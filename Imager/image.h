@@ -237,12 +237,12 @@ float i_img_diff   (i_img *im1,i_img *im2);
 
 /* font routines */
 
-undef_int i_init_fonts( void );
+undef_int i_init_fonts( int t1log );
 
 #ifdef HAVE_LIBT1
 #include <t1lib.h>
 
-undef_int init_t1( void );
+undef_int init_t1( int t1log );
 int       i_t1_new( char *pfb, char *afm );
 int       i_t1_destroy( int font_id );
 undef_int i_t1_cp( i_img *im, int xb, int yb, int channel, int fontnum, float points, char* str, int len, int align );

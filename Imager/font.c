@@ -66,11 +66,11 @@ Initialize font rendering libraries if they are avaliable.
 */
 
 undef_int 
-i_init_fonts() {
+i_init_fonts(int t1log) {
   mm_log((1,"Initializing fonts\n"));
 
 #ifdef HAVE_LIBT1
-  init_t1();
+  init_t1(t1log);
 #endif
   
 #ifdef HAVE_LIBTT
@@ -93,7 +93,7 @@ i_init_fonts() {
 
 
 /* 
-=item i_init_t1()
+=item i_init_t1(t1log)
 
 Initializes the t1lib font rendering engine.
 
@@ -101,9 +101,13 @@ Initializes the t1lib font rendering engine.
 */
 
 undef_int
-init_t1() {
+init_t1(int t1log) {
+  int init_flags = IGNORE_CONFIGFILE|IGNORE_FONTDATABASE;
   mm_log((1,"init_t1()\n"));
-  if ((T1_InitLib(LOGFILE|IGNORE_CONFIGFILE|IGNORE_FONTDATABASE) == NULL)){
+  
+  if (t1log)
+    init_flags |= LOGFILE;
+  if ((T1_InitLib(init_flags) == NULL)){
     mm_log((1,"Initialization of t1lib failed\n"));
     return(1);
   }
