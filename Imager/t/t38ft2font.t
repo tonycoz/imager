@@ -7,7 +7,7 @@
 # Change 1..1 below to 1..last_test_to_print .
 # (It may become useful if the test is moved to ./t subdirectory.)
 
-BEGIN { $| = 1; print "1..10\n"; }
+BEGIN { $| = 1; print "1..14\n"; }
 END {print "not ok 1\n" unless $loaded;}
 use Imager qw(:all);
 $loaded = 1;
@@ -16,7 +16,7 @@ print "ok 1\n";
 init_log("testout/t38ft2font.log",1);
 
 sub skip { 
-  for (2..10) {
+  for (2..14) {
     print "ok $_ # skip no Freetype2 library\n";
   }
   malloc_state();
@@ -201,3 +201,13 @@ for my $steps (0..39) {
 
 $im->write(file=>'testout/t38_oo.ppm')
   or print "# could not save OO output: ",$im->errstr,"\n";
+
+my (@got) = $oof->has_chars(string=>"\x01H");
+@got == 2 or print "not ";
+print "ok 11\n";
+$got[0] and print "not ";
+print "ok 12 # check if \\x01 is defined\n";
+$got[1] or print "not ";
+print "ok 13 # check if 'H' is defined\n";
+$oof->has_chars(string=>"H\x01") eq "\x01\x00" or print "not ";
+print "ok 14\n";

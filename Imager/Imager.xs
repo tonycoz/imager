@@ -3281,7 +3281,37 @@ ft2_transform_box(font, x0, x1, x2, x3)
           PUSHs(sv_2mortal(newSViv(box[1])));
           PUSHs(sv_2mortal(newSViv(box[2])));
           PUSHs(sv_2mortal(newSViv(box[3])));
-        
+
+void
+i_ft2_has_chars(handle, text, utf8)
+        Imager::Font::FT2 handle
+        int utf8
+      PREINIT:
+        char *text;
+        STRLEN len;
+        char *work;
+        int count;
+        int i;
+      PPCODE:
+#ifdef SvUTF8
+        if (SvUTF8(ST(7)))
+          utf8 = 1;
+#endif
+        text = SvPV(ST(1), len);
+        work = mymalloc(len);
+        count = i_ft2_has_chars(handle, text, len, utf8, work);
+        if (GIMME_V == G_ARRAY) {
+          EXTEND(SP, count);
+          for (i = 0; i < count; ++i) {
+            PUSHs(sv_2mortal(newSViv(work[i])));
+          }
+        }
+        else {
+          EXTEND(SP, 1);
+          PUSHs(sv_2mortal(newSVpv(work, count)));
+        }
+        myfree(work);
+
 #endif
 
 MODULE = Imager         PACKAGE = Imager::FillHandle PREFIX=IFILL_

@@ -721,6 +721,44 @@ i_ft2_cp(FT2_Fonthandle *handle, i_img *im, int tx, int ty, int channel,
   return 1;
 }
 
+/*
+=item i_ft2_has_chars(handle, char *text, int len, int utf8, char *out)
+
+Check if the given characters are defined by the font.
+
+Returns the number of characters that were checked.
+
+=cut
+*/
+int i_ft2_has_chars(FT2_Fonthandle *handle, char *text, int len, int utf8, 
+                       char *out) {
+  int count = 0;
+  mm_log((1, "i_ft2_check_chars(handle %p, text %p, len %d, utf8 %d)\n", 
+	  handle, text, len, utf8));
+
+  while (len) {
+    unsigned long c;
+    int index;
+    if (utf8) {
+      c = utf8_advance(&text, &len);
+      if (c == ~0UL) {
+        i_push_error(0, "invalid UTF8 character");
+        return 0;
+      }
+    }
+    else {
+      c = (unsigned char)*text++;
+      --len;
+    }
+    
+    index = FT_Get_Char_Index(handle->face, c);
+    *out++ = index != 0;
+    ++count;
+  }
+
+  return count;
+}
+
 /* uses a method described in fterrors.h to build an error translation
    function
 */
