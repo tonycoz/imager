@@ -55,6 +55,9 @@ New Features:
 - read_multi() needs to handle other multi-image types, such as TIFF 
   (probably the most common)
 
+- compose channels - build a new image based on channels from several
+  images
+
 Clean up:
 - Make sure everything is doable with the OO interface
   i_flood_fill() for example.
