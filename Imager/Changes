@@ -362,6 +362,7 @@ Revision history for Perl extension Imager.
 	for giflib 3.
 	- Win32 support for libpng
 	- fixed set_internal creating 2 refs to one object
+	- Win32 support for jpeg
 
 
 
