@@ -993,6 +993,13 @@ Revision history for Perl extension Imager.
 - Makefile.PL now builds imconfig.h with #defines for libraries
   present (and for the GIF library version) rather than putting them
   into CFLAGS
+- scanning for required include files is now down by directory rather
+  than by file, using -e to check for the existence for a file rather than
+  doing an eq against every filename in the directory.
+- previously we only checked a candidate include directory for freetype.h
+  to consider it a valid FT1.x include directory.  We now check if it
+  contains fterrors.h too, if it does, then it's from a FT2 installation
+  and we ignore it.
 
 =================================================================
 
