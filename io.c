@@ -79,6 +79,7 @@ void
 malloc_state(void) {
   int i, total = 0;
 
+  i_clear_error();
   mm_log((0,"malloc_state()\n"));
   bndcheck_all();
   for(i=0; i<MAXMAL; i++) if (malloc_pointers[i].ptr != NULL) {

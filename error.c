@@ -186,6 +186,17 @@ Called by any imager function before doing any other processing.
 
 =cut */
 void i_clear_error() {
+#ifdef IMAGER_DEBUG_MALLOC
+  int i;
+
+  for (i = 0; i < ERRSTK; ++i) {
+    if (error_space[i]) {
+      myfree(error_stack[i].msg);
+      error_stack[i].msg = NULL;
+      error_space[i] = 0;
+    }
+  }
+#endif
   error_sp = ERRSTK-1;
 }
 
