@@ -391,6 +391,8 @@ Revision history for Perl extension Imager.
 	- makemap_addi() now only puts colours into the palette that it
 	found while optimizing the palette (so we don't get 256 colour
 	palettes for 2 colour images :)
+	- initial implementation of a row-based interface to low-level
+	images (for performance)
 
 ~~~~~~~~~~~~~^ ^ ^~~~~~~~~~~~~~
 
