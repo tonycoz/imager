@@ -7,7 +7,7 @@ use Imager qw(:all :handy);
 #use Data::Dumper;
 $loaded = 1;
 print "ok 1\n";
-init_log("testout/t021sixteen.t", 1);
+init_log("testout/t021sixteen.log", 1);
 
 use Imager::Color::Float;
 

@@ -135,6 +135,8 @@ typedef unsigned short i_sample16_t;
 =item i_img_16_new(int x, int y, int ch)
 
 Creates a new 16-bit per sample image.
+
+=cut
 */
 i_img *i_img_16_new_low(i_img *im, int x, int y, int ch) {
   mm_log((1,"i_img_16_new(x %d, y %d, ch %d)\n", x, y, ch));

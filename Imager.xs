@@ -2788,6 +2788,12 @@ i_img_16_new(x, y, ch)
         int y
         int ch
 
+Imager::ImgRaw
+i_img_double_new(x, y, ch)
+        int x
+        int y
+        int ch
+
 undef_int
 i_tags_addn(im, name, code, idata)
         Imager::ImgRaw im
