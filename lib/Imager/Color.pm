@@ -268,8 +268,11 @@ sub pspec {
   elsif ($args{name}) {
     unless (@result = _get_gimp_color(%args)) {
       unless (@result = _get_x_color(%args)) {
-        $Imager::ERRSTR = "No color named $args{name} found";
-        return ();
+        require Imager::Color::Table;
+        unless (@result = Imager::Color::Table->get($args{name})) {
+          $Imager::ERRSTR = "No color named $args{name} found";
+          return ();
+        }
       }
     }
   }
@@ -278,6 +281,10 @@ sub pspec {
   }
   elsif ($args{xname}) {
     @result = _get_x_color(name=>$args{xname}, %args);
+  }
+  elsif ($args{builtin}) {
+    require Imager::Color::Table;
+    @result = Imager::Color::Table->get($args{builtin});
   }
   elsif ($args{rgb}) {
     @result = @{$args{rgb}};
@@ -487,8 +494,16 @@ or let Imager::Color look in various places, typically
 
 =item *
 
-'name' which specifies a name from either a GIMP palette or an X
-rgb.txt file, whichever is found first.
+'builtin' which specifies a color from the built-in color table in
+Imager::Color::Table.  The colors in this module are the same as the
+default X11 rgb.txt file.
+
+  my $c1 = Imager::Color->new(builtin=>'black') # always RGB(0, 0, 0)
+
+=item *
+
+'name' which specifies a name from either a GIMP palette, an X rgb.txt
+file or the built-in color table, whichever is found first.
 
 =item *
 

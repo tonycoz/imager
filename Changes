@@ -782,6 +782,7 @@ Revision history for Perl extension Imager.
           just yet, just get the code that's there working correctly.
           Thanks to Elthek on rhizo for reporting this and help in 
           tracking it down.
+          Resolves https://rt.cpan.org/Ticket/Display.html?id=7465
         - added a bunch of tests for reading pnm files.
         - previously, if you supplied to_paletted and empty color map
           and set make_colors to 'none', quant_translate() would segfault.
@@ -805,11 +806,16 @@ Revision history for Perl extension Imager.
           RETVAL, and hence wasn't returning failure on failure.
         - supplying a sufficiently small scaling value could make the
           scale() method return an image with zero height or width.
+          Several of the above together resolve 
+          https://rt.cpan.org/Ticket/Display.html?id=7467
         - the void context warning for scale() now includes the callers
           filename/line (instead of the default of Imager.pm line 15xx)
         - Imager->new will now return undef if the dimensions or number of
           channels specified for an image are out of range.  An error
           message can be retrieved with Imager->errstr.
+        - added the C<builtin> color specifier and the 
+          Imager::Color::Table class which defines those colors.
+          Resolves https://rt.cpan.org/Ticket/Display.html?id=2593
 
 =================================================================
 
