@@ -511,6 +511,8 @@ Revision history for Perl extension Imager.
         - error handling for writing jpeg images
         - writing paletted images to GIF now uses the image palette
           if it's small enough
+        - $img->arc() now calls i_circle_aa() if a complete circle is
+          being drawn in a plain color
 
 =================================================================
 
