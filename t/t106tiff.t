@@ -1,5 +1,5 @@
 #!perl -w
-print "1..43\n";
+print "1..69\n";
 use Imager qw(:all);
 $^W=1; # warnings during command-line tests
 $|=1;  # give us some progress in the test harness
@@ -24,7 +24,7 @@ i_box_filled($timg, 2, 2, 18, 18, $trans);
 my $test_num;
 
 if (!i_has_format("tiff")) {
-  for (1..43) {
+  for (1..69) {
     print "ok $_ # skip no tiff support\n";
   }
 } else {
@@ -206,6 +206,131 @@ if (!i_has_format("tiff")) {
   $diff = i_img_diff($img4->{IMG}, $cmp4->{IMG});
   print "# diff $diff\n";
   ok($diff == 0, "written image doesn't match read");
+
+  my $work;
+  my $seekpos;
+  sub io_writer {
+    my ($what) = @_;
+    if ($seekpos > length $work) {
+      $work .= "\0" x ($seekpos - length $work);
+    }
+    substr($work, $seekpos, length $what) = $what;
+    $seekpos += length $what;
+
+    1;
+  }
+  sub io_reader {
+    my ($size, $maxread) = @_;
+    #print "io_reader($size, $maxread) pos $seekpos\n";
+    my $out = substr($work, $seekpos, $maxread);
+    $seekpos += length $out;
+    $out;
+  }
+  sub io_reader2 {
+    my ($size, $maxread) = @_;
+    #print "io_reader2($size, $maxread) pos $seekpos\n";
+    my $out = substr($work, $seekpos, $size);
+    $seekpos += length $out;
+    $out;
+  }
+  use IO::Seekable;
+  sub io_seeker {
+    my ($offset, $whence) = @_;
+    #print "io_seeker($offset, $whence)\n";
+    if ($whence == SEEK_SET) {
+      $seekpos = $offset;
+    }
+    elsif ($whence == SEEK_CUR) {
+      $seekpos += $offset;
+    }
+    else { # SEEK_END
+      $seekpos = length($work) + $offset;
+    }
+    #print "-> $seekpos\n";
+    $seekpos;
+  }
+  my $did_close;
+  sub io_closer {
+    ++$did_close;
+  }
+
+  # read via cb
+  $work = $tiffdata;
+  $seekpos = 0;
+  my $IO2 = Imager::io_new_cb(undef, \&io_reader, \&io_seeker, undef);
+  ok($IO2, "new readcb obj");
+  my $img5 = i_readtiff_wiol($IO2, -1);
+  ok($img5, "read via cb");
+  ok(i_img_diff($img5, $img) == 0, "read from cb diff");
+
+  # read via cb2
+  $work = $tiffdata;
+  $seekpos = 0;
+  my $IO3 = Imager::io_new_cb(undef, \&io_reader2, \&io_seeker, undef);
+  ok($IO3, "new readcb2 obj");
+  my $img6 = i_readtiff_wiol($IO3, -1);
+  ok($img6, "read via cb2");
+  ok(i_img_diff($img6, $img) == 0, "read from cb2 diff");
+
+  # write via cb
+  $work = '';
+  $seekpos = 0;
+  my $IO4 = Imager::io_new_cb(\&io_writer, \&io_reader, \&io_seeker,
+                              \&io_closer);
+  ok($IO4, "new writecb obj");
+  ok(i_writetiff_wiol($img, $IO4), "write to cb");
+  ok($work eq $odata, "write cb match");
+  ok($did_close, "write cb did close");
+  open D1, ">d1.tiff" or die;
+  print D1 $work;
+  close D1;
+  open D2, ">d2.tiff" or die;
+  print D2 $tiffdata;
+  close D2;
+
+  # write via cb2
+  $work = '';
+  $seekpos = 0;
+  $did_close = 0;
+  my $IO5 = Imager::io_new_cb(\&io_writer, \&io_reader, \&io_seeker,
+                              \&io_closer, 1);
+  ok($IO5, "new writecb obj 2");
+  ok(i_writetiff_wiol($img, $IO5), "write to cb2");
+  ok($work eq $odata, "write cb2 match");
+  ok($did_close, "write cb2 did close");
+
+  open D3, ">d3.tiff" or die;
+  print D3 $work;
+  close D3;
+
+  # multi-image write/read
+  my @imgs;
+  push(@imgs, map $ooim->copy(), 1..3);
+  for my $i (0..$#imgs) {
+    $imgs[$i]->addtag(name=>"tiff_pagename", value=>"Page ".($i+1));
+  }
+  my $rc = Imager->write_multi({file=>'testout/t106_multi.tif'}, @imgs);
+  ok($rc, "writing multiple images to tiff");
+  my @out = Imager->read_multi(file=>'testout/t106_multi.tif');
+  ok(@out == @imgs, "reading multiple images from tiff");
+  @out == @imgs or print "# ",scalar @out, " ",Imager->errstr,"\n";
+  for my $i (0..$#imgs) {
+    ok(i_img_diff($imgs[$i]{IMG}, $out[$i]{IMG}) == 0,
+       "comparing image $i");
+    my ($tag) = $out[$i]->tags(name=>'tiff_pagename');
+    ok($tag eq "Page ".($i+1),
+       "tag doesn't match original image");
+  }
+
+  # multi-image fax files
+  ok(Imager->write_multi({file=>'testout/t106_faxmulti.tiff', class=>'fax'},
+                         $oofim, $oofim), "write multi fax image");
+  @imgs = Imager->read_multi(file=>'testout/t106_faxmulti.tiff');
+  ok(@imgs == 2, "reading multipage fax");
+  ok(Imager::i_img_diff($imgs[0]{IMG}, $oofim->{IMG}) == 0,
+     "compare first fax image");
+  ok(Imager::i_img_diff($imgs[1]{IMG}, $oofim->{IMG}) == 0,
+     "compare second fax image");
 }
 
 sub ok {

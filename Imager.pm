@@ -85,6 +85,7 @@ use Imager::Font;
 		i_writepng_wiol
 
 		i_readgif
+		i_readgif_wiol
 		i_readgif_callback
 		i_writegif
 		i_writegifmc
@@ -853,33 +854,114 @@ sub deltag {
   }
 }
 
+my @needseekcb = qw/tiff/;
+my %needseekcb = map { $_, $_ } @needseekcb;
+
+
+sub _get_reader_io {
+  my ($self, $input, $type) = @_;
+
+  if ($input->{fd}) {
+    return io_new_fd($input->{fd});
+  }
+  elsif ($input->{fh}) {
+    my $fd = fileno($input->{fh});
+    unless ($fd) {
+      $self->_set_error("Handle in fh option not opened");
+      return;
+    }
+    return io_new_fd($fd);
+  }
+  elsif ($input->{file}) {
+    my $file = IO::File->new($input->{file}, "r");
+    unless ($file) {
+      $self->_set_error("Could not open $input->{file}: $!");
+      return;
+    }
+    binmode $file;
+    return (io_new_fd(fileno($file)), $file);
+  }
+  elsif ($input->{data}) {
+    return io_new_buffer($input->{data});
+  }
+  elsif ($input->{callback} || $input->{readcb}) {
+    if ($needseekcb{$type} && !$input->{seekcb}) {
+      $self->_set_error("Format $type needs a seekcb parameter");
+    }
+    if ($input->{maxbuffer}) {
+      return io_new_cb($input->{writecb},
+                       $input->{callback} || $input->{readcb},
+                       $input->{seekcb}, $input->{closecb},
+                       $input->{maxbuffer});
+    }
+    else {
+      return io_new_cb($input->{writecb},
+                       $input->{callback} || $input->{readcb},
+                       $input->{seekcb}, $input->{closecb});
+    }
+  }
+  else {
+    $self->_set_error("file/fd/fh/data/callback parameter missing");
+    return;
+  }
+}
+
+sub _get_writer_io {
+  my ($self, $input, $type) = @_;
+
+  if ($input->{fd}) {
+    return io_new_fd($input->{fd});
+  }
+  elsif ($input->{fh}) {
+    my $fd = fileno($input->{fh});
+    unless ($fd) {
+      $self->_set_error("Handle in fh option not opened");
+      return;
+    }
+    return io_new_fd($fd);
+  }
+  elsif ($input->{file}) {
+    my $fh = new IO::File($input->{file},"w+");
+    unless ($fh) { 
+      $self->_set_error("Could not open file $input->{file}: $!");
+      return;
+    }
+    binmode($fh) or die;
+    return (io_new_fd(fileno($fh)), $fh);
+  }
+  elsif ($input->{data}) {
+    return io_new_bufchain();
+  }
+  elsif ($input->{callback} || $input->{writecb}) {
+    if ($input->{maxbuffer}) {
+      return io_new_cb($input->{callback} || $input->{writecb},
+                       $input->{readcb},
+                       $input->{seekcb}, $input->{closecb},
+                       $input->{maxbuffer});
+    }
+    else {
+      return io_new_cb($input->{callback} || $input->{writecb},
+                       $input->{readcb},
+                       $input->{seekcb}, $input->{closecb});
+    }
+  }
+  else {
+    $self->_set_error("file/fd/fh/data/callback parameter missing");
+    return;
+  }
+}
+
 # Read an image from file
 
 sub read {
   my $self = shift;
   my %input=@_;
-  my ($fh, $fd, $IO);
 
   if (defined($self->{IMG})) {
     # let IIM_DESTROY do the destruction, since the image may be
     # referenced from elsewhere
     #i_img_destroy($self->{IMG});
     undef($self->{IMG});
-  }
-
-  if (!$input{fd} and !$input{file} and !$input{data}) {
-    $self->{ERRSTR}='no file, fd or data parameter'; return undef;
-  }
-  if ($input{file}) {
-    $fh = new IO::File($input{file},"r");
-    if (!defined $fh) {
-      $self->{ERRSTR}='Could not open file'; return undef;
-    }
-    binmode($fh);
-    $fd = $fh->fileno();
-  }
-  if ($input{fd}) {
-    $fd=$input{fd};
   }
 
   # FIXME: Find the format here if not specified
@@ -891,15 +973,20 @@ sub read {
   if (!$input{'type'} and $input{file}) {
     $input{'type'}=$FORMATGUESS->($input{file});
   }
+  unless ($input{'type'}) {
+    $self->_set_error('type parameter missing and not possible to guess from extension'); 
+    return undef;
+  }
   if (!$formats{$input{'type'}}) {
     $self->{ERRSTR}='format not supported'; return undef;
   }
 
-  my %iolready=(jpeg=>1, png=>1, tiff=>1, pnm=>1, raw=>1, bmp=>1, tga=>1, rgb=>1);
+  my %iolready=(jpeg=>1, png=>1, tiff=>1, pnm=>1, raw=>1, bmp=>1, tga=>1, rgb=>1, gif=>1);
 
   if ($iolready{$input{'type'}}) {
     # Setup data source
-    $IO = defined $fd ? io_new_fd($fd) : io_new_buffer($input{data});
+    my ($IO, $fh) = $self->_get_reader_io(\%input, $input{'type'})
+      or return;
 
     if ( $input{'type'} eq 'jpeg' ) {
       ($self->{IMG},$self->{IPTCRAW})=i_readjpeg_wiol( $IO );
@@ -944,6 +1031,29 @@ sub read {
 	return undef;
       }
       $self->{DEBUG} && print "loading a bmp file\n";
+    }
+
+    if ( $input{'type'} eq 'gif' ) {
+      if ($input{colors} && !ref($input{colors})) {
+	# must be a reference to a scalar that accepts the colour map
+	$self->{ERRSTR} = "option 'colors' must be a scalar reference";
+	return undef;
+      }
+      if ($input{colors}) {
+        my $colors;
+        ($self->{IMG}, $colors) =i_readgif_wiol( $IO );
+        if ($colors) {
+          ${ $input{colors} } = [ map { NC(@$_) } @$colors ];
+        }
+      }
+      else {
+        $self->{IMG} =i_readgif_wiol( $IO );
+      }
+      if ( !defined($self->{IMG}) ) {
+	$self->{ERRSTR}=$self->_error_as_msg();
+	return undef;
+      }
+      $self->{DEBUG} && print "loading a gif file\n";
     }
 
     if ( $input{'type'} eq 'tga' ) {
@@ -1003,6 +1113,7 @@ sub read {
       return undef;
     }
 
+    my ($fh, $fd);
     if ($input{file}) {
       $fh = new IO::File($input{file},"r");
       if (!defined $fh) {
@@ -1062,13 +1173,13 @@ sub write {
 	     compress=>1,
 	     wierdpack=>0,
 	     fax_fine=>1, @_);
-  my ($fh, $rc, $fd, $IO);
+  my $rc;
 
-  my %iolready=( tiff=>1, raw=>1, png=>1, pnm=>1, bmp=>1, jpeg=>1, tga=>1 ); # this will be SO MUCH BETTER once they are all in there
+  my %iolready=( tiff=>1, raw=>1, png=>1, pnm=>1, bmp=>1, jpeg=>1, tga=>1, 
+                 gif=>1 ); # this will be SO MUCH BETTER once they are all in there
 
   unless ($self->{IMG}) { $self->{ERRSTR}='empty input image'; return undef; }
 
-  if (!$input{file} and !$input{'fd'} and !$input{'data'}) { $self->{ERRSTR}='file/fd/data parameter missing'; return undef; }
   if (!$input{'type'} and $input{file}) { 
     $input{'type'}=$FORMATGUESS->($input{file});
   }
@@ -1079,21 +1190,11 @@ sub write {
 
   if (!$formats{$input{'type'}}) { $self->{ERRSTR}='format not supported'; return undef; }
 
-  if (exists $input{'fd'}) {
-    $fd=$input{'fd'};
-  } elsif (exists $input{'data'}) {
-    $IO = Imager::io_new_bufchain();
-  } else {
-    $fh = new IO::File($input{file},"w+");
-    if (!defined $fh) { $self->{ERRSTR}='Could not open file'; return undef; }
-    binmode($fh) or die;
-    $fd = $fh->fileno();
-  }
+  my ($IO, $fh) = $self->_get_writer_io(\%input, $input{'type'})
+    or return undef;
 
+  # this conditional is probably obsolete
   if ($iolready{$input{'type'}}) {
-    if (defined $fd) {
-      $IO = io_new_fd($fd);
-    }
 
     if ($input{'type'} eq 'tiff') {
       if (defined $input{class} && $input{class} eq 'fax') {
@@ -1144,6 +1245,19 @@ sub write {
 	return undef;
       }
       $self->{DEBUG} && print "writing a tga file\n";
+    } elsif ( $input{'type'} eq 'gif' ) {
+      # compatibility with the old interfaces
+      if ($input{gifquant} eq 'lm') {
+        $input{make_colors} = 'addi';
+        $input{translate} = 'perturb';
+        $input{perturb} = $input{lmdither};
+      } elsif ($input{gifquant} eq 'gen') {
+        # just pass options through
+      } else {
+        $input{make_colors} = 'webmap'; # ignored
+        $input{translate} = 'giflib';
+      }
+      $rc = i_writegif_wiol($IO, \%input, $self->{IMG});
     }
 
     if (exists $input{'data'}) {
@@ -1155,98 +1269,51 @@ sub write {
       ${$input{data}} = $data;
     }
     return $self;
-  } else {
-    if ( $input{'type'} eq 'gif' ) {
-      if (not $input{gifplanes}) {
-	my $gp;
-	my $count=i_count_colors($self->{IMG}, 256);
-	$gp=8 if $count == -1;
-	$gp=1 if not $gp and $count <= 2;
-	$gp=2 if not $gp and $count <= 4;
-	$gp=3 if not $gp and $count <= 8;
-	$gp=4 if not $gp and $count <= 16;
-	$gp=5 if not $gp and $count <= 32;
-	$gp=6 if not $gp and $count <= 64;
-	$gp=7 if not $gp and $count <= 128;
-	$input{gifplanes} = $gp || 8;
-      }
-
-      if ($input{gifplanes}>8) {
-	$input{gifplanes}=8;
-      }
-      if ($input{gifquant} eq 'gen' || $input{callback}) {
-
-
-	if ($input{gifquant} eq 'lm') {
-
-	  $input{make_colors} = 'addi';
-	  $input{translate} = 'perturb';
-	  $input{perturb} = $input{lmdither};
-	} elsif ($input{gifquant} eq 'gen') {
-	  # just pass options through
-	} else {
-	  $input{make_colors} = 'webmap'; # ignored
-	  $input{translate} = 'giflib';
-	}
-
-	if ($input{callback}) {
-	  defined $input{maxbuffer} or $input{maxbuffer} = -1;
-	  $rc = i_writegif_callback($input{callback}, $input{maxbuffer},
-				    \%input, $self->{IMG});
-	} else {
-	  $rc = i_writegif_gen($fd, \%input, $self->{IMG});
-	}
-
-      } elsif ($input{gifquant} eq 'lm') {
-	$rc=i_writegif($self->{IMG},$fd,$input{gifplanes},$input{lmdither},$input{lmfixed});
-      } else {
-	$rc=i_writegifmc($self->{IMG},$fd,$input{gifplanes});
-      }
-      if ( !defined($rc) ) {
-	$self->{ERRSTR} = "Writing GIF file: "._error_as_msg(); return undef;
-      }
-      $self->{DEBUG} && print "writing a gif file\n";
-
-    }
   }
+
   return $self;
 }
 
 sub write_multi {
   my ($class, $opts, @images) = @_;
 
+  if (!$opts->{'type'} && $opts->{'file'}) {
+    $opts->{'type'} = $FORMATGUESS->($opts->{'file'});
+  }
+  unless ($opts->{'type'}) {
+    $class->_set_error('type parameter missing and not possible to guess from extension');
+    return;
+  }
+  # translate to ImgRaw
+  if (grep !UNIVERSAL::isa($_, 'Imager') || !$_->{IMG}, @images) {
+    $class->_set_error('Usage: Imager->write_multi({ options }, @images)');
+    return 0;
+  }
+  my @work = map $_->{IMG}, @images;
+  my ($IO, $file) = $class->_get_writer_io($opts, $opts->{'type'})
+    or return undef;
   if ($opts->{'type'} eq 'gif') {
     my $gif_delays = $opts->{gif_delays};
     local $opts->{gif_delays} = $gif_delays;
-    unless (ref $opts->{gif_delays}) {
+    if ($opts->{gif_delays} && !ref $opts->{gif_delays}) {
       # assume the caller wants the same delay for each frame
       $opts->{gif_delays} = [ ($gif_delays) x @images ];
     }
-    # translate to ImgRaw
-    if (grep !UNIVERSAL::isa($_, 'Imager') || !$_->{IMG}, @images) {
-      $ERRSTR = "Usage: Imager->write_multi({ options }, @images)";
-      return 0;
-    }
-    my @work = map $_->{IMG}, @images;
-    if ($opts->{callback}) {
-      # Note: you may need to fix giflib for this one to work
-      my $maxbuffer = $opts->{maxbuffer};
-      defined $maxbuffer or $maxbuffer = -1; # max by default
-      return i_writegif_callback($opts->{callback}, $maxbuffer,
-				 $opts, @work);
-    }
-    if ($opts->{fd}) {
-      return i_writegif_gen($opts->{fd}, $opts, @work);
+    my $res = i_writegif_wiol($IO, $opts, @work);
+    $res or $class->_set_error($class->_error_as_msg());
+    return $res;
+  }
+  elsif ($opts->{'type'} eq 'tiff') {
+    my $res;
+    $opts->{fax_fine} = 1 unless exists $opts->{fax_fine};
+    if ($opts->{'class'} && $opts->{'class'} eq 'fax') {
+      $res = i_writetiff_multi_wiol_faxable($IO, $opts->{fax_fine}, @work);
     }
     else {
-      my $fh = IO::File->new($opts->{file}, "w+");
-      unless ($fh) {
-	$ERRSTR = "Error creating $opts->{file}: $!";
-	return 0;
-      }
-      binmode($fh);
-      return i_writegif_gen(fileno($fh), $opts, @work);
+      $res = i_writetiff_multi_wiol($IO, @work);
     }
+    $res or $class->_set_error($class->_error_as_msg());
+    return $res;
   }
   else {
     $ERRSTR = "Sorry, write_multi doesn't support $opts->{'type'} yet";
@@ -1267,52 +1334,24 @@ sub read_multi {
     $ERRSTR = "No type parameter supplied and it couldn't be guessed";
     return;
   }
-  my $fd;
-  my $file;
-  if ($opts{file}) {
-    $file = IO::File->new($opts{file}, "r");
-    unless ($file) {
-      $ERRSTR = "Could not open file $opts{file}: $!";
-      return;
-    }
-    binmode $file;
-    $fd = fileno($file);
-  }
-  elsif ($opts{fh}) {
-    $fd = fileno($opts{fh});
-    unless ($fd) {
-      $ERRSTR = "File handle specified with fh option not open";
-      return;
-    }
-  }
-  elsif ($opts{fd}) {
-    $fd = $opts{fd};
-  }
-  elsif ($opts{callback} || $opts{data}) {
-    # don't fail here
-  }
-  else {
-    $ERRSTR = "You need to specify one of file, fd, fh, callback or data";
-    return;
-  }
 
+  my ($IO, $file) = $class->_get_reader_io(\%opts, $opts{'type'})
+    or return;
   if ($opts{'type'} eq 'gif') {
     my @imgs;
-    if ($fd) {
-      @imgs = i_readgif_multi($fd);
+    @imgs = i_readgif_multi_wiol($IO);
+    if (@imgs) {
+      return map { 
+        bless { IMG=>$_, DEBUG=>$DEBUG, ERRSTR=>undef }, 'Imager' 
+      } @imgs;
     }
     else {
-      if (Imager::i_giflib_version() < 4.0) {
-        $ERRSTR = "giflib3.x does not support callbacks";
-        return;
-      }
-      if ($opts{callback}) {
-        @imgs = i_readgif_multi_callback($opts{callback})
-      }
-      else {
-        @imgs = i_readgif_multi_scalar($opts{data});
-      }
+      $ERRSTR = _error_as_msg();
+      return;
     }
+  }
+  elsif ($opts{'type'} eq 'tiff') {
+    my @imgs = i_readtiff_multi_wiol($IO, -1);
     if (@imgs) {
       return map { 
         bless { IMG=>$_, DEBUG=>$DEBUG, ERRSTR=>undef }, 'Imager' 
@@ -2230,6 +2269,17 @@ sub errstr {
   ref $_[0] ? $_[0]->{ERRSTR} : $ERRSTR
 }
 
+sub _set_error {
+  my ($self, $msg) = @_;
+
+  if (ref $self) {
+    $self->{ERRSTR} = $msg;
+  }
+  else {
+    $ERRSTR = $msg;
+  }
+}
+
 # Default guess for the type of an image from extension
 
 sub def_guess_type {
@@ -2244,6 +2294,7 @@ sub def_guess_type {
   return 'tga'  if ($ext eq "tga");
   return 'rgb'  if ($ext eq "rgb");
   return 'gif'  if ($ext eq "gif");
+  return 'raw'  if ($ext eq "raw");
   return ();
 }
 
@@ -2327,9 +2378,8 @@ Imager - Perl extension for Generating 24 bit Images
 
 =head1 SYNOPSIS
 
-  use Imager qw(init);
+  use Imager;
 
-  init();
   $img = Imager->new();
   $img->open(file=>'image.ppm',type=>'pnm')
     || print "failed: ",$img->{ERRSTR},"\n";
@@ -2432,6 +2482,105 @@ horizontal coordinate increases to the right and the vertical
 downwards.
 
 =head2 Reading and writing images
+
+You can read and write a variety of images formats, assuming you have
+the appropriate libraries, and images can be read or written to/from
+files, file handles, file descriptors, scalars, or through callbacks.
+
+To see which image formats Imager is compiled to support the following
+code snippet is sufficient:
+
+  use Imager;
+  print join " ", keys %Imager::formats;
+
+This will include some other information identifying libraries rather
+than file formats.
+
+Reading writing to and from files is simple, use the C<read()>
+method to read an image:
+
+  my $img = Imager->new;
+  $img->read(file=>$filename, type=>$type)
+    or die "Cannot read $filename: ", $img->errstr;
+
+and the C<write()> method to write an image:
+
+  $img->write(file=>$filename, type=>$type)
+    or die "Cannot write $filename: ", $img->errstr;
+
+If the I<filename> includes an extension that Imager recognizes, then
+you don't need the I<type>, but you may want to provide one anyway.
+Imager currently does not check the files magic to determine the
+format.  It is possible to override the method for determining the 
+filetype from the filename.  If the data is given in another form than
+a file name a 
+
+When you read an image, Imager may set some tags, possibly including
+information about the spatial resolution, textual information, and
+animation information.  See L</Tags> for specifics.
+
+When reading or writing you can specify one of a variety of sources or
+targets:
+
+=over
+
+=item file
+
+The C<file> parameter is the name of the image file to be written to
+or read from.  If Imager recognizes the extension of the file you do
+not need to supply a C<type>.
+
+=item fh
+
+C<fh> is a file handle, typically either returned from
+C<<IO::File->new()>>, or a glob from an C<open> call.  You should call
+C<binmode> on the handle before passing it to Imager.
+
+=item fd
+
+C<fd> is a file descriptor.  You can get this by calling the
+C<fileno()> function on a file handle, or by using one of the standard
+file descriptor numbers.
+
+=item data
+
+When reading data, C<data> is a scalar containing the image file data,
+when writing, C<data> is a reference to the scalar to save the image
+file data too.  For GIF images you will need giflib 4 or higher, and
+you may need to patch giflib to use this option for writing.
+
+=item callback
+
+Imager will make calls back to your supplied coderefs to read, write
+and seek from/to/through the image file.
+
+When reading from a file you can use either C<callback> or C<readcb>
+to supply the read callback, and when writing C<callback> or
+C<writecb> to supply the write callback.
+
+When writing you can also supply the C<maxbuffer> option to set the
+maximum amount of data that will be buffered before your write
+callback is called.  Note: the amount of data supplied to your
+callback can be smaller or larger than this size.
+
+The read callback is called with 2 parameters, the minimum amount of
+data required, and the maximum amount that Imager will store in it's C
+level buffer.  You may want to return the minimum if you have a slow
+data source, or the maximum if you have a fast source and want to
+prevent many calls to your perl callback.  The read data should be
+returned as a scalar.
+
+Your write callback takes exactly one parameter, a scalar containing
+the data to be written.  Return true for success.
+
+The seek callback takes 2 parameters, a I<POSITION>, and a I<WHENCE>,
+defined in the same way as perl's seek function.
+
+You can also supply a C<closecb> which is called with no parameters
+when there is no more data to be written.  This could be used to flush
+buffered data.
+
+=back
 
 C<$img-E<gt>read()> generally takes two parameters, 'file' and 'type'.
 If the type of the file can be determined from the suffix of the file
