@@ -105,6 +105,8 @@ rotate.c
 samples/README
 samples/anaglyph.pl
 samples/interleave.pl
+samples/samp-form.cgi
+samples/samp-image.cgi
 spot.perl	For making an ordered dither matrix from a spot function
 stackmach.c
 stackmach.h
