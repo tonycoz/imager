@@ -72,6 +72,11 @@ if (defined $Config{'d_dlsymun'}) { $OSDEF  .= ' -DDLSYMUN'; }
        'OBJECT'       => join(' ', @objs, $F_OBJECT)
       );
 
+if ($] ge '5.005') {
+  $opts{AUTHOR} = 'Arnar M. Hrafnkelsson, addi@umich.edu';
+  $opts{ABSTRACT} = 'Perl extension for Generating 24 bit Images';
+}
+
 if ($VERBOSE) { print Dumper(\%opts); }
 mkdir('testout',0777); # since we cannot include it in the archive.
 WriteMakefile(%opts);
