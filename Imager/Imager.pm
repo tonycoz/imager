@@ -1522,6 +1522,11 @@ sub scale {
   my $img = Imager->new();
   my $tmp = Imager->new();
 
+  unless (defined wantarray) {
+    warn "scale() called in void context - scale() returns the scaled image";
+    return;
+  }
+
   unless ($self->{IMG}) { $self->{ERRSTR}='empty input image'; return undef; }
 
   if ($opts{xpixels} and $opts{ypixels} and $opts{'type'}) {

@@ -751,6 +751,8 @@ Revision history for Perl extension Imager.
 	  Imager.pm
 	- change the list of documents in Imager.pm to move the document 
 	  names out of the =item lines so we can make them into links
+	- the scale() method now produces a warning when called in
+	  void context.
 
 =================================================================
 
