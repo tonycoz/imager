@@ -972,6 +972,8 @@ Revision history for Perl extension Imager.
   meant most errors came out as numbers.
 - add a note to the README on how to get font suitcases and dfont files
   working on OS X.
+- add dfont to the list of extensions supported by ft2
+- document Imager::Font->new()'s index parameter
 
 =================================================================
 

@@ -23,7 +23,7 @@ my %drivers =
    ft2=>{
          class=>'Imager::Font::FreeType2',
          module=>'Imager/Font/FreeType2.pm',
-         files=>'.*\.(pfa|pfb|otf|ttf|fon|fnt)$',
+         files=>'.*\.(pfa|pfb|otf|ttf|fon|fnt|dfont)$',
         },
    ifs=>{
          class=>'Imager::Font::Image',
@@ -366,6 +366,7 @@ this:
 This creates a font object to pass to functions that take a font argument.
 
   $font = Imager::Font->new(file  => 'denmark.ttf',
+                            index => 0,
 			    color => $blue,
 			    size  => 30,
 			    aa    => 1);
@@ -381,13 +382,17 @@ you can tell it explicitly by using the C<type> parameter:
   $t1font = Imager::Font->new(file => 'fruitcase', type => 't1');
   $ttfont = Imager::Font->new(file => 'arglebarf', type => 'tt');
 
+The C<index> parameter is used to select a single face from a font
+file containing more than one face, for example, from a Macintosh font
+suitcase or a .dfont file.
+
 If any of the C<color>, C<size> or C<aa> parameters are omitted when
 calling C<Imager::Font->new()> the they take the following values:
-
 
   color => Imager::Color->new(255, 0, 0, 0);  # this default should be changed
   size  => 15
   aa    => 0
+  index => 0
 
 To use Win32 fonts supply the facename of the font:
 
