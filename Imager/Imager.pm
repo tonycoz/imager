@@ -382,11 +382,18 @@ BEGIN {
 #  print Dumper(@_);
 #}
 
+sub init_log {
+	m_init_log($_[0],$_[1]);
+	log_entry("Imager $VERSION starting\n", 1);
+}
+
+
 sub init {
   my %parms=(loglevel=>1,@_);
   if ($parms{'log'}) {
     init_log($parms{'log'},$parms{'loglevel'});
   }
+
   if (exists $parms{'warn_obsolete'}) {
     $warn_obsolete = $parms{'warn_obsolete'};
   }

@@ -1192,7 +1192,7 @@ i_img_empty_ch(im,x,y,ch)
 	       int     ch
 
 void
-init_log(name,level)
+m_init_log(name,level)
 	      char*    name
 	       int     level
 
