@@ -978,6 +978,7 @@ Revision history for Perl extension Imager.
 - the gradgen filter now does the same color value conversion that
   Imager's drawing functions do.
 - added trivial multiple master support via the FT2 driver
+- added .pcf and .pcf.gz to the list of extensions supported by ft2
 
 =================================================================
 
