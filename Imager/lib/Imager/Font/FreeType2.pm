@@ -111,7 +111,7 @@ sub has_chars {
     $Imager::ERRSTR = "No string supplied to \$font->has_chars()";
     return;
   }
-  return i_ft2_has_chars($self->{id}, $hsh{string}, $hsh{utf8} || 0);
+  return i_ft2_has_chars($self->{id}, $hsh{string}, $hsh{'utf8'} || 0);
 }
 
 1;
