@@ -550,6 +550,8 @@ Revision history for Perl extension Imager.
         - anti-aliased polygon fill
         - add general fill to polygon fill
         - make color values smarter for the drawing functions
+        - implemented reading and writing the TIFF text tags
+        - added prototypes for some of the derivative tags functions
 
 =================================================================
 

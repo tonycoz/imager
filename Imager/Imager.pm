@@ -4087,6 +4087,29 @@ to control output:
 The value of the ResolutionUnit tag.  This is ignored on writing if
 the i_aspect_only tag is non-zero.
 
+=item tiff_documentname
+
+=item tiff_imagedescription
+
+=item tiff_make
+
+=item tiff_model
+
+=item tiff_pagename
+
+=item tiff_software
+
+=item tiff_datetime
+
+=item tiff_artist
+
+=item tiff_hostcomputer
+
+Various strings describing the image.  tiff_datetime must be formatted
+as "YYYY:MM:DD HH:MM:SS".  These correspond directly to the mixed case
+names in the TIFF specification.  These are set in images read from a
+TIFF and save when writing a TIFF image.
+
 =back
 
 The following tags are set when a Windows BMP file is read:
