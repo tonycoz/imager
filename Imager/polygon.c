@@ -148,6 +148,15 @@ ss_scanline_init(ss_scanline *ss, int linelen, int linepairs) {
   ss_scanline_reset(ss);
 }
 
+static
+void
+ss_scanline_exorcise(ss_scanline *ss) {
+  myfree(ss->line);
+  myfree(ss->ss_list);
+}
+  
+		     
+
 
 /* returns the number of matches */
 
@@ -180,14 +189,8 @@ mark_updown_slices(p_line *lset, p_slice *tllist, int count) {
   int k;
   for(k=0; k<count; k+=2) {
     l = lset + tllist[k].n;
-    r = lset + tllist[k+1].n;
 
     if (l->y1 == l->y2) {
-      mm_log((1, "mark_updown_slices: horizontal line being marked: internal error!\n"));
-      exit(3);
-    }
-
-    if (r->y1 == r->y2) {
       mm_log((1, "mark_updown_slices: horizontal line being marked: internal error!\n"));
       exit(3);
     }
@@ -200,6 +203,21 @@ mark_updown_slices(p_line *lset, p_slice *tllist, int count) {
       : 
       (l->y1 > l->y2) ? 1 : -1;
 
+    POLY_DEB( printf("marking left line %d as %s(%d)\n", l->n,
+		     l->updown ?  l->updown == 1 ? "up" : "down" : "vert", l->updown, l->updown)
+	      );
+
+    if (k+1 >= count) {
+      mm_log((1, "Invalid polygon spec, odd number of line crossings.\n"));
+      return;
+    }
+
+    r = lset + tllist[k+1].n;
+    if (r->y1 == r->y2) {
+      mm_log((1, "mark_updown_slices: horizontal line being marked: internal error!\n"));
+      exit(3);
+    }
+
     r->updown = (r->x1 == r->x2) ?
       0 :
       (r->x1 > r->x2)
@@ -208,10 +226,8 @@ mark_updown_slices(p_line *lset, p_slice *tllist, int count) {
       : 
       (r->y1 > r->y2) ? 1 : -1;
     
-    POLY_DEB( printf("marking left line %d as %s(%d)\n", l->n,
-		     l->updown ?  l->updown == 1 ? "up" : "down" : "vert", l->updown, l->updown);
-	      printf("marking right line %d as %s(%d)\n", r->n,
-		     r->updown ?  r->updown == 1 ? "up" : "down" : "vert", r->updown, r->updown);
+    POLY_DEB( printf("marking right line %d as %s(%d)\n", r->n,
+		     r->updown ?  r->updown == 1 ? "up" : "down" : "vert", r->updown, r->updown)
 	      );
   }
 }
@@ -509,9 +525,17 @@ i_poly_aa(i_img *im, int l, double *x, double *y, i_color *val) {
   p_line  *lset;		/* List of lines in polygon */
   p_slice *tllist;		/* List of slices */
 
-  fflush(stdout);
-  setbuf(stdout, NULL);
-   
+  mm_log((1, "i_poly_aa(im %p, l %d, x %p, y %p, val %p)\n", im, l, x, y, val));
+
+  for(i=0; i<l; i++) {
+    mm_log((2, "(%.2f, %.2f)\n", x[i], y[i]));
+  }
+
+
+  POLY_DEB(
+	   fflush(stdout);
+	   setbuf(stdout, NULL);
+	   );
 
   tllist   = mymalloc(sizeof(p_slice)*l);
   
@@ -590,5 +614,10 @@ i_poly_aa(i_img *im, int l, double *x, double *y, i_color *val) {
   } /* Intervals */
   if (16*coarse(tempy) != tempy) 
     scanline_flush(im, &templine, cscl-1, val);
-} /* Function */
 
+  ss_scanline_exorcise(&templine);
+  myfree(pset);
+  myfree(lset);
+  myfree(tllist);
+  
+} /* Function */

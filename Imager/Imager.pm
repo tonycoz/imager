@@ -1791,7 +1791,29 @@ sub polyline {
   return $self;
 }
 
-# this the multipoint bezier curve 
+sub polygon {
+  my $self = shift;
+  my ($pt,$ls,@points);
+  my $dflcl = i_color_new(0,0,0,0);
+  my %opts = (color=>$dflcl, @_);
+
+  unless ($self->{IMG}) { $self->{ERRSTR}='empty input image'; return undef; }
+
+  if (exists($opts{points})) {
+    $opts{'x'} = [ map { $_->[0] } @{$opts{points}} ];
+    $opts{'y'} = [ map { $_->[1] } @{$opts{points}} ];
+  }
+
+  if (!exists $opts{'x'} or !exists $opts{'y'})  {
+    $self->{ERRSTR} = 'no points array, or x and y arrays.'; return undef;
+  }
+
+  i_poly_aa($self->{IMG}, $opts{'x'}, $opts{'y'}, $opts{'color'});
+  return $self;
+}
+
+
+# this the multipoint bezier curve
 # this is here more for testing that actual usage since
 # this is not a good algorithm.  Usually the curve would be
 # broken into smaller segments and each done individually.
@@ -2935,6 +2957,16 @@ Polyline is used to draw multilple lines between a series of points.
 The point set can either be specified as an arrayref to an array of
 array references (where each such array represents a point).  The
 other way is to specify two array references.
+
+Polygon:
+  $img->polygon(points=>[[$x0,$y0],[$x1,$y1],[$x2,$y2]],color=>$red);
+  $img->polyline(x=>[$x0,$x1,$x2], y=>[$y0,$y1,$y2]);
+
+Polygon is used to draw a filled polygon.  Currently the polygon is
+always drawn antialiased, although that will change in the future.
+Like other antialiased drawing functions its coordinates can be
+specified with floating point values.
+
 
 You can fill a region that all has the same color using the
 flood_fill() method, for example:
