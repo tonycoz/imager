@@ -563,6 +563,7 @@ Revision history for Perl extension Imager.
 	- initialize counter for packing 4 bit data
         - don't allocate hashboxes as locals since it overflows the 
 	  stack by default in Darwin
+        - applied T1 afm patch from Claes Jacobsson
 
 =================================================================
 
