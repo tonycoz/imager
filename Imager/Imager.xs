@@ -1825,6 +1825,36 @@ i_tt_bbox(handle,point,str_sv,len_ignored, utf8)
                  PUSHs(sv_2mortal(newSViv(cords[5])));
                }
 
+void
+i_tt_has_chars(handle, text_sv, utf8)
+        Imager::Font::TT handle
+        SV  *text_sv
+        int utf8
+      PREINIT:
+        char const *text;
+        STRLEN len;
+        char *work;
+        int count;
+        int i;
+      PPCODE:
+#ifdef SvUTF8
+        if (SvUTF8(text_sv))
+          utf8 = 1;
+#endif
+        text = SvPV(text_sv, len);
+        work = mymalloc(len);
+        count = i_tt_has_chars(handle, text, len, utf8, work);
+        if (GIMME_V == G_ARRAY) {
+          EXTEND(SP, count);
+          for (i = 0; i < count; ++i) {
+            PUSHs(sv_2mortal(newSViv(work[i])));
+          }
+        }
+        else {
+          EXTEND(SP, 1);
+          PUSHs(sv_2mortal(newSVpv(work, count)));
+        }
+        myfree(work);
 
 #endif 
 
@@ -3975,8 +4005,9 @@ ft2_transform_box(font, x0, x1, x2, x3)
           PUSHs(sv_2mortal(newSViv(box[3])));
 
 void
-i_ft2_has_chars(handle, text, utf8)
+i_ft2_has_chars(handle, text_sv, utf8)
         Imager::Font::FT2 handle
+        SV  *text_sv
         int utf8
       PREINIT:
         char *text;
@@ -3986,10 +4017,10 @@ i_ft2_has_chars(handle, text, utf8)
         int i;
       PPCODE:
 #ifdef SvUTF8
-        if (SvUTF8(ST(7)))
+        if (SvUTF8(text_sv))
           utf8 = 1;
 #endif
-        text = SvPV(ST(1), len);
+        text = SvPV(text_sv, len);
         work = mymalloc(len);
         count = i_ft2_has_chars(handle, text, len, utf8, work);
         if (GIMME_V == G_ARRAY) {

@@ -787,7 +787,7 @@ Returns the number of characters that were checked.
 int i_ft2_has_chars(FT2_Fonthandle *handle, char const *text, int len, 
                     int utf8, char *out) {
   int count = 0;
-  mm_log((1, "i_ft2_check_chars(handle %p, text %p, len %d, utf8 %d)\n", 
+  mm_log((1, "i_ft2_has_chars(handle %p, text %p, len %d, utf8 %d)\n", 
 	  handle, text, len, utf8));
 
   while (len) {

@@ -68,6 +68,17 @@ sub _bounding_box {
 
 sub utf8 { 1 }
 
+# check if the font has the characters in the given string
+sub has_chars {
+  my ($self, %hsh) = @_;
+
+  unless (defined $hsh{string} && length $hsh{string}) {
+    $Imager::ERRSTR = "No string supplied to \$font->has_chars()";
+    return;
+  }
+  return Imager::i_tt_has_chars($self->{id}, $hsh{string}, $hsh{'utf8'} || 0);
+}
+
 1;
 
 __END__

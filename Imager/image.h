@@ -268,6 +268,7 @@ void i_tt_destroy( TT_Fonthandle *handle );
 undef_int i_tt_cp( TT_Fonthandle *handle,i_img *im,int xb,int yb,int channel,float points,char const* txt,int len,int smooth, int utf8);
 undef_int i_tt_text( TT_Fonthandle *handle, i_img *im, int xb, int yb, i_color *cl, float points, char const* txt, int len, int smooth, int utf8);
 undef_int i_tt_bbox( TT_Fonthandle *handle, float points,char *txt,int len,int cords[6], int utf8);
+int i_tt_has_chars(TT_Fonthandle *handle, char const *text, int len, int utf8, char *out);
 
 #endif  /* End of freetype headers */
 
