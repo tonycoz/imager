@@ -878,7 +878,6 @@ io_glue_commit_types(io_glue *ig) {
       ig->closecb = buffer_close;
     }
     break;
-  default:
   }
 }
 
