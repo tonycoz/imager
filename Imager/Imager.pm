@@ -712,7 +712,7 @@ sub read {
     $self->{ERRSTR}='format not supported'; return undef;
   }
 
-  my %iolready=(jpeg=>1, png=>1, tiff=>1, pnm=>1, raw=>1);
+  my %iolready=(jpeg=>1, png=>1, tiff=>1, pnm=>1, raw=>1, bmp=>1);
 
   if ($iolready{$input{type}}) {
     # Setup data source
@@ -752,6 +752,15 @@ sub read {
 	return undef;
       }
       $self->{DEBUG} && print "loading a png file\n";
+    }
+
+    if ( $input{type} eq 'bmp' ) {
+      $self->{IMG}=i_readbmp_wiol( $IO );
+      if ( !defined($self->{IMG}) ) {
+	$self->{ERRSTR}='unable to read bmp image';
+	return undef;
+      }
+      $self->{DEBUG} && print "loading a bmp file\n";
     }
 
     if ( $input{type} eq 'raw' ) {
@@ -859,7 +868,7 @@ sub write {
 	     fax_fine=>1, @_);
   my ($fh, $rc, $fd, $IO);
 
-  my %iolready=( tiff=>1, raw=>1, png=>1, pnm=>1 ); # this will be SO MUCH BETTER once they are all in there
+  my %iolready=( tiff=>1, raw=>1, png=>1, pnm=>1, bmp=>1, ); # this will be SO MUCH BETTER once they are all in there
 
   unless ($self->{IMG}) { $self->{ERRSTR}='empty input image'; return undef; }
 
@@ -915,6 +924,12 @@ sub write {
 	return undef;
       }
       $self->{DEBUG} && print "writing a png file\n";
+    } elsif ( $input{type} eq 'bmp' ) {
+      if ( !i_writebmp_wiol($self->{IMG}, $IO) ) {
+	$self->{ERRSTR}='unable to write bmp image';
+	return undef;
+      }
+      $self->{DEBUG} && print "writing a bmp file\n";
     }
 
     if (exists $input{'data'}) {
@@ -1852,6 +1867,7 @@ sub def_guess_type {
   return 'jpeg' if ($ext =~ m/^jpe?g$/);
   return 'pnm'  if ($ext =~ m/^p[pgb]m$/);
   return 'png'  if ($ext eq "png");
+  return 'bmp'  if ($ext eq "bmp" || $ext eq "dib");
   return 'gif'  if ($ext eq "gif");
   return ();
 }
@@ -3419,7 +3435,7 @@ the first block of the first gif comment before each image.
 Where applicable, the ("name") is the name of that field from the GIF89 
 standard.
 
-The following ares are set in a TIFF image when read, and can be set
+The following tags are set in a TIFF image when read, and can be set
 to control output:
 
 =over
@@ -3428,6 +3444,20 @@ to control output:
 
 The value of the ResolutionUnit tag.  This is ignored on writing if
 the i_aspect_only tag is non-zero.
+
+=back
+
+The following tags are set when reading a Windows BMP file is read:
+
+=over
+
+=item bmp_compression
+
+The type of compression, if any.
+
+=item bmp_important_colors
+
+The number of important colors as defined by the writer of the image.
 
 =back
 

@@ -473,6 +473,7 @@ Revision history for Perl extension Imager.
 	- glyph size issues for freetyp2
         - minor problem in handling of canon option
         - low-level bmp writing (moving it to laptop)
+        - Windows BMP reading and writing
 
 =================================================================
 

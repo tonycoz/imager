@@ -1595,6 +1595,10 @@ i_writebmp_wiol(im,ig)
         Imager::IO     ig
 
 Imager::ImgRaw
+i_readbmp_wiol(ig)
+        Imager::IO     ig
+
+Imager::ImgRaw
 i_scaleaxis(im,Value,Axis)
     Imager::ImgRaw     im
              float     Value

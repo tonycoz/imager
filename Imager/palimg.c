@@ -110,6 +110,7 @@ i_img *i_img_pal_new_low(i_img *im, int x, int y, int channels, int maxpal) {
   im->bytes = sizeof(i_palidx) * x * y;
   im->idata = mymalloc(im->bytes);
   im->channels = channels;
+  memset(im->idata, 0, im->bytes);
   im->xsize = x;
   im->ysize = y;
   
