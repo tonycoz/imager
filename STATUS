@@ -30,7 +30,7 @@ quant.c               # comments, lots of changing code
 Iolayer todo list:
 Format Read/Write
 gif:    O    O
-jpeg:   X    O
+jpeg:   X    X
 png:    X    X
 raw:    X    X
 tiff:   X    X

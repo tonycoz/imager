@@ -165,7 +165,7 @@ Imager::Font - Font handling for Imager.
 	     x     => 15,
 	     y     => 40,
 	     size  => 40,
-	     color => $red
+	     color => $red,
 	     aa    => 1);
 
   # Documentation in Imager.pm
@@ -264,7 +264,7 @@ This is a method of the Imager class but because it's described in
 here since it belongs to the font routines.  Example:
 
   $img=Imager->new();
-  $img=read(file=>"test.jpg");
+  $img->read(file=>"test.jpg");
   $img->string(font=>$t1font,
                text=>"Model-XYZ",
                x=>0,
