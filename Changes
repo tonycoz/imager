@@ -360,6 +360,8 @@ Revision history for Perl extension Imager.
 	some voronoi partitioning - it's dog slow but it's a reference implementation
 	to check if faster algorithms are doing the right thing [tm].  Added a check
 	for giflib 3.
+	- Win32 support for libpng
+	- fixed set_internal creating 2 refs to one object
 
 
 
