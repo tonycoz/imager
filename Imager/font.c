@@ -486,7 +486,15 @@ i_tt_get_instance( TT_Fonthandle *handle, int points, int smooth ) {
   
   if ( USTRCT(handle->instanceh[idx].instance) ) {
     mm_log((1,"i_tt_get_instance: freeing lru item from cache %d\n",idx));
+    /* Free cached glyphs */
+
+    for(i=0;i<256;i++)
+      if ( USTRCT(handle->instanceh[idx].glyphs[i]) )
+	TT_Done_Glyph( handle->instanceh[idx].glyphs[i] );
+
+    for(i=0;i<256;i++) USTRCT(handle->instanceh[idx].glyphs[i])=NULL;    
     TT_Done_Instance( handle->instanceh[idx].instance ); /* Free instance if needed */
+    
   }
   
   /* create and initialize instance */
