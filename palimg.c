@@ -244,7 +244,7 @@ present in the image.
 
 =cut
 */
-int i_ppix_p(i_img *im, int x, int y, i_color *val) {
+static int i_ppix_p(i_img *im, int x, int y, i_color *val) {
   i_palidx which;
   if (x < 0 || x >= im->xsize || y < 0 || y >= im->ysize)
     return -1;
@@ -268,7 +268,7 @@ Retrieve a pixel, converting from a palette index to a color.
 
 =cut
 */
-int i_gpix_p(i_img *im, int x, int y, i_color *val) {
+static int i_gpix_p(i_img *im, int x, int y, i_color *val) {
   i_palidx which;
   if (x < 0 || x >= im->xsize || y < 0 || y >= im->ysize) {
     return -1;
@@ -288,7 +288,7 @@ Retrieve a row of pixels.
 
 =cut
 */
-int i_glin_p(i_img *im, int l, int r, int y, i_color *vals) {
+static int i_glin_p(i_img *im, int l, int r, int y, i_color *vals) {
   if (y >= 0 && y < im->ysize && l < im->xsize && l >= 0) {
     int palsize = PALEXT(im)->count;
     i_color *pal = PALEXT(im)->pal;
@@ -320,7 +320,7 @@ RGB.
 
 =cut
 */
-int i_plin_p(i_img *im, int l, int r, int y, i_color *vals) {
+static int i_plin_p(i_img *im, int l, int r, int y, i_color *vals) {
   int ch, count, i;
   i_palidx *data;
   i_palidx which;
@@ -351,7 +351,7 @@ int i_plin_p(i_img *im, int l, int r, int y, i_color *vals) {
 
 =cut
 */
-int i_gsamp_p(i_img *im, int l, int r, int y, i_sample_t *samps, 
+static int i_gsamp_p(i_img *im, int l, int r, int y, i_sample_t *samps, 
               int *chans, int chan_count) {
   int ch;
   if (y >= 0 && y < im->ysize && l < im->xsize && l >= 0) {
@@ -405,7 +405,7 @@ int i_gsamp_p(i_img *im, int l, int r, int y, i_sample_t *samps,
 =cut
 */
 
-int i_gpal_p(i_img *im, int l, int r, int y, i_palidx *vals) {
+static int i_gpal_p(i_img *im, int l, int r, int y, i_palidx *vals) {
   if (y >= 0 && y < im->ysize && l < im->xsize && l >= 0) {
     i_palidx *data;
     int i, w;
@@ -429,7 +429,7 @@ int i_gpal_p(i_img *im, int l, int r, int y, i_palidx *vals) {
 =cut
 */
 
-int i_ppal_p(i_img *im, int l, int r, int y, i_palidx *vals) {
+static int i_ppal_p(i_img *im, int l, int r, int y, i_palidx *vals) {
   if (y >= 0 && y < im->ysize && l < im->xsize && l >= 0) {
     i_palidx *data;
     int i, w;
@@ -452,7 +452,7 @@ int i_ppal_p(i_img *im, int l, int r, int y, i_palidx *vals) {
 
 =cut
 */
-int i_addcolors_p(i_img *im, i_color *color, int count) {
+static int i_addcolors_p(i_img *im, i_color *color, int count) {
   if (PALEXT(im)->count + count <= PALEXT(im)->alloc) {
     int result = PALEXT(im)->count;
     int index = result;
@@ -474,7 +474,7 @@ int i_addcolors_p(i_img *im, i_color *color, int count) {
 
 =cut
 */
-int i_getcolors_p(i_img *im, int i, i_color *color, int count) {
+static int i_getcolors_p(i_img *im, int i, i_color *color, int count) {
   if (i >= 0 && i+count <= PALEXT(im)->count) {
     while (count) {
       *color++ = PALEXT(im)->pal[i++];
@@ -500,7 +500,7 @@ static int color_eq(i_img *im, i_color *c1, i_color *c2) {
 
 =cut
 */
-int i_colorcount_p(i_img *im) {
+static int i_colorcount_p(i_img *im) {
   return PALEXT(im)->count;
 }
 
@@ -509,7 +509,7 @@ int i_colorcount_p(i_img *im) {
 
 =cut
 */
-int i_maxcolors_p(i_img *im) {
+static int i_maxcolors_p(i_img *im) {
   return PALEXT(im)->alloc;
 }
 
@@ -518,7 +518,7 @@ int i_maxcolors_p(i_img *im) {
 
 =cut
 */
-int i_setcolors_p(i_img *im, int index, i_color *colors, int count) {
+static int i_setcolors_p(i_img *im, int index, i_color *colors, int count) {
   if (index >= 0 && count >= 1 && index + count < PALEXT(im)->count) {
     while (count) {
       PALEXT(im)->pal[index++] = *colors++;
@@ -535,7 +535,7 @@ int i_setcolors_p(i_img *im, int index, i_color *colors, int count) {
 
 =cut
 */
-int i_findcolor_p(i_img *im, i_color *color, i_palidx *entry) {
+static int i_findcolor_p(i_img *im, i_color *color, i_palidx *entry) {
   if (PALEXT(im)->count) {
     int i;
     /* often the same color comes up several times in a row */
