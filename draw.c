@@ -2,6 +2,8 @@
 #include "draw.h"
 #include "log.h"
 
+#include <limits.h>
+
 void
 i_mmarray_cr(i_mmarray *ar,int l) {
   int i;
@@ -106,13 +108,159 @@ i_arc(i_img *im,int x,int y,float rad,float d1,float d2,i_color *val) {
   y1=(int)(y+0.5+rad*sin(d2*PI/180.0));
 
   for(f=d1;f<=d2;f+=0.01) i_mmarray_add(&dot,(int)(x+0.5+rad*cos(f*PI/180.0)),(int)(y+0.5+rad*sin(f*PI/180.0)));
-
+  
   /*  printf("x1: %d.\ny1: %d.\n",x1,y1); */
   i_arcdraw(x, y, x1, y1, &dot);
 
   /*  dot.info(); */
   i_mmarray_render(im,&dot,val);
 }
+
+
+
+/* Temporary AA HACK */
+
+
+typedef int frac;
+static  frac float_to_frac(float x) { return (frac)(0.5+x*16.0); }
+static   int frac_sub     (frac x)  { return (x%16); }
+static   int frac_int     (frac x)  { return (x/16); }
+static float frac_to_float(float x) { return (float)x/16.0; }
+
+static 
+void
+polar_to_plane(float cx, float cy, float angle, float radius, frac *x, frac *y) {
+  *x = float_to_frac(cx+radius*cos(angle));
+  *y = float_to_frac(cy+radius*sin(angle));
+}
+
+static
+void
+order_pair(frac *x, frac *y) {
+  frac t = *x;
+  if (t>*y) {
+    *x = *y;
+    *y = t;
+  }
+}
+
+
+
+
+static
+void
+make_minmax_list(i_mmarray *dot, float x, float y, float radius) {
+  float angle = 0.0;
+  float astep = radius>0.1 ? .5/radius : 10;
+  frac cx, cy, lx, ly, sx, sy;
+
+  mm_log((1, "make_minmax_list(dot %p, x %.2f, y %.2f, radius %.2f)\n", dot, x, y, radius));
+
+  polar_to_plane(x, y, angle, radius, &sx, &sy);
+  
+  for(angle = 0.0; angle<361; angle +=astep) {
+    float alpha;
+    lx = sx; ly = sy;
+    polar_to_plane(x, y, angle, radius, &cx, &cy);
+    sx = cx; sy = cy;
+
+    if (fabs(cx-lx) > fabs(cy-ly)) {
+      int ccx, ccy;
+      if (lx>cx) { 
+	ccx = lx; lx = cx; cx = ccx; 
+	ccy = ly; ly = cy; cy = ccy; 
+      }
+
+      for(ccx=lx; ccx<=cx; ccx++) {
+	ccy = ly + ((cy-ly)*(ccx-lx))/(cx-lx);
+	i_mmarray_add(dot, ccx, ccy);
+      }
+    } else {
+      int ccx, ccy;
+
+      if (ly>cy) { 
+	ccy = ly; ly = cy; cy = ccy; 
+	ccx = lx; lx = cx; cx = ccx; 
+      }
+      
+      for(ccy=ly; ccy<=cy; ccy++) {
+	if (cy-ly) ccx = lx + ((cx-lx)*(ccy-ly))/(cy-ly); else ccx = lx;
+	i_mmarray_add(dot, ccx, ccy);
+      }
+    }
+  }
+}
+
+/* Get the number of subpixels covered */
+
+static
+int
+i_pixel_coverage(i_mmarray *dot, int x, int y) {
+  frac minx = x*16;
+  frac maxx = minx+15;
+  frac cy;
+  int cnt = 0;
+  
+  for(cy=y*16; cy<(y+1)*16; cy++) {
+    frac tmin = dot->data[cy].min;
+    frac tmax = dot->data[cy].max;
+
+    if (tmax == -1 || tmin > maxx || tmax < minx) continue;
+    
+    if (tmin < minx) tmin = minx;
+    if (tmax > maxx) tmax = maxx;
+    
+    cnt+=1+tmax-tmin;
+  }
+  return cnt;
+}
+
+void
+i_circle_aa(i_img *im, float x, float y, float rad, i_color *val) {
+  i_mmarray dot;
+  i_color temp;
+  int ly;
+
+  mm_log((1, "i_circle_aa(im %p, x %d, y %d, rad %.2f, val %p)\n", im, x, y, rad, val));
+
+  i_mmarray_cr(&dot,16*im->ysize);
+  make_minmax_list(&dot, x, y, rad);
+
+  for(ly = 0; ly<im->ysize; ly++) {
+    int ix, cy, cnt = 0, minx = INT_MAX, maxx = INT_MIN;
+
+    /* Find the left/rightmost set subpixels */
+    for(cy = 0; cy<16; cy++) {
+      frac tmin = dot.data[ly*16+cy].min;
+      frac tmax = dot.data[ly*16+cy].max;
+      if (tmax == -1) continue;
+
+      if (minx > tmin) minx = tmin;
+      if (maxx < tmax) maxx = tmax;
+    }
+
+    if (maxx == INT_MIN) continue; /* no work to be done for this row of pixels */
+
+    minx /= 16;
+    maxx /= 16;
+    for(ix=minx; ix<=maxx; ix++) {
+      int cnt = i_pixel_coverage(&dot, ix, ly);
+      if (cnt>255) cnt = 255;
+      if (cnt) { /* should never be true */
+	int ch;
+	float ratio = (float)cnt/255.0;
+	i_gpix(im, ix, ly, &temp);
+	for(ch=0;ch<im->channels; ch++) temp.channel[ch] = (unsigned char)((float)val->channel[ch]*ratio + (float)temp.channel[ch]*(1.0-ratio));
+	i_ppix(im, ix, ly, &temp);
+      }
+    }
+  }
+}
+
+
+
+
+
 
 void
 i_box(i_img *im,int x1,int y1,int x2,int y2,i_color *val) {
