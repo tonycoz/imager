@@ -79,6 +79,8 @@ static void translate_addi(i_quantize *, i_img *, i_palidx *);
 */
 i_palidx *quant_translate(i_quantize *quant, i_img *img) {
   i_palidx *result;
+  int bytes;
+
   mm_log((1, "quant_translate(quant %p, img %p)\n", quant, img));
 
   /* there must be at least one color in the paletted (though even that
@@ -88,7 +90,12 @@ i_palidx *quant_translate(i_quantize *quant, i_img *img) {
     return NULL;
   }
 
-  result = mymalloc(img->xsize * img->ysize);
+  bytes = img->xsize * img->ysize;
+  if (bytes / img->ysize != img->xsize) {
+    i_push_error(0, "integer overflow calculating memory allocation");
+    return NULL;
+  }
+  result = mymalloc(bytes);
 
   switch (quant->translate) {
   case pt_closest:
@@ -108,162 +115,6 @@ i_palidx *quant_translate(i_quantize *quant, i_img *img) {
   
   return result;
 }
-
-#ifdef HAVE_LIBGIF_THIS_NOT_USED
-
-#include "gif_lib.h"
-
-#define GET_RGB(im, x, y, ri, gi, bi, col) \
-        i_gpix((im),(x),(y),&(col)); (ri)=(col).rgb.r; \
-        if((im)->channels==3) { (bi)=(col).rgb.b; (gi)=(col).rgb.g; }
-
-static int 
-quant_replicate(i_img *im, i_palidx *output, i_quantize *quant);
-
-
-/* Use the gif_lib quantization functions to quantize the image */
-static void translate_giflib(i_quantize *quant, i_img *img, i_palidx *out) {
-  int x,y,ColorMapSize,colours_in;
-  unsigned long Size;
-  int i;
-
-  GifByteType *RedBuffer = NULL, *GreenBuffer = NULL, *BlueBuffer = NULL;
-  GifByteType *RedP, *GreenP, *BlueP;
-  ColorMapObject *OutputColorMap = NULL;
-  
-  i_color col;
-
-  mm_log((1,"translate_giflib(quant %p, img %p, out %p)\n", quant, img, out));
-  
-  /*if (!(im->channels==1 || im->channels==3)) { fprintf(stderr,"Unable to write gif, improper colorspace.\n"); exit(3); }*/
-  
-  ColorMapSize = quant->mc_size;
-  
-  Size = ((long) img->xsize) * img->ysize * sizeof(GifByteType);
-  
-  
-  if ((OutputColorMap = MakeMapObject(ColorMapSize, NULL)) == NULL)
-    m_fatal(0,"Failed to allocate memory for Output colormap.");
-  /*  if ((OutputBuffer = (GifByteType *) mymalloc(im->xsize * im->ysize * sizeof(GifByteType))) == NULL)
-      m_fatal(0,"Failed to allocate memory for output buffer.");*/
-  
-  /* ******************************************************* */
-  /* count the number of colours in the image */
-  colours_in=i_count_colors(img, OutputColorMap->ColorCount);
-  
-  if(colours_in != -1) {                /* less then the number wanted */
-                                        /* so we copy them over as-is */
-    mm_log((2,"image has %d colours, which fits in %d.  Copying\n",
-                    colours_in,ColorMapSize));
-    quant_replicate(img, out, quant);
-    /* saves the colors, so don't fall through */
-    return;
-  } else {
-
-    mm_log((2,"image has %d colours, more then %d.  Quantizing\n",colours_in,ColorMapSize));
-
-    if (img->channels >= 3) {
-      if ((RedBuffer   = (GifByteType *) mymalloc((unsigned int) Size)) == NULL) {
-        m_fatal(0,"Failed to allocate memory required, aborted.");
-        return;
-      }
-      if ((GreenBuffer = (GifByteType *) mymalloc((unsigned int) Size)) == NULL) {
-        m_fatal(0,"Failed to allocate memory required, aborted.");
-        myfree(RedBuffer);
-        return;
-      }
-    
-      if ((BlueBuffer  = (GifByteType *) mymalloc((unsigned int) Size)) == NULL) {
-        m_fatal(0,"Failed to allocate memory required, aborted.");
-        myfree(RedBuffer);
-        myfree(GreenBuffer);
-        return;
-      }
-    
-      RedP = RedBuffer;
-      GreenP = GreenBuffer;
-      BlueP = BlueBuffer;
-    
-      for (y=0; y< img->ysize; y++) for (x=0; x < img->xsize; x++) {
-        i_gpix(img,x,y,&col);
-        *RedP++ = col.rgb.r;
-        *GreenP++ = col.rgb.g;
-        *BlueP++ = col.rgb.b;
-      }
-    
-    } else {
-
-      if ((RedBuffer = (GifByteType *) mymalloc((unsigned int) Size))==NULL) {
-        m_fatal(0,"Failed to allocate memory required, aborted.");
-        return;
-      }
-
-      GreenBuffer=BlueBuffer=RedBuffer;
-      RedP = RedBuffer;
-      for (y=0; y< img->ysize; y++) for (x=0; x < img->xsize; x++) {
-        i_gpix(img,x,y,&col);
-        *RedP++ = col.rgb.r;
-      }
-    }
-
-    if (QuantizeBuffer(img->xsize, img->ysize, &ColorMapSize, RedBuffer, GreenBuffer, BlueBuffer,
-		     out, OutputColorMap->Colors) == GIF_ERROR) {
-        mm_log((1,"Error in QuantizeBuffer, unable to write image.\n"));
-    }
-  }
-
-  myfree(RedBuffer);
-  if (img->channels == 3) { myfree(GreenBuffer); myfree(BlueBuffer); }
-
-  /* copy over the color map */
-  for (i = 0; i < ColorMapSize; ++i) {
-    quant->mc_colors[i].rgb.r = OutputColorMap->Colors[i].Red;
-    quant->mc_colors[i].rgb.g = OutputColorMap->Colors[i].Green;
-    quant->mc_colors[i].rgb.b = OutputColorMap->Colors[i].Blue;
-  }
-  quant->mc_count = ColorMapSize;
-}
-
-static
-int
-quant_replicate(i_img *im, GifByteType *output, i_quantize *quant) {
-  int x, y, alloced, r, g=0, b=0, idx ;
-  i_color col;
-  
-  alloced=0;
-  for(y=0; y<im->ysize; y++) {
-    for(x=0; x<im->xsize; x++) {
-      
-      GET_RGB(im, x,y, r,g,b, col);       
-      
-      for(idx=0; idx<alloced; idx++) {   /* linear search for an index */
-	if(quant->mc_colors[idx].rgb.r==r &&
-	   quant->mc_colors[idx].rgb.g==g &&
-	   quant->mc_colors[idx].rgb.b==b) {
-	  break;
-	}
-      }             
-      
-      if(idx >= alloced) {                /* if we haven't already, we */
-	idx=alloced++;                  /* add the colour to the map */
-	if(quant->mc_size < alloced) {
-	  mm_log((1,"Tried to allocate more then %d colours.\n", 
-		  quant->mc_size));
-	  return 0;
-	}
-	quant->mc_colors[idx].rgb.r=r;
-	quant->mc_colors[idx].rgb.g=g;
-	quant->mc_colors[idx].rgb.b=b;                
-      }
-      *output=idx;                        /* fill output buffer */
-      output++;                           /* with colour indexes */
-    }
-  }
-  quant->mc_count = alloced;
-  return 1;
-}
-
-#endif
 
 static void translate_closest(i_quantize *quant, i_img *img, i_palidx *out) {
   quant->perturb = 0;

@@ -925,6 +925,7 @@ Revision history for Perl extension Imager.
 - updated home page URLs throughout the .pods
 - added information on reporting bugs to the SUPPORT section of Imager.pm
 - regops.perl now sorts the dumped data structure to produce minimal diffs
+- quant.c now checks for integer overflow allocating its image data
 
 =================================================================
 
