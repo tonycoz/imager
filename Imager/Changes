@@ -470,16 +470,16 @@ Revision history for Perl extension Imager.
         - some utf8 support for freetype2
         - some vertical layout support for freetype2
         - named parameters for specifying colors, with quite a few options.
-	- glyph size issues for freetyp2
+        - glyph size issues for freetyp2
         - minor problem in handling of canon option
         - low-level bmp writing (moving it to laptop)
         - Windows BMP reading and writing
         - added OO interfaces for the mosaic, bumpmap, postlevels and
           watermark filters
         - added t/t61filters.t to test the filters
-	- fixed some problems in jpeg handling from the exp_represent merge
+        - fixed some problems in jpeg handling from the exp_represent merge
         - fixed buffer flushing for wiol jpeg code
-	- added some tests that will hopefully catch it in the future
+        - added some tests that will hopefully catch it in the future
         - added the OO interfaces to the mosaic, bumpmap, postlevels and
           watermark filters, and documented them
         - fixed a sample size conversion problem in i_gpixf_d() etc.
@@ -520,12 +520,15 @@ Revision history for Perl extension Imager.
         - adjust ascender/descender values for FT1.x to avoid losing
           descenders (specifically the bottom of "g" in ImUgly.ttf or
           arial.ttf at 14pixels)
-        - Added tga.c to read targa images
-        - Added i_bumpmap_complex to do more accurate bumpmapping
+        - added tga.c to read targa images
+        - added i_bumpmap_complex to do more accurate bumpmapping
         - added an image type with doubles as samples
         - change i_copy() and i_sametype() to handle double/sample images
         - added basic POD to trans2.c
         - transform2 now uses the error interface
+        - myrealloc() is implemented for malloc debug mode
+        - now buffer chains are freed when destructor for Imager::IOi
+          is called
 
 =================================================================
 
