@@ -2475,45 +2475,7 @@ This example creates a completely black image of width 400 and
 height 300 and 4 channels.
 
 
-
-
-
-
-When writing to a tiff image file you can also specify the 'class'
-parameter, which can currently take a single value, "fax".  If class
-is set to fax then a tiff image which should be suitable for faxing
-will be written.  For the best results start with a grayscale image.
-By default the image is written at fine resolution you can override
-this by setting the "fax_fine" parameter to 0.
-
-If you are reading from a gif image file, you can supply a 'colors'
-parameter which must be a reference to a scalar.  The referenced
-scalar will receive an array reference which contains the colors, each
-represented as an Imager::Color object.
-
-If you already have an open file handle, for example a socket or a
-pipe, you can specify the 'fd' parameter instead of supplying a
-filename.  Please be aware that you need to use fileno() to retrieve
-the file descriptor for the file:
-
-  $img->read(fd=>fileno(FILE), type=>'gif') or die $img->errstr;
-
-For writing using the 'fd' option you will probably want to set $| for
-that descriptor, since the writes to the file descriptor bypass Perl's
-(or the C libraries) buffering.  Setting $| should avoid out of order
-output.  For example a common idiom when writing a CGI script is:
-
-  # the $| _must_ come before you send the content-type
-  $| = 1;
-  print "Content-Type: image/jpeg\n\n";
-  $img->write(fd=>fileno(STDOUT), type=>'jpeg') or die $img->errstr;
-
-
-
 =head1 BUGS
-
-box, arc, do not support antialiasing yet.  Arc, is only filled as of
-yet.
 
 When saving Gif images the program does NOT try to shave of extra
 colors if it is possible.  If you specify 128 colors and there are
@@ -2521,8 +2483,8 @@ only 2 colors used - it will have a 128 colortable anyway.
 
 =head1 AUTHOR
 
-Arnar M. Hrafnkelsson, addi@umich.edu, and recently lots of assistance
-from Tony Cook.  See the README for a complete list.
+Arnar M. Hrafnkelsson (addi@umich.edu) and Tony Cook (XXX) See the
+README for a complete list.
 
 =head1 SEE ALSO
 

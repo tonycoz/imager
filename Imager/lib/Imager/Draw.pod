@@ -154,4 +154,9 @@ flood_fill() method, for example:
 will fill all regions the same color connected to the point (50, 50).
 
 
+=head1 BUGS
+
+box, arc, do not support antialiasing yet.  Arc, is only filled as of
+yet.  Default color is not unified yet.
+
 =back
