@@ -942,6 +942,10 @@ Revision history for Perl extension Imager.
   from Imager.xs
 - giflib 4.1.3 still doesn't have all the bugs fixed, update the notes
   in README and in the buggy_giflib.txt file that t105gif.t produces
+- make the inclusion of NO_META dependent on the version of EU::MM.
+  I was going to include a META.yml but EU::MM's generation is too 
+  simplistic (and misses the leading document header too).  For now
+  I'll leave it out.
 
 =================================================================
 

@@ -75,12 +75,14 @@ if (defined $Config{'d_dlsymun'}) { $OSDEF  .= ' -DDLSYMUN'; }
        'INC'          => "$DFLAGS $F_INC",
        'OBJECT'       => join(' ', @objs, $F_OBJECT),
        clean          => { FILES=>'testout' },
-       'NO_META'      => 1,
       );
 
-if ($] ge '5.005') {
-  $opts{AUTHOR} = 'Arnar M. Hrafnkelsson, addi@umich.edu';
+if ($ExtUtils::MakeMaker::VERSION > 6.06) {
+  $opts{AUTHOR} = 'Tony Cook <tony@imager.perl.org>, Arnar M. Hrafnkelsson';
   $opts{ABSTRACT} = 'Perl extension for Generating 24 bit Images';
+}
+if ($ExtUtils::MakeMaker::VERSION > 6.10) {
+  $opts{NO_META} = 1;
 }
 
 if ($VERBOSE) { print Dumper(\%opts); }
