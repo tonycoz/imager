@@ -34,7 +34,7 @@ Reads and writes JPEG images
 #include <errno.h>
 
 #define JPEG_APP13       0xED    /* APP13 marker code */
-#define JPGS 1024
+#define JPGS 16384
 
 unsigned char fake_eoi[]={(JOCTET) 0xFF,(JOCTET) JPEG_EOI};
 
