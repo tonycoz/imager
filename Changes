@@ -1020,7 +1020,7 @@ Revision history for Perl extension Imager.
   http://rt.cpan.org/NoAuth/Bug.html?id=11431
 - added reference list of crop() parameters.
   http://rt.cpan.org/NoAuth/Bug.html?id=11430
-- reading an image with an idstring of 128 or more bytes would result 
+- reading a tga image with an idstring of 128 or more bytes would result 
   in an allocation error, if the platform char type was signed
 - tests now check that tga tags are set
 
