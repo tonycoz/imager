@@ -10,9 +10,19 @@ not commitments.
 - audit pnm.c (done)
 - audit tga.c (done)
 - audit rgb.c and add tests
-- capture TIFF read warnings (i_warnings tag?) (done)
-- add Imager::Cookbook with at least 5 recipes
+- add META.yml (bypass EU::MM's limited mechanism)
 - implement i_incomplete for bmp files
+- check if freetype 2 is faster/slower than freetype 1 with Imager's glyph
+  caching.  If FT1 is faster, add caching as a TODO for FT2.
+- add sample CGI that handles an uploaded image
+- examples for fountain filter in Imager::Filters
+- allow Imager::Fountain to take color descriptions (eg. blue, FF000)
+  instead of color objects for c0 and c1.
+- support newer GIMP gradient files with the Name line
+- provide access to right-side bearing information from the bounding box
+  function
+- capture TIFF read warnings (i_warnings tag?) (done)
+- add Imager::Cookbook with at least 5 recipes (done)
 - store floating point tags in an appropriate precision (done)
 - allow image creation to fail on malloc() failure for the image data
   rather than aborting.  The current behaviour could be a denial of
@@ -20,19 +30,12 @@ not commitments.
   over commitment works on Linux (done but reverted)
 - eliminate unused variable warning (especially the RETVAL ones in Imager.xs)
   (done)
-- add META.yml (bypass EU::MM's limited mechanism)
-- check if freetype 2 is faster/slower than freetype 1 with Imager's glyph
-  caching.  If FT1 is faster, add caching as a TODO for FT2.
 - handle probing for libraries better (use pkg-config or I<library>-config
   where possible (freetype2 and libpng)) (done)
 - add concept index to Imager.pm pod (done, still working it)
 - replace testimg/penguin-base.ppm with a smaller image (done)
 - add a sample CGI HTML and image generation scripts that work together,
   with appropriate security management (done)
-- add sample CGI that handles an uploaded image
-- examples for fountain filter in Imager::Filters
-- provide access to right-side bearing information from the bounding box
-  function
 
 0.46: (june 2005)
 - allow limits to be set on the size of an image read from a file.  This is
