@@ -36,6 +36,20 @@ void* myrealloc(void *p, size_t newsize);
 #endif /* IMAGER_MALLOC_DEBUG */
 
 
+
+typedef struct i_mempool {
+  void **p;
+  unsigned int alloc;
+  unsigned int used;
+} i_mempool;
+
+void  i_mempool_init(i_mempool *mp);
+void  i_mempool_extend(i_mempool *mp);
+void *i_mempool_alloc(i_mempool *mp, size_t size);
+void  i_mempool_destroy(i_mempool *mp);
+
+
+
 #ifdef _MSC_VER
 #undef min
 #undef max
