@@ -1009,6 +1009,8 @@ Revision history for Perl extension Imager.
 - explicitly document there are no PNG specific tags.
 - more examples in Imager::Draw
 - minor cleanup of Imager::Fill
+- eliminate unused variables and static functions
+- simplify some XS code by adding another typemap entry
 
 =================================================================
 

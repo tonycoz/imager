@@ -72,8 +72,6 @@ i_writepng_wiol(i_img *im, io_glue *ig) {
   volatile int cspace,channels;
   double xres, yres;
   int aspect_only, have_res;
-  double offx, offy;
-  char offunit[20] = "pixel";
 
   io_glue_commit_types(ig);
   mm_log((1,"i_writepng(im %p ,ig %p)\n", im, ig));

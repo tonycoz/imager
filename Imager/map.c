@@ -38,7 +38,7 @@ void
 i_map(i_img *im, unsigned char (*maps)[256], unsigned int mask) {
   i_color *vals;
   int x, y;
-  int mapno, i, ch;
+  int i, ch;
   int minset = -1, maxset;
 
   mm_log((1,"i_map(im %p, maps %p, chmask %u)\n", im, maps, mask));

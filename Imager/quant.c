@@ -66,9 +66,6 @@ quant_makemap(i_quantize *quant, i_img **imgs, int count) {
   }
 }
 
-#ifdef HAVE_LIBGIF
-static void translate_giflib(i_quantize *, i_img *, i_palidx *);
-#endif
 static void translate_closest(i_quantize *, i_img *, i_palidx *);
 static void translate_errdiff(i_quantize *, i_img *, i_palidx *);
 static void translate_addi(i_quantize *, i_img *, i_palidx *);
@@ -179,9 +176,11 @@ frand(void) {
   return rand()/(RAND_MAX+1.0);
 }
 
+#ifdef NOTEF
 static
 int
 eucl_d(cvec* cv,i_color *cl) { return PWR2(cv->r-cl->channel[0])+PWR2(cv->g-cl->channel[1])+PWR2(cv->b-cl->channel[2]); }
+#endif
 
 static
 int
@@ -747,7 +746,7 @@ static int distcomp(void const *a, void const *b) {
    welcome.
  */
 static void hbsetup(i_quantize *quant, hashbox *hb) {
-  long *dists, mind, maxd, cd;
+  long *dists, mind, maxd;
   int cr, cb, cg, hbnum, i;
   i_color cenc;
 #ifdef HB_SORT
@@ -1157,8 +1156,6 @@ translate_errdiff(i_quantize *quant, i_img *img, i_palidx *out) {
   int errw;
   int difftotal;
   int x, y, dx, dy;
-  int minr, maxr, ming, maxg, minb, maxb, cr, cg, cb;
-  i_color find;
   int bst_idx;
   CF_VARS;
 

@@ -115,12 +115,6 @@ mymalloc_file_line(size_t size, char* file, int line) {
   return buf;
 }
 
-
-
-
-
-
-
 void*
 myrealloc_file_line(void *ptr, size_t newsize, char* file, int line) {
   char *buf;
@@ -154,9 +148,6 @@ myrealloc_file_line(void *ptr, size_t newsize, char* file, int line) {
   mm_log((1,"realloc_file_line: slot <%d> %d bytes allocated at %p for %s (%d)\n", i, newsize, buf, file, line));
   return buf;
 }
-
-
-
 
 static
 void
@@ -228,6 +219,11 @@ malloc_state() {
 void*
 mymalloc(int size) {
   void *buf;
+
+  if (size < 0) {
+    fprintf(stderr, "Attempt to allocate size %d\n", size);
+    exit(3);
+  }
 
   if ( (buf = malloc(size)) == NULL ) {
     mm_log((1, "mymalloc: unable to malloc %d\n", size));

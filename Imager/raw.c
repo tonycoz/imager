@@ -119,8 +119,6 @@ i_writeraw_wiol(i_img* im, io_glue *ig) {
       return(0);
     }
   } else {
-    int y;
-    
     if (im->type == i_direct_type) {
       /* just save it as 8-bits, maybe support saving higher bit count
          raw images later */

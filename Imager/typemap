@@ -10,6 +10,7 @@ const char *		T_PV
 float			T_FLOAT
 float*			T_ARRAY
 undef_int		T_IV_U
+undef_neg_int           T_IV_NEGU
 HASH			T_HVREF
 utf8_str		T_UTF8_STR
 #############################################################################
@@ -29,6 +30,9 @@ T_AVREF
 OUTPUT
 T_IV_U
 	if ($var == 0) $arg=&PL_sv_undef;
+	else sv_setiv($arg, (IV)$var);
+T_IV_NEGU
+	if ($var < 0) $arg=&PL_sv_undef;
 	else sv_setiv($arg, (IV)$var);
 T_PTR_NULL
 	sv_setiv($arg, (IV)$var);
