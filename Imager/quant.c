@@ -154,14 +154,14 @@ static void translate_giflib(i_quantize *quant, i_img *img, i_palidx *out) {
       }
       if ((GreenBuffer = (GifByteType *) mymalloc((unsigned int) Size)) == NULL) {
         m_fatal(0,"Failed to allocate memory required, aborted.");
-        free(RedBuffer);
+        myfree(RedBuffer);
         return;
       }
     
       if ((BlueBuffer  = (GifByteType *) mymalloc((unsigned int) Size)) == NULL) {
         m_fatal(0,"Failed to allocate memory required, aborted.");
-        free(RedBuffer);
-        free(GreenBuffer);
+        myfree(RedBuffer);
+        myfree(GreenBuffer);
         return;
       }
     
@@ -197,8 +197,8 @@ static void translate_giflib(i_quantize *quant, i_img *img, i_palidx *out) {
     }
   }
 
-  free(RedBuffer);
-  if (img->channels == 3) { free(GreenBuffer); free(BlueBuffer); }
+  myfree(RedBuffer);
+  if (img->channels == 3) { myfree(GreenBuffer); myfree(BlueBuffer); }
 
   /* copy over the color map */
   for (i = 0; i < ColorMapSize; ++i) {
@@ -626,7 +626,7 @@ static void hbsetup(i_quantize *quant, hashbox *hb) {
 #endif
       } 
     } 
-  } 
+  }
 #ifdef HB_SORT
   myfree(indices); 
 #endif
