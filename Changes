@@ -970,6 +970,8 @@ Revision history for Perl extension Imager.
 - we were undefing the wrong macro (used as an include guard) when
   building the error code translation function for freetype 2.  This
   meant most errors came out as numbers.
+- add a note to the README on how to get font suitcases and dfont files
+  working on OS X.
 
 =================================================================
 

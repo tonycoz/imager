@@ -140,6 +140,33 @@ To see which directories should be in the include path, try:
 
   freetype-config --cflags
 
+
+Macintosh dfont and suitcase font support
+-----------------------------------------
+
+Through Freetype 2.1, Imager can use Macintosh DFON (.dfont) fonts and
+suitcase font files.
+
+If you want to be able to use more than just the first face in the
+font file though, you will need to configure freetype2 with the
+--with-old-mac-fonts option:
+
+  ./configure --with-old-mac-fonts
+
+You can use the index option to get to the other font faces in the
+file:
+
+  # get the second face from $file
+  my $font = Imager::Font->new(file=>$file, index=>1)
+    or die Imager->errstr;
+
+If you're using a suitcase font, you will also need to force the use
+of freetype 2 with the type argument:
+
+  my $font = Imager::Font->new(file=>$suitcase, type=>'ft2', index=>$index)
+    or die Imager->errstr;
+
+
 ========================
 3. External dependencies
 ========================
