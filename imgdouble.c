@@ -49,7 +49,7 @@ static i_img IIM_base_double_direct =
 {
   0, /* channels set */
   0, 0, 0, /* xsize, ysize, bytes */
-  ~0, /* ch_mask */
+  ~0U, /* ch_mask */
   i_double_bits, /* bits */
   i_direct_type, /* type */
   0, /* virtual */
