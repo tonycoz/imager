@@ -226,6 +226,39 @@ BEGIN {
                         defaults => { },
                         callsub => sub { my %hsh = @_; i_gaussian($hsh{image}, $hsh{stddev}); },
                        };
+  $filters{mosaic} =
+    {
+     callseq => [ qw(image size) ],
+     defaults => { size => 20 },
+     callsub => sub { my %hsh = @_; i_mosaic($hsh{image}, $hsh{size}) },
+    };
+  $filters{bumpmap} =
+    {
+     callseq => [ qw(image bump elevation lightx lighty st) ],
+     defaults => { elevation=>0, st=> 2 },
+     callsub => sub { 
+       my %hsh = @_;
+       i_bumpmap($hsh{image}, $hsh{bump}{IMG}, $hsh{elevation},
+                 $hsh{lightx}, $hsh{lighty}, $hsh{st});
+     },
+    };
+  $filters{postlevels} =
+    {
+     callseq  => [ qw(image levels) ],
+     defaults => { levels => 10 },
+     callsub  => sub { my %hsh = @_; i_postlevels($hsh{image}, $hsh{levels}); },
+    };
+  $filters{watermark} =
+    {
+     callseq  => [ qw(image wmark tx ty pixdiff) ],
+     defaults => { pixdiff=>10, tx=>0, ty=>0 },
+     callsub  => 
+     sub { 
+       my %hsh = @_; 
+       i_watermark($hsh{image}, $hsh{wmark}{IMG}, $hsh{tx}, $hsh{ty}, 
+                   $hsh{pixdiff}); 
+     },
+    };
 
   $FORMATGUESS=\&def_guess_type;
 }
@@ -2797,14 +2830,17 @@ source.
 
   Filter          Arguments
   autolevels      lsat(0.1) usat(0.1) skew(0)
+  bumpmap         bump elevation(0) lightx lighty st(2)
   contrast        intensity
   conv            coef
   gaussian        stddev
   gradgen         xo yo colors dist
   hardinvert
   noise           amount(3) subtype(0)
+  postlevels      levels(10)
   radnoise        xo(100) yo(100) ascale(17.0) rscale(0.02)
   turbnoise       xo(0.0) yo(0.0) scale(10.0)
+  watermark       wmark pixdiff(10) tx(0) ty(0)
 
 The default values are in parenthesis.  All parameters must have some
 value but if a parameter has a default value it may be omitted when
@@ -2820,6 +2856,12 @@ scales the value of each channel so that the values in the image will
 cover the whole possible range for the channel.  I<lsat> and I<usat>
 truncate the range by the specified fraction at the top and bottom of
 the range respectivly..
+
+=item bumpmap
+
+uses the channel I<elevation> image I<bump> as a bumpmap on your
+image, with the light at (I<lightx>, I<lightty>), with a shadow length
+of I<st>.
 
 =item contrast
 
@@ -2863,15 +2905,25 @@ renders radiant Perlin turbulent noise.  The centre of the noise is at
 (I<xo>, I<yo>), I<ascale> controls the angular scale of the noise ,
 and I<rscale> the radial scale, higher numbers give more detail.
 
+=item postlevels
+
+alters the image to have only I<levels> distinct level in each
+channel.
+
 =item turbnoise
 
 renders Perlin turbulent noise.  (I<xo>, I<yo>) controls the origin of
 the noise, and I<scale> the scale of the noise, with lower numbers
 giving more detail.
 
+=item watermark
+
+applies I<wmark> as a watermark on the image with strength I<pixdiff>,
+with an origin at (I<tx>, I<ty>)
+
 =back
 
-A demonstration of the the filters can be found at:
+A demonstration of most of the filters can be found at:
 
   http://www.develop-help.com/imager/filters.html
 

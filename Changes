@@ -474,6 +474,9 @@ Revision history for Perl extension Imager.
         - minor problem in handling of canon option
         - low-level bmp writing (moving it to laptop)
         - Windows BMP reading and writing
+        - added OO interfaces for the mosaic, bumpmap, postlevels and
+          watermark filters
+        - added t/t61filters.t to test the filters
 
 =================================================================
 
