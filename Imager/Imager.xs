@@ -170,6 +170,7 @@ static struct value_name orddith_names[] =
   { "slashline", od_slashline, },
   { "\\line", od_backline, },
   { "backline", od_backline, },
+  { "tiny", od_tiny, },
   { "custom", od_custom, },
 };
 
@@ -199,7 +200,7 @@ static void handle_quant_opts(i_quantize *quant, HV *hv)
 	quant->tr_errdiff = lookup_name(errdiff_names, sizeof(errdiff_names)/sizeof(*errdiff_names), str, ed_floyd);
     }
     if (quant->transp == tr_ordered) {
-      quant->tr_orddith = od_random;
+      quant->tr_orddith = od_tiny;
       sv = hv_fetch(hv, "tr_orddith", 10, 0);
       if (sv && *sv && (str = SvPV(*sv, len)))
 	quant->tr_orddith = lookup_name(orddith_names, sizeof(orddith_names)/sizeof(*orddith_names), str, od_random);
