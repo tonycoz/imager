@@ -1436,6 +1436,7 @@ i_writegif_low(i_quantize *quant, GifFileType *gf, i_img **imgs, int count,
       myfree(result);
       return 0;
     }
+    myfree(result);
     for (imgn = 1; imgn < count; ++imgn) {
       quant->mc_count = orig_count;
       quant->mc_size = orig_size;
