@@ -110,10 +110,18 @@ crop are the edges of the area that you want in the returned image,
 where the right and bottom edges are non-inclusive.  If a parameter is
 omitted a default is used instead.
 
-  # the first two produce the same image
+  # these produce the same image
   $newimg = $img->crop(left=>50, right=>100, top=>10, bottom=>100); 
   $newimg = $img->crop(left=>50, top=>10, width=>50, height=>90);
-  $newimg = $img->crop(left=>50, right=>100); # top 
+  $newimg = $img->crop(right=>100, bottom=>100, width=>50, height=>90);
+
+  # and the following produce the same image
+  $newimg = $img->crop(left=>50, right=>100);
+  $newimg = $img->crop(left=>50, right=>100, top=>0, 
+                       bottom=>$img->getheight);
+
+  # grab the top left corner of the image
+  $newimg = $img->crop(right=>50, bottom=>50);
 
 You can also specify width and height parameters which will produce a
 new image cropped from the center of the input image, with the given
@@ -121,8 +129,21 @@ width and height.
 
   $newimg = $img->crop(width=>50, height=>50);
 
-The width and height parameters take precedence over the left/right
-and top/bottom parameters respectively.
+If you supply C<left>, C<width> and C<right> values, the C<right>
+value will be ignored.  If you supply C<top>, C<height> and C<bottom>
+values, the C<bottom> value will be ignored.
+
+The edges of the cropped area default to the edges of the source
+image, for example:
+
+  # a vertical bar from the middle from top to bottom
+  $newimg = $img->crop(width=>50);
+
+  # the right half
+  $newimg = $img->crop(left=>$img->getwidth() / 2);
+
+If the resulting image would have zero width or height then crop()
+returns false and $img->errstr is an appropriate error message.
 
 =item rotate
 

@@ -20,6 +20,14 @@ sub test_img {
   $img;
 }
 
+sub test_oo_img {
+  my $raw = test_img();
+  my $img = Imager->new;
+  $img->{IMG} = $raw;
+
+  $img;
+}
+
 sub skipn {
   my ($testnum, $count, $why) = @_;
   
