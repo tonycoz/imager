@@ -94,6 +94,8 @@ Format specific issues:
 
 - bmp, pcx and targa image formats
 
+- aalib support
+
 Documentation:
 - Add to the documentation
 - Write a tutorial?
