@@ -957,6 +957,7 @@ Revision history for Perl extension Imager.
   font.c on FreeBSD.
 - finish off a sentence in the "Producing an image from a CGI script"
   example in Imager::Files
+- method index didn't include errstr()
 
 =================================================================
 
