@@ -4,6 +4,7 @@ use Cwd;
 use Config;
 
 $lext=$Config{'so'};   # Get extensions of libraries
+$aext=$Config{'_a'};
 
 #
 # IM_INCPATH      colon seperated list of paths to extra include paths
@@ -229,6 +230,10 @@ sub init {
   @definc{'/usr/include'}=();
   @incs=(qw(/usr/include /usr/local/include /usr/include/freetype /usr/local/include/freetype), split /:/, $INCPATH );
   @libs=(split(/ /, $Config{'libpth'}), split(/:/, $LIBPATH) );
+  if ($^O =~ /win32/i && $Config{cc} =~ /\bcl\b/i) {
+    push(@incs, split /;/, $ENV{INCLUDE}) if exists $ENV{INCLUDE};
+    push(@libs, split /;/, $ENV{LIB}) if exists $ENV{LIB};
+  }
 
   $formats{'jpeg'}={
 		    order=>'21',
@@ -258,7 +263,7 @@ sub init {
 		   order=>'22',
 		   def=>'HAVE_LIBPNG',
 		   inccheck=>sub { $_[0] eq 'png.h' },
-		   libcheck=>sub { $_[0] eq 'libpng.a' or $_[0] eq "libpng.$lext" },
+		   libcheck=>sub { $_[0] eq "libpng$aext" or $_[0] eq "libpng.$lext" },
 		   libfiles=>'-lpng -lz',
 		   objfiles=>'png.o',
 		   docs=>q{
