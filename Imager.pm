@@ -2820,7 +2820,8 @@ C<$img-E<gt>errstr()>.
 
 In cases where no image object is associated with an operation
 C<$Imager::ERRSTR> is used to report errors not directly associated
-with an image object.
+with an image object.  You can also call C<Imager->errstr> to get this
+value.
 
 The C<Imager-E<gt>new> method is described in detail in
 L<Imager::ImageTypes>.
@@ -2852,6 +2853,8 @@ crop() - L<Imager::Transformations/crop> - extract part of an image
 deltag() -  L<Imager::ImageTypes> - delete image tags
 
 difference() - L<Imager::Filters/"Image Difference">
+
+errstr() - L<Imager/"Basic Overview">
 
 filter() - L<Imager::Filters>
 
