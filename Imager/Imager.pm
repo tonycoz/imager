@@ -2962,13 +2962,14 @@ parameter they will determine the width or height respectively.  If
 both are given the one resulting in a larger image is used.  example:
 C<$img> is 700 pixels wide and 500 pixels tall.
 
-  $img->scale(xpixels=>400); # 400x285
-  $img->scale(ypixels=>400); # 560x400
+  $newimg = $img->scale(xpixels=>400); # 400x285
+  $newimg = $img->scale(ypixels=>400); # 560x400
 
-  $img->scale(xpixels=>400,ypixels=>400); # 560x400
-  $img->scale(xpixels=>400,ypixels=>400,type=>min); # 400x285
+  $newimg = $img->scale(xpixels=>400,ypixels=>400); # 560x400
+  $newimg = $img->scale(xpixels=>400,ypixels=>400,type=>min); # 400x285
 
-  $img->scale(scalefactor=>0.25); 175x125 $img->scale(); # 350x250
+  $newimg = $img->scale(scalefactor=>0.25); 175x125 
+  $newimg = $img->scale(); # 350x250
 
 if you want to create low quality previews of images you can pass
 C<qtype=E<gt>'preview'> to scale and it will use nearest neighbor
