@@ -105,7 +105,9 @@ if (!i_has_format("gif")) {
       print test_readgif_cb(1024) ? "ok 10\n" : "not ok 10\n";
     }
     else {
-      print "ok $_ # skip giflib3 doesn't support callbacks\n" for (7..10);
+      for (7..10) {
+	print "ok $_ # skip giflib3 doesn't support callbacks\n";
+      }
     }
     open FH, ">testout/t105_mc.gif" or die "Cannot open testout/t105_mc.gif";
     binmode FH;

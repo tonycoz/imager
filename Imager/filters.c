@@ -932,9 +932,6 @@ i_nearest_color(i_img *im, int num, int *xo, int *yo, i_color *oval, int dmeasur
     c2 = 1.0/(float)(cmatch[midx]);
     c1 = 1.0-c2;
     
-    //    printf("pixel [%d %d %d] c1+c2 = %f\n", val.channel[0], val.channel[1], val.channel[2], c1+c2);
-    //    printf("cmatch = %d, c1 = %f, c2 = %f tval=[%f %f %f]\n", cmatch[midx], c1, c2, tval[midx*im->channels], tval[midx*im->channels+1], tval[midx*im->channels+2] );
-
     for(ch = 0; ch<im->channels; ch++) 
       tval[midx*im->channels + ch] = c1*tval[midx*im->channels + ch] + c2 * (float) val.channel[ch];
   

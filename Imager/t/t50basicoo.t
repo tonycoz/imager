@@ -14,7 +14,7 @@ $loaded = 1;
 
 print "ok 1\n";
 
-Imager::init(log=>"testout/t50basicoo.log");
+Imager::init("log"=>"testout/t50basicoo.log");
 
 %hsh=%Imager::formats;
 
