@@ -649,9 +649,10 @@ i_copy(i_img *im, i_img *src) {
 
 
 /*
-=item i_rubthru(im, src, tx, ty)
+=item i_rubthru(im, src, tx, ty, src_minx, src_miny, src_maxx, src_maxy )
 
-Takes the image I<src> and applies it at an original (I<tx>,I<ty>) in I<im>.
+Takes the sub image I<src[src_minx, src_maxx)[src_miny, src_maxy)> and
+overlays it at (I<tx>,I<ty>) on the image object.
 
 The alpha channel of each pixel in I<src> is used to control how much
 the existing colour in I<im> is replaced, if it is 255 then the colour
@@ -662,14 +663,17 @@ unmodified.
 */
 
 int
-i_rubthru(i_img *im,i_img *src,int tx,int ty) {
+i_rubthru(i_img *im, i_img *src, int tx, int ty, int src_minx, int src_miny,
+	  int src_maxx, int src_maxy) {
   int x, y, ttx, tty;
   int chancount;
   int chans[3];
   int alphachan;
   int ch;
 
-  mm_log((1,"i_rubthru(im %p, src %p, tx %d, ty %d)\n", im, src, tx, ty));
+  mm_log((1,"i_rubthru(im %p, src %p, tx %d, ty %d, src_minx %d, "
+	  "src_miny %d, src_maxx %d, src_maxy %d)\n",
+	  im, src, tx, ty, src_minx, src_miny, src_maxx, src_maxy));
   i_clear_error();
 
   if (im->channels == 3 && src->channels == 4) {
@@ -697,11 +701,10 @@ i_rubthru(i_img *im,i_img *src,int tx,int ty) {
        changed in a similar fashion - TC */
     int alpha;
     i_color pv, orig, dest;
-    ttx = tx;
-    for(x=0; x<src->xsize; x++) {
-      tty=ty;
-      for(y=0;y<src->ysize;y++) {
-        /* fprintf(stderr,"reading (%d,%d) writing (%d,%d).\n",x,y,ttx,tty); */
+    tty = ty;
+    for(y = src_miny; y < src_maxy; y++) {
+      ttx = tx;
+      for(x = src_minx; x < src_maxx; x++) {
         i_gpix(src, x,   y,   &pv);
         i_gpix(im,  ttx, tty, &orig);
         alpha = pv.channel[alphachan];
@@ -710,31 +713,30 @@ i_rubthru(i_img *im,i_img *src,int tx,int ty) {
                               + (255 - alpha) * orig.channel[ch])/255;
         }
         i_ppix(im, ttx, tty, &dest);
-        tty++;
+	ttx++;
       }
-      ttx++;
+      tty++;
     }
   }
   else {
     double alpha;
     i_fcolor pv, orig, dest;
 
-    ttx = tx;
-    for(x=0; x<src->xsize; x++) {
-      tty=ty;
-      for(y=0;y<src->ysize;y++) {
-        /* fprintf(stderr,"reading (%d,%d) writing (%d,%d).\n",x,y,ttx,tty); */
+    tty = ty;
+    for(y = src_miny; y < src_maxy; y++) {
+      ttx = tx;
+      for(x = src_minx; x < src_maxx; x++) {
         i_gpixf(src, x,   y,   &pv);
         i_gpixf(im,  ttx, tty, &orig);
         alpha = pv.channel[alphachan];
         for (ch = 0; ch < chancount; ++ch) {
           dest.channel[ch] = alpha * pv.channel[chans[ch]]
-                              + (1 - alpha) * orig.channel[ch];
+	    + (1 - alpha) * orig.channel[ch];
         }
         i_ppixf(im, ttx, tty, &dest);
-        tty++;
+        ttx++;
       }
-      ttx++;
+      tty++;
     }
   }
 

@@ -716,7 +716,8 @@ Revision history for Perl extension Imager.
           instead.
         - some older FT1 don't define TT_MS_LANGID_ENGLISH_GENERAL,
           which we use, define it if freetype doesn't.
-
+        - Added extra options to rubthrough() so only a subpart of
+          source image is used.
 =================================================================
 
         For latest versions check the Imager-devel pages:
