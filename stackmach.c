@@ -1,7 +1,7 @@
 #include "stackmach.h"
 
 double
-op_run(int codes[], size_t code_size, double parms[], size_t parm_size) {
+i_op_run(int codes[], size_t code_size, double parms[], size_t parm_size) {
   double stack[100];
   double *sp = stack;
 

@@ -36,7 +36,7 @@ Reads and writes JPEG images
 #define JPEG_APP13       0xED    /* APP13 marker code */
 #define JPGS 16384
 
-unsigned char fake_eoi[]={(JOCTET) 0xFF,(JOCTET) JPEG_EOI};
+static unsigned char fake_eoi[]={(JOCTET) 0xFF,(JOCTET) JPEG_EOI};
 
 /* Bad design right here */
 

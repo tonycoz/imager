@@ -57,7 +57,7 @@ void  i_mempool_destroy(i_mempool *mp);
 
 /* XXX Shouldn't these go away? */
 
-int min(int a,int b);
-int max(int x,int y);
+int i_min(int a,int b);
+int i_max(int x,int y);
 
 #endif

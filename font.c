@@ -70,11 +70,11 @@ i_init_fonts(int t1log) {
   mm_log((1,"Initializing fonts\n"));
 
 #ifdef HAVE_LIBT1
-  init_t1(t1log);
+  i_init_t1(t1log);
 #endif
   
 #ifdef HAVE_LIBTT
-  init_tt();
+  i_init_tt();
 #endif
 
 #ifdef HAVE_FT2
@@ -101,7 +101,7 @@ Initializes the t1lib font rendering engine.
 */
 
 undef_int
-init_t1(int t1log) {
+i_init_t1(int t1log) {
   int init_flags = IGNORE_CONFIGFILE|IGNORE_FONTDATABASE;
   mm_log((1,"init_t1()\n"));
   
@@ -430,7 +430,7 @@ Initializes the freetype font rendering engine
 */
 
 undef_int
-init_tt() {
+i_init_tt() {
   TT_Error  error;
   mm_log((1,"init_tt()\n"));
   error = TT_Init_FreeType( &engine );

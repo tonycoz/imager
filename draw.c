@@ -513,7 +513,7 @@ i_line_aa(i_img *im,int x1,int y1,int x2,int y2,i_color *val) {
   }
 }
 
-double
+static double
 perm(int n,int k) {
   double r;
   int i;

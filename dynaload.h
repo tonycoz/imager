@@ -42,11 +42,12 @@ typedef struct {
   void *store;
 } UTIL_args;
 
+#if 0
 int getobj(void *hv_t,char *key,char *type,void **store);
 int getint(void *hv_t,char *key,int *store);
 int getdouble(void *hv_t,char *key,double *store);
 int getvoid(void *hv_t,char *key,void **store);
-
+#endif
 
 void *DSO_open(char* file,char** evalstring);
 int DSO_close(void *);

@@ -14,7 +14,7 @@ enum ByteCodes {
   bcCos
 };
 
-double op_run(int codes[], size_t code_size, double parms[], size_t parm_size);
+double i_op_run(int codes[], size_t code_size, double parms[], size_t parm_size);
 
 /* op_run(fx, sizeof(fx), parms, 2)) */
 

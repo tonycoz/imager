@@ -676,7 +676,7 @@ bufchain_seek(io_glue *ig, off_t offset, int whence) {
       ieb->cpos = ieb->tfill;
 
       while(wrlen > 0) {
-	ssize_t rc, wl = min(wrlen, BBSIZ);
+	ssize_t rc, wl = i_min(wrlen, BBSIZ);
 	mm_log((1, "bufchain_seek: wrlen = %d, wl = %d\n", wrlen, wl));
 	rc = bufchain_write( ig, TB, wl );
 	if (rc != wl) m_fatal(0, "bufchain_seek: Unable to extend file\n");

@@ -243,7 +243,7 @@ undef_int i_init_fonts( int t1log );
 #ifdef HAVE_LIBT1
 #include <t1lib.h>
 
-undef_int init_t1( int t1log );
+undef_int i_init_t1( int t1log );
 int       i_t1_new( char *pfb, char *afm );
 int       i_t1_destroy( int font_id );
 undef_int i_t1_cp( i_img *im, int xb, int yb, int channel, int fontnum, float points, char* str, int len, int align );
@@ -282,7 +282,7 @@ typedef struct TT_Fonthandle_ TT_Fonthandle;
 
 
 
-undef_int init_tt( void );
+undef_int i_init_tt( void );
 TT_Fonthandle* i_tt_new(char *fontname);
 void i_tt_destroy( TT_Fonthandle *handle );
 undef_int i_tt_cp( TT_Fonthandle *handle,i_img *im,int xb,int yb,int channel,float points,char* txt,int len,int smooth);
@@ -357,7 +357,7 @@ typedef struct {
 
 extern int  i_gen_reader(i_gen_read_data *info, char *buffer, int need);
 extern      i_gen_read_data *i_gen_read_data_new(i_read_callback_t cb, char *userdata);
-extern void free_gen_read_data(i_gen_read_data *);
+extern void i_free_gen_read_data(i_gen_read_data *);
 
 /* general writer callback
    userdata - the data the user passed into the writer
@@ -377,7 +377,7 @@ typedef struct {
 
 extern int i_gen_writer(i_gen_write_data *info, char const *data, int size);
 extern i_gen_write_data *i_gen_write_data_new(i_write_callback_t cb, char *userdata, int maxlength);
-extern int free_gen_write_data(i_gen_write_data *, int flush);
+extern int i_free_gen_write_data(i_gen_write_data *, int flush);
 
 /* transparency handling for quantized output */
 typedef enum i_transp_tag {

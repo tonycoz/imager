@@ -11,7 +11,7 @@
 */
 
 void m_lhead ( const char *file, int line  );
-void init_log( const char *name, int onoff );
+void m_init_log( const char *name, int onoff );
 void m_loog(int level,const char *msg, ... );
 void m_fatal ( int exitcode,const char *fmt, ... );
 

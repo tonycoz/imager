@@ -67,13 +67,13 @@ C).  The Perl level won't use all of this.
 
 /* we never actually use the last item - it's the NULL terminator */
 #define ERRSTK 20
-i_errmsg error_stack[ERRSTK];
-int error_sp = ERRSTK - 1;
+static i_errmsg error_stack[ERRSTK];
+static int error_sp = ERRSTK - 1;
 /* we track the amount of space used each string, so we don't reallocate 
    space unless we need to.
    This also means that a memory tracking library may see the memory 
    allocated for this as a leak. */
-int error_space[ERRSTK];
+static int error_space[ERRSTK];
 
 static i_error_cb error_cb;
 static i_failed_cb failed_cb;

@@ -960,7 +960,7 @@ i_gradgen(i_img *im, int num, int *xo, int *yo, i_color *ival, int dmeasure) {
 	fdist[p]  = xd*xd + yd*yd; /* euclidean distance */
 	break;
       case 2: /* euclidean squared */
-	fdist[p]  = max(xd*xd, yd*yd); /* manhattan distance */
+	fdist[p]  = i_max(xd*xd, yd*yd); /* manhattan distance */
 	break;
       default:
 	m_fatal(3,"i_gradgen: Unknown distance measure\n");
@@ -1013,7 +1013,7 @@ i_nearest_color_foo(i_img *im, int num, int *xo, int *yo, i_color *ival, int dme
       mindist = xd*xd + yd*yd; /* euclidean distance */
       break;
     case 2: /* euclidean squared */
-      mindist = max(xd*xd, yd*yd); /* manhattan distance */
+      mindist = i_max(xd*xd, yd*yd); /* manhattan distance */
       break;
     default:
       m_fatal(3,"i_nearest_color: Unknown distance measure\n");
@@ -1030,7 +1030,7 @@ i_nearest_color_foo(i_img *im, int num, int *xo, int *yo, i_color *ival, int dme
 	curdist = xd*xd + yd*yd; /* euclidean distance */
 	break;
       case 2: /* euclidean squared */
-	curdist = max(xd*xd, yd*yd); /* manhattan distance */
+	curdist = i_max(xd*xd, yd*yd); /* manhattan distance */
 	break;
       default:
 	m_fatal(3,"i_nearest_color: Unknown distance measure\n");
@@ -1083,7 +1083,7 @@ i_nearest_color(i_img *im, int num, int *xo, int *yo, i_color *oval, int dmeasur
       mindist = xd*xd + yd*yd; /* euclidean distance */
       break;
     case 2: /* euclidean squared */
-      mindist = max(xd*xd, yd*yd); /* manhattan distance */
+      mindist = i_max(xd*xd, yd*yd); /* manhattan distance */
       break;
     default:
       m_fatal(3,"i_nearest_color: Unknown distance measure\n");
@@ -1100,7 +1100,7 @@ i_nearest_color(i_img *im, int num, int *xo, int *yo, i_color *oval, int dmeasur
 	curdist = xd*xd + yd*yd; /* euclidean distance */
 	break;
       case 2: /* euclidean squared */
-	curdist = max(xd*xd, yd*yd); /* manhattan distance */
+	curdist = i_max(xd*xd, yd*yd); /* manhattan distance */
 	break;
       default:
 	m_fatal(3,"i_nearest_color: Unknown distance measure\n");
@@ -1225,8 +1225,8 @@ i_diff_image(i_img *im1, i_img *im2, int mindiff) {
   if (outchans == 1 || outchans == 3)
     ++outchans;
 
-  xsize = min(im1->xsize, im2->xsize);
-  ysize = min(im1->ysize, im2->ysize);
+  xsize = i_min(im1->xsize, im2->xsize);
+  ysize = i_min(im1->ysize, im2->ysize);
 
   out = i_sametype_chans(im1, xsize, ysize, outchans);
   

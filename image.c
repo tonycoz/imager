@@ -38,7 +38,7 @@ Some of these functions are internal.
 #define minmax(a,b,i) ( ((a>=i)?a: ( (b<=i)?b:i   )) )
 
 /* Hack around an obscure linker bug on solaris - probably due to builtin gcc thingies */
-void fake(void) { ceil(1); }
+static void fake(void) { ceil(1); }
 
 static int i_ppix_d(i_img *im, int x, int y, i_color *val);
 static int i_gpix_d(i_img *im, int x, int y, i_color *val);
@@ -1138,8 +1138,8 @@ i_transform(i_img *im, int *opx,int opxl,int *opy,int opyl,double parm[],int par
     parm[1]=(double)ny;
 
     /*     fprintf(stderr,"(%d,%d) ->",nx,ny);  */
-    rx=op_run(opx,opxl,parm,parmlen);
-    ry=op_run(opy,opyl,parm,parmlen);
+    rx=i_op_run(opx,opxl,parm,parmlen);
+    ry=i_op_run(opy,opyl,parm,parmlen);
     /*    fprintf(stderr,"(%f,%f)\n",rx,ry); */
     i_gpix(im,rx,ry,&val);
     i_ppix(new_img,nx,ny,&val);
@@ -1897,7 +1897,7 @@ i_gen_reader(i_gen_read_data *gci, char *buf, int length) {
       gci->cpos = 0;
       gci->length = did_read;
 
-      copy_size = min(length, gci->length);
+      copy_size = i_min(length, gci->length);
       memcpy(buf, gci->buffer, copy_size);
       gci->cpos += copy_size;
       buf += copy_size;
@@ -1940,13 +1940,13 @@ i_gen_read_data_new(i_read_callback_t cb, char *userdata) {
 }
 
 /*
-=item free_gen_read_data(i_gen_read_data *)
+=item i_free_gen_read_data(i_gen_read_data *)
 
 Cleans up.
 
 =cut
 */
-void free_gen_read_data(i_gen_read_data *self) {
+void i_free_gen_read_data(i_gen_read_data *self) {
   myfree(self);
 }
 
@@ -1990,7 +1990,7 @@ int size)
 
 Allocates and initializes the data structure used by i_gen_writer.
 
-This should be released with L<image.c/free_gen_write_data>
+This should be released with L<image.c/i_free_gen_write_data>
 
 =cut
 */
@@ -2000,7 +2000,7 @@ i_gen_write_data *i_gen_write_data_new(i_write_callback_t cb,
   i_gen_write_data *self = mymalloc(sizeof(i_gen_write_data));
   self->cb = cb;
   self->userdata = userdata;
-  self->maxlength = min(max_length, sizeof(self->buffer));
+  self->maxlength = i_min(max_length, sizeof(self->buffer));
   if (self->maxlength < 0)
     self->maxlength = sizeof(self->buffer);
   self->filledto = 0;
@@ -2009,7 +2009,7 @@ i_gen_write_data *i_gen_write_data_new(i_write_callback_t cb,
 }
 
 /*
-=item free_gen_write_data(i_gen_write_data *info, int flush)
+=item i_free_gen_write_data(i_gen_write_data *info, int flush)
 
 Cleans up the write buffer.
 
@@ -2023,7 +2023,7 @@ ie. if it fails.
 =cut
 */
 
-int free_gen_write_data(i_gen_write_data *info, int flush)
+int i_free_gen_write_data(i_gen_write_data *info, int flush)
 {
   int result = !flush || 
     info->filledto == 0 ||
