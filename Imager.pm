@@ -35,7 +35,7 @@ use Imager::Font;
 		i_img_setmask
 		i_img_getmask
 
-		i_draw
+		i_line
 		i_line_aa
 		i_box
 		i_box_filled
@@ -2015,29 +2015,34 @@ sub arc {
   return $self;
 }
 
-# Draws a line from one point to (but not including) the destination point
+# Draws a line from one point to the other
+# the endpoint is set if the endp parameter is set which it is by default.
+# to turn of the endpoint being set use endp=>0 when calling line.
 
 sub line {
   my $self=shift;
   my $dflcl=i_color_new(0,0,0,0);
-  my %opts=(color=>$dflcl,@_);
+  my %opts=(color=>$dflcl,
+	    endp => 1,
+	    @_);
   unless ($self->{IMG}) { $self->{ERRSTR}='empty input image'; return undef; }
 
   unless (exists $opts{x1} and exists $opts{y1}) { $self->{ERRSTR}='missing begining coord'; return undef; }
   unless (exists $opts{x2} and exists $opts{y2}) { $self->{ERRSTR}='missing ending coord'; return undef; }
 
   my $color = _color($opts{'color'});
-  unless ($color) { 
-    $self->{ERRSTR} = $Imager::ERRSTR; 
-    return; 
+  unless ($color) {
+    $self->{ERRSTR} = $Imager::ERRSTR;
+    return;
   }
+
   $opts{antialias} = $opts{aa} if defined $opts{aa};
   if ($opts{antialias}) {
-    i_line_aa($self->{IMG},$opts{x1}, $opts{y1}, $opts{x2}, $opts{y2}, 
+    i_line_aa($self->{IMG},$opts{x1}, $opts{y1}, $opts{x2}, $opts{y2},
               $color);
   } else {
-    i_draw($self->{IMG},$opts{x1}, $opts{y1}, $opts{x2}, $opts{y2}, 
-           $color);
+    i_line($self->{IMG},$opts{x1}, $opts{y1}, $opts{x2}, $opts{y2},
+           $color, $opts{endp});
   }
   return $self;
 }
@@ -2076,7 +2081,7 @@ sub polyline {
   } else {
     for $pt(@points) {
       if (defined($ls)) { 
-        i_draw($self->{IMG},$ls->[0],$ls->[1],$pt->[0],$pt->[1],$color);
+        i_line($self->{IMG},$ls->[0],$ls->[1],$pt->[0],$pt->[1],$color,1);
       }
       $ls=$pt;
     }
@@ -2161,7 +2166,8 @@ sub polybezier {
 sub flood_fill {
   my $self = shift;
   my %opts = ( color=>Imager::Color->new(255, 255, 255), @_ );
-	my $rc;
+  my $rc;
+
   unless (exists $opts{'x'} && exists $opts{'y'}) {
     $self->{ERRSTR} = "missing seed x and y parameters";
     return undef;
@@ -2180,13 +2186,13 @@ sub flood_fill {
   }
   else {
     my $color = _color($opts{'color'});
-    unless ($color) { 
-      $self->{ERRSTR} = $Imager::ERRSTR; 
-      return; 
+    unless ($color) {
+      $self->{ERRSTR} = $Imager::ERRSTR;
+      return;
     }
     $rc = i_flood_fill($self->{IMG}, $opts{'x'}, $opts{'y'}, $color);
   }
-	if ($rc) { $self; } else { $self->{ERRSTR} = $self->_error_as_msg(); return (); }
+  if ($rc) { $self; } else { $self->{ERRSTR} = $self->_error_as_msg(); return (); }
 }
 
 sub setpixel {
