@@ -3,7 +3,7 @@ use strict;
 require "t/testtools.pl";
 use Imager;
 
-print "1..10\n";
+print "1..58\n";
 
 #$Imager::DEBUG=1;
 
@@ -39,4 +39,119 @@ else {
   isx($src->type, 'paletted', "check source type");
   my $out = $src->crop(left=>10, right=>40, top=>10, bottom=>40);
   isx($out->type, 'paletted', 'check output type');
+}
+
+{ # https://rt.cpan.org/Ticket/Display.html?id=7581
+  # crop() documentation says width/height takes precedence, but is unclear
+  # from looking at the existing code, setting width/height will go from
+  # the left of the image, even if left/top are provided, despite the
+  # sample in the docs
+  # Let's make sure that things happen as documented
+  my $src = test_oo_img();
+  # make sure we get what we want
+  isx($src->getwidth, 150, "src width");
+  isx($src->getheight, 150, "src height");
+
+  # the test data is: 
+  #  - description
+  #  - hash ref containing args to crop()
+  #  - expected left, top, right, bottom values
+  # we call crop using the given arguments then call it using the 
+  # hopefully stable left/top/right/bottom/arguments
+  # this is kind of lame, but I don't want to include a rewritten
+  # crop in this file
+  my @tests = 
+    (
+     [ 
+      "basic",
+      { left=>10, top=>10, right=>70, bottom=>80 },
+      10, 10, 70, 80,
+     ],
+     [
+      "middle",
+      { width=>50, height=>50 },
+      50, 50, 100, 100,
+     ],
+     [
+      "lefttop",
+      { left=>20, width=>70, top=>30, height=>90 },
+      20, 30, 90, 120,
+     ],
+     [
+      "bottomright",
+      { right=>140, width=>50, bottom=>130, height=>60 },
+      90, 70, 140, 130,
+     ],
+     [
+      "acrossmiddle",
+      { top=>40, bottom=>110 },
+      0, 40, 150, 110,
+     ],
+     [
+      "downmiddle",
+      { left=>40, right=>110 },
+      40, 0, 110, 150,
+     ],
+     [
+      "rightside",
+      { left=>80, },
+      80, 0, 150, 150,
+     ],
+     [
+      "leftside",
+      { right=>40 },
+      0, 0, 40, 150,
+     ],
+     [
+      "topside",
+      { bottom=>40, },
+      0, 0, 150, 40,
+     ],
+     [
+      "bottomside",
+      { top=>90 },
+      0, 90, 150, 150,
+     ],
+     [
+      "overright",
+      { left=>100, right=>200 },
+      100, 0, 150, 150,
+     ],
+     [
+      "overtop",
+      { bottom=>50, height=>70 },
+      0, 0, 150, 50,
+     ],
+     [
+      "overleft",
+      { right=>30, width=>60 },
+      0, 0, 30, 150,
+     ],
+     [ 
+      "overbottom",
+      { top=>120, height=>60 },
+      0, 120, 150, 150,
+     ],
+    );
+  for my $test (@tests) {
+    my ($desc, $args, $left, $top, $right, $bottom) = @$test;
+    my $out = $src->crop(%$args);
+    okx($out, "got output for $desc");
+    my $cmp = $src->crop(left=>$left, top=>$top, right=>$right, bottom=>$bottom);
+    okx($cmp, "got cmp for $desc");
+    # make sure they're the same
+    my $diff = Imager::i_img_diff($out->{IMG}, $cmp->{IMG});
+    isx($diff, 0, "difference should be 0 for $desc");
+  }
+}
+{ # https://rt.cpan.org/Ticket/Display.html?id=7581
+  # previously we didn't check that the result had some pixels
+  # make sure we do
+  my $src = test_oo_img();
+  okx(!$src->crop(left=>50, right=>50), "nothing across");
+  matchx($src->errstr, qr/resulting image would have no content/,
+	 "and message");
+  okx(!$src->crop(top=>60, bottom=>60), "nothing down");
+  matchx($src->errstr, qr/resulting image would have no content/,
+	 "and message");
 }

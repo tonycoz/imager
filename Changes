@@ -739,14 +739,14 @@ Revision history for Perl extension Imager.
 	- document the constants that transform2() defines
 	- skip the right number of tests when FT2 isn't available
 	- This version pushed to CPAN because of skip problem in FT2 test.
+
+0.43_01 Fri 8 Oct 2004
 	- only call FT_Get_Postscript_Name() on FT 2.0.6 and later
 	- put the IM_LIBPATH and IM_INCPATH values first in the search
 	  path so the builder gets their local versions if desired rather
 	  than the system versions they might be trying to avoid
 	- document the exp() and log() transform2() functions
 	- document the constants normally set by transform2().
-
-0.44
 	- refer the user to appropriate documents in the example in 
 	  Imager.pm
 	- change the list of documents in Imager.pm to move the document 
@@ -833,6 +833,16 @@ Revision history for Perl extension Imager.
         - the image resulting from a crop is now the same type as the
           source image (paletted vs direct, bits/sample)
           Resolves https://rt.cpan.org/Ticket/Display.html?id=7578
+        - the parameters to crop() weren't handled correctly in most 
+          cases other than supplying left,top,right,bottom.
+        - clarified the documentation for crop() providing more detail
+          and more examples
+        - the edges of the cropped area are now cropped against the 
+          edges of the source image
+        - cropping to zero width/height is treated as an error (no
+          image is returned and $src->errstr has a message)
+          Resolves https://rt.cpan.org/Ticket/Display.html?id=7581
+        - built 0.43_01 for testing
 
 =================================================================
 

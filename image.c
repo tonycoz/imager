@@ -2069,14 +2069,7 @@ int i_free_gen_write_data(i_gen_write_data *info, int flush)
 /*
 =item i_test_format_probe(io_glue *data, int length)
 
-Cleans up the write buffer.
-
-Will flush any left-over data if I<flush> is non-zero.
-
-Returns non-zero if flush is zero or if info->cb() returns non-zero.
-
-Return zero only if flush is non-zero and info->cb() returns zero.
-ie. if it fails.
+Check the beginning of the supplied file for a 'magic number'
 
 =cut
 */

@@ -147,7 +147,7 @@ BEGIN {
   require Exporter;
   require DynaLoader;
 
-  $VERSION = '0.43';
+  $VERSION = '0.43_01';
   @ISA = qw(Exporter DynaLoader);
   bootstrap Imager $VERSION;
 }
@@ -573,41 +573,77 @@ sub paste {
 sub crop {
   my $self=shift;
   unless ($self->{IMG}) { $self->{ERRSTR}='empty input image'; return undef; }
-  my %hsh=(left=>0,right=>$self->getwidth(),top=>0,bottom=>$self->getheight(),@_);
 
-  my ($w,$h,$l,$r,$b,$t)=($self->getwidth(),$self->getheight(),
-				@hsh{qw(left right bottom top)});
-  $l=0 if not defined $l;
-  $t=0 if not defined $t;
+  
+  my %hsh=@_;
 
-  $r||=$l+delete $hsh{'width'}    if defined $l and exists $hsh{'width'};
-  $b||=$t+delete $hsh{'height'}   if defined $t and exists $hsh{'height'};
-  $l||=$r-delete $hsh{'width'}    if defined $r and exists $hsh{'width'};
-  $t||=$b-delete $hsh{'height'}   if defined $b and exists $hsh{'height'};
+  my ($w, $h, $l, $r, $b, $t) =
+    @hsh{qw(width height left right bottom top)};
 
-  $r=$self->getwidth if not defined $r;
-  $b=$self->getheight if not defined $b;
+  # work through the various possibilities
+  if (defined $l) {
+    if (defined $w) {
+      $r = $l + $w;
+    }
+    elsif (!defined $r) {
+      $r = $self->getwidth;
+    }
+  }
+  elsif (defined $r) {
+    if (defined $w) {
+      $l = $r - $w;
+    }
+    else {
+      $l = 0;
+    }
+  }
+  elsif (defined $w) {
+    $l = int(0.5+($self->getwidth()-$w)/2);
+    $r = $l + $w;
+  }
+  else {
+    $l = 0;
+    $r = $self->getwidth;
+  }
+  if (defined $t) {
+    if (defined $h) {
+      $b = $t + $h;
+    }
+    elsif (!defined $b) {
+      $b = $self->getheight;
+    }
+  }
+  elsif (defined $b) {
+    if (defined $h) {
+      $t = $b - $h;
+    }
+    else {
+      $t = 0;
+    }
+  }
+  elsif (defined $h) {
+    $t=int(0.5+($self->getheight()-$h)/2);
+    $b=$t+$h;
+  }
+  else {
+    $t = 0;
+    $b = $self->getheight;
+  }
 
   ($l,$r)=($r,$l) if $l>$r;
   ($t,$b)=($b,$t) if $t>$b;
 
-  if ($hsh{'width'}) {
-    $l=int(0.5+($w-$hsh{'width'})/2);
-    $r=$l+$hsh{'width'};
-  } else {
-    $hsh{'width'}=$r-$l;
-  }
-  if ($hsh{'height'}) {
-    $b=int(0.5+($h-$hsh{'height'})/2);
-    $t=$h+$hsh{'height'};
-  } else {
-    $hsh{'height'}=$b-$t;
+  $l < 0 and $l = 0;
+  $r > $self->getwidth and $r = $self->getwidth;
+  $t < 0 and $t = 0;
+  $b > $self->getheight and $b = $self->getheight;
+
+  if ($l == $r || $t == $b) {
+    $self->_set_error("resulting image would have no content");
+    return;
   }
 
-#    print "l=$l, r=$r, h=$hsh{'width'}\n";
-#    print "t=$t, b=$b, w=$hsh{'height'}\n";
-
-  my $dst = $self->_sametype(xsize=>$hsh{width}, ysize=>$hsh{height});
+  my $dst = $self->_sametype(xsize=>$r-$l, ysize=>$b-$t);
 
   i_copyto($dst->{IMG},$self->{IMG},$l,$t,$r,$b,0,0);
   return $dst;
