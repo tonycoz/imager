@@ -1483,11 +1483,6 @@ i_readpnm_wiol(ig, length)
 
 
 undef_int
-i_writeppm(im,fd)
-    Imager::ImgRaw     im
-	       int     fd
-
-undef_int
 i_writeppm_wiol(im, ig)
     Imager::ImgRaw     im
         Imager::IO     ig

@@ -95,12 +95,3 @@ i_writeraw_wiol(i_img* im, io_glue *ig) {
   }
   return(1);
 }
-
-
-
-
-
-
-
-
-
