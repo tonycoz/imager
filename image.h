@@ -69,10 +69,12 @@ int    i_img_getchannels(i_img *im);
 
 /* Base functions */
 
+#if 0
 int i_ppix(i_img *im,int x,int y,i_color *val);
 int i_gpix(i_img *im,int x,int y,i_color *val);
 int i_ppixf(i_img *im,int x,int y,i_color *val);
 int i_gpixf(i_img *im,int x,int y,i_color *val);
+#endif
 
 #define i_ppix(im, x, y, val) (((im)->i_f_ppix)((im), (x), (y), (val)))
 #define i_gpix(im, x, y, val) (((im)->i_f_gpix)((im), (x), (y), (val)))
@@ -95,6 +97,14 @@ int i_glin_d(i_img *im,int l, int r, int y, i_color *val);
   (((im)->i_f_gsamp)((im), (l), (r), (y), (samps), (chans), (count)))
 #define i_gsampf(im, l, r, y, samps, chans, count) \
   (((im)->i_f_gsampf)((im), (l), (r), (y), (samps), (chans), (count)))
+
+#define i_psamp(im, l, r, y, samps, chans, count) \
+  (((im)->i_f_gsamp)((im), (l), (r), (y), (samps), (chans), (count)))
+#define i_psampf(im, l, r, y, samps, chans, count) \
+  (((im)->i_f_gsampf)((im), (l), (r), (y), (samps), (chans), (count)))
+
+
+
 
 #define i_findcolor(im, color, entry) \
   (((im)->i_f_findcolor) ? ((im)->i_f_findcolor)((im), (color), (entry)) : 0)
@@ -676,9 +686,10 @@ typedef struct {
   void(*i_img_setmask)(i_img *im,int ch_mask);
   int (*i_img_getmask)(i_img *im);
   
+  /*
   int (*i_ppix)(i_img *im,int x,int y,i_color *val);
   int (*i_gpix)(i_img *im,int x,int y,i_color *val);
-
+  */
   void(*i_box)(i_img *im,int x1,int y1,int x2,int y2,i_color *val);
   void(*i_draw)(i_img *im,int x1,int y1,int x2,int y2,i_color *val);
   void(*i_arc)(i_img *im,int x,int y,float rad,float d1,float d2,i_color *val);

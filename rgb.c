@@ -46,18 +46,12 @@ typedef struct {
   unsigned int colormap;
 } rgb_header;
 
+typedef struct {
+  int start, length;
+} stlen_pair;
 
 typedef enum { NoInit, Raw, Rle } rle_state;
 
-typedef struct {
-  int compressed;
-  int bytepp;
-  rle_state state;
-  unsigned char cval[4];
-  int len;
-  unsigned char hdr;
-  io_glue *ig;
-} rgb_source;
 
 
 typedef struct {
@@ -69,66 +63,6 @@ typedef struct {
 
 
 
-/* 
-    * Packing functions - used for (un)packing
- * datastructures into raw bytes.
- */
-
-
-/*
-=item find_repeat
-
-Helper function for rle compressor to find the next triple repeat of the 
-same pixel value in buffer.
-
-    buf - buffer
-    length - number of pixel values in buffer
-    bytepp - number of bytes in a pixel value
-
-=cut
-*/
-
-static
-int
-find_repeat(unsigned char *buf, int length, int bytepp) {
-  int i = 0;
-  
-  while(i<length-1) {
-    if(memcmp(buf+i*bytepp, buf+(i+1)*bytepp, bytepp) == 0) {
-      if (i == length-2) return -1;
-      if (memcmp(buf+(i+1)*bytepp, buf+(i+2)*bytepp,bytepp) == 0)  
-	return i;
-      else i++;
-    }
-    i++;
-  }
-  return -1;
-}
-
-
-/*
-=item find_span
-
-Helper function for rle compressor to find the length of a span where
-the same pixel value is in the buffer.
-
-    buf - buffer
-    length - number of pixel values in buffer
-    bytepp - number of bytes in a pixel value
-
-=cut
-*/
-
-static
-int
-find_span(unsigned char *buf, int length, int bytepp) {
-  int i = 0;
-  while(i<length) {
-    if(memcmp(buf, buf+(i*bytepp), bytepp) != 0) return i;
-    i++;
-  }
-  return length;
-}
 
 
 /*
@@ -191,62 +125,6 @@ rgb_header_pack(rgb_header *header, unsigned char headbuf[512]) {
 }
 
 
-/*
-=item rgb_source_read(s, buf, pixels)
-
-Reads pixel number of pixels from source s into buffer buf.  Takes
-care of decompressing the stream if needed.
-
-    s - data source 
-    buf - destination buffer
-    pixels - number of pixels to put into buffer
-
-=cut
-*/
-
-static
-int
-rgb_source_read(rgb_source *s, unsigned char *buf, size_t pixels) {
-  int cp = 0, j, k;
-  if (!s->compressed) {
-    if (s->ig->readcb(s->ig, buf, pixels*s->bytepp) != pixels*s->bytepp) return 0;
-    return 1;
-  }
-  
-  while(cp < pixels) {
-    int ml;
-    if (s->len == 0) s->state = NoInit;
-    switch (s->state) {
-    case NoInit:
-      if (s->ig->readcb(s->ig, &s->hdr, 1) != 1) return 0;
-
-      s->len = (s->hdr &~(1<<7))+1;
-      s->state = (s->hdr & (1<<7)) ? Rle : Raw;
-      {
-	static cnt = 0;
-	printf("%04d %s: %d\n", cnt++, s->state==Rle?"RLE":"RAW", s->len);
-      }
-      if (s->state == Rle && s->ig->readcb(s->ig, s->cval, s->bytepp) != s->bytepp) return 0;
-
-      break;
-    case Rle:
-      ml = min(s->len, pixels-cp);
-      for(k=0; k<ml; k++) for(j=0; j<s->bytepp; j++) 
-	buf[(cp+k)*s->bytepp+j] = s->cval[j];
-      cp     += ml;
-      s->len -= ml;
-      break;
-    case Raw:
-      ml = min(s->len, pixels-cp);
-      if (s->ig->readcb(s->ig, buf+cp*s->bytepp, ml*s->bytepp) != ml*s->bytepp) return 0;
-      cp     += ml;
-      s->len -= ml;
-      break;
-    }
-  }
-  return 1;
-}
-
 
 
 
@@ -266,40 +144,7 @@ destination is compressed.
 static
 int
 rgb_dest_write(rgb_dest *s, unsigned char *buf, size_t pixels) {
-  int cp = 0, j, k;
 
-  if (!s->compressed) {
-    if (s->ig->writecb(s->ig, buf, pixels*s->bytepp) != pixels*s->bytepp) return 0;
-    return 1;
-  }
-  
-  while(cp < pixels) {
-    int tlen;
-    int nxtrip = find_repeat(buf+cp*s->bytepp, pixels-cp, s->bytepp);
-    tlen = (nxtrip == -1) ? pixels-cp : nxtrip;
-    while(tlen) {
-      unsigned char clen = (tlen>128) ? 128 : tlen;
-      clen--;
-      if (s->ig->writecb(s->ig, &clen, 1) != 1) return 0;
-      clen++;
-      if (s->ig->writecb(s->ig, buf+cp*s->bytepp, clen*s->bytepp) != clen*s->bytepp) return 0;
-      tlen -= clen;
-      cp += clen;
-    }
-    if (cp >= pixels) break;
-    tlen = find_span(buf+cp*s->bytepp, pixels-cp, s->bytepp);
-    if (tlen <3) continue;
-    while (tlen) {
-      unsigned char clen = (tlen>128) ? 128 : tlen;
-      clen = (clen - 1) | 0x80;
-      if (s->ig->writecb(s->ig, &clen, 1) != 1) return 0;
-      clen = (clen & ~0x80) + 1;
-      if (s->ig->writecb(s->ig, buf+cp*s->bytepp, s->bytepp) != s->bytepp) return 0;
-      tlen -= clen;
-      cp += clen;
-    }
-  }
-  return 1;
 }
 
 
@@ -328,10 +173,11 @@ i_readrgb_wiol(io_glue *ig, int length) {
   int x, y, c,i;
   int width, height, channels;
   unsigned long maxlen;
+
+  int savemask;
   
   char *idstring = NULL;
 
-  rgb_source src;
   rgb_header header;
   unsigned char headbuf[512];
   unsigned char *databuf;
@@ -384,9 +230,32 @@ i_readrgb_wiol(io_glue *ig, int length) {
   
   i_tags_add(&img->tags, "rgb_namestr", 0, header.name, 80, 0);
 
+
   switch (header.storagetype) {
   case 0: /* uncompressed */
     
+    linebuf   = i_mempool_alloc(&mp, width*sizeof(i_color));
+    databuf   = i_mempool_alloc(&mp, width);
+
+    savemask = i_img_getmask(img);
+
+    for(c=0; c<channels; c++) {
+      i_img_setmask(img, 1<<c);
+      for(y=0; y<height; y++) {
+	int x;
+	
+	if (ig->readcb(ig, databuf, width) != width) {
+	  i_push_error(0, "SGI rgb: cannot read");
+	  goto ErrorReturn;
+	}
+
+	for(x=0; x<width; x++)
+	  linebuf[x].channel[c] = databuf[x];
+	
+	i_plin(img, 0, width, height-1-y, linebuf);
+      }
+    }
+    i_img_setmask(img, savemask);
     break;
   case 1: /* RLE compressed */
     
