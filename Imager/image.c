@@ -948,7 +948,7 @@ i_scaleaxis(i_img *im, float Value, int Axis) {
   
   new_img = i_img_empty_ch(NULL, hsize, vsize, im->channels);
   
-  /* 1.5 is a magic number, setting it to 2 will cause rather blurred images */
+  /* 1.4 is a magic number, setting it to 2 will cause rather blurred images */
   LanczosWidthFactor = (Value >= 1) ? 1 : (int) (1.4/Value); 
   lMax = LanczosWidthFactor << 1;
   
@@ -982,9 +982,15 @@ i_scaleaxis(i_img *im, float Value, int Axis) {
       
       for (i=0; i<iEnd; i++) {
 	for (k=0; k<im->channels; k++) PictureValue[k] = 0.0;
-	for (l=0; l < lMax; l++) {
-	  i_gpix(im, T+l+1,      i, &val1);
-	  i_gpix(im, T-lMax+l+1, i, &val2);
+	for (l=0; l<lMax; l++) {
+	  int mx = T-lMax+l+1;
+	  int Mx = T+l+1;
+	  mx = (mx < 0) ? 0 : mx;
+	  Mx = (Mx >= im->xsize) ? im->xsize-1 : Mx;
+	  
+	  i_gpix(im, Mx, i, &val1);
+	  i_gpix(im, mx, i, &val2);
+	  
 	  for (k=0; k<im->channels; k++) {
 	    PictureValue[k] += l1[l]        * val1.channel[k];
 	    PictureValue[k] += l0[lMax-l-1] * val2.channel[k];
@@ -1002,15 +1008,20 @@ i_scaleaxis(i_img *im, float Value, int Axis) {
       for (i=0; i<iEnd; i++) {
 	for (k=0; k<im->channels; k++) PictureValue[k] = 0.0;
 	for (l=0; l < lMax; l++) {
-	  i_gpix(im, i, T+l+1, &val1);
-	  i_gpix(im, i, T-lMax+l+1, &val2);
+	  int mx = T-lMax+l+1;
+	  int Mx = T+l+1;
+	  mx = (mx < 0) ? 0 : mx;
+	  Mx = (Mx >= im->ysize) ? im->ysize-1 : Mx;
+
+	  i_gpix(im, i, Mx, &val1);
+	  i_gpix(im, i, mx, &val2);
 	  for (k=0; k<im->channels; k++) {
-	    PictureValue[k] += l1[l] * val1.channel[k];
+	    PictureValue[k] += l1[l]        * val1.channel[k];
 	    PictureValue[k] += l0[lMax-l-1] * val2.channel[k]; 
 	  }
 	}
 	for (k=0; k<im->channels; k++) {
-	  psave = (short)( PictureValue[k] / LanczosWidthFactor);
+	  psave = (short)(0.5+(PictureValue[k] / LanczosWidthFactor));
 	  val.channel[k] = minmax(0, 255, psave);
 	}
 	i_ppix(new_img, i, j, &val);
@@ -1332,6 +1343,7 @@ i_gpix_d(i_img *im, int x, int y, i_color *val) {
     	val->channel[ch]=im->idata[(x+y*im->xsize)*im->channels+ch];
     return 0;
   }
+  for(ch=0;ch<im->channels;ch++) val->channel[ch] = 0;
   return -1; /* error was cliped */
 }
 
