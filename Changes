@@ -517,6 +517,9 @@ Revision history for Perl extension Imager.
         - unsharp mask
         - make i_conv() clamp the bottom end of the samples range too
           (makes it useful for sharpening)
+        - adjust ascender/descender values for FT1.x to avoid losing
+          descenders (specifically the bottom of "g" in ImUgly.ttf or
+          arial.ttf at 14pixels)
 
 =================================================================
 

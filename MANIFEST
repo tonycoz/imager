@@ -49,6 +49,7 @@ tags.c
 trans2.c
 iolayer.h
 iolayer.c
+fontfiles/ImUgly.ttf
 fontfiles/dcr10.afm
 fontfiles/dcr10.pfb
 fontfiles/dodge.ttf
