@@ -260,9 +260,13 @@ static i_img *read_one_tiff(TIFF *tif) {
       }
     } else {
       uint32 rowsperstrip, row;
-      TIFFGetField(tif, TIFFTAG_ROWSPERSTRIP, &rowsperstrip);
-      mm_log((1, "i_readtiff_wiol: rowsperstrip=%d\n", rowsperstrip));
-      
+      int rc = TIFFGetField(tif, TIFFTAG_ROWSPERSTRIP, &rowsperstrip);
+      mm_log((1, "i_readtiff_wiol: rowsperstrip=%d rc = %d\n", rowsperstrip, rc));
+  
+			if (rc != 1 || rowsperstrip==-1) {
+				rowsperstrip = height;
+			}
+    
       raster = (uint32*)_TIFFmalloc(width * rowsperstrip * sizeof (uint32));
       if (!raster) {
         i_img_destroy(im);

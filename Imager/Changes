@@ -672,7 +672,10 @@ Revision history for Perl extension Imager.
         - mc_web_map was storing colors with an alpha of 0
         - update the URLs for libpng and zlib
 				- Fixed empty string handling for tt font driver.
-
+				- Fixed tiff handling of images all contained in a 
+					single strip (rowsperstrip = -1) and added a hack
+					for images missing the rowsperstrip tag.
+					
 =================================================================
 
         For latest versions check the Imager-devel pages:
