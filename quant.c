@@ -376,9 +376,10 @@ makemap_addi(i_quantize *quant, i_img **imgs, int count) {
   int cnum, i, x, y, bst_idx=0, ld, cd, iter, currhb, img_num;
   i_color val;
   float dlt, accerr;
-  hashbox hb[512];
+  hashbox *hb;
 
   clr = (cvec *)mymalloc(sizeof(cvec) * quant->mc_size);
+  hb = mymalloc(sizeof(hashbox) * 512);
   for (i=0; i < quant->mc_count; ++i) {
     clr[i].r = quant->mc_colors[i].rgb.r;
     clr[i].g = quant->mc_colors[i].rgb.g;
@@ -492,6 +493,7 @@ makemap_addi(i_quantize *quant, i_img **imgs, int count) {
 #endif
 
   /* don't want to keep this */
+  myfree(hb);
   myfree(clr);
 }
 
@@ -542,7 +544,7 @@ makemap_addi(i_quantize *quant, i_img **imgs, int count) {
 #define HB_SORT
 
 /* assume i is available */
-#define CF_VARS hashbox hb[512]; \
+#define CF_VARS hashbox *hb = mymalloc(sizeof(hashbox) * 512); \
                int currhb;  \
                long ld, cd
 
@@ -642,7 +644,7 @@ static void hbsetup(i_quantize *quant, hashbox *hb) {
     if (cd < ld) { ld = cd; bst_idx = hb[currhb].vec[i]; } \
   }
 
-#define CF_CLEANUP
+#define CF_CLEANUP myfree(hb)
   
 #endif
 
