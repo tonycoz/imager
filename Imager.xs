@@ -224,6 +224,8 @@ static void handle_quant_opts(i_quantize *quant, HV *hv)
   STRLEN len;
   char *str;
 
+  quant->mc_colors = mymalloc(quant->mc_size * sizeof(i_color));
+
   sv = hv_fetch(hv, "transp", 6, 0);
   if (sv && *sv && (str = SvPV(*sv, len))) {
     quant->transp = 
@@ -345,6 +347,12 @@ static void handle_quant_opts(i_quantize *quant, HV *hv)
     quant->perturb = SvIV(*sv);
 }
 
+static void cleanup_quant_opts(i_quantize *quant) {
+  myfree(quant->mc_colors);
+  if (quant->ed_map)
+    myfree(quant->ed_map);
+}
+
 /* look through the hash for options to add to opts */
 static void handle_gif_opts(i_gif_opts *opts, HV *hv)
 {
@@ -413,6 +421,17 @@ static void handle_gif_opts(i_gif_opts *opts, HV *hv)
   opts->loop_count = hv_fetch_int(hv, "gif_loop_count", 0);
 
   opts->eliminate_unused = hv_fetch_bool(hv, "gif_eliminate_unused", 1);
+}
+
+static void cleanup_gif_opts(i_gif_opts *opts) {
+  if (opts->delays)
+    myfree(opts->delays);
+  if (opts->user_input_flags)
+    myfree(opts->user_input_flags);
+  if (opts->disposal)
+    myfree(opts->disposal);
+  if (opts->positions) 
+    myfree(opts->positions);
 }
 
 /* copies the color map from the hv into the colors member of the HV */
@@ -1479,7 +1498,6 @@ i_writegif_gen(fd, ...)
 	hv = (HV *)SvRV(ST(1));
 	memset(&quant, 0, sizeof(quant));
 	quant.mc_size = 256;
-	quant.mc_colors = mymalloc(quant.mc_size * sizeof(i_color));
 	memset(&opts, 0, sizeof(opts));
 	handle_quant_opts(&quant, hv);
 	handle_gif_opts(&opts, hv);
@@ -1516,7 +1534,8 @@ i_writegif_gen(fd, ...)
         ST(0) = sv_newmortal();
         if (RETVAL == 0) ST(0)=&PL_sv_undef;
         else sv_setiv(ST(0), (IV)RETVAL);
-	myfree(quant.mc_colors);
+	cleanup_gif_opts(&opts);
+	cleanup_quant_opts(&quant);
 
 
 undef_int
@@ -1538,7 +1557,6 @@ i_writegif_callback(cb, maxbuffer,...)
 	hv = (HV *)SvRV(ST(2));
 	memset(&quant, 0, sizeof(quant));
 	quant.mc_size = 256;
-	quant.mc_colors = mymalloc(quant.mc_size * sizeof(i_color));
 	memset(&opts, 0, sizeof(opts));
 	handle_quant_opts(&quant, hv);
 	handle_gif_opts(&opts, hv);
@@ -1569,9 +1587,11 @@ i_writegif_callback(cb, maxbuffer,...)
 	    copy_colors_back(hv, &quant);
           }
 	}
-             ST(0) = sv_newmortal();
-             if (RETVAL == 0) ST(0)=&PL_sv_undef;
-             else sv_setiv(ST(0), (IV)RETVAL);
+	ST(0) = sv_newmortal();
+	if (RETVAL == 0) ST(0)=&PL_sv_undef;
+	else sv_setiv(ST(0), (IV)RETVAL);
+	cleanup_gif_opts(&opts);
+	cleanup_quant_opts(&quant);
 
 void
 i_readgif(fd)
@@ -2402,13 +2422,12 @@ i_img_to_pal(src, quant)
         hv = (HV *)SvRV(ST(1));
         memset(&quant, 0, sizeof(quant));
         quant.mc_size = 256;
-        quant.mc_colors = mymalloc(quant.mc_size * sizeof(i_color));
 	handle_quant_opts(&quant, hv);
         RETVAL = i_img_to_pal(src, &quant);
         if (RETVAL) {
           copy_colors_back(hv, &quant);
         }
-        myfree(quant.mc_colors);
+	cleanup_quant_opts(&quant);
       OUTPUT:
         RETVAL
 

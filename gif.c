@@ -1342,7 +1342,7 @@ i_writegif_low(i_quantize *quant, GifFileType *gf, i_img **imgs, int count,
     if (imgn < opts->position_count) {
       if (imgs[imgn]->xsize + opts->positions[imgn].x > scrw)
 	scrw = imgs[imgn]->xsize + opts->positions[imgn].x;
-      if (imgs[imgn]->ysize + opts->positions[imgn].y > scrw)
+      if (imgs[imgn]->ysize + opts->positions[imgn].y > scrh)
 	scrh = imgs[imgn]->ysize + opts->positions[imgn].y;
     }
     else {
