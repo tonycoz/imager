@@ -7,7 +7,7 @@
 # (It may become useful if the test is moved to ./t subdirectory.)
 use lib qw(blib/lib blib/arch);
 
-BEGIN { $| = 1; print "1..26\n"; }
+BEGIN { $| = 1; print "1..27\n"; }
 END {print "not ok 1\n" unless $loaded;}
 use Imager qw(:all);
 
@@ -108,7 +108,7 @@ close(FH);
 print "ok 9\n";
 
 if (!i_has_format("gif")) {
-	for (10..23) { print "ok $_ # skip\n"; }
+	for (10..24) { print "ok $_ # skip\n"; }
 } else {
     open(FH,">testout/t10.gif") || die "Cannot open testout/t10.gif\n";
     binmode(FH);
@@ -298,15 +298,26 @@ EOS
 			       }, @imgs);
     close FH;
     print "ok 23\n";
-				
+
+    # regression test: giflib doesn't like 1 colour images
+    $img = Imager::ImgRaw::new(100, 100, 3);
+    i_box_filled($img, 0, 0, 100, 100, $red);
+    open FH, ">testout/t10_onecol.gif" or die $!;
+    binmode FH;
+    if (i_writegif_gen(fileno(FH), { translate=>'giflib'}, $img)) {
+      print "ok 24 # single colour write regression\n";
+    } else {
+      print "not ok 24 # single colour write regression\n";
+    }
+    close FH;
 }
 
 
 
 if (!i_has_format("tiff")) {
-  print "ok 24 # skip\n";
   print "ok 25 # skip\n";
   print "ok 26 # skip\n";
+  print "ok 27 # skip\n";
 } else {
   open(FH,">testout/t10.tiff") || die "cannot open testout/t10.tiff for writing\n";
   binmode(FH); 
@@ -314,7 +325,7 @@ if (!i_has_format("tiff")) {
   i_writetiff_wiol($img, $IO);
   close(FH);
 
-  print "ok 24\n";
+  print "ok 25\n";
   
   open(FH,"testout/t10.tiff") or die "cannot open testout/t10.tiff\n";
   binmode(FH);
@@ -324,7 +335,7 @@ if (!i_has_format("tiff")) {
   close(FH);
 
   print "# tiff average mean square pixel difference: ",sqrt(i_img_diff($img,$cmpimg))/150*150,"\n";
-  print "ok 25\n";
+  print "ok 26\n";
 
   $IO = Imager::io_new_bufchain();
   
@@ -338,9 +349,9 @@ if (!i_has_format("tiff")) {
   }
   
   if ($odata eq $tiffdata) {
-    print "ok 26\n";
+    print "ok 27\n";
   } else {
-    print "not ok 26\n";
+    print "not ok 27\n";
   }
 
   
