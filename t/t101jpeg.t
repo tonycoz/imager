@@ -44,10 +44,12 @@ if (!i_has_format("jpeg")) {
   $diff < 10000 or print "not ";
   print "ok 3\n";
 
+	Imager::log_entry("Starting 4\n", 1);
   my $imoo = Imager->new;
   $imoo->read(file=>'testout/t101.jpg') or print "not ";
   print "ok 4\n";
   $imoo->write(file=>'testout/t101_oo.jpg') or print "not ";
+	Imager::log_entry("Starting 5\n", 1);
   print "ok 5\n";
   my $oocmp = Imager->new;
   $oocmp->read(file=>'testout/t101_oo.jpg') or print "not ";

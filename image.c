@@ -2131,6 +2131,20 @@ int i_free_gen_write_data(i_gen_write_data *info, int flush)
 
 
 
+/*
+=item i_test_format_probe(io_glue *data, int length)
+
+Cleans up the write buffer.
+
+Will flush any left-over data if I<flush> is non-zero.
+
+Returns non-zero if flush is zero or if info->cb() returns non-zero.
+
+Return zero only if flush is non-zero and info->cb() returns zero.
+ie. if it fails.
+
+=cut
+*/
 
 
 char *
@@ -2143,33 +2157,43 @@ i_test_format_probe(io_glue *data, int length) {
     {"\xFF\xD8", "jpeg"},
     {"GIF87a", "gif"},
     {"GIF89a", "gif"},
+    {"MM\0*", "tiff"},
+    {"II*\0", "tiff"},
+    {"BM", "bmp"},
+    {"\x89PNG\x0d\x0a\x1a\x0a", "png"},
     {"P1", "pnm"},
     {"P2", "pnm"},
     {"P3", "pnm"},
     {"P4", "pnm"},
     {"P5", "pnm"},
     {"P6", "pnm"},
-    {"MM\0*", "tiff"},
-    {"II*\0", "tiff"},
-    {"BM", "bmp"},
-    {"\x89PNG\x0d\x0a\x1a\x0a", "png"}
   };
   unsigned int i;
-  char head[8];
+  char head[18];
   char *match = NULL;
+  ssize_t rc;
 
   io_glue_commit_types(data);
-  data->readcb(data, head, 8);
+  rc = data->readcb(data, head, 18);
+  if (rc == -1) return NULL;
+  data->seekcb(data, -rc, SEEK_CUR);
 
   for(i=0; i<sizeof(formats)/sizeof(formats[0]); i++) { 
-    int c = !strncmp(formats[i].magic, head, strlen(formats[i].magic));
+    int c;
+    ssize_t len = strlen(formats[i].magic);
+    if (rc<len) continue;
+    c = !strncmp(formats[i].magic, head, len);
     if (c) {
       match = formats[i].name;
       break;
     }
   }
 
-  data->seekcb(data, -8, SEEK_CUR);
+
+
+  if (!match && 
+      (rc == 18) &&
+      tga_header_verify(head)) return "tga";
   return match;
 }
 

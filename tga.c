@@ -321,6 +321,36 @@ tga_header_unpack(tga_header *header, unsigned char headbuf[18]) {
 }
 
 
+
+int
+tga_header_verify(unsigned char headbuf[18]) {
+  tga_header header;
+  tga_header_unpack(&header, headbuf);
+  switch (header.datatypecode) { 
+  default:
+		printf("bad typecode!\n");
+    return 0;
+  case 0:
+  case 1:  /* Uncompressed, color-mapped images */ 
+  case 2:  /* Uncompressed, rgb images          */ 
+  case 3:  /* Uncompressed, grayscale images    */ 
+  case 9:  /* Compressed,   color-mapped images */ 
+  case 10: /* Compressed,   rgb images          */ 
+  case 11: /* Compressed,   grayscale images    */ 
+  }
+
+  switch (header.colourmaptype) { 
+  default:
+		printf("bad colourmaptype!\n");
+    return 0;
+  case 0:
+  case 1:
+  }
+  
+  return 1;
+}
+
+
 /*
 =item tga_header_pack(header, headbuf)
 
@@ -388,9 +418,11 @@ tga_source_read(tga_source *s, unsigned char *buf, size_t pixels) {
       s->len = (s->hdr &~(1<<7))+1;
       s->state = (s->hdr & (1<<7)) ? Rle : Raw;
       {
+/*
 	static cnt = 0;
 	printf("%04d %s: %d\n", cnt++, s->state==Rle?"RLE":"RAW", s->len);
-      }
+ */
+     }
       if (s->state == Rle && s->ig->readcb(s->ig, s->cval, s->bytepp) != s->bytepp) return 0;
 
       break;

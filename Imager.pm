@@ -890,14 +890,14 @@ sub settag {
   }
 }
 
-my @needseekcb = qw/tiff/;
-my %needseekcb = map { $_, $_ } @needseekcb;
-
 
 sub _get_reader_io {
-  my ($self, $input, $type) = @_;
+  my ($self, $input) = @_;
 
-  if ($input->{fd}) {
+	if ($input->{io}) {
+		return $input->{io}, undef;
+	}
+  elsif ($input->{fd}) {
     return io_new_fd($input->{fd});
   }
   elsif ($input->{fh}) {
@@ -921,8 +921,8 @@ sub _get_reader_io {
     return io_new_buffer($input->{data});
   }
   elsif ($input->{callback} || $input->{readcb}) {
-    if ($needseekcb{$type} && !$input->{seekcb}) {
-      $self->_set_error("Format $type needs a seekcb parameter");
+    if (!$input->{seekcb}) {
+      $self->_set_error("Need a seekcb parameter");
     }
     if ($input->{maxbuffer}) {
       return io_new_cb($input->{writecb},
@@ -1011,23 +1011,18 @@ sub read {
   # has been there for half a year dude.
   # Look, i just work here, ok?
 
-  if (!$input{'type'} and $input{file}) {
-    $input{'type'}=$FORMATGUESS->($input{file});
-  }
+  my ($IO, $fh) = $self->_get_reader_io(\%input) or return;
+
   unless ($input{'type'}) {
-    $self->_set_error('type parameter missing and not possible to guess from extension'); 
+		$input{'type'} = i_test_format_probe($IO, -1);
+	}
+
+  unless ($input{'type'}) {
+	  $self->_set_error('type parameter missing and not possible to guess from extension'); 
     return undef;
   }
-  if (!$formats{$input{'type'}}) {
-    $self->{ERRSTR}='format not supported'; return undef;
-  }
-
-  my %iolready=(jpeg=>1, png=>1, tiff=>1, pnm=>1, raw=>1, bmp=>1, tga=>1, rgb=>1, gif=>1);
 
   # Setup data source
-  my ($IO, $fh) = $self->_get_reader_io(\%input, $input{'type'})
-      or return;
-
   if ( $input{'type'} eq 'jpeg' ) {
     ($self->{IMG},$self->{IPTCRAW})=i_readjpeg_wiol( $IO );
     if ( !defined($self->{IMG}) ) {
