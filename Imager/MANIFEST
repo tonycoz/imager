@@ -40,8 +40,7 @@ iolayer.c
 fontfiles/dcr10.afm
 fontfiles/dcr10.pfb
 fontfiles/dodge.ttf
-lib/Imager/regmach.pod
-lib/Imager/Regops.pm
+lib/Imager/regmach.pod #lib/Imager/Regops.pm
 lib/Imager/Expr.pm
 lib/Imager/Expr/Assem.pm
 lib/Imager/Color.pm

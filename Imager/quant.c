@@ -68,7 +68,11 @@ static void translate_addi(i_quantize *, i_img *, i_palidx *);
    The giflib quantizer ignores the palette.
 */
 i_palidx *quant_translate(i_quantize *quant, i_img *img) {
-  i_palidx *result = mymalloc(img->xsize * img->ysize);
+  i_palidx *result;
+	mm_log((1, "quant_translate(quant %p, img %p)\n", quant, img));
+
+	result = mymalloc(img->xsize * img->ysize);
+
   switch (quant->translate) {
 #ifdef HAVE_LIBGIF
   case pt_giflib:
@@ -115,7 +119,7 @@ static void translate_giflib(i_quantize *quant, i_img *img, i_palidx *out) {
   
   i_color col;
 
-  /*mm_log((1,"i_writegif(0x%x, fd %d, colors %dbpp)\n",im,fd,colors));*/
+	mm_log((1,"i_writegif(quant %p, img %p, out %p)\n", quant, img, out));
   
   /*if (!(im->channels==1 || im->channels==3)) { fprintf(stderr,"Unable to write gif, improper colorspace.\n"); exit(3); }*/
   
