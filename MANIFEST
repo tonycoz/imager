@@ -8,6 +8,7 @@ draw.c
 draw.h
 conv.c
 convert.c
+map.c
 error.c
 gaussian.c
 ppport.h
