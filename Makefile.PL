@@ -251,7 +251,7 @@ sub init {
 		    order=>'23',
 		    def=>'HAVE_LIBTIFF',
 		    inccheck=>sub { $_[0] eq 'tiffio.h' },
-		    libcheck=>sub { $_[0] eq 'libtiff.a' or $_ eq "libtiff.$lext" },
+		    libcheck=>sub { $_[0] eq "libtiff$aext" or $_ eq "libtiff.$lext" },
 		    libfiles=>'-ltiff',
 		    objfiles=>'tiff.o',
 		    docs=>q{
