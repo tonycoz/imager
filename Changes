@@ -634,6 +634,8 @@ Revision history for Perl extension Imager.
 0.40
         - difference() wasn't setting an alpha channel when the input
           image didn't have one
+        - improve crop() documentation, see
+          http://perlmonks.org/index.pl?lastnode_id=155767&node_id=155428
 
 =================================================================
 
