@@ -10,6 +10,7 @@ color.c         Color translation and handling
 conv.c
 convert.c
 draw.c
+polygon.c
 draw.h
 fills.c         Generic fills
 map.c

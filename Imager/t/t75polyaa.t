@@ -6,57 +6,168 @@
 # Change 1..1 below to 1..last_test_to_print .
 # (It may become useful if the test is moved to ./t subdirectory.)
 
-BEGIN { $| = 1; print "1..3\n"; }
+BEGIN { $| = 1; print "1..5\n"; }
 END {print "not ok 1\n" unless $loaded;}
 use Imager qw(:all);
 
+sub PI () { 3.14159265358979323846 }
 
-$Imager::DEBUG=1;
 $loaded = 1;
 print "ok 1\n";
 
 init_log("testout/t75aapolyaa.log",1);
 
-$green=i_color_new(0,255,0,0);
+$red   = Imager::Color->new(255,0,0);
+$green = Imager::Color->new(0,255,0);
+$blue  = Imager::Color->new(0,0,255);
+$white = Imager::Color->new(255,255,255);
 
 
-$img=Imager->new(xsize=>10,ysize=>10);
+$img = Imager->new(xsize=>20, ysize=>10);
+@data = translate(5.5,5,
+		  rotate(0,
+			 scale(5, 5,
+			       get_polygon(n_gon => 5)
+			      )
+			)
+		 );
 
-#$nums=10;
-#$rn=10;
 
-#@rand=map { rand($rn) } 0..$nums-1;
-#@angle=sort { $a<=>$b } map { rand(360) } 0..$nums-1;
+my ($x, $y) = array_to_refpair(@data);
+i_poly_aa($img->{IMG}, $x, $y, $white);
 
-#@x=map { 25+(10+$rand[$_])*cos($angle[$_]/180*3.1415) } 0..$nums-1;
-#@y=map { 25+(10+$rand[$_])*sin($angle[$_]/180*3.1415) } 0..$nums-1;
 
-#i_poly_aa($img,[50,300,290,200],[50,60,190,220],$green);
 
-$x1=16;
-$y1=10;
 
-@x=(1, $x1, $x1);
-@y=(1,  1, $y1);
-
-@x=map { $_+0.5 } (0, 8, 8);
-@y=map { $_+0.5 } (0, 4, 0);
-
-i_poly_aa($img->{IMG},\@x,\@y,$green);
-
-push(@x,$x[0]);
-push(@y,$y[0]);
-
-#$red=i_color_new(255,0,0,0);
-#$img->polyline(color=>$red,'x'=>\@x,'y'=>\@y,antialias=>0);
 print "ok 2\n";
 
-open(FH,">testout/t75.ppm") || die "Cannot open testout/t75.ppm\n";
-binmode(FH);
-$IO = Imager::io_new_fd( fileno(FH) );
-i_writeppm_wiol($img->{IMG}, $IO) || die "Cannot write testout/t75.ppm\n";
-close(FH);
-
+$img->write(file=>"testout/t75.ppm") or die $img->errstr;
 print "ok 3\n";
 
-#malloc_state();
+
+$zoom = make_zoom($img, 8, \@data, $red);
+$zoom->write(file=>"testout/t75zoom.ppm") or die $zoom->errstr;
+
+print "ok 4\n";
+
+$img = Imager->new(xsize=>300, ysize=>100);
+
+for $n (0..55) {
+  @data = translate(20+20*($n%14),18+20*int($n/14),
+		    rotate(15*$n/PI,
+			   scale(15, 15,
+				 get_polygon('box')
+				)
+			  )
+		   );
+  my ($x, $y) = array_to_refpair(@data);
+  i_poly_aa($img->{IMG}, $x, $y, NC(rand(255), rand(255), rand(255)));
+}
+
+$img->write(file=>"testout/t75big.png") or die $img->errstr;
+
+print "ok 5\n";
+
+malloc_state();
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+sub get_polygon {
+  my $name = shift;
+  if (exists $primitives{$name}) {
+    return @{$primitives{$name}};
+  }
+
+  if (exists $polygens{$name}) {
+    return $polygens{$name}->(@_);
+  }
+
+  die "polygon spec: $name unknown\n";
+}
+
+
+sub make_zoom {
+  my ($img, $sc, $polydata, $linecolor) = @_;
+
+  # scale with nearest neighboor sampling
+  my $timg = $img->scale(scalefactor=>$sc, qtype=>'preview');
+
+  # draw the grid
+  for($lx=0; $lx<$timg->getwidth(); $lx+=$sc) {
+    $timg->line(color=>$green, x1=>$lx, x2=>$lx, y1=>0, y2=>$timg->getheight(), antialias=>0);
+  }
+
+  for($ly=0; $ly<$timg->getheight(); $ly+=$sc) {
+    $timg->line(color=>$green, y1=>$ly, y2=>$ly, x1=>0, x2=>$timg->getwidth(), antialias=>0);
+  }
+  my @data = scale($sc, $sc, @$polydata);
+  push(@data, $data[0]);
+  my ($x, $y) = array_to_refpair(@data);
+
+  $timg->polyline(color=>$linecolor, 'x'=>$x, 'y'=>$y, antialias=>0);
+  return $timg;
+}
+
+# utility functions to manipulate point data
+
+sub scale {
+  my ($x, $y, @data) = @_;
+  return map { [ $_->[0]*$x , $_->[1]*$y ] } @data;
+}
+
+sub translate {
+  my ($x, $y, @data) = @_;
+  map { [ $_->[0]+$x , $_->[1]+$y ] } @data;
+}
+
+sub rotate {
+  my ($rad, @data) = @_;
+  map { [ $_->[0]*cos($rad)+$_->[1]*sin($rad) , $_->[1]*cos($rad)-$_->[0]*sin($rad) ] } @data;
+}
+
+sub array_to_refpair {
+  my (@x, @y);
+  for (@_) {
+    push(@x, $_->[0]);
+    push(@y, $_->[1]);
+  }
+  return \@x, \@y;
+}
+
+
+
+BEGIN {
+%primitives = (
+	       box => [ [-0.5,-0.5], [0.5,-0.5], [0.5,0.5], [-0.5,0.5] ],
+	       triangle => [ [0,0], [1,0], [1,1] ],
+	      );
+
+%polygens = (
+	     wavycircle => sub {
+	       my $numv = shift;
+	       my $radfunc = shift;
+	       my @radians = map { $_*2*PI/$numv } 0..$numv-1;
+	       my @radius  = map { $radfunc->($_) } @radians;
+	       map {
+		 [ $radius[$_] * cos($_), $radius[$_] * sin($_) ]
+	       } 0..$#radians;
+	     },
+	     n_gon => sub {
+	       my $N = shift;
+	       map {
+		 [ cos($_*2*PI/$N), sin($_*2*PI/$N) ]
+	       } 0..$N-1;
+	     },
+);
+}
