@@ -118,8 +118,9 @@ i_img *i_img_pal_new_low(i_img *im, int x, int y, int channels, int maxpal) {
 }
 
 i_img *i_img_pal_new(int x, int y, int channels, int maxpal) {
-  i_img *im = mymalloc(sizeof(i_img));
-
+  i_img *im;
+  mm_log((1, "i_img_pal_new(x %d, y %d, channels %d, maxpal %d)\n", x, y, channels, maxpal));
+  im = mymalloc(sizeof(i_img));
   return i_img_pal_new_low(im, x, y, channels, maxpal);
 }
 

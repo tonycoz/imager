@@ -31,6 +31,7 @@ init_log(const char* name,int level) {
       }
     }
   }
+  setvbuf(lg_file, NULL, _IONBF, BUFSIZ);
   mm_log((0,"Imager - log started (level = %d)\n", level));
 }
 
