@@ -1604,9 +1604,13 @@ To do this:
 
   Imager->write_multi(\%opts, @images)
 
-Where %opts describes 3 possible types of outputs:
+Where %opts describes 4 possible types of outputs:
 
-=over 4
+=over 5
+
+=item type
+
+This is C<gif> for gif animations.
 
 =item callback
 
