@@ -626,6 +626,8 @@ Revision history for Perl extension Imager.
         - add our own INT2PTR and PTR2IV definitions when perl doesn't
           supply them
         - difference() method
+        - hide (with static) or rename many symbols that could possibly
+          cause conflicts with other libraries or perl
 
 =================================================================
 
