@@ -2393,7 +2393,67 @@ Imager is a module for creating and altering images - It is not meant
 as a replacement or a competitor to ImageMagick or GD. Both are
 excellent packages and well supported.
 
-=head2 API
+=head2 Overview of documentation
+
+=over
+
+=item Imager
+
+This document - Table of Contents, Example and Overview
+
+=item Imager::ImageTypes
+
+Direct type/virtual images, RGB(A)/paletted images, 8/16/double
+bits/channel, image tags, and channel masks.
+
+=item Imager::Files
+
+IO interaction, reading/writing images, format specific tags.
+
+=item Imager::Draw
+
+Drawing Primitives, lines boxes, circles, flood fill.
+
+=item Imager::Color
+
+Color specification.
+
+=item Imager::Font
+
+General font rendering.
+
+=item Imager::Transformations
+
+Copying, scaling, cropping, flipping, blending, pasting, [convert and map.]
+
+=item Imager::Engines
+
+transform2 and matrix_transform.
+
+=item Imager::Filters
+
+Filters, sharpen, blur, noise, convolve etc. and plugins.
+
+=item Imager::Expr
+
+Expressions for evaluation engine used by transform2().
+
+=item Imager::Matrix2d
+
+Helper class for affine transformations.
+
+=item Imager::Fountain
+
+Helper for making gradient profiles.
+
+=back
+
+
+
+
+
+
+
 
 Almost all functions take the parameters in the hash fashion.
 Example:
@@ -3094,290 +3154,6 @@ color table.
 
 =back
 
-=head2 Obtaining/setting attributes of images
-
-To get the size of an image in pixels the C<$img-E<gt>getwidth()> and
-C<$img-E<gt>getheight()> are used.
-
-To get the number of channels in
-an image C<$img-E<gt>getchannels()> is used.  $img-E<gt>getmask() and
-$img-E<gt>setmask() are used to get/set the channel mask of the image.
-
-  $mask=$img->getmask();
-  $img->setmask(mask=>1+2); # modify red and green only
-  $img->setmask(mask=>8); # modify alpha only
-  $img->setmask(mask=>$mask); # restore previous mask
-
-The mask of an image describes which channels are updated when some
-operation is performed on an image.  Naturally it is not possible to
-apply masks to operations like scaling that alter the dimensions of
-images.
-
-It is possible to have Imager find the number of colors in an image
-by using C<$img-E<gt>getcolorcount()>. It requires memory proportionally
-to the number of colors in the image so it is possible to have it
-stop sooner if you only need to know if there are more than a certain number
-of colors in the image.  If there are more colors than asked for
-the function return undef.  Examples:
-
-  if (!defined($img->getcolorcount(maxcolors=>512)) {
-    print "Less than 512 colors in image\n";
-  }
-
-The bits() method retrieves the number of bits used to represent each
-channel in a pixel, 8 for a normal image, 16 for 16-bit image and
-'double' for a double/channel image.  The type() method returns either
-'direct' for truecolor images or 'paletted' for paletted images.  The
-virtual() method returns non-zero if the image contains no actual
-pixels, for example masked images.
-
-=head2 Paletted Images
-
-In general you can work with paletted images in the same way as RGB
-images, except that if you attempt to draw to a paletted image with a
-color that is not in the image's palette, the image will be converted
-to an RGB image.  This means that drawing on a paletted image with
-anti-aliasing enabled will almost certainly convert the image to RGB.
-
-You can add colors to a paletted image with the addcolors() method:
-
-   my @colors = ( Imager::Color->new(255, 0, 0), 
-                  Imager::Color->new(0, 255, 0) );
-   my $index = $img->addcolors(colors=>\@colors);
-
-The return value is the index of the first color added, or undef if
-adding the colors would overflow the palette.
-
-Once you have colors in the palette you can overwrite them with the
-setcolors() method:
-
-  $img->setcolors(start=>$start, colors=>\@colors);
-
-Returns true on success.
-
-To retrieve existing colors from the palette use the getcolors() method:
-
-  # get the whole palette
-  my @colors = $img->getcolors();
-  # get a single color
-  my $color = $img->getcolors(start=>$index);
-  # get a range of colors
-  my @colors = $img->getcolors(start=>$index, count=>$count);
-
-To quickly find a color in the palette use findcolor():
-
-  my $index = $img->findcolor(color=>$color);
-
-which returns undef on failure, or the index of the color.
-
-You can get the current palette size with $img->colorcount, and the
-maximum size of the palette with $img->maxcolors.
-
-=head2 Drawing Methods
-
-IMPLEMENTATION MORE OR LESS DONE CHECK THE TESTS
-DOCUMENTATION OF THIS SECTION OUT OF SYNC
-
-It is possible to draw with graphics primitives onto images.  Such
-primitives include boxes, arcs, circles, polygons and lines.  A
-reference oriented list follows.
-
-Box:
-  $img->box(color=>$blue,xmin=>10,ymin=>30,xmax=>200,ymax=>300,filled=>1);
-
-The above example calls the C<box> method for the image and the box
-covers the pixels with in the rectangle specified.  If C<filled> is
-ommited it is drawn as an outline.  If any of the edges of the box are
-ommited it will snap to the outer edge of the image in that direction.
-Also if a color is omitted a color with (255,255,255,255) is used
-instead.
-
-Arc:
-  $img->arc(color=>$red, r=20, x=>200, y=>100, d1=>10, d2=>20 );
-
-This creates a filled red arc with a 'center' at (200, 100) and spans
-10 degrees and the slice has a radius of 20. SEE section on BUGS.
-
-Circle:
-  $img->circle(color=>$green, r=50, x=>200, y=>100);
-
-This creates a green circle with its center at (200, 100) and has a
-radius of 20.
-
-Line:
-  $img->line(color=>$green, x1=>10, x2=>100,
-                            y1=>20, y2=>50, aa=>1 );
-
-That draws an antialiased line from (10,100) to (20,50).
-
-The I<antialias> parameter is still available for backwards compatibility.
-
-Polyline:
-  $img->polyline(points=>[[$x0,$y0],[$x1,$y1],[$x2,$y2]],color=>$red);
-  $img->polyline(x=>[$x0,$x1,$x2], y=>[$y0,$y1,$y2], aa=>1);
-
-Polyline is used to draw multilple lines between a series of points.
-The point set can either be specified as an arrayref to an array of
-array references (where each such array represents a point).  The
-other way is to specify two array references.
-
-The I<antialias> parameter is still available for backwards compatibility.
-
-Polygon:
-  $img->polygon(points=>[[$x0,$y0],[$x1,$y1],[$x2,$y2]],color=>$red);
-  $img->polygon(x=>[$x0,$x1,$x2], y=>[$y0,$y1,$y2]);
-
-Polygon is used to draw a filled polygon.  Currently the polygon is
-always drawn antialiased, although that will change in the future.
-Like other antialiased drawing functions its coordinates can be
-specified with floating point values.
-
-Flood Fill:
-
-You can fill a region that all has the same color using the
-flood_fill() method, for example:
-
-  $img->flood_fill(x=>50, y=>50, color=>$color);
-
-will fill all regions the same color connected to the point (50, 50).
-
-The arc(), box(), polygon() and flood_fill() methods can take a
-C<fill> parameter which can either be an Imager::Fill object, or a
-reference to a hash containing the parameters used to create the fill:
-
-  $img->box(xmin=>10, ymin=>30, xmax=>150, ymax=>60,
-            fill => { hatch=>'cross2' });
-  use Imager::Fill;
-  my $fill = Imager::Fill->new(hatch=>'stipple');
-  $img->box(fill=>$fill);
-
-Currently you can create opaque or transparent plain color fills,
-hatched fills, image based fills and fountain fills.  See
-L<Imager::Fill> for more information.
-
-The C<color> parameter for any of the drawing methods can be an
-L<Imager::Color> object, a simple scalar that Imager::Color can
-understand, a hashref of parameters that Imager::Color->new
-understands, or an arrayref of red, green, blue values.
-
-=head2 Text rendering
-
-Text rendering is described in the Imager::Font manpage.
-
-=head2 Image resizing
-
-To scale an image so porportions are maintained use the
-C<$img-E<gt>scale()> method.  if you give either a xpixels or ypixels
-parameter they will determine the width or height respectively.  If
-both are given the one resulting in a larger image is used.  example:
-C<$img> is 700 pixels wide and 500 pixels tall.
-
-  $newimg = $img->scale(xpixels=>400); # 400x285
-  $newimg = $img->scale(ypixels=>400); # 560x400
-
-  $newimg = $img->scale(xpixels=>400,ypixels=>400); # 560x400
-  $newimg = $img->scale(xpixels=>400,ypixels=>400,type=>min); # 400x285
-
-  $newimg = $img->scale(scalefactor=>0.25); 175x125 
-  $newimg = $img->scale(); # 350x250
-
-if you want to create low quality previews of images you can pass
-C<qtype=E<gt>'preview'> to scale and it will use nearest neighbor
-sampling instead of filtering. It is much faster but also generates
-worse looking images - especially if the original has a lot of sharp
-variations and the scaled image is by more than 3-5 times smaller than
-the original.
-
-If you need to scale images per axis it is best to do it simply by
-calling scaleX and scaleY.  You can pass either 'scalefactor' or
-'pixels' to both functions.
-
-Another way to resize an image size is to crop it.  The parameters
-to crop are the edges of the area that you want in the returned image.
-If a parameter is omited a default is used instead.
-
-  $newimg = $img->crop(left=>50, right=>100, top=>10, bottom=>100); 
-  $newimg = $img->crop(left=>50, top=>10, width=>50, height=>90);
-  $newimg = $img->crop(left=>50, right=>100); # top 
-
-You can also specify width and height parameters which will produce a
-new image cropped from the center of the input image, with the given
-width and height.
-
-  $newimg = $img->crop(width=>50, height=>50);
-
-The width and height parameters take precedence over the left/right
-and top/bottom parameters respectively.
-
-=head2 Copying images
-
-To create a copy of an image use the C<copy()> method.  This is usefull
-if you want to keep an original after doing something that changes the image
-inplace like writing text.
-
-  $img=$orig->copy();
-
-To copy an image to onto another image use the C<paste()> method.
-
-  $dest->paste(left=>40,top=>20,img=>$logo);
-
-That copies the entire C<$logo> image onto the C<$dest> image so that the
-upper left corner of the C<$logo> image is at (40,20).
-
-
-=head2 Flipping images
-
-An inplace horizontal or vertical flip is possible by calling the
-C<flip()> method.  If the original is to be preserved it's possible to
-make a copy first.  The only parameter it takes is the C<dir>
-parameter which can take the values C<h>, C<v>, C<vh> and C<hv>.
-
-  $img->flip(dir=>"h");       # horizontal flip
-  $img->flip(dir=>"vh");      # vertical and horizontal flip
-  $nimg = $img->copy->flip(dir=>"v"); # make a copy and flip it vertically
-
-=head2 Rotating images
-
-Use the rotate() method to rotate an image.  This method will return a
-new, rotated image.
-
-To rotate by an exact amount in degrees or radians, use the 'degrees'
-or 'radians' parameter:
-
-  my $rot20 = $img->rotate(degrees=>20);
-  my $rotpi4 = $img->rotate(radians=>3.14159265/4);
-
-Exact image rotation uses the same underlying transformation engine as
-the matrix_transform() method.
-
-To rotate in steps of 90 degrees, use the 'right' parameter:
-
-  my $rotated = $img->rotate(right=>270);
-
-Rotations are clockwise for positive values.
-
-=head2 Blending Images
-
-To put an image or a part of an image directly
-into another it is best to call the C<paste()> method on the image you
-want to add to.
-
-  $img->paste(img=>$srcimage,left=>30,top=>50);
-
-That will take paste C<$srcimage> into C<$img> with the upper
-left corner at (30,50).  If no values are given for C<left>
-or C<top> they will default to 0.
-
-A more complicated way of blending images is where one image is
-put 'over' the other with a certain amount of opaqueness.  The
-method that does this is rubthrough.
-
-  $img->rubthrough(src=>$srcimage,tx=>30,ty=>50);
-
-That will take the image C<$srcimage> and overlay it with the upper
-left corner at (30,50).  You can rub 2 or 4 channel images onto a 3
-channel image, or a 2 channel image onto a 1 channel image.  The last
-channel is used as an alpha channel.
 
 
 =head2 Filters
@@ -3554,7 +3330,7 @@ the square of ceil(0.5 + sqrt(ssample_param)).
 =item random
 
 a random set of points within the pixel are sampled.  This looks
-pretty bad for low ssample_param values.  
+pretty bad for low ssample_param values.
 
 =item circle
 
@@ -3588,7 +3364,7 @@ a floating point number between 0 and 1, the end of the range of fill
 parameters covered by this segment.  This should be greater than
 start.
 
-=item c0 
+=item c0
 
 =item c1
 
@@ -3608,7 +3384,7 @@ hue increasing and 2 for hue decreasing.
 
 =back
 
-Don't forgot to use Imager::Fountain instead of building your own.
+Don't forget to use Imager::Fountain instead of building your own.
 Really.  It even loads GIMP gradient files.
 
 =item gaussian
@@ -4123,192 +3899,6 @@ Note: This seems to test ok on the following systems:
 Linux, Solaris, HPUX, OpenBSD, FreeBSD, TRU64/OSF1, AIX.
 If you test this on other systems please let me know.
 
-=head2 Tags
-
-Image tags contain meta-data about the image, ie. information not
-stored as pixels of the image.
-
-At the perl level each tag has a name or code and a value, which is an
-integer or an arbitrary string.  An image can contain more than one
-tag with the same name or code.
-
-You can retrieve tags from an image using the tags() method, you can
-get all of the tags in an image, as a list of array references, with
-the code or name of the tag followed by the value of the tag:
-
-  my @alltags = $img->tags;
-
-or you can get all tags that have a given name:
-
-  my @namedtags = $img->tags(name=>$name);
-
-or a given code:
-
-  my @tags = $img->tags(code=>$code);
-
-You can add tags using the addtag() method, either by name:
-
-  my $index = $img->addtag(name=>$name, value=>$value);
-
-or by code:
-
-  my $index = $img->addtag(code=>$code, value=>$value);
-
-You can remove tags with the deltag() method, either by index:
-
-  $img->deltag(index=>$index);
-
-or by name:
-
-  $img->deltag(name=>$name);
-
-or by code:
-
-  $img->deltag(code=>$code);
-
-In each case deltag() returns the number of tags deleted.
-
-When you read a GIF image using read_multi(), each image can include
-the following tags:
-
-=over
-
-=item gif_left
-
-the offset of the image from the left of the "screen" ("Image Left
-Position")
-
-=item gif_top
-
-the offset of the image from the top of the "screen" ("Image Top Position")
-
-=item gif_interlace
-
-non-zero if the image was interlaced ("Interlace Flag")
-
-=item gif_screen_width
-
-=item gif_screen_height
-
-the size of the logical screen ("Logical Screen Width", 
-"Logical Screen Height")
-
-=item gif_local_map
-
-Non-zero if this image had a local color map.
-
-=item gif_background
-
-The index in the global colormap of the logical screen's background
-color.  This is only set if the current image uses the global
-colormap.
-
-=item gif_trans_index
-
-The index of the color in the colormap used for transparency.  If the
-image has a transparency then it is returned as a 4 channel image with
-the alpha set to zero in this palette entry. ("Transparent Color Index")
-
-=item gif_delay
-
-The delay until the next frame is displayed, in 1/100 of a second. 
-("Delay Time").
-
-=item gif_user_input
-
-whether or not a user input is expected before continuing (view dependent) 
-("User Input Flag").
-
-=item gif_disposal
-
-how the next frame is displayed ("Disposal Method")
-
-=item gif_loop
-
-the number of loops from the Netscape Loop extension.  This may be zero.
-
-=item gif_comment
-
-the first block of the first gif comment before each image.
-
-=back
-
-Where applicable, the ("name") is the name of that field from the GIF89 
-standard.
-
-The following tags are set in a TIFF image when read, and can be set
-to control output:
-
-=over
-
-=item tiff_resolutionunit
-
-The value of the ResolutionUnit tag.  This is ignored on writing if
-the i_aspect_only tag is non-zero.
-
-=item tiff_documentname
-
-=item tiff_imagedescription
-
-=item tiff_make
-
-=item tiff_model
-
-=item tiff_pagename
-
-=item tiff_software
-
-=item tiff_datetime
-
-=item tiff_artist
-
-=item tiff_hostcomputer
-
-Various strings describing the image.  tiff_datetime must be formatted
-as "YYYY:MM:DD HH:MM:SS".  These correspond directly to the mixed case
-names in the TIFF specification.  These are set in images read from a
-TIFF and save when writing a TIFF image.
-
-=back
-
-The following tags are set when a Windows BMP file is read:
-
-=over
-
-=item bmp_compression
-
-The type of compression, if any.
-
-=item bmp_important_colors
-
-The number of important colors as defined by the writer of the image.
-
-=back
-
-Some standard tags will be implemented as time goes by:
-
-=over
-
-=item i_xres
-
-=item i_yres
-
-The spatial resolution of the image in pixels per inch.  If the image
-format uses a different scale, eg. pixels per meter, then this value
-is converted.  A floating point number stored as a string.
-
-=item i_aspect_only
-
-If this is non-zero then the values in i_xres and i_yres are treated
-as a ratio only.  If the image format does not support aspect ratios
-then this is scaled so the smaller value is 72dpi.
-
-=item i_incomplete
-
-If this tag is present then the whole image could not be read.  This
-isn't implemented for all images yet.
-
-=back
 
 =head1 BUGS
 
