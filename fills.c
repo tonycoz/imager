@@ -2,15 +2,81 @@
 #include "imagei.h"
 
 /*
+=head1 NAME
 
-Possible fill types:
- - solid colour
- - hatched (pattern, fg, bg)
- - tiled image
- - regmach
- - tiling?
- - generic?
+fills.c - implements the basic general fills
 
+=head1 SYNOPSIS
+
+  i_fill_t *fill;
+  i_color c1, c2;
+  i_fcolor fc1, fc2;
+  int combine;
+  fill = i_new_fill_solidf(&fc1, combine);
+  fill = i_new_fill_solid(&c1, combine);
+  fill = i_new_fill_hatchf(&fc1, &fc2, combine, hatch, cust_hash, dx, dy);
+  fill = i_new_fill_hatch(&c1, &c2, combine, hatch, cust_hash, dx, dy);
+  i_fill_destroy(fill);
+
+=head1 DESCRIPTION
+
+Implements the basic general fills, which can be used for filling some
+shapes and for flood fills.
+
+Each fill can implement up to 3 functions:
+
+=over
+
+=item fill_with_color
+
+called for fills on 8-bit images.  This can be NULL in which case the
+fill_with_colorf function is called.
+
+=item fill_with_fcolor
+
+called for fills on non-8-bit images or when fill_with_color is NULL.
+
+=item destroy
+
+called by i_fill_destroy() if non-NULL, to release any extra resources
+that the fill may need.
+
+=back
+
+fill_with_color and fill_with_fcolor are basically the same function
+except that the first works with lines of i_color and the second with
+lines of i_fcolor.
+
+If the combines member if non-zero the line data is populated from the
+target image before calling fill_with_*color.
+
+fill_with_color needs to fill the I<data> parameter with the fill
+pixels.  If combines is non-zero it the fill pixels should be combined
+with the existing data.
+
+The current fills are:
+
+=over
+
+=item *
+
+solid fill
+
+=item *
+
+hatched fill
+
+=item *
+
+fountain fill
+
+=back
+
+Fountain fill is implemented by L<filters.c>.
+
+=over
+
+=cut
 */
 
 static i_color fcolor_to_color(i_fcolor *c) {
@@ -82,12 +148,30 @@ static i_fill_solid_t base_solid_fill_comb =
   },
 };
 
+/*
+=item i_fill_destroy(fill)
+
+Call to destroy any fill object.
+
+=cut
+*/
+
 void
 i_fill_destroy(i_fill_t *fill) {
   if (fill->destroy)
     (fill->destroy)(fill);
   myfree(fill);
 }
+
+/*
+=item i_new_fill_solidf(color, combine)
+
+Create a solid fill based on a float color.
+
+If combine is non-zero then alpha values will be combined.
+
+=cut
+*/
 
 i_fill_t *
 i_new_fill_solidf(i_fcolor *c, int combine) {
@@ -106,6 +190,16 @@ i_new_fill_solidf(i_fcolor *c, int combine) {
   return &fill->base;
 }
 
+/*
+=item i_new_fill_solid(color, combine)
+
+Create a solid fill based.
+
+If combine is non-zero then alpha values will be combined.
+
+=cut
+*/
+
 i_fill_t *
 i_new_fill_solid(i_color *c, int combine) {
   int ch;
@@ -121,46 +215,6 @@ i_new_fill_solid(i_color *c, int combine) {
   }
   
   return &fill->base;
-}
-
-#define T_SOLID_FILL(fill) ((i_fill_solid_t *)(fill))
-
-static void
-fill_solid(i_fill_t *fill, int x, int y, int width, int channels, 
-           i_color *data) {
-  while (width-- > 0) {
-    *data++ = T_SOLID_FILL(fill)->c;
-  }
-}
-
-static void
-fill_solidf(i_fill_t *fill, int x, int y, int width, int channels, 
-           i_fcolor *data) {
-  while (width-- > 0) {
-    *data++ = T_SOLID_FILL(fill)->fc;
-  }
-}
-
-static void
-fill_solid_comb(i_fill_t *fill, int x, int y, int width, int channels, 
-           i_color *data) {
-  i_color c = T_SOLID_FILL(fill)->c;
-
-  while (width-- > 0) {
-    COMBINE(*data, c, channels);
-    ++data;
-  }
-}
-
-static void
-fill_solidf_comb(i_fill_t *fill, int x, int y, int width, int channels, 
-           i_fcolor *data) {
-  i_fcolor c = T_SOLID_FILL(fill)->fc;
-
-  while (width-- > 0) {
-    COMBINEF(*data, c, channels);
-    ++data;
-  }
 }
 
 static unsigned char
@@ -309,7 +363,139 @@ static void fill_hatch(i_fill_t *fill, int x, int y, int width, int channels,
                        i_color *data);
 static void fill_hatchf(i_fill_t *fill, int x, int y, int width, int channels, 
                         i_fcolor *data);
+static
+i_fill_t *
+i_new_hatch_low(i_color *fg, i_color *bg, i_fcolor *ffg, i_fcolor *fbg, 
+                int combine, int hatch, unsigned char *cust_hatch,
+                int dx, int dy);
 
+/*
+=item i_new_fill_hatch(fg, bg, combine, hatch, cust_hatch, dx, dy)
+
+Creates a new hatched fill with the fg color used for the 1 bits in
+the hatch and bg for the 0 bits.  If combine is non-zero alpha values
+will be combined.
+
+If cust_hatch is non-NULL it should be a pointer to 8 bytes of the
+hash definition, with the high-bits to the left.
+
+If cust_hatch is NULL then one of the standard hatches is used.
+
+(dx, dy) are an offset into the hatch which can be used to unalign adjoining areas, or to align the origin of a hatch with the the side of a filled area.
+
+=cut
+*/
+i_fill_t *
+i_new_fill_hatch(i_color *fg, i_color *bg, int combine, int hatch, 
+            unsigned char *cust_hatch, int dx, int dy) {
+  return i_new_hatch_low(fg, bg, NULL, NULL, combine, hatch, cust_hatch, 
+                         dx, dy);
+}
+
+/*
+=item i_new_fill_hatchf(fg, bg, combine, hatch, cust_hatch, dx, dy)
+
+Creates a new hatched fill with the fg color used for the 1 bits in
+the hatch and bg for the 0 bits.  If combine is non-zero alpha values
+will be combined.
+
+If cust_hatch is non-NULL it should be a pointer to 8 bytes of the
+hash definition, with the high-bits to the left.
+
+If cust_hatch is NULL then one of the standard hatches is used.
+
+(dx, dy) are an offset into the hatch which can be used to unalign adjoining areas, or to align the origin of a hatch with the the side of a filled area.
+
+=cut
+*/
+i_fill_t *
+i_new_fill_hatchf(i_fcolor *fg, i_fcolor *bg, int combine, int hatch, 
+            unsigned char *cust_hatch, int dx, int dy) {
+  return i_new_hatch_low(NULL, NULL, fg, bg, combine, hatch, cust_hatch, 
+                         dx, dy);
+}
+
+#define T_SOLID_FILL(fill) ((i_fill_solid_t *)(fill))
+
+/*
+=back
+
+=head1 INTERNAL FUNCTIONS
+
+=over
+
+=item fill_solid(fill, x, y, width, channels, data)
+
+The 8-bit sample fill function for non-combining solid fills.
+
+=cut
+*/
+static void
+fill_solid(i_fill_t *fill, int x, int y, int width, int channels, 
+           i_color *data) {
+  while (width-- > 0) {
+    *data++ = T_SOLID_FILL(fill)->c;
+  }
+}
+
+/*
+=item fill_solid(fill, x, y, width, channels, data)
+
+The floating sample fill function for non-combining solid fills.
+
+=cut
+*/
+static void
+fill_solidf(i_fill_t *fill, int x, int y, int width, int channels, 
+           i_fcolor *data) {
+  while (width-- > 0) {
+    *data++ = T_SOLID_FILL(fill)->fc;
+  }
+}
+
+/*
+=item fill_solid_comb(fill, x, y, width, channels, data)
+
+The 8-bit sample fill function for combining solid fills.
+
+=cut
+*/
+static void
+fill_solid_comb(i_fill_t *fill, int x, int y, int width, int channels, 
+           i_color *data) {
+  i_color c = T_SOLID_FILL(fill)->c;
+
+  while (width-- > 0) {
+    COMBINE(*data, c, channels);
+    ++data;
+  }
+}
+
+/*
+=item fill_solidf_comb(fill, x, y, width, channels, data)
+
+The floating sample fill function for combining solid fills.
+
+=cut
+*/
+static void
+fill_solidf_comb(i_fill_t *fill, int x, int y, int width, int channels, 
+           i_fcolor *data) {
+  i_fcolor c = T_SOLID_FILL(fill)->fc;
+
+  while (width-- > 0) {
+    COMBINEF(*data, c, channels);
+    ++data;
+  }
+}
+
+/*
+=item i_new_hatch_low(fg, bg, ffg, fbg, combine, hatch, cust_hatch, dx, dy)
+
+Implements creation of hatch fill objects.
+
+=cut
+*/
 static
 i_fill_t *
 i_new_hatch_low(i_color *fg, i_color *bg, i_fcolor *ffg, i_fcolor *fbg, 
@@ -340,20 +526,13 @@ i_new_hatch_low(i_color *fg, i_color *bg, i_fcolor *ffg, i_fcolor *fbg,
   return &fill->base;
 }
 
-i_fill_t *
-i_new_fill_hatch(i_color *fg, i_color *bg, int combine, int hatch, 
-            unsigned char *cust_hatch, int dx, int dy) {
-  return i_new_hatch_low(fg, bg, NULL, NULL, combine, hatch, cust_hatch, 
-                         dx, dy);
-}
+/*
+=item fill_hatch(fill, x, y, width, channels, data)
 
-i_fill_t *
-i_new_fill_hatchf(i_fcolor *fg, i_fcolor *bg, int combine, int hatch, 
-            unsigned char *cust_hatch, int dx, int dy) {
-  return i_new_hatch_low(NULL, NULL, fg, bg, combine, hatch, cust_hatch, 
-                         dx, dy);
-}
+The 8-bit sample fill function for hatched fills.
 
+=back
+*/
 static void fill_hatch(i_fill_t *fill, int x, int y, int width, int channels, 
                        i_color *data) {
   i_fill_hatch_t *f = (i_fill_hatch_t *)fill;
@@ -376,6 +555,13 @@ static void fill_hatch(i_fill_t *fill, int x, int y, int width, int channels,
   }
 }
 
+/*
+=item fill_hatchf(fill, x, y, width, channels, data)
+
+The floating sample fill function for hatched fills.
+
+=back
+*/
 static void fill_hatchf(i_fill_t *fill, int x, int y, int width, int channels, 
                         i_fcolor *data) {
   i_fill_hatch_t *f = (i_fill_hatch_t *)fill;
@@ -397,3 +583,17 @@ static void fill_hatchf(i_fill_t *fill, int x, int y, int width, int channels,
       mask = 128;
   }
 }
+
+/*
+=back
+
+=head1 AUTHOR
+
+Tony Cook <tony@develop-help.com>
+
+=head1 SEE ALSO
+
+Imager(3)
+
+=cut
+*/
