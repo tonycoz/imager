@@ -816,6 +816,8 @@ Revision history for Perl extension Imager.
         - added the C<builtin> color specifier and the 
           Imager::Color::Table class which defines those colors.
           Resolves https://rt.cpan.org/Ticket/Display.html?id=2593
+        - added the equals() method to Imager::Color.
+          Resolves https://rt.cpan.org/Ticket/Display.html?id=2238
 
 =================================================================
 

@@ -335,6 +335,24 @@ sub set {
   return @arg ? set_internal($self, $arg[0],$arg[1],$arg[2],$arg[3]) : ();
 }
 
+sub equals {
+  my ($self, %opts) = @_;
+
+  my $other = $opts{other}
+    or return Imager->_set_error("'other' parameter required");
+  my $ignore_alpha = $opts{ignore_alpha} || 0;
+
+  my @left = $self->rgba;
+  my @right = $other->rgba;
+  my $last_chan = $ignore_alpha ? 2 : 3;
+  for my $ch (0 .. $last_chan) {
+    $left[$ch] == $right[$ch]
+      or return;
+  }
+  
+  return 1;
+}
+
 1;
 
 __END__
@@ -357,6 +375,10 @@ Imager::Color - Color handling for Imager.
   @hsv = $color->hsv(); # not implemented but proposed
 
   $color->info();
+
+  if ($color->equals(other=>$other_color)) { 
+    ...
+  }
 
 
 =head1 DESCRIPTION
@@ -383,6 +405,16 @@ This returns the rgba code of the color the object contains.
 =item info
 
 Calling info merely dumps the relevant colorcode to the log.
+
+=item equals(other=>$other_color)
+
+=item equals(other=>$other_color, ignore_alpha=>1)
+
+Compares $self and color $other_color returning true if the color
+components are the same.
+
+Compares all four channels unless C<ignore_alpha> is set.  If
+C<ignore_alpha> is set only the first three channels are compared.
 
 =back
 
