@@ -873,6 +873,10 @@ Revision history for Perl extension Imager.
 - resolves https://rt.cpan.org/Ticket/Display.html?id=7949
 - the type 1 glyph_names() method didn't do correct error handling 
   when the string parameter wasn't supplied
+- renamed io.h to imio.h to prevent problems building under cygwin.
+  resolve https://rt.cpan.org/Ticket/Display.html?id=7948
+- i_writegif_low() wasn't setting the returned global palette, which
+  meant a rubbish palette was returned to the user (detected with valgrind)
 
 =================================================================
 
