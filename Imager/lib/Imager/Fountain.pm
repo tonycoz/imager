@@ -260,6 +260,7 @@ sub simple {
       $f->add(start=>$positions->[$i], end=>$positions->[$i+1],
               c0 => $colors->[$i], c1=>$colors->[$i+1]);
     }
+    return $f;
   }
   else {
     warn "Nothing to do";
