@@ -30,6 +30,13 @@ MultiImage & metadata support:
 
 New Features:
 - Add mng support, pcx and aalib support.
+  - Windows icon files (.ico)
+  - ILBM (Amiga) images
+  - photoshop files (I think I've seen docs)
+  - XBM
+  - FITS
+  - WMF (extract bitmap data on read)
+  - gzip or bzip2 compressed raw
 
 - Transforms, interpolated multidimensional lookup tables.
   Usefull for CMYK <-> RGB table lookup.
