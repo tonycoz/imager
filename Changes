@@ -733,12 +733,18 @@ Revision history for Perl extension Imager.
 	  them to imager.perl.org ones.
 
 0.43
-        - added log() and exp() functions to transform2()
+	- added log() and exp() functions to transform2()
 	- change the getpN() functions in transform2() to set a 
 	  reasonable alpha if the input image has no alpha
 	- document the constants that transform2() defines
 	- skip the right number of tests when FT2 isn't available
 	- This version pushed to CPAN because of skip problem in FT2 test.
+	- only call FT_Get_Postscript_Name() on FT 2.0.6 and later
+	- put the IM_LIBPATH and IM_INCPATH values first in the search
+	  path so the builder gets their local versions if desired rather
+	  than the system versions they might be trying to avoid
+	- document the exp() and log() transform2() functions
+	- document the constants normally set by transform2().
 
 =================================================================
 

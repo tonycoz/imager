@@ -1,6 +1,7 @@
 # this doesn't need a new namespace - I hope
 use Imager qw(:all);
 use vars qw($TESTNUM);
+use Carp 'confess';
 
 $TESTNUM = 1;
 
@@ -43,6 +44,8 @@ sub okx {
 sub okn {
   my ($num, $ok, $comment) = @_;
 
+  defined $num or confess "No \$num supplied";
+  defined $comment or confess "No \$comment supplied";
   if ($ok) {
     print "ok $num # $comment\n";
   }

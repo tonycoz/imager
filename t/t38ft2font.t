@@ -242,12 +242,22 @@ if (okx($exfont, "loaded existence font")) {
   okx($bbox->pos_width != $bbox->advance_width, "OO check");
 
   # name tests
-  my $facename = Imager::Font::FreeType2::i_ft2_face_name($exfont->{id});
-  print "# face name '$facename'\n";
-  okx($facename eq 'ExistenceTest', "test face name");
-  $facename = $exfont->face_name;
-  okx($facename eq 'ExistenceTest', "test face name OO");
-
+  # make sure the number of tests on each branch match
+  if (Imager::Font::FreeType2::i_ft2_can_face_name()) {
+    my $facename = Imager::Font::FreeType2::i_ft2_face_name($exfont->{id});
+    print "# face name '$facename'\n";
+    okx($facename eq 'ExistenceTest', "test face name");
+    $facename = $exfont->face_name;
+    okx($facename eq 'ExistenceTest', "test face name OO");
+  }
+  else {
+    # make sure we get the error we expect
+    my $facename = Imager::Font::FreeType2::i_ft2_face_name($exfont->{id});
+    my ($msg) = Imager::_error_as_msg();
+    okx(!defined($facename), "test face name not supported");
+    print "# $msg\n";
+    okx(scalar($msg =~ /or later required/), "test face name not supported");
+  }
 }
 else {
   skipx(5, "couldn't load test font");

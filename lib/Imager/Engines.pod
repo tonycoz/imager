@@ -220,6 +220,48 @@ epsilon value is used.
 
 Basic logical operators.
 
+=item log(n), exp(n)
+
+Natural logarithm and exponential.
+
+=back
+
+=item Constants
+
+transform2() defines the following constants:
+
+=over
+
+=item pi
+
+The classical constant.
+
+=item w
+
+=item h
+
+The width and height of the output image.
+
+=item cx
+
+=item cy
+
+The center of the output image.
+
+=item wI<image number>
+
+=item hI<image number>
+
+The width and height of each of the input images, C<w1> is the width
+of the first input image and so on.
+
+=item cxI<image number>
+
+=item cyI<image number>
+
+The center of each of the input images, (C<cx1>, C<cy1>) is the center
+of the first input image and so on.
+
 =back
 
 A few examples:

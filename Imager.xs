@@ -4226,6 +4226,9 @@ i_ft2_face_name(handle)
           PUSHs(sv_2mortal(newSVpv(name, 0)));
         }
 
+undef_int
+i_ft2_can_face_name()
+
 void
 i_ft2_glyph_name(handle, text_sv, utf8 = 0)
         Imager::Font::FT2 handle
@@ -4370,3 +4373,4 @@ i_new_fill_image(src, matrix, xoff, yoff, combine)
         RETVAL = i_new_fill_image(src, matrixp, xoff, yoff, combine);
       OUTPUT:
         RETVAL
+

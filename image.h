@@ -305,6 +305,7 @@ extern int i_ft2_has_chars(FT2_Fonthandle *handle, char const *text, int len,
                            int utf8, char *work);
 extern int i_ft2_face_name(FT2_Fonthandle *handle, char *name_buf, 
                            size_t name_buf_size);
+extern int i_ft2_can_face_name(void);
 extern int i_ft2_glyph_name(FT2_Fonthandle *handle, unsigned char ch, 
                             char *name_buf, size_t name_buf_size);
 extern int i_ft2_can_do_glyph_names(void);
