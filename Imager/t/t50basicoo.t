@@ -71,29 +71,21 @@ for my $type (@types) {
   if (ok($fh, "opening $opts{file}")) {
     binmode $fh;
     my $fhimg = Imager->new;
-    Imager::log_entry("Reading file: $opts{file}\n", 0);
-
-    my $fhrc = $fhimg->read(fh=>$fh, %mopts);
-    if (!ok($fhrc, "check that type is required")) {
-      ok ($fhimg->errstr =~ /type parameter missing/, "check for no type error");
+    if (ok($fhimg->read(fh=>$fh, %mopts), "read from fh")) {
+      ok($fh->seek(0, SEEK_SET), "seek after read");
+      if (ok($fhimg->read(fh=>$fh, %mopts, type=>$type), "read from fh")) {
+	ok(Imager::i_img_diff($img->{IMG}, $fhimg->{IMG}) == 0,
+	   "image comparison after fh read");
+      }
+      else {
+	skip("no image to compare");
+      }
+      ok($fh->seek(0, SEEK_SET), "seek after read");
     }
-    else {
-      skip("previous test failed");
-    }
-    $fh->seek(0, SEEK_SET);
-    if (ok($fhimg->read(fh=>$fh, %mopts, type=>$type), "read from fh")) {
-      ok(Imager::i_img_diff($img->{IMG}, $fhimg->{IMG}) == 0,
-         "image comparison after fh read");
-    }
-    else {
-      skip("no image to compare");
-    }
-    ok($fh->seek(0, SEEK_SET), "seek after read");
 
     # read from a fd
     my $fdimg = Imager->new;
-    if (ok($fdimg->read(fd=>fileno($fh), %mopts, type=>$type),
-           "read from fd")) {
+    if (ok($fdimg->read(fd=>fileno($fh), %mopts, type=>$type), "read from fd")) {
       ok(Imager::i_img_diff($img->{IMG}, $fdimg->{IMG}) == 0,
          "image comparistion after fd read");
     }
@@ -358,7 +350,7 @@ Imager::malloc_state();
 #print "ok 2\n";
 
 sub ok {
-  my ($ok, $msg, $img) = @_;
+  my ($ok, $msg, $img, $why, $skipcount) = @_;
 
   ++$test_num;
   if ($ok) {
@@ -374,7 +366,7 @@ sub ok {
     print $line, "\n";
     Imager::log_entry($line."\n", 0);
   }
-
+  skip($why, $skipcount) if defined $why;
   $ok;
 }
 
