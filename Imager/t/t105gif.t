@@ -1,5 +1,5 @@
 $|=1;
-print "1..19\n";
+print "1..22\n";
 use Imager qw(:all);
 
 init_log("testout/t105gif.log",1);
@@ -293,9 +293,25 @@ EOS
     else {
       print "ok 19 # ",Imager::_error_as_msg(),"\n";
     }
+
+    # try to read a truncated gif (no image descriptors)
+    read_failure('testimg/trimgdesc.gif', 20);
+    # file truncated just after the image descriptor tag
+    read_failure('testimg/trmiddesc.gif', 21);
+    # image has no colour map
+    read_failure('testimg/nocmap.gif', 22);
+
+    # image has a local colour map
+    open FH, "< testimg/loccmap.gif"
+      or die "Cannot open testimg/loccmap.gif: $!";
+    binmode FH;
+    if (i_readgif(fileno(FH))) {
+      print "ok 23\n";
+    }
+    else {
+      print "not ok 23 # failed to read image with only a local colour map";
+    }
 }
-
-
 
 sub test_readgif_cb {
   my ($size) = @_;
@@ -306,3 +322,21 @@ sub test_readgif_cb {
   close FH; 
   return $img;
 }
+
+# tests for reading bad gif files
+sub read_failure {
+  my ($filename, $testnum) = @_;
+
+  open FH, "< $filename"
+    or die "Cannot open $filename: $!";
+  binmode FH;
+  my ($result, $map) = i_readgif(fileno(FH));
+  if ($result) {
+    print "not ok $testnum # this is an invalid file, we succeeded\n";
+  }
+  else {
+    print "ok $testnum # ",Imager::_error_as_msg(),"\n";
+  }
+  close FH;
+}
+
