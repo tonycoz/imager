@@ -1310,6 +1310,7 @@ Returns 0 if the pixel could be set, -1 otherwise.
 
 =cut
 */
+static
 int
 i_ppix_d(i_img *im, int x, int y, i_color *val) {
   int ch;
@@ -1335,6 +1336,7 @@ Returns 0 if the pixel could be set, -1 otherwise.
 
 =cut
 */
+static
 int 
 i_gpix_d(i_img *im, int x, int y, i_color *val) {
   int ch;
@@ -1363,6 +1365,7 @@ Returns the number of pixels copied (eg. if r, l or y is out of range)
 
 =cut
 */
+static
 int
 i_glin_d(i_img *im, int l, int r, int y, i_color *vals) {
   int ch, count, i;
@@ -1399,6 +1402,7 @@ Returns the number of pixels copied (eg. if r, l or y is out of range)
 
 =cut
 */
+static
 int
 i_plin_d(i_img *im, int l, int r, int y, i_color *vals) {
   int ch, count, i;
@@ -1427,6 +1431,7 @@ i_plin_d(i_img *im, int l, int r, int y, i_color *vals) {
 
 =cut
 */
+static
 int
 i_ppixf_d(i_img *im, int x, int y, i_fcolor *val) {
   int ch;
@@ -1447,6 +1452,7 @@ i_ppixf_d(i_img *im, int x, int y, i_fcolor *val) {
 
 =cut
 */
+static
 int
 i_gpixf_d(i_img *im, int x, int y, i_fcolor *val) {
   int ch;
@@ -1476,6 +1482,7 @@ Returns the number of pixels copied (eg. if r, l or y is out of range)
 
 =cut
 */
+static
 int
 i_glinf_d(i_img *im, int l, int r, int y, i_fcolor *vals) {
   int ch, count, i;
@@ -1512,6 +1519,7 @@ Returns the number of pixels copied (eg. if r, l or y is out of range)
 
 =cut
 */
+static
 int
 i_plinf_d(i_img *im, int l, int r, int y, i_fcolor *vals) {
   int ch, count, i;
@@ -1546,7 +1554,9 @@ Returns the number of samples read (which should be (r-l) * bits_set(chan_mask)
 
 =cut
 */
-int i_gsamp_d(i_img *im, int l, int r, int y, i_sample_t *samps, 
+static
+int
+i_gsamp_d(i_img *im, int l, int r, int y, i_sample_t *samps, 
               int *chans, int chan_count) {
   int ch, count, i, w;
   unsigned char *data;
@@ -1602,7 +1612,9 @@ Returns the number of samples read (which should be (r-l) * bits_set(chan_mask)
 
 =cut
 */
-int i_gsampf_d(i_img *im, int l, int r, int y, i_fsample_t *samps, 
+static
+int
+i_gsampf_d(i_img *im, int l, int r, int y, i_fsample_t *samps, 
                int *chans, int chan_count) {
   int ch, count, i, w;
   unsigned char *data;
