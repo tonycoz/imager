@@ -15,10 +15,7 @@ Iolayer:
 
 BUGS:
 
-- clipping of FT1 output that hangs to the left of the CP, eg.
-http://test.develop-help.com/logo.mhtml?text=ff&font=cgtr66w&size=120&bg=FFFFFF&fg=0000FF&border=2
-- width problem in the above - a test font with similar overlaps could
-  be useful (maybe this can be built with pfaedit)
+- jpeg writer doesn't handle write errors
 
 Enhanched internal structure:
 
