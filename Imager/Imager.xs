@@ -3189,3 +3189,38 @@ i_new_fill_hatchf(fg, bg, combine, hatch, cust_hatch, dx, dy)
       OUTPUT:
         RETVAL
 
+Imager::FillHandle
+i_new_fill_image(src, matrix, xoff, yoff, combine)
+        Imager::ImgRaw src
+        int xoff
+        int yoff
+        int combine
+      PREINIT:
+        double matrix[9];
+        double *matrixp;
+        AV *av;
+        IV len;
+        SV *sv1;
+        int i;
+      CODE:
+        if (!SvOK(ST(1))) {
+          matrixp = NULL;
+        }
+        else {
+          if (!SvROK(ST(1)) || SvTYPE(SvRV(ST(1))) != SVt_PVAV)
+            croak("i_new_fill_image: parameter must be an arrayref");
+	  av=(AV*)SvRV(ST(1));
+	  len=av_len(av)+1;
+          if (len > 9)
+            len = 9;
+          for (i = 0; i < len; ++i) {
+	    sv1=(*(av_fetch(av,i,0)));
+	    matrix[i] = SvNV(sv1);
+          }
+          for (; i < 9; ++i)
+            matrix[i] = 0;
+          matrixp = matrix;
+        }
+        RETVAL = i_new_fill_image(src, matrixp, xoff, yoff, combine);
+      OUTPUT:
+        RETVAL
