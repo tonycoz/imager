@@ -34,6 +34,14 @@ Imager::Draw - Draw primitives to images
   
   $img->flood_fill(x=>50, y=>50, color=>$color);
 
+  $img->setpixel(x=>50, y=>70, color=>$color);
+
+  $img->setpixel(x=>[ 50, 60, 70 ], y=>[20, 30, 40], color=>$color);
+
+  my $color = $img->getpixel(x=>50, y=>70);
+
+  my @colors = $img->getpixel(x=>[ 50, 60, 70 ], y=>[20, 30, 40]);
+
 =head1 DESCRIPTION
 
 It is possible to draw with graphics primitives onto images.  Such
@@ -153,6 +161,24 @@ flood_fill() method, for example:
 
 will fill all regions the same color connected to the point (50, 50).
 
+=item setpixel and getpixel
+
+  $img->setpixel(x=>50, y=>70, color=>$color);
+  $img->setpixel(x=>[ 50, 60, 70 ], y=>[20, 30, 40], color=>$color);
+  my $color = $img->getpixel(x=>50, y=>70);
+  my @colors = $img->getpixel(x=>[ 50, 60, 70 ], y=>[20, 30, 40]);
+
+setpixel() is used to set one or more individual pixels, and
+getpixel() to retrieve the same.
+
+For either method you can supply a single set of co-ordinates as
+scalar x and y parameters, or set each to an arrayref of ordinates.
+
+When called with arrays, getpixel() will return a list of colors in
+list context, and an arrayref in scalar context.
+
+To receive floating point colors from getpixel, set the C<type>
+parameter to 'float'.
 
 =head1 BUGS
 

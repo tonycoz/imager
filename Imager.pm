@@ -2029,6 +2029,90 @@ sub flood_fill {
   $self;
 }
 
+sub setpixel {
+  my $self = shift;
+
+  my %opts = ( color=>$self->{fg} || NC(255, 255, 255), @_);
+
+  unless (exists $opts{'x'} && exists $opts{'y'}) {
+    $self->{ERRSTR} = 'missing x and y parameters';
+    return undef;
+  }
+
+  my $x = $opts{'x'};
+  my $y = $opts{'y'};
+  my $color = _color($opts{color})
+    or return undef;
+  if (ref $x && ref $y) {
+    unless (@$x == @$y) {
+      $self->{ERRSTR} = 'length of x and y mistmatch';
+      return undef;
+    }
+    if ($color->isa('Imager::Color')) {
+      for my $i (0..$#{$opts{'x'}}) {
+        i_ppix($self->{IMG}, $x->[$i], $y->[$i], $color);
+      }
+    }
+    else {
+      for my $i (0..$#{$opts{'x'}}) {
+        i_ppixf($self->{IMG}, $x->[$i], $y->[$i], $color);
+      }
+    }
+  }
+  else {
+    if ($color->isa('Imager::Color')) {
+      i_ppix($self->{IMG}, $x, $y, $color);
+    }
+    else {
+      i_ppixf($self->{IMG}, $x, $y, $color);
+    }
+  }
+
+  $self;
+}
+
+sub getpixel {
+  my $self = shift;
+
+  my %opts = ( type=>'8bit', @_);
+
+  unless (exists $opts{'x'} && exists $opts{'y'}) {
+    $self->{ERRSTR} = 'missing x and y parameters';
+    return undef;
+  }
+
+  my $x = $opts{'x'};
+  my $y = $opts{'y'};
+  if (ref $x && ref $y) {
+    unless (@$x == @$y) {
+      $self->{ERRSTR} = 'length of x and y mismatch';
+      return undef;
+    }
+    my @result;
+    if ($opts{type} eq '8bit') {
+      for my $i (0..$#{$opts{'x'}}) {
+        push(@result, i_get_pixel($self->{IMG}, $x->[$i], $y->[$i]));
+      }
+    }
+    else {
+      for my $i (0..$#{$opts{'x'}}) {
+        push(@result, i_gpixf($self->{IMG}, $x->[$i], $y->[$i]));
+      }
+    }
+    return wantarray ? @result : \@result;
+  }
+  else {
+    if ($opts{type} eq '8bit') {
+      return i_get_pixel($self->{IMG}, $x, $y);
+    }
+    else {
+      return i_gpixf($self->{IMG}, $x, $y);
+    }
+  }
+
+  $self;
+}
+
 # make an identity matrix of the given size
 sub _identity {
   my ($size) = @_;

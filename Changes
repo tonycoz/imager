@@ -597,6 +597,7 @@ Revision history for Perl extension Imager.
 	- Added lib/Imager/ImageTypes.pod, draft of ImageType pod.
 	- Added lib/Imager/Filters.pod, draft of Filters pod.
 	- Added lib/Imager/Engines.pod, draft of Engines pod.
+        - added getpixel() and setpixel() methods
 
 
 =================================================================
