@@ -320,7 +320,6 @@ RGB image with:
   $rgbimg = $img->to_rgb8;
 
 
-
 =head2 Masked Images
 
 Masked images let you control which pixels are modified in an
@@ -429,3 +428,232 @@ isn't implemented for all images yet.
 
 
 
+
+=head2 Quantization options
+
+These options can be specified when calling write_multi() for gif
+files, when writing a single image with the gifquant option set to
+'gen', or for direct calls to i_writegif_gen and i_writegif_callback.
+
+=over
+
+=item colors
+
+A arrayref of colors that are fixed.  Note that some color generators
+will ignore this.
+
+=item transp
+
+The type of transparency processing to perform for images with an
+alpha channel where the output format does not have a proper alpha
+channel (eg. gif).  This can be any of:
+
+=over
+
+=item none
+
+No transparency processing is done. (default)
+
+=item threshold
+
+Pixels more transparent that tr_threshold are rendered as transparent.
+
+=item errdiff
+
+An error diffusion dither is done on the alpha channel.  Note that
+this is independent of the translation performed on the colour
+channels, so some combinations may cause undesired artifacts.
+
+=item ordered
+
+The ordered dither specified by tr_orddith is performed on the alpha
+channel.
+
+=back
+
+This will only be used if the image has an alpha channel, and if there
+is space in the palette for a transparency colour.
+
+=item tr_threshold
+
+The highest alpha value at which a pixel will be made transparent when
+transp is 'threshold'. (0-255, default 127)
+
+=item tr_errdiff
+
+The type of error diffusion to perform on the alpha channel when
+transp is 'errdiff'.  This can be any defined error diffusion type
+except for custom (see errdiff below).
+
+=item tr_orddith
+
+The type of ordered dither to perform on the alpha channel when transp
+is 'ordered'.  Possible values are:
+
+=over
+
+=item random
+
+A semi-random map is used.  The map is the same each time.
+
+=item dot8
+
+8x8 dot dither.
+
+=item dot4
+
+4x4 dot dither
+
+=item hline
+
+horizontal line dither.
+
+=item vline
+
+vertical line dither.
+
+=item "/line"
+
+=item slashline
+
+diagonal line dither
+
+=item '\line'
+
+=item backline
+
+diagonal line dither
+
+=item tiny
+
+dot matrix dither (currently the default).  This is probably the best
+for displays (like web pages).
+
+=item custom
+
+A custom dither matrix is used - see tr_map
+
+=back
+
+=item tr_map
+
+When tr_orddith is custom this defines an 8 x 8 matrix of integers
+representing the transparency threshold for pixels corresponding to
+each position.  This should be a 64 element array where the first 8
+entries correspond to the first row of the matrix.  Values should be
+betweern 0 and 255.
+
+=item make_colors
+
+Defines how the quantization engine will build the palette(s).
+Currently this is ignored if 'translate' is 'giflib', but that may
+change.  Possible values are:
+
+=over
+
+=item none
+
+Only colors supplied in 'colors' are used.
+
+=item webmap
+
+The web color map is used (need url here.)
+
+=item addi
+
+The original code for generating the color map (Addi's code) is used.
+
+=back
+
+Other methods may be added in the future.
+
+=item colors
+
+A arrayref containing Imager::Color objects, which represents the
+starting set of colors to use in translating the images.  webmap will
+ignore this.  The final colors used are copied back into this array
+(which is expanded if necessary.)
+
+=item max_colors
+
+The maximum number of colors to use in the image.
+
+=item translate
+
+The method used to translate the RGB values in the source image into
+the colors selected by make_colors.  Note that make_colors is ignored
+whene translate is 'giflib'.
+
+Possible values are:
+
+=over
+
+=item giflib
+
+The giflib native quantization function is used.
+
+=item closest
+
+The closest color available is used.
+
+=item perturb
+
+The pixel color is modified by perturb, and the closest color is chosen.
+
+=item errdiff
+
+An error diffusion dither is performed.
+
+=back
+
+It's possible other transate values will be added.
+
+=item errdiff
+
+The type of error diffusion dither to perform.  These values (except
+for custom) can also be used in tr_errdif.
+
+=over
+
+=item floyd
+
+Floyd-Steinberg dither
+
+=item jarvis
+
+Jarvis, Judice and Ninke dither
+
+=item stucki
+
+Stucki dither
+
+=item custom
+
+Custom.  If you use this you must also set errdiff_width,
+errdiff_height and errdiff_map.
+
+=back
+
+=item errdiff_width
+
+=item errdiff_height
+
+=item errdiff_orig
+
+=item errdiff_map
+
+When translate is 'errdiff' and errdiff is 'custom' these define a
+custom error diffusion map.  errdiff_width and errdiff_height define
+the size of the map in the arrayref in errdiff_map.  errdiff_orig is
+an integer which indicates the current pixel position in the top row
+of the map.
+
+=item perturb
+
+When translate is 'perturb' this is the magnitude of the random bias
+applied to each channel of the pixel before it is looked up in the
+color table.
+
+=back
+
+=cut
