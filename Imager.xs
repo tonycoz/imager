@@ -19,6 +19,12 @@ typedef i_color* Imager__Color;
 typedef i_fcolor* Imager__Color__Float;
 typedef i_img*   Imager__ImgRaw;
 
+/* later perls define this macro to prevent warning when converting
+from IV to pointer types */
+
+#ifndef INT2PTR
+#define INT2PTR(type,value) (type)(value)
+#endif
 
 #ifdef HAVE_LIBTT
 typedef TT_Fonthandle* Imager__Font__TT;
@@ -577,7 +583,7 @@ static void handle_quant_opts(i_quantize *quant, HV *hv)
     for (i = 0; i < quant->mc_count; ++i) {
       SV **sv1 = av_fetch(av, i, 0);
       if (sv1 && *sv1 && SvROK(*sv1) && sv_derived_from(*sv1, "Imager::Color")) {
-	i_color *col = (i_color *)SvIV((SV*)SvRV(*sv1));
+	i_color *col = INT2PTR(i_color *, SvIV((SV*)SvRV(*sv1)));
 	quant->mc_colors[i] = *col;
       }
     }
@@ -687,7 +693,7 @@ static void handle_gif_opts(i_gif_opts *opts, HV *hv)
   }
   sv = hv_fetch(hv, "gif_tran_color", 14, 0);
   if (sv && *sv && SvROK(*sv) && sv_derived_from(*sv, "Imager::Color")) {
-    i_color *col = (i_color *)SvIV((SV *)SvRV(*sv));
+    i_color *col = INT2PTR(i_color *, SvIV((SV *)SvRV(*sv)));
     opts->tran_color = *col;
   }
   sv = hv_fetch(hv, "gif_positions", 13, 0);
@@ -810,10 +816,10 @@ i_fountain_seg *load_fount_segs(AV *asegs, int *count) {
         croak("i_fountain: segs must contain colors in elements 3 and 4");
       }
       if (sv_derived_from(*sv3, "Imager::Color::Float")) {
-        segs[i].c[j] = *(i_fcolor *)SvIV((SV *)SvRV(*sv3));
+        segs[i].c[j] = *INT2PTR(i_fcolor *, SvIV((SV *)SvRV(*sv3)));
       }
       else {
-        i_color c = *(i_color *)SvIV((SV *)SvRV(*sv3));
+        i_color c = *INT2PTR(i_color *, SvIV((SV *)SvRV(*sv3)));
         int ch;
         for (ch = 0; ch < MAXCHANNELS; ++ch) {
           segs[i].c[j].channel[ch] = c.channel[ch] / 255.0;
@@ -1797,7 +1803,7 @@ i_writetiff_multi_wiol(ig, ...)
 	    SV *sv = ST(1+i);
 	    imgs[i] = NULL;
 	    if (SvROK(sv) && sv_derived_from(sv, "Imager::ImgRaw")) {
-	      imgs[i] = (i_img *)SvIV((SV*)SvRV(sv));
+	      imgs[i] = INT2PTR(i_img *, SvIV((SV*)SvRV(sv)));
 	    }
 	    else {
 	      i_clear_error();
@@ -1845,7 +1851,7 @@ i_writetiff_multi_wiol_faxable(ig, fine, ...)
 	    SV *sv = ST(2+i);
 	    imgs[i] = NULL;
 	    if (SvROK(sv) && sv_derived_from(sv, "Imager::ImgRaw")) {
-	      imgs[i] = (i_img *)SvIV((SV*)SvRV(sv));
+	      imgs[i] = INT2PTR(i_img *, SvIV((SV*)SvRV(sv)));
 	    }
 	    else {
 	      i_clear_error();
@@ -1967,7 +1973,7 @@ i_writegif_gen(fd, ...)
 	    SV *sv = ST(2+i);
 	    imgs[i] = NULL;
 	    if (SvROK(sv) && sv_derived_from(sv, "Imager::ImgRaw")) {
-	      imgs[i] = (i_img *)SvIV((SV*)SvRV(sv));
+	      imgs[i] = INT2PTR(i_img *, SvIV((SV*)SvRV(sv)));
 	    }
 	    else {
 	      i_clear_error();
@@ -2020,7 +2026,7 @@ i_writegif_callback(cb, maxbuffer,...)
 	    SV *sv = ST(3+i);
 	    imgs[i] = NULL;
 	    if (SvROK(sv) && sv_derived_from(sv, "Imager::ImgRaw")) {
-	      imgs[i] = (i_img *)SvIV((SV*)SvRV(sv));
+	      imgs[i] = INT2PTR(i_img *, SvIV((SV*)SvRV(sv)));
 	    }
 	    else {
 	      RETVAL = 0;
@@ -2070,7 +2076,7 @@ i_writegif_wiol(ig, opts,...)
 	    SV *sv = ST(2+i);
 	    imgs[i] = NULL;
 	    if (SvROK(sv) && sv_derived_from(sv, "Imager::ImgRaw")) {
-	      imgs[i] = (i_img *)SvIV((SV*)SvRV(sv));
+	      imgs[i] = INT2PTR(i_img *, SvIV((SV*)SvRV(sv)));
 	    }
 	    else {
 	      RETVAL = 0;
@@ -2756,13 +2762,19 @@ i_gradgen(im, ...)
 	    free(axx); free(ayy); free(ac);
             croak("i_gradgen: Element of fourth argument is not derived from Imager::Color");
 	  }
-	  ival[i] = *(i_color *)SvIV((SV *)SvRV(sv));
+	  ival[i] = *INT2PTR(i_color *, SvIV((SV *)SvRV(sv)));
 	}
         i_gradgen(im, num, xo, yo, ival, dmeasure);
         myfree(xo);
         myfree(yo);
         myfree(ival);
 
+
+void
+i_diff_image(im, im2, mindiff=0)
+    Imager::ImgRaw     im
+    Imager::ImgRaw     im2
+               int     mindiff
 
 void
 i_fountain(im, xa, ya, xb, yb, type, repeat, combine, super_sample, ssample_param, segs)
@@ -2885,7 +2897,7 @@ i_nearest_color(im, ...)
 	    free(axx); free(ayy); free(ac);
             croak("i_nearest_color: Element of fourth argument is not derived from Imager::Color");
 	  }
-	  ival[i] = *(i_color *)SvIV((SV *)SvRV(sv));
+	  ival[i] = *INT2PTR(i_color *, SvIV((SV *)SvRV(sv)));
 	}
         i_nearest_color(im, num, xo, yo, ival, dmeasure);
 
@@ -3091,7 +3103,7 @@ i_addcolors(im, ...)
           if (sv_isobject(ST(i+1)) 
               && sv_derived_from(ST(i+1), "Imager::Color")) {
             IV tmp = SvIV((SV *)SvRV(ST(i+1)));
-            colors[i] = *(i_color *)tmp;
+            colors[i] = *INT2PTR(i_color *, tmp);
           }
           else {
             myfree(colors);
@@ -3125,7 +3137,7 @@ i_setcolors(im, index, ...)
           if (sv_isobject(ST(i+2)) 
               && sv_derived_from(ST(i+2), "Imager::Color")) {
             IV tmp = SvIV((SV *)SvRV(ST(i+2)));
-            colors[i] = *(i_color *)tmp;
+            colors[i] = *INT2PTR(i_color *, tmp);
           }
           else {
             myfree(colors);
@@ -3274,7 +3286,7 @@ i_img_masked_new(targ, mask, x, y, w, h)
               || !sv_derived_from(ST(1), "Imager::ImgRaw")) {
             croak("i_img_masked_new: parameter 2 must undef or an image");
           }
-          mask = (i_img *)SvIV((SV *)SvRV(ST(1)));
+          mask = INT2PTR(i_img *, SvIV((SV *)SvRV(ST(1))));
         }
         else
           mask = NULL;
@@ -3297,7 +3309,7 @@ i_plin(im, l, y, ...)
             if (sv_isobject(ST(i+3)) 
                 && sv_derived_from(ST(i+3), "Imager::Color")) {
               IV tmp = SvIV((SV *)SvRV(ST(i+3)));
-              work[i] = *(i_color *)tmp;
+              work[i] = *INT2PTR(i_color *, tmp);
             }
             else {
               myfree(work);
@@ -3374,7 +3386,7 @@ i_plinf(im, l, y, ...)
             if (sv_isobject(ST(i+3)) 
                 && sv_derived_from(ST(i+3), "Imager::Color::Float")) {
               IV tmp = SvIV((SV *)SvRV(ST(i+3)));
-              work[i] = *(i_fcolor *)tmp;
+              work[i] = *INT2PTR(i_fcolor *, tmp);
             }
             else {
               myfree(work);
