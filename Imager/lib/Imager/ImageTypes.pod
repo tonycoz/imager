@@ -1,0 +1,242 @@
+=head1 NAME
+
+Imager::ImageTypes - Internal image representation information
+
+=head1 SYNOPSIS
+
+  use Imager;
+
+  $img = Imager->new(); #  Empty image (size is 0 by 0)
+  $img->open(file=>'lena.png',type=>'png'); # Read image from file
+
+  $img = Imager->new(xsize=>400, ysize=>300); # RGB data
+  $img = Imager->new(xsize=>400, ysize=>300, channels=>4); # RGB with alpha
+  $img = Imager->new(xsize=>200, ysize=>200, 
+                     channels=>3, type=>'paletted');
+
+
+
+  $img->img_set(xsize=>500, ysize=>500, channels=>4);
+
+  print "image uses ".$img->bits()." per channel\n";
+  print "image is of ".$img->type()." type\n";
+  print "image is virtual\n" if $img->virtual();
+  @tags = $img->tags();
+
+
+=head2 Basic concept
+
+Imager supports various internal image representations of images.  The
+two major classes are direct mode and paletted mode.  In paletted mode
+an image has a numbered list of colors and the color of each pixel is
+determined by an index into the table.  In direct mode there is no
+color palette and each pixel has a seperate value for red green and
+blue for RGB images.  To complicate matters it's possible to have
+other color spaces than RGB, for example, gray, gray and alpha, or
+red, green, blue and alpha.
+
+In addition it's possible to have direct type images with 8 bits/channel
+16 bits/channel or double/channel (64 bits on many systems).
+
+To query an existing image about it's parameters see the C<bits()> and
+C<type()> methods.
+
+The coordinate system in Imager has the origin in the upper left
+corner, see L<Imager::Draw> for details.
+
+
+=head2 Reference list
+
+=over
+
+=item new
+
+  $img = Imager->new();
+  $img->read(file=>"alligator.ppm") or die $img->errstr;
+
+Here C<new()> creates an empty image with width and height of zero.
+It's only useful for creating an Imager object to call the read()
+method on later.
+
+  %opts = (xsize=>300, ysize=>200);
+  $img = Imager->new(%opts); # create direct mode RGBA image
+  $img = Imager->new(%opts, channels=>4); # create direct mode RGBA image
+
+To create paletted images, set the 'type' parameter to 'paletted':
+
+  $img = Imager->new(xsize=>200, ysize=>200, type=>'paletted');
+
+which creates an image with a maxiumum of 256 colors, which you can
+change by supplying the C<maxcolors> parameter.
+
+For improved color precision you can use the bits parameter to specify
+16 bit per channel:
+
+  $img = Imager->new(xsize=>200, ysize=>200, channels=>3, bits=>16);
+
+or for even more precision:
+
+  $img = Imager->new(xsize=>200, ysize=>200, channels=>3, bits=>'double');
+
+to get an image that uses a double for each channel.
+
+Note that as of this writing all functions should work on images with
+more than 8-bits/channel, but many will only work at only
+8-bit/channel precision.
+
+Currently only 8-bit, 16-bit, and double per channel image types are
+available, this may change later.
+
+=item img_set
+
+If you have an existing image, use img_set() to change it's dimensions
+- this will destroy any existing image data:
+
+  $img->img_set(xsize=>500, ysize=>500, channels=>4);
+
+=back
+
+
+To get the size of an image in pixels the C<$img-E<gt>getwidth()> and
+C<$img-E<gt>getheight()> are used.
+
+
+
+=head2 Channel attributes of direct type images
+
+=over
+
+=item getchannels
+
+To get the number of channels in an image C<getchannels()> is used.
+
+=item getmask/setmask
+
+C<getmask()> and C<setmask()> are used to get/set the channel mask of
+the image.  The channel mask is an integer value, if the i-th lsb is set
+the i-th channel is modifiable.
+
+  $mask=$img->getmask();
+  $img->setmask(mask=>1+2); # modify red and green only
+  $img->setmask(mask=>8); # modify alpha only
+  $img->setmask(mask=>$mask); # restore previous mask
+
+
+=back
+
+=head2 Paletted Images
+
+In general you can work with paletted images in the same way as RGB
+images, except that if you attempt to draw to a paletted image with a
+color that is not in the image's palette, the image will be converted
+to an RGB image.  This means that drawing on a paletted image with
+anti-aliasing enabled will almost certainly convert the image to RGB.
+
+Palette management takes place through C<addcolors()>, C<setcolors()>,
+C<getcolors()> and C<findcolor()>:
+
+=over
+
+=item addcolors
+
+You can add colors to a paletted image with the addcolors() method:
+
+   my @colors = ( Imager::Color->new(255, 0, 0), 
+                  Imager::Color->new(0, 255, 0) );
+   my $index = $img->addcolors(colors=>\@colors);
+
+The return value is the index of the first color added, or undef if
+adding the colors would overflow the palette.
+
+=item setcolors
+
+Once you have colors in the palette you can overwrite them with the
+setcolors() method:
+
+  $img->setcolors(start=>$start, colors=>\@colors);
+
+Returns true on success.
+
+=item getcolors
+
+To retrieve existing colors from the palette use the getcolors() method:
+
+  # get the whole palette
+  my @colors = $img->getcolors();
+  # get a single color
+  my $color = $img->getcolors(start=>$index);
+  # get a range of colors
+  my @colors = $img->getcolors(start=>$index, count=>$count);
+
+=item findcolor
+
+To quickly find a color in the palette use findcolor():
+
+  my $index = $img->findcolor(color=>$color);
+
+which returns undef on failure, or the index of the color.
+
+You can get the current palette size with $img->colorcount, and the
+maximum size of the palette with $img->maxcolors.
+
+=back
+
+=head2 Conversion Between Image Types
+
+=over
+
+=item to_paletted
+
+You can create a new paletted image from an existing image using the
+to_paletted() method:
+
+ $palimg = $img->to_paletted(\%opts)
+
+where %opts contains the options specified under L<Quantization options>.
+
+=item to_rgb8
+
+You can convert a paletted image (or any image) to an 8-bit/channel
+RGB image with:
+
+  $rgbimg = $img->to_rgb8;
+
+Warning: if you draw on a paletted image with colors that aren't in
+the palette, the image will be internally converted to a normal image.
+
+
+
+
+=head2 Attributes common to direct and paletted type images
+
+
+
+
+
+
+
+
+
+It is possible to have Imager find the number of colors in an image
+by using C<$img-E<gt>getcolorcount()>. It requires memory proportionally
+to the number of colors in the image so it is possible to have it
+stop sooner if you only need to know if there are more than a certain number
+of colors in the image.  If there are more colors than asked for
+the function return undef.  Examples:
+
+  if (!defined($img->getcolorcount(maxcolors=>512)) {
+    print "Less than 512 colors in image\n";
+  }
+
+The bits() method retrieves the number of bits used to represent each
+channel in a pixel, 8 for a normal image, 16 for 16-bit image and
+'double' for a double/channel image.  The type() method returns either
+'direct' for truecolor images or 'paletted' for paletted images.  The
+virtual() method returns non-zero if the image contains no actual
+pixels, for example masked images.
+
+
+
+
+
+
