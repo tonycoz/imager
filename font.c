@@ -1387,11 +1387,20 @@ Function to get texts bounding boxes given the instance of the font (internal)
 static
 undef_int
 i_tt_bbox_inst( TT_Fonthandle *handle, int inst ,const char *txt, int len, int cords[6], int utf8 ) {
-  int i, upm, ascent, descent, gascent, gdescent, width, casc, cdesc, first, start;
+  int i, upm, casc, cdesc, first;
+  
+  int start    = 0;
+  int width    = 0;
+  int gdescent = 0;
+  int gascent  = 0;
+  int descent  = 0;
+  int ascent   = 0;
+  
+
   unsigned long j;
   unsigned char *ustr;
   ustr=(unsigned char*)txt;
-  
+
   mm_log((1,"i_tt_box_inst(handle 0x%X,inst %d,txt '%.*s', len %d, utf8 %d)\n",handle,inst,len,txt,len, utf8));
 
   upm     = handle->properties.header->Units_Per_EM;
