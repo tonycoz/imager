@@ -21,6 +21,7 @@ $aext=$Config{'_a'};
 # IM_CFLAGS       Extra flags to pass to the compiler
 # IM_LFLAGS       Extra flags to pass to the linker
 # IM_DFLAGS       Extra flags to pass to the preprocessor
+# IM_SUPPRESS_PROMPT  Suppress the prompt asking about gif support
 
 
 getenv();     # get environment variables
@@ -142,7 +143,7 @@ sub gifcheck {
   }
 
  RETR:
-  if ($formats{'gif'} or $formats{'ungif'}) {
+  if (($formats{'gif'} or $formats{'ungif'}) && !$ENV{IM_SUPPRESS_PROMPT}) {
     print <<EOFF;
 
 You have libgif or libungif installed.  They are both known to have
