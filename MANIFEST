@@ -202,6 +202,7 @@ testimg/short8.bmp      8-bit/pixel, data missing from EOF
 testimg/short8rle.bmp   8-bit/pixel compressed, data missing from EOF
 testimg/simple.pbm
 testimg/test_gimp_pal   A simple GIMP palette file
+testimg/tiffwarn.tif	Generates a warning while being read
 testimg/trimgdesc.gif
 testimg/trmiddesc.gif
 testimg/winrgb2.bmp  1-bit bmp base

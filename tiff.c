@@ -61,10 +61,33 @@ static void error_handler(char const *module, char const *fmt, va_list ap) {
   i_push_errorvf(0, fmt, ap);
 }
 
+#define WARN_BUFFER_LIMIT 10000
+static char *warn_buffer = NULL;
+static int warn_buffer_size = 0;
+
 static void warn_handler(char const *module, char const *fmt, va_list ap) {
-  /* for now do nothing, perhaps we could warn(), though that should be
-     done in the XS code, not in the code which isn't mean to know perl 
-     exists ;) */
+  char buf[1000];
+
+  buf[0] = '\0';
+#ifdef HAVE_SNPRINTF
+  vsnprintf(buf, sizeof(buf), fmt, ap);
+#else
+  vsprintf(buf, fmt, ap);
+#endif
+  if (!warn_buffer || strlen(warn_buffer)+strlen(buf)+2 > warn_buffer_size) {
+    int new_size = warn_buffer_size + strlen(buf) + 2;
+    char *old_buffer = warn_buffer;
+    if (new_size > WARN_BUFFER_LIMIT) {
+      new_size = WARN_BUFFER_LIMIT;
+    }
+    warn_buffer = myrealloc(warn_buffer, new_size);
+    if (!old_buffer) *warn_buffer = '\0';
+    warn_buffer_size = new_size;
+  }
+  if (strlen(warn_buffer)+strlen(buf)+2 <= warn_buffer_size) {
+    strcat(warn_buffer, buf);
+    strcat(warn_buffer, "\n");
+  }
 }
 
 static int save_tiff_tags(TIFF *tif, i_img *im);
@@ -200,6 +223,10 @@ static i_img *read_one_tiff(TIFF *tif) {
   }
 
   i_tags_add(&im->tags, "i_format", 0, "tiff", -1, 0);
+  if (warn_buffer && *warn_buffer) {
+    i_tags_add(&im->tags, "i_warning", 0, warn_buffer, -1, 0);
+    *warn_buffer = '\0';
+  }
   
   /*   TIFFPrintDirectory(tif, stdout, 0); good for debugging */
 
@@ -367,6 +394,8 @@ i_readtiff_wiol(io_glue *ig, int length) {
   i_clear_error();
   old_handler = TIFFSetErrorHandler(error_handler);
   old_warn_handler = TIFFSetWarningHandler(warn_handler);
+  if (warn_buffer)
+    *warn_buffer = '\0';
 
   /* Add code to get the filename info from the iolayer */
   /* Also add code to check for mmapped code */
@@ -421,6 +450,8 @@ i_readtiff_multi_wiol(io_glue *ig, int length, int *count) {
   i_clear_error();
   old_handler = TIFFSetErrorHandler(error_handler);
   old_warn_handler = TIFFSetWarningHandler(warn_handler);
+  if (warn_buffer)
+    *warn_buffer = '\0';
 
   /* Add code to get the filename info from the iolayer */
   /* Also add code to check for mmapped code */

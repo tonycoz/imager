@@ -979,6 +979,9 @@ Revision history for Perl extension Imager.
   Imager's drawing functions do.
 - added trivial multiple master support via the FT2 driver
 - added .pcf and .pcf.gz to the list of extensions supported by ft2
+- the tiff reader now puts warning messages produced during reading into
+  the i_warning tag.
+  Resolves: https://rt.cpan.org/Ticket/Display.html?id=8722
 
 =================================================================
 
