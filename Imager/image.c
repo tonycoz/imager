@@ -409,7 +409,7 @@ Destroy image and free data via exorcise.
 
 void
 i_img_destroy(i_img *im) {
-  mm_log((1,"i_img_destroy(im* 0x%x)\n",im));
+  mm_log((1,"i_img_destroy(im %p)\n",im));
   i_img_exorcise(im);
   if (im) { myfree(im); }
 }
@@ -923,71 +923,78 @@ i_scaleaxis(i_img *im, float Value, int Axis) {
   int hsize, vsize, i, j, k, l, lMax, iEnd, jEnd;
   int LanczosWidthFactor;
   float *l0, *l1, OldLocation;
-  int T, TempJump1, TempJump2;
+  int T; 
+  float t;
   float F, PictureValue[MAXCHANNELS];
   short psave;
   i_color val,val1,val2;
   i_img *new_img;
 
-  mm_log((1,"i_scaleaxis(im 0x%x,Value %.2f,Axis %d)\n",im,Value,Axis));
+  mm_log((1,"i_scaleaxis(im %p,Value %.2f,Axis %d)\n",im,Value,Axis));
 
   if (Axis == XAXIS) {
-    hsize = (int) ((float) im->xsize * Value);
+    hsize = (int)(0.5 + im->xsize * Value);
     vsize = im->ysize;
     
     jEnd = hsize;
     iEnd = vsize;
-    
-    TempJump1 = (hsize - 1) * 3;
-    TempJump2 = hsize * (vsize - 1) * 3 + TempJump1;
   } else {
     hsize = im->xsize;
-    vsize = (int) ((float) im->ysize * Value);
-    
+    vsize = (int)(0.5 + im->ysize * Value);
+
     jEnd = vsize;
     iEnd = hsize;
-    
-    TempJump1 = 0;
-    TempJump2 = 0;
   }
   
-  new_img=i_img_empty_ch(NULL,hsize,vsize,im->channels);
+  new_img = i_img_empty_ch(NULL, hsize, vsize, im->channels);
   
-  if (Value >=1) LanczosWidthFactor = 1;
-  else LanczosWidthFactor = (int) (1.0/Value);
-  
+  /* 1.5 is a magic number, setting it to 2 will cause rather blurred images */
+  LanczosWidthFactor = (Value >= 1) ? 1 : (int) (1.4/Value); 
   lMax = LanczosWidthFactor << 1;
   
-  l0 = (float *) mymalloc(lMax * sizeof(float));
-  l1 = (float *) mymalloc(lMax * sizeof(float));
+  l0 = mymalloc(lMax * sizeof(float));
+  l1 = mymalloc(lMax * sizeof(float));
   
   for (j=0; j<jEnd; j++) {
     OldLocation = ((float) j) / Value;
     T = (int) (OldLocation);
     F = OldLocation - (float) T;
     
-    for (l = 0; l < lMax; l++) {
+    for (l = 0; l<lMax; l++) {
       l0[lMax-l-1] = Lanczos(((float) (lMax-l-1) + F) / (float) LanczosWidthFactor);
-      l1[l] = Lanczos(((float) (l + 1) - F) / (float) LanczosWidthFactor);
+      l1[l]        = Lanczos(((float) (l+1)      - F) / (float) LanczosWidthFactor);
     }
     
-    if (Axis== XAXIS) {
+    /* Make sure filter is normalized */
+    t = 0.0;
+    for(l=0; l<lMax; l++) {
+      t+=l0[l];
+      t+=l1[l];
+    }
+    t /= (float)LanczosWidthFactor;
+    
+    for(l=0; l<lMax; l++) {
+      l0[l] /= t;
+      l1[l] /= t;
+    }
+
+    if (Axis == XAXIS) {
       
       for (i=0; i<iEnd; i++) {
 	for (k=0; k<im->channels; k++) PictureValue[k] = 0.0;
 	for (l=0; l < lMax; l++) {
-	  i_gpix(im,T+l+1, i, &val1);
-	  i_gpix(im,T-lMax+l+1, i, &val2);
+	  i_gpix(im, T+l+1,      i, &val1);
+	  i_gpix(im, T-lMax+l+1, i, &val2);
 	  for (k=0; k<im->channels; k++) {
-	    PictureValue[k] += l1[l] * val1.channel[k];
+	    PictureValue[k] += l1[l]        * val1.channel[k];
 	    PictureValue[k] += l0[lMax-l-1] * val2.channel[k];
 	  }
 	}
 	for(k=0;k<im->channels;k++) {
-	  psave = (short)( PictureValue[k] / LanczosWidthFactor);
+	  psave = (short)(0.5+(PictureValue[k] / LanczosWidthFactor));
 	  val.channel[k]=minmax(0,255,psave);
 	}
-	i_ppix(new_img,j,i,&val);
+	i_ppix(new_img, j, i, &val);
       }
       
     } else {
@@ -995,8 +1002,8 @@ i_scaleaxis(i_img *im, float Value, int Axis) {
       for (i=0; i<iEnd; i++) {
 	for (k=0; k<im->channels; k++) PictureValue[k] = 0.0;
 	for (l=0; l < lMax; l++) {
-	  i_gpix(im,i, T+l+1, &val1);
-	  i_gpix(im,i, T-lMax+l+1, &val2);
+	  i_gpix(im, i, T+l+1, &val1);
+	  i_gpix(im, i, T-lMax+l+1, &val2);
 	  for (k=0; k<im->channels; k++) {
 	    PictureValue[k] += l1[l] * val1.channel[k];
 	    PictureValue[k] += l0[lMax-l-1] * val2.channel[k]; 
@@ -1004,9 +1011,9 @@ i_scaleaxis(i_img *im, float Value, int Axis) {
 	}
 	for (k=0; k<im->channels; k++) {
 	  psave = (short)( PictureValue[k] / LanczosWidthFactor);
-	  val.channel[k]=minmax(0,255,psave);
+	  val.channel[k] = minmax(0, 255, psave);
 	}
-	i_ppix(new_img,i,j,&val);
+	i_ppix(new_img, i, j, &val);
       }
       
     }
@@ -1014,7 +1021,7 @@ i_scaleaxis(i_img *im, float Value, int Axis) {
   myfree(l0);
   myfree(l1);
 
-  mm_log((1,"(0x%x) <- i_scaleaxis\n",new_img));
+  mm_log((1,"(%p) <- i_scaleaxis\n", new_img));
 
   return new_img;
 }

@@ -527,8 +527,12 @@ Revision history for Perl extension Imager.
         - added basic POD to trans2.c
         - transform2 now uses the error interface
         - myrealloc() is implemented for malloc debug mode
-        - now buffer chains are freed when destructor for Imager::IOi
+        - now buffer chains are freed when destructor for Imager::IO
           is called
+	- adjusted the Lanczos window width for the scaling code and
+	  added code to normalize the filter generated to preserve
+	  intensity scaling.
+
 
 =================================================================
 
