@@ -101,11 +101,12 @@ calling scaleX and scaleY.  You can pass either 'scalefactor' or
 
 =item crop
 
+Another way to resize an image is to crop it.  The parameters to
+crop are the edges of the area that you want in the returned image,
+where the right and bottom edges are non-inclusive.  If a parameter is
+omitted a default is used instead.
 
-Another way to resize an image size is to crop it.  The parameters
-to crop are the edges of the area that you want in the returned image.
-If a parameter is omited a default is used instead.
-
+  # the first two produce the same image
   $newimg = $img->crop(left=>50, right=>100, top=>10, bottom=>100); 
   $newimg = $img->crop(left=>50, top=>10, width=>50, height=>90);
   $newimg = $img->crop(left=>50, right=>100); # top 
@@ -120,7 +121,6 @@ The width and height parameters take precedence over the left/right
 and top/bottom parameters respectively.
 
 =item rotate
-
 
 Use the rotate() method to rotate an image.  This method will return a
 new, rotated image.
