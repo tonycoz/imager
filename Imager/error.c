@@ -1,0 +1,271 @@
+/*
+=head1 NAME
+
+error.c - error reporting code for Imager
+
+=head1 SYNOPSIS
+
+  // user code:
+  int new_fatal; // non-zero if errors are fatal
+  int old_fatal = i_set_failure_fatal(new_fatal);
+  i_set_argv0("name of your program");
+  extern void error_cb(char const *);
+  i_error_cb old_ecb;
+  old_ecb = i_set_error_cb(error_cb);
+  i_failed_cb old_fcb;
+  extern void failed_cb(char **errors);
+  old_fcb = i_set_failed_cb(failed_cb);
+  if (!i_something(...)) {
+    char **errors = i_errors();
+  }
+
+  // imager code:
+  undef_int i_something(...) {
+    i_clear_error();
+    if (!some_lower_func(...)) {
+      return i_failed("could not something");
+    }
+    return 1;
+  }
+  undef_int some_lower_func(...) {
+    if (somethingelse_failed()) {
+      i_push_error("could not somethingelse");
+      return 0;
+    }
+    return 1;
+  }
+
+=head1 DESCRIPTION
+
+This module provides the C level error handling functionality for
+Imager.
+
+A few functions return or pass in a char **, this is a NULL terminated
+list of pointers to error messages (which are NUL terminated strings,
+just as it normal in C :).  Even though these aren't passed as char
+const * const * pointers, don't modify the strings or the pointers.
+
+The interface as currently defined isn't thread safe, unfortunately.
+
+This code uses Imager's mymalloc() for memory allocation, so out of
+memory errors are I<always> fatal.
+
+=head1 INTERFACE
+
+These functions form the interface that a user of Imager sees (from
+C).  The Perl level won't use all of this.
+
+=over
+
+=cut
+*/
+
+#include "image.h"
+#include <stdio.h>
+#include <stdlib.h>
+
+/* we never actually use the last item - it's the NULL terminator */
+#define ERRSTK 20
+char *error_stack[ERRSTK];
+int error_sp = ERRSTK - 1;
+/* we track the amount of space used each string, so we don't reallocate 
+   space unless we need to.
+   This also means that a memory tracking library may see the memory 
+   allocated for this as a leak. */
+int error_space[ERRSTK];
+
+static i_error_cb error_cb;
+static i_failed_cb failed_cb;
+static int failures_fatal;
+static char *argv0;
+
+/*
+=item i_set_argv0(char const *program)
+
+Sets the name of the program to be displayed in fatal error messages.
+
+The simplest way to use this is just:
+
+  i_set_argv0(argv[0]);
+
+when your program starts.
+*/
+void i_set_argv0(char const *name) {
+  if (!name)
+    return;
+  char *dupl = mymalloc(strlen(name)+1);
+  strcpy(dupl, name);
+  if (argv0)
+    myfree(argv0);
+  argv0 = dupl;
+}
+
+/*
+=item i_set_failure_fatal(int failure_fatal)
+
+If failure_fatal is non-zero then any future failures will result in
+Imager exiting your program with a message describing the failure.
+
+Returns the previous setting.
+
+=cut
+*/
+int i_set_failures_fatal(int fatal) {
+  int old = failures_fatal;
+  failures_fatal = fatal;
+
+  return old;
+}
+
+/*
+=item i_set_error_cb(i_error_cb)
+
+Sets a callback function that is called each time an error is pushed
+onto the error stack.
+
+Returns the previous callback.
+
+i_set_failed_cb() is probably more useful.
+
+=cut
+*/
+i_error_cb i_set_error_cb(i_error_cb cb) {
+  i_error_cb old = error_cb;
+  error_cb = cb;
+
+  return old;
+}
+
+/*
+=item i_set_failed_cb(i_failed_cb cb)
+
+Sets a callback function that is called each time an Imager function
+fails.
+
+Returns the previous callback.
+
+=cut
+*/
+i_failed_cb i_set_failed_cb(i_failed_cb cb) {
+  i_failed_cb old = failed_cb;
+  failed_cb = cb;
+
+  return old;
+}
+
+/*
+=item i_errors()
+
+Returns a pointer to the first element of an array of error messages,
+terminated by a NULL pointer.  The highest level message is first.
+
+=cut
+*/
+char **i_errors() {
+  return error_stack + error_sp;
+}
+
+/*
+=back
+
+=head1 INTERNAL FUNCTIONS
+
+These functions are called by Imager to report errors through the
+above interface.
+
+It may be desirable to have functions to mark the stack and reset to
+the mark.
+
+=over
+
+=item i_clear_error()
+
+Called by any imager function before doing any other processing.
+
+=cut */
+void i_clear_error() {
+  error_sp = ERRSTK-1;
+}
+
+/*
+=item i_push_error(char const *msg)
+
+Called by an imager function to push an error message onto the stack.
+
+No message is pushed if the stack is full (since this means someone
+forgot to call i_clear_error(), or that a function that doesn't do
+error handling is calling function that does.).
+
+=cut
+*/
+void i_push_error(char const *msg) {
+  int size = strlen(msg)+1;
+
+  if (error_sp <= 0)
+    /* bad, bad programmer */
+    return;
+
+  --error_sp;
+  if (error_space[error_sp] < size) {
+    if (error_stack[error_sp])
+      myfree(error_stack[error_sp]);
+    /* memory allocated on the following line is only ever release when 
+       we need a bigger string */
+    error_stack[error_sp] = mymalloc(size);
+    error_space[error_sp] = size;
+  }
+  strcpy(error_stack[error_sp], msg);
+
+  if (error_cb)
+    error_cb(msg);
+}
+
+/*
+=item i_failed(char const *msg)
+
+Called by Imager code to indicate that a top-level has failed.
+
+msg can be NULL.
+
+Calls the current failed callback, if any.
+
+Aborts the program with an error, if failures have been set to be fatal.
+
+Returns zero if it does not abort.
+
+=cut
+*/
+int i_failed(char const *msg) {
+  if (msg)
+    i_push_error(msg);
+  if (failed_cb)
+    failed_cb(error_stack + error_sp);
+  if (failures_fatal) {
+    if (argv0)
+      fprintf(stderr, "%s: ", argv0);
+    fputs("error:\n", stderr);
+    while (error_stack[error_sp]) {
+      fprintf(stderr, " %s\n", error_stack[error_sp]);
+      ++error_sp;
+    }
+    exit(EXIT_FAILURE);
+  }
+
+  return 0;
+}
+
+/*
+=back
+
+=head1 BUGS
+
+This interface isn't thread safe.
+
+=head1 AUTHOR
+
+Tony Cook <tony@develop-help.com>
+
+Stack concept by Arnar Mar Hrafnkelsson <addi@umich.edu>
+
+=cut
+*/
