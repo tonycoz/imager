@@ -407,9 +407,6 @@ static void copy_colors_back(HV *hv, i_quantize *quant) {
   }
 }
 
-/* used to make the typemap happy */
-typedef HV *HASH;
-
 MODULE = Imager		PACKAGE = Imager::Color	PREFIX = ICL_
 
 Imager::Color
