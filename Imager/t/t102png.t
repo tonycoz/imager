@@ -1,3 +1,5 @@
+#!perl -w
+use strict;
 # Before `make install' is performed this script should be runnable with
 # `make test'. After `make install' it should work as `perl test.pl'
 
@@ -7,23 +9,18 @@
 # (It may become useful if the test is moved to ./t subdirectory.)
 use lib qw(blib/lib blib/arch);
 
-BEGIN { $| = 1; print "1..12\n"; }
-END {print "not ok 1\n" unless $loaded;}
-use Imager qw(:all);
-
-$loaded = 1;
-print "ok 1\n";
-
+BEGIN { $| = 1; print "1..13\n"; }
+BEGIN { require 't/testtools.pl'; }
+BEGIN { useokx('Imager', 'load Imager', ':all') }
 init_log("testout/t102png.log",1);
 
 i_has_format("png") && print "# has png\n";
 
-$green  = i_color_new(0,   255, 0,   255);
-$blue   = i_color_new(0,   0,   255, 255);
-$red    = i_color_new(255, 0,   0,   255);
+my $green  = i_color_new(0,   255, 0,   255);
+my $blue   = i_color_new(0,   0,   255, 255);
+my $red    = i_color_new(255, 0,   0,   255);
 
-$img    = Imager::ImgRaw::new(150, 150, 3);
-$cmpimg = Imager::ImgRaw::new(150, 150, 3);
+my $img    = Imager::ImgRaw::new(150, 150, 3);
 
 i_box_filled($img, 70, 25, 130, 125, $green);
 i_box_filled($img, 20, 25, 80,  125, $blue);
@@ -36,9 +33,7 @@ i_box_filled($timg, 0, 0, 20, 20, $green);
 i_box_filled($timg, 2, 2, 18, 18, $trans);
 
 if (!i_has_format("png")) {
-  for (2..12) {
-    print "ok $_ # skip no png support\n";
-  }
+  skipx(12, "no png support");
 } else {
   Imager::i_tags_add($img, "i_xres", 0, "300", 0);
   Imager::i_tags_add($img, "i_yres", 0, undef, 200);
@@ -46,53 +41,43 @@ if (!i_has_format("png")) {
   #Imager::i_tags_add($img, "i_aspect_only", 0, undef, 1);
   open(FH,">testout/t102.png") || die "cannot open testout/t102.png for writing\n";
   binmode(FH);
-  $IO = Imager::io_new_fd(fileno(FH));
-  i_writepng_wiol($img, $IO) || print "not ";
+  my $IO = Imager::io_new_fd(fileno(FH));
+  okx(i_writepng_wiol($img, $IO), "write");
   close(FH);
-
-  print "ok 2\n";
 
   open(FH,"testout/t102.png") || die "cannot open testout/t102.png\n";
   binmode(FH);
   $IO = Imager::io_new_fd(fileno(FH));
-  $cmpimg = i_readpng_wiol($IO, -1) || print "not ";
+  my $cmpimg = i_readpng_wiol($IO, -1);
   close(FH);
+  okx($cmpimg, "read png");
 
-  print "ok 3\n";
   print "# png average mean square pixel difference: ",sqrt(i_img_diff($img,$cmpimg))/150*150,"\n";
-  print i_img_diff($img, $cmpimg)
-    ? "not ok 4 # saved image different\n" : "ok 4\n";
+  isx(i_img_diff($img, $cmpimg), 0, "compare saved and original images");
 
-  my %tags = map { Imager::i_tags_get($img, $_) }
-    0..Imager::i_tags_count($img) - 1;
-  abs($tags{i_xres} - 300) < 1 or print "not ";
-  print "ok 5 # i_xres: $tags{i_xres}\n";
-  abs($tags{i_yres} - 200) < 1 or print "not ";
-  print "ok 6 # i_yres: $tags{i_yres}\n";
+  my %tags = map { Imager::i_tags_get($cmpimg, $_) }
+    0..Imager::i_tags_count($cmpimg) - 1;
+  okx(abs($tags{i_xres} - 300) < 1, "i_xres: $tags{i_xres}");
+  okx(abs($tags{i_yres} - 200) < 1, "i_yres: $tags{i_yres}");
+  isx($tags{i_format}, "png", "i_format: $tags{i_format}");
 
   open FH, "> testout/t102_trans.png"
     or die "Cannot open testout/t102_trans.png: $!";
   binmode FH;
   $IO = Imager::io_new_fd(fileno(FH));
-  if (i_writepng_wiol($timg, $IO)) {
-    print "ok 7\n";
-  }
-  else {
-    print "ok 7 # skip - png transparency not yet implemented\n";
-  }
+  okx(i_writepng_wiol($timg, $IO), "write tranparent");
   close FH;
 
   open FH,"testout/t102_trans.png" 
     or die "cannot open testout/t102_trans.png\n";
   binmode(FH);
   $IO = Imager::io_new_fd(fileno(FH));
-  $cmpimg = i_readpng_wiol($IO, -1) || print "not ";
+  $cmpimg = i_readpng_wiol($IO, -1);
+  okx($cmpimg, "read transparent");
   close(FH);
 
-  print "ok 8\n";
   print "# png average mean square pixel difference: ",sqrt(i_img_diff($timg,$cmpimg))/150*150,"\n";
-  print i_img_diff($timg, $cmpimg)
-	? "not ok 9 # saved image different\n" : "ok 9\n";
+  isx(i_img_diff($timg, $cmpimg), 0, "compare saved and original transparent");
 
   # REGRESSION TEST
   # png.c 1.1 would produce an incorrect image when loading images with
@@ -102,28 +87,22 @@ if (!i_has_format("png")) {
   binmode FH;
   $IO = Imager::io_new_fd(fileno(FH));
   # 1.1 may segfault here (it does with libefence)
-  my $pimg = i_readpng_wiol($IO,-1)
-    or print "not ";
-  print "ok 10\n";
+  my $pimg = i_readpng_wiol($IO,-1);
+  okx($pimg, "read transparent paletted image");
   close FH;
 
   open FH, "< testimg/palette_out.png"
     or die "cannot open testimg/palette_out.png: $!\n";
   binmode FH;
   $IO = Imager::io_new_fd(fileno(FH));
-  my $poimg = i_readpng_wiol($IO, -1)
-    or print "not ";
-  print "ok 11\n";
+  my $poimg = i_readpng_wiol($IO, -1);
+  okx($poimg, "read palette_out image");
   close FH;
-  if (i_img_diff($pimg, $poimg)) {
+  if (!isx(i_img_diff($pimg, $poimg), 0, "images the same")) {
     print <<EOS;
-not ok 12 # regression or you may need a more recent libpng
 # this tests a bug in Imager's png.c v1.1
 # if also tickles a bug in libpng before 1.0.5, so you may need to
 # upgrade libpng
 EOS
-  }
-  else {
-    print "ok 12\n";
   }
 }

@@ -255,6 +255,10 @@ i_readpng_wiol(io_glue *ig, int length) {
   png_read_update_info(png_ptr, info_ptr);
   
   im = i_img_empty_ch(NULL,width,height,channels);
+  if (!im) {
+    png_destroy_read_struct(&png_ptr, &info_ptr, (png_infopp)NULL);
+    return NULL;
+  }
 
   for (pass = 0; pass < number_passes; pass++)
     for (y = 0; y < height; y++) { png_read_row(png_ptr,(png_bytep) &(im->idata[channels*width*y]), NULL); }
@@ -273,11 +277,13 @@ i_readpng_wiol(io_glue *ig, int length) {
 static void get_png_tags(i_img *im, png_structp png_ptr, png_infop info_ptr) {
   png_uint_32 xres, yres;
   int unit_type;
+
+  i_tags_add(&im->tags, "i_format", 0, "png", -1, 0);
   if (png_get_pHYs(png_ptr, info_ptr, &xres, &yres, &unit_type)) {
     mm_log((1,"pHYs (%d, %d) %d\n", xres, yres, unit_type));
     if (unit_type == PNG_RESOLUTION_METER) {
       i_tags_set_float(&im->tags, "i_xres", 0, xres * 0.0254);
-      i_tags_set_float(&im->tags, "i_yres", 0, xres * 0.0254);
+      i_tags_set_float(&im->tags, "i_yres", 0, yres * 0.0254);
     }
     else {
       i_tags_addn(&im->tags, "i_xres", 0, xres);
