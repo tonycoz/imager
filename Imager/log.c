@@ -1,3 +1,4 @@
+#include "imconfig.h"
 #include "log.h"
 
 #define DTBUFF 50

@@ -990,6 +990,9 @@ Revision history for Perl extension Imager.
   and pkg-config to configure libpng.
 - avoid complaining about include/lib directories we pull from 
   perl's config or we have built-in
+- Makefile.PL now builds imconfig.h with #defines for libraries
+  present (and for the GIF library version) rather than putting them
+  into CFLAGS
 
 =================================================================
 
