@@ -711,6 +711,9 @@ Revision history for Perl extension Imager.
           wrapping
         - FT1, FT2 and T1 fonts now support the face_name method
         - FT1, FT2 and T1 now support the glyph_names() method
+        - Debian woody supplied FT2.0.9, which didn't support 
+          FT_Has_PS_Names(), so we use the FT_HAS_GLYPH_NAMES() macro 
+          instead.
 
 =================================================================
 

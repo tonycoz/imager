@@ -904,6 +904,12 @@ i_ft2_face_name(FT2_Fonthandle *handle, char *name_buf, size_t name_buf_size) {
   }
 }
 
+/* FT_Has_PS_Glyph_Names() was introduced in FT2.1.1 */
+/* well, I assume FREETYPE_MAJOR is 2, since we're here */
+#if FREETYPE_MINOR < 1 || (FREETYPE_MINOR == 1 && FREETYPE_PATCH < 1)
+#define FT_Has_PS_Glyph_Names(face) (FT_HAS_GLYPH_NAMES(face))
+#endif
+
 int
 i_ft2_glyph_name(FT2_Fonthandle *handle, unsigned char ch, char *name_buf, 
                  size_t name_buf_size) {
