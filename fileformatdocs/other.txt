@@ -1,0 +1,8 @@
+# man pages on Debian Linux
+pgm - man pgm
+pbm - man pbm
+ppm - man ppm
+pam - man pam (portable arbitrary map)
+png - http://www.w3.org/TR/PNG/
+gif - zless /usr/share/doc/libungif4g/gif89.txt.gz
+bmp - fileformatdocs/bmp.txt (and MSDN)

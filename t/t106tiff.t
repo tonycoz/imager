@@ -1,15 +1,17 @@
 #!perl -w
-print "1..76\n";
+use strict;
+use lib 't';
+use Test::More tests => 77;
 use Imager qw(:all);
 $^W=1; # warnings during command-line tests
 $|=1;  # give us some progress in the test harness
 init_log("testout/t106tiff.log",1);
 
-$green=i_color_new(0,255,0,255);
-$blue=i_color_new(0,0,255,255);
-$red=i_color_new(255,0,0,255);
+my $green=i_color_new(0,255,0,255);
+my $blue=i_color_new(0,0,255,255);
+my $red=i_color_new(255,0,0,255);
 
-$img=Imager::ImgRaw::new(150,150,3);
+my $img=Imager::ImgRaw::new(150,150,3);
 
 i_box_filled($img,70,25,130,125,$green);
 i_box_filled($img,20,25,80,125,$blue);
@@ -21,13 +23,18 @@ my $trans = i_color_new(255, 0, 0, 127);
 i_box_filled($timg, 0, 0, 20, 20, $green);
 i_box_filled($timg, 2, 2, 18, 18, $trans);
 
-my $test_num;
-
-if (!i_has_format("tiff")) {
-  for (1..76) {
-    print "ok $_ # skip no tiff support\n";
+SKIP:
+{
+  unless (i_has_format("tiff")) {
+    my $im = Imager->new;
+    ok(!$im->read(file=>"testimg/comp4.tif"), "should fail to read tif");
+    is($im->errstr, "format 'tiff' not supported", "check no tiff message");
+    $im = Imager->new(xsize=>2, ysize=>2);
+    ok(!$im->write(file=>"testout/notiff.tif"), "should fail to write tiff");
+    is($im->errstr, 'format not supported', "check no tiff message");
+    skip("no tiff support", 73);
   }
-} else {
+
   Imager::i_tags_add($img, "i_xres", 0, "300", 0);
   Imager::i_tags_add($img, "i_yres", 0, undef, 250);
   # resolutionunit is centimeters
@@ -36,39 +43,32 @@ if (!i_has_format("tiff")) {
   open(FH,">testout/t106.tiff") || die "cannot open testout/t106.tiff for writing\n";
   binmode(FH); 
   my $IO = Imager::io_new_fd(fileno(FH));
-  i_writetiff_wiol($img, $IO);
+  ok(i_writetiff_wiol($img, $IO), "write low level");
   close(FH);
 
-  print "ok 1\n";
-  
   open(FH,"testout/t106.tiff") or die "cannot open testout/t106.tiff\n";
   binmode(FH);
   $IO = Imager::io_new_fd(fileno(FH));
-  $cmpimg = i_readtiff_wiol($IO, -1);
+  my $cmpimg = i_readtiff_wiol($IO, -1);
+  ok($cmpimg, "read low-level");
 
   close(FH);
 
   print "# tiff average mean square pixel difference: ",sqrt(i_img_diff($img,$cmpimg))/150*150,"\n";
-  print "ok 2\n";
 
-  i_img_diff($img, $cmpimg) and print "not ";
-  print "ok 3\n";
+  ok(!i_img_diff($img, $cmpimg), "compare written and read image");
 
   # check the tags are ok
   my %tags = map { Imager::i_tags_get($cmpimg, $_) }
     0 .. Imager::i_tags_count($cmpimg) - 1;
-  abs($tags{i_xres} - 300) < 0.5 or print "not ";
-  print "ok 4\n";
-  abs($tags{i_yres} - 250) < 0.5 or print "not ";
-  print "ok 5\n";
-  $tags{tiff_resolutionunit} == 3 or print "not ";
-  print "ok 6\n";
-  $tags{tiff_software} eq 't106tiff.t' or print "not ";
-  print "ok 7\n";
+  ok(abs($tags{i_xres} - 300) < 0.5, "i_xres in range");
+  ok(abs($tags{i_yres} - 250) < 0.5, "i_yres in range");
+  is($tags{tiff_resolutionunit}, 3, "tiff_resolutionunit");
+  is($tags{tiff_software}, 't106tiff.t', "tiff_software");
 
   $IO = Imager::io_new_bufchain();
   
-  Imager::i_writetiff_wiol($img, $IO) or die "Cannot write to bufferchain\n";
+  ok(Imager::i_writetiff_wiol($img, $IO), "write to buffer chain");
   my $tiffdata = Imager::io_slurp($IO);
 
   open(FH,"testout/t106.tiff");
@@ -78,11 +78,7 @@ if (!i_has_format("tiff")) {
     $odata = <FH>;
   }
   
-  if ($odata eq $tiffdata) {
-    print "ok 8\n";
-  } else {
-    print "not ok 8\n";
-  }
+  is($odata, $tiffdata, "same data in file as in memory");
 
   # test Micksa's tiff writer
   # a shortish fax page
@@ -103,63 +99,44 @@ if (!i_has_format("tiff")) {
     or die "Cannot create testout/t106tiff_fax.tiff: $!";
   binmode FH;
   $IO = Imager::io_new_fd(fileno(FH));
-  i_writetiff_wiol_faxable($faximg, $IO, 1)
-    or print "not ";
-  print "ok 9\n";
+  ok(i_writetiff_wiol_faxable($faximg, $IO, 1), "write faxable, low level");
   close FH;
 
   # test the OO interface
   my $ooim = Imager->new;
-  $ooim->read(file=>'testout/t106.tiff')
-    or print "not ";
-  print "ok 10\n";
-  $ooim->write(file=>'testout/t106_oo.tiff')
-    or print "not ";
-  print "ok 11\n";
+  ok($ooim->read(file=>'testout/t106.tiff'), "read OO");
+  ok($ooim->write(file=>'testout/t106_oo.tiff'), "write OO");
 
   # OO with the fax image
   my $oofim = Imager->new;
-  $oofim->read(file=>'testout/t106tiff_fax.tiff')
-    or print "not ";
-  print "ok 12\n";
+  ok($oofim->read(file=>'testout/t106tiff_fax.tiff'),
+     "read fax OO");
 
   # this should have tags set for the resolution
   %tags = map @$_, $oofim->tags;
-  $tags{i_xres} == 204 or print "not ";
-  print "ok 13\n";
-  $tags{i_yres} == 196 or print "not ";
-  print "ok 14\n";
-  $tags{i_aspect_only} and print "not ";
-  print "ok 15\n";
+  is($tags{i_xres}, 204, "fax i_xres");
+  is($tags{i_yres}, 196, "fax i_yres");
+  ok(!$tags{i_aspect_only}, "i_aspect_only");
   # resunit_inches
-  $tags{tiff_resolutionunit} == 2 or print "not ";
-  print "ok 16\n";
+  is($tags{tiff_resolutionunit}, 2, "tiff_resolutionunit");
 
-  $oofim->write(file=>'testout/t106_oo_fax.tiff', class=>'fax')
-    or print "not ";
-  print "ok 17\n";
+  ok($oofim->write(file=>'testout/t106_oo_fax.tiff', class=>'fax'),
+     "write OO, faxable");
 
   # the following should fail since there's no type and no filename
   my $oodata;
-  $ooim->write(data=>\$oodata)
-    and print "not ";
-  print "ok 18\n";
+  ok(!$ooim->write(data=>\$oodata), "write with no type and no filename to guess with");
 
   # OO to data
-  $ooim->write(data=>\$oodata, type=>'tiff')
-    or print "# ",$ooim->errstr, "\nnot ";
-  print "ok 19\n";
-  $oodata eq $tiffdata or print "not ";
-  print "ok 20\n";
+  ok($ooim->write(data=>\$oodata, type=>'tiff'), "write to data")
+    or print "# ",$ooim->errstr, "\n";
+  is($oodata, $tiffdata, "check data matches between memory and file");
 
   # make sure we can write non-fine mode
-  $oofim->write(file=>'testout/t106_oo_faxlo.tiff', class=>'fax', fax_fine=>0)
-    or print "not ";
-  print "ok 21\n";
+  ok($oofim->write(file=>'testout/t106_oo_faxlo.tiff', class=>'fax', fax_fine=>0), "write OO, fax standard mode");
 
   # paletted reads
   my $img4 = Imager->new;
-  $test_num = 22;
   ok($img4->read(file=>'testimg/comp4.tif'), "reading 4-bit paletted");
   ok($img4->type eq 'paletted', "image isn't paletted");
   print "# colors: ", $img4->colorcount,"\n";
@@ -170,7 +147,7 @@ if (!i_has_format("tiff")) {
   # as comp4.bmp
   my $bmp4 = Imager->new;
   ok($bmp4->read(file=>'testimg/comp4.bmp'), "reading 4-bit bmp!");
-  $diff = i_img_diff($img4->{IMG}, $bmp4->{IMG});
+  my $diff = i_img_diff($img4->{IMG}, $bmp4->{IMG});
   print "# diff $diff\n";
   ok($diff == 0, "image mismatch");
   my $img8 = Imager->new;
@@ -356,15 +333,4 @@ if (!i_has_format("tiff")) {
   my ($warning) = $warned->tags(name=>'i_warning');
   ok(defined $warning && $warning =~ /unknown field with tag 28712/,
      "check that warning tag set and correct");
-}
-
-sub ok {
-  my ($ok, $msg) = @_;
-
-  if ($ok) {
-    print "ok ",$test_num++,"\n";
-  }
-  else {
-    print "not ok ", $test_num++," # line ",(caller)[2]," $msg\n";
-  }
 }
