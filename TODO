@@ -38,6 +38,7 @@ New Features:
   - WMF (extract bitmap data on read)
   - gzip or bzip2 compressed raw
   - postscript for output
+  - PAM file support (man pam in recent PNM tools)
 
 - Transforms, interpolated multidimensional lookup tables.
   Usefull for CMYK <-> RGB table lookup.
