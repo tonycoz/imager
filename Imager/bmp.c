@@ -278,7 +278,7 @@ write_packed(io_glue *ig, char *format, ...) {
       break;
 
     default:
-      m_fatal(1, "Unknown read_packed format code 0x%02x", *format);
+      m_fatal(1, "Unknown write_packed format code 0x%02x", *format);
     }
     ++format;
   }

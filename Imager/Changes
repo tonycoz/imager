@@ -552,6 +552,11 @@ Revision history for Perl extension Imager.
         - make color values smarter for the drawing functions
         - implemented reading and writing the TIFF text tags
         - added prototypes for some of the derivative tags functions
+        - read paletted tiff images into Imager paletted images
+        - on partial tiff image reads, set the i_incomplete tag
+        - tiff reading now uses the error stack
+        - use the error stack value from reading bmp files
+        - fix an error message in bmp.c
 
 =================================================================
 

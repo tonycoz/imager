@@ -913,7 +913,7 @@ sub read {
     if ( $input{'type'} eq 'tiff' ) {
       $self->{IMG}=i_readtiff_wiol( $IO, -1 ); # Fixme, check if that length parameter is ever needed
       if ( !defined($self->{IMG}) ) {
-	$self->{ERRSTR}='unable to read tiff image'; return undef;
+	$self->{ERRSTR}=$self->_error_as_msg(); return undef;
       }
       $self->{DEBUG} && print "loading a tiff file\n";
       return $self;
@@ -940,7 +940,7 @@ sub read {
     if ( $input{'type'} eq 'bmp' ) {
       $self->{IMG}=i_readbmp_wiol( $IO );
       if ( !defined($self->{IMG}) ) {
-	$self->{ERRSTR}='unable to read bmp image';
+	$self->{ERRSTR}=$self->_error_as_msg();
 	return undef;
       }
       $self->{DEBUG} && print "loading a bmp file\n";
@@ -4143,6 +4143,11 @@ is converted.  A floating point number stored as a string.
 If this is non-zero then the values in i_xres and i_yres are treated
 as a ratio only.  If the image format does not support aspect ratios
 then this is scaled so the smaller value is 72dpi.
+
+=item i_incomplete
+
+If this tag is present then the whole image could not be read.  This
+isn't implemented for all images yet.
 
 =back
 

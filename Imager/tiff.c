@@ -1,7 +1,7 @@
 #include "image.h"
 #include "tiffio.h"
 #include "iolayer.h"
-
+#include "imagei.h"
 
 /*
 =head1 NAME
@@ -57,6 +57,14 @@ static struct tag_name text_tag_names[] =
 static const int text_tag_count = 
   sizeof(text_tag_names) / sizeof(*text_tag_names);
 
+static void error_handler(char const *module, char const *fmt, va_list ap) {
+  i_push_errorvf(0, fmt, ap);
+}
+
+static int save_tiff_tags(TIFF *tif, i_img *im);
+
+static void expand_4bit_hl(unsigned char *buf, int count);
+
 /*
 =item comp_seek(h, o, w)
 
@@ -93,14 +101,20 @@ i_readtiff_wiol(io_glue *ig, int length) {
   i_img *im;
   uint32 width, height;
   uint16 channels;
-  uint32* raster;
+  uint32* raster = NULL;
   int tiled, error;
   TIFF* tif;
   float xres, yres;
   uint16 resunit;
   int gotXres, gotYres;
   uint16 photometric;
+  uint16 bits_per_sample;
   int i;
+  int ch;
+  TIFFErrorHandler old_handler;
+
+  i_clear_error();
+  old_handler = TIFFSetErrorHandler(error_handler);
 
   error = 0;
 
@@ -110,7 +124,7 @@ i_readtiff_wiol(io_glue *ig, int length) {
   io_glue_commit_types(ig);
   mm_log((1, "i_readtiff_wiol(ig %p, length %d)\n", ig, length));
   
-  tif = TIFFClientOpen("Iolayer: FIXME", 
+  tif = TIFFClientOpen("(Iolayer)", 
 		       "rm", 
 		       (thandle_t) ig,
 		       (TIFFReadWriteProc) ig->readcb,
@@ -123,24 +137,32 @@ i_readtiff_wiol(io_glue *ig, int length) {
   
   if (!tif) {
     mm_log((1, "i_readtiff_wiol: Unable to open tif file\n"));
+    i_push_error(0, "opening file");
+    TIFFSetErrorHandler(old_handler);
     return NULL;
   }
 
   TIFFGetField(tif, TIFFTAG_IMAGEWIDTH, &width);
   TIFFGetField(tif, TIFFTAG_IMAGELENGTH, &height);
-  TIFFGetField(tif, TIFFTAG_SAMPLESPERPIXEL, &channels);
+  TIFFGetFieldDefaulted(tif, TIFFTAG_SAMPLESPERPIXEL, &channels);
   tiled = TIFFIsTiled(tif);
-  TIFFGetField(tif, TIFFTAG_PHOTOMETRIC, &photometric);
+  TIFFGetFieldDefaulted(tif, TIFFTAG_PHOTOMETRIC, &photometric);
+  TIFFGetFieldDefaulted(tif, TIFFTAG_BITSPERSAMPLE, &bits_per_sample);
 
   mm_log((1, "i_readtiff_wiol: width=%d, height=%d, channels=%d\n", width, height, channels));
   mm_log((1, "i_readtiff_wiol: %stiled\n", tiled?"":"not "));
   mm_log((1, "i_readtiff_wiol: %sbyte swapped\n", TIFFIsByteSwapped(tif)?"":"not "));
-  
-  im = i_img_empty_ch(NULL, width, height, channels);
 
+  if (photometric == PHOTOMETRIC_PALETTE && bits_per_sample <= 8) {
+    channels = 3;
+    im = i_img_pal_new(width, height, channels, 256);
+  }
+  else {
+    im = i_img_empty_ch(NULL, width, height, channels);
+  }
+    
   /* resolution tags */
-  if (!TIFFGetField(tif, TIFFTAG_RESOLUTIONUNIT, &resunit))
-    resunit = RESUNIT_INCH;
+  TIFFGetFieldDefaulted(tif, TIFFTAG_RESOLUTIONUNIT, &resunit);
   gotXres = TIFFGetField(tif, TIFFTAG_XRESOLUTION, &xres);
   gotYres = TIFFGetField(tif, TIFFTAG_YRESOLUTION, &yres);
   if (gotXres || gotYres) {
@@ -172,89 +194,159 @@ i_readtiff_wiol(io_glue *ig, int length) {
   }
   
   /*   TIFFPrintDirectory(tif, stdout, 0); good for debugging */
-  
-  if (tiled) {
-    int ok = 1;
+
+  if (photometric == PHOTOMETRIC_PALETTE &&
+      (bits_per_sample == 4 || bits_per_sample == 8)) {
+    uint16 *maps[3];
+    char used[256];
+    int maxused;
     uint32 row, col;
-    uint32 tile_width, tile_height;
+    unsigned char *buffer;
 
-    TIFFGetField(tif, TIFFTAG_TILEWIDTH, &tile_width);
-    TIFFGetField(tif, TIFFTAG_TILELENGTH, &tile_height);
-    mm_log((1, "i_readtiff_wiol: tile_width=%d, tile_height=%d\n", tile_width, tile_height));
-
-    raster = (uint32*)_TIFFmalloc(tile_width * tile_height * sizeof (uint32));
-    if (!raster) {
-      TIFFError(TIFFFileName(tif), "No space for raster buffer");
+    if (!TIFFGetField(tif, TIFFTAG_COLORMAP, maps+0, maps+1, maps+2)) {
+      i_push_error(0, "Cannot get colormap for paletted image");
+      TIFFSetErrorHandler(old_handler);
+      i_img_destroy(im);
+      TIFFClose(tif);
       return NULL;
     }
-    
-    for( row = 0; row < height; row += tile_height ) {
-      for( col = 0; ok && col < width; col += tile_width ) {
-	uint32 i_row, x, newrows, newcols;
-
-	/* Read the tile into an RGBA array */
-	if (!TIFFReadRGBATile(tif, col, row, raster)) {
-	  ok = 0;
-	  break;
-	}
-	newrows = (row+tile_height > height) ? height-row : tile_height;
-	mm_log((1, "i_readtiff_wiol: newrows=%d\n", newrows));
-	newcols = (col+tile_width  > width ) ? width-row  : tile_width;
-	for( i_row = 0; i_row < tile_height; i_row++ ) {
-	  for(x = 0; x < newcols; x++) {
-	    i_color val;
-	    uint32 temp = raster[x+tile_width*(tile_height-i_row-1)];
-	    val.rgba.r = TIFFGetR(temp);
-	    val.rgba.g = TIFFGetG(temp);
-	    val.rgba.b = TIFFGetB(temp);
-	    val.rgba.a = TIFFGetA(temp);
-	    i_ppix(im, col+x, row+i_row, &val);
-	  }
-	}
-      }
-    }
-  } else {
-    uint32 rowsperstrip, row;
-    TIFFGetField(tif, TIFFTAG_ROWSPERSTRIP, &rowsperstrip);
-    mm_log((1, "i_readtiff_wiol: rowsperstrip=%d\n", rowsperstrip));
-    
-    raster = (uint32*)_TIFFmalloc(width * rowsperstrip * sizeof (uint32));
-    if (!raster) {
-      TIFFError(TIFFFileName(tif), "No space for raster buffer");
+    buffer = (unsigned char *)_TIFFmalloc(width+2);
+    if (!buffer) {
+      i_push_error(0, "out of memory");
+      TIFFSetErrorHandler(old_handler);
+      i_img_destroy(im);
+      TIFFClose(tif);
       return NULL;
     }
-    
-    for( row = 0; row < height; row += rowsperstrip ) {
-      uint32 newrows, i_row;
+    row = 0;
+    memset(used, 0, sizeof(used));
+    while (row < height && TIFFReadScanline(tif, buffer, row, 0) > 0) {
+      if (bits_per_sample == 4)
+        expand_4bit_hl(buffer, (width+1)/2);
+      for (col = 0; col < width; ++col) {
+        used[buffer[col]] = 1;
+      }
+      i_ppal(im, 0, width, row, buffer);
+      ++row;
+    }
+    if (row < height) {
+      error = 1;
+    }
+    /* Ideally we'd optimize the palette, but that could be expensive
+       since we'd have to re-index every pixel.
+
+       Optimizing the palette (even at this level) might not 
+       be what the user wants, so I don't do it.
+
+       We'll add a function to optimize a paletted image instead.
+    */
+    maxused = (1 << bits_per_sample)-1;
+    if (!error) {
+      while (maxused >= 0 && !used[maxused])
+        --maxused;
+    }
+    for (i = 0; i < 1 << bits_per_sample; ++i) {
+      i_color c;
+      for (ch = 0; ch < 3; ++ch) {
+        c.channel[ch] = Sample16To8(maps[ch][i]);
+      }
+      i_addcolors(im, &c, 1);
+    }
+    _TIFFfree(buffer);
+  }
+  else {
+    if (tiled) {
+      int ok = 1;
+      uint32 row, col;
+      uint32 tile_width, tile_height;
       
-      if (!TIFFReadRGBAStrip(tif, row, raster)) {
-	error++;
-	break;
+      TIFFGetField(tif, TIFFTAG_TILEWIDTH, &tile_width);
+      TIFFGetField(tif, TIFFTAG_TILELENGTH, &tile_height);
+      mm_log((1, "i_readtiff_wiol: tile_width=%d, tile_height=%d\n", tile_width, tile_height));
+      
+      raster = (uint32*)_TIFFmalloc(tile_width * tile_height * sizeof (uint32));
+      if (!raster) {
+        i_img_destroy(im);
+        i_push_error(0, "No space for raster buffer");
+        TIFFSetErrorHandler(old_handler);
+        TIFFClose(tif);
+        return NULL;
       }
       
-      newrows = (row+rowsperstrip > height) ? height-row : rowsperstrip;
-      mm_log((1, "newrows=%d\n", newrows));
+      for( row = 0; row < height; row += tile_height ) {
+        for( col = 0; ok && col < width; col += tile_width ) {
+          uint32 i_row, x, newrows, newcols;
+          
+          /* Read the tile into an RGBA array */
+          if (!TIFFReadRGBATile(tif, col, row, raster)) {
+            ok = 0;
+            break;
+          }
+          newrows = (row+tile_height > height) ? height-row : tile_height;
+          mm_log((1, "i_readtiff_wiol: newrows=%d\n", newrows));
+          newcols = (col+tile_width  > width ) ? width-row  : tile_width;
+          for( i_row = 0; i_row < tile_height; i_row++ ) {
+            for(x = 0; x < newcols; x++) {
+              i_color val;
+              uint32 temp = raster[x+tile_width*(tile_height-i_row-1)];
+              val.rgba.r = TIFFGetR(temp);
+              val.rgba.g = TIFFGetG(temp);
+              val.rgba.b = TIFFGetB(temp);
+              val.rgba.a = TIFFGetA(temp);
+              i_ppix(im, col+x, row+i_row, &val);
+            }
+          }
+        }
+      }
+    } else {
+      uint32 rowsperstrip, row;
+      TIFFGetField(tif, TIFFTAG_ROWSPERSTRIP, &rowsperstrip);
+      mm_log((1, "i_readtiff_wiol: rowsperstrip=%d\n", rowsperstrip));
       
-      for( i_row = 0; i_row < newrows; i_row++ ) { 
-	uint32 x;
-	for(x = 0; x<width; x++) {
-	  i_color val;
-	  uint32 temp = raster[x+width*(newrows-i_row-1)];
-	  val.rgba.r = TIFFGetR(temp);
-	  val.rgba.g = TIFFGetG(temp);
-	  val.rgba.b = TIFFGetB(temp);
-	  val.rgba.a = TIFFGetA(temp);
-	  i_ppix(im, x, i_row+row, &val);
-	}
+      raster = (uint32*)_TIFFmalloc(width * rowsperstrip * sizeof (uint32));
+      if (!raster) {
+        i_img_destroy(im);
+        i_push_error(0, "No space for raster buffer");
+        TIFFSetErrorHandler(old_handler);
+        TIFFClose(tif);
+        return NULL;
+      }
+      
+      for( row = 0; row < height; row += rowsperstrip ) {
+        uint32 newrows, i_row;
+        
+        if (!TIFFReadRGBAStrip(tif, row, raster)) {
+          error++;
+          break;
+        }
+        
+        newrows = (row+rowsperstrip > height) ? height-row : rowsperstrip;
+        mm_log((1, "newrows=%d\n", newrows));
+        
+        for( i_row = 0; i_row < newrows; i_row++ ) { 
+          uint32 x;
+          for(x = 0; x<width; x++) {
+            i_color val;
+            uint32 temp = raster[x+width*(newrows-i_row-1)];
+            val.rgba.r = TIFFGetR(temp);
+            val.rgba.g = TIFFGetG(temp);
+            val.rgba.b = TIFFGetB(temp);
+            val.rgba.a = TIFFGetA(temp);
+            i_ppix(im, x, i_row+row, &val);
+          }
+        }
       }
     }
-
   }
   if (error) {
     mm_log((1, "i_readtiff_wiol: error during reading\n"));
+    i_tags_addn(&im->tags, "i_incomplete", 0, 1);
   }
-  _TIFFfree( raster );
+  if (raster)
+    _TIFFfree( raster );
   if (TIFFLastDirectory(tif)) mm_log((1, "Last directory of tiff file\n"));
+  TIFFSetErrorHandler(old_handler);
+  TIFFClose(tif);
   return im;
 }
 
@@ -270,8 +362,6 @@ Stores an image in the iolayer object.
 
 =cut 
 */
-
-static int save_tiff_tags(TIFF *tif, i_img *im);
 
 /* FIXME: Add an options array in here soonish */
 
@@ -610,6 +700,27 @@ static int save_tiff_tags(TIFF *tif, i_img *im) {
 
   return 1;
 }
+
+/*
+=item expand_4bit_hl(buf, count)
+
+Expands 4-bit/entry packed data into 1 byte/entry.
+
+buf must contain count bytes to be expanded and have 2*count bytes total 
+space.
+
+The data is expanded in place.
+
+=cut
+*/
+
+static void expand_4bit_hl(unsigned char *buf, int count) {
+  while (--count >= 0) {
+    buf[count*2+1] = buf[count] & 0xF;
+    buf[count*2] = buf[count] >> 4;
+  }
+}
+
 
 /*
 =back

@@ -1,5 +1,5 @@
 #!perl -w
-print "1..21\n";
+print "1..33\n";
 use Imager qw(:all);
 $^W=1; # warnings during command-line tests
 $|=1;  # give us some progress in the test harness
@@ -21,8 +21,10 @@ my $trans = i_color_new(255, 0, 0, 127);
 i_box_filled($timg, 0, 0, 20, 20, $green);
 i_box_filled($timg, 2, 2, 18, 18, $trans);
 
+my $test_num;
+
 if (!i_has_format("tiff")) {
-  for (1..21) {
+  for (1..33) {
     print "ok $_ # skip no tiff support\n";
   }
 } else {
@@ -154,5 +156,47 @@ if (!i_has_format("tiff")) {
   $oofim->write(file=>'testout/t106_oo_faxlo.tiff', class=>'fax', fax_fine=>0)
     or print "not ";
   print "ok 21\n";
+
+  # paletted reads
+  my $img4 = Imager->new;
+  $test_num = 22;
+  ok($img4->read(file=>'testimg/comp4.tif'), "reading 4-bit paletted");
+  ok($img4->type eq 'paletted', "image isn't paletted");
+  print "# colors: ", $img4->colorcount,"\n";
+  ok($img4->colorcount <= 16, "more than 16 colors!");
+  #ok($img4->write(file=>'testout/t106_was4.ppm'),
+  #   "Cannot write img4");
+  # I know I'm using BMP before it's test, but comp4.tif started life 
+  # as comp4.bmp
+  my $bmp4 = Imager->new;
+  ok($bmp4->read(file=>'testimg/comp4.bmp'), "reading 4-bit bmp!");
+  $diff = i_img_diff($img4->{IMG}, $bmp4->{IMG});
+  print "# diff $diff\n";
+  ok($diff == 0, "image mismatch");
+  my $img8 = Imager->new;
+  ok($img8->read(file=>'testimg/comp8.tif'), "reading 8-bit paletted");
+  ok($img8->type eq 'paletted', "image isn't paletted");
+  print "# colors: ", $img8->colorcount,"\n";
+  #ok($img8->write(file=>'testout/t106_was8.ppm'),
+  #   "Cannot write img8");
+  ok($img8->colorcount == 256, "more colors than expected");
+  my $bmp8 = Imager->new;
+  ok($bmp8->read(file=>'testimg/comp8.bmp'), "reading 8-bit bmp!");
+  $diff = i_img_diff($img8->{IMG}, $bmp8->{IMG});
+  print "# diff $diff\n";
+  ok($diff == 0, "image mismatch");
+  my $bad = Imager->new;
+  ok($bad->read(file=>'testimg/comp4bad.tif'), "bad image not returned");
+  ok(scalar $bad->tags(name=>'i_incomplete'), "incomplete tag not set");
 }
 
+sub ok {
+  my ($ok, $msg) = @_;
+
+  if ($ok) {
+    print "ok ",$test_num++,"\n";
+  }
+  else {
+    print "not ok ", $test_num++," # line ",(caller)[2]," $msg\n";
+  }
+}
