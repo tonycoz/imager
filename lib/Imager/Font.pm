@@ -146,6 +146,7 @@ sub bounding_box {
   }
   $input{size} ||= $self->{size};
   $input{sizew} = _first($input{sizew}, $self->{sizew}, 0);
+  $input{utf8} = _first($input{utf8}, $self->{utf8}, 0);
 
   my @box = $self->_bounding_box(%input);
 
