@@ -2624,7 +2624,8 @@ Arnar M. Hrafnkelsson (addi@umich.edu) and Tony Cook
 =head1 SEE ALSO
 
 perl(1), Imager::Color(3), Imager::Font(3), Imager::Matrix2d(3),
-Affix::Infix2Postfix(3), Parse::RecDescent(3) 
+
+Affix::Infix2Postfix(3), Parse::RecDescent(3)
 http://www.eecs.umich.edu/~addi/perl/Imager/
 
 =cut
