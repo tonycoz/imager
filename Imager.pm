@@ -2251,7 +2251,12 @@ the file descriptor for the file:
 For writing using the 'fd' option you will probably want to set $| for
 that descriptor, since the writes to the file descriptor bypass Perl's
 (or the C libraries) buffering.  Setting $| should avoid out of order
-output.
+output.  For example a common idiom when writing a CGI script is:
+
+  # the $| _must_ come before you send the content-type
+  $| = 1;
+  print "Content-Type: image/jpeg\n\n";
+  $img->write(fd=>fileno(STDOUT), type=>'jpeg') or die $img->errstr;
 
 *Note that load() is now an alias for read but will be removed later*
 
