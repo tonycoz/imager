@@ -1,7 +1,7 @@
 #!perl -w
 use strict;
 
-print "1..37\n";
+print "1..39\n";
 
 use Imager ':handy';
 use Imager::Fill;
@@ -106,14 +106,17 @@ my $im = Imager->new(xsize=>200, ysize=>200);
 $im->box(xmin=>10, ymin=>10, xmax=>190, ymax=>190,
          fill=>{ hatch=>'check4x4',
                  fg=>NC(128, 0, 0),
-                 bg=>NC(128, 64, 0) });
+                 bg=>NC(128, 64, 0) })
+  or print "# ",$im->errstr,"\n";
 $im->arc(r=>80, d1=>45, d2=>75, 
            fill=>{ hatch=>'stipple2',
                    combine=>1,
                    fg=>[ 0, 0, 0, 255 ],
-                   bg=>{ rgba=>[255,255,255,160] } });
+                   bg=>{ rgba=>[255,255,255,160] } })
+  or print "# ",$im->errstr,"\n";
 $im->arc(r=>80, d1=>75, d2=>135,
-         fill=>{ fountain=>'radial', xa=>100, ya=>100, xb=>20, yb=>100 });
+         fill=>{ fountain=>'radial', xa=>100, ya=>100, xb=>20, yb=>100 })
+  or print "# ",$im->errstr,"\n";
 $im->write(file=>'testout/t20_sample.ppm');
 
 # flood fill tests
@@ -229,6 +232,13 @@ ok($testnum++,
                        }, r=>40),
    "transformed image based fill");
 $oocopy->write(file=>'testout/t20_image_xform.ppm');
+
+ok($testnum++,
+   !$oocopy->arc(fill=>{ hatch=>"not really a hatch" }, r=>20),
+   "error handling of automatic fill conversion");
+ok($testnum++,
+   $oocopy->errstr =~ /Unknown hatch type/,
+   "error message for automatic fill conversion");
 
 sub ok ($$$) {
   my ($num, $test, $desc) = @_;

@@ -533,6 +533,7 @@ Revision history for Perl extension Imager.
           added code to normalize the filter generated to preserve
           intensity scaling.
         - constant edge extension for scaling operations
+        - better error checking of automatic fill conversions
 
 
 =================================================================

@@ -1711,7 +1711,10 @@ sub arc {
     unless (UNIVERSAL::isa($opts{fill}, 'Imager::Fill')) {
       # assume it's a hash ref
       require 'Imager/Fill.pm';
-      $opts{fill} = Imager::Fill->new(%{$opts{fill}});
+      unless ($opts{fill} = Imager::Fill->new(%{$opts{fill}})) {
+        $self->{ERRSTR} = $Imager::ERRSTR;
+        return;
+      }
     }
     i_arc_cfill($self->{IMG},$opts{'x'},$opts{'y'},$opts{'r'},$opts{'d1'},
                 $opts{'d2'}, $opts{fill}{fill});
@@ -1823,7 +1826,10 @@ sub flood_fill {
     unless (UNIVERSAL::isa($opts{fill}, 'Imager::Fill')) {
       # assume it's a hash ref
       require 'Imager/Fill.pm';
-      $opts{fill} = Imager::Fill->new(%{$opts{fill}});
+      unless ($opts{fill} = Imager::Fill->new(%{$opts{fill}})) {
+        $self->{ERRSTR} = $Imager::ERRSTR;
+        return;
+      }
     }
     i_flood_cfill($self->{IMG}, $opts{x}, $opts{'y'}, $opts{fill}{fill});
   }
