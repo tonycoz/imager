@@ -33,7 +33,8 @@ i_draw($overlay,0,50,100,50,$bgcolor);
 
 open(FH,">testout/t37w32font.ppm") || die "cannot open testout/t37w32font.ppm\n";
 binmode(FH);
-i_writeppm($overlay,fileno(FH));
+$io = Imager::io_new_fd(fileno(FH));
+i_writeppm_wiol($overlay,$io);
 close(FH);
 
 print "ok 2\n";
@@ -46,7 +47,8 @@ i_draw($backgr,0, 100, 499, 100, NC(0, 0, 255));
 
 open(FH,">testout/t37w32font2.ppm") || die "cannot open testout/t37w32font2.ppm\n";
 binmode(FH);
-i_writeppm($backgr,fileno(FH));
+$io = Imager::io_new_fd(fileno(FH));
+i_writeppm_wiol($backgr,$io);
 close(FH);
 
 print "ok 3\n";
