@@ -77,6 +77,10 @@ void i_copyto_trans(i_img *im,i_img *src,int x1,int y1,int x2,int y2,int tx,int 
 void i_copy        (i_img *im,i_img *src);
 void i_rubthru     (i_img *im,i_img *src,int tx,int ty);
 
+undef_int i_flipxy (i_img *im, int direction);
+
+
+
 void i_bezier_multi(i_img *im,int l,double *x,double *y,i_color *val);
 void i_poly_aa     (i_img *im,int l,double *x,double *y,i_color *val);
 

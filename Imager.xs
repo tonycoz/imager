@@ -745,6 +745,11 @@ i_rubthru(im,src,tx,ty)
 	       int     tx
 	       int     ty
 
+undef_int
+i_flipxy(im, direction)
+    Imager::ImgRaw     im
+	       int     direction
+
 
 void
 i_gaussian(im,stdev)

@@ -32,6 +32,7 @@ Some of these functions are internal.
 
 #define XAXIS 0
 #define YAXIS 1
+#define XYAXIS 2
 
 #define minmax(a,b,i) ( ((a>=i)?a: ( (b<=i)?b:i   )) )
 
@@ -252,8 +253,8 @@ i_img_empty(i_img *im,int x,int y) {
 Re-new image reference 
 
    im - Image pointer
-   x - xsize of destination image
-   y - ysize of destination image
+   x  - xsize of destination image
+   y  - ysize of destination image
    ch - number of channels
 
 =cut
@@ -595,6 +596,7 @@ unmodified.
 
 =cut
 */
+
 void
 i_rubthru(i_img *im,i_img *src,int tx,int ty) {
   i_color pv,orig,dest;
@@ -624,6 +626,94 @@ i_rubthru(i_img *im,i_img *src,int tx,int ty) {
     }
 }
 
+
+/*
+=item i_flipxy(im, axis)
+
+Flips the image inplace around the axis specified.
+Returns 0 if parameters are invalid.
+
+   im   - Image pointer
+   axis - 0 = x, 1 = y, 2 = both
+
+=cut
+*/
+
+undef_int
+i_flipxy(i_img *im, int direction) {
+  int x, x2, y, y2, xm, ym;
+  int xs = im->xsize;
+  int ys = im->ysize;
+  
+  mm_log((1, "i_flipxy(im %p, direction %d)\n", im, direction ));
+
+  if (!im) return 0;
+
+  switch (direction) {
+  case XAXIS: /* Horizontal flip */
+    xm = xs/2;
+    ym = ys;
+    for(y=0; y<ym; y++) {
+      x2 = xs-1;
+      for(x=0; x<xm; x++) {
+	i_color val1, val2;
+	i_gpix(im, x,  y,  &val1);
+	i_gpix(im, x2, y,  &val2);
+	i_ppix(im, x,  y,  &val2);
+	i_ppix(im, x2, y,  &val1);
+	x2--;
+      }
+    }
+    break;
+  case YAXIS:
+    xm = xs;
+    ym = ys/2;
+    y2 = ys-1;
+    for(y=0; y<ym; y++) {
+      for(x=0; x<xm; x++) {
+	i_color val1, val2;
+	i_gpix(im, x,  y,  &val1);
+	i_gpix(im, x,  y2, &val2);
+	i_ppix(im, x,  y,  &val2);
+	i_ppix(im, x,  y2, &val1);
+      }
+      y2--;
+    }
+    break;
+  case XYAXIS:
+    xm = xs/2;
+    ym = ys/2;
+    y2 = ys-1;
+    for(y=0; y<ym; y++) {
+      x2 = xs-1;
+      for(x=0; x<xm; x++) {
+	i_color val1, val2;
+	i_gpix(im, x,  y,  &val1);
+	i_gpix(im, x2, y2, &val2);
+	i_ppix(im, x,  y,  &val2);
+	i_ppix(im, x2, y2, &val1);
+
+	i_gpix(im, x2, y,  &val1);
+	i_gpix(im, x,  y2, &val2);
+	i_ppix(im, x2, y,  &val2);
+	i_ppix(im, x,  y2, &val1);
+	x2--;
+      }
+      y2--;
+    }
+    break;
+  default:
+    mm_log((1, "i_flipxy: direction is invalid\n" ));
+    return 0;
+  }
+  return 1;
+}
+
+
+
+
+
+static
 float
 Lanczos(float x) {
   float PIx, PIx2;
