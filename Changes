@@ -400,6 +400,7 @@ Revision history for Perl extension Imager.
 	- incorporated Micksa's faxable tiff support, treating as a type
 	of tiff rather than a separate format
 	- t/t70newgif.t now checks for gif support
+	- added the convert() method
 
 ~~~~~~~~~~~~~^ ^ ^~~~~~~~~~~~~~
 
@@ -444,6 +445,11 @@ Revision history for Perl extension Imager.
 
 	- should we overload <=> or cmp for Imager::Color objects?
 	 too many worms, leave it out
+
+	- if gif_delays is a number instead of an arrayref, use that 
+	number for each frame
+
+	- support writing pgm files
 
         Documentation:
         - Add to the documentation
