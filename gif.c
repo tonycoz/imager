@@ -776,16 +776,22 @@ i_writegif_low(i_quantize *quant, GifFileType *gf, i_img **imgs, int count,
   orig_size = quant->mc_size;
 
   if (opts->each_palette) {
-    int want_trans;
+    int want_trans = quant->transp != tr_none 
+      && imgs[0]->channels == 4;
+
+    /* if the caller gives us too many colours we can't do transparency */
+    if (want_trans && quant->mc_count == 256)
+      want_trans = 0;
+    /* if they want transparency but give us a big size, make it smaller
+       to give room for a transparency colour */
+    if (want_trans && quant->mc_size == 256)
+      --quant->mc_size;
 
     /* we always generate a global palette - this lets systems with a 
        broken giflib work */
     quant_makemap(quant, imgs, 1);
     result = quant_translate(quant, imgs[0]);
 
-    want_trans = quant->transp != tr_none 
-      && imgs[0]->channels == 4 
-      && quant->mc_count < 256;
     if (want_trans)
       quant_transparent(quant, result, imgs[0], quant->mc_count);
     
@@ -837,11 +843,18 @@ i_writegif_low(i_quantize *quant, GifFileType *gf, i_img **imgs, int count,
     for (imgn = 1; imgn < count; ++imgn) {
       quant->mc_count = orig_count;
       quant->mc_size = orig_size;
+      want_trans = quant->transp != tr_none 
+	&& imgs[0]->channels == 4;
+      /* if the caller gives us too many colours we can't do transparency */
+      if (want_trans && quant->mc_count == 256)
+	want_trans = 0;
+      /* if they want transparency but give us a big size, make it smaller
+	 to give room for a transparency colour */
+      if (want_trans && quant->mc_size == 256)
+	--quant->mc_size;
+
       quant_makemap(quant, imgs+imgn, 1);
       result = quant_translate(quant, imgs[imgn]);
-      want_trans = quant->transp != tr_none 
-	&& imgs[imgn]->channels == 4 
-	&& quant->mc_count < 256;
       if (want_trans)
 	quant_transparent(quant, result, imgs[imgn], quant->mc_count);
       
@@ -884,16 +897,6 @@ i_writegif_low(i_quantize *quant, GifFileType *gf, i_img **imgs, int count,
   else {
     int want_trans;
 
-    mm_log((1, "i_writegif_low: GOT HERE\n"));
-
-    /* handle the first image separately - since we allow giflib
-       conversion and giflib doesn't give us a separate function to build
-       the colormap. */
-     
-    /* produce a colour map */
-    quant_makemap(quant, imgs, count);
-    result = quant_translate(quant, imgs[0]);
-
     /* get a palette entry for the transparency iff we have an image
        with an alpha channel */
     want_trans = 0;
@@ -903,7 +906,19 @@ i_writegif_low(i_quantize *quant, GifFileType *gf, i_img **imgs, int count,
 	break;
       }
     }
-    want_trans = want_trans && quant->transp != tr_none && quant->mc_count < 256;
+    want_trans = want_trans && quant->transp != tr_none 
+      && quant->mc_count < 256;
+    if (want_trans && quant->mc_size == 256)
+      --quant->mc_size;
+
+    /* handle the first image separately - since we allow giflib
+       conversion and giflib doesn't give us a separate function to build
+       the colormap. */
+     
+    /* produce a colour map */
+    quant_makemap(quant, imgs, count);
+    result = quant_translate(quant, imgs[0]);
+
     if ((map = make_gif_map(quant, opts, want_trans)) == NULL) {
       myfree(result);
       EGifCloseFile(gf);
