@@ -47,6 +47,7 @@ not commitments.
 - handle probing for libraries better (use pkg-config or I<library>-config
   where possible (freetype2 and libpng))
 - add concept index to Imager.pm pod
+- replace testimg/penguin-base.ppm with a smaller image
 
 0.46: (june 2005)
 - allow limits to be set on the size of an image read from a file.  This is
