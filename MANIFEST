@@ -7,6 +7,7 @@ Makefile.PL
 draw.c
 draw.h
 conv.c
+convert.c
 error.c
 gaussian.c
 ppport.h

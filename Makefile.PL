@@ -61,7 +61,7 @@ if (defined $Config{'d_dlsymun'}) { $OSDEF  .= ' -DDLSYMUN'; }
 @objs = qw(Imager.o draw.o image.o io.o iolayer.o log.o
 	   gaussian.o conv.o pnm.o raw.o feat.o font.o
 	   filters.o dynaload.o stackmach.o datatypes.o
-	   regmach.o trans2.o quant.o error.o);
+	   regmach.o trans2.o quant.o error.o convert.o);
 
 %opts=(
        'NAME'         => 'Imager',

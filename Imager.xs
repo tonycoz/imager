@@ -778,6 +778,56 @@ i_conv(im,pcoef)
 	     i_conv(im,coeff,len);
 	     myfree(coeff);
 
+undef_int
+i_convert(im, src, coeff)
+    Imager::ImgRaw     im
+    Imager::ImgRaw     src
+	PREINIT:
+    	  float *coeff;
+	  int outchan;
+	  int inchan;
+	  AV *avmain;
+          SV **temp;
+	  SV *svsub;
+          AV *avsub;
+	  int len;
+	  int i, j;
+        CODE:
+	  printf("i_convert\n");
+	  if (!SvROK(ST(2)) || SvTYPE(SvRV(ST(2))) != SVt_PVAV)
+	    croak("i_convert: parameter 3 must be an arrayref\n");
+          avmain = (AV*)SvRV(ST(2));
+	  outchan = av_len(avmain)+1;
+          /* find the biggest */
+          inchan = 0;
+	  for (j=0; j < outchan; ++j) {
+	    temp = av_fetch(avmain, j, 0);
+	    if (temp && SvROK(*temp) && SvTYPE(SvRV(*temp)) == SVt_PVAV) {
+	      avsub = (AV*)SvRV(*temp);
+	      len = av_len(avsub)+1;
+	      if (len > inchan)
+		inchan = len;
+	    }
+          }
+          coeff = mymalloc(sizeof(float) * outchan * inchan);
+	  for (j = 0; j < outchan; ++j) {
+	    avsub = (AV*)SvRV(*av_fetch(avmain, j, 0));
+	    len = av_len(avsub)+1;
+	    for (i = 0; i < len; ++i) {
+	      temp = av_fetch(avsub, i, 0);
+	      if (temp)
+		coeff[i+j*inchan] = SvNV(*temp);
+	      else
+	 	coeff[i+j*inchan] = 0;
+	    }
+	    while (i < inchan)
+	      coeff[i++ + j*inchan] = 0;
+	  }
+	  RETVAL = i_convert(im, src, coeff, outchan, inchan);
+          myfree(coeff);
+	  printf("i_convert returns %d\n", RETVAL);
+	OUTPUT:
+	  RETVAL
 	          
 float
 i_img_diff(im1,im2)
@@ -1853,4 +1903,15 @@ DSO_call(handle,func_index,hv)
 
 
 
+# this is mostly for testing...
+Imager::Color
+i_get_pixel(im, x, y)
+	Imager::ImgRaw im
+	int x
+	int y;
+      CODE:
+	RETVAL = (i_color *)mymalloc(sizeof(i_color));
+	i_gpix(im, x, y, RETVAL);
+      OUTPUT:
+	RETVAL
 
