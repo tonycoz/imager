@@ -360,7 +360,7 @@ point.
 */
 
 undef_int
-i_writetiff_wiol_faxable(i_img *im, io_glue *ig) {
+i_writetiff_wiol_faxable(i_img *im, io_glue *ig, int fine) {
   uint32 width, height;
   unsigned char *linebuf = NULL;
   uint32 y;
@@ -369,6 +369,7 @@ i_writetiff_wiol_faxable(i_img *im, io_glue *ig) {
   TIFF* tif;
   int luma_channel;
   uint32 rowsperstrip;
+  float vres = fine ? 196 : 98;
 
   width    = im->xsize;
   height   = im->ysize;
@@ -441,15 +442,13 @@ i_writetiff_wiol_faxable(i_img *im, io_glue *ig) {
   mm_log((1, "i_writetiff_wiol_faxable: TIFFGetField scanlinesize=%d\n", TIFFScanlineSize(tif) ));
   mm_log((1, "i_writetiff_wiol_faxable: TIFFGetField planarconfig=%d == %d\n", rc, PLANARCONFIG_CONTIG));
 
-  /*
-  if (!TIFFSetField(tif, TIFFTAG_XRESOLUTION, 204))
+  if (!TIFFSetField(tif, TIFFTAG_XRESOLUTION, (float)204))
     { mm_log((1, "i_writetiff_wiol_faxable: TIFFSetField Xresolution=204\n")); return 0; }
-  if (!TIFFSetField(tif, TIFFTAG_YRESOLUTION, 196))
+  if (!TIFFSetField(tif, TIFFTAG_YRESOLUTION, vres))
     { mm_log((1, "i_writetiff_wiol_faxable: TIFFSetField Yresolution=196\n")); return 0; }
   if (!TIFFSetField(tif, TIFFTAG_RESOLUTIONUNIT, RESUNIT_INCH)) {
     mm_log((1, "i_writetiff_wiol_faxable: TIFFSetField ResolutionUnit=%d\n", RESUNIT_INCH)); return 0; 
   }
-  */
 
   for (y=0; y<height; y++) {
     int linebufpos=0;

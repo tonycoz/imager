@@ -561,7 +561,8 @@ sub read {
 
 sub write {
   my $self = shift;
-  my %input=(jpegquality=>75, gifquant=>'mc', lmdither=>6.0, lmfixed=>[], @_);
+  my %input=(jpegquality=>75, gifquant=>'mc', lmdither=>6.0, lmfixed=>[], 
+	     fax_fine=>1, @_);
   my ($fh, $rc, $fd, $IO);
 
   my %iolready=( tiff=>1 ); # this will be SO MUCH BETTER once they are all in there
@@ -569,7 +570,7 @@ sub write {
   unless ($self->{IMG}) { $self->{ERRSTR}='empty input image'; return undef; }
 
   if (!$input{file} and !$input{'fd'} and !$input{'data'}) { $self->{ERRSTR}='file/fd/data parameter missing'; return undef; }
-  if (!$input{type}) { $input{type}=$FORMATGUESS->($input{file}); }
+  if (!$input{type} and $input{file}) { $input{type}=$FORMATGUESS->($input{file}); }
   if (!$input{type}) { $self->{ERRSTR}='type parameter missing and not possible to guess from extension'; return undef; }
 
   if (!$formats{$input{type}}) { $self->{ERRSTR}='format not supported'; return undef; }
@@ -588,13 +589,13 @@ sub write {
 
 
   if ($iolready{$input{type}}) {
-    if ($fd) {
+    if (defined $fd) {
       $IO = io_new_fd($fd);
     }
 
     if ($input{type} eq 'tiff') {
-      if ($input{class} eq 'fax') {
-	if (!i_writetiff_wiol_faxable($self->{IMG}, $IO)) {
+      if (defined $input{class} && $input{class} eq 'fax') {
+	if (!i_writetiff_wiol_faxable($self->{IMG}, $IO, $input{fax_fine})) {
 	  $self->{ERRSTR}='Could not write to buffer';
 	  return undef;
 	}
@@ -606,7 +607,6 @@ sub write {
 	}
       }
     }
-
 
     if (exists $input{'data'}) {
       my $data = io_slurp($IO);
@@ -696,17 +696,6 @@ sub write {
 	$self->{ERRSTR}='unable to write raw image'; return undef;
       }
       $self->{DEBUG} && print "writing a raw file\n";
-    } elsif ( $input{type} eq 'tiff' ) {
-      if ($input{class} eq 'fax') {
-	$rc=i_writetiff_wiol($self->{IMG},io_new_fd($fd) );
-      }
-      else {
-	$rc=i_writetiff_wiol_faxable($self->{IMG},io_new_fd($fd) );
-      }
-      if ( !defined($rc) ) {
-	$self->{ERRSTR}='unable to write tiff image'; return undef;
-      }
-      $self->{DEBUG} && print "writing a tiff file\n";
     }
 
   }
@@ -1654,6 +1643,8 @@ When writing to a tiff image file you can also specify the 'class'
 parameter, which can currently take a single value, "fax".  If class
 is set to fax then a tiff image which should be suitable for faxing
 will be written.  For the best results start with a grayscale image.
+By default the image is written at fine resolution you can override
+this by setting the "fax_fine" parameter to 0.
 
 If you are reading from a gif image file, you can supply a 'colors'
 parameter which must be a reference to a scalar.  The referenced

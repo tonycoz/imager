@@ -1072,9 +1072,10 @@ i_writetiff_wiol(im, ig)
         Imager::IO     ig
 
 undef_int
-i_writetiff_wiol_faxable(im, ig)
+i_writetiff_wiol_faxable(im, ig, fine)
     Imager::ImgRaw     im
         Imager::IO     ig
+	       int     fine
 
 
 #endif /* HAVE_LIBTIFF */
