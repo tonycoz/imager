@@ -879,7 +879,7 @@ Revision history for Perl extension Imager.
   meant a rubbish palette was returned to the user (detected with valgrind)
 - built 0.43_02 for testing
 
-0.43_03
+0.43_03 Wed 8 Dec 2004
 
 - change the "double-include" protection macro that imio.h uses.
 - updated download locations for the various libraries that Imager 
