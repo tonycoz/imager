@@ -1007,6 +1007,7 @@ Revision history for Perl extension Imager.
 - calculate the sum of the coefficients once rather than for every
   pixel in i_conv() (convolution filter)
 - explicitly document there are no PNG specific tags.
+- more examples in Imager::Draw
 
 =================================================================
 

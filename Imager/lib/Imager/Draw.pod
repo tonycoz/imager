@@ -59,13 +59,22 @@ think of C<(10, 20)> as C<(10.00, 20.00)> and consider the consiquences.
 The C<color> parameter for any of the drawing methods can be an
 L<Imager::Color> object, a simple scalar that Imager::Color can
 understand, a hashref of parameters that Imager::Color->new
-understands, or an arrayref of red, green, blue values.
+understands, or an arrayref of red, green, blue values, for example:
+
+  $image->box(..., color=>'red');
+  $image->line(..., color=>'#FF0000');
+  $image->flood_fill(..., color=>[ 255, 0, 255 ]);
 
 All filled primitives, i.e. C<arc()>, C<box()>, C<circle()>,
 C<polygon()> and the C<flood_fill()> method can take a C<fill>
 parameter instead of a C<color> parameter which can either be an
 Imager::Fill object, or a reference to a hash containing the
-parameters used to create the fill.  
+parameters used to create the fill, for example:
+
+  $image->box(..., fill=>{ hatch => 'check1x1' });
+  my $fillimage = Imager->new;
+  $fillimage->read(file=>$somefile) or die;
+  $image->flood_fill(..., fill=>{ image=>$fillimage });
 
 Currently you can create opaque or transparent plain color fills,
 hatched fills, image based fills and fountain fills.  See
@@ -97,11 +106,11 @@ other way is to specify two array references.
 
 The I<antialias> parameter is still available for backwards compatibility.
 
-
 =item box
 
   $blue = Imager::Color->new( 0, 0, 255 );
-  $img->box(color => $blue, xmin=>10, ymin=>30, xmax=>200, ymax=>300, filled=>1);
+  $img->box(color => $blue, xmin=>10, ymin=>30, xmax=>200, ymax=>300, 
+            filled=>1);
 
 If any of the edges of the box are ommited it will snap to the outer
 edge of the image in that direction.  If C<filled> is ommited the box
@@ -119,8 +128,6 @@ instead.  [NOTE: This may change to use C<$img-E<gt>fgcolor()> in the future].
 
 Box does not support fractional coordinates yet.
 
-
-
 =item arc
 
   $img->arc(color=>$red, r=>20, x=>200, y=>100, d1=>10, d2=>20 );
@@ -129,7 +136,6 @@ This creates a filled red arc with a 'center' at (200, 100) and spans
 10 degrees and the slice has a radius of 20. [NOTE: arc has a BUG in
 it right now for large differences in angles.]
 It's also possible to supply a C<fill> parameter.
-
 
 =item circle
 
@@ -163,6 +169,10 @@ flood_fill() method, for example:
 
 will fill all regions the same color connected to the point (50, 50).
 
+You can also fill with a complex fill:
+
+  $img->flood_fill(x=>50, y=>50, fill=>{ hatch=>'cross1x1' });
+
 =item setpixel and getpixel
 
   $img->setpixel(x=>50, y=>70, color=>$color);
@@ -186,5 +196,9 @@ parameter to 'float'.
 
 box, arc, do not support antialiasing yet.  Arc, is only filled as of
 yet.  Default color is not unified yet.
+
+=head1 SEE ALSO
+
+Imager(3), Imager::Cookbook(3)
 
 =back
