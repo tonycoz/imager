@@ -127,6 +127,7 @@ i_ft2_new(char *name, int index) {
   if (error) {
     ft2_push_message(error);
     i_push_error(error, "Opening face");
+    mm_log((2, "error opening face '%s': %d\n", name, error));
     return NULL;
   }
 

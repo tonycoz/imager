@@ -112,6 +112,8 @@ New Features:
     the things I expect Imager to be used for.
   - http://www.develop-help.com/imager/strokes.png (.jpg for smaller version)
 
+- have Imager::Color{::Float}? use Graphics::ColorNames if present.
+
 Clean up:
 - Make sure everything is doable with the OO interface
   i_flood_fill() for example.
@@ -172,3 +174,16 @@ Documentation:
 - see the IRC log in design/doclayout.txt
 - method index?
 - concept index?
+
+Build/configure:
+- use prompt() (from ExtUtils::MakeMaker) for questions in Makefile.PL
+- use the library's mechanism's to find the library if needed, for
+  example, freetype-config for FT2
+- the freetype2 library is built as "freetype.lib" on Win32 and needs
+  to be renamed to be found by the configuration process and included
+  with -lfreetype.  Try to work around that.
+- freetype2 and freetype1 tend to be installed in /usr/include/freetype2
+  and /usr/include/freetype directories, or similarly named (somedir/freetype
+  for example), instead of putting these directly into the search path
+  search for the freetype{2}?/someheader and then add the subdirectory if
+  we find the file in that directory.

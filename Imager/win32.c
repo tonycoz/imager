@@ -223,7 +223,7 @@ static void set_logfont(char *face, int size, LOGFONT *lf) {
   memset(lf, 0, sizeof(LOGFONT));
 
   lf->lfHeight = -size; /* character height rather than cell height */
-  lf->lfCharSet = ANSI_CHARSET;
+  lf->lfCharSet = DEFAULT_CHARSET;
   lf->lfOutPrecision = OUT_TT_PRECIS;
   lf->lfClipPrecision = CLIP_DEFAULT_PRECIS;
   lf->lfQuality = PROOF_QUALITY;
