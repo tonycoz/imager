@@ -2404,7 +2404,8 @@ This document - Table of Contents, Example and Overview
 =item Imager::ImageTypes
 
 Direct type/virtual images, RGB(A)/paletted images, 8/16/double
-bits/channel, image tags, and channel masks.
+bits/channel, color maps, channel masks, image tags, color
+quantization.
 
 =item Imager::Files
 
@@ -2412,19 +2413,24 @@ IO interaction, reading/writing images, format specific tags.
 
 =item Imager::Draw
 
-Drawing Primitives, lines boxes, circles, flood fill.
+Drawing Primitives, lines, boxes, circles, arcs, flood fill.
 
 =item Imager::Color
 
 Color specification.
 
+=item Imager::Color
+
+Fill pattern specification.
+
 =item Imager::Font
 
-General font rendering.
+General font rendering, bounding boxes and font metrics.
 
 =item Imager::Transformations
 
-Copying, scaling, cropping, flipping, blending, pasting, [convert and map.]
+Copying, scaling, cropping, flipping, blending, pasting, convert and
+map.
 
 =item Imager::Engines
 
@@ -2432,7 +2438,7 @@ transform2 and matrix_transform.
 
 =item Imager::Filters
 
-Filters, sharpen, blur, noise, convolve etc. and plugins.
+Filters, sharpen, blur, noise, convolve etc. and filter plugins.
 
 =item Imager::Expr
 
@@ -2448,21 +2454,6 @@ Helper for making gradient profiles.
 
 =back
 
-
-
-
-
-
-
-
-Almost all functions take the parameters in the hash fashion.
-Example:
-
-  $img->open(file=>'lena.png',type=>'png');
-
-or just:
-
-  $img->open(file=>'lena.png');
 
 =head2 Basic concept
 
@@ -2483,190 +2474,10 @@ or if you want to create an empty image:
 This example creates a completely black image of width 400 and
 height 300 and 4 channels.
 
-If you have an existing image, use img_set() to change it's dimensions
-- this will destroy any existing image data:
 
-  $img->img_set(xsize=>500, ysize=>500, channels=>4);
 
-To create paletted images, set the 'type' parameter to 'paletted':
 
-  $img = Imager->new(xsize=>200, ysize=>200, channels=>3, type=>'paletted');
 
-which creates an image with a maxiumum of 256 colors, which you can
-change by supplying the C<maxcolors> parameter.
-
-You can create a new paletted image from an existing image using the
-to_paletted() method:
-
- $palimg = $img->to_paletted(\%opts)
-
-where %opts contains the options specified under L<Quantization options>.
-
-You can convert a paletted image (or any image) to an 8-bit/channel
-RGB image with:
-
-  $rgbimg = $img->to_rgb8;
-
-Warning: if you draw on a paletted image with colors that aren't in
-the palette, the image will be internally converted to a normal image.
-
-For improved color precision you can use the bits parameter to specify
-16 bit per channel:
-
-  $img = Imager->new(xsize=>200, ysize=>200, channels=>3, bits=>16);
-
-or for even more precision:
-
-  $img = Imager->new(xsize=>200, ysize=>200, channels=>3, bits=>'double');
-
-to get an image that uses a double for each channel.
-
-Note that as of this writing all functions should work on images with
-more than 8-bits/channel, but many will only work at only
-8-bit/channel precision.
-
-Currently only 8-bit, 16-bit, and double per channel image types are
-available, this may change later.
-
-Color objects are created by calling the Imager::Color->new()
-method:
-
-  $color = Imager::Color->new($red, $green, $blue);
-  $color = Imager::Color->new($red, $green, $blue, $alpha);
-  $color = Imager::Color->new("#C0C0FF"); # html color specification
-
-This object can then be passed to functions that require a color parameter.
-
-Coordinates in Imager have the origin in the upper left corner.  The
-horizontal coordinate increases to the right and the vertical
-downwards.
-
-=head2 Reading and writing images
-
-You can read and write a variety of images formats, assuming you have
-the appropriate libraries, and images can be read or written to/from
-files, file handles, file descriptors, scalars, or through callbacks.
-
-To see which image formats Imager is compiled to support the following
-code snippet is sufficient:
-
-  use Imager;
-  print join " ", keys %Imager::formats;
-
-This will include some other information identifying libraries rather
-than file formats.
-
-Reading writing to and from files is simple, use the C<read()>
-method to read an image:
-
-  my $img = Imager->new;
-  $img->read(file=>$filename, type=>$type)
-    or die "Cannot read $filename: ", $img->errstr;
-
-and the C<write()> method to write an image:
-
-  $img->write(file=>$filename, type=>$type)
-    or die "Cannot write $filename: ", $img->errstr;
-
-If the I<filename> includes an extension that Imager recognizes, then
-you don't need the I<type>, but you may want to provide one anyway.
-Imager currently does not check the files magic to determine the
-format.  It is possible to override the method for determining the 
-filetype from the filename.  If the data is given in another form than
-a file name a 
-
-When you read an image, Imager may set some tags, possibly including
-information about the spatial resolution, textual information, and
-animation information.  See L</Tags> for specifics.
-
-When reading or writing you can specify one of a variety of sources or
-targets:
-
-=over
-
-=item file
-
-The C<file> parameter is the name of the image file to be written to
-or read from.  If Imager recognizes the extension of the file you do
-not need to supply a C<type>.
-
-=item fh
-
-C<fh> is a file handle, typically either returned from
-C<<IO::File->new()>>, or a glob from an C<open> call.  You should call
-C<binmode> on the handle before passing it to Imager.
-
-=item fd
-
-C<fd> is a file descriptor.  You can get this by calling the
-C<fileno()> function on a file handle, or by using one of the standard
-file descriptor numbers.
-
-=item data
-
-When reading data, C<data> is a scalar containing the image file data,
-when writing, C<data> is a reference to the scalar to save the image
-file data too.  For GIF images you will need giflib 4 or higher, and
-you may need to patch giflib to use this option for writing.
-
-=item callback
-
-Imager will make calls back to your supplied coderefs to read, write
-and seek from/to/through the image file.
-
-When reading from a file you can use either C<callback> or C<readcb>
-to supply the read callback, and when writing C<callback> or
-C<writecb> to supply the write callback.
-
-When writing you can also supply the C<maxbuffer> option to set the
-maximum amount of data that will be buffered before your write
-callback is called.  Note: the amount of data supplied to your
-callback can be smaller or larger than this size.
-
-The read callback is called with 2 parameters, the minimum amount of
-data required, and the maximum amount that Imager will store in it's C
-level buffer.  You may want to return the minimum if you have a slow
-data source, or the maximum if you have a fast source and want to
-prevent many calls to your perl callback.  The read data should be
-returned as a scalar.
-
-Your write callback takes exactly one parameter, a scalar containing
-the data to be written.  Return true for success.
-
-The seek callback takes 2 parameters, a I<POSITION>, and a I<WHENCE>,
-defined in the same way as perl's seek function.
-
-You can also supply a C<closecb> which is called with no parameters
-when there is no more data to be written.  This could be used to flush
-buffered data.
-
-=back
-
-C<$img-E<gt>read()> generally takes two parameters, 'file' and 'type'.
-If the type of the file can be determined from the suffix of the file
-it can be omitted.  Format dependant parameters are: For images of
-type 'raw' two extra parameters are needed 'xsize' and 'ysize', if the
-'channel' parameter is omitted for type 'raw' it is assumed to be 3.
-gif and png images might have a palette are converted to truecolor bit
-when read.  Alpha channel is preserved for png images irregardless of
-them being in RGB or gray colorspace.  Similarly grayscale jpegs are
-one channel images after reading them.  For jpeg images the iptc
-header information (stored in the APP13 header) is avaliable to some
-degree. You can get the raw header with C<$img-E<gt>{IPTCRAW}>, but
-you can also retrieve the most basic information with
-C<%hsh=$img-E<gt>parseiptc()> as always patches are welcome.  pnm has no 
-extra options. Examples:
-
-  $img = Imager->new();
-  $img->read(file=>"cover.jpg") or die $img->errstr; # gets type from name
-
-  $img = Imager->new();
-  { local(*FH,$/); open(FH,"file.gif") or die $!; $a=<FH>; }
-  $img->read(data=>$a,type=>'gif') or die $img->errstr;
-
-The second example shows how to read an image from a scalar, this is
-usefull if your data originates from somewhere else than a filesystem
-such as a database over a DBI connection.
 
 When writing to a tiff image file you can also specify the 'class'
 parameter, which can currently take a single value, "fax".  If class
@@ -2697,246 +2508,12 @@ output.  For example a common idiom when writing a CGI script is:
   print "Content-Type: image/jpeg\n\n";
   $img->write(fd=>fileno(STDOUT), type=>'jpeg') or die $img->errstr;
 
-*Note that load() is now an alias for read but will be removed later*
-
-C<$img-E<gt>write> has the same interface as C<read()>.  The earlier
-comments on C<read()> for autodetecting filetypes apply.  For jpegs
-quality can be adjusted via the 'jpegquality' parameter (0-100).  The
-number of colorplanes in gifs are set with 'gifplanes' and should be
-between 1 (2 color) and 8 (256 colors).  It is also possible to choose
-between two quantizing methods with the parameter 'gifquant'. If set
-to mc it uses the mediancut algorithm from either giflibrary. If set
-to lm it uses a local means algorithm. It is then possible to give
-some extra settings. lmdither is the dither deviation amount in pixels
-(manhattan distance).  lmfixed can be an array ref who holds an array
-of Imager::Color objects.  Note that the local means algorithm needs
-much more cpu time but also gives considerable better results than the
-median cut algorithm.
-
-When storing targa images rle compression can be activated with the
-'compress' parameter, the 'idstring' parameter can be used to set the
-targa comment field and the 'wierdpack' option can be used to use the
-15 and 16 bit targa formats for rgb and rgba data.  The 15 bit format
-has 5 of each red, green and blue.  The 16 bit format in addition
-allows 1 bit of alpha.  The most significant bits are used for each
-channel.
-
-Currently just for gif files, you can specify various options for the
-conversion from Imager's internal RGB format to the target's indexed
-file format.  If you set the gifquant option to 'gen', you can use the
-options specified under L<Quantization options>.
-
-To see what Imager is compiled to support the following code snippet
-is sufficient:
-
-  use Imager;
-  print "@{[keys %Imager::formats]}";
-
-When reading raw images you need to supply the width and height of the
-image in the xsize and ysize options:
-
-  $img->read(file=>'foo.raw', xsize=>100, ysize=>100)
-    or die "Cannot read raw image\n";
-
-If your input file has more channels than you want, or (as is common),
-junk in the fourth channel, you can use the datachannels and
-storechannels options to control the number of channels in your input
-file and the resulting channels in your image.  For example, if your
-input image uses 32-bits per pixel with red, green, blue and junk
-values for each pixel you could do:
-
-  $img->read(file=>'foo.raw', xsize=>100, ysize=>100, datachannels=>4,
-	     storechannels=>3)
-    or die "Cannot read raw image\n";
-
-Normally the raw image is expected to have the value for channel 1
-immediately following channel 0 and channel 2 immediately following
-channel 1 for each pixel.  If your input image has all the channel 0
-values for the first line of the image, followed by all the channel 1
-values for the first line and so on, you can use the interleave option:
-
-  $img->read(file=>'foo.raw', xsize=100, ysize=>100, interleave=>1)
-    or die "Cannot read raw image\n";
-
-=head2 Multi-image files
-
-Currently just for gif files, you can create files that contain more
-than one image.
-
-To do this:
-
-  Imager->write_multi(\%opts, @images)
-
-Where %opts describes 4 possible types of outputs:
-
-=over 5
-
-=item type
-
-This is C<gif> for gif animations.
-
-=item callback
-
-A code reference which is called with a single parameter, the data to
-be written.  You can also specify $opts{maxbuffer} which is the
-maximum amount of data buffered.  Note that there can be larger writes
-than this if the file library writes larger blocks.  A smaller value
-maybe useful for writing to a socket for incremental display.
-
-=item fd
-
-The file descriptor to save the images to.
-
-=item file
-
-The name of the file to write to.
-
-%opts may also include the keys from L<Gif options> and L<Quantization
-options>.
-
-=back
-
-You must also specify the file format using the 'type' option.
-
-The current aim is to support other multiple image formats in the
-future, such as TIFF, and to support reading multiple images from a
-single file.
-
-A simple example:
-
-    my @images;
-    # ... code to put images in @images
-    Imager->write_multi({type=>'gif',
-			 file=>'anim.gif',
-			 gif_delays=>[ (10) x @images ] },
-			@images)
-    or die "Oh dear!";
-
-You can read multi-image files (currently only GIF files) using the
-read_multi() method:
-
-  my @imgs = Imager->read_multi(file=>'foo.gif')
-    or die "Cannot read images: ",Imager->errstr;
-
-The possible parameters for read_multi() are:
-
-=over
-
-=item file
-
-The name of the file to read in.
-
-=item fh
-
-A filehandle to read in.  This can be the name of a filehandle, but it
-will need the package name, no attempt is currently made to adjust
-this to the caller's package.
-
-=item fd
-
-The numeric file descriptor of an open file (or socket).
-
-=item callback
-
-A function to be called to read in data, eg. reading a blob from a
-database incrementally.
-
-=item data
-
-The data of the input file in memory.
-
-=item type
-
-The type of file.  If the file is parameter is given and provides
-enough information to guess the type, then this parameter is optional.
-
-=back
-
-Note: you cannot use the callback or data parameter with giflib
-versions before 4.0.
-
-When reading from a GIF file with read_multi() the images are returned
-as paletted images.
-
-=head2 Gif options
-
-These options can be specified when calling write_multi() for gif
-files, when writing a single image with the gifquant option set to
-'gen', or for direct calls to i_writegif_gen and i_writegif_callback.
-
-Note that some viewers will ignore some of these options
-(gif_user_input in particular).
-
-=over 4
-
-=item gif_each_palette
-
-Each image in the gif file has it's own palette if this is non-zero.
-All but the first image has a local colour table (the first uses the
-global colour table.
-
-=item interlace
-
-The images are written interlaced if this is non-zero.
-
-=item gif_delays
-
-A reference to an array containing the delays between images, in 1/100
-seconds.
-
-If you want the same delay for every frame you can simply set this to
-the delay in 1/100 seconds.
-
-=item gif_user_input
-
-A reference to an array contains user input flags.  If the given flag
-is non-zero the image viewer should wait for input before displaying
-the next image.
-
-=item gif_disposal
-
-A reference to an array of image disposal methods.  These define what
-should be done to the image before displaying the next one.  These are
-integers, where 0 means unspecified, 1 means the image should be left
-in place, 2 means restore to background colour and 3 means restore to
-the previous value.
-
-=item gif_tran_color
-
-A reference to an Imager::Color object, which is the colour to use for
-the palette entry used to represent transparency in the palette.  You
-need to set the transp option (see L<Quantization options>) for this
-value to be used.
-
-=item gif_positions
-
-A reference to an array of references to arrays which represent screen
-positions for each image.
-
-=item gif_loop_count
-
-If this is non-zero the Netscape loop extension block is generated,
-which makes the animation of the images repeat.
-
-This is currently unimplemented due to some limitations in giflib.
-
-=item gif_eliminate_unused
-
-If this is true, when you write a paletted image any unused colors
-will be eliminated from its palette.  This is set by default.
-
-=back
-
-
-
 
 
 =head1 BUGS
 
-box, arc, circle do not support antialiasing yet.  arc, is only filled
-as of yet.  Some routines do not return $self where they should.  This
-affects code like this, C<$img-E<gt>box()-E<gt>arc()> where an object
-is expected.
+box, arc, do not support antialiasing yet.  Arc, is only filled as of
+yet.
 
 When saving Gif images the program does NOT try to shave of extra
 colors if it is possible.  If you specify 128 colors and there are
