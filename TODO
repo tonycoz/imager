@@ -52,8 +52,7 @@ New Features:
   (or even from an existing bold or slanted font)
 
 - utf8 support for text output
-  (available for freetype2, should be easy for Win32, may need to fiddle 
-   with cache under FT1)
+  (available for FT1, freetype2, should be easy for Win32)
 
 - easy interfaces for text output:
   - align text around point, including:
@@ -94,6 +93,25 @@ New Features:
   images
 
 - arc outlines
+
+- complex lines/curves:
+  - thick lines:
+    - dotted/dashed lines
+    - doubled lines?
+    - end-point controls (butt-end, square-end, round-end, pointy, arrows)
+  - brush-lines (as with the Gimp, or Photoshop)
+    - more complex with multiple strokes and various randomness as with
+      Fractal Design Painter (or later versions of Corel Photo Paint)
+  - complex line shapes:
+    - lines
+    - general curves (cubic or bezier, whichever is more general)
+    - easy access to general curves:
+      - points to make a nice curve from
+      - various circular curves (centre, radii, start/end angles, 
+        direction)
+  - Complex thick lines are probably more useful than brush-lines for 
+    the things I expect Imager to be used for.
+  - http://www.develop-help.com/imager/strokes.png (.jpg for smaller version)
 
 Clean up:
 - Make sure everything is doable with the OO interface
