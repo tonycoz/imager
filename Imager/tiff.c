@@ -539,6 +539,7 @@ i_writetiff_wiol(i_img *im, io_glue *ig) {
   mm_log((1, "i_writetiff_wiol: TIFFGetField rowsperstrip=%d\n", rowsperstrip));
   mm_log((1, "i_writetiff_wiol: TIFFGetField scanlinesize=%d\n", TIFFScanlineSize(tif) ));
   mm_log((1, "i_writetiff_wiol: TIFFGetField planarconfig=%d == %d\n", rc, PLANARCONFIG_CONTIG));
+  mm_log((1, "i_writetiff_wiol: bitspersample = %d\n", bitspersample));
 
   got_xres = i_tags_get_float(&im->tags, "i_xres", 0, &xres);
   got_yres = i_tags_get_float(&im->tags, "i_yres", 0, &yres);
@@ -797,7 +798,7 @@ static void expand_4bit_hl(unsigned char *buf, int count) {
 }
 
 static void pack_4bit_hl(unsigned char *buf, int count) {
-  int i;
+  int i = 0;
   while (i < count) {
     buf[i/2] = (buf[i] << 4) + buf[i+1];
     i += 2;
