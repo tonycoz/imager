@@ -78,6 +78,7 @@ lib/Imager/Matrix2d.pm
 lib/Imager/regmach.pod
 lib/Imager/Regops.pm
 lib/Imager/Transform.pm
+t/testtools.pl
 t/t00basic.t
 t/t01introvert.t
 t/t020masked.t
