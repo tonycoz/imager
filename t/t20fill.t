@@ -7,7 +7,7 @@ use Imager::Color::Float;
 
 Imager::init_log("testout/t20fill.log", 1);
 
-print "1..18\n";
+print "1..21\n";
 
 my $blue = NC(0,0,255);
 my $red = NC(255, 0, 0);
@@ -113,6 +113,41 @@ $im->arc(r=>80, d1=>45, d2=>75,
 $im->arc(r=>80, d1=>75, d2=>135,
          fill=>{ fountain=>'radial', xa=>100, ya=>100, xb=>20, yb=>100 });
 $im->write(file=>'testout/t20_sample.ppm');
+
+# flood fill tests
+my $rffimg = Imager::ImgRaw::new(100, 100, 3);
+# build a H 
+Imager::i_box_filled($rffimg, 10, 10, 20, 90, $blue);
+Imager::i_box_filled($rffimg, 80, 10, 90, 90, $blue);
+Imager::i_box_filled($rffimg, 20, 45, 80, 55, $blue);
+my $black = Imager::Color->new(0, 0, 0);
+Imager::i_flood_fill($rffimg, 15, 15, $red);
+my $rffcmp = Imager::ImgRaw::new(100, 100, 3);
+# build a H 
+Imager::i_box_filled($rffcmp, 10, 10, 20, 90, $red);
+Imager::i_box_filled($rffcmp, 80, 10, 90, 90, $red);
+Imager::i_box_filled($rffcmp, 20, 45, 80, 55, $red);
+$diff = Imager::i_img_diff($rffimg, $rffcmp);
+ok(19, !$diff, "flood fill difference");
+
+my $ffim = Imager->new(xsize=>100, ysize=>100);
+my $yellow = Imager::Color->new(255, 255, 0);
+$ffim->box(xmin=>10, ymin=>10, xmax=>20, ymax=>90, color=>$blue, filled=>1);
+$ffim->box(xmin=>20, ymin=>45, xmax=>80, ymax=>55, color=>$blue, filled=>1);
+$ffim->box(xmin=>80, ymin=>10, xmax=>90, ymax=>90, color=>$blue, filled=>1);
+ok(20, $ffim->flood_fill(x=>50, 'y'=>50, color=>$red), "flood fill");
+$diff = Imager::i_img_diff($rffcmp, $ffim->{IMG});
+ok(21, !$diff, "oo flood fill difference");
+$ffim->flood_fill(x=>50, 'y'=>50,
+                  fill=> {
+                          hatch => 'check2x2'
+                         });
+#                  fill=>{
+#                         fountain=>'radial',
+#                         xa=>50, ya=>50,
+#                         xb=>10, yb=>10,
+#                        });
+$ffim->write(file=>'testout/t20_ooflood.ppm');
 
 sub ok {
   my ($num, $test, $desc) = @_;

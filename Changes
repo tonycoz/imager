@@ -499,6 +499,9 @@ Revision history for Perl extension Imager.
           - fountain generic fills
           - sample code to generate an examples page
         - improved the scale* hatches a bit
+        - add the flood_fill() method (using the existing i_flood_fill)
+        - implement i_flood_cfill() based on i_flood_fill, and 
+          add general fills to the flood_fill() method
 
 =================================================================
 

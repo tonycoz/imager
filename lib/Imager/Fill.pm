@@ -6,7 +6,7 @@ my @hatch_types =
      hline1 hline2 hline4 slash1 slosh1 slash2 slosh2
      grid1 grid2 grid4 dots1 dots4 dots16 stipple weave cross1 cross2
      vlozenge hlozenge scalesdown scalesup scalesleft scalesright stipple2
-     tile_L/;
+     tile_L stipple3/;
 my %hatch_types;
 @hatch_types{@hatch_types} = 0..$#hatch_types;
 
