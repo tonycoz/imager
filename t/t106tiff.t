@@ -21,7 +21,7 @@ i_box_filled($timg, 0, 0, 20, 20, $green);
 i_box_filled($timg, 2, 2, 18, 18, $trans);
 
 if (!i_has_format("tiff")) {
-  for (1..4) {
+  for (1..13) {
     print "ok $_ # skip no tiff support\n";
   }
 } else {
