@@ -59,10 +59,6 @@ New Features:
 - read_multi() needs to handle other multi-image types, such as TIFF 
   (probably the most common)
 
-- hatched fills
-
-- different combining methods for fills (TC working on it)
-
 Clean up:
 - Make sure everything is doable with the OO interface
   i_flood_fill() for example.
