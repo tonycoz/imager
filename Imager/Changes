@@ -912,6 +912,8 @@ Revision history for Perl extension Imager.
   and skips to that offset before reading image data.  Previously this
   value was read but otherwise ignored.
 - added --palette action to tools/imager
+- i_img_pal_new() now releases the image object memory if creation
+  fails.
 
 =================================================================
 
