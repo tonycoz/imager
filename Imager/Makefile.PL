@@ -153,7 +153,11 @@ bugs.  Imager can crash or display other strange behaviour after
 reading or writing gif images.  Some of the gif tests can even fail
 since they stress some parts of the buggy code.
 
-libungif 4.1.2 and later is safe.
+libungif 4.1.2 and later is safe.  giflib 4.1.3 needs at least one
+patch to have all the bugs fixed, see README for details.
+
+Of course it's possible your operating system distributor has patched
+all of these problems and you have nothing to worry about.
 
 Do you want to remove gif support? [Y/n]
 EOFF

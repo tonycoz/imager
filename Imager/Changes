@@ -940,6 +940,8 @@ Revision history for Perl extension Imager.
   to test/debug for 0.44.
 - image.h had no prototype for i_ft2_bbox_r() and it was being called
   from Imager.xs
+- giflib 4.1.3 still doesn't have all the bugs fixed, update the notes
+  in README and in the buggy_giflib.txt file that t105gif.t produces
 
 =================================================================
 
