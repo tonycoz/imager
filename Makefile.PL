@@ -3,9 +3,6 @@ use ExtUtils::MakeMaker;
 use Cwd;
 use Config;
 
-$lext=$Config{'so'};   # Get extensions of libraries
-$aext=$Config{'_a'};
-
 #
 # IM_INCPATH      colon seperated list of paths to extra include paths
 # IM_LIBPATH      colon seperated list of paths to extra library paths
@@ -115,7 +112,7 @@ EOF
 
   <STDIN>; # eat one return
 
-  for $frm(sort { $formats{$b}{order} <=> $formats{$a}{order} } keys %formats) {
+  for my $frm(sort { $formats{$b}{order} <=> $formats{$a}{order} } keys %formats) {
   SWX:
     if ($formats{$frm}{docs}) { print "\n",$formats{$frm}{docs},"\n\n"; }
     print "Enable $frm support: ";
@@ -219,6 +216,7 @@ sub gd {
 
 sub checkformat {
   my $frm=shift;
+
   my $libchk=$formats{$frm}{'libcheck'};
   my $incchk=$formats{$frm}{'inccheck'};
 
@@ -273,23 +271,36 @@ sub pathcheck {
 sub init {
 
   @definc{'/usr/include'}=();
-  @incs=(split(/\Q$Config{path_sep}/, $INCPATH), 
-         qw(/sw/include 
-            /usr/include/freetype2
-            /usr/local/include/freetype2
-            /usr/local/include/freetype1/freetype
-            /usr/include /usr/local/include /usr/include/freetype 
-            /usr/local/include/freetype));
-  @libs=(split(/\Q$Config{path_sep}/,$LIBPATH), 
-         qw(/sw/lib),  split(/ /, $Config{'libpth'}));
+  @incs=(split(/\Q$Config{path_sep}/, $INCPATH));
+  if ($Config{locincpth}) {
+    push @incs, split ' ', $Config{locincpth};
+  }
   if ($^O =~ /win32/i && $Config{cc} =~ /\bcl\b/i) {
     push(@incs, split /;/, $ENV{INCLUDE}) if exists $ENV{INCLUDE};
+  }
+  push @incs,
+      qw(/sw/include 
+         /usr/include/freetype2
+         /usr/local/include/freetype2
+         /usr/local/include/freetype1/freetype
+         /usr/include /usr/local/include /usr/include/freetype 
+         /usr/local/include/freetype);
+
+  @libs= split(/\Q$Config{path_sep}/,$LIBPATH);
+  if ($Config{loclibpth}) {
+    push @libs, split ' ', $Config{loclibpth};
+  }
+  push @libs, qw(/sw/lib),  split(/ /, $Config{'libpth'});
+  if ($^O =~ /win32/i && $Config{cc} =~ /\bcl\b/i) {
     push(@libs, split /;/, $ENV{LIB}) if exists $ENV{LIB};
   }
   if ($^O eq 'cygwin') {
     push(@libs, '/usr/lib/w32api') if -d '/usr/lib/w32api';
     push(@incs, '/usr/include/w32api') if -d '/usr/lib/w32api';
   }
+
+  my $lext=$Config{'so'};   # Get extensions of libraries
+  my $aext=$Config{'_a'};
 
   $formats{'jpeg'}={
 		    order=>'21',
