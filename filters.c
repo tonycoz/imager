@@ -34,6 +34,23 @@ Some of these functions are internal.
 
 
 
+/*
+=item saturate(in) 
+
+Clamps the input value between 0 and 255. (internal)
+
+  in - input integer
+
+=cut
+*/
+
+static
+unsigned char
+saturate(int in) {
+  if (in>255) { return 255; }
+  else if (in>0) return in;
+  return 0;
+}
 
 
 
@@ -263,12 +280,12 @@ i_bumpmap(i_img *im, i_img *bump, int channel, int light_x, int light_y, int st)
     mm_log((1, "i_bumpmap: channel = %d while bump image only has %d channels\n", channel, bump->channels));
     return;
   }
-  
+
   mx = (bump->xsize <= im->xsize) ? bump->xsize : im->xsize;
   my = (bump->ysize <= im->ysize) ? bump->ysize : im->ysize;
 
   i_img_empty_ch(&new_im, im->xsize, im->ysize, im->channels);
- 
+  
   aX = (light_x > (mx >> 1)) ? light_x : mx - light_x;
   aY = (light_y > (my >> 1)) ? light_y : my - light_y;
 
@@ -316,6 +333,213 @@ i_bumpmap(i_img *im, i_img *bump, int channel, int light_x, int light_y, int st)
   i_img_exorcise(&new_im);
 }
 
+
+
+
+typedef struct {
+  float x,y,z;
+} fvec;
+
+
+static
+float
+dotp(fvec *a, fvec *b) {
+  return a->x*b->x+a->y*b->y+a->z*b->z;
+}
+
+static
+void
+normalize(fvec *a) {
+  double d = sqrt(dotp(a,a));
+  a->x /= d;
+  a->y /= d;
+  a->z /= d;
+}
+
+
+/*
+  positive directions:
+  
+  x - right, 
+  y - down
+  z - out of the plane
+  
+  I = Ia + Ip*( cd*Scol(N.L) + cs*(R.V)^n )
+  
+  Here, the variables are:
+  
+  * Ia   - ambient colour
+  * Ip   - intensity of the point light source
+  * cd   - diffuse coefficient
+  * Scol - surface colour
+  * cs   - specular coefficient
+  * n    - objects shinyness
+  * N    - normal vector
+  * L    - lighting vector
+  * R    - reflection vector
+  * V    - vision vector
+
+  static void fvec_dump(fvec *x) {
+    printf("(%.2f %.2f %.2f)", x->x, x->y, x->z);
+  }
+*/
+
+/* XXX: Should these return a code for success? */
+
+
+
+
+/* 
+=item i_bumpmap_complex(im, bump, channel, tx, ty, Lx, Ly, Lz, Ip, cd, cs, n, Ia, Il, Is)
+
+Makes a bumpmap on image im using the bump image as the elevation map.
+
+  im      - target image
+  bump    - image that contains the elevation info
+  channel - to take the elevation information from
+  tx      - shift in x direction of where to start applying bumpmap
+  ty      - shift in y direction of where to start applying bumpmap
+  Lx      - x position/direction of light
+  Ly      - y position/direction of light
+  Lz      - z position/direction of light
+  Ip      - light intensity
+  cd      - diffuse coefficient
+  cs      - specular coefficient
+  n       - surface shinyness
+  Ia      - ambient colour
+  Il      - light colour
+  Is      - specular colour
+
+if z<0 then the L is taken to be the direction the light is shining in.  Otherwise
+the L is taken to be the position of the Light, Relative to the image.
+
+=cut
+*/
+
+
+void
+i_bumpmap_complex(i_img *im,
+		  i_img *bump,
+		  int channel,
+		  int tx,
+		  int ty,
+		  float Lx,
+		  float Ly,
+		  float Lz,
+		  float cd,
+		  float cs,
+		  float n,
+		  i_color *Ia,
+		  i_color *Il,
+		  i_color *Is) {
+  i_img new_im;
+  
+  int inflight;
+  int x, y, ch;
+  int mx, Mx, my, My;
+  
+  float cdc[MAXCHANNELS];
+  float csc[MAXCHANNELS];
+
+  i_color x1_color, y1_color, x2_color, y2_color;
+
+  i_color Scol;   /* Surface colour       */
+
+  fvec L;         /* Light vector */
+  fvec N;         /* surface normal       */
+  fvec R;         /* Reflection vector    */
+  fvec V;         /* Vision vector        */
+
+  mm_log((1, "i_bumpmap_complex(im %p, bump %p, channel %d, tx %d, ty %d, Lx %.2f, Ly %.2f, Lz %.2f, cd %.2f, cs %.2f, n %.2f, Ia %p, Il %p, Is %p)\n",
+	  im, bump, channel, tx, ty, Lx, Ly, Lz, cd, cs, n, Ia, Il, Is));
+  
+  if (channel >= bump->channels) {
+    mm_log((1, "i_bumpmap_complex: channel = %d while bump image only has %d channels\n", channel, bump->channels));
+    return;
+  }
+
+  for(ch=0; ch<im->channels; ch++) {
+    cdc[ch] = (float)Il->channel[ch]*cd/255.f;
+    csc[ch] = (float)Is->channel[ch]*cs/255.f;
+  }
+
+  mx = 1;
+  my = 1;
+  Mx = bump->xsize-1;
+  My = bump->ysize-1;
+  
+  V.x = 0;
+  V.y = 0;
+  V.z = 1;
+  
+  if (Lz < 0) { /* Light specifies a direction vector, reverse it to get the vector from surface to light */
+    L.x = -Lx;
+    L.y = -Ly;
+    L.z = -Lz;
+    normalize(&L);
+  } else {      /* Light is the position of the light source */
+    inflight = 0;
+    L.x = -0.2;
+    L.y = -0.4;
+    L.z =  1;
+    normalize(&L);
+  }
+
+  i_img_empty_ch(&new_im, im->xsize, im->ysize, im->channels);
+
+  for(y = 0; y < im->ysize; y++) {		
+    for(x = 0; x < im->xsize; x++) {
+      double dp1, dp2;
+      double dx = 0, dy = 0;
+
+      /* Calculate surface normal */
+      if (mx<x && x<Mx && my<y && y<My) {
+	i_gpix(bump, x + 1, y,     &x1_color);
+	i_gpix(bump, x - 1, y,     &x2_color);
+	i_gpix(bump, x,     y + 1, &y1_color);
+	i_gpix(bump, x,     y - 1, &y2_color);
+	dx = x2_color.channel[channel] - x1_color.channel[channel];
+	dy = y2_color.channel[channel] - y1_color.channel[channel];
+      } else {
+	dx = 0;
+	dy = 0;
+      }
+      N.x = -dx * 0.015;
+      N.y = -dy * 0.015;
+      N.z = 1;
+      normalize(&N);
+
+      /* Calculate Light vector if needed */
+      if (Lz>=0) {
+	L.x = Lx - x;
+	L.y = Ly - y;
+	L.z = Lz;
+	normalize(&L);
+      }
+      
+      dp1 = dotp(&L,&N);
+      R.x = -L.x + 2*dp1*N.x;
+      R.y = -L.y + 2*dp1*N.y;
+      R.z = -L.z + 2*dp1*N.z;
+      
+      dp2 = dotp(&R,&V);
+
+      dp1 = dp1<0 ?0 : dp1;
+      dp2 = pow(dp2<0 ?0 : dp2,n);
+
+      i_gpix(im, x, y, &Scol);
+
+      for(ch = 0; ch < im->channels; ch++)
+	Scol.channel[ch] = 
+	  saturate( Ia->channel[ch] + cdc[ch]*Scol.channel[ch]*dp1 + csc[ch]*dp2 );
+      
+      i_ppix(&new_im, x, y, &Scol);
+    }
+  }
+  
+  i_copyto(im, &new_im, 0, 0, (int)im->xsize, (int)im->ysize, 0, 0);
+  i_img_exorcise(&new_im);
+}
 
 
 /* 
@@ -402,24 +626,6 @@ i_mosaic(i_img *im, int size) {
       i_ppix(im, (x + lx), (y + ly), &rcolor);
     
   }
-}
-
-/*
-=item saturate(in) 
-
-Clamps the input value between 0 and 255. (internal)
-
-  in - input integer
-
-=cut
-*/
-
-static
-unsigned char
-saturate(int in) {
-  if (in>255) { return 255; }
-  else if (in>0) return in;
-  return 0;
 }
 
 

@@ -578,6 +578,8 @@ void i_contrast(i_img *im, float intensity);
 void i_hardinvert(i_img *im);
 void i_noise(i_img *im, float amount, unsigned char type);
 void i_bumpmap(i_img *im,i_img *bump,int channel,int light_x,int light_y,int strength);
+void i_bumpmap_complex(i_img *im, i_img *bump, int channel, int tx, int ty, float Lx, float Ly, 
+		       float Lz, float cd, float cs, float n, i_color *Ia, i_color *Il, i_color *Is);
 void i_postlevels(i_img *im,int levels);
 void i_mosaic(i_img *im,int size);
 void i_watermark(i_img *im,i_img *wmark,int tx,int ty,int pixdiff);
