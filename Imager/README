@@ -1,0 +1,217 @@
+================================================================
+Copyright (c) 1999, 2000 Arnar M. Hrafnkelsson. All rights reserved.
+This program is free software; you can redistribute it and/or
+modify it under the same terms as Perl itself.
+================================================================
+
+>> THIS SOFTWARE COMES WITH ABSOLUTELY NO WARRANTY WHATSOEVER <<
+
+================================================================
+
+
+========================
+1. Patent infringements?
+========================
+
+Imager as such contains no patented algorithms.  The external
+libraries (which are not written by me) may or may not contain
+patented algorithms.  YOU ARE SOLELY RESPONSIBLE FOR OBTAINING
+LICENSE(S) TO USE SUCH LIBRARIES SHOULD YOU NEED ANY.
+
+
+========================
+2. Compiling and testing
+========================
+
+Some care has been taken to make the installation as smooth as
+possible.  This is rather hard due to the difference between operating
+systems and site setups.  To get started just type
+
+$ perl Makefile.PL
+
+It should blurb out a list of which libraries were found and which
+not.  If you add a library to the machine after installing Imager it
+does not automatically become available in Imager.  It only uses the
+libraries that are found.  If the list of found libraries is not what
+you expected, then the Makefile.PL is either not searching in the
+right directories or your box does not have the libraries you think it
+does.  For a list of where to get the libraries have a look at
+3. External dependencies.  To widen the search path for libraries and
+include files set the IM_INCPATH and IM_LIBPATH variables.  The
+environment variables that matter when Makefile.PL is run are
+
+IM_INCPATH      colon separated list of paths to extra include files
+IM_LIBPATH      colon separated list of paths to extra library files
+
+IM_VERBOSE      turns on verbose mode for the library scanning and such
+IM_MANUAL       to manually select which libraries are used and which not
+IM_NOLOG        if true logging will not be compiled into the module
+IM_DEBUG_MALLOC if true malloc debugging will be compiled into the module
+                do not use IM_DEBUG_MALLOC in production - this slows
+                everything down
+
+IM_CFLAGS       Extra flags to pass to the compiler
+IM_LFLAGS       Extra flags to pass to the linker
+IM_DFLAGS       Extra flags to pass to the preprocessor
+
+
+
+When finding the libraries has been sorted out it's time for
+
+$ make 
+
+and if that works then do
+
+$ make test
+
+If either fails do take a peek at the file errep.perl.  It's creates a
+file report.txt.  This is some information which will help me discover
+where the problem is so I can try to fix it in future releases.  If
+you find running it ok (just remember - no warranty!) please send the
+report.txt via email to addi@umich.edu .
+
+Troubleshooting tips:
+
+A common problem is that libgif/libungif are sometimes linked to the X
+libraries and then running the tests fails.  In that case something
+like:
+
+$ IM_LFLAGS="-L/usr/X11R6/lib -lX11" perl Makefile.PL
+
+Which simply sets the environment variables for the extra libraries 
+to include the X libraries (which we do not use at all, but must
+included since libgif has been linked with it).
+
+Also note that libgif has a few bugs: You can run something like
+
+$ perl -Iblib/lib -Iblib/arch t/t10formats.t
+
+This way you can see what comments the test script prints out.
+t/t10formats.t checks for an bug in libgiff and prints out a patch
+if that bug is present, note that this bug only affects the more
+"advanced" features of libgif.
+
+Imager needs to have a fairly recent libtiff installed (we know it
+it runs fine with 3.5.5).  In the future we might consider supporting older
+libtiff versions.  For now you can either configure Imager manually (by
+setting the IM_MANUAL environment variable to 1, in sh:
+
+$ IM_MANUAL=1 perl Makefile.PL
+
+and simply say no to tiff support when asked if you want it, the same thing
+can be used to circumvent problems in gifs to get Imager going.
+
+
+If it worked just continue with the installation as normally 
+(with make install).
+
+========================
+3. External dependencies
+========================
+
+Some hints about getting the Imager module to find the libraries it
+needs for specific features.  The libraries it uses are:
+
+ jpeg: ftp://ftp.uu.net/graphics/jpeg/jpegsrc.v6b.tar.gz
+
+  png: ftp://ftp.uu.net/graphics/png  
+  you also need zlib to use png:  ftp://ftp.uu.net/pub/archiving/zip/zlib
+
+  gif: http://www.arrakeen.demon.co.uk/giflib/  
+or at: http://prtr-13.ucsc.edu/~badger/software/libungif/index.shtml
+
+ tiff: http://www.libtiff.org/
+
+   t1: ftp://ftp.neuroinformatik.ruhr-uni-bochum.de/pub/software/t1lib/
+or at: ftp://sunsite.unc.edu/pub/Linux/libs/graphics/
+
+   tt: http://www.freetype.org/
+
+
+Precompiled versions of some of the libraries might be found at:
+
+AIX:
+   http://www.bull.de/
+   ftp://ftp.rge.com/pub/systems/aix/bull/
+
+
+
+========================
+4. Logging and debugging
+========================
+
+Logging is compiled in by default - if you should want to get of it
+from the binaries you can do so by setting the env IMAGER_NOLOG 
+to something. If you want to enable malloc debugging to check for leaks
+then set IMAGER_DEBUG_MALLOC to something.  Needless to say it is
+pretty pointless to have malloc debug enabled with no logging since you 
+can never see the malloc information that way.
+
+
+========================
+5. Truetype information
+========================
+
+If you enable the truetype part and want it to be TESTED you MUST set
+the environment variable TTFONTTEST to a complete path to a truetype
+font.
+
+
+=================
+6. Win32 Support
+=================
+
+Imager can be installed on Win32 systems.  This was ported and tested
+with Microsoft Visual C++ 6.0 with build 623 of ActivePerl.  Currently
+I haven't tried to test any of the image formats except for ppm, since
+I don't have the required libraries on my NT machine.  This may
+change.  The same is true for font support, though it might be
+preferable to try to use Win32's native font support over the external
+librarie - why force the user to install yet another library.
+
+I haven't tried to target compilers other than VC++, since I don't
+have them installed.
+
+If you have any problems with the Win32 support, please email
+tony@develop-help.com (don't forget to use nmake instead of make).
+
+=======================
+7. General information
+=======================
+
+The Imager module homepage is currently at:
+
+ http://www.eecs.umich.edu/~addi/perl/Imager/
+
+The current docs are rather bad as I've been busy adding features
+but hopefully they will be updated soon.  Until then you'll just
+have to use the source. The test scripts might also be a good idea.
+By activating the the #init_log lines in the test script you can get
+rather verbose debugging output from the C code.
+
+
+========================
+8. Thanks
+========================
+
+Thanks go to:
+  Tony Cook           ( TonyC )
+  Claes Jacobson      ( Claes )
+  Philip Gwyn         ( Leolo )
+  Brad Murray         ( HalfJack )
+  Nicholas Dronen     ( Veblen )
+  Michael G Schwern   ( Schwern )
+  Rocco Caputo        ( Dngor )
+  Graham barr         ( Gbarr )
+  Mark-Jason Dominus  ( Mjd )
+  Jerome
+  Jason Alexander     ( Jalex )
+  Randal R. Schwartz  ( Merlyn )
+  Tkil                ( )
+  Artur Bergman       ( Sky )
+  Luc St-Louis        ( Lucs )
+  PerlJam             ( )
+  Roderick Schertler  ( Roderick )
+  Nathan Torkington   ( gnat )
+
+(and just to play it safe) all those I forgot to mention.

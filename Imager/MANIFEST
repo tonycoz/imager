@@ -1,0 +1,95 @@
+Changes
+Imager.pm
+Imager.xs
+MANIFEST
+README
+Makefile.PL
+draw.c
+draw.h
+conv.c
+gaussian.c
+ppport.h
+image.c
+image.h
+datatypes.h
+datatypes.c
+feat.h
+io.c
+io.h
+log.c
+log.h
+jpeg.c
+png.c
+gif.c
+tiff.c
+quant.c
+raw.c
+pnm.c
+filters.c
+feat.c
+font.c
+regmach.c
+regmach.h
+stackmach.c
+stackmach.h
+trans2.c
+iolayer.h
+iolayer.c
+fontfiles/dcr10.afm
+fontfiles/dcr10.pfb
+fontfiles/dodge.ttf
+lib/Imager/regmach.pod
+lib/Imager/Regops.pm
+lib/Imager/Expr.pm
+lib/Imager/Expr/Assem.pm
+lib/Imager/Color.pm
+lib/Imager/Font.pm
+lib/Imager/Transform.pm
+t/t00basic.t
+t/t10formats.t
+t/t15color.t
+t/t30t1font.t
+t/t35ttfont.t
+t/t36oofont.t
+t/t40scale.t
+t/t50basicoo.t
+t/t55trans.t
+t/t56postfix.t
+t/t57infix.t
+t/t58trans2.t
+t/t59assem.t
+t/t60dyntest.t
+t/t65crop.t
+t/t66paste.t
+t/t70newgif.t
+t/t75polyaa.t
+t/t90cc.t
+testimg/scale.ppm
+testimg/scale.gif
+testimg/scalei.gif
+testimg/penguin-base.ppm
+typemap
+dynaload.c
+dynaload.h
+ext.h
+plug.h
+filterlist.perl
+doco.perl
+errep.perl
+regops.perl
+spot.perl	For making an ordered dither matrix from a spot function
+transbench.perl
+transform.perl	Shell interface to Imager::Transform
+bigtest.perl	Library selection tester
+dynfilt/pluginst.h
+dynfilt/dyntest.c
+dynfilt/dt2.c
+dynfilt/mandelbrot.c
+dynfilt/flines.c
+dynfilt/compile.txt
+dynfilt/Makefile.PL
+bench/quantone.perl	One round of benchmarking image quantization.
+bench/quantbench.perl	Benchmark various quantization methods
+bench/makegrad.perl	Builds regular images for quantization.
+bench/kscdisplay.png	Photo test for quantization.
+bench/benchform.perl	Formats the benchmark results

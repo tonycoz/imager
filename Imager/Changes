@@ -1,0 +1,404 @@
+Revision history for Perl extension Imager.
+
+0.01  Thu May  6 15:25:03 1999
+	- original version; created by h2xs 1.18
+
+0.02  Mon May 10 20:20:20 1999
+        - Added PPM writer, and a new return type to
+	be used to return undef() from a function returning
+	(int)0.
+
+0.03  Thu May 20 23:23:23 1999
+        - Added Pseudo image handling thingies, now
+	you can use your own get and put pixel routines.
+
+0.04  Mon May 24 22:14:55 1999
+        - Rewrote parts of jpeg support.
+
+0.05  Tue May 25 23:40:01 1999
+	- Added png support with libpng
+	fixed error reporting and return types from
+	some format routines.
+
+0.06  Wed May 26 19:05:39 1999
+        - Fixed Data::Dumper being used when it shouldn't have
+	added feature checking to see at run time if 
+	certain formats are avaliable.
+	removed some ancient C++ style comments that hadn't 
+	been properly removed, some out of bounds errors in ppm.c
+	fixed tests so missing features are skipped.
+
+0.07  Thu May 27 03:15:00 1999
+        - Fixed the typemap for i_img and i_color so that you can pass
+	a null pointer to them without getting a warning when warnings
+	are enabled. Maybe this is counter perl but it greatly increases
+	the usability of the functions.
+
+0.08   Fri May 28 14:13:21 1999
+         - Added support for gif via, giflib or libungif.
+	 gif is so ridden with patent issues but the user
+	 can decide which library to use since they have the same
+	 include files and calling interface.
+
+0.09   Mon May 31 17:52:32 1999
+         - Added image scaling per axis - faster than doing both
+	 axes at the same time.  The current method uses lancoz
+	 kernel and filtering. But more types should be added -
+	 including: nearest neighbor, linear, and bicubic.
+
+0.10   Mon Jun  7 03:25:54 1999
+         - Added T1 postscript font handling. It's very primitive
+	 at the moment but creative people can do nice stuff 
+	 with it.  Currently it is not possible to have it 
+	 generate an image of the correct size for a given string 
+	 but that is on the way.
+
+0.11   Mon Jun  7 14:43:35 1999
+         - Added T1 features for direct to image rendering in 
+	 a single color.  fixed some debug messages going to 
+	 stderr instead of a log file.
+
+0.12   Tue Jun  8 02:58:43 1999
+         - Fixed bugs in jpeg.c when loading images. Also specified
+	 prototype behaviour to on in the Imager.xs file. The
+	 Makefile.PL step doesn't complain anymore so that is
+	 hopefully fixed.
+
+0.13   Wed Jun  9 06:55:58 1999
+         - Fixed Imager.xs for init_log call.  Minor fixes here
+	 and there.
+
+0.14   Thu Jun 10 14:11:22 1999
+         - Rewrote most of the logging stuff so that it is now
+	 possible to remove all logging from the XS part of the
+	 module.  Also some primitive check of memory usage was
+	 added. Claes Jacobsson sent in some filters, inverter,
+	 contrast and a noise filter.
+
+0.15   Mon Jun 14 08:13:29 1999
+	  - Wrote minor enhancement on the calling syntax list.
+	  Started on the object interface - added better support
+	  for quering avaliable filetypes.  Fixed memory leaks in	
+	  most loaders. New filters from Claes in this version
+	  are bumpmap, postlevels and mosaic.
+
+0.16	Wed Jun 16 20:54:33 1999
+	  - Added fixes to the BEGIN and END parts, added writer
+	  function for the OO interface. Also added basic IPTC 
+	  reading support for jpegs.  Also a few filters have been
+	  added to the OO interface.
+
+0.17	Thu Jun 24 11:09:15 1999
+	  - Added dynamic loading stuff - It's still missing a nice
+	  global symbol table. This will be fixed in next release.
+	  also calling the plugins is not all to easy at the moment.
+
+
+0.18	Mon Jun 28 12:31:33 1999
+	  - Added global symbol table - plugins now need a symbol
+	  table pointer in them. When the module is loaded it is
+	  set to point at the global symbol table. Also some barebones
+	  Makefile.PL has been made in the dynfilt directory - it works
+	  on my system - I hope it does on yours.
+
+
+0.19	Fri Jul  1 15:00:03 1999	
+	  - Added a way new scaling method for creating easy previews.
+	  It only uses nearest neighbor, so it's doesn't look very nice
+	  but it may be better for applications like remote sensing.
+
+0.20	Mon Jul  5 10:15:37 1999
+	  - Added and rewrote documentation.
+
+0.21	Mon Jul  6 19:15:37 1999
+	  - Fixed a bug in the scaling routine - it wasn't
+	  handling 0< cases.
+
+0.22	Sat Oct  9 07:04:14 1999
+	  - Added a new method to write gif images - now 
+	  it is possible to have a part of a palette fixed.
+	  this is very usefull if one needs to make sure that
+	  some color like white is in the pallete.  This method
+	  also allows some ditherding and gives better colormap
+	  than the mediancut from the gif libraries.  It does
+	  need much more cpu power though.  Hopefully later versions
+	  will be faster.
+
+0.23	**************** Internal release only
+	  - Fixed the %instances bug - caused ALL memory to be leaked.
+	  Added real noise function - need feedback on how it should
+	  be used. Also box(), and polyline are now in place.  Polygon
+	  is missing but antialiased line drawing with integer endpoints are
+          done but should be replaced with a version that can have 
+	  floating point endvalues. Two noise filters addded.
+
+0.24	**************** Internal release only
+	  - Converted i_color into an object from a reference, so now it's
+	giving an object instead of a void ptr or an integer or something.
+
+0.25	**************** Internal release only
+	  - Added basic Truetype functionality - still needs a rewrite
+	to be decent. Currently it's a port of a demo program that
+	uses an awful amount of global variables and there is much IO since
+	no caching of glyphs is done.
+
+0.26    Tue Nov 23 03:57:00 1999 > Development release <
+	  - Added transformations so that an image can be wrapped.
+	To achive decent speed a C based stackmachine is included. As a result
+	transformations need to be specified in rpn (postfix) notation. It
+	also can use the Affix::Infix2Postfix class to do the conversion for it.
+
+0.27    Tue Dec 28 03:57:00 1999 > CPAN release <
+	  - This is a bugfix version mostly, thanks to claes for pointing
+	out the problems - fixed palette saving wasn't working correctly after
+	version 0.24 - rather surprised this didn't crash everything.
+	Also fixed that for t1 fonts the bounding box wasn't being reported 
+	unless the font had been used before.  This is either a bug in t1lib
+	or a mistake in it's documentation.  Another lingering bug since 0.24
+	what that $img->box() wasn't creating it's default color properly.
+	Added i_tt_text() method and more debuging to the truetype routines.      	
+	truetype testcase fixed and old debug rubish removed.
+
+0.28    Tue Jan  4 05:25:58 2000 > CPAN release <
+	  - Only fixes to truetype test and transformation tests.
+	Thanks to schinder of cpan testers for testing and reporting.
+
+0.29    Tue Jan  4 21:49:57 2000 > CPAN release <
+	  - fixes to get rid of warnings under pre 5.005, 
+	Fixed broken preproccessor directives to work on non gnu
+	compilers.  Fixed DSO test on HPUX - both code errors and
+	HPUX creates .sl instead of .so so the tests were failing.
+
+0.30    Sun Jan  7 05:00:06 2000 > Bunch of Alpha releases <
+	  - An attempt to automate installation.
+
+0.31    Sat Jan 15 03:58:29 2000 > Fixes fixes fixes <
+	  - Fixed a bug pointed out by Leolo where loading gifs
+	skips the first line of the imageload() has been
+	by read() - for now load is an alias for read.  It will
+	be removed in the future.  Also, fixes dynamic loading on
+	systems that prepend an underscore to symbols.  At the present
+	the only system that I know of that needs this is OpenBSD.
+	BUT YOU MUST RECOMPILE ALL OF YOUR OLD MODULES AGAINST THIS BUILD.
+	Added getchannels() method ( How did I manage to delay this
+	untill now ).  Some document changes but nothing substantial.
+	Also fixed the png read/write routines to handle all colorspaces
+	and images with alpha information.  Also now it's possible to 
+	have Imager guess the format of the files to load or save 
+	when passing files to read or save from the filename.
+	Also all of the tests except dynamic loading now pass on OS/2.
+
+0.32    Tue Feb 29 17:26:00 2000 CPAN RELEASE
+          - Added the getcolorcount method.  Fixed interlace handling
+	on png images.  Fixed the missing channel count in crop()
+	method. Rewrote most of t1lib database stuff - created color
+	and font classes.  T1 stuff is mostly done - TT things were
+	rewritten too and now include most of what is needed for
+	pixmap caching.  Added documentation for fonts.  Comments have
+	been added to some of the relevant c-routines.  Added a copy()
+	function in Imager.xs and a corresponding method name.
+	Changed the underlying data type for the raw XS images from
+	pointers to objects - this will hopefully catch the most
+	basic errors and keep the segfaulting down.  This means that
+	all of the underlying XS calls for readjpeg, readgif, readpng 
+	and readraw do not take the first parameter any more.  
+	Made fixes to keep it not spewing warning on 5.004 perl.	
+
+	**** If you had any code that didn't use the OO interface ****
+	****         It will probably not work any longer         ****
+	
+0.33	Beta -- No final
+	  - Fixed the end message from Imager 0.32.  Destroy called
+	on an empty image.  Did some work on the polygon method.  
+	Some clean up in the Makefile.PL script.  Fixed a buffer
+	overrun in the t_transform in Imager.XS.  Fixed the 
+	error handling in the jpeg loader.  It now correctly
+	returns undef if a load on an image fails.  It also 
+	sends the error messages to the log file.  Added errstr()
+	method to the image object.  Added a new way to read()
+	objects from scalars.  So far this is only implemented for
+	jpeg, png and gif.  ppm and raw soon - as always if someone
+	wants to do an overhaul on the ppm stuff feel free.  It seems
+	like such a basic format that interfacing with a library is more
+	work than implementing all of the needed routines instead.
+
+0.34    Beta -- No final
+	  - Bunch of documentation fixes, backed out ppm code.
+	Put in TonyC's giant transform2 patch.  Fixed the patch
+	to make it ansi compliant.  Fixed a bunch of bugs in the
+	Freetype code with regard to vertical and horizontal 
+	positioning and bounding boxes.  Cleaned up a lot of the
+	code so it runs under -Wall.  Code that is still in 
+	development such as the polygon converter do not compile
+	cleanly.  Fixed the non antialiased versions of truetype
+	dump to image routines.  Also removed the FIXME for the 
+	hardcoding of antialias in the Imager string method.
+	Fixed sign error and a missing cache of the bounding box
+	calculation for the rasterize function.  Removed some
+	debugging code I forgot to remove.  Added iolayer.h
+	and iolayer.c but they don't do anything for now.
+	
+0.35	pre2 -- No time yet
+	  - Fixed some compile warnings for various files under -Wall.
+	Added functionality for jpeg reading of seekable files, it's not
+	really working yet.  This version is pretty much *not* working.
+	Do not install unless you intend to do a lot of development.
+	Repeat - it doesn't even pass tests (but it compiles).  Ok now reading
+	jpegs works from scalars, my guess is that it also works from non
+	seeking sources such as sockets or pipes.
+
+0.35  pre3 - No time yet
+	  - Added the *right* patch from Tony which combines
+	the common code from i_readgif and i_readgif_scalar into
+	i_readgif_low.  Added tiff reading support through iolayer.
+
+0.35  pre4 - No time yet
+	  - Added tiff writing (no options) support through
+	iolayer.  Also made some small fixes for the iolayer reading
+	(was always doing two reads when one was needed).  Patched the
+	Imager::read() call so that it now uses a mixture of old and new
+	functions.  
+
+0.35  pre5 - No time yet
+	  - Fixed various gnu'isms in the c code (some bugs in the link list
+	implmentation).  Fixed missing #skip codes when gif format is not
+	present in any form.  Added fixes for 5.004_04 in the transform2 function.
+	Made sure it compiles cleanly with sun's cc.  Switched from a .jpeg
+	for transform2 check to a .ppm file so it runs when jpeg is not 
+	present.  Added a test for tiff files in t10formats.t.
+
+
+0.35  pre6 - No time yet
+	  - Fixes to Makefile.PL.  Should find freetype includes on more
+	distributions now.  Ran tests on Solaris and Hpux, minor fixes.
+	Compiles with some warnings on with both hpux and solaris' cc.  
+	Made some minor changes to the documentation.  Fixes to tiff.c log
+	code.
+
+0.35  pre7 - No time yet
+	  - Fixes 64 bit bug on freebsd.  While libtiff mirrors the effects of
+	lseek it's toff_t is a uint32, while lseek uses off_t which can be a 64
+	bit quantity.  Added the IM_LFLAGS environment variable to help
+	people with broken libgifs (that want to link with X).
+
+0.35  Sun Jan 28 19:42:59 EST 2001
+	  - More makefile fixes, fixed a few signedness warnings.  
+	Checked to see if it compiled cleanly on Solaris and HPUX.
+	Fixed a 5.004_04 warning and added more ENV flags for makefile.
+
+0.36	Mon Jan 29 09:36:11 EST 2001
+	  - String as 0 or "" caused an error in $img->string().  Fixed a 
+	documentation error invoving string() method syntax.  Merged a patch
+	for non antialised truetype fonts.  Fixed an error in the Makefile.PL
+	which caused a makefile to be generated that bombed with sgi's make.
+
+0.37	Mon Tue 30 09:36:11 EST 2001
+	  - Several documentation fixes.  Pod documentation for almost every
+	function in image.c.  Added sys/types.h include in iolayer which was
+	causing problems on various linux systems.
+
+0.38	pre1 - No time yet
+	  - Fixed a braindamaged fix on the Makefile.PL file.  Moved the 
+	code for Imager::Color into lib/Imager/Color.pm.  Wrote some pod
+	about how it works.  Made the names of Imager::Color XS routines
+	all begin with ICL_ and used the prefix rules of XS to get nice names
+	in perl.  Found a bug (not fixed) in how XS handles 
+	returning an object to an object it had as a parameter (double
+	free).  
+
+0.38	pre2 - No time yet
+	  - Fixes lots of for documentation, patch for freetype bounding
+	box handling.  Split put code for Imager::Font into Font.pm and added
+	more documentation for Font.pm.  Added string local ascender and
+	descender for tt fonts.  Note that this needs to be added to t1 fonts
+	before 0.38 final.
+
+0.38	pre3 - No time yet
+	  - Fixed an in consistency in the bounding box functions for t1
+	fonts.  Now both versions get the 6 argument bounding_box method
+	described in Imager::Font.  Started converting the comments in 
+	font.c so that they are viewable by doco.perl.  Added two examples
+	of filters.  Need to make them more usefull and then add more
+	notes than are in compile.txt.
+
+
+0.38	pre4 - No time yet
+	  - Completed adding pod comments to font.c, tiff.c and iolayer.c.
+	Those along with image.c should now have every single function 
+	described in pod format.
+
+0.38	pre5 - No time yet
+	  - Replaced ppm.c with pnm.c which adds support for pbm/pgm/ppm
+	files ascii and binary formats.  Added patches for the gif routines.
+	Patched some of the color quantizing routines (Leolo and TonyC).
+	There is one bomb and one warning in this test, and frankly I don't
+	see why they are suddenly there.
+
+0.38	pre6 - No time yet
+	  - Patch from Tony that fixes infix when Parse::RecDescent is present.
+	Checked some cases where malloc/free were used instead of mymalloc/myfree.
+	Added bufchain iolayer code.  You can now write to a chain of buffers and
+	later slurp it all into a single perl scalar.  Found some oddity of t/t10
+	test not giving the right return value when malloc debugging was enabled.
+	Fixed some of the logging code and the malloc debugging options.  Added 
+	more tests for tiffs.
+
+0.38	pre7 - No time yet
+	  - Added i_gradgen code and put it into the filters hash.  Think a
+	seperate pod for filters would be a good idea.  Also removed some of the
+	debugging code from the iolayer.  Added pod comments to filters.c and
+	looked over the code.
+
+0.38	pre8 - No time yet
+	  - limited Win32 support, Imager installs and builds using VC++,
+	but there's no image/font format support yet.
+
+0.38  pre9 - No time yet
+	  - Added lots of color quantization code from Tony with benchmarks.
+	Also fixes ugly stack overrun in old version.  Added fixes for the lmfixed
+	problem.  Four of them, let's see which is fastest.  This version adds
+	some voronoi partitioning - it's dog slow but it's a reference implementation
+	to check if faster algorithms are doing the right thing [tm].  Added a check
+	for giflib 3.
+
+
+
+~~~~~~~~~~~~~^ ^ ^~~~~~~~~~~~~~
+
+
+0.40	TODO list
+	iolayer:
+	- Add scalar/mmap to iolayer
+	- Add close() code to iolayer
+	- Merge callback interface into iolayer
+	- Add interface for writing to all formats but tiff
+	- Add interface for reading for png (started), 
+	  gif (merge with cb patch), ppm and raw
+	- Add make new tests once all formats support io_layer
+	- Implment the maxread threshold (Indicates how far 
+	  a library can read before it indicates that it's done).
+
+	MultiImage & metadata support:
+	- Figure what interface should be between C and perl?
+	- How to store data in the C interface for tags/metadata?
+
+	Old sins:
+	- Make sure everything is doable with the OO interface
+	- Split the other classes into seperate files
+	- Compile with memory debugging enabled and fix leaks
+	- Check if hashbox code is choosing the wrong closest color
+
+	Documentation:
+	- Add to the documentation
+	- Write a tutorial?
+	- Write a guide to installing the helper libraries
+	- Go through the entire project and add comments in pod
+	  so doco.perl can be used to read them.
+
+===================================================
+
+	For latest versions check the Imager-devel pages:
+	http://www.eecs.umich.edu/~addi/perl/Imager/devel/
+
+===================================================
+
