@@ -3008,13 +3008,17 @@ parameter which can take the values C<h>, C<v>, C<vh> and C<hv>.
 
 =head2 Rotating images
 
-Use the rotate() method to rotate an image.
+Use the rotate() method to rotate an image.  This method will return a
+new, rotated image.
 
 To rotate by an exact amount in degrees or radians, use the 'degrees'
 or 'radians' parameter:
 
   my $rot20 = $img->rotate(degrees=>20);
   my $rotpi4 = $img->rotate(radians=>3.14159265/4);
+
+Exact image rotation uses the same underlying transformation engine as
+the matrix_transform() method.
 
 To rotate in steps of 90 degrees, use the 'right' parameter:
 
