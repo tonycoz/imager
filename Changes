@@ -453,6 +453,11 @@ Revision history for Perl extension Imager.
 	- if gif_delays is a number instead of an arrayref, use that 
 	number for each frame
 
+        - provide patches for libgif and libungif that fix their bugs
+          and give a useful extension interface.  Probe for the 
+          installation of the patches in Makefile.PL to let gif.c
+          know what features it can use.
+
         Documentation:
         - Add to the documentation
         - Write a tutorial?
