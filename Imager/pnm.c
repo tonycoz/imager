@@ -229,11 +229,11 @@ i_readpnm_wiol(io_glue *ig, int length) {
   int type;
   int x, y, ch;
   int width, height, maxval, channels, pcount;
+  int rounder;
   char *cp;
   unsigned char *uc;
   mbuf buf;
   i_color val;
-  int mult;
 
   i_clear_error();
 
@@ -331,7 +331,25 @@ i_readpnm_wiol(io_glue *ig, int length) {
       mm_log((1, "i_readpnm: error reading maxval\n"));
       return NULL;
     }
+
+    if (maxval == 0) {
+      i_push_error(0, "maxval is zero - invalid pnm file");
+      mm_log((1, "i_readpnm: maxval is zero, invalid pnm file\n"));
+      return NULL;
+    }
+    else if (maxval > 65535) {
+      i_push_errorf(0, "maxval of %d is over 65535 - invalid pnm file", 
+		    maxval);
+      mm_log((1, "i_readpnm: maxval of %d is over 65535 - invalid pnm file\n"));
+      return NULL;
+    }
+    else if (type >= 4 && maxval > 255) {
+      i_push_errorf(0, "maxval of %d is over 255 - not currently supported by Imager for binary pnm", maxval);
+      mm_log((1, "i_readpnm: maxval of %d is over 255 - not currently supported by Imager for binary pnm\n", maxval));
+      return NULL;
+    }
   } else maxval=1;
+  rounder = maxval / 2;
 
   if (!(cp = gnext(&buf)) || !misspace(*cp)) {
     i_push_error(0, "garbage in header, invalid PNM file");
@@ -350,11 +368,10 @@ i_readpnm_wiol(io_glue *ig, int length) {
   case 1: /* Ascii types */
   case 2:
   case 3:
-    mult = type == 1 ? 255 : 1;
     for(y=0;y<height;y++) for(x=0; x<width; x++) {
       for(ch=0; ch<channels; ch++) {
 	int t;
-	if (gnum(&buf, &t)) val.channel[ch] = t * mult;
+	if (gnum(&buf, &t)) val.channel[ch] = (t * 255 + rounder) / maxval;
 	else {
 	  mm_log((1,"i_readpnm: gnum() returned false in data\n"));
 	  return im;
@@ -385,7 +402,8 @@ i_readpnm_wiol(io_glue *ig, int length) {
   case 6: /* binary ppm */
     for(y=0;y<height;y++) for(x=0; x<width; x++) {
       for(ch=0; ch<channels; ch++) {
-	if ( (uc = (unsigned char*)gnext(&buf)) ) val.channel[ch] = *uc;
+	if ( (uc = (unsigned char*)gnext(&buf)) ) 
+	  val.channel[ch] = (*uc * 255 + rounder) / maxval;
 	else {
 	  mm_log((1,"i_readpnm: gnext() returned false in data\n"));
 	  return im;

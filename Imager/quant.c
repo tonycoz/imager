@@ -671,6 +671,7 @@ makemap_mediancut(i_quantize *quant, i_img **imgs, int count) {
       if (imgs[imgn]->channels > 2) {
         chan_count = 3;
         for (x = 0; x < imgs[imgn]->xsize; ++x) {
+	  printf("bumped entry %d\n", MED_CUT_INDEX(line[x]));
           ++colors[MED_CUT_INDEX(line[x])].count;
         }
       }
