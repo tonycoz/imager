@@ -471,7 +471,7 @@ standard.
 
 i_img **i_readgif_multi_low(GifFileType *GifFile, int *count) {
   i_img *img;
-  int i, j, Size, Row, Col, Width, Height, ExtCode, Count, x;
+  int i, j, Size, Width, Height, ExtCode, Count, x;
   int ImageNum = 0, BackGround = 0, ColorMapSize = 0;
   ColorMapObject *ColorMap;
  
@@ -598,7 +598,8 @@ i_img **i_readgif_multi_low(GifFileType *GifFile, int *count) {
       }
 
       ImageNum++;
-      mm_log((1,"i_readgif_multi: Image %d at (%d, %d) [%dx%d]: \n",ImageNum, Col, Row, Width, Height));
+      mm_log((1,"i_readgif_multi: Image %d at (%d, %d) [%dx%d]: \n",
+	      ImageNum, GifFile->Image.Left, GifFile->Image.Top, Width, Height));
 
       if (GifFile->Image.Left + GifFile->Image.Width > GifFile->SWidth ||
 	  GifFile->Image.Top + GifFile->Image.Height > GifFile->SHeight) {
@@ -926,7 +927,7 @@ This function is only used with giflib 4 and higher.
 
 static int
 gif_read_callback(GifFileType *gft, GifByteType *buf, int length) {
-  return i_gen_reader((i_gen_read_data *)gft->UserData, buf, length);
+  return i_gen_reader((i_gen_read_data *)gft->UserData, (char*)buf, length);
 }
 
 #endif
@@ -1671,7 +1672,7 @@ static int gif_writer_callback(GifFileType *gf, const GifByteType *data, int siz
 {
   i_gen_write_data *gwd = (i_gen_write_data *)gf->UserData;
 
-  return i_gen_writer(gwd, data, size) ? size : 0;
+  return i_gen_writer(gwd, (char*)data, size) ? size : 0;
 }
 
 #endif

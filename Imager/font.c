@@ -1140,7 +1140,7 @@ i_tt_bbox_inst( TT_Fonthandle *handle, int inst ,const char *txt, int len, int c
   width   = 0;
   start   = 0;
   
-  mm_log((1, "i_tt_box_inst: glyph='%c' gascent=%d gdescent=%d\n", j, gascent, gdescent));
+  mm_log((1, "i_tt_box_inst: gascent=%d gdescent=%d\n", gascent, gdescent));
 
   first=1;
   for ( i = 0; i < len; ++i ) {
