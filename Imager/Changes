@@ -390,6 +390,7 @@ Revision history for Perl extension Imager.
 	- Split the other classes into seperate files
 	- Compile with memory debugging enabled and fix leaks
 	- Check if hashbox code is choosing the wrong closest color
+	- dynaload.c is strongly tied to perl
 
 	Documentation:
 	- Add to the documentation
