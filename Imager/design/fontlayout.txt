@@ -1,0 +1,9 @@
+<sky:#imager> TonyC: I want to add support for advanced font layouting
+<sky:#imager> like photoshop has
+<sheriff_p:#perl> crab - was that to me/
+<TonyC:#imager> define "advanced font layouting" - what I remember of photoshop
+           it wasn't too great
+<sky:#imager> ok, like quarexpress
+<sky:#imager> kerning, spacing, alignment
+<TonyC:#imager> I've considered doing spacing
+<TonyC:#imager> alignment as in left/right/centre/filled?
