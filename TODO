@@ -27,6 +27,8 @@ MultiImage & metadata support:
   interface design that takes these factors into account.
 
 New Features:
+- Add mng support.
+
 - Transforms, interpolated multidimensional lookup tables.
   Usefull for CMYK <-> RGB table lookup.
 
@@ -35,7 +37,7 @@ New Features:
 
 Clean up:
 - Make sure everything is doable with the OO interface
-  i_flood_fill() f. example.
+  i_flood_fill() for example.
 - Split the other classes into seperate files
   Imager::Font::TT, Imager::Font::T1, currently 
   an if statement is used to choose what code to
