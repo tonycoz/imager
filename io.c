@@ -37,7 +37,7 @@ malloc_entry malloc_pointers[MAXMAL];
 
 static
 void
-malloc_init() {
+malloc_init(void) {
   int i;
   for(i=0; i<MAXMAL; i++) malloc_pointers[i].ptr = NULL;
   malloc_need_init = 0;
@@ -76,7 +76,7 @@ set_entry(int i, char *buf, size_t size, char *file, int line) {
 
 
 void
-malloc_state() {
+malloc_state(void) {
   int i, total = 0;
 
   mm_log((0,"malloc_state()\n"));
@@ -144,7 +144,7 @@ myrealloc_file_line(void *ptr, size_t newsize, char* file, int line) {
     exit(3);
   }
   
-  if ( (buf = realloc(ptr-UNDRRNVAL, UNDRRNVAL+OVERRNVAL+newsize)) == NULL ) {
+  if ( (buf = realloc(((char *)ptr)-UNDRRNVAL, UNDRRNVAL+OVERRNVAL+newsize)) == NULL ) {
     mm_log((1,"Unable to reallocate %i bytes at %p for %s (%i)\n", newsize, ptr, file, line));
     exit(3); 
   }
@@ -205,7 +205,7 @@ myfree_file_line(void *p, char *file, int line) {
   
   if (match != 1) {
     mm_log((1, "myfree_file_line: INCONSISTENT REFCOUNT %d at %s (%i)\n", match, file, line));
-    printf(stderr, "myfree_file_line: INCONSISTENT REFCOUNT %d at %s (%i)\n", match, file, line);
+    fprintf(stderr, "myfree_file_line: INCONSISTENT REFCOUNT %d at %s (%i)\n", match, file, line);
 		exit(255);
   }
   
