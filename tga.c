@@ -464,9 +464,28 @@ i_writetga_wiol(i_img *img, io_glue *ig) {
       return 0;
     }
   }
-
   
   if (img->type == i_palette_type) {
+    int i;
+    size_t palbsize = i_colorcount(img)*img->channels;
+    unsigned char *palbuf = mymalloc(palbsize);
+
+    for(i=0; i<header.colourmaplength; i++) {
+      int ch;
+      i_color val;
+      i_getcolors(img, i, &val, 1);
+      if (img->channels>1) for(ch=0; ch<img->channels; ch++) 
+	palbuf[i*img->channels+ch] = val.channel[rgb_chan[ch]];
+      else for(ch=0; ch<img->channels; ch++)
+	palbuf[i] = val.channel[ch];
+    }
+
+    if (ig->writecb(ig, palbuf, palbsize) != palbsize) {
+      i_push_error(errno, "could not write targa colourmap");
+      return 0;
+    }
+    myfree(palbuf);
+
     /* write palette */
     if (!img->virtual) {
       if (ig->writecb(ig, img->idata, img->bytes) != img->bytes) {
@@ -490,7 +509,11 @@ i_writetga_wiol(i_img *img, io_glue *ig) {
     int y, lsize = img->channels * img->xsize;
     data = mymalloc(lsize);
     for(y=0; y<img->ysize; y++) {
-      i_gsamp(img, 0, img->xsize, y, data, rgb_chan, img->channels);
+      if (img->channels>1) i_gsamp(img, 0, img->xsize, y, data, rgb_chan, img->channels);
+      else {
+	int gray_chan[] = {0};
+	i_gsamp(img, 0, img->xsize, y, data, gray_chan, img->channels);
+      }
       if ( ig->writecb(ig, data, lsize) != lsize ) {
 	i_push_error(errno, "could not write targa data to file");
 	myfree(data);
