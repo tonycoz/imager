@@ -1,0 +1,10 @@
+7/5 23:51:53 <Addi:#Imager> I have code somewhere to do cmyk to rgb conversions
+7/5 23:52:06 <Addi:#Imager> It uses tunable tables with linear interpolation.
+7/5 23:52:31 <Addi:#Imager> It would work like this...
+7/5 23:52:52 <Addi:#Imager> You take an specific kind of an image in cmyk
+7/5 23:52:58 <Addi:#Imager> Then you would convert it into an rgb image
+7/5 23:53:20 <Addi:#Imager> and tune the images color response in photoshop or something
+7/5 23:53:29 <Addi:#Imager> until you got what you wanted.
+7/5 23:53:40 <Addi:#Imager> Then you save that ... and that image is then a lookup table.
+7/5 23:54:09 <Addi:#Imager> It's because storing a 8**4 bytes is a bit too much.
+7/5 23:54:27 <Addi:#Imager> So it saves a coarser version and interpolates.
