@@ -1178,6 +1178,19 @@ i_img_empty_ch(im,x,y,ch)
 	       int     y
 	       int     ch
 
+Imager::ImgRaw
+i_sametype(im, x, y)
+    Imager::ImgRaw im
+               int x
+               int y
+
+Imager::ImgRaw
+i_sametype_chans(im, x, y, channels)
+    Imager::ImgRaw im
+               int x
+               int y
+               int channels
+
 void
 m_init_log(name,level)
 	      char*    name

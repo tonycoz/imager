@@ -94,5 +94,64 @@ sub matchx($$$) {
   matchn($TESTNUM++, $str, $re, $comment);
 }
 
+sub isn ($$$$) {
+  my ($num, $left, $right, $comment) = @_;
+
+  my $match;
+  if (!defined $left && defined $right
+     || defined $left && !defined $right) {
+    $match = 0;
+  }
+  elsif (!defined $left && !defined $right) {
+    $match = 1;
+  }
+  # the right of the || produces a string of \0 if $left is a PV
+  # which is true
+  elsif (!length $left  || ($left & ~$left) ||
+	 !length $right || ($right & ~$right)) {
+    $match = $left eq $right;
+  }
+  else {
+    $match = $left == $right;
+  }
+  okn($num, $match, $comment);
+  unless ($match) {
+    print "# the following two values were not equal:\n";
+    print "# value: ",_sv_str($left),"\n";
+    print "# other: ",_sv_str($right),"\n";
+  }
+
+  $match;
+}
+
+sub isx ($$$) {
+  my ($left, $right, $comment) = @_;
+
+  isn($TESTNUM++, $left, $right, $comment);
+}
+
+sub _sv_str {
+  my ($value) = @_;
+
+  if (defined $value) {
+    if (!length $value || ($value & ~$value)) {
+      $value =~ s/\\/\\\\/g;
+      $value =~ s/\r/\\r/g;
+      $value =~ s/\n/\\n/g;
+      $value =~ s/\t/\\t/g;
+      $value =~ s/\"/\\"/g;
+      $value =~ s/([^ -\x7E])/"\\x".sprintf("%02x", ord($1))/ge;
+
+      return qq!"$value"!;
+    }
+    else {
+      return $value; # a number
+    }
+  }
+  else {
+    return "undef";
+  }
+}
+
 1;
 

@@ -830,6 +830,9 @@ Revision history for Perl extension Imager.
         - corrected "flood fill" to "flood_fill" in Imager/Draw.pod
         - removed compose() method from Imager/Transformations.pod since
           it isn't implemented yet
+        - the image resulting from a crop is now the same type as the
+          source image (paletted vs direct, bits/sample)
+          Resolves https://rt.cpan.org/Ticket/Display.html?id=7578
 
 =================================================================
 
