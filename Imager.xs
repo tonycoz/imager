@@ -2317,7 +2317,7 @@ i_readgif_scalar(...)
           PROTOTYPE: $
             PREINIT:
                char*    data;
-       unsigned int     length;
+             STRLEN     length;
 	        int*    colour_table;
 	        int     colours, q, w;
 	      i_img*    rimg;
@@ -2437,7 +2437,7 @@ i_readgif_multi_scalar(data)
         i_img **imgs;
         int count;
         char *data;
-        unsigned int length;
+        STRLEN length;
         int i;
       PPCODE:
         data = (char *)SvPV(ST(0), length);
