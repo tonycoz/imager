@@ -393,6 +393,10 @@ Revision history for Perl extension Imager.
 	palettes for 2 colour images :)
 	- initial implementation of a row-based interface to low-level
 	images (for performance)
+	- changed Imager::read() for GIF so that the arrayref pointed to 
+	by the ref supplied in colors contains Imager::Color objects 
+	instead of more arrayrefs, keep this interface stable until we 
+	can make an informed choice about i_readgif()
 
 ~~~~~~~~~~~~~^ ^ ^~~~~~~~~~~~~~
 

@@ -493,6 +493,7 @@ sub read {
   if ($input{fd}) { $fd=$input{fd} };
 
   if ( $input{type} eq 'gif' ) {
+    my $colors;
     if ($input{colors} && !ref($input{colors})) {
       # must be a reference to a scalar that accepts the colour map
       $self->{ERRSTR} = "option 'colors' must be a scalar reference";
@@ -500,7 +501,7 @@ sub read {
     }
     if (exists $input{data}) {
       if ($input{colors}) {
-	($self->{IMG}, ${$input{colors}}) = i_readgif_scalar($input{data});
+	($self->{IMG}, $colors) = i_readgif_scalar($input{data});
       }
       else {
 	$self->{IMG}=i_readgif_scalar($input{data});
@@ -508,11 +509,15 @@ sub read {
     }
     else { 
       if ($input{colors}) {
-	($self->{IMG}, ${$input{colors}}) = i_readgif( $fd );
+	($self->{IMG}, $colors) = i_readgif( $fd );
       }
       else {
 	$self->{IMG} = i_readgif( $fd )
       }
+    }
+    if ($colors) {
+      # we may or may not change i_readgif to return blessed objects...
+      ${$input{colors}} = [ map { NC(@$_) } @$colors ];
     }
     if ( !defined($self->{IMG}) ) {
       $self->{ERRSTR}= 'reading GIF:'._error_as_msg(); return undef;
@@ -1501,9 +1506,7 @@ such as a database over a DBI connection.
 If you are reading from a gif image file, you can supply a 'colors'
 parameter which must be a reference to a scalar.  The referenced
 scalar will receive an array reference which contains the colors, each
-represented another array reference which has the 3 colour components
-in it, in RGB order.  Note: this may change to be an array reference
-of Imager::Color objects.
+represented as an Imager::Color object.
 
 If you already have an open file handle, for example a socket or a
 pipe, you can specify the 'fd' parameter instead of supplying a
