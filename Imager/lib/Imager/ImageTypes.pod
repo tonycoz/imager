@@ -562,6 +562,11 @@ The web color map is used (need url here.)
 
 The original code for generating the color map (Addi's code) is used.
 
+=item mediancut
+
+Uses a mediancut algorithm, faster than 'addi', but not as good a
+result.
+
 =back
 
 Other methods may be added in the future.

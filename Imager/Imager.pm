@@ -944,6 +944,11 @@ sub _get_writer_io {
       $self->_set_error("Handle in fh option not opened");
       return;
     }
+    # flush it
+    my $oldfh = select($input->{fh});
+    # flush anything that's buffered, and make sure anything else is flushed
+    $| = 1;
+    select($oldfh);
     return io_new_fd($fd);
   }
   elsif ($input->{file}) {
@@ -1196,8 +1201,8 @@ sub _fix_gif_positions {
   for my $pos (@$positions) {
     my ($x, $y) = @$pos;
     my $img = $imgs[$index++];
-    $img->settag(gif_left=>$x);
-    $img->settag(gif_top=>$y) if defined $y;
+    $img->settag(name=>'gif_left', value=>$x);
+    $img->settag(name=>'gif_top', value=>$y) if defined $y;
   }
   $$msg .= "replaced with the gif_left and gif_top tags";
 }
