@@ -40,10 +40,11 @@ error.c - error reporting code for Imager
 This module provides the C level error handling functionality for
 Imager.
 
-A few functions return or pass in a char **, this is a NULL terminated
-list of pointers to error messages (which are NUL terminated strings,
-just as it normal in C :).  Even though these aren't passed as char
-const * const * pointers, don't modify the strings or the pointers.
+A few functions return or pass in an i_errmsg *, this is list of error
+structures, terminated by an entry with a NULL msg value, each of
+which contains a msg and an error code. Even though these aren't
+passed as i_errmsg const * pointers, don't modify the strings
+or the pointers.
 
 The interface as currently defined isn't thread safe, unfortunately.
 
@@ -66,7 +67,7 @@ C).  The Perl level won't use all of this.
 
 /* we never actually use the last item - it's the NULL terminator */
 #define ERRSTK 20
-char *error_stack[ERRSTK];
+i_errmsg error_stack[ERRSTK];
 int error_sp = ERRSTK - 1;
 /* we track the amount of space used each string, so we don't reallocate 
    space unless we need to.
@@ -91,9 +92,10 @@ The simplest way to use this is just:
 when your program starts.
 */
 void i_set_argv0(char const *name) {
+  char *dupl;
   if (!name)
     return;
-  char *dupl = mymalloc(strlen(name)+1);
+  dupl = mymalloc(strlen(name)+1);
   strcpy(dupl, name);
   if (argv0)
     myfree(argv0);
@@ -161,7 +163,7 @@ terminated by a NULL pointer.  The highest level message is first.
 
 =cut
 */
-char **i_errors() {
+i_errmsg *i_errors() {
   return error_stack + error_sp;
 }
 
@@ -198,7 +200,7 @@ error handling is calling function that does.).
 
 =cut
 */
-void i_push_error(char const *msg) {
+void i_push_error(int code, char const *msg) {
   int size = strlen(msg)+1;
 
   if (error_sp <= 0)
@@ -207,17 +209,54 @@ void i_push_error(char const *msg) {
 
   --error_sp;
   if (error_space[error_sp] < size) {
-    if (error_stack[error_sp])
-      myfree(error_stack[error_sp]);
+    if (error_stack[error_sp].msg)
+      myfree(error_stack[error_sp].msg);
     /* memory allocated on the following line is only ever release when 
        we need a bigger string */
-    error_stack[error_sp] = mymalloc(size);
+    error_stack[error_sp].msg = mymalloc(size);
     error_space[error_sp] = size;
   }
-  strcpy(error_stack[error_sp], msg);
+  strcpy(error_stack[error_sp].msg, msg);
+  error_stack[error_sp].code = code;
 
   if (error_cb)
-    error_cb(msg);
+    error_cb(code, msg);
+}
+
+/*
+=item i_push_errorvf(int code, char const *fmt, va_list ap)
+
+Intended for use by higher level functions, takes a varargs pointer
+and a format to produce the finally pushed error message.
+
+=cut
+*/
+void i_push_errorvf(int code, char const *fmt, va_list ap) {
+  char buf[1024];
+#if defined(_MSC_VER)
+  _vsnprintf(buf, sizeof(buf), fmt, ap);
+#else
+  /* is there a way to detect vsnprintf()? 
+     for this and other functions we need some mechanism to handle 
+     detection (like perl's Configure, or autoconf)
+   */
+  vsprintf(buf, fmt, ap);
+#endif
+  i_push_error(code, buf);
+}
+
+/*
+=item i_push_errorf(int code, char const *fmt, ...)
+
+A version of i_push_error() that does printf() like formating.
+
+=cut
+*/
+void i_push_errorf(int code, char const *fmt, ...) {
+  va_list ap;
+  va_start(ap, fmt);
+  i_push_errorvf(code, fmt, ap);
+  va_end(ap);
 }
 
 /*
@@ -225,7 +264,7 @@ void i_push_error(char const *msg) {
 
 Called by Imager code to indicate that a top-level has failed.
 
-msg can be NULL.
+msg can be NULL, in which case no error is pushed.
 
 Calls the current failed callback, if any.
 
@@ -235,20 +274,42 @@ Returns zero if it does not abort.
 
 =cut
 */
-int i_failed(char const *msg) {
+int i_failed(int code, char const *msg) {
   if (msg)
-    i_push_error(msg);
+    i_push_error(code, msg);
   if (failed_cb)
     failed_cb(error_stack + error_sp);
   if (failures_fatal) {
+    int sp;
+    int total; /* total length of error messages */
+    char *full; /* full message for logging */
     if (argv0)
       fprintf(stderr, "%s: ", argv0);
     fputs("error:\n", stderr);
-    while (error_stack[error_sp]) {
-      fprintf(stderr, " %s\n", error_stack[error_sp]);
-      ++error_sp;
+    sp = error_sp;
+    while (error_stack[sp].msg) {
+      fprintf(stderr, " %s\n", error_stack[sp]);
+      ++sp;
     }
-    exit(EXIT_FAILURE);
+    /* we want to log the error too, build an error message to hand to
+       m_fatal() */
+    total = 1; /* remember the NUL */
+    for (sp = error_sp; error_stack[sp].msg; ++sp) {
+      total += strlen(error_stack[sp].msg) + 2;
+    }
+    full = malloc(total);
+    if (!full) {
+      /* just quit, at least it's on stderr */
+      exit(EXIT_FAILURE);
+    }
+    *full = 0;
+    for (sp = error_sp; error_stack[sp].msg; ++sp) {
+      strcat(full, error_stack[sp].msg);
+      strcat(full, ": ");
+    }
+    /* lose the extra ": " */
+    full[strlen(full)-2] = '\0';
+    m_fatal(EXIT_FAILURE, "%s", full);
   }
 
   return 0;
