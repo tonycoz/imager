@@ -42,6 +42,7 @@ not commitments.
   service attack.
 - eliminate unused variable warning (especially the RETVAL ones in Imager.xs)
 - add META.yml (bypass EU::MM's limited mechanism)
+- add concept index to Imager.pm pod
 
 0.46: (june 2005)
 - allow limits to be set on the size of an image read from a file.  This is
