@@ -1137,6 +1137,8 @@ i_writegif_gen(fd, ...)
 	RETVAL = 1;
 	if (img_count < 1) {
 	  RETVAL = 0;
+	  i_clear_error();
+	  i_push_error(0, "You need to specify images to save");
 	}
 	else {
           imgs = mymalloc(sizeof(i_img *) * img_count);
@@ -1147,6 +1149,8 @@ i_writegif_gen(fd, ...)
 	      imgs[i] = (i_img *)SvIV((SV*)SvRV(sv));
 	    }
 	    else {
+	      i_clear_error();
+	      i_push_error(0, "Only images can be saved");
 	      RETVAL = 0;
 	      break;
             }
