@@ -373,11 +373,11 @@ the appropriate segment is found.  This is currently done with a
 linear search, and the first matching segment is used.  If there is no
 matching segment the pixel is not touched.
 
-=item 4
+=item 4.
 
 the fill parameter is scaled from 0 to 1 depending on the segment type.
 
-=item 5
+=item 5.
 
 the color produced, depending on the segment color type.
 

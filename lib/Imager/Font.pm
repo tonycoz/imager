@@ -149,13 +149,13 @@ sub bounding_box {
 
   my @box = $self->_bounding_box(%input);
 
-  if(exists $input{'x'} and exists $input{'y'}) {
+  if(@box && exists $input{'x'} and exists $input{'y'}) {
     my($gdescent, $gascent)=@box[1,3];
     $box[1]=$input{'y'}-$gascent;      # top = base - ascent (Y is down)
     $box[3]=$input{'y'}-$gdescent;     # bottom = base - descent (Y is down, descent is negative)
     $box[0]+=$input{'x'};
     $box[2]+=$input{'x'};
-  } elsif ($input{'canon'}) {
+  } elsif (@box && $input{'canon'}) {
     $box[3]-=$box[1];    # make it cannoical (ie (0,0) - (width, height))
     $box[2]-=$box[0];
   }

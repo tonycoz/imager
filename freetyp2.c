@@ -242,7 +242,7 @@ Returns non-zero on success.
 */
 int
 i_ft2_bbox(FT2_Fonthandle *handle, double cheight, double cwidth, 
-           char *text, int len, int *bbox) {
+           char *text, int len, int *bbox, int utf8) {
   FT_Error error;
   int width;
   int index;
@@ -264,9 +264,20 @@ i_ft2_bbox(FT2_Fonthandle *handle, double cheight, double cwidth,
 
   first = 1;
   width = 0;
-  while (len--) {
-    int c = (unsigned char)*text++;
-    
+  while (len) {
+    unsigned long c;
+    if (utf8) {
+      c = utf8_advance(&text, &len);
+      if (c == ~0UL) {
+        i_push_error(0, "invalid UTF8 character");
+        return 0;
+      }
+    }
+    else {
+      c = (unsigned char)*text++;
+      --len;
+    }
+
     index = FT_Get_Char_Index(handle->face, c);
     error = FT_Load_Glyph(handle->face, index, FT_LOAD_DEFAULT);
     if (error) {
@@ -567,7 +578,7 @@ i_ft2_text(FT2_Fonthandle *handle, i_img *im, int tx, int ty, i_color *cl,
     loadFlags |= FT_LOAD_NO_HINTING;
 
   /* set the base-line based on the string ascent */
-  if (!i_ft2_bbox(handle, cheight, cwidth, text, len, bbox))
+  if (!i_ft2_bbox(handle, cheight, cwidth, text, len, bbox, utf8))
     return 0;
 
   if (!align) {
