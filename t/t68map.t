@@ -1,4 +1,4 @@
-Imager::init(log=>'testout/t68map.log');
+Imager::init("log"=>'testout/t68map.log');
 
 use Imager qw(:all :handy);
 

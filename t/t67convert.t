@@ -1,4 +1,4 @@
-Imager::init(log=>'testout/t67convert.log');
+Imager::init("log"=>'testout/t67convert.log');
 
 use Imager qw(:all :handy);
 
