@@ -1,5 +1,5 @@
 #!perl -w
-print "1..72\n";
+print "1..74\n";
 use Imager qw(:all);
 $^W=1; # warnings during command-line tests
 $|=1;  # give us some progress in the test harness
@@ -24,7 +24,7 @@ i_box_filled($timg, 2, 2, 18, 18, $trans);
 my $test_num;
 
 if (!i_has_format("tiff")) {
-  for (1..72) {
+  for (1..74) {
     print "ok $_ # skip no tiff support\n";
   }
 } else {
@@ -344,6 +344,12 @@ if (!i_has_format("tiff")) {
 
   my ($format) = $imgs[0]->tags(name=>'i_format');
   ok(defined $format && $format eq 'tiff', "check i_format tag");
+
+  my $warned = Imager->new;
+  ok($warned->read(file=>"testimg/tiffwarn.tif"), "read tiffwarn.tif");
+  my ($warning) = $warned->tags(name=>'i_warning');
+  ok(defined $warning && $warning =~ /unknown field with tag 28712/,
+     "check that warning tag set and correct");
 }
 
 sub ok {
