@@ -108,7 +108,6 @@ my_gif_inputfunc(GifFileType* gft, GifByteType *buf,int length) {
 /* Make some variables global, so we could access them faster: */
 
 static int
-    ImageNum = 0,
     BackGround = 0,
     ColorMapSize = 0,
     InterlacedOffset[] = { 0, 4, 2, 1 }, /* The way Interlaced image should. */
@@ -152,8 +151,9 @@ i_img *
 i_readgif_low(GifFileType *GifFile, int **colour_table, int *colours) {
   i_img *im;
   int i, j, Size, Row, Col, Width, Height, ExtCode, Count, x;
-  int cmapcnt = 0;
-  
+  int cmapcnt = 0, ImageNum = 0;
+ 
+ 
   GifRecordType RecordType;
   GifByteType *Extension;
   
