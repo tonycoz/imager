@@ -607,10 +607,34 @@ sub crop {
 #    print "l=$l, r=$r, h=$hsh{'width'}\n";
 #    print "t=$t, b=$b, w=$hsh{'height'}\n";
 
-  my $dst=Imager->new(xsize=>$hsh{'width'}, ysize=>$hsh{'height'}, channels=>$self->getchannels());
+  my $dst = $self->_sametype(xsize=>$hsh{width}, ysize=>$hsh{height});
 
   i_copyto($dst->{IMG},$self->{IMG},$l,$t,$r,$b,0,0);
   return $dst;
+}
+
+sub _sametype {
+  my ($self, %opts) = @_;
+
+  $self->{IMG} or return $self->_set_error("Not a valid image");
+
+  my $x = $opts{xsize} || $self->getwidth;
+  my $y = $opts{ysize} || $self->getheight;
+  my $channels = $opts{channels} || $self->getchannels;
+  
+  my $out = Imager->new;
+  if ($channels == $self->getchannels) {
+    $out->{IMG} = i_sametype($self->{IMG}, $x, $y);
+  }
+  else {
+    $out->{IMG} = i_sametype_chans($self->{IMG}, $x, $y, $channels);
+  }
+  unless ($out->{IMG}) {
+    $self->{ERRSTR} = $self->_error_as_msg;
+    return;
+  }
+  
+  return $out;
 }
 
 # Sets an image to a certain size and channel number
