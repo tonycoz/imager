@@ -1,7 +1,8 @@
 #!perl -w
-print "1..16\n";
+print "1..17\n";
 use Imager qw(:all);
 use strict;
+BEGIN { require "t/testtools.pl"; }
 init_log("testout/t108tga.log",1);
 
 
@@ -66,7 +67,8 @@ if ($imoo->write(file=>'testout/t108_oo.tga')) {
   print "not ok 16 # ",$imoo->errstr,"\n";
 }
 
-
+my ($type) = $imoo->tags(name=>'i_format');
+isn(17, $type, 'tga', "check i_format tag");
 
 
 sub write_test {

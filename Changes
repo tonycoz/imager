@@ -916,6 +916,8 @@ Revision history for Perl extension Imager.
   fails.
 - set i_format to gif when reading gif files and test for it
 - set i_format to pnm when reading pnm files and test for it
+- set i_format to tga when reading tga files and test for it
+- handle image creation failures when reading tga files
 
 =================================================================
 
