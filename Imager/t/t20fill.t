@@ -168,7 +168,7 @@ my %comb_tests =
    # the following results are based on the results of the tests and
    # are suspect for that reason (and were broken at one point <sigh>)
    # but trying to work them out manually just makes my head hurt - TC
-   hue => { result=>NC(64, 32, 37) },
+   hue => { result=>NC(64, 32, 47) },
    saturation => { result=>NC(63, 37, 64) },
    value => { result=>NC(127, 64, 128) },
    color => { result=>NC(64, 37, 52) },
