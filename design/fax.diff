@@ -1,0 +1,227 @@
+? fax.diff
+? devel/lib/Imager/Regops.pm
+Index: devel/Imager.pm
+===================================================================
+RCS file: /u02/cvsroot/Imager/devel/Imager.pm,v
+retrieving revision 1.12
+diff -u -r1.12 Imager.pm
+--- devel/Imager.pm	2001/05/05 14:40:23	1.12
++++ devel/Imager.pm	2001/05/07 12:58:59
+@@ -81,6 +81,7 @@
+ 
+ 		i_readtiff_wiol
+ 		i_writetiff_wiol
++		i_writetiff_wiol_faxable
+ 
+ 		i_readpng
+ 		i_writepng
+@@ -548,6 +549,7 @@
+ sub write {
+   my $self = shift;
+   my %input=(jpegquality=>75, gifquant=>'mc', lmdither=>6.0, lmfixed=>[], @_);
++
+   my ($fh, $rc, $fd, $IO);
+ 
+   my %iolready=( tiff=>1 ); # this will be SO MUCH BETTER once they are all in there
+@@ -572,7 +574,6 @@
+   }
+ 
+ 
+-
+   if ($iolready{$input{type}}) {
+     if ($fd) {
+       $IO = io_new_fd($fd);
+@@ -582,6 +583,11 @@
+       if (!i_writetiff_wiol($self->{IMG}, $IO)) { $self->{ERRSTR}='Could not write to buffer'; return undef; }
+     }
+ 
++    if ($input{type} eq 'fax') {
++      print STDERR "writing a faxable; TIFF\n";
++      if (!i_writetiff_wiol_faxable($self->{IMG}, $IO)) { $self->{ERRSTR}='Could not write to buffer'; return undef; }
++    }
++
+     my $data = io_slurp($IO);
+     if (!$data) { $self->{ERRSTR}='Could not slurp from buffer'; return undef; }
+ 
+@@ -668,6 +674,13 @@
+       $self->{DEBUG} && print "writing a raw file\n";
+     } elsif ( $input{type} eq 'tiff' ) {
+       $rc=i_writetiff_wiol($self->{IMG},io_new_fd($fd) );
++      if ( !defined($rc) ) {
++	$self->{ERRSTR}='unable to write tiff image'; return undef;
++      }
++      $self->{DEBUG} && print "writing a tiff file\n";
++    } elsif ( $input{type} eq 'fax' ) {
++      print STDERR "writing a faxable tiff (2)\n";
++      $rc=i_writetiff_wiol_faxable($self->{IMG},io_new_fd($fd) );
+       if ( !defined($rc) ) {
+ 	$self->{ERRSTR}='unable to write tiff image'; return undef;
+       }
+Index: devel/Imager.xs
+===================================================================
+RCS file: /u02/cvsroot/Imager/devel/Imager.xs,v
+retrieving revision 1.9
+diff -u -r1.9 Imager.xs
+--- devel/Imager.xs	2001/05/04 07:15:09	1.9
++++ devel/Imager.xs	2001/05/07 12:59:02
+@@ -1023,6 +1023,11 @@
+     Imager::ImgRaw     im
+         Imager::IO     ig
+ 
++undef_int
++i_writetiff_wiol_faxable(im, ig)
++    Imager::ImgRaw     im
++        Imager::IO     ig
++
+ 
+ #endif /* HAVE_LIBTIFF */
+ 
+Index: devel/feat.h
+===================================================================
+RCS file: /u02/cvsroot/Imager/devel/feat.h,v
+retrieving revision 1.1.1.1
+diff -u -r1.1.1.1 feat.h
+--- devel/feat.h	2001/03/25 11:55:00	1.1.1.1
++++ devel/feat.h	2001/05/07 12:59:02
+@@ -6,6 +6,7 @@
+ #endif
+ #ifdef HAVE_LIBTIFF
+   "tiff",
++  "fax",
+ #endif
+ #ifdef HAVE_LIBPNG
+   "png",
+Index: devel/tiff.c
+===================================================================
+RCS file: /u02/cvsroot/Imager/devel/tiff.c,v
+retrieving revision 1.1.1.1
+diff -u -r1.1.1.1 tiff.c
+--- devel/tiff.c	2001/03/25 11:55:00	1.1.1.1
++++ devel/tiff.c	2001/05/07 12:59:03
+@@ -344,3 +344,126 @@
+   return 1;
+ }
+ 
++undef_int
++i_writetiff_wiol_faxable(i_img *im, io_glue *ig) {
++  uint32 width, height;
++  i_color val;
++  unsigned char *linebuf = NULL;
++  uint32 y;
++  int linebufpos;
++  int ch, ci, rc;
++  uint32 x;
++  TIFF* tif;
++  int luma_channel;
++  uint32 rowsperstrip;
++
++  width    = im->xsize;
++  height   = im->ysize;
++
++  switch (im->channels) {
++  case 1:
++    luma_channel = 0;
++    break;
++  case 3:
++    luma_channel = 1;
++    break;
++  default:
++    /* This means a colorspace we don't handle yet */
++    mm_log((1, "i_writetiff_wiol_faxable: don't handle %d channel images.\n", im->channels));
++    return 0;
++  }
++
++  /* Add code to get the filename info from the iolayer */
++  /* Also add code to check for mmapped code */
++
++  io_glue_commit_types(ig);
++  mm_log((1, "i_writetiff_wiol_faxable(im 0x%p, ig 0x%p)\n", im, ig));
++
++  /* FIXME: Enable the mmap interface */
++  
++  tif = TIFFClientOpen("No name", 
++		       "wm",
++		       (thandle_t) ig, 
++		       (TIFFReadWriteProc) ig->readcb,
++		       (TIFFReadWriteProc) ig->writecb,
++		       (TIFFSeekProc)      comp_seek,
++		       (TIFFCloseProc)     ig->closecb, 
++		       (TIFFSizeProc)      ig->sizecb,
++		       (TIFFMapFileProc)   NULL,
++		       (TIFFUnmapFileProc) NULL);
++
++  if (!tif) {
++    mm_log((1, "i_writetiff_wiol_faxable: Unable to open tif file for writing\n"));
++    return 0;
++  }
++
++  mm_log((1, "i_writetiff_wiol_faxable: width=%d, height=%d, channels=%d\n", width, height, im->channels));
++  
++  if (!TIFFSetField(tif, TIFFTAG_IMAGEWIDTH,      width)   )
++    { mm_log((1, "i_writetiff_wiol_faxable: TIFFSetField width=%d failed\n", width)); return 0; }
++  if (!TIFFSetField(tif, TIFFTAG_IMAGELENGTH,     height)  )
++    { mm_log((1, "i_writetiff_wiol_faxable: TIFFSetField length=%d failed\n", height)); return 0; }
++  if (!TIFFSetField(tif, TIFFTAG_SAMPLESPERPIXEL, 1))
++    { mm_log((1, "i_writetiff_wiol_faxable: TIFFSetField samplesperpixel=1 failed\n")); return 0; }
++  if (!TIFFSetField(tif, TIFFTAG_ORIENTATION,  ORIENTATION_TOPLEFT))
++    { mm_log((1, "i_writetiff_wiol_faxable: TIFFSetField Orientation=topleft\n")); return 0; }
++  if (!TIFFSetField(tif, TIFFTAG_BITSPERSAMPLE,   1)        )
++    { mm_log((1, "i_writetiff_wiol_faxable: TIFFSetField bitpersample=1\n")); return 0; }
++  if (!TIFFSetField(tif, TIFFTAG_PLANARCONFIG, PLANARCONFIG_CONTIG))
++    { mm_log((1, "i_writetiff_wiol_faxable: TIFFSetField planarconfig\n")); return 0; }
++  if (!TIFFSetField(tif, TIFFTAG_PHOTOMETRIC, PHOTOMETRIC_MINISBLACK))
++    { mm_log((1, "i_writetiff_wiol_faxable: TIFFSetField photometric=%d\n", PHOTOMETRIC_MINISBLACK)); return 0; }
++  if (!TIFFSetField(tif, TIFFTAG_COMPRESSION, 3))
++    { mm_log((1, "i_writetiff_wiol_faxable: TIFFSetField compression=3\n")); return 0; }
++
++  linebuf = (unsigned char *)_TIFFmalloc( TIFFScanlineSize(tif) );
++  
++  if (!TIFFSetField(tif, TIFFTAG_ROWSPERSTRIP, TIFFDefaultStripSize(tif, -1))) {
++    mm_log((1, "i_writetiff_wiol_faxable: TIFFSetField rowsperstrip=-1\n")); return 0; }
++
++  TIFFGetField(tif, TIFFTAG_ROWSPERSTRIP, &rowsperstrip);
++  TIFFGetField(tif, TIFFTAG_ROWSPERSTRIP, &rc);
++
++  mm_log((1, "i_writetiff_wiol_faxable: TIFFGetField rowsperstrip=%d\n", rowsperstrip));
++  mm_log((1, "i_writetiff_wiol_faxable: TIFFGetField scanlinesize=%d\n", TIFFScanlineSize(tif) ));
++  mm_log((1, "i_writetiff_wiol_faxable: TIFFGetField planarconfig=%d == %d\n", rc, PLANARCONFIG_CONTIG));
++
++  /*
++  if (!TIFFSetField(tif, TIFFTAG_XRESOLUTION, 204))
++    { mm_log((1, "i_writetiff_wiol_faxable: TIFFSetField Xresolution=204\n")); return 0; }
++  if (!TIFFSetField(tif, TIFFTAG_YRESOLUTION, 196))
++    { mm_log((1, "i_writetiff_wiol_faxable: TIFFSetField Yresolution=196\n")); return 0; }
++  if (!TIFFSetField(tif, TIFFTAG_RESOLUTIONUNIT, RESUNIT_INCH)) {
++    mm_log((1, "i_writetiff_wiol_faxable: TIFFSetField ResolutionUnit=%d\n", RESUNIT_INCH)); return 0; 
++  }
++  */
++
++  for (y=0; y<height; y++) {
++    int linebufpos=0;
++    for(x=0; x<width; x+=8) { 
++      int bits;
++      int bitpos;
++      uint8 bitval = 128;
++      linebuf[linebufpos]=0;
++      bits = width-x; if(bits>8) bits=8;
++      for(bitpos=0;bitpos<bits;bitpos++) {
++	int luma;
++	luma = im->data[(x+bitpos+y*im->xsize)*im->channels+luma_channel];
++	linebuf[linebufpos] |= ((luma>=128)?bitval:0);
++	bitval >>= 1;
++      }
++      linebufpos++;
++    }
++    if (TIFFWriteScanline(tif, linebuf, y, 0) < 0) {
++      mm_log((1, "i_writetiff_wiol_faxable: TIFFWriteScanline failed.\n"));
++      break;
++    }
++  }
++  (void) TIFFClose(tif);
++  if (linebuf) _TIFFfree(linebuf);
++  return 1;
++}
++
++
++
++
