@@ -1,0 +1,4 @@
+Makefile
+*.lib
+*.dll
+*.exp
