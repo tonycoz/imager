@@ -250,10 +250,13 @@ int       i_t1_new( char *pfb, char *afm );
 int       i_t1_destroy( int font_id );
 undef_int i_t1_cp( i_img *im, int xb, int yb, int channel, int fontnum, float points, char* str, int len, int align, int utf8, char const *flags );
 undef_int i_t1_text( i_img *im, int xb, int yb, i_color *cl, int fontnum, float points, char* str, int len, int align, int utf8, char const *flags );
-void      i_t1_bbox( int fontnum, float point, char *str, int len, int cords[6], int utf8, char const *flags );
+int      i_t1_bbox( int fontnum, float point, char *str, int len, int cords[6], int utf8, char const *flags );
 void      i_t1_set_aa( int st );
 void      close_t1( void );
-
+int       i_t1_has_chars(int font_num, char const *text, int len, int utf8, char *out);
+extern int i_t1_face_name(int font_num, char *name_buf, size_t name_buf_size);
+extern int i_t1_glyph_name(int font_num, unsigned long ch, char *name_buf, 
+                           size_t name_buf_size);
 #endif
 
 #ifdef HAVE_LIBTT
@@ -269,6 +272,11 @@ undef_int i_tt_cp( TT_Fonthandle *handle,i_img *im,int xb,int yb,int channel,flo
 undef_int i_tt_text( TT_Fonthandle *handle, i_img *im, int xb, int yb, i_color *cl, float points, char const* txt, int len, int smooth, int utf8);
 undef_int i_tt_bbox( TT_Fonthandle *handle, float points,char *txt,int len,int cords[6], int utf8);
 int i_tt_has_chars(TT_Fonthandle *handle, char const *text, int len, int utf8, char *out);
+void i_tt_dump_names(TT_Fonthandle *handle);
+int i_tt_face_name(TT_Fonthandle *handle, char *name_buf, 
+                   size_t name_buf_size);
+int i_tt_glyph_name(TT_Fonthandle *handle, unsigned long ch, char *name_buf,
+                    size_t name_buf_size);
 
 #endif  /* End of freetype headers */
 
@@ -294,6 +302,12 @@ extern int i_ft2_cp(FT2_Fonthandle *handle, i_img *im, int tx, int ty,
                     int utf8);
 extern int i_ft2_has_chars(FT2_Fonthandle *handle, char const *text, int len,
                            int utf8, char *work);
+extern int i_ft2_face_name(FT2_Fonthandle *handle, char *name_buf, 
+                           size_t name_buf_size);
+extern int i_ft2_glyph_name(FT2_Fonthandle *handle, unsigned char ch, 
+                            char *name_buf, size_t name_buf_size);
+extern int i_ft2_can_do_glyph_names(void);
+extern int i_ft2_face_has_glyph_names(FT2_Fonthandle *handle);
 
 #endif
 

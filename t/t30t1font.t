@@ -8,7 +8,7 @@
 # (It may become useful if the test is moved to ./t subdirectory.)
 use strict;
 my $loaded;
-BEGIN { $| = 1; print "1..18\n"; }
+BEGIN { $| = 1; print "1..38\n"; }
 END {print "not ok 1\n" unless $loaded;}
 use Imager qw(:all);
 use Imager::Color;
@@ -28,13 +28,13 @@ my $fontname_afm=$ENV{'T1FONTTESTAFM'}||'./fontfiles/dcr10.afm';
 
 
 if (!(i_has_format("t1")) ) {
-  skipx(17, "t1lib unavailable or disabled");
+  skipx(37, "t1lib unavailable or disabled");
 }
 elsif (! -f $fontname_pfb) {
-  skipx(17, "cannot find fontfile for truetype test $fontname_pfb");
+  skipx(37, "cannot find fontfile for type 1 test $fontname_pfb");
 }
 elsif (! -f $fontname_afm) {
-  skipx(17, "cannot find fontfile for truetype test $fontname_afm");
+  skipx(37, "cannot find fontfile for type 1 test $fontname_afm");
 } else {
 
   print "# has t1\n";
@@ -43,7 +43,7 @@ elsif (! -f $fontname_afm) {
 
   my $fnum=Imager::i_t1_new($fontname_pfb,$fontname_afm); # this will load the pfb font
   unless (okx($fnum >= 0, "load font $fontname_pfb")) {
-    skipx(6, "without the font I can't do a thing");
+    skipx(31, "without the font I can't do a thing");
     exit;
   }
 
@@ -55,7 +55,7 @@ elsif (! -f $fontname_afm) {
   i_line($overlay,0,50,100,50,$bgcolor,1);
 
   my @bbox=i_t1_bbox(0,50.0,'XMCLH',5);
-  okx(@bbox == 6, "i_t1_bbox");
+  okx(@bbox == 7, "i_t1_bbox");
   print "# bbox: ($bbox[0], $bbox[1]) - ($bbox[2], $bbox[3])\n";
 
   open(FH,">testout/t30t1font.ppm") || die "cannot open testout/t35t1font.ppm\n";
@@ -80,9 +80,9 @@ elsif (! -f $fontname_afm) {
   my $alttext = "A\xA1A";
   
   my @utf8box = i_t1_bbox($fnum, 50.0, $text, length($text), 1);
-  okx(@utf8box == 6, "utf8 bbox element count");
+  okx(@utf8box == 7, "utf8 bbox element count");
   my @base = i_t1_bbox($fnum, 50.0, $alttext, length($alttext), 0);
-  okx(@base == 6, "alt bbox element count");
+  okx(@base == 7, "alt bbox element count");
   my $maxdiff = $fontname_pfb eq $deffont ? 0 : $base[2] / 3;
   print "# (@utf8box vs @base)\n";
   okx(abs($utf8box[2] - $base[2]) <= $maxdiff, 
@@ -106,7 +106,7 @@ elsif (! -f $fontname_afm) {
     okx(i_t1_cp($backgr, 80, 180, 1, $fnum, 32, $text, length($text), 1),
         "cp UTF8");
     @utf8box = i_t1_bbox($fnum, 50.0, $text, length($text), 0);
-    okx(@utf8box == 6, "native utf8 bbox element count");
+    okx(@utf8box == 7, "native utf8 bbox element count");
     okx(abs($utf8box[2] - $base[2]) <= $maxdiff, 
       "compare box sizes native $utf8box[2] vs $base[2] (maxerror $maxdiff)");
     eval q{$text = "A\xA1\xA2\x01\x1F\x{0100}A"};
@@ -138,6 +138,64 @@ elsif (! -f $fontname_afm) {
   okx(-e("t1lib.log"), "enable t1log");
   init(t1log=>0);
   unlink "t1lib.log";
+
+  # character existance tests - uses the special ExistenceTest font
+  my $exists_font = 'fontfiles/ExistenceTest.pfb';
+  my $exists_afm = 'fontfiles/ExistenceText.afm';
+  
+  -e $exists_font or die;
+    
+  my $font_num = Imager::i_t1_new($exists_font, $exists_afm);
+  if (okx($font_num >= 0, 'loading test font')) {
+    # first the list interface
+    my @exists = Imager::i_t1_has_chars($font_num, "!A");
+    okx(@exists == 2, "return count from has_chars");
+    okx($exists[0], "we have an exclamation mark");
+    okx(!$exists[1], "we have no uppercase A");
+
+    # then the scalar interface
+    my $exists = Imager::i_t1_has_chars($font_num, "!A");
+    okx(length($exists) == 2, "return scalar length");
+    okx(ord(substr($exists, 0, 1)), "we have an exclamation mark");
+    okx(!ord(substr($exists, 1, 1)), "we have no upper-case A");
+  }
+  else {
+    skipx(6, 'Could not load test font');
+  }
+  
+  my $font = Imager::Font->new(file=>$exists_font, type=>'t1');
+  if (okx($font, "loaded OO font")) {
+    my @exists = $font->has_chars(string=>"!A");
+    okx(@exists == 2, "return count from has_chars");
+    okx($exists[0], "we have an exclamation mark");
+    okx(!$exists[1], "we have no uppercase A");
+    
+    # then the scalar interface
+    my $exists = $font->has_chars(string=>"!A");
+    okx(length($exists) == 2, "return scalar length");
+    okx(ord(substr($exists, 0, 1)), "we have an exclamation mark");
+    okx(!ord(substr($exists, 1, 1)), "we have no upper-case A");
+
+    # check the advance width
+    my @bbox = $font->bounding_box(string=>'/', size=>100);
+    print "# @bbox\n";
+    okx($bbox[2] != $bbox[5], "different advance to pos_width");
+
+    # names
+    my $face_name = Imager::i_t1_face_name($font->{id});
+    print "# face $face_name\n";
+    okx($face_name eq 'ExistenceTest', "face name");
+    $face_name = $font->face_name;
+    okx($face_name eq 'ExistenceTest', "face name");
+
+    my @glyph_names = $font->glyph_names(string=>"!J/");
+    okx($glyph_names[0] eq 'exclam', "check exclam name OO");
+    okx(!defined($glyph_names[1]), "check for no J name OO");
+    okx($glyph_names[2] eq 'slash', "check slash name OO");
+  }
+  else {
+    skipx(12, "Could not load test font");
+  }
 }
 
 #malloc_state();

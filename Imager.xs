@@ -1715,18 +1715,21 @@ i_t1_bbox(fontnum,point,str_sv,len_ignored,utf8=0,flags="")
 	     PREINIT:
                char *str;
                STRLEN len;
-	       int     cords[6];
+	       int     cords[BOUNDING_BOX_COUNT];
                int i;
+               int rc;
 	     PPCODE:
 #ifdef SvUTF8
                if (SvUTF8(str_sv))
                  utf8 = 1;
 #endif
                str = SvPV(str_sv, len);
-   	       i_t1_bbox(fontnum,point,str,len,cords,utf8,flags);
-               EXTEND(SP, 6);
-               for (i = 0; i < 6; ++i)
-                 PUSHs(sv_2mortal(newSViv(cords[i])));
+               rc = i_t1_bbox(fontnum,point,str,len,cords,utf8,flags);
+               if (rc > 0) {
+                 EXTEND(SP, rc);
+                 for (i = 0; i < rc; ++i)
+                   PUSHs(sv_2mortal(newSViv(cords[i])));
+               }
 
 
 
@@ -1755,6 +1758,89 @@ i_t1_text(im,xb,yb,cl,fontnum,points,str_sv,len_ignored,align,utf8=0,flags="")
                                   utf8,flags);
            OUTPUT:
              RETVAL
+
+void
+i_t1_has_chars(handle, text_sv, utf8 = 0)
+        int handle
+        SV  *text_sv
+        int utf8
+      PREINIT:
+        char const *text;
+        STRLEN len;
+        char *work;
+        int count;
+        int i;
+      PPCODE:
+#ifdef SvUTF8
+        if (SvUTF8(text_sv))
+          utf8 = 1;
+#endif
+        text = SvPV(text_sv, len);
+        work = mymalloc(len);
+        count = i_t1_has_chars(handle, text, len, utf8, work);
+        if (GIMME_V == G_ARRAY) {
+          EXTEND(SP, count);
+          for (i = 0; i < count; ++i) {
+            PUSHs(sv_2mortal(newSViv(work[i])));
+          }
+        }
+        else {
+          EXTEND(SP, 1);
+          PUSHs(sv_2mortal(newSVpv(work, count)));
+        }
+        myfree(work);
+
+void
+i_t1_face_name(handle)
+        int handle
+      PREINIT:
+        char name[255];
+        int len;
+      PPCODE:
+        len = i_t1_face_name(handle, name, sizeof(name));
+        if (len) {
+          EXTEND(SP, 1);
+          PUSHs(sv_2mortal(newSVpv(name, strlen(name))));
+        }
+
+void i_t1_glyph_name(handle, text_sv, utf8 = 0)
+        int handle
+        SV *text_sv
+        int utf8
+      PREINIT:
+        char const *text;
+        STRLEN work_len;
+        int len;
+        int outsize;
+        char name[255];
+      PPCODE:
+#ifdef SvUTF8
+        if (SvUTF8(text_sv))
+          utf8 = 1;
+#endif
+        text = SvPV(text_sv, work_len);
+        len = work_len;
+        while (len) {
+          unsigned char ch;
+          if (utf8) {
+            ch = i_utf8_advance(&text, &len);
+            if (ch == ~0UL) {
+              i_push_error(0, "invalid UTF8 character");
+              break;
+            }
+          }
+          else {
+            ch = *text++;
+            --len;
+          }
+          EXTEND(SP, 1);
+          if (outsize = i_t1_glyph_name(handle, ch, name, sizeof(name))) {
+            PUSHs(sv_2mortal(newSVpv(name, 0)));
+          }
+          else {
+            PUSHs(&PL_sv_undef);
+          } 
+        }
 
 #endif 
 
@@ -1840,9 +1926,10 @@ i_tt_bbox(handle,point,str_sv,len_ignored, utf8)
 	       int     len_ignored
                int     utf8
 	     PREINIT:
-	       int     cords[6],rc;
+	       int     cords[BOUNDING_BOX_COUNT],rc;
                char *  str;
                STRLEN len;
+               int i;
 	     PPCODE:
 #ifdef SvUTF8
                if (SvUTF8(ST(2)))
@@ -1850,13 +1937,10 @@ i_tt_bbox(handle,point,str_sv,len_ignored, utf8)
 #endif
                str = SvPV(str_sv, len);
   	       if ((rc=i_tt_bbox(handle,point,str,len,cords, utf8))) {
-                 EXTEND(SP, 4);
-                 PUSHs(sv_2mortal(newSViv(cords[0])));
-                 PUSHs(sv_2mortal(newSViv(cords[1])));
-                 PUSHs(sv_2mortal(newSViv(cords[2])));
-                 PUSHs(sv_2mortal(newSViv(cords[3])));
-                 PUSHs(sv_2mortal(newSViv(cords[4])));
-                 PUSHs(sv_2mortal(newSViv(cords[5])));
+                 EXTEND(SP, rc);
+                 for (i = 0; i < rc; ++i) {
+                   PUSHs(sv_2mortal(newSViv(cords[i])));
+                 }
                }
 
 void
@@ -1890,9 +1974,63 @@ i_tt_has_chars(handle, text_sv, utf8)
         }
         myfree(work);
 
+void
+i_tt_dump_names(handle)
+        Imager::Font::TT handle
+
+void
+i_tt_face_name(handle)
+        Imager::Font::TT handle
+      PREINIT:
+        char name[255];
+        int len;
+      PPCODE:
+        len = i_tt_face_name(handle, name, sizeof(name));
+        if (len) {
+          EXTEND(SP, 1);
+          PUSHs(sv_2mortal(newSVpv(name, strlen(name))));
+        }
+
+void i_tt_glyph_name(handle, text_sv, utf8 = 0)
+        Imager::Font::TT handle
+        SV *text_sv
+        int utf8
+      PREINIT:
+        char const *text;
+        STRLEN work_len;
+        int len;
+        int outsize;
+        char name[255];
+      PPCODE:
+#ifdef SvUTF8
+        if (SvUTF8(text_sv))
+          utf8 = 1;
+#endif
+        text = SvPV(text_sv, work_len);
+        len = work_len;
+        while (len) {
+          unsigned char ch;
+          if (utf8) {
+            ch = i_utf8_advance(&text, &len);
+            if (ch == ~0UL) {
+              i_push_error(0, "invalid UTF8 character");
+              break;
+            }
+          }
+          else {
+            ch = *text++;
+            --len;
+          }
+          EXTEND(SP, 1);
+          if (outsize = i_tt_glyph_name(handle, ch, name, sizeof(name))) {
+            PUSHs(sv_2mortal(newSVpv(name, 0)));
+          }
+          else {
+            PUSHs(&PL_sv_undef);
+          } 
+        }
+
 #endif 
-
-
 
 
 #ifdef HAVE_LIBJPEG
@@ -3813,17 +3951,14 @@ i_wf_bbox(face, size, text)
 	char *face
 	int size
 	char *text
+        int rc, i;
       PREINIT:
-	int cords[6];
+	int cords[BOUNDING_BOX_COUNT];
       PPCODE:
-        if (i_wf_bbox(face, size, text, strlen(text), cords)) {
-          EXTEND(SP, 6);  
-          PUSHs(sv_2mortal(newSViv(cords[0])));
-          PUSHs(sv_2mortal(newSViv(cords[1])));
-          PUSHs(sv_2mortal(newSViv(cords[2])));
-          PUSHs(sv_2mortal(newSViv(cords[3])));
-          PUSHs(sv_2mortal(newSViv(cords[4])));
-          PUSHs(sv_2mortal(newSViv(cords[5])));
+        if (rc = i_wf_bbox(face, size, text, strlen(text), cords)) {
+          EXTEND(SP, rc);  
+          for (i = 0; i < rc; ++i) 
+            PUSHs(sv_2mortal(newSViv(cords[i])));
         }
 
 undef_int
@@ -3930,23 +4065,28 @@ i_ft2_settransform(font, matrix)
         RETVAL
 
 void
-i_ft2_bbox(font, cheight, cwidth, text, utf8)
+i_ft2_bbox(font, cheight, cwidth, text_sv, utf8)
         Imager::Font::FT2 font
         double cheight
         double cwidth
-        char *text
+        SV *text_sv
 	int utf8
       PREINIT:
-        int bbox[6];
+        int bbox[BOUNDING_BOX_COUNT];
         int i;
+        char *text;
+        STRLEN text_len;
+        int rc;
       PPCODE:
+        text = SvPV(text_sv, text_len);
 #ifdef SvUTF8
-        if (SvUTF8(ST(3)))
+        if (SvUTF8(text_sv))
           utf8 = 1;
 #endif
-        if (i_ft2_bbox(font, cheight, cwidth, text, strlen(text), bbox, utf8)) {
-          EXTEND(SP, 6);
-          for (i = 0; i < 6; ++i)
+        rc = i_ft2_bbox(font, cheight, cwidth, text, text_len, bbox, utf8);
+        if (rc) {
+          EXTEND(SP, rc);
+          for (i = 0; i < rc; ++i)
             PUSHs(sv_2mortal(newSViv(bbox[i])));
         }
 
@@ -4073,6 +4213,65 @@ i_ft2_has_chars(handle, text_sv, utf8)
           PUSHs(sv_2mortal(newSVpv(work, count)));
         }
         myfree(work);
+
+void
+i_ft2_face_name(handle)
+        Imager::Font::FT2 handle
+      PREINIT:
+        char name[255];
+        int len;
+      PPCODE:
+        len = i_ft2_face_name(handle, name, sizeof(name));
+        if (len) {
+          EXTEND(SP, 1);
+          PUSHs(sv_2mortal(newSVpv(name, 0)));
+        }
+
+void i_ft2_glyph_name(handle, text_sv, utf8 = 0)
+        Imager::Font::FT2 handle
+        SV *text_sv
+        int utf8
+      PREINIT:
+        char const *text;
+        STRLEN work_len;
+        int len;
+        int outsize;
+        char name[255];
+      PPCODE:
+#ifdef SvUTF8
+        if (SvUTF8(text_sv))
+          utf8 = 1;
+#endif
+        text = SvPV(text_sv, work_len);
+        len = work_len;
+        while (len) {
+          unsigned char ch;
+          if (utf8) {
+            ch = i_utf8_advance(&text, &len);
+            if (ch == ~0UL) {
+              i_push_error(0, "invalid UTF8 character");
+              break;
+            }
+          }
+          else {
+            ch = *text++;
+            --len;
+          }
+          EXTEND(SP, 1);
+          if (outsize = i_ft2_glyph_name(handle, ch, name, sizeof(name))) {
+            PUSHs(sv_2mortal(newSVpv(name, 0)));
+          }
+          else {
+            PUSHs(&PL_sv_undef);
+          } 
+        }
+
+int
+i_ft2_can_do_glyph_names()
+
+int
+i_ft2_face_has_glyph_names(handle)
+        Imager::Font::FT2 handle
 
 #endif
 

@@ -2708,7 +2708,7 @@ In cases where no image object is associated with an operation
 C<$Imager::ERRSTR> is used to report errors not directly associated
 with an image object.
 
-The C<Imager-><gt>new> method is described in detail in the 
+The C<Imager-E<gt>new> method is described in detail in the 
 Imager::ImageTypes manpage.
 
 =head1 SUPPORT

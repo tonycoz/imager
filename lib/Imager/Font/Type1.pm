@@ -4,6 +4,8 @@ use Imager::Color;
 use vars qw(@ISA);
 @ISA = qw(Imager::Font);
 
+*_first = \&Imager::Font::_first;
+
 my $t1aa;
 
 # $T1AA is in there because for some reason (probably cache related) antialiasing
@@ -98,6 +100,39 @@ sub _bounding_box {
   return Imager::i_t1_bbox($self->{id}, $input{size}, $input{string},
 			   length($input{string}), $input{utf8}, $flags);
 }
+
+# check if the font has the characters in the given string
+sub has_chars {
+  my ($self, %hsh) = @_;
+
+  unless (defined $hsh{string} && length $hsh{string}) {
+    $Imager::ERRSTR = "No string supplied to \$font->has_chars()";
+    return;
+  }
+  return Imager::i_t1_has_chars($self->{id}, $hsh{string}, $hsh{'utf8'} || 0);
+}
+
+sub utf8 {
+  1;
+}
+
+sub face_name {
+  my ($self) = @_;
+
+  Imager::i_t1_face_name($self->{id});
+}
+
+sub glyph_names {
+  my ($self, %input) = @_;
+
+  my $string = $input{string};
+  defined $string
+    or return Imager->_seterror("no string parameter passed to glyph_names");
+  my $utf8 = _first($input{utf8} || 0);
+
+  Imager::i_t1_glyph_name($self->{id}, $string, $utf8);
+}
+
 
 1;
 

@@ -25,7 +25,7 @@ system("$make clean") if -e 'Makefile' && !$opts{d};
 for my $set (0..$top) {
   ++$total;
   $ENV{IM_ENABLE} = join(' ', grep($set & $bits{$_}, @opts));
-  print STDERR $opts{v} ? "Enable: $ENV{IM_ENABLE}\n" : '.';
+  print STDERR $opts{v} ? "$set/$top Enable: $ENV{IM_ENABLE}\n" : '.';
   system("echo '****' \$IM_ENABLE >>testout/bigtest.txt");
   if ($opts{d}) {
     if (system("$make $makeopts disttest >>testout/bigtest.txt 2>&1")) {

@@ -46,7 +46,7 @@ if (i_has_format("t1") and -f $fontname_pfb) {
   my $text="LLySja";
   my @bbox=$font->bounding_box(string=>$text, 'x'=>0, 'y'=>50);
 
-  okx(@bbox == 6, "bounding box list length");
+  okx(@bbox == 7, "bounding box list length");
 
   $img->box(box=>\@bbox, color=>$green);
 
@@ -97,7 +97,7 @@ if (i_has_format("tt") and -f $fontname_tt) {
   my $text="LLySja";
   my @bbox=$font->bounding_box(string=>$text, 'x'=>0, 'y'=>50);
 
-  okx(@bbox == 6, "bbox list size");
+  okx(@bbox == 7, "bbox list size");
 
   $img->box(box=>\@bbox, color=>$green);
 
