@@ -13,6 +13,7 @@ filters.c - implements filters that operate on images
   
   i_contrast(im, 0.8);
   i_hardinvert(im);
+  i_unsharp_mask(im, 2.0, 1.0);
   // and more
 
 =head1 DESCRIPTION
@@ -916,6 +917,76 @@ i_nearest_color(i_img *im, int num, int *xo, int *yo, i_color *oval, int dmeasur
   for(p = 0; p<num; p++) for(ch = 0; ch<im->channels; ch++) ival[p].channel[ch] = tval[p*im->channels + ch];
 
   i_nearest_color_foo(im, num, xo, yo, ival, dmeasure);
+}
+
+/*
+=item i_unsharp_mask(im, stddev, scale)
+
+Perform an usharp mask, which is defined as subtracting the blurred
+image from double the original.
+
+=cut
+*/
+void i_unsharp_mask(i_img *im, double stddev, double scale) {
+  i_img copy;
+  int x, y, ch;
+
+  if (scale < 0)
+    return;
+  /* it really shouldn't ever be more than 1.0, but maybe ... */
+  if (scale > 100)
+    scale = 100;
+
+  i_copy(&copy, im);
+  i_gaussian(&copy, stddev);
+  if (im->bits == i_8_bits) {
+    i_color *blur = mymalloc(im->xsize * sizeof(i_color) * 2);
+    i_color *out = blur + im->xsize;
+
+    for (y = 0; y < im->ysize; ++y) {
+      i_glin(&copy, 0, copy.xsize, y, blur);
+      i_glin(im, 0, im->xsize, y, out);
+      for (x = 0; x < im->xsize; ++x) {
+        for (ch = 0; ch < im->channels; ++ch) {
+          /*int temp = out[x].channel[ch] + 
+            scale * (out[x].channel[ch] - blur[x].channel[ch]);*/
+          int temp = out[x].channel[ch] * 2 - blur[x].channel[ch];
+          if (temp < 0)
+            temp = 0;
+          else if (temp > 255)
+            temp = 255;
+          out[x].channel[ch] = temp;
+        }
+      }
+      i_plin(im, 0, im->xsize, y, out);
+    }
+
+    myfree(blur);
+  }
+  else {
+    i_fcolor *blur = mymalloc(im->xsize * sizeof(i_fcolor) * 2);
+    i_fcolor *out = blur + im->xsize;
+
+    for (y = 0; y < im->ysize; ++y) {
+      i_glinf(&copy, 0, copy.xsize, y, blur);
+      i_glinf(im, 0, im->xsize, y, out);
+      for (x = 0; x < im->xsize; ++x) {
+        for (ch = 0; ch < im->channels; ++ch) {
+          double temp = out[x].channel[ch] +
+            scale * (out[x].channel[ch] - blur[x].channel[ch]);
+          if (temp < 0)
+            temp = 0;
+          else if (temp > 1.0)
+            temp = 1.0;
+          out[x].channel[ch] = temp;
+        }
+      }
+      i_plinf(im, 0, im->xsize, y, out);
+    }
+
+    myfree(blur);
+  }
+  i_img_exorcise(&copy);
 }
 
 struct fount_state;

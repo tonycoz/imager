@@ -324,6 +324,16 @@ BEGIN {
                   $hsh{ssample_param}, $hsh{segments});
      },
     };
+  $filters{unsharpmask} =
+    {
+     callseq => [ qw(image stddev scale) ],
+     defaults => { stddev=>2.0, scale=>1.0 },
+     callsub => 
+     sub { 
+       my %hsh = @_;
+       i_unsharp_mask($hsh{image}, $hsh{stddev}, $hsh{scale});
+     },
+    };
 
   $FORMATGUESS=\&def_guess_type;
 }
@@ -3022,6 +3032,7 @@ source.
   postlevels      levels(10)
   radnoise        xo(100) yo(100) ascale(17.0) rscale(0.02)
   turbnoise       xo(0.0) yo(0.0) scale(10.0)
+  unsharpmask     stddev(2.0) scale(1.0)
   watermark       wmark pixdiff(10) tx(0) ty(0)
 
 The default values are in parenthesis.  All parameters must have some
@@ -3259,6 +3270,13 @@ channel.
 renders Perlin turbulent noise.  (I<xo>, I<yo>) controls the origin of
 the noise, and I<scale> the scale of the noise, with lower numbers
 giving more detail.
+
+=item unsharpmask
+
+performs an unsharp mask on the image.  This is the result of
+subtracting a gaussian blurred version of the image from the original.
+I<stddev> controls the stddev parameter of the gaussian blur.  Each
+output pixel is: in + I<scale> * (in - blurred).
 
 =item watermark
 
