@@ -108,7 +108,7 @@ close(FH);
 print "ok 9\n";
 
 if (!i_has_format("gif")) {
-	for (10..25) { print "ok $_ # skip\n"; }
+	for (10..25) { print "ok $_ # skip no gif support\n"; }
 } else {
     open(FH,">testout/t10.gif") || die "Cannot open testout/t10.gif\n";
     binmode(FH);
