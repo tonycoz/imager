@@ -91,10 +91,10 @@ sub rotate {
     return undef;
   }
 
-  if ($opts{x} && $opts{'y'}) {
-    return $class->translate(x=>-$opts{x}, 'y'=>-$opts{'y'})
+  if ($opts{'x'} && $opts{'y'}) {
+    return $class->translate('x'=>-$opts{'x'}, 'y'=>-$opts{'y'})
       * $class->rotate(radians=>$angle)
-        * $class->translate(x=>$opts{x}, 'y'=>$opts{'y'});
+        * $class->translate('x'=>$opts{'x'}, 'y'=>$opts{'y'});
   }
   else {
     my $sin = sin($angle);
@@ -113,8 +113,8 @@ Translates by the specify amounts.
 sub translate {
   my ($class, %opts) = @_;
 
-  if (defined $opts{x} && defined $opts{'y'}) {
-    return bless [ 1, 0, $opts{x},
+  if (defined $opts{'x'} && defined $opts{'y'}) {
+    return bless [ 1, 0, $opts{'x'},
                    0, 1, $opts{'y'},
                    0, 0, 1 ], $class;
   }
@@ -131,10 +131,10 @@ Shear by the given amounts.
 sub shear {
   my ($class, %opts) = @_;
 
-  if (defined $opts{x} || defined $opts{'y'}) {
-    return bless [ 1,             $opts{x}||0, 0,
-                   $opts{'y'}||0, 1,           0,
-                   0,             0,           1 ], $class;
+  if (defined $opts{'x'} || defined $opts{'y'}) {
+    return bless [ 1,             $opts{'x'}||0, 0,
+                   $opts{'y'}||0, 1,             0,
+                   0,             0,             1 ], $class;
   }
   $Imager::ERRSTR = 'x and y parameters required';
   return undef;
@@ -199,18 +199,18 @@ parameters.
 sub scale {
   my ($class, %opts) = @_;
 
-  if (defined $opts{x} || defined $opts{'y'}) {
-    $opts{x} = 1 unless defined $opts{x};
+  if (defined $opts{'x'} || defined $opts{'y'}) {
+    $opts{'x'} = 1 unless defined $opts{'x'};
     $opts{'y'} = 1 unless defined $opts{'y'};
     if ($opts{cx} || $opts{cy}) {
-      return $class->translate(x=>-$opts{cx}, 'y'=>-$opts{cy})
-        * $class->scale(x=>$opts{x}, 'y'=>$opts{'y'})
-          * $class->translate(x=>$opts{cx}, 'y'=>$opts{cy});
+      return $class->translate('x'=>-$opts{cx}, 'y'=>-$opts{cy})
+        * $class->scale('x'=>$opts{'x'}, 'y'=>$opts{'y'})
+          * $class->translate('x'=>$opts{cx}, 'y'=>$opts{cy});
     }
     else {
-      return bless [ $opts{x}, 0,          0,
-                     0,        $opts{'y'}, 0,
-                     0,        0,          1 ], $class;
+      return bless [ $opts{'x'}, 0,          0,
+                     0,          $opts{'y'}, 0,
+                     0,          0,          1 ], $class;
     }
   }
   else {

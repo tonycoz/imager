@@ -79,7 +79,7 @@ close(FH);
 print "ok 3\n";
 
 #$fontname = 'fontfiles/arial.ttf';
-my $oof = Imager::Font->new(file=>$fontname, type=>'ft2', index=>0)
+my $oof = Imager::Font->new(file=>$fontname, type=>'ft2', 'index'=>0)
   or print "not ";
 print "ok 4\n";
 
@@ -87,8 +87,8 @@ my $im = Imager->new(xsize=>400, ysize=>250);
 
 $im->string(font=>$oof,
             text=>"Via OO",
-            x=>20,
-            y=>20,
+            'x'=>20,
+            'y'=>20,
             size=>60,
             color=>NC(255, 128, 255),
             aa => 1,
@@ -99,7 +99,7 @@ $oof->transform(matrix=>[1, 0.1, 0, 0, 1, 0])
 print "ok 6\n";
 $im->string(font=>$oof,
             text=>"Shear",
-            x=>20,
+            'x'=>20,
             'y'=>40,
             size=>60,
             sizew=>50,
@@ -112,7 +112,7 @@ $oof->transform(matrix=>m2d_rotate(degrees=>-30));
 #$oof->transform(matrix=>m2d_identity());
 $im->string(font=>$oof,
             text=>"SPIN",
-            x=>20,
+            'x'=>20,
             'y'=>50,
             size=>50,
   	    sizew=>40,
@@ -122,7 +122,7 @@ $im->string(font=>$oof,
 and
 $im->string(font=>$oof,
             text=>"SPIN",
-            x=>20,
+            'x'=>20,
             'y'=>50,
             size=>50,
 	    sizew=>40,
@@ -147,7 +147,7 @@ if ($] >= 5.006) {
   #$text = "A".chr(0x2010)."A"; # this one works too
   if ($im->string(font=>$oof,
               text=>$text,
-              x=>20,
+              'x'=>20,
               'y'=>200,
               size=>50,
               color=>NC(0,255,0),
@@ -168,7 +168,7 @@ my $text = pack("C*", 0x41, 0xE2, 0x80, 0x90, 0x41);
 #substr($text, -1, 0) = '';
 if ($im->string(font=>$oof,
                 text=>$text,
-                x=>20,
+                'x'=>20,
                 'y'=>230,
                 size=>50,
                 color=>NC(255,128,0),
@@ -191,7 +191,7 @@ for my $steps (0..39) {
   # $oof->hinting(hinting=>1);
   $im->string(font=>$oof,
               text=>"SPIN",
-              x=>160,
+              'x'=>160,
               'y'=>70,
               size=>65,
               color=>NC(255, $steps * 5, 200-$steps * 5),

@@ -36,7 +36,7 @@ sub _hsv_to_rgb {
     my $n = $val * (1.0 - $sat * $f);
     my $k = $val * (1.0 - $sat * (1 - $f));
     my $v = $val;
-    my %fields = ( m=>$m, n=>$n, v=>$v, k=>$k, );
+    my %fields = ( 'm'=>$m, 'n'=>$n, 'v'=>$v, 'k'=>$k, );
     return @fields{split //, $hsv_map[$i]};
   }
 }

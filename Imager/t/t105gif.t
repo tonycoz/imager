@@ -405,19 +405,24 @@ EOS
       or print "not ";
     print "ok 34\n";
     close FH;
-    use Data::Dumper;
-    # build a big map of all tags for all images
-    @tags = 
-      map { 
-        my $im = $_; 
-        [ 
-         map { join ",", map { defined() ? $_ : "undef" } Imager::i_tags_get($im, $_) } 
-         0..Imager::i_tags_count($_)-1 
-        ] 
-      } @imgs;
-    my $dump = Dumper(\@tags);
-    $dump =~ s/^/# /mg;
-    print "# tags from gif\n", $dump;
+    eval {
+      require 'Data/Dumper.pm';
+      Data::Dumper->import();
+    };
+    unless ($@) {
+      # build a big map of all tags for all images
+      @tags = 
+	map { 
+	  my $im = $_; 
+	  [ 
+	   map { join ",", map { defined() ? $_ : "undef" } Imager::i_tags_get($im, $_) } 
+	   0..Imager::i_tags_count($_)-1 
+	  ] 
+	} @imgs;
+      my $dump = Dumper(\@tags);
+      $dump =~ s/^/# /mg;
+      print "# tags from gif\n", $dump;
+    }
 
     # at this point @imgs should contain only paletted images
     ok(35, Imager::i_img_type($imgs[0]) == 1, "imgs[0] not paletted");

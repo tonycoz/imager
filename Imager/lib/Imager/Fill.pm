@@ -16,7 +16,7 @@ my @combine_types =
 my %combine_types;
 @combine_types{@combine_types} = 0 .. $#combine_types;
 $combine_types{mult} = $combine_types{multiply};
-$combine_types{sub}  = $combine_types{subtract};
+$combine_types{'sub'}  = $combine_types{subtract};
 $combine_types{sat}  = $combine_types{saturation};
 
 # this function tries to DWIM for color parameters

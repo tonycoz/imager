@@ -3,7 +3,6 @@ use strict;
 use Imager::Color;
 use vars qw(@ISA);
 @ISA = qw(Imager::Font);
-use File::Spec;
 
 my $t1aa;
 
@@ -36,7 +35,7 @@ sub new {
     return;
   }
   unless ($hsh{file} =~ m!^/! || $hsh{file} =~ m!^\./!) {
-    $hsh{file} = File::Spec->catfile(File::Spec->curdir, $hsh{file});
+    $hsh{file} = './' . $hsh{file};
   }
   my $id = Imager::i_t1_new($hsh{file});
   unless ($id >= 0) { # the low-level code may miss some error handling
@@ -58,11 +57,11 @@ sub _draw {
   my %input = @_;
   t1_set_aa_level($input{aa});
   if (exists $input{channel}) {
-    Imager::i_t1_cp($input{image}{IMG}, $input{x}, $input{'y'},
+    Imager::i_t1_cp($input{image}{IMG}, $input{'x'}, $input{'y'},
 		    $input{channel}, $self->{id}, $input{size},
 		    $input{string}, length($input{string}), $input{align});
   } else {
-    Imager::i_t1_text($input{image}{IMG}, $input{x}, $input{'y'}, 
+    Imager::i_t1_text($input{image}{IMG}, $input{'x'}, $input{'y'}, 
 		      $input{color}, $self->{id}, $input{size}, 
 		      $input{string}, length($input{string}), 
 		      $input{align});

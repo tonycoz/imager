@@ -55,7 +55,7 @@ print "ok 3\n";
 
 my $img = Imager->new(xsize=>200, ysize=>200);
 my $font = Imager::Font->new(face=>$fontname, size=>20);
-$img->string(x=>30, y=>30, string=>"Imager", color=>NC(255, 0, 0), 
+$img->string('x'=>30, 'y'=>30, string=>"Imager", color=>NC(255, 0, 0), 
 	     font=>$font);
 $img->write(file=>'testout/t37_oo.ppm') or print "not ";
 print "ok 4 # ",$img->errstr||'',"\n";

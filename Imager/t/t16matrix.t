@@ -14,7 +14,7 @@ almost_equal($id, [ 1, 0, 0,
                     0, 1, 0,
                     0, 0, 1 ]) or print "not ";
 print "ok 2\n";
-my $trans = Imager::Matrix2d->translate(x=>10, 'y'=>-11);
+my $trans = Imager::Matrix2d->translate('x'=>10, 'y'=>-11);
 almost_equal($trans, [ 1, 0, 10,
                        0, 1, -11,
                        0, 0, 1 ]) or print "not ";
@@ -25,13 +25,13 @@ almost_equal($rotate, [ 0, -1, 0,
                         0, 0,  1 ]) or print "not ";
 print "ok 4\n";
 
-my $shear = Imager::Matrix2d->shear(x=>0.2, 'y'=>0.3);
+my $shear = Imager::Matrix2d->shear('x'=>0.2, 'y'=>0.3);
 almost_equal($shear, [ 1,   0.2, 0,
                        0.3, 1,   0,
                        0,   0,   1 ]) or print "not ";
 print "ok 5\n";
 
-my $scale = Imager::Matrix2d->scale(x=>1.2, 'y'=>0.8);
+my $scale = Imager::Matrix2d->scale('x'=>1.2, 'y'=>0.8);
 almost_equal($scale, [ 1.2, 0,   0,
                        0,   0.8, 0,
                        0,   0,   1 ]) or print "not ";
