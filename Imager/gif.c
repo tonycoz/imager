@@ -18,7 +18,7 @@ gif.c - read and write gif files for Imager
   i_color fixed[N]; // fixed palette entries 
   int fixedlen; // number of fixed colours 
   int success; // non-zero on success
-  char *data; // an GIF file in memory
+  char *data; // a GIF file in memory
   int length; // how big data is 
   int reader(char *, char *, int, int);
   int writer(char *, char *, int);

@@ -1,6 +1,8 @@
 #include "image.h"
 #include "regmach.h"
 
+/* foo test */
+
 i_img* i_transform2(int width, int height, int channels,
 		    struct rm_op *ops, int ops_count, 
 		    double *n_regs, int n_regs_count, 
