@@ -1,0 +1,40 @@
+=head1 NAME
+
+  represent.txt - discuss image representation
+
+=head1 SYNOPSIS
+
+  Virtual Images
+  Image Subsetting
+  Varying Bits/Sample
+  Paletted Images
+  Performance
+
+=head1 DESCRIPTION
+
+I'm going to try to explain what 
+
+=head2 Virtual Images
+
+
+
+=head2 Image Subsetting
+
+=head2 Varying Bits/Sample
+
+=head2 Paletted Images
+
+=head2 Performance
+
+Why is performance last?  Well, it needs to be considered in terms of
+the other topics above.
+
+=head2 Robustness
+
+
+
+=head1 AUTHOR
+
+Tony Cook <tony@develop-help.com>
+
+=cut
