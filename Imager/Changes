@@ -382,6 +382,8 @@ Revision history for Perl extension Imager.
         - Added flip() and docs to Imager.pm and i_flipxy to image.c.
           Added testcases too.
 	- Fixed an overflow bug in png.c
+	- added the colors parameter to Imager::read() which receives 
+	the arrayref of colours that i_readgif(_scalar) returns
 
 ~~~~~~~~~~~~~^ ^ ^~~~~~~~~~~~~~
 
@@ -408,6 +410,9 @@ Revision history for Perl extension Imager.
         - Compile with memory debugging enabled and fix leaks
         - Check if hashbox code is choosing the wrong closest color
         - dynaload.c is strongly tied to perl
+	
+	- should i_readgif returned colormap be an arrayref of 
+	Imager::Color objects?
 
         Documentation:
         - Add to the documentation
