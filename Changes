@@ -955,9 +955,11 @@ Revision history for Perl extension Imager.
   locations first, so that those directories are searched before
   the freetype1 directories.  This prevents problems compiling
   font.c on FreeBSD.
+  Resolves: http://rt-cpan.fsck.com/Ticket/Display.html?id=1723
 - finish off a sentence in the "Producing an image from a CGI script"
   example in Imager::Files
 - method index didn't include errstr()
+- document that you don't want the FT2 freetype.h in the include path
 
 =================================================================
 
