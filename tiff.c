@@ -36,6 +36,26 @@ Some of these functions are internal.
      ((((x) & 0xff000000) >> 24) | (((x) & 0x00ff0000) >>  8) |     \
       (((x) & 0x0000ff00) <<  8) | (((x) & 0x000000ff) << 24))
 
+struct tag_name {
+  char *name;
+  uint32 tag;
+};
+
+static struct tag_name text_tag_names[] =
+{
+  { "tiff_documentname", TIFFTAG_DOCUMENTNAME, },
+  { "tiff_imagedescription", TIFFTAG_IMAGEDESCRIPTION, },
+  { "tiff_make", TIFFTAG_MAKE, },
+  { "tiff_model", TIFFTAG_MODEL, },
+  { "tiff_pagename", TIFFTAG_PAGENAME, },
+  { "tiff_software", TIFFTAG_SOFTWARE, },
+  { "tiff_datetime", TIFFTAG_DATETIME, },
+  { "tiff_artist", TIFFTAG_ARTIST, },
+  { "tiff_hostcomputer", TIFFTAG_HOSTCOMPUTER, },
+};
+
+static const int text_tag_count = 
+  sizeof(text_tag_names) / sizeof(*text_tag_names);
 
 /*
 =item comp_seek(h, o, w)
@@ -79,6 +99,8 @@ i_readtiff_wiol(io_glue *ig, int length) {
   float xres, yres;
   uint16 resunit;
   int gotXres, gotYres;
+  uint16 photometric;
+  int i;
 
   error = 0;
 
@@ -108,6 +130,7 @@ i_readtiff_wiol(io_glue *ig, int length) {
   TIFFGetField(tif, TIFFTAG_IMAGELENGTH, &height);
   TIFFGetField(tif, TIFFTAG_SAMPLESPERPIXEL, &channels);
   tiled = TIFFIsTiled(tif);
+  TIFFGetField(tif, TIFFTAG_PHOTOMETRIC, &photometric);
 
   mm_log((1, "i_readtiff_wiol: width=%d, height=%d, channels=%d\n", width, height, channels));
   mm_log((1, "i_readtiff_wiol: %stiled\n", tiled?"":"not "));
@@ -115,6 +138,7 @@ i_readtiff_wiol(io_glue *ig, int length) {
   
   im = i_img_empty_ch(NULL, width, height, channels);
 
+  /* resolution tags */
   if (!TIFFGetField(tif, TIFFTAG_RESOLUTIONUNIT, &resunit))
     resunit = RESUNIT_INCH;
   gotXres = TIFFGetField(tif, TIFFTAG_XRESOLUTION, &xres);
@@ -134,6 +158,17 @@ i_readtiff_wiol(io_glue *ig, int length) {
       i_tags_addn(&im->tags, "i_aspect_only", 0, 1);
     i_tags_set_float(&im->tags, "i_xres", 0, xres);
     i_tags_set_float(&im->tags, "i_yres", 0, yres);
+  }
+
+  /* Text tags */
+  for (i = 0; i < text_tag_count; ++i) {
+    char *data;
+    if (TIFFGetField(tif, text_tag_names[i].tag, &data)) {
+      mm_log((1, "i_readtiff_wiol: tag %d has value %s\n", 
+	      text_tag_names[i].tag, data));
+      i_tags_add(&im->tags, text_tag_names[i].name, 0, data, 
+		 strlen(data), 0);
+    }
   }
   
   /*   TIFFPrintDirectory(tif, stdout, 0); good for debugging */
@@ -236,6 +271,7 @@ Stores an image in the iolayer object.
 =cut 
 */
 
+static int save_tiff_tags(TIFF *tif, i_img *im);
 
 /* FIXME: Add an options array in here soonish */
 
@@ -396,7 +432,12 @@ i_writetiff_wiol(i_img *im, io_glue *ig) {
       return 0;
     }
   }
-  
+
+  if (!save_tiff_tags(tif, im)) {
+    TIFFClose(tif);
+    return 0;
+  }
+
   for (y=0; y<height; y++) {
     ci = 0;
     for(x=0; x<width; x++) { 
@@ -522,6 +563,11 @@ i_writetiff_wiol_faxable(i_img *im, io_glue *ig, int fine) {
     mm_log((1, "i_writetiff_wiol_faxable: TIFFSetField ResolutionUnit=%d\n", RESUNIT_INCH)); return 0; 
   }
 
+  if (!save_tiff_tags(tif, im)) {
+    TIFFClose(tif);
+    return 0;
+  }
+
   for (y=0; y<height; y++) {
     int linebufpos=0;
     for(x=0; x<width; x+=8) { 
@@ -548,6 +594,22 @@ i_writetiff_wiol_faxable(i_img *im, io_glue *ig, int fine) {
   return 1;
 }
 
+static int save_tiff_tags(TIFF *tif, i_img *im) {
+  int i;
+
+  for (i = 0; i < text_tag_count; ++i) {
+    int entry;
+    if (i_tags_find(&im->tags, text_tag_names[i].name, 0, &entry)) {
+      if (!TIFFSetField(tif, text_tag_names[i].tag, 
+			im->tags.tags[entry].data)) {
+	i_push_errorf(0, "cannot save %s to TIFF", text_tag_names[i].name);
+	return 0;
+      }
+    }
+  }
+
+  return 1;
+}
 
 /*
 =back

@@ -711,5 +711,13 @@ extern int i_tags_findn(i_img_tags *tags, int code, int start, int *entry);
 extern int i_tags_delete(i_img_tags *tags, int entry);
 extern int i_tags_delbyname(i_img_tags *tags, char *name);
 extern int i_tags_delbycode(i_img_tags *tags, int code);
+extern int i_tags_get_float(i_img_tags *tags, char *name, int code, 
+			    double *value);
+extern int i_tags_set_float(i_img_tags *tags, char *name, int code, 
+			    double value);
+extern int i_tags_get_int(i_img_tags *tags, char *name, int code, int *value);
+extern int i_tags_get_string(i_img_tags *tags, char *name, int code, 
+			     char *value, size_t value_size);
+extern void i_tags_print(i_img_tags *tags);
 
 #endif

@@ -1,5 +1,5 @@
 #!perl -w
-print "1..20\n";
+print "1..21\n";
 use Imager qw(:all);
 $^W=1; # warnings during command-line tests
 $|=1;  # give us some progress in the test harness
@@ -22,7 +22,7 @@ i_box_filled($timg, 0, 0, 20, 20, $green);
 i_box_filled($timg, 2, 2, 18, 18, $trans);
 
 if (!i_has_format("tiff")) {
-  for (1..20) {
+  for (1..21) {
     print "ok $_ # skip no tiff support\n";
   }
 } else {
@@ -30,6 +30,7 @@ if (!i_has_format("tiff")) {
   Imager::i_tags_add($img, "i_yres", 0, undef, 250);
   # resolutionunit is centimeters
   Imager::i_tags_add($img, "tiff_resolutionunit", 0, undef, 3);
+  Imager::i_tags_add($img, "tiff_software", 0, "t106tiff.t", 0);
   open(FH,">testout/t106.tiff") || die "cannot open testout/t106.tiff for writing\n";
   binmode(FH); 
   my $IO = Imager::io_new_fd(fileno(FH));
@@ -60,6 +61,8 @@ if (!i_has_format("tiff")) {
   print "ok 5\n";
   $tags{tiff_resolutionunit} == 3 or print "not ";
   print "ok 6\n";
+  $tags{tiff_software} eq 't106tiff.t' or print "not ";
+  print "ok 7\n";
 
   $IO = Imager::io_new_bufchain();
   
@@ -74,9 +77,9 @@ if (!i_has_format("tiff")) {
   }
   
   if ($odata eq $tiffdata) {
-    print "ok 7\n";
+    print "ok 8\n";
   } else {
-    print "not ok 7\n";
+    print "not ok 8\n";
   }
 
   # test Micksa's tiff writer
@@ -100,56 +103,56 @@ if (!i_has_format("tiff")) {
   $IO = Imager::io_new_fd(fileno(FH));
   i_writetiff_wiol_faxable($faximg, $IO, 1)
     or print "not ";
-  print "ok 8\n";
+  print "ok 9\n";
   close FH;
 
   # test the OO interface
   my $ooim = Imager->new;
   $ooim->read(file=>'testout/t106.tiff')
     or print "not ";
-  print "ok 9\n";
+  print "ok 10\n";
   $ooim->write(file=>'testout/t106_oo.tiff')
     or print "not ";
-  print "ok 10\n";
+  print "ok 11\n";
 
   # OO with the fax image
   my $oofim = Imager->new;
   $oofim->read(file=>'testout/t106tiff_fax.tiff')
     or print "not ";
-  print "ok 11\n";
+  print "ok 12\n";
 
   # this should have tags set for the resolution
   %tags = map @$_, $oofim->tags;
   $tags{i_xres} == 204 or print "not ";
-  print "ok 12\n";
-  $tags{i_yres} == 196 or print "not ";
   print "ok 13\n";
-  $tags{i_aspect_only} and print "not ";
+  $tags{i_yres} == 196 or print "not ";
   print "ok 14\n";
+  $tags{i_aspect_only} and print "not ";
+  print "ok 15\n";
   # resunit_inches
   $tags{tiff_resolutionunit} == 2 or print "not ";
-  print "ok 15\n";
+  print "ok 16\n";
 
   $oofim->write(file=>'testout/t106_oo_fax.tiff', class=>'fax')
     or print "not ";
-  print "ok 16\n";
+  print "ok 17\n";
 
   # the following should fail since there's no type and no filename
   my $oodata;
   $ooim->write(data=>\$oodata)
     and print "not ";
-  print "ok 17\n";
+  print "ok 18\n";
 
   # OO to data
   $ooim->write(data=>\$oodata, type=>'tiff')
     or print 'not ';
-  print "ok 18\n";
-  $oodata eq $tiffdata or print "not ";
   print "ok 19\n";
+  $oodata eq $tiffdata or print "not ";
+  print "ok 20\n";
 
   # make sure we can write non-fine mode
   $oofim->write(file=>'testout/t106_oo_faxlo.tiff', class=>'fax', fax_fine=>0)
     or print "not ";
-  print "ok 20\n";
+  print "ok 21\n";
 }
 
