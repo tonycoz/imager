@@ -648,7 +648,7 @@ i_ccomp(i_color *val1,i_color *val2,int ch) {
 
 
 static int
-i_lspan(i_img *im,int seedx,int seedy,i_color *val) {
+i_lspan(i_img *im, int seedx, int seedy, i_color *val) {
   i_color cval;
   while(1) {
     if (seedx-1 < 0) break;
@@ -660,7 +660,7 @@ i_lspan(i_img *im,int seedx,int seedy,i_color *val) {
 }
 
 static int
-i_rspan(i_img *im,int seedx,int seedy,i_color *val) {
+i_rspan(i_img *im, int seedx, int seedy, i_color *val) {
   i_color cval;
   while(1) {
     if (seedx+1 > im->xsize-1) break;
@@ -673,16 +673,36 @@ i_rspan(i_img *im,int seedx,int seedy,i_color *val) {
 
 /* Macro to create a link and push on to the list */
 
-#define ST_PUSH(left,right,dadl,dadr,y,dir) { struct stack_element *s = crdata(left,right,dadl,dadr,y,dir); llist_push(st,&s); }
+#define ST_PUSH(left,right,dadl,dadr,y,dir) do {                 \
+  struct stack_element *s = crdata(left,right,dadl,dadr,y,dir);  \
+  llist_push(st,&s);                                             \
+} while (0)
 
 /* pops the shadow on TOS into local variables lx,rx,y,direction,dadLx and dadRx */
 /* No overflow check! */
  
-#define ST_POP() { struct stack_element *s; llist_pop(st,&s); lx = s->myLx; rx = s->myRx; dadLx = s->dadLx; dadRx = s->dadRx; y = s->myY; direction= s->myDirection; myfree(s); }
+#define ST_POP() do {         \
+  struct stack_element *s;    \
+  llist_pop(st,&s);           \
+  lx        = s->myLx;        \
+  rx        = s->myRx;        \
+  dadLx     = s->dadLx;       \
+  dadRx     = s->dadRx;       \
+  y         = s->myY;         \
+  direction = s->myDirection; \
+  myfree(s);                  \
+} while (0)
 
-#define ST_STACK(dir,dadLx,dadRx,lx,rx,y) { int pushrx = rx+1; int pushlx = lx-1; ST_PUSH(lx,rx,pushlx,pushrx,y+dir,dir); if (rx > dadRx)                                      ST_PUSH(dadRx+1,rx,pushlx,pushrx,y-dir,-dir); if (lx < dadLx) ST_PUSH(lx,dadLx-1,pushlx,pushrx,y-dir,-dir); }
+#define ST_STACK(dir,dadLx,dadRx,lx,rx,y) do {                    \
+  int pushrx = rx+1;                                              \
+  int pushlx = lx-1;                                              \
+  ST_PUSH(lx,rx,pushlx,pushrx,y+dir,dir);                         \
+  if (rx > dadRx)                                                 \
+    ST_PUSH(dadRx+1,rx,pushlx,pushrx,y-dir,-dir);                 \
+  if (lx < dadLx) ST_PUSH(lx,dadLx-1,pushlx,pushrx,y-dir,-dir);   \
+} while (0)
 
-#define SET(x,y) btm_set(btm,x,y);
+#define SET(x,y) btm_set(btm,x,y)
 
 #define INSIDE(x,y) ((!btm_test(btm,x,y) && ( i_gpix(im,x,y,&cval),i_ccomp(&val,&cval,channels)  ) ))
 
@@ -699,13 +719,16 @@ i_flood_fill(i_img *im, int seedx, int seedy, i_color *dcol) {
 
   /*  int tx,ty; */
 
-  int bxmin=seedx,bxmax=seedx,bymin=seedy,bymax=seedy;
+  int bxmin = seedx;
+  int bxmax = seedx;
+  int bymin = seedy;
+  int bymax = seedy;
 
   struct llist *st;
   struct i_bitmap *btm;
 
   int channels,xsize,ysize;
-  i_color cval,val;
+  i_color cval, val;
 
   channels = im->channels;
   xsize    = im->xsize;
@@ -724,10 +747,10 @@ i_flood_fill(i_img *im, int seedx, int seedy, i_color *dcol) {
   i_gpix(im,seedx,seedy,&val);
 
   /* Find the starting span and fill it */
-  lx = i_lspan(im,seedx,seedy,&val);
-  rx = i_rspan(im,seedx,seedy,&val);
+  lx = i_lspan(im, seedx, seedy, &val);
+  rx = i_rspan(im, seedx, seedy, &val);
   
-  /* printf("span: %d %d \n",lx,rx); */
+  printf("span: %d %d \n",lx,rx);
 
   for(x=lx; x<=rx; x++) SET(x,seedy);
 
@@ -738,31 +761,37 @@ i_flood_fill(i_img *im, int seedx, int seedy, i_color *dcol) {
     ST_POP();
     
     if (y<0 || y>ysize-1) continue;
-    if (x<0 || x>xsize-1) continue;
+
 
     if (bymin > y) bymin=y; /* in the worst case an extra line */
     if (bymax < y) bymax=y; 
 
-    /*     
-	   printf("start of scan - on stack : %d \n",st->count); 
-	   printf("lx=%d rx=%d dadLx=%d dadRx=%d y=%d direction=%d\n",lx,rx,dadLx,dadRx,y,direction); 
-	   printf(" ");
-	   for(tx=0;tx<xsize;tx++) printf("%d",tx%10);
-	   printf("\n");
-	   for(ty=0;ty<ysize;ty++) {
-	   printf("%d",ty%10);
-	   for(tx=0;tx<xsize;tx++) printf("%d",!!btm_test(btm,tx,ty));
-	   printf("\n");
-	   }
-	   printf("y=%d\n",y);
-    */
+    /*    
+	  {
+	  int tx, ty;
+	  printf("start of scan - on stack : %d \n",st->count); 
+	  printf("lx=%d rx=%d dadLx=%d dadRx=%d y=%d direction=%d\n",lx,rx,dadLx,dadRx,y,direction); 
+	  
+	  
+	  printf(" ");
+	  for(tx=0;tx<xsize;tx++) printf("%d",tx%10);
+	  printf("\n");
+	  for(ty=0;ty<ysize;ty++) {
+	  printf("%d",ty%10);
+	  for(tx=0;tx<xsize;tx++) printf("%d",!!btm_test(btm,tx,ty));
+	  printf("\n");
+	  }
+	  printf("y=%d\n",y);
+	  }
+      */
 
 
-    x=lx+1;
+    x = lx+1;
     if ( (wasIn = INSIDE(lx,y)) ) {
+      if (lx<0) lx = 0;
       SET(lx,y);
       lx--;
-      while(INSIDE(lx,y) && lx > 0) {
+      while(lx>0 && INSIDE(lx,y)) {
 	SET(lx,y);
 	lx--;
       }
@@ -850,15 +879,15 @@ i_flood_fill_low(i_img *im,int seedx,int seedy,
   i_gpix(im,seedx,seedy,&val);
 
   /* Find the starting span and fill it */
-  lx=i_lspan(im,seedx,seedy,&val);
-  rx=i_rspan(im,seedx,seedy,&val);
+  lx = i_lspan(im, seedx, seedy, &val);
+  rx = i_rspan(im, seedx, seedy, &val);
   
   /* printf("span: %d %d \n",lx,rx); */
 
-  for(x=lx;x<=rx;x++) SET(x,seedy);
+  for(x=lx; x<=rx; x++) SET(x, seedy);
 
-  ST_PUSH(lx,rx,lx,rx,seedy+1,1);
-  ST_PUSH(lx,rx,lx,rx,seedy-1,-1);
+  ST_PUSH(lx, rx, lx, rx, seedy+1,  1);
+  ST_PUSH(lx, rx, lx, rx, seedy-1, -1);
 
   while(st->count) {
     ST_POP();
