@@ -313,11 +313,11 @@ EOS
     print "ok 23\n";
 
     # regression test: giflib doesn't like 1 colour images
-    $img = Imager::ImgRaw::new(100, 100, 3);
-    i_box_filled($img, 0, 0, 100, 100, $red);
+    my $img1 = Imager::ImgRaw::new(100, 100, 3);
+    i_box_filled($img1, 0, 0, 100, 100, $red);
     open FH, ">testout/t10_onecol.gif" or die $!;
     binmode FH;
-    if (i_writegif_gen(fileno(FH), { translate=>'giflib'}, $img)) {
+    if (i_writegif_gen(fileno(FH), { translate=>'giflib'}, $img1)) {
       print "ok 24 # single colour write regression\n";
     } else {
       print "not ok 24 # single colour write regression\n";
@@ -327,16 +327,16 @@ EOS
     # transparency test
     # previously it was harder do write transparent images
     # tests the improvements
-    $img = Imager::ImgRaw::new(20, 20, 4);
+    my $timg = Imager::ImgRaw::new(20, 20, 4);
     my $trans = i_color_new(255, 0, 0, 127);
-    i_box_filled($img, 0, 0, 20, 20, $green);
-    i_box_filled($img, 2, 2, 18, 18, $trans);
+    i_box_filled($timg, 0, 0, 20, 20, $green);
+    i_box_filled($timg, 2, 2, 18, 18, $trans);
     open FH, ">testout/t10_trans.gif" or die $!;
     binmode FH;
     i_writegif_gen(fileno(FH), { make_colors=>'addi',
 				 translate=>'closest',
 				 transp=>'ordered',
-			       }, $img, $img) or print "not ";
+			       }, $timg) or print "not ";
     print "ok 25\n";
     close FH;
 }
