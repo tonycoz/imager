@@ -1477,6 +1477,18 @@ The second example shows how to read an image from a scalar, this is
 usefull if your data originates from somewhere else than a filesystem
 such as a database over a DBI connection.
 
+If you already have an open file handle, for example a socket or a
+pipe, you can specify the 'fd' parameter instead of supplying a
+filename.  Please be aware that you need to use fileno() to retrieve
+the file descriptor for the file:
+
+  $img->read(fd=>fileno(FILE), type=>'gif') or die $img->errstr;
+
+For writing using the 'fd' option you will probably want to set $| for
+that descriptor, since the writes to the file descriptor bypass Perl's
+(or the C libraries) buffering.  Setting $| should avoid out of order
+output.
+
 *Note that load() is now an alias for read but will be removed later*
 
 C<$img-E<gt>write> has the same interface as C<read()>.  The earlier
