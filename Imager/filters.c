@@ -649,7 +649,10 @@ i_watermark(i_img *im, i_img *wmark, int tx, int ty, int pixdiff) {
   int vx, vy, ch;
   i_color val, wval;
 
-  for(vx=0;vx<128;vx++) for(vy=0;vy<110;vy++) {
+	int mx = wmark->xsize;
+	int my = wmark->ysize;
+
+  for(vx=0;vx<mx;vx++) for(vy=0;vy<my;vy++) {
     
     i_gpix(im,    tx+vx, ty+vy,&val );
     i_gpix(wmark, vx,    vy,   &wval);
