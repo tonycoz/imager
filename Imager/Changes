@@ -566,8 +566,18 @@ Revision history for Perl extension Imager.
         - applied T1 afm patch from Claes Jacobsson
         - split IM_INCPATH and IM_LIBPATH with $Config{path_sep}, so they
           work on Windows
-				- Added memory pools for easy cleanup of temp buffers
-				- Added read support for sgi .rgb files.
+        - Added memory pools for easy cleanup of temp buffers
+        - Added read support for sgi .rgb files.
+        - io_new_fd() now creates a FDSEEK io object
+        - implemented i_readgif_wiol()
+        - Imager->read() now uses i_readgif_wiol();
+        - extend callback iolayers at C and Perl levels
+        - implemented i_writegif_wiol()
+        - split out Perl iolayer initialization into private methods
+        - add tests for each type of iolayer in t50basicoo.t
+        - read/write multi-image tiff files
+        - tests in t50basicoo.t for multi-image/file
+
 =================================================================
 
         For latest versions check the Imager-devel pages:

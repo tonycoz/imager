@@ -130,6 +130,297 @@ static int write_callback(char *userdata, char const *data, int size) {
   return success;
 }
 
+#define CBDATA_BUFSIZE 8192
+
+struct cbdata {
+  /* the SVs we use to call back to Perl */
+  SV *writecb;
+  SV *readcb;
+  SV *seekcb;
+  SV *closecb;
+
+  /* we need to remember whether the buffer contains write data or 
+     read data
+   */
+  int reading;
+  int writing;
+
+  /* how far we've read into the buffer (not used for writing) */
+  int where;
+
+  /* the amount of space used/data available in the buffer */
+  int used;
+
+  /* the maximum amount to fill the buffer before flushing
+     If any write is larger than this then the buffer is flushed and 
+     the full write is performed.  The write is _not_ split into 
+     maxwrite sized calls
+   */
+  int maxlength;
+
+  char buffer[CBDATA_BUFSIZE];
+};
+
+/* 
+
+call_writer(cbd, buf, size)
+
+Low-level function to call the perl writer callback.
+
+*/
+
+static ssize_t call_writer(struct cbdata *cbd, void const *buf, size_t size) {
+  int count;
+  int success;
+  SV *sv;
+  dSP;
+
+  if (!SvOK(cbd->writecb))
+    return -1;
+
+  ENTER;
+  SAVETMPS;
+  EXTEND(SP, 1);
+  PUSHMARK(SP);
+  PUSHs(sv_2mortal(newSVpv((char *)buf, size)));
+  PUTBACK;
+
+  count = perl_call_sv(cbd->writecb, G_SCALAR);
+
+  SPAGAIN;
+  if (count != 1)
+    croak("Result of perl_call_sv(..., G_SCALAR) != 1");
+
+  sv = POPs;
+  success = SvTRUE(sv);
+
+
+  PUTBACK;
+  FREETMPS;
+  LEAVE;
+
+  return success ? size : 0;
+}
+
+static ssize_t call_reader(struct cbdata *cbd, void *buf, size_t size, 
+                           size_t maxread) {
+  int count;
+  int result;
+  SV *data;
+  dSP;
+
+  if (!SvOK(cbd->readcb))
+    return -1;
+
+  ENTER;
+  SAVETMPS;
+  EXTEND(SP, 2);
+  PUSHMARK(SP);
+  PUSHs(sv_2mortal(newSViv(size)));
+  PUSHs(sv_2mortal(newSViv(maxread)));
+  PUTBACK;
+
+  count = perl_call_sv(cbd->readcb, G_SCALAR);
+
+  SPAGAIN;
+
+  if (count != 1)
+    croak("Result of perl_call_sv(..., G_SCALAR) != 1");
+
+  data = POPs;
+
+  if (SvOK(data)) {
+    STRLEN len;
+    char *ptr = SvPV(data, len);
+    if (len > maxread)
+      croak("Too much data returned in reader callback");
+    
+    memcpy(buf, ptr, len);
+    result = len;
+  }
+  else {
+    result = -1;
+  }
+
+  PUTBACK;
+  FREETMPS;
+  LEAVE;
+
+  return result;
+}
+
+static ssize_t write_flush(struct cbdata *cbd) {
+  ssize_t result;
+
+  result = call_writer(cbd, cbd->buffer, cbd->used);
+  cbd->used = 0;
+  return result;
+}
+
+static off_t io_seeker(void *p, off_t offset, int whence) {
+  struct cbdata *cbd = p;
+  int count;
+  off_t result;
+  dSP;
+
+  if (!SvOK(cbd->seekcb))
+    return -1;
+
+  if (cbd->writing) {
+    if (cbd->used && write_flush(cbd) <= 0)
+      return -1;
+    cbd->writing = 0;
+  }
+  if (whence == SEEK_CUR && cbd->reading && cbd->where != cbd->used) {
+    offset -= cbd->where - cbd->used;
+  }
+  cbd->reading = 0;
+  cbd->where = cbd->used = 0;
+  
+  ENTER;
+  SAVETMPS;
+  EXTEND(SP, 2);
+  PUSHMARK(SP);
+  PUSHs(sv_2mortal(newSViv(offset)));
+  PUSHs(sv_2mortal(newSViv(whence)));
+  PUTBACK;
+
+  count = perl_call_sv(cbd->seekcb, G_SCALAR);
+
+  SPAGAIN;
+
+  if (count != 1)
+    croak("Result of perl_call_sv(..., G_SCALAR) != 1");
+
+  result = POPi;
+
+  PUTBACK;
+  FREETMPS;
+  LEAVE;
+
+  return result;
+}
+
+static ssize_t io_writer(void *p, void const *data, size_t size) {
+  struct cbdata *cbd = p;
+
+  /*printf("io_writer(%p, %p, %u)\n", p, data, size);*/
+  if (!cbd->writing) {
+    if (cbd->reading && cbd->where < cbd->used) {
+      /* we read past the place where the caller expected us to be
+         so adjust our position a bit */
+        *(char *)0 = 0;
+      if (io_seeker(p, cbd->where - cbd->used, SEEK_CUR) < 0) {
+        return -1;
+      }
+      cbd->reading = 0;
+    }
+    cbd->where = cbd->used = 0;
+  }
+  cbd->writing = 1;
+  if (cbd->used && cbd->used + size > cbd->maxlength) {
+    if (write_flush(cbd) <= 0) {
+      return 0;
+    }
+    cbd->used = 0;
+  }
+  if (cbd->used+size <= cbd->maxlength) {
+    memcpy(cbd->buffer + cbd->used, data, size);
+    cbd->used += size;
+    return size;
+  }
+  /* it doesn't fit - just pass it up */
+  return call_writer(cbd, data, size);
+}
+
+static ssize_t io_reader(void *p, void *data, size_t size) {
+  struct cbdata *cbd = p;
+  ssize_t total;
+  char *out = data; /* so we can do pointer arithmetic */
+  int i;
+
+  if (cbd->writing) {
+    if (write_flush(cbd) <= 0)
+      return 0;
+    cbd->writing = 0;
+  }
+
+  cbd->reading = 1;
+  if (size <= cbd->used - cbd->where) {
+    /* simplest case */
+    memcpy(data, cbd->buffer+cbd->where, size);
+    cbd->where += size;
+    return size;
+  }
+  total = 0;
+  memcpy(out, cbd->buffer + cbd->where, cbd->used - cbd->where);
+  total += cbd->used - cbd->where;
+  size  -= cbd->used - cbd->where;
+  out   += cbd->used - cbd->where;
+  if (size < sizeof(cbd->buffer)) {
+    int did_read;
+    int copy_size;
+    while (size
+	   && (did_read = call_reader(cbd, cbd->buffer, size, 
+				    sizeof(cbd->buffer))) > 0) {
+      cbd->where = 0;
+      cbd->used  = did_read;
+
+      copy_size = min(size, cbd->used);
+      memcpy(out, cbd->buffer, copy_size);
+      cbd->where += copy_size;
+      out   += copy_size;
+      total += copy_size;
+      size  -= copy_size;
+    }
+  }
+  else {
+    /* just read the rest - too big for our buffer*/
+    int did_read;
+    while ((did_read = call_reader(cbd, out, size, size)) > 0) {
+      size  -= did_read;
+      total += did_read;
+      out   += did_read;
+    }
+  }
+
+  return total;
+}
+
+static void io_closer(void *p) {
+  struct cbdata *cbd = p;
+
+  if (cbd->writing && cbd->used > 0) {
+    write_flush(cbd);
+    cbd->writing = 0;
+  }
+
+  if (SvOK(cbd->closecb)) {
+    dSP;
+
+    ENTER;
+    SAVETMPS;
+    PUSHMARK(SP);
+    PUTBACK;
+
+    perl_call_sv(cbd->closecb, G_VOID);
+
+    SPAGAIN;
+    PUTBACK;
+    FREETMPS;
+    LEAVE;
+  }
+}
+
+static void io_destroyer(void *p) {
+  struct cbdata *cbd = p;
+
+  SvREFCNT_dec(cbd->writecb);
+  SvREFCNT_dec(cbd->readcb);
+  SvREFCNT_dec(cbd->seekcb);
+  SvREFCNT_dec(cbd->closecb);
+}
+
 struct value_name {
   char *name;
   int value;
@@ -717,7 +1008,34 @@ io_new_buffer(data)
 	  RETVAL = io_new_buffer(data, length, my_SvREFCNT_dec, ST(0));
         OUTPUT:
           RETVAL
-	
+
+Imager::IO
+io_new_cb(writecb, readcb, seekcb, closecb, maxwrite = CBDATA_BUFSIZE)
+        SV *writecb;
+        SV *readcb;
+        SV *seekcb;
+        SV *closecb;
+        int maxwrite;
+      PREINIT:
+        struct cbdata *cbd;
+      CODE:
+        cbd = mymalloc(sizeof(struct cbdata));
+        SvREFCNT_inc(writecb);
+        cbd->writecb = writecb;
+        SvREFCNT_inc(readcb);
+        cbd->readcb = readcb;
+        SvREFCNT_inc(seekcb);
+        cbd->seekcb = seekcb;
+        SvREFCNT_inc(closecb);
+        cbd->closecb = closecb;
+        cbd->reading = cbd->writing = cbd->where = cbd->used = 0;
+        if (maxwrite > CBDATA_BUFSIZE)
+          maxwrite = CBDATA_BUFSIZE;
+        cbd->maxlength = maxwrite;
+        RETVAL = io_new_cb(cbd, io_reader, io_writer, io_seeker, io_closer, 
+                           io_destroyer);
+      OUTPUT:
+        RETVAL
 
 void
 io_slurp(ig)
@@ -1425,6 +1743,26 @@ i_readtiff_wiol(ig, length)
         Imager::IO     ig
 	       int     length
 
+void
+i_readtiff_multi_wiol(ig, length)
+        Imager::IO     ig
+	       int     length
+      PREINIT:
+        i_img **imgs;
+        int count;
+        int i;
+      PPCODE:
+        imgs = i_readtiff_multi_wiol(ig, length, &count);
+        if (imgs) {
+          EXTEND(SP, count);
+          for (i = 0; i < count; ++i) {
+            SV *sv = sv_newmortal();
+            sv_setref_pv(sv, "Imager::ImgRaw", (void *)imgs[i]);
+            PUSHs(sv);
+          }
+          myfree(imgs);
+        }
+
 
 undef_int
 i_writetiff_wiol(im, ig)
@@ -1432,16 +1770,96 @@ i_writetiff_wiol(im, ig)
         Imager::IO     ig
 
 undef_int
+i_writetiff_multi_wiol(ig, ...)
+        Imager::IO     ig
+      PREINIT:
+        int i;
+        int img_count;
+        i_img **imgs;
+      CODE:
+        if (items < 2)
+          croak("Usage: i_writetiff_multi_wiol(ig, images...)");
+        img_count = items - 1;
+        RETVAL = 1;
+	if (img_count < 1) {
+	  RETVAL = 0;
+	  i_clear_error();
+	  i_push_error(0, "You need to specify images to save");
+	}
+	else {
+          imgs = mymalloc(sizeof(i_img *) * img_count);
+          for (i = 0; i < img_count; ++i) {
+	    SV *sv = ST(1+i);
+	    imgs[i] = NULL;
+	    if (SvROK(sv) && sv_derived_from(sv, "Imager::ImgRaw")) {
+	      imgs[i] = (i_img *)SvIV((SV*)SvRV(sv));
+	    }
+	    else {
+	      i_clear_error();
+	      i_push_error(0, "Only images can be saved");
+              myfree(imgs);
+	      RETVAL = 0;
+	      break;
+            }
+	  }
+          if (RETVAL) {
+	    RETVAL = i_writetiff_multi_wiol(ig, imgs, img_count);
+          }
+	  myfree(imgs);
+	}
+      OUTPUT:
+        RETVAL
+
+undef_int
 i_writetiff_wiol_faxable(im, ig, fine)
     Imager::ImgRaw     im
         Imager::IO     ig
 	       int     fine
 
+undef_int
+i_writetiff_multi_wiol_faxable(ig, fine, ...)
+        Imager::IO     ig
+        int fine
+      PREINIT:
+        int i;
+        int img_count;
+        i_img **imgs;
+      CODE:
+        if (items < 3)
+          croak("Usage: i_writetiff_multi_wiol_faxable(ig, fine, images...)");
+        img_count = items - 2;
+        RETVAL = 1;
+	if (img_count < 1) {
+	  RETVAL = 0;
+	  i_clear_error();
+	  i_push_error(0, "You need to specify images to save");
+	}
+	else {
+          imgs = mymalloc(sizeof(i_img *) * img_count);
+          for (i = 0; i < img_count; ++i) {
+	    SV *sv = ST(2+i);
+	    imgs[i] = NULL;
+	    if (SvROK(sv) && sv_derived_from(sv, "Imager::ImgRaw")) {
+	      imgs[i] = (i_img *)SvIV((SV*)SvRV(sv));
+	    }
+	    else {
+	      i_clear_error();
+	      i_push_error(0, "Only images can be saved");
+              myfree(imgs);
+	      RETVAL = 0;
+	      break;
+            }
+	  }
+          if (RETVAL) {
+	    RETVAL = i_writetiff_multi_wiol_faxable(ig, imgs, img_count, fine);
+          }
+	  myfree(imgs);
+	}
+      OUTPUT:
+        RETVAL
+
 
 #endif /* HAVE_LIBTIFF */
-
-
-
 
 
 #ifdef HAVE_LIBPNG
@@ -1626,6 +2044,59 @@ i_writegif_callback(cb, maxbuffer,...)
 	cleanup_gif_opts(&opts);
 	cleanup_quant_opts(&quant);
 
+undef_int
+i_writegif_wiol(ig, opts,...)
+	Imager::IO ig
+      PREINIT:
+	i_quantize quant;
+	i_gif_opts opts;
+	i_img **imgs = NULL;
+	int img_count;
+	int i;
+	HV *hv;
+      CODE:
+	if (items < 3)
+	    croak("Usage: i_writegif_wiol(IO,hashref, images...)");
+	if (!SvROK(ST(1)) || ! SvTYPE(SvRV(ST(1))))
+	    croak("i_writegif_callback: Second argument must be a hash ref");
+	hv = (HV *)SvRV(ST(1));
+	memset(&quant, 0, sizeof(quant));
+	quant.mc_size = 256;
+	memset(&opts, 0, sizeof(opts));
+	handle_quant_opts(&quant, hv);
+	handle_gif_opts(&opts, hv);
+	img_count = items - 2;
+	RETVAL = 1;
+	if (img_count < 1) {
+	  RETVAL = 0;
+	}
+	else {
+          imgs = mymalloc(sizeof(i_img *) * img_count);
+          for (i = 0; i < img_count; ++i) {
+	    SV *sv = ST(2+i);
+	    imgs[i] = NULL;
+	    if (SvROK(sv) && sv_derived_from(sv, "Imager::ImgRaw")) {
+	      imgs[i] = (i_img *)SvIV((SV*)SvRV(sv));
+	    }
+	    else {
+	      RETVAL = 0;
+	      break;
+            }
+	  }
+          if (RETVAL) {
+	    RETVAL = i_writegif_wiol(ig, &quant, &opts, imgs, img_count);
+          }
+	  myfree(imgs);
+          if (RETVAL) {
+	    copy_colors_back(hv, &quant);
+          }
+	}
+	ST(0) = sv_newmortal();
+	if (RETVAL == 0) ST(0)=&PL_sv_undef;
+	else sv_setiv(ST(0), (IV)RETVAL);
+	cleanup_gif_opts(&opts);
+	cleanup_quant_opts(&quant);
+
 void
 i_readgif(fd)
 	       int     fd
@@ -1674,9 +2145,53 @@ i_readgif(fd)
             PUSHs(newRV_noinc((SV*)ct));
         }
 
+void
+i_readgif_wiol(ig)
+     Imager::IO         ig
+	      PREINIT:
+	        int*    colour_table;
+	        int     colours, q, w;
+	      i_img*    rimg;
+                 SV*    temp[3];
+                 AV*    ct; 
+                 SV*    r;
+	       PPCODE:
+ 	       colour_table = NULL;
+               colours = 0;
 
+	if(GIMME_V == G_ARRAY) {
+            rimg = i_readgif_wiol(ig,&colour_table,&colours);
+        } else {
+            /* don't waste time with colours if they aren't wanted */
+            rimg = i_readgif_wiol(ig,NULL,NULL);
+        }
+	
+	if (colour_table == NULL) {
+            EXTEND(SP,1);
+            r=sv_newmortal();
+            sv_setref_pv(r, "Imager::ImgRaw", (void*)rimg);
+            PUSHs(r);
+	} else {
+            /* the following creates an [[r,g,b], [r, g, b], [r, g, b]...] */
+            /* I don't know if I have the reference counts right or not :( */
+            /* Neither do I :-) */
+            /* No Idea here either */
 
+            ct=newAV();
+            av_extend(ct, colours);
+            for(q=0; q<colours; q++) {
+                for(w=0; w<3; w++)
+                    temp[w]=sv_2mortal(newSViv(colour_table[q*3 + w]));
+                av_store(ct, q, (SV*)newRV_noinc((SV*)av_make(3, temp)));
+            }
+            myfree(colour_table);
 
+            EXTEND(SP,2);
+            r = sv_newmortal();
+            sv_setref_pv(r, "Imager::ImgRaw", (void*)rimg);
+            PUSHs(r);
+            PUSHs(newRV_noinc((SV*)ct));
+        }
 
 void
 i_readgif_scalar(...)
@@ -1837,6 +2352,26 @@ i_readgif_multi_callback(cb)
           }
           myfree(imgs);
         }
+
+void
+i_readgif_multi_wiol(ig)
+        Imager::IO ig
+      PREINIT:
+        i_img **imgs;
+        int count;
+        int i;
+      PPCODE:
+        imgs = i_readgif_multi_wiol(ig, &count);
+        if (imgs) {
+          EXTEND(SP, count);
+          for (i = 0; i < count; ++i) {
+            SV *sv = sv_newmortal();
+            sv_setref_pv(sv, "Imager::ImgRaw", (void *)imgs[i]);
+            PUSHs(sv);
+          }
+          myfree(imgs);
+        }
+
 
 #endif
 

@@ -498,6 +498,7 @@ i_writeppm_wiol(i_img *im, io_glue *ig) {
     mm_log((1,"i_writeppm: ppm/pgm is 1 or 3 channel only (current image is %d)\n",im->channels));
     return(0);
   }
+  ig->closecb(ig);
 
   return(1);
 }

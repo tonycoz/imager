@@ -26,7 +26,9 @@ MultiImage & metadata support:
   interface design that takes these factors into account.
 - define common i_* tags for specifying attribute common among images
   like spatial resolution (implement for other image types, especially 
-  TIFF)
+  TIFF)  (Spatial resolution is supported for all types that support 
+  it - are there any other common properties we can add?)
+  
 
 New Features:
 - Add mng support, pcx and aalib support.
@@ -37,11 +39,10 @@ New Features:
   - FITS
   - WMF (extract bitmap data on read)
   - gzip or bzip2 compressed raw
+  - postscript for output
 
 - Transforms, interpolated multidimensional lookup tables.
   Usefull for CMYK <-> RGB table lookup.
-
-- Finish antialiased filled polygon function.
 
 - advanced font layout (spacing, kerning, alignment) (Artur?)
 

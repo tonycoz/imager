@@ -47,10 +47,12 @@ typedef void   (*closebufp)(void *p);
 
 /* Callbacks we get */
 
-typedef ssize_t(*readl) (int fd, void *buf, size_t count);
-typedef ssize_t(*writel)(int fd, const void *buf, size_t count);
-typedef off_t  (*seekl) (int fd, off_t offset, int whence);
-typedef ssize_t(*sizel) (int fd);
+typedef ssize_t(*readl) (void *p, void *buf, size_t count);
+typedef ssize_t(*writel)(void *p, const void *buf, size_t count);
+typedef off_t  (*seekl) (void *p, off_t offset, int whence);
+typedef void   (*closel)(void *p);
+typedef void   (*destroyl)(void *p);
+typedef ssize_t(*sizel) (void *p);
 
 extern char *io_type_names[];
 
@@ -122,6 +124,8 @@ typedef struct {
   readl		readcb;
   writel	writecb;
   seekl		seekcb;
+  closel        closecb;
+  destroyl      destroycb;
 } io_cb;
 
 typedef union {
@@ -144,6 +148,7 @@ typedef struct _io_glue {
 
 void io_obj_setp_buffer(io_obj *io, char *p, size_t len, closebufp closecb, void *closedata);
 void io_obj_setp_cb      (io_obj *io, void *p, readl readcb, writel writecb, seekl seekcb);
+void io_obj_setp_cb2     (io_obj *io, void *p, readl readcb, writel writecb, seekl seekcb, closel closecb, destroyl destroycb);
 void io_glue_commit_types(io_glue *ig);
 void io_glue_gettypes    (io_glue *ig, int reqmeth);
 
@@ -152,6 +157,7 @@ void io_glue_gettypes    (io_glue *ig, int reqmeth);
 io_glue *io_new_fd(int fd);
 io_glue *io_new_bufchain(void);
 io_glue *io_new_buffer(char *data, size_t len, closebufp closecb, void *closedata);
+io_glue *io_new_cb(void *p, readl readcb, writel writecb, seekl seekcb, closel closecb, destroyl destroycb);
 size_t   io_slurp(io_glue *ig, unsigned char **c);
 void io_glue_DESTROY(io_glue *ig);
 

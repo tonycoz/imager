@@ -432,6 +432,8 @@ write_1bit_data(io_glue *ig, i_img *im) {
   myfree(packed);
   myfree(line);
 
+  ig->closecb(ig);
+
   return 1;
 }
 
@@ -480,6 +482,8 @@ write_4bit_data(io_glue *ig, i_img *im) {
   myfree(packed);
   myfree(line);
 
+  ig->closecb(ig);
+
   return 1;
 }
 
@@ -517,6 +521,8 @@ write_8bit_data(io_glue *ig, i_img *im) {
   }
   myfree(line);
 
+  ig->closecb(ig);
+
   return 1;
 }
 
@@ -545,6 +551,7 @@ write_24bit_data(io_glue *ig, i_img *im) {
     return 0;
   chans = im->channels >= 3 ? bgr_chans : grey_chans;
   samples = mymalloc(line_size);
+  memset(samples, 0, line_size);
   for (y = im->ysize-1; y >= 0; --y) {
     i_gsamp(im, 0, im->xsize, y, samples, chans, 3);
     if (ig->writecb(ig, samples, line_size) < 0) {
@@ -554,6 +561,8 @@ write_24bit_data(io_glue *ig, i_img *im) {
     }
   }
   myfree(samples);
+
+  ig->closecb(ig);
 
   return 1;
 }

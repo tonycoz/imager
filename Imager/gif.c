@@ -1,6 +1,11 @@
 #include "image.h"
 #include <gif_lib.h>
-
+#ifdef _MSCVER
+#include <io.h>
+#else
+#include <unistd.h>
+#endif
+#include <errno.h>
 /* XXX: Reading still needs to support reading all those gif properties */
 
 /*
@@ -570,9 +575,9 @@ i_img **i_readgif_multi_low(GifFileType *GifFile, int *count) {
           results = mymalloc(result_alloc * sizeof(i_img *));
         }
         else {
-          i_img **newresults;
+          /* myrealloc never fails (it just dies if it can't allocate) */
           result_alloc *= 2;
-          newresults = myrealloc(results, result_alloc * sizeof(i_img *));
+          results = myrealloc(results, result_alloc * sizeof(i_img *));
         }
       }
       results[*count-1] = img;
@@ -730,6 +735,49 @@ i_img **i_readgif_multi_low(GifFileType *GifFile, int *count) {
   }
 
   return results;
+}
+
+#if IM_GIFMAJOR >= 4
+/* giflib declares this incorrectly as EgifOpen */
+extern GifFileType *EGifOpen(void *userData, OutputFunc writeFunc);
+
+static int io_glue_read_cb(GifFileType *gft, GifByteType *buf, int length);
+#endif
+
+/*
+=item i_readgif_multi_wiol(ig, int *count)
+
+=cut
+*/
+
+i_img **
+i_readgif_multi_wiol(io_glue *ig, int *count) {
+  io_glue_commit_types(ig);
+
+  if (ig->source.type == FDSEEK || ig->source.type == FDNOSEEK) {
+    return i_readgif_multi(ig->source.fdseek.fd, count);
+  }
+  else {
+#if IM_GIFMAJOR >= 4
+    GifFileType *GifFile;
+
+    i_clear_error();
+
+    if ((GifFile = DGifOpen((void *)ig, io_glue_read_cb )) == NULL) {
+      gif_push_error();
+      i_push_error(0, "Cannot create giflib callback object");
+      mm_log((1,"i_readgif_multi_wiol: Unable to open callback datasource.\n"));
+      return NULL;
+    }
+    
+    return i_readgif_multi_low(GifFile, count);
+#else
+    i_clear_error();
+    i_push_error(0, "callbacks not supported with giflib3");
+    
+    return NULL;
+#endif
+  }
 }
 
 /*
@@ -977,8 +1025,58 @@ i_readgif_callback(i_read_callback_t cb, char *userdata, int **colour_table, int
 
   return result;
 #else
+  i_clear_error();
+  i_push_error(0, "callbacks not supported with giflib3");
+
   return NULL;
 #endif
+}
+
+#if IM_GIFMAJOR >= 4
+
+static int
+io_glue_read_cb(GifFileType *gft, GifByteType *buf, int length) {
+  io_glue *ig = (io_glue *)gft->UserData;
+
+  return ig->readcb(ig, buf, length);
+}
+
+#endif
+
+i_img *
+i_readgif_wiol(io_glue *ig, int **color_table, int *colors) {
+  io_glue_commit_types(ig);
+
+  if (ig->source.type == FDSEEK || ig->source.type == FDNOSEEK) {
+    int fd = dup(ig->source.fdseek.fd);
+    if (fd < 0) {
+      i_push_error(errno, "dup() failed");
+      return 0;
+    }
+    return i_readgif(fd, color_table, colors);
+  }
+  else {
+#if IM_GIFMAJOR >= 4
+    GifFileType *GifFile;
+
+    i_clear_error();
+
+    if ((GifFile = DGifOpen((void *)ig, io_glue_read_cb )) == NULL) {
+      gif_push_error();
+      i_push_error(0, "Cannot create giflib callback object");
+      mm_log((1,"i_readgif_wiol: Unable to open callback datasource.\n"));
+      return NULL;
+    }
+    
+    return i_readgif_low(GifFile, color_table, colors);
+  
+#else
+  i_clear_error();
+  i_push_error(0, "callbacks not supported with giflib3");
+
+  return NULL;
+#endif
+  }
 }
 
 /*
@@ -1149,6 +1247,10 @@ static ColorMapObject *make_gif_map(i_quantize *quant, i_gif_opts *opts,
   /* giflib spews for 1 colour maps, reasonable, I suppose */
   if (map_size == 1)
     map_size = 2;
+  while (i < map_size) {
+    colors[i].Red = colors[i].Green = colors[i].Blue = 0;
+    ++i;
+  }
   
   map = MakeMapObject(map_size, colors);
   mm_log((1, "XXX map is at %p and colors at %p\n", map, map->Colors));
@@ -1705,8 +1807,6 @@ i_writegif_callback(i_quantize *quant, i_write_callback_t cb, char *userdata,
 #if IM_GIFMAJOR >= 4
   GifFileType *gf;
   i_gen_write_data *gwd = i_gen_write_data_new(cb, userdata, maxlength);
-  /* giflib declares this incorrectly as EgifOpen */
-  extern GifFileType *EGifOpen(void *userData, OutputFunc writeFunc);
   int result;
 
   i_clear_error();
@@ -1725,8 +1825,72 @@ i_writegif_callback(i_quantize *quant, i_write_callback_t cb, char *userdata,
   result = i_writegif_low(quant, gf, imgs, count, opts);
   return free_gen_write_data(gwd, result);
 #else
+  i_clear_error();
+  i_push_error(0, "callbacks not supported with giflib3");
+
   return 0;
 #endif
+}
+
+#if IM_GIFMAJOR >= 4
+
+static int
+io_glue_write_cb(GifFileType *gft, const GifByteType *data, int length) {
+  io_glue *ig = (io_glue *)gft->UserData;
+
+  return ig->writecb(ig, data, length);
+}
+
+#endif
+
+/*
+=item i_writegif_wiol(ig, quant, opts, imgs, count)
+
+=cut
+*/
+undef_int
+i_writegif_wiol(io_glue *ig, i_quantize *quant, i_gif_opts *opts, i_img **imgs,
+                int count) {
+  io_glue_commit_types(ig);
+
+  if (ig->source.type == FDSEEK || ig->source.type == FDNOSEEK) {
+    int fd = dup(ig->source.fdseek.fd);
+    if (fd < 0) {
+      i_push_error(errno, "dup() failed");
+      return 0;
+    }
+    /* giflib opens the fd with fdopen(), which is then closed when fclose()
+       is called - dup it so the caller's fd isn't closed */
+    return i_writegif_gen(quant, fd, imgs, count, opts);
+  }
+  else {
+#if IM_GIFMAJOR >= 4
+    GifFileType *GifFile;
+    int result;
+
+    i_clear_error();
+
+    gif_set_version(quant, opts);
+
+    if ((GifFile = EGifOpen((void *)ig, io_glue_write_cb )) == NULL) {
+      gif_push_error();
+      i_push_error(0, "Cannot create giflib callback object");
+      mm_log((1,"i_writegif_wiol: Unable to open callback datasource.\n"));
+      return 0;
+    }
+    
+    result = i_writegif_low(quant, GifFile, imgs, count, opts);
+    
+    ig->closecb(ig);
+
+    return result;
+#else
+    i_clear_error();
+    i_push_error(0, "callbacks not supported with giflib3");
+    
+    return 0;
+#endif
+  }
 }
 
 /*

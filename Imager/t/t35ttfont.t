@@ -66,6 +66,8 @@ i_tt_text($ttraw,$backgr,100,100,$bgcolor,50.0,'test',4,1);
 my $ugly = Imager::i_tt_new("./fontfiles/ImUgly.ttf");
 i_tt_text($ugly, $backgr,100, 50, $bgcolor, 14, 'g%g', 3, 1);
 i_tt_text($ugly, $backgr,150, 50, $bgcolor, 14, 'delta', 5, 1);
+i_tt_text($ttraw, $backgr, 20, 10, $bgcolor, 14, 'abcdefghijklmnopqrstuvwxyz{|}', 29, 1);
+i_tt_text($ttraw, $backgr, 20, 30, $bgcolor, 14, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 26, 1);
 
 
 open(FH,">testout/t35ttfont2.ppm") || die "cannot open testout/t35ttfont.ppm\n";

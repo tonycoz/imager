@@ -181,6 +181,8 @@ i_writepng_wiol(i_img *im, io_glue *ig) {
 
   png_destroy_write_struct(&png_ptr, (png_infopp)NULL);
 
+  ig->closecb(ig);
+
   return(1);
 }
 

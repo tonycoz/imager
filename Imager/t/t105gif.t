@@ -168,7 +168,9 @@ if (!i_has_format("gif")) {
     close FH;
     print "ok 13\n";
 
+    my $can_write_callback = 0;
     if ($gifver >= 4.0) {
+      ++$can_write_callback;
       unless (fork) {
 	# this can SIGSEGV with some versions of giflib
 	open FH, ">testout/t105_anim_cb.gif" or die $!;
@@ -188,6 +190,7 @@ if (!i_has_format("gif")) {
 	exit;
       }
       if (wait > 0 && $?) {
+        $can_write_callback = 0;
 	print "not ok 14 # you probably need to patch giflib\n";
 	print <<EOS;
 #--- egif_lib.c	2000/12/11 07:33:12	1.1

@@ -155,5 +155,8 @@ i_writeraw_wiol(i_img* im, io_glue *ig) {
       }
     }
   }
+
+  ig->closecb(ig);
+
   return(1);
 }

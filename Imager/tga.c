@@ -868,6 +868,9 @@ i_writetga_wiol(i_img *img, io_glue *ig, int wierdpack, int compress, char *idst
     myfree(buf);
     myfree(vals);
   }
+
+  ig->closecb(ig);
+
   return 1;
 }
 
