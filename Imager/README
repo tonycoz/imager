@@ -1,5 +1,5 @@
 ================================================================
-Copyright (c) 1999-2001 Arnar M. Hrafnkelsson. All rights reserved.
+Copyright (c) 1999-2004 Arnar M. Hrafnkelsson. All rights reserved.
 Copyright (c) 2004 Anthony Cook.
 This program is free software; you can redistribute it and/or
 modify it under the same terms as Perl itself.
@@ -88,7 +88,7 @@ included since libgif has been linked with it).
 Otherwise you could just build giflib without any X11 dependencies:
 
   # must be a clean tree
-  cd giflib-4.1.0
+  cd giflib-4.1.3
   ./configure --without-x ...
 
 Also note that libgif has a few bugs: You can run something like
@@ -119,9 +119,26 @@ $ IM_MANUAL=1 perl Makefile.PL
 and simply say no to tiff support when asked if you want it, the same thing
 can be used to circumvent problems in gifs to get Imager going.
 
-
 If it worked just continue with the installation as normally 
 (with make install).
+
+Freetype 1.x vs Freetype 2.x
+----------------------------
+
+These two libraries have some conflicting include file names, but as
+long as you don't put the Freetype 2.x freetype.h directory in the
+include path it should all work.
+
+Put the directory containing ft2build.h in the include path, but not
+the directory containing the freetype 2.x freetype.h.
+
+If you see compilation errors from font.c you've probably made the
+mistake of putting the Freetype 2.x freetype.h directory into the
+include path.
+
+To see which directories should be in the include path, try:
+
+  freetype-config --cflags
 
 ========================
 3. External dependencies
@@ -165,6 +182,7 @@ At the time of writing you will need to manually select to install the
 
    t1: http://www.ibiblio.org/pub/Linux/libs/graphics/
 
+freetype2 or
    tt: http://www.freetype.org/
 
 Precompiled versions of some of the libraries might be found at:
