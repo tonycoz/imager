@@ -57,6 +57,8 @@ use Imager::Font;
 		i_gaussian
 		i_conv
 		
+		i_convert
+		
 		i_img_diff
 
 		i_init_fonts
@@ -1174,6 +1176,117 @@ sub polybezier {
   return $self;
 }
 
+# make an identity matrix of the given size
+sub _identity {
+  my ($size) = @_;
+
+  my $matrix = [ map { [ (0) x $size ] } 1..$size ];
+  for my $c (0 .. ($size-1)) {
+    $matrix->[$c][$c] = 1;
+  }
+  return $matrix;
+}
+
+# general function to convert an image
+sub convert {
+  my ($self, %opts) = @_;
+  my $matrix;
+
+  # the user can either specify a matrix or preset
+  # the matrix overrides the preset
+  if (!exists($opts{matrix})) {
+    unless (exists($opts{preset})) {
+      $self->{ERRSTR} = "convert() needs a matrix or preset";
+      return;
+    }
+    else {
+      if ($opts{preset} eq 'gray' || $opts{preset} eq 'grey') {
+	# convert to greyscale, keeping the alpha channel if any
+	if ($self->getchannels == 3) {
+	  $matrix = [ [ 0.222, 0.707, 0.071 ] ];
+	}
+	elsif ($self->getchannels == 4) {
+	  # preserve the alpha channel
+	  $matrix = [ [ 0.222, 0.707, 0.071, 0 ],
+		      [ 0,     0,     0,     1 ] ];
+	}
+	else {
+	  # an identity
+	  $matrix = _identity($self->getchannels);
+	}
+      }
+      elsif ($opts{preset} eq 'noalpha') {
+	# strip the alpha channel
+	if ($self->getchannels == 2 or $self->getchannels == 4) {
+	  $matrix = _identity($self->getchannels);
+	  pop(@$matrix); # lose the alpha entry
+	}
+	else {
+	  $matrix = _identity($self->getchannels);
+	}
+      }
+      elsif ($opts{preset} eq 'red' || $opts{preset} eq 'channel0') {
+	# extract channel 0
+	$matrix = [ [ 1 ] ];
+      }
+      elsif ($opts{preset} eq 'green' || $opts{preset} eq 'channel1') {
+	$matrix = [ [ 0, 1 ] ];
+      }
+      elsif ($opts{preset} eq 'blue' || $opts{preset} eq 'channel2') {
+	$matrix = [ [ 0, 0, 1 ] ];
+      }
+      elsif ($opts{preset} eq 'alpha') {
+	if ($self->getchannels == 2 or $self->getchannels == 4) {
+	  $matrix = [ [ (0) x ($self->getchannels-1), 1 ] ];
+	}
+	else {
+	  # the alpha is just 1 <shrug>
+	  $matrix = [ [ (0) x $self->getchannels, 1 ] ];
+	}
+      }
+      elsif ($opts{preset} eq 'rgb') {
+	if ($self->getchannels == 1) {
+	  $matrix = [ [ 1 ], [ 1 ], [ 1 ] ];
+	}
+	elsif ($self->getchannels == 2) {
+	  # preserve the alpha channel
+	  $matrix = [ [ 1, 0 ], [ 1, 0 ], [ 1, 0 ], [ 0, 1 ] ];
+	}
+	else {
+	  $matrix = _identity($self->getchannels);
+	}
+      }
+      elsif ($opts{preset} eq 'addalpha') {
+	if ($self->getchannels == 1) {
+	  $matrix = _identity(2);
+	}
+	elsif ($self->getchannels == 3) {
+	  $matrix = _identity(4);
+	}
+	else {
+	  $matrix = _identity($self->getchannels);
+	}
+      }
+      else {
+	$self->{ERRSTR} = "Unknown convert preset $opts{preset}";
+	return undef;
+      }
+    }
+  }
+  else {
+    $matrix = $opts{matrix};
+  }
+
+  my $new = Imager->new();
+  $new->{IMG} = i_img_new();
+  unless (i_convert($new->{IMG}, $self->{IMG}, $matrix)) {
+    # most likely a bad matrix
+    $self->{ERRSTR} = _error_as_msg();
+    return undef;
+  }
+  return $new;
+}
+
 
 # destructive border - image is shrunk by one pixel all around
 
@@ -1633,6 +1746,8 @@ options>.
 
 =back
 
+You must also specify the file format using the 'type' option.
+
 The current aim is to support other multiple image formats in the
 future, such as TIFF, and to support reading multiple images from a
 single file.
@@ -1643,7 +1758,7 @@ A simple example:
     # ... code to put images in @images
     Imager->write_multi({type=>'gif',
 			 file=>'anim.gif',
-			 gif_delays=>[ 10 x @images ] },
+			 gif_delays=>[ (10) x @images ] },
 			@images)
     or die "Oh dear!";
 
@@ -2134,6 +2249,118 @@ value but if a parameter has a default value it may be omitted when
 calling the filter function.
 
 FIXME: make a seperate pod for filters?
+
+=head2 Color transformations
+
+You can use the convert method to transform the color space of an
+image using a matrix.  For ease of use some presets are provided.
+
+The convert method can be used to:
+
+=over 4
+
+=item *
+
+convert an RGB or RGBA image to grayscale.
+
+=item *
+
+convert a grayscale image to RGB.
+
+=item *
+
+extract a single channel from an image.
+
+=item *
+
+set a given channel to a particular value (or from another channel)
+
+=back
+
+The currently defined presets are:
+
+=over
+
+=item gray
+
+=item grey
+
+converts an RGBA image into a grayscale image with alpha channel, or
+an RGB image into a grayscale image without an alpha channel.
+
+This weights the RGB channels at 22.2%, 70.7% and 7.1% respectively.
+
+=item noalpha
+
+removes the alpha channel from a 2 or 4 channel image.  An identity
+for other images.
+
+=item red
+
+=item channel0
+
+extracts the first channel of the image into a single channel image
+
+=item green
+
+=item channel1
+
+extracts the second channel of the image into a single channel image
+
+=item blue
+
+=item channel2
+
+extracts the third channel of the image into a single channel image
+
+=item alpha
+
+extracts the alpha channel of the image into a single channel image.
+
+If the image has 1 or 3 channels (assumed to be grayscale of RGB) then
+the resulting image will be all white.
+
+=item rgb
+
+converts a grayscale image to RGB, preserving the alpha channel if any
+
+=item addalpha
+
+adds an alpha channel to a grayscale or RGB image.  Preserves an
+existing alpha channel for a 2 or 4 channel image.
+
+=back
+
+For example, to convert an RGB image into a greyscale image:
+
+  $new = $img->convert(preset=>'grey'); # or gray
+
+or to convert a grayscale image to an RGB image:
+
+  $new = $img->convert(preset=>'rgb');
+
+The presets aren't necessary simple constants in the code, some are
+generated based on the number of channels in the input image.
+
+If you want to perform some other colour transformation, you can use
+the 'matrix' parameter.
+
+For each output pixel the following matrix multiplication is done:
+
+     channel[0]       [ [ $c00, $c01, ...  ]        inchannel[0]
+   [     ...      ] =          ...              x [     ...        ]
+     channel[n-1]       [ $cn0, ...,  $cnn ] ]      inchannel[max]
+                                                          1
+
+So if you want to swap the red and green channels on a 3 channel image:
+
+  $new = $img->convert(matrix=>[ [ 0, 1, 0 ],
+                                 [ 1, 0, 0 ],
+                                 [ 0, 0, 1 ] ]);
+
+or to convert a 3 channel image to greyscale using equal weightings:
+
+  $new = $img->convert(matrix=>[ [ 0.333, 0.333, 0.334 ] ])
 
 =head2 Transformations
 

@@ -96,6 +96,9 @@ void i_flood_fill  (i_img *im,int seedx,int seedy,i_color *dcol);
 void i_gaussian    (i_img *im,float stdev);
 void i_conv        (i_img *im,float *coeff,int len);
 
+/* colour manipulation */
+extern int i_convert(i_img *im, i_img *src, float *coeff, int outchan, int inchan);
+
 float i_img_diff   (i_img *im1,i_img *im2);
 
 /* font routines */
