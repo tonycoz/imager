@@ -19,47 +19,7 @@ $combine_types{mult} = $combine_types{multiply};
 $combine_types{'sub'}  = $combine_types{subtract};
 $combine_types{sat}  = $combine_types{saturation};
 
-# this function tries to DWIM for color parameters
-#  color objects are used as is
-#  simple scalars are simply treated as single parameters to Imager::Color->new
-#  hashrefs are treated as named argument lists to Imager::Color->new
-#  arrayrefs are treated as list arguments to Imager::Color->new iff any
-#    parameter is > 1
-#  other arrayrefs are treated as list arguments to Imager::Color::Float
-
-sub _color {
-  my $arg = shift;
-  my $result;
-
-  if (ref $arg) {
-    if (UNIVERSAL::isa($arg, "Imager::Color")
-        || UNIVERSAL::isa($arg, "Imager::Color::Float")) {
-      $result = $arg;
-    }
-    else {
-      if ($arg =~ /^HASH\(/) {
-        $result = Imager::Color->new(%$arg);
-      }
-      elsif ($arg =~ /^ARRAY\(/) {
-        if (grep $_ > 1, @$arg) {
-          $result = Imager::Color->new(@$arg);
-        }
-        else {
-          $result = Imager::Color::Float->new(@$arg);
-        }
-      }
-      else {
-        $Imager::ERRSTR = "Not a color";
-      }
-    }
-  }
-  else {
-    # assume Imager::Color::new knows how to handle it
-    $result = Imager::Color->new($arg);
-  }
-
-  return $result;
-}
+*_color = \&Imager::_color;
 
 sub new {
   my ($class, %hsh) = @_;
