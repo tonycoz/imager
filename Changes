@@ -594,6 +594,8 @@ Revision history for Perl extension Imager.
 	  parameter)
 	- Added lib/Imager/Draw.pod documentation of primitives.
 	- Added lib/Imager/Transformations.pod, some docs of simple transforms.
+	- Added lib/Imager/ImageTypes.pod, draft of ImageType pod.
+
 
 =================================================================
 
