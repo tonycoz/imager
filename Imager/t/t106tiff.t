@@ -1,5 +1,5 @@
 #!perl -w
-print "1..71\n";
+print "1..72\n";
 use Imager qw(:all);
 $^W=1; # warnings during command-line tests
 $|=1;  # give us some progress in the test harness
@@ -24,7 +24,7 @@ i_box_filled($timg, 2, 2, 18, 18, $trans);
 my $test_num;
 
 if (!i_has_format("tiff")) {
-  for (1..71) {
+  for (1..72) {
     print "ok $_ # skip no tiff support\n";
   }
 } else {
@@ -341,6 +341,9 @@ if (!i_has_format("tiff")) {
      "compare first fax image");
   ok(Imager::i_img_diff($imgs[1]{IMG}, $oofim->{IMG}) == 0,
      "compare second fax image");
+
+  my ($format) = $imgs[0]->tags(name=>'i_format');
+  ok(defined $format && $format eq 'tiff', "check i_format tag");
 }
 
 sub ok {

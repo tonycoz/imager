@@ -918,6 +918,8 @@ Revision history for Perl extension Imager.
 - set i_format to pnm when reading pnm files and test for it
 - set i_format to tga when reading tga files and test for it
 - handle image creation failures when reading tga files
+- set i_format to tiff when reading tiff images and test for it
+- handle image creation failures when reading tiff files
 
 =================================================================
 

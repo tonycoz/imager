@@ -4,14 +4,14 @@ PRE-0.44:
 - set i_format for every file type on read and test for it:
   - bmp - done
   - jpeg - done
-  - tiff
+  - tiff - done
   - tga - done
   - rgb
   - png - done
   - gif - done
   - pnm - done
 - check each file reader for possible integer overflows
-  - bmp
+  - bmp - done
   - tiff
   - tga
   - rgb
