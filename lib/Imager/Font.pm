@@ -147,6 +147,7 @@ sub bounding_box {
     return;
   }
   $input{size} ||= $self->{size};
+  $input{sizew} = _first($input{sizew}, $self->{sizew}, 0);
 
   my @box = $self->_bounding_box(%input);
 
@@ -156,7 +157,7 @@ sub bounding_box {
     $box[3]=$input{'y'}-$gdescent;     # bottom = base - descent (Y is down, descent is negative)
     $box[0]+=$input{'x'};
     $box[2]+=$input{'x'};
-  } elsif (exists $input{'canon'}) {
+  } elsif ($input{'canon'}) {
     $box[3]-=$box[1];    # make it cannoical (ie (0,0) - (width, height))
     $box[2]-=$box[0];
   }

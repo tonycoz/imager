@@ -58,6 +58,7 @@ sub _draw {
 sub _bounding_box {
   my $self = shift;
   my %input = @_;
+
   return i_ft2_bbox($self->{id}, $input{size}, $input{sizew}, $input{string});
 }
 

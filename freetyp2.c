@@ -299,9 +299,9 @@ i_ft2_bbox(FT2_Fonthandle *handle, double cheight, double cwidth,
   }
 
   bbox[0] = start;
-  bbox[1] = handle->face->size->metrics.ascender / 64;
-  bbox[2] = width + start;
-  bbox[3] = handle->face->size->metrics.descender / 64;
+  bbox[1] = handle->face->size->metrics.descender / 64;
+  bbox[2] = width;
+  bbox[3] = handle->face->size->metrics.ascender / 64;
   bbox[4] = descent;
   bbox[5] = ascent;
 
