@@ -536,6 +536,12 @@ Revision history for Perl extension Imager.
         - better error checking of automatic fill conversions
         - fix some range checking for the fountain fill segment type
 
+0.39  pre2
+	- A few scattered mymalloc/free fixes
+        - io_buffer implemented as a source for io layer and
+          XS and perl OO code added.
+        - Test for iolayer t/t07iolayer.t implemented.
+
 
 =================================================================
 

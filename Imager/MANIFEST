@@ -76,6 +76,7 @@ t/t020masked.t
 t/t021sixteen.t
 t/t022double.t          Test double/sample images
 t/t05error.t
+t/t07iolayer.t
 t/t101jpeg.t
 t/t102png.t
 t/t103raw.t
