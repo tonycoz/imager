@@ -746,6 +746,12 @@ Revision history for Perl extension Imager.
 	- document the exp() and log() transform2() functions
 	- document the constants normally set by transform2().
 
+0.44
+	- refer the user to appropriate documents in the example in 
+	  Imager.pm
+	- change the list of documents in Imager.pm to move the document 
+	  names out of the =item lines so we can make them into links
+
 =================================================================
 
         For latest versions check the Imager-devel pages:
