@@ -147,7 +147,7 @@ BEGIN {
   require Exporter;
   require DynaLoader;
 
-  $VERSION = '0.41';
+  $VERSION = '0.42';
   @ISA = qw(Exporter DynaLoader);
   bootstrap Imager $VERSION;
 }
@@ -2760,7 +2760,7 @@ Imager::Transformations(3), Imager::Engines(3), Imager::Filters(3),
 Imager::Expr(3), Imager::Matrix2d(3), Imager::Fountain(3)
 
 Affix::Infix2Postfix(3), Parse::RecDescent(3)
-http://www.eecs.umich.edu/~addi/perl/Imager/
+http://imager.perl.org/~addi/perl/Imager/
 
 =cut
 
