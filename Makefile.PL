@@ -281,12 +281,12 @@ sub init {
   @definc{'/usr/include'}=();
   @incs=(split(/\Q$Config{path_sep}/, $INCPATH));
   if ($Config{locincpth}) {
-    push @incs, split ' ', $Config{locincpth};
+    push @incs, grep -d, split ' ', $Config{locincpth};
   }
   if ($^O =~ /win32/i && $Config{cc} =~ /\bcl\b/i) {
     push(@incs, split /;/, $ENV{INCLUDE}) if exists $ENV{INCLUDE};
   }
-  push @incs,
+  push @incs, grep -d,
       qw(/sw/include 
          /usr/include/freetype2
          /usr/local/include/freetype2
@@ -296,9 +296,9 @@ sub init {
 
   @libs= split(/\Q$Config{path_sep}/,$LIBPATH);
   if ($Config{loclibpth}) {
-    push @libs, split ' ', $Config{loclibpth};
+    push @libs, grep -d, split ' ', $Config{loclibpth};
   }
-  push @libs, qw(/sw/lib),  split(/ /, $Config{'libpth'});
+  push @libs, grep -d, qw(/sw/lib),  split(/ /, $Config{'libpth'});
   if ($^O =~ /win32/i && $Config{cc} =~ /\bcl\b/i) {
     push(@libs, split /;/, $ENV{LIB}) if exists $ENV{LIB};
   }
