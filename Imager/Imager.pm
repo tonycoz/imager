@@ -2596,11 +2596,13 @@ Imager - Perl extension for Generating 24 bit Images
   my $format;
 
   my $img = Imager->new();
+  # see Imager::Files for information on the open() method
   $img->open(file=>$file) or die $img->errstr();
 
   $file =~ s/\.[^.]*$//;
 
   # Create smaller version
+  # documented in Imager::Transformations
   my $thumb = $img->scale(scalefactor=>.3);
 
   # Autostretch individual channels
@@ -2614,14 +2616,12 @@ Imager - Perl extension for Generating 24 bit Images
     if ($Imager::formats{$format}) {
       $file.="_low.$format";
       print "Storing image as: $file\n";
+      # documented in Imager::Files
       $thumb->write(file=>$file) or
         die $thumb->errstr;
       last SAVE;
     }
   }
-
-
-
 
 =head1 DESCRIPTION
 
@@ -2634,66 +2634,70 @@ render text and more.
 
 =over
 
-=item Imager
+=item *
 
-This document - Synopsis Example, Table of Contents and Overview.
+Imager - This document - Synopsis Example, Table of Contents and
+Overview.
 
-=item Imager::ImageTypes
+=item *
 
-Basics of constructing image objects with C<new()>:
-Direct type/virtual images, RGB(A)/paletted images, 8/16/double
-bits/channel, color maps, channel masks, image tags, color
+L<Imager::ImageTypes> - Basics of constructing image objects with
+C<new()>: Direct type/virtual images, RGB(A)/paletted images,
+8/16/double bits/channel, color maps, channel masks, image tags, color
 quantization.  Also discusses basic image information methods.
 
-=item Imager::Files
+=item *
 
-IO interaction, reading/writing images, format specific tags.
+L<Imager::Files> - IO interaction, reading/writing images, format
+specific tags.
 
-=item Imager::Draw
+=item *
 
-Drawing Primitives, lines, boxes, circles, arcs, flood fill.
+L<Imager::Draw> - Drawing Primitives, lines, boxes, circles, arcs,
+flood fill.
 
-=item Imager::Color
+=item *
 
-Color specification.
+L<Imager::Color> - Color specification.
 
-=item Imager::Fill
+=item *
 
-Fill pattern specification.
+L<Imager::Fill> - Fill pattern specification.
 
-=item Imager::Font
+=item *
 
-General font rendering, bounding boxes and font metrics.
+L<Imager::Font> - General font rendering, bounding boxes and font
+metrics.
 
-=item Imager::Transformations
+=item *
 
-Copying, scaling, cropping, flipping, blending, pasting, convert and
-map.
+L<Imager::Transformations> - Copying, scaling, cropping, flipping,
+blending, pasting, convert and map.
 
-=item Imager::Engines
+=item *
 
-Programmable transformations through C<transform()>, C<transform2()>
-and C<matrix_transform()>.
+L<Imager::Engines> - Programmable transformations through
+C<transform()>, C<transform2()> and C<matrix_transform()>.
 
-=item Imager::Filters
+=item *
 
-Filters, sharpen, blur, noise, convolve etc. and filter plugins.
+L<Imager::Filters> - Filters, sharpen, blur, noise, convolve etc. and
+filter plugins.
 
-=item Imager::Expr
+=item *
 
-Expressions for evaluation engine used by transform2().
+L<Imager::Expr> - Expressions for evaluation engine used by
+transform2().
 
-=item Imager::Matrix2d
+=item *
 
-Helper class for affine transformations.
+L<Imager::Matrix2d> - Helper class for affine transformations.
 
-=item Imager::Fountain
+=item *
 
-Helper for making gradient profiles.
+L<Imager::Fountain> - Helper for making gradient profiles.
 
 =back
-
-
 
 =head2 Basic Overview
 
@@ -2720,8 +2724,8 @@ In cases where no image object is associated with an operation
 C<$Imager::ERRSTR> is used to report errors not directly associated
 with an image object.
 
-The C<Imager-E<gt>new> method is described in detail in the 
-Imager::ImageTypes manpage.
+The C<Imager-E<gt>new> method is described in detail in
+L<Imager::ImageTypes>.
 
 =head1 SUPPORT
 
@@ -2763,7 +2767,3 @@ Affix::Infix2Postfix(3), Parse::RecDescent(3)
 http://imager.perl.org/~addi/perl/Imager/
 
 =cut
-
-
-
-
