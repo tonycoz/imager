@@ -6,7 +6,7 @@
 # Change 1..1 below to 1..last_test_to_print .
 # (It may become useful if the test is moved to ./t subdirectory.)
 
-BEGIN { $| = 1; print "1..6\n"; }
+BEGIN { $| = 1; print "1..7\n"; }
 END {print "not ok 1\n" unless $loaded;}
 
 use Imager qw(:all);
@@ -33,4 +33,16 @@ print "ok 5\n";
 $scaleimg->write(file=>'testout/t40scale2.ppm',type=>'pnm') or print "failed: ",$scaleimg->{ERRSTR},"\n";
 print "ok 6\n";
 
+# check for a warning when scale() is called in void context
+my $warning;
+local $SIG{__WARN__} = 
+  sub { 
+    $warning = "@_";
+    my $printed = $warning;
+    $printed =~ s/\n$//;
+    $printed =~ s/\n/\n\#/g; 
+    print "# ",$printed, "\n";
+  };
+$img->scale(scalefactor=>0.25);
+print $warning =~ /void/ ? "ok 7\n" : "not ok 7\n";
 
