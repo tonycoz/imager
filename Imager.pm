@@ -1657,10 +1657,10 @@ The type of error diffusion to perform on the alpha channel when
 transp is 'errdiff'.  This can be any defined error diffusion type
 except for custom (see errdiff below).
 
-=item tr_ordered
+=item tr_orddith
 
 The type of ordered dither to perform on the alpha channel when transp
-is 'orddith'.  Possible values are:
+is 'ordered'.  Possible values are:
 
 =over 4
 
