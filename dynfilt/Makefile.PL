@@ -47,7 +47,7 @@ $_.\$(SO): $_\$(OBJ_EXT)
 
 
 pure_all :: 
-	\$(NOOP)
+	$(NOOP)
 
 ';
 
@@ -84,7 +84,7 @@ $_.\$(SO): $_\$(OBJ_EXT)
 
 
 pure_all :: 
-	\$(NOOP)
+	$(NOOP)
 
 ';
 
