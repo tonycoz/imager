@@ -202,9 +202,8 @@ The type() method returns either 'direct' for truecolor images or
 
 =item virtual
 
-The virtual() method returns non-zero
-if the image contains no actual pixels, for example masked images.
-
+The virtual() method returns non-zero if the image contains no actual
+pixels, for example masked images.
 
 =back
 
