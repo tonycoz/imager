@@ -428,6 +428,8 @@ Revision history for Perl extension Imager.
 	instantiate.  Currently Imager::Font uses if() statements to
 	select between each type of font.
 
+	- should we overload <=> or cmp for Imager::Color objects?
+
         Documentation:
         - Add to the documentation
         - Write a tutorial?
