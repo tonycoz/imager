@@ -1,4 +1,4 @@
-print "1..3\n";
+print "1..4\n";
 use Imager qw(:all);
 
 init_log("testout/t105gif.log",1);
@@ -58,5 +58,29 @@ if (!i_has_format("tiff")) {
   } else {
     print "not ok 3\n";
   }
+
+  # test Micksa's tiff writer
+  # a shortish fax page
+  my $faximg = Imager::ImgRaw::new(1728, 2000, 1);
+  my $black = i_color_new(0,0,0,255);
+  my $white = i_color_new(255,255,255,255);
+  # vaguely test-patterny
+  i_box_filled($faximg, 0, 0, 1728, 2000, $white);
+  i_box_filled($faximg, 100,100,1628, 200, $black);
+  my $width = 1;
+  my $pos = 100;
+  while ($width+$pos < 1628) {
+    i_box_filled($faximg, $pos, 300, $pos+$width-1, 400, $black);
+    $pos += $width + 20;
+    $width += 2;
+  }
+  open FH, "> testout/t106tiff_fax.tiff"
+    or die "Cannot create testout/t106tiff_fax.tiff: $!";
+  binmode FH;
+  $IO = Imager::io_new_fd(fileno(FH));
+  i_writetiff_wiol_faxable($faximg, $IO)
+    or print "not ";
+  print "ok 4\n";
+  close FH;
 }
 

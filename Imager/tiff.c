@@ -344,3 +344,138 @@ i_writetiff_wiol(i_img *im, io_glue *ig) {
   return 1;
 }
 
+/*
+=item i_writetiff_wiol_faxable(i_img *, io_glue *)
+
+Stores an image in the iolayer object in faxable tiff format.
+
+   im - image object to write out
+   ig - io_object that defines source to write to 
+
+Note, this may be rewritten to use to simply be a call to a
+lower-level function that gives more options for writing tiff at some
+point.
+
+=cut
+*/
+
+undef_int
+i_writetiff_wiol_faxable(i_img *im, io_glue *ig) {
+  uint32 width, height;
+  i_color val;
+  unsigned char *linebuf = NULL;
+  uint32 y;
+  int linebufpos;
+  int ch, ci, rc;
+  uint32 x;
+  TIFF* tif;
+  int luma_channel;
+  uint32 rowsperstrip;
+
+  width    = im->xsize;
+  height   = im->ysize;
+
+  switch (im->channels) {
+  case 1:
+    luma_channel = 0;
+    break;
+  case 3:
+    luma_channel = 1;
+    break;
+  default:
+    /* This means a colorspace we don't handle yet */
+    mm_log((1, "i_writetiff_wiol_faxable: don't handle %d channel images.\n", im->channels));
+    return 0;
+  }
+
+  /* Add code to get the filename info from the iolayer */
+  /* Also add code to check for mmapped code */
+
+  io_glue_commit_types(ig);
+  mm_log((1, "i_writetiff_wiol_faxable(im 0x%p, ig 0x%p)\n", im, ig));
+
+  /* FIXME: Enable the mmap interface */
+  
+  tif = TIFFClientOpen("No name", 
+		       "wm",
+		       (thandle_t) ig, 
+		       (TIFFReadWriteProc) ig->readcb,
+		       (TIFFReadWriteProc) ig->writecb,
+		       (TIFFSeekProc)      comp_seek,
+		       (TIFFCloseProc)     ig->closecb, 
+		       (TIFFSizeProc)      ig->sizecb,
+		       (TIFFMapFileProc)   NULL,
+		       (TIFFUnmapFileProc) NULL);
+
+  if (!tif) {
+    mm_log((1, "i_writetiff_wiol_faxable: Unable to open tif file for writing\n"));
+    return 0;
+  }
+
+  mm_log((1, "i_writetiff_wiol_faxable: width=%d, height=%d, channels=%d\n", width, height, im->channels));
+  
+  if (!TIFFSetField(tif, TIFFTAG_IMAGEWIDTH,      width)   )
+    { mm_log((1, "i_writetiff_wiol_faxable: TIFFSetField width=%d failed\n", width)); return 0; }
+  if (!TIFFSetField(tif, TIFFTAG_IMAGELENGTH,     height)  )
+    { mm_log((1, "i_writetiff_wiol_faxable: TIFFSetField length=%d failed\n", height)); return 0; }
+  if (!TIFFSetField(tif, TIFFTAG_SAMPLESPERPIXEL, 1))
+    { mm_log((1, "i_writetiff_wiol_faxable: TIFFSetField samplesperpixel=1 failed\n")); return 0; }
+  if (!TIFFSetField(tif, TIFFTAG_ORIENTATION,  ORIENTATION_TOPLEFT))
+    { mm_log((1, "i_writetiff_wiol_faxable: TIFFSetField Orientation=topleft\n")); return 0; }
+  if (!TIFFSetField(tif, TIFFTAG_BITSPERSAMPLE,   1)        )
+    { mm_log((1, "i_writetiff_wiol_faxable: TIFFSetField bitpersample=1\n")); return 0; }
+  if (!TIFFSetField(tif, TIFFTAG_PLANARCONFIG, PLANARCONFIG_CONTIG))
+    { mm_log((1, "i_writetiff_wiol_faxable: TIFFSetField planarconfig\n")); return 0; }
+  if (!TIFFSetField(tif, TIFFTAG_PHOTOMETRIC, PHOTOMETRIC_MINISBLACK))
+    { mm_log((1, "i_writetiff_wiol_faxable: TIFFSetField photometric=%d\n", PHOTOMETRIC_MINISBLACK)); return 0; }
+  if (!TIFFSetField(tif, TIFFTAG_COMPRESSION, 3))
+    { mm_log((1, "i_writetiff_wiol_faxable: TIFFSetField compression=3\n")); return 0; }
+
+  linebuf = (unsigned char *)_TIFFmalloc( TIFFScanlineSize(tif) );
+  
+  if (!TIFFSetField(tif, TIFFTAG_ROWSPERSTRIP, TIFFDefaultStripSize(tif, -1))) {
+    mm_log((1, "i_writetiff_wiol_faxable: TIFFSetField rowsperstrip=-1\n")); return 0; }
+
+  TIFFGetField(tif, TIFFTAG_ROWSPERSTRIP, &rowsperstrip);
+  TIFFGetField(tif, TIFFTAG_ROWSPERSTRIP, &rc);
+
+  mm_log((1, "i_writetiff_wiol_faxable: TIFFGetField rowsperstrip=%d\n", rowsperstrip));
+  mm_log((1, "i_writetiff_wiol_faxable: TIFFGetField scanlinesize=%d\n", TIFFScanlineSize(tif) ));
+  mm_log((1, "i_writetiff_wiol_faxable: TIFFGetField planarconfig=%d == %d\n", rc, PLANARCONFIG_CONTIG));
+
+  /*
+  if (!TIFFSetField(tif, TIFFTAG_XRESOLUTION, 204))
+    { mm_log((1, "i_writetiff_wiol_faxable: TIFFSetField Xresolution=204\n")); return 0; }
+  if (!TIFFSetField(tif, TIFFTAG_YRESOLUTION, 196))
+    { mm_log((1, "i_writetiff_wiol_faxable: TIFFSetField Yresolution=196\n")); return 0; }
+  if (!TIFFSetField(tif, TIFFTAG_RESOLUTIONUNIT, RESUNIT_INCH)) {
+    mm_log((1, "i_writetiff_wiol_faxable: TIFFSetField ResolutionUnit=%d\n", RESUNIT_INCH)); return 0; 
+  }
+  */
+
+  for (y=0; y<height; y++) {
+    int linebufpos=0;
+    for(x=0; x<width; x+=8) { 
+      int bits;
+      int bitpos;
+      uint8 bitval = 128;
+      linebuf[linebufpos]=0;
+      bits = width-x; if(bits>8) bits=8;
+      for(bitpos=0;bitpos<bits;bitpos++) {
+	int luma;
+	luma = im->data[(x+bitpos+y*im->xsize)*im->channels+luma_channel];
+	linebuf[linebufpos] |= ((luma>=128)?bitval:0);
+	bitval >>= 1;
+      }
+      linebufpos++;
+    }
+    if (TIFFWriteScanline(tif, linebuf, y, 0) < 0) {
+      mm_log((1, "i_writetiff_wiol_faxable: TIFFWriteScanline failed.\n"));
+      break;
+    }
+  }
+  (void) TIFFClose(tif);
+  if (linebuf) _TIFFfree(linebuf);
+  return 1;
+}
+

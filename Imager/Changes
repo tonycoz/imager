@@ -397,6 +397,8 @@ Revision history for Perl extension Imager.
 	by the ref supplied in colors contains Imager::Color objects 
 	instead of more arrayrefs, keep this interface stable until we 
 	can make an informed choice about i_readgif()
+	- incorporated Micksa's faxable tiff support, treating as a type
+	of tiff rather than a separate format
 
 ~~~~~~~~~~~~~^ ^ ^~~~~~~~~~~~~~
 
