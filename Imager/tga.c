@@ -337,7 +337,8 @@ tga_header_verify(unsigned char headbuf[18]) {
   case 9:  /* Compressed,   color-mapped images */ 
   case 10: /* Compressed,   rgb images          */ 
   case 11: /* Compressed,   grayscale images    */ 
-  }
+	  break;
+	}
 
   switch (header.colourmaptype) { 
   default:
@@ -345,7 +346,8 @@ tga_header_verify(unsigned char headbuf[18]) {
     return 0;
   case 0:
   case 1:
-  }
+  	break;
+	}
   
   return 1;
 }
