@@ -2,21 +2,11 @@ package Imager::Font;
 
 use Imager::Color;
 use strict;
-use vars qw(%T1_Paths %TT_Paths %T1_Cache %TT_Cache $TT_CSize $TT_CSize $T1AA);
+use File::Spec;
 
 # This class is a container
 # and works for both truetype and t1 fonts.
 
-
-# $T1AA is in there because for some reason (probably cache related) antialiasing
-# is a system wide setting in t1 lib.
-
-sub t1_set_aa_level {
-  if (!defined $T1AA or $_[0] != $T1AA) {
-    Imager::i_t1_set_aa($_[0]);
-    $T1AA=$_[0];
-  }
-}
 
 # search method
 # 1. start by checking if file is the parameter
@@ -66,42 +56,64 @@ sub new {
   # here we should have the font type or be dead already.
 
   if ($type eq 't1') {
-    $id=Imager::i_t1_new($file);
+    require 'Imager/Font/Type1.pm';
+    return Imager::Font::Type1->new(%hsh);
   }
 
   if ($type eq 'tt') {
-    $id=Imager::i_tt_new($file);
+    require 'Imager/Font/Truetype.pm';
+    return Imager::Font::Truetype->new(%hsh);
   }
-
-  $self->{'aa'}=$hsh{'aa'}||'0';
-  $self->{'file'}=$file;
-  $self->{'id'}=$id;
-  $self->{'type'}=$type;
-  $self->{'size'}=$hsh{'size'};
-  $self->{'color'}=$hsh{'color'};
-  return $self;
+  # it would be nice to have some generic mechanism to select the
+  # class
+  
+  return undef;
 }
 
+# returns first defined parameter
+sub _first {
+  for (@_) {
+    return $_ if defined $_;
+  }
+  return undef;
+}
 
-
-
-
+sub draw {
+  my $self = shift;
+  my %input = (x => 0, 'y' => 0, @_);
+  unless ($input{image}) {
+    $Imager::ERRSTR = 'No image supplied to $font->draw()';
+    return;
+  }
+  $input{string} = _first($input{string}, $input{text});
+  unless (defined $input{string}) {
+    $Imager::ERRSTR = "Missing require parameter 'string'";
+    return;
+  }
+  $input{aa} = _first($input{aa}, $input{antialias}, $self->{aa}, 1);
+  # the original draw code worked this out but didn't use it
+  $input{align} = _first($input{align}, $self->{align});
+  $input{color} = _first($input{color}, $self->{color});
+  $input{size} = _first($input{size}, $self->{size});
+  unless (defined $input{size}) {
+    $input{image}{ERRSTR} = "No font size provided";
+    return undef;
+  }
+  $input{align} = _first($input{align}, 1);
+  $self->_draw(%input);
+}
 
 sub bounding_box {
   my $self=shift;
   my %input=@_;
-  my @box;
 
-  if (!exists $input{'string'}) { $Imager::ERRSTR='string parameter missing'; return; }
+  if (!exists $input{'string'}) { 
+    $Imager::ERRSTR='string parameter missing'; 
+    return;
+  }
+  $input{size} ||= $self->{size};
 
-  if ($self->{type} eq 't1') {
-    @box=Imager::i_t1_bbox($self->{id}, defined($input{size}) ? $input{size} :$self->{size},
-			   $input{string}, length($input{string}));
-  }
-  if ($self->{type} eq 'tt') {
-    @box=Imager::i_tt_bbox($self->{id}, defined($input{size}) ? $input{size} :$self->{size},
-			   $input{string}, length($input{string}));
-  }
+  my @box = $self->_bounding_box(%input);
 
   if(exists $input{'x'} and exists $input{'y'}) {
     my($gdescent, $gascent)=@box[1,3];
@@ -117,8 +129,6 @@ sub bounding_box {
 }
 
 1;
-
-
 
 __END__
 
@@ -304,6 +314,10 @@ Imager::Font->new(file=>"arial.ttf", color=>$blue, aa=>1)
 Arnar M. Hrafnkelsson, addi@umich.edu
 And a great deal of help from others - see the README for a complete
 list.
+
+=head1 BUGS
+
+You need to modify this class to add new font types.
 
 =head1 SEE ALSO
 

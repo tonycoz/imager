@@ -417,6 +417,9 @@ Revision history for Perl extension Imager.
         - changed README note on libgif bug to refer to t105gif.t instead
 	  of t10formats.t
 
+0.39  pre1
+	- split Imager::Font into a base, *::Type1 and *::Truetype
+
 =================================================================
 
         For latest versions check the Imager-devel pages:

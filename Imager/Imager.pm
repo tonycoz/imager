@@ -1408,52 +1408,7 @@ sub string {
     return;
   }
 
-  my $aa=1;
-  my $font=$input{'font'};
-  my $align=$font->{'align'} unless exists $input{'align'};
-  my $color=$input{'color'} || $font->{'color'};
-  my $size=$input{'size'}   || $font->{'size'};
-
-  if (!defined($size)) { $self->{ERRSTR}='No size parameter and no default in font'; return undef; }
-
-  $aa=$font->{'aa'} if exists $font->{'aa'};
-  $aa=$input{'aa'} if exists $input{'aa'};
-
-
-
-#  unless($font->can('text')) {
-#    $self->{ERRSTR}="font is unable to do what we need";
-#    return;
-#  }
-
-#  use Data::Dumper; 
-#  warn Dumper($font);
-
-#  print "Channel=".$input{'channel'}."\n";
-
-  if ( $font->{'type'} eq 't1' ) {
-    if ( exists $input{'channel'} ) {
-      Imager::Font::t1_set_aa_level($aa);
-      i_t1_cp($self->{IMG},$input{'x'},$input{'y'},
-	      $input{'channel'},$font->{'id'},$size,
-	      $input{'string'},length($input{'string'}),1);
-    } else {
-      Imager::Font::t1_set_aa_level($aa);
-      i_t1_text($self->{IMG},$input{'x'},$input{'y'},
-		$color,$font->{'id'},$size,
-		$input{'string'},length($input{'string'}),1);
-    }
-  }
-
-  if ( $font->{'type'} eq 'tt' ) {
-    if ( exists $input{'channel'} ) {
-      i_tt_cp($font->{'id'},$self->{IMG},$input{'x'},$input{'y'},$input{'channel'},
-	      $size,$input{'string'},length($input{'string'}),$aa); 
-    } else {
-      i_tt_text($font->{'id'},$self->{IMG},$input{'x'},$input{'y'},$color,$size,
-		$input{'string'},length($input{'string'}),$aa); 
-    }
-  }
+  $input{font}->draw(image=>$self, %input);
 
   return $self;
 }
