@@ -40,6 +40,7 @@ btm_test(struct i_bitmap *btm,int x,int y) {
 void
 btm_set(struct i_bitmap *btm,int x,int y) {
   int btno;
+  if (x<0 || x>btm->xsize-1 || y<0 || y>btm->ysize-1) abort();
   btno=btm->xsize*y+x;
   btm->data[btno/8]|=1<<(btno%8);
 }
