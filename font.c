@@ -557,9 +557,14 @@ i_tt_new(char *fontname) {
   for ( i = 0; i < n; i++ ) {
     TT_Get_CharMap_ID( handle->face, i, &platform, &encoding );
     if ( (platform == 3 && encoding == 1 ) || (platform == 0 && encoding == 0 ) ) {
+      mm_log((2,"i_tt_new - found char map platform %u encoding %u\n", platform, encoding));
       TT_Get_CharMap( handle->face, i, &(handle->char_map) );
       break;
     }
+  }
+  if (!USTRCT(handle->char_map) && n != 0) {
+    /* just use the first one */
+    TT_Get_CharMap( handle->face, 0, &(handle->char_map));
   }
 
   /* Zero the pointsizes - and ordering */
@@ -877,7 +882,7 @@ i_tt_render_all_glyphs( TT_Fonthandle *handle, int inst, TT_Raster_Map *bit, TT_
   */
 
   x=-cords[0]; /* FIXME: If you font is antialiased this should be expanded by one to allow for aa expansion and the allocation too - do before passing here */
-  y=-cords[1];
+  y=-cords[4];
   
   for ( i = 0; i < len; i++ ) {
     j = txt[i];
@@ -1016,7 +1021,7 @@ i_tt_rasterize( TT_Fonthandle *handle, TT_Raster_Map *bit, int cords[6], float p
   i_tt_bbox_inst( handle, inst, txt, len, cords );
   
   width  = cords[2]-cords[0];
-  height = cords[3]-cords[1];
+  height = cords[5]-cords[4];
   
   mm_log((1,"i_tt_rasterize: width=%d, height=%d\n",width, height )); 
   
@@ -1065,7 +1070,7 @@ i_tt_cp( TT_Fonthandle *handle, i_img *im, int xb, int yb, int channel, float po
   
   if (! i_tt_rasterize( handle, &bit, cords, points, txt, len, smooth ) ) return 0;
   
-  ascent=cords[3];
+  ascent=cords[5];
   st_offset=cords[0];
 
   i_tt_dump_raster_map_channel( im, &bit, xb-st_offset , yb-ascent, channel, smooth );
@@ -1100,7 +1105,7 @@ i_tt_text( TT_Fonthandle *handle, i_img *im, int xb, int yb, i_color *cl, float 
   
   if (! i_tt_rasterize( handle, &bit, cords, points, txt, len, smooth ) ) return 0;
   
-  ascent=cords[3];
+  ascent=cords[5];
   st_offset=cords[0];
 
   i_tt_dump_raster_map2( im, &bit, xb+st_offset, yb-ascent, cl, smooth ); 
