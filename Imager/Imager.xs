@@ -1252,7 +1252,7 @@ i_t1_set_aa(st)
       	       int     st
 
 int
-i_t1_new(pfb,afm=NULL)
+i_t1_new(pfb,afm)
        	      char*    pfb
        	      char*    afm
 

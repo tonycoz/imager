@@ -37,7 +37,20 @@ sub new {
   unless ($hsh{file} =~ m!^/! || $hsh{file} =~ m!^\./!) {
     $hsh{file} = './' . $hsh{file};
   }
-  my $id = Imager::i_t1_new($hsh{file});
+
+  if($hsh{afm}) {
+	  unless (-e $hsh{afm}) {
+	    $Imager::ERRSTR = "Afm file $hsh{afm} not found";
+	    return;
+	  }
+	  unless ($hsh{afm} =~ m!^/! || $hsh{afm} =~ m!^\./!) {
+	    $hsh{file} = './' . $hsh{file};
+	  }
+  } else {
+	  $hsh{afm} = 0;
+  }
+
+  my $id = Imager::i_t1_new($hsh{file},$hsh{afm});
   unless ($id >= 0) { # the low-level code may miss some error handling
     $Imager::ERRSTR = "Could not load font ($id)";
     return;
