@@ -779,6 +779,8 @@ extern int i_tags_get_float(i_img_tags *tags, char const *name, int code,
 			    double *value);
 extern int i_tags_set_float(i_img_tags *tags, char const *name, int code, 
 			    double value);
+extern int i_tags_set_float2(i_img_tags *tags, char const *name, int code, 
+			    double value, int places);
 extern int i_tags_get_int(i_img_tags *tags, char const *name, int code, 
                           int *value);
 extern int i_tags_get_string(i_img_tags *tags, char const *name, int code, 

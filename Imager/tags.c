@@ -15,6 +15,10 @@ tags.c - functions for manipulating an images tags list
   i_tags_delete(&tags, index);
   count = i_tags_delbyname(tags, name);
   count = i_tags_delbycode(tags, code);
+  if (i_tags_get_float(&tags, name, code, &float_value)) { found }
+  i_tags_set_float(&tags, name, code, value);
+  i_tags_set_float2(&tags, name, code, value, sig_digits);
+  i_tags_get_int(&tags, name, code, &int_value);
 
 =head1 DESCRIPTION
 
@@ -258,9 +262,31 @@ int i_tags_get_float(i_img_tags *tags, char const *name, int code,
 
 int i_tags_set_float(i_img_tags *tags, char const *name, int code, 
                      double value) {
+  return i_tags_set_float2(tags, name, code, value, 30);
+}
+
+/*
+=item i_tags_set_float2(tags, name, code, value, places)
+
+Sets the tag with the given name and code to the given floating point
+value.
+
+Since tags are strings or ints, we convert the value to a string before
+storage at the precision specified by C<places>.
+
+=cut
+*/
+
+int i_tags_set_float2(i_img_tags *tags, char const *name, int code, 
+                      double value, int places) {
   char temp[40];
 
-  sprintf(temp, "%.30g", value);
+  if (places < 0) 
+    places = 30;
+  else if (places > 30) 
+    places = 30;
+
+  sprintf(temp, "%.*g", places, value);
   if (name)
     i_tags_delbyname(tags, name);
   else
