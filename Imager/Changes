@@ -561,6 +561,8 @@ Revision history for Perl extension Imager.
         - freetype 2 bounding box function didn't know UTF8 (doh!)
         - write paletted images as paletted to tiff
 	- initialize counter for packing 4 bit data
+        - don't allocate hashboxes as locals since it overflows the 
+	  stack by default in Darwin
 
 =================================================================
 
