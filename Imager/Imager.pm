@@ -1492,6 +1492,23 @@ is sufficient:
   use Imager;
   print "@{[keys %Imager::formats]}";
 
+When reading raw images you need to supply the width and height of the
+image in the xsize and ysize options:
+
+  $img->read(file=>'foo.raw', xsize=>100, ysize=>100)
+    or die "Cannot read raw image\n";
+
+If your input file has more channels than you want, or (as is common),
+junk in the fourth channel, you can use the datachannels and
+storechannels options to control the number of channels in your input
+file and the resulting channels in your image.  For example, if your
+input image uses 32-bits per pixel with red, green, blue and junk
+values for each pixel you could do:
+
+  $img->read(file=>'foo.raw', xsize=>100, ysize=>100, datachannels=>4,
+	     storechannels=>3)
+    or die "Cannot read raw image\n";
+
 =head2 Multi-image files
 
 Currently just for gif files, you can create files that contain more
