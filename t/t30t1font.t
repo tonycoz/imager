@@ -8,7 +8,7 @@
 # (It may become useful if the test is moved to ./t subdirectory.)
 use strict;
 my $loaded;
-BEGIN { $| = 1; print "1..38\n"; }
+BEGIN { $| = 1; print "1..41\n"; }
 END {print "not ok 1\n" unless $loaded;}
 use Imager qw(:all);
 use Imager::Color;
@@ -28,13 +28,13 @@ my $fontname_afm=$ENV{'T1FONTTESTAFM'}||'./fontfiles/dcr10.afm';
 
 
 if (!(i_has_format("t1")) ) {
-  skipx(37, "t1lib unavailable or disabled");
+  skipx(40, "t1lib unavailable or disabled");
 }
 elsif (! -f $fontname_pfb) {
-  skipx(37, "cannot find fontfile for type 1 test $fontname_pfb");
+  skipx(40, "cannot find fontfile for type 1 test $fontname_pfb");
 }
 elsif (! -f $fontname_afm) {
-  skipx(37, "cannot find fontfile for type 1 test $fontname_afm");
+  skipx(40, "cannot find fontfile for type 1 test $fontname_afm");
 } else {
 
   print "# has t1\n";
@@ -189,12 +189,25 @@ elsif (! -f $fontname_afm) {
     okx($face_name eq 'ExistenceTest', "face name");
 
     my @glyph_names = $font->glyph_names(string=>"!J/");
-    okx($glyph_names[0] eq 'exclam', "check exclam name OO");
+    isx($glyph_names[0], 'exclam', "check exclam name OO");
     okx(!defined($glyph_names[1]), "check for no J name OO");
-    okx($glyph_names[2] eq 'slash', "check slash name OO");
+    isx($glyph_names[2], 'slash', "check slash name OO");
+
+    # this character chosen since when it's truncated to one byte it
+    # becomes 0x21 or '!' which the font does define
+    my $text = pack("C*", 0xE2, 0x80, 0xA1); # "\x{2021}" as utf-8
+    @glyph_names = $font->glyph_names(string=>$text, utf8=>1);
+    isx($glyph_names[0], undef, "expect no glyph_name for \\x{20A1}");
+
+    # make sure a missing string parameter is handled correctly
+    eval {
+      $font->glyph_names();
+    };
+    isx($@, "", "correct error handling");
+    matchx(Imager->errstr, qr/no string parameter/, "error message");
   }
   else {
-    skipx(12, "Could not load test font");
+    skipx(15, "Could not load test font");
   }
 }
 

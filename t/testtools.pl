@@ -43,13 +43,13 @@ sub skipx {
   $TESTNUM += $count;
 }
 
-sub okx {
+sub okx ($$) {
   my ($ok, $comment) = @_;
 
   return okn($TESTNUM++, $ok, $comment);
 }
 
-sub okn {
+sub okn ($$$) {
   my ($num, $ok, $comment) = @_;
 
   defined $num or confess "No \$num supplied";

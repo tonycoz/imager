@@ -127,7 +127,7 @@ sub glyph_names {
 
   my $string = $input{string};
   defined $string
-    or return Imager->_seterror("no string parameter passed to glyph_names");
+    or return Imager->_set_error("no string parameter passed to glyph_names");
   my $utf8 = _first($input{utf8} || 0);
 
   Imager::i_t1_glyph_name($self->{id}, $string, $utf8);

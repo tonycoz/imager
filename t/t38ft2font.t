@@ -18,7 +18,7 @@ okx(1, "loaded");
 init_log("testout/t38ft2font.log",2);
 
 if (!(i_has_format("ft2")) ) { 
-  skipx(115, "No freetype2 library found");
+  skipx(119, "No freetype2 library found");
   exit;
 }
 print "# has ft2\n";
@@ -26,7 +26,7 @@ print "# has ft2\n";
 $fontname=$ENV{'TTFONTTEST'}||'./fontfiles/dodge.ttf';
 
 if (! -f $fontname) {
-  skipx(124, "cannot find fontfile $fontname");
+  skipx(119, "cannot find fontfile $fontname");
   malloc_state();
   exit;
 }

@@ -858,7 +858,6 @@ Revision history for Perl extension Imager.
   names
 - added reliable_only optional parameter to the glyph_names()
   method so you can ignore theresult of FT_Has_PS_Glyph_Names()
-- partly resolves https://rt.cpan.org/Ticket/Display.html?id=7949
 - handle errors given by i_ft2_glyph_name() a bit more
   correctly
 - the FT1 glyph_names() method didn't do correct error handling 
@@ -867,6 +866,13 @@ Revision history for Perl extension Imager.
   wasn't being released (detected with valgrind)
 - the testtools.pl match[nx]() functions escapes the test string on 
   test failure a bit better
+- the XS code for i_tt_glyph_name() used unsigned char to store a 
+  unicode character when it should have used unsigned long.
+- the XS code for i_t1_glyph_name() used unsigned char to store a 
+  unicode character when it should have used unsigned long.
+- resolves https://rt.cpan.org/Ticket/Display.html?id=7949
+- the type 1 glyph_names() method didn't do correct error handling 
+  when the string parameter wasn't supplied
 
 =================================================================
 

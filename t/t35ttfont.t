@@ -7,7 +7,7 @@
 # (It may become useful if the test is moved to ./t subdirectory.)
 use strict;
 my $loaded;
-BEGIN { $| = 1; print "1..35\n"; }
+BEGIN { $| = 1; print "1..39\n"; }
 END {print "not ok 1\n" unless $loaded;}
 use Imager qw(:all);
 require "t/testtools.pl";
@@ -18,7 +18,7 @@ okx(1, "Loaded");
 init_log("testout/t35ttfont.log",2);
 
 unless (i_has_format("tt")) { 
-  skipx(34, "freetype 1.x unavailable or disabled");
+  skipx(38, "freetype 1.x unavailable or disabled");
   malloc_state();
   exit;
 }
@@ -29,7 +29,7 @@ my $fontname=$ENV{'TTFONTTEST'} || $deffont;
 
 if (! -f $fontname) {
   print "# cannot find fontfile for truetype test $fontname\n";
-  skipx(34, 'Cannot load test font');	
+  skipx(38, 'Cannot load test font');	
   exit;
 }
 
@@ -161,6 +161,26 @@ if (okx($hcfont, "loading existence test font")) {
 else {
   skipx(11, "could not load test font");
 }
+undef $hcfont;
+
+my $name_font = "fontfiles/NameTest.ttf";
+$hcfont = Imager::Font->new(file=>$name_font);
+if (okx($hcfont, "loading name font")) {
+  # make sure a missing string parameter is handled correctly
+  eval {
+    $hcfont->glyph_names();
+  };
+  isx($@, "", "correct error handling");
+  matchx(Imager->errstr, qr/no string parameter/, "error message");
+
+  my $text = pack("C*", 0xE2, 0x80, 0x90); # "\x{2010}" as utf-8
+  my @names = $hcfont->glyph_names(string=>$text, utf8=>1);
+  isx($names[0], "hyphentwo", "check utf8 glyph name");
+}
+else {
+  skipx(3, "could not load name font $name_font");
+}
+
 undef $hcfont;
 
 okx(1, "end of code");
