@@ -1056,6 +1056,11 @@ i_readpng_scalar(...)
 
 #ifdef HAVE_LIBGIF
 
+void
+i_giflib_version()
+	PPCODE:
+	  PUSHs(sv_2mortal(newSVnv(IM_GIFMAJOR+IM_GIFMINOR*0.1)));
+
 undef_int
 i_writegif(im,fd,colors,pixdev,fixed)
     Imager::ImgRaw     im
