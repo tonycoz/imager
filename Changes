@@ -604,7 +604,7 @@ Revision history for Perl extension Imager.
         - we now log which memory block is being freed before giving 
           an error on it being re-freed
         - fixed stupid bug in deleting tags
-
+	- fixed minor pod errors involving &gt;
 
 =================================================================
 

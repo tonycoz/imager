@@ -2727,15 +2727,13 @@ Helper for making gradient profiles.
 
 =head2 Basic Overview
 
-An Image object is created with C<$img = Imager-E<gt>new()> Should
-this fail for some reason an explanation can be found in
-C<$Imager::ERRSTR> usually error messages are stored in
-C<$img-E<gt>{ERRSTR}>, but since no object is created this is the only
-way to give back errors.  C<$Imager::ERRSTR> is also used to report
-all errors not directly associated with an image object. Examples:
+An Image object is created with C<$img = Imager-E<gt>new()>.
+Examples:
 
-  $img=Imager->new(); # This is an empty image (size is 0 by 0)
-  $img->open(file=>'lena.png',type=>'png'); # initializes from file
+  $img=Imager->new();                         # create empty image
+  $img->open(file=>'lena.png',type=>'png') or # read image from file
+     die $img->errstr();                      # give an explanation
+                                              # if something failed
 
 or if you want to create an empty image:
 
@@ -2743,6 +2741,14 @@ or if you want to create an empty image:
 
 This example creates a completely black image of width 400 and height
 300 and 4 channels.
+
+When an operation fails which can be directly associated with an image
+the error message is stored can be retrieved with
+C<$img-E<gt>errstr()>.
+
+In cases where no image object is associated with an operation
+C<$Imager::ERRSTR> is used to report errors not directly associated
+with an image object.
 
 =head1 SUPPORT
 
@@ -2756,6 +2762,7 @@ To subscribe send a message with C<subscribe> in the body to:
 or use the form at:
 
    http://www.molar.is/en/lists/imager-devel/
+   (annonymous is temporarily off due to spam)
 
 where you can also find the mailing list archive.
 
@@ -2769,14 +2776,21 @@ Bugs are listed individually for relevant pod pages.
 
 =head1 AUTHOR
 
-Arnar M. Hrafnkelsson (addi@umich.edu) and Tony Cook
+Arnar M. Hrafnkelsson (addi@imager.perl.org) and Tony Cook
 (tony@imager.perl.org) See the README for a complete list.
 
 =head1 SEE ALSO
 
-perl(1), Imager::Color(3), Imager::Font(3), Imager::Matrix2d(3),
+perl(1), Imager::ImageTypes(3), Imager::Files(3), Imager::Draw(3),
+Imager::Color(3), Imager::Fill(3), Imager::Font(3),
+Imager::Transformations(3), Imager::Engines(3), Imager::Filters(3),
+Imager::Expr(3), Imager::Matrix2d(3), Imager::Fountain(3)
 
 Affix::Infix2Postfix(3), Parse::RecDescent(3)
 http://www.eecs.umich.edu/~addi/perl/Imager/
 
 =cut
+
+
+
+

@@ -113,7 +113,7 @@ pattern:
             fill => { hatch=>'cross2' });
 
 Also if a color is omitted a color with (255,255,255,255) is used
-instead.  [NOTE: This may change to use C<$img-&gt;fgcolor()> in the future].
+instead.  [NOTE: This may change to use C<$img-E<gt>fgcolor()> in the future].
 
 Box does not support fractional coordinates yet.
 
