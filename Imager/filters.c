@@ -1,4 +1,5 @@
 #include "image.h"
+#include "imagei.h"
 #include <stdlib.h>
 #include <math.h>
 
@@ -1421,7 +1422,7 @@ i_fountain(i_img *im, double xa, double ya, double xb, double yb,
   int x, y;
   i_fcolor *line = mymalloc(sizeof(i_fcolor) * im->xsize);
   i_fcolor *work = NULL;
-  int ch;
+
   i_fountain_seg *my_segs;
   i_fill_combine_f combine_func = NULL;
   i_fill_combinef_f combinef_func = NULL;
@@ -1439,7 +1440,6 @@ i_fountain(i_img *im, double xa, double ya, double xb, double yb,
     for (x = 0; x < im->xsize; ++x) {
       i_fcolor c;
       int got_one;
-      double v;
       if (super_sample == i_fts_none)
         got_one = fount_getat(&c, x, y, &state);
       else
@@ -1522,7 +1522,6 @@ fount_init_state(struct fount_state *state, double xa, double ya,
   int i, j;
   i_fountain_seg *my_segs = mymalloc(sizeof(i_fountain_seg) * count);
   /*int have_alpha = im->channels == 2 || im->channels == 4;*/
-  int ch;
   
   memset(state, 0, sizeof(*state));
   /* we keep a local copy that we can adjust for speed */
@@ -1596,7 +1595,7 @@ fount_init_state(struct fount_state *state, double xa, double ya,
   }
   state->ffunc = fount_funcs[type];
   if (super_sample < 0 
-      || super_sample >= (sizeof(fount_ssamples)/sizeof(*fount_ssamples))) {
+      || super_sample >= (int)(sizeof(fount_ssamples)/sizeof(*fount_ssamples))) {
     super_sample = 0;
   }
   state->ssample_data = NULL;
@@ -2088,7 +2087,7 @@ fill_fountf(i_fill_t *fill, int x, int y, int width, int channels,
     while (width--) {
       i_fcolor c;
       int got_one;
-      double v;
+
       if (f->state.ssfunc)
         got_one = f->state.ssfunc(&c, x, y, &f->state);
       else
@@ -2104,7 +2103,7 @@ fill_fountf(i_fill_t *fill, int x, int y, int width, int channels,
     while (width--) {
       i_fcolor c;
       int got_one;
-      double v;
+
       if (f->state.ssfunc)
         got_one = f->state.ssfunc(&c, x, y, &f->state);
       else
