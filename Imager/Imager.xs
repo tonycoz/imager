@@ -793,7 +793,6 @@ i_convert(im, src, coeff)
 	  int len;
 	  int i, j;
         CODE:
-	  printf("i_convert\n");
 	  if (!SvROK(ST(2)) || SvTYPE(SvRV(ST(2))) != SVt_PVAV)
 	    croak("i_convert: parameter 3 must be an arrayref\n");
           avmain = (AV*)SvRV(ST(2));
@@ -825,7 +824,6 @@ i_convert(im, src, coeff)
 	  }
 	  RETVAL = i_convert(im, src, coeff, outchan, inchan);
           myfree(coeff);
-	  printf("i_convert returns %d\n", RETVAL);
 	OUTPUT:
 	  RETVAL
 	          
