@@ -165,7 +165,7 @@ solid
 
 hatch
 
-=item
+=item *
 
 fountain (similar to gradients in paint software)
 
@@ -218,11 +218,13 @@ absolute value taken this is alpha combined with the target.
 
 =item lighten
 
-The higher value is taken from each channel of the fill and target pixels, which is then alpha combined with the target.
+The higher value is taken from each channel of the fill and target
+pixels, which is then alpha combined with the target.
 
 =item darken
 
-The higher value is taken from each channel of the fill and target pixels, which is then alpha combined with the target.
+The higher value is taken from each channel of the fill and target
+pixels, which is then alpha combined with the target.
 
 =item hue
 
