@@ -28,5 +28,6 @@ static char *i_format_list[]={
   "raw",
   "pnm",
   "bmp",
+  "tga",
   NULL};
 

@@ -1746,6 +1746,18 @@ Imager::ImgRaw
 i_readbmp_wiol(ig)
         Imager::IO     ig
 
+
+undef_int
+i_writetga_wiol(im,ig)
+    Imager::ImgRaw     im
+        Imager::IO     ig
+
+Imager::ImgRaw
+i_readtga_wiol(ig, length)
+        Imager::IO     ig
+               int     length
+
+
 Imager::ImgRaw
 i_scaleaxis(im,Value,Axis)
     Imager::ImgRaw     im
