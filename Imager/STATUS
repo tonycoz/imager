@@ -1,4 +1,4 @@
-filters.c             # pod (excpet experimental)
+filters.c             # pod (except experimental)
 font.c                # pod
 gif.c                 # pod
 image.c               # pod
