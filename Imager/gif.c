@@ -179,6 +179,14 @@ i_readgif_low(GifFileType *GifFile, int **colour_table, int *colours) {
   
 
   im = i_img_empty_ch(NULL, GifFile->SWidth, GifFile->SHeight, 3);
+  if (!im) {
+    if (colour_table && *colour_table) {
+      myfree(*colour_table);
+      *colour_table = NULL;
+    }
+    DGifCloseFile(GifFile);
+    return NULL;
+  }
 
   Size = GifFile->SWidth * sizeof(GifPixelType); 
   
@@ -354,6 +362,9 @@ i_readgif_low(GifFileType *GifFile, int **colour_table, int *colours) {
     i_img_destroy(im);
     return NULL;
   }
+
+  i_tags_add(&im->tags, "i_format", 0, "gif", -1, 0);
+
   return im;
 }
 
@@ -554,6 +565,10 @@ i_img **i_readgif_multi_low(GifFileType *GifFile, int *count) {
       if (got_gce && trans_index >= 0)
         channels = 4;
       img = i_img_pal_new(Width, Height, channels, 256);
+      if (!img) {
+        free_images(results, *count);
+        return NULL;
+      }
       /* populate the palette of the new image */
       mm_log((1, "ColorMapSize %d\n", ColorMapSize));
       for (i = 0; i < ColorMapSize; ++i) {
@@ -581,6 +596,7 @@ i_img **i_readgif_multi_low(GifFileType *GifFile, int *count) {
         }
       }
       results[*count-1] = img;
+      i_tags_add(&img->tags, "i_format", 0, "gif", -1, 0);
       i_tags_addn(&img->tags, "gif_left", 0, GifFile->Image.Left);
       /**(char *)0 = 1;*/
       i_tags_addn(&img->tags, "gif_top",  0, GifFile->Image.Top);
