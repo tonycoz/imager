@@ -445,6 +445,49 @@ sub _error_as_msg {
   return join(": ", map $_->[0], i_errors());
 }
 
+# this function tries to DWIM for color parameters
+#  color objects are used as is
+#  simple scalars are simply treated as single parameters to Imager::Color->new
+#  hashrefs are treated as named argument lists to Imager::Color->new
+#  arrayrefs are treated as list arguments to Imager::Color->new iff any
+#    parameter is > 1
+#  other arrayrefs are treated as list arguments to Imager::Color::Float
+
+sub _color {
+  my $arg = shift;
+  my $result;
+
+  if (ref $arg) {
+    if (UNIVERSAL::isa($arg, "Imager::Color")
+        || UNIVERSAL::isa($arg, "Imager::Color::Float")) {
+      $result = $arg;
+    }
+    else {
+      if ($arg =~ /^HASH\(/) {
+        $result = Imager::Color->new(%$arg);
+      }
+      elsif ($arg =~ /^ARRAY\(/) {
+        if (grep $_ > 1, @$arg) {
+          $result = Imager::Color->new(@$arg);
+        }
+        else {
+          $result = Imager::Color::Float->new(@$arg);
+        }
+      }
+      else {
+        $Imager::ERRSTR = "Not a color";
+      }
+    }
+  }
+  else {
+    # assume Imager::Color::new knows how to handle it
+    $result = Imager::Color->new($arg);
+  }
+
+  return $result;
+}
+
+
 #
 # Methods to be called on objects.
 #
@@ -1681,8 +1724,13 @@ sub box {
   }
 
   if ($opts{filled}) { 
+    my $color = _color($opts{'color'});
+    unless ($color) { 
+      $self->{ERRSTR} = $Imager::ERRSTR; 
+      return; 
+    }
     i_box_filled($self->{IMG},$opts{xmin},$opts{ymin},$opts{xmax},
-                 $opts{ymax},$opts{color}); 
+                 $opts{ymax}, $color); 
   }
   elsif ($opts{fill}) {
     unless (UNIVERSAL::isa($opts{fill}, 'Imager::Fill')) {
@@ -1697,7 +1745,13 @@ sub box {
                 $opts{ymax},$opts{fill}{fill});
   }
   else { 
-    i_box($self->{IMG},$opts{xmin},$opts{ymin},$opts{xmax},$opts{ymax},$opts{color});
+    my $color = _color($opts{'color'});
+    unless ($color) { 
+      $self->{ERRSTR} = $Imager::ERRSTR; 
+      return; 
+    }
+    i_box($self->{IMG},$opts{xmin},$opts{ymin},$opts{xmax},$opts{ymax},
+          $color);
   }
   return $self;
 }
@@ -1726,15 +1780,26 @@ sub arc {
                 $opts{'d2'}, $opts{fill}{fill});
   }
   else {
+    my $color = _color($opts{'color'});
+    unless ($color) { 
+      $self->{ERRSTR} = $Imager::ERRSTR; 
+      return; 
+    }
     if ($opts{d1} == 0 && $opts{d2} == 361 && $opts{aa}) {
       i_circle_aa($self->{IMG}, $opts{'x'}, $opts{'y'}, $opts{'r'}, 
-                  $opts{'color'});
+                  $color);
     }
     else {
-      #      i_arc($self->{IMG},$opts{'x'},$opts{'y'},$opts{'r'},$opts{'d1'}, $opts{'d2'},$opts{'color'});
-      if ($opts{'d1'} <= $opts{'d2'}) { i_arc($self->{IMG},$opts{'x'},$opts{'y'},$opts{'r'},$opts{'d1'},$opts{'d2'},$opts{'color'}); }
-      else                            { i_arc($self->{IMG},$opts{'x'},$opts{'y'},$opts{'r'},$opts{'d1'},        361,$opts{'color'});
-					i_arc($self->{IMG},$opts{'x'},$opts{'y'},$opts{'r'},          0,$opts{'d2'},$opts{'color'}); }
+      if ($opts{'d1'} <= $opts{'d2'}) { 
+        i_arc($self->{IMG},$opts{'x'},$opts{'y'},$opts{'r'},
+              $opts{'d1'}, $opts{'d2'}, $color); 
+      }
+      else {
+        i_arc($self->{IMG},$opts{'x'},$opts{'y'},$opts{'r'},
+              $opts{'d1'}, 361,         $color);
+        i_arc($self->{IMG},$opts{'x'},$opts{'y'},$opts{'r'},
+              0,           $opts{'d2'}, $color); 
+      }
     }
   }
 
@@ -1752,10 +1817,18 @@ sub line {
   unless (exists $opts{x1} and exists $opts{y1}) { $self->{ERRSTR}='missing begining coord'; return undef; }
   unless (exists $opts{x2} and exists $opts{y2}) { $self->{ERRSTR}='missing ending coord'; return undef; }
 
+  my $color = _color($opts{'color'});
+  unless ($color) { 
+    $self->{ERRSTR} = $Imager::ERRSTR; 
+    return; 
+  }
+  $opts{antialias} = $opts{aa} if defined $opts{aa};
   if ($opts{antialias}) {
-    i_line_aa($self->{IMG},$opts{x1}, $opts{y1}, $opts{x2}, $opts{y2}, $opts{color});
+    i_line_aa($self->{IMG},$opts{x1}, $opts{y1}, $opts{x2}, $opts{y2}, 
+              $color);
   } else {
-    i_draw($self->{IMG},$opts{x1}, $opts{y1}, $opts{x2}, $opts{y2}, $opts{color});
+    i_draw($self->{IMG},$opts{x1}, $opts{y1}, $opts{x2}, $opts{y2}, 
+           $color);
   }
   return $self;
 }
@@ -1778,14 +1851,24 @@ sub polyline {
 
 #  print Dumper(\@points);
 
+  my $color = _color($opts{'color'});
+  unless ($color) { 
+    $self->{ERRSTR} = $Imager::ERRSTR; 
+    return; 
+  }
+  $opts{antialias} = $opts{aa} if defined $opts{aa};
   if ($opts{antialias}) {
     for $pt(@points) {
-      if (defined($ls)) { i_line_aa($self->{IMG},$ls->[0],$ls->[1],$pt->[0],$pt->[1],$opts{color}); }
+      if (defined($ls)) { 
+        i_line_aa($self->{IMG},$ls->[0],$ls->[1],$pt->[0],$pt->[1],$color);
+      }
       $ls=$pt;
     }
   } else {
     for $pt(@points) {
-      if (defined($ls)) { i_draw($self->{IMG},$ls->[0],$ls->[1],$pt->[0],$pt->[1],$opts{color}); }
+      if (defined($ls)) { 
+        i_draw($self->{IMG},$ls->[0],$ls->[1],$pt->[0],$pt->[1],$color);
+      }
       $ls=$pt;
     }
   }
@@ -1822,7 +1905,12 @@ sub polygon {
                     $opts{'fill'}{'fill'});
   }
   else {
-    i_poly_aa($self->{IMG}, $opts{'x'}, $opts{'y'}, $opts{'color'});
+    my $color = _color($opts{'color'});
+    unless ($color) { 
+      $self->{ERRSTR} = $Imager::ERRSTR; 
+      return; 
+    }
+    i_poly_aa($self->{IMG}, $opts{'x'}, $opts{'y'}, $color);
   }
 
   return $self;
@@ -1852,7 +1940,12 @@ sub polybezier {
     return;
   }
 
-  i_bezier_multi($self->{IMG},$opts{'x'},$opts{'y'},$opts{'color'});
+  my $color = _color($opts{'color'});
+  unless ($color) { 
+    $self->{ERRSTR} = $Imager::ERRSTR; 
+    return; 
+  }
+  i_bezier_multi($self->{IMG},$opts{'x'},$opts{'y'},$color);
   return $self;
 }
 
@@ -1877,7 +1970,12 @@ sub flood_fill {
     i_flood_cfill($self->{IMG}, $opts{'x'}, $opts{'y'}, $opts{fill}{fill});
   }
   else {
-    i_flood_fill($self->{IMG}, $opts{'x'}, $opts{'y'}, $opts{color});
+    my $color = _color($opts{'color'});
+    unless ($color) { 
+      $self->{ERRSTR} = $Imager::ERRSTR; 
+      return; 
+    }
+    i_flood_fill($self->{IMG}, $opts{'x'}, $opts{'y'}, $color);
   }
 
   $self;
@@ -2949,18 +3047,22 @@ radius of 20.
 
 Line:
   $img->line(color=>$green, x1=>10, x2=>100,
-                            y1=>20, y2=>50, antialias=>1 );
+                            y1=>20, y2=>50, aa=>1 );
 
 That draws an antialiased line from (10,100) to (20,50).
 
+The I<antialias> parameter is still available for backwards compatibility.
+
 Polyline:
   $img->polyline(points=>[[$x0,$y0],[$x1,$y1],[$x2,$y2]],color=>$red);
-  $img->polyline(x=>[$x0,$x1,$x2], y=>[$y0,$y1,$y2], antialias=>1);
+  $img->polyline(x=>[$x0,$x1,$x2], y=>[$y0,$y1,$y2], aa=>1);
 
 Polyline is used to draw multilple lines between a series of points.
 The point set can either be specified as an arrayref to an array of
 array references (where each such array represents a point).  The
 other way is to specify two array references.
+
+The I<antialias> parameter is still available for backwards compatibility.
 
 Polygon:
   $img->polygon(points=>[[$x0,$y0],[$x1,$y1],[$x2,$y2]],color=>$red);
@@ -2993,6 +3095,11 @@ reference to a hash containing the parameters used to create the fill:
 Currently you can create opaque or transparent plain color fills,
 hatched fills, image based fills and fountain fills.  See
 L<Imager::Fill> for more information.
+
+The C<color> parameter for any of the drawing methods can be an
+L<Imager::Color> object, a simple scalar that Imager::Color can
+understand, a hashref of parameters that Imager::Color->new
+understands, or an arrayref of red, green, blue values.
 
 =head2 Text rendering
 
