@@ -647,6 +647,8 @@ Revision history for Perl extension Imager.
 0.42pre1
         - quote the 'min' parameter to scale in Imager::Transformations
           and at least mention it in the docs beyond the examples
+        - document the values for the read() and write() method type 
+          parameter
 
 =================================================================
 
