@@ -640,6 +640,10 @@ Revision history for Perl extension Imager.
           it used fork() which caused problems on systems that didn't have
           a real fork().
 
+0.41?
+        - skip() in testtools should be skipn() and it should use the 
+          loop variable for the test number
+
 =================================================================
 
         For latest versions check the Imager-devel pages:
