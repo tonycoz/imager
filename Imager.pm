@@ -996,7 +996,7 @@ sub rubthrough {
 sub flip {
   my $self  = shift;
   my %opts  = @_;
-  my %xlate = (x=>0, y=>1, xy=>2, yx=>2);
+  my %xlate = (h=>0, v=>1, hv=>2, vh=>2);
   my $dir;
   return () unless defined $opts{'dir'} and defined $xlate{$opts{'dir'}};
   $dir = $xlate{$opts{'dir'}};
@@ -2009,15 +2009,17 @@ upper left corner of the C<$logo> image is at (40,20).
 =head2 Flipping images
 
 An inplace horizontal or vertical flip is possible by calling the
-C<flip()> method.  If the original is to be preserved it's possible
-to make a copy first.
+C<flip()> method.  If the original is to be preserved it's possible to
+make a copy first.  The only parameter it takes is the C<dir>
+parameter which can take the values C<h>, C<v>, C<vh> and C<hv>.
 
-  $img->flip(dir=>"x");       # horizontal flip
-  $img->flip(dir=>"xy");      # vertical and horizontal flip
-  $nimg = $img->copy->flip(dir=>"y"); # make a copy and flip the copy vertically
+  $img->flip(dir=>"h");       # horizontal flip
+  $img->flip(dir=>"vh");      # vertical and horizontal flip
+  $nimg = $img->copy->flip(dir=>"v"); # make a copy and flip it vertically
 
+=head2 Blending Images
 
-=head2 Blending Images To put an image or a part of an image directly
+To put an image or a part of an image directly
 into another it is best to call the C<paste()> method on the image you
 want to add to.
 
