@@ -683,6 +683,12 @@ Revision history for Perl extension Imager.
         - update t37w32font.t to use i_line() instead of i_draw()
         - replaced non-portable call to rint() with (int)(dy+0.5) (so we
           can build on Win32)
+        - the default tifflib warning handler was crashing on Win32
+          under ActivePerl, when an unrecognized tag was read from the 
+          file.  For now we'll just drop the warnings in the bit bucket.
+          (Ticket #1513)
+        - the code to read multiple tiffs didn't handle files with more
+          than five images correctly, causing a memory overrun.
 
 =================================================================
 

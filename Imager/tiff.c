@@ -61,6 +61,12 @@ static void error_handler(char const *module, char const *fmt, va_list ap) {
   i_push_errorvf(0, fmt, ap);
 }
 
+static void warn_handler(char const *module, char const *fmt, va_list ap) {
+  /* for now do nothing, perhaps we could warn(), though that should be
+     done in the XS code, not in the code which isn't mean to know perl 
+     exists ;) */
+}
+
 static int save_tiff_tags(TIFF *tif, i_img *im);
 
 static void expand_4bit_hl(unsigned char *buf, int count);
@@ -319,10 +325,12 @@ i_img*
 i_readtiff_wiol(io_glue *ig, int length) {
   TIFF* tif;
   TIFFErrorHandler old_handler;
+  TIFFErrorHandler old_warn_handler;
   i_img *im;
 
   i_clear_error();
   old_handler = TIFFSetErrorHandler(error_handler);
+  old_warn_handler = TIFFSetWarningHandler(warn_handler);
 
   /* Add code to get the filename info from the iolayer */
   /* Also add code to check for mmapped code */
@@ -345,6 +353,7 @@ i_readtiff_wiol(io_glue *ig, int length) {
     mm_log((1, "i_readtiff_wiol: Unable to open tif file\n"));
     i_push_error(0, "opening file");
     TIFFSetErrorHandler(old_handler);
+    TIFFSetWarningHandler(old_warn_handler);
     return NULL;
   }
 
@@ -352,6 +361,7 @@ i_readtiff_wiol(io_glue *ig, int length) {
 
   if (TIFFLastDirectory(tif)) mm_log((1, "Last directory of tiff file\n"));
   TIFFSetErrorHandler(old_handler);
+  TIFFSetWarningHandler(old_warn_handler);
   TIFFClose(tif);
   return im;
 }
@@ -367,12 +377,14 @@ i_img**
 i_readtiff_multi_wiol(io_glue *ig, int length, int *count) {
   TIFF* tif;
   TIFFErrorHandler old_handler;
+  TIFFErrorHandler old_warn_handler;
   i_img **results = NULL;
   int result_alloc = 0;
   int dirnum = 0;
 
   i_clear_error();
   old_handler = TIFFSetErrorHandler(error_handler);
+  old_warn_handler = TIFFSetWarningHandler(warn_handler);
 
   /* Add code to get the filename info from the iolayer */
   /* Also add code to check for mmapped code */
@@ -395,6 +407,7 @@ i_readtiff_multi_wiol(io_glue *ig, int length, int *count) {
     mm_log((1, "i_readtiff_wiol: Unable to open tif file\n"));
     i_push_error(0, "opening file");
     TIFFSetErrorHandler(old_handler);
+    TIFFSetWarningHandler(old_warn_handler);
     return NULL;
   }
 
@@ -412,11 +425,17 @@ i_readtiff_multi_wiol(io_glue *ig, int length, int *count) {
         i_img **newresults;
         result_alloc *= 2;
         newresults = myrealloc(results, result_alloc * sizeof(i_img *));
+	if (!newresults) {
+	  i_img_destroy(im); /* don't leak it */
+	  break;
+	}
+	results = newresults;
       }
     }
     results[*count-1] = im;
   } while (TIFFSetDirectory(tif, ++dirnum));
 
+  TIFFSetWarningHandler(old_warn_handler);
   TIFFSetErrorHandler(old_handler);
   TIFFClose(tif);
   return results;
