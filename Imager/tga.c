@@ -38,7 +38,7 @@ Some of these functions are internal.
 
 
 typedef struct {
-  char  idlength;
+  unsigned char  idlength;
   char  colourmaptype;
   char  datatypecode;
   short int colourmaporigin;

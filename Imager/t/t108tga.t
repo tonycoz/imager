@@ -1,5 +1,5 @@
 #!perl -w
-print "1..17\n";
+print "1..21\n";
 use Imager qw(:all);
 use strict;
 BEGIN { require "t/testtools.pl"; }
@@ -70,6 +70,17 @@ if ($imoo->write(file=>'testout/t108_oo.tga')) {
 my ($type) = $imoo->tags(name=>'i_format');
 isn(17, $type, 'tga', "check i_format tag");
 
+# in 0.44 and earlier, reading an image with an idstring of 128 or more
+# bytes would result in an allocation error, if the platform char type
+# was signed
+$imoo = Imager->new;
+okn(18, $imoo->read(file=>'testimg/longid.tga'), "read long id image");
+my ($id) = $imoo->tags(name=>'tga_idstring');
+isn(19, $id, "X" x 128, "check tga_idstring tag");
+my ($bitspp) = $imoo->tags(name=>'tga_bitspp');
+isn(20, $bitspp, 24, "check tga_bitspp tag");
+my ($compressed) = $imoo->tags(name=>'compressed');
+isn(21, $compressed, 1, "check compressed tag");
 
 sub write_test {
   my ($test_num, $im, $filename, $wierdpack, $compress, $idstring) = @_;
