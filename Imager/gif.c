@@ -113,7 +113,31 @@ static int
     ColorMapSize = 0,
     InterlacedOffset[] = { 0, 4, 2, 1 }, /* The way Interlaced image should. */
     InterlacedJumps[] = { 8, 8, 4, 2 };    /* be read - offsets and jumps... */
+
 static ColorMapObject *ColorMap;
+
+
+static
+void
+i_colortable_copy(int **colour_table, int *colours, ColorMapObject *colormap) {
+  GifColorType *mapentry;
+  int q;
+  int colormapsize = colormap->ColorCount;
+
+  if(colours) *colours = colormapsize;
+  if(!colour_table) return;
+  
+  *colour_table = mymalloc(sizeof(int *) * colormapsize * 3);
+  memset(*colour_table, 0, sizeof(int *) * colormapsize * 3);
+
+  for(q=0; q<ColorMapSize; q++) {
+    mapentry = &colormap->Colors[q];
+    (*colour_table)[q*3 + 0] = mapentry->Red;
+    (*colour_table)[q*3 + 1] = mapentry->Green;
+    (*colour_table)[q*3 + 2] = mapentry->Blue;
+  }
+}
+
 
 /*
 =item i_readgif_low(GifFileType *GifFile, int **colour_table, int *colours)
@@ -123,10 +147,13 @@ create the appropriate GifFileType object and pass it in.
 
 =cut
 */
+
 i_img *
 i_readgif_low(GifFileType *GifFile, int **colour_table, int *colours) {
   i_img *im;
   int i, j, Size, Row, Col, Width, Height, ExtCode, Count, x;
+  int cmapcnt = 0;
+  
   GifRecordType RecordType;
   GifByteType *Extension;
   
@@ -134,38 +161,20 @@ i_readgif_low(GifFileType *GifFile, int **colour_table, int *colours) {
   static GifColorType *ColorMapEntry;
   i_color col;
 
-  /*  unsigned char *Buffer, *BufferP; */
-
   mm_log((1,"i_readgif_low(GifFile %p, colour_table %p, colours %p)\n", GifFile, colour_table, colours));
 
   BackGround = GifFile->SBackGroundColor;
   ColorMap = (GifFile->Image.ColorMap ? GifFile->Image.ColorMap : GifFile->SColorMap);
-  ColorMapSize = ColorMap->ColorCount;
 
-  /* **************************************** */
-  if(colour_table != NULL) {
-    int q;
-    *colour_table=mymalloc(sizeof(int *) * ColorMapSize * 3);
-    if(*colour_table == NULL) 
-      m_fatal(0,"Failed to allocate memory for GIF colour table, aborted."); 
-    
-    memset(*colour_table, 0, sizeof(int *) * ColorMapSize * 3);
-
-    for(q=0; q<ColorMapSize; q++) {
-      ColorMapEntry = &ColorMap->Colors[q];
-      (*colour_table)[q*3 + 0]=ColorMapEntry->Red;
-      (*colour_table)[q*3 + 1]=ColorMapEntry->Green;
-      (*colour_table)[q*3 + 2]=ColorMapEntry->Blue;
-    }
-  }
-
-  if(colours != NULL) {
-    *colours = ColorMapSize;
+  if (ColorMap) {
+    ColorMapSize = ColorMap->ColorCount;
+    i_colortable_copy(colour_table, colours, ColorMap);
+    cmapcnt++;
   }
   
-  /* **************************************** */
-  im=i_img_empty_ch(NULL,GifFile->SWidth,GifFile->SHeight,3);
-  
+
+  im = i_img_empty_ch(NULL,GifFile->SWidth,GifFile->SHeight,3);
+
   Size = GifFile->SWidth * sizeof(GifPixelType); 
   
   if ((GifRow = (GifRowType) mymalloc(Size)) == NULL)
@@ -178,8 +187,7 @@ i_readgif_low(GifFileType *GifFile, int **colour_table, int *colours) {
     if (DGifGetRecordType(GifFile, &RecordType) == GIF_ERROR) {
       gif_push_error();
       i_push_error(0, "Unable to get record type");
-      if (colour_table)
-	free(colour_table);
+      if (colour_table) free(colour_table); /* FIXME: Isn't this an error? */
       i_img_destroy(im);
       DGifCloseFile(GifFile);
       return NULL;
@@ -190,11 +198,27 @@ i_readgif_low(GifFileType *GifFile, int **colour_table, int *colours) {
       if (DGifGetImageDesc(GifFile) == GIF_ERROR) {
 	gif_push_error();
 	i_push_error(0, "Unable to get image descriptor");
-	if (colour_table)
-	  free(colour_table);
+	if (colour_table) free(colour_table); /* FIXME: Isn't this an error? */
 	i_img_destroy(im);
 	DGifCloseFile(GifFile);
 	return NULL;
+      }
+
+      if ( cmapcnt == 0) {
+	if (ColorMap = (GifFile->Image.ColorMap ? GifFile->Image.ColorMap : GifFile->SColorMap) ) {
+	  mm_log((1, "Adding local colormap\n"));
+	  ColorMapSize = ColorMap->ColorCount;
+	  i_colortable_copy(colour_table, colours, ColorMap);
+	  cmapcnt++;
+	} else {
+	  /* No colormap and we are about to read in the image - abandon for now */
+	  mm_log((1, "Going in with no colormap\n"));
+	  i_push_error(0, "Image does not have a local or a global color map");
+	  if (colour_table) free(colour_table); /* FIXME: Isn't this an error? */
+	  i_img_destroy(im);
+	  DGifCloseFile(GifFile);
+	  return NULL;
+	}
       }
       Row = GifFile->Image.Top; /* Image Position relative to Screen. */
       Col = GifFile->Image.Left;
@@ -206,8 +230,7 @@ i_readgif_low(GifFileType *GifFile, int **colour_table, int *colours) {
       if (GifFile->Image.Left + GifFile->Image.Width > GifFile->SWidth ||
 	  GifFile->Image.Top + GifFile->Image.Height > GifFile->SHeight) {
 	i_push_errorf(0, "Image %d is not confined to screen dimension, aborted.\n",ImageNum);
-	if (colour_table)
-	  free(colour_table);
+	if (colour_table) free(colour_table); /* FIXME: Yet again */
 	i_img_destroy(im);
 	DGifCloseFile(GifFile);
 	return(0);

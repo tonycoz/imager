@@ -403,8 +403,11 @@ Revision history for Perl extension Imager.
         - added the convert() method
         - Added support for transparent to alpha conversion during loading
           of png files.  Note that libpng 1.0.1 is broken in handling this,
-	  we know that 1.0.5 works.
-	- support for writing PGM (portable gray map) files
+	        we know that 1.0.5 works.
+        - support for writing PGM (portable gray map) files
+        - Fix for i_gifread_low() for images with only a local and no global
+          colormap and an abort if no colormap is present (which is legal
+          in gif).
 
 ~~~~~~~~~~~~~^ ^ ^~~~~~~~~~~~~~
 
@@ -437,6 +440,7 @@ Revision history for Perl extension Imager.
         - Split the other classes into seperate files
         - Compile with memory debugging enabled and fix leaks
         - dynaload.c is strongly tied to perl
+        - Add mycalloc() and myrealloc() to the malloc() wrappers.
 	
 	- should i_readgif returned colormap be an arrayref of 
 	Imager::Color objects?  Note that this will break 
