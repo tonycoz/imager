@@ -173,13 +173,14 @@ void i_hsv_to_rgb(i_color *color) {
   }
   else {
     int i;
-    double f, m, n, k;
+    double f;
+    int m, n, k;
     h = h / 255.0 * 6;
     i = h;
     f = h - i;
-    m = v * (255 - s) / 255;
-    n = v * (255 - s * f) / 255;
-    k = v * (255 - s * (1 - f)) / 255;
+    m = 0.5 + v * (255 - s) / 255;
+    n = 0.5 + v * (255 - s * f) / 255;
+    k = 0.5 + v * (255 - s * (1 - f)) / 255;
     switch (i) {
     case 0:
       color->rgb.r = v; color->rgb.g = k; color->rgb.b = m;
