@@ -677,6 +677,7 @@ Revision history for Perl extension Imager.
 					for images missing the rowsperstrip tag.
 				- Fixed default parameters for crop()
 				- Added Preliminary specialized scaling code.
+				- Added image type detection.
 =================================================================
 
         For latest versions check the Imager-devel pages:

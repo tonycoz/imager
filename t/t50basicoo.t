@@ -42,9 +42,7 @@ my $img = Imager->new();
 my %files;
 @files{@types} = ({ file => "testout/t101.jpg"  },
 		  { file => "testout/t102.png"  },
-		  { file => "testout/t103.raw", xsize=>150, ysize=>150
-                    #, type=>"raw" # TODO: was this there for a reason?
-                  },
+		  { file => "testout/t103.raw", xsize=>150, ysize=>150, type=>'raw'},
 		  { file => "testout/t104.ppm"  },
 		  { file => "testout/t105.gif"  },
 		  { file => "testout/t106.tiff" },
@@ -67,20 +65,22 @@ for my $type (@types) {
 
   my %mopts = %opts;
   delete $mopts{file};
-  
+
   # read from a file handle
   my $fh = IO::File->new($opts{file}, "r");
   if (ok($fh, "opening $opts{file}")) {
     binmode $fh;
     my $fhimg = Imager->new;
-    Imager::log_entry("Reading file: $opts{file}\n", -1);
+    Imager::log_entry("Reading file: $opts{file}\n", 0);
+
     my $fhrc = $fhimg->read(fh=>$fh, %mopts);
-    if (ok(!$fhrc, "check that type is required")) {
+    if (!ok($fhrc, "check that type is required")) {
       ok ($fhimg->errstr =~ /type parameter missing/, "check for no type error");
     }
     else {
       skip("previous test failed");
     }
+    $fh->seek(0, SEEK_SET), "seek after read";
     if (ok($fhimg->read(fh=>$fh, %mopts, type=>$type), "read from fh")) {
       ok(Imager::i_img_diff($img->{IMG}, $fhimg->{IMG}) == 0,
          "image comparison after fh read");
@@ -89,10 +89,10 @@ for my $type (@types) {
       skip("no image to compare");
     }
     ok($fh->seek(0, SEEK_SET), "seek after read");
-    
+
     # read from a fd
     my $fdimg = Imager->new;
-    if (ok($fdimg->read(fd=>fileno($fh), %mopts, type=>$type), 
+    if (ok($fdimg->read(fd=>fileno($fh), %mopts, type=>$type),
            "read from fd")) {
       ok(Imager::i_img_diff($img->{IMG}, $fdimg->{IMG}) == 0,
          "image comparistion after fd read");
@@ -363,6 +363,7 @@ sub ok {
   ++$test_num;
   if ($ok) {
     print "ok $test_num # $msg\n";
+    Imager::log_entry("ok $test_num # $msg\n", 0);
   }
   else {
     my $err;
@@ -371,6 +372,7 @@ sub ok {
     my $line = "not ok $test_num # line ".(caller)[2].": $msg";
     $line .= ": $err" if $err;
     print $line, "\n";
+    Imager::log_entry($line."\n", 0);
   }
 
   $ok;

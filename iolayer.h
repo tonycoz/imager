@@ -32,15 +32,15 @@ typedef enum { FDSEEK, FDNOSEEK, BUFFER, CBSEEK, CBNOSEEK, BUFCHAIN } io_type;
 typedef int ssize_t;
 #endif
 
-struct _io_glue;
+struct io_glue;
 
 /* Callbacks we give out */
 
-typedef ssize_t(*readp) (struct _io_glue *ig, void *buf, size_t count);
-typedef ssize_t(*writep)(struct _io_glue *ig, const void *buf, size_t count);
-typedef off_t  (*seekp) (struct _io_glue *ig, off_t offset, int whence);
-typedef void   (*closep)(struct _io_glue *ig);
-typedef ssize_t(*sizep) (struct _io_glue *ig);
+typedef ssize_t(*readp) (struct io_glue *ig, void *buf, size_t count);
+typedef ssize_t(*writep)(struct io_glue *ig, const void *buf, size_t count);
+typedef off_t  (*seekp) (struct io_glue *ig, off_t offset, int whence);
+typedef void   (*closep)(struct io_glue *ig);
+typedef ssize_t(*sizep) (struct io_glue *ig);
 
 typedef void   (*closebufp)(void *p);
 
@@ -57,12 +57,12 @@ typedef ssize_t(*sizel) (void *p);
 extern char *io_type_names[];
 
 
-typedef struct _io_blink {
+typedef struct io_blink {
   char buf[BBSIZ];
   /* size_t cnt; */
   size_t len;			/* How large is this buffer = BBZIS for now */
-  struct _io_blink *next;
-  struct _io_blink *prev;
+  struct io_blink *next;
+  struct io_blink *prev;
 } io_blink;
 
 
@@ -135,7 +135,7 @@ typedef union {
   io_cb		cb;
 } io_obj;
 
-typedef struct _io_glue {
+typedef struct io_glue {
   io_obj	source;
   int		flags;		/* Flags */
   void		*exdata;	/* Pair specific data */
@@ -159,6 +159,6 @@ io_glue *io_new_bufchain(void);
 io_glue *io_new_buffer(char *data, size_t len, closebufp closecb, void *closedata);
 io_glue *io_new_cb(void *p, readl readcb, writel writecb, seekl seekcb, closel closecb, destroyl destroycb);
 size_t   io_slurp(io_glue *ig, unsigned char **c);
-void io_glue_DESTROY(io_glue *ig);
+void     io_glue_DESTROY(io_glue *ig);
 
 #endif /* _IOLAYER_H_ */

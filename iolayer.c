@@ -824,10 +824,15 @@ Creates buffers and initializes structures to read with the chosen interface.
 void
 io_glue_commit_types(io_glue *ig) {
   io_type      inn = ig->source.type;
-  
+
   mm_log((1, "io_glue_commit_types(ig %p)\n", ig));
   mm_log((1, "io_glue_commit_types: source type %d (%s)\n", inn, io_type_names[inn]));
-  
+
+  if (ig->flags & 0x01) {
+    mm_log((1, "io_glue_commit_types: type already set up\n"));
+    return;
+  }
+
   switch (inn) {
   case BUFCHAIN:
     {
@@ -887,6 +892,7 @@ io_glue_commit_types(io_glue *ig) {
       break;
     }
   }
+  ig->flags |= 0x01; /* indicate source has been setup already */
 }
 
 /*
@@ -931,6 +937,7 @@ io_new_bufchain() {
   io_glue *ig;
   mm_log((1, "io_new_bufchain()\n"));
   ig = mymalloc(sizeof(io_glue));
+  memset(ig, 0, sizeof(*ig));
   io_obj_setp_bufchain(&ig->source);
   return ig;
 }
@@ -958,6 +965,7 @@ io_new_buffer(char *data, size_t len, closebufp closecb, void *closedata) {
   ig = mymalloc(sizeof(io_glue));
   memset(ig, 0, sizeof(*ig));
   io_obj_setp_buffer(&ig->source, data, len, closecb, closedata);
+  ig->flags = 0;
   return ig;
 }
 
@@ -982,6 +990,7 @@ io_new_fd(int fd) {
   memset(ig, 0, sizeof(*ig));
   ig->source.type = FDSEEK;
   ig->source.fdseek.fd = fd;
+  ig->flags = 0;
 #if 0
 #ifdef _MSC_VER
   io_obj_setp_cb(&ig->source, (void*)fd, _read, _write, _lseek);
@@ -1000,7 +1009,7 @@ io_glue *io_new_cb(void *p, readl readcb, writel writecb, seekl seekcb,
   mm_log((1, "io_new_cb(p %p, readcb %p, writecb %p, seekcb %p, closecb %p, "
           "destroycb %p)\n", p, readcb, writecb, seekcb, closecb, destroycb));
   ig = mymalloc(sizeof(io_glue));
-  memset(ig, 0, sizeof(ig));
+  memset(ig, 0, sizeof(*ig));
   io_obj_setp_cb2(&ig->source, p, readcb, writecb, seekcb, closecb, destroycb);
   mm_log((1, "(%p) <- io_new_cb\n", ig));
 
