@@ -64,7 +64,7 @@ recognition.
 
 When you read an image, Imager may set some tags, possibly including
 information about the spatial resolution, textual information, and
-animation information.  See L</Tags> for specifics.
+animation information.  See L<Imager::ImageTypes/Tags> for specifics.
 
 =head2 Input and output
 
@@ -85,11 +85,19 @@ C<fh> is a file handle, typically either returned from
 C<<IO::File->new()>>, or a glob from an C<open> call.  You should call
 C<binmode> on the handle before passing it to Imager.
 
+Imager will set the handle to autoflush to make sure any buffered data
+is flushed , since Imager will write to the file descriptor (from
+fileno()) rather than writing at the perl level.
+
 =item fd
 
 C<fd> is a file descriptor.  You can get this by calling the
 C<fileno()> function on a file handle, or by using one of the standard
 file descriptor numbers.
+
+If you get this from a perl file handle, you may need to flush any
+buffered output, otherwise it may appear in the output stream after
+the image.
 
 =item data
 
@@ -539,16 +547,115 @@ values for the first line and so on, you can use the interleave option:
   $img->read(file=>'foo.raw', xsize=100, ysize=>100, interleave=>1)
     or die "Cannot read raw image\n";
 
-
-
 =head1 EXAMPLES
 
-writing an image from CGI (content type, flush, write to fd)
+=head2 Producing an image from a CGI script
 
-writing an animated gif
+Once you have an image the basic mechanism is:
 
-reading tags after reading an image
+=over
 
+=item 1.
+
+set STDOUT to autoflush
+
+=item 2.
+
+output a content-type header, and optionally a content-length header
+
+=item 3.
+
+put STDOUT into binmode
+
+=item 4.
+
+call write() with the C<fd> or C<fh> parameter.  You will need to
+provide the C<type> parameter since 
+
+=back
+
+  # write an image from a CGI script
+  # using CGI.pm
+  use CGI qw(:standard);
+  $| = 1;
+  binmode STDOUT;
+  print header(-type=>'image/gif');
+  $img->write(type=>'gif', fd=>fileno(STDOUT))
+    or die $img->errstr;
+
+If you want to send a content length you can send the output to a
+scalar to get the length:
+
+  my $data;
+  $img->write(type=>'gif', data=>\$data)
+    or die $img->errstr;
+  binmode STDOUT;
+  print header(-type=>'image/gif', -content_length=>length($data));
+  print $data;
+
+=head2 Writing an animated GIF
+
+The basic idea is simple, just use write_multi():
+
+  my @imgs = ...;
+  Imager->write_multi({ file=>$filename, type=>'gif' }, @imgs);
+
+If your images are RGB images the default quantization mechanism will
+produce a very good result, but can take a long time to execute.  You
+could either use the standard webmap:
+
+  Imager->write_multi({ file=>$filename, 
+                        type=>'gif',
+                        make_colors=>'webmap' },
+                      @imgs);
+
+or use a median cut algorithm to built a fairly optimal color map:
+
+  Imager->write_multi({ file=>$filename,
+                        type=>'gif',
+                        make_colors=>'mediancut' },
+                      @imgs);
+
+By default all of the images will use the same global colormap, which
+will produce a smaller image.  If your images have significant color
+differences, you may want to generate a new palette for each image:
+
+  Imager->write_multi({ file=>$filename,
+                        type=>'gif',
+                        make_colors=>'mediancut',
+                        gif_local_map => 1 },
+                      @imgs);
+
+which will set the C<gif_local_map> tag in each image to 1.
+Alternatively, if you know only some images have different colors, you
+can set the tag just for those images:
+
+  $imgs[2]->settag(name=>'gif_local_map', value=>1);
+  $imgs[4]->settag(name=>'gif_local_map', value=>1);
+
+and call write_multi() without a C<gif_local_map> parameter, or supply
+an arrayref of values for the tag:
+
+  Imager->write_multi({ file=>$filename,
+                        type=>'gif',
+                        make_colors=>'mediancut',
+                        gif_local_map => [ 0, 0, 1, 0, 1 ] },
+                      @imgs);
+
+Other useful parameters include C<gif_delay> to control the delay
+between frames and C<transp> to control transparency.
+
+=head2 Reading tags after reading an image
+
+This is pretty simple:
+
+  # print the author of a TIFF, if any
+  my $img = Imager->new;
+  $img->read(file=>$filename, type='tiff') or die $img->errstr;
+  my $author = $img->tags(name=>'tiff_author');
+  if (defined $author) {
+    print "Author: $author\n";
+  }
 
 =head1 BUGS
 
