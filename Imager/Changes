@@ -581,6 +581,11 @@ Revision history for Perl extension Imager.
         - modify the Freetype2 font code to pick it's own encoding
           rather than using whatever strange translation FT2 happens to 
           pick
+        - modify the FT1 font code to use the first encoding as a default
+          if we don't find a unicode encoding
+        - use the glyph bbox to calculate the glyph bitmaps for rendering
+          with FT1 rather than the global ascender/descender.  This helps
+          with fonts that have broken metrics.
 
 =================================================================
 

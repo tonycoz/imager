@@ -12,7 +12,7 @@ use Imager qw(:all);
 $loaded = 1;
 print "ok 1\n";
 
-init_log("testout/t35ttfont.log",1);
+init_log("testout/t35ttfont.log",2);
 
 sub skip { 
   print "ok 2 # skip\n";
@@ -61,13 +61,14 @@ $backgr=Imager::ImgRaw::new(500,300,3);
 
 #     i_tt_set_aa(2);
 
-i_tt_text($ttraw,$backgr,100,100,$bgcolor,50.0,'test',4,1);
+i_tt_text($ttraw,$backgr,100,120,$bgcolor,50.0,'test',4,1);
 
 my $ugly = Imager::i_tt_new("./fontfiles/ImUgly.ttf");
-i_tt_text($ugly, $backgr,100, 50, $bgcolor, 14, 'g%g', 3, 1);
-i_tt_text($ugly, $backgr,150, 50, $bgcolor, 14, 'delta', 5, 1);
-i_tt_text($ttraw, $backgr, 20, 10, $bgcolor, 14, 'abcdefghijklmnopqrstuvwxyz{|}', 29, 1);
-i_tt_text($ttraw, $backgr, 20, 30, $bgcolor, 14, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 26, 1);
+i_tt_text($ugly, $backgr,100, 80, $bgcolor, 14, 'g%g', 3, 1);
+i_tt_text($ugly, $backgr,150, 80, $bgcolor, 14, 'delta', 5, 1);
+i_draw($backgr,0,20,499,20,i_color_new(0,127,0,0));
+i_tt_text($ttraw, $backgr, 20, 20, $bgcolor, 14, 'abcdefghijklmnopqrstuvwxyz{|}', 29, 1);
+i_tt_text($ttraw, $backgr, 20, 50, $bgcolor, 14, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 26, 1);
 
 
 open(FH,">testout/t35ttfont2.ppm") || die "cannot open testout/t35ttfont.ppm\n";
