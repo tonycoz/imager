@@ -565,10 +565,10 @@ i_readgif_callback(i_read_callback_t cb, char *userdata, int **colour_table, int
   GifFileType *GifFile;
   i_img *result;
 
-  i_clear_error();
-  
   i_gen_read_data *gci = i_gen_read_data_new(cb, userdata);
 
+  i_clear_error();
+  
   mm_log((1,"i_readgif_callback(callback %p, userdata %p, colour_table %p, colours %p)\n", cb, userdata, colour_table, colours));
   if ((GifFile = DGifOpen( (void*) gci, gif_read_callback )) == NULL) {
     gif_push_error();
