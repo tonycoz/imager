@@ -13,22 +13,24 @@ win32.c - implements some win32 specific code, specifically Win32 font support.
    if (i_wf_bbox(facename, size, text, text_len, bbox)) {
      // we have the bbox
    }
+   i_wf_text(face, im, tx, ty, cl, size, text, len, align, aa);
+   i_wf_cp(face, im, tx, ty, channel, size, text, len, align, aa)
 
+=head1 DESCRIPTION
+
+An imager interface to font output using the Win32 GDI.
+
+=over
+
+=cut
 */
 
-static void set_logfont(char *face, int size, LOGFONT *lf) {
-  memset(lf, 0, sizeof(LOGFONT));
-
-  lf->lfHeight = -size; /* character height rather than cell height */
-  lf->lfCharSet = ANSI_CHARSET;
-  lf->lfOutPrecision = OUT_TT_PRECIS;
-  lf->lfClipPrecision = CLIP_DEFAULT_PRECIS;
-  lf->lfQuality = PROOF_QUALITY;
-  strncpy(lf->lfFaceName, face, sizeof(lf->lfFaceName)-1);
-  /* NUL terminated by the memset at the top */
-}
-
 #define fixed(x) ((x).value + ((x).fract) / 65536.0)
+
+static void set_logfont(char *face, int size, LOGFONT *lf);
+
+static LPVOID render_text(char *face, int size, char *text, int length, int aa,
+                          HBITMAP *pbm, SIZE *psz, TEXTMETRIC *tm);
 
 int i_wf_bbox(char *face, int size, char *text, int length, int *bbox) {
   LOGFONT lf;
@@ -103,11 +105,100 @@ int i_wf_bbox(char *face, int size, char *text, int length, int *bbox) {
 }
 
 
+int
+i_wf_text(char *face, i_img *im, int tx, int ty, i_color *cl, int size, 
+	  char *text, int len, int align, int aa) {
+  unsigned char *bits;
+  HBITMAP bm;
+  SIZE sz;
+  int line_width;
+  int x, y;
+  int ch;
+  TEXTMETRIC tm;
+  int top;
+
+  bits = render_text(face, size, text, len, aa, &bm, &sz, &tm);
+  if (!bits)
+    return 0;
+  
+  line_width = sz.cx * 3;
+  line_width = (line_width + 3) / 4 * 4;
+  top = ty;
+  if (align)
+    top -= tm.tmAscent;
+
+  for (y = 0; y < sz.cy; ++y) {
+    for (x = 0; x < sz.cx; ++x) {
+      i_color pel;
+      int scale = bits[3 * x];
+      i_gpix(im, tx+x, top+sz.cy-y-1, &pel);
+      for (ch = 0; ch < im->channels; ++ch) {
+	pel.channel[ch] = 
+	  ((255-scale) * pel.channel[ch] + scale*cl->channel[ch]) / 255.0;
+      }
+      i_ppix(im, tx+x, top+sz.cy-y-1, &pel);
+    }
+    bits += line_width;
+  }
+  DeleteObject(bm);
+
+  return 1;
+}
+
+int
+i_wf_cp(char *face, i_img *im, int tx, int ty, int channel, int size, 
+	  char *text, int len, int align, int aa) {
+  unsigned char *bits;
+  HBITMAP bm;
+  SIZE sz;
+  int line_width;
+  int x, y;
+  int ch;
+  TEXTMETRIC tm;
+  int top;
+
+  bits = render_text(face, size, text, len, aa, &bm, &sz, &tm);
+  if (!bits)
+    return 0;
+  
+  line_width = sz.cx * 3;
+  line_width = (line_width + 3) / 4 * 4;
+  top = ty;
+  if (align)
+    top -= tm.tmAscent;
+
+  for (y = 0; y < sz.cy; ++y) {
+    for (x = 0; x < sz.cx; ++x) {
+      i_color pel;
+      int scale = bits[3 * x];
+      i_gpix(im, tx+x, top+sz.cy-y-1, &pel);
+      pel.channel[channel] = scale;
+      i_ppix(im, tx+x, top+sz.cy-y-1, &pel);
+    }
+    bits += line_width;
+  }
+  DeleteObject(bm);
+
+  return 1;
+}
+
+static void set_logfont(char *face, int size, LOGFONT *lf) {
+  memset(lf, 0, sizeof(LOGFONT));
+
+  lf->lfHeight = -size; /* character height rather than cell height */
+  lf->lfCharSet = ANSI_CHARSET;
+  lf->lfOutPrecision = OUT_TT_PRECIS;
+  lf->lfClipPrecision = CLIP_DEFAULT_PRECIS;
+  lf->lfQuality = PROOF_QUALITY;
+  strncpy(lf->lfFaceName, face, sizeof(lf->lfFaceName)-1);
+  /* NUL terminated by the memset at the top */
+}
+
 /* renders the text to an in-memory RGB bitmap 
    It would be nice to render to greyscale, but Windows doesn't have
    native greyscale bitmaps.
  */
-LPVOID render_text(char *face, int size, char *text, int length, int aa,
+static LPVOID render_text(char *face, int size, char *text, int length, int aa,
 		   HBITMAP *pbm, SIZE *psz, TEXTMETRIC *tm) {
   BITMAPINFO bmi;
   BITMAPINFOHEADER *bmih = &bmi.bmiHeader;
@@ -193,79 +284,3 @@ LPVOID render_text(char *face, int size, char *text, int length, int aa,
   return bits;
 }
 
-int
-i_wf_text(char *face, i_img *im, int tx, int ty, i_color *cl, int size, 
-	  char *text, int len, int align, int aa) {
-  unsigned char *bits;
-  HBITMAP bm;
-  SIZE sz;
-  int line_width;
-  int x, y;
-  int ch;
-  TEXTMETRIC tm;
-  int top;
-
-  bits = render_text(face, size, text, len, aa, &bm, &sz, &tm);
-  if (!bits)
-    return 0;
-  
-  line_width = sz.cx * 3;
-  line_width = (line_width + 3) / 4 * 4;
-  top = ty;
-  if (align)
-    top -= tm.tmAscent;
-
-  for (y = 0; y < sz.cy; ++y) {
-    for (x = 0; x < sz.cx; ++x) {
-      i_color pel;
-      int scale = bits[3 * x];
-      i_gpix(im, tx+x, top+sz.cy-y-1, &pel);
-      for (ch = 0; ch < im->channels; ++ch) {
-	pel.channel[ch] = 
-	  ((255-scale) * pel.channel[ch] + scale*cl->channel[ch]) / 255.0;
-      }
-      i_ppix(im, tx+x, top+sz.cy-y-1, &pel);
-    }
-    bits += line_width;
-  }
-  DeleteObject(bm);
-
-  return 1;
-}
-
-int
-i_wf_cp(char *face, i_img *im, int tx, int ty, int channel, int size, 
-	  char *text, int len, int align, int aa) {
-  unsigned char *bits;
-  HBITMAP bm;
-  SIZE sz;
-  int line_width;
-  int x, y;
-  int ch;
-  TEXTMETRIC tm;
-  int top;
-
-  bits = render_text(face, size, text, len, aa, &bm, &sz, &tm);
-  if (!bits)
-    return 0;
-  
-  line_width = sz.cx * 3;
-  line_width = (line_width + 3) / 4 * 4;
-  top = ty;
-  if (align)
-    top -= tm.tmAscent;
-
-  for (y = 0; y < sz.cy; ++y) {
-    for (x = 0; x < sz.cx; ++x) {
-      i_color pel;
-      int scale = bits[3 * x];
-      i_gpix(im, tx+x, top+sz.cy-y-1, &pel);
-      pel.channel[channel] = scale;
-      i_ppix(im, tx+x, top+sz.cy-y-1, &pel);
-    }
-    bits += line_width;
-  }
-  DeleteObject(bm);
-
-  return 1;
-}
