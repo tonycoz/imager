@@ -1,5 +1,5 @@
 #!perl -w
-print "1..69\n";
+print "1..71\n";
 use Imager qw(:all);
 $^W=1; # warnings during command-line tests
 $|=1;  # give us some progress in the test harness
@@ -24,7 +24,7 @@ i_box_filled($timg, 2, 2, 18, 18, $trans);
 my $test_num;
 
 if (!i_has_format("tiff")) {
-  for (1..69) {
+  for (1..71) {
     print "ok $_ # skip no tiff support\n";
   }
 } else {
@@ -321,6 +321,16 @@ if (!i_has_format("tiff")) {
     ok($tag eq "Page ".($i+1),
        "tag doesn't match original image");
   }
+
+  # writing even more images to tiff - we weren't handling more than five
+  # correctly on read
+  @imgs = map $ooim->copy(), 1..40;
+  my $rc = Imager->write_multi({file=>'testout/t106_multi2.tif'}, @imgs);
+  ok($rc, "writing 40 images to tiff");
+  @out = Imager->read_multi(file=>'testout/t106_multi2.tif');
+  ok(@imgs == @out, "reading 40 images from tiff");
+  # force some allocation activity - helps crash here if it's the problem
+  @out = @imgs = ();
 
   # multi-image fax files
   ok(Imager->write_multi({file=>'testout/t106_faxmulti.tiff', class=>'fax'},
