@@ -630,6 +630,16 @@ i_arc(im,x,y,rad,d1,d2,val)
 
 
 void
+i_circle_aa(im,x,y,rad,val)
+    Imager::ImgRaw     im
+	     float     x
+	     float     y
+             float     rad
+	   Imager::Color    val
+
+
+
+void
 i_bezier_multi(im,xc,yc,val)
     Imager::ImgRaw     im
              Imager::Color  val

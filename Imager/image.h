@@ -77,6 +77,7 @@ void i_box_filled  (i_img *im,int x1,int y1,int x2,int y2,i_color *val);
 void i_draw        (i_img *im,int x1,int y1,int x2,int y2,i_color *val);
 void i_line_aa     (i_img *im,int x1,int y1,int x2,int y2,i_color *val);
 void i_arc         (i_img *im,int x,int y,float rad,float d1,float d2,i_color *val);
+void i_circle_aa   (i_img *im,float x, float y,float rad,i_color *val);
 void i_copyto      (i_img *im,i_img *src,int x1,int y1,int x2,int y2,int tx,int ty);
 void i_copyto_trans(i_img *im,i_img *src,int x1,int y1,int x2,int y2,int tx,int ty,i_color *trans);
 void i_copy        (i_img *im,i_img *src);
