@@ -477,6 +477,9 @@ Revision history for Perl extension Imager.
         - added OO interfaces for the mosaic, bumpmap, postlevels and
           watermark filters
         - added t/t61filters.t to test the filters
+	- fixed some problems in jpeg handling from the exp_represent merge
+        - fixed buffer flushing for wiol jpeg code
+	- added some tests that will hopefully catch it in the future
 
 =================================================================
 

@@ -177,14 +177,23 @@ wiol_init_destination (j_compress_ptr cinfo) {
 static boolean
 wiol_empty_output_buffer(j_compress_ptr cinfo) {
   wiol_dest_ptr dest = (wiol_dest_ptr) cinfo->dest;
-  ssize_t nbytes     = JPGS - dest->pub.free_in_buffer;
   ssize_t rc;
+  /*
+    Previously this code was checking free_in_buffer to see how much 
+    needed to be written.  This does not follow the documentation:
+
+                       "In typical applications, it should write out the
+        *entire* buffer (use the saved start address and buffer length;
+        ignore the current state of next_output_byte and free_in_buffer)."
+
+  ssize_t nbytes     = JPGS - dest->pub.free_in_buffer;
+  */
 
   mm_log((1,"wiol_emtpy_output_buffer(cinfo 0x%p)\n"));
-  rc = dest->data->writecb(dest->data, dest->buffer, nbytes);
+  rc = dest->data->writecb(dest->data, dest->buffer, JPGS);
   
-  if (rc != nbytes) { /* XXX: Should raise some jpeg error */
-    mm_log((1, "wiol_empty_output_buffer: Error: nbytes = %d != rc = %d\n", nbytes, rc));
+  if (rc != JPGS) { /* XXX: Should raise some jpeg error */
+    mm_log((1, "wiol_empty_output_buffer: Error: nbytes = %d != rc = %d\n", JPGS, rc));
   }
   dest->pub.free_in_buffer = JPGS;
   dest->pub.next_output_byte = dest->buffer;
@@ -194,6 +203,12 @@ wiol_empty_output_buffer(j_compress_ptr cinfo) {
 static void
 wiol_term_destination (j_compress_ptr cinfo) {
   wiol_dest_ptr dest = (wiol_dest_ptr) cinfo->dest;
+
+  /* yes, this needs to flush the buffer */
+  /* needs error handling */
+  dest->data->writecb(dest->data, dest->buffer, 
+		      JPGS - dest->pub.free_in_buffer);
+
   mm_log((1, "wiol_term_destination(cinfo %p)\n", cinfo));
   mm_log((1, "wiol_term_destination: dest %p\n", cinfo->dest));
   if (dest != NULL) myfree(dest->buffer);

@@ -52,7 +52,6 @@ use Imager::Font;
 		i_haar
 		i_count_colors
 
-
 		i_gaussian
 		i_conv
 
@@ -364,7 +363,6 @@ sub new {
   if ($hsh{xsize} && $hsh{ysize}) { $self->img_set(%hsh); }
   return $self;
 }
-
 
 # Copy an entire image with no changes 
 # - if an image has magic the copy of it will not be magical
@@ -736,7 +734,7 @@ sub read {
   # yes the code isn't here yet - next week maybe?
   # Next week?  Are you high or something?  That comment
   # has been there for half a year dude.
-
+  # Look, i just work here, ok?
 
   if (!$input{type} and $input{file}) {
     $input{type}=$FORMATGUESS->($input{file});
@@ -821,7 +819,6 @@ sub read {
 
     # Old code for reference while changing the new stuff
 
-
     if (!$input{type} and $input{file}) {
       $input{type}=$FORMATGUESS->($input{file});
     }
@@ -879,29 +876,18 @@ sub read {
       }
       $self->{DEBUG} && print "loading a gif file\n";
     }
-
-    if ( $input{type} eq 'jpeg' ) {
-      if ( !i_writejpeg_wiol($self->{IMG}, $IO, $input{jpegquality})) {
-	$self->{ERRSTR}='unable to write jpeg image'; 
-	return undef;
-      }
-      $self->{DEBUG} && print "writing a jpeg file\n";
-    }
-
   }
   return $self;
 }
 
-
 # Write an image to file
-
 sub write {
   my $self = shift;
   my %input=(jpegquality=>75, gifquant=>'mc', lmdither=>6.0, lmfixed=>[], 
 	     fax_fine=>1, @_);
   my ($fh, $rc, $fd, $IO);
 
-  my %iolready=( tiff=>1, raw=>1, png=>1, pnm=>1, bmp=>1, ); # this will be SO MUCH BETTER once they are all in there
+  my %iolready=( tiff=>1, raw=>1, png=>1, pnm=>1, bmp=>1, jpeg=>1 ); # this will be SO MUCH BETTER once they are all in there
 
   unless ($self->{IMG}) { $self->{ERRSTR}='empty input image'; return undef; }
 
@@ -957,6 +943,12 @@ sub write {
 	return undef;
       }
       $self->{DEBUG} && print "writing a png file\n";
+    } elsif ( $input{type} eq 'jpeg' ) {
+      if ( !i_writejpeg_wiol($self->{IMG}, $IO, $input{jpegquality})) {
+	$self->{ERRSTR}='unable to write jpeg image'; 
+	return undef;
+      }
+      $self->{DEBUG} && print "writing a jpeg file\n";
     } elsif ( $input{type} eq 'bmp' ) {
       if ( !i_writebmp_wiol($self->{IMG}, $IO) ) {
 	$self->{ERRSTR}='unable to write bmp image';
@@ -975,7 +967,6 @@ sub write {
     }
     return $self;
   } else {
-
     if ( $input{type} eq 'gif' ) {
       if (not $input{gifplanes}) {
 	my $gp;
