@@ -991,7 +991,6 @@ read_direct_bmp(io_glue *ig, int xsize, int ysize, int bit_count,
     lasty = ysize;
     yinc = 1;
   }
-  line = mymalloc(line_size);
   if (compression == BI_RGB) {
     masks = std_masks[pix_size-2];
     
