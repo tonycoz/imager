@@ -12,8 +12,10 @@ my $help;
 my $verbose;
 my $backup; # backup extension name
 my $directory; # output directory
+my $output;
 my $type;
 my %write_opts; # options supplied to write()
+my $understand;
 
 my @collection; # actions/options in order to allow us to set values as needed
 
@@ -67,14 +69,29 @@ GetOptions('help' => sub { $help_func->("synopsis") },
 	   'type|t=s' => \$type, # output file type
 	   'write-option|wo=s' => \%write_opts,
 	   'output|o=s' => \$output,
+           'understand' => \$understand,
 
 	   @getoptions,
 
 	   'help-color-spec' => sub { $help_func->("color specifications") },
+           'help-actions' => sub { $help_func->("actions") },
+           'help-options' => sub { $help_func->("processing options") },
+           'help-general' => sub { $help_func->("general options") },
 	  )
   or usage();
 
 $did_help and exit;
+
+unless ($understand) {
+  print STDERR <<EOS;
+This tool is under-tested and will probably destroy your data.
+
+If you understand and agree with this use the --understand option.
+
+In fact, only the --info and --tags actions have been used at all.
+EOS
+  die;
+}
 
 exists $write_opts{file}
   and die "Illegal write option 'file'\n";
@@ -138,6 +155,9 @@ for my $name (@ARGV) {
       }
     }
   }
+  else {
+    print STDERR "Failed reading $name: ",$im->errstr,"\n";
+  }
 }
 
 sub _replace_codes {
@@ -186,6 +206,19 @@ sub req_info_format {
   $state->{info_format} = $value;
 
   $im;
+}
+
+sub req_tags {
+  my ($im, $ignored, $state) = @_;
+
+  print $state->{filename},"\n";
+  my @tags = $im->tags;
+  for my $tag (sort { $a->[0] cmp $b->[0] } @tags) {
+    my $name = shift @$tag;
+    print "  $name: @$tag\n";
+  }
+
+  return;
 }
 
 sub val_scale {
@@ -312,6 +345,7 @@ sub im_functions {
   return
     (
      info => [ \&req_info ],
+     tags => [ \&req_tags ],
      scale => [ \&req_scale, \&val_scale ],
      rotate => [ \&req_rotate, \&val_rotate ],
      caption => [ \&req_caption ],
@@ -411,9 +445,12 @@ imager - Imager command-line image manipulation tool
  imager  [--font-size <size>] [--fs <size>] [--background <color>] 
     [--bg <color>] [--foreground <color>] [--fg <color] 
     [--info-format <format>] [--rotate <angle>] [--scale <scale-spec>] 
-    [--caption <text>] [--info] [--font fontfile] files ...
+    [--caption <text>] [--info] [--tags] [--font fontfile] files ...
  imager --help-I<option>
- imager  --help-I<operation>
+ imager --help-I<operation>
+ imager --help-options
+ imager --help-actions
+ imager --help-general
 
 =head1 DESCRIPTION
 
@@ -431,6 +468,14 @@ is a paletted image, so the displayed image type may not match the
 source image type.
 
 No output image file is produced.
+
+=item --tags
+
+Displays all the tags the Imager reader for that format sets for each
+file.
+
+See L<Imager::Files> for file format specific tags and
+L<Imager::ImageTypes> for common tags.
 
 =item --scale <scalefactor>
 
