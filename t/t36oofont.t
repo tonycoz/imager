@@ -12,7 +12,7 @@ use strict;
 # (It may become useful if the test is moved to ./t subdirectory.)
 
 my $loaded;
-BEGIN { $| = 1; print "1..16\n"; }
+BEGIN { $| = 1; print "1..20\n"; }
 END {print "not ok 1\n" unless $loaded;}
 use Imager;
 require "t/testtools.pl";
@@ -50,12 +50,34 @@ if (i_has_format("t1") and -f $fontname_pfb) {
 
   $img->box(box=>\@bbox, color=>$green);
 
+  # "utf8" support
+  $text = pack("C*", 0x41, 0xE2, 0x80, 0x90, 0x41);
+  okx($img->string(font=>$font, text=>$text, 'x'=>100, 'y'=>50, utf8=>1,
+                   overline=>1),
+      "draw 'utf8' hand-encoded text");
+
+  okx($img->string(font=>$font, text=>$text, 'x'=>140, 'y'=>50, utf8=>1, 
+                   underline=>1, channel=>2),
+      "channel 'utf8' hand-encoded text");
+
+  if($] >= 5.006) {
+    eval q{$text = "A\x{2010}A"};
+    okx($img->string(font=>$font, text=>$text, 'x'=>180, 'y'=>50,
+                    strikethrough=>1),
+       "draw native UTF8 text");
+    okx($img->string(font=>$font, text=>$text, 'x'=>220, 'y'=>50, channel=>1),
+       "channel native UTF8 text");
+  }
+  else {
+    skipx(2, "perl too old for native utf8");
+  }
+
   okx($img->write(file=>"testout/t36oofont1.ppm", type=>'pnm'),
       "write t36oofont1.ppm")
     or print "# ",$img->errstr,"\n";
 
 } else {
-  skipx(4, "T1lib missing or disabled");
+  skipx(8, "T1lib missing or disabled");
 }
 
 if (i_has_format("tt") and -f $fontname_tt) {

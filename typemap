@@ -11,6 +11,7 @@ float			T_FLOAT
 float*			T_ARRAY
 undef_int		T_IV_U
 HASH			T_HVREF
+utf8_str		T_UTF8_STR
 #############################################################################
 INPUT
 T_PTR_NULL

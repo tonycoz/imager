@@ -119,8 +119,6 @@ Clean up:
 
 - Compile with memory debugging enabled and fix all leaks
 
-- dynaload.c is strongly tied to perl
-
 - Add mycalloc() memory allocation wrappers.
 
 - should we overload <=> or cmp for Imager::Color objects?

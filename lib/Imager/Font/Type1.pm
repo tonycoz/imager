@@ -69,15 +69,20 @@ sub _draw {
   my $self = shift;
   my %input = @_;
   t1_set_aa_level($input{aa});
+  my $flags = '';
+  $flags .= 'u' if $input{underline};
+  $flags .= 's' if $input{strikethrough};
+  $flags .= 'o' if $input{overline};
   if (exists $input{channel}) {
     Imager::i_t1_cp($input{image}{IMG}, $input{'x'}, $input{'y'},
 		    $input{channel}, $self->{id}, $input{size},
-		    $input{string}, length($input{string}), $input{align});
+		    $input{string}, length($input{string}), $input{align},
+                    $input{utf8}, $flags);
   } else {
     Imager::i_t1_text($input{image}{IMG}, $input{'x'}, $input{'y'}, 
 		      $input{color}, $self->{id}, $input{size}, 
 		      $input{string}, length($input{string}), 
-		      $input{align});
+		      $input{align}, $input{utf8}, $flags);
   }
 
   return $self;
@@ -86,8 +91,12 @@ sub _draw {
 sub _bounding_box {
   my $self = shift;
   my %input = @_;
+  my $flags = '';
+  $flags .= 'u' if $input{underline};
+  $flags .= 's' if $input{strikethrough};
+  $flags .= 'o' if $input{overline};
   return Imager::i_t1_bbox($self->{id}, $input{size}, $input{string},
-			   length($input{string}));
+			   length($input{string}), $input{utf8}, $flags);
 }
 
 1;
@@ -112,6 +121,28 @@ By default Imager no longer creates the F<t1lib.log> log file.  You
 can re-enable that by calling Imager::init() with the C<t1log> option:
 
   Imager::init(t1log=>1);
+
+Currently specific to Imager::Font::Type1, you can use the following
+flags when drawing text or calculating a bounding box:
+
+=over
+
+=item underline
+
+Draw the text with an underline.
+
+=item overline
+
+Draw the text with an overline.
+
+=item strikethrough
+
+Draw the text with a strikethrough.
+
+=back
+
+Obviously, if you're calculating the bounding box the size of the line
+is included in the box, and the line isn't drawn :)
 
 =head1 AUTHOR
 

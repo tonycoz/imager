@@ -664,6 +664,11 @@ Revision history for Perl extension Imager.
         - support has_chars() method for Freetype 1.x
         - fixed log message for i_ft2_has_chars()
         - fixed some broken checking for UTF8 in FT2 code
+        - handle UTF8 strings passed to T1 low-level functions
+        - handle flags for underline, strikethrough and overline for T1
+          low-level output functions
+        - OO interfaces to UTF8 and flags, for now leaving the flags as
+          specific to Imager::Font::Type1
 
 =================================================================
 
