@@ -568,7 +568,7 @@ sub paste {
 sub crop {
   my $self=shift;
   unless ($self->{IMG}) { $self->{ERRSTR}='empty input image'; return undef; }
-  my %hsh=(left=>0,right=>0,top=>0,bottom=>0,@_);
+  my %hsh=(left=>0,right=>$self->getwidth(),top=>0,bottom=>$self->getheight(),@_);
 
   my ($w,$h,$l,$r,$b,$t)=($self->getwidth(),$self->getheight(),
 				@hsh{qw(left right bottom top)});

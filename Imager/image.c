@@ -867,6 +867,99 @@ Lanczos(float x) {
   else return(sin(PIx) / PIx * sin(PIx2) / PIx2);
 }
 
+
+
+
+
+
+
+
+
+i_img*
+i_scaleaxis_3ch_8bit(i_img *im, int size, int Axis) {
+
+  int i, j;
+  int iEnd, jEnd;
+
+  int hsize, vsize;
+
+  short psave;
+  unsigned long *pixels;
+  i_color val;
+  i_img *new_img;
+
+  mm_log((1,"i_scaleaxis_3ch_8bit(im %p, size %d,Axis %d)\n",im, size, Axis));
+
+  if (Axis == XAXIS) {
+    hsize = size;
+    vsize = im->ysize;
+    
+    jEnd = hsize;
+    iEnd = vsize;
+    pixels = mymalloc(sizeof(*pixels) * im->xsize);
+  } else {
+    hsize = im->xsize;
+    vsize = size;
+    
+    jEnd = vsize;
+    iEnd = hsize;
+    pixels = mymalloc(sizeof(*pixels) * im->ysize);
+  }
+  
+  new_img = i_img_empty_ch(NULL, hsize, vsize, im->channels);
+
+
+  if (Axis == XAXIS) {
+    
+    for (i=0; i<iEnd; i++) {
+      int end = im->xsize;
+
+      for(j=0; j<im->xsize; j++) {
+	i_gpix(im, j, i, &val);
+	pixels[j] = (val.rgba.r<<24) | (val.rgba.g<<16) | (val.rgba.b<<8) | (val.rgba.a<<0);
+      }
+      
+      /* printf("jEnd = %d, end = %d\n", jEnd, end); */
+      while ((end+1)/2>=size) {
+	int lend = end/2;
+	end = (end+1) / 2;
+	
+	for(j=0; j<lend; j++) {
+	  unsigned long a = pixels[2*j];
+	  unsigned long b = pixels[2*j+1];
+	  pixels[j] = (((a ^ b) & 0xfefefefeUL) >> 1) + (a & b);
+	}
+	if (end>lend) {
+	  pixels[j] = pixels[2*j];
+	  j++;
+	}
+      }
+
+      printf("end = %d size = %d\n", end, size);
+
+      /* Replace this with Bresenham later */
+      for(j=0; j<size; j++) {
+	float f = i;
+	  /*	if ((i*size)/end <)  */
+	  unsigned long t = pixels[j];
+	val.rgba.r = (t >> 24) & 0xff;
+	val.rgba.g = (t >> 16) & 0xff;
+	val.rgba.b = (t >> 8) & 0xff;
+	val.rgba.a = t & 0xff;
+	i_ppix(new_img, j, i, &val);
+      }
+    }
+  }
+  
+  return new_img;
+}
+
+
+
+
+
+
+
 /*
 =item i_scaleaxis(im, value, axis)
 
@@ -890,7 +983,10 @@ i_scaleaxis(i_img *im, float Value, int Axis) {
 
   mm_log((1,"i_scaleaxis(im %p,Value %.2f,Axis %d)\n",im,Value,Axis));
 
+
   if (Axis == XAXIS) {
+    return i_scaleaxis_3ch_8bit(im, (int)(0.5+im->xsize*Value), Axis);
+
     hsize = (int)(0.5 + im->xsize * Value);
     vsize = im->ysize;
     
