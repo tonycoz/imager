@@ -578,6 +578,9 @@ Revision history for Perl extension Imager.
         - read/write multi-image tiff files
         - tests in t50basicoo.t for multi-image/file
         - ASCII PBM files were reading white as dark gray (255 vs 1)
+        - modify the Freetype2 font code to pick it's own encoding
+          rather than using whatever strange translation FT2 happens to 
+          pick
 
 =================================================================
 
