@@ -128,9 +128,11 @@ DSO_open(char *file, char **evalstring) {
 undef_int
 DSO_close(void *ptr) {
   DSO_handle *handle = (DSO_handle *)ptr;
-  FreeLibrary(handle->handle);
+  BOOL result = FreeLibrary(handle->handle);
   free(handle->filename);
   free(handle);
+
+  return result;
 }
 
 #else
