@@ -1803,7 +1803,8 @@ i_t1_face_name(handle)
           PUSHs(sv_2mortal(newSVpv(name, strlen(name))));
         }
 
-void i_t1_glyph_name(handle, text_sv, utf8 = 0)
+void
+i_t1_glyph_name(handle, text_sv, utf8 = 0)
         int handle
         SV *text_sv
         int utf8
@@ -1991,7 +1992,8 @@ i_tt_face_name(handle)
           PUSHs(sv_2mortal(newSVpv(name, strlen(name))));
         }
 
-void i_tt_glyph_name(handle, text_sv, utf8 = 0)
+void
+i_tt_glyph_name(handle, text_sv, utf8 = 0)
         Imager::Font::TT handle
         SV *text_sv
         int utf8
@@ -4227,7 +4229,8 @@ i_ft2_face_name(handle)
           PUSHs(sv_2mortal(newSVpv(name, 0)));
         }
 
-void i_ft2_glyph_name(handle, text_sv, utf8 = 0)
+void
+i_ft2_glyph_name(handle, text_sv, utf8 = 0)
         Imager::Font::FT2 handle
         SV *text_sv
         int utf8
