@@ -143,9 +143,13 @@ transform.perl	Shell interface to Imager::Transform
 bigtest.perl	Library selection tester
 dynfilt/pluginst.h
 dynfilt/dyntest.c
+dynfilt/dyntest.exp
 dynfilt/dt2.c
+dynfilt/dt2.exp
 dynfilt/mandelbrot.c
+dynfilt/mandelbrot.exp
 dynfilt/flines.c
+dynfilt/flines.exp
 dynfilt/compile.txt
 dynfilt/Makefile.PL
 win32.c		Implements font support through Win32 GDI
