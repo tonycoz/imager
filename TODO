@@ -13,10 +13,6 @@ Iolayer:
 - Implment the maxread threshold (Indicates how far 
   a library can read before it indicates that it's done).
 
-BUGS:
-- at smaller point sizes (14 pixels) the bottom of a g can be
-lost (using the arial or ImUgly font)
-
 Enhanched internal structure:
 
 MultiImage & metadata support:
