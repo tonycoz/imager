@@ -1089,21 +1089,20 @@ sub read {
     undef($self->{IMG});
   }
 
-  # FIXME: Find the format here if not specified
-  # yes the code isn't here yet - next week maybe?
-  # Next week?  Are you high or something?  That comment
-  # has been there for half a year dude.
-  # Look, i just work here, ok?
-
   my ($IO, $fh) = $self->_get_reader_io(\%input) or return;
 
   unless ($input{'type'}) {
-		$input{'type'} = i_test_format_probe($IO, -1);
-	}
+    $input{'type'} = i_test_format_probe($IO, -1);
+  }
 
   unless ($input{'type'}) {
 	  $self->_set_error('type parameter missing and not possible to guess from extension'); 
     return undef;
+  }
+
+  unless ($formats{$input{'type'}}) {
+    $self->_set_error("format '$input{'type'}' not supported");
+    return;
   }
 
   # Setup data source
