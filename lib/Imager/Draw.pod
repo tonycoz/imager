@@ -154,7 +154,7 @@ Like other antialiased drawing functions its coordinates can be
 specified with floating point values.  As with other filled shapes 
 it's possible to use a C<fill> instead of a color.
 
-=item flood fill
+=item flood_fill
 
 You can fill a region that all has the same color using the
 flood_fill() method, for example:

@@ -2765,6 +2765,111 @@ with an image object.
 The C<Imager-E<gt>new> method is described in detail in
 L<Imager::ImageTypes>.
 
+=head1 METHOD INDEX
+
+Where to find information on methods for Imager class objects.
+
+addcolors() -  L<Imager::ImageTypes>
+
+addtag() -  L<Imager::ImageTypes> - add image tags
+
+arc() - L<Imager::Draw/arc>
+
+bits() - L<Imager::ImageTypes> - number of bits per sample for the
+image
+
+box() - L<Imager::Draw/box>
+
+circle() - L<Imager::Draw/circle>
+
+convert() - L<Imager::Transformations/"Color transformations"> -
+transform the color space
+
+copy() - L<Imager::Transformations/copy>
+
+crop() - L<Imager::Transformations/crop> - extract part of an image
+
+deltag() -  L<Imager::ImageTypes> - delete image tags
+
+difference() - L<Imager::Filters/"Image Difference">
+
+filter() - L<Imager::Filters>
+
+findcolor() - L<Imager::ImageTypes> - search the image palette, if it
+has one
+
+flip() - L<Imager::Transformations/flip>
+
+flood_fill() - L<Imager::Draw/flood_fill>
+
+getchannels() -  L<Imager::ImageTypes>
+
+getcolorcount() -  L<Imager::ImageTypes>
+
+getcolors() - L<Imager::ImageTypes> - get colors from the image
+palette, if it has one
+
+getheight() - L<Imager::ImageTypes>
+
+getpixel() - L<Imager::Draw/setpixel and getpixel>
+
+getwidth() - L<Imager::ImageTypes>
+
+img_set() - L<Imager::ImageTypes>
+
+line() - L<Imager::Draw/line>
+
+map() - L<Imager::Transformations/"Color Mappings"> - remap color
+channel values
+
+masked() -  L<Imager::ImageTypes> - make a masked image
+
+matrix_transform() - L<Imager::Engines/"Matrix Transformations">
+
+new() - L<Imager::ImageTypes>
+
+paste() - L<Imager::Transformations/paste> - draw an image onto an image
+
+polygon() - L<Imager::Draw/polygon>
+
+polyline() - L<Imager::Draw/polyline>
+
+read() - L<Imager::Files>
+
+read_multi() - L<Imager::Files>
+
+rotate() - L<Imager::Transformations/rotate>
+
+rubthrough() - L<Imager::Transformations/rubthrough> - draw an image onto an
+image and use the alpha channel
+
+scale() - L<Imager::Transformations/scale>
+
+setcolors() - L<Imager::ImageTypes> - set palette colors in a paletted image
+
+setpixel() - L<Imager::Draw/setpixel and getpixel>
+
+string() - L<Imager::Font/string> - draw text on an image
+
+tags() -  L<Imager::ImageTypes> - fetch image tags
+
+to_paletted() -  L<Imager::ImageTypes>
+
+to_rgb8() - L<Imager::ImageTypes>
+
+transform() - L<Imager::Engines/"transform">
+
+transform2() - L<Imager::Engines/"transform2">
+
+type() -  L<Imager::ImageTypes> - type of image (direct vs paletted)
+
+virtual() - L<Imager::ImageTypes> - whether the image has it's own
+data
+
+write() - L<Imager::Files>
+
+write_multi() - L<Imager::Files>
+
 =head1 SUPPORT
 
 You can ask for help, report bugs or express your undying love for
