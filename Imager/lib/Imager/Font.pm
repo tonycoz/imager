@@ -727,6 +727,54 @@ included.
 
 =back
 
+=head1 MULTIPLE MASTER FONTS
+
+The Freetype 2 driver supports multiple master fonts:
+
+=over
+
+=item is_mm()
+
+Test if the font is a multiple master font.
+
+=item mm_axes()
+
+Returns a list of the axes that can be changes in the font.  Each
+entry is an array reference which contains:
+
+=over
+
+=item 1.
+
+Name of the axis.
+
+=item 2.
+
+minimum value for this axis.
+
+=item 3.
+
+maximum value for this axis
+
+=back
+
+=item set_mm_coords(coords=>\@values)
+
+Blends an interpolated design from the master fonts.  @values must
+contain as many values as there are axes in the font.
+
+=back
+
+For example, to select the minimum value in each axis:
+
+  my @axes = $font->mm_axes;
+  my @coords = map $_->[1], @axes;
+  $font->set_mm_coords(coords=>\@coords);
+
+It's possible other drivers will support multiple master fonts in the
+future, check if your selected font object supports the is_mm() method
+using the can() method.
+
 =head1 UTF8
 
 There are 2 ways of rendering Unicode characters with Imager:

@@ -143,6 +143,36 @@ sub glyph_names {
   return pop @names;
 }
 
+sub is_mm {
+  my ($self) = @_;
+
+  i_ft2_is_multiple_master($self->{id});
+}
+
+sub mm_axes {
+  my ($self) = @_;
+
+  my ($num_axis, $num_design, @axes) =
+    i_ft2_get_multiple_masters($self->{id})
+      or return Imager->_set_error(Imager->_error_as_msg);
+
+  return @axes;
+}
+
+sub set_mm_coords {
+  my ($self, %opts) = @_;
+
+  $opts{coords}
+    or return Imager->_set_error("Missing coords parameter");
+  ref($opts{coords}) && $opts{coords} =~ /ARRAY\(0x[\da-f]+\)$/
+    or return Imager->_set_error("coords parameter must be an ARRAY ref");
+
+  i_ft2_set_mm_coords($self->{id}, @{$opts{coords}})
+    or return Imager->_set_error(Imager->_error_as_msg);
+
+  return 1;
+}
+
 1;
 
 __END__

@@ -7,18 +7,18 @@
 # Change 1..1 below to 1..last_test_to_print .
 # (It may become useful if the test is moved to ./t subdirectory.)
 
-BEGIN { $| = 1; print "1..120\n"; }
+BEGIN { $| = 1; print "1..138\n"; }
 END {print "not ok 1\n" unless $loaded;}
 use Imager qw(:all);
 
-require "t/testtools.pl";
+BEGIN { require "t/testtools.pl"; }
 $loaded = 1;
 okx(1, "loaded");
 
 init_log("testout/t38ft2font.log",2);
 
 if (!(i_has_format("ft2")) ) { 
-  skipx(119, "No freetype2 library found");
+  skipx(137, "No freetype2 library found");
   exit;
 }
 print "# has ft2\n";
@@ -26,7 +26,7 @@ print "# has ft2\n";
 $fontname=$ENV{'TTFONTTEST'}||'./fontfiles/dodge.ttf';
 
 if (! -f $fontname) {
-  skipx(119, "cannot find fontfile $fontname");
+  skipx(137, "cannot find fontfile $fontname");
   malloc_state();
   exit;
 }
@@ -319,6 +319,55 @@ if (Imager::Font::FreeType2->can_glyph_names) {
 else {
   skipx(9, "FT2 compiled without glyph names support");
 }
+
+# check that error codes are translated correctly
+my $errfont = Imager::Font->new(file=>"t/t38ft2font.t", type=>"ft2");
+isx($errfont, undef, "new font vs non font");
+matchx(Imager->errstr, qr/unknown file format/, "check error message");
+
+# Multiple Master tests
+# we check a non-MM font errors correctly
+print "# check that the methods act correctly for a non-MM font\n";
+okx(!$exfont->is_mm, "exfont not MM");
+okx((() = $exfont->mm_axes) == 0, "exfont has no MM axes");
+matchx(Imager->errstr, qr/no multiple masters/, 
+       "and returns correct error when we ask");
+okx(!$exfont->set_mm_coords(coords=>[0, 0]), "fail setting axis on exfont");
+matchx(Imager->errstr, qr/no multiple masters/, 
+       "and returns correct error when we ask");
+
+# try a MM font now - test font only has A defined
+print "# Try a multiple master font\n";
+my $mmfont = Imager::Font->new(file=>"fontfiles/MMOne.pfb", type=>"ft2", 
+                               color=>"white", aa=>1, size=>60);
+okx($mmfont, "loaded MM font");
+okx($mmfont->is_mm, "font is multiple master");
+my @axes = $mmfont->mm_axes;
+isx(@axes, 2, "check we got both axes");
+isx($axes[0][0], "Weight", "name of first axis");
+isx($axes[0][1],  50, "min for first axis");
+isx($axes[0][2], 999, "max for first axis");
+isx($axes[1][0], "Slant", "name of second axis");
+isx($axes[1][1],   0, "min for second axis");
+isx($axes[1][2], 999, "max for second axis");
+my $mmim = Imager->new(xsize=>200, ysize=>200);
+$mmim->string(font=>$mmfont, x=>0, y=>50, text=>"A");
+okx($mmfont->set_mm_coords(coords=>[ 700, 0 ]), "set to bold, unsloped");
+$mmim->string(font=>$mmfont, x=>0, y=>100, text=>"A", color=>'blue');
+my @weights = qw(50 260 525 760 999);
+my @slants = qw(0 333 666 999);
+for my $windex (0 .. $#weights) {
+  my $weight = $weights[$windex];
+  for my $sindex (0 .. $#slants) {
+    my $slant = $slants[$sindex];
+    $mmfont->set_mm_coords(coords=>[ $weight, $slant ]);
+    $mmim->string(font=>$mmfont, x=>30+32*$windex, 'y'=>50+45*$sindex,
+                  text=>"A");
+  }
+}
+
+okx($mmim->write(file=>"testout/t38mm.ppm"), "save MM output");
+
 
 sub align_test {
   my ($h, $v, $x, $y, $f, $img) = @_;
