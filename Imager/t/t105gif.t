@@ -87,9 +87,7 @@ if (!i_has_format("gif")) {
       print "not ok 6\n";
     }
 
-    my $gifvertext = Imager::i_giflib_version();
-    $gifvertext =~ /(\d+\.\d+)/;
-    my $gifver = $1 || 0;
+    my $gifver = Imager::i_giflib_version();
     if ($gifver >= 4.0) {
       # reading with a callback
       # various sizes to make sure the buffering works
@@ -282,6 +280,7 @@ EOS
     else {
       print "ok 18 # ",Imager::_error_as_msg(),"\n";
     }
+    close FH;
 
     # try to save no images :)
     open FH, ">testout/t105_none.gif"
