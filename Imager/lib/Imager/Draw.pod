@@ -12,7 +12,7 @@ Imager::Draw - Draw primitives to images
   $fill = Imager::Fill->new(hatch=>'stipple');
 
   $img->line(color=>$blue, x1=>10, x2=>100,
-                           y1=>20, y2=>50, aa=>1 );
+                           y1=>20, y2=>50, aa=>1, endp=>1 );
 
   $img->polyline(points=>[[$x0,$y0], [$x1,$y1], [$x2,$y2]],
                  color=>$blue);
@@ -78,10 +78,12 @@ L<Imager::Fill> for more information.
 =item line
 
   $img->line(color=>$green, x1=>10, x2=>100,
-                            y1=>20, y2=>50, aa=>1 );
+                            y1=>20, y2=>50, aa=>1, endp=>1 );
 
-That draws an antialiased line from (10,100) to (20,50).
-The I<antialias> parameter is still available for backwards compatibility.
+Draws a line from (x1,y1) to (x2,y2).  The endpoint (x2,y2) is drawn
+by default.  If endp of 0 is specified then the endpoint will not be
+drawn.  If C<aa> is set then the line will be drawn antialiased.  The
+I<antialias> parameter is still available for backwards compatibility.
 
 =item polyline
 

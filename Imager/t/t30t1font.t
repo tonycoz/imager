@@ -52,7 +52,7 @@ if (!(i_has_format("t1")) ) {
     or print "not ";
   print "ok 2\n";
 
-  i_draw($overlay,0,50,100,50,$bgcolor);
+  i_line($overlay,0,50,100,50,$bgcolor,1);
 
   @bbox=i_t1_bbox(0,50.0,'XMCLH',5);
   print "bbox: ($bbox[0], $bbox[1]) - ($bbox[2], $bbox[3])\n";

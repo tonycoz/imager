@@ -659,6 +659,8 @@ Revision history for Perl extension Imager.
 	- Compaq C 6.4 (OSF1) claims to be C99 but doesn't provide 
           stdint.h, don't try to use it under OSF
         - fix missing initialization in tags.c
+        - Change i_draw to i_line and have it use Bresenham's line
+	  drawing algorithm.
 
 =================================================================
 

@@ -49,7 +49,7 @@ okx(@bbox == 6, "bounding box");
 print "#bbox: ($bbox[0], $bbox[1]) - ($bbox[2], $bbox[3])\n";
 
 okx(i_tt_cp($ttraw,$overlay,5,50,1,50.0,'XMCLH',5,1,0), "cp output");
-i_draw($overlay,0,50,100,50,$bgcolor);
+i_line($overlay,0,50,100,50,$bgcolor,1);
 
 open(FH,">testout/t35ttfont.ppm") || die "cannot open testout/t35ttfont.ppm\n";
 binmode(FH);
@@ -72,7 +72,7 @@ okx(i_tt_text($ugly, $backgr,100, 80, $bgcolor, 14, 'g%g', 3, 1, 0),
     "draw g%g");
 okx(i_tt_text($ugly, $backgr,150, 80, $bgcolor, 14, 'delta', 5, 1, 0),
    "draw delta");
-i_draw($backgr,0,20,499,20,i_color_new(0,127,0,0));
+i_line($backgr,0,20,499,20,i_color_new(0,127,0,0),1);
 okx(i_tt_text($ttraw, $backgr, 20, 20, $bgcolor, 14, 'abcdefghijklmnopqrstuvwxyz{|}', 29, 1, 0), "alphabet");
 okx(i_tt_text($ttraw, $backgr, 20, 50, $bgcolor, 14, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 26, 1, 0), "ALPHABET");
 

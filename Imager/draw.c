@@ -421,40 +421,113 @@ i_box_cfill(i_img *im,int x1,int y1,int x2,int y2,i_fill_t *fill) {
   }
 }
 
+
+/* 
+=item i_line(im, x1, y1, x2, y2, val, endp)
+
+Draw a line to image using bresenhams linedrawing algorithm
+
+   im   - image to draw to
+   x1   - starting x coordinate
+   y1   - starting x coordinate
+   x2   - starting x coordinate
+   y2   - starting x coordinate
+   val  - color to write to image
+   endp - endpoint flag (boolean)
+
+=cut
+*/
+
 void
-i_draw(i_img *im,int x1,int y1,int x2,int y2,i_color *val) {
-  double alpha;
-  double dsec;
-  int temp;
+i_line(i_img *im, int x1, int y1, int x2, int y2, i_color *val, int endp) {
+  int x, y;
+  int dx, dy;
+  int p;
+  unsigned char *cp;
 
-  mm_log((1,"i_draw(im* 0x%x,x1 %d,y1 %d,x2 %d,y2 %d,val 0x%x)\n",im,x1,y1,x2,y2,val));
+  dx = x2 - x1;
+  dy = y2 - y1;
 
-  alpha=(double)(y2-y1)/(double)(x2-x1);
-  if (fabs(alpha)<1) 
-    {
-      if (x2<x1) { temp=x1; x1=x2; x2=temp; temp=y1; y1=y2; y2=temp; }
-      dsec=y1;
-      while(x1<x2)
-	{
-	  dsec+=alpha;
-	  i_ppix(im,x1,(int)(dsec+0.5),val);
-	  x1++;
-	}
+
+  /* choose variable to iterate on */
+  if (abs(dx)>abs(dy)) {
+    int dx2, dy2, cpy;
+
+    /* sort by x */
+    if (x1 > x2) {
+      int t;
+      t = x1; x1 = x2; x2 = t;
+      t = y1; y1 = y2; y2 = t;
     }
-  else
-    {
-      alpha=1/alpha;
-      if (y2<y1) { temp=x1; x1=x2; x2=temp; temp=y1; y1=y2; y2=temp; }
-      dsec=x1;
-      while(y1<y2)
-	{
-	  dsec+=alpha;
-	  i_ppix(im,(int)(dsec+0.5),y1,val);
-	  y1++;
-	}
+    
+    dx = abs(dx);
+    dx2 = dx*2;
+    dy = y2 - y1;
+
+    if (dy<0) {
+      dy = -dy;
+      cpy = -1;
+    } else {
+      cpy = 1;
     }
-  mm_log((1,"i_draw: alpha=%f.\n",alpha));
+    dy2 = dy*2;
+    p = dy2 - dx;
+
+    
+    y = y1;
+    for(x=x1; x<x2-1; x++) {
+      if (p<0) {
+        p += dy2;
+      } else {
+        y += cpy;
+        p += dy2-dx2;
+      }
+      i_ppix(im, x+1, y, val);
+    }
+  } else {
+    int dy2, dx2, cpx;
+
+    /* sort bx y */
+    if (y1 > y2) {
+      int t;
+      t = x1; x1 = x2; x2 = t;
+      t = y1; y1 = y2; y2 = t;
+    }
+    
+    dy = abs(dy);
+    dx = x2 - x1;
+    dy2 = dy*2;
+
+    if (dx<0) {
+      dx = -dx;
+      cpx = -1;
+    } else {
+      cpx = 1;
+    }
+    dx2 = dx*2;
+    p = dx2 - dy;
+
+    x = x1;
+    
+    for(y=y1; y<y2-1; y++) {
+      if (p<0) {
+        p  += dx2;
+      } else {
+        x += cpx;
+        p += dx2-dy2;
+      }
+      i_ppix(im, x, y+1, val);
+    }
+  }
+  if (endp) {
+    i_ppix(im, x1, y1, val);
+    i_ppix(im, x2, y2, val);
+  } else {
+    if (x1 != x2 || y1 != y2) 
+      i_ppix(im, x1, y1, val);
+  }
 }
+
 
 void
 i_line_aa(i_img *im,int x1,int y1,int x2,int y2,i_color *val) {
@@ -707,18 +780,23 @@ i_rspan(i_img *im, int seedx, int seedy, i_color *val) {
 /* INSIDE returns true if pixel is correct color and we haven't set it before. */
 #define INSIDE(x,y) ((!btm_test(btm,x,y) && ( i_gpix(im,x,y,&cval),i_ccomp(&val,&cval,channels)  ) ))
 
-undef_int
-i_flood_fill(i_img *im, int seedx, int seedy, i_color *dcol) {
 
-  int lx,rx;
-  int y;
-  int direction;
-  int dadLx,dadRx;
 
-  int wasIn=0;
-  int x=0;
+/* The function that does all the real work */
 
-  /*  int tx,ty; */
+static struct i_bitmap *
+i_flood_fill_low(i_img *im,int seedx,int seedy,
+                 int *bxminp, int *bxmaxp, int *byminp, int *bymaxp) {
+
+  /*
+    int lx,rx;
+    int y;
+    int direction;
+    int dadLx,dadRx;
+    int wasIn=0;
+  */
+  int ltx, rtx;
+  int tx = 0;
 
   int bxmin = seedx;
   int bxmax = seedx;
@@ -729,17 +807,11 @@ i_flood_fill(i_img *im, int seedx, int seedy, i_color *dcol) {
   struct i_bitmap *btm;
 
   int channels,xsize,ysize;
-  i_color cval, val;
+  i_color cval,val;
 
   channels = im->channels;
   xsize    = im->xsize;
   ysize    = im->ysize;
-
-  if (seedx < 0 || seedx >= xsize ||
-      seedy < 0 || seedy >= ysize) {
-    i_push_error(0, "i_flood_fill: Seed pixel outside of image");
-    return 0;
-  }
 
   btm = btm_new(xsize, ysize);
   st  = llist_new(100, sizeof(struct stack_element*));
@@ -748,80 +820,64 @@ i_flood_fill(i_img *im, int seedx, int seedy, i_color *dcol) {
   i_gpix(im, seedx, seedy, &val);
 
   /* Find the starting span and fill it */
-  lx = i_lspan(im, seedx, seedy, &val);
-  rx = i_rspan(im, seedx, seedy, &val);
-  
-  printf("span: %d %d \n",lx,rx);
+  ltx = i_lspan(im, seedx, seedy, &val);
+  rtx = i_rspan(im, seedx, seedy, &val);
+  for(tx=ltx; tx<=rtx; tx++) SET(tx, seedy);
 
-  for(x=lx; x<=rx; x++) SET(x,seedy);
-
-  ST_PUSH(lx, rx, lx, rx, seedy+1, 1);
-  ST_PUSH(lx, rx, lx, rx, seedy-1,-1);
+  ST_PUSH(ltx, rtx, ltx, rtx, seedy+1,  1);
+  ST_PUSH(ltx, rtx, ltx, rtx, seedy-1, -1);
 
   while(st->count) {
-    ST_POP();
-    
+    /* Stack variables */
+    int lx,rx;
+    int dadLx,dadRx;
+    int y;
+    int direction;
+
+    int x;
+    int wasIn=0;
+
+    ST_POP(); /* sets lx, rx, dadLx, dadRx, y, direction */
+
+
     if (y<0 || y>ysize-1) continue;
-
-
     if (bymin > y) bymin=y; /* in the worst case an extra line */
     if (bymax < y) bymax=y; 
 
-    /*
-      {
-      int tx, ty;
-      printf("start of scan - on stack : %d \n",st->count); 
-      printf("lx=%d rx=%d dadLx=%d dadRx=%d y=%d direction=%d\n",lx,rx,dadLx,dadRx,y,direction); 
-      
-      
-      printf(" ");
-      for(tx=0;tx<xsize;tx++) printf("%d",tx%10);
-      printf("\n");
-      for(ty=0;ty<ysize;ty++) {
-      printf("%d",ty%10);
-      for(tx=0;tx<xsize;tx++) printf("%d",!!btm_test(btm,tx,ty));
-      printf("\n");
-      }
-      printf("y=%d\n",y);
-      }
-    */
-
 
     x = lx+1;
-    if ( lx>=0 && (wasIn = INSIDE(lx,y)) ) {
-      SET(lx,y);
+    if ( lx >= 0 && (wasIn = INSIDE(lx, y)) ) {
+      SET(lx, y);
       lx--;
-      while(lx>0 && INSIDE(lx,y)) {
+      while(INSIDE(lx, y) && lx > 0) {
 	SET(lx,y);
 	lx--;
       }
     }
 
     if (bxmin > lx) bxmin = lx;
-    
     while(x <= xsize-1) {
       /*  printf("x=%d\n",x); */
       if (wasIn) {
 	
-	if (INSIDE(x,y)) {
+	if (INSIDE(x, y)) {
 	  /* case 1: was inside, am still inside */
 	  SET(x,y);
 	} else {
 	  /* case 2: was inside, am no longer inside: just found the
 	     right edge of a span */
-	  ST_STACK(direction,dadLx,dadRx,lx,(x-1),y);
+	  ST_STACK(direction, dadLx, dadRx, lx, (x-1), y);
 
-	  if (bxmax < x) bxmax=x;
-
+	  if (bxmax < x) bxmax = x;
 	  wasIn=0;
 	}
       } else {
-	if (x>rx) goto EXT;
-	if (INSIDE(x,y)) {
-	  SET(x,y);
+	if (x > rx) goto EXT;
+	if (INSIDE(x, y)) {
+	  SET(x, y);
 	  /* case 3: Wasn't inside, am now: just found the start of a new run */
-	  wasIn=1;
-	  lx=x;
+	  wasIn = 1;
+	    lx = x;
 	} else {
 	  /* case 4: Wasn't inside, still isn't */
 	}
@@ -831,142 +887,10 @@ i_flood_fill(i_img *im, int seedx, int seedy, i_color *dcol) {
   EXT: /* out of loop */
     if (wasIn) {
       /* hit an edge of the frame buffer while inside a run */
-      ST_STACK(direction,dadLx,dadRx,lx,(x-1),y);
-      if (bxmax < x) bxmax=x;
+      ST_STACK(direction, dadLx, dadRx, lx, (x-1), y);
+      if (bxmax < x) bxmax = x;
     }
   }
-  
-  /*   printf("lx=%d rx=%d dadLx=%d dadRx=%d y=%d direction=%d\n",lx,rx,dadLx,dadRx,y,direction); 
-       printf("bounding box: [%d,%d] - [%d,%d]\n",bxmin,bymin,bxmax,bymax); */
-
-  for(y=bymin;y<=bymax;y++) for(x=bxmin;x<=bxmax;x++) if (btm_test(btm,x,y)) i_ppix(im,x,y,dcol);
-
-  btm_destroy(btm);
-  mm_log((1, "DESTROY\n"));
-  llist_destroy(st);
-  return 1;
-}
-
-static struct i_bitmap *
-i_flood_fill_low(i_img *im,int seedx,int seedy,
-                 int *bxminp, int *bxmaxp, int *byminp, int *bymaxp) {
-  int lx,rx;
-  int y;
-  int direction;
-  int dadLx,dadRx;
-
-  int wasIn=0;
-  int x=0;
-
-  /*  int tx,ty; */
-
-  int bxmin=seedx,bxmax=seedx,bymin=seedy,bymax=seedy;
-
-  struct llist *st;
-  struct i_bitmap *btm;
-
-  int channels,xsize,ysize;
-  i_color cval,val;
-
-  channels=im->channels;
-  xsize=im->xsize;
-  ysize=im->ysize;
-
-  btm=btm_new(xsize,ysize);
-  st=llist_new(100,sizeof(struct stack_element*));
-
-  /* Get the reference color */
-  i_gpix(im,seedx,seedy,&val);
-
-  /* Find the starting span and fill it */
-  lx = i_lspan(im, seedx, seedy, &val);
-  rx = i_rspan(im, seedx, seedy, &val);
-  
-  /* printf("span: %d %d \n",lx,rx); */
-
-  for(x=lx; x<=rx; x++) SET(x, seedy);
-
-  ST_PUSH(lx, rx, lx, rx, seedy+1,  1);
-  ST_PUSH(lx, rx, lx, rx, seedy-1, -1);
-
-  while(st->count) {
-    ST_POP();
-    
-    if (y<0 || y>ysize-1) continue;
-
-    if (bymin > y) bymin=y; /* in the worst case an extra line */
-    if (bymax < y) bymax=y; 
-
-    /*     printf("start of scan - on stack : %d \n",st->count); */
-
-    
-    /*     printf("lx=%d rx=%d dadLx=%d dadRx=%d y=%d direction=%d\n",lx,rx,dadLx,dadRx,y,direction); */
-    
-    /*
-    printf(" ");
-    for(tx=0;tx<xsize;tx++) printf("%d",tx%10);
-    printf("\n");
-    for(ty=0;ty<ysize;ty++) {
-      printf("%d",ty%10);
-      for(tx=0;tx<xsize;tx++) printf("%d",!!btm_test(btm,tx,ty));
-      printf("\n");
-    }
-
-    printf("y=%d\n",y);
-    */
-
-
-    x=lx+1;
-    if ( (wasIn = INSIDE(lx,y)) ) {
-      SET(lx,y);
-      lx--;
-      while(INSIDE(lx,y) && lx > 0) {
-	SET(lx,y);
-	lx--;
-      }
-    }
-
-    if (bxmin > lx) bxmin=lx;
-    
-    while(x <= xsize-1) {
-      /*  printf("x=%d\n",x); */
-      if (wasIn) {
-	
-	if (INSIDE(x,y)) {
-	  /* case 1: was inside, am still inside */
-	  SET(x,y);
-	} else {
-	  /* case 2: was inside, am no longer inside: just found the
-	     right edge of a span */
-	  ST_STACK(direction,dadLx,dadRx,lx,(x-1),y);
-
-	  if (bxmax < x) bxmax=x;
-
-	  wasIn=0;
-	}
-      } else {
-	if (x>rx) goto EXT;
-	if (INSIDE(x,y)) {
-	  SET(x,y);
-	  /* case 3: Wasn't inside, am now: just found the start of a new run */
-	  wasIn=1;
-	    lx=x;
-	} else {
-	  /* case 4: Wasn't inside, still isn't */
-	}
-      }
-      x++;
-    }
-  EXT: /* out of loop */
-    if (wasIn) {
-      /* hit an edge of the frame buffer while inside a run */
-      ST_STACK(direction,dadLx,dadRx,lx,(x-1),y);
-      if (bxmax < x) bxmax=x;
-    }
-  }
-  
-  /*   printf("lx=%d rx=%d dadLx=%d dadRx=%d y=%d direction=%d\n",lx,rx,dadLx,dadRx,y,direction); 
-       printf("bounding box: [%d,%d] - [%d,%d]\n",bxmin,bymin,bxmax,bymax); */
 
   llist_destroy(st);
 
@@ -978,6 +902,34 @@ i_flood_fill_low(i_img *im,int seedx,int seedy,
   return btm;
 }
 
+
+
+
+undef_int
+i_flood_fill(i_img *im, int seedx, int seedy, i_color *dcol) {
+  int bxmin, bxmax, bymin, bymax;
+  struct i_bitmap *btm;
+  int x, y;
+
+  i_clear_error();
+  if (seedx < 0 || seedx >= im->xsize ||
+      seedy < 0 || seedy >= im->ysize) {
+    i_push_error(0, "i_flood_cfill: Seed pixel outside of image");
+    return 0;
+  }
+
+  btm = i_flood_fill_low(im, seedx, seedy, &bxmin, &bxmax, &bymin, &bymax);
+
+  for(y=bymin;y<=bymax;y++)
+    for(x=bxmin;x<=bxmax;x++)
+      if (btm_test(btm,x,y)) 
+	i_ppix(im,x,y,dcol);
+  btm_destroy(btm);
+  return 1;
+}
+
+
+
 undef_int
 i_flood_cfill(i_img *im, int seedx, int seedy, i_fill_t *fill) {
   int bxmin, bxmax, bymin, bymax;
@@ -985,13 +937,13 @@ i_flood_cfill(i_img *im, int seedx, int seedy, i_fill_t *fill) {
   int x, y;
   int start;
 
+  i_clear_error();
   
   if (seedx < 0 || seedx >= im->xsize ||
       seedy < 0 || seedy >= im->ysize) {
     i_push_error(0, "i_flood_cfill: Seed pixel outside of image");
     return 0;
   }
-
 
   btm = i_flood_fill_low(im, seedx, seedy, &bxmin, &bxmax, &bymin, &bymax);
 
@@ -1001,7 +953,7 @@ i_flood_cfill(i_img *im, int seedx, int seedy, i_fill_t *fill) {
     if (fill->combine)
       work = mymalloc(sizeof(i_color) * (bxmax - bxmin));
 
-    for(y=bymin;y<=bymax;y++) {
+    for(y=bymin; y<=bymax; y++) {
       x = bxmin;
       while (x < bxmax) {
         while (x < bxmax && !btm_test(btm, x, y)) {

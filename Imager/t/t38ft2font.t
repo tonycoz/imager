@@ -49,7 +49,7 @@ $ttraw or print Imager::_error_as_msg(),"\n";
 print "#bbox: ($bbox[0], $bbox[1]) - ($bbox[2], $bbox[3])\n";
 
 Imager::Font::FreeType2::i_ft2_cp($ttraw,$overlay,5,50,1,50.0,50, 'XMCLH',1,1, 0, 0);
-i_draw($overlay,0,50,100,50,$bgcolor);
+i_line($overlay,0,50,100,50,$bgcolor,1);
 
 open(FH,">testout/t38ft2font.ppm") || die "cannot open testout/t38ft2font.ppm\n";
 binmode(FH);
@@ -68,7 +68,7 @@ $backgr=Imager::ImgRaw::new(500,300,3);
 Imager::Font::FreeType2::i_ft2_text($ttraw,$backgr,100,150,NC(255, 64, 64),200.0,50, 'MAW',1,1,0, 0);
 Imager::Font::FreeType2::i_ft2_settransform($ttraw, [0.9659, 0.2588, 0, -0.2588, 0.9659, 0 ]);
 Imager::Font::FreeType2::i_ft2_text($ttraw,$backgr,100,150,NC(0, 128, 0),200.0,50, 'MAW',0,1, 0, 0);
-i_draw($backgr, 0,150, 499, 150, NC(0, 0, 255));
+i_line($backgr, 0,150, 499, 150, NC(0, 0, 255),1);
 
 open(FH,">testout/t38ft2font2.ppm") || die "cannot open testout/t38ft2font.ppm\n";
 binmode(FH);
