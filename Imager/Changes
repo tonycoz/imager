@@ -669,8 +669,9 @@ Revision history for Perl extension Imager.
           low-level output functions
         - OO interfaces to UTF8 and flags, for now leaving the flags as
           specific to Imager::Font::Type1
-	- mc_web_map was storing colors with an alpha of 0
+        - mc_web_map was storing colors with an alpha of 0
         - update the URLs for libpng and zlib
+				- Fixed empty string handling for tt font driver.
 
 =================================================================
 
