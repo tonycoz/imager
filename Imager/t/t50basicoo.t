@@ -42,8 +42,8 @@ for $type (@types) {
   $img->read( %opts ) or die "failed: ",$img->errstr,"\n";
 }
 
-$img2=$img->crop(width=>50, height=>50);
-$img2->write(file=> 'testout/t50.ppm', type=>'pnm');
+$img2 =  $img->crop(width=>50, height=>50);
+$img2 -> write(file=> 'testout/t50.ppm', type=>'pnm');
 
 undef($img);
 

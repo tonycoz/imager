@@ -387,8 +387,8 @@ void i_qdist(i_img *im);
 
 #endif /* HAVE_LIBGIF */
 
-i_img *i_readraw(int fd,int x,int y,int datachannels,int storechannels,int intrl);
-undef_int i_writeraw(i_img* im,int fd);
+i_img    *i_readraw_wiol(io_glue *ig, int x, int y, int datachannels, int storechannels, int intrl);
+undef_int i_writeraw_wiol(i_img* im, io_glue *ig);
 
 i_img *i_readpnm_wiol(io_glue *ig, int length);
 undef_int i_writeppm(i_img *im,int fd);

@@ -25,6 +25,15 @@ stackmach.c           # no comments
 
 quant.c               # comments, lots of changing code
 
+=====================
 
+Iolayer todo list:
+Format Read/Write
+Gif:    O    O
+png:    O    O 
+raw:    O    O
+jpeg:   X    O
+tiff:   X    X
+pnm:    X    X
 
 

@@ -1,9 +1,11 @@
 #include "image.h"
 #include <stdio.h>
+#include "iolayer.h"
 #ifndef _MSC_VER
 #include <unistd.h>
 #endif
 #include <string.h>
+
 
 #define TRUE 1
 #define FALSE 0
@@ -36,7 +38,7 @@ expandchannels(unsigned char *inbuffer,unsigned char *outbuffer,int chunks,int d
 }
 
 i_img *
-i_readraw(int fd,int x,int y,int datachannels,int storechannels,int intrl) {
+i_readraw_wiol(io_glue *ig, int x, int y, int datachannels, int storechannels, int intrl) {
   i_img* im;
   int rc,k;
   
@@ -46,14 +48,16 @@ i_readraw(int fd,int x,int y,int datachannels,int storechannels,int intrl) {
   
   int inbuflen,ilbuflen,exbuflen;
 
-  mm_log((1,"readraw(fd %d,x %d,y %d,datachannels %d,storechannels %d,intrl %d)\n",fd,x,y,datachannels,storechannels,intrl));
+  io_glue_commit_types(ig);
+  mm_log((1, "i_readraw(ig %p,x %d,y %d,datachannels %d,storechannels %d,intrl %d)\n",
+	  ig, x, y, datachannels, storechannels, intrl));
   
-  im=i_img_empty_ch(NULL,x,y,storechannels);
+  im = i_img_empty_ch(NULL,x,y,storechannels);
   
-  inbuflen=im->xsize*datachannels;
-  ilbuflen=inbuflen;
-  exbuflen=im->xsize*storechannels;
-  inbuffer=(unsigned char*)mymalloc(inbuflen);
+  inbuflen = im->xsize*datachannels;
+  ilbuflen = inbuflen;
+  exbuflen = im->xsize*storechannels;
+  inbuffer = (unsigned char*)mymalloc(inbuflen);
   mm_log((1,"inbuflen: %d, ilbuflen: %d, exbuflen: %d.\n",inbuflen,ilbuflen,exbuflen));
 
   if (intrl==0) ilbuffer=inbuffer; else ilbuffer=(unsigned char*)mymalloc(inbuflen);
@@ -61,7 +65,7 @@ i_readraw(int fd,int x,int y,int datachannels,int storechannels,int intrl) {
 
   k=0;
   while(k<im->ysize) {
-    rc=myread(fd,inbuffer,inbuflen);
+    rc = ig->readcb(ig, inbuffer, inbuflen);
     if (rc!=inbuflen) { fprintf(stderr,"Premature end of file.\n"); exit(2); }
     interleave(inbuffer,ilbuffer,im->xsize,datachannels);
     expandchannels(ilbuffer,exbuffer,im->xsize,datachannels,storechannels);
@@ -78,13 +82,17 @@ i_readraw(int fd,int x,int y,int datachannels,int storechannels,int intrl) {
 
 
 undef_int
-i_writeraw(i_img* im,int fd) {
+i_writeraw_wiol(i_img* im, io_glue *ig) {
   int rc;
-  mm_log((1,"writeraw(im 0x%x,fd %d)\n",im,fd));
+  io_glue_commit_types(ig);
+  mm_log((1,"writeraw(im %p,ig %p)\n", im, ig));
   
   if (im == NULL) { mm_log((1,"Image is empty\n")); return(0); }
-  rc=mywrite(fd,im->data,im->bytes);
-  if (rc!=im->bytes) { mm_log((1,"i_writeraw: Couldn't write to file\n")); return(0); }
+  rc = ig->writecb(ig, im->data, im->bytes);
+  if (rc != im->bytes) {
+    mm_log((1,"i_writeraw: Couldn't write to file\n"));
+    return(0); 
+  }
   return(1);
 }
 
