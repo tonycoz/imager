@@ -117,7 +117,7 @@ use Imager::Font;
 		NF
 );
 
-@EXPORT=qw( 
+@EXPORT=qw(
 	   init_log
 	   i_list_formats
 	   i_has_format
@@ -1547,7 +1547,7 @@ sub transform2 {
     $Imager::ERRSTR = Imager::Expr::error();
     return;
   }
-  
+
   my $img = Imager->new();
   $img->{IMG} = i_transform2($opts->{width}, $opts->{height}, $code->code(),
                              $code->nregs(), $code->cregs(),
@@ -1556,7 +1556,7 @@ sub transform2 {
     $Imager::ERRSTR = Imager->_error_as_msg();
     return;
   }
-  
+
   return $img;
 }
 
@@ -2922,7 +2922,7 @@ This creates a green circle with its center at (200, 100) and has a
 radius of 20.
 
 Line:
-  $img->line(color=>$green, x1=10, x2=>100, 
+  $img->line(color=>$green, x1=>10, x2=>100,
                             y1=>20, y2=>50, antialias=>1 );
 
 That draws an antialiased line from (10,100) to (20,50).

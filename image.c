@@ -1342,7 +1342,7 @@ i_gpix_d(i_img *im, int x, int y, i_color *val) {
   int ch;
   if (x>-1 && x<im->xsize && y>-1 && y<im->ysize) {
     for(ch=0;ch<im->channels;ch++) 
-    	val->channel[ch]=im->idata[(x+y*im->xsize)*im->channels+ch];
+      val->channel[ch]=im->idata[(x+y*im->xsize)*im->channels+ch];
     return 0;
   }
   for(ch=0;ch<im->channels;ch++) val->channel[ch] = 0;
