@@ -237,13 +237,13 @@ sub pathcheck {
     print "  Include paths:\n";
     for (@incs) { print $_,"\n"; }
   }
-  @incs=grep { -d $_ && -r _ && -x _ or ( print("  $_ doesnt exist or is unaccessible - removed."),0) } @incs;
+  @incs=grep { -d $_ && -r _ && -x _ or ( print("  $_ doesnt exist or is unaccessible - removed.\n"),0) } @incs;
 
   if ($VERBOSE) {
     print "\nLibrary paths:\n";
     for (@incs) { print $_,"\n"; }
   }
-  @libs=grep { -d $_ && -r _ && -x _ or ( print("  $_ doesnt exist or is unaccessible - removed."),0) } @libs;
+  @libs=grep { -d $_ && -r _ && -x _ or ( print("  $_ doesnt exist or is unaccessible - removed.\n"),0) } @libs;
   print "\ndone.\n";
 }
 
@@ -263,8 +263,8 @@ sub pathcheck {
 sub init {
 
   @definc{'/usr/include'}=();
-  @incs=(qw(/usr/include/freetype2 /usr/local/include/freetype2 /usr/include /usr/local/include /usr/include/freetype /usr/local/include/freetype), split /\Q$Config{path_sep}/, $INCPATH );
-	@libs=( split(/\Q$Config{path_sep}/,$LIBPATH) , split(/ /, $Config{'libpth'}));
+  @incs=(qw(/sw/include /usr/include/freetype2 /usr/local/include/freetype2 /usr/include /usr/local/include /usr/include/freetype /usr/local/include/freetype), split /\Q$Config{path_sep}/, $INCPATH );
+  @libs=(qw(/sw/lib), split(/\Q$Config{path_sep}/,$LIBPATH) , split(/ /, $Config{'libpth'}));
   if ($^O =~ /win32/i && $Config{cc} =~ /\bcl\b/i) {
     push(@incs, split /;/, $ENV{INCLUDE}) if exists $ENV{INCLUDE};
     push(@libs, split /;/, $ENV{LIB}) if exists $ENV{LIB};

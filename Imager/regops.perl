@@ -79,7 +79,7 @@ Tony Cook, tony@develop-help.com
 
 =head1 SEE ALSO
 
-perl(1), Imager(3), http://www.eecs.umich.edu/~addi/perl/Imager/
+perl(1), Imager(3), http://imager.perl.org/~addi/perl/Imager/
 
 =cut
 

@@ -644,7 +644,7 @@ Revision history for Perl extension Imager.
         - skip() in testtools should be skipn() and it should use the 
           loop variable for the test number
 
-0.42pre1
+0.42
         - quote the 'min' parameter to scale in Imager::Transformations
           and at least mention it in the docs beyond the examples
         - document the values for the read() and write() method type 
@@ -725,11 +725,17 @@ Revision history for Perl extension Imager.
         - transform2() can now produce images with other than 3 channels.
         - added a correct T_AVREF input mapping to the typemap to 
           simplify parameter lists
+	- shut off one of the align subtests in the ft2 test.  The triggering
+	  is likely an ft2 bug.
+        - removed some half written scaling optimization code.
+	- added /sw/lib and /sw/include to the Makefile.PL code for osX.
+	- removed all references to the www.eecs.umich.edu page and changed
+	  them to imager.perl.org ones.
 
 =================================================================
 
         For latest versions check the Imager-devel pages:
-        http://www.eecs.umich.edu/~addi/perl/Imager/devel/
+        http://imager.perl.org/~addi/perl/Imager/
 
 =================================================================
 
