@@ -974,6 +974,7 @@ Revision history for Perl extension Imager.
   working on OS X.
 - add dfont to the list of extensions supported by ft2
 - document Imager::Font->new()'s index parameter
+- added concept index to Imager.pm's POD
 
 =================================================================
 

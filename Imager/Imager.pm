@@ -2933,6 +2933,101 @@ write() - L<Imager::Files>
 
 write_multi() - L<Imager::Files>
 
+=head1 CONCEPT INDEX
+
+animated GIF - L<Imager::File/"Writing an animated GIF">
+
+aspect ratio - L<Imager::ImageTypes/i_xres>,
+L<Imager::ImageTypes/i_yres>, L<Imager::ImageTypes/i_aspect_only>
+
+blur - L<Imager::Filters/guassian>, L<Imager::Filters/conv>
+
+boxes, drawing - L<Imager::Draw/box>
+
+color - L<Imager::Color>
+
+color names - L<Imager::Color>, L<Imager::Color::Table>
+
+combine modes - L<Imager::Fill/combine>
+
+cropping - L<Imager::Transformations/crop>
+
+dpi - L<Imager::ImageTypes/i_xres>
+
+drawing boxes - L<Imager::Draw/box>
+
+drawing lines - L<Imager::Draw/line>
+
+drawing text - L<Imager::Font/string>
+
+error message - L<Imager/"Basic Overview">
+
+files, font - L<Imager::Font>
+
+files, image - L<Imager::Files>
+
+filling, types of fill - L<Imager::Fill>
+
+filling, boxes - L<Imager::Draw/box>
+
+filling, flood fill - L<Imager::Draw/flood_fill>
+
+flood fill - L<Imager::Draw/flood_fill>
+
+fonts - L<Imager::Font>
+
+fonts, drawing with - L<Imager::Font/string>, L<Imager::Font/align>,
+L<Imager::Font::Wrap>
+
+fonts, metrics - L<Imager::Font/bounding_box>, L<Imager::Font::BBox>
+
+fonts, multiple master - L<Imager::Font/"MULTIPLE MASTER FONTS">
+
+fountain fill - L<Imager::Fill/"Fountain fills">,
+L<Imager::Filters/fountain>, L<Imager::Fountain>,
+L<Imager::Filters/gradgen>
+
+gradient fill - L<Imager::Fill/"Fountain fills">,
+L<Imager::Filters/fountain>, L<Imager::Fountain>,
+L<Imager::Filters/gradgen>
+
+hatch fills - L<Imager::Fill/"Hatched fills">
+
+JPEG - L<Imager::Files/"JPEG">
+
+lines, drawing - L<Imager::Draw/line>
+
+metadata, image - L<Imager::ImageTypes/"Tags">
+
+png - L<Imager::Files/"PNG">
+
+pnm - L<Imager::Files/"PNM (Portable aNy Map">
+
+rectangles, drawing - L<Imager::Draw/box>
+
+resizing an image - L<Imager::Transformations/scale>, 
+L<Imager::Transformations/crop>
+
+saving an image - L<Imager::Files>
+
+scaling - L<Imager::Transformations/scale>
+
+sharpen - L<Imager::Filters/unsharpmask>, L<Imager::Filters/conv>
+
+size, image - L<Imager::ImageTypes/getwidth>,
+L<Imager::ImageTypes/getheight>
+
+size, text - L<Imager::Font/bounding_box>
+
+text, drawing - L<Imager::Font/string>, L<Imager::Font/align>,
+L<Imager::Font::Wrap>
+
+text, wrapping text in an area - L<Imager::Font::Wrap>
+
+text, measuring - L<Imager::Font/bounding_box>, L<Imager::Font::BBox>
+
+writing an image - L<Imager::Files>
+
 =head1 SUPPORT
 
 You can ask for help, report bugs or express your undying love for
