@@ -54,6 +54,11 @@ Clean up:
 - should the interlace option for reading raw images have 
   symbolic names in the OO interface?
 
+- improve consistency in the interfaces, both in trying to use named
+  parameters where possible but also in using consistent names, eg.
+  (tx, ty) vs (left, top) in rubthrough() vs paste().  Do we want a (simple)
+  standard for this (suggested names)?  Remember to preserve the old 
+  interface where possible.
 
 
 Format specific issues:
