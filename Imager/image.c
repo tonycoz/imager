@@ -206,6 +206,8 @@ i_img_new() {
 
   im->i_f_ppix=i_ppix_d;
   im->i_f_gpix=i_gpix_d;
+  im->i_f_plin=i_plin_d;
+  im->i_f_glin=i_glin_d;
   im->ext_data=NULL;
   
   mm_log((1,"(%p) <- i_img_struct\n",im));
@@ -241,6 +243,8 @@ i_img_empty(i_img *im,int x,int y) {
 
   im->i_f_ppix = i_ppix_d;
   im->i_f_gpix = i_gpix_d;
+  im->i_f_plin = i_plin_d;
+  im->i_f_glin = i_glin_d;
   im->ext_data = NULL;
   
   mm_log((1,"(%p) <- i_img_empty\n", im));
@@ -277,6 +281,8 @@ i_img_empty_ch(i_img *im,int x,int y,int ch) {
   
   im->i_f_ppix = i_ppix_d;
   im->i_f_gpix = i_gpix_d;
+  im->i_f_plin = i_plin_d;
+  im->i_f_glin = i_glin_d;
   im->ext_data = NULL;
   
   mm_log((1,"(%p) <- i_img_empty_ch\n",im));
@@ -304,6 +310,8 @@ i_img_exorcise(i_img *im) {
 
   im->i_f_ppix=i_ppix_d;
   im->i_f_gpix=i_gpix_d;
+  im->i_f_plin=i_plin_d;
+  im->i_f_glin=i_glin_d;
   im->ext_data=NULL;
 }
 
@@ -467,6 +475,82 @@ i_gpix_d(i_img *im, int x, int y, i_color *val) {
 }
 
 /*
+=item i_glin_d(im, l, r, y, vals)
+
+Reads a line of data from the image, storing the pixels at vals.
+
+The line runs from (l,y) inclusive to (r,y) non-inclusive
+
+vals should point at space for (r-l) pixels.
+
+l should never be less than zero (to avoid confusion about where to
+put the pixels in vals).
+
+Returns the number of pixels copied (eg. if r, l or y is out of range)
+
+=cut */
+int
+i_glin_d(i_img *im, int l, int r, int y, i_color *vals) {
+  int x, ch;
+  int count;
+  int i;
+  unsigned char *data;
+  if (y >=0 && y < im->ysize && l < im->xsize && l >= 0) {
+    if (r > im->xsize)
+      r = im->xsize;
+    data = im->data + (l+y*im->xsize) * im->channels;
+    count = r - l;
+    for (i = 0; i < count; ++i) {
+      for (ch = 0; ch < im->channels; ++ch)
+	vals[i].channel[ch] = *data++;
+    }
+    return count;
+  }
+  else {
+    return 0;
+  }
+}
+/*
+=item i_plin_d(im, l, r, y, vals)
+
+Writes a line of data into the image, using the pixels at vals.
+
+The line runs from (l,y) inclusive to (r,y) non-inclusive
+
+vals should point at (r-l) pixels.
+
+l should never be less than zero (to avoid confusion about where to
+get the pixels in vals).
+
+Returns the number of pixels copied (eg. if r, l or y is out of range)
+
+=cut */
+int
+i_plin_d(i_img *im, int l, int r, int y, i_color *vals) {
+  int x, ch;
+  int count;
+  int i;
+  unsigned char *data;
+  if (y >=0 && y < im->ysize && l < im->xsize && l >= 0) {
+    if (r > im->xsize)
+      r = im->xsize;
+    data = im->data + (l+y*im->xsize) * im->channels;
+    count = r - l;
+    for (i = 0; i < count; ++i) {
+      for (ch = 0; ch < im->channels; ++ch) {
+	if (im->ch_mask & (1 << ch)) 
+	  *data = vals[i].channel[ch];
+	++data;
+      }
+    }
+    return count;
+  }
+  else {
+    return 0;
+  }
+}
+
+/*
 =item i_ppix_pch(im, x, y, ch)
 
 Get the value from the channel I<ch> for pixel (I<x>,I<y>) from I<im>
@@ -570,7 +654,7 @@ Copies the contents of the image I<src> over the image I<im>.
 
 void
 i_copy(i_img *im, i_img *src) {
-  i_color pv;
+  i_color *pv;
   int x,y,y1,x1;
 
   mm_log((1,"i_copy(im* %p,src %p)\n", im, src));
@@ -578,10 +662,11 @@ i_copy(i_img *im, i_img *src) {
   x1 = src->xsize;
   y1 = src->ysize;
   i_img_empty_ch(im, x1, y1, src->channels);
+  pv = mymalloc(sizeof(i_color) * x1);
   
-  for(y=0; y<y1; y++) for(x=0; x<x1; x++) {
-    i_gpix(src, x, y, &pv);
-    i_ppix(im,  x, y, &pv);
+  for (y = 0; y < y1; ++y) {
+    i_glin(src, 0, x1, y, pv);
+    i_plin(im, 0, x1, y, pv);
   }
 }
 
