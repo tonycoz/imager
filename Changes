@@ -933,6 +933,9 @@ Revision history for Perl extension Imager.
 - i_readrgb_wiol() now sets i_format to rgb.
 - set i_format to raw when reading tga files and test for it
 - document i_format tag
+- some tests were using $Config{ivsize} when they should have been 
+  using $Config{intsize}
+  Resolves: https://rt.cpan.org/Ticket/Display.html?id=8645
 
 =================================================================
 

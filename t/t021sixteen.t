@@ -116,8 +116,8 @@ matchn($num++, Imager->errstr, qr/channels must be between 1 and 4/,
   # least and may result in running out of memory, causing a different
   # type of exit
   use Config;
-  if ($Config{ivsize} == 4) {
-    my $uint_range = 256 ** $Config{ivsize};
+  if ($Config{intsize} == 4) {
+    my $uint_range = 256 ** $Config{intsize};
     print "# range $uint_range\n";
     my $dim1 = int(sqrt($uint_range/2))+1;
     
