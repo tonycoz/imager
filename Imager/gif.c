@@ -215,22 +215,23 @@ i_readgif_low(GifFileType *GifFile, int **colour_table, int *colours) {
 	return NULL;
       }
 
-      if ( cmapcnt == 0) {
-	if (( ColorMap = (GifFile->Image.ColorMap ? GifFile->Image.ColorMap : GifFile->SColorMap) )) {
-	  mm_log((1, "Adding local colormap\n"));
-	  ColorMapSize = ColorMap->ColorCount;
+      if (( ColorMap = (GifFile->Image.ColorMap ? GifFile->Image.ColorMap : GifFile->SColorMap) )) {
+	mm_log((1, "Adding local colormap\n"));
+	ColorMapSize = ColorMap->ColorCount;
+	if ( cmapcnt == 0) {
 	  i_colortable_copy(colour_table, colours, ColorMap);
 	  cmapcnt++;
-	} else {
-	  /* No colormap and we are about to read in the image - abandon for now */
-	  mm_log((1, "Going in with no colormap\n"));
-	  i_push_error(0, "Image does not have a local or a global color map");
-	  /* we can't have allocated a colour table here */
-	  i_img_destroy(im);
-	  DGifCloseFile(GifFile);
-	  return NULL;
 	}
+      } else {
+	/* No colormap and we are about to read in the image - abandon for now */
+	mm_log((1, "Going in with no colormap\n"));
+	i_push_error(0, "Image does not have a local or a global color map");
+	/* we can't have allocated a colour table here */
+	i_img_destroy(im);
+	DGifCloseFile(GifFile);
+	return NULL;
       }
+      
       Row = GifFile->Image.Top; /* Image Position relative to Screen. */
       Col = GifFile->Image.Left;
       Width = GifFile->Image.Width;
@@ -253,7 +254,7 @@ i_readgif_low(GifFileType *GifFile, int **colour_table, int *colours) {
 
 	for (Count = i = 0; i < 4; i++) for (j = Row + InterlacedOffset[i]; j < Row + Height; j += InterlacedJumps[i]) {
 	  Count++;
-	  if (DGifGetLine(GifFile, &GifRow[Col], Width) == GIF_ERROR) {
+	  if (DGifGetLine(GifFile, GifRow, Width) == GIF_ERROR) {
 	    gif_push_error();
 	    i_push_error(0, "Reading GIF line");
 	    if (colour_table && *colour_table) {
@@ -265,19 +266,19 @@ i_readgif_low(GifFileType *GifFile, int **colour_table, int *colours) {
 	    return NULL;
 	  }
 	  
-	  for (x = 0; x < GifFile->SWidth; x++) {
+	  for (x = 0; x < Width; x++) {
 	    ColorMapEntry = &ColorMap->Colors[GifRow[x]];
 	    col.rgb.r = ColorMapEntry->Red;
 	    col.rgb.g = ColorMapEntry->Green;
 	    col.rgb.b = ColorMapEntry->Blue;
-	    i_ppix(im,x,j,&col);
+	    i_ppix(im,Col+x,j,&col);
 	  }
 	  
 	}
       }
       else {
 	for (i = 0; i < Height; i++) {
-	  if (DGifGetLine(GifFile, &GifRow[Col], Width) == GIF_ERROR) {
+	  if (DGifGetLine(GifFile, GifRow, Width) == GIF_ERROR) {
 	    gif_push_error();
 	    i_push_error(0, "Reading GIF line");
 	    if (colour_table && *colour_table) {
@@ -289,12 +290,12 @@ i_readgif_low(GifFileType *GifFile, int **colour_table, int *colours) {
 	    return NULL;
 	  }
 
-	  for (x = 0; x < GifFile->SWidth; x++) {
+	  for (x = 0; x < Width; x++) {
 	    ColorMapEntry = &ColorMap->Colors[GifRow[x]];
 	    col.rgb.r = ColorMapEntry->Red;
 	    col.rgb.g = ColorMapEntry->Green;
 	    col.rgb.b = ColorMapEntry->Blue;
-	    i_ppix(im, x, Row, &col);
+	    i_ppix(im, Col+x, Row, &col);
 	  }
 	  Row++;
 	}
