@@ -844,7 +844,7 @@ Revision history for Perl extension Imager.
           Resolves https://rt.cpan.org/Ticket/Display.html?id=7581
         - built 0.43_01 for testing
 
-0.43_02
+0.43_02 Mon 26 Oct 2004
 
 - the changes to scale() had some problems with integer vs floating point
   calculations (only caught in tests under perl 5.8.5 <sigh>)
@@ -877,6 +877,10 @@ Revision history for Perl extension Imager.
   resolve https://rt.cpan.org/Ticket/Display.html?id=7948
 - i_writegif_low() wasn't setting the returned global palette, which
   meant a rubbish palette was returned to the user (detected with valgrind)
+
+0.43_03
+
+- change the "double-include" protection macro that imio.h uses.
 
 =================================================================
 
