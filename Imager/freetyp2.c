@@ -823,10 +823,10 @@ int i_ft2_has_chars(FT2_Fonthandle *handle, char const *text, int len,
 /* uses a method described in fterrors.h to build an error translation
    function
 */
-#undef __FT_ERRORS_H__
+#undef __FTERRORS_H__
 #define FT_ERRORDEF(e, v, s) case v: i_push_error(code, s); return;
-#define FT_ERROR_START_LIST
-#define FT_ERROR_END_LIST
+#define FT_ERROR_START_LIST 
+#define FT_ERROR_END_LIST 
 
 /*
 =back

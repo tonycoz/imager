@@ -967,6 +967,9 @@ Revision history for Perl extension Imager.
 - Makefile.PL now checks the directories specified by $Config{locincpth}
   and $Config{loclibpth} for includes and libraries respectively.
   Resolves: https://rt.cpan.org/Ticket/Display.html?id=2942
+- we were undefing the wrong macro (used as an include guard) when
+  building the error code translation function for freetype 2.  This
+  meant most errors came out as numbers.
 
 =================================================================
 
