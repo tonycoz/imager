@@ -12,7 +12,7 @@ use strict;
 # (It may become useful if the test is moved to ./t subdirectory.)
 
 my $loaded;
-BEGIN { $| = 1; print "1..13\n"; }
+BEGIN { $| = 1; print "1..16\n"; }
 END {print "not ok 1\n" unless $loaded;}
 use Imager;
 require "t/testtools.pl";
@@ -98,8 +98,13 @@ if (i_has_format("tt") and -f $fontname_tt) {
 
   okx($font->utf8, "make sure utf8 method returns true");
 
+  my $has_chars = $font->has_chars(string=>"\x01A");
+  okx($has_chars eq "\x00\x01", "has_chars scalar");
+  my @has_chars = $font->has_chars(string=>"\x01A");
+  okx(!$has_chars[0], "has_chars list 0");
+  okx($has_chars[1], "has_chars list 1");
 } else {
-  skipx(7, "FT1.x missing or disabled");
+  skipx(10, "FT1.x missing or disabled");
 }
 
 okx(1, "end");

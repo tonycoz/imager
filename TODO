@@ -137,8 +137,9 @@ Clean up:
 
 - try to clean up the inconsistencies between font types:
   - utf8 (even if we just treat characters over 0xFF as missing for T1)
-  - transformations
-  - has_char() method
+    (done for FT2, FT1)
+  - transformations (done for FT2)
+  - has_char() method (done for FT2, FT1)
 
 Format specific issues:
 - provide patches for libgif and libungif that fix their bugs

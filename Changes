@@ -656,11 +656,14 @@ Revision history for Perl extension Imager.
         - some char * vs unsigned char * casts missing on OSF1 v4.0
         - some enums had , on the last item in datatypes.h, which OSF1
           didn't like
-	- Compaq C 6.4 (OSF1) claims to be C99 but doesn't provide 
+        - Compaq C 6.4 (OSF1) claims to be C99 but doesn't provide 
           stdint.h, don't try to use it under OSF
         - fix missing initialization in tags.c
         - Change i_draw to i_line and have it use Bresenham's line
-	  drawing algorithm.
+          drawing algorithm.
+        - support has_chars() method for Freetype 1.x
+        - fixed log message for i_ft2_has_chars()
+        - fixed some broken checking for UTF8 in FT2 code
 
 =================================================================
 

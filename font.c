@@ -29,7 +29,7 @@ font.c - implements font handling functions for t1 and truetype fonts
 
   #ifdef HAVE_LIBTT
   handle = i_tt_new(path_to_ttf);
-  rc = i_tt_bbox(handle, points, "foo", 3, int cords[6]);
+  rc = i_tt_bbox(handle, points, "foo", 3, int cords[6], utf8);
   i_tt_destroy(handle);
 
   // and much more
@@ -837,6 +837,7 @@ i_tt_get_glyph( TT_Fonthandle *handle, int inst, unsigned long j) {
   
   if ( (error = TT_New_Glyph( handle->face, &handle->instanceh[inst].glyphs[TT_HASH(j)].glyph)) ) {
     mm_log((1, "Cannot allocate and load glyph: error 0x%x.\n", error ));
+    i_push_error(error, "TT_New_Glyph()");
     return 0;
   }
   if ( (error = TT_Load_Glyph( handle->instanceh[inst].instance, handle->instanceh[inst].glyphs[TT_HASH(j)].glyph, code, load_flags)) ) {
@@ -844,6 +845,7 @@ i_tt_get_glyph( TT_Fonthandle *handle, int inst, unsigned long j) {
     /* Don't leak */
     TT_Done_Glyph( handle->instanceh[inst].glyphs[TT_HASH(j)].glyph );
     USTRCT( handle->instanceh[inst].glyphs[TT_HASH(j)].glyph ) = NULL;
+    i_push_error(error, "TT_Load_Glyph()");
     return 0;
   }
 
@@ -858,12 +860,62 @@ i_tt_get_glyph( TT_Fonthandle *handle, int inst, unsigned long j) {
     TT_Done_Glyph( handle->instanceh[inst].glyphs[TT_HASH(j)].glyph );
     USTRCT( handle->instanceh[inst].glyphs[TT_HASH(j)].glyph ) = NULL;
     handle->instanceh[inst].glyphs[TT_HASH(j)].ch = TT_NOCHAR;
+    i_push_error(error, "TT_Get_Glyph_Metrics()");
     return 0;
   }
 
   return 1;
 }
 
+/*
+=item i_tt_has_chars(handle, text, len, utf8, out)
+
+Check if the given characters are defined by the font.  Note that len
+is the number of bytes, not the number of characters (when utf8 is
+non-zero).
+
+Returns the number of characters that were checked.
+
+=cut
+*/
+
+int
+i_tt_has_chars(TT_Fonthandle *handle, char const *text, int len, int utf8,
+               char *out) {
+  int count = 0;
+  int inst;
+  mm_log((1, "i_ft2_has_chars(handle %p, text %p, len %d, utf8 %d)\n", 
+          handle, text, len, utf8));
+
+  while (len) {
+    unsigned long c;
+    int index;
+    if (utf8) {
+      c = i_utf8_advance(&text, &len);
+      if (c == ~0UL) {
+        i_push_error(0, "invalid UTF8 character");
+        return 0;
+      }
+    }
+    else {
+      c = (unsigned char)*text++;
+      --len;
+    }
+    
+    if (TT_VALID(handle->char_map)) {
+      index = TT_Char_Index(handle->char_map, c);
+    }
+    else {
+      index = (c - ' ' + 1) < 0 ? 0 : (c - ' ' + 1);
+      if (index >= handle->properties.num_Glyphs)
+        index = 0;
+    }
+    *out++ = index != 0;
+    ++count;
+  }
+
+  return count;
+}
 
 /* 
 =item i_tt_destroy(handle)
@@ -961,13 +1013,15 @@ calls i_tt_render_glyph to render each glyph into the bit rastermap (internal)
 
 static
 int
-i_tt_render_all_glyphs( TT_Fonthandle *handle, int inst, TT_Raster_Map *bit, TT_Raster_Map *small_bit, int cords[6], char const* txt, int len, int smooth, int utf8 ) {
+i_tt_render_all_glyphs( TT_Fonthandle *handle, int inst, TT_Raster_Map *bit,
+                        TT_Raster_Map *small_bit, int cords[6], 
+                        char const* txt, int len, int smooth, int utf8 ) {
   unsigned long j;
   int i;
   TT_F26Dot6 x,y;
   
-  mm_log((1,"i_tt_render_all_glyphs( handle 0x%X, inst %d, bit 0x%X, small_bit 0x%X, txt '%.*s', len %d, smooth %d)\n",
-	  handle, inst, bit, small_bit, len, txt, len, smooth));
+  mm_log((1,"i_tt_render_all_glyphs( handle 0x%X, inst %d, bit 0x%X, small_bit 0x%X, txt '%.*s', len %d, smooth %d, utf8 %d)\n",
+	  handle, inst, bit, small_bit, len, txt, len, smooth, utf8));
   
   /* 
      y=-( handle->properties.horizontal->Descender * handle->instanceh[inst].imetrics.y_ppem )/(handle->properties.header->Units_Per_EM);
@@ -1125,7 +1179,9 @@ i_tt_rasterize( TT_Fonthandle *handle, TT_Raster_Map *bit, int cords[6], float p
   }
   
   /* calculate bounding box */
-  i_tt_bbox_inst( handle, inst, txt, len, cords, 0 );
+  if (!i_tt_bbox_inst( handle, inst, txt, len, cords, utf8 ))
+    return 0;
+    
   
   width  = cords[2]-cords[0];
   height = cords[5]-cords[4];
@@ -1136,8 +1192,12 @@ i_tt_rasterize( TT_Fonthandle *handle, TT_Raster_Map *bit, int cords[6], float p
   i_tt_clear_raster_map( bit );
   if ( smooth ) i_tt_init_raster_map( &small_bit, handle->instanceh[inst].imetrics.x_ppem + 32, height, smooth );
   
-  i_tt_render_all_glyphs( handle, inst, bit, &small_bit, cords, txt, len, 
-                          smooth, utf8 );
+  if (!i_tt_render_all_glyphs( handle, inst, bit, &small_bit, cords, txt, len, 
+                               smooth, utf8 )) {
+    if ( smooth ) 
+      i_tt_done_raster_map( &small_bit );
+    return 0;
+  }
 
   /*  ascent = ( handle->properties.horizontal->Ascender  * handle->instanceh[inst].imetrics.y_ppem ) / handle->properties.header->Units_Per_EM; */
   
@@ -1176,6 +1236,7 @@ i_tt_cp( TT_Fonthandle *handle, i_img *im, int xb, int yb, int channel, float po
   int ascent, st_offset;
   TT_Raster_Map bit;
   
+  i_clear_error();
   if (! i_tt_rasterize( handle, &bit, cords, points, txt, len, smooth, utf8 ) ) return 0;
   
   ascent=cords[5];
@@ -1210,6 +1271,8 @@ i_tt_text( TT_Fonthandle *handle, i_img *im, int xb, int yb, i_color *cl, float 
   int cords[6];
   int ascent, st_offset;
   TT_Raster_Map bit;
+
+  i_clear_error();
   
   if (! i_tt_rasterize( handle, &bit, cords, points, txt, len, smooth, utf8 ) ) return 0;
   
@@ -1275,7 +1338,8 @@ i_tt_bbox_inst( TT_Fonthandle *handle, int inst ,const char *txt, int len, int c
       casc   = (gm->bbox.yMax+63) / 64;
       cdesc  = (gm->bbox.yMin-63) / 64;
 
-      mm_log((1, "i_tt_box_inst: glyph='%c' casc=%d cdesc=%d\n", j, casc, cdesc));
+      mm_log((1, "i_tt_box_inst: glyph='%c' casc=%d cdesc=%d\n", 
+              ((j >= ' ' && j <= '~') ? j : '.'), casc, cdesc));
 
       if (first) {
 	start    = gm->bbox.xMin / 64;
@@ -1328,10 +1392,12 @@ Interface to get a strings bounding box
 undef_int
 i_tt_bbox( TT_Fonthandle *handle, float points,char *txt,int len,int cords[6], int utf8) {
   int inst;
-  
+
+  i_clear_error();
   mm_log((1,"i_tt_box(handle 0x%X,points %f,txt '%.*s', len %d, utf8 %d)\n",handle,points,len,txt,len, utf8));
 
   if ( (inst=i_tt_get_instance(handle,points,-1)) < 0) {
+    i_push_errorf(0, "i_tt_get_instance(%g)", points);
     mm_log((1,"i_tt_text: get instance failed\n"));
     return 0;
   }
