@@ -2228,7 +2228,7 @@ sub setpixel {
 sub getpixel {
   my $self = shift;
 
-  my %opts = ( type=>'8bit', @_);
+  my %opts = ( "type"=>'8bit', @_);
 
   unless (exists $opts{'x'} && exists $opts{'y'}) {
     $self->{ERRSTR} = 'missing x and y parameters';
@@ -2243,7 +2243,7 @@ sub getpixel {
       return undef;
     }
     my @result;
-    if ($opts{type} eq '8bit') {
+    if ($opts{"type"} eq '8bit') {
       for my $i (0..$#{$opts{'x'}}) {
         push(@result, i_get_pixel($self->{IMG}, $x->[$i], $y->[$i]));
       }
@@ -2256,7 +2256,7 @@ sub getpixel {
     return wantarray ? @result : \@result;
   }
   else {
-    if ($opts{type} eq '8bit') {
+    if ($opts{"type"} eq '8bit') {
       return i_get_pixel($self->{IMG}, $x, $y);
     }
     else {

@@ -37,17 +37,17 @@ ok($img->box(color=>$redobj, xmin=>10, ymin=>30, xmax=>28, ymax=>48, filled=>1),
 ok($img->box(color=>$red, xmin=>30, ymin=>30, xmax=>48, ymax=>48, filled=>1),
    "filled box with color");
 
-ok($img->arc(x=>75, 'y'=>25, r=>24, color=>$redobj),
+ok($img->arc('x'=>75, 'y'=>25, r=>24, color=>$redobj),
    "filled arc with colorobj");
 
-ok($img->arc(x=>75, 'y'=>25, r=>20, color=>$green),
+ok($img->arc('x'=>75, 'y'=>25, r=>20, color=>$green),
    "filled arc with colorobj");
-ok($img->arc(x=>75, 'y'=>25, r=>18, color=>$white, d1=>325, d2=>225),
+ok($img->arc('x'=>75, 'y'=>25, r=>18, color=>$white, d1=>325, d2=>225),
    "filled arc with color");
 
-ok($img->arc(x=>75, 'y'=>25, r=>18, color=>$blue, d1=>225, d2=>325),
+ok($img->arc('x'=>75, 'y'=>25, r=>18, color=>$blue, d1=>225, d2=>325),
    "filled arc with color");
-ok($img->arc(x=>75, 'y'=>25, r=>15, color=>$green, aa=>1),
+ok($img->arc('x'=>75, 'y'=>25, r=>15, color=>$green, aa=>1),
    "filled arc with color");
 
 ok($img->line(color=>$blueobj, x1=>5, y1=>55, x2=>35, y2=>95),
@@ -65,36 +65,36 @@ ok($img->line(color=>$green, x1=>15, y1=>55, x2=>45, y2=>95, antialias=>1),
 ok($img->polyline(points=>[ [ 55, 55 ], [ 90, 60 ], [ 95, 95] ],
                   color=>$redobj),
    "polyline points with color obj");
-ok($img->polyline(x=>[ 55, 85, 90 ], 'y'=>[60, 65, 95], color=>$green, aa=>1),
+ok($img->polyline('x'=>[ 55, 85, 90 ], 'y'=>[60, 65, 95], color=>$green, aa=>1),
    "polyline xy with color aa");
-ok($img->polyline(x=>[ 55, 80, 85 ], 'y'=>[65, 70, 95], color=>$green, 
+ok($img->polyline('x'=>[ 55, 80, 85 ], 'y'=>[65, 70, 95], color=>$green, 
                   antialias=>1),
    "polyline xy with color antialias");
 
-ok($img->setpixel(x=>[35, 37, 39], 'y'=>[55, 57, 59], color=>$red),
+ok($img->setpixel('x'=>[35, 37, 39], 'y'=>[55, 57, 59], color=>$red),
    "set array of pixels");
-ok($img->setpixel(x=>39, 'y'=>55, color=>$green),
+ok($img->setpixel('x'=>39, 'y'=>55, color=>$green),
    "set single pixel");
 use Imager::Color::Float;
 my $flred = Imager::Color::Float->new(1, 0, 0, 0);
 my $flgreen = Imager::Color::Float->new(0, 1, 0, 0);
-ok($img->setpixel(x=>[41, 43, 45], 'y'=>[55, 57, 59], color=>$flred),
+ok($img->setpixel('x'=>[41, 43, 45], 'y'=>[55, 57, 59], color=>$flred),
    "set array of float pixels");
-ok($img->setpixel(x=>45, 'y'=>55, color=>$flgreen),
+ok($img->setpixel('x'=>45, 'y'=>55, color=>$flgreen),
    "set single float pixel");
-my @gp = $img->getpixel(x=>[41, 43, 45], 'y'=>[55, 57, 59]);
+my @gp = $img->getpixel('x'=>[41, 43, 45], 'y'=>[55, 57, 59]);
 ok(grep($_->isa('Imager::Color'), @gp) == 3, "check getpixel result type");
 ok(grep(color_cmp($_, NC(255, 0, 0)) == 0, @gp) == 3, 
    "check getpixel result colors");
-my $gp = $img->getpixel(x=>45, 'y'=>55);
+my $gp = $img->getpixel('x'=>45, 'y'=>55);
 ok($gp->isa('Imager::Color'), "check scalar getpixel type");
 ok(color_cmp($gp, NC(0, 255, 0)) == 0, "check scalar getpixel color");
-@gp = $img->getpixel(x=>[35, 37, 39], 'y'=>[55, 57, 59], type=>'float');
+@gp = $img->getpixel('x'=>[35, 37, 39], 'y'=>[55, 57, 59], type=>'float');
 ok(grep($_->isa('Imager::Color::Float'), @gp) == 3, 
    "check getpixel float result type");
 ok(grep(color_cmp($_, $flred) == 0, @gp) == 3,
    "check getpixel float result type");
-$gp = $img->getpixel(x=>39, 'y'=>55, type=>'float');
+$gp = $img->getpixel('x'=>39, 'y'=>55, type=>'float');
 ok($gp->isa('Imager::Color::Float'), "check scalar float getpixel type");
 ok(color_cmp($gp, $flgreen) == 0, "check scalar float getpixel color");
 
