@@ -79,6 +79,8 @@ ok(11, !$im7, "expected failure on accessing invalid image");
 print "# ", Imager->errstr, "\n";
 ok(12, Imager->errstr =~ /not enough images/, "didn't get expected error");
 
+
+
 sub ok ($$$) {
   my ($num, $test, $desc) = @_;
 

@@ -205,9 +205,11 @@ myfree_file_line(void *p, char *file, int line) {
   
   if (match != 1) {
     mm_log((1, "myfree_file_line: INCONSISTENT REFCOUNT %d at %s (%i)\n", match, file, line));
+    printf(stderr, "myfree_file_line: INCONSISTENT REFCOUNT %d at %s (%i)\n", match, file, line);
+		exit(255);
   }
   
-  mm_log((1, "myfree_file_line: freeing address %p\n", pp-UNDRRNVAL));
+  mm_log((1, "myfree_file_line: freeing address %p (real %p)\n", pp, pp-UNDRRNVAL));
   
   free(pp-UNDRRNVAL);
 }

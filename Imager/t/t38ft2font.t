@@ -23,7 +23,7 @@ sub skip {
   exit(0);
 }
 
-if (!(i_has_format("ft2")) ) { skip(); } 
+if (!(i_has_format("ft2")) ) { skip(); }
 print "# has ft2\n";
 
 $fontname=$ENV{'TTFONTTEST'}||'./fontfiles/dodge.ttf';

@@ -121,41 +121,34 @@ i_writeraw_wiol(i_img* im, io_glue *ig) {
          raw images later */
       int line_size = im->xsize * im->channels;
       unsigned char *data = mymalloc(line_size);
-      if (data) {
-        int y = 0;
-        rc = line_size;
-        while (rc == line_size && y < im->ysize) {
-          i_gsamp(im, 0, im->xsize, y, data, NULL, im->channels);
-          rc = ig->writecb(ig, data, line_size);
-          ++y;
-        }
-      } else {
-        i_push_error(0, "Out of memory");
-        return 0;
+
+      int y = 0;
+      rc = line_size;
+      while (rc == line_size && y < im->ysize) {
+	i_gsamp(im, 0, im->xsize, y, data, NULL, im->channels);
+	rc = ig->writecb(ig, data, line_size);
+	++y;
       }
       if (rc != line_size) {
         i_push_error(errno, "write error");
         return 0;
       }
+      myfree(data);
     } else {
       /* paletted image - assumes the caller puts the palette somewhere 
          else
       */
       int line_size = sizeof(i_palidx) * im->xsize;
       i_palidx *data = mymalloc(sizeof(i_palidx) * im->xsize);
-      if (data) {
-        int y = 0;
-        rc = line_size;
-        while (rc == line_size && y < im->ysize) {
-	  i_gpal(im, 0, im->xsize, y, data);
-          rc = ig->writecb(ig, data, line_size);
-          ++y;
-        }
-        myfree(data);
-      } else {
-        i_push_error(0, "Out of memory");
-        return 0;
+
+      int y = 0;
+      rc = line_size;
+      while (rc == line_size && y < im->ysize) {
+	i_gpal(im, 0, im->xsize, y, data);
+	rc = ig->writecb(ig, data, line_size);
+	++y;
       }
+      myfree(data);
       if (rc != line_size) {
         i_push_error(errno, "write error");
         return 0;

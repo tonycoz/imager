@@ -193,6 +193,7 @@ i_arc_cfill(i_img *im,int x,int y,float rad,float d1,float d2,i_fill_t *fill) {
 
   /*  dot.info(); */
   i_mmarray_render_fill(im,&dot,fill);
+  i_mmarray_dst(&dot);
 }
 
 
@@ -924,13 +925,13 @@ static
 struct stack_element*
 crdata(int left,int right,int dadl,int dadr,int y, int dir) {
   struct stack_element *ste;
-  ste=(struct stack_element*)mymalloc(sizeof(struct stack_element));
-  ste->myLx=left;
-  ste->myRx=right;
-  ste->dadLx=dadl;
-  ste->dadRx=dadr;
-  ste->myY=y;
-  ste->myDirection=dir;
+  ste              = mymalloc(sizeof(struct stack_element));
+  ste->myLx        = left;
+  ste->myRx        = right;
+  ste->dadLx       = dadl;
+  ste->dadRx       = dadr;
+  ste->myY         = y;
+  ste->myDirection = dir;
   return ste;
 }
 
@@ -970,14 +971,14 @@ i_rspan(i_img *im,int seedx,int seedy,i_color *val) {
 
 /* Macro to create a link and push on to the list */
 
-#define ST_PUSH(left,right,dadl,dadr,y,dir) { struct stack_element *s=crdata(left,right,dadl,dadr,y,dir); llist_push(st,&s);}
+#define ST_PUSH(left,right,dadl,dadr,y,dir) { struct stack_element *s = crdata(left,right,dadl,dadr,y,dir); llist_push(st,&s); }
 
 /* pops the shadow on TOS into local variables lx,rx,y,direction,dadLx and dadRx */
 /* No overflow check! */
  
-#define ST_POP() { struct stack_element *s; llist_pop(st,&s); lx=s->myLx; rx=s->myRx; dadLx=s->dadLx; dadRx=s->dadRx; y=s->myY; direction=s->myDirection; myfree(s); }
+#define ST_POP() { struct stack_element *s; llist_pop(st,&s); lx = s->myLx; rx = s->myRx; dadLx = s->dadLx; dadRx = s->dadRx; y = s->myY; direction= s->myDirection; myfree(s); }
 
-#define ST_STACK(dir,dadLx,dadRx,lx,rx,y) { int pushrx=rx+1; int pushlx=lx-1; ST_PUSH(lx,rx,pushlx,pushrx,y+dir,dir); if (rx > dadRx) ST_PUSH(dadRx+1,rx,pushlx,pushrx,y-dir,-dir); if (lx < dadLx) ST_PUSH(lx,dadLx-1,pushlx,pushrx,y-dir,-dir); }
+#define ST_STACK(dir,dadLx,dadRx,lx,rx,y) { int pushrx = rx+1; int pushlx = lx-1; ST_PUSH(lx,rx,pushlx,pushrx,y+dir,dir); if (rx > dadRx)                                      ST_PUSH(dadRx+1,rx,pushlx,pushrx,y-dir,-dir); if (lx < dadLx) ST_PUSH(lx,dadLx-1,pushlx,pushrx,y-dir,-dir); }
 
 #define SET(x,y) btm_set(btm,x,y);
 
@@ -1004,26 +1005,26 @@ i_flood_fill(i_img *im,int seedx,int seedy,i_color *dcol) {
   int channels,xsize,ysize;
   i_color cval,val;
 
-  channels=im->channels;
-  xsize=im->xsize;
-  ysize=im->ysize;
+  channels = im->channels;
+  xsize    = im->xsize;
+  ysize    = im->ysize;
 
-  btm=btm_new(xsize,ysize);
-  st=llist_new(100,sizeof(struct stack_element*));
+  btm = btm_new(xsize,ysize);
+  st = llist_new(100,sizeof(struct stack_element*));
 
   /* Get the reference color */
   i_gpix(im,seedx,seedy,&val);
 
   /* Find the starting span and fill it */
-  lx=i_lspan(im,seedx,seedy,&val);
-  rx=i_rspan(im,seedx,seedy,&val);
+  lx = i_lspan(im,seedx,seedy,&val);
+  rx = i_rspan(im,seedx,seedy,&val);
   
   /* printf("span: %d %d \n",lx,rx); */
 
-  for(x=lx;x<=rx;x++) SET(x,seedy);
+  for(x=lx; x<=rx; x++) SET(x,seedy);
 
-  ST_PUSH(lx,rx,lx,rx,seedy+1,1);
-  ST_PUSH(lx,rx,lx,rx,seedy-1,-1);
+  ST_PUSH(lx, rx, lx, rx, seedy+1, 1);
+  ST_PUSH(lx, rx, lx, rx, seedy-1,-1);
 
   while(st->count) {
     ST_POP();
@@ -1107,6 +1108,7 @@ i_flood_fill(i_img *im,int seedx,int seedy,i_color *dcol) {
   for(y=bymin;y<=bymax;y++) for(x=bxmin;x<=bxmax;x++) if (btm_test(btm,x,y)) i_ppix(im,x,y,dcol);
 
   btm_destroy(btm);
+  mm_log((1, "DESTROY\n"));
   llist_destroy(st);
 }
 

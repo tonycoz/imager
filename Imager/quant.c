@@ -68,9 +68,9 @@ static void translate_addi(i_quantize *, i_img *, i_palidx *);
 */
 i_palidx *quant_translate(i_quantize *quant, i_img *img) {
   i_palidx *result;
-	mm_log((1, "quant_translate(quant %p, img %p)\n", quant, img));
+  mm_log((1, "quant_translate(quant %p, img %p)\n", quant, img));
 
-	result = mymalloc(img->xsize * img->ysize);
+  result = mymalloc(img->xsize * img->ysize);
 
   switch (quant->translate) {
 #ifdef HAVE_LIBGIF
@@ -82,17 +82,17 @@ i_palidx *quant_translate(i_quantize *quant, i_img *img) {
   case pt_closest:
     translate_closest(quant, img, result);
     break;
-
+    
   case pt_errdiff:
     translate_errdiff(quant, img, result);
     break;
-
+    
   case pt_perturb:
   default:
     translate_addi(quant, img, result);
     break;
   }
-
+  
   return result;
 }
 
