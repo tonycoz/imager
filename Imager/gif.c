@@ -542,6 +542,7 @@ i_img **i_readgif_multi_low(GifFileType *GifFile, int *count) {
         channels = 4;
       img = i_img_pal_new(Width, Height, channels, 256);
       /* populate the palette of the new image */
+      mm_log((1, "ColorMapSize %d\n", ColorMapSize));
       for (i = 0; i < ColorMapSize; ++i) {
         i_color col;
         col.rgba.r = ColorMap->Colors[i].Red;
@@ -580,7 +581,6 @@ i_img **i_readgif_multi_low(GifFileType *GifFile, int *count) {
       if (GifFile->Image.ColorMap) {
         i_tags_addn(&img->tags, "gif_localmap", 0, 1);
       }
-      
       if (got_gce) {
         if (trans_index >= 0)
           i_tags_addn(&img->tags, "gif_trans_index", 0, trans_index);
@@ -598,7 +598,7 @@ i_img **i_readgif_multi_low(GifFileType *GifFile, int *count) {
       }
 
       ImageNum++;
-      mm_log((1,"i_readgif_multi: Image %d at (%d, %d) [%dx%d]: \n",
+      mm_log((1,"i_readgif_multi_low: Image %d at (%d, %d) [%dx%d]: \n",
 	      ImageNum, GifFile->Image.Left, GifFile->Image.Top, Width, Height));
 
       if (GifFile->Image.Left + GifFile->Image.Width > GifFile->SWidth ||
@@ -608,6 +608,7 @@ i_img **i_readgif_multi_low(GifFileType *GifFile, int *count) {
 	DGifCloseFile(GifFile);
 	return(0);
       }
+	     
       if (GifFile->Image.Interlace) {
 	for (Count = i = 0; i < 4; i++) {
           for (j = InterlacedOffset[i]; j < Height; 

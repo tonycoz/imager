@@ -163,6 +163,7 @@ i_arc(i_img *im,int x,int y,float rad,float d1,float d2,i_color *val) {
 
   /*  dot.info(); */
   i_mmarray_render(im,&dot,val);
+  i_mmarray_dst(&dot);
 }
 
 void

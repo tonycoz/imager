@@ -107,7 +107,7 @@ int i_tags_add(i_img_tags *tags, char *name, int code, char *data, int size,
   }
   else if (tags->count == tags->alloc) {
     int newalloc = tags->alloc + 10;
-    void *newtags = realloc(tags->tags, sizeof(i_img_tag) * newalloc);
+    void *newtags = myrealloc(tags->tags, sizeof(i_img_tag) * newalloc);
     if (!newtags) {
       return 0;
     }

@@ -33,6 +33,13 @@ void my_SvREFCNT_dec(void *p) {
   SvREFCNT_dec((SV*)p);
 }
 
+
+void
+log_entry(char *string, int level) {
+  mm_log((level, string));
+}
+
+
 typedef struct i_reader_data_tag
 {
   /* presumably a CODE ref or name of a sub */
@@ -756,6 +763,12 @@ void
 init_log(name,level)
 	      char*    name
 	       int     level
+
+void
+log_entry(string,level)
+	      char*    string
+	       int     level
+
 
 void
 i_img_exorcise(im)
