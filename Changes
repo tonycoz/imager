@@ -409,6 +409,7 @@ Revision history for Perl extension Imager.
           colormap and an abort if no colormap is present (which is legal
           in gif).
         - several fixes to i_readgif_low()
+	- Fixed crop() method so that it is consistent with documentation.
 
 ~~~~~~~~~~~~~^ ^ ^~~~~~~~~~~~~~
 
@@ -466,6 +467,11 @@ Revision history for Perl extension Imager.
           and give a useful extension interface.  Probe for the 
           installation of the patches in Makefile.PL to let gif.c
           know what features it can use.
+
+        - Add options for pnm, writer to save in any of the p1..P6
+          formats.  Even if the input has 1 channel, write 3 and such
+          cases.  Also allow ascii mode.  Need to be able to write 
+          pbm images which needs ties to the quantization code.
 
         Documentation:
         - Add to the documentation

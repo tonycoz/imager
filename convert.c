@@ -47,7 +47,7 @@ i_convert(i_img *im, i_img *src, float *coeff, int outchan, int inchan)
   int ilimit;
   double work[MAXCHANNELS];
 
-  mm_log((1,"i_convert(im* 0x%x, src, 0x%x, coeff 0x%x,outchan %d, inchan %d)\n",im,src, coeff,outchan, inchan));
+  mm_log((1,"i_convert(im %p, src, %p, coeff %p,outchan %d, inchan %d)\n",im,src, coeff,outchan, inchan));
  
   i_clear_error();
 
