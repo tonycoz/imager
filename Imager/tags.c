@@ -100,7 +100,7 @@ int i_tags_add(i_img_tags *tags, char *name, int code, char *data, int size,
   i_img_tag work = {0};
   if (tags->tags == NULL) {
     int alloc = 10;
-    tags->tags = malloc(sizeof(i_img_tag) * alloc);
+    tags->tags = mymalloc(sizeof(i_img_tag) * alloc);
     if (!tags->tags)
       return 0;
     tags->alloc = alloc;
@@ -115,15 +115,15 @@ int i_tags_add(i_img_tags *tags, char *name, int code, char *data, int size,
     tags->alloc = newalloc;
   }
   if (name) {
-    work.name = malloc(strlen(name)+1);
+    work.name = mymalloc(strlen(name)+1);
     if (!work.name)
       return 0;
     strcpy(work.name, name);
   }
   if (data) {
-    work.data = malloc(size+1);
+    work.data = mymalloc(size+1);
     if (!work.data) {
-      if (work.name) free(work.name);
+      if (work.name) myfree(work.name);
       return 0;
     }
     memcpy(work.data, data, size);
@@ -142,11 +142,11 @@ void i_tags_destroy(i_img_tags *tags) {
     int i;
     for (i = 0; i < tags->count; ++i) {
       if (tags->tags[i].name)
-	free(tags->tags[i].name);
+	myfree(tags->tags[i].name);
       if (tags->tags[i].data)
-	free(tags->tags[i].data);
+	myfree(tags->tags[i].data);
     }
-    free(tags->tags);
+    myfree(tags->tags);
   }
 }
 
@@ -182,9 +182,9 @@ int i_tags_delete(i_img_tags *tags, int entry) {
     memmove(tags->tags+entry, tags->tags+entry+1,
 	    tags->count-entry-1);
     if (old.name)
-      free(old.name);
+      myfree(old.name);
     if (old.data)
-      free(old.data);
+      myfree(old.data);
     --tags->count;
     return 1;
   }

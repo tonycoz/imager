@@ -760,8 +760,8 @@ read_4bit_bmp(io_glue *ig, int xsize, int ysize, int clr_used,
           break;
 
         case BMPRLE_ENDOFBMP:
-          free(packed);
-          free(line);
+          myfree(packed);
+          myfree(line);
           return im;
 
         case BMPRLE_DELTA:
@@ -889,7 +889,7 @@ read_8bit_bmp(io_glue *ig, int xsize, int ysize, int clr_used,
           break;
 
         case BMPRLE_ENDOFBMP:
-          free(line);
+          myfree(line);
           return im;
 
         case BMPRLE_DELTA:

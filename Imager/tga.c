@@ -689,7 +689,7 @@ i_readtga_wiol(io_glue *ig, int length) {
   
   if (idstring) {
     i_tags_add(&img->tags, "tga_idstring", 0, idstring, header.idlength, 0);
-    free(idstring);
+    myfree(idstring);
   }
 
   if (mapped &&
