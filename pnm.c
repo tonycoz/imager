@@ -366,7 +366,7 @@ i_readpnm_wiol(io_glue *ig, int length) {
     
   case 4: /* binary pbm */
     for(y=0;y<height;y++) for(x=0; x<width; x+=8) {
-      if ( (uc = gnext(&buf)) ) {
+      if ( (uc = (unsigned char*)gnext(&buf)) ) {
 	int xt;
 	int pc = width-x < 8 ? width-x : 8;
 	/*	mm_log((1,"i_readpnm: y=%d x=%d pc=%d\n", y, x, pc)); */
@@ -385,7 +385,7 @@ i_readpnm_wiol(io_glue *ig, int length) {
   case 6: /* binary ppm */
     for(y=0;y<height;y++) for(x=0; x<width; x++) {
       for(ch=0; ch<channels; ch++) {
-	if ( (uc = gnext(&buf)) ) val.channel[ch] = *uc;
+	if ( (uc = (unsigned char*)gnext(&buf)) ) val.channel[ch] = *uc;
 	else {
 	  mm_log((1,"i_readpnm: gnext() returned false in data\n"));
 	  return im;
