@@ -1042,6 +1042,8 @@ Revision history for Perl extension Imager.
   values across to the returned color objects.
   http://rt.cpan.org/NoAuth/Bug.html?id=11860 
 - Imager::Cookbook wasn't included in the MANIFEST
+- added samp-form.cgi and samp-image.cgi to the samples directory to 
+  demonstrate displaying a generated image on a HTML page.
 
 =================================================================
 

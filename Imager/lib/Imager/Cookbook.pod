@@ -156,6 +156,10 @@ the values supplied to both requests.
 How you make the data available to the image generation code depends
 on your application.
 
+See C<samples/samp-form.cgi> and C<samples/samp-image.cgi> in the
+Imager distribution for one approach.  The POD in C<samp-form.cgi>
+also discusses some of the issues involved.
+
 =head2 Parsing an image posted via CGI
 
 C<WARNING>: file format attacks have become a common attack vector,

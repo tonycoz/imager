@@ -20,3 +20,11 @@ interleave.pl
   This includes 3 different implementations, first using transform2(),
   the second using the internal i_copyto() function and the third using
   the internal i_glin() and i_plin() functions.
+
+samp-form.cgi
+samp-image.cgi
+
+  Example that demonstrates generating an image linked from a HTML form.
+
+  The POD for this sample discusses alternate approaches and security
+  considerations.

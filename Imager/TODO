@@ -28,7 +28,7 @@ not commitments.
 - add concept index to Imager.pm pod (done, still working it)
 - replace testimg/penguin-base.ppm with a smaller image (done)
 - add a sample CGI HTML and image generation scripts that work together,
-  with appropriate security management
+  with appropriate security management (done)
 - add sample CGI that handles an uploaded image
 - examples for fountain filter in Imager::Filters
 - provide access to right-side bearing information from the bounding box
@@ -46,6 +46,13 @@ not commitments.
 - implement gsamp()/gsampf()/plin() etc methods for those low level image
   interfaces which don't yet have methods.
 - implement i_incomplete for png and gif files.
+- documentation audit, check:
+  - every method has at least one example, but if the method is complex
+    (like transform2, to_paletted, string() for example) it should include 
+    a range of examples
+  - check each method description to ensure it's reasonably clear.
+  - check POD sections (SEE ALSO in particular)
+- rework handling of antialiasing against transparent images
 
 Speculation
 -----------
