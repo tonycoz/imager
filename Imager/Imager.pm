@@ -619,7 +619,7 @@ sub write {
 	     fax_fine=>1, @_);
   my ($fh, $rc, $fd, $IO);
 
-  my %iolready=( tiff=>1 ); # this will be SO MUCH BETTER once they are all in there
+  my %iolready=( tiff=>1, raw=>1, png=>1, pnm=>1 ); # this will be SO MUCH BETTER once they are all in there
 
   unless ($self->{IMG}) { $self->{ERRSTR}='empty input image'; return undef; }
 
@@ -660,18 +660,23 @@ sub write {
 	}
       }
     } elsif ( $input{type} eq 'pnm' ) {
-
       if ( ! i_writeppm_wiol($self->{IMG},$IO) ) {
 	$self->{ERRSTR}='unable to write pnm image';
 	return undef;
       }
       $self->{DEBUG} && print "writing a pnm file\n";
     } elsif ( $input{type} eq 'raw' ) {
-      if ( !i_writeraw($self->{IMG},$IO) ) {
+      if ( !i_writeraw_wiol($self->{IMG},$IO) ) {
 	$self->{ERRSTR}='unable to write raw image';
 	return undef;
       }
       $self->{DEBUG} && print "writing a raw file\n";
+    } elsif ( $input{type} eq 'png' ) {
+      if ( !i_writepng_wiol($self->{IMG}, $IO) ) {
+	$self->{ERRSTR}='unable to write png image';
+	return undef;
+      }
+      $self->{DEBUG} && print "writing a png file\n";
     }
 
     if (exists $input{'data'}) {
@@ -726,8 +731,6 @@ sub write {
 	  $rc = i_writegif_gen($fd, \%input, $self->{IMG});
 	}
 
-
-
       } elsif ($input{gifquant} eq 'lm') {
 	$rc=i_writegif($self->{IMG},$fd,$input{gifplanes},$input{lmdither},$input{lmfixed});
       } else {
@@ -744,12 +747,6 @@ sub write {
 	$self->{ERRSTR}='unable to write jpeg image'; return undef;
       }
       $self->{DEBUG} && print "writing a jpeg file\n";
-    } elsif ( $input{type} eq 'png' ) {
-      $rc=i_writepng($self->{IMG},$fd);
-      if ( !defined($rc) ) {
-	$self->{ERRSTR}='unable to write png image'; return undef;
-      }
-      $self->{DEBUG} && print "writing a png file\n";
     }
   }
   return $self;
