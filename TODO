@@ -52,7 +52,33 @@ New Features:
   (or even from an existing bold or slanted font)
 
 - utf8 support for text output
-  (available for freetype2)
+  (available for freetype2, should be easy for Win32, may need to fiddle 
+   with cache under FT1)
+
+- easy interfaces for text output:
+  - align text around point, including:
+    - left, center, right horizontal alignment
+    - top, center, baseline, bottom alignment
+    - choose whether to base alignment upon character cells or font 
+      metrics to avoid spacing problems between lines
+  - fill a box from text, with newline handling
+    - an option to just return the information that would be used to 
+      output the text, so it can be used for sizing calculations
+    - how much text fit in the box/how much space is left in the box
+  - fill a box with rich text (size and font changes)
+    - as above
+    - wrapping around boxes/images
+  - pod2Imager :)
+
+- tools to get more information about fonts/characters:
+  - name of font "Arial Bold Italic" vs "arialbi.ttf"
+  - ABC widths for characters (currently the only way to get the C width 
+    for a character is to get the width with a following space and without
+    and then compare)
+  - character names
+
+- encodings for text output (maybe using the Encode module to work 
+  between encodings)
 
 - image rotation, 3 ways of doing rotation:
   - rotation by shearing, which produces makes lengths in the image larger,
@@ -90,6 +116,11 @@ Clean up:
   (tx, ty) vs (left, top) in rubthrough() vs paste().  Do we want a (simple)
   standard for this (suggested names)?  Remember to preserve the old 
   interface where possible.
+
+- try to clean up the inconsistencies between font types:
+  - utf8 (even if we just treat characters over 0xFF as missing for T1)
+  - transformations
+  - has_char() method
 
 Format specific issues:
 - provide patches for libgif and libungif that fix their bugs
