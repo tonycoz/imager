@@ -1,14 +1,83 @@
 #include "image.h"
 #include <gif_lib.h>
 
+/*
+=head1 NAME
+
+gif.c - read and write gif files for Imager
+
+=head1 SYNOPSIS
+
+  i_img *img;
+  i_img *imgs[count];
+  int fd;
+  int *colour_table,
+  int colours;
+  int max_colours; // number of bits per colour
+  int pixdev;  // how much noise to add 
+  i_color fixed[N]; // fixed palette entries 
+  int fixedlen; // number of fixed colours 
+  int success; // non-zero on success
+  char *data; // an GIF file in memory
+  int length; // how big data is 
+  int reader(char *, char *, int, int);
+  int writer(char *, char *, int);
+  char *userdata; // user's data, whatever it is
+  i_quantize quant;
+  i_gif_opts opts;
+
+  img = i_readgif(fd, &colour_table, &colours);
+  success = i_writegif(img, fd, max_colours, pixdev, fixedlen, fixed);
+  success = i_writegifmc(img, fd, max_colours);
+  img = i_readgif_scalar(data, length, &colour_table, &colours);
+  img = i_readgif_callback(cb, userdata, &colour_table, &colours);
+  success = i_writegif_gen(&quant, fd, imgs, count, &opts);
+  success = i_writegif_callback(&quant, writer, userdata, maxlength, 
+                                imgs, count, &opts);
+
+=head1 DESCRIPTION
+
+This source file provides the C level interface to reading and writing
+GIF files for Imager.
+
+This has been tested with giflib 3 and 4, though you lose the callback
+functionality with giflib3.
+
+=head1 REFERENCE
+
+=over
+
+=cut
+*/
 
 #if IM_GIFMAJOR >= 4
+
+/*
+=item gif_scalar_info
+
+Internal.  A structure passed to the reader function used for reading
+GIFs from scalars.
+
+Used with giflib 4 and later.
+
+=cut
+*/
 
 struct gif_scalar_info {
   char *data;
   int length;
   int cpos;
 };
+
+/*
+=item my_gif_inputfunc(GifFileType *gft, GifByteType *buf, int length)
+
+Internal.  The reader callback passed to giflib.
+
+Used with giflib 4 and later.
+
+=cut
+*/
 
 int
 my_gif_inputfunc(GifFileType* gft, GifByteType *buf,int length) {
@@ -43,6 +112,14 @@ static int
     InterlacedJumps[] = { 8, 8, 4, 2 };    /* be read - offsets and jumps... */
 static ColorMapObject *ColorMap;
 
+/*
+=item i_readgif_low(GifFileType *GifFile, int **colour_table, int *colours)
+
+Internal.  Low-level function for reading a GIF file.  The caller must
+create the appropriate GifFileType object and pass it in.
+
+=cut
+*/
 i_img *
 i_readgif_low(GifFileType *GifFile, int **colour_table, int *colours) {
   i_img *im;
@@ -184,6 +261,19 @@ i_readgif_low(GifFileType *GifFile, int **colour_table, int *colours) {
   return im;
 }
 
+/*
+=item i_readgif(int fd, int **colour_table, int *colours)
+
+Reads in a GIF file from a file handle and converts it to an Imager
+RGB image object.
+
+Returns the palette for the object in colour_table for colours
+colours.
+
+Returns NULL on failure.
+
+=cut
+*/
 
 i_img *
 i_readgif(int fd, int **colour_table, int *colours) {
@@ -199,6 +289,17 @@ i_readgif(int fd, int **colour_table, int *colours) {
   return i_readgif_low(GifFile, colour_table, colours);
 }
 
+/*
+=item i_writegif(i_img *im, int fd, int max_colors, int pixdev, int fixedlen, i_color fixed[])
+
+Write I<img> to the file handle I<fd>.  The resulting GIF will use a
+maximum of 1<<I<max_colours> colours, with the first I<fixedlen>
+colours taken from I<fixed>.
+
+Returns non-zero on success.
+
+=cut
+*/
 
 undef_int
 i_writegif(i_img *im, int fd, int max_colors, int pixdev, int fixedlen, i_color fixed[])
@@ -218,6 +319,17 @@ i_writegif(i_img *im, int fd, int max_colors, int pixdev, int fixedlen, i_color 
   quant.perturb = pixdev;
   return i_writegif_gen(&quant, fd, &im, 1, &opts);
 }
+
+/*
+=item i_writegifmc(i_img *im, int fd, int max_colors)
+
+Write I<img> to the file handle I<fd>.  The resulting GIF will use a
+maximum of 1<<I<max_colours> colours.
+
+Returns non-zero on success.
+
+=cut
+*/
 
 undef_int
 i_writegifmc(i_img *im, int fd, int max_colors) {
@@ -334,6 +446,17 @@ i_writegifex(i_img *im,int fd) {
 
 #endif
 
+/*
+=item i_readgif_scalar(char *data, int length, int **colour_table, int *colours)
+
+Reads a GIF file from an in memory copy of the file.  This can be used
+if you get the 'file' from some source other than an actual file (or
+some other file handle).
+
+This function is only available with giflib 4 and higher.
+
+=cut
+*/
 i_img*
 i_readgif_scalar(char *data, int length, int **colour_table, int *colours) {
 #if IM_GIFMAJOR >= 4
@@ -359,12 +482,34 @@ i_readgif_scalar(char *data, int length, int **colour_table, int *colours) {
 
 #if IM_GIFMAJOR >= 4
 
+/*
+=item gif_read_callback(GifFileType *gft, GifByteType *buf, int length)
+
+Internal.  The reader callback wrapper passed to giflib.
+
+This function is only used with giflib 4 and higher.
+
+=cut
+*/
+
 static int
 gif_read_callback(GifFileType *gft, GifByteType *buf, int length) {
   return i_gen_reader((i_gen_read_data *)gft->UserData, buf, length);
 }
 
 #endif
+
+
+/*
+=item i_readgif_callback(i_read_callback_t cb, char *userdata, int **colour_table, int *colours)
+
+Read a GIF file into an Imager RGB file, the data of the GIF file is
+retreived by callin the user supplied callback function.
+
+This function is only used with giflib 4 and higher.
+
+=cut
+*/
 
 i_img*
 i_readgif_callback(i_read_callback_t cb, char *userdata, int **colour_table, int *colours) {
@@ -390,8 +535,16 @@ i_readgif_callback(i_read_callback_t cb, char *userdata, int **colour_table, int
 #endif
 }
 
-/* low level image write 
-   writes in interlace if that's what was requested */
+/*
+=item do_write(GifFileType *gf, i_gif_opts *opts, i_img *img, i_palidx *data)
+
+Internal.  Low level image write function.  Writes in interlace if
+that was requested in the GIF options.
+
+Returns non-zero on success.
+
+=cut
+*/
 static undef_int 
 do_write(GifFileType *gf, i_gif_opts *opts, i_img *img, i_palidx *data) {
   if (opts->interlace) {
@@ -421,6 +574,15 @@ do_write(GifFileType *gf, i_gif_opts *opts, i_img *img, i_palidx *data) {
   return 1;
 }
 
+/*
+=item do_gce(GifFileType *gf, int index, i_gif_opts *opts, int want_trans, int trans_index)
+
+Internal. Writes the GIF graphics control extension, if necessary.
+
+Returns non-zero on success.
+
+=cut
+*/
 static int do_gce(GifFileType *gf, int index, i_gif_opts *opts, int want_trans, int trans_index)
 {
   unsigned char gce[4] = {0};
@@ -450,7 +612,17 @@ static int do_gce(GifFileType *gf, int index, i_gif_opts *opts, int want_trans, 
   return 1;
 }
 
-/* add the Netscape2.0 loop extension block, if requested */
+/*
+=item do_ns_loop(GifFileType *gf, i_gif_opts *opts)
+
+Internal.  Add the Netscape2.0 loop extension block, if requested.
+
+The code for this function is currently "#if 0"ed out since the giflib
+extension writing code currently doesn't seem to support writing
+application extension blocks.
+
+=cut
+*/
 static int do_ns_loop(GifFileType *gf, i_gif_opts *opts)
 {
 #if 0
@@ -476,6 +648,14 @@ static int do_ns_loop(GifFileType *gf, i_gif_opts *opts)
   return 1;
 }
 
+/*
+=item make_gif_map(i_quantize *quant, i_gif_opts *opts, int want_trans)
+
+Create a giflib color map object from an Imager color map.
+
+=cut
+*/
+
 static ColorMapObject *make_gif_map(i_quantize *quant, i_gif_opts *opts,
 				    int want_trans) {
   GifColorType colors[256];
@@ -500,9 +680,29 @@ static ColorMapObject *make_gif_map(i_quantize *quant, i_gif_opts *opts,
   return MakeMapObject(map_size, colors);
 }
 
-/* we need to call EGifSetGifVersion() before opening the file - put that
-   common code here
+/*
+=item gif_set_version(i_quantize *quant, i_gif_opts *opts)
+
+We need to call EGifSetGifVersion() before opening the file - put that
+common code here.
+
+Unfortunately giflib 4.1.0 crashes when we use this.  Internally
+giflib 4.1.0 has code:
+
+  static char *GifVersionPrefix = GIF87_STAMP;
+
+and the code that sets the version internally does:
+
+  strncpy(&GifVersionPrefix[3], Version, 3);
+
+which is very broken.
+
+Failing to set the correct GIF version doesn't seem to cause a problem
+with readers.
+
+=cut
 */
+
 static void gif_set_version(i_quantize *quant, i_gif_opts *opts) {
   /* the following crashed giflib
      the EGifSetGifVersion() is seriously borked in giflib
@@ -518,6 +718,17 @@ static void gif_set_version(i_quantize *quant, i_gif_opts *opts) {
      EGifSetGifVersion("87a");
   */
 }
+
+/*
+=item i_writegif_low(i_quantize *quant, GifFileType *gf, i_img **imgs, int count, i_gif_opts *opts)
+
+Internal.  Low-level function that does the high-level GIF processing
+:)
+
+Returns non-zero on success.
+
+=cut
+*/
 
 static undef_int
 i_writegif_low(i_quantize *quant, GifFileType *gf, i_img **imgs, int count,
@@ -780,6 +991,20 @@ i_writegif_low(i_quantize *quant, GifFileType *gf, i_img **imgs, int count,
   return 1;
 }
 
+/*
+=item i_writegif_gen(i_quantize *quant, int fd, i_img **imgs, int count, i_gif_opts *opts)
+
+General high-level function to write a GIF to a file.
+
+Writes the GIF images to the specified file handle using the options
+in quant and opts.  See L<image.h/i_quantize> and
+L<image.h/i_gif_opts>.
+
+Returns non-zero on success.
+
+=cut
+*/
+
 undef_int
 i_writegif_gen(i_quantize *quant, int fd, i_img **imgs, int count, 
 	       i_gif_opts *opts) {
@@ -802,6 +1027,14 @@ i_writegif_gen(i_quantize *quant, int fd, i_img **imgs, int count,
 
 #if IM_GIFMAJOR >= 4
 
+/*
+=item gif_writer_callback(GifFileType *gf, const GifByteType *data, int size)
+
+Internal.  Wrapper for the user write callback function.
+
+=cut
+*/
+
 static int gif_writer_callback(GifFileType *gf, const GifByteType *data, int size)
 {
   i_gen_write_data *gwd = (i_gen_write_data *)gf->UserData;
@@ -810,6 +1043,17 @@ static int gif_writer_callback(GifFileType *gf, const GifByteType *data, int siz
 }
 
 #endif
+
+/*
+=item i_writegif_callback(i_quantize *quant, i_write_callback_t cb, char *userdata, int maxlength, i_img **imgs, int count, i_gif_opts *opts)
+
+General high-level function to write a GIF using callbacks to send
+back the data.
+
+Returns non-zero on success.
+
+=cut
+*/
 
 undef_int
 i_writegif_callback(i_quantize *quant, i_write_callback_t cb, char *userdata,
@@ -837,3 +1081,30 @@ i_writegif_callback(i_quantize *quant, i_write_callback_t cb, char *userdata,
   return 0;
 #endif
 }
+
+/*
+=head1 BUGS
+
+The Netscape loop extension isn't implemented.  Giflib's extension
+writing code doesn't seem to support writing named extensions in this 
+form.
+
+A bug in giflib is tickled by the i_writegif_callback().  This isn't a
+problem on ungiflib, but causes a SEGV on giflib.  A patch is provided
+in t/t10formats.t
+
+The GIF file tag (GIF87a vs GIF89a) currently isn't set.  Using the
+supplied interface in giflib 4.1.0 causes a SEGV in
+EGifSetGifVersion().  See L<gif_set_version> for an explanation.
+
+=head1 AUTHOR
+
+Arnar M. Hrafnkelsson, addi@umich.edu
+
+=head1 SEE ALSO
+
+perl(1), Imager(3)
+
+=cut
+
+*/
