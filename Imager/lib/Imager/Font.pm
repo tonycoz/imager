@@ -326,7 +326,7 @@ cases this can be a negative number, in that case the first letter
 stretches to the left of the starting position that is specified in
 the string method of the Imager class.  <$global_descent> is the how
 far down the lowest letter of the entire font reaches below the
-baseline (this is often j).  C<$pos_width> is how wide the string from
+baseline (this is often j).  C<$pos_width> is how wide the string
 from the starting position is.  The total width of the string is
 C<$pos_width-$neg_width>.  C<$descent> and C<$ascent> are the same as
 <$global_descent> and <$global_ascent> except that they are only for
