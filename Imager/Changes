@@ -975,6 +975,8 @@ Revision history for Perl extension Imager.
 - add dfont to the list of extensions supported by ft2
 - document Imager::Font->new()'s index parameter
 - added concept index to Imager.pm's POD
+- the gradgen filter now does the same color value conversion that
+  Imager's drawing functions do.
 
 =================================================================
 

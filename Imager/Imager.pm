@@ -221,11 +221,19 @@ BEGIN {
 		       callsub => sub { my %hsh=@_; i_conv($hsh{image},$hsh{coef}); }
 		      };
 
-  $filters{gradgen} ={
-		       callseq => ['image', 'xo', 'yo', 'colors', 'dist'],
-		       defaults => { },
-		       callsub => sub { my %hsh=@_; i_gradgen($hsh{image}, $hsh{xo}, $hsh{yo}, $hsh{colors}, $hsh{dist}); }
-		      };
+  $filters{gradgen} =
+    {
+     callseq => ['image', 'xo', 'yo', 'colors', 'dist'],
+     defaults => { dist => 0 },
+     callsub => 
+     sub { 
+       my %hsh=@_;
+       my @colors = @{$hsh{colors}};
+       $_ = _color($_)
+         for @colors;
+       i_gradgen($hsh{image}, $hsh{xo}, $hsh{yo}, \@colors, $hsh{dist});
+     }
+    };
 
   $filters{nearest_color} ={
 			    callseq => ['image', 'xo', 'yo', 'colors', 'dist'],
