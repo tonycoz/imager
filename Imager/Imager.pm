@@ -809,7 +809,7 @@ sub read {
     $self->{ERRSTR}='format not supported'; return undef;
   }
 
-  my %iolready=(jpeg=>1, png=>1, tiff=>1, pnm=>1, raw=>1, bmp=>1);
+  my %iolready=(jpeg=>1, png=>1, tiff=>1, pnm=>1, raw=>1, bmp=>1, tga=>1);
 
   if ($iolready{$input{type}}) {
     # Setup data source
@@ -858,6 +858,16 @@ sub read {
 	return undef;
       }
       $self->{DEBUG} && print "loading a bmp file\n";
+    }
+
+    if ( $input{type} eq 'tga' ) {
+      $self->{IMG}=i_readtga_wiol( $IO, -1 ); # Fixme, check if that length parameter is ever needed
+      if ( !defined($self->{IMG}) ) {
+	$self->{ERRSTR}=$self->_error_as_msg();
+#	$self->{ERRSTR}='unable to read tga image';
+	return undef;
+      }
+      $self->{DEBUG} && print "loading a tga file\n";
     }
 
     if ( $input{type} eq 'raw' ) {
@@ -953,7 +963,7 @@ sub write {
 	     fax_fine=>1, @_);
   my ($fh, $rc, $fd, $IO);
 
-  my %iolready=( tiff=>1, raw=>1, png=>1, pnm=>1, bmp=>1, jpeg=>1 ); # this will be SO MUCH BETTER once they are all in there
+  my %iolready=( tiff=>1, raw=>1, png=>1, pnm=>1, bmp=>1, jpeg=>1, tga=>1 ); # this will be SO MUCH BETTER once they are all in there
 
   unless ($self->{IMG}) { $self->{ERRSTR}='empty input image'; return undef; }
 
@@ -1021,6 +1031,13 @@ sub write {
 	return undef;
       }
       $self->{DEBUG} && print "writing a bmp file\n";
+    } elsif ( $input{type} eq 'tga' ) {
+      if ( !i_writetga_wiol($self->{IMG}, $IO) ) {
+	$self->{ERRSTR}=$self->_error_as_msg();
+#	$self->{ERRSTR}='unable to write tga image';
+	return undef;
+      }
+      $self->{DEBUG} && print "writing a tga file\n";
     }
 
     if (exists $input{'data'}) {
@@ -2020,6 +2037,7 @@ sub def_guess_type {
   return 'pnm'  if ($ext =~ m/^p[pgb]m$/);
   return 'png'  if ($ext eq "png");
   return 'bmp'  if ($ext eq "bmp" || $ext eq "dib");
+  return 'tga'  if ($ext eq "tga");
   return 'gif'  if ($ext eq "gif");
   return ();
 }
@@ -3814,7 +3832,7 @@ the i_aspect_only tag is non-zero.
 
 =back
 
-The following tags are set when reading a Windows BMP file is read:
+The following tags are set when a Windows BMP file is read:
 
 =over
 
