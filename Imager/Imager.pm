@@ -2593,8 +2593,20 @@ or if you want to create an empty image:
 This example creates a completely black image of width 400 and height
 300 and 4 channels.
 
+=head1 SUPPORT
 
+You can ask for help, report bugs or express your undying love for
+Imager on the Imager-devel mailing list.
 
+To subscribe send a message with C<subscribe> in the body to:
+
+   imager-devel+request@molar.is
+
+or use the form at:
+
+   http://www.molar.is/en/lists/imager-devel/
+
+where you can also find the mailing list archive.
 
 =head1 BUGS
 
@@ -2602,8 +2614,8 @@ Bugs are listed individually for relevant pod pages.
 
 =head1 AUTHOR
 
-Arnar M. Hrafnkelsson (addi@umich.edu) and Tony Cook (XXX) See the
-README for a complete list.
+Arnar M. Hrafnkelsson (addi@umich.edu) and Tony Cook
+(tony@imager.perl.org) See the README for a complete list.
 
 =head1 SEE ALSO
 
