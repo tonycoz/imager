@@ -15,7 +15,7 @@ sub new {
 sub _bounding_box {
   my ($self, %opts) = @_;
   
-  my @bbox = i_wf_bbox($self->{face}, $opts{size}, $opts{string});
+  my @bbox = Imager::i_wf_bbox($self->{face}, $opts{size}, $opts{string});
 }
 
 sub _draw {

@@ -1,5 +1,5 @@
 #!perl -w
-BEGIN { $| = 1; print "1..4\n"; }
+BEGIN { $| = 1; print "1..5\n"; }
 END {print "not ok 1\n" unless $loaded;}
 use Imager qw(:all);
 $loaded = 1;
@@ -29,7 +29,7 @@ $overlay=Imager::ImgRaw::new(200,70,3);
 print "#bbox: ($bbox[0], $bbox[1]) - ($bbox[2], $bbox[3])\n";
 
 Imager::i_wf_cp($fontname,$overlay,5,50,1,50.0,'XMCLH',1,1);
-i_draw($overlay,0,50,100,50,$bgcolor);
+i_line($overlay,0,50,100,50,$bgcolor, 1);
 
 open(FH,">testout/t37w32font.ppm") || die "cannot open testout/t37w32font.ppm\n";
 binmode(FH);
@@ -43,7 +43,7 @@ $bgcolor=i_color_set($bgcolor,200,200,200,0);
 $backgr=Imager::ImgRaw::new(500,300,3);
 
 Imager::i_wf_text($fontname,$backgr,100,100,$bgcolor,100,'MAW.',1, 1);
-i_draw($backgr,0, 100, 499, 100, NC(0, 0, 255));
+i_line($backgr,0, 100, 499, 100, NC(0, 0, 255), 1);
 
 open(FH,">testout/t37w32font2.ppm") || die "cannot open testout/t37w32font2.ppm\n";
 binmode(FH);
@@ -59,3 +59,10 @@ $img->string('x'=>30, 'y'=>30, string=>"Imager", color=>NC(255, 0, 0),
 	     font=>$font);
 $img->write(file=>'testout/t37_oo.ppm') or print "not ";
 print "ok 4 # ",$img->errstr||'',"\n";
+my @bbox2 = $font->bounding_box(string=>'Imager');
+if (@bbox2 == 6) {
+  print "ok 5 # @bbox2\n";
+}
+else {
+  print "not ok 5\n";
+}
