@@ -559,7 +559,7 @@ extern int    i_writebmp_wiol(i_img *im, io_glue *ig);
 extern i_img *i_readbmp_wiol(io_glue *ig);
 
 i_img   * i_readtga_wiol(io_glue *ig, int length);
-undef_int i_writetga_wiol(i_img *im, io_glue *ig);
+undef_int i_writetga_wiol(i_img *img, io_glue *ig, int wierdpack, int compress, char *idstring, size_t idlen);
 
 i_img * i_scaleaxis(i_img *im, float Value, int Axis);
 i_img * i_scale_nn(i_img *im, float scx, float scy);
@@ -574,6 +574,7 @@ i_img * i_transform2(int width, int height, int channels,
 		     double *n_regs, int n_regs_count, 
 		     i_color *c_regs, int c_regs_count, 
 		     i_img **in_imgs, int in_imgs_count);
+
 /* filters */
 
 void i_contrast(i_img *im, float intensity);

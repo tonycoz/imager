@@ -75,6 +75,17 @@ typedef struct {
 
 
 
+/*
+=item bpp_to_bytes(bpp)
+
+Convert bits per pixel into bytes per pixel
+
+   bpp - bits per pixel
+
+=cut
+*/
+
+
 static
 int
 bpp_to_bytes(unsigned int bpp) {
@@ -91,6 +102,18 @@ bpp_to_bytes(unsigned int bpp) {
   }
   return 0;
 }
+
+
+
+/*
+=item bpp_to_channels(bpp)
+
+Convert bits per pixel into channels in the image
+
+   bpp - bits per pixel
+
+=cut
+*/
 
 static
 int
@@ -115,16 +138,23 @@ bpp_to_channels(unsigned int bpp) {
 /* 
  * Packing functions - used for (un)packing
  * datastructures into raw bytes.
-*/
+ */
 
 
-/* color_unpack
+/*
+=item color_unpack(buf, bytepp, val)
 
-Unpacks bytes into colours, for 2 byte type the first byte coming from
-the file will actually be GGGBBBBB, and the second will be ARRRRRGG.
-"A" represents an attribute bit.  The 3 byte entry contains 1 byte
-each of blue, green, and red.  The 4 byte entry contains 1 byte each
-of blue, green, red, and attribute.
+Unpacks bytes into colour structures, for 2 byte type the first byte
+coming from the file will actually be GGGBBBBB, and the second will be
+ARRRRRGG.  "A" represents an attribute bit.  The 3 byte entry contains
+1 byte each of blue, green, and red.  The 4 byte entry contains 1 byte
+each of blue, green, red, and attribute.
+
+   buf - pointer to data
+   bytepp - bytes per pixel
+   val - pointer to color to store to
+
+=cut
 */
 
 static
@@ -160,13 +190,20 @@ color_unpack(unsigned char *buf, int bytepp, i_color *val) {
 
 
 
-/* color_pack
+/*
+=item color_pack
 
-Packs colous into bytes, for 2 byte type the first byte will be
-GGGBBBBB, and the second will be ARRRRRGG.  "A" represents an
+Packs a colour into an array of bytes, for 2 byte type the first byte
+will be GGGBBBBB, and the second will be ARRRRRGG.  "A" represents an
 attribute bit.  The 3 byte entry contains 1 byte each of blue, green,
 and red.  The 4 byte entry contains 1 byte each of blue, green, red,
 and attribute.
+
+    buf - destination buffer
+    bitspp - bits per pixel
+    val - color to pack
+
+=cut
 */
 
 static
@@ -197,11 +234,21 @@ color_pack(unsigned char *buf, int bitspp, i_color *val) {
     break;
   default:
   }
-  //  printf("%d  %3d %3d %3d\n", bitspp, val->rgb.r, val->rgb.g, val->rgb.b);
 }
 
 
+/*
+=item find_repeat
 
+Helper function for rle compressor to find the next triple repeat of the 
+same pixel value in buffer.
+
+    buf - buffer
+    length - number of pixel values in buffer
+    bytepp - number of bytes in a pixel value
+
+=cut
+*/
 
 static
 int
@@ -221,6 +268,19 @@ find_repeat(unsigned char *buf, int length, int bytepp) {
 }
 
 
+/*
+=item find_span
+
+Helper function for rle compressor to find the length of a span where
+the same pixel value is in the buffer.
+
+    buf - buffer
+    length - number of pixel values in buffer
+    bytepp - number of bytes in a pixel value
+
+=cut
+*/
+
 static
 int
 find_span(unsigned char *buf, int length, int bytepp) {
@@ -233,8 +293,83 @@ find_span(unsigned char *buf, int length, int bytepp) {
 }
 
 
+/*
+=item tga_header_unpack(header, headbuf)
+
+Unpacks the header structure into from buffer and stores
+in the header structure.
+
+    header - header structure
+    headbuf - buffer to unpack from
+
+=cut
+*/
+
+static
+void
+tga_header_unpack(tga_header *header, unsigned char headbuf[18]) {
+  header->idlength        = headbuf[0];
+  header->colourmaptype   = headbuf[1];
+  header->datatypecode    = headbuf[2];
+  header->colourmaporigin = (headbuf[4] << 8) + headbuf[3];
+  header->colourmaplength = (headbuf[6] << 8) + headbuf[5];
+  header->colourmapdepth  = headbuf[7];
+  header->x_origin        = (headbuf[9] << 8) + headbuf[8];
+  header->y_origin        = (headbuf[11] << 8) + headbuf[10];
+  header->width           = (headbuf[13] << 8) + headbuf[12];
+  header->height          = (headbuf[15] << 8) + headbuf[14];
+  header->bitsperpixel    = headbuf[16];
+  header->imagedescriptor = headbuf[17];
+}
 
 
+/*
+=item tga_header_pack(header, headbuf)
+
+Packs header structure into buffer for writing.
+
+    header - header structure
+    headbuf - buffer to pack into
+
+=cut
+*/
+
+static
+void
+tga_header_pack(tga_header *header, unsigned char headbuf[18]) {
+  headbuf[0] = header->idlength;
+  headbuf[1] = header->colourmaptype;
+  headbuf[2] = header->datatypecode;
+  headbuf[3] = header->colourmaporigin & 0xff;
+  headbuf[4] = header->colourmaporigin >> 8;
+  headbuf[5] = header->colourmaplength & 0xff;
+  headbuf[6] = header->colourmaplength >> 8;
+  headbuf[7] = header->colourmapdepth;
+  headbuf[8] = header->x_origin & 0xff;
+  headbuf[9] = header->x_origin >> 8;
+  headbuf[10] = header->y_origin & 0xff;
+  headbuf[11] = header->y_origin >> 8;
+  headbuf[12] = header->width & 0xff;
+  headbuf[13] = header->width >> 8;
+  headbuf[14] = header->height & 0xff;
+  headbuf[15] = header->height >> 8;
+  headbuf[16] = header->bitsperpixel;
+  headbuf[17] = header->imagedescriptor;
+}
+
+
+/*
+=item tga_source_read(s, buf, pixels)
+
+Reads pixel number of pixels from source s into buffer buf.  Takes
+care of decompressing the stream if needed.
+
+    s - data source 
+    buf - destination buffer
+    pixels - number of pixels to put into buffer
+
+=cut
+*/
 
 static
 int
@@ -278,13 +413,18 @@ tga_source_read(tga_source *s, unsigned char *buf, size_t pixels) {
 
 
 
-/* 
-   tga_dest_write
-   
-   Note that it is possible for length to be more than 0 and the state
-   still be noinit.  That just means that there isn't enough data yet to
-   determine the next packet type.
 
+/*
+=item tga_dest_write(s, buf, pixels)
+
+Writes pixels from buf to destination s.  Takes care of compressing if the
+destination is compressed.
+
+    s - data destination
+    buf - source buffer
+    pixels - number of pixels to put write to destination
+
+=cut
 */
 
 static
@@ -330,7 +470,19 @@ tga_dest_write(tga_dest *s, unsigned char *buf, size_t pixels) {
 
 
 
+/*
+=item tga_palette_read(ig, img, bytepp, colourmaplength)
 
+Reads the colormap from a tga file and stores in the paletted image
+structure.
+
+    ig - iolayer data source
+    img - image structure
+    bytepp - bytes per pixel
+    colourmaplength - number of colours in colourmap
+
+=cut
+*/
 
 static
 int
@@ -358,6 +510,18 @@ tga_palette_read(io_glue *ig, i_img *img, int bytepp, int colourmaplength) {
 }
 
 
+/*
+=item tga_palette_write(ig, img, bitspp, colourmaplength)
+
+Stores the colormap of an image in the destination ig.
+
+    ig - iolayer data source
+    img - image structure
+    bitspp - bits per pixel in colourmap
+    colourmaplength - number of colours in colourmap
+
+=cut
+*/
 
 static
 int
@@ -381,53 +545,13 @@ tga_palette_write(io_glue *ig, i_img *img, int bitspp, int colourmaplength) {
   return 1;
 }
 
-static
-void
-tga_header_unpack(tga_header *header, unsigned char headbuf[18]) {
-  header->idlength        = headbuf[0];
-  header->colourmaptype   = headbuf[1];
-  header->datatypecode    = headbuf[2];
-  header->colourmaporigin = (headbuf[4] << 8) + headbuf[3];
-  header->colourmaplength = (headbuf[6] << 8) + headbuf[5];
-  header->colourmapdepth  = headbuf[7];
-  header->x_origin        = (headbuf[9] << 8) + headbuf[8];
-  header->y_origin        = (headbuf[11] << 8) + headbuf[10];
-  header->width           = (headbuf[13] << 8) + headbuf[12];
-  header->height          = (headbuf[15] << 8) + headbuf[14];
-  header->bitsperpixel    = headbuf[16];
-  header->imagedescriptor = headbuf[17];
-}
-
-
-static
-void
-tga_header_pack(tga_header *header, unsigned char headbuf[18]) {
-  headbuf[0] = header->idlength;
-  headbuf[1] = header->colourmaptype;
-  headbuf[2] = header->datatypecode;
-  headbuf[3] = header->colourmaporigin & 0xff;
-  headbuf[4] = header->colourmaporigin >> 8;
-  headbuf[5] = header->colourmaplength & 0xff;
-  headbuf[6] = header->colourmaplength >> 8;
-  headbuf[7] = header->colourmapdepth;
-  headbuf[8] = header->x_origin & 0xff;
-  headbuf[9] = header->x_origin >> 8;
-  headbuf[10] = header->y_origin & 0xff;
-  headbuf[11] = header->y_origin >> 8;
-  headbuf[12] = header->width & 0xff;
-  headbuf[13] = header->width >> 8;
-  headbuf[14] = header->height & 0xff;
-  headbuf[15] = header->height >> 8;
-  headbuf[16] = header->bitsperpixel;
-  headbuf[17] = header->imagedescriptor;
-}
-
 
 
 /*
 =item i_readtga_wiol(ig, length)
 
-Retrieve an image and stores in the iolayer object. Returns NULL on fatal error.
+Read in an image from the iolayer data source and return the image structure to it.
+Returns NULL on error.
 
    ig     - io_glue object
    length - maximum length to read from data source, before closing it -1 
@@ -590,14 +714,19 @@ i_readtga_wiol(io_glue *ig, int length) {
 
 
 
+/*
+=item i_writetga_wiol(img, ig)
 
+Writes an image in targa format.  Returns 0 on error.
 
+   img    - image to store
+   ig     - io_glue object
 
-
-
+=cut
+*/
 
 undef_int
-i_writetga_wiol(i_img *img, io_glue *ig) {
+i_writetga_wiol(i_img *img, io_glue *ig, int wierdpack, int compress, char *idstring, size_t idlen) {
   static int rgb_chan[] = { 2, 1, 0, 3 };
   tga_header header;
   tga_dest dest;
@@ -605,18 +734,21 @@ i_writetga_wiol(i_img *img, io_glue *ig) {
   //  unsigned char *data;
   unsigned int bitspp;
   
-  int idlen;
   int mapped;
 
   /* parameters */
-  int compress = 1;
-  char *idstring = "testing";
-  int wierdpack = 0;
+
+  /*
+    int compress = 1;
+    char *idstring = "testing";
+    int wierdpack = 0;
+  */
 
   idlen = strlen(idstring);
   mapped = img->type == i_palette_type;
 
-  mm_log((1,"i_writetga_wiol(img %p, ig %p)\n", img, ig));
+  mm_log((1,"i_writetga_wiol(img %p, ig %p, idstring %p, idlen %d, wierdpack %d, compress %d)\n",
+	  img, ig, idstring, idlen, wierdpack, compress));
   mm_log((1, "virtual %d, paletted %d\n", img->virtual, mapped));
   mm_log((1, "channels %d\n", img->channels));
   

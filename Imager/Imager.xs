@@ -1787,9 +1787,22 @@ i_readbmp_wiol(ig)
 
 
 undef_int
-i_writetga_wiol(im,ig)
+i_writetga_wiol(im,ig, wierdpack, compress, idstring)
     Imager::ImgRaw     im
         Imager::IO     ig
+               int     wierdpack
+               int     compress
+              char*    idstring
+            PREINIT:
+                SV* sv1;
+                int rc;
+                int idlen;
+	       CODE:
+                idlen  = SvCUR(ST(4));
+                RETVAL = i_writetga_wiol(im, ig, wierdpack, compress, idstring, idlen);
+                OUTPUT:
+                RETVAL
+
 
 Imager::ImgRaw
 i_readtga_wiol(ig, length)
