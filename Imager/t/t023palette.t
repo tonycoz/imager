@@ -144,8 +144,8 @@ matchx(Imager->errstr, qr/Channels must be positive and <= 4/,
   # least and may result in running out of memory, causing a different
   # type of exit
   use Config;
-  if ($Config{ivsize} == 4) {
-    my $uint_range = 256 ** $Config{ivsize};
+  if ($Config{intsize} == 4) {
+    my $uint_range = 256 ** $Config{intsize};
     my $dim1 = int(sqrt($uint_range))+1;
     
     my $im_b = Imager->new(xsize=>$dim1, ysize=>$dim1, channels=>1, type=>'paletted');
