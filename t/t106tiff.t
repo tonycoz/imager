@@ -189,8 +189,10 @@ if (!i_has_format("tiff")) {
   ok($bad->read(file=>'testimg/comp4bad.tif'), "bad image not returned");
   ok(scalar $bad->tags(name=>'i_incomplete'), "incomplete tag not set");
   ok($img8->write(file=>'testout/t106_pal8.tif'), "writing 8-bit paletted");
-  ok(my $cmp8 = Imager->new->read(file=>'testout/t106pal8.tif'),
+  my $cmp8 = Imager->new;
+  ok($cmp8->read(file=>'testout/t106_pal8.tif'),
      "reading 8-bit paletted");
+  #print "# ",$cmp8->errstr,"\n";
   ok($cmp8->type eq 'paletted', "pal8 isn't paletted");
   ok($cmp8->colorcount == 256, "pal8 bad colorcount");
   $diff = i_img_diff($img8->{IMG}, $cmp8->{IMG});
