@@ -524,6 +524,8 @@ Revision history for Perl extension Imager.
         - Added i_bumpmap_complex to do more accurate bumpmapping
         - added an image type with doubles as samples
         - change i_copy() and i_sametype() to handle double/sample images
+        - added basic POD to trans2.c
+        - transform2 now uses the error interface
 
 =================================================================
 
