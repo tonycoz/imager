@@ -1083,7 +1083,6 @@ sub write {
 
       if ( !i_writetga_wiol($self->{IMG}, $IO, $input{wierdpack}, $input{compress}, $input{idstring}) ) {
 	$self->{ERRSTR}=$self->_error_as_msg();
-#	$self->{ERRSTR}='unable to write tga image';
 	return undef;
       }
       $self->{DEBUG} && print "writing a tga file\n";
