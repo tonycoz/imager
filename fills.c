@@ -163,13 +163,13 @@ typedef struct
 } i_fill_solid_t;
 
 static void fill_solid(i_fill_t *, int x, int y, int width, int channels, 
-                       i_color *, i_color *);
+                       i_color *);
 static void fill_solidf(i_fill_t *, int x, int y, int width, int channels, 
-                        i_fcolor *, i_fcolor *);
+                        i_fcolor *);
 static void fill_solid_comb(i_fill_t *, int x, int y, int width, int channels, 
-                            i_color *, i_color *);
+                            i_color *);
 static void fill_solidf_comb(i_fill_t *, int x, int y, int width, 
-                             int channels, i_fcolor *, i_fcolor *);
+                             int channels, i_fcolor *);
 
 static i_fill_solid_t base_solid_fill =
 {
@@ -408,9 +408,9 @@ typedef struct
 } i_fill_hatch_t;
 
 static void fill_hatch(i_fill_t *fill, int x, int y, int width, int channels, 
-                       i_color *data, i_color *work);
+                       i_color *data);
 static void fill_hatchf(i_fill_t *fill, int x, int y, int width, int channels, 
-                        i_fcolor *data, i_fcolor *work);
+                        i_fcolor *data);
 static
 i_fill_t *
 i_new_hatch_low(i_color *fg, i_color *bg, i_fcolor *ffg, i_fcolor *fbg, 
@@ -464,9 +464,9 @@ i_new_fill_hatchf(i_fcolor *fg, i_fcolor *bg, int combine, int hatch,
 }
 
 static void fill_image(i_fill_t *fill, int x, int y, int width, int channels,
-                       i_color *data, i_color *work);
+                       i_color *data);
 static void fill_imagef(i_fill_t *fill, int x, int y, int width, int channels,
-                       i_fcolor *data, i_fcolor *work);
+                       i_fcolor *data);
 struct i_fill_image_t {
   i_fill_t base;
   i_img *src;
@@ -532,7 +532,7 @@ The 8-bit sample fill function for non-combining solid fills.
 */
 static void
 fill_solid(i_fill_t *fill, int x, int y, int width, int channels, 
-           i_color *data, i_color *work) {
+           i_color *data) {
   while (width-- > 0) {
     *data++ = T_SOLID_FILL(fill)->c;
   }
@@ -547,7 +547,7 @@ The floating sample fill function for non-combining solid fills.
 */
 static void
 fill_solidf(i_fill_t *fill, int x, int y, int width, int channels, 
-           i_fcolor *data, i_fcolor *work) {
+           i_fcolor *data) {
   while (width-- > 0) {
     *data++ = T_SOLID_FILL(fill)->fc;
   }
@@ -562,15 +562,12 @@ The 8-bit sample fill function for combining solid fills.
 */
 static void
 fill_solid_comb(i_fill_t *fill, int x, int y, int width, int channels, 
-                i_color *data, i_color *work) {
+                i_color *data) {
   i_color c = T_SOLID_FILL(fill)->c;
-  int count = width;
-  i_color *wstart = work;
 
   while (width-- > 0) {
-    *work++ = c;
+    *data++ = c;
   }
-  (fill->combine)(data, wstart, channels, count);
 }
 
 /*
@@ -582,15 +579,12 @@ The floating sample fill function for combining solid fills.
 */
 static void
 fill_solidf_comb(i_fill_t *fill, int x, int y, int width, int channels, 
-           i_fcolor *data, i_fcolor *work) {
+           i_fcolor *data) {
   i_fcolor c = T_SOLID_FILL(fill)->fc;
-  int count = width;
-  i_fcolor *wstart = work;
 
   while (width-- > 0) {
-    *work++ = c;
+    *data++ = c;
   }
-  (fill->combinef)(data, wstart, channels, count);
 }
 
 /*
@@ -643,31 +637,17 @@ The 8-bit sample fill function for hatched fills.
 =cut
 */
 static void fill_hatch(i_fill_t *fill, int x, int y, int width, int channels, 
-                       i_color *data, i_color *work) {
+                       i_color *data) {
   i_fill_hatch_t *f = (i_fill_hatch_t *)fill;
   int byte = f->hatch[(y + f->dy) & 7];
   int xpos = (x + f->dx) & 7;
   int mask = 128 >> xpos;
 
-  if (fill->combine) {
-    int count = width;
-    i_color *wstart = work;
-
-    while (count-- > 0) {
-      *work++ = (byte & mask) ? f->fg : f->bg;
-      
-      if ((mask >>= 1) == 0)
-        mask = 128;
-    }
-    (fill->combine)(data, wstart, channels, width);
-  }
-  else {
-    while (width-- > 0) {
-      *data++ = (byte & mask) ? f->fg : f->bg;
-
-      if ((mask >>= 1) == 0)
-        mask = 128;
-    }
+  while (width-- > 0) {
+    *data++ = (byte & mask) ? f->fg : f->bg;
+    
+    if ((mask >>= 1) == 0)
+      mask = 128;
   }
 }
 
@@ -679,31 +659,17 @@ The floating sample fill function for hatched fills.
 =back
 */
 static void fill_hatchf(i_fill_t *fill, int x, int y, int width, int channels, 
-                        i_fcolor *data, i_fcolor *work) {
+                        i_fcolor *data) {
   i_fill_hatch_t *f = (i_fill_hatch_t *)fill;
   int byte = f->hatch[(y + f->dy) & 7];
   int xpos = (x + f->dx) & 7;
   int mask = 128 >> xpos;
   
-  if (fill->combinef) {
-    int count = width;
-    i_fcolor *wstart = work;
-
-    while (count-- > 0) {
-      *work++ = (byte & mask) ? f->ffg : f->fbg;
-      
-      if ((mask >>= 1) == 0)
-        mask = 128;
-    }
-    (fill->combinef)(data, wstart, channels, width);
-  }
-  else {
-    while (width-- > 0) {
-      *data++ = (byte & mask) ? f->ffg : f->fbg;
-
-      if ((mask >>= 1) == 0)
-        mask = 128;
-    }
+  while (width-- > 0) {
+    *data++ = (byte & mask) ? f->ffg : f->fbg;
+    
+    if ((mask >>= 1) == 0)
+      mask = 128;
   }
 }
 
@@ -757,9 +723,8 @@ static i_fcolor interp_i_fcolor(i_fcolor before, i_fcolor after, double pos,
 =cut
 */
 static void fill_image(i_fill_t *fill, int x, int y, int width, int channels,
-                       i_color *data, i_color *work) {
+                       i_color *data) {
   struct i_fill_image_t *f = (struct i_fill_image_t *)fill;
-  i_color *out = fill->combine ? work : data;
   int i = 0;
   i_color c;
   
@@ -796,7 +761,7 @@ static void fill_image(i_fill_t *fill, int x, int y, int width, int channels,
         }
         c2[dy] = interp_i_color(c[dy][0], c[dy][1], rx, f->src->channels);
       }
-      *out++ = interp_i_color(c2[0], c2[1], ry, f->src->channels);
+      *data++ = interp_i_color(c2[0], c2[1], ry, f->src->channels);
       ++i;
     }
   }
@@ -819,14 +784,10 @@ static void fill_image(i_fill_t *fill, int x, int y, int width, int channels,
       }
       rx -= ix * f->src->xsize;
       ry -= iy * f->src->ysize;
-      i_gpix(f->src, rx, ry, out);
-      ++out;
+      i_gpix(f->src, rx, ry, data);
+      ++data;
       ++i;
     }
-  }
-
-  if (fill->combine) {
-    (fill->combine)(data, work, channels, width);
   }
 }
 
@@ -836,9 +797,8 @@ static void fill_image(i_fill_t *fill, int x, int y, int width, int channels,
 =cut
 */
 static void fill_imagef(i_fill_t *fill, int x, int y, int width, int channels,
-                       i_fcolor *data, i_fcolor *work) {
+                       i_fcolor *data) {
   struct i_fill_image_t *f = (struct i_fill_image_t *)fill;
-  i_fcolor *out = fill->combine ? work : data;
   int i = 0;
   i_fcolor c;
   
@@ -875,7 +835,7 @@ static void fill_imagef(i_fill_t *fill, int x, int y, int width, int channels,
         }
         c2[dy] = interp_i_fcolor(c[dy][0], c[dy][1], rx, f->src->channels);
       }
-      *out++ = interp_i_fcolor(c2[0], c2[1], ry, f->src->channels);
+      *data++ = interp_i_fcolor(c2[0], c2[1], ry, f->src->channels);
       ++i;
     }
   }
@@ -898,14 +858,10 @@ static void fill_imagef(i_fill_t *fill, int x, int y, int width, int channels,
       }
       rx -= ix * f->src->xsize;
       ry -= iy * f->src->ysize;
-      i_gpixf(f->src, rx, ry, out);
-      ++out;
+      i_gpixf(f->src, rx, ry, data);
+      ++data;
       ++i;
     }
-  }
-
-  if (fill->combinef) {
-    (fill->combinef)(data, work, channels, width);
   }
 }
 

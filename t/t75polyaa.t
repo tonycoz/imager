@@ -6,7 +6,7 @@
 # Change 1..1 below to 1..last_test_to_print .
 # (It may become useful if the test is moved to ./t subdirectory.)
 
-BEGIN { $| = 1; print "1..7\n"; }
+BEGIN { $| = 1; print "1..9\n"; }
 END {print "not ok 1\n" unless $loaded;}
 use Imager qw(:all);
 
@@ -102,18 +102,31 @@ make_zoom($img,20,\@data, $blue)->write(file=>"testout/t75wavebug.ppm") or die $
 
 print "ok 7\n";
 
+$img = Imager->new(xsize=>300, ysize=>300);
+$img->polygon(fill=>{ hatch=>'cross1', fg=>'00FF00', bg=>'0000FF', dx=>3 },
+              points => [
+                         translate(150,150,
+                                   scale(70,70,
+                                         get_polygon('wavycircle', 32*8, sub { 1+1*cos(4*$_) })))
+                        ],
+             ) or die $img->errstr();
+$img->write(file=>"testout/t75wave_fill.ppm") or die $img->errstr;
+
+print "ok 8\n";
+
+$img = Imager->new(xsize=>300, ysize=>300, bits=>16);
+$img->polygon(fill=>{ hatch=>'cross1', fg=>'00FF00', bg=>'0000FF' },
+              points => [
+                         translate(150,150,
+                                   scale(70,70,
+                                         get_polygon('wavycircle', 32*8, sub { 1+1*cos(5*$_) })))
+                        ],
+             ) or die $img->errstr();
+$img->write(file=>"testout/t75wave_fill16.ppm") or die $img->errstr;
+
+print "ok 9\n";
+
 malloc_state();
-
-
-
-
-
-
-
-
-
-
-
 
 
 

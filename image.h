@@ -127,10 +127,10 @@ struct i_fill_tag;
 
 typedef void (*i_fill_with_color_f)
      (struct i_fill_tag *fill, int x, int y, int width, int channels, 
-      i_color *data, i_color *work);
+      i_color *data);
 typedef void (*i_fill_with_fcolor_f)
      (struct i_fill_tag *fill, int x, int y, int width, int channels,
-      i_fcolor *data, i_fcolor *work);
+      i_fcolor *data);
 typedef void (*i_fill_destroy_f)(struct i_fill_tag *fill);
 typedef void (*i_fill_combine_f)(i_color *out, i_color *in, int channels, 
                                  int count);
@@ -209,6 +209,7 @@ extern i_img *i_matrix_transform(i_img *im, int xsize, int ysize, double *matrix
 
 void i_bezier_multi(i_img *im,int l,double *x,double *y,i_color *val);
 void i_poly_aa     (i_img *im,int l,double *x,double *y,i_color *val);
+void i_poly_aa_cfill(i_img *im,int l,double *x,double *y,i_fill_t *fill);
 
 void i_flood_fill  (i_img *im,int seedx,int seedy,i_color *dcol);
 

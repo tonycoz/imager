@@ -546,6 +546,10 @@ Revision history for Perl extension Imager.
 
 0.39    Released: Nov 2 2001.
 
+0.40  pre1
+        - anti-aliased polygon fill
+        - add general fill to polygon fill
+
 =================================================================
 
         For latest versions check the Imager-devel pages:
