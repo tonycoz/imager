@@ -662,6 +662,9 @@ It's possible that a driver will disable hinting if you use a
 transformation, to prevent discontinuities in the transformations.
 See the end of the test script t/t38ft2font.t for an example.
 
+Currently only the ft2 (Freetype 2.x) driver supports the transform()
+method.
+
 =item has_chars(string=>$text)
 
 Checks if the characters in $text are defined by the font.
