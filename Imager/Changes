@@ -753,6 +753,7 @@ Revision history for Perl extension Imager.
 	  names out of the =item lines so we can make them into links
 	- the scale() method now produces a warning when called in
 	  void context.
+	- font.c now only uses the defined T1Lib error codes
 
 =================================================================
 
