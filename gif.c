@@ -176,15 +176,25 @@ i_readgif_low(GifFileType *GifFile, int **colour_table, int *colours) {
   /* Scan the content of the GIF file and load the image(s) in: */
   do {
     if (DGifGetRecordType(GifFile, &RecordType) == GIF_ERROR) {
-      PrintGifError();
-      exit(-1);
+      gif_push_error();
+      i_push_error(0, "Unable to get record type");
+      if (colour_table)
+	free(colour_table);
+      i_img_destroy(im);
+      DGifCloseFile(GifFile);
+      return NULL;
     }
     
     switch (RecordType) {
     case IMAGE_DESC_RECORD_TYPE:
       if (DGifGetImageDesc(GifFile) == GIF_ERROR) {
-	PrintGifError();
-	exit(-1);
+	gif_push_error();
+	i_push_error(0, "Unable to get image descriptor");
+	if (colour_table)
+	  free(colour_table);
+	i_img_destroy(im);
+	DGifCloseFile(GifFile);
+	return NULL;
       }
       Row = GifFile->Image.Top; /* Image Position relative to Screen. */
       Col = GifFile->Image.Left;
@@ -195,7 +205,11 @@ i_readgif_low(GifFileType *GifFile, int **colour_table, int *colours) {
 
       if (GifFile->Image.Left + GifFile->Image.Width > GifFile->SWidth ||
 	  GifFile->Image.Top + GifFile->Image.Height > GifFile->SHeight) {
-	fprintf(stderr, "Image %d is not confined to screen dimension, aborted.\n",ImageNum);
+	i_push_errorf(0, "Image %d is not confined to screen dimension, aborted.\n",ImageNum);
+	if (colour_table)
+	  free(colour_table);
+	i_img_destroy(im);
+	DGifCloseFile(GifFile);
 	return(0);
       }
       if (GifFile->Image.Interlace) {
@@ -203,8 +217,13 @@ i_readgif_low(GifFileType *GifFile, int **colour_table, int *colours) {
 	for (Count = i = 0; i < 4; i++) for (j = Row + InterlacedOffset[i]; j < Row + Height; j += InterlacedJumps[i]) {
 	  Count++;
 	  if (DGifGetLine(GifFile, &GifRow[Col], Width) == GIF_ERROR) {
-	    mm_log((1,"fatal"));
-	    exit(-1);
+	    gif_push_error();
+	    i_push_error(0, "Reading GIF line");
+	    if (colour_table)
+	      free(colour_table);
+	    i_img_destroy(im);
+	    DGifCloseFile(GifFile);
+	    return NULL;
 	  }
 	  
 	  for (x = 0; x < GifFile->SWidth; x++) {
@@ -220,8 +239,13 @@ i_readgif_low(GifFileType *GifFile, int **colour_table, int *colours) {
       else {
 	for (i = 0; i < Height; i++) {
 	  if (DGifGetLine(GifFile, &GifRow[Col], Width) == GIF_ERROR) {
-	    mm_log((1,"fatal\n"));
-	    exit(-1);
+	    gif_push_error();
+	    i_push_error(0, "Reading GIF line");
+	    if (colour_table)
+	      free(colour_table);
+	    i_img_destroy(im);
+	    DGifCloseFile(GifFile);
+	    return NULL;
 	  }
 
 	  for (x = 0; x < GifFile->SWidth; x++) {
@@ -238,13 +262,23 @@ i_readgif_low(GifFileType *GifFile, int **colour_table, int *colours) {
     case EXTENSION_RECORD_TYPE:
       /* Skip any extension blocks in file: */
       if (DGifGetExtension(GifFile, &ExtCode, &Extension) == GIF_ERROR) {
-	mm_log((1,"fatal\n"));
-	exit(-1);
+	gif_push_error();
+	i_push_error(0, "Reading extension record");
+	if (colour_table)
+	  free(colour_table);
+	i_img_destroy(im);
+	DGifCloseFile(GifFile);
+	return NULL;
       }
       while (Extension != NULL) {
 	if (DGifGetExtensionNext(GifFile, &Extension) == GIF_ERROR) {
-	  mm_log((1,"fatal\n"));
-	  exit(-1);
+	  gif_push_error();
+	  i_push_error(0, "reading next block of extension");
+	  if (colour_table)
+	    free(colour_table);
+	  i_img_destroy(im);
+	  DGifCloseFile(GifFile);
+	  return NULL;
 	}
       }
       break;
@@ -258,8 +292,12 @@ i_readgif_low(GifFileType *GifFile, int **colour_table, int *colours) {
   myfree(GifRow);
   
   if (DGifCloseFile(GifFile) == GIF_ERROR) {
-    PrintGifError();
-    exit(-1);
+    gif_push_error();
+    i_push_error(0, "Closing GIF file object");
+    if (colour_table)
+      free(colour_table);
+    i_img_destroy(im);
+    return NULL;
   }
   return im;
 }
@@ -281,10 +319,14 @@ Returns NULL on failure.
 i_img *
 i_readgif(int fd, int **colour_table, int *colours) {
   GifFileType *GifFile;
+
+  i_clear_error();
   
   mm_log((1,"i_readgif(fd %d, colour_table %p, colours %p)\n", fd, colour_table, colours));
 
   if ((GifFile = DGifOpenFileHandle(fd)) == NULL) {
+    gif_push_error();
+    i_push_error(0, "Cannot create giflib file object");
     mm_log((1,"i_readgif: Unable to open file\n"));
     return NULL;
   }
@@ -464,8 +506,9 @@ i_img*
 i_readgif_scalar(char *data, int length, int **colour_table, int *colours) {
 #if IM_GIFMAJOR >= 4
   GifFileType *GifFile;
-  
   struct gif_scalar_info gsi;
+
+  i_clear_error();
 
   gsi.cpos=0;
   gsi.length=length;
@@ -473,6 +516,8 @@ i_readgif_scalar(char *data, int length, int **colour_table, int *colours) {
 
   mm_log((1,"i_readgif_scalar(char* data, int length, colour_table %p, colours %p)\n", data, length, colour_table, colours));
   if ((GifFile = DGifOpen( (void*) &gsi, my_gif_inputfunc )) == NULL) {
+    gif_push_error();
+    i_push_error(0, "Cannot create giflib callback object");
     mm_log((1,"i_readgif_scalar: Unable to open scalar datasource.\n"));
     return NULL;
   }
@@ -519,11 +564,15 @@ i_readgif_callback(i_read_callback_t cb, char *userdata, int **colour_table, int
 #if IM_GIFMAJOR >= 4
   GifFileType *GifFile;
   i_img *result;
+
+  i_clear_error();
   
   i_gen_read_data *gci = i_gen_read_data_new(cb, userdata);
 
   mm_log((1,"i_readgif_callback(callback %p, userdata %p, colour_table %p, colours %p)\n", cb, userdata, colour_table, colours));
   if ((GifFile = DGifOpen( (void*) gci, gif_read_callback )) == NULL) {
+    gif_push_error();
+    i_push_error(0, "Cannot create giflib callback object");
     mm_log((1,"i_readgif_callback: Unable to open callback datasource.\n"));
     myfree(gci);
     return NULL;
@@ -1070,7 +1119,6 @@ i_writegif_gen(i_quantize *quant, int fd, i_img **imgs, int count,
     gif_push_error();
     i_push_error(0, "Cannot create GIF file object");
     mm_log((1, "Error in EGifOpenFileHandle, unable to write image.\n"));
-    gif_push_error();
     return 0;
   }
 
