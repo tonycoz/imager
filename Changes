@@ -689,6 +689,7 @@ Revision history for Perl extension Imager.
           (Ticket #1513)
         - the code to read multiple tiffs didn't handle files with more
           than five images correctly, causing a memory overrun.
+        - fix some minor test code hiccups
 
 =================================================================
 
