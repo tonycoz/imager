@@ -42,9 +42,9 @@ print i_img_diff($img, $cmpimg)
 
 # build a grayscale image
 my $gimg = Imager::ImgRaw::new(150, 150, 1);
-my $gray = i_color_new(128, 0, 0);
-my $dgray = i_color_new(64, 0, 0);
-my $white = i_color_new(255, 0, 0);
+my $gray = i_color_new(128, 0, 0, 255);
+my $dgray = i_color_new(64, 0, 0, 255);
+my $white = i_color_new(255, 0, 0, 255);
 i_box_filled($gimg, 20, 20, 130, 130, $gray);
 i_box_filled($gimg, 40, 40, 110, 110, $dgray);
 i_arc($gimg, 75, 75, 30, 0, 361, $white);
