@@ -59,7 +59,7 @@ m_fatal(int exitcode,const char *fmt, ... ) {
  * Logging is inactive - insert dummy functions
  */
 
-void init_log(const char* name,int onoff) {}
+void m_init_log(const char* name,int onoff) {}
 void m_fatal(int exitcode,const char *fmt, ... ) { exit(exitcode); }
 
 

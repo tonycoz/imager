@@ -761,6 +761,9 @@ Revision history for Perl extension Imager.
 	  pointers passed to TIFFClientOpen be non-NULL, the mmap() and
 	  munmap() pointers were always NULL and the sizeproc was
 	  sometimes NULL.
+        - there would be a link or load time error on m_init_log() if
+          Imager was built with IM_NOLOG, fixed by renamed init_log()
+          to m_init_log() in log.c
 
 =================================================================
 
