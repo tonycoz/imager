@@ -100,7 +100,7 @@ realseek_read(io_glue *ig, void *buf, size_t count) {
   size_t        bc = 0;
   char       *cbuf = buf;
 
-  IOL_DEB( printf("realseek_read: fd = %d, ier->cpos = %ld, buf = 0x%p, count = %d\n", fd, (long) ier->cpos, buf, count) );
+  IOL_DEB( printf("realseek_read: fd = %d, ier->cpos = %ld, buf = %p, count = %d\n", fd, (long) ier->cpos, buf, count) );
   /* Is this a good idea? Would it be better to handle differently? skip handling? */
   while( count!=bc && (rc = ig->source.cb.readcb(fd,cbuf+bc,count-bc))>0 ) bc+=rc;
   
@@ -131,7 +131,7 @@ realseek_write(io_glue *ig, const void *buf, size_t count) {
   size_t        bc = 0;
   char       *cbuf = (char*)buf; 
   
-  IOL_DEB( printf("realseek_write: fd = %d, ier->cpos = %ld, buf = 0x%p, count = %d\n", fd, (long) ier->cpos, buf, count) );
+  IOL_DEB( printf("realseek_write: fd = %d, ier->cpos = %ld, buf = %p, count = %d\n", fd, (long) ier->cpos, buf, count) );
   /* Is this a good idea? Would it be better to handle differently? skip handling? */
 
   while( count!=bc && (rc = ig->source.cb.writecb(fd,cbuf+bc,count-bc))>0 ) bc+=rc;
@@ -179,7 +179,7 @@ realseek_seek(io_glue *ig, off_t offset, int whence) {
   /*  io_ex_rseek *ier = ig->exdata; Needed later */
   int fd           = (int)ig->source.cb.p;
   int rc;
-  IOL_DEB( printf("realseek_seek(ig 0x%p, offset %ld, whence %d)\n", ig, (long) offset, whence) );
+  IOL_DEB( printf("realseek_seek(ig %p, offset %ld, whence %d)\n", ig, (long) offset, whence) );
   rc = lseek(fd, offset, whence);
 
   IOL_DEB( printf("realseek_seek: rc %ld\n", (long) rc) );
@@ -376,7 +376,6 @@ bufchain_read(io_glue *ig, void *buf, size_t count) {
   size_t         sk;
 
   mm_log((1, "bufchain_read(ig %p, buf %p, count %ld)\n", ig, buf, count));
-  IOL_DEB( printf("bufchain_read: fd = %d, ier->cpos = %ld, buf = 0x%p, count = %d\n", fd, (long) ier->cpos, buf, count) );
 
   while( scount ) {
     int clen = (ieb->cp == ieb->tail) ? ieb->tfill : ieb->cp->len;
@@ -424,9 +423,9 @@ bufchain_write(io_glue *ig, const void *buf, size_t count) {
   size_t         ocount = count;
   size_t         sk;
 
-  mm_log((1, "bufchain_write: ig = %p, buf = 0x%p, count = %d\n", ig, buf, count));
+  mm_log((1, "bufchain_write: ig = %p, buf = %p, count = %d\n", ig, buf, count));
 
-  IOL_DEB( printf("bufchain_write: ig = %p, ieb->cpos = %ld, buf = 0x%p, count = %d\n", ig, (long) ieb->cpos, buf, count) );
+  IOL_DEB( printf("bufchain_write: ig = %p, ieb->cpos = %ld, buf = %p, count = %d\n", ig, (long) ieb->cpos, buf, count) );
   
   while(count) {
     mm_log((2, "bufchain_write: - looping - count = %d\n", count));
@@ -470,7 +469,7 @@ static
 void
 bufchain_close(io_glue *ig) {
   mm_log((1, "bufchain_close(ig %p)\n",ig));
-  IOL_DEB( printf("bufchain_close(ig 0x%p)\n", ig) );
+  IOL_DEB( printf("bufchain_close(ig %p)\n", ig) );
   /* FIXME: Commit a seek point here */
   
 }
@@ -674,7 +673,7 @@ void
 io_glue_commit_types(io_glue *ig) {
   io_type      inn = ig->source.type;
   
-  mm_log((1, "io_glue_commit_types(ig 0x%p)\n", ig));
+  mm_log((1, "io_glue_commit_types(ig %p)\n", ig));
   mm_log((1, "io_glue_commit_types: source type %d (%s)\n", inn, io_type_names[inn]));
   
   switch (inn) {

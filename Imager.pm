@@ -594,23 +594,28 @@ sub write {
 
     if ($input{type} eq 'tiff') {
       if ($input{class} eq 'fax') {
-	if (!i_writetiff_wiol_faxable($self->{IMG}, $IO)) { 
+	if (!i_writetiff_wiol_faxable($self->{IMG}, $IO)) {
 	  $self->{ERRSTR}='Could not write to buffer';
 	  return undef;
 	}
       }
       else {
-	if (!i_writetiff_wiol($self->{IMG}, $IO)) { 
-	  $self->{ERRSTR}='Could not write to buffer'; 
-	  return undef; 
+	if (!i_writetiff_wiol($self->{IMG}, $IO)) {
+	  $self->{ERRSTR}='Could not write to buffer';
+	  return undef;
 	}
       }
     }
 
-    my $data = io_slurp($IO);
-    if (!$data) { $self->{ERRSTR}='Could not slurp from buffer'; return undef; }
 
-    ${$input{data}} = $data;
+    if (exists $input{'data'}) {
+      my $data = io_slurp($IO);
+      if (!$data) {
+	$self->{ERRSTR}='Could not slurp from buffer';
+	return undef;
+      }
+      ${$input{data}} = $data;
+    }
     return $self;
   } else {
 
