@@ -1888,7 +1888,7 @@ i_transform2(width,height,ops,n_regs,c_regs,in_imgs)
              int height;
 	     double* parm;
 	     struct rm_op *ops;
-	     unsigned int ops_len;
+	     STRLEN ops_len;
 	     int ops_count;
              double *n_regs;
              int n_regs_count;
