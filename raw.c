@@ -8,10 +8,6 @@
 #include <errno.h>
 
 
-#define TRUE 1
-#define FALSE 0
-
-#define BSIZ 100*BUFSIZ
 
 /*
 
@@ -31,11 +27,26 @@
 
 */
 
+static
 void
-expandchannels(unsigned char *inbuffer,unsigned char *outbuffer,int chunks,int datachannels,int storechannels) {
+interleave(unsigned char *inbuffer,unsigned char *outbuffer,int rowsize,int channels) {
+  int ch,ind,i;
+  i=0;
+  if (inbuffer == outbuffer) return; /* Check if data is already in interleaved format */
+  for (ind=0; ind<rowsize; ind++) 
+    for (ch=0; ch<channels; ch++) 
+      outbuffer[i++] = inbuffer[rowsize*ch+ind]; 
+}
+
+static
+void
+expandchannels(unsigned char *inbuffer, unsigned char *outbuffer, 
+	       int chunks, int datachannels, int storechannels) {
   int ch,i;
-  if (inbuffer==outbuffer) return; /* Check if data is already in expanded format */
-  for(ch=0;ch<chunks;ch++) for (i=0;i<storechannels;i++) outbuffer[ch*storechannels+i]=inbuffer[ch*datachannels+i];
+  if (inbuffer == outbuffer) return; /* Check if data is already in expanded format */
+  for(ch=0; ch<chunks; ch++) 
+    for (i=0; i<storechannels; i++) 
+      outbuffer[ch*storechannels+i] = inbuffer[ch*datachannels+i];
 }
 
 i_img *
@@ -61,23 +72,26 @@ i_readraw_wiol(io_glue *ig, int x, int y, int datachannels, int storechannels, i
   inbuffer = (unsigned char*)mymalloc(inbuflen);
   mm_log((1,"inbuflen: %d, ilbuflen: %d, exbuflen: %d.\n",inbuflen,ilbuflen,exbuflen));
 
-  if (intrl==0) ilbuffer=inbuffer; else ilbuffer=(unsigned char*)mymalloc(inbuflen);
-  if (datachannels==storechannels) exbuffer=ilbuffer; else exbuffer=(unsigned char*)mymalloc(exbuflen);
+  if (intrl==0) ilbuffer = inbuffer; 
+  else ilbuffer=mymalloc(inbuflen);
 
+  if (datachannels==storechannels) exbuffer=ilbuffer; 
+  else exbuffer= mymalloc(exbuflen);
+  
   k=0;
-  while(k<im->ysize) {
+  while( k<im->ysize ) {
     rc = ig->readcb(ig, inbuffer, inbuflen);
-    if (rc!=inbuflen) { fprintf(stderr,"Premature end of file.\n"); exit(2); }
+    if (rc != inbuflen) { fprintf(stderr,"Premature end of file.\n"); exit(2); }
     interleave(inbuffer,ilbuffer,im->xsize,datachannels);
     expandchannels(ilbuffer,exbuffer,im->xsize,datachannels,storechannels);
-    /* FIXME? Do we ever want to save to a virtual image? */
+    /* FIXME: Do we ever want to save to a virtual image? */
     memcpy(&(im->idata[im->xsize*storechannels*k]),exbuffer,exbuflen);
     k++;
   }
 
   myfree(inbuffer);
-  if (intrl!=0) myfree(ilbuffer);
-  if (datachannels!=storechannels) myfree(exbuffer);
+  if (intrl != 0) myfree(ilbuffer);
+  if (datachannels != storechannels) myfree(exbuffer);
   return im;
 }
 
@@ -93,14 +107,13 @@ i_writeraw_wiol(i_img* im, io_glue *ig) {
   
   if (im == NULL) { mm_log((1,"Image is empty\n")); return(0); }
   if (!im->virtual) {
-    rc=ig->writecb(ig,im->idata,im->bytes);
-    if (rc!=im->bytes) { 
+    rc = ig->writecb(ig,im->idata,im->bytes);
+    if (rc != im->bytes) { 
       i_push_error(errno, "Could not write to file");
       mm_log((1,"i_writeraw: Couldn't write to file\n")); 
       return(0);
     }
-  }
-  else {
+  } else {
     int y;
     
     if (im->type == i_direct_type) {
@@ -116,8 +129,7 @@ i_writeraw_wiol(i_img* im, io_glue *ig) {
           rc = ig->writecb(ig, data, line_size);
           ++y;
         }
-      }
-      else {
+      } else {
         i_push_error(0, "Out of memory");
         return 0;
       }
@@ -125,8 +137,7 @@ i_writeraw_wiol(i_img* im, io_glue *ig) {
         i_push_error(errno, "write error");
         return 0;
       }
-    }
-    else {
+    } else {
       /* paletted image - assumes the caller puts the palette somewhere 
          else
       */
@@ -141,8 +152,7 @@ i_writeraw_wiol(i_img* im, io_glue *ig) {
           ++y;
         }
         myfree(data);
-      }
-      else {
+      } else {
         i_push_error(0, "Out of memory");
         return 0;
       }
@@ -152,6 +162,5 @@ i_writeraw_wiol(i_img* im, io_glue *ig) {
       }
     }
   }
-
   return(1);
 }

@@ -41,12 +41,9 @@ void* myrealloc(void *p, size_t newsize);
 #undef max
 #endif
 
-/* XXX Shouldn't all of these go away */
+/* XXX Shouldn't these go away? */
 
 int min(int a,int b);
 int max(int x,int y);
-int myread(int fd,void *buf,int len);
-int mywrite(int fd,void *buf,int len);
-void interleave(unsigned char *inbuffer,unsigned char *outbuffer,int rowsize,int channels);
 
 #endif

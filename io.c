@@ -259,7 +259,7 @@ myrealloc(void *block, size_t size) {
 
 
 
-
+/* Should these really be here? */
 
 #undef min
 #undef max
@@ -273,35 +273,4 @@ int
 max(int a,int b) {
   if (a>b) return a; else return b;
 }
-
-int
-myread(int fd,void *buf,int len) {
-  unsigned char* bufc;
-  int bc,rc;
-  bufc = (unsigned char*)buf;
-  bc=0;
-  while( ((rc=read(fd,bufc+bc,len-bc))>0 ) && (bc!=len) ) bc+=rc;
-  if ( rc < 0 ) return rc;
-  else return bc;
-}
-
-int
-mywrite(int fd,void *buf,int len) {
-  unsigned char* bufc;
-  int bc,rc;
-  bufc=(unsigned char*)buf;
-  bc=0;
-  while(((rc=write(fd,bufc+bc,len-bc))>0) && (bc!=len)) bc+=rc;
-  if (rc<0) return rc;
-  else return bc;
-}
-
-void
-interleave(unsigned char *inbuffer,unsigned char *outbuffer,int rowsize,int channels) {
-  int ch,ind,i;
-  i=0;
-  if ( inbuffer==outbuffer ) return; /* Check if data is already in interleaved format */
-  for( ind=0; ind<rowsize; ind++) for (ch=0; ch<channels; ch++) outbuffer[i++] = inbuffer[rowsize*ch+ind]; 
-}
-
 
