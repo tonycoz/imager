@@ -577,6 +577,7 @@ Revision history for Perl extension Imager.
         - add tests for each type of iolayer in t50basicoo.t
         - read/write multi-image tiff files
         - tests in t50basicoo.t for multi-image/file
+        - ASCII PBM files were reading white as dark gray (255 vs 1)
 
 =================================================================
 

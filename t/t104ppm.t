@@ -1,6 +1,6 @@
 use Imager ':all';
 
-print "1..8\n";
+print "1..13\n";
 
 init_log("testout/t104ppm.log",1);
 
@@ -65,6 +65,15 @@ print "ok 7\n";
 i_img_diff($gimg, $gcmpimg) == 0 or print "not ";
 print "ok 8\n";
 
+my $ooim = Imager->new;
+$ooim->read(file=>"testimg/simple.pbm") or print "not ";
+print "ok 9\n";
+
+check_gray(10, Imager::i_get_pixel($ooim->{IMG}, 0, 0), 255);
+check_gray(11, Imager::i_get_pixel($ooim->{IMG}, 0, 1), 0);
+check_gray(12, Imager::i_get_pixel($ooim->{IMG}, 1, 0), 0);
+check_gray(13, Imager::i_get_pixel($ooim->{IMG}, 1, 1), 255);
+
 sub openimage {
   my $fname = shift;
   local(*FH);
@@ -79,4 +88,16 @@ sub slurp {
   my $data = <$fh>;
   close($fh);
   return $data;
+}
+
+sub check_gray {
+  my ($num, $c, $gray) = @_;
+
+  my ($g) = $c->rgba;
+  if ($g == $gray) {
+    print "ok $num\n";
+  }
+  else {
+    print "not ok $num # $g doesn't match $gray\n";
+  }
 }

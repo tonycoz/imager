@@ -133,6 +133,7 @@ testimg/scale.ppm
 testimg/scalei.gif
 testimg/screen2.gif
 testimg/screen3.gif
+testimg/simple.pbm
 testimg/test_gimp_pal   A simple GIMP palette file
 testimg/trimgdesc.gif
 testimg/trmiddesc.gif

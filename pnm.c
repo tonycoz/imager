@@ -354,7 +354,7 @@ i_readpnm_wiol(io_glue *ig, int length) {
     for(y=0;y<height;y++) for(x=0; x<width; x++) {
       for(ch=0; ch<channels; ch++) {
 	int t;
-	if (gnum(&buf, &t)) val.channel[ch] = t;
+	if (gnum(&buf, &t)) val.channel[ch] = t * mult;
 	else {
 	  mm_log((1,"i_readpnm: gnum() returned false in data\n"));
 	  return im;
