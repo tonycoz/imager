@@ -290,6 +290,21 @@ BEGIN {
                                    random  => 2,
                                    circle  => 3,
                                   },
+                  combine => {
+                              none      => 0,
+                              normal    => 1,
+                              multiply  => 2, mult => 2,
+                              dissolve  => 3,
+                              add       => 4,
+                              subtract  => 5, sub => 5,
+                              diff      => 6,
+                              lighten   => 7,
+                              darken    => 8,
+                              hue       => 9,
+                              sat       => 10,
+                              value     => 11,
+                              color     => 12,
+                             },
                  },
      defaults => { ftype => 0, repeat => 0, combine => 0,
                    super_sample => 0, ssample_param => 4,
@@ -2960,7 +2975,7 @@ source.
   bumpmap         bump elevation(0) lightx lighty st(2)
   contrast        intensity
   conv            coef
-  fountain        xa ya xb yb ftype(linear) repeat(none) combine(0)
+  fountain        xa ya xb yb ftype(linear) repeat(none) combine(none)
                   super_sample(none) ssample_param(4) segments(see below)
   gaussian        stddev
   gradgen         xo yo colors dist
@@ -3080,7 +3095,8 @@ for a linear fill).
 By default the fill simply overwrites the whole image (unless you have
 parts of the range 0 through 1 that aren't covered by a segment), if
 any segments of your fill have any transparency, you can set the
-I<combine> option to 1 to have the fill combined with the existing pixels.
+I<combine> option to 'normal' to have the fill combined with the
+existing pixels.  See the description of I<combine> in L<Imager/Fill>.
 
 If your fill has sharp edges, for example between steps if you use
 repeat set to 'triangle', you may see some aliased or ragged edges.

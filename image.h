@@ -44,6 +44,8 @@ extern void i_fcolor_destroy(i_fcolor *cl);
 
 extern void i_rgb_to_hsvf(i_fcolor *color);
 extern void i_hsv_to_rgbf(i_fcolor *color);
+extern void i_rgb_to_hsv(i_color *color);
+extern void i_hsv_to_rgb(i_color *color);
 
 i_img *IIM_new(int x,int y,int ch);
 void   IIM_DESTROY(i_img *im);
@@ -125,11 +127,16 @@ struct i_fill_tag;
 
 typedef void (*i_fill_with_color_f)
      (struct i_fill_tag *fill, int x, int y, int width, int channels, 
-      i_color *data);
+      i_color *data, i_color *work);
 typedef void (*i_fill_with_fcolor_f)
      (struct i_fill_tag *fill, int x, int y, int width, int channels,
-      i_fcolor *data);
+      i_fcolor *data, i_fcolor *work);
 typedef void (*i_fill_destroy_f)(struct i_fill_tag *fill);
+typedef void (*i_fill_combine_f)(i_color *out, i_color *in, int channels, 
+                                 int count);
+typedef void (*i_fill_combinef_f)(i_fcolor *out, i_fcolor *in, int channels,
+                                  int count);
+
 
 typedef struct i_fill_tag
 {
@@ -146,8 +153,25 @@ typedef struct i_fill_tag
 
   /* if non-zero the caller will fill data with the original data
      from the image */
-  int combines;
+  i_fill_combine_f combine;
+  i_fill_combinef_f combinef;
 } i_fill_t;
+
+typedef enum {
+  ic_none,
+  ic_normal,
+  ic_multiply,
+  ic_dissolve,
+  ic_add,
+  ic_subtract,
+  ic_diff,
+  ic_lighten,
+  ic_darken,
+  ic_hue,
+  ic_sat,
+  ic_value,
+  ic_color
+} i_combine_t;
 
 extern i_fill_t *i_new_fill_solidf(i_fcolor *c, int combine);
 extern i_fill_t *i_new_fill_solid(i_color *c, int combine);

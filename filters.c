@@ -1143,8 +1143,15 @@ i_fountain(i_img *im, double xa, double ya, double xb, double yb,
   struct fount_state state;
   int x, y;
   i_fcolor *line = mymalloc(sizeof(i_fcolor) * im->xsize);
+  i_fcolor *work = NULL;
   int ch;
   i_fountain_seg *my_segs;
+  i_fill_combine_f combine_func = NULL;
+  i_fill_combinef_f combinef_func = NULL;
+
+  i_get_combine(combine, &combine_func, &combinef_func);
+  if (combinef_func)
+    work = mymalloc(sizeof(i_fcolor) * im->xsize);
 
   fount_init_state(&state, xa, ya, xb, yb, type, repeat, combine, 
                    super_sample, ssample_param, count, segs);
@@ -1161,16 +1168,14 @@ i_fountain(i_img *im, double xa, double ya, double xb, double yb,
       else
         got_one = state.ssfunc(&c, x, y, &state);
       if (got_one) {
-        if (combine) {
-          for (ch = 0; ch < im->channels; ++ch) {
-            line[x].channel[ch] = line[x].channel[ch] * (1.0 - c.channel[3])
-              + c.channel[ch] * c.channel[3];
-          }
-        }
+        if (combine)
+          work[x] = c;
         else 
           line[x] = c;
       }
     }
+    if (combine)
+      combinef_func(line, work, im->channels, im->xsize);
     i_plinf(im, 0, im->xsize, y, line);
   }
   fount_finish_state(&state);
@@ -1184,7 +1189,7 @@ typedef struct {
 
 static void
 fill_fountf(i_fill_t *fill, int x, int y, int width, int channels, 
-            i_fcolor *data);
+            i_fcolor *data, i_fcolor *work);
 static void
 fount_fill_destroy(i_fill_t *fill);
 
@@ -1206,7 +1211,12 @@ i_new_fill_fount(double xa, double ya, double xb, double yb,
   fill->base.fill_with_color = NULL;
   fill->base.fill_with_fcolor = fill_fountf;
   fill->base.destroy = fount_fill_destroy;
-  fill->base.combines = combine;
+  if (combine)
+    i_get_combine(combine, &fill->base.combine, &fill->base.combinef);
+  else {
+    fill->base.combine = NULL;
+    fill->base.combinef = NULL;
+  }
   fount_init_state(&fill->state, xa, ya, xb, yb, type, repeat, combine, 
                    super_sample, ssample_param, count, segs);
 
@@ -1791,32 +1801,42 @@ The fill function for fountain fills.
 */
 static void
 fill_fountf(i_fill_t *fill, int x, int y, int width, int channels, 
-            i_fcolor *data) {
+            i_fcolor *data, i_fcolor *work) {
   i_fill_fountain_t *f = (i_fill_fountain_t *)fill;
-  int ch;
+  
+  if (fill->combinef) {
+    i_fcolor *wstart = work;
+    int count = width;
 
-  while (width--) {
-    i_fcolor c;
-    int got_one;
-    double v;
-    if (f->state.ssfunc)
-      got_one = f->state.ssfunc(&c, x, y, &f->state);
-    else
-      got_one = fount_getat(&c, x, y, &f->state);
-
-    if (got_one) {
-      if (f->base.combines) {
-        for (ch = 0; ch < channels; ++ch) {
-          data->channel[ch] = data->channel[ch] * (1.0 - c.channel[3])
-            + c.channel[ch] * c.channel[3];
-        }
-      }
-      else 
-        *data = c;
+    while (width--) {
+      i_fcolor c;
+      int got_one;
+      double v;
+      if (f->state.ssfunc)
+        got_one = f->state.ssfunc(&c, x, y, &f->state);
+      else
+        got_one = fount_getat(&c, x, y, &f->state);
+      
+      *work++ = c;
+      
+      ++x;
     }
-
-    ++x;
-    ++data;
+    (fill->combinef)(data, wstart, channels, count);
+  }
+  else {
+    while (width--) {
+      i_fcolor c;
+      int got_one;
+      double v;
+      if (f->state.ssfunc)
+        got_one = f->state.ssfunc(&c, x, y, &f->state);
+      else
+        got_one = fount_getat(&c, x, y, &f->state);
+      
+      *data++ = c;
+      
+      ++x;
+    }
   }
 }
 

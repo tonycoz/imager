@@ -6,7 +6,7 @@
 # Change 1..1 below to 1..last_test_to_print .
 # (It may become useful if the test is moved to ./t subdirectory.)
 
-BEGIN { $| = 1; print "1..22\n"; }
+BEGIN { $| = 1; print "1..42\n"; }
 END {print "not ok 1\n" unless $loaded;}
 use Imager;
 $loaded = 1;
@@ -65,6 +65,47 @@ color_ok(21, 200, 201, 203, 204,
          Imager::Color->new(channels=>[ 200, 201, 203, 204 ]));
 color_ok(22, 255, 250, 250, 255, 
          Imager::Color->new(name=>'snow', palette=>'testimg/test_gimp_pal'));
+
+# test the internal HSV <=> RGB conversions
+# these values were generated using the GIMP
+# all but hue is 0..360, saturation and value from 0 to 1
+# rgb from 0 to 255
+my @hsv_vs_rgb =
+  (
+   { hsv => [ 0, 0.2, 0.1 ], rgb=> [ 25, 20, 20 ] },
+   { hsv => [ 0, 0.5, 1.0 ], rgb => [ 255, 127, 127 ] },
+   { hsv => [ 100, 0.5, 1.0 ], rgb => [ 170, 255, 127 ] },
+   { hsv => [ 100, 1.0, 1.0 ], rgb=> [ 85, 255, 0 ] },
+   { hsv => [ 335, 0.5, 0.5 ], rgb=> [127, 63, 90 ] },
+  );
+
+use Imager::Color::Float;
+my $test_num = 23;
+my $index = 0;
+for my $entry (@hsv_vs_rgb) {
+  print "# color index $index\n";
+  my $hsv = $entry->{hsv};
+  my $rgb = $entry->{rgb};
+  my $fhsvo = Imager::Color::Float->new($hsv->[0]/360.0, $hsv->[1], $hsv->[2]);
+  my $fc = Imager::Color::Float::i_hsv_to_rgb($fhsvo);
+  fcolor_close_enough($test_num++, $rgb->[0]/255, $rgb->[1]/255, 
+                      $rgb->[2]/255, $fc);
+  my $fc2 = Imager::Color::Float::i_rgb_to_hsv($fc);
+  fcolor_close_enough($test_num++, $hsv->[0]/360.0, $hsv->[1], $hsv->[2], 
+                      $fc2);
+
+  my $hsvo = Imager::Color->new($hsv->[0]*255/360.0, $hsv->[1] * 255, 
+                                $hsv->[2] * 255);
+  my $c = Imager::Color::i_hsv_to_rgb($hsvo);
+  color_close_enough($test_num++, @$rgb, $c);
+  my $c2 = Imager::Color::i_rgb_to_hsv($c);
+  color_close_enough_hsv($test_num++, $hsv->[0]*255/360.0, $hsv->[1] * 255, 
+                     $hsv->[2] * 255, $c2);
+  ++$index;
+}
+
+
+ 
 sub test_col {
   my ($c, $r, $g, $b, $a) = @_;
   unless ($c) {
@@ -73,6 +114,48 @@ sub test_col {
   }
   my ($cr, $cg, $cb, $ca) = $c->rgba;
   return $r == $cr && $g == $cg && $b == $cb && $a == $ca;
+}
+
+sub color_close_enough {
+  my ($test_num, $r, $g, $b, $c) = @_;
+
+  my ($cr, $cg, $cb) = $c->rgba;
+  if (abs($cr-$r) <= 5 && abs($cg-$g) <= 5 && abs($cb-$b) <= 5) {
+    print "ok $test_num\n";
+  }
+  else {
+    print "not ok $test_num # ($cr, $cg, $cb) <=> ($r, $g, $b)\n";
+  }
+}
+
+sub color_close_enough_hsv {
+  my ($test_num, $h, $s, $v, $c) = @_;
+
+  my ($ch, $cs, $cv) = $c->rgba;
+  if ($ch < 5 && $h > 250) {
+    $ch += 255;
+  }
+  elsif ($ch > 250 && $h < 5) {
+    $h += 255;
+  }
+  if (abs($ch-$h) <= 5 && abs($cs-$s) <= 5 && abs($cv-$v) <= 5) {
+    print "ok $test_num\n";
+  }
+  else {
+    print "not ok $test_num # ($ch, $cs, $cv) <=> ($h, $s, $v)\n";
+  }
+}
+
+sub fcolor_close_enough {
+  my ($test_num, $r, $g, $b, $c) = @_;
+
+  my ($cr, $cg, $cb) = $c->rgba;
+  if (abs($cr-$r) <= 0.01 && abs($cg-$g) <= 0.01 && abs($cb-$b) <= 0.01) {
+    print "ok $test_num\n";
+  }
+  else {
+    print "not ok $test_num # ($cr, $cg, $cb) <=> ($r, $g, $b)\n";
+  }
 }
 
 sub color_ok {

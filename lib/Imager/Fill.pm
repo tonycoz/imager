@@ -1,5 +1,5 @@
 package Imager::Fill;
-
+use strict;
 # this needs to be kept in sync with the array of hatches in fills.c
 my @hatch_types =
   qw/check1x1 check2x2 check4x4 vline1 vline2 vline4
@@ -10,17 +10,74 @@ my @hatch_types =
 my %hatch_types;
 @hatch_types{@hatch_types} = 0..$#hatch_types;
 
+my @combine_types = 
+  qw/none normal multiply dissolve add subtract diff lighten darken
+     hue saturation value color/;
+my %combine_types;
+@combine_types{@combine_types} = 0 .. $#combine_types;
+$combine_types{mult} = $combine_types{multiply};
+$combine_types{sub}  = $combine_types{subtract};
+$combine_types{sat}  = $combine_types{saturation};
+
+# this function tries to DWIM for color parameters
+#  color objects are used as is
+#  simple scalars are simply treated as single parameters to Imager::Color->new
+#  hashrefs are treated as named argument lists to Imager::Color->new
+#  arrayrefs are treated as list arguments to Imager::Color->new iff any
+#    parameter is > 1
+#  other arrayrefs are treated as list arguments to Imager::Color::Float
+
+sub _color {
+  my $arg = shift;
+  my $result;
+
+  if (ref $arg) {
+    if (UNIVERSAL::isa($arg, "Imager::Color")
+        || UNIVERSAL::isa($arg, "Imager::Color::Float")) {
+      $result = $arg;
+    }
+    else {
+      if ($arg =~ /^HASH\(/) {
+        $result = Imager::Color->new(%$arg);
+      }
+      elsif ($arg =~ /^ARRAY\(/) {
+        if (grep $_ > 1, @$arg) {
+          $result = Imager::Color->new(@$arg);
+        }
+        else {
+          $result = Imager::Color::Float->new(@$arg);
+        }
+      }
+      else {
+        $Imager::ERRSTR = "Not a color";
+      }
+    }
+  }
+  else {
+    # assume Imager::Color::new knows how to handle it
+    $result = Imager::Color->new($arg);
+  }
+
+  return $result;
+}
+
 sub new {
   my ($class, %hsh) = @_;
 
   my $self = bless { }, $class;
   $hsh{combine} ||= 0;
+  if (exists $combine_types{$hsh{combine}}) {
+    $hsh{combine} = $combine_types{$hsh{combine}};
+  }
   if ($hsh{solid}) {
-    if (UNIVERSAL::isa($hsh{solid}, 'Imager::Color')) {
-      $self->{fill} = Imager::i_new_fill_solid($hsh{solid}, $hsh{combine});
+    my $solid = _color($hsh{solid});
+    if (UNIVERSAL::isa($solid, 'Imager::Color')) {
+      $self->{fill} = 
+        Imager::i_new_fill_solid($solid, $hsh{combine});
     }
-    elsif (UNIVERSAL::isa($hsh{colid}, 'Imager::Color::Float')) {
-      $self->{fill} = Imager::i_new_fill_solidf($hsh{solid}, $hsh{combine});
+    elsif (UNIVERSAL::isa($solid, 'Imager::Color::Float')) {
+      $self->{fill} = 
+        Imager::i_new_fill_solidf($solid, $hsh{combine});
     }
     else {
       $Imager::ERRSTR = "solid isn't a color";
@@ -42,17 +99,18 @@ sub new {
       }
       $hsh{hatch} = $hatch_types{$hsh{hatch}};
     }
-    if (UNIVERSAL::isa($hsh{fg}, 'Imager::Color')) {
-      $hsh{bg} ||= Imager::Color->new(255, 255, 255);
+    my $fg = _color($hsh{fg});
+    if (UNIVERSAL::isa($fg, 'Imager::Color')) {
+      my $bg = _color($hsh{bg} || Imager::Color->new(255, 255, 255));
       $self->{fill} = 
-        Imager::i_new_fill_hatch($hsh{fg}, $hsh{bg}, $hsh{combine}, 
+        Imager::i_new_fill_hatch($fg, $bg, $hsh{combine}, 
                                  $hsh{hatch}, $hsh{cust_hatch}, 
                                  $hsh{dx}, $hsh{dy});
     }
-    elsif (UNIVERSAL::isa($hsh{bg}, 'Imager::Color::Float')) {
-      $hsh{bg} ||= Imager::Color::Float->new(1, 1, 1);
+    elsif (UNIVERSAL::isa($fg, 'Imager::Color::Float')) {
+      my $bg  = _color($hsh{bg} || Imager::Color::Float->new(1, 1, 1));
       $self->{fill} = 
-        Imager::i_new_fill_hatchf($hsh{fg}, $hsh{bg}, $hsh{combine},
+        Imager::i_new_fill_hatchf($fg, $bg, $hsh{combine},
                                   $hsh{hatch}, $hsh{cust_hatch}, 
                                   $hsh{dx}, $hsh{dy});
     }
@@ -104,6 +162,10 @@ sub hatches {
   return @hatch_types;
 }
 
+sub combines {
+  return @combine_types;
+}
+
 1;
 
 =head1 NAME
@@ -145,11 +207,78 @@ fountain (similar to gradients in paint software)
 
 =item combine
 
-If this is non-zero the fill combines the given colors or samples (if
-the fill is an image) with the underlying image.
+The way in which the fill data is combined with the underlying image,
+possible values include:
 
-This this is missing or zero then the target image pixels are simply
-overwritten.
+=over
+
+=item none
+
+The fill pixel replaces the target pixel.
+
+=item normal
+
+The fill pixels alpha value is used to combine it with the target pixel.
+
+=item multiply
+
+=item mult
+
+Each channel of fill and target is multiplied, and the result is
+combined using the alpha channel of the fill pixel.
+
+=item dissolve
+
+If the alpha of the fill pixel is greater than a random number, the
+fill pixel is alpha combined with the target pixel.
+
+=item add
+
+The channels of the fill and target are added together, clamped to the range of the samples and alpha combined with the target.
+
+=item subtract
+
+The channels of the fill are subtracted from the target, clamped to be
+>= 0, and alpha combined with the target.
+
+=item diff
+
+The channels of the fill are subtracted from the target and the
+absolute value taken this is alpha combined with the target.
+
+=item lighten
+
+The higher value is taken from each channel of the fill and target pixels, which is then alpha combined with the target.
+
+=item darken
+
+The higher value is taken from each channel of the fill and target pixels, which is then alpha combined with the target.
+
+=item hue
+
+The combination of the saturation and value of the target is combined
+with the hue of the fill pixel, and is then alpha combined with the
+target.
+
+=item sat
+
+The combination of the hue and value of the target is combined
+with the saturation of the fill pixel, and is then alpha combined with the
+target.
+
+=item value
+
+The combination of the hue and value of the target is combined
+with the value of the fill pixel, and is then alpha combined with the
+target.
+
+=item color
+
+The combination of the value of the target is combined with the hue
+and saturation of the fill pixel, and is then alpha combined with the
+target.
+
+=back
 
 =back
 
@@ -272,6 +401,20 @@ This fills the given region with a fountain fill.  This is exactly the
 same fill as the C<fountain> filter, but is restricted to the shape
 you are drawing, and the fountain parameter supplies the fill type,
 and is required.
+
+=head1 OTHER METHODS
+
+=over
+
+=item Imager::Fill->hatches
+
+A list of all defined hatch names.
+
+=item Imager::Fill->combines
+
+A list of all combine types.
+
+=back
 
 =head1 FUTURE PLANS
 

@@ -543,7 +543,26 @@ ICL_rgba(cl)
 		PUSHs(sv_2mortal(newSVnv(cl->rgba.b)));
 		PUSHs(sv_2mortal(newSVnv(cl->rgba.a)));
 
-
+Imager::Color
+i_hsv_to_rgb(c)
+        Imager::Color c
+      CODE:
+        RETVAL = mymalloc(sizeof(i_color));
+        *RETVAL = *c;
+        i_hsv_to_rgb(RETVAL);
+      OUTPUT:
+        RETVAL
+        
+Imager::Color
+i_rgb_to_hsv(c)
+        Imager::Color c
+      CODE:
+        RETVAL = mymalloc(sizeof(i_color));
+        *RETVAL = *c;
+        i_rgb_to_hsv(RETVAL);
+      OUTPUT:
+        RETVAL
+        
 
 
 MODULE = Imager        PACKAGE = Imager::Color::Float  PREFIX=ICLF_
@@ -585,6 +604,27 @@ ICLF_set_internal(cl,r,g,b,a)
         cl->rgba.a = a;                
         EXTEND(SP, 1);
         PUSHs(ST(0));
+
+Imager::Color::Float
+i_hsv_to_rgb(c)
+        Imager::Color::Float c
+      CODE:
+        RETVAL = mymalloc(sizeof(i_fcolor));
+        *RETVAL = *c;
+        i_hsv_to_rgbf(RETVAL);
+      OUTPUT:
+        RETVAL
+        
+Imager::Color::Float
+i_rgb_to_hsv(c)
+        Imager::Color::Float c
+      CODE:
+        RETVAL = mymalloc(sizeof(i_fcolor));
+        *RETVAL = *c;
+        i_rgb_to_hsvf(RETVAL);
+      OUTPUT:
+        RETVAL
+        
 
 MODULE = Imager		PACKAGE = Imager::ImgRaw	PREFIX = IIM_
 
@@ -3092,6 +3132,27 @@ i_new_fill_hatch(fg, bg, combine, hatch, cust_hatch, dx, dy)
         else
           cust_hatch = NULL;
         RETVAL = i_new_fill_hatch(fg, bg, combine, hatch, cust_hatch, dx, dy);
+      OUTPUT:
+        RETVAL
+
+Imager::FillHandle
+i_new_fill_hatchf(fg, bg, combine, hatch, cust_hatch, dx, dy)
+        Imager::Color::Float fg
+        Imager::Color::Float bg
+        int combine
+        int hatch
+        int dx
+        int dy
+      PREINIT:
+        unsigned char *cust_hatch;
+        STRLEN len;
+      CODE:
+        if (SvOK(ST(4))) {
+          cust_hatch = SvPV(ST(4), len);
+        }
+        else
+          cust_hatch = NULL;
+        RETVAL = i_new_fill_hatchf(fg, bg, combine, hatch, cust_hatch, dx, dy);
       OUTPUT:
         RETVAL
 
