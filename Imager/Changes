@@ -1002,6 +1002,8 @@ Revision history for Perl extension Imager.
   and we ignore it.
 - Makefile.PL now accepts command-line options to set include and library
   directories and to enable/disable drivers.
+- added simple examples to most of the filters documented in 
+  Imager::Filters
 
 =================================================================
 

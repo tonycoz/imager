@@ -71,7 +71,8 @@ that comes with the module source.
 
   gaussian        stddev
 
-  gradgen         xo yo colors dist
+  gradgen         xo yo colors 
+                  dist         0
 
   hardinvert
 
@@ -113,11 +114,20 @@ cover the whole possible range for the channel.  I<lsat> and I<usat>
 truncate the range by the specified fraction at the top and bottom of
 the range respectivly.
 
+  # increase contrast, losing little detail
+  my $levels = $img->filter(type=>"autolevels");
+
+  # increase contrast, losing 20% of highlight at top and bottom range
+  my $trunc_levels = $img->filter(type=>"autolevels", lsat=>0.2, usat=>0.2);
+
 =item bumpmap
 
 uses the channel I<elevation> image I<bump> as a bumpmap on your
 image, with the light at (I<lightx>, I<lightty>), with a shadow length
 of I<st>.
+
+  my $shadowed = $img->filter(type=>"bumpmap", bump=>$bumpmap_img,
+                              lightx=>10, lighty=>10, st=>5);
 
 =item bumpmap_complex
 
@@ -129,15 +139,24 @@ I<Is> is the color of specular highlights.  I<cd> is the diffuse
 coefficient and I<cs> is the specular coefficient.  I<n> is the
 shininess of the surface.
 
+  my $shadowed = $img->filter(type=>"bumpmap_complex", bump=>$bumpmap_img);
+
 =item contrast
 
 scales each channel by I<intensity>.  Values of I<intensity> < 1.0
 will reduce the contrast.
 
+  my $high_contrast = $img->filter(type=>"contrast", intensity=>1.3);
+  my $low_contrast = $img->filter(type=>"contrast", intensity=>0.8);
+
 =item conv
 
 performs 2 1-dimensional convolutions on the image using the values
-from I<coef>.  I<coef> should be have an odd length.
+from I<coef>.  I<coef> should be have an odd length and the sum of the
+coefficients must be non-zero.
+
+  my $sharper = $img->filter(type=>"conv", coef=>[-0.5, 2, -0.5 ]);
+  my $blur = $img->filter(type=>"conv", coef=>[ 1, 2, 1 ]);
 
 =item fountain
 
@@ -217,7 +236,7 @@ By default the fill simply overwrites the whole image (unless you have
 parts of the range 0 through 1 that aren't covered by a segment), if
 any segments of your fill have any transparency, you can set the
 I<combine> option to 'normal' to have the fill combined with the
-existing pixels.  See the description of I<combine> in L<Imager/Fill>.
+existing pixels.  See the description of I<combine> in L<Imager::Fill>.
 
 If your fill has sharp edges, for example between steps if you use
 repeat set to 'triangle', you may see some aliased or ragged edges.
@@ -254,14 +273,15 @@ option.  This is roughly the number of points sampled, but depends on
 the type of sampling.
 
 The segments option is an arrayref of segments.  You really should use
-the Imager::Fountain class to build your fountain fill.  Each segment
-is an array ref containing:
+the L<Imager::Fountain> class to build your fountain fill.  Each
+segment is an array ref containing:
 
 =over
 
 =item start
 
-a floating point number between 0 and 1, the start of the range of fill parameters covered by this segment.
+a floating point number between 0 and 1, the start of the range of
+fill parameters covered by this segment.
 
 =item middle
 
@@ -305,21 +325,35 @@ bigger blurs.  For a definition of Gaussian Blur, see:
 
   http://www.maths.abdn.ac.uk/~igc/tch/mx4002/notes/node99.html
 
+Values of C<stddev> around 0.5 provide a barely noticable blur, values
+around 5 provide a very strong blur.
+
+  my $slight_blur = $img->filter(type=>"gaussian", stddev=>0.5);
+  my $blurry      = $img->filter(type=>"gaussian", stddev=>5);
+
 =item gradgen
 
 renders a gradient, with the given I<colors> at the corresponding
 points (x,y) in I<xo> and I<yo>.  You can specify the way distance is
-measured for color blendeing by setting I<dist> to 0 for Euclidean, 1
+measured for color blending by setting I<dist> to 0 for Euclidean, 1
 for Euclidean squared, and 2 for Manhattan distance.
+
+  my $redbluegreen = $img->filter
+    (type="gradgen", xo=>[ 10, 50, 10 ], yo=>[ 10, 50, 50 ],
+     colors=>[ qw(red blue green) ]);
 
 =item hardinvert
 
 inverts the image, black to white, white to black.  All channels are
 inverted, including the alpha channel if any.
 
+  my $inverted = $img->filter(type=>"hardinvert");
+
 =item mosaic
 
 produces averaged tiles of the given I<size>.
+
+  my $mosaic = $img->filter(type=>"mosaic", size=>5);
 
 =item noise
 
@@ -327,22 +361,32 @@ adds noise of the given I<amount> to the image.  If I<subtype> is
 zero, the noise is even to each channel, otherwise noise is added to
 each channel independently.
 
+  my $mono_noise = $img->filter(type=>"noise", amount=>20, subtype=>0);
+  my $color_noise = $img->filter(type=>"noise", amount=>20, subtype=>1);
+
 =item radnoise
 
 renders radiant Perlin turbulent noise.  The centre of the noise is at
 (I<xo>, I<yo>), I<ascale> controls the angular scale of the noise ,
 and I<rscale> the radial scale, higher numbers give more detail.
 
+  my $radial_noise = $img->filter(type=>"radnoise", xo=>50, yo=>50,
+                                  ascale=>1, rscale=>0.02);
+
 =item postlevels
 
 alters the image to have only I<levels> distinct level in each
 channel.
+
+  my $posted = $img->filter(type=>"postlevels", levels=>10);
 
 =item turbnoise
 
 renders Perlin turbulent noise.  (I<xo>, I<yo>) controls the origin of
 the noise, and I<scale> the scale of the noise, with lower numbers
 giving more detail.
+
+  my $noise = $img->filter(type=>"turbnoise", xo=>10, yo=>10, scale=>10);
 
 =item unsharpmask
 
@@ -351,10 +395,15 @@ subtracting a gaussian blurred version of the image from the original.
 I<stddev> controls the stddev parameter of the gaussian blur.  Each
 output pixel is: in + I<scale> * (in - blurred).
 
+  my $unsharp = $img->filter(type=>"unsharpmask", stddev=>1, scale=>0.5);
+
 =item watermark
 
 applies I<wmark> as a watermark on the image with strength I<pixdiff>,
 with an origin at (I<tx>, I<ty>)
+
+  my $marked = $img->filter(type=>"watermark", tx=>10, ty=>50, 
+                            wmark=>$wmark_image, pixdiff=>50);
 
 =back
 
