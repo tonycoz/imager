@@ -1,3 +1,4 @@
+$|=1;
 print "1..19\n";
 use Imager qw(:all);
 
