@@ -248,9 +248,9 @@ undef_int i_init_fonts( int t1log );
 undef_int i_init_t1( int t1log );
 int       i_t1_new( char *pfb, char *afm );
 int       i_t1_destroy( int font_id );
-undef_int i_t1_cp( i_img *im, int xb, int yb, int channel, int fontnum, float points, char* str, int len, int align );
-undef_int i_t1_text( i_img *im, int xb, int yb, i_color *cl, int fontnum, float points, char* str, int len, int align );
-void      i_t1_bbox( int fontnum, float point, char *str, int len, int cords[6] );
+undef_int i_t1_cp( i_img *im, int xb, int yb, int channel, int fontnum, float points, char* str, int len, int align, int utf8, char const *flags );
+undef_int i_t1_text( i_img *im, int xb, int yb, i_color *cl, int fontnum, float points, char* str, int len, int align, int utf8, char const *flags );
+void      i_t1_bbox( int fontnum, float point, char *str, int len, int cords[6], int utf8, char const *flags );
 void      i_t1_set_aa( int st );
 void      close_t1( void );
 

@@ -1679,48 +1679,82 @@ i_t1_destroy(font_id)
 
 
 undef_int
-i_t1_cp(im,xb,yb,channel,fontnum,points,str,len,align)
+i_t1_cp(im,xb,yb,channel,fontnum,points,str_sv,len_ignored,align,utf8=0,flags="")
     Imager::ImgRaw     im
 	       int     xb
 	       int     yb
 	       int     channel
 	       int     fontnum
              float     points
-	      char*    str
-	       int     len
+	        SV*    str_sv
 	       int     align
+               int     utf8
+              char*    flags
+             PREINIT:
+               char *str;
+               STRLEN len;
+             CODE:
+#ifdef SvUTF8
+               if (SvUTF8(str_sv))
+                 utf8 = 1;
+#endif
+               str = SvPV(str_sv, len);
+               RETVAL = i_t1_cp(im, xb,yb,channel,fontnum,points,str,len,align,
+                                  utf8,flags);
+           OUTPUT:
+             RETVAL
+
 
 void
-i_t1_bbox(fontnum,point,str,len)
+i_t1_bbox(fontnum,point,str_sv,len_ignored,utf8=0,flags="")
                int     fontnum
 	     float     point
-	      char*    str
-	       int     len
+	        SV*    str_sv
+               int     utf8
+              char*    flags
 	     PREINIT:
+               char *str;
+               STRLEN len;
 	       int     cords[6];
+               int i;
 	     PPCODE:
-   	       i_t1_bbox(fontnum,point,str,len,cords);
-               EXTEND(SP, 4);
-               PUSHs(sv_2mortal(newSViv(cords[0])));
-               PUSHs(sv_2mortal(newSViv(cords[1])));
-               PUSHs(sv_2mortal(newSViv(cords[2])));
-               PUSHs(sv_2mortal(newSViv(cords[3])));
-               PUSHs(sv_2mortal(newSViv(cords[4])));
-               PUSHs(sv_2mortal(newSViv(cords[5])));
+#ifdef SvUTF8
+               if (SvUTF8(str_sv))
+                 utf8 = 1;
+#endif
+               str = SvPV(str_sv, len);
+   	       i_t1_bbox(fontnum,point,str,len,cords,utf8,flags);
+               EXTEND(SP, 6);
+               for (i = 0; i < 6; ++i)
+                 PUSHs(sv_2mortal(newSViv(cords[i])));
 
 
 
 undef_int
-i_t1_text(im,xb,yb,cl,fontnum,points,str,len,align)
+i_t1_text(im,xb,yb,cl,fontnum,points,str_sv,len_ignored,align,utf8=0,flags="")
     Imager::ImgRaw     im
 	       int     xb
 	       int     yb
      Imager::Color    cl
 	       int     fontnum
              float     points
-	      char*    str
-	       int     len
+	        SV*    str_sv
 	       int     align
+               int     utf8
+              char*    flags
+             PREINIT:
+               char *str;
+               STRLEN len;
+             CODE:
+#ifdef SvUTF8
+               if (SvUTF8(str_sv))
+                 utf8 = 1;
+#endif
+               str = SvPV(str_sv, len);
+               RETVAL = i_t1_text(im, xb,yb,cl,fontnum,points,str,len,align,
+                                  utf8,flags);
+           OUTPUT:
+             RETVAL
 
 #endif 
 

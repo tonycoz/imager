@@ -7,11 +7,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-
-
-
-
-
 /*
 =head1 NAME
 
@@ -90,7 +85,8 @@ i_init_fonts(int t1log) {
 
 #ifdef HAVE_LIBT1
 
-
+static int t1_get_flags(char const *flags);
+static char *t1_from_utf8(char const *in, int len, int *outlen);
 
 /* 
 =item i_init_t1(t1log)
@@ -147,6 +143,7 @@ Loads the fonts with the given filenames, returns its font id
 int
 i_t1_new(char *pfb,char *afm) {
   int font_id;
+
   mm_log((1,"i_t1_new(pfb %s,afm %s)\n",pfb,(afm?afm:"NULL")));
   font_id = T1_AddFont(pfb);
   if (font_id<0) {
@@ -158,6 +155,7 @@ i_t1_new(char *pfb,char *afm) {
     mm_log((1,"i_t1_new: requesting afm file '%s'.\n",afm));
     if (T1_SetAfmFileName(font_id,afm)<0) mm_log((1,"i_t1_new: afm loading of '%s' failed.\n",afm));
   }
+
   return font_id;
 }
 
@@ -234,16 +232,25 @@ Interface to text rendering into a single channel in an image
 */
 
 undef_int
-i_t1_cp(i_img *im,int xb,int yb,int channel,int fontnum,float points,char* str,int len,int align) {
+i_t1_cp(i_img *im,int xb,int yb,int channel,int fontnum,float points,char* str,int len,int align, int utf8, char const *flags) {
   GLYPH *glyph;
   int xsize,ysize,x,y;
   i_color val;
+  int mod_flags = t1_get_flags(flags);
 
   unsigned int ch_mask_store;
   
   if (im == NULL) { mm_log((1,"i_t1_cp: Null image in input\n")); return(0); }
 
-  glyph=T1_AASetString( fontnum, str, len, 0, T1_KERNING, points, NULL);
+  if (utf8) {
+    int worklen;
+    char *work = t1_from_utf8(str, len, &worklen);
+    glyph=T1_AASetString( fontnum, work, worklen, 0, mod_flags, points, NULL);
+    myfree(work);
+  }
+  else {
+    glyph=T1_AASetString( fontnum, str, len, 0, mod_flags, points, NULL);
+  }
   if (glyph == NULL)
     return 0;
 
@@ -288,13 +295,22 @@ function to get a strings bounding box given the font id and sizes
 */
 
 void
-i_t1_bbox(int fontnum,float points,char *str,int len,int cords[6]) {
+i_t1_bbox(int fontnum,float points,char *str,int len,int cords[6], int utf8,char const *flags) {
   BBox bbox;
   BBox gbbox;
+  int mod_flags = t1_get_flags(flags);
   
   mm_log((1,"i_t1_bbox(fontnum %d,points %.2f,str '%.*s', len %d)\n",fontnum,points,len,str,len));
   T1_LoadFont(fontnum);  /* FIXME: Here a return code is ignored - haw haw haw */ 
-  bbox = T1_GetStringBBox(fontnum,str,len,0,T1_KERNING);
+  if (utf8) {
+    int worklen;
+    char *work = t1_from_utf8(str, len, &worklen);
+    bbox = T1_GetStringBBox(fontnum,work,worklen,0,mod_flags);
+    myfree(work);
+  }
+  else {
+    bbox = T1_GetStringBBox(fontnum,str,len,0,mod_flags);
+  }
   gbbox = T1_GetFontBBox(fontnum);
   
   mm_log((1,"bbox: (%d,%d,%d,%d)\n",
@@ -336,15 +352,24 @@ Interface to text rendering in a single color onto an image
 */
 
 undef_int
-i_t1_text(i_img *im,int xb,int yb,i_color *cl,int fontnum,float points,char* str,int len,int align) {
+i_t1_text(i_img *im,int xb,int yb,i_color *cl,int fontnum,float points,char* str,int len,int align, int utf8, char const *flags) {
   GLYPH *glyph;
   int xsize,ysize,x,y,ch;
   i_color val;
   unsigned char c,i;
+  int mod_flags = t1_get_flags(flags);
 
   if (im == NULL) { mm_log((1,"i_t1_cp: Null image in input\n")); return(0); }
 
-  glyph=T1_AASetString( fontnum, str, len, 0, T1_KERNING, points, NULL);
+  if (utf8) {
+    int worklen;
+    char *work = t1_from_utf8(str, len, &worklen);
+    glyph=T1_AASetString( fontnum, work, worklen, 0, mod_flags, points, NULL);
+    myfree(work);
+  }
+  else {
+    glyph=T1_AASetString( fontnum, str, len, 0, mod_flags, points, NULL);
+  }
   if (glyph == NULL)
     return 0;
 
@@ -370,6 +395,65 @@ i_t1_text(i_img *im,int xb,int yb,i_color *cl,int fontnum,float points,char* str
   return 1;
 }
 
+/*
+=item t1_get_flags(flags)
+
+Processes the characters in I<flags> to create a mod_flags value used
+by some T1Lib functions.
+
+=cut
+ */
+static int
+t1_get_flags(char const *flags) {
+  int mod_flags = T1_KERNING;
+
+  while (*flags) {
+    switch (*flags++) {
+    case 'u': case 'U': mod_flags |= T1_UNDERLINE; break;
+    case 'o': case 'O': mod_flags |= T1_OVERLINE; break;
+    case 's': case 'S': mod_flags |= T1_OVERSTRIKE; break;
+      /* ignore anything we don't recognize */
+    }
+  }
+
+  return mod_flags;
+}
+
+/*
+=item t1_from_utf8(char const *in, int len, int *outlen)
+
+Produces an unencoded version of I<in> by dropping any Unicode
+character over 255.
+
+Returns a newly allocated buffer which should be freed with myfree().
+Sets *outlen to the number of bytes used in the output string.
+
+=cut
+*/
+
+static char *
+t1_from_utf8(char const *in, int len, int *outlen) {
+  char *out = mymalloc(len+1);
+  char *p = out;
+  unsigned long c;
+
+  while (len) {
+    c = i_utf8_advance(&in, &len);
+    if (c == ~0UL) {
+      myfree(out);
+      i_push_error(0, "invalid UTF8 character");
+      return 0;
+    }
+    /* yeah, just drop them */
+    if (c < 0x100) {
+      *p++ = (char)c;
+    }
+  }
+  *p = '\0';
+  *outlen = p - out;
+
+  return out;
+}
 
 #endif /* HAVE_LIBT1 */
 
