@@ -2608,6 +2608,10 @@ or use the form at:
 
 where you can also find the mailing list archive.
 
+If you're into IRC, you can typically find the developers in #Imager
+on irc.rhizomatic.net.  As with any IRC channel, the participants
+could be occupied or asleep, so please be patient.
+
 =head1 BUGS
 
 Bugs are listed individually for relevant pod pages.
