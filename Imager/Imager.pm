@@ -58,6 +58,7 @@ use Imager::Font;
 		i_conv
 		
 		i_convert
+		i_map
 		
 		i_img_diff
 
@@ -1292,6 +1293,54 @@ sub convert {
   }
   return $new;
 }
+
+
+
+
+
+# general function to map an image through lookup tables
+sub map {
+  my ($self, %opts) = @_;
+  my @chlist = qw( r g b a );
+
+  if (!exists($opts{'maps'})) {
+    # make maps from channel maps
+    my $chnum;
+    for $chnum (0..$#chlist) {
+      $opts{'maps'}[$chnum] = $opts{$chlist[$chnum]} if exists $opts{$chlist[$chnum]};
+    }
+  }
+  if ($opts{'maps'} and $self->{IMG}) {
+    i_map($self->{IMG}, $opts{'maps'} );
+  }
+  return $self;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 # destructive border - image is shrunk by one pixel all around

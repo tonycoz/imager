@@ -826,7 +826,45 @@ i_convert(im, src, coeff)
           myfree(coeff);
 	OUTPUT:
 	  RETVAL
-	          
+
+
+void
+i_map(im, pmaps)
+    Imager::ImgRaw     im
+	PREINIT:
+	  unsigned int mask = 0;
+	  AV *avmain;
+	  AV *avsub;
+          SV **temp;
+	  int len;
+	  int i, j;
+	  unsigned char (*maps)[256];
+        CODE:
+	  if (!SvROK(ST(1)) || SvTYPE(SvRV(ST(1))) != SVt_PVAV)
+	    croak("i_map: parameter 2 must be an arrayref\n");
+          avmain = (AV*)SvRV(ST(1));
+	  len = av_len(avmain)+1;
+	  if (im->channels < len) len = im->channels;
+
+	  maps = mymalloc( len * sizeof(unsigned char [256]) );
+
+	  for (j=0; j<len ; j++) {
+	    temp = av_fetch(avmain, j, 0);
+	    if (temp && SvROK(*temp) && (SvTYPE(SvRV(*temp)) == SVt_PVAV) ) {
+	      avsub = (AV*)SvRV(*temp);
+	      if(av_len(avsub) != 255) continue;
+	      mask |= 1<<j;
+              for (i=0; i<256 ; i++) {
+		temp = av_fetch(avsub, i, 0);
+		maps[j][i] = temp ? SvIV(*temp) : 0;
+	      }
+            }
+          }
+          i_map(im, maps, mask);
+	  myfree(maps);
+
+
+
 float
 i_img_diff(im1,im2)
     Imager::ImgRaw     im1
