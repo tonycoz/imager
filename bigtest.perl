@@ -1,7 +1,7 @@
 #!perl -w
 use strict;
 # tests Imager with every combination of options
-my @opts = qw(jpeg tiff png gif ungif T1-fonts TT-fonts);
+my @opts = qw(jpeg tiff png gif ungif T1-fonts TT-fonts freetype2);
 
 # each option gets a bit
 my %bits;
