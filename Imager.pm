@@ -81,6 +81,7 @@ use Imager::Font;
 
 		i_readtiff_wiol
 		i_writetiff_wiol
+		i_writetiff_wiol_faxable
 
 		i_readpng
 		i_writepng
@@ -584,7 +585,18 @@ sub write {
     }
 
     if ($input{type} eq 'tiff') {
-      if (!i_writetiff_wiol($self->{IMG}, $IO)) { $self->{ERRSTR}='Could not write to buffer'; return undef; }
+      if ($input{class} eq 'fax') {
+	if (!i_writetiff_wiol_faxable($self->{IMG}, $IO)) { 
+	  $self->{ERRSTR}='Could not write to buffer';
+	  return undef;
+	}
+      }
+      else {
+	if (!i_writetiff_wiol($self->{IMG}, $IO)) { 
+	  $self->{ERRSTR}='Could not write to buffer'; 
+	  return undef; 
+	}
+      }
     }
 
     my $data = io_slurp($IO);
@@ -672,7 +684,12 @@ sub write {
       }
       $self->{DEBUG} && print "writing a raw file\n";
     } elsif ( $input{type} eq 'tiff' ) {
-      $rc=i_writetiff_wiol($self->{IMG},io_new_fd($fd) );
+      if ($input{class} eq 'fax') {
+	$rc=i_writetiff_wiol($self->{IMG},io_new_fd($fd) );
+      }
+      else {
+	$rc=i_writetiff_wiol_faxable($self->{IMG},io_new_fd($fd) );
+      }
       if ( !defined($rc) ) {
 	$self->{ERRSTR}='unable to write tiff image'; return undef;
       }
@@ -1489,8 +1506,8 @@ one channel images after reading them.  For jpeg images the iptc
 header information (stored in the APP13 header) is avaliable to some
 degree. You can get the raw header with C<$img-E<gt>{IPTCRAW}>, but
 you can also retrieve the most basic information with
-C<%hsh=$img-E<gt>parseiptc()> as always patches are welcome.  Neither
-pnm nor tiff have extra options. Examples:
+C<%hsh=$img-E<gt>parseiptc()> as always patches are welcome.  pnm has no 
+extra options. Examples:
 
   $img = Imager->new();
   $img->read(file=>"cover.jpg") or die $img->errstr; # gets type from name
@@ -1502,6 +1519,11 @@ pnm nor tiff have extra options. Examples:
 The second example shows how to read an image from a scalar, this is
 usefull if your data originates from somewhere else than a filesystem
 such as a database over a DBI connection.
+
+When writing to a tiff image file you can also specify the 'class'
+parameter, which can currently take a single value, "fax".  If class
+is set to fax then a tiff image which should be suitable for faxing
+will be written.  For the best results start with a grayscale image.
 
 If you are reading from a gif image file, you can supply a 'colors'
 parameter which must be a reference to a scalar.  The referenced
