@@ -18,7 +18,7 @@ okx(1, "loaded");
 init_log("testout/t38ft2font.log",2);
 
 if (!(i_has_format("ft2")) ) { 
-  skipx(124, "No freetype2 library found");
+  skipx(115, "No freetype2 library found");
   exit;
 }
 print "# has ft2\n";

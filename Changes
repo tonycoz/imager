@@ -737,6 +737,7 @@ Revision history for Perl extension Imager.
 	- change the getpN() functions in transform2() to set a 
 	  reasonable alpha if the input image has no alpha
 	- document the constants that transform2() defines
+	- skip the right number of tests when FT2 isn't available
 
 =================================================================
 
