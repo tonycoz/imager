@@ -82,7 +82,9 @@ t/t104ppm.t
 t/t105gif.t
 t/t106tiff.t
 t/t107bmp.t
+t/t108tga.t
 t/t15color.t
+t/t16matrix.t           Tests Imager::Matrix2d
 t/t20fill.t             Tests fills
 t/t30t1font.t
 t/t35ttfont.t
@@ -98,6 +100,7 @@ t/t58trans2.t
 t/t59assem.t
 t/t60dyntest.t
 t/t61filters.t
+t/t64copyflip.t         Test copy, flip, rotate, matrix_transform
 t/t65crop.t
 t/t66paste.t
 t/t67convert.t
