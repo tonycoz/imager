@@ -19,7 +19,7 @@
 #include <sys/types.h>
 
 /* #define BBSIZ 1096 */
-#define BBSIZ 1096
+#define BBSIZ 16384
 #define IO_FAKE_SEEK 1<<0L
 #define IO_TEMP_SEEK 1<<1L
 
