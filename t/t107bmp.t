@@ -1,8 +1,9 @@
 #!perl -w
-print "1..12\n";
+print "1..62\n";
 use Imager qw(:all);
 use strict;
 init_log("testout/t107bmp.log",1);
+require 't/testtools.pl';
 
 my $base_diff = 0;
 # if you change this make sure you generate new compressed versions
@@ -38,15 +39,21 @@ my $bi_rgb = 0;
 my $bi_rle8 = 1;
 my $bi_rle4 = 2;
 my $bi_bitfields = 3;
-read_test(5, "testout/t107_24bit.bmp", $img, bmp_compression=>0);
-read_test(6, "testout/t107_8bit.bmp", $im8, bmp_compression=>0);
-read_test(7, "testout/t107_4bit.bmp", $im4, bmp_compression=>0);
-read_test(8, "testout/t107_1bit.bmp", $im1, bmp_compression=>0);
+read_test(5, "testout/t107_24bit.bmp", $img, 
+          bmp_compression=>0, bmp_bit_count => 24);
+read_test(6, "testout/t107_8bit.bmp", $im8, 
+          bmp_compression=>0, bmp_bit_count => 8);
+read_test(7, "testout/t107_4bit.bmp", $im4, 
+          bmp_compression=>0, bmp_bit_count => 4);
+read_test(8, "testout/t107_1bit.bmp", $im1, bmp_compression=>0, 
+          bmp_bit_count=>1);
 # the following might have slight differences
 $base_diff = i_img_diff($img, $im8) * 2;
 print "# base difference $base_diff\n";
-read_test(9, "testimg/comp4.bmp", $im4, bmp_compression=>$bi_rle4);
-read_test(10, "testimg/comp8.bmp", $im8, bmp_compression=>$bi_rle8);
+read_test(9, "testimg/comp4.bmp", $im4, 
+          bmp_compression=>$bi_rle4, bmp_bit_count => 4);
+read_test(10, "testimg/comp8.bmp", $im8, 
+          bmp_compression=>$bi_rle8, bmp_bit_count => 8);
 
 my $imoo = Imager->new;
 if ($imoo->read(file=>'testout/t107_24bit.bmp')) {
@@ -62,6 +69,90 @@ else {
   print "not 12 # ",$imoo->errstr,"\n";
 }
 
+# various invalid format tests
+# we have so many different test images to try to detect all the possible
+# failure paths in the code, adding these did detect real problems
+print "# catch various types of invalid bmp files\n";
+my $test_num = 13;
+my @tests =
+  (
+   # entries in each array ref are:
+   #  - basename of an invalid BMP file
+   #  - error message that should be produced
+   #  - description of what is being tested
+   #  - possible flag to indicate testing only on 32-bit machines
+   [ 'badplanes.bmp', 'not a BMP file', "invalid planes value" ],
+   [ 'badbits.bmp', 'unknown bit count for BMP file (5)', 
+     'should fail to read invalid bits' ],
+
+   # 1-bit/pixel BMPs
+   [ 'badused1.bmp', 'out of range colors used (3)',
+     'out of range palette size (1-bit)' ],
+   [ 'badcomp1.bmp', 'unknown 1-bit BMP compression (1)',
+     'invalid compression value (1-bit)' ],
+   [ 'bad1wid0.bmp', 'Image sizes must be positive',
+     'width 0 (1-bit)' ],
+   [ 'bad4oflow.bmp', 'integer overflow calculating image allocation',
+     'overflow integers on 32-bit machines (1-bit)', '32bitonly' ],
+   [ 'short1.bmp', 'failed reading 1-bit bmp data', 
+     'short 1-bit' ],
+
+   # 4-bit/pixel BMPs
+   [ 'badused4a.bmp', 'out of range colors used (272)', 
+     'should fail to read invalid pal size (272) (4-bit)' ],
+   [ 'badused4b.bmp', 'out of range colors used (17)',
+     'should fail to read invalid pal size (17) (4-bit)' ],
+   [ 'badcomp4.bmp', 'unknown 4-bit BMP compression (1)',
+     'invalid compression value (4-bit)' ],
+   [ 'short4.bmp', 'failed reading 4-bit bmp data', 
+     'short uncompressed 4-bit' ],
+   [ 'short4rle.bmp', 'missing data during decompression', 
+     'short compressed 4-bit' ],
+   [ 'bad4wid0.bmp', 'Image sizes must be positive',
+     'width 0 (4-bit)' ],
+   [ 'bad4widbig.bmp', 'Image sizes must be positive',
+     'width big (4-bit)' ],
+   [ 'bad4oflow.bmp', 'integer overflow calculating image allocation',
+     'overflow integers on 32-bit machines (4-bit)', '32bitonly' ],
+
+   # 8-bit/pixel BMPs
+   [ 'bad8useda.bmp', 'out of range colors used (257)',
+     'should fail to read invalid pal size (8-bit)' ],
+   [ 'bad8comp.bmp', 'unknown 8-bit BMP compression (2)',
+     'invalid compression value (8-bit)' ],
+   [ 'short8.bmp', 'failed reading 8-bit bmp data', 
+     'short uncompressed 8-bit' ],
+   [ 'short8rle.bmp', 'missing data during decompression', 
+     'short compressed 8-bit' ],
+   [ 'bad8wid0.bmp', 'Image sizes must be positive',
+     'width 0 (8-bit)' ],
+   [ 'bad8oflow.bmp', 'integer overflow calculating image allocation',
+     'overflow integers on 32-bit machines (8-bit)', '32bitonly' ],
+
+   # 24-bit/pixel BMPs
+   [ 'short24.bmp', 'failed reading image data',
+     'short 24-bit' ],
+   [ 'bad24wid0.bmp', 'Image sizes must be positive',
+     'width 0 (24-bit)' ],
+   [ 'bad24oflow.bmp', 'integer overflow calculating image allocation',
+     'overflow integers on 32-bit machines (24-bit)', '32bitonly' ],
+   [ 'bad24comp.bmp', 'unknown 24-bit BMP compression (4)',
+     'bad compression (24-bit)' ],
+  );
+use Config;
+my $intsize = $Config{intsize};
+for my $test (@tests) {
+  my ($file, $error, $comment, $bit32only) = @$test;
+  if (!$bit32only || $intsize == 4) {
+    okn($test_num++, !$imoo->read(file=>"testimg/$file"), $comment);
+    isn($test_num++, $imoo->errstr, $error, "check error message");
+  }
+  else {
+    skipn($test_num, 2, "only tested on 32-bit machines");
+    $test_num += 2;
+  }
+}
+                              
 sub write_test {
   my ($test_num, $im, $filename) = @_;
   local *FH;
@@ -86,6 +177,10 @@ sub write_test {
 sub read_test {
   my ($test_num, $filename, $im, %tags) = @_;
   local *FH;
+  
+  print "# read_test: $filename\n";
+
+  $tags{i_format} = "bmp";
 
   if (open FH, "< $filename") {
     binmode FH;
@@ -101,9 +196,19 @@ sub read_test {
         for my $tag (keys %tags) {
           if (my $index = Imager::i_tags_find($im_read, $tag, 0)) {
             my ($name, $value) = Imager::i_tags_get($im_read, $index);
-            if ($value != $tags{$tag}) {
-              print "# tag $tag value mismatch $tags{$tag} != $value\n";
-              $tags_ok = 0;
+            my $exp_value = $tags{$tag};
+            print "#   tag $name = '$value' - expect '$exp_value'\n";
+            if ($exp_value =~ /\d/) {
+              if ($value != $tags{$tag}) {
+                print "# tag $tag value mismatch $tags{$tag} != $value\n";
+                $tags_ok = 0;
+              }
+            }
+            else {
+              if ($value ne $tags{$tag}) {
+                print "# tag $tag value mismatch $tags{$tag} != $value\n";
+                $tags_ok = 0;
+              }
             }
           }
         }

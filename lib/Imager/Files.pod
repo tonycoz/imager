@@ -501,9 +501,25 @@ Packed RGB values.
 
 =back
 
+=item bmp_compression_name
+
+The bmp_compression value as a BI_* string
+
 =item bmp_important_colors
 
 The number of important colors as defined by the writer of the image.
+
+=item bmp_used_colors
+
+Number of color used from the BMP header
+
+=item bmp_filesize
+
+The file size from the BMP header
+
+=item bmp_bit_count
+
+Number of bits stored per pixel. (24, 8, 4 or 1)
 
 =back
 

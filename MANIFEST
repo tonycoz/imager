@@ -2,56 +2,40 @@ Changes
 Imager.pm
 Imager.xs
 MANIFEST
-README
 Makefile.PL
+README
+bigtest.perl	Library selection tester
 bmp.c           Reading and writing Windows BMP files
-tga.c           Reading and writing Targa files
-rgb.c           Reading and writing SGI rgb files
 color.c         Color translation and handling
 conv.c
 convert.c
-draw.c
-polygon.c
-draw.h
-fills.c         Generic fills
-map.c
-error.c
-gaussian.c
-ppport.h
-image.c
-image.h
-imagei.h
-datatypes.h
 datatypes.c
-feat.h
-img16.c
-imgdouble.c     Implements double/sample images
-io.c
-imio.h
-log.c
-log.h
-jpeg.c
-png.c
-gif.c
-tiff.c
-quant.c
-raw.c
-pnm.c
-filters.c
+datatypes.h
+doco.perl
+draw.c
+draw.h
+dynaload.c
+dynaload.h
+dynfilt/Makefile.PL
+dynfilt/compile.txt
+dynfilt/dt2.c
+dynfilt/dt2.exp
+dynfilt/dyntest.c
+dynfilt/dyntest.exp
+dynfilt/flines.c
+dynfilt/flines.exp
+dynfilt/mandelbrot.c
+dynfilt/mandelbrot.exp
+dynfilt/pluginst.h
+errep.perl
+error.c
+ext.h
 feat.c
+feat.h
+fills.c         Generic fills
+filterlist.perl
+filters.c
 font.c
-freetyp2.c	Implements freetype2 font support
-maskimg.c
-palimg.c
-regmach.c
-regmach.h
-rotate.c
-stackmach.c
-stackmach.h
-tags.c
-trans2.c
-iolayer.h
-iolayer.c
 fontfiles/ExistenceTest.afm     please edit ExistenceTest.sfd in CVS
 fontfiles/ExistenceTest.pfb     to change these files, edited and
 fontfiles/ExistenceTest.ttf     generated using pfaedit
@@ -60,33 +44,65 @@ fontfiles/NameTest.ttf          test glyph_names() - see t38ft2font.t
 fontfiles/dcr10.afm
 fontfiles/dcr10.pfb
 fontfiles/dodge.ttf
+freetyp2.c	Implements freetype2 font support
+gaussian.c
+gif.c
+image.c
+image.h
+imagei.h
+img16.c
+imgdouble.c     Implements double/sample images
+imio.h
+io.c
+iolayer.c
+iolayer.h
+jpeg.c
 lib/Imager/Color.pm
 lib/Imager/Color/Float.pm
 lib/Imager/Color/Table.pm
+lib/Imager/Draw.pod
+lib/Imager/Engines.pod
 lib/Imager/Expr.pm
 lib/Imager/Expr/Assem.pm
 lib/Imager/Files.pod
-lib/Imager/Draw.pod
-lib/Imager/Transformations.pod
-lib/Imager/ImageTypes.pod
-lib/Imager/Filters.pod
-lib/Imager/Engines.pod
 lib/Imager/Fill.pm
+lib/Imager/Filters.pod
 lib/Imager/Font.pm
 lib/Imager/Font/BBox.pm
-lib/Imager/Font/Type1.pm
-lib/Imager/Font/Truetype.pm
 lib/Imager/Font/FreeType2.pm
+lib/Imager/Font/Image.pm
+lib/Imager/Font/Truetype.pm
+lib/Imager/Font/Type1.pm
 lib/Imager/Font/Win32.pm
 lib/Imager/Font/Wrap.pm
-lib/Imager/Font/Image.pm
 lib/Imager/Fountain.pm
-lib/Imager/interface.pod
+lib/Imager/ImageTypes.pod
 lib/Imager/Matrix2d.pm
-lib/Imager/regmach.pod
 lib/Imager/Regops.pm
 lib/Imager/Transform.pm
-t/testtools.pl
+lib/Imager/Transformations.pod
+lib/Imager/interface.pod
+lib/Imager/regmach.pod
+log.c
+log.h
+map.c
+maskimg.c
+palimg.c
+plug.h
+png.c
+pnm.c
+polygon.c
+ppport.h
+quant.c
+raw.c
+regmach.c
+regmach.h
+regops.perl
+rgb.c           Reading and writing SGI rgb files
+rotate.c
+spot.perl	For making an ordered dither matrix from a spot function
+stackmach.c
+stackmach.h
 t/t00basic.t
 t/t01introvert.t
 t/t020masked.t
@@ -131,6 +147,27 @@ t/t70newgif.t
 t/t75polyaa.t
 t/t80texttools.t        Test text wrapping
 t/t90cc.t
+t/testtools.pl
+tags.c
+testimg/bad1oflow.bmp   1-bit/pixel, overflow integer on 32-bit machines
+testimg/bad1wid0.bmp    1-bit/pixel, zero width
+testimg/bad24comp.bmp   24-bit/pixel, bad compression
+testimg/bad24oflow.bmp  24-bit/pixel, overflow integer on 32-bit machines
+testimg/bad24wid0.bmp   24-bit/pixel, 0 width
+testimg/bad4oflow.bmp   4-bit/pixel, overflow integer on 32-bit machines
+testimg/bad4wid0.bmp    4-bit/pixel, 0 width
+testimg/bad4widbig.bmp  4-bit/pixel, large width
+testimg/bad8comp.bmp    8-bit/pixel, bad compression
+testimg/bad8oflow.bmp   8-bit/pixel, overflow integer on 32-bit machines
+testimg/bad8useda.bmp   8-bit/pixel, bad colors used value
+testimg/bad8wid0.bmp    8-bit/pixel, width 0
+testimg/badbits.bmp     bad bits value in header
+testimg/badcomp1.bmp    bad compression for 1-bit/pixel
+testimg/badcomp4.bmp    bad compression for 4-bit/pixel
+testimg/badplanes.bmp   bad planes value in header
+testimg/badused1.bmp    1-bit/pixel, out of range colors used value
+testimg/badused4a.bmp   4-bit/pixel, badly out of range used value (SEGV test)
+testimg/badused4b.bmp   4-bit/pixel, just out of range used value (SEGV test)
 testimg/bandw.gif
 testimg/comp4.bmp       Compressed 4-bit/pixel BMP
 testimg/comp4.tif       4-bit/pixel paletted TIFF
@@ -156,31 +193,19 @@ testimg/scale.ppm
 testimg/scalei.gif
 testimg/screen2.gif
 testimg/screen3.gif
+testimg/short1.bmp      1-bit/pixel, data missing from EOF
+testimg/short24.bmp     24-bit/pixel, data missing from EOF
+testimg/short4.bmp      truncated 4bit/pixel uncompressed BMP
+testimg/short4rle.bmp   truncated 4bit/pixel compressed BMP
+testimg/short8.bmp      8-bit/pixel, data missing from EOF
+testimg/short8rle.bmp   8-bit/pixel compressed, data missing from EOF
 testimg/simple.pbm
 testimg/test_gimp_pal   A simple GIMP palette file
 testimg/trimgdesc.gif
 testimg/trmiddesc.gif
-typemap
-dynaload.c
-dynaload.h
-ext.h
-plug.h
-filterlist.perl
-doco.perl
-errep.perl
-regops.perl
-spot.perl	For making an ordered dither matrix from a spot function
+tga.c           Reading and writing Targa files
+tiff.c
+trans2.c
 transform.perl	Shell interface to Imager::Transform
-bigtest.perl	Library selection tester
-dynfilt/pluginst.h
-dynfilt/dyntest.c
-dynfilt/dyntest.exp
-dynfilt/dt2.c
-dynfilt/dt2.exp
-dynfilt/mandelbrot.c
-dynfilt/mandelbrot.exp
-dynfilt/flines.c
-dynfilt/flines.exp
-dynfilt/compile.txt
-dynfilt/Makefile.PL
+typemap
 win32.c		Implements font support through Win32 GDI
