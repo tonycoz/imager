@@ -515,6 +515,8 @@ Revision history for Perl extension Imager.
           being drawn in a plain color
         - image based fills
         - unsharp mask
+        - make i_conv() clamp the bottom end of the samples range too
+          (makes it useful for sharpening)
 
 =================================================================
 
