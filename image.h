@@ -301,6 +301,8 @@ extern int i_ft2_cp(FT2_Fonthandle *handle, i_img *im, int tx, int ty,
                     int channel, double cheight, double cwidth, 
                     char *text, int len, int align, int aa, int vlayout, 
                     int utf8);
+extern int i_ft2_has_chars(FT2_Fonthandle *handle, char *text, int len,
+                           int utf8, char *work);
 
 #endif
 

@@ -468,6 +468,18 @@ It's possible that a driver will disable hinting if you use a
 transformation, to prevent discontinuities in the transformations.
 See the end of the test script t/t38ft2font.t for an example.
 
+=item has_chars(string=>$text)
+
+Checks if the characters in $text are defined by the font.
+
+In a list context returns a list of true or false value corresponding
+to the characters in $text, true if the character is defined, false if
+not.  In scalar context returns a string of NUL or non-NUL
+characters.  Supports UTF8.
+
+Not all fonts support this method (use $font->can("has_chars") to
+check.)
+
 =item logo
 
 This method doesn't exist yet but is under consideration.  It would mostly
