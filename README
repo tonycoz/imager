@@ -99,9 +99,9 @@ like undefined symbol: FreeSavedImages when running make test.
 Install libungif package to fix it.
 
 
-Imager needs to have a fairly recent libtiff installed (we know it
-it runs fine with 3.5.5).  In the future we might consider supporting older
-libtiff versions.  For now you can either configure Imager manually (by
+Imager needs to have a libtiff version of at least 3.5.5.  In the
+future we might consider supporting older libtiff versions.  For
+now you can either configure Imager manually (by
 setting the IM_MANUAL environment variable to 1, in sh:
 
 $ IM_MANUAL=1 perl Makefile.PL
