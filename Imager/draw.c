@@ -713,11 +713,9 @@ i_flood_fill(i_img *im, int seedx, int seedy, i_color *dcol) {
 
   if (seedx < 0 || seedx >= xsize ||
       seedy < 0 || seedy >= ysize) {
-    
-    i_push_error(0, "Seed pixel outside of image");
+    i_push_error(0, "i_flood_fill: Seed pixel outside of image");
     return 0;
   }
-      
 
   btm = btm_new(xsize,ysize);
   st = llist_new(100,sizeof(struct stack_element*));
@@ -740,26 +738,23 @@ i_flood_fill(i_img *im, int seedx, int seedy, i_color *dcol) {
     ST_POP();
     
     if (y<0 || y>ysize-1) continue;
+    if (x<0 || x>xsize-1) continue;
 
     if (bymin > y) bymin=y; /* in the worst case an extra line */
     if (bymax < y) bymax=y; 
 
-    /*     printf("start of scan - on stack : %d \n",st->count); */
-
-    
-    /*     printf("lx=%d rx=%d dadLx=%d dadRx=%d y=%d direction=%d\n",lx,rx,dadLx,dadRx,y,direction); */
-    
-    /*
-    printf(" ");
-    for(tx=0;tx<xsize;tx++) printf("%d",tx%10);
-    printf("\n");
-    for(ty=0;ty<ysize;ty++) {
-      printf("%d",ty%10);
-      for(tx=0;tx<xsize;tx++) printf("%d",!!btm_test(btm,tx,ty));
-      printf("\n");
-    }
-
-    printf("y=%d\n",y);
+    /*     
+	   printf("start of scan - on stack : %d \n",st->count); 
+	   printf("lx=%d rx=%d dadLx=%d dadRx=%d y=%d direction=%d\n",lx,rx,dadLx,dadRx,y,direction); 
+	   printf(" ");
+	   for(tx=0;tx<xsize;tx++) printf("%d",tx%10);
+	   printf("\n");
+	   for(ty=0;ty<ysize;ty++) {
+	   printf("%d",ty%10);
+	   for(tx=0;tx<xsize;tx++) printf("%d",!!btm_test(btm,tx,ty));
+	   printf("\n");
+	   }
+	   printf("y=%d\n",y);
     */
 
 
@@ -964,7 +959,7 @@ i_flood_cfill(i_img *im, int seedx, int seedy, i_fill_t *fill) {
   
   if (seedx < 0 || seedx >= im->xsize ||
       seedy < 0 || seedy >= im->ysize) {
-    i_push_error(0, "Seed pixel outside of image");
+    i_push_error(0, "i_flood_cfill: Seed pixel outside of image");
     return 0;
   }
 
