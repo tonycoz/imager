@@ -72,19 +72,17 @@ Retrieve an image and stores in the iolayer object. Returns NULL on fatal error.
 i_img *
 i_readtga_wiol(io_glue *ig, int length) {
   i_img* img;
-  int type;
-  int y, i;
+  int x, y, i;
   int width, height, channels;
   char *idstring;
-  unsigned char *uc;
-  i_color val;
 
   tga_header header;
   size_t palbsize;
   unsigned char *palbuf;
   unsigned char headbuf[18];
-  unsigned char *linebuf;
-
+  unsigned char *databuf;
+  i_color *linebuf;
+  
   i_clear_error();
 
   mm_log((1,"i_readtga(ig %p, length %d)\n", ig, length));
@@ -187,14 +185,14 @@ i_readtga_wiol(io_glue *ig, int length) {
 
 
     /* read image data in */
-    linebuf = mymalloc(width);
+    databuf = mymalloc(width);
     for(y=height-1;y>=0;y--) {
-      if (ig->readcb(ig, linebuf, width) != width) {
+      if (ig->readcb(ig, databuf, width) != width) {
 	i_push_error(errno, "read for targa data failed");
-	myfree(linebuf);
+	myfree(databuf);
 	return NULL;
       }
-      i_ppal(img, 0, width, y, linebuf);
+      i_ppal(img, 0, width, y, databuf);
     }
     
     return img;
@@ -202,7 +200,41 @@ i_readtga_wiol(io_glue *ig, int length) {
     
   case 2:  /* Uncompressed, RGB images */
     mm_log((1, "Uncompressed RGB image\n"));
+
+    if (header.imagedescriptor != 0) {
+      i_push_error(0, "Targa: Imagedescriptor not 0, not supported internal format");
+      return NULL;
+    }
+    
+    if (header.bitsperpixel != 24) {
+      i_push_error(0, "Targa: bpp is not 24, unsupported.");
+      return NULL;
+    }
     channels = 3;
+    
+    img = i_img_empty_ch(NULL, width, height, channels);
+    /* read image data in */
+    databuf = mymalloc(width*channels);
+    linebuf = mymalloc(width*sizeof(i_color));
+    
+    for(y=height-1;y>=0;y--) {
+      if (ig->readcb(ig, databuf, width*channels) != width*channels) {
+	i_push_error(errno, "read for targa data failed");
+	myfree(linebuf);
+	myfree(databuf);
+	return NULL;
+      }
+      for(x=0; x<width; x++) {
+	linebuf[x].rgb.r = databuf[x*channels+2];
+	linebuf[x].rgb.g = databuf[x*channels+1];
+	linebuf[x].rgb.b = databuf[x*channels];
+      }
+      i_plin(img, 0, width, y, linebuf);
+    }
+    myfree(linebuf);
+    myfree(databuf);
+    return img;
+    break;
     /* Do stuff */
     break;
   case 3: /* Uncompressed, black and white images */
@@ -251,13 +283,27 @@ i_writetga_wiol(i_img *im, io_glue *ig) {
   int rc;
   writep write_func;
 
-  mm_log((1,"i_writeppm(im %p, ig %p)\n", im, ig));
+  mm_log((1,"i_writetga_wiol(im %p, ig %p)\n", im, ig));
   i_clear_error();
 
   /* Add code to get the filename info from the iolayer */
   /* Also add code to check for mmapped code */
 
   io_glue_commit_types(ig);
+
+  if (im->type == i_palette_type) {
+    
+
+
+
+  }
+
+
+
+
+
+
+  
 
   if (im->channels == 3) {
     sprintf(header,"P6\n#CREATOR: Imager\n%d %d\n255\n",im->xsize,im->ysize);
