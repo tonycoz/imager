@@ -1004,6 +1004,8 @@ Revision history for Perl extension Imager.
   directories and to enable/disable drivers.
 - added simple examples to most of the filters documented in 
   Imager::Filters
+- calculate the sum of the coefficients once rather than for every
+  pixel in i_conv() (convolution filter)
 
 =================================================================
 
