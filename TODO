@@ -7,7 +7,7 @@ brown-bag bugs may add intermediate releases.  The dates are goals,
 not commitments.
 
 0.45: (march 2005?)
-- audit pnm.c
+- audit pnm.c (done)
 - audit tga.c
 - audit rgb.c and add tests
 - capture TIFF read warnings (i_warnings tag?) (done)
@@ -17,7 +17,7 @@ not commitments.
 - allow image creation to fail on malloc() failure for the image data
   rather than aborting.  The current behaviour could be a denial of
   service attack.  This has limited utility because of the way memory
-  over commitment works on Linux (reverted)
+  over commitment works on Linux (done but reverted)
 - eliminate unused variable warning (especially the RETVAL ones in Imager.xs)
   (done)
 - add META.yml (bypass EU::MM's limited mechanism)
