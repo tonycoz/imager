@@ -251,6 +251,7 @@ typedef enum i_ord_dith_tag
   od_vline,
   od_slashline, /* / line dither */
   od_backline, /* \ line dither */
+  od_tiny, /* small checkerbox */
   od_custom /* custom 8x8 map */
 } i_ord_dith;
 
