@@ -1,5 +1,5 @@
 $|=1;
-print "1..22\n";
+print "1..23\n";
 use Imager qw(:all);
 
 init_log("testout/t105gif.log",1);
