@@ -115,7 +115,10 @@ t/t75polyaa.t
 t/t90cc.t
 testimg/bandw.gif
 testimg/comp4.bmp       Compressed 4-bit/pixel BMP
+testimg/comp4.tif       4-bit/pixel paletted TIFF
+testimg/comp4bad.tif    corrupted 4-bit/pixel paletted TIFF
 testimg/comp8.bmp       Compressed 8-bit/pixel BMP
+testimg/comp8.tif       8-bit/pixel paletted TIFF
 testimg/expected.gif
 testimg/gimpgrad        A GIMP gradient file
 testimg/junk.ppm
