@@ -754,6 +754,7 @@ Revision history for Perl extension Imager.
 	- the scale() method now produces a warning when called in
 	  void context.
 	- font.c now only uses the defined T1Lib error codes
+	- define aTHX_ when perl doesn't (perl 5.004 for example)
 
 =================================================================
 
