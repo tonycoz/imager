@@ -81,10 +81,12 @@ gnext(mbuf *mb) {
     mb->cp = 0;
     mb->len = ig->readcb(ig, mb->buf, BSIZ);
     if (mb->len == -1) {
+      i_push_error(errno, "file read error");
       mm_log((1, "i_readpnm: read error\n"));
       return NULL;
     }
     if (mb->len == 0) {
+      i_push_error(errno, "unexpected end of file");
       mm_log((1, "i_readpnm: end of file\n"));
       return NULL;
     }
@@ -112,10 +114,12 @@ gpeek(mbuf *mb) {
     mb->cp = 0;
     mb->len = ig->readcb(ig, mb->buf, BSIZ);
     if (mb->len == -1) {
+      i_push_error(errno, "read error");
       mm_log((1, "i_readpnm: read error\n"));
       return NULL;
     }
     if (mb->len == 0) {
+      i_push_error(0, "unexpected end of file");
       mm_log((1, "i_readpnm: end of file\n"));
       return NULL;
     }
@@ -229,6 +233,8 @@ i_readpnm_wiol(io_glue *ig, int length) {
   i_color val;
   int mult;
 
+  i_clear_error();
+
   /*  char *pp; */
 
   mm_log((1,"i_readpnm(ig %p, length %d)\n", ig, length));
@@ -253,6 +259,7 @@ i_readpnm_wiol(io_glue *ig, int length) {
   cp = gnext(&buf);
 
   if (!cp || *cp != 'P') {
+    i_push_error(0, "bad header magic, not a PNM file");
     mm_log((1, "i_readpnm: Could not read header of file\n"));
     return NULL;
   }
@@ -265,6 +272,7 @@ i_readpnm_wiol(io_glue *ig, int length) {
   type = *cp-'0';
 
   if (type < 1 || type > 6) {
+    i_push_error(0, "unknown PNM file type, not a PNM file");
     mm_log((1, "i_readpnm: Not a pnm file\n"));
     return NULL;
   }
@@ -275,6 +283,7 @@ i_readpnm_wiol(io_glue *ig, int length) {
   }
   
   if ( !misspace(*cp) ) {
+    i_push_error(0, "unexpected character, not a PNM file");
     mm_log((1, "i_readpnm: Not a pnm file\n"));
     return NULL;
   }
@@ -285,38 +294,45 @@ i_readpnm_wiol(io_glue *ig, int length) {
   /* Read sizes and such */
 
   if (!skip_comment(&buf)) {
+    i_push_error(0, "while skipping to width");
     mm_log((1, "i_readpnm: error reading before width\n"));
     return NULL;
   }
   
   if (!gnum(&buf, &width)) {
+    i_push_error(0, "could not read image width");
     mm_log((1, "i_readpnm: error reading width\n"));
     return NULL;
   }
 
   if (!skip_comment(&buf)) {
+    i_push_error(0, "while skipping to height");
     mm_log((1, "i_readpnm: error reading before height\n"));
     return NULL;
   }
 
   if (!gnum(&buf, &height)) {
+    i_push_error(0, "could not read image height");
     mm_log((1, "i_readpnm: error reading height\n"));
     return NULL;
   }
   
   if (!(type == 1 || type == 4)) {
     if (!skip_comment(&buf)) {
+      i_push_error(0, "while skipping to maxval");
       mm_log((1, "i_readpnm: error reading before maxval\n"));
       return NULL;
     }
 
     if (!gnum(&buf, &maxval)) {
+      i_push_error(0, "could not read maxval");
       mm_log((1, "i_readpnm: error reading maxval\n"));
       return NULL;
     }
   } else maxval=1;
 
   if (!(cp = gnext(&buf)) || !misspace(*cp)) {
+    i_push_error(0, "garbage in header, invalid PNM file");
     mm_log((1, "i_readpnm: garbage in header\n"));
     return NULL;
   }
