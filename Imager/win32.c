@@ -18,7 +18,7 @@ win32.c - implements some win32 specific code, specifically Win32 font support.
 
 =head1 DESCRIPTION
 
-An imager interface to font output using the Win32 GDI.
+An Imager interface to font output using the Win32 GDI.
 
 =over
 
@@ -31,6 +31,14 @@ static void set_logfont(char *face, int size, LOGFONT *lf);
 
 static LPVOID render_text(char *face, int size, char *text, int length, int aa,
                           HBITMAP *pbm, SIZE *psz, TEXTMETRIC *tm);
+
+/*
+=item i_wf_bbox(face, size, text, length, bbox)
+
+Calculate a bounding box for the text.
+
+=cut
+*/
 
 int i_wf_bbox(char *face, int size, char *text, int length, int *bbox) {
   LOGFONT lf;
@@ -104,6 +112,13 @@ int i_wf_bbox(char *face, int size, char *text, int length, int *bbox) {
   return 1;
 }
 
+/*
+=item i_wf_text(face, im, tx, ty, cl, size, text, len, align, aa)
+
+Draws the text in the given color.
+
+=cut
+*/
 
 int
 i_wf_text(char *face, i_img *im, int tx, int ty, i_color *cl, int size, 
@@ -145,6 +160,14 @@ i_wf_text(char *face, i_img *im, int tx, int ty, i_color *cl, int size,
   return 1;
 }
 
+/*
+=item i_wf_cp(face, im, tx, ty, channel, size, text, len, align, aa)
+
+Draws the text in the given channel.
+
+=cut
+*/
+
 int
 i_wf_cp(char *face, i_img *im, int tx, int ty, int channel, int size, 
 	  char *text, int len, int align, int aa) {
@@ -182,6 +205,20 @@ i_wf_cp(char *face, i_img *im, int tx, int ty, int channel, int size,
   return 1;
 }
 
+/*
+=back
+
+=head1 INTERNAL FUNCTIONS
+
+=over
+
+=item set_logfont(face, size, lf)
+
+Fills in a LOGFONT structure with reasonable defaults.
+
+=cut
+*/
+
 static void set_logfont(char *face, int size, LOGFONT *lf) {
   memset(lf, 0, sizeof(LOGFONT));
 
@@ -194,10 +231,16 @@ static void set_logfont(char *face, int size, LOGFONT *lf) {
   /* NUL terminated by the memset at the top */
 }
 
-/* renders the text to an in-memory RGB bitmap 
-   It would be nice to render to greyscale, but Windows doesn't have
-   native greyscale bitmaps.
- */
+/*
+=item render_text(face, size, text, length, aa, pbm, psz, tm)
+
+renders the text to an in-memory RGB bitmap 
+
+It would be nice to render to greyscale, but Windows doesn't have
+native greyscale bitmaps.
+
+=cut
+*/
 static LPVOID render_text(char *face, int size, char *text, int length, int aa,
 		   HBITMAP *pbm, SIZE *psz, TEXTMETRIC *tm) {
   BITMAPINFO bmi;
@@ -284,3 +327,20 @@ static LPVOID render_text(char *face, int size, char *text, int length, int aa,
   return bits;
 }
 
+/*
+=head1 BUGS
+
+Should really use a structure so we can set more attributes.
+
+Should support UTF8
+
+=head1 AUTHOR
+
+Tony Cook <tony@develop-help.com>
+
+=head1 SEE ALSO
+
+Imager(3)
+
+=cut
+*/
