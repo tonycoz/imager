@@ -260,6 +260,37 @@ myrealloc(void *block, size_t size) {
 
 
 
+/* memory pool implementation */
+
+void
+i_mempool_init(i_mempool *mp) {
+  mp->alloc = 10;
+  mp->used  = 0;
+  mp->p = mymalloc(sizeof(void*)*mp->alloc);
+}
+
+void
+i_mempool_extend(i_mempool *mp) {
+  mp->p = myrealloc(mp->p, mp->alloc * 2);
+  mp->alloc *=2;
+}
+
+void *
+i_mempool_alloc(i_mempool *mp, size_t size) {
+  if (mp->used == mp->alloc) i_mempool_extend(mp);
+  mp->p[mp->used] = mymalloc(size);
+  mp->used++;
+  return mp->p[mp->used-1];
+}
+
+
+void
+i_mempool_destroy(i_mempool *mp) {
+  unsigned int i;
+  for(i=0; i<mp->used; i++) myfree(mp->p[i]);
+  myfree(mp->p);
+}
+
 
 
 /* Should these really be here? */
