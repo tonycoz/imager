@@ -1,7 +1,7 @@
 #!perl -w
 use strict;
 use lib 't';
-use Test::More tests => 12;
+use Test::More tests => 16;
 
 BEGIN { use_ok(Imager=>':all') }
 
@@ -38,6 +38,14 @@ ok($scaleimg->write(file=>'testout/t40scale2.ppm',type=>'pnm'),
       print "# ",$printed, "\n";
     };
   $img->scale(scalefactor=>0.25);
+  cmp_ok($warning, '=~', qr/void/, "check warning");
+  cmp_ok($warning, '=~', qr/t40scale\.t/, "check filename");
+  $warning = '';
+  $img->scaleX(scalefactor=>0.25);
+  cmp_ok($warning, '=~', qr/void/, "check warning");
+  cmp_ok($warning, '=~', qr/t40scale\.t/, "check filename");
+  $warning = '';
+  $img->scaleY(scalefactor=>0.25);
   cmp_ok($warning, '=~', qr/void/, "check warning");
   cmp_ok($warning, '=~', qr/t40scale\.t/, "check filename");
 }

@@ -1031,6 +1031,9 @@ Revision history for Perl extension Imager.
 - some test scripts have been modified to use Test::More, which is now
   included under the t directory.  Eventually all will be modified to use
   Test::More and the duplicates in t/testtools.pl will be removed
+- the convert, crop, rotate, copy, matrix_transform, to_paletted, to_rgb8, 
+  scaleX and scaleY methods now warn when called in void context.
+  http://rt.cpan.org/NoAuth/Bug.html?id=9672
 
 =================================================================
 

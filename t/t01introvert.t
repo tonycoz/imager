@@ -4,7 +4,7 @@
 
 use strict;
 use lib 't';
-use Test::More tests=>93;
+use Test::More tests=>95;
 
 BEGIN { use_ok(Imager => qw(:handy :all)) }
 
@@ -226,6 +226,22 @@ cmp_ok(Imager->errstr, '=~', qr/channels must be between 1 and 4/,
     cmp_ok(Imager->errstr, '=~', qr/integer overflow/,
            "check the error message");
   }
+}
+
+{ # http://rt.cpan.org/NoAuth/Bug.html?id=9672
+  my $warning;
+  local $SIG{__WARN__} = 
+    sub { 
+      $warning = "@_";
+      my $printed = $warning;
+      $printed =~ s/\n$//;
+      $printed =~ s/\n/\n\#/g; 
+      print "# ",$printed, "\n";
+    };
+  my $img = Imager->new(xsize=>10, ysize=>10);
+  $img->to_rgb8(); # doesn't really matter what the source is
+  cmp_ok($warning, '=~', 'void', "correct warning");
+  cmp_ok($warning, '=~', 't01introvert\\.t', "correct file");
 }
 
 sub check_add {

@@ -2,7 +2,7 @@
 use strict;
 use Imager qw(:all :handy);
 use lib 't';
-use Test::More tests=>17;
+use Test::More tests=>19;
 
 Imager::init("log"=>'testout/t67convert.log');
 
@@ -93,3 +93,18 @@ SKIP:
      "colour is as expected");
 }
 
+{ # http://rt.cpan.org/NoAuth/Bug.html?id=9672
+  my $warning;
+  local $SIG{__WARN__} = 
+    sub { 
+      $warning = "@_";
+      my $printed = $warning;
+      $printed =~ s/\n$//;
+      $printed =~ s/\n/\n\#/g; 
+      print "# ",$printed, "\n";
+    };
+  my $img = Imager->new(xsize=>10, ysize=>10);
+  $img->convert(preset=>"grey");
+  cmp_ok($warning, '=~', 'void', "correct warning");
+  cmp_ok($warning, '=~', 't67convert\\.t', "correct file");
+}
