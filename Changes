@@ -961,6 +961,11 @@ Revision history for Perl extension Imager.
 - method index didn't include errstr()
 - document that you don't want the FT2 freetype.h in the include path
 
+0.44_01
+
+- the plugins Makefile has long produced an error after all tests were
+  complete on Win32, finally tracked down why
+
 =================================================================
 
         For latest versions check the Imager-devel pages:
