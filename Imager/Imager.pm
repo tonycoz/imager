@@ -993,6 +993,18 @@ sub rubthrough {
 }
 
 
+sub flip {
+  my $self  = shift;
+  my %opts  = @_;
+  my %xlate = (x=>0, y=>1, xy=>2, yx=>2);
+  my $dir;
+  return () unless defined $opts{'dir'} and defined $xlate{$opts{'dir'}};
+  $dir = $xlate{$opts{'dir'}};
+  return $self if i_flipxy($self->{IMG}, $dir);
+  return ();
+}
+
+
 
 # These two are supported for legacy code only
 
@@ -1887,7 +1899,6 @@ the function return undef.  Examples:
 =head2 Drawing Methods
 
 IMPLEMENTATION MORE OR LESS DONE CHECK THE TESTS
-
 DOCUMENTATION OF THIS SECTION OUT OF SYNC
 
 It is possible to draw with graphics primitives onto images.  Such
@@ -1994,10 +2005,21 @@ To copy an image to onto another image use the C<paste()> method.
 That copies the entire C<$logo> image onto the C<$dest> image so that the
 upper left corner of the C<$logo> image is at (40,20).
 
-=head2 Blending Images
- 
-To put an image or a part of an image directly into another it is
-best to call the C<paste()> method on the image you want to add to.
+
+=head2 Flipping images
+
+An inplace horizontal or vertical flip is possible by calling the
+C<flip()> method.  If the original is to be preserved it's possible
+to make a copy first.
+
+  $img->flip(dir=>"x");       # horizontal flip
+  $img->flip(dir=>"xy");      # vertical and horizontal flip
+  $nimg = $img->copy->flip(dir=>"y"); # make a copy and flip the copy vertically
+
+
+=head2 Blending Images To put an image or a part of an image directly
+into another it is best to call the C<paste()> method on the image you
+want to add to.
 
   $img->paste(img=>$srcimage,left=>30,top=>50);
 
