@@ -106,7 +106,7 @@ interleave.pl - given two identically sized images create an image twice the hei
 
 =head1 SYNOPSIS
 
-  perl interleave.pl even_input odd_output output
+  perl interleave.pl even_input odd_input output
 
 =head1 DESCRIPTION
 
