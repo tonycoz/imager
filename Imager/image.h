@@ -509,6 +509,10 @@ extern i_img *i_img_16_new_low(i_img *im, int x, int y, int ch);
 extern i_img *i_img_double_new(int x, int y, int ch);
 extern i_img *i_img_double_new_low(i_img *im, int x, int y, int ch);
 
+
+char * i_test_format_probe(io_glue *data, int length);
+
+
 #ifdef HAVE_LIBJPEG
 i_img *   
 i_readjpeg_wiol(io_glue *ig, int length, char** iptc_itext, int *itlength);

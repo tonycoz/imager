@@ -1932,6 +1932,11 @@ i_readjpeg_wiol(ig)
 #endif
 
 
+char *
+i_test_format_probe(ig, length)
+        Imager::IO     ig
+	       int     length
+
 
 
 #ifdef HAVE_LIBTIFF
