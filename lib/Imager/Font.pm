@@ -25,7 +25,7 @@ my %drivers =
    ft2=>{
          class=>'Imager::Font::FreeType2',
          module=>'Imager/Font/FreeType2.pm',
-         files=>'.*\.(pfb|ttf|fon)$', # maybe this should be dynamic
+         files=>'.*\.(pfa|pfb|otf|ttf|fon|fnt)$',
         },
    w32=>{
          class=>'Imager::Font::Win32',
