@@ -46,14 +46,14 @@ New Features:
 - utf8 support for text output
 
 - image rotation, 3 ways of doing rotation:
-  - exact multiple of 90 degrees (the easy case) (done)
-  - rotation by exact angles that results in no scaling, using 
-    interpolation to produce a good result (done)
   - rotation by shearing, which produces makes lengths in the image larger,
     but could be useful
+  (2 of the 3 have been done)
 
 - read_multi() needs to handle other multi-image types, such as TIFF 
   (probably the most common)
+
+- hatched fills
 
 Clean up:
 - Make sure everything is doable with the OO interface
