@@ -82,8 +82,12 @@ static i_img IIM_base_16bit_direct =
    so we check for one otherwise we work by bytes directly
 
    We do assume 8-bit char
+
+   "Compaq C V6.4-009 on Compaq Tru64 UNIX V5.1A (Rev. 1885)" says it
+   supports C99, but doesn't supply stdint.h, which is required for
+   both hosted and freestanding implementations.  So guard against it.
 */
-#if __STDC_VERSION__ >= 199901L
+#if __STDC_VERSION__ >= 199901L && !defined(OS_dec_osf)
 /* C99 should define something useful */
 #include <stdint.h>
 #ifdef UINT16_MAX

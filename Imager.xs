@@ -1142,7 +1142,7 @@ io_slurp(ig)
  	      data    = NULL;
               tlength = io_slurp(ig, &data);
               EXTEND(SP,1);
-              PUSHs(sv_2mortal(newSVpv(data,tlength)));
+              PUSHs(sv_2mortal(newSVpv((char *)data,tlength)));
               myfree(data);
 
 
@@ -1244,7 +1244,8 @@ i_img_getdata(im)
     Imager::ImgRaw     im
              PPCODE:
 	       EXTEND(SP, 1);
-               PUSHs(im->idata ? sv_2mortal(newSVpv(im->idata, im->bytes)) 
+               PUSHs(im->idata ? 
+	             sv_2mortal(newSVpv((char *)im->idata, im->bytes)) 
 		     : &PL_sv_undef);
 
 
@@ -3173,7 +3174,7 @@ i_gpal(im, l, r, y)
           }
           else {
             EXTEND(SP, 1);
-            PUSHs(sv_2mortal(newSVpv(work, count * sizeof(i_palidx))));
+            PUSHs(sv_2mortal(newSVpv((char *)work, count * sizeof(i_palidx))));
           }
           myfree(work);
         }
@@ -3378,7 +3379,7 @@ i_gsamp(im, l, r, y, ...)
           }
           else {
             EXTEND(SP, 1);
-            PUSHs(sv_2mortal(newSVpv(data, count * sizeof(i_sample_t))));
+            PUSHs(sv_2mortal(newSVpv((char *)data, count * sizeof(i_sample_t))));
           }
 	  myfree(data);
         }
@@ -4034,7 +4035,7 @@ i_new_fill_hatch(fg, bg, combine, hatch, cust_hatch, dx, dy)
         STRLEN len;
       CODE:
         if (SvOK(ST(4))) {
-          cust_hatch = SvPV(ST(4), len);
+          cust_hatch = (unsigned char *)SvPV(ST(4), len);
         }
         else
           cust_hatch = NULL;
@@ -4055,7 +4056,7 @@ i_new_fill_hatchf(fg, bg, combine, hatch, cust_hatch, dx, dy)
         STRLEN len;
       CODE:
         if (SvOK(ST(4))) {
-          cust_hatch = SvPV(ST(4), len);
+          cust_hatch = (unsigned char *)SvPV(ST(4), len);
         }
         else
           cust_hatch = NULL;

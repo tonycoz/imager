@@ -651,8 +651,15 @@ Revision history for Perl extension Imager.
           parameter
         - support UTF8 text with Freetype 1.x 
         - second parameter to SvPV() must be of type STRLEN
-	- Doc pathces from cogent.
-	- Fixed out of bounds access on bitmap for flood fills.
+        - Doc pathces from cogent.
+        - Fixed out of bounds access on bitmap for flood fills.
+        - some char * vs unsigned char * casts missing on OSF1 v4.0
+        - some enums had , on the last item in datatypes.h, which OSF1
+          didn't like
+	- Compaq C 6.4 (OSF1) claims to be C99 but doesn't provide 
+          stdint.h, don't try to use it under OSF
+        - fix missing initialization in tags.c
+
 =================================================================
 
         For latest versions check the Imager-devel pages:
