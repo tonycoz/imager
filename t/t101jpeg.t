@@ -23,16 +23,19 @@ if (!i_has_format("jpeg")) {
 } else {
   open(FH,">testout/t101.jpg") || die "cannot open testout/t101.jpg for writing\n";
   binmode(FH);
-  i_writejpeg($img,fileno(FH),30);
+  $IO = Imager::io_new_fd(fileno(FH));
+  i_writejpeg_wiol($img,$IO,30);
   close(FH);
 
   print "ok 1\n";
   
-  open(FH,"testout/t101.jpg") || die "cannot open testout/t101.jpg\n";
+  open(FH, "testout/t101.jpg") || die "cannot open testout/t101.jpg\n";
   binmode(FH);
-
-  ($cmpimg,undef)=i_readjpeg(fileno(FH));
+  $IO = Imager::io_new_fd(fileno(FH));
+  ($cmpimg,undef) = i_readjpeg_wiol($IO);
   close(FH);
+
+  print "$cmpimg\n";
 
   print "# jpeg average mean square pixel difference: ",sqrt(i_img_diff($img,$cmpimg))/150*150,"\n";
   print "ok 2\n";

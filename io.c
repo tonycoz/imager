@@ -188,6 +188,7 @@ mymalloc(int size) {
 
 void
 myfree(void *p) {
+  mm_log((1, "myfree(p %p)\n", p));
   free(p);
 }
 

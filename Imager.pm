@@ -16,17 +16,17 @@ use Imager::Font;
 		DSO_close
 		DSO_funclist
 		DSO_call
-		
+
 		load_plugin
 		unload_plugin
-		
+
 		i_list_formats
 		i_has_format
-		
+
 		i_color_new
 		i_color_set
 		i_color_info
-		
+
 		i_img_empty
 		i_img_empty_ch
 		i_img_exorcise
@@ -43,7 +43,7 @@ use Imager::Font;
 		i_box_filled
 		i_arc
 		i_circle_aa
-		
+
 		i_bezier_multi
 		i_poly_aa
 
@@ -53,14 +53,14 @@ use Imager::Font;
 		i_scale_nn
 		i_haar
 		i_count_colors
-		
-		
+
+
 		i_gaussian
 		i_conv
-		
+
 		i_convert
 		i_map
-		
+
 		i_img_diff
 
 		i_init_fonts
@@ -76,9 +76,6 @@ use Imager::Font;
 		i_tt_cp
 		i_tt_text
 		i_tt_bbox
-
-		i_readjpeg
-		i_writejpeg
 
 		i_readjpeg_wiol
 		i_writejpeg_wiol
@@ -110,11 +107,11 @@ use Imager::Font;
 		i_postlevels
 		i_mosaic
 		i_watermark
-		
+
 		malloc_state
 
 		list_formats
-		
+
 		i_gifquant
 
 		newfont
@@ -122,7 +119,6 @@ use Imager::Font;
 		newcolour
 		NC
 		NF
-		
 );
 
 
@@ -460,6 +456,9 @@ sub read {
 
   # FIXME: Find the format here if not specified
   # yes the code isn't here yet - next week maybe?
+  # Next week?  Are you high or something?  That comment
+  # has been there for half a year dude.
+
 
   if (!$input{type} and $input{file}) {
     $input{type}=$FORMATGUESS->($input{file});
@@ -592,20 +591,16 @@ sub read {
 	return undef;
       }
       $self->{DEBUG} && print "loading a gif file\n";
+    }
 
-
-    } elsif ( $input{type} eq 'jpeg' ) {
-      if (exists $input{data}) {
-	($self->{IMG},$self->{IPTCRAW})=i_readjpeg_scalar($input{data});
-      } else {
-	($self->{IMG},$self->{IPTCRAW})=i_readjpeg( $fd );
-      }
-      if ( !defined($self->{IMG}) ) {
-	$self->{ERRSTR}='unable to read jpeg image';
+    if ( $input{type} eq 'jpeg' ) {
+      if ( !i_writejpeg_wiol($self->{IMG}, $IO, $input{jpegquality})) {
+	$self->{ERRSTR}='unable to write jpeg image'; 
 	return undef;
       }
-      $self->{DEBUG} && print "loading a jpeg file\n";
+      $self->{DEBUG} && print "writing a jpeg file\n";
     }
+
   }
   return $self;
 }
@@ -741,12 +736,6 @@ sub write {
       }
       $self->{DEBUG} && print "writing a gif file\n";
 
-    } elsif ( $input{type} eq 'jpeg' ) {
-      $rc = i_writejpeg($self->{IMG},$fd,$input{jpegquality});
-      if ( !defined($rc) ) {
-	$self->{ERRSTR}='unable to write jpeg image'; return undef;
-      }
-      $self->{DEBUG} && print "writing a jpeg file\n";
     }
   }
   return $self;
