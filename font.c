@@ -538,7 +538,7 @@ i_tt_new(char *fontname) {
   
   /* allocate memory for the structure */
   
-  handle=mymalloc( sizeof(TT_Fonthandle) );
+  handle = mymalloc( sizeof(TT_Fonthandle) );
 
   /* load the typeface */
   error = TT_Open_Face( engine, fontname, &handle->face );
@@ -782,6 +782,7 @@ pixmaps and glyphs
 void
 i_tt_destroy( TT_Fonthandle *handle) {
   TT_Close_Face( handle->face );
+  myfree( handle );
   
   /* FIXME: Should these be freed automatically by the library? 
 

@@ -34,15 +34,15 @@ if (! -f $fontname) {
 i_init_fonts();
 #     i_tt_set_aa(1);
 
-$bgcolor=i_color_new(255,0,0,0);
-$overlay=Imager::ImgRaw::new(200,70,3);
+$bgcolor = i_color_new(255,0,0,0);
+$overlay = Imager::ImgRaw::new(200,70,3);
 
-$ttraw=Imager::i_tt_new($fontname);
+$ttraw = Imager::i_tt_new($fontname);
 
 #use Data::Dumper;
 #warn Dumper($ttraw);
 
-@bbox=i_tt_bbox($ttraw,50.0,'XMCLH',5);
+@bbox = i_tt_bbox($ttraw,50.0,'XMCLH',5);
 print "#bbox: ($bbox[0], $bbox[1]) - ($bbox[2], $bbox[3])\n";
 
 i_tt_cp($ttraw,$overlay,5,50,1,50.0,'XMCLH',5,1);

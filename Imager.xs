@@ -21,7 +21,7 @@ typedef i_img*   Imager__ImgRaw;
 
 
 #ifdef HAVE_LIBTT
-typedef TT_Fonthandle* Imager__TTHandle;
+typedef TT_Fonthandle* Imager__Font__TT;
 #endif
 
 #ifdef HAVE_FT2
@@ -1258,19 +1258,26 @@ i_t1_text(im,xb,yb,cl,fontnum,points,str,len,align)
 #ifdef HAVE_LIBTT
 
 
-Imager::TTHandle
+Imager::Font::TT
 i_tt_new(fontname)
 	      char*     fontname
 
-void
-i_tt_destroy(handle)
-     Imager::TTHandle    handle
 
+MODULE = Imager         PACKAGE = Imager::Font::TT      PREFIX=TT_
+
+#define TT_DESTROY(handle) i_tt_destroy(handle)
+
+void
+TT_DESTROY(handle)
+     Imager::Font::TT   handle
+
+
+MODULE = Imager         PACKAGE = Imager
 
 
 undef_int
 i_tt_text(handle,im,xb,yb,cl,points,str,len,smooth)
-  Imager::TTHandle     handle
+  Imager::Font::TT     handle
     Imager::ImgRaw     im
 	       int     xb
 	       int     yb
@@ -1283,7 +1290,7 @@ i_tt_text(handle,im,xb,yb,cl,points,str,len,smooth)
 
 undef_int
 i_tt_cp(handle,im,xb,yb,channel,points,str,len,smooth)
-  Imager::TTHandle     handle
+  Imager::Font::TT     handle
     Imager::ImgRaw     im
 	       int     xb
 	       int     yb
@@ -1297,7 +1304,7 @@ i_tt_cp(handle,im,xb,yb,channel,points,str,len,smooth)
 
 undef_int
 i_tt_bbox(handle,point,str,len)
-  Imager::TTHandle     handle
+  Imager::Font::TT     handle
 	     float     point
 	      char*    str
 	       int     len

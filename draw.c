@@ -335,6 +335,7 @@ i_circle_aa(i_img *im, float x, float y, float rad, i_color *val) {
       }
     }
   }
+  i_mmarray_dst(&dot);
 }
 
 
