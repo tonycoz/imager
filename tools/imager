@@ -221,6 +221,23 @@ sub req_tags {
   return;
 }
 
+sub req_palette {
+  my ($im, $ignored, $state) = @_;
+
+  print $state->{filename},"\n";
+  if ($im->type eq 'direct') {
+    print "  No palette - this is a direct color image\n";
+  }
+  else {
+    my @colors = $im->getcolors;
+    for my $index (0..$#colors) {
+      printf "%3d: (%3d, %3d, %3d)\n", $index, ($colors[$index]->rgba)[0..2];
+    }
+  }
+
+  return;
+}
+
 sub val_scale {
   my ($option, $value) = @_;
 
@@ -346,6 +363,7 @@ sub im_functions {
     (
      info => [ \&req_info ],
      tags => [ \&req_tags ],
+     palette => [ \&req_palette ],
      scale => [ \&req_scale, \&val_scale ],
      rotate => [ \&req_rotate, \&val_rotate ],
      caption => [ \&req_caption ],
@@ -476,6 +494,10 @@ file.
 
 See L<Imager::Files> for file format specific tags and
 L<Imager::ImageTypes> for common tags.
+
+=item --palette
+
+Dumps the palette of the given file, if it is an indexed image.
 
 =item --scale <scalefactor>
 
