@@ -1,6 +1,7 @@
 #!perl -w
 use strict;
 $|=1;
+use lib 't';
 use Test::More tests => 69;
 use Imager qw(:all);
 BEGIN { require "t/testtools.pl"; }
