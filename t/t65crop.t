@@ -1,9 +1,9 @@
 #!perl -w
 use strict;
+use lib 't';
+use Test::More tests => 58;
 require "t/testtools.pl";
 use Imager;
-
-print "1..58\n";
 
 #$Imager::DEBUG=1;
 
@@ -11,34 +11,34 @@ Imager::init('log'=>'testout/t65crop.log');
 
 my $img=Imager->new() || die "unable to create image object\n";
 
-okx($img, "created image ph");
+ok($img, "created image ph");
 
-if (okx($img->open(file=>'testimg/scale.ppm',type=>'pnm'), "loaded source")) {
+SKIP:
+{
+  skip("couldn't load source image", 2)
+    unless ok($img->open(file=>'testimg/scale.ppm',type=>'pnm'), "loaded source");
   my $nimg = $img->crop(top=>10, left=>10, bottom=>25, right=>25);
-  okx($nimg, "got an image");
-  okx($nimg->write(file=>"testout/t65.ppm"), "save to file");
-}
-else {
-  skipx(2, "couldn't load source image");
+  ok($nimg, "got an image");
+  ok($nimg->write(file=>"testout/t65.ppm"), "save to file");
 }
 
 { # https://rt.cpan.org/Ticket/Display.html?id=7578
   # make sure we get the right type of image on crop
   my $src = Imager->new(xsize=>50, ysize=>50, channels=>2, bits=>16);
-  isx($src->getchannels, 2, "check src channels");
-  isx($src->bits, 16, "check src bits");
+  is($src->getchannels, 2, "check src channels");
+  is($src->bits, 16, "check src bits");
   my $out = $src->crop(left=>10, right=>40, top=>10, bottom=>40);
-  isx($out->getchannels, 2, "check out channels");
-  isx($out->bits, 16, "check out bits");
+  is($out->getchannels, 2, "check out channels");
+  is($out->bits, 16, "check out bits");
 }
 { # https://rt.cpan.org/Ticket/Display.html?id=7578
   print "# try it for paletted too\n";
   my $src = Imager->new(xsize=>50, ysize=>50, channels=>3, type=>'paletted');
   # make sure color index zero is defined so there's something to copy
   $src->addcolors(colors=>[Imager::Color->new(0,0,0)]);
-  isx($src->type, 'paletted', "check source type");
+  is($src->type, 'paletted', "check source type");
   my $out = $src->crop(left=>10, right=>40, top=>10, bottom=>40);
-  isx($out->type, 'paletted', 'check output type');
+  is($out->type, 'paletted', 'check output type');
 }
 
 { # https://rt.cpan.org/Ticket/Display.html?id=7581
@@ -49,8 +49,8 @@ else {
   # Let's make sure that things happen as documented
   my $src = test_oo_img();
   # make sure we get what we want
-  isx($src->getwidth, 150, "src width");
-  isx($src->getheight, 150, "src height");
+  is($src->getwidth, 150, "src width");
+  is($src->getheight, 150, "src height");
 
   # the test data is: 
   #  - description
@@ -136,22 +136,23 @@ else {
   for my $test (@tests) {
     my ($desc, $args, $left, $top, $right, $bottom) = @$test;
     my $out = $src->crop(%$args);
-    okx($out, "got output for $desc");
+    ok($out, "got output for $desc");
     my $cmp = $src->crop(left=>$left, top=>$top, right=>$right, bottom=>$bottom);
-    okx($cmp, "got cmp for $desc");
+    ok($cmp, "got cmp for $desc");
     # make sure they're the same
     my $diff = Imager::i_img_diff($out->{IMG}, $cmp->{IMG});
-    isx($diff, 0, "difference should be 0 for $desc");
+    is($diff, 0, "difference should be 0 for $desc");
   }
 }
 { # https://rt.cpan.org/Ticket/Display.html?id=7581
   # previously we didn't check that the result had some pixels
   # make sure we do
   my $src = test_oo_img();
-  okx(!$src->crop(left=>50, right=>50), "nothing across");
-  matchx($src->errstr, qr/resulting image would have no content/,
+  ok(!$src->crop(left=>50, right=>50), "nothing across");
+  cmp_ok($src->errstr, '=~', qr/resulting image would have no content/,
 	 "and message");
-  okx(!$src->crop(top=>60, bottom=>60), "nothing down");
-  matchx($src->errstr, qr/resulting image would have no content/,
+  ok(!$src->crop(top=>60, bottom=>60), "nothing down");
+  cmp_ok($src->errstr, '=~', qr/resulting image would have no content/,
 	 "and message");
 }
+
