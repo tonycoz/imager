@@ -84,6 +84,12 @@ Which simply sets the environment variables for the extra libraries
 to include the X libraries (which we do not use at all, but must
 included since libgif has been linked with it).
 
+Otherwise you could just build giflib without any X11 dependencies:
+
+  # must be a clean tree
+  cd giflib-4.1.0
+  ./configure --without-x ...
+
 Also note that libgif has a few bugs: You can run something like
 
 $ perl -Iblib/lib -Iblib/arch t/t105gif.t
@@ -128,6 +134,11 @@ needs for specific features.  The libraries it uses are:
 
   gif: http://www.arrakeen.demon.co.uk/giflib/  
 or at: http://prtr-13.ucsc.edu/~badger/software/libungif/index.shtml
+
+The default giflib is buggy in rarely used code, you can find a patch
+to fix the worst of the problems at:
+
+ http://www.develop-help.com/imager/giflib.patch
 
  tiff: http://www.libtiff.org/
 

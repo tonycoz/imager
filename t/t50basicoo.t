@@ -9,6 +9,8 @@ use strict;
 use Imager;
 use IO::Seekable;
 
+my $buggy_giflib_file = "buggy_giflib.txt";
+
 Imager::init("log"=>"testout/t50basicoo.log");
 
 # single image/file types
@@ -204,7 +206,8 @@ for my $type (@types) {
      "write to FH after writing $type");
   ok($fh->close, "closing FH after writing $type");
 
-  if ($type ne 'gif' || Imager::i_giflib_version() >= 4) {
+  if ($type ne 'gif' || 
+      (Imager::i_giflib_version() >= 4 && !-e $buggy_giflib_file)) {
     if (ok(open(DATA, "< $file"), "opening data source")) {
       binmode DATA;
       my $data = do { local $/; <DATA> };
@@ -297,7 +300,12 @@ for my $type (@types) {
     }
   }
   else {
-    skip("giflib < 4 doesn't support callbacks", 8);
+    if (-e $buggy_giflib_file) {
+      skip("see $buggy_giflib_file", 8);
+    }
+    else {
+      skip("giflib < 4 doesn't support callbacks", 8);
+    }
   }
 }
 

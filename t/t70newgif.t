@@ -11,6 +11,8 @@
 BEGIN { $| = 1; print "1..24\n"; }
 END {print "not ok 1\n" unless $loaded;}
 
+my $buggy_giflib_file = "buggy_giflib.txt";
+
 use Imager qw(:all :handy);
 $loaded=1;
 
@@ -92,45 +94,59 @@ if (i_has_format("gif")) {
   print "ok 13\n";
   Imager->errstr =~ /fh option not open/ or print "not ";
   print "ok 14 # ",Imager->errstr,"\n";
-  @imgs = Imager->read_multi(type=>'gif', file=>'testimg/screen2.gif');
-  @imgs == 2 or print "not ";
-  print "ok 15\n";
-  grep(!UNIVERSAL::isa($_, 'Imager'), @imgs) and print "not ";
-  print "ok 16\n";
-  grep($_->type eq 'direct', @imgs) and print "not ";
-  print "ok 17\n";
-  (my @left = $imgs[0]->tags(name=>'gif_left')) == 1 or print "not ";
-  print "ok 18\n";
-  my $left = $imgs[1]->tags(name=>'gif_left') or print "not ";
-  print "ok 19\n";
-  $left == 3 or print "not ";
-  print "ok 20\n";
-  if (Imager::i_giflib_version() >= 4.0) {
-    open FH, "< testimg/screen2.gif" 
-      or die "Cannot open testimg/screen2.gif: $!";
-    binmode FH;
-    my $cb = 
-      sub {
-        my $tmp;
-        read(FH, $tmp, $_[0]) and $tmp
-      };
-    @imgs = Imager->read_multi(type=>'gif',
-                               callback => $cb) or print "not ";
-    print "ok 21\n";
-    close FH;
+  unless (-e $buggy_giflib_file) {
+    @imgs = Imager->read_multi(type=>'gif', file=>'testimg/screen2.gif');
     @imgs == 2 or print "not ";
-    print "ok 22\n";
-
-    open FH, "< testimg/screen2.gif" 
-      or die "Cannot open testimg/screen2.gif: $!";
-    binmode FH;
-    my $data = do { local $/; <FH>; };
-    close FH;
-    @imgs = Imager->read_multi(type=>'gif',
-			       data=>$data) or print "not ";
-    print "ok 23\n";
-    @imgs = 2 or print "not ";
-    print "ok 24\n";
+    print "ok 15\n";
+    grep(!UNIVERSAL::isa($_, 'Imager'), @imgs) and print "not ";
+    print "ok 16\n";
+    grep($_->type eq 'direct', @imgs) and print "not ";
+    print "ok 17\n";
+    (my @left = $imgs[0]->tags(name=>'gif_left')) == 1 or print "not ";
+    print "ok 18\n";
+    my $left = $imgs[1]->tags(name=>'gif_left') or print "not ";
+    print "ok 19\n";
+    $left == 3 or print "not ";
+    print "ok 20\n";
+  }
+  else {
+    for (15 .. 20) {
+      print "ok $_ # skip see $buggy_giflib_file\n";
+    }
+  }
+  if (Imager::i_giflib_version() >= 4.0) {
+    unless (-e $buggy_giflib_file) {
+      open FH, "< testimg/screen2.gif" 
+	or die "Cannot open testimg/screen2.gif: $!";
+      binmode FH;
+      my $cb = 
+	sub {
+	  my $tmp;
+	  read(FH, $tmp, $_[0]) and $tmp
+	};
+      @imgs = Imager->read_multi(type=>'gif',
+				 callback => $cb) or print "not ";
+      print "ok 21\n";
+      close FH;
+      @imgs == 2 or print "not ";
+      print "ok 22\n";
+      
+      open FH, "< testimg/screen2.gif" 
+	or die "Cannot open testimg/screen2.gif: $!";
+      binmode FH;
+      my $data = do { local $/; <FH>; };
+      close FH;
+      @imgs = Imager->read_multi(type=>'gif',
+				 data=>$data) or print "not ";
+      print "ok 23\n";
+      @imgs = 2 or print "not ";
+      print "ok 24\n";
+    }
+    else {
+      for (21..24) {
+	print "ok $_ # skip see $buggy_giflib_file\n";
+      }
+    }
   }
   else {
     for (21..24) {
