@@ -835,16 +835,6 @@ i_nearest_color_foo(i_img *im, int num, int *xo, int *yo, i_color *ival, int dme
   }
 }
 
-
-
-
-
-
-
-
-
-
-
 void
 i_nearest_color(i_img *im, int num, int *xo, int *yo, i_color *oval, int dmeasure) {
   i_color *ival;
@@ -927,3 +917,826 @@ i_nearest_color(i_img *im, int num, int *xo, int *yo, i_color *oval, int dmeasur
 
   i_nearest_color_foo(im, num, xo, yo, ival, dmeasure);
 }
+
+/*
+  Keep state information used by each type of fountain fill
+*/
+struct fount_state {
+  /* precalculated for the equation of the line perpendicular to the line AB */
+  double lA, lB, lC;
+  double AB;
+  double sqrtA2B2;
+  double mult;
+  double cos;
+  double sin;
+  double theta;
+  int xa, ya;
+  void *ssample_data;
+};
+
+static double linear_fount_f(double x, double y, struct fount_state *state);
+static double bilinear_fount_f(double x, double y, struct fount_state *state);
+static double radial_fount_f(double x, double y, struct fount_state *state);
+static double square_fount_f(double x, double y, struct fount_state *state);
+static double revolution_fount_f(double x, double y, 
+                                 struct fount_state *state);
+static double conical_fount_f(double x, double y, struct fount_state *state);
+
+typedef double (*fount_func)(double, double, struct fount_state *);
+static fount_func fount_funcs[] =
+{
+  linear_fount_f,
+  bilinear_fount_f,
+  radial_fount_f,
+  square_fount_f,
+  revolution_fount_f,
+  conical_fount_f,
+};
+
+static double linear_interp(double pos, i_fountain_seg *seg);
+static double sine_interp(double pos, i_fountain_seg *seg);
+static double sphereup_interp(double pos, i_fountain_seg *seg);
+static double spheredown_interp(double pos, i_fountain_seg *seg);
+typedef double (*fount_interp)(double pos, i_fountain_seg *seg);
+static fount_interp fount_interps[] =
+{
+  linear_interp,
+  linear_interp,
+  sine_interp,
+  sphereup_interp,
+  spheredown_interp,
+};
+
+static void direct_cinterp(i_fcolor *out, double pos, i_fountain_seg *seg);
+static void hue_up_cinterp(i_fcolor *out, double pos, i_fountain_seg *seg);
+static void hue_down_cinterp(i_fcolor *out, double pos, i_fountain_seg *seg);
+typedef void (*fount_cinterp)(i_fcolor *out, double pos, i_fountain_seg *seg);
+static fount_cinterp fount_cinterps[] =
+{
+  direct_cinterp,
+  hue_up_cinterp,
+  hue_down_cinterp,
+};
+
+typedef double (*fount_repeat)(double v);
+static double fount_r_none(double v);
+static double fount_r_sawtooth(double v);
+static double fount_r_triangle(double v);
+static double fount_r_saw_both(double v);
+static double fount_r_tri_both(double v);
+static fount_repeat fount_repeats[] =
+{
+  fount_r_none,
+  fount_r_sawtooth,
+  fount_r_triangle,
+  fount_r_saw_both,
+  fount_r_tri_both,
+};
+
+static int simple_ssample(i_fcolor *out, double parm, double x, double y, 
+                           struct fount_state *state, 
+                           fount_func ffunc, fount_repeat rpfunc,
+                           i_fountain_seg *segs, int count);
+static int random_ssample(i_fcolor *out, double parm, double x, double y, 
+                           struct fount_state *state, 
+                           fount_func ffunc, fount_repeat rpfunc,
+                           i_fountain_seg *segs, int count);
+static int circle_ssample(i_fcolor *out, double parm, double x, double y, 
+                           struct fount_state *state, 
+                           fount_func ffunc, fount_repeat rpfunc,
+                           i_fountain_seg *segs, int count);
+typedef int (*fount_ssample)(i_fcolor *out, double parm, double x, double y, 
+                              struct fount_state *state,
+                              fount_func ffunc, fount_repeat rpfunc,
+                              i_fountain_seg *segs, int count);
+static fount_ssample fount_ssamples[] =
+{
+  NULL,
+  simple_ssample,
+  random_ssample,
+  circle_ssample,
+};
+
+static int
+fount_getat(i_fcolor *out, double x, double y, fount_func ffunc, 
+            fount_repeat rpfunc, struct fount_state *state,
+            i_fountain_seg *segs, int count);
+
+#define EPSILON (1e-6)
+
+/*
+=item i_fountain(im, xa, ya, xb, yb, type, repeat, combine, super_sample, ssample_param, count, segs)
+
+Draws a fountain fill using A(xa, ya) and B(xb, yb) as reference points.
+
+I<type> controls how the reference points are used:
+
+=over
+
+=item i_ft_linear
+
+linear, where A is 0 and B is 1.
+
+=item i_ft_bilinear
+
+linear in both directions from A.
+
+=item i_ft_radial
+
+circular, where A is the centre of the fill, and B is a point
+on the radius.
+
+=item i_ft_radial_square
+
+where A is the centre of the fill and B is the centre of
+one side of the square.
+
+=item i_ft_revolution
+
+where A is the centre of the fill and B defines the 0/1.0
+angle of the fill.
+
+=item i_ft_conical
+
+similar to i_ft_revolution, except that the revolution goes in both
+directions
+
+=back
+
+I<repeat> can be one of:
+
+=over
+
+=item i_fr_none
+
+values < 0 are treated as zero, values > 1 are treated as 1.
+
+=item i_fr_sawtooth
+
+negative values are treated as 0, positive values are modulo 1.0
+
+=item i_fr_triangle
+
+negative values are treated as zero, if (int)value is odd then the value is treated as 1-(value
+mod 1.0), otherwise the same as for sawtooth.
+
+=item i_fr_saw_both
+
+like i_fr_sawtooth, except that the sawtooth pattern repeats into
+negative values.
+
+=item i_fr_tri_both
+
+Like i_fr_triangle, except that negative values are handled as their
+absolute values.
+
+=back
+
+If combine is non-zero then non-opaque values are combined with the
+underlying color.
+
+I<super_sample> controls super sampling, if any.  At some point I'll
+probably add a adaptive super-sampler.  Current possible values are:
+
+=over
+
+=item i_fts_none
+
+No super-sampling is done.
+
+=item i_fts_grid
+
+A square grid of points withing the pixel are sampled.
+
+=item i_fts_random
+
+Random points within the pixel are sampled.
+
+=item i_fts_circle
+
+Points on the radius of a circle are sampled.  This produces fairly
+good results, but is fairly slow since sin() and cos() are evaluated
+for each point.
+
+=back
+
+I<ssample_param> is intended to be roughly the number of points
+sampled within the pixel.
+
+I<count> and I<segs> define the segments of the fill.
+
+=cut
+
+*/
+
+void
+i_fountain(i_img *im, double xa, double ya, double xb, double yb, 
+           i_fountain_type type, i_fountain_repeat repeat, 
+           int combine, int super_sample, double ssample_param, 
+           int count, i_fountain_seg *segs) {
+  struct fount_state state;
+  fount_func ffunc;
+  fount_ssample ssfunc;
+  fount_repeat rpfunc;
+  int x, y;
+  i_fcolor *line = mymalloc(sizeof(i_fcolor) * im->xsize);
+  int i, j;
+  i_fountain_seg *my_segs = mymalloc(sizeof(i_fountain_seg) * count);
+  int have_alpha = im->channels == 2 || im->channels == 4;
+  int ch;
+
+  /* we keep a local copy that we can adjust for speed */
+  for (i = 0; i < count; ++i) {
+    i_fountain_seg *seg = my_segs + i;
+
+    *seg = segs[i];
+    if (seg->type < 0 || type >= i_ft_end)
+      seg->type = i_ft_linear;
+    if (seg->color < 0 || seg->color >= i_fc_end)
+      seg->color = i_fc_direct;
+    if (seg->color == i_fc_hue_up || seg->color == i_fc_hue_down) {
+      /* so we don't have to translate to HSV on each request, do it here */
+      for (j = 0; j < 2; ++j) {
+        i_rgb_to_hsvf(seg->c+j);
+      }
+      if (seg->color == i_fc_hue_up) {
+        if (seg->c[1].channel[0] <= seg->c[0].channel[0])
+          seg->c[1].channel[0] += 1.0;
+      }
+      else {
+        if (seg->c[0].channel[0] <= seg->c[0].channel[1])
+          seg->c[0].channel[0] += 1.0;
+      }
+    }
+    /*printf("start %g mid %g end %g c0(%g,%g,%g,%g) c1(%g,%g,%g,%g) type %d color %d\n", 
+           seg->start, seg->middle, seg->end, seg->c[0].channel[0], 
+           seg->c[0].channel[1], seg->c[0].channel[2], seg->c[0].channel[3],
+           seg->c[1].channel[0], seg->c[1].channel[1], seg->c[1].channel[2], 
+           seg->c[1].channel[3], seg->type, seg->color);*/
+           
+  }
+
+  /* initialize each engine */
+  /* these are so common ... */
+  state.lA = xb - xa;
+  state.lB = yb - ya;
+  state.AB = sqrt(state.lA * state.lA + state.lB * state.lB);
+  state.xa = xa;
+  state.ya = ya;
+  switch (type) {
+  default:
+    type = i_ft_linear; /* make the invalid value valid */
+  case i_ft_linear:
+  case i_ft_bilinear:
+    state.lC = ya * ya - ya * yb + xa * xa - xa * xb;
+    state.mult = 1;
+    state.mult = 1/linear_fount_f(xb, yb, &state);
+    break;
+
+  case i_ft_radial:
+    state.mult = 1.0 / sqrt((double)(xb-xa)*(xb-xa) 
+                            + (double)(yb-ya)*(yb-ya));
+    break;
+
+  case i_ft_radial_square:
+    state.cos = state.lA / state.AB;
+    state.sin = state.lB / state.AB;
+    state.mult = 1.0 / state.AB;
+    break;
+
+  case i_ft_revolution:
+    state.theta = atan2(yb-ya, xb-xa);
+    state.mult = 1.0 / (PI * 2);
+    break;
+
+  case i_ft_conical:
+    state.theta = atan2(yb-ya, xb-xa);
+    state.mult = 1.0 / PI;
+    break;
+  }
+  ffunc = fount_funcs[type];
+  if (super_sample < 0 
+      || super_sample >= (sizeof(fount_ssamples)/sizeof(*fount_ssamples))) {
+    super_sample = 0;
+  }
+  state.ssample_data = NULL;
+  switch (super_sample) {
+  case i_fts_grid:
+    ssample_param = floor(0.5 + sqrt(ssample_param));
+    state.ssample_data = mymalloc(sizeof(i_fcolor) * ssample_param * ssample_param);
+    break;
+
+  case i_fts_random:
+  case i_fts_circle:
+    ssample_param = floor(0.5+ssample_param);
+    state.ssample_data = mymalloc(sizeof(i_fcolor) * ssample_param);
+    break;
+  }
+  ssfunc = fount_ssamples[super_sample];
+  if (repeat < 0 || repeat >= (sizeof(fount_repeats)/sizeof(*fount_repeats)))
+    repeat = 0;
+  rpfunc = fount_repeats[repeat];
+
+  for (y = 0; y < im->ysize; ++y) {
+    i_glinf(im, 0, im->xsize, y, line);
+    for (x = 0; x < im->xsize; ++x) {
+      i_fcolor c;
+      int got_one;
+      double v;
+      if (super_sample == i_fts_none)
+        got_one = fount_getat(&c, x, y, ffunc, rpfunc, &state, my_segs, count);
+      else
+        got_one = ssfunc(&c, ssample_param, x, y, &state, ffunc, rpfunc, 
+                         my_segs, count);
+      if (got_one) {
+        i_fountain_seg *seg = my_segs + i;
+        if (combine) {
+          for (ch = 0; ch < im->channels; ++ch) {
+            line[x].channel[ch] = line[x].channel[ch] * (1.0 - c.channel[3])
+              + c.channel[ch] * c.channel[3];
+          }
+        }
+        else 
+          line[x] = c;
+      }
+    }
+    i_plinf(im, 0, im->xsize, y, line);
+  }
+  myfree(line);
+  myfree(my_segs);
+  if (state.ssample_data)
+    myfree(state.ssample_data);
+}
+
+/*
+=back
+
+=head1 INTERNAL FUNCTIONS
+
+=over
+
+=item fount_getat(out, x, y, ffunc, rpfunc, state, segs, count)
+
+Evaluates the fountain fill at the given point.
+
+This is called by both the non-super-sampling and super-sampling code.
+
+You might think that it would make sense to sample the fill parameter
+instead, and combine those, but this breaks badly.
+
+=cut
+*/
+
+static int
+fount_getat(i_fcolor *out, double x, double y, fount_func ffunc, 
+            fount_repeat rpfunc, struct fount_state *state, 
+            i_fountain_seg *segs, int count) {
+  double v = rpfunc(ffunc(x, y, state));
+  int i;
+
+  i = 0;
+  while (i < count && (v < segs[i].start || v > segs[i].end)) {
+    ++i;
+  }
+  if (i < count) {
+    v = (fount_interps[segs[i].type])(v, segs+i);
+    (fount_cinterps[segs[i].color])(out, v, segs+i);
+    return 1;
+  }
+  else
+    return 0;
+}
+
+/*
+=item linear_fount_f(x, y, state)
+
+Calculate the fill parameter for a linear fountain fill.
+
+Uses the point to line distance function, with some precalculation
+done in i_fountain().
+
+=cut
+*/
+static double
+linear_fount_f(double x, double y, struct fount_state *state) {
+  return (state->lA * x + state->lB * y + state->lC) / state->AB * state->mult;
+}
+
+/*
+=item bilinear_fount_f(x, y, state)
+
+Calculate the fill parameter for a bi-linear fountain fill.
+
+=cut
+*/
+static double
+bilinear_fount_f(double x, double y, struct fount_state *state) {
+  return fabs((state->lA * x + state->lB * y + state->lC) / state->AB * state->mult);
+}
+
+/*
+=item radial_fount_f(x, y, state)
+
+Calculate the fill parameter for a radial fountain fill.
+
+Simply uses the distance function.
+
+=cut
+ */
+static double
+radial_fount_f(double x, double y, struct fount_state *state) {
+  return sqrt((double)(state->xa-x)*(state->xa-x) 
+              + (double)(state->ya-y)*(state->ya-y)) * state->mult;
+}
+
+/*
+=item square_fount_f(x, y, state)
+
+Calculate the fill parameter for a square fountain fill.
+
+Works by rotating the reference co-ordinate around the centre of the
+square.
+
+=cut
+*/
+static double
+square_fount_f(double x, double y, struct fount_state *state) {
+  int xc, yc; /* centred on A */
+  double xt, yt; /* rotated by theta */
+  xc = x - state->xa;
+  yc = y - state->ya;
+  xt = fabs(xc * state->cos + yc * state->sin);
+  yt = fabs(-xc * state->sin + yc * state->cos);
+  return (xt > yt ? xt : yt) * state->mult;
+}
+
+/*
+=item revolution_fount_f(x, y, state)
+
+Calculates the fill parameter for the revolution fountain fill.
+
+=cut
+*/
+static double
+revolution_fount_f(double x, double y, struct fount_state *state) {
+  double angle = atan2(y - state->ya, x - state->xa);
+  
+  angle -= state->theta;
+  if (angle < 0) {
+    angle = fmod(angle+ PI * 4, PI*2);
+  }
+
+  return angle * state->mult;
+}
+
+/*
+=item conical_fount_f(x, y, state)
+
+Calculates the fill parameter for the conical fountain fill.
+
+=cut
+*/
+static double
+conical_fount_f(double x, double y, struct fount_state *state) {
+  double angle = atan2(y - state->ya, x - state->xa);
+  
+  angle -= state->theta;
+  if (angle < -PI)
+    angle += PI * 2;
+  else if (angle > PI) 
+    angle -= PI * 2;
+
+  return fabs(angle) * state->mult;
+}
+
+/*
+=item linear_interp(pos, seg)
+
+Calculates linear interpolation on the fill parameter.  Breaks the
+segment into 2 regions based in the I<middle> value.
+
+=cut
+*/
+static double
+linear_interp(double pos, i_fountain_seg *seg) {
+  if (pos < seg->middle) {
+    double len = seg->middle - seg->start;
+    if (len < EPSILON)
+      return 0.0;
+    else
+      return (pos - seg->start) / len / 2;
+  }
+  else {
+    double len = seg->end - seg->middle;
+    if (len < EPSILON)
+      return 1.0;
+    else
+      return 0.5 + (pos - seg->middle) / len / 2;
+  }
+}
+
+/*
+=item sine_interp(pos, seg)
+
+Calculates sine function interpolation on the fill parameter.
+
+=cut
+*/
+static double
+sine_interp(double pos, i_fountain_seg *seg) {
+  /* I wonder if there's a simple way to smooth the transition for this */
+  double work = linear_interp(pos, seg);
+
+  return (1-cos(work * PI))/2;
+}
+
+/*
+=item sphereup_interp(pos, seg)
+
+Calculates spherical interpolation on the fill parameter, with the cusp 
+at the low-end.
+
+=cut
+*/
+static double
+sphereup_interp(double pos, i_fountain_seg *seg) {
+  double work = linear_interp(pos, seg);
+
+  return sqrt(1.0 - (1-work) * (1-work));
+}
+
+/*
+=item spheredown_interp(pos, seg)
+
+Calculates spherical interpolation on the fill parameter, with the cusp 
+at the high-end.
+
+=cut
+*/
+static double
+spheredown_interp(double pos, i_fountain_seg *seg) {
+  double work = linear_interp(pos, seg);
+
+  return 1-sqrt(1.0 - work * work);
+}
+
+/*
+=item direct_cinterp(out, pos, seg)
+
+Calculates the fountain color based on direct scaling of the channels
+of the color channels.
+
+=cut
+*/
+static void
+direct_cinterp(i_fcolor *out, double pos, i_fountain_seg *seg) {
+  int ch;
+  for (ch = 0; ch < MAXCHANNELS; ++ch) {
+    out->channel[ch] = seg->c[0].channel[ch] * (1 - pos) 
+      + seg->c[1].channel[ch] * pos;
+  }
+}
+
+/*
+=item hue_up_cinterp(put, pos, seg)
+
+Calculates the fountain color based on scaling a HSV value.  The hue
+increases as the fill parameter increases.
+
+=cut
+*/
+static void
+hue_up_cinterp(i_fcolor *out, double pos, i_fountain_seg *seg) {
+  int ch;
+  for (ch = 0; ch < MAXCHANNELS; ++ch) {
+    out->channel[ch] = seg->c[0].channel[ch] * (1 - pos) 
+      + seg->c[1].channel[ch] * pos;
+  }
+  i_hsv_to_rgbf(out);
+}
+
+/*
+=item hue_down_cinterp(put, pos, seg)
+
+Calculates the fountain color based on scaling a HSV value.  The hue
+decreases as the fill parameter increases.
+
+=cut
+*/
+static void
+hue_down_cinterp(i_fcolor *out, double pos, i_fountain_seg *seg) {
+  int ch;
+  for (ch = 0; ch < MAXCHANNELS; ++ch) {
+    out->channel[ch] = seg->c[0].channel[ch] * (1 - pos) 
+      + seg->c[1].channel[ch] * pos;
+  }
+  i_hsv_to_rgbf(out);
+}
+
+/*
+=item simple_ssample(out, parm, x, y, state, ffunc, rpfunc, segs, count)
+
+Simple grid-based super-sampling.
+
+=cut
+*/
+static int
+simple_ssample(i_fcolor *out, double parm, double x, double y, 
+               struct fount_state *state, 
+               fount_func ffunc, fount_repeat rpfunc, i_fountain_seg *segs,
+               int count) {
+  i_fcolor *work = state->ssample_data;
+  int dx, dy;
+  int grid = parm;
+  double base = -0.5 + 0.5 / grid;
+  double step = 1.0 / grid;
+  int ch, i;
+  int samp_count = 0;
+
+  for (dx = 0; dx < grid; ++dx) {
+    for (dy = 0; dy < grid; ++dy) {
+      if (fount_getat(work+samp_count, x + base + step * dx, 
+                      y + base + step * dy, ffunc, rpfunc, state, 
+                      segs, count)) {
+        ++samp_count;
+      }
+    }
+  }
+  for (ch = 0; ch < MAXCHANNELS; ++ch) {
+    out->channel[ch] = 0;
+    for (i = 0; i < samp_count; ++i) {
+      out->channel[ch] += work[i].channel[ch];
+    }
+    /* we divide by 4 rather than samp_count since if there's only one valid
+       sample it should be mostly transparent */
+    out->channel[ch] /= grid * grid;
+  }
+  return samp_count;
+}
+
+/*
+=item random_ssample(out, parm, x, y, state, ffunc, rpfunc, segs, count)
+
+Random super-sampling.
+
+=cut
+*/
+static int
+random_ssample(i_fcolor *out, double parm, double x, double y, 
+               struct fount_state *state, 
+               fount_func ffunc, fount_repeat rpfunc, i_fountain_seg *segs,
+               int count) {
+  i_fcolor *work = state->ssample_data;
+  int i, ch;
+  int maxsamples = parm;
+  double rand_scale = 1.0 / RAND_MAX;
+  int samp_count = 0;
+  for (i = 0; i < maxsamples; ++i) {
+    if (fount_getat(work+samp_count, x - 0.5 + rand() * rand_scale, 
+                    y - 0.5 + rand() * rand_scale, ffunc, rpfunc, state, 
+                    segs, count)) {
+      ++samp_count;
+    }
+  }
+  for (ch = 0; ch < MAXCHANNELS; ++ch) {
+    out->channel[ch] = 0;
+    for (i = 0; i < samp_count; ++i) {
+      out->channel[ch] += work[i].channel[ch];
+    }
+    /* we divide by maxsamples rather than samp_count since if there's
+       only one valid sample it should be mostly transparent */
+    out->channel[ch] /= maxsamples;
+  }
+  return samp_count;
+}
+
+/*
+=item circle_ssample(out, parm, x, y, state, ffunc, rpfunc, segs, count)
+
+Super-sampling around the circumference of a circle.
+
+I considered saving the sin()/cos() values and transforming step-size
+around the circle, but that's inaccurate, though it may not matter
+much.
+
+=cut
+ */
+static int
+circle_ssample(i_fcolor *out, double parm, double x, double y, 
+               struct fount_state *state, 
+               fount_func ffunc, fount_repeat rpfunc, i_fountain_seg *segs,
+               int count) {
+  i_fcolor *work = state->ssample_data;
+  int i, ch;
+  int maxsamples = parm;
+  double angle = 2 * PI / maxsamples;
+  double radius = 0.3; /* semi-random */
+  int samp_count = 0;
+  for (i = 0; i < maxsamples; ++i) {
+    if (fount_getat(work+samp_count, x + radius * cos(angle * i), 
+                    y + radius * sin(angle * i), ffunc, rpfunc, state, 
+                    segs, count)) {
+      ++samp_count;
+    }
+  }
+  for (ch = 0; ch < MAXCHANNELS; ++ch) {
+    out->channel[ch] = 0;
+    for (i = 0; i < samp_count; ++i) {
+      out->channel[ch] += work[i].channel[ch];
+    }
+    /* we divide by maxsamples rather than samp_count since if there's
+       only one valid sample it should be mostly transparent */
+    out->channel[ch] /= maxsamples;
+  }
+  return samp_count;
+}
+
+/*
+=item fount_r_none(v)
+
+Implements no repeats.  Simply clamps the fill value.
+
+=cut
+*/
+static double
+fount_r_none(double v) {
+  return v < 0 ? 0 : v > 1 ? 1 : v;
+}
+
+/*
+=item fount_r_sawtooth(v)
+
+Implements sawtooth repeats.  Clamps negative values and uses fmod()
+on others.
+
+=cut
+*/
+static double
+fount_r_sawtooth(double v) {
+  return v < 0 ? 0 : fmod(v, 1.0);
+}
+
+/*
+=item fount_r_triangle(v)
+
+Implements triangle repeats.  Clamps negative values, uses fmod to get
+a range 0 through 2 and then adjusts values > 1.
+
+=cut
+*/
+static double
+fount_r_triangle(double v) {
+  if (v < 0)
+    return 0;
+  else {
+    v = fmod(v, 2.0);
+    return v > 1.0 ? 2.0 - v : v;
+  }
+}
+
+/*
+=item fount_r_saw_both(v)
+
+Implements sawtooth repeats in the both postive and negative directions.
+
+Adjusts the value to be postive and then just uses fmod().
+
+=cut
+*/
+static double
+fount_r_saw_both(double v) {
+  if (v < 0)
+    v += 1+(int)(-v);
+  return fmod(v, 1.0);
+}
+
+/*
+=item fount_r_tri_both(v)
+
+Implements triangle repeats in the both postive and negative directions.
+
+Uses fmod on the absolute value, and then adjusts values > 1.
+
+=cut
+*/
+static double
+fount_r_tri_both(double v) {
+  v = fmod(fabs(v), 2.0);
+  return v > 1.0 ? 2.0 - v : v;
+}
+
+/*
+=back
+
+=head1 AUTHOR
+
+Arnar M. Hrafnkelsson <addi@umich.edu>
+
+Tony Cook <tony@develop-help.com> (i_fountain())
+
+=head1 SEE ALSO
+
+Imager(3)
+
+=cut
+*/

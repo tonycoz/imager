@@ -42,6 +42,9 @@ void     ICL_add         (i_color *dst, i_color *src, int ch);
 extern i_fcolor *i_fcolor_new(double r, double g, double b, double a);
 extern void i_fcolor_destroy(i_fcolor *cl);
 
+extern void i_rgb_to_hsvf(i_fcolor *color);
+extern void i_hsv_to_rgbf(i_fcolor *color);
+
 i_img *IIM_new(int x,int y,int ch);
 void   IIM_DESTROY(i_img *im);
 i_img *i_img_new( void );
@@ -509,6 +512,52 @@ void i_radnoise(i_img *im,int xo,int yo,float rscale,float ascale);
 void i_turbnoise(i_img *im,float xo,float yo,float scale);
 void i_gradgen(i_img *im, int num, int *xo, int *yo, i_color *ival, int dmeasure);
 void i_nearest_color(i_img *im, int num, int *xo, int *yo, i_color *ival, int dmeasure);
+typedef enum {
+  i_fst_linear,
+  i_fst_curved,
+  i_fst_sine,
+  i_fst_sphere_up,
+  i_fst_sphere_down,
+  i_fst_end
+} i_fountain_seg_type;
+typedef enum {
+  i_fc_direct,
+  i_fc_hue_up,
+  i_fc_hue_down,
+  i_fc_end
+} i_fountain_color;
+typedef struct {
+  double start, middle, end;
+  i_fcolor c[2];
+  i_fountain_seg_type type;
+  i_fountain_color color;
+} i_fountain_seg;
+typedef enum {
+  i_fr_none,
+  i_fr_sawtooth,
+  i_fr_triangle,
+  i_fr_saw_both,
+  i_fr_tri_both
+} i_fountain_repeat;
+typedef enum {
+  i_ft_linear,
+  i_ft_bilinear,
+  i_ft_radial,
+  i_ft_radial_square,
+  i_ft_revolution,
+  i_ft_conical,
+  i_ft_end
+} i_fountain_type;
+typedef enum {
+  i_fts_none,
+  i_fts_grid,
+  i_fts_random,
+  i_fts_circle
+} i_ft_supersample;
+void i_fountain(i_img *im, double xa, double ya, double xb, double yb, 
+                i_fountain_type type, i_fountain_repeat repeat, 
+                int combine, int super_sample, double ssample_param,
+                int count, i_fountain_seg *segs);
 
 /* Debug only functions */
 

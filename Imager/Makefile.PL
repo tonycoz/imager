@@ -63,7 +63,7 @@ if (defined $Config{'d_dlsymun'}) { $OSDEF  .= ' -DDLSYMUN'; }
 	   filters.o dynaload.o stackmach.o datatypes.o
 	   regmach.o trans2.o quant.o error.o convert.o
 	   map.o tags.o palimg.o maskimg.o img16.o rotate.o
-           bmp.o);
+           bmp.o color.o);
 
 %opts=(
        'NAME'         => 'Imager',
