@@ -42,6 +42,10 @@ not commitments.
   service attack.
 - eliminate unused variable warning (especially the RETVAL ones in Imager.xs)
 - add META.yml (bypass EU::MM's limited mechanism)
+- check if freetype 2 is faster/slower than freetype 1 with Imager's glyph
+  caching.  If FT1 is faster, add caching as a TODO for FT2.
+- handle probing for libraries better (use pkg-config or I<library>-config
+  where possible (freetype2 and libpng))
 - add concept index to Imager.pm pod
 
 0.46: (june 2005)
