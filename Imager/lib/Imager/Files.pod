@@ -149,6 +149,23 @@ Return either a valid Imager file type, or undef.
 The different image formats can write different image type, and some have
 different options to control how the images are written.
 
+When you call C<write()> or C<write_multi()> with an option that has
+the same name as a tag for the image format you're writing, then the
+value supplied to that option will be used to set the corresponding
+tag in the image.  Depending on the image format, these values will be
+used when writing the image.
+
+This replaces the previous options that were used when writing GIF
+images.  Currently if you use an obsolete option, it will be converted
+to the equivalent tag and Imager will produced a warning.  You can
+suppress these warnings by calling the C<Imager::init()> function with
+the C<warn_obsolete> option set to false:
+
+  Imager::init(warn_obsolete=>0);
+
+At some point in the future these obsolete options will no longer be
+supported.
+
 =head2 PNM (Portable aNy Map)
 
 Imager can write PGM (Portable Gray Map) and PPM (Portable PixMaps)
@@ -182,75 +199,9 @@ PNM does not support the spatial resolution tags.
 
 =head2 GIF (Graphics Interchange Format)
 
-You can supply many different options when writing to a GIF file, and
-you can write a multi-image GIF file, eg. for animation, with the
-C<write_multi()> method.
-
-These options can be specified when calling write_multi() or when
-writing a single image with the C<gifquant> option set to 'gen'
-
-Note that some viewers will ignore some of these options
-(C<gif_user_input> in particular).
-
-=over
-
-=item gif_each_palette
-
-Each image in the gif file has it's own palette if this is non-zero.
-All but the first image has a local colour table (the first uses the
-global colour table.
-
-=item interlace
-
-The images are written interlaced if this is non-zero.
-
-=item gif_delays
-
-A reference to an array containing the delays between images, in 1/100
-seconds.
-
-If you want the same delay for every frame you can simply set this to
-the delay in 1/100 seconds.
-
-=item gif_user_input
-
-A reference to an array contains user input flags.  If the given flag
-is non-zero the image viewer should wait for input before displaying
-the next image.
-
-=item gif_disposal
-
-A reference to an array of image disposal methods.  These define what
-should be done to the image before displaying the next one.  These are
-integers, where 0 means unspecified, 1 means the image should be left
-in place, 2 means restore to background colour and 3 means restore to
-the previous value.
-
-=item gif_tran_color
-
-A reference to an Imager::Color object, which is the colour to use for
-the palette entry used to represent transparency in the palette.  You
-need to set the transp option (see L<Quantization options>) for this
-value to be used.
-
-=item gif_positions
-
-A reference to an array of references to arrays which represent screen
-positions for each image.
-
-=item gif_loop_count
-
-If this is non-zero the Netscape loop extension block is generated,
-which makes the animation of the images repeat.
-
-This is currently unimplemented due to some limitations in giflib.
-
-=item gif_eliminate_unused
-
-If this is true, when you write a paletted image any unused colors
-will be eliminated from its palette.  This is set by default.
-
-=back
+When writing one of more GIF images you can use the same
+L<Quantization Options|Imager::ImageTypes> as you can when converting
+an RGB image into a paletted image.
 
 When reading a GIF all of the sub-images are combined using the screen
 size and image positions into one big image, producing an RGB image.
@@ -266,8 +217,8 @@ use the C<getcolors()> method on each image.
 
 GIF does not support the spatial resolution tags.
 
-GIF will set the following tags in each image when reading, but does
-not use them when saving to GIF:
+Imager will set the following tags in each image when reading, and can
+use most of them when writing to GIF:
 
 =over
 
@@ -288,24 +239,42 @@ non-zero if the image was interlaced ("Interlace Flag")
 
 =item gif_screen_height
 
-the size of the logical screen ("Logical Screen Width", 
-"Logical Screen Height")
+the size of the logical screen. When writing this is used as the
+minimum.  If any image being written would extend beyond this the
+screen size is extended.  ("Logical Screen Width", "Logical Screen
+Height").
+
+When writing this is used as a minimum, if the combination of the
+image size and the image's C<gif_left> and C<gif_top> is beyond this
+size then the screen size will be expanded.
 
 =item gif_local_map
 
-Non-zero if this image had a local color map.
+Non-zero if this image had a local color map.  If set for an image
+when writing the image is quantized separately from the other images
+in the file.
 
 =item gif_background
 
 The index in the global colormap of the logical screen's background
 color.  This is only set if the current image uses the global
-colormap.
+colormap.  You can set this on write too, but for it to choose the
+color you want, you will need to supply only paletted images and set
+the C<gif_eliminate_unused> tag to 0.
 
 =item gif_trans_index
 
 The index of the color in the colormap used for transparency.  If the
 image has a transparency then it is returned as a 4 channel image with
-the alpha set to zero in this palette entry. ("Transparent Color Index")
+the alpha set to zero in this palette entry.  This value is not used
+when writing. ("Transparent Color Index")
+
+=item gif_trans_color
+
+A reference to an Imager::Color object, which is the colour to use for
+the palette entry used to represent transparency in the palette.  You
+need to set the transp option (see L<Quantization options>) for this
+value to be used.
 
 =item gif_delay
 
@@ -329,10 +298,58 @@ the number of loops from the Netscape Loop extension.  This may be zero.
 
 the first block of the first gif comment before each image.
 
+=item gif_eliminate_unused
+
+If this is true, when you write a paletted image any unused colors
+will be eliminated from its palette.  This is set by default.
+
 =back
 
 Where applicable, the ("name") is the name of that field from the GIF89 
 standard.
+
+The following gif writing options are obsolete, you should set the
+corresponding tag in the image, either by using the tags functions, or
+by supplying the tag and value as options.
+
+=over
+
+=item gif_each_palette
+
+Each image in the gif file has it's own palette if this is non-zero.
+All but the first image has a local colour table (the first uses the
+global colour table.
+
+Use C<gif_local_map> in new code.
+
+=item interlace
+
+The images are written interlaced if this is non-zero.
+
+Use C<gif_interlace> in new code.
+
+=item gif_delays
+
+A reference to an array containing the delays between images, in 1/100
+seconds.
+
+Use C<gif_delay> in new code.
+
+=item gif_positions
+
+A reference to an array of references to arrays which represent screen
+positions for each image.
+
+New code should use the C<gif_left> and C<gif_top> tags.
+
+=item gif_loop_count
+
+If this is non-zero the Netscape loop extension block is generated,
+which makes the animation of the images repeat.
+
+This is currently unimplemented due to some limitations in giflib.
+
+=back
 
 =head2 TIFF (Tagged Image File Format)
 
@@ -539,5 +556,8 @@ When saving Gif images the program does NOT try to shave of extra
 colors if it is possible.  If you specify 128 colors and there are
 only 2 colors used - it will have a 128 colortable anyway.
 
+=head1 SEE ALSO
+
+Imager(3)
 
 =cut

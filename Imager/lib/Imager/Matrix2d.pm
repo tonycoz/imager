@@ -118,7 +118,7 @@ sub translate {
                    0, 1, $opts{'y'},
                    0, 0, 1 ], $class;
   }
-  
+
   $Imager::ERRSTR = 'x and y parameters required';
   return undef;
 }

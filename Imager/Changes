@@ -600,6 +600,10 @@ Revision history for Perl extension Imager.
         - added getpixel() and setpixel() methods
         - added Artur's OSX dlload() emulation, with minor changes
         - modified _color() to work around a 5.6.0 bug
+        - replaced old gif options with tags
+        - we now log which memory block is being freed before giving 
+          an error on it being re-freed
+        - fixed stupid bug in deleting tags
 
 
 =================================================================

@@ -1,7 +1,7 @@
 #!perl -w
 use strict;
 $|=1;
-print "1..40\n";
+print "1..45\n";
 use Imager qw(:all);
 
 sub ok ($$$);
@@ -25,11 +25,11 @@ i_box_filled($timg, 0, 0, 20, 20, $green);
 i_box_filled($timg, 2, 2, 18, 18, $trans);
 
 if (!i_has_format("gif")) {
-  for (1..40) { print "ok $_ # skip no gif support\n"; }
+  for (1..45) { print "ok $_ # skip no gif support\n"; }
 } else {
     open(FH,">testout/t105.gif") || die "Cannot open testout/t105.gif\n";
     binmode(FH);
-    i_writegifmc($img,fileno(FH),7) || die "Cannot write testout/t105.gif\n";
+    i_writegifmc($img,fileno(FH),6) || die "Cannot write testout/t105.gif\n";
     close(FH);
 
     print "ok 1\n";
@@ -145,6 +145,7 @@ if (!i_has_format("gif")) {
     my $sortagreen = i_color_new(0, 255, 0, 63);
     for my $i (0..4) {
       my $im = Imager::ImgRaw::new(200, 200, 4);
+      _add_tags($im, gif_delay=>50, gif_disposal=>2);
       for my $j (0..$i-1) {
 	my $fill = i_color_new(0, 128, 0, 255 * ($i-$j)/$i);
 	i_box_filled($im, 0, $j*40, 199, $j*40+40, $fill);
@@ -215,11 +216,13 @@ EOS
       print "ok 14 # skip giflib3 doesn't support callbacks\n";
     }
     @imgs = ();
+    my $c = i_color_new(0,0,0,0);
     for my $g (0..3) {
       my $im = Imager::ImgRaw::new(200, 200, 3);
+      _add_tags($im, gif_local_map=>1, gif_delay=>150, gif_loop=>10);
       for my $x (0 .. 39) {
 	for my $y (0 .. 39) {
-	  my $c = i_color_new($x * 6, $y * 6, 32*$g+$x+$y, 255);
+          $c->set($x * 6, $y * 6, 32*$g+$x+$y, 255);
 	  i_box_filled($im, $x*5, $y*5, $x*5+4, $y*5+4, $c);
 	}
       }
@@ -232,11 +235,8 @@ EOS
     # output looks moderately horrible
     open FH, ">testout/t105_mult_pall.gif" or die "Cannot create file: $!";
     binmode FH;
-    if (i_writegif_gen(fileno(FH), { make_colors=>'webmap',
+    if (i_writegif_gen(fileno(FH), { #make_colors=>'webmap',
                                      translate=>'giflib',
-                                     gif_delays=>[ 50, 50, 50, 50 ],
-                                     #gif_loop_count => 50,
-                                     gif_each_palette => 1,
                                    }, @imgs)) {
       print "ok 15\n";
     }
@@ -449,6 +449,25 @@ EOS
        "re-reading saved paletted images");
     ok(39, i_img_diff($imgs[0], $imgs2[0]) == 0, "imgs[0] mismatch");
     ok(40, i_img_diff($imgs[1], $imgs2[1]) == 0, "imgs[1] mismatch");
+
+    # test that the OO interface warns when we supply old options
+    {
+      my @warns;
+      local $SIG{__WARN__} = sub { push(@warns, "@_") };
+
+      my $ooim = Imager->new;
+      ok(41, $ooim->read(file=>"testout/t105.gif"), "read into object");
+      ok(42, $ooim->write(file=>"testout/t105_warn.gif", interlace=>1),
+        "save from object");
+      ok(43, grep(/Obsolete .* interlace .* gif_interlace/, @warns),
+        "check for warning");
+      init(warn_obsolete=>0);
+      @warns = ();
+      ok(44, $ooim->write(file=>"testout/t105_warn.gif", interlace=>1),
+        "save from object");
+      ok(45, !grep(/Obsolete .* interlace .* gif_interlace/, @warns),
+        "check for warning");
+    }
 }
 
 sub ok ($$$) {
@@ -489,3 +508,18 @@ sub read_failure {
   close FH;
 }
 
+sub _clear_tags {
+  my (@imgs) = @_;
+
+  for my $img (@imgs) {
+    $img->deltag(code=>0);
+  }
+}
+
+sub _add_tags {
+  my ($img, %tags) = @_;
+
+  for my $key (keys %tags) {
+    Imager::i_tags_add($img, $key, 0, $tags{$key}, 0);
+  }
+}

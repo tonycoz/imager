@@ -47,6 +47,8 @@ A tag is represented by an i_img_tag structure:
 #include "image.h"
 #include <string.h>
 #include <stdlib.h>
+#include <errno.h>
+#include <limits.h>
 
 /* useful for debugging */
 void i_tags_print(i_img_tags *tags);
@@ -79,7 +81,7 @@ Returns non-zero on success.
 =cut
 */
 
-int i_tags_addn(i_img_tags *tags, char *name, int code, int idata) {
+int i_tags_addn(i_img_tags *tags, char const *name, int code, int idata) {
   return i_tags_add(tags, name, code, NULL, 0, idata);
 }
 
@@ -95,9 +97,11 @@ Returns non-zero on success.
 =cut
 */
 
-int i_tags_add(i_img_tags *tags, char *name, int code, char *data, int size, 
-	       int idata) {
+int i_tags_add(i_img_tags *tags, char const *name, int code, char const *data, 
+               int size, int idata) {
   i_img_tag work = {0};
+  /*printf("i_tags_add(tags %p [count %d], name %s, code %d, data %p, size %d, idata %d)\n",
+    tags, tags->count, name, code, data, size, idata);*/
   if (tags->tags == NULL) {
     int alloc = 10;
     tags->tags = mymalloc(sizeof(i_img_tag) * alloc);
@@ -134,6 +138,8 @@ int i_tags_add(i_img_tags *tags, char *name, int code, char *data, int size,
   work.idata = idata;
   tags->tags[tags->count++] = work;
 
+  /*i_tags_print(tags);*/
+
   return 1;
 }
 
@@ -150,7 +156,7 @@ void i_tags_destroy(i_img_tags *tags) {
   }
 }
 
-int i_tags_find(i_img_tags *tags, char *name, int start, int *entry) {
+int i_tags_find(i_img_tags *tags, char const *name, int start, int *entry) {
   if (tags->tags) {
     while (start < tags->count) {
       if (tags->tags[start].name && strcmp(name, tags->tags[start].name) == 0) {
@@ -177,23 +183,28 @@ int i_tags_findn(i_img_tags *tags, int code, int start, int *entry) {
 }
 
 int i_tags_delete(i_img_tags *tags, int entry) {
+  /*printf("i_tags_delete(tags %p [count %d], entry %d)\n",
+    tags, tags->count, entry);*/
   if (tags->tags && entry >= 0 && entry < tags->count) {
     i_img_tag old = tags->tags[entry];
     memmove(tags->tags+entry, tags->tags+entry+1,
-	    tags->count-entry-1);
+	    (tags->count-entry-1) * sizeof(i_img_tag));
     if (old.name)
       myfree(old.name);
     if (old.data)
       myfree(old.data);
     --tags->count;
+
     return 1;
   }
   return 0;
 }
 
-int i_tags_delbyname(i_img_tags *tags, char *name) {
+int i_tags_delbyname(i_img_tags *tags, char const *name) {
   int count = 0;
   int i;
+  /*printf("i_tags_delbyname(tags %p [count %d], name %s)\n",
+    tags, tags->count, name);*/
   if (tags->tags) {
     for (i = tags->count-1; i >= 0; --i) {
       if (tags->tags[i].name && strcmp(name, tags->tags[i].name) == 0) {
@@ -202,6 +213,8 @@ int i_tags_delbyname(i_img_tags *tags, char *name) {
       }
     }
   }
+  /*i_tags_print(tags);*/
+
   return count;
 }
 
@@ -219,7 +232,8 @@ int i_tags_delbycode(i_img_tags *tags, int code) {
   return count;
 }
 
-int i_tags_get_float(i_img_tags *tags, char *name, int code, double *value) {
+int i_tags_get_float(i_img_tags *tags, char const *name, int code, 
+                     double *value) {
   int index;
   i_img_tag *entry;
 
@@ -240,7 +254,8 @@ int i_tags_get_float(i_img_tags *tags, char *name, int code, double *value) {
   return 1;
 }
 
-int i_tags_set_float(i_img_tags *tags, char *name, int code, double value) {
+int i_tags_set_float(i_img_tags *tags, char const *name, int code, 
+                     double value) {
   char temp[40];
 
   sprintf(temp, "%.30g", value);
@@ -252,7 +267,7 @@ int i_tags_set_float(i_img_tags *tags, char *name, int code, double value) {
   return i_tags_add(tags, name, code, temp, strlen(temp), 0);
 }
 
-int i_tags_get_int(i_img_tags *tags, char *name, int code, int *value) {
+int i_tags_get_int(i_img_tags *tags, char const *name, int code, int *value) {
   int index;
   i_img_tag *entry;
 
@@ -273,7 +288,132 @@ int i_tags_get_int(i_img_tags *tags, char *name, int code, int *value) {
   return 1;
 }
 
-int i_tags_get_string(i_img_tags *tags, char *name, int code, 
+static int parse_long(char *data, char **end, long *out) {
+#if 0
+  /* I wrote this without thinking about strtol */
+  long x = 0;
+  int neg = *data == '-';
+
+  if (neg)
+    ++data;
+  if (!isdigit(*data))
+    return 0;
+  while (isdigit(*data)) {
+    /* this check doesn't guarantee we don't overflow, but it helps */
+    if (x > LONG_MAX / 10)
+      return 0; 
+    x = x * 10 + *data - '0';
+    ++data;
+  }
+  if (neg)
+    x = -x;
+
+  *end = data;
+
+  return 1;
+#else
+  long result;
+  int savederr = errno;
+  char *myend;
+
+  errno = 0;
+  result = strtol(data, &myend, 10);
+  if ((result == LONG_MIN || result == LONG_MAX) && errno == ERANGE
+      || myend == data) {
+    return 0;
+  }
+
+  *out = result;
+  *end = myend;
+
+  return 1;
+#endif
+}
+
+/* parse a comma-separated list of integers
+   returns when it has maxcount numbers, finds a non-comma after a number
+   or can't parse a number
+   if it can't parse a number after a comma, that's considered an error
+*/
+static int parse_long_list(char *data, char **end, int maxcount, long *out) {
+  int i;
+
+  while (i < maxcount-1) {
+    if (!parse_long(data, &data, out))
+      return 0;
+    out++;
+    i++;
+    if (*data != ',')
+      return i;
+    ++data;
+  }
+  if (!parse_long(data, &data, out))
+    return 0;
+  ++i;
+  *end = data;
+  return i;
+}
+
+/* parse "color(red,green,blue,alpha)" */
+static int parse_color(char *data, char **end, i_color *value) {
+  long n[4];
+  int count, i;
+  
+  if (memcmp(data, "color(", 6))
+    return 0; /* not a color */
+  data += 6;
+  count = parse_long_list(data, &data, 4, n);
+  if (count < 3)
+    return 0;
+  for (i = 0; i < count; ++i)
+    value->channel[i] = n[i];
+  if (count < 4)
+    value->channel[3] = 255;
+
+  return 1;
+}
+
+int i_tags_get_color(i_img_tags *tags, char const *name, int code, 
+                     i_color *value) {
+  int index;
+  i_img_tag *entry;
+  char *end;
+
+  if (name) {
+    if (!i_tags_find(tags, name, 0, &index))
+      return 0;
+  }
+  else {
+    if (!i_tags_findn(tags, code, 0, &index))
+      return 0;
+  }
+  entry = tags->tags+index;
+  if (!entry->data) 
+    return 0;
+
+  if (!parse_color(entry->data, &end, value))
+    return 0;
+  
+  /* for now we're sloppy about the end */
+
+  return 1;
+}
+
+int i_tags_set_color(i_img_tags *tags, char const *name, int code, 
+                     i_color const *value) {
+  char temp[80];
+
+  sprintf(temp, "color(%d,%d,%d,%d)", value->channel[0], value->channel[1],
+          value->channel[2], value->channel[3]);
+  if (name)
+    i_tags_delbyname(tags, name);
+  else
+    i_tags_delbycode(tags, code);
+
+  return i_tags_add(tags, name, code, temp, strlen(temp), 0);
+}
+
+int i_tags_get_string(i_img_tags *tags, char const *name, int code, 
                       char *value, size_t value_size) {
   int index;
   i_img_tag *entry;
@@ -309,11 +449,11 @@ void i_tags_print(i_img_tags *tags) {
     i_img_tag *tag = tags->tags + i;
     printf("Tag %d\n", i);
     if (tag->name)
-      printf(" Name : %s\n", tag->name);
+      printf(" Name : %s (%p)\n", tag->name, tag->name);
     printf(" Code : %d\n", tag->code);
     if (tag->data) {
       int pos;
-      printf(" Data : %d => '", tag->size);
+      printf(" Data : %d (%p) => '", tag->size, tag->data);
       for (pos = 0; pos < tag->size; ++pos) {
 	if (tag->data[pos] == '\\' || tag->data[pos] == '\'') {
 	  putchar('\\');

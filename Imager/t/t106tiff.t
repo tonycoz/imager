@@ -147,7 +147,7 @@ if (!i_has_format("tiff")) {
 
   # OO to data
   $ooim->write(data=>\$oodata, type=>'tiff')
-    or print 'not ';
+    or print "# ",$ooim->errstr, "\nnot ";
   print "ok 19\n";
   $oodata eq $tiffdata or print "not ";
   print "ok 20\n";
