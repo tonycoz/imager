@@ -425,6 +425,8 @@ Revision history for Perl extension Imager.
         - Figure what interface should be between C and perl?
         - How to store data in the C interface for tags/metadata?
 
+        - other internal image representations (design/represent.txt)
+
 	Good stuff:
 	- image colour transformations based on input images, see 
 	design/cmyktorgb.txt for Addi's description
