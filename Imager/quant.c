@@ -258,7 +258,8 @@ typedef int (*cmpfunc)(const void*, const void*);
 
 typedef struct {
   unsigned char r,g,b;
-  char state;
+  char fixed;
+  char used;
   int dr,dg,db;
   int cdist;
   int mcount;
@@ -369,7 +370,7 @@ for each side of the cube, but this will require even more memory.
 static void
 makemap_addi(i_quantize *quant, i_img **imgs, int count) {
   cvec *clr;
-  int cnum, i, x, y, bst_idx=0, ld, cd, iter, currhb;
+  int cnum, i, x, y, bst_idx=0, ld, cd, iter, currhb, img_num;
   i_color val;
   float dlt, accerr;
   hashbox hb[512];
@@ -379,11 +380,13 @@ makemap_addi(i_quantize *quant, i_img **imgs, int count) {
     clr[i].r = quant->mc_colors[i].rgb.r;
     clr[i].g = quant->mc_colors[i].rgb.g;
     clr[i].b = quant->mc_colors[i].rgb.b;
-    clr[i].state = 1;
+    clr[i].fixed = 1;
+    clr[i].mcount = 0;
   }
   /* mymalloc doesn't clear memory, so I think we need this */
   for (; i < quant->mc_size; ++i) {
-    clr[i].state = 0;
+    clr[i].fixed = 0;
+    clr[i].mcount = 0;
   }
   cnum = quant->mc_size;
   dlt = 1;
@@ -394,8 +397,8 @@ makemap_addi(i_quantize *quant, i_img **imgs, int count) {
   for(iter=0;iter<3;iter++) {
     accerr=0.0;
     
-    for (i = 0; i < count; ++i) {
-      i_img *im = imgs[i];
+    for (img_num = 0; img_num < count; ++img_num) {
+      i_img *im = imgs[img_num];
       for(y=0;y<im->ysize;y++) for(x=0;x<im->xsize;x++) {
 	ld=196608;
 	i_gpix(im,x,y,&val);
@@ -426,14 +429,16 @@ makemap_addi(i_quantize *quant, i_img **imgs, int count) {
     /*    printf("total error: %.2f\n",sqrt(accerr)); */
 
     for(i=0;i<cnum;i++) {
-      if (clr[i].state) continue; /* skip reserved colors */
+      if (clr[i].fixed) continue; /* skip reserved colors */
 
       if (clr[i].mcount) {
+	clr[i].used = 1;
 	clr[i].r=clr[i].r*(1-dlt)+dlt*clr[i].dr;
 	clr[i].g=clr[i].g*(1-dlt)+dlt*clr[i].dg;
 	clr[i].b=clr[i].b*(1-dlt)+dlt*clr[i].db;
       } else {
-	/* I don't know why - TC */
+	/* let's try something else */
+	clr[i].used = 0;
 	clr[i].r=rand();
 	clr[i].g=rand();
 	clr[i].b=rand();
@@ -458,6 +463,22 @@ makemap_addi(i_quantize *quant, i_img **imgs, int count) {
   }
 #endif
 
+  /* if defined, we only include colours with an mcount or that were
+     supplied in the fixed palette, giving us a smaller output palette */
+#define ONLY_USE_USED
+#ifdef ONLY_USE_USED
+  /* transfer the colors back */
+  quant->mc_count = 0;
+  for (i = 0; i < cnum; ++i) {
+    if (clr[i].fixed || clr[i].used) {
+      /*printf("Adding %d (%d,%d,%d)\n", i, clr[i].r, clr[i].g, clr[i].b);*/
+      quant->mc_colors[quant->mc_count].rgb.r = clr[i].r;
+      quant->mc_colors[quant->mc_count].rgb.g = clr[i].g;
+      quant->mc_colors[quant->mc_count].rgb.b = clr[i].b;
+      ++quant->mc_count;
+    }
+  }
+#else
   /* transfer the colors back */
   for (i = 0; i < cnum; ++i) {
     quant->mc_colors[i].rgb.r = clr[i].r;
@@ -465,6 +486,7 @@ makemap_addi(i_quantize *quant, i_img **imgs, int count) {
     quant->mc_colors[i].rgb.b = clr[i].b;
   }
   quant->mc_count = cnum;
+#endif
 
   /* don't want to keep this */
   myfree(clr);
@@ -1052,7 +1074,7 @@ static void prescan(i_img **imgs,int count, int cnum, cvec *clr) {
   i=0;
   while(i<cnum) {
     /*    printf("prebox[%d].cand=%d\n",k,prebox[k].cand); */
-    if (clr[i].state) { i++; continue; } /* reserved go to next */
+    if (clr[i].fixed) { i++; continue; } /* reserved go to next */
     if (j>=prebox[k].cand) { k++; j=1; } else {
       if (prebox[k].cand == 2) boxcenter(prebox[k].boxnum,&(clr[i]));
       else boxrand(prebox[k].boxnum,&(clr[i]));
