@@ -417,6 +417,13 @@ Revision history for Perl extension Imager.
         - Figure what interface should be between C and perl?
         - How to store data in the C interface for tags/metadata?
 
+	Good stuff:
+	- matrix based colour transformations, for RGB to grayscale
+	and simple linear other conversions, see design/colmatrix.txt
+	- image colour transformations based on input images, see 
+	design/cmyktorgb.txt for Addi's description
+	- eventually support tiff's madness
+
         Old sins:
         - Make sure everything is doable with the OO interface
         - Split the other classes into seperate files
@@ -425,14 +432,15 @@ Revision history for Perl extension Imager.
 	
 	- should i_readgif returned colormap be an arrayref of 
 	Imager::Color objects?  Note that this will break 
-	compatibility with previous releases
+	compatibility with previous releases.
 
 	- should Imager::Font be split into a base class whose 	
 	new chooses a base class (ttf, t1 or win32?) to 
 	instantiate.  Currently Imager::Font uses if() statements to
-	select between each type of font.
+	select between each type of font.  It should.
 
 	- should we overload <=> or cmp for Imager::Color objects?
+	 too many worms, leave it out
 
         Documentation:
         - Add to the documentation
