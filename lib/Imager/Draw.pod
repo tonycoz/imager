@@ -1,0 +1,157 @@
+=head1 NAME
+
+Imager::Draw - Draw primitives to images
+
+=head1 SYNOPSIS
+
+  use Imager;
+  use Imager::Fill;
+
+  $img = ...;
+  $blue = Imager::Color->new( 0, 0, 255 );
+  $fill = Imager::Fill->new(hatch=>'stipple');
+
+  $img->line(color=>$blue, x1=>10, x2=>100,
+                           y1=>20, y2=>50, aa=>1 );
+
+  $img->polyline(points=>[[$x0,$y0], [$x1,$y1], [$x2,$y2]],
+                 color=>$blue);
+  $img->polyline(x=>[$x0,$x1,$x2], y=>[$y0,$y1,$y2], aa=>1);
+
+  $img->box(color=> $blue, xmin=> 10, ymin=>30,
+                           xmax=>200, ymax=>300, filled=>1);
+  $img->box(fill=>$fill);
+
+  $img->arc(color=>$blue, r=20, x=>200, y=>100,
+            d1=>10, d2=>20 );
+
+  $img->circle(color=>$blue, r=50, x=>200, y=>100);
+
+  $img->polygon(points=>[[$x0,$y0], [$x1,$y1], [$x2,$y2]], 
+                color=>$blue);
+
+  $img->polygon(x=>[$x0,$x1,$x2], y=>[$y0,$y1,$y2]);
+  
+  $img->flood_fill(x=>50, y=>50, color=>$color);
+
+=head1 DESCRIPTION
+
+It is possible to draw with graphics primitives onto images.  Such
+primitives include boxes, arcs, circles, polygons and lines.  The
+coordinate system in Imager has the origin C<(0,0)> in the upper left
+corner of an image.  For non antialiasing operation all coordinates are 
+rounded towards the nearest integer.  For antialiased operations floating
+point coordinates are used.
+
+Drawing is assumed to take place in a coordinate system of infinite
+resolution.  This is the typical convention and really only matters when
+it is necessary to check for off-by-one cases.  Typically it's usefull to 
+think of C<(10, 20)> as C<(10.00, 20.00)> and consider the consiquences.
+
+The C<color> parameter for any of the drawing methods can be an
+L<Imager::Color> object, a simple scalar that Imager::Color can
+understand, a hashref of parameters that Imager::Color->new
+understands, or an arrayref of red, green, blue values.
+
+All filled primitives, i.e. C<arc()>, C<box()>, C<circle()>,
+C<polygon()> and the C<flood_fill()> method can take a C<fill>
+parameter instead of a C<color> parameter which can either be an
+Imager::Fill object, or a reference to a hash containing the
+parameters used to create the fill.  
+
+Currently you can create opaque or transparent plain color fills,
+hatched fills, image based fills and fountain fills.  See
+L<Imager::Fill> for more information.
+
+=head2 List of primitives
+
+=over
+
+=item line
+
+  $img->line(color=>$green, x1=>10, x2=>100,
+                            y1=>20, y2=>50, aa=>1 );
+
+That draws an antialiased line from (10,100) to (20,50).
+The I<antialias> parameter is still available for backwards compatibility.
+
+=item polyline
+
+  $img->polyline(points=>[[$x0,$y0],[$x1,$y1],[$x2,$y2]],color=>$red);
+  $img->polyline(x=>[$x0,$x1,$x2], y=>[$y0,$y1,$y2], aa=>1);
+
+Polyline is used to draw multilple lines between a series of points.
+The point set can either be specified as an arrayref to an array of
+array references (where each such array represents a point).  The
+other way is to specify two array references.
+
+The I<antialias> parameter is still available for backwards compatibility.
+
+
+=item box
+
+  $blue = Imager::Color->new( 0, 0, 255 );
+  $img->box(color => $blue, xmin=>10, ymin=>30, xmax=>200, ymax=>300, filled=>1);
+
+If any of the edges of the box are ommited it will snap to the outer
+edge of the image in that direction.  If C<filled> is ommited the box
+is drawn as an outline.  Instead of a color it is possible to use a C<fill>
+pattern:
+
+  $fill = Imager::Fill->new(hatch=>'stipple');
+  $img->box(fill=>$fill);  # fill entire image with a given fill pattern
+
+  $img->box(xmin=>10, ymin=>30, xmax=>150, ymax=>60,
+            fill => { hatch=>'cross2' });
+
+Also if a color is omitted a color with (255,255,255,255) is used
+instead.  [NOTE: This may change to use C<$img-&gt;fgcolor()> in the future].
+
+Box does not support fractional coordinates yet.
+
+
+
+=item arc
+
+  $img->arc(color=>$red, r=20, x=>200, y=>100, d1=>10, d2=>20 );
+
+This creates a filled red arc with a 'center' at (200, 100) and spans
+10 degrees and the slice has a radius of 20. [NOTE: arc has a BUG in
+it right now for large differences in angles.]
+It's also possible to supply a C<fill> parameter.
+
+
+=item circle
+
+  $img->circle(color=>$green, r=50, x=>200, y=>100, aa=>1);
+
+This creates an antialiased green circle with its center at (200, 100)
+and has a radius of 50.  It's also possible to supply a C<fill> parameter
+instead of a color parameter.
+
+The circle is always filled but that might change, so always pass a 
+filled=>1 parameter if you want it to be filled.
+
+
+=item polygon
+
+  $img->polygon(points=>[[$x0,$y0],[$x1,$y1],[$x2,$y2]],color=>$red);
+  $img->polygon(x=>[$x0,$x1,$x2], y=>[$y0,$y1,$y2], fill=>$fill);
+
+Polygon is used to draw a filled polygon.  Currently the polygon is
+always drawn antialiased, although that will change in the future.
+Like other antialiased drawing functions its coordinates can be
+specified with floating point values.  As with other filled shapes 
+it's possible to use a C<fill> instead of a color.
+
+=item flood fill
+
+You can fill a region that all has the same color using the
+flood_fill() method, for example:
+
+  $img->flood_fill(x=>50, y=>50, color=>$color);
+
+will fill all regions the same color connected to the point (50, 50).
+
+
+=back

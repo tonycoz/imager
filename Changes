@@ -592,6 +592,8 @@ Revision history for Perl extension Imager.
 	- didn't set default for bounding_box() utf8 parameter (caused a
 	  warning when calling bounding_box() on a FT2 font with no utf8
 	  parameter)
+	- Added lib/Imager/Draw.pod documentation of primitives.
+
 
 =================================================================
 
