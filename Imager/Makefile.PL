@@ -116,9 +116,6 @@ if ($ExtUtils::MakeMaker::VERSION > 6.06) {
   $opts{AUTHOR} = 'Tony Cook <tony@imager.perl.org>, Arnar M. Hrafnkelsson';
   $opts{ABSTRACT} = 'Perl extension for Generating 24 bit Images';
 }
-if ($ExtUtils::MakeMaker::VERSION > 6.10) {
-  $opts{NO_META} = 1;
-}
 
 make_imconfig(\@defines);
 
@@ -142,6 +139,39 @@ imconfig.h: Makefile.PL
 	$(PERLRUN) Makefile.PL
 	$(ECHO) "==> Your Makefile has been rebuilt - re-run your make command <=="
 ';
+}
+
+sub MY::metafile {
+  my ($self) = @_;
+
+  my $meta = <<YAML;
+--- #YAML:1.0
+name: Imager
+version: $self->{VERSION}
+version_from: $self->{VERSION_FROM}
+author: $self->{AUTHOR}
+abstract: $self->{ABSTRACT}
+installdirs: $self->{INSTALLDIRS}
+recommends:
+  Parse::RecDescent: 0
+license: perl
+dynamic_config: 1
+distribution_type: module
+generated_by: Imager version $self->{VERSION}
+YAML
+  
+  my @write;
+  if ($self->can('echo')) {
+    # use EU::MM's version where possible, hopefully it's portable
+    @write = $self->echo($meta, 'META.yml');
+  }
+  else {
+    my @lines = split /\n/, $meta;
+    @lines = map qq{"$_"}, @lines;
+    push @write, "\${ECHO} ".shift(@lines)." >META.yml";
+    push @write, map { "\${ECHO} $_ >>META.yml" } @lines;
+  }
+  return sprintf "metafile :\n\t%s\n", join "\n\t", @write;
 }
 
 # manual configuration of helper libraries

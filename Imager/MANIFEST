@@ -2,6 +2,7 @@ Changes
 Imager.pm
 Imager.xs
 MANIFEST
+META.yml        Module meta-data
 Makefile.PL
 README
 bigtest.perl	Library selection tester
