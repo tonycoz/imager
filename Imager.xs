@@ -2295,7 +2295,7 @@ i_writegif(im,fd,colors,pixdev,fixed)
 	       sv1=(*(av_fetch(av,i,0)));
                if (sv_derived_from(sv1, "Imager::Color")) {
                  Itmp = SvIV((SV*)SvRV(sv1));
-                 tmp = (i_color*) Itmp;
+                 tmp = INT2PTR(i_color*, Itmp);
                } else croak("Imager: one of the elements of array ref is not of Imager::Color type\n");
                fixed[i]=*tmp;
 	     }
