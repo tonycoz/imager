@@ -50,6 +50,9 @@ functionality with giflib3.
 =cut
 */
 
+static char const *gif_error_msg(int code);
+static void gif_push_error();
+
 #if IM_GIFMAJOR >= 4
 
 /*
@@ -552,6 +555,8 @@ do_write(GifFileType *gf, i_gif_opts *opts, i_img *img, i_palidx *data) {
     for (i = 0; i < 4; ++i) {
       for (j = InterlacedOffset[i]; j < img->ysize; j += InterlacedJumps[i]) {
 	if (EGifPutLine(gf, data+j*img->xsize, img->xsize) == GIF_ERROR) {
+	  gif_push_error();
+	  i_push_error(0, "Could not save image data:");
 	  mm_log((1, "Error in EGifPutLine\n"));
 	  EGifCloseFile(gf);
 	  return 0;
@@ -563,6 +568,8 @@ do_write(GifFileType *gf, i_gif_opts *opts, i_img *img, i_palidx *data) {
     int y;
     for (y = 0; y < img->ysize; ++y) {
       if (EGifPutLine(gf, data, img->xsize) == GIF_ERROR) {
+	gif_push_error();
+	i_push_error(0, "Could not save image data:");
 	mm_log((1, "Error in EGifPutLine\n"));
 	EGifCloseFile(gf);
 	return 0;
@@ -607,7 +614,10 @@ static int do_gce(GifFileType *gf, int index, i_gif_opts *opts, int want_trans, 
     ++want_gce;
   }
   if (want_gce) {
-    return EGifPutExtension(gf, 0xF9, sizeof(gce), gce) != GIF_ERROR;
+    if (EGifPutExtension(gf, 0xF9, sizeof(gce), gce) == GIF_ERROR) {
+      gif_push_error();
+      i_push_error(0, "Could not save GCE");
+    }
   }
   return 1;
 }
@@ -662,6 +672,7 @@ static ColorMapObject *make_gif_map(i_quantize *quant, i_gif_opts *opts,
   int i;
   int size = quant->mc_count;
   int map_size;
+  ColorMapObject *map;
 
   for (i = 0; i < quant->mc_count; ++i) {
     colors[i].Red = quant->mc_colors[i].rgb.r;
@@ -680,7 +691,13 @@ static ColorMapObject *make_gif_map(i_quantize *quant, i_gif_opts *opts,
   /* giflib spews for 1 colour maps, reasonable, I suppose */
   if (map_size == 1)
     map_size = 2;
-  return MakeMapObject(map_size, colors);
+  map = MakeMapObject(map_size, colors);
+  if (!map) {
+    gif_push_error();
+    i_push_error(0, "Could not create color map object");
+    return NULL;
+  }
+  return map;
 }
 
 /*
@@ -768,9 +785,10 @@ i_writegif_low(i_quantize *quant, GifFileType *gf, i_img **imgs, int count,
     }
   }
 
-
-  if (count <= 0)
+  if (count <= 0) {
+    i_push_error(0, "No images provided to write");
     return 0; /* what are you smoking? */
+  }
 
   orig_count = quant->mc_count;
   orig_size = quant->mc_size;
@@ -807,6 +825,8 @@ i_writegif_low(i_quantize *quant, GifFileType *gf, i_img **imgs, int count,
       ++color_bits;
   
     if (EGifPutScreenDesc(gf, scrw, scrh, color_bits, 0, map) == GIF_ERROR) {
+      gif_push_error();
+      i_push_error(0, "Could not save screen descriptor");
       FreeMapObject(map);
       myfree(result);
       EGifCloseFile(gf);
@@ -831,6 +851,8 @@ i_writegif_low(i_quantize *quant, GifFileType *gf, i_img **imgs, int count,
       posx = posy = 0;
     if (EGifPutImageDesc(gf, posx, posy, imgs[0]->xsize, imgs[0]->ysize, 
 			 opts->interlace, NULL) == GIF_ERROR) {
+      gif_push_error();
+      i_push_error(0, "Could not save image descriptor");
       EGifCloseFile(gf);
       mm_log((1, "Error in EGifPutImageDesc."));
       return 0;
@@ -878,6 +900,8 @@ i_writegif_low(i_quantize *quant, GifFileType *gf, i_img **imgs, int count,
       if (EGifPutImageDesc(gf, posx, posy, imgs[imgn]->xsize, 
 			   imgs[imgn]->ysize, opts->interlace, 
 			   map) == GIF_ERROR) {
+	gif_push_error();
+	i_push_error(0, "Could not save image descriptor");
 	myfree(result);
 	FreeMapObject(map);
 	EGifCloseFile(gf);
@@ -930,6 +954,8 @@ i_writegif_low(i_quantize *quant, GifFileType *gf, i_img **imgs, int count,
       ++color_bits;
 
     if (EGifPutScreenDesc(gf, scrw, scrh, color_bits, 0, map) == GIF_ERROR) {
+      gif_push_error();
+      i_push_error(0, "Could not save screen descriptor");
       FreeMapObject(map);
       myfree(result);
       EGifCloseFile(gf);
@@ -954,6 +980,8 @@ i_writegif_low(i_quantize *quant, GifFileType *gf, i_img **imgs, int count,
       posx = posy = 0;
     if (EGifPutImageDesc(gf, posx, posy, imgs[0]->xsize, imgs[0]->ysize, 
 			 opts->interlace, NULL) == GIF_ERROR) {
+      gif_push_error();
+      i_push_error(0, "Could not save image descriptor");
       EGifCloseFile(gf);
       mm_log((1, "Error in EGifPutImageDesc."));
       return 0;
@@ -988,6 +1016,8 @@ i_writegif_low(i_quantize *quant, GifFileType *gf, i_img **imgs, int count,
       if (EGifPutImageDesc(gf, posx, posy, 
 			   imgs[imgn]->xsize, imgs[imgn]->ysize, 
 			   opts->interlace, NULL) == GIF_ERROR) {
+	gif_push_error();
+	i_push_error(0, "Could not save image descriptor");
 	myfree(result);
 	EGifCloseFile(gf);
 	mm_log((1, "Error in EGifPutImageDesc."));
@@ -1002,6 +1032,8 @@ i_writegif_low(i_quantize *quant, GifFileType *gf, i_img **imgs, int count,
     }
   }
   if (EGifCloseFile(gf) == GIF_ERROR) {
+    gif_push_error();
+    i_push_error(0, "Could not close GIF file");
     mm_log((1, "Error in EGifCloseFile\n"));
     return 0;
   }
@@ -1028,15 +1060,17 @@ i_writegif_gen(i_quantize *quant, int fd, i_img **imgs, int count,
 	       i_gif_opts *opts) {
   GifFileType *gf;
 
+  i_clear_error();
   mm_log((1, "i_writegif_gen(quant %p, fd %d, imgs %p, count %d, opts %p)\n", 
 	  quant, fd, imgs, count, opts));
 
   gif_set_version(quant, opts);
 
-  mm_log((1, "i_writegif_gen: set ops\n"));
-
   if ((gf = EGifOpenFileHandle(fd)) == NULL) {
+    gif_push_error();
+    i_push_error(0, "Cannot create GIF file object");
     mm_log((1, "Error in EGifOpenFileHandle, unable to write image.\n"));
+    gif_push_error();
     return 0;
   }
 
@@ -1084,10 +1118,14 @@ i_writegif_callback(i_quantize *quant, i_write_callback_t cb, char *userdata,
   extern GifFileType *EGifOpen(void *userData, OutputFunc writeFunc);
   int result;
 
+  i_clear_error();
+
   mm_log((1, "i_writegif_callback(quant %p, i_write_callback_t %p, userdata $p, maxlength %d, imgs %p, count %d, opts %p)\n", 
 	  quant, cb, userdata, maxlength, imgs, count, opts));
   
   if ((gf = EGifOpen(gwd, &gif_writer_callback)) == NULL) {
+    gif_push_error();
+    i_push_error(0, "Cannot create GIF file object");
     mm_log((1, "Error in EGifOpenFileHandle, unable to write image.\n"));
     free_gen_write_data(gwd, 0);
     return 0;
@@ -1098,6 +1136,111 @@ i_writegif_callback(i_quantize *quant, i_write_callback_t cb, char *userdata,
 #else
   return 0;
 #endif
+}
+
+/*
+=item gif_error_msg(int code)
+
+Grabs the most recent giflib error code from GifLastError() and 
+returns a string that describes that error.
+
+The returned pointer points to a static buffer, either from a literal
+C string or a static buffer.
+
+=cut */
+
+static char const *gif_error_msg(int code) {
+  static char msg[80];
+
+  switch (code) {
+  case E_GIF_ERR_OPEN_FAILED: /* should not see this */
+    return "Failed to open given file";
+    
+  case E_GIF_ERR_WRITE_FAILED:
+    return "Write failed";
+
+  case E_GIF_ERR_HAS_SCRN_DSCR: /* should not see this */
+    return "Screen descriptor already passed to giflib";
+
+  case E_GIF_ERR_HAS_IMAG_DSCR: /* should not see this */
+    return "Image descriptor already passed to giflib";
+    
+  case E_GIF_ERR_NO_COLOR_MAP: /* should not see this */
+    return "Neither global nor local color map set";
+
+  case E_GIF_ERR_DATA_TOO_BIG: /* should not see this */
+    return "Too much pixel data passed to giflib";
+
+  case E_GIF_ERR_NOT_ENOUGH_MEM:
+    return "Out of memory";
+    
+  case E_GIF_ERR_DISK_IS_FULL:
+    return "Disk is full";
+    
+  case E_GIF_ERR_CLOSE_FAILED: /* should not see this */
+    return "File close failed";
+ 
+  case E_GIF_ERR_NOT_WRITEABLE: /* should not see this */
+    return "File not writable";
+
+  case D_GIF_ERR_OPEN_FAILED:
+    return "Failed to open file";
+    
+  case D_GIF_ERR_READ_FAILED:
+    return "Failed to read from file";
+
+  case D_GIF_ERR_NOT_GIF_FILE:
+    return "File is not a GIF file";
+
+  case D_GIF_ERR_NO_SCRN_DSCR:
+    return "No screen descriptor detected - invalid file";
+
+  case D_GIF_ERR_NO_IMAG_DSCR:
+    return "No image descriptor detected - invalid file";
+
+  case D_GIF_ERR_NO_COLOR_MAP:
+    return "No global or local color map found";
+
+  case D_GIF_ERR_WRONG_RECORD:
+    return "Wrong record type detected - invalid file?";
+
+  case D_GIF_ERR_DATA_TOO_BIG:
+    return "Data in file too big for image";
+
+  case D_GIF_ERR_NOT_ENOUGH_MEM:
+    return "Out of memory";
+
+  case D_GIF_ERR_CLOSE_FAILED:
+    return "Close failed";
+
+  case D_GIF_ERR_NOT_READABLE:
+    return "File not opened for read";
+
+  case D_GIF_ERR_IMAGE_DEFECT:
+    return "Defective image";
+
+  case D_GIF_ERR_EOF_TOO_SOON:
+    return "Unexpected EOF - invalid file";
+
+  default:
+    sprintf(msg, "Unknown giflib error code %d", code);
+    return msg;
+  }
+}
+
+/*
+=item gif_push_error()
+
+Utility function that takes the current GIF error code, converts it to
+an error message and pushes it on the error stack.
+
+=cut
+*/
+
+static void gif_push_error() {
+  int code = GifLastError(); /* clears saved error */
+
+  i_push_error(code, gif_error_msg(code));
 }
 
 /*
