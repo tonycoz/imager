@@ -1197,6 +1197,100 @@ void i_unsharp_mask(i_img *im, double stddev, double scale) {
   i_img_exorcise(&copy);
 }
 
+/*
+=item i_diff_image(im1, im2, mindiff)
+
+Creates a new image that is transparent, except where the pixel in im2
+is different from im1, where it is the pixel from im2.
+
+The samples must differ by at least mindiff to be considered different.
+
+=cut
+*/
+
+i_img *
+i_diff_image(i_img *im1, i_img *im2, int mindiff) {
+  i_img *out;
+  int outchans, diffchans;
+  int xsize, ysize;
+  i_img temp;
+
+  i_clear_error();
+  if (im1->channels != im2->channels) {
+    i_push_error(0, "different number of channels");
+    return NULL;
+  }
+
+  outchans = diffchans = im1->channels;
+  if (outchans == 1 || outchans == 3)
+    ++outchans;
+
+  xsize = min(im1->xsize, im2->xsize);
+  ysize = min(im1->ysize, im2->ysize);
+
+  out = i_sametype_chans(im1, xsize, ysize, outchans);
+  
+  if (im1->bits == i_8_bits && im2->bits == i_8_bits) {
+    i_color *line1 = mymalloc(2 * xsize * sizeof(*line1));
+    i_color *line2 = line1 + xsize;
+    i_color empty;
+    int x, y, ch;
+
+    for (ch = 0; ch < MAXCHANNELS; ++ch)
+      empty.channel[ch] = 0;
+
+    for (y = 0; y < ysize; ++y) {
+      i_glin(im1, 0, xsize, y, line1);
+      i_glin(im2, 0, xsize, y, line2);
+      for (x = 0; x < xsize; ++x) {
+        int diff = 0;
+        for (ch = 0; ch < diffchans; ++ch) {
+          if (line1[x].channel[ch] != line2[x].channel[ch]
+              && abs(line1[x].channel[ch] - line2[x].channel[ch]) > mindiff) {
+            diff = 1;
+            break;
+          }
+        }
+        if (!diff)
+          line2[x] = empty;
+      }
+      i_plin(out, 0, xsize, y, line2);
+    }
+    myfree(line1);
+  }
+  else {
+    i_fcolor *line1 = mymalloc(2 * xsize * sizeof(*line1));
+    i_fcolor *line2 = line1 + xsize;
+    i_fcolor empty;
+    int x, y, ch;
+    double dist = mindiff / 255;
+
+    for (ch = 0; ch < MAXCHANNELS; ++ch)
+      empty.channel[ch] = 0;
+
+    for (y = 0; y < ysize; ++y) {
+      i_glinf(im1, 0, xsize, y, line1);
+      i_glinf(im2, 0, xsize, y, line2);
+      for (x = 0; x < xsize; ++x) {
+        int diff = 0;
+        for (ch = 0; ch < diffchans; ++ch) {
+          if (line1[x].channel[ch] != line2[x].channel[ch]
+              && abs(line1[x].channel[ch] - line2[x].channel[ch]) > dist) {
+            diff = 1;
+            break;
+          }
+        }
+        if (!diff)
+          line2[x] = empty;
+      }
+      i_plinf(out, 0, xsize, y, line2);
+    }
+    myfree(line1);
+  }
+
+  return out;
+}
+
 struct fount_state;
 static double linear_fount_f(double x, double y, struct fount_state *state);
 static double bilinear_fount_f(double x, double y, struct fount_state *state);

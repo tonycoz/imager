@@ -625,6 +625,7 @@ Revision history for Perl extension Imager.
           prevent pointer vs int size warnings on 64-bit builds of perl.
         - add our own INT2PTR and PTR2IV definitions when perl doesn't
           supply them
+        - difference() method
 
 =================================================================
 

@@ -2402,6 +2402,27 @@ sub map {
   return $self;
 }
 
+sub difference {
+  my ($self, %opts) = @_;
+
+  defined $opts{mindist} or $opts{mindist} = 0;
+
+  defined $opts{other}
+    or return $self->_set_error("No 'other' parameter supplied");
+  defined $opts{other}{IMG}
+    or return $self->_set_error("No image data in 'other' image");
+
+  $self->{IMG}
+    or return $self->_set_error("No image data");
+
+  my $result = Imager->new;
+  $result->{IMG} = i_diff_image($self->{IMG}, $opts{other}{IMG}, 
+                                $opts{mindist})
+    or return $self->_set_error($self->_error_as_msg());
+
+  return $result;
+}
+
 # destructive border - image is shrunk by one pixel all around
 
 sub border {
@@ -2516,6 +2537,7 @@ sub _set_error {
   else {
     $ERRSTR = $msg;
   }
+  return;
 }
 
 # Default guess for the type of an image from extension
