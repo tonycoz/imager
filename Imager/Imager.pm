@@ -304,6 +304,11 @@ sub unload_plugin {
   return 1;
 }
 
+# take the results of i_error() and make a message out of it
+sub _error_as_msg {
+  return join(": ", map $_->[0], i_errors());
+}
+
 
 #
 # Methods to be called on objects.
@@ -464,7 +469,7 @@ sub read {
 
     if ( $input{type} eq 'pnm' ) {
       $self->{IMG}=i_readpnm_wiol( $IO, -1 ); # Fixme, check if that length parameter is ever needed
-      if ( !defined($self->{IMG}) ) { $self->{ERRSTR}='unable to read pnm image'; return undef; }
+      if ( !defined($self->{IMG}) ) { $self->{ERRSTR}='unable to read pnm image: '._error_as_msg(); return undef; }
       $self->{DEBUG} && print "loading a pnm file\n";
       return $self;
     }
