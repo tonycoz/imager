@@ -2,6 +2,7 @@
 use strict;
 use Imager qw(:handy);
 
+Imager::init_log("testout/t61filters.log", 1);
 # meant for testing the filters themselves
 my $imbase = Imager->new;
 $imbase->open(file=>'testout/t104.ppm') or die;

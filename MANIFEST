@@ -10,6 +10,7 @@ conv.c
 convert.c
 draw.c
 draw.h
+fills.c         Generic fills
 map.c
 error.c
 gaussian.c

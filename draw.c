@@ -46,6 +46,45 @@ i_mmarray_render(i_img *im,i_mmarray *ar,i_color *val) {
   for(i=0;i<ar->lines;i++) if (ar->data[i].max!=-1) for(x=ar->data[i].min;x<ar->data[i].max;x++) i_ppix(im,x,i,val);
 }
 
+void
+i_mmarray_render_fill(i_img *im,i_mmarray *ar,i_fill_t *fill) {
+  int x, w, y;
+  if (im->bits == i_8_bits && fill->fill_with_color) {
+    i_color *line = mymalloc(sizeof(i_color) * im->xsize);
+    for(y=0;y<ar->lines;y++) {
+      if (ar->data[y].max!=-1) {
+        x = ar->data[y].min;
+        w = ar->data[y].max-ar->data[y].min;
+
+        if (fill->combines) 
+          i_glin(im, x, x+w, y, line);
+        
+        (fill->fill_with_color)(fill, x, y, w, im->channels, line);
+        i_plin(im, x, x+w, y, line);
+      }
+    }
+  
+    myfree(line);
+  }
+  else {
+    i_fcolor *line = mymalloc(sizeof(i_fcolor) * im->xsize);
+    for(y=0;y<ar->lines;y++) {
+      if (ar->data[y].max!=-1) {
+        x = ar->data[y].min;
+        w = ar->data[y].max-ar->data[y].min;
+
+        if (fill->combines) 
+          i_glinf(im, x, x+w, y, line);
+        
+        (fill->fill_with_fcolor)(fill, x, y, w, im->channels, line);
+        i_plinf(im, x, x+w, y, line);
+      }
+    }
+  
+    myfree(line);
+  }
+}
+
 
 static
 void
@@ -114,6 +153,35 @@ i_arc(i_img *im,int x,int y,float rad,float d1,float d2,i_color *val) {
 
   /*  dot.info(); */
   i_mmarray_render(im,&dot,val);
+}
+
+void
+i_arc_cfill(i_img *im,int x,int y,float rad,float d1,float d2,i_fill_t *fill) {
+  i_mmarray dot;
+  float f,fx,fy;
+  int x1,y1;
+
+  mm_log((1,"i_arc_cfill(im* 0x%x,x %d,y %d,rad %.2f,d1 %.2f,d2 %.2f,fill 0x%x)\n",im,x,y,rad,d1,d2,fill));
+
+  i_mmarray_cr(&dot,im->ysize);
+
+  x1=(int)(x+0.5+rad*cos(d1*PI/180.0));
+  y1=(int)(y+0.5+rad*sin(d1*PI/180.0));
+  fx=(float)x1; fy=(float)y1;
+
+  /*  printf("x1: %d.\ny1: %d.\n",x1,y1); */
+  i_arcdraw(x, y, x1, y1, &dot);
+
+  x1=(int)(x+0.5+rad*cos(d2*PI/180.0));
+  y1=(int)(y+0.5+rad*sin(d2*PI/180.0));
+
+  for(f=d1;f<=d2;f+=0.01) i_mmarray_add(&dot,(int)(x+0.5+rad*cos(f*PI/180.0)),(int)(y+0.5+rad*sin(f*PI/180.0)));
+  
+  /*  printf("x1: %d.\ny1: %d.\n",x1,y1); */
+  i_arcdraw(x, y, x1, y1, &dot);
+
+  /*  dot.info(); */
+  i_mmarray_render_fill(im,&dot,fill);
 }
 
 
@@ -283,6 +351,36 @@ i_box_filled(i_img *im,int x1,int y1,int x2,int y2,i_color *val) {
   for(x=x1;x<x2+1;x++) for (y=y1;y<y2+1;y++) i_ppix(im,x,y,val);
 }
 
+void
+i_box_cfill(i_img *im,int x1,int y1,int x2,int y2,i_fill_t *fill) {
+  mm_log((1,"i_box_cfill(im* 0x%x,x1 %d,y1 %d,x2 %d,y2 %d,fill 0x%x)\n",im,x1,y1,x2,y2,fill));
+
+  ++x2;
+  if (im->bits == i_8_bits && fill->fill_with_color) {
+    i_color *line = mymalloc(sizeof(i_color) * (x2 - x1));
+    while (y1 <= y2) {
+      if (fill->combines)
+        i_glin(im, x1, x2, y1, line);
+
+      (fill->fill_with_color)(fill, x1, y1, x2-x1, im->channels, line);
+      i_plin(im, x1, x2, y1, line);
+      ++y1;
+    }
+    myfree(line);
+  }
+  else {
+    i_fcolor *line = mymalloc(sizeof(i_fcolor) * (x2 - x1));
+    while (y1 <= y2) {
+      if (fill->combines)
+        i_glinf(im, x1, x2, y1, line);
+
+      (fill->fill_with_fcolor)(fill, x1, y1, x2-x1, im->channels, line);
+      i_plinf(im, x1, x2, y1, line);
+      ++y1;
+    }
+    myfree(line);
+  }
+}
 
 void
 i_draw(i_img *im,int x1,int y1,int x2,int y2,i_color *val) {

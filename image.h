@@ -120,15 +120,56 @@ int i_glin_d(i_img *im,int l, int r, int y, i_color *val);
 #define i_img_type(im) ((im)->type)
 #define i_img_bits(im) ((im)->bits)
 
+/* Generic fills */
+struct i_fill_tag;
+
+typedef void (*i_fill_with_color_f)
+     (struct i_fill_tag *fill, int x, int y, int width, int channels, 
+      i_color *data);
+typedef void (*i_fill_with_fcolor_f)
+     (struct i_fill_tag *fill, int x, int y, int width, int channels,
+      i_fcolor *data);
+typedef void (*i_fill_destroy_f)(struct i_fill_tag *fill);
+
+typedef struct i_fill_tag
+{
+  /* called for 8-bit/sample image (and maybe lower) */
+  /* this may be NULL, if so call fill_with_fcolor */
+  i_fill_with_color_f fill_with_color;
+
+  /* called for other sample sizes */
+  /* this must be non-NULL */
+  i_fill_with_fcolor_f fill_with_fcolor;
+
+  /* called if non-NULL to release any extra resources */
+  i_fill_destroy_f destroy;
+
+  /* if non-zero the caller will fill data with the original data
+     from the image */
+  int combines;
+} i_fill_t;
+
+extern i_fill_t *i_new_fill_solidf(i_fcolor *c, int combine);
+extern i_fill_t *i_new_fill_solid(i_color *c, int combine);
+extern i_fill_t *
+i_new_fill_hatch(i_color *fg, i_color *bg, int combine, int hatch, 
+                 unsigned char *cust_hatch, int dx, int dy);
+extern i_fill_t *
+i_new_fill_hatchf(i_fcolor *fg, i_fcolor *bg, int combine, int hatch, 
+                  unsigned char *cust_hatch, int dx, int dy);
+extern void i_fill_destroy(i_fill_t *fill);
+
 float i_gpix_pch(i_img *im,int x,int y,int ch);
 
 /* functions for drawing primitives */
 
 void i_box         (i_img *im,int x1,int y1,int x2,int y2,i_color *val);
 void i_box_filled  (i_img *im,int x1,int y1,int x2,int y2,i_color *val);
+void i_box_cfill(i_img *im, int x1, int y1, int x2, int y2, i_fill_t *fill);
 void i_draw        (i_img *im,int x1,int y1,int x2,int y2,i_color *val);
 void i_line_aa     (i_img *im,int x1,int y1,int x2,int y2,i_color *val);
 void i_arc         (i_img *im,int x,int y,float rad,float d1,float d2,i_color *val);
+void i_arc_cfill(i_img *im,int x,int y,float rad,float d1,float d2,i_fill_t *fill);
 void i_circle_aa   (i_img *im,float x, float y,float rad,i_color *val);
 void i_copyto      (i_img *im,i_img *src,int x1,int y1,int x2,int y2,int tx,int ty);
 void i_copyto_trans(i_img *im,i_img *src,int x1,int y1,int x2,int y2,int tx,int ty,i_color *trans);
@@ -558,6 +599,11 @@ void i_fountain(i_img *im, double xa, double ya, double xb, double yb,
                 i_fountain_type type, i_fountain_repeat repeat, 
                 int combine, int super_sample, double ssample_param,
                 int count, i_fountain_seg *segs);
+extern i_fill_t *
+i_new_fill_fount(double xa, double ya, double xb, double yb, 
+                 i_fountain_type type, i_fountain_repeat repeat, 
+                 int combine, int super_sample, double ssample_param, 
+                 int count, i_fountain_seg *segs);
 
 /* Debug only functions */
 
