@@ -384,6 +384,13 @@ Revision history for Perl extension Imager.
 	- Fixed an overflow bug in png.c
 	- added the colors parameter to Imager::read() which receives 
 	the arrayref of colours that i_readgif(_scalar) returns
+	- fixed a problem in makemap_addi in quant.c where only the first
+	image was compared against the palette when the palette was being 
+	refined.  I screwed up on this originally (TC).  This is the other
+	half of a fix for Leolo's lmfixed problem <sigh>.
+	- makemap_addi() now only puts colours into the palette that it
+	found while optimizing the palette (so we don't get 256 colour
+	palettes for 2 colour images :)
 
 ~~~~~~~~~~~~~^ ^ ^~~~~~~~~~~~~~
 
