@@ -1429,14 +1429,14 @@ i_poly_aa_cfill(im,xc,yc,fill)
 
 
 
-void
+undef_int
 i_flood_fill(im,seedx,seedy,dcol)
     Imager::ImgRaw     im
 	       int     seedx
 	       int     seedy
      Imager::Color     dcol
 
-void
+undef_int
 i_flood_cfill(im,seedx,seedy,fill)
     Imager::ImgRaw     im
 	       int     seedx
