@@ -14,7 +14,7 @@ HASH			T_HVREF
 #############################################################################
 INPUT
 T_PTR_NULL
-	if (SvOK($arg)) $var = ($type)SvIV($arg);
+	if (SvOK($arg)) $var = INT2PTR($type,SvIV($arg));
 	else $var = NULL
 #############################################################################
 OUTPUT

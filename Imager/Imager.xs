@@ -2771,12 +2771,6 @@ i_gradgen(im, ...)
 
 
 void
-i_diff_image(im, im2, mindiff=0)
-    Imager::ImgRaw     im
-    Imager::ImgRaw     im2
-               int     mindiff
-
-void
 i_fountain(im, xa, ya, xb, yb, type, repeat, combine, super_sample, ssample_param, segs)
     Imager::ImgRaw     im
             double     xa
