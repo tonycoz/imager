@@ -363,7 +363,7 @@ Revision history for Perl extension Imager.
 	- Win32 support for libpng
 	- fixed set_internal creating 2 refs to one object
 	- Win32 support for jpeg
-
+	- Win32 support for tiff
 
 
 ~~~~~~~~~~~~~^ ^ ^~~~~~~~~~~~~~
