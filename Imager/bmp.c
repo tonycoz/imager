@@ -861,6 +861,7 @@ read_8bit_bmp(io_glue *ig, int xsize, int ysize, int clr_used,
       i_ppal(im, 0, xsize, y, line);
       y += yinc;
     }
+    myfree(line);
   }
   else if (compression == BI_RLE8) {
     int read_size;
