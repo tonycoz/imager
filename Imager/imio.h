@@ -18,7 +18,7 @@
 #define myrealloc(x,y) (myrealloc_file_line((x),(y), __FILE__, __LINE__))
 #define myfree(x) (myfree_file_line((x), __FILE__, __LINE__))
 
-void  malloc_state       ();
+void  malloc_state       (void);
 void* mymalloc_file_line (size_t size, char* file, int line);
 void  myfree_file_line   (void *p, char*file, int line);
 void* myrealloc_file_line(void *p, size_t newsize, char* file,int line);
