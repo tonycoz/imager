@@ -550,6 +550,12 @@ sub copy {
   my $self = shift;
   unless ($self->{IMG}) { $self->{ERRSTR}='empty input image'; return undef; }
 
+  unless (defined wantarray) {
+    my @caller = caller;
+    warn "copy() called in void context - copy() returns the copied image at $caller[1] line $caller[2]\n";
+    return;
+  }
+
   my $newcopy=Imager->new();
   $newcopy->{IMG}=i_img_new();
   i_copy($newcopy->{IMG},$self->{IMG});
@@ -581,8 +587,13 @@ sub paste {
 sub crop {
   my $self=shift;
   unless ($self->{IMG}) { $self->{ERRSTR}='empty input image'; return undef; }
-
   
+  unless (defined wantarray) {
+    my @caller = caller;
+    warn "crop() called in void context - crop() returns the cropped image at $caller[1] line $caller[2]\n";
+    return;
+  }
+
   my %hsh=@_;
 
   my ($w, $h, $l, $r, $b, $t) =
@@ -753,6 +764,12 @@ sub to_paletted {
     $opts = shift;
   }
 
+  unless (defined wantarray) {
+    my @caller = caller;
+    warn "to_paletted() called in void context - to_paletted() returns the converted image at $caller[1] line $caller[2]\n";
+    return;
+  }
+
   my $result = Imager->new;
   $result->{IMG} = i_img_to_pal($self->{IMG}, $opts);
 
@@ -771,6 +788,12 @@ sub to_paletted {
 sub to_rgb8 {
   my $self = shift;
   my $result;
+
+  unless (defined wantarray) {
+    my @caller = caller;
+    warn "to_rgb8() called in void context - to_rgb8() returns the cropped image at $caller[1] line $caller[2]\n";
+    return;
+  }
 
   if ($self->{IMG}) {
     $result = Imager->new;
@@ -1644,6 +1667,12 @@ sub scaleX {
   my $self=shift;
   my %opts=(scalefactor=>0.5,@_);
 
+  unless (defined wantarray) {
+    my @caller = caller;
+    warn "scaleX() called in void context - scaleX() returns the scaled image at $caller[1] line $caller[2]\n";
+    return;
+  }
+
   unless ($self->{IMG}) { $self->{ERRSTR}='empty input image'; return undef; }
 
   my $img = Imager->new();
@@ -1662,6 +1691,12 @@ sub scaleX {
 sub scaleY {
   my $self=shift;
   my %opts=(scalefactor=>0.5,@_);
+
+  unless (defined wantarray) {
+    my @caller = caller;
+    warn "scaleY() called in void context - scaleY() returns the scaled image at $caller[1] line $caller[2]\n";
+    return;
+  }
 
   unless ($self->{IMG}) { $self->{ERRSTR}='empty input image'; return undef; }
 
@@ -1868,6 +1903,13 @@ sub flip {
 sub rotate {
   my $self = shift;
   my %opts = @_;
+
+  unless (defined wantarray) {
+    my @caller = caller;
+    warn "rotate() called in void context - rotate() returns the rotated image at $caller[1] line $caller[2]\n";
+    return;
+  }
+
   if (defined $opts{right}) {
     my $degrees = $opts{right};
     if ($degrees < 0) {
@@ -1919,6 +1961,12 @@ sub rotate {
 sub matrix_transform {
   my $self = shift;
   my %opts = @_;
+
+  unless (defined wantarray) {
+    my @caller = caller;
+    warn "copy() called in void context - copy() returns the copied image at $caller[1] line $caller[2]\n";
+    return;
+  }
 
   if ($opts{matrix}) {
     my $xsize = $opts{xsize} || $self->getwidth;
@@ -2333,6 +2381,12 @@ sub _identity {
 sub convert {
   my ($self, %opts) = @_;
   my $matrix;
+
+  unless (defined wantarray) {
+    my @caller = caller;
+    warn "convert() called in void context - convert() returns the converted image at $caller[1] line $caller[2]\n";
+    return;
+  }
 
   # the user can either specify a matrix or preset
   # the matrix overrides the preset

@@ -2,7 +2,7 @@
 # some of this is tested in t01introvert.t too
 use strict;
 use lib 't';
-use Test::More tests => 57;
+use Test::More tests => 59;
 BEGIN { use_ok("Imager"); }
 
 my $img = Imager->new(xsize=>50, ysize=>50, type=>'paletted');
@@ -172,6 +172,22 @@ cmp_ok(Imager->errstr, '=~', qr/Channels must be positive and <= 4/,
     cmp_ok(Imager->errstr, '=~', qr/integer overflow/,
            "check the error message");
   }
+}
+
+{ # http://rt.cpan.org/NoAuth/Bug.html?id=9672
+  my $warning;
+  local $SIG{__WARN__} = 
+    sub { 
+      $warning = "@_";
+      my $printed = $warning;
+      $printed =~ s/\n$//;
+      $printed =~ s/\n/\n\#/g; 
+      print "# ",$printed, "\n";
+    };
+  my $img = Imager->new(xsize=>10, ysize=>10);
+  $img->to_paletted();
+  cmp_ok($warning, '=~', 'void', "correct warning");
+  cmp_ok($warning, '=~', 't023palette\\.t', "correct file");
 }
 
 sub coloreq {

@@ -1,7 +1,7 @@
 #!perl -w
 use strict;
 use lib 't';
-use Test::More tests=>51;
+use Test::More tests=>57;
 use Imager;
 
 #$Imager::DEBUG=1;
@@ -111,5 +111,29 @@ sub rot_test {
     is($src->bits, $cimg->bits, "bits check");
     is($src->getchannels, $cimg->getchannels, "channels check");
   }
+}
+
+{ # http://rt.cpan.org/NoAuth/Bug.html?id=9672
+  my $warning;
+  local $SIG{__WARN__} = 
+    sub { 
+      $warning = "@_";
+      my $printed = $warning;
+      $printed =~ s/\n$//;
+      $printed =~ s/\n/\n\#/g; 
+      print "# ",$printed, "\n";
+    };
+  my $img = Imager->new(xsize=>10, ysize=>10);
+  $img->copy();
+  cmp_ok($warning, '=~', 'void', "correct warning");
+  cmp_ok($warning, '=~', 't64copyflip\\.t', "correct file");
+  $warning = '';
+  $img->rotate(degrees=>5);
+  cmp_ok($warning, '=~', 'void', "correct warning");
+  cmp_ok($warning, '=~', 't64copyflip\\.t', "correct file");
+  $warning = '';
+  $img->matrix_transform(matrix=>[1, 1, 1]);
+  cmp_ok($warning, '=~', 'void', "correct warning");
+  cmp_ok($warning, '=~', 't64copyflip\\.t', "correct file");
 }
 
