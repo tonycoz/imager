@@ -1,83 +1,72 @@
 #!perl -w
-BEGIN { $| = 1; print "1..43\n"; }
-END {print "not ok 1\n" unless $loaded;}
+use strict;
+use lib 't';
+use Test::More tests=>51;
 use Imager;
-
-$loaded = 1;
 
 #$Imager::DEBUG=1;
 
 Imager::init('log'=>'testout/t64copyflip.log');
 
-$img=Imager->new() or die "unable to create image object\n";
+my $img=Imager->new() or die "unable to create image object\n";
 
 $img->open(file=>'testimg/scale.ppm',type=>'pnm');
-$nimg = $img->copy() or skip ( "\# warning ".$img->{'ERRSTR'}."\n" );
-print "ok 1\n";
+my $nimg = $img->copy();
+ok($nimg, "copy returned something");
 
 # test if ->copy() works
 
-$diff = Imager::i_img_diff($img->{IMG}, $nimg->{IMG});
-if ($diff > 0) { print "not ok 2 # copy and original differ!\n"; }
-else { print "ok 2\n"; }
+my $diff = Imager::i_img_diff($img->{IMG}, $nimg->{IMG});
+is($diff, 0, "copy matches source");
 
 
 # test if ->flip(dir=>'h')->flip(dir=>'h') doesn't alter the image
 
 $nimg->flip(dir=>"h")->flip(dir=>"h");
 $diff = Imager::i_img_diff($img->{IMG}, $nimg->{IMG});
-if ($diff > 0) { print "not ok 3 # double horizontal flip and original differ!\n"; }
-else { print "ok 3\n"; }
-
+is($diff, 0, "double horiz flipped matches original");
 
 # test if ->flip(dir=>'v')->flip(dir=>'v') doesn't alter the image
 
 $nimg->flip(dir=>"v")->flip(dir=>"v");
 $diff = Imager::i_img_diff($img->{IMG}, $nimg->{IMG});
-if ($diff > 0) { print "not ok 4 # double vertical flip and original differ!\n"; }
-else { print "ok 4\n"; }
+is($diff, 0, "double vertically flipped image matches original");
 
 
 # test if ->flip(dir=>'h')->flip(dir=>'v') is same as ->flip(dir=>'hv')
 
 $nimg->flip(dir=>"v")->flip(dir=>"h")->flip(dir=>"hv");;
 $diff = Imager::i_img_diff($img->{IMG}, $nimg->{IMG});
-if ($diff > 0) {
-  print "not ok 5 # double flips and original differ!\n";
-  $nimg->write(file=>"testout/t64copyflip_error.ppm") or die $nimg->errstr();
-}
-else { print "ok 5\n"; }
+is($diff, 0, "check flip with hv matches flip v then flip h");
 
-rot_test(6, $img, 90, 4);
-rot_test(10, $img, 180, 2);
-rot_test(14, $img, 270, 4);
-rot_test(18, $img, 0, 1);
+rot_test($img, 90, 4);
+rot_test($img, 180, 2);
+rot_test($img, 270, 4);
+rot_test($img, 0, 1);
 
 my $pimg = $img->to_paletted();
-rot_test(22, $pimg, 90, 4);
-rot_test(26, $pimg, 180, 2);
-rot_test(30, $pimg, 270, 4);
-rot_test(34, $pimg, 0, 1);
+rot_test($pimg, 90, 4);
+rot_test($pimg, 180, 2);
+rot_test($pimg, 270, 4);
+rot_test($pimg, 0, 1);
 
 my $timg = $img->rotate(right=>90)->rotate(right=>270);
-Imager::i_img_diff($img->{IMG}, $timg->{IMG}) and print "not ";
-print "ok 38\n";
+is(Imager::i_img_diff($img->{IMG}, $timg->{IMG}), 0,
+   "check rotate 90 then 270 matches original");
 $timg = $img->rotate(right=>90)->rotate(right=>180)->rotate(right=>90);
-Imager::i_img_diff($img->{IMG}, $timg->{IMG}) and print "not ";
-print "ok 39\n";
+is(Imager::i_img_diff($img->{IMG}, $timg->{IMG}), 0,
+     "check rotate 90 then 180 then 90 matches original");
 
 # this could use more tests
-my $rimg = $img->rotate(degrees=>10)
-  or print "not ";
-print "ok 40\n";
+my $rimg = $img->rotate(degrees=>10);
+ok($rimg, "rotation by 10 degrees gave us an image");
 if (!$rimg->write(file=>"testout/t64_rot10.ppm")) {
   print "# Cannot save: ",$rimg->errstr,"\n";
 }
 
 # rotate with background
-$rimg = $img->rotate(degrees=>10, back=>Imager::Color->new(builtin=>'red'))
-  or print "not ";
-print "ok 41\n";
+$rimg = $img->rotate(degrees=>10, back=>Imager::Color->new(builtin=>'red'));
+ok($rimg, "rotate with background gave us an image");
 if (!$rimg->write(file=>"testout/t64_rot10_back.ppm")) {
   print "# Cannot save: ",$rimg->errstr,"\n";
 }
@@ -85,23 +74,22 @@ if (!$rimg->write(file=>"testout/t64_rot10_back.ppm")) {
 
 my $trimg = $img->matrix_transform(matrix=>[ 1.2, 0, 0,
                                              0,   1, 0,
-                                             0,   0, 1])
-  or print "not ";
-print "ok 42\n";
+                                             0,   0, 1]);
+ok($trimg, "matrix_transform() returned an image");
 $trimg->write(file=>"testout/t64_trans.ppm")
   or print "# Cannot save: ",$trimg->errstr,"\n";
 
 $trimg = $img->matrix_transform(matrix=>[ 1.2, 0, 0,
                                              0,   1, 0,
                                              0,   0, 1],
-				   back=>Imager::Color->new(builtin=>'blue'))
-  or print "not ";
-print "ok 43\n";
+				   back=>Imager::Color->new(builtin=>'blue'));
+ok($trimg, "matrix_transform() with back returned an image");
+
 $trimg->write(file=>"testout/t64_trans_back.ppm")
   or print "# Cannot save: ",$trimg->errstr,"\n";
 
 sub rot_test {
-  my ($testnum, $src, $degrees, $count) = @_;
+  my ($src, $degrees, $count) = @_;
 
   my $cimg = $src->copy();
   my $in;
@@ -110,39 +98,18 @@ sub rot_test {
     $cimg = $cimg->rotate(right=>$degrees)
       or last;
   }
-  if ($cimg) {
-    print "ok ",$testnum++,"\n";
+ SKIP:
+  {
+    ok($cimg, "got a rotated image")
+      or skip("no image to check", 4);
     my $diff = Imager::i_img_diff($src->{IMG}, $cimg->{IMG});
-    if ($diff) {
-      print "not ok ",$testnum++," # final image doesn't match input\n";
-      for (1..3) {
-        print "ok ",$testnum++," # skipped\n";
-      }
-    }
-    else {
-      # check that other parameters match
-      $src->type eq $cimg->type or print "not ";
-      print "ok ",$testnum++," # type\n";
-      $src->bits eq $cimg->bits or print "not ";
-      print "ok ",$testnum++," # bits\n";
-      $src->getchannels eq $cimg->getchannels or print "not ";
-      print "ok ",$testnum++," # channels \n";
-    }
-  }
-  else {
-    print "not ok ",$testnum++," # rotate returned undef:",$in->errstr,"\n";
-    for (1..4) {
-      print "ok ",$testnum++," # skipped\n";
-    }
-  }
-}
+    is($diff, 0, "check it matches source")
+      or skip("didn't match", 3);
 
-sub skip {
-    print $_[0];
-    print "ok 2 # skip\n";
-    print "ok 3 # skip\n";
-    print "ok 4 # skip\n";
-    print "ok 5 # skip\n";
-    exit(0);
+    # check that other parameters match
+    is($src->type, $cimg->type, "type check");
+    is($src->bits, $cimg->bits, "bits check");
+    is($src->getchannels, $cimg->getchannels, "channels check");
+  }
 }
 
