@@ -391,6 +391,7 @@ typedef enum i_make_colors_tag {
   mc_none, /* user supplied colour map only */
   mc_web_map, /* Use the 216 colour web colour map */
   mc_addi, /* Addi's algorithm */
+  mc_median_cut, /* median cut - similar to giflib, hopefully */
   mc_mask = 0xFF /* (mask for generator) */
 } i_make_colors;
 
@@ -560,9 +561,9 @@ extern i_img **i_readgif_multi_wiol(io_glue *ig, int *count);
 undef_int i_writegif(i_img *im,int fd,int colors,int pixdev,int fixedlen,i_color fixed[]);
 undef_int i_writegifmc(i_img *im,int fd,int colors);
 undef_int i_writegifex(i_img *im,int fd);
-undef_int i_writegif_gen(i_quantize *quant, int fd, i_img **imgs, int count, i_gif_opts *opts);
-undef_int i_writegif_callback(i_quantize *quant, i_write_callback_t cb, char *userdata, int maxbuffer, i_img **imgs, int count, i_gif_opts *opts);
-undef_int i_writegif_wiol(io_glue *ig, i_quantize *quant, i_gif_opts *opts, 
+undef_int i_writegif_gen(i_quantize *quant, int fd, i_img **imgs, int count);
+undef_int i_writegif_callback(i_quantize *quant, i_write_callback_t cb, char *userdata, int maxbuffer, i_img **imgs, int count);
+undef_int i_writegif_wiol(io_glue *ig, i_quantize *quant, 
                           i_img **imgs, int count);
 void i_qdist(i_img *im);
 
@@ -724,22 +725,29 @@ extern int i_failed(int code, char const *msg);
 
 /* image tag processing */
 extern void i_tags_new(i_img_tags *tags);
-extern int i_tags_addn(i_img_tags *tags, char *name, int code, int idata);
-extern int i_tags_add(i_img_tags *tags, char *name, int code, char *data, 
-                      int size, int idata);
+extern int i_tags_addn(i_img_tags *tags, char const *name, int code, 
+                       int idata);
+extern int i_tags_add(i_img_tags *tags, char const *name, int code, 
+                      char const *data, int size, int idata);
 extern void i_tags_destroy(i_img_tags *tags);
-extern int i_tags_find(i_img_tags *tags, char *name, int start, int *entry);
+extern int i_tags_find(i_img_tags *tags, char const *name, int start, 
+                       int *entry);
 extern int i_tags_findn(i_img_tags *tags, int code, int start, int *entry);
 extern int i_tags_delete(i_img_tags *tags, int entry);
-extern int i_tags_delbyname(i_img_tags *tags, char *name);
+extern int i_tags_delbyname(i_img_tags *tags, char const *name);
 extern int i_tags_delbycode(i_img_tags *tags, int code);
-extern int i_tags_get_float(i_img_tags *tags, char *name, int code, 
+extern int i_tags_get_float(i_img_tags *tags, char const *name, int code, 
 			    double *value);
-extern int i_tags_set_float(i_img_tags *tags, char *name, int code, 
+extern int i_tags_set_float(i_img_tags *tags, char const *name, int code, 
 			    double value);
-extern int i_tags_get_int(i_img_tags *tags, char *name, int code, int *value);
-extern int i_tags_get_string(i_img_tags *tags, char *name, int code, 
+extern int i_tags_get_int(i_img_tags *tags, char const *name, int code, 
+                          int *value);
+extern int i_tags_get_string(i_img_tags *tags, char const *name, int code, 
 			     char *value, size_t value_size);
+extern int i_tags_get_color(i_img_tags *tags, char const *name, int code, 
+                            i_color *value);
+extern int i_tags_set_color(i_img_tags *tags, char const *name, int code, 
+                            i_color const *value);
 extern void i_tags_print(i_img_tags *tags);
 
 #endif

@@ -5,6 +5,7 @@
 #include "image.h"
 
 static void makemap_addi(i_quantize *, i_img **imgs, int count);
+static void makemap_mediancut(i_quantize *, i_img **imgs, int count);
 
 static
 void
@@ -27,11 +28,17 @@ setcol(i_color *cl,unsigned char r,unsigned char g,unsigned char b,unsigned char
 
 void
 quant_makemap(i_quantize *quant, i_img **imgs, int count) {
-#ifdef HAVE_LIBGIF
-  /* giflib does it's own color table generation */
-  if (quant->translate == pt_giflib) 
+
+  if (quant->translate == pt_giflib) {
+    /* giflib does it's own color table generation */
+    /* previously we used giflib's quantizer, but it didn't handle multiple
+       images, which made it hard to build a global color map
+       We've implemented our own median cut code so we can ignore 
+       the giflib version */
+    makemap_mediancut(quant, imgs, count);
     return;
-#endif
+  }
+
   switch (quant->make_colors & mc_mask) {
   case mc_none:
     /* use user's specified map */
@@ -46,6 +53,10 @@ quant_makemap(i_quantize *quant, i_img **imgs, int count) {
 	    setcol(quant->mc_colors+i++, r, g, b, 0);
       quant->mc_count = i;
     }
+    break;
+
+  case mc_median_cut:
+    makemap_mediancut(quant, imgs, count);
     break;
 
   case mc_addi:
@@ -73,13 +84,8 @@ i_palidx *quant_translate(i_quantize *quant, i_img *img) {
   result = mymalloc(img->xsize * img->ysize);
 
   switch (quant->translate) {
-#ifdef HAVE_LIBGIF
-  case pt_giflib:
-    translate_giflib(quant, img, result);
-    break;
-#endif
-
   case pt_closest:
+  case pt_giflib:
     translate_closest(quant, img, result);
     break;
     
@@ -495,6 +501,247 @@ makemap_addi(i_quantize *quant, i_img **imgs, int count) {
   /* don't want to keep this */
   myfree(hb);
   myfree(clr);
+}
+
+typedef struct {
+  i_sample_t rgb[3];
+  int count;
+} quant_color_entry;
+
+#define MEDIAN_CUT_COLORS 32768
+
+#define MED_CUT_INDEX(c) ((((c).rgb.r & 0xF8) << 7) | \
+        (((c).rgb.g & 0xF8) << 2) | (((c).rgb.b & 0xF8) >> 3))
+
+/* scale these to cover the whole range */
+#define MED_CUT_RED(index) ((((index) & 0x7C00) >> 10) * 255 / 31)
+#define MED_CUT_GREEN(index) ((((index) & 0x3E0) >> 5) * 255 / 31)
+#define MED_CUT_BLUE(index) (((index) & 0x1F) * 255 / 31)
+
+typedef struct {
+  i_sample_t min[3]; /* minimum for each channel */
+  i_sample_t max[3]; /* maximum for each channel */
+  i_sample_t width[3]; /* width for each channel */
+  int start, size;   /* beginning and size of the partition */
+  int pixels; /* number of pixels represented by this partition */
+} medcut_partition;
+
+/*
+=item calc_part(part, colors)
+
+Calculates the new color limits for the given partition.
+
+Giflib assumes that the limits for the non-split channels stay the
+same, but this strikes me as incorrect, especially if the colors tend
+to be color ramps.
+
+Of course this could be optimized by not recalculating the channel we
+just sorted on, but it's not worth the effort right now.
+
+=cut
+*/
+static void calc_part(medcut_partition *part, quant_color_entry *colors) {
+  int i, ch;
+  
+  for (ch = 0; ch < 3; ++ch) {
+    part->min[ch] = 255;
+    part->max[ch] = 0;
+  }
+  for (i = part->start; i < part->start + part->size; ++i) {
+    for (ch = 0; ch < 3; ++ch) {
+      if (part->min[ch] > colors[i].rgb[ch])
+        part->min[ch] = colors[i].rgb[ch];
+      if (part->max[ch] < colors[i].rgb[ch])
+        part->max[ch] = colors[i].rgb[ch];
+    }
+  }
+  for (ch = 0; ch < 3; ++ch) {
+    part->width[ch] = part->max[ch] - part->min[ch];
+  }
+}
+
+/* simple functions to sort by each channel - we could use a global, but 
+   that would be bad */
+
+static int
+color_sort_red(void const *left, void const *right) {
+  return ((quant_color_entry *)left)->rgb[0] - ((quant_color_entry *)right)->rgb[0];
+}
+
+static int
+color_sort_green(void const *left, void const *right) {
+  return ((quant_color_entry *)left)->rgb[1] - ((quant_color_entry *)right)->rgb[1];
+}
+
+static int
+color_sort_blue(void const *left, void const *right) {
+  return ((quant_color_entry *)left)->rgb[2] - ((quant_color_entry *)right)->rgb[2];
+}
+
+static int (*sorters[])(void const *, void const *) =
+{
+  color_sort_red,
+  color_sort_green,
+  color_sort_blue,
+};
+
+static void
+makemap_mediancut(i_quantize *quant, i_img **imgs, int count) {
+  quant_color_entry *colors;
+  i_mempool mp;
+  int imgn, x, y, i, ch;
+  int max_width;
+  i_color *line;
+  int color_count;
+  int total_pixels;
+  medcut_partition *parts;
+  int part_num;
+  int in, out;
+
+  /*printf("images %d  pal size %d\n", count, quant->mc_size);*/
+
+  i_mempool_init(&mp);
+
+  colors = i_mempool_alloc(&mp, sizeof(*colors) * MEDIAN_CUT_COLORS);
+  for (i = 0; i < MEDIAN_CUT_COLORS; ++i) {
+    colors[i].rgb[0] = MED_CUT_RED(i);
+    colors[i].rgb[1] = MED_CUT_GREEN(i);
+    colors[i].rgb[2] = MED_CUT_BLUE(i);
+    colors[i].count = 0;
+  }
+
+  max_width = -1;
+  for (imgn = 0; imgn < count; ++imgn) {
+    if (imgs[imgn]->xsize > max_width)
+      max_width = imgs[imgn]->xsize;
+  }
+  line = i_mempool_alloc(&mp, sizeof(i_color) * max_width);
+
+  /* build the stats */
+  total_pixels = 0;
+  for (imgn = 0; imgn < count; ++imgn) {
+    total_pixels += imgs[imgn]->xsize * imgs[imgn]->ysize;
+    for (y = 0; y < imgs[imgn]->ysize; ++y) {
+      i_glin(imgs[imgn], 0, imgs[imgn]->xsize, y, line);
+      for (x = 0; x < imgs[imgn]->xsize; ++x) {
+        ++colors[MED_CUT_INDEX(line[x])].count;
+      }
+    }
+  }
+
+  /* eliminate the empty colors */
+  out = 0;
+  for (in = 0; in < MEDIAN_CUT_COLORS; ++in) {
+    if (colors[in].count) {
+      colors[out++] = colors[in];
+    }
+  }
+  /*printf("out %d\n", out);
+
+  for (i = 0; i < out; ++i) {
+    if (colors[i].count) {
+      printf("%d: (%d,%d,%d) -> %d\n", i, colors[i].rgb[0], colors[i].rgb[1], 
+             colors[i].rgb[2], colors[i].count);
+    }
+    }*/
+
+  if (out < quant->mc_size) {
+    /* just copy them into the color table */
+    for (i = 0; i < out; ++i) {
+      for (ch = 0; ch < 3; ++ch) {
+        quant->mc_colors[i].channel[ch] = colors[i].rgb[ch];
+      }
+    }
+    quant->mc_count = out;
+  }
+  else {
+    /* build the starting partition */
+    parts = i_mempool_alloc(&mp, sizeof(*parts) * quant->mc_size);
+    parts[0].start = 0;
+    parts[0].size = out;
+    parts[0].pixels = total_pixels;
+    calc_part(parts, colors);
+    color_count = 1;
+    
+    while (color_count < quant->mc_size) {
+      int max_index, max_ch; /* index/channel with biggest spread */
+      int max_size;
+      medcut_partition *workpart;
+      int cum_total;
+      int half;
+      
+      /* find the partition with the most biggest span with more than 
+         one color */
+      max_size = -1;
+      for (i = 0; i < color_count; ++i) {
+        for (ch = 0; ch < 3; ++ch) {
+          if (parts[i].width[ch] > max_size 
+              && parts[i].size > 1) {
+            max_index = i;
+            max_ch = ch;
+            max_size = parts[i].width[ch];
+          }
+        }
+      }
+      
+      /* nothing else we can split */
+      if (max_size == -1)
+        break;
+      
+      workpart = parts+max_index;
+      /*printf("splitting partition %d (pixels %ld, start %d, size %d)\n", max_index, workpart->pixels, workpart->start, workpart->size);*/
+      qsort(colors + workpart->start, workpart->size, sizeof(*colors),
+            sorters[max_ch]);
+      
+      /* find the median or something like it we need to make sure both
+         sides of the split have at least one color in them, so we don't
+         test at the first or last entry */
+      i = workpart->start;
+      cum_total = colors[i].count;
+      ++i;
+      half = workpart->pixels / 2;
+      while (i < workpart->start + workpart->size - 1
+             && cum_total < half) {
+        cum_total += colors[i++].count;
+      }
+      /*printf("Split at %d to make %d (half %ld, cumtotal %ld)\n", i, color_count, half, cum_total);*/
+      
+      /* found the spot to split */
+      parts[color_count].start = i;
+      parts[color_count].size = workpart->start + workpart->size - i;
+      workpart->size = i - workpart->start;
+      parts[color_count].pixels = workpart->pixels - cum_total;
+      workpart->pixels = cum_total;
+      
+      /* recalculate the limits */
+      calc_part(workpart, colors);
+      calc_part(parts+color_count, colors);
+      ++color_count;
+    }
+    
+    /* fill in the color table - since we could still have partitions
+       that have more than one color, we need to average the colors */
+    for (part_num = 0; part_num < color_count; ++part_num) {
+      long sums[3];
+      medcut_partition *workpart;
+      
+      workpart = parts+part_num;
+      for (ch = 0; ch < 3; ++ch)
+        sums[ch] = 0;
+      
+      for (i = workpart->start; i < workpart->start + workpart->size; ++i) {
+        for (ch = 0; ch < 3; ++ch) {
+          sums[ch] += colors[i].rgb[ch] * colors[i].count;
+        }
+      }
+      for (ch = 0; ch < 3; ++ch) {
+        quant->mc_colors[part_num].channel[ch] = sums[ch] / workpart->pixels;
+      }
+    }
+    quant->mc_count = color_count;
+  }
+  /*printf("out %d colors\n", quant->mc_count);*/
+  i_mempool_destroy(&mp);
 }
 
 #define pboxjump 32

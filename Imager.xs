@@ -447,6 +447,7 @@ static struct value_name make_color_names[] =
   { "none", mc_none, },
   { "webmap", mc_web_map, },
   { "addi", mc_addi, },
+  { "mediancut", mc_median_cut, },
 };
 
 static struct value_name translate_names[] =
@@ -644,6 +645,7 @@ static void cleanup_quant_opts(i_quantize *quant) {
     myfree(quant->ed_map);
 }
 
+#if 0
 /* look through the hash for options to add to opts */
 static void handle_gif_opts(i_gif_opts *opts, HV *hv)
 {
@@ -724,6 +726,8 @@ static void cleanup_gif_opts(i_gif_opts *opts) {
   if (opts->positions) 
     myfree(opts->positions);
 }
+
+#endif
 
 /* copies the color map from the hv into the colors member of the HV */
 static void copy_colors_back(HV *hv, i_quantize *quant) {
@@ -1936,7 +1940,6 @@ i_writegif_gen(fd, ...)
       PROTOTYPE: $$@
       PREINIT:
 	i_quantize quant;
-	i_gif_opts opts;
 	i_img **imgs = NULL;
 	int img_count;
 	int i;
@@ -1949,9 +1952,7 @@ i_writegif_gen(fd, ...)
 	hv = (HV *)SvRV(ST(1));
 	memset(&quant, 0, sizeof(quant));
 	quant.mc_size = 256;
-	memset(&opts, 0, sizeof(opts));
 	handle_quant_opts(&quant, hv);
-	handle_gif_opts(&opts, hv);
 	img_count = items - 2;
 	RETVAL = 1;
 	if (img_count < 1) {
@@ -1975,7 +1976,7 @@ i_writegif_gen(fd, ...)
             }
 	  }
           if (RETVAL) {
-	    RETVAL = i_writegif_gen(&quant, fd, imgs, img_count, &opts);
+	    RETVAL = i_writegif_gen(&quant, fd, imgs, img_count);
           }
 	  myfree(imgs);
           if (RETVAL) {
@@ -1985,7 +1986,6 @@ i_writegif_gen(fd, ...)
         ST(0) = sv_newmortal();
         if (RETVAL == 0) ST(0)=&PL_sv_undef;
         else sv_setiv(ST(0), (IV)RETVAL);
-	cleanup_gif_opts(&opts);
 	cleanup_quant_opts(&quant);
 
 
@@ -1994,7 +1994,6 @@ i_writegif_callback(cb, maxbuffer,...)
 	int maxbuffer;
       PREINIT:
 	i_quantize quant;
-	i_gif_opts opts;
 	i_img **imgs = NULL;
 	int img_count;
 	int i;
@@ -2008,9 +2007,7 @@ i_writegif_callback(cb, maxbuffer,...)
 	hv = (HV *)SvRV(ST(2));
 	memset(&quant, 0, sizeof(quant));
 	quant.mc_size = 256;
-	memset(&opts, 0, sizeof(opts));
 	handle_quant_opts(&quant, hv);
-	handle_gif_opts(&opts, hv);
 	img_count = items - 3;
 	RETVAL = 1;
 	if (img_count < 1) {
@@ -2031,7 +2028,7 @@ i_writegif_callback(cb, maxbuffer,...)
 	  }
           if (RETVAL) {
 	    wd.sv = ST(0);
-	    RETVAL = i_writegif_callback(&quant, write_callback, (char *)&wd, maxbuffer, imgs, img_count, &opts);
+	    RETVAL = i_writegif_callback(&quant, write_callback, (char *)&wd, maxbuffer, imgs, img_count);
           }
 	  myfree(imgs);
           if (RETVAL) {
@@ -2041,7 +2038,6 @@ i_writegif_callback(cb, maxbuffer,...)
 	ST(0) = sv_newmortal();
 	if (RETVAL == 0) ST(0)=&PL_sv_undef;
 	else sv_setiv(ST(0), (IV)RETVAL);
-	cleanup_gif_opts(&opts);
 	cleanup_quant_opts(&quant);
 
 undef_int
@@ -2049,7 +2045,6 @@ i_writegif_wiol(ig, opts,...)
 	Imager::IO ig
       PREINIT:
 	i_quantize quant;
-	i_gif_opts opts;
 	i_img **imgs = NULL;
 	int img_count;
 	int i;
@@ -2062,9 +2057,7 @@ i_writegif_wiol(ig, opts,...)
 	hv = (HV *)SvRV(ST(1));
 	memset(&quant, 0, sizeof(quant));
 	quant.mc_size = 256;
-	memset(&opts, 0, sizeof(opts));
 	handle_quant_opts(&quant, hv);
-	handle_gif_opts(&opts, hv);
 	img_count = items - 2;
 	RETVAL = 1;
 	if (img_count < 1) {
@@ -2084,7 +2077,7 @@ i_writegif_wiol(ig, opts,...)
             }
 	  }
           if (RETVAL) {
-	    RETVAL = i_writegif_wiol(ig, &quant, &opts, imgs, img_count);
+	    RETVAL = i_writegif_wiol(ig, &quant, imgs, img_count);
           }
 	  myfree(imgs);
           if (RETVAL) {
@@ -2094,7 +2087,6 @@ i_writegif_wiol(ig, opts,...)
 	ST(0) = sv_newmortal();
 	if (RETVAL == 0) ST(0)=&PL_sv_undef;
 	else sv_setiv(ST(0), (IV)RETVAL);
-	cleanup_gif_opts(&opts);
 	cleanup_quant_opts(&quant);
 
 void

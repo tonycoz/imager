@@ -50,7 +50,8 @@ my %files;
                   { file => "testout/t108_24bit.tga" }, );
 my %writeopts =
   (
-   gif=> { make_colors=>'webmap', translate=>'closest', gifquant=>'gen' },
+   gif=> { make_colors=>'webmap', translate=>'closest', gifquant=>'gen',
+         gif_delay=>20 },
   );
 
 for my $type (@types) {
