@@ -293,7 +293,7 @@ static int dlclose(void *handle) /* stub only */
   return 0;
 }
 
-static char *dlerror(void *handle) /* stub only */
+static char *dlerror(void) /* stub only */
 {
   printf("Error occurred\n");
   return dl_error; 
