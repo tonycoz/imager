@@ -718,6 +718,9 @@ Revision history for Perl extension Imager.
           which we use, define it if freetype doesn't.
         - Added extra options to rubthrough() so only a subpart of
           source image is used.
+        - the image fills didn't handle filling with source images of
+          less than four channels correctly
+
 =================================================================
 
         For latest versions check the Imager-devel pages:
