@@ -2,6 +2,7 @@
 use ExtUtils::MakeMaker;
 use Cwd;
 use Config;
+use File::Spec;
 
 #
 # IM_INCPATH      colon seperated list of paths to extra include paths
@@ -41,10 +42,12 @@ if ($MANUAL) {
 # Make sure there isn't a clash between the gif libraries.
 gifcheck();
 
+my $lib_cflags = '';
 for $frm(values %formats) {
   $F_DEFINE .= ' -D'.$frm->{def};
   $F_LIBS   .= ' '  .$frm->{libfiles};
   $F_OBJECT .= ' '  .$frm->{objfiles};
+  $lib_cflags   .= ' '  .$frm->{cflags} if $frm->{cflags};
 }
 
 $F_INC  = join ' ', map "-I$_", map / / ? qq{"$_"} : $_, 
@@ -69,7 +72,7 @@ if (defined $Config{'d_dlsymun'}) { $OSDEF  .= ' -DDLSYMUN'; }
        'VERSION_FROM' => 'Imager.pm',
        'LIBS'         => "$LFLAGS -lm $OSLIBS $F_LIBS",
        'DEFINE'       => "$F_DEFINE $EXTDEF $OSDEF $CFLAGS",
-       'INC'          => "$DFLAGS $F_INC",
+       'INC'          => "$lib_cflags $DFLAGS $F_INC",
        'OBJECT'       => join(' ', @objs, $F_OBJECT),
        clean          => { FILES=>'testout' },
       );
@@ -217,6 +220,11 @@ sub gd {
 sub checkformat {
   my $frm=shift;
 
+  my $code = $formats{$frm}{'code'};
+  if ($code) {
+    return 1 if $code->($formats{$frm}, $frm);
+  }
+
   my $libchk=$formats{$frm}{'libcheck'};
   my $incchk=$formats{$frm}{'inccheck'};
 
@@ -336,7 +344,8 @@ sub init {
 		   docs=>q{
 			   Png stands for Portable Network Graphics and is intended as
 			   a replacement for gif on the web. It is patent free and
-			   is recommended by the w3c, you need libpng to use these formats}
+			   is recommended by the w3c, you need libpng to use these formats},
+                   code => \&png_probe,
 		  };
 
   $formats{'gif'}={
@@ -417,10 +426,11 @@ DOCS
                            libcheck=>sub { $_[0] eq "libfreetype$aext" or $_[0] eq "libfreetype.$lext" },
                            libfiles=>'-lfreetype',
                            objfiles=>'freetyp2.o',
-                           docs=><<DOCS
+                           docs=><<DOCS,
 Freetype 2 supports both Truetype and Type 1 fonts, both of which are
 scalable.
 DOCS
+                           code => \&freetype2_probe,
                           };
   # Make fix indent
   for (keys %formats) { $formats{$_}->{docs} =~ s/^\s+/  /mg; }
@@ -466,4 +476,70 @@ sub getenv {
     print "Malloc debugging enabled\n";
   }
 
+}
+
+# probes for freetype2 by trying to run freetype-config
+sub freetype2_probe {
+  my ($frm, $frmkey) = @_;
+
+  is_exe('freetype-config') or return;
+
+  my $cflags = `freetype-config --cflags`
+    and !$? or return;
+  chomp $cflags;
+  
+  $frm->{cflags} = $cflags;
+  my $lflags = `freetype-config --libs`
+    and !$? or return;
+  chomp $lflags;
+  $frm->{libfiles} = $lflags;
+
+  printf "%10s: configured via freetype-config\n", $frmkey;
+
+  return 1;
+}
+
+# probes for libpng via pkg-config
+sub png_probe {
+  my ($frm, $frmkey) = @_;
+
+  is_exe('pkg-config') or return;
+
+  my $cflags;
+  my $config;
+  for my $check_conf (qw(libpng libpng12 libpng10)) {
+    $cflags = `pkg-config $check_conf --cflags`;
+    if ($cflags && !$?) {
+      $config = $check_conf;
+      last;
+    }
+  }
+  $config or return;
+
+  my $lflags = `pkg-config $config --libs`
+    and !$? or return;
+
+  chomp $cflags;
+  chomp $lflags;
+  $frm->{cflags} = $cflags;
+  $frm->{libfiles} = $lflags;
+
+  printf "%10s: configured via `pkg-config $config ...`\n", $frmkey;
+
+  return 1;
+}
+
+sub catfile {
+  return File::Spec->catfile(@_);
+}
+
+sub is_exe {
+  my ($name) = @_;
+
+  for my $dir (File::Spec->path) {
+    -x catfile($dir, "$name$Config{_exe}")
+      and return 1;
+  }
+
+  return;
 }

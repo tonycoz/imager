@@ -986,6 +986,8 @@ Revision history for Perl extension Imager.
   to their source.
   Resolves: https://rt.cpan.org/Ticket/Display.html?id=8520
 - added tiff_resolutionunit_name tag when reading tiff files
+- Makefile.PL now attempts to use freetype-config to configure freetype 2
+  and pkg-config to configure libpng.
 
 =================================================================
 
