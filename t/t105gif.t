@@ -1,9 +1,9 @@
 #!perl -w
 use strict;
 $|=1;
-print "1..61\n";
+print "1..69\n";
 use Imager qw(:all);
-require "t/testtools.pl";
+BEGIN { require "t/testtools.pl"; }
 
 my $buggy_giflib_file = "buggy_giflib.txt";
 
@@ -28,7 +28,7 @@ i_box_filled($timg, 0, 0, 20, 20, $green);
 i_box_filled($timg, 2, 2, 18, 18, $trans);
 
 if (!i_has_format("gif")) {
-  skipn(1, 61, "no gif support");
+  skipn(1, 69, "no gif support");
 } else {
     open(FH,">testout/t105.gif") || die "Cannot open testout/t105.gif\n";
     binmode(FH);
@@ -553,6 +553,22 @@ EOS
     # I don't see a way to test this, since we don't have a mechanism
     # to give the second image different quant options, we can't trigger
     # a failure just for the second image
+
+    # check that the i_format tag is set for both multiple and single
+    # image reads
+    {
+      my @anim = Imager->read_multi(file=>"testout/t105_anim.gif");
+      okn($num++, @anim == 5, "check we got all the images");
+      for my $frame (@anim) {
+        my ($type) = $frame->tags(name=>'i_format');
+        isn($num++, $type, 'gif', "check i_format for animation frame");
+      }
+
+      my $im = Imager->new;
+      okn($num++, $im->read(file=>"testout/t105.gif"), "read some gif");
+      my ($type) = $im->tags(name=>'i_format');
+      isn($num++, $type, 'gif', 'check i_format for single image read');
+    }
 }
 
 sub ok ($$$) {

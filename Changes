@@ -914,6 +914,7 @@ Revision history for Perl extension Imager.
 - added --palette action to tools/imager
 - i_img_pal_new() now releases the image object memory if creation
   fails.
+- set i_format to gif when reading gif files and test for it
 
 =================================================================
 
