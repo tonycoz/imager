@@ -537,7 +537,7 @@ i_line_dda(i_img *im, int x1, int y1, int x2, int y2, i_color *val) {
   
   for(x=x1; x<=x2; x++) {
     dy = y1+ (x-x1)/(float)(x2-x1)*(y2-y1);
-    i_ppix(im, x, rint(dy), val);
+    i_ppix(im, x, (int)(dy+0.5), val);
   }
 }
 

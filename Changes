@@ -671,13 +671,19 @@ Revision history for Perl extension Imager.
           specific to Imager::Font::Type1
         - mc_web_map was storing colors with an alpha of 0
         - update the URLs for libpng and zlib
-				- Fixed empty string handling for tt font driver.
-				- Fixed tiff handling of images all contained in a 
-					single strip (rowsperstrip = -1) and added a hack
-					for images missing the rowsperstrip tag.
-				- Fixed default parameters for crop()
-				- Added Preliminary specialized scaling code.
-				- Added image type detection.
+        - Fixed empty string handling for tt font driver.
+        - Fixed tiff handling of images all contained in a 
+          single strip (rowsperstrip = -1) and added a hack
+          for images missing the rowsperstrip tag.
+        - Fixed default parameters for crop()
+        - Added Preliminary specialized scaling code.
+        - Added image type detection.
+        - added smoke test for win32 font bounding_box() method, and
+          fixed the problem reported in ticket #1748.
+        - update t37w32font.t to use i_line() instead of i_draw()
+        - replaced non-portable call to rint() with (int)(dy+0.5) (so we
+          can build on Win32)
+
 =================================================================
 
         For latest versions check the Imager-devel pages:
