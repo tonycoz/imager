@@ -1902,6 +1902,31 @@ i_readtga_wiol(ig, length)
                int     length
 
 
+undef_int
+i_writergb_wiol(im,ig, wierdpack, compress, idstring)
+    Imager::ImgRaw     im
+        Imager::IO     ig
+               int     wierdpack
+               int     compress
+              char*    idstring
+            PREINIT:
+                SV* sv1;
+                int rc;
+                int idlen;
+	       CODE:
+                idlen  = SvCUR(ST(4));
+                RETVAL = i_writergb_wiol(im, ig, wierdpack, compress, idstring, idlen);
+                OUTPUT:
+                RETVAL
+
+
+Imager::ImgRaw
+i_readrgb_wiol(ig, length)
+        Imager::IO     ig
+               int     length
+
+
+
 Imager::ImgRaw
 i_scaleaxis(im,Value,Axis)
     Imager::ImgRaw     im

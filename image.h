@@ -564,6 +564,9 @@ extern i_img *i_readbmp_wiol(io_glue *ig);
 i_img   * i_readtga_wiol(io_glue *ig, int length);
 undef_int i_writetga_wiol(i_img *img, io_glue *ig, int wierdpack, int compress, char *idstring, size_t idlen);
 
+i_img   * i_readrgb_wiol(io_glue *ig, int length);
+undef_int i_writergb_wiol(i_img *img, io_glue *ig, int wierdpack, int compress, char *idstring, size_t idlen);
+
 i_img * i_scaleaxis(i_img *im, float Value, int Axis);
 i_img * i_scale_nn(i_img *im, float scx, float scy);
 i_img * i_haar(i_img *im);

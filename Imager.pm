@@ -895,7 +895,7 @@ sub read {
     $self->{ERRSTR}='format not supported'; return undef;
   }
 
-  my %iolready=(jpeg=>1, png=>1, tiff=>1, pnm=>1, raw=>1, bmp=>1, tga=>1);
+  my %iolready=(jpeg=>1, png=>1, tiff=>1, pnm=>1, raw=>1, bmp=>1, tga=>1, rgb=>1);
 
   if ($iolready{$input{'type'}}) {
     # Setup data source
@@ -950,11 +950,20 @@ sub read {
       $self->{IMG}=i_readtga_wiol( $IO, -1 ); # Fixme, check if that length parameter is ever needed
       if ( !defined($self->{IMG}) ) {
 	$self->{ERRSTR}=$self->_error_as_msg();
-#	$self->{ERRSTR}='unable to read tga image';
 	return undef;
       }
       $self->{DEBUG} && print "loading a tga file\n";
     }
+
+    if ( $input{'type'} eq 'rgb' ) {
+      $self->{IMG}=i_readrgb_wiol( $IO, -1 ); # Fixme, check if that length parameter is ever needed
+      if ( !defined($self->{IMG}) ) {
+	$self->{ERRSTR}=$self->_error_as_msg();
+	return undef;
+      }
+      $self->{DEBUG} && print "loading a tga file\n";
+    }
+
 
     if ( $input{'type'} eq 'raw' ) {
       my %params=(datachannels=>3,storechannels=>3,interleave=>1,%input);
@@ -2233,6 +2242,7 @@ sub def_guess_type {
   return 'png'  if ($ext eq "png");
   return 'bmp'  if ($ext eq "bmp" || $ext eq "dib");
   return 'tga'  if ($ext eq "tga");
+  return 'rgb'  if ($ext eq "rgb");
   return 'gif'  if ($ext eq "gif");
   return ();
 }
