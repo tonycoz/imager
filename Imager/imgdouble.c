@@ -86,6 +86,8 @@ Creates a new double per sample image.
 =cut
 */
 i_img *i_img_double_new_low(i_img *im, int x, int y, int ch) {
+  int bytes;
+
   mm_log((1,"i_img_double_new(x %d, y %d, ch %d)\n", x, y, ch));
 
   if (x < 1 || y < 1) {
@@ -96,13 +98,18 @@ i_img *i_img_double_new_low(i_img *im, int x, int y, int ch) {
     i_push_errorf(0, "channels must be between 1 and %d", MAXCHANNELS);
     return NULL;
   }
+  bytes = x * y * ch * sizeof(double);
+  if (bytes / y / ch / sizeof(double) != x) {
+    i_push_errorf(0, "integer overflow calculating image allocation");
+    return NULL;
+  }
   
   *im = IIM_base_double_direct;
   i_tags_new(&im->tags);
   im->xsize = x;
   im->ysize = y;
   im->channels = ch;
-  im->bytes = x * y * ch * sizeof(double);
+  im->bytes = bytes;
   im->ext_data = NULL;
   im->idata = mymalloc(im->bytes);
   if (im->idata) {

@@ -1,6 +1,6 @@
 #!perl -w
 use strict;
-BEGIN { $| = 1; print "1..43\n"; }
+BEGIN { $| = 1; print "1..51\n"; }
 my $loaded;
 END {print "not ok 1\n" unless $loaded;}
 use Imager qw(:all :handy);
@@ -107,6 +107,50 @@ okn($num++, !Imager->new(xsize=>1, ysize=>1, bits=>16, channels=>5),
     "fail to create a five channel image");
 matchn($num++, Imager->errstr, qr/channels must be between 1 and 4/,
        "and correct error message");
+
+{
+  # https://rt.cpan.org/Ticket/Display.html?id=8213
+  # check for handling of memory allocation of very large images
+  # only test this on 32-bit machines - on a 64-bit machine it may
+  # result in trying to allocate 4Gb of memory, which is unfriendly at
+  # least and may result in running out of memory, causing a different
+  # type of exit
+  use Config;
+  if ($Config{ivsize} == 4) {
+    my $uint_range = 256 ** $Config{ivsize};
+    print "# range $uint_range\n";
+    my $dim1 = int(sqrt($uint_range/2))+1;
+    
+    my $im_b = Imager->new(xsize=>$dim1, ysize=>$dim1, channels=>1, bits=>16);
+    isn($num++, $im_b, undef, "integer overflow check - 1 channel");
+    
+    $im_b = Imager->new(xisze=>$dim1, ysize=>1, channels=>1, bits=>16);
+    okn($num++, $im_b, "but same width ok");
+    $im_b = Imager->new(xisze=>1, ysize=>$dim1, channels=>1, bits=>16);
+    okn($num++, $im_b, "but same height ok");
+    matchn($num++, Imager->errstr, qr/integer overflow/,
+           "check the error message");
+
+    # do a similar test with a 3 channel image, so we're sure we catch
+    # the same case where the third dimension causes the overflow
+    my $dim3 = int(sqrt($uint_range / 3 / 2))+1;
+    
+    $im_b = Imager->new(xsize=>$dim3, ysize=>$dim3, channels=>3, bits=>16);
+    isn($num++, $im_b, undef, "integer overflow check - 3 channel");
+    
+    $im_b = Imager->new(xisze=>$dim3, ysize=>1, channels=>3, bits=>16);
+    okn($num++, $im_b, "but same width ok");
+    $im_b = Imager->new(xisze=>1, ysize=>$dim3, channels=>3, bits=>16);
+    okn($num++, $im_b, "but same height ok");
+
+    matchn($num++, Imager->errstr, qr/integer overflow/,
+           "check the error message");
+  }
+  else {
+    skipn($num, 8, "don't want to allocate 4Gb");
+    $num += 8;
+  }
+}
 
 sub NCF {
   return Imager::Color::Float->new(@_);

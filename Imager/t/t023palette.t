@@ -4,7 +4,7 @@ use strict;
 my $loaded;
 BEGIN { 
   require "t/testtools.pl";
-  $| = 1; print "1..49\n";
+  $| = 1; print "1..57\n";
 }
 END { okx(0, "loading") unless $loaded; }
 use Imager;
@@ -135,6 +135,50 @@ okx(!Imager->new(xsize=>1, ysize=>1, type=>'paletted', channels=>5),
     "fail on 5 channels");
 matchx(Imager->errstr, qr/Channels must be positive and <= 4/,
        "and correct error message");
+
+{
+  # https://rt.cpan.org/Ticket/Display.html?id=8213
+  # check for handling of memory allocation of very large images
+  # only test this on 32-bit machines - on a 64-bit machine it may
+  # result in trying to allocate 4Gb of memory, which is unfriendly at
+  # least and may result in running out of memory, causing a different
+  # type of exit
+  use Config;
+  if ($Config{ivsize} == 4) {
+    my $uint_range = 256 ** $Config{ivsize};
+    my $dim1 = int(sqrt($uint_range))+1;
+    
+    my $im_b = Imager->new(xsize=>$dim1, ysize=>$dim1, channels=>1, type=>'paletted');
+    isx($im_b, undef, "integer overflow check - 1 channel");
+    
+    $im_b = Imager->new(xisze=>$dim1, ysize=>1, channels=>1, type=>'paletted');
+    okx($im_b, "but same width ok");
+    $im_b = Imager->new(xisze=>1, ysize=>$dim1, channels=>1, type=>'paletted');
+    okx($im_b, "but same height ok");
+    matchx(Imager->errstr, qr/integer overflow/,
+           "check the error message");
+
+    # do a similar test with a 3 channel image, so we're sure we catch
+    # the same case where the third dimension causes the overflow
+    # for paletted images the third dimension can't cause an overflow
+    # but make sure we didn't anything too dumb in the checks
+    my $dim3 = $dim1;
+    
+    $im_b = Imager->new(xsize=>$dim3, ysize=>$dim3, channels=>3, type=>'paletted');
+    isx($im_b, undef, "integer overflow check - 3 channel");
+    
+    $im_b = Imager->new(xisze=>$dim3, ysize=>1, channels=>3, type=>'paletted');
+    okx($im_b, "but same width ok");
+    $im_b = Imager->new(xisze=>1, ysize=>$dim3, channels=>3, type=>'paletted');
+    okx($im_b, "but same height ok");
+
+    matchx(Imager->errstr, qr/integer overflow/,
+           "check the error message");
+  }
+  else {
+    skipx(8, "don't want to allocate 4Gb");
+  }
+}
 
 sub coloreq {
   my ($left, $right, $comment) = @_;

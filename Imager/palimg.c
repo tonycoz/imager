@@ -84,6 +84,7 @@ Currently 0 < maxpal <= 256
 */
 i_img *i_img_pal_new_low(i_img *im, int x, int y, int channels, int maxpal) {
   i_img_pal_ext *palext;
+  int bytes;
 
   i_clear_error();
   if (maxpal < 0 || maxpal > 256) {
@@ -98,6 +99,11 @@ i_img *i_img_pal_new_low(i_img *im, int x, int y, int channels, int maxpal) {
     i_push_errorf(0, "Channels must be positive and <= %d", MAXCHANNELS);
     return NULL;
   }
+  bytes = sizeof(i_palidx) * x * y;
+  if (bytes / y / sizeof(i_palidx) != x) {
+    i_push_errorf(0, "integer overflow calculating image allocation");
+    return NULL;
+  }
 
   memcpy(im, &IIM_base_8bit_pal, sizeof(i_img));
   palext = mymalloc(sizeof(i_img_pal_ext));
@@ -107,7 +113,7 @@ i_img *i_img_pal_new_low(i_img *im, int x, int y, int channels, int maxpal) {
   palext->last_found = -1;
   im->ext_data = palext;
   i_tags_new(&im->tags);
-  im->bytes = sizeof(i_palidx) * x * y;
+  im->bytes = bytes;
   im->idata = mymalloc(im->bytes);
   im->channels = channels;
   memset(im->idata, 0, im->bytes);
