@@ -173,19 +173,27 @@ if (!i_has_format("gif")) {
       print "not ok 15\n";
     }
 
-    # reading with a callback
-    # various sizes to make sure the buffering works
-    # requested size
-    open FH, "<testimg/scale.gif" or die "Cannot open testimg/scale.gif";
-    binmode FH;
-    $img = i_readgif_callback(sub { my $tmp; read(FH, $tmp, $_[0]) and $tmp });
-    close FH; 
-    print $img ? "ok 16\n" : "not ok 16\n";
-
-    print test_readgif_cb(1) ? "ok 17\n" : "not ok 17\n";
-    print test_readgif_cb(512) ? "ok 18\n" : "not ok 18\n";
-    print test_readgif_cb(1024) ? "ok 19\n" : "not ok 19\n";
-
+    my $gifvertext = Imager::i_giflib_version();
+    $gifvertext =~ /(\d+\.\d+)/;
+    my $gifver = $1 || 0;
+    if ($gifver >= 4.0) {
+      # reading with a callback
+      # various sizes to make sure the buffering works
+      # requested size
+      open FH, "<testimg/scale.gif" or die "Cannot open testimg/scale.gif";
+      binmode FH;
+      # no callback version in giflib3, so don't overwrite a good image
+      my $img2 = i_readgif_callback(sub { my $tmp; read(FH, $tmp, $_[0]) and $tmp });
+      close FH; 
+      print $img ? "ok 16\n" : "not ok 16\n";
+      
+      print test_readgif_cb(1) ? "ok 17\n" : "not ok 17\n";
+      print test_readgif_cb(512) ? "ok 18\n" : "not ok 18\n";
+      print test_readgif_cb(1024) ? "ok 19\n" : "not ok 19\n";
+    }
+    else {
+      print "ok $_ # skip - giflib3 doesn't support callbacks\n" for (16..19);
+    }
     open FH, ">testout/t10_mc.gif" or die "Cannot open testout/t10_mc.gif";
     binmode FH;
     i_writegifmc($img, fileno(FH), 7) or die "Cannot write testout/t10_mc.gif";
@@ -234,27 +242,28 @@ if (!i_has_format("gif")) {
     close FH;
     print "ok 21\n";
 
-    unless (fork) {
-      # this can SIGSEGV with some versions of giflib
-      open FH, ">testout/t10_anim_cb.gif" or die $!;
-      i_writegif_callback(sub { 
-				print FH $_[0] 
-			      },
-			  -1, # max buffering
-			  { make_colors=>'webmap',	
-			    translate=>'closest',
-			    gif_delays=>\@gif_delays,
-			    gif_disposal=>\@gif_disposal,
-			    #transp=>'ordered',
-			    tr_orddith=>'dot8'}, @imgs)
-	or die "Cannot write anim gif";
-      close FH;
-      print "ok 22\n";
-      exit;
-    }
-    if (wait > 0 && $?) {
-      print "not ok 22 # you probably need to patch giflib\n";
-      print <<EOS;
+    if ($gifver >= 4.0) {
+      unless (fork) {
+	# this can SIGSEGV with some versions of giflib
+	open FH, ">testout/t10_anim_cb.gif" or die $!;
+	i_writegif_callback(sub { 
+			      print FH $_[0] 
+			    },
+			    -1, # max buffering
+			    { make_colors=>'webmap',	
+			      translate=>'closest',
+			      gif_delays=>\@gif_delays,
+			      gif_disposal=>\@gif_disposal,
+			      #transp=>'ordered',
+			      tr_orddith=>'dot8'}, @imgs)
+	  or die "Cannot write anim gif";
+	close FH;
+	print "ok 22\n";
+	exit;
+      }
+      if (wait > 0 && $?) {
+	print "not ok 22 # you probably need to patch giflib\n";
+	print <<EOS;
 #--- egif_lib.c	2000/12/11 07:33:12	1.1
 #+++ egif_lib.c	2000/12/11 07:33:48
 #@@ -167,6 +167,12 @@
@@ -271,6 +280,10 @@ if (!i_has_format("gif")) {
 #     GifFile->Private = (VoidPtr) Private;
 #     Private->FileHandle = 0;
 EOS
+      }
+    }
+    else {
+      print "ok 22 # skip - giflib3 doesn't support callbacks\n";
     }
     @imgs = ();
     for $g (0..3) {
