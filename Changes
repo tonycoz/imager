@@ -844,6 +844,11 @@ Revision history for Perl extension Imager.
           Resolves https://rt.cpan.org/Ticket/Display.html?id=7581
         - built 0.43_01 for testing
 
+0.43_02
+
+- the changes to scale() had some problems with integer vs floating point
+  calculations (only caught in tests under perl 5.8.5 <sigh>)
+
 =================================================================
 
         For latest versions check the Imager-devel pages:
