@@ -2962,6 +2962,10 @@ color names - L<Imager::Color>, L<Imager::Color::Table>
 
 combine modes - L<Imager::Fill/combine>
 
+contrast - L<Imager::Filter/contrast>, L<Imager::Filter/autolevels>
+
+convolution - L<Imager::Filter/conv>
+
 cropping - L<Imager::Transformations/crop>
 
 dpi - L<Imager::ImageTypes/i_xres>
@@ -2999,19 +3003,40 @@ fountain fill - L<Imager::Fill/"Fountain fills">,
 L<Imager::Filters/fountain>, L<Imager::Fountain>,
 L<Imager::Filters/gradgen>
 
+GIF files - L<Imager::Files/"GIF">
+
+GIF files, animated - L<Imager::File/"Writing an animated GIF">
+
 gradient fill - L<Imager::Fill/"Fountain fills">,
 L<Imager::Filters/fountain>, L<Imager::Fountain>,
 L<Imager::Filters/gradgen>
 
+guassian blur - L<Imager::Filter/guassian>
+
 hatch fills - L<Imager::Fill/"Hatched fills">
+
+invert image - L<Imager::Filter/hardinvert>
 
 JPEG - L<Imager::Files/"JPEG">
 
 lines, drawing - L<Imager::Draw/line>
 
+matrix - L<Imager::Matrix2d>, 
+L<Imager::Transformations/"Matrix Transformations">,
+L<Imager::Font/transform>
+
 metadata, image - L<Imager::ImageTypes/"Tags">
 
-png - L<Imager::Files/"PNG">
+mosaic - L<Imager::Filter/mosaic>
+
+noise, filter - L<Imager::Filter/noise>
+
+noise, rendered - L<Imager::Filter/turbnoise>,
+L<Imager::Filter/radnoise>
+
+posterize - L<Imager::Filter/postlevels>
+
+png files - L<Imager::Files>, L<Imager::Files/"PNG">
 
 pnm - L<Imager::Files/"PNM (Portable aNy Map">
 
@@ -3037,6 +3062,12 @@ L<Imager::Font::Wrap>
 text, wrapping text in an area - L<Imager::Font::Wrap>
 
 text, measuring - L<Imager::Font/bounding_box>, L<Imager::Font::BBox>
+
+tiles, color - L<Imager::Filter/mosaic>
+
+unsharp mask - L<Imager::Filter/unsharpmask>
+
+watermark - L<Imager::Filter/watermark>
 
 writing an image - L<Imager::Files>
 
