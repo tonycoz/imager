@@ -42,7 +42,7 @@ sub _hsv_to_rgb {
 }
 
 # cache of loaded gimp files
-# each key is a filename, under each key is a hashref with the following 
+# each key is a filename, under each key is a hashref with the following
 # keys:
 #   mod_time => last mod_time of file
 #   colors => hashref name to arrayref of colors
@@ -140,6 +140,8 @@ my @x_search =
    '/usr/lib/X11/rgb.txt', # seems fairly standard
    '/usr/local/lib/X11/rgb.txt', # seems possible
    '/usr/X11R6/lib/X11/rgb.txt', # probably the same as the first
+   '/usr/openwin/lib/rgb.txt',
+   '/usr/openwin/lib/X11/rgb.txt',
   );
 
 # x rgb.txt cache
@@ -252,7 +254,7 @@ sub pspec {
     my $hue = exists $args{hue}        ? $args{hue}        : $args{h};
     my $sat = exists $args{saturation} ? $args{saturation} : $args{'s'};
     my $val = exists $args{value}      ? $args{value}      : $args{v};
-    
+
     @result = _hsv_to_rgb($hue, $sat, $val);
   }
   elsif (exists $args{web}) {
