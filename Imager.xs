@@ -855,8 +855,12 @@ i_map(im, pmaps)
 	      if(av_len(avsub) != 255) continue;
 	      mask |= 1<<j;
               for (i=0; i<256 ; i++) {
+		int val;
 		temp = av_fetch(avsub, i, 0);
-		maps[j][i] = temp ? SvIV(*temp) : 0;
+		val = temp ? SvIV(*temp) : 0;
+		if (val<0) val = 0;
+		if (val>255) val = 255;
+		maps[j][i] = val;
 	      }
             }
           }

@@ -16,13 +16,13 @@ my $imbase = Imager::ImgRaw::new(200,300,3);
 $tst = 1;
 
 i_map($imbase, [ [],     [],     \@map1 ]);
-print $tst++." ok\n";
+print "ok ".$tst++."\n";
 i_map($imbase, [ \@map1, \@map1, \@map1 ]);
 
-print $tst++." ok\n";
+print "ok ".$tst++."\n";
 i_map($imbase, [ \@map1, \@map2, \@map3 ]);
 
-print $tst++." ok\n";
+print "ok ".$tst++."\n";
 i_map($imbase, [ \@maps, \@mapl, \@map3 ]);
 
 # test the highlevel interface
@@ -31,8 +31,8 @@ i_map($imbase, [ \@maps, \@mapl, \@map3 ]);
 
 my $im = Imager->new;
 if ($im->read(file=>'testimg/scale.ppm')) {
-  print $tst++.( $im->map(r=>\@map1, g=>\@map2, b=>\@map3) ? " ok\n" : " not ok\n");
-  print $tst++.( $im->map(maps=>[\@map1, [], \@map2]) ? " ok\n" : " not ok\n");
+  print( ( $im->map(red=>\@map1, green=>\@map2, blue=>\@map3) ? "ok " : "not ok ").$tst++."\n" );
+  print( ( $im->map(maps=>[\@map1, [], \@map2]) ? "ok " : "not ok "). $tst++."\n");
 }
 else {
   die "could not load testout/scale.ppm\n";

@@ -1295,19 +1295,21 @@ sub convert {
 }
 
 
-
-
-
 # general function to map an image through lookup tables
+
 sub map {
   my ($self, %opts) = @_;
-  my @chlist = qw( r g b a );
+  my @chlist = qw( red green blue alpha );
 
   if (!exists($opts{'maps'})) {
     # make maps from channel maps
     my $chnum;
     for $chnum (0..$#chlist) {
-      $opts{'maps'}[$chnum] = $opts{$chlist[$chnum]} if exists $opts{$chlist[$chnum]};
+      if (exists $opts{$chlist[$chnum]}) {
+	$opts{'maps'}[$chnum] = $opts{$chlist[$chnum]};
+      } elsif (exists $opts{'all'}) {
+	$opts{'maps'}[$chnum] = $opts{'all'};
+      }
     }
   }
   if ($opts{'maps'} and $self->{IMG}) {
@@ -1315,22 +1317,6 @@ sub map {
   }
   return $self;
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -2422,6 +2408,50 @@ or to convert a 3 channel image to greyscale using equal weightings:
 
   $new = $img->convert(matrix=>[ [ 0.333, 0.333, 0.334 ] ])
 
+=head2 Color Mappings
+
+You can use the map method to map the values of each channel of an
+image independently using a list of lookup tables.  It's important to
+realize that the modification is made inplace.  The function simply
+returns the input image again or undef on failure.
+
+Each channel is mapped independently through a lookup table with 256
+entries.  The elements in the table should not be less than 0 and not
+greater than 255.  If they are out of the 0..255 range they are
+clamped to the range.  If a table does not contain 256 entries it is
+silently ignored.
+
+Single channels can mapped by specifying their name and the mapping
+table.  The channel names are C<red>, C<green>, C<blue>, C<alpha>.
+
+  @map = map { int( $_/2 } 0..255;
+  $img->map( red=>\@map );
+
+It is also possible to specify a single map that is applied to all
+channels, alpha channel included.  For example this applies a gamma
+correction with a gamma of 1.4 to the input image.
+
+  $gamma = 1.4;
+  @map = map { int( 0.5 + 255*($_/255)**$gamma ) } 0..255;
+  $img->map(all=> \@map);
+
+The C<all> map is used as a default channel, if no other map is
+specified for a channel then the C<all> map is used instead.  If we
+had not wanted to apply gamma to the alpha channel we would have used:
+
+  $img->map(all=> \@map, alpha=>[]);
+
+Since C<[]> contains fewer than 256 element the gamma channel is
+unaffected.
+
+It is also possible to simply specify an array of maps that are
+applied to the images in the rgba order.  For example to apply
+maps to the C<red> and C<blue> channels one would use:
+
+  $img->map(maps=>[\@redmap, [], \@bluemap]);
+
+
+
 =head2 Transformations
 
 Another special image method is transform.  It can be used to generate
@@ -2604,7 +2634,8 @@ A few examples:
 
 =item rpnexpr=>'x 25 % 15 * y 35 % 10 * getp1 !pat x y getp1 !pix @pix sat 0.7 gt @pat @pix ifp'
 
-tiles a smaller version of the input image over itself where the colour has a saturation over 0.7.
+tiles a smaller version of the input image over itself where the
+colour has a saturation over 0.7.
 
 =item rpnexpr=>'x 25 % 15 * y 35 % 10 * getp1 !pat y 360 / !rat x y getp1 1 @rat - pmult @pat @rat pmult padd'
 
@@ -2678,13 +2709,12 @@ only 2 colors used - it will have a 128 colortable anyway.
 
 =head1 AUTHOR
 
-Arnar M. Hrafnkelsson, addi@umich.edu
-And a great deal of help from others - see the README for a complete
-list.
+Arnar M. Hrafnkelsson, addi@umich.edu, and recently lots of assistance
+from Tony Cook.  See the README for a complete list.
+
 =head1 SEE ALSO
 
-perl(1), Imager::Color(3), Affix::Infix2Postfix(3), Parse::RecDescent(3)
-http://www.eecs.umich.edu/~addi/perl/Imager/
-
+perl(1), Imager::Color(3), Imager::Font, Affix::Infix2Postfix(3),
+Parse::RecDescent(3) http://www.eecs.umich.edu/~addi/perl/Imager/
 
 =cut
