@@ -63,6 +63,7 @@ lib/Imager/Font.pm
 lib/Imager/Font/Type1.pm
 lib/Imager/Font/Truetype.pm
 lib/Imager/Font/FreeType2.pm
+lib/Imager/Font/Win32.pm
 lib/Imager/Fountain.pm
 lib/Imager/interface.pod
 lib/Imager/Matrix2d.pm
