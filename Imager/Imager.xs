@@ -1864,7 +1864,7 @@ i_t1_glyph_name(handle, text_sv, utf8 = 0)
         text = SvPV(text_sv, work_len);
         len = work_len;
         while (len) {
-          unsigned char ch;
+          unsigned long ch;
           if (utf8) {
             ch = i_utf8_advance(&text, &len);
             if (ch == ~0UL) {
@@ -2053,7 +2053,7 @@ i_tt_glyph_name(handle, text_sv, utf8 = 0)
         text = SvPV(text_sv, work_len);
         len = work_len;
         while (len) {
-          unsigned char ch;
+          unsigned long ch;
           if (utf8) {
             ch = i_utf8_advance(&text, &len);
             if (ch == ~0UL) {
