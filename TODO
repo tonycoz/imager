@@ -1,17 +1,17 @@
                          *** TODO ***
-                        
 
 
 Iolayer:
 - Add scalar/mmap to iolayer
-- Add close() code to iolayer
+- Add close() code to iolayer for fakeseek sources.
 - Merge callback interface into iolayer
-- Add interface for writing to all formats but tiff
-- Add interface for reading for png (started), 
-  gif (merge with cb patch), ppm and raw
-- Add new tests once all formats support io_layer
-- Implment the maxread threshold (Indicates how far 
-  a library can read before it indicates that it's done).
+- Add iolayer reading/writing for gif
+- and raw
+- Implment the maxread threshold (Indicates how much can
+  be read from a source before it stops reading from its
+  underlying source.  For making sure only the relevant
+  data is read from a socket for example. 
+
 
 Enhanched internal structure:
 
@@ -29,14 +29,14 @@ MultiImage & metadata support:
   TIFF)
 
 New Features:
-- Add mng support.
+- Add mng support, pcx and aalib support.
 
 - Transforms, interpolated multidimensional lookup tables.
   Usefull for CMYK <-> RGB table lookup.
 
 - Finish antialiased filled polygon function.
 
-- advanced font layout (spacing, kerning, alignment) (sky)
+- advanced font layout (spacing, kerning, alignment) (Artur?)
 
 - ways to check if characters are present in a font, eg. checking if
   ligatures are present
@@ -70,7 +70,7 @@ Clean up:
 
 - dynaload.c is strongly tied to perl
 
-- Add mycalloc() and myrealloc() to the malloc() wrappers.
+- Add mycalloc() memory allocation wrappers.
 
 - should we overload <=> or cmp for Imager::Color objects?
   too many worms, leave it out
@@ -90,21 +90,16 @@ Format specific issues:
   installation of the patches in Makefile.PL to let gif.c
   know what features it can use.
 
-- Add options for pnm, writer to save in any of the p1..P6
+- Add options for pnm writer to save in any of the p1..P6
   formats.  Even if the input has 1 channel, write 3 and such
   cases.  Also allow ascii mode.  Need to be able to write 
   pbm images which needs ties to the quantization code.
 
-- pcx and targa image formats
+- save paletted images as paletted where that's supported.  Done
+  for gif/tga.  Not done for png/tiff yet.
 
-- aalib support
-
-- save other formats as paletted for paletted where that's supported
-
-- read other format paletted images as paletted images
-
-- have jpeg.c write 2 or 4 channel images as 1 or 3 channels respectively
-
+- read other format paletted images as paletted images.  This has 
+  been done for gif/tga formats but not for tiff/png.
 
 Documentation:
 - Add to the documentation
