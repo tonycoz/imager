@@ -1,6 +1,6 @@
 #!perl -w
 use strict;
-BEGIN { $| = 1; print "1..29\n"; }
+BEGIN { $| = 1; print "1..30\n"; }
 my $loaded;
 END {print "not ok 1\n" unless $loaded;}
 use Imager qw(:all :handy);
@@ -19,6 +19,7 @@ ok(3, Imager::i_img_getmask($im_g) & 1, "1 channel image bad mask");
 ok(4, Imager::i_img_virtual($im_g) == 0, 
   "1 channel image thinks it is virtual");
 my $double_bits = length(pack("d", 1)) * 8;
+print "# $double_bits double bits\n";
 ok(5, Imager::i_img_bits($im_g) == $double_bits, 
    "1 channel image has bits != $double_bits");
 ok(6, Imager::i_img_type($im_g) == 0, "1 channel image isn't direct");
@@ -60,12 +61,13 @@ test_colorf_glin(26, $im_rgb, 0, 1,
                  ($redf) x 20, ($greenf) x 60, ($redf) x 20);
 
 # basic OO tests
-my $oo16img = Imager->new(xsize=>200, ysize=>201, bits=>16)
-  or print "not ";
-print "ok 28\n";
-$oo16img->bits == 16 or print "not ";
-print "ok 29\n";
+my $ooimg = Imager->new(xsize=>200, ysize=>201, bits=>'double');
+ok(28, $ooimg, "couldn't make double image");
+ok(29, $ooimg->bits eq 'double', "oo didn't give double image");
 
+# check that the image is copied correctly
+my $oocopy = $ooimg->copy;
+ok(30, $oocopy->bits eq 'double', "oo copy didn't give double image");
 
 sub NCF {
   return Imager::Color::Float->new(@_);

@@ -647,9 +647,16 @@ i_copy(i_img *im, i_img *src) {
       myfree(pv);
     }
     else {
-      /* currently the only other depth is 16 */
       i_fcolor *pv;
-      i_img_16_new_low(im, x1, y1, src->channels);
+      if (src->bits == i_16_bits)
+	i_img_16_new_low(im, x1, y1, src->channels);
+      else if (src->bits == i_double_bits)
+	i_img_double_new_low(im, x1, y1, src->channels);
+      else {
+	fprintf(stderr, "i_copy(): Unknown image bit size %d\n", src->bits);
+	return; /* I dunno */
+      }
+
       pv = mymalloc(sizeof(i_fcolor) * x1);
       for (y = 0; y < y1; ++y) {
         i_glinf(src, 0, x1, y, pv);
@@ -1063,8 +1070,11 @@ i_img *i_sametype(i_img *src, int xsize, int ysize) {
     if (src->bits == 8) {
       return i_img_empty_ch(NULL, xsize, ysize, src->channels);
     }
-    else if (src->bits == 16) {
+    else if (src->bits == i_16_bits) {
       return i_img_16_new(xsize, ysize, src->channels);
+    }
+    else if (src->bits == i_double_bits) {
+      return i_img_double_new(xsize, ysize, src->channels);
     }
     else {
       i_push_error(0, "Unknown image bits");

@@ -686,7 +686,11 @@ sub findcolor {
 
 sub bits {
   my $self = shift;
-  $self->{IMG} and i_img_bits($self->{IMG});
+  my $bits = $self->{IMG} && i_img_bits($self->{IMG});
+  if ($bits && $bits == length(pack("d", 1)) * 8) {
+    $bits = 'double';
+  }
+  $bits;
 }
 
 sub type {
@@ -2807,7 +2811,8 @@ the function return undef.  Examples:
   }
 
 The bits() method retrieves the number of bits used to represent each
-channel in a pixel, typically 8.  The type() method returns either
+channel in a pixel, 8 for a normal image, 16 for 16-bit image and
+'double' for a double/channel image.  The type() method returns either
 'direct' for truecolor images or 'paletted' for paletted images.  The
 virtual() method returns non-zero if the image contains no actual
 pixels, for example masked images.
