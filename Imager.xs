@@ -1687,8 +1687,31 @@ i_gradgen(im, ...)
 
 
 
-
-
+void
+i_errors()
+      PREINIT:
+        i_errmsg *errors;
+	int i;
+	int count;
+	AV *av;
+	SV *ref;
+	SV *sv;
+      PPCODE:
+	errors = i_errors();
+	i = 0;
+	while (errors[i].msg) {
+	  av = newAV();
+	  sv = newSVpv(errors[i].msg, strlen(errors[i].msg));
+	  if (!av_store(av, 0, sv)) {
+	    SvREFCNT_dec(sv);
+	  }
+	  sv = newSViv(errors[i].code);
+	  if (!av_store(av, 1, sv)) {
+	    SvREFCNT_dec(sv);
+	  }
+	  PUSHs(sv_2mortal(newRV_noinc((SV*)av)));
+	  ++i;
+	}
 
 void
 i_nearest_color(im, ...)
