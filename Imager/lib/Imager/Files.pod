@@ -215,7 +215,7 @@ When reading a GIF all of the sub-images are combined using the screen
 size and image positions into one big image, producing an RGB image.
 This may change in the future to produce a paletted image where possible.
 
-When you read a single GIF with C<<$img->read()>> you can supply a
+When you read a single GIF with C<$img-E<gt>read()> you can supply a
 reference to a scalar in the C<colors> parameter, if the image is read
 the scalar will be filled with a reference to an anonymous array of
 L<Imager::Color> objects, representing the palette of the image.  This
