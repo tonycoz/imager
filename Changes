@@ -1044,6 +1044,8 @@ Revision history for Perl extension Imager.
 - Imager::Cookbook wasn't included in the MANIFEST
 - added samp-form.cgi and samp-image.cgi to the samples directory to 
   demonstrate displaying a generated image on a HTML page.
+- Makefile.PL now adds rules to generate a suitable META.yml to the
+  generated Makefile.
 
 =================================================================
 

@@ -90,3 +90,8 @@ pure_all ::
 
 }
 }
+
+# EU::MM crashes without this when we define it in the base Makefile.PL
+sub MY::metafile {
+  '';
+}
