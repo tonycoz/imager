@@ -213,7 +213,6 @@ testimg/winrgb8.bmp  8-bit bmp base
 testimg/winrgb8off.bmp  8-bit bmp with image data offset from header
 tga.c           Reading and writing Targa files
 tiff.c
-tools/imager    Command-line tool for imager (experimental)
 trans2.c
 transform.perl	Shell interface to Imager::Transform
 typemap
