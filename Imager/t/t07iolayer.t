@@ -27,6 +27,7 @@ undef($im);
 
 
 open(FH, "<testimg/penguin-base.ppm");
+binmode(FH);
 $data = <FH>;
 close(FH);
 $IO3 = Imager::io_new_buffer($data);
