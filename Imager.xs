@@ -1565,7 +1565,8 @@ i_img_diff(im1,im2)
 
 
 undef_int	  
-i_init_fonts()
+i_init_fonts(t1log=0)
+    int t1log
 
 #ifdef HAVE_LIBT1
 

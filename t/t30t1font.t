@@ -6,7 +6,7 @@
 # Change 1..1 below to 1..last_test_to_print .
 # (It may become useful if the test is moved to ./t subdirectory.)
 
-BEGIN { $| = 1; print "1..4\n"; }
+BEGIN { $| = 1; print "1..6\n"; }
 END {print "not ok 1\n" unless $loaded;}
 use Imager qw(:all);
 use Imager::Color;
@@ -19,9 +19,9 @@ print "ok 1\n";
 init_log("testout/t30t1font.log",1);
 
 if (!(i_has_format("t1")) ) {
-  print "ok 2 # skip\n";
-  print "ok 3 # skip\n";
-  print "ok 4 # skip\n";
+  for (2..6) {
+    print "ok $_ # skip t1lib unavailable or disabled\n";
+  }
 } else {
 
   print "# has t1\n";
@@ -85,6 +85,14 @@ if (!(i_has_format("t1")) ) {
 
   print "# debug: ",join(" x ",i_t1_bbox(0,50,"eses",4) ),"\n";
   print "# debug: ",join(" x ",i_t1_bbox(0,50,"llll",4) ),"\n";
+
+  unlink "t1lib.log"; # lose it if it exists
+  init(t1log=>0);
+  print -e("t1lib.log") ? "not ok 5\n" : "ok 5\n";
+  init(t1log=>1);
+  print -e("t1lib.log") ? "ok 6\n" : "not ok 6\n";
+  init(t1log=>0);
+  unlink "t1lib.log";
 }
 
 #malloc_state();

@@ -396,6 +396,9 @@ sub init {
 #	i_init_fonts();
 #	$fontstate='ok';
 #    }
+  if (exists $parms{'t1log'}) {
+    i_init_fonts($parms{'t1log'});
+  }
 }
 
 END {
