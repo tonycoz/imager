@@ -365,7 +365,7 @@ Revision history for Perl extension Imager.
         - Win32 support for jpeg
         - Win32 support for tiff
         - base level error reporting code added, I still need to modify
-        older code to use it
+          older code to use it
         - fix translate=>'giflib' handling of single-colour images.  
           Previously a single colour image would cause an error in 
           MakeMapObject().
@@ -374,33 +374,35 @@ Revision history for Perl extension Imager.
         - minor doc fixes for transparent gifs
         - make it less error-prone to write transparent gifs
         - documented the options for reading raw images
-	- Changes switched to use spaces for formatting
-	- switch gif.c to new error reporting with related changes to
-	  Imager.xs, Imager.pm
+        - Changes switched to use spaces for formatting
+        - switch gif.c to new error reporting with related changes to
+          Imager.xs, Imager.pm
         - each of the image formats now have their own test file,
           extracted from t10formats.t, usually with som extra tests
         - Added flip() and docs to Imager.pm and i_flipxy to image.c.
           Added testcases too.
-	- Fixed an overflow bug in png.c
-	- added the colors parameter to Imager::read() which receives 
-	the arrayref of colours that i_readgif(_scalar) returns
-	- fixed a problem in makemap_addi in quant.c where only the first
-	image was compared against the palette when the palette was being 
-	refined.  I screwed up on this originally (TC).  This is the other
-	half of a fix for Leolo's lmfixed problem <sigh>.
-	- makemap_addi() now only puts colours into the palette that it
-	found while optimizing the palette (so we don't get 256 colour
-	palettes for 2 colour images :)
-	- initial implementation of a row-based interface to low-level
-	images (for performance)
-	- changed Imager::read() for GIF so that the arrayref pointed to 
-	by the ref supplied in colors contains Imager::Color objects 
-	instead of more arrayrefs, keep this interface stable until we 
-	can make an informed choice about i_readgif()
-	- incorporated Micksa's faxable tiff support, treating as a type
-	of tiff rather than a separate format
-	- t/t70newgif.t now checks for gif support
-	- added the convert() method
+        - Fixed an overflow bug in png.c
+        - added the colors parameter to Imager::read() which receives 
+          the arrayref of colours that i_readgif(_scalar) returns
+        - fixed a problem in makemap_addi in quant.c where only the first
+          image was compared against the palette when the palette was being 
+          refined.  I screwed up on this originally (TC).  This is the other
+          half of a fix for Leolo's lmfixed problem <sigh>.
+        - makemap_addi() now only puts colours into the palette that it
+          found while optimizing the palette (so we don't get 256 colour
+          palettes for 2 colour images :)
+        - initial implementation of a row-based interface to low-level
+          images (for performance)
+        - changed Imager::read() for GIF so that the arrayref pointed to 
+          by the ref supplied in colors contains Imager::Color objects 
+          instead of more arrayrefs, keep this interface stable until we 
+          can make an informed choice about i_readgif()
+        - incorporated Micksa's faxable tiff support, treating as a type
+          of tiff rather than a separate format
+        - t/t70newgif.t now checks for gif support
+        - added the convert() method
+        - Added support for transparent to alpha conversion during loading
+          of png files.
 
 ~~~~~~~~~~~~~^ ^ ^~~~~~~~~~~~~~
 
