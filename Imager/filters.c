@@ -918,22 +918,7 @@ i_nearest_color(i_img *im, int num, int *xo, int *yo, i_color *oval, int dmeasur
   i_nearest_color_foo(im, num, xo, yo, ival, dmeasure);
 }
 
-/*
-  Keep state information used by each type of fountain fill
-*/
-struct fount_state {
-  /* precalculated for the equation of the line perpendicular to the line AB */
-  double lA, lB, lC;
-  double AB;
-  double sqrtA2B2;
-  double mult;
-  double cos;
-  double sin;
-  double theta;
-  int xa, ya;
-  void *ssample_data;
-};
-
+struct fount_state;
 static double linear_fount_f(double x, double y, struct fount_state *state);
 static double bilinear_fount_f(double x, double y, struct fount_state *state);
 static double radial_fount_f(double x, double y, struct fount_state *state);
@@ -993,22 +978,14 @@ static fount_repeat fount_repeats[] =
   fount_r_tri_both,
 };
 
-static int simple_ssample(i_fcolor *out, double parm, double x, double y, 
-                           struct fount_state *state, 
-                           fount_func ffunc, fount_repeat rpfunc,
-                           i_fountain_seg *segs, int count);
-static int random_ssample(i_fcolor *out, double parm, double x, double y, 
-                           struct fount_state *state, 
-                           fount_func ffunc, fount_repeat rpfunc,
-                           i_fountain_seg *segs, int count);
-static int circle_ssample(i_fcolor *out, double parm, double x, double y, 
-                           struct fount_state *state, 
-                           fount_func ffunc, fount_repeat rpfunc,
-                           i_fountain_seg *segs, int count);
-typedef int (*fount_ssample)(i_fcolor *out, double parm, double x, double y, 
-                              struct fount_state *state,
-                              fount_func ffunc, fount_repeat rpfunc,
-                              i_fountain_seg *segs, int count);
+static int simple_ssample(i_fcolor *out, double x, double y, 
+                           struct fount_state *state);
+static int random_ssample(i_fcolor *out, double x, double y, 
+                           struct fount_state *state);
+static int circle_ssample(i_fcolor *out, double x, double y, 
+                           struct fount_state *state);
+typedef int (*fount_ssample)(i_fcolor *out, double x, double y, 
+                              struct fount_state *state);
 static fount_ssample fount_ssamples[] =
 {
   NULL,
@@ -1018,9 +995,38 @@ static fount_ssample fount_ssamples[] =
 };
 
 static int
-fount_getat(i_fcolor *out, double x, double y, fount_func ffunc, 
-            fount_repeat rpfunc, struct fount_state *state,
-            i_fountain_seg *segs, int count);
+fount_getat(i_fcolor *out, double x, double y, struct fount_state *state);
+
+/*
+  Keep state information used by each type of fountain fill
+*/
+struct fount_state {
+  /* precalculated for the equation of the line perpendicular to the line AB */
+  double lA, lB, lC;
+  double AB;
+  double sqrtA2B2;
+  double mult;
+  double cos;
+  double sin;
+  double theta;
+  int xa, ya;
+  void *ssample_data;
+  fount_func ffunc;
+  fount_repeat rpfunc;
+  fount_ssample ssfunc;
+  double parm;
+  i_fountain_seg *segs;
+  int count;
+};
+
+static void
+fount_init_state(struct fount_state *state, double xa, double ya, 
+                 double xb, double yb, i_fountain_type type, 
+                 i_fountain_repeat repeat, int combine, int super_sample, 
+                 double ssample_param, int count, i_fountain_seg *segs);
+
+static void
+fount_finish_state(struct fount_state *state);
 
 #define EPSILON (1e-6)
 
@@ -1135,16 +1141,101 @@ i_fountain(i_img *im, double xa, double ya, double xb, double yb,
            int combine, int super_sample, double ssample_param, 
            int count, i_fountain_seg *segs) {
   struct fount_state state;
-  fount_func ffunc;
-  fount_ssample ssfunc;
-  fount_repeat rpfunc;
   int x, y;
   i_fcolor *line = mymalloc(sizeof(i_fcolor) * im->xsize);
+  int ch;
+  i_fountain_seg *my_segs;
+
+  fount_init_state(&state, xa, ya, xb, yb, type, repeat, combine, 
+                   super_sample, ssample_param, count, segs);
+  my_segs = state.segs;
+
+  for (y = 0; y < im->ysize; ++y) {
+    i_glinf(im, 0, im->xsize, y, line);
+    for (x = 0; x < im->xsize; ++x) {
+      i_fcolor c;
+      int got_one;
+      double v;
+      if (super_sample == i_fts_none)
+        got_one = fount_getat(&c, x, y, &state);
+      else
+        got_one = state.ssfunc(&c, x, y, &state);
+      if (got_one) {
+        if (combine) {
+          for (ch = 0; ch < im->channels; ++ch) {
+            line[x].channel[ch] = line[x].channel[ch] * (1.0 - c.channel[3])
+              + c.channel[ch] * c.channel[3];
+          }
+        }
+        else 
+          line[x] = c;
+      }
+    }
+    i_plinf(im, 0, im->xsize, y, line);
+  }
+  fount_finish_state(&state);
+  myfree(line);
+}
+
+typedef struct {
+  i_fill_t base;
+  struct fount_state state;
+} i_fill_fountain_t;
+
+static void
+fill_fountf(i_fill_t *fill, int x, int y, int width, int channels, 
+            i_fcolor *data);
+static void
+fount_fill_destroy(i_fill_t *fill);
+
+/*
+=item i_new_fount(xa, ya, xb, yb, type, repeat, combine, super_sample, ssample_param, count, segs)
+
+=cut
+*/
+
+i_fill_t *
+i_new_fill_fount(double xa, double ya, double xb, double yb, 
+                 i_fountain_type type, i_fountain_repeat repeat, 
+                 int combine, int super_sample, double ssample_param, 
+                 int count, i_fountain_seg *segs) {
+  i_fill_fountain_t *fill = mymalloc(sizeof(i_fill_fountain_t));
+  
+  fill->base.fill_with_color = NULL;
+  fill->base.fill_with_fcolor = fill_fountf;
+  fill->base.destroy = fount_fill_destroy;
+  fill->base.combines = combine;
+  fount_init_state(&fill->state, xa, ya, xb, yb, type, repeat, combine, 
+                   super_sample, ssample_param, count, segs);
+
+  return &fill->base;
+}
+
+/*
+=back
+
+=head1 INTERNAL FUNCTIONS
+
+=over
+
+=item fount_init_state(...)
+
+Used by both the fountain fill filter and the fountain fill.
+
+=cut
+*/
+
+static void
+fount_init_state(struct fount_state *state, double xa, double ya, 
+                 double xb, double yb, i_fountain_type type, 
+                 i_fountain_repeat repeat, int combine, int super_sample, 
+                 double ssample_param, int count, i_fountain_seg *segs) {
   int i, j;
   i_fountain_seg *my_segs = mymalloc(sizeof(i_fountain_seg) * count);
-  int have_alpha = im->channels == 2 || im->channels == 4;
+  /*int have_alpha = im->channels == 2 || im->channels == 4;*/
   int ch;
-
+  
+  memset(state, 0, sizeof(*state));
   /* we keep a local copy that we can adjust for speed */
   for (i = 0; i < count; ++i) {
     i_fountain_seg *seg = my_segs + i;
@@ -1178,103 +1269,78 @@ i_fountain(i_img *im, double xa, double ya, double xb, double yb,
 
   /* initialize each engine */
   /* these are so common ... */
-  state.lA = xb - xa;
-  state.lB = yb - ya;
-  state.AB = sqrt(state.lA * state.lA + state.lB * state.lB);
-  state.xa = xa;
-  state.ya = ya;
+  state->lA = xb - xa;
+  state->lB = yb - ya;
+  state->AB = sqrt(state->lA * state->lA + state->lB * state->lB);
+  state->xa = xa;
+  state->ya = ya;
   switch (type) {
   default:
     type = i_ft_linear; /* make the invalid value valid */
   case i_ft_linear:
   case i_ft_bilinear:
-    state.lC = ya * ya - ya * yb + xa * xa - xa * xb;
-    state.mult = 1;
-    state.mult = 1/linear_fount_f(xb, yb, &state);
+    state->lC = ya * ya - ya * yb + xa * xa - xa * xb;
+    state->mult = 1;
+    state->mult = 1/linear_fount_f(xb, yb, state);
     break;
 
   case i_ft_radial:
-    state.mult = 1.0 / sqrt((double)(xb-xa)*(xb-xa) 
-                            + (double)(yb-ya)*(yb-ya));
+    state->mult = 1.0 / sqrt((double)(xb-xa)*(xb-xa) 
+                             + (double)(yb-ya)*(yb-ya));
     break;
 
   case i_ft_radial_square:
-    state.cos = state.lA / state.AB;
-    state.sin = state.lB / state.AB;
-    state.mult = 1.0 / state.AB;
+    state->cos = state->lA / state->AB;
+    state->sin = state->lB / state->AB;
+    state->mult = 1.0 / state->AB;
     break;
 
   case i_ft_revolution:
-    state.theta = atan2(yb-ya, xb-xa);
-    state.mult = 1.0 / (PI * 2);
+    state->theta = atan2(yb-ya, xb-xa);
+    state->mult = 1.0 / (PI * 2);
     break;
 
   case i_ft_conical:
-    state.theta = atan2(yb-ya, xb-xa);
-    state.mult = 1.0 / PI;
+    state->theta = atan2(yb-ya, xb-xa);
+    state->mult = 1.0 / PI;
     break;
   }
-  ffunc = fount_funcs[type];
+  state->ffunc = fount_funcs[type];
   if (super_sample < 0 
       || super_sample >= (sizeof(fount_ssamples)/sizeof(*fount_ssamples))) {
     super_sample = 0;
   }
-  state.ssample_data = NULL;
+  state->ssample_data = NULL;
   switch (super_sample) {
   case i_fts_grid:
     ssample_param = floor(0.5 + sqrt(ssample_param));
-    state.ssample_data = mymalloc(sizeof(i_fcolor) * ssample_param * ssample_param);
+    state->ssample_data = mymalloc(sizeof(i_fcolor) * ssample_param * ssample_param);
     break;
 
   case i_fts_random:
   case i_fts_circle:
     ssample_param = floor(0.5+ssample_param);
-    state.ssample_data = mymalloc(sizeof(i_fcolor) * ssample_param);
+    state->ssample_data = mymalloc(sizeof(i_fcolor) * ssample_param);
     break;
   }
-  ssfunc = fount_ssamples[super_sample];
+  state->parm = ssample_param;
+  state->ssfunc = fount_ssamples[super_sample];
   if (repeat < 0 || repeat >= (sizeof(fount_repeats)/sizeof(*fount_repeats)))
     repeat = 0;
-  rpfunc = fount_repeats[repeat];
-
-  for (y = 0; y < im->ysize; ++y) {
-    i_glinf(im, 0, im->xsize, y, line);
-    for (x = 0; x < im->xsize; ++x) {
-      i_fcolor c;
-      int got_one;
-      double v;
-      if (super_sample == i_fts_none)
-        got_one = fount_getat(&c, x, y, ffunc, rpfunc, &state, my_segs, count);
-      else
-        got_one = ssfunc(&c, ssample_param, x, y, &state, ffunc, rpfunc, 
-                         my_segs, count);
-      if (got_one) {
-        i_fountain_seg *seg = my_segs + i;
-        if (combine) {
-          for (ch = 0; ch < im->channels; ++ch) {
-            line[x].channel[ch] = line[x].channel[ch] * (1.0 - c.channel[3])
-              + c.channel[ch] * c.channel[3];
-          }
-        }
-        else 
-          line[x] = c;
-      }
-    }
-    i_plinf(im, 0, im->xsize, y, line);
-  }
-  myfree(line);
-  myfree(my_segs);
-  if (state.ssample_data)
-    myfree(state.ssample_data);
+  state->rpfunc = fount_repeats[repeat];
+  state->segs = my_segs;
+  state->count = count;
 }
 
+static void
+fount_finish_state(struct fount_state *state) {
+  if (state->ssample_data)
+    myfree(state->ssample_data);
+  myfree(state->segs);
+}
+
+
 /*
-=back
-
-=head1 INTERNAL FUNCTIONS
-
-=over
-
 =item fount_getat(out, x, y, ffunc, rpfunc, state, segs, count)
 
 Evaluates the fountain fill at the given point.
@@ -1288,19 +1354,18 @@ instead, and combine those, but this breaks badly.
 */
 
 static int
-fount_getat(i_fcolor *out, double x, double y, fount_func ffunc, 
-            fount_repeat rpfunc, struct fount_state *state, 
-            i_fountain_seg *segs, int count) {
-  double v = rpfunc(ffunc(x, y, state));
+fount_getat(i_fcolor *out, double x, double y, struct fount_state *state) {
+  double v = (state->rpfunc)((state->ffunc)(x, y, state));
   int i;
 
   i = 0;
-  while (i < count && (v < segs[i].start || v > segs[i].end)) {
+  while (i < state->count 
+         && (v < state->segs[i].start || v > state->segs[i].end)) {
     ++i;
   }
-  if (i < count) {
-    v = (fount_interps[segs[i].type])(v, segs+i);
-    (fount_cinterps[segs[i].color])(out, v, segs+i);
+  if (i < state->count) {
+    v = (fount_interps[state->segs[i].type])(v, state->segs+i);
+    (fount_cinterps[state->segs[i].color])(out, v, state->segs+i);
     return 1;
   }
   else
@@ -1541,13 +1606,10 @@ Simple grid-based super-sampling.
 =cut
 */
 static int
-simple_ssample(i_fcolor *out, double parm, double x, double y, 
-               struct fount_state *state, 
-               fount_func ffunc, fount_repeat rpfunc, i_fountain_seg *segs,
-               int count) {
+simple_ssample(i_fcolor *out, double x, double y, struct fount_state *state) {
   i_fcolor *work = state->ssample_data;
   int dx, dy;
-  int grid = parm;
+  int grid = state->parm;
   double base = -0.5 + 0.5 / grid;
   double step = 1.0 / grid;
   int ch, i;
@@ -1556,8 +1618,7 @@ simple_ssample(i_fcolor *out, double parm, double x, double y,
   for (dx = 0; dx < grid; ++dx) {
     for (dy = 0; dy < grid; ++dy) {
       if (fount_getat(work+samp_count, x + base + step * dx, 
-                      y + base + step * dy, ffunc, rpfunc, state, 
-                      segs, count)) {
+                      y + base + step * dy, state)) {
         ++samp_count;
       }
     }
@@ -1582,19 +1643,16 @@ Random super-sampling.
 =cut
 */
 static int
-random_ssample(i_fcolor *out, double parm, double x, double y, 
-               struct fount_state *state, 
-               fount_func ffunc, fount_repeat rpfunc, i_fountain_seg *segs,
-               int count) {
+random_ssample(i_fcolor *out, double x, double y, 
+               struct fount_state *state) {
   i_fcolor *work = state->ssample_data;
   int i, ch;
-  int maxsamples = parm;
+  int maxsamples = state->parm;
   double rand_scale = 1.0 / RAND_MAX;
   int samp_count = 0;
   for (i = 0; i < maxsamples; ++i) {
     if (fount_getat(work+samp_count, x - 0.5 + rand() * rand_scale, 
-                    y - 0.5 + rand() * rand_scale, ffunc, rpfunc, state, 
-                    segs, count)) {
+                    y - 0.5 + rand() * rand_scale, state)) {
       ++samp_count;
     }
   }
@@ -1622,20 +1680,17 @@ much.
 =cut
  */
 static int
-circle_ssample(i_fcolor *out, double parm, double x, double y, 
-               struct fount_state *state, 
-               fount_func ffunc, fount_repeat rpfunc, i_fountain_seg *segs,
-               int count) {
+circle_ssample(i_fcolor *out, double x, double y, 
+               struct fount_state *state) {
   i_fcolor *work = state->ssample_data;
   int i, ch;
-  int maxsamples = parm;
+  int maxsamples = state->parm;
   double angle = 2 * PI / maxsamples;
   double radius = 0.3; /* semi-random */
   int samp_count = 0;
   for (i = 0; i < maxsamples; ++i) {
     if (fount_getat(work+samp_count, x + radius * cos(angle * i), 
-                    y + radius * sin(angle * i), ffunc, rpfunc, state, 
-                    segs, count)) {
+                    y + radius * sin(angle * i), state)) {
       ++samp_count;
     }
   }
@@ -1723,6 +1778,55 @@ static double
 fount_r_tri_both(double v) {
   v = fmod(fabs(v), 2.0);
   return v > 1.0 ? 2.0 - v : v;
+}
+
+/*
+=item fill_fountf(fill, x, y, width, channels, data)
+
+The fill function for fountain fills.
+
+=cut
+*/
+static void
+fill_fountf(i_fill_t *fill, int x, int y, int width, int channels, 
+            i_fcolor *data) {
+  i_fill_fountain_t *f = (i_fill_fountain_t *)fill;
+  int ch;
+
+  while (width--) {
+    i_fcolor c;
+    int got_one;
+    double v;
+    if (f->state.ssfunc)
+      got_one = f->state.ssfunc(&c, x, y, &f->state);
+    else
+      got_one = fount_getat(&c, x, y, &f->state);
+
+    if (got_one) {
+      if (f->base.combines) {
+        for (ch = 0; ch < channels; ++ch) {
+          data->channel[ch] = data->channel[ch] * (1.0 - c.channel[3])
+            + c.channel[ch] * c.channel[3];
+        }
+      }
+      else 
+        *data = c;
+    }
+
+    ++x;
+    ++data;
+  }
+}
+
+/*
+=item fount_fill_destroy(fill)
+
+=cut
+*/
+static void
+fount_fill_destroy(i_fill_t *fill) {
+  i_fill_fountain_t *f = (i_fill_fountain_t *)fill;
+  fount_finish_state(&f->state);
 }
 
 /*

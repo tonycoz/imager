@@ -312,7 +312,6 @@ static void handle_quant_opts(i_quantize *quant, HV *hv)
 /* look through the hash for options to add to opts */
 static void handle_gif_opts(i_gif_opts *opts, HV *hv)
 {
-  /*** FIXME: POSSIBLY BROKEN: do I need to unref the SV from hv_fetch? ***/
   SV **sv;
   int i;
   /**((char *)0) = '\0';*/
@@ -413,12 +412,95 @@ static void copy_colors_back(HV *hv, i_quantize *quant) {
   }
 }
 
+/* loads the segments of a fountain fill into an array */
+i_fountain_seg *load_fount_segs(AV *asegs, int *count) {
+  /* Each element of segs must contain:
+     [ start, middle, end, c0, c1, segtype, colortrans ]
+     start, middle, end are doubles from 0 to 1
+     c0, c1 are Imager::Color::Float or Imager::Color objects
+     segtype, colortrans are ints
+  */
+  int i, j;
+  AV *aseg;
+  SV *sv;
+  i_fountain_seg *segs;
+  double work[3];
+  int worki[2];
+
+  *count = av_len(asegs)+1;
+  if (*count < 1) 
+    croak("i_fountain must have at least one segment");
+  segs = mymalloc(sizeof(i_fountain_seg) * *count);
+  for(i = 0; i < *count; i++) {
+    SV **sv1 = av_fetch(asegs, i, 0);
+    if (!sv1 || !*sv1 || !SvROK(*sv1) 
+        || SvTYPE(SvRV(*sv1)) != SVt_PVAV) {
+      myfree(segs);
+      croak("i_fountain: segs must be an arrayref of arrayrefs");
+    }
+    aseg = (AV *)SvRV(*sv1);
+    if (av_len(aseg) != 7-1) {
+      myfree(segs);
+      croak("i_fountain: a segment must have 7 members");
+    }
+    for (j = 0; j < 3; ++j) {
+      SV **sv2 = av_fetch(aseg, j, 0);
+      if (!sv2 || !*sv2) {
+        myfree(segs);
+        croak("i_fountain: XS error");
+      }
+      work[j] = SvNV(*sv2);
+    }
+    segs[i].start  = work[0];
+    segs[i].middle = work[1];
+    segs[i].end    = work[2];
+    for (j = 0; j < 2; ++j) {
+      SV **sv3 = av_fetch(aseg, 3+j, 0);
+      if (!sv3 || !*sv3 || !SvROK(*sv3) ||
+          (!sv_derived_from(*sv3, "Imager::Color")
+           && !sv_derived_from(*sv3, "Imager::Color::Float"))) {
+        myfree(segs);
+        croak("i_fountain: segs must contain colors in elements 3 and 4");
+      }
+      if (sv_derived_from(*sv3, "Imager::Color::Float")) {
+        segs[i].c[j] = *(i_fcolor *)SvIV((SV *)SvRV(*sv3));
+      }
+      else {
+        i_color c = *(i_color *)SvIV((SV *)SvRV(*sv3));
+        int ch;
+        for (ch = 0; ch < MAXCHANNELS; ++ch) {
+          segs[i].c[j].channel[ch] = c.channel[ch] / 255.0;
+        }
+      }
+    }
+    for (j = 0; j < 2; ++j) {
+      SV **sv2 = av_fetch(aseg, j+5, 0);
+      if (!sv2 || !*sv2) {
+        myfree(segs);
+        croak("i_fountain: XS error");
+      }
+      worki[j] = SvIV(*sv2);
+    }
+    segs[i].type = worki[0];
+    segs[i].color = worki[1];
+  }
+
+  return segs;
+}
+
 /* I don't think ICLF_* names belong at the C interface
    this makes the XS code think we have them, to let us avoid 
    putting function bodies in the XS code
 */
 #define ICLF_new_internal(r, g, b, a) i_fcolor_new((r), (g), (b), (a))
 #define ICLF_DESTROY(cl) i_fcolor_destroy(cl)
+
+/* for the fill objects
+   Since a fill object may later have dependent images, (or fills!)
+   we need perl wrappers - oh well
+*/
+#define IFILL_DESTROY(fill) i_fill_destroy(fill);
+typedef i_fill_t* Imager__FillHandle;
 
 MODULE = Imager		PACKAGE = Imager::Color	PREFIX = ICL_
 
@@ -668,6 +750,15 @@ i_box_filled(im,x1,y1,x2,y2,val)
 	   Imager::Color    val
 
 void
+i_box_cfill(im,x1,y1,x2,y2,fill)
+    Imager::ImgRaw     im
+	       int     x1
+	       int     y1
+	       int     x2
+	       int     y2
+	   Imager::FillHandle    fill
+
+void
 i_arc(im,x,y,rad,d1,d2,val)
     Imager::ImgRaw     im
 	       int     x
@@ -676,6 +767,16 @@ i_arc(im,x,y,rad,d1,d2,val)
              float     d1
              float     d2
 	   Imager::Color    val
+
+void
+i_arc_cfill(im,x,y,rad,d1,d2,fill)
+    Imager::ImgRaw     im
+	       int     x
+	       int     y
+             float     rad
+             float     d1
+             float     d2
+	   Imager::FillHandle    fill
 
 
 
@@ -1896,86 +1997,45 @@ i_fountain(im, xa, ya, xb, yb, type, repeat, combine, super_sample, ssample_para
                int     super_sample
             double     ssample_param
       PREINIT:
-	int i, j;
         AV *asegs;
-        AV *aseg;
-	SV *sv;
         int count;
         i_fountain_seg *segs;
-        double work[3];
-        int worki[2];
       CODE:
-        /* Each element of segs must contain:
-           [ start, middle, end, c0, c1, segtype, colortrans ]
-             start, middle, end are doubles from 0 to 1
-             c0, c1 are Imager::Color::Float or Imager::Color objects
-             segtype, colortrans are ints
-        */
 	if (!SvROK(ST(10)) || ! SvTYPE(SvRV(ST(10))))
 	    croak("i_fountain: argument 11 must be an array ref");
         
 	asegs = (AV *)SvRV(ST(10));
-	
-        count = av_len(asegs)+1;
-	if (count < 1) 
-          croak("i_fountain must have at least one segment");
-        segs = mymalloc(sizeof(i_fountain_seg) * count);
-	for(i = 0; i<count; i++) {
-          SV **sv1 = av_fetch(asegs, i, 0);
-          if (!sv1 || !*sv1 || !SvROK(*sv1) 
-              || SvTYPE(SvRV(*sv1)) != SVt_PVAV) {
-            myfree(segs);
-            croak("i_fountain: segs must be an arrayref of arrayrefs");
-          }
-          aseg = (AV *)SvRV(*sv1);
-          if (av_len(aseg) != 7-1) {
-            myfree(segs);
-            croak("i_fountain: a segment must have 7 members");
-          }
-          for (j = 0; j < 3; ++j) {
-            SV **sv2 = av_fetch(aseg, j, 0);
-            if (!sv2 || !*sv2) {
-              myfree(segs);
-              croak("i_fountain: XS error");
-            }
-            work[j] = SvNV(*sv2);
-          }
-          segs[i].start  = work[0];
-          segs[i].middle = work[1];
-          segs[i].end    = work[2];
-          for (j = 0; j < 2; ++j) {
-            SV **sv3 = av_fetch(aseg, 3+j, 0);
-            if (!sv3 || !*sv3 || !SvROK(*sv3) ||
-                (!sv_derived_from(*sv3, "Imager::Color")
-                 && !sv_derived_from(*sv3, "Imager::Color::Float"))) {
-              myfree(segs);
-              croak("i_fountain: segs must contain colors in elements 3 and 4");
-            }
-            if (sv_derived_from(*sv3, "Imager::Color::Float")) {
-              segs[i].c[j] = *(i_fcolor *)SvIV((SV *)SvRV(*sv3));
-            }
-            else {
-              i_color c = *(i_color *)SvIV((SV *)SvRV(*sv3));
-              int ch;
-              for (ch = 0; ch < MAXCHANNELS; ++ch) {
-                segs[i].c[j].channel[ch] = c.channel[ch] / 255.0;
-              }
-            }
-          }
-          for (j = 0; j < 2; ++j) {
-            SV **sv2 = av_fetch(aseg, j+5, 0);
-            if (!sv2 || !*sv2) {
-              myfree(segs);
-              croak("i_fountain: XS error");
-            }
-            worki[j] = SvIV(*sv2);
-          }
-          segs[i].type = worki[0];
-          segs[i].color = worki[1];
-	}
+        segs = load_fount_segs(asegs, &count);
         i_fountain(im, xa, ya, xb, yb, type, repeat, combine, super_sample, 
                    ssample_param, count, segs);
         myfree(segs);
+
+Imager::FillHandle
+i_new_fill_fount(xa, ya, xb, yb, type, repeat, combine, super_sample, ssample_param, segs)
+            double     xa
+            double     ya
+            double     xb
+            double     yb
+               int     type
+               int     repeat
+               int     combine
+               int     super_sample
+            double     ssample_param
+      PREINIT:
+        AV *asegs;
+        int count;
+        i_fountain_seg *segs;
+      CODE:
+	if (!SvROK(ST(9)) || ! SvTYPE(SvRV(ST(9))))
+	    croak("i_fountain: argument 11 must be an array ref");
+        
+	asegs = (AV *)SvRV(ST(9));
+        segs = load_fount_segs(asegs, &count);
+        RETVAL = i_new_fill_fount(xa, ya, xb, yb, type, repeat, combine, 
+                                  super_sample, ssample_param, count, segs);
+        myfree(segs);        
+      OUTPUT:
+        RETVAL
 
 void
 i_errors()
@@ -2988,4 +3048,43 @@ ft2_transform_box(font, x0, x1, x2, x3)
           PUSHs(sv_2mortal(newSViv(box[3])));
         
 #endif
+
+MODULE = Imager         PACKAGE = Imager::FillHandle PREFIX=IFILL_
+
+void
+IFILL_DESTROY(fill)
+        Imager::FillHandle fill
+
+MODULE = Imager         PACKAGE = Imager
+
+Imager::FillHandle
+i_new_fill_solid(cl, combine)
+        Imager::Color cl
+        int combine
+
+Imager::FillHandle
+i_new_fill_solidf(cl, combine)
+        Imager::Color::Float cl
+        int combine
+
+Imager::FillHandle
+i_new_fill_hatch(fg, bg, combine, hatch, cust_hatch, dx, dy)
+        Imager::Color fg
+        Imager::Color bg
+        int combine
+        int hatch
+        int dx
+        int dy
+      PREINIT:
+        unsigned char *cust_hatch;
+        STRLEN len;
+      CODE:
+        if (SvOK(ST(4))) {
+          cust_hatch = SvPV(ST(4), len);
+        }
+        else
+          cust_hatch = NULL;
+        RETVAL = i_new_fill_hatch(fg, bg, combine, hatch, cust_hatch, dx, dy);
+      OUTPUT:
+        RETVAL
 

@@ -1602,8 +1602,22 @@ sub box {
     $opts{'ymax'} = max($opts{'box'}->[1],$opts{'box'}->[3]);
   }
 
-  if ($opts{filled}) { i_box_filled($self->{IMG},$opts{xmin},$opts{ymin},$opts{xmax},$opts{ymax},$opts{color}); }
-  else { i_box($self->{IMG},$opts{xmin},$opts{ymin},$opts{xmax},$opts{ymax},$opts{color}); }
+  if ($opts{filled}) { 
+    i_box_filled($self->{IMG},$opts{xmin},$opts{ymin},$opts{xmax},
+                 $opts{ymax},$opts{color}); 
+  }
+  elsif ($opts{fill}) {
+    unless (UNIVERSAL::isa($opts{fill}, 'Imager::Fill')) {
+      # assume it's a hash ref
+      require 'Imager/Fill.pm';
+      $opts{fill} = Imager::Fill->new(%{$opts{fill}});
+    }
+    i_box_cfill($self->{IMG},$opts{xmin},$opts{ymin},$opts{xmax},
+                $opts{ymax},$opts{fill}{fill});
+  }
+  else { 
+    i_box($self->{IMG},$opts{xmin},$opts{ymin},$opts{xmax},$opts{ymax},$opts{color});
+  }
   return $self;
 }
 
@@ -1618,7 +1632,20 @@ sub arc {
 	    'x'=>$self->getwidth()/2,
 	    'y'=>$self->getheight()/2,
 	    'd1'=>0, 'd2'=>361, @_);
-  i_arc($self->{IMG},$opts{'x'},$opts{'y'},$opts{'r'},$opts{'d1'},$opts{'d2'},$opts{'color'}); 
+  if ($opts{fill}) {
+    unless (UNIVERSAL::isa($opts{fill}, 'Imager::Fill')) {
+      # assume it's a hash ref
+      require 'Imager/Fill.pm';
+      $opts{fill} = Imager::Fill->new(%{$opts{fill}});
+    }
+    i_arc_cfill($self->{IMG},$opts{'x'},$opts{'y'},$opts{'r'},$opts{'d1'},
+                $opts{'d2'}, $opts{fill}{fill});
+  }
+  else {
+    i_arc($self->{IMG},$opts{'x'},$opts{'y'},$opts{'r'},$opts{'d1'},
+          $opts{'d2'},$opts{'color'}); 
+  }
+
   return $self;
 }
 
@@ -2730,6 +2757,18 @@ Arc:
 
 This creates a filled red arc with a 'center' at (200, 100) and spans
 10 degrees and the slice has a radius of 20. SEE section on BUGS.
+
+Both the arc() and box() methods can take a C<fill> parameter which
+can either be an Imager::Fill object, or a reference to a hash
+containing the parameters used to create the fill:
+
+  $img->box(xmin=>10, ymin=>30, xmax=>150, ymax=>60,
+            fill => { hatch=>'cross2' });
+  use Imager::Fill;
+  my $fill = Imager::Fill->new(hatch=>'stipple');
+  $img->box(fill=>$fill);
+
+See L<Imager::Fill> for the type of fills you can use.
 
 Circle:
   $img->circle(color=>$green, r=50, x=>200, y=>100);

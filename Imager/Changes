@@ -491,6 +491,13 @@ Revision history for Perl extension Imager.
           - OO interface and documentation
           - Imager::Fountain for building/loading fill definitions
           - named value translation for filters
+        - added a generic fill mechanism
+          - created versions of i_box() and i_arc() that can fill using
+            generic fills
+          - solid generic fills (with alpha blending if asked for)
+          - hatched generic fills (with some options)
+          - fountain generic fills
+          - sample code to generate an examples page
 
 =================================================================
 

@@ -58,10 +58,7 @@ New Features:
 Clean up:
 - Make sure everything is doable with the OO interface
   i_flood_fill() for example.
-- Split the other classes into seperate files
-  Imager::Font::TT, Imager::Font::T1, currently 
-  an if statement is used to choose what code to
-  run.
+
 - Compile with memory debugging enabled and fix all leaks
 
 - dynaload.c is strongly tied to perl

@@ -157,7 +157,7 @@ myfree_file_line(void *p, char *file, int line) {
   }
   
   if (match != 1) {
-    mm_log((1, "myfree_file_line: INCONSISTENT REFCOUNT %d\n", match));
+    mm_log((1, "myfree_file_line: INCONSISTENT REFCOUNT %d at %s (%i)\n", match, file, line));
   }
   
   mm_log((1, "myfree_file_line: freeing address %p\n", pp-UNDRRNVAL));
@@ -178,11 +178,11 @@ void*
 mymalloc(int size) {
   void *buf;
 
-  mm_log((1, "mymalloc(size %d)\n", size));
   if ( (buf = malloc(size)) == NULL ) {
     mm_log((1, "mymalloc: unable to malloc %d\n", size));
     fprintf(stderr,"Unable to malloc.\n"); exit(3);
   }
+  mm_log((1, "mymalloc(size %d) -> %p\n", size, buf));
   return buf;
 }
 
