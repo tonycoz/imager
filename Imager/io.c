@@ -180,7 +180,7 @@ mymalloc(int size) {
 
   if ( (buf = malloc(size)) == NULL ) {
     mm_log((1, "mymalloc: unable to malloc %d\n", size));
-    fprintf(stderr,"Unable to malloc.\n"); exit(3);
+    fprintf(stderr,"Unable to malloc %d.\n", size); exit(3);
   }
   mm_log((1, "mymalloc(size %d) -> %p\n", size, buf));
   return buf;

@@ -1088,3 +1088,193 @@ i_flood_fill(i_img *im,int seedx,int seedy,i_color *dcol) {
   btm_destroy(btm);
   llist_destroy(st);
 }
+
+static struct i_bitmap *
+i_flood_fill_low(i_img *im,int seedx,int seedy,
+                 int *bxminp, int *bxmaxp, int *byminp, int *bymaxp) {
+  int lx,rx;
+  int y;
+  int direction;
+  int dadLx,dadRx;
+
+  int wasIn=0;
+  int x=0;
+
+  /*  int tx,ty; */
+
+  int bxmin=seedx,bxmax=seedx,bymin=seedy,bymax=seedy;
+
+  struct llist *st;
+  struct i_bitmap *btm;
+
+  int channels,xsize,ysize;
+  i_color cval,val;
+
+  channels=im->channels;
+  xsize=im->xsize;
+  ysize=im->ysize;
+
+  btm=btm_new(xsize,ysize);
+  st=llist_new(100,sizeof(struct stack_element*));
+
+  /* Get the reference color */
+  i_gpix(im,seedx,seedy,&val);
+
+  /* Find the starting span and fill it */
+  lx=i_lspan(im,seedx,seedy,&val);
+  rx=i_rspan(im,seedx,seedy,&val);
+  
+  /* printf("span: %d %d \n",lx,rx); */
+
+  for(x=lx;x<=rx;x++) SET(x,seedy);
+
+  ST_PUSH(lx,rx,lx,rx,seedy+1,1);
+  ST_PUSH(lx,rx,lx,rx,seedy-1,-1);
+
+  while(st->count) {
+    ST_POP();
+    
+    if (y<0 || y>ysize-1) continue;
+
+    if (bymin > y) bymin=y; /* in the worst case an extra line */
+    if (bymax < y) bymax=y; 
+
+    /*     printf("start of scan - on stack : %d \n",st->count); */
+
+    
+    /*     printf("lx=%d rx=%d dadLx=%d dadRx=%d y=%d direction=%d\n",lx,rx,dadLx,dadRx,y,direction); */
+    
+    /*
+    printf(" ");
+    for(tx=0;tx<xsize;tx++) printf("%d",tx%10);
+    printf("\n");
+    for(ty=0;ty<ysize;ty++) {
+      printf("%d",ty%10);
+      for(tx=0;tx<xsize;tx++) printf("%d",!!btm_test(btm,tx,ty));
+      printf("\n");
+    }
+
+    printf("y=%d\n",y);
+    */
+
+
+    x=lx+1;
+    if ( (wasIn = INSIDE(lx,y)) ) {
+      SET(lx,y);
+      lx--;
+      while(INSIDE(lx,y) && lx > 0) {
+	SET(lx,y);
+	lx--;
+      }
+    }
+
+    if (bxmin > lx) bxmin=lx;
+    
+    while(x <= xsize-1) {
+      /*  printf("x=%d\n",x); */
+      if (wasIn) {
+	
+	if (INSIDE(x,y)) {
+	  /* case 1: was inside, am still inside */
+	  SET(x,y);
+	} else {
+	  /* case 2: was inside, am no longer inside: just found the
+	     right edge of a span */
+	  ST_STACK(direction,dadLx,dadRx,lx,(x-1),y);
+
+	  if (bxmax < x) bxmax=x;
+
+	  wasIn=0;
+	}
+      } else {
+	if (x>rx) goto EXT;
+	if (INSIDE(x,y)) {
+	  SET(x,y);
+	  /* case 3: Wasn't inside, am now: just found the start of a new run */
+	  wasIn=1;
+	    lx=x;
+	} else {
+	  /* case 4: Wasn't inside, still isn't */
+	}
+      }
+      x++;
+    }
+  EXT: /* out of loop */
+    if (wasIn) {
+      /* hit an edge of the frame buffer while inside a run */
+      ST_STACK(direction,dadLx,dadRx,lx,(x-1),y);
+      if (bxmax < x) bxmax=x;
+    }
+  }
+  
+  /*   printf("lx=%d rx=%d dadLx=%d dadRx=%d y=%d direction=%d\n",lx,rx,dadLx,dadRx,y,direction); 
+       printf("bounding box: [%d,%d] - [%d,%d]\n",bxmin,bymin,bxmax,bymax); */
+
+  llist_destroy(st);
+
+  *bxminp = bxmin;
+  *bxmaxp = bxmax;
+  *byminp = bymin;
+  *bymaxp = bymax;
+
+  return btm;
+}
+
+void
+i_flood_cfill(i_img *im, int seedx, int seedy, i_fill_t *fill) {
+  int bxmin, bxmax, bymin, bymax;
+  struct i_bitmap *btm;
+  int x, y;
+  int start;
+
+  btm = i_flood_fill_low(im, seedx, seedy, &bxmin, &bxmax, &bymin, &bymax);
+
+  if (im->bits == i_8_bits && fill->fill_with_color) {
+    i_color *line = mymalloc(sizeof(i_color) * (bxmax - bxmin));
+
+    for(y=bymin;y<=bymax;y++) {
+      x = bxmin;
+      while (x < bxmax) {
+        while (x < bxmax && !btm_test(btm, x, y)) {
+          ++x;
+        }
+        if (btm_test(btm, x, y)) {
+          start = x;
+          while (x < bxmax && btm_test(btm, x, y)) {
+            ++x;
+          }
+          if (fill->combines)
+            i_glin(im, start, x, y, line);
+          (fill->fill_with_color)(fill, start, y, x-start, im->channels, line);
+          i_plin(im, start, x, y, line);
+        }
+      }
+    }
+    myfree(line);
+  }
+  else {
+    i_fcolor *line = mymalloc(sizeof(i_fcolor) * (bxmax - bxmin));
+    
+    for(y=bymin;y<=bymax;y++) {
+      x = bxmin;
+      while (x < bxmax) {
+        while (x < bxmax && !btm_test(btm, x, y)) {
+          ++x;
+        }
+        if (btm_test(btm, x, y)) {
+          start = x;
+          while (x < bxmax && btm_test(btm, x, y)) {
+            ++x;
+          }
+          if (fill->combines)
+            i_glinf(im, start, x, y, line);
+          (fill->fill_with_fcolor)(fill, start, y, x-start, im->channels, line);
+          i_plinf(im, start, x, y, line);
+        }
+      }
+    }
+    myfree(line);
+  }
+
+  btm_destroy(btm);
+}

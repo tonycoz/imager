@@ -1727,6 +1727,30 @@ sub polybezier {
   return $self;
 }
 
+sub flood_fill {
+  my $self = shift;
+  my %opts = ( color=>Imager::Color->new(255, 255, 255), @_ );
+
+  unless (exists $opts{x} && exists $opts{'y'}) {
+    $self->{ERRSTR} = "missing seed x and y parameters";
+    return undef;
+  }
+  
+  if ($opts{fill}) {
+    unless (UNIVERSAL::isa($opts{fill}, 'Imager::Fill')) {
+      # assume it's a hash ref
+      require 'Imager/Fill.pm';
+      $opts{fill} = Imager::Fill->new(%{$opts{fill}});
+    }
+    i_flood_cfill($self->{IMG}, $opts{x}, $opts{'y'}, $opts{fill}{fill});
+  }
+  else {
+    i_flood_fill($self->{IMG}, $opts{x}, $opts{'y'}, $opts{color});
+  }
+
+  $self;
+}
+
 # make an identity matrix of the given size
 sub _identity {
   my ($size) = @_;
@@ -2790,6 +2814,20 @@ Polyline is used to draw multilple lines between a series of points.
 The point set can either be specified as an arrayref to an array of
 array references (where each such array represents a point).  The
 other way is to specify two array references.
+
+You can fill a region that all has the same color using the
+flood_fill() method, for example:
+
+  $img->flood_fill(x=>50, y=>50, color=>$color);
+
+will fill all regions the same color connected to the point (50, 50).
+
+You can also use a general fill, so you could fill the same region
+with a check pattern using:
+
+  $img->flood_fill(x=>50, y=>50, fill=>{ hatch=>'check2x2' });
+
+See L<Imager::Fill> for more information on general fills.
 
 =head2 Text rendering
 

@@ -868,6 +868,13 @@ i_flood_fill(im,seedx,seedy,dcol)
 	       int     seedy
      Imager::Color     dcol
 
+void
+i_flood_cfill(im,seedx,seedy,fill)
+    Imager::ImgRaw     im
+	       int     seedx
+	       int     seedy
+     Imager::FillHandle     fill
+
 
 void
 i_copyto(im,src,x1,y1,x2,y2,tx,ty)
