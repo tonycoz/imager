@@ -50,8 +50,8 @@ sub _draw {
              $input{string}, , $input{align}, $input{aa}, $input{vlayout},
              $input{utf8});
   } else {
-    i_ft2_text($self->{id}, $input{image}{IMG}, 
-               $input{'x'}, $input{'y'}, 
+    i_ft2_text($self->{id}, $input{image}{IMG},
+               $input{'x'}, $input{'y'},
                $input{color}, $input{size}, $input{sizew} || 0,
                $input{string}, $input{align}, $input{aa}, $input{vlayout},
                $input{utf8});
