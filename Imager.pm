@@ -1692,8 +1692,7 @@ is 'ordered'.  Possible values are:
 
 =item random
 
-A semi-random map is used.  The map is the same each time.  Currently
-the default (which may change.)
+A semi-random map is used.  The map is the same each time.
 
 =item dot8
 
@@ -1722,6 +1721,11 @@ diagonal line dither
 =item backline
 
 diagonal line dither
+
+=item tiny
+
+dot matrix dither (currently the default).  This is probably the best
+for displays (like web pages).
 
 =item custom
 
