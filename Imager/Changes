@@ -962,9 +962,11 @@ Revision history for Perl extension Imager.
 - document that you don't want the FT2 freetype.h in the include path
 
 0.44_01
-
 - the plugins Makefile has long produced an error after all tests were
   complete on Win32, finally tracked down why
+- Makefile.PL now checks the directories specified by $Config{locincpth}
+  and $Config{loclibpth} for includes and libraries respectively.
+  Resolves: https://rt.cpan.org/Ticket/Display.html?id=2942
 
 =================================================================
 
