@@ -216,6 +216,7 @@ void i_flood_fill  (i_img *im,int seedx,int seedy,i_color *dcol);
 
 void i_gaussian    (i_img *im,float stdev);
 void i_conv        (i_img *im,float *coeff,int len);
+void i_unsharp_mask(i_img *im, double stddev, double scale);
 
 /* colour manipulation */
 extern int i_convert(i_img *im, i_img *src, float *coeff, int outchan, int inchan);

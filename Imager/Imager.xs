@@ -1023,6 +1023,12 @@ i_gaussian(im,stdev)
 	     float     stdev
 
 void
+i_unsharp_mask(im,stdev,scale)
+    Imager::ImgRaw     im
+	     float     stdev
+             double    scale
+
+void
 i_conv(im,pcoef)
     Imager::ImgRaw     im
 	     PREINIT:
