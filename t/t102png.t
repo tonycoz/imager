@@ -41,14 +41,14 @@ if (!i_has_format("png")) {
   print "ok 4 # skip no png support\n";
   print "ok 5 # skip no png support\n";
 } else {
-  open(FH,">testout/t12.png") || die "cannot open testout/t12.png for writing\n";
+  open(FH,">testout/t102.png") || die "cannot open testout/t102.png for writing\n";
   binmode(FH);
   i_writepng($img,fileno(FH)) || print "not ";
   close(FH);
 
   print "ok 2\n";
 
-  open(FH,"testout/t12.png") || die "cannot open testout/t12.png\n";
+  open(FH,"testout/t102.png") || die "cannot open testout/t102.png\n";
   binmode(FH);
   $cmpimg=i_readpng(fileno(FH)) || print "not ";
   close(FH);
@@ -58,8 +58,8 @@ if (!i_has_format("png")) {
   print i_img_diff($img, $cmpimg)
     ? "not ok 4 # saved image different\n" : "ok 4\n";
 
-  open FH, "> testout/t12_trans.png"
-    or die "Cannot open testout/t12_trans.png: $!";
+  open FH, "> testout/t102_trans.png"
+    or die "Cannot open testout/t102_trans.png: $!";
   binmode FH;
   if (i_writepng($timg, fileno(FH))) {
     print "ok 5\n";
@@ -69,8 +69,8 @@ if (!i_has_format("png")) {
   }
   close FH;
 
-  open FH,"testout/t12_trans.png" 
-    or die "cannot open testout/t12_trans.png\n";
+  open FH,"testout/t102_trans.png" 
+    or die "cannot open testout/t102_trans.png\n";
   binmode(FH);
   $cmpimg=i_readpng(fileno(FH)) || print "not ";
   close(FH);
