@@ -29,5 +29,6 @@ static char *i_format_list[]={
   "pnm",
   "bmp",
   "tga",
+  "rgb",
   NULL};
 

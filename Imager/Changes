@@ -566,7 +566,8 @@ Revision history for Perl extension Imager.
         - applied T1 afm patch from Claes Jacobsson
         - split IM_INCPATH and IM_LIBPATH with $Config{path_sep}, so they
           work on Windows
-
+				- Added memory pools for easy cleanup of temp buffers
+				- Added read support for sgi .rgb files.
 =================================================================
 
         For latest versions check the Imager-devel pages:
