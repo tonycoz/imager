@@ -453,8 +453,6 @@ Revision history for Perl extension Imager.
 	- if gif_delays is a number instead of an arrayref, use that 
 	number for each frame
 
-	- support writing pgm files
-
         Documentation:
         - Add to the documentation
         - Write a tutorial?
