@@ -80,7 +80,7 @@ for my $type (@types) {
     else {
       skip("previous test failed");
     }
-    $fh->seek(0, SEEK_SET), "seek after read";
+    $fh->seek(0, SEEK_SET);
     if (ok($fhimg->read(fh=>$fh, %mopts, type=>$type), "read from fh")) {
       ok(Imager::i_img_diff($img->{IMG}, $fhimg->{IMG}) == 0,
          "image comparison after fh read");
