@@ -171,11 +171,13 @@ The basic interface would include:
     unsigned char channels[MAX_CHANNELS];
     /* and others as we currently have */
   } i_color;
+
   typedef struct {
     struct { double char r, g, b, a; } rgb;
     double channels[MAX_CHANNELS];
     /* and others as we currently have */
   } i_fcolor;
+
   typedef struct i_img_tag i_img;
   typedef int (*i_f_ppix_t)(i_img *im, int x, int y, i_color *pix);
   typedef int (*i_f_ppixf_t)(i_img *im, int x, int y, i_fcolor *pix);
@@ -185,10 +187,12 @@ The basic interface would include:
   typedef int (*i_f_gpixf_t)(i_img *im, int x, int y, i_fcolor *pix);
   typedef int (*i_f_glin_t)(i_img *im, int x, int r, int y, i_color *vals);
   typedef int (*i_f_glinf_t)(i_img *im, int x, int r, int y, i_fcolor *vals);
+
   typedef enum {
     i_literal_type, /* keeps RGB values per pixel */
     i_palette_type, /* keeps a palette index per pixel */
   } i_img_types;
+
   /* interface functions 
   typedef int (*i_f_gpal_t)(i_img *im, int x, int r, int y, i_palidx *vals);
   typedef int (*i_f_ppal_t)(i_img *im, int x, int r, int y, i_palidx *vals);
@@ -196,6 +200,7 @@ The basic interface would include:
   typedef int (*i_f_getcolor_t)(i_img *im, int i, i_color *);
   typedef int (*i_f_colorcount_t)(i_img *im);
   typedef int (*i_f_findcolor_t)(i_img *im);
+
   typedef enum { 
     /* bits per sample, not per pixel */
     /* a paletted image might have one bit perl sample */
@@ -203,17 +208,25 @@ The basic interface would include:
     i_16_bits = 16,
     i_double_bits = 64
   } i_img_bits;
+
+  typedef struct {
+    char *msg;
+    int code;
+  } i_errmsg;
+
   typedef struct {
     char *name; /* name of a given tag, might be NULL */
     int code; /* number of a given tag, -1 if it has no meaning */
     char *data; /* value of a given tag if it's not an int, may be NULL */
     int idata; /* value of a given tag if data is NULL */
   } i_img_tag;
+
   typedef struct {
     int count; /* how many tags have been set */
     int alloc; /* how many tags have been allocated for */
     i_img_tag *tags;
   } i_img_tags;
+
   typedef struct {
     int channels;
     int xsize, ysize, bytes;
@@ -224,6 +237,8 @@ The basic interface would include:
     void *idata; /* renamed to force inspection of existing code */
 		 /* can be NULL if virtual is non-zero */
     i_img_tags tags;
+
+    i_errmsg error_stack[ERRSTK]; /* Store errors with image */
 
     /* interface functions */
     i_f_ppix_t i_f_ppix;
@@ -261,5 +276,6 @@ Tony Cook <tony@develop-help.com>
 =head1 HISTORY
 
 16May2001 - initially completed version, could use some polishing
+16May2001 - Added i_error stack to the image structure.
 
 =cut
