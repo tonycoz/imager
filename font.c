@@ -534,8 +534,8 @@ i_tt_new(char *fontname) {
   /* load the typeface */
   error = TT_Open_Face( engine, fontname, &handle->face );
   if ( error ) {
-    if ( error == TT_Err_Could_Not_Open_File ) mm_log((1, "Could not find/open %s.\n", fontname ))
-    else mm_log((1, "Error while opening %s, error code = 0x%x.\n",fontname, error ));
+    if ( error == TT_Err_Could_Not_Open_File ) { mm_log((1, "Could not find/open %s.\n", fontname )) }
+    else { mm_log((1, "Error while opening %s, error code = 0x%x.\n",fontname, error )); }
     return NULL;
   }
   
