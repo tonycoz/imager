@@ -1,3 +1,4 @@
+#!perl -w
 # Before `make install' is performed this script should be runnable with
 # `make test'. After `make install' it should work as `perl test.pl'
 
@@ -6,7 +7,7 @@
 # Change 1..1 below to 1..last_test_to_print .
 # (It may become useful if the test is moved to ./t subdirectory.)
 
-BEGIN { $| = 1; print "1..42\n"; }
+BEGIN { $| = 1; print "1..43\n"; }
 END {print "not ok 1\n" unless $loaded;}
 use Imager;
 $loaded = 1;
@@ -104,7 +105,9 @@ for my $entry (@hsv_vs_rgb) {
   ++$index;
 }
 
-
+# check the built-ins table
+color_ok($test_num++, 0, 0, 0, 255, 
+	Imager::Color->new(builtin=>'black'));
  
 sub test_col {
   my ($c, $r, $g, $b, $a) = @_;
@@ -165,7 +168,8 @@ sub color_ok {
     print "ok $test_num\n";
   }
   else {
-    print "not ok $test_num\n"
+    print "not ok $test_num\n";
+    print "# ($r,$g,$b,$a) != (".join(",", $c ? $c->rgba: ()).")\n";
   }
 }
 

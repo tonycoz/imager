@@ -61,6 +61,7 @@ fontfiles/dcr10.pfb
 fontfiles/dodge.ttf
 lib/Imager/Color.pm
 lib/Imager/Color/Float.pm
+lib/Imager/Color/Table.pm
 lib/Imager/Expr.pm
 lib/Imager/Expr/Assem.pm
 lib/Imager/Files.pod
