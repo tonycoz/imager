@@ -366,7 +366,7 @@ sub im_functions {
      palette => [ \&req_palette ],
      scale => [ \&req_scale, \&val_scale ],
      rotate => [ \&req_rotate, \&val_rotate ],
-     caption => [ \&req_caption ],
+     # caption => [ \&req_caption ], # not done yet
     );
 }
 
@@ -534,6 +534,8 @@ Displays the usage message if no extra parameter is found, otherwise displays
 more detailed help for the given function, if any.
 
 =item --caption text
+
+Not implemented yet.
 
 Expands the image to create a caption area and draws the given text in the
 current font.
