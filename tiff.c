@@ -204,6 +204,7 @@ static i_img *read_one_tiff(TIFF *tif) {
       /* from dots per cm to dpi */
       xres *= 2.54;
       yres *= 2.54;
+      i_tags_add(&im->tags, "tiff_resolutionunit_name", 0, "centimeter", -1, 0);
     }
     else if (resunit == RESUNIT_NONE) {
       i_tags_addn(&im->tags, "i_aspect_only", 0, 1);
