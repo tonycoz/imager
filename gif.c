@@ -193,7 +193,7 @@ i_readgif_low(GifFileType *GifFile, int **colour_table, int *colours) {
       gif_push_error();
       i_push_error(0, "Unable to get record type");
       if (colour_table && *colour_table) {
-	free(*colour_table);
+	myfree(*colour_table);
 	*colour_table = NULL;
       }
       i_img_destroy(im);
@@ -207,7 +207,7 @@ i_readgif_low(GifFileType *GifFile, int **colour_table, int *colours) {
 	gif_push_error();
 	i_push_error(0, "Unable to get image descriptor");
 	if (colour_table && *colour_table) {
-	  free(*colour_table);
+	  myfree(*colour_table);
 	  *colour_table = NULL;
 	}
 	i_img_destroy(im);
@@ -242,7 +242,7 @@ i_readgif_low(GifFileType *GifFile, int **colour_table, int *colours) {
 	  GifFile->Image.Top + GifFile->Image.Height > GifFile->SHeight) {
 	i_push_errorf(0, "Image %d is not confined to screen dimension, aborted.\n",ImageNum);
 	if (colour_table && *colour_table) {
-	  free(*colour_table);
+	  myfree(*colour_table);
 	  *colour_table = NULL;
 	}
 	i_img_destroy(im);
@@ -257,7 +257,7 @@ i_readgif_low(GifFileType *GifFile, int **colour_table, int *colours) {
 	    gif_push_error();
 	    i_push_error(0, "Reading GIF line");
 	    if (colour_table && *colour_table) {
-	      free(*colour_table);
+	      myfree(*colour_table);
 	      *colour_table = NULL;
 	    }
 	    i_img_destroy(im);
@@ -281,7 +281,7 @@ i_readgif_low(GifFileType *GifFile, int **colour_table, int *colours) {
 	    gif_push_error();
 	    i_push_error(0, "Reading GIF line");
 	    if (colour_table && *colour_table) {
-	      free(*colour_table);
+	      myfree(*colour_table);
 	      *colour_table = NULL;
 	    }
 	    i_img_destroy(im);
@@ -306,7 +306,7 @@ i_readgif_low(GifFileType *GifFile, int **colour_table, int *colours) {
 	gif_push_error();
 	i_push_error(0, "Reading extension record");
 	if (colour_table && *colour_table) {
-	  free(*colour_table);
+	  myfree(*colour_table);
 	  *colour_table = NULL;
 	}
 	i_img_destroy(im);
@@ -318,7 +318,7 @@ i_readgif_low(GifFileType *GifFile, int **colour_table, int *colours) {
 	  gif_push_error();
 	  i_push_error(0, "reading next block of extension");
 	  if (colour_table && *colour_table) {
-	    free(*colour_table);
+	    myfree(*colour_table);
 	    *colour_table = NULL;
 	  }
 	  i_img_destroy(im);
@@ -340,7 +340,7 @@ i_readgif_low(GifFileType *GifFile, int **colour_table, int *colours) {
     gif_push_error();
     i_push_error(0, "Closing GIF file object");
     if (colour_table && *colour_table) {
-      free(*colour_table);
+      myfree(*colour_table);
       *colour_table = NULL;
     }
     i_img_destroy(im);
