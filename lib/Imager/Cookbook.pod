@@ -194,7 +194,7 @@ get the file handle
 
 have Imager read the image
 
-=cut
+=back
 
   # returns the client's name for the file, don't open this locally
   my $cgi = CGI->new;
