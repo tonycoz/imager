@@ -1529,8 +1529,8 @@ fount_init_state(struct fount_state *state, double xa, double ya,
     i_fountain_seg *seg = my_segs + i;
 
     *seg = segs[i];
-    if (seg->type < 0 || type >= i_ft_end)
-      seg->type = i_ft_linear;
+    if (seg->type < 0 || seg->type >= i_fst_end)
+      seg->type = i_fst_linear;
     if (seg->color < 0 || seg->color >= i_fc_end)
       seg->color = i_fc_direct;
     if (seg->color == i_fc_hue_up || seg->color == i_fc_hue_down) {

@@ -9,7 +9,7 @@ $imbase->open(file=>'testout/t104.ppm') or die;
 my $im_other = Imager->new(xsize=>150, ysize=>150);
 $im_other->box(xmin=>30, ymin=>60, xmax=>120, ymax=>90, filled=>1);
 
-print "1..41\n";
+print "1..43\n";
 
 test($imbase, 1, {type=>'autolevels'}, 'testout/t61_autolev.ppm');
 
@@ -84,6 +84,13 @@ test($imbase, 38, { type=>'unsharpmask', stddev=>2.0 },
 test($imbase, 40, {type=>'conv', coef=>[ -1, 3, -1, ], },
      'testout/t61_conv_sharp.ppm');
 
+# Regression test: the checking of the segment type was incorrect
+# (the comparison was checking the wrong variable against the wrong value)
+my $f4 = [ [ 0, 0.5, 1, NC(0,0,0), NC(255,255,255), 5, 0 ] ];
+test($imbase, 42, {type=>'fountain',  xa=>75, ya=>75, xb=>90, yb=>15,
+                    segments=>$f4, super_sample=>'grid',
+                    ftype=>'linear', combine=>'color' },
+     'testout/t61_regress_fount.ppm');
 
 sub test {
   my ($in, $num, $params, $out) = @_;

@@ -534,6 +534,7 @@ Revision history for Perl extension Imager.
           intensity scaling.
         - constant edge extension for scaling operations
         - better error checking of automatic fill conversions
+        - fix some range checking for the fountain fill segment type
 
 
 =================================================================
