@@ -227,9 +227,8 @@ i_readpng(int fd) {
   /* Strip alpha bytes from the input data without combining with the
    * background (not recommended).
    */
-  if (color_type != PNG_COLOR_TYPE_RGB_ALPHA || color_type != PNG_COLOR_TYPE_GRAY_ALPHA) 
+  if ( (color_type != PNG_COLOR_TYPE_RGB_ALPHA) && (color_type != PNG_COLOR_TYPE_GRAY_ALPHA) )
     png_set_strip_alpha(png_ptr);
-
 
   number_passes = png_set_interlace_handling(png_ptr);
 
