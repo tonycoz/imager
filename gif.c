@@ -163,6 +163,13 @@ i_readgif_low(GifFileType *GifFile, int **colour_table, int *colours) {
 
   mm_log((1,"i_readgif_low(GifFile %p, colour_table %p, colours %p)\n", GifFile, colour_table, colours));
 
+  /* it's possible that the caller has called us with *colour_table being
+     non-NULL, but we check that to see if we need to free an allocated
+     colour table on error.
+  */
+  if (colour_table)
+    *colour_table = NULL;
+
   BackGround = GifFile->SBackGroundColor;
   ColorMap = (GifFile->Image.ColorMap ? GifFile->Image.ColorMap : GifFile->SColorMap);
 
@@ -187,7 +194,10 @@ i_readgif_low(GifFileType *GifFile, int **colour_table, int *colours) {
     if (DGifGetRecordType(GifFile, &RecordType) == GIF_ERROR) {
       gif_push_error();
       i_push_error(0, "Unable to get record type");
-      if (colour_table) free(colour_table); /* FIXME: Isn't this an error? */
+      if (colour_table && *colour_table) {
+	free(*colour_table);
+	*colour_table = NULL;
+      }
       i_img_destroy(im);
       DGifCloseFile(GifFile);
       return NULL;
@@ -198,7 +208,10 @@ i_readgif_low(GifFileType *GifFile, int **colour_table, int *colours) {
       if (DGifGetImageDesc(GifFile) == GIF_ERROR) {
 	gif_push_error();
 	i_push_error(0, "Unable to get image descriptor");
-	if (colour_table) free(colour_table); /* FIXME: Isn't this an error? */
+	if (colour_table && *colour_table) {
+	  free(*colour_table);
+	  *colour_table = NULL;
+	}
 	i_img_destroy(im);
 	DGifCloseFile(GifFile);
 	return NULL;
@@ -214,7 +227,7 @@ i_readgif_low(GifFileType *GifFile, int **colour_table, int *colours) {
 	  /* No colormap and we are about to read in the image - abandon for now */
 	  mm_log((1, "Going in with no colormap\n"));
 	  i_push_error(0, "Image does not have a local or a global color map");
-	  if (colour_table) free(colour_table); /* FIXME: Isn't this an error? */
+	  /* we can't have allocated a colour table here */
 	  i_img_destroy(im);
 	  DGifCloseFile(GifFile);
 	  return NULL;
@@ -230,7 +243,10 @@ i_readgif_low(GifFileType *GifFile, int **colour_table, int *colours) {
       if (GifFile->Image.Left + GifFile->Image.Width > GifFile->SWidth ||
 	  GifFile->Image.Top + GifFile->Image.Height > GifFile->SHeight) {
 	i_push_errorf(0, "Image %d is not confined to screen dimension, aborted.\n",ImageNum);
-	if (colour_table) free(colour_table); /* FIXME: Yet again */
+	if (colour_table && *colour_table) {
+	  free(*colour_table);
+	  *colour_table = NULL;
+	}
 	i_img_destroy(im);
 	DGifCloseFile(GifFile);
 	return(0);
@@ -242,8 +258,10 @@ i_readgif_low(GifFileType *GifFile, int **colour_table, int *colours) {
 	  if (DGifGetLine(GifFile, &GifRow[Col], Width) == GIF_ERROR) {
 	    gif_push_error();
 	    i_push_error(0, "Reading GIF line");
-	    if (colour_table)
-	      free(colour_table);
+	    if (colour_table && *colour_table) {
+	      free(*colour_table);
+	      *colour_table = NULL;
+	    }
 	    i_img_destroy(im);
 	    DGifCloseFile(GifFile);
 	    return NULL;
@@ -264,8 +282,10 @@ i_readgif_low(GifFileType *GifFile, int **colour_table, int *colours) {
 	  if (DGifGetLine(GifFile, &GifRow[Col], Width) == GIF_ERROR) {
 	    gif_push_error();
 	    i_push_error(0, "Reading GIF line");
-	    if (colour_table)
-	      free(colour_table);
+	    if (colour_table && *colour_table) {
+	      free(*colour_table);
+	      *colour_table = NULL;
+	    }
 	    i_img_destroy(im);
 	    DGifCloseFile(GifFile);
 	    return NULL;
@@ -287,8 +307,10 @@ i_readgif_low(GifFileType *GifFile, int **colour_table, int *colours) {
       if (DGifGetExtension(GifFile, &ExtCode, &Extension) == GIF_ERROR) {
 	gif_push_error();
 	i_push_error(0, "Reading extension record");
-	if (colour_table)
-	  free(colour_table);
+	if (colour_table && *colour_table) {
+	  free(*colour_table);
+	  *colour_table = NULL;
+	}
 	i_img_destroy(im);
 	DGifCloseFile(GifFile);
 	return NULL;
@@ -297,8 +319,10 @@ i_readgif_low(GifFileType *GifFile, int **colour_table, int *colours) {
 	if (DGifGetExtensionNext(GifFile, &Extension) == GIF_ERROR) {
 	  gif_push_error();
 	  i_push_error(0, "reading next block of extension");
-	  if (colour_table)
-	    free(colour_table);
+	  if (colour_table && *colour_table) {
+	    free(*colour_table);
+	    *colour_table = NULL;
+	  }
 	  i_img_destroy(im);
 	  DGifCloseFile(GifFile);
 	  return NULL;
@@ -317,8 +341,10 @@ i_readgif_low(GifFileType *GifFile, int **colour_table, int *colours) {
   if (DGifCloseFile(GifFile) == GIF_ERROR) {
     gif_push_error();
     i_push_error(0, "Closing GIF file object");
-    if (colour_table)
-      free(colour_table);
+    if (colour_table && *colour_table) {
+      free(*colour_table);
+      *colour_table = NULL;
+    }
     i_img_destroy(im);
     return NULL;
   }
