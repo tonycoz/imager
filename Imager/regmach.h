@@ -54,6 +54,9 @@ enum rm_byte_codes {
   rbc_set, /* ra -> r */
   rbc_setp, /* pa -> p*/
   rbc_print, /* prints ra */
+  rbc_rgba, /* rgba(ra, rb, rc, rd) -> p */
+  rbc_hsva, /* hsva(ra, rb, rc, rd) -> p */
+  rbc_alpha, /* alpha(pa) -> r */
   rbc_op_count
 };
 

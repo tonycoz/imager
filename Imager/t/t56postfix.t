@@ -7,7 +7,11 @@ print "ok 1\n";
 
 #$Imager::DEBUG=1;
 
-my $expr = Imager::Expr->new({rpnexpr=>'x two * y one + getp1', variables=>[ qw(x y) ], constants=>{one=>1, two=>2}});
+my $expr = Imager::Expr->new({rpnexpr=><<EXPR, variables=>[ qw(x y) ], constants=>{one=>1, two=>2}});
+x two * # see if comments work
+y one + 
+getp1
+EXPR
 if ($expr) {
   print "ok 2\n";
 

@@ -2870,7 +2870,14 @@ i_transform(im,opx,opy,parm)
              else sv_setref_pv(ST(0), "Imager::ImgRaw", (void*)RETVAL);
 
 Imager::ImgRaw
-i_transform2(width,height,ops,n_regs,c_regs,in_imgs)
+i_transform2(sv_width,sv_height,channels,sv_ops,av_n_regs,av_c_regs,av_in_imgs)
+	SV *sv_width
+	SV *sv_height
+	SV *sv_ops
+	AV *av_n_regs
+	AV *av_c_regs
+	AV *av_in_imgs
+	int channels
 	     PREINIT:
              int width;
              int height;
@@ -2889,32 +2896,18 @@ i_transform2(width,height,ops,n_regs,c_regs,in_imgs)
              IV tmp;
 	     int i;
              CODE:
-	     if (!SvROK(ST(3))) croak("Imager: Parameter 4 must be a reference to an array\n");
-	     if (!SvROK(ST(4))) croak("Imager: Parameter 5 must be a reference to an array\n");
-	     if (!SvROK(ST(5))) croak("Imager: Parameter 6 must be a reference to an array of images\n");
-	     if (SvTYPE(SvRV(ST(3))) != SVt_PVAV) croak("Imager: Parameter 4 must be a reference to an array\n");
-	     if (SvTYPE(SvRV(ST(4))) != SVt_PVAV) croak("Imager: Parameter 5 must be a reference to an array\n");
 
-	/*if (SvTYPE(SvRV(ST(5))) != SVt_PVAV) croak("Imager: Parameter 6 must be a reference to an array\n");*/
-
-             if (SvTYPE(SvRV(ST(5))) == SVt_PVAV) {
-	       av = (AV*)SvRV(ST(5));
-               in_imgs_count = av_len(av)+1;
-	       for (i = 0; i < in_imgs_count; ++i) {
-		 sv1 = *av_fetch(av, i, 0);
-		 if (!sv_derived_from(sv1, "Imager::ImgRaw")) {
-		   croak("Parameter 5 must contain only images");
-		 }
+             in_imgs_count = av_len(av_in_imgs)+1;
+	     for (i = 0; i < in_imgs_count; ++i) {
+	       sv1 = *av_fetch(av_in_imgs, i, 0);
+	       if (!sv_derived_from(sv1, "Imager::ImgRaw")) {
+		 croak("sv_in_img must contain only images");
 	       }
 	     }
-	     else {
-	       in_imgs_count = 0;
-             }
              if (in_imgs_count > 0) {
-               av = (AV*)SvRV(ST(5));
                in_imgs = mymalloc(in_imgs_count*sizeof(i_img*));
                for (i = 0; i < in_imgs_count; ++i) {              
-	         sv1 = *av_fetch(av,i,0);
+	         sv1 = *av_fetch(av_in_imgs,i,0);
 	         if (!sv_derived_from(sv1, "Imager::ImgRaw")) {
 		   croak("Parameter 5 must contain only images");
 	         }
@@ -2927,38 +2920,37 @@ i_transform2(width,height,ops,n_regs,c_regs,in_imgs)
 	       in_imgs = NULL;
              }
              /* default the output size from the first input if possible */
-             if (SvOK(ST(0)))
-	       width = SvIV(ST(0));
+             if (SvOK(sv_width))
+	       width = SvIV(sv_width);
              else if (in_imgs_count)
 	       width = in_imgs[0]->xsize;
              else
 	       croak("No output image width supplied");
 
-             if (SvOK(ST(1)))
-	       height = SvIV(ST(1));
+             if (SvOK(sv_height))
+	       height = SvIV(sv_height);
              else if (in_imgs_count)
 	       height = in_imgs[0]->ysize;
              else
 	       croak("No output image height supplied");
 
-	     ops = (struct rm_op *)SvPV(ST(2), ops_len);
+	     ops = (struct rm_op *)SvPV(sv_ops, ops_len);
              if (ops_len % sizeof(struct rm_op))
 	         croak("Imager: Parameter 3 must be a bitmap of regops\n");
 	     ops_count = ops_len / sizeof(struct rm_op);
-	     av = (AV*)SvRV(ST(3));
-	     n_regs_count = av_len(av)+1;
+
+	     n_regs_count = av_len(av_n_regs)+1;
              n_regs = mymalloc(n_regs_count * sizeof(double));
 	     for (i = 0; i < n_regs_count; ++i) {
-	       sv1 = *av_fetch(av,i,0);
+	       sv1 = *av_fetch(av_n_regs,i,0);
 	       if (SvOK(sv1))
 	         n_regs[i] = SvNV(sv1);
 	     }
-             av = (AV*)SvRV(ST(4));
-             c_regs_count = av_len(av)+1;
+             c_regs_count = av_len(av_c_regs)+1;
              c_regs = mymalloc(c_regs_count * sizeof(i_color));
              /* I don't bother initializing the colou?r registers */
 
-	     RETVAL=i_transform2(width, height, 3, ops, ops_count, 
+	     RETVAL=i_transform2(width, height, channels, ops, ops_count, 
 				 n_regs, n_regs_count, 
 				 c_regs, c_regs_count, in_imgs, in_imgs_count);
 	     if (in_imgs)
