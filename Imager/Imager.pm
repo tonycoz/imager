@@ -2682,8 +2682,6 @@ Imager - Perl extension for Generating 24 bit Images
   }
 
 
-  # Logo Generator Example
-
 
 
 =head1 DESCRIPTION
