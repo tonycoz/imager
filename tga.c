@@ -54,15 +54,25 @@ typedef struct {
 } tga_header;
 
 
+typedef enum { NoInit, Raw, Rle } rle_state;
+
 typedef struct {
   int compressed;
   int bytepp;
-  enum { NoInit, Raw, Rle } state;
+  rle_state state;
   unsigned char cval[4];
   int len;
   unsigned char hdr;
   io_glue *ig;
 } tga_source;
+
+
+typedef struct {
+  int compressed;
+  int bytepp;
+  io_glue *ig;
+} tga_dest;
+
 
 
 static
@@ -102,6 +112,12 @@ bpp_to_channels(unsigned int bpp) {
 
 
 
+/* 
+ * Packing functions - used for (un)packing
+ * datastructures into raw bytes.
+*/
+
+
 /* color_unpack
 
 Unpacks bytes into colours, for 2 byte type the first byte coming from
@@ -122,7 +138,10 @@ color_unpack(unsigned char *buf, int bytepp, i_color *val) {
     val->rgba.r = (buf[1] & 0x7c) << 1;
     val->rgba.g = ((buf[1] & 0x03) << 6) | ((buf[0] & 0xe0) >> 2);
     val->rgba.b = (buf[0] & 0x1f) << 3;
-    val->rgba.a = (buf[1] & 0x80);
+    val->rgba.a = (buf[1] & 0x80) ? 255 : 0;
+    val->rgba.r |= val->rgba.r >> 5;
+    val->rgba.g |= val->rgba.g >> 5;
+    val->rgba.b |= val->rgba.b >> 5;
     break;
   case 3:
     val->rgb.b = buf[0];
@@ -139,11 +158,83 @@ color_unpack(unsigned char *buf, int bytepp, i_color *val) {
   }
 }
 
-/* 
-   tga_source_read
-   
-   Does not byte reorder,  returns true on success, 0 otherwise 
+
+
+/* color_pack
+
+Packs colous into bytes, for 2 byte type the first byte will be
+GGGBBBBB, and the second will be ARRRRRGG.  "A" represents an
+attribute bit.  The 3 byte entry contains 1 byte each of blue, green,
+and red.  The 4 byte entry contains 1 byte each of blue, green, red,
+and attribute.
 */
+
+static
+void
+color_pack(unsigned char *buf, int bitspp, i_color *val) {
+  switch (bitspp) {
+  case 8:
+    buf[0] = val->gray.gray_color;
+    break;
+  case 15:
+    buf[0]  = (val->rgba.b >> 3);
+    buf[0] |= (val->rgba.g & 0x38) << 2;
+    buf[1]  = (val->rgba.r & 0xf8)>> 1;
+    buf[1] |= (val->rgba.g >> 6);
+  case 16:
+    buf[1] |=  val->rgba.a & 0x80;
+    break;
+  case 24:
+    buf[0] = val->rgb.b;
+    buf[1] = val->rgb.g;
+    buf[2] = val->rgb.r;
+    break;
+  case 32:
+    buf[0] = val->rgba.b;
+    buf[1] = val->rgba.g;
+    buf[2] = val->rgba.r;
+    buf[3] = val->rgba.a;
+    break;
+  default:
+  }
+  //  printf("%d  %3d %3d %3d\n", bitspp, val->rgb.r, val->rgb.g, val->rgb.b);
+}
+
+
+
+
+static
+int
+find_repeat(unsigned char *buf, int length, int bytepp) {
+  int i = 0;
+  
+  while(i<length-1) {
+    if(memcmp(buf+i*bytepp, buf+(i+1)*bytepp, bytepp) == 0) {
+      if (i == length-2) return -1;
+      if (memcmp(buf+(i+1)*bytepp, buf+(i+2)*bytepp,bytepp) == 0)  
+	return i;
+      else i++;
+    }
+    i++;
+  }
+  return -1;
+}
+
+
+static
+int
+find_span(unsigned char *buf, int length, int bytepp) {
+  int i = 0;
+  while(i<length) {
+    if(memcmp(buf, buf+(i*bytepp), bytepp) != 0) return i;
+    i++;
+  }
+  return length;
+}
+
+
+
+
 
 static
 int
@@ -185,6 +276,62 @@ tga_source_read(tga_source *s, unsigned char *buf, size_t pixels) {
   return 1;
 }
 
+
+
+/* 
+   tga_dest_write
+   
+   Note that it is possible for length to be more than 0 and the state
+   still be noinit.  That just means that there isn't enough data yet to
+   determine the next packet type.
+
+*/
+
+static
+int
+tga_dest_write(tga_dest *s, unsigned char *buf, size_t pixels) {
+  int cp = 0, j, k;
+
+  if (!s->compressed) {
+    if (s->ig->writecb(s->ig, buf, pixels*s->bytepp) != pixels*s->bytepp) return 0;
+    return 1;
+  }
+  
+  while(cp < pixels) {
+    int tlen;
+    int nxtrip = find_repeat(buf+cp*s->bytepp, pixels-cp, s->bytepp);
+    tlen = (nxtrip == -1) ? pixels-cp : nxtrip;
+    while(tlen) {
+      int clen = (tlen>128) ? 128 : tlen;
+      clen--;
+      if (s->ig->writecb(s->ig, &clen, 1) != 1) return 0;
+      clen++;
+      if (s->ig->writecb(s->ig, buf+cp*s->bytepp, clen*s->bytepp) != clen*s->bytepp) return 0;
+      tlen -= clen;
+      cp += clen;
+    }
+    if (cp >= pixels) break;
+    tlen = find_span(buf+cp*s->bytepp, pixels-cp, s->bytepp);
+    while (tlen) {
+      int clen = (tlen>128) ? 128 : tlen;
+      clen = (clen - 1) | 0x80;
+      if (s->ig->writecb(s->ig, &clen, 1) != 1) return 0;
+      clen = (clen & ~0x80) + 1;
+      if (s->ig->writecb(s->ig, buf+cp*s->bytepp, s->bytepp) != s->bytepp) return 0;
+      tlen -= clen;
+      cp += clen;
+    }
+  }
+  return 1;
+}
+
+
+
+
+
+
+
+
 static
 int
 tga_palette_read(io_glue *ig, i_img *img, int bytepp, int colourmaplength) {
@@ -211,6 +358,69 @@ tga_palette_read(io_glue *ig, i_img *img, int bytepp, int colourmaplength) {
 }
 
 
+
+static
+int
+tga_palette_write(io_glue *ig, i_img *img, int bitspp, int colourmaplength) {
+  int i;
+  int bytepp = bpp_to_bytes(bitspp);
+  size_t palbsize = i_colorcount(img)*bytepp;
+  unsigned char *palbuf = mymalloc(palbsize);
+  
+  for(i=0; i<colourmaplength; i++) {
+    i_color val;
+    i_getcolors(img, i, &val, 1);
+    color_pack(palbuf+i*bytepp, bitspp, &val);
+  }
+  
+  if (ig->writecb(ig, palbuf, palbsize) != palbsize) {
+    i_push_error(errno, "could not write targa colourmap");
+    return 0;
+  }
+  myfree(palbuf);
+  return 1;
+}
+
+static
+void
+tga_header_unpack(tga_header *header, unsigned char headbuf[18]) {
+  header->idlength        = headbuf[0];
+  header->colourmaptype   = headbuf[1];
+  header->datatypecode    = headbuf[2];
+  header->colourmaporigin = (headbuf[4] << 8) + headbuf[3];
+  header->colourmaplength = (headbuf[6] << 8) + headbuf[5];
+  header->colourmapdepth  = headbuf[7];
+  header->x_origin        = (headbuf[9] << 8) + headbuf[8];
+  header->y_origin        = (headbuf[11] << 8) + headbuf[10];
+  header->width           = (headbuf[13] << 8) + headbuf[12];
+  header->height          = (headbuf[15] << 8) + headbuf[14];
+  header->bitsperpixel    = headbuf[16];
+  header->imagedescriptor = headbuf[17];
+}
+
+
+static
+void
+tga_header_pack(tga_header *header, unsigned char headbuf[18]) {
+  headbuf[0] = header->idlength;
+  headbuf[1] = header->colourmaptype;
+  headbuf[2] = header->datatypecode;
+  headbuf[3] = header->colourmaporigin & 0xff;
+  headbuf[4] = header->colourmaporigin >> 8;
+  headbuf[5] = header->colourmaplength & 0xff;
+  headbuf[6] = header->colourmaplength >> 8;
+  headbuf[7] = header->colourmapdepth;
+  headbuf[8] = header->x_origin & 0xff;
+  headbuf[9] = header->x_origin >> 8;
+  headbuf[10] = header->y_origin & 0xff;
+  headbuf[11] = header->y_origin >> 8;
+  headbuf[12] = header->width & 0xff;
+  headbuf[13] = header->width >> 8;
+  headbuf[14] = header->height & 0xff;
+  headbuf[15] = header->height >> 8;
+  headbuf[16] = header->bitsperpixel;
+  headbuf[17] = header->imagedescriptor;
+}
 
 
 
@@ -252,18 +462,7 @@ i_readtga_wiol(io_glue *ig, int length) {
     return NULL;
   }
 
-  header.idlength        = headbuf[0];
-  header.colourmaptype   = headbuf[1];
-  header.datatypecode    = headbuf[2];
-  header.colourmaporigin = (headbuf[4] << 8) + headbuf[3];
-  header.colourmaplength = (headbuf[6] << 8) + headbuf[5];
-  header.colourmapdepth  = headbuf[7];
-  header.x_origin        = (headbuf[9] << 8) + headbuf[8];
-  header.y_origin        = (headbuf[11] << 8) + headbuf[10];
-  header.width           = (headbuf[13] << 8) + headbuf[12];
-  header.height          = (headbuf[15] << 8) + headbuf[14];
-  header.bitsperpixel    = headbuf[16];
-  header.imagedescriptor = headbuf[17];
+  tga_header_unpack(&header, headbuf);
 
   mm_log((1,"Id length:         %d\n",header.idlength));
   mm_log((1,"Colour map type:   %d\n",header.colourmaptype));
@@ -277,7 +476,6 @@ i_readtga_wiol(io_glue *ig, int length) {
   mm_log((1,"Height:            %d\n",header.height));
   mm_log((1,"Bits per pixel:    %d\n",header.bitsperpixel));
   mm_log((1,"Descriptor:        %d\n",header.imagedescriptor));
-
 
   if (header.idlength) {
     idstring = mymalloc(header.idlength+1);
@@ -400,58 +598,72 @@ i_readtga_wiol(io_glue *ig, int length) {
 
 undef_int
 i_writetga_wiol(i_img *img, io_glue *ig) {
-  int rc;
   static int rgb_chan[] = { 2, 1, 0, 3 };
   tga_header header;
+  tga_dest dest;
   unsigned char headbuf[18];
-  unsigned char *data;
-  int compress = 0;
+  //  unsigned char *data;
+  unsigned int bitspp;
+  
+  int idlen;
+  int mapped;
+
+  /* parameters */
+  int compress = 1;
   char *idstring = "testing";
-  int idlen = strlen(idstring);
-  int mapped = img->type == i_palette_type;
+  int wierdpack = 0;
+
+  idlen = strlen(idstring);
+  mapped = img->type == i_palette_type;
 
   mm_log((1,"i_writetga_wiol(img %p, ig %p)\n", img, ig));
-  i_clear_error();
-
-  io_glue_commit_types(ig);
-
   mm_log((1, "virtual %d, paletted %d\n", img->virtual, mapped));
   mm_log((1, "channels %d\n", img->channels));
+  
+  i_clear_error();
+  
+  switch (img->channels) {
+  case 1:
+    bitspp = 8;
+    if (wierdpack) {
+      mm_log((1,"wierdpack option ignored for 1 channel images\n"));
+      wierdpack=0;
+    }
+    break;
+  case 2:
+    i_push_error(0, "Cannot store 2 channel image in targa format");
+    return 0;
+    break;
+  case 3:
+    bitspp = wierdpack ? 15 : 24;
+    break;
+  case 4:
+    bitspp = wierdpack ? 16 : 32;
+    break;
+  default:
+    i_push_error(0, "Targa only handles 1,3 and 4 channel images.");
+    return 0;
+  }
 
+  io_glue_commit_types(ig);
+  
   header.idlength;
   header.idlength = idlen;
   header.colourmaptype   = mapped ? 1 : 0;
   header.datatypecode    = mapped ? 1 : img->channels == 1 ? 3 : 2;
-  mm_log((1, "datatypecode %d\n", header.datatypecode));
   header.datatypecode   += compress ? 8 : 0;
+  mm_log((1, "datatypecode %d\n", header.datatypecode));
   header.colourmaporigin = 0;
   header.colourmaplength = mapped ? i_colorcount(img) : 0;
-  header.colourmapdepth  = mapped ? img->channels*8 : 0;
+  header.colourmapdepth  = mapped ? bitspp : 0;
   header.x_origin        = 0;
   header.y_origin        = 0;
   header.width           = img->xsize;
   header.height          = img->ysize;
-  header.bitsperpixel    = mapped ? 8 : 8*img->channels;
+  header.bitsperpixel    = mapped ? 8 : bitspp;
   header.imagedescriptor = (1<<5); /* normal order instead of upside down */
 
-  headbuf[0] = header.idlength;
-  headbuf[1] = header.colourmaptype;
-  headbuf[2] = header.datatypecode;
-  headbuf[3] = header.colourmaporigin & 0xff;
-  headbuf[4] = header.colourmaporigin >> 8;
-  headbuf[5] = header.colourmaplength & 0xff;
-  headbuf[6] = header.colourmaplength >> 8;
-  headbuf[7] = header.colourmapdepth;
-  headbuf[8] = header.x_origin & 0xff;
-  headbuf[9] = header.x_origin >> 8;
-  headbuf[10] = header.y_origin & 0xff;
-  headbuf[11] = header.y_origin >> 8;
-  headbuf[12] = header.width & 0xff;
-  headbuf[13] = header.width >> 8;
-  headbuf[14] = header.height & 0xff;
-  headbuf[15] = header.height >> 8;
-  headbuf[16] = header.bitsperpixel;
-  headbuf[17] = header.imagedescriptor;
+  tga_header_pack(&header, headbuf);
 
   if (ig->writecb(ig, &headbuf, sizeof(headbuf)) != sizeof(headbuf)) {
     i_push_error(errno, "could not write targa header");
@@ -465,29 +677,20 @@ i_writetga_wiol(i_img *img, io_glue *ig) {
     }
   }
   
+  /* Make this into a constructor? */
+  dest.compressed = compress;
+  dest.bytepp     = mapped ? 1 : bpp_to_bytes(bitspp);
+  dest.ig         = ig;
+
+  mm_log((1, "dest.compressed = %d\n", dest.compressed));
+  mm_log((1, "dest.bytepp = %d\n", dest.bytepp));
+
   if (img->type == i_palette_type) {
     int i;
-    size_t palbsize = i_colorcount(img)*img->channels;
-    unsigned char *palbuf = mymalloc(palbsize);
-
-    for(i=0; i<header.colourmaplength; i++) {
-      int ch;
-      i_color val;
-      i_getcolors(img, i, &val, 1);
-      if (img->channels>1) for(ch=0; ch<img->channels; ch++) 
-	palbuf[i*img->channels+ch] = val.channel[rgb_chan[ch]];
-      else for(ch=0; ch<img->channels; ch++)
-	palbuf[i] = val.channel[ch];
-    }
-
-    if (ig->writecb(ig, palbuf, palbsize) != palbsize) {
-      i_push_error(errno, "could not write targa colourmap");
-      return 0;
-    }
-    myfree(palbuf);
-
-    /* write palette */
-    if (!img->virtual) {
+    int bytepp = bpp_to_bytes(bitspp);
+    if (!tga_palette_write(ig, img, bitspp, i_colorcount(img))) return 0;
+    
+    if (!img->virtual && !dest.compressed) {
       if (ig->writecb(ig, img->idata, img->bytes) != img->bytes) {
 	i_push_error(errno, "could not write targa image data");
 	return 0;
@@ -497,30 +700,24 @@ i_writetga_wiol(i_img *img, io_glue *ig) {
       i_palidx *vals = mymalloc(sizeof(i_palidx)*img->xsize);
       for(y=0; y<img->ysize; y++) {
 	i_gpal(img, 0, img->xsize, y, vals);
-	if (ig->writecb(ig, vals, img->xsize) != img->xsize) {
-	  i_push_error(errno, "could not write targa data to file");
-	  myfree(vals);
-	  return 0;
-	}
+	tga_dest_write(&dest, vals, img->xsize);
       }
       myfree(vals);
     }
-  } else {
-    int y, lsize = img->channels * img->xsize;
-    data = mymalloc(lsize);
+  } else { /* direct type */
+    int x, y;
+    int bytepp = wierdpack ? 2 : bpp_to_bytes(bitspp);
+    int lsize = bytepp * img->xsize;
+    i_color *vals = mymalloc(img->xsize*sizeof(i_color));
+    unsigned char *buf = mymalloc(lsize);
+    
     for(y=0; y<img->ysize; y++) {
-      if (img->channels>1) i_gsamp(img, 0, img->xsize, y, data, rgb_chan, img->channels);
-      else {
-	int gray_chan[] = {0};
-	i_gsamp(img, 0, img->xsize, y, data, gray_chan, img->channels);
-      }
-      if ( ig->writecb(ig, data, lsize) != lsize ) {
-	i_push_error(errno, "could not write targa data to file");
-	myfree(data);
-	return 0;
-      }
+      i_glin(img, 0, img->xsize, y, vals);
+      for(x=0; x<img->xsize; x++) color_pack(buf+x*bytepp, bitspp, vals+x);
+      tga_dest_write(&dest, buf, img->xsize);
     }
-    myfree(data);
+    myfree(buf);
+    myfree(vals);
   }
   return 1;
 }
