@@ -456,6 +456,11 @@ sub _error_as_msg {
 
 sub _color {
   my $arg = shift;
+  # perl 5.6.0 seems to do weird things to $arg if we don't make an 
+  # explicitly stringified copy
+  # I vaguely remember a bug on this on p5p, but couldn't find it
+  # through bugs.perl.org (I had trouble getting it to find any bugs)
+  my $copy = $arg . "";
   my $result;
 
   if (ref $arg) {
@@ -464,10 +469,10 @@ sub _color {
       $result = $arg;
     }
     else {
-      if ($arg =~ /^HASH\(/) {
+      if ($copy =~ /^HASH\(/) {
         $result = Imager::Color->new(%$arg);
       }
-      elsif ($arg =~ /^ARRAY\(/) {
+      elsif ($copy =~ /^ARRAY\(/) {
         if (grep $_ > 1, @$arg) {
           $result = Imager::Color->new(@$arg);
         }
