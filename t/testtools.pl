@@ -82,6 +82,27 @@ sub requireokx {
   }
 }
 
+sub useokx {
+  my ($module, $comment, @imports) = @_;
+  
+  my $pack = caller;
+  eval <<EOS;
+package $pack;
+require $module;
+$module->import(\@imports);
+EOS
+  unless (okx(!$@, $comment)) {
+    my $msg = $@;
+    $msg =~ s/\n+$//;
+    $msg =~ s/\n/\n# /g;
+    print "# $msg\n";
+    return 0;
+  }
+  else {
+    return 1;
+  }
+}
+
 sub matchn($$$$) {
   my ($num, $str, $re, $comment) = @_;
 
