@@ -72,6 +72,9 @@ New Features:
 
 - arc outlines
 
+- single pixel set and get, maybe with an array of co-ordinates
+  http://www.molar.is/en/lists/imager-devel/2002-01/0002.shtml
+
 Clean up:
 - Make sure everything is doable with the OO interface
   i_flood_fill() for example.
