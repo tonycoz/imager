@@ -205,6 +205,7 @@ testimg/trimgdesc.gif
 testimg/trmiddesc.gif
 tga.c           Reading and writing Targa files
 tiff.c
+tools/imager    Command-line tool for imager (experimental)
 trans2.c
 transform.perl	Shell interface to Imager::Transform
 typemap
