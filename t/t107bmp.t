@@ -1,9 +1,9 @@
 #!perl -w
-print "1..62\n";
+print "1..74\n";
 use Imager qw(:all);
 use strict;
 init_log("testout/t107bmp.log",1);
-require 't/testtools.pl';
+BEGIN { require 't/testtools.pl'; } # BEGIN to apply prototypes
 
 my $base_diff = 0;
 # if you change this make sure you generate new compressed versions
@@ -150,6 +150,41 @@ for my $test (@tests) {
   else {
     skipn($test_num, 2, "only tested on 32-bit machines");
     $test_num += 2;
+  }
+}
+
+# previously we didn't seek to the offbits position before reading
+# the image data, check we handle it correctly
+# in each case the first is an original image with a given number of
+# bits and the second is the same file with data inserted before the
+# image bits and the offset modified to suit
+my @comp =
+  (
+   [ 'winrgb2.bmp', 'winrgb2off.bmp', 1 ],
+   [ 'winrgb4.bmp', 'winrgb4off.bmp', 4 ],
+   [ 'winrgb8.bmp', 'winrgb8off.bmp', 8 ],
+   [ 'winrgb24.bmp', 'winrgb24off.bmp', 24 ],
+  );
+
+for my $comp (@comp) {
+  my ($base_file, $off_file, $bits) = @$comp;
+
+  my $base_im = Imager->new;
+  my $got_base = 
+    okn($test_num++, $base_im->read(file=>"testimg/$base_file"),
+        "read original")
+      or print "# ",$base_im->errstr,"\n";
+  my $off_im = Imager->new;
+  my $got_off =
+    okn($test_num++, $off_im->read(file=>"testimg/$off_file"),
+        "read offset file")
+      or print "# ",$off_im->errstr,"\n";
+  if ($got_base && $got_off) {
+    okn($test_num++, !i_img_diff($base_im->{IMG}, $off_im->{IMG}), 
+        "compare base and offset image ($bits bits)");
+  }
+  else {
+    skipn($test_num++, 1, "missed one file");
   }
 }
                               

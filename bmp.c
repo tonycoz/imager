@@ -45,13 +45,14 @@ static int write_8bit_data(io_glue *ig, i_img *im);
 static int write_24bit_data(io_glue *ig, i_img *im);
 static int read_bmp_pal(io_glue *ig, i_img *im, int count);
 static i_img *read_1bit_bmp(io_glue *ig, int xsize, int ysize, int clr_used, 
-                            int compression);
+                            int compression, long offbits);
 static i_img *read_4bit_bmp(io_glue *ig, int xsize, int ysize, int clr_used, 
-                            int compression);
+                            int compression, long offbits);
 static i_img *read_8bit_bmp(io_glue *ig, int xsize, int ysize, int clr_used, 
-                            int compression);
+                            int compression, long offbits);
 static i_img *read_direct_bmp(io_glue *ig, int xsize, int ysize, 
-                              int bit_count, int clr_used, int compression);
+                              int bit_count, int clr_used, int compression,
+                              long offbits);
 
 /* 
 =item i_writebmp_wiol(im, io_glue)
@@ -134,21 +135,22 @@ i_readbmp_wiol(io_glue *ig) {
   
   switch (bit_count) {
   case 1:
-    im = read_1bit_bmp(ig, xsize, ysize, clr_used, compression);
+    im = read_1bit_bmp(ig, xsize, ysize, clr_used, compression, offbits);
     break;
 
   case 4:
-    im = read_4bit_bmp(ig, xsize, ysize, clr_used, compression);
+    im = read_4bit_bmp(ig, xsize, ysize, clr_used, compression, offbits);
     break;
 
   case 8:
-    im = read_8bit_bmp(ig, xsize, ysize, clr_used, compression);
+    im = read_8bit_bmp(ig, xsize, ysize, clr_used, compression, offbits);
     break;
 
   case 32:
   case 24:
   case 16:
-    im = read_direct_bmp(ig, xsize, ysize, bit_count, clr_used, compression);
+    im = read_direct_bmp(ig, xsize, ysize, bit_count, clr_used, compression,
+                         offbits);
     break;
 
   default:
@@ -614,7 +616,7 @@ read_bmp_pal(io_glue *ig, i_img *im, int count) {
 }
 
 /*
-=item read_1bit_bmp(ig, xsize, ysize, clr_used)
+=item read_1bit_bmp(ig, xsize, ysize, clr_used, compression, offbits)
 
 Reads in the palette and image data for a 1-bit/pixel image.
 
@@ -624,7 +626,7 @@ Returns the image or NULL.
 */
 static i_img *
 read_1bit_bmp(io_glue *ig, int xsize, int ysize, int clr_used, 
-              int compression) {
+              int compression, long offbits) {
   i_img *im;
   int x, y, lasty, yinc;
   i_palidx *line, *p;
@@ -632,6 +634,7 @@ read_1bit_bmp(io_glue *ig, int xsize, int ysize, int clr_used,
   int line_size = (xsize + 7)/8;
   int byte, bit;
   unsigned char *in;
+  long base_offset;
 
   if (compression != BI_RGB) {
     i_push_errorf(0, "unknown 1-bit BMP compression (%d)", compression);
@@ -658,12 +661,33 @@ read_1bit_bmp(io_glue *ig, int xsize, int ysize, int clr_used,
     i_push_errorf(0, "out of range colors used (%d)", clr_used);
     return NULL;
   }
+
+  base_offset = FILEHEAD_SIZE + INFOHEAD_SIZE + clr_used * 4;
+  if (offbits < base_offset) {
+    i_push_errorf(0, "image data offset too small (%ld)", offbits);
+    return NULL;
+  }
+
   im = i_img_pal_new(xsize, ysize, 3, 256);
   if (!im)
     return NULL;
   if (!read_bmp_pal(ig, im, clr_used)) {
     i_img_destroy(im);
     return NULL;
+  }
+
+  if (offbits > base_offset) {
+    /* this will be slow if the offset is large, but that should be
+       rare */
+    char buffer;
+    while (base_offset < offbits) {
+      if (ig->readcb(ig, &buffer, 1) != 1) {
+        i_img_destroy(im);
+        i_push_error(0, "failed skipping to image data offset");
+        return NULL;
+      }
+      ++base_offset;
+    }
   }
   
   i_tags_add(&im->tags, "bmp_compression_name", 0, "BI_RGB", -1, 0);
@@ -712,7 +736,7 @@ point.
 */
 static i_img *
 read_4bit_bmp(io_glue *ig, int xsize, int ysize, int clr_used, 
-              int compression) {
+              int compression, long offbits) {
   i_img *im;
   int x, y, lasty, yinc;
   i_palidx *line, *p;
@@ -720,6 +744,7 @@ read_4bit_bmp(io_glue *ig, int xsize, int ysize, int clr_used,
   int line_size = (xsize + 1)/2;
   unsigned char *in;
   int size, i;
+  long base_offset;
 
   line_size = (line_size+3) / 4 * 4;
 
@@ -743,6 +768,12 @@ read_4bit_bmp(io_glue *ig, int xsize, int ysize, int clr_used,
     return NULL;
   }
 
+  base_offset = FILEHEAD_SIZE + INFOHEAD_SIZE + clr_used * 4;
+  if (offbits < base_offset) {
+    i_push_errorf(0, "image data offset too small (%ld)", offbits);
+    return NULL;
+  }
+
   im = i_img_pal_new(xsize, ysize, 3, 256);
   if (!im) /* error should have been pushed already */
     return NULL;
@@ -751,6 +782,20 @@ read_4bit_bmp(io_glue *ig, int xsize, int ysize, int clr_used,
     return NULL;
   }
 
+  if (offbits > base_offset) {
+    /* this will be slow if the offset is large, but that should be
+       rare */
+    char buffer;
+    while (base_offset < offbits) {
+      if (ig->readcb(ig, &buffer, 1) != 1) {
+        i_img_destroy(im);
+        i_push_error(0, "failed skipping to image data offset");
+        return NULL;
+      }
+      ++base_offset;
+    }
+  }
+  
   if (line_size < 260)
     packed = mymalloc(260);
   else
@@ -873,12 +918,13 @@ Returns the image or NULL.
 */
 static i_img *
 read_8bit_bmp(io_glue *ig, int xsize, int ysize, int clr_used, 
-              int compression) {
+              int compression, long offbits) {
   i_img *im;
   int x, y, lasty, yinc;
   i_palidx *line, *p;
   int line_size = xsize;
   unsigned char *in;
+  long base_offset;
 
   line_size = (line_size+3) / 4 * 4;
 
@@ -901,6 +947,12 @@ read_8bit_bmp(io_glue *ig, int xsize, int ysize, int clr_used,
     return NULL;
   }
 
+  base_offset = FILEHEAD_SIZE + INFOHEAD_SIZE + clr_used * 4;
+  if (offbits < base_offset) {
+    i_push_errorf(0, "image data offset too small (%ld)", offbits);
+    return NULL;
+  }
+
   im = i_img_pal_new(xsize, ysize, 3, 256);
   if (!im)
     return NULL;
@@ -909,6 +961,20 @@ read_8bit_bmp(io_glue *ig, int xsize, int ysize, int clr_used,
     return NULL;
   }
 
+  if (offbits > base_offset) {
+    /* this will be slow if the offset is large, but that should be
+       rare */
+    char buffer;
+    while (base_offset < offbits) {
+      if (ig->readcb(ig, &buffer, 1) != 1) {
+        i_img_destroy(im);
+        i_push_error(0, "failed skipping to image data offset");
+        return NULL;
+      }
+      ++base_offset;
+    }
+  }
+  
   line = mymalloc(line_size);
   if (compression == BI_RGB) {
     i_tags_add(&im->tags, "bmp_compression_name", 0, "BI_RGB", -1, 0);
@@ -1023,7 +1089,7 @@ Returns the image or NULL.
 */
 static i_img *
 read_direct_bmp(io_glue *ig, int xsize, int ysize, int bit_count, 
-                int clr_used, int compression) {
+                int clr_used, int compression, long offbits) {
   i_img *im;
   int x, y, lasty, yinc;
   i_color *line, *p;
@@ -1037,6 +1103,7 @@ read_direct_bmp(io_glue *ig, int xsize, int ysize, int bit_count,
   char junk[4];
   const char *compression_name;
   int bytes;
+  long base_offset = FILEHEAD_SIZE + INFOHEAD_SIZE;
   
   unpack_code[0] = *("v3V"+pix_size-2);
   unpack_code[1] = '\0';
@@ -1067,6 +1134,7 @@ read_direct_bmp(io_glue *ig, int xsize, int ysize, int bit_count,
         i_push_error(0, "skipping colors");
         return 0;
       }
+      base_offset += 4;
     }
   }
   else if (compression == BI_BITFIELDS) {
@@ -1087,12 +1155,27 @@ read_direct_bmp(io_glue *ig, int xsize, int ysize, int bit_count,
       }
       masks.shifts[i] = pos - 8;
     }
+    base_offset += 4 * 4;
   }
   else {
     i_push_errorf(0, "unknown 24-bit BMP compression (%d)", compression);
     return NULL;
   }
 
+  if (offbits > base_offset) {
+    /* this will be slow if the offset is large, but that should be
+       rare */
+    char buffer;
+    while (base_offset < offbits) {
+      if (ig->readcb(ig, &buffer, 1) != 1) {
+        i_img_destroy(im);
+        i_push_error(0, "failed skipping to image data offset");
+        return NULL;
+      }
+      ++base_offset;
+    }
+  }
+  
   im = i_img_empty(NULL, xsize, ysize);
   if (!im)
     return NULL;
@@ -1156,6 +1239,8 @@ Doesn't handle OS/2 bitmaps.
 16-bit/pixel images haven't been tested.  (I need an image).
 
 BI_BITFIELDS compression hasn't been tested (I need an image).
+
+The header handling for paletted images needs to be refactored
 
 =cut
 */
