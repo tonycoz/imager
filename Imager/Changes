@@ -402,7 +402,8 @@ Revision history for Perl extension Imager.
         - t/t70newgif.t now checks for gif support
         - added the convert() method
         - Added support for transparent to alpha conversion during loading
-          of png files.
+          of png files.  Note that libpng 1.0.1 is broken in handling this,
+	  we know that 1.0.5 works.
 
 ~~~~~~~~~~~~~^ ^ ^~~~~~~~~~~~~~
 
