@@ -1009,6 +1009,10 @@ Revision history for Perl extension Imager.
 - minor cleanup of Imager::Fill
 - eliminate unused variables and static functions
 - simplify some XS code by adding another typemap entry
+- the right-side bearing used to adjust the final width wasn't being
+  calculated correctly, this would cause the bounding_box() function for 
+  freetype 2.x to return a larger than expected text width.
+  http://rt.cpan.org/NoAuth/Bug.html?id=11291
 
 =================================================================
 

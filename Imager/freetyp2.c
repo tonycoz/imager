@@ -388,7 +388,7 @@ i_ft2_bbox(FT2_Fonthandle *handle, double cheight, double cwidth,
       /* last character 
        handle the case where the right the of the character overlaps the 
        right*/
-      rightb = gm->horiAdvance - gm->horiBearingX - gm->width;
+      rightb = (gm->horiAdvance - gm->horiBearingX - gm->width)/64;
       if (rightb > 0)
         rightb = 0;
     }
