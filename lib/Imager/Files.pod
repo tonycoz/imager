@@ -62,6 +62,19 @@ you don't need the I<type>, but you may want to provide one anyway.
 See L</Guessing types> for information on controlling this
 recognition.
 
+The C<type> parameter is a lowercase representation of the file type,
+and can be any of the following:
+
+  bmp   Windows BitMaP (BMP)
+  gif   Graphics Interchange Format (GIF)
+  jpeg  JPEG/JFIF
+  png   Portable Network Graphics (PNG)
+  pnm   Portable aNyMap (PNM)
+  raw   Raw
+  rgb   SGI .rgb files
+  tga   TARGA
+  tiff  Tagged Image File Format (TIFF)
+
 When you read an image, Imager may set some tags, possibly including
 information about the spatial resolution, textual information, and
 animation information.  See L<Imager::ImageTypes/Tags> for specifics.
