@@ -58,6 +58,7 @@ void   i_img_destroy(i_img *im);
 void   i_img_info(i_img *im,int *info);
 
 extern i_img *i_sametype(i_img *im, int xsize, int ysize);
+extern i_img *i_sametype_chans(i_img *im, int xsize, int ysize, int channels);
 
 i_img *i_img_pal_new(int x, int y, int ch, int maxpal);
 
@@ -614,6 +615,7 @@ void i_radnoise(i_img *im,int xo,int yo,float rscale,float ascale);
 void i_turbnoise(i_img *im,float xo,float yo,float scale);
 void i_gradgen(i_img *im, int num, int *xo, int *yo, i_color *ival, int dmeasure);
 void i_nearest_color(i_img *im, int num, int *xo, int *yo, i_color *ival, int dmeasure);
+i_img *i_diff_image(i_img *im, i_img *im2, int mindist);
 typedef enum {
   i_fst_linear,
   i_fst_curved,

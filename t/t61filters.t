@@ -9,7 +9,7 @@ $imbase->open(file=>'testout/t104.ppm') or die;
 my $im_other = Imager->new(xsize=>150, ysize=>150);
 $im_other->box(xmin=>30, ymin=>60, xmax=>120, ymax=>90, filled=>1);
 
-print "1..43\n";
+print "1..45\n";
 
 test($imbase, 1, {type=>'autolevels'}, 'testout/t61_autolev.ppm');
 
@@ -91,6 +91,19 @@ test($imbase, 42, {type=>'fountain',  xa=>75, ya=>75, xb=>90, yb=>15,
                     segments=>$f4, super_sample=>'grid',
                     ftype=>'linear', combine=>'color' },
      'testout/t61_regress_fount.ppm');
+my $im2 = $imbase->copy;
+$im2->box(xmin=>20, ymin=>20, xmax=>40, ymax=>40, color=>'FF0000', filled=>1);
+$im2->write(file=>'testout/t61_diff_base.ppm');
+my $im3 = Imager->new(xsize=>150, ysize=>150, channels=>3);
+$im3->box(xmin=>20, ymin=>20, xmax=>40, ymax=>40, color=>'FF0000', filled=>1);
+my $diff = $imbase->difference(other=>$im2);
+print $diff ? "ok 44\n" : "not ok 44\n";
+if ($im3 && $diff) {
+  print Imager::i_img_diff($im3->{IMG}, $diff->{IMG}) ? "not ok 45\n" : "ok 45\n";
+}
+else {
+  print "ok 45 # skip\n";
+}
 
 sub test {
   my ($in, $num, $params, $out) = @_;

@@ -1072,6 +1072,32 @@ i_img *i_sametype(i_img *src, int xsize, int ysize) {
 }
 
 /*
+=item i_sametype_chans(i_img *im, int xsize, int ysize, int channels)
+
+Returns an image of the same type (sample size).
+
+For paletted images the equivalent direct type is returned.
+
+=cut
+*/
+
+i_img *i_sametype_chans(i_img *src, int xsize, int ysize, int channels) {
+  if (src->bits == 8) {
+    return i_img_empty_ch(NULL, xsize, ysize, channels);
+  }
+  else if (src->bits == i_16_bits) {
+    return i_img_16_new(xsize, ysize, channels);
+  }
+  else if (src->bits == i_double_bits) {
+    return i_img_double_new(xsize, ysize, channels);
+  }
+  else {
+    i_push_error(0, "Unknown image bits");
+    return NULL;
+  }
+}
+
+/*
 =item i_transform(im, opx, opxl, opy, opyl, parm, parmlen)
 
 Spatially transforms I<im> returning a new image.
