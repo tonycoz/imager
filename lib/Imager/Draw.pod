@@ -22,10 +22,10 @@ Imager::Draw - Draw primitives to images
                            xmax=>200, ymax=>300, filled=>1);
   $img->box(fill=>$fill);
 
-  $img->arc(color=>$blue, r=20, x=>200, y=>100,
+  $img->arc(color=>$blue, r=>20, x=>200, y=>100,
             d1=>10, d2=>20 );
 
-  $img->circle(color=>$blue, r=50, x=>200, y=>100);
+  $img->circle(color=>$blue, r=>50, x=>200, y=>100);
 
   $img->polygon(points=>[[$x0,$y0], [$x1,$y1], [$x2,$y2]], 
                 color=>$blue);
@@ -123,7 +123,7 @@ Box does not support fractional coordinates yet.
 
 =item arc
 
-  $img->arc(color=>$red, r=20, x=>200, y=>100, d1=>10, d2=>20 );
+  $img->arc(color=>$red, r=>20, x=>200, y=>100, d1=>10, d2=>20 );
 
 This creates a filled red arc with a 'center' at (200, 100) and spans
 10 degrees and the slice has a radius of 20. [NOTE: arc has a BUG in
@@ -133,7 +133,7 @@ It's also possible to supply a C<fill> parameter.
 
 =item circle
 
-  $img->circle(color=>$green, r=50, x=>200, y=>100, aa=>1);
+  $img->circle(color=>$green, r=>50, x=>200, y=>100, aa=>1);
 
 This creates an antialiased green circle with its center at (200, 100)
 and has a radius of 50.  It's also possible to supply a C<fill> parameter
