@@ -665,7 +665,7 @@ i_flipxy(i_img *im, int direction) {
       }
     }
     break;
-  case YAXIS:
+  case YAXIS: /* Vertical flip */
     xm = xs;
     ym = ys/2;
     y2 = ys-1;
@@ -680,7 +680,7 @@ i_flipxy(i_img *im, int direction) {
       y2--;
     }
     break;
-  case XYAXIS:
+  case XYAXIS: /* Horizontal and Vertical flip */
     xm = xs/2;
     ym = ys/2;
     y2 = ys-1;
@@ -700,6 +700,32 @@ i_flipxy(i_img *im, int direction) {
 	x2--;
       }
       y2--;
+    }
+    if (xm*2 != xs) { /* odd number of column */
+      mm_log((1, "i_flipxy: odd number of columns\n"));
+      x = xm;
+      y2 = ys-1;
+      for(y=0; y<ym; y++) {
+	i_color val1, val2;
+	i_gpix(im, x,  y,  &val1);
+	i_gpix(im, x,  y2, &val2);
+	i_ppix(im, x,  y,  &val2);
+	i_ppix(im, x,  y2, &val1);
+	y2--;
+      }
+    }
+    if (ym*2 != ys) { /* odd number of rows */
+      mm_log((1, "i_flipxy: odd number of rows\n"));
+      y = ym;
+      x2 = xs-1;
+      for(x=0; x<xm; x++) {
+	i_color val1, val2;
+	i_gpix(im, x,  y,  &val1);
+	i_gpix(im, x2, y,  &val2);
+	i_ppix(im, x,  y,  &val2);
+	i_ppix(im, x2, y,  &val1);
+	x2--;
+      }
     }
     break;
   default:
