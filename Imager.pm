@@ -321,7 +321,7 @@ BEGIN {
                               multiply  => 2, mult => 2,
                               dissolve  => 3,
                               add       => 4,
-                              subtract  => 5, sub => 5,
+                              subtract  => 5, 'sub' => 5,
                               diff      => 6,
                               lighten   => 7,
                               darken    => 8,
@@ -794,8 +794,8 @@ sub deltag {
 
   return 0 unless $self->{IMG};
 
-  if (defined $opts{index}) {
-    return i_tags_delete($self->{IMG}, $opts{index});
+  if (defined $opts{'index'}) {
+    return i_tags_delete($self->{IMG}, $opts{'index'});
   }
   elsif (defined $opts{name}) {
     return i_tags_delbyname($self->{IMG}, $opts{name});
@@ -844,20 +844,20 @@ sub read {
   # has been there for half a year dude.
   # Look, i just work here, ok?
 
-  if (!$input{type} and $input{file}) {
-    $input{type}=$FORMATGUESS->($input{file});
+  if (!$input{'type'} and $input{file}) {
+    $input{'type'}=$FORMATGUESS->($input{file});
   }
-  if (!$formats{$input{type}}) {
+  if (!$formats{$input{'type'}}) {
     $self->{ERRSTR}='format not supported'; return undef;
   }
 
   my %iolready=(jpeg=>1, png=>1, tiff=>1, pnm=>1, raw=>1, bmp=>1, tga=>1);
 
-  if ($iolready{$input{type}}) {
+  if ($iolready{$input{'type'}}) {
     # Setup data source
     $IO = io_new_fd($fd);	# sort of simple for now eh?
 
-    if ( $input{type} eq 'jpeg' ) {
+    if ( $input{'type'} eq 'jpeg' ) {
       ($self->{IMG},$self->{IPTCRAW})=i_readjpeg_wiol( $IO );
       if ( !defined($self->{IMG}) ) {
 	$self->{ERRSTR}='unable to read jpeg image'; return undef;
@@ -866,7 +866,7 @@ sub read {
       return $self;
     }
 
-    if ( $input{type} eq 'tiff' ) {
+    if ( $input{'type'} eq 'tiff' ) {
       $self->{IMG}=i_readtiff_wiol( $IO, -1 ); # Fixme, check if that length parameter is ever needed
       if ( !defined($self->{IMG}) ) {
 	$self->{ERRSTR}='unable to read tiff image'; return undef;
@@ -875,7 +875,7 @@ sub read {
       return $self;
     }
 
-    if ( $input{type} eq 'pnm' ) {
+    if ( $input{'type'} eq 'pnm' ) {
       $self->{IMG}=i_readpnm_wiol( $IO, -1 ); # Fixme, check if that length parameter is ever needed
       if ( !defined($self->{IMG}) ) {
 	$self->{ERRSTR}='unable to read pnm image: '._error_as_msg(); return undef;
@@ -884,7 +884,7 @@ sub read {
       return $self;
     }
 
-    if ( $input{type} eq 'png' ) {
+    if ( $input{'type'} eq 'png' ) {
       $self->{IMG}=i_readpng_wiol( $IO, -1 ); # Fixme, check if that length parameter is ever needed
       if ( !defined($self->{IMG}) ) {
 	$self->{ERRSTR}='unable to read png image';
@@ -893,7 +893,7 @@ sub read {
       $self->{DEBUG} && print "loading a png file\n";
     }
 
-    if ( $input{type} eq 'bmp' ) {
+    if ( $input{'type'} eq 'bmp' ) {
       $self->{IMG}=i_readbmp_wiol( $IO );
       if ( !defined($self->{IMG}) ) {
 	$self->{ERRSTR}='unable to read bmp image';
@@ -902,7 +902,7 @@ sub read {
       $self->{DEBUG} && print "loading a bmp file\n";
     }
 
-    if ( $input{type} eq 'tga' ) {
+    if ( $input{'type'} eq 'tga' ) {
       $self->{IMG}=i_readtga_wiol( $IO, -1 ); # Fixme, check if that length parameter is ever needed
       if ( !defined($self->{IMG}) ) {
 	$self->{ERRSTR}=$self->_error_as_msg();
@@ -912,7 +912,7 @@ sub read {
       $self->{DEBUG} && print "loading a tga file\n";
     }
 
-    if ( $input{type} eq 'raw' ) {
+    if ( $input{'type'} eq 'raw' ) {
       my %params=(datachannels=>3,storechannels=>3,interleave=>1,%input);
 
       if ( !($params{xsize} && $params{ysize}) ) {
@@ -937,15 +937,15 @@ sub read {
 
     # Old code for reference while changing the new stuff
 
-    if (!$input{type} and $input{file}) {
-      $input{type}=$FORMATGUESS->($input{file});
+    if (!$input{'type'} and $input{file}) {
+      $input{'type'}=$FORMATGUESS->($input{file});
     }
 
-    if (!$input{type}) {
+    if (!$input{'type'}) {
       $self->{ERRSTR}='type parameter missing and not possible to guess from extension'; return undef;
     }
 
-    if (!$formats{$input{type}}) {
+    if (!$formats{$input{'type'}}) {
       $self->{ERRSTR}='format not supported';
       return undef;
     }
@@ -964,7 +964,7 @@ sub read {
       $fd=$input{fd};
     }
 
-    if ( $input{type} eq 'gif' ) {
+    if ( $input{'type'} eq 'gif' ) {
       my $colors;
       if ($input{colors} && !ref($input{colors})) {
 	# must be a reference to a scalar that accepts the colour map
@@ -1016,10 +1016,15 @@ sub write {
   unless ($self->{IMG}) { $self->{ERRSTR}='empty input image'; return undef; }
 
   if (!$input{file} and !$input{'fd'} and !$input{'data'}) { $self->{ERRSTR}='file/fd/data parameter missing'; return undef; }
-  if (!$input{type} and $input{file}) { $input{type}=$FORMATGUESS->($input{file}); }
-  if (!$input{type}) { $self->{ERRSTR}='type parameter missing and not possible to guess from extension'; return undef; }
+  if (!$input{'type'} and $input{file}) { 
+    $input{'type'}=$FORMATGUESS->($input{file});
+  }
+  if (!$input{'type'}) { 
+    $self->{ERRSTR}='type parameter missing and not possible to guess from extension';
+    return undef;
+  }
 
-  if (!$formats{$input{type}}) { $self->{ERRSTR}='format not supported'; return undef; }
+  if (!$formats{$input{'type'}}) { $self->{ERRSTR}='format not supported'; return undef; }
 
   if (exists $input{'fd'}) {
     $fd=$input{'fd'};
@@ -1032,12 +1037,12 @@ sub write {
     $fd = $fh->fileno();
   }
 
-  if ($iolready{$input{type}}) {
+  if ($iolready{$input{'type'}}) {
     if (defined $fd) {
       $IO = io_new_fd($fd);
     }
 
-    if ($input{type} eq 'tiff') {
+    if ($input{'type'} eq 'tiff') {
       if (defined $input{class} && $input{class} eq 'fax') {
 	if (!i_writetiff_wiol_faxable($self->{IMG}, $IO, $input{fax_fine})) {
 	  $self->{ERRSTR}='Could not write to buffer';
@@ -1049,37 +1054,37 @@ sub write {
 	  return undef;
 	}
       }
-    } elsif ( $input{type} eq 'pnm' ) {
+    } elsif ( $input{'type'} eq 'pnm' ) {
       if ( ! i_writeppm_wiol($self->{IMG},$IO) ) {
 	$self->{ERRSTR}='unable to write pnm image';
 	return undef;
       }
       $self->{DEBUG} && print "writing a pnm file\n";
-    } elsif ( $input{type} eq 'raw' ) {
+    } elsif ( $input{'type'} eq 'raw' ) {
       if ( !i_writeraw_wiol($self->{IMG},$IO) ) {
 	$self->{ERRSTR}='unable to write raw image';
 	return undef;
       }
       $self->{DEBUG} && print "writing a raw file\n";
-    } elsif ( $input{type} eq 'png' ) {
+    } elsif ( $input{'type'} eq 'png' ) {
       if ( !i_writepng_wiol($self->{IMG}, $IO) ) {
 	$self->{ERRSTR}='unable to write png image';
 	return undef;
       }
       $self->{DEBUG} && print "writing a png file\n";
-    } elsif ( $input{type} eq 'jpeg' ) {
+    } elsif ( $input{'type'} eq 'jpeg' ) {
       if ( !i_writejpeg_wiol($self->{IMG}, $IO, $input{jpegquality})) {
         $self->{ERRSTR} = $self->_error_as_msg();
 	return undef;
       }
       $self->{DEBUG} && print "writing a jpeg file\n";
-    } elsif ( $input{type} eq 'bmp' ) {
+    } elsif ( $input{'type'} eq 'bmp' ) {
       if ( !i_writebmp_wiol($self->{IMG}, $IO) ) {
 	$self->{ERRSTR}='unable to write bmp image';
 	return undef;
       }
       $self->{DEBUG} && print "writing a bmp file\n";
-    } elsif ( $input{type} eq 'tga' ) {
+    } elsif ( $input{'type'} eq 'tga' ) {
 
       if ( !i_writetga_wiol($self->{IMG}, $IO, $input{wierdpack}, $input{compress}, $input{idstring}) ) {
 	$self->{ERRSTR}=$self->_error_as_msg();
@@ -1098,7 +1103,7 @@ sub write {
     }
     return $self;
   } else {
-    if ( $input{type} eq 'gif' ) {
+    if ( $input{'type'} eq 'gif' ) {
       if (not $input{gifplanes}) {
 	my $gp;
 	my $count=i_count_colors($self->{IMG}, 256);
@@ -1157,7 +1162,7 @@ sub write {
 sub write_multi {
   my ($class, $opts, @images) = @_;
 
-  if ($opts->{type} eq 'gif') {
+  if ($opts->{'type'} eq 'gif') {
     my $gif_delays = $opts->{gif_delays};
     local $opts->{gif_delays} = $gif_delays;
     unless (ref $opts->{gif_delays}) {
@@ -1191,7 +1196,7 @@ sub write_multi {
     }
   }
   else {
-    $ERRSTR = "Sorry, write_multi doesn't support $opts->{type} yet";
+    $ERRSTR = "Sorry, write_multi doesn't support $opts->{'type'} yet";
     return 0;
   }
 }
@@ -1200,12 +1205,12 @@ sub write_multi {
 sub read_multi {
   my ($class, %opts) = @_;
 
-  if ($opts{file} && !exists $opts{type}) {
+  if ($opts{file} && !exists $opts{'type'}) {
     # guess the type 
     my $type = $FORMATGUESS->($opts{file});
-    $opts{type} = $type;
+    $opts{'type'} = $type;
   }
-  unless ($opts{type}) {
+  unless ($opts{'type'}) {
     $ERRSTR = "No type parameter supplied and it couldn't be guessed";
     return;
   }
@@ -1238,7 +1243,7 @@ sub read_multi {
     return;
   }
 
-  if ($opts{type} eq 'gif') {
+  if ($opts{'type'} eq 'gif') {
     my @imgs;
     if ($fd) {
       @imgs = i_readgif_multi($fd);
@@ -1266,7 +1271,7 @@ sub read_multi {
     }
   }
 
-  $ERRSTR = "Cannot read multiple images from $opts{type} files";
+  $ERRSTR = "Cannot read multiple images from $opts{'type'} files";
   return;
 }
 
@@ -1296,35 +1301,35 @@ sub filter {
   my %hsh;
   unless ($self->{IMG}) { $self->{ERRSTR}='empty input image'; return undef; }
 
-  if (!$input{type}) { $self->{ERRSTR}='type parameter missing'; return undef; }
+  if (!$input{'type'}) { $self->{ERRSTR}='type parameter missing'; return undef; }
 
-  if ( (grep { $_ eq $input{type} } keys %filters) != 1) {
+  if ( (grep { $_ eq $input{'type'} } keys %filters) != 1) {
     $self->{ERRSTR}='type parameter not matching any filter'; return undef;
   }
 
-  if ($filters{$input{type}}{names}) {
-    my $names = $filters{$input{type}}{names};
+  if ($filters{$input{'type'}}{names}) {
+    my $names = $filters{$input{'type'}}{names};
     for my $name (keys %$names) {
       if (defined $input{$name} && exists $names->{$name}{$input{$name}}) {
         $input{$name} = $names->{$name}{$input{$name}};
       }
     }
   }
-  if (defined($filters{$input{type}}{defaults})) {
-    %hsh=('image',$self->{IMG},%{$filters{$input{type}}{defaults}},%input);
+  if (defined($filters{$input{'type'}}{defaults})) {
+    %hsh=('image',$self->{IMG},%{$filters{$input{'type'}}{defaults}},%input);
   } else {
     %hsh=('image',$self->{IMG},%input);
   }
 
-  my @cs=@{$filters{$input{type}}{callseq}};
+  my @cs=@{$filters{$input{'type'}}{callseq}};
 
   for(@cs) {
     if (!defined($hsh{$_})) {
-      $self->{ERRSTR}="missing parameter '$_' for filter ".$input{type}; return undef;
+      $self->{ERRSTR}="missing parameter '$_' for filter ".$input{'type'}; return undef;
     }
   }
 
-  &{$filters{$input{type}}{callsub}}(%hsh);
+  &{$filters{$input{'type'}}{callsub}}(%hsh);
 
   my @b=keys %hsh;
 
@@ -1338,16 +1343,16 @@ sub filter {
 
 sub scale {
   my $self=shift;
-  my %opts=(scalefactor=>0.5,type=>'max',qtype=>'normal',@_);
+  my %opts=(scalefactor=>0.5,'type'=>'max',qtype=>'normal',@_);
   my $img = Imager->new();
   my $tmp = Imager->new();
 
   unless ($self->{IMG}) { $self->{ERRSTR}='empty input image'; return undef; }
 
-  if ($opts{xpixels} and $opts{ypixels} and $opts{type}) {
+  if ($opts{xpixels} and $opts{ypixels} and $opts{'type'}) {
     my ($xpix,$ypix)=( $opts{xpixels}/$self->getwidth() , $opts{ypixels}/$self->getheight() );
-    if ($opts{type} eq 'min') { $opts{scalefactor}=min($xpix,$ypix); }
-    if ($opts{type} eq 'max') { $opts{scalefactor}=max($xpix,$ypix); }
+    if ($opts{'type'} eq 'min') { $opts{scalefactor}=min($xpix,$ypix); }
+    if ($opts{'type'} eq 'max') { $opts{scalefactor}=max($xpix,$ypix); }
   } elsif ($opts{xpixels}) { $opts{scalefactor}=$opts{xpixels}/$self->getwidth(); }
   elsif ($opts{ypixels}) { $opts{scalefactor}=$opts{ypixels}/$self->getheight(); }
 
@@ -1431,9 +1436,9 @@ sub transform {
 					     {op=>'-',trans=>'Sub'},
 					     {op=>'*',trans=>'Mult'},
 					     {op=>'/',trans=>'Div'},
-					     {op=>'-',type=>'unary',trans=>'u-'},
+					     {op=>'-','type'=>'unary',trans=>'u-'},
 					     {op=>'**'},
-					     {op=>'func',type=>'unary'}],
+					     {op=>'func','type'=>'unary'}],
 				     'grouping'=>[qw( \( \) )],
 				     'func'=>[qw( sin cos )],
 				     'vars'=>[qw( x y )]
@@ -1817,7 +1822,7 @@ sub flood_fill {
   my $self = shift;
   my %opts = ( color=>Imager::Color->new(255, 255, 255), @_ );
 
-  unless (exists $opts{x} && exists $opts{'y'}) {
+  unless (exists $opts{'x'} && exists $opts{'y'}) {
     $self->{ERRSTR} = "missing seed x and y parameters";
     return undef;
   }
@@ -1831,10 +1836,10 @@ sub flood_fill {
         return;
       }
     }
-    i_flood_cfill($self->{IMG}, $opts{x}, $opts{'y'}, $opts{fill}{fill});
+    i_flood_cfill($self->{IMG}, $opts{'x'}, $opts{'y'}, $opts{fill}{fill});
   }
   else {
-    i_flood_fill($self->{IMG}, $opts{x}, $opts{'y'}, $opts{color});
+    i_flood_fill($self->{IMG}, $opts{'x'}, $opts{'y'}, $opts{color});
   }
 
   $self;
@@ -2029,7 +2034,7 @@ sub setmask {
 
 sub getcolorcount {
   my $self=shift;
-  my %opts=(maxcolors=>2**30,@_);
+  my %opts=('maxcolors'=>2**30,@_);
   if (!defined($self->{IMG})) { $self->{ERRSTR}='image is empty'; return undef; }
   my $rc=i_count_colors($self->{IMG},$opts{'maxcolors'});
   return ($rc==-1? undef : $rc);

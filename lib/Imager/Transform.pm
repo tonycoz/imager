@@ -357,10 +357,10 @@ sub transform {
   my %opts = %$opts;
   $opts{$func->{type}} = $func->{$func->{type}};
   my %con = %$constants;
-  for my $name (keys %{$func->{constants}}) {
+  for my $name (keys %{$func->{'constants'}}) {
     unless (exists $con{$name}) {
-      if (exists $func->{constants}{$name}{default}) {
-	$con{$name} = $func->{constants}{$name}{default};
+      if (exists $func->{'constants'}{$name}{default}) {
+	$con{$name} = $func->{'constants'}{$name}{default};
       }
       else {
 	$self->{error} = "No value or default for constant $name";
@@ -368,10 +368,10 @@ sub transform {
       }
     }
   }
-  $opts{constants} = \%con;
-  unless (@in == @{$func->{inputs}}) {
+  $opts{'constants'} = \%con;
+  unless (@in == @{$func->{'inputs'}}) {
     $self->{error} = @in." input images given, ".
-      @{$func->{inputs}}." supplied";
+      @{$func->{'inputs'}}." supplied";
     return;
   }
 
@@ -407,21 +407,21 @@ sub describe {
 Function   : $name
 Description: $func->{desc}
 EOS
-  if ($func->{inputs} && @{$func->{inputs}}) {
+  if ($func->{'inputs'} && @{$func->{'inputs'}}) {
     $desc .= "Input images:\n";
     my $i = 1;
-    for my $in (@{$func->{inputs}}) {
+    for my $in (@{$func->{'inputs'}}) {
       $desc .= "  $i: $in->{desc}\n";
     }
   }
   else {
     $desc .= "There are no input images\n";
   }
-  if ($func->{constants} && keys %{$func->{constants}}) {
+  if ($func->{'constants'} && keys %{$func->{'constants'}}) {
     $desc .= "Input constants:\n";
-    for my $key (keys %{$func->{constants}}) {
-      $desc .= "  $key: $func->{constants}{$key}{desc}\n";
-      $desc .= "       Default: $func->{constants}{$key}{default}\n";
+    for my $key (keys %{$func->{'constants'}}) {
+      $desc .= "  $key: $func->{'constants'}{$key}{desc}\n";
+      $desc .= "       Default: $func->{'constants'}{$key}{default}\n";
     }
   }
   else {

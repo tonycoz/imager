@@ -1,9 +1,7 @@
-
 package Imager::Font;
 
 use Imager::Color;
 use strict;
-use File::Spec;
 
 # the aim here is that we can:
 #  - add file based types in one place: here
@@ -112,7 +110,7 @@ sub _first {
 
 sub draw {
   my $self = shift;
-  my %input = (x => 0, 'y' => 0, @_);
+  my %input = ('x' => 0, 'y' => 0, @_);
   unless ($input{image}) {
     $Imager::ERRSTR = 'No image supplied to $font->draw()';
     return;

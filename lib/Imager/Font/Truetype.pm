@@ -41,11 +41,11 @@ sub _draw {
   my %input = @_;
   if ( exists $input{channel} ) {
     Imager::i_tt_cp($self->{id},$input{image}{IMG},
-		    $input{x}, $input{'y'}, $input{channel}, $input{size},
+		    $input{'x'}, $input{'y'}, $input{channel}, $input{size},
 		    $input{string}, length($input{string}),$input{aa}); 
   } else {
     Imager::i_tt_text($self->{id}, $input{image}{IMG}, 
-		      $input{x}, $input{'y'}, $input{color},
+		      $input{'x'}, $input{'y'}, $input{color},
 		      $input{size}, $input{string}, 
 		      length($input{string}), $input{aa}); 
   }

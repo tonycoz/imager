@@ -140,10 +140,10 @@ my $yellow = Imager::Color->new(255, 255, 0);
 $ffim->box(xmin=>10, ymin=>10, xmax=>20, ymax=>90, color=>$blue, filled=>1);
 $ffim->box(xmin=>20, ymin=>45, xmax=>80, ymax=>55, color=>$blue, filled=>1);
 $ffim->box(xmin=>80, ymin=>10, xmax=>90, ymax=>90, color=>$blue, filled=>1);
-ok(20, $ffim->flood_fill(x=>50, 'y'=>50, color=>$red), "flood fill");
+ok(20, $ffim->flood_fill('x'=>50, 'y'=>50, color=>$red), "flood fill");
 $diff = Imager::i_img_diff($rffcmp, $ffim->{IMG});
 ok(21, !$diff, "oo flood fill difference");
-$ffim->flood_fill(x=>50, 'y'=>50,
+$ffim->flood_fill('x'=>50, 'y'=>50,
                   fill=> {
                           hatch => 'check2x2'
                          });
