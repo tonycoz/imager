@@ -10,7 +10,7 @@
 BEGIN { $| = 1; print "1..8\n"; }
 END {print "not ok 1\n" unless $loaded;}
 
-use Imager;
+use Imager qw(:all :handy);
 $loaded=1;
 
 print "ok 1\n";
@@ -40,13 +40,13 @@ if ($im2->read(file=>'testimg/bandw.gif', colors=>\$map)) {
       print "ok 6\n";
       my @sorted = sort { comp_entry($a,$b) } @$map;
       # first entry must be #000000 and second #FFFFFF
-      if (comp_entry($sorted[0], [0,0,0]) == 0) {
+      if (comp_entry($sorted[0], NC(0,0,0)) == 0) {
 	print "ok 7\n";
       }
       else {
 	print "not ok 7 # entry should be black\n";
       }
-      if (comp_entry($sorted[1], [255,255,255]) == 0) {
+      if (comp_entry($sorted[1], NC(255,255,255)) == 0) {
 	print "ok 8\n";
       }
       else {
@@ -73,7 +73,9 @@ else {
 
 sub comp_entry {
   my ($l, $r) = @_;
-  return $l->[0] <=> $r->[0]
-    || $l->[1] <=> $r->[1]
-      || $l->[2] <=> $r->[2];
+  my @l = $l->rgba;
+  my @r = $r->rgba;
+  return $l[0] <=> $r[0]
+    || $l[1] <=> $r[1]
+      || $l[2] <=> $r[2];
 }
