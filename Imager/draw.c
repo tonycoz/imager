@@ -539,21 +539,6 @@ i_bezier_multi(i_img *im,int l,double *x,double *y,i_color *val) {
 
 */
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 /* This should be moved into a seperate file? */
 
 /* This is the truncation used:
