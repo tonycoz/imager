@@ -85,13 +85,11 @@ sub requireokx {
 sub matchn($$$$) {
   my ($num, $str, $re, $comment) = @_;
 
-  my $match = $str =~ $re;
+  my $match = defined($str) && $str =~ $re;
   okn($num, $match, $comment);
   unless ($match) {
-    $str =~ s/\\/\\\\/g;
-    $str =~ s/[^\x20-\x7E]/"\\x".sprintf("%02X", ord($1))/ge;
-    print "# The string '$str'\n";
-    print "# did not match '$re'\n";
+    print "# The value: ",_sv_str($str),"\n";
+    print "# did not match: qr/$re/\n";
   }
   return $match;
 }

@@ -848,11 +848,30 @@ Revision history for Perl extension Imager.
 
 - the changes to scale() had some problems with integer vs floating point
   calculations (only caught in tests under perl 5.8.5 <sigh>)
+- the FT2 glyph_names() method didn't do correct error handling
+  when the string parameter wasn't supplied
+- i_ft2_glyph_name() accepted only an unsigned char as the
+  character code to get the name for, which meant it
+  didn't work for unicode characters \x{100} or above
+- the XS for i_ft2_glyph_name() had a similar problem
+- added NameTest.ttf to be used in checking unicode glyph
+  names
+- added reliable_only optional parameter to the glyph_names()
+  method so you can ignore theresult of FT_Has_PS_Glyph_Names()
+- partly resolves https://rt.cpan.org/Ticket/Display.html?id=7949
+- handle errors given by i_ft2_glyph_name() a bit more
+  correctly
+- the FT1 glyph_names() method didn't do correct error handling 
+  when the string parameter wasn't supplied
+- some memory allocated when creating a callback IO object (io_new_cb)
+  wasn't being released (detected with valgrind)
+- the testtools.pl match[nx]() functions escapes the test string on 
+  test failure a bit better
 
 =================================================================
 
         For latest versions check the Imager-devel pages:
-        http://imager.perl.org/~addi/perl/Imager/
+        http://imager.perl.org/
 
 =================================================================
 

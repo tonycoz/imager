@@ -1,0 +1,72 @@
+SplineFontDB: 1.0
+FontName: NameTest
+FullName: NameTest
+FamilyName: NameTest
+Weight: Medium
+Copyright: Created by Tony Cook - test font for the glyph_names() method
+Comments: 2004-10-13: Created.
+Version: 001.000
+ItalicAngle: 0
+UnderlinePosition: -100
+UnderlineWidth: 50
+Ascent: 800
+Descent: 200
+XUID: [1021 123 2012976297 155577]
+FSType: 0
+OS2WinAscent: 0
+OS2WinAOffset: 1
+OS2WinDescent: 0
+OS2WinDOffset: 1
+HheadAscent: 0
+HheadAOffset: 0
+HheadDescent: 0
+HheadDOffset: 0
+ScriptLang: 1
+ 1 latn 1 dflt 
+TtfTable: cvt  4
+!$MDh
+EndTtf
+Encoding: Custom
+UnicodeInterp: none
+DisplaySize: -24
+AntiAlias: 1
+FitToEm: 1
+WinInfo: 0 21 12
+BeginChars: 65536 2
+StartChar: exclam
+Encoding: 33 33 65535
+Width: 295
+Flags: W
+HStem: 30 60<141 143>
+Fore
+111 60 m 0
+ 111 76.5596 124.44 90 141 90 c 0
+ 157.56 90 171 76.5596 171 60 c 0
+ 171 43.4404 157.56 30 141 30 c 0
+ 124.44 30 111 43.4404 111 60 c 0
+165 171 m 2
+ 165 157.2 153.8 146 140 146 c 0
+ 126.2 146 115 157.2 115 171 c 0
+ 115 228.6 115 728.006 115 747 c 0
+ 115 760.8 126.2 772 140 772 c 0
+ 153.8 772 165 760.8 165 747 c 2
+ 165 171 l 2
+EndSplineSet
+EndChar
+StartChar: hyphentwo
+Encoding: 8208 8208 65535
+Width: 487
+Flags: W
+HStem: 308 50<114 378>
+Fore
+372 358 m 2
+ 385.8 358 397 346.8 397 333 c 0
+ 397 319.2 385.8 308 372 308 c 0
+ 346.2 308 122.395 308 114 308 c 0
+ 100.2 308 89 319.2 89 333 c 0
+ 89 346.8 100.2 358 114 358 c 2
+ 372 358 l 2
+EndSplineSet
+EndChar
+EndChars
+EndSplineFont

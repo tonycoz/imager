@@ -132,10 +132,15 @@ sub glyph_names {
 
   my $string = $input{string};
   defined $string
-    or return Imager->_seterror("no string parameter passed to glyph_names");
-  my $utf8 = _first($input{utf8} || 0);
+    or return Imager->_set_error("no string parameter passed to glyph_names");
+  my $utf8 = _first($input{utf8}, 0);
+  my $reliable_only = _first($input{reliable_only}, 1);
 
-  i_ft2_glyph_name($self->{id}, $string, $utf8);
+  my @names = i_ft2_glyph_name($self->{id}, $string, $utf8, $reliable_only);
+  @names or return Imager->_set_error(Imager->_error_as_msg);
+
+  return @names if wantarray;
+  return pop @names;
 }
 
 1;

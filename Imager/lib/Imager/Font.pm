@@ -700,7 +700,7 @@ Imager::Font->new(file=>"arial.ttf", color=>$blue, aa=>1)
 Returns the internal name of the face.  Not all font types support
 this method yet.
 
-=item glyph_names(string=>$string [, utf8=>$utf8 ] );
+=item glyph_names(string=>$string [, utf8=>$utf8 ][, reliable_only=>0 ] );
 
 Returns a list of glyph names for each of the characters in the
 string.  If the character has no name then C<undef> is returned for
@@ -709,6 +709,13 @@ the character.
 Some font files do not include glyph names, in this case Freetype 2
 will not return any names.  Freetype 1 can return standard names even
 if there are no glyph names in the font.
+
+Freetype 2 has an API function that returns true only if the font has
+"reliable glyph names", unfortunately this always returns false for
+TTF fonts.  This can avoid the check of this API by supplying
+C<reliable_only> as 0.  The consequences of using this on an unknown
+font may be unpredictable, since the Freetype documentation doesn't
+say how those name tables are unreliable, or how FT2 handles them.
 
 Both Freetype 1.x and 2.x allow support for glyph names to not be
 included.

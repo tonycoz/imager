@@ -493,6 +493,7 @@ static void io_destroyer(void *p) {
   SvREFCNT_dec(cbd->readcb);
   SvREFCNT_dec(cbd->seekcb);
   SvREFCNT_dec(cbd->closecb);
+  myfree(cbd);
 }
 
 struct value_name {
@@ -4265,10 +4266,11 @@ undef_int
 i_ft2_can_face_name()
 
 void
-i_ft2_glyph_name(handle, text_sv, utf8 = 0)
+i_ft2_glyph_name(handle, text_sv, utf8 = 0, reliable_only = 1)
         Imager::Font::FT2 handle
         SV *text_sv
         int utf8
+        int reliable_only
       PREINIT:
         char const *text;
         STRLEN work_len;
@@ -4283,7 +4285,7 @@ i_ft2_glyph_name(handle, text_sv, utf8 = 0)
         text = SvPV(text_sv, work_len);
         len = work_len;
         while (len) {
-          unsigned char ch;
+          unsigned long ch;
           if (utf8) {
             ch = i_utf8_advance(&text, &len);
             if (ch == ~0UL) {
@@ -4296,7 +4298,8 @@ i_ft2_glyph_name(handle, text_sv, utf8 = 0)
             --len;
           }
           EXTEND(SP, 1);
-          if (outsize = i_ft2_glyph_name(handle, ch, name, sizeof(name))) {
+          if (outsize = i_ft2_glyph_name(handle, ch, name, sizeof(name), 
+                                         reliable_only)) {
             PUSHs(sv_2mortal(newSVpv(name, 0)));
           }
           else {
