@@ -1,5 +1,4 @@
 #include "image.h"
-#include "io.h"
 #include "log.h"
 #include "iolayer.h"
 

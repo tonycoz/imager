@@ -1,6 +1,5 @@
 #include "image.h"
 #include "imagei.h"
-#include "io.h"
 
 /*
 =head1 NAME

@@ -75,6 +75,7 @@ if (defined $Config{'d_dlsymun'}) { $OSDEF  .= ' -DDLSYMUN'; }
        'INC'          => "$DFLAGS $F_INC",
        'OBJECT'       => join(' ', @objs, $F_OBJECT),
        clean          => { FILES=>'testout' },
+       'NO_META'      => 1,
       );
 
 if ($] ge '5.005') {

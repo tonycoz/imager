@@ -1,7 +1,7 @@
 #ifndef _IMAGE_H_
 #define _IMAGE_H_
 
-#include "io.h"
+#include "imio.h"
 #include "iolayer.h"
 #include "log.h"
 #include "stackmach.h"

@@ -1,7 +1,7 @@
 #ifndef _DATATYPES_H_
 #define _DATATYPES_H_
 
-#include "io.h"
+#include "imio.h"
 
 #define MAXCHANNELS 4
 

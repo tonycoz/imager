@@ -1663,6 +1663,7 @@ i_writegif_low(i_quantize *quant, GifFileType *gf, i_img **imgs, int count) {
       if ((map = make_gif_map(quant, imgs[0], want_trans)) == NULL) {
         i_mempool_destroy(&mp);
         EGifCloseFile(gf);
+        quant->mc_colors = orig_colors;
         mm_log((1, "Error in MakeMapObject"));
         return 0;
       }
@@ -1851,6 +1852,12 @@ i_writegif_low(i_quantize *quant, GifFileType *gf, i_img **imgs, int count) {
     mm_log((1, "Error in EGifCloseFile\n"));
     return 0;
   }
+  if (glob_colors) {
+    int i;
+    for (i = 0; i < glob_color_count; ++i)
+      orig_colors[i] = glob_colors[i];
+  }
+
   i_mempool_destroy(&mp);
   quant->mc_colors = orig_colors;
 

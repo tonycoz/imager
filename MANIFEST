@@ -27,7 +27,7 @@ feat.h
 img16.c
 imgdouble.c     Implements double/sample images
 io.c
-io.h
+imio.h
 log.c
 log.h
 jpeg.c

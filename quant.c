@@ -410,6 +410,9 @@ makemap_addi(i_quantize *quant, i_img **imgs, int count) {
   i_sample_t *line;
   const int *sample_indices;
 
+  mm_log((1, "makemap_addi(quant %p { mc_count=%d, mc_colors=%p }, imgs %p, count %d)\n", 
+          quant, quant->mc_count, quant->mc_colors, imgs, count));
+         
   i_mempool_init(&mp);
 
   clr = i_mempool_alloc(&mp, sizeof(cvec) * quant->mc_size);
@@ -423,6 +426,10 @@ makemap_addi(i_quantize *quant, i_img **imgs, int count) {
   }
   /* mymalloc doesn't clear memory, so I think we need this */
   for (; i < quant->mc_size; ++i) {
+    /*clr[i].r = clr[i].g = clr[i].b = 0;*/
+    clr[i].dr = 0;
+    clr[i].dg = 0;
+    clr[i].db = 0;
     clr[i].fixed = 0;
     clr[i].mcount = 0;
   }
@@ -543,6 +550,12 @@ makemap_addi(i_quantize *quant, i_img **imgs, int count) {
     quant->mc_colors[i].rgb.b = clr[i].b;
   }
   quant->mc_count = cnum;
+#endif
+
+#if 0
+  mm_log((1, "makemap_addi returns - quant.mc_count = %d\n", quant->mc_count));
+  for (i = 0; i < quant->mc_count; ++i)
+    mm_log((5, "  map entry %d: (%d, %d, %d)\n", i, clr[i].r, clr[i].g, clr[i].b));
 #endif
 
   i_mempool_destroy(&mp);
