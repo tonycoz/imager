@@ -53,26 +53,19 @@ wiol_flush_data(png_structp png_ptr) {
 }
 
 
+/* Check function demo 
+
 int
 check_if_png(char *file_name, FILE **fp) {
   char buf[PNG_BYTES_TO_CHECK];
-   
-  /* Open the prospective PNG file. */
   if ((*fp = fopen(file_name, "rb")) != NULL) return 0;
-   
-  /* Read in some of the signature bytes */
   if (fread(buf, 1, PNG_BYTES_TO_CHECK, *fp) != PNG_BYTES_TO_CHECK) return 0;
-
-  /* Compare the first PNG_BYTES_TO_CHECK bytes of the signature.
-     Return nonzero (true) if they match */
-
   return(!png_sig_cmp((png_bytep)buf, (png_size_t)0, PNG_BYTES_TO_CHECK));
 }
-
+*/
 
 undef_int
 i_writepng_wiol(i_img *im, io_glue *ig) {
-  FILE *fp;
   png_structp png_ptr;
   png_infop info_ptr;
   int width,height,y;
@@ -179,7 +172,6 @@ i_writepng_wiol(i_img *im, io_glue *ig) {
       myfree(data);
     }
     else {
-      fclose(fp);
       png_destroy_write_struct(&png_ptr, (png_infopp)NULL);
       return 0;
     }
