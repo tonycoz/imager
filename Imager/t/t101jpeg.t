@@ -21,14 +21,14 @@ if (!i_has_format("jpeg")) {
   print "ok 1 # skip no jpeg support\n";
   print "ok 2 # skip no jpeg support\n";
 } else {
-  open(FH,">testout/t11.jpg") || die "cannot open testout/t11.jpg for writing\n";
+  open(FH,">testout/t101.jpg") || die "cannot open testout/t101.jpg for writing\n";
   binmode(FH);
   i_writejpeg($img,fileno(FH),30);
   close(FH);
 
   print "ok 1\n";
   
-  open(FH,"testout/t11.jpg") || die "cannot open testout/t11.jpg\n";
+  open(FH,"testout/t101.jpg") || die "cannot open testout/t101.jpg\n";
   binmode(FH);
 
   ($cmpimg,undef)=i_readjpeg(fileno(FH));
