@@ -889,6 +889,8 @@ Revision history for Perl extension Imager.
   This could potentially be a security hole.
   partly resolves https://rt.cpan.org/Ticket/Display.html?id=8213
 - set i_format to jpeg for jpeg files and test for it
+- set i_format to png when reading png files and test for it
+- i_yres was being set to the xres when reading a png file
 
 =================================================================
 
