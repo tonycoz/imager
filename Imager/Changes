@@ -498,6 +498,7 @@ Revision history for Perl extension Imager.
           - hatched generic fills (with some options)
           - fountain generic fills
           - sample code to generate an examples page
+        - improved the scale* hatches a bit
 
 =================================================================
 
