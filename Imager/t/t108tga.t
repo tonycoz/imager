@@ -1,5 +1,5 @@
 #!perl -w
-print "1..18\n";
+print "1..16\n";
 use Imager qw(:all);
 use strict;
 init_log("testout/t108tga.log",1);
