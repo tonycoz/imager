@@ -675,7 +675,8 @@ Revision history for Perl extension Imager.
 				- Fixed tiff handling of images all contained in a 
 					single strip (rowsperstrip = -1) and added a hack
 					for images missing the rowsperstrip tag.
-					
+				- Fixed default parameters for crop()
+				- Added Preliminary specialized scaling code.
 =================================================================
 
         For latest versions check the Imager-devel pages:
