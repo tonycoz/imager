@@ -8,11 +8,13 @@
 use strict;
 
 my $loaded;
-BEGIN { $| = 1; print "1..71\n"; }
+BEGIN { $| = 1; print "1..85\n"; }
 END {print "not ok 1\n" unless $loaded;}
 use Imager qw(:handy :all);
 $loaded = 1;
 print "ok 1\n";
+
+require "t/testtools.pl";
 
 init_log("testout/t01introvert.log",1);
 
@@ -221,6 +223,33 @@ print "ok 56\n";
   $impal3->type eq 'paletted' or print "not ";
   print "ok 71\n";
 }
+
+my $num = 72;
+okn($num++, !Imager->new(xsize=>0, ysize=>1), "fail to create 0 height image");
+matchn($num++, Imager->errstr, qr/Image sizes must be positive/,
+       "0 height error message check");
+okn($num++, !Imager->new(xsize=>1, ysize=>0), "fail to create 0 width image");
+matchn($num++, Imager->errstr, qr/Image sizes must be positive/,
+       "0 width error message check");
+okn($num++, !Imager->new(xsize=>-1, ysize=>1), "fail to create -ve height image");
+matchn($num++, Imager->errstr, qr/Image sizes must be positive/,
+       "-ve width error message check");
+okn($num++, !Imager->new(xsize=>1, ysize=>-1), "fail to create -ve width image");
+matchn($num++, Imager->errstr, qr/Image sizes must be positive/,
+       "-ve height error message check");
+okn($num++, !Imager->new(xsize=>-1, ysize=>-1), "fail to create -ve width/height image");
+matchn($num++, Imager->errstr, qr/Image sizes must be positive/,
+       "-ve width/height error message check");
+
+okn($num++, !Imager->new(xsize=>1, ysize=>1, channels=>0),
+    "fail to create a zero channel image");
+matchn($num++, Imager->errstr, qr/channels must be between 1 and 4/,
+       "out of range channel message check");
+okn($num++, !Imager->new(xsize=>1, ysize=>1, channels=>5),
+    "fail to create a five channel image");
+matchn($num++, Imager->errstr, qr/channels must be between 1 and 4/,
+       "out of range channel message check");
+
 
 sub check_add {
   my ($base, $im, $color, $expected) = @_;

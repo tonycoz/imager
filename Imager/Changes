@@ -783,6 +783,33 @@ Revision history for Perl extension Imager.
           Thanks to Elthek on rhizo for reporting this and help in 
           tracking it down.
         - added a bunch of tests for reading pnm files.
+        - previously, if you supplied to_paletted and empty color map
+          and set make_colors to 'none', quant_translate() would segfault.
+          This was because it was making the reasonable assumption that
+          you'd have colors to map to.  quant_translate() now checks there
+          is at least one color and return NULL if there isn't.
+        - i_img_to_pal() now does error checking of the value returned by
+          quant_translate().
+        - Imager::to_paletted() now checks for success/failure of 
+          i_img_to_pal() correctly and does appropriate error handling.
+        - i_writegif_low() did no error checking on the result of
+          quant_translate(), it now does
+        - we now test that trying to write a GIF image with no palette
+          allowable by the quant options is a failure.
+        - Imager::write() was doing nothing with the result of the call 
+          to i_writegif_gen(), in particular it wasn't returning () on 
+          failure.
+        - added tests for paletted image handling and the methods
+          specific to those images
+        - the XS for i_setcolors() was missing the OUTPUT clause for
+          RETVAL, and hence wasn't returning failure on failure.
+        - supplying a sufficiently small scaling value could make the
+          scale() method return an image with zero height or width.
+        - the void context warning for scale() now includes the callers
+          filename/line (instead of the default of Imager.pm line 15xx)
+        - Imager->new will now return undef if the dimensions or number of
+          channels specified for an image are out of range.  An error
+          message can be retrieved with Imager->errstr.
 
 =================================================================
 

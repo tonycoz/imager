@@ -87,6 +87,15 @@ Creates a new double per sample image.
 */
 i_img *i_img_double_new_low(i_img *im, int x, int y, int ch) {
   mm_log((1,"i_img_double_new(x %d, y %d, ch %d)\n", x, y, ch));
+
+  if (x < 1 || y < 1) {
+    i_push_error(0, "Image sizes must be positive");
+    return NULL;
+  }
+  if (ch < 1 || ch > MAXCHANNELS) {
+    i_push_errorf(0, "channels must be between 1 and %d", MAXCHANNELS);
+    return NULL;
+  }
   
   *im = IIM_base_double_direct;
   i_tags_new(&im->tags);
@@ -109,6 +118,8 @@ i_img *i_img_double_new_low(i_img *im, int x, int y, int ch) {
 
 i_img *i_img_double_new(int x, int y, int ch) {
   i_img *im;
+
+  i_clear_error();
 
   im = mymalloc(sizeof(i_img));
   if (im) {

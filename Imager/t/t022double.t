@@ -1,12 +1,15 @@
 #!perl -w
 use strict;
-BEGIN { $| = 1; print "1..30\n"; }
+BEGIN { $| = 1; print "1..42\n"; }
 my $loaded;
 END {print "not ok 1\n" unless $loaded;}
 use Imager qw(:all :handy);
 #use Data::Dumper;
 $loaded = 1;
 print "ok 1\n";
+
+require "t/testtools.pl";
+
 init_log("testout/t022double.log", 1);
 
 use Imager::Color::Float;
@@ -68,6 +71,32 @@ ok(29, $ooimg->bits eq 'double', "oo didn't give double image");
 # check that the image is copied correctly
 my $oocopy = $ooimg->copy;
 ok(30, $oocopy->bits eq 'double', "oo copy didn't give double image");
+
+my $num = 31;
+okn($num++, !Imager->new(xsize=>0, ysize=>1, bits=>'double'),
+    "fail making 0 width image");
+matchn($num++, Imager->errstr, qr/Image sizes must be positive/,
+       "and correct message");
+okn($num++, !Imager->new(xsize=>1, ysize=>0, bits=>'double'),
+    "fail making 0 height image");
+matchn($num++, Imager->errstr, qr/Image sizes must be positive/,
+       "and correct message");
+okn($num++, !Imager->new(xsize=>-1, ysize=>1, bits=>'double'),
+    "fail making -ve width image");
+matchn($num++, Imager->errstr, qr/Image sizes must be positive/,
+       "and correct message");
+okn($num++, !Imager->new(xsize=>1, ysize=>-1, bits=>'double'),
+    "fail making -ve height image");
+matchn($num++, Imager->errstr, qr/Image sizes must be positive/,
+       "and correct message");
+okn($num++, !Imager->new(xsize=>1, ysize=>1, bits=>'double', channels=>0),
+    "fail making 0 channel image");
+matchn($num++, Imager->errstr, qr/channels must be between 1 and 4/,
+       "and correct message");
+okn($num++, !Imager->new(xsize=>1, ysize=>1, bits=>'double', channels=>5),
+    "fail making 5 channel image");
+matchn($num++, Imager->errstr, qr/channels must be between 1 and 4/,
+       "and correct message");
 
 sub NCF {
   return Imager::Color::Float->new(@_);

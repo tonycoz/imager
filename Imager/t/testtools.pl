@@ -74,5 +74,25 @@ sub requireokx {
   }
 }
 
+sub matchn($$$$) {
+  my ($num, $str, $re, $comment) = @_;
+
+  my $match = $str =~ $re;
+  okn($num, $match, $comment);
+  unless ($match) {
+    $str =~ s/\\/\\\\/g;
+    $str =~ s/[^\x20-\x7E]/"\\x".sprintf("%02X", ord($1))/ge;
+    print "# The string '$str'\n";
+    print "# did not match '$re'\n";
+  }
+  return $match;
+}
+
+sub matchx($$$) {
+  my ($str, $re, $comment) = @_;
+
+  matchn($TESTNUM++, $str, $re, $comment);
+}
+
 1;
 

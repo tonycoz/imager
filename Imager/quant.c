@@ -81,6 +81,13 @@ i_palidx *quant_translate(i_quantize *quant, i_img *img) {
   i_palidx *result;
   mm_log((1, "quant_translate(quant %p, img %p)\n", quant, img));
 
+  /* there must be at least one color in the paletted (though even that
+     isn't very useful */
+  if (quant->mc_count == 0) {
+    i_push_error(0, "no colors available for translation");
+    return NULL;
+  }
+
   result = mymalloc(img->xsize * img->ysize);
 
   switch (quant->translate) {
@@ -671,7 +678,6 @@ makemap_mediancut(i_quantize *quant, i_img **imgs, int count) {
       if (imgs[imgn]->channels > 2) {
         chan_count = 3;
         for (x = 0; x < imgs[imgn]->xsize; ++x) {
-	  printf("bumped entry %d\n", MED_CUT_INDEX(line[x]));
           ++colors[MED_CUT_INDEX(line[x])].count;
         }
       }

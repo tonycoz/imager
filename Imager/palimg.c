@@ -95,7 +95,7 @@ i_img *i_img_pal_new_low(i_img *im, int x, int y, int channels, int maxpal) {
     return NULL;
   }
   if (channels < 1 || channels > MAXCHANNELS) {
-    i_push_errorf(0, "Channels must be postive and <= %d", MAXCHANNELS);
+    i_push_errorf(0, "Channels must be positive and <= %d", MAXCHANNELS);
     return NULL;
   }
 
@@ -189,20 +189,28 @@ Converts an RGB image to a paletted image
 i_img *i_img_to_pal(i_img *src, i_quantize *quant) {
   i_palidx *result;
   i_img *im;
-  
-  im = i_img_pal_new(src->xsize, src->ysize, src->channels, quant->mc_size);
 
+  i_clear_error();
+  
   quant_makemap(quant, &src, 1);
   result = quant_translate(quant, src);
 
-  /* copy things over */
-  memcpy(im->idata, result, im->bytes);
-  PALEXT(im)->count = quant->mc_count;
-  memcpy(PALEXT(im)->pal, quant->mc_colors, sizeof(i_color) * quant->mc_count);
+  if (result) {
 
-  myfree(result);
+    im = i_img_pal_new(src->xsize, src->ysize, src->channels, quant->mc_size);
 
-  return im;
+    /* copy things over */
+    memcpy(im->idata, result, im->bytes);
+    PALEXT(im)->count = quant->mc_count;
+    memcpy(PALEXT(im)->pal, quant->mc_colors, sizeof(i_color) * quant->mc_count);
+    
+    myfree(result);
+
+    return im;
+  }
+  else {
+    return NULL;
+  }
 }
 
 /*
