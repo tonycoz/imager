@@ -410,6 +410,7 @@ Revision history for Perl extension Imager.
           in gif).
         - several fixes to i_readgif_low()
 	- Fixed crop() method so that it is consistent with documentation.
+        - make clean now removes the testout directory
 
 ~~~~~~~~~~~~~^ ^ ^~~~~~~~~~~~~~
 
