@@ -508,6 +508,7 @@ Revision history for Perl extension Imager.
           hanging off the left of the character cell
         - the tt driver produces some artifacts when characters
           overlapped
+        - error handling for writing jpeg images
 
 =================================================================
 

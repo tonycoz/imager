@@ -1,6 +1,6 @@
 use Imager qw(:all);
 
-print "1..7\n";
+print "1..8\n";
 
 init_log("testout/t101jpeg.log",1);
 
@@ -18,7 +18,7 @@ i_conv($img,[0.1, 0.2, 0.4, 0.2, 0.1]);
 
 i_has_format("jpeg") && print "# has jpeg\n";
 if (!i_has_format("jpeg")) {
-  for (1..7) {
+  for (1..8) {
     print "ok $_ # skip no jpeg support\n";
   }
 } else {
@@ -57,4 +57,22 @@ if (!i_has_format("jpeg")) {
   print "# OO image difference $diff\n";
   $diff < 10000 or print "not ";
   print "ok 7\n";
+
+  # write failure test
+  open FH, "< testout/t101.jpg" or die "Cannot open testout/t101.jpg: $!";
+  binmode FH;
+  ok(8, !$imoo->write(fd=>fileno(FH), type=>'jpeg'), 'failure handling');
+  close FH;
+  print "# ",$imoo->errstr,"\n";
+}
+
+sub ok {
+  my ($num, $test, $msg) = @_;
+
+  if ($test) {
+    print "ok $num\n";
+  }
+  else {
+    print "not ok $num # $msg\n";
+  }
 }
