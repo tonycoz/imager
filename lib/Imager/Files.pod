@@ -252,9 +252,91 @@ will be eliminated from its palette.  This is set by default.
 
 =back
 
-colors parameter on read.
+When reading a GIF all of the sub-images are combined using the screen
+size and image positions into one big image, producing an RGB image.
+This may change in the future to produce a paletted image where possible.
+
+When you read a single GIF with C<<$img->read()>> you can supply a
+reference to a scalar in the C<colors> parameter, if the image is read
+the scalar will be filled with a reference to an anonymous array of
+L<Imager::Color> objects, representing the palette of the image.  This
+will be the first palette found in the image.  If you want the
+palettes for each of the images in the file, use C<read_multi()> and
+use the C<getcolors()> method on each image.
+
+GIF does not support the spatial resolution tags.
+
+GIF will set the following tags in each image when reading, but does
+not use them when saving to GIF:
+
+=over
+
+=item gif_left
+
+the offset of the image from the left of the "screen" ("Image Left
+Position")
+
+=item gif_top
+
+the offset of the image from the top of the "screen" ("Image Top Position")
+
+=item gif_interlace
+
+non-zero if the image was interlaced ("Interlace Flag")
+
+=item gif_screen_width
+
+=item gif_screen_height
+
+the size of the logical screen ("Logical Screen Width", 
+"Logical Screen Height")
+
+=item gif_local_map
+
+Non-zero if this image had a local color map.
+
+=item gif_background
+
+The index in the global colormap of the logical screen's background
+color.  This is only set if the current image uses the global
+colormap.
+
+=item gif_trans_index
+
+The index of the color in the colormap used for transparency.  If the
+image has a transparency then it is returned as a 4 channel image with
+the alpha set to zero in this palette entry. ("Transparent Color Index")
+
+=item gif_delay
+
+The delay until the next frame is displayed, in 1/100 of a second. 
+("Delay Time").
+
+=item gif_user_input
+
+whether or not a user input is expected before continuing (view dependent) 
+("User Input Flag").
+
+=item gif_disposal
+
+how the next frame is displayed ("Disposal Method")
+
+=item gif_loop
+
+the number of loops from the Netscape Loop extension.  This may be zero.
+
+=item gif_comment
+
+the first block of the first gif comment before each image.
+
+=back
+
+Where applicable, the ("name") is the name of that field from the GIF89 
+standard.
 
 =head2 TIFF (Tagged Image File Format)
+
+
 
 =head2 BMP (BitMaP)
 
