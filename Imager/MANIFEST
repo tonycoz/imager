@@ -14,9 +14,11 @@ gaussian.c
 ppport.h
 image.c
 image.h
+imagei.h
 datatypes.h
 datatypes.c
 feat.h
+img16.c
 io.c
 io.h
 log.c
@@ -31,24 +33,38 @@ pnm.c
 filters.c
 feat.c
 font.c
+freetyp2.c	Implements freetype2 font support
+maskimg.c
+palimg.c
 regmach.c
 regmach.h
+rotate.c
 stackmach.c
 stackmach.h
+tags.c
 trans2.c
 iolayer.h
 iolayer.c
 fontfiles/dcr10.afm
 fontfiles/dcr10.pfb
 fontfiles/dodge.ttf
-lib/Imager/regmach.pod
-lib/Imager/Regops.pm
+lib/Imager/Color.pm
+lib/Imager/Color/Float.pm
 lib/Imager/Expr.pm
 lib/Imager/Expr/Assem.pm
-lib/Imager/Color.pm
 lib/Imager/Font.pm
+lib/Imager/Font/Type1.pm
+lib/Imager/Font/Truetype.pm
+lib/Imager/Font/FreeType2.pm
+lib/Imager/interface.pod
+lib/Imager/Matrix2d.pm
+lib/Imager/regmach.pod
+lib/Imager/Regops.pm
 lib/Imager/Transform.pm
 t/t00basic.t
+t/t01introvert.t
+t/t020masked.t
+t/t021sixteen.t
 t/t05error.t
 t/t101jpeg.t
 t/t102png.t
@@ -60,6 +76,8 @@ t/t15color.t
 t/t30t1font.t
 t/t35ttfont.t
 t/t36oofont.t
+t/t37w32font.t		Tests Win32 GDI font support
+t/t38ft2font.t		Tests freetype2 support
 t/t40scale.t
 t/t50basicoo.t
 t/t55trans.t
@@ -70,6 +88,7 @@ t/t59assem.t
 t/t60dyntest.t
 t/t65crop.t
 t/t66paste.t
+t/t69rubthru.t
 t/t70newgif.t
 t/t75polyaa.t
 t/t90cc.t
@@ -85,6 +104,8 @@ testimg/scale.gif
 testimg/scale.ppm
 testimg/scalei.gif
 testimg/screen2.gif
+testimg/screen3.gif
+testimg/test_gimp_pal
 testimg/trimgdesc.gif
 testimg/trmiddesc.gif
 typemap
@@ -106,3 +127,4 @@ dynfilt/mandelbrot.c
 dynfilt/flines.c
 dynfilt/compile.txt
 dynfilt/Makefile.PL
+win32.c		Implements font support through Win32 GDI

@@ -1,4 +1,4 @@
-BEGIN { $| = 1; print "1..6\n"; }
+BEGIN { $| = 1; print "1..10\n"; }
 END {print "not ok 1\n" unless $loaded;}
 use Imager;
 
@@ -53,3 +53,20 @@ if ($im6) {
   $im6->write(type=>'pnm', file=>'testout/t56c.ppm')
     || die "Cannot write testout/t56c.ppm";
 }
+
+use Imager::Transform;
+
+# some simple tests
+my @funcs = Imager::Transform->list or print "not ";
+print "ok 7\n";
+my $tran = Imager::Transform->new($funcs[0]) or print "not ";
+print "ok 8\n";
+$tran->describe() eq Imager::Transform->describe($funcs[0]) or print "not ";
+print "ok 9\n";
+# look for a function that takes inputs (at least one does)
+my @needsinputs = grep Imager::Transform->new($_)->inputs, @funcs;
+# make sure they're 
+my @inputs = Imager::Transform->new($needsinputs[0])->inputs;
+$inputs[0]{desc} or print "not ";
+print "ok 10\n";
+# at some point I might want to test the actual transformations

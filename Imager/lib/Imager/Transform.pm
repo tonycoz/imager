@@ -247,6 +247,7 @@ EOS
    circleripple=>
    {
     type=>'rpnexpr',
+    desc=>'Adds a circular ripple effect',
     rpnexpr=><<'EOS',
 x y cx cy distance !dist
 @dist freq / sin !scale
@@ -268,6 +269,7 @@ EOS
    spiral=>
    {
     type=>'rpnexpr',
+    desc=>'Render a colorful spiral',
     rpnexpr=><<'EOS',
 x y cx cy distance !d y cy - x cx - atan2 !a
 @d spacing / @a + pi 2 * % !a2 
@@ -493,7 +495,7 @@ Returns a list of input image descriptions, or the number of them,
 depending on content.
 
 The list contains hashrefs, which current contain only one member,
-desc, a description of the use of the image.
+desc, a description of the use of the input image.
 
 =item my $out = $tran->transform(\%opts, \%constants, @imgs)
 

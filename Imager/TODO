@@ -25,6 +25,9 @@ MultiImage & metadata support:
   local errors?
 - SEE design/represent.txt for proposed new structure and
   interface design that takes these factors into account.
+- define common i_* tags for specifying attribute common among images
+  like spatial resolution (implement for other image types, especially 
+  TIFF)
 
 New Features:
 - Add mng support.
@@ -34,6 +37,23 @@ New Features:
 
 - Finish antialiased filled polygon function.
 
+- freetype 2 support
+
+- advanced font layout (spacing, kerning, alignment) (sky)
+
+- font synthesis - synthesize a bold or slanted font from a normal font
+  (or even from an existing bold or slanted font)
+- utf8 support for text output
+
+- image rotation, 3 ways of doing rotation:
+  - exact multiple of 90 degrees (the easy case) (done)
+  - rotation by exact angles that results in no scaling, using 
+    interpolation to produce a good result (done)
+  - rotation by shearing, which produces makes lengths in the image larger,
+    but could be useful
+
+- read_multi() needs to handle other multi-image types, such as TIFF 
+  (probably the most common)
 
 Clean up:
 - Make sure everything is doable with the OO interface
@@ -62,13 +82,6 @@ Clean up:
 
 
 Format specific issues:
-- should i_readgif returned colormap be an arrayref of 
-  Imager::Color objects?  Note that this will break 
-  compatibility with previous releases.
-
-- if gif_delays is a number instead of an arrayref, use that 
-  number for each frame
-
 - provide patches for libgif and libungif that fix their bugs
   and give a useful extension interface.  Probe for the 
   installation of the patches in Makefile.PL to let gif.c
@@ -79,10 +92,15 @@ Format specific issues:
   cases.  Also allow ascii mode.  Need to be able to write 
   pbm images which needs ties to the quantization code.
 
+- bmp, pcx and targa image formats
 
 Documentation:
 - Add to the documentation
 - Write a tutorial?
+- sample code and Imager/Samples.pod describing them
+- Imager/Cookbook.pod
+- modify the .pm files to put pod describing a function close to the 
+  function
 - Write a guide to installing the helper libraries
 - Go through the entire project and add comments in pod
   so doco.perl can be used to read them.

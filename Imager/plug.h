@@ -23,8 +23,12 @@
 #define i_img_setmask(im,ch_mask) (symbol_table->i_img_setmask(im,ch_mask))
 #define i_img_getmask(im) (symbol_table->i_img_getmask(im))
 
+/*
+Not needed?  The i_gpix() macro in image.h will call the right function
+directly.
 #define i_ppix(im,x,y,val) (symbol_table->i_ppix(im,x,y,val))
 #define i_gpix(im,x,y,val) (symbol_table->i_gpix(im,x,y,val))
+*/
 
 #define i_box(im, x1, y1, x2, y2,val) (symbol_table->i_box(im, x1, y1, x2, y2,val))
 #define i_draw(im, x1, y1, x2, y2,val) (symbol_table->i_draw(im, x1, y1, x2, y2,val))

@@ -141,7 +141,7 @@ void io_glue_gettypes    (io_glue *ig, int reqmeth);
 
 /* XS functions */
 io_glue *io_new_fd(int fd);
-io_glue *io_new_bufchain();
+io_glue *io_new_bufchain(void);
 size_t   io_slurp(io_glue *ig, unsigned char **c);
 void io_glue_DESTROY(io_glue *ig);
 

@@ -419,6 +419,57 @@ Revision history for Perl extension Imager.
 
 0.39  pre1
 	- split Imager::Font into a base, *::Type1 and *::Truetype
+        - writing faxable tiff now allows 2 and 4 channel images
+        - virtual image interface - 8-bit/sample images
+        - paletted images
+        - 16-bit/sample images
+        - masked images
+        - writing non-8bit images to raw
+        - writing   ''       ''   to tiff
+        - i_convert support for high-bit images and paletted images
+        - i_copy for high-bit and paletted images
+        - tests for rubthru
+        - rubthru can now rub a 2 channel image over a 1 or 3 channel 
+          image
+        - rubthru for high-bit images
+        - i_readgif_multi functions, which return all the frames from a
+          GIF file, along with a bunch of meta-information as tag
+        - OO interface to tags
+        - OO interface read_multi() to read multi-image files (just GIF
+          so far)
+        - documentation for the multi-image GIF reading and tags
+        - rotate() method with rotate by steps of 90 degrees (and docs)
+        - fixed a bug in i_img_pal_new_low()
+        - added gaussian to the filters list
+        - documented the individual filters
+	- fixed the right-hand side of bounding boxes for TT fonts 
+	  where the last character overlaps the advance width (eg. 
+	  italic fonts)
+        - added rotation by exact amounts in degrees or radians,
+          implemented using the matrix idea from Addi.  The procedural
+          matrix transformer is exposed, but still needs testing (as XS)
+          and needs an OO interface, hopefully with some helper tools,
+          like the preset interface with ->convert().
+        - MY::postamble() in Makefile.PL included a broken rule 
+          (Makefile.PL 1.13.2.5)
+	- support for GDI fonts under Win32
+	- made that work for cygwin too (needs the w32api package)
+	- freetype1 support under Win32
+	- t1lib support under Win32
+	- fixed a minor bug in font.c (invalid font files caused a SEGV)
+	- checked cygwin for both t1lib and freetype1
+        - freetype 2 support
+        - exposed the matrix_transform() function to the OO interface
+        - added Imager::Matrix2d convenience class
+        - support for setting the resolution when writing to PNG
+        - retrieve physical resolution to tags when reading from PNG
+        - found an XS bug in the interface to i_tags_add()
+        - fixed handling of writing text to a channel with freetype2 
+          (sometimes the edge of a character would damage the edge of the 
+          previous character)
+        - some utf8 support for freetype2
+        - some vertical layout support for freetype2
+        - named parameters for specifying colors, with quite a few options.
 
 =================================================================
 

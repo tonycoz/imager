@@ -16,11 +16,16 @@ extern "C" {
 
 typedef io_glue* Imager__IO;
 typedef i_color* Imager__Color;
+typedef i_fcolor* Imager__Color__Float;
 typedef i_img*   Imager__ImgRaw;
 
 
 #ifdef HAVE_LIBTT
 typedef TT_Fonthandle* Imager__TTHandle;
+#endif
+
+#ifdef HAVE_FT2
+typedef FT2_Fonthandle* Imager__Font__FT2;
 #endif
 
 typedef struct i_reader_data_tag
@@ -408,6 +413,13 @@ static void copy_colors_back(HV *hv, i_quantize *quant) {
   }
 }
 
+/* I don't think ICLF_* names belong at the C interface
+   this makes the XS code think we have them, to let us avoid 
+   putting function bodies in the XS code
+*/
+#define ICLF_new_internal(r, g, b, a) i_fcolor_new((r), (g), (b), (a))
+#define ICLF_DESTROY(cl) i_fcolor_destroy(cl)
+
 MODULE = Imager		PACKAGE = Imager::Color	PREFIX = ICL_
 
 Imager::Color
@@ -452,8 +464,45 @@ ICL_rgba(cl)
 
 
 
+MODULE = Imager        PACKAGE = Imager::Color::Float  PREFIX=ICLF_
 
+Imager::Color::Float
+ICLF_new_internal(r, g, b, a)
+        double r
+        double g
+        double b
+        double a
 
+void
+ICLF_DESTROY(cl)
+        Imager::Color::Float    cl
+
+void
+ICLF_rgba(cl)
+        Imager::Color::Float    cl
+      PREINIT:
+        int ch;
+      PPCODE:
+        EXTEND(SP, MAXCHANNELS);
+        for (ch = 0; ch < MAXCHANNELS; ++ch) {
+        /* printf("%d: %g\n", ch, cl->channel[ch]); */
+          PUSHs(sv_2mortal(newSVnv(cl->channel[ch])));
+        }
+
+void
+ICLF_set_internal(cl,r,g,b,a)
+        Imager::Color::Float    cl
+        double     r
+        double     g
+        double     b
+        double     a
+      PPCODE:
+        cl->rgba.r = r;
+        cl->rgba.g = g;
+        cl->rgba.b = b;
+        cl->rgba.a = a;                
+        EXTEND(SP, 1);
+        PUSHs(ST(0));
 
 MODULE = Imager		PACKAGE = Imager::ImgRaw	PREFIX = IIM_
 
@@ -578,7 +627,8 @@ i_img_getdata(im)
     Imager::ImgRaw     im
              PPCODE:
 	       EXTEND(SP, 1);
-               PUSHs(sv_2mortal(newSVpv(im->data, im->bytes)));
+               PUSHs(im->idata ? sv_2mortal(newSVpv(im->idata, im->bytes)) 
+		     : &PL_sv_undef);
 
 
 void
@@ -748,7 +798,7 @@ i_copy(im,src)
     Imager::ImgRaw     src
 
 
-void
+undef_int
 i_rubthru(im,src,tx,ty)
     Imager::ImgRaw     im
     Imager::ImgRaw     src
@@ -760,6 +810,43 @@ i_flipxy(im, direction)
     Imager::ImgRaw     im
 	       int     direction
 
+Imager::ImgRaw
+i_rotate90(im, degrees)
+    Imager::ImgRaw      im
+               int      degrees
+
+Imager::ImgRaw
+i_rotate_exact(im, amount)
+    Imager::ImgRaw      im
+            double      amount
+
+Imager::ImgRaw
+i_matrix_transform(im, xsize, ysize, matrix)
+    Imager::ImgRaw      im
+               int      xsize
+               int      ysize
+      PREINIT:
+        double matrix[9];
+        AV *av;
+        IV len;
+        SV *sv1;
+        int i;
+      CODE:
+        if (!SvROK(ST(3)) || SvTYPE(SvRV(ST(3))) != SVt_PVAV)
+          croak("i_matrix_transform: parameter 4 must be an array ref\n");
+	av=(AV*)SvRV(ST(3));
+	len=av_len(av)+1;
+        if (len > 9)
+          len = 9;
+        for (i = 0; i < len; ++i) {
+	  sv1=(*(av_fetch(av,i,0)));
+	  matrix[i] = SvNV(sv1);
+        }
+        for (; i < 9; ++i)
+          matrix[i] = 0;
+        RETVAL = i_matrix_transform(im, xsize, ysize, matrix);        
+      OUTPUT:
+        RETVAL
 
 void
 i_gaussian(im,stdev)
@@ -1412,10 +1499,65 @@ i_readgif_callback(...)
             PUSHs(newRV_noinc((SV*)ct));
         }
 
+void
+i_readgif_multi(fd)
+        int     fd
+      PREINIT:
+        i_img **imgs;
+        int count;
+        int i;
+      PPCODE:
+        imgs = i_readgif_multi(fd, &count);
+        if (imgs) {
+          EXTEND(SP, count);
+          for (i = 0; i < count; ++i) {
+            SV *sv = sv_newmortal();
+            sv_setref_pv(sv, "Imager::ImgRaw", (void *)imgs[i]);
+            PUSHs(sv);
+          }
+          myfree(imgs);
+        }
 
+void
+i_readgif_multi_scalar(data)
+      PREINIT:
+        i_img **imgs;
+        int count;
+        char *data;
+        unsigned int length;
+        int i;
+      PPCODE:
+        data = (char *)SvPV(ST(0), length);
+        imgs = i_readgif_multi_scalar(data, length, &count);
+        if (imgs) {
+          EXTEND(SP, count);
+          for (i = 0; i < count; ++i) {
+            SV *sv = sv_newmortal();
+            sv_setref_pv(sv, "Imager::ImgRaw", (void *)imgs[i]);
+            PUSHs(sv);
+          }
+          myfree(imgs);
+        }
 
-
-
+void
+i_readgif_multi_callback(cb)
+      PREINIT:
+        i_reader_data rd;
+        i_img **imgs;
+        int count;
+        int i;
+      PPCODE:
+        rd.sv = ST(0);
+        imgs = i_readgif_multi_callback(read_callback, (char *)&rd, &count);
+        if (imgs) {
+          EXTEND(SP, count);
+          for (i = 0; i < count; ++i) {
+            SV *sv = sv_newmortal();
+            sv_setref_pv(sv, "Imager::ImgRaw", (void *)imgs[i]);
+            PUSHs(sv);
+          }
+          myfree(imgs);
+        }
 
 #endif
 
@@ -1743,7 +1885,6 @@ i_errors()
       PREINIT:
         i_errmsg *errors;
 	int i;
-	int count;
 	AV *av;
 	SV *ref;
 	SV *sv;
@@ -1885,14 +2026,869 @@ DSO_call(handle,func_index,hv)
 
 
 # this is mostly for testing...
-Imager::Color
+SV *
 i_get_pixel(im, x, y)
 	Imager::ImgRaw im
 	int x
 	int y;
+      PREINIT:
+        i_color *color;
       CODE:
-	RETVAL = (i_color *)mymalloc(sizeof(i_color));
-	i_gpix(im, x, y, RETVAL);
+	color = (i_color *)mymalloc(sizeof(i_color));
+	if (i_gpix(im, x, y, color) == 0) {
+          ST(0) = sv_newmortal();
+          sv_setref_pv(ST(0), "Imager::Color", (void *)color);
+        }
+        else {
+          myfree(color);
+          ST(0) = &PL_sv_undef;
+        }
+        
+
+int
+i_ppix(im, x, y, cl)
+        Imager::ImgRaw im
+        int x
+        int y
+        Imager::Color cl
+
+Imager::ImgRaw
+i_img_pal_new(x, y, channels, maxpal)
+	int	x
+        int	y
+        int     channels
+	int	maxpal
+
+Imager::ImgRaw
+i_img_to_pal(src, quant)
+        Imager::ImgRaw src
+      PREINIT:
+        HV *hv;
+        i_quantize quant;
+      CODE:
+        if (!SvROK(ST(1)) || ! SvTYPE(SvRV(ST(1))))
+          croak("i_img_to_pal: second argument must be a hash ref");
+        hv = (HV *)SvRV(ST(1));
+        memset(&quant, 0, sizeof(quant));
+        quant.mc_size = 256;
+        quant.mc_colors = mymalloc(quant.mc_size * sizeof(i_color));
+	handle_quant_opts(&quant, hv);
+        RETVAL = i_img_to_pal(src, &quant);
+        if (RETVAL) {
+          copy_colors_back(hv, &quant);
+        }
+        myfree(quant.mc_colors);
+      OUTPUT:
+        RETVAL
+
+Imager::ImgRaw
+i_img_to_rgb(src)
+        Imager::ImgRaw src
+
+void
+i_gpal(im, l, r, y)
+        Imager::ImgRaw  im
+        int     l
+        int     r
+        int     y
+      PREINIT:
+        i_palidx *work;
+        int count, i;
+      PPCODE:
+        if (l < r) {
+          work = mymalloc((r-l) * sizeof(i_palidx));
+          count = i_gpal(im, l, r, y, work);
+          if (GIMME_V == G_ARRAY) {
+            EXTEND(SP, count);
+            for (i = 0; i < count; ++i) {
+              PUSHs(sv_2mortal(newSViv(work[i])));
+            }
+          }
+          else {
+            EXTEND(SP, 1);
+            PUSHs(sv_2mortal(newSVpv(work, count * sizeof(i_palidx))));
+          }
+          myfree(work);
+        }
+        else {
+          if (GIMME_V != G_ARRAY) {
+            EXTEND(SP, 1);
+            PUSHs(&PL_sv_undef);
+          }
+        }
+
+int
+i_ppal(im, l, y, ...)
+        Imager::ImgRaw  im
+        int     l
+        int     y
+      PREINIT:
+        i_palidx *work;
+        int count, i;
+      CODE:
+        if (items > 3) {
+          work = mymalloc(sizeof(i_palidx) * (items-3));
+          for (i=0; i < items-3; ++i) {
+            work[i] = SvIV(ST(i+3));
+          }
+          RETVAL = i_ppal(im, l, l+items-3, y, work);
+          myfree(work);
+        }
+        else {
+          RETVAL = 0;
+        }
+      OUTPUT:
+        RETVAL
+
+SV *
+i_addcolors(im, ...)
+        Imager::ImgRaw  im
+      PREINIT:
+        int index;
+        i_color *colors;
+        int i;
+      CODE:
+        if (items < 2)
+          croak("i_addcolors: no colors to add");
+        colors = mymalloc((items-1) * sizeof(i_color));
+        for (i=0; i < items-1; ++i) {
+          if (sv_isobject(ST(i+1)) 
+              && sv_derived_from(ST(i+1), "Imager::Color")) {
+            IV tmp = SvIV((SV *)SvRV(ST(i+1)));
+            colors[i] = *(i_color *)tmp;
+          }
+          else {
+            myfree(colors);
+            croak("i_plin: pixels must be Imager::Color objects");
+          }
+        }
+        index = i_addcolors(im, colors, items-1);
+        myfree(colors);
+        if (index == 0) {
+          ST(0) = sv_2mortal(newSVpv("0 but true", 0));
+        }
+        else if (index == -1) {
+          ST(0) = &PL_sv_undef;
+        }
+        else {
+          ST(0) = sv_2mortal(newSViv(index));
+        }
+
+int 
+i_setcolors(im, index, ...)
+        Imager::ImgRaw  im
+        int index
+      PREINIT:
+        i_color *colors;
+        int i;
+      CODE:
+        if (items < 3)
+          croak("i_setcolors: no colors to add");
+        colors = mymalloc((items-2) * sizeof(i_color));
+        for (i=0; i < items-2; ++i) {
+          if (sv_isobject(ST(i+2)) 
+              && sv_derived_from(ST(i+2), "Imager::Color")) {
+            IV tmp = SvIV((SV *)SvRV(ST(i+2)));
+            colors[i] = *(i_color *)tmp;
+          }
+          else {
+            myfree(colors);
+            croak("i_setcolors: pixels must be Imager::Color objects");
+          }
+        }
+        RETVAL = i_setcolors(im, index, colors, items-2);
+        myfree(colors);
+
+void
+i_getcolors(im, index, ...)
+        Imager::ImgRaw im
+        int index
+      PREINIT:
+        i_color *colors;
+        int count = 1;
+        int i;
+      PPCODE:
+        if (items > 3)
+          croak("i_getcolors: too many arguments");
+        if (items == 3)
+          count = SvIV(ST(2));
+        if (count < 1)
+          croak("i_getcolors: count must be positive");
+        colors = mymalloc(sizeof(i_color) * count);
+        if (i_getcolors(im, index, colors, count)) {
+          for (i = 0; i < count; ++i) {
+            i_color *pv;
+            SV *sv = sv_newmortal();
+            pv = mymalloc(sizeof(i_color));
+            *pv = colors[i];
+            sv_setref_pv(sv, "Imager::Color", (void *)pv);
+            PUSHs(sv);
+          }
+        }
+        myfree(colors);
+
+
+SV *
+i_colorcount(im)
+        Imager::ImgRaw im
+      PREINIT:
+        int count;
+      CODE:
+        count = i_colorcount(im);
+        if (count >= 0) {
+          ST(0) = sv_2mortal(newSViv(count));
+        }
+        else {
+          ST(0) = &PL_sv_undef;
+        }
+
+SV *
+i_maxcolors(im)
+        Imager::ImgRaw im
+      PREINIT:
+        int count;
+      CODE:
+        count = i_maxcolors(im);
+        if (count >= 0) {
+          ST(0) = sv_2mortal(newSViv(count));
+        }
+        else {
+          ST(0) = &PL_sv_undef;
+        }
+
+SV *
+i_findcolor(im, color)
+        Imager::ImgRaw im
+        Imager::Color color
+      PREINIT:
+        i_palidx index;
+      CODE:
+        if (i_findcolor(im, color, &index)) {
+          ST(0) = sv_2mortal(newSViv(index));
+        }
+        else {
+          ST(0) = &PL_sv_undef;
+        }
+
+int
+i_img_bits(im)
+        Imager::ImgRaw  im
+
+int
+i_img_type(im)
+        Imager::ImgRaw  im
+
+int
+i_img_virtual(im)
+        Imager::ImgRaw  im
+
+void
+i_gsamp(im, l, r, y, ...)
+        Imager::ImgRaw im
+        int l
+        int r
+        int y
+      PREINIT:
+        int *chans;
+        int chan_count;
+        i_sample_t *data;
+        int count, i;
+      PPCODE:
+        if (items < 5)
+          croak("No channel numbers supplied to g_samp()");
+        if (l < r) {
+          chan_count = items - 4;
+          chans = mymalloc(sizeof(int) * chan_count);
+          for (i = 0; i < chan_count; ++i)
+            chans[i] = SvIV(ST(i+4));
+          data = mymalloc(sizeof(i_sample_t) * (r-l) * chan_count);
+          count = i_gsamp(im, l, r, y, data, chans, chan_count);
+          if (GIMME_V == G_ARRAY) {
+            EXTEND(SP, count);
+            for (i = 0; i < count; ++i)
+              PUSHs(sv_2mortal(newSViv(data[i])));
+          }
+          else {
+            EXTEND(SP, 1);
+            PUSHs(sv_2mortal(newSVpv(data, count * sizeof(i_sample_t))));
+          }
+        }
+        else {
+          if (GIMME_V != G_ARRAY) {
+            EXTEND(SP, 1);
+            PUSHs(&PL_sv_undef);
+          }
+        }
+
+Imager::ImgRaw
+i_img_masked_new(targ, mask, x, y, w, h)
+        Imager::ImgRaw targ
+        int x
+        int y
+        int w
+        int h
+      PREINIT:
+        i_img *mask;
+      CODE:
+        if (SvOK(ST(1))) {
+          if (!sv_isobject(ST(1)) 
+              || !sv_derived_from(ST(1), "Imager::ImgRaw")) {
+            croak("i_img_masked_new: parameter 2 must undef or an image");
+          }
+          mask = (i_img *)SvIV((SV *)SvRV(ST(1)));
+        }
+        else
+          mask = NULL;
+        RETVAL = i_img_masked_new(targ, mask, x, y, w, h);
+      OUTPUT:
+        RETVAL
+
+int
+i_plin(im, l, y, ...)
+        Imager::ImgRaw  im
+        int     l
+        int     y
+      PREINIT:
+        i_color *work;
+        int count, i;
+      CODE:
+        if (items > 3) {
+          work = mymalloc(sizeof(i_color) * (items-3));
+          for (i=0; i < items-3; ++i) {
+            if (sv_isobject(ST(i+3)) 
+                && sv_derived_from(ST(i+3), "Imager::Color")) {
+              IV tmp = SvIV((SV *)SvRV(ST(i+3)));
+              work[i] = *(i_color *)tmp;
+            }
+            else {
+              myfree(work);
+              croak("i_plin: pixels must be Imager::Color objects");
+            }
+          }
+          /**(char *)0 = 1;*/
+          RETVAL = i_plin(im, l, l+items-3, y, work);
+          myfree(work);
+        }
+        else {
+          RETVAL = 0;
+        }
+      OUTPUT:
+        RETVAL
+
+int
+i_ppixf(im, x, y, cl)
+        Imager::ImgRaw im
+        int x
+        int y
+        Imager::Color::Float cl
+
+void
+i_gsampf(im, l, r, y, ...)
+        Imager::ImgRaw im
+        int l
+        int r
+        int y
+      PREINIT:
+        int *chans;
+        int chan_count;
+        i_fsample_t *data;
+        int count, i;
+      PPCODE:
+        if (items < 5)
+          croak("No channel numbers supplied to g_sampf()");
+        if (l < r) {
+          chan_count = items - 4;
+          chans = mymalloc(sizeof(int) * chan_count);
+          for (i = 0; i < chan_count; ++i)
+            chans[i] = SvIV(ST(i+4));
+          data = mymalloc(sizeof(i_fsample_t) * (r-l) * chan_count);
+          count = i_gsampf(im, l, r, y, data, chans, chan_count);
+          if (GIMME_V == G_ARRAY) {
+            EXTEND(SP, count);
+            for (i = 0; i < count; ++i)
+              PUSHs(sv_2mortal(newSVnv(data[i])));
+          }
+          else {
+            EXTEND(SP, 1);
+            PUSHs(sv_2mortal(newSVpv((void *)data, count * sizeof(i_fsample_t))));
+          }
+        }
+        else {
+          if (GIMME_V != G_ARRAY) {
+            EXTEND(SP, 1);
+            PUSHs(&PL_sv_undef);
+          }
+        }
+
+int
+i_plinf(im, l, y, ...)
+        Imager::ImgRaw  im
+        int     l
+        int     y
+      PREINIT:
+        i_fcolor *work;
+        int count, i;
+      CODE:
+        if (items > 3) {
+          work = mymalloc(sizeof(i_fcolor) * (items-3));
+          for (i=0; i < items-3; ++i) {
+            if (sv_isobject(ST(i+3)) 
+                && sv_derived_from(ST(i+3), "Imager::Color::Float")) {
+              IV tmp = SvIV((SV *)SvRV(ST(i+3)));
+              work[i] = *(i_fcolor *)tmp;
+            }
+            else {
+              myfree(work);
+              croak("i_plin: pixels must be Imager::Color::Float objects");
+            }
+          }
+          /**(char *)0 = 1;*/
+          RETVAL = i_plinf(im, l, l+items-3, y, work);
+          myfree(work);
+        }
+        else {
+          RETVAL = 0;
+        }
+      OUTPUT:
+        RETVAL
+
+SV *
+i_gpixf(im, x, y)
+	Imager::ImgRaw im
+	int x
+	int y;
+      PREINIT:
+        i_fcolor *color;
+      CODE:
+	color = (i_fcolor *)mymalloc(sizeof(i_fcolor));
+	if (i_gpixf(im, x, y, color) == 0) {
+          ST(0) = sv_newmortal();
+          sv_setref_pv(ST(0), "Imager::Color::Float", (void *)color);
+        }
+        else {
+          myfree(color);
+          ST(0) = &PL_sv_undef;
+        }
+        
+void
+i_glin(im, l, r, y)
+        Imager::ImgRaw im
+        int l
+        int r
+        int y
+      PREINIT:
+        i_color *vals;
+        int count, i;
+      PPCODE:
+        if (l < r) {
+          vals = mymalloc((r-l) * sizeof(i_color));
+          count = i_glin(im, l, r, y, vals);
+          EXTEND(SP, count);
+          for (i = 0; i < count; ++i) {
+            SV *sv;
+            i_color *col = mymalloc(sizeof(i_color));
+            sv = sv_newmortal();
+            sv_setref_pv(sv, "Imager::Color", (void *)col);
+            PUSHs(sv);
+          }
+          myfree(vals);
+        }
+
+void
+i_glinf(im, l, r, y)
+        Imager::ImgRaw im
+        int l
+        int r
+        int y
+      PREINIT:
+        i_fcolor *vals;
+        int count, i;
+      PPCODE:
+        if (l < r) {
+          vals = mymalloc((r-l) * sizeof(i_fcolor));
+          count = i_glinf(im, l, r, y, vals);
+          EXTEND(SP, count);
+          for (i = 0; i < count; ++i) {
+            SV *sv;
+            i_fcolor *col = mymalloc(sizeof(i_fcolor));
+            *col = vals[i];
+            sv = sv_newmortal();
+            sv_setref_pv(sv, "Imager::Color::Float", (void *)col);
+            PUSHs(sv);
+          }
+          myfree(vals);
+        }
+
+Imager::ImgRaw
+i_img_16_new(x, y, ch)
+        int x
+        int y
+        int ch
+
+undef_int
+i_tags_addn(im, name, code, idata)
+        Imager::ImgRaw im
+        int     code
+        int     idata
+      PREINIT:
+        char *name;
+        STRLEN len;
+      CODE:
+        if (SvOK(ST(1)))
+          name = SvPV(ST(1), len);
+        else
+          name = NULL;
+        RETVAL = i_tags_addn(&im->tags, name, code, idata);
+      OUTPUT:
+        RETVAL
+
+undef_int
+i_tags_add(im, name, code, data, idata)
+        Imager::ImgRaw  im
+        int code
+        int idata
+      PREINIT:
+        char *name;
+        char *data;
+        STRLEN len;
+      CODE:
+        if (SvOK(ST(1)))
+          name = SvPV(ST(1), len);
+        else
+          name = NULL;
+        if (SvOK(ST(3)))
+          data = SvPV(ST(3), len);
+        else {
+          data = NULL;
+          len = 0;
+        }
+        RETVAL = i_tags_add(&im->tags, name, code, data, len, idata);
+      OUTPUT:
+        RETVAL
+
+SV *
+i_tags_find(im, name, start)
+        Imager::ImgRaw  im
+        char *name
+        int start
+      PREINIT:
+        int entry;
+      CODE:
+        if (i_tags_find(&im->tags, name, start, &entry)) {
+          if (entry == 0)
+            ST(0) = sv_2mortal(newSVpv("0 but true", 0));
+          else
+            ST(0) = sv_2mortal(newSViv(entry));
+        } else {
+          ST(0) = &PL_sv_undef;
+        }
+
+SV *
+i_tags_findn(im, code, start)
+        Imager::ImgRaw  im
+        int             code
+        int             start
+      PREINIT:
+        int entry;
+      CODE:
+        if (i_tags_findn(&im->tags, code, start, &entry)) {
+          if (entry == 0)
+            ST(0) = sv_2mortal(newSVpv("0 but true", 0));
+          else
+            ST(0) = sv_2mortal(newSViv(entry));
+        }
+        else
+          ST(0) = &PL_sv_undef;
+
+int
+i_tags_delete(im, entry)
+        Imager::ImgRaw  im
+        int             entry
+      CODE:
+        RETVAL = i_tags_delete(&im->tags, entry);
+      OUTPUT:
+        RETVAL
+
+int
+i_tags_delbyname(im, name)
+        Imager::ImgRaw  im
+        char *          name
+      CODE:
+        RETVAL = i_tags_delbyname(&im->tags, name);
+      OUTPUT:
+        RETVAL
+
+int
+i_tags_delbycode(im, code)
+        Imager::ImgRaw  im
+        int             code
+      CODE:
+        RETVAL = i_tags_delbycode(&im->tags, code);
+      OUTPUT:
+        RETVAL
+
+void
+i_tags_get(im, index)
+        Imager::ImgRaw  im
+        int             index
+      PPCODE:
+        if (index >= 0 && index < im->tags.count) {
+          i_img_tag *entry = im->tags.tags + index;
+          EXTEND(SP, 5);
+        
+          if (entry->name) {
+            PUSHs(sv_2mortal(newSVpv(entry->name, 0)));
+          }
+          else {
+            PUSHs(sv_2mortal(newSViv(entry->code)));
+          }
+          if (entry->data) {
+            PUSHs(sv_2mortal(newSVpvn(entry->data, entry->size)));
+          }
+          else {
+            PUSHs(sv_2mortal(newSViv(entry->idata)));
+          }
+        }
+
+int
+i_tags_count(im)
+        Imager::ImgRaw  im
+      CODE:
+        RETVAL = im->tags.count;
+      OUTPUT:
+        RETVAL
+
+#ifdef HAVE_WIN32
+
+void
+i_wf_bbox(face, size, text)
+	char *face
+	int size
+	char *text
+      PREINIT:
+	int cords[6];
+      PPCODE:
+        if (i_wf_bbox(face, size, text, strlen(text), cords)) {
+          EXTEND(SP, 6);  
+          PUSHs(sv_2mortal(newSViv(cords[0])));
+          PUSHs(sv_2mortal(newSViv(cords[1])));
+          PUSHs(sv_2mortal(newSViv(cords[2])));
+          PUSHs(sv_2mortal(newSViv(cords[3])));
+          PUSHs(sv_2mortal(newSViv(cords[4])));
+          PUSHs(sv_2mortal(newSViv(cords[5])));
+        }
+
+undef_int
+i_wf_text(face, im, tx, ty, cl, size, text, align, aa)
+	char *face
+	Imager::ImgRaw im
+	int tx
+	int ty
+	Imager::Color cl
+	int size
+	char *text
+	int align
+	int aa
+      CODE:
+	RETVAL = i_wf_text(face, im, tx, ty, cl, size, text, strlen(text), 
+	                   align, aa);
       OUTPUT:
 	RETVAL
+
+undef_int
+i_wf_cp(face, im, tx, ty, channel, size, text, align, aa)
+	char *face
+	Imager::ImgRaw im
+	int tx
+	int ty
+	int channel
+	int size
+	char *text
+	int align
+	int aa
+      CODE:
+	RETVAL = i_wf_cp(face, im, tx, ty, channel, size, text, strlen(text), 
+		         align, aa);
+      OUTPUT:
+	RETVAL
+
+
+#endif
+
+#ifdef HAVE_FT2
+
+MODULE = Imager         PACKAGE = Imager::Font::FT2     PREFIX=FT2_
+
+#define FT2_DESTROY(font) i_ft2_destroy(font)
+
+void
+FT2_DESTROY(font)
+        Imager::Font::FT2 font
+
+MODULE = Imager         PACKAGE = Imager::Font::FreeType2 
+
+Imager::Font::FT2
+i_ft2_new(name, index)
+        char *name
+        int index
+
+undef_int
+i_ft2_setdpi(font, xdpi, ydpi)
+        Imager::Font::FT2 font
+        int xdpi
+        int ydpi
+
+void
+i_ft2_getdpi(font)
+        Imager::Font::FT2 font
+      PREINIT:
+        int xdpi, ydpi;
+      CODE:
+        if (i_ft2_getdpi(font, &xdpi, &ydpi)) {
+          EXTEND(SP, 2);
+          PUSHs(sv_2mortal(newSViv(xdpi)));
+          PUSHs(sv_2mortal(newSViv(ydpi)));
+        }
+
+undef_int
+i_ft2_sethinting(font, hinting)
+        Imager::Font::FT2 font
+        int hinting
+
+undef_int
+i_ft2_settransform(font, matrix)
+        Imager::Font::FT2 font
+      PREINIT:
+        double matrix[6];
+        int len;
+        AV *av;
+        SV *sv1;
+        int i;
+      CODE:
+        if (!SvROK(ST(1)) || SvTYPE(SvRV(ST(1))) != SVt_PVAV)
+          croak("i_ft2_settransform: parameter 2 must be an array ref\n");
+	av=(AV*)SvRV(ST(1));
+	len=av_len(av)+1;
+        if (len > 6)
+          len = 6;
+        for (i = 0; i < len; ++i) {
+	  sv1=(*(av_fetch(av,i,0)));
+	  matrix[i] = SvNV(sv1);
+        }
+        for (; i < 6; ++i)
+          matrix[i] = 0;
+        RETVAL = i_ft2_settransform(font, matrix);
+      OUTPUT:
+        RETVAL
+
+void
+i_ft2_bbox(font, cheight, cwidth, text)
+        Imager::Font::FT2 font
+        double cheight
+        double cwidth
+        char *text
+      PREINIT:
+        int bbox[6];
+        int i;
+      PPCODE:
+        if (i_ft2_bbox(font, cheight, cwidth, text, strlen(text), bbox)) {
+          EXTEND(SP, 6);
+          for (i = 0; i < 6; ++i)
+            PUSHs(sv_2mortal(newSViv(bbox[i])));
+        }
+
+void
+i_ft2_bbox_r(font, cheight, cwidth, text, vlayout, utf8)
+        Imager::Font::FT2 font
+        double cheight
+        double cwidth
+        char *text
+        int vlayout
+        int utf8
+      PREINIT:
+        int bbox[8];
+        int i;
+      PPCODE:
+#ifdef SvUTF8
+        if (SvUTF8(ST(3)))
+          utf8 = 1;
+#endif
+        if (i_ft2_bbox_r(font, cheight, cwidth, text, strlen(text), vlayout,
+                         utf8, bbox)) {
+          EXTEND(SP, 8);
+          for (i = 0; i < 8; ++i)
+            PUSHs(sv_2mortal(newSViv(bbox[i])));
+        }
+
+undef_int
+i_ft2_text(font, im, tx, ty, cl, cheight, cwidth, text, align, aa, vlayout, utf8)
+        Imager::Font::FT2 font
+        Imager::ImgRaw im
+        int tx
+        int ty
+        Imager::Color cl
+        double cheight
+        double cwidth
+        int align
+        int aa
+        int vlayout
+        int utf8
+      PREINIT:
+        char *text;
+        STRLEN len;
+      CODE:
+#ifdef SvUTF8
+        if (SvUTF8(ST(7))) {
+          utf8 = 1;
+        }
+#endif
+        text = SvPV(ST(7), len);
+        RETVAL = i_ft2_text(font, im, tx, ty, cl, cheight, cwidth, text,
+                            len, align, aa, vlayout, utf8);
+      OUTPUT:
+        RETVAL
+
+undef_int
+i_ft2_cp(font, im, tx, ty, channel, cheight, cwidth, text, align, aa, vlayout, utf8)
+        Imager::Font::FT2 font
+        Imager::ImgRaw im
+        int tx
+        int ty
+        int channel
+        double cheight
+        double cwidth
+        char *text
+        int align
+        int aa
+        int vlayout
+        int utf8
+      CODE:
+#ifdef SvUTF8
+        if (SvUTF8(ST(7)))
+          utf8 = 1;
+#endif
+        RETVAL = i_ft2_cp(font, im, tx, ty, channel, cheight, cwidth, text,
+                          strlen(text), align, aa, vlayout, 1);
+      OUTPUT:
+        RETVAL
+
+void
+ft2_transform_box(font, x0, x1, x2, x3)
+        Imager::Font::FT2 font
+        int x0
+        int x1
+        int x2
+        int x3
+      PREINIT:
+        int box[4];
+      PPCODE:
+        box[0] = x0; box[1] = x1; box[2] = x2; box[3] = x3;
+        ft2_transform_box(font, box);
+          EXTEND(SP, 4);
+          PUSHs(sv_2mortal(newSViv(box[0])));
+          PUSHs(sv_2mortal(newSViv(box[1])));
+          PUSHs(sv_2mortal(newSViv(box[2])));
+          PUSHs(sv_2mortal(newSViv(box[3])));
+        
+#endif
 

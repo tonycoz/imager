@@ -19,6 +19,12 @@ static char *i_format_list[]={
 #ifdef HAVE_LIBTT
   "tt",
 #endif
+#ifdef HAVE_WIN32
+  "w32",
+#endif
+#ifdef HAVE_FT2
+  "ft2",
+#endif
   "raw",
   "pnm",
   NULL};

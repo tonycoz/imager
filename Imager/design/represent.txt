@@ -9,6 +9,8 @@
   Varying Bits/Sample
   Paletted Images
   Performance
+  Robustness
+  XS Changes
 
 =head1 DESCRIPTION
 
@@ -193,7 +195,7 @@ The basic interface would include:
     i_palette_type, /* keeps a palette index per pixel */
   } i_img_types;
 
-  /* interface functions 
+  /* interface functions */
   typedef int (*i_f_gpal_t)(i_img *im, int x, int r, int y, i_palidx *vals);
   typedef int (*i_f_ppal_t)(i_img *im, int x, int r, int y, i_palidx *vals);
   typedef int (*i_f_addcolor_t)(i_img *im, i_color *);
@@ -269,6 +271,12 @@ We might want to add functions to set/retrieve the whole palette at
 once, though setting the whole palette at once would make existing
 image data fairly useless.
 
+=head1 XS CHANGES
+
+I had been considering moving the i_img object from being an
+Imager::ImgRef object to being an Imager object.  But I don't see much
+point to it, so I'll leave it the way it is now.
+
 =head1 AUTHOR
 
 Tony Cook <tony@develop-help.com>
@@ -277,5 +285,6 @@ Tony Cook <tony@develop-help.com>
 
 16May2001 - initially completed version, could use some polishing
 16May2001 - Added i_error stack to the image structure.
+24May2001 - Added XS Changes section (TC)
 
 =cut

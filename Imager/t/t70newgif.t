@@ -1,3 +1,4 @@
+#!perl -w
 # Before `make install' is performed this script should be runnable with
 # `make test'. After `make install' it should work as `perl test.pl'
 
@@ -7,7 +8,7 @@
 # (It may become useful if the test is moved to ./t subdirectory.)
 
 
-BEGIN { $| = 1; print "1..8\n"; }
+BEGIN { $| = 1; print "1..24\n"; }
 END {print "not ok 1\n" unless $loaded;}
 
 use Imager qw(:all :handy);
@@ -71,9 +72,74 @@ if (i_has_format("gif")) {
     print "not ok 4 # ",$im2->errstr,"\n";
     print "ok 5 # skipped - couldn't load image\n";
   }
+
+  # test the read_multi interface
+  my @imgs = Imager->read_multi();
+  @imgs and print "not ";
+  print "ok 9\n";
+  Imager->errstr =~ /type parameter/ or print "not ";
+  print "ok 10 # ",Imager->errstr,"\n";
+
+  @imgs = Imager->read_multi(type=>'gif');
+  @imgs and print "not ";
+  print "ok 11\n";
+  Imager->errstr =~ /file/ or print "not ";
+  print "ok 12 # ",Imager->errstr,"\n";
+  # kill warning
+  *NONESUCH = \20;
+  @imgs = Imager->read_multi(type=>'gif', fh=>*NONESUCH);
+  @imgs and print "not ";
+  print "ok 13\n";
+  Imager->errstr =~ /fh option not open/ or print "not ";
+  print "ok 14 # ",Imager->errstr,"\n";
+  @imgs = Imager->read_multi(type=>'gif', file=>'testimg/screen2.gif');
+  @imgs == 2 or print "not ";
+  print "ok 15\n";
+  grep(!UNIVERSAL::isa($_, 'Imager'), @imgs) and print "not ";
+  print "ok 16\n";
+  grep($_->type eq 'direct', @imgs) and print "not ";
+  print "ok 17\n";
+  (my @left = $imgs[0]->tags(name=>'gif_left')) == 1 or print "not ";
+  print "ok 18\n";
+  my $left = $imgs[1]->tags(name=>'gif_left') or print "not ";
+  print "ok 19\n";
+  $left == 3 or print "not ";
+  print "ok 20\n";
+  if (Imager::i_giflib_version() >= 4.0) {
+    open FH, "< testimg/screen2.gif" 
+      or die "Cannot open testimg/screen2.gif: $!";
+    binmode FH;
+    my $cb = 
+      sub {
+        my $tmp;
+        read(FH, $tmp, $_[0]) and $tmp
+      };
+    @imgs = Imager->read_multi(type=>'gif',
+                               callback => $cb) or print "not ";
+    print "ok 21\n";
+    close FH;
+    @imgs == 2 or print "not ";
+    print "ok 22\n";
+
+    open FH, "< testimg/screen2.gif" 
+      or die "Cannot open testimg/screen2.gif: $!";
+    binmode FH;
+    my $data = do { local $/; <FH>; };
+    close FH;
+    @imgs = Imager->read_multi(type=>'gif',
+			       data=>$data) or print "not ";
+    print "ok 23\n";
+    @imgs = 2 or print "not ";
+    print "ok 24\n";
+  }
+  else {
+    for (21..24) {
+      print "ok $_ # skipped - giflib3 doesn't support callbacks\n";
+    }
+  }
 }
 else {
-  for (3..8) {
+  for (3..24) {
     print "ok $_ # skipped: no gif support\n";
   }
 }

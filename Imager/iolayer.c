@@ -203,7 +203,7 @@ realseek_seek(io_glue *ig, off_t offset, int whence) {
 
 static
 io_blink*
-io_blink_new() {
+io_blink_new(void) {
   io_blink *ib;
 
   mm_log((1, "io_blink_new()\n"));

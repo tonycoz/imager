@@ -95,6 +95,10 @@ i_writepng(i_img *im, int fd) {
   png_infop info_ptr;
   int width,height,y;
   volatile int cspace,channels;
+  double xres, yres;
+  int aspect_only, have_res;
+  double offx, offy;
+  char offunit[20] = "pixel";
 
   mm_log((1,"i_writepng(0x%x,fd %d)\n",im,fd));
   
@@ -163,8 +167,48 @@ i_writepng(i_img *im, int fd) {
   png_set_IHDR(png_ptr, info_ptr, width, height, 8, cspace,
 	       PNG_INTERLACE_NONE, PNG_COMPRESSION_TYPE_BASE, PNG_FILTER_TYPE_BASE);
 
+  have_res = 1;
+  if (i_tags_get_float(&im->tags, "i_xres", 0, &xres)) {
+    if (i_tags_get_float(&im->tags, "i_yres", 0, &yres))
+      ; /* nothing to do */
+    else
+      yres = xres;
+  }
+  else {
+    if (i_tags_get_float(&im->tags, "i_yres", 0, &yres))
+      xres = yres;
+    else
+      have_res = 0;
+  }
+  if (have_res) {
+    aspect_only = 0;
+    i_tags_get_int(&im->tags, "i_aspect_only", 0, &aspect_only);
+    xres /= 0.0254;
+    yres /= 0.0254;
+    png_set_pHYs(png_ptr, info_ptr, xres + 0.5, yres + 0.5, 
+                 aspect_only ? PNG_RESOLUTION_UNKNOWN : PNG_RESOLUTION_METER);
+  }
+
   png_write_info(png_ptr, info_ptr);
-  for (y = 0; y < height; y++) png_write_row(png_ptr, (png_bytep) &(im->data[channels*width*y]));
+  if (!im->virtual && im->type == i_direct_type && im->bits == i_8_bits) {
+    for (y = 0; y < height; y++) 
+      png_write_row(png_ptr, (png_bytep) &(im->idata[channels*width*y]));
+  }
+  else {
+    unsigned char *data = mymalloc(im->xsize * im->channels);
+    if (data) {
+      for (y = 0; y < height; y++) {
+        i_gsamp(im, 0, im->xsize, y, data, NULL, im->channels);
+        png_write_row(png_ptr, (png_bytep)data);
+      }
+      myfree(data);
+    }
+    else {
+      fclose(fp);
+      png_destroy_write_struct(&png_ptr, (png_infopp)NULL);
+      return 0;
+    }
+  }
   png_write_end(png_ptr, info_ptr);
   png_destroy_write_struct(&png_ptr, (png_infopp)NULL);
 
@@ -181,6 +225,10 @@ i_writepng_wiol(i_img *im, io_glue *ig) {
   png_infop info_ptr;
   int width,height,y;
   volatile int cspace,channels;
+  double xres, yres;
+  int aspect_only, have_res;
+  double offx, offy;
+  char offunit[20] = "pixel";
 
   io_glue_commit_types(ig);
   mm_log((1,"i_writepng(im %p ,ig %p)\n", im, ig));
@@ -241,9 +289,49 @@ i_writepng_wiol(i_img *im, io_glue *ig) {
   png_set_IHDR(png_ptr, info_ptr, width, height, 8, cspace,
 	       PNG_INTERLACE_NONE, PNG_COMPRESSION_TYPE_BASE, PNG_FILTER_TYPE_BASE);
 
+  have_res = 1;
+  if (i_tags_get_float(&im->tags, "i_xres", 0, &xres)) {
+    if (i_tags_get_float(&im->tags, "i_yres", 0, &yres))
+      ; /* nothing to do */
+    else
+      yres = xres;
+  }
+  else {
+    if (i_tags_get_float(&im->tags, "i_yres", 0, &yres))
+      xres = yres;
+    else
+      have_res = 0;
+  }
+  if (have_res) {
+    aspect_only = 0;
+    i_tags_get_int(&im->tags, "i_aspect_only", 0, &aspect_only);
+    xres /= 0.0254;
+    yres /= 0.0254;
+    png_set_pHYs(png_ptr, info_ptr, xres + 0.5, yres + 0.5, 
+                 aspect_only ? PNG_RESOLUTION_UNKNOWN : PNG_RESOLUTION_METER);
+  }
+
   png_write_info(png_ptr, info_ptr);
 
-  for (y = 0; y < height; y++) png_write_row(png_ptr, (png_bytep) &(im->data[channels*width*y]));
+  if (!im->virtual && im->type == i_direct_type && im->bits == i_8_bits) {
+    for (y = 0; y < height; y++) 
+      png_write_row(png_ptr, (png_bytep) &(im->idata[channels*width*y]));
+  }
+  else {
+    unsigned char *data = mymalloc(im->xsize * im->channels);
+    if (data) {
+      for (y = 0; y < height; y++) {
+        i_gsamp(im, 0, im->xsize, y, data, NULL, im->channels);
+        png_write_row(png_ptr, (png_bytep)data);
+      }
+      myfree(data);
+    }
+    else {
+      fclose(fp);
+      png_destroy_write_struct(&png_ptr, (png_infopp)NULL);
+      return 0;
+    }
+  }
 
   png_write_end(png_ptr, info_ptr);
 
@@ -254,6 +342,7 @@ i_writepng_wiol(i_img *im, io_glue *ig) {
 
 
 
+static void get_png_tags(i_img *im, png_structp png_ptr, png_infop info_ptr);
 
 i_img*
 i_readpng_wiol(io_glue *ig, int length) {
@@ -322,13 +411,32 @@ i_readpng_wiol(io_glue *ig, int length) {
   im = i_img_empty_ch(NULL,width,height,channels);
 
   for (pass = 0; pass < number_passes; pass++)
-    for (y = 0; y < height; y++) { png_read_row(png_ptr,(png_bytep) &(im->data[channels*width*y]), NULL); }
+    for (y = 0; y < height; y++) { png_read_row(png_ptr,(png_bytep) &(im->idata[channels*width*y]), NULL); }
   
   png_read_end(png_ptr, info_ptr); 
   
+  get_png_tags(im, png_ptr, info_ptr);
+
   png_destroy_read_struct(&png_ptr, &info_ptr, (png_infopp)NULL);
   
   mm_log((1,"(0x%08X) <- i_readpng_scalar\n", im));  
   
   return im;
+}
+
+static void get_png_tags(i_img *im, png_structp png_ptr, png_infop info_ptr) {
+  png_uint_32 xres, yres;
+  int unit_type;
+  if (png_get_pHYs(png_ptr, info_ptr, &xres, &yres, &unit_type)) {
+    mm_log((1,"pHYs (%d, %d) %d\n", xres, yres, unit_type));
+    if (unit_type == PNG_RESOLUTION_METER) {
+      i_tags_set_float(&im->tags, "i_xres", 0, xres * 0.0254);
+      i_tags_set_float(&im->tags, "i_yres", 0, xres * 0.0254);
+    }
+    else {
+      i_tags_addn(&im->tags, "i_xres", 0, xres);
+      i_tags_addn(&im->tags, "i_yres", 0, yres);
+      i_tags_addn(&im->tags, "i_aspect_only", 0, 1);
+    }
+  }
 }

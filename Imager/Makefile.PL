@@ -62,7 +62,7 @@ if (defined $Config{'d_dlsymun'}) { $OSDEF  .= ' -DDLSYMUN'; }
 	   gaussian.o conv.o pnm.o raw.o feat.o font.o
 	   filters.o dynaload.o stackmach.o datatypes.o
 	   regmach.o trans2.o quant.o error.o convert.o
-	   map.o);
+	   map.o tags.o palimg.o maskimg.o img16.o rotate.o);
 
 %opts=(
        'NAME'         => 'Imager',
@@ -88,7 +88,7 @@ exit;
 
 sub MY::postamble {
 '
-dyntest.(MYEXTLIB) : dynfilt/Makefile
+dyntest.$(MYEXTLIB) : dynfilt/Makefile
 	cd dynfilt && $(MAKE) $(PASTHRU)
 
 lib/Imager/Regops.pm : regmach.h regops.perl
@@ -261,11 +261,15 @@ sub pathcheck {
 sub init {
 
   @definc{'/usr/include'}=();
-  @incs=(qw(/usr/include /usr/local/include /usr/include/freetype /usr/local/include/freetype), split /:/, $INCPATH );
+  @incs=(qw(/usr/include /usr/local/include /usr/include/freetype /usr/local/include/freetype /usr/include/freetype2 /usr/local/include/freetype2), split /:/, $INCPATH );
   @libs=(split(/ /, $Config{'libpth'}), split(/:/, $LIBPATH) );
   if ($^O =~ /win32/i && $Config{cc} =~ /\bcl\b/i) {
     push(@incs, split /;/, $ENV{INCLUDE}) if exists $ENV{INCLUDE};
     push(@libs, split /;/, $ENV{LIB}) if exists $ENV{LIB};
+  }
+  if ($^O eq 'cygwin') {
+    push(@libs, '/usr/lib/w32api') if -d '/usr/lib/w32api';
+    push(@incs, '/usr/include/w32api') if -d '/usr/lib/w32api';
   }
 
   $formats{'jpeg'}={
@@ -338,7 +342,7 @@ sub init {
 			order=>'30',
 			def=>'HAVE_LIBT1',
 			inccheck=>sub { $_[0] eq 't1lib.h' },
-			libcheck=>sub { $_[0] eq 'libt1.a' or $_[0] eq "libt1.$lext" },
+			libcheck=>sub { $_[0] eq "libt1$aext" or $_[0] eq "libt1.$lext" },
 			libfiles=>'-lt1',
 			objfiles=>'',
 			docs=>q{
@@ -352,7 +356,7 @@ sub init {
 			order=>'31',
 			def=>'HAVE_LIBTT',
 			inccheck=>sub { $_[0] eq 'freetype.h' },
-			libcheck=>sub { $_[0] eq 'libttf.a' or $_[0] eq "libttf.$lext" },
+			libcheck=>sub { $_[0] eq "libttf$aext" or $_[0] eq "libttf.$lext" },
 			libfiles=>'-lttf',
 			objfiles=>'',
 			docs=>q{
@@ -362,6 +366,32 @@ sub init {
 				used to rasterize for us. The only drawback is that there
 				are alot of badly designed fonts out there.}
 		       };
+  $formats{'w32'} = {
+		     order=>40,
+		     def=>'HAVE_WIN32',
+		     inccheck=>sub { lc $_[0] eq 'windows.h' },
+		     libcheck=>sub { lc $_[0] eq 'gdi32.lib' 
+				       || lc $_[0] eq 'libgdi32.a' },
+		     libfiles=>$^O eq 'cygwin' ? '-lgdi32' : '',
+		     objfiles=>'win32.o',
+		     docs => <<DOCS
+Uses the Win32 GDI for rendering text.
+
+This currently only works on under normal Win32 and cygwin.
+DOCS
+		    };
+  $formats{'freetype2'} = {
+                           order=>'29',
+                           def=>'HAVE_FT2',
+                           inccheck=>sub { lc $_[0] eq 'ft2build.h' },
+                           libcheck=>sub { $_[0] eq "libfreetype$aext" or $_[0] eq "libfreetype.$lext" },
+                           libfiles=>'-lfreetype',
+                           objfiles=>'freetyp2.o',
+                           docs=><<DOCS
+Freetype 2 supports both Truetype and Type 1 fonts, both of which are
+scalable.
+DOCS
+                          };
   # Make fix indent
   for (keys %formats) { $formats{$_}->{docs} =~ s/^\s+/  /mg; }
 }

@@ -332,7 +332,7 @@ i_readjpeg_wiol(io_glue *data, int length, char** iptc_itext, int *itlength) {
   buffer = (*cinfo.mem->alloc_sarray) ((j_common_ptr) &cinfo, JPOOL_IMAGE, row_stride, 1);
   while (cinfo.output_scanline < cinfo.output_height) {
     (void) jpeg_read_scanlines(&cinfo, buffer, 1);
-    memcpy(im->data+im->channels*im->xsize*(cinfo.output_scanline-1),buffer[0],row_stride);
+    memcpy(im->idata+im->channels*im->xsize*(cinfo.output_scanline-1),buffer[0],row_stride);
   }
   (void) jpeg_finish_decompress(&cinfo);
   jpeg_destroy_decompress(&cinfo);
@@ -361,8 +361,6 @@ i_writejpeg_wiol(i_img *im, io_glue *ig, int qfactor) {
   if (!(im->channels==1 || im->channels==3)) { fprintf(stderr,"Unable to write JPEG, improper colorspace.\n"); exit(3); }
   quality = qfactor;
 
-  image_buffer = im->data;
-
   cinfo.err = jpeg_std_error(&jerr);
 
   jpeg_create_compress(&cinfo);
@@ -390,9 +388,37 @@ i_writejpeg_wiol(i_img *im, io_glue *ig, int qfactor) {
 
   row_stride = im->xsize * im->channels;	/* JSAMPLEs per row in image_buffer */
 
-  while (cinfo.next_scanline < cinfo.image_height) {
-    row_pointer[0] = & image_buffer[cinfo.next_scanline * row_stride];
-    (void) jpeg_write_scanlines(&cinfo, row_pointer, 1);
+  if (!im->virtual && im->type == i_direct_type && im->bits == i_8_bits) {
+    image_buffer=im->idata;
+
+    while (cinfo.next_scanline < cinfo.image_height) {
+      /* jpeg_write_scanlines expects an array of pointers to scanlines.
+       * Here the array is only one element long, but you could pass
+       * more than one scanline at a time if that's more convenient.
+       */
+      row_pointer[0] = & image_buffer[cinfo.next_scanline * row_stride];
+      (void) jpeg_write_scanlines(&cinfo, row_pointer, 1);
+    }
+  }
+  else {
+    unsigned char *data = mymalloc(im->xsize * im->channels);
+    if (data) {
+      while (cinfo.next_scanline < cinfo.image_height) {
+        /* jpeg_write_scanlines expects an array of pointers to scanlines.
+         * Here the array is only one element long, but you could pass
+         * more than one scanline at a time if that's more convenient.
+         */
+        i_gsamp(im, 0, im->xsize, cinfo.next_scanline, data, 
+                NULL, im->channels);
+        row_pointer[0] = data;
+        (void) jpeg_write_scanlines(&cinfo, row_pointer, 1);
+      }
+    }
+    else {
+      jpeg_finish_compress(&cinfo);
+      jpeg_destroy_compress(&cinfo);
+      return 0; /* out of memory? */
+    }
   }
 
   /* Step 6: Finish compression */

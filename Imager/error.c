@@ -190,7 +190,7 @@ void i_clear_error() {
 }
 
 /*
-=item i_push_error(char const *msg)
+=item i_push_error(int code, char const *msg)
 
 Called by an imager function to push an error message onto the stack.
 

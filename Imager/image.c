@@ -1,4 +1,5 @@
 #include "image.h"
+#include "imagei.h"
 #include "io.h"
 
 /*
@@ -37,7 +38,18 @@ Some of these functions are internal.
 #define minmax(a,b,i) ( ((a>=i)?a: ( (b<=i)?b:i   )) )
 
 /* Hack around an obscure linker bug on solaris - probably due to builtin gcc thingies */
-void fake() { ceil(1); }
+void fake(void) { ceil(1); }
+
+static int i_ppix_d(i_img *im, int x, int y, i_color *val);
+static int i_gpix_d(i_img *im, int x, int y, i_color *val);
+static int i_glin_d(i_img *im, int l, int r, int y, i_color *vals);
+static int i_plin_d(i_img *im, int l, int r, int y, i_color *vals);
+static int i_ppixf_d(i_img *im, int x, int y, i_fcolor *val);
+static int i_gpixf_d(i_img *im, int x, int y, i_fcolor *val);
+static int i_glinf_d(i_img *im, int l, int r, int y, i_fcolor *vals);
+static int i_plinf_d(i_img *im, int l, int r, int y, i_fcolor *vals);
+static int i_gsamp_d(i_img *im, int l, int r, int y, i_sample_t *samps, int *chans, int chan_count);
+static int i_gsampf_d(i_img *im, int l, int r, int y, i_fsample_t *samps, int *chans, int chan_count);
 
 /* 
 =item ICL_new_internal(r, g, b, a)
@@ -151,6 +163,94 @@ ICL_DESTROY(i_color *cl) {
 }
 
 /*
+=item i_fcolor_new(double r, double g, double b, double a)
+
+=cut
+*/
+i_fcolor *i_fcolor_new(double r, double g, double b, double a) {
+  i_fcolor *cl = NULL;
+
+  mm_log((1,"i_fcolor_new(r %g,g %g,b %g,a %g)\n", r, g, b, a));
+
+  if ( (cl=mymalloc(sizeof(i_fcolor))) == NULL) m_fatal(2,"malloc() error\n");
+  cl->rgba.r = r;
+  cl->rgba.g = g;
+  cl->rgba.b = b;
+  cl->rgba.a = a;
+  mm_log((1,"(%p) <- i_fcolor_new\n",cl));
+
+  return cl;
+}
+
+/*
+=item i_fcolor_destroy(i_fcolor *cl) 
+
+=cut
+*/
+void i_fcolor_destroy(i_fcolor *cl) {
+  myfree(cl);
+}
+
+/*
+=item IIM_base_8bit_direct (static)
+
+A static i_img object used to initialize direct 8-bit per sample images.
+
+=cut
+*/
+static i_img IIM_base_8bit_direct =
+{
+  0, /* channels set */
+  0, 0, 0, /* xsize, ysize, bytes */
+  ~0, /* ch_mask */
+  i_8_bits, /* bits */
+  i_direct_type, /* type */
+  0, /* virtual */
+  NULL, /* idata */
+  { 0, 0, NULL }, /* tags */
+  NULL, /* ext_data */
+
+  i_ppix_d, /* i_f_ppix */
+  i_ppixf_d, /* i_f_ppixf */
+  i_plin_d, /* i_f_plin */
+  i_plinf_d, /* i_f_plinf */
+  i_gpix_d, /* i_f_gpix */
+  i_gpixf_d, /* i_f_gpixf */
+  i_glin_d, /* i_f_glin */
+  i_glinf_d, /* i_f_glinf */
+  i_gsamp_d, /* i_f_gsamp */
+  i_gsampf_d, /* i_f_gsampf */
+
+  NULL, /* i_f_gpal */
+  NULL, /* i_f_ppal */
+  NULL, /* i_f_addcolors */
+  NULL, /* i_f_getcolors */
+  NULL, /* i_f_colorcount */
+  NULL, /* i_f_maxcolors */
+  NULL, /* i_f_findcolor */
+  NULL, /* i_f_setcolors */
+
+  NULL, /* i_f_destroy */
+};
+
+/*static void set_8bit_direct(i_img *im) {
+  im->i_f_ppix = i_ppix_d;
+  im->i_f_ppixf = i_ppixf_d;
+  im->i_f_plin = i_plin_d;
+  im->i_f_plinf = i_plinf_d;
+  im->i_f_gpix = i_gpix_d;
+  im->i_f_gpixf = i_gpixf_d;
+  im->i_f_glin = i_glin_d;
+  im->i_f_glinf = i_glinf_d;
+  im->i_f_gpal = NULL;
+  im->i_f_ppal = NULL;
+  im->i_f_addcolor = NULL;
+  im->i_f_getcolor = NULL;
+  im->i_f_colorcount = NULL;
+  im->i_f_findcolor = NULL;
+  }*/
+
+/*
 =item IIM_new(x, y, ch)
 
 Creates a new image object I<x> pixels wide, and I<y> pixels high with I<ch> channels.
@@ -174,6 +274,7 @@ IIM_new(int x,int y,int ch) {
 void
 IIM_DESTROY(i_img *im) {
   mm_log((1,"IIM_DESTROY(im* %p)\n",im));
+  i_img_destroy(im);
   /*   myfree(cl); */
 }
 
@@ -197,18 +298,13 @@ i_img_new() {
   if ( (im=mymalloc(sizeof(i_img))) == NULL)
     m_fatal(2,"malloc() error\n");
   
+  *im = IIM_base_8bit_direct;
   im->xsize=0;
   im->ysize=0;
   im->channels=3;
   im->ch_mask=MAXINT;
   im->bytes=0;
-  im->data=NULL;
-
-  im->i_f_ppix=i_ppix_d;
-  im->i_f_gpix=i_gpix_d;
-  im->i_f_plin=i_plin_d;
-  im->i_f_glin=i_glin_d;
-  im->ext_data=NULL;
+  im->idata=NULL;
   
   mm_log((1,"(%p) <- i_img_struct\n",im));
   return im;
@@ -223,32 +319,17 @@ Re-new image reference (assumes 3 channels)
    x - xsize of destination image
    y - ysize of destination image
 
+**FIXME** what happens if a live image is passed in here?
+
+Should this just call i_img_empty_ch()?
+
 =cut
 */
 
 i_img *
 i_img_empty(i_img *im,int x,int y) {
   mm_log((1,"i_img_empty(*im %p, x %d, y %d)\n",im, x, y));
-  if (im==NULL)
-    if ( (im=mymalloc(sizeof(i_img))) == NULL)
-      m_fatal(2,"malloc() error\n");
-  
-  im->xsize    = x;
-  im->ysize    = y;
-  im->channels = 3;
-  im->ch_mask  = MAXINT;
-  im->bytes=x*y*im->channels;
-  if ( (im->data = mymalloc(im->bytes)) == NULL) m_fatal(2,"malloc() error\n"); 
-  memset(im->data, 0, (size_t)im->bytes);
-
-  im->i_f_ppix = i_ppix_d;
-  im->i_f_gpix = i_gpix_d;
-  im->i_f_plin = i_plin_d;
-  im->i_f_glin = i_glin_d;
-  im->ext_data = NULL;
-  
-  mm_log((1,"(%p) <- i_img_empty\n", im));
-  return im;
+  return i_img_empty_ch(im, x, y, 3);
 }
 
 /* 
@@ -270,19 +351,17 @@ i_img_empty_ch(i_img *im,int x,int y,int ch) {
   if (im == NULL)
     if ( (im=mymalloc(sizeof(i_img))) == NULL)
       m_fatal(2,"malloc() error\n");
-  
+
+  memcpy(im, &IIM_base_8bit_direct, sizeof(i_img));
+  i_tags_new(&im->tags);
   im->xsize    = x;
   im->ysize    = y;
   im->channels = ch;
   im->ch_mask  = MAXINT;
   im->bytes=x*y*im->channels;
-  if ( (im->data=mymalloc(im->bytes)) == NULL) m_fatal(2,"malloc() error\n"); 
-  memset(im->data,0,(size_t)im->bytes);
+  if ( (im->idata=mymalloc(im->bytes)) == NULL) m_fatal(2,"malloc() error\n"); 
+  memset(im->idata,0,(size_t)im->bytes);
   
-  im->i_f_ppix = i_ppix_d;
-  im->i_f_gpix = i_gpix_d;
-  im->i_f_plin = i_plin_d;
-  im->i_f_glin = i_glin_d;
   im->ext_data = NULL;
   
   mm_log((1,"(%p) <- i_img_empty_ch\n",im));
@@ -302,8 +381,11 @@ Free image data.
 void
 i_img_exorcise(i_img *im) {
   mm_log((1,"i_img_exorcise(im* 0x%x)\n",im));
-  if (im->data != NULL) { myfree(im->data); }
-  im->data     = NULL;
+  i_tags_destroy(&im->tags);
+  if (im->i_f_destroy)
+    (im->i_f_destroy)(im);
+  if (im->idata != NULL) { myfree(im->idata); }
+  im->idata    = NULL;
   im->xsize    = 0;
   im->ysize    = 0;
   im->channels = 0;
@@ -356,7 +438,7 @@ i_img_info(i_img *im,int *info) {
   mm_log((1,"i_img_info(im 0x%x)\n",im));
   if (im != NULL) {
     mm_log((1,"i_img_info: xsize=%d ysize=%d channels=%d mask=%ud\n",im->xsize,im->ysize,im->channels,im->ch_mask));
-    mm_log((1,"i_img_info: data=0x%d\n",im->data));
+    mm_log((1,"i_img_info: idata=0x%d\n",im->idata));
     info[0] = im->xsize;
     info[1] = im->ysize;
     info[2] = im->channels;
@@ -412,7 +494,7 @@ range.
 =cut
 */
 int
-i_ppix(i_img *im, int x, int y, i_color *val) { return im->i_f_ppix(im, x, y, val); }
+(i_ppix)(i_img *im, int x, int y, i_color *val) { return im->i_f_ppix(im, x, y, val); }
 
 /*
 =item i_gpix(im, x, y, &col)
@@ -424,127 +506,7 @@ Returns true if the pixel could be retrieved, false otherwise.
 =cut
 */
 int
-i_gpix(i_img *im, int x, int y, i_color *val) { return im->i_f_gpix(im, x, y, val); }
-
-/*
-=item i_ppix_d(im, x, y, col)
-
-Internal function.
-
-This is the function kept in the i_f_ppix member of an i_img object.
-It does a normal store of a pixel into the image with range checking.
-
-Returns true if the pixel could be set, false otherwise.
-
-=cut
-*/
-int
-i_ppix_d(i_img *im, int x, int y, i_color *val) {
-  int ch;
-  
-  if ( x>-1 && x<im->xsize && y>-1 && y<im->ysize ) {
-    for(ch=0;ch<im->channels;ch++)
-      if (im->ch_mask&(1<<ch)) 
-	im->data[(x+y*im->xsize)*im->channels+ch]=val->channel[ch];
-    return 0;
-  }
-  return -1; /* error was clipped */
-}
-
-/*
-=item i_gpix_d(im, x, y, &col)
-
-Internal function.
-
-This is the function kept in the i_f_gpix member of an i_img object.
-It does normal retrieval of a pixel from the image with range checking.
-
-Returns true if the pixel could be set, false otherwise.
-
-=cut
-*/
-int 
-i_gpix_d(i_img *im, int x, int y, i_color *val) {
-  int ch;
-  if (x>-1 && x<im->xsize && y>-1 && y<im->ysize) {
-    for(ch=0;ch<im->channels;ch++) 
-    	val->channel[ch]=im->data[(x+y*im->xsize)*im->channels+ch];
-    return 0;
-  }
-  return -1; /* error was cliped */
-}
-
-/*
-=item i_glin_d(im, l, r, y, vals)
-
-Reads a line of data from the image, storing the pixels at vals.
-
-The line runs from (l,y) inclusive to (r,y) non-inclusive
-
-vals should point at space for (r-l) pixels.
-
-l should never be less than zero (to avoid confusion about where to
-put the pixels in vals).
-
-Returns the number of pixels copied (eg. if r, l or y is out of range)
-
-=cut */
-int
-i_glin_d(i_img *im, int l, int r, int y, i_color *vals) {
-  int ch, count, i;
-  unsigned char *data;
-  if (y >=0 && y < im->ysize && l < im->xsize && l >= 0) {
-    if (r > im->xsize)
-      r = im->xsize;
-    data = im->data + (l+y*im->xsize) * im->channels;
-    count = r - l;
-    for (i = 0; i < count; ++i) {
-      for (ch = 0; ch < im->channels; ++ch)
-	vals[i].channel[ch] = *data++;
-    }
-    return count;
-  }
-  else {
-    return 0;
-  }
-}
-/*
-=item i_plin_d(im, l, r, y, vals)
-
-Writes a line of data into the image, using the pixels at vals.
-
-The line runs from (l,y) inclusive to (r,y) non-inclusive
-
-vals should point at (r-l) pixels.
-
-l should never be less than zero (to avoid confusion about where to
-get the pixels in vals).
-
-Returns the number of pixels copied (eg. if r, l or y is out of range)
-
-=cut */
-int
-i_plin_d(i_img *im, int l, int r, int y, i_color *vals) {
-  int ch, count, i;
-  unsigned char *data;
-  if (y >=0 && y < im->ysize && l < im->xsize && l >= 0) {
-    if (r > im->xsize)
-      r = im->xsize;
-    data = im->data + (l+y*im->xsize) * im->channels;
-    count = r - l;
-    for (i = 0; i < count; ++i) {
-      for (ch = 0; ch < im->channels; ++ch) {
-	if (im->ch_mask & (1 << ch)) 
-	  *data = vals[i].channel[ch];
-	++data;
-      }
-    }
-    return count;
-  }
-  else {
-    return 0;
-  }
-}
+(i_gpix)(i_img *im, int x, int y, i_color *val) { return im->i_f_gpix(im, x, y, val); }
 
 /*
 =item i_ppix_pch(im, x, y, ch)
@@ -560,7 +522,8 @@ Warning: this ignores the vptr interface for images.
 */
 float
 i_gpix_pch(i_img *im,int x,int y,int ch) {
-  if (x>-1 && x<im->xsize && y>-1 && y<im->ysize) return ((float)im->data[(x+y*im->xsize)*im->channels+ch]/255);
+  /* FIXME */
+  if (x>-1 && x<im->xsize && y>-1 && y<im->ysize) return ((float)im->idata[(x+y*im->xsize)*im->channels+ch]/255);
   else return 0;
 }
 
@@ -619,24 +582,39 @@ If x1 > x2 or y1 > y2 then the corresponding co-ordinates are swapped.
 
 void
 i_copyto(i_img *im, i_img *src, int x1, int y1, int x2, int y2, int tx, int ty) {
-  i_color pv;
   int x, y, t, ttx, tty;
-
+  
   if (x2<x1) { t=x1; x1=x2; x2=t; }
   if (y2<y1) { t=y1; y1=y2; y2=t; }
-
+  
   mm_log((1,"i_copyto(im* %p, src %p, x1 %d, y1 %d, x2 %d, y2 %d, tx %d, ty %d)\n",
 	  im, src, x1, y1, x2, y2, tx, ty));
-
+  
+  if (im->bits == i_8_bits) {
+    i_color pv;
     tty = ty;
     for(y=y1; y<y2; y++) {
-    ttx = tx;
-    for(x=x1; x<x2; x++) {
-      i_gpix(src, x,   y,   &pv);
-      i_ppix(im,  ttx, tty, &pv);
-      ttx++;
+      ttx = tx;
+      for(x=x1; x<x2; x++) {
+        i_gpix(src, x,   y,   &pv);
+        i_ppix(im,  ttx, tty, &pv);
+        ttx++;
+      }
+      tty++;
     }
-    tty++;
+  }
+  else {
+    i_fcolor pv;
+    tty = ty;
+    for(y=y1; y<y2; y++) {
+      ttx = tx;
+      for(x=x1; x<x2; x++) {
+        i_gpixf(src, x,   y,   &pv);
+        i_ppixf(im,  ttx, tty, &pv);
+        ttx++;
+      }
+      tty++;
+    }
   }
 }
 
@@ -650,21 +628,58 @@ Copies the contents of the image I<src> over the image I<im>.
 
 void
 i_copy(i_img *im, i_img *src) {
-  i_color *pv;
   int y, y1, x1;
 
   mm_log((1,"i_copy(im* %p,src %p)\n", im, src));
 
   x1 = src->xsize;
   y1 = src->ysize;
-  i_img_empty_ch(im, x1, y1, src->channels);
-  pv = mymalloc(sizeof(i_color) * x1);
-  
-  for (y = 0; y < y1; ++y) {
-    i_glin(src, 0, x1, y, pv);
-    i_plin(im, 0, x1, y, pv);
+  if (src->type == i_direct_type) {
+    if (src->bits == i_8_bits) {
+      i_color *pv;
+      i_img_empty_ch(im, x1, y1, src->channels);
+      pv = mymalloc(sizeof(i_color) * x1);
+      
+      for (y = 0; y < y1; ++y) {
+        i_glin(src, 0, x1, y, pv);
+        i_plin(im, 0, x1, y, pv);
+      }
+      myfree(pv);
+    }
+    else {
+      /* currently the only other depth is 16 */
+      i_fcolor *pv;
+      i_img_16_new_low(im, x1, y1, src->channels);
+      pv = mymalloc(sizeof(i_fcolor) * x1);
+      for (y = 0; y < y1; ++y) {
+        i_glinf(src, 0, x1, y, pv);
+        i_plinf(im, 0, x1, y, pv);
+      }
+      myfree(pv);
+    }
   }
-  myfree(pv);
+  else {
+    i_color temp;
+    int index;
+    int count;
+    i_palidx *vals;
+
+    /* paletted image */
+    i_img_pal_new_low(im, x1, y1, src->channels, i_maxcolors(src));
+    /* copy across the palette */
+    count = i_colorcount(src);
+    for (index = 0; index < count; ++index) {
+      i_getcolors(src, index, &temp, 1);
+      i_addcolors(im, &temp, 1);
+    }
+
+    vals = mymalloc(sizeof(i_palidx) * x1);
+    for (y = 0; y < y1; ++y) {
+      i_gpal(src, 0, x1, y, vals);
+      i_ppal(im, 0, x1, y, vals);
+    }
+    myfree(vals);
+  }
 }
 
 
@@ -681,31 +696,84 @@ unmodified.
 =cut
 */
 
-void
+int
 i_rubthru(i_img *im,i_img *src,int tx,int ty) {
-  i_color pv, orig, dest;
   int x, y, ttx, tty;
+  int chancount;
+  int chans[3];
+  int alphachan;
+  int ch;
 
   mm_log((1,"i_rubthru(im %p, src %p, tx %d, ty %d)\n", im, src, tx, ty));
+  i_clear_error();
 
-  if (im->channels  != 3) { fprintf(stderr,"Destination is not in rgb mode.\n"); exit(3); }
-  if (src->channels != 4) { fprintf(stderr,"Source is not in rgba mode.\n"); exit(3); }
-
-  ttx = tx;
-  for(x=0; x<src->xsize; x++) {
-    tty=ty;
-    for(y=0;y<src->ysize;y++) {
-      /* fprintf(stderr,"reading (%d,%d) writing (%d,%d).\n",x,y,ttx,tty); */
-      i_gpix(src, x,   y,   &pv);
-      i_gpix(im,  ttx, tty, &orig);
-      dest.rgb.r = (pv.rgba.a*pv.rgba.r+(255-pv.rgba.a)*orig.rgb.r)/255;
-      dest.rgb.g = (pv.rgba.a*pv.rgba.g+(255-pv.rgba.a)*orig.rgb.g)/255;
-      dest.rgb.b = (pv.rgba.a*pv.rgba.b+(255-pv.rgba.a)*orig.rgb.b)/255;
-      i_ppix(im, ttx, tty, &dest);
-      tty++;
-    }
-    ttx++;
+  if (im->channels == 3 && src->channels == 4) {
+    chancount = 3;
+    chans[0] = 0; chans[1] = 1; chans[2] = 2;
+    alphachan = 3;
   }
+  else if (im->channels == 3 && src->channels == 2) {
+    chancount = 3;
+    chans[0] = chans[1] = chans[2] = 0;
+    alphachan = 1;
+  }
+  else if (im->channels == 1 && src->channels == 2) {
+    chancount = 1;
+    chans[0] = 0;
+    alphachan = 1;
+  }
+  else {
+    i_push_error(0, "rubthru can only work where (dest, src) channels are (3,4), (3,2) or (1,2)");
+    return 0;
+  }
+
+  if (im->bits <= 8) {
+    /* if you change this code, please make sure the else branch is
+       changed in a similar fashion - TC */
+    int alpha;
+    i_color pv, orig, dest;
+    ttx = tx;
+    for(x=0; x<src->xsize; x++) {
+      tty=ty;
+      for(y=0;y<src->ysize;y++) {
+        /* fprintf(stderr,"reading (%d,%d) writing (%d,%d).\n",x,y,ttx,tty); */
+        i_gpix(src, x,   y,   &pv);
+        i_gpix(im,  ttx, tty, &orig);
+        alpha = pv.channel[alphachan];
+        for (ch = 0; ch < chancount; ++ch) {
+          dest.channel[ch] = (alpha * pv.channel[chans[ch]]
+                              + (255 - alpha) * orig.channel[ch])/255;
+        }
+        i_ppix(im, ttx, tty, &dest);
+        tty++;
+      }
+      ttx++;
+    }
+  }
+  else {
+    double alpha;
+    i_fcolor pv, orig, dest;
+
+    ttx = tx;
+    for(x=0; x<src->xsize; x++) {
+      tty=ty;
+      for(y=0;y<src->ysize;y++) {
+        /* fprintf(stderr,"reading (%d,%d) writing (%d,%d).\n",x,y,ttx,tty); */
+        i_gpixf(src, x,   y,   &pv);
+        i_gpixf(im,  ttx, tty, &orig);
+        alpha = pv.channel[alphachan];
+        for (ch = 0; ch < chancount; ++ch) {
+          dest.channel[ch] = alpha * pv.channel[chans[ch]]
+                              + (1 - alpha) * orig.channel[ch];
+        }
+        i_ppixf(im, ttx, tty, &dest);
+        tty++;
+      }
+      ttx++;
+    }
+  }
+
+  return 1;
 }
 
 
@@ -980,6 +1048,42 @@ i_scale_nn(i_img *im, float scx, float scy) {
   return new_img;
 }
 
+/*
+=item i_sametype(i_img *im, int xsize, int ysize)
+
+Returns an image of the same type (sample size, channels, paletted/direct).
+
+For paletted images the palette is copied from the source.
+
+=cut
+*/
+
+i_img *i_sametype(i_img *src, int xsize, int ysize) {
+  if (src->type == i_direct_type) {
+    if (src->bits == 8) {
+      return i_img_empty_ch(NULL, xsize, ysize, src->channels);
+    }
+    else if (src->bits == 16) {
+      return i_img_16_new(xsize, ysize, src->channels);
+    }
+    else {
+      i_push_error(0, "Unknown image bits");
+      return NULL;
+    }
+  }
+  else {
+    i_color col;
+    int i;
+
+    i_img *targ = i_img_pal_new(xsize, ysize, src->channels, i_maxcolors(src));
+    for (i = 0; i < i_colorcount(src); ++i) {
+      i_getcolors(src, i, &col, 1);
+      i_addcolors(targ, &col, 1);
+    }
+
+    return targ;
+  }
+}
 
 /*
 =item i_transform(im, opx, opxl, opy, opyl, parm, parmlen)
@@ -1159,6 +1263,577 @@ symbol_table_t symbol_table={i_has_format,ICL_set_internal,ICL_info,
 
 
 /*
+=back
+
+=head2 8-bit per sample image internal functions
+
+These are the functions installed in an 8-bit per sample image.
+
+=over
+
+=item i_ppix_d(im, x, y, col)
+
+Internal function.
+
+This is the function kept in the i_f_ppix member of an i_img object.
+It does a normal store of a pixel into the image with range checking.
+
+Returns 0 if the pixel could be set, -1 otherwise.
+
+=cut
+*/
+int
+i_ppix_d(i_img *im, int x, int y, i_color *val) {
+  int ch;
+  
+  if ( x>-1 && x<im->xsize && y>-1 && y<im->ysize ) {
+    for(ch=0;ch<im->channels;ch++)
+      if (im->ch_mask&(1<<ch)) 
+	im->idata[(x+y*im->xsize)*im->channels+ch]=val->channel[ch];
+    return 0;
+  }
+  return -1; /* error was clipped */
+}
+
+/*
+=item i_gpix_d(im, x, y, &col)
+
+Internal function.
+
+This is the function kept in the i_f_gpix member of an i_img object.
+It does normal retrieval of a pixel from the image with range checking.
+
+Returns 0 if the pixel could be set, -1 otherwise.
+
+=cut
+*/
+int 
+i_gpix_d(i_img *im, int x, int y, i_color *val) {
+  int ch;
+  if (x>-1 && x<im->xsize && y>-1 && y<im->ysize) {
+    for(ch=0;ch<im->channels;ch++) 
+    	val->channel[ch]=im->idata[(x+y*im->xsize)*im->channels+ch];
+    return 0;
+  }
+  return -1; /* error was cliped */
+}
+
+/*
+=item i_glin_d(im, l, r, y, vals)
+
+Reads a line of data from the image, storing the pixels at vals.
+
+The line runs from (l,y) inclusive to (r,y) non-inclusive
+
+vals should point at space for (r-l) pixels.
+
+l should never be less than zero (to avoid confusion about where to
+put the pixels in vals).
+
+Returns the number of pixels copied (eg. if r, l or y is out of range)
+
+=cut
+*/
+int
+i_glin_d(i_img *im, int l, int r, int y, i_color *vals) {
+  int ch, count, i;
+  unsigned char *data;
+  if (y >=0 && y < im->ysize && l < im->xsize && l >= 0) {
+    if (r > im->xsize)
+      r = im->xsize;
+    data = im->idata + (l+y*im->xsize) * im->channels;
+    count = r - l;
+    for (i = 0; i < count; ++i) {
+      for (ch = 0; ch < im->channels; ++ch)
+	vals[i].channel[ch] = *data++;
+    }
+    return count;
+  }
+  else {
+    return 0;
+  }
+}
+
+/*
+=item i_plin_d(im, l, r, y, vals)
+
+Writes a line of data into the image, using the pixels at vals.
+
+The line runs from (l,y) inclusive to (r,y) non-inclusive
+
+vals should point at (r-l) pixels.
+
+l should never be less than zero (to avoid confusion about where to
+get the pixels in vals).
+
+Returns the number of pixels copied (eg. if r, l or y is out of range)
+
+=cut
+*/
+int
+i_plin_d(i_img *im, int l, int r, int y, i_color *vals) {
+  int ch, count, i;
+  unsigned char *data;
+  if (y >=0 && y < im->ysize && l < im->xsize && l >= 0) {
+    if (r > im->xsize)
+      r = im->xsize;
+    data = im->idata + (l+y*im->xsize) * im->channels;
+    count = r - l;
+    for (i = 0; i < count; ++i) {
+      for (ch = 0; ch < im->channels; ++ch) {
+	if (im->ch_mask & (1 << ch)) 
+	  *data = vals[i].channel[ch];
+	++data;
+      }
+    }
+    return count;
+  }
+  else {
+    return 0;
+  }
+}
+
+/*
+=item i_ppixf_d(im, x, y, val)
+
+=cut
+*/
+int
+i_ppixf_d(i_img *im, int x, int y, i_fcolor *val) {
+  int ch;
+  
+  if ( x>-1 && x<im->xsize && y>-1 && y<im->ysize ) {
+    for(ch=0;ch<im->channels;ch++)
+      if (im->ch_mask&(1<<ch)) {
+	im->idata[(x+y*im->xsize)*im->channels+ch] = 
+          SampleFTo8(val->channel[ch]);
+      }
+    return 0;
+  }
+  return -1; /* error was clipped */
+}
+
+/*
+=item i_gpixf_d(im, x, y, val)
+
+=cut
+*/
+int
+i_gpixf_d(i_img *im, int x, int y, i_fcolor *val) {
+  int ch;
+  if (x>-1 && x<im->xsize && y>-1 && y<im->ysize) {
+    for(ch=0;ch<im->channels;ch++) {
+      val->channel[ch] = 
+        Sample8ToF(im->idata[(x+y*im->xsize)*im->channels+ch]);
+    }
+    return 0;
+  }
+  return -1; /* error was cliped */
+}
+
+/*
+=item i_glinf_d(im, l, r, y, vals)
+
+Reads a line of data from the image, storing the pixels at vals.
+
+The line runs from (l,y) inclusive to (r,y) non-inclusive
+
+vals should point at space for (r-l) pixels.
+
+l should never be less than zero (to avoid confusion about where to
+put the pixels in vals).
+
+Returns the number of pixels copied (eg. if r, l or y is out of range)
+
+=cut
+*/
+int
+i_glinf_d(i_img *im, int l, int r, int y, i_fcolor *vals) {
+  int ch, count, i;
+  unsigned char *data;
+  if (y >=0 && y < im->ysize && l < im->xsize && l >= 0) {
+    if (r > im->xsize)
+      r = im->xsize;
+    data = im->idata + (l+y*im->xsize) * im->channels;
+    count = r - l;
+    for (i = 0; i < count; ++i) {
+      for (ch = 0; ch < im->channels; ++ch)
+	vals[i].channel[ch] = SampleFTo8(*data++);
+    }
+    return count;
+  }
+  else {
+    return 0;
+  }
+}
+
+/*
+=item i_plinf_d(im, l, r, y, vals)
+
+Writes a line of data into the image, using the pixels at vals.
+
+The line runs from (l,y) inclusive to (r,y) non-inclusive
+
+vals should point at (r-l) pixels.
+
+l should never be less than zero (to avoid confusion about where to
+get the pixels in vals).
+
+Returns the number of pixels copied (eg. if r, l or y is out of range)
+
+=cut
+*/
+int
+i_plinf_d(i_img *im, int l, int r, int y, i_fcolor *vals) {
+  int ch, count, i;
+  unsigned char *data;
+  if (y >=0 && y < im->ysize && l < im->xsize && l >= 0) {
+    if (r > im->xsize)
+      r = im->xsize;
+    data = im->idata + (l+y*im->xsize) * im->channels;
+    count = r - l;
+    for (i = 0; i < count; ++i) {
+      for (ch = 0; ch < im->channels; ++ch) {
+	if (im->ch_mask & (1 << ch)) 
+	  *data = Sample8ToF(vals[i].channel[ch]);
+	++data;
+      }
+    }
+    return count;
+  }
+  else {
+    return 0;
+  }
+}
+
+/*
+=item i_gsamp_d(i_img *im, int l, int r, int y, i_sample_t *samps, int *chans, int chan_count)
+
+Reads sample values from im for the horizontal line (l, y) to (r-1,y)
+for the channels specified by chans, an array of int with chan_count
+elements.
+
+Returns the number of samples read (which should be (r-l) * bits_set(chan_mask)
+
+=cut
+*/
+int i_gsamp_d(i_img *im, int l, int r, int y, i_sample_t *samps, 
+              int *chans, int chan_count) {
+  int ch, count, i, w;
+  unsigned char *data;
+
+  if (y >=0 && y < im->ysize && l < im->xsize && l >= 0) {
+    if (r > im->xsize)
+      r = im->xsize;
+    data = im->idata + (l+y*im->xsize) * im->channels;
+    w = r - l;
+    count = 0;
+
+    if (chans) {
+      /* make sure we have good channel numbers */
+      for (ch = 0; ch < chan_count; ++ch) {
+        if (chans[ch] < 0 || chans[ch] >= im->channels) {
+          i_push_errorf(0, "No channel %d in this image", chans[ch]);
+          return 0;
+        }
+      }
+      for (i = 0; i < w; ++i) {
+        for (ch = 0; ch < chan_count; ++ch) {
+          *samps++ = data[chans[ch]];
+          ++count;
+        }
+        data += im->channels;
+      }
+    }
+    else {
+      for (i = 0; i < w; ++i) {
+        for (ch = 0; ch < chan_count; ++ch) {
+          *samps++ = data[ch];
+          ++count;
+        }
+        data += im->channels;
+      }
+    }
+
+    return count;
+  }
+  else {
+    return 0;
+  }
+}
+
+/*
+=item i_gsampf_d(i_img *im, int l, int r, int y, i_fsample_t *samps, int *chans, int chan_count)
+
+Reads sample values from im for the horizontal line (l, y) to (r-1,y)
+for the channels specified by chan_mask, where bit 0 is the first
+channel.
+
+Returns the number of samples read (which should be (r-l) * bits_set(chan_mask)
+
+=cut
+*/
+int i_gsampf_d(i_img *im, int l, int r, int y, i_fsample_t *samps, 
+               int *chans, int chan_count) {
+  int ch, count, i, w;
+  unsigned char *data;
+  for (ch = 0; ch < chan_count; ++ch) {
+    if (chans[ch] < 0 || chans[ch] >= im->channels) {
+      i_push_errorf(0, "No channel %d in this image", chans[ch]);
+    }
+  }
+  if (y >=0 && y < im->ysize && l < im->xsize && l >= 0) {
+    if (r > im->xsize)
+      r = im->xsize;
+    data = im->idata + (l+y*im->xsize) * im->channels;
+    w = r - l;
+    count = 0;
+
+    if (chans) {
+      /* make sure we have good channel numbers */
+      for (ch = 0; ch < chan_count; ++ch) {
+        if (chans[ch] < 0 || chans[ch] >= im->channels) {
+          i_push_errorf(0, "No channel %d in this image", chans[ch]);
+          return 0;
+        }
+      }
+      for (i = 0; i < w; ++i) {
+        for (ch = 0; ch < chan_count; ++ch) {
+          *samps++ = data[chans[ch]];
+          ++count;
+        }
+        data += im->channels;
+      }
+    }
+    else {
+      for (i = 0; i < w; ++i) {
+        for (ch = 0; ch < chan_count; ++ch) {
+          *samps++ = data[ch];
+          ++count;
+        }
+        data += im->channels;
+      }
+    }
+    return count;
+  }
+  else {
+    return 0;
+  }
+}
+
+/*
+=back
+
+=head2 Image method wrappers
+
+These functions provide i_fsample_t functions in terms of their
+i_sample_t versions.
+
+=over
+
+=item i_ppixf_fp(i_img *im, int x, int y, i_fcolor *pix)
+
+=cut
+*/
+
+int i_ppixf_fp(i_img *im, int x, int y, i_fcolor *pix) {
+  i_color temp;
+  int ch;
+
+  for (ch = 0; ch < im->channels; ++ch)
+    temp.channel[ch] = SampleFTo8(pix->channel[ch]);
+  
+  return i_ppix(im, x, y, &temp);
+}
+
+/*
+=item i_gpixf_fp(i_img *im, int x, int y, i_fcolor *pix)
+
+=cut
+*/
+int i_gpixf_fp(i_img *im, int x, int y, i_fcolor *pix) {
+  i_color temp;
+  int ch;
+
+  if (i_gpix(im, x, y, &temp)) {
+    for (ch = 0; ch < im->channels; ++ch)
+      pix->channel[ch] = Sample8ToF(temp.channel[ch]);
+    return 0;
+  }
+  else 
+    return -1;
+}
+
+/*
+=item i_plinf_fp(i_img *im, int l, int r, int y, i_fcolor *pix)
+
+=cut
+*/
+int i_plinf_fp(i_img *im, int l, int r, int y, i_fcolor *pix) {
+  i_color *work;
+
+  if (y >= 0 && y < im->ysize && l < im->xsize && l >= 0) {
+    if (r > im->xsize)
+      r = im->xsize;
+    if (r > l) {
+      int ret;
+      int i, ch;
+      work = mymalloc(sizeof(i_color) * (r-l));
+      for (i = 0; i < r-l; ++i) {
+        for (ch = 0; ch < im->channels; ++ch) 
+          work[i].channel[ch] = SampleFTo8(pix[i].channel[ch]);
+      }
+      ret = i_plin(im, l, r, y, work);
+      myfree(work);
+
+      return ret;
+    }
+    else {
+      return 0;
+    }
+  }
+  else {
+    return 0;
+  }
+}
+
+/*
+=item i_glinf_fp(i_img *im, int l, int r, int y, i_fcolor *pix)
+
+=cut
+*/
+int i_glinf_fp(i_img *im, int l, int r, int y, i_fcolor *pix) {
+  i_color *work;
+
+  if (y >= 0 && y < im->ysize && l < im->xsize && l >= 0) {
+    if (r > im->xsize)
+      r = im->xsize;
+    if (r > l) {
+      int ret;
+      int i, ch;
+      work = mymalloc(sizeof(i_color) * (r-l));
+      ret = i_plin(im, l, r, y, work);
+      for (i = 0; i < r-l; ++i) {
+        for (ch = 0; ch < im->channels; ++ch) 
+          pix[i].channel[ch] = Sample8ToF(work[i].channel[ch]);
+      }
+      myfree(work);
+
+      return ret;
+    }
+    else {
+      return 0;
+    }
+  }
+  else {
+    return 0;
+  }
+}
+
+/*
+=item i_gsampf_fp(i_img *im, int l, int r, int y, i_fsample_t *samp, int *chans, int chan_count)
+
+=cut
+*/
+int i_gsampf_fp(i_img *im, int l, int r, int y, i_fsample_t *samp, 
+                int *chans, int chan_count) {
+  i_sample_t *work;
+
+  if (y >= 0 && y < im->ysize && l < im->xsize && l >= 0) {
+    if (r > im->xsize)
+      r = im->xsize;
+    if (r > l) {
+      int ret;
+      int i;
+      work = mymalloc(sizeof(i_sample_t) * (r-l));
+      ret = i_gsamp(im, l, r, y, work, chans, chan_count);
+      for (i = 0; i < ret; ++i) {
+          samp[i] = Sample8ToF(work[i]);
+      }
+      myfree(work);
+
+      return ret;
+    }
+    else {
+      return 0;
+    }
+  }
+  else {
+    return 0;
+  }
+}
+
+/*
+=back
+
+=head2 Palette wrapper functions
+
+Used for virtual images, these forward palette calls to a wrapped image, 
+assuming the wrapped image is the first pointer in the structure that 
+im->ext_data points at.
+
+=over
+
+=item i_addcolors_forward(i_img *im, i_color *colors, int count)
+
+=cut
+*/
+int i_addcolors_forward(i_img *im, i_color *colors, int count) {
+  return i_addcolors(*(i_img **)im->ext_data, colors, count);
+}
+
+/*
+=item i_getcolors_forward(i_img *im, int i, i_color *color, int count)
+
+=cut
+*/
+int i_getcolors_forward(i_img *im, int i, i_color *color, int count) {
+  return i_getcolors(*(i_img **)im->ext_data, i, color, count);
+}
+
+/*
+=item i_setcolors_forward(i_img *im, int i, i_color *color, int count)
+
+=cut
+*/
+int i_setcolors_forward(i_img *im, int i, i_color *color, int count) {
+  return i_setcolors(*(i_img **)im->ext_data, i, color, count);
+}
+
+/*
+=item i_colorcount_forward(i_img *im)
+
+=cut
+*/
+int i_colorcount_forward(i_img *im) {
+  return i_colorcount(*(i_img **)im->ext_data);
+}
+
+/*
+=item i_maxcolors_forward(i_img *im)
+
+=cut
+*/
+int i_maxcolors_forward(i_img *im) {
+  return i_maxcolors(*(i_img **)im->ext_data);
+}
+
+/*
+=item i_findcolor_forward(i_img *im, i_color *color, i_palidx *entry)
+
+=cut
+*/
+int i_findcolor_forward(i_img *im, i_color *color, i_palidx *entry) {
+  return i_findcolor(*(i_img **)im->ext_data, color, entry);
+}
+
+/*
+=back
+
+=head2 Stream reading and writing wrapper functions
+
+=over
+
 =item i_gen_reader(i_gen_read_data *info, char *buf, int length)
 
 Performs general read buffering for file readers that permit reading
