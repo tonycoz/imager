@@ -18,7 +18,10 @@ Imager::Transformations - Simple transformations of one image into another.
 
   $dest->paste(left=>40,top=>20,img=>$logo);
 
-  $img->rubthrough(src=>$srcimage,tx=>30,ty=>50);
+  $img->rubthrough(src=>$srcimage,tx=>30, ty=>50);
+  $img->rubthrough(src=>$srcimage,tx=>30, ty=>50,
+                   src_minx=>20, src_miny=>30,
+                   src_maxx=>20, src_maxy=>30);
 
 
   $img->flip(dir=>"h");       # horizontal flip
@@ -167,12 +170,17 @@ A more complicated way of blending images is where one image is
 put 'over' the other with a certain amount of opaqueness.  The
 method that does this is rubthrough.
 
-  $img->rubthrough(src=>$srcimage,tx=>30,ty=>50);
+  $img->rubthrough(src=>$overlay,
+                   tx=>30,       ty=>50,
+                   src_minx=>20, src_miny=>30,
+                   src_maxx=>20, src_maxy=>30);
 
-That will take the image C<$srcimage> and overlay it with the upper
-left corner at (30,50).  You can rub 2 or 4 channel images onto a 3
-channel image, or a 2 channel image onto a 1 channel image.  The last
-channel is used as an alpha channel.
+That will take the sub image defined by I<$overlay> and
+I<[src_minx,src_maxx)[src_miny,src_maxy)> and overlay it on top of
+I<$img> with the upper left corner at (30,50).  You can rub 2 or 4
+channel images onto a 3 channel image, or a 2 channel image onto a 1
+channel image.  The last channel is used as an alpha channel.  To add
+an alpha channel to an image see I<convert()>.
 
 
 =item flip

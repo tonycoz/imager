@@ -1478,11 +1478,16 @@ i_copy(im,src)
 
 
 undef_int
-i_rubthru(im,src,tx,ty)
+i_rubthru(im,src,tx,ty,src_minx,src_miny,src_maxx,src_maxy)
     Imager::ImgRaw     im
     Imager::ImgRaw     src
 	       int     tx
 	       int     ty
+	       int     src_minx
+	       int     src_miny
+	       int     src_maxx
+	       int     src_maxy
+
 
 undef_int
 i_flipxy(im, direction)
