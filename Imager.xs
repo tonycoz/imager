@@ -690,6 +690,18 @@ io_slurp(ig)
               myfree(data);
 
 
+MODULE = Imager		PACKAGE = Imager::IO	PREFIX = io_glue_
+
+void
+io_glue_DESTROY(ig)
+        Imager::IO     ig
+
+
+MODULE = Imager		PACKAGE = Imager
+
+PROTOTYPES: ENABLE
+
+
 
 void
 i_list_formats()

@@ -246,6 +246,28 @@ io_bchain_advance(io_ex_bchain *ieb) {
 }
 
 
+
+/*
+=item io_bchain_destroy()
+
+frees all resources used by a buffer chain.
+
+=cut
+*/
+
+void
+io_destroy_bufchain(io_ex_bchain *ieb) {
+  io_blink *cp = ieb->head;
+  while(cp) {
+    io_blink *t = cp->next;
+    free(cp);
+    cp = t;
+  }
+}
+
+
+
+
 /*
 
 static
@@ -686,7 +708,7 @@ io_glue_commit_types(io_glue *ig) {
       ieb->cpos   = 0;
       ieb->gpos   = 0;
       ieb->tfill  = 0;
-      
+
       ieb->head   = io_blink_new();
       ieb->cp     = ieb->head;
       ieb->tail   = ieb->head;
@@ -758,6 +780,12 @@ io_new_bufchain() {
   io_obj_setp_bufchain(&ig->source);
   return ig;
 }
+
+
+
+
+
+
 
 
 /*
@@ -841,6 +869,23 @@ Might leave us with a dangling pointer issue on some buffers.
 
 void
 io_glue_DESTROY(io_glue *ig) {
-  free(ig);
-  /* FIXME: Handle extradata and such */
+  io_type      inn = ig->source.type;
+  mm_log((1, "io_glue_DESTROY(ig %p)\n", ig));
+  
+  switch (inn) {
+  case BUFCHAIN:
+    {
+      io_ex_bchain *ieb = ig->exdata;
+      io_destroy_bufchain(ieb);
+    }
+    break;
+  case CBSEEK:
+  default:
+    {
+      io_ex_rseek *ier = ig->exdata;
+      myfree(ier);
+    }
+
+  }
+  myfree(ig);
 }
