@@ -1212,7 +1212,7 @@ i_writegif(im,fd,colors,pixdev,fixed)
 
 undef_int
 i_writegifmc(im,fd,colors)
-    Imager::ImgRaw     im
+    Imager::ImgRaw    im
 	       int     fd
 	       int     colors
 
@@ -1499,6 +1499,12 @@ undef_int
 i_writeppm(im,fd)
     Imager::ImgRaw     im
 	       int     fd
+
+undef_int
+i_writeppm_wiol(im, ig)
+    Imager::ImgRaw     im
+        Imager::IO     ig
+
 
 Imager::ImgRaw
 i_readraw(fd,x,y,datachannels,storechannels,intrl)

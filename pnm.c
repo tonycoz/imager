@@ -1,6 +1,7 @@
 #include "image.h"
 #include "io.h"
 #include "log.h"
+#include "iolayer.h"
 
 #include <stdlib.h>
 #include <errno.h>
@@ -451,8 +452,57 @@ i_writeppm(i_img *im,int fd) {
 }
 
 
+undef_int
+i_writeppm_wiol(i_img *im, io_glue *ig) {
+  char header[255];
+  int rc;
+  writep write_func;
 
+  mm_log((1,"i_writeppm(im %p, ig %p)\n", im, ig));
+  i_clear_error();
 
+  /* Add code to get the filename info from the iolayer */
+  /* Also add code to check for mmapped code */
 
+  io_glue_commit_types(ig);
 
-
+  if (im->channels==3) {
+    sprintf(header,"P6\n#CREATOR: Imager\n%d %d\n255\n",im->xsize,im->ysize);
+    
+    if (ig->writecb(ig, header, strlen(header) )<0) {
+      i_push_error(errno, "could not write ppm header");
+      mm_log((1,"i_writeppm: unable to write ppm header.\n"));
+      return(0);
+    }
+    
+    rc = ig->writecb(ig, im->data, im->bytes);
+    if (rc<0) {
+      i_push_error(errno, "could not write ppm data");
+      mm_log((1,"i_writeppm: unable to write ppm data.\n"));
+      return(0);
+    }
+  }
+  else if (im->channels == 1) {
+    sprintf(header, "P5\n#CREATOR: Imager\n%d %d\n255\n",
+	    im->xsize, im->ysize);
+    if (ig->writecb(ig, header, strlen(header)) < 0) {
+      i_push_error(errno, "could not write pgm header");
+      mm_log((1,"i_writeppm: unable to write pgm header.\n"));
+      return(0);
+    }
+    
+    rc = ig->writecb(ig, im->data, im->bytes);
+    if (rc<0) {
+      i_push_error(errno, "could not write pgm data");
+      mm_log((1,"i_writeppm: unable to write pgm data.\n"));
+      return(0);
+    }
+  }
+  else {
+    i_push_error(0, "can only save 1 or 3 channel images to pnm");
+    mm_log((1,"i_writeppm: ppm/pgm is 1 or 3 channel only (current image is %d)\n",im->channels));
+    return(0);
+  }
+  
+  return(1);
+}

@@ -50,7 +50,8 @@ i_draw($overlay,0,50,100,50,$bgcolor);
 
 open(FH,">testout/t35ttfont.ppm") || die "cannot open testout/t35ttfont.ppm\n";
 binmode(FH);
-i_writeppm($overlay,fileno(FH));
+$IO = Imager::io_new_fd( fileno(FH) );
+i_writeppm_wiol($overlay, $IO);
 close(FH);
 
 print "ok 2\n";
@@ -64,7 +65,8 @@ i_tt_text($ttraw,$backgr,100,100,$bgcolor,50.0,'test',4,1);
 
 open(FH,">testout/t35ttfont2.ppm") || die "cannot open testout/t35ttfont.ppm\n";
 binmode(FH);
-i_writeppm($backgr,fileno(FH));
+$IO = Imager::io_new_fd( fileno(FH) );
+i_writeppm_wiol($backgr, $IO);
 close(FH);
 
 print "ok 3\n";

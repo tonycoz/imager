@@ -52,7 +52,9 @@ push(@y,$y[0]);
 print "ok 2\n";
 
 open(FH,">testout/t75.ppm") || die "Cannot open testout/t75.ppm\n";
-i_writeppm($img->{IMG},fileno(FH)) || die "Cannot write testout/t75.ppm\n";
+binmode(FH);
+$IO = Imager::io_new_fd( fileno(FH) );
+i_writeppm_wiol($img->{IMG}, $IO) || die "Cannot write testout/t75.ppm\n";
 close(FH);
 
 print "ok 3\n";
