@@ -1,0 +1,643 @@
+#!/usr/bin/perl -w
+use strict;
+use Imager;
+use Getopt::Long;
+use File::Spec;
+use File::Basename qw(basename);
+use vars qw($VERSION);
+
+$VERSION="0.01_00";
+
+my $help;
+my $verbose;
+my $backup; # backup extension name
+my $directory; # output directory
+my $type;
+my %write_opts; # options supplied to write()
+
+my @collection; # actions/options in order to allow us to set values as needed
+
+# each entry consists of:
+#  - ref to action/option handler function
+#  - help text
+#  - optional ref to value parser function
+
+my %funcs = im_functions();
+my %options = im_options();
+my %all = ( %funcs, %options );
+
+my $action_func =
+  sub { 
+    my ($option, $value) = @_;
+    if ($all{$option}[1] && ref $all{$option}[1]) {
+      $value = $all{$option}[1]->($option, $value);
+    }
+    push @collection, [ $option, $value ] 
+  };
+
+my $did_help;
+my $help_func =
+  sub {
+    my ($option) = @_;
+
+    $option =~ s/help-//;
+    help_on($option);
+    ++$did_help;
+  };
+
+my @getoptions;
+for my $option_name (keys %all) {
+  my $option = $all{$option_name};
+  my @names = ( $option_name );
+  my @other_names = split /\|/, $option->[2] if $option->[2];
+  push @names, @other_names;
+  my $code = '';
+  if ($option->[1]) {
+    $code = ref $option->[1] ? "=s" : "=".$option->[1];
+  }
+  push @getoptions, join("|", @names) . $code => $action_func;
+  # this would be evil $all{$_} = $option for @other_names;
+  push @getoptions, join("|", map "help-$_", @names) => $help_func;
+}
+
+GetOptions('help' => sub { $help_func->("synopsis") },
+	   'verbose|v+' => \$verbose,
+	   'backup|i=s' => \$backup,
+	   'directory|d=s' => \$directory,
+	   'type|t=s' => \$type, # output file type
+	   'write-option|wo=s' => \%write_opts,
+	   'output|o=s' => \$output,
+
+	   @getoptions,
+
+	   'help-color-spec' => sub { $help_func->("color specifications") },
+	  )
+  or usage();
+
+$did_help and exit;
+
+exists $write_opts{file}
+  and die "Illegal write option 'file'\n";
+exists $write_opts{type}
+  and die "Use the --type option to set the output format\n";
+
+delete $write_opts{qw/file fd fh data callback/};
+
+my @actions = grep $funcs{$_->[0]}, @collection;
+
+if ($help) {
+  if (@actions) {
+    print $funcs{$_}[1] for map $_->[0], @actions;
+    exit;
+  }
+  else {
+    usage();
+  }
+}
+
+if (!@actions && !@ARGV) {
+  usage();
+}
+
+unless (@ARGV) {
+  die "No files to process\n";
+}
+
+unless (@actions) {
+  die "Nothing to do, supply at least one action, see $0 --help\n";
+}
+
+my @type;
+push @type, type => $type if $type;
+
+for my $name (@ARGV) {
+  my $im = Imager->new;
+  if ($im->read(file=>$name)) {
+    my %state = ( filename => $name );
+
+    for my $action (@collection) {
+      $im = $all{$action->[0]}[0]->($im, $action->[1], \%state);
+      last unless $im;
+    }
+
+    if ($im) {
+      my $outname = $name;
+      if ($directory) {
+	my $file;
+	(undef, undef, $file) = File::Spec->split_path($outname);
+	$outname = File::Spec->catfile($directory, $file);
+      }
+      if ($backup) {
+	my $backfile = $name . $backup;
+	rename $name, $backfile
+	  or die "Couldn't rename source '$name' to backup '$backfile': $!\n";
+      }
+
+      unless ($im->write(file=>$outname, @type)) {
+	die "Could not write result from '$name' to '$outname': ", $im->errstr,"\n";
+      }
+    }
+  }
+}
+
+sub _replace_codes {
+  my ($im, $state, $format) = @_;
+
+  my %replace =
+    (
+     f => [ 's', $state->{filename} ],
+     b => [ 's', basename($state->{filename}) ],
+     w => [ 'd', $im->getwidth ],
+     h => [ 'd', $im->getheight ],
+     c => [ 'd', $im->getchannels ],
+     t => [ 's', $im->type ],
+     n => [ 'c', ord("\n") ], # a bit of a hack
+     '%' => [ '%' ],
+    );
+  my @values;
+  $format =~ s{%(-?(?:\d+(?:\.\d*)?|\.\d+)?)([fwhctbn%])}
+    {
+      my $which = $replace{$2};
+      push @values, @$which[1..$#$which];
+      "%$1$which->[0]"
+    }eg;
+
+  return sprintf $format, @values;
+}
+
+sub req_info {
+  my ($im, $ignored, $state) = @_;
+
+  my $format = $state->{info_format} || <<EOS;
+Image: %f
+Dimensions: %ww x %hh
+Channels: %c
+Type: %t
+EOS
+
+  print _replace_codes($im, $state, $format);
+
+  return;
+}
+
+sub req_info_format {
+  my ($im, $value, $state) = @_;
+
+  $state->{info_format} = $value;
+
+  $im;
+}
+
+sub val_scale {
+  my ($option, $value) = @_;
+
+  my %options;
+  if ($option =~ /^(\d+)\s*x\s*(\d+)$/i) {
+    return { xpixels=>$1, ypixels=>$2 };
+  }
+  elsif ($option =~ /^(\d+(?:\.\d*)?|\.\d+)$/) {
+    return { scalefactor => $option };
+  }
+  elsif ($option =~ /^(\d+)\s*x\s*(\d+)\s*min$/i) {
+    return { xpixels=>$1, ypixels=>$2, type=>'min' };
+  }
+  elsif ($option =~ /^(\d+)\s*(?:w|wide)$/i) {
+    return { xpixels => $1 };
+  }
+  elsif ($option =~ /^(\d+)\s*(?:h|high)$/i) {
+    return { ypixels => $1 };
+  }
+  else {
+    die "Invalid parameter to --scale, try $0 --help-scale\n";
+  }
+}
+
+sub req_scale {
+  my ($im, $args) = @_;
+
+  return $im->scale(%$args);
+}
+
+sub val_rotate {
+  my ($option, $value) = @_;
+
+  if ($value =~ /^[-+]?(?:\d+(?:\.\d*)|\.\d+)$/) {
+    return { degrees => $value };
+  }
+  elsif ($value =~ /^([-+]?(?:\d+(?:\.\d*)|\.\d+))\s*(?:r|radians)$/i) {
+    return { radians => $1 };
+  }
+  else {
+    die "Invalid parameter to --rotate, try $0 --help-rotate\n";
+  }
+}
+
+sub req_rotate {
+  my ($im, $args, $state) = @_;
+
+  my @moreargs;
+  if ($state->{background}) {
+    push @moreargs, back => $state->{background};
+  }
+  return $im->rotate(%$args, @moreargs);
+}
+
+sub req_bg {
+  my ($im, $value, $state) = @_;
+
+  $state->{background} = $value;
+  
+  $im;
+}
+
+sub req_fg {
+  my ($im, $value, $state) = @_;
+
+  $state->{foreground} = $value;
+
+  $im;
+}
+
+sub req_font {
+  my ($im, $value, $state) = @_;
+
+  $state->{font} = Imager::Font->new(file=>$value)
+    or die "Could not create font from $value: ", Imager->errstr,"\n";
+
+  $im;
+}
+
+sub val_font_size {
+  my ($option, $value) = @_;
+
+  unless ($value =~ /^\d+$/ && $value > 0) {
+    die "$option must be a positive integer\n";
+  }
+
+  $value;
+}
+
+sub req_font_size {
+  my ($im, $value, $state) = @_;
+
+  $state->{font_size} = $value;
+
+  $im;
+}
+
+sub req_caption {
+  my ($im, $format, $state) = @_;
+
+  my $text = _replace_codes($im, $state, $format);
+
+  my $font = $state->{font}
+    or die "You must supply a --font option before the --caption command\n";
+
+  my $size = $state->{font_size} || 16;
+
+  my $box = $font->bounding_box(size=>$size);
+  $box->total_width <= $im->getwidth
+    or die "Caption text '$text' is wider (", $box->total_width, 
+      ") than the image (",$im->getwidth,")\n";
+
+  die "not implemented yet";
+}
+
+sub usage {
+  help_on("SYNOPSIS");
+  exit 1;
+}
+
+sub im_functions {
+  return
+    (
+     info => [ \&req_info ],
+     scale => [ \&req_scale, \&val_scale ],
+     rotate => [ \&req_rotate, \&val_rotate ],
+     caption => [ \&req_caption ],
+    );
+}
+
+sub val_color {
+  my ($option, $value) = @_;
+
+  if ($value =~ /^rgba\((\d+),(\d+),(\d+),(\d+)\)$/i) {
+    return Imager::Color->new($1,$2,$3,$4);
+  }
+  elsif ($value =~ /^rgb\((\d+),(\d+),(\d+)\)$/i) {
+    return Imager::Color->new($1,$2,$3);
+  }
+  elsif ($value =~ /^\#[\da-f]{3}([\da-f]{3})?$/) {
+    return Imager::Color->new(web=>$value);
+  }
+  elsif ($value =~ /^hsv\((\d+(?:\.\d*)),(\d+\.\d*|\.\d+),(\d+\.\d*|\.\d+)\)$/) {
+    return Imager::Color->new(hsv => [ $1, $2, $3 ]);
+  }
+  elsif ($value =~ /^hsva\((\d+(?:\.\d*)),(\d+\.\d*|\.\d+),(\d+\.\d*|\.\d+),(\d+)\)$/) {
+    return Imager::Color->new(hsv => [ $1, $2, $3 ], alpha=>$4);
+  }
+  else {
+    my $color = Imager::Color->new(name=>$value);
+    return $color if $color;
+
+    die "Unrecognized color specification $value supplied to --$option\n";
+  }
+}
+
+sub im_options {
+  return
+    (
+     background => [ \&req_bg, \&val_color, 'bg' ],
+     foreground => [ \&req_fg, \&val_color, 'fg' ],
+     'info-format' => [ \&req_info_format, 's'],
+     font => [ \&req_font, \&val_font ],
+     'font-size' => [ \&req_font_size, \&val_font_size, 'fs' ],
+    );
+}
+
+sub help_on {
+  my ($topic) = @_;
+
+  open SOURCE, "< $0" or die "Cannot read source for help text: $!\n";
+  my @lines;
+  while (<SOURCE>) {
+    # don't chomp it
+    if (/^=item --$topic\s/) {
+      push @lines, $_;
+      # read any more =items then read text until we see =item or =back
+      while (<SOURCE>) {
+        last unless /^\s*$/ or /^=item /;
+        push @lines, $_;
+      }
+      push @lines, $_;
+      # and any other until another option or =back
+      while (<SOURCE>) {
+        last if /^=(item|cut|back)/;
+        push @lines, $_;
+      }
+      print @lines;
+      return;
+    }
+    elsif (/^=head(\d) $topic\s*$/i) {
+      my $level = $1;
+      push @lines, $_;
+      while (<SOURCE>) {
+        last if /=head[1-$level]/;
+        push @lines, $_;
+      }
+
+      print @lines;
+      return;
+    }
+  }
+  close SOURCE;
+
+  die "No help topic $topic found\n";
+}
+
+
+sub help_color_spec {
+  print <<EOS;
+EOS
+}
+
+=head1 NAME
+
+imager - Imager command-line image manipulation tool
+
+=head1 SYNOPSIS
+
+ imager --help
+ imager  [--font-size <size>] [--fs <size>] [--background <color>] 
+    [--bg <color>] [--foreground <color>] [--fg <color] 
+    [--info-format <format>] [--rotate <angle>] [--scale <scale-spec>] 
+    [--caption <text>] [--info] [--font fontfile] files ...
+ imager --help-I<option>
+ imager  --help-I<operation>
+
+=head1 DESCRIPTION
+
+=head1 ACTIONS
+
+=over
+
+=item --info
+
+Displays the width, height, channels, type for each image, and any tags
+Imager picks up.  No options.
+
+Note: Imager still converts many files into direct images when the source
+is a paletted image, so the displayed image type may not match the
+source image type.
+
+No output image file is produced.
+
+=item --scale <scalefactor>
+
+=item --scale <width>x<height>
+
+=item --scale <width>x<height>min
+
+=item --scale <width>w
+
+=item --scale <height>h
+
+Scale either by the given scaling factor, given as a floating point number,
+or to a given dimension.
+
+The scaling is always proportional, if a dimension is given then the
+scalefactor that results in the larger image that matches either the 
+specified width or height is chosen, unless the word "min" is present".
+
+  --scale 0.5         # half size image
+  --scale 100x100     # aim for 100 pixel x 100 pixel image
+  --scale 100x100min  # image that fits in 100 x 100 pixel box
+  --scale 100w        # 100 pixel wide image
+  --scale 100h        # 100 pixel high image
+
+=item --rotate <degrees>
+
+=item --rotate <radians>r
+
+Rotate the image by the given number of degrees or radians.
+
+=item --help
+
+Displays the usage message if no extra parameter is found, otherwise displays
+more detailed help for the given function, if any.
+
+=item --caption text
+
+Expands the image to create a caption area and draws the given text in the
+current font.
+
+You must set a font with --font before this.
+
+  imager --font arial.ttf --caption "my silly picture"
+
+The text has the same replacements done as the --info command.
+
+  imager --font arial.ttf --caption '%b - %w x %h'
+
+If the caption text is too wide for the image an error is produced.
+
+Any newlines that aren't at the beginning or end of the caption cause
+multiple lines of text to be produced.
+
+The --foreground and --background options can be used to set colors
+for this.  By default black text on a white background is produced.
+
+=back
+
+=head1 GENERAL OPTIONS
+
+=over
+
+=item --help
+
+Display the SYNOPSIS from this POD
+
+=item --verbose
+
+=item -v
+
+Increase the verbosity level.
+
+=item --backup <extension>
+
+=item -i <extension>
+
+Input files are renamed to I<filename><extension> before the output
+file is written.
+
+=item --directory <directory>
+
+=item -d <directory>
+
+If this is supplied the output files are written to this directory
+instead of the 
+
+=item --type <fileformat>
+
+Specifies an output file format
+
+=item --write-option name=value
+
+=item --wo name=value
+
+Sets the value of an option supplied to the Imager write() function.
+The options available depend on the file format, see
+L<Imager::Files/TYPE SPECIFIC INFORMATION> for file format specific
+options.
+
+You can also supply the L<Imager::ImageTypes/Common Tags>.
+
+If you're writing to a gif file you can also supply the options
+documented as tags under L<Imager::ImageTypes/Quantization options>.
+
+=back
+
+=head1 PROCESSING OPTIONS
+
+These supply extra parameters to the actions
+
+=over
+
+=item --background <color-spec>
+
+=item --bg <color-spec>
+
+Sets the background color for the --rotate and --caption actions, and
+possibly other actions in the future.
+
+See $0 --help-color-spec for possible color specifications.
+
+  --bg red
+  --bg rgba(0,0,0,0)
+
+=item --foreground <color-spec>
+
+=item --fg <color-spec>
+
+Sets the foreground color for the --caption action, and possibly other
+actions in the future.
+
+See $0 --help-color-spec for possible color specifications.
+
+  --fg red
+  --fg 'rgba(0,0,0,0)'
+
+=item --font-size size
+
+=item --fs size
+
+Set the font size used by the --caption command, in pixels.
+
+  --fs 16  # 16 pixels from baseline to top
+  --font-size 40 # a bit bigger
+
+=item --info-format format
+
+Sets the format for the output of the --info command.
+
+The format can contain printf style replacement codes, each value is %
+followed by a sprintf() field width/precision, followed by the value
+code.
+
+The following values can be output:
+  w - image width in pixels
+  h - image height in pixels
+  f - full image filename
+  b - base image filename
+  c - number of channels
+  t - image type (direct vs paletted)
+  n - inserts a newline
+  % - inserts a '%' symbol
+
+The default format is:
+
+ Image: %f%nDimensions: %ww x %hh%nChannels: %c%nType: %t%n
+
+You can use field widths to produce a more table like appearance:
+
+  im --info-format '%4w %4h %4c %-8t %b%n' --info *.jpg
+
+=item --font filename
+
+Gives the name of a font file.  Required by actions that render text.
+
+  --font ImUgly.ttf
+  --font arial.ttf
+
+=back
+
+=head1 COLOR SPECIFICATIONS
+
+Possible color specifications:
+  color-name - the name of a built-in color
+  rgb(red,green,blue) - as an RGB triplet
+  #RRGGBB - as a HTML RGB hex triple
+  #RGB - as a HTML CSS RGB hex triple
+  rgba(red,green,blue,alpha) - as an RGBA quad
+  hsv(hue,sat,value) - as an HSV triplet
+  hsva(hue,sat,value,alpha) as an HSVA quad
+
+For example:
+
+  red
+  rgb(255,0,0)
+  #FF0000
+  hsv(180,1,1)
+
+If you use either of the HTML color specifications, or a specification
+using parentheses from a Unix shell you will need to quote it, for
+example:
+
+  --fg '#FF0000'
+  --bg 'rgb(255,0,255)'
+
+=head1 AUTHOR
+
+Tony Cook <tony@develop-help.com>
+
+=cut
