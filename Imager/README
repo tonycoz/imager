@@ -128,9 +128,11 @@ needs for specific features.  The libraries it uses are:
 
  jpeg: ftp://ftp.uu.net/graphics/jpeg/jpegsrc.v6b.tar.gz
 
-  png: ftp://ftp.uu.net/graphics/png  
-  you also need zlib to use png:  ftp://ftp.uu.net/pub/archiving/zip/zlib
+  png: ftp://swrinde.nde.swri.edu/pub/png/
+  you also need zlib to use png:  http://www.gzip.org/zlib/
   We have encountered problems with libpng 1.0.1, which were fixed in 1.0.5
+  Note: you should probably be using zlib 1.1.4, since 1.1.3 has a 
+  potential security problem.
 
   gif: http://www.arrakeen.demon.co.uk/giflib/  
 or at: http://prtr-13.ucsc.edu/~badger/software/libungif/index.shtml
