@@ -9,7 +9,7 @@ $imbase->open(file=>'testout/t104.ppm') or die;
 my $im_other = Imager->new(xsize=>150, ysize=>150);
 $im_other->box(xmin=>30, ymin=>60, xmax=>120, ymax=>90, filled=>1);
 
-print "1..37\n";
+print "1..39\n";
 
 test($imbase, 1, {type=>'autolevels'}, 'testout/t61_autolev.ppm');
 
@@ -79,6 +79,9 @@ test($imbase, 34, { type=>'fountain', xa=>75, ya=>75, xb=>90, yb=>15,
      'testout/t61_fount_gimp.ppm');
 test($imbase, 36, { type=>'unsharpmask', stddev=>2.0 },
      'testout/t61_unsharp.ppm');
+test($imbase, 38, {type=>'conv', coef=>[ -1, 3, -1, ], },
+     'testout/t61_conv_sharp.ppm');
+
 
 sub test {
   my ($in, $num, $params, $out) = @_;
