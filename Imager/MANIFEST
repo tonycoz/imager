@@ -7,6 +7,7 @@ Makefile.PL
 draw.c
 draw.h
 conv.c
+error.c
 gaussian.c
 ppport.h
 image.c
@@ -46,6 +47,7 @@ lib/Imager/Color.pm
 lib/Imager/Font.pm
 lib/Imager/Transform.pm
 t/t00basic.t
+t/t05error.t
 t/t10formats.t
 t/t15color.t
 t/t30t1font.t
