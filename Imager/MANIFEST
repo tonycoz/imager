@@ -49,7 +49,6 @@ lib/Imager/Font.pm
 lib/Imager/Transform.pm
 t/t00basic.t
 t/t05error.t
-t/t10formats.t
 t/t101jpeg.t
 t/t102png.t
 t/t103raw.t
