@@ -399,6 +399,7 @@ Revision history for Perl extension Imager.
 	can make an informed choice about i_readgif()
 	- incorporated Micksa's faxable tiff support, treating as a type
 	of tiff rather than a separate format
+	- t/t70newgif.t now checks for gif support
 
 ~~~~~~~~~~~~~^ ^ ^~~~~~~~~~~~~~
 
