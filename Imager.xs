@@ -30,6 +30,10 @@ from IV to pointer types */
 #define PTR2IV(p) INT2PTR(IV,p)
 #endif
 
+#ifndef aTHX_
+#define aTHX_
+#endif
+
 #ifdef HAVE_LIBTT
 typedef TT_Fonthandle* Imager__Font__TT;
 #endif
