@@ -1724,8 +1724,10 @@ sub arc {
                   $opts{'color'});
     }
     else {
-      i_arc($self->{IMG},$opts{'x'},$opts{'y'},$opts{'r'},$opts{'d1'},
-            $opts{'d2'},$opts{'color'}); 
+      #      i_arc($self->{IMG},$opts{'x'},$opts{'y'},$opts{'r'},$opts{'d1'}, $opts{'d2'},$opts{'color'});
+      if ($opts{'d1'} <= $opts{'d2'}) { i_arc($self->{IMG},$opts{'x'},$opts{'y'},$opts{'r'},$opts{'d1'},$opts{'d2'},$opts{'color'}); }
+      else                            { i_arc($self->{IMG},$opts{'x'},$opts{'y'},$opts{'r'},$opts{'d1'},        361,$opts{'color'});
+					i_arc($self->{IMG},$opts{'x'},$opts{'y'},$opts{'r'},          0,$opts{'d2'},$opts{'color'}); }
     }
   }
 

@@ -378,6 +378,7 @@ i_readtga_wiol(io_glue *ig, int length) {
       myfree(databuf);
       return NULL;
     }
+    if (mapped && header.colourmaporigin) for(x=0; x<width; x++) databuf[x] -= header.colourmaporigin;
     if (mapped) i_ppal(img, 0, width, header.imagedescriptor & (1<<5) ? y : height-1-y, databuf);
     else {
       for(x=0; x<width; x++) color_unpack(databuf+x*src.bytepp, src.bytepp, linebuf+x);
@@ -398,113 +399,105 @@ i_readtga_wiol(io_glue *ig, int length) {
 
 
 undef_int
-i_writetga_wiol(i_img *im, io_glue *ig) {
-  char header[255];
+i_writetga_wiol(i_img *img, io_glue *ig) {
   int rc;
-  writep write_func;
+  static int rgb_chan[] = { 2, 1, 0, 3 };
+  tga_header header;
+  unsigned char headbuf[18];
+  unsigned char *data;
+  int compress = 0;
+  char *idstring = "testing";
+  int idlen = strlen(idstring);
+  int mapped = img->type == i_palette_type;
 
-  mm_log((1,"i_writetga_wiol(im %p, ig %p)\n", im, ig));
+  mm_log((1,"i_writetga_wiol(img %p, ig %p)\n", img, ig));
   i_clear_error();
-
-  /* Add code to get the filename info from the iolayer */
-  /* Also add code to check for mmapped code */
 
   io_glue_commit_types(ig);
 
-  if (im->type == i_palette_type) {
-    
+  mm_log((1, "virtual %d, paletted %d\n", img->virtual, mapped));
+  mm_log((1, "channels %d\n", img->channels));
 
+  header.idlength;
+  header.idlength = idlen;
+  header.colourmaptype   = mapped ? 1 : 0;
+  header.datatypecode    = mapped ? 1 : img->channels == 1 ? 3 : 2;
+  mm_log((1, "datatypecode %d\n", header.datatypecode));
+  header.datatypecode   += compress ? 8 : 0;
+  header.colourmaporigin = 0;
+  header.colourmaplength = mapped ? i_colorcount(img) : 0;
+  header.colourmapdepth  = mapped ? img->channels*8 : 0;
+  header.x_origin        = 0;
+  header.y_origin        = 0;
+  header.width           = img->xsize;
+  header.height          = img->ysize;
+  header.bitsperpixel    = mapped ? 8 : 8*img->channels;
+  header.imagedescriptor = (1<<5); /* normal order instead of upside down */
 
+  headbuf[0] = header.idlength;
+  headbuf[1] = header.colourmaptype;
+  headbuf[2] = header.datatypecode;
+  headbuf[3] = header.colourmaporigin & 0xff;
+  headbuf[4] = header.colourmaporigin >> 8;
+  headbuf[5] = header.colourmaplength & 0xff;
+  headbuf[6] = header.colourmaplength >> 8;
+  headbuf[7] = header.colourmapdepth;
+  headbuf[8] = header.x_origin & 0xff;
+  headbuf[9] = header.x_origin >> 8;
+  headbuf[10] = header.y_origin & 0xff;
+  headbuf[11] = header.y_origin >> 8;
+  headbuf[12] = header.width & 0xff;
+  headbuf[13] = header.width >> 8;
+  headbuf[14] = header.height & 0xff;
+  headbuf[15] = header.height >> 8;
+  headbuf[16] = header.bitsperpixel;
+  headbuf[17] = header.imagedescriptor;
 
+  if (ig->writecb(ig, &headbuf, sizeof(headbuf)) != sizeof(headbuf)) {
+    i_push_error(errno, "could not write targa header");
+    return 0;
   }
 
-
-
-
-
+  if (idlen) {
+    if (ig->writecb(ig, idstring, idlen) != idlen) {
+      i_push_error(errno, "could not write targa idstring");
+      return 0;
+    }
+  }
 
   
-
-  if (im->channels == 3) {
-    sprintf(header,"P6\n#CREATOR: Imager\n%d %d\n255\n",im->xsize,im->ysize);
-    if (ig->writecb(ig,header,strlen(header))<0) {
-      i_push_error(errno, "could not write ppm header");
-      mm_log((1,"i_writeppm: unable to write ppm header.\n"));
-      return(0);
-    }
-
-    if (!im->virtual && im->bits == i_8_bits && im->type == i_direct_type) {
-      rc = ig->writecb(ig,im->idata,im->bytes);
-    }
-    else {
-      unsigned char *data = mymalloc(3 * im->xsize);
-      if (data != NULL) {
-        int y = 0;
-        int x, ch;
-        unsigned char *p;
-        static int rgb_chan[3] = { 0, 1, 2 };
-
-        rc = 0;
-        while (y < im->ysize && rc >= 0) {
-          i_gsamp(im, 0, im->xsize, y, data, rgb_chan, 3);
-          rc = ig->writecb(ig, data, im->xsize * 3);
-        }
-        myfree(data);
+  if (img->type == i_palette_type) {
+    /* write palette */
+    if (!img->virtual) {
+      if (ig->writecb(ig, img->idata, img->bytes) != img->bytes) {
+	i_push_error(errno, "could not write targa image data");
+	return 0;
       }
-      else {
-        i_push_error(0, "Out of memory");
-        return 0;
+    } else {
+      int y;
+      i_palidx *vals = mymalloc(sizeof(i_palidx)*img->xsize);
+      for(y=0; y<img->ysize; y++) {
+	i_gpal(img, 0, img->xsize, y, vals);
+	if (ig->writecb(ig, vals, img->xsize) != img->xsize) {
+	  i_push_error(errno, "could not write targa data to file");
+	  myfree(vals);
+	  return 0;
+	}
+      }
+      myfree(vals);
+    }
+  } else {
+    int y, lsize = img->channels * img->xsize;
+    data = mymalloc(lsize);
+    for(y=0; y<img->ysize; y++) {
+      i_gsamp(img, 0, img->xsize, y, data, rgb_chan, img->channels);
+      if ( ig->writecb(ig, data, lsize) != lsize ) {
+	i_push_error(errno, "could not write targa data to file");
+	myfree(data);
+	return 0;
       }
     }
-    if (rc<0) {
-      i_push_error(errno, "could not write ppm data");
-      mm_log((1,"i_writeppm: unable to write ppm data.\n"));
-      return(0);
-    }
+    myfree(data);
   }
-  else if (im->channels == 1) {
-    sprintf(header, "P5\n#CREATOR: Imager\n%d %d\n255\n",
-	    im->xsize, im->ysize);
-    if (ig->writecb(ig,header, strlen(header)) < 0) {
-      i_push_error(errno, "could not write pgm header");
-      mm_log((1,"i_writeppm: unable to write pgm header.\n"));
-      return(0);
-    }
-
-    if (!im->virtual && im->bits == i_8_bits && im->type == i_direct_type) {
-      rc=ig->writecb(ig,im->idata,im->bytes);
-    }
-    else {
-      unsigned char *data = mymalloc(im->xsize);
-      if (data != NULL) {
-        int y = 0;
-        int x, ch;
-        int chan = 0;
-        unsigned char *p;
-
-        rc = 0;
-        while (y < im->ysize && rc >= 0) {
-          i_gsamp(im, 0, im->xsize, y, data, &chan, 1);
-          rc = ig->writecb(ig, data, im->xsize);
-        }
-        myfree(data);
-      }
-      else {
-        i_push_error(0, "Out of memory");
-        return 0;
-      }
-    }
-    if (rc<0) {
-      i_push_error(errno, "could not write pgm data");
-      mm_log((1,"i_writeppm: unable to write pgm data.\n"));
-      return(0);
-    }
-  }
-  else {
-    i_push_error(0, "can only save 1 or 3 channel images to pnm");
-    mm_log((1,"i_writeppm: ppm/pgm is 1 or 3 channel only (current image is %d)\n",im->channels));
-    return(0);
-  }
-
-  return(1);
+  return 1;
 }
