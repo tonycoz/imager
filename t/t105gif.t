@@ -1,5 +1,5 @@
 $|=1;
-print "1..23\n";
+print "1..26\n";
 use Imager qw(:all);
 
 init_log("testout/t105gif.log",1);
@@ -312,6 +312,48 @@ EOS
       print "not ok 23 # failed to read image with only a local colour map";
     }
     close FH;
+
+    # image has global and local colour maps
+    open FH, "< testimg/screen2.gif"
+      or die "Cannot open testimg/screen2.gif: $!";
+    binmode FH;
+    my $ims = i_readgif(fileno(FH));
+    if ($ims) {
+      print "ok 24\n";
+    }
+    else {
+      print "not ok 24 # ",Imager::_error_as_msg(),"\n";
+    }
+    close FH;
+    open FH, "< testimg/expected.gif"
+      or die "Cannot open testimg/expected.gif: $!";
+    binmode FH;
+    my $ime = i_readgif(fileno(FH));
+    close FH;
+    if ($ime) {
+      print "ok 25\n";
+    }
+    else {
+      print "not ok 25 # ",Imager::_error_as_msg(),"\n";
+    }
+    if ($ims && $ime) {
+      if (i_img_diff($ime, $ims)) {
+	print "not ok 26 # mismatch ",i_img_diff($ime, $ims),"\n";
+	# save the bad one
+	open FH, "> testout/t105_screen2.gif"
+	  or die "Cannot create testout/t105_screen.gif: $!";
+	binmode FH;
+	i_writegifmc($ims, fileno(FH), 7)
+	  or print "# could not save t105_screen.gif\n";
+	close FH;
+      }
+      else {
+	print "ok 26\n";
+      }
+    }
+    else {
+      print "ok 26 # skipped\n";
+    }
 }
 
 sub test_readgif_cb {

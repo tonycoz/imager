@@ -408,6 +408,7 @@ Revision history for Perl extension Imager.
         - Fix for i_gifread_low() for images with only a local and no global
           colormap and an abort if no colormap is present (which is legal
           in gif).
+        - several fixes to i_readgif_low()
 
 ~~~~~~~~~~~~~^ ^ ^~~~~~~~~~~~~~
 
