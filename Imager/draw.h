@@ -22,4 +22,5 @@ void i_mmarray_info(i_mmarray *ar);
 void i_arc(i_img *im,int x,int y,float rad,float d1,float d2,i_color *val);
 void i_box(i_img *im,int x0,int y0,int x1,int y1,i_color *val);
 void i_line(i_img *im,int x1,int y1,int x2,int y2,i_color *val, int endp);
+void i_line_aa(i_img *im,int x1,int y1,int x2,int y2,i_color *val, int endp);
 

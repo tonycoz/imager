@@ -204,7 +204,7 @@ void i_box         (i_img *im,int x1,int y1,int x2,int y2,i_color *val);
 void i_box_filled  (i_img *im,int x1,int y1,int x2,int y2,i_color *val);
 void i_box_cfill(i_img *im, int x1, int y1, int x2, int y2, i_fill_t *fill);
 void i_line        (i_img *im,int x1,int y1,int x2,int y2,i_color *val, int endp);
-void i_line_aa     (i_img *im,int x1,int y1,int x2,int y2,i_color *val);
+void i_line_aa     (i_img *im,int x1,int y1,int x2,int y2,i_color *val, int endp);
 void i_arc         (i_img *im,int x,int y,float rad,float d1,float d2,i_color *val);
 void i_arc_cfill(i_img *im,int x,int y,float rad,float d1,float d2,i_fill_t *fill);
 void i_circle_aa   (i_img *im,float x, float y,float rad,i_color *val);
