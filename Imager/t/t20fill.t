@@ -244,7 +244,7 @@ ok($testnum++,
 # previous box fills to float images, or using the fountain fill
 # got into a loop here
 
-if ($Config{d_alarm} eq 'define') {
+if ($Config{d_alarm}) {
   local $SIG{ALRM} = sub { die; };
 
   eval {
