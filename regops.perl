@@ -44,7 +44,9 @@ while (<IN>) {
   }
 }
 print OUT "\n\@EXPORT = qw(@ops);\n\n";
-print OUT Data::Dumper->Dump([\%attr],["*Attr"]);
+my $dumper = Data::Dumper->new([\%attr],["*Attr"]);
+$dumper->Sortkeys(1);
+print OUT $dumper->Dump;
 print OUT "\$MaxOperands = $max_opr;\n";
 print OUT qq/\$PackCode = "$reg_pack";\n/;
 print OUT <<'EOS';
@@ -79,7 +81,7 @@ Tony Cook, tony@develop-help.com
 
 =head1 SEE ALSO
 
-perl(1), Imager(3), http://imager.perl.org/~addi/perl/Imager/
+perl(1), Imager(3), http://imager.perl.org/
 
 =cut
 

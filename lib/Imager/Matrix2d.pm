@@ -385,6 +385,6 @@ Needs a way to invert matrixes.
 
 Imager(3), Imager::Font(3)
 
-http://www.eecs.umich.edu/~addi/perl/Imager/
+http://imager.perl.org/
 
 =cut

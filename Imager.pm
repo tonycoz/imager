@@ -2947,8 +2947,20 @@ or use the form at:
 where you can also find the mailing list archive.
 
 If you're into IRC, you can typically find the developers in #Imager
-on irc.rhizomatic.net.  As with any IRC channel, the participants
-could be occupied or asleep, so please be patient.
+on irc.perl.org.  As with any IRC channel, the participants could be
+occupied or asleep, so please be patient.
+
+You can report bugs either by sending email to:
+
+  bug-Imager@rt.cpan.org
+
+or by pointing your browser at:
+
+  https://rt.cpan.org/NoAuth/ReportBug.html?Queue=Imager
+
+Please remember to include the versions of Imager, perl, supporting
+libraries, and any relevant code.  If you have specific images that
+cause the problems, please include those too.
 
 =head1 BUGS
 
@@ -2967,6 +2979,6 @@ Imager::Transformations(3), Imager::Engines(3), Imager::Filters(3),
 Imager::Expr(3), Imager::Matrix2d(3), Imager::Fountain(3)
 
 Affix::Infix2Postfix(3), Parse::RecDescent(3)
-http://imager.perl.org/~addi/perl/Imager/
+http://imager.perl.org/
 
 =cut

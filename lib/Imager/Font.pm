@@ -816,8 +816,7 @@ You need to modify this class to add new font types.
 Imager(3), Imager::Font::FreeType2(3), Imager::Font::Type1(3),
 Imager::Font::Win32(3), Imager::Font::Truetype(3), Imager::Font::BBox(3)
 
-
-http://www.eecs.umich.edu/~addi/perl/Imager/
+ http://imager.perl.org/
 
 =cut
 
