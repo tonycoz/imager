@@ -6,6 +6,7 @@ print "1..40\n";
 use Imager ':handy';
 use Imager::Fill;
 use Imager::Color::Float;
+use Config;
 
 sub ok ($$$);
 
@@ -242,7 +243,8 @@ ok($testnum++,
 
 # previous box fills to float images, or using the fountain fill
 # got into a loop here
-{
+
+if ($Config{d_alarm} eq 'define') {
   local $SIG{ALRM} = sub { die; };
 
   eval {
@@ -255,6 +257,10 @@ ok($testnum++,
     alarm 0;
   };
   $@ and ok($testnum++, 0, "linear box fill $@");
+}
+else {
+  print "ok $testnum # skipped can't test without alarm\n";
+  ++$testnum;
 }
 
 sub ok ($$$) {
