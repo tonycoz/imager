@@ -182,7 +182,77 @@ PNM does not support the spatial resolution tags.
 
 =head2 GIF (Graphics Interchange Format)
 
+You can supply many different options when writing to a GIF file, and
+you can write a multi-image GIF file, eg. for animation, with the
+C<write_multi()> method.
 
+These options can be specified when calling write_multi() or when
+writing a single image with the C<gifquant> option set to 'gen'
+
+Note that some viewers will ignore some of these options
+(gif_user_input in particular).
+
+=over 4
+
+=item gif_each_palette
+
+Each image in the gif file has it's own palette if this is non-zero.
+All but the first image has a local colour table (the first uses the
+global colour table.
+
+=item interlace
+
+The images are written interlaced if this is non-zero.
+
+=item gif_delays
+
+A reference to an array containing the delays between images, in 1/100
+seconds.
+
+If you want the same delay for every frame you can simply set this to
+the delay in 1/100 seconds.
+
+=item gif_user_input
+
+A reference to an array contains user input flags.  If the given flag
+is non-zero the image viewer should wait for input before displaying
+the next image.
+
+=item gif_disposal
+
+A reference to an array of image disposal methods.  These define what
+should be done to the image before displaying the next one.  These are
+integers, where 0 means unspecified, 1 means the image should be left
+in place, 2 means restore to background colour and 3 means restore to
+the previous value.
+
+=item gif_tran_color
+
+A reference to an Imager::Color object, which is the colour to use for
+the palette entry used to represent transparency in the palette.  You
+need to set the transp option (see L<Quantization options>) for this
+value to be used.
+
+=item gif_positions
+
+A reference to an array of references to arrays which represent screen
+positions for each image.
+
+=item gif_loop_count
+
+If this is non-zero the Netscape loop extension block is generated,
+which makes the animation of the images repeat.
+
+This is currently unimplemented due to some limitations in giflib.
+
+=item gif_eliminate_unused
+
+If this is true, when you write a paletted image any unused colors
+will be eliminated from its palette.  This is set by default.
+
+=back
+
+colors parameter on read.
 
 =head2 TIFF (Tagged Image File Format)
 
