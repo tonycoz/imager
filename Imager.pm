@@ -2536,7 +2536,7 @@ Drawing Primitives, lines, boxes, circles, arcs, flood fill.
 
 Color specification.
 
-=item Imager::Color
+=item Imager::Fill
 
 Fill pattern specification.
 
@@ -2551,7 +2551,8 @@ map.
 
 =item Imager::Engines
 
-transform2 and matrix_transform.
+Programmable transformations through C<transform()>, C<transform2()>
+and C<matrix_transform()>.
 
 =item Imager::Filters
 
@@ -2570,8 +2571,6 @@ Helper class for affine transformations.
 Helper for making gradient profiles.
 
 =back
-
-
 
 
 
