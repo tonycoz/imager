@@ -226,9 +226,11 @@ i_readrgb_wiol(io_glue *ig, int length) {
   channels = header.zsize;
 
   img = i_img_empty_ch(NULL, width, height, channels);
+  if (!img)
+    return NULL;
   
   i_tags_add(&img->tags, "rgb_namestr", 0, header.name, 80, 0);
-
+  i_tags_add(&img->tags, "i_format", 0, "rgb", -1, 0);
 
   switch (header.storagetype) {
   case 0: /* uncompressed */
@@ -343,6 +345,8 @@ i_readrgb_wiol(io_glue *ig, int length) {
     break;
   }
 
+  i_tags_add(&img->tags, "i_format", 0, "rgb", -1, 0);
+
   i_mempool_destroy(&mp);
   return img;
 
@@ -367,9 +371,9 @@ Writes an image in targa format.  Returns 0 on error.
 
 undef_int
 i_writergb_wiol(i_img *img, io_glue *ig, int wierdpack, int compress, char *idstring, size_t idlen) {
-  
+  i_clear_error();
+  i_push_error(0, "writing SGI RGB files is not implemented");
 
-
-
+  return 0;
 }
 

@@ -423,11 +423,11 @@ then this is scaled so the smaller value is 72dpi.
 If this tag is present then the whole image could not be read.  This
 isn't implemented for all images yet.
 
+=item i_format
+
+The file format this file was read from.
+
 =back
-
-
-
-
 
 =head2 Quantization options
 

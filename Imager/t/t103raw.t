@@ -1,5 +1,5 @@
 #!perl -w
-print "1..15\n";
+print "1..16\n";
 use Imager qw(:all);
 use strict;
 init_log("testout/t103raw.log",1);
@@ -136,6 +136,17 @@ my $diff = i_img_diff($maskimg, $cmpimgmask);
 print "# difference for virtual image $diff\n";
 $diff and print "not ";
 print "ok 15\n";
+
+# check that i_format is set correctly
+my $index = Imager::i_tags_find($cmpimgmask, 'i_format', 0);
+
+if ($index) {
+  my $value = Imager::i_tags_get($cmpimgmask, $index);
+  print $value eq 'raw' ? "ok 16\n" : "not ok 16 - bad value for i_format tag\n";
+}
+else {
+  print "not ok 16 - no i_format tag set\n";
+}
 
 sub read_test {
   my ($in, $xsize, $ysize, $data, $store, $intrl, $base, $test) = @_;

@@ -926,6 +926,13 @@ Revision history for Perl extension Imager.
 - added information on reporting bugs to the SUPPORT section of Imager.pm
 - regops.perl now sorts the dumped data structure to produce minimal diffs
 - quant.c now checks for integer overflow allocating its image data
+- i_readraw_wiol() now checks for image creation failure
+- i_readrgb_wiol() now checks for image creation failure
+- i_writergb_wiol() was an empty stub, it now pushes an error message
+  and explicitly returns failure.
+- i_readrgb_wiol() now sets i_format to rgb.
+- set i_format to raw when reading tga files and test for it
+- document i_format tag
 
 =================================================================
 
