@@ -87,6 +87,7 @@ New Features:
    (handles TIFF and GIF)
 
 - write_multi() to save other multi-image types, (handles TIFF and GIF)
+  - pnm binary formats support multiple images per file
 
 - compose channels - build a new image based on channels from several
   images

@@ -775,6 +775,14 @@ Revision history for Perl extension Imager.
           built from CVS on Win32)
         - Makefile.PL should now handle INCLUDE or LIB with spaces in them
           correctly on Win32.
+        - the pnm reader read maxval for ppm/pgm files and then ignored it,
+          it's now validated (0 < maxval < 65536) and used to scale
+          samples.  Note that binary ppm/pgm files (P6/P5) with maxval >
+          255 result in an error, since I didn't want to add new features
+          just yet, just get the code that's there working correctly.
+          Thanks to Elthek on rhizo for reporting this and help in 
+          tracking it down.
+        - added a bunch of tests for reading pnm files.
 
 =================================================================
 

@@ -138,6 +138,12 @@ testimg/expected.gif
 testimg/gimpgrad        A GIMP gradient file
 testimg/junk.ppm
 testimg/loccmap.gif
+testimg/maxval.ppm
+testimg/maxval_0.ppm
+testimg/maxval_256.ppm
+testimg/maxval_4095_asc.ppm
+testimg/maxval_65536.ppm
+testimg/maxval_asc.ppm
 testimg/nocmap.gif
 testimg/palette.png
 testimg/palette_out.png
