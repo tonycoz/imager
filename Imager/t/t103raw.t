@@ -104,7 +104,6 @@ sub load_data {
   return $result;
 }
 
-# FIXME: need tests for the datachannel, storechannel and interlace options
 # FIXME: may need tests for 1,2,4 channel images
 
 __DATA__
