@@ -606,7 +606,7 @@ Revision history for Perl extension Imager.
         - fixed stupid bug in deleting tags
 	- fixed minor pod errors involving &gt;
         - make t1log optional, defaulting to off.  You can enable the log
-          with Imager::init(t1log=>1)
+          with Imager::init(t1log=>1) (Ticket #369)
 
 =================================================================
 
