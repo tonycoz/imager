@@ -420,7 +420,13 @@ Revision history for Perl extension Imager.
         - dynaload.c is strongly tied to perl
 	
 	- should i_readgif returned colormap be an arrayref of 
-	Imager::Color objects?
+	Imager::Color objects?  Note that this will break 
+	compatibility with previous releases
+
+	- should Imager::Font be split into a base class whose 	
+	new chooses a base class (ttf, t1 or win32?) to 
+	instantiate.  Currently Imager::Font uses if() statements to
+	select between each type of font.
 
         Documentation:
         - Add to the documentation
