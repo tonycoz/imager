@@ -180,7 +180,7 @@ static struct value_name orddith_names[] =
 };
 
 static int
-hv_fetch_bool(HV *hv, char const *name, int def) {
+hv_fetch_bool(HV *hv, char *name, int def) {
   SV **sv;
 
   sv = hv_fetch(hv, name, strlen(name), 0);
@@ -192,7 +192,7 @@ hv_fetch_bool(HV *hv, char const *name, int def) {
 }
 
 static int
-hv_fetch_int(HV *hv, char const *name, int def) {
+hv_fetch_int(HV *hv, char *name, int def) {
   SV **sv;
 
   sv = hv_fetch(hv, name, strlen(name), 0);
