@@ -144,7 +144,7 @@ myrealloc_file_line(void *ptr, size_t newsize, char* file, int line) {
     exit(3);
   }
   
-  if ( (buf = realloc(ptr-UNDRRNVAL, UNDRRNVAL+OVERRNVAL+newsize) == NULL) ) {
+  if ( (buf = realloc(ptr-UNDRRNVAL, UNDRRNVAL+OVERRNVAL+newsize)) == NULL ) {
     mm_log((1,"Unable to reallocate %i bytes at %p for %s (%i)\n", newsize, ptr, file, line));
     exit(3); 
   }
@@ -181,7 +181,7 @@ void
 bndcheck_all() {
   int idx;
   mm_log((1, "bndcheck_all()\n"));
-for(idx=0; idx<MAXMAL; idx++)
+  for(idx=0; idx<MAXMAL; idx++)
     if (malloc_pointers[idx].ptr)
       bndcheck(idx);
 }
