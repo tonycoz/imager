@@ -25,16 +25,18 @@ i_conv(i_img *im,float *coeff,int len) {
 
   center=(len-1)/2;
 
+  pc = 0.0;
+  for (c = 0; c < len; ++c) {
+    pc += coeff[c];
+  }
 
   for(l=0;l<im->ysize;l++) {
     for(i=0;i<im->xsize;i++) {
-      pc=0.0;
       for(ch=0;ch<im->channels;ch++) res[ch]=0;
       for(c=0;c<len;c++)
 	if (i_gpix(im,i+c-center,l,&rcolor)!=-1) {
 	  for(ch=0;ch<im->channels;ch++) 
             res[ch]+=(float)(rcolor.channel[ch])*coeff[c];
-	  pc+=coeff[c];
 	}
       for(ch=0;ch<im->channels;ch++) {
         double temp = res[ch]/pc;
@@ -49,14 +51,12 @@ i_conv(i_img *im,float *coeff,int len) {
     {
       for(i=0;i<im->ysize;i++)
 	{
-	  pc=0.0;
 	  for(ch=0;ch<im->channels;ch++) res[ch]=0;
 	  for(c=0;c<len;c++)
 	    if (i_gpix(&timg,l,i+c-center,&rcolor)!=-1)
 	      {
 		for(ch=0;ch<im->channels;ch++) 
                   res[ch]+=(float)(rcolor.channel[ch])*coeff[c];
-		pc+=coeff[c];
 	      }
 	  for(ch=0;ch<im->channels;ch++) {
             double temp = res[ch]/pc;
