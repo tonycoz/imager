@@ -67,6 +67,12 @@ static void expand_4bit_hl(unsigned char *buf, int count);
 
 static void pack_4bit_hl(unsigned char *buf, int count);
 
+
+static toff_t sizeproc(thandle_t x) {
+	return 0;
+}
+
+
 /*
 =item comp_seek(h, o, w)
 
@@ -327,7 +333,7 @@ i_readtiff_wiol(io_glue *ig, int length) {
 		       (TIFFReadWriteProc) ig->writecb,
 		       (TIFFSeekProc) comp_seek,
 		       (TIFFCloseProc) ig->closecb,
-		       (TIFFSizeProc) ig->sizecb,
+		       ig->sizecb ? (TIFFSizeProc) ig->sizecb : (TIFFSizeProc) sizeproc,
 		       (TIFFMapFileProc) NULL,
 		       (TIFFUnmapFileProc) NULL);
   
