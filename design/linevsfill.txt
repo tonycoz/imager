@@ -1,0 +1,113 @@
+5/4 16:47:55 <TonyC:#imager> http://perlmonks.org/index.pl?node_id=11500 in case you missed it - he mentions a couple of Imager projects
+5/4 17:04:45 <Addi:#Imager> ooo
+5/4 17:04:48 * Addi:#Imager checks
+5/4 17:06:16 <TonyC:#imager> note merlyn's comments: http://perlmonks.org/index.pl?lastnode_id=155767&node_id=155428
+5/4 17:07:09 <TonyC:#imager> are the bottom/right parameters meant to be inclusive?
+5/4 17:07:43 <TonyC:#imager> Imager has a few mentions on perlmonks (try the SuperSearch)
+5/4 17:10:09 <Addi:#Imager> Hmmm, those off by one errors .... grrrr...
+5/4 17:10:22 <TonyC:#imager> is it a bug in the code or the docs?
+5/4 17:12:28 <Addi:#Imager> Let's choose the sensible one...
+5/4 17:12:29 <TonyC:#imager> $img->masked() takes left, right, top, bottom parameters too, and the resulting virtual image is right-left x bottom-top pixels
+5/4 17:12:38 <TonyC:#imager> which is my preference :)
+5/4 17:12:45 <Addi:#Imager> Yes.
+5/4 17:12:58 <TonyC:#imager> but it's confusing since the box drawing code uses the other interpretation
+5/4 17:13:01 <Addi:#Imager> That's what I would like...
+5/4 17:13:03 <Addi:#Imager> I think leolo wrote crop initiallly.
+5/4 17:13:50 <Addi:#Imager> Well, lets just work out the rules completely.
+5/4 17:14:21 <Addi:#Imager> Actually, I think we found one rule that is always consistent.
+5/4 17:14:42 <Addi:#Imager> imagine that everything has infinite resolution, and that we only specify integer coordinates.
+5/4 17:15:05 <Addi:#Imager> oh, that one has issues on line drawing iirc.
+5/4 17:15:40 <Leolo:#imager> did I ?
+5/4 17:16:04 <Leolo:#imager> not that i know of
+5/4 17:16:20 <Addi:#Imager> You recall copy and paste though, right?
+5/4 17:16:21 <Leolo:#imager> i didn't write any/much new code for Imager, mostly bug fixes
+5/4 17:17:30 <Addi:#Imager> Hmmm, claes then maybe, I'm sure I didn't ;)
+5/4 17:17:53 <TonyC:#imager> suuureee... :)
+5/4 17:17:53 <Leolo:#imager> either the hemp has scrambled my brain beyond repair, or i didn't write that code
+5/4 17:17:56 * Addi:#Imager writes up line drawing semantics.
+5/4 17:17:58 <Addi:#Imager> hehe
+5/4 17:20:51 <TonyC:#imager> cvs doesn't go back that far, so we can't check that way
+5/4 17:25:33 <Addi:#Imager> imager.perl.org/addi/drawing_semantics.txt
+5/4 17:26:14 <Addi:#Imager> It started out as statements and ended up as questions.
+5/4 17:26:37 <TonyC:#imager> so the current box()/crop() semantics are right, and masked() is wrong
+5/4 17:26:59 <Addi:#Imager> Well, you see there is a problem in there, right?
+5/4 17:27:02 <TonyC:#imager> oops, box() is right, crop() is wrong()
+5/4 17:27:22 <Addi:#Imager> I'm not seeing line behaving nicely
+5/4 17:27:41 <Addi:#Imager> like box(0,0,100,100) should fill (0,0) thru (99,99)
+5/4 17:28:15 <Leolo:#imager> inclusion of end-points debate!
+5/4 17:28:20 <TonyC:#imager> which is how box X and Win32 GDI act for filled shapes
+5/4 17:28:21 <Leolo:#imager> brane hurt time
+5/4 17:28:29 <TonyC:#imager> but box(filled=>1...) doesn't
+5/4 17:28:47 <Leolo:#imager> i figure both inclusion and exclusion are OK, as long as it's consistant and DOCUMENTED
+5/4 17:28:47 <TonyC:#imager> we've debated this before :)
+5/4 17:28:53 <Addi:#Imager> TonyC: Right, but X also says that box() behaves just as if you drew it with lines()
+5/4 17:29:07 <Addi:#Imager> So box() says how line() should work.
+5/4 17:29:14 <TonyC:#imager> for a filled or unfilled rectangle?
+5/4 17:29:17 <Addi:#Imager> Well, discussed, we never argue here.
+5/4 17:29:43 <Addi:#Imager> I think the outline for filled/unfilled box in X is the same.
+5/4 17:29:57 <Addi:#Imager> Lets make sure.
+5/4 17:30:45 <Addi:#Imager> Yup, should be the same as a polyline of ( [x,y] [x+width,y] [x+width,y+height] [x,y+height] [x,y] )
+5/4 17:32:09 <Addi:#Imager> Wow, this is amazing, how the heck can this hold?
+5/4 17:32:27 <Addi:#Imager> Does the polyline method in X know what is inside and what is outside of the polygon?
+5/4 17:33:33 <TonyC:#imager> from "Xlib Programming Manual", p 155: "Suprisingly, the filling and drawing versions of the rectangle functions do not draw the same outline if given the same arguments.  The routine that fills a rectangle draws an outline one pixel shorter in width and height than the routine that just draws the outline, as shown in Figure 6-2."
+5/4 17:33:57 <Addi:#Imager> ahhh, hah.
+5/4 17:34:11 <TonyC:#imager> I've quoted that before :)
+5/4 17:34:28 <Leolo:#imager> so filled is smaller?
+5/4 17:34:30 <Leolo:#imager> wow
+5/4 17:34:43 <Addi:#Imager> Damn, I think we're just replaying old conversation, can you just tell me right away how it ends?
+5/4 17:34:43 <Addi:#Imager> :P
+5/4 17:34:50 <Addi:#Imager> Leolo: nasty!
+5/4 17:34:51 <TonyC:#imager> we didn't resolve it :)
+5/4 17:35:05 <Addi:#Imager> Yeah, because it's just a friggen nightmare.
+5/4 17:35:12 <Addi:#Imager> But I don't think we can put it of anymore.
+5/4 17:35:32 <Addi:#Imager> TonyC: You have that in .ps?
+5/4 17:35:50 <TonyC:#imager> consider it in terms of area for the filled version - it produces a (right-left)*(bottom-top) area rectangle
+5/4 17:35:53 <TonyC:#imager> no, hardcopy
+5/4 17:36:08 <TonyC:#imager> it's from 1993, but I doubt it has changed since then
+5/4 17:36:08 <Addi:#Imager> It comes with the X source iirc.
+5/4 17:37:12 <Addi:#Imager> ok, so this means that box that is not filled should draw out to (100,100)
+5/4 17:37:25 <Addi:#Imager> while a filled box would only go out to 99,99
+5/4 17:37:30 <TonyC:#imager> yes
+5/4 17:37:51 <Addi:#Imager> I'm not really sure which is better.
+5/4 17:37:58 <TonyC:#imager> when working with fills, consider the origin to be at the top-left of the top-left pixel
+5/4 17:38:14 <TonyC:#imager> when working with lines, consider the origin to be at the centre of the top-left pixel
+5/4 17:38:16 <Addi:#Imager> TonyC: Exactly, that's how I hoped to do everything.
+5/4 17:38:32 <Addi:#Imager> hmmm, that's a good way to put it.
+5/4 17:38:40 <Leolo:#imager> good luck, folks
+5/4 17:38:46 <Leolo:#imager> i'm going to have another round of sleep
+5/4 17:38:55 <Addi:#Imager> nini leolo.
+5/4 17:39:07 <TonyC:#imager> sounds good, a hole digging machine woke me this morning
+5/4 17:39:18 <TonyC:#imager> and an earth mover
+5/4 17:39:24 <Addi:#Imager> TonyC: They also have wierd ways of specifying circles and things.
+5/4 17:40:27 <Addi:#Imager> The thing that one would hope for is that you could make a box and then make and edge for it too.
+5/4 17:40:59 <TonyC:#imager> yeah, it's the only annoyance, but if you can accept overlap you're ok
+5/4 17:41:21 <Addi:#Imager> Well, ImageMagick allows borders on any primitive iirc.
+5/4 17:41:44 <Addi:#Imager> Well, boxes might be easy to handle, but consider the terror of dealing with polygons.
+5/4 17:41:48 <Addi:#Imager> It has to extend to that.
+5/4 17:41:59 <Addi:#Imager> Do they say anything about polygons in the Xlib manual?
+5/4 17:42:17 * TonyC:#imager looks
+5/4 17:44:02 <TonyC:#imager> nothing useful to our debate
+5/4 17:45:51 <Addi:#Imager> ok, I guess the same logic as you used before holds.
+5/4 17:46:06 <Addi:#Imager> infinately thin border in inf resolution.
+5/4 17:46:19 <Addi:#Imager> It's all about 'enclosed'.
+5/4 17:46:35 <Addi:#Imager> upper left corner basically.
+5/4 17:47:05 <Addi:#Imager> I guess it means that making a border in X is a horrible pain.
+5/4 17:47:49 <TonyC:#imager> in Win32, you give it a pen (outline) and a brush (fill) and it's GDI's problem
+5/4 17:48:36 <Addi:#Imager> Yeah, I wonder if the GC in X does the border for you.
+5/4 17:51:13 <TonyC:#imager> my manual says there's no outline function corresponding to XFillPolygon()
+5/4 17:54:30 <Addi:#Imager> ok, but I guess this means that both endpoints of lines are drawn in X?
+5/4 17:54:37 <Addi:#Imager> but for a polyline each pixel is only drawn once.
+5/4 17:55:13 <TonyC:#imager> which function?
+5/4 17:55:17 <purl:#imager> which function are they fixing?
+5/4 17:55:22 <Addi:#Imager> line)
+5/4 17:55:22 <Addi:#Imager> line()
+5/4 17:55:43 <Addi:#Imager> or rather we could draw both endpoints.
+5/4 17:56:03 <Addi:#Imager> and it would not break how box() would work (assuming we used non filled semantics).
+5/4 17:57:34 <Addi:#Imager> wow, they do thick lines as polygons behind the curtains.
+5/4 17:58:06 <TonyC:#imager> ok, I guess you're already looking at XDrawLine(s)
+5/4 17:58:14 <Addi:#Imager> Yeah.
+5/4 17:58:38 <TonyC:#imager> simplest way of doing it - considering line endings and joins and so on
+5/4 17:59:55 <Addi:#Imager> It would seem that XDrawLine() draws both endpoints.
+5/4 18:00:42 <TonyC:#imager> though the line crossings for simple lines aren't such an issue with Imager since it does't do XOR and other similar combining modes, which X needs to handle
+5/4 18:00:55 <Addi:#Imager> Yeah.
+5/4 18:01:31 <Addi:#Imager> imager does alpha instead which is pretty much very hard to do with stroke support.
