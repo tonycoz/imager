@@ -2039,7 +2039,7 @@ sub line {
   $opts{antialias} = $opts{aa} if defined $opts{aa};
   if ($opts{antialias}) {
     i_line_aa($self->{IMG},$opts{x1}, $opts{y1}, $opts{x2}, $opts{y2},
-              $color);
+              $color, $opts{endp});
   } else {
     i_line($self->{IMG},$opts{x1}, $opts{y1}, $opts{x2}, $opts{y2},
            $color, $opts{endp});
@@ -2074,7 +2074,7 @@ sub polyline {
   if ($opts{antialias}) {
     for $pt(@points) {
       if (defined($ls)) { 
-        i_line_aa($self->{IMG},$ls->[0],$ls->[1],$pt->[0],$pt->[1],$color);
+        i_line_aa($self->{IMG},$ls->[0],$ls->[1],$pt->[0],$pt->[1],$color, 1);
       }
       $ls=$pt;
     }

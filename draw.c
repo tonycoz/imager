@@ -530,13 +530,51 @@ i_line(i_img *im, int x1, int y1, int x2, int y2, i_color *val, int endp) {
 
 
 void
-i_line_aa(i_img *im,int x1,int y1,int x2,int y2,i_color *val) {
+i_line_dda(i_img *im, int x1, int y1, int x2, int y2, i_color *val) {
+
+  float dy;
+  int x;
+  
+  for(x=x1; x<=x2; x++) {
+    dy = y1+ (x-x1)/(float)(x2-x1)*(y2-y1);
+    i_ppix(im, x, rint(dy), val);
+  }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+void
+i_line_aa3(i_img *im,int x1,int y1,int x2,int y2,i_color *val) {
   i_color tval;
   float alpha;
   float dsec,dfrac;
   int temp,dx,dy,isec,ch;
 
-  mm_log((1,"i_draw(im* 0x%x,x1 %d,y1 %d,x2 %d,y2 %d,val 0x%x)\n",im,x1,y1,x2,y2,val));
+  mm_log((1,"i_line_aa(im* 0x%x,x1 %d,y1 %d,x2 %d,y2 %d,val 0x%x)\n",im,x1,y1,x2,y2,val));
 
   dy=y2-y1;
   dx=x2-x1;
@@ -586,6 +624,138 @@ i_line_aa(i_img *im,int x1,int y1,int x2,int y2,i_color *val) {
   }
 }
 
+
+
+
+void
+i_line_aa(i_img *im, int x1, int y1, int x2, int y2, i_color *val, int endp) {
+  int x, y;
+  int dx, dy;
+  int p;
+  unsigned char *cp;
+
+  dx = x2 - x1;
+  dy = y2 - y1;
+
+  /* choose variable to iterate on */
+  if (abs(dx)>abs(dy)) {
+    int dx2, dy2, cpy;
+    
+    /* sort by x */
+    if (x1 > x2) {
+      int t;
+      t = x1; x1 = x2; x2 = t;
+      t = y1; y1 = y2; y2 = t;
+    }
+    
+    dx = abs(dx);
+    dx2 = dx*2;
+    dy = y2 - y1;
+
+    if (dy<0) {
+      dy = -dy;
+      cpy = -1;
+    } else {
+      cpy = 1;
+    }
+    dy2 = dy*2;
+    p = dy2 - dx2; /* this has to be like this for AA */
+    
+    y = y1;
+
+    for(x=x1; x<x2-1; x++) {
+      int ch;
+      i_color tval;
+      float t = (dy) ? -(float)(p)/(float)(dx2) : 1;
+      float t1, t2;
+
+      if (t<0) t = 0;
+      t1 = 1-t;
+      t2 = t;
+
+      i_gpix(im,x+1,y,&tval);
+      for(ch=0;ch<im->channels;ch++)
+	tval.channel[ch]=(unsigned char)(t1*(float)tval.channel[ch]+t2*(float)val->channel[ch]);
+      i_ppix(im,x+1,y,&tval);
+
+      i_gpix(im,x+1,y+cpy,&tval);
+      for(ch=0;ch<im->channels;ch++)
+	tval.channel[ch]=(unsigned char)(t2*(float)tval.channel[ch]+t1*(float)val->channel[ch]);
+      i_ppix(im,x+1,y+cpy,&tval);
+
+      if (p<0) {
+        p += dy2;
+      } else {
+        y += cpy;
+        p += dy2-dx2;
+      }
+    }
+  } else {
+    int dy2, dx2, cpx;
+
+    /* sort bx y */
+    if (y1 > y2) {
+      int t;
+      t = x1; x1 = x2; x2 = t;
+      t = y1; y1 = y2; y2 = t;
+    }
+    
+    dy = abs(dy);
+    dx = x2 - x1;
+    dy2 = dy*2;
+
+    if (dx<0) {
+      dx = -dx;
+      cpx = -1;
+    } else {
+      cpx = 1;
+    }
+    dx2 = dx*2;
+    p = dx2 - dy2; /* this has to be like this for AA */
+
+    x = x1;
+    
+    for(y=y1; y<y2-1; y++) {
+      int ch;
+      i_color tval;
+      float t = (dx) ? -(float)(p)/(float)(dy2) : 1;
+      float t1, t2;
+      
+      if (t<0) t = 0;
+      t1 = 1-t;
+      t2 = t;
+
+      i_gpix(im,x,y+1,&tval);
+      for(ch=0;ch<im->channels;ch++)
+	tval.channel[ch]=(unsigned char)(t1*(float)tval.channel[ch]+t2*(float)val->channel[ch]);
+      i_ppix(im,x,y+1,&tval);
+
+      i_gpix(im,x+cpx,y+1,&tval);
+      for(ch=0;ch<im->channels;ch++)
+	tval.channel[ch]=(unsigned char)(t2*(float)tval.channel[ch]+t1*(float)val->channel[ch]);
+      i_ppix(im,x+cpx,y+1,&tval);
+
+      if (p<0) {
+        p  += dx2;
+      } else {
+        x += cpx;
+        p += dx2-dy2;
+      }
+    }
+  }
+
+
+  if (endp) {
+    i_ppix(im, x1, y1, val);
+    i_ppix(im, x2, y2, val);
+  } else {
+    if (x1 != x2 || y1 != y2) 
+      i_ppix(im, x1, y1, val);
+  }
+}
+
+
+
 static double
 perm(int n,int k) {
   double r;
@@ -633,7 +803,7 @@ i_bezier_multi(i_img *im,int l,double *x,double *y,i_color *val) {
     }
     /*    printf("%f -> (%d,%d)\n",t,(int)(0.5+cx),(int)(0.5+cy)); */
     if (i++) { 
-      i_line_aa(im,lx,ly,(int)(0.5+cx),(int)(0.5+cy),val);
+      i_line_aa(im,lx,ly,(int)(0.5+cx),(int)(0.5+cy),val, 1);
     }
       /*     i_ppix(im,(int)(0.5+cx),(int)(0.5+cy),val); */
     lx=(int)(0.5+cx);
