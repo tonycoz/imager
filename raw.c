@@ -65,6 +65,8 @@ i_readraw_wiol(io_glue *ig, int x, int y, int datachannels, int storechannels, i
 	  ig, x, y, datachannels, storechannels, intrl));
   
   im = i_img_empty_ch(NULL,x,y,storechannels);
+  if (!im)
+    return NULL;
   
   inbuflen = im->xsize*datachannels;
   ilbuflen = inbuflen;
@@ -92,6 +94,9 @@ i_readraw_wiol(io_glue *ig, int x, int y, int datachannels, int storechannels, i
   myfree(inbuffer);
   if (intrl != 0) myfree(ilbuffer);
   if (datachannels != storechannels) myfree(exbuffer);
+
+  i_tags_add(&im->tags, "i_format", 0, "raw", -1, 0);
+
   return im;
 }
 
