@@ -1026,7 +1026,7 @@ Revision history for Perl extension Imager.
 - calling the read() method for a format not included in the Imager build,
   for example, JPEG with no libjpeg installed, would crash with an 
   undefined function error (modified by DynaLoaders dependence on 
-  AutoLoader.
+  AutoLoader.)
   http://rt.cpan.org/NoAuth/Bug.html?id=9618
 - some test scripts have been modified to use Test::More, which is now
   included under the t directory.  Eventually all will be modified to use
