@@ -2922,8 +2922,8 @@ IMPLEMENTATION MORE OR LESS DONE CHECK THE TESTS
 DOCUMENTATION OF THIS SECTION OUT OF SYNC
 
 It is possible to draw with graphics primitives onto images.  Such
-primitives include boxes, arcs, circles and lines.  A reference
-oriented list follows.
+primitives include boxes, arcs, circles, polygons and lines.  A
+reference oriented list follows.
 
 Box:
   $img->box(color=>$blue,xmin=>10,ymin=>30,xmax=>200,ymax=>300,filled=>1);
@@ -2940,18 +2940,6 @@ Arc:
 
 This creates a filled red arc with a 'center' at (200, 100) and spans
 10 degrees and the slice has a radius of 20. SEE section on BUGS.
-
-Both the arc() and box() methods can take a C<fill> parameter which
-can either be an Imager::Fill object, or a reference to a hash
-containing the parameters used to create the fill:
-
-  $img->box(xmin=>10, ymin=>30, xmax=>150, ymax=>60,
-            fill => { hatch=>'cross2' });
-  use Imager::Fill;
-  my $fill = Imager::Fill->new(hatch=>'stipple');
-  $img->box(fill=>$fill);
-
-See L<Imager::Fill> for the type of fills you can use.
 
 Circle:
   $img->circle(color=>$green, r=50, x=>200, y=>100);
@@ -2976,13 +2964,14 @@ other way is to specify two array references.
 
 Polygon:
   $img->polygon(points=>[[$x0,$y0],[$x1,$y1],[$x2,$y2]],color=>$red);
-  $img->polyline(x=>[$x0,$x1,$x2], y=>[$y0,$y1,$y2]);
+  $img->polygon(x=>[$x0,$x1,$x2], y=>[$y0,$y1,$y2]);
 
 Polygon is used to draw a filled polygon.  Currently the polygon is
 always drawn antialiased, although that will change in the future.
 Like other antialiased drawing functions its coordinates can be
 specified with floating point values.
 
+Flood Fill:
 
 You can fill a region that all has the same color using the
 flood_fill() method, for example:
@@ -2991,12 +2980,19 @@ flood_fill() method, for example:
 
 will fill all regions the same color connected to the point (50, 50).
 
-You can also use a general fill, so you could fill the same region
-with a check pattern using:
+The arc(), box(), polygon() and flood_fill() methods can take a
+C<fill> parameter which can either be an Imager::Fill object, or a
+reference to a hash containing the parameters used to create the fill:
 
-  $img->flood_fill(x=>50, y=>50, fill=>{ hatch=>'check2x2' });
+  $img->box(xmin=>10, ymin=>30, xmax=>150, ymax=>60,
+            fill => { hatch=>'cross2' });
+  use Imager::Fill;
+  my $fill = Imager::Fill->new(hatch=>'stipple');
+  $img->box(fill=>$fill);
 
-See L<Imager::Fill> for more information on general fills.
+Currently you can create opaque or transparent plain color fills,
+hatched fills, image based fills and fountain fills.  See
+L<Imager::Fill> for more information.
 
 =head2 Text rendering
 
