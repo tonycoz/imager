@@ -1242,6 +1242,11 @@ i_diff_image(i_img *im1, i_img *im2, int mindiff) {
     for (y = 0; y < ysize; ++y) {
       i_glin(im1, 0, xsize, y, line1);
       i_glin(im2, 0, xsize, y, line2);
+      if (outchans != diffchans) {
+        /* give the output an alpha channel since it doesn't have one */
+        for (x = 0; x < xsize; ++x)
+          line2[x].channel[diffchans] = 255;
+      }
       for (x = 0; x < xsize; ++x) {
         int diff = 0;
         for (ch = 0; ch < diffchans; ++ch) {
@@ -1271,6 +1276,11 @@ i_diff_image(i_img *im1, i_img *im2, int mindiff) {
     for (y = 0; y < ysize; ++y) {
       i_glinf(im1, 0, xsize, y, line1);
       i_glinf(im2, 0, xsize, y, line2);
+      if (outchans != diffchans) {
+        /* give the output an alpha channel since it doesn't have one */
+        for (x = 0; x < xsize; ++x)
+          line2[x].channel[diffchans] = 1.0;
+      }
       for (x = 0; x < xsize; ++x) {
         int diff = 0;
         for (ch = 0; ch < diffchans; ++ch) {
