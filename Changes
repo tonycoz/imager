@@ -520,6 +520,8 @@ Revision history for Perl extension Imager.
         - adjust ascender/descender values for FT1.x to avoid losing
           descenders (specifically the bottom of "g" in ImUgly.ttf or
           arial.ttf at 14pixels)
+        - Added tga.c to read targa images
+        - Added i_bumpmap_complex to do more accurate bumpmapping
 
 =================================================================
 
