@@ -1001,7 +1001,13 @@ sub read {
 # Write an image to file
 sub write {
   my $self = shift;
-  my %input=(jpegquality=>75, gifquant=>'mc', lmdither=>6.0, lmfixed=>[], 
+  my %input=(jpegquality=>75, 
+	     gifquant=>'mc', 
+	     lmdither=>6.0, 
+	     lmfixed=>[],
+	     idstring=>"",
+	     compress=>1,
+	     wierdpack=>0,
 	     fax_fine=>1, @_);
   my ($fh, $rc, $fd, $IO);
 
@@ -1074,7 +1080,8 @@ sub write {
       }
       $self->{DEBUG} && print "writing a bmp file\n";
     } elsif ( $input{type} eq 'tga' ) {
-      if ( !i_writetga_wiol($self->{IMG}, $IO) ) {
+
+      if ( !i_writetga_wiol($self->{IMG}, $IO, $input{wierdpack}, $input{compress}, $input{idstring}) ) {
 	$self->{ERRSTR}=$self->_error_as_msg();
 #	$self->{ERRSTR}='unable to write tga image';
 	return undef;
