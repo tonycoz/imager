@@ -523,6 +523,7 @@ Revision history for Perl extension Imager.
         - Added tga.c to read targa images
         - Added i_bumpmap_complex to do more accurate bumpmapping
         - added an image type with doubles as samples
+        - change i_copy() and i_sametype() to handle double/sample images
 
 =================================================================
 
