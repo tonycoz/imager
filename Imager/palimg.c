@@ -554,3 +554,17 @@ static int i_findcolor_p(i_img *im, i_color *color, i_palidx *entry) {
   }
   return 0;
 }
+
+/*
+=back
+
+=head1 AUTHOR
+
+Tony Cook <tony@develop-help.com>
+
+=head1 SEE ALSO
+
+Imager(3)
+
+=cut
+*/

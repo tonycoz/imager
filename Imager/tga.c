@@ -30,7 +30,7 @@ entire memory mapped buffer.
 
 Some of these functions are internal.
 
-=over 4
+=over
 
 =cut
 */
@@ -870,3 +870,17 @@ i_writetga_wiol(i_img *img, io_glue *ig, int wierdpack, int compress, char *idst
   }
   return 1;
 }
+
+/*
+=back
+
+=head1 AUTHOR
+
+Arnar M. Hrafnkelsson <addi@umich.edu>
+
+=head1 SEE ALSO
+
+Imager(3)
+
+=cut
+*/

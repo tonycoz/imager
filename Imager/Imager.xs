@@ -1922,7 +1922,7 @@ i_transform2(width,height,ops,n_regs,c_regs,in_imgs)
 	     else {
 	       in_imgs_count = 0;
              }
-             if (SvTYPE(SvRV(ST(5))) == SVt_PVAV) {
+             if (in_imgs_count > 0) {
                av = (AV*)SvRV(ST(5));
                in_imgs = mymalloc(in_imgs_count*sizeof(i_img*));
                for (i = 0; i < in_imgs_count; ++i) {              

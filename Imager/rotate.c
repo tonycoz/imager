@@ -438,3 +438,17 @@ i_img *i_rotate_exact(i_img *src, double amount) {
 
   return i_matrix_transform(src, newxsize, newysize, matrix);
 }
+
+/*
+=back
+
+=head1 AUTHOR
+
+Tony Cook <tony@develop-help.com>
+
+=head1 SEE ALSO
+
+Imager(3)
+
+=cut
+*/

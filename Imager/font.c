@@ -43,7 +43,7 @@ more for Imager.
 
 Some of these functions are internal.
 
-=over 4
+=over
 
 =cut
 
@@ -1218,3 +1218,18 @@ i_tt_bbox( TT_Fonthandle *handle, float points,char *txt,int len,int cords[6]) {
 
 
 #endif /* HAVE_LIBTT */
+
+
+/*
+=back
+
+=head1 AUTHOR
+
+Arnar M. Hrafnkelsson <addi@umich.edu>
+
+=head1 SEE ALSO
+
+Imager(3)
+
+=cut
+*/

@@ -52,7 +52,7 @@ objects for Imager.  The typical usage pattern for data sources is:
 
 Some of these functions are internal.
 
-=over 4
+=over
 
 =cut
 */
@@ -889,3 +889,18 @@ io_glue_DESTROY(io_glue *ig) {
   }
   myfree(ig);
 }
+
+
+/*
+=back
+
+=head1 AUTHOR
+
+Arnar M. Hrafnkelsson <addi@umich.edu>
+
+=head1 SEE ALSO
+
+Imager(3)
+
+=cut
+*/

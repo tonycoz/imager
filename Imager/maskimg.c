@@ -512,3 +512,17 @@ static int i_ppal_masked(i_img *im, int l, int r, int y, i_palidx *vals) {
   }
 }
 
+
+/*
+=back
+
+=head1 AUTHOR
+
+Tony Cook <tony@develop-help.com>
+
+=head1 SEE ALSO
+
+Imager(3)
+
+=cut
+*/

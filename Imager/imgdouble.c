@@ -349,3 +349,17 @@ static int i_gsampf_ddoub(i_img *im, int l, int r, int y, i_fsample_t *samps,
   }
 }
 
+
+/*
+=back
+
+=head1 AUTHOR
+
+Tony Cook <tony@develop-help.com>
+
+=head1 SEE ALSO
+
+Imager(3)
+
+=cut
+*/

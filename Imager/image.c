@@ -26,7 +26,7 @@ color objects for Imager.
 
 Some of these functions are internal.
 
-=over 4
+=over
 
 =cut
 */
@@ -2058,6 +2058,12 @@ int free_gen_write_data(i_gen_write_data *info, int flush)
 
 /*
 =back
+
+=head1 AUTHOR
+
+Arnar M. Hrafnkelsson <addi@umich.edu>
+
+Tony Cook <tony@develop-help.com>
 
 =head1 SEE ALSO
 

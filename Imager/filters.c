@@ -27,7 +27,7 @@ the pod for Imager.
 
 Some of these functions are internal.
 
-=over 4
+=over
 
 =cut
 */
