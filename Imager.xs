@@ -421,14 +421,16 @@ ICL_DESTROY(cl)
                Imager::Color    cl
 
 
-Imager::Color
+void
 ICL_set_internal(cl,r,g,b,a)
                Imager::Color    cl
                unsigned char     r
                unsigned char     g
                unsigned char     b
                unsigned char     a
-
+	   PPCODE:
+	       EXTEND(SP, 1);
+	       PUSHs(ST(0));
 
 void
 ICL_info(cl)
