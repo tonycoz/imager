@@ -297,7 +297,7 @@ int i_failed(int code, char const *msg) {
     for (sp = error_sp; error_stack[sp].msg; ++sp) {
       total += strlen(error_stack[sp].msg) + 2;
     }
-    full = malloc(total);
+    full = mymalloc(total);
     if (!full) {
       /* just quit, at least it's on stderr */
       exit(EXIT_FAILURE);

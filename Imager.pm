@@ -855,7 +855,7 @@ sub read {
 
   if ($iolready{$input{'type'}}) {
     # Setup data source
-    $IO = io_new_fd($fd);	# sort of simple for now eh?
+    $IO = defined $fd ? io_new_fd($fd) : io_new_buffer($input{data});
 
     if ( $input{'type'} eq 'jpeg' ) {
       ($self->{IMG},$self->{IPTCRAW})=i_readjpeg_wiol( $IO );
