@@ -599,7 +599,8 @@ put STDOUT into binmode
 =item 4.
 
 call write() with the C<fd> or C<fh> parameter.  You will need to
-provide the C<type> parameter since 
+provide the C<type> parameter since Imager can't use the extension to
+guess the file format you want.
 
 =back
 

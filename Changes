@@ -955,6 +955,8 @@ Revision history for Perl extension Imager.
   locations first, so that those directories are searched before
   the freetype1 directories.  This prevents problems compiling
   font.c on FreeBSD.
+- finish off a sentence in the "Producing an image from a CGI script"
+  example in Imager::Files
 
 =================================================================
 
