@@ -1,6 +1,12 @@
                          *** TODO ***
 
-PRE-0.44:
+Release Plans (subject to change)
+-------------
+
+brown-bag bugs may add intermediate releases.  The dates are goals,
+not commitments.
+
+0.44: (december 2004)
 - set i_format for every file type on read and test for it:
   - bmp - done
   - jpeg - done
@@ -10,7 +16,7 @@ PRE-0.44:
   - png - done
   - gif - done
   - pnm - done
-  - raw
+  - raw - done
 - check each file reader for possible integer overflows
   - bmp - done
   - tiff
@@ -21,7 +27,41 @@ PRE-0.44:
   - pnm
 - check bmp code uses image data offset correctly - done
 - check quant code for integer overflows - done
-- check for old URLs (umich and imager.perl.org/~addi/...)
+- check for old URLs (umich and imager.perl.org/~addi/...) - done
+
+0.45: (march 2005?)
+- audit pnm.c
+- audit tga.c
+- audit rgb.c and add tests
+- capture TIFF read warnings (i_warnings tag?)
+- add Imager::Cookbook with at least 5 recipes
+- implement i_incomplete for bmp files
+- store floating point tags in an appropriate precision
+- allow image creation to fail on malloc() failure for the image data
+  rather than aborting.  The current behaviour could be a denial of
+  service attack.
+- eliminate unused variable warning (especially the RETVAL ones in Imager.xs)
+
+0.46: (june 2005)
+- allow limits to be set on the size of an image read from a file.  This is
+  to prevent an attacker supplying huge images that consume all of 
+  memory causing a denial of service attack.
+- add Imager::Tutorial (see Tk::UserGuide for a structure)
+  don't cover installation - belongs in README or INSTALL
+  it doesn't need to cover everything - read/write/create/simple drawing
+  and simple text - other stuff belongs in the cookbook or in sample code
+- add 5 more recipes to Imager::Cookbook
+- implement gsamp()/gsampf()/plin() etc methods for those low level image
+  interfaces which don't yet have methods.
+- implement i_incomplete for png and gif files.
+
+Speculation
+-----------
+
+Some of what's listed below has been implemented.
+
+- should i_incomplete be optional?  ie. reading a short image results in
+  an error unless the user requests incomplete images.
 
 Iolayer:
 - Add scalar/mmap to iolayer
@@ -32,7 +72,6 @@ Iolayer:
   be read from a source before it stops reading from its
   underlying source.  For making sure only the relevant
   data is read from a socket for example. 
-
 
 Enhanched internal structure:
 
