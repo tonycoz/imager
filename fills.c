@@ -221,7 +221,7 @@ i_new_fill_solidf(i_fcolor *c, int combine) {
   int ch;
   i_fill_solid_t *fill = mymalloc(sizeof(i_fill_solid_t));
   
-  if (combine && c->channel[3] < 1.0) {
+  if (combine) {
     *fill = base_solid_fill_comb;
     i_get_combine(combine, &fill->base.combine, &fill->base.combinef);
   }
@@ -250,7 +250,7 @@ i_new_fill_solid(i_color *c, int combine) {
   int ch;
   i_fill_solid_t *fill = mymalloc(sizeof(i_fill_solid_t));
 
-  if (combine && c->channel[3] < 255) {
+  if (combine) {
     *fill = base_solid_fill_comb;
     i_get_combine(combine, &fill->base.combine, &fill->base.combinef);
   }
@@ -561,7 +561,7 @@ i_new_hatch_low(i_color *fg, i_color *bg, i_fcolor *ffg, i_fcolor *fbg,
   fill->bg = bg ? *bg : fcolor_to_color(fbg);
   fill->ffg = ffg ? *ffg : color_to_fcolor(fg);
   fill->fbg = fbg ? *fbg : color_to_fcolor(bg);
-  if (combine && (fill->ffg.channel[0] < 1 || fill->fbg.channel[0] < 1)) {
+  if (combine) {
     i_get_combine(combine, &fill->base.combine, &fill->base.combinef);
   }
   else {
