@@ -149,6 +149,14 @@ sub new {
                   $hsh{ftype}, $hsh{repeat}, $hsh{combine}, $hsh{super_sample},
                   $hsh{ssample_param}, $hsh{segments});
   }
+  elsif (defined $hsh{image}) {
+    $hsh{xoff} ||= 0;
+    $hsh{yoff} ||= 0;
+    $self->{fill} =
+      Imager::i_new_fill_image($hsh{image}{IMG}, $hsh{matrix}, $hsh{xoff}, 
+                               $hsh{yoff}, $hsh{combine});
+    $self->{DEPS} = [ $hsh{image}{IMG} ];
+  }
   else {
     $Imager::ERRSTR = "No fill type specified";
     warn "No fill type!";
@@ -177,6 +185,8 @@ sub combines {
   my $fill1 = Imager::Fill->new(solid=>$color, combine=>$combine);
   my $fill2 = Imager::Fill->new(hatch=>'vline2', fg=>$color1, bg=>$color2,
                                 dx=>$dx, dy=>$dy);
+  my $fill3 = Imager::Fill->new(fountain=>$type, ...);
+  my $fill4 = Imager::Fill->new(image=>$img, ...);
 
 =head1 DESCRIPTION 
 
@@ -402,6 +412,22 @@ same fill as the C<fountain> filter, but is restricted to the shape
 you are drawing, and the fountain parameter supplies the fill type,
 and is required.
 
+=head2 Image Fills
+
+  my $fill = Imager::Fill->new(image=>$src, xoff=>$xoff, yoff=>$yoff,
+                               matrix=>$matrix, $combine);
+
+Fills the given image with a tiled version of the given image.  The
+first non-zero value of xoff or yoff will provide an offset along the
+given axis between rows or columns of tiles respectively.
+
+The matrix parameter performs a co-ordinate transformation from the
+co-ordinates in the target image to the fill image co-ordinates.
+Linear interpolation is used to determine the fill pixel.  You can use
+the L<Imager::Matrix2d> class to create transformation matrices.
+
+The matrix parameter will significantly slow down the fill.
+
 =head1 OTHER METHODS
 
 =over
@@ -421,10 +447,6 @@ A list of all combine types.
 I'm planning on adding the following types of fills:
 
 =over
-
-=item image
-
-tiled image fill
 
 =item checkerboard
 

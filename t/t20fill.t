@@ -1,7 +1,7 @@
 #!perl -w
 use strict;
 
-print "1..35\n";
+print "1..37\n";
 
 use Imager ':handy';
 use Imager::Fill;
@@ -197,6 +197,38 @@ for my $comb (Imager::Fill->combines) {
 
 ok($testnum++, $ffim->arc(r=>45, color=>$blue, aa=>1), "aa circle");
 $ffim->write(file=>"testout/t20_aacircle.ppm");
+
+# image based fills
+my $green = NC(0, 255, 0);
+my $fillim = Imager->new(xsize=>40, ysize=>40, channels=>4);
+$fillim->box(filled=>1, xmin=>5, ymin=>5, xmax=>35, ymax=>35, 
+             color=>NC(0, 0, 255, 128));
+$fillim->arc(filled=>1, r=>10, color=>$green, aa=>1);
+my $ooim = Imager->new(xsize=>150, ysize=>150);
+$ooim->box(filled=>1, color=>$green, xmin=>70, ymin=>25, xmax=>130, ymax=>125);
+$ooim->box(filled=>1, color=>$blue, xmin=>20, ymin=>25, xmax=>80, ymax=>125);
+$ooim->arc(r=>30, color=>$red, aa=>1);
+
+my $oocopy = $ooim->copy();
+ok($testnum++, 
+   $oocopy->arc(fill=>{image=>$fillim, 
+                       combine=>'normal',
+                       xoff=>5}, r=>40),
+   "image based fill");
+$oocopy->write(file=>'testout/t20_image.ppm');
+
+# a more complex version
+use Imager::Matrix2d ':handy';
+$oocopy = $ooim->copy;
+ok($testnum++,
+   $oocopy->arc(fill=>{
+                       image=>$fillim,
+                       combine=>'normal',
+                       matrix=>m2d_rotate(degrees=>30),
+                       xoff=>5
+                       }, r=>40),
+   "transformed image based fill");
+$oocopy->write(file=>'testout/t20_image_xform.ppm');
 
 sub ok ($$$) {
   my ($num, $test, $desc) = @_;

@@ -513,6 +513,7 @@ Revision history for Perl extension Imager.
           if it's small enough
         - $img->arc() now calls i_circle_aa() if a complete circle is
           being drawn in a plain color
+        - image based fills
 
 =================================================================
 

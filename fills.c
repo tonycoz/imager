@@ -16,6 +16,7 @@ fills.c - implements the basic general fills
   fill = i_new_fill_solid(&c1, combine);
   fill = i_new_fill_hatchf(&fc1, &fc2, combine, hatch, cust_hash, dx, dy);
   fill = i_new_fill_hatch(&c1, &c2, combine, hatch, cust_hash, dx, dy);
+  fill = i_new_fill_image(im, matrix, xoff, yoff, combine);
   i_fill_destroy(fill);
 
 =head1 DESCRIPTION
@@ -462,6 +463,58 @@ i_new_fill_hatchf(i_fcolor *fg, i_fcolor *bg, int combine, int hatch,
                          dx, dy);
 }
 
+static void fill_image(i_fill_t *fill, int x, int y, int width, int channels,
+                       i_color *data, i_color *work);
+static void fill_imagef(i_fill_t *fill, int x, int y, int width, int channels,
+                       i_fcolor *data, i_fcolor *work);
+struct i_fill_image_t {
+  i_fill_t base;
+  i_img *src;
+  int xoff, yoff;
+  int has_matrix;
+  double matrix[9];
+};
+
+/*
+=item i_new_fill_image(im, matrix, xoff, yoff, combine)
+
+Create an image based fill.
+
+=cut
+*/
+i_fill_t *
+i_new_fill_image(i_img *im, double *matrix, int xoff, int yoff, int combine) {
+  struct i_fill_image_t *fill = mymalloc(sizeof(*fill));
+
+  fill->base.fill_with_color = fill_image;
+  fill->base.fill_with_fcolor = fill_imagef;
+  fill->base.destroy = NULL;
+
+  if (combine) {
+    i_get_combine(combine, &fill->base.combine, &fill->base.combinef);
+  }
+  else {
+    fill->base.combine = NULL;
+    fill->base.combinef = NULL;
+  }
+  fill->src = im;
+  if (xoff < 0)
+    xoff += im->xsize;
+  fill->xoff = xoff;
+  if (yoff < 0)
+    yoff += im->ysize;
+  fill->yoff = yoff;
+  if (matrix) {
+    fill->has_matrix = 1;
+    memcpy(fill->matrix, matrix, sizeof(fill->matrix));
+  }
+  else
+    fill->has_matrix = 0;
+
+  return &fill->base;
+}
+
+
 #define T_SOLID_FILL(fill) ((i_fill_solid_t *)(fill))
 
 /*
@@ -651,6 +704,208 @@ static void fill_hatchf(i_fill_t *fill, int x, int y, int width, int channels,
       if ((mask >>= 1) == 0)
         mask = 128;
     }
+  }
+}
+
+/* hopefully this will be inlined  (it is with -O3 with gcc 2.95.4) */
+/* linear interpolation */
+static i_color interp_i_color(i_color before, i_color after, double pos,
+                              int channels) {
+  i_color out;
+  int ch;
+
+  pos -= floor(pos);
+  for (ch = 0; ch < channels; ++ch)
+    out.channel[ch] = (1-pos) * before.channel[ch] + pos * after.channel[ch];
+  if (out.channel[3])
+    for (ch = 0; ch < channels; ++ch)
+      if (ch != 3) {
+        int temp = out.channel[ch] * 255 / out.channel[3];
+        if (temp > 255)
+          temp = 255;
+        out.channel[ch] = temp;
+      }
+
+  return out;
+}
+
+/* hopefully this will be inlined  (it is with -O3 with gcc 2.95.4) */
+/* linear interpolation */
+static i_fcolor interp_i_fcolor(i_fcolor before, i_fcolor after, double pos,
+                                int channels) {
+  i_fcolor out;
+  int ch;
+
+  pos -= floor(pos);
+  for (ch = 0; ch < channels; ++ch)
+    out.channel[ch] = (1-pos) * before.channel[ch] + pos * after.channel[ch];
+  if (out.channel[3])
+    for (ch = 0; ch < channels; ++ch)
+      if (ch != 3) {
+        int temp = out.channel[ch] / out.channel[3];
+        if (temp > 1.0)
+          temp = 1.0;
+        out.channel[ch] = temp;
+      }
+
+  return out;
+}
+
+/*
+=item fill_image(fill, x, y, width, channels, data, work)
+
+=cut
+*/
+static void fill_image(i_fill_t *fill, int x, int y, int width, int channels,
+                       i_color *data, i_color *work) {
+  struct i_fill_image_t *f = (struct i_fill_image_t *)fill;
+  i_color *out = fill->combine ? work : data;
+  int i = 0;
+  i_color c;
+  
+  if (f->has_matrix) {
+    /* the hard way */
+    while (i < width) {
+      double rx = f->matrix[0] * (x+i) + f->matrix[1] * y + f->matrix[2];
+      double ry = f->matrix[3] * (x+i) + f->matrix[4] * y + f->matrix[5];
+      double ix = floor(rx / f->src->xsize);
+      double iy = floor(ry / f->src->ysize);
+      i_color c[2][2];
+      i_color c2[2];
+      int dy;
+
+      if (f->xoff) {
+        rx += iy * f->xoff;
+        ix = floor(rx / f->src->xsize);
+      }
+      else if (f->yoff) {
+        ry += ix * f->yoff;
+        iy = floor(ry / f->src->ysize);
+      }
+      rx -= ix * f->src->xsize;
+      ry -= iy * f->src->ysize;
+
+      for (dy = 0; dy < 2; ++dy) {
+        if ((int)rx == f->src->xsize-1) {
+          i_gpix(f->src, f->src->xsize-1, ((int)ry+dy) % f->src->ysize, &c[dy][0]);
+          i_gpix(f->src, 0, ((int)ry+dy) % f->src->xsize, &c[dy][1]);
+        }
+        else {
+          i_glin(f->src, (int)rx, (int)rx+2, ((int)ry+dy) % f->src->ysize, 
+                 c[dy]);
+        }
+        c2[dy] = interp_i_color(c[dy][0], c[dy][1], rx, f->src->channels);
+      }
+      *out++ = interp_i_color(c2[0], c2[1], ry, f->src->channels);
+      ++i;
+    }
+  }
+  else {
+    /* the easy way */
+    /* this should be possible to optimize to use i_glin() */
+    while (i < width) {
+      int rx = x+i;
+      int ry = y;
+      int ix = rx / f->src->xsize;
+      int iy = ry / f->src->ysize;
+
+      if (f->xoff) {
+        rx += iy * f->xoff;
+        ix = rx / f->src->xsize;
+      }
+      else if (f->yoff) {
+        ry += ix * f->yoff;
+        iy = ry / f->src->xsize;
+      }
+      rx -= ix * f->src->xsize;
+      ry -= iy * f->src->ysize;
+      i_gpix(f->src, rx, ry, out);
+      ++out;
+      ++i;
+    }
+  }
+
+  if (fill->combine) {
+    (fill->combine)(data, work, channels, width);
+  }
+}
+
+/*
+=item fill_image(fill, x, y, width, channels, data, work)
+
+=cut
+*/
+static void fill_imagef(i_fill_t *fill, int x, int y, int width, int channels,
+                       i_fcolor *data, i_fcolor *work) {
+  struct i_fill_image_t *f = (struct i_fill_image_t *)fill;
+  i_fcolor *out = fill->combine ? work : data;
+  int i = 0;
+  i_fcolor c;
+  
+  if (f->has_matrix) {
+    /* the hard way */
+    while (i < width) {
+      double rx = f->matrix[0] * (x+i) + f->matrix[1] * y + f->matrix[2];
+      double ry = f->matrix[3] * (x+i) + f->matrix[4] * y + f->matrix[5];
+      double ix = floor(rx / f->src->xsize);
+      double iy = floor(ry / f->src->ysize);
+      i_fcolor c[2][2];
+      i_fcolor c2[2];
+      int dy;
+
+      if (f->xoff) {
+        rx += iy * f->xoff;
+        ix = floor(rx / f->src->xsize);
+      }
+      else if (f->yoff) {
+        ry += ix * f->yoff;
+        iy = floor(ry / f->src->ysize);
+      }
+      rx -= ix * f->src->xsize;
+      ry -= iy * f->src->ysize;
+
+      for (dy = 0; dy < 2; ++dy) {
+        if ((int)rx == f->src->xsize-1) {
+          i_gpixf(f->src, f->src->xsize-1, ((int)ry+dy) % f->src->ysize, &c[dy][0]);
+          i_gpixf(f->src, 0, ((int)ry+dy) % f->src->xsize, &c[dy][1]);
+        }
+        else {
+          i_glinf(f->src, (int)rx, (int)rx+2, ((int)ry+dy) % f->src->ysize, 
+                 c[dy]);
+        }
+        c2[dy] = interp_i_fcolor(c[dy][0], c[dy][1], rx, f->src->channels);
+      }
+      *out++ = interp_i_fcolor(c2[0], c2[1], ry, f->src->channels);
+      ++i;
+    }
+  }
+  else {
+    /* the easy way */
+    /* this should be possible to optimize to use i_glin() */
+    while (i < width) {
+      int rx = x+i;
+      int ry = y;
+      int ix = rx / f->src->xsize;
+      int iy = ry / f->src->ysize;
+
+      if (f->xoff) {
+        rx += iy * f->xoff;
+        ix = rx / f->src->xsize;
+      }
+      else if (f->yoff) {
+        ry += ix * f->yoff;
+        iy = ry / f->src->xsize;
+      }
+      rx -= ix * f->src->xsize;
+      ry -= iy * f->src->ysize;
+      i_gpixf(f->src, rx, ry, out);
+      ++out;
+      ++i;
+    }
+  }
+
+  if (fill->combinef) {
+    (fill->combinef)(data, work, channels, width);
   }
 }
 

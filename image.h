@@ -181,6 +181,8 @@ i_new_fill_hatch(i_color *fg, i_color *bg, int combine, int hatch,
 extern i_fill_t *
 i_new_fill_hatchf(i_fcolor *fg, i_fcolor *bg, int combine, int hatch, 
                   unsigned char *cust_hatch, int dx, int dy);
+extern i_fill_t *
+i_new_fill_image(i_img *im, double *matrix, int xoff, int yoff, int combine);
 extern void i_fill_destroy(i_fill_t *fill);
 
 float i_gpix_pch(i_img *im,int x,int y,int ch);
