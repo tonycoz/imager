@@ -542,6 +542,7 @@ Revision history for Perl extension Imager.
           XS and perl OO code added.
         - Test for iolayer t/t07iolayer.t implemented.
 	- Fixed most known memory leaks.
+	- gif screen was wasn't being calculated correctly
 
 =================================================================
 

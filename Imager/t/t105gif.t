@@ -160,6 +160,8 @@ if (!i_has_format("gif")) {
 				 translate=>'closest',
 				 gif_delays=>\@gif_delays,
 				 gif_disposal=>\@gif_disposal,
+				 gif_positions=> [ map [ $_*10, $_*10 ], 0..4 ],
+				 gif_user_input=>[ 1, 0, 1, 0, 1 ],
 				 transp=>'ordered',
 				 tr_orddith=>'dot8'}, @imgs)
       or die "Cannot write anim gif";
