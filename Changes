@@ -504,6 +504,10 @@ Revision history for Perl extension Imager.
           add general fills to the flood_fill() method
         - generalize the combine parameter to get different ways of 
           combining the fill with the target
+        - the tt driver (freetype 1) didn't handle the first character
+          hanging off the left of the character cell
+        - the tt driver produces some artifacts when characters
+          overlapped
 
 =================================================================
 

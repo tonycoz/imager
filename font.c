@@ -692,10 +692,32 @@ i_tt_blit_or( TT_Raster_Map *dst, TT_Raster_Map *src,int x_off, int y_off ) {
     s = ( (char*)src->bitmap ) + y * src->cols + x1;
     d = ( (char*)dst->bitmap ) + ( y + y_off ) * dst->cols + x1 + x_off;
     
-    for ( x = x1; x < x2; ++x ) *d++ |= *s++;
+    for ( x = x1; x < x2; ++x ) {
+      if (*s > *d)
+	*d = *s;
+      d++;
+      s++;
+    }
   }
 }
 
+/* useful for debugging */
+#if 0
+
+static void dump_raster_map(FILE *out, TT_Raster_Map *bit ) {
+  int x, y;
+  fprintf(out, "cols %d rows %d  flow %d\n", bit->cols, bit->rows, bit->flow);
+  for (y = 0; y < bit->rows; ++y) {
+    fprintf(out, "%2d:", y);
+    for (x = 0; x < bit->cols; ++x) {
+      if ((x & 7) == 0 && x) putc(' ', out);
+      fprintf(out, "%02x", ((unsigned char *)bit->bitmap)[y*bit->cols+x]);
+    }
+    putc('\n', out);
+  }
+}
+
+#endif
 
 /* 
 =item i_tt_get_glyph(handle, inst, j) 
@@ -810,7 +832,7 @@ i_tt_render_glyph( TT_Glyph glyph, TT_Glyph_Metrics* gmetrics, TT_Raster_Map *bi
   if ( !smooth ) TT_Get_Glyph_Bitmap( glyph, bit, x_off * 64, y_off * 64);
   else {
     TT_F26Dot6 xmin, ymin, xmax, ymax;
-    
+
     xmin =  gmetrics->bbox.xMin & -64;
     ymin =  gmetrics->bbox.yMin & -64;
     xmax = (gmetrics->bbox.xMax + 63) & -64;
@@ -853,7 +875,7 @@ i_tt_render_all_glyphs( TT_Fonthandle *handle, int inst, TT_Raster_Map *bit, TT_
      y=-( handle->properties.horizontal->Descender * handle->instanceh[inst].imetrics.y_ppem )/(handle->properties.header->Units_Per_EM);
   */
 
-  x=cords[0]; /* FIXME: If you font is antialiased this should be expanded by one to allow for aa expansion and the allocation too - do before passing here */
+  x=-cords[0]; /* FIXME: If you font is antialiased this should be expanded by one to allow for aa expansion and the allocation too - do before passing here */
   y=-cords[1];
   
   for ( i = 0; i < len; i++ ) {
@@ -1080,7 +1102,7 @@ i_tt_text( TT_Fonthandle *handle, i_img *im, int xb, int yb, i_color *cl, float 
   ascent=cords[3];
   st_offset=cords[0];
 
-  i_tt_dump_raster_map2( im, &bit, xb-st_offset, yb-ascent, cl, smooth ); 
+  i_tt_dump_raster_map2( im, &bit, xb+st_offset, yb-ascent, cl, smooth ); 
   i_tt_done_raster_map( &bit );
 
   return 1;
@@ -1157,7 +1179,7 @@ i_tt_bbox_inst( TT_Fonthandle *handle, int inst ,const char *txt, int len, int c
   
   cords[0]=start;
   cords[1]=gdescent;
-  cords[2]=width+start;
+  cords[2]=width;
   cords[3]=gascent;
   cords[4]=descent;
   cords[5]=ascent;
