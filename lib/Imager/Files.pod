@@ -79,6 +79,8 @@ When you read an image, Imager may set some tags, possibly including
 information about the spatial resolution, textual information, and
 animation information.  See L<Imager::ImageTypes/Tags> for specifics.
 
+The open() method is a historical alias for the read() method.
+
 =head2 Input and output
 
 When reading or writing you can specify one of a variety of sources or

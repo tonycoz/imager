@@ -131,6 +131,44 @@ crop are the edges of the area that you want in the returned image,
 where the right and bottom edges are non-inclusive.  If a parameter is
 omitted a default is used instead.
 
+The possible parameters are:
+
+=over
+
+=item *
+
+C<left> - the left edge of the area to be cropped.  Default: 0
+
+=item *
+
+C<top> - the top edge of the area to be cropped.  Default: 0
+
+=item *
+
+C<right> - the right edge of the area to be cropped.  Default: right
+edge of image.
+
+=item *
+
+C<bottom> - the bottom edge of the area to be cropped.  Default:
+bottom edge of image.
+
+=item *
+
+C<width> - width of the crop area.  Ignored if both C<left> and C<right> are
+supplied.  Centered on the image if neither C<left> nor C<right> are
+supplied.
+
+=item *
+
+C<height> - height of the crop area.  Ignored if both C<top> and
+C<bottom> are supplied.  Centered on the image if neither C<top> nor
+C<bottom> are supplied.
+
+=back
+
+For example:
+
   # these produce the same image
   $newimg = $img->crop(left=>50, right=>100, top=>10, bottom=>100); 
   $newimg = $img->crop(left=>50, top=>10, width=>50, height=>90);

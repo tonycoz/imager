@@ -2702,8 +2702,8 @@ Imager - Perl extension for Generating 24 bit Images
   my $format;
 
   my $img = Imager->new();
-  # see Imager::Files for information on the open() method
-  $img->open(file=>$file) or die $img->errstr();
+  # see Imager::Files for information on the read() method
+  $img->read(file=>$file) or die $img->errstr();
 
   $file =~ s/\.[^.]*$//;
 
@@ -2815,7 +2815,7 @@ An Image object is created with C<$img = Imager-E<gt>new()>.
 Examples:
 
   $img=Imager->new();                         # create empty image
-  $img->open(file=>'lena.png',type=>'png') or # read image from file
+  $img->read(file=>'lena.png',type=>'png') or # read image from file
      die $img->errstr();                      # give an explanation
                                               # if something failed
 
@@ -2903,15 +2903,18 @@ matrix_transform() - L<Imager::Engines/"Matrix Transformations">
 
 new() - L<Imager::ImageTypes>
 
+open() - L<Imager::Files> - an alias for read()
+
 paste() - L<Imager::Transformations/paste> - draw an image onto an image
 
 polygon() - L<Imager::Draw/polygon>
 
 polyline() - L<Imager::Draw/polyline>
 
-read() - L<Imager::Files>
+read() - L<Imager::Files> - read a single image from an image file
 
-read_multi() - L<Imager::Files>
+read_multi() - L<Imager::Files> - read multiple images from an image
+file
 
 rotate() - L<Imager::Transformations/rotate>
 
@@ -2945,9 +2948,10 @@ type() -  L<Imager::ImageTypes> - type of image (direct vs paletted)
 virtual() - L<Imager::ImageTypes> - whether the image has it's own
 data
 
-write() - L<Imager::Files>
+write() - L<Imager::Files> - write an image to a file
 
-write_multi() - L<Imager::Files>
+write_multi() - L<Imager::Files> - write multiple image to an image
+file.
 
 =head1 CONCEPT INDEX
 
