@@ -44,8 +44,8 @@ static int write_4bit_data(io_glue *ig, i_img *im);
 static int write_8bit_data(io_glue *ig, i_img *im);
 static int write_24bit_data(io_glue *ig, i_img *im);
 static int read_bmp_pal(io_glue *ig, i_img *im, int count);
-static i_img *read_1bit_bmp(io_glue *ig, int xsize, int ysize, 
-                            int clr_used);
+static i_img *read_1bit_bmp(io_glue *ig, int xsize, int ysize, int clr_used, 
+                            int compression);
 static i_img *read_4bit_bmp(io_glue *ig, int xsize, int ysize, int clr_used, 
                             int compression);
 static i_img *read_8bit_bmp(io_glue *ig, int xsize, int ysize, int clr_used, 
@@ -102,16 +102,18 @@ BI_BITFIELDS images too, but I need a test image.
 
 i_img *
 i_readbmp_wiol(io_glue *ig) {
-  int b_magic, m_magic, filesize, dummy, infohead_size;
+  int b_magic, m_magic, filesize, res1, res2, infohead_size;
   int xsize, ysize, planes, bit_count, compression, size_image, xres, yres;
   int clr_used, clr_important, offbits;
   i_img *im;
+
+  mm_log((1, "i_readbmp_wiol(ig %p)\n", ig));
   
   io_glue_commit_types(ig);
   i_clear_error();
 
   if (!read_packed(ig, "CCVvvVVVVvvVVVVVV", &b_magic, &m_magic, &filesize, 
-		   &dummy, &dummy, &offbits, &infohead_size, 
+		   &res1, &res2, &offbits, &infohead_size, 
                    &xsize, &ysize, &planes,
 		   &bit_count, &compression, &size_image, &xres, &yres, 
 		   &clr_used, &clr_important)) {
@@ -123,10 +125,16 @@ i_readbmp_wiol(io_glue *ig) {
     i_push_error(0, "not a BMP file");
     return 0;
   }
+
+  mm_log((1, " bmp header: filesize %d offbits %d xsize %d ysize %d planes %d "
+          "bit_count %d compression %d size %d xres %d yres %d clr_used %d "
+          "clr_important %d\n", filesize, offbits, xsize, ysize, planes, 
+          bit_count, compression, size_image, xres, yres, clr_used, 
+          clr_important));
   
   switch (bit_count) {
   case 1:
-    im = read_1bit_bmp(ig, xsize, ysize, clr_used);
+    im = read_1bit_bmp(ig, xsize, ysize, clr_used, compression);
     break;
 
   case 4:
@@ -148,17 +156,23 @@ i_readbmp_wiol(io_glue *ig) {
     return NULL;
   }
 
-  /* store the resolution */
-  if (xres && !yres)
-    yres = xres;
-  else if (yres && !xres)
-    xres = yres;
-  if (xres) {
-    i_tags_set_float(&im->tags, "i_xres", 0, xres * 0.0254);
-    i_tags_set_float(&im->tags, "i_yres", 0, yres * 0.0254);
+  if (im) {
+    /* store the resolution */
+    if (xres && !yres)
+      yres = xres;
+    else if (yres && !xres)
+      xres = yres;
+    if (xres) {
+      i_tags_set_float(&im->tags, "i_xres", 0, xres * 0.0254);
+      i_tags_set_float(&im->tags, "i_yres", 0, yres * 0.0254);
+    }
+    i_tags_addn(&im->tags, "bmp_compression", 0, compression);
+    i_tags_addn(&im->tags, "bmp_important_colors", 0, clr_important);
+    i_tags_addn(&im->tags, "bmp_used_colors", 0, clr_used);
+    i_tags_addn(&im->tags, "bmp_filesize", 0, filesize);
+    i_tags_addn(&im->tags, "bmp_bit_count", 0, bit_count);
+    i_tags_add(&im->tags, "i_format", 0, "bmp", 3, 0);
   }
-  i_tags_addn(&im->tags, "bmp_compression", 0, compression);
-  i_tags_addn(&im->tags, "bmp_important_colors", 0, clr_important);
 
   return im;
 }
@@ -195,31 +209,31 @@ int read_packed(io_glue *ig, char *format, ...) {
 
     switch (*format) {
     case 'v':
-      if (ig->readcb(ig, buf, 2) == -1)
+      if (ig->readcb(ig, buf, 2) != 2)
 	return 0;
       *p = buf[0] + (buf[1] << 8);
       break;
 
     case 'V':
-      if (ig->readcb(ig, buf, 4) == -1)
+      if (ig->readcb(ig, buf, 4) != 4)
 	return 0;
       *p = buf[0] + (buf[1] << 8) + (buf[2] << 16) + (buf[3] << 24);
       break;
 
     case 'C':
-      if (ig->readcb(ig, buf, 1) == -1)
+      if (ig->readcb(ig, buf, 1) != 1)
 	return 0;
       *p = buf[0];
       break;
 
     case 'c':
-      if (ig->readcb(ig, buf, 1) == -1)
+      if (ig->readcb(ig, buf, 1) != 1)
 	return 0;
       *p = (char)buf[0];
       break;
       
     case '3': /* extension - 24-bit number */
-      if (ig->readcb(ig, buf, 3) == -1)
+      if (ig->readcb(ig, buf, 3) != 3)
         return 0;
       *p = buf[0] + (buf[1] << 8) + (buf[2] << 16);
       break;
@@ -590,8 +604,10 @@ read_bmp_pal(io_glue *ig, i_img *im, int count) {
     c.channel[0] = r;
     c.channel[1] = g;
     c.channel[2] = b;
-    if (i_addcolors(im, &c, 1) < 0)
+    if (i_addcolors(im, &c, 1) < 0) {
+      i_push_error(0, "out of space in image palette");
       return 0;
+    }
   }
   
   return 1;
@@ -607,7 +623,8 @@ Returns the image or NULL.
 =cut
 */
 static i_img *
-read_1bit_bmp(io_glue *ig, int xsize, int ysize, int clr_used) {
+read_1bit_bmp(io_glue *ig, int xsize, int ysize, int clr_used, 
+              int compression) {
   i_img *im;
   int x, y, lasty, yinc;
   i_palidx *line, *p;
@@ -615,6 +632,11 @@ read_1bit_bmp(io_glue *ig, int xsize, int ysize, int clr_used) {
   int line_size = (xsize + 7)/8;
   int byte, bit;
   unsigned char *in;
+
+  if (compression != BI_RGB) {
+    i_push_errorf(0, "unknown 1-bit BMP compression (%d)", compression);
+    return NULL;
+  }
 
   line_size = (line_size+3) / 4 * 4;
 
@@ -630,13 +652,21 @@ read_1bit_bmp(io_glue *ig, int xsize, int ysize, int clr_used) {
     lasty = ysize;
     yinc = 1;
   }
-  im = i_img_pal_new(xsize, ysize, 3, 256);
   if (!clr_used)
     clr_used = 2;
+  if (clr_used < 0 || clr_used > 2) {
+    i_push_errorf(0, "out of range colors used (%d)", clr_used);
+    return NULL;
+  }
+  im = i_img_pal_new(xsize, ysize, 3, 256);
+  if (!im)
+    return NULL;
   if (!read_bmp_pal(ig, im, clr_used)) {
     i_img_destroy(im);
     return NULL;
   }
+  
+  i_tags_add(&im->tags, "bmp_compression_name", 0, "BI_RGB", -1, 0);
 
   packed = mymalloc(line_size);
   line = mymalloc(xsize+8);
@@ -644,7 +674,7 @@ read_1bit_bmp(io_glue *ig, int xsize, int ysize, int clr_used) {
     if (ig->readcb(ig, packed, line_size) != line_size) {
       myfree(packed);
       myfree(line);
-      i_push_error(0, "reading 1-bit bmp data");
+      i_push_error(0, "failed reading 1-bit bmp data");
       i_img_destroy(im);
       return NULL;
     }
@@ -705,9 +735,17 @@ read_4bit_bmp(io_glue *ig, int xsize, int ysize, int clr_used,
     lasty = ysize;
     yinc = 1;
   }
-  im = i_img_pal_new(xsize, ysize, 3, 256);
   if (!clr_used)
     clr_used = 16;
+
+  if (clr_used > 16 || clr_used < 0) {
+    i_push_errorf(0, "out of range colors used (%d)", clr_used);
+    return NULL;
+  }
+
+  im = i_img_pal_new(xsize, ysize, 3, 256);
+  if (!im) /* error should have been pushed already */
+    return NULL;
   if (!read_bmp_pal(ig, im, clr_used)) {
     i_img_destroy(im);
     return NULL;
@@ -719,11 +757,12 @@ read_4bit_bmp(io_glue *ig, int xsize, int ysize, int clr_used,
     packed = mymalloc(line_size);
   line = mymalloc(xsize+1);
   if (compression == BI_RGB) {
+    i_tags_add(&im->tags, "bmp_compression_name", 0, "BI_RGB", -1, 0);
     while (y != lasty) {
       if (ig->readcb(ig, packed, line_size) != line_size) {
 	myfree(packed);
 	myfree(line);
-	i_push_error(0, "reading 4-bit bmp data");
+	i_push_error(0, "failed reading 4-bit bmp data");
 	i_img_destroy(im);
 	return NULL;
       }
@@ -745,6 +784,7 @@ read_4bit_bmp(io_glue *ig, int xsize, int ysize, int clr_used,
     int want_high;
     int count;
 
+    i_tags_add(&im->tags, "bmp_compression_name", 0, "BI_RLE4", -1, 0);
     x = 0;
     while (1) {
       /* there's always at least 2 bytes in a sequence */
@@ -814,7 +854,7 @@ read_4bit_bmp(io_glue *ig, int xsize, int ysize, int clr_used,
   else { /*if (compression == BI_RLE4) {*/
     myfree(packed);
     myfree(line);
-    i_push_error(0, "bad compression for 4-bit image");
+    i_push_errorf(0, "unknown 4-bit BMP compression (%d)", compression);
     i_img_destroy(im);
     return NULL;
   }
@@ -854,9 +894,16 @@ read_8bit_bmp(io_glue *ig, int xsize, int ysize, int clr_used,
     lasty = ysize;
     yinc = 1;
   }
-  im = i_img_pal_new(xsize, ysize, 3, 256);
   if (!clr_used)
     clr_used = 256;
+  if (clr_used > 256 || clr_used < 0) {
+    i_push_errorf(0, "out of range colors used (%d)", clr_used);
+    return NULL;
+  }
+
+  im = i_img_pal_new(xsize, ysize, 3, 256);
+  if (!im)
+    return NULL;
   if (!read_bmp_pal(ig, im, clr_used)) {
     i_img_destroy(im);
     return NULL;
@@ -864,10 +911,11 @@ read_8bit_bmp(io_glue *ig, int xsize, int ysize, int clr_used,
 
   line = mymalloc(line_size);
   if (compression == BI_RGB) {
+    i_tags_add(&im->tags, "bmp_compression_name", 0, "BI_RGB", -1, 0);
     while (y != lasty) {
       if (ig->readcb(ig, line, line_size) != line_size) {
 	myfree(line);
-	i_push_error(0, "reading 8-bit bmp data");
+	i_push_error(0, "failed reading 8-bit bmp data");
 	i_img_destroy(im);
 	return NULL;
       }
@@ -882,6 +930,7 @@ read_8bit_bmp(io_glue *ig, int xsize, int ysize, int clr_used,
     int count;
     unsigned char packed[2];
 
+    i_tags_add(&im->tags, "bmp_compression_name", 0, "BI_RLE8", -1, 0);
     x = 0;
     while (1) {
       /* there's always at least 2 bytes in a sequence */
@@ -935,7 +984,7 @@ read_8bit_bmp(io_glue *ig, int xsize, int ysize, int clr_used,
   }
   else { 
     myfree(line);
-    i_push_errorf(0, "unknown 8-bit BMP compression %d", compression);
+    i_push_errorf(0, "unknown 8-bit BMP compression (%d)", compression);
     i_img_destroy(im);
     return NULL;
   }
@@ -986,6 +1035,8 @@ read_direct_bmp(io_glue *ig, int xsize, int ysize, int bit_count,
   int i;
   int extras;
   char junk[4];
+  const char *compression_name;
+  int bytes;
   
   unpack_code[0] = *("v3V"+pix_size-2);
   unpack_code[1] = '\0';
@@ -1006,6 +1057,7 @@ read_direct_bmp(io_glue *ig, int xsize, int ysize, int bit_count,
     yinc = 1;
   }
   if (compression == BI_RGB) {
+    compression_name = "BI_RGB";
     masks = std_masks[pix_size-2];
     
     /* there's a potential "palette" after the header */
@@ -1019,6 +1071,8 @@ read_direct_bmp(io_glue *ig, int xsize, int ysize, int bit_count,
   }
   else if (compression == BI_BITFIELDS) {
     int pos, bit;
+    compression_name = "BI_BITFIELDS";
+
     for (i = 0; i < 3; ++i) {
       if (!read_packed(ig, "V", masks.masks+i)) {
         i_push_error(0, "reading pixel masks");
@@ -1034,16 +1088,32 @@ read_direct_bmp(io_glue *ig, int xsize, int ysize, int bit_count,
       masks.shifts[i] = pos - 8;
     }
   }
+  else {
+    i_push_errorf(0, "unknown 24-bit BMP compression (%d)", compression);
+    return NULL;
+  }
 
   im = i_img_empty(NULL, xsize, ysize);
+  if (!im)
+    return NULL;
 
-  line = mymalloc(sizeof(i_color) * xsize);
+  i_tags_add(&im->tags, "bmp_compression_name", 0, compression_name, -1, 0);
+
+  /* I wasn't able to make this overflow in testing, but better to be
+     safe */
+  bytes = sizeof(i_color) * xsize;
+  if (bytes / sizeof(i_color) != xsize) {
+    i_img_destroy(im);
+    i_push_error(0, "integer overflow calculating buffer size");
+    return NULL;
+  }
+  line = mymalloc(bytes);
   while (y != lasty) {
     p = line;
     for (x = 0; x < xsize; ++x) {
       unsigned pixel;
       if (!read_packed(ig, unpack_code, &pixel)) {
-        i_push_error(0, "reading image data");
+        i_push_error(0, "failed reading image data");
         myfree(line);
         i_img_destroy(im);
         return NULL;

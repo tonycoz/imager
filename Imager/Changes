@@ -891,6 +891,19 @@ Revision history for Perl extension Imager.
 - set i_format to jpeg for jpeg files and test for it
 - set i_format to png when reading png files and test for it
 - i_yres was being set to the xres when reading a png file
+- added many bad BMP files to test various code paths in bmp.c, and 
+  made many minor fixes to bmp.c to make them work:
+  - it was possible for various types of read failures to SEGV, both
+    as NULL pointer dereferences and buffer overflows
+  - some errors, like palettes being too large for the number of bits
+    per pixel, were not being caught
+  - failing to read all of a packed data structure would not cause
+    a read failure
+  - invalid compression types were not always caught
+  - error messages are more consistent (still not always great messages,
+    but one step at a time)
+- added bmp_compression_name, bmp_used_colors, bmp_filesize, bmp_bit_count 
+  tags on reading a BMP file
 
 =================================================================
 
