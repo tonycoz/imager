@@ -111,12 +111,14 @@ for my $entry (@hsv_vs_rgb) {
 color_ok($test_num++, 0, 0, 0, 255, 
 	Imager::Color->new(builtin=>'black'));
 
-my $c1 = Imager::Color->new(255, 255, 255, 0);
-my $c2 = Imager::Color->new(255, 255, 255, 255);
-okn($test_num++, !$c1->equals(other=>$c2), "not equal no ignore alpha");
-okn($test_num++, scalar($c1->equals(other=>$c2, ignore_alpha=>1)), 
-    "equal with ignore alpha");
-okn($test_num++, $c1->equals(other=>$c1), "equal to itself");
+{
+  my $c1 = Imager::Color->new(255, 255, 255, 0);
+  my $c2 = Imager::Color->new(255, 255, 255, 255);
+  okn($test_num++, !$c1->equals(other=>$c2), "not equal no ignore alpha");
+  okn($test_num++, scalar($c1->equals(other=>$c2, ignore_alpha=>1)), 
+      "equal with ignore alpha");
+  okn($test_num++, $c1->equals(other=>$c1), "equal to itself");
+}
  
 sub test_col {
   my ($c, $r, $g, $b, $a) = @_;

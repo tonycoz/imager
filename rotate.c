@@ -178,7 +178,8 @@ static i_fcolor interp_i_fcolor(i_fcolor before, i_fcolor after, double pos,
   return out;
 }
 
-i_img *i_matrix_transform(i_img *src, int xsize, int ysize, double *matrix) {
+i_img *i_matrix_transform_bg(i_img *src, int xsize, int ysize, double *matrix,
+			     i_color *backp, i_fcolor *fbackp) {
   i_img *result = i_sametype(src, xsize, ysize);
   int x, y;
   int ch;
@@ -189,10 +190,22 @@ i_img *i_matrix_transform(i_img *src, int xsize, int ysize, double *matrix) {
   if (src->type == i_direct_type) {
     if (src->bits == i_8_bits) {
       i_color *vals = mymalloc(xsize * sizeof(i_color));
-      i_color black;
+      i_color back;
+      i_fsample_t fsamp;
 
-      for (ch = 0; ch < src->channels; ++ch)
-        black.channel[ch] = 0;
+      if (backp) {
+	back = *backp;
+      }
+      else if (fbackp) {
+	for (ch = 0; ch < src->channels; ++ch) {
+	  fsamp = fbackp->channel[ch];
+	  back.channel[ch] = fsamp < 0 ? 0 : fsamp > 1 ? 255 : fsamp * 255;
+	}
+      }
+      else {
+	for (ch = 0; ch < src->channels; ++ch)
+	  back.channel[ch] = 0;
+      }
 
       for (y = 0; y < ysize; ++y) {
         for (x = 0; x < xsize; ++x) {
@@ -217,7 +230,7 @@ i_img *i_matrix_transform(i_img *src, int xsize, int ysize, double *matrix) {
                 for (i = 0; i < 2; ++i)
                   for (j = 0; j < 2; ++j)
                     if (i_gpix(src, floor(sx)+i, floor(sy)+j, &c[j][i]))
-                      c[j][i] = black;
+                      c[j][i] = back;
                 for (j = 0; j < 2; ++j)
                   ci2[j] = interp_i_color(c[j][0], c[j][1], sx, src->channels);
                 vals[x] = interp_i_color(ci2[0], ci2[1], sy, src->channels);
@@ -226,7 +239,7 @@ i_img *i_matrix_transform(i_img *src, int xsize, int ysize, double *matrix) {
                 i_color ci2[2];
                 for (i = 0; i < 2; ++i)
                   if (i_gpix(src, floor(sx)+i, sy, ci2+i))
-                    ci2[i] = black;
+                    ci2[i] = back;
                 vals[x] = interp_i_color(ci2[0], ci2[1], sx, src->channels);
               }
             }
@@ -235,17 +248,18 @@ i_img *i_matrix_transform(i_img *src, int xsize, int ysize, double *matrix) {
                 i_color ci2[2];
                 for (i = 0; i < 2; ++i)
                   if (i_gpix(src, sx, floor(sy)+i, ci2+i))
-                    ci2[i] = black;
+                    ci2[i] = back;
                 vals[x] = interp_i_color(ci2[0], ci2[1], sy, src->channels);
               }
               else {
                 /* all the world's an integer */
-                i_gpix(src, sx, sy, vals+x);
+                if (i_gpix(src, sx, sy, vals+x))
+		  vals[x] = back;
               }
             }
           }
           else {
-            vals[x] = black;
+            vals[x] = back;
           }
         }
         i_plin(result, 0, xsize, y, vals);
@@ -254,10 +268,19 @@ i_img *i_matrix_transform(i_img *src, int xsize, int ysize, double *matrix) {
     }
     else {
       i_fcolor *vals = mymalloc(xsize * sizeof(i_fcolor));
-      i_fcolor black;
+      i_fcolor back;
 
-      for (ch = 0; ch < src->channels; ++ch)
-        black.channel[ch] = 0;
+      if (fbackp) {
+	back = *fbackp;
+      }
+      else if (backp) {
+	for (ch = 0; ch < src->channels; ++ch)
+	  back.channel[ch] = backp->channel[ch] / 255.0;
+      }
+      else {
+	for (ch = 0; ch < src->channels; ++ch)
+	  back.channel[ch] = 0;
+      }
 
       for (y = 0; y < ysize; ++y) {
         for (x = 0; x < xsize; ++x) {
@@ -282,7 +305,7 @@ i_img *i_matrix_transform(i_img *src, int xsize, int ysize, double *matrix) {
                 for (i = 0; i < 2; ++i)
                   for (j = 0; j < 2; ++j)
                     if (i_gpixf(src, floor(sx)+i, floor(sy)+j, &c[j][i]))
-                      c[j][i] = black;
+                      c[j][i] = back;
                 for (j = 0; j < 2; ++j)
                   ci2[j] = interp_i_fcolor(c[j][0], c[j][1], sx, src->channels);
                 vals[x] = interp_i_fcolor(ci2[0], ci2[1], sy, src->channels);
@@ -291,7 +314,7 @@ i_img *i_matrix_transform(i_img *src, int xsize, int ysize, double *matrix) {
                 i_fcolor ci2[2];
                 for (i = 0; i < 2; ++i)
                   if (i_gpixf(src, floor(sx)+i, sy, ci2+i))
-                    ci2[i] = black;
+                    ci2[i] = back;
                 vals[x] = interp_i_fcolor(ci2[0], ci2[1], sx, src->channels);
               }
             }
@@ -300,17 +323,18 @@ i_img *i_matrix_transform(i_img *src, int xsize, int ysize, double *matrix) {
                 i_fcolor ci2[2];
                 for (i = 0; i < 2; ++i)
                   if (i_gpixf(src, sx, floor(sy)+i, ci2+i))
-                    ci2[i] = black;
+                    ci2[i] = back;
                 vals[x] = interp_i_fcolor(ci2[0], ci2[1], sy, src->channels);
               }
               else {
                 /* all the world's an integer */
-                i_gpixf(src, sx, sy, vals+x);
+                if (i_gpixf(src, sx, sy, vals+x)) 
+		  vals[x] = back;
               }
             }
           }
           else {
-            vals[x] = black;
+            vals[x] = back;
           }
         }
         i_plinf(result, 0, xsize, y, vals);
@@ -321,28 +345,38 @@ i_img *i_matrix_transform(i_img *src, int xsize, int ysize, double *matrix) {
   else {
     /* don't interpolate for a palette based image */
     i_palidx *vals = mymalloc(xsize * sizeof(i_palidx));
-    i_palidx black = 0;
+    i_palidx back = 0;
     i_color min;
-    int minval;
+    int minval = 256 * 4;
     int ix, iy;
-    
-    i_getcolors(src, 0, &min, 1);
-    minval = 0;
-    for (ch = 0; ch < src->channels; ++ch) {
-      minval += min.channel[ch];
-    }
+    i_color want_back;
+    i_fsample_t fsamp;
 
-    /* find the darkest color */
-    for (i = 1; i < i_colorcount(src); ++i) {
+    if (backp) {
+      want_back = *backp;
+    }
+    else if (fbackp) {
+      for (ch = 0; ch < src->channels; ++ch) {
+	fsamp = fbackp->channel[ch];
+	want_back.channel[ch] = fsamp < 0 ? 0 : fsamp > 1 ? 255 : fsamp * 255;
+      }
+    }
+    else {
+      for (ch = 0; ch < src->channels; ++ch)
+	want_back.channel[ch] = 0;
+    }
+    
+    /* find the closest color */
+    for (i = 0; i < i_colorcount(src); ++i) {
       i_color temp;
       int tempval;
       i_getcolors(src, i, &temp, 1);
       tempval = 0;
       for (ch = 0; ch < src->channels; ++ch) {
-        tempval += temp.channel[ch];
+        tempval += abs(want_back.channel[ch] - temp.channel[ch]);
       }
       if (tempval < minval) {
-        black = i;
+        back = i;
         min = temp;
         minval = tempval;
       }
@@ -367,10 +401,11 @@ i_img *i_matrix_transform(i_img *src, int xsize, int ysize, double *matrix) {
           /* all the world's an integer */
           ix = (int)(sx+0.5);
           iy = (int)(sy+0.5);
-          i_gpal(src, ix, ix+1, iy, vals+x);
+          if (!i_gpal(src, ix, ix+1, iy, vals+x))
+	    vals[i] = back;
         }
         else {
-          vals[x] = black;
+          vals[x] = back;
         }
       }
       i_ppal(result, 0, xsize, y, vals);
@@ -380,6 +415,11 @@ i_img *i_matrix_transform(i_img *src, int xsize, int ysize, double *matrix) {
 
   return result;
 }
+
+i_img *i_matrix_transform(i_img *src, int xsize, int ysize, double *matrix) {
+  return i_matrix_transform_bg(src, xsize, ysize, matrix, NULL, NULL);
+}
+
 
 i_matrix_mult(double *dest, double *left, double *right) {
   int i, j, k;
@@ -396,7 +436,8 @@ i_matrix_mult(double *dest, double *left, double *right) {
   }
 }
 
-i_img *i_rotate_exact(i_img *src, double amount) {
+i_img *i_rotate_exact_bg(i_img *src, double amount, 
+			 i_color *backp, i_fcolor *fbackp) {
   double xlate1[9] = { 0 };
   double rotate[9];
   double xlate2[9] = { 0 };
@@ -436,8 +477,13 @@ i_img *i_rotate_exact(i_img *src, double amount) {
   i_matrix_mult(temp, xlate1, rotate);
   i_matrix_mult(matrix, temp, xlate2);
 
-  return i_matrix_transform(src, newxsize, newysize, matrix);
+  return i_matrix_transform_bg(src, newxsize, newysize, matrix, backp, fbackp);
 }
+
+i_img *i_rotate_exact(i_img *src, double amount) {
+  return i_rotate_exact_bg(src, amount, NULL, NULL);
+}
+
 
 /*
 =back

@@ -140,13 +140,22 @@ or 'radians' parameter:
   my $rotpi4 = $img->rotate(radians=>3.14159265/4);
 
 Exact image rotation uses the same underlying transformation engine as
-the matrix_transform() method.
+the matrix_transform() method (see Imager::Engines).
+
+You can also supply a C<back> argument which acts as a background
+color for the areas of the image with no samples available (outside
+the rectangle of the source image.)  This can be either an
+Imager::Color or Imager::Color::Float object.  This is B<not> mixed
+transparent pixels in the middle of the source image, it is B<only>
+used for pixels where there is no corresponding pixel in the source
+image.
 
 To rotate in steps of 90 degrees, use the 'right' parameter:
 
   my $rotated = $img->rotate(right=>270);
 
 Rotations are clockwise for positive values.
+
 
 =back
 

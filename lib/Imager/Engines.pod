@@ -347,8 +347,12 @@ WARNING: the matrix you provide in the matrix operator transforms the
 co-ordinates within the B<destination> image to the co-ordinates
 within the I<source> image.  This can be confusing.
 
-Since Imager has 3 different fairly general ways of transforming an
-image spatially, this method also has a yatf() alias.  Yet Another
-Transformation Function.
+You can also supply a C<back> argument which acts as a background
+color for the areas of the image with no samples available (outside
+the rectangle of the source image.)  This can be either an
+Imager::Color or Imager::Color::Float object.  This is B<not> mixed
+transparent pixels in the middle of the source image, it is B<only>
+used for pixels where there is no corresponding pixel in the source
+image.
 
 =cut
