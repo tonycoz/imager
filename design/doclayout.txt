@@ -1,0 +1,132 @@
+3/1 15:41:43 <TonyC:#Imager> I've written the beginning of replacement text for "Reading and writing images" in Imager.pm in the dev_more_iolayer branch, could you have a look and give me some feedback?
+3/1 15:41:47 <Addi:#Imager> But the OO api is consistent so I think the impact should be minimized.
+3/1 15:41:50 <TonyC:#Imager> you da boss :)
+3/1 15:42:41 <Addi:#Imager> and images can read or
+3/1 15:42:46 <Addi:#Imager> missing 'be'
+3/1 15:43:46 <Addi:#Imager> There's one point that could be added about filetypes
+3/1 15:43:52 <TonyC:#Imager> maybe I do something else for a bit
+3/1 15:43:56 <TonyC:#Imager> what's that?
+3/1 15:44:04 <Addi:#Imager> You can override the sub for finding types
+3/1 15:44:12 <TonyC:#Imager> I want to add file style specific info too
+3/1 15:44:26 <TonyC:#Imager> I wondered why it was a variable
+3/1 15:44:46 <Addi:#Imager> So instead of using extensions, a user could provide his own method (that called file for example, although that only works for files).
+3/1 15:44:46 <TonyC:#Imager> local $Imager::FORMATGUESS = \&my_format_guess;
+3/1 15:44:50 <Addi:#Imager> Yeah.
+3/1 15:45:25 <Addi:#Imager> Can I edit this a little?
+3/1 15:45:39 <Addi:#Imager> This looks really great btw.
+3/1 15:45:58 <TonyC:#Imager> sure, I'll just commit the "be"
+3/1 15:46:18 <TonyC:#Imager> actually, I'll let you
+3/1 15:46:27 <TonyC:#Imager> it's a bit faster for you :)
+3/1 15:46:33 <Addi:#Imager> okie - where should I stop reading?
+3/1 15:46:49 <TonyC:#Imager> C<$img-E<gt>read()> generally takes two parameters, 'file' and 'type'.  <-- start of the old text
+3/1 15:47:26 <Addi:#Imager> ok - good.
+3/1 15:48:04 <TonyC:#Imager> I want to make the file type specific stuff more reference like, I haven't figured out a layout yet though
+3/1 15:48:06 <TonyC:#Imager> brb
+3/1 15:51:31 <TonyC:#Imager> back
+3/1 15:51:31 <Addi:#Imager> The problem in writing these docs is that you want people to be able to see an overview
+3/1 15:51:58 <Addi:#Imager> It's possible to bury people in details about all the different ways to read/write images and the formats.
+3/1 15:52:07 <Addi:#Imager> But most people will just want the defaults ;)
+3/1 15:52:16 <TonyC:#Imager> that's why I stuck the 2 read/write examples near the top
+3/1 15:53:18 <TonyC:#Imager> I suppose I should add examples to the file/fh/fd/data/callback items
+3/1 15:53:32 <Addi:#Imager> Well, I'm not sure that would help.
+3/1 15:53:40 <Addi:#Imager> Maybe two pages would be nice.
+3/1 15:53:44 <Addi:#Imager> Imager.pm
+3/1 15:53:51 <Addi:#Imager> and Imager-Reference.pod
+3/1 15:53:54 <TonyC:#Imager> it would help for the callbacks :)
+3/1 15:54:11 <Addi:#Imager> Then Imager.pm would have all intro stuff
+3/1 15:54:24 <Addi:#Imager> and we could just refer to the reference for details...
+3/1 15:55:22 <TonyC:#Imager> hmm, I'd kind of expect it the other way around, Imager.pm containing reference info, and Imager/Intro.pod
+3/1 15:55:48 <Addi:#Imager> Hmm - I just thought of it the other way because that's the way gtk does it.
+3/1 15:55:53 <Addi:#Imager> But I have no real preference.
+3/1 15:56:17 <TonyC:#Imager> I don't know
+3/1 15:57:19 <Addi:#Imager> Intro.pod is probably better.
+3/1 15:58:32 * TonyC:#Imager looks at perldoc DBI for inspiration
+3/1 15:58:48 <Addi:#Imager> structuring docs is hard :/
+3/1 15:59:12 <TonyC:#Imager> what's another big module? Tk?
+3/1 15:59:18 <Addi:#Imager> Tk is big.
+3/1 15:59:25 <Addi:#Imager> ImageMagick ;P
+3/1 15:59:46 <TonyC:#Imager> perldoc Tk is just a table of contents
+3/1 16:00:44 <Addi:#Imager> does it have a "getting started" section?
+3/1 16:01:01 <TonyC:#Imager> Tk::overview and Tk::UserGuide
+3/1 16:02:40 <TonyC:#Imager> perldoc POE has a small but complete example, overview and TOC
+3/1 16:03:07 <Addi:#Imager> Yeah - it can put references into all the sub modules.
+3/1 16:03:42 <TonyC:#Imager> I can easily imagine Imager::File, maybe Imager::Draw etc
+3/1 16:03:49 <TonyC:#Imager> (as pods)
+3/1 16:04:28 <Addi:#Imager> So - that would give us a POE like doc structure?
+3/1 16:04:45 <TonyC:#Imager> perldoc LWP has an overview, example, TOC
+3/1 16:04:46 <Addi:#Imager> And perldoc Imager would give an intro?
+3/1 16:04:57 <TonyC:#Imager> yep, and references to other infor
+3/1 16:05:01 <TonyC:#Imager> s/r$//
+3/1 16:05:57 <Addi:#Imager> ok - you think we should adopt a similar approach?  I like it.
+3/1 16:06:01 <TonyC:#Imager> might work better for our sanity too - rather maintaining a large POD in Imager.pm, we have a relatively small example, overview, TOC and some smaller files
+3/1 16:06:09 <TonyC:#Imager> yep
+3/1 16:06:32 <Addi:#Imager> Yeah - I think this is what we should do.
+3/1 16:08:42 * Addi:#Imager commits what will now not be of much use ;)
+3/1 16:08:46 <Addi:#Imager> It's only spelling.
+3/1 16:08:51 <Addi:#Imager> and some silly comment.
+3/1 16:08:58 <TonyC:#Imager> ok, if this is going to a rework of that magnitude, I'll integrate the iolayer changes into the main branch, and then put the detailed file handling docs in lib/Imager/Files.pod
+3/1 16:09:33 <Addi:#Imager> Hmmm, before that, should we work out what sections we want?
+3/1 16:10:17 <TonyC:#Imager> Files is obvious (and big enough)
+3/1 16:10:19 <TonyC:#Imager> Filters
+3/1 16:10:26 <TonyC:#Imager> Transform
+3/1 16:10:40 <Addi:#Imager> Image types?
+3/1 16:11:04 <TonyC:#Imager> as in paletted vs rgb vs rgb16 vs rgbdouble?
+3/1 16:11:09 <Addi:#Imager> yes.
+3/1 16:11:15 <Addi:#Imager> And tags.
+3/1 16:11:18 <Addi:#Imager> Hmm
+3/1 16:11:21 <Addi:#Imager> maybe not tags...
+3/1 16:11:26 <Addi:#Imager> It's a borderline issue.
+3/1 16:11:38 <TonyC:#Imager> the format specific tags probably belong in Files
+3/1 16:11:51 <TonyC:#Imager> Drawing
+3/1 16:11:57 <Addi:#Imager> And then tags as such in Image formats.
+3/1 16:13:03 <TonyC:#Imager> I wonder if Transform should be split into built-ins and the engines
+3/1 16:13:48 <TonyC:#Imager> and color transformations?
+3/1 16:14:21 <Addi:#Imager> that would be convert/copy/map ?
+3/1 16:15:53 <TonyC:#Imager> I don't know - a file with tranform(), flip(), rotate(), transform2(), matrix_transform(), copy(), convert() and map() would be pretty big
+3/1 16:16:45 <Addi:#Imager> A lot better than current though ;)
+3/1 16:17:30 <Addi:#Imager> scale too.
+3/1 16:17:47 <TonyC:#Imager> yep, it's just if we're splitting, I'm not sure transform2() belongs with the simple rotate(), flip() etc functions
+3/1 16:18:15 <Addi:#Imager> true..
+3/1 16:18:18 <Addi:#Imager> Maybe two of those?
+3/1 16:18:45 <Addi:#Imager> Programmable transforms?
+3/1 16:18:48 <TonyC:#Imager> transform() and transform2() seem like they should be separate
+3/1 16:18:50 <TonyC:#Imager> yep
+3/1 16:19:18 <TonyC:#Imager> I don't know what we'd call the file though :)
+3/1 16:19:29 <TonyC:#Imager> Imager::Engines maybe
+3/1 16:19:51 <Addi:#Imager> Imager::Bonobo, Imager::Cocoa, Imager::Marketing, Imager::Hype ;)
+3/1 16:20:07 <TonyC:#Imager> heh
+3/1 16:20:22 <TonyC:#Imager> though I'm not sure what Bonobo is
+3/1 16:21:03 <TonyC:#Imager> (a monkey?)
+3/1 16:21:06 <Addi:#Imager> It's some java component framework or something high flying thingy.
+3/1 16:24:19 <TonyC:#Imager> portable embedded documents or somethine
+3/1 16:24:24 <TonyC:#Imager> s/e$/g/
+3/1 16:24:47 <Addi:#Imager> Something like that - It's a 'buzzword' ;)
+3/1 16:24:51 <Addi:#Imager> That's all I know.
+3/1 16:24:58 <Addi:#Imager> Engine is a good term for it I guess.
+3/1 16:26:02 <TonyC:#Imager> do you prefer plurals or singular?  Imager::File|Files Imager::Filter|Filters etc
+3/1 16:27:08 <Addi:#Imager> Normally I wouldn't care
+3/1 16:27:27 <Addi:#Imager> But I think plural would help people see they are not classes.
+3/1 16:28:38 <Addi:#Imager> What do you think?
+3/1 16:29:08 <TonyC:#Imager> plurals make more sense for these, I think
+3/1 16:33:44 <Addi:#Imager> Imager          - Complete Example?, overview and TOC
+3/1 16:33:45 <Addi:#Imager> Files           - IO interaction, reading/writing, format specific tags
+3/1 16:33:45 <Addi:#Imager> Filters         - Filters
+3/1 16:33:45 <Addi:#Imager> Image Formats   - Direct type/Virtual, RGB(A), img16, double
+3/1 16:33:45 <Addi:#Imager> Transformations - flip, rotate, copy, scale, convert and map
+3/1 16:33:45 <Addi:#Imager> Engines         - transform2, matrix_transform
+3/1 16:34:34 <Addi:#Imager> Does that seem logical?
+3/1 16:35:02 <TonyC:#Imager> I'm not sure about Image Formats, maybe Image Types
+3/1 16:35:15 <TonyC:#Imager> but either could be a source of confusion
+3/1 16:35:18 <Addi:#Imager> Image types is petter.
+3/1 16:35:22 <Addi:#Imager> better.
+3/1 16:35:32 <Addi:#Imager> Storage formats is confusing too.
+3/1 16:35:52 <Addi:#Imager> drawing, forgot that.
+3/1 16:36:13 <TonyC:#Imager> we already have Imager::Transform
+3/1 16:36:29 <TonyC:#Imager> but it should be ok
+3/1 16:37:31 <TonyC:#Imager> looks good to me
+3/1 16:41:46 <Addi:#Imager> ok - coordinate system belongs in Image Types?
+3/1 16:42:16 <TonyC:#Imager> you mean x, y, channel?
+3/1 16:43:08 <Addi:#Imager> Yes, but also upper left hand corner .
+3/1 16:43:42 <TonyC:#Imager> maybe that would just go in Imager.pm
+3/1 16:44:10 <TonyC:#Imager> hmm, but Image Types is probably the most logical place
+3/1 16:44:34 <Addi:#Imager> Probably both - It's good to have it in the preview.
