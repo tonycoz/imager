@@ -83,14 +83,14 @@ GetOptions('help' => sub { $help_func->("synopsis") },
 $did_help and exit;
 
 unless ($understand) {
-  print STDERR <<EOS;
+  die <<EOS;
 This tool is under-tested and will probably destroy your data.
 
-If you understand and agree with this use the --understand option.
+If you understand and agree with this use the --understand option to
+avoid this message.
 
 In fact, only the --info and --tags actions have been used at all.
 EOS
-  die;
 }
 
 exists $write_opts{file}
@@ -469,6 +469,7 @@ imager - Imager command-line image manipulation tool
  imager --help-options
  imager --help-actions
  imager --help-general
+ imager --help-colorspec
 
 =head1 DESCRIPTION
 
