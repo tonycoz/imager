@@ -1,0 +1,70 @@
+Currently when writing an animated gif you can do:
+
+  Imager->write_multi({ type=>'gif', file=>'foo.gif',
+                        gif_delays => [ (10) x @images ] },
+                      @images);
+
+and it will write out the images in @images with the given delay
+between each image.
+
+Now let's say we decide that all options are to be supplied in tags
+instead of as parameters, this includes things like the jpegquality
+(if possible) and tiff text tags.
+
+The problem with this is that we're making it harder to write the
+image, rather than supplying the parameters to write*() the user needs
+to go through an set tags:
+
+  $_->addtag(name=>'gif_delay', value=>10) for @images;
+  Imager->write_multi({ type=>'gif', file=>'foo.gif'},
+                      @images);
+
+It's worse if the user needs to set more options:
+
+  $_->addtag(name=>'gif_delay', value=>10) for @images;
+  $_->addtag(name=>'gif_user_input', value=>1) for @images;
+  Imager->write_multi({ type=>'gif', file=>'foo.gif'},
+                      @images);
+
+Now we could add a function to simplify this:
+
+  $_->addtags(gif_delay=>10, gif_user_input=>1) for @images;
+  Imager->write_multi({ type=>'gif', file=>'foo.gif'},
+                      @images);
+
+but consider how we can preserve some of the existing interface.
+
+The option I was considering was to have the write*() methods set any
+parameters that have the file type as a prefix in the write call, as
+tags in the image, hence:
+
+  Imager->write_multi({ type=>'gif', file=>'foo.gif',
+                        gif_delay => [ (10) x @images ],
+                        gif_user_input => [ (1) x @images ] },
+                      @images);
+
+If the value provided isn't an array reference, we could expand that to the number of images, so:
+
+  Imager->write_multi({ type=>'gif', file=>'foo.gif',
+                        gif_delay => 10,
+                        gif_user_input => 1 },
+                      @images);
+
+This also applies nicely to TIFFs:
+
+  Imager->write_multi({ type=>'tiff', file=>'foo.tiff',
+                        tiff_pagename => [ map "Page $_", 1 .. @images ],
+                        tiff_documentname => "My New Document" },
+                      @images);
+
+Now the names aren't going to be completely compatible between the old
+interface and the new, since the gif names at least tend to be
+plurals, but we do preserve the ease of use of the interface, making
+it more DWIM than a "set tags then write" interface.
+
+The main problem with this interface is we're modifying images that
+we're meant to be writing to a file, which really shouldn't require
+modifying the images.
+
+We discussed some of this in IRC a while ago, but didn't come to any
+decisions.
