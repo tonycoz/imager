@@ -192,7 +192,7 @@ writing a single image with the C<gifquant> option set to 'gen'
 Note that some viewers will ignore some of these options
 (C<gif_user_input> in particular).
 
-=over 4
+=over
 
 =item gif_each_palette
 
@@ -471,6 +471,15 @@ The number of important colors as defined by the writer of the image.
 
 =head2 TGA (TarGA)
 
+When storing targa images rle compression can be activated with the
+'compress' parameter, the 'idstring' parameter can be used to set the
+targa comment field and the 'wierdpack' option can be used to use the
+15 and 16 bit targa formats for rgb and rgba data.  The 15 bit format
+has 5 of each red, green and blue.  The 16 bit format in addition
+allows 1 bit of alpha.  The most significant bits are used for each
+channel.
+
+
 Tags:
 
 =over
@@ -482,6 +491,38 @@ Tags:
 =item compressed
 
 =back
+
+
+=head2 RAW
+
+
+When reading raw images you need to supply the width and height of the
+image in the xsize and ysize options:
+
+  $img->read(file=>'foo.raw', xsize=>100, ysize=>100)
+    or die "Cannot read raw image\n";
+
+If your input file has more channels than you want, or (as is common),
+junk in the fourth channel, you can use the datachannels and
+storechannels options to control the number of channels in your input
+file and the resulting channels in your image.  For example, if your
+input image uses 32-bits per pixel with red, green, blue and junk
+values for each pixel you could do:
+
+  $img->read(file=>'foo.raw', xsize=>100, ysize=>100, datachannels=>4,
+	     storechannels=>3)
+    or die "Cannot read raw image\n";
+
+Normally the raw image is expected to have the value for channel 1
+immediately following channel 0 and channel 2 immediately following
+channel 1 for each pixel.  If your input image has all the channel 0
+values for the first line of the image, followed by all the channel 1
+values for the first line and so on, you can use the interleave option:
+
+  $img->read(file=>'foo.raw', xsize=100, ysize=>100, interleave=>1)
+    or die "Cannot read raw image\n";
+
+
 
 =head1 EXAMPLES
 
