@@ -135,9 +135,28 @@ sub automatic {
 
 
 sub gifcheck {
-  if ($formats{'gif'} and $formats{'ungif'}) { 
+  if ($formats{'gif'} and $formats{'ungif'}) {
     print "ungif and gif can not coexist - removing ungif support\n";
     delete $formats{'ungif'};
+  }
+
+ RETR:
+  if ($formats{'gif'} or $formats{'ungif'}) {
+    print <<EOFF;
+
+You have libgif or libungif installed.  They are both known to have
+bugs.  Imager can crash or display other strange behaviour after
+reading or writing gif images.  Some of the gif tests can even fail
+since they stress some parts of the buggy code.
+
+Do you want to remove gif support? [Y/n]
+EOFF
+    my $resp = <STDIN>;
+    chomp($resp);
+    if ($resp ne "n") {
+      delete $formats{'gif'};
+      delete $formats{'ungif'};
+    }
   }
   my @dirs;
   for my $frm (grep $formats{$_}, qw(gif ungif)) {
