@@ -63,7 +63,7 @@ if ($imoo->read(file=>'testout/t108_24bit.tga')) {
 if ($imoo->write(file=>'testout/t108_oo.tga')) {
   print "ok 16\n";
 } else {
-  print "not 16 # ",$imoo->errstr,"\n";
+  print "not ok 16 # ",$imoo->errstr,"\n";
 }
 
 
