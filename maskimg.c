@@ -230,7 +230,6 @@ Internal function.
 */
 static int i_plin_masked(i_img *im, int l, int r, int y, i_color *vals) {
   i_img_mask_ext *ext = MASKEXT(im);
-  int result;
 
   if (y >= 0 && y < im->ysize && l < im->xsize && l >= 0) {
     if (r > im->xsize)

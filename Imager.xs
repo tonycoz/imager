@@ -18,6 +18,7 @@ typedef io_glue* Imager__IO;
 typedef i_color* Imager__Color;
 typedef i_fcolor* Imager__Color__Float;
 typedef i_img*   Imager__ImgRaw;
+typedef int undef_neg_int;
 
 #ifdef HAVE_LIBTT
 typedef TT_Fonthandle* Imager__Font__TT;
@@ -558,6 +559,7 @@ static struct value_name orddith_names[] =
   { "custom", od_custom, },
 };
 
+#if 0
 static int
 hv_fetch_bool(HV *hv, char *name, int def) {
   SV **sv;
@@ -581,6 +583,7 @@ hv_fetch_int(HV *hv, char *name, int def) {
   else
     return def;
 }
+#endif
 
 /* look through the hash for quantization options */
 static void handle_quant_opts(i_quantize *quant, HV *hv)
@@ -845,7 +848,6 @@ load_fount_segs(AV *asegs, int *count) {
   */
   int i, j;
   AV *aseg;
-  SV *sv;
   i_fountain_seg *segs;
   double work[3];
   int worki[2];
@@ -1961,7 +1963,7 @@ i_tt_cp(handle,im,xb,yb,channel,points,str_sv,len_ignored,smooth,utf8)
                 RETVAL
 
 
-undef_int
+void
 i_tt_bbox(handle,point,str_sv,len_ignored, utf8)
   Imager::Font::TT     handle
 	     float     point
@@ -2619,8 +2621,6 @@ void
 i_readgif_callback(...)
           PROTOTYPE: &
             PREINIT:
-               char*    data;
-	        int     length;
 	        int*    colour_table;
 	        int     colours, q, w;
 	      i_img*    rimg;
@@ -3332,11 +3332,6 @@ DSO_call(handle,func_index,hv)
 
 
 
-# this is mostly for testing...
-# this function results in 'RETVAL' : unreferenced local variable
-# in VC++, and might be subtley wrong
-# the most obvious change may result in a double free so I'm leaving it
-# for now
 SV *
 i_get_pixel(im, x, y)
 	Imager::ImgRaw im
@@ -3347,13 +3342,15 @@ i_get_pixel(im, x, y)
       CODE:
 	color = (i_color *)mymalloc(sizeof(i_color));
 	if (i_gpix(im, x, y, color) == 0) {
-          ST(0) = sv_newmortal();
-          sv_setref_pv(ST(0), "Imager::Color", (void *)color);
+          RETVAL = NEWSV(0, 0);
+          sv_setref_pv(RETVAL, "Imager::Color", (void *)color);
         }
         else {
           myfree(color);
-          ST(0) = &PL_sv_undef;
+          RETVAL = &PL_sv_undef;
         }
+      OUTPUT:
+        RETVAL
         
 
 int
@@ -3475,14 +3472,16 @@ i_addcolors(im, ...)
         index = i_addcolors(im, colors, items-1);
         myfree(colors);
         if (index == 0) {
-          ST(0) = sv_2mortal(newSVpv("0 but true", 0));
+          RETVAL = newSVpv("0 but true", 0);
         }
         else if (index == -1) {
-          ST(0) = &PL_sv_undef;
+          RETVAL = &PL_sv_undef;
         }
         else {
-          ST(0) = sv_2mortal(newSViv(index));
+          RETVAL = newSViv(index);
         }
+      OUTPUT:
+        RETVAL
 
 undef_int 
 i_setcolors(im, index, ...)
@@ -3540,33 +3539,13 @@ i_getcolors(im, index, ...)
         myfree(colors);
 
 
-SV *
+undef_neg_int
 i_colorcount(im)
         Imager::ImgRaw im
-      PREINIT:
-        int count;
-      CODE:
-        count = i_colorcount(im);
-        if (count >= 0) {
-          ST(0) = sv_2mortal(newSViv(count));
-        }
-        else {
-          ST(0) = &PL_sv_undef;
-        }
 
-SV *
+undef_neg_int
 i_maxcolors(im)
         Imager::ImgRaw im
-      PREINIT:
-        int count;
-      CODE:
-        count = i_maxcolors(im);
-        if (count >= 0) {
-          ST(0) = sv_2mortal(newSViv(count));
-        }
-        else {
-          ST(0) = &PL_sv_undef;
-        }
 
 SV *
 i_findcolor(im, color)
@@ -3576,11 +3555,13 @@ i_findcolor(im, color)
         i_palidx index;
       CODE:
         if (i_findcolor(im, color, &index)) {
-          ST(0) = sv_2mortal(newSViv(index));
+          RETVAL = newSViv(index);
         }
         else {
-          ST(0) = &PL_sv_undef;
+          RETVAL = &PL_sv_undef;
         }
+      OUTPUT:
+        RETVAL
 
 int
 i_img_bits(im)
@@ -3777,14 +3758,16 @@ i_gpixf(im, x, y)
       CODE:
 	color = (i_fcolor *)mymalloc(sizeof(i_fcolor));
 	if (i_gpixf(im, x, y, color) == 0) {
-          ST(0) = sv_newmortal();
-          sv_setref_pv(ST(0), "Imager::Color::Float", (void *)color);
+          RETVAL = NEWSV(0,0);
+          sv_setref_pv(RETVAL, "Imager::Color::Float", (void *)color);
         }
         else {
           myfree(color);
-          ST(0) = &PL_sv_undef;
+          RETVAL = &PL_sv_undef;
         }
-        
+      OUTPUT:
+        RETVAL
+
 void
 i_glin(im, l, r, y)
         Imager::ImgRaw im
@@ -3897,12 +3880,14 @@ i_tags_find(im, name, start)
       CODE:
         if (i_tags_find(&im->tags, name, start, &entry)) {
           if (entry == 0)
-            ST(0) = sv_2mortal(newSVpv("0 but true", 0));
+            RETVAL = newSVpv("0 but true", 0);
           else
-            ST(0) = sv_2mortal(newSViv(entry));
+            RETVAL = newSViv(entry);
         } else {
-          ST(0) = &PL_sv_undef;
+          RETVAL = &PL_sv_undef;
         }
+      OUTPUT:
+        RETVAL
 
 SV *
 i_tags_findn(im, code, start)
@@ -3914,12 +3899,15 @@ i_tags_findn(im, code, start)
       CODE:
         if (i_tags_findn(&im->tags, code, start, &entry)) {
           if (entry == 0)
-            ST(0) = sv_2mortal(newSVpv("0 but true", 0));
+            RETVAL = newSVpv("0 but true", 0);
           else
-            ST(0) = sv_2mortal(newSViv(entry));
+            RETVAL = newSViv(entry);
         }
-        else
-          ST(0) = &PL_sv_undef;
+        else {
+          RETVAL = &PL_sv_undef;
+        }
+      OUTPUT:
+        RETVAL
 
 int
 i_tags_delete(im, entry)

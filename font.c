@@ -488,7 +488,6 @@ i_t1_has_chars(int font_num, const char *text, int len, int utf8,
 
   while (len) {
     unsigned long c;
-    int index;
     if (utf8) {
       c = i_utf8_advance(&text, &len);
       if (c == ~0UL) {
@@ -1247,7 +1246,6 @@ int
 i_tt_has_chars(TT_Fonthandle *handle, char const *text, int len, int utf8,
                char *out) {
   int count = 0;
-  int inst;
   mm_log((1, "i_tt_has_chars(handle %p, text %p, len %d, utf8 %d)\n", 
           handle, text, len, utf8));
 
@@ -1381,7 +1379,6 @@ i_tt_render_all_glyphs( TT_Fonthandle *handle, int inst, TT_Raster_Map *bit,
                         TT_Raster_Map *small_bit, int cords[6], 
                         char const* txt, int len, int smooth, int utf8 ) {
   unsigned long j;
-  int i;
   TT_F26Dot6 x,y;
   
   mm_log((1,"i_tt_render_all_glyphs( handle 0x%X, inst %d, bit 0x%X, small_bit 0x%X, txt '%.*s', len %d, smooth %d, utf8 %d)\n",

@@ -726,7 +726,6 @@ static void fill_image(i_fill_t *fill, int x, int y, int width, int channels,
                        i_color *data) {
   struct i_fill_image_t *f = (struct i_fill_image_t *)fill;
   int i = 0;
-  i_color c;
   i_color *out = data;
   
   if (f->has_matrix) {
@@ -824,7 +823,6 @@ static void fill_imagef(i_fill_t *fill, int x, int y, int width, int channels,
                        i_fcolor *data) {
   struct i_fill_image_t *f = (struct i_fill_image_t *)fill;
   int i = 0;
-  i_fcolor c;
   
   if (f->has_matrix) {
     /* the hard way */
@@ -1050,7 +1048,6 @@ static void combine_mult(i_color *out, i_color *in, int channels, int count) {
   int ch;
 
   while (count--) {
-    i_color c = *in;
     double mult[MAXCHANNELS];
     mult[3] = in->channel[3];
     for (ch = 0; ch < (channels); ++ch) { 
@@ -1079,8 +1076,6 @@ static void combine_multf(i_fcolor *out, i_fcolor *in, int channels, int count) 
 }
 
 static void combine_dissolve(i_color *out, i_color *in, int channels, int count) {
-  int ch;
-
   while (count--) {
     if (in->channel[3] > rand() * (255.0 / RAND_MAX))
       COMBINE(*out, *in, channels);
@@ -1090,8 +1085,6 @@ static void combine_dissolve(i_color *out, i_color *in, int channels, int count)
 }
 
 static void combine_dissolvef(i_fcolor *out, i_fcolor *in, int channels, int count) {
-  int ch;
-
   while (count--) {
     if (in->channel[3] > rand() * (1.0 / RAND_MAX))
       COMBINEF(*out, *in, channels);

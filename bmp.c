@@ -516,7 +516,7 @@ static int
 write_8bit_data(io_glue *ig, i_img *im) {
   i_palidx *line;
   int line_size = im->xsize;
-  int x, y;
+  int y;
 
   /* round up to nearest multiple of four */
   line_size = (line_size + 3) / 4 * 4;
@@ -558,7 +558,7 @@ static int
 write_24bit_data(io_glue *ig, i_img *im) {
   int *chans;
   unsigned char *samples;
-  int x, y;
+  int y;
   int line_size = 3 * im->xsize;
   
   line_size = (line_size + 3) / 4 * 4;
@@ -632,7 +632,7 @@ read_1bit_bmp(io_glue *ig, int xsize, int ysize, int clr_used,
   i_palidx *line, *p;
   unsigned char *packed;
   int line_size = (xsize + 7)/8;
-  int byte, bit;
+  int bit;
   unsigned char *in;
   long base_offset;
 
@@ -826,7 +826,6 @@ read_4bit_bmp(io_glue *ig, int xsize, int ysize, int clr_used,
   }
   else if (compression == BI_RLE4) {
     int read_size;
-    int want_high;
     int count;
 
     i_tags_add(&im->tags, "bmp_compression_name", 0, "BI_RLE4", -1, 0);
@@ -921,9 +920,8 @@ read_8bit_bmp(io_glue *ig, int xsize, int ysize, int clr_used,
               int compression, long offbits) {
   i_img *im;
   int x, y, lasty, yinc;
-  i_palidx *line, *p;
+  i_palidx *line;
   int line_size = xsize;
-  unsigned char *in;
   long base_offset;
 
   line_size = (line_size+3) / 4 * 4;
@@ -992,7 +990,6 @@ read_8bit_bmp(io_glue *ig, int xsize, int ysize, int clr_used,
   }
   else if (compression == BI_RLE8) {
     int read_size;
-    int want_high;
     int count;
     unsigned char packed[2];
 
@@ -1093,7 +1090,6 @@ read_direct_bmp(io_glue *ig, int xsize, int ysize, int bit_count,
   i_img *im;
   int x, y, lasty, yinc;
   i_color *line, *p;
-  unsigned char *in;
   int pix_size = bit_count / 8;
   int line_size = xsize * pix_size;
   struct bm_masks masks;

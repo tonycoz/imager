@@ -123,13 +123,14 @@ point_set_new(double *x, double *y, int l) {
   return pset;
 }
 
+#if 0
 static
 void
 p_line_dump(p_line *l) {
   printf("%d (%d,%d)->(%d,%d) [%d-%d,%d-%d]\n", l->n, l->x1, l->y1, l->x2, l->y2, 
 	 l->minx, l->maxx, l->miny, l->maxy);
 }
-
+#endif
 
 static
 void
@@ -179,6 +180,7 @@ lines_in_interval(p_line *lset, int l, p_slice *tllist, pcord minc, pcord maxc) 
   return count;
 }
 
+#if 0
 static
 int
 lines_in_interval_old(p_line *lset, int l, p_slice *tllist, pcord cc) {
@@ -198,6 +200,7 @@ lines_in_interval_old(p_line *lset, int l, p_slice *tllist, pcord cc) {
   }
   return count;
 }
+#endif
 
 /* marks the up variable for all lines in a slice */
 
@@ -302,8 +305,6 @@ pixel_coverage(p_line *line, pcord minx, pcord maxx, pcord  miny, pcord maxy) {
   double lycross, rycross;
   int l, r;
 
-  double xs, ys;
-  
   if (!line->updown) {
     l = r = 0;
   } else {
@@ -364,7 +365,6 @@ render_slice_scanline(ss_scanline *ss, int y, p_line *l, p_line *r) {
   int thin;		/* boolean for thin/thick segment */
   int startpix;		/* temporary variable for "start of this interval" */
   int stoppix;		/* temporary variable for "end of this interval" */
-  int step2end;		/* temporary variable to mark where step2 ends */
 
   /* Find the y bounds of scanline_slice */
 
@@ -406,7 +406,7 @@ render_slice_scanline(ss_scanline *ss, int y, p_line *l, p_line *r) {
 }
 
 
-
+#if 0
 static
 void
 render_slice_scanline_old(ss_scanline *ss, int y, p_line *l, p_line *r) {
@@ -418,7 +418,6 @@ render_slice_scanline_old(ss_scanline *ss, int y, p_line *l, p_line *r) {
   int thin;		/* boolean for thin/thick segment */
   int startpix;		/* temporary variable for "start of this interval" */
   int stoppix;		/* temporary variable for "end of this interval" */
-  int step2end;		/* temporary variable to mark where step2 ends */
 
   /* Find the y bounds of scanline_slice */
 
@@ -497,11 +496,7 @@ render_slice_scanline_old(ss_scanline *ss, int y, p_line *l, p_line *r) {
   
   ss->line[cpix] += (16.0)*(maxy-miny) - pixel_coverage(r, cpix*16, cpix*16+16, miny, maxy);
 }
-
-
-
-
-
+#endif
 
 /* Antialiasing polygon algorithm 
    specs:
@@ -537,7 +532,6 @@ static void
 i_poly_aa_low(i_img *im, int l, double *x, double *y, void *ctx, scanline_flusher flusher) {
   int i ,k;			/* Index variables */
   int clc;			/* Lines inside current interval */
-  pcord miny ,maxy;		/* Min and max values of the current slice in the subcord system */
   pcord tempy;
   int cscl;			/* Current scanline */
 
@@ -581,7 +575,6 @@ i_poly_aa_low(i_img *im, int l, double *x, double *y, void *ctx, scanline_flushe
   for(i=0; i<l-1; i++) {
     int startscan = i_max( coarse(pset[i].y), 0);
     int stopscan = i_min( coarse(pset[i+1].y+15), im->ysize);
-    pcord cc = (pset[i].y + pset[i+1].y)/2;
 
     if (pset[i].y == pset[i+1].y) {
       POLY_DEB( printf("current slice thickness = 0 => skipping\n") );
@@ -602,8 +595,6 @@ i_poly_aa_low(i_img *im, int l, double *x, double *y, void *ctx, scanline_flushe
     POLY_DEB( printf("Interval contains %d lines\n", clc) );
 
     for(k=0; k<clc; k++) {
-      int lno = tllist[k].n;
-      p_line *ln = lset+lno;
       POLY_DEB(
 	       printf("%d:  line #%2d: (%2d, %2d)->(%2d, %2d) (%2d/%2d, %2d/%2d) -> (%2d/%2d, %2d/%2d) alignment=%s\n",
 		      k, lno, ln->x1, ln->y1, ln->x2, ln->y2, 
@@ -660,7 +651,6 @@ struct poly_cfill_state {
 static void
 scanline_flush_cfill(i_img *im, ss_scanline *ss, int y, void *ctx) {
   int x, ch, tv;
-  i_color t;
   int pos;
   int left, right;
   struct poly_cfill_state *state = (struct poly_cfill_state *)ctx;

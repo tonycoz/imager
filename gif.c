@@ -495,7 +495,7 @@ standard.
 
 i_img **i_readgif_multi_low(GifFileType *GifFile, int *count) {
   i_img *img;
-  int i, j, Size, Width, Height, ExtCode, Count, x;
+  int i, j, Size, Width, Height, ExtCode, Count;
   int ImageNum = 0, BackGround = 0, ColorMapSize = 0;
   ColorMapObject *ColorMap;
  
@@ -1386,9 +1386,8 @@ static int
 has_common_palette(i_img **imgs, int count, i_quantize *quant, 
                    int want_trans) {
   int size = quant->mc_count;
-  int i, j;
+  int i;
   int imgn;
-  int x, y;
   char used[256];
 
   /* we try to build a common palette here, if we can manage that, then
@@ -1498,7 +1497,6 @@ i_writegif_low(i_quantize *quant, GifFileType *gf, i_img **imgs, int count) {
   i_color *orig_colors = quant->mc_colors;
   i_color *glob_colors = NULL;
   int glob_color_count;
-  int glob_map_size;
   int glob_want_trans;
   int glob_paletted; /* the global map was made from the image palettes */
   int colors_paletted;

@@ -169,18 +169,15 @@ Returns NULL on error.
 i_img *
 i_readrgb_wiol(io_glue *ig, int length) {
   i_img *img;
-  int x, y, c,i;
+  int y, c,i;
   int width, height, channels;
   unsigned long maxlen;
 
   int savemask;
   
-  char *idstring = NULL;
-
   rgb_header header;
   unsigned char headbuf[512];
   unsigned char *databuf;
-  unsigned char *reorderbuf;
   unsigned long *starttab, *lengthtab;
   i_color *linebuf = NULL;
   i_mempool mp;

@@ -247,7 +247,6 @@ make_minmax_list(i_mmarray *dot, float x, float y, float radius) {
   polar_to_plane(x, y, angle, radius, &sx, &sy);
   
   for(angle = 0.0; angle<361; angle +=astep) {
-    float alpha;
     lx = sx; ly = sy;
     polar_to_plane(x, y, angle, radius, &cx, &cy);
     sx = cx; sy = cy;
@@ -315,7 +314,7 @@ i_circle_aa(i_img *im, float x, float y, float rad, i_color *val) {
   make_minmax_list(&dot, x, y, rad);
 
   for(ly = 0; ly<im->ysize; ly++) {
-    int ix, cy, cnt = 0, minx = INT_MAX, maxx = INT_MIN;
+    int ix, cy, minx = INT_MAX, maxx = INT_MIN;
 
     /* Find the left/rightmost set subpixels */
     for(cy = 0; cy<16; cy++) {
@@ -443,7 +442,6 @@ i_line(i_img *im, int x1, int y1, int x2, int y2, i_color *val, int endp) {
   int x, y;
   int dx, dy;
   int p;
-  unsigned char *cp;
 
   dx = x2 - x1;
   dy = y2 - y1;
@@ -632,7 +630,6 @@ i_line_aa(i_img *im, int x1, int y1, int x2, int y2, i_color *val, int endp) {
   int x, y;
   int dx, dy;
   int p;
-  unsigned char *cp;
 
   dx = x2 - x1;
   dy = y2 - y1;

@@ -126,8 +126,6 @@ i_ft2_new(char *name, int index) {
   FT_Error error;
   FT2_Fonthandle *result;
   FT_Face face;
-  double matrix[6] = { 1, 0, 0,
-                       0, 1, 0 };
   int i, j;
   FT_Encoding encoding;
   int score;
@@ -428,7 +426,6 @@ too much hard work.
 void ft2_transform_box(FT2_Fonthandle *handle, int bbox[4]) {
   double work[8];
   double *matrix = handle->matrix;
-  int i;
   
   work[0] = matrix[0] * bbox[0] + matrix[1] * bbox[1];
   work[1] = matrix[3] * bbox[0] + matrix[4] * bbox[1];
@@ -490,13 +487,11 @@ i_ft2_bbox_r(FT2_Fonthandle *handle, double cheight, double cwidth,
   int ascent = 0, descent = 0;
   int glyph_ascent, glyph_descent;
   FT_Glyph_Metrics *gm;
-  int start = 0;
   int work[4];
   int bounds[4];
   double x = 0, y = 0;
   int i;
   FT_GlyphSlot slot;
-  int advx, advy;
   int loadFlags = FT_LOAD_DEFAULT;
 
   if (vlayout)

@@ -31,7 +31,6 @@ Some of these functions are internal.
 =cut
 */
 
-
 #define byteswap_macro(x) \
      ((((x) & 0xff000000) >> 24) | (((x) & 0x00ff0000) >>  8) |     \
       (((x) & 0x0000ff00) <<  8) | (((x) & 0x000000ff) << 24))
@@ -527,7 +526,6 @@ i_writetiff_low_faxable(TIFF *tif, i_img *im, int fine) {
   uint32 y;
   int rc;
   uint32 x;
-  int luma_mask;
   uint32 rowsperstrip;
   float vres = fine ? 196 : 98;
   int luma_chan;
@@ -639,7 +637,7 @@ i_writetiff_low(TIFF *tif, i_img *im) {
   tsize_t linebytes;
   int ch, ci, rc;
   uint32 x;
-  int got_xres, got_yres, got_aspectonly, aspect_only, resunit;
+  int got_xres, got_yres, aspect_only, resunit;
   double xres, yres;
   uint16 bitspersample = 8;
   uint16 samplesperpixel;
@@ -704,7 +702,6 @@ i_writetiff_low(TIFF *tif, i_img *im) {
     i_color c;
     int count = i_colorcount(im);
     int size;
-    int bits;
     int ch, i;
     
     samplesperpixel = 1;
@@ -1005,7 +1002,6 @@ Stores an image in the iolayer object.
 undef_int
 i_writetiff_wiol(i_img *img, io_glue *ig) {
   TIFF* tif;
-  int i;
 
   io_glue_commit_types(ig);
   i_clear_error();
@@ -1060,7 +1056,6 @@ point.
 undef_int
 i_writetiff_wiol_faxable(i_img *im, io_glue *ig, int fine) {
   TIFF* tif;
-  int i;
 
   io_glue_commit_types(ig);
   i_clear_error();

@@ -317,29 +317,6 @@ int i_tags_get_int(i_img_tags *tags, char const *name, int code, int *value) {
 }
 
 static int parse_long(char *data, char **end, long *out) {
-#if 0
-  /* I wrote this without thinking about strtol */
-  long x = 0;
-  int neg = *data == '-';
-
-  if (neg)
-    ++data;
-  if (!isdigit(*data))
-    return 0;
-  while (isdigit(*data)) {
-    /* this check doesn't guarantee we don't overflow, but it helps */
-    if (x > LONG_MAX / 10)
-      return 0; 
-    x = x * 10 + *data - '0';
-    ++data;
-  }
-  if (neg)
-    x = -x;
-
-  *end = data;
-
-  return 1;
-#else
   long result;
   int savederr = errno;
   char *myend;
@@ -348,14 +325,15 @@ static int parse_long(char *data, char **end, long *out) {
   result = strtol(data, &myend, 10);
   if ((result == LONG_MIN || result == LONG_MAX) && errno == ERANGE
       || myend == data) {
+    errno = savederr;
     return 0;
   }
 
+  errno = savederr;
   *out = result;
   *end = myend;
 
   return 1;
-#endif
 }
 
 /* parse a comma-separated list of integers
