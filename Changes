@@ -472,6 +472,7 @@ Revision history for Perl extension Imager.
         - named parameters for specifying colors, with quite a few options.
 	- glyph size issues for freetyp2
         - minor problem in handling of canon option
+        - low-level bmp writing (moving it to laptop)
 
 =================================================================
 

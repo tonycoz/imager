@@ -775,6 +775,7 @@ data from the io_glue callbacks hasn't been done yet.
 io_glue *
 io_new_fd(int fd) {
   io_glue *ig = mymalloc(sizeof(io_glue));
+  memset(ig, 0, sizeof(*ig));
 #ifdef _MSC_VER
   io_obj_setp_cb(&ig->source, (void*)fd, _read, _write, _lseek);
 #else

@@ -99,7 +99,7 @@ int i_glin_d(i_img *im,int l, int r, int y, i_color *val);
 #define i_ppal(im, l, r, y, vals) \
   (((im)->i_f_ppal) ? ((im)->i_f_ppal)((im), (l), (r), (y), (vals)) : 0)
 #define i_addcolors(im, colors, count) \
-  (((im)->i_f_addcolors) ? ((im)->i_f_addcolors)((im), (colors), (count)) : 0)
+  (((im)->i_f_addcolors) ? ((im)->i_f_addcolors)((im), (colors), (count)) : -1)
 #define i_getcolors(im, index, color, count) \
   (((im)->i_f_getcolors) ? \
    ((im)->i_f_getcolors)((im), (index), (color), (count)) : 0)
@@ -479,6 +479,7 @@ undef_int i_writeraw_wiol(i_img* im, io_glue *ig);
 i_img   * i_readpnm_wiol(io_glue *ig, int length);
 undef_int i_writeppm_wiol(i_img *im, io_glue *ig);
 
+extern int i_writebmp_wiol(i_img *im, io_glue *ig);
 
 i_img * i_scaleaxis(i_img *im, float Value, int Axis);
 i_img * i_scale_nn(i_img *im, float scx, float scy);
