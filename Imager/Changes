@@ -589,6 +589,9 @@ Revision history for Perl extension Imager.
 	- fix calculation of descender for FT2, it was calculating the
 	  minimum decent rather than the maximum for the characters in 
 	  the string
+	- didn't set default for bounding_box() utf8 parameter (caused a
+	  warning when calling bounding_box() on a FT2 font with no utf8
+	  parameter)
 
 =================================================================
 
