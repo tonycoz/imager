@@ -461,6 +461,7 @@ typedef struct {
   char *msg;
   int code;
 } i_errmsg;
+
 typedef void (*i_error_cb)(int code, char const *msg);
 typedef void (*i_failed_cb)(i_errmsg *msgs);
 extern i_error_cb i_set_error_cb(i_error_cb);

@@ -216,7 +216,7 @@ i_readgif_low(GifFileType *GifFile, int **colour_table, int *colours) {
       }
 
       if ( cmapcnt == 0) {
-	if (ColorMap = (GifFile->Image.ColorMap ? GifFile->Image.ColorMap : GifFile->SColorMap) ) {
+	if (( ColorMap = (GifFile->Image.ColorMap ? GifFile->Image.ColorMap : GifFile->SColorMap) )) {
 	  mm_log((1, "Adding local colormap\n"));
 	  ColorMapSize = ColorMap->ColorCount;
 	  i_colortable_copy(colour_table, colours, ColorMap);
@@ -439,104 +439,6 @@ i_writegifmc(i_img *im, int fd, int max_colors) {
   return i_writegif_gen(&quant, fd, &im, 1, &opts);
 }
 
-#if 1
-
-undef_int
-i_writegifex(i_img *im, int fd) {
-  return 0;
-}
-
-#else
-
-/* I don't think this works
-   note that RedBuffer is never allocated - TC
-*/
-
-undef_int
-i_writegifex(i_img *im,int fd) {
-  int colors, xsize, ysize, channels;
-  int x,y,ColorMapSize;
-  unsigned long Size;
-
-  struct octt *ct;
-
-  GifByteType *RedBuffer = NULL, *GreenBuffer = NULL, *BlueBuffer = NULL,*OutputBuffer = NULL;
-  ColorMapObject *OutputColorMap = NULL;
-  GifFileType *GifFile;
-  GifByteType *Ptr;
-  
-  i_color val;
-
-  mm_log((1,"i_writegif(0x%x,fd %d)\n",im,fd));
-  
-  if (!(im->channels==1 || im->channels==3)) { fprintf(stderr,"Unable to write gif, improper colorspace.\n"); exit(3); }
-
-  xsize=im->xsize;
-  ysize=im->ysize;
-  channels=im->channels;
-
-  colors=0;
-  ct=octt_new();
-
-  colors=0;
-  for(x=0;x<xsize;x++) for(y=0;y<ysize;y++) {
-    i_gpix(im,x,y,&val);
-    colors+=octt_add(ct,val.rgb.r,val.rgb.g,val.rgb.b);
-    /*  if (colors > maxc) { octt_delete(ct); } 
-	We'll just bite the bullet */
-  }
-
-  ColorMapSize = (colors > 256) ? 256 : colors;
-  
-  Size = ((long) im->xsize) * im->ysize * sizeof(GifByteType);
-  
-  if ((OutputColorMap = MakeMapObject(ColorMapSize, NULL)) == NULL)
-    m_fatal(0,"Failed to allocate memory for Output colormap.");
-  if ((OutputBuffer = (GifByteType *) mymalloc(im->xsize * im->ysize * sizeof(GifByteType))) == NULL)
-    m_fatal(0,"Failed to allocate memory for output buffer.");
-  
-  if (QuantizeBuffer(im->xsize, im->ysize, &ColorMapSize, RedBuffer, GreenBuffer, BlueBuffer,
-		     OutputBuffer, OutputColorMap->Colors) == GIF_ERROR) {
-    mm_log((1,"Error in QuantizeBuffer, unable to write image.\n"));
-    return(0);
-  }
-
-
-  myfree(RedBuffer);
-  if (im->channels == 3) { myfree(GreenBuffer); myfree(BlueBuffer); }
-  
-  if ((GifFile = EGifOpenFileHandle(fd)) == NULL) {
-    mm_log((1,"Error in EGifOpenFileHandle, unable to write image.\n"));
-    return(0);
-  }
-  
-  if (EGifPutScreenDesc(GifFile,im->xsize, im->ysize, colors, 0,OutputColorMap) == GIF_ERROR ||
-      EGifPutImageDesc(GifFile,0, 0, im->xsize, im->ysize, FALSE, NULL) == GIF_ERROR) {
-    mm_log((1,"Error in EGifOpenFileHandle, unable to write image.\n"));
-    if (GifFile != NULL) EGifCloseFile(GifFile);
-    return(0);
-  }
-
-  Ptr = OutputBuffer;
-
-  for (y = 0; y < im->ysize; y++) {
-    if (EGifPutLine(GifFile, Ptr, im->xsize) == GIF_ERROR) {
-      mm_log((1,"Error in EGifOpenFileHandle, unable to write image.\n"));
-      if (GifFile != NULL) EGifCloseFile(GifFile);
-      return(0);
-    }
-    
-    Ptr += im->xsize;
-  }
-  
-  if (EGifCloseFile(GifFile) == GIF_ERROR) {
-    mm_log((1,"Error in EGifCloseFile, unable to write image.\n"));
-    return(0);
-  }
-  return(1);
-}
-
-#endif
 
 /*
 =item i_readgif_scalar(char *data, int length, int **colour_table, int *colours)
@@ -802,7 +704,9 @@ static ColorMapObject *make_gif_map(i_quantize *quant, i_gif_opts *opts,
   /* giflib spews for 1 colour maps, reasonable, I suppose */
   if (map_size == 1)
     map_size = 2;
+  
   map = MakeMapObject(map_size, colors);
+  mm_log((1, "XXX map is at %p and colors at %p\n", map, map->Colors));
   if (!map) {
     gif_push_error();
     i_push_error(0, "Could not create color map object");

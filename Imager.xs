@@ -1163,10 +1163,6 @@ i_writegifmc(im,fd,colors)
 	       int     fd
 	       int     colors
 
-undef_int
-i_writegifex(im,fd)
-    Imager::ImgRaw     im
-	       int     fd
 
 undef_int
 i_writegif_gen(fd, ...)

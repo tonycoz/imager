@@ -288,7 +288,7 @@ int i_failed(int code, char const *msg) {
     fputs("error:\n", stderr);
     sp = error_sp;
     while (error_stack[sp].msg) {
-      fprintf(stderr, " %s\n", error_stack[sp]);
+      fprintf(stderr, " %s\n", error_stack[sp].msg);
       ++sp;
     }
     /* we want to log the error too, build an error message to hand to
