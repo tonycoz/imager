@@ -1,7 +1,7 @@
 #!perl -w
 use strict;
 
-print "1..34\n";
+print "1..35\n";
 
 use Imager ':handy';
 use Imager::Fill;
@@ -194,6 +194,9 @@ for my $comb (Imager::Fill->combines) {
         "  allowed: ",join(",", $test->{result}->rgba),"\n";
   }
 }
+
+ok($testnum++, $ffim->arc(r=>45, color=>$blue, aa=>1), "aa circle");
+$ffim->write(file=>"testout/t20_aacircle.ppm");
 
 sub ok ($$$) {
   my ($num, $test, $desc) = @_;
