@@ -152,7 +152,10 @@ hence we need to support use of integer algorithms where appropriate.
 By preferring access via the functions we can reduce the possibility
 of incorrect access to the image data.
 
-If an image interface function pointer isn't implemented, it should be set to NULL rather than being left uninitialized.  This is so that use of the ununsed pointer results in an immediate crash rather than possibly calling the wrong function and crashing at some later point.
+If an image interface function pointer isn't implemented, it should be
+set to NULL rather than being left uninitialized.  This is so that use 
+of the ununsed pointer results in an immediate crash rather than
+possibly calling the wrong function and crashing at some later point.
 
 In a debug build of Imager the image interface functions should check
 that the correct type of image pointer is being passed in.  This means
