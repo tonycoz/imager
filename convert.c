@@ -41,8 +41,7 @@ Now handles images with more than 8-bits/sample.
 */
 
 int
-i_convert(i_img *im, i_img *src, float *coeff, int outchan, int inchan)
-{
+i_convert(i_img *im, i_img *src, float *coeff, int outchan, int inchan) {
   int x, y;
   int i, j;
   int ilimit;
@@ -177,6 +176,8 @@ i_convert(i_img *im, i_img *src, float *coeff, int outchan, int inchan)
       i_gpal(src, 0, im->xsize, y, vals);
       i_ppal(im, 0, im->xsize, y, vals);
     }
+    myfree(vals);
+    myfree(colors);
   }
 
   return 1;

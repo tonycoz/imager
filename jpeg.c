@@ -215,10 +215,11 @@ wiol_empty_output_buffer(j_compress_ptr cinfo) {
 
   mm_log((1,"wiol_empty_output_buffer(cinfo 0x%p)\n"));
   rc = dest->data->writecb(dest->data, dest->buffer, JPGS);
-  
+
   if (rc != JPGS) { /* XXX: Should raise some jpeg error */
+    myfree(dest->buffer);
     mm_log((1, "wiol_empty_output_buffer: Error: nbytes = %d != rc = %d\n", JPGS, rc));
-    ERREXIT(cinfo, JERR_FILE_WRITE); 
+    ERREXIT(cinfo, JERR_FILE_WRITE);
   }
   dest->pub.free_in_buffer = JPGS;
   dest->pub.next_output_byte = dest->buffer;
@@ -231,13 +232,12 @@ wiol_term_destination (j_compress_ptr cinfo) {
   size_t nbytes = JPGS - dest->pub.free_in_buffer;
   /* yes, this needs to flush the buffer */
   /* needs error handling */
+
   if (dest->data->writecb(dest->data, dest->buffer, nbytes) != nbytes) {
+    myfree(dest->buffer);
     ERREXIT(cinfo, JERR_FILE_WRITE);
   }
-
-
-  mm_log((1, "wiol_term_destination(cinfo %p)\n", cinfo));
-  mm_log((1, "wiol_term_destination: dest %p\n", cinfo->dest));
+  
   if (dest != NULL) myfree(dest->buffer);
 }
 

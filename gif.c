@@ -177,7 +177,7 @@ i_readgif_low(GifFileType *GifFile, int **colour_table, int *colours) {
 
   Size = GifFile->SWidth * sizeof(GifPixelType); 
   
-  GifRow = (GifRowType) mymalloc(Size);
+  GifRow = mymalloc(Size);
 
   for (i = 0; i < GifFile->SWidth; i++) GifRow[i] = GifFile->SBackGroundColor;
   
@@ -190,6 +190,7 @@ i_readgif_low(GifFileType *GifFile, int **colour_table, int *colours) {
 	myfree(*colour_table);
 	*colour_table = NULL;
       }
+      myfree(GifRow);
       i_img_destroy(im);
       DGifCloseFile(GifFile);
       return NULL;
@@ -204,6 +205,7 @@ i_readgif_low(GifFileType *GifFile, int **colour_table, int *colours) {
 	  myfree(*colour_table);
 	  *colour_table = NULL;
 	}
+	myfree(GifRow);
 	i_img_destroy(im);
 	DGifCloseFile(GifFile);
 	return NULL;
@@ -221,6 +223,7 @@ i_readgif_low(GifFileType *GifFile, int **colour_table, int *colours) {
 	mm_log((1, "Going in with no colormap\n"));
 	i_push_error(0, "Image does not have a local or a global color map");
 	/* we can't have allocated a colour table here */
+	myfree(GifRow);
 	i_img_destroy(im);
 	DGifCloseFile(GifFile);
 	return NULL;
@@ -240,9 +243,10 @@ i_readgif_low(GifFileType *GifFile, int **colour_table, int *colours) {
 	  myfree(*colour_table);
 	  *colour_table = NULL;
 	}
+	myfree(GifRow);
 	i_img_destroy(im);
 	DGifCloseFile(GifFile);
-	return(0);
+	return NULL;
       }
       if (GifFile->Image.Interlace) {
 
@@ -255,6 +259,7 @@ i_readgif_low(GifFileType *GifFile, int **colour_table, int *colours) {
 	      myfree(*colour_table);
 	      *colour_table = NULL;
 	    }
+	    myfree(GifRow);
 	    i_img_destroy(im);
 	    DGifCloseFile(GifFile);
 	    return NULL;
@@ -279,6 +284,7 @@ i_readgif_low(GifFileType *GifFile, int **colour_table, int *colours) {
 	      myfree(*colour_table);
 	      *colour_table = NULL;
 	    }
+	    myfree(GifRow);
 	    i_img_destroy(im);
 	    DGifCloseFile(GifFile);
 	    return NULL;
@@ -304,6 +310,7 @@ i_readgif_low(GifFileType *GifFile, int **colour_table, int *colours) {
 	  myfree(*colour_table);
 	  *colour_table = NULL;
 	}
+	myfree(GifRow);
 	i_img_destroy(im);
 	DGifCloseFile(GifFile);
 	return NULL;
@@ -316,6 +323,7 @@ i_readgif_low(GifFileType *GifFile, int **colour_table, int *colours) {
 	    myfree(*colour_table);
 	    *colour_table = NULL;
 	  }
+	  myfree(GifRow);
 	  i_img_destroy(im);
 	  DGifCloseFile(GifFile);
 	  return NULL;

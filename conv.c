@@ -19,7 +19,7 @@ i_conv(i_img *im,float *coeff,int len) {
   float res[11];
   i_img timg;
 
-  mm_log((1,"i_conv(im* 0x%x,coeff 0x%x,len %d)\n",im,coeff,len));
+  mm_log((1,"i_conv(im %p, coeff %p, len %d)\n",im,coeff,len));
  
   i_img_empty_ch(&timg,im->xsize,im->ysize,im->channels);
 
@@ -66,6 +66,7 @@ i_conv(i_img *im,float *coeff,int len) {
 	  i_ppix(im,l,i,&rcolor);
 	}
     }
+  i_img_exorcise(&timg);
 }
 
 

@@ -979,6 +979,7 @@ i_gradgen(i_img *im, int num, int *xo, int *yo, i_color *ival, int dmeasure) {
     }
     i_ppix(im, x, y, &val); 
   }
+  myfree(fdist);
   
 }
 
@@ -1456,6 +1457,7 @@ i_fountain(i_img *im, double xa, double ya, double xb, double yb,
     i_plinf(im, 0, im->xsize, y, line);
   }
   fount_finish_state(&state);
+  if (work) myfree(work);
   myfree(line);
 }
 

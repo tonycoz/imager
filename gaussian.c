@@ -24,7 +24,7 @@ i_gaussian(i_img *im,float stdev) {
   float res[11];
   i_img timg;
 
-  mm_log((1,"i_gaussian(im* 0x%x,stdev %.2f)\n",im,stdev));
+  mm_log((1,"i_gaussian(im %p, stdev %.2f)\n",im,stdev));
   
   i_img_empty_ch(&timg,im->xsize,im->ysize,im->channels);
 	      
@@ -61,6 +61,7 @@ i_gaussian(i_img *im,float stdev) {
       i_ppix(im,l,i,&rcolor);
     }
   }
+  i_img_exorcise(&timg);
 }
 
 

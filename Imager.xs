@@ -1506,9 +1506,11 @@ i_writegif_gen(fd, ...)
 	    copy_colors_back(hv, &quant);
           }
 	}
-             ST(0) = sv_newmortal();
-             if (RETVAL == 0) ST(0)=&PL_sv_undef;
-             else sv_setiv(ST(0), (IV)RETVAL);
+        ST(0) = sv_newmortal();
+        if (RETVAL == 0) ST(0)=&PL_sv_undef;
+        else sv_setiv(ST(0), (IV)RETVAL);
+	myfree(quant.mc_colors);
+
 
 undef_int
 i_writegif_callback(cb, maxbuffer,...)
@@ -2144,6 +2146,10 @@ i_gradgen(im, ...)
 	  ival[i] = *(i_color *)SvIV((SV *)SvRV(sv));
 	}
         i_gradgen(im, num, xo, yo, ival, dmeasure);
+        myfree(xo);
+        myfree(yo);
+        myfree(ival);
+
 
 void
 i_fountain(im, xa, ya, xb, yb, type, repeat, combine, super_sample, ssample_param, segs)
@@ -2631,6 +2637,7 @@ i_gsamp(im, l, r, y, ...)
             EXTEND(SP, 1);
             PUSHs(sv_2mortal(newSVpv(data, count * sizeof(i_sample_t))));
           }
+	  myfree(data);
         }
         else {
           if (GIMME_V != G_ARRAY) {
@@ -2638,6 +2645,7 @@ i_gsamp(im, l, r, y, ...)
             PUSHs(&PL_sv_undef);
           }
         }
+
 
 Imager::ImgRaw
 i_img_masked_new(targ, mask, x, y, w, h)

@@ -49,17 +49,17 @@ btm_set(struct i_bitmap *btm,int x,int y) {
 
 
 /*
-  Linked list - stack type 
+  Bucketed linked list - stack type 
 */
 
 struct llink *
 llink_new(struct llink* p,int size) {
   struct llink *l;
-  l=(struct llink*)mymalloc(sizeof(struct llink));
-  l->n=NULL;
-  l->p=p;
-  l->fill=0;
-  l->data=(void*)mymalloc(size);
+  l       = mymalloc(sizeof(struct llink));
+  l->n    = NULL;
+  l->p    = p;
+  l->fill = 0;
+  l->data = mymalloc(size);
   return l;
 }
 
@@ -79,7 +79,7 @@ llink_destroy(struct llink* l) {
 int
 llist_llink_push(struct llist *lst, struct llink *lnk,void *data) {
   int multip;
-  multip=lst->multip;
+  multip = lst->multip;
 
   /*   fprintf(stderr,"llist_llink_push: data=0x%08X -> 0x%08X\n",data,*(int*)data);
        fprintf(stderr,"ssize = %d, multip = %d, fill = %d\n",lst->ssize,lst->multip,lnk->fill); */
@@ -96,32 +96,39 @@ llist_llink_push(struct llist *lst, struct llink *lnk,void *data) {
 struct llist *
 llist_new(int multip, int ssize) {
   struct llist *l;
-  l=(struct llist*)mymalloc(sizeof(struct llist));
-  l->h=l->t=NULL;
-  l->multip=multip;
-  l->ssize=ssize;
-  l->count=0;
+  l         = mymalloc(sizeof(struct llist));
+  l->h      = NULL;
+  l->t      = NULL;
+  l->multip = multip;
+  l->ssize  = ssize;
+  l->count  = 0;
   return l;
 }
 
 void
 llist_push(struct llist *l,void *data) {
-  int ssize=l->ssize;
-  int multip=l->multip;
+  int ssize  = l->ssize;
+  int multip = l->multip;
   
-  /*    fprintf(stderr,"llist_push: data=0x%08X\n",data); */
-
-  if (l->t == NULL) l->t=l->h=llink_new(NULL,ssize*multip);  /* Tail is empty - list is empty */
+  /*  fprintf(stderr,"llist_push: data=0x%08X\n",data);
+      fprintf(stderr,"Chain size: %d\n", l->count); */
+    
+  if (l->t == NULL) {
+    l->t = l->h = llink_new(NULL,ssize*multip);  /* Tail is empty - list is empty */
+    /* fprintf(stderr,"Chain empty - extended\n"); */
+  }
   else { /* Check for overflow in current tail */
     if (l->t->fill >= l->multip) {
-      struct llink* nt=llink_new(l->t,ssize*multip);
+      struct llink* nt = llink_new(l->t, ssize*multip);
       l->t->n=nt;
       l->t=nt;
       /* fprintf(stderr,"Chain extended\n"); */
     }
   }
   /*   fprintf(stderr,"0x%08X\n",l->t); */
-  if (llist_llink_push(l,l->t,data)) { fprintf(stderr,"DARN!\n"); }
+  if (llist_llink_push(l,l->t,data)) { 
+    m_fatal(3, "out of memory\n");
+  }
 }
 
 /* returns 0 if the list is empty */
@@ -133,11 +140,13 @@ llist_pop(struct llist *l,void *data) {
   if (l->t == NULL) return 0;
   l->t->fill--;
   l->count--;
-  /*   memcpy(data,(char*)(l->t->data)+l->ssize*l->t->fill,l->ssize); */
   memcpy(data,(char*)(l->t->data)+l->ssize*l->t->fill,l->ssize);
   
   if (!l->t->fill) {			 	/* This link empty */
-    if (l->t->p == NULL) l->h=l->t=NULL;	/* and it's the only link */
+    if (l->t->p == NULL) {                      /* and it's the only link */
+      llink_destroy(l->t);
+      l->h = l->t = NULL;
+    }
     else {
       l->t=l->t->p;
       llink_destroy(l->t->n);

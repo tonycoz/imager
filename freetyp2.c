@@ -96,6 +96,8 @@ i_ft2_new(char *name, int index) {
   double matrix[6] = { 1, 0, 0,
                        0, 1, 0 };
 
+  mm_log((1, "i_ft2_new(name %p, index %d)\n", name, index));
+
   i_clear_error();
   error = FT_New_Face(library, name, index, &face);
   if (error) {
@@ -249,6 +251,9 @@ i_ft2_bbox(FT2_Fonthandle *handle, double cheight, double cwidth,
   int glyph_ascent, glyph_descent;
   FT_Glyph_Metrics *gm;
   int start = 0;
+
+  mm_log((1, "i_ft2_bbox(handle %p, cheight %f, cwidth %f, text %p, len %d, bbox %p)\n",
+	  handle, cheight, cwidth, text, len, bbox));
 
   error = FT_Set_Char_Size(handle->face, cwidth*64, cheight*64, 
                            handle->xdpi, handle->ydpi);
@@ -548,6 +553,9 @@ i_ft2_text(FT2_Fonthandle *handle, i_img *im, int tx, int ty, i_color *cl,
   i_color pel;
   int loadFlags = FT_LOAD_DEFAULT;
 
+  mm_log((1, "i_ft2_text(handle %p, im %p, tx %d, ty %d, cl %p, cheight %f, cwidth %f, text %p, len %d, align %d, aa %d)\n",
+	  handle, im, tx, ty, cl, cheight, cwidth, text, align, aa));
+
   if (vlayout) {
     if (!FT_HAS_VERTICAL(handle->face)) {
       i_push_error(0, "face has no vertical metrics");
@@ -677,6 +685,9 @@ i_ft2_cp(FT2_Fonthandle *handle, i_img *im, int tx, int ty, int channel,
   i_color cl, cl2;
   int x, y;
 
+  mm_log((1, "i_ft2_cp(handle %p, im %p, tx %d, ty %d, channel %d, cheight %f, cwidth %f, text %p, len %d, ...)\n", 
+	  handle, im, tx, ty, channel, cheight, cwidth, text, len));
+
   if (vlayout && !FT_HAS_VERTICAL(handle->face)) {
     i_push_error(0, "face has no vertical metrics");
     return 0;
@@ -706,7 +717,7 @@ i_ft2_cp(FT2_Fonthandle *handle, i_img *im, int tx, int ty, int channel,
       i_ppix(im, tx + x + bbox[0], ty + y + bbox[1], &cl2);
     }
   }
-
+  i_img_destroy(work);
   return 1;
 }
 
