@@ -199,14 +199,22 @@ static i_img *read_one_tiff(TIFF *tif) {
       xres = yres;
     else if (!gotYres)
       yres = xres;
+    i_tags_addn(&im->tags, "tiff_resolutionunit", 0, resunit);
     if (resunit == RESUNIT_CENTIMETER) {
       /* from dots per cm to dpi */
       xres *= 2.54;
       yres *= 2.54;
     }
-    i_tags_addn(&im->tags, "tiff_resolutionunit", 0, resunit);
-    if (resunit == RESUNIT_NONE)
+    else if (resunit == RESUNIT_NONE) {
       i_tags_addn(&im->tags, "i_aspect_only", 0, 1);
+      i_tags_add(&im->tags, "tiff_resolutionunit_name", 0, "none", -1, 0);
+    }
+    else if (resunit == RESUNIT_INCH) {
+      i_tags_add(&im->tags, "tiff_resolutionunit_name", 0, "inch", -1, 0);
+    }
+    else {
+      i_tags_add(&im->tags, "tiff_resolutionunit_name", 0, "unknown", -1, 0);
+    }
     /* tifflib doesn't seem to provide a way to get to the original rational
        value of these, which would let me provide a more reasonable
        precision. So make up a number. */

@@ -985,6 +985,7 @@ Revision history for Perl extension Imager.
 - the i_xres and i_yres tags are now stored in a resolution similar
   to their source.
   Resolves: https://rt.cpan.org/Ticket/Display.html?id=8520
+- added tiff_resolutionunit_name tag when reading tiff files
 
 =================================================================
 

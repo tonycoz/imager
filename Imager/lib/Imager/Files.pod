@@ -430,6 +430,13 @@ The C<i_xres> and C<i_yres> tags are expressed in pixels per inch no
 matter tha value of this tag, they will be converted to/from the value
 stored in the TIFF file.
 
+=item tiff_resolutionunit_name
+
+This is set when reading a TIFF file to the name of the unit given by
+C<tiff_resolutionunit>.  Possible results include C<inch>,
+C<centimeter>, C<none> (the C<i_aspect_only> tag is also set reading
+these files) or C<unknown>.
+
 =item tiff_documentname
 
 =item tiff_imagedescription
