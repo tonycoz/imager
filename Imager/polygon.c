@@ -101,10 +101,10 @@ line_set_new(double *x, double *y, int l) {
     lset[i].y1 = IMTRUNC(y[i]);
     lset[i].x2 = IMTRUNC(x[(i+1)%l]);
     lset[i].y2 = IMTRUNC(y[(i+1)%l]);
-    lset[i].miny=min(lset[i].y1,lset[i].y2);
-    lset[i].maxy=max(lset[i].y1,lset[i].y2);
-    lset[i].minx=min(lset[i].x1,lset[i].x2);
-    lset[i].maxx=max(lset[i].x1,lset[i].x2);
+    lset[i].miny=i_min(lset[i].y1,lset[i].y2);
+    lset[i].maxy=i_max(lset[i].y1,lset[i].y2);
+    lset[i].minx=i_min(lset[i].x1,lset[i].x2);
+    lset[i].maxx=i_max(lset[i].x1,lset[i].x2);
   }
   return lset;
 }
@@ -265,7 +265,7 @@ typedef void (*scanline_flusher)(i_img *im, ss_scanline *ss, int y, void *ctx);
 
 /* This function must be modified later to do proper blending */
 
-void
+static void
 scanline_flush(i_img *im, ss_scanline *ss, int y, void *ctx) {
   int x, ch, tv;
   i_color t;
@@ -368,22 +368,22 @@ render_slice_scanline(ss_scanline *ss, int y, p_line *l, p_line *r) {
 
   /* Find the y bounds of scanline_slice */
 
-  maxy = min( l->maxy, r->maxy );
-  miny = max( l->miny, r->miny );
+  maxy = i_min( l->maxy, r->maxy );
+  miny = i_max( l->miny, r->miny );
 
-  maxy = min( maxy, (y+1)*16 );
-  miny = max( miny,  y*16 );
+  maxy = i_min( maxy, (y+1)*16 );
+  miny = i_max( miny,  y*16 );
 
-  lminx = min( p_eval_aty(l, maxy), p_eval_aty(l, miny) );
-  lmaxx = max( p_eval_aty(l, maxy), p_eval_aty(l, miny) );
+  lminx = i_min( p_eval_aty(l, maxy), p_eval_aty(l, miny) );
+  lmaxx = i_max( p_eval_aty(l, maxy), p_eval_aty(l, miny) );
 
-  rminx = min( p_eval_aty(r, maxy), p_eval_aty(r, miny) );
-  rmaxx = max( p_eval_aty(r, maxy), p_eval_aty(r, miny) );
+  rminx = i_min( p_eval_aty(r, maxy), p_eval_aty(r, miny) );
+  rmaxx = i_max( p_eval_aty(r, maxy), p_eval_aty(r, miny) );
 
   thin = coarse(lmaxx) >= coarse(rminx);
 
-  startpix = max( coarse(lminx), 0 );
-  stoppix  = min( coarse(rmaxx-1), ss->linelen-1 );
+  startpix = i_max( coarse(lminx), 0 );
+  stoppix  = i_min( coarse(rmaxx-1), ss->linelen-1 );
   
   for(cpix=startpix; cpix<=stoppix; cpix++) {
     int lt = coarse(lmaxx-1) >= cpix;
@@ -422,24 +422,24 @@ render_slice_scanline_old(ss_scanline *ss, int y, p_line *l, p_line *r) {
 
   /* Find the y bounds of scanline_slice */
 
-  maxy = min( l->maxy, r->maxy );
-  miny = max( l->miny, r->miny );
+  maxy = i_min( l->maxy, r->maxy );
+  miny = i_max( l->miny, r->miny );
 
-  maxy = min( maxy, (y+1)*16 );
-  miny = max( miny,  y*16 );
+  maxy = i_min( maxy, (y+1)*16 );
+  miny = i_max( miny,  y*16 );
 
-  lminx = min( p_eval_aty(l, maxy), p_eval_aty(l, miny) );
-  lmaxx = max( p_eval_aty(l, maxy), p_eval_aty(l, miny) );
+  lminx = i_min( p_eval_aty(l, maxy), p_eval_aty(l, miny) );
+  lmaxx = i_max( p_eval_aty(l, maxy), p_eval_aty(l, miny) );
 
-  rminx = min( p_eval_aty(r, maxy), p_eval_aty(r, miny) );
-  rmaxx = max( p_eval_aty(r, maxy), p_eval_aty(r, miny) );
+  rminx = i_min( p_eval_aty(r, maxy), p_eval_aty(r, miny) );
+  rmaxx = i_max( p_eval_aty(r, maxy), p_eval_aty(r, miny) );
 
   thin = coarse(lmaxx) >= coarse(rminx);
 
 
   /* First step */
   startpix = coarse(lminx);				/* includes tricky starting pixel */
-  stoppix  = min(coarse(lmaxx), coarse(rminx) );	/* last pixel is tricky */
+  stoppix  = i_min(coarse(lmaxx), coarse(rminx) );	/* last pixel is tricky */
   
   /* handle start pixel */
 
@@ -468,7 +468,7 @@ render_slice_scanline_old(ss_scanline *ss, int y, p_line *l, p_line *r) {
       printf("%2d: step2a pixel\n", cpix);
       ss->line[cpix] += 
 	pixel_coverage(l, cpix*16, cpix*16+16, miny, maxy)
-	+(cpix*16+16-min(cpix*16+16, l->maxx))*(maxy-miny)
+	+(cpix*16+16-i_min(cpix*16+16, l->maxx))*(maxy-miny)
 	-pixel_coverage(r, cpix*16, cpix*16+16, miny, maxy);
     }
   } else { /* step 2b */
@@ -481,7 +481,7 @@ render_slice_scanline_old(ss_scanline *ss, int y, p_line *l, p_line *r) {
   
   /* step 3 */
 
-  cpix = max(coarse(rminx), coarse(lmaxx+15));
+  cpix = i_max(coarse(rminx), coarse(lmaxx+15));
   stoppix = coarse(rmaxx-15);
   
   printf("step3 from %d to %d\n", cpix, stoppix);
@@ -533,7 +533,7 @@ render_slice_scanline_old(ss_scanline *ss, int y, p_line *l, p_line *r) {
  */
 
 
-void
+static void
 i_poly_aa_low(i_img *im, int l, double *x, double *y, void *ctx, scanline_flusher flusher) {
   int i ,k;			/* Index variables */
   int clc;			/* Lines inside current interval */
@@ -579,8 +579,8 @@ i_poly_aa_low(i_img *im, int l, double *x, double *y, void *ctx, scanline_flushe
 
   /* loop on intervals */
   for(i=0; i<l-1; i++) {
-    int startscan = max( coarse(pset[i].y), 0);
-    int stopscan = min( coarse(pset[i+1].y+15), im->ysize);
+    int startscan = i_max( coarse(pset[i].y), 0);
+    int stopscan = i_min( coarse(pset[i+1].y+15), im->ysize);
     pcord cc = (pset[i].y + pset[i+1].y)/2;
 
     if (pset[i].y == pset[i+1].y) {
@@ -615,7 +615,7 @@ i_poly_aa_low(i_img *im, int l, double *x, double *y, void *ctx, scanline_flushe
 	       );
     }
     for(cscl=startscan; cscl<stopscan; cscl++) {
-      tempy = min(cscl*16+16, pset[i+1].y);
+      tempy = i_min(cscl*16+16, pset[i+1].y);
       POLY_DEB( printf("evaluating scan line %d \n", cscl) );
       for(k=0; k<clc-1; k+=2) {
 	POLY_DEB( printf("evaluating slice %d\n", k) );
@@ -657,7 +657,7 @@ struct poly_cfill_state {
   i_fill_t *fill;
 };
 
-void
+static void
 scanline_flush_cfill(i_img *im, ss_scanline *ss, int y, void *ctx) {
   int x, ch, tv;
   i_color t;
@@ -720,7 +720,7 @@ struct poly_cfill_state_f {
   i_fill_t *fill;
 };
 
-void
+static void
 scanline_flush_cfill_f(i_img *im, ss_scanline *ss, int y, void *ctx) {
   int x, ch, tv;
   int pos;

@@ -1,5 +1,8 @@
 #include "image.h"
 
+#ifndef IMAGER_EXT_H
+#define IMAGER_EXT_H
+
 /* structures for passing data between Imager-plugin and the Imager-module */
 
 typedef struct {
@@ -16,3 +19,5 @@ typedef struct {
   int (*getvoid)(void *hv_t,char* key,void **store);
   int (*getobj)(void *hv_t,char* key,char* type,void **store);
 } UTIL_table_t;
+
+#endif

@@ -69,7 +69,7 @@ i_img* i_transform2(int width, int height, int channels,
     for (y = 0; y < height; ++y) {
       n_regs[0] = x;
       n_regs[1] = y;
-      val = rm_run(ops, ops_count, n_regs, n_regs_count, c_regs, c_regs_count, 
+      val = i_rm_run(ops, ops_count, n_regs, n_regs_count, c_regs, c_regs_count, 
 		   in_imgs, in_imgs_count);
       i_ppix(new_img, x, y, &val);
     }

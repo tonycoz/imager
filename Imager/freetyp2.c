@@ -400,10 +400,10 @@ void ft2_transform_box(FT2_Fonthandle *handle, int bbox[4]) {
   work[6] = matrix[0] * bbox[2] + matrix[1] * bbox[3];
   work[7] = matrix[3] * bbox[2] + matrix[4] * bbox[3];
 
-  bbox[0] = floor(min(min(work[0], work[2]),min(work[4], work[6])));
-  bbox[1] = floor(min(min(work[1], work[3]),min(work[5], work[7])));
-  bbox[2] = ceil(max(max(work[0], work[2]),max(work[4], work[6])));
-  bbox[3] = ceil(max(max(work[1], work[3]),max(work[5], work[7])));
+  bbox[0] = floor(i_min(i_min(work[0], work[2]),i_min(work[4], work[6])));
+  bbox[1] = floor(i_min(i_min(work[1], work[3]),i_min(work[5], work[7])));
+  bbox[2] = ceil(i_max(i_max(work[0], work[2]),i_max(work[4], work[6])));
+  bbox[3] = ceil(i_max(i_max(work[1], work[3]),i_max(work[5], work[7])));
 }
 
 /*
@@ -415,10 +415,10 @@ bounding box in bbox[] that encloses both.
 =cut
 */
 static void expand_bounds(int bbox[4], int bbox2[4]) {
-  bbox[0] = min(bbox[0], bbox2[0]);
-  bbox[1] = min(bbox[1], bbox2[1]);
-  bbox[2] = max(bbox[2], bbox2[2]);
-  bbox[3] = max(bbox[3], bbox2[3]);
+  bbox[0] = i_min(bbox[0], bbox2[0]);
+  bbox[1] = i_min(bbox[1], bbox2[1]);
+  bbox[2] = i_max(bbox[2], bbox2[2]);
+  bbox[3] = i_max(bbox[3], bbox2[3]);
 }
 
 /*

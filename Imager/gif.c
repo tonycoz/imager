@@ -871,7 +871,7 @@ i_readgif_multi_callback(i_read_callback_t cb, char *userdata, int *count) {
   }
 
   result = i_readgif_multi_low(GifFile, count);
-  free_gen_read_data(gci);
+  i_free_gen_read_data(gci);
 
   return result;
 #else
@@ -1023,7 +1023,7 @@ i_readgif_callback(i_read_callback_t cb, char *userdata, int **colour_table, int
   }
 
   result = i_readgif_low(GifFile, colour_table, colours);
-  free_gen_read_data(gci);
+  i_free_gen_read_data(gci);
 
   return result;
 #else
@@ -1926,12 +1926,12 @@ i_writegif_callback(i_quantize *quant, i_write_callback_t cb, char *userdata,
     gif_push_error();
     i_push_error(0, "Cannot create GIF file object");
     mm_log((1, "Error in EGifOpenFileHandle, unable to write image.\n"));
-    free_gen_write_data(gwd, 0);
+    i_free_gen_write_data(gwd, 0);
     return 0;
   }
 
   result = i_writegif_low(quant, gf, imgs, count);
-  return free_gen_write_data(gwd, result);
+  return i_free_gen_write_data(gwd, result);
 #else
   i_clear_error();
   i_push_error(0, "callbacks not supported with giflib3");

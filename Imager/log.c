@@ -17,7 +17,7 @@ static char  data_buffer[DATABUFF];
  */
 
 void
-init_log(const char* name,int level) {
+m_init_log(const char* name,int level) {
   log_level = level;
   if (level < 0) {
     lg_file = NULL;

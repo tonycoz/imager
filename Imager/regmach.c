@@ -19,16 +19,16 @@
 */
 
 /* returns the value (brightness) of color from 0 to 1 */
-double hsv_value(i_color color) {
-  return max(max(color.rgb.r, color.rgb.g), color.rgb.b) / 255.0;
+static double hsv_value(i_color color) {
+  return i_max(i_max(color.rgb.r, color.rgb.g), color.rgb.b) / 255.0;
 }
 
 /* returns the hue (color) of color from 0 to 360 */
-double hsv_hue(i_color color) {
+static double hsv_hue(i_color color) {
   int val;
   int temp;
-  temp = min(min(color.rgb.r, color.rgb.g), color.rgb.b);
-  val = max(color.rgb.r, max(color.rgb.g, color.rgb.b));
+  temp = i_min(i_min(color.rgb.r, color.rgb.g), color.rgb.b);
+  val = i_max(color.rgb.r, i_max(color.rgb.g, color.rgb.b));
   if (val == 0 || val==temp) {
     return 0;
   }
@@ -55,18 +55,18 @@ double hsv_hue(i_color color) {
 }
 
 /* return the saturation of color from 0 to 1 */
-double hsv_sat(i_color color) {
-  int value = max(max(color.rgb.r, color.rgb.g), color.rgb.b);
+static double hsv_sat(i_color color) {
+  int value = i_max(i_max(color.rgb.r, color.rgb.g), color.rgb.b);
   if (value == 0) {
     return 0;
   }
   else {
-    int temp = min(max(color.rgb.r, color.rgb.g), color.rgb.b);
+    int temp = i_min(i_max(color.rgb.r, color.rgb.g), color.rgb.b);
     return (value - temp) / (double)value;
   }
 }
 
-i_color make_hsv(double hue, double sat, double val) {
+static i_color make_hsv(double hue, double sat, double val) {
   int i;
   i_color c;
   for( i=0; i< MAXCHANNELS; i++) c.channel[i]=0;
@@ -123,7 +123,7 @@ i_color make_hsv(double hue, double sat, double val) {
   return c;
 }
 
-i_color make_rgb(int r, int g, int b) {
+static i_color make_rgb(int r, int g, int b) {
   i_color c;
   if (r < 0)
     r = 0;
@@ -163,7 +163,7 @@ i_color make_rgb(int r, int g, int b) {
 #define n_epsilon(x, y) (abs(x)+abs(y))*0.001
 static i_color bcol = {{ 0 }};
 
-i_color rm_run(struct rm_op codes[], size_t code_count, 
+i_color i_rm_run(struct rm_op codes[], size_t code_count, 
 	       double n_regs[],  size_t n_regs_count,
 	       i_color c_regs[], size_t c_regs_count,
 	       i_img *images[],  size_t image_count) {

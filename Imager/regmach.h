@@ -73,10 +73,10 @@ struct rm_op {
   rm_word rout; /* output register */
 };
 
-i_color rm_run(struct rm_op codes[], size_t code_count, 
-	       double n_regs[], size_t n_regs_count,
-	       i_color c_regs[], size_t c_regs_count,
-	       i_img *images[], size_t image_count);
+i_color i_rm_run(struct rm_op codes[], size_t code_count, 
+		 double n_regs[], size_t n_regs_count,
+		 i_color c_regs[], size_t c_regs_count,
+		 i_img *images[], size_t image_count);
 
 /* op_run(fx, sizeof(fx), parms, 2)) */
 

@@ -1525,9 +1525,9 @@ maxdist(int boxnum,cvec *cv) {
   
   bbox(boxnum,&r0,&r1,&g0,&g1,&b0,&b1);
 
-  mr=max(abs(b-b0),abs(b-b1));
-  mg=max(abs(g-g0),abs(g-g1));
-  mb=max(abs(r-r0),abs(r-r1));
+  mr=i_max(abs(b-b0),abs(b-b1));
+  mg=i_max(abs(g-g0),abs(g-g1));
+  mb=i_max(abs(r-r0),abs(r-r1));
   
   return PWR2(mr)+PWR2(mg)+PWR2(mb);
 }
@@ -1547,9 +1547,9 @@ mindist(int boxnum,cvec *cv) {
 
   if (r0<=r && r<=r1 && g0<=g && g<=g1 && b0<=b && b<=b1) return 0;
 
-  mr=min(abs(b-b0),abs(b-b1));
-  mg=min(abs(g-g0),abs(g-g1));
-  mb=min(abs(r-r0),abs(r-r1));
+  mr=i_min(abs(b-b0),abs(b-b1));
+  mg=i_min(abs(g-g0),abs(g-g1));
+  mb=i_min(abs(r-r0),abs(r-r1));
   
   mr=PWR2(mr);
   mg=PWR2(mg);
@@ -1670,7 +1670,8 @@ transparent_errdiff(i_quantize *quant, i_palidx *data, i_img *img,
 }
 
 /* builtin ordered dither maps */
-unsigned char orddith_maps[][64] =
+static unsigned char 
+orddith_maps[][64] =
 {
   { /* random 
        this is purely random - it's pretty awful

@@ -892,7 +892,7 @@ static void combine_valuef(i_fcolor *, i_fcolor *, int, int);
 static void combine_color(i_color *, i_color *, int, int);
 static void combine_colorf(i_fcolor *, i_fcolor *, int, int);
 
-struct i_combines {
+static struct i_combines {
   i_fill_combine_f combine;
   i_fill_combinef_f combinef;
 } combines[] =

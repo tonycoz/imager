@@ -38,13 +38,89 @@ typedef TT_Fonthandle* Imager__Font__TT;
 typedef FT2_Fonthandle* Imager__Font__FT2;
 #endif
 
+/* These functions are all shared - then comes platform dependant code */
+static int getstr(void *hv_t,char *key,char **store) {
+  SV** svpp;
+  HV* hv=(HV*)hv_t;
+
+  mm_log((1,"getstr(hv_t 0x%X, key %s, store 0x%X)\n",hv_t,key,store));
+
+  if ( !hv_exists(hv,key,strlen(key)) ) return 0;
+
+  svpp=hv_fetch(hv, key, strlen(key), 0);
+  *store=SvPV(*svpp, PL_na );
+
+  return 1;
+}
+
+static int getint(void *hv_t,char *key,int *store) {
+  SV** svpp;
+  HV* hv=(HV*)hv_t;  
+
+  mm_log((1,"getint(hv_t 0x%X, key %s, store 0x%X)\n",hv_t,key,store));
+
+  if ( !hv_exists(hv,key,strlen(key)) ) return 0;
+
+  svpp=hv_fetch(hv, key, strlen(key), 0);
+  *store=(int)SvIV(*svpp);
+  return 1;
+}
+
+static int getdouble(void *hv_t,char* key,double *store) {
+  SV** svpp;
+  HV* hv=(HV*)hv_t;
+
+  mm_log((1,"getdouble(hv_t 0x%X, key %s, store 0x%X)\n",hv_t,key,store));
+
+  if ( !hv_exists(hv,key,strlen(key)) ) return 0;
+  svpp=hv_fetch(hv, key, strlen(key), 0);
+  *store=(float)SvNV(*svpp);
+  return 1;
+}
+
+static int getvoid(void *hv_t,char* key,void **store) {
+  SV** svpp;
+  HV* hv=(HV*)hv_t;
+
+  mm_log((1,"getvoid(hv_t 0x%X, key %s, store 0x%X)\n",hv_t,key,store));
+
+  if ( !hv_exists(hv,key,strlen(key)) ) return 0;
+
+  svpp=hv_fetch(hv, key, strlen(key), 0);
+  *store = INT2PTR(void*, SvIV(*svpp));
+
+  return 1;
+}
+
+static int getobj(void *hv_t,char *key,char *type,void **store) {
+  SV** svpp;
+  HV* hv=(HV*)hv_t;
+
+  mm_log((1,"getobj(hv_t 0x%X, key %s,type %s, store 0x%X)\n",hv_t,key,type,store));
+
+  if ( !hv_exists(hv,key,strlen(key)) ) return 0;
+
+  svpp=hv_fetch(hv, key, strlen(key), 0);
+
+  if (sv_derived_from(*svpp,type)) {
+    IV tmp = SvIV((SV*)SvRV(*svpp));
+    *store = INT2PTR(void*, tmp);
+  } else {
+    mm_log((1,"getobj: key exists in hash but is not of correct type"));
+    return 0;
+  }
+
+  return 1;
+}
+
+UTIL_table_t i_UTIL_table={getstr,getint,getdouble,getvoid,getobj};
 
 void my_SvREFCNT_dec(void *p) {
   SvREFCNT_dec((SV*)p);
 }
 
 
-void
+static void
 log_entry(char *string, int level) {
   mm_log((level, string));
 }
@@ -376,7 +452,7 @@ static ssize_t io_reader(void *p, void *data, size_t size) {
       cbd->where = 0;
       cbd->used  = did_read;
 
-      copy_size = min(size, cbd->used);
+      copy_size = i_min(size, cbd->used);
       memcpy(out, cbd->buffer, copy_size);
       cbd->where += copy_size;
       out   += copy_size;
@@ -770,7 +846,8 @@ static void copy_colors_back(HV *hv, i_quantize *quant) {
 }
 
 /* loads the segments of a fountain fill into an array */
-i_fountain_seg *load_fount_segs(AV *asegs, int *count) {
+static i_fountain_seg *
+load_fount_segs(AV *asegs, int *count) {
   /* Each element of segs must contain:
      [ start, middle, end, c0, c1, segtype, colortrans ]
      start, middle, end are doubles from 0 to 1
@@ -858,6 +935,10 @@ i_fountain_seg *load_fount_segs(AV *asegs, int *count) {
 */
 #define IFILL_DESTROY(fill) i_fill_destroy(fill);
 typedef i_fill_t* Imager__FillHandle;
+
+/* the m_init_log() function was called init_log(), renamed to reduce
+    potential naming conflicts */
+#define init_log m_init_log
 
 MODULE = Imager		PACKAGE = Imager::Color	PREFIX = ICL_
 

@@ -26,7 +26,7 @@
 /* this is a way to get number of channels from color space 
  * Color code to channel number */
 
-int CC2C[PNG_COLOR_MASK_PALETTE|PNG_COLOR_MASK_COLOR|PNG_COLOR_MASK_ALPHA];
+static int CC2C[PNG_COLOR_MASK_PALETTE|PNG_COLOR_MASK_COLOR|PNG_COLOR_MASK_ALPHA];
 
 #define PNG_BYTES_TO_CHECK 4
  

@@ -1,6 +1,6 @@
 #include "image.h"
 
-float
+static float
 gauss(int x,float std) {
   return 1.0/(sqrt(2.0*PI)*std)*exp(-(float)(x)*(float)(x)/(2*std*std));
 }
