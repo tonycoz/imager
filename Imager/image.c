@@ -908,7 +908,7 @@ i_scaleaxis(i_img *im, float Value, int Axis) {
     hsize = (int)(0.5 + im->xsize * Value);
     if (hsize < 1) {
       hsize = 1;
-      Value = 1 / im->xsize;
+      Value = 1.0 / im->xsize;
     }
     vsize = im->ysize;
     
@@ -920,7 +920,7 @@ i_scaleaxis(i_img *im, float Value, int Axis) {
 
     if (vsize < 1) {
       vsize = 1;
-      Value = 1 / im->ysize;
+      Value = 1.0 / im->ysize;
     }
 
     jEnd = vsize;
