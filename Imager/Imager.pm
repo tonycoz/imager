@@ -42,6 +42,7 @@ use Imager::Font;
 		i_box
 		i_box_filled
 		i_arc
+		i_circle_aa
 		
 		i_bezier_multi
 		i_poly_aa
