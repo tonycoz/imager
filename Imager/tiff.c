@@ -65,6 +65,8 @@ static int save_tiff_tags(TIFF *tif, i_img *im);
 
 static void expand_4bit_hl(unsigned char *buf, int count);
 
+static void pack_4bit_hl(unsigned char *buf, int count);
+
 /*
 =item comp_seek(h, o, w)
 
@@ -384,6 +386,9 @@ i_writetiff_wiol(i_img *im, io_glue *ig) {
   TIFF* tif;
   int got_xres, got_yres, got_aspectonly, aspect_only, resunit;
   double xres, yres;
+  uint16 bitspersample = 8;
+  uint16 samplesperpixel;
+  uint16 *colors = NULL;
 
   char *cc = mymalloc( 123 );
   myfree(cc);
@@ -400,6 +405,9 @@ i_writetiff_wiol(i_img *im, io_glue *ig) {
   case 3:
     photometric = PHOTOMETRIC_RGB;
     if (compression == COMPRESSION_JPEG && jpegcolormode == JPEGCOLORMODE_RGB) photometric = PHOTOMETRIC_YCBCR;
+    else if (im->type == i_palette_type) {
+      photometric = PHOTOMETRIC_PALETTE;
+    }
     break;
   default:
     /* This means a colorspace we don't handle yet */
@@ -437,12 +445,60 @@ i_writetiff_wiol(i_img *im, io_glue *ig) {
   
   if (!TIFFSetField(tif, TIFFTAG_IMAGEWIDTH,      width)   ) { mm_log((1, "i_writetiff_wiol: TIFFSetField width=%d failed\n", width)); return 0; }
   if (!TIFFSetField(tif, TIFFTAG_IMAGELENGTH,     height)  ) { mm_log((1, "i_writetiff_wiol: TIFFSetField length=%d failed\n", height)); return 0; }
-  if (!TIFFSetField(tif, TIFFTAG_SAMPLESPERPIXEL, channels)) { mm_log((1, "i_writetiff_wiol: TIFFSetField samplesperpixel=%d failed\n", channels)); return 0; }
   if (!TIFFSetField(tif, TIFFTAG_ORIENTATION,  ORIENTATION_TOPLEFT)) { mm_log((1, "i_writetiff_wiol: TIFFSetField Orientation=topleft\n")); return 0; }
-  if (!TIFFSetField(tif, TIFFTAG_BITSPERSAMPLE,   8)        ) { mm_log((1, "i_writetiff_wiol: TIFFSetField bitpersample=8\n")); return 0; }
   if (!TIFFSetField(tif, TIFFTAG_PLANARCONFIG, PLANARCONFIG_CONTIG)) { mm_log((1, "i_writetiff_wiol: TIFFSetField planarconfig\n")); return 0; }
   if (!TIFFSetField(tif, TIFFTAG_PHOTOMETRIC,   photometric)) { mm_log((1, "i_writetiff_wiol: TIFFSetField photometric=%d\n", photometric)); return 0; }
   if (!TIFFSetField(tif, TIFFTAG_COMPRESSION,   compression)) { mm_log((1, "i_writetiff_wiol: TIFFSetField compression=%d\n", compression)); return 0; }
+  samplesperpixel = channels;
+  if (photometric == PHOTOMETRIC_PALETTE) {
+    uint16 *out[3];
+    i_color c;
+    int count = i_colorcount(im);
+    int size;
+    int bits;
+    int ch, i;
+    
+    samplesperpixel = 1;
+    if (count > 16)
+      bitspersample = 8;
+    else
+      bitspersample = 4;
+    size = 1 << bitspersample;
+    colors = (uint16 *)_TIFFmalloc(sizeof(uint16) * 3 * size);
+    out[0] = colors;
+    out[1] = colors + size;
+    out[2] = colors + 2 * size;
+    
+    for (i = 0; i < count; ++i) {
+      i_getcolors(im, i, &c, 1);
+      for (ch = 0; ch < 3; ++ch)
+        out[ch][i] = c.channel[ch] * 257;
+    }
+    for (; i < size; ++i) {
+      for (ch = 0; ch < 3; ++ch)
+        out[ch][i] = 0;
+    }
+    if (!TIFFSetField(tif, TIFFTAG_BITSPERSAMPLE, bitspersample)) { 
+      mm_log((1, "i_writetiff_wiol: TIFFSetField bitpersample=%d\n", 
+              bitspersample)); 
+      return 0;
+    }
+    if (!TIFFSetField(tif, TIFFTAG_COLORMAP, out[0], out[1], out[2])) {
+      mm_log((1, "i_writetiff_wiol: TIFFSetField colormap\n")); 
+      return 0;
+    }
+  }
+  else {
+    if (!TIFFSetField(tif, TIFFTAG_BITSPERSAMPLE, bitspersample)) { 
+      mm_log((1, "i_writetiff_wiol: TIFFSetField bitpersample=%d\n", 
+              bitspersample)); 
+      return 0;
+    }
+  }
+  if (!TIFFSetField(tif, TIFFTAG_SAMPLESPERPIXEL, samplesperpixel)) { 
+    mm_log((1, "i_writetiff_wiol: TIFFSetField samplesperpixel=%d failed\n", samplesperpixel)); 
+    return 0;
+  }
 
   switch (compression) {
   case COMPRESSION_JPEG:
@@ -467,8 +523,12 @@ i_writetiff_wiol(i_img *im, io_glue *ig) {
   }
   
   linebytes = channels * width;
-  linebuf = (unsigned char *)_TIFFmalloc( TIFFScanlineSize(tif) > linebytes ?
-					  linebytes : TIFFScanlineSize(tif) );
+  linebytes = TIFFScanlineSize(tif) > linebytes ? linebytes 
+    : TIFFScanlineSize(tif);
+  /* working space for the scanlines - we go from 8-bit/pixel to 4 */
+  if (photometric == PHOTOMETRIC_PALETTE && bitspersample == 4)
+    linebytes += linebytes + 1;
+  linebuf = (unsigned char *)_TIFFmalloc(linebytes);
   
   if (!TIFFSetField(tif, TIFFTAG_ROWSPERSTRIP, TIFFDefaultStripSize(tif, rowsperstrip))) {
     mm_log((1, "i_writetiff_wiol: TIFFSetField rowsperstrip=%d\n", rowsperstrip)); return 0; }
@@ -528,19 +588,34 @@ i_writetiff_wiol(i_img *im, io_glue *ig) {
     return 0;
   }
 
-  for (y=0; y<height; y++) {
-    ci = 0;
-    for(x=0; x<width; x++) { 
-      (void) i_gpix(im, x, y,&val);
-      for(ch=0; ch<channels; ch++) linebuf[ci++] = val.channel[ch];
+  if (photometric == PHOTOMETRIC_PALETTE) {
+    for (y = 0; y < height; ++y) {
+      i_gpal(im, 0, width, y, linebuf);
+      if (bitspersample == 4)
+        pack_4bit_hl(linebuf, width);
+      if (TIFFWriteScanline(tif, linebuf, y, 0) < 0) {
+        mm_log((1, "i_writetiff_wiol: TIFFWriteScanline failed.\n"));
+        break;
+      }
     }
-    if (TIFFWriteScanline(tif, linebuf, y, 0) < 0) {
-      mm_log((1, "i_writetiff_wiol: TIFFWriteScanline failed.\n"));
-      break;
+  }
+  else {
+    for (y=0; y<height; y++) {
+      ci = 0;
+      for(x=0; x<width; x++) { 
+        (void) i_gpix(im, x, y,&val);
+        for(ch=0; ch<channels; ch++) 
+          linebuf[ci++] = val.channel[ch];
+      }
+      if (TIFFWriteScanline(tif, linebuf, y, 0) < 0) {
+        mm_log((1, "i_writetiff_wiol: TIFFWriteScanline failed.\n"));
+        break;
+      }
     }
   }
   (void) TIFFClose(tif);
   if (linebuf) _TIFFfree(linebuf);
+  if (colors) _TIFFfree(colors);
   return 1;
 }
 
@@ -721,6 +796,13 @@ static void expand_4bit_hl(unsigned char *buf, int count) {
   }
 }
 
+static void pack_4bit_hl(unsigned char *buf, int count) {
+  int i;
+  while (i < count) {
+    buf[i/2] = (buf[i] << 4) + buf[i+1];
+    i += 2;
+  }
+}
 
 /*
 =back

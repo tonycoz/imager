@@ -13,7 +13,7 @@ freetyp2.c - font support via the FreeType library version 2.
   double matrix[6];
   if (!i_ft2_settransform(font, matrix)) { error }
   int bbox[6];
-  if (!i_ft2_bbox(font, cheight, cwidth, text, length, bbox)) { error }
+  if (!i_ft2_bbox(font, cheight, cwidth, text, length, bbox, utf8)) { error }
   i_img *im = ...;
   i_color cl;
   if (!i_ft2_text(font, im, tx, ty, cl, cheight, cwidth, text, length, align,

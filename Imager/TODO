@@ -55,6 +55,8 @@ New Features:
 - read_multi() needs to handle other multi-image types, such as TIFF 
   (probably the most common)
 
+- write_multi() to save other multi-image types, especially TIFF
+
 - compose channels - build a new image based on channels from several
   images
 
@@ -96,10 +98,12 @@ Format specific issues:
   pbm images which needs ties to the quantization code.
 
 - save paletted images as paletted where that's supported.  Done
-  for gif/tga.  Not done for png/tiff yet.
+  for gif/tga/bmp/tiff.  Not done for png yet.
 
 - read other format paletted images as paletted images.  This has 
-  been done for gif/tga formats but not for tiff/png.
+  been done for gif/tga/bmp/tiff formats but not for png.
+
+- read/write 16-bit/sample images as such for tiff
 
 Documentation:
 - Add to the documentation

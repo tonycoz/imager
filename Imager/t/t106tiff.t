@@ -1,5 +1,5 @@
 #!perl -w
-print "1..33\n";
+print "1..43\n";
 use Imager qw(:all);
 $^W=1; # warnings during command-line tests
 $|=1;  # give us some progress in the test harness
@@ -24,7 +24,7 @@ i_box_filled($timg, 2, 2, 18, 18, $trans);
 my $test_num;
 
 if (!i_has_format("tiff")) {
-  for (1..33) {
+  for (1..43) {
     print "ok $_ # skip no tiff support\n";
   }
 } else {
@@ -188,6 +188,22 @@ if (!i_has_format("tiff")) {
   my $bad = Imager->new;
   ok($bad->read(file=>'testimg/comp4bad.tif'), "bad image not returned");
   ok(scalar $bad->tags(name=>'i_incomplete'), "incomplete tag not set");
+  ok($img8->write(file=>'testout/t106_pal8.tif'), "writing 8-bit paletted");
+  ok(my $cmp8 = Imager->new->read(file=>'testout/t106pal8.tif'),
+     "reading 8-bit paletted");
+  ok($cmp8->type eq 'paletted', "pal8 isn't paletted");
+  ok($cmp8->colorcount == 256, "pal8 bad colorcount");
+  $diff = i_img_diff($img8->{IMG}, $cmp8->{IMG});
+  print "# diff $diff\n";
+  ok($diff == 0, "written image doesn't match read");
+  ok($img4->write(file=>'testout/t106_pal4.tif'), "writing 4-bit paletted");
+  ok(my $cmp4 = Imager->new->read(file=>'testout/t106_pal4.tif'),
+     "reading 4-bit paletted");
+  ok($cmp4->type eq 'paletted', "pal4 isn't paletted");
+  ok($cmp4->colorcount == 16, "pal4 bad colorcount");
+  $diff = i_img_diff($img4->{IMG}, $cmp4->{IMG});
+  print "# diff $diff\n";
+  ok($diff == 0, "written image doesn't match read");
 }
 
 sub ok {
