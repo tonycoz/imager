@@ -8,7 +8,7 @@ $imbase->open(file=>'testout/t104.ppm') or die;
 my $im_other = Imager->new(xsize=>150, ysize=>150);
 $im_other->box(xmin=>30, ymin=>60, xmax=>120, ymax=>90, filled=>1);
 
-print "1..26\n";
+print "1..35\n";
 
 test($imbase, 1, {type=>'autolevels'}, 'testout/t61_autolev.ppm');
 
@@ -45,6 +45,37 @@ test($imbase, 23, {type=>'postlevels', levels=>3}, 'testout/t61_postlevels.ppm')
 
 test($imbase, 25, {type=>'watermark', wmark=>$im_other },
      'testout/t61_watermark.ppm');
+
+test($imbase, 27, {type=>'fountain', xa=>75, ya=>75, xb=>85, yb=>30,
+                   repeat=>'triangle', #ftype=>'radial', 
+                   super_sample=>'circle', ssample_param => 16,
+                  },
+     'testout/t61_fountain.ppm');
+use Imager::Fountain;
+
+my $f1 = Imager::Fountain->new;
+$f1->add(end=>0.2, c0=>NC(255, 0,0), c1=>NC(255, 255,0));
+$f1->add(start=>0.2, c0=>NC(255,255,0), c1=>NC(0,0,255,0));
+test($imbase, 29, { type=>'fountain', xa=>20, ya=>130, xb=>130, yb=>20,
+                    #repeat=>'triangle',
+                    segments=>$f1 
+                  },
+     'testout/t61_fountain2.ppm');
+my $f2 = Imager::Fountain->new
+  ->add(end=>0.5, c0=>NC(255,0,0), c1=>NC(255,0,0), color=>'hueup')
+  ->add(start=>0.5, c0=>NC(255,0,0), c1=>NC(255,0,0), color=>'huedown');
+#use Data::Dumper;
+#print Dumper($f2);
+test($imbase, 31, { type=>'fountain', xa=>20, ya=>130, xb=>130, yb=>20,
+                    segments=>$f2 },
+     'testout/t61_fount_hsv.ppm');
+my $f3 = Imager::Fountain->read(gimp=>'testimg/gimpgrad') 
+  or print "not ";
+print "ok 33\n";
+test($imbase, 34, { type=>'fountain', xa=>75, ya=>75, xb=>90, yb=>10,
+                    segments=>$f3, super_sample=>'grid',
+                    ftype=>'radial_square', combine=>1 },
+     'testout/t61_fount_gimp.ppm');
 
 sub test {
   my ($in, $num, $params, $out) = @_;

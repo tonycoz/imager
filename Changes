@@ -480,6 +480,17 @@ Revision history for Perl extension Imager.
 	- fixed some problems in jpeg handling from the exp_represent merge
         - fixed buffer flushing for wiol jpeg code
 	- added some tests that will hopefully catch it in the future
+        - added the OO interfaces to the mosaic, bumpmap, postlevels and
+          watermark filters, and documented them
+        - fixed a sample size conversion problem in i_gpixf_d() etc.
+        - added simple color representation conversion functions (used
+          in i_fountain().)
+        - added the fountain filter:
+          - creates gradients similar to paint software
+          - 90% support for GIMP gradient files
+          - OO interface and documentation
+          - Imager::Fountain for building/loading fill definitions
+          - named value translation for filters
 
 =================================================================
 

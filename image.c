@@ -1458,7 +1458,7 @@ i_glinf_d(i_img *im, int l, int r, int y, i_fcolor *vals) {
     count = r - l;
     for (i = 0; i < count; ++i) {
       for (ch = 0; ch < im->channels; ++ch)
-	vals[i].channel[ch] = SampleFTo8(*data++);
+	vals[i].channel[ch] = Sample8ToF(*data++);
     }
     return count;
   }
@@ -1495,7 +1495,7 @@ i_plinf_d(i_img *im, int l, int r, int y, i_fcolor *vals) {
     for (i = 0; i < count; ++i) {
       for (ch = 0; ch < im->channels; ++ch) {
 	if (im->ch_mask & (1 << ch)) 
-	  *data = Sample8ToF(vals[i].channel[ch]);
+	  *data = SampleFTo8(vals[i].channel[ch]);
 	++data;
       }
     }
@@ -1599,7 +1599,7 @@ int i_gsampf_d(i_img *im, int l, int r, int y, i_fsample_t *samps,
       }
       for (i = 0; i < w; ++i) {
         for (ch = 0; ch < chan_count; ++ch) {
-          *samps++ = data[chans[ch]];
+          *samps++ = Sample8ToF(data[chans[ch]]);
           ++count;
         }
         data += im->channels;
@@ -1608,7 +1608,7 @@ int i_gsampf_d(i_img *im, int l, int r, int y, i_fsample_t *samps,
     else {
       for (i = 0; i < w; ++i) {
         for (ch = 0; ch < chan_count; ++ch) {
-          *samps++ = data[ch];
+          *samps++ = Sample8ToF(data[ch]);
           ++count;
         }
         data += im->channels;

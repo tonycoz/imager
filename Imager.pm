@@ -168,6 +168,16 @@ BEGIN {
 
   $DEBUG=0;
 
+  # the members of the subhashes under %filters are:
+  #  callseq - a list of the parameters to the underlying filter in the
+  #            order they are passed
+  #  callsub - a code ref that takes a named parameter list and calls the
+  #            underlying filter
+  #  defaults - a hash of default values
+  #  names - defines names for value of given parameters so if the names 
+  #          field is foo=> { bar=>1 }, and the user supplies "bar" as the
+  #          foo parameter, the filter will receive 1 for the foo
+  #          parameter
   $filters{contrast}={
 		      callseq => ['image','intensity'],
 		      callsub => sub { my %hsh=@_; i_contrast($hsh{image},$hsh{intensity}); } 
@@ -256,6 +266,47 @@ BEGIN {
        my %hsh = @_; 
        i_watermark($hsh{image}, $hsh{wmark}{IMG}, $hsh{tx}, $hsh{ty}, 
                    $hsh{pixdiff}); 
+     },
+    };
+  $filters{fountain} =
+    {
+     callseq  => [ qw(image xa ya xb yb ftype repeat combine super_sample ssample_param segments) ],
+     names    => {
+                  ftype => { linear         => 0,
+                             bilinear       => 1,
+                             radial         => 2,
+                             radial_square  => 3,
+                             revolution     => 4,
+                             conical        => 5 },
+                  repeat => { none      => 0,
+                              sawtooth  => 1,
+                              triangle  => 2,
+                              saw_both  => 3,
+                              tri_both  => 4,
+                            },
+                  super_sample => {
+                                   none    => 0,
+                                   grid    => 1,
+                                   random  => 2,
+                                   circle  => 3,
+                                  },
+                 },
+     defaults => { ftype => 0, repeat => 0, combine => 0,
+                   super_sample => 0, ssample_param => 4,
+                   segments=>[ 
+                              [ 0, 0.5, 1,
+                                Imager::Color->new(0,0,0),
+                                Imager::Color->new(255, 255, 255),
+                                0, 0,
+                              ],
+                             ],
+                 },
+     callsub  => 
+     sub {
+       my %hsh = @_;
+       i_fountain($hsh{image}, $hsh{xa}, $hsh{ya}, $hsh{xb}, $hsh{yb},
+                  $hsh{ftype}, $hsh{repeat}, $hsh{combine}, $hsh{super_sample},
+                  $hsh{ssample_param}, $hsh{segments});
      },
     };
 
@@ -1171,6 +1222,14 @@ sub filter {
     $self->{ERRSTR}='type parameter not matching any filter'; return undef;
   }
 
+  if ($filters{$input{type}}{names}) {
+    my $names = $filters{$input{type}}{names};
+    for my $name (keys %$names) {
+      if (defined $input{$name} && exists $names->{$name}{$input{$name}}) {
+        $input{$name} = $names->{$name}{$input{$name}};
+      }
+    }
+  }
   if (defined($filters{$input{type}}{defaults})) {
     %hsh=('image',$self->{IMG},%{$filters{$input{type}}{defaults}},%input);
   } else {
@@ -2824,9 +2883,12 @@ source.
   bumpmap         bump elevation(0) lightx lighty st(2)
   contrast        intensity
   conv            coef
+  fountain        xa ya xb yb ftype(linear) repeat(none) combine(0)
+                  super_sample(none) ssample_param(4) segments(see below)
   gaussian        stddev
   gradgen         xo yo colors dist
   hardinvert
+  mosaic          size(20)
   noise           amount(3) subtype(0)
   postlevels      levels(10)
   radnoise        xo(100) yo(100) ascale(17.0) rscale(0.02)
@@ -2864,6 +2926,163 @@ will reduce the contrast.
 performs 2 1-dimensional convolutions on the image using the values
 from I<coef>.  I<coef> should be have an odd length.
 
+=item fountain
+
+renders a fountain fill, similar to the gradient tool in most paint
+software.  The default fill is a linear fill from opaque black to
+opaque white.  The points A(xa, ya) and B(xb, yb) control the way the
+fill is performed, depending on the ftype parameter:
+
+=over
+
+=item linear
+
+the fill ramps from A through to B.
+
+=item bilinear
+
+the fill ramps in both directions from A, where AB defines the length
+of the gradient.
+
+=item radial
+
+A is the center of a circle, and B is a point on it's circumference.
+The fill ramps from the center out to the circumference.
+
+=item radial_square
+
+A is the center of a square and B is the center of one of it's sides.
+This can be used to rotate the square.  The fill ramps out to the
+edges of the square.
+
+=item revolution
+
+A is the centre of a circle and B is a point on it's circumference.  B
+marks the 0 and 360 point on the circle, with the fill ramping
+clockwise.
+
+=item conical
+
+A is the center of a circle and B is a point on it's circumference.  B
+marks the 0 and point on the circle, with the fill ramping in both
+directions to meet opposite.
+
+=back
+
+The I<repeat> option controls how the fill is repeated for some
+I<ftype>s after it leaves the AB range:
+
+=over
+
+=item none
+
+no repeats, points outside of each range are treated as if they were
+on the extreme end of that range.
+
+=item sawtooth
+
+the fill simply repeats in the positive direction
+
+=item triangle
+
+the fill repeats in reverse and then forward and so on, in the
+positive direction
+
+=item saw_both
+
+the fill repeats in both the positive and negative directions (only
+meaningful for a linear fill).
+
+=item tri_both
+
+as for triangle, but in the negative direction too (only meaningful
+for a linear fill).
+
+=back
+
+By default the fill simply overwrites the whole image (unless you have
+parts of the range 0 through 1 that aren't covered by a segment), if
+any segments of your fill have any transparency, you can set the
+I<combine> option to 1 to have the fill combined with the existing pixels.
+
+If your fill has sharp edges, for example between steps if you use
+repeat set to 'triangle', you may see some aliased or ragged edges.
+You can enable super-sampling which will take extra samples within the
+pixel in an attempt anti-alias the fill.
+
+The possible values for the super_sample option are:
+
+=over
+
+=item none
+
+no super-sampling is done
+
+=item grid
+
+a square grid of points are sampled.  The number of points sampled is
+the square of ceil(0.5 + sqrt(ssample_param)).
+
+=item random
+
+a random set of points within the pixel are sampled.  This looks
+pretty bad for low ssample_param values.  
+
+=item circle
+
+the points on the radius of a circle within the pixel are sampled.
+This seems to produce the best results, but is fairly slow (for now).
+
+=back
+
+You can control the level of sampling by setting the ssample_param
+option.  This is roughly the number of points sampled, but depends on
+the type of sampling.
+
+The segments option is an arrayref of segments.  You really should use
+the Imager::Fountain class to build your fountain fill.  Each segment
+is an array ref containing:
+
+=over
+
+=item start
+
+a floating point number between 0 and 1, the start of the range of fill parameters covered by this segment.
+
+=item middle
+
+a floating point number between start and end which can be used to
+push the color range towards one end of the segment.
+
+=item end
+
+a floating point number between 0 and 1, the end of the range of fill
+parameters covered by this segment.  This should be greater than
+start.
+
+=item c0 
+
+=item c1
+
+The colors at each end of the segment.  These can be either
+Imager::Color or Imager::Color::Float objects.
+
+=item segment type
+
+The type of segment, this controls the way the fill parameter varies
+over the segment. 0 for linear, 1 for curved (unimplemented), 2 for
+sine, 3 for sphere increasing, 4 for sphere decreasing.
+
+=item color type
+
+The way the color varies within the segment, 0 for simple RGB, 1 for
+hue increasing and 2 for hue decreasing.
+
+=back
+
+Don't forgot to use Imager::Fountain instead of building your own.
+Really.  It even loads GIMP gradient files.
+
 =item gaussian
 
 performs a gaussian blur of the image, using I<stddev> as the standard
@@ -2883,6 +3102,10 @@ for Euclidean squared, and 2 for Manhattan distance.
 
 inverts the image, black to white, white to black.  All channels are
 inverted, including the alpha channel if any.
+
+=item mosaic
+
+produces averaged tiles of the given I<size>.
 
 =item noise
 
