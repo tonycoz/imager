@@ -109,7 +109,7 @@ int i_wf_bbox(char *face, int size, char *text, int length, int *bbox) {
   ReleaseDC(NULL, dc);
   DeleteObject(font);
 
-  return 1;
+  return 6;
 }
 
 /*

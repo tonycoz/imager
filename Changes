@@ -763,7 +763,10 @@ Revision history for Perl extension Imager.
 	  sometimes NULL.
         - there would be a link or load time error on m_init_log() if
           Imager was built with IM_NOLOG, fixed by renamed init_log()
-          to m_init_log() in log.c
+          to m_init_log() in log.c (thanks to Takumi Yamani)
+        - moved some variable definitions to the right place
+        - the Win32 font driver bounding box function now returns the 
+          right number of values (both thanks to Takumi Yamani)
 
 =================================================================
 
