@@ -184,7 +184,6 @@ color_unpack(unsigned char *buf, int bytepp, i_color *val) {
     val->rgba.r = buf[2];
     val->rgba.a = buf[3];
     break;
-  default:
   }
 }
 
@@ -232,7 +231,6 @@ color_pack(unsigned char *buf, int bitspp, i_color *val) {
     buf[2] = val->rgba.r;
     buf[3] = val->rgba.a;
     break;
-  default:
   }
 }
 
@@ -396,7 +394,6 @@ tga_source_read(tga_source *s, unsigned char *buf, size_t pixels) {
       ml = min(s->len, pixels-cp);
       for(k=0; k<ml; k++) for(j=0; j<s->bytepp; j++) 
 	buf[(cp+k)*s->bytepp+j] = s->cval[j];
-      //      memset(buf+cp, s->cidx, ml);
       cp     += ml;
       s->len -= ml;
       break;
@@ -748,7 +745,6 @@ i_writetga_wiol(i_img *img, io_glue *ig, int wierdpack, int compress, char *idst
   tga_header header;
   tga_dest dest;
   unsigned char headbuf[18];
-  //  unsigned char *data;
   unsigned int bitspp;
   
   int mapped;
