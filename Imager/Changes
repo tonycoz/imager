@@ -1000,6 +1000,8 @@ Revision history for Perl extension Imager.
   to consider it a valid FT1.x include directory.  We now check if it
   contains fterrors.h too, if it does, then it's from a FT2 installation
   and we ignore it.
+- Makefile.PL now accepts command-line options to set include and library
+  directories and to enable/disable drivers.
 
 =================================================================
 

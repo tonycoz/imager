@@ -3,6 +3,7 @@ use ExtUtils::MakeMaker;
 use Cwd;
 use Config;
 use File::Spec;
+use Getopt::Long;
 
 #
 # IM_INCPATH      colon seperated list of paths to extra include paths
@@ -21,10 +22,47 @@ use File::Spec;
 # IM_DFLAGS       Extra flags to pass to the preprocessor
 # IM_SUPPRESS_PROMPT  Suppress the prompt asking about gif support
 
+my $help;
+my @enable;
+my @disable;
+my @incpaths;
+my @libpaths;
+my $noprobe;
+GetOptions("help" => \$help,
+           "enable=s" => \@enable,
+           "disable=s" => \@disable,
+           "incpath=s", \@incpaths,
+           "libpath=s" => \@libpaths,
+           "noprobe" => \$noprobe);
+
+if ($help) {
+  usage();
+}
+
+if (@enable && @disable) {
+  print STDERR "Only --enable or --disable can be used, not both, try --help\n";
+  exit 1;
+}
 
 getenv();     # get environment variables
 init();       # initialize global data
 pathcheck();  # Check if directories exist
+
+if (exists $ENV{IM_ENABLE}) {
+  my %en = map { $_, 1 } split ' ', $ENV{IM_ENABLE};
+  for my $key (keys %formats) {
+    delete $formats{$key} unless $en{$key};
+  }
+}
+if (@enable) {
+  my %en = map { $_ => 1 } map { split /,/ } @enable;
+  for my $key (keys %formats) {
+    delete $formats{$key} unless $en{$key};
+  }
+}
+elsif (@disable) {
+  delete @formats{map { split /,/ } @disable};
+}
 
 my @defines;
 
@@ -33,12 +71,6 @@ if ($MANUAL) {
   manual();
 } else {
   automatic();
-  if (exists $ENV{IM_ENABLE}) {
-    my %en = map { $_, 1 } split ' ', $ENV{IM_ENABLE};
-    for my $key (keys %formats) {
-      delete $formats{$key} unless $en{$key};
-    }
-  }
 }
 
 # Make sure there isn't a clash between the gif libraries.
@@ -230,9 +262,9 @@ sub gd {
 
 sub checkformat {
   my $frm=shift;
-
+  
   my $code = $formats{$frm}{'code'};
-  if ($code) {
+  if ($code && !$noprobe) {
     return 1 if $code->($formats{$frm}, $frm);
   }
 
@@ -254,8 +286,6 @@ sub checkformat {
   $formats{$frm}{libdir} = \@l;
   return scalar(@i && @l);
 }
-
-
 
 
 sub pathcheck {
@@ -290,7 +320,8 @@ sub pathcheck {
 sub init {
 
   @definc{'/usr/include'}=();
-  @incs=(split(/\Q$Config{path_sep}/, $INCPATH));
+  @incs=(split(/\Q$Config{path_sep}/, $INCPATH),
+        map { split /\Q$Config{path_sep}/} @incpaths );
   if ($Config{locincpth}) {
     push @incs, grep -d, split ' ', $Config{locincpth};
   }
@@ -302,10 +333,11 @@ sub init {
          /usr/include/freetype2
          /usr/local/include/freetype2
          /usr/local/include/freetype1/freetype
-         /usr/include /usr/local/include /usr/include/freetype 
+         /usr/include /usr/local/include /usr/include/freetype
          /usr/local/include/freetype);
 
-  @libs= split(/\Q$Config{path_sep}/,$LIBPATH);
+  @libs= ( split(/\Q$Config{path_sep}/,$LIBPATH),
+    map { split /\Q$Config{path_sep}/} @libpaths );
   if ($Config{loclibpth}) {
     push @libs, grep -d, split ' ', $Config{loclibpth};
   }
@@ -579,4 +611,16 @@ sub is_exe {
   }
 
   return;
+}
+
+sub usage {
+  print STDERR <<EOS;
+Usage: $0 [--enable feature1,feature2,...] [--incpath ...] [--libpath ...]
+       $0 [--disable feature1,feature2,...] [--incpath ...] [--libpath ...]
+       $0 --help
+Possible feature names are:
+  png gif ungif jpeg tiff T1-fonts TT-fonts freetype2
+EOS
+  exit 1;
+
 }
