@@ -1509,6 +1509,15 @@ values for each pixel you could do:
 	     storechannels=>3)
     or die "Cannot read raw image\n";
 
+Normally the raw image is expected to have the value for channel 1
+immediately following channel 0 and channel 2 immediately following
+channel 1 for each pixel.  If your input image has all the channel 0
+values for the first line of the image, followed by all the channel 1
+values for the first line and so on, you can use the interleave option:
+
+  $img->read(file=>'foo.raw', xsize=100, ysize=>100, interleave=>1)
+    or die "Cannot read raw image\n";
+
 =head2 Multi-image files
 
 Currently just for gif files, you can create files that contain more
