@@ -1496,65 +1496,57 @@ sub transform {
 }
 
 
-{
-  my $got_expr;
-  sub transform2 {
-    my ($opts, @imgs) = @_;
+sub transform2 {
+  my ($opts, @imgs) = @_;
+  
+  require "Imager/Expr.pm";
 
-    if (!$got_expr) {
-      # this is fairly big, delay loading it
-      eval "use Imager::Expr";
-      die $@ if $@;
-      ++$got_expr;
+  $opts->{variables} = [ qw(x y) ];
+  my ($width, $height) = @{$opts}{qw(width height)};
+  if (@imgs) {
+    $width ||= $imgs[0]->getwidth();
+    $height ||= $imgs[0]->getheight();
+    my $img_num = 1;
+    for my $img (@imgs) {
+      $opts->{constants}{"w$img_num"} = $img->getwidth();
+      $opts->{constants}{"h$img_num"} = $img->getheight();
+      $opts->{constants}{"cx$img_num"} = $img->getwidth()/2;
+      $opts->{constants}{"cy$img_num"} = $img->getheight()/2;
+      ++$img_num;
     }
-
-    $opts->{variables} = [ qw(x y) ];
-    my ($width, $height) = @{$opts}{qw(width height)};
-    if (@imgs) {
-	$width ||= $imgs[0]->getwidth();
-	$height ||= $imgs[0]->getheight();
-	my $img_num = 1;
-	for my $img (@imgs) {
-	    $opts->{constants}{"w$img_num"} = $img->getwidth();
-	    $opts->{constants}{"h$img_num"} = $img->getheight();
-	    $opts->{constants}{"cx$img_num"} = $img->getwidth()/2;
-	    $opts->{constants}{"cy$img_num"} = $img->getheight()/2;
-	    ++$img_num;
-	}
-    }
-    if ($width) {
-      $opts->{constants}{w} = $width;
-      $opts->{constants}{cx} = $width/2;
-    }
-    else {
-      $Imager::ERRSTR = "No width supplied";
-      return;
-    }
-    if ($height) {
-      $opts->{constants}{h} = $height;
-      $opts->{constants}{cy} = $height/2;
-    }
-    else {
-      $Imager::ERRSTR = "No height supplied";
-      return;
-    }
-    my $code = Imager::Expr->new($opts);
-    if (!$code) {
-      $Imager::ERRSTR = Imager::Expr::error();
-      return;
-    }
-
-    my $img = Imager->new();
-    $img->{IMG} = i_transform2($opts->{width}, $opts->{height}, $code->code(),
-			       $code->nregs(), $code->cregs(),
-			       [ map { $_->{IMG} } @imgs ]);
-    if (!defined $img->{IMG}) {
-      $Imager::ERRSTR = "transform2 failed";
-      return;
-    }
-
-    return $img;
   }
+  if ($width) {
+    $opts->{constants}{w} = $width;
+    $opts->{constants}{cx} = $width/2;
+  }
+  else {
+    $Imager::ERRSTR = "No width supplied";
+    return;
+  }
+  if ($height) {
+    $opts->{constants}{h} = $height;
+    $opts->{constants}{cy} = $height/2;
+  }
+  else {
+    $Imager::ERRSTR = "No height supplied";
+    return;
+  }
+  my $code = Imager::Expr->new($opts);
+  if (!$code) {
+    $Imager::ERRSTR = Imager::Expr::error();
+    return;
+  }
+  
+  my $img = Imager->new();
+  $img->{IMG} = i_transform2($opts->{width}, $opts->{height}, $code->code(),
+                             $code->nregs(), $code->cregs(),
+                             [ map { $_->{IMG} } @imgs ]);
+  if (!defined $img->{IMG}) {
+    $Imager::ERRSTR = Imager->_error_as_msg();
+    return;
+  }
+  
+  return $img;
 }
 
 sub rubthrough {

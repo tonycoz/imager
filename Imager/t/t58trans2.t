@@ -1,6 +1,8 @@
-BEGIN { $| = 1; print "1..10\n"; }
+BEGIN { $| = 1; print "1..12\n"; }
 END {print "not ok 1\n" unless $loaded;}
 use Imager;
+
+sub ok($$$);
 
 $loaded = 1;
 print "ok 1\n";
@@ -19,14 +21,14 @@ $im2->open(file=>'testimg/scale.ppm',type=>'pnm')
 # error handling
 my $opts = { rpnexpr=>'x x 10 / sin 10 * y + get1' };
 my $im3 = Imager::transform2($opts);
-print $im3 ? "not ok 2\n" : "ok 2\n";
-print defined($Imager::ERRSTR) ? "ok 3\n" : "not ok 3\n";
+ok(2, !$im3, "returned an image on error");
+ok(3, defined($Imager::ERRSTR), "No error message on failure");
 
 # image synthesis
 my $im4 = Imager::transform2({
 	width=>300, height=>300,
 	rpnexpr=>'x y cx cy distance !d y cy - x cx - atan2 !a @d 10 / @a + 3.1416 2 * % !a2 @a2 cy * 3.1416 / 1 @a2 sin 1 + 2 / hsv'});
-print $im4 ? "ok 4\n" : "not ok 4\n";
+ok(4, $im4, "synthesis failed");
 
 if ($im4) {
   $im4->write(type=>'pnm', file=>'testout/t56a.ppm')
@@ -37,7 +39,7 @@ if ($im4) {
 my $im5 = Imager::transform2({
 	rpnexpr=>'x x 10 / sin 10 * y + getp1'
 }, $im1);
-print $im5 ? "ok 5\n" : "not ok 5\n";
+ok(5, $im5, "image distortion");
 if ($im5) {
   $im5->write(type=>'pnm', file=>'testout/t56b.ppm')
     || die "Cannot write testout/t56b.ppm";
@@ -48,7 +50,7 @@ $opts = {
 rpnexpr=>'x h / !rat x w2 % y h2 % getp2 !pat x y getp1 @rat * @pat 1 @rat - * +'
 };
 my $im6 = Imager::transform2($opts,$im1,$im2);
-print $im6 ? "ok 6\n" : "not ok 6 # $opts->{error}\n";
+ok(6, $im6, "image combination");
 if ($im6) {
   $im6->write(type=>'pnm', file=>'testout/t56c.ppm')
     || die "Cannot write testout/t56c.ppm";
@@ -70,3 +72,22 @@ my @inputs = Imager::Transform->new($needsinputs[0])->inputs;
 $inputs[0]{desc} or print "not ";
 print "ok 10\n";
 # at some point I might want to test the actual transformations
+
+# check lower level error handling
+my $im7 = Imager::transform2({rpnexpr=>'x y getp2', width=>100, height=>100});
+ok(11, !$im7, "expected failure on accessing invalid image");
+print "# ", Imager->errstr, "\n";
+ok(12, Imager->errstr =~ /not enough images/, "didn't get expected error");
+
+sub ok ($$$) {
+  my ($num, $test, $desc) = @_;
+
+  if ($test) {
+    print "ok $num\n";
+  }
+  else {
+    print "not ok $num # $desc\n";
+  }
+  $test;
+}
+
