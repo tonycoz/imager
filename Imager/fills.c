@@ -109,14 +109,18 @@ static i_color fcolor_to_color(i_fcolor *c) {
 
   for (ch = 0; ch < MAXCHANNELS; ++ch)
     out.channel[ch] = SampleFTo8(c->channel[ch]);
+
+  return out;
 }
 
 static i_fcolor color_to_fcolor(i_color *c) {
   int ch;
-  i_color out;
+  i_fcolor out;
 
   for (ch = 0; ch < MAXCHANNELS; ++ch)
     out.channel[ch] = Sample8ToF(c->channel[ch]);
+
+  return out;
 }
 
 /* alpha combine in with out */
@@ -1007,6 +1011,7 @@ static void combine_hue(i_color *out, i_color *in, int channels, int count) {
     i_rgb_to_hsv(in);
     c.channel[0] = in->channel[0];
     i_hsv_to_rgb(&c);
+    c.channel[3] = in->channel[3];
     COMBINE(*out, c, channels);
     ++out;
     ++in;
