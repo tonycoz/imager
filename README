@@ -162,12 +162,12 @@ font.
 =================
 
 Imager can be installed on Win32 systems.  This was ported and tested
-with Microsoft Visual C++ 6.0 with build 623 of ActivePerl.  Currently
-I haven't tried to test any of the image formats except for ppm, since
-I don't have the required libraries on my NT machine.  This may
-change.  The same is true for font support, though it might be
-preferable to try to use Win32's native font support over the external
-librarie - why force the user to install yet another library.
+with Microsoft Visual C++ 6.0 with build 623 of ActivePerl.  If you
+have the appropriate libraries installed you can read and write PNG,
+TIFF, PPM and JPEG files.  There is currently no support for fonts
+under Win32, though it might be preferable to try to use Win32's
+native font support over the external librarie - why force the user to
+install yet another library?
 
 I haven't tried to target compilers other than VC++, since I don't
 have them installed.
