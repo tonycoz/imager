@@ -282,8 +282,8 @@ static void get_png_tags(i_img *im, png_structp png_ptr, png_infop info_ptr) {
   if (png_get_pHYs(png_ptr, info_ptr, &xres, &yres, &unit_type)) {
     mm_log((1,"pHYs (%d, %d) %d\n", xres, yres, unit_type));
     if (unit_type == PNG_RESOLUTION_METER) {
-      i_tags_set_float(&im->tags, "i_xres", 0, xres * 0.0254);
-      i_tags_set_float(&im->tags, "i_yres", 0, yres * 0.0254);
+      i_tags_set_float2(&im->tags, "i_xres", 0, xres * 0.0254, 5);
+      i_tags_set_float2(&im->tags, "i_yres", 0, yres * 0.0254, 5);
     }
     else {
       i_tags_addn(&im->tags, "i_xres", 0, xres);

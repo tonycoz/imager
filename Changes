@@ -982,6 +982,9 @@ Revision history for Perl extension Imager.
 - the tiff reader now puts warning messages produced during reading into
   the i_warning tag.
   Resolves: https://rt.cpan.org/Ticket/Display.html?id=8722
+- the i_xres and i_yres tags are now stored in a resolution similar
+  to their source.
+  Resolves: https://rt.cpan.org/Ticket/Display.html?id=8520
 
 =================================================================
 

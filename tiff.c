@@ -207,8 +207,11 @@ static i_img *read_one_tiff(TIFF *tif) {
     i_tags_addn(&im->tags, "tiff_resolutionunit", 0, resunit);
     if (resunit == RESUNIT_NONE)
       i_tags_addn(&im->tags, "i_aspect_only", 0, 1);
-    i_tags_set_float(&im->tags, "i_xres", 0, xres);
-    i_tags_set_float(&im->tags, "i_yres", 0, yres);
+    /* tifflib doesn't seem to provide a way to get to the original rational
+       value of these, which would let me provide a more reasonable
+       precision. So make up a number. */
+    i_tags_set_float2(&im->tags, "i_xres", 0, xres, 6);
+    i_tags_set_float2(&im->tags, "i_yres", 0, yres, 6);
   }
 
   /* Text tags */

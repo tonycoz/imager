@@ -165,8 +165,8 @@ i_readbmp_wiol(io_glue *ig) {
     else if (yres && !xres)
       xres = yres;
     if (xres) {
-      i_tags_set_float(&im->tags, "i_xres", 0, xres * 0.0254);
-      i_tags_set_float(&im->tags, "i_yres", 0, yres * 0.0254);
+      i_tags_set_float2(&im->tags, "i_xres", 0, xres * 0.0254, 4);
+      i_tags_set_float2(&im->tags, "i_yres", 0, yres * 0.0254, 4);
     }
     i_tags_addn(&im->tags, "bmp_compression", 0, compression);
     i_tags_addn(&im->tags, "bmp_important_colors", 0, clr_important);
