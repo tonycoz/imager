@@ -491,6 +491,9 @@ typedef struct i_gif_opts {
 
   /* Netscape loop extension - number of loops */
   int loop_count;
+
+  /* should be eliminate unused colors? */
+  int eliminate_unused;
 } i_gif_opts;
 
 extern void quant_makemap(i_quantize *quant, i_img **imgs, int count);
