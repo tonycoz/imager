@@ -28,7 +28,7 @@ MultiImage & metadata support:
   like spatial resolution (implement for other image types, especially 
   TIFF)  (Spatial resolution is supported for all types that support 
   it - are there any other common properties we can add?)
-  
+- implement the i_incomplete tag for other formats  
 
 New Features:
 - Add mng support, pcx and aalib support.
@@ -113,6 +113,9 @@ Format specific issues:
 
 - read/write 16-bit/sample images as such for tiff
 
+- read more metadata from images, esp tiff tags, EXIF format information 
+  from TIFF and JPEG.
+
 Documentation:
 - Add to the documentation
 - Write a tutorial?
@@ -123,3 +126,4 @@ Documentation:
 - Write a guide to installing the helper libraries
 - Go through the entire project and add comments in pod
   so doco.perl can be used to read them.
+- see the IRC log in design/doclayout.txt
