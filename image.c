@@ -1241,13 +1241,6 @@ i_count_colors(i_img *im,int maxc) {
   return colorcnt;
 }
 
-
-symbol_table_t symbol_table={i_has_format,ICL_set_internal,ICL_info,
-			     i_img_new,i_img_empty,i_img_empty_ch,i_img_exorcise,
-			     i_img_info,i_img_setmask,i_img_getmask,
-			     i_box,i_draw,i_arc,i_copyto,i_copyto_trans,i_rubthru};
-
-
 /*
 =back
 

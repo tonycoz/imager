@@ -11,6 +11,14 @@ typedef shl_t minthandle_t;
 #include <windows.h>
 typedef HMODULE minthandle_t;
 #undef WIN32_LEAN_AND_MEAN
+#elif defined(OS_darwin)
+#define DL_LOADONCEONLY
+#define DLSYMUN
+#undef environ
+#undef bool
+
+#import <mach-o/dyld.h>
+typedef void *minthandle_t; 
 #else 
 #include <dlfcn.h>
 typedef void *minthandle_t; 
