@@ -14,20 +14,20 @@ use Imager qw(:all);
 $loaded = 1;
 print "ok 1\n";
 
-init_log("testout/t10formats.log",1);
+init_log("testout/t102png.log",1);
 
 i_has_format("png") && print "# has png\n";
 
-$green=i_color_new(0,255,0,255);
-$blue=i_color_new(0,0,255,255);
-$red=i_color_new(255,0,0,255);
+$green  = i_color_new(0,   255, 0,   255);
+$blue   = i_color_new(0,   0,   255, 255);
+$red    = i_color_new(255, 0,   0,   255);
 
-$img=Imager::ImgRaw::new(150,150,3);
-$cmpimg=Imager::ImgRaw::new(150,150,3);
+$img    = Imager::ImgRaw::new(150, 150, 3);
+$cmpimg = Imager::ImgRaw::new(150, 150, 3);
 
-i_box_filled($img,70,25,130,125,$green);
-i_box_filled($img,20,25,80,125,$blue);
-i_arc($img,75,75,30,0,361,$red);
+i_box_filled($img, 70, 25, 130, 125, $green);
+i_box_filled($img, 20, 25, 80,  125, $blue);
+i_arc($img, 75, 75, 30, 0, 361, $red);
 i_conv($img,[0.1, 0.2, 0.4, 0.2, 0.1]);
 
 my $timg = Imager::ImgRaw::new(20, 20, 4);
@@ -55,10 +55,10 @@ if (!i_has_format("png")) {
 
   print "ok 3\n";
   print "# png average mean square pixel difference: ",sqrt(i_img_diff($img,$cmpimg))/150*150,"\n";
-  print i_img_diff($img, $cmpimg) 
-	? "not ok 4 # saved image different\n" : "ok 4\n";
+  print i_img_diff($img, $cmpimg)
+    ? "not ok 4 # saved image different\n" : "ok 4\n";
 
-  open FH, "> testout/t12_trans.png" 
+  open FH, "> testout/t12_trans.png"
     or die "Cannot open testout/t12_trans.png: $!";
   binmode FH;
   if (i_writepng($timg, fileno(FH))) {
@@ -77,6 +77,6 @@ if (!i_has_format("png")) {
 
   print "ok 6\n";
   print "# png average mean square pixel difference: ",sqrt(i_img_diff($timg,$cmpimg))/150*150,"\n";
-  print i_img_diff($timg, $cmpimg) 
+  print i_img_diff($timg, $cmpimg)
 	? "not ok 7 # saved image different\n" : "ok 7\n";
 }
