@@ -10,7 +10,7 @@ Imager::Transformations - Simple transformations of one image into another.
 
   $newimg = $img->scale(xpixels=>400);
   $newimg = $img->scale(xpixels=>400, ypixels=>400);
-  $newimg = $img->scale(xpixels=>400, ypixels=>400, type=>min);
+  $newimg = $img->scale(xpixels=>400, ypixels=>400, type=>'min');
   $newimg = $img->scale(scalefactor=>0.25);
 
   $newimg = $img->crop(left=>50, right=>100, top=>10, bottom=>100); 
@@ -76,14 +76,15 @@ if you want to keep an original after doing something that changes the image.
 To scale an image so porportions are maintained use the
 C<$img-E<gt>scale()> method.  if you give either a xpixels or ypixels
 parameter they will determine the width or height respectively.  If
-both are given the one resulting in a larger image is used.  example:
-C<$img> is 700 pixels wide and 500 pixels tall.
+both are given the one resulting in a larger image is used, unless you
+set the C<type> parameter to C<'min'>.  example: C<$img> is 700 pixels
+wide and 500 pixels tall.
 
   $newimg = $img->scale(xpixels=>400); # 400x285
   $newimg = $img->scale(ypixels=>400); # 560x400
 
   $newimg = $img->scale(xpixels=>400,ypixels=>400); # 560x400
-  $newimg = $img->scale(xpixels=>400,ypixels=>400,type=>min); # 400x285
+  $newimg = $img->scale(xpixels=>400,ypixels=>400,type=>'min'); # 400x285
 
   $newimg = $img->scale(scalefactor=>0.25); 175x125 
   $newimg = $img->scale(); # 350x250

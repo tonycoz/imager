@@ -2703,7 +2703,7 @@ This document - Synopsis Example, Table of Contents and Overview.
 
 Direct type/virtual images, RGB(A)/paletted images, 8/16/double
 bits/channel, color maps, channel masks, image tags, color
-quantization.
+quantization.  Also discusses basic image information methods.
 
 =item Imager::Files
 
