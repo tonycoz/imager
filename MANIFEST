@@ -49,6 +49,12 @@ lib/Imager/Transform.pm
 t/t00basic.t
 t/t05error.t
 t/t10formats.t
+t/t101jpeg.t
+t/t102png.t
+t/t103raw.t
+t/t104ppm.t
+t/t105gif.t
+t/t106tiff.t
 t/t15color.t
 t/t30t1font.t
 t/t35ttfont.t
