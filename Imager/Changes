@@ -502,6 +502,8 @@ Revision history for Perl extension Imager.
         - add the flood_fill() method (using the existing i_flood_fill)
         - implement i_flood_cfill() based on i_flood_fill, and 
           add general fills to the flood_fill() method
+        - generalize the combine parameter to get different ways of 
+          combining the fill with the target
 
 =================================================================
 
