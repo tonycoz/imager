@@ -22,14 +22,16 @@ i_box_filled($timg, 2, 2, 18, 18, $trans);
 
 open(FH,">testout/t103.raw") || die "Cannot open testout/t103.raw for writing\n";
 binmode(FH);
-i_writeraw($img,fileno(FH)) || die "Cannot write testout/t103.raw\n";
+$IO = Imager::io_new_fd( fileno(FH) );
+i_writeraw_wiol($img, $IO) || die "Cannot write testout/t103.raw\n";
 close(FH);
 
 print "ok 1\n";
 
 open(FH,"testout/t103.raw") || die "Cannot open testout/t103.raw\n";
 binmode(FH);
-$cmpimg=i_readraw(fileno(FH),150,150,3,3,0) || die "Cannot read testout/t103.raw\n";
+$IO = Imager::io_new_fd( fileno(FH) );
+$cmpimg = i_readraw_wiol($IO, 150, 150, 3, 3, 0) || die "Cannot read testout/t103.raw\n";
 close(FH);
 
 print "# raw average mean square pixel difference: ",sqrt(i_img_diff($img,$cmpimg))/150*150,"\n";
@@ -48,7 +50,9 @@ save_data('testout/t103_img_int.raw');
 open FH, "testout/t103_base.raw" 
   or die "Cannot open testout/t103_base.raw: $!";
 binmode FH;
-my $baseimg = i_readraw(fileno(FH), 4, 4, 3, 3, 0)
+$IO = Imager::io_new_fd( fileno(FH) );
+
+my $baseimg = i_readraw_wiol( $IO, 4, 4, 3, 3, 0)
   or die "Cannot read base raw image";
 close FH;
 
@@ -65,7 +69,9 @@ sub read_test {
   my ($in, $xsize, $ysize, $data, $store, $intrl, $base, $test) = @_;
   open FH, $in or die "Cannot open $in: $!";
   binmode FH;
-  my $img = i_readraw(fileno(FH), $xsize, $ysize, $data, $store, $intrl);
+  my $IO = Imager::io_new_fd( fileno(FH) );
+
+  my $img = i_readraw_wiol($IO, $xsize, $ysize, $data, $store, $intrl);
   if ($img) {
     print "ok $test\n";
     if (i_img_diff($img, $baseimg)) {

@@ -165,8 +165,7 @@ i_readgif_low(GifFileType *GifFile, int **colour_table, int *colours) {
      non-NULL, but we check that to see if we need to free an allocated
      colour table on error.
   */
-  if (colour_table)
-    *colour_table = NULL;
+  if (colour_table) *colour_table = NULL;
 
   BackGround = GifFile->SBackGroundColor;
   ColorMap = (GifFile->Image.ColorMap ? GifFile->Image.ColorMap : GifFile->SColorMap);
@@ -178,7 +177,7 @@ i_readgif_low(GifFileType *GifFile, int **colour_table, int *colours) {
   }
   
 
-  im = i_img_empty_ch(NULL,GifFile->SWidth,GifFile->SHeight,3);
+  im = i_img_empty_ch(NULL, GifFile->SWidth, GifFile->SHeight, 3);
 
   Size = GifFile->SWidth * sizeof(GifPixelType); 
   
@@ -237,7 +236,7 @@ i_readgif_low(GifFileType *GifFile, int **colour_table, int *colours) {
       Width = GifFile->Image.Width;
       Height = GifFile->Image.Height;
       ImageNum++;
-      mm_log((1,"i_readgif: Image %d at (%d, %d) [%dx%d]: \n",ImageNum, Col, Row, Width, Height));
+      mm_log((1,"i_readgif_low: Image %d at (%d, %d) [%dx%d]: \n",ImageNum, Col, Row, Width, Height));
 
       if (GifFile->Image.Left + GifFile->Image.Width > GifFile->SWidth ||
 	  GifFile->Image.Top + GifFile->Image.Height > GifFile->SHeight) {

@@ -100,8 +100,8 @@ use Imager::Font;
 		i_readpnm_wiol
 		i_writeppm_wiol
 
-		i_readraw
-		i_writeraw
+		i_readraw_wiol
+		i_writeraw_wiol
 
 		i_contrast
 		i_hardinvert
@@ -443,119 +443,172 @@ sub read {
     undef($self->{IMG});
   }
 
-  if (!$input{fd} and !$input{file} and !$input{data}) { $self->{ERRSTR}='no file, fd or data parameter'; return undef; }
+  if (!$input{fd} and !$input{file} and !$input{data}) {
+    $self->{ERRSTR}='no file, fd or data parameter'; return undef;
+  }
   if ($input{file}) {
     $fh = new IO::File($input{file},"r");
-    if (!defined $fh) { $self->{ERRSTR}='Could not open file'; return undef; }
+    if (!defined $fh) {
+      $self->{ERRSTR}='Could not open file'; return undef;
+    }
     binmode($fh);
     $fd = $fh->fileno();
   }
-  if ($input{fd}) { $fd=$input{fd} };
+  if ($input{fd}) {
+    $fd=$input{fd};
+  }
 
   # FIXME: Find the format here if not specified
   # yes the code isn't here yet - next week maybe?
 
-  if (!$input{type} and $input{file}) { $input{type}=$FORMATGUESS->($input{file}); }
-  if (!$formats{$input{type}}) { $self->{ERRSTR}='format not supported'; return undef; }
+  if (!$input{type} and $input{file}) {
+    $input{type}=$FORMATGUESS->($input{file});
+  }
+  if (!$formats{$input{type}}) {
+    $self->{ERRSTR}='format not supported'; return undef;
+  }
 
-  my %iolready=(jpeg=>1, tiff=>1, pnm=>1);
+  my %iolready=(jpeg=>1, tiff=>1, pnm=>1, raw=>1);
 
   if ($iolready{$input{type}}) {
     # Setup data source
-    $IO = io_new_fd($fd); # sort of simple for now eh?
+    $IO = io_new_fd($fd);	# sort of simple for now eh?
 
     if ( $input{type} eq 'jpeg' ) {
       ($self->{IMG},$self->{IPTCRAW})=i_readjpeg_wiol( $IO );
-      if ( !defined($self->{IMG}) ) { $self->{ERRSTR}='unable to read jpeg image'; return undef; }
+      if ( !defined($self->{IMG}) ) {
+	$self->{ERRSTR}='unable to read jpeg image'; return undef;
+      }
       $self->{DEBUG} && print "loading a jpeg file\n";
       return $self;
     }
 
     if ( $input{type} eq 'tiff' ) {
       $self->{IMG}=i_readtiff_wiol( $IO, -1 ); # Fixme, check if that length parameter is ever needed
-      if ( !defined($self->{IMG}) ) { $self->{ERRSTR}='unable to read tiff image'; return undef; }
+      if ( !defined($self->{IMG}) ) {
+	$self->{ERRSTR}='unable to read tiff image'; return undef;
+      }
       $self->{DEBUG} && print "loading a tiff file\n";
       return $self;
     }
 
     if ( $input{type} eq 'pnm' ) {
       $self->{IMG}=i_readpnm_wiol( $IO, -1 ); # Fixme, check if that length parameter is ever needed
-      if ( !defined($self->{IMG}) ) { $self->{ERRSTR}='unable to read pnm image: '._error_as_msg(); return undef; }
+      if ( !defined($self->{IMG}) ) {
+	$self->{ERRSTR}='unable to read pnm image: '._error_as_msg(); return undef;
+      }
       $self->{DEBUG} && print "loading a pnm file\n";
       return $self;
     }
 
+    if ( $input{type} eq 'raw' ) {
+      my %params=(datachannels=>3,storechannels=>3,interleave=>1,%input);
+
+      if ( !($params{xsize} && $params{ysize}) ) {
+	$self->{ERRSTR}='missing xsize or ysize parameter for raw';
+	return undef;
+      }
+
+      $self->{IMG} = i_readraw_wiol( $IO,
+				     $params{xsize},
+				     $params{ysize},
+				     $params{datachannels},
+				     $params{storechannels},
+				     $params{interleave});
+      if ( !defined($self->{IMG}) ) {
+	$self->{ERRSTR}='unable to read raw image';
+	return undef;
+      }
+      $self->{DEBUG} && print "loading a raw file\n";
+    }
   } else {
 
-  # Old code for reference while changing the new stuff
+    # Old code for reference while changing the new stuff
 
 
-  if (!$input{type} and $input{file}) { $input{type}=$FORMATGUESS->($input{file}); }
-  if (!$input{type}) { $self->{ERRSTR}='type parameter missing and not possible to guess from extension'; return undef; }
+    if (!$input{type} and $input{file}) {
+      $input{type}=$FORMATGUESS->($input{file});
+    }
 
-  if (!$formats{$input{type}}) { $self->{ERRSTR}='format not supported'; return undef; }
+    if (!$input{type}) {
+      $self->{ERRSTR}='type parameter missing and not possible to guess from extension'; return undef;
+    }
 
-  if ($input{file}) {
-    $fh = new IO::File($input{file},"r");
-    if (!defined $fh) { $self->{ERRSTR}='Could not open file'; return undef; }
-    binmode($fh);
-    $fd = $fh->fileno();
-  }
-  if ($input{fd}) { $fd=$input{fd} };
-
-  if ( $input{type} eq 'gif' ) {
-    my $colors;
-    if ($input{colors} && !ref($input{colors})) {
-      # must be a reference to a scalar that accepts the colour map
-      $self->{ERRSTR} = "option 'colors' must be a scalar reference";
+    if (!$formats{$input{type}}) {
+      $self->{ERRSTR}='format not supported';
       return undef;
     }
-    if (exists $input{data}) {
-      if ($input{colors}) {
-	($self->{IMG}, $colors) = i_readgif_scalar($input{data});
-      }
-      else {
-	$self->{IMG}=i_readgif_scalar($input{data});
-      }
-    }
-    else { 
-      if ($input{colors}) {
-	($self->{IMG}, $colors) = i_readgif( $fd );
-      }
-      else {
-	$self->{IMG} = i_readgif( $fd )
-      }
-    }
-    if ($colors) {
-      # we may or may not change i_readgif to return blessed objects...
-      ${$input{colors}} = [ map { NC(@$_) } @$colors ];
-    }
-    if ( !defined($self->{IMG}) ) {
-      $self->{ERRSTR}= 'reading GIF:'._error_as_msg(); return undef;
-    }
-    $self->{DEBUG} && print "loading a gif file\n";
-  } elsif ( $input{type} eq 'jpeg' ) {
-    if (exists $input{data}) { ($self->{IMG},$self->{IPTCRAW})=i_readjpeg_scalar($input{data}); }
-    else { ($self->{IMG},$self->{IPTCRAW})=i_readjpeg( $fd ); }
-    if ( !defined($self->{IMG}) ) { $self->{ERRSTR}='unable to read jpeg image'; return undef; }
-    $self->{DEBUG} && print "loading a jpeg file\n";
-  } elsif ( $input{type} eq 'png' ) {
-    if (exists $input{data}) { $self->{IMG}=i_readpng_scalar($input{data}); }
-    else { $self->{IMG}=i_readpng( $fd ); }
-    if ( !defined($self->{IMG}) ) { $self->{ERRSTR}='unable to read png image'; return undef; }
-    $self->{DEBUG} && print "loading a png file\n";
-  } elsif ( $input{type} eq 'raw' ) {
-    my %params=(datachannels=>3,storechannels=>3,interleave=>1);
-    for(keys(%input)) { $params{$_}=$input{$_}; }
 
-    if ( !($params{xsize} && $params{ysize}) ) { $self->{ERRSTR}='missing xsize or ysize parameter for raw'; return undef; }
-    $self->{IMG}=i_readraw( $fd, $params{xsize}, $params{ysize},
-			   $params{datachannels}, $params{storechannels}, $params{interleave});
-    if ( !defined($self->{IMG}) ) { $self->{ERRSTR}='unable to read raw image'; return undef; }
-    $self->{DEBUG} && print "loading a raw file\n";
+    if ($input{file}) {
+      $fh = new IO::File($input{file},"r");
+      if (!defined $fh) {
+	$self->{ERRSTR}='Could not open file';
+	return undef;
+      }
+      binmode($fh);
+      $fd = $fh->fileno();
+    }
+
+    if ($input{fd}) {
+      $fd=$input{fd};
+    }
+
+    if ( $input{type} eq 'gif' ) {
+      my $colors;
+      if ($input{colors} && !ref($input{colors})) {
+	# must be a reference to a scalar that accepts the colour map
+	$self->{ERRSTR} = "option 'colors' must be a scalar reference";
+	return undef;
+      }
+      if (exists $input{data}) {
+	if ($input{colors}) {
+	  ($self->{IMG}, $colors) = i_readgif_scalar($input{data});
+	} else {
+	  $self->{IMG}=i_readgif_scalar($input{data});
+	}
+      } else {
+	if ($input{colors}) {
+	  ($self->{IMG}, $colors) = i_readgif( $fd );
+	} else {
+	  $self->{IMG} = i_readgif( $fd )
+	}
+      }
+      if ($colors) {
+	# we may or may not change i_readgif to return blessed objects...
+	${ $input{colors} } = [ map { NC(@$_) } @$colors ];
+      }
+      if ( !defined($self->{IMG}) ) {
+	$self->{ERRSTR}= 'reading GIF:'._error_as_msg();
+	return undef;
+      }
+      $self->{DEBUG} && print "loading a gif file\n";
+
+
+    } elsif ( $input{type} eq 'jpeg' ) {
+      if (exists $input{data}) {
+	($self->{IMG},$self->{IPTCRAW})=i_readjpeg_scalar($input{data});
+      } else {
+	($self->{IMG},$self->{IPTCRAW})=i_readjpeg( $fd );
+      }
+      if ( !defined($self->{IMG}) ) {
+	$self->{ERRSTR}='unable to read jpeg image';
+	return undef;
+      }
+      $self->{DEBUG} && print "loading a jpeg file\n";
+    } elsif ( $input{type} eq 'png' ) {
+      if (exists $input{data}) {
+	$self->{IMG}=i_readpng_scalar($input{data});
+      } else {
+	$self->{IMG}=i_readpng( $fd );
+      }
+      if ( !defined($self->{IMG}) ) {
+	$self->{ERRSTR}='unable to read png image';
+	return undef;
+      }
+      $self->{DEBUG} && print "loading a png file\n";
+    }
   }
   return $self;
-  }
 }
 
 

@@ -1342,13 +1342,13 @@ i_readgif(fd)
  	       colour_table = NULL;
                colours = 0;
 
-	if(GIMME_V == G_ARRAY) {  
+	if(GIMME_V == G_ARRAY) {
             rimg = i_readgif(fd,&colour_table,&colours);
         } else {
             /* don't waste time with colours if they aren't wanted */
             rimg = i_readgif(fd,NULL,NULL);
         }
-
+	
 	if (colour_table == NULL) {
             EXTEND(SP,1);
             r=sv_newmortal();
@@ -1368,9 +1368,9 @@ i_readgif(fd)
                 av_store(ct, q, (SV*)newRV_noinc((SV*)av_make(3, temp)));
             }
             myfree(colour_table);
-            
+
             EXTEND(SP,2);
-            r=sv_newmortal();
+            r = sv_newmortal();
             sv_setref_pv(r, "Imager::ImgRaw", (void*)rimg);
             PUSHs(r);
             PUSHs(newRV_noinc((SV*)ct));
@@ -1507,8 +1507,8 @@ i_writeppm_wiol(im, ig)
 
 
 Imager::ImgRaw
-i_readraw(fd,x,y,datachannels,storechannels,intrl)
-	       int     fd
+i_readraw_wiol(ig,x,y,datachannels,storechannels,intrl)
+        Imager::IO     ig
 	       int     x
 	       int     y
 	       int     datachannels
@@ -1516,9 +1516,10 @@ i_readraw(fd,x,y,datachannels,storechannels,intrl)
 	       int     intrl
 
 undef_int
-i_writeraw(im,fd)
+i_writeraw_wiol(im,ig)
     Imager::ImgRaw     im
-	       int     fd
+        Imager::IO     ig
+
 
 
 Imager::ImgRaw

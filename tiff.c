@@ -82,7 +82,7 @@ i_readtiff_wiol(io_glue *ig, int length) {
   /* Also add code to check for mmapped code */
 
   io_glue_commit_types(ig);
-  mm_log((1, "i_readtiff_wiol(ig 0x%p, length %d)\n", ig, length));
+  mm_log((1, "i_readtiff_wiol(ig %p, length %d)\n", ig, length));
   
   tif = TIFFClientOpen("Iolayer: FIXME", 
 		       "rm", 
