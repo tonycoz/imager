@@ -686,8 +686,8 @@ i_rspan(i_img *im,int seedx,int seedy,i_color *val) {
 
 #define INSIDE(x,y) ((!btm_test(btm,x,y) && ( i_gpix(im,x,y,&cval),i_ccomp(&val,&cval,channels)  ) ))
 
-void
-i_flood_fill(i_img *im,int seedx,int seedy,i_color *dcol) {
+undef_int
+i_flood_fill(i_img *im, int seedx, int seedy, i_color *dcol) {
 
   int lx,rx;
   int y;
@@ -710,6 +710,14 @@ i_flood_fill(i_img *im,int seedx,int seedy,i_color *dcol) {
   channels = im->channels;
   xsize    = im->xsize;
   ysize    = im->ysize;
+
+  if (seedx < 0 || seedx >= xsize ||
+      seedy < 0 || seedy >= ysize) {
+    
+    i_push_error(0, "Seed pixel outside of image");
+    return 0;
+  }
+      
 
   btm = btm_new(xsize,ysize);
   st = llist_new(100,sizeof(struct stack_element*));
@@ -812,6 +820,7 @@ i_flood_fill(i_img *im,int seedx,int seedy,i_color *dcol) {
   btm_destroy(btm);
   mm_log((1, "DESTROY\n"));
   llist_destroy(st);
+  return 1;
 }
 
 static struct i_bitmap *
@@ -945,12 +954,20 @@ i_flood_fill_low(i_img *im,int seedx,int seedy,
   return btm;
 }
 
-void
+undef_int
 i_flood_cfill(i_img *im, int seedx, int seedy, i_fill_t *fill) {
   int bxmin, bxmax, bymin, bymax;
   struct i_bitmap *btm;
   int x, y;
   int start;
+
+  
+  if (seedx < 0 || seedx >= im->xsize ||
+      seedy < 0 || seedy >= im->ysize) {
+    i_push_error(0, "Seed pixel outside of image");
+    return 0;
+  }
+
 
   btm = i_flood_fill_low(im, seedx, seedy, &bxmin, &bxmax, &bymin, &bymax);
 
@@ -1026,4 +1043,5 @@ i_flood_cfill(i_img *im, int seedx, int seedy, i_fill_t *fill) {
   }
 
   btm_destroy(btm);
+  return 1;
 }

@@ -222,7 +222,9 @@ void i_bezier_multi(i_img *im,int l,double *x,double *y,i_color *val);
 void i_poly_aa     (i_img *im,int l,double *x,double *y,i_color *val);
 void i_poly_aa_cfill(i_img *im,int l,double *x,double *y,i_fill_t *fill);
 
-void i_flood_fill  (i_img *im,int seedx,int seedy,i_color *dcol);
+undef_int i_flood_fill  (i_img *im,int seedx,int seedy,i_color *dcol);
+undef_int i_flood_cfill(i_img *im, int seedx, int seedy, i_fill_t *fill);
+
 
 /* image processing functions */
 

@@ -2161,7 +2161,7 @@ sub polybezier {
 sub flood_fill {
   my $self = shift;
   my %opts = ( color=>Imager::Color->new(255, 255, 255), @_ );
-
+	my $rc;
   unless (exists $opts{'x'} && exists $opts{'y'}) {
     $self->{ERRSTR} = "missing seed x and y parameters";
     return undef;
@@ -2176,7 +2176,7 @@ sub flood_fill {
         return;
       }
     }
-    i_flood_cfill($self->{IMG}, $opts{'x'}, $opts{'y'}, $opts{fill}{fill});
+    $rc = i_flood_cfill($self->{IMG}, $opts{'x'}, $opts{'y'}, $opts{fill}{fill});
   }
   else {
     my $color = _color($opts{'color'});
@@ -2184,10 +2184,9 @@ sub flood_fill {
       $self->{ERRSTR} = $Imager::ERRSTR; 
       return; 
     }
-    i_flood_fill($self->{IMG}, $opts{'x'}, $opts{'y'}, $color);
+    $rc = i_flood_fill($self->{IMG}, $opts{'x'}, $opts{'y'}, $color);
   }
-
-  $self;
+	if ($rc) { $self; } else { $self->{ERRSTR} = $self->_error_as_msg(); return (); }
 }
 
 sub setpixel {
