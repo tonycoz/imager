@@ -532,4 +532,12 @@ writing an animated gif
 
 reading tags after reading an image
 
+
+=head1 BUGS
+
+When saving Gif images the program does NOT try to shave of extra
+colors if it is possible.  If you specify 128 colors and there are
+only 2 colors used - it will have a 128 colortable anyway.
+
+
 =cut
