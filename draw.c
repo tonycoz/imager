@@ -704,6 +704,7 @@ i_rspan(i_img *im, int seedx, int seedy, i_color *val) {
 
 #define SET(x,y) btm_set(btm,x,y)
 
+/* INSIDE returns true if pixel is correct color and we haven't set it before. */
 #define INSIDE(x,y) ((!btm_test(btm,x,y) && ( i_gpix(im,x,y,&cval),i_ccomp(&val,&cval,channels)  ) ))
 
 undef_int
@@ -740,11 +741,11 @@ i_flood_fill(i_img *im, int seedx, int seedy, i_color *dcol) {
     return 0;
   }
 
-  btm = btm_new(xsize,ysize);
-  st = llist_new(100,sizeof(struct stack_element*));
+  btm = btm_new(xsize, ysize);
+  st  = llist_new(100, sizeof(struct stack_element*));
 
   /* Get the reference color */
-  i_gpix(im,seedx,seedy,&val);
+  i_gpix(im, seedx, seedy, &val);
 
   /* Find the starting span and fill it */
   lx = i_lspan(im, seedx, seedy, &val);
@@ -766,29 +767,28 @@ i_flood_fill(i_img *im, int seedx, int seedy, i_color *dcol) {
     if (bymin > y) bymin=y; /* in the worst case an extra line */
     if (bymax < y) bymax=y; 
 
-    /*    
-	  {
-	  int tx, ty;
-	  printf("start of scan - on stack : %d \n",st->count); 
-	  printf("lx=%d rx=%d dadLx=%d dadRx=%d y=%d direction=%d\n",lx,rx,dadLx,dadRx,y,direction); 
-	  
-	  
-	  printf(" ");
-	  for(tx=0;tx<xsize;tx++) printf("%d",tx%10);
-	  printf("\n");
-	  for(ty=0;ty<ysize;ty++) {
-	  printf("%d",ty%10);
-	  for(tx=0;tx<xsize;tx++) printf("%d",!!btm_test(btm,tx,ty));
-	  printf("\n");
-	  }
-	  printf("y=%d\n",y);
-	  }
-      */
+    /*
+      {
+      int tx, ty;
+      printf("start of scan - on stack : %d \n",st->count); 
+      printf("lx=%d rx=%d dadLx=%d dadRx=%d y=%d direction=%d\n",lx,rx,dadLx,dadRx,y,direction); 
+      
+      
+      printf(" ");
+      for(tx=0;tx<xsize;tx++) printf("%d",tx%10);
+      printf("\n");
+      for(ty=0;ty<ysize;ty++) {
+      printf("%d",ty%10);
+      for(tx=0;tx<xsize;tx++) printf("%d",!!btm_test(btm,tx,ty));
+      printf("\n");
+      }
+      printf("y=%d\n",y);
+      }
+    */
 
 
     x = lx+1;
-    if ( (wasIn = INSIDE(lx,y)) ) {
-      if (lx<0) lx = 0;
+    if ( lx>=0 && (wasIn = INSIDE(lx,y)) ) {
       SET(lx,y);
       lx--;
       while(lx>0 && INSIDE(lx,y)) {
@@ -797,7 +797,7 @@ i_flood_fill(i_img *im, int seedx, int seedy, i_color *dcol) {
       }
     }
 
-    if (bxmin > lx) bxmin=lx;
+    if (bxmin > lx) bxmin = lx;
     
     while(x <= xsize-1) {
       /*  printf("x=%d\n",x); */
@@ -821,7 +821,7 @@ i_flood_fill(i_img *im, int seedx, int seedy, i_color *dcol) {
 	  SET(x,y);
 	  /* case 3: Wasn't inside, am now: just found the start of a new run */
 	  wasIn=1;
-	    lx=x;
+	  lx=x;
 	} else {
 	  /* case 4: Wasn't inside, still isn't */
 	}
