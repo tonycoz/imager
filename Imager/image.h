@@ -295,6 +295,8 @@ extern int i_ft2_settransform(FT2_Fonthandle *handle, double *matrix);
 extern int i_ft2_sethinting(FT2_Fonthandle *handle, int hinting);
 extern int i_ft2_bbox(FT2_Fonthandle *handle, double cheight, double cwidth, 
                       char const *text, int len, int *bbox, int utf8);
+extern int i_ft2_bbox_r(FT2_Fonthandle *handle, double cheight, double cwidth, 
+		      char const *text, int len, int vlayout, int utf8, int *bbox);
 extern int i_ft2_text(FT2_Fonthandle *handle, i_img *im, int tx, int ty, 
                       i_color *cl, double cheight, double cwidth, 
                       char const *text, int len, int align, int aa, 

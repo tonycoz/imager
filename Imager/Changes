@@ -938,6 +938,8 @@ Revision history for Perl extension Imager.
   Resolves: https://rt.cpan.org/Ticket/Display.html?id=8645
 - tools/imager has been removed from the MANIFEST, it's way too late
   to test/debug for 0.44.
+- image.h had no prototype for i_ft2_bbox_r() and it was being called
+  from Imager.xs
 
 =================================================================
 
