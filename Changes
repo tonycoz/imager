@@ -408,7 +408,6 @@ Revision history for Perl extension Imager.
         - Make sure everything is doable with the OO interface
         - Split the other classes into seperate files
         - Compile with memory debugging enabled and fix leaks
-        - Check if hashbox code is choosing the wrong closest color
         - dynaload.c is strongly tied to perl
 	
 	- should i_readgif returned colormap be an arrayref of 
