@@ -668,6 +668,7 @@ i_copy(i_img *im, i_img *src) {
     i_glin(src, 0, x1, y, pv);
     i_plin(im, 0, x1, y, pv);
   }
+  myfree(pv);
 }
 
 
