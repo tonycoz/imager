@@ -36,10 +36,9 @@ i_box_filled($timg, 0, 0, 20, 20, $green);
 i_box_filled($timg, 2, 2, 18, 18, $trans);
 
 if (!i_has_format("png")) {
-  print "ok 2 # skip no png support\n";
-  print "ok 3 # skip no png support\n";
-  print "ok 4 # skip no png support\n";
-  print "ok 5 # skip no png support\n";
+  for (2..10) {
+    print "ok $_ # skip no png support\n";
+  }
 } else {
   open(FH,">testout/t102.png") || die "cannot open testout/t102.png for writing\n";
   binmode(FH);
