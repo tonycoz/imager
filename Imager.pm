@@ -495,7 +495,7 @@ sub read {
   if ( $input{type} eq 'gif' ) {
     if (exists $input{data}) { $self->{IMG}=i_readgif_scalar($input{data}); }
     else { $self->{IMG}=i_readgif( $fd ) }
-    if ( !defined($self->{IMG}) ) { $self->{ERRSTR}='unable to read gif image'; return undef; }
+    if ( !defined($self->{IMG}) ) { $self->{ERRSTR}= 'reading GIF:'._error_as_msg(); return undef; }
     $self->{DEBUG} && print "loading a gif file\n";
   } elsif ( $input{type} eq 'jpeg' ) {
     if (exists $input{data}) { ($self->{IMG},$self->{IPTCRAW})=i_readjpeg_scalar($input{data}); }
@@ -617,7 +617,7 @@ sub write {
 	$rc=i_writegifmc($self->{IMG},$fd,$input{gifplanes});
       }
       if ( !defined($rc) ) {
-	$self->{ERRSTR}='unable to write gif image'; return undef;
+	$self->{ERRSTR} = "Writing GIF file: "._error_as_msg(); return undef;
       }
       $self->{DEBUG} && print "writing a gif file\n";
 
