@@ -553,9 +553,7 @@ Tags:
 
 =back
 
-
 =head2 RAW
-
 
 When reading raw images you need to supply the width and height of the
 image in the xsize and ysize options:
@@ -582,6 +580,10 @@ values for the first line and so on, you can use the interleave option:
 
   $img->read(file=>'foo.raw', xsize=100, ysize=>100, interleave=>1)
     or die "Cannot read raw image\n";
+
+=head2 PNG
+
+There are no PNG specific tags.
 
 =head1 EXAMPLES
 
