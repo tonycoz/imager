@@ -360,21 +360,21 @@ undef_int i_writejpeg(i_img *im,int fd,int qfactor);
 #endif /* HAVE_LIBJPEG */
 
 #ifdef HAVE_LIBTIFF
-i_img* i_readtiff_wiol(io_glue *ig, int length);
+i_img   * i_readtiff_wiol(io_glue *ig, int length);
 undef_int i_writetiff_wiol(i_img *im, io_glue *ig);
 undef_int i_writetiff_wiol_faxable(i_img *im, io_glue *ig, int fine);
 
 #endif /* HAVE_LIBTIFF */
 
 #ifdef HAVE_LIBPNG
-i_img *i_readpng_wiol(io_glue *ig, int length);
-undef_int i_writepng(i_img *im,int fd);
+i_img    *i_readpng_wiol(io_glue *ig, int length);
+undef_int i_writepng_wiol(i_img *im, io_glue *ig);
 #endif /* HAVE_LIBPNG */
 
 #ifdef HAVE_LIBGIF
-i_img *i_readgif(int fd, int **colour_table, int *colours);
-i_img *i_readgif_scalar(char *data, int length, int **colour_table, int *colours);
-i_img *i_readgif_callback(i_read_callback_t callback, char *userdata, int **colour_table, int *colours);
+i_img   * i_readgif(int fd, int **colour_table, int *colours);
+i_img   * i_readgif_scalar(char *data, int length, int **colour_table, int *colours);
+i_img   * i_readgif_callback(i_read_callback_t callback, char *userdata, int **colour_table, int *colours);
 undef_int i_writegif(i_img *im,int fd,int colors,int pixdev,int fixedlen,i_color fixed[]);
 undef_int i_writegifmc(i_img *im,int fd,int colors);
 undef_int i_writegifex(i_img *im,int fd);
@@ -385,27 +385,26 @@ void i_qdist(i_img *im);
 
 #endif /* HAVE_LIBGIF */
 
-i_img    *i_readraw_wiol(io_glue *ig, int x, int y, int datachannels, int storechannels, int intrl);
+i_img   * i_readraw_wiol(io_glue *ig, int x, int y, int datachannels, int storechannels, int intrl);
 undef_int i_writeraw_wiol(i_img* im, io_glue *ig);
 
-i_img *i_readpnm_wiol(io_glue *ig, int length);
-undef_int i_writeppm(i_img *im,int fd);
+i_img   * i_readpnm_wiol(io_glue *ig, int length);
 undef_int i_writeppm_wiol(i_img *im, io_glue *ig);
 
 
-i_img* i_scaleaxis(i_img *im, float Value, int Axis);
-i_img* i_scale_nn(i_img *im, float scx, float scy);
-i_img* i_haar(i_img *im);
-int i_count_colors(i_img *im,int maxc);
+i_img * i_scaleaxis(i_img *im, float Value, int Axis);
+i_img * i_scale_nn(i_img *im, float scx, float scy);
+i_img * i_haar(i_img *im);
+int     i_count_colors(i_img *im,int maxc);
 
-i_img* i_transform(i_img *im, int *opx,int opxl,int *opy,int opyl,double parm[],int parmlen);
+i_img * i_transform(i_img *im, int *opx,int opxl,int *opy,int opyl,double parm[],int parmlen);
 
 struct rm_op;
-i_img* i_transform2(int width, int height, int channels,
-		    struct rm_op *ops, int ops_count, 
-		    double *n_regs, int n_regs_count, 
-		    i_color *c_regs, int c_regs_count, 
-		    i_img **in_imgs, int in_imgs_count);
+i_img * i_transform2(int width, int height, int channels,
+		     struct rm_op *ops, int ops_count, 
+		     double *n_regs, int n_regs_count, 
+		     i_color *c_regs, int c_regs_count, 
+		     i_img **in_imgs, int in_imgs_count);
 /* filters */
 
 void i_contrast(i_img *im, float intensity);

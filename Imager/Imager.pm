@@ -653,13 +653,25 @@ sub write {
 	  $self->{ERRSTR}='Could not write to buffer';
 	  return undef;
 	}
-      }
-      else {
+      } else {
 	if (!i_writetiff_wiol($self->{IMG}, $IO)) {
 	  $self->{ERRSTR}='Could not write to buffer';
 	  return undef;
 	}
       }
+    } elsif ( $input{type} eq 'pnm' ) {
+
+      if ( ! i_writeppm_wiol($self->{IMG},$IO) ) {
+	$self->{ERRSTR}='unable to write pnm image';
+	return undef;
+      }
+      $self->{DEBUG} && print "writing a pnm file\n";
+    } elsif ( $input{type} eq 'raw' ) {
+      if ( !i_writeraw($self->{IMG},$IO) ) {
+	$self->{ERRSTR}='unable to write raw image';
+	return undef;
+      }
+      $self->{DEBUG} && print "writing a raw file\n";
     }
 
     if (exists $input{'data'}) {
@@ -727,31 +739,18 @@ sub write {
       $self->{DEBUG} && print "writing a gif file\n";
 
     } elsif ( $input{type} eq 'jpeg' ) {
-      $rc=i_writejpeg($self->{IMG},$fd,$input{jpegquality});
+      $rc = i_writejpeg($self->{IMG},$fd,$input{jpegquality});
       if ( !defined($rc) ) {
 	$self->{ERRSTR}='unable to write jpeg image'; return undef;
       }
       $self->{DEBUG} && print "writing a jpeg file\n";
-    } elsif ( $input{type} eq 'png' ) { 
+    } elsif ( $input{type} eq 'png' ) {
       $rc=i_writepng($self->{IMG},$fd);
       if ( !defined($rc) ) {
 	$self->{ERRSTR}='unable to write png image'; return undef;
       }
       $self->{DEBUG} && print "writing a png file\n";
-    } elsif ( $input{type} eq 'pnm' ) {
-      $rc=i_writeppm($self->{IMG},$fd);
-      if ( !defined($rc) ) {
-	$self->{ERRSTR}='unable to write pnm image'; return undef;
-      }
-      $self->{DEBUG} && print "writing a pnm file\n";
-    } elsif ( $input{type} eq 'raw' ) {
-      $rc=i_writeraw($self->{IMG},$fd);
-      if ( !defined($rc) ) {
-	$self->{ERRSTR}='unable to write raw image'; return undef;
-      }
-      $self->{DEBUG} && print "writing a raw file\n";
     }
-
   }
   return $self;
 }
