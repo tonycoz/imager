@@ -1742,42 +1742,77 @@ MODULE = Imager         PACKAGE = Imager
 
 
 undef_int
-i_tt_text(handle,im,xb,yb,cl,points,str,len,smooth)
+i_tt_text(handle,im,xb,yb,cl,points,str_sv,len_ignored,smooth,utf8)
   Imager::Font::TT     handle
     Imager::ImgRaw     im
 	       int     xb
 	       int     yb
      Imager::Color     cl
              float     points
-	      char*    str
-	       int     len
+	      SV *     str_sv
+	       int     len_ignored
 	       int     smooth
+               int     utf8
+             PREINIT:
+               char *str;
+               STRLEN len;
+             CODE:
+#ifdef SvUTF8
+               if (SvUTF8(str_sv))
+                 utf8 = 1;
+#endif
+               str = SvPV(str_sv, len);
+               RETVAL = i_tt_text(handle, im, xb, yb, cl, points, str, 
+                                  len, smooth, utf8);
+             OUTPUT:
+               RETVAL                
 
 
 undef_int
-i_tt_cp(handle,im,xb,yb,channel,points,str,len,smooth)
+i_tt_cp(handle,im,xb,yb,channel,points,str_sv,len_ignored,smooth,utf8)
   Imager::Font::TT     handle
     Imager::ImgRaw     im
 	       int     xb
 	       int     yb
 	       int     channel
              float     points
-	      char*    str
-	       int     len
+	      SV *     str_sv
+	       int     len_ignored
 	       int     smooth
-
+               int     utf8
+             PREINIT:
+               char *str;
+               STRLEN len;
+             CODE:
+#ifdef SvUTF8
+               if (SvUTF8(str_sv))
+                 utf8 = 1;
+#endif
+               str = SvPV(str_sv, len);
+               RETVAL = i_tt_cp(handle, im, xb, yb, channel, points, str, len,
+                                smooth, utf8);
+             OUTPUT:
+                RETVAL
 
 
 undef_int
-i_tt_bbox(handle,point,str,len)
+i_tt_bbox(handle,point,str_sv,len_ignored, utf8)
   Imager::Font::TT     handle
 	     float     point
-	      char*    str
-	       int     len
+	       SV*    str_sv
+	       int     len_ignored
+               int     utf8
 	     PREINIT:
 	       int     cords[6],rc;
+               char *  str;
+               STRLEN len;
 	     PPCODE:
-  	       if ((rc=i_tt_bbox(handle,point,str,len,cords))) {
+#ifdef SvUTF8
+               if (SvUTF8(ST(2)))
+                 utf8 = 1;
+#endif
+               str = SvPV(str_sv, len);
+  	       if ((rc=i_tt_bbox(handle,point,str,len,cords, utf8))) {
                  EXTEND(SP, 4);
                  PUSHs(sv_2mortal(newSViv(cords[0])));
                  PUSHs(sv_2mortal(newSViv(cords[1])));

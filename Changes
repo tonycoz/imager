@@ -649,6 +649,7 @@ Revision history for Perl extension Imager.
           and at least mention it in the docs beyond the examples
         - document the values for the read() and write() method type 
           parameter
+        - support UTF8 text with Freetype 1.x 
 
 =================================================================
 

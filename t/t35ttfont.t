@@ -5,26 +5,27 @@
 
 # Change 1..1 below to 1..last_test_to_print .
 # (It may become useful if the test is moved to ./t subdirectory.)
-
-BEGIN { $| = 1; print "1..3\n"; }
+use strict;
+my $loaded;
+BEGIN { $| = 1; print "1..23\n"; }
 END {print "not ok 1\n" unless $loaded;}
 use Imager qw(:all);
+require "t/testtools.pl";
 $loaded = 1;
-print "ok 1\n";
+
+okx(1, "Loaded");
 
 init_log("testout/t35ttfont.log",2);
 
-sub skip { 
-  print "ok 2 # skip\n";
-  print "ok 3 # skip\n";
+unless (i_has_format("tt")) { 
+  skipx(22, "freetype 1.x unavailable or disabled");
   malloc_state();
-  exit(0);
+  exit;
 }
-
-if (!(i_has_format("tt")) ) { skip(); } 
 print "# has tt\n";
 
-$fontname=$ENV{'TTFONTTEST'}||'./fontfiles/dodge.ttf';
+my $deffont = './fontfiles/dodge.ttf';
+my $fontname=$ENV{'TTFONTTEST'} || $deffont;
 
 if (! -f $fontname) {
   print "# cannot find fontfile for truetype test $fontname\n";
@@ -34,48 +35,96 @@ if (! -f $fontname) {
 i_init_fonts();
 #     i_tt_set_aa(1);
 
-$bgcolor = i_color_new(255,0,0,0);
-$overlay = Imager::ImgRaw::new(200,70,3);
+my $bgcolor = i_color_new(255,0,0,0);
+my $overlay = Imager::ImgRaw::new(200,70,3);
 
-$ttraw = Imager::i_tt_new($fontname);
+my $ttraw = Imager::i_tt_new($fontname);
+okx($ttraw, "create font");
 
 #use Data::Dumper;
 #warn Dumper($ttraw);
 
-@bbox = i_tt_bbox($ttraw,50.0,'XMCLH',5);
+my @bbox = i_tt_bbox($ttraw,50.0,'XMCLH',5,0);
+okx(@bbox == 6, "bounding box");
 print "#bbox: ($bbox[0], $bbox[1]) - ($bbox[2], $bbox[3])\n";
 
-i_tt_cp($ttraw,$overlay,5,50,1,50.0,'XMCLH',5,1);
+okx(i_tt_cp($ttraw,$overlay,5,50,1,50.0,'XMCLH',5,1,0), "cp output");
 i_draw($overlay,0,50,100,50,$bgcolor);
 
 open(FH,">testout/t35ttfont.ppm") || die "cannot open testout/t35ttfont.ppm\n";
 binmode(FH);
-$IO = Imager::io_new_fd( fileno(FH) );
-i_writeppm_wiol($overlay, $IO);
+my $IO = Imager::io_new_fd( fileno(FH) );
+okx(i_writeppm_wiol($overlay, $IO), "save t35ttfont.ppm");
 close(FH);
 
-print "ok 2\n";
-
 $bgcolor=i_color_set($bgcolor,200,200,200,0);
-$backgr=Imager::ImgRaw::new(500,300,3);
+my $backgr=Imager::ImgRaw::new(500,300,3);
 
 #     i_tt_set_aa(2);
 
-i_tt_text($ttraw,$backgr,100,120,$bgcolor,50.0,'test',4,1);
+okx(i_tt_text($ttraw,$backgr,100,120,$bgcolor,50.0,'test',4,1,0),
+   "normal output");
 
 my $ugly = Imager::i_tt_new("./fontfiles/ImUgly.ttf");
-i_tt_text($ugly, $backgr,100, 80, $bgcolor, 14, 'g%g', 3, 1);
-i_tt_text($ugly, $backgr,150, 80, $bgcolor, 14, 'delta', 5, 1);
+okx($ugly, "create ugly font");
+# older versions were dropping the bottom of g and the right of a
+okx(i_tt_text($ugly, $backgr,100, 80, $bgcolor, 14, 'g%g', 3, 1, 0), 
+    "draw g%g");
+okx(i_tt_text($ugly, $backgr,150, 80, $bgcolor, 14, 'delta', 5, 1, 0),
+   "draw delta");
 i_draw($backgr,0,20,499,20,i_color_new(0,127,0,0));
-i_tt_text($ttraw, $backgr, 20, 20, $bgcolor, 14, 'abcdefghijklmnopqrstuvwxyz{|}', 29, 1);
-i_tt_text($ttraw, $backgr, 20, 50, $bgcolor, 14, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 26, 1);
+okx(i_tt_text($ttraw, $backgr, 20, 20, $bgcolor, 14, 'abcdefghijklmnopqrstuvwxyz{|}', 29, 1, 0), "alphabet");
+okx(i_tt_text($ttraw, $backgr, 20, 50, $bgcolor, 14, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 26, 1, 0), "ALPHABET");
 
+# UTF8 tests
+# for perl < 5.6 we can hand-encode text
+# the following is "A\x{2010}A"
+# 
+my $text = pack("C*", 0x41, 0xE2, 0x80, 0x90, 0x41);
+my $alttext = "A-A";
+
+my @utf8box = i_tt_bbox($ttraw, 50.0, $text, length($text), 1);
+okx(@utf8box == 6, "utf8 bbox element count");
+my @base = i_tt_bbox($ttraw, 50.0, $alttext, length($alttext), 0);
+okx(@base == 6, "alt bbox element count");
+my $maxdiff = $fontname eq $deffont ? 0 : $base[2] / 3;
+print "# (@utf8box vs @base)\n";
+okx(abs($utf8box[2] - $base[2]) <= $maxdiff, 
+    "compare box sizes $utf8box[2] vs $base[2] (maxerror $maxdiff)");
+
+# hand-encoded UTF8 drawing
+okx(i_tt_text($ttraw, $backgr, 200, 80, $bgcolor, 14, $text, length($text), 1, 1), "draw hand-encoded UTF8");
+
+okx(i_tt_cp($ttraw, $backgr, 250, 80, 1, 14, $text, length($text), 1, 1), 
+    "cp hand-encoded UTF8");
+
+# ok, try native perl UTF8 if available
+if ($] >= 5.006) {
+  my $text;
+  # we need to do this in eval to prevent compile time errors in older
+  # versions
+  eval q{$text = "A\x{2010}A"}; # A, HYPHEN, A in our test font
+  #$text = "A".chr(0x2010)."A"; # this one works too
+  okx(i_tt_text($ttraw, $backgr, 300, 80, $bgcolor, 14, $text, 0, 1, 0),
+      "draw UTF8");
+  okx(i_tt_cp($ttraw, $backgr, 350, 80, 0, 14, $text, 0, 1, 0),
+      "cp UTF8");
+  @utf8box = i_tt_bbox($ttraw, 50.0, $text, length($text), 0);
+  okx(@utf8box == 6, "native utf8 bbox element count");
+  okx(abs($utf8box[2] - $base[2]) <= $maxdiff, 
+    "compare box sizes native $utf8box[2] vs $base[2] (maxerror $maxdiff)");
+  eval q{$text = "A\x{0905}\x{0906}\x{0103}A"}; # Devanagari
+  okx(i_tt_text($ugly, $backgr, 100, 160, $bgcolor, 36, $text, 0, 1, 0),
+      "more complex output");
+}
+else {
+  skipx(5, "perl too old to test native UTF8 support");
+}
 
 open(FH,">testout/t35ttfont2.ppm") || die "cannot open testout/t35ttfont.ppm\n";
 binmode(FH);
 $IO = Imager::io_new_fd( fileno(FH) );
-i_writeppm_wiol($backgr, $IO);
+okx(i_writeppm_wiol($backgr, $IO), "save t35ttfont2.ppm");
 close(FH);
 
-print "ok 3\n";
-
+okx(1, "end of code");

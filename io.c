@@ -309,3 +309,81 @@ i_max(int a,int b) {
   if (a>b) return a; else return b;
 }
 
+
+struct utf8_size {
+  int mask, expect;
+  int size;
+};
+
+struct utf8_size utf8_sizes[] =
+{
+  { 0x80, 0x00, 1 },
+  { 0xE0, 0xC0, 2 },
+  { 0xF0, 0xE0, 3 },
+  { 0xF8, 0xF0, 4 },
+};
+
+/*
+=item utf8_advance(char **p, int *len)
+
+Retreive a UTF8 character from the stream.
+
+Modifies *p and *len to indicate the consumed characters.
+
+This doesn't support the extended UTF8 encoding used by later versions
+of Perl.
+
+=cut
+*/
+
+unsigned long i_utf8_advance(char const **p, int *len) {
+  unsigned char c;
+  int i, ci, clen = 0;
+  unsigned char codes[3];
+  if (*len == 0)
+    return ~0UL;
+  c = *(*p)++; --*len;
+
+  for (i = 0; i < sizeof(utf8_sizes)/sizeof(*utf8_sizes); ++i) {
+    if ((c & utf8_sizes[i].mask) == utf8_sizes[i].expect) {
+      clen = utf8_sizes[i].size;
+    }
+  }
+  if (clen == 0 || *len < clen-1) {
+    --*p; ++*len;
+    return ~0UL;
+  }
+
+  /* check that each character is well formed */
+  i = 1;
+  ci = 0;
+  while (i < clen) {
+    if (((*p)[ci] & 0xC0) != 0x80) {
+      --*p; ++*len;
+      return ~0UL;
+    }
+    codes[ci] = (*p)[ci];
+    ++ci; ++i;
+  }
+  *p += clen-1; *len -= clen-1;
+  if (c & 0x80) {
+    if ((c & 0xE0) == 0xC0) {
+      return ((c & 0x1F) << 6) + (codes[0] & 0x3F);
+    }
+    else if ((c & 0xF0) == 0xE0) {
+      return ((c & 0x0F) << 12) | ((codes[0] & 0x3F) << 6) | (codes[1] & 0x3f);
+    }
+    else if ((c & 0xF8) == 0xF0) {
+      return ((c & 0x07) << 18) | ((codes[0] & 0x3F) << 12) 
+              | ((codes[1] & 0x3F) << 6) | (codes[2] & 0x3F);
+    }
+    else {
+      *p -= clen; *len += clen;
+      return ~0UL;
+    }
+  }
+  else {
+    return c;
+  }
+}
+

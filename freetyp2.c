@@ -40,7 +40,6 @@ Truetype, Type1 and Windows FNT.
 #include FT_FREETYPE_H
 
 static void ft2_push_message(int code);
-static unsigned long utf8_advance(char **p, int *len);
 
 static FT_Library library;
 
@@ -286,7 +285,7 @@ Returns non-zero on success.
 */
 int
 i_ft2_bbox(FT2_Fonthandle *handle, double cheight, double cwidth, 
-           char *text, int len, int *bbox, int utf8) {
+           char const *text, int len, int *bbox, int utf8) {
   FT_Error error;
   int width;
   int index;
@@ -311,7 +310,7 @@ i_ft2_bbox(FT2_Fonthandle *handle, double cheight, double cwidth,
   while (len) {
     unsigned long c;
     if (utf8) {
-      c = utf8_advance(&text, &len);
+      c = i_utf8_advance(&text, &len);
       if (c == ~0UL) {
         i_push_error(0, "invalid UTF8 character");
         return 0;
@@ -443,7 +442,7 @@ Returns non-zero on success.
 */
 int
 i_ft2_bbox_r(FT2_Fonthandle *handle, double cheight, double cwidth, 
-           char *text, int len, int vlayout, int utf8, int *bbox) {
+           char const *text, int len, int vlayout, int utf8, int *bbox) {
   FT_Error error;
   int width;
   int index;
@@ -475,7 +474,7 @@ i_ft2_bbox_r(FT2_Fonthandle *handle, double cheight, double cwidth,
   while (len) {
     unsigned long c;
     if (utf8) {
-      c = utf8_advance(&text, &len);
+      c = i_utf8_advance(&text, &len);
       if (c == ~0UL) {
         i_push_error(0, "invalid UTF8 character");
         return 0;
@@ -592,7 +591,7 @@ Returns non-zero on success.
 */
 int
 i_ft2_text(FT2_Fonthandle *handle, i_img *im, int tx, int ty, i_color *cl,
-           double cheight, double cwidth, char *text, int len, int align,
+           double cheight, double cwidth, char const *text, int len, int align,
            int aa, int vlayout, int utf8) {
   FT_Error error;
   int index;
@@ -633,7 +632,7 @@ i_ft2_text(FT2_Fonthandle *handle, i_img *im, int tx, int ty, i_color *cl,
   while (len) {
     unsigned long c;
     if (utf8) {
-      c = utf8_advance(&text, &len);
+      c = i_utf8_advance(&text, &len);
       if (c == ~0UL) {
         i_push_error(0, "invalid UTF8 character");
         return 0;
@@ -733,7 +732,7 @@ Returns non-zero on success.
 */
 
 i_ft2_cp(FT2_Fonthandle *handle, i_img *im, int tx, int ty, int channel,
-         double cheight, double cwidth, char *text, int len, int align,
+         double cheight, double cwidth, char const *text, int len, int align,
          int aa, int vlayout, int utf8) {
   int bbox[8];
   i_img *work;
@@ -785,8 +784,8 @@ Returns the number of characters that were checked.
 
 =cut
 */
-int i_ft2_has_chars(FT2_Fonthandle *handle, char *text, int len, int utf8, 
-                       char *out) {
+int i_ft2_has_chars(FT2_Fonthandle *handle, char const *text, int len, 
+                    int utf8, char *out) {
   int count = 0;
   mm_log((1, "i_ft2_check_chars(handle %p, text %p, len %d, utf8 %d)\n", 
 	  handle, text, len, utf8));
@@ -795,7 +794,7 @@ int i_ft2_has_chars(FT2_Fonthandle *handle, char *text, int len, int utf8,
     unsigned long c;
     int index;
     if (utf8) {
-      c = utf8_advance(&text, &len);
+      c = i_utf8_advance(&text, &len);
       if (c == ~0UL) {
         i_push_error(0, "invalid UTF8 character");
         return 0;
@@ -877,83 +876,6 @@ make_bmp_map(FT_Bitmap *bitmap, unsigned char *map) {
     map[i] = i * 255 / (bitmap->num_grays - 1);
 
   return 1;
-}
-
-struct utf8_size {
-  int mask, expect;
-  int size;
-};
-
-struct utf8_size utf8_sizes[] =
-{
-  { 0x80, 0x00, 1 },
-  { 0xE0, 0xC0, 2 },
-  { 0xF0, 0xE0, 3 },
-  { 0xF8, 0xF0, 4 },
-};
-
-/*
-=item utf8_advance(char **p, int *len)
-
-Retreive a UTF8 character from the stream.
-
-Modifies *p and *len to indicate the consumed characters.
-
-This doesn't support the extended UTF8 encoding used by later versions
-of Perl.
-
-=cut
-*/
-
-unsigned long utf8_advance(char **p, int *len) {
-  unsigned char c;
-  int i, ci, clen = 0;
-  unsigned char codes[3];
-  if (*len == 0)
-    return ~0UL;
-  c = *(*p)++; --*len;
-
-  for (i = 0; i < sizeof(utf8_sizes)/sizeof(*utf8_sizes); ++i) {
-    if ((c & utf8_sizes[i].mask) == utf8_sizes[i].expect) {
-      clen = utf8_sizes[i].size;
-    }
-  }
-  if (clen == 0 || *len < clen-1) {
-    --*p; ++*len;
-    return ~0UL;
-  }
-
-  /* check that each character is well formed */
-  i = 1;
-  ci = 0;
-  while (i < clen) {
-    if (((*p)[ci] & 0xC0) != 0x80) {
-      --*p; ++*len;
-      return ~0UL;
-    }
-    codes[ci] = (*p)[ci];
-    ++ci; ++i;
-  }
-  *p += clen-1; *len -= clen-1;
-  if (c & 0x80) {
-    if ((c & 0xE0) == 0xC0) {
-      return ((c & 0x1F) << 6) + (codes[0] & 0x3F);
-    }
-    else if ((c & 0xF0) == 0xE0) {
-      return ((c & 0x0F) << 12) | ((codes[0] & 0x3F) << 6) | (codes[1] & 0x3f);
-    }
-    else if ((c & 0xF8) == 0xF0) {
-      return ((c & 0x07) << 18) | ((codes[0] & 0x3F) << 12) 
-              | ((codes[1] & 0x3F) << 6) | (codes[2] & 0x3F);
-    }
-    else {
-      *p -= clen; *len += clen;
-      return ~0UL;
-    }
-  }
-  else {
-    return c;
-  }
 }
 
 /*

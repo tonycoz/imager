@@ -256,39 +256,16 @@ void      close_t1( void );
 
 #ifdef HAVE_LIBTT
 
-#include <freetype.h>
-#define TT_CHC 5
-
-struct TT_Instancehandle_ {
-  TT_Instance instance;
-  TT_Instance_Metrics imetrics;
-  TT_Glyph_Metrics gmetrics[256];
-  TT_Glyph glyphs[256];
-  int smooth;
-  int ptsize;
-  int order;
-};
-
-typedef struct TT_Instancehandle_ TT_Instancehandle;
-
-struct TT_Fonthandle_ {
-  TT_Face face;
-  TT_Face_Properties properties;
-  TT_Instancehandle instanceh[TT_CHC];
-  TT_CharMap char_map;
-};
+struct TT_Fonthandle_;
 
 typedef struct TT_Fonthandle_ TT_Fonthandle;
-
-
 
 undef_int i_init_tt( void );
 TT_Fonthandle* i_tt_new(char *fontname);
 void i_tt_destroy( TT_Fonthandle *handle );
-undef_int i_tt_cp( TT_Fonthandle *handle,i_img *im,int xb,int yb,int channel,float points,char* txt,int len,int smooth);
-undef_int i_tt_text( TT_Fonthandle *handle, i_img *im, int xb, int yb, i_color *cl, float points, char* txt, int len, int smooth);
-undef_int i_tt_bbox( TT_Fonthandle *handle, float points,char *txt,int len,int cords[6]);
-
+undef_int i_tt_cp( TT_Fonthandle *handle,i_img *im,int xb,int yb,int channel,float points,char const* txt,int len,int smooth, int utf8);
+undef_int i_tt_text( TT_Fonthandle *handle, i_img *im, int xb, int yb, i_color *cl, float points, char const* txt, int len, int smooth, int utf8);
+undef_int i_tt_bbox( TT_Fonthandle *handle, float points,char *txt,int len,int cords[6], int utf8);
 
 #endif  /* End of freetype headers */
 
@@ -303,16 +280,16 @@ extern int i_ft2_getdpi(FT2_Fonthandle *handle, int *xdpi, int *ydpi);
 extern int i_ft2_settransform(FT2_Fonthandle *handle, double *matrix);
 extern int i_ft2_sethinting(FT2_Fonthandle *handle, int hinting);
 extern int i_ft2_bbox(FT2_Fonthandle *handle, double cheight, double cwidth, 
-                      char *text, int len, int *bbox, int utf8);
+                      char const *text, int len, int *bbox, int utf8);
 extern int i_ft2_text(FT2_Fonthandle *handle, i_img *im, int tx, int ty, 
                       i_color *cl, double cheight, double cwidth, 
-                      char *text, int len, int align, int aa, int vlayout,
-                      int utf8);
+                      char const *text, int len, int align, int aa, 
+                      int vlayout, int utf8);
 extern int i_ft2_cp(FT2_Fonthandle *handle, i_img *im, int tx, int ty, 
                     int channel, double cheight, double cwidth, 
-                    char *text, int len, int align, int aa, int vlayout, 
+                    char const *text, int len, int align, int aa, int vlayout, 
                     int utf8);
-extern int i_ft2_has_chars(FT2_Fonthandle *handle, char *text, int len,
+extern int i_ft2_has_chars(FT2_Fonthandle *handle, char const *text, int len,
                            int utf8, char *work);
 
 #endif
