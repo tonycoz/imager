@@ -631,6 +631,10 @@ Revision history for Perl extension Imager.
         - Fix runaway cache problem for freetype1 font cache.
         - Added version logging when log is started.
 
+0.40
+        - difference() wasn't setting an alpha channel when the input
+          image didn't have one
+
 =================================================================
 
         For latest versions check the Imager-devel pages:
