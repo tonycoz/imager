@@ -619,6 +619,12 @@ Revision history for Perl extension Imager.
           all but the first test that fails with the broken giflib
         - i_box_cfill() went into an infinite loop on fountain fills
           or fills on images with more than 8-bits/sample
+        - hide more of our Darwin dlload emulation to prevent runtime
+          symbol conflicts
+        - use INT2PTR() and PTR2IV() macros instead of direct casts to
+          prevent pointer vs int size warnings on 64-bit builds of perl.
+        - add our own INT2PTR and PTR2IV definitions when perl doesn't
+          supply them
 
 =================================================================
 

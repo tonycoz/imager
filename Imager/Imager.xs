@@ -26,6 +26,10 @@ from IV to pointer types */
 #define INT2PTR(type,value) (type)(value)
 #endif
 
+#ifndef PTR2IV
+#define PTR2IV(p) INT2PTR(IV,p)
+#endif
+
 #ifdef HAVE_LIBTT
 typedef TT_Fonthandle* Imager__Font__TT;
 #endif
@@ -2582,7 +2586,7 @@ i_transform2(width,height,ops,n_regs,c_regs,in_imgs)
 		   croak("Parameter 5 must contain only images");
 	         }
                  tmp = SvIV((SV*)SvRV(sv1));
-	         in_imgs[i] = (i_img*)tmp;
+	         in_imgs[i] = INT2PTR(i_img*, tmp);
 	       }
 	     }
              else {
@@ -2924,11 +2928,11 @@ DSO_open(filename)
                if (rc!=NULL) {
                  if (evstr!=NULL) {
                    EXTEND(SP,2); 
-                   PUSHs(sv_2mortal(newSViv((IV)rc)));
+                   PUSHs(sv_2mortal(newSViv(PTR2IV(rc))));
                    PUSHs(sv_2mortal(newSVpvn(evstr, strlen(evstr))));
                  } else {
                    EXTEND(SP,1);
-                   PUSHs(sv_2mortal(newSViv((IV)rc)));
+                   PUSHs(sv_2mortal(newSViv(PTR2IV(rc))));
                  }
                }
 
