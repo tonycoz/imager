@@ -35,33 +35,21 @@ maps im inplace into another image.
 */
 
 void
-i_map(i_img *im, int mapcount, unsigned char (*maps)[256], unsigned int *chmasks) {
+i_map(i_img *im, unsigned char (*maps)[256], unsigned int mask) {
   i_color *vals;
   int x, y;
   int mapno, i, ch;
-  unsigned int mask = 0;
-  unsigned char (**cmaps)[256];
   int minset = -1, maxset;
 
-  mm_log((1,"i_map(im %p, mapcount %d, maps %p, chmasks %p)\n", im, mapcount, maps, chmasks));
+  mm_log((1,"i_map(im %p, maps %p, chmask %ud)\n", im, maps, mask));
 
-
-  for(mapno=0; mapno<mapcount; mapno++) mask |=chmasks[mapno];
   if (!mask) return; /* nothing to do here */
-
-
 
   for(i=0; i<im->channels; i++)
     if (mask & (1<<i)) {
       if (minset == -1) minset = i;
       maxset = i;
     }
-
-  cmaps = mymalloc(sizeof(unsigned char (*)[256])*im->channels);
-  memset(cmaps, 0, sizeof(unsigned char (*)[256])*im->channels);
-  for(mapno=0; mapno<mapcount; mapno++)
-    for(ch=0; ch<im->channels; ch++) 
-      if (chmasks[i] & (1<<ch)) cmaps[ch] = &maps[mapno];
   
   vals = mymalloc(sizeof(i_color) * im->xsize);
   for (y = 0; y < im->ysize; ++y) {
@@ -69,13 +57,12 @@ i_map(i_img *im, int mapcount, unsigned char (*maps)[256], unsigned int *chmasks
     for (x = 0; x < im->xsize; ++x) {
       int lidx = x * im->channels;
       for(ch = minset; ch<=maxset; ch++) {
-	if (!cmaps[ch]) continue;
-	vals[lidx].channel[ch] = (*cmaps[ch])[vals[lidx].channel[ch]];
+	if (!maps[ch]) continue;
+	vals[lidx].channel[ch] = maps[ch][vals[lidx].channel[ch]];
       }
     }
     i_plin(im, 0, im->xsize, y, vals);
   }
-  myfree(cmaps);
   myfree(vals);
 }
 
