@@ -116,6 +116,7 @@ needs for specific features.  The libraries it uses are:
 
   png: ftp://ftp.uu.net/graphics/png  
   you also need zlib to use png:  ftp://ftp.uu.net/pub/archiving/zip/zlib
+  We have encountered problems with libpng 1.0.1, which were fixed in 1.0.5
 
   gif: http://www.arrakeen.demon.co.uk/giflib/  
 or at: http://prtr-13.ucsc.edu/~badger/software/libungif/index.shtml
