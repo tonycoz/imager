@@ -142,6 +142,10 @@ i_readbmp_wiol(io_glue *ig) {
   case 16:
     im = read_direct_bmp(ig, xsize, ysize, bit_count, clr_used, compression);
     break;
+
+  default:
+    i_push_errorf(0, "unknown bit count for BMP file (%d)", bit_count);
+    return NULL;
   }
 
   /* store the resolution */

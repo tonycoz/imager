@@ -4,7 +4,7 @@ Imager.xs
 MANIFEST
 README
 Makefile.PL
-bmp.c
+bmp.c           Reading and writing Windows BMP files
 color.c         Color translation and handling
 conv.c
 convert.c
@@ -55,6 +55,7 @@ lib/Imager/Color.pm
 lib/Imager/Color/Float.pm
 lib/Imager/Expr.pm
 lib/Imager/Expr/Assem.pm
+lib/Imager/Fill.pm
 lib/Imager/Font.pm
 lib/Imager/Font/Type1.pm
 lib/Imager/Font/Truetype.pm
@@ -78,6 +79,7 @@ t/t105gif.t
 t/t106tiff.t
 t/t107bmp.t
 t/t15color.t
+t/t20fill.t             Tests fills
 t/t30t1font.t
 t/t35ttfont.t
 t/t36oofont.t
@@ -94,6 +96,8 @@ t/t60dyntest.t
 t/t61filters.t
 t/t65crop.t
 t/t66paste.t
+t/t67convert.t
+t/t68map.t
 t/t69rubthru.t
 t/t70newgif.t
 t/t75polyaa.t

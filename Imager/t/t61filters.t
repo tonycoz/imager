@@ -73,9 +73,9 @@ test($imbase, 31, { type=>'fountain', xa=>20, ya=>130, xb=>130, yb=>20,
 my $f3 = Imager::Fountain->read(gimp=>'testimg/gimpgrad') 
   or print "not ";
 print "ok 33\n";
-test($imbase, 34, { type=>'fountain', xa=>75, ya=>75, xb=>90, yb=>10,
+test($imbase, 34, { type=>'fountain', xa=>75, ya=>75, xb=>90, yb=>15,
                     segments=>$f3, super_sample=>'grid',
-                    ftype=>'radial_square', combine=>1 },
+                    ftype=>'radial_square', combine=>'color' },
      'testout/t61_fount_gimp.ppm');
 
 sub test {

@@ -1,13 +1,15 @@
 #!perl -w
 use strict;
 
+print "1..34\n";
+
 use Imager ':handy';
 use Imager::Fill;
 use Imager::Color::Float;
 
-Imager::init_log("testout/t20fill.log", 1);
+sub ok ($$$);
 
-print "1..21\n";
+Imager::init_log("testout/t20fill.log", 1);
 
 my $blue = NC(0,0,255);
 my $red = NC(255, 0, 0);
@@ -72,7 +74,7 @@ ok(12, !$diff, "custom hatch mismatch");
 my $im1 = Imager->new(xsize=>100, ysize=>100);
 my $im2 = Imager->new(xsize=>100, ysize=>100);
 
-my $solid = Imager::Fill->new(solid=>$red);
+my $solid = Imager::Fill->new(solid=>'#FF0000');
 ok(13, $solid, "creating oo solid fill");
 ok(14, $solid->{fill}, "bad oo solid fill");
 $im1->box(fill=>$solid);
@@ -108,8 +110,8 @@ $im->box(xmin=>10, ymin=>10, xmax=>190, ymax=>190,
 $im->arc(r=>80, d1=>45, d2=>75, 
            fill=>{ hatch=>'stipple2',
                    combine=>1,
-                   fg=>NC(0, 0, 0, 255),
-                   bg=>NC(255,255,255,192) });
+                   fg=>[ 0, 0, 0, 255 ],
+                   bg=>{ rgba=>[255,255,255,160] } });
 $im->arc(r=>80, d1=>75, d2=>135,
          fill=>{ fountain=>'radial', xa=>100, ya=>100, xb=>20, yb=>100 });
 $im->write(file=>'testout/t20_sample.ppm');
@@ -149,7 +151,51 @@ $ffim->flood_fill(x=>50, 'y'=>50,
 #                        });
 $ffim->write(file=>'testout/t20_ooflood.ppm');
 
-sub ok {
+# test combining modes
+my $fill = NC(192, 128, 128, 128);
+my $target = NC(64, 32, 64);
+my %comb_tests =
+  (
+   none=>{ result=>$fill },
+   normal=>{ result=>NC(128, 80, 96) },
+   multiply => { result=>NC(56, 24, 48) },
+   dissolve => { result=>[ $target, NC(128, 80, 96) ] },
+   add => { result=>NC(159, 96, 128) },
+   subtract => { result=>NC(31, 15, 31) }, # 31.87, 15.9, 31.87
+   diff => { result=>NC(96, 64, 64) },
+   lighten => { result=>NC(128, 80, 96) },
+   darken => { result=>$target },
+   # the following results are based on the results of the tests and
+   # are suspect for that reason (and were broken at one point <sigh>)
+   # but trying to work them out manually just makes my head hurt - TC
+   hue => { result=>NC(64, 32, 55) },
+   saturation => { result=>NC(63, 37, 64) },
+   value => { result=>NC(127, 64, 128) },
+   color => { result=>NC(64, 37, 52) },
+  );
+
+my $testnum = 22; # from 22 to 34
+for my $comb (Imager::Fill->combines) {
+  my $test = $comb_tests{$comb};
+  my $targim = Imager->new(xsize=>1, ysize=>1);
+  $targim->box(filled=>1, color=>$target);
+  my $fillobj = Imager::Fill->new(solid=>$fill, combine=>$comb);
+  $targim->box(fill=>$fillobj);
+  my $c = Imager::i_get_pixel($targim->{IMG}, 0, 0);
+  if ($test->{result} =~ /ARRAY/) {
+    ok($testnum++, scalar grep(color_close($_, $c), @{$test->{result}}), 
+       "combine '$comb'")
+      or print "# got:",join(",", $c->rgba),"  allowed: ", 
+        join("|", map { join(",", $_->rgba) } @{$test->{result}}),"\n";
+  }
+  else {
+    ok($testnum++, color_close($c, $test->{result}), "combine '$comb'")
+      or print "# got: ",join(",", $c->rgba),
+        "  allowed: ",join(",", $test->{result}->rgba),"\n";
+  }
+}
+
+sub ok ($$$) {
   my ($num, $test, $desc) = @_;
 
   if ($test) {
@@ -158,6 +204,21 @@ sub ok {
   else {
     print "not ok $num # $desc\n";
   }
+  $test;
+}
+
+sub color_close {
+  my ($c1, $c2) = @_;
+
+  my @c1 = $c1->rgba;
+  my @c2 = $c2->rgba;
+
+  for my $i (0..2) {
+    if (abs($c1[$i]-$c2[$i]) > 2) {
+      return 0;
+    }
+  }
+  return 1;
 }
 
 # for use during testing

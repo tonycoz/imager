@@ -39,4 +39,6 @@ extern int i_setcolors_forward(i_img *im, int index, i_color *colors,
 #define Sample16To8(num) ((num) / 257)
 #define Sample8To16(num) ((num) * 257)
 
+extern void i_get_combine(int combine, i_fill_combine_f *, i_fill_combinef_f *);
+
 #endif
