@@ -42,6 +42,7 @@ typedef off_t  (*seekp) (struct _io_glue *ig, off_t offset, int whence);
 typedef void   (*closep)(struct _io_glue *ig);
 typedef ssize_t(*sizep) (struct _io_glue *ig);
 
+typedef void   (*closebufp)(void *p);
 
 
 /* Callbacks we get */
@@ -91,6 +92,12 @@ typedef struct {
   off_t gpos;			/* Global position in stream */
 } io_ex_bchain;
 
+typedef struct {
+  off_t offset;			/* Offset of the source - not used */
+  off_t cpos;			/* Offset within the current */
+} io_ex_buffer;
+
+
 
 /* Structures to describe data sources */
 
@@ -102,8 +109,10 @@ typedef struct {
 typedef struct {
   io_type	type;		/* Must be first parameter */
   char		*name;		/* Data source name */
-  char		*c;
+  char		*data;
   size_t	len;
+  closebufp     closecb;        /* free memory mapped segment or decrement refcount */
+  void          *closedata;
 } io_buffer;
 
 typedef struct {
@@ -133,7 +142,7 @@ typedef struct _io_glue {
   sizep		sizecb;
 } io_glue;
 
-void io_obj_setp_buffer  (io_obj *io, void *p, size_t len);
+void io_obj_setp_buffer(io_obj *io, char *p, size_t len, closebufp closecb, void *closedata);
 void io_obj_setp_cb      (io_obj *io, void *p, readl readcb, writel writecb, seekl seekcb);
 void io_glue_commit_types(io_glue *ig);
 void io_glue_gettypes    (io_glue *ig, int reqmeth);
@@ -142,6 +151,7 @@ void io_glue_gettypes    (io_glue *ig, int reqmeth);
 /* XS functions */
 io_glue *io_new_fd(int fd);
 io_glue *io_new_bufchain(void);
+io_glue *io_new_buffer(char *data, size_t len, closebufp closecb, void *closedata);
 size_t   io_slurp(io_glue *ig, unsigned char **c);
 void io_glue_DESTROY(io_glue *ig);
 

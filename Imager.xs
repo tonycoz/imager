@@ -28,6 +28,11 @@ typedef TT_Fonthandle* Imager__TTHandle;
 typedef FT2_Fonthandle* Imager__Font__FT2;
 #endif
 
+
+void my_SvREFCNT_dec(void *p) {
+  SvREFCNT_dec((SV*)p);
+}
+
 typedef struct i_reader_data_tag
 {
   /* presumably a CODE ref or name of a sub */
@@ -674,17 +679,29 @@ Imager::IO
 io_new_bufchain()
 
 
+Imager::IO
+io_new_buffer(data)
+	  char   *data
+	PREINIT:
+	  size_t length;
+	  SV* sv;
+	CODE:
+	  SvPV(ST(0), length);
+          SvREFCNT_inc(ST(0));
+	  RETVAL = io_new_buffer(data, length, my_SvREFCNT_dec, ST(0));
+        OUTPUT:
+          RETVAL
+	
+
 void
 io_slurp(ig)
         Imager::IO     ig
 	     PREINIT:
 	      unsigned char*    data;
-	     size_t    tlength;
-                SV*    r;
+	      size_t    tlength;
 	     PPCODE:
  	      data    = NULL;
               tlength = io_slurp(ig, &data);
-              r = sv_newmortal();
               EXTEND(SP,1);
               PUSHs(sv_2mortal(newSVpv(data,tlength)));
               myfree(data);
@@ -2589,8 +2606,9 @@ i_gsamp(im, l, r, y, ...)
           chans = mymalloc(sizeof(int) * chan_count);
           for (i = 0; i < chan_count; ++i)
             chans[i] = SvIV(ST(i+4));
-          data = mymalloc(sizeof(i_sample_t) * (r-l) * chan_count);
+          data = mymalloc(sizeof(i_sample_t) * (r-l) * chan_count); /* XXX: memleak? */
           count = i_gsamp(im, l, r, y, data, chans, chan_count);
+	  myfree(chans);
           if (GIMME_V == G_ARRAY) {
             EXTEND(SP, count);
             for (i = 0; i < count; ++i)
