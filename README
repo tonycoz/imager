@@ -71,7 +71,7 @@ If either fails do take a peek at the file errep.perl.  It's creates a
 file report.txt.  This is some information which will help me discover
 where the problem is so I can try to fix it in future releases.  If
 you find running it ok (just remember - no warranty!) please send the
-report.txt via email to addi@umich.edu .
+report.txt via email to imager@imager.perl.org.
 
 Troubleshooting tips:
 
@@ -257,7 +257,7 @@ need to select libungif-4.1.2-1 manually in the setup.exe installation
 tool.
 
 If you have any problems with the Win32 support, please email
-tony@develop-help.com (don't forget to use nmake instead of make).
+imager@imager.perl.org (don't forget to use nmake instead of make).
 
 =======================
 6. General information
@@ -273,6 +273,13 @@ have to use the source. The test scripts might also be a good idea.
 By activating the the #init_log lines in the test script you can get
 rather verbose debugging output from the C code.
 
+You can report bugs either by sending email to:
+
+  bug-Imager@rt.cpan.org
+
+or by pointing your browser at:
+
+  https://rt.cpan.org/NoAuth/ReportBug.html?Queue=Imager
 
 ========================
 7. Thanks
