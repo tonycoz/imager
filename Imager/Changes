@@ -1014,6 +1014,12 @@ Revision history for Perl extension Imager.
   freetype 2.x to return a larger than expected text width.
   http://rt.cpan.org/NoAuth/Bug.html?id=11291
 - add scaleX/scaleY to the method index and gives them some examples
+  http://rt.cpan.org/NoAuth/Bug.html?id=11328
+- call read() instead of open() in the example code in Imager.pm,
+  and mention that open() is an alias for read().
+  http://rt.cpan.org/NoAuth/Bug.html?id=11431
+- added reference list of crop() parameters.
+  http://rt.cpan.org/NoAuth/Bug.html?id=11430
 
 =================================================================
 
