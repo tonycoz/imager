@@ -379,21 +379,27 @@ sub crop {
 				@hsh{qw(left right bottom top)});
   $l=0 if not defined $l;
   $t=0 if not defined $t;
+
+  $r||=$l+delete $hsh{'width'}    if defined $l and exists $hsh{'width'};
+  $b||=$t+delete $hsh{'height'}   if defined $t and exists $hsh{'height'};
+  $l||=$r-delete $hsh{'width'}    if defined $r and exists $hsh{'width'};
+  $t||=$b-delete $hsh{'height'}   if defined $b and exists $hsh{'height'};
+
   $r=$self->getwidth if not defined $r;
   $b=$self->getheight if not defined $b;
 
   ($l,$r)=($r,$l) if $l>$r;
   ($t,$b)=($b,$t) if $t>$b;
 
-  if ($hsh{'width'}) { 
-    $l=int(0.5+($w-$hsh{'width'})/2); 
-    $r=$l+$hsh{'width'}; 
+  if ($hsh{'width'}) {
+    $l=int(0.5+($w-$hsh{'width'})/2);
+    $r=$l+$hsh{'width'};
   } else {
     $hsh{'width'}=$r-$l;
   }
-  if ($hsh{'height'}) { 
-    $b=int(0.5+($h-$hsh{'height'})/2); 
-    $t=$h+$hsh{'height'}; 
+  if ($hsh{'height'}) {
+    $b=int(0.5+($h-$hsh{'height'})/2);
+    $t=$h+$hsh{'height'};
   } else {
     $hsh{'height'}=$b-$t;
   }
@@ -401,7 +407,7 @@ sub crop {
 #    print "l=$l, r=$r, h=$hsh{'width'}\n";
 #    print "t=$t, b=$b, w=$hsh{'height'}\n";
 
-  my $dst=Imager->new(xsize=>$hsh{'width'},ysize=>$hsh{'height'},channels=>$self->getchannels());
+  my $dst=Imager->new(xsize=>$hsh{'width'}, ysize=>$hsh{'height'}, channels=>$self->getchannels());
 
   i_copyto($dst->{IMG},$self->{IMG},$l,$t,$r,$b,0,0);
   return $dst;
