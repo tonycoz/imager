@@ -10,7 +10,7 @@
 
 #ifdef IMAGER_DEBUG_MALLOC
 
-#define MAXMAL 1024
+#define MAXMAL 102400
 #define MAXDESC 65
 
 #define UNDRRNVAL 100

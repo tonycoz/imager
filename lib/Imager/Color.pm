@@ -32,7 +32,6 @@ sub new {
 
 sub set {
   my $self = shift;
-  print "set: @_\n";
   my @arg = pspec(@_);
   return @arg ? set_internal($self, $arg[0],$arg[1],$arg[2],$arg[3]) : ();
 }

@@ -108,29 +108,27 @@ my_gif_inputfunc(GifFileType* gft, GifByteType *buf,int length) {
 /* Make some variables global, so we could access them faster: */
 
 static int
-    BackGround = 0,
-    ColorMapSize = 0,
-    InterlacedOffset[] = { 0, 4, 2, 1 }, /* The way Interlaced image should. */
-    InterlacedJumps[] = { 8, 8, 4, 2 };    /* be read - offsets and jumps... */
+  InterlacedOffset[] = { 0, 4, 2, 1 }, /* The way Interlaced image should. */
+  InterlacedJumps[] = { 8, 8, 4, 2 };    /* be read - offsets and jumps... */
 
-static ColorMapObject *ColorMap;
+/*  static ColorMapObject *ColorMap; */
 
 
 static
 void
-i_colortable_copy(int **colour_table, int *colours, ColorMapObject *colormap) {
+i_colortable_copy(int **colour_table, int *colours, ColorMapObject *colourmap) {
   GifColorType *mapentry;
   int q;
-  int colormapsize = colormap->ColorCount;
+  int colourmapsize = colourmap->ColorCount;
 
-  if(colours) *colours = colormapsize;
+  if(colours) *colours = colourmapsize;
   if(!colour_table) return;
   
-  *colour_table = mymalloc(sizeof(int *) * colormapsize * 3);
-  memset(*colour_table, 0, sizeof(int *) * colormapsize * 3);
+  *colour_table = mymalloc(sizeof(int *) * colourmapsize * 3);
+  memset(*colour_table, 0, sizeof(int *) * colourmapsize * 3);
 
-  for(q=0; q<ColorMapSize; q++) {
-    mapentry = &colormap->Colors[q];
+  for(q=0; q<colourmapsize; q++) {
+    mapentry = &colourmap->Colors[q];
     (*colour_table)[q*3 + 0] = mapentry->Red;
     (*colour_table)[q*3 + 1] = mapentry->Green;
     (*colour_table)[q*3 + 2] = mapentry->Blue;
@@ -151,8 +149,8 @@ i_img *
 i_readgif_low(GifFileType *GifFile, int **colour_table, int *colours) {
   i_img *im;
   int i, j, Size, Row, Col, Width, Height, ExtCode, Count, x;
-  int cmapcnt = 0, ImageNum = 0;
- 
+  int cmapcnt = 0, ImageNum = 0, BackGround = 0, ColorMapSize = 0;
+  ColorMapObject *ColorMap;
  
   GifRecordType RecordType;
   GifByteType *Extension;
@@ -296,7 +294,7 @@ i_readgif_low(GifFileType *GifFile, int **colour_table, int *colours) {
 	    col.rgb.r = ColorMapEntry->Red;
 	    col.rgb.g = ColorMapEntry->Green;
 	    col.rgb.b = ColorMapEntry->Blue;
-	    i_ppix(im,x,Row,&col);
+	    i_ppix(im, x, Row, &col);
 	  }
 	  Row++;
 	}
