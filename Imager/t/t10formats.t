@@ -7,7 +7,7 @@
 # (It may become useful if the test is moved to ./t subdirectory.)
 use lib qw(blib/lib blib/arch);
 
-BEGIN { $| = 1; print "1..27\n"; }
+BEGIN { $| = 1; print "1..28\n"; }
 END {print "not ok 1\n" unless $loaded;}
 use Imager qw(:all);
 
@@ -308,7 +308,7 @@ EOS
 				 gif_delays=>[ 50, 50, 50, 50 ],
 				 #gif_loop_count => 50,
 				 gif_each_palette => 1,
-			       }, @imgs);
+			       }, @imgs) or print "not ";
     close FH;
     print "ok 23\n";
 
@@ -323,14 +323,30 @@ EOS
       print "not ok 24 # single colour write regression\n";
     }
     close FH;
+    
+    # transparency test
+    # previously it was harder do write transparent images
+    # tests the improvements
+    $img = Imager::ImgRaw::new(20, 20, 4);
+    my $trans = i_color_new(255, 0, 0, 127);
+    i_box_filled($img, 0, 0, 20, 20, $green);
+    i_box_filled($img, 2, 2, 18, 18, $trans);
+    open FH, ">testout/t10_trans.gif" or die $!;
+    binmode FH;
+    i_writegif_gen(fileno(FH), { make_colors=>'addi',
+				 translate=>'closest',
+				 transp=>'ordered',
+			       }, $img, $img) or print "not ";
+    print "ok 25\n";
+    close FH;
 }
 
 
 
 if (!i_has_format("tiff")) {
-  print "ok 25 # skip\n";
   print "ok 26 # skip\n";
   print "ok 27 # skip\n";
+  print "ok 28 # skip\n";
 } else {
   open(FH,">testout/t10.tiff") || die "cannot open testout/t10.tiff for writing\n";
   binmode(FH); 
@@ -338,7 +354,7 @@ if (!i_has_format("tiff")) {
   i_writetiff_wiol($img, $IO);
   close(FH);
 
-  print "ok 25\n";
+  print "ok 26\n";
   
   open(FH,"testout/t10.tiff") or die "cannot open testout/t10.tiff\n";
   binmode(FH);
@@ -348,7 +364,7 @@ if (!i_has_format("tiff")) {
   close(FH);
 
   print "# tiff average mean square pixel difference: ",sqrt(i_img_diff($img,$cmpimg))/150*150,"\n";
-  print "ok 26\n";
+  print "ok 27\n";
 
   $IO = Imager::io_new_bufchain();
   
@@ -362,9 +378,9 @@ if (!i_has_format("tiff")) {
   }
   
   if ($odata eq $tiffdata) {
-    print "ok 27\n";
+    print "ok 28\n";
   } else {
-    print "not ok 27\n";
+    print "not ok 28\n";
   }
 
   
