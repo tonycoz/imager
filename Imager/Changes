@@ -379,7 +379,9 @@ Revision history for Perl extension Imager.
 	  Imager.xs, Imager.pm
         - each of the image formats now have their own test file,
           extracted from t10formats.t, usually with som extra tests
-  - Added flip() and docs to Imager.pm and i_flipxy to image.c.
+        - Added flip() and docs to Imager.pm and i_flipxy to image.c.
+          Added testcases too.
+	- Fixed an overflow bug in png.c
 
 ~~~~~~~~~~~~~^ ^ ^~~~~~~~~~~~~~
 
