@@ -245,6 +245,30 @@ float i_img_diff   (i_img *im1,i_img *im2);
 
 undef_int i_init_fonts( int t1log );
 
+/*
+   describes an axis of a MM font.
+   Modelled on FT2's FT_MM_Axis.
+   It would be nice to have a default entry too, but FT2 
+   doesn't support it.
+*/
+typedef struct i_font_mm_axis_tag {
+  char const *name;
+  int minimum;
+  int maximum;
+} i_font_mm_axis;
+
+#define IM_FONT_MM_MAX_AXES 4
+
+/* 
+   multiple master information for a font, if any 
+   modelled on FT2's FT_Multi_Master.
+*/
+typedef struct i_font_mm_tag {
+  int num_axis;
+  int num_designs; /* provided but not necessarily useful */
+  i_font_mm_axis axis[IM_FONT_MM_MAX_AXES];
+} i_font_mm;
+
 #ifdef HAVE_LIBT1
 #include <t1lib.h>
 
@@ -316,6 +340,12 @@ extern int i_ft2_glyph_name(FT2_Fonthandle *handle, unsigned long ch,
 extern int i_ft2_can_do_glyph_names(void);
 extern int i_ft2_face_has_glyph_names(FT2_Fonthandle *handle);
 
+extern int i_ft2_get_multiple_masters(FT2_Fonthandle *handle,
+                                      i_font_mm *mm);
+extern int
+i_ft2_is_multiple_master(FT2_Fonthandle *handle);
+extern int
+i_ft2_set_mm_coords(FT2_Fonthandle *handle, int coord_count, long *coords);
 #endif
 
 #ifdef WIN32

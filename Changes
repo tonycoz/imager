@@ -977,6 +977,7 @@ Revision history for Perl extension Imager.
 - added concept index to Imager.pm's POD
 - the gradgen filter now does the same color value conversion that
   Imager's drawing functions do.
+- added trivial multiple master support via the FT2 driver
 
 =================================================================
 

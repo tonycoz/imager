@@ -4314,6 +4314,58 @@ int
 i_ft2_face_has_glyph_names(handle)
         Imager::Font::FT2 handle
 
+int
+i_ft2_is_multiple_master(handle)
+        Imager::Font::FT2 handle
+
+void
+i_ft2_get_multiple_masters(handle)
+        Imager::Font::FT2 handle
+      PREINIT:
+        i_font_mm mm;
+        int i;
+      PPCODE:
+        if (i_ft2_get_multiple_masters(handle, &mm)) {
+          EXTEND(SP, 2+mm.num_axis);
+          PUSHs(sv_2mortal(newSViv(mm.num_axis)));
+          PUSHs(sv_2mortal(newSViv(mm.num_designs)));
+          for (i = 0; i < mm.num_axis; ++i) {
+            AV *av = newAV();
+            SV *sv;
+            av_extend(av, 3);
+            sv = newSVpv(mm.axis[i].name, strlen(mm.axis[i].name));
+            SvREFCNT_inc(sv);
+            av_store(av, 0, sv);
+            sv = newSViv(mm.axis[i].minimum);
+            SvREFCNT_inc(sv);
+            av_store(av, 1, sv);
+            sv = newSViv(mm.axis[i].maximum);
+            SvREFCNT_inc(sv);
+            av_store(av, 2, sv);
+            PUSHs(newRV_noinc((SV *)av));
+          }
+        }
+
+undef_int
+i_ft2_set_mm_coords(handle, ...)
+        Imager::Font::FT2 handle
+      PROTOTYPE: DISABLE
+      PREINIT:
+        long *coords;
+        int ix_coords, i;
+      CODE:
+        /* T_ARRAY handling by xsubpp seems to be busted in 5.6.1, so
+           transfer the array manually */
+        ix_coords = items-1;
+        coords = mymalloc(sizeof(long) * ix_coords);
+	for (i = 0; i < ix_coords; ++i) {
+          coords[i] = (long)SvIV(ST(1+i));
+        }
+        RETVAL = i_ft2_set_mm_coords(handle, ix_coords, coords);
+        myfree(coords);
+      OUTPUT:
+        RETVAL
+
 #endif
 
 MODULE = Imager         PACKAGE = Imager::FillHandle PREFIX=IFILL_
