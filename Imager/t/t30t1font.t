@@ -25,7 +25,7 @@ if (!(i_has_format("t1")) ) {
 } else {
 
   print "# has t1\n";
-  
+
   $fontname_pfb=$ENV{'T1FONTTESTPFB'}||'./fontfiles/dcr10.pfb';
   $fontname_afm=$ENV{'T1FONTTESTAFM'}||'./fontfiles/dcr10.afm';
 
@@ -41,39 +41,41 @@ if (!(i_has_format("t1")) ) {
 
   i_init_fonts();
   i_t1_set_aa(1);
-  
+
   $fnum=Imager::i_t1_new($fontname_pfb,$fontname_afm); # this will load the pfb font
   if ($fnum<0) { die "Couldn't load font $fontname_pfb"; }
- 
+
   $bgcolor=Imager::Color->new(255,0,0,0);
   $overlay=Imager::ImgRaw::new(200,70,3);
-  
+
   i_t1_cp($overlay,5,50,1,$fnum,50.0,'XMCLH',5,1);
   i_draw($overlay,0,50,100,50,$bgcolor);
-  
+
   @bbox=i_t1_bbox(0,50.0,'XMCLH',5);
   print "bbox: ($bbox[0], $bbox[1]) - ($bbox[2], $bbox[3])\n";
-  
+
   open(FH,">testout/t30t1font.ppm") || die "cannot open testout/t35t1font.ppm\n";
   binmode(FH); # for os2
-  i_writeppm($overlay,fileno(FH));
+  $IO = Imager::io_new_fd( fileno(FH) );
+  i_writeppm_wiol($overlay,$IO);
   close(FH);
 
   print "ok 2\n";
-  
+
   $bgcolor=Imager::Color::set($bgcolor,200,200,200,0);
   $backgr=Imager::ImgRaw::new(280,150,3);
 
   i_t1_set_aa(2);
   i_t1_text($backgr,10,100,$bgcolor,$fnum,150.0,'test',4,1);
-  
+
   open(FH,">testout/t30t1font2.ppm") || die "cannot open testout/t35t1font.ppm\n";
   binmode(FH);
-  i_writeppm($backgr,fileno(FH));
+  $IO = Imager::io_new_fd( fileno(FH) );
+  i_writeppm_wiol($backgr, $IO);
   close(FH);
-  
+
   print "ok 3\n";
-  
+
   $rc=i_t1_destroy($fnum);
   if ($fnum <0) { die "i_t1_destroy failed: rc=$rc\n"; }
 

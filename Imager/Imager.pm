@@ -98,7 +98,7 @@ use Imager::Font;
 		i_writegif_callback
 
 		i_readpnm_wiol
-		i_writeppm
+		i_writeppm_wiol
 
 		i_readraw
 		i_writeraw

@@ -46,7 +46,7 @@ if (!i_has_format("gif")) {
     $palette=''; # just to skip a warning.
 
     print "ok 3\n";
-    
+
     # check that reading interlaced/non-interlaced versions of 
     # the same GIF produce the same image
     # I could replace this with code that used Imager's built-in
@@ -66,18 +66,22 @@ if (!i_has_format("gif")) {
 
     open FH, ">testout/t105i.ppm" or die "Cannot create testout/t105i.ppm";
     binmode FH;
-    i_writeppm($imgi, fileno(FH)) or die "Cannot write testout/t105i.ppm";
+    $IO = Imager::io_new_fd( fileno(FH) );
+    i_writeppm_wiol($imgi, $IO) or die "Cannot write testout/t105i.ppm";
     close FH;
+
 
     open FH, ">testout/t105ni.ppm" or die "Cannot create testout/t105ni.ppm";
     binmode FH;
-    i_writeppm($imgni, fileno(FH)) or die "Cannot write testout/t105ni.ppm";
+    $IO = Imager::io_new_fd( fileno(FH) );
+    i_writeppm_wiol($imgni, $IO) or die "Cannot write testout/t105ni.ppm";
     close FH;
 
     # compare them
     open FH, "<testout/t105i.ppm" or die "Cannot open testout/t105i.ppm";
     $datai = do { local $/; <FH> };
     close FH;
+
     open FH, "<testout/t105ni.ppm" or die "Cannot open testout/t105ni.ppm";
     $datani = do { local $/; <FH> };
     close FH;
@@ -99,7 +103,7 @@ if (!i_has_format("gif")) {
       my $img2 = i_readgif_callback(sub { my $tmp; read(FH, $tmp, $_[0]) and $tmp });
       close FH; 
       print $img ? "ok 7\n" : "not ok 7\n";
-      
+
       print test_readgif_cb(1) ? "ok 8\n" : "not ok 8\n";
       print test_readgif_cb(512) ? "ok 9\n" : "not ok 9\n";
       print test_readgif_cb(1024) ? "ok 10\n" : "not ok 10\n";

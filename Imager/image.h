@@ -392,6 +392,7 @@ undef_int i_writeraw(i_img* im,int fd);
 
 i_img *i_readpnm_wiol(io_glue *ig, int length);
 undef_int i_writeppm(i_img *im,int fd);
+undef_int i_writeppm_wiol(i_img *im, io_glue *ig);
 
 
 i_img* i_scaleaxis(i_img *im, float Value, int Axis);
