@@ -270,7 +270,7 @@ adding the colors would overflow the palette.
   $img->setcolors(start=>$start, colors=>\@colors);
 
 Once you have colors in the palette you can overwrite them with the
-C<setcolors()> method:  C<sercolors()> returns true on success.
+C<setcolors()> method:  C<setcolors()> returns true on success.
 
 =item getcolors
 

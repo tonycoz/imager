@@ -3433,7 +3433,7 @@ i_addcolors(im, ...)
           ST(0) = sv_2mortal(newSViv(index));
         }
 
-int 
+undef_int 
 i_setcolors(im, index, ...)
         Imager::ImgRaw  im
         int index
@@ -3457,6 +3457,8 @@ i_setcolors(im, index, ...)
         }
         RETVAL = i_setcolors(im, index, colors, items-2);
         myfree(colors);
+      OUTPUT:
+	RETVAL
 
 void
 i_getcolors(im, index, ...)

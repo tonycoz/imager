@@ -526,7 +526,12 @@ sub new {
   $self->{ERRSTR}=undef; #
   $self->{DEBUG}=$DEBUG;
   $self->{DEBUG} && print "Initialized Imager\n";
-  if ($hsh{xsize} && $hsh{ysize}) { $self->img_set(%hsh); }
+  if (defined $hsh{xsize} && defined $hsh{ysize}) { 
+    unless ($self->img_set(%hsh)) {
+      $Imager::ERRSTR = $self->{ERRSTR};
+      return;
+    }
+  }
   return $self;
 }
 
@@ -637,6 +642,13 @@ sub img_set {
     $self->{IMG}=Imager::ImgRaw::new($hsh{'xsize'}, $hsh{'ysize'},
                                      $hsh{'channels'});
   }
+
+  unless ($self->{IMG}) {
+    $self->{ERRSTR} = Imager->_error_as_msg();
+    return;
+  }
+
+  $self;
 }
 
 # created a masked version of the current image
@@ -678,9 +690,13 @@ sub to_paletted {
 
   #print "Type ", i_img_type($result->{IMG}), "\n";
 
-  $result->{IMG} or undef $result;
-
-  return $result;
+  if ($result->{IMG}) {
+    return $result;
+  }
+  else {
+    $self->{ERRSTR} = $self->_error_as_msg;
+    return;
+  }
 }
 
 # convert a paletted (or any image) to an 8-bit/channel RGB images
@@ -1335,7 +1351,10 @@ sub write {
       $input{make_colors} = 'webmap'; # ignored
       $input{translate} = 'giflib';
     }
-    $rc = i_writegif_wiol($IO, \%input, $self->{IMG});
+    if (!i_writegif_wiol($IO, \%input, $self->{IMG})) {
+      $self->{ERRSTR} = $self->_error_as_msg;
+      return;
+    }
   }
 
   if (exists $input{'data'}) {
@@ -1523,7 +1542,8 @@ sub scale {
   my $tmp = Imager->new();
 
   unless (defined wantarray) {
-    warn "scale() called in void context - scale() returns the scaled image";
+    my @caller = caller;
+    warn "scale() called in void context - scale() returns the scaled image at $caller[1] line $caller[2]\n";
     return;
   }
 

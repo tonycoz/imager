@@ -90,6 +90,7 @@ t/t01introvert.t
 t/t020masked.t
 t/t021sixteen.t
 t/t022double.t          Test double/sample images
+t/t023palette.t		Test paletted images
 t/t05error.t
 t/t07iolayer.t
 t/t101jpeg.t
@@ -138,7 +139,7 @@ testimg/expected.gif
 testimg/gimpgrad        A GIMP gradient file
 testimg/junk.ppm
 testimg/loccmap.gif
-testimg/maxval.ppm
+testimg/maxval.ppm	For ppm file maxval handling
 testimg/maxval_0.ppm
 testimg/maxval_256.ppm
 testimg/maxval_4095_asc.ppm

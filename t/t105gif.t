@@ -1,7 +1,7 @@
 #!perl -w
 use strict;
 $|=1;
-print "1..60\n";
+print "1..61\n";
 use Imager qw(:all);
 require "t/testtools.pl";
 
@@ -28,7 +28,7 @@ i_box_filled($timg, 0, 0, 20, 20, $green);
 i_box_filled($timg, 2, 2, 18, 18, $trans);
 
 if (!i_has_format("gif")) {
-  skipn(1, 60, "no gif support");
+  skipn(1, 61, "no gif support");
 } else {
     open(FH,">testout/t105.gif") || die "Cannot open testout/t105.gif\n";
     binmode(FH);
@@ -542,6 +542,17 @@ EOS
         ++$num;
       }
     }
+
+    # try to write an image with no colors - should error
+    ok($num++, !$ooim->write(file=>"testout/t105nocolors.gif",
+			    make_colors=>'none',
+			    colors=>[], gifquant=>'gen'),
+       "write with no colors");
+
+    # try to write multiple with no colors, with separate maps
+    # I don't see a way to test this, since we don't have a mechanism
+    # to give the second image different quant options, we can't trigger
+    # a failure just for the second image
 }
 
 sub ok ($$$) {

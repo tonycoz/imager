@@ -1678,6 +1678,12 @@ i_writegif_low(i_quantize *quant, GifFileType *gf, i_img **imgs, int count) {
     result = quant_paletted(quant, imgs[0]);
   else
     result = quant_translate(quant, imgs[0]);
+  if (!result) {
+    i_mempool_destroy(&mp);
+    quant->mc_colors = orig_colors;
+    EGifCloseFile(gf);
+    return 0;
+  }
   if (want_trans) {
     quant_transparent(quant, result, imgs[0], quant->mc_count);
     trans_index = quant->mc_count;
@@ -1752,6 +1758,13 @@ i_writegif_low(i_quantize *quant, GifFileType *gf, i_img **imgs, int count) {
       else {
         quant_makemap(quant, imgs+imgn, 1);
         result = quant_translate(quant, imgs[imgn]);
+      }
+      if (!result) {
+        i_mempool_destroy(&mp);
+        quant->mc_colors = orig_colors;
+        EGifCloseFile(gf);
+        mm_log((1, "error in quant_translate()"));
+        return 0;
       }
       if (want_trans) {
         quant_transparent(quant, result, imgs[imgn], quant->mc_count);

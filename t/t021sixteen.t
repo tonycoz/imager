@@ -1,6 +1,6 @@
 #!perl -w
 use strict;
-BEGIN { $| = 1; print "1..29\n"; }
+BEGIN { $| = 1; print "1..43\n"; }
 my $loaded;
 END {print "not ok 1\n" unless $loaded;}
 use Imager qw(:all :handy);
@@ -8,6 +8,7 @@ use Imager qw(:all :handy);
 $loaded = 1;
 print "ok 1\n";
 init_log("testout/t021sixteen.log", 1);
+require "t/testtools.pl";
 
 use Imager::Color::Float;
 
@@ -71,6 +72,41 @@ print "ok 28\n";
 $oo16img->bits == 16 or print "not ";
 print "ok 29\n";
 
+my $num = 30;
+# make sure of error handling
+okn($num++, !Imager->new(xsize=>0, ysize=>1, bits=>16),
+    "fail to create a 0 pixel wide image");
+matchn($num++, Imager->errstr, qr/Image sizes must be positive/,
+       "and correct error message");
+
+okn($num++, !Imager->new(xsize=>1, ysize=>0, bits=>16),
+    "fail to create a 0 pixel high image");
+matchn($num++, Imager->errstr, qr/Image sizes must be positive/,
+       "and correct error message");
+
+okn($num++, !Imager->new(xsize=>-1, ysize=>1, bits=>16),
+    "fail to create a negative width image");
+matchn($num++, Imager->errstr, qr/Image sizes must be positive/,
+       "and correct error message");
+
+okn($num++, !Imager->new(xsize=>1, ysize=>-1, bits=>16),
+    "fail to create a negative height image");
+matchn($num++, Imager->errstr, qr/Image sizes must be positive/,
+       "and correct error message");
+
+okn($num++, !Imager->new(xsize=>-1, ysize=>-1, bits=>16),
+    "fail to create a negative width/height image");
+matchn($num++, Imager->errstr, qr/Image sizes must be positive/,
+       "and correct error message");
+
+okn($num++, !Imager->new(xsize=>1, ysize=>1, bits=>16, channels=>0),
+    "fail to create a zero channel image");
+matchn($num++, Imager->errstr, qr/channels must be between 1 and 4/,
+       "and correct error message");
+okn($num++, !Imager->new(xsize=>1, ysize=>1, bits=>16, channels=>5),
+    "fail to create a five channel image");
+matchn($num++, Imager->errstr, qr/channels must be between 1 and 4/,
+       "and correct error message");
 
 sub NCF {
   return Imager::Color::Float->new(@_);
