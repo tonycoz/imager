@@ -491,9 +491,7 @@ Returns the number of pixels copied (eg. if r, l or y is out of range)
 =cut */
 int
 i_glin_d(i_img *im, int l, int r, int y, i_color *vals) {
-  int x, ch;
-  int count;
-  int i;
+  int ch, count, i;
   unsigned char *data;
   if (y >=0 && y < im->ysize && l < im->xsize && l >= 0) {
     if (r > im->xsize)
@@ -527,9 +525,7 @@ Returns the number of pixels copied (eg. if r, l or y is out of range)
 =cut */
 int
 i_plin_d(i_img *im, int l, int r, int y, i_color *vals) {
-  int x, ch;
-  int count;
-  int i;
+  int ch, count, i;
   unsigned char *data;
   if (y >=0 && y < im->ysize && l < im->xsize && l >= 0) {
     if (r > im->xsize)
@@ -655,7 +651,7 @@ Copies the contents of the image I<src> over the image I<im>.
 void
 i_copy(i_img *im, i_img *src) {
   i_color *pv;
-  int x,y,y1,x1;
+  int y, y1, x1;
 
   mm_log((1,"i_copy(im* %p,src %p)\n", im, src));
 

@@ -792,9 +792,7 @@ i_gradgen(i_img *im, int num, int *xo, int *yo, i_color *ival, int dmeasure) {
 void
 i_nearest_color_foo(i_img *im, int num, int *xo, int *yo, i_color *ival, int dmeasure) {
 
-  i_color val;
-  int p, x, y, ch;
-  int channels = im->channels;
+  int p, x, y;
   int xsize    = im->xsize;
   int ysize    = im->ysize;
 
@@ -869,7 +867,6 @@ i_nearest_color(i_img *im, int num, int *xo, int *yo, i_color *oval, int dmeasur
   float c1, c2;
   i_color val;
   int p, x, y, ch;
-  int channels = im->channels;
   int xsize    = im->xsize;
   int ysize    = im->ysize;
   int *cmatch;

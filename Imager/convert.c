@@ -44,7 +44,7 @@ i_convert(i_img *im, i_img *src, float *coeff, int outchan, int inchan)
   i_color *vals;
   int x, y;
   int i, j;
-  int ilimit, jlimit;
+  int ilimit;
   double work[MAXCHANNELS];
 
   mm_log((1,"i_convert(im* 0x%x, src, 0x%x, coeff 0x%x,outchan %d, inchan %d)\n",im,src, coeff,outchan, inchan));

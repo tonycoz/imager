@@ -13,8 +13,8 @@
 #define MAXMAL 102400
 #define MAXDESC 65
 
-#define UNDRRNVAL 100
-#define OVERRNVAL 100
+#define UNDRRNVAL 10
+#define OVERRNVAL 10
 
 #define PADBYTE 0xaa
 
@@ -55,7 +55,7 @@ mymalloc_file_line(int size, char* file, int line) {
   int i;
   if (malloc_need_init) {
     for(i=0; i<MAXMAL; i++) malloc_pointers[i].point = NULL;
-    malloc_need_init=0;
+    malloc_need_init = 0;
     atexit(malloc_state);
   }
 
@@ -157,7 +157,7 @@ myfree_file_line(void *p, char *file, int line) {
   }
   
   if (match != 1) {
-    mm_log((1, "myfree_file_line: inconsistent refcount %d\n", match));
+    mm_log((1, "myfree_file_line: INCONSISTENT REFCOUNT %d\n", match));
   }
   
   mm_log((1, "myfree_file_line: freeing address %p\n", pp-UNDRRNVAL));
@@ -179,7 +179,7 @@ mymalloc(int size) {
   void *buf;
 
   mm_log((1, "mymalloc(size %d)\n", size));
-  if ( (buf=malloc(size)) == NULL ) {
+  if ( (buf = malloc(size)) == NULL ) {
     mm_log((1, "mymalloc: unable to malloc\n", size));
     fprintf(stderr,"Unable to malloc.\n"); exit(3);
   }

@@ -362,11 +362,9 @@ point.
 undef_int
 i_writetiff_wiol_faxable(i_img *im, io_glue *ig) {
   uint32 width, height;
-  i_color val;
   unsigned char *linebuf = NULL;
   uint32 y;
-  int linebufpos;
-  int ch, ci, rc;
+  int rc;
   uint32 x;
   TIFF* tif;
   int luma_channel;

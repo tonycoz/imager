@@ -27,7 +27,6 @@ setcol(i_color *cl,unsigned char r,unsigned char g,unsigned char b,unsigned char
 
 void
 quant_makemap(i_quantize *quant, i_img **imgs, int count) {
-	i_color temp;
 #ifdef HAVE_LIBGIF
   /* giflib does it's own color table generation */
   if (quant->translate == pt_giflib) 
