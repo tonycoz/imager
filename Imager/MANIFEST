@@ -40,7 +40,8 @@ iolayer.c
 fontfiles/dcr10.afm
 fontfiles/dcr10.pfb
 fontfiles/dodge.ttf
-lib/Imager/regmach.pod #lib/Imager/Regops.pm
+lib/Imager/regmach.pod
+lib/Imager/Regops.pm
 lib/Imager/Expr.pm
 lib/Imager/Expr/Assem.pm
 lib/Imager/Color.pm
@@ -71,11 +72,20 @@ t/t66paste.t
 t/t70newgif.t
 t/t75polyaa.t
 t/t90cc.t
-testimg/scale.ppm
-testimg/scale.gif
-testimg/scalei.gif
-testimg/penguin-base.ppm
+testimg/bandw.gif
+testimg/expected.gif
 testimg/junk.ppm
+testimg/loccmap.gif
+testimg/nocmap.gif
+testimg/palette.png
+testimg/palette_out.png
+testimg/penguin-base.ppm
+testimg/scale.gif
+testimg/scale.ppm
+testimg/scalei.gif
+testimg/screen2.gif
+testimg/trimgdesc.gif
+testimg/trmiddesc.gif
 typemap
 dynaload.c
 dynaload.h

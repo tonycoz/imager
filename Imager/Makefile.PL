@@ -80,8 +80,6 @@ if ($] ge '5.005') {
 if ($VERBOSE) { print Dumper(\%opts); }
 mkdir('testout',0777); # since we cannot include it in the archive.
 WriteMakefile(%opts);
-print "Generating Regops.pm\n";
-system($Config{"make"}." lib/Imager/Regops.pm") and die "Failed to generate lib/Imager/Regops.pm";
 
 exit;
 
