@@ -7,7 +7,7 @@
 # (It may become useful if the test is moved to ./t subdirectory.)
 use lib qw(blib/lib blib/arch);
 
-BEGIN { $| = 1; print "1..7\n"; }
+BEGIN { $| = 1; print "1..10\n"; }
 END {print "not ok 1\n" unless $loaded;}
 use Imager qw(:all);
 
@@ -79,4 +79,34 @@ if (!i_has_format("png")) {
   print "# png average mean square pixel difference: ",sqrt(i_img_diff($timg,$cmpimg))/150*150,"\n";
   print i_img_diff($timg, $cmpimg)
 	? "not ok 7 # saved image different\n" : "ok 7\n";
+
+  # REGRESSION TEST
+  # png.c 1.1 would produce an incorrect image when loading images with
+  # less than 8 bits/pixel with a transparent palette entry
+  open FH, "< testimg/palette.png"
+    or die "cannot open testimg/palette.png: $!\n";
+  binmode FH;
+  # 1.1 may segfault here (it does with libefence)
+  my $pimg = i_readpng(fileno(FH))
+    or print "not ";
+  print "ok 8\n";
+  close FH;
+  open FH, "< testimg/palette_out.png"
+    or die "cannot open testimg/palette_out.png: $!\n";
+  binmode FH;
+  my $poimg = i_readpng(fileno(FH))
+    or print "not ";
+  print "ok 9\n";
+  close FH;
+  if (i_img_diff($pimg, $poimg)) {
+    print <<EOS;
+not ok 10 # regression or you may need a more recent libpng
+# this tests a bug in Imager's png.c v1.1
+# if also tickles a bug in libpng before 1.0.5, so you may need to
+# upgrade libpng
+EOS
+  }
+  else {
+    print "ok 10\n";
+  }
 }
