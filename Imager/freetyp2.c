@@ -884,8 +884,28 @@ make_bmp_map(FT_Bitmap *bitmap, unsigned char *map) {
   return 1;
 }
 
+/* FREETYPE_PATCH was introduced in 2.0.6, we don't want a false 
+   positive on 2.0.0 to 2.0.4, so we accept a false negative in 2.0.5 */
+#ifndef FREETYPE_PATCH
+#define FREETYPE_PATCH 4
+#endif
+
+/* FT_Get_Postscript_Name() was introduced in FT2.0.5 */
+#define IM_HAS_FACE_NAME (FREETYPE_MINOR > 0 || FREETYPE_PATCH >= 5)
+/* #define IM_HAS_FACE_NAME 0 */ 
+
+/*
+=item i_ft2_face_name(handle, name_buf, name_buf_size)
+
+Fills the given buffer with the Postscript Face name of the font,
+if there is one.
+
+=cut
+*/
+
 int
 i_ft2_face_name(FT2_Fonthandle *handle, char *name_buf, size_t name_buf_size) {
+#if IM_HAS_FACE_NAME
   char const *name = FT_Get_Postscript_Name(handle->face);
 
   i_clear_error();
@@ -902,6 +922,18 @@ i_ft2_face_name(FT2_Fonthandle *handle, char *name_buf, size_t name_buf_size) {
 
     return 0;
   }
+#else
+  i_clear_error();
+  i_push_error(0, "Freetype 2.0.6 or later required");
+  *name_buf = '\0';
+
+  return 0;
+#endif
+}
+
+int
+i_ft2_can_face_name(void) {
+  return IM_HAS_FACE_NAME;
 }
 
 /* FT_Has_PS_Glyph_Names() was introduced in FT2.1.1 */

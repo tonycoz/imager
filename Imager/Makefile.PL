@@ -263,8 +263,12 @@ sub pathcheck {
 sub init {
 
   @definc{'/usr/include'}=();
-  @incs=(qw(/sw/include /usr/include/freetype2 /usr/local/include/freetype2 /usr/include /usr/local/include /usr/include/freetype /usr/local/include/freetype), split /\Q$Config{path_sep}/, $INCPATH );
-  @libs=(qw(/sw/lib), split(/\Q$Config{path_sep}/,$LIBPATH) , split(/ /, $Config{'libpth'}));
+  @incs=(split(/\Q$Config{path_sep}/, $INCPATH), 
+         qw(/sw/include /usr/include/freetype2 /usr/local/include/freetype2 
+            /usr/include /usr/local/include /usr/include/freetype 
+            /usr/local/include/freetype));
+  @libs=(split(/\Q$Config{path_sep}/,$LIBPATH), 
+         qw(/sw/lib),  split(/ /, $Config{'libpth'}));
   if ($^O =~ /win32/i && $Config{cc} =~ /\bcl\b/i) {
     push(@incs, split /;/, $ENV{INCLUDE}) if exists $ENV{INCLUDE};
     push(@libs, split /;/, $ENV{LIB}) if exists $ENV{LIB};
