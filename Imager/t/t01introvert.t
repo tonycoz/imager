@@ -1,18 +1,12 @@
 #!perl -w
 # t/t01introvert.t - tests internals of image formats
 # to make sure we get expected values
-#
-# Change 1..1 below to 1..last_test_to_print .
-# (It may become useful if the test is moved to ./t subdirectory.)
 
 use strict;
+use lib 't';
+use Test::More tests=>93;
 
-my $loaded;
-BEGIN { $| = 1; print "1..93\n"; }
-END {print "not ok 1\n" unless $loaded;}
-use Imager qw(:handy :all);
-$loaded = 1;
-print "ok 1\n";
+BEGIN { use_ok(Imager => qw(:handy :all)) }
 
 require "t/testtools.pl";
 
@@ -20,127 +14,88 @@ init_log("testout/t01introvert.log",1);
 
 my $im_g = Imager::ImgRaw::new(100, 101, 1);
 
-print Imager::i_img_getchannels($im_g) == 1 
-  ? "ok 2\n" : "not ok 2 # 1 channel image channel count mismatch\n";
-print Imager::i_img_getmask($im_g) & 1 
-  ? "ok 3\n" : "not ok 3 # 1 channel image bad mask\n";
-print Imager::i_img_virtual($im_g) 
-  ? "not ok 4 # 1 channel image thinks it is virtual\n" : "ok 4\n";
-print Imager::i_img_bits($im_g) == 8
-  ? "ok 5\n" : "not ok 5 # 1 channel image has bits != 8\n";
-print Imager::i_img_type($im_g) == 0 # direct
-  ? "ok 6\n" : "not ok 6 # 1 channel image isn't direct\n";
+is(Imager::i_img_getchannels($im_g), 1, "1 channel image channel count");
+ok(Imager::i_img_getmask($im_g) & 1, "1 channel image mask");
+ok(!Imager::i_img_virtual($im_g), "1 channel image not virtual");
+is(Imager::i_img_bits($im_g), 8, "1 channel image has 8 bits/sample");
+is(Imager::i_img_type($im_g), 0, "1 channel image is direct");
 
 my @ginfo = Imager::i_img_info($im_g);
-print $ginfo[0] == 100 
-  ? "ok 7\n" : "not ok 7 # 1 channel image width incorrect\n";
-print $ginfo[1] == 101
-  ? "ok 8\n" : "not ok 8 # 1 channel image height incorrect\n";
+is($ginfo[0], 100, "1 channel image width");
+is($ginfo[1], 101, "1 channel image height");
 
 undef $im_g; # can we check for release after this somehow?
 
 my $im_rgb = Imager::ImgRaw::new(100, 101, 3);
 
-print Imager::i_img_getchannels($im_rgb) == 3
-  ? "ok 9\n" : "not ok 9 # 3 channel image channel count mismatch\n";
-print +(Imager::i_img_getmask($im_rgb) & 7) == 7
-  ? "ok 10\n" : "not ok 10 # 3 channel image bad mask\n";
-print Imager::i_img_bits($im_rgb) == 8
-  ? "ok 11\n" : "not ok 11 # 3 channel image has bits != 8\n";
-print Imager::i_img_type($im_rgb) == 0 # direct
-  ? "ok 12\n" : "not ok 12 # 3 channel image isn't direct\n";
+is(Imager::i_img_getchannels($im_rgb), 3, "3 channel image channel count");
+is((Imager::i_img_getmask($im_rgb) & 7), 7, "3 channel image mask");
+is(Imager::i_img_bits($im_rgb), 8, "3 channel image has 8 bits/sample");
+is(Imager::i_img_type($im_rgb), 0, "3 channel image is direct");
 
 undef $im_rgb;
 
 my $im_pal = Imager::i_img_pal_new(100, 101, 3, 256);
 
-print $im_pal ? "ok 13\n" : "not ok 13 # couldn't make paletted image\n";
-print Imager::i_img_getchannels($im_pal) == 3
-  ? "ok 14\n" : "not ok 14 # pal img channel count mismatch\n";
-print Imager::i_img_bits($im_pal) == 8
-  ? "ok 15\n" : "not ok 15 # pal img bits != 8\n";
-print Imager::i_img_type($im_pal) == 1
-  ? "ok 16\n" : "not ok 16 # pal img isn't paletted\n";
+ok($im_pal, "make paletted image");
+is(Imager::i_img_getchannels($im_pal), 3, "pal img channel count");
+is(Imager::i_img_bits($im_pal), 8, "pal img bits");
+is(Imager::i_img_type($im_pal), 1, "pal img is paletted");
 
 my $red = NC(255, 0, 0);
 my $green = NC(0, 255, 0);
 my $blue = NC(0, 0, 255);
 
-my $red_idx = check_add(17, $im_pal, $red, 0);
-my $green_idx = check_add(21, $im_pal, $green, 1);
-my $blue_idx = check_add(25, $im_pal, $blue, 2);
+my $red_idx = check_add($im_pal, $red, 0);
+my $green_idx = check_add($im_pal, $green, 1);
+my $blue_idx = check_add($im_pal, $blue, 2);
 
 # basic writing of palette indicies
 # fill with red
-Imager::i_ppal($im_pal, 0, 0, ($red_idx) x 100) == 100
-  or print "not ";
-print "ok 29\n";
+is(Imager::i_ppal($im_pal, 0, 0, ($red_idx) x 100), 100, 
+   "write red 100 times");
 # and blue
-Imager::i_ppal($im_pal, 50, 0, ($blue_idx) x 50) == 50
-  or print "not ";
-print "ok 30\n";
+is(Imager::i_ppal($im_pal, 50, 0, ($blue_idx) x 50), 50,
+   "write blue 50 times");
 
 # make sure we get it back
 my @pals = Imager::i_gpal($im_pal, 0, 100, 0);
-grep($_ != $red_idx, @pals[0..49]) and print "not ";
-print "ok 31\n";
-grep($_ != $blue_idx, @pals[50..99]) and print "not ";
-print "ok 32\n";
-Imager::i_gpal($im_pal, 0, 100, 0) eq "\0" x 50 . "\2" x 50 or print "not ";
-print "ok 33\n";
+ok(!grep($_ != $red_idx, @pals[0..49]), "check for red");
+ok(!grep($_ != $blue_idx, @pals[50..99]), "check for blue");
+is(Imager::i_gpal($im_pal, 0, 100, 0), "\0" x 50 . "\2" x 50, 
+   "gpal in scalar context");
 my @samp = Imager::i_gsamp($im_pal, 0, 100, 0, 0, 1, 2);
-@samp == 300 or print "not ";
-print "ok 34\n";
+is(@samp, 300, "gsamp count in list context");
 my @samp_exp = ((255, 0, 0) x 50, (0, 0, 255) x 50);
-my $diff = array_ncmp(\@samp, \@samp_exp);
-$diff == 0 or print "not ";
-print "ok 35\n";
+is_deeply(\@samp, \@samp_exp, "gsamp list deep compare");
 my $samp = Imager::i_gsamp($im_pal, 0, 100, 0, 0, 1, 2);
-length($samp) == 300 or print "not ";
-print "ok 36\n";
-$samp eq "\xFF\0\0" x 50 . "\0\0\xFF" x 50
-  or print "not ";
-print "ok 37\n";
+is(length($samp), 300, "gsamp scalar length");
+is($samp, "\xFF\0\0" x 50 . "\0\0\xFF" x 50, "gsamp scalar bytes");
 
 # reading indicies as colors
-my $c_red = Imager::i_get_pixel($im_pal, 0, 0)
-  or print "not ";
-print "ok 38\n";
-color_cmp($red, $c_red) == 0
-  or print "not ";
-print "ok 39\n";
-my $c_blue = Imager::i_get_pixel($im_pal, 50, 0)
-  or print "not ";
-print "ok 40\n";
-color_cmp($blue, $c_blue) == 0
-  or print "not ";
-print "ok 41\n";
+my $c_red = Imager::i_get_pixel($im_pal, 0, 0);
+ok($c_red, "got the red pixel");
+ok(color_cmp($red, $c_red) == 0, "and it's red");
+my $c_blue = Imager::i_get_pixel($im_pal, 50, 0);
+ok($c_blue, "got the blue pixel");
+ok(color_cmp($blue, $c_blue) == 0, "and it's blue");
 
 # drawing with colors
-Imager::i_ppix($im_pal, 0, 0, $green) and print "not ";
-print "ok 42\n";
+ok(Imager::i_ppix($im_pal, 0, 0, $green) == 0, "draw with color in palette");
 # that was in the palette, should still be paletted
-print Imager::i_img_type($im_pal) == 1
-  ? "ok 43\n" : "not ok 43 # pal img isn't paletted (but still should be)\n";
+is(Imager::i_img_type($im_pal), 1, "image still paletted");
 
-my $c_green = Imager::i_get_pixel($im_pal, 0, 0)
-  or print "not ";
-print "ok 44\n";
-color_cmp($green, $c_green) == 0
-  or print "not ";
-print "ok 45\n";
+my $c_green = Imager::i_get_pixel($im_pal, 0, 0);
+ok($c_green, "got green pixel");
+ok(color_cmp($green, $c_green) == 0, "and it's green");
 
-Imager::i_colorcount($im_pal) == 3 or print "not ";
-print "ok 46\n";
-Imager::i_findcolor($im_pal, $green) == 1 or print "not ";
-print "ok 47\n";
+is(Imager::i_colorcount($im_pal), 3, "still 3 colors in palette");
+is(Imager::i_findcolor($im_pal, $green), 1, "and green is the second");
 
 my $black = NC(0, 0, 0);
 # this should convert the image to RGB
-Imager::i_ppix($im_pal, 1, 0, $black) and print "not ";
-print "ok 48\n";
-print Imager::i_img_type($im_pal) == 0
-  ? "ok 49\n" : "not ok 49 # pal img shouldn't be paletted now\n";
+ok(Imager::i_ppix($im_pal, 1, 0, $black) == 0, "draw with black (not in palette)");
+is(Imager::i_img_type($im_pal), 0, "pal img shouldn't be paletted now");
 
 my %quant =
   (
@@ -148,106 +103,86 @@ my %quant =
    makemap => 'none',
   );
 my $im_pal2 = Imager::i_img_to_pal($im_pal, \%quant);
-$im_pal2 or print "not ";
-print "ok 50\n";
-@{$quant{colors}} == 4 or print "not ";
-print "ok 51\n";
-Imager::i_gsamp($im_pal2, 0, 100, 0, 0, 1, 2) 
-  eq "\0\xFF\0\0\0\0"."\xFF\0\0" x 48 . "\0\0\xFF" x 50
-  or print "not ";
-print "ok 52\n";
+ok($im_pal2, "got an image from quantizing");
+is(@{$quant{colors}}, 4, "has the right number of colours");
+is(Imager::i_gsamp($im_pal2, 0, 100, 0, 0, 1, 2),
+  "\0\xFF\0\0\0\0"."\xFF\0\0" x 48 . "\0\0\xFF" x 50,
+   "colors are still correct");
 
 # test the OO interfaces
-my $impal2 = Imager->new(type=>'pseudo', xsize=>200, ysize=>201)
-  or print "not ";
-print "ok 53\n";
-$impal2->getchannels == 3 or print "not ";
-print "ok 54\n";
-$impal2->bits == 8 or print "not ";
-print "ok 55\n";
-$impal2->type eq 'paletted' or print "not ";
-print "ok 56\n";
+my $impal2 = Imager->new(type=>'pseudo', xsize=>200, ysize=>201);
+ok($impal2, "make paletted via OO");
+is($impal2->getchannels, 3, "check channels");
+is($impal2->bits, 8, "check bits");
+is($impal2->type, 'paletted', "check type");
 
 {
-  my $red_idx = $impal2->addcolors(colors=>[$red])
-    or print "not ";
-  print "ok 57\n";
-  $red_idx == 0 or print "not ";
-  print "ok 58\n";
-  my $blue_idx = $impal2->addcolors(colors=>[$blue, $green])
-    or print "not ";
-  print "ok 59\n";
-  $blue_idx == 1 or print "not ";
-  print "ok 60\n";
+  my $red_idx = $impal2->addcolors(colors=>[$red]);
+  ok($red_idx, "add red to OO");
+  is(0+$red_idx, 0, "and it's expected index for red");
+  my $blue_idx = $impal2->addcolors(colors=>[$blue, $green]);
+  ok($blue_idx, "add blue/green via OO");
+  is($blue_idx, 1, "and it's expected index for blue");
   my $green_idx = $blue_idx + 1;
   my $c = $impal2->getcolors(start=>$green_idx);
-  color_cmp($green, $c) == 0 or print "not ";
-  print "ok 61\n";
+  ok(color_cmp($green, $c) == 0, "found green where expected");
   my @cols = $impal2->getcolors;
-  @cols == 3 or print "not ";
-  print "ok 62\n";
+  is(@cols, 3, "got 3 colors");
   my @exp = ( $red, $blue, $green );
+  my $good = 1;
   for my $i (0..2) {
     if (color_cmp($cols[$i], $exp[$i])) {
-      print "not ";
+      $good = 0;
       last;
     }
   }
-  print "ok 63\n";
-  $impal2->colorcount == 3 or print "not ";
-  print "ok 64\n";
-  $impal2->maxcolors == 256 or print "not ";
-  print "ok 65\n";
-  $impal2->findcolor(color=>$blue) == 1 or print "not ";
-  print "ok 66\n";
-  $impal2->setcolors(start=>0, colors=>[ $blue, $red ]) or print "not ";
-  print "ok 67\n";
+  ok($good, "all colors in palette as expected");
+  is($impal2->colorcount, 3, "and colorcount returns 3");
+  is($impal2->maxcolors, 256, "maxcolors as expected");
+  is($impal2->findcolor(color=>$blue), 1, "findcolors found blue");
+  ok($impal2->setcolors(start=>0, colors=>[ $blue, $red ]),
+     "we can setcolors");
 
   # make an rgb version
   my $imrgb2 = $impal2->to_rgb8();
-  $imrgb2->type eq 'direct' or print "not ";
-  print "ok 68\n";
+  is($imrgb2->type, 'direct', "converted is direct");
 
   # and back again, specifying the palette
   my @colors = ( $red, $blue, $green );
   my $impal3 = $imrgb2->to_paletted(colors=>\@colors,
                                     make_colors=>'none',
-                                    translate=>'closest')
-    or print "not ";
-  print "ok 69\n";
+                                    translate=>'closest');
+  ok($impal3, "got a paletted image from conversion");
   dump_colors(@colors);
   print "# in image\n";
   dump_colors($impal3->getcolors);
-  $impal3->colorcount == 3 or print "not ";
-  print "ok 70\n";
-  $impal3->type eq 'paletted' or print "not ";
-  print "ok 71\n";
+  is($impal3->colorcount, 3, "new image has expected color table size");
+  is($impal3->type, 'paletted', "and is paletted");
 }
 
-my $num = 72;
-okn($num++, !Imager->new(xsize=>0, ysize=>1), "fail to create 0 height image");
-matchn($num++, Imager->errstr, qr/Image sizes must be positive/,
+ok(!Imager->new(xsize=>0, ysize=>1), "fail to create 0 height image");
+cmp_ok(Imager->errstr, '=~', qr/Image sizes must be positive/,
        "0 height error message check");
-okn($num++, !Imager->new(xsize=>1, ysize=>0), "fail to create 0 width image");
-matchn($num++, Imager->errstr, qr/Image sizes must be positive/,
+ok(!Imager->new(xsize=>1, ysize=>0), "fail to create 0 width image");
+cmp_ok(Imager->errstr, '=~', qr/Image sizes must be positive/,
        "0 width error message check");
-okn($num++, !Imager->new(xsize=>-1, ysize=>1), "fail to create -ve height image");
-matchn($num++, Imager->errstr, qr/Image sizes must be positive/,
+ok(!Imager->new(xsize=>-1, ysize=>1), "fail to create -ve height image");
+cmp_ok(Imager->errstr, '=~', qr/Image sizes must be positive/,
        "-ve width error message check");
-okn($num++, !Imager->new(xsize=>1, ysize=>-1), "fail to create -ve width image");
-matchn($num++, Imager->errstr, qr/Image sizes must be positive/,
+ok(!Imager->new(xsize=>1, ysize=>-1), "fail to create -ve width image");
+cmp_ok(Imager->errstr, '=~', qr/Image sizes must be positive/,
        "-ve height error message check");
-okn($num++, !Imager->new(xsize=>-1, ysize=>-1), "fail to create -ve width/height image");
-matchn($num++, Imager->errstr, qr/Image sizes must be positive/,
+ok(!Imager->new(xsize=>-1, ysize=>-1), "fail to create -ve width/height image");
+cmp_ok(Imager->errstr, '=~', qr/Image sizes must be positive/,
        "-ve width/height error message check");
 
-okn($num++, !Imager->new(xsize=>1, ysize=>1, channels=>0),
-    "fail to create a zero channel image");
-matchn($num++, Imager->errstr, qr/channels must be between 1 and 4/,
+ok(!Imager->new(xsize=>1, ysize=>1, channels=>0),
+   "fail to create a zero channel image");
+cmp_ok(Imager->errstr, '=~', qr/channels must be between 1 and 4/,
        "out of range channel message check");
-okn($num++, !Imager->new(xsize=>1, ysize=>1, channels=>5),
-    "fail to create a five channel image");
-matchn($num++, Imager->errstr, qr/channels must be between 1 and 4/,
+ok(!Imager->new(xsize=>1, ysize=>1, channels=>5),
+   "fail to create a five channel image");
+cmp_ok(Imager->errstr, '=~', qr/channels must be between 1 and 4/,
        "out of range channel message check");
 
 {
@@ -257,20 +192,23 @@ matchn($num++, Imager->errstr, qr/channels must be between 1 and 4/,
   # result in trying to allocate 4Gb of memory, which is unfriendly at
   # least and may result in running out of memory, causing a different
   # type of exit
-  use Config;
-  if ($Config{intsize} == 4) {
+ SKIP:
+  {
+    use Config;
+    skip("don't want to allocate 4Gb", 8) unless $Config{intsize} == 4;
+
     my $uint_range = 256 ** $Config{intsize};
     print "# range $uint_range\n";
     my $dim1 = int(sqrt($uint_range))+1;
     
     my $im_b = Imager->new(xsize=>$dim1, ysize=>$dim1, channels=>1);
-    isn($num++, $im_b, undef, "integer overflow check - 1 channel");
+    is($im_b, undef, "integer overflow check - 1 channel");
     
     $im_b = Imager->new(xisze=>$dim1, ysize=>1, channels=>1);
-    okn($num++, $im_b, "but same width ok");
+    ok($im_b, "but same width ok");
     $im_b = Imager->new(xisze=>1, ysize=>$dim1, channels=>1);
-    okn($num++, $im_b, "but same height ok");
-    matchn($num++, Imager->errstr, qr/integer overflow/,
+    ok($im_b, "but same height ok");
+    cmp_ok(Imager->errstr, '=~', qr/integer overflow/,
            "check the error message");
 
     # do a similar test with a 3 channel image, so we're sure we catch
@@ -278,37 +216,27 @@ matchn($num++, Imager->errstr, qr/channels must be between 1 and 4/,
     my $dim3 = int(sqrt($uint_range / 3))+1;
     
     $im_b = Imager->new(xsize=>$dim3, ysize=>$dim3, channels=>3);
-    isn($num++, $im_b, undef, "integer overflow check - 3 channel");
+    is($im_b, undef, "integer overflow check - 3 channel");
     
     $im_b = Imager->new(xisze=>$dim3, ysize=>1, channels=>3);
-    okn($num++, $im_b, "but same width ok");
+    ok($im_b, "but same width ok");
     $im_b = Imager->new(xisze=>1, ysize=>$dim3, channels=>3);
-    okn($num++, $im_b, "but same height ok");
+    ok($im_b, "but same height ok");
 
-    matchn($num++, Imager->errstr, qr/integer overflow/,
+    cmp_ok(Imager->errstr, '=~', qr/integer overflow/,
            "check the error message");
-  }
-  else {
-    skipn($num, 8, "don't want to allocate 4Gb");
-    $num += 8;
   }
 }
 
 sub check_add {
-  my ($base, $im, $color, $expected) = @_;
-  my $index = Imager::i_addcolors($im, $color)
-    or print "not ";
-  print "ok ",$base++,"\n";
+  my ($im, $color, $expected) = @_;
+  my $index = Imager::i_addcolors($im, $color);
+  ok($index, "got index");
   print "# $index\n";
-  $index == $expected
-    or print "not ";
-  print "ok ",$base++,"\n";
-  my ($new) = Imager::i_getcolors($im, $index)
-    or print "not ";
-  print "ok ",$base++,"\n";
-  color_cmp($new, $color) == 0
-    or print "not ";
-  print "ok ",$base++,"\n";
+  is(0+$index, $expected, "index matched expected");
+  my ($new) = Imager::i_getcolors($im, $index);
+  ok($new, "got the color");
+  ok(color_cmp($new, $color) == 0, "color matched what was added");
 
   $index;
 }
@@ -322,15 +250,15 @@ sub color_cmp {
       || $l[2] <=> $r[2];
 }
 
-sub array_ncmp {
-  my ($a1, $a2) = @_;
-  my $len = @$a1 < @$a2 ? @$a1 : @$a2;
-  for my $i (0..$len-1) {
-    my $diff = $a1->[$i] <=> $a2->[$i] 
-      and return $diff;
-  }
-  return @$a1 <=> @$a2;
-}
+# sub array_ncmp {
+#   my ($a1, $a2) = @_;
+#   my $len = @$a1 < @$a2 ? @$a1 : @$a2;
+#   for my $i (0..$len-1) {
+#     my $diff = $a1->[$i] <=> $a2->[$i] 
+#       and return $diff;
+#   }
+#   return @$a1 <=> @$a2;
+# }
 
 sub dump_colors {
   for my $col (@_) {
