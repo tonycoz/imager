@@ -948,7 +948,7 @@ Revision history for Perl extension Imager.
   I'll leave it out.
 - built 0.43_03 for testing
 
-0.44
+0.44 Wed 15 Dec 2004
 - modify the default include directories list to include the location
   FreeBSD keeps freetype1 headers after the freetype2 locations.
   This ensures that the -I options are generated with freetype2
