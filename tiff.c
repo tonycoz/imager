@@ -2,6 +2,7 @@
 #include "tiffio.h"
 #include "iolayer.h"
 
+
 /*
 =head1 NAME
 
@@ -29,6 +30,12 @@ Some of these functions are internal.
 
 =cut
 */
+
+
+#define byteswap_macro(x) \
+     ((((x) & 0xff000000) >> 24) | (((x) & 0x00ff0000) >>  8) |     \
+      (((x) & 0x0000ff00) <<  8) | (((x) & 0x000000ff) << 24))
+
 
 /*
 =item comp_seek(h, o, w)
@@ -160,8 +167,12 @@ i_readtiff_wiol(io_glue *ig, int length) {
 	newcols = (col+tile_width  > width ) ? width-row  : tile_width;
 	for( i_row = 0; i_row < tile_height; i_row++ ) {
 	  for(x = 0; x < newcols; x++) {
-	    i_color val;               /* FIXME: Make sure this works everywhere */
-	    val.ui = raster[x+tile_width*(tile_height-i_row-1)];
+	    i_color val;
+	    uint32 temp = raster[x+tile_width*(tile_height-i_row-1)];
+	    val.rgba.r = TIFFGetR(temp);
+	    val.rgba.g = TIFFGetG(temp);
+	    val.rgba.b = TIFFGetB(temp);
+	    val.rgba.a = TIFFGetA(temp);
 	    i_ppix(im, col+x, row+i_row, &val);
 	  }
 	}
@@ -192,8 +203,12 @@ i_readtiff_wiol(io_glue *ig, int length) {
       for( i_row = 0; i_row < newrows; i_row++ ) { 
 	uint32 x;
 	for(x = 0; x<width; x++) {
-	  i_color val;               /* FIXME: Make sure this works everywhere */
-	  val.ui = raster[x+width*(newrows-i_row-1)];
+	  i_color val;
+	  uint32 temp = raster[x+width*(newrows-i_row-1)];
+	  val.rgba.r = TIFFGetR(temp);
+	  val.rgba.g = TIFFGetG(temp);
+	  val.rgba.b = TIFFGetB(temp);
+	  val.rgba.a = TIFFGetA(temp);
 	  i_ppix(im, x, i_row+row, &val);
 	}
       }

@@ -30,7 +30,7 @@ if (!i_has_format("tiff")) {
   Imager::i_tags_add($img, "i_yres", 0, undef, 250);
   # resolutionunit is centimeters
   Imager::i_tags_add($img, "tiff_resolutionunit", 0, undef, 3);
-  open(FH,">testout/t106.tiff") || die "cannot open testout/t10.tiff for writing\n";
+  open(FH,">testout/t106.tiff") || die "cannot open testout/t106.tiff for writing\n";
   binmode(FH); 
   my $IO = Imager::io_new_fd(fileno(FH));
   i_writetiff_wiol($img, $IO);
