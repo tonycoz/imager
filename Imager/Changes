@@ -881,6 +881,8 @@ Revision history for Perl extension Imager.
 0.43_03
 
 - change the "double-include" protection macro that imio.h uses.
+- updated download locations for the various libraries that Imager 
+  depends on.  Added some advice for cygwin.
 
 =================================================================
 
