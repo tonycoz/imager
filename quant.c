@@ -50,7 +50,7 @@ quant_makemap(i_quantize *quant, i_img **imgs, int count) {
       for (r = 0; r < 256; r+=0x33)
 	for (g = 0; g < 256; g+=0x33)
 	  for (b = 0; b < 256; b += 0x33)
-	    setcol(quant->mc_colors+i++, r, g, b, 0);
+	    setcol(quant->mc_colors+i++, r, g, b, 255);
       quant->mc_count = i;
     }
     break;
