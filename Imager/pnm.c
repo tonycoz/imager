@@ -97,7 +97,7 @@ gnext(mbuf *mb) {
 
 
 /*
-=item gnext(mbuf *mb)
+=item gpeek(mbuf *mb)
 
 Fetches a character but does NOT advance.  Returns a pointer to
 the byte or NULL on failure (internal).
@@ -153,7 +153,7 @@ skip_spaces(mbuf *mb) {
 
 
 /*
-=item skip_spaces(mb)
+=item skip_comment(mb)
 
 Advances in stream over whitespace and a comment if one is found. (internal)
 
@@ -236,24 +236,8 @@ i_readpnm_wiol(io_glue *ig, int length) {
 
   i_clear_error();
 
-  /*  char *pp; */
-
   mm_log((1,"i_readpnm(ig %p, length %d)\n", ig, length));
 
-  /*
-  pp = mymalloc(20);
-  
-  pp[-1]= 'c';
-  pp[-2]= 'c';
-  
-  bndcheck_all();
-
-  myfree(pp);
-
-  mm_log((1, "Hack is exiting\n"));
-
-*/
-  
   io_glue_commit_types(ig);
   init_buf(&buf, ig);
 
