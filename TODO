@@ -13,6 +13,12 @@ Iolayer:
 - Implment the maxread threshold (Indicates how far 
   a library can read before it indicates that it's done).
 
+BUGS:
+
+- clipping of FT1 output that hangs to the left of the CP, eg.
+http://test.develop-help.com/logo.mhtml?text=ff&font=cgtr66w&size=120&bg=FFFFFF&fg=0000FF&border=2
+- width problem in the above - a test font with similar overlaps could
+  be useful (maybe this can be built with pfaedit)
 
 Enhanched internal structure:
 
@@ -55,6 +61,8 @@ New Features:
 
 - hatched fills
 
+- different combining methods for fills (TC working on it)
+
 Clean up:
 - Make sure everything is doable with the OO interface
   i_flood_fill() for example.
@@ -77,7 +85,6 @@ Clean up:
   standard for this (suggested names)?  Remember to preserve the old 
   interface where possible.
 
-
 Format specific issues:
 - provide patches for libgif and libungif that fix their bugs
   and give a useful extension interface.  Probe for the 
@@ -89,9 +96,16 @@ Format specific issues:
   cases.  Also allow ascii mode.  Need to be able to write 
   pbm images which needs ties to the quantization code.
 
-- bmp, pcx and targa image formats
+- pcx and targa image formats
 
 - aalib support
+
+- when saving gifs handle the case where paletted images are being saved
+
+- save other formats as paletted for paletted where that's supported
+
+- read other format paletted images as paletted images
+
 
 Documentation:
 - Add to the documentation
