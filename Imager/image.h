@@ -362,6 +362,7 @@ undef_int i_writejpeg(i_img *im,int fd,int qfactor);
 #ifdef HAVE_LIBTIFF
 i_img* i_readtiff_wiol(io_glue *ig, int length);
 undef_int i_writetiff_wiol(i_img *im, io_glue *ig);
+undef_int i_writetiff_wiol_faxable(i_img *im, io_glue *ig, int fine);
 
 #endif /* HAVE_LIBTIFF */
 

@@ -411,6 +411,9 @@ Revision history for Perl extension Imager.
         - several fixes to i_readgif_low()
 	- Fixed crop() method so that it is consistent with documentation.
         - make clean now removes the testout directory
+	- added tests for the OO interface for tiff, added an option to
+	  choose the resolution for fax tiffs, removed some unused code,
+	  fixed minor problems with Imager::write() handling of image types
 
 ~~~~~~~~~~~~~^ ^ ^~~~~~~~~~~~~~
 
