@@ -281,10 +281,10 @@ if (!i_has_format("tiff")) {
   ok(i_writetiff_wiol($img, $IO4), "write to cb");
   ok($work eq $odata, "write cb match");
   ok($did_close, "write cb did close");
-  open D1, ">d1.tiff" or die;
+  open D1, ">testout/d1.tiff" or die;
   print D1 $work;
   close D1;
-  open D2, ">d2.tiff" or die;
+  open D2, ">testout/d2.tiff" or die;
   print D2 $tiffdata;
   close D2;
 
@@ -299,7 +299,7 @@ if (!i_has_format("tiff")) {
   ok($work eq $odata, "write cb2 match");
   ok($did_close, "write cb2 did close");
 
-  open D3, ">d3.tiff" or die;
+  open D3, ">testout/d3.tiff" or die;
   print D3 $work;
   close D3;
 
