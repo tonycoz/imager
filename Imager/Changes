@@ -920,6 +920,11 @@ Revision history for Perl extension Imager.
 - handle image creation failures when reading tga files
 - set i_format to tiff when reading tiff images and test for it
 - handle image creation failures when reading tiff files
+- test t/t35ttfont.t no longer requires TTFONTTEST to be set (and 
+  hasn't for a long time,) removed that requirement from README
+- updated home page URLs throughout the .pods
+- added information on reporting bugs to the SUPPORT section of Imager.pm
+- regops.perl now sorts the dumped data structure to produce minimal diffs
 
 =================================================================
 

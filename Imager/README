@@ -1,5 +1,6 @@
 ================================================================
 Copyright (c) 1999-2001 Arnar M. Hrafnkelsson. All rights reserved.
+Copyright (c) 2004 Anthony Cook.
 This program is free software; you can redistribute it and/or
 modify it under the same terms as Perl itself.
 ================================================================
@@ -178,17 +179,8 @@ pretty pointless to have malloc debug enabled with no logging since you
 can never see the malloc information that way.
 
 
-========================
-5. Truetype information
-========================
-
-If you enable the truetype part and want it to be TESTED you MUST set
-the environment variable TTFONTTEST to a complete path to a truetype
-font.
-
-
 =================
-6. Win32 Support
+5. Win32 Support
 =================
 
 Imager can be installed on Win32 systems.  This was ported and tested
@@ -216,7 +208,7 @@ If you have any problems with the Win32 support, please email
 tony@develop-help.com (don't forget to use nmake instead of make).
 
 =======================
-7. General information
+6. General information
 =======================
 
 The Imager module homepage is currently at:
@@ -231,7 +223,7 @@ rather verbose debugging output from the C code.
 
 
 ========================
-8. Thanks
+7. Thanks
 ========================
 
 Thanks go to:

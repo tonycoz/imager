@@ -100,7 +100,8 @@ list.
 =head1 SEE ALSO
 
 Imager(3)
-http://www.eecs.umich.edu/~addi/perl/Imager/
+
+http://imager.perl.org/
 
 =cut
 
