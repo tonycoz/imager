@@ -8,8 +8,8 @@ PRE-0.44:
   - tga
   - rgb
   - png - done
-  - gif
-  - pnm
+  - gif - done
+  - pnm - done
 - check each file reader for possible integer overflows
   - bmp
   - tiff

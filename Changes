@@ -915,6 +915,7 @@ Revision history for Perl extension Imager.
 - i_img_pal_new() now releases the image object memory if creation
   fails.
 - set i_format to gif when reading gif files and test for it
+- set i_format to pnm when reading pnm files and test for it
 
 =================================================================
 
