@@ -429,6 +429,7 @@ ICL_set_internal(cl,r,g,b,a)
                unsigned char     b
                unsigned char     a
 	   PPCODE:
+	       ICL_set_internal(cl, r, g, b, a);
 	       EXTEND(SP, 1);
 	       PUSHs(ST(0));
 
