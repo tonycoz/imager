@@ -719,6 +719,12 @@ i_readtga_wiol(io_glue *ig, int length) {
   img = mapped ? 
     i_img_pal_new(width, height, channels, 256) :
     i_img_empty_ch(NULL, width, height, channels);
+
+  if (!img) {
+    if (idstring) 
+      myfree(idstring);
+    return NULL;
+  }
   
   if (idstring) {
     i_tags_add(&img->tags, "tga_idstring", 0, idstring, header.idlength, 0);
@@ -758,6 +764,7 @@ i_readtga_wiol(io_glue *ig, int length) {
   myfree(databuf);
   if (linebuf) myfree(linebuf);
   
+  i_tags_add(&img->tags, "i_format", 0, "tga", -1, 0);
   i_tags_addn(&img->tags, "tga_bitspp", 0, mapped?header.colourmapdepth:header.bitsperpixel);
   if (src.compressed) i_tags_addn(&img->tags, "compressed", 0, 1);
   return img;
