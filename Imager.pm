@@ -1792,11 +1792,11 @@ sub box {
     i_box_cfill($self->{IMG},$opts{xmin},$opts{ymin},$opts{xmax},
                 $opts{ymax},$opts{fill}{fill});
   }
-  else { 
+  else {
     my $color = _color($opts{'color'});
     unless ($color) { 
-      $self->{ERRSTR} = $Imager::ERRSTR; 
-      return; 
+      $self->{ERRSTR} = $Imager::ERRSTR;
+      return;
     }
     i_box($self->{IMG},$opts{xmin},$opts{ymin},$opts{xmax},$opts{ymax},
           $color);
@@ -2344,19 +2344,19 @@ sub parseiptc {
     if (/^\004\004/) {
       @sar=split(/\034\002/);
       foreach $item (@sar) {
-	if ($item =~ m/^x/) { 
+	if ($item =~ m/^x/) {
 	  $caption=&clean($item);
 	  $i++;
 	}
-	if ($item =~ m/^P/) { 
+	if ($item =~ m/^P/) {
 	  $photogr=&clean($item);
 	  $i++;
 	}
-	if ($item =~ m/^i/) { 
+	if ($item =~ m/^i/) {
 	  $headln=&clean($item);
 	  $i++;
 	}
-	if ($item =~ m/^n/) { 
+	if ($item =~ m/^n/) {
 	  $credit=&clean($item);
 	  $i++;
 	}
