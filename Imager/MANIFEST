@@ -62,6 +62,7 @@ lib/Imager/Expr.pm
 lib/Imager/Expr/Assem.pm
 lib/Imager/Files.pod
 lib/Imager/Draw.pod
+lib/Imager/Transformations.pod
 lib/Imager/Fill.pm
 lib/Imager/Font.pm
 lib/Imager/Font/Type1.pm
