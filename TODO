@@ -40,8 +40,6 @@ New Features:
 
 - Finish antialiased filled polygon function.
 
-- freetype 2 support
-
 - advanced font layout (spacing, kerning, alignment) (sky)
 
 - font synthesis - synthesize a bold or slanted font from a normal font
@@ -98,6 +96,8 @@ Format specific issues:
 - save other formats as paletted for paletted where that's supported
 
 - read other format paletted images as paletted images
+
+- have jpeg.c write 2 or 4 channel images as 1 or 3 channels respectively
 
 
 Documentation:

@@ -1011,7 +1011,7 @@ sub write {
       $self->{DEBUG} && print "writing a png file\n";
     } elsif ( $input{type} eq 'jpeg' ) {
       if ( !i_writejpeg_wiol($self->{IMG}, $IO, $input{jpegquality})) {
-	$self->{ERRSTR}='unable to write jpeg image'; 
+        $self->{ERRSTR} = $self->_error_as_msg();
 	return undef;
       }
       $self->{DEBUG} && print "writing a jpeg file\n";

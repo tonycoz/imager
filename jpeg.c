@@ -1,3 +1,25 @@
+/*
+=head1 NAME
+
+jpeg.c - implement saving and loading JPEG images
+
+=head1 SYNOPSIS
+
+  io_glue *ig;
+  if (!i_writejpeg_wiol(im, ig, quality)) {
+    .. error ..
+  }
+  im = i_readjpeg_wiol(ig, length, iptc_text, itlength);
+
+=head1 DESCRIPTION
+
+Reads and writes JPEG images
+
+=over
+
+=cut
+*/
+
 #include <stdio.h>
 #include <sys/stat.h>
 #ifndef _MSC_VER
@@ -8,6 +30,8 @@
 #include "iolayer.h"
 #include "image.h"
 #include "jpeglib.h"
+#include "jerror.h"
+#include <errno.h>
 
 #define JPEG_APP13       0xED    /* APP13 marker code */
 #define JPGS 1024
@@ -189,11 +213,12 @@ wiol_empty_output_buffer(j_compress_ptr cinfo) {
   ssize_t nbytes     = JPGS - dest->pub.free_in_buffer;
   */
 
-  mm_log((1,"wiol_emtpy_output_buffer(cinfo 0x%p)\n"));
+  mm_log((1,"wiol_empty_output_buffer(cinfo 0x%p)\n"));
   rc = dest->data->writecb(dest->data, dest->buffer, JPGS);
   
   if (rc != JPGS) { /* XXX: Should raise some jpeg error */
     mm_log((1, "wiol_empty_output_buffer: Error: nbytes = %d != rc = %d\n", JPGS, rc));
+    ERREXIT(cinfo, JERR_FILE_WRITE); 
   }
   dest->pub.free_in_buffer = JPGS;
   dest->pub.next_output_byte = dest->buffer;
@@ -203,11 +228,13 @@ wiol_empty_output_buffer(j_compress_ptr cinfo) {
 static void
 wiol_term_destination (j_compress_ptr cinfo) {
   wiol_dest_ptr dest = (wiol_dest_ptr) cinfo->dest;
-
+  size_t nbytes = JPGS - dest->pub.free_in_buffer;
   /* yes, this needs to flush the buffer */
   /* needs error handling */
-  dest->data->writecb(dest->data, dest->buffer, 
-		      JPGS - dest->pub.free_in_buffer);
+  if (dest->data->writecb(dest->data, dest->buffer, nbytes) != nbytes) {
+    ERREXIT(cinfo, JERR_FILE_WRITE);
+  }
+
 
   mm_log((1, "wiol_term_destination(cinfo %p)\n", cinfo));
   mm_log((1, "wiol_term_destination: dest %p\n", cinfo->dest));
@@ -238,10 +265,6 @@ jpeg_wiol_dest(j_compress_ptr cinfo, io_glue *ig) {
   dest->pub.free_in_buffer      = JPGS;
   dest->pub.next_output_byte    = dest->buffer;
 }
-
-
-
-
 
 LOCAL(unsigned int)
 jpeg_getc (j_decompress_ptr cinfo)
@@ -282,6 +305,8 @@ my_output_message (j_common_ptr cinfo) {
   /* Create the message */
   (*cinfo->err->format_message) (cinfo, buffer);
 
+  i_push_error(0, buffer);
+
   /* Send it to stderr, adding a newline */
   mm_log((1, "%s\n", buffer));
 }
@@ -303,15 +328,16 @@ my_error_exit (j_common_ptr cinfo) {
   /* Always display the message. */
   /* We could postpone this until after returning, if we chose. */
   (*cinfo->err->output_message) (cinfo);
-  
+
   /* Return control to the setjmp point */
   longjmp(myerr->setjmp_buffer, 1);
 }
 
+/*
+=item i_readjpeg_wiol(data, length, iptc_itext, itlength)
 
-
-
-
+=cut
+*/
 i_img*
 i_readjpeg_wiol(io_glue *data, int length, char** iptc_itext, int *itlength) {
   i_img *im;
@@ -322,6 +348,8 @@ i_readjpeg_wiol(io_glue *data, int length, char** iptc_itext, int *itlength) {
   int row_stride;		/* physical row width in output buffer */
 
   mm_log((1,"i_readjpeg_wiol(data 0x%p, length %d,iptc_itext 0x%p)\n", data, iptc_itext));
+
+  i_clear_error();
 
   iptc_text = iptc_itext;
   cinfo.err = jpeg_std_error(&jerr.pub);
@@ -356,8 +384,11 @@ i_readjpeg_wiol(io_glue *data, int length, char** iptc_itext, int *itlength) {
   return im;
 }
 
+/*
+=item i_writejpeg_wiol(im, ig, qfactor)
 
-
+=cut
+*/
 
 undef_int
 i_writejpeg_wiol(i_img *im, io_glue *ig, int qfactor) {
@@ -366,19 +397,34 @@ i_writejpeg_wiol(i_img *im, io_glue *ig, int qfactor) {
   int quality;
 
   struct jpeg_compress_struct cinfo;
-  struct jpeg_error_mgr jerr;
+  struct my_error_mgr jerr;
 
   JSAMPROW row_pointer[1];	/* pointer to JSAMPLE row[s] */
   int row_stride;		/* physical row width in image buffer */
+  unsigned char * data = NULL;
 
   mm_log((1,"i_writejpeg(im %p, ig %p, qfactor %d)\n", im, ig, qfactor));
   
-  if (!(im->channels==1 || im->channels==3)) { fprintf(stderr,"Unable to write JPEG, improper colorspace.\n"); exit(3); }
+  i_clear_error();
+
+  if (!(im->channels==1 || im->channels==3)) { 
+    i_push_error(0, "only 1 or 3 channels images can be saved as JPEG");
+    return 0;
+  }
   quality = qfactor;
 
-  cinfo.err = jpeg_std_error(&jerr);
-
+  cinfo.err = jpeg_std_error(&jerr.pub);
+  jerr.pub.error_exit = my_error_exit;
+  jerr.pub.output_message = my_output_message;
+  
   jpeg_create_compress(&cinfo);
+
+  if (setjmp(jerr.setjmp_buffer)) {
+    jpeg_destroy_compress(&cinfo);
+    if (data)
+      myfree(data);
+    return 0;
+  }
 
   io_glue_commit_types(ig);
   jpeg_wiol_dest(&cinfo, ig);
@@ -416,7 +462,7 @@ i_writejpeg_wiol(i_img *im, io_glue *ig, int qfactor) {
     }
   }
   else {
-    unsigned char *data = mymalloc(im->xsize * im->channels);
+    data = mymalloc(im->xsize * im->channels);
     if (data) {
       while (cinfo.next_scanline < cinfo.image_height) {
         /* jpeg_write_scanlines expects an array of pointers to scanlines.
@@ -430,8 +476,8 @@ i_writejpeg_wiol(i_img *im, io_glue *ig, int qfactor) {
       }
     }
     else {
-      jpeg_finish_compress(&cinfo);
       jpeg_destroy_compress(&cinfo);
+      i_push_error(0, "out of memory");
       return 0; /* out of memory? */
     }
   }
@@ -444,3 +490,17 @@ i_writejpeg_wiol(i_img *im, io_glue *ig, int qfactor) {
 
   return(1);
 }
+
+/*
+=back
+
+=head1 AUTHOR
+
+Arnar M. Hrafnkelsson, addi@umich.edu
+
+=head1 SEE ALSO
+
+Imager(3)
+
+=cut
+*/
