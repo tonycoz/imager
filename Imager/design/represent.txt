@@ -1,6 +1,6 @@
 =head1 NAME
 
-  represent.txt - discuss image representation
+  represent.txt - discuss image representation within Imager
 
 =head1 SYNOPSIS
 
@@ -12,22 +12,104 @@
 
 =head1 DESCRIPTION
 
-I'm going to try to explain what 
+I'm going to try to explain what we can get from having a flexible
+representation of images within Imager.
+
+The main idea is to have all, or almost all of Imager access the
+contents of an image through function pointers embedded in the i_img
+structure.  This means that the underlying image data can be formatted
+to suit special purposes, including paletted images, images kept of
+disk (think of 64k x 64k RGB images), and virtual images (where
+there's no actual image data.)
+
+=head2 Paletted Images
+
+This is the form we've discussed the most.  The main advantage here is
+when the user is performing simple manipulations on the image data.
+One example that came up recently was when mjd was trying to combine
+several images into a single animated GIF file.  If we were
+representing the image internally as paletted, and the GIF reader and
+writer knew how to do that we could have loaded the images into
+paletted images and then written them with no quantization required.
+
+Now we could get complicated and have writes with colours that don't
+exist in the image cause an extra entry be added to the palette, but
+this leads to complications as to when to convert the image to RGB.
+Some paletted formats support large palettes, so if we allowed a few
+hundred new colours to be drawn into the image and the tried to save
+to a format with only small palettes, not only has the user paid the
+performance cost in writing to the image (since paletted writes
+include a palette lookup), but also the hit in having to re-quantize
+the image anyway.
+
+So my idea was to have the paletted write functions be something like:
+
+  if (found entry in palette) {
+    save to the pixel
+  } else {
+    convert image to rgb
+    call rgb save function
+  }
+
+An initial implementation might only support 256 colour palettes, we
+might expand that later to support larger palettes.
+
+We could expose the quant.c functions to allow the user to create
+palettes (and possibly tune them), and to convert from RGB images to
+paletted images.
+
+For improved memory usage for large images we could also implement 4
+and 1 bit/pixel images.  If we want good support for faxing this could
+be useful.
 
 =head2 Virtual Images
 
+Another possible type of image is a B<virtual image> where the i_img
+that the user has, has no image data directly associated with it.  The
+results of retreiving pixels would simply be the result of some
+function.  Such virtualness could even be in terms of "virtual
+memory", so a 32-bit processor machine could work with 65536x65536x24
+bit images which doesn't even fit into the address-space of the 32-bit
+machine.
 
+One possible implementation of function based images would be through
+the use of the transform2() engine.  This way the user could specify
+the function to be used to generate the virtual image.  This is most
+useful for very large images, otherwise simply generating a new image
+using the transform2() function would be faster.
 
-=head2 Image Subsetting
+=head3 Image Subsetting
+
+This would be mainly for when writing to an image, the user could
+supply another image where which pixels were non-black allowed writes
+to the corresponding pixels in another image.  Since access is
+controlled via another image, we aren't limited to rectangular
+subsets.
+
+One simple example might be to create a mask image that has some text
+drawn in a large font.  When a gradient or other effect is used it
+will fill the letters in the target image.  A more subtle effect could
+be lightening, darkening or blurring through the image.
+
+One implementation consideration is that if calculating the pixel
+value is expensive the caller may want a method to check if given
+pixels are writable, to avoid that extra expense.
 
 =head2 Varying Bits/Sample
 
-=head2 Paletted Images
+=head2 Implementation
+
+Since we want some function pointers to only be available for some
+images (like 'getpixindex' against paletted images), callers need to
+be able to detect the type of image that they are working with.
 
 =head2 Performance
 
 Why is performance last?  Well, it needs to be considered in terms of
 the other topics above.
+
+Perhaps some method to check the writability at given pixels could be
+used to avoid expensive pixel calculations.
 
 =head2 Robustness
 
