@@ -108,6 +108,11 @@ See Imager::Font to see how to use this type.
 This class provides low-level functions that require the caller to
 perform data validation
 
+By default Imager no longer creates the F<t1lib.log> log file.  You
+can re-enable that by calling Imager::init() with the C<t1log> option:
+
+  Imager::init(t1log=>1);
+
 =head1 AUTHOR
 
 Addi, Tony
