@@ -240,7 +240,6 @@ i_readpng(int fd) {
   for (pass = 0; pass < number_passes; pass++)
     for (y = 0; y < height; y++) {
       png_read_row(png_ptr,(png_bytep) &(im->data[channels*width*y]), NULL);
-      mm_log((1, "pass = %d, row %d\n", pass, y));
     }
   /* read rest of file, and get additional chunks in info_ptr - REQUIRED */
 
