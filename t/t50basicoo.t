@@ -73,6 +73,7 @@ for my $type (@types) {
   if (ok($fh, "opening $opts{file}")) {
     binmode $fh;
     my $fhimg = Imager->new;
+    Imager::log_entry("Reading file: $opts{file}\n", -1);
     my $fhrc = $fhimg->read(fh=>$fh, %mopts);
     if (ok(!$fhrc, "check that type is required")) {
       ok ($fhimg->errstr =~ /type parameter missing/, "check for no type error");

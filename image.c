@@ -2189,7 +2189,15 @@ i_test_format_probe(io_glue *data, int length) {
     }
   }
 
-
+	if (match && !strcmp(match, "jpeg")) {
+		unsigned int x0, x1;
+  	rc = data->readcb(data, head, 18);
+	  if (rc == -1) return NULL;
+		x0 = (unsigned char)head[0];
+		x1 = (unsigned char)head[1];
+	  data->seekcb(data, -rc, SEEK_CUR);
+		printf("Jpeg reread: %x %x\n", x0, x1);
+	}
 
   if (!match && 
       (rc == 18) &&
