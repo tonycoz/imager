@@ -246,7 +246,7 @@ sub checkformat {
 
   my @i;
   for my $ip (@incs) {
-    push(@i, gd($ip,$incchk));
+    push(@i, $ip) if $incchk->($ip,$frm);
   }
 
   printf("%10s: includes %s - libraries %s\n",$frm,(@i?'found':'not found'),(@l?'found':'not found'));
@@ -324,7 +324,7 @@ sub init {
   $formats{'jpeg'}={
 		    order=>'21',
 		    def=>'HAVE_LIBJPEG',
-		    inccheck=>sub { $_[0] eq 'jpeglib.h' },
+		    inccheck=>sub { -e catfile($_[0], 'jpeglib.h') },
 		    libcheck=>sub { $_[0] eq "libjpeg$aext" or $_ eq "libjpeg.$lext" },
 		    libfiles=>'-ljpeg',
 		    objfiles=>'jpeg.o',
@@ -336,7 +336,7 @@ sub init {
   $formats{'tiff'}={
 		    order=>'23',
 		    def=>'HAVE_LIBTIFF',
-		    inccheck=>sub { $_[0] eq 'tiffio.h' },
+		    inccheck=>sub { -e catfile($_[0], 'tiffio.h') },
 		    libcheck=>sub { $_[0] eq "libtiff$aext" or $_ eq "libtiff.$lext" },
 		    libfiles=>'-ltiff',
 		    objfiles=>'tiff.o',
@@ -348,7 +348,7 @@ sub init {
   $formats{'png'}={
 		   order=>'22',
 		   def=>'HAVE_LIBPNG',
-		   inccheck=>sub { $_[0] eq 'png.h' },
+		   inccheck=>sub { -e catfile($_[0], 'png.h') },
 		   libcheck=>sub { $_[0] eq "libpng$aext" or $_[0] eq "libpng.$lext" },
 		   libfiles=>'-lpng -lz',
 		   objfiles=>'png.o',
@@ -362,7 +362,7 @@ sub init {
   $formats{'gif'}={
 		   order=>'20',
 		   def=>'HAVE_LIBGIF',
-		   inccheck=>sub { $_[0] eq 'gif_lib.h' },
+		   inccheck=>sub { -e catfile($_[0], 'gif_lib.h') },
 		   libcheck=>sub { $_[0] eq "libgif$aext" or $_[0] eq "libgif.$lext" },
 		   libfiles=>'-lgif',
 		   objfiles=>'gif.o',
@@ -377,7 +377,7 @@ sub init {
   $formats{'ungif'}={
 		     order=>'21',
 		     def=>'HAVE_LIBGIF',
-		     inccheck=>sub { $_[0] eq 'gif_lib.h' },
+		     inccheck=>sub { -e catfile($_[0], 'gif_lib.h') },
 		     libcheck=>sub { $_[0] eq "libungif$aext" or $_[0] eq "libungif.$lext" },
 		     libfiles=>'-lungif',
 		     objfiles=>'gif.o',
@@ -391,7 +391,7 @@ sub init {
   $formats{'T1-fonts'}={
 			order=>'30',
 			def=>'HAVE_LIBT1',
-			inccheck=>sub { $_[0] eq 't1lib.h' },
+			inccheck=>sub { -e catfile($_[0], 't1lib.h') },
 			libcheck=>sub { $_[0] eq "libt1$aext" or $_[0] eq "libt1.$lext" },
 			libfiles=>'-lt1',
 			objfiles=>'',
@@ -402,24 +402,26 @@ sub init {
 				for use in images.}
 		       };
 
-  $formats{'TT-fonts'}={
-			order=>'31',
-			def=>'HAVE_LIBTT',
-			inccheck=>sub { $_[0] eq 'freetype.h' },
-			libcheck=>sub { $_[0] eq "libttf$aext" or $_[0] eq "libttf.$lext" },
-			libfiles=>'-lttf',
-			objfiles=>'',
-			docs=>q{
-				Truetype fonts are scalable fonts. They can include 
-				kerning and hinting information and generally yield good
-				visual quality esp on low resultions. The freetype library is
-				used to rasterize for us. The only drawback is that there
-				are alot of badly designed fonts out there.}
+  $formats{'TT-fonts'}=
+    {
+     order=>'31',
+     def=>'HAVE_LIBTT',
+     inccheck=>sub { -e catfile($_[0], 'freetype.h')
+                       && !-e catfile($_[0], 'fterrors.h') },
+     libcheck=>sub { $_[0] eq "libttf$aext" or $_[0] eq "libttf.$lext" },
+     libfiles=>'-lttf',
+     objfiles=>'',
+     docs=>q{
+Truetype fonts are scalable fonts. They can include 
+kerning and hinting information and generally yield good
+visual quality esp on low resultions. The freetype library is
+used to rasterize for us. The only drawback is that there
+are alot of badly designed fonts out there.}
 		       };
   $formats{'w32'} = {
 		     order=>40,
 		     def=>'HAVE_WIN32',
-		     inccheck=>sub { lc $_[0] eq 'windows.h' },
+		     inccheck=>sub { -e catfile($_[0], 'windows.h') },
 		     libcheck=>sub { lc $_[0] eq 'gdi32.lib' 
 				       || lc $_[0] eq 'libgdi32.a' },
 		     libfiles=>$^O eq 'cygwin' ? '-lgdi32' : '',
@@ -433,13 +435,13 @@ DOCS
   $formats{'freetype2'} = {
                            order=>'29',
                            def=>'HAVE_FT2',
-                           inccheck=>sub { lc $_[0] eq 'ft2build.h' },
+                           inccheck=>sub { -e catfile($_[0], 'ft2build.h') },
                            libcheck=>sub { $_[0] eq "libfreetype$aext" or $_[0] eq "libfreetype.$lext" },
                            libfiles=>'-lfreetype',
                            objfiles=>'freetyp2.o',
                            docs=><<DOCS,
 Freetype 2 supports both Truetype and Type 1 fonts, both of which are
-scalable.
+scalable.  It also supports a variety of other fonts.
 DOCS
                            code => \&freetype2_probe,
                           };
