@@ -366,6 +366,10 @@ Revision history for Perl extension Imager.
 	- Win32 support for tiff
 	- base level error reporting code added, I still need to modify
 	older code to use it
+        - fix translate=>'giflib' handling of single-colour images.  
+	  Previously a single colour image would cause an error in 
+	  MakeMapObject().
+        - fix t/t10formats.t tests against giflib3
 
 
 ~~~~~~~~~~~~~^ ^ ^~~~~~~~~~~~~~
