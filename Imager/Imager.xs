@@ -3939,9 +3939,9 @@ i_wf_bbox(face, size, text)
 	char *face
 	int size
 	char *text
-        int rc, i;
       PREINIT:
 	int cords[BOUNDING_BOX_COUNT];
+        int rc, i;
       PPCODE:
         if (rc = i_wf_bbox(face, size, text, strlen(text), cords)) {
           EXTEND(SP, rc);  
