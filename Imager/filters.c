@@ -1191,6 +1191,8 @@ fount_fill_destroy(i_fill_t *fill);
 /*
 =item i_new_fount(xa, ya, xb, yb, type, repeat, combine, super_sample, ssample_param, count, segs)
 
+Creates a new general fill which fills with a fountain fill.
+
 =cut
 */
 
