@@ -426,8 +426,6 @@ Revision history for Perl extension Imager.
         - How to store data in the C interface for tags/metadata?
 
 	Good stuff:
-	- matrix based colour transformations, for RGB to grayscale
-	and simple linear other conversions, see design/colmatrix.txt
 	- image colour transformations based on input images, see 
 	design/cmyktorgb.txt for Addi's description
 	- eventually support tiff's madness
