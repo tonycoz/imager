@@ -1589,7 +1589,10 @@ i_writeraw_wiol(im,ig)
     Imager::ImgRaw     im
         Imager::IO     ig
 
-
+undef_int
+i_writebmp_wiol(im,ig)
+    Imager::ImgRaw     im
+        Imager::IO     ig
 
 Imager::ImgRaw
 i_scaleaxis(im,Value,Axis)
