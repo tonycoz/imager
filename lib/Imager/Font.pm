@@ -23,7 +23,7 @@ my %drivers =
    ft2=>{
          class=>'Imager::Font::FreeType2',
          module=>'Imager/Font/FreeType2.pm',
-         files=>'.*\.(pfa|pfb|otf|ttf|fon|fnt|dfont)$',
+         files=>'.*\.(pfa|pfb|otf|ttf|fon|fnt|dfont|pcf(\.gz)?)$',
         },
    ifs=>{
          class=>'Imager::Font::Image',
