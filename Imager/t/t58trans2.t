@@ -9,7 +9,7 @@ print "ok 1\n";
 
 #$Imager::DEBUG=1;
 
-Imager::init('log'=>'testout/t56trans2.log');
+Imager::init('log'=>'testout/t58trans2.log');
 
 my $im1 = Imager->new();
 $im1->open(file=>'testimg/penguin-base.ppm', type=>'pnm')
