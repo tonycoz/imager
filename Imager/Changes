@@ -370,6 +370,9 @@ Revision history for Perl extension Imager.
 	  Previously a single colour image would cause an error in 
 	  MakeMapObject().
         - fix t/t10formats.t tests against giflib3
+        - added test for transparent gifs
+        - minor doc fixes for transparent gifs
+        - make it less error-prone to write transparent gifs
 
 
 ~~~~~~~~~~~~~^ ^ ^~~~~~~~~~~~~~
