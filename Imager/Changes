@@ -617,6 +617,8 @@ Revision history for Perl extension Imager.
         - handle the presence of the default broken giflib better,
           by giving them some more prose about the problem, and skipping
           all but the first test that fails with the broken giflib
+        - i_box_cfill() went into an infinite loop on fountain fills
+          or fills on images with more than 8-bits/sample
 
 =================================================================
 
