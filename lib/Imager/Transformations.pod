@@ -1,0 +1,180 @@
+=head1 NAME
+
+Imager::Transformations - Simple transformations of one image into another.
+
+=head1 SYNOPSIS
+
+  use Imager;
+
+  $newimg = $img->copy();
+
+  $newimg = $img->scale(xpixels=>400);
+  $newimg = $img->scale(xpixels=>400, ypixels=>400);
+  $newimg = $img->scale(xpixels=>400, ypixels=>400, type=>min);
+  $newimg = $img->scale(scalefactor=>0.25);
+
+  $newimg = $img->crop(left=>50, right=>100, top=>10, bottom=>100); 
+  $newimg = $img->crop(left=>50, top=>10, width=>50, height=>90);
+
+  $dest->paste(left=>40,top=>20,img=>$logo);
+
+  $img->rubthrough(src=>$srcimage,tx=>30,ty=>50);
+
+
+  $img->flip(dir=>"h");       # horizontal flip
+  $img->flip(dir=>"vh");      # vertical and horizontal flip
+  $nimg = $img->copy->flip(dir=>"v"); # make a copy and flip it vertically
+
+  my $rot20 = $img->rotate(degrees=>20);
+  my $rotpi4 = $img->rotate(radians=>3.14159265/4);
+
+=head1 DESCRIPTION
+
+The methods described in Imager::Transformations fall into two categories.
+Either they take an existing image and modify it in place, or they 
+return a modified copy.
+
+Functions that modify inplace are C<flip()>, C<paste()> and
+C<rubthrough()>.  If the original is to be left intact it's possible
+to make a copy and alter the copy:
+
+  $flipped = $img->copy()->flip(dir=>'h');
+
+=head2 Image copying/resizing/cropping/rotating
+
+A list of the transformations that do not alter the source image follows:
+
+=over
+
+=item copy
+
+To create a copy of an image use the C<copy()> method.  This is usefull
+if you want to keep an original after doing something that changes the image.
+
+  $newimg = $orig->copy();
+
+=item scale
+
+To scale an image so porportions are maintained use the
+C<$img-E<gt>scale()> method.  if you give either a xpixels or ypixels
+parameter they will determine the width or height respectively.  If
+both are given the one resulting in a larger image is used.  example:
+C<$img> is 700 pixels wide and 500 pixels tall.
+
+  $newimg = $img->scale(xpixels=>400); # 400x285
+  $newimg = $img->scale(ypixels=>400); # 560x400
+
+  $newimg = $img->scale(xpixels=>400,ypixels=>400); # 560x400
+  $newimg = $img->scale(xpixels=>400,ypixels=>400,type=>min); # 400x285
+
+  $newimg = $img->scale(scalefactor=>0.25); 175x125 
+  $newimg = $img->scale(); # 350x250
+
+if you want to create low quality previews of images you can pass
+C<qtype=E<gt>'preview'> to scale and it will use nearest neighbor
+sampling instead of filtering. It is much faster but also generates
+worse looking images - especially if the original has a lot of sharp
+variations and the scaled image is by more than 3-5 times smaller than
+the original.
+
+If you need to scale images per axis it is best to do it simply by
+calling scaleX and scaleY.  You can pass either 'scalefactor' or
+'pixels' to both functions.
+
+=item crop
+
+
+Another way to resize an image size is to crop it.  The parameters
+to crop are the edges of the area that you want in the returned image.
+If a parameter is omited a default is used instead.
+
+  $newimg = $img->crop(left=>50, right=>100, top=>10, bottom=>100); 
+  $newimg = $img->crop(left=>50, top=>10, width=>50, height=>90);
+  $newimg = $img->crop(left=>50, right=>100); # top 
+
+You can also specify width and height parameters which will produce a
+new image cropped from the center of the input image, with the given
+width and height.
+
+  $newimg = $img->crop(width=>50, height=>50);
+
+The width and height parameters take precedence over the left/right
+and top/bottom parameters respectively.
+
+=item rotate
+
+
+Use the rotate() method to rotate an image.  This method will return a
+new, rotated image.
+
+To rotate by an exact amount in degrees or radians, use the 'degrees'
+or 'radians' parameter:
+
+  my $rot20 = $img->rotate(degrees=>20);
+  my $rotpi4 = $img->rotate(radians=>3.14159265/4);
+
+Exact image rotation uses the same underlying transformation engine as
+the matrix_transform() method.
+
+To rotate in steps of 90 degrees, use the 'right' parameter:
+
+  my $rotated = $img->rotate(right=>270);
+
+Rotations are clockwise for positive values.
+
+=back
+
+
+=head2 Image pasting/flipping/
+
+A list of the transformations that alter the source image follows:
+
+=over
+
+=item paste
+
+
+To copy an image to onto another image use the C<paste()> method.
+
+  $dest->paste(left=>40,top=>20,img=>$logo);
+
+That copies the entire C<$logo> image onto the C<$dest> image so that the
+upper left corner of the C<$logo> image is at (40,20).
+
+
+=item rubthrough
+
+A more complicated way of blending images is where one image is
+put 'over' the other with a certain amount of opaqueness.  The
+method that does this is rubthrough.
+
+  $img->rubthrough(src=>$srcimage,tx=>30,ty=>50);
+
+That will take the image C<$srcimage> and overlay it with the upper
+left corner at (30,50).  You can rub 2 or 4 channel images onto a 3
+channel image, or a 2 channel image onto a 1 channel image.  The last
+channel is used as an alpha channel.
+
+
+=item flip
+
+An inplace horizontal or vertical flip is possible by calling the
+C<flip()> method.  If the original is to be preserved it's possible to
+make a copy first.  The only parameter it takes is the C<dir>
+parameter which can take the values C<h>, C<v>, C<vh> and C<hv>.
+
+  $img->flip(dir=>"h");       # horizontal flip
+  $img->flip(dir=>"vh");      # vertical and horizontal flip
+  $nimg = $img->copy->flip(dir=>"v"); # make a copy and flip it vertically
+
+=back
+
+
+
+
+
+
+
+
+
+
