@@ -252,8 +252,9 @@ ok($testnum++,
                   fill=>{ fountain=>'linear', xa=>20, ya=>20, xb=>80, 
                           yb=>20 }), "linear box fill");
     ++$testnum;
+    alarm 0;
   };
-  $@ and ok($testnum++, 0, "linear box fill alarmed");
+  $@ and ok($testnum++, 0, "linear box fill $@");
 }
 
 sub ok ($$$) {
