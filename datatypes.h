@@ -30,6 +30,8 @@ struct _i_img {
 
   int (*i_f_ppix) (struct _i_img *,int,int,i_color *); 
   int (*i_f_gpix) (struct _i_img *,int,int,i_color *);
+  int (*i_f_plin) (struct _i_img *,int l, int r, int y, i_color *);
+  int (*i_f_glin) (struct _i_img *,int l, int r, int y, i_color *);
   void *ext_data;
 };
 

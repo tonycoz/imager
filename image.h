@@ -62,6 +62,11 @@ int i_gpix(i_img *im,int x,int y,i_color *val);
 
 int i_ppix_d(i_img *im,int x,int y,i_color *val);
 int i_gpix_d(i_img *im,int x,int y,i_color *val);
+int i_plin_d(i_img *im,int l, int r, int y, i_color *val);
+int i_glin_d(i_img *im,int l, int r, int y, i_color *val);
+
+#define i_plin(im, l, r, y, val) (((im)->i_f_plin)(im, l, r, y, val))
+#define i_glin(im, l, r, y, val) (((im)->i_f_glin)(im, l, r, y, val))
 
 float i_gpix_pch(i_img *im,int x,int y,int ch);
 
