@@ -2196,7 +2196,7 @@ sub setpixel {
     or return undef;
   if (ref $x && ref $y) {
     unless (@$x == @$y) {
-      $self->{ERRSTR} = 'length of x and y mistmatch';
+      $self->{ERRSTR} = 'length of x and y mismatch';
       return undef;
     }
     if ($color->isa('Imager::Color')) {
