@@ -60,7 +60,7 @@ static i_img IIM_base_masked =
 {
   0, /* channels set */
   0, 0, 0, /* xsize, ysize, bytes */
-  ~0, /* ch_mask */
+  ~0U, /* ch_mask */
   i_8_bits, /* bits */
   i_palette_type, /* type */
   1, /* virtual */

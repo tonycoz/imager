@@ -387,6 +387,10 @@ tga_source_read(tga_source *s, unsigned char *buf, size_t pixels) {
 
       s->len = (s->hdr &~(1<<7))+1;
       s->state = (s->hdr & (1<<7)) ? Rle : Raw;
+      {
+	static cnt = 0;
+	printf("%04d %s: %d\n", cnt++, s->state==Rle?"RLE":"RAW", s->len);
+      }
       if (s->state == Rle && s->ig->readcb(s->ig, s->cval, s->bytepp) != s->bytepp) return 0;
 
       break;
@@ -439,7 +443,7 @@ tga_dest_write(tga_dest *s, unsigned char *buf, size_t pixels) {
     int nxtrip = find_repeat(buf+cp*s->bytepp, pixels-cp, s->bytepp);
     tlen = (nxtrip == -1) ? pixels-cp : nxtrip;
     while(tlen) {
-      int clen = (tlen>128) ? 128 : tlen;
+      unsigned char clen = (tlen>128) ? 128 : tlen;
       clen--;
       if (s->ig->writecb(s->ig, &clen, 1) != 1) return 0;
       clen++;
@@ -451,7 +455,7 @@ tga_dest_write(tga_dest *s, unsigned char *buf, size_t pixels) {
     tlen = find_span(buf+cp*s->bytepp, pixels-cp, s->bytepp);
     if (tlen <3) continue;
     while (tlen) {
-      int clen = (tlen>128) ? 128 : tlen;
+      unsigned char clen = (tlen>128) ? 128 : tlen;
       clen = (clen - 1) | 0x80;
       if (s->ig->writecb(s->ig, &clen, 1) != 1) return 0;
       clen = (clen & ~0x80) + 1;
