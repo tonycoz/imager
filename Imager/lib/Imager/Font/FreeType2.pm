@@ -3,6 +3,9 @@ use strict;
 use Imager::Color;
 use vars qw(@ISA);
 @ISA = qw(Imager::Font);
+
+*_first = \&Imager::Font::_first;
+
 sub new {
   my $class = shift;
   my %hsh=(color=>Imager::Color->new(255,0,0,0),
@@ -112,6 +115,27 @@ sub has_chars {
     return;
   }
   return i_ft2_has_chars($self->{id}, $hsh{string}, $hsh{'utf8'} || 0);
+}
+
+sub face_name {
+  my ($self) = @_;
+
+  i_ft2_face_name($self->{id});
+}
+
+sub can_glyph_names {
+  i_ft2_can_do_glyph_names();
+}
+
+sub glyph_names {
+  my ($self, %input) = @_;
+
+  my $string = $input{string};
+  defined $string
+    or return Imager->_seterror("no string parameter passed to glyph_names");
+  my $utf8 = _first($input{utf8} || 0);
+
+  i_ft2_glyph_name($self->{id}, $string, $utf8);
 }
 
 1;

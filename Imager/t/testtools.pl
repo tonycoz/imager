@@ -53,5 +53,23 @@ sub okn {
   return $ok;
 }
 
+sub requireokx {
+  my ($file, $comment) = @_;
+
+  eval {
+    require $file;
+  };
+  if ($@) {
+    my $msg = $@;
+    $msg =~ s/\n+$//;
+    $msg =~ s/\n/\n# /g;
+    okx(0, $comment);
+    print "# $msg\n";
+  }
+  else {
+    okx(1, $comment);
+  }
+}
+
 1;
 

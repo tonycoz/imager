@@ -12,7 +12,7 @@ freetyp2.c - font support via the FreeType library version 2.
   if (!i_ft2_getdpi(font, &xdpi, &ydpi)) { error }
   double matrix[6];
   if (!i_ft2_settransform(font, matrix)) { error }
-  int bbox[6];
+  int bbox[BOUNDING_BOX_COUNT];
   if (!i_ft2_bbox(font, cheight, cwidth, text, length, bbox, utf8)) { error }
   i_img *im = ...;
   i_color cl;
@@ -294,6 +294,8 @@ i_ft2_bbox(FT2_Fonthandle *handle, double cheight, double cwidth,
   int glyph_ascent, glyph_descent;
   FT_Glyph_Metrics *gm;
   int start = 0;
+  int loadFlags = FT_LOAD_DEFAULT;
+  int rightb;
 
   mm_log((1, "i_ft2_bbox(handle %p, cheight %f, cwidth %f, text %p, len %d, bbox %p)\n",
 	  handle, cheight, cwidth, text, len, bbox));
@@ -304,6 +306,9 @@ i_ft2_bbox(FT2_Fonthandle *handle, double cheight, double cwidth,
     ft2_push_message(error);
     i_push_error(0, "setting size");
   }
+
+  if (!handle->hint)
+    loadFlags |= FT_LOAD_NO_HINTING;
 
   first = 1;
   width = 0;
@@ -322,7 +327,7 @@ i_ft2_bbox(FT2_Fonthandle *handle, double cheight, double cwidth,
     }
 
     index = FT_Get_Char_Index(handle->face, c);
-    error = FT_Load_Glyph(handle->face, index, FT_LOAD_DEFAULT);
+    error = FT_Load_Glyph(handle->face, index, loadFlags);
     if (error) {
       ft2_push_message(error);
       i_push_errorf(0, "loading glyph for character \\x%02x (glyph 0x%04X)", 
@@ -351,20 +356,21 @@ i_ft2_bbox(FT2_Fonthandle *handle, double cheight, double cwidth,
       /* last character 
        handle the case where the right the of the character overlaps the 
        right*/
-      int rightb = gm->horiAdvance - gm->horiBearingX - gm->width;
-      if (rightb < 0)
-        width -= rightb / 64;
+      rightb = gm->horiAdvance - gm->horiBearingX - gm->width;
+      if (rightb > 0)
+        rightb = 0;
     }
   }
 
-  bbox[0] = start;
-  bbox[1] = handle->face->size->metrics.descender / 64;
-  bbox[2] = width;
-  bbox[3] = handle->face->size->metrics.ascender / 64;
-  bbox[4] = descent;
-  bbox[5] = ascent;
+  bbox[BBOX_NEG_WIDTH] = start;
+  bbox[BBOX_GLOBAL_DESCENT] = handle->face->size->metrics.descender / 64;
+  bbox[BBOX_POS_WIDTH] = width - rightb;
+  bbox[BBOX_GLOBAL_ASCENT] = handle->face->size->metrics.ascender / 64;
+  bbox[BBOX_DESCENT] = descent;
+  bbox[BBOX_ASCENT] = ascent;
+  bbox[BBOX_ADVANCE_WIDTH] = width;
 
-  return 1;
+  return BBOX_ADVANCE_WIDTH + 1;
 }
 
 /*
@@ -461,6 +467,8 @@ i_ft2_bbox_r(FT2_Fonthandle *handle, double cheight, double cwidth,
 
   if (vlayout)
     loadFlags |= FT_LOAD_VERTICAL_LAYOUT;
+  if (!handle->hint)
+    loadFlags |= FT_LOAD_NO_HINTING;
 
   error = FT_Set_Char_Size(handle->face, cwidth*64, cheight*64, 
                            handle->xdpi, handle->ydpi);
@@ -534,7 +542,7 @@ i_ft2_bbox_r(FT2_Fonthandle *handle, double cheight, double cwidth,
     }
     x += slot->advance.x / 64;
     y += slot->advance.y / 64;
-    
+
     if (glyph_ascent > ascent)
       ascent = glyph_ascent;
     if (glyph_descent > descent)
@@ -567,8 +575,6 @@ i_ft2_bbox_r(FT2_Fonthandle *handle, double cheight, double cwidth,
   return 1;
 }
 
-
-
 static int
 make_bmp_map(FT_Bitmap *bitmap, unsigned char *map);
 
@@ -596,7 +602,7 @@ i_ft2_text(FT2_Fonthandle *handle, i_img *im, int tx, int ty, i_color *cl,
   FT_Error error;
   int index;
   FT_Glyph_Metrics *gm;
-  int bbox[6];
+  int bbox[BOUNDING_BOX_COUNT];
   FT_GlyphSlot slot;
   int x, y;
   unsigned char *bmp;
@@ -876,6 +882,88 @@ make_bmp_map(FT_Bitmap *bitmap, unsigned char *map) {
     map[i] = i * 255 / (bitmap->num_grays - 1);
 
   return 1;
+}
+
+int
+i_ft2_face_name(FT2_Fonthandle *handle, char *name_buf, size_t name_buf_size) {
+  char const *name = FT_Get_Postscript_Name(handle->face);
+
+  i_clear_error();
+
+  if (name) {
+    strncpy(name_buf, name, name_buf_size);
+    name_buf[name_buf_size-1] = '\0';
+
+    return strlen(name) + 1;
+  }
+  else {
+    i_push_error(0, "no face name available");
+    *name_buf = '\0';
+
+    return 0;
+  }
+}
+
+int
+i_ft2_glyph_name(FT2_Fonthandle *handle, unsigned char ch, char *name_buf, 
+                 size_t name_buf_size) {
+#ifdef FT_CONFIG_OPTION_NO_GLYPH_NAMES
+  i_clear_error();
+  *name_buf = '\0';
+  i_push_error(0, "FT2 configured without glyph name support");
+
+  return 0;
+#else
+  i_clear_error();
+
+  if (FT_Has_PS_Glyph_Names(handle->face)) {
+    FT_UInt index = FT_Get_Char_Index(handle->face, ch);
+
+    if (index) {
+      FT_Error error = FT_Get_Glyph_Name(handle->face, index, name_buf, 
+                                         name_buf_size);
+      if (error) {
+        ft2_push_message(error);
+        *name_buf = '\0';
+        return;
+      }
+      if (*name_buf) {
+        return strlen(name_buf) + 1;
+      }
+      else {
+        return 0;
+      }
+    }
+    else {
+      i_push_error(0, "no glyph for that character");
+      *name_buf = 0;
+      return 0;
+    }
+  }
+  else {
+    i_push_error(0, "no glyph names in font");
+    *name_buf = '\0';
+    return 0;
+  }
+#endif
+}
+
+int
+i_ft2_can_do_glyph_names(void) {
+#ifdef FT_CONFIG_OPTION_NO_GLYPH_NAMES
+  return 0;
+#else
+  return 1;
+#endif
+}
+
+int 
+i_ft2_face_has_glyph_names(FT2_Fonthandle *handle) {
+#ifdef FT_CONFIG_OPTION_NO_GLYPH_NAMES
+  return 0;
+#else
+  return FT_Has_PS_Glyph_Names(handle->face);
+#endif
 }
 
 /*

@@ -117,13 +117,15 @@ sub draw {
   }
   $input{string} = _first($input{string}, $input{text});
   unless (defined $input{string}) {
-    $Imager::ERRSTR = "Missing require parameter 'string'";
+    $Imager::ERRSTR = "Missing required parameter 'string'";
     return;
   }
   $input{aa} = _first($input{aa}, $input{antialias}, $self->{aa}, 1);
   # the original draw code worked this out but didn't use it
   $input{align} = _first($input{align}, $self->{align});
   $input{color} = _first($input{color}, $self->{color});
+  $input{color} = Imager::_color($input{'color'});
+
   $input{size} = _first($input{size}, $self->{size});
   unless (defined $input{size}) {
     $input{image}{ERRSTR} = "No font size provided";
@@ -134,6 +136,81 @@ sub draw {
   $input{vlayout} = _first($input{vlayout}, $self->{vlayout}, 0);
 
   $self->_draw(%input);
+}
+
+sub align {
+  my $self = shift;
+  my %input = ( halign => 'left', valign => 'baseline', 
+                'x' => 0, 'y' => 0, @_ );
+
+  my $text = _first($input{string}, $input{text});
+  unless (defined $text) {
+    Imager->_set_error("Missing required parameter 'string'");
+    return;
+  }
+  
+  # image needs to be supplied, but can be supplied as undef
+  unless (exists $input{image}) {
+    Imager->_set_error("Missing required parameter 'image'");
+    return;
+  }
+  my $size = _first($input{size}, $self->{size});
+  my $utf8 = _first($input{utf8}, 0);
+  
+  my $bbox = $self->bounding_box(string=>$text, size=>$size, utf8=>$utf8);
+  my $valign = $input{valign};
+  $valign = 'baseline'
+    unless $valign && $valign =~ /^(?:top|center|bottom|baseline)$/;
+  
+  my $halign = $input{halign};
+  $halign = 'start' 
+    unless $halign && $halign =~ /^(?:left|start|center|end|right)$/;
+
+  my $x = $input{'x'};
+  my $y = $input{'y'};
+  
+  if ($valign eq 'top') {
+    $y += $bbox->ascent;
+  }
+  elsif ($valign eq 'center') {
+    $y += $bbox->ascent - $bbox->text_height / 2;
+  }
+  elsif ($valign eq 'bottom') {
+    $y += $bbox->descent;
+  }
+  # else baseline is the default
+
+  if ($halign eq 'left') {
+    $x -= $bbox->start_offset;
+  }
+  elsif ($halign eq 'start') {
+    # nothing to do
+  }
+  elsif ($halign eq 'center') {
+    $x -= $bbox->start_offset + $bbox->total_width / 2;
+  }
+  elsif ($halign eq 'end' || $halign eq 'right') {
+    $x -= $bbox->start_offset + $bbox->total_width - 1;
+  }
+  $x = int($x);
+  $y = int($y);
+
+  if ($input{image}) {
+    delete @input{qw/x y/};
+    $self->draw(%input, 'x' => $x, 'y' => $y, align=>1)
+      or return;
+#      for my $i (1 .. length $text) {
+#        my $work = substr($text, 0, $i);
+#        my $bbox = $self->bounding_box(string=>$work, size=>$size, utf8=>$utf8);
+#        my $nx = $x + $bbox->end_offset;
+#        $input{image}->setpixel(x=>[ ($nx) x 5 ],
+#                                'y'=>[ $y-2, $y-1, $y, $y+1, $y+2 ],
+#                                color=>'FF0000');
+#      }
+  }
+
+  return ($x+$bbox->start_offset, $y-$bbox->ascent, 
+          $x+$bbox->end_offset, $y-$bbox->descent+1);
 }
 
 sub bounding_box {
@@ -150,17 +227,24 @@ sub bounding_box {
 
   my @box = $self->_bounding_box(%input);
 
-  if(@box && exists $input{'x'} and exists $input{'y'}) {
-    my($gdescent, $gascent)=@box[1,3];
-    $box[1]=$input{'y'}-$gascent;      # top = base - ascent (Y is down)
-    $box[3]=$input{'y'}-$gdescent;     # bottom = base - descent (Y is down, descent is negative)
-    $box[0]+=$input{'x'};
-    $box[2]+=$input{'x'};
-  } elsif (@box && $input{'canon'}) {
-    $box[3]-=$box[1];    # make it cannoical (ie (0,0) - (width, height))
-    $box[2]-=$box[0];
+  if (wantarray) {
+    if(@box && exists $input{'x'} and exists $input{'y'}) {
+      my($gdescent, $gascent)=@box[1,3];
+      $box[1]=$input{'y'}-$gascent;      # top = base - ascent (Y is down)
+      $box[3]=$input{'y'}-$gdescent;     # bottom = base - descent (Y is down, descent is negative)
+      $box[0]+=$input{'x'};
+      $box[2]+=$input{'x'};
+    } elsif (@box && $input{'canon'}) {
+      $box[3]-=$box[1];    # make it cannoical (ie (0,0) - (width, height))
+      $box[2]-=$box[0];
+    }
+    return @box;
   }
-  return @box;
+  else {
+    require Imager::Font::BBox;
+
+    return Imager::Font::BBox->new(@box);
+  }
 }
 
 sub dpi {
@@ -314,24 +398,53 @@ Other logical font attributes may be added if there is sufficient demand.
 
 Returns the bounding box for the specified string.  Example:
 
-  ($neg_width,
-   $global_descent,
-   $pos_width,
-   $global_ascent,
-   $descent,
-   $ascent) = $font->bounding_box(string => "A Fool");
+  my ($neg_width,
+      $global_descent,
+      $pos_width,
+      $global_ascent,
+      $descent,
+      $ascent,
+      $advance_width) = $font->bounding_box(string => "A Fool");
 
-The C<$neg_width> is the relative start of a the string.  In some
+  my $bbox_object = $font->bounding_box(string => "A Fool");
+
+=over
+
+=item C<$neg_width>
+
+the relative start of a the string.  In some
 cases this can be a negative number, in that case the first letter
 stretches to the left of the starting position that is specified in
-the string method of the Imager class.  <$global_descent> is the how
-far down the lowest letter of the entire font reaches below the
-baseline (this is often j).  C<$pos_width> is how wide the string
-from the starting position is.  The total width of the string is
-C<$pos_width-$neg_width>.  C<$descent> and C<$ascent> are the same as
-<$global_descent> and <$global_ascent> except that they are only for
-the characters that appear in the string.  Obviously we can stuff all
-the results into an array just as well:
+the string method of the Imager class
+
+=item C<$global_descent> 
+
+how far down the lowest letter of the entire font reaches below the
+baseline (this is often j).
+
+=item C<$pos_width>
+
+how wide the string from
+the starting position is.  The total width of the string is
+C<$pos_width-$neg_width>.
+
+=item C<$descent> 
+
+=item C<$ascent> 
+
+the same as <$global_descent> and <$global_ascent> except that they
+are only for the characters that appear in the string.
+
+=item C<$advance_width>
+
+the distance from the start point that the next string output should
+start at, this is often the same as C<$pos_width>, but can be
+different if the final character overlaps the right side of its
+character cell.
+
+=back
+
+Obviously we can stuff all the results into an array just as well:
 
   @metrics = $font->bounding_box(string => "testing 123");
 
@@ -353,7 +466,9 @@ but:
  $bbox[2] - horizontal space taken by glyphs
  $bbox[3] - vertical space taken by glyphs
 
-
+Returns an L<Imager::Font::BBox> object in scalar context, so you can
+avoid all those confusing indices.  This has methods as named above,
+with some extra convenience methods.
 
 =item string
 
@@ -444,6 +559,84 @@ Sometimes it is necessary to know how much space a string takes before
 rendering it.  The bounding_box() method described earlier can be used
 for that.
 
+=item align(string=>$text, size=>$size, x=>..., y=>..., valign => ..., halign=>...)
+
+Higher level text output - outputs the text aligned as specified
+around the given point (x,y).
+
+  # "Hello" centered at 100, 100 in the image.
+  my ($left, $top, $bottom, $right) = 
+    $font->align(string=>"Hello",
+                 x=>100, y=>100, 
+                 halign=>'center', valign=>'center', 
+                 image=>$image);
+
+Takes the same parameters as $font->draw(), and the following extra
+parameters:
+
+=over
+
+=item valign
+
+Possible values are:
+
+=over
+
+=item top
+
+Point is at the top of the text.
+
+=item bottom
+
+Point is at the bottom of the text.
+
+=item baseline
+
+Point is on the baseline of the text (default.)
+
+=item center
+
+Point is vertically centered within the text.
+
+=back
+
+=item halign
+
+=over
+
+=item left
+
+The point is at the left of the text.
+
+=item start
+
+The point is at the start point of the text.
+
+=item center
+
+The point is horizontally centered within the text.
+
+=item right
+
+The point is at the right end of the text.
+
+=item end
+
+The point is at the right end of the text.  This will change to the
+end point of the text (once the proper bounding box interfaces are
+available).
+
+=back
+
+=item image
+
+The image to draw to.  Set to C<undef> to avoid drawing but still
+calculate the bounding box.
+
+=back
+
+Returns a list specifying the bounds of the drawn text.
+
 =item dpi()
 
 =item dpi(xdpi=>$xdpi, ydpi=>$ydpi)
@@ -493,6 +686,24 @@ This would be nice for writing (admittedly multiline) one liners like:
 Imager::Font->new(file=>"arial.ttf", color=>$blue, aa=>1)
             ->string(text=>"Plan XYZ", border=>5)
             ->write(file=>"xyz.png");
+
+=item face_name()
+
+Returns the internal name of the face.  Not all font types support
+this method yet.
+
+=item glyph_names(string=>$string [, utf8=>$utf8 ] );
+
+Returns a list of glyph names for each of the characters in the
+string.  If the character has no name then C<undef> is returned for
+the character.
+
+Some font files do not include glyph names, in this case Freetype 2
+will not return any names.  Freetype 1 can return standard names even
+if there are no glyph names in the font.
+
+Both Freetype 1.x and 2.x allow support for glyph names to not be
+included.
 
 =back
 
@@ -588,7 +799,7 @@ You need to modify this class to add new font types.
 =head1 SEE ALSO
 
 Imager(3), Imager::Font::FreeType2(3), Imager::Font::Type1(3),
-Imager::Font::Win32(3), Imager::Font::Truetype(3)
+Imager::Font::Win32(3), Imager::Font::Truetype(3), Imager::Font::BBox(3)
 
 
 http://www.eecs.umich.edu/~addi/perl/Imager/

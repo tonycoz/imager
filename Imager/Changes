@@ -690,6 +690,27 @@ Revision history for Perl extension Imager.
         - the code to read multiple tiffs didn't handle files with more
           than five images correctly, causing a memory overrun.
         - fix some minor test code hiccups
+        - implemented i_t1_has_chars(), tests for same
+        - added ExistenceTest.{pfb,afm,ttf} for testing $font->has_chars
+        - tests for Imager::Font::Type1::has_chars();
+        - tests for Imager::Font::Truetype::has_chars();
+        - internal and external bounding box calculations now use
+          the same hint flags as text output for Freetype 2.x
+        - made the i_foo_bbox() interface more expandable by using
+          symbolic constants for the sizes and array offsets
+        - added a / character to the ExistenceTest.foo fonts that 
+          overlaps the right side of the character cell, to test the 
+          advance width reporting.
+        - added advance width to the i_foo_bbox() interface, and 
+          implemented it for FT2, FT1 and Type 1
+        - Imager::Font::bounding_box() now returns an Imager::Font::BBox
+          object in scalar context.
+        - implemented $font->align() text output method, for simple output
+          of aligned text
+        - created Imager::Font::Wrap::wrap_text to perform simple text 
+          wrapping
+        - FT1, FT2 and T1 fonts now support the face_name method
+        - FT1, FT2 and T1 now support the glyph_names() method
 
 =================================================================
 

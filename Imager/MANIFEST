@@ -52,6 +52,9 @@ tags.c
 trans2.c
 iolayer.h
 iolayer.c
+fontfiles/ExistenceTest.afm     please edit ExistenceTest.sfd in CVS
+fontfiles/ExistenceTest.pfb     to change these files, edited and
+fontfiles/ExistenceTest.ttf     generated using pfaedit
 fontfiles/ImUgly.ttf
 fontfiles/dcr10.afm
 fontfiles/dcr10.pfb
@@ -68,10 +71,12 @@ lib/Imager/Filters.pod
 lib/Imager/Engines.pod
 lib/Imager/Fill.pm
 lib/Imager/Font.pm
+lib/Imager/Font/BBox.pm
 lib/Imager/Font/Type1.pm
 lib/Imager/Font/Truetype.pm
 lib/Imager/Font/FreeType2.pm
 lib/Imager/Font/Win32.pm
+lib/Imager/Font/Wrap.pm
 lib/Imager/Fountain.pm
 lib/Imager/interface.pod
 lib/Imager/Matrix2d.pm
@@ -120,6 +125,7 @@ t/t68map.t
 t/t69rubthru.t
 t/t70newgif.t
 t/t75polyaa.t
+t/t80texttools.t        Test text wrapping
 t/t90cc.t
 testimg/bandw.gif
 testimg/comp4.bmp       Compressed 4-bit/pixel BMP

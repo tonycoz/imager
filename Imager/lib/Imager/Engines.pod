@@ -150,7 +150,9 @@ on colour values too - though you need to be careful - adding 2 white
 values together and multiplying by 0.5 will give you grey, not white.
 
 Division by zero (or a small number) just results in a large number.
-Modulo zero (or a small number) results in zero.
+Modulo zero (or a small number) results in zero.  % is implemented
+using fmod() so you can use this to take a value mod a floating point
+value.
 
 =item sin(N), cos(N), atan2(y,x)
 
@@ -248,6 +250,17 @@ For details on expression parsing see L<Imager::Expr>.  For details on
 the virtual machine used to transform the images, see
 L<Imager::regmach.pod>.
 
+  # generate a colorful spiral
+  # requires that Parse::RecDescent be installed
+  my $newimg = Imager::transform2({
+                                   width => 160, height=>160,
+                                   expr => <<EOS
+  dist = distance(x, y, w/2, h/2);
+  angle = atan2(y-h/2, x-w/2);
+  angle2 = (dist / 10 + angle) % ( 2 * pi );
+  return hsv(angle*180/pi, 1, (sin(angle2)+1)/2);
+  EOS
+                                  });
 
 =head2 Matrix Transformations
 

@@ -44,14 +44,6 @@ Some of these functions are internal.
 
 */
 
-
-
-
-
-
-
-
-
 /* 
 =item i_init_fonts()
 
@@ -87,6 +79,8 @@ i_init_fonts(int t1log) {
 
 static int t1_get_flags(char const *flags);
 static char *t1_from_utf8(char const *in, int len, int *outlen);
+
+static void t1_push_error(void);
 
 /* 
 =item i_init_t1(t1log)
@@ -294,11 +288,12 @@ function to get a strings bounding box given the font id and sizes
 =cut
 */
 
-void
+int
 i_t1_bbox(int fontnum,float points,char *str,int len,int cords[6], int utf8,char const *flags) {
   BBox bbox;
   BBox gbbox;
   int mod_flags = t1_get_flags(flags);
+  int advance;
   
   mm_log((1,"i_t1_bbox(fontnum %d,points %.2f,str '%.*s', len %d)\n",fontnum,points,len,str,len));
   T1_LoadFont(fontnum);  /* FIXME: Here a return code is ignored - haw haw haw */ 
@@ -312,6 +307,7 @@ i_t1_bbox(int fontnum,float points,char *str,int len,int cords[6], int utf8,char
     bbox = T1_GetStringBBox(fontnum,str,len,0,mod_flags);
   }
   gbbox = T1_GetFontBBox(fontnum);
+  advance = T1_GetStringWidth(fontnum, str, len, 0, mod_flags);
   
   mm_log((1,"bbox: (%d,%d,%d,%d)\n",
 	  (int)(bbox.llx*points/1000),
@@ -322,14 +318,18 @@ i_t1_bbox(int fontnum,float points,char *str,int len,int cords[6], int utf8,char
 	  (int)(bbox.ury*points/1000) ));
 
 
-  cords[0]=((float)bbox.llx*points)/1000;
-  cords[2]=((float)bbox.urx*points)/1000;
+  cords[BBOX_NEG_WIDTH]=((float)bbox.llx*points)/1000;
+  cords[BBOX_POS_WIDTH]=((float)bbox.urx*points)/1000;
 
-  cords[1]=((float)gbbox.lly*points)/1000;
-  cords[3]=((float)gbbox.ury*points)/1000;
+  cords[BBOX_GLOBAL_DESCENT]=((float)gbbox.lly*points)/1000;
+  cords[BBOX_GLOBAL_ASCENT]=((float)gbbox.ury*points)/1000;
 
-  cords[4]=((float)bbox.lly*points)/1000;
-  cords[5]=((float)bbox.ury*points)/1000;
+  cords[BBOX_DESCENT]=((float)bbox.lly*points)/1000;
+  cords[BBOX_ASCENT]=((float)bbox.ury*points)/1000;
+
+  cords[BBOX_ADVANCE_WIDTH] = ((float)advance * points)/1000;
+
+  return BBOX_ADVANCE_WIDTH+1;
 }
 
 
@@ -455,15 +455,238 @@ t1_from_utf8(char const *in, int len, int *outlen) {
   return out;
 }
 
+/*
+=item i_t1_has_chars(font_num, text, len, utf8, out)
+
+Check if the given characters are defined by the font.  Note that len
+is the number of bytes, not the number of characters (when utf8 is
+non-zero).
+
+out[char index] will be true if the character exists.
+
+Accepts UTF-8, but since T1 can only have 256 characters, any chars
+with values over 255 will simply be returned as false.
+
+Returns the number of characters that were checked.
+
+=cut
+*/
+
+int
+i_t1_has_chars(int font_num, const char *text, int len, int utf8,
+               char *out) {
+  int count = 0;
+  
+  mm_log((1, "i_t1_has_chars(font_num %d, text %p, len %d, utf8 %d)\n", 
+          font_num, text, len, utf8));
+
+  i_clear_error();
+  if (T1_LoadFont(font_num)) {
+    t1_push_error();
+    return 0;
+  }
+
+  while (len) {
+    unsigned long c;
+    int index;
+    if (utf8) {
+      c = i_utf8_advance(&text, &len);
+      if (c == ~0UL) {
+        i_push_error(0, "invalid UTF8 character");
+        return 0;
+      }
+    }
+    else {
+      c = (unsigned char)*text++;
+      --len;
+    }
+    
+    if (c >= 0x100) {
+      /* limit of 256 characters for T1 */
+      *out++ = 0;
+    }
+    else {
+      char const * name = T1_GetCharName(font_num, (unsigned char)c);
+
+      if (name) {
+        *out++ = strcmp(name, ".notdef") != 0;
+      }
+      else {
+        mm_log((2, "  No name found for character %lx\n", c));
+        *out++ = 0;
+      }
+    }
+    ++count;
+  }
+
+  return count;
+}
+
+/*
+=item i_t1_face_name(font_num, name_buf, name_buf_size)
+
+Copies the face name of the given C<font_num> to C<name_buf>.  Returns
+the number of characters required to store the name (which can be
+larger than C<name_buf_size>, including the space required to store
+the terminating NUL).
+
+If name_buf is too small (as specified by name_buf_size) then the name
+will be truncated.  name_buf will always be NUL termintaed.
+
+=cut
+*/
+
+int
+i_t1_face_name(int font_num, char *name_buf, size_t name_buf_size) {
+  char *name;
+
+  T1_errno = 0;
+  if (T1_LoadFont(font_num)) {
+    t1_push_error();
+    return 0;
+  }
+  name = T1_GetFontName(font_num);
+
+  if (name) {
+    strncpy(name_buf, name, name_buf_size);
+    name_buf[name_buf_size-1] = '\0';
+    return strlen(name) + 1;
+  }
+  else {
+    t1_push_error();
+    return 0;
+  }
+}
+
+int
+i_t1_glyph_name(int font_num, unsigned long ch, char *name_buf, 
+                 size_t name_buf_size) {
+  char *name;
+
+  i_clear_error();
+  if (ch > 0xFF) {
+    return 0;
+  }
+  if (T1_LoadFont(font_num)) {
+    t1_push_error();
+    return 0;
+  }
+  name = T1_GetCharName(font_num, (unsigned char)ch);
+  if (name) {
+    if (strcmp(name, ".notdef")) {
+      strncpy(name_buf, name, name_buf_size);
+      name_buf[name_buf_size-1] = '\0';
+      return strlen(name) + 1;
+    }
+    else {
+      return 0;
+    }
+  }
+  else {
+    t1_push_error();
+    return 0;
+  }
+}
+
+static void
+t1_push_error(void) {
+  switch (T1_errno) {
+  case 0: 
+    i_push_error(0, "No error"); 
+    break;
+
+  case T1ERR_SCAN_FONT_FORMAT:
+    i_push_error(T1ERR_SCAN_FONT_FORMAT, "SCAN_FONT_FORMAT"); 
+    break;
+
+  case T1ERR_SCAN_FILE_OPEN_ERR:
+    i_push_error(T1ERR_SCAN_FILE_OPEN_ERR, "SCAN_FILE_OPEN_ERR"); 
+    break;
+
+  case T1ERR_SCAN_OUT_OF_MEMORY:
+    i_push_error(T1ERR_SCAN_OUT_OF_MEMORY, "SCAN_OUT_OF_MEMORY"); 
+    break;
+
+  case T1ERR_SCAN_ERROR:
+    i_push_error(T1ERR_SCAN_ERROR, "SCAN_ERROR"); 
+    break;
+
+  case T1ERR_SCAN_FILE_EOF:
+    i_push_error(T1ERR_SCAN_FILE_EOF, "SCAN_FILE_EOF"); 
+    break;
+
+  case T1ERR_PATH_ERROR:
+    i_push_error(T1ERR_PATH_ERROR, "PATH_ERROR"); 
+    break;
+
+  case T1ERR_PARSE_ERROR:
+    i_push_error(T1ERR_PARSE_ERROR, "PARSE_ERROR"); 
+    break;
+
+  case T1ERR_TYPE1_ABORT:
+    i_push_error(T1ERR_TYPE1_ABORT, "TYPE1_ABORT"); 
+    break;
+
+  case T1ERR_INVALID_FONTID:
+    i_push_error(T1ERR_INVALID_FONTID, "INVALID_FONTID"); 
+    break;
+
+  case T1ERR_INVALID_PARAMETER:
+    i_push_error(T1ERR_INVALID_PARAMETER, "INVALID_PARAMETER"); 
+    break;
+
+  case T1ERR_OP_NOT_PERMITTED:
+    i_push_error(T1ERR_OP_NOT_PERMITTED, "OP_NOT_PERMITTED"); 
+    break;
+
+  case T1ERR_ALLOC_MEM:
+    i_push_error(T1ERR_ALLOC_MEM, "ALLOC_MEM"); 
+    break;
+
+  case T1ERR_FILE_OPEN_ERR:
+    i_push_error(T1ERR_FILE_OPEN_ERR, "FILE_OPEN_ERR"); 
+    break;
+
+  case T1ERR_UNSPECIFIED:
+    i_push_error(T1ERR_UNSPECIFIED, "UNSPECIFIED"); 
+    break;
+
+  case T1ERR_NO_AFM_DATA:
+    i_push_error(T1ERR_NO_AFM_DATA, "NO_AFM_DATA"); 
+    break;
+
+  case T1ERR_X11:
+    i_push_error(T1ERR_X11, "X11"); 
+    break;
+
+  case T1ERR_COMPOSITE_CHAR:
+    i_push_error(T1ERR_COMPOSITE_CHAR, "COMPOSITE_CHAR"); 
+    break;
+
+  default:
+    i_push_errorf(T1_errno, "unknown error %d", (int)T1_errno);
+  }
+}
+
 #endif /* HAVE_LIBT1 */
 
 
 /* Truetype font support */
-
 #ifdef HAVE_LIBTT
+
+/* This is enabled by default when configuring Freetype 1.x
+   I haven't a clue how to reliably detect it at compile time.
+
+   We need a compilation probe in Makefile.PL
+*/
+#define FTXPOST 1
 
 #include <freetype.h>
 #define TT_CHC 5
+
+#ifdef FTXPOST
+#include <ftxpost.h>
+#endif
 
 /* convert a code point into an index in the glyph cache */
 #define TT_HASH(x) ((x) & 0xFF)
@@ -492,6 +715,10 @@ struct TT_Fonthandle_ {
   TT_Face_Properties properties;
   TT_Instancehandle instanceh[TT_CHC];
   TT_CharMap char_map;
+#ifdef FTXPOST
+  int loaded_names;
+  TT_Error load_cond;
+#endif
 };
 
 /* Defines */
@@ -553,6 +780,15 @@ i_init_tt() {
     mm_log((1,"Initialization of freetype failed, code = 0x%x\n",error));
     return(1);
   }
+
+#ifdef FTXPOST
+  error = TT_Init_Post_Extension( engine );
+  if (error) {
+    mm_log((1, "Initialization of Post extension failed = 0x%x\n", error));
+    return 1;
+  }
+#endif
+
   return(0);
 }
 
@@ -725,6 +961,10 @@ i_tt_new(char *fontname) {
     handle->instanceh[i].ptsize=0;
     handle->instanceh[i].smooth=-1;
   }
+
+#ifdef FTXPOST
+  handle->loaded_names = 0;
+#endif
 
   mm_log((1,"i_tt_new <- 0x%X\n",handle));
   return handle;
@@ -968,7 +1208,7 @@ i_tt_has_chars(TT_Fonthandle *handle, char const *text, int len, int utf8,
                char *out) {
   int count = 0;
   int inst;
-  mm_log((1, "i_ft2_has_chars(handle %p, text %p, len %d, utf8 %d)\n", 
+  mm_log((1, "i_tt_has_chars(handle %p, text %p, len %d, utf8 %d)\n", 
           handle, text, len, utf8));
 
   while (len) {
@@ -1316,7 +1556,7 @@ Interface to text rendering into a single channel in an image
 undef_int
 i_tt_cp( TT_Fonthandle *handle, i_img *im, int xb, int yb, int channel, float points, char const* txt, int len, int smooth, int utf8 ) {
 
-  int cords[6];
+  int cords[BOUNDING_BOX_COUNT];
   int ascent, st_offset;
   TT_Raster_Map bit;
   
@@ -1352,7 +1592,7 @@ Interface to text rendering in a single color onto an image
 
 undef_int
 i_tt_text( TT_Fonthandle *handle, i_img *im, int xb, int yb, i_color *cl, float points, char const* txt, int len, int smooth, int utf8) {
-  int cords[6];
+  int cords[BOUNDING_BOX_COUNT];
   int ascent, st_offset;
   TT_Raster_Map bit;
 
@@ -1386,7 +1626,7 @@ Function to get texts bounding boxes given the instance of the font (internal)
 
 static
 undef_int
-i_tt_bbox_inst( TT_Fonthandle *handle, int inst ,const char *txt, int len, int cords[6], int utf8 ) {
+i_tt_bbox_inst( TT_Fonthandle *handle, int inst ,const char *txt, int len, int cords[BOUNDING_BOX_COUNT], int utf8 ) {
   int i, upm, casc, cdesc, first;
   
   int start    = 0;
@@ -1395,7 +1635,7 @@ i_tt_bbox_inst( TT_Fonthandle *handle, int inst ,const char *txt, int len, int c
   int gascent  = 0;
   int descent  = 0;
   int ascent   = 0;
-  
+  int rightb   = 0;
 
   unsigned long j;
   unsigned char *ustr;
@@ -1445,12 +1685,12 @@ i_tt_bbox_inst( TT_Fonthandle *handle, int inst ,const char *txt, int len, int c
 	   character goes past the right of the advance width,
 	   as is common for italic fonts
 	*/
-	int rightb = gm->advance - gm->bearingX 
+	rightb = gm->advance - gm->bearingX 
 	  - (gm->bbox.xMax - gm->bbox.xMin);
 	/* fprintf(stderr, "font info last: %d %d %d %d\n", 
 	   gm->bbox.xMax, gm->bbox.xMin, gm->advance, rightb); */
-	if (rightb < 0)
-	  width -= rightb/64;
+	if (rightb > 0)
+	  rightb = 0;
       }
 
       ascent  = (ascent  >  casc ?  ascent : casc );
@@ -1458,13 +1698,15 @@ i_tt_bbox_inst( TT_Fonthandle *handle, int inst ,const char *txt, int len, int c
     }
   }
   
-  cords[0]=start;
-  cords[1]=gdescent;
-  cords[2]=width;
-  cords[3]=gascent;
-  cords[4]=descent;
-  cords[5]=ascent;
-  return 1;
+  cords[BBOX_NEG_WIDTH]=start;
+  cords[BBOX_GLOBAL_DESCENT]=gdescent;
+  cords[BBOX_POS_WIDTH]=width - rightb / 64;
+  cords[BBOX_GLOBAL_ASCENT]=gascent;
+  cords[BBOX_DESCENT]=descent;
+  cords[BBOX_ASCENT]=ascent;
+  cords[BBOX_ADVANCE_WIDTH] = width;
+
+  return BBOX_ADVANCE_WIDTH + 1;
 }
 
 
@@ -1498,7 +1740,154 @@ i_tt_bbox( TT_Fonthandle *handle, float points,char *txt,int len,int cords[6], i
   return i_tt_bbox_inst(handle, inst, txt, len, cords, utf8);
 }
 
+/*
+=item i_tt_face_name(handle, name_buf, name_buf_size)
 
+Retrieve's the font's postscript name.
+
+This is complicated by the need to handle encodings and so on.
+
+=cut
+ */
+int
+i_tt_face_name(TT_Fonthandle *handle, char *name_buf, size_t name_buf_size) {
+  TT_Face_Properties props;
+  int name_count;
+  int i;
+  TT_UShort platform_id, encoding_id, lang_id, name_id;
+  TT_UShort name_len;
+  TT_String *name;
+  int want_index = -1; /* an acceptable but not perfect name */
+  int score = 0;
+
+  i_clear_error();
+  
+  TT_Get_Face_Properties(handle->face, &props);
+  name_count = props.num_Names;
+  for (i = 0; i < name_count; ++i) {
+    TT_Get_Name_ID(handle->face, i, &platform_id, &encoding_id, &lang_id, 
+                   &name_id);
+
+    TT_Get_Name_String(handle->face, i, &name, &name_len);
+
+    if (platform_id != TT_PLATFORM_APPLE_UNICODE && name_len
+        && name_id == TT_NAME_ID_PS_NAME) {
+      int might_want_index = -1;
+      int might_score = 0;
+      if ((platform_id == TT_PLATFORM_MACINTOSH && encoding_id == TT_MAC_ID_ROMAN)
+          ||
+          (platform_id == TT_PLATFORM_MICROSOFT && encoding_id == TT_MS_LANGID_ENGLISH_UNITED_STATES)) {
+        /* exactly what we want */
+        want_index = i;
+        break;
+      }
+      
+      if (platform_id == TT_PLATFORM_MICROSOFT
+          && (encoding_id & 0xFF) == TT_MS_LANGID_ENGLISH_GENERAL) {
+        /* any english is good */
+        might_want_index = i;
+        might_score = 9;
+      }
+      /* there might be something in between */
+      else {
+        /* anything non-unicode is better than nothing */
+        might_want_index = i;
+        might_score = 1;
+      }
+      if (might_score > score) {
+        score = might_score;
+        want_index = might_want_index;
+      }
+    }
+  }
+
+  if (want_index != -1) {
+    TT_Get_Name_String(handle->face, want_index, &name, &name_len);
+    
+    strncpy(name_buf, name, name_buf_size);
+    name_buf[name_buf_size-1] = '\0';
+
+    return strlen(name) + 1;
+  }
+  else {
+    i_push_error(0, "no face name present");
+    return 0;
+  }
+}
+
+void i_tt_dump_names(TT_Fonthandle *handle) {
+  TT_Face_Properties props;
+  int name_count;
+  int i;
+  TT_UShort platform_id, encoding_id, lang_id, name_id;
+  TT_UShort name_len;
+  TT_String *name;
+  
+  TT_Get_Face_Properties(handle->face, &props);
+  name_count = props.num_Names;
+  for (i = 0; i < name_count; ++i) {
+    TT_Get_Name_ID(handle->face, i, &platform_id, &encoding_id, &lang_id, 
+                   &name_id);
+    TT_Get_Name_String(handle->face, i, &name, &name_len);
+
+    printf("# %d: plat %d enc %d lang %d name %d value ", i, platform_id,
+           encoding_id, lang_id, name_id);
+    if (platform_id == TT_PLATFORM_APPLE_UNICODE) {
+      printf("(unicode)\n");
+    }
+    else {
+      printf("'%s'\n", name);
+    }
+  }
+}
+
+int
+i_tt_glyph_name(TT_Fonthandle *handle, unsigned long ch, char *name_buf, 
+                 size_t name_buf_size) {
+#ifdef FTXPOST
+  TT_Error rc;
+  TT_String *psname;
+  TT_UShort index;
+
+  i_clear_error();
+
+  if (!handle->loaded_names) {
+    TT_Post post;
+    mm_log((1, "Loading PS Names"));
+    handle->load_cond = TT_Load_PS_Names(handle->face, &post);
+    ++handle->loaded_names;
+  }
+
+  if (handle->load_cond) {
+    i_push_errorf(rc, "error loading names (%d)", handle->load_cond);
+    return 0;
+  }
+  
+  index = TT_Char_Index(handle->char_map, ch);
+  if (!index) {
+    i_push_error(0, "no such character");
+    return 0;
+  }
+
+  rc = TT_Get_PS_Name(handle->face, index, &psname);
+
+  if (rc) {
+    i_push_error(rc, "error getting name");
+    return 0;
+  }
+
+  strncpy(name_buf, psname, name_buf_size);
+  name_buf[name_buf_size-1] = '\0';
+
+  return strlen(psname) + 1;
+#else
+  mm_log((1, "FTXPOST extension not enabled\n"));
+  i_clear_error();
+  i_push_error(0, "Use of FTXPOST extension disabled");
+
+  return 0;
+#endif
+}
 
 #endif /* HAVE_LIBTT */
 

@@ -226,5 +226,17 @@ void octt_dump(struct octt *ct);
 void octt_count(struct octt *ct,int *tot,int max,int *overflow);
 void octt_delete(struct octt *ct);
 
+/* font bounding box results */
+enum bounding_box_index_t {
+  BBOX_NEG_WIDTH,
+  BBOX_GLOBAL_DESCENT,
+  BBOX_POS_WIDTH,
+  BBOX_GLOBAL_ASCENT,
+  BBOX_DESCENT,
+  BBOX_ASCENT,
+  BBOX_ADVANCE_WIDTH,
+  BOUNDING_BOX_COUNT
+};
+
 #endif
 
