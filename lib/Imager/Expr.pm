@@ -298,6 +298,7 @@ my %op_names = ( '+'=>'add', '-'=>'subtract', '*'=>'mult', '/' => 'div',
 sub compile {
   my ($self, $expr, $opts) = @_;
 
+  $expr =~ s/#.*//; # remove comments
   my @st_ops = split ' ', $expr;
 
   for (@st_ops) {

@@ -66,7 +66,7 @@ static double hsv_sat(i_color color) {
   }
 }
 
-static i_color make_hsv(double hue, double sat, double val) {
+static i_color make_hsv(double hue, double sat, double val, int alpha) {
   int i;
   i_color c;
   for( i=0; i< MAXCHANNELS; i++) c.channel[i]=0;
@@ -119,11 +119,12 @@ static i_color make_hsv(double hue, double sat, double val) {
       break;
     }
   }
+  c.rgba.a = alpha;
 
   return c;
 }
 
-static i_color make_rgb(int r, int g, int b) {
+static i_color make_rgb(int r, int g, int b, int a) {
   i_color c;
   if (r < 0)
     r = 0;
@@ -140,6 +141,8 @@ static i_color make_rgb(int r, int g, int b) {
   if (b > 255)
     b = 255;
   c.rgb.b = b;
+
+  c.rgba.a = a;
 
   return c;
 }
@@ -210,17 +213,17 @@ i_color i_rm_run(struct rm_op codes[], size_t code_count,
       nout = -na;
 
     case rbc_multp:
-      cout = make_rgb(ca.rgb.r * nb, ca.rgb.g * nb, ca.rgb.b * nb);
+      cout = make_rgb(ca.rgb.r * nb, ca.rgb.g * nb, ca.rgb.b * nb, 255);
       break;
 
     case rbc_addp:
       cout = make_rgb(ca.rgb.r + cb.rgb.r, ca.rgb.g + cb.rgb.g, 
-		      ca.rgb.b + cb.rgb.b);
+		      ca.rgb.b + cb.rgb.b, 255);
       break;
 
     case rbc_subtractp:
       cout = make_rgb(ca.rgb.r - cb.rgb.r, ca.rgb.g - cb.rgb.g, 
-		      ca.rgb.b - cb.rgb.b);
+		      ca.rgb.b - cb.rgb.b, 255);
       break;
 
     case rbc_sin:
@@ -270,7 +273,11 @@ i_color i_rm_run(struct rm_op codes[], size_t code_count,
       break;
       
     case rbc_hsv:
-      cout = make_hsv(na, nb, nc);
+      cout = make_hsv(na, nb, nc, 255);
+      break;
+
+    case rbc_hsva:
+      cout = make_hsv(na, nb, nc, nd);
       break;
 
     case rbc_red:
@@ -285,8 +292,16 @@ i_color i_rm_run(struct rm_op codes[], size_t code_count,
       nout = ca.rgb.b;
       break;
 
+    case rbc_alpha:
+      nout = ca.rgba.a;
+      break;
+
     case rbc_rgb:
-      cout = make_rgb(na, nb, nc);
+      cout = make_rgb(na, nb, nc, 255);
+      break;
+
+    case rbc_rgba:
+      cout = make_rgb(na, nb, nc, nd);
       break;
 
     case rbc_int:

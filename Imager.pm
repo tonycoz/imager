@@ -1722,9 +1722,14 @@ sub transform2 {
     $Imager::ERRSTR = Imager::Expr::error();
     return;
   }
+  my $channels = $opts->{channels} || 3;
+  unless ($channels >= 1 && $channels <= 4) {
+    return Imager->_set_error("channels must be an integer between 1 and 4");
+  }
 
   my $img = Imager->new();
-  $img->{IMG} = i_transform2($opts->{width}, $opts->{height}, $code->code(),
+  $img->{IMG} = i_transform2($opts->{width}, $opts->{height}, 
+			     $channels, $code->code(),
                              $code->nregs(), $code->cregs(),
                              [ map { $_->{IMG} } @imgs ]);
   if (!defined $img->{IMG}) {

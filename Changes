@@ -720,6 +720,11 @@ Revision history for Perl extension Imager.
           source image is used.
         - the image fills didn't handle filling with source images of
           less than four channels correctly
+        - added comment support the postfix transform2() expression
+          parser
+        - transform2() can now produce images with other than 3 channels.
+        - added a correct T_AVREF input mapping to the typemap to 
+          simplify parameter lists
 
 =================================================================
 

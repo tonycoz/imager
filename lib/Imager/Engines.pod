@@ -91,6 +91,11 @@ images an error occurs.
 constants - a reference to hash of constants to define for the
 expression engine.  Some extra constants are defined by Imager
 
+=item *
+
+channels - the number of channels in the output image.  If this isn't
+supplied a 3 channel image will be created.
+
 =back
 
 The tranformation function is specified using either the expr or
@@ -180,16 +185,21 @@ respectively.  I may add a getpn() function at some point, but this
 prevents static checking of the instructions against the number of
 images actually passed in.
 
-=item value(c), hue(c), sat(c), hsv(h,s,v)
+=item value(c), hue(c), sat(c), hsv(h,s,v), hsva(h,s,v,alpha)
 
 Separates a colour value into it's value (brightness), hue (colour)
 and saturation elements.  Use hsv() to put them back together (after
-suitable manipulation).
+suitable manipulation), or hsva() to include a tranparency value.
 
 =item red(c), green(c), blue(c), rgb(r,g,b)
 
 Separates a colour value into it's red, green and blue colours.  Use
-rgb(r,g,b) to put it back together.
+rgb(r,g,b) to put it back together, or rgba() to include a
+transparency value.
+
+=item alpha(c)
+
+Retrieve the alpha value from a colour.
 
 =item int(n)
 
@@ -261,6 +271,17 @@ L<Imager::regmach.pod>.
   return hsv(angle*180/pi, 1, (sin(angle2)+1)/2);
   EOS
                                   });
+
+  # replace green portions of an image with another image
+  my $newimg = Imager::transform2({
+                                   rpnexpr => <<EOS
+  x y getp2 !pat # used to replace green portions
+  x y getp1 !pix # source with "green screen"
+  @pix red 10 lt @pix blue 10 lt && # low blue and red
+  @pix green 254 gt && # and high green
+  @pat @pix ifp
+  EOS
+                                  }, $source, $background);
 
 =head2 Matrix Transformations
 

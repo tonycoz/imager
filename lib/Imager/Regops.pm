@@ -52,340 +52,364 @@ use constant RBC_JUMPNZ => 42;
 use constant RBC_SET => 43;
 use constant RBC_SETP => 44;
 use constant RBC_PRINT => 45;
-use constant RBC_OP_COUNT => 46;
+use constant RBC_RGBA => 46;
+use constant RBC_HSVA => 47;
+use constant RBC_ALPHA => 48;
+use constant RBC_OP_COUNT => 49;
 
-@EXPORT = qw(RBC_ADD RBC_SUBTRACT RBC_MULT RBC_DIV RBC_MOD RBC_POW RBC_UMINUS RBC_MULTP RBC_ADDP RBC_SUBTRACTP RBC_SIN RBC_COS RBC_ATAN2 RBC_SQRT RBC_DISTANCE RBC_GETP1 RBC_GETP2 RBC_GETP3 RBC_VALUE RBC_HUE RBC_SAT RBC_HSV RBC_RED RBC_GREEN RBC_BLUE RBC_RGB RBC_INT RBC_IF RBC_IFP RBC_LE RBC_LT RBC_GE RBC_GT RBC_EQ RBC_NE RBC_AND RBC_OR RBC_NOT RBC_ABS RBC_RET RBC_JUMP RBC_JUMPZ RBC_JUMPNZ RBC_SET RBC_SETP RBC_PRINT RBC_OP_COUNT);
+@EXPORT = qw(RBC_ADD RBC_SUBTRACT RBC_MULT RBC_DIV RBC_MOD RBC_POW RBC_UMINUS RBC_MULTP RBC_ADDP RBC_SUBTRACTP RBC_SIN RBC_COS RBC_ATAN2 RBC_SQRT RBC_DISTANCE RBC_GETP1 RBC_GETP2 RBC_GETP3 RBC_VALUE RBC_HUE RBC_SAT RBC_HSV RBC_RED RBC_GREEN RBC_BLUE RBC_RGB RBC_INT RBC_IF RBC_IFP RBC_LE RBC_LT RBC_GE RBC_GT RBC_EQ RBC_NE RBC_AND RBC_OR RBC_NOT RBC_ABS RBC_RET RBC_JUMP RBC_JUMPZ RBC_JUMPNZ RBC_SET RBC_SETP RBC_PRINT RBC_RGBA RBC_HSVA RBC_ALPHA RBC_OP_COUNT);
 
 %Attr = (
-          'or' => {
-                    'opcode' => 36,
-                    'parms' => 2,
-                    'func' => '0',
-                    'types' => 'rr',
-                    'result' => 'r'
-                  },
-          'getp1' => {
-                       'opcode' => 15,
-                       'parms' => 2,
-                       'func' => 1,
-                       'types' => 'rr',
-                       'result' => 'p'
-                     },
-          'uminus' => {
-                        'opcode' => 6,
-                        'parms' => 1,
-                        'func' => '0',
-                        'types' => 'r',
-                        'result' => 'r'
-                      },
-          'getp2' => {
-                       'opcode' => 16,
-                       'parms' => 2,
-                       'func' => 1,
-                       'types' => 'rr',
-                       'result' => 'p'
-                     },
-          'getp3' => {
-                       'opcode' => 17,
-                       'parms' => 2,
-                       'func' => 1,
-                       'types' => 'rr',
-                       'result' => 'p'
-                     },
-          'jumpnz' => {
-                        'opcode' => 42,
-                        'parms' => 1,
-                        'func' => '0',
-                        'types' => 'r',
-                        'result' => undef
-                      },
-          'op_count' => {
-                          'opcode' => 46,
-                          'parms' => '0',
-                          'func' => '0',
-                          'types' => '',
-                          'result' => undef
-                        },
-          'blue' => {
-                      'opcode' => 24,
+          'setp' => {
+                      'result' => 'p',
                       'parms' => 1,
-                      'func' => 1,
-                      'types' => 'p',
-                      'result' => 'r'
+                      'opcode' => 44,
+                      'func' => 0,
+                      'types' => 'p'
                     },
-          'int' => {
-                     'opcode' => 26,
+          'green' => {
+                       'result' => 'r',
+                       'parms' => 1,
+                       'opcode' => 23,
+                       'func' => 1,
+                       'types' => 'p'
+                     },
+          'abs' => {
+                     'result' => 'r',
                      'parms' => 1,
+                     'opcode' => 38,
                      'func' => 1,
-                     'types' => 'r',
-                     'result' => 'r'
+                     'types' => 'r'
                    },
           'le' => {
+                    'result' => 'r',
+                    'parms' => 2,
                     'opcode' => 29,
-                    'parms' => 2,
-                    'func' => '0',
-                    'types' => 'rr',
-                    'result' => 'r'
+                    'func' => 0,
+                    'types' => 'rr'
                   },
-          'multp' => {
-                       'opcode' => 7,
-                       'parms' => 2,
-                       'func' => '0',
-                       'types' => 'pr',
-                       'result' => 'p'
-                     },
-          'ne' => {
-                    'opcode' => 34,
-                    'parms' => 2,
-                    'func' => '0',
-                    'types' => 'rr',
-                    'result' => 'r'
-                  },
-          'jumpz' => {
-                       'opcode' => 41,
-                       'parms' => 1,
-                       'func' => '0',
-                       'types' => 'r',
-                       'result' => undef
-                     },
-          'atan2' => {
-                       'opcode' => 12,
-                       'parms' => 2,
-                       'func' => 1,
-                       'types' => 'rr',
-                       'result' => 'r'
-                     },
-          'subtractp' => {
-                           'opcode' => 9,
-                           'parms' => 2,
-                           'func' => '0',
-                           'types' => 'pp',
-                           'result' => 'p'
-                         },
-          'rgb' => {
-                     'opcode' => 25,
-                     'parms' => 3,
-                     'func' => 1,
-                     'types' => 'rrr',
-                     'result' => 'p'
-                   },
-          'red' => {
-                     'opcode' => 22,
+          'cos' => {
+                     'result' => 'r',
                      'parms' => 1,
+                     'opcode' => 11,
                      'func' => 1,
-                     'types' => 'p',
-                     'result' => 'r'
+                     'types' => 'r'
                    },
-          'setp' => {
-                      'opcode' => 44,
+          'not' => {
+                     'result' => 'r',
+                     'parms' => 1,
+                     'opcode' => 37,
+                     'func' => 0,
+                     'types' => 'r'
+                   },
+          'ne' => {
+                    'result' => 'r',
+                    'parms' => 2,
+                    'opcode' => 34,
+                    'func' => 0,
+                    'types' => 'rr'
+                  },
+          'blue' => {
+                      'result' => 'r',
                       'parms' => 1,
-                      'func' => '0',
-                      'types' => 'p',
-                      'result' => 'p'
+                      'opcode' => 24,
+                      'func' => 1,
+                      'types' => 'p'
                     },
-          'jump' => {
-                      'opcode' => 40,
-                      'parms' => '0',
-                      'func' => '0',
-                      'types' => '',
-                      'result' => undef
-                    },
-          'value' => {
-                       'opcode' => 18,
-                       'parms' => 1,
-                       'func' => 1,
-                       'types' => 'p',
-                       'result' => 'r'
-                     },
-          'mod' => {
-                     'opcode' => 4,
+          'and' => {
+                     'result' => 'r',
                      'parms' => 2,
-                     'func' => '0',
-                     'types' => 'rr',
-                     'result' => 'r'
+                     'opcode' => 35,
+                     'func' => 0,
+                     'types' => 'rr'
+                   },
+          'mult' => {
+                      'result' => 'r',
+                      'parms' => 2,
+                      'opcode' => 2,
+                      'func' => 0,
+                      'types' => 'rr'
+                    },
+          'rgba' => {
+                      'result' => 'p',
+                      'parms' => 4,
+                      'opcode' => 46,
+                      'func' => 1,
+                      'types' => 'rrrr'
+                    },
+          'pow' => {
+                     'result' => 'r',
+                     'parms' => 2,
+                     'opcode' => 5,
+                     'func' => 0,
+                     'types' => 'rr'
                    },
           'lt' => {
+                    'result' => 'r',
+                    'parms' => 2,
                     'opcode' => 30,
-                    'parms' => 2,
-                    'func' => '0',
-                    'types' => 'rr',
-                    'result' => 'r'
+                    'func' => 0,
+                    'types' => 'rr'
                   },
-          'mult' => {
-                      'opcode' => 2,
-                      'parms' => 2,
-                      'func' => '0',
-                      'types' => 'rr',
-                      'result' => 'r'
-                    },
-          'hue' => {
-                     'opcode' => 19,
-                     'parms' => 1,
-                     'func' => 1,
-                     'types' => 'p',
-                     'result' => 'r'
-                   },
-          'div' => {
-                     'opcode' => 3,
+          'mod' => {
+                     'result' => 'r',
                      'parms' => 2,
-                     'func' => '0',
-                     'types' => 'rr',
-                     'result' => 'r'
+                     'opcode' => 4,
+                     'func' => 0,
+                     'types' => 'rr'
                    },
-          'cos' => {
-                     'opcode' => 11,
-                     'parms' => 1,
-                     'func' => 1,
-                     'types' => 'r',
-                     'result' => 'r'
-                   },
-          'subtract' => {
-                          'opcode' => 1,
-                          'parms' => 2,
-                          'func' => '0',
-                          'types' => 'rr',
-                          'result' => 'r'
-                        },
-          'sat' => {
-                     'opcode' => 20,
-                     'parms' => 1,
-                     'func' => 1,
-                     'types' => 'p',
-                     'result' => 'r'
-                   },
-          'add' => {
-                     'opcode' => '0',
-                     'parms' => 2,
-                     'func' => '0',
-                     'types' => 'rr',
-                     'result' => 'r'
-                   },
-          'sin' => {
-                     'opcode' => 10,
-                     'parms' => 1,
-                     'func' => 1,
-                     'types' => 'r',
-                     'result' => 'r'
-                   },
-          'sqrt' => {
-                      'opcode' => 13,
-                      'parms' => 1,
-                      'func' => 1,
-                      'types' => 'r',
-                      'result' => 'r'
-                    },
-          'ret' => {
-                     'opcode' => 39,
-                     'parms' => 1,
-                     'func' => '0',
-                     'types' => 'p',
-                     'result' => undef
-                   },
-          'distance' => {
-                          'opcode' => 14,
-                          'parms' => 4,
-                          'func' => 1,
-                          'types' => 'rrrr',
-                          'result' => 'r'
-                        },
-          'set' => {
-                     'opcode' => 43,
-                     'parms' => 1,
-                     'func' => '0',
-                     'types' => 'r',
-                     'result' => 'r'
-                   },
-          'ge' => {
-                    'opcode' => 31,
-                    'parms' => 2,
-                    'func' => '0',
-                    'types' => 'rr',
-                    'result' => 'r'
-                  },
-          'print' => {
-                       'opcode' => 45,
-                       'parms' => 1,
-                       'func' => '0',
-                       'types' => 'r',
-                       'result' => undef
-                     },
-          'if' => {
-                    'opcode' => 27,
-                    'parms' => 3,
-                    'func' => 1,
-                    'types' => 'rrr',
-                    'result' => 'r'
-                  },
-          'not' => {
-                     'opcode' => 37,
-                     'parms' => 1,
-                     'func' => '0',
-                     'types' => 'r',
-                     'result' => 'r'
-                   },
-          'hsv' => {
-                     'opcode' => 21,
-                     'parms' => 3,
-                     'func' => 1,
-                     'types' => 'rrr',
-                     'result' => 'p'
-                   },
-          'green' => {
-                       'opcode' => 23,
-                       'parms' => 1,
+          'getp1' => {
+                       'result' => 'p',
+                       'parms' => 2,
+                       'opcode' => 15,
                        'func' => 1,
-                       'types' => 'p',
-                       'result' => 'r'
+                       'types' => 'rr'
                      },
-          'and' => {
-                     'opcode' => 35,
-                     'parms' => 2,
-                     'func' => '0',
-                     'types' => 'rr',
-                     'result' => 'r'
-                   },
-          'abs' => {
-                     'opcode' => 38,
+          'atan2' => {
+                       'result' => 'r',
+                       'parms' => 2,
+                       'opcode' => 12,
+                       'func' => 1,
+                       'types' => 'rr'
+                     },
+          'getp2' => {
+                       'result' => 'p',
+                       'parms' => 2,
+                       'opcode' => 16,
+                       'func' => 1,
+                       'types' => 'rr'
+                     },
+          'getp3' => {
+                       'result' => 'p',
+                       'parms' => 2,
+                       'opcode' => 17,
+                       'func' => 1,
+                       'types' => 'rr'
+                     },
+          'value' => {
+                       'result' => 'r',
+                       'parms' => 1,
+                       'opcode' => 18,
+                       'func' => 1,
+                       'types' => 'p'
+                     },
+          'subtractp' => {
+                           'result' => 'p',
+                           'parms' => 2,
+                           'opcode' => 9,
+                           'func' => 0,
+                           'types' => 'pp'
+                         },
+          'ge' => {
+                    'result' => 'r',
+                    'parms' => 2,
+                    'opcode' => 31,
+                    'func' => 0,
+                    'types' => 'rr'
+                  },
+          'sat' => {
+                     'result' => 'r',
                      'parms' => 1,
+                     'opcode' => 20,
                      'func' => 1,
-                     'types' => 'r',
-                     'result' => 'r'
+                     'types' => 'p'
+                   },
+          'jump' => {
+                      'result' => undef,
+                      'parms' => 0,
+                      'opcode' => 40,
+                      'func' => 0,
+                      'types' => ''
+                    },
+          'if' => {
+                    'result' => 'r',
+                    'parms' => 3,
+                    'opcode' => 27,
+                    'func' => 1,
+                    'types' => 'rrr'
+                  },
+          'div' => {
+                     'result' => 'r',
+                     'parms' => 2,
+                     'opcode' => 3,
+                     'func' => 0,
+                     'types' => 'rr'
+                   },
+          'ifp' => {
+                     'result' => 'p',
+                     'parms' => 3,
+                     'opcode' => 28,
+                     'func' => 1,
+                     'types' => 'rpp'
+                   },
+          'set' => {
+                     'result' => 'r',
+                     'parms' => 1,
+                     'opcode' => 43,
+                     'func' => 0,
+                     'types' => 'r'
                    },
           'eq' => {
+                    'result' => 'r',
+                    'parms' => 2,
                     'opcode' => 33,
-                    'parms' => 2,
-                    'func' => '0',
-                    'types' => 'rr',
-                    'result' => 'r'
+                    'func' => 0,
+                    'types' => 'rr'
                   },
-          'pow' => {
-                     'opcode' => 5,
-                     'parms' => 2,
-                     'func' => '0',
-                     'types' => 'rr',
-                     'result' => 'r'
-                   },
-          'addp' => {
-                      'opcode' => 8,
-                      'parms' => 2,
-                      'func' => '0',
-                      'types' => 'pp',
-                      'result' => 'p'
-                    },
-          'gt' => {
-                    'opcode' => 32,
-                    'parms' => 2,
-                    'func' => '0',
-                    'types' => 'rr',
-                    'result' => 'r'
-                  },
-          'ifp' => {
-                     'opcode' => 28,
-                     'parms' => 3,
+          'multp' => {
+                       'result' => 'p',
+                       'parms' => 2,
+                       'opcode' => 7,
+                       'func' => 0,
+                       'types' => 'pr'
+                     },
+          'sin' => {
+                     'result' => 'r',
+                     'parms' => 1,
+                     'opcode' => 10,
                      'func' => 1,
-                     'types' => 'rpp',
-                     'result' => 'p'
-                   }
+                     'types' => 'r'
+                   },
+          'sqrt' => {
+                      'result' => 'r',
+                      'parms' => 1,
+                      'opcode' => 13,
+                      'func' => 1,
+                      'types' => 'r'
+                    },
+          'alpha' => {
+                       'result' => 'r',
+                       'parms' => 1,
+                       'opcode' => 48,
+                       'func' => 1,
+                       'types' => 'p'
+                     },
+          'distance' => {
+                          'result' => 'r',
+                          'parms' => 4,
+                          'opcode' => 14,
+                          'func' => 1,
+                          'types' => 'rrrr'
+                        },
+          'gt' => {
+                    'result' => 'r',
+                    'parms' => 2,
+                    'opcode' => 32,
+                    'func' => 0,
+                    'types' => 'rr'
+                  },
+          'red' => {
+                     'result' => 'r',
+                     'parms' => 1,
+                     'opcode' => 22,
+                     'func' => 1,
+                     'types' => 'p'
+                   },
+          'rgb' => {
+                     'result' => 'p',
+                     'parms' => 3,
+                     'opcode' => 25,
+                     'func' => 1,
+                     'types' => 'rrr'
+                   },
+          'hue' => {
+                     'result' => 'r',
+                     'parms' => 1,
+                     'opcode' => 19,
+                     'func' => 1,
+                     'types' => 'p'
+                   },
+          'hsva' => {
+                      'result' => 'p',
+                      'parms' => 4,
+                      'opcode' => 47,
+                      'func' => 1,
+                      'types' => 'rrrr'
+                    },
+          'print' => {
+                       'result' => undef,
+                       'parms' => 1,
+                       'opcode' => 45,
+                       'func' => 0,
+                       'types' => 'r'
+                     },
+          'jumpnz' => {
+                        'result' => undef,
+                        'parms' => 1,
+                        'opcode' => 42,
+                        'func' => 0,
+                        'types' => 'r'
+                      },
+          'addp' => {
+                      'result' => 'p',
+                      'parms' => 2,
+                      'opcode' => 8,
+                      'func' => 0,
+                      'types' => 'pp'
+                    },
+          'int' => {
+                     'result' => 'r',
+                     'parms' => 1,
+                     'opcode' => 26,
+                     'func' => 1,
+                     'types' => 'r'
+                   },
+          'op_count' => {
+                          'result' => undef,
+                          'parms' => 0,
+                          'opcode' => 49,
+                          'func' => 0,
+                          'types' => ''
+                        },
+          'or' => {
+                    'result' => 'r',
+                    'parms' => 2,
+                    'opcode' => 36,
+                    'func' => 0,
+                    'types' => 'rr'
+                  },
+          'jumpz' => {
+                       'result' => undef,
+                       'parms' => 1,
+                       'opcode' => 41,
+                       'func' => 0,
+                       'types' => 'r'
+                     },
+          'add' => {
+                     'result' => 'r',
+                     'parms' => 2,
+                     'opcode' => 0,
+                     'func' => 0,
+                     'types' => 'rr'
+                   },
+          'subtract' => {
+                          'result' => 'r',
+                          'parms' => 2,
+                          'opcode' => 1,
+                          'func' => 0,
+                          'types' => 'rr'
+                        },
+          'ret' => {
+                     'result' => undef,
+                     'parms' => 1,
+                     'opcode' => 39,
+                     'func' => 0,
+                     'types' => 'p'
+                   },
+          'hsv' => {
+                     'result' => 'p',
+                     'parms' => 3,
+                     'opcode' => 21,
+                     'func' => 1,
+                     'types' => 'rrr'
+                   },
+          'uminus' => {
+                        'result' => 'r',
+                        'parms' => 1,
+                        'opcode' => 6,
+                        'func' => 0,
+                        'types' => 'r'
+                      }
         );
 $MaxOperands = 4;
 $PackCode = "i";
