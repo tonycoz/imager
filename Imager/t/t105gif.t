@@ -311,6 +311,7 @@ EOS
     else {
       print "not ok 23 # failed to read image with only a local colour map";
     }
+    close FH;
 }
 
 sub test_readgif_cb {
