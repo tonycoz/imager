@@ -141,8 +141,9 @@ available, this may change later.
 
 =item img_set
 
-If you have an existing image, use img_set() to change it's dimensions
-- this will destroy any existing image data:
+img_set destroys the image data in the object and creates a new one
+with the given dimensions and channels.  For a way to convert image
+data between formats see the C<convert()> method.
 
   $img->img_set(xsize=>500, ysize=>500, channels=>4);
 
@@ -159,8 +160,8 @@ If you have an existing image, use img_set() to change it's dimensions
 The C<getwidth()> method returns the width of the image.  This value
 comes either from C<new()> with xsize,ysize parameters or from reading
 data from a file with C<read()>.  If called on an image that has no
-valid data in it like C<Imager-E<gt>new()> returns, the return value of
-C<getwidth()> is undef.
+valid data in it like C<Imager-E<gt>new()> returns, the return value
+of C<getwidth()> is undef.
 
 =item getheight
 
@@ -184,7 +185,7 @@ sooner if you only need to know if there are more than a certain
 number of colors in the image.  If there are more colors than asked
 for the function return undef.  Examples:
 
-  if (!defined($img->getcolorcount(maxcolors=>512)) {
+  if (defined($img->getcolorcount(maxcolors=>512)) {
     print "Less than 512 colors in image\n";
   }
 
