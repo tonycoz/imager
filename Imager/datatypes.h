@@ -49,7 +49,7 @@ typedef union {
 
 typedef enum {
   i_direct_type, /* direct colour, keeps RGB values per pixel */
-  i_palette_type, /* keeps a palette index per pixel */
+  i_palette_type /* keeps a palette index per pixel */
 } i_img_type_t;
 
 typedef enum { 
@@ -57,7 +57,7 @@ typedef enum {
   /* a paletted image might have one bit per sample */
   i_8_bits = 8,
   i_16_bits = 16,
-  i_double_bits = sizeof(double) * 8,
+  i_double_bits = sizeof(double) * 8
 } i_img_bits_t;
 
 typedef struct {

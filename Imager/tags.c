@@ -338,6 +338,7 @@ static int parse_long(char *data, char **end, long *out) {
 static int parse_long_list(char *data, char **end, int maxcount, long *out) {
   int i;
 
+  i = 0;
   while (i < maxcount-1) {
     if (!parse_long(data, &data, out))
       return 0;
