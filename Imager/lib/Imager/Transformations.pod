@@ -23,10 +23,28 @@ Imager::Transformations - Simple transformations of one image into another.
 
   $img->flip(dir=>"h");       # horizontal flip
   $img->flip(dir=>"vh");      # vertical and horizontal flip
-  $nimg = $img->copy->flip(dir=>"v"); # make a copy and flip it vertically
+  $newimg = $img->copy->flip(dir=>"v"); # make a copy and flip it vertically
 
   my $rot20 = $img->rotate(degrees=>20);
   my $rotpi4 = $img->rotate(radians=>3.14159265/4);
+
+
+  # Convert image to gray
+  $new = $img->convert(preset=>'grey');          
+
+  # Swap red/green channel  
+  $new = $img->convert(matrix=>[ [ 0, 1, 0 ],
+                                 [ 1, 0, 0 ],
+                                 [ 0, 0, 1 ] ]);
+
+  # limit the range of red channel from 0..255 to 0..127
+  @map = map { int( $_/2 } 0..255;
+  $img->map( red=>\@map );
+
+  # Apply a Gamma of 1.4
+  my $gamma = 1.4;
+  my @map = map { int( 0.5 + 255*($_/255)**$gamma ) } 0..255;
+  $img->map(all=>\@map);  # inplace conversion
 
 =head1 DESCRIPTION
 
@@ -172,7 +190,161 @@ parameter which can take the values C<h>, C<v>, C<vh> and C<hv>.
 
 
 
+=head2 Color transformations
 
+You can use the convert method to transform the color space of an
+image using a matrix.  For ease of use some presets are provided.
+
+The convert method can be used to:
+
+=over
+
+=item *
+
+convert an RGB or RGBA image to grayscale.
+
+=item *
+
+convert a grayscale image to RGB.
+
+=item *
+
+extract a single channel from an image.
+
+=item *
+
+set a given channel to a particular value (or from another channel)
+
+=back
+
+The currently defined presets are:
+
+=over
+
+=item gray
+
+=item grey
+
+converts an RGBA image into a grayscale image with alpha channel, or
+an RGB image into a grayscale image without an alpha channel.
+
+This weights the RGB channels at 22.2%, 70.7% and 7.1% respectively.
+
+=item noalpha
+
+removes the alpha channel from a 2 or 4 channel image.  An identity
+for other images.
+
+=item red
+
+=item channel0
+
+extracts the first channel of the image into a single channel image
+
+=item green
+
+=item channel1
+
+extracts the second channel of the image into a single channel image
+
+=item blue
+
+=item channel2
+
+extracts the third channel of the image into a single channel image
+
+=item alpha
+
+extracts the alpha channel of the image into a single channel image.
+
+If the image has 1 or 3 channels (assumed to be grayscale of RGB) then
+the resulting image will be all white.
+
+=item rgb
+
+converts a grayscale image to RGB, preserving the alpha channel if any
+
+=item addalpha
+
+adds an alpha channel to a grayscale or RGB image.  Preserves an
+existing alpha channel for a 2 or 4 channel image.
+
+=back
+
+For example, to convert an RGB image into a greyscale image:
+
+  $new = $img->convert(preset=>'grey'); # or gray
+
+or to convert a grayscale image to an RGB image:
+
+  $new = $img->convert(preset=>'rgb');
+
+The presets aren't necessary simple constants in the code, some are
+generated based on the number of channels in the input image.
+
+If you want to perform some other colour transformation, you can use
+the 'matrix' parameter.
+
+For each output pixel the following matrix multiplication is done:
+
+  | channel[0] |   | $c00, ...,  $c0k |   | inchannel[0] |
+  |    ...     | = |       ...        | x |     ...      |
+  | channel[k] |   | $ck0, ...,  $ckk |   | inchannel[k] |
+                                                          1
+Where C<k = $img-&gt;getchannels()-1>.
+
+So if you want to swap the red and green channels on a 3 channel image:
+
+  $new = $img->convert(matrix=>[ [ 0, 1, 0 ],
+                                 [ 1, 0, 0 ],
+                                 [ 0, 0, 1 ] ]);
+
+or to convert a 3 channel image to greyscale using equal weightings:
+
+  $new = $img->convert(matrix=>[ [ 0.333, 0.333, 0.334 ] ])
+
+
+=head2 Color Mappings
+
+You can use the map method to map the values of each channel of an
+image independently using a list of lookup tables.  It's important to
+realize that the modification is made inplace.  The function simply
+returns the input image again or undef on failure.
+
+Each channel is mapped independently through a lookup table with 256
+entries.  The elements in the table should not be less than 0 and not
+greater than 255.  If they are out of the 0..255 range they are
+clamped to the range.  If a table does not contain 256 entries it is
+silently ignored.
+
+Single channels can mapped by specifying their name and the mapping
+table.  The channel names are C<red>, C<green>, C<blue>, C<alpha>.
+
+  @map = map { int( $_/2 } 0..255;
+  $img->map( red=>\@map );
+
+It is also possible to specify a single map that is applied to all
+channels, alpha channel included.  For example this applies a gamma
+correction with a gamma of 1.4 to the input image.
+
+  $gamma = 1.4;
+  @map = map { int( 0.5 + 255*($_/255)**$gamma ) } 0..255;
+  $img->map(all=> \@map);
+
+The C<all> map is used as a default channel, if no other map is
+specified for a channel then the C<all> map is used instead.  If we
+had not wanted to apply gamma to the alpha channel we would have used:
+
+  $img->map(all=> \@map, alpha=>[]);
+
+Since C<[]> contains fewer than 256 element the gamma channel is
+unaffected.
+
+It is also possible to simply specify an array of maps that are
+applied to the images in the rgba order.  For example to apply
+maps to the C<red> and C<blue> channels one would use:
+
+  $img->map(maps=>[\@redmap, [], \@bluemap]);
 
 
 
