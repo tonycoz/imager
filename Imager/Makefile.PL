@@ -153,6 +153,8 @@ bugs.  Imager can crash or display other strange behaviour after
 reading or writing gif images.  Some of the gif tests can even fail
 since they stress some parts of the buggy code.
 
+libungif 4.1.2 and later is safe.
+
 Do you want to remove gif support? [Y/n]
 EOFF
     my $resp = <STDIN>;

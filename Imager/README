@@ -104,6 +104,9 @@ not libungif on RedHat then you will probably get lots of errors
 like undefined symbol: FreeSavedImages when running make test.
 Install libungif package to fix it.
 
+Stock libungif 4.1.2 or later seems to fix all of the bugs, if you
+have a problem that version of linungif (or later), let us know and
+we'll look into it.
 
 Imager needs to have a libtiff version of at least 3.5.5.  In the
 future we might consider supporting older libtiff versions.  For
