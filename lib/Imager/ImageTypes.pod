@@ -10,21 +10,71 @@ Imager::ImageTypes - Internal image representation information
   $img->open(file=>'lena.png',type=>'png'); # Read image from file
 
   $img = Imager->new(xsize=>400, ysize=>300); # RGB data
-  $img = Imager->new(xsize=>400, ysize=>300, channels=>4); # RGB with alpha
-  $img = Imager->new(xsize=>200, ysize=>200, 
-                     channels=>3, type=>'paletted');
+
+  $img = Imager->new(xsize=>400, ysize=>300,  # Grayscale
+                     channels=>1);            #
+
+  $img = Imager->new(xsize=>400, ysize=>300,  # RGB with alpha
+                     channels=>4);            #
+					      
+  $img = Imager->new(xsize=>200, ysize=>200,  
+                     type=>'paletted');       # paletted image
+					      
+  $img = Imager->new(xsize=>200, ysize=>200,  
+                     bits=>16);               # 16 bits/channel rgb
+					      
+  $img = Imager->new(xsize=>200, ysize=>200,  
+                     bits=>'double');         # 'double' floating point
+                                              #  per channel
+
+  $img->img_set(xsize=>500, ysize=>500,       # reset the image object
+                channels=>4);
 
 
+  # Example getting information about an Imager object
 
-  $img->img_set(xsize=>500, ysize=>500, channels=>4);
+  print "Image information:\n";
+  print "Width:        ", $img->getwidth(),    "\n";
+  print "Height:       ", $img->getheight(),   "\n";
+  print "Channels:     ", $img->getchannels(), "\n";
+  print "Bits/Channel: ", $img->bits(),        "\n";
+  print "Virtual:      ", $img->virtual() ? "Yes" : "No", "\n";
+  my $colorcount = $img->getcolorcount(maxcolors=>512);
+        print "Actual number of colors in image: ";
+  print defined($colorcount) ? $colorcount : ">512", "\n";
+  print "Type:         ", $img->type(),        "\n";
 
-  print "image uses ".$img->bits()." per channel\n";
-  print "image is of ".$img->type()." type\n";
-  print "image is virtual\n" if $img->virtual();
-  @tags = $img->tags();
+  if ($img->type() eq 'direct') {
+    print "Modifiable Channels: ";
+    print join " ", map {
+      ($img->getmask() & 1<<$_) ? $_ : ()
+    } 0..$img->getchannels();
+    print "\n";
+  
+  } else {
+  
+    @colors = $img->getcolors();
+    print "Palette size: ".@colors."\n";
+    my $mx = @colors > 4 ? 4 : 0+@colors;
+    print "First $mx entries:\n";
+    for (@colors[0..$mx-1]) {
+      my @res = $_->rgba();
+      print "(", join(", ", @res[0..$img->getchannels()-1]), ")\n";
+    }
+  }
+  
+  my @tags = $img->tags();
+  if (@tags) {
+    print "Tags:\n";
+    for(@tags) {
+      print shift @$_, ": ", join " ", @$_, "\n";
+    }
+  } else {
+    print "No tags in image\n";
+  }
+  
 
-
-=head2 Basic concept
+=head1 DESCRIPTION
 
 Imager supports various internal image representations of images.  The
 two major classes are direct mode and paletted mode.  In paletted mode
@@ -38,14 +88,14 @@ red, green, blue and alpha.
 In addition it's possible to have direct type images with 8 bits/channel
 16 bits/channel or double/channel (64 bits on many systems).
 
-To query an existing image about it's parameters see the C<bits()> and
-C<type()> methods.
+To query an existing image about it's parameters see the C<bits()>,
+C<type()>, C<getwidth()>, C<getheight()>, C<getchannels()> and
+C<virtual()> methods.
 
 The coordinate system in Imager has the origin in the upper left
 corner, see L<Imager::Draw> for details.
 
-
-=head2 Reference list
+=head2 Creating Imager Objects
 
 =over
 
@@ -72,11 +122,13 @@ change by supplying the C<maxcolors> parameter.
 For improved color precision you can use the bits parameter to specify
 16 bit per channel:
 
-  $img = Imager->new(xsize=>200, ysize=>200, channels=>3, bits=>16);
+  $img = Imager->new(xsize=>200, ysize=>200,
+                     channels=>3, bits=>16);
 
 or for even more precision:
 
-  $img = Imager->new(xsize=>200, ysize=>200, channels=>3, bits=>'double');
+  $img = Imager->new(xsize=>200, ysize=>200,
+                     channels=>3, bits=>'double');
 
 to get an image that uses a double for each channel.
 
@@ -96,35 +148,100 @@ If you have an existing image, use img_set() to change it's dimensions
 
 =back
 
-
-To get the size of an image in pixels the C<$img-E<gt>getwidth()> and
-C<$img-E<gt>getheight()> are used.
-
-
-
-=head2 Channel attributes of direct type images
+=head2 Getting Information About an Imager Object
 
 =over
 
+=item getwidth
+
+  print "Image width: ", $img->getwidth(), "\n";
+
+The C<getwidth()> method returns the width of the image.  This value
+comes either from C<new()> with xsize,ysize parameters or from reading
+data from a file with C<read()>.  If called on an image that has no
+valid data in it like C<Imager-&gt;new()> returns, the return value of
+C<getwidth()> is undef.
+
+=item getheight
+
+  print "Image height: ", $img->getheight(), "\n";
+
+Same details apply as for L<getwidth>.
+
 =item getchannels
+
+  print "Image has ",$img->getchannels(), " channels\n";
 
 To get the number of channels in an image C<getchannels()> is used.
 
-=item getmask/setmask
 
-C<getmask()> and C<setmask()> are used to get/set the channel mask of
-the image.  The channel mask is an integer value, if the i-th lsb is set
-the i-th channel is modifiable.
+=item getcolorcount
 
-  $mask=$img->getmask();
-  $img->setmask(mask=>1+2); # modify red and green only
-  $img->setmask(mask=>8); # modify alpha only
-  $img->setmask(mask=>$mask); # restore previous mask
+It is possible to have Imager find the number of colors in an image by
+with the C<getcolorcount()> method. It requires memory proportionally
+to the number of colors in the image so it is possible to have it stop
+sooner if you only need to know if there are more than a certain
+number of colors in the image.  If there are more colors than asked
+for the function return undef.  Examples:
+
+  if (!defined($img->getcolorcount(maxcolors=>512)) {
+    print "Less than 512 colors in image\n";
+  }
+
+
+=item bits
+
+The bits() method retrieves the number of bits used to represent each
+channel in a pixel, 8 for a normal image, 16 for 16-bit image and
+'double' for a double/channel image.
+
+=item type
+
+The type() method returns either 'direct' for truecolor images or
+'paletted' for paletted images.  
+
+=item virtual
+
+The virtual() method returns non-zero
+if the image contains no actual pixels, for example masked images.
 
 
 =back
 
-=head2 Paletted Images
+
+=head2 Direct Type Images
+
+=over
+
+=item getmask
+
+  @rgbanames = qw( red green blue alpha );
+  my $mask = $img->getmask();
+  print "Modifiable channels:\n";
+  for (0..$img->getchannels()-1) {
+    print $rgbanames[$_],"\n" if $mask & 1<<$_;
+  }
+
+C<getmask()> is used to fetch the current channel mask.  The mask
+determines what channels are currently modifiable in the image.  The
+channel mask is an integer value, if the i-th lsb is set the i-th
+channel is modifiable.
+
+=item setmask
+
+  $mask = $img->getmask();
+  $img->setmask(mask=>8);     # modify alpha only
+
+    ...
+
+  $img->setmask(mask=>$mask); # restore previous mask
+
+C<setmask()> is used to set the channel mask of the image.  See
+L<getmask> for details.
+
+=back
+
+=head2 Palette Type Images
 
 In general you can work with paletted images in the same way as RGB
 images, except that if you attempt to draw to a paletted image with a
@@ -150,12 +267,10 @@ adding the colors would overflow the palette.
 
 =item setcolors
 
-Once you have colors in the palette you can overwrite them with the
-setcolors() method:
-
   $img->setcolors(start=>$start, colors=>\@colors);
 
-Returns true on success.
+Once you have colors in the palette you can overwrite them with the
+C<setcolors()> method:  C<sercolors()> returns true on success.
 
 =item getcolors
 
@@ -183,6 +298,9 @@ maximum size of the palette with $img->maxcolors.
 
 =head2 Conversion Between Image Types
 
+Warning: if you draw on a paletted image with colors that aren't in
+the palette, the image will be internally converted to a normal image.
+
 =over
 
 =item to_paletted
@@ -201,42 +319,83 @@ RGB image with:
 
   $rgbimg = $img->to_rgb8;
 
-Warning: if you draw on a paletted image with colors that aren't in
-the palette, the image will be internally converted to a normal image.
+
+=head2 Tags
+
+Image tags contain meta-data about the image, ie. information not
+stored as pixels of the image.
+
+At the perl level each tag has a name or code and a value, which is an
+integer or an arbitrary string.  An image can contain more than one
+tag with the same name or code.
+
+You can retrieve tags from an image using the tags() method, you can
+get all of the tags in an image, as a list of array references, with
+the code or name of the tag followed by the value of the tag:
+
+  my @alltags = $img->tags;
+
+or you can get all tags that have a given name:
+
+  my @namedtags = $img->tags(name=>$name);
+
+or a given code:
+
+  my @tags = $img->tags(code=>$code);
+
+You can add tags using the addtag() method, either by name:
+
+  my $index = $img->addtag(name=>$name, value=>$value);
+
+or by code:
+
+  my $index = $img->addtag(code=>$code, value=>$value);
+
+You can remove tags with the deltag() method, either by index:
+
+  $img->deltag(index=>$index);
+
+or by name:
+
+  $img->deltag(name=>$name);
+
+or by code:
+
+  $img->deltag(code=>$code);
+
+In each case deltag() returns the number of tags deleted.
 
 
+=head2 Common Tags
 
+Many tags are only meaningful for one format.  GIF looping information
+is pretty useless for JPEG for example.  Thus, many tags are set by
+only a single reader or used by a single writer.  For a complete list
+of format specific tags see L<Imager::Files>.
 
-=head2 Attributes common to direct and paletted type images
+Since tags are a relatively new addition their use is not wide spread
+but eventually we hope to have all the readers for various formats set
+some standard information.
 
+=over
 
+=item i_xres
 
+=item i_yres
 
+The spatial resolution of the image in pixels per inch.  If the image
+format uses a different scale, eg. pixels per meter, then this value
+is converted.  A floating point number stored as a string.
 
+=item i_aspect_only
 
+If this is non-zero then the values in i_xres and i_yres are treated
+as a ratio only.  If the image format does not support aspect ratios
+then this is scaled so the smaller value is 72dpi.
 
+=item i_incomplete
 
+If this tag is present then the whole image could not be read.  This
+isn't implemented for all images yet.
 
-It is possible to have Imager find the number of colors in an image
-by using C<$img-E<gt>getcolorcount()>. It requires memory proportionally
-to the number of colors in the image so it is possible to have it
-stop sooner if you only need to know if there are more than a certain number
-of colors in the image.  If there are more colors than asked for
-the function return undef.  Examples:
-
-  if (!defined($img->getcolorcount(maxcolors=>512)) {
-    print "Less than 512 colors in image\n";
-  }
-
-The bits() method retrieves the number of bits used to represent each
-channel in a pixel, 8 for a normal image, 16 for 16-bit image and
-'double' for a double/channel image.  The type() method returns either
-'direct' for truecolor images or 'paletted' for paletted images.  The
-virtual() method returns non-zero if the image contains no actual
-pixels, for example masked images.
-
-
-
-
-
-
+=back
