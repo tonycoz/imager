@@ -688,6 +688,12 @@ t1_push_error(void) {
 #include <ftxpost.h>
 #endif
 
+/* some versions of FT1.x don't seem to define this - it's font defined
+   so it won't change */
+#ifndef TT_MS_LANGID_ENGLISH_GENERAL
+#define TT_MS_LANGID_ENGLISH_GENERAL 0x0409
+#endif
+
 /* convert a code point into an index in the glyph cache */
 #define TT_HASH(x) ((x) & 0xFF)
 

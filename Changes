@@ -714,6 +714,8 @@ Revision history for Perl extension Imager.
         - Debian woody supplied FT2.0.9, which didn't support 
           FT_Has_PS_Names(), so we use the FT_HAS_GLYPH_NAMES() macro 
           instead.
+        - some older FT1 don't define TT_MS_LANGID_ENGLISH_GENERAL,
+          which we use, define it if freetype doesn't.
 
 =================================================================
 
