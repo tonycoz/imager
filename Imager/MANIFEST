@@ -23,6 +23,7 @@ datatypes.h
 datatypes.c
 feat.h
 img16.c
+imgdouble.c     Implements double/sample images
 io.c
 io.h
 log.c
@@ -72,6 +73,7 @@ t/t00basic.t
 t/t01introvert.t
 t/t020masked.t
 t/t021sixteen.t
+t/t022double.t          Test double/sample images
 t/t05error.t
 t/t101jpeg.t
 t/t102png.t

@@ -522,6 +522,7 @@ Revision history for Perl extension Imager.
           arial.ttf at 14pixels)
         - Added tga.c to read targa images
         - Added i_bumpmap_complex to do more accurate bumpmapping
+        - added an image type with doubles as samples
 
 =================================================================
 

@@ -562,6 +562,9 @@ sub img_set {
     $self->{IMG} = i_img_pal_new($hsh{xsize}, $hsh{ysize}, $hsh{channels},
                                  $hsh{maxcolors} || 256);
   }
+  elsif ($hsh{bits} eq 'double') {
+    $self->{IMG} = i_img_double_new($hsh{xsize}, $hsh{ysize}, $hsh{channels});
+  }
   elsif ($hsh{bits} == 16) {
     $self->{IMG} = i_img_16_new($hsh{xsize}, $hsh{ysize}, $hsh{channels});
   }
@@ -2237,15 +2240,22 @@ Warning: if you draw on a paletted image with colors that aren't in
 the palette, the image will be internally converted to a normal image.
 
 For improved color precision you can use the bits parameter to specify
-16 bites per channel:
+16 bit per channel:
 
   $img = Imager->new(xsize=>200, ysize=>200, channels=>3, bits=>16);
 
-Note that as of this writing all functions should work on 16-bit
-images, but at only 8-bit/channel precision.
+or for even more precision:
 
-Currently only 8 and 16/bit per channel image types are available,
-this may change later.
+  $img = Imager->new(xsize=>200, ysize=>200, channels=>3, bits=>'double');
+
+to get an image that uses a double for each channel.
+
+Note that as of this writing all functions should work on images with
+more than 8-bits/channel, but many will only work at only
+8-bit/channel precision.
+
+Currently only 8-bit, 16-bit, and double per channel image types are
+available, this may change later.
 
 Color objects are created by calling the Imager::Color->new()
 method:
