@@ -606,7 +606,7 @@ Revision history for Perl extension Imager.
         - fixed stupid bug in deleting tags
 	- fixed minor pod errors involving &gt;
 
-0.40?
+0.40pre2
         - make t1log optional, defaulting to off.  You can enable the log
           with Imager::init(t1log=>1) (Ticket #369)
         - quote a few hash key strings to prevent warnings on 5.004
@@ -628,7 +628,8 @@ Revision history for Perl extension Imager.
         - difference() method
         - hide (with static) or rename many symbols that could possibly
           cause conflicts with other libraries or perl
-
+				- Fix runaway cache problem for freetype1 font cache.
+				- Added version logging when log is started.
 =================================================================
 
         For latest versions check the Imager-devel pages:
