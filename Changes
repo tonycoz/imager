@@ -636,6 +636,9 @@ Revision history for Perl extension Imager.
           image didn't have one
         - improve crop() documentation, see
           http://perlmonks.org/index.pl?lastnode_id=155767&node_id=155428
+        - handle the first "buggy giflib" test more portably.  Previously
+          it used fork() which caused problems on systems that didn't have
+          a real fork().
 
 =================================================================
 

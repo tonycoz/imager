@@ -3,6 +3,7 @@ use strict;
 $|=1;
 print "1..60\n";
 use Imager qw(:all);
+require "t/testtools.pl";
 
 my $buggy_giflib_file = "buggy_giflib.txt";
 
@@ -27,7 +28,7 @@ i_box_filled($timg, 0, 0, 20, 20, $green);
 i_box_filled($timg, 2, 2, 18, 18, $trans);
 
 if (!i_has_format("gif")) {
-  for (1..60) { print "ok $_ # skip no gif support\n"; }
+  skipn(1, 60, "no gif support");
 } else {
     open(FH,">testout/t105.gif") || die "Cannot open testout/t105.gif\n";
     binmode(FH);
@@ -175,25 +176,31 @@ if (!i_has_format("gif")) {
     unlink $buggy_giflib_file;
     if ($gifver >= 4.0) {
       ++$can_write_callback;
-      unless (fork) {
-	# this can SIGSEGV with some versions of giflib
-	open FH, ">testout/t105_anim_cb.gif" or die $!;
-	i_writegif_callback(sub { 
-			      print FH $_[0] 
-			    },
-			    -1, # max buffering
-			    { make_colors=>'webmap',	
-			      translate=>'closest',
-			      gif_delays=>\@gif_delays,
-			      gif_disposal=>\@gif_disposal,
-			      #transp=>'ordered',
-			      tr_orddith=>'dot8'}, @imgs)
-	  or die "Cannot write anim gif";
-	close FH;
-	print "ok 14\n";
-	exit;
-      }
-      if (wait > 0 && $?) {
+      my $good = ext_test(14, <<'ENDOFCODE');
+use Imager;
+require "t/testtools.pl";
+my $timg = test_img();
+my @gif_delays = (50) x 5;
+my @gif_disposal = (2) x 5;
+my @imgs = ($timg) x 5;
+open FH, "> testout/t105_anim_cb.gif" or die $!;
+binmode FH;
+i_writegif_callback(sub { 
+		      print FH $_[0] 
+		    },
+		    -1, # max buffering
+		    { make_colors=>'webmap',	
+		      translate=>'closest',
+		      gif_delays=>\@gif_delays,
+		      gif_disposal=>\@gif_disposal,
+		      #transp=>'ordered',
+		      tr_orddith=>'dot8'}, @imgs)
+  or die "Cannot write anim gif";
+close FH;
+print "ok 14\n";
+exit;
+ENDOFCODE
+      unless ($good) {
         $can_write_callback = 0;
 	print "not ok 14 # see $buggy_giflib_file\n";
 	print STDERR "\nprobable buggy giflib - skipping tests that depend on a good giflib\n";
@@ -588,5 +595,62 @@ sub _add_tags {
 
   for my $key (keys %tags) {
     Imager::i_tags_add($img, $key, 0, $tags{$key}, 0);
+  }
+}
+
+sub ext_test {
+  my ($testnum, $code, $count, $name) = @_;
+
+  $count ||= 1;
+  $name ||= "gif$testnum";
+
+  # build our code
+  my $script = "testout/$name.pl";
+  if (open SCRIPT, "> $script") {
+    print SCRIPT <<'PROLOG';
+#!perl -w
+if (lc $^O eq 'mswin32') {
+  # avoid the dialog box that window's pops up on a GPF
+  # if you want to debug this stuff, I suggest you comment out the 
+  # following
+  eval {
+    require Win32API::File;
+    Win32API::File::SetErrorMode( Win32API::File::SEM_NOGPFAULTERRORBOX());
+  };
+}
+PROLOG
+
+    print SCRIPT $code;
+    close SCRIPT;
+
+    my $perl = $^X;
+    $perl = qq/"$perl"/ if $perl =~ / /;
+
+    print "# script: $script\n";
+    my $cmd = "$perl -Mblib $script";
+    print "# command: $cmd\n";
+
+    my $ok = 1;
+    my @out = `$cmd`; # should work on DOS and Win32
+    print @out;
+    my $found = 0;
+    for (@out) {
+      if (/^not ok/) {
+	$ok = 0;
+	++$found;
+      }
+      elsif (/^ok/) {
+	++$found;
+      }
+    }
+    unless ($count == $found) {
+      print "# didn't see enough ok/not ok\n";
+      $ok = 0;
+    }
+    return $ok;
+  }
+  else {
+    return skip($testnum, $count, "could not create test script $script: $!");
+    return 0;
   }
 }
