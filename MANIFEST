@@ -56,6 +56,7 @@ fontfiles/ExistenceTest.afm     please edit ExistenceTest.sfd in CVS
 fontfiles/ExistenceTest.pfb     to change these files, edited and
 fontfiles/ExistenceTest.ttf     generated using pfaedit
 fontfiles/ImUgly.ttf
+fontfiles/NameTest.ttf          test glyph_names() - see t38ft2font.t
 fontfiles/dcr10.afm
 fontfiles/dcr10.pfb
 fontfiles/dodge.ttf

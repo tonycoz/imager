@@ -944,8 +944,8 @@ i_ft2_can_face_name(void) {
 #endif
 
 int
-i_ft2_glyph_name(FT2_Fonthandle *handle, unsigned char ch, char *name_buf, 
-                 size_t name_buf_size) {
+i_ft2_glyph_name(FT2_Fonthandle *handle, unsigned long ch, char *name_buf, 
+                 size_t name_buf_size, int reliable_only) {
 #ifdef FT_CONFIG_OPTION_NO_GLYPH_NAMES
   i_clear_error();
   *name_buf = '\0';
@@ -953,35 +953,41 @@ i_ft2_glyph_name(FT2_Fonthandle *handle, unsigned char ch, char *name_buf,
 
   return 0;
 #else
+  FT_UInt index;
+
   i_clear_error();
 
-  if (FT_Has_PS_Glyph_Names(handle->face)) {
-    FT_UInt index = FT_Get_Char_Index(handle->face, ch);
+  if (!FT_HAS_GLYPH_NAMES(handle->face)) {
+    i_push_error(0, "no glyph names in font");
+    *name_buf = '\0';
+    return 0;
+  }
+  if (reliable_only && !FT_Has_PS_Glyph_Names(handle->face)) {
+    i_push_error(0, "no reliable glyph names in font - set reliable_only to 0 to try anyway");
+    *name_buf = '\0';
+    return 0;
+  }
 
-    if (index) {
-      FT_Error error = FT_Get_Glyph_Name(handle->face, index, name_buf, 
-                                         name_buf_size);
-      if (error) {
-        ft2_push_message(error);
-        *name_buf = '\0';
-        return;
-      }
-      if (*name_buf) {
-        return strlen(name_buf) + 1;
-      }
-      else {
-        return 0;
-      }
+  index = FT_Get_Char_Index(handle->face, ch);
+  
+  if (index) {
+    FT_Error error = FT_Get_Glyph_Name(handle->face, index, name_buf, 
+                                       name_buf_size);
+    if (error) {
+      ft2_push_message(error);
+      *name_buf = '\0';
+      return;
+    }
+    if (*name_buf) {
+      return strlen(name_buf) + 1;
     }
     else {
-      i_push_error(0, "no glyph for that character");
-      *name_buf = 0;
       return 0;
     }
   }
   else {
-    i_push_error(0, "no glyph names in font");
-    *name_buf = '\0';
+    i_push_error(0, "no glyph for that character");
+    *name_buf = 0;
     return 0;
   }
 #endif
