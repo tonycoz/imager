@@ -274,7 +274,10 @@ sub init {
 
   @definc{'/usr/include'}=();
   @incs=(split(/\Q$Config{path_sep}/, $INCPATH), 
-         qw(/sw/include /usr/include/freetype2 /usr/local/include/freetype2 
+         qw(/sw/include 
+            /usr/include/freetype2
+            /usr/local/include/freetype2
+            /usr/local/include/freetype1/freetype
             /usr/include /usr/local/include /usr/include/freetype 
             /usr/local/include/freetype));
   @libs=(split(/\Q$Config{path_sep}/,$LIBPATH), 
