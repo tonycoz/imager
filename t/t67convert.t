@@ -1,8 +1,10 @@
-Imager::init("log"=>'testout/t67convert.log');
-
+#!perl -w
+use strict;
 use Imager qw(:all :handy);
+use lib 't';
+use Test::More tests=>17;
 
-print "1..17\n";
+Imager::init("log"=>'testout/t67convert.log');
 
 my $imbase = Imager::ImgRaw::new(200,300,3);
 
@@ -10,121 +12,84 @@ my $imbase = Imager::ImgRaw::new(200,300,3);
 # make a 1 channel image from the above (black) image
 # but with 1 as the 'extra' value
 my $imnew = Imager::i_img_new();
-unless (i_convert($imnew, $imbase, [ [ 0, 0, 0, 1 ] ])) {
-  print "not ok 1 # call failed\n";
-  print "ok 2 # skipped\n";
-  print "ok 3 # skipped\n";
-}
-else {
-  print "ok 1\n";
+SKIP:
+{
+  skip("convert to white failed", 3)
+    unless ok(i_convert($imnew, $imbase, [ [ 0, 0, 0, 1 ] ]), "convert to white");
+
   my ($w, $h, $ch) = i_img_info($imnew);
 
   # the output image should now have one channel
-  if ($ch == 1) {
-    print "ok 2\n";
-  }
-  else {
-    print "not ok 2 # $ch channels in output\n";
-  }
+  is($ch, 1, "one channel image now");
   # should have the same width and height
-  if ($w == 200 && $h == 300) {
-    print "ok 3\n";
-  }
-  else {
-    print "not ok 3 # output image is the wrong size!\n";
-  }
+  ok($w == 200 && $h == 300, "check converted size is the same");
+
   # should be a white image now, let's check
   my $c = Imager::i_get_pixel($imnew, 20, 20);
   my @c = $c->rgba;
   print "# @c\n";
-  if (($c->rgba())[0] == 255) {
-    print "ok 4\n";
-  }
-  else {
-    print "not ok 4 # wrong colour in output image",($c->rgba())[0],"\n";
-  }
+  is($c[0], 255, "check image is white");
 }
 
 # test the highlevel interface
 # currently this requires visual inspection of the output files
 my $im = Imager->new;
-if ($im->read(file=>'testimg/scale.ppm')) {
-  print "ok 5\n";
-  my $out;
-  $out = $im->convert(preset=>'gray')
-    or print "not ";
-  print "ok 6\n";
-  if ($out->write(file=>'testout/t67_gray.ppm', type=>'pnm')) {
-    print "ok 7\n";
-  }
-  else {
-    print "not ok 7 # Cannot save testout/t67_gray.ppm:", $out->errstr,"\n";
-  }
-  $out = $im->convert(preset=>'blue')
-    or print "not ";
-  print "ok 8\n";
+SKIP:
+{
+  skip("could not load scale.ppm", 3)
+    unless $im->read(file=>'testimg/scale.ppm');
+  my $out = $im->convert(preset=>'gray');
+  ok($out, "convert preset gray");
+  ok($out->write(file=>'testout/t67_gray.ppm', type=>'pnm'),
+    "save grey image");
+  $out = $im->convert(preset=>'blue');
+  ok($out, "convert preset blue");
 
-  if ($out->write(file=>'testout/t67_blue.ppm', type=>'pnm')) {
-    print "ok 9\n";
-  }
-  else {
-    print "not ok 9 # Cannot save testout/t67_blue.ppm:", $out->errstr, "\n";
-  }
-}
-else {
-  print "not ok 5 # could not load testout/scale.ppm\n";
-  print map "ok $_ # skipped\n", 6..9;
+  ok($out->write(file=>'testout/t67_blue.ppm', type=>'pnm'),
+     "save blue image");
 }
 
 # test against 16-bit/sample images
 my $im16targ = Imager::i_img_16_new(200, 300, 3);
-unless (i_convert($im16targ, $imbase, [ [ 0, 0, 0, 1 ],
-                                        [ 0, 0, 0, 0 ],
-                                        [ 0, 0, 0, 0 ] ])) {
-  print "not ok 10 # call failed\n";
-  print map "ok $_ # skipped\n", 11..12;
-}
-else {
-  print "ok 10\n";
-
+SKIP:
+{
+  skip("could not convert 16-bit image", 2)
+    unless ok(i_convert($im16targ, $imbase, [ [ 0, 0, 0, 1 ],
+                                              [ 0, 0, 0, 0 ],
+                                              [ 0, 0, 0, 0 ] ]),
+              "convert 16/bit sample image");
   # image should still be 16-bit
-  Imager::i_img_bits($im16targ) == 16
-      or print "not ";
-  print "ok 11\n";
+  is(Imager::i_img_bits($im16targ), 16, "Image still 16-bit/sample");
   # make sure that it's roughly red
   my $c = Imager::i_gpixf($im16targ, 0, 0);
   my @ch = $c->rgba;
-  abs($ch[0] - 1) <= 0.0001 && abs($ch[1]) <= 0.0001 && abs($ch[2]) <= 0.0001
-    or print "not ";
-  print "ok 12\n";
+  ok(abs($ch[0] - 1) <= 0.0001 && abs($ch[1]) <= 0.0001 && abs($ch[2]) <= 0.0001,
+     "image roughly red");
 }
 
 # test against palette based images
 my $impal = Imager::i_img_pal_new(200, 300, 3, 256);
 my $black = NC(0, 0, 0);
-my $blackindex = Imager::i_addcolors($impal, $black)
-  or print "not ";
-print "ok 13\n";
+my $blackindex = Imager::i_addcolors($impal, $black);
+ok($blackindex, "add black to paletted");
 for my $y (0..299) {
   Imager::i_ppal($impal, 0, $y, ($black) x 200);
 }
 my $impalout = Imager::i_img_pal_new(200, 300, 3, 256);
-if (i_convert($impalout, $impal, [ [ 0, 0, 0, 0 ],
+SKIP:
+{
+  skip("could not convert paletted", 3)
+    unless ok(i_convert($impalout, $impal, [ [ 0, 0, 0, 0 ],
                                    [ 0, 0, 0, 1 ],
-                                   [ 0, 0, 0, 0 ] ])) {
-  Imager::i_img_type($impalout) == 1 or print "not ";
-  print "ok 14\n";
-  Imager::i_colorcount($impalout) == 1 or print "not ";
-  print "ok 15\n";
-  my $c = Imager::i_getcolors($impalout, $blackindex) or print "not ";
-  print "ok 16\n";
+                                   [ 0, 0, 0, 0 ] ]),
+             "convert paletted");
+  is(Imager::i_img_type($impalout), 1, "image still paletted");
+  is(Imager::i_colorcount($impalout), 1, "still only one colour");
+  my $c = Imager::i_getcolors($impalout, $blackindex);
+  ok($c, "get color from palette");
   my @ch = $c->rgba;
   print "# @ch\n";
-  $ch[0] == 0 && $ch[1] == 255 && $ch[2] == 0
-    or print "not ";
-  print "ok 17\n";
+  ok($ch[0] == 0 && $ch[1] == 255 && $ch[2] == 0, 
+     "colour is as expected");
 }
-else {
-  print "not ok 14 # could not convert paletted image\n";
-  print map "ok $_ # skipped\n", 15..17;
-}
+
