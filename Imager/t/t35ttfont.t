@@ -63,6 +63,11 @@ $backgr=Imager::ImgRaw::new(500,300,3);
 
 i_tt_text($ttraw,$backgr,100,100,$bgcolor,50.0,'test',4,1);
 
+my $ugly = Imager::i_tt_new("./fontfiles/ImUgly.ttf");
+i_tt_text($ugly, $backgr,100, 50, $bgcolor, 14, 'g', 1, 1);
+i_tt_text($ugly, $backgr,150, 50, $bgcolor, 14, 'delta', 5, 1);
+
+
 open(FH,">testout/t35ttfont2.ppm") || die "cannot open testout/t35ttfont.ppm\n";
 binmode(FH);
 $IO = Imager::io_new_fd( fileno(FH) );

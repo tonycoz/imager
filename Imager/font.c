@@ -1134,8 +1134,8 @@ i_tt_bbox_inst( TT_Fonthandle *handle, int inst ,const char *txt, int len, int c
   mm_log((1,"i_tt_box_inst(handle 0x%X,inst %d,txt '%.*s', len %d)\n",handle,inst,len,txt,len));
 
   upm     = handle->properties.header->Units_Per_EM;
-  gascent  = ( handle->properties.horizontal->Ascender  * handle->instanceh[inst].imetrics.y_ppem ) / upm;
-  gdescent = ( handle->properties.horizontal->Descender * handle->instanceh[inst].imetrics.y_ppem ) / upm;
+  gascent  = ( handle->properties.horizontal->Ascender  * handle->instanceh[inst].imetrics.y_ppem + upm - 1) / upm;
+  gdescent = ( handle->properties.horizontal->Descender * handle->instanceh[inst].imetrics.y_ppem - upm + 1) / upm;
   
   width   = 0;
   start   = 0;
@@ -1148,15 +1148,15 @@ i_tt_bbox_inst( TT_Fonthandle *handle, int inst ,const char *txt, int len, int c
     if ( i_tt_get_glyph(handle,inst,j) ) {
       TT_Glyph_Metrics *gm = handle->instanceh[inst].gmetrics + j;
       width += gm->advance   / 64;
-      casc   = gm->bbox.yMax / 64;
-      cdesc  = gm->bbox.yMin / 64;
+      casc   = (gm->bbox.yMax+63) / 64;
+      cdesc  = (gm->bbox.yMin-63) / 64;
 
       mm_log((1, "i_tt_box_inst: glyph='%c' casc=%d cdesc=%d\n", j, casc, cdesc));
 
       if (first) {
 	start    = gm->bbox.xMin / 64;
-	ascent   = gm->bbox.yMax / 64;
-	descent  = gm->bbox.yMin / 64;
+	ascent   = (gm->bbox.yMax+63) / 64;
+	descent  = (gm->bbox.yMin-63) / 64;
 	first = 0;
       }
       if (i == len-1) {
