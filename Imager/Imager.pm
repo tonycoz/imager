@@ -1024,7 +1024,7 @@ sub read {
 
   # Setup data source
   if ( $input{'type'} eq 'jpeg' ) {
-    ($self->{IMG},$self->{IPTCRAW})=i_readjpeg_wiol( $IO );
+    ($self->{IMG},$self->{IPTCRAW}) = i_readjpeg_wiol( $IO );
     if ( !defined($self->{IMG}) ) {
       $self->{ERRSTR}='unable to read jpeg image'; return undef;
     }
