@@ -2,7 +2,7 @@
 Imager::Color           T_PTROBJ
 Imager::Color::Float    T_PTROBJ
 Imager::ImgRaw          T_PTROBJ
-Imager::TTHandle	T_PTROBJ
+Imager::Font::TT	T_PTROBJ
 Imager::IO              T_PTROBJ
 Imager::Font::FT2       T_PTROBJ
 Imager::FillHandle      T_PTROBJ

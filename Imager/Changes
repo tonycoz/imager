@@ -541,7 +541,7 @@ Revision history for Perl extension Imager.
         - io_buffer implemented as a source for io layer and
           XS and perl OO code added.
         - Test for iolayer t/t07iolayer.t implemented.
-
+	- Fixed most known memory leaks.
 
 =================================================================
 
