@@ -6,29 +6,6 @@ Release Plans (subject to change)
 brown-bag bugs may add intermediate releases.  The dates are goals,
 not commitments.
 
-0.44: (december 2004)
-- set i_format for every file type on read and test for it:
-  - bmp - done
-  - jpeg - done
-  - tiff - done
-  - tga - done
-  - rgb
-  - png - done
-  - gif - done
-  - pnm - done
-  - raw - done
-- check each file reader for possible integer overflows
-  - bmp - done
-  - tiff
-  - tga
-  - rgb
-  - png
-  - gif
-  - pnm
-- check bmp code uses image data offset correctly - done
-- check quant code for integer overflows - done
-- check for old URLs (umich and imager.perl.org/~addi/...) - done
-
 0.45: (march 2005?)
 - audit pnm.c
 - audit tga.c
@@ -42,12 +19,13 @@ not commitments.
   service attack.  This has limited utility because of the way memory
   over commitment works on Linux (reverted)
 - eliminate unused variable warning (especially the RETVAL ones in Imager.xs)
+  (done)
 - add META.yml (bypass EU::MM's limited mechanism)
 - check if freetype 2 is faster/slower than freetype 1 with Imager's glyph
   caching.  If FT1 is faster, add caching as a TODO for FT2.
 - handle probing for libraries better (use pkg-config or I<library>-config
   where possible (freetype2 and libpng)) (done)
-- add concept index to Imager.pm pod
+- add concept index to Imager.pm pod (done, still working it)
 - replace testimg/penguin-base.ppm with a smaller image
 - add a sample CGI HTML and image generation scripts that work together,
   with appropriate security management
@@ -266,3 +244,30 @@ Build/configure:
   we find the file in that directory.
 - switch to Test::More
 - change headers to use more unique re-include protection macros
+
+Old release checklists
+----------------------
+
+0.44: (december 2004)
+- set i_format for every file type on read and test for it:
+  - bmp - done
+  - jpeg - done
+  - tiff - done
+  - tga - done
+  - rgb - no read function anyway
+  - png - done
+  - gif - done
+  - pnm - done
+  - raw - done
+- check each file reader for possible integer overflows
+  - bmp - done
+  - tiff
+  - tga
+  - rgb
+  - png
+  - gif
+  - pnm
+- check bmp code uses image data offset correctly - done
+- check quant code for integer overflows - done
+- check for old URLs (umich and imager.perl.org/~addi/...) - done
+
