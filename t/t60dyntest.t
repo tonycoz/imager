@@ -10,7 +10,7 @@ Imager::init('log'=>'testout/t60dyntest.log');
 
 $img=Imager->new() || die "unable to create image object\n";
 
-$img->open(file=>'testout/t10.ppm',type=>'pnm') || die "failed: ",$img->{ERRSTR},"\n";
+$img->open(file=>'testout/t104.ppm',type=>'pnm') || die "failed: ",$img->{ERRSTR},"\n";
 
 $plug='dynfilt/dyntest.'.$Config{'so'};
 load_plugin($plug) || die "unable to load plugin:\n$Imager::ERRSTR\n";

@@ -431,9 +431,13 @@ Revision history for Perl extension Imager.
 
         - other internal image representations (design/represent.txt)
 
+	- Error handling, make a general i_errstr object and arrange
+          such that each image has an i_errstr object to hold its
+          local errors?
+
 	Good stuff:
 	- image colour transformations based on input images, see 
-	design/cmyktorgb.txt for Addi's description
+          design/cmyktorgb.txt for Addi's description
 	- eventually support tiff's madness
 
         Old sins:
@@ -444,8 +448,8 @@ Revision history for Perl extension Imager.
         - Add mycalloc() and myrealloc() to the malloc() wrappers.
 	
 	- should i_readgif returned colormap be an arrayref of 
-	Imager::Color objects?  Note that this will break 
-	compatibility with previous releases.
+          Imager::Color objects?  Note that this will break 
+          compatibility with previous releases.
 
 	- should Imager::Font be split into a base class whose 	
 	new chooses a base class (ttf, t1 or win32?) to 

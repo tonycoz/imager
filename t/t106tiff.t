@@ -1,7 +1,7 @@
 print "1..4\n";
 use Imager qw(:all);
 
-init_log("testout/t105gif.log",1);
+init_log("testout/t106tiff.log",1);
 
 $green=i_color_new(0,255,0,255);
 $blue=i_color_new(0,0,255,255);
@@ -24,7 +24,7 @@ if (!i_has_format("tiff")) {
   print "ok 2 # skip no tiff support\n";
   print "ok 3 # skip no tiff support\n";
 } else {
-  open(FH,">testout/t10.tiff") || die "cannot open testout/t10.tiff for writing\n";
+  open(FH,">testout/t106.tiff") || die "cannot open testout/t10.tiff for writing\n";
   binmode(FH); 
   my $IO = Imager::io_new_fd(fileno(FH));
   i_writetiff_wiol($img, $IO);
@@ -32,7 +32,7 @@ if (!i_has_format("tiff")) {
 
   print "ok 1\n";
   
-  open(FH,"testout/t10.tiff") or die "cannot open testout/t10.tiff\n";
+  open(FH,"testout/t106.tiff") or die "cannot open testout/t106.tiff\n";
   binmode(FH);
   $IO = Imager::io_new_fd(fileno(FH));
   $cmpimg = i_readtiff_wiol($IO, -1);
@@ -47,7 +47,7 @@ if (!i_has_format("tiff")) {
   Imager::i_writetiff_wiol($img, $IO) or die "Cannot write to bufferchain\n";
   my $tiffdata = Imager::io_slurp($IO);
 
-  open(FH,"testout/t10.tiff");
+  open(FH,"testout/t106.tiff");
   my $odata;
   { local $/;
     $odata = <FH>;
