@@ -614,6 +614,9 @@ Revision history for Perl extension Imager.
           correctly (Ticket #365)
         - make channel pointer to i_gsamp() const int * so we can pass
           const arrays
+        - handle the presence of the default broken giflib better,
+          by giving them some more prose about the problem, and skipping
+          all but the first test that fails with the broken giflib
 
 =================================================================
 

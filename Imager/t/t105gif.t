@@ -4,6 +4,8 @@ $|=1;
 print "1..60\n";
 use Imager qw(:all);
 
+my $buggy_giflib_file = "buggy_giflib.txt";
+
 sub ok ($$$);
 
 init_log("testout/t105gif.log",1);
@@ -170,6 +172,7 @@ if (!i_has_format("gif")) {
     print "ok 13\n";
 
     my $can_write_callback = 0;
+    unlink $buggy_giflib_file;
     if ($gifver >= 4.0) {
       ++$can_write_callback;
       unless (fork) {
@@ -192,23 +195,26 @@ if (!i_has_format("gif")) {
       }
       if (wait > 0 && $?) {
         $can_write_callback = 0;
-	print "not ok 14 # you probably need to patch giflib\n";
-	print <<EOS;
-#--- egif_lib.c	2000/12/11 07:33:12	1.1
-#+++ egif_lib.c	2000/12/11 07:33:48
-#@@ -167,6 +167,12 @@
-#         _GifError = E_GIF_ERR_NOT_ENOUGH_MEM;
-#         return NULL;
-#     }
-#+    if ((Private->HashTable = _InitHashTable()) == NULL) {
-#+        free(GifFile);
-#+        free(Private);
-#+        _GifError = E_GIF_ERR_NOT_ENOUGH_MEM;
-#+        return NULL;
-#+    }
-#
-#     GifFile->Private = (VoidPtr) Private;
-#     Private->FileHandle = 0;
+	print "not ok 14 # see $buggy_giflib_file\n";
+	print STDERR "\nprobable buggy giflib - skipping tests that depend on a good giflib\n";
+	print STDERR "see $buggy_giflib_file for more information\n";
+	open FLAG, "> $buggy_giflib_file" or die;
+	print FLAG <<EOS;
+This file is created by t105gif.t when test 14 fails.
+
+This failure usually indicates you\'re using the original version
+of giflib 4.1.0, which has a few bugs that Imager tickles.
+
+You can apply the patch from:
+
+http://www.develop-help.com/imager/giflib.patch
+
+or you can just install Imager as is, if you only need to write GIFs to 
+files or file descriptors (such as sockets).
+
+In previous versions of Imager only this test was careful about catching 
+the error, we now skip any tests that crashed or failed when the buggy 
+giflib was present.
 EOS
       }
     }
@@ -320,136 +326,142 @@ EOS
     # image has no colour map
     read_failure('testimg/nocmap.gif', 22);
 
-    # image has a local colour map
-    open FH, "< testimg/loccmap.gif"
-      or die "Cannot open testimg/loccmap.gif: $!";
-    binmode FH;
-    if (i_readgif(fileno(FH))) {
-      print "ok 23\n";
-    }
-    else {
-      print "not ok 23 # failed to read image with only a local colour map";
-    }
-    close FH;
-
-    # image has global and local colour maps
-    open FH, "< testimg/screen2.gif"
-      or die "Cannot open testimg/screen2.gif: $!";
-    binmode FH;
-    my $ims = i_readgif(fileno(FH));
-    if ($ims) {
-      print "ok 24\n";
-    }
-    else {
-      print "not ok 24 # ",Imager::_error_as_msg(),"\n";
-    }
-    close FH;
-    open FH, "< testimg/expected.gif"
-      or die "Cannot open testimg/expected.gif: $!";
-    binmode FH;
-    my $ime = i_readgif(fileno(FH));
-    close FH;
-    if ($ime) {
-      print "ok 25\n";
-    }
-    else {
-      print "not ok 25 # ",Imager::_error_as_msg(),"\n";
-    }
-    if ($ims && $ime) {
-      if (i_img_diff($ime, $ims)) {
-	print "not ok 26 # mismatch ",i_img_diff($ime, $ims),"\n";
-	# save the bad one
-	open FH, "> testout/t105_screen2.gif"
-	  or die "Cannot create testout/t105_screen.gif: $!";
-	binmode FH;
-	i_writegifmc($ims, fileno(FH), 7)
-	  or print "# could not save t105_screen.gif\n";
-	close FH;
+    unless (-e $buggy_giflib_file) {
+      # image has a local colour map
+      open FH, "< testimg/loccmap.gif"
+	or die "Cannot open testimg/loccmap.gif: $!";
+      binmode FH;
+      if (i_readgif(fileno(FH))) {
+	print "ok 23\n";
       }
       else {
-	print "ok 26\n";
+	print "not ok 23 # failed to read image with only a local colour map";
       }
+      close FH;
+
+      # image has global and local colour maps
+      open FH, "< testimg/screen2.gif"
+	or die "Cannot open testimg/screen2.gif: $!";
+      binmode FH;
+      my $ims = i_readgif(fileno(FH));
+      if ($ims) {
+	print "ok 24\n";
+      }
+      else {
+	print "not ok 24 # ",Imager::_error_as_msg(),"\n";
+      }
+      close FH;
+      open FH, "< testimg/expected.gif"
+	or die "Cannot open testimg/expected.gif: $!";
+      binmode FH;
+      my $ime = i_readgif(fileno(FH));
+      close FH;
+      if ($ime) {
+	print "ok 25\n";
+      }
+      else {
+	print "not ok 25 # ",Imager::_error_as_msg(),"\n";
+      }
+      if ($ims && $ime) {
+	if (i_img_diff($ime, $ims)) {
+	  print "not ok 26 # mismatch ",i_img_diff($ime, $ims),"\n";
+	  # save the bad one
+	  open FH, "> testout/t105_screen2.gif"
+	    or die "Cannot create testout/t105_screen.gif: $!";
+	  binmode FH;
+	  i_writegifmc($ims, fileno(FH), 7)
+	    or print "# could not save t105_screen.gif\n";
+	  close FH;
+	}
+	else {
+	  print "ok 26\n";
+	}
+      }
+      else {
+	print "ok 26 # skipped\n";
+      }
+
+      # test reading a multi-image file into multiple images
+      open FH, "< testimg/screen2.gif"
+	or die "Cannot open testimg/screen2.gif: $!";
+      binmode FH;
+      @imgs = Imager::i_readgif_multi(fileno(FH))
+	or print "not ";
+      print "ok 27\n";
+      close FH;
+      @imgs == 2 or print "not ";
+      print "ok 28\n";
+      for my $img (@imgs) {
+	unless (Imager::i_img_type($img) == 1) {
+	  print "not ";
+	  last;
+	}
+      }
+      print "ok 29\n";
+      Imager::i_colorcount($imgs[0]) == 4 or print "not ";
+      print "ok 30\n";
+      Imager::i_colorcount($imgs[1]) == 2 or print "not ";
+      print "ok 31\n";
+      Imager::i_tags_find($imgs[0], "gif_left", 0) or print "not ";
+      print "ok 32\n";
+      my @tags = map {[ Imager::i_tags_get($imgs[1], $_) ]} 0..Imager::i_tags_count($imgs[1])-1;
+      my ($left) = grep $_->[0] eq 'gif_left', @tags;
+      $left && $left->[1] == 3 or print "not ";
+      print "ok 33\n";
+      
+      # screen3.gif was saved with 
+      open FH, "< testimg/screen3.gif"
+	or die "Cannot open testimg/screen3.gif: $!";
+      binmode FH;
+      @imgs = Imager::i_readgif_multi(fileno(FH))
+	or print "not ";
+      print "ok 34\n";
+      close FH;
+      eval {
+	require 'Data/Dumper.pm';
+	Data::Dumper->import();
+      };
+      unless ($@) {
+	# build a big map of all tags for all images
+	@tags = 
+	  map { 
+	    my $im = $_; 
+	    [ 
+	     map { join ",", map { defined() ? $_ : "undef" } Imager::i_tags_get($im, $_) } 
+	     0..Imager::i_tags_count($_)-1 
+	    ] 
+	  } @imgs;
+	my $dump = Dumper(\@tags);
+	$dump =~ s/^/# /mg;
+	print "# tags from gif\n", $dump;
+      }
+      
+      # at this point @imgs should contain only paletted images
+      ok(35, Imager::i_img_type($imgs[0]) == 1, "imgs[0] not paletted");
+      ok(36, Imager::i_img_type($imgs[1]) == 1, "imgs[1] not paletted");
+      
+      # see how we go saving it
+      open FH, ">testout/t105_pal.gif" or die $!;
+      binmode FH;
+      ok(37, i_writegif_gen(fileno(FH), { make_colors=>'addi',
+					  translate=>'closest',
+					  transp=>'ordered',
+					}, @imgs), "write from paletted");
+      close FH;
+      
+      # make sure nothing bad happened
+      open FH, "< testout/t105_pal.gif" or die $!;
+      binmode FH;
+      ok(38, (my @imgs2 = Imager::i_readgif_multi(fileno(FH))) == 2,
+	 "re-reading saved paletted images");
+      ok(39, i_img_diff($imgs[0], $imgs2[0]) == 0, "imgs[0] mismatch");
+      ok(40, i_img_diff($imgs[1], $imgs2[1]) == 0, "imgs[1] mismatch");
     }
     else {
-      print "ok 26 # skipped\n";
-    }
-
-    # test reading a multi-image file into multiple images
-    open FH, "< testimg/screen2.gif"
-      or die "Cannot open testimg/screen2.gif: $!";
-    binmode FH;
-    @imgs = Imager::i_readgif_multi(fileno(FH))
-      or print "not ";
-    print "ok 27\n";
-    close FH;
-    @imgs == 2 or print "not ";
-    print "ok 28\n";
-    for my $img (@imgs) {
-      unless (Imager::i_img_type($img) == 1) {
-        print "not ";
-        last;
+      for (23..40) {
+	print "ok $_ # skip see $buggy_giflib_file\n";
       }
     }
-    print "ok 29\n";
-    Imager::i_colorcount($imgs[0]) == 4 or print "not ";
-    print "ok 30\n";
-    Imager::i_colorcount($imgs[1]) == 2 or print "not ";
-    print "ok 31\n";
-    Imager::i_tags_find($imgs[0], "gif_left", 0) or print "not ";
-    print "ok 32\n";
-    my @tags = map {[ Imager::i_tags_get($imgs[1], $_) ]} 0..Imager::i_tags_count($imgs[1])-1;
-    my ($left) = grep $_->[0] eq 'gif_left', @tags;
-    $left && $left->[1] == 3 or print "not ";
-    print "ok 33\n";
-
-    # screen3.gif was saved with 
-    open FH, "< testimg/screen3.gif"
-      or die "Cannot open testimg/screen3.gif: $!";
-    binmode FH;
-    @imgs = Imager::i_readgif_multi(fileno(FH))
-      or print "not ";
-    print "ok 34\n";
-    close FH;
-    eval {
-      require 'Data/Dumper.pm';
-      Data::Dumper->import();
-    };
-    unless ($@) {
-      # build a big map of all tags for all images
-      @tags = 
-	map { 
-	  my $im = $_; 
-	  [ 
-	   map { join ",", map { defined() ? $_ : "undef" } Imager::i_tags_get($im, $_) } 
-	   0..Imager::i_tags_count($_)-1 
-	  ] 
-	} @imgs;
-      my $dump = Dumper(\@tags);
-      $dump =~ s/^/# /mg;
-      print "# tags from gif\n", $dump;
-    }
-
-    # at this point @imgs should contain only paletted images
-    ok(35, Imager::i_img_type($imgs[0]) == 1, "imgs[0] not paletted");
-    ok(36, Imager::i_img_type($imgs[1]) == 1, "imgs[1] not paletted");
-
-    # see how we go saving it
-    open FH, ">testout/t105_pal.gif" or die $!;
-    binmode FH;
-    ok(37, i_writegif_gen(fileno(FH), { make_colors=>'addi',
-                                        translate=>'closest',
-                                        transp=>'ordered',
-                                      }, @imgs), "write from paletted");
-    close FH;
-    
-    # make sure nothing bad happened
-    open FH, "< testout/t105_pal.gif" or die $!;
-    binmode FH;
-    ok(38, (my @imgs2 = Imager::i_readgif_multi(fileno(FH))) == 2,
-       "re-reading saved paletted images");
-    ok(39, i_img_diff($imgs[0], $imgs2[0]) == 0, "imgs[0] mismatch");
-    ok(40, i_img_diff($imgs[1], $imgs2[1]) == 0, "imgs[1] mismatch");
-
     # test that the OO interface warns when we supply old options
     {
       my @warns;
