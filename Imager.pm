@@ -706,6 +706,12 @@ sub write_multi {
   my ($class, $opts, @images) = @_;
 
   if ($opts->{type} eq 'gif') {
+    my $gif_delays = $opts->{gif_delays};
+    local $opts->{gif_delays} = $gif_delays;
+    unless (ref $opts->{gif_delays}) {
+      # assume the caller wants the same delay for each frame
+      $opts->{gif_delays} = [ ($gif_delays) x @images ];
+    }
     # translate to ImgRaw
     if (grep !UNIVERSAL::isa($_, 'Imager') || !$_->{IMG}, @images) {
       $ERRSTR = "Usage: Imager->write_multi({ options }, @images)";
@@ -1787,6 +1793,9 @@ The images are written interlaced if this is non-zero.
 
 A reference to an array containing the delays between images, in 1/100
 seconds.
+
+If you want the same delay for every frame you can simply set this to
+the delay in 1/100 seconds.
 
 =item gif_user_input
 
