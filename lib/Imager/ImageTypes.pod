@@ -320,6 +320,32 @@ RGB image with:
   $rgbimg = $img->to_rgb8;
 
 
+
+=head2 Masked Images
+
+Masked images let you control which pixels are modified in an
+underlying image.  Where the first channel is completely black in the
+mask image, writes to the underlying image are ignored.
+
+For example, given a base image called $img:
+
+  my $mask = Imager->new(xsize=>$img->getwidth, ysize=>getheight,
+                         channels=>1);
+  # ... draw something on the mask
+  my $maskedimg = $img->masked(mask=>$mask);
+
+You can specifiy the region of the underlying image that is masked
+using the left, top, right and bottom options.
+
+If you just want a subset of the image, without masking, just specify
+the region without specifying a mask.
+
+
+
+
+
+
+
 =head2 Tags
 
 Image tags contain meta-data about the image, ie. information not
@@ -399,3 +425,7 @@ If this tag is present then the whole image could not be read.  This
 isn't implemented for all images yet.
 
 =back
+
+
+
+
