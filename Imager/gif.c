@@ -1,6 +1,8 @@
 #include "image.h"
 #include <gif_lib.h>
 
+/* XXX: Reading still needs to support reading all those gif properties */
+
 /*
 =head1 NAME
 
@@ -96,14 +98,7 @@ my_gif_inputfunc(GifFileType* gft, GifByteType *buf,int length) {
 
 #endif
 
-/*
-  This file needs a complete rewrite 
 
-  This file needs a complete rewrite 
-
-  Maybe not anymore, though reading still needs to support reading
-  all those gif properties.
-*/
 
 /* Make some variables global, so we could access them faster: */
 
@@ -111,7 +106,6 @@ static int
   InterlacedOffset[] = { 0, 4, 2, 1 }, /* The way Interlaced image should. */
   InterlacedJumps[] = { 8, 8, 4, 2 };    /* be read - offsets and jumps... */
 
-/*  static ColorMapObject *ColorMap; */
 
 
 static
@@ -181,8 +175,7 @@ i_readgif_low(GifFileType *GifFile, int **colour_table, int *colours) {
 
   Size = GifFile->SWidth * sizeof(GifPixelType); 
   
-  if ((GifRow = (GifRowType) mymalloc(Size)) == NULL)
-    m_fatal(0,"Failed to allocate memory required, aborted."); /* First row. */
+  GifRow = (GifRowType) mymalloc(Size);
 
   for (i = 0; i < GifFile->SWidth; i++) GifRow[i] = GifFile->SBackGroundColor;
   
@@ -394,8 +387,7 @@ Returns non-zero on success.
 */
 
 undef_int
-i_writegif(i_img *im, int fd, int max_colors, int pixdev, int fixedlen, i_color fixed[])
-{
+i_writegif(i_img *im, int fd, int max_colors, int pixdev, int fixedlen, i_color fixed[]) {
   i_color colors[256];
   i_quantize quant;
   i_gif_opts opts;
