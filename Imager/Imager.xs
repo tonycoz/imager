@@ -1487,12 +1487,34 @@ i_rotate90(im, degrees)
                int      degrees
 
 Imager::ImgRaw
-i_rotate_exact(im, amount)
+i_rotate_exact(im, amount, ...)
     Imager::ImgRaw      im
             double      amount
+      PREINIT:
+	i_color *backp = NULL;
+	i_fcolor *fbackp = NULL;
+	int i;
+	SV * sv1;
+      CODE:
+	/* extract the bg colors if any */
+	/* yes, this is kind of strange */
+	for (i = 2; i < items; ++i) {
+          sv1 = ST(i);
+          if (sv_derived_from(sv1, "Imager::Color")) {
+	    IV tmp = SvIV((SV*)SvRV(sv1));
+	    backp = INT2PTR(i_color *, tmp);
+	  }
+	  else if (sv_derived_from(sv1, "Imager::Color::Float")) {
+	    IV tmp = SvIV((SV*)SvRV(sv1));
+	    fbackp = INT2PTR(i_fcolor *, tmp);
+	  }
+	}
+	RETVAL = i_rotate_exact_bg(im, amount, backp, fbackp);
+      OUTPUT:
+	RETVAL
 
 Imager::ImgRaw
-i_matrix_transform(im, xsize, ysize, matrix)
+i_matrix_transform(im, xsize, ysize, matrix, ...)
     Imager::ImgRaw      im
                int      xsize
                int      ysize
@@ -1502,6 +1524,8 @@ i_matrix_transform(im, xsize, ysize, matrix)
         IV len;
         SV *sv1;
         int i;
+	i_color *backp = NULL;
+	i_fcolor *fbackp = NULL;
       CODE:
         if (!SvROK(ST(3)) || SvTYPE(SvRV(ST(3))) != SVt_PVAV)
           croak("i_matrix_transform: parameter 4 must be an array ref\n");
@@ -1515,7 +1539,20 @@ i_matrix_transform(im, xsize, ysize, matrix)
         }
         for (; i < 9; ++i)
           matrix[i] = 0;
-        RETVAL = i_matrix_transform(im, xsize, ysize, matrix);        
+	/* extract the bg colors if any */
+	/* yes, this is kind of strange */
+	for (i = 4; i < items; ++i) {
+          sv1 = ST(i);
+          if (sv_derived_from(sv1, "Imager::Color")) {
+	    IV tmp = SvIV((SV*)SvRV(sv1));
+	    backp = INT2PTR(i_color *, tmp);
+	  }
+	  else if (sv_derived_from(sv1, "Imager::Color::Float")) {
+	    IV tmp = SvIV((SV*)SvRV(sv1));
+	    fbackp = INT2PTR(i_fcolor *, tmp);
+	  }
+	}
+        RETVAL = i_matrix_transform_bg(im, xsize, ysize, matrix, backp, fbackp);
       OUTPUT:
         RETVAL
 

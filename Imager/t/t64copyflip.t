@@ -1,4 +1,5 @@
-BEGIN { $| = 1; print "1..41\n"; }
+#!perl -w
+BEGIN { $| = 1; print "1..43\n"; }
 END {print "not ok 1\n" unless $loaded;}
 use Imager;
 
@@ -73,12 +74,30 @@ if (!$rimg->write(file=>"testout/t64_rot10.ppm")) {
   print "# Cannot save: ",$rimg->errstr,"\n";
 }
 
+# rotate with background
+$rimg = $img->rotate(degrees=>10, back=>Imager::Color->new(builtin=>'red'))
+  or print "not ";
+print "ok 41\n";
+if (!$rimg->write(file=>"testout/t64_rot10_back.ppm")) {
+  print "# Cannot save: ",$rimg->errstr,"\n";
+}
+	
+
 my $trimg = $img->matrix_transform(matrix=>[ 1.2, 0, 0,
                                              0,   1, 0,
                                              0,   0, 1])
   or print "not ";
-print "ok 41\n";
+print "ok 42\n";
 $trimg->write(file=>"testout/t64_trans.ppm")
+  or print "# Cannot save: ",$trimg->errstr,"\n";
+
+my $trimg = $img->matrix_transform(matrix=>[ 1.2, 0, 0,
+                                             0,   1, 0,
+                                             0,   0, 1],
+				   back=>Imager::Color->new(builtin=>'blue'))
+  or print "not ";
+print "ok 43\n";
+$trimg->write(file=>"testout/t64_trans_back.ppm")
   or print "# Cannot save: ",$trimg->errstr,"\n";
 
 sub rot_test {

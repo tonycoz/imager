@@ -818,6 +818,13 @@ Revision history for Perl extension Imager.
           Resolves https://rt.cpan.org/Ticket/Display.html?id=2593
         - added the equals() method to Imager::Color.
           Resolves https://rt.cpan.org/Ticket/Display.html?id=2238
+        - prevent a test warning introduced by the above
+        - the rotate() and matrix_transform() methods now accept a 'back'
+          parameter specifying a background color.  This is only used
+          where there is no source data (think of the corners around an
+          image rotated 45 degrees) and it not combined with transparent
+          pixels from the source image.
+          Resolves https://rt.cpan.org/Ticket/Display.html?id=6140
 
 =================================================================
 

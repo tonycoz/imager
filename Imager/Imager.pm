@@ -1829,7 +1829,13 @@ sub rotate {
     my $amount = $opts{radians} || $opts{degrees} * 3.1415926535 / 180;
 
     my $result = Imager->new;
-    if ($result->{IMG} = i_rotate_exact($self->{IMG}, $amount)) {
+    if ($opts{back}) {
+      $result->{IMG} = i_rotate_exact($self->{IMG}, $amount, $opts{back});
+    }
+    else {
+      $result->{IMG} = i_rotate_exact($self->{IMG}, $amount);
+    }
+    if ($result->{IMG}) {
       return $result;
     }
     else {
@@ -1838,7 +1844,7 @@ sub rotate {
     }
   }
   else {
-    $self->{ERRSTR} = "Only the 'right' parameter is available";
+    $self->{ERRSTR} = "Only the 'right', 'radians' and 'degrees' parameters are available";
     return undef;
   }
 }
@@ -1852,9 +1858,16 @@ sub matrix_transform {
     my $ysize = $opts{ysize} || $self->getheight;
 
     my $result = Imager->new;
-    $result->{IMG} = i_matrix_transform($self->{IMG}, $xsize, $ysize, 
-                                        $opts{matrix})
-      or return undef;
+    if ($opts{back}) {
+      $result->{IMG} = i_matrix_transform($self->{IMG}, $xsize, $ysize, 
+					  $opts{matrix}, $opts{back})
+	or return undef;
+    }
+    else {
+      $result->{IMG} = i_matrix_transform($self->{IMG}, $xsize, $ysize, 
+					  $opts{matrix})
+	or return undef;
+    }
 
     return $result;
   }
