@@ -20,9 +20,9 @@ i_box_filled($timg, 0, 0, 20, 20, $green);
 i_box_filled($timg, 2, 2, 18, 18, $trans);
 
 if (!i_has_format("tiff")) {
-  print "ok 1 # skip no tiff support\n";
-  print "ok 2 # skip no tiff support\n";
-  print "ok 3 # skip no tiff support\n";
+  for (1..4) {
+    print "ok $_ # skip no tiff support\n";
+  }
 } else {
   open(FH,">testout/t106.tiff") || die "cannot open testout/t10.tiff for writing\n";
   binmode(FH); 
