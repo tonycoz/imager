@@ -727,6 +727,7 @@ static void fill_image(i_fill_t *fill, int x, int y, int width, int channels,
   struct i_fill_image_t *f = (struct i_fill_image_t *)fill;
   int i = 0;
   i_color c;
+  i_color *out = data;
   
   if (f->has_matrix) {
     /* the hard way */
@@ -761,7 +762,7 @@ static void fill_image(i_fill_t *fill, int x, int y, int width, int channels,
         }
         c2[dy] = interp_i_color(c[dy][0], c[dy][1], rx, f->src->channels);
       }
-      *data++ = interp_i_color(c2[0], c2[1], ry, f->src->channels);
+      *out++ = interp_i_color(c2[0], c2[1], ry, f->src->channels);
       ++i;
     }
   }
@@ -784,9 +785,32 @@ static void fill_image(i_fill_t *fill, int x, int y, int width, int channels,
       }
       rx -= ix * f->src->xsize;
       ry -= iy * f->src->ysize;
-      i_gpix(f->src, rx, ry, data);
-      ++data;
+      i_gpix(f->src, rx, ry, out);
+      ++out;
       ++i;
+    }
+  }
+  if (f->src->channels == 3) {
+    /* just set the alpha */
+    for (i = 0; i <  width; ++i) {
+      data->channel[3] = 255;
+      data++;
+    }
+  }
+  else if (f->src->channels == 2) {
+    /* copy the alpha to channel 3, duplicate the grey value */
+    for (i = 0; i <  width; ++i) {
+      data->channel[3] = data->channel[1];
+      data->channel[1] = data->channel[2] = data->channel[0];
+      data++;
+    }
+  }
+  else if (f->src->channels == 1) {
+    /* set the alpha, duplicate grey */
+    for (i = 0; i <  width; ++i) {
+      data->channel[3] = 255;
+      data->channel[1] = data->channel[2] = data->channel[0];
+      data++;
     }
   }
 }
@@ -861,6 +885,29 @@ static void fill_imagef(i_fill_t *fill, int x, int y, int width, int channels,
       i_gpixf(f->src, rx, ry, data);
       ++data;
       ++i;
+    }
+  }
+  if (f->src->channels == 3) {
+    /* just set the alpha */
+    for (i = 0; i <  width; ++i) {
+      data->channel[3] = 1.0;
+      data++;
+    }
+  }
+  else if (f->src->channels == 2) {
+    /* copy the alpha to channel 3, duplicate the grey value */
+    for (i = 0; i <  width; ++i) {
+      data->channel[3] = data->channel[1];
+      data->channel[1] = data->channel[2] = data->channel[0];
+      data++;
+    }
+  }
+  else if (f->src->channels == 1) {
+    /* set the alpha, duplicate grey */
+    for (i = 0; i <  width; ++i) {
+      data->channel[3] = 1.0;
+      data->channel[1] = data->channel[2] = data->channel[0];
+      data++;
     }
   }
 }
