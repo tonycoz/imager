@@ -413,6 +413,7 @@ i_box_cfill(i_img *im,int x1,int y1,int x2,int y2,i_fill_t *fill) {
         (fill->fill_with_fcolor)(fill, x1, y1, x2-x1, im->channels, line);
       }
       i_plinf(im, x1, x2, y1, line);
+      ++y1;
     }
     myfree(line);
     if (work)
