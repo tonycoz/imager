@@ -87,8 +87,8 @@ use Imager::Font;
 		i_writetiff_wiol
 		i_writetiff_wiol_faxable
 
-		i_readpng
-		i_writepng
+		i_readpng_wiol
+		i_writepng_wiol
 
 		i_readgif
 		i_readgif_callback
@@ -468,7 +468,7 @@ sub read {
     $self->{ERRSTR}='format not supported'; return undef;
   }
 
-  my %iolready=(jpeg=>1, tiff=>1, pnm=>1, raw=>1);
+  my %iolready=(jpeg=>1, png=>1, tiff=>1, pnm=>1, raw=>1);
 
   if ($iolready{$input{type}}) {
     # Setup data source
@@ -501,6 +501,15 @@ sub read {
       return $self;
     }
 
+    if ( $input{type} eq 'png' ) {
+      $self->{IMG}=i_readpng_wiol( $IO, -1 ); # Fixme, check if that length parameter is ever needed
+      if ( !defined($self->{IMG}) ) {
+	$self->{ERRSTR}='unable to read png image';
+	return undef;
+      }
+      $self->{DEBUG} && print "loading a png file\n";
+    }
+
     if ( $input{type} eq 'raw' ) {
       my %params=(datachannels=>3,storechannels=>3,interleave=>1,%input);
 
@@ -521,6 +530,7 @@ sub read {
       }
       $self->{DEBUG} && print "loading a raw file\n";
     }
+
   } else {
 
     # Old code for reference while changing the new stuff
@@ -595,17 +605,6 @@ sub read {
 	return undef;
       }
       $self->{DEBUG} && print "loading a jpeg file\n";
-    } elsif ( $input{type} eq 'png' ) {
-      if (exists $input{data}) {
-	$self->{IMG}=i_readpng_scalar($input{data});
-      } else {
-	$self->{IMG}=i_readpng( $fd );
-      }
-      if ( !defined($self->{IMG}) ) {
-	$self->{ERRSTR}='unable to read png image';
-	return undef;
-      }
-      $self->{DEBUG} && print "loading a png file\n";
     }
   }
   return $self;

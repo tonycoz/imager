@@ -15,7 +15,7 @@ i_box_filled($img,20,25,80,125,$blue);
 i_arc($img,75,75,30,0,361,$red);
 i_conv($img,[0.1, 0.2, 0.4, 0.2, 0.1]);
 
-my $fh = openimage(">testout/104.ppm");
+my $fh = openimage(">testout/t104.ppm");
 $IO = Imager::io_new_fd(fileno($fh));
 i_writeppm_wiol($img, $IO) 
   or die "Cannot write testout/t104.ppm\n";
@@ -24,8 +24,7 @@ close($fh);
 print "ok 1\n";
 
 $IO = Imager::io_new_bufchain();
-i_writeppm_wiol($img, $IO)
-  or die "Cannot write to bufchain";
+i_writeppm_wiol($img, $IO) or die "Cannot write to bufchain";
 $data = Imager::io_slurp($IO);
 print "ok 2\n";
 

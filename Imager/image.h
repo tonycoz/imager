@@ -355,7 +355,6 @@ extern void quant_transparent(i_quantize *quant, i_palidx *indices, i_img *img, 
 i_img* i_readjpeg(int fd,char** iptc_itext,int *tlength);
 i_img* i_readjpeg_scalar(char *data, int length,char** iptc_itext,int *itlength);
 i_img* i_readjpeg_wiol(io_glue *ig, int length, char** iptc_itext, int *itlength);
-
 i_img* i_readjpeg_extra2(int fd,char** iptc_itext);
 undef_int i_writejpeg(i_img *im,int fd,int qfactor);
 #endif /* HAVE_LIBJPEG */
@@ -368,8 +367,7 @@ undef_int i_writetiff_wiol_faxable(i_img *im, io_glue *ig, int fine);
 #endif /* HAVE_LIBTIFF */
 
 #ifdef HAVE_LIBPNG
-i_img *i_readpng(int fd);
-i_img *i_readpng_scalar(char *data, int length);
+i_img *i_readpng_wiol(io_glue *ig, int length);
 undef_int i_writepng(i_img *im,int fd);
 #endif /* HAVE_LIBPNG */
 

@@ -42,14 +42,16 @@ if (!i_has_format("png")) {
 } else {
   open(FH,">testout/t102.png") || die "cannot open testout/t102.png for writing\n";
   binmode(FH);
-  i_writepng($img,fileno(FH)) || print "not ";
+  $IO = Imager::io_new_fd(fileno(FH));
+  i_writepng_wiol($img, $IO) || print "not ";
   close(FH);
 
   print "ok 2\n";
 
   open(FH,"testout/t102.png") || die "cannot open testout/t102.png\n";
   binmode(FH);
-  $cmpimg=i_readpng(fileno(FH)) || print "not ";
+  $IO = Imager::io_new_fd(fileno(FH));
+  $cmpimg = i_readpng_wiol($IO, -1) || print "not ";
   close(FH);
 
   print "ok 3\n";
@@ -60,7 +62,8 @@ if (!i_has_format("png")) {
   open FH, "> testout/t102_trans.png"
     or die "Cannot open testout/t102_trans.png: $!";
   binmode FH;
-  if (i_writepng($timg, fileno(FH))) {
+  $IO = Imager::io_new_fd(fileno(FH));
+  if (i_writepng_wiol($timg, $IO)) {
     print "ok 5\n";
   }
   else {
@@ -71,7 +74,8 @@ if (!i_has_format("png")) {
   open FH,"testout/t102_trans.png" 
     or die "cannot open testout/t102_trans.png\n";
   binmode(FH);
-  $cmpimg=i_readpng(fileno(FH)) || print "not ";
+  $IO = Imager::io_new_fd(fileno(FH));
+  $cmpimg = i_readpng_wiol($IO, -1) || print "not ";
   close(FH);
 
   print "ok 6\n";
@@ -85,15 +89,18 @@ if (!i_has_format("png")) {
   open FH, "< testimg/palette.png"
     or die "cannot open testimg/palette.png: $!\n";
   binmode FH;
+  $IO = Imager::io_new_fd(fileno(FH));
   # 1.1 may segfault here (it does with libefence)
-  my $pimg = i_readpng(fileno(FH))
+  my $pimg = i_readpng_wiol($IO,-1)
     or print "not ";
   print "ok 8\n";
   close FH;
+
   open FH, "< testimg/palette_out.png"
     or die "cannot open testimg/palette_out.png: $!\n";
   binmode FH;
-  my $poimg = i_readpng(fileno(FH))
+  $IO = Imager::io_new_fd(fileno(FH));
+  my $poimg = i_readpng_wiol($IO, -1)
     or print "not ";
   print "ok 9\n";
   close FH;

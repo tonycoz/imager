@@ -1139,28 +1139,15 @@ i_writetiff_wiol_faxable(im, ig, fine)
 #ifdef HAVE_LIBPNG
 
 Imager::ImgRaw
-i_readpng(fd)
-	       int     fd
+i_readpng_wiol(ig, length)
+        Imager::IO     ig
+	       int     length
 
 
 undef_int
-i_writepng(im,fd)
+i_writepng_wiol(im, ig)
     Imager::ImgRaw     im
-	       int     fd
-
-
-Imager::ImgRaw
-i_readpng_scalar(...)
-          PROTOTYPE: $
-            PREINIT:
-	      char*    data;
-      unsigned int     length;
-	       CODE:
-              data = (char *)SvPV(ST(0), length);
- 	      RETVAL=i_readpng_scalar(data,length);
-             OUTPUT:
-              RETVAL
-	
+        Imager::IO     ig
 
 
 #endif
