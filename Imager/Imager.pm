@@ -1583,7 +1583,9 @@ the previous value.
 =item gif_tran_color
 
 A reference to an Imager::Color object, which is the colour to use for
-the palette entry used to represent transparency in the palette.
+the palette entry used to represent transparency in the palette.  You
+need to set the transp option (see L<Quantization options>) for this
+value to be used.
 
 =item gif_positions
 
@@ -1640,6 +1642,9 @@ The ordered dither specified by tr_orddith is performed on the alpha
 channel.
 
 =back
+
+This will only be used if the image has an alpha channel, and if there
+is space in the palette for a transparency colour.
 
 =item tr_threshold
 
