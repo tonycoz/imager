@@ -11,7 +11,6 @@ my $blue=i_color_new(0,0,255,255);
 my $red=i_color_new(255,0,0,255);
 
 my $img=Imager::ImgRaw::new(150,150,3);
-my $cmpimg=Imager::ImgRaw::new(150,150,3);
 
 i_box_filled($img,70,25,130,125,$green);
 i_box_filled($img,20,25,80,125,$blue);
