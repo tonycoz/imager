@@ -8,7 +8,7 @@ not commitments.
 
 0.45: (march 2005?)
 - audit pnm.c (done)
-- audit tga.c
+- audit tga.c (done)
 - audit rgb.c and add tests
 - capture TIFF read warnings (i_warnings tag?) (done)
 - add Imager::Cookbook with at least 5 recipes
@@ -26,7 +26,7 @@ not commitments.
 - handle probing for libraries better (use pkg-config or I<library>-config
   where possible (freetype2 and libpng)) (done)
 - add concept index to Imager.pm pod (done, still working it)
-- replace testimg/penguin-base.ppm with a smaller image
+- replace testimg/penguin-base.ppm with a smaller image (done)
 - add a sample CGI HTML and image generation scripts that work together,
   with appropriate security management
 - add sample CGI that handles an uploaded image

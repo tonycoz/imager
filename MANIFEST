@@ -101,6 +101,9 @@ regmach.h
 regops.perl
 rgb.c           Reading and writing SGI rgb files
 rotate.c
+samples/README
+samples/anaglyph.pl
+samples/interleave.pl
 spot.perl	For making an ordered dither matrix from a spot function
 stackmach.c
 stackmach.h

@@ -1036,6 +1036,11 @@ Revision history for Perl extension Imager.
   http://rt.cpan.org/NoAuth/Bug.html?id=9672
 - correct email addresses in the README file, and include bug reporting
   information there too
+- added README for samples directory, describes interleave.pl and 
+  anaglyph.pl to start.
+- the XS for the internal i_glin() function wasn't copying the pixel
+  values across to the returned color objects.
+  http://rt.cpan.org/NoAuth/Bug.html?id=11860 
 
 =================================================================
 

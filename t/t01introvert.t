@@ -4,7 +4,7 @@
 
 use strict;
 use lib 't';
-use Test::More tests=>95;
+use Test::More tests=>98;
 
 BEGIN { use_ok(Imager => qw(:handy :all)) }
 
@@ -242,6 +242,17 @@ cmp_ok(Imager->errstr, '=~', qr/channels must be between 1 and 4/,
   $img->to_rgb8(); # doesn't really matter what the source is
   cmp_ok($warning, '=~', 'void', "correct warning");
   cmp_ok($warning, '=~', 't01introvert\\.t', "correct file");
+}
+
+{ # http://rt.cpan.org/NoAuth/Bug.html?id=11860
+  my $im = Imager->new(xsize=>2, ysize=>2);
+  $im->setpixel(x=>0, 'y'=>0, color=>$red);
+  $im->setpixel(x=>1, 'y'=>0, color=>$blue);
+
+  my @row = Imager::i_glin($im->{IMG}, 0, 2, 0);
+  is(@row, 2, "got 2 pixels from i_glin");
+  ok(color_cmp($row[0], $red) == 0, "red first");
+  ok(color_cmp($row[1], $blue) == 0, "then blue");
 }
 
 sub check_add {

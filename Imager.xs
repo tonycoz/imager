@@ -3785,6 +3785,7 @@ i_glin(im, l, r, y)
           for (i = 0; i < count; ++i) {
             SV *sv;
             i_color *col = mymalloc(sizeof(i_color));
+            *col = vals[i];
             sv = sv_newmortal();
             sv_setref_pv(sv, "Imager::Color", (void *)col);
             PUSHs(sv);

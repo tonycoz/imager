@@ -1,0 +1,22 @@
+This directory includes example code for Imager.
+
+If you have sample code to contribute, please contact the maintainer.
+
+The notes here just provide a basic description and the functions
+used.
+
+anaglyph.pl
+
+  Produce a color, grey or pure anaglyph image given left and right
+  images of a stereoscopic pair.
+
+  Uses transform2() and convert().
+
+interleave.pl
+
+  Produce an interleaved image given the left and right images of a
+  stereoscopic pair.  Note that the source images must be pre-scaled.
+
+  This includes 3 different implementations, first using transform2(),
+  the second using the internal i_copyto() function and the third using
+  the internal i_glin() and i_plin() functions.
