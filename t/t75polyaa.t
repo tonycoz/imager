@@ -6,7 +6,7 @@
 # Change 1..1 below to 1..last_test_to_print .
 # (It may become useful if the test is moved to ./t subdirectory.)
 
-BEGIN { $| = 1; print "1..5\n"; }
+BEGIN { $| = 1; print "1..6\n"; }
 END {print "not ok 1\n" unless $loaded;}
 use Imager qw(:all);
 
@@ -64,9 +64,23 @@ for $n (0..55) {
   i_poly_aa($img->{IMG}, $x, $y, NC(rand(255), rand(255), rand(255)));
 }
 
-$img->write(file=>"testout/t75big.png") or die $img->errstr;
+$img->write(file=>"testout/t75big.ppm") or die $img->errstr;
 
 print "ok 5\n";
+
+$img = Imager->new(xsize => 200, ysize => 200);
+
+$img -> polygon(color=>$blue,
+		points => [
+			   translate(100,100,
+				     scale(10,10,
+					   get_polygon('wavycircle', 32*4, sub { 8+0.5*cos(12*$_) })))
+			  ],
+	       ) or die $img->errstr();
+
+$img->write(file=>"testout/t75wave.ppm") or die $img->errstr;
+
+print "ok 6\n";
 
 malloc_state();
 
@@ -160,7 +174,7 @@ BEGIN {
 	       my @radians = map { $_*2*PI/$numv } 0..$numv-1;
 	       my @radius  = map { $radfunc->($_) } @radians;
 	       map {
-		 [ $radius[$_] * cos($_), $radius[$_] * sin($_) ]
+		 [ $radius[$_] * cos($radians[$_]), $radius[$_] * sin($radians[$_]) ]
 	       } 0..$#radians;
 	     },
 	     n_gon => sub {
