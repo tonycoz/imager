@@ -209,8 +209,8 @@ ENDOFCODE
 	print FLAG <<EOS;
 This file is created by t105gif.t when test 14 fails.
 
-This failure usually indicates you\'re using the original version
-of giflib 4.1.0, which has a few bugs that Imager tickles.
+This failure usually indicates you\'re using the original versions
+of giflib 4.1.0 - 4.1.3, which have a few bugs that Imager tickles.
 
 You can apply the patch from:
 
@@ -218,6 +218,14 @@ http://www.develop-help.com/imager/giflib.patch
 
 or you can just install Imager as is, if you only need to write GIFs to 
 files or file descriptors (such as sockets).
+
+One hunk of this patch is rejected (correctly) with giflib 4.1.3,
+since one bug that the patch fixes is fixed in 4.1.3.
+
+If you don't feel comfortable with that apply the patch file that
+belongs to the following patch entry on sourceforge:
+
+https://sourceforge.net/tracker/index.php?func=detail&aid=981255&group_id=102202&atid=631306
 
 In previous versions of Imager only this test was careful about catching 
 the error, we now skip any tests that crashed or failed when the buggy 
