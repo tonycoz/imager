@@ -2378,20 +2378,53 @@ Imager - Perl extension for Generating 24 bit Images
 
 =head1 SYNOPSIS
 
+  # Thumbnail example
+
+  #!/usr/bin/perl -w
+  use strict;
   use Imager;
 
-  $img = Imager->new();
-  $img->open(file=>'image.ppm',type=>'pnm')
-    || print "failed: ",$img->{ERRSTR},"\n";
-  $scaled=$img->scale(xpixels=>400,ypixels=>400);
-  $scaled->write(file=>'sc_image.ppm',type=>'pnm')
-    || print "failed: ",$scaled->{ERRSTR},"\n";
+  die "Usage: thumbmake.pl filename\n" if !-f $ARGV[0];
+  my $file = shift;
+
+  my $format;
+
+  my $img = Imager->new();
+  $img->open(file=>$file) or die $img->errstr();
+
+  $file =~ s/\.[^.]*$//;
+
+  # Create smaller version
+  my $thumb = $img->scale(scalefactor=>.3);
+
+  # Autostretch individual channels
+  $thumb->filter(type=>'autolevels');
+
+  # try to save in one of these formats
+  SAVE:
+
+  for $format ( qw( png gif jpg tiff ppm ) ) {
+    # Check if given format is supported
+    if ($Imager::formats{$format}) {
+      $file.="_low.$format";
+      print "Storing image as: $file\n";
+      $thumb->write(file=>$file) or
+        die $thumb->errstr;
+      last SAVE;
+    }
+  }
+
+
+  # Logo Generator Example
+
+
 
 =head1 DESCRIPTION
 
-Imager is a module for creating and altering images - It is not meant
-as a replacement or a competitor to ImageMagick or GD. Both are
-excellent packages and well supported.
+Imager is a module for creating and altering images.  It can read and
+write various image formats, draw primitive shapes like lines,and
+polygons, blend multiple images together in various ways, scale, crop,
+render text and more.
 
 =head2 Overview of documentation
 
@@ -2399,7 +2432,7 @@ excellent packages and well supported.
 
 =item Imager
 
-This document - Table of Contents, Example and Overview
+This document - Synopsis Example, Table of Contents and Overview.
 
 =item Imager::ImageTypes
 
@@ -2455,7 +2488,10 @@ Helper for making gradient profiles.
 =back
 
 
-=head2 Basic concept
+
+
+
+=head2 Basic Overview
 
 An Image object is created with C<$img = Imager-E<gt>new()> Should
 this fail for some reason an explanation can be found in
@@ -2471,15 +2507,15 @@ or if you want to create an empty image:
 
   $img=Imager->new(xsize=>400,ysize=>300,channels=>4);
 
-This example creates a completely black image of width 400 and
-height 300 and 4 channels.
+This example creates a completely black image of width 400 and height
+300 and 4 channels.
+
+
 
 
 =head1 BUGS
 
-When saving Gif images the program does NOT try to shave of extra
-colors if it is possible.  If you specify 128 colors and there are
-only 2 colors used - it will have a 128 colortable anyway.
+Bugs are listed individually for relevant pod pages.
 
 =head1 AUTHOR
 
