@@ -1018,65 +1018,10 @@ i_tt_bbox(handle,point,str,len)
 
 #ifdef HAVE_LIBJPEG
 undef_int
-i_writejpeg(im,fd,qfactor)
+i_writejpeg_wiol(im, ig, qfactor)
     Imager::ImgRaw     im
-	       int     fd
+        Imager::IO     ig
 	       int     qfactor
-
-void
-i_readjpeg(fd)
-	       int     fd
-	     PREINIT:
-	      char*    iptc_itext;
-	       int     tlength;
-	     i_img*    rimg;
-                SV*    r;
-	     PPCODE:
- 	      iptc_itext = NULL;
-	      rimg=i_readjpeg(fd,&iptc_itext,&tlength);
-	      if (iptc_itext == NULL) {
-		    r = sv_newmortal();
-	            EXTEND(SP,1);
-	            sv_setref_pv(r, "Imager::ImgRaw", (void*)rimg);
- 		    PUSHs(r);
-	      } else {
-		    r = sv_newmortal();
-	            EXTEND(SP,2);
-	            sv_setref_pv(r, "Imager::ImgRaw", (void*)rimg);
- 		    PUSHs(r);
-		    PUSHs(sv_2mortal(newSVpv(iptc_itext,tlength)));
-                    myfree(iptc_itext);
-	      }
-
-
-void
-i_readjpeg_scalar(...)
-          PROTOTYPE: $
-            PREINIT:
-	      char*    data;
-      unsigned int     length;
-	      char*    iptc_itext;
-	       int     tlength;
-	     i_img*    rimg;
-                SV*    r;
-	     PPCODE:
- 	      iptc_itext = NULL;
-              data = (char *)SvPV(ST(0), length);
-	      rimg=i_readjpeg_scalar(data,length,&iptc_itext,&tlength);
-	      mm_log((1,"i_readjpeg_scalar: 0x%08X\n",rimg));
-	      if (iptc_itext == NULL) {
-		    r = sv_newmortal();
-	            EXTEND(SP,1);
-	            sv_setref_pv(r, "Imager::ImgRaw", (void*)rimg);
- 		    PUSHs(r);
-	      } else {
-		    r = sv_newmortal();
-	            EXTEND(SP,2);
-	            sv_setref_pv(r, "Imager::ImgRaw", (void*)rimg);
- 		    PUSHs(r);
-		    PUSHs(sv_2mortal(newSVpv(iptc_itext,tlength)));
-                    myfree(iptc_itext);
-	      }
 
 
 void

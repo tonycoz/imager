@@ -352,11 +352,9 @@ extern i_palidx *quant_translate(i_quantize *quant, i_img *img);
 extern void quant_transparent(i_quantize *quant, i_palidx *indices, i_img *img, i_palidx trans_index);
 
 #ifdef HAVE_LIBJPEG
-i_img* i_readjpeg(int fd,char** iptc_itext,int *tlength);
-i_img* i_readjpeg_scalar(char *data, int length,char** iptc_itext,int *itlength);
-i_img* i_readjpeg_wiol(io_glue *ig, int length, char** iptc_itext, int *itlength);
-i_img* i_readjpeg_extra2(int fd,char** iptc_itext);
-undef_int i_writejpeg(i_img *im,int fd,int qfactor);
+i_img *   
+i_readjpeg_wiol(io_glue *ig, int length, char** iptc_itext, int *itlength);
+undef_int i_writejpeg_wiol(i_img *im, io_glue *ig, int qfactor);
 #endif /* HAVE_LIBJPEG */
 
 #ifdef HAVE_LIBTIFF
