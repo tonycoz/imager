@@ -573,7 +573,7 @@ i_copy(i_img *im, i_img *src) {
   i_color pv;
   int x,y,y1,x1;
 
-  mm_log((1,"i_copy(im* %p,src %p)\n", im,s rc));
+  mm_log((1,"i_copy(im* %p,src %p)\n", im, src));
 
   x1 = src->xsize;
   y1 = src->ysize;
