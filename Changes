@@ -564,6 +564,8 @@ Revision history for Perl extension Imager.
         - don't allocate hashboxes as locals since it overflows the 
 	  stack by default in Darwin
         - applied T1 afm patch from Claes Jacobsson
+        - split IM_INCPATH and IM_LIBPATH with $Config{path_sep}, so they
+          work on Windows
 
 =================================================================
 
