@@ -1,5 +1,27 @@
                          *** TODO ***
 
+PRE-0.44:
+- set i_format for every file type on read and test for it:
+  - bmp - done
+  - jpeg - done
+  - tiff
+  - tga
+  - rgb
+  - png - done
+  - gif
+  - pnm
+- check each file reader for possible integer overflows
+  - bmp
+  - tiff
+  - tga
+  - rgb
+  - png
+  - gif
+  - pnm
+- check bmp code uses image data offset correctly - done
+- check quant code for integer overflows
+- check for old URLs (umich and imager.perl.org/~addi/...)
+
 Iolayer:
 - Add scalar/mmap to iolayer
 - Add close() code to iolayer for fakeseek sources.

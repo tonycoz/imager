@@ -125,6 +125,8 @@ int i_tags_add(i_img_tags *tags, char const *name, int code, char const *data,
     strcpy(work.name, name);
   }
   if (data) {
+    if (size == -1)
+      size = strlen(data);
     work.data = mymalloc(size+1);
     if (!work.data) {
       if (work.name) myfree(work.name);

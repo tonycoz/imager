@@ -908,6 +908,9 @@ Revision history for Perl extension Imager.
 - added tools/imager to the distribution.  This is still very 
   experimental and untested.  Patches welcome, if you write tests to go
   with them.
+- the BMP reader now validates the bfOffBits value from the BMP header
+  and skips to that offset before reading image data.  Previously this
+  value was read but otherwise ignored.
 
 =================================================================
 
