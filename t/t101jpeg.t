@@ -1,6 +1,6 @@
 use Imager qw(:all);
 
-print "1..2\n";
+print "1..7\n";
 
 init_log("testout/t101jpeg.log",1);
 
@@ -18,8 +18,9 @@ i_conv($img,[0.1, 0.2, 0.4, 0.2, 0.1]);
 
 i_has_format("jpeg") && print "# has jpeg\n";
 if (!i_has_format("jpeg")) {
-  print "ok 1 # skip no jpeg support\n";
-  print "ok 2 # skip no jpeg support\n";
+  for (1..7) {
+    print "ok $_ # skip no jpeg support\n";
+  }
 } else {
   open(FH,">testout/t101.jpg") || die "cannot open testout/t101.jpg for writing\n";
   binmode(FH);
@@ -36,7 +37,24 @@ if (!i_has_format("jpeg")) {
   close(FH);
 
   print "$cmpimg\n";
-
-  print "# jpeg average mean square pixel difference: ",sqrt(i_img_diff($img,$cmpimg))/150*150,"\n";
+  my $diff = sqrt(i_img_diff($img,$cmpimg))/150*150;
+  print "# jpeg average mean square pixel difference: ",$diff,"\n";
   print "ok 2\n";
+
+  $diff < 10000 or print "not ";
+  print "ok 3\n";
+
+  my $imoo = Imager->new;
+  $imoo->read(file=>'testout/t101.jpg') or print "not ";
+  print "ok 4\n";
+  $imoo->write(file=>'testout/t101_oo.jpg') or print "not ";
+  print "ok 5\n";
+  my $oocmp = Imager->new;
+  $oocmp->read(file=>'testout/t101_oo.jpg') or print "not ";
+  print "ok 6\n";
+
+  $diff = sqrt(i_img_diff($imoo->{IMG},$oocmp->{IMG}))/150*150;
+  print "# OO image difference $diff\n";
+  $diff < 10000 or print "not ";
+  print "ok 7\n";
 }
