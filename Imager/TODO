@@ -29,7 +29,10 @@ not commitments.
 - replace testimg/penguin-base.ppm with a smaller image
 - add a sample CGI HTML and image generation scripts that work together,
   with appropriate security management
+- add sample CGI that handles an uploaded image
 - examples for fountain filter in Imager::Filters
+- provide access to right-side bearing information from the bounding box
+  function
 
 0.46: (june 2005)
 - allow limits to be set on the size of an image read from a file.  This is
