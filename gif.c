@@ -684,7 +684,6 @@ application extension blocks.
 */
 static int do_ns_loop(GifFileType *gf, i_gif_opts *opts)
 {
-#if 0
   /* EGifPutExtension() doesn't appear to handle application 
      extension blocks in any way
      Since giflib wraps the fd with a FILE * (and puts that in its
@@ -695,13 +694,29 @@ static int do_ns_loop(GifFileType *gf, i_gif_opts *opts)
      If giflib's callback interface wasn't broken by default, I'd 
      force file writes to use callbacks, but it is broken by default.
   */
+#if 0
+  /* yes this was another attempt at supporting the loop extension */
   if (opts->loop_count) {
-    unsigned char nsle[15] = "NETSCAPE2.0";
-    nsle[11] = 3;
-    nsle[12] = 1;
-    nsle[13] = opts->loop_count % 256;
-    nsle[14] = opts->loop_count / 256;
-    return EGifPutExtension(gf, 0xFF, sizeof(nsle), nsle) != GIF_ERROR;
+    unsigned char nsle[12] = "NETSCAPE2.0";
+    unsigned char subblock[3];
+    if (EGifPutExtension(gf, 0xFF, 11, nsle) == GIF_ERROR) {
+      gif_push_error();
+      i_push_error(0, "writing loop extension");
+      return 0;
+    }
+    subblock[0] = 1;
+    subblock[1] = opts->loop_count % 256;
+    subblock[2] = opts->loop_count / 256;
+    if (EGifPutExtension(gf, 0, 3, subblock) == GIF_ERROR) {
+      gif_push_error();
+      i_push_error(0, "writing loop extention sub-block");
+      return 0;
+    }
+    if (EGifPutExtension(gf, 0, 0, subblock) == GIF_ERROR) {
+      gif_push_error();
+      i_push_error(0, "writing loop extension terminator");
+      return 0;
+    }
   }
 #endif
   return 1;
