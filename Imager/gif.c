@@ -677,6 +677,9 @@ static ColorMapObject *make_gif_map(i_quantize *quant, i_gif_opts *opts,
   map_size = 1;
   while (map_size < size)
     map_size <<= 1;
+  /* giflib spews for 1 colour maps, reasonable, I suppose */
+  if (map_size == 1)
+    map_size = 2;
   return MakeMapObject(map_size, colors);
 }
 
