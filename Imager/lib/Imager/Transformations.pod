@@ -13,6 +13,11 @@ Imager::Transformations - Simple transformations of one image into another.
   $newimg = $img->scale(xpixels=>400, ypixels=>400, type=>'min');
   $newimg = $img->scale(scalefactor=>0.25);
 
+  $newimg = $img->scaleX(pixels=>400);
+  $newimg = $img->scaleX(scalefactor=>0.25);
+  $newimg = $img->scaleY(pixels=>400);
+  $newimg = $img->scaleY(scalefactor=>0.25);
+
   $newimg = $img->crop(left=>50, right=>100, top=>10, bottom=>100); 
   $newimg = $img->crop(left=>50, top=>10, width=>50, height=>90);
 
@@ -76,6 +81,10 @@ if you want to keep an original after doing something that changes the image.
 
 =item scale
 
+=item scaleX
+
+=item scaleY
+
 To scale an image so porportions are maintained use the
 C<$img-E<gt>scale()> method.  if you give either a xpixels or ypixels
 parameter they will determine the width or height respectively.  If
@@ -102,6 +111,11 @@ the original.
 If you need to scale images per axis it is best to do it simply by
 calling scaleX and scaleY.  You can pass either 'scalefactor' or
 'pixels' to both functions.
+
+  $newimg = $img->scaleX(pixels=>400); # 400x500
+  $newimg = $img->scaleX(scalefactor=>0.25) # 175x500
+  $newimg = $img->scaleY(pixels=>400); # 700x400
+  $newimg = $img->scaleY(scalefactor=>0.25) # 700x125
 
 =item crop
 

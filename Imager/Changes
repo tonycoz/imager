@@ -1013,6 +1013,7 @@ Revision history for Perl extension Imager.
   calculated correctly, this would cause the bounding_box() function for 
   freetype 2.x to return a larger than expected text width.
   http://rt.cpan.org/NoAuth/Bug.html?id=11291
+- add scaleX/scaleY to the method index and gives them some examples
 
 =================================================================
 

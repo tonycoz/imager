@@ -2920,6 +2920,10 @@ image and use the alpha channel
 
 scale() - L<Imager::Transformations/scale>
 
+scaleX() - L<Imager::Transformations/scaleX>
+
+scaleY() - L<Imager::Transformations/scaleY>
+
 setcolors() - L<Imager::ImageTypes> - set palette colors in a paletted image
 
 setpixel() - L<Imager::Draw/setpixel and getpixel>
