@@ -291,7 +291,7 @@ For each output pixel the following matrix multiplication is done:
   |    ...     | = |       ...        | x |     ...      |
   | channel[k] |   | $ck0, ...,  $ckk |   | inchannel[k] |
                                                           1
-Where C<k = $img-&gt;getchannels()-1>.
+Where C<k = $img-E<gt>getchannels()-1>.
 
 So if you want to swap the red and green channels on a 3 channel image:
 
