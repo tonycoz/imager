@@ -6,6 +6,7 @@ README
 Makefile.PL
 bmp.c           Reading and writing Windows BMP files
 tga.c           Reading and writing Targa files
+rgb.c           Reading and writing SGI rgb files
 color.c         Color translation and handling
 conv.c
 convert.c
