@@ -871,8 +871,7 @@ i_nearest_color(i_img *im, int num, int *xo, int *yo, i_color *oval, int dmeasur
   int ysize    = im->ysize;
   int *cmatch;
 
-  mm_log((1,"i_nearest_color(im %p, num %d, xo %p, yo %p, ival %p, dmeasure %d)\n", im, num, xo, yo, ival, dmeasure));
-  
+  mm_log((1,"i_nearest_color(im %p, num %d, xo %p, yo %p, ival %p, dmeasure %d)\n", im, num, xo, yo, oval, dmeasure));
 
   tval   = mymalloc( sizeof(float)*num*im->channels );
   ival   = mymalloc( sizeof(i_color)*num );
