@@ -36,8 +36,6 @@ Some of these functions are internal.
 */
 
 
-#define BSIZ 1024
-
 
 
 typedef struct {
@@ -54,6 +52,165 @@ typedef struct {
   char  bitsperpixel;
   char  imagedescriptor;
 } tga_header;
+
+
+typedef struct {
+  int compressed;
+  int bytepp;
+  enum { NoInit, Raw, Rle } state;
+  unsigned char cval[4];
+  int len;
+  unsigned char hdr;
+  io_glue *ig;
+} tga_source;
+
+
+static
+int
+bpp_to_bytes(unsigned int bpp) {
+  switch (bpp) {
+  case 8:
+    return 1;
+  case 15:
+  case 16:
+    return 2;
+  case 24:
+    return 3;
+  case 32:
+    return 4;
+  }
+  return 0;
+}
+
+static
+int
+bpp_to_channels(unsigned int bpp) {
+  switch (bpp) {
+  case 8:
+    return 1;
+  case 15:
+    return 3;
+  case 16:
+    return 4;
+  case 24:
+    return 3;
+  case 32:
+    return 4;
+  }
+  return 0;
+}
+
+
+
+/* color_unpack
+
+Unpacks bytes into colours, for 2 byte type the first byte coming from
+the file will actually be GGGBBBBB, and the second will be ARRRRRGG.
+"A" represents an attribute bit.  The 3 byte entry contains 1 byte
+each of blue, green, and red.  The 4 byte entry contains 1 byte each
+of blue, green, red, and attribute.
+*/
+
+static
+void
+color_unpack(unsigned char *buf, int bytepp, i_color *val) {
+  switch (bytepp) {
+  case 1:
+    val->gray.gray_color = buf[0];
+    break;
+  case 2:
+    val->rgba.r = (buf[1] & 0x7c) << 1;
+    val->rgba.g = ((buf[1] & 0x03) << 6) | ((buf[0] & 0xe0) >> 2);
+    val->rgba.b = (buf[0] & 0x1f) << 3;
+    val->rgba.a = (buf[1] & 0x80);
+    break;
+  case 3:
+    val->rgb.b = buf[0];
+    val->rgb.g = buf[1];
+    val->rgb.r = buf[2];
+    break;
+  case 4:
+    val->rgba.b = buf[0];
+    val->rgba.g = buf[1];
+    val->rgba.r = buf[2];
+    val->rgba.a = buf[3];
+    break;
+  default:
+  }
+}
+
+/* 
+   tga_source_read
+   
+   Does not byte reorder,  returns true on success, 0 otherwise 
+*/
+
+static
+int
+tga_source_read(tga_source *s, unsigned char *buf, size_t pixels) {
+  int cp = 0, j, k;
+  if (!s->compressed) {
+    if (s->ig->readcb(s->ig, buf, pixels*s->bytepp) != pixels*s->bytepp) return 0;
+    return 1;
+  }
+  
+  while(cp < pixels) {
+    int ml;
+    if (s->len == 0) s->state = NoInit;
+    switch (s->state) {
+    case NoInit:
+      if (s->ig->readcb(s->ig, &s->hdr, 1) != 1) return 0;
+
+      s->len = (s->hdr &~(1<<7))+1;
+      s->state = (s->hdr & (1<<7)) ? Rle : Raw;
+      if (s->state == Rle && s->ig->readcb(s->ig, s->cval, s->bytepp) != s->bytepp) return 0;
+
+      break;
+    case Rle:
+      ml = min(s->len, pixels-cp);
+      for(k=0; k<ml; k++) for(j=0; j<s->bytepp; j++) 
+	buf[(cp+k)*s->bytepp+j] = s->cval[j];
+      //      memset(buf+cp, s->cidx, ml);
+      cp     += ml;
+      s->len -= ml;
+      break;
+    case Raw:
+      ml = min(s->len, pixels-cp);
+      if (s->ig->readcb(s->ig, buf+cp*s->bytepp, ml*s->bytepp) != ml*s->bytepp) return 0;
+      cp     += ml;
+      s->len -= ml;
+      break;
+    }
+  }
+  return 1;
+}
+
+static
+int
+tga_palette_read(io_glue *ig, i_img *img, int bytepp, int colourmaplength) {
+  int i;
+  size_t palbsize;
+  unsigned char *palbuf;
+  i_color val;
+
+  palbsize = colourmaplength*bytepp;
+  palbuf   = mymalloc(palbsize);
+  
+  if (ig->readcb(ig, palbuf, palbsize) != palbsize) {
+    i_push_error(errno, "could not read targa colourmap");
+    return 0;
+  }
+  
+  /* populate the palette of the new image */
+  for(i=0; i<colourmaplength; i++) {
+    color_unpack(palbuf+i*bytepp, bytepp, &val);
+    i_addcolors(img, &val, 1);
+  }
+  myfree(palbuf);
+  return 1;
+}
+
+
 
 
 
@@ -74,15 +231,16 @@ i_readtga_wiol(io_glue *ig, int length) {
   i_img* img;
   int x, y, i;
   int width, height, channels;
+  int mapped;
   char *idstring;
 
+  tga_source src;
   tga_header header;
-  size_t palbsize;
-  unsigned char *palbuf;
   unsigned char headbuf[18];
   unsigned char *databuf;
-  i_color *linebuf;
-  
+  unsigned char *reorderbuf;
+
+  i_color *linebuf = NULL;
   i_clear_error();
 
   mm_log((1,"i_readtga(ig %p, length %d)\n", ig, length));
@@ -97,11 +255,11 @@ i_readtga_wiol(io_glue *ig, int length) {
   header.idlength        = headbuf[0];
   header.colourmaptype   = headbuf[1];
   header.datatypecode    = headbuf[2];
-  header.colourmaporigin = headbuf[4] << 8 + headbuf[3];
-  header.colourmaplength = headbuf[6] << 8 + headbuf[5];
+  header.colourmaporigin = (headbuf[4] << 8) + headbuf[3];
+  header.colourmaplength = (headbuf[6] << 8) + headbuf[5];
   header.colourmapdepth  = headbuf[7];
-  header.x_origin        = headbuf[9] << 8 + headbuf[8];
-  header.y_origin        = headbuf[11] << 8 + headbuf[10];
+  header.x_origin        = (headbuf[9] << 8) + headbuf[8];
+  header.y_origin        = (headbuf[11] << 8) + headbuf[10];
   header.width           = (headbuf[13] << 8) + headbuf[12];
   header.height          = (headbuf[15] << 8) + headbuf[14];
   header.bitsperpixel    = headbuf[16];
@@ -134,131 +292,32 @@ i_readtga_wiol(io_glue *ig, int length) {
   height = header.height;
   
   /* Set tags here */
-
-  /* Only RGB for now, eventually support all formats */
+  
   switch (header.datatypecode) {
-
   case 0: /* No data in image */
     i_push_error(0, "Targa image contains no image data");
     return NULL;
     break;
-
-  case 1: /* Uncompressed, color-mapped images */
-    if (header.imagedescriptor != 0) {
-      i_push_error(0, "Targa: Imagedescriptor not 0, not supported internal format");
-      return NULL;
-    }
-    
+  case 1:  /* Uncompressed, color-mapped images */
+  case 9:  /* Compressed,   color-mapped images */
+  case 3:  /* Uncompressed, grayscale images    */
+  case 11: /* Compressed,   grayscale images    */
     if (header.bitsperpixel != 8) {
-      i_push_error(0, "Targa: bpp is not 8, unsupported.");
+      i_push_error(0, "Targa: mapped/grayscale image's bpp is not 8, unsupported.");
       return NULL;
     }
-    
-    mm_log((1, "Uncompressed color-mapped image\n"));
-    if (header.colourmapdepth != 24) {
-      i_push_error(0, "Colourmap is not 24 bit");
-      return NULL;
-    }
-    channels = 3;
-
-    img = i_img_pal_new(width, height, channels, 256);
-
-    /* Read in the palette */
-
-    palbsize = header.colourmaplength*channels;
-    palbuf = mymalloc(palbsize);
-    
-    if (ig->readcb(ig, palbuf, palbsize) != palbsize) {
-      i_push_error(errno, "could not read targa colourmap");
-      return NULL;
-    }
-    
-    /* populate the palette of the new image */
-    for(i=0; i<header.colourmaplength; i++) {
-      i_color col;
-      col.rgba.r = palbuf[i*channels+2];
-      col.rgba.g = palbuf[i*channels+1];
-      col.rgba.b = palbuf[i*channels+0];
-      i_addcolors(img, &col, 1);
-    }
-    myfree(palbuf);
-
-
-    /* read image data in */
-    databuf = mymalloc(width);
-    for(y=height-1;y>=0;y--) {
-      if (ig->readcb(ig, databuf, width) != width) {
-	i_push_error(errno, "read for targa data failed");
-	myfree(databuf);
-	return NULL;
-      }
-      i_ppal(img, 0, width, y, databuf);
-    }
-    
-    return img;
+    src.bytepp = 1;
     break;
-    
-  case 2:  /* Uncompressed, RGB images */
-    mm_log((1, "Uncompressed RGB image\n"));
-
-    if (header.imagedescriptor != 0) {
-      i_push_error(0, "Targa: Imagedescriptor not 0, not supported internal format");
-      return NULL;
-    }
-    
-    if (header.bitsperpixel != 24) {
-      i_push_error(0, "Targa: bpp is not 24, unsupported.");
-      return NULL;
-    }
-    channels = 3;
-    
-    img = i_img_empty_ch(NULL, width, height, channels);
-    /* read image data in */
-    databuf = mymalloc(width*channels);
-    linebuf = mymalloc(width*sizeof(i_color));
-    
-    for(y=height-1;y>=0;y--) {
-      if (ig->readcb(ig, databuf, width*channels) != width*channels) {
-	i_push_error(errno, "read for targa data failed");
-	myfree(linebuf);
-	myfree(databuf);
-	return NULL;
-      }
-      for(x=0; x<width; x++) {
-	linebuf[x].rgb.r = databuf[x*channels+2];
-	linebuf[x].rgb.g = databuf[x*channels+1];
-	linebuf[x].rgb.b = databuf[x*channels];
-      }
-      i_plin(img, 0, width, y, linebuf);
-    }
-    myfree(linebuf);
-    myfree(databuf);
-    return img;
-    break;
-    /* Do stuff */
-    break;
-  case 3: /* Uncompressed, black and white images */
-    i_push_error(0, "Targa black and white subformat is not supported");
-    return NULL;
-    break;
-  case 9: /* Runlength encoded, color-mapped images */
-    i_push_error(0, "Targa runlength coded colormapped subformat is not supported");
-    return NULL;
-    break;
-  case 10: /* Runlength encoded, RGB images */
-    channels = 3;
-    /* Do stuff */
-    break;
-  case 11: /* Compressed, black and white images */
-    i_push_error(0, "Targa compressed black and white subformat is not supported");
+  case 2:  /* Uncompressed, rgb images          */
+  case 10: /* Compressed,   rgb images          */
+    if ((src.bytepp = bpp_to_bytes(header.bitsperpixel)))
+      break;
+    i_push_error(0, "Targa: direct color image's bpp is not 15/16/24/32 - unsupported.");
     return NULL;
     break;
   case 32: /* Compressed color-mapped, Huffman, Delta and runlength */
-    i_push_error(0, "Targa Huffman/delta/rle subformat is not supported");
-    return NULL;
-    break;
   case 33: /* Compressed color-mapped, Huffman, Delta and runlength */
-    i_push_error(0, "Targa Huffman/delta/rle/quadtree subformat is not supported");
+    i_push_error(0, "Unsupported Targa (Huffman/delta/rle/quadtree) subformat is not supported");
     return NULL;
     break;
   default: /* All others which we don't know which might be */
@@ -266,7 +325,68 @@ i_readtga_wiol(io_glue *ig, int length) {
     return NULL;
     break;
   }
-  return NULL;
+  
+  src.state = NoInit;
+  src.len = 0;
+  src.ig = ig;
+  src.compressed = !!(header.datatypecode & (1<<3));
+
+  /* Determine number of channels */
+  
+  mapped = 1;
+  switch (header.datatypecode) {
+    int tbpp;
+  case 2:  /* Uncompressed, rgb images          */
+  case 10: /* Compressed,   rgb images          */
+    mapped = 0;
+  case 1:  /* Uncompressed, color-mapped images */
+  case 9:  /* Compressed,   color-mapped images */
+    if ((channels = bpp_to_channels(mapped ? 
+				   header.colourmapdepth : 
+				   header.bitsperpixel))) break;
+    i_push_error(0, "Targa Image has none of 15/16/24/32 pixel layout");
+    return NULL;
+    break;
+  case 3:  /* Uncompressed, grayscale images    */
+  case 11: /* Compressed,   grayscale images    */
+    mapped = 0;
+    channels = 1;
+    break;
+  }
+  
+  img = mapped ? 
+    i_img_pal_new(width, height, channels, 256) :
+    i_img_empty_ch(NULL, width, height, channels);
+  
+  if (mapped &&
+      !tga_palette_read(ig,
+			img,
+			bpp_to_bytes(header.colourmapdepth),
+			header.colourmaplength)
+      ) {
+    i_push_error(0, "Targa Image has none of 15/16/24/32 pixel layout");
+    return NULL;
+  }
+  
+  /* Allocate buffers */
+  databuf = mymalloc(width*src.bytepp);
+  if (!mapped) linebuf = mymalloc(width*sizeof(i_color));
+  
+  for(y=0; y<height; y++) {
+    if (!tga_source_read(&src, databuf, width)) {
+      i_push_error(errno, "read for targa data failed");
+      myfree(databuf);
+      return NULL;
+    }
+    if (mapped) i_ppal(img, 0, width, header.imagedescriptor & (1<<5) ? y : height-1-y, databuf);
+    else {
+      for(x=0; x<width; x++) color_unpack(databuf+x*src.bytepp, src.bytepp, linebuf+x);
+      i_plin(img, 0, width, header.imagedescriptor & (1<<5) ? y : height-1-y, linebuf);
+    }
+  }
+  myfree(databuf);
+  if (linebuf) myfree(linebuf);
+  return img;
 }
 
 
