@@ -57,6 +57,8 @@ enum rm_byte_codes {
   rbc_rgba, /* rgba(ra, rb, rc, rd) -> p */
   rbc_hsva, /* hsva(ra, rb, rc, rd) -> p */
   rbc_alpha, /* alpha(pa) -> r */
+  rbc_log, /* log(ra) -> r */
+  rbc_exp, /* exp(ra) -> r */
   rbc_op_count
 };
 

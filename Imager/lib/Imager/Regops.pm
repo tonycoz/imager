@@ -55,9 +55,11 @@ use constant RBC_PRINT => 45;
 use constant RBC_RGBA => 46;
 use constant RBC_HSVA => 47;
 use constant RBC_ALPHA => 48;
-use constant RBC_OP_COUNT => 49;
+use constant RBC_LOG => 49;
+use constant RBC_EXP => 50;
+use constant RBC_OP_COUNT => 51;
 
-@EXPORT = qw(RBC_ADD RBC_SUBTRACT RBC_MULT RBC_DIV RBC_MOD RBC_POW RBC_UMINUS RBC_MULTP RBC_ADDP RBC_SUBTRACTP RBC_SIN RBC_COS RBC_ATAN2 RBC_SQRT RBC_DISTANCE RBC_GETP1 RBC_GETP2 RBC_GETP3 RBC_VALUE RBC_HUE RBC_SAT RBC_HSV RBC_RED RBC_GREEN RBC_BLUE RBC_RGB RBC_INT RBC_IF RBC_IFP RBC_LE RBC_LT RBC_GE RBC_GT RBC_EQ RBC_NE RBC_AND RBC_OR RBC_NOT RBC_ABS RBC_RET RBC_JUMP RBC_JUMPZ RBC_JUMPNZ RBC_SET RBC_SETP RBC_PRINT RBC_RGBA RBC_HSVA RBC_ALPHA RBC_OP_COUNT);
+@EXPORT = qw(RBC_ADD RBC_SUBTRACT RBC_MULT RBC_DIV RBC_MOD RBC_POW RBC_UMINUS RBC_MULTP RBC_ADDP RBC_SUBTRACTP RBC_SIN RBC_COS RBC_ATAN2 RBC_SQRT RBC_DISTANCE RBC_GETP1 RBC_GETP2 RBC_GETP3 RBC_VALUE RBC_HUE RBC_SAT RBC_HSV RBC_RED RBC_GREEN RBC_BLUE RBC_RGB RBC_INT RBC_IF RBC_IFP RBC_LE RBC_LT RBC_GE RBC_GT RBC_EQ RBC_NE RBC_AND RBC_OR RBC_NOT RBC_ABS RBC_RET RBC_JUMP RBC_JUMPZ RBC_JUMPNZ RBC_SET RBC_SETP RBC_PRINT RBC_RGBA RBC_HSVA RBC_ALPHA RBC_LOG RBC_EXP RBC_OP_COUNT);
 
 %Attr = (
           'setp' => {
@@ -319,6 +321,13 @@ use constant RBC_OP_COUNT => 49;
                      'func' => 1,
                      'types' => 'p'
                    },
+          'log' => {
+                     'result' => 'r',
+                     'parms' => 1,
+                     'opcode' => 49,
+                     'func' => 1,
+                     'types' => 'r'
+                   },
           'hsva' => {
                       'result' => 'p',
                       'parms' => 4,
@@ -357,7 +366,7 @@ use constant RBC_OP_COUNT => 49;
           'op_count' => {
                           'result' => undef,
                           'parms' => 0,
-                          'opcode' => 49,
+                          'opcode' => 51,
                           'func' => 0,
                           'types' => ''
                         },
@@ -381,6 +390,13 @@ use constant RBC_OP_COUNT => 49;
                      'opcode' => 0,
                      'func' => 0,
                      'types' => 'rr'
+                   },
+          'exp' => {
+                     'result' => 'r',
+                     'parms' => 1,
+                     'opcode' => 50,
+                     'func' => 1,
+                     'types' => 'r'
                    },
           'subtract' => {
                           'result' => 'r',
@@ -444,7 +460,7 @@ Tony Cook, tony@develop-help.com
 
 =head1 SEE ALSO
 
-perl(1), Imager(3), http://www.eecs.umich.edu/~addi/perl/Imager/
+perl(1), Imager(3), http://imager.perl.org/~addi/perl/Imager/
 
 =cut
 
