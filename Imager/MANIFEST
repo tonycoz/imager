@@ -4,10 +4,11 @@ Imager.xs
 MANIFEST
 README
 Makefile.PL
-draw.c
-draw.h
+bmp.c
 conv.c
 convert.c
+draw.c
+draw.h
 map.c
 error.c
 gaussian.c
@@ -72,6 +73,7 @@ t/t103raw.t
 t/t104ppm.t
 t/t105gif.t
 t/t106tiff.t
+t/t107bmp.t
 t/t15color.t
 t/t30t1font.t
 t/t35ttfont.t
@@ -86,6 +88,7 @@ t/t57infix.t
 t/t58trans2.t
 t/t59assem.t
 t/t60dyntest.t
+t/t61filters.t
 t/t65crop.t
 t/t66paste.t
 t/t69rubthru.t
@@ -93,6 +96,8 @@ t/t70newgif.t
 t/t75polyaa.t
 t/t90cc.t
 testimg/bandw.gif
+testimg/comp4.bmp
+testimg/comp8.bmp
 testimg/expected.gif
 testimg/junk.ppm
 testimg/loccmap.gif

@@ -774,21 +774,6 @@ i_gradgen(i_img *im, int num, int *xo, int *yo, i_color *ival, int dmeasure) {
   
 }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 void
 i_nearest_color_foo(i_img *im, int num, int *xo, int *yo, i_color *ival, int dmeasure) {
 

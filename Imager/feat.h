@@ -27,5 +27,6 @@ static char *i_format_list[]={
 #endif
   "raw",
   "pnm",
+  "bmp",
   NULL};
 
