@@ -1,0 +1,8 @@
+#!/bin/sh
+mkdir med_res_imager
+mkdir icon_imager
+mkdir med_res_pnm
+mkdir icon_pnm
+pngtopnm <kscdisplay.png | cjpeg >kscdisplay.jpg
+time perl -Mblib=.. scale.perl kscdisplay.jpg
+time perl scale.sh.perl kscdisplay.jpg
