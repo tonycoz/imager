@@ -650,6 +650,7 @@ Revision history for Perl extension Imager.
         - document the values for the read() and write() method type 
           parameter
         - support UTF8 text with Freetype 1.x 
+        - second parameter to SvPV() must be of type STRLEN
 
 =================================================================
 
