@@ -21,7 +21,7 @@ i_box_filled($timg, 0, 0, 20, 20, $green);
 i_box_filled($timg, 2, 2, 18, 18, $trans);
 
 if (!i_has_format("gif")) {
-	for (1..23) { print "ok $_ # skip no gif support\n"; }
+	for (1..26) { print "ok $_ # skip no gif support\n"; }
 } else {
     open(FH,">testout/t105.gif") || die "Cannot open testout/t105.gif\n";
     binmode(FH);
