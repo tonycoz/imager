@@ -1,6 +1,7 @@
 #ifndef _IMAGE_H_
 #define _IMAGE_H_
 
+#include "imconfig.h"
 #include "imio.h"
 #include "iolayer.h"
 #include "log.h"
