@@ -91,7 +91,7 @@ print "ok 42\n";
 $trimg->write(file=>"testout/t64_trans.ppm")
   or print "# Cannot save: ",$trimg->errstr,"\n";
 
-my $trimg = $img->matrix_transform(matrix=>[ 1.2, 0, 0,
+$trimg = $img->matrix_transform(matrix=>[ 1.2, 0, 0,
                                              0,   1, 0,
                                              0,   0, 1],
 				   back=>Imager::Color->new(builtin=>'blue'))
