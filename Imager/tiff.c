@@ -98,6 +98,37 @@ comp_seek(thandle_t h, toff_t o, int w) {
   return (toff_t) ig->seekcb(ig, o, w);
 }
 
+/*
+=item comp_mmap(thandle_t, tdata_t*, toff_t*)
+
+Dummy mmap stub.
+
+This shouldn't ever be called but newer tifflibs want it anyway.
+
+=cut
+*/
+
+static 
+int
+comp_mmap(thandle_t h, tdata_t*p, toff_t*off) {
+  return -1;
+}
+
+/*
+=item comp_munmap(thandle_t h, tdata_t p, toff_t off)
+
+Dummy munmap stub.
+
+This shouldn't ever be called but newer tifflibs want it anyway.
+
+=cut
+*/
+
+static void
+comp_munmap(thandle_t h, tdata_t p, toff_t off) {
+  /* do nothing */
+}
+
 static i_img *read_one_tiff(TIFF *tif) {
   i_img *im;
   uint32 width, height;
@@ -346,8 +377,8 @@ i_readtiff_wiol(io_glue *ig, int length) {
 		       (TIFFSeekProc) comp_seek,
 		       (TIFFCloseProc) ig->closecb,
 		       ig->sizecb ? (TIFFSizeProc) ig->sizecb : (TIFFSizeProc) sizeproc,
-		       (TIFFMapFileProc) NULL,
-		       (TIFFUnmapFileProc) NULL);
+		       (TIFFMapFileProc) comp_mmap,
+		       (TIFFUnmapFileProc) comp_munmap);
   
   if (!tif) {
     mm_log((1, "i_readtiff_wiol: Unable to open tif file\n"));
@@ -399,9 +430,9 @@ i_readtiff_multi_wiol(io_glue *ig, int length, int *count) {
 		       (TIFFReadWriteProc) ig->writecb,
 		       (TIFFSeekProc) comp_seek,
 		       (TIFFCloseProc) ig->closecb,
-		       (TIFFSizeProc) ig->sizecb,
-		       (TIFFMapFileProc) NULL,
-		       (TIFFUnmapFileProc) NULL);
+		       ig->sizecb ? (TIFFSizeProc) ig->sizecb : (TIFFSizeProc) sizeproc,
+		       (TIFFMapFileProc) comp_mmap,
+		       (TIFFUnmapFileProc) comp_munmap);
   
   if (!tif) {
     mm_log((1, "i_readtiff_wiol: Unable to open tif file\n"));
@@ -825,9 +856,9 @@ i_writetiff_multi_wiol(io_glue *ig, i_img **imgs, int count) {
 		       (TIFFReadWriteProc) ig->writecb,
 		       (TIFFSeekProc)      comp_seek,
 		       (TIFFCloseProc)     ig->closecb, 
-		       (TIFFSizeProc)      ig->sizecb,
-		       (TIFFMapFileProc)   NULL,
-		       (TIFFUnmapFileProc) NULL);
+		       ig->sizecb ? (TIFFSizeProc) ig->sizecb : (TIFFSizeProc) sizeproc,
+		       (TIFFMapFileProc)   comp_mmap,
+		       (TIFFUnmapFileProc) comp_munmap);
   
 
 
@@ -885,9 +916,9 @@ i_writetiff_multi_wiol_faxable(io_glue *ig, i_img **imgs, int count, int fine) {
 		       (TIFFReadWriteProc) ig->writecb,
 		       (TIFFSeekProc)      comp_seek,
 		       (TIFFCloseProc)     ig->closecb, 
-		       (TIFFSizeProc)      ig->sizecb,
-		       (TIFFMapFileProc)   NULL,
-		       (TIFFUnmapFileProc) NULL);
+		       ig->sizecb ? (TIFFSizeProc) ig->sizecb : (TIFFSizeProc) sizeproc,
+		       (TIFFMapFileProc)   comp_mmap,
+		       (TIFFUnmapFileProc) comp_munmap);
   
 
 
@@ -941,9 +972,9 @@ i_writetiff_wiol(i_img *img, io_glue *ig) {
 		       (TIFFReadWriteProc) ig->writecb,
 		       (TIFFSeekProc)      comp_seek,
 		       (TIFFCloseProc)     ig->closecb, 
-		       (TIFFSizeProc)      ig->sizecb,
-		       (TIFFMapFileProc)   NULL,
-		       (TIFFUnmapFileProc) NULL);
+		       ig->sizecb ? (TIFFSizeProc) ig->sizecb : (TIFFSizeProc) sizeproc,
+		       (TIFFMapFileProc)   comp_mmap,
+		       (TIFFUnmapFileProc) comp_munmap);
   
 
 
@@ -996,9 +1027,9 @@ i_writetiff_wiol_faxable(i_img *im, io_glue *ig, int fine) {
 		       (TIFFReadWriteProc) ig->writecb,
 		       (TIFFSeekProc)      comp_seek,
 		       (TIFFCloseProc)     ig->closecb, 
-		       (TIFFSizeProc)      ig->sizecb,
-		       (TIFFMapFileProc)   NULL,
-		       (TIFFUnmapFileProc) NULL);
+		       ig->sizecb ? (TIFFSizeProc) ig->sizecb : (TIFFSizeProc) sizeproc,
+		       (TIFFMapFileProc)   comp_mmap,
+		       (TIFFUnmapFileProc) comp_munmap);
   
 
 

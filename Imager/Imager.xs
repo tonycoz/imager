@@ -19,21 +19,6 @@ typedef i_color* Imager__Color;
 typedef i_fcolor* Imager__Color__Float;
 typedef i_img*   Imager__ImgRaw;
 
-/* later perls define this macro to prevent warning when converting
-from IV to pointer types */
-
-#ifndef INT2PTR
-#define INT2PTR(type,value) (type)(value)
-#endif
-
-#ifndef PTR2IV
-#define PTR2IV(p) INT2PTR(IV,p)
-#endif
-
-#ifndef aTHX_
-#define aTHX_
-#endif
-
 #ifdef HAVE_LIBTT
 typedef TT_Fonthandle* Imager__Font__TT;
 #endif

@@ -754,7 +754,13 @@ Revision history for Perl extension Imager.
 	- the scale() method now produces a warning when called in
 	  void context.
 	- font.c now only uses the defined T1Lib error codes
-	- define aTHX_ when perl doesn't (perl 5.004 for example)
+	- update ppport.h and remove the duplicate definitions from
+	  Imager.xs.  Had to mangle ppport.h to prevent duplicate global
+	  function definitions.
+	- newer versions of tifflib require that all of the function
+	  pointers passed to TIFFClientOpen be non-NULL, the mmap() and
+	  munmap() pointers were always NULL and the sizeproc was
+	  sometimes NULL.
 
 =================================================================
 
