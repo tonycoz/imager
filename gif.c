@@ -124,8 +124,8 @@ i_colortable_copy(int **colour_table, int *colours, ColorMapObject *colourmap) {
   if(colours) *colours = colourmapsize;
   if(!colour_table) return;
   
-  *colour_table = mymalloc(sizeof(int *) * colourmapsize * 3);
-  memset(*colour_table, 0, sizeof(int *) * colourmapsize * 3);
+  *colour_table = mymalloc(sizeof(int) * colourmapsize * 3);
+  memset(*colour_table, 0, sizeof(int) * colourmapsize * 3);
 
   for(q=0; q<colourmapsize; q++) {
     mapentry = &colourmap->Colors[q];
