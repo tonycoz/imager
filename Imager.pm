@@ -1818,7 +1818,7 @@ sub flood_fill {
     $self->{ERRSTR} = "missing seed x and y parameters";
     return undef;
   }
-  
+
   if ($opts{fill}) {
     unless (UNIVERSAL::isa($opts{fill}, 'Imager::Fill')) {
       # assume it's a hash ref
@@ -2346,6 +2346,14 @@ some extra settings. lmdither is the dither deviation amount in pixels
 of Imager::Color objects.  Note that the local means algorithm needs
 much more cpu time but also gives considerable better results than the
 median cut algorithm.
+
+When storing targa images rle compression can be activated with the
+'compress' parameter, the 'idstring' parameter can be used to set the
+targa comment field and the 'wierdpack' option can be used to use the
+15 and 16 bit targa formats for rgb and rgba data.  The 15 bit format
+has 5 of each red, green and blue.  The 16 bit format in addition
+allows 1 bit of alpha.  The most significant bits are used for each
+channel.
 
 Currently just for gif files, you can specify various options for the
 conversion from Imager's internal RGB format to the target's indexed
@@ -3784,9 +3792,9 @@ Someone decides that the filter is not working as it should -
 dyntest.c modified and recompiled.
 
   load_plugin("dynfilt/dyntest.so") || die "unable to load plugin\n";
-  $img->filter(%hsh); 
+  $img->filter(%hsh);
 
-An example plugin comes with the module - Please send feedback to 
+An example plugin comes with the module - Please send feedback to
 addi@umich.edu if you test this.
 
 Note: This seems to test ok on the following systems:
@@ -3970,7 +3978,7 @@ from Tony Cook.  See the README for a complete list.
 
 =head1 SEE ALSO
 
-perl(1), Imager::Color(3), Imager::Font(3), Imager::Matrix2d(3), 
+perl(1), Imager::Color(3), Imager::Font(3), Imager::Matrix2d(3),
 Affix::Infix2Postfix(3), Parse::RecDescent(3) 
 http://www.eecs.umich.edu/~addi/perl/Imager/
 
