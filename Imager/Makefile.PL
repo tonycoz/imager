@@ -113,7 +113,7 @@ EOF
   SWX:
     if ($formats{$frm}{docs}) { print "\n",$formats{$frm}{docs},"\n\n"; }
     print "Enable $frm support: ";
-    $gz=<STDIN>;
+    $gz = <STDIN>;
     chomp($gz);
     if ($gz =~ m/^(y|yes|n|no)/i) {
       $gz=substr(lc($gz),0,1);
@@ -156,8 +156,14 @@ EOFF
     if ($resp ne "n") {
       delete $formats{'gif'};
       delete $formats{'ungif'};
+      return;
     }
   }
+
+  for my $frm (qw(gif ungif)) {
+    checkformat($frm) if ($MANUAL and $formats{$frm});
+  }
+
   my @dirs;
   for my $frm (grep $formats{$_}, qw(gif ungif)) {
     push(@dirs, @{$formats{$frm}{incdir}}) if $formats{$frm}{incdir};
