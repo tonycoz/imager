@@ -412,7 +412,6 @@ static ssize_t io_reader(void *p, void *data, size_t size) {
   struct cbdata *cbd = p;
   ssize_t total;
   char *out = data; /* so we can do pointer arithmetic */
-  int i;
 
   if (cbd->writing) {
     if (write_flush(cbd) <= 0)
@@ -1085,7 +1084,6 @@ io_new_buffer(data)
 	  char   *data
 	PREINIT:
 	  size_t length;
-	  SV* sv;
 	CODE:
 	  SvPV(ST(0), length);
           SvREFCNT_inc(ST(0));
@@ -1564,7 +1562,6 @@ i_convert(im, src, coeff)
 	  int inchan;
 	  AV *avmain;
           SV **temp;
-	  SV *svsub;
           AV *avsub;
 	  int len;
 	  int i, j;
@@ -2746,8 +2743,6 @@ i_writetga_wiol(im,ig, wierdpack, compress, idstring)
                int     compress
               char*    idstring
             PREINIT:
-                SV* sv1;
-                int rc;
                 int idlen;
 	       CODE:
                 idlen  = SvCUR(ST(4));
@@ -2770,8 +2765,6 @@ i_writergb_wiol(im,ig, wierdpack, compress, idstring)
                int     compress
               char*    idstring
             PREINIT:
-                SV* sv1;
-                int rc;
                 int idlen;
 	       CODE:
                 idlen  = SvCUR(ST(4));
@@ -2870,7 +2863,6 @@ i_transform2(sv_width,sv_height,channels,sv_ops,av_n_regs,av_c_regs,av_in_imgs)
 	     PREINIT:
              int width;
              int height;
-	     double* parm;
 	     struct rm_op *ops;
 	     STRLEN ops_len;
 	     int ops_count;
@@ -2880,8 +2872,7 @@ i_transform2(sv_width,sv_height,channels,sv_ops,av_n_regs,av_c_regs,av_in_imgs)
 	     int c_regs_count;
              int in_imgs_count;
              i_img **in_imgs;
-	     AV* av;
-	     SV* sv1;
+             SV *sv1;
              IV tmp;
 	     int i;
              CODE:
@@ -3152,7 +3143,6 @@ i_errors()
         i_errmsg *errors;
 	int i;
 	AV *av;
-	SV *ref;
 	SV *sv;
       PPCODE:
 	errors = i_errors();
@@ -3292,6 +3282,10 @@ DSO_call(handle,func_index,hv)
 
 
 # this is mostly for testing...
+# this function results in 'RETVAL' : unreferenced local variable
+# in VC++, and might be subtley wrong
+# the most obvious change may result in a double free so I'm leaving it
+# for now
 SV *
 i_get_pixel(im, x, y)
 	Imager::ImgRaw im
@@ -3389,7 +3383,7 @@ i_ppal(im, l, y, ...)
         int     y
       PREINIT:
         i_palidx *work;
-        int count, i;
+        int i;
       CODE:
         if (items > 3) {
           work = mymalloc(sizeof(i_palidx) * (items-3));
@@ -3618,7 +3612,7 @@ i_plin(im, l, y, ...)
         int     y
       PREINIT:
         i_color *work;
-        int count, i;
+        int i;
       CODE:
         if (items > 3) {
           work = mymalloc(sizeof(i_color) * (items-3));
@@ -3695,7 +3689,7 @@ i_plinf(im, l, y, ...)
         int     y
       PREINIT:
         i_fcolor *work;
-        int count, i;
+        int i;
       CODE:
         if (items > 3) {
           work = mymalloc(sizeof(i_fcolor) * (items-3));

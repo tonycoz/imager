@@ -1,4 +1,4 @@
-
+#!perl -w
 use ExtUtils::MakeMaker;
 use Cwd;
 use Config;
@@ -50,8 +50,9 @@ for $frm(values %formats) {
   $F_OBJECT .= ' '  .$frm->{objfiles};
 }
 
-$F_INC  = join(" ",map { (exists $definc{$_})?'':'-I'.$_ } @incs);
-$F_LIBS = join(" ",map { '-L'.$_ } @libs).' '.$F_LIBS;
+$F_INC  = join ' ', map "-I$_", map / / ? qq{"$_"} : $_, 
+  grep !exists $definc{$_}, @incs;
+$F_LIBS = join(' ',map "-L$_", map / / ? qq{"$_"} : $_, @libs) . $F_LIBS;
 
 $OSLIBS = '';
 $OSDEF  = "-DOS_$^O";

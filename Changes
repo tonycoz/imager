@@ -767,6 +767,14 @@ Revision history for Perl extension Imager.
         - moved some variable definitions to the right place
         - the Win32 font driver bounding box function now returns the 
           right number of values (both thanks to Takumi Yamani)
+        - the Win32 font driver now uses DEFAULT_CHARSET rather than
+          ANSI_CHARSET are the lfCharSet value for the LOGFONT,
+          as suggested by Takumi Yamani.
+        - fontfiles/ExistenceTest.{pfb,ttf} weren't marked as
+          binary in the CVS repository (caused test failures if you
+          built from CVS on Win32)
+        - Makefile.PL should now handle INCLUDE or LIB with spaces in them
+          correctly on Win32.
 
 =================================================================
 
