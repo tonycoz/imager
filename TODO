@@ -254,3 +254,4 @@ Build/configure:
   search for the freetype{2}?/someheader and then add the subdirectory if
   we find the file in that directory.
 - switch to Test::More
+- change headers to use more unique re-include protection macros
