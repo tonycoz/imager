@@ -25,7 +25,7 @@ memory mapped buffer.
 
 Some of these functions are internal.
 
-=over 4
+=over
 
 =cut
 */
@@ -533,3 +533,17 @@ i_writetiff_wiol_faxable(i_img *im, io_glue *ig, int fine) {
   return 1;
 }
 
+
+/*
+=back
+
+=head1 AUTHOR
+
+Arnar M. Hrafnkelsson <addi@umich.edu>
+
+=head1 SEE ALSO
+
+Imager(3)
+
+=cut
+*/

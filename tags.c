@@ -329,3 +329,17 @@ void i_tags_print(i_img_tags *tags) {
     }
   }
 }
+
+/*
+=back
+
+=head1 AUTHOR
+
+Tony Cook <tony@develop-help.com>
+
+=head1 SEE ALSO
+
+Imager(3)
+
+=cut
+*/

@@ -640,7 +640,7 @@ i_new_hatch_low(i_color *fg, i_color *bg, i_fcolor *ffg, i_fcolor *fbg,
 
 The 8-bit sample fill function for hatched fills.
 
-=back
+=cut
 */
 static void fill_hatch(i_fill_t *fill, int x, int y, int width, int channels, 
                        i_color *data, i_color *work) {
