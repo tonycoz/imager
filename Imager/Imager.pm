@@ -2747,6 +2747,10 @@ Overview.
 
 =item *
 
+L<Imager::Cookbook> - how to do various things with Imager.
+
+=item *
+
 L<Imager::ImageTypes> - Basics of constructing image objects with
 C<new()>: Direct type/virtual images, RGB(A)/paletted images,
 8/16/double bits/channel, color maps, channel masks, image tags, color
