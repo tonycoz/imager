@@ -948,6 +948,14 @@ Revision history for Perl extension Imager.
   I'll leave it out.
 - built 0.43_03 for testing
 
+0.44
+- modify the default include directories list to include the location
+  FreeBSD keeps freetype1 headers after the freetype2 locations.
+  This ensures that the -I options are generated with freetype2
+  locations first, so that those directories are searched before
+  the freetype1 directories.  This prevents problems compiling
+  font.c on FreeBSD.
+
 =================================================================
 
         For latest versions check the Imager-devel pages:
