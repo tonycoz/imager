@@ -1189,6 +1189,113 @@ static void gif_set_version(i_quantize *quant, i_gif_opts *opts) {
   */
 }
 
+static int 
+in_palette(i_color *c, i_quantize *quant, int size) {
+  int i;
+
+  for (i = 0; i < size; ++i) {
+    if (c->channel[0] == quant->mc_colors[i].channel[0]
+        && c->channel[1] == quant->mc_colors[i].channel[1]
+        && c->channel[2] == quant->mc_colors[i].channel[2]) {
+      return i;
+    }
+  }
+
+  return -1;
+}
+
+/*
+=item has_common_palette(imgs, count, quant, want_trans)
+
+Tests if all the given images are paletted and have a common palette,
+if they do it builds that palette.
+
+A possible improvement might be to eliminate unused colors in the
+images palettes.
+
+=cut */
+static int
+has_common_palette(i_img **imgs, int count, i_quantize *quant, int want_trans,
+                   i_gif_opts *opts) {
+  int size = quant->mc_count;
+  int i, j;
+  int imgn;
+  int x, y;
+  char used[256];
+
+  /* we try to build a common palette here, if we can manage that, then
+     that's the palette we use */
+  for (imgn = 0; imgn < count; ++imgn) {
+    if (imgs[imgn]->type != i_palette_type)
+      return 0;
+
+    if (opts->eliminate_unused) {
+      i_palidx *line = mymalloc(sizeof(i_palidx) * imgs[imgn]->xsize);
+      int x, y;
+      memset(used, 0, sizeof(used));
+
+      for (y = 0; y < imgs[imgn]->ysize; ++y) {
+        i_gpal(imgs[imgn], 0, imgs[imgn]->xsize, y, line);
+        for (x = 0; x < imgs[imgn]->xsize; ++x)
+          used[line[x]] = 1;
+      }
+
+      myfree(line);
+    }
+    else {
+      /* assume all are in use */
+      memset(used, 1, sizeof(used));
+    }
+
+    for (i = 0; i < i_colorcount(imgs[imgn]); ++i) {
+      i_color c;
+      
+      i_getcolors(imgs[imgn], i, &c, 1);
+      if (used[i]) {
+        if (in_palette(&c, quant, size) < 0) {
+          if (size < quant->mc_size) {
+            quant->mc_colors[size++] = c;
+          }
+          else {
+            /* oops, too many colors */
+            return 0;
+          }
+        }
+      }
+    }
+  }
+
+  quant->mc_count = size;
+
+  return 1;
+}
+
+static i_palidx *
+quant_paletted(i_quantize *quant, i_img *img) {
+  i_palidx *data = mymalloc(sizeof(i_palidx) * img->xsize * img->ysize);
+  i_palidx *p = data;
+  i_palidx trans[256];
+  int i;
+  int x, y;
+
+  /* build a translation table */
+  for (i = 0; i < i_colorcount(img); ++i) {
+    i_color c;
+    i_getcolors(img, i, &c, 1);
+    trans[i] = in_palette(&c, quant, quant->mc_count);
+  }
+
+  for (y = 0; y < img->ysize; ++y) {
+    i_gpal(img, 0, img->xsize, y, data+img->xsize * y);
+    for (x = 0; x < img->xsize; ++x) {
+      *p = trans[*p];
+      ++p;
+    }
+  }
+
+  return data;
+}
+
 /*
 =item i_writegif_low(i_quantize *quant, GifFileType *gf, i_img **imgs, int count, i_gif_opts *opts)
 
@@ -1209,6 +1316,7 @@ i_writegif_low(i_quantize *quant, GifFileType *gf, i_img **imgs, int count,
   int scrw = 0, scrh = 0;
   int imgn, orig_count, orig_size;
   int posx, posy;
+  int trans_index;
 
   mm_log((1, "i_writegif_low(quant %p, gf  %p, imgs %p, count %d, opts %p)\n", 
 	  quant, gf, imgs, count, opts));
@@ -1257,12 +1365,18 @@ i_writegif_low(i_quantize *quant, GifFileType *gf, i_img **imgs, int count,
 
     /* we always generate a global palette - this lets systems with a 
        broken giflib work */
-    quant_makemap(quant, imgs, 1);
-    result = quant_translate(quant, imgs[0]);
+    if (has_common_palette(imgs, 1, quant, want_trans, opts)) {
+      result = quant_paletted(quant, imgs[0]);
+    }
+    else {
+      quant_makemap(quant, imgs, 1);
+      result = quant_translate(quant, imgs[0]);
+    }
+    if (want_trans) {
+      trans_index = quant->mc_count;
+      quant_transparent(quant, result, imgs[0], trans_index);
+    }
 
-    if (want_trans)
-      quant_transparent(quant, result, imgs[0], quant->mc_count);
-    
     if ((map = make_gif_map(quant, opts, want_trans)) == NULL) {
       myfree(result);
       EGifCloseFile(gf);
@@ -1288,7 +1402,7 @@ i_writegif_low(i_quantize *quant, GifFileType *gf, i_img **imgs, int count,
     if (!do_ns_loop(gf, opts))
       return 0;
 
-    if (!do_gce(gf, 0, opts, want_trans, quant->mc_count)) {
+    if (!do_gce(gf, 0, opts, want_trans, trans_index)) {
       myfree(result);
       EGifCloseFile(gf);
       return 0;
@@ -1325,11 +1439,18 @@ i_writegif_low(i_quantize *quant, GifFileType *gf, i_img **imgs, int count,
       if (want_trans && quant->mc_size == 256)
 	--quant->mc_size;
 
-      quant_makemap(quant, imgs+imgn, 1);
-      result = quant_translate(quant, imgs[imgn]);
-      if (want_trans)
-	quant_transparent(quant, result, imgs[imgn], quant->mc_count);
-      
+      if (has_common_palette(imgs+imgn, 1, quant, want_trans, opts)) {
+        result = quant_paletted(quant, imgs[imgn]);
+      }
+      else {
+        quant_makemap(quant, imgs+imgn, 1);
+        result = quant_translate(quant, imgs[imgn]);
+      }
+      if (want_trans) {
+        quant_transparent(quant, result, imgs[imgn], quant->mc_count);
+        trans_index = quant->mc_count;
+      }
+
       if (!do_gce(gf, imgn, opts, want_trans, quant->mc_count)) {
 	myfree(result);
 	EGifCloseFile(gf);
@@ -1370,6 +1491,7 @@ i_writegif_low(i_quantize *quant, GifFileType *gf, i_img **imgs, int count,
   }
   else {
     int want_trans;
+    int do_quant_paletted = 0;
 
     /* get a palette entry for the transparency iff we have an image
        with an alpha channel */
@@ -1390,8 +1512,14 @@ i_writegif_low(i_quantize *quant, GifFileType *gf, i_img **imgs, int count,
        the colormap. */
      
     /* produce a colour map */
-    quant_makemap(quant, imgs, count);
-    result = quant_translate(quant, imgs[0]);
+    if (has_common_palette(imgs, count, quant, want_trans, opts)) {
+      result = quant_paletted(quant, imgs[0]);
+      ++do_quant_paletted;
+    }
+    else {
+      quant_makemap(quant, imgs, count);
+      result = quant_translate(quant, imgs[0]);
+    }
 
     if ((map = make_gif_map(quant, opts, want_trans)) == NULL) {
       myfree(result);
@@ -1448,7 +1576,10 @@ i_writegif_low(i_quantize *quant, GifFileType *gf, i_img **imgs, int count,
 
     for (imgn = 1; imgn < count; ++imgn) {
       int local_trans;
-      result = quant_translate(quant, imgs[imgn]);
+      if (do_quant_paletted)
+        result = quant_paletted(quant, imgs[imgn]);
+      else
+        result = quant_translate(quant, imgs[imgn]);
       local_trans = want_trans && imgs[imgn]->channels == 4;
       if (local_trans)
 	quant_transparent(quant, result, imgs[imgn], quant->mc_count);

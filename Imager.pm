@@ -2491,6 +2491,11 @@ which makes the animation of the images repeat.
 
 This is currently unimplemented due to some limitations in giflib.
 
+=item gif_eliminate_unused
+
+If this is true, when you write a paletted image any unused colors
+will be eliminated from its palette.  This is set by default.
+
 =back
 
 =head2 Quantization options

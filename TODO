@@ -13,10 +13,6 @@ Iolayer:
 - Implment the maxread threshold (Indicates how far 
   a library can read before it indicates that it's done).
 
-BUGS:
-
-- jpeg writer doesn't handle write errors
-
 Enhanched internal structure:
 
 MultiImage & metadata support:
@@ -42,9 +38,14 @@ New Features:
 
 - advanced font layout (spacing, kerning, alignment) (sky)
 
+- ways to check if characters are present in a font, eg. checking if
+  ligatures are present
+
 - font synthesis - synthesize a bold or slanted font from a normal font
   (or even from an existing bold or slanted font)
+
 - utf8 support for text output
+  (available for freetype2)
 
 - image rotation, 3 ways of doing rotation:
   - rotation by shearing, which produces makes lengths in the image larger,
@@ -90,8 +91,6 @@ Format specific issues:
 - pcx and targa image formats
 
 - aalib support
-
-- when saving gifs handle the case where paletted images are being saved
 
 - save other formats as paletted for paletted where that's supported
 

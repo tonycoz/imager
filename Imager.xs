@@ -179,6 +179,30 @@ static struct value_name orddith_names[] =
   { "custom", od_custom, },
 };
 
+static int
+hv_fetch_bool(HV *hv, char const *name, int def) {
+  SV **sv;
+
+  sv = hv_fetch(hv, name, strlen(name), 0);
+  if (sv && *sv) {
+    return SvTRUE(*sv);
+  }
+  else
+    return def;
+}
+
+static int
+hv_fetch_int(HV *hv, char const *name, int def) {
+  SV **sv;
+
+  sv = hv_fetch(hv, name, strlen(name), 0);
+  if (sv && *sv) {
+    return SvIV(*sv);
+  }
+  else
+    return def;
+}
+
 /* look through the hash for quantization options */
 static void handle_quant_opts(i_quantize *quant, HV *hv)
 {
@@ -315,12 +339,9 @@ static void handle_gif_opts(i_gif_opts *opts, HV *hv)
   SV **sv;
   int i;
   /**((char *)0) = '\0';*/
-  sv = hv_fetch(hv, "gif_each_palette", 16, 0);
-  if (sv && *sv)
-    opts->each_palette = SvIV(*sv);
-  sv = hv_fetch(hv, "interlace", 9, 0);
-  if (sv && *sv)
-    opts->interlace = SvIV(*sv);
+  opts->each_palette = hv_fetch_bool(hv, "gif_each_palette", 0);
+  opts->interlace = hv_fetch_bool(hv, "interlace", 0);
+
   sv = hv_fetch(hv, "gif_delays", 10, 0);
   if (sv && *sv && SvROK(*sv) && SvTYPE(SvRV(*sv)) == SVt_PVAV) {
     AV *av = (AV*)SvRV(*sv);
@@ -377,9 +398,9 @@ static void handle_gif_opts(i_gif_opts *opts, HV *hv)
     }
   }
   /* Netscape2.0 loop count extension */
-  sv = hv_fetch(hv, "gif_loop_count", 14, 0);
-  if (sv && *sv)
-    opts->loop_count = SvIV(*sv);
+  opts->loop_count = hv_fetch_int(hv, "gif_loop_count", 0);
+
+  opts->eliminate_unused = hv_fetch_bool(hv, "gif_eliminate_unused", 1);
 }
 
 /* copies the color map from the hv into the colors member of the HV */

@@ -1,14 +1,18 @@
+#!perl -w
+use strict;
 $|=1;
-print "1..34\n";
+print "1..40\n";
 use Imager qw(:all);
+
+sub ok ($$$);
 
 init_log("testout/t105gif.log",1);
 
-$green=i_color_new(0,255,0,255);
-$blue=i_color_new(0,0,255,255);
-$red=i_color_new(255,0,0,255);
+my $green=i_color_new(0,255,0,255);
+my $blue=i_color_new(0,0,255,255);
+my $red=i_color_new(255,0,0,255);
 
-$img=Imager::ImgRaw::new(150,150,3);
+my $img=Imager::ImgRaw::new(150,150,3);
 
 i_box_filled($img,70,25,130,125,$green);
 i_box_filled($img,20,25,80,125,$blue);
@@ -21,7 +25,7 @@ i_box_filled($timg, 0, 0, 20, 20, $green);
 i_box_filled($timg, 2, 2, 18, 18, $trans);
 
 if (!i_has_format("gif")) {
-  for (1..34) { print "ok $_ # skip no gif support\n"; }
+  for (1..40) { print "ok $_ # skip no gif support\n"; }
 } else {
     open(FH,">testout/t105.gif") || die "Cannot open testout/t105.gif\n";
     binmode(FH);
@@ -39,7 +43,7 @@ if (!i_has_format("gif")) {
 
     open(FH,"testout/t105.gif") || die "Cannot open testout/t105.gif\n";
     binmode(FH);
-    ($img, $palette)=i_readgif(fileno(FH));
+    ($img, my $palette)=i_readgif(fileno(FH));
     $img || die "Cannot read testout/t105.gif\n";
     close(FH);
 
@@ -53,20 +57,20 @@ if (!i_has_format("gif")) {
     # image comparison code, but I know this code revealed the error
     open(FH, "<testimg/scalei.gif") || die "Cannot open testimg/scalei.gif";
     binmode FH;
-    ($imgi) = i_readgif(fileno(FH));
+    my ($imgi) = i_readgif(fileno(FH));
     $imgi || die "Cannot read testimg/scalei.gif";
     close FH;
     print "ok 4\n";
     open FH, "<testimg/scale.gif" or die "Cannot open testimg/scale.gif";
     binmode FH;
-    ($imgni) = i_readgif(fileno(FH));
+    my ($imgni) = i_readgif(fileno(FH));
     $imgni or die "Cannot read testimg/scale.gif";
     close FH;
     print "ok 5\n";
 
     open FH, ">testout/t105i.ppm" or die "Cannot create testout/t105i.ppm";
     binmode FH;
-    $IO = Imager::io_new_fd( fileno(FH) );
+    my $IO = Imager::io_new_fd( fileno(FH) );
     i_writeppm_wiol($imgi, $IO) or die "Cannot write testout/t105i.ppm";
     close FH;
 
@@ -79,11 +83,11 @@ if (!i_has_format("gif")) {
 
     # compare them
     open FH, "<testout/t105i.ppm" or die "Cannot open testout/t105i.ppm";
-    $datai = do { local $/; <FH> };
+    my $datai = do { local $/; <FH> };
     close FH;
 
     open FH, "<testout/t105ni.ppm" or die "Cannot open testout/t105ni.ppm";
-    $datani = do { local $/; <FH> };
+    my $datani = do { local $/; <FH> };
     close FH;
     if ($datai eq $datani) {
       print "ok 6\n";
@@ -206,7 +210,7 @@ EOS
       print "ok 14 # skip giflib3 doesn't support callbacks\n";
     }
     @imgs = ();
-    for $g (0..3) {
+    for my $g (0..3) {
       my $im = Imager::ImgRaw::new(200, 200, 3);
       for my $x (0 .. 39) {
 	for my $y (0 .. 39) {
@@ -392,6 +396,7 @@ EOS
     my ($left) = grep $_->[0] eq 'gif_left', @tags;
     $left && $left->[1] == 3 or print "not ";
     print "ok 33\n";
+
     # screen3.gif was saved with 
     open FH, "< testimg/screen3.gif"
       or die "Cannot open testimg/screen3.gif: $!";
@@ -399,6 +404,7 @@ EOS
     @imgs = Imager::i_readgif_multi(fileno(FH))
       or print "not ";
     print "ok 34\n";
+    close FH;
     use Data::Dumper;
     # build a big map of all tags for all images
     @tags = 
@@ -412,6 +418,38 @@ EOS
     my $dump = Dumper(\@tags);
     $dump =~ s/^/# /mg;
     print "# tags from gif\n", $dump;
+
+    # at this point @imgs should contain only paletted images
+    ok(35, Imager::i_img_type($imgs[0]) == 1, "imgs[0] not paletted");
+    ok(36, Imager::i_img_type($imgs[1]) == 1, "imgs[1] not paletted");
+
+    # see how we go saving it
+    open FH, ">testout/t105_pal.gif" or die $!;
+    binmode FH;
+    ok(37, i_writegif_gen(fileno(FH), { make_colors=>'addi',
+                                        translate=>'closest',
+                                        transp=>'ordered',
+                                      }, @imgs), "write from paletted");
+    close FH;
+    
+    # make sure nothing bad happened
+    open FH, "< testout/t105_pal.gif" or die $!;
+    binmode FH;
+    ok(38, (my @imgs2 = Imager::i_readgif_multi(fileno(FH))) == 2,
+       "re-reading saved paletted images");
+    ok(39, i_img_diff($imgs[0], $imgs2[0]) == 0, "imgs[0] mismatch");
+    ok(40, i_img_diff($imgs[1], $imgs2[1]) == 0, "imgs[1] mismatch");
+}
+
+sub ok ($$$) {
+  my ($num, $ok, $comment) = @_;
+
+  if ($ok) {
+    print "ok $num\n";
+  }
+  else {
+    print "not ok $num # line ",(caller)[2],": $comment \n";
+  }
 }
 
 sub test_readgif_cb {
