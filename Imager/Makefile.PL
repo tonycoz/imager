@@ -70,7 +70,8 @@ if (defined $Config{'d_dlsymun'}) { $OSDEF  .= ' -DDLSYMUN'; }
        'LIBS'         => "$LFLAGS -lm $OSLIBS $F_LIBS",
        'DEFINE'       => "$F_DEFINE $EXTDEF $OSDEF $CFLAGS",
        'INC'          => "$DFLAGS $F_INC",
-       'OBJECT'       => join(' ', @objs, $F_OBJECT)
+       'OBJECT'       => join(' ', @objs, $F_OBJECT),
+       clean          => { FILES=>'testout' },
       );
 
 if ($] ge '5.005') {
