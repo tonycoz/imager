@@ -179,6 +179,7 @@ testimg/expected.gif
 testimg/gimpgrad        A GIMP gradient file
 testimg/junk.ppm
 testimg/loccmap.gif
+testimg/longid.tga      Test TGA with a long id string
 testimg/maxval.ppm	For ppm file maxval handling
 testimg/maxval_0.ppm
 testimg/maxval_256.ppm
