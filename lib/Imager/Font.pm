@@ -25,6 +25,11 @@ my %drivers =
          module=>'Imager/Font/FreeType2.pm',
          files=>'.*\.(pfa|pfb|otf|ttf|fon|fnt)$',
         },
+   ifs=>{
+         class=>'Imager::Font::Image',
+         module=>'Imager/Font/Image.pm',
+         files=>'.*\.ifs$',
+        },
    w32=>{
          class=>'Imager::Font::Win32',
          module=>'Imager/Font/Win32.pm',
@@ -32,7 +37,7 @@ my %drivers =
   );
 
 # this currently should only contain file based types, don't add w32
-my @priority = qw(t1 tt ft2);
+my @priority = qw(t1 tt ft2 ifs);
 
 # when Imager::Font is loaded, Imager.xs has not been bootstrapped yet
 # this function is called from Imager.pm to finish initialization
@@ -49,25 +54,25 @@ sub __init {
 
 sub new {
   my $class = shift;
-  my $self ={};
-  my ($file,$type,$id);
-  my %hsh=(color=>Imager::Color->new(255,0,0,0),
-	   size=>15,
+  my $self = {};
+  my ($file, $type, $id);
+  my %hsh=(color => Imager::Color->new(255,0,0,0),
+	   size => 15,
 	   @_);
 
   bless $self,$class;
 
-  if ($hsh{'file'}) { 
-    $file=$hsh{'file'};
+  if ($hsh{'file'}) {
+    $file = $hsh{'file'};
     if ( $file !~ m/^\// ) {
-      $file='./'.$file;
+      $file = './'.$file;
       if (! -e $file) {
-	$Imager::ERRSTR="Font $file not found";
+	$Imager::ERRSTR = "Font $file not found";
 	return();
       }
     }
 
-    $type=$hsh{'type'};
+    $type = $hsh{'type'};
     if (!defined($type) or !$drivers{$type}) {
       for my $drv (@priority) {
         undef $type;
@@ -79,7 +84,7 @@ sub new {
       }
     }
     if (!defined($type)) {
-      $Imager::ERRSTR="Font type not found";
+      $Imager::ERRSTR = "Font type not found";
       return;
     }
   } elsif ($hsh{face}) {
@@ -89,8 +94,8 @@ sub new {
     return;
   }
 
-  if (!$Imager::formats{$type}) { 
-    $Imager::ERRSTR="`$type' not enabled";
+  if (!$Imager::formats{$type}) {
+    $Imager::ERRSTR = "`$type' not enabled";
     return;
   }
 
@@ -148,7 +153,7 @@ sub align {
     Imager->_set_error("Missing required parameter 'string'");
     return;
   }
-  
+
   # image needs to be supplied, but can be supplied as undef
   unless (exists $input{image}) {
     Imager->_set_error("Missing required parameter 'image'");
@@ -156,19 +161,19 @@ sub align {
   }
   my $size = _first($input{size}, $self->{size});
   my $utf8 = _first($input{utf8}, 0);
-  
+
   my $bbox = $self->bounding_box(string=>$text, size=>$size, utf8=>$utf8);
   my $valign = $input{valign};
   $valign = 'baseline'
     unless $valign && $valign =~ /^(?:top|center|bottom|baseline)$/;
-  
+
   my $halign = $input{halign};
   $halign = 'start' 
     unless $halign && $halign =~ /^(?:left|start|center|end|right)$/;
 
   my $x = $input{'x'};
   my $y = $input{'y'};
-  
+
   if ($valign eq 'top') {
     $y += $bbox->ascent;
   }
@@ -273,7 +278,7 @@ sub transform {
     $Imager::ERRSTR = "You need to supply a matrix";
     return;
   }
-  
+
   return $self->_transform(%hsh);
 }
 

@@ -30,5 +30,6 @@ static char *i_format_list[]={
   "bmp",
   "tga",
   "rgb",
+  "ifs",
   NULL};
 
