@@ -270,10 +270,8 @@ static char *dlopen(char *path, int mode /* mode is ignored */)
   return handle;
 }
 
-void *
-dlsym(handle, symbol)
-     void *handle;
-     char *symbol;
+static void *
+dlsym(void *handle, char *symbol)
 {
   void *addr;
 
@@ -290,16 +288,14 @@ dlsym(handle, symbol)
   return addr;
 }
 
-int dlclose(handle) /* stub only */
-     void *handle;
+static int dlclose(void *handle) /* stub only */
 {
   return 0;
 }
 
-char *dlerror(handle) /* stub only */
-     void *handle;
+static char *dlerror(void *handle) /* stub only */
 {
-  printf("Error occured\n");
+  printf("Error occurred\n");
   return dl_error; 
 }
 
