@@ -1,0 +1,63 @@
+=head1 NAME
+
+Imager::Cookbook - recipes working with Imager
+
+=head1 DESCRIPTION
+
+Various simple and not so simple ways to do things with Imager.
+
+=head1 FILES
+
+This is described in detail in L<Imager::Files>.
+
+=head2 Reading an image from a file
+
+  my $image = Imager->new;
+
+  $image->read(file=>$filename) or die $image->errstr;
+
+See L<Imager::Files>.
+
+=head2 Writing an image to a file
+
+  $image->write(file=>$filename) or die $image->errstr;
+
+=head2 Write an animated gif.
+
+  # build an array of images to use in the gif
+  my  @images;
+  # synthesize the images or read them from files, it doesn't matter
+  ...
+
+  # write the gif
+  Imager->write_multi({ file=>$filename, type=>'gif' }, @images)
+    or die Imager->errstr;
+
+See L<Imager::Files/"Writing an animated GIF"> for a more detailed
+example.
+
+=head2 Reading multiple images from one file
+
+Some formats, like GIF and TIFF support multiple images per file.  Use
+the L<read_multi()|Imager::Files> method to read them:
+
+  my @images = Imager->read_multi(file=>$filename)
+    or die Imager->errstr;
+
+=head1 IMAGE SYNTHESIS
+
+=head1 WORLD WIDE WEB
+
+=head1 TEXT
+
+=head1 METADATA
+
+=head1 AUTHOR
+
+Tony Cook <tony@develop-help.com>
+
+=head1 SEE ALSO
+
+L<Imager>, L<Imager::Files>, L<Imager::Draw>.
+
+=cut
