@@ -2706,6 +2706,7 @@ This document - Synopsis Example, Table of Contents and Overview.
 
 =item Imager::ImageTypes
 
+Basics of constructing image objects with C<new()>:
 Direct type/virtual images, RGB(A)/paletted images, 8/16/double
 bits/channel, color maps, channel masks, image tags, color
 quantization.  Also discusses basic image information methods.
@@ -2784,6 +2785,9 @@ C<$img-E<gt>errstr()>.
 In cases where no image object is associated with an operation
 C<$Imager::ERRSTR> is used to report errors not directly associated
 with an image object.
+
+The C<Imager-><gt>new> method is described in detail in the 
+Imager::ImageTypes manpage.
 
 =head1 SUPPORT
 
