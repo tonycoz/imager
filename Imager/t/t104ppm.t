@@ -1,6 +1,6 @@
 use Imager ':all';
 
-print "1..3\n";
+print "1..6\n";
 
 init_log("testout/t104ppm.log",1);
 
@@ -40,5 +40,28 @@ print "ok 2\n";
 print i_img_diff($img, $cmpimg) 
   ? "not ok 3 # saved image different\n" : "ok 3\n";
 
+# build a grayscale image
+my $gimg = Imager::ImgRaw::new(150, 150, 1);
+my $gray = i_color_new(128, 0, 0);
+my $dgray = i_color_new(64, 0, 0);
+my $white = i_color_new(255, 0, 0);
+i_box_filled($gimg, 20, 20, 130, 130, $gray);
+i_box_filled($gimg, 40, 40, 110, 110, $dgray);
+i_arc($gimg, 75, 75, 30, 0, 361, $white);
+open FH, "> testout/t104_gray.pgm"
+  or die "Cannot create testout/t104_gray.pgm: $!\n";
+binmode FH;
+i_writeppm($gimg, fileno(FH))
+  or print "not ";
+print "ok 4\n";
+close FH;
+open FH, "< testout/t104_gray.pgm"
+  or die "Cannot open testout/t104_gray.pgm: $!\n";
+binmode FH;
+$IO = Imager::io_new_fd(fileno(FH));
+my $gcmpimg = i_readpnm_wiol($IO, -1) 
+  or print "not ";
+print "ok 5\n";
+i_img_diff($gimg, $gcmpimg) == 0 or print "not ";
+print "ok 6\n";
 
-# FIXME: may need tests for 1,2,4 channel images?

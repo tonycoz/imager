@@ -404,6 +404,7 @@ Revision history for Perl extension Imager.
         - Added support for transparent to alpha conversion during loading
           of png files.  Note that libpng 1.0.1 is broken in handling this,
 	  we know that 1.0.5 works.
+	- support for writing PGM (portable gray map) files
 
 ~~~~~~~~~~~~~^ ^ ^~~~~~~~~~~~~~
 
