@@ -67,6 +67,7 @@ if (!i_has_format("tiff")) {
   my $tiffdata = Imager::io_slurp($IO);
 
   open(FH,"testout/t106.tiff");
+  binmode FH;
   my $odata;
   { local $/;
     $odata = <FH>;
