@@ -1625,7 +1625,10 @@ sub box {
     unless (UNIVERSAL::isa($opts{fill}, 'Imager::Fill')) {
       # assume it's a hash ref
       require 'Imager/Fill.pm';
-      $opts{fill} = Imager::Fill->new(%{$opts{fill}});
+      unless ($opts{fill} = Imager::Fill->new(%{$opts{fill}})) {
+        $self->{ERRSTR} = $Imager::ERRSTR;
+        return undef;
+      }
     }
     i_box_cfill($self->{IMG},$opts{xmin},$opts{ymin},$opts{xmax},
                 $opts{ymax},$opts{fill}{fill});
