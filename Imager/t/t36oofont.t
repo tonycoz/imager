@@ -11,11 +11,13 @@ use strict;
 # Change 1..1 below to 1..last_test_to_print .
 # (It may become useful if the test is moved to ./t subdirectory.)
 
-BEGIN { $| = 1; print "1..7\n"; }
-END {print "not ok 1\n" unless $::loaded;}
+my $loaded;
+BEGIN { $| = 1; print "1..13\n"; }
+END {print "not ok 1\n" unless $loaded;}
 use Imager;
-$::loaded=1;
-print "ok 1\n";
+require "t/testtools.pl";
+$loaded=1;
+okx(1, "loaded");
 
 init_log("testout/t36oofont.log", 1);
 
@@ -28,8 +30,6 @@ die $Imager::ERRSTR unless $green;
 my $red=Imager::Color->new(205, 92, 92, 255);
 die $Imager::ERRSTR unless $red;
 
-
-
 if (i_has_format("t1") and -f $fontname_pfb) {
 
   my $img=Imager->new(xsize=>300, ysize=>100) or die "$Imager::ERRSTR\n";
@@ -37,29 +37,25 @@ if (i_has_format("t1") and -f $fontname_pfb) {
   my $font=Imager::Font->new(file=>$fontname_pfb,size=>25)
     or die $img->{ERRSTR};
 
-  print "ok 2\n";
+  okx(1, "created font");
 
-  $img->string(font=>$font, text=>"XMCLH", 'x'=>100, 'y'=>100) 
-    or die $img->{ERRSTR};
-
-  print "ok 3\n";
-
+  okx($img->string(font=>$font, text=>"XMCLH", 'x'=>100, 'y'=>100),
+      "draw text");
   $img->line(x1=>0, x2=>300, y1=>50, y2=>50, color=>$green);
 
   my $text="LLySja";
   my @bbox=$font->bounding_box(string=>$text, 'x'=>0, 'y'=>50);
 
-  print @bbox ? '' : 'not ', "ok 4\n";
+  okx(@bbox == 6, "bounding box list length");
 
   $img->box(box=>\@bbox, color=>$green);
 
-  $img->write(file=>"testout/t36oofont1.ppm", type=>'pnm')
-    or die "cannot write to testout/t36oofont1.ppm: $img->{ERRSTR}\n";
+  okx($img->write(file=>"testout/t36oofont1.ppm", type=>'pnm'),
+      "write t36oofont1.ppm")
+    or print "# ",$img->errstr,"\n";
 
 } else {
-  print "ok 2 # skip\n";
-  print "ok 3 # skip\n";
-  print "ok 4 # skip\n";
+  skipx(4, "T1lib missing or disabled");
 }
 
 if (i_has_format("tt") and -f $fontname_tt) {
@@ -69,28 +65,41 @@ if (i_has_format("tt") and -f $fontname_tt) {
   my $font=Imager::Font->new(file=>$fontname_tt,size=>25)
     or die $img->{ERRSTR};
 
-  print "ok 5\n";
+  okx(1, "create TT font object");
 
-  $img->string(font=>$font, text=>"XMCLH", 'x'=>100, 'y'=>100) 
-    or die $img->{ERRSTR};
-
-  print "ok 6\n";
+  okx($img->string(font=>$font, text=>"XMCLH", 'x'=>100, 'y'=>100),
+      "draw text");
 
   $img->line(x1=>0, x2=>300, y1=>50, y2=>50, color=>$green);
 
   my $text="LLySja";
   my @bbox=$font->bounding_box(string=>$text, 'x'=>0, 'y'=>50);
 
-  print @bbox ? '' : 'not ', "ok 7\n";
+  okx(@bbox == 6, "bbox list size");
 
   $img->box(box=>\@bbox, color=>$green);
 
-  $img->write(file=>"testout/t36oofont2.ppm", type=>'pnm')
-    or die "cannot write to testout/t36oofont2.ppm: $img->{ERRSTR}\n";
+  $text = pack("C*", 0x41, 0xE2, 0x80, 0x90, 0x41);
+  okx($img->string(font=>$font, text=>$text, 'x'=>100, 'y'=>50, utf8=>1),
+      "draw hand-encoded UTF8 text");
+
+  if($] >= 5.006) {
+    eval q{$text = "A\x{2010}A"};
+    okx($img->string(font=>$font, text=>$text, 'x'=>200, 'y'=>50),
+       "draw native UTF8 text");
+  }
+  else {
+    skipx(1, "perl too old for native utf8");
+  }
+
+  okx($img->write(file=>"testout/t36oofont2.ppm", type=>'pnm'),
+      "write t36oofont2.ppm")
+    or print "# ", $img->errstr,"\n";
+
+  okx($font->utf8, "make sure utf8 method returns true");
 
 } else {
-  print "ok 5 # skip\n";
-  print "ok 6 # skip\n";
-  print "ok 7 # skip\n";
+  skipx(7, "FT1.x missing or disabled");
 }
 
+okx(1, "end");

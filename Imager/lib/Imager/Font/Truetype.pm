@@ -39,15 +39,22 @@ sub new {
 sub _draw {
   my $self = shift;
   my %input = @_;
+
+  # note that the string length parameter is ignored and calculated in
+  # XS with SvPV(), since we want the number of bytes rather than the
+  # number of characters, which is what we'd get in perl for a UTF8
+  # encoded string in 5.6 and later
+
   if ( exists $input{channel} ) {
     Imager::i_tt_cp($self->{id},$input{image}{IMG},
 		    $input{'x'}, $input{'y'}, $input{channel}, $input{size},
-		    $input{string}, length($input{string}),$input{aa}); 
+		    $input{string}, length($input{string}),$input{aa},
+                    $input{utf8}); 
   } else {
     Imager::i_tt_text($self->{id}, $input{image}{IMG}, 
 		      $input{'x'}, $input{'y'}, $input{color},
 		      $input{size}, $input{string}, 
-		      length($input{string}), $input{aa}); 
+		      length($input{string}), $input{aa}, $input{utf8}); 
   }
 }
 
@@ -55,8 +62,11 @@ sub _bounding_box {
   my $self = shift;
   my %input = @_;
   return Imager::i_tt_bbox($self->{id}, $input{size},
-			   $input{string}, length($input{string}));
+			   $input{string}, length($input{string}),
+                           $input{utf8});
 }
+
+sub utf8 { 1 }
 
 1;
 
