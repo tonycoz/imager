@@ -1,0 +1,193 @@
+=head1 NAME
+
+Imager::Files - working with image files
+
+=head1 SYNOPSIS
+
+  my $img = ...;
+  $img->write(file=>$filename, type=>$type)
+    or die "Cannot write: ",$img->errstr;
+
+  $img = Imager->new;
+  $img->read(file=>$filename, type=>$type)
+    or die "Cannot read: ", $img->errstr;
+
+  Imager->write_multi({ file=> $filename, ... }, @images)
+    or die "Cannot write: ", Imager->errstr;
+
+  my @imgs = Imager->read_multi(file=>$filename)
+    or die "Cannot read: ", Imager->errstr;
+
+=head1 DESCRIPTION
+
+You can read and write a variety of images formats, assuming you have
+the appropriate libraries, and images can be read or written to/from
+files, file handles, file descriptors, scalars, or through callbacks.
+
+To see which image formats Imager is compiled to support the following
+code snippet is sufficient:
+
+  use Imager;
+  print join " ", keys %Imager::formats;
+
+This will include some other information identifying libraries rather
+than file formats.
+
+Reading writing to and from files is simple, use the C<read()>
+method to read an image:
+
+  my $img = Imager->new;
+  $img->read(file=>$filename, type=>$type)
+    or die "Cannot read $filename: ", $img->errstr;
+
+and the C<write()> method to write an image:
+
+  $img->write(file=>$filename, type=>$type)
+    or die "Cannot write $filename: ", $img->errstr;
+
+If you're reading from a format that supports multiple images per
+file, use the C<read_multi()> method:
+
+  my @imgs = Imager->read_multi(file=>$filename, type=>$type)
+    or die "Cannot read $filename: ", Imager->errstr;
+
+and if you want to write multiple images to a single file use the
+C<write_multi()> method:
+
+  Imager->write_multi({ file=> $filename, type=>$type }, @images)
+    or die "Cannot write $filename: ", Imager->errstr;
+
+If the I<filename> includes an extension that Imager recognizes, then
+you don't need the I<type>, but you may want to provide one anyway.
+See L</Guessing types> for information on controlling this
+recognition.
+
+When you read an image, Imager may set some tags, possibly including
+information about the spatial resolution, textual information, and
+animation information.  See L</Tags> for specifics.
+
+=head2 Input and output
+
+When reading or writing you can specify one of a variety of sources or
+targets:
+
+=over
+
+=item file
+
+The C<file> parameter is the name of the image file to be written to
+or read from.  If Imager recognizes the extension of the file you do
+not need to supply a C<type>.
+
+=item fh
+
+C<fh> is a file handle, typically either returned from
+C<<IO::File->new()>>, or a glob from an C<open> call.  You should call
+C<binmode> on the handle before passing it to Imager.
+
+=item fd
+
+C<fd> is a file descriptor.  You can get this by calling the
+C<fileno()> function on a file handle, or by using one of the standard
+file descriptor numbers.
+
+=item data
+
+When reading data, C<data> is a scalar containing the image file data,
+when writing, C<data> is a reference to the scalar to save the image
+file data too.  For GIF images you will need giflib 4 or higher, and
+you may need to patch giflib to use this option for writing.
+
+=item callback
+
+Imager will make calls back to your supplied coderefs to read, write
+and seek from/to/through the image file.
+
+When reading from a file you can use either C<callback> or C<readcb>
+to supply the read callback, and when writing C<callback> or
+C<writecb> to supply the write callback.
+
+When writing you can also supply the C<maxbuffer> option to set the
+maximum amount of data that will be buffered before your write
+callback is called.  Note: the amount of data supplied to your
+callback can be smaller or larger than this size.
+
+The read callback is called with 2 parameters, the minimum amount of
+data required, and the maximum amount that Imager will store in it's C
+level buffer.  You may want to return the minimum if you have a slow
+data source, or the maximum if you have a fast source and want to
+prevent many calls to your perl callback.  The read data should be
+returned as a scalar.
+
+Your write callback takes exactly one parameter, a scalar containing
+the data to be written.  Return true for success.
+
+The seek callback takes 2 parameters, a I<POSITION>, and a I<WHENCE>,
+defined in the same way as perl's seek function.
+
+You can also supply a C<closecb> which is called with no parameters
+when there is no more data to be written.  This could be used to flush
+buffered data.
+
+=back
+
+=head2 Guessing types
+
+Imager uses the code reference in $Imager::FORMATGUESS to guess the
+file type when you don't supply a C<type>.  The code reference is
+called with a single parameter, the filename of the file.  The code
+reference is only called if a C<file> parameter is supplied to the
+file access method.
+
+Return either a valid Imager file type, or undef.
+
+  # I'm writing jpegs to weird filenames
+  local $Imager::FORMATGUESS = sub { 'jpeg' };
+
+=head1 TYPE SPECIFIC INFORMATION
+
+The different image formats can write different image type, and some have
+different options to control how the images are written.
+
+=head2 PNM (Portable aNy Map)
+
+Imager can write PGM (Portable Gray Map) and PPM (Portable PixMaps)
+files, depending on the number of channels in the image.  Currently
+the images are written in binary formats.  Only 1 and 3 channel images
+can be written, including 1 and 3 channel paletted images.
+
+  $img->write(file=>'foo.ppm') or die $img->errstr;
+
+Imager can read both the ASCII and binary versions of each of the PBM
+(Portable BitMap), PGM and PPM formats.
+
+  $img->read(file=>'foo.ppm') or die $img->errstr;
+
+PNM does not support the spatial resolution tags.
+
+=head2 JPEG
+
+You can supply a C<jpegquality> parameter (0-100) when writing a JPEG
+file, which defaults to 75%.  Only 1 and 3 channel images
+can be written, including 1 and 3 channel paletted images.
+
+  $img->write(file=>'foo.jpg', jpegquality=>90) or die $img->errstr;
+
+Imager will read a grayscale JPEG as a 1 channel image and a color
+JPEG as a 3 channel image.
+
+  $img->read(file=>'foo.jpg') or die $img->errstr;
+
+PNM does not support the spatial resolution tags.
+
+=head2 GIF (Graphics Interchange Format)
+
+
+
+=head2 TIFF (Tagged Image File Format)
+
+=head2 BMP (BitMaP)
+
+=head2 TGA (TarGA)
+
+=cut
