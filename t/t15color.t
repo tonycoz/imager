@@ -121,7 +121,7 @@ sub color_close_enough {
 
   my ($cr, $cg, $cb) = $c->rgba;
   if (abs($cr-$r) <= 5 && abs($cg-$g) <= 5 && abs($cb-$b) <= 5) {
-    print "ok $test_num\n";
+    print "ok $test_num # ($cr, $cg, $cb) <=> ($r, $g, $b)\n";
   }
   else {
     print "not ok $test_num # ($cr, $cg, $cb) <=> ($r, $g, $b)\n";
@@ -139,7 +139,7 @@ sub color_close_enough_hsv {
     $h += 255;
   }
   if (abs($ch-$h) <= 5 && abs($cs-$s) <= 5 && abs($cv-$v) <= 5) {
-    print "ok $test_num\n";
+    print "ok $test_num # ($ch, $cs, $cv) <=> ($h, $s, $v)\n";
   }
   else {
     print "not ok $test_num # ($ch, $cs, $cv) <=> ($h, $s, $v)\n";
