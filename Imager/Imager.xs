@@ -3174,16 +3174,21 @@ i_ft2_settransform(font, matrix)
         RETVAL
 
 void
-i_ft2_bbox(font, cheight, cwidth, text)
+i_ft2_bbox(font, cheight, cwidth, text, utf8)
         Imager::Font::FT2 font
         double cheight
         double cwidth
         char *text
+	int utf8
       PREINIT:
         int bbox[6];
         int i;
       PPCODE:
-        if (i_ft2_bbox(font, cheight, cwidth, text, strlen(text), bbox)) {
+#ifdef SvUTF8
+        if (SvUTF8(ST(3)))
+          utf8 = 1;
+#endif
+        if (i_ft2_bbox(font, cheight, cwidth, text, strlen(text), bbox, utf8)) {
           EXTEND(SP, 6);
           for (i = 0; i < 6; ++i)
             PUSHs(sv_2mortal(newSViv(bbox[i])));

@@ -558,6 +558,7 @@ Revision history for Perl extension Imager.
         - use the error stack value from reading bmp files
         - fix an error message in bmp.c
         - added has_chars() method to Imager::Font::FreeType2
+	- freetype 2 bounding box function didn't know UTF8 (doh!)
 
 =================================================================
 
