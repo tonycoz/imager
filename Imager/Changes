@@ -1008,6 +1008,7 @@ Revision history for Perl extension Imager.
   pixel in i_conv() (convolution filter)
 - explicitly document there are no PNG specific tags.
 - more examples in Imager::Draw
+- minor cleanup of Imager::Fill
 
 =================================================================
 
