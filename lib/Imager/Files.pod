@@ -190,7 +190,7 @@ These options can be specified when calling write_multi() or when
 writing a single image with the C<gifquant> option set to 'gen'
 
 Note that some viewers will ignore some of these options
-(gif_user_input in particular).
+(C<gif_user_input> in particular).
 
 =over 4
 
@@ -336,7 +336,47 @@ standard.
 
 =head2 TIFF (Tagged Image File Format)
 
+Imager can write images to either paletted or RGB TIFF images,
+depending on the type of the source image.  Currently if you write a
+16-bit/sample or double/sample image it will be written as an
+8-bit/sample image.  Only 1 or 3 channel images can be written.
 
+If you are creating images for faxing you can set the I<class>
+parameter set to C<fax>.  By default the image is written in fine
+mode, but this can be overridden by setting the I<fax_fine> parameter
+to zero.  Since a fax image is bi-level, Imager uses a threshold to
+decide if a given pixel is black or white, based on a single channel.
+For greyscale images channel 0 is used, for color images channel 1
+(green) is used.  If you want more control over the conversion you can
+use $img->to_paletted() to product a bi-level image.  This way you can
+use dithering:
+
+  my $bilevel = $img->to_paletted(colors=>[ NC(0,0,0), NC(255,255,255) ],
+                                  make_colors => 'none',
+                                  translate => 'errdiff',
+                                  errdiff => 'stucki');
+
+=over
+
+=item class
+
+If set to 'fax' the image will be written as a bi-level fax image.
+
+=item fax_fine
+
+By default when I<class> is set to 'fax' the image is written in fine
+mode, you can select normal mode by setting I<fax_fine> to 0.
+
+=back
+
+Imager should be able to read any TIFF image you supply.  Paletted
+TIFF images are read as paletted Imager images, since paletted TIFF
+images have 16-bits/sample (48-bits/color) this means the bottom
+8-bits are lost, but this shouldn't be a big deal.  Currently all
+direct color images are read at 8-bits/sample.
+
+TIFF supports the spatial resolution tags.  See the
+C<tiff_resolutionunit> tag for some extra options.
 
 The following tags are set in a TIFF image when read, and can be set
 to control output:
@@ -347,6 +387,10 @@ to control output:
 
 The value of the ResolutionUnit tag.  This is ignored on writing if
 the i_aspect_only tag is non-zero.
+
+The C<i_xres> and C<i_yres> tags are expressed in pixels per inch no
+matter tha value of this tag, they will be converted to/from the value
+stored in the TIFF file.
 
 =item tiff_documentname
 
@@ -369,23 +413,55 @@ the i_aspect_only tag is non-zero.
 Various strings describing the image.  tiff_datetime must be formatted
 as "YYYY:MM:DD HH:MM:SS".  These correspond directly to the mixed case
 names in the TIFF specification.  These are set in images read from a
-TIFF and save when writing a TIFF image.
+TIFF and saved when writing a TIFF image.
 
 =back
 
-
-
-
 =head2 BMP (BitMaP)
 
+Imager can write 24-bit RGB, and 8, 4 and 1-bit per pixel paletted
+Windows BMP files.  Currently you cannot write compressed BMP files
+with Imager.
 
-The following tags are set when a Windows BMP file is read:
+Imager can read 24-bit RGB, and 8, 4 and 1-bit perl pixel paletted
+Windows BMP files.  There is some support for reading 16-bit per pixel
+images, but I haven't found any for testing.
+
+BMP has no support for multi-image files.
+
+BMP files support the spatial resolution tags, but since BMP has no
+support for storing only an aspect ratio, if C<i_aspect_only> is set
+when you write the C<i_xres> and C<i_yres> values are scaled so the
+smaller it 72 DPI.
+
+The following tags are set when you read an image from a BMP file:
 
 =over
 
 =item bmp_compression
 
-The type of compression, if any.
+The type of compression, if any.  This can be any of the following
+values:
+
+=over
+
+=item BI_RGB (0)
+
+Uncompressed.
+
+=item BI_RLE8 (1)
+
+8-bits/pixel paletted value RLE compression.
+
+=item BI_RLE4 (2)
+
+4-bits/pixel paletted value RLE compression.
+
+=item BI_BITFIELDS (3)
+
+Packed RGB values.
+
+=back
 
 =item bmp_important_colors
 
@@ -393,11 +469,26 @@ The number of important colors as defined by the writer of the image.
 
 =back
 
-
-
-
-
-
 =head2 TGA (TarGA)
+
+Tags:
+
+=over
+
+=item tga_idstring
+
+=item tga_bitspp
+
+=item compressed
+
+=back
+
+=head1 EXAMPLES
+
+writing an image from CGI (content type, flush, write to fd)
+
+writing an animated gif
+
+reading tags after reading an image
 
 =cut
