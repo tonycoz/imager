@@ -162,7 +162,26 @@ ss_scanline_exorcise(ss_scanline *ss) {
 
 static
 int
-lines_in_interval(p_line *lset, int l, p_slice *tllist, pcord cc) {
+lines_in_interval(p_line *lset, int l, p_slice *tllist, pcord minc, pcord maxc) {
+  int k;
+  int count = 0;
+  for(k=0; k<l; k++) {
+    if (lset[k].maxy > minc && lset[k].miny < maxc) {
+      if (lset[k].miny == lset[k].maxy) {
+	POLY_DEB( printf(" HORIZONTAL - skipped\n") );
+      } else {
+	tllist[count].x=p_eval_aty(&lset[k],(minc+maxc)/2.0 );
+	tllist[count].n=k;
+	count++;
+      }
+    }
+  }
+  return count;
+}
+
+static
+int
+lines_in_interval_old(p_line *lset, int l, p_slice *tllist, pcord cc) {
   int k;
   int count = 0;
   for(k=0; k<l; k++) {
@@ -559,20 +578,21 @@ i_poly_aa(i_img *im, int l, double *x, double *y, i_color *val) {
   /* loop on intervals */
   for(i=0; i<l-1; i++) {
     int startscan = max( coarse(pset[i].y), 0);
-    int stopscan = min( coarse(pset[i+1].y+15), im->ysize-1);
+    int stopscan = min( coarse(pset[i+1].y+15), im->ysize);
     pcord cc = (pset[i].y + pset[i+1].y)/2;
+
+    if (pset[i].y == pset[i+1].y) {
+      POLY_DEB( printf("current slice thickness = 0 => skipping\n") );
+      continue;
+    }
 
     POLY_DEB(
 	     printf("current slice is %d: %d to %d ( cpoint %d ) scanlines %d to %d\n", 
 		    i, pset[i].y, pset[i+1].y, cc, startscan, stopscan)
 	     );
     
-    if (pset[i].y == pset[i+1].y) {
-      POLY_DEB( printf("current slice thickness = 0 => skipping\n") );
-      continue;
-    }
     
-    clc = lines_in_interval(lset, l, tllist, cc);
+    clc = lines_in_interval(lset, l, tllist, pset[i].y, pset[i+1].y);
     qsort(tllist, clc, sizeof(p_slice), (int(*)(const void *,const void *))p_compx);
 
     mark_updown_slices(lset, tllist, clc);
@@ -596,6 +616,7 @@ i_poly_aa(i_img *im, int l, double *x, double *y, i_color *val) {
       tempy = min(cscl*16+16, pset[i+1].y);
       POLY_DEB( printf("evaluating scan line %d \n", cscl) );
       for(k=0; k<clc-1; k+=2) {
+	POLY_DEB( printf("evaluating slice %d\n", k) );
 	render_slice_scanline(&templine, cscl, lset+tllist[k].n, lset+tllist[k+1].n);
       }
       if (16*coarse(tempy) == tempy) {
