@@ -32,9 +32,9 @@ static int i_gpixf_d16(i_img *im, int x, int y, i_fcolor *val);
 static int i_glinf_d16(i_img *im, int l, int r, int y, i_fcolor *vals);
 static int i_plinf_d16(i_img *im, int l, int r, int y, i_fcolor *vals);
 static int i_gsamp_d16(i_img *im, int l, int r, int y, i_sample_t *samps, 
-                       int *chans, int chan_count);
+                       int const *chans, int chan_count);
 static int i_gsampf_d16(i_img *im, int l, int r, int y, i_fsample_t *samps, 
-                        int *chans, int chan_count);
+                        int const *chans, int chan_count);
 
 /*
 =item IIM_base_16bit_direct
@@ -313,7 +313,7 @@ static int i_plinf_d16(i_img *im, int l, int r, int y, i_fcolor *vals) {
 }
 
 static int i_gsamp_d16(i_img *im, int l, int r, int y, i_sample_t *samps, 
-                       int *chans, int chan_count) {
+                       int const *chans, int chan_count) {
   int ch, count, i, w;
   int off;
 
@@ -358,7 +358,7 @@ static int i_gsamp_d16(i_img *im, int l, int r, int y, i_sample_t *samps,
 }
 
 static int i_gsampf_d16(i_img *im, int l, int r, int y, i_fsample_t *samps, 
-                        int *chans, int chan_count) {
+                        int const *chans, int chan_count) {
   int ch, count, i, w;
   int off;
 

@@ -15,7 +15,7 @@ extern int i_gpixf_fp(i_img *im, int x, int y, i_fcolor *pix);
 extern int i_plinf_fp(i_img *im, int l, int r, int y, i_fcolor *pix);
 extern int i_glinf_fp(i_img *im, int l, int r, int y, i_fcolor *pix);
 extern int i_gsampf_fp(i_img *im, int l, int r, int y, i_fsample_t *samp,
-                       int *chans, int chan_count);
+                       int const *chans, int chan_count);
 
 /* wrapper functions that forward palette calls to the underlying image,
    assuming the underlying image is the first pointer in whatever

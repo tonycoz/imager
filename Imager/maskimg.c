@@ -43,9 +43,9 @@ static int i_gpixf_masked(i_img *im, int x, int y, i_fcolor *pix);
 static int i_glin_masked(i_img *im, int l, int r, int y, i_color *vals);
 static int i_glinf_masked(i_img *im, int l, int r, int y, i_fcolor *vals);
 static int i_gsamp_masked(i_img *im, int l, int r, int y, i_sample_t *samp, 
-                          int *chans, int chan_count);
+                          int const *chans, int chan_count);
 static int i_gsampf_masked(i_img *im, int l, int r, int y, i_fsample_t *samp, 
-                           int *chans, int chan_count);
+                           int const *chans, int chan_count);
 static int i_gpal_masked(i_img *im, int l, int r, int y, i_palidx *vals);
 static int i_ppal_masked(i_img *im, int l, int r, int y, i_palidx *vals);
 
@@ -438,7 +438,7 @@ static int i_glinf_masked(i_img *im, int l, int r, int y, i_fcolor *vals) {
 }
 
 static int i_gsamp_masked(i_img *im, int l, int r, int y, i_sample_t *samp, 
-                          int *chans, int chan_count) {
+                          int const *chans, int chan_count) {
   i_img_mask_ext *ext = MASKEXT(im);
   if (y >= 0 && y < im->ysize && l < im->xsize && l >= 0) {
     if (r > im->xsize)
@@ -452,7 +452,7 @@ static int i_gsamp_masked(i_img *im, int l, int r, int y, i_sample_t *samp,
 }
 
 static int i_gsampf_masked(i_img *im, int l, int r, int y, i_fsample_t *samp, 
-                          int *chans, int chan_count) {
+                          int const *chans, int chan_count) {
   i_img_mask_ext *ext = MASKEXT(im);
   if (y >= 0 && y < im->ysize && l < im->xsize && l >= 0) {
     if (r > im->xsize)

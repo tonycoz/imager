@@ -85,9 +85,9 @@ typedef int (*i_f_glin_t)(i_img *im, int x, int r, int y, i_color *vals);
 typedef int (*i_f_glinf_t)(i_img *im, int x, int r, int y, i_fcolor *vals);
 
 typedef int (*i_f_gsamp_t)(i_img *im, int x, int r, int y, i_sample_t *samp,
-                           int *chans, int chan_count);
+                           const int *chans, int chan_count);
 typedef int (*i_f_gsampf_t)(i_img *im, int x, int r, int y, i_fsample_t *samp,
-                            int *chan, int chan_count);
+                            const int *chan, int chan_count);
 
 typedef int (*i_f_gpal_t)(i_img *im, int x, int r, int y, i_palidx *vals);
 typedef int (*i_f_ppal_t)(i_img *im, int x, int r, int y, i_palidx *vals);
