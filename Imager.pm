@@ -155,7 +155,7 @@ BEGIN {
   require Exporter;
   require DynaLoader;
 
-  $VERSION = '0.38pre9';
+  $VERSION = '0.38';
   @ISA = qw(Exporter DynaLoader);
   bootstrap Imager $VERSION;
 }
