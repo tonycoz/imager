@@ -264,7 +264,7 @@ sub init {
 
   @definc{'/usr/include'}=();
   @incs=(qw(/usr/include/freetype2 /usr/local/include/freetype2 /usr/include /usr/local/include /usr/include/freetype /usr/local/include/freetype), split /\Q$Config{path_sep}/, $INCPATH );
-  @libs=(split(/ /, $Config{'libpth'}), split(/\Q$Config{path_sep}/, $LIBPATH) );
+	@libs=( split(/\Q$Config{path_sep}/,$LIBPATH) , split(/ /, $Config{'libpth'}));
   if ($^O =~ /win32/i && $Config{cc} =~ /\bcl\b/i) {
     push(@incs, split /;/, $ENV{INCLUDE}) if exists $ENV{INCLUDE};
     push(@libs, split /;/, $ENV{LIB}) if exists $ENV{LIB};
