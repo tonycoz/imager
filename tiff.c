@@ -163,6 +163,9 @@ static i_img *read_one_tiff(TIFF *tif) {
   else {
     im = i_img_empty_ch(NULL, width, height, channels);
   }
+
+  if (!im)
+    return NULL;
     
   /* resolution tags */
   TIFFGetFieldDefaulted(tif, TIFFTAG_RESOLUTIONUNIT, &resunit);
@@ -195,6 +198,8 @@ static i_img *read_one_tiff(TIFF *tif) {
 		 strlen(data), 0);
     }
   }
+
+  i_tags_add(&im->tags, "i_format", 0, "tiff", -1, 0);
   
   /*   TIFFPrintDirectory(tif, stdout, 0); good for debugging */
 
