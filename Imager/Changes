@@ -586,6 +586,9 @@ Revision history for Perl extension Imager.
         - use the glyph bbox to calculate the glyph bitmaps for rendering
           with FT1 rather than the global ascender/descender.  This helps
           with fonts that have broken metrics.
+	- fix calculation of descender for FT2, it was calculating the
+	  minimum decent rather than the maximum for the characters in 
+	  the string
 
 =================================================================
 

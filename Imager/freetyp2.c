@@ -343,7 +343,7 @@ i_ft2_bbox(FT2_Fonthandle *handle, double cheight, double cwidth,
 
     if (glyph_ascent > ascent)
       ascent = glyph_ascent;
-    if (glyph_descent > descent)
+    if (glyph_descent < descent)
       descent = glyph_descent;
 
     width += gm->horiAdvance / 64;
