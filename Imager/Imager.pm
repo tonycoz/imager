@@ -493,9 +493,30 @@ sub read {
   if ($input{fd}) { $fd=$input{fd} };
 
   if ( $input{type} eq 'gif' ) {
-    if (exists $input{data}) { $self->{IMG}=i_readgif_scalar($input{data}); }
-    else { $self->{IMG}=i_readgif( $fd ) }
-    if ( !defined($self->{IMG}) ) { $self->{ERRSTR}= 'reading GIF:'._error_as_msg(); return undef; }
+    if ($input{colors} && !ref($input{colors})) {
+      # must be a reference to a scalar that accepts the colour map
+      $self->{ERRSTR} = "option 'colors' must be a scalar reference";
+      return undef;
+    }
+    if (exists $input{data}) {
+      if ($input{colors}) {
+	($self->{IMG}, ${$input{colors}}) = i_readgif_scalar($input{data});
+      }
+      else {
+	$self->{IMG}=i_readgif_scalar($input{data});
+      }
+    }
+    else { 
+      if ($input{colors}) {
+	($self->{IMG}, ${$input{colors}}) = i_readgif( $fd );
+      }
+      else {
+	$self->{IMG} = i_readgif( $fd )
+      }
+    }
+    if ( !defined($self->{IMG}) ) {
+      $self->{ERRSTR}= 'reading GIF:'._error_as_msg(); return undef;
+    }
     $self->{DEBUG} && print "loading a gif file\n";
   } elsif ( $input{type} eq 'jpeg' ) {
     if (exists $input{data}) { ($self->{IMG},$self->{IPTCRAW})=i_readjpeg_scalar($input{data}); }
@@ -1476,6 +1497,13 @@ pnm nor tiff have extra options. Examples:
 The second example shows how to read an image from a scalar, this is
 usefull if your data originates from somewhere else than a filesystem
 such as a database over a DBI connection.
+
+If you are reading from a gif image file, you can supply a 'colors'
+parameter which must be a reference to a scalar.  The referenced
+scalar will receive an array reference which contains the colors, each
+represented another array reference which has the 3 colour components
+in it, in RGB order.  Note: this may change to be an array reference
+of Imager::Color objects.
 
 If you already have an open file handle, for example a socket or a
 pipe, you can specify the 'fd' parameter instead of supplying a
