@@ -61,7 +61,7 @@ if (defined $Config{'d_dlsymun'}) { $OSDEF  .= ' -DDLSYMUN'; }
 @objs = qw(Imager.o draw.o image.o io.o iolayer.o log.o
 	   gaussian.o conv.o pnm.o raw.o feat.o font.o
 	   filters.o dynaload.o stackmach.o datatypes.o
-	   regmach.o trans2.o quant.o);
+	   regmach.o trans2.o quant.o error.o);
 
 %opts=(
        'NAME'         => 'Imager',
@@ -276,7 +276,7 @@ sub init {
 		   order=>'20',
 		   def=>'HAVE_LIBGIF',
 		   inccheck=>sub { $_[0] eq 'gif_lib.h' },
-		   libcheck=>sub { $_[0] eq 'libgif.a' or $_[0] eq "libgif.$lext" },
+		   libcheck=>sub { $_[0] eq "libgif$aext" or $_[0] eq "libgif.$lext" },
 		   libfiles=>'-lgif',
 		   objfiles=>'gif.o',
 		   docs=>q{
@@ -291,7 +291,7 @@ sub init {
 		     order=>'21',
 		     def=>'HAVE_LIBGIF',
 		     inccheck=>sub { $_[0] eq 'gif_lib.h' },
-		     libcheck=>sub { $_[0] eq 'libungif.a' or $_[0] eq "libungif.$lext" },
+		     libcheck=>sub { $_[0] eq "libungif$aext" or $_[0] eq "libungif.$lext" },
 		     libfiles=>'-lungif',
 		     objfiles=>'gif.o',
 		     docs=>q{
