@@ -1,0 +1,10 @@
+#!perl -w
+use Imager qw(:all);
+use Benchmark;
+
+# a basic benchmark to test how much faster it is to work line by line
+$im1 = Imager::ImgRaw::new(200,200,3);
+$im2 = Imager::ImgRaw::new(200,200,3);
+
+timethese(-5,
+	{ copy => 'Imager::i_copy($im2, $im1)' });
