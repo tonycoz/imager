@@ -941,7 +941,7 @@ i_nearest_color(i_img *im, int num, int *xo, int *yo, i_color *oval, int dmeasur
 
     for(ch = 0; ch<im->channels; ch++) 
       tval[midx*im->channels + ch] = c1*tval[midx*im->channels + ch] + c2 * (float) val.channel[ch];
-    
+  
     
   }
 
