@@ -1,7 +1,7 @@
 #!perl -w
 use strict;
 $|=1;
-print "1..45\n";
+print "1..60\n";
 use Imager qw(:all);
 
 sub ok ($$$);
@@ -467,6 +467,61 @@ EOS
         "save from object");
       ok(45, !grep(/Obsolete .* interlace .* gif_interlace/, @warns),
         "check for warning");
+    }
+
+    # test that we get greyscale from 1 channel images
+    # we check for each makemap, and for each translate
+    print "# test writes of grayscale images - ticket #365\n"; 
+    my $num = 46;
+    my $ooim = Imager->new(xsize=>50, ysize=>50, channels=>1);
+    for (my $y = 0; $y < 50; $y += 10) {
+      $ooim->box(box=>[ 0, $y, 49, $y+9], color=>NC($y*5,0,0), filled=>1);
+    }
+    my $ooim3 = $ooim->convert(preset=>'rgb');
+    #$ooim3->write(file=>'testout/t105gray.ppm');
+    my %maxerror = ( mediancut => 51000, 
+                     addi => 0,
+                     closest => 0,
+                     perturb => 0,
+                     errdiff => 0 );
+    for my $makemap (qw(mediancut addi)) {
+      print "# make_colors => $makemap\n";
+      ok($num++, $ooim->write(file=>"testout/t105gray-$makemap.gif",
+                              make_colors=>$makemap,
+                              gifquant=>'gen'),
+         "writing gif with makemap $makemap");
+      my $im2 = Imager->new;
+      if (ok($num++, $im2->read(file=>"testout/t105gray-$makemap.gif"),
+             "reading written grayscale gif")) {
+        my $diff = i_img_diff($ooim3->{IMG}, $im2->{IMG});
+        ok($num++, $diff <= $maxerror{$makemap}, "comparing images $diff");
+        #$im2->write(file=>"testout/t105gray-$makemap.ppm");
+      }
+      else {
+        print "ok $num # skip\n";
+        ++$num;
+      }
+    }
+    for my $translate (qw(closest perturb errdiff)) {
+      print "# translate => $translate\n";
+      my @colors = map NC($_*50, $_*50, $_*50), 0..4;
+      ok($num++, $ooim->write(file=>"testout/t105gray-$translate.gif",
+                              translate=>$translate,
+                              make_colors=>'none',
+                              colors=>\@colors,
+                              gifquant=>'gen'),
+         "writing gif with translate $translate");
+      my $im2 = Imager->new;
+      if (ok($num++, $im2->read(file=>"testout/t105gray-$translate.gif"),
+             "reading written grayscale gif")) {
+        my $diff = i_img_diff($ooim3->{IMG}, $im2->{IMG});
+        ok($num++, $diff <= $maxerror{$translate}, "comparing images $diff");
+        #$im2->write(file=>"testout/t105gray-$translate.ppm");
+      }
+      else {
+        print "ok $num # skip\n";
+        ++$num;
+      }
     }
 }
 

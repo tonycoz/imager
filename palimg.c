@@ -26,7 +26,7 @@ static int i_ppix_p(i_img *im, int x, int y, i_color *val);
 static int i_gpix_p(i_img *im, int x, int y, i_color *val);
 static int i_glin_p(i_img *im, int l, int r, int y, i_color *vals);
 static int i_plin_p(i_img *im, int l, int r, int y, i_color *vals);
-static int i_gsamp_p(i_img *im, int l, int r, int y, i_sample_t *samps, int *chans, int chan_count);
+static int i_gsamp_p(i_img *im, int l, int r, int y, i_sample_t *samps, int const *chans, int chan_count);
 static int i_gpal_p(i_img *pm, int l, int r, int y, i_palidx *vals);
 static int i_ppal_p(i_img *pm, int l, int r, int y, i_palidx *vals);
 static int i_addcolors_p(i_img *im, i_color *color, int count);
@@ -353,7 +353,7 @@ static int i_plin_p(i_img *im, int l, int r, int y, i_color *vals) {
 =cut
 */
 static int i_gsamp_p(i_img *im, int l, int r, int y, i_sample_t *samps, 
-              int *chans, int chan_count) {
+              int const *chans, int chan_count) {
   int ch;
   if (y >= 0 && y < im->ysize && l < im->xsize && l >= 0) {
     int palsize = PALEXT(im)->count;

@@ -48,10 +48,10 @@ static int i_ppixf_d(i_img *im, int x, int y, i_fcolor *val);
 static int i_gpixf_d(i_img *im, int x, int y, i_fcolor *val);
 static int i_glinf_d(i_img *im, int l, int r, int y, i_fcolor *vals);
 static int i_plinf_d(i_img *im, int l, int r, int y, i_fcolor *vals);
-static int i_gsamp_d(i_img *im, int l, int r, int y, i_sample_t *samps, int *chans, int chan_count);
-static int i_gsampf_d(i_img *im, int l, int r, int y, i_fsample_t *samps, int *chans, int chan_count);
-static int i_psamp_d(i_img *im, int l, int r, int y, i_sample_t *samps, int *chans, int chan_count);
-static int i_psampf_d(i_img *im, int l, int r, int y, i_fsample_t *samps, int *chans, int chan_count);
+static int i_gsamp_d(i_img *im, int l, int r, int y, i_sample_t *samps, const int *chans, int chan_count);
+static int i_gsampf_d(i_img *im, int l, int r, int y, i_fsample_t *samps, const int *chans, int chan_count);
+/*static int i_psamp_d(i_img *im, int l, int r, int y, i_sample_t *samps, int *chans, int chan_count);
+  static int i_psampf_d(i_img *im, int l, int r, int y, i_fsample_t *samps, int *chans, int chan_count);*/
 
 /* 
 =item ICL_new_internal(r, g, b, a)
@@ -1508,7 +1508,7 @@ Returns the number of samples read (which should be (r-l) * bits_set(chan_mask)
 static
 int
 i_gsamp_d(i_img *im, int l, int r, int y, i_sample_t *samps, 
-              int *chans, int chan_count) {
+              const int *chans, int chan_count) {
   int ch, count, i, w;
   unsigned char *data;
 
@@ -1566,7 +1566,7 @@ Returns the number of samples read (which should be (r-l) * bits_set(chan_mask)
 static
 int
 i_gsampf_d(i_img *im, int l, int r, int y, i_fsample_t *samps, 
-               int *chans, int chan_count) {
+           const int *chans, int chan_count) {
   int ch, count, i, w;
   unsigned char *data;
   for (ch = 0; ch < chan_count; ++ch) {
@@ -1728,7 +1728,7 @@ int i_glinf_fp(i_img *im, int l, int r, int y, i_fcolor *pix) {
 =cut
 */
 int i_gsampf_fp(i_img *im, int l, int r, int y, i_fsample_t *samp, 
-                int *chans, int chan_count) {
+                int const *chans, int chan_count) {
   i_sample_t *work;
 
   if (y >= 0 && y < im->ysize && l < im->xsize && l >= 0) {
