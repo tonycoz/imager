@@ -10,6 +10,7 @@ PRE-0.44:
   - png - done
   - gif - done
   - pnm - done
+  - raw
 - check each file reader for possible integer overflows
   - bmp - done
   - tiff
@@ -19,7 +20,7 @@ PRE-0.44:
   - gif
   - pnm
 - check bmp code uses image data offset correctly - done
-- check quant code for integer overflows
+- check quant code for integer overflows - done
 - check for old URLs (umich and imager.perl.org/~addi/...)
 
 Iolayer:
