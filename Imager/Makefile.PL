@@ -239,7 +239,7 @@ sub init {
 		    order=>'21',
 		    def=>'HAVE_LIBJPEG',
 		    inccheck=>sub { $_[0] eq 'jpeglib.h' },
-		    libcheck=>sub { $_[0] eq 'libjpeg.a' or $_ eq "libjpeg.$lext" },
+		    libcheck=>sub { $_[0] eq "libjpeg$aext" or $_ eq "libjpeg.$lext" },
 		    libfiles=>'-ljpeg',
 		    objfiles=>'jpeg.o',
 		    docs=>q{
