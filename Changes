@@ -628,8 +628,9 @@ Revision history for Perl extension Imager.
         - difference() method
         - hide (with static) or rename many symbols that could possibly
           cause conflicts with other libraries or perl
-				- Fix runaway cache problem for freetype1 font cache.
-				- Added version logging when log is started.
+        - Fix runaway cache problem for freetype1 font cache.
+        - Added version logging when log is started.
+
 =================================================================
 
         For latest versions check the Imager-devel pages:
