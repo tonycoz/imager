@@ -1,0 +1,81 @@
+                         *** TODO ***
+                        
+
+
+Iolayer:
+- Add scalar/mmap to iolayer
+- Add close() code to iolayer
+- Merge callback interface into iolayer
+- Add interface for writing to all formats but tiff
+- Add interface for reading for png (started), 
+  gif (merge with cb patch), ppm and raw
+- Add new tests once all formats support io_layer
+- Implment the maxread threshold (Indicates how far 
+  a library can read before it indicates that it's done).
+
+
+Enhanched internal structure:
+
+MultiImage & metadata support:
+- Figure what interface should be between C and perl?
+- How to store data in the C interface for tags/metadata?
+  Support tiff's madness, i.e. tags and options.
+- Error handling, make a general i_errstr object and arrange
+  such that each image has an i_errstr object to hold its
+  local errors?
+- SEE design/represent.txt for proposed new structure and
+  interface design that takes these factors into account.
+
+New Features:
+- Transforms, interpolated multidimensional lookup tables.
+  Usefull for CMYK <-> RGB table lookup.
+
+- Finish antialiased filled polygon function.
+
+
+Clean up:
+- Make sure everything is doable with the OO interface
+  i_flood_fill() f. example.
+- Split the other classes into seperate files
+  Imager::Font::TT, Imager::Font::T1, currently 
+  an if statement is used to choose what code to
+  run.
+- Compile with memory debugging enabled and fix all leaks
+
+- dynaload.c is strongly tied to perl
+
+- Add mycalloc() and myrealloc() to the malloc() wrappers.
+
+- should we overload <=> or cmp for Imager::Color objects?
+  too many worms, leave it out
+
+- should the interlace option for reading raw images have 
+  symbolic names in the OO interface?
+
+
+
+Format specific issues:
+- should i_readgif returned colormap be an arrayref of 
+  Imager::Color objects?  Note that this will break 
+  compatibility with previous releases.
+
+- if gif_delays is a number instead of an arrayref, use that 
+  number for each frame
+
+- provide patches for libgif and libungif that fix their bugs
+  and give a useful extension interface.  Probe for the 
+  installation of the patches in Makefile.PL to let gif.c
+  know what features it can use.
+
+- Add options for pnm, writer to save in any of the p1..P6
+  formats.  Even if the input has 1 channel, write 3 and such
+  cases.  Also allow ascii mode.  Need to be able to write 
+  pbm images which needs ties to the quantization code.
+
+
+Documentation:
+- Add to the documentation
+- Write a tutorial?
+- Write a guide to installing the helper libraries
+- Go through the entire project and add comments in pod
+  so doco.perl can be used to read them.
