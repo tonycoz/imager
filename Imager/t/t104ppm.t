@@ -1,9 +1,9 @@
 #!perl -w
 use Imager ':all';
-require "t/testtools.pl";
+BEGIN { require "t/testtools.pl"; }
 use strict;
 
-print "1..43\n";
+print "1..45\n";
 
 init_log("testout/t104ppm.log",1);
 
@@ -169,6 +169,16 @@ check_gray(13, Imager::i_get_pixel($ooim->{IMG}, 1, 1), 255);
   check_color(41, $white, 255, 255, 255, "white 4095 pixel");
   check_color(42, $grey,  128, 128, 128, "grey  4095 pixel");
   check_color(43, $green, 127, 127, 0,   "green 4095 pixel");
+}
+
+my $num = 44;
+{ # check i_format is set when reading a pnm file
+  # doesn't really matter which file.
+  my $maxval = Imager->new;
+  okn($num++, $maxval->read(file=>"testimg/maxval.ppm"),
+      "read test file");
+  my ($type) = $maxval->tags(name=>'i_format');
+  isn($num++, $type, 'pnm', "check i_format");
 }
 
 sub openimage {

@@ -363,6 +363,8 @@ i_readpnm_wiol(io_glue *ig, int length) {
   
   im = i_img_empty_ch(NULL, width, height, channels);
 
+  i_tags_add(&im->tags, "i_format", 0, "pnm", -1, 0);
+
   switch (type) {
   case 1: /* Ascii types */
   case 2:
