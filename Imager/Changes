@@ -946,6 +946,7 @@ Revision history for Perl extension Imager.
   I was going to include a META.yml but EU::MM's generation is too 
   simplistic (and misses the leading document header too).  For now
   I'll leave it out.
+- built 0.43_03 for testing
 
 =================================================================
 
