@@ -2129,6 +2129,53 @@ int i_free_gen_write_data(i_gen_write_data *info, int flush)
   return result;
 }
 
+
+
+
+
+char *
+i_test_format_probe(io_glue *data, int length) {
+
+  static struct {
+    char *magic;
+    char *name;
+  } formats[] = {
+    {"\xFF\xD8", "jpeg"},
+    {"GIF87a", "gif"},
+    {"GIF89a", "gif"},
+    {"P1", "pnm"},
+    {"P2", "pnm"},
+    {"P3", "pnm"},
+    {"P4", "pnm"},
+    {"P5", "pnm"},
+    {"P6", "pnm"},
+    {"MM\0*", "tiff"},
+    {"II*\0", "tiff"},
+    {"BM", "bmp"},
+    {"\x89PNG\x0d\x0a\x1a\x0a", "png"}
+  };
+  unsigned int i;
+  char head[8];
+  char *match = NULL;
+
+  io_glue_commit_types(data);
+  data->readcb(data, head, 8);
+
+  for(i=0; i<sizeof(formats)/sizeof(formats[0]); i++) { 
+    int c = !strncmp(formats[i].magic, head, strlen(formats[i].magic));
+    if (c) {
+      match = formats[i].name;
+      break;
+    }
+  }
+
+  data->seekcb(data, -8, SEEK_CUR);
+  return match;
+}
+
+
+
+
 /*
 =back
 
