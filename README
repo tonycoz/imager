@@ -84,10 +84,10 @@ included since libgif has been linked with it).
 
 Also note that libgif has a few bugs: You can run something like
 
-$ perl -Iblib/lib -Iblib/arch t/t10formats.t
+$ perl -Iblib/lib -Iblib/arch t/t105gif.t
 
 This way you can see what comments the test script prints out.
-t/t10formats.t checks for an bug in libgiff and prints out a patch
+t/t105gif.t checks for an bug in libgif and prints out a patch
 if that bug is present, note that this bug only affects the more
 "advanced" features of libgif.
 

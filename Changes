@@ -414,6 +414,8 @@ Revision history for Perl extension Imager.
 	- added tests for the OO interface for tiff, added an option to
 	  choose the resolution for fax tiffs, removed some unused code,
 	  fixed minor problems with Imager::write() handling of image types
+        - changed README note on libgif bug to refer to t105gif.t instead
+	  of t10formats.t
 
 ~~~~~~~~~~~~~^ ^ ^~~~~~~~~~~~~~
 
