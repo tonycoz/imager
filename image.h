@@ -39,6 +39,9 @@ void     ICL_info        (i_color *cl);
 void     ICL_DESTROY     (i_color *cl);
 void     ICL_add         (i_color *dst, i_color *src, int ch);
 
+extern i_fcolor *i_fcolor_new(double r, double g, double b, double a);
+extern void i_fcolor_destroy(i_fcolor *cl);
+
 i_img *IIM_new(int x,int y,int ch);
 void   IIM_DESTROY(i_img *im);
 i_img *i_img_new( void );
@@ -48,6 +51,10 @@ void   i_img_exorcise(i_img *im);
 void   i_img_destroy(i_img *im);
 
 void   i_img_info(i_img *im,int *info);
+
+extern i_img *i_sametype(i_img *im, int xsize, int ysize);
+
+i_img *i_img_pal_new(int x, int y, int ch, int maxpal);
 
 /* Image feature settings */
 
@@ -59,14 +66,56 @@ int    i_img_getchannels(i_img *im);
 
 int i_ppix(i_img *im,int x,int y,i_color *val);
 int i_gpix(i_img *im,int x,int y,i_color *val);
+int i_ppixf(i_img *im,int x,int y,i_color *val);
+int i_gpixf(i_img *im,int x,int y,i_color *val);
 
+#define i_ppix(im, x, y, val) (((im)->i_f_ppix)((im), (x), (y), (val)))
+#define i_gpix(im, x, y, val) (((im)->i_f_gpix)((im), (x), (y), (val)))
+#define i_ppixf(im, x, y, val) (((im)->i_f_ppixf)((im), (x), (y), (val)))
+#define i_gpixf(im, x, y, val) (((im)->i_f_gpixf)((im), (x), (y), (val)))
+
+#if 0
 int i_ppix_d(i_img *im,int x,int y,i_color *val);
 int i_gpix_d(i_img *im,int x,int y,i_color *val);
 int i_plin_d(i_img *im,int l, int r, int y, i_color *val);
 int i_glin_d(i_img *im,int l, int r, int y, i_color *val);
+#endif
 
 #define i_plin(im, l, r, y, val) (((im)->i_f_plin)(im, l, r, y, val))
 #define i_glin(im, l, r, y, val) (((im)->i_f_glin)(im, l, r, y, val))
+#define i_plinf(im, l, r, y, val) (((im)->i_f_plinf)(im, l, r, y, val))
+#define i_glinf(im, l, r, y, val) (((im)->i_f_glinf)(im, l, r, y, val))
+
+#define i_gsamp(im, l, r, y, samps, chans, count) \
+  (((im)->i_f_gsamp)((im), (l), (r), (y), (samps), (chans), (count)))
+#define i_gsampf(im, l, r, y, samps, chans, count) \
+  (((im)->i_f_gsampf)((im), (l), (r), (y), (samps), (chans), (count)))
+
+#define i_findcolor(im, color, entry) \
+  (((im)->i_f_findcolor) ? ((im)->i_f_findcolor)((im), (color), (entry)) : 0)
+
+#define i_gpal(im, l, r, y, vals) \
+  (((im)->i_f_gpal) ? ((im)->i_f_gpal)((im), (l), (r), (y), (vals)) : 0)
+#define i_ppal(im, l, r, y, vals) \
+  (((im)->i_f_ppal) ? ((im)->i_f_ppal)((im), (l), (r), (y), (vals)) : 0)
+#define i_addcolors(im, colors, count) \
+  (((im)->i_f_addcolors) ? ((im)->i_f_addcolors)((im), (colors), (count)) : 0)
+#define i_getcolors(im, index, color, count) \
+  (((im)->i_f_getcolors) ? \
+   ((im)->i_f_getcolors)((im), (index), (color), (count)) : 0)
+#define i_setcolors(im, index, color, count) \
+  (((im)->i_f_setcolors) ? \
+   ((im)->i_f_setcolors)((im), (index), (color), (count)) : 0)
+#define i_colorcount(im) \
+  (((im)->i_f_colorcount) ? ((im)->i_f_colorcount)(im) : -1)
+#define i_maxcolors(im) \
+  (((im)->i_f_maxcolors) ? ((im)->i_f_maxcolors)(im) : -1)
+#define i_findcolor(im, color, entry) \
+  (((im)->i_f_findcolor) ? ((im)->i_f_findcolor)((im), (color), (entry)) : 0)
+
+#define i_img_virtual(im) ((im)->virtual)
+#define i_img_type(im) ((im)->type)
+#define i_img_bits(im) ((im)->bits)
 
 float i_gpix_pch(i_img *im,int x,int y,int ch);
 
@@ -81,11 +130,12 @@ void i_circle_aa   (i_img *im,float x, float y,float rad,i_color *val);
 void i_copyto      (i_img *im,i_img *src,int x1,int y1,int x2,int y2,int tx,int ty);
 void i_copyto_trans(i_img *im,i_img *src,int x1,int y1,int x2,int y2,int tx,int ty,i_color *trans);
 void i_copy        (i_img *im,i_img *src);
-void i_rubthru     (i_img *im,i_img *src,int tx,int ty);
+int i_rubthru     (i_img *im,i_img *src,int tx,int ty);
 
 undef_int i_flipxy (i_img *im, int direction);
-
-
+extern i_img *i_rotate90(i_img *im, int degrees);
+extern i_img *i_rotate_exact(i_img *im, double amount);
+extern i_img *i_matrix_transform(i_img *im, int xsize, int ysize, double *matrix);
 
 void i_bezier_multi(i_img *im,int l,double *x,double *y,i_color *val);
 void i_poly_aa     (i_img *im,int l,double *x,double *y,i_color *val);
@@ -99,6 +149,7 @@ void i_conv        (i_img *im,float *coeff,int len);
 
 /* colour manipulation */
 extern int i_convert(i_img *im, i_img *src, float *coeff, int outchan, int inchan);
+extern void i_map(i_img *im, unsigned char (*maps)[256], unsigned int mask);
 
 float i_img_diff   (i_img *im1,i_img *im2);
 
@@ -158,11 +209,38 @@ undef_int i_tt_bbox( TT_Fonthandle *handle, float points,char *txt,int len,int c
 
 #endif  /* End of freetype headers */
 
+#ifdef HAVE_FT2
 
+typedef struct FT2_Fonthandle FT2_Fonthandle;
+extern int i_ft2_init(void);
+extern FT2_Fonthandle * i_ft2_new(char *name, int index);
+extern void i_ft2_destroy(FT2_Fonthandle *handle);
+extern int i_ft2_setdpi(FT2_Fonthandle *handle, int xdpi, int ydpi);
+extern int i_ft2_getdpi(FT2_Fonthandle *handle, int *xdpi, int *ydpi);
+extern int i_ft2_settransform(FT2_Fonthandle *handle, double *matrix);
+extern int i_ft2_sethinting(FT2_Fonthandle *handle, int hinting);
+extern int i_ft2_bbox(FT2_Fonthandle *handle, double cheight, double cwidth, 
+                      char *text, int len, int *bbox);
+extern int i_ft2_text(FT2_Fonthandle *handle, i_img *im, int tx, int ty, 
+                      i_color *cl, double cheight, double cwidth, 
+                      char *text, int len, int align, int aa, int vlayout,
+                      int utf8);
+extern int i_ft2_cp(FT2_Fonthandle *handle, i_img *im, int tx, int ty, 
+                    int channel, double cheight, double cwidth, 
+                    char *text, int len, int align, int aa, int vlayout, 
+                    int utf8);
 
+#endif
 
+#ifdef WIN32
 
+extern int i_wf_bbox(char *face, int size, char *text, int length, int *bbox);
+extern int i_wf_text(char *face, i_img *im, int tx, int ty, i_color *cl, 
+		     int size, char *text, int len, int align, int aa);
+extern int i_wf_cp(char *face, i_img *im, int tx, int ty, int channel, 
+		   int size, char *text, int len, int align, int aa);
 
+#endif
 
 /* functions for reading and writing formats */
 
@@ -351,6 +429,15 @@ extern void quant_makemap(i_quantize *quant, i_img **imgs, int count);
 extern i_palidx *quant_translate(i_quantize *quant, i_img *img);
 extern void quant_transparent(i_quantize *quant, i_palidx *indices, i_img *img, i_palidx trans_index);
 
+extern i_img *i_img_pal_new(int x, int y, int channels, int maxpal);
+extern i_img *i_img_pal_new_low(i_img *im, int x, int y, int channels, int maxpal);
+extern i_img *i_img_to_pal(i_img *src, i_quantize *quant);
+extern i_img *i_img_to_rgb(i_img *src);
+extern i_img *i_img_masked_new(i_img *targ, i_img *mask, int x, int y, 
+                               int w, int h);
+extern i_img *i_img_16_new(int x, int y, int ch);
+extern i_img *i_img_16_new_low(i_img *im, int x, int y, int ch);
+
 #ifdef HAVE_LIBJPEG
 i_img *   
 i_readjpeg_wiol(io_glue *ig, int length, char** iptc_itext, int *itlength);
@@ -370,9 +457,12 @@ undef_int i_writepng_wiol(i_img *im, io_glue *ig);
 #endif /* HAVE_LIBPNG */
 
 #ifdef HAVE_LIBGIF
-i_img   * i_readgif(int fd, int **colour_table, int *colours);
-i_img   * i_readgif_scalar(char *data, int length, int **colour_table, int *colours);
-i_img   * i_readgif_callback(i_read_callback_t callback, char *userdata, int **colour_table, int *colours);
+i_img *i_readgif(int fd, int **colour_table, int *colours);
+i_img *i_readgif_scalar(char *data, int length, int **colour_table, int *colours);
+i_img *i_readgif_callback(i_read_callback_t callback, char *userdata, int **colour_table, int *colours);
+extern i_img **i_readgif_multi(int fd, int *count);
+extern i_img **i_readgif_multi_scalar(char *data, int length, int *count);
+extern i_img **i_readgif_multi_callback(i_read_callback_t callback, char *userdata, int *count);
 undef_int i_writegif(i_img *im,int fd,int colors,int pixdev,int fixedlen,i_color fixed[]);
 undef_int i_writegifmc(i_img *im,int fd,int colors);
 undef_int i_writegifex(i_img *im,int fd);
@@ -447,7 +537,7 @@ typedef struct {
   void(*i_arc)(i_img *im,int x,int y,float rad,float d1,float d2,i_color *val);
   void(*i_copyto)(i_img *im,i_img *src,int x1,int y1,int x2,int y2,int tx,int ty);
   void(*i_copyto_trans)(i_img *im,i_img *src,int x1,int y1,int x2,int y2,int tx,int ty,i_color *trans);
-  void(*i_rubthru)(i_img *im,i_img *src,int tx,int ty);
+  int(*i_rubthru)(i_img *im,i_img *src,int tx,int ty);
 
 } symbol_table_t;
 
@@ -466,13 +556,24 @@ extern i_error_cb i_set_error_cb(i_error_cb);
 extern i_failed_cb i_set_failed_cb(i_failed_cb);
 extern void i_set_argv0(char const *);
 extern int i_set_errors_fatal(int new_fatal);
-extern i_errmsg *i_errors();
+extern i_errmsg *i_errors(void);
 
 extern void i_push_error(int code, char const *msg);
 extern void i_push_errorf(int code, char const *fmt, ...);
 extern void i_push_errorvf(int code, char const *fmt, va_list);
-extern void i_clear_error();
+extern void i_clear_error(void);
 extern int i_failed(int code, char const *msg);
 
+/* image tag processing */
+extern void i_tags_new(i_img_tags *tags);
+extern int i_tags_addn(i_img_tags *tags, char *name, int code, int idata);
+extern int i_tags_add(i_img_tags *tags, char *name, int code, char *data, 
+                      int size, int idata);
+extern void i_tags_destroy(i_img_tags *tags);
+extern int i_tags_find(i_img_tags *tags, char *name, int start, int *entry);
+extern int i_tags_findn(i_img_tags *tags, int code, int start, int *entry);
+extern int i_tags_delete(i_img_tags *tags, int entry);
+extern int i_tags_delbyname(i_img_tags *tags, char *name);
+extern int i_tags_delbycode(i_img_tags *tags, int code);
 
 #endif

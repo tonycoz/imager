@@ -77,6 +77,11 @@ i_init_fonts() {
   init_tt();
 #endif
 
+#ifdef HAVE_FT2
+  if (!i_ft2_init())
+    return 0;
+#endif
+
   return(1); /* FIXME: Always true - check the return values of the init_t1 and init_tt functions */
 }
 
@@ -119,7 +124,7 @@ Shuts the t1lib font rendering engine down.
 */
 
 void
-i_close_t1() {
+i_close_t1(void) {
   T1_CloseLib();
 }
 
@@ -235,6 +240,8 @@ i_t1_cp(i_img *im,int xb,int yb,int channel,int fontnum,float points,char* str,i
   if (im == NULL) { mm_log((1,"i_t1_cp: Null image in input\n")); return(0); }
 
   glyph=T1_AASetString( fontnum, str, len, 0, T1_KERNING, points, NULL);
+  if (glyph == NULL)
+    return 0;
 
   mm_log((1,"metrics: ascent: %d descent: %d\n",glyph->metrics.ascent,glyph->metrics.descent));
   mm_log((1," leftSideBearing: %d rightSideBearing: %d\n",glyph->metrics.leftSideBearing,glyph->metrics.rightSideBearing));
@@ -334,6 +341,8 @@ i_t1_text(i_img *im,int xb,int yb,i_color *cl,int fontnum,float points,char* str
   if (im == NULL) { mm_log((1,"i_t1_cp: Null image in input\n")); return(0); }
 
   glyph=T1_AASetString( fontnum, str, len, 0, T1_KERNING, points, NULL);
+  if (glyph == NULL)
+    return 0;
 
   mm_log((1,"metrics:  ascent: %d descent: %d\n",glyph->metrics.ascent,glyph->metrics.descent));
   mm_log((1," leftSideBearing: %d rightSideBearing: %d\n",glyph->metrics.leftSideBearing,glyph->metrics.rightSideBearing));
@@ -1115,17 +1124,30 @@ i_tt_bbox_inst( TT_Fonthandle *handle, int inst ,const char *txt, int len, int c
   for ( i = 0; i < len; ++i ) {
     j = ustr[i];
     if ( i_tt_get_glyph(handle,inst,j) ) {
-      width += handle->instanceh[inst].gmetrics[j].advance   / 64;
-      casc   = handle->instanceh[inst].gmetrics[j].bbox.yMax / 64;
-      cdesc  = handle->instanceh[inst].gmetrics[j].bbox.yMin / 64;
+      TT_Glyph_Metrics *gm = handle->instanceh[inst].gmetrics + j;
+      width += gm->advance   / 64;
+      casc   = gm->bbox.yMax / 64;
+      cdesc  = gm->bbox.yMin / 64;
 
       mm_log((1, "i_tt_box_inst: glyph='%c' casc=%d cdesc=%d\n", j, casc, cdesc));
 
       if (first) {
-	start    = handle->instanceh[inst].gmetrics[j].bbox.xMin / 64;
-	ascent   = handle->instanceh[inst].gmetrics[j].bbox.yMax / 64;
-	descent  = handle->instanceh[inst].gmetrics[j].bbox.yMin / 64;
+	start    = gm->bbox.xMin / 64;
+	ascent   = gm->bbox.yMax / 64;
+	descent  = gm->bbox.yMin / 64;
 	first = 0;
+      }
+      if (i == len-1) {
+	/* the right-side bearing - in case the right-side of a 
+	   character goes past the right of the advance width,
+	   as is common for italic fonts
+	*/
+	int rightb = gm->advance - gm->bearingX 
+	  - (gm->bbox.xMax - gm->bbox.xMin);
+	/* fprintf(stderr, "font info last: %d %d %d %d\n", 
+	   gm->bbox.xMax, gm->bbox.xMin, gm->advance, rightb); */
+	if (rightb < 0)
+	  width -= rightb/64;
       }
 
       ascent  = (ascent  >  casc ?  ascent : casc );

@@ -1,14 +1,15 @@
-print "1..6\n";
+#!perl -w
+print "1..15\n";
 use Imager qw(:all);
-
+use strict;
 init_log("testout/t103raw.log",1);
 
-$green=i_color_new(0,255,0,255);
-$blue=i_color_new(0,0,255,255);
-$red=i_color_new(255,0,0,255);
+my $green=i_color_new(0,255,0,255);
+my $blue=i_color_new(0,0,255,255);
+my $red=i_color_new(255,0,0,255);
 
-$img=Imager::ImgRaw::new(150,150,3);
-$cmpimg=Imager::ImgRaw::new(150,150,3);
+my $img=Imager::ImgRaw::new(150,150,3);
+my $cmpimg=Imager::ImgRaw::new(150,150,3);
 
 i_box_filled($img,70,25,130,125,$green);
 i_box_filled($img,20,25,80,125,$blue);
@@ -22,7 +23,7 @@ i_box_filled($timg, 2, 2, 18, 18, $trans);
 
 open(FH,">testout/t103.raw") || die "Cannot open testout/t103.raw for writing\n";
 binmode(FH);
-$IO = Imager::io_new_fd( fileno(FH) );
+my $IO = Imager::io_new_fd( fileno(FH) );
 i_writeraw_wiol($img, $IO) || die "Cannot write testout/t103.raw\n";
 close(FH);
 
@@ -65,6 +66,77 @@ read_test('testout/t103_line_int.raw', 4, 4, 3, 3, 1, $baseimg, 5);
 # intrl==2 is documented in raw.c but doesn't seem to be implemented
 #read_test('testout/t103_img_int.raw', 4, 4, 3, 3, 2, $baseimg, 7);
 
+# paletted images
+my $palim = Imager::i_img_pal_new(20, 20, 3, 256)
+  or print "not ";
+print "ok 7\n";
+my $redindex = Imager::i_addcolors($palim, $red);
+my $blueindex = Imager::i_addcolors($palim, $blue);
+for my $y (0..9) {
+  Imager::i_ppal($palim, 0, $y, ($redindex) x 20);
+}
+for my $y (10..19) {
+  Imager::i_ppal($palim, 0, $y, ($blueindex) x 20);
+}
+open FH, "> testout/t103_pal.raw"
+  or die "Cannot create testout/t103_pal.raw: $!";
+binmode FH;
+$IO = Imager::io_new_fd(fileno(FH));
+i_writeraw_wiol($palim, $IO) or print "not ";
+print "ok 8\n";
+close FH;
+
+open FH, "testout/t103_pal.raw"
+  or die "Cannot open testout/t103_pal.raw: $!";
+binmode FH;
+my $data = do { local $/; <FH> };
+$data eq "\x0" x 200 . "\x1" x 200
+  or print "not ";
+print "ok 9\n";
+
+# 16-bit image
+# we don't have 16-bit reads yet
+my $img16 = Imager::i_img_16_new(150, 150, 3)
+  or print "not ";
+print "ok 10\n";
+i_box_filled($img16,70,25,130,125,$green);
+i_box_filled($img16,20,25,80,125,$blue);
+i_arc($img16,75,75,30,0,361,$red);
+i_conv($img16,[0.1, 0.2, 0.4, 0.2, 0.1]);
+
+open FH, "> testout/t103_16.raw" 
+  or die "Cannot create testout/t103_16.raw: $!";
+binmode FH;
+$IO = Imager::io_new_fd(fileno(FH));
+i_writeraw_wiol($img16, $IO) or print "not ";
+print "ok 11\n";
+close FH;
+
+# try a simple virtual image
+my $maskimg = Imager::i_img_masked_new($img, undef, 0, 0, 150, 150)
+  or print "not ";
+print "ok 12\n";
+
+open FH, "> testout/t103_virt.raw" 
+  or die "Cannot create testout/t103_virt.raw: $!";
+binmode FH;
+$IO = Imager::io_new_fd(fileno(FH));
+i_writeraw_wiol($maskimg, $IO) or print "not ";
+print "ok 13\n";
+close FH;
+
+open FH, "testout/t103_virt.raw"
+  or die "Cannot open testout/t103_virt.raw: $!";
+binmode FH;
+$IO = Imager::io_new_fd(fileno(FH));
+my $cmpimgmask = i_readraw_wiol($IO, 150, 150, 3, 3, 0)
+  or print "not ";
+print "ok 14\n";
+my $diff = i_img_diff($maskimg, $cmpimgmask);
+print "# difference for virtual image $diff\n";
+$diff and print "not ";
+print "ok 15\n";
+
 sub read_test {
   my ($in, $xsize, $ysize, $data, $store, $intrl, $base, $test) = @_;
   open FH, $in or die "Cannot open $in: $!";
@@ -106,7 +178,7 @@ sub load_data {
   }
   $hex =~ tr/ //d;
   my $result = pack("H*", $hex);
-  print unpack("H*", $result),"\n";
+  #print unpack("H*", $result),"\n";
   return $result;
 }
 

@@ -47,8 +47,11 @@ if (!(i_has_format("t1")) ) {
 
   $bgcolor=Imager::Color->new(255,0,0,0);
   $overlay=Imager::ImgRaw::new(200,70,3);
+  
+  i_t1_cp($overlay,5,50,1,$fnum,50.0,'XMCLH',5,1)
+    or print "not ";
+  print "ok 2\n";
 
-  i_t1_cp($overlay,5,50,1,$fnum,50.0,'XMCLH',5,1);
   i_draw($overlay,0,50,100,50,$bgcolor);
 
   @bbox=i_t1_bbox(0,50.0,'XMCLH',5);
@@ -60,21 +63,20 @@ if (!(i_has_format("t1")) ) {
   i_writeppm_wiol($overlay,$IO);
   close(FH);
 
-  print "ok 2\n";
-
   $bgcolor=Imager::Color::set($bgcolor,200,200,200,0);
   $backgr=Imager::ImgRaw::new(280,150,3);
 
   i_t1_set_aa(2);
-  i_t1_text($backgr,10,100,$bgcolor,$fnum,150.0,'test',4,1);
-
+  i_t1_text($backgr,10,100,$bgcolor,$fnum,150.0,'test',4,1)
+    or print "not ";
+  
+  print "ok 3\n";
+  
   open(FH,">testout/t30t1font2.ppm") || die "cannot open testout/t35t1font.ppm\n";
   binmode(FH);
   $IO = Imager::io_new_fd( fileno(FH) );
   i_writeppm_wiol($backgr, $IO);
   close(FH);
-
-  print "ok 3\n";
 
   $rc=i_t1_destroy($fnum);
   if ($fnum <0) { die "i_t1_destroy failed: rc=$rc\n"; }

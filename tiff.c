@@ -2,8 +2,6 @@
 #include "tiffio.h"
 #include "iolayer.h"
 
-
-
 /*
 =head1 NAME
 
@@ -31,10 +29,6 @@ Some of these functions are internal.
 
 =cut
 */
-
-
-
-
 
 /*
 =item comp_seek(h, o, w)
@@ -75,6 +69,9 @@ i_readtiff_wiol(io_glue *ig, int length) {
   uint32* raster;
   int tiled, error;
   TIFF* tif;
+  float xres, yres;
+  uint16 resunit;
+  int gotXres, gotYres;
 
   error = 0;
 
@@ -110,6 +107,27 @@ i_readtiff_wiol(io_glue *ig, int length) {
   mm_log((1, "i_readtiff_wiol: %sbyte swapped\n", TIFFIsByteSwapped(tif)?"":"not "));
   
   im = i_img_empty_ch(NULL, width, height, channels);
+
+  if (!TIFFGetField(tif, TIFFTAG_RESOLUTIONUNIT, &resunit))
+    resunit = RESUNIT_INCH;
+  gotXres = TIFFGetField(tif, TIFFTAG_XRESOLUTION, &xres);
+  gotYres = TIFFGetField(tif, TIFFTAG_YRESOLUTION, &yres);
+  if (gotXres || gotYres) {
+    if (!gotXres)
+      xres = yres;
+    else if (!gotYres)
+      yres = xres;
+    if (resunit == RESUNIT_CENTIMETER) {
+      /* from dots per cm to dpi */
+      xres *= 2.54;
+      yres *= 2.54;
+    }
+    i_tags_addn(&im->tags, "tiff_resolutionunit", 0, resunit);
+    if (resunit == RESUNIT_NONE)
+      i_tags_addn(&im->tags, "i_aspect_only", 0, 1);
+    i_tags_set_float(&im->tags, "i_xres", 0, xres);
+    i_tags_set_float(&im->tags, "i_yres", 0, yres);
+  }
   
   /*   TIFFPrintDirectory(tif, stdout, 0); good for debugging */
   
@@ -217,13 +235,14 @@ i_writetiff_wiol(i_img *im, io_glue *ig) {
   i_color val;
   uint16 photometric;
   uint32 rowsperstrip = (uint32) -1;  /* Let library pick default */
-  double resolution = -1;
   unsigned char *linebuf = NULL;
   uint32 y;
   tsize_t linebytes;
   int ch, ci, rc;
   uint32 x;
   TIFF* tif;
+  int got_xres, got_yres, got_aspectonly, aspect_only, resunit;
+  double xres, yres;
 
   char *cc = mymalloc( 123 );
   myfree(cc);
@@ -320,11 +339,46 @@ i_writetiff_wiol(i_img *im, io_glue *ig) {
   mm_log((1, "i_writetiff_wiol: TIFFGetField scanlinesize=%d\n", TIFFScanlineSize(tif) ));
   mm_log((1, "i_writetiff_wiol: TIFFGetField planarconfig=%d == %d\n", rc, PLANARCONFIG_CONTIG));
 
-  if (resolution > 0) {
-    if (!TIFFSetField(tif, TIFFTAG_XRESOLUTION, resolution)) { mm_log((1, "i_writetiff_wiol: TIFFSetField Xresolution=%d\n", resolution)); return 0; }
-    if (!TIFFSetField(tif, TIFFTAG_YRESOLUTION, resolution)) { mm_log((1, "i_writetiff_wiol: TIFFSetField Yresolution=%d\n", resolution)); return 0; }
-    if (!TIFFSetField(tif, TIFFTAG_RESOLUTIONUNIT, RESUNIT_INCH)) {
-      mm_log((1, "i_writetiff_wiol: TIFFSetField ResolutionUnit=%d\n", RESUNIT_INCH)); return 0; 
+  got_xres = i_tags_get_float(&im->tags, "i_xres", 0, &xres);
+  got_yres = i_tags_get_float(&im->tags, "i_yres", 0, &yres);
+  if (!i_tags_get_int(&im->tags, "i_aspect_only", 0,&aspect_only))
+    aspect_only = 0;
+  if (!i_tags_get_int(&im->tags, "tiff_resolutionunit", 0, &resunit))
+    resunit = RESUNIT_INCH;
+  if (got_xres || got_yres) {
+    if (!got_xres)
+      xres = yres;
+    else if (!got_yres)
+      yres = xres;
+    if (aspect_only) {
+      resunit = RESUNIT_NONE;
+    }
+    else {
+      if (resunit == RESUNIT_CENTIMETER) {
+	xres /= 2.54;
+	yres /= 2.54;
+      }
+      else {
+	resunit  = RESUNIT_INCH;
+      }
+    }
+    if (!TIFFSetField(tif, TIFFTAG_XRESOLUTION, (float)xres)) {
+      TIFFClose(tif);
+      i_img_destroy(im);
+      i_push_error(0, "cannot set TIFFTAG_XRESOLUTION tag");
+      return 0;
+    }
+    if (!TIFFSetField(tif, TIFFTAG_YRESOLUTION, (float)yres)) {
+      TIFFClose(tif);
+      i_img_destroy(im);
+      i_push_error(0, "cannot set TIFFTAG_YRESOLUTION tag");
+      return 0;
+    }
+    if (!TIFFSetField(tif, TIFFTAG_RESOLUTIONUNIT, (uint16)resunit)) {
+      TIFFClose(tif);
+      i_img_destroy(im);
+      i_push_error(0, "cannot set TIFFTAG_RESOLUTIONUNIT tag");
+      return 0;
     }
   }
   
@@ -367,19 +421,22 @@ i_writetiff_wiol_faxable(i_img *im, io_glue *ig, int fine) {
   int rc;
   uint32 x;
   TIFF* tif;
-  int luma_channel;
+  int luma_mask;
   uint32 rowsperstrip;
   float vres = fine ? 196 : 98;
+  int luma_chan;
 
   width    = im->xsize;
   height   = im->ysize;
 
   switch (im->channels) {
   case 1:
-    luma_channel = 0;
+  case 2:
+    luma_chan = 0;
     break;
   case 3:
-    luma_channel = 1;
+  case 4:
+    luma_chan = 1;
     break;
   default:
     /* This means a colorspace we don't handle yet */
@@ -455,13 +512,13 @@ i_writetiff_wiol_faxable(i_img *im, io_glue *ig, int fine) {
     for(x=0; x<width; x+=8) { 
       int bits;
       int bitpos;
+      i_sample_t luma[8];
       uint8 bitval = 128;
       linebuf[linebufpos]=0;
       bits = width-x; if(bits>8) bits=8;
+      i_gsamp(im, x, x+8, y, luma, &luma_chan, 1);
       for(bitpos=0;bitpos<bits;bitpos++) {
-	int luma;
-	luma = im->data[(x+bitpos+y*im->xsize)*im->channels+luma_channel];
-	linebuf[linebufpos] |= ((luma>=128)?bitval:0);
+	linebuf[linebufpos] |= ((luma[bitpos]>=128)?bitval:0);
 	bitval >>= 1;
       }
       linebufpos++;

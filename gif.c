@@ -53,9 +53,11 @@ functionality with giflib3.
 */
 
 static char const *gif_error_msg(int code);
-static void gif_push_error();
+static void gif_push_error(void);
 
 #if IM_GIFMAJOR >= 4
+
+static int gif_read_callback(GifFileType *gft, GifByteType *buf, int length);
 
 /*
 =item gif_scalar_info
@@ -372,6 +374,447 @@ i_readgif(int fd, int **colour_table, int *colours) {
   }
 
   return i_readgif_low(GifFile, colour_table, colours);
+}
+
+/*
+
+Internal function called by i_readgif_multi_low() in error handling
+
+*/
+static void free_images(i_img **imgs, int count) {
+  int i;
+  for (i = 0; i < count; ++i)
+    i_img_destroy(imgs[i]);
+  myfree(imgs);
+}
+
+/*
+=item i_readgif_multi_low(GifFileType *gf, int *count)
+
+Reads one of more gif images from the given GIF file.
+
+Returns a pointer to an array of i_img *, and puts the count into 
+*count.
+
+Unlike the normal i_readgif*() functions the images are paletted
+images rather than a combined RGB image.
+
+This functions sets tags on the images returned:
+
+=over
+
+=item gif_left
+
+the offset of the image from the left of the "screen" ("Image Left
+Position")
+
+=item gif_top
+
+the offset of the image from the top of the "screen" ("Image Top Position")
+
+=item gif_interlace
+
+non-zero if the image was interlaced ("Interlace Flag")
+
+=item gif_screen_width
+
+=item gif_screen_height
+
+the size of the logical screen ("Logical Screen Width", 
+"Logical Screen Height")
+
+=item gif_local_map
+
+Non-zero if this image had a local color map.
+
+=item gif_background
+
+The index in the global colormap of the logical screen's background
+color.  This is only set if the current image uses the global
+colormap.
+
+=item gif_trans_index
+
+The index of the color in the colormap used for transparency.  If the
+image has a transparency then it is returned as a 4 channel image with
+the alpha set to zero in this palette entry. ("Transparent Color Index")
+
+=item gif_delay
+
+The delay until the next frame is displayed, in 1/100 of a second. 
+("Delay Time").
+
+=item gif_user_input
+
+whether or not a user input is expected before continuing (view dependent) 
+("User Input Flag").
+
+=item gif_disposal
+
+how the next frame is displayed ("Disposal Method")
+
+=item gif_loop
+
+the number of loops from the Netscape Loop extension.  This may be zero.
+
+=item gif_comment
+
+the first block of the first gif comment before each image.
+
+=back
+
+Where applicable, the ("name") is the name of that field from the GIF89 
+standard.
+
+=cut
+*/
+
+i_img **i_readgif_multi_low(GifFileType *GifFile, int *count) {
+  i_img *img;
+  int i, j, Size, Row, Col, Width, Height, ExtCode, Count, x;
+  int ImageNum = 0, BackGround = 0, ColorMapSize = 0;
+  ColorMapObject *ColorMap;
+ 
+  GifRecordType RecordType;
+  GifByteType *Extension;
+  
+  GifRowType GifRow;
+  int got_gce = 0;
+  int trans_index; /* transparent index if we see a GCE */
+  int gif_delay; /* delay from a GCE */
+  int user_input; /* user input flag from a GCE */
+  int disposal; /* disposal method from a GCE */
+  int got_ns_loop = 0;
+  int ns_loop;
+  char *comment = NULL; /* a comment */
+  i_img **results = NULL;
+  int result_alloc = 0;
+  int channels;
+  
+  *count = 0;
+
+  mm_log((1,"i_readgif_multi_low(GifFile %p, , count %p)\n", GifFile, count));
+
+  BackGround = GifFile->SBackGroundColor;
+
+  Size = GifFile->SWidth * sizeof(GifPixelType);
+  
+  if ((GifRow = (GifRowType) mymalloc(Size)) == NULL)
+    m_fatal(0,"Failed to allocate memory required, aborted."); /* First row. */
+
+  /* Scan the content of the GIF file and load the image(s) in: */
+  do {
+    if (DGifGetRecordType(GifFile, &RecordType) == GIF_ERROR) {
+      gif_push_error();
+      i_push_error(0, "Unable to get record type");
+      free_images(results, *count);
+      DGifCloseFile(GifFile);
+      return NULL;
+    }
+    
+    switch (RecordType) {
+    case IMAGE_DESC_RECORD_TYPE:
+      if (DGifGetImageDesc(GifFile) == GIF_ERROR) {
+	gif_push_error();
+	i_push_error(0, "Unable to get image descriptor");
+        free_images(results, *count);
+	DGifCloseFile(GifFile);
+	return NULL;
+      }
+
+      if (( ColorMap = (GifFile->Image.ColorMap ? GifFile->Image.ColorMap : GifFile->SColorMap) )) {
+	mm_log((1, "Adding local colormap\n"));
+	ColorMapSize = ColorMap->ColorCount;
+      } else {
+	/* No colormap and we are about to read in the image - 
+           abandon for now */
+	mm_log((1, "Going in with no colormap\n"));
+	i_push_error(0, "Image does not have a local or a global color map");
+        free_images(results, *count);
+	DGifCloseFile(GifFile);
+	return NULL;
+      }
+      
+      Width = GifFile->Image.Width;
+      Height = GifFile->Image.Height;
+      channels = 3;
+      if (got_gce && trans_index >= 0)
+        channels = 4;
+      img = i_img_pal_new(Width, Height, channels, 256);
+      /* populate the palette of the new image */
+      for (i = 0; i < ColorMapSize; ++i) {
+        i_color col;
+        col.rgba.r = ColorMap->Colors[i].Red;
+        col.rgba.g = ColorMap->Colors[i].Green;
+        col.rgba.b = ColorMap->Colors[i].Blue;
+        if (channels == 4 && trans_index == i)
+          col.rgba.a = 0;
+        else
+          col.rgba.a = 255;
+       
+        i_addcolors(img, &col, 1);
+      }
+      ++*count;
+      if (*count > result_alloc) {
+        if (result_alloc == 0) {
+          result_alloc = 5;
+          results = mymalloc(result_alloc * sizeof(i_img *));
+        }
+        else {
+          i_img **newresults;
+          result_alloc *= 2;
+          newresults = myrealloc(results, result_alloc * sizeof(i_img *));
+        }
+      }
+      results[*count-1] = img;
+      i_tags_addn(&img->tags, "gif_left", 0, GifFile->Image.Left);
+      /**(char *)0 = 1;*/
+      i_tags_addn(&img->tags, "gif_top",  0, GifFile->Image.Top);
+      i_tags_addn(&img->tags, "gif_interlace", 0, GifFile->Image.Interlace);
+      i_tags_addn(&img->tags, "gif_screen_width", 0, GifFile->SWidth);
+      i_tags_addn(&img->tags, "gif_screen_height", 0, GifFile->SHeight);
+      if (GifFile->SColorMap && !GifFile->Image.ColorMap) {
+        i_tags_addn(&img->tags, "gif_background", 0, 
+                    GifFile->SBackGroundColor);
+      }
+      if (GifFile->Image.ColorMap) {
+        i_tags_addn(&img->tags, "gif_localmap", 0, 1);
+      }
+      
+      if (got_gce) {
+        if (trans_index >= 0)
+          i_tags_addn(&img->tags, "gif_trans_index", 0, trans_index);
+        i_tags_addn(&img->tags, "gif_delay", 0, gif_delay);
+        i_tags_addn(&img->tags, "gif_user_input", 0, user_input);
+        i_tags_addn(&img->tags, "gif_disposal", 0, disposal);
+      }
+      got_gce = 0;
+      if (got_ns_loop)
+        i_tags_addn(&img->tags, "gif_loop", 0, ns_loop);
+      if (comment) {
+        i_tags_add(&img->tags, "gif_comment", 0, comment, strlen(comment), 0);
+        myfree(comment);
+        comment = NULL;
+      }
+
+      ImageNum++;
+      mm_log((1,"i_readgif_multi: Image %d at (%d, %d) [%dx%d]: \n",ImageNum, Col, Row, Width, Height));
+
+      if (GifFile->Image.Left + GifFile->Image.Width > GifFile->SWidth ||
+	  GifFile->Image.Top + GifFile->Image.Height > GifFile->SHeight) {
+	i_push_errorf(0, "Image %d is not confined to screen dimension, aborted.\n",ImageNum);
+	free_images(results, *count);        
+	DGifCloseFile(GifFile);
+	return(0);
+      }
+      if (GifFile->Image.Interlace) {
+	for (Count = i = 0; i < 4; i++) {
+          for (j = InterlacedOffset[i]; j < Height; 
+               j += InterlacedJumps[i]) {
+            Count++;
+            if (DGifGetLine(GifFile, GifRow, Width) == GIF_ERROR) {
+              gif_push_error();
+              i_push_error(0, "Reading GIF line");
+              free_images(results, *count);
+              DGifCloseFile(GifFile);
+              return NULL;
+            }
+            
+            i_ppal(img, 0, Width, j, GifRow);
+          }
+	}
+      }
+      else {
+	for (i = 0; i < Height; i++) {
+	  if (DGifGetLine(GifFile, GifRow, Width) == GIF_ERROR) {
+	    gif_push_error();
+	    i_push_error(0, "Reading GIF line");
+            free_images(results, *count);
+	    DGifCloseFile(GifFile);
+	    return NULL;
+	  }
+
+          i_ppal(img, 0, Width, i, GifRow);
+	}
+      }
+      break;
+    case EXTENSION_RECORD_TYPE:
+      /* Skip any extension blocks in file: */
+      if (DGifGetExtension(GifFile, &ExtCode, &Extension) == GIF_ERROR) {
+	gif_push_error();
+	i_push_error(0, "Reading extension record");
+        free_images(results, *count);
+	DGifCloseFile(GifFile);
+	return NULL;
+      }
+      if (ExtCode == 0xF9) {
+        got_gce = 1;
+        if (Extension[1] & 1)
+          trans_index = Extension[4];
+        else
+          trans_index = -1;
+        gif_delay = Extension[2] + 256 * Extension[3];
+        user_input = (Extension[0] & 2) != 0;
+        disposal = (Extension[0] >> 2) & 3;
+      }
+      if (ExtCode == 0xFF && *Extension == 11) {
+        if (memcmp(Extension+1, "NETSCAPE2.0", 11) == 0) {
+          if (DGifGetExtensionNext(GifFile, &Extension) == GIF_ERROR) {
+            gif_push_error();
+            i_push_error(0, "reading loop extension");
+            free_images(results, *count);
+            DGifCloseFile(GifFile);
+            return NULL;
+          }
+          if (Extension && *Extension == 3) {
+            got_ns_loop = 1;
+            ns_loop = Extension[2] + 256 * Extension[3];
+          }
+        }
+      }
+      else if (ExtCode == 0xFE) {
+        /* while it's possible for a GIF file to contain more than one
+           comment, I'm only implementing a single comment per image, 
+           with the comment saved into the following image.
+           If someone wants more than that they can implement it.
+           I also don't handle comments that take more than one block.
+        */
+        if (!comment) {
+          comment = mymalloc(*Extension+1);
+          memcpy(comment, Extension+1, *Extension);
+          comment[*Extension] = '\0';
+        }
+      }
+      while (Extension != NULL) {
+	if (DGifGetExtensionNext(GifFile, &Extension) == GIF_ERROR) {
+	  gif_push_error();
+	  i_push_error(0, "reading next block of extension");
+          free_images(results, *count);
+	  DGifCloseFile(GifFile);
+	  return NULL;
+	}
+      }
+      break;
+    case TERMINATE_RECORD_TYPE:
+      break;
+    default:		    /* Should be trapped by DGifGetRecordType. */
+      break;
+    }
+  } while (RecordType != TERMINATE_RECORD_TYPE);
+
+  if (comment) {
+    if (*count) {
+      i_tags_add(&(results[*count-1]->tags), "gif_comment", 0, comment, 
+                 strlen(comment), 0);
+    }
+    myfree(comment);
+  }
+  
+  myfree(GifRow);
+  
+  if (DGifCloseFile(GifFile) == GIF_ERROR) {
+    gif_push_error();
+    i_push_error(0, "Closing GIF file object");
+    free_images(results, *count);
+    return NULL;
+  }
+
+  return results;
+}
+
+/*
+=item i_readgif_multi(int fd, int *count)
+
+=cut
+*/
+i_img **
+i_readgif_multi(int fd, int *count) {
+  GifFileType *GifFile;
+
+  i_clear_error();
+  
+  mm_log((1,"i_readgif_multi(fd %d, &count %p)\n", fd, count));
+
+  if ((GifFile = DGifOpenFileHandle(fd)) == NULL) {
+    gif_push_error();
+    i_push_error(0, "Cannot create giflib file object");
+    mm_log((1,"i_readgif: Unable to open file\n"));
+    return NULL;
+  }
+
+  return i_readgif_multi_low(GifFile, count);
+}
+
+/*
+=item i_readgif_multi_scalar(char *data, int length, int *count)
+
+=cut
+*/
+i_img **
+i_readgif_multi_scalar(char *data, int length, int *count) {
+#if IM_GIFMAJOR >= 4
+  GifFileType *GifFile;
+  struct gif_scalar_info gsi;
+
+  i_clear_error();
+  
+  gsi.cpos=0;
+  gsi.length=length;
+  gsi.data=data;
+
+  mm_log((1,"i_readgif_multi_scalar(data %p, length %d, &count %p)\n", 
+          data, length, count));
+
+  if ((GifFile = DGifOpen( (void*) &gsi, my_gif_inputfunc )) == NULL) {
+    gif_push_error();
+    i_push_error(0, "Cannot create giflib callback object");
+    mm_log((1,"i_readgif_multi_scalar: Unable to open scalar datasource.\n"));
+    return NULL;
+  }
+
+  return i_readgif_multi_low(GifFile, count);
+#else
+  return NULL;
+#endif
+}
+
+/*
+=item i_readgif_callback(i_read_callback_t cb, char *userdata, int **colour_table, int *colours)
+
+Read a GIF file into an Imager RGB file, the data of the GIF file is
+retreived by callin the user supplied callback function.
+
+This function is only used with giflib 4 and higher.
+
+=cut
+*/
+
+i_img**
+i_readgif_multi_callback(i_read_callback_t cb, char *userdata, int *count) {
+#if IM_GIFMAJOR >= 4
+  GifFileType *GifFile;
+  i_img **result;
+
+  i_gen_read_data *gci = i_gen_read_data_new(cb, userdata);
+
+  i_clear_error();
+  
+  mm_log((1,"i_readgif_multi_callback(callback %p, userdata %p, count %p)\n", cb, userdata, count));
+  if ((GifFile = DGifOpen( (void*) gci, gif_read_callback )) == NULL) {
+    gif_push_error();
+    i_push_error(0, "Cannot create giflib callback object");
+    mm_log((1,"i_readgif_callback: Unable to open callback datasource.\n"));
+    myfree(gci);
+    return NULL;
+  }
+
+  result = i_readgif_multi_low(GifFile, count);
+  free_gen_read_data(gci);
+
+  return result;
+#else
+  return NULL;
+#endif
 }
 
 /*
@@ -1243,7 +1686,7 @@ an error message and pushes it on the error stack.
 =cut
 */
 
-static void gif_push_error() {
+static void gif_push_error(void) {
   int code = GifLastError(); /* clears saved error */
 
   i_push_error(code, gif_error_msg(code));
