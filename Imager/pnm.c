@@ -439,6 +439,7 @@ i_writeppm_wiol(i_img *im, io_glue *ig) {
         while (y < im->ysize && rc >= 0) {
           i_gsamp(im, 0, im->xsize, y, data, rgb_chan, 3);
           rc = ig->writecb(ig, data, im->xsize * 3);
+          ++y;
         }
         myfree(data);
       }
@@ -477,6 +478,7 @@ i_writeppm_wiol(i_img *im, io_glue *ig) {
         while (y < im->ysize && rc >= 0) {
           i_gsamp(im, 0, im->xsize, y, data, &chan, 1);
           rc = ig->writecb(ig, data, im->xsize);
+          ++y;
         }
         myfree(data);
       }

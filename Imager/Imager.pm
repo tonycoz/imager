@@ -44,6 +44,7 @@ use Imager::Font;
 
 		i_bezier_multi
 		i_poly_aa
+		i_poly_aa_cfill
 
 		i_copyto
 		i_rubthru
@@ -1808,7 +1809,22 @@ sub polygon {
     $self->{ERRSTR} = 'no points array, or x and y arrays.'; return undef;
   }
 
-  i_poly_aa($self->{IMG}, $opts{'x'}, $opts{'y'}, $opts{'color'});
+  if ($opts{'fill'}) {
+    unless (UNIVERSAL::isa($opts{'fill'}, 'Imager::Fill')) {
+      # assume it's a hash ref
+      require 'Imager/Fill.pm';
+      unless ($opts{'fill'} = Imager::Fill->new(%{$opts{'fill'}})) {
+        $self->{ERRSTR} = $Imager::ERRSTR;
+        return undef;
+      }
+    }
+    i_poly_aa_cfill($self->{IMG}, $opts{'x'}, $opts{'y'}, 
+                    $opts{'fill'}{'fill'});
+  }
+  else {
+    i_poly_aa($self->{IMG}, $opts{'x'}, $opts{'y'}, $opts{'color'});
+  }
+
   return $self;
 }
 

@@ -59,10 +59,14 @@ i_mmarray_render_fill(i_img *im,i_mmarray *ar,i_fill_t *fill) {
         x = ar->data[y].min;
         w = ar->data[y].max-ar->data[y].min;
 
-        if (fill->combine) 
+        if (fill->combine) {
           i_glin(im, x, x+w, y, line);
-        
-        (fill->fill_with_color)(fill, x, y, w, im->channels, line, work);
+          (fill->fill_with_color)(fill, x, y, w, im->channels, work);
+          (fill->combine)(line, work, im->channels, w);
+        }
+        else {
+          (fill->fill_with_color)(fill, x, y, w, im->channels, line);
+        }
         i_plin(im, x, x+w, y, line);
       }
     }
@@ -81,10 +85,14 @@ i_mmarray_render_fill(i_img *im,i_mmarray *ar,i_fill_t *fill) {
         x = ar->data[y].min;
         w = ar->data[y].max-ar->data[y].min;
 
-        if (fill->combinef) 
+        if (fill->combinef) {
           i_glinf(im, x, x+w, y, line);
-        
-        (fill->fill_with_fcolor)(fill, x, y, w, im->channels, line, work);
+          (fill->fill_with_fcolor)(fill, x, y, w, im->channels, work);
+          (fill->combinef)(line, work, im->channels, w);
+        }
+        else {
+          (fill->fill_with_fcolor)(fill, x, y, w, im->channels, line);
+        }
         i_plinf(im, x, x+w, y, line);
       }
     }
@@ -375,10 +383,14 @@ i_box_cfill(i_img *im,int x1,int y1,int x2,int y2,i_fill_t *fill) {
     if (fill->combine)
       work = mymalloc(sizeof(i_color) * (x2-x1));
     while (y1 <= y2) {
-      if (fill->combine)
+      if (fill->combine) {
         i_glin(im, x1, x2, y1, line);
-
-      (fill->fill_with_color)(fill, x1, y1, x2-x1, im->channels, line, work);
+        (fill->fill_with_color)(fill, x1, y1, x2-x1, im->channels, work);
+        (fill->combine)(line, work, im->channels, x2-x1);
+      }
+      else {
+        (fill->fill_with_color)(fill, x1, y1, x2-x1, im->channels, line);
+      }
       i_plin(im, x1, x2, y1, line);
       ++y1;
     }
@@ -392,12 +404,15 @@ i_box_cfill(i_img *im,int x1,int y1,int x2,int y2,i_fill_t *fill) {
     work = mymalloc(sizeof(i_fcolor) * (x2 - x1));
 
     while (y1 <= y2) {
-      if (fill->combinef)
+      if (fill->combine) {
         i_glinf(im, x1, x2, y1, line);
-
-      (fill->fill_with_fcolor)(fill, x1, y1, x2-x1, im->channels, line, work);
+        (fill->fill_with_fcolor)(fill, x1, y1, x2-x1, im->channels, work);
+        (fill->combinef)(line, work, im->channels, x2-x1);
+      }
+      else {
+        (fill->fill_with_fcolor)(fill, x1, y1, x2-x1, im->channels, line);
+      }
       i_plinf(im, x1, x2, y1, line);
-      ++y1;
     }
     myfree(line);
     if (work)
@@ -955,10 +970,16 @@ i_flood_cfill(i_img *im, int seedx, int seedy, i_fill_t *fill) {
           while (x < bxmax && btm_test(btm, x, y)) {
             ++x;
           }
-          if (fill->combine)
+          if (fill->combine) {
             i_glin(im, start, x, y, line);
-          (fill->fill_with_color)(fill, start, y, x-start, im->channels, 
-                                  line, work);
+            (fill->fill_with_color)(fill, start, y, x-start, im->channels, 
+                                    work);
+            (fill->combine)(line, work, im->channels, x-start);
+          }
+          else {
+            (fill->fill_with_color)(fill, start, y, x-start, im->channels, 
+                                    line);
+          }
           i_plin(im, start, x, y, line);
         }
       }
@@ -984,10 +1005,16 @@ i_flood_cfill(i_img *im, int seedx, int seedy, i_fill_t *fill) {
           while (x < bxmax && btm_test(btm, x, y)) {
             ++x;
           }
-          if (fill->combinef)
+          if (fill->combinef) {
             i_glinf(im, start, x, y, line);
-          (fill->fill_with_fcolor)(fill, start, y, x-start, im->channels, 
-                                   line, work);
+            (fill->fill_with_fcolor)(fill, start, y, x-start, im->channels, 
+                                    work);
+            (fill->combinef)(line, work, im->channels, x-start);
+          }
+          else {
+            (fill->fill_with_fcolor)(fill, start, y, x-start, im->channels, 
+                                    line);
+          }
           i_plinf(im, start, x, y, line);
         }
       }

@@ -1468,7 +1468,7 @@ typedef struct {
 
 static void
 fill_fountf(i_fill_t *fill, int x, int y, int width, int channels, 
-            i_fcolor *data, i_fcolor *work);
+            i_fcolor *data);
 static void
 fount_fill_destroy(i_fill_t *fill);
 
@@ -2079,42 +2079,21 @@ The fill function for fountain fills.
 */
 static void
 fill_fountf(i_fill_t *fill, int x, int y, int width, int channels, 
-            i_fcolor *data, i_fcolor *work) {
+            i_fcolor *data) {
   i_fill_fountain_t *f = (i_fill_fountain_t *)fill;
   
-  if (fill->combinef) {
-    i_fcolor *wstart = work;
-    int count = width;
-
-    while (width--) {
-      i_fcolor c;
-      int got_one;
-
-      if (f->state.ssfunc)
-        got_one = f->state.ssfunc(&c, x, y, &f->state);
-      else
-        got_one = fount_getat(&c, x, y, &f->state);
-      
-      *work++ = c;
-      
-      ++x;
-    }
-    (fill->combinef)(data, wstart, channels, count);
-  }
-  else {
-    while (width--) {
-      i_fcolor c;
-      int got_one;
-
-      if (f->state.ssfunc)
-        got_one = f->state.ssfunc(&c, x, y, &f->state);
-      else
-        got_one = fount_getat(&c, x, y, &f->state);
-      
-      *data++ = c;
-      
-      ++x;
-    }
+  while (width--) {
+    i_fcolor c;
+    int got_one;
+    
+    if (f->state.ssfunc)
+      got_one = f->state.ssfunc(&c, x, y, &f->state);
+    else
+      got_one = fount_getat(&c, x, y, &f->state);
+    
+    *data++ = c;
+    
+    ++x;
   }
 }
 
