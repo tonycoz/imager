@@ -371,6 +371,10 @@ i_readjpeg_wiol(io_glue *data, int length, char** iptc_itext, int *itlength) {
   (void) jpeg_read_header(&cinfo, TRUE);
   (void) jpeg_start_decompress(&cinfo);
   im=i_img_empty_ch(NULL,cinfo.output_width,cinfo.output_height,cinfo.output_components);
+  if (!im) {
+    jpeg_destroy_decompress(&cinfo);
+    return NULL;
+  }
   row_stride = cinfo.output_width * cinfo.output_components;
   buffer = (*cinfo.mem->alloc_sarray) ((j_common_ptr) &cinfo, JPOOL_IMAGE, row_stride, 1);
   while (cinfo.output_scanline < cinfo.output_height) {
@@ -380,6 +384,9 @@ i_readjpeg_wiol(io_glue *data, int length, char** iptc_itext, int *itlength) {
   (void) jpeg_finish_decompress(&cinfo);
   jpeg_destroy_decompress(&cinfo);
   *itlength=tlength;
+
+  i_tags_add(&im->tags, "i_format", 0, "jpeg", 4, 0);
+
   mm_log((1,"i_readjpeg_wiol -> (0x%x)\n",im));
   return im;
 }

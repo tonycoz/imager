@@ -888,6 +888,7 @@ Revision history for Perl extension Imager.
   overflow an integer would cause too small a buffer to be allocated.
   This could potentially be a security hole.
   partly resolves https://rt.cpan.org/Ticket/Display.html?id=8213
+- set i_format to jpeg for jpeg files and test for it
 
 =================================================================
 

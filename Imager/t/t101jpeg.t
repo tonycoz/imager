@@ -1,6 +1,6 @@
 use Imager qw(:all);
 
-print "1..8\n";
+print "1..9\n";
 
 init_log("testout/t101jpeg.log",1);
 
@@ -18,7 +18,7 @@ i_conv($img,[0.1, 0.2, 0.4, 0.2, 0.1]);
 
 i_has_format("jpeg") && print "# has jpeg\n";
 if (!i_has_format("jpeg")) {
-  for (1..8) {
+  for (1..9) {
     print "ok $_ # skip no jpeg support\n";
   }
 } else {
@@ -66,6 +66,10 @@ if (!i_has_format("jpeg")) {
   ok(8, !$imoo->write(fd=>fileno(FH), type=>'jpeg'), 'failure handling');
   close FH;
   print "# ",$imoo->errstr,"\n";
+
+  # check that the i_format tag is set
+  my @fmt = $imoo->tags(name=>'i_format');
+  ok(9, @fmt == 1 && $fmt[0] eq 'jpeg', 'i_format tag');
 }
 
 sub ok {
