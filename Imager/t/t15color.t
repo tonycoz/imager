@@ -29,6 +29,7 @@ my $fail;
 for (@foo) {
   Imager::Color::set_internal($_, 128, 128, 128, 128) == $_ or ++$fail;
   Imager::Color::set_internal($_, 128, 128, 128, 128) == $_ or ++$fail;
+  test_col($_, 128, 128, 128, 128) or ++$fail;
 }
 $fail and print "not ";
 print "ok 5\n";
