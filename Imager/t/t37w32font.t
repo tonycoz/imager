@@ -8,7 +8,7 @@ print "ok 1\n";
 init_log("testout/t37w32font.log",1);
 
 sub skip { 
-  for (2..4) {
+  for (2..5) {
     print "ok $_ # skip not MS Windows\n";
   }
   malloc_state();

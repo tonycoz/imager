@@ -325,7 +325,7 @@ if (!i_has_format("tiff")) {
   # writing even more images to tiff - we weren't handling more than five
   # correctly on read
   @imgs = map $ooim->copy(), 1..40;
-  my $rc = Imager->write_multi({file=>'testout/t106_multi2.tif'}, @imgs);
+  $rc = Imager->write_multi({file=>'testout/t106_multi2.tif'}, @imgs);
   ok($rc, "writing 40 images to tiff");
   @out = Imager->read_multi(file=>'testout/t106_multi2.tif');
   ok(@imgs == @out, "reading 40 images from tiff");
