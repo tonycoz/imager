@@ -1,0 +1,417 @@
+#include "image.h"
+#include "io.h"
+#include "log.h"
+
+#include <stdlib.h>
+
+
+/*
+=head1 NAME
+
+pnm.c - implements reading and writing ppm/pnm/pbm files, uses io layer.
+
+=head1 SYNOPSIS
+
+   io_glue *ig = io_new_fd( fd );
+   i_img *im   = i_readpnm_wiol(ig, -1); // no limit on how much is read
+   // or 
+   io_glue *ig = io_new_fd( fd );
+   return_code = i_writepnm_wiol(im, ig); 
+
+=head1 DESCRIPTION
+
+pnm.c implements the basic functions to read and write portable 
+anymap files.  It uses the iolayer and needs either a seekable source
+or an entire memory mapped buffer.
+
+=head1 FUNCTION REFERENCE
+
+Some of these functions are internal.
+
+=over 4
+
+=cut
+*/
+
+
+#define BSIZ 1024
+#define misspace(x) (x==' ' || x=='\n' || x=='\r' || x=='\t' || x=='\f' || x=='\v')
+#define misnumber(x) (x <= '9' && x>='0')
+
+static char *typenames[]={"ascii pbm", "ascii pgm", "ascii ppm", "binary pbm", "binary pgm", "binary ppm"};
+
+/*
+ * Type to encapsulate the local buffer
+ * management skipping over in a file 
+ */
+
+typedef struct {
+  io_glue *ig;
+  int len;
+  int cp;
+  char buf[BSIZ];
+} mbuf;
+
+
+static
+void init_buf(mbuf *mb, io_glue *ig) {
+  mb->len = 0;
+  mb->cp  = 0;
+  mb->ig  = ig;
+}
+
+
+
+/*
+=item gnext(mbuf *mb)
+
+Fetches a character and advances in stream by one character.  
+Returns a pointer to the byte or NULL on failure (internal).
+
+   mb - buffer object
+
+=cut
+*/
+
+static
+char *
+gnext(mbuf *mb) {
+  io_glue *ig = mb->ig;
+  if (mb->cp == mb->len) {
+    mb->cp = 0;
+    mb->len = ig->readcb(ig, mb->buf, BSIZ);
+    if (mb->len == -1) {
+      mm_log((1, "i_readpnm: read error\n"));
+      return NULL;
+    }
+    if (mb->len == 0) {
+      mm_log((1, "i_readpnm: end of file\n"));
+      return NULL;
+    }
+  }
+  return &mb->buf[mb->cp++];
+}
+
+
+/*
+=item gnext(mbuf *mb)
+
+Fetches a character but does NOT advance.  Returns a pointer to
+the byte or NULL on failure (internal).
+
+   mb - buffer object
+
+=cut
+*/
+
+static
+char *
+gpeek(mbuf *mb) {
+  io_glue *ig = mb->ig;
+  if (mb->cp == mb->len) {
+    mb->cp = 0;
+    mb->len = ig->readcb(ig, mb->buf, BSIZ);
+    if (mb->len == -1) {
+      mm_log((1, "i_readpnm: read error\n"));
+      return NULL;
+    }
+    if (mb->len == 0) {
+      mm_log((1, "i_readpnm: end of file\n"));
+      return NULL;
+    }
+  }
+  return &mb->buf[mb->cp];
+}
+
+
+
+
+/*
+=item skip_spaces(mb)
+
+Advances in stream until it is positioned at a
+non white space character. (internal)
+
+   mb - buffer object
+
+=cut
+*/
+
+static
+int
+skip_spaces(mbuf *mb) {
+  char *cp;
+  while( (cp = gpeek(mb)) && misspace(*cp) ) if ( !gnext(mb) ) break;
+  if (!cp) return 0;
+  return 1;
+}
+
+
+/*
+=item skip_spaces(mb)
+
+Advances in stream over whitespace and a comment if one is found. (internal)
+
+   mb - buffer object
+
+=cut
+*/
+
+static
+int
+skip_comment(mbuf *mb) {
+  char *cp;
+
+  if (!skip_spaces(mb)) return 0;
+
+  if (!(cp = gpeek(mb))) return 0;
+  if (*cp == '#') {
+    while( (cp = gpeek(mb)) && (*cp != '\n' && *cp != '\r') ) {
+      if ( !gnext(mb) ) break;
+    }
+  }
+  if (!cp) return 0;
+  
+  return 1;
+}
+
+
+/*
+=item gnum(mb, i)
+
+Fetches the next number from stream and stores in i, returns true
+on success else false.
+
+   mb - buffer object
+   i  - integer to store result in
+
+=cut
+*/
+
+static
+int
+gnum(mbuf *mb, int *i) {
+  char *cp;
+  *i = 0;
+
+  if (!skip_spaces(mb)) return 0; 
+
+  while( (cp = gpeek(mb)) && misnumber(*cp) ) {
+    *i = *i*10+(*cp-'0');
+    cp = gnext(mb);
+  }
+  return 1;
+}
+
+
+/*
+=item i_readpnm_wiol(ig, length)
+
+Retrieve an image and stores in the iolayer object. Returns NULL on fatal error.
+
+   ig     - io_glue object
+   length - maximum length to read from data source, before closing it -1 
+            signifies no limit.
+
+=cut
+*/
+
+
+i_img *
+i_readpnm_wiol(io_glue *ig, int length) {
+  i_img* im;
+  int type;
+  int x, y, ch;
+  int width, height, maxval, channels, pcount;
+  char *cp;
+  unsigned char *uc;
+  mbuf buf;
+  i_color val;
+  int mult;
+
+  /*  char *pp; */
+
+  mm_log((1,"i_readpnm(ig %p, length %d)\n", ig, length));
+
+  /*
+  pp = mymalloc(20);
+  
+  pp[-1]= 'c';
+  pp[-2]= 'c';
+  
+  bndcheck_all();
+
+  myfree(pp);
+
+  mm_log((1, "Hack is exiting\n"));
+
+*/
+  
+  io_glue_commit_types(ig);
+  init_buf(&buf, ig);
+
+  cp = gnext(&buf);
+
+  if (!cp || *cp != 'P') {
+    mm_log((1, "i_readpnm: Could not read header of file\n"));
+    return NULL;
+  }
+
+  if ( !(cp = gnext(&buf)) ) {
+    mm_log((1, "i_readpnm: Could not read header of file\n"));
+    return NULL;
+  }
+  
+  type = *cp-'0';
+
+  if (type < 1 || type > 6) {
+    mm_log((1, "i_readpnm: Not a pnm file\n"));
+    return NULL;
+  }
+
+  if ( !(cp = gnext(&buf)) ) {
+    mm_log((1, "i_readpnm: Could not read header of file\n"));
+    return NULL;
+  }
+  
+  if ( !misspace(*cp) ) {
+    mm_log((1, "i_readpnm: Not a pnm file\n"));
+    return NULL;
+  }
+  
+  mm_log((1, "i_readpnm: image is a %s\n", typenames[type-1] ));
+
+  
+  /* Read sizes and such */
+
+  if (!skip_comment(&buf)) {
+    mm_log((1, "i_readpnm: error reading before width\n"));
+    return NULL;
+  }
+  
+  if (!gnum(&buf, &width)) {
+    mm_log((1, "i_readpnm: error reading width\n"));
+    return NULL;
+  }
+
+  if (!skip_comment(&buf)) {
+    mm_log((1, "i_readpnm: error reading before height\n"));
+    return NULL;
+  }
+
+  if (!gnum(&buf, &height)) {
+    mm_log((1, "i_readpnm: error reading height\n"));
+    return NULL;
+  }
+  
+  if (!(type == 1 || type == 4)) {
+    if (!skip_comment(&buf)) {
+      mm_log((1, "i_readpnm: error reading before maxval\n"));
+      return NULL;
+    }
+
+    if (!gnum(&buf, &maxval)) {
+      mm_log((1, "i_readpnm: error reading maxval\n"));
+      return NULL;
+    }
+  } else maxval=1;
+
+  if (!(cp = gnext(&buf)) || !misspace(*cp)) {
+    mm_log((1, "i_readpnm: garbage in header\n"));
+    return NULL;
+  }
+
+  channels = (type == 3 || type == 6) ? 3:1;
+  pcount = width*height*channels;
+
+  mm_log((1, "i_readpnm: (%d x %d), channels = %d, maxval = %d\n", width, height, channels, maxval));
+  
+  im = i_img_empty_ch(NULL, width, height, channels);
+
+  switch (type) {
+  case 1: /* Ascii types */
+  case 2:
+  case 3:
+    mult = type == 1 ? 255 : 1;
+    for(y=0;y<height;y++) for(x=0; x<width; x++) {
+      for(ch=0; ch<channels; ch++) {
+	int t;
+	if (gnum(&buf, &t)) val.channel[ch] = t;
+	else {
+	  mm_log((1,"i_readpnm: gnum() returned false in data\n"));
+	  return im;
+	}
+      }
+      i_ppix(im, x, y, &val);
+    }
+    break;
+    
+  case 4: /* binary pbm */
+    for(y=0;y<height;y++) for(x=0; x<width; x+=8) {
+      if ( (uc = gnext(&buf)) ) {
+	int xt;
+	int pc = width-x < 8 ? width-x : 8;
+	/*	mm_log((1,"i_readpnm: y=%d x=%d pc=%d\n", y, x, pc)); */
+	for(xt = 0; xt<pc; xt++) {
+	  val.channel[0] = (*uc & (128>>xt)) ? 0 : 255; 
+	  i_ppix(im, x+xt, y, &val);
+	}
+      } else {
+	mm_log((1,"i_readpnm: gnext() returned false in data\n"));
+	return im;
+      }
+    }
+    break;
+
+  case 5: /* binary pgm */
+  case 6: /* binary ppm */
+    for(y=0;y<height;y++) for(x=0; x<width; x++) {
+      for(ch=0; ch<channels; ch++) {
+	if ( (uc = gnext(&buf)) ) val.channel[ch] = *uc;
+	else {
+	  mm_log((1,"i_readpnm: gnext() returned false in data\n"));
+	  return im;
+	}
+      }
+      i_ppix(im, x, y, &val);
+    }
+    break;
+  default:
+    mm_log((1, "type %s [P%d] unsupported\n", typenames[type-1], type));
+    return NULL;
+  }
+  return im;
+}
+
+undef_int
+i_writeppm(i_img *im,int fd) {
+  char header[255];
+  int rc;
+
+  mm_log((1,"i_writeppm(im* 0x%x,fd %d)\n",im,fd));
+  if (im->channels!=3) {
+    mm_log((1,"i_writeppm: ppm is 3 channel only (current image is %d)\n",im->channels));
+    return(0);
+  }
+  
+  sprintf(header,"P6\n#CREATOR: Imager\n%d %d\n255\n",im->xsize,im->ysize);
+  
+  if (mywrite(fd,header,strlen(header))<0) {
+    mm_log((1,"i_writeppm: unable to write ppm header.\n"));
+    return(0);
+  }
+  
+  rc=mywrite(fd,im->data,im->bytes);
+  if (rc<0) {
+    mm_log((1,"i_writeppm: unable to write ppm data.\n"));
+    return(0);
+  }
+  return(1);
+}
+
+
+
+
+
+
+
