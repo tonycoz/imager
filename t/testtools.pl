@@ -16,12 +16,12 @@ sub test_img {
   $img;
 }
 
-sub skip {
+sub skipn {
   my ($testnum, $count, $why) = @_;
   
   $why = '' unless defined $why;
 
-  print "ok $testnum # skip $why\n" for $testnum ... $testnum+$count-1;
+  print "ok $_ # skip $why\n" for $testnum ... $testnum+$count-1;
 }
 
 1;
