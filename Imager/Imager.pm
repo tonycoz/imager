@@ -245,10 +245,35 @@ BEGIN {
     {
      callseq => [ qw(image bump elevation lightx lighty st) ],
      defaults => { elevation=>0, st=> 2 },
-     callsub => sub { 
+     callsub => sub {
        my %hsh = @_;
        i_bumpmap($hsh{image}, $hsh{bump}{IMG}, $hsh{elevation},
                  $hsh{lightx}, $hsh{lighty}, $hsh{st});
+     },
+    };
+  $filters{bumpmap_complex} =
+    {
+     callseq => [ qw(image bump channel tx ty Lx Ly Lz cd cs n Ia Il Is) ],
+     defaults => {
+		  channel => 0,
+		  tx => 0,
+		  ty => 0,
+		  Lx => 0.2,
+		  Ly => 0.4,
+		  Lz => -1.0,
+		  cd => 1.0,
+		  cs => 40,
+		  n => 1.3,
+		  Ia => Imager::Color->new(rgb=>[0,0,0]),
+		  Il => Imager::Color->new(rgb=>[255,255,255]),
+		  Is => Imager::Color->new(rgb=>[255,255,255]),
+		 },
+     callsub => sub {
+       my %hsh = @_;
+       i_bumpmap_complex($hsh{image}, $hsh{bump}{IMG}, $hsh{channel},
+                 $hsh{tx}, $hsh{ty}, $hsh{Lx}, $hsh{Ly}, $hsh{Lz},
+		 $hsh{cd}, $hsh{cs}, $hsh{n}, $hsh{Ia}, $hsh{Il},
+		 $hsh{Is});
      },
     };
   $filters{postlevels} =
@@ -2994,11 +3019,11 @@ That will take paste C<$srcimage> into C<$img> with the upper
 left corner at (30,50).  If no values are given for C<left>
 or C<top> they will default to 0.
 
-A more complicated way of blending images is where one image is 
+A more complicated way of blending images is where one image is
 put 'over' the other with a certain amount of opaqueness.  The
 method that does this is rubthrough.
 
-  $img->rubthrough(src=>$srcimage,tx=>30,ty=>50); 
+  $img->rubthrough(src=>$srcimage,tx=>30,ty=>50);
 
 That will take the image C<$srcimage> and overlay it with the upper
 left corner at (30,50).  You can rub 2 or 4 channel images onto a 3
@@ -3020,6 +3045,9 @@ source.
   Filter          Arguments
   autolevels      lsat(0.1) usat(0.1) skew(0)
   bumpmap         bump elevation(0) lightx lighty st(2)
+  bumpmap_complex bump channel(0) tx(0) ty(0) Lx(0.2) Ly(0.4)
+                  Lz(-1) cd(1.0) cs(40.0) n(1.3) Ia(0 0 0) Il(255 255 255)
+                  Is(255 255 255)
   contrast        intensity
   conv            coef
   fountain        xa ya xb yb ftype(linear) repeat(none) combine(none)
@@ -3055,6 +3083,16 @@ the range respectivly..
 uses the channel I<elevation> image I<bump> as a bumpmap on your
 image, with the light at (I<lightx>, I<lightty>), with a shadow length
 of I<st>.
+
+=item bumpmap_complex
+
+uses the channel I<channel> image I<bump> as a bumpmap on your image.
+If Lz<0 the three L parameters are considered to be the direction of
+the light.  If Lz>0 the L parameters are considered to be the light
+position.  I<Ia> is the ambient colour, I<Il> is the light colour,
+I<Is> is the color of specular highlights.  I<cd> is the diffuse
+coefficient and I<cs> is the specular coefficient.  I<n> is the
+shininess of the surface.
 
 =item contrast
 

@@ -9,7 +9,7 @@ $imbase->open(file=>'testout/t104.ppm') or die;
 my $im_other = Imager->new(xsize=>150, ysize=>150);
 $im_other->box(xmin=>30, ymin=>60, xmax=>120, ymax=>90, filled=>1);
 
-print "1..39\n";
+print "1..41\n";
 
 test($imbase, 1, {type=>'autolevels'}, 'testout/t61_autolev.ppm');
 
@@ -42,12 +42,14 @@ test($imbase, 19, {type=>'turbnoise'}, 'testout/t61_turbnoise.ppm');
 test($imbase, 21, {type=>'bumpmap', bump=>$im_other, lightx=>30, lighty=>30},
      'testout/t61_bumpmap.ppm');
 
-test($imbase, 23, {type=>'postlevels', levels=>3}, 'testout/t61_postlevels.ppm');
+test($imbase, 23, {type=>'bumpmap_complex', bump=>$im_other}, 'testout/t61_bumpmap_complex.ppm');
 
-test($imbase, 25, {type=>'watermark', wmark=>$im_other },
+test($imbase, 25, {type=>'postlevels', levels=>3}, 'testout/t61_postlevels.ppm');
+
+test($imbase, 27, {type=>'watermark', wmark=>$im_other },
      'testout/t61_watermark.ppm');
 
-test($imbase, 27, {type=>'fountain', xa=>75, ya=>75, xb=>85, yb=>30,
+test($imbase, 29, {type=>'fountain', xa=>75, ya=>75, xb=>85, yb=>30,
                    repeat=>'triangle', #ftype=>'radial', 
                    super_sample=>'circle', ssample_param => 16,
                   },
@@ -57,9 +59,9 @@ use Imager::Fountain;
 my $f1 = Imager::Fountain->new;
 $f1->add(end=>0.2, c0=>NC(255, 0,0), c1=>NC(255, 255,0));
 $f1->add(start=>0.2, c0=>NC(255,255,0), c1=>NC(0,0,255,0));
-test($imbase, 29, { type=>'fountain', xa=>20, ya=>130, xb=>130, yb=>20,
+test($imbase, 31, { type=>'fountain', xa=>20, ya=>130, xb=>130, yb=>20,
                     #repeat=>'triangle',
-                    segments=>$f1 
+                    segments=>$f1
                   },
      'testout/t61_fountain2.ppm');
 my $f2 = Imager::Fountain->new
@@ -67,25 +69,25 @@ my $f2 = Imager::Fountain->new
   ->add(start=>0.5, c0=>NC(255,0,0), c1=>NC(255,0,0), color=>'huedown');
 #use Data::Dumper;
 #print Dumper($f2);
-test($imbase, 31, { type=>'fountain', xa=>20, ya=>130, xb=>130, yb=>20,
+test($imbase, 33, { type=>'fountain', xa=>20, ya=>130, xb=>130, yb=>20,
                     segments=>$f2 },
      'testout/t61_fount_hsv.ppm');
-my $f3 = Imager::Fountain->read(gimp=>'testimg/gimpgrad') 
+my $f3 = Imager::Fountain->read(gimp=>'testimg/gimpgrad')
   or print "not ";
-print "ok 33\n";
-test($imbase, 34, { type=>'fountain', xa=>75, ya=>75, xb=>90, yb=>15,
+print "ok 35\n";
+test($imbase, 36, { type=>'fountain', xa=>75, ya=>75, xb=>90, yb=>15,
                     segments=>$f3, super_sample=>'grid',
                     ftype=>'radial_square', combine=>'color' },
      'testout/t61_fount_gimp.ppm');
-test($imbase, 36, { type=>'unsharpmask', stddev=>2.0 },
+test($imbase, 38, { type=>'unsharpmask', stddev=>2.0 },
      'testout/t61_unsharp.ppm');
-test($imbase, 38, {type=>'conv', coef=>[ -1, 3, -1, ], },
+test($imbase, 40, {type=>'conv', coef=>[ -1, 3, -1, ], },
      'testout/t61_conv_sharp.ppm');
 
 
 sub test {
   my ($in, $num, $params, $out) = @_;
-  
+
   my $copy = $in->copy;
   if ($copy->filter(%$params)) {
     print "ok $num\n";

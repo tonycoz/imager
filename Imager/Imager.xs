@@ -1981,6 +1981,26 @@ i_bumpmap(im,bump,channel,light_x,light_y,strength)
                int     light_y
                int     strength
 
+
+void
+i_bumpmap_complex(im,bump,channel,tx,ty,Lx,Ly,Lz,cd,cs,n,Ia,Il,Is)
+    Imager::ImgRaw     im
+    Imager::ImgRaw     bump
+               int     channel
+               int     tx
+               int     ty
+             float     Lx
+             float     Ly
+             float     Lz
+             float     cd
+             float     cs
+             float     n
+     Imager::Color     Ia
+     Imager::Color     Il
+     Imager::Color     Is
+
+
+
 void
 i_postlevels(im,levels)
     Imager::ImgRaw     im
