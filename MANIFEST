@@ -97,7 +97,6 @@ doco.perl
 errep.perl
 regops.perl
 spot.perl	For making an ordered dither matrix from a spot function
-transbench.perl
 transform.perl	Shell interface to Imager::Transform
 bigtest.perl	Library selection tester
 dynfilt/pluginst.h
@@ -107,8 +106,3 @@ dynfilt/mandelbrot.c
 dynfilt/flines.c
 dynfilt/compile.txt
 dynfilt/Makefile.PL
-bench/quantone.perl	One round of benchmarking image quantization.
-bench/quantbench.perl	Benchmark various quantization methods
-bench/makegrad.perl	Builds regular images for quantization.
-bench/kscdisplay.png	Photo test for quantization.
-bench/benchform.perl	Formats the benchmark results
