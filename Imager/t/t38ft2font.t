@@ -13,7 +13,7 @@ use Imager qw(:all);
 $loaded = 1;
 print "ok 1\n";
 
-init_log("testout/t38ft2font.log",1);
+init_log("testout/t38ft2font.log",2);
 
 sub skip { 
   for (2..14) {

@@ -71,9 +71,31 @@ struct FT2_Fonthandle {
   FT_Face face;
   int xdpi, ydpi;
   int hint;
+  FT_Encoding encoding;
 
   /* used to adjust so we can align the draw point to the top-left */
   double matrix[6];
+};
+
+/* the following is used to select a "best" encoding */
+static struct enc_score {
+  FT_Encoding encoding;
+  int score;
+} enc_scores[] =
+{
+  /* the selections here are fairly arbitrary
+     ideally we need to give the user a list of encodings available
+     and a mechanism to choose one */
+  { ft_encoding_unicode,        10 },
+  { ft_encoding_sjis,            8 },
+  { ft_encoding_gb2312,          8 },
+  { ft_encoding_big5,            8 },
+  { ft_encoding_wansung,         8 },
+  { ft_encoding_johab,           8 },  
+  { ft_encoding_latin_2,         6 },
+  { ft_encoding_apple_roman,     6 },
+  { ft_encoding_adobe_standard,  6 },
+  { ft_encoding_adobe_expert,    6 },
 };
 
 /*
@@ -95,6 +117,9 @@ i_ft2_new(char *name, int index) {
   FT_Face face;
   double matrix[6] = { 1, 0, 0,
                        0, 1, 0 };
+  int i, j;
+  FT_Encoding encoding;
+  int score;
 
   mm_log((1, "i_ft2_new(name %p, index %d)\n", name, index));
 
@@ -106,9 +131,28 @@ i_ft2_new(char *name, int index) {
     return NULL;
   }
 
+  encoding = face->num_charmaps ? face->charmaps[0]->encoding : ft_encoding_unicode;
+  score = 0;
+  for (i = 0; i < face->num_charmaps; ++i) {
+    FT_Encoding enc_entry = face->charmaps[i]->encoding;
+    mm_log((2, "i_ft2_new, encoding %lX platform %u encoding %u\n",
+            enc_entry, face->charmaps[i]->platform_id,
+            face->charmaps[i]->encoding_id));
+    for (j = 0; j < sizeof(enc_scores) / sizeof(*enc_scores); ++j) {
+      if (enc_scores[j].encoding == enc_entry && enc_scores[j].score > score) {
+        encoding = enc_entry;
+        score = enc_scores[j].score;
+        break;
+      }
+    }
+  }
+  FT_Select_Charmap(face, encoding);
+  mm_log((2, "i_ft2_new, selected encoding %lX\n", encoding));
+
   result = mymalloc(sizeof(FT2_Fonthandle));
   result->face = face;
   result->xdpi = result->ydpi = 72;
+  result->encoding = encoding;
 
   /* by default we disable hinting on a call to i_ft2_settransform()
      if we don't do this, then the hinting can the untransformed text
