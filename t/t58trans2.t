@@ -1,5 +1,5 @@
 #!perl -w
-BEGIN { $| = 1; print "1..15\n"; }
+BEGIN { $| = 1; print "1..16\n"; }
 END {print "not ok 1\n" unless $loaded;}
 use Imager;
 
@@ -73,6 +73,13 @@ my $c = $im8->getpixel(x=>0, 'y'=>0);
 is(($c->rgba)[3], 0, "zero alpha");
 $c = $im8->getpixel(x=>49, 'y'=>49);
 is(($c->rgba)[3], 255, "max alpha");
+
+$opts = { rpnexpr => 'x 1 + log 50 * y 1 + log 50 * getp1' };
+my $im9 = Imager::transform2($opts, $im1);
+ok($im9, "log function");
+if ($im9) {
+  $im9->write(type=>'pnm', file=>'testout/t56-9.ppm');
+}
 
 use Imager::Transform;
 

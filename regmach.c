@@ -1,4 +1,5 @@
 #include "regmach.h"
+#include <float.h>
 
 /*#define DEBUG*/
 #ifdef DEBUG
@@ -6,6 +7,9 @@
 #else
 #define DBG(x) 
 #endif
+
+static float MAX_EXP_ARG; /* = log(DBL_MAX); */
+
 
 /* these functions currently assume RGB images - there seems to be some 
    support for other color spaces, but I can't tell how you find what 
@@ -173,6 +177,7 @@ i_color i_rm_run(struct rm_op codes[], size_t code_count,
   double dx, dy;
   struct rm_op *codes_base = codes;
   size_t count_base = code_count;
+
   DBG(("rm_run(%p, %d)\n", codes, code_count));
   while (code_count) {
     DBG((" rm_code %d\n", codes->code));
@@ -250,14 +255,17 @@ i_color i_rm_run(struct rm_op codes[], size_t code_count,
 
     case rbc_getp1:
       i_gpix(images[0], na, nb, c_regs+codes->rout);
+      if (images[0]->channels < 4) cout.rgba.a = 255;
       break;
 
     case rbc_getp2:
       i_gpix(images[1], na, nb, c_regs+codes->rout);
+      if (images[1]->channels < 4) cout.rgba.a = 255;
       break;
 
     case rbc_getp3:
       i_gpix(images[2], na, nb, c_regs+codes->rout);
+      if (images[2]->channels < 4) cout.rgba.a = 255;
       break;
 
     case rbc_value:
@@ -390,6 +398,25 @@ i_color i_rm_run(struct rm_op codes[], size_t code_count,
 
     case rbc_setp:
       cout = ca;
+      break;
+
+    case rbc_log:
+      if (na > 0) {
+	nout = log(na);
+      }
+      else {
+	nout = DBL_MAX;
+      }
+      break;
+
+    case rbc_exp:
+      if (!MAX_EXP_ARG) MAX_EXP_ARG = log(DBL_MAX);
+      if (na <= MAX_EXP_ARG) {
+	nout = exp(na);
+      }
+      else {
+	nout = DBL_MAX;
+      }
       break;
 
     case rbc_print:

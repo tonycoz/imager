@@ -732,6 +732,12 @@ Revision history for Perl extension Imager.
 	- removed all references to the www.eecs.umich.edu page and changed
 	  them to imager.perl.org ones.
 
+0.43pre1
+        - added log() and exp() functions to transform2()
+	- change the getpN() functions in transform2() to set a 
+	  reasonable alpha if the input image has no alpha
+	- document the constants that transform2() defines
+
 =================================================================
 
         For latest versions check the Imager-devel pages:

@@ -40,6 +40,10 @@ Imager::Transformations - Simple transformations of one image into another.
                                  [ 1, 0, 0 ],
                                  [ 0, 0, 1 ] ]);
 
+  # image composition
+  $img->compose(img=>$source, mask=>$mask, left=>100, top=>50)
+    or die $img->errstr;
+
   # limit the range of red channel from 0..255 to 0..127
   @map = map { int( $_/2 } 0..255;
   $img->map( red=>\@map );
