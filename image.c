@@ -348,6 +348,8 @@ Re-new image reference
 
 i_img *
 i_img_empty_ch(i_img *im,int x,int y,int ch) {
+  int bytes;
+
   mm_log((1,"i_img_empty_ch(*im %p, x %d, y %d, ch %d)\n", im, x, y, ch));
 
   if (x < 1 || y < 1) {
@@ -356,6 +358,12 @@ i_img_empty_ch(i_img *im,int x,int y,int ch) {
   }
   if (ch < 1 || ch > MAXCHANNELS) {
     i_push_errorf(0, "channels must be between 1 and %d", MAXCHANNELS);
+    return NULL;
+  }
+  /* check this multiplication doesn't overflow */
+  bytes = x*y*ch;
+  if (bytes / y / ch != x) {
+    i_push_errorf(0, "integer overflow calculating image allocation");
     return NULL;
   }
 
@@ -369,8 +377,9 @@ i_img_empty_ch(i_img *im,int x,int y,int ch) {
   im->ysize    = y;
   im->channels = ch;
   im->ch_mask  = MAXINT;
-  im->bytes=x*y*im->channels;
-  if ( (im->idata=mymalloc(im->bytes)) == NULL) m_fatal(2,"malloc() error\n"); 
+  im->bytes=bytes;
+  if ( (im->idata=mymalloc(im->bytes)) == NULL) 
+    m_fatal(2,"malloc() error\n"); 
   memset(im->idata,0,(size_t)im->bytes);
   
   im->ext_data = NULL;

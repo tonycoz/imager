@@ -884,6 +884,10 @@ Revision history for Perl extension Imager.
 - updated download locations for the various libraries that Imager 
   depends on.  Added some advice for cygwin.
 - more information on gif library versions in README and Makefile.PL
+- creating an image where the size of the allocated image buffer would
+  overflow an integer would cause too small a buffer to be allocated.
+  This could potentially be a security hole.
+  partly resolves https://rt.cpan.org/Ticket/Display.html?id=8213
 
 =================================================================
 
