@@ -1046,6 +1046,7 @@ Revision history for Perl extension Imager.
   demonstrate displaying a generated image on a HTML page.
 - Makefile.PL now adds rules to generate a suitable META.yml to the
   generated Makefile.
+- added sample code for handling images uploaded via a HTML form.
 
 =================================================================
 

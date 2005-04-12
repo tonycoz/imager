@@ -28,3 +28,25 @@ samp-image.cgi
 
   The POD for this sample discusses alternate approaches and security
   considerations.
+
+samp-scale.html
+samp-scale.cgi
+
+  Example that demonstrates reading an image uploaded via a HTML form.
+
+  Produces an output image scaled to fit inside 200x200.
+
+samp-tags.html
+samp-tags.cgi
+
+  Example that demonstrates reading an image uploaded via a HTML form.
+
+  Produces a text/plain report of the tags that Imager defined for the
+  image.
+
+  This and the previous sample are very similar, the intent is to show
+  the common elements and to demonstrate that the output is independent
+  of the input.
+
+  See the section "Parsing an image posted via CGI" in Imager::Cookbook
+  for cautions and details on reading uploaded images.
