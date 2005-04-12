@@ -108,6 +108,10 @@ samples/anaglyph.pl
 samples/interleave.pl
 samples/samp-form.cgi
 samples/samp-image.cgi
+samples/samp-scale.cgi  Demonstrate image upload via a HTML form
+samples/samp-scale.html Form for samp-scale.cgi
+samples/samp-tags.cgi   Demonstrate image upload via a HTML form
+samples/samp-tags.html  Form for samp-tags.cgi
 spot.perl	For making an ordered dither matrix from a spot function
 stackmach.c
 stackmach.h

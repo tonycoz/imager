@@ -10,11 +10,11 @@ not commitments.
 - audit pnm.c (done)
 - audit tga.c (done)
 - audit rgb.c and add tests
-- add META.yml (bypass EU::MM's limited mechanism)
+- add META.yml (bypass EU::MM's limited mechanism) (done)
 - implement i_incomplete for bmp files
 - check if freetype 2 is faster/slower than freetype 1 with Imager's glyph
   caching.  If FT1 is faster, add caching as a TODO for FT2.
-- add sample CGI that handles an uploaded image
+- add sample CGI that handles an uploaded image (done)
 - examples for fountain filter in Imager::Filters
 - allow Imager::Fountain to take color descriptions (eg. blue, FF000)
   instead of color objects for c0 and c1.
