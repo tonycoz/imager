@@ -1,7 +1,7 @@
 #!perl -w
 use strict;
 use Imager qw(:handy);
-use Test::More tests => 45;
+use Test::More tests => 54;
 Imager::init_log("testout/t61filters.log", 1);
 # meant for testing the filters themselves
 my $imbase = Imager->new;
@@ -102,6 +102,37 @@ SKIP:
   is(Imager::i_img_diff($im3->{IMG}, $diff->{IMG}), 0,
      "compare test image and diff image");
 }
+
+# newer versions of gimp add a line to the gradient file
+my $name;
+my $f5 = Imager::Fountain->read(gimp=>'testimg/newgimpgrad.ggr',
+                                name => \$name);
+ok($f5, "read newer gimp gradient")
+  or print "# ",Imager->errstr,"\n";
+is($name, "imager test gradient", "check name read correctly");
+$f5 = Imager::Fountain->read(gimp=>'testimg/newgimpgrad.ggr');
+ok($f5, "check we handle case of no name reference correctly")
+  or print "# ",Imager->errstr,"\n";
+
+# test writing of gradients
+ok($f2->write(gimp=>'testout/t61grad1.ggr'), "save a gradient")
+  or print "# ",Imager->errstr,"\n";
+undef $name;
+my $f6 = Imager::Fountain->read(gimp=>'testout/t61grad1.ggr', 
+                                name=>\$name);
+ok($f6, "read what we wrote")
+  or print "# ",Imager->errstr,"\n";
+ok(!defined $name, "we didn't set the name, so shouldn't get one");
+
+# try with a name
+ok($f2->write(gimp=>'testout/t61grad2.ggr', name=>'test gradient'),
+   "write gradient with a name")
+  or print "# ",Imager->errstr,"\n";
+undef $name;
+my $f7 = Imager::Fountain->read(gimp=>'testout/t61grad2.ggr', name=>\$name);
+ok($f7, "read what we wrote")
+  or print "# ",Imager->errstr,"\n";
+is($name, "test gradient", "check the name matches");
 
 sub test {
   my ($in, $params, $out) = @_;
