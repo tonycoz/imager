@@ -197,6 +197,7 @@ testimg/maxval_256.ppm
 testimg/maxval_4095_asc.ppm
 testimg/maxval_65536.ppm
 testimg/maxval_asc.ppm
+testimg/newgimpgrad.ggr Test GIMP Gradient file (newer type)
 testimg/nocmap.gif
 testimg/palette.png
 testimg/palette_out.png

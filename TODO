@@ -18,7 +18,7 @@ not commitments.
 - examples for fountain filter in Imager::Filters
 - allow Imager::Fountain to take color descriptions (eg. blue, FF000)
   instead of color objects for c0 and c1.
-- support newer GIMP gradient files with the Name line
+- support newer GIMP gradient files with the Name line (done)
 - provide access to right-side bearing information from the bounding box
   function
 - capture TIFF read warnings (i_warnings tag?) (done)

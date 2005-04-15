@@ -28,8 +28,17 @@ file or you can build them from scratch.
 
 =item read(gimp=>$filename)
 
-  Loads a gradient from the given GIMP gradient file, and returns a
-  new Imager::Fountain object.
+=item read(gimp=>$filename, name=>\$name)
+
+Loads a gradient from the given GIMP gradient file, and returns a
+new Imager::Fountain object.
+
+If the name parameter is supplied as a scalar reference then any name
+field from newer GIMP gradient files will be returned in it.
+
+  my $gradient = Imager::Fountain->read(gimp=>'foo.ggr');
+  my $name;
+  my $gradient2 = Imager::Fountain->read(gimp=>'bar.ggr', name=>\$name);
 
 =cut
 
@@ -44,7 +53,10 @@ sub read {
       return;
     }
 
-    return $class->_load_gimp_gradient($fh, $opts{gimp});
+    my $trash_name;
+    my $name_ref = $opts{name} && ref $opts{name} ? $opts{name} : \$trash_name;
+
+    return $class->_load_gimp_gradient($fh, $opts{gimp}, $name_ref);
   }
   else {
     warn "$class::read: Nothing to do!";
@@ -54,7 +66,17 @@ sub read {
 
 =item write(gimp=>$filename)
 
+=item write(gimp=>$filename, name=>$name)
+
 Save the gradient to a GIMP gradient file.
+
+The second variant allows the gradient name to be set (for newer
+versions of the GIMP).
+
+  $gradient->write(gimp=>'foo.ggr')
+    or die Imager->errstr;
+  $gradient->write(gimp=>'bar.ggr', name=>'the bar gradient')
+    or die Imager->errstr;
 
 =cut
 
@@ -69,7 +91,7 @@ sub write {
       return;
     }
 
-    return $self->_save_gimp_gradient($fh, $opts{gimp});
+    return $self->_save_gimp_gradient($fh, $opts{gimp}, $opts{name});
   }
   else {
     warn "Nothing to do\n";
@@ -283,18 +305,22 @@ Does the work of loading a GIMP gradient file.
 =cut
 
 sub _load_gimp_gradient {
-  my ($class, $fh, $name) = @_;
+  my ($class, $fh, $filename, $name) = @_;
 
   my $head = <$fh>;
   chomp $head;
   unless ($head eq 'GIMP Gradient') {
-    $Imager::ERRSTR = "$name is not a GIMP gradient file";
+    $Imager::ERRSTR = "$filename is not a GIMP gradient file";
     return;
   }
   my $count = <$fh>;
   chomp $count;
+  if ($count =~ /^name:\s?(.*)/i) {
+    ref $name and $$name = $1;
+    $count = <$fh>; # try again
+  }
   unless ($count =~ /^\d$/) {
-    $Imager::ERRSTR = "$name is missing the segment count";
+    $Imager::ERRSTR = "$filename is missing the segment count";
     return;
   }
   my @result;
@@ -322,18 +348,23 @@ Does the work of saving to a GIMP gradient file.
 =cut
 
 sub _save_gimp_gradient {
-  my ($self, $fh, $name) = @_;
+  my ($self, $fh, $filename, $name) = @_;
 
   print $fh "GIMP Gradient\n";
+  defined $name or $name = '';
+  $name =~ tr/ -~/ /cds;
+  if ($name) {
+    print $fh "Name: $name\n";
+  }
   print $fh scalar(@$self),"\n";
   for my $row (@$self) {
     printf $fh "%.6f %.6f %.6f ",@{$row}[0..2];
     for my $i (0, 1) {
       for ($row->[3+$i]->rgba) {
-        printf $fh, "%.6f ", $_;
+        printf $fh "%.6f ", $_/255.0;
       }
     }
-    print $fh @{$row}[5,6];
+    print $fh "@{$row}[5,6]";
     unless (print $fh "\n") {
       $Imager::ERRSTR = "write error: $!";
       return;
