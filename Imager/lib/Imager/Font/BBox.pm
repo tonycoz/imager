@@ -131,7 +131,7 @@ otherwise the same as end_offset.
 sub advance_width {
   my $self = shift;
 
-  @$self > 6 ? $self->[6] : $self->[5];
+  @$self > 6 ? $self->[6] : $self->[2];
 }
 
 =item total_width()

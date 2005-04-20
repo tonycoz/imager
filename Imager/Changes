@@ -1059,6 +1059,9 @@ Revision history for Perl extension Imager.
   descriptions as other functions do.
 - fix a few compiler warnings
 - document the Imager::Font::BBox advance_width() method
+- Imager::Font::BBox advance_width() method was falling back to
+  the wrong value when the font driver's low level function
+  didn't return the advance width.
 
 =================================================================
 
