@@ -1057,6 +1057,8 @@ Revision history for Perl extension Imager.
 - the segments parameter supplied to the fountain filter and the
   fountain fill contructor now accepts color names or other 
   descriptions as other functions do.
+- fix a few compiler warnings
+- document the Imager::Font::BBox advance_width() method
 
 =================================================================
 

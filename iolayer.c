@@ -6,6 +6,7 @@
 #ifdef _MSC_VER
 #include <io.h>
 #endif
+#include <string.h>
 
 #define IOL_DEB(x)
 

@@ -14,6 +14,9 @@ not commitments.
 - implement i_incomplete for bmp files
 - check if freetype 2 is faster/slower than freetype 1 with Imager's glyph
   caching.  If FT1 is faster, add caching as a TODO for FT2.
+- add XS for i_tags_get_string() and test it.
+- test and fix problem with fallback value for 
+  Imager::Font::BBox->advance_width.
 - add sample CGI that handles an uploaded image (done)
 - examples for fountain filter in Imager::Filters
 - allow Imager::Fountain to take color descriptions (eg. blue, FF000)
