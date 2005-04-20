@@ -1,5 +1,6 @@
 #include "imconfig.h"
 #include "log.h"
+#include <stdlib.h>
 
 #define DTBUFF 50
 #define DATABUFF DTBUFF+3+10+1+5+1+1

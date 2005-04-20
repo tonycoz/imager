@@ -123,6 +123,9 @@ sub ascent {
 
 =item advance_width()
 
+The advance width of the string, if the driver supports that,
+otherwise the same as end_offset.
+
 =cut
 
 sub advance_width {

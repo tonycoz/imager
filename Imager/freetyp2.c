@@ -766,6 +766,7 @@ Returns non-zero on success.
 =cut
 */
 
+int
 i_ft2_cp(FT2_Fonthandle *handle, i_img *im, int tx, int ty, int channel,
          double cheight, double cwidth, char const *text, int len, int align,
          int aa, int vlayout, int utf8) {
@@ -1004,7 +1005,7 @@ i_ft2_glyph_name(FT2_Fonthandle *handle, unsigned long ch, char *name_buf,
     if (error) {
       ft2_push_message(error);
       *name_buf = '\0';
-      return;
+      return 0;
     }
     if (*name_buf) {
       return strlen(name_buf) + 1;
