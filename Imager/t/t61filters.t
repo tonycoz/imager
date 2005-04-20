@@ -1,7 +1,7 @@
 #!perl -w
 use strict;
 use Imager qw(:handy);
-use Test::More tests => 54;
+use Test::More tests => 59;
 Imager::init_log("testout/t61filters.log", 1);
 # meant for testing the filters themselves
 my $imbase = Imager->new;
@@ -134,6 +134,34 @@ ok($f7, "read what we wrote")
   or print "# ",Imager->errstr,"\n";
 is($name, "test gradient", "check the name matches");
 
+# we attempt to convert color names in segments to segments now
+{
+  my @segs =
+    (
+     [ 0.0, 0.5, 1.0, '000000', '#FFF', 0, 0 ],
+    );
+  my $im = Imager->new(xsize=>50, ysize=>50);
+  ok($im->filter(type=>'fountain', segments => \@segs,
+                 xa=>0, ya=>30, xb=>49, yb=>30), 
+     "fountain with color names instead of objects in segments");
+  my $left = $im->getpixel('x'=>0, 'y'=>20);
+  ok(color_close($left, Imager::Color->new(0,0,0)),
+     "check black converted correctly");
+  my $right = $im->getpixel('x'=>49, 'y'=>20);
+  ok(color_close($right, Imager::Color->new(255,255,255)),
+     "check white converted correctly");
+
+  # check that invalid color names are handled correctly
+  my @segs2 =
+    (
+     [ 0.0, 0.5, 1.0, '000000', 'FxFxFx', 0, 0 ],
+    );
+  ok(!$im->filter(type=>'fountain', segments => \@segs2,
+                  xa=>0, ya=>30, xb=>49, yb=>30), 
+     "fountain with invalid color name");
+  cmp_ok($im->errstr, '=~', 'No color named', "check error message");
+}
+
 sub test {
   my ($in, $params, $out) = @_;
 
@@ -148,4 +176,18 @@ sub test {
       skip("couldn't filter", 1);
     }
   }
+}
+
+sub color_close {
+  my ($c1, $c2) = @_;
+
+  my @c1 = $c1->rgba;
+  my @c2 = $c2->rgba;
+
+  for my $i (0..2) {
+    if (abs($c1[$i]-$c2[$i]) > 2) {
+      return 0;
+    }
+  }
+  return 1;
 }

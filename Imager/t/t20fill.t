@@ -1,14 +1,11 @@
 #!perl -w
 use strict;
-
-print "1..40\n";
+use Test::More tests => 47;
 
 use Imager ':handy';
 use Imager::Fill;
 use Imager::Color::Float;
 use Config;
-
-sub ok ($$$);
 
 Imager::init_log("testout/t20fill.log", 1);
 
@@ -16,38 +13,38 @@ my $blue = NC(0,0,255);
 my $red = NC(255, 0, 0);
 my $redf = Imager::Color::Float->new(1, 0, 0);
 my $rsolid = Imager::i_new_fill_solid($blue, 0);
-ok(1, $rsolid, "building solid fill");
+ok($rsolid, "building solid fill");
 my $raw1 = Imager::ImgRaw::new(100, 100, 3);
 # use the normal filled box
 Imager::i_box_filled($raw1, 0, 0, 99, 99, $blue);
 my $raw2 = Imager::ImgRaw::new(100, 100, 3);
 Imager::i_box_cfill($raw2, 0, 0, 99, 99, $rsolid);
-ok(2, 1, "drawing with solid fill");
+ok(1, "drawing with solid fill");
 my $diff = Imager::i_img_diff($raw1, $raw2);
-ok(3, $diff == 0, "solid fill doesn't match");
+ok($diff == 0, "solid fill doesn't match");
 Imager::i_box_filled($raw1, 0, 0, 99, 99, $red);
 my $rsolid2 = Imager::i_new_fill_solidf($redf, 0);
-ok(4, $rsolid2, "creating float solid fill");
+ok($rsolid2, "creating float solid fill");
 Imager::i_box_cfill($raw2, 0, 0, 99, 99, $rsolid2);
 $diff = Imager::i_img_diff($raw1, $raw2);
-ok(5, $diff == 0, "float solid fill doesn't match");
+ok($diff == 0, "float solid fill doesn't match");
 
 # ok solid still works, let's try a hatch
 # hash1 is a 2x2 checkerboard
 my $rhatcha = Imager::i_new_fill_hatch($red, $blue, 0, 1, undef, 0, 0);
 my $rhatchb = Imager::i_new_fill_hatch($blue, $red, 0, 1, undef, 2, 0);
-ok(6, $rhatcha && $rhatchb, "can't build hatched fill");
+ok($rhatcha && $rhatchb, "can't build hatched fill");
 
 # the offset should make these match
 Imager::i_box_cfill($raw1, 0, 0, 99, 99, $rhatcha);
 Imager::i_box_cfill($raw2, 0, 0, 99, 99, $rhatchb);
-ok(7, 1, "filling with hatch");
+ok(1, "filling with hatch");
 $diff = Imager::i_img_diff($raw1, $raw2);
-ok(8, $diff == 0, "hatch images different");
+ok($diff == 0, "hatch images different");
 $rhatchb = Imager::i_new_fill_hatch($blue, $red, 0, 1, undef, 4, 6);
 Imager::i_box_cfill($raw2, 0, 0, 99, 99, $rhatchb);
 $diff = Imager::i_img_diff($raw1, $raw2);
-ok(9, $diff == 0, "hatch images different");
+ok($diff == 0, "hatch images different");
 
 # I guess I was tired when I originally did this - make sure it keeps
 # acting the way it's meant to
@@ -55,13 +52,13 @@ ok(9, $diff == 0, "hatch images different");
 $rhatchb = Imager::i_new_fill_hatch($red, $blue, 0, 1, undef, 2, 2);
 Imager::i_box_cfill($raw2, 0, 0, 99, 99, $rhatchb);
 $diff = Imager::i_img_diff($raw1, $raw2);
-ok(10, $diff == 0, "hatch images different");
+ok($diff == 0, "hatch images different");
 
 # this shouldn't match
 $rhatchb = Imager::i_new_fill_hatch($red, $blue, 0, 1, undef, 1, 1);
 Imager::i_box_cfill($raw2, 0, 0, 99, 99, $rhatchb);
 $diff = Imager::i_img_diff($raw1, $raw2);
-ok(11, $diff, "hatch images the same!");
+ok($diff, "hatch images the same!");
 
 # custom hatch
 # the inverse of the 2x2 checkerboard
@@ -69,19 +66,19 @@ my $hatch = pack("C8", 0x33, 0x33, 0xCC, 0xCC, 0x33, 0x33, 0xCC, 0xCC);
 my $rcustom = Imager::i_new_fill_hatch($blue, $red, 0, 0, $hatch, 0, 0);
 Imager::i_box_cfill($raw2, 0, 0, 99, 99, $rcustom);
 $diff = Imager::i_img_diff($raw1, $raw2);
-ok(12, !$diff, "custom hatch mismatch");
+ok(!$diff, "custom hatch mismatch");
 
 # test the oo interface
 my $im1 = Imager->new(xsize=>100, ysize=>100);
 my $im2 = Imager->new(xsize=>100, ysize=>100);
 
 my $solid = Imager::Fill->new(solid=>'#FF0000');
-ok(13, $solid, "creating oo solid fill");
-ok(14, $solid->{fill}, "bad oo solid fill");
+ok($solid, "creating oo solid fill");
+ok($solid->{fill}, "bad oo solid fill");
 $im1->box(fill=>$solid);
 $im2->box(filled=>1, color=>$red);
 $diff = Imager::i_img_diff($im1->{IMG}, $im2->{IMG});
-ok(15, !$diff, "oo solid fill");
+ok(!$diff, "oo solid fill");
 
 my $hatcha = Imager::Fill->new(hatch=>'check2x2');
 my $hatchb = Imager::Fill->new(hatch=>'check2x2', dx=>2);
@@ -89,17 +86,17 @@ $im1->box(fill=>$hatcha);
 $im2->box(fill=>$hatchb);
 # should be different
 $diff = Imager::i_img_diff($im1->{IMG}, $im2->{IMG});
-ok(16, $diff, "offset checks the same!");
+ok($diff, "offset checks the same!");
 $hatchb = Imager::Fill->new(hatch=>'check2x2', dx=>2, dy=>2);
 $im2->box(fill=>$hatchb);
 $diff = Imager::i_img_diff($im1->{IMG}, $im2->{IMG});
-ok(17, !$diff, "offset into similar check should be the same");
+ok(!$diff, "offset into similar check should be the same");
 
 # test dymanic build of fill
 $im2->box(fill=>{hatch=>'check2x2', dx=>2, fg=>NC(255,255,255), 
                  bg=>NC(0,0,0)});
 $diff = Imager::i_img_diff($im1->{IMG}, $im2->{IMG});
-ok(18, !$diff, "offset and flipped should be the same");
+ok(!$diff, "offset and flipped should be the same");
 
 # a simple demo
 my $im = Imager->new(xsize=>200, ysize=>200);
@@ -134,16 +131,16 @@ Imager::i_box_filled($rffcmp, 10, 10, 20, 90, $red);
 Imager::i_box_filled($rffcmp, 80, 10, 90, 90, $red);
 Imager::i_box_filled($rffcmp, 20, 45, 80, 55, $red);
 $diff = Imager::i_img_diff($rffimg, $rffcmp);
-ok(19, !$diff, "flood fill difference");
+ok(!$diff, "flood fill difference");
 
 my $ffim = Imager->new(xsize=>100, ysize=>100);
 my $yellow = Imager::Color->new(255, 255, 0);
 $ffim->box(xmin=>10, ymin=>10, xmax=>20, ymax=>90, color=>$blue, filled=>1);
 $ffim->box(xmin=>20, ymin=>45, xmax=>80, ymax=>55, color=>$blue, filled=>1);
 $ffim->box(xmin=>80, ymin=>10, xmax=>90, ymax=>90, color=>$blue, filled=>1);
-ok(20, $ffim->flood_fill('x'=>50, 'y'=>50, color=>$red), "flood fill");
+ok($ffim->flood_fill('x'=>50, 'y'=>50, color=>$red), "flood fill");
 $diff = Imager::i_img_diff($rffcmp, $ffim->{IMG});
-ok(21, !$diff, "oo flood fill difference");
+ok(!$diff, "oo flood fill difference");
 $ffim->flood_fill('x'=>50, 'y'=>50,
                   fill=> {
                           hatch => 'check2x2'
@@ -178,7 +175,6 @@ my %comb_tests =
    color => { result=>NC(64, 37, 52) },
   );
 
-my $testnum = 22; # from 22 to 34
 for my $comb (Imager::Fill->combines) {
   my $test = $comb_tests{$comb};
   my $targim = Imager->new(xsize=>1, ysize=>1);
@@ -187,19 +183,19 @@ for my $comb (Imager::Fill->combines) {
   $targim->box(fill=>$fillobj);
   my $c = Imager::i_get_pixel($targim->{IMG}, 0, 0);
   if ($test->{result} =~ /ARRAY/) {
-    ok($testnum++, scalar grep(color_close($_, $c), @{$test->{result}}), 
+    ok(scalar grep(color_close($_, $c), @{$test->{result}}), 
        "combine '$comb'")
       or print "# got:",join(",", $c->rgba),"  allowed: ", 
         join("|", map { join(",", $_->rgba) } @{$test->{result}}),"\n";
   }
   else {
-    ok($testnum++, color_close($c, $test->{result}), "combine '$comb'")
+    ok(color_close($c, $test->{result}), "combine '$comb'")
       or print "# got: ",join(",", $c->rgba),
         "  allowed: ",join(",", $test->{result}->rgba),"\n";
   }
 }
 
-ok($testnum++, $ffim->arc(r=>45, color=>$blue, aa=>1), "aa circle");
+ok($ffim->arc(r=>45, color=>$blue, aa=>1), "aa circle");
 $ffim->write(file=>"testout/t20_aacircle.ppm");
 
 # image based fills
@@ -214,8 +210,7 @@ $ooim->box(filled=>1, color=>$blue, xmin=>20, ymin=>25, xmax=>80, ymax=>125);
 $ooim->arc(r=>30, color=>$red, aa=>1);
 
 my $oocopy = $ooim->copy();
-ok($testnum++, 
-   $oocopy->arc(fill=>{image=>$fillim, 
+ok($oocopy->arc(fill=>{image=>$fillim, 
                        combine=>'normal',
                        xoff=>5}, r=>40),
    "image based fill");
@@ -224,8 +219,7 @@ $oocopy->write(file=>'testout/t20_image.ppm');
 # a more complex version
 use Imager::Matrix2d ':handy';
 $oocopy = $ooim->copy;
-ok($testnum++,
-   $oocopy->arc(fill=>{
+ok($oocopy->arc(fill=>{
                        image=>$fillim,
                        combine=>'normal',
                        matrix=>m2d_rotate(degrees=>30),
@@ -234,45 +228,70 @@ ok($testnum++,
    "transformed image based fill");
 $oocopy->write(file=>'testout/t20_image_xform.ppm');
 
-ok($testnum++,
-   !$oocopy->arc(fill=>{ hatch=>"not really a hatch" }, r=>20),
+ok(!$oocopy->arc(fill=>{ hatch=>"not really a hatch" }, r=>20),
    "error handling of automatic fill conversion");
-ok($testnum++,
-   $oocopy->errstr =~ /Unknown hatch type/,
+ok($oocopy->errstr =~ /Unknown hatch type/,
    "error message for automatic fill conversion");
 
 # previous box fills to float images, or using the fountain fill
 # got into a loop here
 
-if ($Config{d_alarm}) {
+SKIP:
+{
+  skip("can't test without alarm()", 1) unless $Config{d_alarm};
   local $SIG{ALRM} = sub { die; };
 
   eval {
     alarm(2);
-    ok($testnum,
-       $ooim->box(xmin=>20, ymin=>20, xmax=>80, ymax=>40,
+    ok($ooim->box(xmin=>20, ymin=>20, xmax=>80, ymax=>40,
                   fill=>{ fountain=>'linear', xa=>20, ya=>20, xb=>80, 
                           yb=>20 }), "linear box fill");
-    ++$testnum;
     alarm 0;
   };
-  $@ and ok($testnum++, 0, "linear box fill $@");
-}
-else {
-  print "ok $testnum # skipped can't test without alarm\n";
-  ++$testnum;
+  $@ and ok(0, "linear box fill $@");
 }
 
-sub ok ($$$) {
-  my ($num, $test, $desc) = @_;
+# test that passing in a non-array ref returns an error
+{
+  my $fill = Imager::Fill->new(fountain=>'linear',
+                               xa => 20, ya=>20, xb=>20, yb=>40,
+                               segments=>"invalid");
+  ok(!$fill, "passing invalid segments produces an error");
+  cmp_ok(Imager->errstr, '=~', 'array reference',
+         "check the error message");
+}
 
-  if ($test) {
-    print "ok $num\n";
-  }
-  else {
-    print "not ok $num # $desc\n";
-  }
-  $test;
+# test that colors in segments are converted
+{
+  my @segs =
+    (
+     [ 0.0, 0.5, 1.0, '000000', '#FFF', 0, 0 ],
+    );
+  my $fill = Imager::Fill->new(fountain=>'linear',
+                               xa => 0, ya=>20, xb=>49, yb=>20,
+                               segments=>\@segs);
+  ok($fill, "check that color names are converted")
+    or print "# ",Imager->errstr,"\n";
+  my $im = Imager->new(xsize=>50, ysize=>50);
+  $im->box(fill=>$fill);
+  my $left = $im->getpixel('x'=>0, 'y'=>20);
+  ok(color_close($left, Imager::Color->new(0,0,0)),
+     "check black converted correctly");
+  my $right = $im->getpixel('x'=>49, 'y'=>20);
+  ok(color_close($right, Imager::Color->new(255,255,255)),
+     "check white converted correctly");
+
+  # check that invalid colors handled correctly
+  
+  my @segs2 =
+    (
+     [ 0.0, 0.5, 1.0, '000000', 'FxFxFx', 0, 0 ],
+    );
+  my $fill2 = Imager::Fill->new(fountain=>'linear',
+                               xa => 0, ya=>20, xb=>49, yb=>20,
+                               segments=>\@segs2);
+  ok(!$fill2, "check handling of invalid color names");
+  cmp_ok(Imager->errstr, '=~', 'No color named', "check error message");
 }
 
 sub color_close {

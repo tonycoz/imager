@@ -1054,6 +1054,9 @@ Revision history for Perl extension Imager.
   Imager::Fountain can now read and write such gradient files.  The
   interface is a bit indirect, but I'd like to preserve
   Imager::Fountain as a blessed array ref for now.
+- the segments parameter supplied to the fountain filter and the
+  fountain fill contructor now accepts color names or other 
+  descriptions as other functions do.
 
 =================================================================
 

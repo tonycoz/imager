@@ -354,9 +354,19 @@ BEGIN {
      callsub  => 
      sub {
        my %hsh = @_;
+
+       # make sure the segments are specified with colors
+       my @segments;
+       for my $segment (@{$hsh{segments}}) {
+         my @new_segment = @$segment;
+         
+         $_ = _color($_) or die $Imager::ERRSTR."\n" for @new_segment[3,4];
+         push @segments, \@new_segment;
+       }
+
        i_fountain($hsh{image}, $hsh{xa}, $hsh{ya}, $hsh{xb}, $hsh{yb},
                   $hsh{ftype}, $hsh{repeat}, $hsh{combine}, $hsh{super_sample},
-                  $hsh{ssample_param}, $hsh{segments});
+                  $hsh{ssample_param}, \@segments);
      },
     };
   $filters{unsharpmask} =
@@ -1613,7 +1623,14 @@ sub filter {
     }
   }
 
-  &{$filters{$input{'type'}}{callsub}}(%hsh);
+  eval {
+    local $SIG{__DIE__}; # we don't want this processed by confess, etc
+    &{$filters{$input{'type'}}{callsub}}(%hsh);
+  };
+  if ($@) {
+    chomp($self->{ERRSTR} = $@);
+    return;
+  }
 
   my @b=keys %hsh;
 
