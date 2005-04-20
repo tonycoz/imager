@@ -6,6 +6,7 @@ BEGIN { use_ok(Imager => ':all') }
 
 init_log("testout/t37w32font.log",1);
 
+SKIP:
 {
   i_has_format('w32') or skip("no MS Windows", 6);
   print "# has w32\n";
