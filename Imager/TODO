@@ -25,6 +25,8 @@ not commitments.
 - provide access to right-side bearing information from the bounding box
   function
 - capture TIFF read warnings (i_warnings tag?) (done)
+- Imager::Matrix2d rotate method only applies offset if both x and y
+  are non-zero, it should do it if either is non-zero
 - add Imager::Cookbook with at least 5 recipes (done)
 - store floating point tags in an appropriate precision (done)
 - allow image creation to fail on malloc() failure for the image data
