@@ -1664,7 +1664,7 @@ Function to get texts bounding boxes given the instance of the font (internal)
 static
 undef_int
 i_tt_bbox_inst( TT_Fonthandle *handle, int inst ,const char *txt, int len, int cords[BOUNDING_BOX_COUNT], int utf8 ) {
-  int i, upm, casc, cdesc, first;
+  int upm, casc, cdesc, first;
   
   int start    = 0;
   int width    = 0;
@@ -1717,7 +1717,7 @@ i_tt_bbox_inst( TT_Fonthandle *handle, int inst ,const char *txt, int len, int c
 	descent  = (gm->bbox.yMin-63) / 64;
 	first = 0;
       }
-      if (i == len-1) {
+      if (!len) { /* if at end of string */
 	/* the right-side bearing - in case the right-side of a 
 	   character goes past the right of the advance width,
 	   as is common for italic fonts

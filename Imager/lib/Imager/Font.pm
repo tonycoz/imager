@@ -325,7 +325,8 @@ Imager::Font - Font handling for Imager.
    $pos_width,
    $global_ascent,
    $descent,
-   $ascent) = $font->bounding_box(string=>"Foo");
+   $ascent,
+   $advance_width) = $font->bounding_box(string=>"Foo");
 
   $logo = $font->logo(text   => "Slartibartfast Enterprises",
 		      size   => 40,

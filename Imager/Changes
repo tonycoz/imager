@@ -1062,6 +1062,10 @@ Revision history for Perl extension Imager.
 - Imager::Font::BBox advance_width() method was falling back to
   the wrong value when the font driver's low level function
   didn't return the advance width.
+- the FT 1.x was comparing versus an uninitialized variable when
+  checking the end of string when calculating the right side bearing
+  used to adjust pos_width for glyphs that overlap the right side of the
+  advance width.
 
 =================================================================
 

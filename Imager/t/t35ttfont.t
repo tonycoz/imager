@@ -1,7 +1,7 @@
 #!perl -w
 use strict;
 use lib 't';
-use Test::More tests => 40;
+use Test::More tests => 43;
 
 BEGIN { use_ok(Imager => ':all') }
 require "t/testtools.pl";
@@ -119,7 +119,7 @@ SKIP:
  SKIP:
   {
     ok($hcfont, "loading existence test font")
-      or skip("could not load test font", 11);
+      or skip("could not load test font", 14);
 
     # list interface
     my @exists = $hcfont->has_chars(string=>'!A');
@@ -147,6 +147,14 @@ SKIP:
     
     print "# ** name table of the test font **\n";
     Imager::i_tt_dump_names($hcfont->{id});
+
+    # the test font is known to have a shorter advance width for that char
+    my @bbox = $hcfont->bounding_box(string=>"/", size=>100);
+    is(@bbox, 7, "should be 7 entries");
+    isnt($bbox[6], $bbox[2], "different advance width from pos width");
+    print "# @bbox\n";
+    my $bbox = $hcfont->bounding_box(string=>"/", size=>100);
+    isnt($bbox->pos_width, $bbox->advance_width, "OO check");
   }
   undef $hcfont;
   

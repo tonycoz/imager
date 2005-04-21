@@ -237,7 +237,7 @@ if (okx($exfont, "loaded existence font")) {
   # the test font is known to have a shorter advance width for that char
   my @bbox = $exfont->bounding_box(string=>"/", size=>100);
   okx(@bbox == 7, "should be 7 entries");
-  okx($bbox[6] != $bbox[4], "different advance width");
+  okx($bbox[6] != $bbox[2], "different advance width");
   my $bbox = $exfont->bounding_box(string=>"/", size=>100);
   okx($bbox->pos_width != $bbox->advance_width, "OO check");
 
