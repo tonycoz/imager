@@ -16,7 +16,8 @@ not commitments.
   caching.  If FT1 is faster, add caching as a TODO for FT2.
 - add XS for i_tags_get_string() and test it.
 - test and fix problem with fallback value for 
-  Imager::Font::BBox->advance_width.
+  Imager::Font::BBox->advance_width. (done)
+- i_tt_bbox_inst in font.c uses variable i without ever setting it.
 - add sample CGI that handles an uploaded image (done)
 - examples for fountain filter in Imager::Filters
 - allow Imager::Fountain to take color descriptions (eg. blue, FF000)
