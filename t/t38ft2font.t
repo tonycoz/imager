@@ -1,4 +1,5 @@
 #!perl -w
+use strict;
 # Before `make install' is performed this script should be runnable with
 # `make test'. After `make install' it should work as `perl test.pl'
 
@@ -7,6 +8,7 @@
 # Change 1..1 below to 1..last_test_to_print .
 # (It may become useful if the test is moved to ./t subdirectory.)
 
+my $loaded;
 BEGIN { $| = 1; print "1..138\n"; }
 END {print "not ok 1\n" unless $loaded;}
 use Imager qw(:all);
@@ -23,7 +25,7 @@ if (!(i_has_format("ft2")) ) {
 }
 print "# has ft2\n";
 
-$fontname=$ENV{'TTFONTTEST'}||'./fontfiles/dodge.ttf';
+my$fontname=$ENV{'TTFONTTEST'}||'./fontfiles/dodge.ttf';
 
 if (! -f $fontname) {
   skipx(137, "cannot find fontfile $fontname");
@@ -34,17 +36,17 @@ if (! -f $fontname) {
 #i_init_fonts();
 #     i_tt_set_aa(1);
 
-$bgcolor=i_color_new(255,0,0,0);
-$overlay=Imager::ImgRaw::new(200,70,3);
+my $bgcolor=i_color_new(255,0,0,0);
+my $overlay=Imager::ImgRaw::new(200,70,3);
 
-$ttraw=Imager::Font::FreeType2::i_ft2_new($fontname, 0);
+my $ttraw=Imager::Font::FreeType2::i_ft2_new($fontname, 0);
 
 $ttraw or print Imager::_error_as_msg(),"\n";
 okx($ttraw, "loaded raw font");
 #use Data::Dumper;
 #warn Dumper($ttraw);
 
-@bbox=Imager::Font::FreeType2::i_ft2_bbox($ttraw, 50.0, 0, 'XMCLH', 0);
+my @bbox=Imager::Font::FreeType2::i_ft2_bbox($ttraw, 50.0, 0, 'XMCLH', 0);
 print "#bbox @bbox\n";
 
 okx(@bbox == 7, "i_ft2_bbox() returns 7 values");
@@ -59,7 +61,7 @@ okx(i_writeppm_wiol($overlay, $IO), "saved image");
 close(FH);
 
 $bgcolor=i_color_set($bgcolor,200,200,200,0);
-$backgr=Imager::ImgRaw::new(500,300,3);
+my $backgr=Imager::ImgRaw::new(500,300,3);
 
 #     i_tt_set_aa(2);
 okx(Imager::Font::FreeType2::i_ft2_text($ttraw,$backgr,100,150,NC(255, 64, 64),200.0,50, 'MAW',1,1,0, 0), "drew MAW");
@@ -196,7 +198,7 @@ okx($oof->has_chars(string=>"H\x01") eq "\x01\x00",
     "scalar has_chars()");
 
 print "# OO bounding boxes\n";
-my @bbox = $oof->bounding_box(string=>"hello", size=>30);
+@bbox = $oof->bounding_box(string=>"hello", size=>30);
 my $bbox = $oof->bounding_box(string=>"hello", size=>30);
 
 okx(@bbox == 7, "list bbox returned 7 items");
