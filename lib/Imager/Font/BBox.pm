@@ -15,6 +15,8 @@ Imager::Font::BBox - objects representing the bounding box of a string.
 
   # methods
   my $start = $bbox->start_offset;
+  my $left_bearing = $bbox->left_bearing;
+  my $right_bearing = $bbox->right_bearing;
   my $end = $bbox->end_offset;
   my $gdescent = $box->global_descent;
   my $gascent = $bbox->global_ascent;
@@ -23,6 +25,7 @@ Imager::Font::BBox - objects representing the bounding box of a string.
   my $total_width = $bbox->total_width;
   my $fheight = $bbox->font_height;
   my $theight = $bbox->text_height;
+  my $display_width = $bbox->display_width;
 
 =head1 DESCRIPTION
 
@@ -45,6 +48,8 @@ first glyph is to the right of the drawing location.
 The alias neg_width() is present to match the bounding_box()
 documentation for list context.
 
+The alias left_bearing() is present to match font terminology.
+
 =cut
 
 sub start_offset {
@@ -52,6 +57,10 @@ sub start_offset {
 }
 
 sub neg_width {
+  return $_[0][0];
+}
+
+sub left_bearing {
   return $_[0][0];
 }
 
@@ -167,6 +176,42 @@ sub text_height {
   my $self = shift;
 
   $self->ascent - $self->descent;
+}
+
+=item right_bearing
+
+The distance from the right of the last glyph to the end of the advance
+point.
+
+If the glyph overflows the right side of the advance width this value
+is negative.
+
+=cut
+
+sub right_bearing {
+  my $self = shift;
+
+  @$self >= 8 && return $self->[7]; # driver gives it to us
+
+  # otherwise the closest we have is the difference between the 
+  # end_pos and advance_width
+  return $self->advance_width - $self->pos_width;
+}
+
+=item display_width
+
+The distance from the left-most pixel of the left-most glyph to the
+right-most pixel of the right-most glyph.
+
+Equals advance_width - left_bearing - right_bearing (and implemented
+that way.)
+
+=cut
+
+sub display_width {
+  my ($self) = @_;
+
+  $self->advance_width - $self->left_bearing - $self->right_bearing;
 }
 
 =back

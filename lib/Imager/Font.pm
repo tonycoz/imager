@@ -326,7 +326,8 @@ Imager::Font - Font handling for Imager.
    $global_ascent,
    $descent,
    $ascent,
-   $advance_width) = $font->bounding_box(string=>"Foo");
+   $advance_width,
+   $right_bearing) = $font->bounding_box(string=>"Foo");
 
   $logo = $font->logo(text   => "Slartibartfast Enterprises",
 		      size   => 40,
@@ -415,7 +416,8 @@ Returns the bounding box for the specified string.  Example:
       $global_ascent,
       $descent,
       $ascent,
-      $advance_width) = $font->bounding_box(string => "A Fool");
+      $advance_width,
+      $right_bearing) = $font->bounding_box(string => "A Fool");
 
   my $bbox_object = $font->bounding_box(string => "A Fool");
 
@@ -452,6 +454,12 @@ the distance from the start point that the next string output should
 start at, this is often the same as C<$pos_width>, but can be
 different if the final character overlaps the right side of its
 character cell.
+
+=item C<$right_bearing>
+
+The distance from the right side of the final glyph to the end of the
+advance width.  If the final glyph overflows the advance width this
+value is negative.
 
 =back
 

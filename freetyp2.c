@@ -389,20 +389,24 @@ i_ft2_bbox(FT2_Fonthandle *handle, double cheight, double cwidth,
        handle the case where the right the of the character overlaps the 
        right*/
       rightb = (gm->horiAdvance - gm->horiBearingX - gm->width)/64;
-      if (rightb > 0)
-        rightb = 0;
+      /*if (rightb > 0)
+        rightb = 0;*/
     }
   }
 
   bbox[BBOX_NEG_WIDTH] = start;
   bbox[BBOX_GLOBAL_DESCENT] = handle->face->size->metrics.descender / 64;
-  bbox[BBOX_POS_WIDTH] = width - rightb;
+  bbox[BBOX_POS_WIDTH] = width;
+  if (rightb < 0)
+    bbox[BBOX_POS_WIDTH] -= rightb;
   bbox[BBOX_GLOBAL_ASCENT] = handle->face->size->metrics.ascender / 64;
   bbox[BBOX_DESCENT] = descent;
   bbox[BBOX_ASCENT] = ascent;
   bbox[BBOX_ADVANCE_WIDTH] = width;
+  bbox[BBOX_RIGHT_BEARING] = rightb;
+  mm_log((1, " bbox=> negw=%d glob_desc=%d pos_wid=%d glob_asc=%d desc=%d asc=%d adv_width=%d rightb=%d\n", bbox[0], bbox[1], bbox[2], bbox[3], bbox[4], bbox[5], bbox[6], bbox[7]));
 
-  return BBOX_ADVANCE_WIDTH + 1;
+  return BBOX_RIGHT_BEARING + 1;
 }
 
 /*

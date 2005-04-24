@@ -1,6 +1,7 @@
 #!perl -w
 use strict;
-use Test::More tests => 138;
+use Test::More tests => 144;
+++$|;
 # Before `make install' is performed this script should be runnable with
 # `make test'. After `make install' it should work as `perl test.pl'
 
@@ -37,7 +38,7 @@ SKIP:
   my @bbox=Imager::Font::FreeType2::i_ft2_bbox($ttraw, 50.0, 0, 'XMCLH', 0);
   print "#bbox @bbox\n";
   
-  is(@bbox, 7, "i_ft2_bbox() returns 7 values");
+  is(@bbox, 8, "i_ft2_bbox() returns 8 values");
 
   ok(Imager::Font::FreeType2::i_ft2_cp($ttraw,$overlay,5,50,1,50.0,50, 'XMCLH',1,1, 0, 0), "drawn to channel");
   i_line($overlay,0,50,100,50,$bgcolor,1);
@@ -187,7 +188,7 @@ SKIP:
   @bbox = $oof->bounding_box(string=>"hello", size=>30);
   my $bbox = $oof->bounding_box(string=>"hello", size=>30);
 
-  is(@bbox, 7, "list bbox returned 7 items");
+  is(@bbox, 8, "list bbox returned 8 items");
   ok($bbox->isa('Imager::Font::BBox'), "scalar bbox returned right class");
   ok($bbox->start_offset == $bbox[0], "start_offset");
   ok($bbox->end_offset == $bbox[2], "end_offset");
@@ -223,13 +224,29 @@ SKIP:
   SKIP:
   {
     ok($exfont, "loaded existence font") or
-      skip("couldn't load test font", 5);
+      skip("couldn't load test font", 11);
+
     # the test font is known to have a shorter advance width for that char
     my @bbox = $exfont->bounding_box(string=>"/", size=>100);
-    is(@bbox, 7, "should be 7 entries");
+    is(@bbox, 8, "should be 8 entries");
     isnt($bbox[6], $bbox[2], "different advance width");
     my $bbox = $exfont->bounding_box(string=>"/", size=>100);
     ok($bbox->pos_width != $bbox->advance_width, "OO check");
+
+    cmp_ok($bbox->right_bearing, '<', 0, "check right bearing");
+
+    cmp_ok($bbox->display_width, '>', $bbox->advance_width,
+           "check display width (roughly)");
+
+    # check with a char that fits inside the box
+    my $bbox = $exfont->bounding_box(string=>"!", size=>100);
+    print "# pos width ", $bbox->pos_width, "\n";
+    is($bbox->pos_width, $bbox->advance_width, 
+       "check backwards compatibility");
+    cmp_ok($bbox->left_bearing, '>', 0, "left bearing positive");
+    cmp_ok($bbox->right_bearing, '>', 0, "right bearing positive");
+    cmp_ok($bbox->display_width, '<', $bbox->advance_width,
+           "display smaller than advance");
 
     # name tests
     # make sure the number of tests on each branch match
