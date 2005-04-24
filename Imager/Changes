@@ -1066,6 +1066,10 @@ Revision history for Perl extension Imager.
   checking the end of string when calculating the right side bearing
   used to adjust pos_width for glyphs that overlap the right side of the
   advance width.
+- Imager::Font::BBox objects now have right_bearing() and display_width()
+  methods.  Hopefully this and the advance_width() method fills out
+  the Imager bounding box interface to a useful state.
+  Implemented for FT2 so far.
 
 =================================================================
 

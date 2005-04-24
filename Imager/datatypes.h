@@ -235,6 +235,7 @@ enum bounding_box_index_t {
   BBOX_DESCENT,
   BBOX_ASCENT,
   BBOX_ADVANCE_WIDTH,
+  BBOX_RIGHT_BEARING,
   BOUNDING_BOX_COUNT
 };
 
