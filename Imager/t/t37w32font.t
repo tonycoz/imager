@@ -64,41 +64,44 @@ SKIP:
   is($bbox->advance_width, $bbox->end_offset, 
      "check advance_width fallback correct");
 
-  ok(Imager::i_wf_addfont("fontfiles/ExistenceTest.ttf"), "add test font");
-
-  my $namefont = Imager::Font->new(face=>"ExistenceTest");
-  ok($namefont, "create font based on added font");
-
-  # the test font is known to have a shorter advance width for that char
-  @bbox = $namefont->bounding_box(string=>"/", size=>100);
-  print "# / box: @bbox\n";
-  is(@bbox, 8, "should be 8 entries");
-  isnt($bbox[6], $bbox[2], "different advance width");
-  $bbox = $namefont->bounding_box(string=>"/", size=>100);
-  ok($bbox->pos_width != $bbox->advance_width, "OO check");
+  {
+    $^O eq 'cygwin' and skip("Too hard to get correct directory for test font on cygwin", 11);
+    ok(Imager::i_wf_addfont("fontfiles/ExistenceTest.ttf"), "add test font")
+      or print "# ",Imager::_error_as_msg(),"\n";
+    
+    my $namefont = Imager::Font->new(face=>"ExistenceTest");
+    ok($namefont, "create font based on added font");
+    
+    # the test font is known to have a shorter advance width for that char
+    @bbox = $namefont->bounding_box(string=>"/", size=>100);
+    print "# / box: @bbox\n";
+    is(@bbox, 8, "should be 8 entries");
+    isnt($bbox[6], $bbox[2], "different advance width");
+    $bbox = $namefont->bounding_box(string=>"/", size=>100);
+    ok($bbox->pos_width != $bbox->advance_width, "OO check");
+    
+    cmp_ok($bbox->right_bearing, '<', 0, "check right bearing");
   
-  cmp_ok($bbox->right_bearing, '<', 0, "check right bearing");
-  
-  cmp_ok($bbox->display_width, '>', $bbox->advance_width,
-	 "check display width (roughly)");
-
-  my $im = Imager->new(xsize=>200, ysize=>200);
-  $im->string(font=>$namefont, text=>"/", x=>20, y=>100, color=>'white', size=>100);
-  $im->line(color=>'blue', x1=>20, y1=>0, x2=>20, y2=>199);
-  my $right = 20 + $bbox->advance_width;
-  $im->line(color=>'blue', x1=>$right, y1=>0, x2=>$right, y2=>199);
-  $im->write(file=>'testout/t37w32_slash.ppm');
-
-  # check with a char that fits inside the box
-  $bbox = $namefont->bounding_box(string=>"!", size=>100);
-  print "# pos width ", $bbox->pos_width, "\n";
-  print "# ! box: @$bbox\n";
-  is($bbox->pos_width, $bbox->advance_width, 
+    cmp_ok($bbox->display_width, '>', $bbox->advance_width,
+	   "check display width (roughly)");
+    
+    my $im = Imager->new(xsize=>200, ysize=>200);
+    $im->string(font=>$namefont, text=>"/", x=>20, y=>100, color=>'white', size=>100);
+    $im->line(color=>'blue', x1=>20, y1=>0, x2=>20, y2=>199);
+    my $right = 20 + $bbox->advance_width;
+    $im->line(color=>'blue', x1=>$right, y1=>0, x2=>$right, y2=>199);
+    $im->write(file=>'testout/t37w32_slash.ppm');
+    
+    # check with a char that fits inside the box
+    $bbox = $namefont->bounding_box(string=>"!", size=>100);
+    print "# pos width ", $bbox->pos_width, "\n";
+    print "# ! box: @$bbox\n";
+    is($bbox->pos_width, $bbox->advance_width, 
      "check backwards compatibility");
-  cmp_ok($bbox->left_bearing, '>', 0, "left bearing positive");
-  cmp_ok($bbox->right_bearing, '>', 0, "right bearing positive");
-  cmp_ok($bbox->display_width, '<', $bbox->advance_width,
-	 "display smaller than advance");
-
+    cmp_ok($bbox->left_bearing, '>', 0, "left bearing positive");
+    cmp_ok($bbox->right_bearing, '>', 0, "right bearing positive");
+    cmp_ok($bbox->display_width, '<', $bbox->advance_width,
+	   "display smaller than advance");
+  }
 
 }
