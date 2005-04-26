@@ -10,7 +10,7 @@ init_log("testout/t35ttfont.log",2);
 
 SKIP:
 {
-  skip("freetype 1.x unavailable or disabled", 39) 
+  skip("freetype 1.x unavailable or disabled", 48) 
     unless i_has_format("tt");
   print "# has tt\n";
   
@@ -19,7 +19,7 @@ SKIP:
 
   if (!ok(-f $fontname, "check test font file exists")) {
     print "# cannot find fontfile for truetype test $fontname\n";
-    skip('Cannot load test font', 38);
+    skip('Cannot load test font', 47);
   }
 
   i_init_fonts();
