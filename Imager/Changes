@@ -1069,7 +1069,7 @@ Revision history for Perl extension Imager.
 - Imager::Font::BBox objects now have right_bearing() and display_width()
   methods.  Hopefully this and the advance_width() method fills out
   the Imager bounding box interface to a useful state.
-  Implemented for FT2 so far.
+  Implemented for FT2, FT1.x, T1Lib so far.
 
 =================================================================
 

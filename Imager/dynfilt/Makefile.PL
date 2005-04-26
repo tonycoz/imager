@@ -92,6 +92,8 @@ pure_all ::
 }
 
 # EU::MM crashes without this when we define it in the base Makefile.PL
+# but then warns about redefinition, so delete the GLOB entry
+BEGIN { delete $MY::{metafile} }
 sub MY::metafile {
   '';
 }

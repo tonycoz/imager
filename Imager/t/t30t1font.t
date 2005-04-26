@@ -7,7 +7,7 @@
 # Change 1..1 below to 1..last_test_to_print .
 # (It may become useful if the test is moved to ./t subdirectory.)
 use strict;
-use Test::More tests => 41;
+use Test::More tests => 50;
 BEGIN { use_ok(Imager => ':all') }
 
 #$Imager::DEBUG=1;
@@ -22,13 +22,13 @@ my $fontname_afm=$ENV{'T1FONTTESTAFM'}||'./fontfiles/dcr10.afm';
 SKIP:
 {
   if (!(i_has_format("t1")) ) {
-    skip(40, "t1lib unavailable or disabled", 40);
+    skip("t1lib unavailable or disabled", 49);
   }
   elsif (! -f $fontname_pfb) {
-    skip("cannot find fontfile for type 1 test $fontname_pfb", 40);
+    skip("cannot find fontfile for type 1 test $fontname_pfb", 49);
   }
   elsif (! -f $fontname_afm) {
-    skip("cannot find fontfile for type 1 test $fontname_afm", 40);
+    skip("cannot find fontfile for type 1 test $fontname_afm", 49);
   }
 
   print "# has t1\n";
@@ -37,7 +37,7 @@ SKIP:
 
   my $fnum=Imager::i_t1_new($fontname_pfb,$fontname_afm); # this will load the pfb font
   unless (ok($fnum >= 0, "load font $fontname_pfb")) {
-    skip("without the font I can't do a thing", 39);
+    skip("without the font I can't do a thing", 48);
   }
 
   my $bgcolor=Imager::Color->new(255,0,0,0);
@@ -48,7 +48,7 @@ SKIP:
   i_line($overlay,0,50,100,50,$bgcolor,1);
 
   my @bbox=i_t1_bbox(0,50.0,'XMCLH',5);
-  ok(@bbox == 7, "i_t1_bbox");
+  is(@bbox, 8, "i_t1_bbox");
   print "# bbox: ($bbox[0], $bbox[1]) - ($bbox[2], $bbox[3])\n";
 
   open(FH,">testout/t30t1font.ppm") || die "cannot open testout/t35t1font.ppm\n";
@@ -73,9 +73,9 @@ SKIP:
   my $alttext = "A\xA1A";
   
   my @utf8box = i_t1_bbox($fnum, 50.0, $text, length($text), 1);
-  is(@utf8box, 7, "utf8 bbox element count");
+  is(@utf8box, 8, "utf8 bbox element count");
   my @base = i_t1_bbox($fnum, 50.0, $alttext, length($alttext), 0);
-  is(@base, 7, "alt bbox element count");
+  is(@base, 8, "alt bbox element count");
   my $maxdiff = $fontname_pfb eq $deffont ? 0 : $base[2] / 3;
   print "# (@utf8box vs @base)\n";
   ok(abs($utf8box[2] - $base[2]) <= $maxdiff, 
@@ -101,7 +101,7 @@ SKIP:
     ok(i_t1_cp($backgr, 80, 180, 1, $fnum, 32, $text, length($text), 1),
         "cp UTF8");
     @utf8box = i_t1_bbox($fnum, 50.0, $text, length($text), 0);
-    is(@utf8box, 7, "native utf8 bbox element count");
+    is(@utf8box, 8, "native utf8 bbox element count");
     ok(abs($utf8box[2] - $base[2]) <= $maxdiff, 
       "compare box sizes native $utf8box[2] vs $base[2] (maxerror $maxdiff)");
     eval q{$text = "A\xA1\xA2\x01\x1F\x{0100}A"};
@@ -158,7 +158,7 @@ SKIP:
   SKIP:
   {
     ok($font, "loaded OO font")
-      or skip("Could not load test font", 15);
+      or skip("Could not load test font", 24);
     my @exists = $font->has_chars(string=>"!A");
     is(@exists, 2, "return count from has_chars");
     ok($exists[0], "we have an exclamation mark");
@@ -199,6 +199,31 @@ SKIP:
     };
     is($@, "", "correct error handling");
     cmp_ok(Imager->errstr, '=~', qr/no string parameter/, "error message");
+
+    # test extended bounding box results
+    # the test font is known to have a shorter advance width for that char
+    @bbox = $font->bounding_box(string=>"/", size=>100);
+    is(@bbox, 8, "should be 8 entries");
+    isnt($bbox[6], $bbox[2], "different advance width");
+    my $bbox = $font->bounding_box(string=>"/", size=>100);
+    cmp_ok($bbox->pos_width, '>', $bbox->advance_width, "OO check");
+
+    cmp_ok($bbox->right_bearing, '<', 0, "check right bearing");
+
+    cmp_ok($bbox->display_width, '>', $bbox->advance_width,
+           "check display width (roughly)");
+
+    # check with a char that fits inside the box
+    $bbox = $font->bounding_box(string=>"!", size=>100);
+    print "# pos width ", $bbox->pos_width, "\n";
+
+    # they aren't the same historically for the type 1 driver
+    isnt($bbox->pos_width, $bbox->advance_width, 
+       "check backwards compatibility");
+    cmp_ok($bbox->left_bearing, '>', 0, "left bearing positive");
+    cmp_ok($bbox->right_bearing, '>', 0, "right bearing positive");
+    cmp_ok($bbox->display_width, '<', $bbox->advance_width,
+           "display smaller than advance");
   }
 }
 
