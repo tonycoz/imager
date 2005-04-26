@@ -239,7 +239,7 @@ SKIP:
            "check display width (roughly)");
 
     # check with a char that fits inside the box
-    my $bbox = $exfont->bounding_box(string=>"!", size=>100);
+    $bbox = $exfont->bounding_box(string=>"!", size=>100);
     print "# pos width ", $bbox->pos_width, "\n";
     is($bbox->pos_width, $bbox->advance_width, 
        "check backwards compatibility");
