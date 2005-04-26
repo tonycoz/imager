@@ -1,7 +1,7 @@
 #!perl -w
 use strict;
 use lib 't';
-use Test::More tests => 43;
+use Test::More tests => 49;
 
 BEGIN { use_ok(Imager => ':all') }
 require "t/testtools.pl";
@@ -32,7 +32,7 @@ SKIP:
   ok($ttraw, "create font");
 
   my @bbox = i_tt_bbox($ttraw,50.0,'XMCLH',5,0);
-  is(@bbox, 7, "bounding box");
+  is(@bbox, 8, "bounding box");
   print "#bbox: ($bbox[0], $bbox[1]) - ($bbox[2], $bbox[3])\n";
 
   ok(i_tt_cp($ttraw,$overlay,5,50,1,50.0,'XMCLH',5,1,0), "cp output");
@@ -71,9 +71,9 @@ SKIP:
   my $alttext = "A-A";
   
   my @utf8box = i_tt_bbox($ttraw, 50.0, $text, length($text), 1);
-  is(@utf8box, 7, "utf8 bbox element count");
+  is(@utf8box, 8, "utf8 bbox element count");
   my @base = i_tt_bbox($ttraw, 50.0, $alttext, length($alttext), 0);
-  is(@base, 7, "alt bbox element count");
+  is(@base, 8, "alt bbox element count");
   my $maxdiff = $fontname eq $deffont ? 0 : $base[2] / 3;
   print "# (@utf8box vs @base)\n";
   ok(abs($utf8box[2] - $base[2]) <= $maxdiff, 
@@ -100,7 +100,7 @@ SKIP:
     ok(i_tt_cp($ttraw, $backgr, 350, 80, 0, 14, $text, 0, 1, 0),
        "cp UTF8");
     @utf8box = i_tt_bbox($ttraw, 50.0, $text, length($text), 0);
-    is(@utf8box, 7, "native utf8 bbox element count");
+    is(@utf8box, 8, "native utf8 bbox element count");
     ok(abs($utf8box[2] - $base[2]) <= $maxdiff, 
        "compare box sizes native $utf8box[2] vs $base[2] (maxerror $maxdiff)");
     eval q{$text = "A\x{0905}\x{0906}\x{0103}A"}; # Devanagari
@@ -119,7 +119,7 @@ SKIP:
  SKIP:
   {
     ok($hcfont, "loading existence test font")
-      or skip("could not load test font", 14);
+      or skip("could not load test font", 20);
 
     # list interface
     my @exists = $hcfont->has_chars(string=>'!A');
@@ -150,11 +150,27 @@ SKIP:
 
     # the test font is known to have a shorter advance width for that char
     my @bbox = $hcfont->bounding_box(string=>"/", size=>100);
-    is(@bbox, 7, "should be 7 entries");
+    is(@bbox, 8, "should be 8 entries");
     isnt($bbox[6], $bbox[2], "different advance width from pos width");
     print "# @bbox\n";
     my $bbox = $hcfont->bounding_box(string=>"/", size=>100);
     isnt($bbox->pos_width, $bbox->advance_width, "OO check");
+
+    cmp_ok($bbox->right_bearing, '<', 0, "check right bearing");
+
+    cmp_ok($bbox->display_width, '>', $bbox->advance_width,
+           "check display width (roughly)");
+
+    # check with a char that fits inside the box
+    $bbox = $hcfont->bounding_box(string=>"!", size=>100);
+    print "# @$bbox\n";
+    print "# pos width ", $bbox->pos_width, "\n";
+    is($bbox->pos_width, $bbox->advance_width, 
+       "check backwards compatibility");
+    cmp_ok($bbox->left_bearing, '>', 0, "left bearing positive");
+    cmp_ok($bbox->right_bearing, '>', 0, "right bearing positive");
+    cmp_ok($bbox->display_width, '<', $bbox->advance_width,
+           "display smaller than advance");
   }
   undef $hcfont;
   

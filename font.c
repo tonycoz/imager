@@ -328,8 +328,10 @@ i_t1_bbox(int fontnum,float points,char *str,int len,int cords[6], int utf8,char
   cords[BBOX_ASCENT]=((float)bbox.ury*points)/1000;
 
   cords[BBOX_ADVANCE_WIDTH] = ((float)advance * points)/1000;
+  cords[BBOX_RIGHT_BEARING] = 
+    cords[BBOX_ADVANCE_WIDTH] - cords[BBOX_POS_WIDTH];
 
-  return BBOX_ADVANCE_WIDTH+1;
+  return BBOX_RIGHT_BEARING+1;
 }
 
 
@@ -1726,8 +1728,6 @@ i_tt_bbox_inst( TT_Fonthandle *handle, int inst ,const char *txt, int len, int c
 	  - (gm->bbox.xMax - gm->bbox.xMin);
 	/* fprintf(stderr, "font info last: %d %d %d %d\n", 
 	   gm->bbox.xMax, gm->bbox.xMin, gm->advance, rightb); */
-	if (rightb > 0)
-	  rightb = 0;
       }
 
       ascent  = (ascent  >  casc ?  ascent : casc );
@@ -1737,13 +1737,16 @@ i_tt_bbox_inst( TT_Fonthandle *handle, int inst ,const char *txt, int len, int c
   
   cords[BBOX_NEG_WIDTH]=start;
   cords[BBOX_GLOBAL_DESCENT]=gdescent;
-  cords[BBOX_POS_WIDTH]=width - rightb / 64;
+  cords[BBOX_POS_WIDTH]=width;
+  if (rightb < 0)
+    cords[BBOX_POS_WIDTH] -= rightb / 64;
   cords[BBOX_GLOBAL_ASCENT]=gascent;
   cords[BBOX_DESCENT]=descent;
   cords[BBOX_ASCENT]=ascent;
   cords[BBOX_ADVANCE_WIDTH] = width;
+  cords[BBOX_RIGHT_BEARING] = rightb / 64;
 
-  return BBOX_ADVANCE_WIDTH + 1;
+  return BBOX_RIGHT_BEARING + 1;
 }
 
 

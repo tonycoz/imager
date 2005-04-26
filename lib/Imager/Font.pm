@@ -873,6 +873,15 @@ list.
 
 You need to modify this class to add new font types.
 
+The $pos_width member returned by the bounding_box() method has
+historically returned different values from different drivers.  The
+Freetype 1.x and 2.x, and the Win32 drivers return the max of the
+advance width and the right edge of the right-most glyph.  The Type 1
+driver always returns the right edge of the right-most glyph.
+
+The newer advance_width and right_bearing values allow access to any
+of the above.
+
 =head1 SEE ALSO
 
 Imager(3), Imager::Font::FreeType2(3), Imager::Font::Type1(3),

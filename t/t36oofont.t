@@ -15,7 +15,7 @@ my $loaded;
 BEGIN { $| = 1; print "1..20\n"; }
 END {print "not ok 1\n" unless $loaded;}
 use Imager;
-require "t/testtools.pl";
+BEGIN { require "t/testtools.pl"; }
 $loaded=1;
 okx(1, "loaded");
 
@@ -46,7 +46,7 @@ if (i_has_format("t1") and -f $fontname_pfb) {
   my $text="LLySja";
   my @bbox=$font->bounding_box(string=>$text, 'x'=>0, 'y'=>50);
 
-  okx(@bbox == 7, "bounding box list length");
+  isx(@bbox, 8, "bounding box list length");
 
   $img->box(box=>\@bbox, color=>$green);
 
@@ -97,7 +97,7 @@ if (i_has_format("tt") and -f $fontname_tt) {
   my $text="LLySja";
   my @bbox=$font->bounding_box(string=>$text, 'x'=>0, 'y'=>50);
 
-  okx(@bbox == 7, "bbox list size");
+  isx(@bbox, 8, "bbox list size");
 
   $img->box(box=>\@bbox, color=>$green);
 
