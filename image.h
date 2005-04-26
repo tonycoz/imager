@@ -356,6 +356,7 @@ extern int i_wf_text(char *face, i_img *im, int tx, int ty, i_color *cl,
 		     int size, char *text, int len, int align, int aa);
 extern int i_wf_cp(char *face, i_img *im, int tx, int ty, int channel, 
 		   int size, char *text, int len, int align, int aa);
+extern int i_wf_addfont(char const *file);
 
 #endif
 
