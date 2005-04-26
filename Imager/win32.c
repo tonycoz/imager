@@ -1,3 +1,4 @@
+#define _WIN32_WINNT 0x500
 #include "image.h"
 #define STRICT
 #include <windows.h>
@@ -51,12 +52,21 @@ int i_wf_bbox(char *face, int size, char *text, int length, int *bbox) {
   int i;
   MAT2 mat;
 
+  mm_log((1, "i_wf_bbox(face %s, size %d, text %p, length %d, bbox %p)\n", face, size, text, length, bbox));
+
   set_logfont(face, size, &lf);
   font = CreateFontIndirect(&lf);
   if (!font) 
     return 0;
   dc = GetDC(NULL);
   oldFont = (HFONT)SelectObject(dc, font);
+
+  {
+    char facename[100];
+    if (GetTextFace(dc, sizeof(facename), facename)) {
+      mm_log((1, "  face: %s\n", facename));
+    }
+  }
 
   if (!GetTextExtentPoint32(dc, text, length, &sz)
       || !GetTextMetrics(dc, &tm)) {
@@ -69,25 +79,35 @@ int i_wf_bbox(char *face, int size, char *text, int length, int *bbox) {
      see it.  GetGlyphOutline() seems to return the same size for
      all characters.
   */
-  bbox[1] = bbox[4] = tm.tmDescent;
-  bbox[2] = sz.cx;
-  bbox[3] = bbox[5] = tm.tmAscent;
+  bbox[BBOX_GLOBAL_DESCENT] = bbox[BBOX_DESCENT] = tm.tmDescent;
+  bbox[BBOX_POS_WIDTH] = sz.cx;
+  bbox[BBOX_ADVANCE_WIDTH] = sz.cx;
+  bbox[BBOX_GLOBAL_ASCENT] = bbox[BBOX_ASCENT] = tm.tmAscent;
   
-  if (GetCharABCWidths(dc, text[0], text[0], &first)
+  if (length
+      && GetCharABCWidths(dc, text[0], text[0], &first)
       && GetCharABCWidths(dc, text[length-1], text[length-1], &last)) {
-    bbox[0] = first.abcA;
+    mm_log((1, "first: %d A: %d  B: %d  C: %d\n", text[0],
+	    first.abcA, first.abcB, first.abcC));
+    mm_log((1, "first: %d A: %d  B: %d  C: %d\n", text[length-1],
+	    last.abcA, last.abcB, last.abcC));
+    bbox[BBOX_NEG_WIDTH] = first.abcA;
+    bbox[BBOX_RIGHT_BEARING] = last.abcC;
     if (last.abcC < 0)
-      bbox[2] -= last.abcC;
+      bbox[BBOX_POS_WIDTH] -= last.abcC;
   }
   else {
-    bbox[0] = 0;
+    bbox[BBOX_NEG_WIDTH] = 0;
+    bbox[BBOX_RIGHT_BEARING] = 0;
   }
 
   SelectObject(dc, oldFont);
   ReleaseDC(NULL, dc);
   DeleteObject(font);
 
-  return 6;
+  mm_log((1, " bbox=> negw=%d glob_desc=%d pos_wid=%d glob_asc=%d desc=%d asc=%d adv_width=%d rightb=%d\n", bbox[0], bbox[1], bbox[2], bbox[3], bbox[4], bbox[5], bbox[6], bbox[7]));
+
+  return BBOX_RIGHT_BEARING + 1;
 }
 
 /*
@@ -181,6 +201,28 @@ i_wf_cp(char *face, i_img *im, int tx, int ty, int channel, int size,
   DeleteObject(bm);
 
   return 1;
+}
+
+/*
+=item i_wf_addfont(char const *filename, char const *resource_file)
+
+Adds a TTF font file as usable by the application.
+
+The font is always added as private to the application.
+
+=cut
+ */
+int
+i_wf_addfont(char const *filename) {
+  i_clear_error();
+
+  if (AddFontResourceEx(filename, FR_PRIVATE, 0)) {
+    return 1;
+  }
+  else {
+    i_push_errorf(0, "Could not add resource: %ld", GetLastError());
+    return 0;
+  }
 }
 
 /*

@@ -4019,6 +4019,9 @@ i_wf_cp(face, im, tx, ty, channel, size, text, align, aa)
       OUTPUT:
 	RETVAL
 
+undef_int
+i_wf_addfont(font)
+        char *font
 
 #endif
 

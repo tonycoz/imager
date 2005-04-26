@@ -1069,7 +1069,9 @@ Revision history for Perl extension Imager.
 - Imager::Font::BBox objects now have right_bearing() and display_width()
   methods.  Hopefully this and the advance_width() method fills out
   the Imager bounding box interface to a useful state.
-  Implemented for FT2, FT1.x, T1Lib so far.
+  Implemented for all four font drivers.
+- Win32 font bounding_box() method now supports the advance width
+  and right bearing values.
 
 =================================================================
 
