@@ -58,7 +58,6 @@ int i_wf_bbox(char *face, int size, char *text, int length, int *bbox) {
   dc = GetDC(NULL);
   oldFont = (HFONT)SelectObject(dc, font);
 
-#if 1
   if (!GetTextExtentPoint32(dc, text, length, &sz)
       || !GetTextMetrics(dc, &tm)) {
     SelectObject(dc, oldFont);
@@ -83,27 +82,6 @@ int i_wf_bbox(char *face, int size, char *text, int length, int *bbox) {
   else {
     bbox[0] = 0;
   }
-#else
-  for (i = 0; i < length; ++i) {
-    memset(&gm, 0, sizeof(gm));
-    memset(&mat, 0, sizeof(mat));
-    mat.eM11.value = 1;
-    mat.eM22.value = 1;
-    if (GetGlyphOutline(dc, GGO_METRICS, text[i], &gm, 0, NULL, &mat) != GDI_ERROR) {
-      printf("%02X: black (%d, %d) origin (%d, %d) cell(%d, %d)\n",
-	     text[i], gm.gmBlackBoxX, gm.gmBlackBoxY, gm.gmptGlyphOrigin.x, 
-	     gm.gmptGlyphOrigin.y, gm.gmCellIncX, gm.gmCellIncY);
-      printf("  : mat [ %-8f  %-8f ]\n", fixed(mat.eM11), fixed(mat.eM12));
-      printf("        [ %-8f  %-8f ]\n", fixed(mat.eM21), fixed(mat.eM22));
-    }
-    else {
-      printf("Could not get metrics for '\\x%02X'\n", text[i]);
-    }
-    if (GetCharABCWidths(dc, text[i], text[i], &first)) {
-      printf("%02X: %d %d %d\n", text[i], first.abcA, first.abcB, first.abcC);
-    }
-  }
-#endif
 
   SelectObject(dc, oldFont);
   ReleaseDC(NULL, dc);
