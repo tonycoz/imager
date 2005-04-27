@@ -25,7 +25,7 @@ not commitments.
   instead of color objects for c0 and c1 (done)
 - support newer GIMP gradient files with the Name line (done)
 - provide access to right-side bearing information from the bounding box
-  function
+  function (done for all drivers)
 - capture TIFF read warnings (i_warnings tag?) (done)
 - Imager::Matrix2d rotate method only applies offset if both x and y
   are non-zero, it should do it if either is non-zero
