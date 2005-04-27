@@ -91,7 +91,9 @@ sub rotate {
     return undef;
   }
 
-  if ($opts{'x'} && $opts{'y'}) {
+  if ($opts{'x'} || $opts{'y'}) {
+    $opts{'x'} ||= 0;
+    $opts{'y'} ||= 0;
     return $class->translate('x'=>-$opts{'x'}, 'y'=>-$opts{'y'})
       * $class->rotate(radians=>$angle)
         * $class->translate('x'=>$opts{'x'}, 'y'=>$opts{'y'});
