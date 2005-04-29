@@ -3960,6 +3960,29 @@ i_tags_get(im, index)
           }
         }
 
+void
+i_tags_get_string(im, what_sv)
+        Imager::ImgRaw  im
+        SV *what_sv
+      PREINIT:
+        char const *name = NULL;
+        int code;
+        char buffer[200];
+        int result;
+      PPCODE:
+        if (SvIOK(what_sv)) {
+          code = SvIV(what_sv);
+          name = NULL;
+        }
+        else {
+          name = SvPV_nolen(what_sv);
+          code = 0;
+        }
+        if (i_tags_get_string(&im->tags, name, code, buffer, sizeof(buffer))) {
+          EXTEND(SP, 1);
+          PUSHs(sv_2mortal(newSVpv(buffer, 0)));
+        }
+
 int
 i_tags_count(im)
         Imager::ImgRaw  im
