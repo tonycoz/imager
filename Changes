@@ -1074,6 +1074,8 @@ Revision history for Perl extension Imager.
   and right bearing values.
 - Imager::Matrix2d->rotate() would only rotate around the supplied 
   centre point if both 'x' and 'y' were non-zero.
+- the internal i_tags_get_string() function now acts correctly for
+  integer only tags.
 
 =================================================================
 

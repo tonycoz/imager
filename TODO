@@ -16,8 +16,10 @@ not commitments.
   caching.  If FT1 is faster, add caching as a TODO for FT2.
 - add XS for i_tags_get_string() and test it.  It has an apparent problem
   in C<< sprintf(value, "%d", entry->data); >> since data is a pointer
+  (done)
 - test and fix problem with fallback value for 
   Imager::Font::BBox->advance_width. (done)
+- check handling of string() method align parameter.
 - i_tt_bbox_inst in font.c uses variable i without ever setting it. (fixed)
 - add sample CGI that handles an uploaded image (done)
 - examples for fountain filter in Imager::Filters

@@ -442,7 +442,7 @@ int i_tags_get_string(i_img_tags *tags, char const *name, int code,
     value[cpsize] = '\0';
   }
   else {
-    sprintf(value, "%d", entry->data);
+    sprintf(value, "%d", entry->idata);
   }
 
   return 1;

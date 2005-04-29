@@ -4,7 +4,7 @@
 
 use strict;
 use lib 't';
-use Test::More tests=>98;
+use Test::More tests=>124;
 
 BEGIN { use_ok(Imager => qw(:handy :all)) }
 
@@ -253,6 +253,45 @@ cmp_ok(Imager->errstr, '=~', qr/channels must be between 1 and 4/,
   is(@row, 2, "got 2 pixels from i_glin");
   ok(color_cmp($row[0], $red) == 0, "red first");
   ok(color_cmp($row[1], $blue) == 0, "then blue");
+}
+
+{ # general tag tests
+  
+  # we don't care much about the image itself
+  my $im = Imager::ImgRaw::new(10, 10, 1);
+
+  ok(Imager::i_tags_addn($im, 'alpha', 0, 101), "i_tags_addn(...alpha, 0, 101)");
+  ok(Imager::i_tags_addn($im, undef, 99, 102), "i_tags_addn(...undef, 99, 102)");
+  is(Imager::i_tags_count($im), 2, "should have 2 tags");
+  ok(Imager::i_tags_addn($im, undef, 99, 103), "i_tags_addn(...undef, 99, 103)");
+  is(Imager::i_tags_count($im), 3, "should have 3 tags, despite the dupe");
+  is(Imager::i_tags_find($im, 'alpha', 0), '0 but true', "find alpha");
+  is(Imager::i_tags_findn($im, 99, 0), 1, "find 99");
+  is(Imager::i_tags_findn($im, 99, 2), 2, "find 99 again");
+  is(Imager::i_tags_get($im, 0), 101, "check first");
+  is(Imager::i_tags_get($im, 1), 102, "check second");
+  is(Imager::i_tags_get($im, 2), 103, "check third");
+
+  ok(Imager::i_tags_add($im, 'beta', 0, "hello", 0), 
+     "add string with string key");
+  ok(Imager::i_tags_add($im, 'gamma', 0, "goodbye", 0),
+     "add another one");
+  ok(Imager::i_tags_add($im, undef, 199, "aloha", 0),
+     "add one keyed by number");
+  is(Imager::i_tags_find($im, 'beta', 0), 3, "find beta");
+  is(Imager::i_tags_find($im, 'gamma', 0), 4, "find gamma");
+  is(Imager::i_tags_findn($im, 199, 0), 5, "find 199");
+  ok(Imager::i_tags_delete($im, 2), "delete");
+  is(Imager::i_tags_find($im, 'beta', 0), 2, 'find beta after deletion');
+  ok(Imager::i_tags_delbyname($im, 'beta'), 'delete beta by name');
+  is(Imager::i_tags_find($im, 'beta', 0), undef, 'beta not there now');
+  is(Imager::i_tags_get_string($im, "gamma"), "goodbye", 
+     'i_tags_get_string() on a string');
+  is(Imager::i_tags_get_string($im, 99), 102, 
+     'i_tags_get_string() on a number entry');
+  ok(Imager::i_tags_delbycode($im, 99), 'delete by code');
+  is(Imager::i_tags_findn($im, 99, 0), undef, '99 not there now');
+  is(Imager::i_tags_count($im), 3, 'final count of 3');
 }
 
 sub check_add {
