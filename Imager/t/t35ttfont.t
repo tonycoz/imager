@@ -1,7 +1,7 @@
 #!perl -w
 use strict;
 use lib 't';
-use Test::More tests => 49;
+use Test::More tests => 54;
 
 BEGIN { use_ok(Imager => ':all') }
 require "t/testtools.pl";
@@ -194,5 +194,29 @@ SKIP:
 
   undef $hcfont;
   
+ SKIP:
+  { print "# alignment tests\n";
+    my $font = Imager::Font->new(file=>'fontfiles/ImUgly.ttf', type=>'tt');
+    ok($font, "loaded deffont OO")
+      or skip("could not load font:".Imager->errstr, 4);
+    my $im = Imager->new(xsize=>70, ysize=>150);
+    my %common = 
+      (
+       font=>$font, 
+       text=>'Ay', 
+       size=>40, 
+       color=>'white',
+       x=>5,
+       aa=>1,
+      );
+    ok($im->string(%common, 'y'=>40), "no alignment");
+    ok($im->string(%common, 'y'=>90, align=>1), "align=1");
+    ok($im->string(%common, 'y'=>110, align=>0), "align=0");
+    $im->line(x1=>0, y1=>40, x2=>69, y2=>40, color=>'blue');
+    $im->line(x1=>0, y1=>90, x2=>69, y2=>90, color=>'blue');
+    $im->line(x1=>0, y1=>110, x2=>69, y2=>110, color=>'blue');
+    ok($im->write(file=>'testout/t35align.ppm'), "save align image");
+  }
+
   ok(1, "end of code");
 }
