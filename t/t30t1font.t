@@ -7,7 +7,7 @@
 # Change 1..1 below to 1..last_test_to_print .
 # (It may become useful if the test is moved to ./t subdirectory.)
 use strict;
-use Test::More tests => 50;
+use Test::More tests => 55;
 BEGIN { use_ok(Imager => ':all') }
 
 #$Imager::DEBUG=1;
@@ -224,6 +224,30 @@ SKIP:
     cmp_ok($bbox->right_bearing, '>', 0, "right bearing positive");
     cmp_ok($bbox->display_width, '<', $bbox->advance_width,
            "display smaller than advance");
+  }
+
+ SKIP:
+  { print "# alignment tests\n";
+    my $font = Imager::Font->new(file=>$deffont, type=>'t1');
+    ok($font, "loaded deffont OO")
+      or skip("could not load font:".Imager->errstr, 4);
+    my $im = Imager->new(xsize=>70, ysize=>150);
+    my %common = 
+      (
+       font=>$font, 
+       text=>'Ay', 
+       size=>40, 
+       color=>'white',
+       x=>5,
+       aa=>1,
+      );
+    ok($im->string(%common, 'y'=>40), "no alignment");
+    ok($im->string(%common, 'y'=>90, align=>1), "align=1");
+    ok($im->string(%common, 'y'=>110, align=>0), "align=0");
+    $im->line(x1=>0, y1=>40, x2=>69, y2=>40, color=>'blue');
+    $im->line(x1=>0, y1=>90, x2=>69, y2=>90, color=>'blue');
+    $im->line(x1=>0, y1=>110, x2=>69, y2=>110, color=>'blue');
+    ok($im->write(file=>'testout/t30align.ppm'), "save align image");
   }
 }
 

@@ -1,6 +1,6 @@
 #!perl -w
 use strict;
-use Test::More tests => 144;
+use Test::More tests => 149;
 ++$|;
 # Before `make install' is performed this script should be runnable with
 # `make test'. After `make install' it should work as `perl test.pl'
@@ -372,6 +372,30 @@ SKIP:
   }
 
   ok($mmim->write(file=>"testout/t38mm.ppm"), "save MM output");
+
+ SKIP:
+  { print "# alignment tests\n";
+    my $font = Imager::Font->new(file=>'fontfiles/ImUgly.ttf', type=>'tt');
+    ok($font, "loaded deffont OO")
+      or skip("could not load font:".Imager->errstr, 4);
+    my $im = Imager->new(xsize=>70, ysize=>150);
+    my %common = 
+      (
+       font=>$font, 
+       text=>'Ay', 
+       size=>40, 
+       color=>'white',
+       x=>5,
+       aa=>1,
+      );
+    ok($im->string(%common, 'y'=>40), "no alignment");
+    ok($im->string(%common, 'y'=>90, align=>1), "align=1");
+    ok($im->string(%common, 'y'=>110, align=>0), "align=0");
+    $im->line(x1=>0, y1=>40, x2=>69, y2=>40, color=>'blue');
+    $im->line(x1=>0, y1=>90, x2=>69, y2=>90, color=>'blue');
+    $im->line(x1=>0, y1=>110, x2=>69, y2=>110, color=>'blue');
+    ok($im->write(file=>'testout/t38align.ppm'), "save align image");
+  }
 }
 
 sub align_test {
@@ -413,6 +437,7 @@ sub align_test {
   else {
     SKIP: { skip("couldn't draw text", 8) };
   }
+
 }
 
 sub okmatchcolor {
