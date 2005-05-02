@@ -1910,7 +1910,7 @@ MODULE = Imager         PACKAGE = Imager
 
 
 undef_int
-i_tt_text(handle,im,xb,yb,cl,points,str_sv,len_ignored,smooth,utf8)
+i_tt_text(handle,im,xb,yb,cl,points,str_sv,len_ignored,smooth,utf8,align=1)
   Imager::Font::TT     handle
     Imager::ImgRaw     im
 	       int     xb
@@ -1921,6 +1921,7 @@ i_tt_text(handle,im,xb,yb,cl,points,str_sv,len_ignored,smooth,utf8)
 	       int     len_ignored
 	       int     smooth
                int     utf8
+               int     align
              PREINIT:
                char *str;
                STRLEN len;
@@ -1931,13 +1932,13 @@ i_tt_text(handle,im,xb,yb,cl,points,str_sv,len_ignored,smooth,utf8)
 #endif
                str = SvPV(str_sv, len);
                RETVAL = i_tt_text(handle, im, xb, yb, cl, points, str, 
-                                  len, smooth, utf8);
+                                  len, smooth, utf8, align);
              OUTPUT:
                RETVAL                
 
 
 undef_int
-i_tt_cp(handle,im,xb,yb,channel,points,str_sv,len_ignored,smooth,utf8)
+i_tt_cp(handle,im,xb,yb,channel,points,str_sv,len_ignored,smooth,utf8,align=1)
   Imager::Font::TT     handle
     Imager::ImgRaw     im
 	       int     xb
@@ -1948,6 +1949,7 @@ i_tt_cp(handle,im,xb,yb,channel,points,str_sv,len_ignored,smooth,utf8)
 	       int     len_ignored
 	       int     smooth
                int     utf8
+               int     align
              PREINIT:
                char *str;
                STRLEN len;
@@ -1958,7 +1960,7 @@ i_tt_cp(handle,im,xb,yb,channel,points,str_sv,len_ignored,smooth,utf8)
 #endif
                str = SvPV(str_sv, len);
                RETVAL = i_tt_cp(handle, im, xb, yb, channel, points, str, len,
-                                smooth, utf8);
+                                smooth, utf8, align);
              OUTPUT:
                 RETVAL
 

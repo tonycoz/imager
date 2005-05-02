@@ -1562,8 +1562,6 @@ i_tt_rasterize( TT_Fonthandle *handle, TT_Raster_Map *bit, int cords[6], float p
     return 0;
   }
 
-  /*  ascent = ( handle->properties.horizontal->Ascender  * handle->instanceh[inst].imetrics.y_ppem ) / handle->properties.header->Units_Per_EM; */
-  
   if ( smooth ) i_tt_done_raster_map( &small_bit );
   return 1;
 }
@@ -1593,19 +1591,20 @@ Interface to text rendering into a single channel in an image
 */
 
 undef_int
-i_tt_cp( TT_Fonthandle *handle, i_img *im, int xb, int yb, int channel, float points, char const* txt, int len, int smooth, int utf8 ) {
+i_tt_cp( TT_Fonthandle *handle, i_img *im, int xb, int yb, int channel, float points, char const* txt, int len, int smooth, int utf8, int align ) {
 
   int cords[BOUNDING_BOX_COUNT];
-  int ascent, st_offset;
+  int ascent, st_offset, y;
   TT_Raster_Map bit;
   
   i_clear_error();
   if (! i_tt_rasterize( handle, &bit, cords, points, txt, len, smooth, utf8 ) ) return 0;
   
-  ascent=cords[5];
-  st_offset=cords[0];
+  ascent=cords[BBOX_ASCENT];
+  st_offset=cords[BBOX_NEG_WIDTH];
+  y = align ? yb-ascent : yb;
 
-  i_tt_dump_raster_map_channel( im, &bit, xb-st_offset , yb-ascent, channel, smooth );
+  i_tt_dump_raster_map_channel( im, &bit, xb-st_offset , y, channel, smooth );
   i_tt_done_raster_map( &bit );
 
   return 1;
@@ -1630,19 +1629,20 @@ Interface to text rendering in a single color onto an image
 */
 
 undef_int
-i_tt_text( TT_Fonthandle *handle, i_img *im, int xb, int yb, i_color *cl, float points, char const* txt, int len, int smooth, int utf8) {
+i_tt_text( TT_Fonthandle *handle, i_img *im, int xb, int yb, i_color *cl, float points, char const* txt, int len, int smooth, int utf8, int align) {
   int cords[BOUNDING_BOX_COUNT];
-  int ascent, st_offset;
+  int ascent, st_offset, y;
   TT_Raster_Map bit;
 
   i_clear_error();
   
   if (! i_tt_rasterize( handle, &bit, cords, points, txt, len, smooth, utf8 ) ) return 0;
   
-  ascent=cords[5];
-  st_offset=cords[0];
+  ascent=cords[BBOX_ASCENT];
+  st_offset=cords[BBOX_NEG_WIDTH];
+  y = align ? yb-ascent : yb;
 
-  i_tt_dump_raster_map2( im, &bit, xb+st_offset, yb-ascent, cl, smooth ); 
+  i_tt_dump_raster_map2( im, &bit, xb+st_offset, y, cl, smooth ); 
   i_tt_done_raster_map( &bit );
 
   return 1;

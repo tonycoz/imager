@@ -7,7 +7,7 @@
 # Change 1..1 below to 1..last_test_to_print .
 # (It may become useful if the test is moved to ./t subdirectory.)
 use strict;
-use Test::More tests => 58;
+use Test::More tests => 64;
 BEGIN { use_ok(Imager => ':all') }
 
 #$Imager::DEBUG=1;
@@ -22,13 +22,13 @@ my $fontname_afm=$ENV{'T1FONTTESTAFM'}||'./fontfiles/dcr10.afm';
 SKIP:
 {
   if (!(i_has_format("t1")) ) {
-    skip("t1lib unavailable or disabled", 57);
+    skip("t1lib unavailable or disabled", 63);
   }
   elsif (! -f $fontname_pfb) {
-    skip("cannot find fontfile for type 1 test $fontname_pfb", 57);
+    skip("cannot find fontfile for type 1 test $fontname_pfb", 63);
   }
   elsif (! -f $fontname_afm) {
-    skip("cannot find fontfile for type 1 test $fontname_afm", 57);
+    skip("cannot find fontfile for type 1 test $fontname_afm", 63);
   }
 
   print "# has t1\n";
@@ -231,34 +231,24 @@ SKIP:
     my $font = Imager::Font->new(file=>$deffont, type=>'t1');
     ok($font, "loaded deffont OO")
       or skip("could not load font:".Imager->errstr, 4);
-    my $im = Imager->new(xsize=>70, ysize=>150);
-    my %common1 = 
+    my $im = Imager->new(xsize=>140, ysize=>150);
+    my %common = 
       (
        font=>$font, 
-       text=>'A', 
        size=>40, 
-       color=>'white',
-       x=>5,
        aa=>1,
       );
-    my %common2 = 
-      (
-       font=>$font, 
-       text=>'y', 
-       size=>40, 
-       color=>'white',
-       x=>40,
-       aa=>1,
-      );
-    $im->line(x1=>0, y1=>40, x2=>69, y2=>40, color=>'blue');
-    $im->line(x1=>0, y1=>90, x2=>69, y2=>90, color=>'blue');
-    $im->line(x1=>0, y1=>110, x2=>69, y2=>110, color=>'blue');
-    ok($im->string(%common1, 'y'=>40), "no alignment A");
-    ok($im->string(%common2, 'y'=>40), "no alignment y");
-    ok($im->string(%common1, 'y'=>90, align=>1), "align=1");
-    ok($im->string(%common2, 'y'=>90, align=>1), "align=1");
-    ok($im->string(%common1, 'y'=>110, align=>0), "align=0");
-    ok($im->string(%common2, 'y'=>110, align=>0), "align=0");
+    $im->line(x1=>0, y1=>40, x2=>139, y2=>40, color=>'blue');
+    $im->line(x1=>0, y1=>90, x2=>139, y2=>90, color=>'blue');
+    $im->line(x1=>0, y1=>110, x2=>139, y2=>110, color=>'blue');
+    for my $args ([ x=>5,   text=>"A", color=>"white" ],
+                  [ x=>40,  text=>"y", color=>"white" ],
+                  [ x=>75,  text=>"A", cp=>1 ],
+                  [ x=>110, text=>"y", cp=>1 ]) {
+      ok($im->string(%common, @$args, 'y'=>40), "A no alignment");
+      ok($im->string(%common, @$args, 'y'=>90, align=>1), "A align=1");
+      ok($im->string(%common, @$args, 'y'=>110, align=>0), "A align=0");
+    }
     ok($im->write(file=>'testout/t30align.ppm'), "save align image");
   }
 }
