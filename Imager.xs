@@ -3970,7 +3970,6 @@ i_tags_get_string(im, what_sv)
         char const *name = NULL;
         int code;
         char buffer[200];
-        int result;
       PPCODE:
         if (SvIOK(what_sv)) {
           code = SvIV(what_sv);

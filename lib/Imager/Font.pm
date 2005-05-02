@@ -535,7 +535,12 @@ The start point for rendering the text.  See the align parameter.
 =item align
 
 If non-zero the point supplied in (x,y) will be on the base-line, if
-zero then (x,y) will be at the top-left of the first character.
+zero then (x,y) will be at the top-left of the string.
+
+ie. if drawing the string "yA" and align is 0 the point (x,y) will
+aligned with the top of the A.  If align is 1 (the default) it will be
+aligned with the baseline of the font, typically bottom of the A,
+depending on the font used.
 
 =item channel
 

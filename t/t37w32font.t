@@ -1,7 +1,7 @@
 #!perl -w
 use strict;
 use lib 't';
-use Test::More tests => 18;
+use Test::More tests => 32;
 BEGIN { use_ok(Imager => ':all') }
 ++$|;
 
@@ -9,7 +9,7 @@ init_log("testout/t37w32font.log",1);
 
 SKIP:
 {
-  i_has_format('w32') or skip("no MS Windows", 17);
+  i_has_format('w32') or skip("no MS Windows", 31);
   print "# has w32\n";
 
   my $fontname=$ENV{'TTFONTTEST'} || 'Times New Roman Bold';
@@ -102,6 +102,32 @@ SKIP:
     cmp_ok($bbox->right_bearing, '>', 0, "right bearing positive");
     cmp_ok($bbox->display_width, '<', $bbox->advance_width,
 	   "display smaller than advance");
+  }
+
+ SKIP:
+  { print "# alignment tests\n";
+    my $font = Imager::Font->new(face=>"Arial");
+    ok($font, "loaded Arial OO")
+      or skip("could not load font:".Imager->errstr, 4);
+    my $im = Imager->new(xsize=>140, ysize=>150);
+    my %common = 
+      (
+       font=>$font, 
+       size=>40, 
+       aa=>1,
+      );
+    $im->line(x1=>0, y1=>40, x2=>139, y2=>40, color=>'blue');
+    $im->line(x1=>0, y1=>90, x2=>139, y2=>90, color=>'blue');
+    $im->line(x1=>0, y1=>110, x2=>139, y2=>110, color=>'blue');
+    for my $args ([ x=>5,   text=>"A", color=>"white" ],
+                  [ x=>40,  text=>"y", color=>"white" ],
+                  [ x=>75,  text=>"A", channel=>1 ],
+                  [ x=>110, text=>"y", channel=>1 ]) {
+      ok($im->string(%common, @$args, 'y'=>40), "A no alignment");
+      ok($im->string(%common, @$args, 'y'=>90, align=>1), "A align=1");
+      ok($im->string(%common, @$args, 'y'=>110, align=>0), "A align=0");
+    }
+    ok($im->write(file=>'testout/t37align.ppm'), "save align image");
   }
 
 }
