@@ -1,7 +1,7 @@
 #!perl -w
 use strict;
 use lib 't';
-use Test::More tests => 54;
+use Test::More tests => 57;
 
 BEGIN { use_ok(Imager => ':all') }
 require "t/testtools.pl";
@@ -10,7 +10,7 @@ init_log("testout/t35ttfont.log",2);
 
 SKIP:
 {
-  skip("freetype 1.x unavailable or disabled", 48) 
+  skip("freetype 1.x unavailable or disabled", 56) 
     unless i_has_format("tt");
   print "# has tt\n";
   
@@ -19,7 +19,7 @@ SKIP:
 
   if (!ok(-f $fontname, "check test font file exists")) {
     print "# cannot find fontfile for truetype test $fontname\n";
-    skip('Cannot load test font', 47);
+    skip('Cannot load test font', 55);
   }
 
   i_init_fonts();
@@ -175,7 +175,7 @@ SKIP:
   undef $hcfont;
   
   my $name_font = "fontfiles/NameTest.ttf";
-  $hcfont = Imager::Font->new(file=>$name_font);
+  $hcfont = Imager::Font->new(file=>$name_font, type=>'tt');
  SKIP:
   {
     ok($hcfont, "loading name font")
@@ -200,21 +200,33 @@ SKIP:
     ok($font, "loaded deffont OO")
       or skip("could not load font:".Imager->errstr, 4);
     my $im = Imager->new(xsize=>70, ysize=>150);
-    my %common = 
+    my %common1 = 
       (
        font=>$font, 
-       text=>'Ay', 
+       text=>'A', 
        size=>40, 
        color=>'white',
        x=>5,
        aa=>1,
       );
-    ok($im->string(%common, 'y'=>40), "no alignment");
-    ok($im->string(%common, 'y'=>90, align=>1), "align=1");
-    ok($im->string(%common, 'y'=>110, align=>0), "align=0");
+    my %common2 = 
+      (
+       font=>$font, 
+       text=>'y', 
+       size=>40, 
+       color=>'white',
+       x=>40,
+       aa=>1,
+      );
     $im->line(x1=>0, y1=>40, x2=>69, y2=>40, color=>'blue');
     $im->line(x1=>0, y1=>90, x2=>69, y2=>90, color=>'blue');
     $im->line(x1=>0, y1=>110, x2=>69, y2=>110, color=>'blue');
+    ok($im->string(%common1, 'y'=>40), "A no alignment");
+    ok($im->string(%common2, 'y'=>40), "y no alignment");
+    ok($im->string(%common1, 'y'=>90, align=>1), "A align=1");
+    ok($im->string(%common2, 'y'=>90, align=>1), "y align=1");
+    ok($im->string(%common1, 'y'=>110, align=>0), "A align=0");
+    ok($im->string(%common2, 'y'=>110, align=>0), "y align=0");
     ok($im->write(file=>'testout/t35align.ppm'), "save align image");
   }
 
