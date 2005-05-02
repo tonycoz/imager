@@ -1079,6 +1079,11 @@ Revision history for Perl extension Imager.
 - the FT1.x driver now supports the align parameter correctly.
   Tests were added to each driver to check correct handling of the align
   parameter.
+- the Win32 font driver bounding_box() method now puts accuarate values
+  in the ascent and descent values, previous that were set to the 
+  font ascent/descent rather than the values specific to the string.
+- supplying align=>0 to the win32 font driver string() function 
+  now aligns in the same way as the other drivers.
 
 =================================================================
 

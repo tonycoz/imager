@@ -243,8 +243,8 @@ SKIP:
     $im->line(x1=>0, y1=>110, x2=>139, y2=>110, color=>'blue');
     for my $args ([ x=>5,   text=>"A", color=>"white" ],
                   [ x=>40,  text=>"y", color=>"white" ],
-                  [ x=>75,  text=>"A", cp=>1 ],
-                  [ x=>110, text=>"y", cp=>1 ]) {
+                  [ x=>75,  text=>"A", channel=>1 ],
+                  [ x=>110, text=>"y", channel=>1 ]) {
       ok($im->string(%common, @$args, 'y'=>40), "A no alignment");
       ok($im->string(%common, @$args, 'y'=>90, align=>1), "A align=1");
       ok($im->string(%common, @$args, 'y'=>110, align=>0), "A align=0");

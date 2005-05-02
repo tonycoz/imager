@@ -51,6 +51,7 @@ int i_wf_bbox(char *face, int size, char *text, int length, int *bbox) {
   GLYPHMETRICS gm;
   int i;
   MAT2 mat;
+  int ascent, descent, max_ascent = -size, min_descent = size;
 
   mm_log((1, "i_wf_bbox(face %s, size %d, text %p, length %d, bbox %p)\n", face, size, text, length, bbox));
 
@@ -68,6 +69,28 @@ int i_wf_bbox(char *face, int size, char *text, int length, int *bbox) {
     }
   }
 
+  for (i = 0; i < length; ++i) {
+    unsigned char c = text[i];
+    unsigned char cp = c > '~' ? '.' : c < ' ' ? '.' : c;
+    
+    memset(&mat, 0, sizeof(mat));
+    mat.eM11.value = 1;
+    mat.eM22.value = 1;
+    if (GetGlyphOutline(dc, c, GGO_METRICS, &gm, 0, NULL, &mat) != GDI_ERROR) {
+      mm_log((2, "  glyph '%c' (%02x): bbx (%u,%u) org (%d,%d) inc(%d,%d)\n",
+	      cp, c, gm.gmBlackBoxX, gm.gmBlackBoxY, gm.gmptGlyphOrigin.x,
+		gm.gmptGlyphOrigin.y, gm.gmCellIncX, gm.gmCellIncY));
+
+      ascent = gm.gmptGlyphOrigin.y;
+      descent = ascent - gm.gmBlackBoxY;
+      if (ascent > max_ascent) max_ascent = ascent;
+      if (descent < min_descent) min_descent = descent;
+    }
+    else {
+	mm_log((1, "  glyph '%c' (%02x): error %d\n", cp, c, GetLastError()));
+    }
+  }
+
   if (!GetTextExtentPoint32(dc, text, length, &sz)
       || !GetTextMetrics(dc, &tm)) {
     SelectObject(dc, oldFont);
@@ -75,21 +98,19 @@ int i_wf_bbox(char *face, int size, char *text, int length, int *bbox) {
     DeleteObject(font);
     return 0;
   }
-  /* if there's a way to get a characters ascent/descent reliably, I can't
-     see it.  GetGlyphOutline() seems to return the same size for
-     all characters.
-  */
-  bbox[BBOX_GLOBAL_DESCENT] = bbox[BBOX_DESCENT] = tm.tmDescent;
+  bbox[BBOX_GLOBAL_DESCENT] = tm.tmDescent;
+  bbox[BBOX_DESCENT] = min_descent == size ? tm.tmDescent : min_descent;
   bbox[BBOX_POS_WIDTH] = sz.cx;
   bbox[BBOX_ADVANCE_WIDTH] = sz.cx;
-  bbox[BBOX_GLOBAL_ASCENT] = bbox[BBOX_ASCENT] = tm.tmAscent;
+  bbox[BBOX_GLOBAL_ASCENT] = tm.tmAscent;
+  bbox[BBOX_ASCENT] = max_ascent == -size ? tm.tmAscent : max_ascent;
   
   if (length
       && GetCharABCWidths(dc, text[0], text[0], &first)
       && GetCharABCWidths(dc, text[length-1], text[length-1], &last)) {
     mm_log((1, "first: %d A: %d  B: %d  C: %d\n", text[0],
 	    first.abcA, first.abcB, first.abcC));
-    mm_log((1, "first: %d A: %d  B: %d  C: %d\n", text[length-1],
+    mm_log((1, "last: %d A: %d  B: %d  C: %d\n", text[length-1],
 	    last.abcA, last.abcB, last.abcC));
     bbox[BBOX_NEG_WIDTH] = first.abcA;
     bbox[BBOX_RIGHT_BEARING] = last.abcC;
@@ -137,8 +158,15 @@ i_wf_text(char *face, i_img *im, int tx, int ty, i_color *cl, int size,
   line_width = sz.cx * 3;
   line_width = (line_width + 3) / 4 * 4;
   top = ty;
-  if (align)
+  if (align) {
     top -= tm.tmAscent;
+  }
+  else {
+    int bbox[BOUNDING_BOX_COUNT];
+
+    i_wf_bbox(face, size, text, len, bbox);
+    top -= tm.tmAscent - bbox[BBOX_ASCENT];
+  }
 
   for (y = 0; y < sz.cy; ++y) {
     for (x = 0; x < sz.cx; ++x) {
@@ -147,7 +175,7 @@ i_wf_text(char *face, i_img *im, int tx, int ty, i_color *cl, int size,
       i_gpix(im, tx+x, top+sz.cy-y-1, &pel);
       for (ch = 0; ch < im->channels; ++ch) {
 	pel.channel[ch] = 
-	  ((255-scale) * pel.channel[ch] + scale*cl->channel[ch]) / 255.0;
+	  ((255-scale) * pel.channel[ch] + scale*cl->channel[ch]) / 255;
       }
       i_ppix(im, tx+x, top+sz.cy-y-1, &pel);
     }
@@ -174,7 +202,6 @@ i_wf_cp(char *face, i_img *im, int tx, int ty, int channel, int size,
   SIZE sz;
   int line_width;
   int x, y;
-  int ch;
   TEXTMETRIC tm;
   int top;
 
@@ -185,8 +212,15 @@ i_wf_cp(char *face, i_img *im, int tx, int ty, int channel, int size,
   line_width = sz.cx * 3;
   line_width = (line_width + 3) / 4 * 4;
   top = ty;
-  if (align)
+  if (align) {
     top -= tm.tmAscent;
+  }
+  else {
+    int bbox[BOUNDING_BOX_COUNT];
+
+    i_wf_bbox(face, size, text, len, bbox);
+    top -= tm.tmAscent - bbox[BBOX_ASCENT];
+  }
 
   for (y = 0; y < sz.cy; ++y) {
     for (x = 0; x < sz.cx; ++x) {
@@ -298,7 +332,7 @@ static LPVOID render_text(char *face, int size, char *text, int length, int aa,
       bmih->biBitCount = 24;
       bmih->biCompression = BI_RGB;
       bmih->biSizeImage = 0;
-      bmih->biXPelsPerMeter = 72 / 2.54 * 100;
+      bmih->biXPelsPerMeter = (LONG)(72 / 2.54 * 100);
       bmih->biYPelsPerMeter = bmih->biXPelsPerMeter;
       bmih->biClrUsed = 0;
       bmih->biClrImportant = 0;
