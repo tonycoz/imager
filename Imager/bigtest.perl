@@ -17,8 +17,9 @@ getopts('vd', \%opts);
 my $top = (1 << @opts)-1;
 
 my @results;
+my $testlog = "bigtest.txt";
 
-unlink('testout/bigtest.txt');
+unlink $testlog;
 my $total = 0;
 my $good = 0;
 system("$make clean") if -e 'Makefile' && !$opts{d};
@@ -26,28 +27,28 @@ for my $set (0..$top) {
   ++$total;
   $ENV{IM_ENABLE} = join(' ', grep($set & $bits{$_}, @opts));
   print STDERR $opts{v} ? "$set/$top Enable: $ENV{IM_ENABLE}\n" : '.';
-  system("echo '****' \$IM_ENABLE >>testout/bigtest.txt");
+  system("echo '****' \$IM_ENABLE >>$testlog");
   if ($opts{d}) {
-    if (system("$make $makeopts disttest >>testout/bigtest.txt 2>&1")) {
+    if (system("$make $makeopts disttest >>$testlog.txt 2>&1")) {
       push(@results, [ $ENV{IM_ENABLE}, 'disttest failed' ]);
       next;
     }
   }
   else {
     unlink 'Makefile';
-    if (system("$perl Makefile.PL >>testout/bigtest.txt 2>&1")) {
+    if (system("$perl Makefile.PL >>$testlog 2>&1")) {
       push(@results, [ $ENV{IM_ENABLE}, 'Makefile.PL failed' ]);
       next;
     }
-    if (system("$make $makeopts >>testout/bigtest.txt 2>&1")) {
+    if (system("$make $makeopts >>$testlog 2>&1")) {
       push(@results, [ $ENV{IM_ENABLE}, 'make failed' ]);
       next;
     }
-    if (system("$make test >>testout/bigtest.txt 2>&1")) {
+    if (system("$make test >>$testlog 2>&1")) {
       push(@results, [ $ENV{IM_ENABLE}, 'test failed' ]);
       next;
     }
-    if (system("$make clean >>testout/bigtest.txt 2>&1")) {
+    if (system("$make clean >>$testlog 2>&1")) {
       push(@results, [ $ENV{IM_ENABLE}, 'clean failed' ]);
       next;
     }
@@ -64,7 +65,7 @@ foreach my $row (@results) {
 }
 print "-" x 71, "\n";
 print "Total: $total  Successes: $good  Failures: ",$total-$good,"\n";
-print "Output in testout/bigtest.txt\n";
+print "Output in $testlog\n";
 
 __END__
 
