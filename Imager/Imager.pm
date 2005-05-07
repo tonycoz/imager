@@ -3169,11 +3169,7 @@ If you're into IRC, you can typically find the developers in #Imager
 on irc.perl.org.  As with any IRC channel, the participants could be
 occupied or asleep, so please be patient.
 
-You can report bugs either by sending email to:
-
-  bug-Imager@rt.cpan.org
-
-or by pointing your browser at:
+You can report bugs by pointing your browser at:
 
   https://rt.cpan.org/NoAuth/ReportBug.html?Queue=Imager
 
