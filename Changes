@@ -1084,6 +1084,9 @@ Revision history for Perl extension Imager.
   font ascent/descent rather than the values specific to the string.
 - supplying align=>0 to the win32 font driver string() function 
   now aligns in the same way as the other drivers.
+- removed the bug reporting email address to prevent spammers stripping
+  it.  The URL is still there and if someone knows how rt.cpan.org works
+  they can still figure out the email.
 
 =================================================================
 

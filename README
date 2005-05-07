@@ -273,11 +273,7 @@ have to use the source. The test scripts might also be a good idea.
 By activating the the #init_log lines in the test script you can get
 rather verbose debugging output from the C code.
 
-You can report bugs either by sending email to:
-
-  bug-Imager@rt.cpan.org
-
-or by pointing your browser at:
+You can report bugs by pointing your browser at:
 
   https://rt.cpan.org/NoAuth/ReportBug.html?Queue=Imager
 
