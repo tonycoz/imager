@@ -7,6 +7,11 @@ brown-bag bugs may add intermediate releases.  The dates are goals,
 not commitments.
 
 0.45: (march 2005?)
+- resolve fills test failure under 5.8.6/darwin
+  http://www.nntp.perl.org/group/perl.cpan.testers/202802
+  add tests to check if the same problem occurs with other ?: operators
+- stop tga_header_verify() from spewing junk to stdout
+- fix i_setcolors_p bug
 - audit pnm.c (done)
 - audit tga.c (done)
 - audit rgb.c and add tests
@@ -239,6 +244,10 @@ Format specific issues:
   from TIFF and JPEG.
 
 - handle 16-bit/sample pgm/ppm files
+
+- "jpeg lossless rotation" - directly manipulates the JPEG
+  representation to rotate, scale or in some limited cases, crop an
+  image.
 
 Documentation:
 - Add to the documentation
