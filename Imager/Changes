@@ -1087,6 +1087,10 @@ Revision history for Perl extension Imager.
 - removed the bug reporting email address to prevent spammers stripping
   it.  The URL is still there and if someone knows how rt.cpan.org works
   they can still figure out the email.
+- the internal function used to probe file formats if the type
+  parameter wasn't passed to the read() method would produce
+  diagnostics on stdout, precluding use in web applications.  Silenced
+  it.
 
 =================================================================
 

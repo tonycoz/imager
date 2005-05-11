@@ -320,14 +320,14 @@ tga_header_unpack(tga_header *header, unsigned char headbuf[18]) {
 }
 
 
-
+/* this function should never produce diagnostics to stdout, maybe to the logfile */
 int
 tga_header_verify(unsigned char headbuf[18]) {
   tga_header header;
   tga_header_unpack(&header, headbuf);
   switch (header.datatypecode) { 
   default:
-		printf("bad typecode!\n");
+    /*printf("bad typecode!\n");*/
     return 0;
   case 0:
   case 1:  /* Uncompressed, color-mapped images */ 
@@ -341,7 +341,7 @@ tga_header_verify(unsigned char headbuf[18]) {
 
   switch (header.colourmaptype) { 
   default:
-		printf("bad colourmaptype!\n");
+    /*printf("bad colourmaptype!\n");*/
     return 0;
   case 0:
   case 1:
@@ -464,7 +464,7 @@ destination is compressed.
 static
 int
 tga_dest_write(tga_dest *s, unsigned char *buf, size_t pixels) {
-  int cp = 0, j;
+  int cp = 0;
 
   if (!s->compressed) {
     if (s->ig->writecb(s->ig, buf, pixels*s->bytepp) != pixels*s->bytepp) return 0;

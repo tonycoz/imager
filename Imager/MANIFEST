@@ -123,6 +123,7 @@ t/t022double.t          Test double/sample images
 t/t023palette.t		Test paletted images
 t/t05error.t
 t/t07iolayer.t
+t/t1000files.t          Format independent file tests
 t/t101jpeg.t
 t/t102png.t
 t/t103raw.t
