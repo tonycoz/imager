@@ -1091,6 +1091,9 @@ Revision history for Perl extension Imager.
   parameter wasn't passed to the read() method would produce
   diagnostics on stdout, precluding use in web applications.  Silenced
   it.
+- the setcolors() had a fencepost error making it impossible to 
+  use it to set the last color in the palette.
+  http://rt.cpan.org/NoAuth/Bug.html?id=12676
 
 =================================================================
 
