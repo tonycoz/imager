@@ -1,3 +1,4 @@
+#include "image.h"
 #include "dynaload.h"
 /* #include "XSUB.h"  so we can compile on threaded perls */
 #include "imagei.h"

@@ -1,6 +1,6 @@
 #include "../plug.h"
 
-#ifdef _MSC_VER
+#ifdef WIN32
 #define WIN32_EXPORT __declspec(dllexport)
 #else
 /* this may need to change for other Win32 compilers */

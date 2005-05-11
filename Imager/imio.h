@@ -2,10 +2,6 @@
 #define IMAGER_IMIO_H_
 #include <stdio.h>
 #include <sys/stat.h>
-#ifndef _MSC_VER
-#include <unistd.h>
-#include <sys/mman.h>
-#endif
 
 #include "log.h"
 
