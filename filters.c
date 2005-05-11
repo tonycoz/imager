@@ -140,7 +140,7 @@ Inverts the pixel values by the amount specified.
 =cut
 */
 
-#ifdef _MSC_VER
+#ifdef WIN32
 /* random() is non-ASCII, even if it is better than rand() */
 #define random() rand()
 #endif
