@@ -537,7 +537,7 @@ static int i_maxcolors_p(i_img *im) {
 =cut
 */
 static int i_setcolors_p(i_img *im, int index, i_color *colors, int count) {
-  if (index >= 0 && count >= 1 && index + count < PALEXT(im)->count) {
+  if (index >= 0 && count >= 1 && index + count <= PALEXT(im)->count) {
     while (count) {
       PALEXT(im)->pal[index++] = *colors++;
       --count;

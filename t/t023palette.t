@@ -2,7 +2,7 @@
 # some of this is tested in t01introvert.t too
 use strict;
 use lib 't';
-use Test::More tests => 59;
+use Test::More tests => 62;
 BEGIN { use_ok("Imager"); }
 
 my $img = Imager->new(xsize=>50, ysize=>50, type=>'paletted');
@@ -188,6 +188,17 @@ cmp_ok(Imager->errstr, '=~', qr/Channels must be positive and <= 4/,
   $img->to_paletted();
   cmp_ok($warning, '=~', 'void', "correct warning");
   cmp_ok($warning, '=~', 't023palette\\.t', "correct file");
+}
+
+{ # http://rt.cpan.org/NoAuth/Bug.html?id=12676
+  # setcolors() has a fencepost error
+  my $img = Imager->new(xsize=>10, ysize=>10, type=>'paletted');
+
+  is($img->addcolors(colors=>[ $black, $red ]), "0 but true",
+     "add test colors");
+  ok($img->setcolors(start=>1, colors=>[ $green ]), "set the last color");
+  ok(!$img->setcolors(start=>2, colors=>[ $black ]), 
+     "set after the last color");
 }
 
 sub coloreq {
