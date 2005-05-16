@@ -11,7 +11,7 @@ not commitments.
   http://www.nntp.perl.org/group/perl.cpan.testers/202802
   add tests to check if the same problem occurs with other ?: operators
 - stop tga_header_verify() from spewing junk to stdout (done)
-- fix i_setcolors_p bug
+- fix i_setcolors_p bug (done)
 - audit pnm.c (done)
 - audit tga.c (done)
 - audit rgb.c and add tests
