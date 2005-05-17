@@ -1097,6 +1097,7 @@ Revision history for Perl extension Imager.
 - fix the filter examples in Imager::Filter so they don't indicate that 
   a new image is returned (the filter() method works in-place)
 - add examples for the fountain filter
+- prevent warnings from Makefile.PL when there's no libraries found
 
 =================================================================
 
