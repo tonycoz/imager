@@ -1098,6 +1098,8 @@ Revision history for Perl extension Imager.
   a new image is returned (the filter() method works in-place)
 - add examples for the fountain filter
 - prevent warnings from Makefile.PL when there's no libraries found
+- Imager no longer assumes that MSVC is the only native Win32 
+  compiler, MinGW can be used to build Imager.
 
 =================================================================
 
