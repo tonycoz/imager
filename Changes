@@ -1080,7 +1080,7 @@ Revision history for Perl extension Imager.
   Tests were added to each driver to check correct handling of the align
   parameter.
 - the Win32 font driver bounding_box() method now puts accuarate values
-  in the ascent and descent values, previous that were set to the 
+  in the ascent and descent values, previously they were set to the 
   font ascent/descent rather than the values specific to the string.
 - supplying align=>0 to the win32 font driver string() function 
   now aligns in the same way as the other drivers.
@@ -1094,6 +1094,9 @@ Revision history for Perl extension Imager.
 - the setcolors() had a fencepost error making it impossible to 
   use it to set the last color in the palette.
   http://rt.cpan.org/NoAuth/Bug.html?id=12676
+- fix the filter examples in Imager::Filter so they don't indicate that 
+  a new image is returned (the filter() method works in-place)
+- add examples for the fountain filter
 
 =================================================================
 

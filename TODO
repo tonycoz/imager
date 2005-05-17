@@ -27,7 +27,7 @@ not commitments.
 - check handling of string() method align parameter. (done, fixed)
 - i_tt_bbox_inst in font.c uses variable i without ever setting it. (fixed)
 - add sample CGI that handles an uploaded image (done)
-- examples for fountain filter in Imager::Filters
+- examples for fountain filter in Imager::Filters (done)
 - allow Imager::Fountain to take color descriptions (eg. blue, FF000)
   instead of color objects for c0 and c1 (done)
 - support newer GIMP gradient files with the Name line (done)

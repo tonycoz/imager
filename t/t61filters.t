@@ -1,7 +1,7 @@
 #!perl -w
 use strict;
 use Imager qw(:handy);
-use Test::More tests => 59;
+use Test::More tests => 62;
 Imager::init_log("testout/t61filters.log", 1);
 # meant for testing the filters themselves
 my $imbase = Imager->new;
@@ -160,6 +160,42 @@ is($name, "test gradient", "check the name matches");
                   xa=>0, ya=>30, xb=>49, yb=>30), 
      "fountain with invalid color name");
   cmp_ok($im->errstr, '=~', 'No color named', "check error message");
+}
+
+{
+  my $im = Imager->new(xsize=>100, ysize=>100);
+  # build the gradient the hard way - linear from black to white,
+  # then back again
+  my @simple =
+   (
+     [   0, 0.25, 0.5, 'black', 'white', 0, 0 ],
+     [ 0.5. 0.75, 1.0, 'white', 'black', 0, 0 ],
+   );
+  # across
+  my $linear = $im->filter(type   => "fountain",
+                           ftype  => 'linear',
+                           repeat => 'sawtooth',
+                           xa     => 0,
+                           ya     => $im->getheight / 2,
+                           xb     => $im->getwidth - 1,
+                           yb     => $im->getheight / 2);
+  ok($linear, "linear fountain sample");
+  # around
+  my $revolution = $im->filter(type   => "fountain",
+                               ftype  => 'revolution',
+                               xa     => $im->getwidth / 2,
+                               ya     => $im->getheight / 2,
+                               xb     => $im->getwidth / 2,
+                               yb     => 0);
+  ok($revolution, "revolution fountain sample");
+  # out from the middle
+  my $radial = $im->filter(type   => "fountain",
+                           ftype  => 'radial',
+                           xa     => $im->getwidth / 2,
+                           ya     => $im->getheight / 2,
+                           xb     => $im->getwidth / 2,
+                           yb     => 0);
+  ok($radial, "radial fountain sample");
 }
 
 sub test {
