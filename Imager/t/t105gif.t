@@ -102,7 +102,7 @@ SKIP:
     my $gifver = Imager::i_giflib_version();
   SKIP:
     {
-      skip("giflib3 doesn't support callbacks", 4) if $gifver >= 4.0;
+      skip("giflib3 doesn't support callbacks", 4) unless $gifver >= 4.0;
       # reading with a callback
       # various sizes to make sure the buffering works
       # requested size
@@ -168,7 +168,9 @@ SKIP:
 
     my $can_write_callback = 0;
     unlink $buggy_giflib_file;
-    if ($gifver >= 4.0) {
+    SKIP:
+    {
+      skip("giflib3 doesn't support callbacks", 1) unless $gifver >= 4.0;
       ++$can_write_callback;
       my $good = ext_test(14, <<'ENDOFCODE');
 use Imager;
@@ -226,9 +228,6 @@ the error, we now skip any tests that crashed or failed when the buggy
 giflib was present.
 EOS
       }
-    }
-    else {
-      print "ok 14 # skip giflib3 doesn't support callbacks\n";
     }
     @imgs = ();
     my $c = i_color_new(0,0,0,0);

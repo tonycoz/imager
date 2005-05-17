@@ -1100,6 +1100,8 @@ Revision history for Perl extension Imager.
 - prevent warnings from Makefile.PL when there's no libraries found
 - Imager no longer assumes that MSVC is the only native Win32 
   compiler, MinGW can be used to build Imager.
+- fixed an inverted condition checking the giflib version, and 
+  replaced a manual test skip in t/t105gif.t
 
 =================================================================
 
