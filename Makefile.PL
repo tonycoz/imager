@@ -77,6 +77,8 @@ if ($MANUAL) {
 gifcheck();
 
 my $lib_cflags = '';
+my $F_LIBS = '';
+my $F_OBJECT = '';
 for my $frmkey (keys %formats) {
   my $frm = $formats{$frmkey};
   push @defines, [ $frm->{def}, 1, "$frmkey available" ];
