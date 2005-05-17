@@ -12,7 +12,7 @@ Imager::Filters - Entire Image Filtering Operations
   $img->filter(type=>'autolevels', lsat=>0.2);
   $img->filter(type=>'turbnoise')
 
-  # and lots others
+  # and lots of others
 
   load_plugin("dynfilt/dyntest.so")
     or die "unable to load plugin\n";
@@ -103,6 +103,8 @@ that comes with the module source.
 All parameters must have some value but if a parameter has a default
 value it may be omitted when calling the filter function.
 
+Every one of these filters modifies the image in place.
+
 A reference of the filters follows:
 
 =over
@@ -115,10 +117,12 @@ truncate the range by the specified fraction at the top and bottom of
 the range respectivly.
 
   # increase contrast, losing little detail
-  my $levels = $img->filter(type=>"autolevels");
+  $img->filter(type=>"autolevels")
+    or die $img->errstr;
 
   # increase contrast, losing 20% of highlight at top and bottom range
-  my $trunc_levels = $img->filter(type=>"autolevels", lsat=>0.2, usat=>0.2);
+  $img->filter(type=>"autolevels", lsat=>0.2, usat=>0.2)
+    or die $img->errstr;
 
 =item bumpmap
 
@@ -126,8 +130,9 @@ uses the channel I<elevation> image I<bump> as a bumpmap on your
 image, with the light at (I<lightx>, I<lightty>), with a shadow length
 of I<st>.
 
-  my $shadowed = $img->filter(type=>"bumpmap", bump=>$bumpmap_img,
-                              lightx=>10, lighty=>10, st=>5);
+  $img->filter(type=>"bumpmap", bump=>$bumpmap_img,
+               lightx=>10, lighty=>10, st=>5)
+    or die $img->errstr;
 
 =item bumpmap_complex
 
@@ -139,15 +144,21 @@ I<Is> is the color of specular highlights.  I<cd> is the diffuse
 coefficient and I<cs> is the specular coefficient.  I<n> is the
 shininess of the surface.
 
-  my $shadowed = $img->filter(type=>"bumpmap_complex", bump=>$bumpmap_img);
+  $img->filter(type=>"bumpmap_complex", bump=>$bumpmap_img)
+    or die $img->errstr;
 
 =item contrast
 
 scales each channel by I<intensity>.  Values of I<intensity> < 1.0
 will reduce the contrast.
 
-  my $high_contrast = $img->filter(type=>"contrast", intensity=>1.3);
-  my $low_contrast = $img->filter(type=>"contrast", intensity=>0.8);
+  # higher contrast
+  $img->filter(type=>"contrast", intensity=>1.3)
+    or die $img->errstr;
+
+  # lower contrast
+  $img->filter(type=>"contrast", intensity=>0.8)
+    or die $img->errstr;
 
 =item conv
 
@@ -155,8 +166,13 @@ performs 2 1-dimensional convolutions on the image using the values
 from I<coef>.  I<coef> should be have an odd length and the sum of the
 coefficients must be non-zero.
 
-  my $sharper = $img->filter(type=>"conv", coef=>[-0.5, 2, -0.5 ]);
-  my $blur = $img->filter(type=>"conv", coef=>[ 1, 2, 1 ]);
+  # sharper
+  $img->filter(type=>"conv", coef=>[-0.5, 2, -0.5 ])
+    or die $img->errstr;
+
+  # blur
+  $img->filter(type=>"conv", coef=>[ 1, 2, 1 ])
+    or die $img->errstr;
 
 =item fountain
 
@@ -317,6 +333,42 @@ hue increasing and 2 for hue decreasing.
 Don't forget to use Imager::Fountain instead of building your own.
 Really.  It even loads GIMP gradient files.
 
+  # build the gradient the hard way - linear from black to white,
+  # then back again
+  my @simple =
+   (
+     [   0, 0.25, 0.5, 'black', 'white', 0, 0 ],
+     [ 0.5. 0.75, 1.0, 'white', 'black', 0, 0 ],
+   );
+  # across
+  my $linear = $img->copy;
+  $linear->filter(type   => "fountain",
+                  ftype  => 'linear',
+                  repeat => 'sawtooth',
+                  xa     => 0,
+                  ya     => $linear->getheight / 2,
+                  xb     => $linear->getwidth - 1,
+                  yb     => $linear->getheight / 2)
+    or die $linear->errstr;
+  # around
+  my $revolution = $img->copy;
+  $revolution->filter(type   => "fountain",
+                      ftype  => 'revolution',
+                      xa     => $revolution->getwidth / 2,
+                      ya     => $revolution->getheight / 2,
+                      xb     => $revolution->getwidth / 2,
+                      yb     => 0)
+    or die $revolution->errstr;
+  # out from the middle
+  my $radial = $img->copy;
+  $radial->filter(type   => "fountain",
+                  ftype  => 'radial',
+                  xa     => $im->getwidth / 2,
+                  ya     => $im->getheight / 2,
+                  xb     => $im->getwidth / 2,
+                  yb     => 0)
+    or die $radial->errstr;
+                           
 =item gaussian
 
 performs a gaussian blur of the image, using I<stddev> as the standard
@@ -328,8 +380,13 @@ bigger blurs.  For a definition of Gaussian Blur, see:
 Values of C<stddev> around 0.5 provide a barely noticable blur, values
 around 5 provide a very strong blur.
 
-  my $slight_blur = $img->filter(type=>"gaussian", stddev=>0.5);
-  my $blurry      = $img->filter(type=>"gaussian", stddev=>5);
+  # only slightly blurred
+  $img->filter(type=>"gaussian", stddev=>0.5)
+    or die $img->errstr;
+
+  # more strongly blurred
+  $img->filter(type=>"gaussian", stddev=>5)
+    or die $img->errstr;
 
 =item gradgen
 
@@ -338,22 +395,25 @@ points (x,y) in I<xo> and I<yo>.  You can specify the way distance is
 measured for color blending by setting I<dist> to 0 for Euclidean, 1
 for Euclidean squared, and 2 for Manhattan distance.
 
-  my $redbluegreen = $img->filter
-    (type="gradgen", xo=>[ 10, 50, 10 ], yo=>[ 10, 50, 50 ],
-     colors=>[ qw(red blue green) ]);
+  $img->filter(type="gradgen", 
+               xo=>[ 10, 50, 10 ], 
+               yo=>[ 10, 50, 50 ],
+               colors=>[ qw(red blue green) ]);
 
 =item hardinvert
 
 inverts the image, black to white, white to black.  All channels are
 inverted, including the alpha channel if any.
 
-  my $inverted = $img->filter(type=>"hardinvert");
+  $img->filter(type=>"hardinvert")
+    or die $img->errstr;
 
 =item mosaic
 
 produces averaged tiles of the given I<size>.
 
-  my $mosaic = $img->filter(type=>"mosaic", size=>5);
+  $img->filter(type=>"mosaic", size=>5)
+    or die $img->errstr;
 
 =item noise
 
@@ -361,8 +421,13 @@ adds noise of the given I<amount> to the image.  If I<subtype> is
 zero, the noise is even to each channel, otherwise noise is added to
 each channel independently.
 
-  my $mono_noise = $img->filter(type=>"noise", amount=>20, subtype=>0);
-  my $color_noise = $img->filter(type=>"noise", amount=>20, subtype=>1);
+  # monochrome noise
+  $img->filter(type=>"noise", amount=>20, subtype=>0)
+    or die $img->errstr;
+
+  # color noise
+  $img->filter(type=>"noise", amount=>20, subtype=>1)
+    or die $img->errstr;
 
 =item radnoise
 
@@ -370,15 +435,17 @@ renders radiant Perlin turbulent noise.  The centre of the noise is at
 (I<xo>, I<yo>), I<ascale> controls the angular scale of the noise ,
 and I<rscale> the radial scale, higher numbers give more detail.
 
-  my $radial_noise = $img->filter(type=>"radnoise", xo=>50, yo=>50,
-                                  ascale=>1, rscale=>0.02);
+  $img->filter(type=>"radnoise", xo=>50, yo=>50,
+               ascale=>1, rscale=>0.02)
+    or die $img->errstr;
 
 =item postlevels
 
 alters the image to have only I<levels> distinct level in each
 channel.
 
-  my $posted = $img->filter(type=>"postlevels", levels=>10);
+  $img->filter(type=>"postlevels", levels=>10)
+    or die $img->errstr;
 
 =item turbnoise
 
@@ -386,7 +453,8 @@ renders Perlin turbulent noise.  (I<xo>, I<yo>) controls the origin of
 the noise, and I<scale> the scale of the noise, with lower numbers
 giving more detail.
 
-  my $noise = $img->filter(type=>"turbnoise", xo=>10, yo=>10, scale=>10);
+  $img->filter(type=>"turbnoise", xo=>10, yo=>10, scale=>10)
+    or die $img->errstr;
 
 =item unsharpmask
 
@@ -395,15 +463,17 @@ subtracting a gaussian blurred version of the image from the original.
 I<stddev> controls the stddev parameter of the gaussian blur.  Each
 output pixel is: in + I<scale> * (in - blurred).
 
-  my $unsharp = $img->filter(type=>"unsharpmask", stddev=>1, scale=>0.5);
+  $img->filter(type=>"unsharpmask", stddev=>1, scale=>0.5)
+    or die $img->errstr;
 
 =item watermark
 
 applies I<wmark> as a watermark on the image with strength I<pixdiff>,
 with an origin at (I<tx>, I<ty>)
 
-  my $marked = $img->filter(type=>"watermark", tx=>10, ty=>50, 
-                            wmark=>$wmark_image, pixdiff=>50);
+  $img->filter(type=>"watermark", tx=>10, ty=>50, 
+               wmark=>$wmark_image, pixdiff=>50)
+    or die $img->errstr;
 
 =back
 
