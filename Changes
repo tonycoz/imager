@@ -1106,6 +1106,8 @@ Revision history for Perl extension Imager.
   mis-generated with the gcc 4.0 that ships with OS X 10.4
 - work around junk that pkg-config sends to stderr on FreeBSD 4.10
 - testimg/base.jpg was missing from the MANIFEST, causing test failures
+- use a temp file to avoid messing with echo on Win32 when building
+  META.yml
 
 =================================================================
 

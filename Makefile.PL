@@ -161,19 +161,11 @@ dynamic_config: 1
 distribution_type: module
 generated_by: Imager version $self->{VERSION}
 YAML
+  open META, "> meta.tmp" or die "Cannot create meta.tmp: $!";
+  print META $meta;
+  close META;
   
-  my @write;
-  if ($self->can('echo')) {
-    # use EU::MM's version where possible, hopefully it's portable
-    @write = $self->echo($meta, 'META.yml');
-  }
-  else {
-    my @lines = split /\n/, $meta;
-    @lines = map qq{"$_"}, @lines;
-    push @write, "\${ECHO} ".shift(@lines)." >META.yml";
-    push @write, map { "\${ECHO} $_ >>META.yml" } @lines;
-  }
-  return sprintf "metafile :\n\t%s\n", join "\n\t", @write;
+  return sprintf "metafile :\n\t\$(CP) meta.tmp META.yml\n";
 }
 
 # manual configuration of helper libraries
