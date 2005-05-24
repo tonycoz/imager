@@ -961,7 +961,7 @@ Revision history for Perl extension Imager.
 - method index didn't include errstr()
 - document that you don't want the FT2 freetype.h in the include path
 
-0.44_01
+0.44_01 Tue 24 May 2005
 - the plugins Makefile has long produced an error after all tests were
   complete on Win32, finally tracked down why
 - Makefile.PL now checks the directories specified by $Config{locincpth}
