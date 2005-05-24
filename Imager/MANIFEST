@@ -115,6 +115,8 @@ samples/samp-tags.html  Form for samp-tags.cgi
 spot.perl	For making an ordered dither matrix from a spot function
 stackmach.c
 stackmach.h
+t/Test/Builder.pm
+t/Test/More.pm
 t/t00basic.t
 t/t01introvert.t
 t/t020masked.t
