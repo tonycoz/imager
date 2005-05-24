@@ -1,5 +1,6 @@
 #!perl -w
 use strict;
+use lib 't';
 use Test::More tests => 158;
 ++$|;
 # Before `make install' is performed this script should be runnable with
