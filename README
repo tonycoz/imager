@@ -259,8 +259,41 @@ tool.
 If you have any problems with the Win32 support, please email
 imager@imager.perl.org (don't forget to use nmake instead of make).
 
+============
+6. Mac OS X
+============
+
+Building Imager under OS X is generally straightforward.  There are
+some exceptions though:
+
+a) you may find to need to ranlib library files in place after you've 
+   installed them, for example:
+
+     ranlib /usr/local/lib/libgif.a
+
+b) the version of GCC enabled by default on OS X 10.4 generates
+   incorrect code for some functions.  To work around this run:
+
+     gcc_select 3
+
+   before building Imager and:
+
+     gcc_select 4
+
+   after building Imager.
+
+   This problem exhibits itself as test failures in t/t20fill.t
+
+c) if you want to build GCC 4.0 from scratch and use that you will
+   need to adjust the command-line supplied during the link stage, so
+   that there is some other option before the -bundle option.
+
+   For example:
+
+     perl Makefile.PL LDDLFLAGS="`perl -MConfig -e 'print "-g $Config{lddlflags}"'`"
+   
 =======================
-6. General information
+7. General information
 =======================
 
 The Imager module homepage is currently at:
@@ -278,7 +311,7 @@ You can report bugs by pointing your browser at:
   https://rt.cpan.org/NoAuth/ReportBug.html?Queue=Imager
 
 ========================
-7. Thanks
+8. Thanks
 ========================
 
 Thanks go to:
