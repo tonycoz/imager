@@ -64,6 +64,7 @@ SKIP:
   is($bbox->advance_width, $bbox->end_offset, 
      "check advance_width fallback correct");
 
+ SKIP:
   {
     $^O eq 'cygwin' and skip("Too hard to get correct directory for test font on cygwin", 11);
     ok(Imager::i_wf_addfont("fontfiles/ExistenceTest.ttf"), "add test font")
