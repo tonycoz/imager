@@ -1108,6 +1108,7 @@ Revision history for Perl extension Imager.
 - testimg/base.jpg was missing from the MANIFEST, causing test failures
 - use a temp file to avoid messing with echo on Win32 when building
   META.yml
+- add some Mac OS X notes to the README
 
 =================================================================
 
