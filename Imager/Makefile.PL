@@ -111,7 +111,7 @@ if (defined $Config{'d_dlsymun'}) { $OSDEF  .= ' -DDLSYMUN'; }
        'DEFINE'       => "$OSDEF $CFLAGS",
        'INC'          => "$lib_cflags $DFLAGS $F_INC",
        'OBJECT'       => join(' ', @objs, $F_OBJECT),
-       clean          => { FILES=>'testout' },
+       clean          => { FILES=>'testout meta.tmp' },
       );
 
 if ($ExtUtils::MakeMaker::VERSION > 6.06) {
