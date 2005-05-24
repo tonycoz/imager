@@ -579,6 +579,18 @@ EOS
   close CONFIG;
 }
 
+# use pkg-config to probe for libraries
+# works around the junk that pkg-config dumps on FreeBSD
+sub _pkg_probe {
+  my ($pkg) = @_;
+
+  is_exe('pkg-config') or return;
+
+  my $redir = $^O eq 'MSWin32' ? '' : '2>/dev/null';
+
+  !system("pkg-config $pkg --exists $redir");
+}
+
 # probes for freetype2 by trying to run freetype-config
 sub freetype2_probe {
   my ($frm, $frmkey) = @_;
@@ -606,16 +618,17 @@ sub png_probe {
 
   is_exe('pkg-config') or return;
 
-  my $cflags;
   my $config;
   for my $check_conf (qw(libpng libpng12 libpng10)) {
-    $cflags = `pkg-config $check_conf --cflags`;
-    if ($cflags && !$?) {
+    if (_pkg_probe($check_conf)) {
       $config = $check_conf;
       last;
     }
   }
   $config or return;
+
+  my $cflags = `pkg-config $config --cflags`
+    and !$? or return;
 
   my $lflags = `pkg-config $config --libs`
     and !$? or return;

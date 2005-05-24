@@ -184,6 +184,7 @@ testimg/badused1.bmp    1-bit/pixel, out of range colors used value
 testimg/badused4a.bmp   4-bit/pixel, badly out of range used value (SEGV test)
 testimg/badused4b.bmp   4-bit/pixel, just out of range used value (SEGV test)
 testimg/bandw.gif
+testimg/base.jpg	Base JPEG test image
 testimg/comp4.bmp       Compressed 4-bit/pixel BMP
 testimg/comp4.tif       4-bit/pixel paletted TIFF
 testimg/comp4bad.tif    corrupted 4-bit/pixel paletted TIFF
