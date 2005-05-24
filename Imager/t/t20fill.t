@@ -1,6 +1,7 @@
 #!perl -w
 use strict;
-use Test::More tests => 47;
+use lib 't';
+use Test::More tests => 52;
 
 use Imager ':handy';
 use Imager::Fill;
@@ -12,6 +13,7 @@ Imager::init_log("testout/t20fill.log", 1);
 my $blue = NC(0,0,255);
 my $red = NC(255, 0, 0);
 my $redf = Imager::Color::Float->new(1, 0, 0);
+my $bluef = Imager::Color::Float->new(0, 0, 1);
 my $rsolid = Imager::i_new_fill_solid($blue, 0);
 ok($rsolid, "building solid fill");
 my $raw1 = Imager::ImgRaw::new(100, 100, 3);
@@ -67,6 +69,30 @@ my $rcustom = Imager::i_new_fill_hatch($blue, $red, 0, 0, $hatch, 0, 0);
 Imager::i_box_cfill($raw2, 0, 0, 99, 99, $rcustom);
 $diff = Imager::i_img_diff($raw1, $raw2);
 ok(!$diff, "custom hatch mismatch");
+
+{
+  # basic test of floating color hatch fills
+  # this will exercise the code that the gcc shipped with OS X 10.4
+  # forgets to generate
+  # the float version is called iff we're working with a non-8-bit image
+  # i_new_fill_hatchf() makes the same object as i_new_fill_hatch() but
+  # we test the other construction code path here
+  my $fraw1 = Imager::i_img_double_new(100, 100, 3);
+  my $fhatch1 = Imager::i_new_fill_hatchf($redf, $bluef, 0, 1, undef, 0, 0);
+  ok($fraw1, "making double image 1");
+  ok($fhatch1, "making float hatch 1");
+  Imager::i_box_cfill($fraw1, 0, 0, 99, 99, $fhatch1);
+  my $fraw2 = Imager::i_img_double_new(100, 100, 3);
+  my $fhatch2 = Imager::i_new_fill_hatchf($bluef, $redf, 0, 1, undef, 0, 2);
+  ok($fraw2, "making double image 2");
+  ok($fhatch2, "making float hatch 2");
+  Imager::i_box_cfill($fraw2, 0, 0, 99, 99, $fhatch2);
+
+  $diff = Imager::i_img_diff($fraw1, $fraw2);
+  ok(!$diff, "float custom hatch mismatch");
+  save($fraw1, "testout/t20hatchf1.ppm");
+  save($fraw2, "testout/t20hatchf2.ppm");
+}
 
 # test the oo interface
 my $im1 = Imager->new(xsize=>100, ysize=>100);
