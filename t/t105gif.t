@@ -198,7 +198,7 @@ exit;
 ENDOFCODE
       unless ($good) {
         $can_write_callback = 0;
-	print "not ok 14 # see $buggy_giflib_file\n";
+	fail("see $buggy_giflib_file");
 	print STDERR "\nprobable buggy giflib - skipping tests that depend on a good giflib\n";
 	print STDERR "see $buggy_giflib_file for more information\n";
 	open FLAG, "> $buggy_giflib_file" or die;
@@ -319,7 +319,7 @@ EOS
 
     SKIP:
     {
-      skip("see $buggy_giflib_file", 8) if -e $buggy_giflib_file;
+      skip("see $buggy_giflib_file", 18) if -e $buggy_giflib_file;
       # image has a local colour map
       open FH, "< testimg/loccmap.gif"
 	or die "Cannot open testimg/loccmap.gif: $!";

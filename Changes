@@ -1110,6 +1110,9 @@ Revision history for Perl extension Imager.
   META.yml
 - add some Mac OS X notes to the README
 
+0.44_02
+- t/t105gif.t wasn't handling buggy giflibs correctly
+
 =================================================================
 
         For latest versions check the Imager-devel pages:
