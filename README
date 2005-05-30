@@ -256,8 +256,9 @@ prevent lockups in the gif test scripts.  At the time of writing you
 need to select libungif-4.1.2-1 manually in the setup.exe installation
 tool.
 
-If you have any problems with the Win32 support, please email
-imager@imager.perl.org (don't forget to use nmake instead of make).
+If you get errors from your make tool, make sure you're using the same
+make that was used to build your perl - generally GNU make for cygwin,
+nmake for Visual C/C++ and dmake for MinGW.
 
 ============
 6. Mac OS X
