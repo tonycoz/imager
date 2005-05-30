@@ -1,6 +1,6 @@
 --- #YAML:1.0
 name: Imager
-version: 0.44_01
+version: 0.45
 version_from: Imager.pm
 author: Tony Cook <tony@imager.perl.org>, Arnar M. Hrafnkelsson
 abstract: Perl extension for Generating 24 bit Images
@@ -10,4 +10,4 @@ recommends:
 license: perl
 dynamic_config: 1
 distribution_type: module
-generated_by: Imager version 0.44_01
+generated_by: Imager version 0.45
