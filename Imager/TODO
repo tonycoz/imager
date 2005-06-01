@@ -7,24 +7,40 @@ brown-bag bugs may add intermediate releases.  The dates are goals,
 not commitments.
 
 0.46: (September 2005)
+
 - allow limits to be set on the size of an image read from a file.  This is
   to prevent an attacker supplying huge images that consume all of 
   memory causing a denial of service attack.
+
 - add Imager::Tutorial (see Tk::UserGuide for a structure)
   don't cover installation - belongs in README or INSTALL
   it doesn't need to cover everything - read/write/create/simple drawing
   and simple text - other stuff belongs in the cookbook or in sample code
+
 - add 5 more recipes to Imager::Cookbook
+
 - implement gsamp()/gsampf()/plin() etc methods for those low level image
   interfaces which don't yet have methods.
+
 - implement i_incomplete for png and gif files.
+
 - documentation audit, check:
   - every method has at least one example, but if the method is complex
     (like transform2, to_paletted, string() for example) it should include 
     a range of examples
   - check each method description to ensure it's reasonably clear.
   - check POD sections (SEE ALSO in particular)
-- rework handling of antialiasing against transparent images
+
+- rework handling of antialiasing and other transparency against
+  transparent images
+
+  Places to check:
+   - text AA rendering
+   - AA line drawing
+   - anything that uses combine (fills in particular)
+
+- module version numbers
+  http://rt.cpan.org/NoAuth/Bug.html?id=13047
 
 Speculation
 -----------
