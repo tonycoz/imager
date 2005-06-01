@@ -6,52 +6,7 @@ Release Plans (subject to change)
 brown-bag bugs may add intermediate releases.  The dates are goals,
 not commitments.
 
-0.45: (march 2005?)
-- resolve fills test failure under 5.8.6/darwin
-  http://www.nntp.perl.org/group/perl.cpan.testers/202802
-  add tests to check if the same problem occurs with other ?: operators
-- stop tga_header_verify() from spewing junk to stdout (done)
-- fix i_setcolors_p bug (done)
-- audit pnm.c (done)
-- audit tga.c (done)
-- audit rgb.c and add tests
-- add META.yml (bypass EU::MM's limited mechanism) (done)
-- implement i_incomplete for bmp files
-- check if freetype 2 is faster/slower than freetype 1 with Imager's glyph
-  caching.  If FT1 is faster, add caching as a TODO for FT2.
-- add XS for i_tags_get_string() and test it.  It has an apparent problem
-  in C<< sprintf(value, "%d", entry->data); >> since data is a pointer
-  (done)
-- test and fix problem with fallback value for 
-  Imager::Font::BBox->advance_width. (done)
-- check handling of string() method align parameter. (done, fixed)
-- i_tt_bbox_inst in font.c uses variable i without ever setting it. (fixed)
-- add sample CGI that handles an uploaded image (done)
-- examples for fountain filter in Imager::Filters (done)
-- allow Imager::Fountain to take color descriptions (eg. blue, FF000)
-  instead of color objects for c0 and c1 (done)
-- support newer GIMP gradient files with the Name line (done)
-- provide access to right-side bearing information from the bounding box
-  function (done for all drivers)
-- capture TIFF read warnings (i_warnings tag?) (done)
-- Imager::Matrix2d rotate method only applies offset if both x and y
-  are non-zero, it should do it if either is non-zero (done)
-- add Imager::Cookbook with at least 5 recipes (done)
-- store floating point tags in an appropriate precision (done)
-- allow image creation to fail on malloc() failure for the image data
-  rather than aborting.  The current behaviour could be a denial of
-  service attack.  This has limited utility because of the way memory
-  over commitment works on Linux (done but reverted)
-- eliminate unused variable warning (especially the RETVAL ones in Imager.xs)
-  (done)
-- handle probing for libraries better (use pkg-config or I<library>-config
-  where possible (freetype2 and libpng)) (done)
-- add concept index to Imager.pm pod (done, still working it)
-- replace testimg/penguin-base.ppm with a smaller image (done)
-- add a sample CGI HTML and image generation scripts that work together,
-  with appropriate security management (done)
-
-0.46: (june 2005)
+0.46: (September 2005)
 - allow limits to be set on the size of an image read from a file.  This is
   to prevent an attacker supplying huge images that consume all of 
   memory causing a denial of service attack.
@@ -301,4 +256,49 @@ Old release checklists
 - check bmp code uses image data offset correctly - done
 - check quant code for integer overflows - done
 - check for old URLs (umich and imager.perl.org/~addi/...) - done
+
+0.45: (march 2005?)
+- resolve fills test failure under 5.8.6/darwin
+  http://www.nntp.perl.org/group/perl.cpan.testers/202802
+  add tests to check if the same problem occurs with other ?: operators
+- stop tga_header_verify() from spewing junk to stdout (done)
+- fix i_setcolors_p bug (done)
+- audit pnm.c (done)
+- audit tga.c (done)
+- audit rgb.c and add tests
+- add META.yml (bypass EU::MM's limited mechanism) (done)
+- implement i_incomplete for bmp files
+- check if freetype 2 is faster/slower than freetype 1 with Imager's glyph
+  caching.  If FT1 is faster, add caching as a TODO for FT2.
+- add XS for i_tags_get_string() and test it.  It has an apparent problem
+  in C<< sprintf(value, "%d", entry->data); >> since data is a pointer
+  (done)
+- test and fix problem with fallback value for 
+  Imager::Font::BBox->advance_width. (done)
+- check handling of string() method align parameter. (done, fixed)
+- i_tt_bbox_inst in font.c uses variable i without ever setting it. (fixed)
+- add sample CGI that handles an uploaded image (done)
+- examples for fountain filter in Imager::Filters (done)
+- allow Imager::Fountain to take color descriptions (eg. blue, FF000)
+  instead of color objects for c0 and c1 (done)
+- support newer GIMP gradient files with the Name line (done)
+- provide access to right-side bearing information from the bounding box
+  function (done for all drivers)
+- capture TIFF read warnings (i_warnings tag?) (done)
+- Imager::Matrix2d rotate method only applies offset if both x and y
+  are non-zero, it should do it if either is non-zero (done)
+- add Imager::Cookbook with at least 5 recipes (done)
+- store floating point tags in an appropriate precision (done)
+- allow image creation to fail on malloc() failure for the image data
+  rather than aborting.  The current behaviour could be a denial of
+  service attack.  This has limited utility because of the way memory
+  over commitment works on Linux (done but reverted)
+- eliminate unused variable warning (especially the RETVAL ones in Imager.xs)
+  (done)
+- handle probing for libraries better (use pkg-config or I<library>-config
+  where possible (freetype2 and libpng)) (done)
+- add concept index to Imager.pm pod (done, still working it)
+- replace testimg/penguin-base.ppm with a smaller image (done)
+- add a sample CGI HTML and image generation scripts that work together,
+  with appropriate security management (done)
 
