@@ -1113,6 +1113,10 @@ Revision history for Perl extension Imager.
 0.45 Mon 30 May 2005
 - t/t105gif.t wasn't handling buggy giflibs correctly
 
+0.45_01
+- give the colorcount() and maxcolors() methods their own entries and
+  add them to the method index.
+
 =================================================================
 
         For latest versions check the Imager-devel pages:

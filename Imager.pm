@@ -2925,6 +2925,8 @@ box() - L<Imager::Draw/box>
 
 circle() - L<Imager::Draw/circle>
 
+colorcount() - L<Imager::Draw/colorcount>
+
 convert() - L<Imager::Transformations/"Color transformations"> -
 transform the color space
 
@@ -2970,6 +2972,8 @@ channel values
 masked() -  L<Imager::ImageTypes> - make a masked image
 
 matrix_transform() - L<Imager::Engines/"Matrix Transformations">
+
+maxcolors() - L<Imager::ImageTypes/maxcolor>
 
 new() - L<Imager::ImageTypes>
 
