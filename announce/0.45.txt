@@ -1,0 +1,68 @@
+Imager 0.45 has been released and will soon be available on all CPAN
+mirrors.
+
+This is primarily a bug-fix release.  The following issues have been
+fixed:
+
+- the dynamic filters Makefile would fail after everything had been
+  built on Win32
+
+- the correct error messages are now produced for Freetype 2.0 errors
+
+- multiple master fonts are now supported by the freetype 2 driver
+
+- we now attempt to use freetype-config and pkg-config when probing
+  for and configuring freetype 2.
+
+- we now attempt to use pkg-config when probing for and configuring
+  libpng
+
+- we don't accept a directory indicating freetype 2.x headers as a
+  freetype 1.x installation any more
+
+- reading a TGA image with a long (>127) idstring would result in an
+  allocation error.
+
+- calling the read() method for a format supported by Imager but not
+  supported by the current build (eg. reading a JPEG without libjpeg
+  installed when Imager was built) no longer crashes with an undefined
+  function error.
+
+- the i_glin() XS code wasn't copying the returned colors back correctly
+
+- the right-side bearing calculated for freetype2.x wasn't scaled from
+  a fixed point number to an integer, this would cause pos_width() to
+  be much luarger than was correct if the right-most character
+  overflowed the character box.
+
+- saving a gradient file with Imager::Fountain->save() missed
+  outputting a space between the last 2 parameters of each segment.
+
+- methods that work with an image and return a new image now warn when
+  called in void context.
+
+- the Imager::Matrix2d rotate() method would only use the x and y
+  parameters if both were non-zero.
+
+- the FT1.x driver ignored the align parameter.
+
+Documentation changes:
+
+- added a concept index for perldoc Imager
+
+- more examples in Imager::Draw
+
+- added examples to all filters in Imager::Filter
+
+- many minor documentation fixes
+
+New/improved features:
+
+- Imager::Fountain can read newer GIMP gradient files containing NAME
+  lines
+
+- color names can now be used where color objects were required for
+  most filters.
+
+- all font drivers now return an display_width() and right_bearing()
+  value.
