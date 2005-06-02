@@ -52,9 +52,10 @@ Imager::ImageTypes - Internal image representation information
     print "\n";
   
   } else {
-  
+    # palette info
+    my $count = $img->colorcount;  
     @colors = $img->getcolors();
-    print "Palette size: ".@colors."\n";
+    print "Palette size: $count\n";
     my $mx = @colors > 4 ? 4 : 0+@colors;
     print "First $mx entries:\n";
     for (@colors[0..$mx-1]) {
@@ -291,8 +292,17 @@ To quickly find a color in the palette use findcolor():
 
 which returns undef on failure, or the index of the color.
 
-You can get the current palette size with $img->colorcount, and the
-maximum size of the palette with $img->maxcolors.
+=item colorcount
+
+Returns the number of colors in the image's palette:
+
+  my $count = $img->colorcount;
+
+=item maxcolors
+
+Returns the maximum size of the image's palette.
+
+  my $maxcount = $img->maxcolors;
 
 =back
 
