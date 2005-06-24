@@ -1,0 +1,14 @@
+How should we handle incomplete files?
+======================================
+
+Reading an incomplete TIFF sets i_incomplete, but no others do.
+
+Should this only occur if a flag is set?
+
+Should there be some indication of how much was read?
+
+Some formats, like compressed BMP don't really have a way to tell.  A
+valid BMP might be 100 x 100 and only set 1 pixel in the data.  Though
+we can't tell what the non-set pixels should be in this case.
+
+
