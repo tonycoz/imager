@@ -30,9 +30,10 @@ not commitments.
     a range of examples
   - check each method description to ensure it's reasonably clear.
   - check POD sections (SEE ALSO in particular)
+  (#1521, #5608, #8231, #11429, #13058)
 
 - rework handling of antialiasing and other transparency against
-  transparent images
+  transparent images (#11972)
 
   Places to check:
    - text AA rendering
