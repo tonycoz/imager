@@ -18,15 +18,6 @@ not commitments.
 - module version numbers
   http://rt.cpan.org/NoAuth/Bug.html?id=13047
 
-- rework handling of antialiasing and other transparency against
-  transparent images
-
-  Places to check:
-   - text AA rendering
-   - AA line drawing
-   - anything that uses combine (fills in particular)
-  http://rt.cpan.org/NoAuth/Bug.html?id=11972
-
 - allow limits to be set on the size of an image read from a file.  This is
   to prevent an attacker supplying huge images that consume all of 
   memory causing a denial of service attack.
@@ -52,7 +43,24 @@ not commitments.
     a range of examples
   - check each method description to ensure it's reasonably clear.
   - check POD sections (SEE ALSO in particular)
+  - multiple examples for writing GIF images.
   (#1521, #5608, #8231, #11429, #13058)
+
+- have $img->read() act like ($img) = Imager->read_multi()
+
+0.47:
+
+- rework handling of antialiasing and other transparency against
+  transparent images
+
+  Places to check:
+   - text AA rendering
+   - AA line drawing
+   - anything that uses combine (fills in particular)
+   - image scaling? and matrix_transform()'s interpolation
+  http://rt.cpan.org/NoAuth/Bug.html?id=11972
+
+
 
 Speculation
 -----------
