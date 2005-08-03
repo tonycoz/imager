@@ -188,6 +188,10 @@ static i_img *read_one_tiff(TIFF *tif) {
 
   if (!im)
     return NULL;
+
+  /* general metadata */
+  i_tags_addn(&im->tags, "tiff_bitspersample", 0, bits_per_sample);
+  i_tags_addn(&im->tags, "tiff_photometric", 0, photometric);
     
   /* resolution tags */
   TIFFGetFieldDefaulted(tif, TIFFTAG_RESOLUTIONUNIT, &resunit);
