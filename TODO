@@ -44,6 +44,8 @@ not commitments.
   - check each method description to ensure it's reasonably clear.
   - check POD sections (SEE ALSO in particular)
   - multiple examples for writing GIF images.
+  - name arguments and use those names in the documentation
+    http://nntp.perl.org/group/perl.perl5.porters/102434
   (#1521, #5608, #8231, #11429, #13058)
 
 - have $img->read() act like ($img) = Imager->read_multi()
