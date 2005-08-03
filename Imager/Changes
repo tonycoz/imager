@@ -1116,6 +1116,8 @@ Revision history for Perl extension Imager.
 0.45_01
 - give the colorcount() and maxcolors() methods their own entries and
   add them to the method index.
+- added tiff_bitspersample and tiff_photometric tags to tiff images
+  when read
 
 =================================================================
 

@@ -439,6 +439,16 @@ C<tiff_resolutionunit>.  Possible results include C<inch>,
 C<centimeter>, C<none> (the C<i_aspect_only> tag is also set reading
 these files) or C<unknown>.
 
+=item tiff_bitspersample
+
+Bits per sample from the image.  This value is not used when writing
+an image, it is only set on a read image.
+
+=item tiff_photometric
+
+Value of the PhotometricInterpretation tag from the image.  This value
+is not used when writing an image, it is only set on a read image.
+
 =item tiff_documentname
 
 =item tiff_imagedescription
