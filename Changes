@@ -1120,6 +1120,7 @@ Revision history for Perl extension Imager.
   when read
 - loading filter DLLs/DSOs had an off-by-one error allocating a buffer
   for the filename of the library (does anyone use this functionality?)
+- remove old #if 0 code from Imager.xs
 
 =================================================================
 
