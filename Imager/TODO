@@ -10,6 +10,8 @@ not commitments.
 
 - check remaining memory allocation calls for integer overflows
   http://rt.cpan.org/NoAuth/Bug.html?id=8213
+   - check *alloc() calls
+   - check llist_push() calls
 
 - fix Imager::Color warning when $ENV{HOME} isn't set from
   _get_gimp_color()
@@ -49,6 +51,8 @@ not commitments.
   (#1521, #5608, #8231, #11429, #13058)
 
 - have $img->read() act like ($img) = Imager->read_multi()
+
+- figure out what the nearest_color filter does, and document it
 
 0.47:
 
