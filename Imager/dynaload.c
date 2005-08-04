@@ -57,11 +57,14 @@ DSO_open(char* file,char** evalstring) {
   mm_log( (1,"Call ok.\n") ); 
  
   if ( (shl_findsym(&tt_handle, I_FUNCTION_LIST ,TYPE_UNDEFINED,(func_ptr*)&function_list))) return NULL; 
-  if ( (dso_handle=(DSO_handle*)malloc(sizeof(DSO_handle))) == NULL) return NULL;
+  if ( (dso_handle=(DSO_handle*)malloc(sizeof(DSO_handle))) == NULL) /* checked 17jul05 tonyc */
+    return NULL;
 
   dso_handle->handle=tt_handle; /* needed to close again */
   dso_handle->function_list=function_list;
-  if ( (dso_handle->filename=(char*)malloc(strlen(file))) == NULL) { free(dso_handle); return NULL; }
+  if ( (dso_handle->filename=(char*)malloc(strlen(file)+1)) == NULL) { /* checked 17jul05 tonyc */
+    free(dso_handle); return NULL;
+  }
   strcpy(dso_handle->filename,file);
 
   mm_log((1,"DSO_open <- (0x%X)\n",dso_handle));
@@ -111,14 +114,18 @@ DSO_open(char *file, char **evalstring) {
     FreeLibrary(d_handle);
     return NULL;
   }
-  if ( (dso_handle = (DSO_handle*)malloc(sizeof(DSO_handle))) == NULL) {
+  if ( (dso_handle = (DSO_handle*)malloc(sizeof(DSO_handle))) == NULL) { /* checked 17jul05 tonyc */
     mm_log( (1, "DSO_Open: out of memory\n") );
     FreeLibrary(d_handle);
     return NULL;
   }
   dso_handle->handle=d_handle; /* needed to close again */
   dso_handle->function_list=function_list;
-  if ( (dso_handle->filename=(char*)malloc(strlen(file))) == NULL) { free(dso_handle); FreeLibrary(d_handle); return NULL; }
+  if ( (dso_handle->filename=(char*)malloc(strlen(file)+1)) == NULL) { /* checked 17jul05 tonyc */
+    free(dso_handle);
+    FreeLibrary(d_handle); 
+    return NULL; 
+  }
   strcpy(dso_handle->filename,file);
 
   mm_log( (1,"DSO_open <- 0x%X\n",dso_handle) );
@@ -287,11 +294,15 @@ DSO_open(char* file,char** evalstring) {
     return NULL;
   }
   
-  if ( (dso_handle=(DSO_handle*)malloc(sizeof(DSO_handle))) == NULL) return NULL;
+  if ( (dso_handle=(DSO_handle*)malloc(sizeof(DSO_handle))) == NULL) /* checked 17jul05 tonyc */
+    return NULL;
   
   dso_handle->handle=d_handle; /* needed to close again */
   dso_handle->function_list=function_list;
-  if ( (dso_handle->filename=(char*)malloc(strlen(file))) == NULL) { free(dso_handle); return NULL; }
+  if ( (dso_handle->filename=(char*)malloc(strlen(file)+1)) == NULL) { /* checked 17jul05 tonyc */
+    free(dso_handle); 
+    return NULL;
+  }
   strcpy(dso_handle->filename,file);
 
   mm_log( (1,"DSO_open <- 0x%X\n",dso_handle) );
