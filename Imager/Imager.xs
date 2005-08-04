@@ -559,32 +559,6 @@ static struct value_name orddith_names[] =
   { "custom", od_custom, },
 };
 
-#if 0
-static int
-hv_fetch_bool(HV *hv, char *name, int def) {
-  SV **sv;
-
-  sv = hv_fetch(hv, name, strlen(name), 0);
-  if (sv && *sv) {
-    return SvTRUE(*sv);
-  }
-  else
-    return def;
-}
-
-static int
-hv_fetch_int(HV *hv, char *name, int def) {
-  SV **sv;
-
-  sv = hv_fetch(hv, name, strlen(name), 0);
-  if (sv && *sv) {
-    return SvIV(*sv);
-  }
-  else
-    return def;
-}
-#endif
-
 /* look through the hash for quantization options */
 static void handle_quant_opts(i_quantize *quant, HV *hv)
 {
@@ -722,90 +696,6 @@ static void cleanup_quant_opts(i_quantize *quant) {
   if (quant->ed_map)
     myfree(quant->ed_map);
 }
-
-#if 0
-/* look through the hash for options to add to opts */
-static void handle_gif_opts(i_gif_opts *opts, HV *hv)
-{
-  SV **sv;
-  int i;
-  /**((char *)0) = '\0';*/
-  opts->each_palette = hv_fetch_bool(hv, "gif_each_palette", 0);
-  opts->interlace = hv_fetch_bool(hv, "interlace", 0);
-
-  sv = hv_fetch(hv, "gif_delays", 10, 0);
-  if (sv && *sv && SvROK(*sv) && SvTYPE(SvRV(*sv)) == SVt_PVAV) {
-    AV *av = (AV*)SvRV(*sv);
-    opts->delay_count = av_len(av)+1;
-    opts->delays = mymalloc(sizeof(int) * opts->delay_count);
-    for (i = 0; i < opts->delay_count; ++i) {
-      SV *sv1 = *av_fetch(av, i, 0);
-      opts->delays[i] = SvIV(sv1);
-    }
-  }
-  sv = hv_fetch(hv, "gif_user_input", 14, 0);
-  if (sv && *sv && SvROK(*sv) && SvTYPE(SvRV(*sv)) == SVt_PVAV) {
-    AV *av = (AV*)SvRV(*sv);
-    opts->user_input_count = av_len(av)+1;
-    opts->user_input_flags = mymalloc(opts->user_input_count);
-    for (i = 0; i < opts->user_input_count; ++i) {
-      SV *sv1 = *av_fetch(av, i, 0);
-      opts->user_input_flags[i] = SvIV(sv1) != 0;
-    }
-  }
-  sv = hv_fetch(hv, "gif_disposal", 12, 0);
-  if (sv && *sv && SvROK(*sv) && SvTYPE(SvRV(*sv)) == SVt_PVAV) {
-    AV *av = (AV*)SvRV(*sv);
-    opts->disposal_count = av_len(av)+1;
-    opts->disposal = mymalloc(opts->disposal_count);
-    for (i = 0; i < opts->disposal_count; ++i) {
-      SV *sv1 = *av_fetch(av, i, 0);
-      opts->disposal[i] = SvIV(sv1);
-    }
-  }
-  sv = hv_fetch(hv, "gif_tran_color", 14, 0);
-  if (sv && *sv && SvROK(*sv) && sv_derived_from(*sv, "Imager::Color")) {
-    i_color *col = INT2PTR(i_color *, SvIV((SV *)SvRV(*sv)));
-    opts->tran_color = *col;
-  }
-  sv = hv_fetch(hv, "gif_positions", 13, 0);
-  if (sv && *sv && SvROK(*sv) && SvTYPE(SvRV(*sv)) == SVt_PVAV) {
-    AV *av = (AV *)SvRV(*sv);
-    opts->position_count = av_len(av) + 1;
-    opts->positions = mymalloc(sizeof(i_gif_pos) * opts->position_count);
-    for (i = 0; i < opts->position_count; ++i) {
-      SV **sv2 = av_fetch(av, i, 0);
-      opts->positions[i].x = opts->positions[i].y = 0;
-      if (sv && *sv && SvROK(*sv) && SvTYPE(SvRV(*sv)) == SVt_PVAV) {
-	AV *av2 = (AV*)SvRV(*sv2);
-	SV **sv3;
-	sv3 = av_fetch(av2, 0, 0);
-	if (sv3 && *sv3)
-	  opts->positions[i].x = SvIV(*sv3);
-	sv3 = av_fetch(av2, 1, 0);
-	if (sv3 && *sv3)
-	  opts->positions[i].y = SvIV(*sv3);
-      }
-    }
-  }
-  /* Netscape2.0 loop count extension */
-  opts->loop_count = hv_fetch_int(hv, "gif_loop_count", 0);
-
-  opts->eliminate_unused = hv_fetch_bool(hv, "gif_eliminate_unused", 1);
-}
-
-static void cleanup_gif_opts(i_gif_opts *opts) {
-  if (opts->delays)
-    myfree(opts->delays);
-  if (opts->user_input_flags)
-    myfree(opts->user_input_flags);
-  if (opts->disposal)
-    myfree(opts->disposal);
-  if (opts->positions) 
-    myfree(opts->positions);
-}
-
-#endif
 
 /* copies the color map from the hv into the colors member of the HV */
 static void copy_colors_back(HV *hv, i_quantize *quant) {
