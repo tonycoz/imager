@@ -1122,6 +1122,8 @@ Revision history for Perl extension Imager.
   for the filename of the library (does anyone use this functionality?)
 - remove old #if 0 code from Imager.xs
 - convert t/t15color.t to Test::More
+- prevent warnings when looking up a GIMP color with no palette
+  parameter and $ENV{HOME} not set.
 
 =================================================================
 

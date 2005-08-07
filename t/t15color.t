@@ -7,7 +7,7 @@
 # Change 1..1 below to 1..last_test_to_print .
 # (It may become useful if the test is moved to ./t subdirectory.)
 
-use Test::More tests => 46;
+use Test::More tests => 47;
 
 BEGIN { use_ok('Imager'); };
 
@@ -114,6 +114,18 @@ color_ok('builtin black', 0, 0, 0, 255,
   ok(scalar($c1->equals(other=>$c2, ignore_alpha=>1)), 
       "equal with ignore alpha");
   ok($c1->equals(other=>$c1), "equal to itself");
+}
+
+{ # http://rt.cpan.org/NoAuth/Bug.html?id=13143
+  # Imager::Color->new(color_name) warning if HOME environment variable not set
+  local $ENV{HOME};
+  my @warnings;
+  local $SIG{__WARN__} = sub { push @warnings, "@_" };
+
+  # presumably no-one will name a color like this.
+  my $c1 = Imager::Color->new(gimp=>"ABCDEFGHIJKLMNOP");
+  is(@warnings, 0, "Should be no warnings")
+    or do { print "# $_" for @warnings };
 }
  
 sub test_col {
