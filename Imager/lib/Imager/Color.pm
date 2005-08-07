@@ -109,6 +109,8 @@ sub _get_gimp_color {
     # or set the palette parameter
     for my $attempt (@gimp_search) {
       my $work = $attempt; # don't modify the source array
+      $work =~ /\$HOME/ && !defined $ENV{HOME}
+	and next;
       $work =~ s/\$HOME/$ENV{HOME}/;
       if (-e $work) {
         $filename = $work;
