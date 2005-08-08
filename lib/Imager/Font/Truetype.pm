@@ -1,7 +1,9 @@
 package Imager::Font::Truetype;
 use strict;
-use vars qw(@ISA);
+use vars qw(@ISA $VERSION);
 @ISA = qw(Imager::Font);
+
+$VERSION = sprintf "%d.%03d", q$Revision$=~/\d+/g;
 
 *_first = \&Imager::Font::_first;
 

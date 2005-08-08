@@ -1,5 +1,9 @@
 package Imager::Fill;
 use strict;
+use vars qw($VERSION);
+
+$VERSION = sprintf "%d.%03d", q$Revision$=~/\d+/g;
+
 # this needs to be kept in sync with the array of hatches in fills.c
 my @hatch_types =
   qw/check1x1 check2x2 check4x4 vline1 vline2 vline4

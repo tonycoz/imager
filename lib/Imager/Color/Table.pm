@@ -1,5 +1,8 @@
 package Imager::Color::Table;
 use strict;
+use vars qw($VERSION);
+
+$VERSION = sprintf "%d.%03d", q$Revision$=~/\d+/g;
 
     my %colors;
 

@@ -2,6 +2,9 @@ package Imager::Expr::Assem;
 use strict;
 use Imager::Expr;
 use Imager::Regops;
+use vars qw($VERSION);
+
+$VERSION = sprintf "%d.%03d", q$Revision$=~/\d+/g;
 
 use vars qw(@ISA);
 @ISA = qw(Imager::Expr);

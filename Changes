@@ -1124,6 +1124,7 @@ Revision history for Perl extension Imager.
 - convert t/t15color.t to Test::More
 - prevent warnings when looking up a GIMP color with no palette
   parameter and $ENV{HOME} not set.
+- added VERSION numbers to most .pms
 
 =================================================================
 

@@ -2,6 +2,9 @@ package Imager::Font;
 
 use Imager::Color;
 use strict;
+use vars qw($VERSION);
+
+$VERSION = sprintf "%d.%03d", q$Revision$=~/\d+/g;
 
 # the aim here is that we can:
 #  - add file based types in one place: here
