@@ -3,6 +3,9 @@ package Imager::Font::Wrap;
 use strict;
 use Imager;
 use Imager::Font;
+use vars qw($VERSION);
+
+$VERSION = sprintf "%d.%03d", q$Revision$=~/\d+/g;
 
 *_first = \&Imager::Font::_first;
 

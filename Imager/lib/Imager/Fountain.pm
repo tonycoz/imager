@@ -1,6 +1,9 @@
 package Imager::Fountain;
 use strict;
 use Imager::Color::Float;
+use vars qw($VERSION);
+
+$VERSION = sprintf "%d.%03d", q$Revision$=~/\d+/g;
 
 =head1 NAME
 

@@ -2,7 +2,9 @@ package Imager::Color::Float;
 
 use Imager;
 use strict;
-use vars qw();
+use vars qw($VERSION);
+
+$VERSION = sprintf "%d.%03d", q$Revision$=~/\d+/g;
 
 # It's just a front end to the XS creation functions.
 
