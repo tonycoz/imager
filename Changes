@@ -1125,6 +1125,7 @@ Revision history for Perl extension Imager.
 - prevent warnings when looking up a GIMP color with no palette
   parameter and $ENV{HOME} not set.
 - added VERSION numbers to most .pms
+- convert t/t104ppm.t to Test::More
 
 =================================================================
 
