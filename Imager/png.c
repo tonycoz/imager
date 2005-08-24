@@ -1,5 +1,5 @@
 #include "iolayer.h"
-#include "image.h"
+#include "imagei.h"
 #include "png.h"
 
 /* Check to see if a file is a PNG file using png_sig_cmp().  png_sig_cmp()
@@ -236,6 +236,12 @@ i_readpng_wiol(io_glue *ig, int length) {
   channels = CC2C[color_type];
 
   mm_log((1,"i_readpng_wiol: channels %d\n",channels));
+
+  if (!i_int_check_image_file_limits(width, height, channels, sizeof(i_sample_t))) {
+    mm_log((1, "i_readpnm: image size exceeds limits\n"));
+    png_destroy_read_struct(&png_ptr, &info_ptr, (png_infopp)NULL);
+    return NULL;
+  }
 
   png_set_strip_16(png_ptr);
   png_set_packing(png_ptr);

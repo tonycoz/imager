@@ -1142,7 +1142,7 @@ sub read {
   if ( $input{'type'} eq 'jpeg' ) {
     ($self->{IMG},$self->{IPTCRAW}) = i_readjpeg_wiol( $IO );
     if ( !defined($self->{IMG}) ) {
-      $self->{ERRSTR}='unable to read jpeg image'; return undef;
+      $self->{ERRSTR}=$self->_error_as_msg(); return undef;
     }
     $self->{DEBUG} && print "loading a jpeg file\n";
     return $self;
@@ -1169,7 +1169,7 @@ sub read {
   if ( $input{'type'} eq 'png' ) {
     $self->{IMG}=i_readpng_wiol( $IO, -1 ); # Fixme, check if that length parameter is ever needed
     if ( !defined($self->{IMG}) ) {
-      $self->{ERRSTR}='unable to read png image';
+      $self->{ERRSTR} = $self->_error_as_msg();
       return undef;
     }
     $self->{DEBUG} && print "loading a png file\n";
@@ -2632,6 +2632,32 @@ sub string {
   return $self;
 }
 
+my @file_limit_names = qw/width height bytes/;
+
+sub set_file_limits {
+  shift;
+
+  my %opts = @_;
+  my %values;
+  
+  if ($opts{reset}) {
+    @values{@file_limit_names} = (0) x @file_limit_names;
+  }
+  else {
+    @values{@file_limit_names} = i_get_image_file_limits();
+  }
+
+  for my $key (keys %values) {
+    defined $opts{$key} and $values{$key} = $opts{$key};
+  }
+
+  i_set_image_file_limits($values{width}, $values{height}, $values{bytes});
+}
+
+sub get_file_limits {
+  i_get_image_file_limits();
+}
+
 # Shortcuts that can be exported
 
 sub newcolor { Imager::Color->new(@_); }
@@ -2956,6 +2982,8 @@ getcolorcount() -  L<Imager::ImageTypes>
 getcolors() - L<Imager::ImageTypes> - get colors from the image
 palette, if it has one
 
+get_file_limits() - L<Imager::Files/"Limiting the sizes of images you read">
+
 getheight() - L<Imager::ImageTypes>
 
 getpixel() - L<Imager::Draw/setpixel and getpixel>
@@ -3004,6 +3032,8 @@ scaleY() - L<Imager::Transformations/scaleY>
 setcolors() - L<Imager::ImageTypes> - set palette colors in a paletted image
 
 setpixel() - L<Imager::Draw/setpixel and getpixel>
+
+set_file_limits() - L<Imager::Files/"Limiting the sizes of images you read">
 
 string() - L<Imager::Font/string> - draw text on an image
 
@@ -3100,6 +3130,8 @@ hatch fills - L<Imager::Fill/"Hatched fills">
 invert image - L<Imager::Filter/hardinvert>
 
 JPEG - L<Imager::Files/"JPEG">
+
+limiting image sizes - L<Imager::Files/"Limiting the sizes of images you read">
 
 lines, drawing - L<Imager::Draw/line>
 

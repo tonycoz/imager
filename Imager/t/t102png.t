@@ -1,7 +1,7 @@
 #!perl -w
 use strict;
 use lib 't';
-use Test::More tests => 13;
+use Test::More tests => 28;
 # Before `make install' is performed this script should be runnable with
 # `make test'. After `make install' it should work as `perl test.pl'
 
@@ -115,4 +115,41 @@ if (!i_has_format("png")) {
 # upgrade libpng
 EOS
   }
+
+  { # check file limits are checked
+    my $limit_file = "testout/t102.png";
+    ok(Imager->set_file_limits(reset=>1, width=>149), "set width limit 149");
+    my $im = Imager->new;
+    ok(!$im->read(file=>$limit_file),
+       "should fail read due to size limits");
+    print "# ",$im->errstr,"\n";
+    like($im->errstr, qr/image width/, "check message");
+    
+    ok(Imager->set_file_limits(reset=>1, height=>149), "set height limit 149");
+    ok(!$im->read(file=>$limit_file),
+       "should fail read due to size limits");
+    print "# ",$im->errstr,"\n";
+    like($im->errstr, qr/image height/, "check message");
+    
+    ok(Imager->set_file_limits(reset=>1, width=>150), "set width limit 150");
+    ok($im->read(file=>$limit_file),
+       "should succeed - just inside width limit");
+    ok(Imager->set_file_limits(reset=>1, height=>150), "set height limit 150");
+    ok($im->read(file=>$limit_file),
+       "should succeed - just inside height limit");
+    
+    # 150 x 150 x 3 channel image uses 67500 bytes
+    ok(Imager->set_file_limits(reset=>1, bytes=>67499),
+       "set bytes limit 67499");
+    ok(!$im->read(file=>$limit_file),
+       "should fail - too many bytes");
+    print "# ",$im->errstr,"\n";
+    like($im->errstr, qr/storage size/, "check error message");
+    ok(Imager->set_file_limits(reset=>1, bytes=>67500),
+       "set bytes limit 67500");
+    ok($im->read(file=>$limit_file),
+       "should succeed - just inside bytes limit");
+    Imager->set_file_limits(reset=>1);
+  }
+
 }

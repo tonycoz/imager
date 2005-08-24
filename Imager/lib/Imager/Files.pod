@@ -18,6 +18,8 @@ Imager::Files - working with image files
   my @imgs = Imager->read_multi(file=>$filename)
     or die "Cannot read: ", Imager->errstr;
 
+  Imager->set_file_limits(width=>$max_width, height=>$max_height)
+
 =head1 DESCRIPTION
 
 You can read and write a variety of images formats, assuming you have
@@ -166,6 +168,64 @@ Return either a valid Imager file type, or undef.
 
   # I'm writing jpegs to weird filenames
   local $Imager::FORMATGUESS = sub { 'jpeg' };
+
+=head2 Limiting the sizes of images you read
+
+In some cases you will be receiving images from an untested source,
+such as submissions via CGI.  To prevent such images from consuming
+large amounts of memory, you can set limits on the dimensions of
+images you read from files:
+
+=over
+
+=item *
+
+width - limit the width in pixels of the image
+
+=item *
+
+height - limit the height in pixels of the image
+
+=item *
+
+bytes - limits the amount of storage used by the image.  This depends
+on the width, height, channels and sample size of the image.  For
+paletted images this is calculated as if the image was expanded to a
+direct color image.
+
+=back
+
+To set the limits, call the class method set_file_limits:
+
+  Imager->set_file_limits(width=>$max_width, height=>$max_height);
+
+You can pass any or all of the limits above, any limits you do not
+pass are left as they were.
+
+Any limit of zero is treated as unlimited.
+
+By default, all of the limits are zero, or unlimited.
+
+You can reset all of the limited to their defaults by passing in the
+reset parameter as a true value:
+
+  # no limits
+  Imager->set_file_limits(reset=>1);
+
+This can be used with the other limits to reset all but the limit you
+pass:
+
+  # only width is limited
+  Imager->set_file_limits(reset=>1, width=>100);
+
+  # only bytes is limited
+  Imager->set_file_limits(reset=>1, bytes=>10_000_000);
+
+You can get the current limits with the get_file_limits() method:
+
+  my ($max_width, $max_height, $max_bytes) =
+     Imager->get_file_limits();
+
 
 =head1 TYPE SPECIFIC INFORMATION
 

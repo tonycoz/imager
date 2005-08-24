@@ -1,6 +1,7 @@
 #include "image.h"
 #include "log.h"
 #include "iolayer.h"
+#include "imagei.h"
 
 #include <stdlib.h>
 #include <errno.h>
@@ -342,6 +343,11 @@ i_readpnm_wiol(io_glue *ig, int length) {
 
   channels = (type == 3 || type == 6) ? 3:1;
   pcount = width*height*channels;
+
+  if (!i_int_check_image_file_limits(width, height, channels, sizeof(i_sample_t))) {
+    mm_log((1, "i_readpnm: image size exceeds limits\n"));
+    return NULL;
+  }
 
   mm_log((1, "i_readpnm: (%d x %d), channels = %d, maxval = %d\n", width, height, channels, maxval));
   

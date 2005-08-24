@@ -943,7 +943,6 @@ i_rgb_to_hsv(c)
         i_rgb_to_hsvf(RETVAL);
       OUTPUT:
         RETVAL
-        
 
 MODULE = Imager		PACKAGE = Imager::ImgRaw	PREFIX = IIM_
 
@@ -1025,6 +1024,24 @@ io_slurp(ig)
               PUSHs(sv_2mortal(newSVpv((char *)data,tlength)));
               myfree(data);
 
+
+undef_int
+i_set_image_file_limits(width, height, bytes)
+	int width
+	int height
+	int bytes
+
+void
+i_get_image_file_limits()
+      PREINIT:
+        int width, height, bytes;
+      PPCODE:
+        if (i_get_image_file_limits(&width, &height, &bytes)) {
+	  EXTEND(SP, 3);
+          PUSHs(sv_2mortal(newSViv(width)));
+          PUSHs(sv_2mortal(newSViv(height)));
+          PUSHs(sv_2mortal(newSViv(bytes)));
+        }
 
 MODULE = Imager		PACKAGE = Imager::IO	PREFIX = io_glue_
 

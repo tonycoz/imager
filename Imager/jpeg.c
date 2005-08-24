@@ -28,7 +28,7 @@ Reads and writes JPEG images
 #include <setjmp.h>
 
 #include "iolayer.h"
-#include "image.h"
+#include "imagei.h"
 #include "jpeglib.h"
 #include "jerror.h"
 #include <errno.h>
@@ -370,6 +370,13 @@ i_readjpeg_wiol(io_glue *data, int length, char** iptc_itext, int *itlength) {
 
   (void) jpeg_read_header(&cinfo, TRUE);
   (void) jpeg_start_decompress(&cinfo);
+  if (!i_int_check_image_file_limits(cinfo.output_width, cinfo.output_height,
+				     cinfo.output_components, sizeof(i_sample_t))) {
+    mm_log((1, "i_readjpeg: image size exceeds limits\n"));
+
+    jpeg_destroy_decompress(&cinfo);
+    return NULL;
+  }
   im=i_img_empty_ch(NULL,cinfo.output_width,cinfo.output_height,cinfo.output_components);
   if (!im) {
     jpeg_destroy_decompress(&cinfo);

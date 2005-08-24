@@ -1,9 +1,10 @@
 #!perl -w
-print "1..74\n";
-use Imager qw(:all);
 use strict;
+use lib 't';
+use Test::More tests => 89;
+use Imager qw(:all);
 init_log("testout/t107bmp.log",1);
-BEGIN { require 't/testtools.pl'; } # BEGIN to apply prototypes
+#BEGIN { require 't/testtools.pl'; } # BEGIN to apply prototypes
 
 my $base_diff = 0;
 # if you change this make sure you generate new compressed versions
@@ -20,60 +21,53 @@ i_conv($img,[0.1, 0.2, 0.4, 0.2, 0.1]);
 
 Imager::i_tags_add($img, 'i_xres', 0, '300', 0);
 Imager::i_tags_add($img, 'i_yres', 0, undef, 300);
-write_test(1, $img, "testout/t107_24bit.bmp");
+write_test($img, "testout/t107_24bit.bmp");
 # 'webmap' is noticably faster than the default
 my $im8 = Imager::i_img_to_pal($img, { make_colors=>'webmap', 
 				       translate=>'errdiff'});
-write_test(2, $im8, "testout/t107_8bit.bmp");
+write_test($im8, "testout/t107_8bit.bmp");
 # use a fixed palette so we get reproducible results for the compressed
 # version
 my @pal16 = map { NC($_) } 
   qw(605844 966600 0148b2 00f800 bf0a33 5e009e
      2ead1b 0000f8 004b01 fd0000 0e1695 000002);
 my $im4 = Imager::i_img_to_pal($img, { colors=>\@pal16, make_colors=>'none' });
-write_test(3, $im4, "testout/t107_4bit.bmp");
+write_test($im4, "testout/t107_4bit.bmp");
 my $im1 = Imager::i_img_to_pal($img, { colors=>[ NC(0, 0, 0), NC(176, 160, 144) ],
 			       make_colors=>'none', translate=>'errdiff' });
-write_test(4, $im1, "testout/t107_1bit.bmp");
+write_test($im1, "testout/t107_1bit.bmp");
 my $bi_rgb = 0;
 my $bi_rle8 = 1;
 my $bi_rle4 = 2;
 my $bi_bitfields = 3;
-read_test(5, "testout/t107_24bit.bmp", $img, 
+read_test("testout/t107_24bit.bmp", $img, 
           bmp_compression=>0, bmp_bit_count => 24);
-read_test(6, "testout/t107_8bit.bmp", $im8, 
+read_test("testout/t107_8bit.bmp", $im8, 
           bmp_compression=>0, bmp_bit_count => 8);
-read_test(7, "testout/t107_4bit.bmp", $im4, 
+read_test("testout/t107_4bit.bmp", $im4, 
           bmp_compression=>0, bmp_bit_count => 4);
-read_test(8, "testout/t107_1bit.bmp", $im1, bmp_compression=>0, 
+read_test("testout/t107_1bit.bmp", $im1, bmp_compression=>0, 
           bmp_bit_count=>1);
 # the following might have slight differences
 $base_diff = i_img_diff($img, $im8) * 2;
 print "# base difference $base_diff\n";
-read_test(9, "testimg/comp4.bmp", $im4, 
+read_test("testimg/comp4.bmp", $im4, 
           bmp_compression=>$bi_rle4, bmp_bit_count => 4);
-read_test(10, "testimg/comp8.bmp", $im8, 
+read_test("testimg/comp8.bmp", $im8, 
           bmp_compression=>$bi_rle8, bmp_bit_count => 8);
 
 my $imoo = Imager->new;
-if ($imoo->read(file=>'testout/t107_24bit.bmp')) {
-  print "ok 11\n";
-}
-else {
-  print "not ok 11 # ",$imoo->errstr,"\n";
-}
-if ($imoo->write(file=>'testout/t107_oo.bmp')) {
-  print "ok 12\n";
-}
-else {
-  print "not 12 # ",$imoo->errstr,"\n";
-}
+# read via OO
+ok($imoo->read(file=>'testout/t107_24bit.bmp'), "read via OO")
+  or print "# ",$imoo->errstr,"\n";
+
+ok($imoo->write(file=>'testout/t107_oo.bmp'), "write via OO")
+  or print "# ",$imoo->errstr,"\n";
 
 # various invalid format tests
 # we have so many different test images to try to detect all the possible
 # failure paths in the code, adding these did detect real problems
 print "# catch various types of invalid bmp files\n";
-my $test_num = 13;
 my @tests =
   (
    # entries in each array ref are:
@@ -90,9 +84,10 @@ my @tests =
      'out of range palette size (1-bit)' ],
    [ 'badcomp1.bmp', 'unknown 1-bit BMP compression (1)',
      'invalid compression value (1-bit)' ],
-   [ 'bad1wid0.bmp', 'Image sizes must be positive',
+   [ 'bad1wid0.bmp', 'file size limit - image width of 0 is not positive',
      'width 0 (1-bit)' ],
-   [ 'bad4oflow.bmp', 'integer overflow calculating image allocation',
+   [ 'bad4oflow.bmp', 
+     'file size limit - integer overflow calculating storage',
      'overflow integers on 32-bit machines (1-bit)', '32bitonly' ],
    [ 'short1.bmp', 'failed reading 1-bit bmp data', 
      'short 1-bit' ],
@@ -108,11 +103,11 @@ my @tests =
      'short uncompressed 4-bit' ],
    [ 'short4rle.bmp', 'missing data during decompression', 
      'short compressed 4-bit' ],
-   [ 'bad4wid0.bmp', 'Image sizes must be positive',
+   [ 'bad4wid0.bmp', 'file size limit - image width of 0 is not positive',
      'width 0 (4-bit)' ],
-   [ 'bad4widbig.bmp', 'Image sizes must be positive',
+   [ 'bad4widbig.bmp', 'file size limit - image width of -2147483628 is not positive',
      'width big (4-bit)' ],
-   [ 'bad4oflow.bmp', 'integer overflow calculating image allocation',
+   [ 'bad4oflow.bmp', 'file size limit - integer overflow calculating storage',
      'overflow integers on 32-bit machines (4-bit)', '32bitonly' ],
 
    # 8-bit/pixel BMPs
@@ -124,17 +119,17 @@ my @tests =
      'short uncompressed 8-bit' ],
    [ 'short8rle.bmp', 'missing data during decompression', 
      'short compressed 8-bit' ],
-   [ 'bad8wid0.bmp', 'Image sizes must be positive',
+   [ 'bad8wid0.bmp', 'file size limit - image width of 0 is not positive',
      'width 0 (8-bit)' ],
-   [ 'bad8oflow.bmp', 'integer overflow calculating image allocation',
+   [ 'bad8oflow.bmp', 'file size limit - integer overflow calculating storage',
      'overflow integers on 32-bit machines (8-bit)', '32bitonly' ],
 
    # 24-bit/pixel BMPs
    [ 'short24.bmp', 'failed reading image data',
      'short 24-bit' ],
-   [ 'bad24wid0.bmp', 'Image sizes must be positive',
+   [ 'bad24wid0.bmp', 'file size limit - image width of 0 is not positive',
      'width 0 (24-bit)' ],
-   [ 'bad24oflow.bmp', 'integer overflow calculating image allocation',
+   [ 'bad24oflow.bmp', 'file size limit - integer overflow calculating storage',
      'overflow integers on 32-bit machines (24-bit)', '32bitonly' ],
    [ 'bad24comp.bmp', 'unknown 24-bit BMP compression (4)',
      'bad compression (24-bit)' ],
@@ -143,13 +138,12 @@ use Config;
 my $intsize = $Config{intsize};
 for my $test (@tests) {
   my ($file, $error, $comment, $bit32only) = @$test;
-  if (!$bit32only || $intsize == 4) {
-    okn($test_num++, !$imoo->read(file=>"testimg/$file"), $comment);
-    isn($test_num++, $imoo->errstr, $error, "check error message");
-  }
-  else {
-    skipn($test_num, 2, "only tested on 32-bit machines");
-    $test_num += 2;
+ SKIP:
+  {
+    skip("only tested on 32-bit machines", 2)
+      if $bit32only && $intsize != 4;
+    ok(!$imoo->read(file=>"testimg/$file"), $comment);
+    is($imoo->errstr, $error, "check error message");
   }
 }
 
@@ -171,46 +165,79 @@ for my $comp (@comp) {
 
   my $base_im = Imager->new;
   my $got_base = 
-    okn($test_num++, $base_im->read(file=>"testimg/$base_file"),
+    ok($base_im->read(file=>"testimg/$base_file"),
         "read original")
       or print "# ",$base_im->errstr,"\n";
   my $off_im = Imager->new;
   my $got_off =
-    okn($test_num++, $off_im->read(file=>"testimg/$off_file"),
+    ok($off_im->read(file=>"testimg/$off_file"),
         "read offset file")
       or print "# ",$off_im->errstr,"\n";
-  if ($got_base && $got_off) {
-    okn($test_num++, !i_img_diff($base_im->{IMG}, $off_im->{IMG}), 
+ SKIP:
+  {
+    skip("missed one file", 1)
+      unless $got_base && $got_off;
+    is(i_img_diff($base_im->{IMG}, $off_im->{IMG}), 0,
         "compare base and offset image ($bits bits)");
   }
-  else {
-    skipn($test_num++, 1, "missed one file");
-  }
+}
+
+{ # check file limits are checked
+  my $limit_file = "testout/t104.ppm";
+  ok(Imager->set_file_limits(reset=>1, width=>149), "set width limit 149");
+  my $im = Imager->new;
+  ok(!$im->read(file=>$limit_file),
+     "should fail read due to size limits");
+  print "# ",$im->errstr,"\n";
+  like($im->errstr, qr/image width/, "check message");
+
+  ok(Imager->set_file_limits(reset=>1, height=>149), "set height limit 149");
+  ok(!$im->read(file=>$limit_file),
+     "should fail read due to size limits");
+  print "# ",$im->errstr,"\n";
+  like($im->errstr, qr/image height/, "check message");
+
+  ok(Imager->set_file_limits(reset=>1, width=>150), "set width limit 150");
+  ok($im->read(file=>$limit_file),
+     "should succeed - just inside width limit");
+  ok(Imager->set_file_limits(reset=>1, height=>150), "set height limit 150");
+  ok($im->read(file=>$limit_file),
+     "should succeed - just inside height limit");
+  
+  # 150 x 150 x 3 channel image uses 67500 bytes
+  ok(Imager->set_file_limits(reset=>1, bytes=>67499),
+     "set bytes limit 67499");
+  ok(!$im->read(file=>$limit_file),
+     "should fail - too many bytes");
+  print "# ",$im->errstr,"\n";
+  like($im->errstr, qr/storage size/, "check error message");
+  ok(Imager->set_file_limits(reset=>1, bytes=>67500),
+     "set bytes limit 67500");
+  ok($im->read(file=>$limit_file),
+     "should succeed - just inside bytes limit");
+  Imager->set_file_limits(reset=>1);
 }
                               
 sub write_test {
-  my ($test_num, $im, $filename) = @_;
+  my ($im, $filename) = @_;
   local *FH;
 
   if (open FH, "> $filename") {
     binmode FH;
     my $IO = Imager::io_new_fd(fileno(FH));
-    if (Imager::i_writebmp_wiol($im, $IO)) {
-      print "ok $test_num\n";
-    }
-    else {
-      print "not ok $test_num # ",Imager->_error_as_msg(),"\n";
+    unless (ok(Imager::i_writebmp_wiol($im, $IO), $filename)) {
+      print "# ",Imager->_error_as_msg(),"\n";
     }
     undef $IO;
     close FH;
   }
   else {
-    print "not ok $test_num # $!\n";
+    fail("could not open $filename: $!");
   }
 }
 
 sub read_test {
-  my ($test_num, $filename, $im, %tags) = @_;
+  my ($filename, $im, %tags) = @_;
   local *FH;
   
   print "# read_test: $filename\n";
@@ -224,7 +251,7 @@ sub read_test {
     if ($im_read) {
       my $diff = i_img_diff($im, $im_read);
       if ($diff > $base_diff) {
-        print "not ok $test_num # image mismatch $diff\n";
+	fail("image mismatch reading $filename");
       }
       else {
         my $tags_ok = 1;
@@ -247,12 +274,7 @@ sub read_test {
             }
           }
         }
-        if ($tags_ok) {
-          print "ok $test_num\n";
-        }
-        else {
-          print "not ok $test_num # bad tag values\n";
-        }
+        ok($tags_ok, "reading $filename");
         #  for my $i (0 .. Imager::i_tags_count($im_read)-1) {
         #    my ($name, $value) = Imager::i_tags_get($im_read, $i);
         #    print "# tag '$name' => '$value'\n";
@@ -260,13 +282,13 @@ sub read_test {
       }
     }
     else {
-      print "not ok $test_num # ",Imager->_error_as_msg(),"\n";
+      fail("could not read $filename: ".Imager->_error_as_msg());
     }
     undef $IO;
     close FH;
   }
   else {
-    print "not ok $test_num # $!\n";
+    fail("could not open $filename: $!");
   }
 }
 

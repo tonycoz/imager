@@ -793,4 +793,10 @@ extern int i_tags_set_color(i_img_tags *tags, char const *name, int code,
                             i_color const *value);
 extern void i_tags_print(i_img_tags *tags);
 
+/* image file limits */
+extern int
+i_set_image_file_limits(int width, int height, int bytes);
+extern int
+i_get_image_file_limits(int *width, int *height, int *bytes);
+
 #endif

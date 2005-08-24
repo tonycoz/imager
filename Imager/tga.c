@@ -1,4 +1,4 @@
-#include "image.h"
+#include "imagei.h"
 #include "log.h"
 #include "iolayer.h"
 
@@ -645,6 +645,7 @@ i_readtga_wiol(io_glue *ig, int length) {
 
   width = header.width;
   height = header.height;
+
   
   /* Set tags here */
   
@@ -712,6 +713,12 @@ i_readtga_wiol(io_glue *ig, int length) {
     mapped = 0;
     channels = 1;
     break;
+  }
+
+  if (!i_int_check_image_file_limits(width, height, channels, 
+				     sizeof(i_sample_t))) {
+    mm_log((1, "i_readtga_wiol: image size exceeds limits\n"));
+    return NULL;
   }
   
   img = mapped ? 
