@@ -1,7 +1,7 @@
 #!perl -w
-print "1..21\n";
 use Imager qw(:all);
 use strict;
+use Test::More tests=>36;
 BEGIN { require "t/testtools.pl"; }
 init_log("testout/t108tga.log",1);
 
@@ -9,19 +9,19 @@ init_log("testout/t108tga.log",1);
 my $img = create_test_image();
 my $base_diff = 0;
 
-write_test(1, $img, "testout/t108_24bit.tga", 0, 0, "");
-write_test(2, $img, "testout/t108_24bit_rle.tga", 0, 1, "");
-write_test(3, $img, "testout/t108_15bit.tga", 1, 1, "");
-write_test(4, $img, "testout/t108_15bit_rle.tga", 1, 1, "");
+write_test($img, "testout/t108_24bit.tga", 0, 0, "");
+write_test($img, "testout/t108_24bit_rle.tga", 0, 1, "");
+write_test($img, "testout/t108_15bit.tga", 1, 1, "");
+write_test($img, "testout/t108_15bit_rle.tga", 1, 1, "");
 
 # 'webmap' is noticably faster than the default
 my $im8 = Imager::i_img_to_pal($img, { make_colors=>'webmap',
 				       translate=>'errdiff'});
 
-write_test(5, $im8, "testout/t108_8bit.tga", 0, 0, "");
-write_test(6, $im8, "testout/t108_8bit_rle.tga", 0, 1, "");
-write_test(7, $im8, "testout/t108_8_15bit.tga", 1, 0, "");
-write_test(8, $im8, "testout/t108_8_15bit_rle.tga", 1, 1, "");
+write_test($im8, "testout/t108_8bit.tga", 0, 0, "");
+write_test($im8, "testout/t108_8bit_rle.tga", 0, 1, "");
+write_test($im8, "testout/t108_8_15bit.tga", 1, 0, "");
+write_test($im8, "testout/t108_8_15bit_rle.tga", 1, 1, "");
 
 
 # use a fixed palette so we get reproducible results for the compressed
@@ -40,13 +40,13 @@ my $im1 = Imager::i_img_to_pal($img, { colors=>\@bit1,
 				       make_colors=>'none',
 				       translate=>'errdiff' });
 
-write_test(9, $im4, "testout/t108_4bit.tga", 0, 1, "");
-write_test(10, $im1, "testout/t108_1bit.tga", 0, 1, "This is a comment!");
+write_test($im4, "testout/t108_4bit.tga", 0, 1, "");
+write_test($im1, "testout/t108_1bit.tga", 0, 1, "This is a comment!");
 
-read_test(11, "testout/t108_24bit.tga", $img);
-read_test(12, "testout/t108_8bit.tga",  $im8);
-read_test(13, "testout/t108_4bit.tga",  $im4);
-read_test(14, "testout/t108_1bit.tga",  $im1);
+read_test("testout/t108_24bit.tga", $img);
+read_test("testout/t108_8bit.tga",  $im8);
+read_test("testout/t108_4bit.tga",  $im4);
+read_test("testout/t108_1bit.tga",  $im1);
 
 # the following might have slight differences
 
@@ -55,55 +55,85 @@ $base_diff = i_img_diff($img, $im8) * 2;
 print "# base difference $base_diff\n";
 
 my $imoo = Imager->new;
-if ($imoo->read(file=>'testout/t108_24bit.tga')) {
-  print "ok 15\n";
-} else {
-  print "not ok 15 # ",$imoo->errstr,"\n";
-}
+ok($imoo->read(file=>'testout/t108_24bit.tga'),
+   "OO read image")
+  or print "# ",$imoo->errstr,"\n";
 
-if ($imoo->write(file=>'testout/t108_oo.tga')) {
-  print "ok 16\n";
-} else {
-  print "not ok 16 # ",$imoo->errstr,"\n";
-}
+ok($imoo->write(file=>'testout/t108_oo.tga'),
+   "OO write image")
+  or print "# ",$imoo->errstr,"\n";
 
 my ($type) = $imoo->tags(name=>'i_format');
-isn(17, $type, 'tga', "check i_format tag");
+is($type, 'tga', "check i_format tag");
 
 # in 0.44 and earlier, reading an image with an idstring of 128 or more
 # bytes would result in an allocation error, if the platform char type
 # was signed
 $imoo = Imager->new;
-okn(18, $imoo->read(file=>'testimg/longid.tga'), "read long id image");
+ok($imoo->read(file=>'testimg/longid.tga'), "read long id image");
 my ($id) = $imoo->tags(name=>'tga_idstring');
-isn(19, $id, "X" x 128, "check tga_idstring tag");
+is($id, "X" x 128, "check tga_idstring tag");
 my ($bitspp) = $imoo->tags(name=>'tga_bitspp');
-isn(20, $bitspp, 24, "check tga_bitspp tag");
+is($bitspp, 24, "check tga_bitspp tag");
 my ($compressed) = $imoo->tags(name=>'compressed');
-isn(21, $compressed, 1, "check compressed tag");
+is($compressed, 1, "check compressed tag");
+
+{ # check file limits are checked
+  my $limit_file = "testout/t108_24bit.tga";
+  ok(Imager->set_file_limits(reset=>1, width=>149), "set width limit 149");
+  my $im = Imager->new;
+  ok(!$im->read(file=>$limit_file),
+     "should fail read due to size limits");
+  print "# ",$im->errstr,"\n";
+  like($im->errstr, qr/image width/, "check message");
+  
+  ok(Imager->set_file_limits(reset=>1, height=>149), "set height limit 149");
+  ok(!$im->read(file=>$limit_file),
+     "should fail read due to size limits");
+  print "# ",$im->errstr,"\n";
+  like($im->errstr, qr/image height/, "check message");
+  
+  ok(Imager->set_file_limits(reset=>1, width=>150), "set width limit 150");
+  ok($im->read(file=>$limit_file),
+     "should succeed - just inside width limit");
+  ok(Imager->set_file_limits(reset=>1, height=>150), "set height limit 150");
+  ok($im->read(file=>$limit_file),
+     "should succeed - just inside height limit");
+  
+  # 150 x 150 x 3 channel image uses 67500 bytes
+  ok(Imager->set_file_limits(reset=>1, bytes=>67499),
+     "set bytes limit 67499");
+  ok(!$im->read(file=>$limit_file),
+     "should fail - too many bytes");
+  print "# ",$im->errstr,"\n";
+  like($im->errstr, qr/storage size/, "check error message");
+  ok(Imager->set_file_limits(reset=>1, bytes=>67500),
+     "set bytes limit 67500");
+  ok($im->read(file=>$limit_file),
+     "should succeed - just inside bytes limit");
+  Imager->set_file_limits(reset=>1);
+}
 
 sub write_test {
-  my ($test_num, $im, $filename, $wierdpack, $compress, $idstring) = @_;
+  my ($im, $filename, $wierdpack, $compress, $idstring) = @_;
   local *FH;
 
   if (open FH, "> $filename") {
     binmode FH;
     my $IO = Imager::io_new_fd(fileno(FH));
-    if (Imager::i_writetga_wiol($im, $IO, $wierdpack, $compress, $idstring)) {
-      print "ok $test_num\n";
-    } else {
-      print "not ok $test_num # ",Imager->_error_as_msg(),"\n";
-    }
+    ok(Imager::i_writetga_wiol($im, $IO, $wierdpack, $compress, $idstring),
+       "write $filename")
+      or print "# ",Imager->_error_as_msg(),"\n";
     undef $IO;
     close FH;
   } else {
-    print "not ok $test_num # $!\n";
+    fail("write $filename: open failed: $!");
   }
 }
 
 
 sub read_test {
-  my ($test_num, $filename, $im, %tags) = @_;
+  my ($filename, $im, %tags) = @_;
   local *FH;
 
   if (open FH, "< $filename") {
@@ -112,17 +142,15 @@ sub read_test {
     my $im_read = Imager::i_readtga_wiol($IO,-1);
     if ($im_read) {
       my $diff = i_img_diff($im, $im_read);
-      if ($diff > $base_diff) {
-        print "not ok $test_num # image mismatch $diff\n";
-      }
-      print "ok $test_num\n";
+      cmp_ok($diff, '<=', $base_diff,
+	     "check read image vs original");
     } else {
-      print "not ok $test_num # ",Imager->_error_as_msg(),"\n";
+      fail("read $filename ".Imager->_error_as_msg());
     }
     undef $IO;
     close FH;
   } else {
-    print "not ok $test_num # $!\n";
+    fail("read $filename, open failure: $!");
   }
 }
 

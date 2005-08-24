@@ -1126,6 +1126,10 @@ Revision history for Perl extension Imager.
   parameter and $ENV{HOME} not set.
 - added VERSION numbers to most .pms
 - convert t/t104ppm.t to Test::More
+- convert t/t107bmp.t to Test::More
+- convert t/t108tga.t to Test::More
+- error messages generated reading JPEG or PNG images are now
+  available via errstr()
 
 =================================================================
 

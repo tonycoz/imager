@@ -1,5 +1,5 @@
-#include "image.h"
 #include <stdarg.h>
+#include "imagei.h"
 
 /*
 =head1 NAME
@@ -132,6 +132,11 @@ i_readbmp_wiol(io_glue *ig) {
           "clr_important %d\n", filesize, offbits, xsize, ysize, planes, 
           bit_count, compression, size_image, xres, yres, clr_used, 
           clr_important));
+
+  if (!i_int_check_image_file_limits(xsize, ysize, 3, sizeof(i_sample_t))) {
+    mm_log((1, "i_readbmp_wiol: image size exceeds limits\n"));
+    return NULL;
+  }
   
   switch (bit_count) {
   case 1:

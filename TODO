@@ -14,15 +14,15 @@ not commitments.
    - check llist_push() calls
 
 - fix Imager::Color warning when $ENV{HOME} isn't set from
-  _get_gimp_color()
+  _get_gimp_color() (done)
   http://rt.cpan.org/NoAuth/Bug.html?id=13143
 
-- module version numbers
-  http://rt.cpan.org/NoAuth/Bug.html?id=13047
+- module version numbers (done)
+  http://rt.cpan.org/NoAuth/Bug.html?id=13047 
 
 - allow limits to be set on the size of an image read from a file.  This is
   to prevent an attacker supplying huge images that consume all of 
-  memory causing a denial of service attack.
+  memory causing a denial of service attack. (done)
 
 - implement gsamp()/gsampf()/plin() etc methods for those low level image
   interfaces which don't yet have methods.
@@ -50,7 +50,7 @@ not commitments.
     http://nntp.perl.org/group/perl.perl5.porters/102434
   (#1521, #5608, #8231, #11429, #13058)
 
-- have $img->read() act like ($img) = Imager->read_multi()
+- have $img->read() act like ($img) = Imager->read_multi() on GIFs
 
 - figure out what the nearest_color filter does, and document it
 

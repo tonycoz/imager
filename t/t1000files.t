@@ -5,7 +5,7 @@
 
 use strict;
 use lib 't';
-use Test::More tests => 3;
+use Test::More tests => 12;
 use Imager;
 
 Imager::init_log("testout/t1000files.log", 1);
@@ -45,3 +45,23 @@ PERL
   is($out, '', "output should be empty");
 }
 
+# test the file limit functions
+# by default the limits are zero (unlimited)
+print "# image file limits\n";
+is_deeply([ Imager->get_file_limits() ], [0, 0, 0],
+	  "check defaults");
+ok(Imager->set_file_limits(width=>100), "set only width");
+is_deeply([ Imager->get_file_limits() ], [100, 0, 0 ],
+	  "check width set");
+ok(Imager->set_file_limits(height=>150, bytes=>10000),
+   "set height and bytes");
+is_deeply([ Imager->get_file_limits() ], [ 100, 150, 10000 ],
+	  "check all values now set");
+ok(Imager->set_file_limits(reset=>1, height => 99),
+   "set height and reset");
+is_deeply([ Imager->get_file_limits() ], [ 0, 99, 0 ],
+	  "check only height is set");
+ok(Imager->set_file_limits(reset=>1),
+   "just reset");
+is_deeply([ Imager->get_file_limits() ], [ 0, 0, 0 ],
+	  "check all are reset");

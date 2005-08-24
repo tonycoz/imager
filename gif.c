@@ -1,4 +1,4 @@
-#include "image.h"
+#include "imagei.h"
 #include <gif_lib.h>
 #ifdef _MSCVER
 #include <io.h>
@@ -177,6 +177,15 @@ i_readgif_low(GifFileType *GifFile, int **colour_table, int *colours) {
     cmapcnt++;
   }
   
+  if (!i_int_check_image_file_limits(GifFile->SWidth, GifFile->SHeight, 3, sizeof(i_sample_t))) {
+    if (colour_table && *colour_table) {
+      myfree(*colour_table);
+      *colour_table = NULL;
+    }
+    DGifCloseFile(GifFile);
+    mm_log((1, "i_readgif: image size exceeds limits\n"));
+    return NULL;
+  }
 
   im = i_img_empty_ch(NULL, GifFile->SWidth, GifFile->SHeight, 3);
   if (!im) {
@@ -564,6 +573,11 @@ i_img **i_readgif_multi_low(GifFileType *GifFile, int *count) {
       channels = 3;
       if (got_gce && trans_index >= 0)
         channels = 4;
+      if (!i_int_check_image_file_limits(Width, Height, channels, sizeof(i_sample_t))) {
+	free_images(results, *count);
+	mm_log((1, "i_readgif: image size exceeds limits\n"));
+	return NULL;
+      }
       img = i_img_pal_new(Width, Height, channels, 256);
       if (!img) {
         free_images(results, *count);

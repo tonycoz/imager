@@ -41,6 +41,9 @@ extern int i_setcolors_forward(i_img *im, int index, i_color *colors,
 
 extern void i_get_combine(int combine, i_fill_combine_f *, i_fill_combinef_f *);
 
+extern int
+i_int_check_image_file_limits(int width, int height, int channels, int sample_size);
+
 #include "ext.h"
 
 extern UTIL_table_t i_UTIL_table;

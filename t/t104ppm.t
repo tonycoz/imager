@@ -1,10 +1,8 @@
 #!perl -w
 use Imager ':all';
-use Test::More tests => 45;
-BEGIN { require "t/testtools.pl"; }
+use lib 't';
+use Test::More tests => 60;
 use strict;
-
-print "1..45\n";
 
 init_log("testout/t104ppm.log",1);
 
@@ -159,6 +157,42 @@ check_gray(Imager::i_get_pixel($ooim->{IMG}, 1, 1), 255);
       "read test file");
   my ($type) = $maxval->tags(name=>'i_format');
   is($type, 'pnm', "check i_format");
+}
+
+{ # check file limits are checked
+  my $limit_file = "testout/t104.ppm";
+  ok(Imager->set_file_limits(reset=>1, width=>149), "set width limit 149");
+  my $im = Imager->new;
+  ok(!$im->read(file=>$limit_file),
+     "should fail read due to size limits");
+  print "# ",$im->errstr,"\n";
+  like($im->errstr, qr/image width/, "check message");
+
+  ok(Imager->set_file_limits(reset=>1, height=>149), "set height limit 149");
+  ok(!$im->read(file=>$limit_file),
+     "should fail read due to size limits");
+  print "# ",$im->errstr,"\n";
+  like($im->errstr, qr/image height/, "check message");
+
+  ok(Imager->set_file_limits(reset=>1, width=>150), "set width limit 150");
+  ok($im->read(file=>$limit_file),
+     "should succeed - just inside width limit");
+  ok(Imager->set_file_limits(reset=>1, height=>150), "set height limit 150");
+  ok($im->read(file=>$limit_file),
+     "should succeed - just inside height limit");
+  
+  # 150 x 150 x 3 channel image uses 67500 bytes
+  ok(Imager->set_file_limits(reset=>1, bytes=>67499),
+     "set bytes limit 67499");
+  ok(!$im->read(file=>$limit_file),
+     "should fail - too many bytes");
+  print "# ",$im->errstr,"\n";
+  like($im->errstr, qr/storage size/, "check error message");
+  ok(Imager->set_file_limits(reset=>1, bytes=>67500),
+     "set bytes limit 67500");
+  ok($im->read(file=>$limit_file),
+     "should succeed - just inside bytes limit");
+  Imager->set_file_limits(reset=>1);
 }
 
 sub openimage {
