@@ -1130,6 +1130,8 @@ Revision history for Perl extension Imager.
 - convert t/t108tga.t to Test::More
 - error messages generated reading JPEG or PNG images are now
   available via errstr()
+- implement/test/document set_file_limits()/get_file_limits() methods,
+  which allow limits on the size of image files read.
 
 =================================================================
 
