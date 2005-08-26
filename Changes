@@ -1132,6 +1132,7 @@ Revision history for Perl extension Imager.
   available via errstr()
 - implement/test/document set_file_limits()/get_file_limits() methods,
   which allow limits on the size of image files read.
+- new example for convert() method based on Leolo's query
 
 =================================================================
 
