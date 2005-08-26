@@ -401,6 +401,16 @@ or to convert a 3 channel image to greyscale using equal weightings:
 
   $new = $img->convert(matrix=>[ [ 0.333, 0.333, 0.334 ] ])
 
+Convert a 2 channel image (grayscale with alpha) to an RGBA image with
+the grey converted to the specified RGB color:
+
+  # set (RGB) scaled on the grey scale portion and copy the alpha
+  # channel as is
+  my $colored = $gray->convert(matrix=>[ [ ($red/255),   0 ], 
+                                         [ ($green/255), 0 ], 
+                                         [ ($blue/255),  0 ], 
+                                         [ 0,            1 ],
+                                       ]);
 
 =head2 Color Mappings
 
