@@ -3375,7 +3375,7 @@ i_addcolors(im, ...)
           }
           else {
             myfree(colors);
-            croak("i_plin: pixels must be Imager::Color objects");
+            croak("i_addcolor: pixels must be Imager::Color objects");
           }
         }
         index = i_addcolors(im, colors, items-1);
@@ -3556,23 +3556,35 @@ i_plin(im, l, y, ...)
       PREINIT:
         i_color *work;
         int i;
+        STRLEN len;
+        int count;
       CODE:
         if (items > 3) {
-          work = mymalloc(sizeof(i_color) * (items-3));
-          for (i=0; i < items-3; ++i) {
-            if (sv_isobject(ST(i+3)) 
-                && sv_derived_from(ST(i+3), "Imager::Color")) {
-              IV tmp = SvIV((SV *)SvRV(ST(i+3)));
-              work[i] = *INT2PTR(i_color *, tmp);
+          if (items == 4 && SvOK(ST(3)) && !SvROK(ST(3))) {
+	    /* supplied as a byte string */
+            work = (i_color *)SvPV(ST(3), len);
+            count = len / sizeof(i_color);
+	    if (count * sizeof(i_color) != len) {
+              croak("i_plin: length of scalar argument must be multiple of sizeof i_color");
             }
-            else {
-              myfree(work);
-              croak("i_plin: pixels must be Imager::Color objects");
-            }
+            RETVAL = i_plin(im, l, l+count, y, work);
           }
-          /**(char *)0 = 1;*/
-          RETVAL = i_plin(im, l, l+items-3, y, work);
-          myfree(work);
+	  else {
+            work = mymalloc(sizeof(i_color) * (items-3));
+            for (i=0; i < items-3; ++i) {
+              if (sv_isobject(ST(i+3)) 
+                  && sv_derived_from(ST(i+3), "Imager::Color")) {
+                IV tmp = SvIV((SV *)SvRV(ST(i+3)));
+                work[i] = *INT2PTR(i_color *, tmp);
+              }
+              else {
+                myfree(work);
+                croak("i_plin: pixels must be Imager::Color objects");
+              }
+            }
+            RETVAL = i_plin(im, l, l+items-3, y, work);
+            myfree(work);
+          }
         }
         else {
           RETVAL = 0;
@@ -3633,23 +3645,36 @@ i_plinf(im, l, y, ...)
       PREINIT:
         i_fcolor *work;
         int i;
+        STRLEN len;
+        int count;
       CODE:
         if (items > 3) {
-          work = mymalloc(sizeof(i_fcolor) * (items-3));
-          for (i=0; i < items-3; ++i) {
-            if (sv_isobject(ST(i+3)) 
-                && sv_derived_from(ST(i+3), "Imager::Color::Float")) {
-              IV tmp = SvIV((SV *)SvRV(ST(i+3)));
-              work[i] = *INT2PTR(i_fcolor *, tmp);
+          if (items == 4 && SvOK(ST(3)) && !SvROK(ST(3))) {
+	    /* supplied as a byte string */
+            work = (i_fcolor *)SvPV(ST(3), len);
+            count = len / sizeof(i_fcolor);
+	    if (count * sizeof(i_fcolor) != len) {
+              croak("i_plin: length of scalar argument must be multiple of sizeof i_fcolor");
             }
-            else {
-              myfree(work);
-              croak("i_plin: pixels must be Imager::Color::Float objects");
-            }
+            RETVAL = i_plinf(im, l, l+count, y, work);
           }
-          /**(char *)0 = 1;*/
-          RETVAL = i_plinf(im, l, l+items-3, y, work);
-          myfree(work);
+	  else {
+            work = mymalloc(sizeof(i_fcolor) * (items-3));
+            for (i=0; i < items-3; ++i) {
+              if (sv_isobject(ST(i+3)) 
+                  && sv_derived_from(ST(i+3), "Imager::Color::Float")) {
+                IV tmp = SvIV((SV *)SvRV(ST(i+3)));
+                work[i] = *INT2PTR(i_fcolor *, tmp);
+              }
+              else {
+                myfree(work);
+                croak("i_plinf: pixels must be Imager::Color::Float objects");
+              }
+            }
+            /**(char *)0 = 1;*/
+            RETVAL = i_plinf(im, l, l+items-3, y, work);
+            myfree(work);
+          }
         }
         else {
           RETVAL = 0;
@@ -3690,14 +3715,20 @@ i_glin(im, l, r, y)
         if (l < r) {
           vals = mymalloc((r-l) * sizeof(i_color));
           count = i_glin(im, l, r, y, vals);
-          EXTEND(SP, count);
-          for (i = 0; i < count; ++i) {
-            SV *sv;
-            i_color *col = mymalloc(sizeof(i_color));
-            *col = vals[i];
-            sv = sv_newmortal();
-            sv_setref_pv(sv, "Imager::Color", (void *)col);
-            PUSHs(sv);
+	  if (GIMME_V == G_ARRAY) {
+            EXTEND(SP, count);
+            for (i = 0; i < count; ++i) {
+              SV *sv;
+              i_color *col = mymalloc(sizeof(i_color));
+              *col = vals[i];
+              sv = sv_newmortal();
+              sv_setref_pv(sv, "Imager::Color", (void *)col);
+              PUSHs(sv);
+            }
+          }
+          else if (count) {
+	    EXTEND(SP, 1);
+	    PUSHs(sv_2mortal(newSVpv((void *)vals, count * sizeof(i_color))));
           }
           myfree(vals);
         }
@@ -3715,14 +3746,20 @@ i_glinf(im, l, r, y)
         if (l < r) {
           vals = mymalloc((r-l) * sizeof(i_fcolor));
           count = i_glinf(im, l, r, y, vals);
-          EXTEND(SP, count);
-          for (i = 0; i < count; ++i) {
-            SV *sv;
-            i_fcolor *col = mymalloc(sizeof(i_fcolor));
-            *col = vals[i];
-            sv = sv_newmortal();
-            sv_setref_pv(sv, "Imager::Color::Float", (void *)col);
-            PUSHs(sv);
+          if (GIMME_V == G_ARRAY) {
+            EXTEND(SP, count);
+            for (i = 0; i < count; ++i) {
+              SV *sv;
+              i_fcolor *col = mymalloc(sizeof(i_fcolor));
+              *col = vals[i];
+              sv = sv_newmortal();
+              sv_setref_pv(sv, "Imager::Color::Float", (void *)col);
+              PUSHs(sv);
+            }
+          }
+          else if (count) {
+            EXTEND(SP, 1);
+            PUSHs(sv_2mortal(newSVpv((void *)vals, count * sizeof(i_fcolor))));
           }
           myfree(vals);
         }

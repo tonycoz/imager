@@ -54,6 +54,11 @@ not commitments.
 
 - figure out what the nearest_color filter does, and document it
 
+- remove image.h dependency on t1lib.h
+
+- make sure dynfilt/Makefile.PL gets the same includes that
+  Makefile.PL does.
+
 0.47:
 
 - rework handling of antialiasing and other transparency against

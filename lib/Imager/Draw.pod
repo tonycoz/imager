@@ -42,6 +42,14 @@ Imager::Draw - Draw primitives to images
 
   my @colors = $img->getpixel(x=>[ 50, 60, 70 ], y=>[20, 30, 40]);
 
+  # low-level functions
+  my @colors = $img->getscanline(y=>50, x=>10, width=>20);
+  
+  $img->setscanline(y=>60, x=>20, pixels=>\@colors);
+
+  my @samples = $img->getsamples(y=>50, x=>10, width=>20, 
+                                 channels=>[ 2, 0 ]);
+
 =head1 DESCRIPTION
 
 It is possible to draw with graphics primitives onto images.  Such
@@ -191,6 +199,250 @@ list context, and an arrayref in scalar context.
 
 To receive floating point colors from getpixel, set the C<type>
 parameter to 'float'.
+
+=item setscanline
+
+Set all or part of a horizontal line of pixels to an image.  This
+method is most useful in conjuction with L</getscanline>.
+
+The parameters you can pass are:
+
+=over
+
+=item *
+
+y - vertical position of the scanline.  This parameter is required.
+
+=item *
+
+x - position to start on the scanline.  Default: 0
+
+=item *
+
+pixels - either a reference to an array containing Imager::Color
+objects, an reference to an array containing Imager::Color::Float
+objects or a scalar containing packed color data.
+
+See L</"Packed Color Data"> for information on the format of packed
+color data.
+
+=item *
+
+type - the type of pixel data supplied.  If you supply an array
+reference of object then this is determined automatically.  If you
+supply packed color data this defaults to '8bit', if your data is
+packed floating point color data then set this to 'float'.
+
+You can use float or 8bit samples with any image.
+
+=back
+
+Returns the number of pixels set.
+
+Each of the following sets 5 pixels from (5, 10) through (9, 10) to
+blue, red, blue, red, blue:
+
+  my $red_color = Imager::Color->new(255, 0, 0);
+  my $blue_color = Imager::Color->new(0, 0, 255);
+
+  $image->setscanline(y=>10, x=>5, pixels=>
+                      [ ($blue_color, $red_color) x 2, $blue_color ]);
+
+  # use floating point color instead, for 16-bit plus images
+  my $red_colorf = Imager::Color::Float->new(1.0, 0, 0);
+  my $blue_colorf = Imager::Color::Float->new(0, 0, 1.0);
+
+  $image->setscanline(y=>10, x=>5, pixels=>
+                      [ ($blue_colorf, $red_colorf) x 2, $blue_colorf ]);
+
+  # packed 8-bit data
+  $image->setscanline(y=>10, x=>5, pixels=>
+                      pack("C*", ((0, 0, 255, 255), (255, 0, 0, 255)) x 2,
+                            (0, 0, 255, 255)));
+
+  # packed floating point samples
+  $image->setscanline(y=>10, x=>5, type=>'float', pixels=>
+                      pack("d*", ((0, 0, 1.0, 1.0), (1.0, 0, 0, 1.0)) x 2,
+                            (0, 0, 1.0, 1.0)));
+
+
+Copy even rows from one image to another:
+
+  for (my $y = 0; $y < $im2->getheight; $y+=2) {
+    $im1->setscanline(y=>$y,
+                      pixels=>scalar($im2->getscanline(y=>$y)));
+  }
+
+
+Set the blue channel to 0 for all pixels in an image.  This could be
+done with convert too:
+
+  for my $y (0..$im->getheight-1) {
+    my $row = $im->getscanline(y=>$y);
+    $row =~ s/(..).(.)/$1\0$2/gs;
+    $im->setscanline(y=>$y, pixels=>$row);
+  }
+
+=item getscanline
+
+Read all or part of a horizonatal line of pixels from an image.  This
+method is most useful in conjunction with L</setscanline>.
+
+The parameters you can pass are:
+
+=over
+
+=item *
+
+y - vertical position of the scanline.  This parameter is required.
+
+=item *
+
+x - position to start on the scanline.  Default: 0
+
+=item *
+
+width - number of pixels to read.  Default: $img->getwidth - x
+
+=item *
+
+type - the type of pixel data to return.  Default: C<8bit>.
+
+Permited values are C<8bit> and C<float>.
+
+=back
+
+In list context this method will return a list of Imager::Color
+objects when I<type> is C<8bit>, or a list of Imager::Color::Float
+objects when I<type> if C<float>.
+
+In scalar context this returns a packed 8-bit pixels when I<type> is
+C<8bit>, or a list of packed floating point pixels when I<type> is
+C<float>.
+
+The values of samples for which the image does not have channels is
+undefined.  For example, for a single channel image the values of
+channels 1 through 3 are undefined.
+
+Check image for a given color:
+
+  my $found;
+  YLOOP: for my $y (0..$img->getheight-1) {
+    my @colors = $img->getscanline(y=>$y);
+    for my $color (@colors) {
+      my ($red, $green, $blue, $alpha) = $color->rgba;
+      if ($red == $test_red && $green == $test_green && $blue == $test_blue
+          && $alpha == $test_alpha) {
+        ++$found;
+        last YLOOP;
+      }
+    }
+  }
+
+Or do it using packed data:
+
+  my $found;
+  my $test_packed = pack("CCCC", $test_red, $test_green, $test_blue, 
+                         $test_alpha);
+  YLOOP: for my $y (0..$img->getheight-1) {
+    my $colors = $img->getscanline(y=>$y);
+    while (length $colors) {
+      if (substr($colors, 0, 4, '') eq $test_packed) {
+        ++$found;
+        last YLOOP;
+      }
+    }
+  }
+
+Some of the examples for L</setscanline> for more examples.
+
+=item getsamples
+
+Read specified channels from all or part of a horizontal line of
+pixels from an image.
+
+The parameters you can pass are:
+
+=over
+
+=item *
+
+y - vertical position of the scanline.  This parameter is required.
+
+=item *
+
+x - position to start on the scanline.  Default: 0
+
+=item *
+
+width - number of pixels to read.  Default: $img->getwidth - x
+
+=item *
+
+type - the type of sample data to return.  Default: C<8bit>.
+
+Permited values are C<8bit> and C<float>.
+
+=item *
+
+channels - a reference to an array of channels to return, where 0 is
+the first channel.  Default: C< [ 0 .. $self->getchannels()-1 ] >
+
+=back
+
+In list context this will return a list of integers between 0 and 255
+inclusive when I<type> is C<8bit>, or a list of floating point numbers
+between 0.0 and 1.0 inclusive when I<type> is C<float>.
+
+In scalar context this will return a string of packed bytes, as with
+C< pack("C*", ...) > when I<type> is C<8bit> or a string of packed
+doubles as with C< pack("d*", ...) > when I<type> is C<float>.
+
+Example: Check if any pixels in an image have a non-zero alpha
+channel:
+
+  my $has_coverage;
+  for my $y (0 .. $img->getheight()-1) {
+    my $alpha = $img->getsamples(y=>$y, channels=>[0]);
+    if ($alpha =~ /[^\0]/) {
+      ++$has_coverage;
+      last;
+    }
+  }
+
+Example: Convert a 2 channel grey image into a 4 channel RGBA image:
+
+  # this could be done with convert() instead
+  my $out = Imager->new(xsize => $src->getwidth(), 
+                        ysize => $src->getheight(),
+                        channels => 4);
+  for my $y ( 0 .. $src->getheight()-1 ) {
+    my $data = $src->getsamples(y=>$y, channels=>[ 0, 0, 0, 1 ]);
+    $out->setscanline(y=>$y, pixels=>$data);
+  }
+
+=back
+
+=head1 Packed Color Data
+
+The getscanline() and setscanline() functions can work with pixels
+packed into scalars.  This is useful to remove the cost of creating
+color objects, but should only be used when performance is an issue.
+
+Packed data can either be 1 byte per sample or 1 double per sample.
+
+Each pixel returned by getscanline() or supplied to setscanline()
+contains 4 samples, even if the image has fewer then 4 channels.  The
+values of the extra samples as returned by getscanline() is not
+specified.  The extra samples passed to setscanline() are ignored.
+
+To produce packed 1 byte/sample pixels, use the pack C<C> template:
+
+  my $packed_8bit_pixel = pack("CCCC", $red, $blue, $green, $alpha);
+
+To produce packed double/sample pixels, use the pack C<d> template:
+
+  my $packed_float_pixel = pack("dddd", $red, $blue, $green, $alpha);
 
 =head1 BUGS
 
