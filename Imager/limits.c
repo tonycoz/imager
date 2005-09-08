@@ -66,6 +66,7 @@ i_get_image_file_limits(int *width, int *height, int *bytes) {
 
 int
 i_int_check_image_file_limits(int width, int height, int channels, int sample_size) {
+  int bytes;
   i_clear_error();
   
   if (width <= 0) {
@@ -107,7 +108,7 @@ i_int_check_image_file_limits(int width, int height, int channels, int sample_si
      We don't protect it under max_bytes since we always want to check 
      for overflow.
   */
-  int bytes = width * height * channels * sample_size;
+  bytes = width * height * channels * sample_size;
   if (bytes / width != height * channels * sample_size
       || bytes / height != width * channels * sample_size) {
     i_push_error(0, "file size limit - integer overflow calculating storage");

@@ -1136,6 +1136,8 @@ Revision history for Perl extension Imager.
 - implement getscanline(), setscanline() and getsamples() methods.
   These are low level methods for fast access to image data, based on
   existing C functions that Imager uses internally.
+- limit limits.c to C89
+- the gif tests weren't skipping enough when there was no gif support
 
 =================================================================
 
