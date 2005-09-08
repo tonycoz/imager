@@ -1133,6 +1133,9 @@ Revision history for Perl extension Imager.
 - implement/test/document set_file_limits()/get_file_limits() methods,
   which allow limits on the size of image files read.
 - new example for convert() method based on Leolo's query
+- implement getscanline(), setscanline() and getsamples() methods.
+  These are low level methods for fast access to image data, based on
+  existing C functions that Imager uses internally.
 
 =================================================================
 

@@ -2383,6 +2383,111 @@ sub getpixel {
   $self;
 }
 
+sub getscanline {
+  my $self = shift;
+  my %opts = ( type => '8bit', x=>0, @_);
+
+  defined $opts{width} or $opts{width} = $self->getwidth - $opts{x};
+
+  unless (defined $opts{'y'}) {
+    $self->_set_error("missing y parameter");
+    return;
+  }
+
+  if ($opts{type} eq '8bit') {
+    return i_glin($self->{IMG}, $opts{x}, $opts{x}+$opts{width},
+		  $opts{y});
+  }
+  elsif ($opts{type} eq 'float') {
+    return i_glinf($self->{IMG}, $opts{x}, $opts{x}+$opts{width},
+		  $opts{y});
+  }
+  else {
+    $self->_set_error("invalid type parameter - must be '8bit' or 'float'");
+    return;
+  }
+}
+
+sub setscanline {
+  my $self = shift;
+  my %opts = ( x=>0, @_);
+
+  unless (defined $opts{'y'}) {
+    $self->_set_error("missing y parameter");
+    return;
+  }
+
+  if (!$opts{type}) {
+    if (ref $opts{pixels} && @{$opts{pixels}}) {
+      # try to guess the type
+      if ($opts{pixels}[0]->isa('Imager::Color')) {
+	$opts{type} = '8bit';
+      }
+      elsif ($opts{pixels}[0]->isa('Imager::Color::Float')) {
+	$opts{type} = 'float';
+      }
+      else {
+	$self->_set_error("missing type parameter and could not guess from pixels");
+	return;
+      }
+    }
+    else {
+      # default
+      $opts{type} = '8bit';
+    }
+  }
+
+  if ($opts{type} eq '8bit') {
+    if (ref $opts{pixels}) {
+      return i_plin($self->{IMG}, $opts{x}, $opts{'y'}, @{$opts{pixels}});
+    }
+    else {
+      return i_plin($self->{IMG}, $opts{x}, $opts{'y'}, $opts{pixels});
+    }
+  }
+  elsif ($opts{type} eq 'float') {
+    if (ref $opts{pixels}) {
+      return i_plinf($self->{IMG}, $opts{x}, $opts{'y'}, @{$opts{pixels}});
+    }
+    else {
+      return i_plinf($self->{IMG}, $opts{x}, $opts{'y'}, $opts{pixels});
+    }
+  }
+  else {
+    $self->_set_error("invalid type parameter - must be '8bit' or 'float'");
+    return;
+  }
+}
+
+sub getsamples {
+  my $self = shift;
+  my %opts = ( type => '8bit', x=>0, @_);
+
+  defined $opts{width} or $opts{width} = $self->getwidth - $opts{x};
+
+  unless (defined $opts{'y'}) {
+    $self->_set_error("missing y parameter");
+    return;
+  }
+  
+  unless ($opts{channels}) {
+    $opts{channels} = [ 0 .. $self->getchannels()-1 ];
+  }
+
+  if ($opts{type} eq '8bit') {
+    return i_gsamp($self->{IMG}, $opts{x}, $opts{x}+$opts{width},
+		   $opts{y}, @{$opts{channels}});
+  }
+  elsif ($opts{type} eq 'float') {
+    return i_gsampf($self->{IMG}, $opts{x}, $opts{x}+$opts{width},
+		    $opts{y}, @{$opts{channels}});
+  }
+  else {
+    $self->_set_error("invalid type parameter - must be '8bit' or 'float'");
+    return;
+  }
+}
+
 # make an identity matrix of the given size
 sub _identity {
   my ($size) = @_;
@@ -2988,6 +3093,10 @@ getheight() - L<Imager::ImageTypes>
 
 getpixel() - L<Imager::Draw/setpixel and getpixel>
 
+getsamples() - L<Imager::Draw/getsamples>
+
+getscanline() - L<Imager::Draw/getscanline>
+
 getwidth() - L<Imager::ImageTypes>
 
 img_set() - L<Imager::ImageTypes>
@@ -3024,6 +3133,8 @@ rubthrough() - L<Imager::Transformations/rubthrough> - draw an image onto an
 image and use the alpha channel
 
 scale() - L<Imager::Transformations/scale>
+
+setscanline() - L<Imager::Draw/setscanline>
 
 scaleX() - L<Imager::Transformations/scaleX>
 
