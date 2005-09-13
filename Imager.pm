@@ -3263,7 +3263,7 @@ posterize - L<Imager::Filter/postlevels>
 
 png files - L<Imager::Files>, L<Imager::Files/"PNG">
 
-pnm - L<Imager::Files/"PNM (Portable aNy Map">
+pnm - L<Imager::Files/"PNM (Portable aNy Map)">
 
 rectangles, drawing - L<Imager::Draw/box>
 

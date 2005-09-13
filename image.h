@@ -271,7 +271,6 @@ typedef struct i_font_mm_tag {
 } i_font_mm;
 
 #ifdef HAVE_LIBT1
-#include <t1lib.h>
 
 undef_int i_init_t1( int t1log );
 int       i_t1_new( char *pfb, char *afm );

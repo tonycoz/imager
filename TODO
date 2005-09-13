@@ -25,10 +25,10 @@ not commitments.
   memory causing a denial of service attack. (done)
 
 - implement gsamp()/gsampf()/plin() etc methods for those low level image
-  interfaces which don't yet have methods.
-   - code
-   - test
-   - document
+  interfaces which don't yet have methods. (done)
+   - code (done)
+   - test (done)
+   - document (done)
 
 - add Imager::Tutorial (see Tk::UserGuide for a structure)
   don't cover installation - belongs in README or INSTALL
@@ -54,7 +54,7 @@ not commitments.
 
 - figure out what the nearest_color filter does, and document it
 
-- remove image.h dependency on t1lib.h
+- remove image.h dependency on t1lib.h (done)
 
 - make sure dynfilt/Makefile.PL gets the same includes that
   Makefile.PL does.

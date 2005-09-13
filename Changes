@@ -1138,6 +1138,9 @@ Revision history for Perl extension Imager.
   existing C functions that Imager uses internally.
 - limit limits.c to C89
 - the gif tests weren't skipping enough when there was no gif support
+- move include t1lib out of image.h to font.c, since nothing it 
+  provides is needed elsewhere.
+- minor POD fixes
 
 =================================================================
 
