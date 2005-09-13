@@ -7,6 +7,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#ifdef HAVE_LIBT1
+#include <t1lib.h>
+#endif
+
+
 /*
 =head1 NAME
 

@@ -453,4 +453,4 @@ yet.  Default color is not unified yet.
 
 Imager(3), Imager::Cookbook(3)
 
-=back
+=cut
