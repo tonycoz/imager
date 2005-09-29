@@ -2948,6 +2948,10 @@ Overview.
 
 =item *
 
+L<Imager::Tutorial> - a brief introduction to Imager.
+
+=item *
+
 L<Imager::Cookbook> - how to do various things with Imager.
 
 =item *
@@ -3197,7 +3201,7 @@ drawing boxes - L<Imager::Draw/box>
 
 drawing lines - L<Imager::Draw/line>
 
-drawing text - L<Imager::Font/string>
+drawing text - L<Imager::Font/string>, L<Imager::Font/align>
 
 error message - L<Imager/"Basic Overview">
 

@@ -1141,6 +1141,7 @@ Revision history for Perl extension Imager.
 - move include t1lib out of image.h to font.c, since nothing it 
   provides is needed elsewhere.
 - minor POD fixes
+- added a brief tutorial
 
 =================================================================
 
