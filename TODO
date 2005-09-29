@@ -30,7 +30,7 @@ not commitments.
    - test (done)
    - document (done)
 
-- add Imager::Tutorial (see Tk::UserGuide for a structure)
+- add Imager::Tutorial (see Tk::UserGuide for a structure) (done)
   don't cover installation - belongs in README or INSTALL
   it doesn't need to cover everything - read/write/create/simple drawing
   and simple text - other stuff belongs in the cookbook or in sample code
