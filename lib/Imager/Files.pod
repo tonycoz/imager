@@ -549,7 +549,7 @@ BMP has no support for multi-image files.
 BMP files support the spatial resolution tags, but since BMP has no
 support for storing only an aspect ratio, if C<i_aspect_only> is set
 when you write the C<i_xres> and C<i_yres> values are scaled so the
-smaller it 72 DPI.
+smaller is 72 DPI.
 
 The following tags are set when you read an image from a BMP file:
 

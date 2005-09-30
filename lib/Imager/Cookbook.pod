@@ -122,6 +122,7 @@ This is similar to writing to a file, but you also need to supply the
 information needed by the web browser to identify the file format:
 
   my $img = ....; # create the image and generate the contents
+  ++$|; # make sure the content type isn't buffered
   print "Content-Type: image/png\n\n";
   binmode STDOUT;
   $img->write(fd=>fileno(STDOUT), type=>'png')
