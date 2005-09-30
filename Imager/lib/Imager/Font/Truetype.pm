@@ -26,8 +26,8 @@ sub new {
     return;
   }
   my $id = Imager::i_tt_new($hsh{file});
-  unless ($id >= 0) { # the low-level code may miss some error handling
-    $Imager::ERRSTR = "Could not load font ($id)";
+  unless ($id) { # the low-level code may miss some error handling
+    $Imager::ERRSTR = Imager::_error_as_msg();
     return;
   }
   return bless {

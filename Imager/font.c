@@ -714,18 +714,23 @@ t1_push_error(void) {
 /* Truetype font support */
 #ifdef HAVE_LIBTT
 
-/* This is enabled by default when configuring Freetype 1.x
+/* These are enabled by default when configuring Freetype 1.x
    I haven't a clue how to reliably detect it at compile time.
 
    We need a compilation probe in Makefile.PL
 */
 #define FTXPOST 1
+#define FTXERR18 1
 
 #include <freetype.h>
 #define TT_CHC 5
 
 #ifdef FTXPOST
 #include <ftxpost.h>
+#endif
+
+#ifdef FTXERR18
+#include <ftxerr18.h>
 #endif
 
 /* some versions of FT1.x don't seem to define this - it's font defined
@@ -772,6 +777,7 @@ struct TT_Fonthandle_ {
 #define USTRCT(x) ((x).z)
 #define TT_VALID( handle )  ( ( handle ).z != NULL )
 
+static void i_tt_push_error(TT_Error rc);
 
 /* Prototypes */
 
@@ -958,6 +964,8 @@ i_tt_new(char *fontname) {
   TT_Fonthandle *handle;
   unsigned short i,n;
   unsigned short platform,encoding;
+
+  i_clear_error();
   
   mm_log((1,"i_tt_new(fontname '%s')\n",fontname));
   
@@ -975,6 +983,7 @@ i_tt_new(char *fontname) {
       mm_log((1, "Error while opening %s, error code = 0x%x.\n",fontname, 
               error )); 
     }
+    i_tt_push_error(error);
     return NULL;
   }
   
@@ -1931,6 +1940,24 @@ i_tt_glyph_name(TT_Fonthandle *handle, unsigned long ch, char *name_buf,
   i_push_error(0, "Use of FTXPOST extension disabled");
 
   return 0;
+#endif
+}
+
+/*
+=item i_tt_push_error(code)
+
+Push an error message and code onto the Imager error stack.
+
+=cut
+*/
+static void
+i_tt_push_error(TT_Error rc) {
+#ifdef FTXERR18
+  TT_String const *msg = TT_ErrToString18(rc);
+
+  i_push_error(rc, msg);
+#else
+  i_push_errorf(rc, "Error code 0x%04x", (unsigned)rc);
 #endif
 }
 
