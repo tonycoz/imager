@@ -1,7 +1,7 @@
 #!perl -w
 use strict;
 use lib 't';
-use Test::More tests => 63;
+use Test::More tests => 65;
 
 BEGIN { use_ok(Imager => ':all') }
 require "t/testtools.pl";
@@ -10,7 +10,7 @@ init_log("testout/t35ttfont.log",2);
 
 SKIP:
 {
-  skip("freetype 1.x unavailable or disabled", 62) 
+  skip("freetype 1.x unavailable or disabled", 64) 
     unless i_has_format("tt");
   print "# has tt\n";
   
@@ -218,6 +218,16 @@ SKIP:
       ok($im->string(%common, @$args, 'y'=>110, align=>0), "A align=0");
     }
     ok($im->write(file=>'testout/t35align.ppm'), "save align image");
+  }
+
+  { # Ticket #14804 Imager::Font->new() doesn't report error details
+    # when using freetype 1
+    my $old_lang = $ENV{LANG};
+    $ENV{LANG} = "C";
+    my $font = Imager::Font->new(file=>'t/t35ttfont.t', type=>'tt');
+    ok(!$font, "font creation should have failed for invalid file");
+    cmp_ok(Imager->errstr, 'eq', 'Invalid file format.',
+	  "test error message");
   }
 
   ok(1, "end of code");
