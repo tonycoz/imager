@@ -35,6 +35,8 @@ not commitments.
   it doesn't need to cover everything - read/write/create/simple drawing
   and simple text - other stuff belongs in the cookbook or in sample code
 
+- rename lib/Imager/Cookbook.pm to lib/Imager/Cookbook.pod (done)
+
 - add 5 more recipes to Imager::Cookbook
 
 - implement i_incomplete for png and gif files.

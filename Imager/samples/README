@@ -12,6 +12,13 @@ anaglyph.pl
 
   Uses transform2() and convert().
 
+replace_color.pl
+
+  Example using Imager::transform2() to replace one color with another
+  in an image.
+
+  http://www.perlmonks.org/?node_id=497355
+
 interleave.pl
 
   Produce an interleaved image given the left and right images of a
@@ -50,3 +57,4 @@ samp-tags.cgi
 
   See the section "Parsing an image posted via CGI" in Imager::Cookbook
   for cautions and details on reading uploaded images.
+
