@@ -87,6 +87,7 @@ lib/Imager/Transformations.pod
 lib/Imager/Tutorial.pod
 lib/Imager/interface.pod
 lib/Imager/regmach.pod
+limits.c
 log.c
 log.h
 map.c
@@ -107,6 +108,7 @@ rotate.c
 samples/README
 samples/anaglyph.pl
 samples/interleave.pl
+samples/replace_color.pl
 samples/samp-form.cgi
 samples/samp-image.cgi
 samples/samp-scale.cgi  Demonstrate image upload via a HTML form
