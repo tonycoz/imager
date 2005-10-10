@@ -62,7 +62,7 @@ jpeg.c
 lib/Imager/Color.pm
 lib/Imager/Color/Float.pm
 lib/Imager/Color/Table.pm
-lib/Imager/Cookbook.pm
+lib/Imager/Cookbook.pod
 lib/Imager/Draw.pod
 lib/Imager/Engines.pod
 lib/Imager/Expr.pm
