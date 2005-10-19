@@ -2035,9 +2035,10 @@ i_test_format_probe(ig, length)
 #ifdef HAVE_LIBTIFF
 
 Imager::ImgRaw
-i_readtiff_wiol(ig, length)
+i_readtiff_wiol(ig, length, page=0)
         Imager::IO     ig
 	       int     length
+               int     page
 
 void
 i_readtiff_multi_wiol(ig, length)

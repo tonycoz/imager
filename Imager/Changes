@@ -1148,6 +1148,8 @@ Revision history for Perl extension Imager.
 - renamed lib/Imager/Cookbook.pm to lib/Imager/Cookbook.pod - CPANTS
   complains about it not having 'use strict;'
 - add samples/replace_color.pl
+- you can now supply a page parameter to read() to read a given page
+  from a TIFF file.
 
 =================================================================
 
