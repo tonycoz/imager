@@ -1149,7 +1149,10 @@ sub read {
   }
 
   if ( $input{'type'} eq 'tiff' ) {
-    $self->{IMG}=i_readtiff_wiol( $IO, -1 ); # Fixme, check if that length parameter is ever needed
+    my $page = $input{'page'};
+    defined $page or $page = 0;
+    # Fixme, check if that length parameter is ever needed
+    $self->{IMG}=i_readtiff_wiol( $IO, -1, $page ); 
     if ( !defined($self->{IMG}) ) {
       $self->{ERRSTR}=$self->_error_as_msg(); return undef;
     }

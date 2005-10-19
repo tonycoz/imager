@@ -400,7 +400,7 @@ static i_img *read_one_tiff(TIFF *tif) {
 =cut
 */
 i_img*
-i_readtiff_wiol(io_glue *ig, int length) {
+i_readtiff_wiol(io_glue *ig, int length, int page) {
   TIFF* tif;
   TIFFErrorHandler old_handler;
   TIFFErrorHandler old_warn_handler;
@@ -435,6 +435,16 @@ i_readtiff_wiol(io_glue *ig, int length) {
     TIFFSetErrorHandler(old_handler);
     TIFFSetWarningHandler(old_warn_handler);
     return NULL;
+  }
+
+  if (page != 0) {
+    if (!TIFFSetDirectory(tif, page)) {
+      mm_log((1, "i_readtiff_wiol: Unable to switch to directory %d\n", page));
+      i_push_errorf(0, "could not switch to page %d", page);
+      TIFFSetErrorHandler(old_handler);
+      TIFFSetWarningHandler(old_warn_handler);
+      return NULL;
+    }
   }
 
   im = read_one_tiff(tif);

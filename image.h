@@ -572,7 +572,7 @@ undef_int i_writejpeg_wiol(i_img *im, io_glue *ig, int qfactor);
 #endif /* HAVE_LIBJPEG */
 
 #ifdef HAVE_LIBTIFF
-i_img   * i_readtiff_wiol(io_glue *ig, int length);
+i_img   * i_readtiff_wiol(io_glue *ig, int length, int page);
 i_img  ** i_readtiff_multi_wiol(io_glue *ig, int length, int *count);
 undef_int i_writetiff_wiol(i_img *im, io_glue *ig);
 undef_int i_writetiff_multi_wiol(io_glue *ig, i_img **imgs, int count);
