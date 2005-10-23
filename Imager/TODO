@@ -73,7 +73,23 @@ not commitments.
    - image scaling? and matrix_transform()'s interpolation
   http://rt.cpan.org/NoAuth/Bug.html?id=11972
 
+0.48:
 
+- fill out handling of large sample (16/double per sample) images
+  - filters
+  - rendering:
+    - lines
+    - text
+    - boxes
+    - polygons
+  - engines
+    - matrix transform
+    - transform()
+    - transform2()
+  - files:
+    - png
+    - tiff
+    - pnm
 
 Speculation
 -----------
