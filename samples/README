@@ -58,3 +58,6 @@ samp-tags.cgi
   See the section "Parsing an image posted via CGI" in Imager::Cookbook
   for cautions and details on reading uploaded images.
 
+border.pl
+
+  Example of adding a border to an image.

@@ -229,6 +229,37 @@ Imager distribution for example code.
 
 =head1 DRAWING
 
+=head2 Adding a border to an image
+
+First make a new image with space for the border:
+
+  my $border_width = ...;
+  my $border_height = ...;
+  my $out = Imager->new(xsize => $source->getwidth() + 2 * $border_width,
+                        ysize => $source->getheight() + 2 * $border_height,
+                        bits => $source->bits,
+                        channels => $source->getchannels);
+
+Then paste the source image into the new image:
+
+  $out->paste(left => $border_width,
+              top => $border_height,
+              img => $source);
+
+Whether you draw the border before or after pasting the original image
+depends on whether you want the border to overlap the image, for
+example a semi-tranparent border drawn after pasting the source image
+could overlap the edge without hiding it.
+
+If you want a solid border you could just fill the image before
+pasting the source for simplicity:
+
+  $out->box(filled=>1, color=>'red');
+  $out->paste(left => $border_width,
+              top => $border_height,
+              img => $source);
+
+
 =head1 TEXT
 
 =head2 Drawing text
@@ -238,6 +269,14 @@ Imager distribution for example code.
 =head2 Measuring text
 
 =head2 Word wrapping text
+
+=head2 Rotating text
+
+=head2 Shearing (slanting) text
+
+=head1 IMAGE TRANSFORMATION
+
+=head2 Shearing an image
 
 =head1 METADATA
 
