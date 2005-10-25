@@ -692,6 +692,12 @@ See the end of the test script t/t38ft2font.t for an example.
 Currently only the ft2 (Freetype 2.x) driver supports the transform()
 method.
 
+See samples/slant_text.pl for a sample using this function.
+
+Note that the transformation is done in font co-ordinates where y
+increases as you move up, not image co-ordinates where y decreases as
+you move up.
+
 =item has_chars(string=>$text)
 
 Checks if the characters in $text are defined by the font.

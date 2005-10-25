@@ -291,6 +291,7 @@ newline.
 I tried to make it fairly nicely formatted.  You might disagree :)
 
 =cut
+
 sub _string {
   my ($m) = @_;
 
