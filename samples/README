@@ -61,3 +61,13 @@ samp-tags.cgi
 border.pl
 
   Example of adding a border to an image.
+
+slant_text.pl
+
+  Example of drawing transformed text.
+
+  Draws slanted or rotated text to a new image and saves it to a file.
+
+  As part of this it demonstrates calculating the transformed bounding
+  box of the text.
+

@@ -1152,6 +1152,8 @@ Revision history for Perl extension Imager.
   from a TIFF file.
 - added samples/border.pl, and notes on adding a border in 
   Imager::Cookbook.
+- added sampled/slant_text.pl, and notes on shearing/rotating text in
+  Imager::Cookbook.
 
 =================================================================
 

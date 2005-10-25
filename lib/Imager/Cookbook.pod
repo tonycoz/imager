@@ -270,9 +270,44 @@ pasting the source for simplicity:
 
 =head2 Word wrapping text
 
-=head2 Rotating text
+=head2 Shearing (slanting) or Rotating text
 
-=head2 Shearing (slanting) text
+This requires that you have Imager installed with Freetype 2.x support
+installed, and that the font be created using the Freetype 2.x driver,
+for example:
+
+  my $font = Imager::Font->new(file=>$fontfile, type=>'ft2');
+
+First you need a transformation matrix, for shearing that could be:
+
+  my $angle_in_radians = ...;
+  my $tan_angle = sin($angle_rads) / cos($angle_rads);
+  # shear horizontally, supply this as y instead to do it vertically
+  my $matrix = Imager::Matrix2d->shear(x=>$tan_angle);
+
+For rotation that would be:
+
+  my $matrix = Imager::Matrix2d->rotate(radians => $angle_in_radians);
+
+or:
+
+  my $matrix = Imager::Matrix2d->rotate(degrees => $angle_in_degrees);
+
+Feed that to the font object:
+
+  $font->transform(matrix => $matrix);
+
+and draw the text as normal:
+
+  $image->string(string => $text,
+                 x => $where_x,
+                 y => $where_y,
+                 color => $color,
+                 font => $font);
+
+See samples/slant_text.pl for a comprehensive example, including
+calculating the transformed bounding box to create an image to fit the
+transformed text into.
 
 =head1 IMAGE TRANSFORMATION
 
