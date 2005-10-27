@@ -52,7 +52,7 @@ not commitments.
     http://nntp.perl.org/group/perl.perl5.porters/102434
   (#1521, #5608, #8231, #11429, #13058)
 
-- have $img->read() act like ($img) = Imager->read_multi() on GIFs
+- have $img->read() act like ($img) = Imager->read_multi() on GIFs (done)
 
 - figure out what the nearest_color filter does, and document it
 

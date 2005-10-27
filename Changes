@@ -1154,6 +1154,14 @@ Revision history for Perl extension Imager.
   Imager::Cookbook.
 - added sampled/slant_text.pl, and notes on shearing/rotating text in
   Imager::Cookbook.
+- INCOMPATIBLE CHANGE:
+  reading a gif file will now read the first image from the file rather 
+  than the a consolidated image.  If you want the old behaviour supply
+  C<< gif_consolidate=>1 >> to the read() method.  Older versions of 
+  Imager will accept this parameter and produce the same result.
+- you can now supply a page parameter to read() to read a given page
+  from a GIF file.
+- reading a multi-image GIF was leaking memory (a line buffer per file)
 
 =================================================================
 

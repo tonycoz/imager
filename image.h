@@ -591,6 +591,7 @@ i_img *i_readgif(int fd, int **colour_table, int *colours);
 i_img *i_readgif_wiol(io_glue *ig, int **colour_table, int *colours);
 i_img *i_readgif_scalar(char *data, int length, int **colour_table, int *colours);
 i_img *i_readgif_callback(i_read_callback_t callback, char *userdata, int **colour_table, int *colours);
+i_img *i_readgif_single_wiol(io_glue *ig, int page);
 extern i_img **i_readgif_multi(int fd, int *count);
 extern i_img **i_readgif_multi_scalar(char *data, int length, int *count);
 extern i_img **i_readgif_multi_callback(i_read_callback_t callback, char *userdata, int *count);
