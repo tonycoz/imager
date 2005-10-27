@@ -1193,16 +1193,28 @@ sub read {
       $self->{ERRSTR} = "option 'colors' must be a scalar reference";
       return undef;
     }
-    if ($input{colors}) {
-      my $colors;
-      ($self->{IMG}, $colors) =i_readgif_wiol( $IO );
-      if ($colors) {
-	${ $input{colors} } = [ map { NC(@$_) } @$colors ];
+    if ($input{'gif_consolidate'}) {
+      if ($input{colors}) {
+	my $colors;
+	($self->{IMG}, $colors) =i_readgif_wiol( $IO );
+	if ($colors) {
+	  ${ $input{colors} } = [ map { NC(@$_) } @$colors ];
+	}
+      }
+      else {
+	$self->{IMG} =i_readgif_wiol( $IO );
       }
     }
     else {
-      $self->{IMG} =i_readgif_wiol( $IO );
+      my $page = $input{'page'};
+      defined $page or $page = 0;
+      $self->{IMG} = i_readgif_single_wiol( $IO, $page );
+      if ($input{colors}) {
+	${ $input{colors} } =
+	  [ i_getcolors($self->{IMG}, 0, i_colorcount($self->{IMG})) ];
+      }
     }
+
     if ( !defined($self->{IMG}) ) {
       $self->{ERRSTR}=$self->_error_as_msg();
       return undef;

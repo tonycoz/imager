@@ -2478,6 +2478,11 @@ i_readgif_wiol(ig)
             PUSHs(newRV_noinc((SV*)ct));
         }
 
+Imager::ImgRaw
+i_readgif_single_wiol(ig, page=0)
+	Imager::IO	ig
+        int		page
+
 void
 i_readgif_scalar(...)
           PROTOTYPE: $

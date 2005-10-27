@@ -434,6 +434,25 @@ This is currently unimplemented due to some limitations in giflib.
 
 =back
 
+You can supply a C<page> parameter to the C<read()> method to read
+some page other than the first.  The page is 0 based:
+
+  # read the second image in the file
+  $image->read(file=>"example.gif", page=>1)
+    or die "Cannot read second page: ",$image->errstr,"\n";
+
+Before release 0.46, Imager would read multi-image GIF image files
+into a single image, overlaying each of the images onto the virtual
+GIF screen.
+
+As of 0.46 the default is to read the first image from the file, as if
+called with C<< page => 0 >>.
+
+You can return to the previous behaviour by calling read with the
+C<gif_consolidate> parameter set to a true value:
+
+  $img->read(file=>$some_gif_file, gif_consolidate=>1);
+
 =head2 TIFF (Tagged Image File Format)
 
 Imager can write images to either paletted or RGB TIFF images,
