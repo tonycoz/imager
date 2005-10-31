@@ -87,7 +87,7 @@ i_img *i_img_pal_new_low(i_img *im, int x, int y, int channels, int maxpal) {
   int bytes;
 
   i_clear_error();
-  if (maxpal < 0 || maxpal > 256) {
+  if (maxpal < 1 || maxpal > 256) {
     i_push_error(0, "Maximum of 256 palette entries");
     return NULL;
   }
