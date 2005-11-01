@@ -1163,6 +1163,7 @@ Revision history for Perl extension Imager.
   from a GIF file.
 - reading a multi-image GIF was leaking memory (a line buffer per file)
 - maxcolors now must be at least 1 when creating a paletted image.
+- converted t/t022double.t to use Test::More
 
 =================================================================
 
