@@ -87,6 +87,9 @@ static char *t1_from_utf8(char const *in, int len, int *outlen);
 
 static void t1_push_error(void);
 
+static int t1_active_fonts = 0;
+static int t1_initialized = 0;
+
 /* 
 =item i_init_t1(t1log)
 
@@ -99,6 +102,15 @@ undef_int
 i_init_t1(int t1log) {
   int init_flags = IGNORE_CONFIGFILE|IGNORE_FONTDATABASE;
   mm_log((1,"init_t1()\n"));
+
+  if (t1_active_fonts) {
+    mm_log((1, "Cannot re-initialize T1 - active fonts\n"));
+    return 1;
+  }
+
+  if (t1_initialized) {
+    T1_CloseLib();
+  }
   
   if (t1log)
     init_flags |= LOGFILE;
@@ -108,6 +120,9 @@ i_init_t1(int t1log) {
   }
   T1_SetLogLevel(T1LOG_DEBUG);
   i_t1_set_aa(1); /* Default Antialias value */
+
+  ++t1_initialized;
+
   return(0);
 }
 
@@ -125,6 +140,7 @@ Shuts the t1lib font rendering engine down.
 void
 i_close_t1(void) {
   T1_CloseLib();
+  t1_initialized = 0;
 }
 
 
@@ -155,6 +171,8 @@ i_t1_new(char *pfb,char *afm) {
     if (T1_SetAfmFileName(font_id,afm)<0) mm_log((1,"i_t1_new: afm loading of '%s' failed.\n",afm));
   }
 
+  ++t1_active_fonts;
+
   return font_id;
 }
 
@@ -171,6 +189,9 @@ Frees resources for a t1 font with given font id.
 int
 i_t1_destroy(int font_id) {
   mm_log((1,"i_t1_destroy(font_id %d)\n",font_id));
+
+  --t1_active_fonts;
+
   return T1_DeleteFont(font_id);
 }
 

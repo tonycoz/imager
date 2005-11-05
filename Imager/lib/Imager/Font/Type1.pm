@@ -159,6 +159,8 @@ can re-enable that by calling Imager::init() with the C<t1log> option:
 
   Imager::init(t1log=>1);
 
+This must be called before creating any fonts.
+
 Currently specific to Imager::Font::Type1, you can use the following
 flags when drawing text or calculating a bounding box:
 

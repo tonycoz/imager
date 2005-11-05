@@ -36,6 +36,14 @@ SKIP:
 
   i_t1_set_aa(1);
 
+  unlink "t1lib.log"; # lose it if it exists
+  init(t1log=>0);
+  ok(!-e("t1lib.log"), "disable t1log");
+  init(t1log=>1);
+  ok(-e("t1lib.log"), "enable t1log");
+  init(t1log=>0);
+  unlink "t1lib.log";
+
   my $fnum=Imager::i_t1_new($fontname_pfb,$fontname_afm); # this will load the pfb font
   unless (ok($fnum >= 0, "load font $fontname_pfb")) {
     skip("without the font I can't do a thing", 48);
@@ -123,14 +131,6 @@ SKIP:
 
   print "# debug: ",join(" x ",i_t1_bbox(0,50,"eses",4) ),"\n";
   print "# debug: ",join(" x ",i_t1_bbox(0,50,"llll",4) ),"\n";
-
-  unlink "t1lib.log"; # lose it if it exists
-  init(t1log=>0);
-  ok(!-e("t1lib.log"), "disable t1log");
-  init(t1log=>1);
-  ok(-e("t1lib.log"), "enable t1log");
-  init(t1log=>0);
-  unlink "t1lib.log";
 
   # character existance tests - uses the special ExistenceTest font
   my $exists_font = 'fontfiles/ExistenceTest.pfb';
