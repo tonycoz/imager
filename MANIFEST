@@ -165,6 +165,7 @@ t/t70newgif.t
 t/t75polyaa.t
 t/t80texttools.t        Test text wrapping
 t/t90cc.t
+t/t91pod.t		Test POD with Test::Pod
 t/testtools.pl
 tags.c
 testimg/bad1oflow.bmp   1-bit/pixel, overflow integer on 32-bit machines
