@@ -2711,8 +2711,17 @@ sub getmask {
 sub setmask {
   my $self = shift;
   my %opts = @_;
-  if (!defined($self->{IMG})) { $self->{ERRSTR} = 'image is empty'; return undef; }
+  if (!defined($self->{IMG})) { 
+    $self->{ERRSTR} = 'image is empty';
+    return undef;
+  }
+  unless (defined $opts{mask}) {
+    $self->_set_error("mask parameter required");
+    return;
+  }
   i_img_setmask( $self->{IMG} , $opts{mask} );
+
+  1;
 }
 
 # Get number of colors in an image
@@ -3361,5 +3370,9 @@ Imager::Expr(3), Imager::Matrix2d(3), Imager::Fountain(3)
 
 Affix::Infix2Postfix(3), Parse::RecDescent(3)
 http://imager.perl.org/
+
+Other perl imaging modules include:
+
+GD(3), Image::Magick(3), Graphics::Magick(3).
 
 =cut

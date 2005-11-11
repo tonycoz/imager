@@ -148,8 +148,15 @@ static int i_ppix_ddoub(i_img *im, int x, int y, i_color *val) {
     return -1;
 
   off = (x + y * im->xsize) * im->channels;
-  for (ch = 0; ch < im->channels; ++ch)
-    ((double*)im->idata)[off+ch] = Sample8ToF(val->channel[ch]);
+  if (I_ALL_CHANNELS_WRITABLE(im)) {
+    for (ch = 0; ch < im->channels; ++ch)
+      ((double*)im->idata)[off+ch] = Sample8ToF(val->channel[ch]);
+  }
+  else {
+    for (ch = 0; ch < im->channels; ++ch)
+      if (im->ch_mask & (1<<ch))
+	((double*)im->idata)[off+ch] = Sample8ToF(val->channel[ch]);
+  }
 
   return 0;
 }
@@ -174,8 +181,15 @@ static int i_ppixf_ddoub(i_img *im, int x, int y, i_fcolor *val) {
     return -1;
 
   off = (x + y * im->xsize) * im->channels;
-  for (ch = 0; ch < im->channels; ++ch)
-    ((double *)im->idata)[off+ch] = val->channel[ch];;
+  if (I_ALL_CHANNELS_WRITABLE(im)) {
+    for (ch = 0; ch < im->channels; ++ch)
+      ((double *)im->idata)[off+ch] = val->channel[ch];
+  }
+  else {
+    for (ch = 0; ch < im->channels; ++ch)
+      if (im->ch_mask & (1 << ch))
+	((double *)im->idata)[off+ch] = val->channel[ch];
+  }
 
   return 0;
 }
@@ -222,10 +236,21 @@ static int i_plin_ddoub(i_img *im, int l, int r, int y, i_color *vals) {
       r = im->xsize;
     off = (l+y*im->xsize) * im->channels;
     count = r - l;
-    for (i = 0; i < count; ++i) {
-      for (ch = 0; ch < im->channels; ++ch) {
-        ((double *)im->idata)[off] = Sample8ToF(vals[i].channel[ch]);
-        ++off;
+    if (I_ALL_CHANNELS_WRITABLE(im)) {
+      for (i = 0; i < count; ++i) {
+	for (ch = 0; ch < im->channels; ++ch) {
+	  ((double *)im->idata)[off] = Sample8ToF(vals[i].channel[ch]);
+	  ++off;
+	}
+      }
+    }
+    else {
+      for (i = 0; i < count; ++i) {
+	for (ch = 0; ch < im->channels; ++ch) {
+	  if (im->ch_mask & (1 << ch))
+	    ((double *)im->idata)[off] = Sample8ToF(vals[i].channel[ch]);
+	  ++off;
+	}
       }
     }
     return count;
@@ -264,10 +289,21 @@ static int i_plinf_ddoub(i_img *im, int l, int r, int y, i_fcolor *vals) {
       r = im->xsize;
     off = (l+y*im->xsize) * im->channels;
     count = r - l;
-    for (i = 0; i < count; ++i) {
-      for (ch = 0; ch < im->channels; ++ch) {
-        ((double *)im->idata)[off] = vals[i].channel[ch];
-        ++off;
+    if (I_ALL_CHANNELS_WRITABLE(im)) {
+      for (i = 0; i < count; ++i) {
+	for (ch = 0; ch < im->channels; ++ch) {
+	  ((double *)im->idata)[off] = vals[i].channel[ch];
+	  ++off;
+	}
+      }
+    }
+    else {
+      for (i = 0; i < count; ++i) {
+	for (ch = 0; ch < im->channels; ++ch) {
+	  if (im->ch_mask & (1 << ch))
+	    ((double *)im->idata)[off] = vals[i].channel[ch];
+	  ++off;
+	}
       }
     }
     return count;

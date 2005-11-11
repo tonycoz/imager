@@ -54,4 +54,7 @@ extern UTIL_table_t i_UTIL_table;
 #define HAVE_SNPRINTF
 #endif
 
+/* test if all channels are writable */
+#define I_ALL_CHANNELS_WRITABLE(im) (((im)->ch_mask & 0xF) == 0xf)
+
 #endif
