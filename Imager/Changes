@@ -1165,6 +1165,9 @@ Revision history for Perl extension Imager.
 - maxcolors now must be at least 1 when creating a paletted image.
 - converted t/t022double.t to use Test::More
 - t1 library re-initialization modified to support T1Lib 5.1.0
+- setmask() now returns true on success and reports a missing mask
+  parameter.
+- double per sample images were ignoring the channel mask.
 
 =================================================================
 

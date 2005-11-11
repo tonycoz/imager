@@ -1,7 +1,7 @@
 #!perl -w
 use strict;
 use lib 't';
-use Test::More tests => 49;
+use Test::More tests => 81;
 
 BEGIN { use_ok(Imager => qw(:all :handy)) }
 require "t/testtools.pl";
@@ -136,6 +136,64 @@ cmp_ok(Imager->errstr, '=~', qr/channels must be between 1 and 4/,
   }
 }
 
+{ # check the channel mask function
+  # we want to check all four of ppix() and plin(), ppix() and plinf()
+  # basic test procedure:
+  #   first using default/all 1s mask, set to white
+  #   make sure we got white
+  #   set mask to skip a channel, set to grey
+  #   make sure only the right channels set
+  
+  print "# channel mask tests\n";
+  my $im = Imager->new(xsize => 10, ysize=>10, bits=>'double');
+
+  # 8-bit color tests
+  my $white = NC(255, 255, 255);
+  my $grey = NC(128, 128, 128);
+  my $white_grey = NC(128, 255, 128);
+
+  print "# with ppix\n";
+  ok($im->setmask(mask=>~0), "set to default mask");
+  ok($im->setpixel(x=>0, 'y'=>0, color=>$white), "set to white all channels");
+  test_color_gpix($im->{IMG}, 0, 0, $white);
+  ok($im->setmask(mask=>0xF-0x2), "set channel to exclude channel1");
+  ok($im->setpixel(x=>0, 'y'=>0, color=>$grey), "set to grey, no channel 2");
+  test_color_gpix($im->{IMG}, 0, 0, $white_grey);
+
+  print "# with plin\n";
+  ok($im->setmask(mask=>~0), "set to default mask");
+  ok($im->setscanline(x=>0, 'y'=>1, pixels => [$white]), 
+     "set to white all channels");
+  test_color_gpix($im->{IMG}, 0, 1, $white);
+  ok($im->setmask(mask=>0xF-0x2), "set channel to exclude channel1");
+  ok($im->setscanline(x=>0, 'y'=>1, pixels=>[$grey]), 
+     "set to grey, no channel 2");
+  test_color_gpix($im->{IMG}, 0, 1, $white_grey);
+
+  # float color tests
+  my $whitef = NCF(1.0, 1.0, 1.0);
+  my $greyf = NCF(0.5, 0.5, 0.5);
+  my $white_greyf = NCF(0.5, 1.0, 0.5);
+
+  print "# with ppixf\n";
+  ok($im->setmask(mask=>~0), "set to default mask");
+  ok($im->setpixel(x=>0, 'y'=>2, color=>$whitef), "set to white all channels");
+  test_colorf_gpix($im->{IMG}, 0, 2, $whitef);
+  ok($im->setmask(mask=>0xF-0x2), "set channel to exclude channel1");
+  ok($im->setpixel(x=>0, 'y'=>2, color=>$greyf), "set to grey, no channel 2");
+  test_colorf_gpix($im->{IMG}, 0, 2, $white_greyf);
+
+  print "# with plinf\n";
+  ok($im->setmask(mask=>~0), "set to default mask");
+  ok($im->setscanline(x=>0, 'y'=>3, pixels => [$whitef]), 
+     "set to white all channels");
+  test_colorf_gpix($im->{IMG}, 0, 3, $whitef);
+  ok($im->setmask(mask=>0xF-0x2), "set channel to exclude channel1");
+  ok($im->setscanline(x=>0, 'y'=>3, pixels=>[$greyf]), 
+     "set to grey, no channel 2");
+  test_colorf_gpix($im->{IMG}, 0, 3, $white_greyf);
+}
+
 sub NCF {
   return Imager::Color::Float->new(@_);
 }
@@ -144,8 +202,22 @@ sub test_colorf_gpix {
   my ($im, $x, $y, $expected) = @_;
   my $c = Imager::i_gpixf($im, $x, $y);
   ok($c, "got gpix ($x, $y)");
-  ok(colorf_cmp($c, $expected) == 0,
-     "got right color ($x, $y)");
+  unless (ok(colorf_cmp($c, $expected) == 0,
+	     "got right color ($x, $y)")) {
+    print "# got: (", join(",", ($c->rgba)[0,1,2]), ")\n";
+    print "# expected: (", join(",", ($expected->rgba)[0,1,2]), ")\n";
+  }
+}
+
+sub test_color_gpix {
+  my ($im, $x, $y, $expected) = @_;
+  my $c = Imager::i_get_pixel($im, $x, $y);
+  ok($c, "got gpix ($x, $y)");
+  unless (ok(color_cmp($c, $expected) == 0,
+     "got right color ($x, $y)")) {
+    print "# got: (", join(",", ($c->rgba)[0,1,2]), ")\n";
+    print "# expected: (", join(",", ($expected->rgba)[0,1,2]), ")\n";
+  }
 }
 
 sub test_colorf_glin {
@@ -168,3 +240,13 @@ sub colorf_cmp {
       || $s1[2] <=> $s2[2];
 }
 
+sub color_cmp {
+  my ($c1, $c2) = @_;
+
+  my @s1 = $c1->rgba;
+  my @s2 = $c2->rgba;
+
+  return $s1[0] <=> $s2[0] 
+    || $s1[1] <=> $s2[1]
+      || $s1[2] <=> $s2[2];
+}
