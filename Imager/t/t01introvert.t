@@ -4,7 +4,7 @@
 
 use strict;
 use lib 't';
-use Test::More tests=>164;
+use Test::More tests=>196;
 
 BEGIN { use_ok(Imager => qw(:handy :all)) }
 
@@ -473,6 +473,13 @@ cmp_ok(Imager->errstr, '=~', qr/channels must be between 1 and 4/,
   print "# end OO level scanline function tests\n";
 }
 
+{ # check the channel mask function
+  
+  my $im = Imager->new(xsize => 10, ysize=>10, bits=>8);
+
+  mask_tests($im, 0.005);
+}
+
 sub check_add {
   my ($im, $color, $expected) = @_;
   my $index = Imager::i_addcolors($im, $color);
@@ -484,15 +491,6 @@ sub check_add {
   ok(color_cmp($new, $color) == 0, "color matched what was added");
 
   $index;
-}
-
-sub color_cmp {
-  my ($l, $r) = @_;
-  my @l = $l->rgba;
-  my @r = $r->rgba;
-  return $l[0] <=> $r[0]
-    || $l[1] <=> $r[1]
-      || $l[2] <=> $r[2];
 }
 
 # sub array_ncmp {
