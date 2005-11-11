@@ -226,7 +226,7 @@ Natural logarithm and exponential.
 
 =back
 
-=item Constants
+=head3 Constants
 
 transform2() defines the following constants:
 
