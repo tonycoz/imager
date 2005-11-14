@@ -74,7 +74,6 @@ Imager::ImageTypes - Internal image representation information
     print "No tags in image\n";
   }
   
-
 =head1 DESCRIPTION
 
 Imager supports various internal image representations of images.  The
@@ -113,6 +112,84 @@ method on later.
   $img = Imager->new(%opts); # create direct mode RGBA image
   $img = Imager->new(%opts, channels=>4); # create direct mode RGBA image
 
+The parameters for new are:
+
+=over
+
+=item *
+
+C<xsize>, C<ysize> - Defines the width and height in pixels of the
+image.  These must be positive.
+
+If not supplied then only placeholder object is created, which can be
+supplied to the C<read()> or C<img_set()> methods.
+
+=item *
+
+C<channels> - The number of channels for the image.  Default 3.  Valid
+values are from 1 to 4.
+
+=item *
+
+C<bits> - The storage type for samples in the image.  Default: 8.
+Valid values are:
+
+=over
+
+=item *
+
+C<8> - One byte per sample.  256 discrete values.
+
+=item *
+
+C<16> - 16-bits per sample, 65536 discrete values.
+
+=item *
+
+C<double> - one C double per sample.
+
+=back
+
+Note: you can use any Imager function on any sample size image.
+
+Paletted images always use 8 bits/sample.
+
+=item *
+
+C<type> - either C<'direct'> or C<'paletted'>.  Default: C<'direct'>.
+
+Direct images store color values for each pixel.  
+
+Paletted images keep a table of up to 256 colors called the palette,
+each pixel is represented as an index into that table.
+
+In most cases when working with Imager you will want to use the
+C<direct> image type.
+
+If you draw on a C<paletted> image with a color not in the image's
+palette then Imager will transparently convert it to a C<direct>
+image.
+
+=item *
+
+C<maxcolors> - the maximum number of colors in a paletted image.
+Default: 256.  This must be in the range 1 through 256.
+
+=back
+
+In the simplest case just supply the width and height of the image:
+
+  # 8 bit/sample, RGB image
+  my $img = Imager->new(xsize => $width, ysize => $height);
+
+or if you want an alpha channel:
+
+  # 8 bits/sample, RGBA image
+  my $img = Imager->new(xsize => $width, ysize => $height, channels=>4);
+
+Note that it I<is> possible for image creation to fail, for example if
+channels is out of range, or if the image would take too much memory.
+
 To create paletted images, set the 'type' parameter to 'paletted':
 
   $img = Imager->new(xsize=>200, ysize=>200, type=>'paletted');
@@ -137,8 +214,12 @@ Note that as of this writing all functions should work on images with
 more than 8-bits/channel, but many will only work at only
 8-bit/channel precision.
 
-Currently only 8-bit, 16-bit, and double per channel image types are
-available, this may change later.
+If you want an empty Imager object to call the read() method on, just
+call new() with no parameters:
+
+  my $img = Imager->new;
+  $img->read(file=>$filename)
+    or die $img->errstr;
 
 =item img_set
 
@@ -147,6 +228,8 @@ with the given dimensions and channels.  For a way to convert image
 data between formats see the C<convert()> method.
 
   $img->img_set(xsize=>500, ysize=>500, channels=>4);
+
+This takes exactly the same parameters as the new() method.
 
 =back
 
@@ -197,20 +280,39 @@ The bits() method retrieves the number of bits used to represent each
 channel in a pixel, 8 for a normal image, 16 for 16-bit image and
 'double' for a double/channel image.
 
+  if ($img->bits eq 8) {
+    # fast but limited to 8-bits/sample
+  }
+  else {
+    # slower but more precise
+  }
+
 =item type
 
 The type() method returns either 'direct' for truecolor images or
-'paletted' for paletted images.  
+'paletted' for paletted images.
+
+  if ($img->type eq 'paletted') {
+    # print the palette
+    for my $color ($img->getcolors) {
+      print join(",", $color->rgba), "\n";
+    }
+  }
 
 =item virtual
 
 The virtual() method returns non-zero if the image contains no actual
 pixels, for example masked images.
 
+This may also be used for non-native Imager images in the future, for
+example, for an Imager object that draws on an SDL surface.
+
 =back
 
-
 =head2 Direct Type Images
+
+Direct images store the color value directly for each pixel in the
+image.
 
 =over
 
@@ -226,7 +328,8 @@ pixels, for example masked images.
 C<getmask()> is used to fetch the current channel mask.  The mask
 determines what channels are currently modifiable in the image.  The
 channel mask is an integer value, if the i-th lsb is set the i-th
-channel is modifiable.
+channel is modifiable.  eg. a channel mask of 0x5 means only channels
+0 and 2 are writable.
 
 =item setmask
 
@@ -243,6 +346,9 @@ L<getmask> for details.
 =back
 
 =head2 Palette Type Images
+
+Paletted images keep an array of up to 256 colors, and each pixel is
+stored as an index into that array.
 
 In general you can work with paletted images in the same way as RGB
 images, except that if you attempt to draw to a paletted image with a
@@ -266,12 +372,29 @@ You can add colors to a paletted image with the addcolors() method:
 The return value is the index of the first color added, or undef if
 adding the colors would overflow the palette.
 
+The only parameter is C<colors> which must be a reference to an array
+of Imager::Color objects.
+
 =item setcolors
 
   $img->setcolors(start=>$start, colors=>\@colors);
 
 Once you have colors in the palette you can overwrite them with the
 C<setcolors()> method:  C<setcolors()> returns true on success.
+
+Parameters:
+
+=over
+
+=item *
+
+start - the first index to be set.  Default: 0
+
+=item *
+
+colors - reference to an array of Imager::Color objects.
+
+=back
 
 =item getcolors
 
@@ -291,6 +414,16 @@ To quickly find a color in the palette use findcolor():
   my $index = $img->findcolor(color=>$color);
 
 which returns undef on failure, or the index of the color.
+
+Parameter:
+
+=over
+
+=item *
+
+color - an Imager::Color object.
+
+=back
 
 =item colorcount
 
@@ -322,6 +455,15 @@ to_paletted() method:
 
 where %opts contains the options specified under L<Quantization options>.
 
+  # convert to a paletted image using the web palette
+  # use the closest color to each pixel
+  my $webimg = $img->to_paletted({ make_colors => 'webmap' });
+
+  # convert to a paletted image using a fairly optimal palette
+  # use an error diffusion dither to try to reduce the average error
+  my $optimag = $img->to_paletted({ make_colors => 'mediancut',
+                                    translate => 'errdiff' });
+
 =item to_rgb8
 
 You can convert a paletted image (or any image) to an 8-bit/channel
@@ -329,8 +471,59 @@ RGB image with:
 
   $rgbimg = $img->to_rgb8;
 
+No parameters.
 
-=head2 Masked Images
+=item masked
+
+Creates a masked image.  A masked image lets you create an image proxy
+object that protects parts of the underlying target image.
+
+In the discussion below there are 3 image objects involved:
+
+=over
+
+=item *
+
+the masked image - the return value of the masked() method.  Any
+writes to this image are written to the target image, assuming the
+mask image allows it.
+
+=item *
+
+the mask image - the image that protects writes to the target image.
+Supplied as the C<mask> parameter to the masked() method.
+
+=item *
+
+the target image - the image you called the masked() method on.  Any
+writes to the masked image end up on this image.
+
+=back
+
+Parameters:
+
+=over
+
+=item *
+
+mask - the mask image.  If not supplied then all pixels in the target
+image are writable.  On each write to the masked image, only pixels
+that have non-zero in chennel 0 of the mask image will be written to
+the original image.  Default: none, if not supplied then no masking is
+done, but the other parameters are still honored.
+
+=item *
+
+left, top - the offset of writes to the target image.  eg. if you
+attempt to set pixel (x,y) in the masked image, then pixel (x+left,
+y+top) will be written to in the original image.
+
+=item *
+
+bottom, right - the bottom right of the area in the target available
+from the masked image.
+
+=back
 
 Masked images let you control which pixels are modified in an
 underlying image.  Where the first channel is completely black in the
@@ -338,22 +531,25 @@ mask image, writes to the underlying image are ignored.
 
 For example, given a base image called $img:
 
-  my $mask = Imager->new(xsize=>$img->getwidth, ysize=>getheight,
+  my $mask = Imager->new(xsize=>$img->getwidth, ysize=>$img->getheight,
                          channels=>1);
   # ... draw something on the mask
   my $maskedimg = $img->masked(mask=>$mask);
+
+  # now draw on $maskedimg and it will only draw on areas of $img 
+  # where $mask is non-zero in channel 0.
 
 You can specifiy the region of the underlying image that is masked
 using the left, top, right and bottom options.
 
 If you just want a subset of the image, without masking, just specify
-the region without specifying a mask.
+the region without specifying a mask.  For example:
 
+  # just work with a 100x100 region of $img
+  my $maskedimg = $img->masked(left => 100, top=>100,
+                               right=>200, bottom=>200);
 
-
-
-
-
+=back
 
 =head2 Tags
 
@@ -362,21 +558,46 @@ stored as pixels of the image.
 
 At the perl level each tag has a name or code and a value, which is an
 integer or an arbitrary string.  An image can contain more than one
-tag with the same name or code.
+tag with the same name or code, but having more than one tag with the
+same name is discouraged.
 
 You can retrieve tags from an image using the tags() method, you can
 get all of the tags in an image, as a list of array references, with
-the code or name of the tag followed by the value of the tag:
+the code or name of the tag followed by the value of the tag.
 
+=over
+
+=item tags
+
+Retrieve tags from the image.
+
+With no parameters, retrieves a list array references, each containing
+a name and value: all tags in the image:
+
+  # get a list of ( [ name1 => value1 ], [ name2 => value2 ] ... )
   my @alltags = $img->tags;
+  print $_->[0], ":", $_->[1], "\n" for @all_tags;
 
-or you can get all tags that have a given name:
+  # or put it in a hash, but this will lose duplicates
+  my %alltags = map @$_, $img->tags;
 
-  my @namedtags = $img->tags(name=>$name);
+in scalar context this returns the number of tags:
+
+  my $num_tags = $img->tags;
+
+or you can get all tags values for the given name:
+
+  my @namedtags = $img->tags(name => $name);
+
+in scalar context this returns the first tag of that name:
+
+  my $firstnamed = $img->tags(name => $name);
 
 or a given code:
 
   my @tags = $img->tags(code=>$code);
+
+=item addtag
 
 You can add tags using the addtag() method, either by name:
 
@@ -385,6 +606,8 @@ You can add tags using the addtag() method, either by name:
 or by code:
 
   my $index = $img->addtag(code=>$code, value=>$value);
+
+=item deltag
 
 You can remove tags with the deltag() method, either by index:
 
@@ -400,6 +623,7 @@ or by code:
 
 In each case deltag() returns the number of tags deleted.
 
+=back
 
 =head2 Common Tags
 
@@ -431,7 +655,7 @@ then this is scaled so the smaller value is 72dpi.
 =item i_incomplete
 
 If this tag is present then the whole image could not be read.  This
-isn't implemented for all images yet.
+isn't implemented for all images yet, and may not be.
 
 =item i_format
 
@@ -671,5 +895,19 @@ color table.
 
 =back
 
+=head1 REVISION
+
+$Revision$
+
+=head1 AUTHORS
+
+Tony Cook, Arnar M. Hrafnkelsson
+
+=head1 SEE ALSO
+
+Imager(3), Imager::Files(3), Imager::Draw(3),
+Imager::Color(3), Imager::Fill(3), Imager::Font(3),
+Imager::Transformations(3), Imager::Engines(3), Imager::Filters(3),
+Imager::Expr(3), Imager::Matrix2d(3), Imager::Fountain(3)
 
 =cut

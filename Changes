@@ -1171,6 +1171,11 @@ Revision history for Perl extension Imager.
 - converted t/t021sixteen.t to use Test::More
 - 16-bit per sample images were ignoring the channel mask
 - added t/t91pod.t
+- expand Imager::ImageTypes:
+  - make all methods into =items
+  - document parameters
+  - more examples
+  - add AUTHOR/REVISION/SEE ALSO
 
 =================================================================
 
