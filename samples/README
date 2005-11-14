@@ -71,3 +71,6 @@ slant_text.pl
   As part of this it demonstrates calculating the transformed bounding
   box of the text.
 
+tk-photo.pl
+
+  Simple example of making a Tk::Photo object using Imager data.
