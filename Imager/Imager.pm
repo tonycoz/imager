@@ -3071,13 +3071,13 @@ L<Imager::ImageTypes>.
 
 Where to find information on methods for Imager class objects.
 
-addcolors() -  L<Imager::ImageTypes>
+addcolors() -  L<Imager::ImageTypes/addcolors>
 
-addtag() -  L<Imager::ImageTypes> - add image tags
+addtag() -  L<Imager::ImageTypes/addtag> - add image tags
 
 arc() - L<Imager::Draw/arc>
 
-bits() - L<Imager::ImageTypes> - number of bits per sample for the
+bits() - L<Imager::ImageTypes/bits> - number of bits per sample for the
 image
 
 box() - L<Imager::Draw/box>
@@ -3093,7 +3093,7 @@ copy() - L<Imager::Transformations/copy>
 
 crop() - L<Imager::Transformations/crop> - extract part of an image
 
-deltag() -  L<Imager::ImageTypes> - delete image tags
+deltag() -  L<Imager::ImageTypes/deltag> - delete image tags
 
 difference() - L<Imager::Filters/"Image Difference">
 
@@ -3101,23 +3101,23 @@ errstr() - L<Imager/"Basic Overview">
 
 filter() - L<Imager::Filters>
 
-findcolor() - L<Imager::ImageTypes> - search the image palette, if it
+findcolor() - L<Imager::ImageTypes/findcolor> - search the image palette, if it
 has one
 
 flip() - L<Imager::Transformations/flip>
 
 flood_fill() - L<Imager::Draw/flood_fill>
 
-getchannels() -  L<Imager::ImageTypes>
+getchannels() -  L<Imager::ImageTypes/getchannels>
 
-getcolorcount() -  L<Imager::ImageTypes>
+getcolorcount() -  L<Imager::ImageTypes/getcolorcount>
 
-getcolors() - L<Imager::ImageTypes> - get colors from the image
+getcolors() - L<Imager::ImageTypes/getcolors> - get colors from the image
 palette, if it has one
 
 get_file_limits() - L<Imager::Files/"Limiting the sizes of images you read">
 
-getheight() - L<Imager::ImageTypes>
+getheight() - L<Imager::ImageTypes/getwidth>
 
 getpixel() - L<Imager::Draw/setpixel and getpixel>
 
@@ -3125,22 +3125,22 @@ getsamples() - L<Imager::Draw/getsamples>
 
 getscanline() - L<Imager::Draw/getscanline>
 
-getwidth() - L<Imager::ImageTypes>
+getwidth() - L<Imager::ImageTypes/getwidth>
 
-img_set() - L<Imager::ImageTypes>
+img_set() - L<Imager::ImageTypes/img_set>
 
 line() - L<Imager::Draw/line>
 
 map() - L<Imager::Transformations/"Color Mappings"> - remap color
 channel values
 
-masked() -  L<Imager::ImageTypes> - make a masked image
+masked() -  L<Imager::ImageTypes/masked> - make a masked image
 
 matrix_transform() - L<Imager::Engines/"Matrix Transformations">
 
-maxcolors() - L<Imager::ImageTypes/maxcolor>
+maxcolors() - L<Imager::ImageTypes/maxcolors>
 
-new() - L<Imager::ImageTypes>
+new() - L<Imager::ImageTypes/new>
 
 open() - L<Imager::Files> - an alias for read()
 
@@ -3168,7 +3168,8 @@ scaleX() - L<Imager::Transformations/scaleX>
 
 scaleY() - L<Imager::Transformations/scaleY>
 
-setcolors() - L<Imager::ImageTypes> - set palette colors in a paletted image
+setcolors() - L<Imager::ImageTypes/setcolors> - set palette colors in
+a paletted image
 
 setpixel() - L<Imager::Draw/setpixel and getpixel>
 
@@ -3176,19 +3177,19 @@ set_file_limits() - L<Imager::Files/"Limiting the sizes of images you read">
 
 string() - L<Imager::Font/string> - draw text on an image
 
-tags() -  L<Imager::ImageTypes> - fetch image tags
+tags() -  L<Imager::ImageTypes/tags> - fetch image tags
 
-to_paletted() -  L<Imager::ImageTypes>
+to_paletted() -  L<Imager::ImageTypes/to_paletted>
 
-to_rgb8() - L<Imager::ImageTypes>
+to_rgb8() - L<Imager::ImageTypes/to_rgb8>
 
 transform() - L<Imager::Engines/"transform">
 
 transform2() - L<Imager::Engines/"transform2">
 
-type() -  L<Imager::ImageTypes> - type of image (direct vs paletted)
+type() -  L<Imager::ImageTypes/type> - type of image (direct vs paletted)
 
-virtual() - L<Imager::ImageTypes> - whether the image has it's own
+virtual() - L<Imager::ImageTypes/virtual> - whether the image has it's own
 data
 
 write() - L<Imager::Files> - write an image to a file
@@ -3287,6 +3288,9 @@ noise, filter - L<Imager::Filter/noise>
 noise, rendered - L<Imager::Filter/turbnoise>,
 L<Imager::Filter/radnoise>
 
+pseudo-color image - L<Imager::ImageTypes/to_paletted>,
+L<Imager::ImageTypes/new>
+
 posterize - L<Imager::Filter/postlevels>
 
 png files - L<Imager::Files>, L<Imager::Files/"PNG">
@@ -3308,6 +3312,8 @@ size, image - L<Imager::ImageTypes/getwidth>,
 L<Imager::ImageTypes/getheight>
 
 size, text - L<Imager::Font/bounding_box>
+
+tags, image metadata - L<Imager::ImageTypes/"Tags">
 
 text, drawing - L<Imager::Font/string>, L<Imager::Font/align>,
 L<Imager::Font::Wrap>
@@ -3358,8 +3364,8 @@ Bugs are listed individually for relevant pod pages.
 
 =head1 AUTHOR
 
-Arnar M. Hrafnkelsson (addi@imager.perl.org) and Tony Cook
-(tony@imager.perl.org) See the README for a complete list.
+Arnar M. Hrafnkelsson and Tony Cook (tony@imager.perl.org) among
+others. See the README for a complete list.
 
 =head1 SEE ALSO
 
