@@ -31,7 +31,7 @@ tk-photo.pl - display an Imager image under Tk
 
 =head1 SYNOPSIS
 
-  $ perl tk-photol.pl
+  $ perl tk-photo.pl
 
 =head1 DESCRIPTION
 
