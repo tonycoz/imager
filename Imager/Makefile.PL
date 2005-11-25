@@ -22,6 +22,8 @@ use Getopt::Long;
 # IM_DFLAGS       Extra flags to pass to the preprocessor
 # IM_SUPPRESS_PROMPT  Suppress the prompt asking about gif support
 
+getenv();     # get environment variables
+
 my $help;
 my @enable;
 my @disable;
@@ -33,7 +35,14 @@ GetOptions("help" => \$help,
            "disable=s" => \@disable,
            "incpath=s", \@incpaths,
            "libpath=s" => \@libpaths,
-           "noprobe" => \$noprobe);
+           "noprobe" => \$noprobe,
+	   "verbose|v" => \$VERBOSE);
+
+if ($VERBOSE) { 
+  print "Verbose mode\n"; 
+  require Data::Dumper; 
+  import Data::Dumper qw(Dumper);
+}
 
 if ($help) {
   usage();
@@ -44,7 +53,6 @@ if (@enable && @disable) {
   exit 1;
 }
 
-getenv();     # get environment variables
 init();       # initialize global data
 pathcheck();  # Check if directories exist
 
@@ -322,7 +330,7 @@ sub pathcheck {
 
   if ($VERBOSE) {
     print "\nLibrary paths:\n";
-    for (@incs) { print $_,"\n"; }
+    for (@libs) { print $_,"\n"; }
   }
   @libs=grep { -d $_ && -r _ && -x _ or ( print("  $_ doesnt exist or is unaccessible - removed.\n"),0) } @libs;
   print "\ndone.\n";
@@ -535,8 +543,6 @@ sub getenv {
 				IM_LFLAGS
 				IM_DFLAGS);
 
-  if ($VERBOSE) { print "Verbose mode\n"; require Data::Dumper; import Data::Dumper qw(Dumper);}
-
   if ($NOLOG)   { print "Logging not compiled into module\n"; }
   else { 
     push @defines, [ IMAGER_LOG => 1, "Logging system" ];
@@ -652,8 +658,8 @@ sub is_exe {
 
 sub usage {
   print STDERR <<EOS;
-Usage: $0 [--enable feature1,feature2,...] [--incpath ...] [--libpath ...]
-       $0 [--disable feature1,feature2,...] [--incpath ...] [--libpath ...]
+Usage: $0 [-v] [--enable feature1,feature2,...] [--incpath ...] [--libpath ...]
+       $0 [-v] [--disable feature1,feature2,...] [--incpath ...] [--libpath ...]
        $0 --help
 Possible feature names are:
   png gif ungif jpeg tiff T1-fonts TT-fonts freetype2
