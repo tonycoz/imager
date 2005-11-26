@@ -1183,6 +1183,8 @@ Revision history for Perl extension Imager.
 - arc(..., fill=> ...) wasn't handling concave areas correctly
 - arc(..., color=>...) wasn't properly filling it's area
 - added experimental antialiased support to arc()
+- the order of the returned values for Imager::Font's align() method
+  was incorrect.
 
 =================================================================
 
