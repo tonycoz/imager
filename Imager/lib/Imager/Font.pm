@@ -592,7 +592,7 @@ Higher level text output - outputs the text aligned as specified
 around the given point (x,y).
 
   # "Hello" centered at 100, 100 in the image.
-  my ($left, $top, $bottom, $right) = 
+  my ($left, $top, $right, $bottom) = 
     $font->align(string=>"Hello",
                  x=>100, y=>100, 
                  halign=>'center', valign=>'center', 
