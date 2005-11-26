@@ -1,3 +1,4 @@
+#!perl -w
 # Before `make install' is performed this script should be runnable with
 # `make test'. After `make install' it should work as `perl test.pl'
 
@@ -6,14 +7,10 @@
 # Change 1..1 below to 1..last_test_to_print .
 # (It may become useful if the test is moved to ./t subdirectory.)
 use strict;
+use Test::More tests => 38;
 my $loaded;
 
-BEGIN { $| = 1; print "1..29\n"; }
-END {print "not ok 1\n" unless $loaded;}
-use Imager qw/:all/;
-$loaded = 1;
-print "ok 1\n";
-
+BEGIN { use_ok(Imager=>':all'); }
 init_log("testout/t21draw.log",1);
 
 my $redobj = NC(255, 0, 0);
@@ -24,9 +21,7 @@ my $blueobj = NC(0, 0, 255);
 my $blue = { hue=>240, saturation=>1, value=>1 };
 my $white = '#FFFFFF';
 
-my $testnum = 2;
-
-my $img = Imager->new(xsize=>100, ysize=>100);
+my $img = Imager->new(xsize=>100, ysize=>300);
 
 ok($img->box(color=>$blueobj, xmin=>10, ymin=>10, xmax=>48, ymax=>18),
    "box with color obj");
@@ -54,8 +49,8 @@ ok($img->line(color=>$blueobj, x1=>5, y1=>55, x2=>35, y2=>95),
    "line with colorobj");
 
 # FIXME - neither the start nor end-point is set for a non-aa line
-#my $c = Imager::i_get_pixel($img->{IMG}, 5, 55);
-#ok(color_cmp($c, $blueobj) == 0, "# TODO start point not set");
+my $c = Imager::i_get_pixel($img->{IMG}, 5, 55);
+ok(color_cmp($c, $blueobj) == 0, "# TODO start point not set");
 
 ok($img->line(color=>$red, x1=>10, y1=>55, x2=>40, y2=>95, aa=>1),
    "aa line with color");
@@ -98,21 +93,33 @@ $gp = $img->getpixel('x'=>39, 'y'=>55, type=>'float');
 ok($gp->isa('Imager::Color::Float'), "check scalar float getpixel type");
 ok(color_cmp($gp, $flgreen) == 0, "check scalar float getpixel color");
 
+# more complete arc tests
+ok($img->arc(x=>25, 'y'=>125, r=>20, d1=>315, d2=>45, color=>$greenobj),
+   "color arc through angle 0");
+# use diff combine here to make sure double writing is noticable
+ok($img->arc(x=>75, 'y'=>125, r=>20, d1=>315, d2=>45,
+	     fill => { solid=>$blueobj, combine => 'diff' }),
+   "fill arc through angle 0");
+ok($img->arc(x=>25, 'y'=>175, r=>20, d1=>315, d2=>225, color=>$redobj),
+   "concave color arc");
+ok($img->arc(x=>75, 'y'=>175, r=>20, d1=>315, d2=>225,
+	     fill => { solid=>$greenobj, combine=>'diff' }),
+   "concave fill arc");
+ok($img->arc(x=>25, y=>225, r=>20, d1=>135, d2=>45, color=>$redobj),
+   "another concave color arc");
+ok($img->arc(x=>75, y=>225, r=>20, d1=>135, d2=>45, 
+	     fille => { solid=>$blueobj, combine=>'diff' }),
+   "another concave fillarc");
+ok($img->arc(x=>25, y=>275, r=>20, d1=>135, d2=>45, color=>$redobj, aa=>1),
+   "concave color arc aa");
+ok($img->arc(x=>75, y=>275, r=>20, d1=>135, d2=>45, 
+	     fille => { solid=>$blueobj, combine=>'diff' }, aa=>1),
+   "concave fill arc aa");
+
 ok($img->write(file=>'testout/t21draw.ppm'),
    "saving output");
 
 malloc_state();
-
-sub ok {
-  my ($ok, $msg) = @_;
-
-  if ($ok) {
-    print "ok ",$testnum++,"\n";
-  }
-  else {
-    print "not ok ",$testnum++," # $msg\n";
-  }
-}
 
 sub color_cmp {
   my ($l, $r) = @_;

@@ -2084,8 +2084,6 @@ sub box {
   return $self;
 }
 
-# Draws an arc - this routine SUCKS and is buggy - it sometimes doesn't work when the arc is a convex polygon
-
 sub arc {
   my $self=shift;
   unless ($self->{IMG}) { $self->{ERRSTR}='empty input image'; return undef; }
@@ -2095,38 +2093,61 @@ sub arc {
 	    'x'=>$self->getwidth()/2,
 	    'y'=>$self->getheight()/2,
 	    'd1'=>0, 'd2'=>361, @_);
-  if ($opts{fill}) {
-    unless (UNIVERSAL::isa($opts{fill}, 'Imager::Fill')) {
-      # assume it's a hash ref
-      require 'Imager/Fill.pm';
-      unless ($opts{fill} = Imager::Fill->new(%{$opts{fill}})) {
-        $self->{ERRSTR} = $Imager::ERRSTR;
-        return;
+  if ($opts{aa}) {
+    if ($opts{fill}) {
+      unless (UNIVERSAL::isa($opts{fill}, 'Imager::Fill')) {
+	# assume it's a hash ref
+	require 'Imager/Fill.pm';
+	unless ($opts{fill} = Imager::Fill->new(%{$opts{fill}})) {
+	  $self->{ERRSTR} = $Imager::ERRSTR;
+	  return;
+	}
       }
-    }
-    i_arc_cfill($self->{IMG},$opts{'x'},$opts{'y'},$opts{'r'},$opts{'d1'},
-                $opts{'d2'}, $opts{fill}{fill});
-  }
-  else {
-    my $color = _color($opts{'color'});
-    unless ($color) { 
-      $self->{ERRSTR} = $Imager::ERRSTR; 
-      return; 
-    }
-    if ($opts{d1} == 0 && $opts{d2} == 361 && $opts{aa}) {
-      i_circle_aa($self->{IMG}, $opts{'x'}, $opts{'y'}, $opts{'r'}, 
-                  $color);
+      i_arc_aa_cfill($self->{IMG},$opts{'x'},$opts{'y'},$opts{'r'},$opts{'d1'},
+		     $opts{'d2'}, $opts{fill}{fill});
     }
     else {
-      if ($opts{'d1'} <= $opts{'d2'}) { 
-        i_arc($self->{IMG},$opts{'x'},$opts{'y'},$opts{'r'},
-              $opts{'d1'}, $opts{'d2'}, $color); 
+      my $color = _color($opts{'color'});
+      unless ($color) { 
+	$self->{ERRSTR} = $Imager::ERRSTR; 
+	return; 
+      }
+      if ($opts{d1} == 0 && $opts{d2} == 361 && $opts{aa}) {
+	i_circle_aa($self->{IMG}, $opts{'x'}, $opts{'y'}, $opts{'r'}, 
+		    $color);
       }
       else {
-        i_arc($self->{IMG},$opts{'x'},$opts{'y'},$opts{'r'},
-              $opts{'d1'}, 361,         $color);
-        i_arc($self->{IMG},$opts{'x'},$opts{'y'},$opts{'r'},
-              0,           $opts{'d2'}, $color); 
+	i_arc_aa($self->{IMG},$opts{'x'},$opts{'y'},$opts{'r'},
+		 $opts{'d1'}, $opts{'d2'}, $color); 
+      }
+    }
+  }
+  else {
+    if ($opts{fill}) {
+      unless (UNIVERSAL::isa($opts{fill}, 'Imager::Fill')) {
+	# assume it's a hash ref
+	require 'Imager/Fill.pm';
+	unless ($opts{fill} = Imager::Fill->new(%{$opts{fill}})) {
+	  $self->{ERRSTR} = $Imager::ERRSTR;
+	  return;
+	}
+      }
+      i_arc_cfill($self->{IMG},$opts{'x'},$opts{'y'},$opts{'r'},$opts{'d1'},
+		  $opts{'d2'}, $opts{fill}{fill});
+    }
+    else {
+      my $color = _color($opts{'color'});
+      unless ($color) { 
+	$self->{ERRSTR} = $Imager::ERRSTR; 
+	return; 
+      }
+      if ($opts{d1} == 0 && $opts{d2} == 361 && $opts{aa}) {
+	i_circle_aa($self->{IMG}, $opts{'x'}, $opts{'y'}, $opts{'r'}, 
+		    $color);
+      }
+      else {
+	i_arc($self->{IMG},$opts{'x'},$opts{'y'},$opts{'r'},
+	      $opts{'d1'}, $opts{'d2'}, $color); 
       }
     }
   }
@@ -3208,17 +3229,23 @@ blur - L<Imager::Filters/guassian>, L<Imager::Filters/conv>
 
 boxes, drawing - L<Imager::Draw/box>
 
+changes between image - L<Imager::Filter/"Image Difference">
+
 color - L<Imager::Color>
 
 color names - L<Imager::Color>, L<Imager::Color::Table>
 
 combine modes - L<Imager::Fill/combine>
 
+compare images - L<Imager::Filter/"Image Difference">
+
 contrast - L<Imager::Filter/contrast>, L<Imager::Filter/autolevels>
 
 convolution - L<Imager::Filter/conv>
 
 cropping - L<Imager::Transformations/crop>
+
+C<diff> images - L<Imager::Filter/"Image Difference">
 
 dpi - L<Imager::ImageTypes/i_xres>
 

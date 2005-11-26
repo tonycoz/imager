@@ -1180,6 +1180,9 @@ Revision history for Perl extension Imager.
 - fixes to verbose mode in Makefile.PL, also added a -v switch so you 
   can enable it via the command-line
   Resolves: http://rt.cpan.org/NoAuth/Bug.html?id=16094
+- arc(..., fill=> ...) wasn't handling concave areas correctly
+- arc(..., color=>...) wasn't properly filling it's area
+- added experimental antialiased support to arc()
 
 =================================================================
 
