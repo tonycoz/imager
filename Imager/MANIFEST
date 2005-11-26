@@ -49,6 +49,7 @@ fontfiles/dodge.ttf
 freetyp2.c	Implements freetype2 font support
 gaussian.c
 gif.c
+hlines.c	Manage sets of horizontal line segments
 image.c
 image.h
 imagei.h
@@ -164,6 +165,7 @@ t/t69rubthru.t
 t/t70newgif.t
 t/t75polyaa.t
 t/t80texttools.t        Test text wrapping
+t/t81hlines.t		Test hlines.c
 t/t90cc.t
 t/t91pod.t		Test POD with Test::Pod
 t/testtools.pl

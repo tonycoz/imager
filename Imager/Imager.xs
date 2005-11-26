@@ -9,10 +9,16 @@ extern "C" {
 
 #endif
 
+#define i_int_hlines_testing() 1
+
 #include "image.h"
 #include "feat.h"
 #include "dynaload.h"
 #include "regmach.h"
+
+#if i_int_hlines_testing()
+#include "imagei.h"
+#endif
 
 typedef io_glue* Imager__IO;
 typedef i_color* Imager__Color;
@@ -821,6 +827,67 @@ typedef i_fill_t* Imager__FillHandle;
     potential naming conflicts */
 #define init_log m_init_log
 
+#if i_int_hlines_testing()
+
+typedef i_int_hlines *Imager__Internal__Hlines;
+
+static i_int_hlines *
+i_int_hlines_new(int start_y, int count_y, int start_x, int count_x) {
+  i_int_hlines *result = mymalloc(sizeof(i_int_hlines));
+  i_int_init_hlines(result, start_y, count_y, start_x, count_x);
+
+  return result;
+}
+
+static i_int_hlines *
+i_int_hlines_new_img(i_img *im) {
+  i_int_hlines *result = mymalloc(sizeof(i_int_hlines));
+  i_int_init_hlines_img(result, im);
+
+  return result;
+}
+
+static void
+i_int_hlines_DESTROY(i_int_hlines *hlines) {
+  i_int_hlines_destroy(hlines);
+  myfree(hlines);
+}
+
+static int seg_compare(const void *vleft, const void *vright) {
+  const i_int_hline_seg *left = vleft;
+  const i_int_hline_seg *right = vright;
+
+  return left->minx - right->minx;
+}
+
+static SV *
+i_int_hlines_dump(i_int_hlines *hlines) {
+  SV *dump = newSVpvf("start_y: %d limit_y: %d start_x: %d limit_x: %d\n",
+	hlines->start_y, hlines->limit_y, hlines->start_x, hlines->limit_x);
+  int y;
+  
+  for (y = hlines->start_y; y < hlines->limit_y; ++y) {
+    i_int_hline_entry *entry = hlines->entries[y-hlines->start_y];
+    if (entry) {
+      int i;
+      /* sort the segments, if any */
+      if (entry->count)
+        qsort(entry->segs, entry->count, sizeof(i_int_hline_seg), seg_compare);
+
+      sv_catpvf(dump, " %d (%d):", y, entry->count);
+      for (i = 0; i < entry->count; ++i) {
+        sv_catpvf(dump, " [%d, %d)", entry->segs[i].minx, 
+                  entry->segs[i].x_limit);
+      }
+      sv_catpv(dump, "\n");
+    }
+  }
+
+  return dump;
+}
+
+#endif
+
 MODULE = Imager		PACKAGE = Imager::Color	PREFIX = ICL_
 
 Imager::Color
@@ -1217,6 +1284,16 @@ i_arc(im,x,y,rad,d1,d2,val)
 	   Imager::Color    val
 
 void
+i_arc_aa(im,x,y,rad,d1,d2,val)
+    Imager::ImgRaw     im
+	    double     x
+	    double     y
+            double     rad
+            double     d1
+            double     d2
+	   Imager::Color    val
+
+void
 i_arc_cfill(im,x,y,rad,d1,d2,fill)
     Imager::ImgRaw     im
 	       int     x
@@ -1226,6 +1303,15 @@ i_arc_cfill(im,x,y,rad,d1,d2,fill)
              float     d2
 	   Imager::FillHandle    fill
 
+void
+i_arc_aa_cfill(im,x,y,rad,d1,d2,fill)
+    Imager::ImgRaw     im
+	    double     x
+	    double     y
+            double     rad
+            double     d1
+            double     d2
+	   Imager::FillHandle	fill
 
 
 void
@@ -4430,3 +4516,39 @@ i_new_fill_image(src, matrix, xoff, yoff, combine)
       OUTPUT:
         RETVAL
 
+MODULE = Imager  PACKAGE = Imager::Internal::Hlines  PREFIX=i_int_hlines_
+
+# this class is only exposed for testing
+
+int
+i_int_hlines_testing()
+
+#if i_int_hlines_testing()
+
+Imager::Internal::Hlines
+i_int_hlines_new(start_y, count_y, start_x, count_x)
+	int start_y
+	int count_y
+	int start_x
+	int count_x
+
+Imager::Internal::Hlines
+i_int_hlines_new_img(im)
+	Imager::ImgRaw im
+
+void
+i_int_hlines_add(hlines, y, minx, width)
+	Imager::Internal::Hlines hlines
+	int y
+	int minx
+	int width
+
+void
+i_int_hlines_DESTROY(hlines)
+	Imager::Internal::Hlines hlines
+
+SV *
+i_int_hlines_dump(hlines)
+	Imager::Internal::Hlines hlines
+
+#endif

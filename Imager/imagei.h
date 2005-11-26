@@ -44,6 +44,9 @@ extern void i_get_combine(int combine, i_fill_combine_f *, i_fill_combinef_f *);
 extern int
 i_int_check_image_file_limits(int width, int height, int channels, int sample_size);
 
+#define im_min(a, b) ((a) < (b) ? (a) : (b))
+#define im_max(a, b) ((a) > (b) ? (a) : (b))
+
 #include "ext.h"
 
 extern UTIL_table_t i_UTIL_table;
@@ -56,5 +59,37 @@ extern UTIL_table_t i_UTIL_table;
 
 /* test if all channels are writable */
 #define I_ALL_CHANNELS_WRITABLE(im) (((im)->ch_mask & 0xF) == 0xf)
+
+typedef struct i_int_hline_seg_tag {
+  int minx, x_limit;
+} i_int_hline_seg;
+
+typedef struct i_int_hline_entry_tag {
+  int count;
+  int alloc;
+  i_int_hline_seg segs[1];
+} i_int_hline_entry;
+
+/* represents a set of horizontal line segments to be filled in later */
+typedef struct i_int_hlines_tag {
+  int start_y, limit_y;
+  int start_x, limit_x;
+  i_int_hline_entry **entries;
+} i_int_hlines;
+
+extern void 
+i_int_init_hlines(
+		  i_int_hlines *hlines, 
+		  int start_y,
+		  int count_y, 
+		  int start_x, 
+		  int width_x
+		  );
+extern void i_int_init_hlines_img(i_int_hlines *hlines, i_img *img);
+extern void i_int_hlines_add(i_int_hlines *hlines, int y, int minx, int width);
+extern void i_int_hlines_destroy(i_int_hlines *hlines);
+
+extern void i_int_hlines_fill_color(i_img *im, i_int_hlines *hlines, i_color *val);
+extern void i_int_hlines_fill_fill(i_img *im, i_int_hlines *hlines, i_fill_t *fill);
 
 #endif
