@@ -676,9 +676,9 @@ scanline_flush_cfill(i_img *im, ss_scanline *ss, int y, void *ctx) {
         tv = saturate(ss->line[x]);
         fillbuf[pos].channel[3] = 
           fillbuf[pos].channel[3] * tv / 255;
+	pos++;
       }
       (state->fill->combine)(line, fillbuf, im->channels, right-left);
-      pos++;
     }
     else {
       for (x = left; x < right; ++x) {
@@ -738,9 +738,9 @@ scanline_flush_cfill_f(i_img *im, ss_scanline *ss, int y, void *ctx) {
         tv = saturate(ss->line[x]);
         fillbuf[pos].channel[3] = 
           fillbuf[pos].channel[3] * tv / 255;
+	pos++;
       }
       (state->fill->combinef)(line, fillbuf, im->channels, right-left);
-      pos++;
     }
     else {
       for (x = left; x < right; ++x) {
