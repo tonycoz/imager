@@ -1189,6 +1189,8 @@ Revision history for Perl extension Imager.
   path (Makefile.PL).  This was a later response to #16094
   Resolves: http://rt.cpan.org/NoAuth/Bug.html?16094
 - add --nolog command-line switch to Makefile.PL to disable logging
+- filled polygons using a complex fill with combine != 0 (none) didn't
+  correctly handle polygons that crossed a given scanline more than once.
 
 =================================================================
 
