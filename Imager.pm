@@ -2141,14 +2141,8 @@ sub arc {
 	$self->{ERRSTR} = $Imager::ERRSTR; 
 	return; 
       }
-      if ($opts{d1} == 0 && $opts{d2} == 361 && $opts{aa}) {
-	i_circle_aa($self->{IMG}, $opts{'x'}, $opts{'y'}, $opts{'r'}, 
-		    $color);
-      }
-      else {
-	i_arc($self->{IMG},$opts{'x'},$opts{'y'},$opts{'r'},
-	      $opts{'d1'}, $opts{'d2'}, $color); 
-      }
+      i_arc($self->{IMG},$opts{'x'},$opts{'y'},$opts{'r'},
+	    $opts{'d1'}, $opts{'d2'}, $color); 
     }
   }
 
