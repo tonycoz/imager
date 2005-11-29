@@ -7,7 +7,7 @@
 # Change 1..1 below to 1..last_test_to_print .
 # (It may become useful if the test is moved to ./t subdirectory.)
 use strict;
-use Test::More tests => 38;
+use Test::More tests => 43;
 my $loaded;
 
 BEGIN { use_ok(Imager=>':all'); }
@@ -21,7 +21,7 @@ my $blueobj = NC(0, 0, 255);
 my $blue = { hue=>240, saturation=>1, value=>1 };
 my $white = '#FFFFFF';
 
-my $img = Imager->new(xsize=>100, ysize=>300);
+my $img = Imager->new(xsize=>100, ysize=>500);
 
 ok($img->box(color=>$blueobj, xmin=>10, ymin=>10, xmax=>48, ymax=>18),
    "box with color obj");
@@ -102,19 +102,39 @@ ok($img->arc(x=>75, 'y'=>125, r=>20, d1=>315, d2=>45,
    "fill arc through angle 0");
 ok($img->arc(x=>25, 'y'=>175, r=>20, d1=>315, d2=>225, color=>$redobj),
    "concave color arc");
+angle_marker($img, 25, 175, 23, 315, 225);
 ok($img->arc(x=>75, 'y'=>175, r=>20, d1=>315, d2=>225,
 	     fill => { solid=>$greenobj, combine=>'diff' }),
    "concave fill arc");
+angle_marker($img, 75, 175, 23, 315, 225);
 ok($img->arc(x=>25, y=>225, r=>20, d1=>135, d2=>45, color=>$redobj),
    "another concave color arc");
+angle_marker($img, 25, 225, 23, 45, 135);
 ok($img->arc(x=>75, y=>225, r=>20, d1=>135, d2=>45, 
-	     fille => { solid=>$blueobj, combine=>'diff' }),
+	     fill => { solid=>$blueobj, combine=>'diff' }),
    "another concave fillarc");
+angle_marker($img, 75, 225, 23, 45, 135);
 ok($img->arc(x=>25, y=>275, r=>20, d1=>135, d2=>45, color=>$redobj, aa=>1),
    "concave color arc aa");
 ok($img->arc(x=>75, y=>275, r=>20, d1=>135, d2=>45, 
-	     fille => { solid=>$blueobj, combine=>'diff' }, aa=>1),
+	     fill => { solid=>$blueobj, combine=>'diff' }, aa=>1),
    "concave fill arc aa");
+
+ok($img->circle(x=>25, y=>325, r=>20, color=>$redobj),
+   "color circle no aa");
+ok($img->circle(x=>75, y=>325, r=>20, color=>$redobj, aa=>1),
+   "color circle aa");
+ok($img->circle(x=>25, 'y'=>375, r=>20, 
+		fill => { hatch=>'stipple', fg=>$blueobj, bg=>$redobj }),
+   "fill circle no aa");
+ok($img->circle(x=>75, 'y'=>375, r=>20, aa=>1,
+		fill => { hatch=>'stipple', fg=>$blueobj, bg=>$redobj }),
+   "fill circle aa");
+
+ok($img->arc(x=>50, y=>450, r=>45, d1=>135, d2=>45, 
+	     fill => { solid=>$blueobj, combine=>'diff' }),
+   "another concave fillarc");
+angle_marker($img, 50, 450, 47, 45, 135);
 
 ok($img->write(file=>'testout/t21draw.ppm'),
    "saving output");
@@ -129,4 +149,19 @@ sub color_cmp {
   return $l[0] <=> $r[0]
     || $l[1] <=> $r[1]
       || $l[2] <=> $r[2];
+}
+
+use constant PI => 4 * atan2(1,1);
+
+sub angle_marker {
+  my ($img, $x, $y, $radius, @angles) = @_;
+
+  for my $angle (@angles) {
+    my $x1 = int($x + $radius * cos($angle * PI / 180) + 0.5);
+    my $y1 = int($y + $radius * sin($angle * PI / 180) + 0.5);
+    my $x2 = int($x + (5+$radius) * cos($angle * PI / 180) + 0.5);
+    my $y2 = int($y + (5+$radius) * sin($angle * PI / 180) + 0.5);
+    
+    $img->line(x1=>$x1, y1=>$y1, x2=>$x2, y2=>$y2, color=>'#FFF');
+  }
 }
