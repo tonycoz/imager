@@ -1191,6 +1191,8 @@ Revision history for Perl extension Imager.
 - add --nolog command-line switch to Makefile.PL to disable logging
 - filled polygons using a complex fill with combine != 0 (none) didn't
   correctly handle polygons that crossed a given scanline more than once.
+- the straight edges of filled arcs weren't being drawn correctly, 
+  causing minor artifacts at the inner and external corners
 
 =================================================================
 

@@ -112,14 +112,14 @@ i_arcdraw(int x1, int y1, int x2, int y2, i_mmarray *ar) {
   double dsec;
   int temp;
   alpha=(double)(y2-y1)/(double)(x2-x1);
-  if (fabs(alpha)<1) 
+  if (fabs(alpha) <= 1) 
     {
       if (x2<x1) { temp=x1; x1=x2; x2=temp; temp=y1; y1=y2; y2=temp; }
       dsec=y1;
-      while(x1<x2)
+      while(x1<=x2)
 	{
-	  dsec+=alpha;
 	  i_mmarray_add(ar,x1,(int)(dsec+0.5));
+	  dsec+=alpha;
 	  x1++;
 	}
     }
@@ -128,10 +128,10 @@ i_arcdraw(int x1, int y1, int x2, int y2, i_mmarray *ar) {
       alpha=1/alpha;
       if (y2<y1) { temp=x1; x1=x2; x2=temp; temp=y1; y1=y2; y2=temp; }
       dsec=x1;
-      while(y1<y2)
+      while(y1<=y2)
 	{
-	  dsec+=alpha;
 	  i_mmarray_add(ar,(int)(dsec+0.5),y1);
+	  dsec+=alpha;
 	  y1++;
 	}
     }
