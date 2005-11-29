@@ -36,7 +36,8 @@ GetOptions("help" => \$help,
            "incpath=s", \@incpaths,
            "libpath=s" => \@libpaths,
            "noprobe" => \$noprobe,
-	   "verbose|v" => \$VERBOSE);
+           "verbose|v" => \$VERBOSE,
+           "nolog" => \$NOLOG);
 
 if ($VERBOSE) { 
   print "Verbose mode\n"; 
@@ -46,6 +47,16 @@ if ($VERBOSE) {
 
 if ($help) {
   usage();
+}
+
+if ($NOLOG)   { print "Logging not compiled into module\n"; }
+else { 
+  push @defines, [ IMAGER_LOG => 1, "Logging system" ];
+}
+
+if ($DEBUG_MALLOC) {
+  push @defines, [ IMAGER_DEBUG_MALLOC => 1, "Use Imager's DEBUG malloc()" ];
+  print "Malloc debugging enabled\n";
 }
 
 if (@enable && @disable) {
@@ -379,7 +390,7 @@ sub init {
   }
   if ($^O eq 'cygwin') {
     push(@libs, '/usr/lib/w32api') if -d '/usr/lib/w32api';
-    push(@incs, '/usr/include/w32api') if -d '/usr/lib/w32api';
+    push(@incs, '/usr/include/w32api') if -d '/usr/include/w32api';
   }
 
   my $lext=$Config{'so'};   # Get extensions of libraries
@@ -543,16 +554,6 @@ sub getenv {
 				IM_LFLAGS
 				IM_DFLAGS);
 
-  if ($NOLOG)   { print "Logging not compiled into module\n"; }
-  else { 
-    push @defines, [ IMAGER_LOG => 1, "Logging system" ];
-  }
-
-  if ($DEBUG_MALLOC) {
-    push @defines, [ IMAGER_DEBUG_MALLOC => 1, "Use Imager's DEBUG malloc()" ];
-    print "Malloc debugging enabled\n";
-  }
-
 }
 
 sub make_imconfig {
@@ -658,11 +659,22 @@ sub is_exe {
 
 sub usage {
   print STDERR <<EOS;
-Usage: $0 [-v] [--enable feature1,feature2,...] [--incpath ...] [--libpath ...]
-       $0 [-v] [--disable feature1,feature2,...] [--incpath ...] [--libpath ...]
+Usage: $0 [--enable feature1,feature2,...] [other options]
+       $0 [--disable feature1,feature2,...]  [other options]
        $0 --help
 Possible feature names are:
   png gif ungif jpeg tiff T1-fonts TT-fonts freetype2
+Other options:
+  --verbose | -v
+    Verbose library probing (or set IM_VERBOSE in the environment)
+  --nolog
+    Disable logging (or set IM_NOLOG in the environment)
+  --incpath dir
+    Add to the include search path
+  --libpath dir
+    Add to the library search path
+  --noprobe
+    Don't use pkg-config or freetype2-config to probe for freetype2 and libpng
 EOS
   exit 1;
 

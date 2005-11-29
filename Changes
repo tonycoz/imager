@@ -1185,6 +1185,10 @@ Revision history for Perl extension Imager.
 - added experimental antialiased support to arc()
 - the order of the returned values for Imager::Font's align() method
   was incorrect.
+- check the correct directory when adding the cygwin Win32 API include
+  path (Makefile.PL).  This was a later response to #16094
+  Resolves: http://rt.cpan.org/NoAuth/Bug.html?16094
+- add --nolog command-line switch to Makefile.PL to disable logging
 
 =================================================================
 
