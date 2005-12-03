@@ -6,3 +6,4 @@ pam - man pam (portable arbitrary map)
 png - http://www.w3.org/TR/PNG/
 gif - zless /usr/share/doc/libungif4g/gif89.txt.gz
 bmp - fileformatdocs/bmp.txt (and MSDN)
+ico - http://msdn.microsoft.com/library/default.asp?url=/library/en-us/dnwui/html/msdn_icons.asp
