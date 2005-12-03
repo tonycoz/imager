@@ -197,8 +197,11 @@ sub align {
   elsif ($halign eq 'center') {
     $x -= $bbox->start_offset + $bbox->total_width / 2;
   }
-  elsif ($halign eq 'end' || $halign eq 'right') {
-    $x -= $bbox->start_offset + $bbox->total_width - 1;
+  elsif ($halign eq 'end') {
+    $x -= $bbox->advance_width;
+  }
+  elsif ($halign eq 'right') {
+    $x -= $bbox->advance_width - $bbox->right_bearing;
   }
   $x = int($x);
   $y = int($y);
@@ -207,14 +210,6 @@ sub align {
     delete @input{qw/x y/};
     $self->draw(%input, 'x' => $x, 'y' => $y, align=>1)
       or return;
-#      for my $i (1 .. length $text) {
-#        my $work = substr($text, 0, $i);
-#        my $bbox = $self->bounding_box(string=>$work, size=>$size, utf8=>$utf8);
-#        my $nx = $x + $bbox->end_offset;
-#        $input{image}->setpixel(x=>[ ($nx) x 5 ],
-#                                'y'=>[ $y-2, $y-1, $y, $y+1, $y+2 ],
-#                                color=>'FF0000');
-#      }
   }
 
   return ($x+$bbox->start_offset, $y-$bbox->ascent, 
@@ -649,9 +644,7 @@ The point is at the right end of the text.
 
 =item end
 
-The point is at the right end of the text.  This will change to the
-end point of the text (once the proper bounding box interfaces are
-available).
+The point is at the end point of the text.
 
 =back
 

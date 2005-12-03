@@ -1193,6 +1193,8 @@ Revision history for Perl extension Imager.
   correctly handle polygons that crossed a given scanline more than once.
 - the straight edges of filled arcs weren't being drawn correctly, 
   causing minor artifacts at the inner and external corners
+- implemented valign=>'end' for Imager::Font->align
+- added $img->align_string() as a way to call Imager::Font->align
 
 =================================================================
 

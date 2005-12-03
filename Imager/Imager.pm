@@ -2776,6 +2776,32 @@ sub string {
   return $self;
 }
 
+sub align_string {
+  my $self = shift;
+  unless ($self->{IMG}) { $self->{ERRSTR}='empty input image'; return undef; }
+
+  my %input=('x'=>0, 'y'=>0, @_);
+  $input{string}||=$input{text};
+
+  unless(exists $input{string}) {
+    $self->{ERRSTR}="missing required parameter 'string'";
+    return;
+  }
+
+  unless($input{font}) {
+    $self->{ERRSTR}="missing required parameter 'font'";
+    return;
+  }
+
+  my @result;
+  unless (@result = $input{font}->align(image=>$self, %input)) {
+    $self->{ERRSTR} = $self->_error_as_msg();
+    return;
+  }
+
+  return wantarray ? @result : $result[0];
+}
+
 my @file_limit_names = qw/width height bytes/;
 
 sub set_file_limits {
@@ -3092,6 +3118,8 @@ addtag() -  L<Imager::ImageTypes/addtag> - add image tags
 
 arc() - L<Imager::Draw/arc>
 
+align_string() - L<Imager::Draw/align_string>
+
 bits() - L<Imager::ImageTypes/bits> - number of bits per sample for the
 image
 
@@ -3134,7 +3162,7 @@ get_file_limits() - L<Imager::Files/"Limiting the sizes of images you read">
 
 getheight() - L<Imager::ImageTypes/getwidth>
 
-getpixel() - L<Imager::Draw/setpixel and getpixel>
+getpixel() - L<Imager::Draw/getpixel>
 
 getsamples() - L<Imager::Draw/getsamples>
 
@@ -3186,11 +3214,11 @@ scaleY() - L<Imager::Transformations/scaleY>
 setcolors() - L<Imager::ImageTypes/setcolors> - set palette colors in
 a paletted image
 
-setpixel() - L<Imager::Draw/setpixel and getpixel>
+setpixel() - L<Imager::Draw/setpixel>
 
 set_file_limits() - L<Imager::Files/"Limiting the sizes of images you read">
 
-string() - L<Imager::Font/string> - draw text on an image
+string() - L<Imager::Draw/string> - draw text on an image
 
 tags() -  L<Imager::ImageTypes/tags> - fetch image tags
 
@@ -3336,7 +3364,7 @@ size, text - L<Imager::Font/bounding_box>
 
 tags, image metadata - L<Imager::ImageTypes/"Tags">
 
-text, drawing - L<Imager::Font/string>, L<Imager::Font/align>,
+text, drawing - L<Imager::Draw/string>, L<Imager::Draw/align_string>,
 L<Imager::Font::Wrap>
 
 text, wrapping text in an area - L<Imager::Font::Wrap>
@@ -3349,7 +3377,7 @@ unsharp mask - L<Imager::Filter/unsharpmask>
 
 watermark - L<Imager::Filter/watermark>
 
-writing an image - L<Imager::Files>
+writing an image to a file - L<Imager::Files>
 
 =head1 SUPPORT
 

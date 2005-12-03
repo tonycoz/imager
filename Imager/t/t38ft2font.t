@@ -407,8 +407,8 @@ sub align_test {
   my @pos = $f->align(halign=>$h, valign=>$v, 'x'=>$x, 'y'=>$y,
                       image=>$img, size=>15, color=>'FFFFFF',
                       string=>"x$h ${v}y", channel=>1, aa=>1);
-  @pos = $f->align(halign=>$h, valign=>$v, 'x'=>$x, 'y'=>$y,
-                      image=>$img, size=>15, color=>'FF99FF',
+  @pos = $img->align_string(halign=>$h, valign=>$v, 'x'=>$x, 'y'=>$y,
+                      font=>$f, size=>15, color=>'FF99FF',
                       string=>"x$h ${v}y", aa=>1);
   if (ok(@pos == 4, "$h $v aligned output")) {
     # checking corners
@@ -438,7 +438,7 @@ sub align_test {
     cross($img, $pos[2], $cy, '0000FF');
   }
   else {
-    SKIP: { skip("couldn't draw text", 8) };
+    SKIP: { skip("couldn't draw text", 7) };
   }
 
 }
