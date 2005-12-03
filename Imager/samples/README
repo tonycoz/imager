@@ -74,3 +74,16 @@ slant_text.pl
 tk-photo.pl
 
   Simple example of making a Tk::Photo object using Imager data.
+
+align-string.pl
+
+  Simple demonstration of the align_string() method.  Usage:
+
+   perl align-string.pl fontfile size outputfile text...
+
+  eg.
+
+   perl align-string.pl fontfiles/ImUgly.ttf 60 test.ppm .A.
+
+  This demonstrates how the various values of halign and valign
+  behave.
