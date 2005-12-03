@@ -1195,6 +1195,7 @@ Revision history for Perl extension Imager.
   causing minor artifacts at the inner and external corners
 - implemented valign=>'end' for Imager::Font->align
 - added $img->align_string() as a way to call Imager::Font->align
+- added samples/align-string.pl
 
 =================================================================
 
