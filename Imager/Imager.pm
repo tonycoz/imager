@@ -2758,7 +2758,7 @@ sub string {
   my %input=('x'=>0, 'y'=>0, @_);
   $input{string}||=$input{text};
 
-  unless(exists $input{string}) {
+  unless(defined $input{string}) {
     $self->{ERRSTR}="missing required parameter 'string'";
     return;
   }
@@ -2769,7 +2769,6 @@ sub string {
   }
 
   unless ($input{font}->draw(image=>$self, %input)) {
-    $self->{ERRSTR} = $self->_error_as_msg();
     return;
   }
 
@@ -2778,24 +2777,34 @@ sub string {
 
 sub align_string {
   my $self = shift;
-  unless ($self->{IMG}) { $self->{ERRSTR}='empty input image'; return undef; }
+
+  my $img;
+  if (ref $self) {
+    unless ($self->{IMG}) { 
+      $self->{ERRSTR}='empty input image'; 
+      return;
+    }
+  }
+  else {
+    $img = undef;
+  }
 
   my %input=('x'=>0, 'y'=>0, @_);
   $input{string}||=$input{text};
 
   unless(exists $input{string}) {
-    $self->{ERRSTR}="missing required parameter 'string'";
+    $self->_set_error("missing required parameter 'string'");
     return;
   }
 
   unless($input{font}) {
-    $self->{ERRSTR}="missing required parameter 'font'";
+    $self->_set_error("missing required parameter 'font'");
     return;
   }
 
   my @result;
-  unless (@result = $input{font}->align(image=>$self, %input)) {
-    $self->{ERRSTR} = $self->_error_as_msg();
+  unless (@result = $input{font}->align(image=>$img, %input)) {
+    $self->{ERRSTR} = $self->errstr if $img;
     return;
   }
 
@@ -3140,7 +3149,7 @@ deltag() -  L<Imager::ImageTypes/deltag> - delete image tags
 
 difference() - L<Imager::Filters/"Image Difference">
 
-errstr() - L<Imager/"Basic Overview">
+errstr() - L<"Basic Overview">
 
 filter() - L<Imager::Filters>
 
@@ -3277,7 +3286,7 @@ drawing lines - L<Imager::Draw/line>
 
 drawing text - L<Imager::Font/string>, L<Imager::Font/align>
 
-error message - L<Imager/"Basic Overview">
+error message - L<"Basic Overview">
 
 files, font - L<Imager::Font>
 
@@ -3390,8 +3399,11 @@ To subscribe send a message with C<subscribe> in the body to:
 
 or use the form at:
 
-   http://www.molar.is/en/lists/imager-devel/
-   (annonymous is temporarily off due to spam)
+=over
+
+L<http://www.molar.is/en/lists/imager-devel/>
+
+=back
 
 where you can also find the mailing list archive.
 
@@ -3401,7 +3413,11 @@ occupied or asleep, so please be patient.
 
 You can report bugs by pointing your browser at:
 
-  https://rt.cpan.org/NoAuth/ReportBug.html?Queue=Imager
+=over
+
+L<https://rt.cpan.org/NoAuth/ReportBug.html?Queue=Imager>
+
+=back
 
 Please remember to include the versions of Imager, perl, supporting
 libraries, and any relevant code.  If you have specific images that
@@ -3418,16 +3434,18 @@ others. See the README for a complete list.
 
 =head1 SEE ALSO
 
-perl(1), Imager::ImageTypes(3), Imager::Files(3), Imager::Draw(3),
-Imager::Color(3), Imager::Fill(3), Imager::Font(3),
-Imager::Transformations(3), Imager::Engines(3), Imager::Filters(3),
-Imager::Expr(3), Imager::Matrix2d(3), Imager::Fountain(3)
+L<perl>(1), L<Imager::ImageTypes>(3), L<Imager::Files>(3),
+L<Imager::Draw>(3), L<Imager::Color>(3), L<Imager::Fill>(3),
+L<Imager::Font>(3), L<Imager::Transformations>(3),
+L<Imager::Engines>(3), L<Imager::Filters>(3), L<Imager::Expr>(3),
+L<Imager::Matrix2d>(3), L<Imager::Fountain>(3)
 
-Affix::Infix2Postfix(3), Parse::RecDescent(3)
-http://imager.perl.org/
+L<http://imager.perl.org/>
+
+L<Affix::Infix2Postfix>(3), L<Parse::RecDescent>(3)
 
 Other perl imaging modules include:
 
-GD(3), Image::Magick(3), Graphics::Magick(3).
+L<GD>(3), L<Image::Magick>(3), L<Graphics::Magick>(3).
 
 =cut
