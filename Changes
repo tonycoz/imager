@@ -1199,6 +1199,7 @@ Revision history for Perl extension Imager.
 - added $img->align_string() as a way to call Imager::Font->align
 - added samples/align-string.pl
 - improved missing argument handling a little for the string() method
+- linkify Imager.pm a bit more
 
 =================================================================
 
