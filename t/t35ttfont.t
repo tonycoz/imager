@@ -1,7 +1,7 @@
 #!perl -w
 use strict;
 use lib 't';
-use Test::More tests => 65;
+use Test::More tests => 71;
 
 BEGIN { use_ok(Imager => ':all') }
 require "t/testtools.pl";
@@ -228,6 +228,23 @@ SKIP:
     ok(!$font, "font creation should have failed for invalid file");
     cmp_ok(Imager->errstr, 'eq', 'Invalid file format.',
 	  "test error message");
+  }
+
+  { # check errstr set correctly
+    my $font = Imager::Font->new(file=>$fontname, type=>'tt',
+				size => undef);
+    ok($font, "made size error test font");
+    my $im = Imager->new(xsize=>100, ysize=>100);
+    ok($im, "made size error test image");
+    ok(!$im->string(font=>$font, x=>10, 'y'=>50, string=>"Hello"),
+       "drawing should fail with no size");
+    is($im->errstr, "No font size provided", "check error message");
+
+    # try no string
+    ok(!$im->string(font=>$font, x=>10, 'y'=>50, size=>15),
+       "drawing should fail with no string");
+    is($im->errstr, "missing required parameter 'string'",
+       "check error message");
   }
 
   ok(1, "end of code");
