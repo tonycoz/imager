@@ -2,7 +2,7 @@
 use strict;
 use Imager qw(:handy);
 use lib 't';
-use Test::More tests => 62;
+use Test::More tests => 64;
 Imager::init_log("testout/t61filters.log", 1);
 # meant for testing the filters themselves
 my $imbase = Imager->new;
@@ -81,6 +81,12 @@ test($imbase, { type=>'unsharpmask', stddev=>2.0 },
      'testout/t61_unsharp.ppm');
 test($imbase, {type=>'conv', coef=>[ -1, 3, -1, ], },
      'testout/t61_conv_sharp.ppm');
+
+test($imbase, { type=>'nearest_color', dist=>1,
+                   xo=>[ 10,  10, 120 ],
+                   yo=>[ 10, 140,  60 ],
+                   colors=> [ NC('#FF0000'), NC('#FFFF00'), NC('#00FFFF') ]},
+     'testout/t61_nearest.ppm');
 
 # Regression test: the checking of the segment type was incorrect
 # (the comparison was checking the wrong variable against the wrong value)

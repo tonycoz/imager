@@ -1205,6 +1205,7 @@ Revision history for Perl extension Imager.
   - document parameters
   - more examples
   - add AUTHOR, REVISION.
+- add smoke test for nearest_color filter
 
 =================================================================
 
