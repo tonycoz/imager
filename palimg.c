@@ -84,7 +84,7 @@ Currently 0 < maxpal <= 256
 */
 i_img *i_img_pal_new_low(i_img *im, int x, int y, int channels, int maxpal) {
   i_img_pal_ext *palext;
-  int bytes;
+  int bytes, line_bytes;
 
   i_clear_error();
   if (maxpal < 1 || maxpal > 256) {
@@ -101,7 +101,16 @@ i_img *i_img_pal_new_low(i_img *im, int x, int y, int channels, int maxpal) {
   }
   bytes = sizeof(i_palidx) * x * y;
   if (bytes / y / sizeof(i_palidx) != x) {
-    i_push_errorf(0, "integer overflow calculating image allocation");
+    i_push_error(0, "integer overflow calculating image allocation");
+    return NULL;
+  }
+
+  /* basic assumption: we can always allocate a buffer representing a
+     line from the image, otherwise we're going to have trouble
+     working with the image */
+  line_bytes = sizeof(i_color) * x;
+  if (line_bytes / x != sizeof(i_color)) {
+    i_push_error(0, "integer overflow calculating scanline allocation");
     return NULL;
   }
 

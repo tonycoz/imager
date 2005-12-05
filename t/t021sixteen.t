@@ -1,7 +1,7 @@
 #!perl -w
 use strict;
 use lib 't';
-use Test::More tests => 83;
+use Test::More tests => 85;
 
 BEGIN { use_ok(Imager=>qw(:all :handy)) }
 
@@ -132,6 +132,17 @@ cmp_ok(Imager->errstr, '=~', qr/channels must be between 1 and 4/,
 
     cmp_ok(Imager->errstr, '=~', qr/integer overflow/,
            "check the error message");
+
+    # check we can allocate a scanline, unlike double images the scanline
+    # in the image itself is smaller than a line of i_fcolor
+    # divide by 2 to get to int range, by 2 for 2 bytes/pixel, by 3 to 
+    # fit the image allocation in, but for the floats to overflow
+    my $dim4 = $uint_range / 2 / 2 / 3;
+    my $im_o = Imager->new(xsize=>$dim4, ysize=>1, channels=>1, bits=>16);
+    is($im_o, undef, "integer overflow check - scanline");
+    cmp_ok(Imager->errstr, '=~',
+           qr/integer overflow calculating scanline allocation/,
+           "check error message");
   }
 }
 

@@ -12,9 +12,15 @@
 struct i_bitmap*
 btm_new(int xsize,int ysize) {
   int i;
+  int bytes;
   struct i_bitmap *btm;
-  btm=(struct i_bitmap*)mymalloc(sizeof(struct i_bitmap));
-  btm->data=(char*)mymalloc((xsize*ysize+8)/8);
+  btm=(struct i_bitmap*)mymalloc(sizeof(struct i_bitmap)); /* checked 4jul05 tonyc */
+  bytes = (xsize*ysize+8)/8;
+  if (bytes * 8 / ysize < xsize-1) { /* this is kind of rough */
+    fprintf(stderr, "Integer overflow allocating bitmap %d x %d", xsize, ysize);
+    exit(3);
+  }
+  btm->data=(char*)mymalloc(bytes); /* checked 4jul05 tonyc */
   btm->xsize=xsize;
   btm->ysize=ysize;
   for(i=0;i<(xsize*ysize+8)/8;i++) btm->data[i]=0; /* Is this always needed */
@@ -56,11 +62,11 @@ btm_set(struct i_bitmap *btm,int x,int y) {
 struct llink *
 llink_new(struct llink* p,int size) {
   struct llink *l;
-  l       = mymalloc(sizeof(struct llink));
+  l       = mymalloc(sizeof(struct llink)); /* checked 4jul05 tonyc */
   l->n    = NULL;
   l->p    = p;
   l->fill = 0;
-  l->data = mymalloc(size);
+  l->data = mymalloc(size); /* checked 4jul05 tonyc - depends on caller to llist_push */
   return l;
 }
 
@@ -97,7 +103,7 @@ llist_llink_push(struct llist *lst, struct llink *lnk,void *data) {
 struct llist *
 llist_new(int multip, int ssize) {
   struct llist *l;
-  l         = mymalloc(sizeof(struct llist));
+  l         = mymalloc(sizeof(struct llist)); /* checked 4jul05 tonyc */
   l->h      = NULL;
   l->t      = NULL;
   l->multip = multip;
@@ -198,7 +204,7 @@ octt_new() {
   int i;
   struct octt *t;
   
-  t=(struct octt*)mymalloc(sizeof(struct octt));
+  t=(struct octt*)mymalloc(sizeof(struct octt)); /* checked 4jul05 tonyc */
   for(i=0;i<8;i++) t->t[i]=NULL;
   t->cnt=0;
   return t;

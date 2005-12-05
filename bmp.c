@@ -413,6 +413,7 @@ write_1bit_data(io_glue *ig, i_img *im) {
   unsigned char *out;
   int line_size = (im->xsize+7) / 8;
   int x, y;
+  int unpacked_size;
 
   /* round up to nearest multiple of four */
   line_size = (line_size + 3) / 4 * 4;
@@ -420,10 +421,18 @@ write_1bit_data(io_glue *ig, i_img *im) {
   if (!write_bmphead(ig, im, 1, line_size * im->ysize))
     return 0;
 
-  line = mymalloc(im->xsize + 8);
+  /* this shouldn't be an issue, but let's be careful */
+  unpacked_size = im->xsize + 8;
+  if (unpacked_size < im->xsize) {
+    i_push_error(0, "integer overflow during memory allocation");
+    return 0;
+  }
+  line = mymalloc(unpacked_size); /* checked 29jun05 tonyc */
   memset(line + im->xsize, 0, 8);
-  
-  packed = mymalloc(line_size);
+
+  /* size allocated here is always much smaller than xsize, hence
+     can't overflow int */
+  packed = mymalloc(line_size); /* checked 29jun05 tonyc */
   memset(packed, 0, line_size);
   
   for (y = im->ysize-1; y >= 0; --y) {
@@ -474,6 +483,7 @@ write_4bit_data(io_glue *ig, i_img *im) {
   unsigned char *out;
   int line_size = (im->xsize+1) / 2;
   int x, y;
+  int unpacked_size;
 
   /* round up to nearest multiple of four */
   line_size = (line_size + 3) / 4 * 4;
@@ -481,10 +491,18 @@ write_4bit_data(io_glue *ig, i_img *im) {
   if (!write_bmphead(ig, im, 4, line_size * im->ysize))
     return 0;
 
-  line = mymalloc(im->xsize + 2);
+  /* this shouldn't be an issue, but let's be careful */
+  unpacked_size = im->xsize + 2;
+  if (unpacked_size < im->xsize) {
+    i_push_error(0, "integer overflow during memory allocation");
+    return 0;
+  }
+  line = mymalloc(unpacked_size); /* checked 29jun05 tonyc */
   memset(line + im->xsize, 0, 2);
   
-  packed = mymalloc(line_size);
+  /* size allocated here is always much smaller than xsize, hence
+     can't overflow int */
+  packed = mymalloc(line_size); /* checked 29jun05 tonyc */
   memset(packed, 0, line_size);
   
   for (y = im->ysize-1; y >= 0; --y) {
@@ -522,6 +540,7 @@ write_8bit_data(io_glue *ig, i_img *im) {
   i_palidx *line;
   int line_size = im->xsize;
   int y;
+  int unpacked_size;
 
   /* round up to nearest multiple of four */
   line_size = (line_size + 3) / 4 * 4;
@@ -529,7 +548,13 @@ write_8bit_data(io_glue *ig, i_img *im) {
   if (!write_bmphead(ig, im, 8, line_size * im->ysize))
     return 0;
 
-  line = mymalloc(im->xsize + 4);
+  /* this shouldn't be an issue, but let's be careful */
+  unpacked_size = im->xsize + 4;
+  if (unpacked_size < im->xsize) {
+    i_push_error(0, "integer overflow during memory allocation");
+    return 0;
+  }
+  line = mymalloc(unpacked_size); /* checked 29jun05 tonyc */
   memset(line + im->xsize, 0, 4);
   
   for (y = im->ysize-1; y >= 0; --y) {
@@ -565,13 +590,20 @@ write_24bit_data(io_glue *ig, i_img *im) {
   unsigned char *samples;
   int y;
   int line_size = 3 * im->xsize;
+
+  /* just in case we implement a direct format with 2bytes/pixel
+     (unlikely though) */
+  if (line_size / 3 != im->xsize) {
+    i_push_error(0, "integer overflow during memory allocation");
+    return 0;
+  }
   
   line_size = (line_size + 3) / 4 * 4;
   
   if (!write_bmphead(ig, im, 24, line_size * im->ysize))
     return 0;
   chans = im->channels >= 3 ? bgr_chans : grey_chans;
-  samples = mymalloc(line_size);
+  samples = mymalloc(line_size); /* checked 29jun05 tonyc */
   memset(samples, 0, line_size);
   for (y = im->ysize-1; y >= 0; --y) {
     i_gsamp(im, 0, im->xsize, y, samples, chans, 3);
@@ -646,6 +678,15 @@ read_1bit_bmp(io_glue *ig, int xsize, int ysize, int clr_used,
     return NULL;
   }
 
+  if (xsize + 8 < xsize) { /* if there was overflow */
+    /* we check with 8 because we allocate that much for the decoded 
+       line buffer */
+    i_push_error(0, "integer overflow during memory allocation");
+    return NULL;
+  }
+
+  /* if xsize+7 is ok then (xsize+7)/8 will be and the minor
+     adjustments below won't make it overflow */
   line_size = (line_size+3) / 4 * 4;
 
   if (ysize > 0) {
@@ -697,8 +738,8 @@ read_1bit_bmp(io_glue *ig, int xsize, int ysize, int clr_used,
   
   i_tags_add(&im->tags, "bmp_compression_name", 0, "BI_RGB", -1, 0);
 
-  packed = mymalloc(line_size);
-  line = mymalloc(xsize+8);
+  packed = mymalloc(line_size); /* checked 29jun05 tonyc */
+  line = mymalloc(xsize+8); /* checked 29jun05 tonyc */
   while (y != lasty) {
     if (ig->readcb(ig, packed, line_size) != line_size) {
       myfree(packed);
@@ -751,6 +792,8 @@ read_4bit_bmp(io_glue *ig, int xsize, int ysize, int clr_used,
   int size, i;
   long base_offset;
 
+  /* line_size is going to be smaller than xsize in most cases (and
+     when it's not, xsize is itself small), and hence not overflow */
   line_size = (line_size+3) / 4 * 4;
 
   if (ysize > 0) {
@@ -802,10 +845,11 @@ read_4bit_bmp(io_glue *ig, int xsize, int ysize, int clr_used,
   }
   
   if (line_size < 260)
-    packed = mymalloc(260);
+    packed = mymalloc(260); /* checked 29jun05 tonyc */
   else
-    packed = mymalloc(line_size);
-  line = mymalloc(xsize+1);
+    packed = mymalloc(line_size); /* checked 29jun05 tonyc */
+  /* xsize won't approach MAXINT */
+  line = mymalloc(xsize+1); /* checked 29jun05 tonyc */
   if (compression == BI_RGB) {
     i_tags_add(&im->tags, "bmp_compression_name", 0, "BI_RGB", -1, 0);
     while (y != lasty) {
@@ -930,6 +974,10 @@ read_8bit_bmp(io_glue *ig, int xsize, int ysize, int clr_used,
   long base_offset;
 
   line_size = (line_size+3) / 4 * 4;
+  if (line_size < xsize) { /* if it overflowed (unlikely, but check) */
+    i_push_error(0, "integer overflow during memory allocation");
+    return NULL;
+  }
 
   if (ysize > 0) {
     y = ysize-1;
@@ -978,7 +1026,7 @@ read_8bit_bmp(io_glue *ig, int xsize, int ysize, int clr_used,
     }
   }
   
-  line = mymalloc(line_size);
+  line = mymalloc(line_size); /* checked 29jun05 tonyc */
   if (compression == BI_RGB) {
     i_tags_add(&im->tags, "bmp_compression_name", 0, "BI_RGB", -1, 0);
     while (y != lasty) {
@@ -1191,7 +1239,7 @@ read_direct_bmp(io_glue *ig, int xsize, int ysize, int bit_count,
     i_push_error(0, "integer overflow calculating buffer size");
     return NULL;
   }
-  line = mymalloc(bytes);
+  line = mymalloc(bytes); /* checked 29jun05 tonyc */
   while (y != lasty) {
     p = line;
     for (x = 0; x < xsize; ++x) {

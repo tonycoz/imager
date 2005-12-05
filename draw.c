@@ -8,9 +8,16 @@
 void
 i_mmarray_cr(i_mmarray *ar,int l) {
   int i;
+  int alloc_size;
 
   ar->lines=l;
-  ar->data=mymalloc(sizeof(minmax)*l);
+  alloc_size = sizeof(minmax) * l;
+  /* check for overflow */
+  if (alloc_size / l != sizeof(minmax)) {
+    fprintf(stderr, "overflow calculating memory allocation");
+    exit(3);
+  }
+  ar->data=mymalloc(alloc_size); /* checked 5jul05 tonyc */
   for(i=0;i<l;i++) { ar->data[i].max=-1; ar->data[i].min=MAXINT; }
 }
 
@@ -51,10 +58,10 @@ void
 i_mmarray_render_fill(i_img *im,i_mmarray *ar,i_fill_t *fill) {
   int x, w, y;
   if (im->bits == i_8_bits && fill->fill_with_color) {
-    i_color *line = mymalloc(sizeof(i_color) * im->xsize);
+    i_color *line = mymalloc(sizeof(i_color) * im->xsize); /* checked 5jul05 tonyc */
     i_color *work = NULL;
     if (fill->combine)
-      work = mymalloc(sizeof(i_color) * im->xsize);
+      work = mymalloc(sizeof(i_color) * im->xsize); /* checked 5jul05 tonyc */
     for(y=0;y<ar->lines;y++) {
       if (ar->data[y].max!=-1) {
         x = ar->data[y].min;
@@ -77,10 +84,10 @@ i_mmarray_render_fill(i_img *im,i_mmarray *ar,i_fill_t *fill) {
       myfree(work);
   }
   else {
-    i_fcolor *line = mymalloc(sizeof(i_fcolor) * im->xsize);
+    i_fcolor *line = mymalloc(sizeof(i_fcolor) * im->xsize); /* checked 5jul05 tonyc */
     i_fcolor *work = NULL;
     if (fill->combinef)
-      work = mymalloc(sizeof(i_fcolor) * im->xsize);
+      work = mymalloc(sizeof(i_fcolor) * im->xsize); /* checked 5jul05 tonyc */
     for(y=0;y<ar->lines;y++) {
       if (ar->data[y].max!=-1) {
         x = ar->data[y].min;
@@ -492,11 +499,21 @@ i_box_cfill(i_img *im,int x1,int y1,int x2,int y2,i_fill_t *fill) {
   mm_log((1,"i_box_cfill(im* 0x%x,x1 %d,y1 %d,x2 %d,y2 %d,fill 0x%x)\n",im,x1,y1,x2,y2,fill));
 
   ++x2;
+  if (x1 < 0)
+    x1 = 0;
+  if (y1 < 0) 
+    y1 = 0;
+  if (x2 > im->xsize) 
+    x2 = im->xsize;
+  if (y2 >= im->ysize)
+    y2 = im->ysize-1;
+  if (x1 >= x2 || y1 > y2)
+    return;
   if (im->bits == i_8_bits && fill->fill_with_color) {
-    i_color *line = mymalloc(sizeof(i_color) * (x2 - x1));
+    i_color *line = mymalloc(sizeof(i_color) * (x2 - x1)); /* checked 5jul05 tonyc */
     i_color *work = NULL;
     if (fill->combine)
-      work = mymalloc(sizeof(i_color) * (x2-x1));
+      work = mymalloc(sizeof(i_color) * (x2-x1)); /* checked 5jul05 tonyc */
     while (y1 <= y2) {
       if (fill->combine) {
         i_glin(im, x1, x2, y1, line);
@@ -514,9 +531,9 @@ i_box_cfill(i_img *im,int x1,int y1,int x2,int y2,i_fill_t *fill) {
       myfree(work);
   }
   else {
-    i_fcolor *line = mymalloc(sizeof(i_fcolor) * (x2 - x1));
+    i_fcolor *line = mymalloc(sizeof(i_fcolor) * (x2 - x1)); /* checked 5jul05 tonyc */
     i_fcolor *work;
-    work = mymalloc(sizeof(i_fcolor) * (x2 - x1));
+    work = mymalloc(sizeof(i_fcolor) * (x2 - x1)); /* checked 5jul05 tonyc */
 
     while (y1 <= y2) {
       if (fill->combine) {
@@ -894,8 +911,8 @@ i_bezier_multi(i_img *im,int l,double *x,double *y,i_color *val) {
   int n=l-1;
   double itr,ccoef;
 
-
-  bzcoef=mymalloc(sizeof(double)*l);
+  /* this is the same size as the x and y arrays, so shouldn't overflow */
+  bzcoef=mymalloc(sizeof(double)*l); /* checked 5jul05 tonyc */
   for(k=0;k<l;k++) bzcoef[k]=perm(n,k);
   ICL_info(val);
 
@@ -925,16 +942,6 @@ i_bezier_multi(i_img *im,int l,double *x,double *y,i_color *val) {
   ICL_info(val);
   myfree(bzcoef);
 }
-
-
-
-
-
-
-
-
-
-
 
 /* Flood fill 
 
@@ -983,7 +990,7 @@ static
 struct stack_element*
 crdata(int left,int right,int dadl,int dadr,int y, int dir) {
   struct stack_element *ste;
-  ste              = mymalloc(sizeof(struct stack_element));
+  ste              = mymalloc(sizeof(struct stack_element)); /* checked 5jul05 tonyc */
   ste->myLx        = left;
   ste->myRx        = right;
   ste->dadLx       = dadl;
@@ -1231,10 +1238,11 @@ i_flood_cfill(i_img *im, int seedx, int seedy, i_fill_t *fill) {
   btm = i_flood_fill_low(im, seedx, seedy, &bxmin, &bxmax, &bymin, &bymax);
 
   if (im->bits == i_8_bits && fill->fill_with_color) {
-    i_color *line = mymalloc(sizeof(i_color) * (bxmax - bxmin));
+    /* bxmax/bxmin are inside the image, hence this won't overflow */
+    i_color *line = mymalloc(sizeof(i_color) * (bxmax - bxmin)); /* checked 5jul05 tonyc */
     i_color *work = NULL;
     if (fill->combine)
-      work = mymalloc(sizeof(i_color) * (bxmax - bxmin));
+      work = mymalloc(sizeof(i_color) * (bxmax - bxmin)); /* checked 5jul05 tonyc */
 
     for(y=bymin; y<=bymax; y++) {
       x = bxmin;
@@ -1266,10 +1274,11 @@ i_flood_cfill(i_img *im, int seedx, int seedy, i_fill_t *fill) {
       myfree(work);
   }
   else {
-    i_fcolor *line = mymalloc(sizeof(i_fcolor) * (bxmax - bxmin));
+    /* bxmax/bxmin are inside the image, hence this won't overflow */
+    i_fcolor *line = mymalloc(sizeof(i_fcolor) * (bxmax - bxmin)); /* checked 5jul05 tonyc */
     i_fcolor *work = NULL;
     if (fill->combinef)
-      work = mymalloc(sizeof(i_fcolor) * (bxmax - bxmin));
+      work = mymalloc(sizeof(i_fcolor) * (bxmax - bxmin)); /* checked 5jul05 tonyc */
     
     for(y=bymin;y<=bymax;y++) {
       x = bxmin;

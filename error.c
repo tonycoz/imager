@@ -95,7 +95,9 @@ void i_set_argv0(char const *name) {
   char *dupl;
   if (!name)
     return;
-  dupl = mymalloc(strlen(name)+1);
+  /* if the user has an existing string of MAXINT length then
+     the system is broken anyway */
+  dupl = mymalloc(strlen(name)+1); /* check 17jul05 tonyc */
   strcpy(dupl, name);
   if (argv0)
     myfree(argv0);
@@ -222,9 +224,11 @@ void i_push_error(int code, char const *msg) {
   if (error_space[error_sp] < size) {
     if (error_stack[error_sp].msg)
       myfree(error_stack[error_sp].msg);
-    /* memory allocated on the following line is only ever release when 
+    /* memory allocated on the following line is only ever released when 
        we need a bigger string */
-    error_stack[error_sp].msg = mymalloc(size);
+    /* size is size (len+1) of an existing string, overflow would mean
+       the system is broken anyway */
+    error_stack[error_sp].msg = mymalloc(size); /* checked 17jul05 tonyc */
     error_space[error_sp] = size;
   }
   strcpy(error_stack[error_sp].msg, msg);
@@ -269,6 +273,9 @@ void i_push_errorf(int code, char const *fmt, ...) {
   i_push_errorvf(code, fmt, ap);
   va_end(ap);
 }
+
+#ifdef IMAGER_I_FAILED
+#error "This isn't used and is untested"
 
 /*
 =item i_failed(char const *msg)
@@ -325,6 +332,8 @@ int i_failed(int code, char const *msg) {
 
   return 0;
 }
+
+#endif
 
 /*
 =back

@@ -461,7 +461,8 @@ Sets *outlen to the number of bytes used in the output string.
 
 static char *
 t1_from_utf8(char const *in, int len, int *outlen) {
-  char *out = mymalloc(len+1);
+  /* at this point len is from a perl SV, so can't approach MAXINT */
+  char *out = mymalloc(len+1); /* checked 5Nov05 tonyc */
   char *p = out;
   unsigned long c;
 
@@ -992,7 +993,7 @@ i_tt_new(char *fontname) {
   
   /* allocate memory for the structure */
   
-  handle = mymalloc( sizeof(TT_Fonthandle) );
+  handle = mymalloc( sizeof(TT_Fonthandle) ); /* checked 5Nov05 tonyc */
 
   /* load the typeface */
   error = TT_Open_Face( engine, fontname, &handle->face );
@@ -1082,10 +1083,15 @@ i_tt_init_raster_map( TT_Raster_Map* bit, int width, int height, int smooth ) {
     bit->cols  = ( bit->width + 7 ) / 8;    /* convert to # of bytes     */
     bit->size  = bit->rows * bit->cols;     /* number of bytes in buffer */
   }
+
+  if (bit->size / bit->rows != bit->cols) {
+    m_fatal(0, "Integer overflow calculating bitmap size (%d, %d)\n",
+            bit->width, bit->rows);
+  }
   
   mm_log((1,"i_tt_init_raster_map: bit->width %d, bit->cols %d, bit->rows %d, bit->size %d)\n", bit->width, bit->cols, bit->rows, bit->size ));
 
-  bit->bitmap = (void *) mymalloc( bit->size );
+  bit->bitmap = (void *) mymalloc( bit->size ); /* checked 6Nov05 tonyc */
   if ( !bit->bitmap ) m_fatal(0,"Not enough memory to allocate bitmap (%d)!\n",bit->size );
 }
 

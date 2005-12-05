@@ -68,8 +68,9 @@ i_convert(i_img *im, i_img *src, float *coeff, int outchan, int inchan) {
     }
     if (im->bits == i_8_bits && src->bits == i_8_bits) {
       i_color *vals;
-      
-      vals = mymalloc(sizeof(i_color) * src->xsize);
+
+      /* we can always allocate a single scanline of i_color */
+      vals = mymalloc(sizeof(i_color) * src->xsize); /* checked 04Jul05 tonyc */
       for (y = 0; y < src->ysize; ++y) {
         i_glin(src, 0, src->xsize, y, vals);
         for (x = 0; x < src->xsize; ++x) {
@@ -97,8 +98,10 @@ i_convert(i_img *im, i_img *src, float *coeff, int outchan, int inchan) {
     }
     else {
       i_fcolor *vals;
-      
-      vals = mymalloc(sizeof(i_fcolor) * src->xsize);
+
+      /* we can always allocate a single scanline of i_fcolor 
+         for a >8 image */
+      vals = mymalloc(sizeof(i_fcolor) * src->xsize); /* checked 4Jul05 tonyc */
       for (y = 0; y < src->ysize; ++y) {
         i_glinf(src, 0, src->xsize, y, vals);
         for (x = 0; x < src->xsize; ++x) {
@@ -142,7 +145,8 @@ i_convert(i_img *im, i_img *src, float *coeff, int outchan, int inchan) {
     /* just translate the color table */
     count = i_colorcount(src);
     outcount = i_colorcount(im);
-    colors = mymalloc(count * sizeof(i_color));
+    /* color table allocated for image, so it must fit */
+    colors = mymalloc(count * sizeof(i_color)); /* check 04Jul05 tonyc */
     i_getcolors(src, 0, colors, count);
     for (index = 0; index < count; ++index) {
       for (j = 0; j < outchan; ++j) {
@@ -171,7 +175,10 @@ i_convert(i_img *im, i_img *src, float *coeff, int outchan, int inchan) {
       i_addcolors(im, colors, count-outcount);
     }
     /* and copy the indicies */
-    vals = mymalloc(sizeof(i_palidx) * im->xsize);
+    /* i_palidx is always unsigned char and will never be bigger than short
+       and since a line of 4-byte i_colors can fit then a line of i_palidx
+       will fit */
+    vals = mymalloc(sizeof(i_palidx) * im->xsize); /* checked 4jul05 tonyc */
     for (y = 0; y < im->ysize; ++y) {
       i_gpal(src, 0, im->xsize, y, vals);
       i_ppal(im, 0, im->xsize, y, vals);
