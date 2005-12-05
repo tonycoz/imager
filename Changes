@@ -1200,6 +1200,11 @@ Revision history for Perl extension Imager.
 - added samples/align-string.pl
 - improved missing argument handling a little for the string() method
 - linkify Imager.pm a bit more
+- expand Imager::Draw:
+  - make all methods items
+  - document parameters
+  - more examples
+  - add AUTHOR, REVISION.
 
 =================================================================
 

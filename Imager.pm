@@ -2804,7 +2804,6 @@ sub align_string {
 
   my @result;
   unless (@result = $input{font}->align(image=>$img, %input)) {
-    $self->{ERRSTR} = $self->errstr if $img;
     return;
   }
 
