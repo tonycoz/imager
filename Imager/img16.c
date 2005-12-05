@@ -143,7 +143,7 @@ Creates a new 16-bit per sample image.
 =cut
 */
 i_img *i_img_16_new_low(i_img *im, int x, int y, int ch) {
-  int bytes;
+  int bytes, line_bytes;
   mm_log((1,"i_img_16_new(x %d, y %d, ch %d)\n", x, y, ch));
 
   if (x < 1 || y < 1) {
@@ -160,6 +160,15 @@ i_img *i_img_16_new_low(i_img *im, int x, int y, int ch) {
     return NULL;
   }
   
+  /* basic assumption: we can always allocate a buffer representing a
+     line from the image, otherwise we're going to have trouble
+     working with the image */
+  line_bytes = sizeof(i_fcolor) * x;
+  if (line_bytes / x != sizeof(i_fcolor)) {
+    i_push_error(0, "integer overflow calculating scanline allocation");
+    return NULL;
+  }
+
   *im = IIM_base_16bit_direct;
   i_tags_new(&im->tags);
   im->xsize = x;

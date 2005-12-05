@@ -937,6 +937,7 @@ i_gradgen(i_img *im, int num, int *xo, int *yo, i_color *ival, int dmeasure) {
   int channels = im->channels;
   int xsize    = im->xsize;
   int ysize    = im->ysize;
+  int bytes;
 
   float *fdist;
 
@@ -947,7 +948,20 @@ i_gradgen(i_img *im, int num, int *xo, int *yo, i_color *ival, int dmeasure) {
     ICL_info(&ival[p]);
   }
 
-  fdist = mymalloc( sizeof(float) * num );
+  /* on the systems I have sizeof(float) == sizeof(int) and thus
+     this would be same size as the arrays xo and yo point at, but this
+     may not be true for other systems
+
+     since the arrays here are caller controlled, I assume that on
+     overflow is a programming error rather than an end-user error, so
+     calling exit() is justified.
+  */
+  bytes = sizeof(float) * num;
+  if (bytes / num != sizeof(float)) {
+    fprintf(stderr, "integer overflow calculating memory allocation");
+    exit(1);
+  }
+  fdist = mymalloc( bytes ); /* checked 14jul05 tonyc */
   
   for(y = 0; y<ysize; y++) for(x = 0; x<xsize; x++) {
     float cs = 0;
@@ -1047,6 +1061,72 @@ i_nearest_color_foo(i_img *im, int num, int *xo, int *yo, i_color *ival, int dme
   }
 }
 
+/*
+=item i_nearest_color(im, num, xo, yo, oval, dmeasure)
+
+This wasn't document - quoth Addi:
+
+  An arty type of filter
+
+FIXME: check IRC logs for actual text.
+
+Inputs:
+
+=over
+
+=item *
+
+i_img *im - image to render on.
+
+=item *
+
+int num - number of points/colors in xo, yo, oval
+
+=item *
+
+int *xo - array of I<num> x positions
+
+=item *
+
+int *yo - array of I<num> y positions
+
+=item *
+
+i_color *oval - array of I<num> colors
+
+xo, yo, oval correspond to each other, the point xo[i], yo[i] has a
+color something like oval[i], at least closer to that color than other
+points.
+
+=item *
+
+int dmeasure - how we measure the distance from some point P(x,y) to
+any (xo[i], yo[i]).
+
+Valid values are:
+
+=over
+
+=item 0
+
+euclidean distance: sqrt((x2-x1)**2 + (y2-y1)**2)
+
+=item 1
+
+square of euclidean distance: ((x2-x1)**2 + (y2-y1)**2)
+
+=item 2
+
+manhattan distance: max((y2-y1)**2, (x2-x1)**2)
+
+=back
+
+An invalid value causes an error exit (the program is aborted).
+
+=back
+
+=cut
+ */
 void
 i_nearest_color(i_img *im, int num, int *xo, int *yo, i_color *oval, int dmeasure) {
   i_color *ival;
@@ -1058,7 +1138,7 @@ i_nearest_color(i_img *im, int num, int *xo, int *yo, i_color *oval, int dmeasur
   int ysize    = im->ysize;
   int *cmatch;
 
-  mm_log((1,"i_nearest_color(im %p, num %d, xo %p, yo %p, ival %p, dmeasure %d)\n", im, num, xo, yo, oval, dmeasure));
+  mm_log((1,"i_nearest_color(im %p, num %d, xo %p, yo %p, oval %p, dmeasure %d)\n", im, num, xo, yo, oval, dmeasure));
 
   tval   = mymalloc( sizeof(float)*num*im->channels );
   ival   = mymalloc( sizeof(i_color)*num );
@@ -1120,12 +1200,13 @@ i_nearest_color(i_img *im, int num, int *xo, int *yo, i_color *oval, int dmeasur
     c1 = 1.0-c2;
     
     for(ch = 0; ch<im->channels; ch++) 
-      tval[midx*im->channels + ch] = c1*tval[midx*im->channels + ch] + c2 * (float) val.channel[ch];
+      tval[midx*im->channels + ch] = 
+        c1*tval[midx*im->channels + ch] + c2 * (float) val.channel[ch];
   
-    
   }
 
-  for(p = 0; p<num; p++) for(ch = 0; ch<im->channels; ch++) ival[p].channel[ch] = tval[p*im->channels + ch];
+  for(p = 0; p<num; p++) for(ch = 0; ch<im->channels; ch++)
+    ival[p].channel[ch] = tval[p*im->channels + ch];
 
   i_nearest_color_foo(im, num, xo, yo, ival, dmeasure);
 }

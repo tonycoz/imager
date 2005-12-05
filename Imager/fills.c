@@ -220,7 +220,7 @@ If combine is non-zero then alpha values will be combined.
 i_fill_t *
 i_new_fill_solidf(i_fcolor *c, int combine) {
   int ch;
-  i_fill_solid_t *fill = mymalloc(sizeof(i_fill_solid_t));
+  i_fill_solid_t *fill = mymalloc(sizeof(i_fill_solid_t)); /* checked 14jul05 tonyc */
   
   if (combine) {
     *fill = base_solid_fill_comb;
@@ -249,7 +249,7 @@ If combine is non-zero then alpha values will be combined.
 i_fill_t *
 i_new_fill_solid(i_color *c, int combine) {
   int ch;
-  i_fill_solid_t *fill = mymalloc(sizeof(i_fill_solid_t));
+  i_fill_solid_t *fill = mymalloc(sizeof(i_fill_solid_t)); /* checked 14jul05 tonyc */
 
   if (combine) {
     *fill = base_solid_fill_comb;
@@ -484,7 +484,7 @@ Create an image based fill.
 */
 i_fill_t *
 i_new_fill_image(i_img *im, double *matrix, int xoff, int yoff, int combine) {
-  struct i_fill_image_t *fill = mymalloc(sizeof(*fill));
+  struct i_fill_image_t *fill = mymalloc(sizeof(*fill)); /* checked 14jul05 tonyc */
 
   fill->base.fill_with_color = fill_image;
   fill->base.fill_with_fcolor = fill_imagef;
@@ -599,7 +599,7 @@ i_fill_t *
 i_new_hatch_low(i_color *fg, i_color *bg, i_fcolor *ffg, i_fcolor *fbg, 
                 int combine, int hatch, unsigned char *cust_hatch,
                 int dx, int dy) {
-  i_fill_hatch_t *fill = mymalloc(sizeof(i_fill_hatch_t));
+  i_fill_hatch_t *fill = mymalloc(sizeof(i_fill_hatch_t)); /* checked 14jul05 tonyc */
 
   fill->base.fill_with_color = fill_hatch;
   fill->base.fill_with_fcolor = fill_hatchf;

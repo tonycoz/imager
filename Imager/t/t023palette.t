@@ -2,7 +2,7 @@
 # some of this is tested in t01introvert.t too
 use strict;
 use lib 't';
-use Test::More tests => 62;
+use Test::More tests => 64;
 BEGIN { use_ok("Imager"); }
 
 my $img = Imager->new(xsize=>50, ysize=>50, type=>'paletted');
@@ -139,7 +139,7 @@ cmp_ok(Imager->errstr, '=~', qr/Channels must be positive and <= 4/,
   use Config;
  SKIP:
   {
-    skip("don't want to allocate 4Gb", 8)
+    skip("don't want to allocate 4Gb", 10)
       unless $Config{intsize} == 4;
 
     my $uint_range = 256 ** $Config{intsize};
@@ -164,13 +164,23 @@ cmp_ok(Imager->errstr, '=~', qr/Channels must be positive and <= 4/,
     $im_b = Imager->new(xsize=>$dim3, ysize=>$dim3, channels=>3, type=>'paletted');
     is($im_b, undef, "integer overflow check - 3 channel");
     
-    $im_b = Imager->new(xisze=>$dim3, ysize=>1, channels=>3, type=>'paletted');
+    $im_b = Imager->new(xsize=>$dim3, ysize=>1, channels=>3, type=>'paletted');
     ok($im_b, "but same width ok");
-    $im_b = Imager->new(xisze=>1, ysize=>$dim3, channels=>3, type=>'paletted');
+    $im_b = Imager->new(xsize=>1, ysize=>$dim3, channels=>3, type=>'paletted');
     ok($im_b, "but same height ok");
 
     cmp_ok(Imager->errstr, '=~', qr/integer overflow/,
            "check the error message");
+
+    # test the scanline allocation check
+    # divide by 2 to get int range, by 3 so that the image (one byte/pixel)
+    # doesn't integer overflow, but the scanline of i_color (4/pixel) does
+    my $dim4 = $uint_range / 2 / 3;
+    my $im_o = Imager->new(xsize=>$dim4, ysize=>1, channels=>3, type=>'paletted');
+    is($im_o, undef, "integer overflow check - scanline size");
+    cmp_ok(Imager->errstr, '=~', 
+           qr/integer overflow calculating scanline allocation/,
+           "check error message");
   }
 }
 
