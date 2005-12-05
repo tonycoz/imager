@@ -123,9 +123,10 @@ sub draw {
     $Imager::ERRSTR = 'No image supplied to $font->draw()';
     return;
   }
+  my $image = $input{image};
   $input{string} = _first($input{string}, $input{text});
   unless (defined $input{string}) {
-    $Imager::ERRSTR = "Missing required parameter 'string'";
+    $image->_set_error("Missing required parameter 'string'");
     return;
   }
   $input{aa} = _first($input{aa}, $input{antialias}, $self->{aa}, 1);
@@ -136,14 +137,19 @@ sub draw {
 
   $input{size} = _first($input{size}, $self->{size});
   unless (defined $input{size}) {
-    $input{image}{ERRSTR} = "No font size provided";
+    $image->_set_error("No font size provided");
     return undef;
   }
   $input{align} = _first($input{align}, 1);
   $input{utf8} = _first($input{utf8}, $self->{utf8}, 0);
   $input{vlayout} = _first($input{vlayout}, $self->{vlayout}, 0);
 
-  $self->_draw(%input);
+  my $result = $self->_draw(%input);
+  unless ($result) {
+    $image->_set_error($image->_error_as_msg());
+  }
+
+  return $result;
 }
 
 sub align {
@@ -151,17 +157,20 @@ sub align {
   my %input = ( halign => 'left', valign => 'baseline', 
                 'x' => 0, 'y' => 0, @_ );
 
-  my $text = _first($input{string}, $input{text});
-  unless (defined $text) {
-    Imager->_set_error("Missing required parameter 'string'");
-    return;
-  }
-
   # image needs to be supplied, but can be supplied as undef
   unless (exists $input{image}) {
     Imager->_set_error("Missing required parameter 'image'");
     return;
   }
+
+  my $errors_to = $input{image} || 'Imager';
+
+  my $text = _first($input{string}, $input{text});
+  unless (defined $text) {
+    $errors_to->_set_error("Missing required parameter 'string'");
+    return;
+  }
+
   my $size = _first($input{size}, $self->{size});
   my $utf8 = _first($input{utf8}, 0);
 
