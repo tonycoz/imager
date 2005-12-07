@@ -35,6 +35,10 @@ code snippet is sufficient:
 This will include some other information identifying libraries rather
 than file formats.
 
+=over 
+
+=item read
+
 Reading writing to and from files is simple, use the C<read()>
 method to read an image:
 
@@ -42,10 +46,14 @@ method to read an image:
   $img->read(file=>$filename, type=>$type)
     or die "Cannot read $filename: ", $img->errstr;
 
+=item write
+
 and the C<write()> method to write an image:
 
   $img->write(file=>$filename, type=>$type)
     or die "Cannot write $filename: ", $img->errstr;
+
+=item read_multi
 
 If you're reading from a format that supports multiple images per
 file, use the C<read_multi()> method:
@@ -53,11 +61,15 @@ file, use the C<read_multi()> method:
   my @imgs = Imager->read_multi(file=>$filename, type=>$type)
     or die "Cannot read $filename: ", Imager->errstr;
 
+=item write_multi
+
 and if you want to write multiple images to a single file use the
 C<write_multi()> method:
 
   Imager->write_multi({ file=> $filename, type=>$type }, @images)
     or die "Cannot write $filename: ", Imager->errstr;
+
+=back
 
 If the I<filename> includes an extension that Imager recognizes, then
 you don't need the I<type>, but you may want to provide one anyway.
@@ -278,7 +290,54 @@ JPEG as a 3 channel image.
 
   $img->read(file=>'foo.jpg') or die $img->errstr;
 
-PNM does not support the spatial resolution tags.
+JPEG does not support the spatial resolution tags.
+
+If an APP1 block containing EXIF information is found, then any of the
+following tags can be set:
+
+=over
+
+exif_aperture exif_artist exif_brightness exif_color_space
+exif_contrast exif_copyright exif_custom_rendered exif_date_time
+exif_date_time_digitized exif_date_time_original
+exif_digital_zoom_ratio exif_exposure_bias exif_exposure_index
+exif_exposure_mode exif_exposure_program exif_exposure_time
+exif_f_number exif_flash exif_flash_energy exif_flashpix_version
+exif_focal_length exif_focal_length_in_35mm_film
+exif_focal_plane_resolution_unit exif_focal_plane_x_resolution
+exif_focal_plane_y_resolution exif_gain_control exif_image_description
+exif_image_unique_id exif_iso_speed_rating exif_make exif_max_aperture
+exif_metering_mode exif_model exif_orientation exif_related_sound_file
+exif_resolution_unit exif_saturation exif_scene_capture_type
+exif_sensing_method exif_sharpness exif_shutter_speed exif_software
+exif_spectral_sensitivity exif_sub_sec_time
+exif_sub_sec_time_digitized exif_sub_sec_time_original
+exif_subject_distance exif_subject_distance_range
+exif_subject_location exif_tag_light_source exif_user_comment
+exif_version exif_white_balance exif_x_resolution exif_y_resolution
+
+=back
+
+The following derived tags can also be set:
+
+=over
+
+exif_color_space_name exif_contrast_name exif_custom_rendered_name
+exif_exposure_mode_name exif_exposure_program_name exif_flash_name
+exif_focal_plane_resolution_unit_name exif_gain_control_name
+exif_light_source_name exif_metering_mode_name
+exif_resolution_unit_name exif_saturation_name
+exif_scene_capture_type_name exif_sensing_method_name
+exif_sharpness_name exif_subject_distance_range_name
+exif_white_balance_name
+
+=back
+
+The derived tags are for enumerated fields, when the value for the
+base field is valid then the text that appears in the EXIF
+specification for that value appears in the derived field.  So for
+example if C<exf_metering_mode> is C<5> then
+C<exif_metering_mode_name> is set to C<Pattern>.
 
 =head2 GIF (Graphics Interchange Format)
 

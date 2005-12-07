@@ -2,7 +2,7 @@
 use strict;
 use lib 't';
 use Imager qw(:all);
-use Test::More tests => 24;
+use Test::More tests => 34;
 
 init_log("testout/t101jpeg.log",1);
 
@@ -109,6 +109,37 @@ if (!i_has_format("jpeg")) {
     ok($im->read(file=>$limit_file),
        "should succeed - just inside bytes limit");
     Imager->set_file_limits(reset=>1);
+  }
+
+ SKIP:
+  {
+    # we don't test them all
+    my %expected_tags =
+      (
+       exif_date_time_original => "2005:11:25 00:00:00",
+       exif_flash => 0,
+       exif_image_description => "Imager Development Notes",
+       exif_make => "Canon",
+       exif_model => "CanoScan LiDE 35",
+       exif_resolution_unit => 2,
+       exif_resolution_unit_name => "inches",
+       exif_user_comment => "        Part of notes from reworking i_arc() and friends.",
+       exif_white_balance => 0,
+       exif_white_balance_name => "Auto white balance",
+      );
+
+    # exif tests
+    Imager::i_exif_enabled()
+	or skip("no exif support", scalar keys %expected_tags);
+
+    my $im = Imager->new;
+    $im->read(file=>"testimg/exiftest.jpg")
+      or skip("Could not read test image:".$im->errstr, scalar keys %expected_tags);
+
+    for my $key (keys %expected_tags) {
+      is($expected_tags{$key}, $im->tags(name => $key),
+	 "test value of exif tag $key");
+    }
   }
 }
 

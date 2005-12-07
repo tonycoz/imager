@@ -1207,6 +1207,7 @@ Revision history for Perl extension Imager.
   - add AUTHOR, REVISION.
 - add smoke test for nearest_color filter
 - added integer overflow checks to many memory allocation calls
+- added experimental EXIF decoding when reading JPEG files.
 
 =================================================================
 

@@ -30,6 +30,7 @@ my @disable;
 my @incpaths;
 my @libpaths;
 my $noprobe;
+my $noexif;
 GetOptions("help" => \$help,
            "enable=s" => \@enable,
            "disable=s" => \@disable,
@@ -37,7 +38,8 @@ GetOptions("help" => \$help,
            "libpath=s" => \@libpaths,
            "noprobe" => \$noprobe,
            "verbose|v" => \$VERBOSE,
-           "nolog" => \$NOLOG);
+           "nolog" => \$NOLOG,
+	   "noexif" => \$noexif);
 
 if ($VERBOSE) { 
   print "Verbose mode\n"; 
@@ -48,6 +50,8 @@ if ($VERBOSE) {
 if ($help) {
   usage();
 }
+
+my @defines;
 
 if ($NOLOG)   { print "Logging not compiled into module\n"; }
 else { 
@@ -83,8 +87,6 @@ elsif (@disable) {
   delete @formats{map { split /,/ } @disable};
 }
 
-my @defines;
-
 # Pick what libraries are used
 if ($MANUAL) {
   manual();
@@ -104,6 +106,11 @@ for my $frmkey (keys %formats) {
   $F_LIBS   .= ' '  .$frm->{libfiles};
   $F_OBJECT .= ' '  .$frm->{objfiles};
   $lib_cflags   .= ' '  .$frm->{cflags} if $frm->{cflags};
+}
+unless ($noexif) {
+  print "EXIF support enabled\n";
+  push @defines, [ 'IMEXIF_ENABLE', 1, "Enable experimental EXIF support" ];
+  $F_OBJECT .= ' imexif.o';
 }
 
 $F_INC  = join ' ', map "-I$_", map / / ? qq{"$_"} : $_, 
@@ -520,6 +527,7 @@ scalable.  It also supports a variety of other fonts.
 DOCS
                            code => \&freetype2_probe,
                           };
+
   # Make fix indent
   for (keys %formats) { $formats{$_}->{docs} =~ s/^\s+/  /mg; }
 }
