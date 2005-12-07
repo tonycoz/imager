@@ -2,7 +2,7 @@
 use strict;
 use lib 't';
 use Imager qw(:all);
-use Test::More tests => 34;
+use Test::More tests => 49;
 
 init_log("testout/t101jpeg.log",1);
 
@@ -55,6 +55,7 @@ if (!i_has_format("jpeg")) {
 	Imager::log_entry("Starting 4\n", 1);
   my $imoo = Imager->new;
   ok($imoo->read(file=>'testout/t101.jpg'), "read jpeg OO");
+
   ok($imoo->write(file=>'testout/t101_oo.jpg'), "write jpeg OO");
 	Imager::log_entry("Starting 5\n", 1);
   my $oocmp = Imager->new;
@@ -139,6 +140,97 @@ if (!i_has_format("jpeg")) {
     for my $key (keys %expected_tags) {
       is($expected_tags{$key}, $im->tags(name => $key),
 	 "test value of exif tag $key");
+    }
+  }
+
+  {
+    # tests that the density values are set and read correctly
+    # tests jpeg_comment too
+    my @density_tests =
+      (
+       [ 't101cm100.jpg', 
+	 { 
+	  jpeg_density_unit => 2, 
+	  i_xres => 254, 
+	  i_yres => 254
+	 },
+	 { 
+	  jpeg_density_unit => 2, 
+	  i_xres => 254, 
+	  i_yres => 254,
+	  i_aspect_only => undef,
+	 },
+       ],
+       [
+	't101xonly.jpg',
+	{
+	 i_xres => 100,
+	},
+	{
+	 i_xres => 100,
+	 i_yres => 100,
+	 jpeg_density_unit => 1,
+	 i_aspect_only => undef,
+	},
+       ],
+       [
+	't101yonly.jpg',
+	{
+	 i_yres => 100,
+	},
+	{
+	 i_xres => 100,
+	 i_yres => 100,
+	 jpeg_density_unit => 1,
+	 i_aspect_only => undef,
+	},
+       ],
+       [
+	't101asponly.jpg',
+	{
+	 i_xres => 50,
+	 i_yres => 100,
+	 i_aspect_only => 1,
+	},
+	{
+	 i_xres => 50,
+	 i_yres => 100,
+	 i_aspect_only => 1,
+	 jpeg_density_unit => 0,
+	},
+       ],
+       [
+	't101com.jpg',
+	{
+	 jpeg_comment => 'test comment'
+	},
+       ],
+      );
+
+    print "# test density tags\n";
+    # I don't care about the content
+    my $base_im = Imager->new(xsize => 10, ysize => 10);
+    for my $test (@density_tests) {
+      my ($filename, $out_tags, $expect_tags) = @$test;
+      $expect_tags ||= $out_tags;
+
+      my $work = $base_im->copy;
+      for my $key (keys %$out_tags) {
+	$work->addtag(name => $key, value => $out_tags->{$key});
+      }
+
+      ok($work->write(file=>"testout/$filename", type=>'jpeg'),
+	 "save $filename");
+      
+      my $check = Imager->new;
+      ok($check->read(file=> "testout/$filename"),
+	 "read $filename");
+
+      my %tags;
+      for my $key (keys %$expect_tags) {
+	$tags{$key} = $check->tags(name=>$key);
+      }
+      is_deeply($expect_tags, \%tags, "check tags for $filename");
     }
   }
 }

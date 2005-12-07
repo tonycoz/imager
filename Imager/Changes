@@ -1208,6 +1208,9 @@ Revision history for Perl extension Imager.
 - add smoke test for nearest_color filter
 - added integer overflow checks to many memory allocation calls
 - added experimental EXIF decoding when reading JPEG files.
+- read/write i_xres, i_yres, i_aspect only tage with JPEG files,
+  and read/write jpeg_density_unit (+_name) tag
+- save the jpeg_comment tag when writing
 
 =================================================================
 

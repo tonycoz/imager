@@ -1054,7 +1054,7 @@ copy_string_tags(i_img *im, imtiff *tiff, tag_map *map, int map_count) {
       if (map[i].tag == entry->tag) {
 	int len = entry->type == ift_ascii ? entry->size - 1 : entry->size;
 	i_tags_add(&im->tags, map[i].name, 0,
-		   tiff->base + entry->offset, len, 0);
+		   (char const *)(tiff->base + entry->offset), len, 0);
 	break;
       }
     }
