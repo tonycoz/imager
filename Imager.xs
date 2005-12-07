@@ -888,6 +888,12 @@ i_int_hlines_dump(i_int_hlines *hlines) {
 
 #endif
 
+#ifdef IMEXIF_ENABLE
+#define i_exif_enabled() 1
+#else
+#define i_exif_enabled() 0
+#endif
+
 MODULE = Imager		PACKAGE = Imager::Color	PREFIX = ICL_
 
 Imager::Color
@@ -2107,6 +2113,8 @@ i_readjpeg_wiol(ig)
                     myfree(iptc_itext);
 	      }
 
+int
+i_exif_enabled()
 
 #endif
 

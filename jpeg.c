@@ -32,8 +32,12 @@ Reads and writes JPEG images
 #include "jpeglib.h"
 #include "jerror.h"
 #include <errno.h>
+#ifdef IMEXIF_ENABLE
+#include "imexif.h"
+#endif
 
 #define JPEG_APP13       0xED    /* APP13 marker code */
+#define JPEG_APP1 (JPEG_APP0 + 1)
 #define JPGS 16384
 
 static unsigned char fake_eoi[]={(JOCTET) 0xFF,(JOCTET) JPEG_EOI};
@@ -341,11 +345,15 @@ my_error_exit (j_common_ptr cinfo) {
 i_img*
 i_readjpeg_wiol(io_glue *data, int length, char** iptc_itext, int *itlength) {
   i_img *im;
+#ifdef IMEXIF_ENABLE
+  int seen_exif = 0;
+#endif
 
   struct jpeg_decompress_struct cinfo;
   struct my_error_mgr jerr;
   JSAMPARRAY buffer;		/* Output row buffer */
   int row_stride;		/* physical row width in output buffer */
+  jpeg_saved_marker_ptr markerp;
 
   mm_log((1,"i_readjpeg_wiol(data 0x%p, length %d,iptc_itext 0x%p)\n", data, iptc_itext));
 
@@ -366,6 +374,8 @@ i_readjpeg_wiol(io_glue *data, int length, char** iptc_itext, int *itlength) {
   
   jpeg_create_decompress(&cinfo);
   jpeg_set_marker_processor(&cinfo, JPEG_APP13, APP13_handler);
+  jpeg_save_markers(&cinfo, JPEG_APP1, 0xFFFF);
+  jpeg_save_markers(&cinfo, JPEG_COM, 0xFFFF);
   jpeg_wiol_src(&cinfo, data, length);
 
   (void) jpeg_read_header(&cinfo, TRUE);
@@ -388,6 +398,23 @@ i_readjpeg_wiol(io_glue *data, int length, char** iptc_itext, int *itlength) {
     (void) jpeg_read_scanlines(&cinfo, buffer, 1);
     memcpy(im->idata+im->channels*im->xsize*(cinfo.output_scanline-1),buffer[0],row_stride);
   }
+
+  /* check for APP1 marker and save */
+  markerp = cinfo.marker_list;
+  while (markerp != NULL) {
+    if (markerp->marker == JPEG_COM) {
+      i_tags_add(&im->tags, "jpeg_comment", 0, markerp->data,
+		 markerp->data_length, 0);
+    }
+#ifdef IMEXIF_ENABLE
+    else if (markerp->marker == JPEG_APP1 && !seen_exif) {
+      seen_exif = i_int_decode_exif(im, markerp->data, markerp->data_length);
+    }
+#endif      
+
+    markerp = markerp->next;
+  }
+
   (void) jpeg_finish_decompress(&cinfo);
   jpeg_destroy_decompress(&cinfo);
   *itlength=tlength;
