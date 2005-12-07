@@ -415,6 +415,31 @@ i_readjpeg_wiol(io_glue *data, int length, char** iptc_itext, int *itlength) {
     markerp = markerp->next;
   }
 
+  if (cinfo.saw_JFIF_marker) {
+    double xres = cinfo.X_density;
+    double yres = cinfo.Y_density;
+    
+    i_tags_addn(&im->tags, "jpeg_density_unit", 0, cinfo.density_unit);
+    switch (cinfo.density_unit) {
+    case 0: /* values are just the aspect ratio */
+      i_tags_addn(&im->tags, "i_aspect_only", 0, 1);
+      i_tags_add(&im->tags, "jpeg_density_unit_name", 0, "none", -1, 0);
+      break;
+
+    case 1: /* per inch */
+      i_tags_add(&im->tags, "jpeg_density_unit_name", 0, "inch", -1, 0);
+      break;
+
+    case 2: /* per cm */
+      i_tags_add(&im->tags, "jpeg_density_unit_name", 0, "centimeter", -1, 0);
+      xres *= 2.54;
+      yres *= 2.54;
+      break;
+    }
+    i_tags_set_float2(&im->tags, "i_xres", 0, xres, 6);
+    i_tags_set_float2(&im->tags, "i_yres", 0, yres, 6);
+  }
+
   (void) jpeg_finish_decompress(&cinfo);
   jpeg_destroy_decompress(&cinfo);
   *itlength=tlength;
@@ -435,6 +460,9 @@ undef_int
 i_writejpeg_wiol(i_img *im, io_glue *ig, int qfactor) {
   JSAMPLE *image_buffer;
   int quality;
+  int got_xres, got_yres, aspect_only, resunit;
+  double xres, yres;
+  int comment_entry;
 
   struct jpeg_compress_struct cinfo;
   struct my_error_mgr jerr;
@@ -485,7 +513,37 @@ i_writejpeg_wiol(i_img *im, io_glue *ig, int qfactor) {
   jpeg_set_defaults(&cinfo);
   jpeg_set_quality(&cinfo, quality, TRUE);  /* limit to baseline-JPEG values */
 
+  got_xres = i_tags_get_float(&im->tags, "i_xres", 0, &xres);
+  got_yres = i_tags_get_float(&im->tags, "i_yres", 0, &yres);
+  if (!i_tags_get_int(&im->tags, "i_aspect_only", 0,&aspect_only))
+    aspect_only = 0;
+  if (!i_tags_get_int(&im->tags, "jpeg_density_unit", 0, &resunit))
+    resunit = 1; /* per inch */
+  if (resunit < 0 || resunit > 2) /* default to inch if invalid */
+    resunit = 1;
+  if (got_xres || got_yres) {
+    if (!got_xres)
+      xres = yres;
+    else if (!got_yres)
+      yres = xres;
+    if (aspect_only)
+      resunit = 0; /* standard tags override format tags */
+    if (resunit == 2) {
+      /* convert to per cm */
+      xres /= 2.54;
+      yres /= 2.54;
+    }
+    cinfo.density_unit = resunit;
+    cinfo.X_density = (int)(xres + 0.5);
+    cinfo.Y_density = (int)(yres + 0.5);
+  }
+
   jpeg_start_compress(&cinfo, TRUE);
+
+  if (i_tags_find(&im->tags, "jpeg_comment", 0, &comment_entry)) {
+    jpeg_write_marker(&cinfo, JPEG_COM, im->tags.tags[comment_entry].data,
+		      im->tags.tags[comment_entry].size);
+  }
 
   row_stride = im->xsize * im->channels;	/* JSAMPLEs per row in image_buffer */
 
