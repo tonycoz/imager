@@ -1211,6 +1211,8 @@ Revision history for Perl extension Imager.
 - read/write i_xres, i_yres, i_aspect only tage with JPEG files,
   and read/write jpeg_density_unit (+_name) tag
 - save the jpeg_comment tag when writing
+- the has_chars() method now checks the font objects utf8 flag as well 
+  as the utf8 parameter.
 
 =================================================================
 
