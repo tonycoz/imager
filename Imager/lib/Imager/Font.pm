@@ -336,13 +336,9 @@ Imager::Font - Font handling for Imager.
    $advance_width,
    $right_bearing) = $font->bounding_box(string=>"Foo");
 
-  $logo = $font->logo(text   => "Slartibartfast Enterprises",
-		      size   => 40,
-		      border => 5,
-		      color  => $green);
-  # logo is proposed - doesn't exist yet
+  my $bbox_object = $font->bounding_box(string=>"Foo");
 
-
+  # documented in Imager::Draw
   $img->string(font  => $font,
 	     text  => "Model-XYZ",
 	     x     => 15,
@@ -350,8 +346,6 @@ Imager::Font - Font handling for Imager.
 	     size  => 40,
 	     color => $red,
 	     aa    => 1);
-
-  # Documentation in Imager.pm
 
 =head1 DESCRIPTION
 
@@ -412,6 +406,71 @@ typically isn't necessary for Win32 TrueType fonts, since you can
 contruct the full name of the font as above.
 
 Other logical font attributes may be added if there is sufficient demand.
+
+Parameters:
+
+=over
+
+=item *
+
+file - name of the file to load the font from.
+
+=item *
+
+face - face name.  This is used only under Win32 to create a GDI based
+font.  This is ignored if the C<file> parameter is supplied.
+
+=item *
+
+type - font driver to use.  Currently the permitted values for this are:
+
+=over
+
+=item *
+
+tt - Freetype 1.x driver.  Supports TTF fonts.
+
+=item *
+
+t1 - T1 Lib driver.  Supports Postscript Type 1 fonts.  Allows for
+synthesis of underline, strikethrough and overline.
+
+=item *
+
+ft2 - Freetype 2.x driver.  Supports many different font formats.
+Also supports the transform() method.
+
+=back
+
+=item *
+
+color - the default color used with this font.  Default: red.
+
+=item *
+
+size - the default size used with this font.  Default: 15.
+
+=item *
+
+utf8 - if non-zero then text supplied to $img->string(...) and
+$font->bounding_box(...) is assumed to be UTF 8 encoded by default.
+
+=item *
+
+align - the default value for the $img->string(...) C<align>
+parameter.  Default: 1.
+
+=item *
+
+vlayout - the default value for the $img->string(...) C<vlayout>
+parameter.  Default: 0.
+
+=item *
+
+aa - the default value for the $im->string(...) C<aa> parameter.
+Default: 0.
+
+=back
 
 =item bounding_box
 
@@ -496,99 +555,49 @@ Returns an L<Imager::Font::BBox> object in scalar context, so you can
 avoid all those confusing indices.  This has methods as named above,
 with some extra convenience methods.
 
-=item string
-
-This is a method of the Imager class but because it's described in
-here since it belongs to the font routines.  Example:
-
-  $img=Imager->new();
-  $img->read(file=>"test.jpg");
-  $img->string(font=>$t1font,
-               text=>"Model-XYZ",
-               x=>0,
-               y=>40,
-               size=>40,
-               color=>$red);
-  $img->write(file=>"testout.jpg");
-
-This would put a 40 pixel high text in the top left corner of an
-image.  If you measure the actuall pixels it varies since the fonts
-usually do not use their full height.  It seems that the color and
-size can be specified twice.  When a font is created only the actual
-font specified matters.  It his however convenient to store default
-values in a font, such as color and size.  If parameters are passed to
-the string function they are used instead of the defaults stored in
-the font.
-
-The following parameters can be supplied to the string() method:
+Parameters are:
 
 =over
 
-=item string
+=item *
 
-The text to be rendered.  If this isn't present the 'text' parameter
-is used.  If neither is present the call will fail.
+string - the string to calculate the bounding box for.  Required.
 
-=item aa
+=item *
 
-If non-zero the output will be anti-aliased.
+size - the font size to use.  Default: value set in
+Imager::Font->new(), or 15.
 
-=item x
+=item *
 
-=item y
+sizew - the font width to use.  Default to the value of the C<size>
+parameter.
 
-The start point for rendering the text.  See the align parameter.
+=item *
 
-=item align
+utf8 - For drivers that support it, treat the string as UTF8 encoded.
+For versions of perl that support Unicode (5.6 and later), this will
+be enabled automatically if the 'string' parameter is already a UTF8
+string. See L<UTF8> for more information.  Default: the C<utf8> value
+passed to Imager::Font->new(...) or 0.
 
-If non-zero the point supplied in (x,y) will be on the base-line, if
-zero then (x,y) will be at the top-left of the string.
+=item *
 
-ie. if drawing the string "yA" and align is 0 the point (x,y) will
-aligned with the top of the A.  If align is 1 (the default) it will be
-aligned with the baseline of the font, typically bottom of the A,
-depending on the font used.
+x, y - offsets applied to @box[0..3] to give you a adjusted bounding
+box.  Ignored in scalar context.
 
-=item channel
+=item *
 
-If present, the text will be written to the specified channel of the
-image and the color parameter will be ignore.
-
-=item color
-
-The color to draw the text in.
-
-=item size
-
-The point-size to draw the text at.
-
-=item sizew
-
-For drivers that support it, the width to draw the text at.  Defaults
-to be value of the 'size' parameter.
-
-=item utf8
-
-For drivers that support it, treat the string as UTF8 encoded.  For
-versions of perl that support Unicode (5.6 and later), this will be
-enabled automatically if the 'string' parameter is already a UTF8
-string. See L<UTF8> for more information.
-
-=item vlayout
-
-For drivers that support it, draw the text vertically.  Note: I
-haven't found a font that has the appropriate metrics yet.
+canon - if non-zero and the C<x>, C<y> parameters are not supplied,
+then $pos_width and $global_ascent values will returned as the width
+and height of the text instead.
 
 =back
 
-If string() is called with the C<channel> parameter then the color
-isn't used and the font is drawn in only one channel of the image.
-This can be quite handy to create overlays.  See the examples for tips
-about this.
+=item string
 
-Sometimes it is necessary to know how much space a string takes before
-rendering it.  The bounding_box() method described earlier can be used
-for that.
+The $img->string(...) method is now documented in
+L<Imager::Draw/string>
 
 =item align(string=>$text, size=>$size, x=>..., y=>..., valign => ..., halign=>...)
 
@@ -677,6 +686,23 @@ The default is 72 dpi.
 
 This isn't implemented for all font types yet.
 
+Possible parameters are:
+
+=over
+
+=item *
+
+xdpi, ydpi - set the horizontal and vertical resolution in dots per
+inch.
+
+=item *
+
+dpi - set both horizontal and vertical resolution to this value.
+
+=back
+
+Returns a list containing the previous xdpi, ydpi values.
+
 =item transform(matrix=>$matrix)
 
 Applies a transformation to the font, where matrix is an array ref of
@@ -712,18 +738,22 @@ characters.  Supports UTF8 where the font driver supports UTF8.
 Not all fonts support this method (use $font->can("has_chars") to
 check.)
 
-=item logo
+=over
 
-This method doesn't exist yet but is under consideration.  It would mostly
-be helpful for generating small tests and such.  Its proposed interface is:
+=item *
 
-  $img = $font->logo(string=>"Plan XYZ", color=>$blue, border=>7);
+string - string of characters to check for.  Required.  Must contain
+at least one character.
 
-This would be nice for writing (admittedly multiline) one liners like:
+=item *
 
-Imager::Font->new(file=>"arial.ttf", color=>$blue, aa=>1)
-            ->string(text=>"Plan XYZ", border=>5)
-            ->write(file=>"xyz.png");
+utf8 - For drivers that support it, treat the string as UTF8 encoded.
+For versions of perl that support Unicode (5.6 and later), this will
+be enabled automatically if the 'string' parameter is already a UTF8
+string. See L<UTF8> for more information.  Default: the C<utf8> value
+passed to Imager::Font->new(...) or 0.
+
+=back
 
 =item face_name()
 
@@ -897,6 +927,10 @@ driver always returns the right edge of the right-most glyph.
 
 The newer advance_width and right_bearing values allow access to any
 of the above.
+
+=head1 REVISION
+
+$Revision$
 
 =head1 SEE ALSO
 

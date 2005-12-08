@@ -1213,7 +1213,12 @@ Revision history for Perl extension Imager.
 - save the jpeg_comment tag when writing
 - the has_chars() method now checks the font objects utf8 flag as well 
   as the utf8 parameter.
-
+- clean up Imager::Font documentation:
+   - string now documented in Imager::Draw
+   - add parameter list documentation
+- document the utf8 parameter for bounding_box(), has_chars()
+  Resolves: http://rt.cpan.org/NoAuth/Bug.html?id=16094
+  
 =================================================================
 
         For latest versions check the Imager-devel pages:
