@@ -10,7 +10,7 @@ init_log("testout/t35ttfont.log",2);
 
 SKIP:
 {
-  skip("freetype 1.x unavailable or disabled", 64) 
+  skip("freetype 1.x unavailable or disabled", 70) 
     unless i_has_format("tt");
   print "# has tt\n";
   
