@@ -81,7 +81,8 @@ sub has_chars {
     $Imager::ERRSTR = "No string supplied to \$font->has_chars()";
     return;
   }
-  return Imager::i_tt_has_chars($self->{id}, $hsh{string}, $hsh{'utf8'} || 0);
+  return Imager::i_tt_has_chars($self->{id}, $hsh{string}, 
+				_first($hsh{'utf8'}, $self->{utf8}, 0));
 }
 
 sub face_name {
