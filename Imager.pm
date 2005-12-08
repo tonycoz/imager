@@ -2784,6 +2784,7 @@ sub align_string {
       $self->{ERRSTR}='empty input image'; 
       return;
     }
+    $img = $self;
   }
   else {
     $img = undef;
