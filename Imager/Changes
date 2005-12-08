@@ -1217,7 +1217,7 @@ Revision history for Perl extension Imager.
    - string now documented in Imager::Draw
    - add parameter list documentation
 - document the utf8 parameter for bounding_box(), has_chars()
-  Resolves: http://rt.cpan.org/NoAuth/Bug.html?id=16094
+  Resolves: http://rt.cpan.org/NoAuth/Bug.html?id=13508
   
 =================================================================
 
