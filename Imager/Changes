@@ -1219,6 +1219,7 @@ Revision history for Perl extension Imager.
 - document the utf8 parameter for bounding_box(), has_chars()
   Resolves: http://rt.cpan.org/NoAuth/Bug.html?id=13508
 - decode the EXIF GPS IFD as well
+- minor documentation touchups
   
 =================================================================
 

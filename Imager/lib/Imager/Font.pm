@@ -681,7 +681,7 @@ Returns a list specifying the bounds of the drawn text.
 
 =item dpi(dpi=>$dpi)
 
-Set retrieve the spatial resolution of the image in dots per inch.
+Set or retrieve the spatial resolution of the image in dots per inch.
 The default is 72 dpi.
 
 This isn't implemented for all font types yet.
