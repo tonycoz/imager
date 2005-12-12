@@ -1225,6 +1225,7 @@ Revision history for Perl extension Imager.
 0.45_02
 - some test scripts weren't fixing @INC correctly
 - t/t101jpeg.t wasn't skipping enough when there was no jpeg support
+- bump version to 0.45_02
   
 =================================================================
 
