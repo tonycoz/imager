@@ -30,7 +30,7 @@ if (!i_has_format("jpeg")) {
     $im = Imager->new(xsize=>2, ysize=>2);
     ok(!$im->write(file=>"testout/nojpeg.jpg"), "should fail to write jpeg");
     cmp_ok($im->errstr, '=~', qr/format not supported/, "check no jpeg message");
-    skip("no jpeg support", 5);
+    skip("no jpeg support", 45);
   }
 } else {
   open(FH,">testout/t101.jpg") || die "cannot open testout/t101.jpg for writing\n";
