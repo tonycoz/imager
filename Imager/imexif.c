@@ -64,6 +64,7 @@ typedef struct {
   int tag;
   int type;
   int count;
+  int item_size;
   int size;
   int offset;
 } ifd_entry;
@@ -133,7 +134,7 @@ typedef struct {
 #define tag_f_number 0x829D
 #define tag_exposure_program 0x8822
 #define tag_spectral_sensitivity 0x8824
-#define tag_iso_speed_rating 0x8827
+#define tag_iso_speed_ratings 0x8827
 #define tag_oecf 0x8828
 #define tag_shutter_speed 0x9201
 #define tag_aperture 0x9202
@@ -170,6 +171,39 @@ typedef struct {
 #define tag_device_setting_description 0xA40B
 #define tag_subject_distance_range 0xA40C
 
+/* GPS tags */
+#define tag_gps_version_id 0
+#define tag_gps_latitude_ref 1
+#define tag_gps_latitude 2
+#define tag_gps_longitude_ref 3
+#define tag_gps_longitude 4
+#define tag_gps_altitude_ref 5
+#define tag_gps_altitude 6
+#define tag_gps_time_stamp 7
+#define tag_gps_satellites 8
+#define tag_gps_status 9
+#define tag_gps_measure_mode 10
+#define tag_gps_dop 11
+#define tag_gps_speed_ref 12
+#define tag_gps_speed 13
+#define tag_gps_track_ref 14
+#define tag_gps_track 15
+#define tag_gps_img_direction_ref 16
+#define tag_gps_img_direction 17
+#define tag_gps_map_datum 18
+#define tag_gps_dest_latitude_ref 19
+#define tag_gps_dest_latitude 20
+#define tag_gps_dest_longitude_ref 21
+#define tag_gps_dest_longitude 22
+#define tag_gps_dest_bearing_ref 23
+#define tag_gps_dest_bearing 24
+#define tag_gps_dest_distance_ref 25
+#define tag_gps_dest_distance 26
+#define tag_gps_processing_method 27
+#define tag_gps_area_information 28
+#define tag_gps_date_stamp 29
+#define tag_gps_differential 30
+
 /* don't use this on pointers */
 #define ARRAY_COUNT(array) (sizeof(array)/sizeof(*array))
 
@@ -205,14 +239,17 @@ static int tiff_get16s(imtiff *, unsigned long offset);
 static int tiff_get32s(imtiff *, unsigned long offset);
 static double tiff_get_rat(imtiff *, unsigned long offset);
 static double tiff_get_rats(imtiff *, unsigned long offset);
-static void save_ifd0_tags(i_img *im, imtiff *tiff, unsigned long *exif_ifd_offset);
+static void save_ifd0_tags(i_img *im, imtiff *tiff, unsigned long *exif_ifd_offset, unsigned long *gps_ifd_offset);
 static void save_exif_ifd_tags(i_img *im, imtiff *tiff);
+static void save_gps_ifd_tags(i_img *im, imtiff *tiff);
 static void
 copy_string_tags(i_img *im, imtiff *tiff, tag_map *map, int map_count);
 static void
 copy_int_tags(i_img *im, imtiff *tiff, tag_map *map, int map_count);
 static void
 copy_rat_tags(i_img *im, imtiff *tiff, tag_map *map, int map_count);
+static void
+copy_num_array_tags(i_img *im, imtiff *tiff, tag_map *map, int map_count);
 static void
 copy_name_tags(i_img *im, imtiff *tiff, tag_value_map *map, int map_count);
 static void process_maker_note(i_img *im, imtiff *tiff, unsigned long offset, size_t size);
@@ -246,7 +283,7 @@ int
 i_int_decode_exif(i_img *im, unsigned char *data, size_t length) {
   imtiff tiff;
   unsigned long exif_ifd_offset = 0;
-  unsigned long ifd1_offset;
+  unsigned long gps_ifd_offset = 0;
   /* basic checks - must start with "Exif\0\0" */
 
   if (length < 6 || memcmp(data, "Exif\0\0", 6) != 0) {
@@ -266,7 +303,7 @@ i_int_decode_exif(i_img *im, unsigned char *data, size_t length) {
     return 1;
   }
 
-  save_ifd0_tags(im, &tiff, &exif_ifd_offset);
+  save_ifd0_tags(im, &tiff, &exif_ifd_offset, &gps_ifd_offset);
 
   if (exif_ifd_offset) {
     if (tiff_load_ifd(&tiff, exif_ifd_offset)) {
@@ -274,6 +311,15 @@ i_int_decode_exif(i_img *im, unsigned char *data, size_t length) {
     }
     else {
       mm_log((2, "Could not load Exif IFD\n"));
+    }
+  }
+
+  if (gps_ifd_offset) {
+    if (tiff_load_ifd(&tiff, gps_ifd_offset)) {
+      save_gps_ifd_tags(im, &tiff);
+    }
+    else {
+      mm_log((2, "Could not load GPS IFD\n"));
     }
   }
 
@@ -294,7 +340,7 @@ i_int_decode_exif(i_img *im, unsigned char *data, size_t length) {
 
 =item save_ifd0_tags
 
-save_ifd0_tags(im, tiff, &exif_ifd_offset)
+save_ifd0_tags(im, tiff, &exif_ifd_offset, &gps_ifd_offset)
 
 Scans the currently loaded IFD for tags expected in IFD0 and sets them
 in the image.
@@ -345,7 +391,8 @@ static tag_value_map ifd0_values[] =
   };
 
 static void
-save_ifd0_tags(i_img *im, imtiff *tiff, unsigned long *exif_ifd_offset) {
+save_ifd0_tags(i_img *im, imtiff *tiff, unsigned long *exif_ifd_offset,
+	       unsigned long *gps_ifd_offset) {
   int i, tag_index;
   int work;
   ifd_entry *entry;
@@ -357,6 +404,11 @@ save_ifd0_tags(i_img *im, imtiff *tiff, unsigned long *exif_ifd_offset) {
       if (tiff_get_tag_int(tiff, tag_index, &work))
 	*exif_ifd_offset = work;
       break;
+
+    case tag_gps_ifd:
+      if (tiff_get_tag_int(tiff, tag_index, &work))
+	*gps_ifd_offset = work;
+      break;
     }
   }
 
@@ -364,6 +416,7 @@ save_ifd0_tags(i_img *im, imtiff *tiff, unsigned long *exif_ifd_offset) {
   copy_int_tags(im, tiff, ifd0_int_tags, ifd0_int_tag_count);
   copy_rat_tags(im, tiff, ifd0_rat_tags, ARRAY_COUNT(ifd0_rat_tags));
   copy_name_tags(im, tiff, ifd0_values, ARRAY_COUNT(ifd0_values));
+  /* copy_num_array_tags(im, tiff, ifd0_num_arrays, ARRAY_COUNT(ifd0_num_arrays)); */
 }
 
 /*
@@ -398,7 +451,6 @@ static tag_map exif_ifd_int_tags[] =
   {
     { tag_color_space, "exif_color_space" },
     { tag_exposure_program, "exif_exposure_program" },
-    { tag_iso_speed_rating, "exif_iso_speed_rating" },
     { tag_metering_mode, "exif_metering_mode" },
     { tag_light_source, "exif_light_source" },
     { tag_flash, "exif_flash" },
@@ -619,6 +671,13 @@ static tag_value_map exif_ifd_values[] =
     VALUE_MAP_ENTRY(focal_plane_resolution_unit),
   };
 
+static tag_map exif_num_arrays[] =
+  {
+    { tag_iso_speed_ratings, "exif_iso_speed_ratings" },
+    { tag_subject_area, "exif_subject_area" },
+    { tag_subject_location, "exif_subject_location" },
+  };
+
 static void
 save_exif_ifd_tags(i_img *im, imtiff *tiff) {
   int i, tag_index;
@@ -669,11 +728,77 @@ save_exif_ifd_tags(i_img *im, imtiff *tiff) {
   copy_int_tags(im, tiff, exif_ifd_int_tags, exif_ifd_int_tag_count);
   copy_rat_tags(im, tiff, exif_ifd_rat_tags, exif_ifd_rat_tag_count);
   copy_name_tags(im, tiff, exif_ifd_values, ARRAY_COUNT(exif_ifd_values));
+  copy_num_array_tags(im, tiff, exif_num_arrays, ARRAY_COUNT(exif_num_arrays));
 
   /* This trashes the IFD - make sure it's done last */
   if (maker_note_offset) {
     process_maker_note(im, tiff, maker_note_offset, maker_note_size);
   }
+}
+
+static tag_map gps_ifd_string_tags[] =
+  {
+    { tag_gps_version_id, "exif_gps_version_id" },
+    { tag_gps_latitude_ref, "exif_gps_latitude_ref" },
+    { tag_gps_longitude_ref, "exif_gps_longitude_ref" },
+    { tag_gps_altitude_ref, "exif_gps_altitude_ref" },
+    { tag_gps_satellites, "exif_gps_satellites" },
+    { tag_gps_status, "exif_gps_status" },
+    { tag_gps_measure_mode, "exif_gps_measure_mode" },
+    { tag_gps_speed_ref, "exif_gps_speed_ref" },
+    { tag_gps_track_ref, "exif_gps_track_ref" },
+  };
+
+static tag_map gps_ifd_int_tags[] =
+  {
+    { tag_gps_differential, "exif_gps_differential" },
+  };
+
+static tag_map gps_ifd_rat_tags[] =
+  {
+    { tag_gps_altitude, "exif_gps_altitude" },
+    { tag_gps_time_stamp, "exif_gps_time_stamp" },
+    { tag_gps_dop, "exif_gps_dop" },
+    { tag_gps_speed, "exif_gps_speed" },
+    { tag_gps_track, "exif_track" }
+  };
+
+static tag_map gps_differential_values [] =
+  {
+    { 0, "without differential correction" },
+    { 1, "Differential correction applied" },
+  };
+
+static tag_value_map gps_ifd_values[] =
+  {
+    VALUE_MAP_ENTRY(gps_differential),
+  };
+
+static tag_map gps_num_arrays[] =
+  {
+    { tag_gps_latitude, "exif_gps_latitude" },
+    { tag_gps_longitude, "exif_gps_longitude" },
+  };
+
+static void
+save_gps_ifd_tags(i_img *im, imtiff *tiff) {
+  int i, tag_index;
+  int work;
+  ifd_entry *entry;
+
+  /* for (tag_index = 0, entry = tiff->ifd; 
+       tag_index < tiff->ifd_size; ++tag_index, ++entry) {
+    switch (entry->tag) {
+      break;
+    }
+    }*/
+
+  copy_string_tags(im, tiff, gps_ifd_string_tags, 
+	 ARRAY_COUNT(gps_ifd_string_tags));
+  copy_int_tags(im, tiff, gps_ifd_int_tags, ARRAY_COUNT(gps_ifd_int_tags));
+  copy_rat_tags(im, tiff, gps_ifd_rat_tags, ARRAY_COUNT(gps_ifd_rat_tags));
+  copy_name_tags(im, tiff, gps_ifd_values, ARRAY_COUNT(gps_ifd_values));
+  copy_num_array_tags(im, tiff, gps_num_arrays, ARRAY_COUNT(gps_num_arrays));
 }
 
 /*
@@ -813,15 +938,19 @@ tiff_load_ifd(imtiff *tiff, unsigned long offset) {
     entry->type = tiff_get16(tiff, base+2);
     entry->count = tiff_get32(tiff, base+4);
     if (entry->type >= 1 || entry->type <= ift_last) {
-      int data_size = type_sizes[entry->type] * entry->count;
-      entry->size = data_size;
-      if (data_size <= 4) {
+      entry->item_size = type_sizes[entry->type];
+      entry->size = entry->item_size * entry->count;
+      if (entry->size / entry->item_size != entry->count) {
+	mm_log((1, "Integer overflow calculating tag data size processing EXIF block\n"));
+	return 0;
+      }
+      else if (entry->size <= 4) {
 	entry->offset = base + 8;
       }
       else {
 	entry->offset = tiff_get32(tiff, base+8);
-	if (entry->offset + data_size > tiff->size) {
-	  mm_log((2, "Invalid data offset processing IFD"));
+	if (entry->offset + entry->size > tiff->size) {
+	  mm_log((2, "Invalid data offset processing IFD\n"));
 	  myfree(entries);
 	  return 0;
 	}
@@ -882,6 +1011,72 @@ The value must have a count of 1.
 */
 
 static int
+tiff_get_tag_double_array(imtiff *tiff, int index, double *result, 
+			  int array_index) {
+  ifd_entry *entry;
+  unsigned long offset;
+  if (index < 0 || index >= tiff->ifd_size) {
+    m_fatal(3, "tiff_get_tag_double_array() tag index out of range");
+  }
+  
+  entry = tiff->ifd + index;
+  if (array_index < 0 || array_index >= entry->count) {
+    mm_log((3, "tiff_get_tag_double_array() array index out of range"));
+    return 0;
+  }
+
+  offset = entry->offset + array_index * entry->item_size;
+
+  switch (entry->type) {
+  case ift_short:
+    *result = tiff_get16(tiff, offset);
+    return 1;
+   
+  case ift_long:
+    *result = tiff_get32(tiff, offset);
+    return 1;
+
+  case ift_rational:
+    *result = tiff_get_rat(tiff, offset);
+    return 1;
+
+  case ift_sshort:
+    *result = tiff_get16s(tiff, offset);
+    return 1;
+
+  case ift_slong:
+    *result = tiff_get32s(tiff, offset);
+    return 1;
+
+  case ift_srational:
+    *result = tiff_get_rats(tiff, offset);
+    return 1;
+
+  case ift_byte:
+    *result = *(tiff->base + offset);
+    return 1;
+  }
+
+  return 0;
+}
+
+/*
+=item tiff_get_tag_double
+
+  double value;
+  if (tiff_get_tag(tiff, index, &value)) {
+    // process value
+  }
+
+Attempts to retrieve a double value from the given index in the
+current IFD.
+
+The value must have a count of 1.
+
+=cut
+*/
+
+static int
 tiff_get_tag_double(imtiff *tiff, int index, double *result) {
   ifd_entry *entry;
   if (index < 0 || index >= tiff->ifd_size) {
@@ -894,29 +1089,57 @@ tiff_get_tag_double(imtiff *tiff, int index, double *result) {
     return 0;
   }
 
+  return tiff_get_tag_double_array(tiff, index, result, 0);
+}
+
+/*
+=item tiff_get_tag_int_array
+
+  int value;
+  if (tiff_get_tag_int_array(tiff, index, &value, array_index)) {
+    // process value
+  }
+
+Attempts to retrieve an integer value from the given index in the
+current IFD.
+
+=cut
+*/
+
+static int
+tiff_get_tag_int_array(imtiff *tiff, int index, int *result, int array_index) {
+  ifd_entry *entry;
+  unsigned long offset;
+  if (index < 0 || index >= tiff->ifd_size) {
+    m_fatal(3, "tiff_get_tag_int_array() tag index out of range");
+  }
+  
+  entry = tiff->ifd + index;
+  if (array_index < 0 || array_index >= entry->count) {
+    m_fatal(3, "tiff_get_tag_int_array() array index out of range");
+  }
+
+  offset = entry->offset + array_index * entry->item_size;
+
   switch (entry->type) {
   case ift_short:
-    *result = tiff_get16(tiff, entry->offset);
+    *result = tiff_get16(tiff, offset);
     return 1;
    
   case ift_long:
-    *result = tiff_get32(tiff, entry->offset);
-    return 1;
-
-  case ift_rational:
-    *result = tiff_get_rat(tiff, entry->offset);
+    *result = tiff_get32(tiff, offset);
     return 1;
 
   case ift_sshort:
-    *result = tiff_get16s(tiff, entry->offset);
+    *result = tiff_get16s(tiff, offset);
     return 1;
 
   case ift_slong:
-    *result = tiff_get32s(tiff, entry->offset);
+    *result = tiff_get32s(tiff, offset);
     return 1;
 
-  case ift_srational:
-    *result = tiff_get_rats(tiff, entry->offset);
+  case ift_byte:
+    *result = *(tiff->base + offset);
     return 1;
   }
 
@@ -945,32 +1168,14 @@ tiff_get_tag_int(imtiff *tiff, int index, int *result) {
   if (index < 0 || index >= tiff->ifd_size) {
     m_fatal(3, "tiff_get_tag_int() index out of range");
   }
-  
+
   entry = tiff->ifd + index;
   if (entry->count != 1) {
     mm_log((3, "tiff_get_tag_int() called on tag with multiple values"));
     return 0;
   }
 
-  switch (entry->type) {
-  case ift_short:
-    *result = tiff_get16(tiff, entry->offset);
-    return 1;
-   
-  case ift_long:
-    *result = tiff_get32(tiff, entry->offset);
-    return 1;
-
-  case ift_sshort:
-    *result = tiff_get16s(tiff, entry->offset);
-    return 1;
-
-  case ift_slong:
-    *result = tiff_get32s(tiff, entry->offset);
-    return 1;
-  }
-
-  return 0;
+  return tiff_get_tag_int_array(tiff, index, result, 0);
 }
 
 /*
@@ -1055,6 +1260,63 @@ copy_string_tags(i_img *im, imtiff *tiff, tag_map *map, int map_count) {
 	int len = entry->type == ift_ascii ? entry->size - 1 : entry->size;
 	i_tags_add(&im->tags, map[i].name, 0,
 		   (char const *)(tiff->base + entry->offset), len, 0);
+	break;
+      }
+    }
+  }
+}
+
+/*
+=item copy_num_array_tags
+
+Scans the IFD for arrays of numbers and sets them in the image.
+
+=cut
+*/
+
+/* a more general solution would be better in some ways, but we don't need it */
+#define MAX_ARRAY_VALUES 10
+#define MAX_ARRAY_STRING (MAX_ARRAY_VALUES * 20)
+
+static void
+copy_num_array_tags(i_img *im, imtiff *tiff, tag_map *map, int map_count) {
+  int i, j, tag_index;
+  ifd_entry *entry;
+
+  for (tag_index = 0, entry = tiff->ifd; 
+       tag_index < tiff->ifd_size; ++tag_index, ++entry) {
+    for (i = 0; i < map_count; ++i) {
+      if (map[i].tag == entry->tag && entry->count <= MAX_ARRAY_VALUES) {
+	if (entry->type == ift_rational || entry->type == ift_srational) {
+	  double value;
+	  char workstr[MAX_ARRAY_STRING];
+	  *workstr = '\0';
+	  for (j = 0; j < entry->count; ++j) {
+	    if (!tiff_get_tag_double_array(tiff, tag_index, &value, j)) {
+	      m_fatal(3, "unexpected failure from tiff_get_tag_double_array(..., %d, ..., %d)\n", tag_index, j);
+	    }
+	    if (j) 
+	      strcat(workstr, " ");
+	    sprintf(workstr + strlen(workstr), "%.6g", value);
+	  }
+	  i_tags_add(&im->tags, map[i].name, 0, workstr, -1, 0);
+	}
+	else if (entry->type == ift_short || entry->type == ift_long
+		 || entry->type == ift_sshort || entry->type == ift_slong
+		 || entry->type == ift_byte) {
+	  int value;
+	  char workstr[MAX_ARRAY_STRING];
+	  *workstr = '\0';
+	  for (j = 0; j < entry->count; ++j) {
+	    if (!tiff_get_tag_int_array(tiff, tag_index, &value, j)) {
+	      m_fatal(3, "unexpected failure from tiff_get_tag_int_array(..., %d, ..., %d)\n", tag_index, j);
+	    }
+	    if (j) 
+	      strcat(workstr, " ");
+	    sprintf(workstr + strlen(workstr), "%d", value);
+	  }
+	  i_tags_add(&im->tags, map[i].name, 0, workstr, -1, 0);
+	}
 	break;
       }
     }
