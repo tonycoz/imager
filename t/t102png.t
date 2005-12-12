@@ -42,7 +42,7 @@ if (!i_has_format("png")) {
     $im = Imager->new(xsize=>2, ysize=>2);
     ok(!$im->write(file=>"testout/nopng.png"), "should fail to write png");
     is($im->errstr, 'format not supported', "check no png message");
-    skip("no png support", 8);
+    skip("no png support", 23);
   }
 } else {
   Imager::i_tags_add($img, "i_xres", 0, "300", 0);
