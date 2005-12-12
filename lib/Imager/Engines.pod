@@ -51,7 +51,10 @@ Note: You can still use the transform() function, but the transform2()
 function is just as fast and is more likely to be enhanced and
 maintained.
 
+  $new_img=$img->transform(xexpr=>'x',yexpr=>'y+10*sin((x+y)/10)')
 
+  $new_img=$img->transform(xexpr=>'x+0.1*y+5*sin(y/10.0+1.57)',
+                           yexpr=>'y+10*sin((x+y-0.785)/10)') 
 
 =head2 transform2
 
@@ -101,13 +104,11 @@ supplied a 3 channel image will be created.
 The tranformation function is specified using either the expr or
 rpnexpr member of the options.
 
-=over
-
-=item Infix expressions
+=head3 Infix expressions
 
 You can supply infix expressions to transform 2 with the expr keyword.
 
-$opts{expr} = 'return getp1(w-x, h-y)'
+  $opts{expr} = 'return getp1(w-x, h-y)'
 
 The 'expression' supplied follows this general grammar:
 
@@ -117,14 +118,14 @@ This allows you to simplify your expressions using variables.
 
 A more complex example might be:
 
-$opts{expr} = 'pix = getp1(x,y); return if(value(pix)>0.8,pix*0.8,pix)'
+  $opts{expr} = 'pix = getp1(x,y); return if(value(pix)>0.8,pix*0.8,pix)'
 
-Currently to use infix expressions you must have the Parse::RecDescent
+Currently to use infix expressions you must have the L<Parse::RecDescent>
 module installed (available from CPAN).  There is also what might be a
 significant delay the first time you run the infix expression parser
 due to the compilation of the expression grammar.
 
-=item Postfix expressions
+=head3 Postfix expressions
 
 You can supply postfix or reverse-polish notation expressions to
 transform2() through the rpnexpr keyword.
@@ -141,7 +142,7 @@ An example equivalent to the infix expression above:
 
  $opts{rpnexpr} = 'x y getp1 !pix @pix value 0.8 gt @pix 0.8 * @pix ifp'
 
-=back
+=head3 Operators
 
 transform2() has a fairly rich range of operators.
 

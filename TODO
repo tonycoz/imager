@@ -50,7 +50,7 @@ not commitments.
   - multiple examples for writing GIF images.
   - name arguments and use those names in the documentation
     http://nntp.perl.org/group/perl.perl5.porters/102434
-  (#1521, #5608, #8231, #11429, #13058)
+  (#1521, #5608, #8231, #11429, #13058(done))
 
 - have $img->read() act like ($img) = Imager->read_multi() on GIFs (done)
 
