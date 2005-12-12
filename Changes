@@ -1221,6 +1221,10 @@ Revision history for Perl extension Imager.
 - decode the EXIF GPS IFD as well
 - minor documentation touchups
 - bump version 0.45_01
+
+0.45_02
+- some test scripts weren't fixing @INC correctly
+- t/t101jpeg.t wasn't skipping enough when there was no jpeg support
   
 =================================================================
 

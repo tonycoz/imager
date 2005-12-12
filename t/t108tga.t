@@ -1,6 +1,7 @@
 #!perl -w
 use Imager qw(:all);
 use strict;
+use lib 't';
 use Test::More tests=>36;
 BEGIN { require "t/testtools.pl"; }
 init_log("testout/t108tga.log",1);
