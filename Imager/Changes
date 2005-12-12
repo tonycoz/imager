@@ -1113,7 +1113,7 @@ Revision history for Perl extension Imager.
 0.45 Mon 30 May 2005
 - t/t105gif.t wasn't handling buggy giflibs correctly
 
-0.45_01
+0.45_01 Mon 12 Dec 2005
 - give the colorcount() and maxcolors() methods their own entries and
   add them to the method index.
 - added tiff_bitspersample and tiff_photometric tags to tiff images
@@ -1220,6 +1220,7 @@ Revision history for Perl extension Imager.
   Resolves: http://rt.cpan.org/NoAuth/Bug.html?id=13508
 - decode the EXIF GPS IFD as well
 - minor documentation touchups
+- bump version 0.45_01
   
 =================================================================
 
