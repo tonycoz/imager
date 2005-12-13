@@ -1222,11 +1222,14 @@ Revision history for Perl extension Imager.
 - minor documentation touchups
 - bump version 0.45_01
 
-0.45_02
+0.45_02 Mon 12 Dec 2005
 - some test scripts weren't fixing @INC correctly
 - t/t101jpeg.t wasn't skipping enough when there was no jpeg support
 - bump version to 0.45_02
-  
+
+0.45_03
+- change the use in t/t91.pod to require version 1.00 of Test::Pod  
+
 =================================================================
 
         For latest versions check the Imager-devel pages:
