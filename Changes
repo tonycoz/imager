@@ -1229,6 +1229,7 @@ Revision history for Perl extension Imager.
 
 0.45_03
 - change the use in t/t91.pod to require version 1.00 of Test::Pod  
+- minor changes to Imager::Transformations
 
 =================================================================
 
