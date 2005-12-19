@@ -81,10 +81,6 @@ if you want to keep an original after doing something that changes the image.
 
 =item scale
 
-=item scaleX
-
-=item scaleY
-
 To scale an image so porportions are maintained use the
 C<$img-E<gt>scale()> method.  if you give either a xpixels or ypixels
 parameter they will determine the width or height respectively.  If
@@ -108,15 +104,76 @@ worse looking images - especially if the original has a lot of sharp
 variations and the scaled image is by more than 3-5 times smaller than
 the original.
 
+=over
+
+=item *
+
+xpixels, ypixels - desired size of the scaled image.  The resulting
+image is always scaled proportionally.  The C<type> parameter controls
+whether the larger or smaller of the two possible sizes is chosen.
+
+=item *
+
+type - controls whether the larger or smaller of the two possible
+sizes is chosen, possible values are:
+
+=over
+
+=item *
+
+min - the smaller of the 2 sizes are chosen.
+
+=item *
+
+max - the larger of the 2 sizes.  This is the default.
+
+=back
+
+The behaviour when C<type> is set to some other value is undefined.
+
+For example, if the original image is 400 pixels wide by 200 pixels
+high and C<xpixels> is set to 300, and C<ypixels> is set to 160.  When
+C<type> is C<'min'> the resulting image is 300 x 150, when C<type> is
+C<'max'> the resulting image is 320 x 150.
+
+C<type> is only used if both C<xpixels> and C<ypixels> are supplied.
+
+=item *
+
+qtype - defines the quality of scaling performed.  Possible values are:
+
+=over
+
+=item *
+
+normal - high quality scaling.  This is the default.
+
+=item *
+
+preview - lower quality.
+
+=back
+
+=back
+
 If you need to scale images per axis it is best to do it simply by
 calling scaleX() or scaleY().  You can pass either 'scalefactor' or
 'pixels' to both functions.
+
+Returns the scaled image on success.
+
+Returns false on failure, check the errstr() method for the reason for
+failure.
+
+=item scaleX
 
 scaleX() will scale along the X dimension, changing the width of the
 image:
 
   $newimg = $img->scaleX(pixels=>400); # 400x500
   $newimg = $img->scaleX(scalefactor=>0.25) # 175x500
+
+=item scaleY
 
 scaleY() will scale along the Y dimension, changing the height of the
 image:
