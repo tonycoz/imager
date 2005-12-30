@@ -1242,6 +1242,9 @@ Revision history for Perl extension Imager.
 0.47 Fri 30 Dec 2005
 - bump to 0.47
 
+0.47_01
+- set the locale to "C" properly when testing ft1.x error messages
+
 =================================================================
 
         For latest versions check the Imager-devel pages:
