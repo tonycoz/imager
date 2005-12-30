@@ -1235,6 +1235,8 @@ Revision history for Perl extension Imager.
 0.46_01
 - switched to subversion - changed $VERSION that was based on Revision
   tag to be manually handled.
+- outputting a single space using the Freetype 1.x driver (type=>'tt')
+  was producing a divide by zero error.
 
 =================================================================
 

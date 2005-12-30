@@ -1084,7 +1084,7 @@ i_tt_init_raster_map( TT_Raster_Map* bit, int width, int height, int smooth ) {
     bit->size  = bit->rows * bit->cols;     /* number of bytes in buffer */
   }
 
-  if (bit->size / bit->rows != bit->cols) {
+  if (bit->rows && bit->size / bit->rows != bit->cols) {
     m_fatal(0, "Integer overflow calculating bitmap size (%d, %d)\n",
             bit->width, bit->rows);
   }

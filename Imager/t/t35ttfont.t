@@ -1,7 +1,7 @@
 #!perl -w
 use strict;
 use lib 't';
-use Test::More tests => 71;
+use Test::More tests => 72;
 
 BEGIN { use_ok(Imager => ':all') }
 require "t/testtools.pl";
@@ -10,7 +10,7 @@ init_log("testout/t35ttfont.log",2);
 
 SKIP:
 {
-  skip("freetype 1.x unavailable or disabled", 70) 
+  skip("freetype 1.x unavailable or disabled", 71) 
     unless i_has_format("tt");
   print "# has tt\n";
   
@@ -19,7 +19,7 @@ SKIP:
 
   if (!ok(-f $fontname, "check test font file exists")) {
     print "# cannot find fontfile for truetype test $fontname\n";
-    skip('Cannot load test font', 61);
+    skip('Cannot load test font', 70);
   }
 
   i_init_fonts();
@@ -31,11 +31,11 @@ SKIP:
   my $ttraw = Imager::i_tt_new($fontname);
   ok($ttraw, "create font");
 
-  my @bbox = i_tt_bbox($ttraw,50.0,'XMCLH',5,0);
+  my @bbox = i_tt_bbox($ttraw,50.0,'XMCLH',6,0);
   is(@bbox, 8, "bounding box");
   print "#bbox: ($bbox[0], $bbox[1]) - ($bbox[2], $bbox[3])\n";
 
-  ok(i_tt_cp($ttraw,$overlay,5,50,1,50.0,'XMCLH',5,1,0), "cp output");
+  ok(i_tt_cp($ttraw,$overlay,5,50,1,50.0,'XM CLH',6,1,0), "cp output");
   i_line($overlay,0,50,100,50,$bgcolor,1);
 
   open(FH,">testout/t35ttfont.ppm") || die "cannot open testout/t35ttfont.ppm\n";
@@ -49,7 +49,7 @@ SKIP:
   
   #     i_tt_set_aa(2);
   
-  ok(i_tt_text($ttraw,$backgr,100,120,$bgcolor,50.0,'test',4,1,0),
+  ok(i_tt_text($ttraw,$backgr,100,120,$bgcolor,50.0,'te st',5,1,0),
       "normal output");
 
   my $ugly = Imager::i_tt_new("./fontfiles/ImUgly.ttf");
@@ -57,7 +57,7 @@ SKIP:
   # older versions were dropping the bottom of g and the right of a
   ok(i_tt_text($ugly, $backgr,100, 80, $bgcolor, 14, 'g%g', 3, 1, 0), 
      "draw g%g");
-  ok(i_tt_text($ugly, $backgr,150, 80, $bgcolor, 14, 'delta', 5, 1, 0),
+  ok(i_tt_text($ugly, $backgr,150, 80, $bgcolor, 14, 'delta', 6, 1, 0),
       "draw delta");
   i_line($backgr,0,20,499,20,i_color_new(0,127,0,0),1);
   ok(i_tt_text($ttraw, $backgr, 20, 20, $bgcolor, 14, 'abcdefghijklmnopqrstuvwxyz{|}', 29, 1, 0), "alphabet");
@@ -245,6 +245,13 @@ SKIP:
        "drawing should fail with no string");
     is($im->errstr, "missing required parameter 'string'",
        "check error message");
+  }
+
+  { # introduced in 0.46 - outputting just space crashes
+    my $im = Imager->new(xsize=>100, ysize=>100);
+    my $font = Imager::Font->new(file=>'fontfiles/ImUgly.ttf', size=>14);
+    ok($im->string(font=>$font, x=> 5, y => 50, string=>' '),
+      "outputting just a space was crashing");
   }
 
   ok(1, "end of code");
