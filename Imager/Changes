@@ -1237,6 +1237,7 @@ Revision history for Perl extension Imager.
   tag to be manually handled.
 - outputting a single space using the Freetype 1.x driver (type=>'tt')
   was producing a divide by zero error.
+- bump to 0.46_01 for testing
 
 =================================================================
 
