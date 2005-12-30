@@ -222,12 +222,16 @@ SKIP:
 
   { # Ticket #14804 Imager::Font->new() doesn't report error details
     # when using freetype 1
-    my $old_lang = $ENV{LANG};
-    $ENV{LANG} = "C";
+    # make sure we're using C locale for messages
+    use POSIX qw(setlocale LC_ALL);
+    setlocale(LC_ALL, "C");
+
     my $font = Imager::Font->new(file=>'t/t35ttfont.t', type=>'tt');
     ok(!$font, "font creation should have failed for invalid file");
     cmp_ok(Imager->errstr, 'eq', 'Invalid file format.',
 	  "test error message");
+
+    setlocale(LC_ALL, "");
   }
 
   { # check errstr set correctly
