@@ -2,7 +2,7 @@ package Imager::Fill;
 use strict;
 use vars qw($VERSION);
 
-$VERSION = sprintf "%d.%03d", q$Revision$=~/\d+/g;
+$VERSION = "1.009";
 
 # this needs to be kept in sync with the array of hatches in fills.c
 my @hatch_types =

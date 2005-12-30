@@ -3,7 +3,7 @@ use strict;
 use Imager::Color::Float;
 use vars qw($VERSION);
 
-$VERSION = sprintf "%d.%03d", q$Revision$=~/\d+/g;
+$VERSION = "1.005";
 
 =head1 NAME
 
