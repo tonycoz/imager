@@ -1232,12 +1232,15 @@ Revision history for Perl extension Imager.
 - minor changes to Imager::Transformations
 - bump version to 0.46
 
-0.46_01
+0.46_01 Fri 30 Dec 2005
 - switched to subversion - changed $VERSION that was based on Revision
   tag to be manually handled.
 - outputting a single space using the Freetype 1.x driver (type=>'tt')
   was producing a divide by zero error.
 - bump to 0.46_01 for testing
+
+0.47 Fri 30 Dec 2005
+- bump to 0.47
 
 =================================================================
 
