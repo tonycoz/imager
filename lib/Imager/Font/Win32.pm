@@ -3,7 +3,7 @@ use strict;
 use vars qw(@ISA $VERSION);
 @ISA = qw(Imager::Font);
 
-$VERSION = sprintf "%d.%03d", q$Revision$=~/\d+/g;
+$VERSION = "1.004";
 
 # called by Imager::Font::new()
 # since Win32's HFONTs include the size information this

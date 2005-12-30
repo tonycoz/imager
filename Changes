@@ -1232,6 +1232,10 @@ Revision history for Perl extension Imager.
 - minor changes to Imager::Transformations
 - bump version to 0.46
 
+0.46_01
+- switched to subversion - changed $VERSION that was based on Revision
+  tag to be manually handled.
+
 =================================================================
 
         For latest versions check the Imager-devel pages:

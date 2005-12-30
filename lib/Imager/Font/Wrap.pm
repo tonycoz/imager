@@ -5,7 +5,7 @@ use Imager;
 use Imager::Font;
 use vars qw($VERSION);
 
-$VERSION = sprintf "%d.%03d", q$Revision$=~/\d+/g;
+$VERSION = "1.002";
 
 *_first = \&Imager::Font::_first;
 

@@ -4,7 +4,7 @@ use Imager::Color;
 use strict;
 use vars qw($VERSION);
 
-$VERSION = sprintf "%d.%03d", q$Revision$=~/\d+/g;
+$VERSION = "1.033";
 
 # the aim here is that we can:
 #  - add file based types in one place: here
