@@ -1217,7 +1217,6 @@ read_direct_bmp(io_glue *ig, int xsize, int ysize, int bit_count,
     char buffer;
     while (base_offset < offbits) {
       if (ig->readcb(ig, &buffer, 1) != 1) {
-        i_img_destroy(im);
         i_push_error(0, "failed skipping to image data offset");
         return NULL;
       }
