@@ -1245,6 +1245,9 @@ Revision history for Perl extension Imager.
 0.47_01
 - set the locale to "C" properly when testing ft1.x error messages
 - don't destroy image before creating it in error handling in bmp.c
+- extra concept index entries
+- Imager::Draw - align_string()'s valign parameter was invalid in the 
+  synopsis
 
 =================================================================
 
