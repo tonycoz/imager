@@ -3256,6 +3256,9 @@ animated GIF - L<Imager::File/"Writing an animated GIF">
 aspect ratio - L<Imager::ImageTypes/i_xres>,
 L<Imager::ImageTypes/i_yres>, L<Imager::ImageTypes/i_aspect_only>
 
+blend - alpha blending one image onto another
+L<Imager::Transformations/rubthrough>
+
 blur - L<Imager::Filters/guassian>, L<Imager::Filters/conv>
 
 boxes, drawing - L<Imager::Draw/box>
@@ -3345,6 +3348,9 @@ noise, filter - L<Imager::Filter/noise>
 
 noise, rendered - L<Imager::Filter/turbnoise>,
 L<Imager::Filter/radnoise>
+
+paste - L<Imager::Transformations/paste>,
+L<Imager::Transformations/rubthrough>
 
 pseudo-color image - L<Imager::ImageTypes/to_paletted>,
 L<Imager::ImageTypes/new>

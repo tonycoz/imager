@@ -55,7 +55,7 @@ Imager::Draw - Draw primitives to images
   $img->align_string(x => $img->getwidth() - 1,
                      y => $img->getheight() - 1,
                      halign => 'right',
-                     valign => 'left',
+                     valign => 'bottom',
                      string => 'Imager',
                      font => $font,
                      size => 12);
