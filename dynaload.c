@@ -1,7 +1,7 @@
-#include "image.h"
+#include "imager.h"
 #include "dynaload.h"
 /* #include "XSUB.h"  so we can compile on threaded perls */
-#include "imagei.h"
+#include "imageri.h"
 
 static symbol_table_t symbol_table={i_has_format,ICL_set_internal,ICL_info,
 			     i_img_new,i_img_empty,i_img_empty_ch,i_img_exorcise,

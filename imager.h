@@ -28,7 +28,7 @@
 #define MAXINT 2147483647
 #endif
 
-#include "datatypes.h"
+#include "imdatatypes.h"
 
 undef_int i_has_format(char *frmt);
 
@@ -49,6 +49,7 @@ extern void i_rgb_to_hsv(i_color *color);
 extern void i_hsv_to_rgb(i_color *color);
 
 i_img *IIM_new(int x,int y,int ch);
+#define i_img_8_new IIM_new
 void   IIM_DESTROY(i_img *im);
 i_img *i_img_new( void );
 i_img *i_img_empty(i_img *im,int x,int y);
@@ -71,24 +72,33 @@ int    i_img_getchannels(i_img *im);
 
 /* Base functions */
 
-#if 0
-int i_ppix(i_img *im,int x,int y,i_color *val);
-int i_gpix(i_img *im,int x,int y,i_color *val);
-int i_ppixf(i_img *im,int x,int y,i_color *val);
-int i_gpixf(i_img *im,int x,int y,i_color *val);
-#endif
+extern int i_ppix(i_img *im,int x,int y,i_color *val);
+extern int i_gpix(i_img *im,int x,int y,i_color *val);
+extern int i_ppixf(i_img *im,int x,int y,i_fcolor *val);
+extern int i_gpixf(i_img *im,int x,int y,i_fcolor *val);
 
 #define i_ppix(im, x, y, val) (((im)->i_f_ppix)((im), (x), (y), (val)))
 #define i_gpix(im, x, y, val) (((im)->i_f_gpix)((im), (x), (y), (val)))
 #define i_ppixf(im, x, y, val) (((im)->i_f_ppixf)((im), (x), (y), (val)))
 #define i_gpixf(im, x, y, val) (((im)->i_f_gpixf)((im), (x), (y), (val)))
 
-#if 0
-int i_ppix_d(i_img *im,int x,int y,i_color *val);
-int i_gpix_d(i_img *im,int x,int y,i_color *val);
-int i_plin_d(i_img *im,int l, int r, int y, i_color *val);
-int i_glin_d(i_img *im,int l, int r, int y, i_color *val);
-#endif
+extern int i_plin(i_img *im, int l, int r, int y, i_color *vals);
+extern int i_glin(i_img *im, int l, int r, int y, i_color *vals);
+extern int i_plinf(i_img *im, int l, int r, int y, i_fcolor *vals);
+extern int i_glinf(i_img *im, int l, int r, int y, i_fcolor *vals);
+extern int i_gsamp(i_img *im, int l, int r, int y, i_sample_t *samp, 
+                   const int *chans, int chan_count);
+extern int i_gsampf(i_img *im, int l, int r, int y, i_fsample_t *samp, 
+                   const int *chans, int chan_count);
+extern int i_gpal(i_img *im, int x, int r, int y, i_palidx *vals);
+extern int i_ppal(i_img *im, int x, int r, int y, i_palidx *vals);
+extern int i_addcolors(i_img *im, i_color *colors, int count);
+extern int i_getcolors(i_img *im, int i, i_color *, int count);
+extern int i_colorcount(i_img *im);
+extern int i_maxcolors(i_img *im);
+extern int i_findcolor(i_img *im, i_color *color, i_palidx *entry);
+extern int i_setcolors(i_img *im, int index, i_color *colors, 
+                       int count);
 
 #define i_plin(im, l, r, y, val) (((im)->i_f_plin)(im, l, r, y, val))
 #define i_glin(im, l, r, y, val) (((im)->i_f_glin)(im, l, r, y, val))
@@ -99,14 +109,6 @@ int i_glin_d(i_img *im,int l, int r, int y, i_color *val);
   (((im)->i_f_gsamp)((im), (l), (r), (y), (samps), (chans), (count)))
 #define i_gsampf(im, l, r, y, samps, chans, count) \
   (((im)->i_f_gsampf)((im), (l), (r), (y), (samps), (chans), (count)))
-
-#define i_psamp(im, l, r, y, samps, chans, count) \
-  (((im)->i_f_gsamp)((im), (l), (r), (y), (samps), (chans), (count)))
-#define i_psampf(im, l, r, y, samps, chans, count) \
-  (((im)->i_f_gsampf)((im), (l), (r), (y), (samps), (chans), (count)))
-
-
-
 
 #define i_findcolor(im, color, entry) \
   (((im)->i_f_findcolor) ? ((im)->i_f_findcolor)((im), (color), (entry)) : 0)
@@ -133,57 +135,6 @@ int i_glin_d(i_img *im,int l, int r, int y, i_color *val);
 #define i_img_virtual(im) ((im)->virtual)
 #define i_img_type(im) ((im)->type)
 #define i_img_bits(im) ((im)->bits)
-
-/* Generic fills */
-struct i_fill_tag;
-
-typedef void (*i_fill_with_color_f)
-     (struct i_fill_tag *fill, int x, int y, int width, int channels, 
-      i_color *data);
-typedef void (*i_fill_with_fcolor_f)
-     (struct i_fill_tag *fill, int x, int y, int width, int channels,
-      i_fcolor *data);
-typedef void (*i_fill_destroy_f)(struct i_fill_tag *fill);
-typedef void (*i_fill_combine_f)(i_color *out, i_color *in, int channels, 
-                                 int count);
-typedef void (*i_fill_combinef_f)(i_fcolor *out, i_fcolor *in, int channels,
-                                  int count);
-
-
-typedef struct i_fill_tag
-{
-  /* called for 8-bit/sample image (and maybe lower) */
-  /* this may be NULL, if so call fill_with_fcolor */
-  i_fill_with_color_f fill_with_color;
-
-  /* called for other sample sizes */
-  /* this must be non-NULL */
-  i_fill_with_fcolor_f fill_with_fcolor;
-
-  /* called if non-NULL to release any extra resources */
-  i_fill_destroy_f destroy;
-
-  /* if non-zero the caller will fill data with the original data
-     from the image */
-  i_fill_combine_f combine;
-  i_fill_combinef_f combinef;
-} i_fill_t;
-
-typedef enum {
-  ic_none,
-  ic_normal,
-  ic_multiply,
-  ic_dissolve,
-  ic_add,
-  ic_subtract,
-  ic_diff,
-  ic_lighten,
-  ic_darken,
-  ic_hue,
-  ic_sat,
-  ic_value,
-  ic_color
-} i_combine_t;
 
 extern i_fill_t *i_new_fill_solidf(i_fcolor *c, int combine);
 extern i_fill_t *i_new_fill_solid(i_color *c, int combine);
@@ -213,7 +164,7 @@ void i_arc_aa_cfill(i_img *im,double x,double y,double rad,double d1,double d2,i
 void i_circle_aa   (i_img *im,float x, float y,float rad,i_color *val);
 void i_copyto      (i_img *im,i_img *src,int x1,int y1,int x2,int y2,int tx,int ty);
 void i_copyto_trans(i_img *im,i_img *src,int x1,int y1,int x2,int y2,int tx,int ty,i_color *trans);
-void i_copy        (i_img *im,i_img *src);
+i_img* i_copy        (i_img *src);
 int  i_rubthru     (i_img *im, i_img *src, int tx, int ty, int src_minx, int src_miny, int src_maxx, int src_maxy);
 
 
@@ -248,30 +199,6 @@ float i_img_diff   (i_img *im1,i_img *im2);
 
 undef_int i_init_fonts( int t1log );
 
-/*
-   describes an axis of a MM font.
-   Modelled on FT2's FT_MM_Axis.
-   It would be nice to have a default entry too, but FT2 
-   doesn't support it.
-*/
-typedef struct i_font_mm_axis_tag {
-  char const *name;
-  int minimum;
-  int maximum;
-} i_font_mm_axis;
-
-#define IM_FONT_MM_MAX_AXES 4
-
-/* 
-   multiple master information for a font, if any 
-   modelled on FT2's FT_Multi_Master.
-*/
-typedef struct i_font_mm_tag {
-  int num_axis;
-  int num_designs; /* provided but not necessarily useful */
-  i_font_mm_axis axis[IM_FONT_MM_MAX_AXES];
-} i_font_mm;
-
 #ifdef HAVE_LIBT1
 
 undef_int i_init_t1( int t1log );
@@ -290,10 +217,6 @@ extern int i_t1_glyph_name(int font_num, unsigned long ch, char *name_buf,
 
 #ifdef HAVE_LIBTT
 
-struct TT_Fonthandle_;
-
-typedef struct TT_Fonthandle_ TT_Fonthandle;
-
 undef_int i_init_tt( void );
 TT_Fonthandle* i_tt_new(char *fontname);
 void i_tt_destroy( TT_Fonthandle *handle );
@@ -311,7 +234,6 @@ int i_tt_glyph_name(TT_Fonthandle *handle, unsigned long ch, char *name_buf,
 
 #ifdef HAVE_FT2
 
-typedef struct FT2_Fonthandle FT2_Fonthandle;
 extern int i_ft2_init(void);
 extern FT2_Fonthandle * i_ft2_new(char *name, int index);
 extern void i_ft2_destroy(FT2_Fonthandle *handle);
@@ -413,144 +335,9 @@ extern int i_gen_writer(i_gen_write_data *info, char const *data, int size);
 extern i_gen_write_data *i_gen_write_data_new(i_write_callback_t cb, char *userdata, int maxlength);
 extern int i_free_gen_write_data(i_gen_write_data *, int flush);
 
-/* transparency handling for quantized output */
-typedef enum i_transp_tag {
-  tr_none, /* ignore any alpha channel */
-  tr_threshold, /* threshold the transparency - uses tr_threshold */
-  tr_errdiff, /* error diffusion */
-  tr_ordered /* an ordered dither */
-} i_transp;
-
-/* controls how we build the colour map */
-typedef enum i_make_colors_tag {
-  mc_none, /* user supplied colour map only */
-  mc_web_map, /* Use the 216 colour web colour map */
-  mc_addi, /* Addi's algorithm */
-  mc_median_cut, /* median cut - similar to giflib, hopefully */
-  mc_mask = 0xFF /* (mask for generator) */
-} i_make_colors;
-
-/* controls how we translate the colours */
-typedef enum i_translate_tag {
-  pt_giflib, /* get gif lib to do it (ignores make_colours) */
-  pt_closest, /* just use the closest match within the hashbox */
-  pt_perturb, /* randomly perturb the data - uses perturb_size*/
-  pt_errdiff /* error diffusion dither - uses errdiff */
-} i_translate;
-
-/* Which error diffusion map to use */
-typedef enum i_errdiff_tag {
-  ed_floyd, /* floyd-steinberg */
-  ed_jarvis, /* Jarvis, Judice and Ninke */
-  ed_stucki, /* Stucki */
-  ed_custom, /* the map found in ed_map|width|height|orig */
-  ed_mask = 0xFF, /* mask to get the map */
-  ed_bidir = 0x100 /* change direction for each row */
-} i_errdiff;
-
-/* which ordered dither map to use
-   currently only available for transparency
-   I don't know of a way to do ordered dither of an image against some 
-   general palette
- */
-typedef enum i_ord_dith_tag
-{
-  od_random, /* sort of random */
-  od_dot8, /* large dot */
-  od_dot4,
-  od_hline,
-  od_vline,
-  od_slashline, /* / line dither */
-  od_backline, /* \ line dither */
-  od_tiny, /* small checkerbox */
-  od_custom /* custom 8x8 map */
-} i_ord_dith;
-
-typedef struct i_gif_pos_tag {
-  int x, y;
-} i_gif_pos;
-
-/* passed into i_writegif_gen() to control quantization */
-typedef struct i_quantize_tag {
-  /* how to handle transparency */
-  i_transp transp;
-  /* the threshold at which to make pixels opaque */
-  int tr_threshold;
-  i_errdiff tr_errdiff;
-  i_ord_dith tr_orddith;
-  unsigned char tr_custom[64];
-  
-  /* how to make the colour map */
-  i_make_colors make_colors;
-
-  /* any existing colours 
-     mc_existing is an existing colour table
-     mc_count is the number of existing colours
-     mc_size is the total size of the array that mc_existing points
-     at - this must be at least 256
-  */
-  i_color *mc_colors;
-  int mc_size;
-  int mc_count;
-
-  /* how we translate the colours */
-  i_translate translate;
-
-  /* the error diffusion map to use if translate is mc_errdiff */
-  i_errdiff errdiff;
-  /* the following define the error diffusion values to use if 
-     errdiff is ed_custom.  ed_orig is the column on the top row that
-     represents the current 
-  */
-  int *ed_map;
-  int ed_width, ed_height, ed_orig;
-
-  /* the amount of perturbation to use for translate is mc_perturb */
-  int perturb;
-} i_quantize;
-
-typedef struct i_gif_opts {
-  /* each image has a local color map */
-  int each_palette;
-
-  /* images are interlaced */
-  int interlace;
-
-  /* time for which image is displayed 
-   (in 1/100 seconds)
-   default: 0
-  */
-  int delay_count;
-  int *delays;
-
-  /* user input flags 
-     default: 0
-   */
-  int user_input_count;
-  char *user_input_flags;
-
-  /* disposal
-     default: 0 */
-  int disposal_count;
-  char *disposal;
-
-  /* this is added to the color table when we make an image transparent */
-  i_color tran_color;
-
-  /* image positions */
-  int position_count;
-  i_gif_pos *positions;
-
-  /* Netscape loop extension - number of loops */
-  int loop_count;
-
-  /* should be eliminate unused colors? */
-  int eliminate_unused;
-} i_gif_opts;
-
-extern void quant_makemap(i_quantize *quant, i_img **imgs, int count);
-extern i_palidx *quant_translate(i_quantize *quant, i_img *img);
-extern void quant_transparent(i_quantize *quant, i_palidx *indices, i_img *img, i_palidx trans_index);
+extern void i_quant_makemap(i_quantize *quant, i_img **imgs, int count);
+extern i_palidx *i_quant_translate(i_quantize *quant, i_img *img);
+extern void i_quant_transparent(i_quantize *quant, i_palidx *indices, i_img *img, i_palidx trans_index);
 
 extern i_img *i_img_pal_new(int x, int y, int channels, int maxpal);
 extern i_img *i_img_pal_new_low(i_img *im, int x, int y, int channels, int maxpal);
@@ -657,48 +444,6 @@ void i_turbnoise(i_img *im,float xo,float yo,float scale);
 void i_gradgen(i_img *im, int num, int *xo, int *yo, i_color *ival, int dmeasure);
 void i_nearest_color(i_img *im, int num, int *xo, int *yo, i_color *ival, int dmeasure);
 i_img *i_diff_image(i_img *im, i_img *im2, int mindist);
-typedef enum {
-  i_fst_linear,
-  i_fst_curved,
-  i_fst_sine,
-  i_fst_sphere_up,
-  i_fst_sphere_down,
-  i_fst_end
-} i_fountain_seg_type;
-typedef enum {
-  i_fc_direct,
-  i_fc_hue_up,
-  i_fc_hue_down,
-  i_fc_end
-} i_fountain_color;
-typedef struct {
-  double start, middle, end;
-  i_fcolor c[2];
-  i_fountain_seg_type type;
-  i_fountain_color color;
-} i_fountain_seg;
-typedef enum {
-  i_fr_none,
-  i_fr_sawtooth,
-  i_fr_triangle,
-  i_fr_saw_both,
-  i_fr_tri_both
-} i_fountain_repeat;
-typedef enum {
-  i_ft_linear,
-  i_ft_bilinear,
-  i_ft_radial,
-  i_ft_radial_square,
-  i_ft_revolution,
-  i_ft_conical,
-  i_ft_end
-} i_fountain_type;
-typedef enum {
-  i_fts_none,
-  i_fts_grid,
-  i_fts_random,
-  i_fts_circle
-} i_ft_supersample;
 void i_fountain(i_img *im, double xa, double ya, double xb, double yb, 
                 i_fountain_type type, i_fountain_repeat repeat, 
                 int combine, int super_sample, double ssample_param,
@@ -772,6 +517,10 @@ extern int i_tags_addn(i_img_tags *tags, char const *name, int code,
                        int idata);
 extern int i_tags_add(i_img_tags *tags, char const *name, int code, 
                       char const *data, int size, int idata);
+extern int i_tags_set(i_img_tags *tags, char const *name,
+                      char const *data, int size);
+extern int i_tags_setn(i_img_tags *tags, char const *name, int idata);
+                       
 extern void i_tags_destroy(i_img_tags *tags);
 extern int i_tags_find(i_img_tags *tags, char const *name, int start, 
                        int *entry);

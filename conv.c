@@ -1,4 +1,4 @@
-#include "image.h"
+#include "imager.h"
 
 /*
   General convolution for 2d decoupled filters

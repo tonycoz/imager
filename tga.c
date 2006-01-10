@@ -1,4 +1,4 @@
-#include "imagei.h"
+#include "imageri.h"
 #include "log.h"
 #include "iolayer.h"
 

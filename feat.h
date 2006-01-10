@@ -1,4 +1,4 @@
-#include "image.h"
+#include "imager.h"
 
 static char *i_format_list[]={
 #ifdef HAVE_LIBJPEG

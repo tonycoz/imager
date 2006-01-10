@@ -2,6 +2,7 @@
 #define _DATATYPES_H_
 
 #include "imio.h"
+#include "imconfig.h"
 
 #define MAXCHANNELS 4
 
@@ -238,6 +239,276 @@ enum bounding_box_index_t {
   BBOX_RIGHT_BEARING,
   BOUNDING_BOX_COUNT
 };
+
+/* Generic fills */
+struct i_fill_tag;
+
+typedef void (*i_fill_with_color_f)
+     (struct i_fill_tag *fill, int x, int y, int width, int channels, 
+      i_color *data);
+typedef void (*i_fill_with_fcolor_f)
+     (struct i_fill_tag *fill, int x, int y, int width, int channels,
+      i_fcolor *data);
+typedef void (*i_fill_destroy_f)(struct i_fill_tag *fill);
+typedef void (*i_fill_combine_f)(i_color *out, i_color *in, int channels, 
+                                 int count);
+typedef void (*i_fill_combinef_f)(i_fcolor *out, i_fcolor *in, int channels,
+                                  int count);
+
+/* fountain fill types */
+typedef enum {
+  i_fst_linear,
+  i_fst_curved,
+  i_fst_sine,
+  i_fst_sphere_up,
+  i_fst_sphere_down,
+  i_fst_end
+} i_fountain_seg_type;
+typedef enum {
+  i_fc_direct,
+  i_fc_hue_up,
+  i_fc_hue_down,
+  i_fc_end
+} i_fountain_color;
+typedef struct {
+  double start, middle, end;
+  i_fcolor c[2];
+  i_fountain_seg_type type;
+  i_fountain_color color;
+} i_fountain_seg;
+typedef enum {
+  i_fr_none,
+  i_fr_sawtooth,
+  i_fr_triangle,
+  i_fr_saw_both,
+  i_fr_tri_both
+} i_fountain_repeat;
+typedef enum {
+  i_ft_linear,
+  i_ft_bilinear,
+  i_ft_radial,
+  i_ft_radial_square,
+  i_ft_revolution,
+  i_ft_conical,
+  i_ft_end
+} i_fountain_type;
+typedef enum {
+  i_fts_none,
+  i_fts_grid,
+  i_fts_random,
+  i_fts_circle
+} i_ft_supersample;
+
+
+typedef struct i_fill_tag
+{
+  /* called for 8-bit/sample image (and maybe lower) */
+  /* this may be NULL, if so call fill_with_fcolor */
+  i_fill_with_color_f fill_with_color;
+
+  /* called for other sample sizes */
+  /* this must be non-NULL */
+  i_fill_with_fcolor_f fill_with_fcolor;
+
+  /* called if non-NULL to release any extra resources */
+  i_fill_destroy_f destroy;
+
+  /* if non-zero the caller will fill data with the original data
+     from the image */
+  i_fill_combine_f combine;
+  i_fill_combinef_f combinef;
+} i_fill_t;
+
+typedef enum {
+  ic_none,
+  ic_normal,
+  ic_multiply,
+  ic_dissolve,
+  ic_add,
+  ic_subtract,
+  ic_diff,
+  ic_lighten,
+  ic_darken,
+  ic_hue,
+  ic_sat,
+  ic_value,
+  ic_color
+} i_combine_t;
+
+/*
+   describes an axis of a MM font.
+   Modelled on FT2's FT_MM_Axis.
+   It would be nice to have a default entry too, but FT2 
+   doesn't support it.
+*/
+typedef struct i_font_mm_axis_tag {
+  char const *name;
+  int minimum;
+  int maximum;
+} i_font_mm_axis;
+
+#define IM_FONT_MM_MAX_AXES 4
+
+/* 
+   multiple master information for a font, if any 
+   modelled on FT2's FT_Multi_Master.
+*/
+typedef struct i_font_mm_tag {
+  int num_axis;
+  int num_designs; /* provided but not necessarily useful */
+  i_font_mm_axis axis[IM_FONT_MM_MAX_AXES];
+} i_font_mm;
+
+#ifdef HAVE_LIBTT
+
+struct TT_Fonthandle_;
+
+typedef struct TT_Fonthandle_ TT_Fonthandle;
+
+#endif
+
+#ifdef HAVE_FT2
+
+typedef struct FT2_Fonthandle FT2_Fonthandle;
+
+#endif
+
+/* transparency handling for quantized output */
+typedef enum i_transp_tag {
+  tr_none, /* ignore any alpha channel */
+  tr_threshold, /* threshold the transparency - uses tr_threshold */
+  tr_errdiff, /* error diffusion */
+  tr_ordered /* an ordered dither */
+} i_transp;
+
+/* controls how we build the colour map */
+typedef enum i_make_colors_tag {
+  mc_none, /* user supplied colour map only */
+  mc_web_map, /* Use the 216 colour web colour map */
+  mc_addi, /* Addi's algorithm */
+  mc_median_cut, /* median cut - similar to giflib, hopefully */
+  mc_mask = 0xFF /* (mask for generator) */
+} i_make_colors;
+
+/* controls how we translate the colours */
+typedef enum i_translate_tag {
+  pt_giflib, /* get gif lib to do it (ignores make_colours) */
+  pt_closest, /* just use the closest match within the hashbox */
+  pt_perturb, /* randomly perturb the data - uses perturb_size*/
+  pt_errdiff /* error diffusion dither - uses errdiff */
+} i_translate;
+
+/* Which error diffusion map to use */
+typedef enum i_errdiff_tag {
+  ed_floyd, /* floyd-steinberg */
+  ed_jarvis, /* Jarvis, Judice and Ninke */
+  ed_stucki, /* Stucki */
+  ed_custom, /* the map found in ed_map|width|height|orig */
+  ed_mask = 0xFF, /* mask to get the map */
+  ed_bidir = 0x100 /* change direction for each row */
+} i_errdiff;
+
+/* which ordered dither map to use
+   currently only available for transparency
+   I don't know of a way to do ordered dither of an image against some 
+   general palette
+ */
+typedef enum i_ord_dith_tag
+{
+  od_random, /* sort of random */
+  od_dot8, /* large dot */
+  od_dot4,
+  od_hline,
+  od_vline,
+  od_slashline, /* / line dither */
+  od_backline, /* \ line dither */
+  od_tiny, /* small checkerbox */
+  od_custom /* custom 8x8 map */
+} i_ord_dith;
+
+typedef struct i_gif_pos_tag {
+  int x, y;
+} i_gif_pos;
+
+/* passed into i_writegif_gen() to control quantization */
+typedef struct i_quantize_tag {
+  /* how to handle transparency */
+  i_transp transp;
+  /* the threshold at which to make pixels opaque */
+  int tr_threshold;
+  i_errdiff tr_errdiff;
+  i_ord_dith tr_orddith;
+  unsigned char tr_custom[64];
+  
+  /* how to make the colour map */
+  i_make_colors make_colors;
+
+  /* any existing colours 
+     mc_existing is an existing colour table
+     mc_count is the number of existing colours
+     mc_size is the total size of the array that mc_existing points
+     at - this must be at least 256
+  */
+  i_color *mc_colors;
+  int mc_size;
+  int mc_count;
+
+  /* how we translate the colours */
+  i_translate translate;
+
+  /* the error diffusion map to use if translate is mc_errdiff */
+  i_errdiff errdiff;
+  /* the following define the error diffusion values to use if 
+     errdiff is ed_custom.  ed_orig is the column on the top row that
+     represents the current 
+  */
+  int *ed_map;
+  int ed_width, ed_height, ed_orig;
+
+  /* the amount of perturbation to use for translate is mc_perturb */
+  int perturb;
+} i_quantize;
+
+typedef struct i_gif_opts {
+  /* each image has a local color map */
+  int each_palette;
+
+  /* images are interlaced */
+  int interlace;
+
+  /* time for which image is displayed 
+   (in 1/100 seconds)
+   default: 0
+  */
+  int delay_count;
+  int *delays;
+
+  /* user input flags 
+     default: 0
+   */
+  int user_input_count;
+  char *user_input_flags;
+
+  /* disposal
+     default: 0 */
+  int disposal_count;
+  char *disposal;
+
+  /* this is added to the color table when we make an image transparent */
+  i_color tran_color;
+
+  /* image positions */
+  int position_count;
+  i_gif_pos *positions;
+
+  /* Netscape loop extension - number of loops */
+  int loop_count;
+
+  /* should be eliminate unused colors? */
+  int eliminate_unused;
+} i_gif_opts;
+
+
 
 #endif
 

@@ -6,33 +6,24 @@ extern "C" {
 #include "XSUB.h"
 #include "ppport.h"
 #ifdef __cplusplus
-
+}
 #endif
 
 #define i_int_hlines_testing() 1
 
-#include "image.h"
+#include "imager.h"
 #include "feat.h"
 #include "dynaload.h"
 #include "regmach.h"
-
-#if i_int_hlines_testing()
-#include "imagei.h"
-#endif
+#include "imextdef.h"
 
 typedef io_glue* Imager__IO;
-typedef i_color* Imager__Color;
-typedef i_fcolor* Imager__Color__Float;
-typedef i_img*   Imager__ImgRaw;
-typedef int undef_neg_int;
 
-#ifdef HAVE_LIBTT
-typedef TT_Fonthandle* Imager__Font__TT;
+#if i_int_hlines_testing()
+#include "imageri.h"
 #endif
 
-#ifdef HAVE_FT2
-typedef FT2_Fonthandle* Imager__Font__FT2;
-#endif
+#include "imperl.h"
 
 /* These functions are all shared - then comes platform dependant code */
 static int getstr(void *hv_t,char *key,char **store) {
@@ -816,12 +807,6 @@ load_fount_segs(AV *asegs, int *count) {
 #define ICLF_new_internal(r, g, b, a) i_fcolor_new((r), (g), (b), (a))
 #define ICLF_DESTROY(cl) i_fcolor_destroy(cl)
 
-/* for the fill objects
-   Since a fill object may later have dependent images, (or fills!)
-   we need perl wrappers - oh well
-*/
-#define IFILL_DESTROY(fill) i_fill_destroy(fill);
-typedef i_fill_t* Imager__FillHandle;
 
 /* the m_init_log() function was called init_log(), renamed to reduce
     potential naming conflicts */
@@ -1473,9 +1458,8 @@ i_copyto_trans(im,src,x1,y1,x2,y2,tx,ty,trans)
 	       int     ty
      Imager::Color     trans
 
-void
-i_copy(im,src)
-    Imager::ImgRaw     im
+Imager::ImgRaw
+i_copy(src)
     Imager::ImgRaw     src
 
 
@@ -4560,3 +4544,6 @@ i_int_hlines_dump(hlines)
 	Imager::Internal::Hlines hlines
 
 #endif
+
+BOOT:
+        PERL_SET_GLOBAL_CALLBACKS;

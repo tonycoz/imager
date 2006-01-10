@@ -1,7 +1,7 @@
-#include "image.h"
+#include "imager.h"
 #include "log.h"
 #include "iolayer.h"
-#include "imagei.h"
+#include "imageri.h"
 
 #include <stdlib.h>
 #include <errno.h>

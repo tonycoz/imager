@@ -1,28 +1,86 @@
-BEGIN { $| = 1; print "1..4\n"; }
-END {print "not ok 1\n" unless $loaded;}
-use Imager;
+#!perl -w
+use strict;
+use Test::More tests => 15;
 
-$loaded = 1;
+BEGIN { use_ok("Imager") }
 
 #$Imager::DEBUG=1;
 
 Imager::init('log'=>'testout/t66paste.log');
 
-$img=Imager->new() || die "unable to create image object\n";
+# the original smoke tests
+my $img=Imager->new() || die "unable to create image object\n";
 
-print "ok 1\n";
+ok($img->open(file=>'testimg/scale.ppm',type=>'pnm'), "load test img");
 
-$img->open(file=>'testimg/scale.ppm',type=>'pnm');
+my $nimg=Imager->new() or die "Unable to create image object\n";
+ok($nimg->open(file=>'testimg/scale.ppm',type=>'pnm'), "load test img again");
 
-$nimg=Imager->new() or die "Unable to create image object\n";
-$nimg->open(file=>'testimg/scale.ppm',type=>'pnm');
-print "ok 2\n";
+ok($img->paste(img=>$nimg, top=>30, left=>30), "paste it")
+  or print "# ", $img->errstr, "\n";;
 
-$img->paste(img=>$nimg, top=>30, left=>30) or die $img->{ERRSTR};
-print "ok 3\n";
+ok($img->write(type=>'pnm',file=>'testout/t66.ppm'), "save it")
+  or print "# ", $img->errstr, "\n";
 
+# more stringent tests
+{
+  my $src = Imager->new(xsize => 100, ysize => 100);
+  $src->box(filled=>1, color=>'FF0000');
 
-$img->write(type=>'pnm',file=>'testout/t66.ppm') || die "error in write()\n";
-print "ok 4\n";
+  $src->box(filled=>1, color=>'0000FF', xmin => 20, ymin=>20,
+            xmax=>79, ymax=>79);
 
+  my $targ = Imager->new(xsize => 100, ysize => 100);
+  $targ->box(filled=>1, color=>'00FF00', xmin=>20, ymin=>20, xmax=>79,
+             ymax=>79);
 
+  my $work = $targ->copy;
+  ok($work->paste(src=>$src, left => 15, top => 10), "paste whole image");
+  # build comparison image
+  my $cmp = $targ->copy;
+  $cmp->box(filled=>1, xmin=>15, ymin => 10, color=>'FF0000');
+  $cmp->box(filled=>1, xmin=>35, ymin => 30, xmax=>94, ymax=>89, 
+            color=>'0000FF');
+
+  is(Imager::i_img_diff($work->{IMG}, $cmp->{IMG}), 0,
+     "compare pasted and expected");
+
+  $work = $targ->copy;
+  ok($work->paste(src=>$src, left=>2, top=>7, src_minx => 10, src_miny => 15),
+     "paste from inside src");
+  $cmp = $targ->copy;
+  $cmp->box(filled=>1, xmin=>2, ymin=>7, xmax=>91, ymax=>91, color=>'FF0000');
+  $cmp->box(filled=>1, xmin=>12, ymin=>12, xmax=>71, ymax=>71, 
+            color=>'0000FF');
+  is(Imager::i_img_diff($work->{IMG}, $cmp->{IMG}), 0,
+     "compare pasted and expected");
+
+  # paste part source
+  $work = $targ->copy;
+  ok($work->paste(src=>$src, left=>15, top=>20, 
+                  src_minx=>10, src_miny=>15, src_maxx=>80, src_maxy =>70),
+     "paste src cropped all sides");
+  $cmp = $targ->copy;
+  $cmp->box(filled=>1, xmin=>15, ymin=>20, xmax=>84, ymax=>74, 
+            color=>'FF0000');
+  $cmp->box(filled=>1, xmin=>25, ymin=>25, xmax=>84, ymax=>74,
+            color=>'0000FF');
+  is(Imager::i_img_diff($work->{IMG}, $cmp->{IMG}), 0,
+     "compare pasted and expected");
+
+  # go by width instead
+  $work = $targ->copy;
+  ok($work->paste(src=>$src, left=>15, top=>20,
+                  src_minx=>10, src_miny => 15, width => 70, height => 55),
+     "same but specify width/height instead");
+  is(Imager::i_img_diff($work->{IMG}, $cmp->{IMG}), 0,
+     "compare pasted and expected");
+
+  # use src_coords
+  $work = $targ->copy;
+  ok($work->paste(src=>$src, left => 15, top => 20,
+                  src_coords => [ 10, 15, 80, 70 ]),
+     "using src_coords");
+  is(Imager::i_img_diff($work->{IMG}, $cmp->{IMG}), 0,
+     "compare pasted and expected");
+}

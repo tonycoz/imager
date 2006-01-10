@@ -1,5 +1,5 @@
 #include "imio.h"
-#include "datatypes.h"
+#include "imdatatypes.h"
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>

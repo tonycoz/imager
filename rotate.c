@@ -16,7 +16,7 @@ Other rotations will be added as tuits become available.
 =cut
 */
 
-#include "image.h"
+#include "imager.h"
 #include <math.h> /* for floor() */
 
 i_img *i_rotate90(i_img *src, int degrees) {

@@ -11,8 +11,8 @@ maskimg.c - implements masked images/image subsets
 =cut
 */
 
-#include "image.h"
-#include "imagei.h"
+#include "imager.h"
+#include "imageri.h"
 
 #include <stdio.h>
 /*

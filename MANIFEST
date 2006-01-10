@@ -1,18 +1,33 @@
 Changes
+CountColor/CountColor.pm        sample XS access to API
+CountColor/CountColor.xs
+CountColor/Makefile.PL
+CountColor/t/t00countcolor.t
+DynTest/DynTest.pm      simple conversion of the dyntest sample from dynfilt/
+DynTest/DynTest.xs
+DynTest/Makefile.PL
+DynTest/linstretch.c
+DynTest/t/t00dyntest.t
 Imager.pm
 Imager.xs
 MANIFEST
+MANIFEST.SKIP
 META.yml        Module meta-data
+Mandelbrot/Makefile.PL          more complex filter
+Mandelbrot/Mandelbrot.pm
+Mandelbrot/Mandelbrot.xs
+Mandelbrot/mandel.c
+Mandelbrot/t/t00mandel.t
 Makefile.PL
 README
+apidocs.perl    Build lib/Imager/APIRef.pm
 bigtest.perl	Library selection tester
 bmp.c           Reading and writing Windows BMP files
 color.c         Color translation and handling
 conv.c
 convert.c
-datatypes.c
-datatypes.h
 doco.perl
+datatypes.c
 draw.c
 draw.h
 dynaload.c
@@ -51,23 +66,32 @@ gaussian.c
 gif.c
 hlines.c	Manage sets of horizontal line segments
 image.c
-image.h
-imagei.h
+imager.h
+imageri.h
+imdatatypes.h
+imext.c         Defines the function table
+imext.h         Included by external modules for API access
+imextdef.h
+imexttypes.h    Define API function table type
 imexif.c	Experimental JPEG EXIF decoding
 imexif.h
 img16.c
 imgdouble.c     Implements double/sample images
 imio.h
+imperl.h
 io.c
 iolayer.c
 iolayer.h
 jpeg.c
+lib/Imager/API.pm
+lib/Imager/APIRef.pm    API function reference
 lib/Imager/Color.pm
 lib/Imager/Color/Float.pm
 lib/Imager/Color/Table.pm
 lib/Imager/Cookbook.pod
 lib/Imager/Draw.pod
 lib/Imager/Engines.pod
+lib/Imager/ExtUtils.pm
 lib/Imager/Expr.pm
 lib/Imager/Expr/Assem.pm
 lib/Imager/Files.pod
@@ -83,6 +107,7 @@ lib/Imager/Font/Win32.pm
 lib/Imager/Font/Wrap.pm
 lib/Imager/Fountain.pm
 lib/Imager/ImageTypes.pod
+lib/Imager/Inline.pod           Using Imager with Inline::C
 lib/Imager/Matrix2d.pm
 lib/Imager/Regops.pm
 lib/Imager/Transform.pm
@@ -95,6 +120,7 @@ log.c
 log.h
 map.c
 maskimg.c
+metafile.pl     Common META.yml generation
 palimg.c
 plug.h
 png.c
@@ -168,6 +194,7 @@ t/t70newgif.t
 t/t75polyaa.t
 t/t80texttools.t        Test text wrapping
 t/t81hlines.t		Test hlines.c
+t/t82inline.t           Test Inline::C integration
 t/t90cc.t
 t/t91pod.t		Test POD with Test::Pod
 t/testtools.pl

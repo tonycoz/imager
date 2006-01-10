@@ -1,4 +1,4 @@
-#include "imagei.h"
+#include "imageri.h"
 #include <stdlib.h>
 
 #define OVERLAPPED(start1, end1, start2, end2) \

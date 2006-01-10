@@ -3,7 +3,7 @@
 
 #include <stdio.h>
 #include <math.h>
-#include "image.h"
+#include "imager.h"
 
 enum rm_byte_codes {
   rbc_add, /* ra + rb -> r*/

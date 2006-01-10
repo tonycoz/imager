@@ -1248,6 +1248,48 @@ Revision history for Perl extension Imager.
 - extra concept index entries
 - Imager::Draw - align_string()'s valign parameter was invalid in the 
   synopsis
+- start of external Imager API access:
+  - rename headers to avoid conflicts:
+    - image.h to imager.h
+    - imagei.h to imageri.h
+    - datatypes.h to imdatatypes.h
+    - config.h to imconfig.h (created by Makefile.PL)
+  - moved all public types defined in imager.h to imdatatypes.h
+  - supply the PM parameter to WriteMakefile(), to install headers 
+    under Imager/include, and the Imager typemap in Imager/typemap.
+    We scan the MANIFEST for files to add to PM.
+  - add "i_" prefix on some functions useful as public at the C level.
+  - moved the typedefs that support the typemap from Imager.xs to 
+    imperl.h
+  - set the global callbacks hook in the Imager.xs BOOT section
+  - API cleanup:
+    - define i_tags_set(), i_tags_setn() - we might not allow multiple 
+      values for a tag in the future
+    - i_copy() now returns a new image instead of doing horrible inplace
+      things to an existing image
+    - provide actual functions for all of the macros we define in imager.h
+      so we can put them in the global callbacks structure
+  - define global functions structure (imexttypes.h)
+    and initialize it (imext.c)
+  - add API include header with macros to setup the define and
+    initialize the local callbacks pointer, and macros to call the API
+    functions.
+  - build Imager::APIRef from C sources, including updating the sources
+    to include documentation for each API function.
+  - convert dyntest and mandelbrot dynfilts into XS modules (too easy)
+  - simple Imager::CountColor example
+- support Inline::C :
+  - typemap changes to accept Imager or Imager::ImgRaw objects as 
+    image parameters
+  - define Imager output type for trivial cases of returning an i_img as
+    a full Imager object
+  - Inline WITH hook to filter Imager XS types into types Inline::C can
+    accept, supply appropriate headers and initialization.
+  - test script t/t82inline.t
+- try to use XSLoader instead of DynaLoader (but fallback if necessary)
+- paste() can now paste a subset of the source image.
+- paste() now has better tests
+- paste() should now be faster for larger pastes
 
 =================================================================
 

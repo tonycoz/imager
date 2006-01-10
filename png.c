@@ -1,5 +1,5 @@
 #include "iolayer.h"
-#include "imagei.h"
+#include "imageri.h"
 #include "png.h"
 
 /* Check to see if a file is a PNG file using png_sig_cmp().  png_sig_cmp()

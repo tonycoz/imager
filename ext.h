@@ -1,4 +1,4 @@
-#include "image.h"
+#include "imager.h"
 
 #ifndef IMAGER_EXT_H
 #define IMAGER_EXT_H

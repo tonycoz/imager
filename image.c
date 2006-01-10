@@ -1,5 +1,5 @@
-#include "image.h"
-#include "imagei.h"
+#include "imager.h"
+#include "imageri.h"
 
 /*
 =head1 NAME
@@ -254,7 +254,12 @@ static i_img IIM_base_8bit_direct =
 /*
 =item IIM_new(x, y, ch)
 
-Creates a new image object I<x> pixels wide, and I<y> pixels high with I<ch> channels.
+=item i_img_8_new(x, y, ch)
+
+=category Image creation
+
+Creates a new image object I<x> pixels wide, and I<y> pixels high with
+I<ch> channels.
 
 =cut
 */
@@ -278,8 +283,6 @@ IIM_DESTROY(i_img *im) {
   i_img_destroy(im);
   /*   myfree(cl); */
 }
-
-
 
 /* 
 =item i_img_new()
@@ -420,6 +423,8 @@ i_img_exorcise(i_img *im) {
 /* 
 =item i_img_destroy(im)
 
+=category Image
+
 Destroy image and free data via exorcise.
 
    im - Image pointer
@@ -436,6 +441,8 @@ i_img_destroy(i_img *im) {
 
 /* 
 =item i_img_info(im, info)
+
+=category Image
 
 Return image information
 
@@ -507,6 +514,8 @@ i_img_getchannels(i_img *im) { return im->channels; }
 /*
 =item i_copyto_trans(im, src, x1, y1, x2, y2, tx, ty, trans)
 
+=category Image
+
 (x1,y1) (x2,y2) specifies the region to copy (in the source coordinates)
 (tx,ty) specifies the upper left corner for the target image.
 pass NULL in trans for non transparent i_colors.
@@ -547,6 +556,8 @@ i_copyto_trans(i_img *im,i_img *src,int x1,int y1,int x2,int y2,int tx,int ty,i_
 /*
 =item i_copyto(dest, src, x1, y1, x2, y2, tx, ty)
 
+=category Image
+
 Copies image data from the area (x1,y1)-[x2,y2] in the source image to
 a rectangle the same size with it's top-left corner at (tx,ty) in the
 destination image.
@@ -562,22 +573,39 @@ i_copyto(i_img *im, i_img *src, int x1, int y1, int x2, int y2, int tx, int ty) 
   
   if (x2<x1) { t=x1; x1=x2; x2=t; }
   if (y2<y1) { t=y1; y1=y2; y2=t; }
-  
+  if (tx < 0) {
+    /* adjust everything equally */
+    x1 += -tx;
+    x2 += -tx;
+    tx = 0;
+  }
+  if (ty < 0) {
+    y1 += -ty;
+    y2 += -ty;
+    ty = 0;
+  }
+  if (x1 >= src->xsize || y1 >= src->ysize)
+    return; /* nothing to do */
+  if (x2 > src->xsize)
+    x2 = src->xsize;
+  if (y2 > src->ysize)
+    y2 = src->ysize;
+  if (x1 == x2 || y1 == y2)
+    return; /* nothing to do */
+
   mm_log((1,"i_copyto(im* %p, src %p, x1 %d, y1 %d, x2 %d, y2 %d, tx %d, ty %d)\n",
 	  im, src, x1, y1, x2, y2, tx, ty));
   
   if (im->bits == i_8_bits) {
-    i_color pv;
+    i_color *row = mymalloc(sizeof(i_color) * (x2-x1));
     tty = ty;
     for(y=y1; y<y2; y++) {
       ttx = tx;
-      for(x=x1; x<x2; x++) {
-        i_gpix(src, x,   y,   &pv);
-        i_ppix(im,  ttx, tty, &pv);
-        ttx++;
-      }
+      i_glin(src, x1, x2, y, row);
+      i_plin(im, tx, tx+x2-x1, tty, row);
       tty++;
     }
+    myfree(row);
   }
   else {
     i_fcolor pv;
@@ -595,25 +623,34 @@ i_copyto(i_img *im, i_img *src, int x1, int y1, int x2, int y2, int tx, int ty) 
 }
 
 /*
-=item i_copy(im, src)
+=item i_copy(src)
 
-Copies the contents of the image I<src> over the image I<im>.
+=category Image
+
+Creates a new image that is a copy of src.
+
+Tags are not copied, only the image data.
+
+Returns: i_img *
 
 =cut
 */
 
-void
-i_copy(i_img *im, i_img *src) {
+i_img *
+i_copy(i_img *src) {
   int y, y1, x1;
+  i_img *im = i_sametype(src, src->xsize, src->ysize);
 
-  mm_log((1,"i_copy(im* %p,src %p)\n", im, src));
+  mm_log((1,"i_copy(src %p)\n", src));
+
+  if (!im)
+    return NULL;
 
   x1 = src->xsize;
   y1 = src->ysize;
   if (src->type == i_direct_type) {
     if (src->bits == i_8_bits) {
       i_color *pv;
-      i_img_empty_ch(im, x1, y1, src->channels);
       pv = mymalloc(sizeof(i_color) * x1);
       
       for (y = 0; y < y1; ++y) {
@@ -624,14 +661,6 @@ i_copy(i_img *im, i_img *src) {
     }
     else {
       i_fcolor *pv;
-      if (src->bits == i_16_bits)
-	i_img_16_new_low(im, x1, y1, src->channels);
-      else if (src->bits == i_double_bits)
-	i_img_double_new_low(im, x1, y1, src->channels);
-      else {
-	fprintf(stderr, "i_copy(): Unknown image bit size %d\n", src->bits);
-	return; /* I dunno */
-      }
 
       pv = mymalloc(sizeof(i_fcolor) * x1);
       for (y = 0; y < y1; ++y) {
@@ -663,11 +692,15 @@ i_copy(i_img *im, i_img *src) {
     }
     myfree(vals);
   }
+
+  return im;
 }
 
 
 /*
 =item i_rubthru(im, src, tx, ty, src_minx, src_miny, src_maxx, src_maxy )
+
+=category Image
 
 Takes the sub image I<src[src_minx, src_maxx)[src_miny, src_maxy)> and
 overlays it at (I<tx>,I<ty>) on the image object.
@@ -1073,6 +1106,8 @@ i_scale_nn(i_img *im, float scx, float scy) {
 /*
 =item i_sametype(i_img *im, int xsize, int ysize)
 
+=category Image creation
+
 Returns an image of the same type (sample size, channels, paletted/direct).
 
 For paletted images the palette is copied from the source.
@@ -1112,6 +1147,8 @@ i_img *i_sametype(i_img *src, int xsize, int ysize) {
 
 /*
 =item i_sametype_chans(i_img *im, int xsize, int ysize, int channels)
+
+=category Image creation
 
 Returns an image of the same type (sample size).
 

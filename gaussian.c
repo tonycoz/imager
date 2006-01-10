@@ -1,4 +1,4 @@
-#include "image.h"
+#include "imager.h"
 
 static float
 gauss(int x,float std) {

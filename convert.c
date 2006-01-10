@@ -17,7 +17,7 @@ converting from RGBA to greyscale and back.
 =cut
 */
 
-#include "image.h"
+#include "imager.h"
 
 
 /*

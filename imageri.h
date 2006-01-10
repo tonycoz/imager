@@ -5,7 +5,7 @@
 #ifndef IMAGEI_H_
 #define IMAGEI_H_
 
-#include "image.h"
+#include "imager.h"
 
 /* wrapper functions that implement the floating point sample version of a 
    function in terms of the 8-bit sample version

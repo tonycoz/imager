@@ -145,11 +145,17 @@ use Imager::Font;
 
 BEGIN {
   require Exporter;
-  require DynaLoader;
-
+  @ISA = qw(Exporter);
   $VERSION = '0.47';
-  @ISA = qw(Exporter DynaLoader);
-  bootstrap Imager $VERSION;
+  eval {
+    require XSLoader;
+    XSLoader::load(Imager => $VERSION);
+    1;
+  } or do {
+    require DynaLoader;
+    push @ISA, 'DynaLoader';
+    bootstrap Imager $VERSION;
+  }
 }
 
 BEGIN {
@@ -567,8 +573,7 @@ sub copy {
   }
 
   my $newcopy=Imager->new();
-  $newcopy->{IMG}=i_img_new();
-  i_copy($newcopy->{IMG},$self->{IMG});
+  $newcopy->{IMG} = i_copy($self->{IMG});
   return $newcopy;
 }
 
@@ -576,19 +581,68 @@ sub copy {
 
 sub paste {
   my $self = shift;
-  unless ($self->{IMG}) { $self->{ERRSTR}='empty input image'; return undef; }
-  my %input=(left=>0, top=>0, @_);
-  unless($input{img}) {
-    $self->{ERRSTR}="no source image";
+
+  unless ($self->{IMG}) { 
+    $self->_set_error('empty input image');
+    return;
+  }
+  my %input=(left=>0, top=>0, src_minx => 0, src_miny => 0, @_);
+  my $src = $input{img} || $input{src};
+  unless($src) {
+    $self->_set_error("no source image");
     return;
   }
   $input{left}=0 if $input{left} <= 0;
   $input{top}=0 if $input{top} <= 0;
-  my $src=$input{img};
+
   my($r,$b)=i_img_info($src->{IMG});
+  my ($src_left, $src_top) = @input{qw/src_minx src_miny/};
+  my ($src_right, $src_bottom);
+  if ($input{src_coords}) {
+    ($src_left, $src_top, $src_right, $src_bottom) = @{$input{src_coords}}
+  }
+  else {
+    if (defined $input{src_maxx}) {
+      $src_right = $input{src_maxx};
+    }
+    elsif (defined $input{width}) {
+      if ($input{width} <= 0) {
+        $self->_set_error("paste: width must me positive");
+        return;
+      }
+      $src_right = $src_left + $input{width};
+    }
+    else {
+      $src_right = $r;
+    }
+    if (defined $input{src_maxx}) {
+      $src_bottom = $input{src_maxy};
+    }
+    elsif (defined $input{height}) {
+      if ($input{height} < 0) {
+        $self->_set_error("paste: height must be positive");
+        return;
+      }
+      $src_bottom = $src_top + $input{height};
+    }
+    else {
+      $src_bottom = $b;
+    }
+  }
+
+  $src_right > $r and $src_right = $r;
+  $src_bottom > $r and $src_bottom = $b;
+
+  if ($src_right <= $src_left
+      || $src_bottom < $src_top) {
+    $self->_set_error("nothing to paste");
+    return;
+  }
 
   i_copyto($self->{IMG}, $src->{IMG}, 
-	   0,0, $r, $b, $input{left}, $input{top});
+	   $src_left, $src_top, $src_right, $src_bottom, 
+           $input{left}, $input{top});
+
   return $self;  # What should go here??
 }
 
@@ -1653,6 +1707,25 @@ sub filter {
   $self->{DEBUG} && print "matching callseq is: @b\n";
 
   return $self;
+}
+
+sub register_filter {
+  my $class = shift;
+  my %hsh = ( defaults => {}, @_ );
+
+  defined $hsh{type}
+    or die "register_filter() with no type\n";
+  defined $hsh{callsub}
+    or die "register_filter() with no callsub\n";
+  defined $hsh{callseq}
+    or die "register_filter() with no callseq\n";
+
+  exists $filters{$hsh{type}}
+    and return;
+
+  $filters{$hsh{type}} = \%hsh;
+
+  return 1;
 }
 
 # Scale an image to requested size and return the scaled version
@@ -2953,7 +3026,15 @@ sub parseiptc {
   return (caption=>$caption,photogr=>$photogr,headln=>$headln,credit=>$credit);
 }
 
-# Autoload methods go after =cut, and are processed by the autosplit program.
+sub Inline {
+  my ($lang) = @_;
+
+  $lang eq 'C'
+    or die "Only C language supported";
+
+  require Imager::ExtUtils;
+  return Imager::ExtUtils->inline_config;
+}
 
 1;
 __END__
@@ -3085,6 +3166,22 @@ L<Imager::Matrix2d> - Helper class for affine transformations.
 =item *
 
 L<Imager::Fountain> - Helper for making gradient profiles.
+
+=item *
+
+L<Imager::API> - using Imager's C API
+
+=item *
+
+L<Imager::APIRef> - API function reference
+
+=item *
+
+L<Imager::Inline> - using Imager's C API from Inline::C
+
+=item *
+
+L<Imager::ExtUtils> - tools to get access to Imager's C API.
 
 =back
 

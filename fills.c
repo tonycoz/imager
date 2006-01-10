@@ -1,5 +1,5 @@
-#include "image.h"
-#include "imagei.h"
+#include "imager.h"
+#include "imageri.h"
 
 /*
 =head1 NAME
@@ -195,6 +195,8 @@ static i_fill_solid_t base_solid_fill_comb =
 /*
 =item i_fill_destroy(fill)
 
+=category Fills
+
 Call to destroy any fill object.
 
 =cut
@@ -209,6 +211,8 @@ i_fill_destroy(i_fill_t *fill) {
 
 /*
 =item i_new_fill_solidf(color, combine)
+
+=category Fills
 
 Create a solid fill based on a float color.
 
@@ -239,7 +243,9 @@ i_new_fill_solidf(i_fcolor *c, int combine) {
 /*
 =item i_new_fill_solid(color, combine)
 
-Create a solid fill based.
+=category Fills
+
+Create a solid fill based on an 8-bit color.
 
 If combine is non-zero then alpha values will be combined.
 
@@ -420,6 +426,8 @@ i_new_hatch_low(i_color *fg, i_color *bg, i_fcolor *ffg, i_fcolor *fbg,
 /*
 =item i_new_fill_hatch(fg, bg, combine, hatch, cust_hatch, dx, dy)
 
+=category Fills
+
 Creates a new hatched fill with the fg color used for the 1 bits in
 the hatch and bg for the 0 bits.  If combine is non-zero alpha values
 will be combined.
@@ -442,6 +450,8 @@ i_new_fill_hatch(i_color *fg, i_color *bg, int combine, int hatch,
 
 /*
 =item i_new_fill_hatchf(fg, bg, combine, hatch, cust_hatch, dx, dy)
+
+=category Fills
 
 Creates a new hatched fill with the fg color used for the 1 bits in
 the hatch and bg for the 0 bits.  If combine is non-zero alpha values
@@ -478,7 +488,13 @@ struct i_fill_image_t {
 /*
 =item i_new_fill_image(im, matrix, xoff, yoff, combine)
 
+=category Fills
+
 Create an image based fill.
+
+matrix is an array of 9 doubles representing a transformation matrix.
+
+xoff and yoff are the offset into the image to start filling from.
 
 =cut
 */
