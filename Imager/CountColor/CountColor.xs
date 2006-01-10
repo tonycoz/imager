@@ -22,8 +22,8 @@ count_color(i_img *im, i_color *color) {
 
   for (x = 0; x < im->xsize; ++x) {
     for (y = 0; y < im->ysize; ++y) {
-      i_gpix(im, x, y, &c);
       int match = 1;
+      i_gpix(im, x, y, &c);
       for (chan = 0; chan < im->channels; ++chan) {
         if (c.channel[chan] != color->channel[chan]) {
           match = 0;
