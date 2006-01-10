@@ -20,8 +20,8 @@ sample image type to work with.
 =cut
 */
 
-#include "image.h"
-#include "imagei.h"
+#include "imager.h"
+#include "imageri.h"
 
 static int i_ppix_d16(i_img *im, int x, int y, i_color *val);
 static int i_gpix_d16(i_img *im, int x, int y, i_color *val);
@@ -136,7 +136,7 @@ typedef unsigned short i_sample16_t;
 #endif
 
 /*
-=item i_img_16_new(int x, int y, int ch)
+=item i_img_16_new_low(int x, int y, int ch)
 
 Creates a new 16-bit per sample image.
 
@@ -187,6 +187,18 @@ i_img *i_img_16_new_low(i_img *im, int x, int y, int ch) {
   
   return im;
 }
+
+/*
+=item i_img_16_new(x, y, ch)
+
+=category Image creation
+
+Create a new 16-bit/sample image.
+
+Returns the image on success, or NULL on failure.
+
+=cut
+*/
 
 i_img *i_img_16_new(int x, int y, int ch) {
   i_img *im;

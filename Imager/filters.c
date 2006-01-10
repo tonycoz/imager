@@ -1,5 +1,5 @@
-#include "image.h"
-#include "imagei.h"
+#include "imager.h"
+#include "imageri.h"
 #include <stdlib.h>
 #include <math.h>
 
@@ -109,21 +109,24 @@ i_hardinvert(i_img *im) {
   int x, y;
   unsigned char ch;
   
-  i_color rcolor;
+  i_color *row, *entry;
   
-    mm_log((1,"i_hardinvert(im %p)\n", im));
+  mm_log((1,"i_hardinvert(im %p)\n", im));
+
+  row = mymalloc(sizeof(i_color) * im->xsize);
 
   for(y = 0; y < im->ysize; y++) {
+    i_glin(im, 0, im->xsize, y, row);
+    entry = row;
     for(x = 0; x < im->xsize; x++) {
-      i_gpix(im, x, y, &rcolor);
-      
       for(ch = 0; ch < im->channels; ch++) {
-	rcolor.channel[ch] = 255 - rcolor.channel[ch];
+	entry->channel[ch] = 255 - entry->channel[ch];
       }
-      
-      i_ppix(im, x, y, &rcolor);
+      ++entry;
     }
+    i_plin(im, 0, im->xsize, y, row);
   }  
+  myfree(row);
 }
 
 
@@ -1220,7 +1223,7 @@ image from double the original.
 =cut
 */
 void i_unsharp_mask(i_img *im, double stddev, double scale) {
-  i_img copy;
+  i_img *copy;
   int x, y, ch;
 
   if (scale < 0)
@@ -1229,14 +1232,14 @@ void i_unsharp_mask(i_img *im, double stddev, double scale) {
   if (scale > 100)
     scale = 100;
 
-  i_copy(&copy, im);
-  i_gaussian(&copy, stddev);
+  copy = i_copy(im);
+  i_gaussian(copy, stddev);
   if (im->bits == i_8_bits) {
     i_color *blur = mymalloc(im->xsize * sizeof(i_color) * 2);
     i_color *out = blur + im->xsize;
 
     for (y = 0; y < im->ysize; ++y) {
-      i_glin(&copy, 0, copy.xsize, y, blur);
+      i_glin(copy, 0, copy->xsize, y, blur);
       i_glin(im, 0, im->xsize, y, out);
       for (x = 0; x < im->xsize; ++x) {
         for (ch = 0; ch < im->channels; ++ch) {
@@ -1260,7 +1263,7 @@ void i_unsharp_mask(i_img *im, double stddev, double scale) {
     i_fcolor *out = blur + im->xsize;
 
     for (y = 0; y < im->ysize; ++y) {
-      i_glinf(&copy, 0, copy.xsize, y, blur);
+      i_glinf(copy, 0, copy->xsize, y, blur);
       i_glinf(im, 0, im->xsize, y, out);
       for (x = 0; x < im->xsize; ++x) {
         for (ch = 0; ch < im->channels; ++ch) {
@@ -1278,7 +1281,7 @@ void i_unsharp_mask(i_img *im, double stddev, double scale) {
 
     myfree(blur);
   }
-  i_img_exorcise(&copy);
+  i_img_destroy(copy);
 }
 
 /*
@@ -1660,7 +1663,12 @@ static void
 fount_fill_destroy(i_fill_t *fill);
 
 /*
-=item i_new_fount(xa, ya, xb, yb, type, repeat, combine, super_sample, ssample_param, count, segs)
+=item i_new_fill_fount(xa, ya, xb, yb, type, repeat, combine, super_sample, ssample_param, count, segs)
+
+=category Fills
+=synopsis fill = i_new_fill_fount(0, 0, 100, 100, i_ft_linear, i_ft_linear, 
+=synopsis                         i_fr_triangle, 0, i_fts_grid, 9, 1, segs);
+
 
 Creates a new general fill which fills with a fountain fill.
 

@@ -48,7 +48,7 @@ A tag is represented by an i_img_tag structure:
 =cut
 */
 
-#include "image.h"
+#include "imager.h"
 #include <string.h>
 #include <stdlib.h>
 #include <errno.h>
@@ -60,8 +60,13 @@ void i_tags_print(i_img_tags *tags);
 /*
 =item i_tags_new(i_img_tags *tags)
 
+=category Tags
+
 Initialize a tags structure.  Should not be used if the tags structure
 has been previously used.
+
+This should be called tags member of an i_img object on creation (in
+i_img_*_new() functions).
 
 To destroy the contents use i_tags_destroy()
 
@@ -149,6 +154,16 @@ int i_tags_add(i_img_tags *tags, char const *name, int code, char const *data,
   return 1;
 }
 
+/*
+=item i_tags_destroy(tags)
+
+=category Tags
+
+Destroys the given tags structure.  Called by i_img_destroy().
+
+=cut
+*/
+
 void i_tags_destroy(i_img_tags *tags) {
   if (tags->tags) {
     int i;
@@ -161,6 +176,20 @@ void i_tags_destroy(i_img_tags *tags) {
     myfree(tags->tags);
   }
 }
+
+/*
+=item i_tags_find(tags, name, start, &entry)
+
+=category Tags
+
+Searchs for a tag of the given I<name> starting from index I<start>.
+
+On success returns true and sets *I<entry>.
+
+On failure returns false.
+
+=cut
+*/
 
 int i_tags_find(i_img_tags *tags, char const *name, int start, int *entry) {
   if (tags->tags) {
@@ -175,6 +204,20 @@ int i_tags_find(i_img_tags *tags, char const *name, int start, int *entry) {
   return 0;
 }
 
+/*
+=item i_tags_findn(tags, code, start, &entry)
+
+=category Tags
+
+Searchs for a tag of the given I<code> starting from index I<start>.
+
+On success returns true and sets *I<entry>.
+
+On failure returns false.
+
+=cut
+*/
+
 int i_tags_findn(i_img_tags *tags, int code, int start, int *entry) {
   if (tags->tags) {
     while (start < tags->count) {
@@ -188,6 +231,17 @@ int i_tags_findn(i_img_tags *tags, int code, int start, int *entry) {
   return 0;
 }
 
+/*
+=item i_tags_delete(tags, index)
+
+=category Tags
+
+Delete a tag by index.
+
+Returns true on success.
+
+=cut
+*/
 int i_tags_delete(i_img_tags *tags, int entry) {
   /*printf("i_tags_delete(tags %p [count %d], entry %d)\n",
     tags, tags->count, entry);*/
@@ -205,6 +259,18 @@ int i_tags_delete(i_img_tags *tags, int entry) {
   }
   return 0;
 }
+
+/*
+=item i_tags_delbyname(tags, name)
+
+=category Tags
+
+Delete any tags with the given name.
+
+Returns the number of tags deleted.
+
+=cut
+*/
 
 int i_tags_delbyname(i_img_tags *tags, char const *name) {
   int count = 0;
@@ -224,6 +290,18 @@ int i_tags_delbyname(i_img_tags *tags, char const *name) {
   return count;
 }
 
+/*
+=item i_tags_delbycode(tags, code)
+
+=category Tags
+
+Delete any tags with the given code.
+
+Returns the number of tags deleted.
+
+=cut
+*/
+
 int i_tags_delbycode(i_img_tags *tags, int code) {
   int count = 0;
   int i;
@@ -237,6 +315,23 @@ int i_tags_delbycode(i_img_tags *tags, int code) {
   }
   return count;
 }
+
+/*
+=item i_tags_get_float(tags, name, code, value)
+
+=category Tags
+
+Retrieves a tag as a floating point value.  
+
+If the tag has a string value then that is parsed as a floating point
+number, otherwise the integer value of the tag is used.
+
+On success sets *I<value> and returns true.
+
+On failure returns false.
+
+=cut
+*/
 
 int i_tags_get_float(i_img_tags *tags, char const *name, int code, 
                      double *value) {
@@ -260,6 +355,16 @@ int i_tags_get_float(i_img_tags *tags, char const *name, int code,
   return 1;
 }
 
+/*
+=item i_tags_set_float(tags, name, code, value)
+
+=category Tags
+
+Equivalent to i_tags_set_float2(tags, name, code, value, 30).
+
+=cut
+*/
+
 int i_tags_set_float(i_img_tags *tags, char const *name, int code, 
                      double value) {
   return i_tags_set_float2(tags, name, code, value, 30);
@@ -267,6 +372,8 @@ int i_tags_set_float(i_img_tags *tags, char const *name, int code,
 
 /*
 =item i_tags_set_float2(tags, name, code, value, places)
+
+=category Tags
 
 Sets the tag with the given name and code to the given floating point
 value.
@@ -294,6 +401,20 @@ int i_tags_set_float2(i_img_tags *tags, char const *name, int code,
 
   return i_tags_add(tags, name, code, temp, strlen(temp), 0);
 }
+
+/*
+=item i_tags_get_int(tags, name, code, &value)
+
+=category Tags
+
+Retrieve a tag specified by name or code as an integer.
+
+On success sets the i_color *I<value> to the color and returns true.
+
+On failure returns false.
+
+=cut
+*/
 
 int i_tags_get_int(i_img_tags *tags, char const *name, int code, int *value) {
   int index;
@@ -380,6 +501,20 @@ static int parse_color(char *data, char **end, i_color *value) {
   return 1;
 }
 
+/*
+=item i_tags_get_color(tags, name, code, &value)
+
+=category Tags
+
+Retrieve a tag specified by name or code as color.
+
+On success sets the i_color *I<value> to the color and returns true.
+
+On failure returns false.
+
+=cut
+*/
+
 int i_tags_get_color(i_img_tags *tags, char const *name, int code, 
                      i_color *value) {
   int index;
@@ -406,6 +541,16 @@ int i_tags_get_color(i_img_tags *tags, char const *name, int code,
   return 1;
 }
 
+/*
+=item i_tags_set_color(tags, name, code, &value)
+
+=category Tags
+
+Stores the given color as a tag with the given name and code.
+
+=cut
+*/
+
 int i_tags_set_color(i_img_tags *tags, char const *name, int code, 
                      i_color const *value) {
   char temp[80];
@@ -419,6 +564,26 @@ int i_tags_set_color(i_img_tags *tags, char const *name, int code,
 
   return i_tags_add(tags, name, code, temp, strlen(temp), 0);
 }
+
+/*
+=item i_tags_get_string(tags, name, code, value, value_size)
+
+=category Tags
+
+Retrieves a tag by name or code as a string.
+
+On success copies the string to value for a max of value_size and
+returns true.
+
+On failure returns false.
+
+value_size must be at least large enough for a string representation
+of an integer.
+
+The copied value is always NUL terminated.
+
+=cut
+*/
 
 int i_tags_get_string(i_img_tags *tags, char const *name, int code, 
                       char *value, size_t value_size) {
@@ -446,6 +611,40 @@ int i_tags_get_string(i_img_tags *tags, char const *name, int code,
   }
 
   return 1;
+}
+
+/*
+=item i_tags_set(tags, name, data, size)
+
+=category Tags
+
+Sets the given tag to the string I<data>
+
+=cut
+*/
+
+int
+i_tags_set(i_img_tags *tags, char const *name, char const *data, int size) {
+  i_tags_delbyname(tags, name);
+
+  return i_tags_add(tags, name, 0, data, size, 0);
+}
+
+/*
+=item i_tags_setn(tags, name, idata)
+
+=category Tags
+
+Sets the given tag to the integer I<idata>
+
+=cut
+*/
+
+int
+i_tags_setn(i_img_tags *tags, char const *name, int idata) {
+  i_tags_delbyname(tags, name);
+
+  return i_tags_addn(tags, name, 0, idata);
 }
 
 void i_tags_print(i_img_tags *tags) {

@@ -20,8 +20,8 @@ sample image type to work with.
 =cut
 */
 
-#include "image.h"
-#include "imagei.h"
+#include "imager.h"
+#include "imageri.h"
 
 static int i_ppix_ddoub(i_img *im, int x, int y, i_color *val);
 static int i_gpix_ddoub(i_img *im, int x, int y, i_color *val);
@@ -80,6 +80,8 @@ static i_img IIM_base_double_direct =
 
 /*
 =item i_img_double_new(int x, int y, int ch)
+
+=category Image creation
 
 Creates a new double per sample image.
 

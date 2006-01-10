@@ -61,7 +61,7 @@ C).  The Perl level won't use all of this.
 =cut
 */
 
-#include "image.h"
+#include "imager.h"
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -184,9 +184,14 @@ the mark.
 
 =item i_clear_error()
 
+=category Error handling
+
+Clears the error stack.
+
 Called by any imager function before doing any other processing.
 
-=cut */
+=cut
+*/
 void i_clear_error() {
 #ifdef IMAGER_DEBUG_MALLOC
   int i;
@@ -204,6 +209,8 @@ void i_clear_error() {
 
 /*
 =item i_push_error(int code, char const *msg)
+
+=category Error handling
 
 Called by an imager function to push an error message onto the stack.
 
@@ -241,6 +248,8 @@ void i_push_error(int code, char const *msg) {
 /*
 =item i_push_errorvf(int code, char const *fmt, va_list ap)
 
+=category Error handling
+
 Intended for use by higher level functions, takes a varargs pointer
 and a format to produce the finally pushed error message.
 
@@ -262,6 +271,8 @@ void i_push_errorvf(int code, char const *fmt, va_list ap) {
 
 /*
 =item i_push_errorf(int code, char const *fmt, ...)
+
+=category Error handling
 
 A version of i_push_error() that does printf() like formating.
 

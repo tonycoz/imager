@@ -28,7 +28,7 @@ Reads and writes JPEG images
 #include <setjmp.h>
 
 #include "iolayer.h"
-#include "imagei.h"
+#include "imageri.h"
 #include "jpeglib.h"
 #include "jerror.h"
 #include <errno.h>

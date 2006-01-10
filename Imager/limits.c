@@ -24,7 +24,7 @@ Setting a value of zero means that limit will be ignored.
   
  */
 
-#include "imagei.h"
+#include "imageri.h"
 
 static int max_width, max_height;
 static int max_bytes;

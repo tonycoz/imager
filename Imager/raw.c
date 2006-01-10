@@ -1,4 +1,4 @@
-#include "image.h"
+#include "imager.h"
 #include <stdio.h>
 #include "iolayer.h"
 #ifndef _MSC_VER

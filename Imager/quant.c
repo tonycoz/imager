@@ -2,7 +2,7 @@
    currently only used by gif.c, but maybe we'll support producing 
    8-bit (or bigger indexed) png files at some point
 */
-#include "image.h"
+#include "imager.h"
 
 static void makemap_addi(i_quantize *, i_img **imgs, int count);
 static void makemap_mediancut(i_quantize *, i_img **imgs, int count);
@@ -26,8 +26,20 @@ setcol(i_color *cl,unsigned char r,unsigned char g,unsigned char b,unsigned char
    handle multiple colour maps.
 */
 
+/*
+=item i_quant_makemap(quant, imgs, count)
+
+=category Image quantization
+
+Analyzes the I<count> images in I<imgs> according to the rules in
+I<quant> to build a color map (optimal or not depending on
+quant->make_colors).
+
+=cut
+*/
+
 void
-quant_makemap(i_quantize *quant, i_img **imgs, int count) {
+i_quant_makemap(i_quantize *quant, i_img **imgs, int count) {
 
   if (quant->translate == pt_giflib) {
     /* giflib does it's own color table generation */
@@ -70,11 +82,27 @@ static void translate_closest(i_quantize *, i_img *, i_palidx *);
 static void translate_errdiff(i_quantize *, i_img *, i_palidx *);
 static void translate_addi(i_quantize *, i_img *, i_palidx *);
 
-/* Quantize the image given the palette in quant.
+/*
+=item i_quant_translate(quant, img)
 
-   The giflib quantizer ignores the palette.
+=category Image quantization
+
+Quantize the image given the palette in quant.
+
+On success returns a pointer to a memory block of img->xsize *
+img->ysize i_palidx entries.
+
+On failure returns NULL.
+
+You should call myfree() on the returned block when you're done with
+it.
+
+This function will fail if the supplied palette contains no colors.
+
+=cut
 */
-i_palidx *quant_translate(i_quantize *quant, i_img *img) {
+i_palidx *
+i_quant_translate(i_quantize *quant, i_img *img) {
   i_palidx *result;
   int bytes;
 
@@ -1438,7 +1466,21 @@ static void transparent_threshold(i_quantize *, i_palidx *, i_img *, i_palidx);
 static void transparent_errdiff(i_quantize *, i_palidx *, i_img *, i_palidx);
 static void transparent_ordered(i_quantize *, i_palidx *, i_img *, i_palidx);
 
-void quant_transparent(i_quantize *quant, i_palidx *data, i_img *img,
+/*
+=item i_quant_transparent(quant, data, img, trans_index)
+
+=category Image quantization
+
+Dither the alpha channel on I<img> into the palette indexes in
+I<data>.  Pixels to be transparent are replaced with I<trans_pixel>.
+
+The method used depends on the tr_* members of quant.
+
+=cut
+*/
+
+void 
+i_quant_transparent(i_quantize *quant, i_palidx *data, i_img *img,
 		       i_palidx trans_index)
 {
   switch (quant->transp) {

@@ -1,4 +1,4 @@
-#include "image.h"
+#include "imager.h"
 
 /* structures for passing data between Imager-plugin and the Imager-module */
 

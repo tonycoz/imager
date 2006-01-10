@@ -1,5 +1,5 @@
 #define _WIN32_WINNT 0x500
-#include "image.h"
+#include "imager.h"
 #define STRICT
 #include <windows.h>
 

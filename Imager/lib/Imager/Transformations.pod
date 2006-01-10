@@ -301,15 +301,53 @@ A list of the transformations that alter the source image follows:
 
 =item paste
 
+X<paste>To copy an image to onto another image use the C<paste()>
+method.
 
-To copy an image to onto another image use the C<paste()> method.
-
-  $dest->paste(left=>40,top=>20,img=>$logo);
+  $dest->paste(left=>40, top=>20, src=>$logo);
 
 That copies the entire C<$logo> image onto the C<$dest> image so that the
 upper left corner of the C<$logo> image is at (40,20).
 
+Parameters:
 
+=over
+
+=item *
+
+src, img - the source image.  I<src> added for compatibility with
+rubthrough().
+
+=item *
+
+left, top - position in output of the top left of the pasted image.
+Default: (0,0)
+
+=item *
+
+src_minx, src_miny - the top left corner in the source image to start
+the paste from.  Default: (0, 0)
+
+=item *
+
+src_maxx, src_maxy - the bottom right in the source image of the sub
+image to paste.  This position is B<non> inclusive.  Default: bottom
+right corner of the source image.
+
+=item *
+
+width, height - if the corresponding src_maxx or src_maxy is not
+defined then width or height is used for the width or height of the
+sub image to be pasted.
+
+=back
+
+  # copy the 20x20 pixel image from (20,20) in $src_image to (10,10) in $img
+  $img->paste(src=>$src_image,
+              left => 10, top => 10,
+              src_minx => 20, src_miny => 20,
+              src_maxx => 40, src_maxx => 40);
+              
 =item rubthrough
 
 A more complicated way of blending images is where one image is

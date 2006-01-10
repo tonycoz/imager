@@ -1,7 +1,7 @@
-#include "image.h"
+#include "imager.h"
 #include "draw.h"
 #include "log.h"
-#include "imagei.h"
+#include "imageri.h"
 
 #include <limits.h>
 
@@ -201,6 +201,18 @@ i_arc_hlines(i_int_hlines *hlines,int x,int y,float rad,float d1,float d2) {
   }
 }
 
+/*
+=item i_arc(im, x, y, rad, d1, d2, color)
+
+=category Drawing
+=synopsis i_arc(im, 50, 50, 20, 45, 135, &color);
+
+Fills an arc centered at (x,y) with radius I<rad> covering the range
+of angles in degrees from d1 to d2, with the color.
+
+=cut
+*/
+
 void
 i_arc(i_img *im,int x,int y,float rad,float d1,float d2,i_color *val) {
   i_int_hlines hlines;
@@ -213,6 +225,18 @@ i_arc(i_img *im,int x,int y,float rad,float d1,float d2,i_color *val) {
 
   i_int_hlines_destroy(&hlines);
 }
+
+/*
+=item i_arc_cfill(im, x, y, rad, d1, d2, fill)
+
+=category Drawing
+=synopsis i_arc_cfill(im, 50, 50, 35, 90, 135, fill);
+
+Fills an arc centered at (x,y) with radius I<rad> covering the range
+of angles in degrees from d1 to d2, with the fill object.
+
+=cut
+*/
 
 #define MIN_CIRCLE_STEPS 8
 #define MAX_CIRCLE_STEPS 360
@@ -301,6 +325,18 @@ arc_poly(int *count, double **xvals, double **yvals,
   ++*count;
 }
 
+/*
+=item i_arc_aa(im, x, y, rad, d1, d2, color)
+
+=category Drawing
+=synopsis i_arc_aa(im, 50, 50, 35, 90, 135, &color);
+
+Antialias fills an arc centered at (x,y) with radius I<rad> covering
+the range of angles in degrees from d1 to d2, with the color.
+
+=cut
+*/
+
 void
 i_arc_aa(i_img *im, double x, double y, double rad, double d1, double d2,
 	 i_color *val) {
@@ -314,6 +350,18 @@ i_arc_aa(i_img *im, double x, double y, double rad, double d1, double d2,
   myfree(xvals);
   myfree(yvals);
 }
+
+/*
+=item i_arc_aa_cfill(im, x, y, rad, d1, d2, fill)
+
+=category Drawing
+=synopsis i_arc_aa_cfill(im, 50, 50, 35, 90, 135, fill);
+
+Antialias fills an arc centered at (x,y) with radius I<rad> covering
+the range of angles in degrees from d1 to d2, with the fill object.
+
+=cut
+*/
 
 void
 i_arc_aa_cfill(i_img *im, double x, double y, double rad, double d1, double d2,
@@ -425,6 +473,17 @@ i_pixel_coverage(i_mmarray *dot, int x, int y) {
   return cnt;
 }
 
+/*
+=item i_circle_aa(im, x, y, rad, color)
+
+=category Drawing
+=synopsis i_circle_aa(im, 50, 50, 45, &color);
+
+Antialias fills a circle centered at (x,y) for radius I<rad> with
+color.
+
+=cut
+*/
 void
 i_circle_aa(i_img *im, float x, float y, float rad, i_color *val) {
   i_mmarray dot;
@@ -468,10 +527,16 @@ i_circle_aa(i_img *im, float x, float y, float rad, i_color *val) {
   i_mmarray_dst(&dot);
 }
 
+/*
+=item i_box(im, x1, y1, x2, y2, color)
 
+=category Drawing
+=synopsis i_box(im, 0, 0, im->xsize-1, im->ysize-1, &color).
 
+Outlines the box from (x1,y1) to (x2,y2) inclusive with I<color>.
 
-
+=cut
+*/
 
 void
 i_box(i_img *im,int x1,int y1,int x2,int y2,i_color *val) {
@@ -487,12 +552,34 @@ i_box(i_img *im,int x1,int y1,int x2,int y2,i_color *val) {
   }
 }
 
+/*
+=item i_box_filled(im, x1, y1, x2, y2, color)
+
+=category Drawing
+=synopsis i_box_filled(im, 0, 0, im->xsize-1, im->ysize-1, &color);
+
+Fills the box from (x1,y1) to (x2,y2) inclusive with color.
+
+=cut
+*/
+
 void
 i_box_filled(i_img *im,int x1,int y1,int x2,int y2,i_color *val) {
   int x,y;
   mm_log((1,"i_box_filled(im* 0x%x,x1 %d,y1 %d,x2 %d,y2 %d,val 0x%x)\n",im,x1,y1,x2,y2,val));
   for(x=x1;x<x2+1;x++) for (y=y1;y<y2+1;y++) i_ppix(im,x,y,val);
 }
+
+/*
+=item i_box_cfill(im, x1, y1, x2, y2, fill)
+
+=category Drawing
+=synopsis i_box_cfill(im, 0, 0, im->xsize-1, im->ysize-1, fill);
+
+Fills the box from (x1,y1) to (x2,y2) inclusive with fill.
+
+=cut
+*/
 
 void
 i_box_cfill(i_img *im,int x1,int y1,int x2,int y2,i_fill_t *fill) {
@@ -556,6 +643,8 @@ i_box_cfill(i_img *im,int x1,int y1,int x2,int y2,i_fill_t *fill) {
 
 /* 
 =item i_line(im, x1, y1, x2, y2, val, endp)
+
+=category Drawing
 
 Draw a line to image using bresenhams linedrawing algorithm
 
@@ -756,7 +845,17 @@ i_line_aa3(i_img *im,int x1,int y1,int x2,int y2,i_color *val) {
 }
 
 
+/*
+=item i_line_aa(im, x1, x2, y1, y2, color, endp)
 
+=category Drawing
+
+Antialias draws a line from (x1,y1) to (x2, y2) in color.
+
+The point (x2, y2) is drawn only if endp is set.
+
+=cut
+*/
 
 void
 i_line_aa(i_img *im, int x1, int y1, int x2, int y2, i_color *val, int endp) {
@@ -1192,8 +1291,19 @@ i_flood_fill_low(i_img *im,int seedx,int seedy,
   return btm;
 }
 
+/*
+=item i_flood_fill(im, seedx, seedy, color)
 
+=category Drawing
+=synopsis i_flood_fill(im, 50, 50, &color);
 
+Flood fills the 4-connected region starting from the point (seedx,
+seedy) with I<color>.
+
+Returns false if (seedx, seedy) are outside the image.
+
+=cut
+*/
 
 undef_int
 i_flood_fill(i_img *im, int seedx, int seedy, i_color *dcol) {
@@ -1218,7 +1328,19 @@ i_flood_fill(i_img *im, int seedx, int seedy, i_color *dcol) {
   return 1;
 }
 
+/*
+=item i_flood_cfill(im, seedx, seedy, fill)
 
+=category Drawing
+=synopsis i_flood_cfill(im, 50, 50, fill);
+
+Flood fills the 4-connected region starting from the point (seedx,
+seedy) with I<fill>.
+
+Returns false if (seedx, seedy) are outside the image.
+
+=cut
+*/
 
 undef_int
 i_flood_cfill(i_img *im, int seedx, int seedy, i_fill_t *fill) {

@@ -18,8 +18,8 @@ Basic 8-bit/sample paletted image
 =cut
 */
 
-#include "image.h"
-#include "imagei.h"
+#include "imager.h"
+#include "imageri.h"
 
 #define PALEXT(im) ((i_img_pal_ext*)((im)->ext_data))
 static int i_ppix_p(i_img *im, int x, int y, i_color *val);
@@ -74,7 +74,7 @@ static i_img IIM_base_8bit_pal =
 };
 
 /*
-=item i_img_pal_new_low(i_img *im, int x, int y, int channels, int maxpal)
+=item i_img_pal_new_low(im, x, y, channels, maxpal)
 
 Creates a new paletted image.
 
@@ -131,6 +131,18 @@ i_img *i_img_pal_new_low(i_img *im, int x, int y, int channels, int maxpal) {
   
   return im;
 }
+
+/*
+=item i_img_pal_new(x, y, channels, maxpal)
+
+=category Image creation
+
+Creates a new paletted image of the supplied dimensions.
+
+Returns a new image or NULL on failure.
+
+=cut
+*/
 
 i_img *i_img_pal_new(int x, int y, int channels, int maxpal) {
   i_img *im;
@@ -210,8 +222,8 @@ i_img *i_img_to_pal(i_img *src, i_quantize *quant) {
 
   i_clear_error();
   
-  quant_makemap(quant, &src, 1);
-  result = quant_translate(quant, src);
+  i_quant_makemap(quant, &src, 1);
+  result = i_quant_translate(quant, src);
 
   if (result) {
 
@@ -289,7 +301,7 @@ static int i_ppix_p(i_img *im, int x, int y, i_color *val) {
 }
 
 /*
-=item i_gpix(i_img *im, int x, int y, i_color *val)
+=item i_gpix_p(i_img *im, int x, int y, i_color *val)
 
 Retrieve a pixel, converting from a palette index to a color.
 

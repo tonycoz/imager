@@ -1,7 +1,7 @@
-#include "image.h"
+#include "imager.h"
 #include "tiffio.h"
 #include "iolayer.h"
-#include "imagei.h"
+#include "imageri.h"
 
 /*
 =head1 NAME

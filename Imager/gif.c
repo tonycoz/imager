@@ -1,4 +1,4 @@
-#include "imagei.h"
+#include "imageri.h"
 #include <gif_lib.h>
 #ifdef _MSCVER
 #include <io.h>
@@ -1721,7 +1721,7 @@ i_writegif_low(i_quantize *quant, GifFileType *gf, i_img **imgs, int count) {
     }
     else {
       glob_paletted = 0;
-      quant_makemap(quant, glob_imgs, glob_img_count);
+      i_quant_makemap(quant, glob_imgs, glob_img_count);
     }
     glob_color_count = quant->mc_count;
     quant->mc_colors = orig_colors;
@@ -1748,7 +1748,7 @@ i_writegif_low(i_quantize *quant, GifFileType *gf, i_img **imgs, int count) {
     }
     else {
       colors_paletted = 0;
-      quant_makemap(quant, imgs, 1);
+      i_quant_makemap(quant, imgs, 1);
     }
   }
   if ((map = make_gif_map(quant, imgs[0], want_trans)) == NULL) {
@@ -1818,7 +1818,7 @@ i_writegif_low(i_quantize *quant, GifFileType *gf, i_img **imgs, int count) {
       }
       else {
         colors_paletted = 0;
-        quant_makemap(quant, imgs, 1);
+        i_quant_makemap(quant, imgs, 1);
       }
       if ((map = make_gif_map(quant, imgs[0], want_trans)) == NULL) {
         i_mempool_destroy(&mp);
@@ -1838,7 +1838,7 @@ i_writegif_low(i_quantize *quant, GifFileType *gf, i_img **imgs, int count) {
   if (colors_paletted)
     result = quant_paletted(quant, imgs[0]);
   else
-    result = quant_translate(quant, imgs[0]);
+    result = i_quant_translate(quant, imgs[0]);
   if (!result) {
     i_mempool_destroy(&mp);
     quant->mc_colors = orig_colors;
@@ -1846,7 +1846,7 @@ i_writegif_low(i_quantize *quant, GifFileType *gf, i_img **imgs, int count) {
     return 0;
   }
   if (want_trans) {
-    quant_transparent(quant, result, imgs[0], quant->mc_count);
+    i_quant_transparent(quant, result, imgs[0], quant->mc_count);
     trans_index = quant->mc_count;
   }
 
@@ -1917,18 +1917,18 @@ i_writegif_low(i_quantize *quant, GifFileType *gf, i_img **imgs, int count) {
         result = quant_paletted(quant, imgs[imgn]);
       }
       else {
-        quant_makemap(quant, imgs+imgn, 1);
-        result = quant_translate(quant, imgs[imgn]);
+        i_quant_makemap(quant, imgs+imgn, 1);
+        result = i_quant_translate(quant, imgs[imgn]);
       }
       if (!result) {
         i_mempool_destroy(&mp);
         quant->mc_colors = orig_colors;
         EGifCloseFile(gf);
-        mm_log((1, "error in quant_translate()"));
+        mm_log((1, "error in i_quant_translate()"));
         return 0;
       }
       if (want_trans) {
-        quant_transparent(quant, result, imgs[imgn], quant->mc_count);
+        i_quant_transparent(quant, result, imgs[imgn], quant->mc_count);
         trans_index = quant->mc_count;
       }
 
@@ -1947,10 +1947,10 @@ i_writegif_low(i_quantize *quant, GifFileType *gf, i_img **imgs, int count) {
       if (glob_paletted)
         result = quant_paletted(quant, imgs[imgn]);
       else
-        result = quant_translate(quant, imgs[imgn]);
+        result = i_quant_translate(quant, imgs[imgn]);
       want_trans = glob_want_trans && imgs[imgn]->channels == 4;
       if (want_trans) {
-        quant_transparent(quant, result, imgs[imgn], quant->mc_count);
+        i_quant_transparent(quant, result, imgs[imgn], quant->mc_count);
         trans_index = quant->mc_count;
       }
       map = NULL;

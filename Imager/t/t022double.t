@@ -66,7 +66,7 @@ ok($ooimg->bits eq 'double', "oo didn't give double image");
 
 # check that the image is copied correctly
 my $oocopy = $ooimg->copy;
-ok($oocopy->bits eq 'double', "oo copy didn't give double image");
+is($oocopy->bits, 'double', "oo copy didn't give double image");
 
 ok(!Imager->new(xsize=>0, ysize=>1, bits=>'double'),
     "fail making 0 width image");

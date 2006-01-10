@@ -1,4 +1,4 @@
-#include "image.h"
+#include "imager.h"
 
 typedef struct {
   int min,max;

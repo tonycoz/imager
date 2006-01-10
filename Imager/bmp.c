@@ -1,5 +1,5 @@
 #include <stdarg.h>
-#include "imagei.h"
+#include "imageri.h"
 
 /*
 =head1 NAME

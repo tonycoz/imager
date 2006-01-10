@@ -1,4 +1,4 @@
-#include "image.h"
+#include "imager.h"
 
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -1084,6 +1084,7 @@ i_tt_init_raster_map( TT_Raster_Map* bit, int width, int height, int smooth ) {
     bit->size  = bit->rows * bit->cols;     /* number of bytes in buffer */
   }
 
+  /* rows can be 0 for some glyphs, for example ' ' */
   if (bit->rows && bit->size / bit->rows != bit->cols) {
     m_fatal(0, "Integer overflow calculating bitmap size (%d, %d)\n",
             bit->width, bit->rows);

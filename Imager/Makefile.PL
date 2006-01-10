@@ -4,6 +4,9 @@ use Cwd;
 use Config;
 use File::Spec;
 use Getopt::Long;
+use vars qw(%Recommends);
+require "metafile.pl";
+use ExtUtils::Manifest qw(maniread);
 
 #
 # IM_INCPATH      colon seperated list of paths to extra include paths
@@ -128,7 +131,11 @@ if (defined $Config{'d_dlsymun'}) { $OSDEF  .= ' -DDLSYMUN'; }
 	   filters.o dynaload.o stackmach.o datatypes.o
 	   regmach.o trans2.o quant.o error.o convert.o
 	   map.o tags.o palimg.o maskimg.o img16.o rotate.o
-           bmp.o tga.o rgb.o color.o fills.o imgdouble.o limits.o hlines.o);
+           bmp.o tga.o rgb.o color.o fills.o imgdouble.o limits.o hlines.o
+           imext.o);
+
+$Recommends{Imager} =
+  { 'Parse::RecDescent' => 0 };
 
 %opts=(
        'NAME'         => 'Imager',
@@ -138,6 +145,7 @@ if (defined $Config{'d_dlsymun'}) { $OSDEF  .= ' -DDLSYMUN'; }
        'INC'          => "$lib_cflags $DFLAGS $F_INC",
        'OBJECT'       => join(' ', @objs, $F_OBJECT),
        clean          => { FILES=>'testout meta.tmp' },
+       PM             => gen_PM(),
       );
 
 if ($ExtUtils::MakeMaker::VERSION > 6.06) {
@@ -162,36 +170,16 @@ dyntest.$(MYEXTLIB) : dynfilt/Makefile
 lib/Imager/Regops.pm : regmach.h regops.perl
 	$(PERL) regops.perl regmach.h lib/Imager/Regops.pm
 
-imconfig.h: Makefile.PL
+imconfig.h : Makefile.PL
 	$(ECHO) "imconfig.h out-of-date with respect to $?"
 	$(PERLRUN) Makefile.PL
 	$(ECHO) "==> Your Makefile has been rebuilt - re-run your make command <=="
+
+lib/Imager/APIRef.pm : $(C_FILES) apidocs.perl
+	$(PERLRUN) apidocs.perl lib/Imager/APIRef.pm
+
 ';
-}
 
-sub MY::metafile {
-  my ($self) = @_;
-
-  my $meta = <<YAML;
---- #YAML:1.0
-name: Imager
-version: $self->{VERSION}
-version_from: $self->{VERSION_FROM}
-author: $self->{AUTHOR}
-abstract: $self->{ABSTRACT}
-installdirs: $self->{INSTALLDIRS}
-recommends:
-  Parse::RecDescent: 0
-license: perl
-dynamic_config: 1
-distribution_type: module
-generated_by: Imager version $self->{VERSION}
-YAML
-  open META, "> meta.tmp" or die "Cannot create meta.tmp: $!";
-  print META $meta;
-  close META;
-  
-  return sprintf "metafile :\n\t\$(CP) meta.tmp META.yml\n";
 }
 
 # manual configuration of helper libraries
@@ -686,4 +674,39 @@ Other options:
 EOS
   exit 1;
 
+}
+
+# generate the PM MM argument
+# I'd prefer to modify the public version, but there doesn't seem to be 
+# a public API to do that
+sub gen_PM {
+  my %pm;
+  my $instbase = '$(INST_LIBDIR)';
+
+  # first the basics, .pm and .pod files
+  $pm{"Imager.pm"} = "$instbase/Imager.pm";
+
+  my $mani = maniread();
+
+  for my $filename (keys %$mani) {
+    if ($filename =~ m!^lib/! && $filename =~ /\.(pm|pod)$/) {
+      (my $work = $filename) =~ s/^lib//;
+      $pm{$filename} = $instbase . $work;
+    }
+  }
+
+  # need the typemap
+  $pm{typemap} = $instbase . '/Imager/typemap';
+
+  # and the core headers
+  for my $filename (keys %$mani) {
+    if ($filename =~ /^\w+\.h$/) {
+      $pm{$filename} = $instbase . '/Imager/include/' . $filename;
+    }
+  }
+
+  # and the generated header
+  $pm{"imconfig.h"} = $instbase . '/Imager/include/imconfig.h';
+
+  \%pm;
 }
