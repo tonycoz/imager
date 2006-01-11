@@ -12,7 +12,7 @@
 */
 
 void
-i_conv(i_img *im,float *coeff,int len) {
+i_conv(i_img *im,const float *coeff,int len) {
   int i,l,c,ch,center;
   float pc;
   i_color rcolor;

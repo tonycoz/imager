@@ -214,7 +214,7 @@ of angles in degrees from d1 to d2, with the color.
 */
 
 void
-i_arc(i_img *im,int x,int y,float rad,float d1,float d2,i_color *val) {
+i_arc(i_img *im,int x,int y,float rad,float d1,float d2,const i_color *val) {
   i_int_hlines hlines;
 
   i_int_init_hlines_img(&hlines, im);
@@ -339,7 +339,7 @@ the range of angles in degrees from d1 to d2, with the color.
 
 void
 i_arc_aa(i_img *im, double x, double y, double rad, double d1, double d2,
-	 i_color *val) {
+	 const i_color *val) {
   double *xvals, *yvals;
   int count;
 
@@ -485,7 +485,7 @@ color.
 =cut
 */
 void
-i_circle_aa(i_img *im, float x, float y, float rad, i_color *val) {
+i_circle_aa(i_img *im, float x, float y, float rad, const i_color *val) {
   i_mmarray dot;
   i_color temp;
   int ly;
@@ -539,7 +539,7 @@ Outlines the box from (x1,y1) to (x2,y2) inclusive with I<color>.
 */
 
 void
-i_box(i_img *im,int x1,int y1,int x2,int y2,i_color *val) {
+i_box(i_img *im,int x1,int y1,int x2,int y2,const i_color *val) {
   int x,y;
   mm_log((1,"i_box(im* 0x%x,x1 %d,y1 %d,x2 %d,y2 %d,val 0x%x)\n",im,x1,y1,x2,y2,val));
   for(x=x1;x<x2+1;x++) {
@@ -564,7 +564,7 @@ Fills the box from (x1,y1) to (x2,y2) inclusive with color.
 */
 
 void
-i_box_filled(i_img *im,int x1,int y1,int x2,int y2,i_color *val) {
+i_box_filled(i_img *im,int x1,int y1,int x2,int y2, const i_color *val) {
   int x,y;
   mm_log((1,"i_box_filled(im* 0x%x,x1 %d,y1 %d,x2 %d,y2 %d,val 0x%x)\n",im,x1,y1,x2,y2,val));
   for(x=x1;x<x2+1;x++) for (y=y1;y<y2+1;y++) i_ppix(im,x,y,val);
@@ -660,7 +660,7 @@ Draw a line to image using bresenhams linedrawing algorithm
 */
 
 void
-i_line(i_img *im, int x1, int y1, int x2, int y2, i_color *val, int endp) {
+i_line(i_img *im, int x1, int y1, int x2, int y2, const i_color *val, int endp) {
   int x, y;
   int dx, dy;
   int p;
@@ -858,7 +858,7 @@ The point (x2, y2) is drawn only if endp is set.
 */
 
 void
-i_line_aa(i_img *im, int x1, int y1, int x2, int y2, i_color *val, int endp) {
+i_line_aa(i_img *im, int x1, int y1, int x2, int y2, const i_color *val, int endp) {
   int x, y;
   int dx, dy;
   int p;
@@ -1002,7 +1002,7 @@ perm(int n,int k) {
    to get a new level - this may lead to errors who knows lets test it */
 
 void
-i_bezier_multi(i_img *im,int l,double *x,double *y,i_color *val) {
+i_bezier_multi(i_img *im,int l,const double *x,const double *y, const i_color *val) {
   double *bzcoef;
   double t,cx,cy;
   int k,i;
@@ -1306,7 +1306,7 @@ Returns false if (seedx, seedy) are outside the image.
 */
 
 undef_int
-i_flood_fill(i_img *im, int seedx, int seedy, i_color *dcol) {
+i_flood_fill(i_img *im, int seedx, int seedy, const i_color *dcol) {
   int bxmin, bxmax, bymin, bymax;
   struct i_bitmap *btm;
   int x, y;

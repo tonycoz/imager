@@ -239,7 +239,7 @@ Fill the areas given by hlines with color.
 */
 
 void
-i_int_hlines_fill_color(i_img *im, i_int_hlines *hlines, i_color *col) {
+i_int_hlines_fill_color(i_img *im, i_int_hlines *hlines, const i_color *col) {
   int y, i, x;
 
   for (y = hlines->start_y; y < hlines->limit_y; ++y) {

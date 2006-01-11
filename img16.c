@@ -23,14 +23,14 @@ sample image type to work with.
 #include "imager.h"
 #include "imageri.h"
 
-static int i_ppix_d16(i_img *im, int x, int y, i_color *val);
+static int i_ppix_d16(i_img *im, int x, int y, const i_color *val);
 static int i_gpix_d16(i_img *im, int x, int y, i_color *val);
 static int i_glin_d16(i_img *im, int l, int r, int y, i_color *vals);
-static int i_plin_d16(i_img *im, int l, int r, int y, i_color *vals);
-static int i_ppixf_d16(i_img *im, int x, int y, i_fcolor *val);
+static int i_plin_d16(i_img *im, int l, int r, int y, const i_color *vals);
+static int i_ppixf_d16(i_img *im, int x, int y, const i_fcolor *val);
 static int i_gpixf_d16(i_img *im, int x, int y, i_fcolor *val);
 static int i_glinf_d16(i_img *im, int l, int r, int y, i_fcolor *vals);
-static int i_plinf_d16(i_img *im, int l, int r, int y, i_fcolor *vals);
+static int i_plinf_d16(i_img *im, int l, int r, int y, const i_fcolor *vals);
 static int i_gsamp_d16(i_img *im, int l, int r, int y, i_sample_t *samps, 
                        int const *chans, int chan_count);
 static int i_gsampf_d16(i_img *im, int l, int r, int y, i_fsample_t *samps, 
@@ -218,7 +218,7 @@ i_img *i_img_16_new(int x, int y, int ch) {
   return im;
 }
 
-static int i_ppix_d16(i_img *im, int x, int y, i_color *val) {
+static int i_ppix_d16(i_img *im, int x, int y, const i_color *val) {
   int off, ch;
 
   if (x < 0 || x >= im->xsize || y < 0 || y > im->ysize) 
@@ -251,7 +251,7 @@ static int i_gpix_d16(i_img *im, int x, int y, i_color *val) {
   return 0;
 }
 
-static int i_ppixf_d16(i_img *im, int x, int y, i_fcolor *val) {
+static int i_ppixf_d16(i_img *im, int x, int y, const i_fcolor *val) {
   int off, ch;
 
   if (x < 0 || x >= im->xsize || y < 0 || y > im->ysize) 
@@ -305,7 +305,7 @@ static int i_glin_d16(i_img *im, int l, int r, int y, i_color *vals) {
   }
 }
 
-static int i_plin_d16(i_img *im, int l, int r, int y, i_color *vals) {
+static int i_plin_d16(i_img *im, int l, int r, int y, const i_color *vals) {
   int ch, count, i;
   int off;
   if (y >=0 && y < im->ysize && l < im->xsize && l >= 0) {
@@ -358,7 +358,7 @@ static int i_glinf_d16(i_img *im, int l, int r, int y, i_fcolor *vals) {
   }
 }
 
-static int i_plinf_d16(i_img *im, int l, int r, int y, i_fcolor *vals) {
+static int i_plinf_d16(i_img *im, int l, int r, int y, const i_fcolor *vals) {
   int ch, count, i;
   int off;
   if (y >=0 && y < im->ysize && l < im->xsize && l >= 0) {

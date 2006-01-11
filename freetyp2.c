@@ -122,7 +122,7 @@ Return NULL on failure.
 */
 
 FT2_Fonthandle *
-i_ft2_new(char *name, int index) {
+i_ft2_new(const char *name, int index) {
   FT_Error error;
   FT2_Fonthandle *result;
   FT_Face face;
@@ -269,7 +269,7 @@ This should be a 2 x 3 matrix like:
 =cut
 */
 int
-i_ft2_settransform(FT2_Fonthandle *handle, double *matrix) {
+i_ft2_settransform(FT2_Fonthandle *handle, const double *matrix) {
   FT_Matrix m;
   FT_Vector v;
   int i;
@@ -629,7 +629,7 @@ Returns non-zero on success.
 =cut
 */
 int
-i_ft2_text(FT2_Fonthandle *handle, i_img *im, int tx, int ty, i_color *cl,
+i_ft2_text(FT2_Fonthandle *handle, i_img *im, int tx, int ty, const i_color *cl,
            double cheight, double cwidth, char const *text, int len, int align,
            int aa, int vlayout, int utf8) {
   FT_Error error;
@@ -1082,7 +1082,7 @@ i_ft2_get_multiple_masters(FT2_Fonthandle *handle, i_font_mm *mm) {
 }
 
 int
-i_ft2_set_mm_coords(FT2_Fonthandle *handle, int coord_count, long *coords) {
+i_ft2_set_mm_coords(FT2_Fonthandle *handle, int coord_count, const long *coords) {
 #ifdef IM_FT2_MM
   int i;
   FT_Long ftcoords[T1_MAX_MM_AXIS];

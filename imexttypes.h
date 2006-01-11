@@ -19,38 +19,38 @@ typedef struct {
   i_img *(*f_i_sametype_chans)(i_img *im, int xsize, int ysize, int channels);
   void (*f_i_img_info)(i_img *im, int *info);
 
-  int (*f_i_ppix)(i_img *im, int x, int y, i_color *val);
+  int (*f_i_ppix)(i_img *im, int x, int y, const i_color *val);
   int (*f_i_gpix)(i_img *im, int x, int y, i_color *val);
-  int (*f_i_ppixf)(i_img *im, int x, int y, i_fcolor *val);
+  int (*f_i_ppixf)(i_img *im, int x, int y, const i_fcolor *val);
   int (*f_i_gpixf)(i_img *im, int x, int y, i_fcolor *val);
-  int (*f_i_plin)(i_img *im, int l, int r, int y, i_color *vals);
+  int (*f_i_plin)(i_img *im, int l, int r, int y, const i_color *vals);
   int (*f_i_glin)(i_img *im, int l, int r, int y, i_color *vals);
-  int (*f_i_plinf)(i_img *im, int l, int r, int y, i_fcolor *vals);
+  int (*f_i_plinf)(i_img *im, int l, int r, int y, const i_fcolor *vals);
   int (*f_i_glinf)(i_img *im, int l, int r, int y, i_fcolor *vals);
   int (*f_i_gsamp)(i_img *im, int l, int r, int y, i_sample_t *samp, 
                    const int *chans, int chan_count);
   int (*f_i_gsampf)(i_img *im, int l, int r, int y, i_fsample_t *samp, 
                    const int *chans, int chan_count);
   int (*f_i_gpal)(i_img *im, int x, int r, int y, i_palidx *vals);
-  int (*f_i_ppal)(i_img *im, int x, int r, int y, i_palidx *vals);
-  int (*f_i_addcolors)(i_img *im, i_color *colors, int count);
+  int (*f_i_ppal)(i_img *im, int x, int r, int y, const i_palidx *vals);
+  int (*f_i_addcolors)(i_img *im, const i_color *colors, int count);
   int (*f_i_getcolors)(i_img *im, int i, i_color *, int count);
   int (*f_i_colorcount)(i_img *im);
   int (*f_i_maxcolors)(i_img *im);
-  int (*f_i_findcolor)(i_img *im, i_color *color, i_palidx *entry);
-  int (*f_i_setcolors)(i_img *im, int index, i_color *colors, 
+  int (*f_i_findcolor)(i_img *im, const i_color *color, i_palidx *entry);
+  int (*f_i_setcolors)(i_img *im, int index, const i_color *colors, 
                        int count);
 
-  i_fill_t *(*f_i_new_fill_solid)(i_color *c, int combine);
-  i_fill_t *(*f_i_new_fill_solidf)(i_fcolor *c, int combine);
+  i_fill_t *(*f_i_new_fill_solid)(const i_color *c, int combine);
+  i_fill_t *(*f_i_new_fill_solidf)(const i_fcolor *c, int combine);
 
-  i_fill_t *(*f_i_new_fill_hatch)(i_color *fg, i_color *bg, int combine, 
-                                  int hatch, unsigned char *cust_hatch, 
+  i_fill_t *(*f_i_new_fill_hatch)(const i_color *fg, const i_color *bg, int combine, 
+                                  int hatch, const unsigned char *cust_hatch, 
                                   int dx, int dy);
-  i_fill_t *(*f_i_new_fill_hatchf)(i_fcolor *fg, i_fcolor *bg, int combine, 
-                                  int hatch, unsigned char *cust_hatch, 
+  i_fill_t *(*f_i_new_fill_hatchf)(const i_fcolor *fg, const i_fcolor *bg, int combine, 
+                                  int hatch, const unsigned char *cust_hatch, 
                                   int dx, int dy);
-  i_fill_t *(*f_i_new_fill_image)(i_img *im, double *matrix, int xoff, 
+  i_fill_t *(*f_i_new_fill_image)(i_img *im, const double *matrix, int xoff, 
                                 int yoff, int combine);
   i_fill_t *(*f_i_new_fill_fount)(double xa, double ya, double xb, double yb, 
                  i_fountain_type type, i_fountain_repeat repeat, 
@@ -95,21 +95,21 @@ typedef struct {
   int (*f_i_tags_set_color)(i_img_tags *tags, char const *name, int code,
                             i_color const *value);
 
-  void (*f_i_box)(i_img *im, int x1, int y1, int x2, int y2, i_color *val);
-  void (*f_i_box_filled)(i_img *im, int x1, int y1, int x2, int y2, i_color *val);
+  void (*f_i_box)(i_img *im, int x1, int y1, int x2, int y2, const i_color *val);
+  void (*f_i_box_filled)(i_img *im, int x1, int y1, int x2, int y2, const i_color *val);
   void (*f_i_box_cfill)(i_img *im, int x1, int y1, int x2, int y2, i_fill_t *fill);
-  void (*f_i_line)(i_img *im, int x1, int y1, int x2, int y2, i_color *val, int endp);
-  void (*f_i_line_aa)(i_img *im, int x1, int y1, int x2, int y2, i_color *val, int endp);
-  void (*f_i_arc)(i_img *im, int x, int y, float rad, float d1, float d2, i_color *val);
-  void (*f_i_arc_aa)(i_img *im, double x, double y, double rad, double d1, double d2, i_color *val);
+  void (*f_i_line)(i_img *im, int x1, int y1, int x2, int y2, const i_color *val, int endp);
+  void (*f_i_line_aa)(i_img *im, int x1, int y1, int x2, int y2, const i_color *val, int endp);
+  void (*f_i_arc)(i_img *im, int x, int y, float rad, float d1, float d2, const i_color *val);
+  void (*f_i_arc_aa)(i_img *im, double x, double y, double rad, double d1, double d2, const i_color *val);
   void (*f_i_arc_cfill)(i_img *im, int x, int y, float rad, float d1, float d2, i_fill_t *val);
   void (*f_i_arc_aa_cfill)(i_img *im, double x, double y, double rad, double d1, double d2, i_fill_t *fill);
-  void (*f_i_circle_aa)(i_img *im, float x, float y, float rad, i_color *val);
-  int (*f_i_flood_fill)(i_img *im, int seedx, int seedy, i_color *dcol);
+  void (*f_i_circle_aa)(i_img *im, float x, float y, float rad, const i_color *val);
+  int (*f_i_flood_fill)(i_img *im, int seedx, int seedy, const i_color *dcol);
   int (*f_i_flood_cfill)(i_img *im, int seedx, int seedy, i_fill_t *fill);
 
   void (*f_i_copyto)(i_img *im, i_img *src, int x1, int y1, int x2, int y2, int tx, int ty);
-  void (*f_i_copyto_trans)(i_img *im, i_img *src, int x1, int y1, int x2, int y2, int tx, int ty, i_color *trans);
+  void (*f_i_copyto_trans)(i_img *im, i_img *src, int x1, int y1, int x2, int y2, int tx, int ty, const i_color *trans);
   i_img *(*f_i_copy)(i_img *im);
   int (*f_i_rubthru)(i_img *im, i_img *src, int tx, int ty, int src_minx, int src_miny, int src_maxx, int src_maxy);
 } im_ext_funcs;
