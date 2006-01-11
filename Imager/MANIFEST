@@ -135,15 +135,20 @@ regops.perl
 rgb.c           Reading and writing SGI rgb files
 rotate.c
 samples/README
+samples/align-string.pl Demonstrate align_string method.
 samples/anaglyph.pl
+samples/border.pl       Demonstrate adding a border
+samples/inline_replace_color.pl  replace colors using Inline::C
 samples/interleave.pl
-samples/replace_color.pl
+samples/replace_color.pl replace colors using transform2()
 samples/samp-form.cgi
 samples/samp-image.cgi
 samples/samp-scale.cgi  Demonstrate image upload via a HTML form
 samples/samp-scale.html Form for samp-scale.cgi
 samples/samp-tags.cgi   Demonstrate image upload via a HTML form
 samples/samp-tags.html  Form for samp-tags.cgi
+samples/slant_text.pl   Using $font->transform() to slant text
+samples/tk-photo.pl
 spot.perl	For making an ordered dither matrix from a spot function
 stackmach.c
 stackmach.h
@@ -197,6 +202,7 @@ t/t81hlines.t		Test hlines.c
 t/t82inline.t           Test Inline::C integration
 t/t90cc.t
 t/t91pod.t		Test POD with Test::Pod
+t/t92samples.t
 t/testtools.pl
 tags.c
 testimg/bad1oflow.bmp   1-bit/pixel, overflow integer on 32-bit machines
