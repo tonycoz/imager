@@ -178,8 +178,8 @@ static i_fcolor interp_i_fcolor(i_fcolor before, i_fcolor after, double pos,
   return out;
 }
 
-i_img *i_matrix_transform_bg(i_img *src, int xsize, int ysize, double *matrix,
-			     i_color *backp, i_fcolor *fbackp) {
+i_img *i_matrix_transform_bg(i_img *src, int xsize, int ysize, const double *matrix,
+			     const i_color *backp, const i_fcolor *fbackp) {
   i_img *result = i_sametype(src, xsize, ysize);
   int x, y;
   int ch;
@@ -415,12 +415,12 @@ i_img *i_matrix_transform_bg(i_img *src, int xsize, int ysize, double *matrix,
   return result;
 }
 
-i_img *i_matrix_transform(i_img *src, int xsize, int ysize, double *matrix) {
+i_img *i_matrix_transform(i_img *src, int xsize, int ysize, const double *matrix) {
   return i_matrix_transform_bg(src, xsize, ysize, matrix, NULL, NULL);
 }
 
 static void
-i_matrix_mult(double *dest, double *left, double *right) {
+i_matrix_mult(double *dest, const double *left, const double *right) {
   int i, j, k;
   double accum;
   
@@ -436,7 +436,7 @@ i_matrix_mult(double *dest, double *left, double *right) {
 }
 
 i_img *i_rotate_exact_bg(i_img *src, double amount, 
-			 i_color *backp, i_fcolor *fbackp) {
+			 const i_color *backp, const i_fcolor *fbackp) {
   double xlate1[9] = { 0 };
   double rotate[9];
   double xlate2[9] = { 0 };

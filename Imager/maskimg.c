@@ -34,10 +34,10 @@ typedef struct {
 #define MASKEXT(im) ((i_img_mask_ext *)((im)->ext_data))
 
 static void i_destroy_masked(i_img *im);
-static int i_ppix_masked(i_img *im, int x, int y, i_color *pix);
-static int i_ppixf_masked(i_img *im, int x, int y, i_fcolor *pix);
-static int i_plin_masked(i_img *im, int l, int r, int y, i_color *vals);
-static int i_plinf_masked(i_img *im, int l, int r, int y, i_fcolor *vals);
+static int i_ppix_masked(i_img *im, int x, int y, const i_color *pix);
+static int i_ppixf_masked(i_img *im, int x, int y, const i_fcolor *pix);
+static int i_plin_masked(i_img *im, int l, int r, int y, const i_color *vals);
+static int i_plinf_masked(i_img *im, int l, int r, int y, const i_fcolor *vals);
 static int i_gpix_masked(i_img *im, int x, int y, i_color *pix);
 static int i_gpixf_masked(i_img *im, int x, int y, i_fcolor *pix);
 static int i_glin_masked(i_img *im, int l, int r, int y, i_color *vals);
@@ -47,7 +47,7 @@ static int i_gsamp_masked(i_img *im, int l, int r, int y, i_sample_t *samp,
 static int i_gsampf_masked(i_img *im, int l, int r, int y, i_fsample_t *samp, 
                            int const *chans, int chan_count);
 static int i_gpal_masked(i_img *im, int l, int r, int y, i_palidx *vals);
-static int i_ppal_masked(i_img *im, int l, int r, int y, i_palidx *vals);
+static int i_ppal_masked(i_img *im, int l, int r, int y, const i_palidx *vals);
 
 /*
 =item IIM_base_masked
@@ -168,7 +168,7 @@ static void i_destroy_masked(i_img *im) {
 }
 
 /*
-=item i_ppix_masked(i_img *im, int x, int y, i_color *pix)
+=item i_ppix_masked(i_img *im, int x, int y, const i_color *pix)
 
 Write a pixel to a masked image.
 
@@ -176,7 +176,7 @@ Internal function.
 
 =cut
 */
-static int i_ppix_masked(i_img *im, int x, int y, i_color *pix) {
+static int i_ppix_masked(i_img *im, int x, int y, const i_color *pix) {
   i_img_mask_ext *ext = MASKEXT(im);
   int result;
 
@@ -194,7 +194,7 @@ static int i_ppix_masked(i_img *im, int x, int y, i_color *pix) {
 }
 
 /*
-=item i_ppixf_masked(i_img *im, int x, int y, i_fcolor *pix)
+=item i_ppixf_masked(i_img *im, int x, int y, const i_fcolor *pix)
 
 Write a pixel to a masked image.
 
@@ -202,7 +202,7 @@ Internal function.
 
 =cut
 */
-static int i_ppixf_masked(i_img *im, int x, int y, i_fcolor *pix) {
+static int i_ppixf_masked(i_img *im, int x, int y, const i_fcolor *pix) {
   i_img_mask_ext *ext = MASKEXT(im);
   int result;
 
@@ -220,7 +220,7 @@ static int i_ppixf_masked(i_img *im, int x, int y, i_fcolor *pix) {
 }
 
 /*
-=item i_plin_masked(i_img *im, int l, int r, int y, i_color *vals)
+=item i_plin_masked(i_img *im, int l, int r, int y, const i_color *vals)
 
 Write a row of data to a masked image.
 
@@ -228,7 +228,7 @@ Internal function.
 
 =cut
 */
-static int i_plin_masked(i_img *im, int l, int r, int y, i_color *vals) {
+static int i_plin_masked(i_img *im, int l, int r, int y, const i_color *vals) {
   i_img_mask_ext *ext = MASKEXT(im);
 
   if (y >= 0 && y < im->ysize && l < im->xsize && l >= 0) {
@@ -298,7 +298,7 @@ static int i_plin_masked(i_img *im, int l, int r, int y, i_color *vals) {
 }
 
 /*
-=item i_plinf_masked(i_img *im, int l, int r, int y, i_fcolor *vals)
+=item i_plinf_masked(i_img *im, int l, int r, int y, const i_fcolor *vals)
 
 Write a row of data to a masked image.
 
@@ -306,7 +306,7 @@ Internal function.
 
 =cut
 */
-static int i_plinf_masked(i_img *im, int l, int r, int y, i_fcolor *vals) {
+static int i_plinf_masked(i_img *im, int l, int r, int y, const i_fcolor *vals) {
   i_img_mask_ext *ext = MASKEXT(im);
   if (y >= 0 && y < im->ysize && l < im->xsize && l >= 0) {
     if (r > im->xsize)
@@ -477,7 +477,7 @@ static int i_gpal_masked(i_img *im, int l, int r, int y, i_palidx *vals) {
   }
 }
 
-static int i_ppal_masked(i_img *im, int l, int r, int y, i_palidx *vals) {
+static int i_ppal_masked(i_img *im, int l, int r, int y, const i_palidx *vals) {
   i_img_mask_ext *ext = MASKEXT(im);
   if (y >= 0 && y < im->ysize && l < im->xsize && l >= 0) {
     if (r > im->xsize)

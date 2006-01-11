@@ -76,10 +76,10 @@ typedef struct {
 } i_img_tags;
 
 typedef struct i_img_ i_img;
-typedef int (*i_f_ppix_t)(i_img *im, int x, int y, i_color *pix);
-typedef int (*i_f_ppixf_t)(i_img *im, int x, int y, i_fcolor *pix);
-typedef int (*i_f_plin_t)(i_img *im, int x, int r, int y, i_color *vals);
-typedef int (*i_f_plinf_t)(i_img *im, int x, int r, int y, i_fcolor *vals);
+typedef int (*i_f_ppix_t)(i_img *im, int x, int y, const i_color *pix);
+typedef int (*i_f_ppixf_t)(i_img *im, int x, int y, const i_fcolor *pix);
+typedef int (*i_f_plin_t)(i_img *im, int x, int r, int y, const i_color *vals);
+typedef int (*i_f_plinf_t)(i_img *im, int x, int r, int y, const i_fcolor *vals);
 typedef int (*i_f_gpix_t)(i_img *im, int x, int y, i_color *pix);
 typedef int (*i_f_gpixf_t)(i_img *im, int x, int y, i_fcolor *pix);
 typedef int (*i_f_glin_t)(i_img *im, int x, int r, int y, i_color *vals);
@@ -91,13 +91,13 @@ typedef int (*i_f_gsampf_t)(i_img *im, int x, int r, int y, i_fsample_t *samp,
                             const int *chan, int chan_count);
 
 typedef int (*i_f_gpal_t)(i_img *im, int x, int r, int y, i_palidx *vals);
-typedef int (*i_f_ppal_t)(i_img *im, int x, int r, int y, i_palidx *vals);
-typedef int (*i_f_addcolors_t)(i_img *im, i_color *colors, int count);
+typedef int (*i_f_ppal_t)(i_img *im, int x, int r, int y, const i_palidx *vals);
+typedef int (*i_f_addcolors_t)(i_img *im, const i_color *colors, int count);
 typedef int (*i_f_getcolors_t)(i_img *im, int i, i_color *, int count);
 typedef int (*i_f_colorcount_t)(i_img *im);
 typedef int (*i_f_maxcolors_t)(i_img *im);
-typedef int (*i_f_findcolor_t)(i_img *im, i_color *color, i_palidx *entry);
-typedef int (*i_f_setcolors_t)(i_img *im, int index, i_color *colors, 
+typedef int (*i_f_findcolor_t)(i_img *im, const i_color *color, i_palidx *entry);
+typedef int (*i_f_setcolors_t)(i_img *im, int index, const i_color *colors, 
                               int count);
 
 typedef void (*i_f_destroy_t)(i_img *im);

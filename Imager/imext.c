@@ -115,7 +115,7 @@ color to the image.
 */
 
 int 
-(i_ppix)(i_img *im,int x,int y,i_color *val) {
+(i_ppix)(i_img *im, int x, int y, const i_color *val) {
   return i_ppix(im, x, y, val);
 }
 
@@ -151,7 +151,7 @@ color to the image.
 =cut
 */
 int
-(i_ppixf)(i_img *im,int x,int y,i_fcolor *val) {
+(i_ppixf)(i_img *im, int x, int y, const i_fcolor *val) {
   return i_ppixf(im, x, y, val);
 }
 
@@ -187,7 +187,7 @@ Returns the number of pixels set.
 */
 
 int
-(i_plin)(i_img *im, int l, int r, int y, i_color *vals) {
+(i_plin)(i_img *im, int l, int r, int y, const i_color *vals) {
   return i_plin(im, l, r, y, vals);
 }
 
@@ -222,7 +222,7 @@ Returns the number of pixels set.
 */
 
 int
-(i_plinf)(i_img *im, int l, int r, int y, i_fcolor *vals) {
+(i_plinf)(i_img *im, int l, int r, int y, const i_fcolor *vals) {
   return i_plinf(im, l, r, y, vals);
 }
 
@@ -324,7 +324,7 @@ Always returns 0 for direct color images.
 =cut
 */
 int
-(i_ppal)(i_img *im, int x, int r, int y, i_palidx *vals) {
+(i_ppal)(i_img *im, int x, int r, int y, const i_palidx *vals) {
   return i_ppal(im, x, r, y, vals);
 }
 
@@ -345,7 +345,7 @@ Always fails for direct color images.
 */
 
 int
-(i_addcolors)(i_img *im, i_color *colors, int count) {
+(i_addcolors)(i_img *im, const i_color *colors, int count) {
   return i_addcolors(im, colors, count);
 }
 
@@ -425,7 +425,7 @@ Always fails on direct color images.
 =cut
 */
 int
-(i_findcolor)(i_img *im, i_color *color, i_palidx *entry) {
+(i_findcolor)(i_img *im, const i_color *color, i_palidx *entry) {
   return i_findcolor(im, color, entry);
 }
 
@@ -448,7 +448,7 @@ Always fails on direct color images.
 =cut
 */
 int
-(i_setcolors)(i_img *im, int index, i_color *colors, int count) {
+(i_setcolors)(i_img *im, int index, const i_color *colors, int count) {
   return i_setcolors(im, index, colors, count);
 }
 

@@ -41,7 +41,7 @@ Now handles images with more than 8-bits/sample.
 */
 
 int
-i_convert(i_img *im, i_img *src, float *coeff, int outchan, int inchan) {
+i_convert(i_img *im, i_img *src, const float *coeff, int outchan, int inchan) {
   int x, y;
   int i, j;
   int ilimit;

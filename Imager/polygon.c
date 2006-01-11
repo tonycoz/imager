@@ -91,7 +91,7 @@ p_eval_atx(p_line *l, pcord x) {
 
 static
 p_line *
-line_set_new(double *x, double *y, int l) {
+line_set_new(const double *x, const double *y, int l) {
   int i;
   p_line *lset = mymalloc(sizeof(p_line) * l);
 
@@ -111,7 +111,7 @@ line_set_new(double *x, double *y, int l) {
 
 static
 p_point *
-point_set_new(double *x, double *y, int l) {
+point_set_new(const double *x, const double *y, int l) {
   int i;
   p_point *pset = mymalloc(sizeof(p_point) * l);
   
@@ -264,12 +264,12 @@ saturate(int in) {
   return 0;
 }
 
-typedef void (*scanline_flusher)(i_img *im, ss_scanline *ss, int y, void *ctx);
+typedef void (*scanline_flusher)(i_img *im, ss_scanline *ss, int y, const void *ctx);
 
 /* This function must be modified later to do proper blending */
 
 static void
-scanline_flush(i_img *im, ss_scanline *ss, int y, void *ctx) {
+scanline_flush(i_img *im, ss_scanline *ss, int y, const void *ctx) {
   int x, ch, tv;
   i_color t;
   i_color *val = (i_color *)ctx;
@@ -529,7 +529,7 @@ render_slice_scanline_old(ss_scanline *ss, int y, p_line *l, p_line *r) {
 
 
 static void
-i_poly_aa_low(i_img *im, int l, double *x, double *y, void *ctx, scanline_flusher flusher) {
+i_poly_aa_low(i_img *im, int l, const double *x, const double *y, void const *ctx, scanline_flusher flusher) {
   int i ,k;			/* Index variables */
   int clc;			/* Lines inside current interval */
   pcord tempy;
@@ -637,7 +637,7 @@ i_poly_aa_low(i_img *im, int l, double *x, double *y, void *ctx, scanline_flushe
 } /* Function */
 
 void
-i_poly_aa(i_img *im, int l, double *x, double *y, i_color *val) {
+i_poly_aa(i_img *im, int l, const double *x, const double *y, const i_color *val) {
   i_poly_aa_low(im, l, x, y, val, scanline_flush);
 }
 
@@ -649,11 +649,11 @@ struct poly_cfill_state {
 };
 
 static void
-scanline_flush_cfill(i_img *im, ss_scanline *ss, int y, void *ctx) {
+scanline_flush_cfill(i_img *im, ss_scanline *ss, int y, const void *ctx) {
   int x, ch, tv;
   int pos;
   int left, right;
-  struct poly_cfill_state *state = (struct poly_cfill_state *)ctx;
+  struct poly_cfill_state const *state = (struct poly_cfill_state const *)ctx;
   i_color *fillbuf = state->fillbuf;
   i_color *line = state->linebuf;
 
@@ -711,11 +711,11 @@ struct poly_cfill_state_f {
 };
 
 static void
-scanline_flush_cfill_f(i_img *im, ss_scanline *ss, int y, void *ctx) {
+scanline_flush_cfill_f(i_img *im, ss_scanline *ss, int y, const void *ctx) {
   int x, ch, tv;
   int pos;
   int left, right;
-  struct poly_cfill_state_f *state = (struct poly_cfill_state_f *)ctx;
+  struct poly_cfill_state_f const *state = (struct poly_cfill_state_f const *)ctx;
   i_fcolor *fillbuf = state->fillbuf;
   i_fcolor *line = state->linebuf;
 
@@ -766,7 +766,7 @@ scanline_flush_cfill_f(i_img *im, ss_scanline *ss, int y, void *ctx) {
 }
 
 void
-i_poly_aa_cfill(i_img *im, int l, double *x, double *y, i_fill_t *fill) {
+i_poly_aa_cfill(i_img *im, int l, const double *x, const double *y, i_fill_t *fill) {
   if (im->bits == i_8_bits && fill->fill_with_color) {
     struct poly_cfill_state ctx;
     ctx.fillbuf = mymalloc(sizeof(i_color) * im->xsize * 2);

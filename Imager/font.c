@@ -315,7 +315,7 @@ function to get a strings bounding box given the font id and sizes
 */
 
 int
-i_t1_bbox(int fontnum,float points,char *str,int len,int cords[6], int utf8,char const *flags) {
+i_t1_bbox(int fontnum,float points,const char *str,int len,int cords[6], int utf8,char const *flags) {
   BBox bbox;
   BBox gbbox;
   int mod_flags = t1_get_flags(flags);
@@ -330,10 +330,10 @@ i_t1_bbox(int fontnum,float points,char *str,int len,int cords[6], int utf8,char
     myfree(work);
   }
   else {
-    bbox = T1_GetStringBBox(fontnum,str,len,0,mod_flags);
+    bbox = T1_GetStringBBox(fontnum,(char *)str,len,0,mod_flags);
   }
   gbbox = T1_GetFontBBox(fontnum);
-  advance = T1_GetStringWidth(fontnum, str, len, 0, mod_flags);
+  advance = T1_GetStringWidth(fontnum, (char *)str, len, 0, mod_flags);
   
   mm_log((1,"bbox: (%d,%d,%d,%d)\n",
 	  (int)(bbox.llx*points/1000),
@@ -380,7 +380,7 @@ Interface to text rendering in a single color onto an image
 */
 
 undef_int
-i_t1_text(i_img *im,int xb,int yb,i_color *cl,int fontnum,float points,char* str,int len,int align, int utf8, char const *flags) {
+i_t1_text(i_img *im,int xb,int yb,const i_color *cl,int fontnum,float points,const char* str,int len,int align, int utf8, char const *flags) {
   GLYPH *glyph;
   int xsize,ysize,x,y,ch;
   i_color val;
@@ -396,7 +396,8 @@ i_t1_text(i_img *im,int xb,int yb,i_color *cl,int fontnum,float points,char* str
     myfree(work);
   }
   else {
-    glyph=T1_AASetString( fontnum, str, len, 0, mod_flags, points, NULL);
+    /* T1_AASetString() accepts a char * not a const char */
+    glyph=T1_AASetString( fontnum, (char *)str, len, 0, mod_flags, points, NULL);
   }
   if (glyph == NULL)
     return 0;
@@ -817,7 +818,7 @@ static int
 i_tt_render_all_glyphs( TT_Fonthandle *handle, int inst, TT_Raster_Map *bit, 
                         TT_Raster_Map *small_bit, int cords[6], 
                         char const* txt, int len, int smooth, int utf8 );
-static void i_tt_dump_raster_map2( i_img* im, TT_Raster_Map* bit, int xb, int yb, i_color *cl, int smooth );
+static void i_tt_dump_raster_map2( i_img* im, TT_Raster_Map* bit, int xb, int yb, const i_color *cl, int smooth );
 static void i_tt_dump_raster_map_channel( i_img* im, TT_Raster_Map* bit, int xb, int yb, int channel, int smooth );
 static  int
 i_tt_rasterize( TT_Fonthandle *handle, TT_Raster_Map *bit, int cords[6], 
@@ -981,7 +982,7 @@ the font handle's cache
 */
 
 TT_Fonthandle*
-i_tt_new(char *fontname) {
+i_tt_new(const char *fontname) {
   TT_Error error;
   TT_Fonthandle *handle;
   unsigned short i,n;
@@ -1479,7 +1480,7 @@ Function to dump a raster onto an image in color used by i_tt_text() (internal).
 
 static
 void
-i_tt_dump_raster_map2( i_img* im, TT_Raster_Map* bit, int xb, int yb, i_color *cl, int smooth ) {
+i_tt_dump_raster_map2( i_img* im, TT_Raster_Map* bit, int xb, int yb, const i_color *cl, int smooth ) {
   char *bmap;
   i_color val;
   int c, i, ch, x, y;
@@ -1671,7 +1672,7 @@ Interface to text rendering in a single color onto an image
 */
 
 undef_int
-i_tt_text( TT_Fonthandle *handle, i_img *im, int xb, int yb, i_color *cl, float points, char const* txt, int len, int smooth, int utf8, int align) {
+i_tt_text( TT_Fonthandle *handle, i_img *im, int xb, int yb, const i_color *cl, float points, char const* txt, int len, int smooth, int utf8, int align) {
   int cords[BOUNDING_BOX_COUNT];
   int ascent, st_offset, y;
   TT_Raster_Map bit;
@@ -1807,7 +1808,7 @@ Interface to get a strings bounding box
 */
 
 undef_int
-i_tt_bbox( TT_Fonthandle *handle, float points,char *txt,int len,int cords[6], int utf8) {
+i_tt_bbox( TT_Fonthandle *handle, float points,const char *txt,int len,int cords[6], int utf8) {
   int inst;
 
   i_clear_error();

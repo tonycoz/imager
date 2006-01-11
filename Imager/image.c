@@ -39,14 +39,14 @@ Some of these functions are internal.
 /* Hack around an obscure linker bug on solaris - probably due to builtin gcc thingies */
 static void fake(void) { ceil(1); }
 
-static int i_ppix_d(i_img *im, int x, int y, i_color *val);
+static int i_ppix_d(i_img *im, int x, int y, const i_color *val);
 static int i_gpix_d(i_img *im, int x, int y, i_color *val);
 static int i_glin_d(i_img *im, int l, int r, int y, i_color *vals);
-static int i_plin_d(i_img *im, int l, int r, int y, i_color *vals);
-static int i_ppixf_d(i_img *im, int x, int y, i_fcolor *val);
+static int i_plin_d(i_img *im, int l, int r, int y, const i_color *vals);
+static int i_ppixf_d(i_img *im, int x, int y, const i_fcolor *val);
 static int i_gpixf_d(i_img *im, int x, int y, i_fcolor *val);
 static int i_glinf_d(i_img *im, int l, int r, int y, i_fcolor *vals);
-static int i_plinf_d(i_img *im, int l, int r, int y, i_fcolor *vals);
+static int i_plinf_d(i_img *im, int l, int r, int y, const i_fcolor *vals);
 static int i_gsamp_d(i_img *im, int l, int r, int y, i_sample_t *samps, const int *chans, int chan_count);
 static int i_gsampf_d(i_img *im, int l, int r, int y, i_fsample_t *samps, const int *chans, int chan_count);
 /*static int i_psamp_d(i_img *im, int l, int r, int y, i_sample_t *samps, int *chans, int chan_count);
@@ -142,7 +142,7 @@ Dump color information to log - strictly for debugging.
 */
 
 void
-ICL_info(i_color *cl) {
+ICL_info(i_color const *cl) {
   mm_log((1,"i_color_info(cl* %p)\n",cl));
   mm_log((1,"i_color_info: (%d,%d,%d,%d)\n",cl->rgba.r,cl->rgba.g,cl->rgba.b,cl->rgba.a));
 }
@@ -524,7 +524,7 @@ pass NULL in trans for non transparent i_colors.
 */
 
 void
-i_copyto_trans(i_img *im,i_img *src,int x1,int y1,int x2,int y2,int tx,int ty,i_color *trans) {
+i_copyto_trans(i_img *im,i_img *src,int x1,int y1,int x2,int y2,int tx,int ty,const i_color *trans) {
   i_color pv;
   int x,y,t,ttx,tty,tt,ch;
 
@@ -1365,7 +1365,7 @@ Returns 0 if the pixel could be set, -1 otherwise.
 */
 static
 int
-i_ppix_d(i_img *im, int x, int y, i_color *val) {
+i_ppix_d(i_img *im, int x, int y, const i_color *val) {
   int ch;
   
   if ( x>-1 && x<im->xsize && y>-1 && y<im->ysize ) {
@@ -1457,7 +1457,7 @@ Returns the number of pixels copied (eg. if r, l or y is out of range)
 */
 static
 int
-i_plin_d(i_img *im, int l, int r, int y, i_color *vals) {
+i_plin_d(i_img *im, int l, int r, int y, const i_color *vals) {
   int ch, count, i;
   unsigned char *data;
   if (y >=0 && y < im->ysize && l < im->xsize && l >= 0) {
@@ -1486,7 +1486,7 @@ i_plin_d(i_img *im, int l, int r, int y, i_color *vals) {
 */
 static
 int
-i_ppixf_d(i_img *im, int x, int y, i_fcolor *val) {
+i_ppixf_d(i_img *im, int x, int y, const i_fcolor *val) {
   int ch;
   
   if ( x>-1 && x<im->xsize && y>-1 && y<im->ysize ) {
@@ -1574,7 +1574,7 @@ Returns the number of pixels copied (eg. if r, l or y is out of range)
 */
 static
 int
-i_plinf_d(i_img *im, int l, int r, int y, i_fcolor *vals) {
+i_plinf_d(i_img *im, int l, int r, int y, const i_fcolor *vals) {
   int ch, count, i;
   unsigned char *data;
   if (y >=0 && y < im->ysize && l < im->xsize && l >= 0) {
@@ -1730,7 +1730,7 @@ i_sample_t versions.
 =cut
 */
 
-int i_ppixf_fp(i_img *im, int x, int y, i_fcolor *pix) {
+int i_ppixf_fp(i_img *im, int x, int y, const i_fcolor *pix) {
   i_color temp;
   int ch;
 
@@ -1763,7 +1763,7 @@ int i_gpixf_fp(i_img *im, int x, int y, i_fcolor *pix) {
 
 =cut
 */
-int i_plinf_fp(i_img *im, int l, int r, int y, i_fcolor *pix) {
+int i_plinf_fp(i_img *im, int l, int r, int y, const i_fcolor *pix) {
   i_color *work;
 
   if (y >= 0 && y < im->ysize && l < im->xsize && l >= 0) {
@@ -1868,11 +1868,11 @@ im->ext_data points at.
 
 =over
 
-=item i_addcolors_forward(i_img *im, i_color *colors, int count)
+=item i_addcolors_forward(i_img *im, const i_color *colors, int count)
 
 =cut
 */
-int i_addcolors_forward(i_img *im, i_color *colors, int count) {
+int i_addcolors_forward(i_img *im, const i_color *colors, int count) {
   return i_addcolors(*(i_img **)im->ext_data, colors, count);
 }
 
@@ -1886,11 +1886,11 @@ int i_getcolors_forward(i_img *im, int i, i_color *color, int count) {
 }
 
 /*
-=item i_setcolors_forward(i_img *im, int i, i_color *color, int count)
+=item i_setcolors_forward(i_img *im, int i, const i_color *color, int count)
 
 =cut
 */
-int i_setcolors_forward(i_img *im, int i, i_color *color, int count) {
+int i_setcolors_forward(i_img *im, int i, const i_color *color, int count) {
   return i_setcolors(*(i_img **)im->ext_data, i, color, count);
 }
 
@@ -1913,11 +1913,11 @@ int i_maxcolors_forward(i_img *im) {
 }
 
 /*
-=item i_findcolor_forward(i_img *im, i_color *color, i_palidx *entry)
+=item i_findcolor_forward(i_img *im, const i_color *color, i_palidx *entry)
 
 =cut
 */
-int i_findcolor_forward(i_img *im, i_color *color, i_palidx *entry) {
+int i_findcolor_forward(i_img *im, const i_color *color, i_palidx *entry) {
   return i_findcolor(*(i_img **)im->ext_data, color, entry);
 }
 
