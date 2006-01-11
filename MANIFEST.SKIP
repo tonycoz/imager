@@ -28,7 +28,7 @@ Makefile$
 Makefile\.old
 \bpm_to_blib$
 \.o$
-^testimg/
+^testout
 ^blib/
 ^Imager\.c$
 ^Mandelbrot/Mandelbrot\.c$

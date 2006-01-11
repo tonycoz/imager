@@ -19,6 +19,11 @@ replace_color.pl
 
   http://www.perlmonks.org/?node_id=497355
 
+inline_replace_color.pl
+
+  Example using Inline::C and the Imager API to replace one color with
+  another in an image.
+
 interleave.pl
 
   Produce an interleaved image given the left and right images of a
