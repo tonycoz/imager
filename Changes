@@ -1294,6 +1294,7 @@ Revision history for Perl extension Imager.
 - added t/t92samples.t to check samples/README against MANIFEST
 - added inline_replace_color.pl to samples
 - constify the Imager API
+- document Imager::Filter::Mandelbrot
 
 =================================================================
 
