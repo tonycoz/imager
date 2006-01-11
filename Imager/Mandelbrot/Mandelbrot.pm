@@ -40,3 +40,52 @@ Imager->register_filter(type=>'mandelbrot',
                         callseq => \@callseq);
 
 1;
+
+__END__
+
+=head1 NAME
+
+Imager::Filter::Mandelbrot - filter that renders the Mandelbrot set.
+
+=head1 SYNOPSIS
+
+  use Imager;
+  use Imager::Filter::Mandelbrot;
+
+  $img->filter(type=>'mandelbrot', ...);
+
+=head1 DESCRIPTION
+
+This is a expansion of the mandelbrot dynamically loadable filter
+provided in dynfilt in previous releases of Imager.
+
+Valid filter parameters are:
+
+=over
+
+=item *
+
+minx, maxx - the range of x values to render.  Defaults: -2.5, 1.5.
+
+=item *
+
+miny, maxy - the range of y values to render.  Defaults: -1.5, 1.5
+
+=item *
+
+maxiter - the maximum number of iterations to perform when checking if
+the sequence tend towards infinity.
+
+=back
+
+=head1 AUTHOR
+
+Original by Arnar M. Hrafnkelsson.
+
+Adapted and expanded by Tony Cook <tony@imager.perl.org>
+
+=head1 SEE ALSO
+
+Imager, Imager::Filters.
+
+=cut
