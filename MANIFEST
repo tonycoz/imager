@@ -8,6 +8,10 @@ DynTest/DynTest.xs
 DynTest/Makefile.PL
 DynTest/linstretch.c
 DynTest/t/t00dyntest.t
+Flines/Flines.pm
+Flines/Flines.xs
+Flines/Makefile.PL
+Flines/t/t00flines.t
 Imager.pm
 Imager.xs
 MANIFEST

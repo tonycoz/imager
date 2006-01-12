@@ -30,6 +30,7 @@ Makefile\.old
 \.o$
 ^testout
 ^blib/
+^Flines/Flines\.c$
 ^Imager\.c$
 ^Mandelbrot/Mandelbrot\.c$
 ^CountColor/CountColor\.c$
