@@ -163,6 +163,8 @@ exit;
 
 
 sub MY::postamble {
+    my $self = shift;
+    my $perl = $self->{PERLRUN} ? '$(PERLRUN)' : '$(PERL)';
 '
 dyntest.$(MYEXTLIB) : dynfilt/Makefile
 	cd dynfilt && $(MAKE) $(PASTHRU)
@@ -174,11 +176,11 @@ imconfig.h : Makefile.PL
 	$(ECHO) "imconfig.h out-of-date with respect to $?"
 	$(PERLRUN) Makefile.PL
 	$(ECHO) "==> Your Makefile has been rebuilt - re-run your make command <=="
+'.qq!
+lib/Imager/APIRef.pm : \$(C_FILES) apidocs.perl
+	$perl apidocs.perl lib/Imager/APIRef.pm
 
-lib/Imager/APIRef.pm : $(C_FILES) apidocs.perl
-	$(PERLRUN) apidocs.perl lib/Imager/APIRef.pm
-
-';
+!;
 
 }
 

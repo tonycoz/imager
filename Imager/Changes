@@ -1296,6 +1296,7 @@ Revision history for Perl extension Imager.
 - constify the Imager API
 - document Imager::Filter::Mandelbrot
 - convert dynfilt/flines.c to Imager::Filter::Flines
+- minor changes for older perl/ExtUtils::MM
 
 =================================================================
 

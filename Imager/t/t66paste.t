@@ -1,5 +1,6 @@
 #!perl -w
 use strict;
+use lib 't';
 use Test::More tests => 15;
 
 BEGIN { use_ok("Imager") }
