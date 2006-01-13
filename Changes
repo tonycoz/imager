@@ -1297,6 +1297,9 @@ Revision history for Perl extension Imager.
 - document Imager::Filter::Mandelbrot
 - convert dynfilt/flines.c to Imager::Filter::Flines
 - minor changes for older perl/ExtUtils::MM
+- deal with freetype-config --cflags returning the directories
+  in the wrong order (Freetype 2.1.4 and earlier)
+  Thanks to David Wheeler for his help in tracking this down.
 
 =================================================================
 

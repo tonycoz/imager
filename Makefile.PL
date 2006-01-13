@@ -597,11 +597,30 @@ sub freetype2_probe {
   my $cflags = `freetype-config --cflags`
     and !$? or return;
   chomp $cflags;
-  
-  $frm->{cflags} = $cflags;
+
   my $lflags = `freetype-config --libs`
     and !$? or return;
   chomp $lflags;
+
+  # before 2.1.5 freetype-config --cflags could output
+  # the -I options in the wrong order, causing a conflict with
+  # freetype1.x installed with the same --prefix
+  #
+  # can happen iff:
+  #  - both -Iprefix/include and -Iprefix/include/freetype2 are in cflags
+  #    in that order
+  #  - freetype 1.x headers are in prefix/include/freetype
+  my @incdirs = map substr($_, 2), grep /^-I/, split ' ', $cflags;
+  if (@incdirs == 2 
+      && $incdirs[1] eq "$incdirs[0]/freetype2"
+      && -e "$incdirs[0]/freetype/freetype.h"
+      && -e "$incdirs[0]/freetype/fterrid.h") {
+    print "** freetype-config provided -I options out of order, correcting\n"
+      if $VERBOSE;
+    $cflags = join(' ', grep(!/-I/, split ' ', $cflags),
+		   map "-I$_", reverse @incdirs);
+  }
+  $frm->{cflags} = $cflags;
   $frm->{libfiles} = $lflags;
 
   printf "%10s: configured via freetype-config\n", $frmkey;
