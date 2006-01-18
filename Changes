@@ -1307,6 +1307,10 @@ Revision history for Perl extension Imager.
 - error messages when writing PNM images were always
   'unable to write pnm image', more useful messages are now reported.
 - convert t/t103raw.t to Test::More
+- reading a raw image no longer exits on a short read or read error,
+  and returns an appropriate error message in $im->errstr
+- write failures when writing a raw image now return a useful
+  message in $im->errstr
 
 =================================================================
 
