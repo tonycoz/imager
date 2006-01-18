@@ -1306,6 +1306,7 @@ Revision history for Perl extension Imager.
   'Could not write to buffer', more useful messages are now reported.
 - error messages when writing PNM images were always
   'unable to write pnm image', more useful messages are now reported.
+- convert t/t103raw.t to Test::More
 
 =================================================================
 
