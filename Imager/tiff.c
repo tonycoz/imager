@@ -431,7 +431,7 @@ i_readtiff_wiol(io_glue *ig, int length, int page) {
   
   if (!tif) {
     mm_log((1, "i_readtiff_wiol: Unable to open tif file\n"));
-    i_push_error(0, "opening file");
+    i_push_error(0, "Error opening file");
     TIFFSetErrorHandler(old_handler);
     TIFFSetWarningHandler(old_warn_handler);
     return NULL;
@@ -497,7 +497,7 @@ i_readtiff_multi_wiol(io_glue *ig, int length, int *count) {
   
   if (!tif) {
     mm_log((1, "i_readtiff_wiol: Unable to open tif file\n"));
-    i_push_error(0, "opening file");
+    i_push_error(0, "Error opening file");
     TIFFSetErrorHandler(old_handler);
     TIFFSetWarningHandler(old_warn_handler);
     return NULL;
@@ -899,7 +899,10 @@ Stores an image in the iolayer object.
 undef_int
 i_writetiff_multi_wiol(io_glue *ig, i_img **imgs, int count) {
   TIFF* tif;
+  TIFFErrorHandler old_handler;
   int i;
+
+  old_handler = TIFFSetErrorHandler(error_handler);
 
   io_glue_commit_types(ig);
   i_clear_error();
@@ -922,24 +925,30 @@ i_writetiff_multi_wiol(io_glue *ig, i_img **imgs, int count) {
 
 
   if (!tif) {
-    mm_log((1, "i_writetiff_mulit_wiol: Unable to open tif file for writing\n"));
+    mm_log((1, "i_writetiff_multi_wiol: Unable to open tif file for writing\n"));
+    i_push_error(0, "Could not create TIFF object");
+    TIFFSetErrorHandler(old_handler);
     return 0;
   }
 
   for (i = 0; i < count; ++i) {
     if (!i_writetiff_low(tif, imgs[i])) {
       TIFFClose(tif);
+      TIFFSetErrorHandler(old_handler);
       return 0;
     }
 
     if (!TIFFWriteDirectory(tif)) {
       i_push_error(0, "Cannot write TIFF directory");
       TIFFClose(tif);
+      TIFFSetErrorHandler(old_handler);
       return 0;
     }
   }
 
+  TIFFSetErrorHandler(old_handler);
   (void) TIFFClose(tif);
+
   return 1;
 }
 
@@ -960,6 +969,9 @@ undef_int
 i_writetiff_multi_wiol_faxable(io_glue *ig, i_img **imgs, int count, int fine) {
   TIFF* tif;
   int i;
+  TIFFErrorHandler old_handler;
+
+  old_handler = TIFFSetErrorHandler(error_handler);
 
   io_glue_commit_types(ig);
   i_clear_error();
@@ -983,23 +995,29 @@ i_writetiff_multi_wiol_faxable(io_glue *ig, i_img **imgs, int count, int fine) {
 
   if (!tif) {
     mm_log((1, "i_writetiff_mulit_wiol: Unable to open tif file for writing\n"));
+    i_push_error(0, "Could not create TIFF object");
+    TIFFSetErrorHandler(old_handler);
     return 0;
   }
 
   for (i = 0; i < count; ++i) {
     if (!i_writetiff_low_faxable(tif, imgs[i], fine)) {
       TIFFClose(tif);
+      TIFFSetErrorHandler(old_handler);
       return 0;
     }
 
     if (!TIFFWriteDirectory(tif)) {
       i_push_error(0, "Cannot write TIFF directory");
       TIFFClose(tif);
+      TIFFSetErrorHandler(old_handler);
       return 0;
     }
   }
 
   (void) TIFFClose(tif);
+  TIFFSetErrorHandler(old_handler);
+
   return 1;
 }
 
@@ -1016,13 +1034,16 @@ Stores an image in the iolayer object.
 undef_int
 i_writetiff_wiol(i_img *img, io_glue *ig) {
   TIFF* tif;
+  TIFFErrorHandler old_handler;
+
+  old_handler = TIFFSetErrorHandler(error_handler);
 
   io_glue_commit_types(ig);
   i_clear_error();
   mm_log((1, "i_writetiff_wiol(img %p, ig 0x%p)\n", img, ig));
 
   /* FIXME: Enable the mmap interface */
-  
+
   tif = TIFFClientOpen("No name", 
 		       "wm",
 		       (thandle_t) ig, 
@@ -1038,15 +1059,20 @@ i_writetiff_wiol(i_img *img, io_glue *ig) {
 
   if (!tif) {
     mm_log((1, "i_writetiff_wiol: Unable to open tif file for writing\n"));
+    i_push_error(0, "Could not create TIFF object");
+    TIFFSetErrorHandler(old_handler);
     return 0;
   }
 
   if (!i_writetiff_low(tif, img)) {
     TIFFClose(tif);
+    TIFFSetErrorHandler(old_handler);
     return 0;
   }
 
   (void) TIFFClose(tif);
+  TIFFSetErrorHandler(old_handler);
+
   return 1;
 }
 
@@ -1070,6 +1096,9 @@ point.
 undef_int
 i_writetiff_wiol_faxable(i_img *im, io_glue *ig, int fine) {
   TIFF* tif;
+  TIFFErrorHandler old_handler;
+
+  old_handler = TIFFSetErrorHandler(error_handler);
 
   io_glue_commit_types(ig);
   i_clear_error();
@@ -1092,15 +1121,20 @@ i_writetiff_wiol_faxable(i_img *im, io_glue *ig, int fine) {
 
   if (!tif) {
     mm_log((1, "i_writetiff_wiol: Unable to open tif file for writing\n"));
+    i_push_error(0, "Could not create TIFF object");
+    TIFFSetErrorHandler(old_handler);
     return 0;
   }
 
   if (!i_writetiff_low_faxable(tif, im, fine)) {
     TIFFClose(tif);
+    TIFFSetErrorHandler(old_handler);
     return 0;
   }
 
   (void) TIFFClose(tif);
+  TIFFSetErrorHandler(old_handler);
+
   return 1;
 }
 

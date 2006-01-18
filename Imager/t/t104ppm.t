@@ -1,7 +1,7 @@
 #!perl -w
 use Imager ':all';
 use lib 't';
-use Test::More tests => 60;
+use Test::More tests => 64;
 use strict;
 
 init_log("testout/t104ppm.log",1);
@@ -193,6 +193,18 @@ check_gray(Imager::i_get_pixel($ooim->{IMG}, 1, 1), 255);
   ok($im->read(file=>$limit_file),
      "should succeed - just inside bytes limit");
   Imager->set_file_limits(reset=>1);
+}
+
+{ # check error messages set correctly
+  my $im = Imager->new(xsize=>100, ysize=>100, channels=>4);
+  ok(!$im->write(file=>"testout/t104_fail.ppm", type=>'pnm'),
+     "should fail to write 4 channel image");
+  is($im->errstr, 'can only save 1 or 3 channel images to pnm',
+     "check error message");
+  ok(!$im->read(file=>'t/t104ppm.t', type=>'pnm'),
+     'should fail to read script as an image file');
+  is($im->errstr, 'unable to read pnm image: bad header magic, not a PNM file',
+     "check error message");
 }
 
 sub openimage {

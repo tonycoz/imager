@@ -7,6 +7,7 @@
 #include <io.h>
 #endif
 #include <string.h>
+#include <errno.h>
 
 #define IOL_DEB(x)
 
@@ -1071,19 +1072,33 @@ static ssize_t fd_read(io_glue *ig, void *buf, size_t count) {
 }
 
 static ssize_t fd_write(io_glue *ig, const void *buf, size_t count) {
+  ssize_t result;
 #ifdef _MSC_VER
-  return _write(ig->source.fdseek.fd, buf, count);
+  result = _write(ig->source.fdseek.fd, buf, count);
 #else
-  return write(ig->source.fdseek.fd, buf, count);
+  result = write(ig->source.fdseek.fd, buf, count);
 #endif
+
+  if (result <= 0) {
+    i_push_errorf(errno, "write() failure: %s (%d)", strerror(errno), errno);
+  }
+
+  return result;
 }
 
 static off_t fd_seek(io_glue *ig, off_t offset, int whence) {
+  off_t result;
 #ifdef _MSC_VER
-  return _lseek(ig->source.fdseek.fd, offset, whence);
+  result = _lseek(ig->source.fdseek.fd, offset, whence);
 #else
-  return lseek(ig->source.fdseek.fd, offset, whence);
+  result = lseek(ig->source.fdseek.fd, offset, whence);
 #endif
+
+  if (result == (off_t)-1) {
+    i_push_errorf(errno, "lseek() failure: %s (%d)", strerror(errno), errno);
+  }
+
+  return result;
 }
 
 static void fd_close(io_glue *ig) {
