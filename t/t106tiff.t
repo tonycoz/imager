@@ -1,7 +1,7 @@
 #!perl -w
 use strict;
 use lib 't';
-use Test::More tests => 89;
+use Test::More tests => 101;
 use Imager qw(:all);
 $^W=1; # warnings during command-line tests
 $|=1;  # give us some progress in the test harness
@@ -32,7 +32,7 @@ SKIP:
     $im = Imager->new(xsize=>2, ysize=>2);
     ok(!$im->write(file=>"testout/notiff.tif"), "should fail to write tiff");
     is($im->errstr, 'format not supported', "check no tiff message");
-    skip("no tiff support", 85);
+    skip("no tiff support", 97);
   }
 
   Imager::i_tags_add($img, "i_xres", 0, "300", 0);
@@ -365,5 +365,46 @@ SKIP:
     ok(!$imwork->read(file=>$page_file, page=>2),
        "check out of range page");
     is($imwork->errstr, "could not switch to page 2", "check message");
+  }
+
+  { # test writing returns an error message correctly
+    # open a file read only and try to write to it
+    open TIFF, "> testout/t106_empty.tif" or die;
+    close TIFF;
+    open TIFF, "< testout/t106_empty.tif"
+      or skip "Cannot open testout/t106_empty.tif for reading", 8;
+    binmode TIFF;
+    my $im = Imager->new(xsize=>100, ysize=>100);
+    ok(!$im->write(fh => \*TIFF, type=>'tiff'),
+       "fail to write to read only handle");
+    cmp_ok($im->errstr, '=~', 'Could not create TIFF object: Error writing TIFF header: write\(\)',
+	   "check error message");
+    ok(!Imager->write_multi({ type => 'tiff', fh => \*TIFF }, $im),
+       "fail to write multi to read only handle");
+    cmp_ok(Imager->errstr, '=~', 'Could not create TIFF object: Error writing TIFF header: write\(\)',
+	   "check error message");
+    ok(!$im->write(fh => \*TIFF, type=>'tiff', class=>'fax'),
+       "fail to write to read only handle (fax)");
+    cmp_ok($im->errstr, '=~', 'Could not create TIFF object: Error writing TIFF header: write\(\)',
+	   "check error message");
+    ok(!Imager->write_multi({ type => 'tiff', fh => \*TIFF, class=>'fax' }, $im),
+       "fail to write multi to read only handle (fax)");
+    cmp_ok(Imager->errstr, '=~', 'Could not create TIFF object: Error writing TIFF header: write\(\)',
+	   "check error message");
+  }
+
+  { # test reading returns an error correctly - use test script as an
+    # invalid TIFF file
+    my $im = Imager->new;
+    ok(!$im->read(file=>'t/t106tiff.t', type=>'tiff'),
+       "fail to read script as image");
+    is($im->errstr, 
+       "Error opening file: Not a TIFF file, bad magic number 8483 (0x2123)", 
+       "check error message");
+    my @ims = Imager->read_multi(file =>'t/t106tiff.t', type=>'tiff');
+    ok(!@ims, "fail to read_multi script as image");
+    is($im->errstr, 
+       "Error opening file: Not a TIFF file, bad magic number 8483 (0x2123)", 
+       "check error message");
   }
 }

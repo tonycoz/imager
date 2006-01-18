@@ -1302,6 +1302,10 @@ Revision history for Perl extension Imager.
   Thanks to David Wheeler for his help in tracking this down.
 - reword and provide an example for non-proportionally scaling an
   image.  Wording from Simon Cozens.
+- error messages when writing TIFF images were always 
+  'Could not write to buffer', more useful messages are now reported.
+- error messages when writing PNM images were always
+  'unable to write pnm image', more useful messages are now reported.
 
 =================================================================
 

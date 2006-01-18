@@ -1217,7 +1217,8 @@ sub read {
   if ( $input{'type'} eq 'pnm' ) {
     $self->{IMG}=i_readpnm_wiol( $IO, -1 ); # Fixme, check if that length parameter is ever needed
     if ( !defined($self->{IMG}) ) {
-      $self->{ERRSTR}='unable to read pnm image: '._error_as_msg(); return undef;
+      $self->{ERRSTR}='unable to read pnm image: '._error_as_msg(); 
+      return undef;
     }
     $self->{DEBUG} && print "loading a pnm file\n";
     return $self;
@@ -1446,12 +1447,12 @@ sub write {
 
     if (defined $input{class} && $input{class} eq 'fax') {
       if (!i_writetiff_wiol_faxable($self->{IMG}, $IO, $input{fax_fine})) {
-	$self->{ERRSTR}='Could not write to buffer';
+	$self->{ERRSTR} = $self->_error_as_msg();
 	return undef;
       }
     } else {
       if (!i_writetiff_wiol($self->{IMG}, $IO)) {
-	$self->{ERRSTR}='Could not write to buffer';
+	$self->{ERRSTR} = $self->_error_as_msg();
 	return undef;
       }
     }
@@ -1459,7 +1460,7 @@ sub write {
     $self->_set_opts(\%input, "pnm_", $self)
       or return undef;
     if ( ! i_writeppm_wiol($self->{IMG},$IO) ) {
-      $self->{ERRSTR}='unable to write pnm image';
+      $self->{ERRSTR} = $self->_error_as_msg();
       return undef;
     }
     $self->{DEBUG} && print "writing a pnm file\n";
