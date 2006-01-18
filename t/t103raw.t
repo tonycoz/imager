@@ -1,7 +1,8 @@
 #!perl -w
-print "1..16\n";
-use Imager qw(:all);
 use strict;
+use lib 't';
+use Test::More tests => 17;
+use Imager qw(:all);
 init_log("testout/t103raw.log",1);
 
 my $green=i_color_new(0,255,0,255);
@@ -24,19 +25,19 @@ i_box_filled($timg, 2, 2, 18, 18, $trans);
 open(FH,">testout/t103.raw") || die "Cannot open testout/t103.raw for writing\n";
 binmode(FH);
 my $IO = Imager::io_new_fd( fileno(FH) );
-i_writeraw_wiol($img, $IO) || die "Cannot write testout/t103.raw\n";
+ok(i_writeraw_wiol($img, $IO), "write raw low") or
+  print "# Cannot write testout/t103.raw\n";
 close(FH);
-
-print "ok 1\n";
 
 open(FH,"testout/t103.raw") || die "Cannot open testout/t103.raw\n";
 binmode(FH);
 $IO = Imager::io_new_fd( fileno(FH) );
-$cmpimg = i_readraw_wiol($IO, 150, 150, 3, 3, 0) || die "Cannot read testout/t103.raw\n";
+$cmpimg = i_readraw_wiol($IO, 150, 150, 3, 3, 0);
+ok($cmpimg, "read raw low")
+  or print "# Cannot read testout/t103.raw\n";
 close(FH);
 
 print "# raw average mean square pixel difference: ",sqrt(i_img_diff($img,$cmpimg))/150*150,"\n";
-print "ok 2\n";
 
 # I could have kept the raw images for these tests in binary files in
 # testimg/, but I think keeping them as hex encoded data in here makes
@@ -53,7 +54,8 @@ open FH, "testout/t103_base.raw"
 binmode FH;
 $IO = Imager::io_new_fd( fileno(FH) );
 
-my $baseimg = i_readraw_wiol( $IO, 4, 4, 3, 3, 0)
+my $baseimg = i_readraw_wiol( $IO, 4, 4, 3, 3, 0);
+ok($baseimg, "read base raw image")
   or die "Cannot read base raw image";
 close FH;
 
@@ -61,112 +63,107 @@ close FH;
 # each read_test() call does 2 tests:
 #  - check if the read succeeds
 #  - check if it matches $baseimg
-read_test('testout/t103_3to4.raw', 4, 4, 4, 3, 0, $baseimg, 3);
-read_test('testout/t103_line_int.raw', 4, 4, 3, 3, 1, $baseimg, 5);
+read_test('testout/t103_3to4.raw', 4, 4, 4, 3, 0, $baseimg);
+read_test('testout/t103_line_int.raw', 4, 4, 3, 3, 1, $baseimg);
 # intrl==2 is documented in raw.c but doesn't seem to be implemented
 #read_test('testout/t103_img_int.raw', 4, 4, 3, 3, 2, $baseimg, 7);
 
 # paletted images
-my $palim = Imager::i_img_pal_new(20, 20, 3, 256)
-  or print "not ";
-print "ok 7\n";
-my $redindex = Imager::i_addcolors($palim, $red);
-my $blueindex = Imager::i_addcolors($palim, $blue);
-for my $y (0..9) {
-  Imager::i_ppal($palim, 0, $y, ($redindex) x 20);
+SKIP:
+{
+  my $palim = Imager::i_img_pal_new(20, 20, 3, 256);
+  ok($palim, "make paletted image")
+    or skip("couldn't make paletted image", 2);
+  my $redindex = Imager::i_addcolors($palim, $red);
+  my $blueindex = Imager::i_addcolors($palim, $blue);
+  for my $y (0..9) {
+    Imager::i_ppal($palim, 0, $y, ($redindex) x 20);
+  }
+  for my $y (10..19) {
+    Imager::i_ppal($palim, 0, $y, ($blueindex) x 20);
+  }
+  open FH, "> testout/t103_pal.raw"
+    or die "Cannot create testout/t103_pal.raw: $!";
+  binmode FH;
+  $IO = Imager::io_new_fd(fileno(FH));
+  ok(i_writeraw_wiol($palim, $IO), "write low paletted");
+  close FH;
+  
+  open FH, "testout/t103_pal.raw"
+    or die "Cannot open testout/t103_pal.raw: $!";
+  binmode FH;
+  my $data = do { local $/; <FH> };
+  is($data, "\x0" x 200 . "\x1" x 200, "compare paletted data written");
+  close FH;
 }
-for my $y (10..19) {
-  Imager::i_ppal($palim, 0, $y, ($blueindex) x 20);
-}
-open FH, "> testout/t103_pal.raw"
-  or die "Cannot create testout/t103_pal.raw: $!";
-binmode FH;
-$IO = Imager::io_new_fd(fileno(FH));
-i_writeraw_wiol($palim, $IO) or print "not ";
-print "ok 8\n";
-close FH;
-
-open FH, "testout/t103_pal.raw"
-  or die "Cannot open testout/t103_pal.raw: $!";
-binmode FH;
-my $data = do { local $/; <FH> };
-$data eq "\x0" x 200 . "\x1" x 200
-  or print "not ";
-print "ok 9\n";
 
 # 16-bit image
 # we don't have 16-bit reads yet
-my $img16 = Imager::i_img_16_new(150, 150, 3)
-  or print "not ";
-print "ok 10\n";
-i_box_filled($img16,70,25,130,125,$green);
-i_box_filled($img16,20,25,80,125,$blue);
-i_arc($img16,75,75,30,0,361,$red);
-i_conv($img16,[0.1, 0.2, 0.4, 0.2, 0.1]);
-
-open FH, "> testout/t103_16.raw" 
-  or die "Cannot create testout/t103_16.raw: $!";
-binmode FH;
-$IO = Imager::io_new_fd(fileno(FH));
-i_writeraw_wiol($img16, $IO) or print "not ";
-print "ok 11\n";
-close FH;
+SKIP:
+{
+  my $img16 = Imager::i_img_16_new(150, 150, 3);
+  ok($img16, "make 16-bit/sample image")
+    or skip("couldn't make 16 bit/sample image", 1);
+  i_box_filled($img16,70,25,130,125,$green);
+  i_box_filled($img16,20,25,80,125,$blue);
+  i_arc($img16,75,75,30,0,361,$red);
+  i_conv($img16,[0.1, 0.2, 0.4, 0.2, 0.1]);
+  
+  open FH, "> testout/t103_16.raw" 
+    or die "Cannot create testout/t103_16.raw: $!";
+  binmode FH;
+  $IO = Imager::io_new_fd(fileno(FH));
+  ok(i_writeraw_wiol($img16, $IO), "write low 16 bit image");
+  close FH;
+}
 
 # try a simple virtual image
-my $maskimg = Imager::i_img_masked_new($img, undef, 0, 0, 150, 150)
-  or print "not ";
-print "ok 12\n";
+SKIP:
+{
+  my $maskimg = Imager::i_img_masked_new($img, undef, 0, 0, 150, 150);
+  ok($maskimg, "make masked image")
+    or skip("couldn't make masked image", 3);
 
-open FH, "> testout/t103_virt.raw" 
-  or die "Cannot create testout/t103_virt.raw: $!";
-binmode FH;
-$IO = Imager::io_new_fd(fileno(FH));
-i_writeraw_wiol($maskimg, $IO) or print "not ";
-print "ok 13\n";
-close FH;
+  open FH, "> testout/t103_virt.raw" 
+    or die "Cannot create testout/t103_virt.raw: $!";
+  binmode FH;
+  $IO = Imager::io_new_fd(fileno(FH));
+  ok(i_writeraw_wiol($maskimg, $IO), "write virtual raw");
+  close FH;
 
-open FH, "testout/t103_virt.raw"
-  or die "Cannot open testout/t103_virt.raw: $!";
-binmode FH;
-$IO = Imager::io_new_fd(fileno(FH));
-my $cmpimgmask = i_readraw_wiol($IO, 150, 150, 3, 3, 0)
-  or print "not ";
-print "ok 14\n";
-my $diff = i_img_diff($maskimg, $cmpimgmask);
-print "# difference for virtual image $diff\n";
-$diff and print "not ";
-print "ok 15\n";
+  open FH, "testout/t103_virt.raw"
+    or die "Cannot open testout/t103_virt.raw: $!";
+  binmode FH;
+  $IO = Imager::io_new_fd(fileno(FH));
+  my $cmpimgmask = i_readraw_wiol($IO, 150, 150, 3, 3, 0);
+  ok($cmpimgmask, "read result of masked write");
+  my $diff = i_img_diff($maskimg, $cmpimgmask);
+  print "# difference for virtual image $diff\n";
+  is($diff, 0, "compare masked to read");
 
-# check that i_format is set correctly
-my $index = Imager::i_tags_find($cmpimgmask, 'i_format', 0);
-
-if ($index) {
-  my $value = Imager::i_tags_get($cmpimgmask, $index);
-  print $value eq 'raw' ? "ok 16\n" : "not ok 16 - bad value for i_format tag\n";
-}
-else {
-  print "not ok 16 - no i_format tag set\n";
+  # check that i_format is set correctly
+  my $index = Imager::i_tags_find($cmpimgmask, 'i_format', 0);
+  if ($index) {
+    my $value = Imager::i_tags_get($cmpimgmask, $index);
+    is($value, 'raw', "check i_format value");
+  }
+  else {
+    fail("couldn't find i_format tag");
+  }
 }
 
 sub read_test {
-  my ($in, $xsize, $ysize, $data, $store, $intrl, $base, $test) = @_;
+  my ($in, $xsize, $ysize, $data, $store, $intrl, $base) = @_;
   open FH, $in or die "Cannot open $in: $!";
   binmode FH;
   my $IO = Imager::io_new_fd( fileno(FH) );
 
   my $img = i_readraw_wiol($IO, $xsize, $ysize, $data, $store, $intrl);
-  if ($img) {
-    print "ok $test\n";
-    if (i_img_diff($img, $baseimg)) {
-      print "ok ",$test+1," # skip images don't match, but maybe I don't understand\n";
-    }
-    else {
-      print "ok ",$test+1,"\n";
-    }
-  }
-  else {
-    print "not ok $test # could not read image\n";
-    print "ok ",$test+1," # skip\n";
+ SKIP:
+  {
+    ok($img, "read_test $in read")
+      or skip("couldn't read $in", 1);
+    is(i_img_diff($img, $baseimg), 0, "read_test $in compare");
   }
 }
 
