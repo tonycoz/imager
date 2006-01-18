@@ -1,7 +1,7 @@
 #!perl -w
 use strict;
 use lib 't';
-use Test::More tests => 17;
+use Test::More tests => 23;
 use Imager qw(:all);
 init_log("testout/t103raw.log",1);
 
@@ -150,6 +150,33 @@ SKIP:
   else {
     fail("couldn't find i_format tag");
   }
+}
+
+{ # error handling checks
+  # should get an error writing to a open for read file
+  # make a empty file
+  open RAW, "> testout/t103_empty.raw"
+    or die "Cannot create testout/t103_empty.raw: $!";
+  close RAW;
+  open RAW, "< testout/t103_empty.raw"
+    or die "Cannot open testout/t103_empty.raw: $!";
+  my $im = Imager->new(xsize => 50, ysize=>50);
+  ok(!$im->write(fh => \*RAW, type => 'raw'),
+     "write to open for read handle");
+  cmp_ok($im->errstr, '=~', '^Could not write to file: write\(\) failure', 
+	 "check error message");
+  close RAW;
+
+  # should get an error reading an empty file
+  ok(!$im->read(file => 'testout/t103_empty.raw', xsize => 50, ysize=>50, type=>'raw'),
+     'read an empty file');
+  is($im->errstr, 'premature end of file', "check message");
+  open RAW, "> testout/t103_empty.raw"
+    or die "Cannot create testout/t103_empty.raw: $!";
+  ok(!$im->read(fh => \*RAW, , xsize => 50, ysize=>50, type=>'raw'),
+     'read a file open for write');
+  cmp_ok($im->errstr, '=~', '^error reading file: read\(\) failure', "check message");
+  
 }
 
 sub read_test {

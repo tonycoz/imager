@@ -1311,7 +1311,7 @@ sub read {
 				   $params{storechannels},
 				   $params{interleave});
     if ( !defined($self->{IMG}) ) {
-      $self->{ERRSTR}='unable to read raw image';
+      $self->{ERRSTR}=$self->_error_as_msg();
       return undef;
     }
     $self->{DEBUG} && print "loading a raw file\n";
@@ -1468,7 +1468,7 @@ sub write {
     $self->_set_opts(\%input, "raw_", $self)
       or return undef;
     if ( !i_writeraw_wiol($self->{IMG},$IO) ) {
-      $self->{ERRSTR}='unable to write raw image';
+      $self->{ERRSTR} = $self->_error_as_msg();
       return undef;
     }
     $self->{DEBUG} && print "writing a raw file\n";

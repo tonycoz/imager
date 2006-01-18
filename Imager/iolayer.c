@@ -1064,11 +1064,19 @@ io_slurp(io_glue *ig, unsigned char **c) {
 =cut
 */
 static ssize_t fd_read(io_glue *ig, void *buf, size_t count) {
+  ssize_t result;
 #ifdef _MSC_VER
-  return _read(ig->source.fdseek.fd, buf, count);
+  result = _read(ig->source.fdseek.fd, buf, count);
 #else
-  return read(ig->source.fdseek.fd, buf, count);
+  result = read(ig->source.fdseek.fd, buf, count);
 #endif
+
+  /* 0 is valid - means EOF */
+  if (result < 0) {
+    i_push_errorf(0, "read() failure: %s (%d)", strerror(errno), errno);
+  }
+
+  return result;
 }
 
 static ssize_t fd_write(io_glue *ig, const void *buf, size_t count) {

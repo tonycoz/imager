@@ -53,6 +53,8 @@ i_img *
 i_readraw_wiol(io_glue *ig, int x, int y, int datachannels, int storechannels, int intrl) {
   i_img* im;
   int rc,k;
+
+  i_clear_error();
   
   unsigned char *inbuffer;
   unsigned char *ilbuffer;
@@ -83,7 +85,17 @@ i_readraw_wiol(io_glue *ig, int x, int y, int datachannels, int storechannels, i
   k=0;
   while( k<im->ysize ) {
     rc = ig->readcb(ig, inbuffer, inbuflen);
-    if (rc != inbuflen) { fprintf(stderr,"Premature end of file.\n"); exit(2); }
+    if (rc != inbuflen) { 
+      if (rc < 0)
+	i_push_error(0, "error reading file");
+      else
+	i_push_error(0, "premature end of file");
+      i_img_destroy(im);
+      myfree(inbuffer);
+      if (intrl != 0) myfree(ilbuffer);
+      if (datachannels != storechannels) myfree(exbuffer);
+      return NULL;
+    }
     interleave(inbuffer,ilbuffer,im->xsize,datachannels);
     expandchannels(ilbuffer,exbuffer,im->xsize,datachannels,storechannels);
     /* FIXME: Do we ever want to save to a virtual image? */
