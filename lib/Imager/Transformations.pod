@@ -156,9 +156,11 @@ preview - lower quality.
 
 =back
 
-If you need to scale images per axis it is best to do it simply by
-calling scaleX() or scaleY().  You can pass either 'scalefactor' or
-'pixels' to both functions.
+To scale an image on a given axis without maintaining proportions, it
+is best to call the scaleX() and scaleY() methods with the required
+dimensions. eg.
+
+  my $scaled = $img->scaleX(pixels=>400)->scaleY(pixels=>200);
 
 Returns the scaled image on success.
 

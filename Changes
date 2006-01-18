@@ -1300,6 +1300,8 @@ Revision history for Perl extension Imager.
 - deal with freetype-config --cflags returning the directories
   in the wrong order (Freetype 2.1.4 and earlier)
   Thanks to David Wheeler for his help in tracking this down.
+- reword and provide an example for non-proportionally scaling an
+  image.  Wording from Simon Cozens.
 
 =================================================================
 
