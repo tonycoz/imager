@@ -1311,6 +1311,7 @@ Revision history for Perl extension Imager.
   and returns an appropriate error message in $im->errstr
 - write failures when writing a raw image now return a useful
   message in $im->errstr
+- added typemap type names to types in Imager::API.
 
 =================================================================
 

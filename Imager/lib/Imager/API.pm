@@ -46,6 +46,17 @@ or file format handlers.
 See L<Imager::Inline> for information on using Imager's Inline::C
 support.
 
+=head1 Beware
+
+=over
+
+=item *
+
+don't return an object you received as a parameter - this will cause
+the object to be freed twice.
+
+=back
+
 =head1 Types
 
 The API makes the following types visible:
@@ -83,6 +94,16 @@ perform various low level image operations.
 The only time you should directly write to any value in this type is
 if you're implementing your own image type.
 
+The typemap includes typenames Imager and Imager::ImgRaw as typedefs
+for C<i_img *>.
+
+For incoming parameters the typemap will accept either Imager or
+Imager::ImgRaw objects.
+
+For return values the typemap will produce a full Imager object for an
+Imager return type and a raw image object for an Imager::ImgRaw return
+type.
+
 =head2 i_color - 8-bit color
 
 Represents an 8-bit per sample color.  This is a union containing
@@ -108,10 +129,14 @@ channels - array of channels.
 
 =back
 
+Use Imager::Color for parameter and return value types.
+
 =head2 i_fcolor - floating point color
 
-Similar to i_fcolor except that each component is a double instead of
+Similar to i_color except that each component is a double instead of
 an unsigned char.
+
+Use Imager::Color::Float for parameter and return value types.
 
 =head2 i_fill_t - fill objects
 
@@ -120,6 +145,10 @@ operations.
 
 Unless you're defining your own fill objects you should treat this as
 an opaque type.
+
+Use Imager::FillHandle for parameter and return value types.  At the
+Perl level this is stored in the C<fill> member of the Perl level
+Imager::Fill object.
 
 =head1 Create an XS module using the Imager API
 
