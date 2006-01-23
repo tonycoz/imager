@@ -1312,6 +1312,7 @@ Revision history for Perl extension Imager.
 - write failures when writing a raw image now return a useful
   message in $im->errstr
 - added typemap type names to types in Imager::API.
+- make skip when Inline::C not available less verbose
 
 =================================================================
 

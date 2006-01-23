@@ -5,7 +5,7 @@ use strict;
 use lib 't';
 use Test::More;
 eval "require Inline::C;";
-plan skip_all => "Inline required for testing API - $@" if $@;
+plan skip_all => "Inline required for testing API" if $@;
 
 plan tests => 8;
 require Inline;
