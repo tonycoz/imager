@@ -1107,6 +1107,69 @@ void
 io_glue_DESTROY(ig)
         Imager::IO     ig
 
+long
+seek(ig, offset, whence)
+    Imager::IO ig
+    long offset
+    int whence
+  CODE:
+    RETVAL = ig->seekcb(ig, offset, whence);
+  OUTPUT:
+    RETVAL
+
+SV *
+read(ig, sv, len)
+    Imager::IO ig
+    SV *sv
+    int len
+  CODE:
+    if (len <= 0) {
+      RETVAL = &PL_sv_undef;
+    }
+    else {
+      char *buf = SvGROW(sv, len+1);
+      int result_len = ig->readcb(ig, buf, len);
+      if (result_len >= 0) {
+        RETVAL = newSViv(result_len);
+        SvCUR_set(sv, result_len);
+        *SvEND(sv) = '\0';
+        SvUTF8_off(sv); /* _always_ octets */
+        SvSETMAGIC(sv);
+      }
+      else {
+        RETVAL = &PL_sv_undef;
+      }
+    }
+  OUTPUT:
+    RETVAL
+
+SV *
+write(ig, data_sv)
+    Imager::IO ig
+    SV *data_sv
+  PREINIT:
+    STRLEN len;
+    void const *buf;
+    int result;
+  CODE:
+#ifdef SvUTF8
+    if (SvUTF8(data_sv)) {
+      /* make a copy and downgrade it, so we get octets.
+        croaks() if we can't downgrade */
+      data_sv = sv_2mortal(newSVsv(data_sv));
+      sv_utf8_downgrade(data_sv, FALSE);
+    }
+#endif
+    buf = SvPV(data_sv, len);
+    result = ig->writecb(ig, buf, len);
+    if (result <= 0) {
+      RETVAL = &PL_sv_undef;
+    }
+    else {
+      RETVAL = newSViv(result);
+    }
+  OUTPUT:
+    RETVAL
 
 MODULE = Imager		PACKAGE = Imager
 

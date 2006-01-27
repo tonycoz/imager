@@ -117,3 +117,8 @@ $work = '';
 ok(Imager::i_writeppm_wiol($im, $IO9), "write to short cb");
 ok($work eq $data2, "short write image match");
 
+{ # test the new methods
+  my $io = Imager::io_new_bufchain();
+  ok($io, "make bufchain");
+  is($io->write("test"), 4, "write");
+}
