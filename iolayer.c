@@ -64,6 +64,7 @@ static ssize_t fd_write(io_glue *ig, const void *buf, size_t count);
 static off_t fd_seek(io_glue *ig, off_t offset, int whence);
 static void fd_close(io_glue *ig);
 static ssize_t fd_size(io_glue *ig);
+static const char *my_strerror(int err);
 
 /*
  * Callbacks for sources that cannot seek
@@ -1073,7 +1074,7 @@ static ssize_t fd_read(io_glue *ig, void *buf, size_t count) {
 
   /* 0 is valid - means EOF */
   if (result < 0) {
-    i_push_errorf(0, "read() failure: %s (%d)", strerror(errno), errno);
+    i_push_errorf(0, "read() failure: %s (%d)", my_strerror(errno), errno);
   }
 
   return result;
@@ -1088,7 +1089,7 @@ static ssize_t fd_write(io_glue *ig, const void *buf, size_t count) {
 #endif
 
   if (result <= 0) {
-    i_push_errorf(errno, "write() failure: %s (%d)", strerror(errno), errno);
+    i_push_errorf(errno, "write() failure: %s (%d)", my_strerror(errno), errno);
   }
 
   return result;
@@ -1103,7 +1104,7 @@ static off_t fd_seek(io_glue *ig, off_t offset, int whence) {
 #endif
 
   if (result == (off_t)-1) {
-    i_push_errorf(errno, "lseek() failure: %s (%d)", strerror(errno), errno);
+    i_push_errorf(errno, "lseek() failure: %s (%d)", my_strerror(errno), errno);
   }
 
   return result;
@@ -1167,6 +1168,32 @@ io_glue_DESTROY(io_glue *ig) {
   myfree(ig);
 }
 
+/*
+=back
+
+=head1 INTERNAL FUNCTIONS
+
+=over
+
+=item my_strerror
+
+Calls strerror() and ensures we don't return NULL.
+
+On some platforms it's possible for strerror() to return NULL, this
+wrapper ensures we only get non-NULL values.
+
+=cut
+*/
+
+static
+const char *my_strerror(int err) {
+  const char *result = strerror(err);
+
+  if (!result)
+    result = "Unknown error";
+
+  return result;
+}
 
 /*
 =back

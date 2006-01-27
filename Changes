@@ -1314,6 +1314,7 @@ Revision history for Perl extension Imager.
 - added typemap type names to types in Imager::API.
 - make skip when Inline::C not available less verbose
 - convert t/t07iolayer.t to Test::More
+- handle the possibility of strerror() returning NULL.
 
 =================================================================
 
