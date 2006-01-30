@@ -1321,6 +1321,8 @@ Revision history for Perl extension Imager.
 - add example to SYNOPSIS of samples/inline_replace_color.pl
 - minor POD fix in Imager::Color::Table
 - eliminate many -Wall warnings
+- update README to match unbuggy giflib
+- document index parameter of Imager::Font->new()
 
 =================================================================
 
