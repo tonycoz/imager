@@ -15,7 +15,6 @@ int
 mandel(double x, double y, int max_iter) {
   double xn, yn;
   double xo, yo;
-  double dist;
   int iter = 1;
   /*	Z(n+1) = Z(n) ^2 + c */
 
@@ -37,8 +36,7 @@ mandel(double x, double y, int max_iter) {
 void 
 mandelbrot(i_img *im, double minx, double miny, double maxx, double maxy, int max_iter) {
 
-  i_color vl;
-  int i,bytes,x,y;
+  int i,x,y;
   int idx;
   double divx, divy;
 

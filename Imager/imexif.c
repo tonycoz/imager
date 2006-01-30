@@ -353,13 +353,13 @@ Sets *exif_ifd_offset to the offset of the EXIF IFD if found.
 
 static tag_map ifd0_string_tags[] =
   {
-    tag_make, "exif_make",
-    tag_model, "exif_model",
-    tag_copyright, "exif_copyright",
-    tag_software, "exif_software",
-    tag_artist, "exif_artist",
-    tag_date_time, "exif_date_time",
-    tag_image_description, "exif_image_description",
+    { tag_make, "exif_make" },
+    { tag_model, "exif_model" },
+    { tag_copyright, "exif_copyright" },
+    { tag_software, "exif_software" },
+    { tag_artist, "exif_artist" },
+    { tag_date_time, "exif_date_time" },
+    { tag_image_description, "exif_image_description" },
   };
 
 static const int ifd0_string_tag_count = ARRAY_COUNT(ifd0_string_tags);
@@ -393,7 +393,7 @@ static tag_value_map ifd0_values[] =
 static void
 save_ifd0_tags(i_img *im, imtiff *tiff, unsigned long *exif_ifd_offset,
 	       unsigned long *gps_ifd_offset) {
-  int i, tag_index;
+  int tag_index;
   int work;
   ifd_entry *entry;
 
@@ -681,7 +681,6 @@ static tag_map exif_num_arrays[] =
 static void
 save_exif_ifd_tags(i_img *im, imtiff *tiff) {
   int i, tag_index;
-  int work;
   ifd_entry *entry;
   char *user_comment;
   unsigned long maker_note_offset = 0;
@@ -782,9 +781,9 @@ static tag_map gps_num_arrays[] =
 
 static void
 save_gps_ifd_tags(i_img *im, imtiff *tiff) {
-  int i, tag_index;
+  /* int i, tag_index; 
   int work;
-  ifd_entry *entry;
+  ifd_entry *entry; */
 
   /* for (tag_index = 0, entry = tiff->ifd; 
        tag_index < tiff->ifd_size; ++tag_index, ++entry) {
@@ -985,8 +984,6 @@ This is called by tiff_load_ifd() and tiff_final().
 
 static void
 tiff_clear_ifd(imtiff *tiff) {
-  int i;
- 
   if (tiff->ifd_size && tiff->ifd) {
     myfree(tiff->ifd);
     tiff->ifd_size = 0;

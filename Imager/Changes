@@ -1320,6 +1320,7 @@ Revision history for Perl extension Imager.
 - document register_filter() and add test for it
 - add example to SYNOPSIS of samples/inline_replace_color.pl
 - minor POD fix in Imager::Color::Table
+- eliminate many -Wall warnings
 
 =================================================================
 

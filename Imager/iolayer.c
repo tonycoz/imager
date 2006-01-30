@@ -1,5 +1,6 @@
 #include "imio.h"
 #include "iolayer.h"
+#include "imerror.h"
 #include "log.h"
 #include <stdlib.h>
 #include <stdio.h>
@@ -891,6 +892,7 @@ io_glue_commit_types(io_glue *ig) {
       ig->writecb = fd_write;
       ig->seekcb  = fd_seek;
       ig->closecb = fd_close;
+      ig->sizecb  = fd_size;
       break;
     }
   }

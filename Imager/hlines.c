@@ -263,7 +263,7 @@ i_int_hlines_fill_fill(im, hlines, fill)
 */
 void
 i_int_hlines_fill_fill(i_img *im, i_int_hlines *hlines, i_fill_t *fill) {
-  int y, i, x;
+  int y, i;
 
   if (im->bits == i_8_bits && fill->fill_with_color) {
     i_color *line = mymalloc(sizeof(i_color) * im->xsize);

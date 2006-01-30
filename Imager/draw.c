@@ -382,9 +382,6 @@ i_arc_aa_cfill(i_img *im, double x, double y, double rad, double d1, double d2,
 
 typedef int frac;
 static  frac float_to_frac(float x) { return (frac)(0.5+x*16.0); }
-static   int frac_sub     (frac x)  { return (x%16); }
-static   int frac_int     (frac x)  { return (x/16); }
-static float frac_to_float(float x) { return (float)x/16.0; }
 
 static 
 void
@@ -392,19 +389,6 @@ polar_to_plane(float cx, float cy, float angle, float radius, frac *x, frac *y) 
   *x = float_to_frac(cx+radius*cos(angle));
   *y = float_to_frac(cy+radius*sin(angle));
 }
-
-static
-void
-order_pair(frac *x, frac *y) {
-  frac t = *x;
-  if (t>*y) {
-    *x = *y;
-    *y = t;
-  }
-}
-
-
-
 
 static
 void

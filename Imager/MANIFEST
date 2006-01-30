@@ -73,6 +73,7 @@ image.c
 imager.h
 imageri.h
 imdatatypes.h
+imerror.h	Error handling functions
 imext.c         Defines the function table
 imext.h         Included by external modules for API access
 imextdef.h

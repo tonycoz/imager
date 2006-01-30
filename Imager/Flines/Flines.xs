@@ -25,9 +25,7 @@ saturate(int in) {
 void
 flines(i_img *im) {
   i_color vl;
-  int i,bytes,x,y;
-  int idx;
-  
+  int x,y;
   
   for(y = 0; y < im->ysize; y ++) {
     for(x = 0; x < im->xsize; x ++ ) {

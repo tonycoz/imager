@@ -1862,7 +1862,7 @@ i_t1_glyph_name(handle, text_sv, utf8 = 0)
             --len;
           }
           EXTEND(SP, 1);
-          if (outsize = i_t1_glyph_name(handle, ch, name, sizeof(name))) {
+          if ((outsize = i_t1_glyph_name(handle, ch, name, sizeof(name))) != 0) {
             PUSHs(sv_2mortal(newSVpv(name, 0)));
           }
           else {
@@ -1901,7 +1901,6 @@ i_tt_text(handle,im,xb,yb,cl,points,str_sv,len_ignored,smooth,utf8,align=1)
      Imager::Color     cl
              float     points
 	      SV *     str_sv
-	       int     len_ignored
 	       int     smooth
                int     utf8
                int     align
@@ -1929,7 +1928,6 @@ i_tt_cp(handle,im,xb,yb,channel,points,str_sv,len_ignored,smooth,utf8,align=1)
 	       int     channel
              float     points
 	      SV *     str_sv
-	       int     len_ignored
 	       int     smooth
                int     utf8
                int     align
@@ -1953,7 +1951,6 @@ i_tt_bbox(handle,point,str_sv,len_ignored, utf8)
   Imager::Font::TT     handle
 	     float     point
 	       SV*    str_sv
-	       int     len_ignored
                int     utf8
 	     PREINIT:
 	       int     cords[BOUNDING_BOX_COUNT],rc;
@@ -2053,7 +2050,7 @@ i_tt_glyph_name(handle, text_sv, utf8 = 0)
             --len;
           }
           EXTEND(SP, 1);
-          if (outsize = i_tt_glyph_name(handle, ch, name, sizeof(name))) {
+          if ((outsize = i_tt_glyph_name(handle, ch, name, sizeof(name))) != 0) {
             PUSHs(sv_2mortal(newSVpv(name, 0)));
           }
           else {
@@ -4342,8 +4339,8 @@ i_ft2_glyph_name(handle, text_sv, utf8 = 0, reliable_only = 1)
             --len;
           }
           EXTEND(SP, 1);
-          if (outsize = i_ft2_glyph_name(handle, ch, name, sizeof(name), 
-                                         reliable_only)) {
+          if ((outsize = i_ft2_glyph_name(handle, ch, name, sizeof(name), 
+                                         reliable_only)) != 0) {
             PUSHs(sv_2mortal(newSVpv(name, 0)));
           }
           else {
