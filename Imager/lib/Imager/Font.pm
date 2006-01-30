@@ -470,7 +470,21 @@ parameter.  Default: 0.
 aa - the default value for the $im->string(...) C<aa> parameter.
 Default: 0.
 
+=item *
+
+index - for font file containing multiple fonts this selects which
+font to use.  This is useful for Macintosh DFON (.dfont) and suitcase
+font files.
+
+If you want to use a suitcase font you will need to tell Imager to use
+the FreeType 2.x driver by setting C<type> to C<'ft2'>:
+
+  my $font = Imager::Font->new(file=>$file, index => 1, type=>'ft2')
+    or die Imager->errstr;
+
 =back
+
+
 
 =item bounding_box
 
