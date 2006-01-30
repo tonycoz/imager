@@ -1680,9 +1680,14 @@ sub filter {
     }
   }
   if (defined($filters{$input{'type'}}{defaults})) {
-    %hsh=('image',$self->{IMG},%{$filters{$input{'type'}}{defaults}},%input);
+    %hsh=( image => $self->{IMG},
+           imager => $self,
+           %{$filters{$input{'type'}}{defaults}},
+           %input );
   } else {
-    %hsh=('image',$self->{IMG},%input);
+    %hsh=( image => $self->{IMG},
+           imager => $self,
+           %input );
   }
 
   my @cs=@{$filters{$input{'type'}}{callseq}};

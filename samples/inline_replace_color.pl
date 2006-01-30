@@ -4,11 +4,13 @@ use Imager;
 
 =head1 NAME
 
-inline_replace_color - replace one color with another in an image, using Inline
+inline_replace_color.pl - replace one color with another in an image, using Inline
 
 =head1 SYNOPSIS
 
-  perl inline_replace_color fromcolor tocolor inimage outimage
+  perl inline_replace_color.pl fromcolor tocolor inimage outimage
+
+  perl inline_replace_color.pl white 808080 foo.jpg bar.png
 
 =head1 DESCRIPTION
 

@@ -68,6 +68,7 @@ $Revision$
 
 =head1 SEE ALSO
 
-Imager, Imager::ExtUtils, Imager::API, Imager::APIRef
+Imager, Imager::ExtUtils, Imager::API, Imager::APIRef,
+samples/inline_replace_color.pl
 
 =cut

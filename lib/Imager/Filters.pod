@@ -481,10 +481,61 @@ A demonstration of most of the filters can be found at:
 
   http://www.develop-help.com/imager/filters.html
 
-(This is a slow link.)
+=head2 External Filters
 
+As of Imager 0.48 you can create perl or XS based filters and hook
+them into Imager's filter() method:
+
+=over
+
+=item register_filter
+
+Registers a filter so it is visible via Imager's filter() method.
+
+  Imager->register_filter(type => 'your_filter',
+                          defaults => { parm1 => 'default1' },
+                          callseq => [ qw/image parm1/ ],
+                          callsub => \&your_filter);
+  $img->filter(type=>'your_filter', parm1 => 'something');
+
+The following parameters are needed:
+
+=over
+
+=item *
+
+type - the type value that will be supplied to filter() to use your
+filter.
+
+=item *
+
+defaults - a hash of defaults for the filter's parameters
+
+=item *
+
+callseq - a reference to an array of required parameter names.
+
+=item *
+
+callsub - a code reference called to execute your filter.  The
+parameters passed to filter() are supplied as a list of parameter
+name, value ... which can be assigned to a hash.
+
+The special parameters C<image> and C<imager> are supplied as the low
+level image object from $self and $self itself respectively.
+
+The function you supply must modify the image in place.
+
+=back
+
+See Imager::Filter::Mandelbrot for an example.
+
+=back
 
 =head2 Plugins
+
+The plugin interface is deprecated.  Please use the Imager API, see
+L</Imager::API> for details.
 
 It is possible to add filters to the module without recompiling the
 module itself.  This is done by using DSOs (Dynamic shared object)
