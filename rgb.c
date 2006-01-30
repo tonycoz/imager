@@ -143,7 +143,7 @@ destination is compressed.
 static
 int
 rgb_dest_write(rgb_dest *s, unsigned char *buf, size_t pixels) {
-
+  return -1;
 }
 
 

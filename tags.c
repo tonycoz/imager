@@ -444,7 +444,7 @@ static int parse_long(char *data, char **end, long *out) {
 
   errno = 0;
   result = strtol(data, &myend, 10);
-  if ((result == LONG_MIN || result == LONG_MAX) && errno == ERANGE
+  if (((result == LONG_MIN || result == LONG_MAX) && errno == ERANGE)
       || myend == data) {
     errno = savederr;
     return 0;

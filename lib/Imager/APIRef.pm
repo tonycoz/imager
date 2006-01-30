@@ -98,7 +98,7 @@ Outlines the box from (x1,y1) to (x2,y2) inclusive with I<color>.
 
 
 =for comment
-From: Line 531 in draw.c
+From: Line 515 in draw.c
 
 =item i_box_cfill(im, x1, y1, x2, y2, fill)
 
@@ -107,7 +107,7 @@ Fills the box from (x1,y1) to (x2,y2) inclusive with fill.
 
 
 =for comment
-From: Line 574 in draw.c
+From: Line 558 in draw.c
 
 =item i_box_filled(im, x1, y1, x2, y2, color)
 
@@ -116,7 +116,7 @@ Fills the box from (x1,y1) to (x2,y2) inclusive with color.
 
 
 =for comment
-From: Line 556 in draw.c
+From: Line 540 in draw.c
 
 =item i_circle_aa(im, x, y, rad, color)
 
@@ -126,7 +126,7 @@ color.
 
 
 =for comment
-From: Line 477 in draw.c
+From: Line 461 in draw.c
 
 =item i_flood_cfill(im, seedx, seedy, fill)
 
@@ -138,7 +138,7 @@ Returns false if (seedx, seedy) are outside the image.
 
 
 =for comment
-From: Line 1332 in draw.c
+From: Line 1316 in draw.c
 
 =item i_flood_fill(im, seedx, seedy, color)
 
@@ -150,7 +150,7 @@ Returns false if (seedx, seedy) are outside the image.
 
 
 =for comment
-From: Line 1295 in draw.c
+From: Line 1279 in draw.c
 
 =item i_glin(im, l, r, y, colors)
 
@@ -261,7 +261,7 @@ Draw a line to image using bresenhams linedrawing algorithm
 
 
 =for comment
-From: Line 645 in draw.c
+From: Line 629 in draw.c
 
 =item i_line_aa(im, x1, x2, y1, y2, color, endp)
 
@@ -272,7 +272,7 @@ The point (x2, y2) is drawn only if endp is set.
 
 
 =for comment
-From: Line 849 in draw.c
+From: Line 833 in draw.c
 
 =item i_plin(im, l, r, y, colors)
 
