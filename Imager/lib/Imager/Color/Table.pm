@@ -811,6 +811,7 @@ __DATA__
 144 238 144		light green
 144 238 144		LightGreen
 __END__
+
 =head1 NAME
 
 Imager::Color::Table - built-in Imager color table
