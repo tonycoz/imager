@@ -1315,6 +1315,10 @@ Revision history for Perl extension Imager.
 - make skip when Inline::C not available less verbose
 - convert t/t07iolayer.t to Test::More
 - handle the possibility of strerror() returning NULL.
+- supply C<imager> parameter to filters so we can register filters
+  implemented in perl.
+- document register_filter() and add test for it
+- add example to SYNOPSIS of samples/inline_replace_color.pl
 
 =================================================================
 

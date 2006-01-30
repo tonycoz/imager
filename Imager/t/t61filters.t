@@ -2,7 +2,7 @@
 use strict;
 use Imager qw(:handy);
 use lib 't';
-use Test::More tests => 64;
+use Test::More tests => 66;
 Imager::init_log("testout/t61filters.log", 1);
 # meant for testing the filters themselves
 my $imbase = Imager->new;
@@ -203,6 +203,32 @@ is($name, "test gradient", "check the name matches");
                            xb     => $im->getwidth / 2,
                            yb     => 0);
   ok($radial, "radial fountain sample");
+}
+
+{
+  # try a simple custom filter that uses the Perl image interface
+  sub perl_filt {
+    my %args = @_;
+
+    my $im = $args{imager};
+
+    my $channels = $args{channels};
+    unless (@$channels) {
+      $channels = [ reverse(0 .. $im->getchannels-1) ];
+    }
+    my @chans = @$channels;
+    push @chans, 0 while @chans < 4;
+
+    for my $y (0 .. $im->getheight-1) {
+      my $row = $im->getsamples(y => $y, channels => \@chans);
+      $im->setscanline(y => $y, pixels => $row);
+    }
+  }
+  Imager->register_filter(type => 'perl_test',
+                          callsub => \&perl_filt,
+                          defaults => { channels => [] },
+                          callseq => [ qw/imager channels/ ]);
+  test($imbase, { type => 'perl_test' }, 'testout/t61perl.ppm');
 }
 
 sub test {
