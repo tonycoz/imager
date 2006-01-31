@@ -1323,6 +1323,8 @@ Revision history for Perl extension Imager.
 - eliminate many -Wall warnings
 - update README to match unbuggy giflib
 - document index parameter of Imager::Font->new()
+- change faxable output to use a more fax natural PHOTOMETRIC_MINISWHITE, 
+  since T.4 normally works that way, and MINISBLACK confuses some readers.
 
 =================================================================
 
