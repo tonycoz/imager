@@ -122,7 +122,7 @@ SKIP:
   # resunit_inches
   is($tags{tiff_resolutionunit}, 2, "tiff_resolutionunit");
   is($tags{tiff_bitspersample}, 1, "tiff_bitspersample");
-  is($tags{tiff_photometric}, 1, "tiff_photometric");
+  is($tags{tiff_photometric}, 0, "tiff_photometric");
 
   ok($oofim->write(file=>'testout/t106_oo_fax.tiff', class=>'fax'),
      "write OO, faxable");
