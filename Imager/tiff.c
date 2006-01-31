@@ -580,7 +580,7 @@ i_writetiff_low_faxable(TIFF *tif, i_img *im, int fine) {
     { mm_log((1, "i_writetiff_wiol_faxable: TIFFSetField bitpersample=1\n")); return 0; }
   if (!TIFFSetField(tif, TIFFTAG_PLANARCONFIG, PLANARCONFIG_CONTIG))
     { mm_log((1, "i_writetiff_wiol_faxable: TIFFSetField planarconfig\n")); return 0; }
-  if (!TIFFSetField(tif, TIFFTAG_PHOTOMETRIC, PHOTOMETRIC_MINISBLACK))
+  if (!TIFFSetField(tif, TIFFTAG_PHOTOMETRIC, PHOTOMETRIC_MINISWHITE))
     { mm_log((1, "i_writetiff_wiol_faxable: TIFFSetField photometric=%d\n", PHOTOMETRIC_MINISBLACK)); return 0; }
   if (!TIFFSetField(tif, TIFFTAG_COMPRESSION, 3))
     { mm_log((1, "i_writetiff_wiol_faxable: TIFFSetField compression=3\n")); return 0; }
@@ -620,7 +620,7 @@ i_writetiff_low_faxable(TIFF *tif, i_img *im, int fine) {
       bits = width-x; if(bits>8) bits=8;
       i_gsamp(im, x, x+8, y, luma, &luma_chan, 1);
       for(bitpos=0;bitpos<bits;bitpos++) {
-	linebuf[linebufpos] |= ((luma[bitpos]>=128)?bitval:0);
+	linebuf[linebufpos] |= ((luma[bitpos] < 128) ? bitval : 0);
 	bitval >>= 1;
       }
       linebufpos++;
