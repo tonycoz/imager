@@ -6,6 +6,14 @@ Release Plans (subject to change)
 brown-bag bugs may add intermediate releases.  The dates are goals,
 not commitments.
 
+BEFORE 0.48:
+
+scale() fixes/docs, Imager::Transformations going over.
+
+do some more malloc checks
+
+scan $Config{libspath} for directories if we can.
+
 0.47:
 
 - more documentation (and corresponding code cleanup)
@@ -27,6 +35,7 @@ not commitments.
 - write Imager::SDL
 
 - maybe Imager::Tk::Photo
+
 
 0.46: (September 2005)
 
