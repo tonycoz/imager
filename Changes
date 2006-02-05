@@ -1329,6 +1329,8 @@ Revision history for Perl extension Imager.
 - make scale() fail if an invalid type is supplied (previously
   documented as undefined behaviour)
 - add error handling tests for scale()
+- smarter warning removal
+- handle effects of byte ordering when testing tiff error messages
 
 =================================================================
 
