@@ -1839,7 +1839,6 @@ i_t1_glyph_name(handle, text_sv, utf8 = 0)
         char const *text;
         STRLEN work_len;
         int len;
-        int outsize;
         char name[255];
       PPCODE:
 #ifdef SvUTF8
@@ -1862,7 +1861,7 @@ i_t1_glyph_name(handle, text_sv, utf8 = 0)
             --len;
           }
           EXTEND(SP, 1);
-          if ((outsize = i_t1_glyph_name(handle, ch, name, sizeof(name))) != 0) {
+          if (i_t1_glyph_name(handle, ch, name, sizeof(name))) {
             PUSHs(sv_2mortal(newSVpv(name, 0)));
           }
           else {
@@ -4316,7 +4315,6 @@ i_ft2_glyph_name(handle, text_sv, utf8 = 0, reliable_only = 1)
         char const *text;
         STRLEN work_len;
         int len;
-        int outsize;
         char name[255];
       PPCODE:
 #ifdef SvUTF8
@@ -4339,8 +4337,8 @@ i_ft2_glyph_name(handle, text_sv, utf8 = 0, reliable_only = 1)
             --len;
           }
           EXTEND(SP, 1);
-          if ((outsize = i_ft2_glyph_name(handle, ch, name, sizeof(name), 
-                                         reliable_only)) != 0) {
+          if (i_ft2_glyph_name(handle, ch, name, sizeof(name), 
+                                         reliable_only)) {
             PUSHs(sv_2mortal(newSVpv(name, 0)));
           }
           else {
