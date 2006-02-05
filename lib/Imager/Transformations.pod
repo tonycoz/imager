@@ -114,6 +114,16 @@ whether the larger or smaller of the two possible sizes is chosen.
 
 =item *
 
+constrain - an Image::Math::Constrain object defining the way in which
+the image size should be constrained.
+
+=item *
+
+scalefactor - if none of xpixels, ypixels or constrain is supplied
+then this is used as the ratio to scale by.  Default: 0.5.
+
+=item *
+
 type - controls whether the larger or smaller of the two possible
 sizes is chosen, possible values are:
 
@@ -168,6 +178,43 @@ Returns the scaled image on success.
 
 Returns false on failure, check the errstr() method for the reason for
 failure.
+
+  # setup
+  my $image = Imager->new;
+  $image->read(file => 'somefile.jpg')
+    or die $image->errstr;
+
+  # all full quality unless indicated otherwise
+  # half the size:
+  my $half = $image->scale;
+
+  # double the size
+  my $double = $image->scale(scalefactor => 2.0);
+
+  # so a 400 x 400 box fits in the resulting image:
+  my $fit400x400inside = $image->scale(xpixels => 400, ypixels => 400);
+  my $fit400x400inside2 = $image->scale(xpixels => 400, ypixels => 400,
+                                        type=>'max');
+
+  # fit inside a 400 x 400 box
+  my $inside400x400 = $image->scale(xpixels => 400, ypixels => 400,
+                              type=>'min');
+
+  # make it 400 pixels wide or high
+  my $width400 = $image->scale(xpixels => 400);
+  my $height400 = $image->scale(ypixels => 400);
+
+  # low quality scales:
+  # to half size
+  my $low = $image->scale(qtype => 'preview');
+
+  # using an Image::Math::Constrain object
+  use Image::Math::Constrain;
+  my $constrain = Image::Math::Constrain->new(800, 600);
+  my $scaled = $image->scale(constrain => $constrain);
+
+  # same as Image::Math::Constrain version
+  my $scaled2 = $image->scale(xpixels => 800, ypixels => 600, type => 'min');
 
 =item scaleX
 

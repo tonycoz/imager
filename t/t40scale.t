@@ -1,7 +1,7 @@
 #!perl -w
 use strict;
 use lib 't';
-use Test::More tests => 22;
+use Test::More tests => 46;
 
 BEGIN { use_ok(Imager=>':all') }
 
@@ -78,3 +78,46 @@ ok($scaleimg->write(file=>'testout/t40scale2.ppm',type=>'pnm'),
   is($im->errstr, "invalid value for type parameter", "check error message");
 }
 
+SKIP:
+{ # Image::Math::Constrain support
+  eval "require Image::Math::Constrain;";
+  $@ and skip "module optional Image::Math::Constrain not installed", 3;
+  my $constrain = Image::Math::Constrain->new(20, 100);
+  my $im = Imager->new(xsize => 160, ysize => 96);
+  my $result = $im->scale(constrain => $constrain);
+  ok($result, "successful scale with Image::Math::Constrain");
+  is($result->getwidth, 20, "check result width");
+  is($result->getheight, 12, "check result height");
+}
+
+{ # scale size checks
+  my $im = Imager->new(xsize => 160, ysize => 96); # some random size
+
+  scale_test($im, 80, 48, "48 x 48 def type",
+	     xpixels => 48, ypixels => 48);
+  scale_test($im, 80, 48, "48 x 48 max type",
+	     xpixels => 48, ypixels => 48, type => 'max');
+  scale_test($im, 80, 48, "80 x 80 min type",
+	     xpixels => 80, ypixels => 80, type => 'min');
+  scale_test($im, 80, 48, "no scale parameters (default to 0.5 scalefactor)");
+  scale_test($im, 120, 72, "0.75 scalefactor",
+	     scalefactor => 0.75);
+  scale_test($im, 80, 48, "80 width",
+	     xpixels => 80);
+  scale_test($im, 120, 72, "72 height",
+	     ypixels => 72);
+}
+
+sub scale_test {
+  my ($in, $exp_width, $exp_height, $note, @parms) = @_;
+
+  print "# $note: @parms\n";
+ SKIP:
+  {
+    my $scaled = $in->scale(@parms);
+    ok($scaled, "scale $note")
+      or skip("failed to scale", 2);
+    is($scaled->getwidth, $exp_width, "check width");
+    is($scaled->getheight, $exp_height, "check height");
+  }
+}

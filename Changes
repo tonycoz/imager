@@ -1331,6 +1331,10 @@ Revision history for Perl extension Imager.
 - add error handling tests for scale()
 - smarter warning removal
 - handle effects of byte ordering when testing tiff error messages
+- scale() can now expect an Image::Math::Constrain object as a scaling
+  constraint via the constrain parameter.
+- added tests for the various ways we can specify scaling size
+- documented scale()'s scalefactor parameter
 
 =================================================================
 
