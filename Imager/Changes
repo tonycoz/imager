@@ -1335,6 +1335,8 @@ Revision history for Perl extension Imager.
   constraint via the constrain parameter.
 - added tests for the various ways we can specify scaling size
 - documented scale()'s scalefactor parameter
+- sick of $opts{scalefactor} in scale(), give it a scalar to call it's
+  own.
 
 =================================================================
 

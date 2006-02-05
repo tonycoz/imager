@@ -81,7 +81,7 @@ ok($scaleimg->write(file=>'testout/t40scale2.ppm',type=>'pnm'),
 SKIP:
 { # Image::Math::Constrain support
   eval "require Image::Math::Constrain;";
-  $@ and skip "module optional Image::Math::Constrain not installed", 3;
+  $@ and skip "optional module Image::Math::Constrain not installed", 3;
   my $constrain = Image::Math::Constrain->new(20, 100);
   my $im = Imager->new(xsize => 160, ysize => 96);
   my $result = $im->scale(constrain => $constrain);

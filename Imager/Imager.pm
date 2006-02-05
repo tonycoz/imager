@@ -1742,6 +1742,8 @@ sub scale {
   my $img = Imager->new();
   my $tmp = Imager->new();
 
+  my $scalefactor = $opts{scalefactor};
+
   unless (defined wantarray) {
     my @caller = caller;
     warn "scale() called in void context - scale() returns the scaled image at $caller[1] line $caller[2]\n";
@@ -1755,43 +1757,43 @@ sub scale {
 
   # work out the scaling
   if ($opts{xpixels} and $opts{ypixels} and $opts{'type'}) {
-    my ($xpix, $ypix)=( $opts{xpixels}/$self->getwidth() , 
-		       $opts{ypixels}/$self->getheight() );
+    my ($xpix, $ypix)=( $opts{xpixels} / $self->getwidth() , 
+			$opts{ypixels} / $self->getheight() );
     if ($opts{'type'} eq 'min') { 
-      $opts{scalefactor}=min($xpix,$ypix); 
+      $scalefactor = min($xpix,$ypix); 
     }
     elsif ($opts{'type'} eq 'max') {
-      $opts{scalefactor}=max($xpix,$ypix);
+      $scalefactor = max($xpix,$ypix);
     }
     else {
       $self->_set_error('invalid value for type parameter');
       return undef;
     }
   } elsif ($opts{xpixels}) { 
-    $opts{scalefactor}=$opts{xpixels}/$self->getwidth();
+    $scalefactor = $opts{xpixels} / $self->getwidth();
   }
   elsif ($opts{ypixels}) { 
-    $opts{scalefactor}=$opts{ypixels}/$self->getheight();
+    $scalefactor = $opts{ypixels}/$self->getheight();
   }
   elsif ($opts{constrain} && ref $opts{constrain}
 	 && $opts{constrain}->can('constrain')) {
     # we've been passed an Image::Math::Constrain object or something
     # that looks like one
-    (undef, undef, $opts{scalefactor})
+    (undef, undef, $scalefactor)
       = $opts{constrain}->constrain($self->getwidth, $self->getheight);
-    unless ($opts{scalefactor}) {
+    unless ($scalefactor) {
       $self->_set_error('constrain method failed on constrain parameter');
       return undef;
     }
   }
 
   if ($opts{qtype} eq 'normal') {
-    $tmp->{IMG}=i_scaleaxis($self->{IMG},$opts{scalefactor},0);
+    $tmp->{IMG} = i_scaleaxis($self->{IMG}, $scalefactor, 0);
     if ( !defined($tmp->{IMG}) ) { 
-      $self->{ERRSTR}='unable to scale image';
+      $self->{ERRSTR} = 'unable to scale image';
       return undef;
     }
-    $img->{IMG}=i_scaleaxis($tmp->{IMG},$opts{scalefactor},1);
+    $img->{IMG}=i_scaleaxis($tmp->{IMG}, $scalefactor, 1);
     if ( !defined($img->{IMG}) ) { 
       $self->{ERRSTR}='unable to scale image'; 
       return undef;
@@ -1800,8 +1802,7 @@ sub scale {
     return $img;
   }
   elsif ($opts{'qtype'} eq 'preview') {
-    $img->{IMG} = i_scale_nn($self->{IMG}, $opts{'scalefactor'},
-			   $opts{'scalefactor'}); 
+    $img->{IMG} = i_scale_nn($self->{IMG}, $scalefactor, $scalefactor); 
     if ( !defined($img->{IMG}) ) { 
       $self->{ERRSTR}='unable to scale image'; 
       return undef;
