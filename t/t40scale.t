@@ -1,7 +1,7 @@
 #!perl -w
 use strict;
 use lib 't';
-use Test::More tests => 16;
+use Test::More tests => 22;
 
 BEGIN { use_ok(Imager=>':all') }
 
@@ -61,3 +61,20 @@ ok($scaleimg->write(file=>'testout/t40scale2.ppm',type=>'pnm'),
   is($out->getwidth, 1, "min scale width (preview)");
   is($out->getheight, 1, "min scale height (preview)");
 }
+
+{ # error handling - NULL image
+  my $im = Imager->new;
+  ok(!$im->scale(scalefactor => 0.5), "try to scale empty image");
+  is($im->errstr, "empty input image", "check error message");
+}
+
+{ # invalid qtype value
+  my $im = Imager->new(xsize => 100, ysize => 100);
+  ok(!$im->scale(scalefactor => 0.5, qtype=>'unknown'), "unknown qtype");
+  is($im->errstr, "invalid value for qtype parameter", "check error message");
+  
+  # invalid type value
+  ok(!$im->scale(xpixels => 10, ypixels=>50, type=>"unknown"), "unknown type");
+  is($im->errstr, "invalid value for type parameter", "check error message");
+}
+

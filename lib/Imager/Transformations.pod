@@ -81,7 +81,7 @@ if you want to keep an original after doing something that changes the image.
 
 =item scale
 
-To scale an image so porportions are maintained use the
+X<scale>To scale an image so porportions are maintained use the
 C<$img-E<gt>scale()> method.  if you give either a xpixels or ypixels
 parameter they will determine the width or height respectively.  If
 both are given the one resulting in a larger image is used, unless you
@@ -129,7 +129,7 @@ max - the larger of the 2 sizes.  This is the default.
 
 =back
 
-The behaviour when C<type> is set to some other value is undefined.
+scale() will fail if C<type> is set to some other value.
 
 For example, if the original image is 400 pixels wide by 200 pixels
 high and C<xpixels> is set to 300, and C<ypixels> is set to 160.  When
@@ -153,6 +153,8 @@ normal - high quality scaling.  This is the default.
 preview - lower quality.
 
 =back
+
+scale() will fail if C<qtype> is set to some other value.
 
 =back
 
