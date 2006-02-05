@@ -1748,28 +1748,59 @@ sub scale {
     return;
   }
 
-  unless ($self->{IMG}) { $self->{ERRSTR}='empty input image'; return undef; }
+  unless ($self->{IMG}) { 
+    $self->_set_error('empty input image'); 
+    return undef;
+  }
 
+  # work out the scaling
   if ($opts{xpixels} and $opts{ypixels} and $opts{'type'}) {
-    my ($xpix,$ypix)=( $opts{xpixels}/$self->getwidth() , $opts{ypixels}/$self->getheight() );
-    if ($opts{'type'} eq 'min') { $opts{scalefactor}=min($xpix,$ypix); }
-    if ($opts{'type'} eq 'max') { $opts{scalefactor}=max($xpix,$ypix); }
-  } elsif ($opts{xpixels}) { $opts{scalefactor}=$opts{xpixels}/$self->getwidth(); }
-  elsif ($opts{ypixels}) { $opts{scalefactor}=$opts{ypixels}/$self->getheight(); }
+    my ($xpix, $ypix)=( $opts{xpixels}/$self->getwidth() , 
+		       $opts{ypixels}/$self->getheight() );
+    if ($opts{'type'} eq 'min') { 
+      $opts{scalefactor}=min($xpix,$ypix); 
+    }
+    elsif ($opts{'type'} eq 'max') {
+      $opts{scalefactor}=max($xpix,$ypix);
+    }
+    else {
+      $self->_set_error('invalid value for type parameter');
+      return undef;
+    }
+  } elsif ($opts{xpixels}) { 
+    $opts{scalefactor}=$opts{xpixels}/$self->getwidth();
+  }
+  elsif ($opts{ypixels}) { 
+    $opts{scalefactor}=$opts{ypixels}/$self->getheight();
+  }
 
   if ($opts{qtype} eq 'normal') {
     $tmp->{IMG}=i_scaleaxis($self->{IMG},$opts{scalefactor},0);
-    if ( !defined($tmp->{IMG}) ) { $self->{ERRSTR}='unable to scale image'; return undef; }
+    if ( !defined($tmp->{IMG}) ) { 
+      $self->{ERRSTR}='unable to scale image';
+      return undef;
+    }
     $img->{IMG}=i_scaleaxis($tmp->{IMG},$opts{scalefactor},1);
-    if ( !defined($img->{IMG}) ) { $self->{ERRSTR}='unable to scale image'; return undef; }
+    if ( !defined($img->{IMG}) ) { 
+      $self->{ERRSTR}='unable to scale image'; 
+      return undef;
+    }
+
     return $img;
   }
-  if ($opts{'qtype'} eq 'preview') {
-    $img->{IMG}=i_scale_nn($self->{IMG},$opts{'scalefactor'},$opts{'scalefactor'}); 
-    if ( !defined($img->{IMG}) ) { $self->{ERRSTR}='unable to scale image'; return undef; }
+  elsif ($opts{'qtype'} eq 'preview') {
+    $img->{IMG} = i_scale_nn($self->{IMG}, $opts{'scalefactor'},
+			   $opts{'scalefactor'}); 
+    if ( !defined($img->{IMG}) ) { 
+      $self->{ERRSTR}='unable to scale image'; 
+      return undef;
+    }
     return $img;
   }
-  $self->{ERRSTR}='scale: invalid value for qtype'; return undef;
+  else {
+    $self->_set_error('invalid value for qtype parameter');
+    return undef;
+  }
 }
 
 # Scales only along the X axis

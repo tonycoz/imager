@@ -1325,6 +1325,10 @@ Revision history for Perl extension Imager.
 - document index parameter of Imager::Font->new()
 - change faxable output to use a more fax natural PHOTOMETRIC_MINISWHITE, 
   since T.4 normally works that way, and MINISBLACK confuses some readers.
+- clean up scale() method for readability
+- make scale() fail if an invalid type is supplied (previously
+  documented as undefined behaviour)
+- add error handling tests for scale()
 
 =================================================================
 
