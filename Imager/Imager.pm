@@ -1773,6 +1773,17 @@ sub scale {
   elsif ($opts{ypixels}) { 
     $opts{scalefactor}=$opts{ypixels}/$self->getheight();
   }
+  elsif ($opts{constrain} && ref $opts{constrain}
+	 && $opts{constrain}->can('constrain')) {
+    # we've been passed an Image::Math::Constrain object or something
+    # that looks like one
+    (undef, undef, $opts{scalefactor})
+      = $opts{constrain}->constrain($self->getwidth, $self->getheight);
+    unless ($opts{scalefactor}) {
+      $self->_set_error('constrain method failed on constrain parameter');
+      return undef;
+    }
+  }
 
   if ($opts{qtype} eq 'normal') {
     $tmp->{IMG}=i_scaleaxis($self->{IMG},$opts{scalefactor},0);
