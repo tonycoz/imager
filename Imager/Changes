@@ -1337,6 +1337,12 @@ Revision history for Perl extension Imager.
 - documented scale()'s scalefactor parameter
 - sick of $opts{scalefactor} in scale(), give it a scalar to call it's
   own.
+- check $Config{ldflags} and $Config{ccflags} for places to search for
+  headers and libraries.  This deals with the way the fink build of perl
+  puts -L/sw/lib in ldflags rather than using loclibpth
+- eliminate some of the duplication of -I and -L options in LIBS and INC
+- Makefile.PL now uses strict.
+- the search for freetype1.x headers is now smarter
 
 =================================================================
 
