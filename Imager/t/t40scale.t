@@ -1,7 +1,7 @@
 #!perl -w
 use strict;
 use lib 't';
-use Test::More tests => 46;
+use Test::More tests => 68;
 
 BEGIN { use_ok(Imager=>':all') }
 
@@ -66,6 +66,12 @@ ok($scaleimg->write(file=>'testout/t40scale2.ppm',type=>'pnm'),
   my $im = Imager->new;
   ok(!$im->scale(scalefactor => 0.5), "try to scale empty image");
   is($im->errstr, "empty input image", "check error message");
+
+  # scaleX/scaleY
+  ok(!$im->scaleX(scalefactor => 0.5), "try to scaleX empty image");
+  is($im->errstr, "empty input image", "check error message");
+  ok(!$im->scaleY(scalefactor => 0.5), "try to scaleY empty image");
+  is($im->errstr, "empty input image", "check error message");
 }
 
 { # invalid qtype value
@@ -93,29 +99,43 @@ SKIP:
 { # scale size checks
   my $im = Imager->new(xsize => 160, ysize => 96); # some random size
 
-  scale_test($im, 80, 48, "48 x 48 def type",
+  scale_test($im, 'scale', 80, 48, "48 x 48 def type",
 	     xpixels => 48, ypixels => 48);
-  scale_test($im, 80, 48, "48 x 48 max type",
+  scale_test($im, 'scale', 80, 48, "48 x 48 max type",
 	     xpixels => 48, ypixels => 48, type => 'max');
-  scale_test($im, 80, 48, "80 x 80 min type",
+  scale_test($im, 'scale', 80, 48, "80 x 80 min type",
 	     xpixels => 80, ypixels => 80, type => 'min');
-  scale_test($im, 80, 48, "no scale parameters (default to 0.5 scalefactor)");
-  scale_test($im, 120, 72, "0.75 scalefactor",
+  scale_test($im, 'scale', 80, 48, "no scale parameters (default to 0.5 scalefactor)");
+  scale_test($im, 'scale', 120, 72, "0.75 scalefactor",
 	     scalefactor => 0.75);
-  scale_test($im, 80, 48, "80 width",
+  scale_test($im, 'scale', 80, 48, "80 width",
 	     xpixels => 80);
-  scale_test($im, 120, 72, "72 height",
+  scale_test($im, 'scale', 120, 72, "72 height",
 	     ypixels => 72);
+
+  # scaleX
+  scale_test($im, 'scaleX', 80, 96, "defaults");
+  scale_test($im, 'scaleX', 40, 96, "0.25 scalefactor",
+             scalefactor => 0.25);
+  scale_test($im, 'scaleX', 120, 96, "pixels 120",
+             pixels => 120);
+
+  # scaleY
+  scale_test($im, 'scaleY', 160, 48, "defaults");
+  scale_test($im, 'scaleY', 160, 192, "2.0 scalefactor",
+             scalefactor => 2.0);
+  scale_test($im, 'scaleY', 160, 144, "pixels 144",
+             pixels => 144);
 }
 
 sub scale_test {
-  my ($in, $exp_width, $exp_height, $note, @parms) = @_;
+  my ($in, $method, $exp_width, $exp_height, $note, @parms) = @_;
 
   print "# $note: @parms\n";
  SKIP:
   {
-    my $scaled = $in->scale(@parms);
-    ok($scaled, "scale $note")
+    my $scaled = $in->$method(@parms);
+    ok($scaled, "$method $note")
       or skip("failed to scale", 2);
     is($scaled->getwidth, $exp_width, "check width");
     is($scaled->getheight, $exp_height, "check height");

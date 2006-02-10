@@ -179,6 +179,8 @@ Returns the scaled image on success.
 Returns false on failure, check the errstr() method for the reason for
 failure.
 
+A mandatory warning is produced if scale() is called in void context.
+
   # setup
   my $image = Imager->new;
   $image->read(file => 'somefile.jpg')
@@ -218,19 +220,59 @@ failure.
 
 =item scaleX
 
-scaleX() will scale along the X dimension, changing the width of the
-image:
+scaleX() will scale along the X dimension, return a new image with the
+new width:
 
-  $newimg = $img->scaleX(pixels=>400); # 400x500
+  my $newimg = $img->scaleX(pixels=>400); # 400x500
   $newimg = $img->scaleX(scalefactor=>0.25) # 175x500
+
+=over
+
+=item *
+
+scalefactor - the amount to scale the X axis.  Ignored if C<pixels> is
+provided.  Default: 0.5.
+
+=item *
+
+pixels - the new width of the image.
+
+=back
+
+Returns the scaled image on success.
+
+Returns false on failure, check the errstr() method for the reason for
+failure.
+
+A mandatory warning is produced if scaleX() is called in void context.
 
 =item scaleY
 
-scaleY() will scale along the Y dimension, changing the height of the
-image:
+scaleY() will scale along the Y dimension, return a new image with the
+new height:
 
   $newimg = $img->scaleY(pixels=>400); # 700x400
   $newimg = $img->scaleY(scalefactor=>0.25) # 700x125
+
+=over
+
+=item *
+
+scalefactor - the amount to scale the Y axis.  Ignored if C<pixels> is
+provided.  Default: 0.5.
+
+=item *
+
+pixels - the new height of the image.
+
+=back
+
+Returns the scaled image on success.
+
+Returns false on failure, check the errstr() method for the reason for
+failure.
+
+A mandatory warning is produced if scaleY() is called in void context.
 
 =item crop
 

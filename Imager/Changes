@@ -1343,6 +1343,8 @@ Revision history for Perl extension Imager.
 - eliminate some of the duplication of -I and -L options in LIBS and INC
 - Makefile.PL now uses strict.
 - the search for freetype1.x headers is now smarter
+- add tests for scaleX()/scaleY()
+- expand documentation of scaleX()/scaleY()
 
 =================================================================
 
