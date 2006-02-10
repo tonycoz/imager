@@ -1818,8 +1818,8 @@ sub scale {
 # Scales only along the X axis
 
 sub scaleX {
-  my $self=shift;
-  my %opts=(scalefactor=>0.5,@_);
+  my $self = shift;
+  my %opts = ( scalefactor=>0.5, @_ );
 
   unless (defined wantarray) {
     my @caller = caller;
@@ -1827,24 +1827,39 @@ sub scaleX {
     return;
   }
 
-  unless ($self->{IMG}) { $self->{ERRSTR}='empty input image'; return undef; }
+  unless ($self->{IMG}) { 
+    $self->{ERRSTR} = 'empty input image';
+    return undef;
+  }
 
   my $img = Imager->new();
 
-  if ($opts{pixels}) { $opts{scalefactor}=$opts{pixels}/$self->getwidth(); }
+  my $scalefactor = $opts{scalefactor};
 
-  unless ($self->{IMG}) { $self->{ERRSTR}='empty input image'; return undef; }
-  $img->{IMG}=i_scaleaxis($self->{IMG},$opts{scalefactor},0);
+  if ($opts{pixels}) { 
+    $scalefactor = $opts{pixels} / $self->getwidth();
+  }
 
-  if ( !defined($img->{IMG}) ) { $self->{ERRSTR}='unable to scale image'; return undef; }
+  unless ($self->{IMG}) { 
+    $self->{ERRSTR}='empty input image'; 
+    return undef;
+  }
+
+  $img->{IMG} = i_scaleaxis($self->{IMG}, $scalefactor, 0);
+
+  if ( !defined($img->{IMG}) ) { 
+    $self->{ERRSTR} = 'unable to scale image'; 
+    return undef;
+  }
+
   return $img;
 }
 
 # Scales only along the Y axis
 
 sub scaleY {
-  my $self=shift;
-  my %opts=(scalefactor=>0.5,@_);
+  my $self = shift;
+  my %opts = ( scalefactor => 0.5, @_ );
 
   unless (defined wantarray) {
     my @caller = caller;
@@ -1856,15 +1871,25 @@ sub scaleY {
 
   my $img = Imager->new();
 
-  if ($opts{pixels}) { $opts{scalefactor}=$opts{pixels}/$self->getheight(); }
+  my $scalefactor = $opts{scalefactor};
 
-  unless ($self->{IMG}) { $self->{ERRSTR}='empty input image'; return undef; }
-  $img->{IMG}=i_scaleaxis($self->{IMG},$opts{scalefactor},1);
+  if ($opts{pixels}) { 
+    $scalefactor = $opts{pixels} / $self->getheight();
+  }
 
-  if ( !defined($img->{IMG}) ) { $self->{ERRSTR}='unable to scale image'; return undef; }
+  unless ($self->{IMG}) { 
+    $self->{ERRSTR} = 'empty input image'; 
+    return undef;
+  }
+  $img->{IMG}=i_scaleaxis($self->{IMG}, $scalefactor, 1);
+
+  if ( !defined($img->{IMG}) ) {
+    $self->{ERRSTR} = 'unable to scale image';
+    return undef;
+  }
+
   return $img;
 }
-
 
 # Transform returns a spatial transformation of the input image
 # this moves pixels to a new location in the returned image.
