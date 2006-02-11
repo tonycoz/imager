@@ -1,7 +1,7 @@
 #!perl -w
 use strict;
 use lib 't';
-use Test::More tests=>57;
+use Test::More tests => 61;
 use Imager;
 
 #$Imager::DEBUG=1;
@@ -70,7 +70,22 @@ ok($rimg, "rotate with background gave us an image");
 if (!$rimg->write(file=>"testout/t64_rot10_back.ppm")) {
   print "# Cannot save: ",$rimg->errstr,"\n";
 }
-	
+
+{
+  # rotate with text background
+  my $rimg = $img->rotate(degrees => 45, back => '#FF00FF');
+  ok($rimg, "rotate with background as text gave us an image");
+  
+  # check the color set correctly
+  my $c = $rimg->getpixel(x => 0, 'y' => 0);
+  is_deeply([ 255, 0, 255 ], [ ($c->rgba)[0, 1, 2] ],
+            "check background set correctly");
+
+  # check error handling for background color
+  $rimg = $img->rotate(degrees => 45, back => "some really unknown color");
+  ok(!$rimg, "should fail due to bad back color");
+  cmp_ok($img->errstr, '=~', "^No color named ", "check error message");
+}
 
 my $trimg = $img->matrix_transform(matrix=>[ 1.2, 0, 0,
                                              0,   1, 0,
