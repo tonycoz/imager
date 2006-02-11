@@ -2116,9 +2116,16 @@ sub rotate {
   elsif (defined $opts{radians} || defined $opts{degrees}) {
     my $amount = $opts{radians} || $opts{degrees} * 3.1415926535 / 180;
 
+    my $back = $opts{back};
     my $result = Imager->new;
-    if ($opts{back}) {
-      $result->{IMG} = i_rotate_exact($self->{IMG}, $amount, $opts{back});
+    if ($back) {
+      $back = _color($back);
+      unless ($back) {
+        $self->_set_error(Imager->errstr);
+        return undef;
+      }
+
+      $result->{IMG} = i_rotate_exact($self->{IMG}, $amount, $back);
     }
     else {
       $result->{IMG} = i_rotate_exact($self->{IMG}, $amount);

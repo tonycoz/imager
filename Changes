@@ -1345,6 +1345,7 @@ Revision history for Perl extension Imager.
 - the search for freetype1.x headers is now smarter
 - add tests for scaleX()/scaleY()
 - expand documentation of scaleX()/scaleY()
+- rotate()s back parameter now accepts color names like other methods
 
 =================================================================
 
