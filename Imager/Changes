@@ -1346,6 +1346,7 @@ Revision history for Perl extension Imager.
 - add tests for scaleX()/scaleY()
 - expand documentation of scaleX()/scaleY()
 - rotate()s back parameter now accepts color names like other methods
+- convert t/t69rubthru.t to Test::More
 
 =================================================================
 
