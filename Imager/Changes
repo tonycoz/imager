@@ -1347,6 +1347,8 @@ Revision history for Perl extension Imager.
 - expand documentation of scaleX()/scaleY()
 - rotate()s back parameter now accepts color names like other methods
 - convert t/t69rubthru.t to Test::More
+- minor clean up of rubthrough() method
+- error handling tests for rubthrough()
 
 =================================================================
 

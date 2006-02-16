@@ -2050,8 +2050,14 @@ sub rubthrough {
   my $self=shift;
   my %opts=(tx => 0,ty => 0, @_);
 
-  unless ($self->{IMG}) { $self->{ERRSTR}='empty input image'; return undef; }
-  unless ($opts{src} && $opts{src}->{IMG}) { $self->{ERRSTR}='empty input image for source'; return undef; }
+  unless ($self->{IMG}) { 
+    $self->{ERRSTR}='empty input image'; 
+    return undef;
+  }
+  unless ($opts{src} && $opts{src}->{IMG}) {
+    $self->{ERRSTR}='empty input image for src'; 
+    return undef;
+  }
 
   %opts = (src_minx => 0,
 	   src_miny => 0,
@@ -2060,8 +2066,9 @@ sub rubthrough {
 	   %opts);
 
   unless (i_rubthru($self->{IMG}, $opts{src}->{IMG}, $opts{tx}, $opts{ty},
-	  $opts{src_minx}, $opts{src_miny}, $opts{src_maxx}, $opts{src_maxy})) {
-    $self->{ERRSTR} = $self->_error_as_msg();
+                    $opts{src_minx}, $opts{src_miny}, 
+                    $opts{src_maxx}, $opts{src_maxy})) {
+    $self->_set_error($self->_error_as_msg());
     return undef;
   }
   return $self;
