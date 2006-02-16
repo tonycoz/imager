@@ -1,6 +1,6 @@
 #!perl -w
 use strict;
-use Test::More tests => 23;
+use Test::More tests => 28;
 BEGIN { use_ok(Imager => qw(:all :handy)); }
 
 init_log("testout/t69rubthru.log", 1);
@@ -74,6 +74,19 @@ ok(color_cmp(Imager::i_get_pixel($ootarg->{IMG}, 30, 30), NC(128, 0, 0)) == 0,
 # make sure we fail as expected
 my $oogtarg = Imager->new(xsize=>100, ysize=>100, channels=>1);
 ok(!$oogtarg->rubthrough(src=>$oosrc), "check oo fails correctly");
+
+is($oogtarg->errstr, 
+   'rubthru can only work where (dest, src) channels are (3,4), (3,2) or (1,2)',
+   "check error message");
+
+{ # check empty image errors
+  my $empty = Imager->new;
+  ok(!$empty->rubthrough(src => $oosrc), "check empty target");
+  is($empty->errstr, 'empty input image', "check error message");
+  ok(!$oogtarg->rubthrough(src=>$empty), "check empty source");
+  is($oogtarg->errstr, 'empty input image for src',
+     "check error message");
+}
 
 sub color_cmp {
   my ($l, $r) = @_;
