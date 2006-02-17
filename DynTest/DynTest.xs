@@ -18,6 +18,8 @@ DEFINE_IMAGER_CALLBACKS;
 
 MODULE = Imager::Filter::DynTest   PACKAGE = Imager::Filter::DynTest
 
+PROTOTYPES: ENABLE
+
 void
 lin_stretch(im, a, b)
         Imager::ImgRaw im

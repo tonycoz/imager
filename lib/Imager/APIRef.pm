@@ -414,7 +414,7 @@ Creates a new general fill which fills with a fountain fill.
 
 
 =for comment
-From: Line 1718 in filters.c
+From: Line 1713 in filters.c
 
 =item i_new_fill_hatch(fg, bg, combine, hatch, cust_hatch, dx, dy)
 
