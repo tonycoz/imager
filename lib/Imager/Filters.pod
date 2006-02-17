@@ -535,7 +535,7 @@ See Imager::Filter::Mandelbrot for an example.
 =head2 Plugins
 
 The plugin interface is deprecated.  Please use the Imager API, see
-L</Imager::API> for details.
+L</Imager::API> and L<External Filters> for details
 
 It is possible to add filters to the module without recompiling the
 module itself.  This is done by using DSOs (Dynamic shared object)
