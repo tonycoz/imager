@@ -1,4 +1,4 @@
-#include "imio.h"
+#include "imager.h"
 #include <stdlib.h>
 #ifndef _MSC_VER
 #include <unistd.h>
@@ -72,9 +72,6 @@ set_entry(int i, char *buf, size_t size, char *file, int line) {
   return buf;
 }
 
-
-
-
 void
 malloc_state(void) {
   int i, total = 0;
@@ -115,6 +112,11 @@ mymalloc_file_line(size_t size, char* file, int line) {
   return buf;
 }
 
+void *
+(mymalloc)(int size) {
+  return mymalloc_file_line(size, "unknown", 0);
+}
+
 void*
 myrealloc_file_line(void *ptr, size_t newsize, char* file, int line) {
   char *buf;
@@ -149,6 +151,11 @@ myrealloc_file_line(void *ptr, size_t newsize, char* file, int line) {
   return buf;
 }
 
+void *
+(myrealloc)(void *ptr, size_t newsize) {
+  return myrealloc_file_line(ptr, newsize, "unknown", 0);
+}
+
 static
 void
 bndcheck(int idx) {
@@ -178,10 +185,6 @@ bndcheck_all() {
       bndcheck(idx);
 }
 
-
-
-
-
 void
 myfree_file_line(void *p, char *file, int line) {
   char  *pp = p;
@@ -205,6 +208,11 @@ myfree_file_line(void *p, char *file, int line) {
   
   
   free(pp-UNDRRNVAL);
+}
+
+void
+(myfree)(void *block) {
+  myfree_file_line(block, "unknown", 0);
 }
 
 #else 
@@ -233,10 +241,20 @@ mymalloc(int size) {
   return buf;
 }
 
+void *
+mymalloc_file_line(size_t size, char *file, int line) {
+  return mymalloc(size);
+}
+
 void
 myfree(void *p) {
   mm_log((1, "myfree(p %p)\n", p));
   free(p);
+}
+
+void
+myfree_file_line(void *p, char *file, int line) {
+  myfree(p);
 }
 
 void *
@@ -250,6 +268,11 @@ myrealloc(void *block, size_t size) {
     exit(3);
   }
   return result;
+}
+
+void *
+myrealloc_file_line(void *block, size_t newsize, char *file, int size) {
+  return myrealloc(block, newsize);
 }
 
 #endif /* IMAGER_MALLOC_DEBUG */

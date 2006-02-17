@@ -1,9 +1,7 @@
-#include "imio.h"
-#include "imdatatypes.h"
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
-
+#include "imager.h"
 
 /*
   2d bitmask with test and set operations

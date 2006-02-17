@@ -416,9 +416,12 @@ Internal function called by i_readgif_multi_low() in error handling
 */
 static void free_images(i_img **imgs, int count) {
   int i;
-  for (i = 0; i < count; ++i)
-    i_img_destroy(imgs[i]);
-  myfree(imgs);
+  
+  if (count) {
+    for (i = 0; i < count; ++i)
+      i_img_destroy(imgs[i]);
+    myfree(imgs);
+  }
 }
 
 /*

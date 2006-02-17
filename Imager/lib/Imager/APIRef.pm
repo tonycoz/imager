@@ -69,7 +69,7 @@ the range of angles in degrees from d1 to d2, with the color.
 
 
 =for comment
-From: Line 329 in draw.c
+From: Line 330 in draw.c
 
 =item i_arc_aa_cfill(im, x, y, rad, d1, d2, fill)
 
@@ -79,7 +79,7 @@ the range of angles in degrees from d1 to d2, with the fill object.
 
 
 =for comment
-From: Line 355 in draw.c
+From: Line 356 in draw.c
 
 =item i_arc_cfill(im, x, y, rad, d1, d2, fill)
 
@@ -98,7 +98,7 @@ Outlines the box from (x1,y1) to (x2,y2) inclusive with I<color>.
 
 
 =for comment
-From: Line 515 in draw.c
+From: Line 516 in draw.c
 
 =item i_box_cfill(im, x1, y1, x2, y2, fill)
 
@@ -107,7 +107,7 @@ Fills the box from (x1,y1) to (x2,y2) inclusive with fill.
 
 
 =for comment
-From: Line 558 in draw.c
+From: Line 559 in draw.c
 
 =item i_box_filled(im, x1, y1, x2, y2, color)
 
@@ -116,7 +116,7 @@ Fills the box from (x1,y1) to (x2,y2) inclusive with color.
 
 
 =for comment
-From: Line 540 in draw.c
+From: Line 541 in draw.c
 
 =item i_circle_aa(im, x, y, rad, color)
 
@@ -126,7 +126,7 @@ color.
 
 
 =for comment
-From: Line 461 in draw.c
+From: Line 462 in draw.c
 
 =item i_flood_cfill(im, seedx, seedy, fill)
 
@@ -138,7 +138,7 @@ Returns false if (seedx, seedy) are outside the image.
 
 
 =for comment
-From: Line 1316 in draw.c
+From: Line 1317 in draw.c
 
 =item i_flood_fill(im, seedx, seedy, color)
 
@@ -150,7 +150,7 @@ Returns false if (seedx, seedy) are outside the image.
 
 
 =for comment
-From: Line 1279 in draw.c
+From: Line 1280 in draw.c
 
 =item i_glin(im, l, r, y, colors)
 
@@ -161,7 +161,7 @@ Returns the number of pixels retrieved.
 
 
 =for comment
-From: Line 195 in imext.c
+From: Line 199 in imext.c
 
 =item i_glinf(im, l, r, y, colors)
 
@@ -173,7 +173,7 @@ Returns the number of pixels retrieved.
 
 
 =for comment
-From: Line 230 in imext.c
+From: Line 234 in imext.c
 
 =item i_gpal(im, x, r, y, indexes)
 
@@ -187,7 +187,7 @@ Always returns 0 for direct color images.
 
 
 =for comment
-From: Line 294 in imext.c
+From: Line 298 in imext.c
 
 =item i_gpix(im, x, y, color)
 
@@ -198,7 +198,7 @@ Returns 0 if the pixel was retrieved, or -1 if not.
 
 
 =for comment
-From: Line 123 in imext.c
+From: Line 127 in imext.c
 
 =item i_gpixf(im, x, y, fcolor)
 
@@ -210,7 +210,7 @@ Returns 0 if the pixel was retrieved, or -1 if not.
 
 
 =for comment
-From: Line 159 in imext.c
+From: Line 163 in imext.c
 
 =item i_gsamp(im, l, r, y, samp, chans, chan_count)
 
@@ -227,7 +227,7 @@ chan_count)
 
 
 =for comment
-From: Line 248 in imext.c
+From: Line 252 in imext.c
 
 =item i_gsampf(im, l, r, y, samp, chans, chan_count)
 
@@ -244,7 +244,7 @@ chan_count)
 
 
 =for comment
-From: Line 271 in imext.c
+From: Line 275 in imext.c
 
 =item i_line(im, x1, y1, x2, y2, val, endp)
 
@@ -261,7 +261,7 @@ Draw a line to image using bresenhams linedrawing algorithm
 
 
 =for comment
-From: Line 629 in draw.c
+From: Line 630 in draw.c
 
 =item i_line_aa(im, x1, x2, y1, y2, color, endp)
 
@@ -272,7 +272,7 @@ The point (x2, y2) is drawn only if endp is set.
 
 
 =for comment
-From: Line 833 in draw.c
+From: Line 834 in draw.c
 
 =item i_plin(im, l, r, y, colors)
 
@@ -284,7 +284,7 @@ Returns the number of pixels set.
 
 
 =for comment
-From: Line 177 in imext.c
+From: Line 181 in imext.c
 
 =item i_plinf(im, l, r, fcolors)
 
@@ -296,7 +296,7 @@ Returns the number of pixels set.
 
 
 =for comment
-From: Line 212 in imext.c
+From: Line 216 in imext.c
 
 =item i_ppal(im, x, r, y, indexes)
 
@@ -310,7 +310,7 @@ Always returns 0 for direct color images.
 
 
 =for comment
-From: Line 313 in imext.c
+From: Line 317 in imext.c
 
 =item i_ppix(im, x, y, color)
 
@@ -324,7 +324,7 @@ color to the image.
 
 
 =for comment
-From: Line 103 in imext.c
+From: Line 107 in imext.c
 
 =item i_ppixf(im, x, y, fcolor)
 
@@ -338,7 +338,7 @@ color to the image.
 
 
 =for comment
-From: Line 140 in imext.c
+From: Line 144 in imext.c
 
 
 =back
@@ -414,7 +414,7 @@ Creates a new general fill which fills with a fountain fill.
 
 
 =for comment
-From: Line 1666 in filters.c
+From: Line 1718 in filters.c
 
 =item i_new_fill_hatch(fg, bg, combine, hatch, cust_hatch, dx, dy)
 
@@ -715,7 +715,7 @@ Always fails for direct color images.
 
 
 =for comment
-From: Line 332 in imext.c
+From: Line 336 in imext.c
 
 =item i_colorcount(im)
 
@@ -726,7 +726,7 @@ Returns -1 for direct images.
 
 
 =for comment
-From: Line 378 in imext.c
+From: Line 382 in imext.c
 
 =item i_findcolor(im, color, &entry)
 
@@ -741,7 +741,7 @@ Always fails on direct color images.
 
 
 =for comment
-From: Line 413 in imext.c
+From: Line 417 in imext.c
 
 =item i_getcolors(im, index, colors, count)
 
@@ -760,7 +760,7 @@ palette.
 
 
 =for comment
-From: Line 353 in imext.c
+From: Line 357 in imext.c
 
 =item i_maxcolors(im)
 
@@ -772,7 +772,7 @@ Returns -1 for direct color images.
 
 
 =for comment
-From: Line 395 in imext.c
+From: Line 399 in imext.c
 
 =item i_setcolors(im, index, colors, count)
 
@@ -790,7 +790,7 @@ Always fails on direct color images.
 
 
 =for comment
-From: Line 433 in imext.c
+From: Line 437 in imext.c
 
 
 =back

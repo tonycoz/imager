@@ -442,12 +442,13 @@ void i_autolevels(i_img *im,float lsat,float usat,float skew);
 void i_radnoise(i_img *im,int xo,int yo,float rscale,float ascale);
 void i_turbnoise(i_img *im,float xo,float yo,float scale);
 void i_gradgen(i_img *im, int num, int *xo, int *yo, i_color *ival, int dmeasure);
-void i_nearest_color(i_img *im, int num, int *xo, int *yo, i_color *ival, int dmeasure);
+int i_nearest_color(i_img *im, int num, int *xo, int *yo, i_color *ival, int dmeasure);
 i_img *i_diff_image(i_img *im, i_img *im2, int mindist);
-void i_fountain(i_img *im, double xa, double ya, double xb, double yb, 
-                i_fountain_type type, i_fountain_repeat repeat, 
-                int combine, int super_sample, double ssample_param,
-                int count, i_fountain_seg *segs);
+int
+i_fountain(i_img *im, double xa, double ya, double xb, double yb, 
+           i_fountain_type type, i_fountain_repeat repeat, 
+           int combine, int super_sample, double ssample_param,
+           int count, i_fountain_seg *segs);
 extern i_fill_t *
 i_new_fill_fount(double xa, double ya, double xb, double yb, 
                  i_fountain_type type, i_fountain_repeat repeat, 
@@ -528,5 +529,30 @@ extern int
 i_set_image_file_limits(int width, int height, int bytes);
 extern int
 i_get_image_file_limits(int *width, int *height, int *bytes);
+
+/* memory allocation */
+void* mymalloc(int size);
+void  myfree(void *p);
+void* myrealloc(void *p, size_t newsize);
+void* mymalloc_file_line (size_t size, char* file, int line);
+void  myfree_file_line   (void *p, char*file, int line);
+void* myrealloc_file_line(void *p, size_t newsize, char* file,int line);
+
+#ifdef IMAGER_DEBUG_MALLOC
+
+#define mymalloc(x) (mymalloc_file_line((x), __FILE__, __LINE__))
+#define myrealloc(x,y) (myrealloc_file_line((x),(y), __FILE__, __LINE__))
+#define myfree(x) (myfree_file_line((x), __FILE__, __LINE__))
+
+void  malloc_state       (void);
+void* mymalloc_comm      (int size, char *comm);
+void  bndcheck_all       (void);
+
+#else
+
+#define malloc_comm(a,b) (mymalloc(a))
+void  malloc_state(void);
+
+#endif /* IMAGER_MALLOC_DEBUG */
 
 #endif

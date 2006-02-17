@@ -301,8 +301,9 @@ arc_poly(int *count, double **xvals, double **yvals,
   angle_inc = 2 * PI / steps;
 
   point_count = steps + 5; /* rough */
-  *xvals = mymalloc(point_count * sizeof(double));
-  *yvals = mymalloc(point_count * sizeof(double));
+  /* point_count is always relatively small, so allocation won't overflow */
+  *xvals = mymalloc(point_count * sizeof(double)); /* checked 17feb2005 tonyc */
+  *yvals = mymalloc(point_count * sizeof(double)); /* checked 17feb2005 tonyc */
 
   /* from centre to edge at d1 */
   (*xvals)[0] = x;

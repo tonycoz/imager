@@ -3124,7 +3124,7 @@ i_diff_image(im, im2, mindist=0)
     Imager::ImgRaw     im2
                int     mindist
 
-void
+undef_int
 i_fountain(im, xa, ya, xb, yb, type, repeat, combine, super_sample, ssample_param, segs)
     Imager::ImgRaw     im
             double     xa
@@ -3146,9 +3146,11 @@ i_fountain(im, xa, ya, xb, yb, type, repeat, combine, super_sample, ssample_para
         
 	asegs = (AV *)SvRV(ST(10));
         segs = load_fount_segs(asegs, &count);
-        i_fountain(im, xa, ya, xb, yb, type, repeat, combine, super_sample, 
-                   ssample_param, count, segs);
+        RETVAL = i_fountain(im, xa, ya, xb, yb, type, repeat, combine, 
+                            super_sample, ssample_param, count, segs);
         myfree(segs);
+      OUTPUT:
+        RETVAL
 
 Imager::FillHandle
 i_new_fill_fount(xa, ya, xb, yb, type, repeat, combine, super_sample, ssample_param, segs)
@@ -3201,7 +3203,7 @@ i_errors()
 	  ++i;
 	}
 
-void
+undef_int
 i_nearest_color(im, ...)
     Imager::ImgRaw     im
       PREINIT:
@@ -3246,10 +3248,9 @@ i_nearest_color(im, ...)
 	  }
 	  ival[i] = *INT2PTR(i_color *, SvIV((SV *)SvRV(sv)));
 	}
-        i_nearest_color(im, num, xo, yo, ival, dmeasure);
-
-
-
+        RETVAL = i_nearest_color(im, num, xo, yo, ival, dmeasure);
+      OUTPUT:
+        RETVAL
 
 void
 malloc_state()
