@@ -1349,6 +1349,11 @@ Revision history for Perl extension Imager.
 - convert t/t69rubthru.t to Test::More
 - minor clean up of rubthrough() method
 - error handling tests for rubthrough()
+- expand Imager::Transformations:
+  - document parameters more explicitly
+  - document return values
+  - add examples
+  - add AUTHOR, SEE ALSO, REVISION
 
 =================================================================
 

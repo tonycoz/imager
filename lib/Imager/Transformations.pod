@@ -281,6 +281,8 @@ crop are the edges of the area that you want in the returned image,
 where the right and bottom edges are non-inclusive.  If a parameter is
 omitted a default is used instead.
 
+crop() returns the cropped image and does not modify the source image.
+
 The possible parameters are:
 
 =over
@@ -354,6 +356,8 @@ image, for example:
 If the resulting image would have zero width or height then crop()
 returns false and $img->errstr is an appropriate error message.
 
+A mandatory warning is produced if crop() is called in void context.
+
 =item rotate
 
 Use the rotate() method to rotate an image.  This method will return a
@@ -382,11 +386,51 @@ To rotate in steps of 90 degrees, use the 'right' parameter:
 
 Rotations are clockwise for positive values.
 
+Parameters:
+
+=over
+
+=item *
+
+right - rotate by an exact multiple of 90 degrees, specified in
+degreess.
+
+=item *
+
+radians - rotate by an angle specified in radians.
+
+=item *
+
+degrees - rotate by an angle specified in degrees.
+
+=item *
+
+back - for C<radians> and C<degrees> this is the color used for the
+areas not covered by the original image.  For example, the corners of
+an image rotated by 45 degrees.
+
+This can be either an Imager::Color object, an Imager::Color::Float
+object or any parameter that Imager can convert to a color object, see
+L<Imager::Draw/Color Parameters> for details.
+
+This is B<not> mixed transparent pixels in the middle of the source
+image, it is B<only> used for pixels where there is no corresponding
+pixel in the source image.
+
+Default: transparent black.
 
 =back
 
+  # rotate 45 degrees clockwise, 
+  my $rotated = $img->rotate(degrees => 45);
 
-=head2 Image pasting/flipping/
+  # rotate 10 degrees counter-clockwise
+  # set pixels not sourced from the original to red
+  my $rotated = $img->rotate(degrees => -10, back => 'red');
+
+=back
+
+=head2 Image pasting/flipping
 
 A list of the transformations that alter the source image follows:
 
@@ -459,6 +503,42 @@ channel images onto a 3 channel image, or a 2 channel image onto a 1
 channel image.  The last channel is used as an alpha channel.  To add
 an alpha channel to an image see I<convert()>.
 
+Parameters:
+
+=over
+
+=item *
+
+tx, ty - location in the the target image ($self) to render the top
+left corner of the source.
+
+=item *
+
+src_minx, src_miny - the top left corner in the source to transfer to
+the target image.  Default: (0, 0).
+
+=item *
+
+src_maxx, src_maxy - the bottom right in the source image of the sub
+image to overlay.  This position is B<non> inclusive.  Default: bottom
+right corner of the source image.
+
+=back
+
+  # overlay all of $source onto $targ
+  $targ->rubthrough(tx => 20, ty => 25, src => $source);
+
+  # overlay the top left corner of $source onto $targ
+  $targ->rubthrough(tx => 20, ty => 25, src => $source,
+                    src_maxx => 20, src_maxy => 20);
+
+  # overlay the bottom right corner of $source onto $targ
+  $targ->rubthrough(tx => 20, ty => 30, src => $src,
+                    src_minx => $src->getwidth() - 20,
+                    src_miny => $src->getheight() - 20);
+
+rubthrough() returns true on success.  On failure check
+$target->errstr for the reason for failure.
 
 =item flip
 
@@ -471,10 +551,10 @@ parameter which can take the values C<h>, C<v>, C<vh> and C<hv>.
   $img->flip(dir=>"vh");      # vertical and horizontal flip
   $nimg = $img->copy->flip(dir=>"v"); # make a copy and flip it vertically
 
+flip() returns true on success.  On failure check $img->errstr for the
+reason for failure.
+
 =back
-
-
-
 
 =head2 Color transformations
 
@@ -600,6 +680,15 @@ the grey converted to the specified RGB color:
                                          [ 0,            1 ],
                                        ]);
 
+To convert a 3 channel image to a 4 channel image with a 50 percent
+alpha channel:
+
+  my $withalpha = $rgb->convert(matrix =>[ [ 1, 0, 0, 0 ],
+                                           [ 0, 1, 0, 0 ],
+                                           [ 0, 0, 1, 0 ],
+                                           [ 0, 0, 0, 0.5 ],
+                                         ]);
+
 =head2 Color Mappings
 
 You can use the map method to map the values of each channel of an
@@ -641,5 +730,17 @@ applied to the images in the rgba order.  For example to apply
 maps to the C<red> and C<blue> channels one would use:
 
   $img->map(maps=>[\@redmap, [], \@bluemap]);
+
+=head1 SEE ALSO
+
+L<Imager>, L<Imager::Engines>
+
+=head1 AUTHOR
+
+Tony Cook <tony@imager.perl.org>, Arnar M. Hrafnkelsson
+
+=head1 REVISION
+
+$Revision$
 
 =cut
