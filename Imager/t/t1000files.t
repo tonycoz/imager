@@ -5,7 +5,7 @@
 
 use strict;
 use lib 't';
-use Test::More tests => 12;
+use Test::More tests => 18;
 use Imager;
 
 Imager::init_log("testout/t1000files.log", 1);
@@ -65,3 +65,23 @@ ok(Imager->set_file_limits(reset=>1),
    "just reset");
 is_deeply([ Imager->get_file_limits() ], [ 0, 0, 0 ],
 	  "check all are reset");
+
+# check file type probe
+probe_ok("49492A41", undef, "not quite tiff");
+probe_ok("4D4D0041", undef, "not quite tiff");
+probe_ok("49492A00", "tiff", "tiff intel");
+probe_ok("4D4D002A", "tiff", "tiff motorola");
+probe_ok("474946383961", "gif", "gif 89");
+probe_ok("474946383761", "gif", "gif 87");
+
+sub probe_ok {
+  my ($packed, $exp_type, $name) = @_;
+
+  my $builder = Test::Builder->new;
+  my $data = pack("H*", $packed);
+
+  my $io = Imager::io_new_buffer($data);
+  my $result = Imager::i_test_format_probe($io, -1);
+
+  return $builder->is_eq($result, $exp_type, $name)
+}

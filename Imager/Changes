@@ -1354,6 +1354,8 @@ Revision history for Perl extension Imager.
   - document return values
   - add examples
   - add AUTHOR, SEE ALSO, REVISION
+- eliminate sign warning from image.c
+- make TIFF detection stricter
 
 =================================================================
 

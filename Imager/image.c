@@ -2119,30 +2119,33 @@ Check the beginning of the supplied file for a 'magic number'
 =cut
 */
 
+#define FORMAT_ENTRY(magic, type) \
+  { (unsigned char *)(magic ""), sizeof(magic)-1, type }
 
 char *
 i_test_format_probe(io_glue *data, int length) {
-
   static struct {
-    char *magic;
+    unsigned char *magic;
+    size_t magic_size;
     char *name;
   } formats[] = {
-    {"\xFF\xD8", "jpeg"},
-    {"GIF87a", "gif"},
-    {"GIF89a", "gif"},
-    {"MM\0*", "tiff"},
-    {"II*\0", "tiff"},
-    {"BM", "bmp"},
-    {"\x89PNG\x0d\x0a\x1a\x0a", "png"},
-    {"P1", "pnm"},
-    {"P2", "pnm"},
-    {"P3", "pnm"},
-    {"P4", "pnm"},
-    {"P5", "pnm"},
-    {"P6", "pnm"},
+    FORMAT_ENTRY("\xFF\xD8", "jpeg"),
+    FORMAT_ENTRY("GIF87a", "gif"),
+    FORMAT_ENTRY("GIF89a", "gif"),
+    FORMAT_ENTRY("MM\0*", "tiff"),
+    FORMAT_ENTRY("II*\0", "tiff"),
+    FORMAT_ENTRY("BM", "bmp"),
+    FORMAT_ENTRY("\x89PNG\x0d\x0a\x1a\x0a", "png"),
+    FORMAT_ENTRY("P1", "pnm"),
+    FORMAT_ENTRY("P2", "pnm"),
+    FORMAT_ENTRY("P3", "pnm"),
+    FORMAT_ENTRY("P4", "pnm"),
+    FORMAT_ENTRY("P5", "pnm"),
+    FORMAT_ENTRY("P6", "pnm"),
   };
+
   unsigned int i;
-  char head[18];
+  unsigned char head[18];
   char *match = NULL;
   ssize_t rc;
 
@@ -2153,9 +2156,9 @@ i_test_format_probe(io_glue *data, int length) {
 
   for(i=0; i<sizeof(formats)/sizeof(formats[0]); i++) { 
     int c;
-    ssize_t len = strlen(formats[i].magic);
-    if (rc<len) continue;
-    c = !strncmp(formats[i].magic, head, len);
+    if (rc < formats[i].magic_size)
+      continue;
+    c = !memcmp(formats[i].magic, head, formats[i].magic_size);
     if (c) {
       match = formats[i].name;
       break;
@@ -2176,7 +2179,9 @@ i_test_format_probe(io_glue *data, int length) {
 
   if (!match && 
       (rc == 18) &&
-      tga_header_verify(head)) return "tga";
+      tga_header_verify(head))
+    return "tga";
+
   return match;
 }
 
