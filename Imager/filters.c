@@ -1668,7 +1668,7 @@ i_fountain(i_img *im, double xa, double ya, double xb, double yb,
     work = mymalloc(line_bytes); /* checked 17feb2005 tonyc */
 
   fount_init_state(&state, xa, ya, xb, yb, type, repeat, combine, 
-                   super_sample, ssample_param, count, segs)) {
+                   super_sample, ssample_param, count, segs);
   my_segs = state.segs;
 
   for (y = 0; y < im->ysize; ++y) {
