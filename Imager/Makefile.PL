@@ -661,10 +661,10 @@ sub freetype1_probe {
     }
   }
 
+  return unless $found_inc && $found_lib;
   printf("%10s: includes %s - libraries %s\n", $frmkey,
 	 ($found_inc ? 'found' : 'not found'), 
 	 ($found_lib ? 'found' : 'not found'));
-  return unless $found_inc && $found_lib;
 
   $frm->{cflags} = "-I$found_inc";
   $frm->{libfiles} = "-lttf";
