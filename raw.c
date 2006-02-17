@@ -54,14 +54,14 @@ i_readraw_wiol(io_glue *ig, int x, int y, int datachannels, int storechannels, i
   i_img* im;
   int rc,k;
 
-  i_clear_error();
-  
   unsigned char *inbuffer;
   unsigned char *ilbuffer;
   unsigned char *exbuffer;
   
   int inbuflen,ilbuflen,exbuflen;
 
+  i_clear_error();
+  
   io_glue_commit_types(ig);
   mm_log((1, "i_readraw(ig %p,x %d,y %d,datachannels %d,storechannels %d,intrl %d)\n",
 	  ig, x, y, datachannels, storechannels, intrl));

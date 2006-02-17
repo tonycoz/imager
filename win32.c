@@ -28,9 +28,9 @@ An Imager interface to font output using the Win32 GDI.
 
 #define fixed(x) ((x).value + ((x).fract) / 65536.0)
 
-static void set_logfont(char *face, int size, LOGFONT *lf);
+static void set_logfont(const char *face, int size, LOGFONT *lf);
 
-static LPVOID render_text(char *face, int size, char *text, int length, int aa,
+static LPVOID render_text(const char *face, int size, const char *text, int length, int aa,
                           HBITMAP *pbm, SIZE *psz, TEXTMETRIC *tm);
 
 /*
@@ -41,7 +41,7 @@ Calculate a bounding box for the text.
 =cut
 */
 
-int i_wf_bbox(char *face, int size, char *text, int length, int *bbox) {
+int i_wf_bbox(const char *face, int size, const char *text, int length, int *bbox) {
   LOGFONT lf;
   HFONT font, oldFont;
   HDC dc;
@@ -140,8 +140,8 @@ Draws the text in the given color.
 */
 
 int
-i_wf_text(char *face, i_img *im, int tx, int ty, i_color *cl, int size, 
-	  char *text, int len, int align, int aa) {
+i_wf_text(const char *face, i_img *im, int tx, int ty, const i_color *cl, int size, 
+	  const char *text, int len, int align, int aa) {
   unsigned char *bits;
   HBITMAP bm;
   SIZE sz;
@@ -195,8 +195,8 @@ Draws the text in the given channel.
 */
 
 int
-i_wf_cp(char *face, i_img *im, int tx, int ty, int channel, int size, 
-	  char *text, int len, int align, int aa) {
+i_wf_cp(const char *face, i_img *im, int tx, int ty, int channel, int size, 
+	  const char *text, int len, int align, int aa) {
   unsigned char *bits;
   HBITMAP bm;
   SIZE sz;
@@ -273,7 +273,7 @@ Fills in a LOGFONT structure with reasonable defaults.
 =cut
 */
 
-static void set_logfont(char *face, int size, LOGFONT *lf) {
+static void set_logfont(const char *face, int size, LOGFONT *lf) {
   memset(lf, 0, sizeof(LOGFONT));
 
   lf->lfHeight = -size; /* character height rather than cell height */
@@ -295,7 +295,7 @@ native greyscale bitmaps.
 
 =cut
 */
-static LPVOID render_text(char *face, int size, char *text, int length, int aa,
+static LPVOID render_text(const char *face, int size, const char *text, int length, int aa,
 		   HBITMAP *pbm, SIZE *psz, TEXTMETRIC *tm) {
   BITMAPINFO bmi;
   BITMAPINFOHEADER *bmih = &bmi.bmiHeader;

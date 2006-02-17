@@ -1358,6 +1358,8 @@ Revision history for Perl extension Imager.
 - make TIFF detection stricter
 - more memory allocation integer overflow auditing
 - IM_DEBUG_MALLOC wasn't interacting well with the API
+- make win32.c const happy
+- make raw.c C89 compliant
 
 =================================================================
 
