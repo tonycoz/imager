@@ -19,6 +19,8 @@ DEFINE_IMAGER_CALLBACKS;
 
 MODULE = Imager::Filter::Mandelbrot   PACKAGE = Imager::Filter::Mandelbrot
 
+PROTOTYPES: ENABLE
+
 void
 mandelbrot(im, minx=-2.5, miny=-2.0, maxx=2.5, maxy=-2.0, max_iter=256)
         Imager::ImgRaw im
