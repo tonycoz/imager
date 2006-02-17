@@ -51,9 +51,9 @@ flines(i_img *im) {
 
 DEFINE_IMAGER_CALLBACKS;
 
-PROTOTYPES: ENABLE
-
 MODULE = Imager::Filter::Flines   PACKAGE = Imager::Filter::Flines
+
+PROTOTYPES: ENABLE
 
 void
 flines(im)
