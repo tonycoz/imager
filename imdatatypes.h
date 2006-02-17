@@ -508,6 +508,13 @@ typedef struct i_gif_opts {
   int eliminate_unused;
 } i_gif_opts;
 
+/* distance measures used by some filters */
+enum {
+  i_dmeasure_euclidean = 0,
+  i_dmeasure_euclidean_squared = 1,
+  i_dmeasure_manhatten = 2,
+  i_dmeasure_limit = 2,
+};
 
 
 #endif

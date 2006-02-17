@@ -13,9 +13,19 @@ extern im_ext_funcs *imager_function_ext_table;
 /* just for use here */
 #define im_extt imager_function_ext_table
 
+#ifdef IMAGER_DEBUG_MALLOC
+
+#define mymalloc(size) ((im_extt->f_mymalloc_file_line)((size), __FILE__, __LINE__))
+#define myrealloc(ptr, size) ((im_extt->f_myrealloc_file_line)((ptr), (size), __FILE__, __LINE__))
+#define myfree(ptr) ((im_extt->f_myfree_file_line)((ptr), __FILE__, __LINE__))
+
+#else
+
 #define mymalloc(size) ((im_extt->f_mymalloc)(size))
 #define myfree(size) ((im_extt->f_myfree)(size))
 #define myrealloc(block, newsize) ((im_extt->f_myrealloc)((block), (newsize)))
+
+#endif
 
 #define i_img_8_new(xsize, ysize, channels) ((im_extt->f_i_img_8_new)((xsize), (ysize), (channels)))
 #define i_img_16_new(xsize, ysize, channels) ((im_extt->f_i_img_16_new)((xsize), (ysize), (channels)))

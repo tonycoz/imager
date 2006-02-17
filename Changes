@@ -1356,6 +1356,8 @@ Revision history for Perl extension Imager.
   - add AUTHOR, SEE ALSO, REVISION
 - eliminate sign warning from image.c
 - make TIFF detection stricter
+- more memory allocation integer overflow auditing
+- IM_DEBUG_MALLOC wasn't interacting well with the API
 
 =================================================================
 

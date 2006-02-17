@@ -241,11 +241,26 @@ BEGIN {
      }
     };
 
-  $filters{nearest_color} ={
-			    callseq => ['image', 'xo', 'yo', 'colors', 'dist'],
-			    defaults => { },
-			    callsub => sub { my %hsh=@_; i_nearest_color($hsh{image}, $hsh{xo}, $hsh{yo}, $hsh{colors}, $hsh{dist}); }
-			   };
+  $filters{nearest_color} =
+    {
+     callseq => ['image', 'xo', 'yo', 'colors', 'dist'],
+     defaults => { },
+     callsub => 
+     sub { 
+       my %hsh=@_; 
+       # make sure the segments are specified with colors
+       my @colors;
+       for my $color (@{$hsh{colors}}) {
+         my $new_color = _color($color) 
+           or die $Imager::ERRSTR."\n";
+         push @colors, $new_color;
+       }
+
+       i_nearest_color($hsh{image}, $hsh{xo}, $hsh{yo}, \@colors, 
+                       $hsh{dist})
+         or die Imager->_error_as_msg() . "\n";
+     },
+    };
   $filters{gaussian} = {
                         callseq => [ 'image', 'stddev' ],
                         defaults => { },
@@ -372,7 +387,8 @@ BEGIN {
 
        i_fountain($hsh{image}, $hsh{xa}, $hsh{ya}, $hsh{xb}, $hsh{yb},
                   $hsh{ftype}, $hsh{repeat}, $hsh{combine}, $hsh{super_sample},
-                  $hsh{ssample_param}, \@segments);
+                  $hsh{ssample_param}, \@segments)
+         or die Imager->_error_as_msg() . "\n";
      },
     };
   $filters{unsharpmask} =

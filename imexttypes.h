@@ -9,6 +9,9 @@ typedef struct {
   void * (*f_mymalloc)(int size);
   void (*f_myfree)(void *block);
   void * (*f_myrealloc)(void *block, size_t newsize);
+  void* (*f_mymalloc_file_line)(size_t size, char* file, int line);
+  void  (*f_myfree_file_line)(void *p, char*file, int line);
+  void* (*f_myrealloc_file_line)(void *p, size_t newsize, char* file,int line);
 
   i_img *(*f_i_img_8_new)(int xsize, int ysize, int channels);
   i_img *(*f_i_img_16_new)(int xsize, int ysize, int channels);
