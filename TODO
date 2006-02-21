@@ -8,11 +8,11 @@ not commitments.
 
 BEFORE 0.48:
 
-scale() fixes/docs, Imager::Transformations going over.
+scale() fixes/docs, Imager::Transformations going over. (done)
 
-do some more malloc checks
+do some more malloc checks (done)
 
-scan $Config{libspath} for directories if we can.
+scan $Config{libspath} for directories if we can. (done)
 
 0.47:
 

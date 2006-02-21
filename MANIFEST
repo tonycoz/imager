@@ -125,7 +125,6 @@ log.c
 log.h
 map.c
 maskimg.c
-metafile.pl     Common META.yml generation
 palimg.c
 plug.h
 png.c

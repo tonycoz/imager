@@ -6,7 +6,6 @@ use Config;
 use File::Spec;
 use Getopt::Long;
 use vars qw(%Recommends);
-require "metafile.pl";
 use ExtUtils::Manifest qw(maniread);
 use vars qw(%formats $VERBOSE $INCPATH $LIBPATH $NOLOG $DEBUG_MALLOC $MANUAL $CFLAGS $LFLAGS $DFLAGS);
 
@@ -168,11 +167,17 @@ if ($ExtUtils::MakeMaker::VERSION > 6.06) {
   $opts{AUTHOR} = 'Tony Cook <tony@imager.perl.org>, Arnar M. Hrafnkelsson';
   $opts{ABSTRACT} = 'Perl extension for Generating 24 bit Images';
 }
+if ($ExtUtils::MakeMaker::VERSION > 6.10) {
+  $opts{NO_META} = 1;
+}
 
 make_imconfig(\@defines);
 
 if ($VERBOSE) { print Dumper(\%opts); }
 mkdir('testout',0777); # since we cannot include it in the archive.
+
+make_metafile(\%opts);
+
 WriteMakefile(%opts);
 
 exit;
@@ -814,4 +819,50 @@ sub gen_PM {
   $pm{"imconfig.h"} = $instbase . '/Imager/include/imconfig.h';
 
   \%pm;
+}
+
+sub make_metafile {
+  my ($opts) = @_;
+
+  # extract the version
+  my $version = MM->parse_version($opts->{VERSION_FROM})
+    or die "Could not extract version number from $opts->{VERSION_FROM}\n";
+
+  my $meta = <<YAML;
+--- #YAML:1.0
+name: $opts->{NAME}
+version: $version
+version_from: $opts->{VERSION_FROM}
+author: $opts->{AUTHOR}
+abstract: $opts->{ABSTRACT}
+installdirs: site
+YAML
+  if (keys %{$Recommends{$opts->{NAME}}}) {
+    $meta .= "recommends:\n";
+    while (my ($module, $version) = each %{$Recommends{$opts->{NAME}}}) {
+      $meta .= "  $module: $version\n";
+    }
+  }
+  $meta .= <<YAML;
+license: perl
+dynamic_config: 1
+distribution_type: module
+generated_by: $opts->{NAME} version $version
+YAML
+  my $save_meta;
+  if (open META, "< META.yml") {
+    my $old_meta = do { local $/; <META> };
+    close META;
+
+    $save_meta = $old_meta ne $meta;
+  }
+  else {
+    ++$save_meta;
+  }
+  if ($save_meta) {
+    print "Updating META.yml\n";
+    open META, "> META.yml" or die "Cannot create META.yml: $!";
+    print META $meta;
+    close META;
+  }
 }
