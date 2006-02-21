@@ -1360,6 +1360,7 @@ Revision history for Perl extension Imager.
 - IM_DEBUG_MALLOC wasn't interacting well with the API
 - make win32.c const happy
 - make raw.c C89 compliant
+- added version/level to the API function table structure
 
 =================================================================
 

@@ -6,6 +6,9 @@
 */
 im_ext_funcs imager_function_table =
   {
+    IMAGER_API_VERSION,
+    IMAGER_API_LEVEL,
+
     mymalloc,
     myfree,
     myrealloc,

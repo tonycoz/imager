@@ -5,7 +5,26 @@
 
 #include "imdatatypes.h"
 
+/*
+ IMAGER_API_VERSION is similar to the version number in the third and
+ fourth bytes of TIFF files - if it ever changes then the API has changed
+ too much for any application to remain compatible.
+*/
+#define IMAGER_API_VERSION 1
+
+/*
+ IMAGER_API_LEVEL is the level of the structure.  New function pointers
+ will always remain at the end (unless IMAGER_API_VERSION changes), and
+ will result in an increment of IMAGER_API_LEVEL.
+*/
+
+#define IMAGER_API_LEVEL 1
+
 typedef struct {
+  int version;
+  int level;
+
+  /* IMAGER_API_LEVEL 1 functions */
   void * (*f_mymalloc)(int size);
   void (*f_myfree)(void *block);
   void * (*f_myrealloc)(void *block, size_t newsize);
@@ -115,6 +134,8 @@ typedef struct {
   void (*f_i_copyto_trans)(i_img *im, i_img *src, int x1, int y1, int x2, int y2, int tx, int ty, const i_color *trans);
   i_img *(*f_i_copy)(i_img *im);
   int (*f_i_rubthru)(i_img *im, i_img *src, int tx, int ty, int src_minx, int src_miny, int src_maxx, int src_maxy);
+
+  /* IMAGER_API_LEVEL 2 functions will be added here */
 } im_ext_funcs;
 
 #define PERL_FUNCTION_TABLE_NAME "Imager::__ext_func_table"
