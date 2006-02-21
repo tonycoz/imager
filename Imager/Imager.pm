@@ -146,7 +146,7 @@ use Imager::Font;
 BEGIN {
   require Exporter;
   @ISA = qw(Exporter);
-  $VERSION = '0.47';
+  $VERSION = '0.47_01';
   eval {
     require XSLoader;
     XSLoader::load(Imager => $VERSION);
