@@ -7,8 +7,20 @@ extern im_ext_funcs *imager_function_ext_table;
 
 #define DEFINE_IMAGER_CALLBACKS im_ext_funcs *imager_function_ext_table
 
+#ifndef IMAGER_MIN_API_LEVEL
+#define IMAGER_MIN_API_LEVEL IMAGER_API_LEVEL
+#endif
+
 #define PERL_INITIALIZE_IMAGER_CALLBACKS \
-  imager_function_ext_table = INT2PTR(im_ext_funcs *, SvIV(get_sv(PERL_FUNCTION_TABLE_NAME, 1)))
+  do {  \
+    imager_function_ext_table = INT2PTR(im_ext_funcs *, SvIV(get_sv(PERL_FUNCTION_TABLE_NAME, 1))); \
+    if (!imager_function_ext_table) \
+      croak("Imager API function table not found!"); \
+    if (imager_function_ext_table->version != IMAGER_API_VERSION) \
+      croak("Imager API version incorrect"); \
+    if (imager_function_ext_table->level < IMAGER_MIN_API_LEVEL) \
+      croak("API level %d below minimum of %d", imager_function_ext_table->level, IMAGER_MIN_API_LEVEL); \
+  } while (0)
 
 /* just for use here */
 #define im_extt imager_function_ext_table

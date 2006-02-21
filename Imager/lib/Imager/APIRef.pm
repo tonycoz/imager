@@ -161,7 +161,7 @@ Returns the number of pixels retrieved.
 
 
 =for comment
-From: Line 199 in imext.c
+From: Line 202 in imext.c
 
 =item i_glinf(im, l, r, y, colors)
 
@@ -173,7 +173,7 @@ Returns the number of pixels retrieved.
 
 
 =for comment
-From: Line 234 in imext.c
+From: Line 237 in imext.c
 
 =item i_gpal(im, x, r, y, indexes)
 
@@ -187,7 +187,7 @@ Always returns 0 for direct color images.
 
 
 =for comment
-From: Line 298 in imext.c
+From: Line 301 in imext.c
 
 =item i_gpix(im, x, y, color)
 
@@ -198,7 +198,7 @@ Returns 0 if the pixel was retrieved, or -1 if not.
 
 
 =for comment
-From: Line 127 in imext.c
+From: Line 130 in imext.c
 
 =item i_gpixf(im, x, y, fcolor)
 
@@ -210,7 +210,7 @@ Returns 0 if the pixel was retrieved, or -1 if not.
 
 
 =for comment
-From: Line 163 in imext.c
+From: Line 166 in imext.c
 
 =item i_gsamp(im, l, r, y, samp, chans, chan_count)
 
@@ -227,7 +227,7 @@ chan_count)
 
 
 =for comment
-From: Line 252 in imext.c
+From: Line 255 in imext.c
 
 =item i_gsampf(im, l, r, y, samp, chans, chan_count)
 
@@ -244,7 +244,7 @@ chan_count)
 
 
 =for comment
-From: Line 275 in imext.c
+From: Line 278 in imext.c
 
 =item i_line(im, x1, y1, x2, y2, val, endp)
 
@@ -284,7 +284,7 @@ Returns the number of pixels set.
 
 
 =for comment
-From: Line 181 in imext.c
+From: Line 184 in imext.c
 
 =item i_plinf(im, l, r, fcolors)
 
@@ -296,7 +296,7 @@ Returns the number of pixels set.
 
 
 =for comment
-From: Line 216 in imext.c
+From: Line 219 in imext.c
 
 =item i_ppal(im, x, r, y, indexes)
 
@@ -310,7 +310,7 @@ Always returns 0 for direct color images.
 
 
 =for comment
-From: Line 317 in imext.c
+From: Line 320 in imext.c
 
 =item i_ppix(im, x, y, color)
 
@@ -324,7 +324,7 @@ color to the image.
 
 
 =for comment
-From: Line 107 in imext.c
+From: Line 110 in imext.c
 
 =item i_ppixf(im, x, y, fcolor)
 
@@ -338,7 +338,7 @@ color to the image.
 
 
 =for comment
-From: Line 144 in imext.c
+From: Line 147 in imext.c
 
 
 =back
@@ -715,7 +715,7 @@ Always fails for direct color images.
 
 
 =for comment
-From: Line 336 in imext.c
+From: Line 339 in imext.c
 
 =item i_colorcount(im)
 
@@ -726,7 +726,7 @@ Returns -1 for direct images.
 
 
 =for comment
-From: Line 382 in imext.c
+From: Line 385 in imext.c
 
 =item i_findcolor(im, color, &entry)
 
@@ -741,7 +741,7 @@ Always fails on direct color images.
 
 
 =for comment
-From: Line 417 in imext.c
+From: Line 420 in imext.c
 
 =item i_getcolors(im, index, colors, count)
 
@@ -760,7 +760,7 @@ palette.
 
 
 =for comment
-From: Line 357 in imext.c
+From: Line 360 in imext.c
 
 =item i_maxcolors(im)
 
@@ -772,7 +772,7 @@ Returns -1 for direct color images.
 
 
 =for comment
-From: Line 399 in imext.c
+From: Line 402 in imext.c
 
 =item i_setcolors(im, index, colors, count)
 
@@ -790,7 +790,7 @@ Always fails on direct color images.
 
 
 =for comment
-From: Line 437 in imext.c
+From: Line 440 in imext.c
 
 
 =back
