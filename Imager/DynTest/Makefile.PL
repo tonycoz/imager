@@ -1,5 +1,4 @@
 use ExtUtils::MakeMaker;
-require "../metafile.pl";
 
 my %opts = 
   (

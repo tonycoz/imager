@@ -1361,6 +1361,9 @@ Revision history for Perl extension Imager.
 - make win32.c const happy
 - make raw.c C89 compliant
 - added version/level to the API function table structure
+- fix/simplify META.yml generation - we now generate META.yml at
+  Makefile.PL time, since trying to work with EU::MM to generate a 
+  custom META.yml was a waste.
 
 =================================================================
 
