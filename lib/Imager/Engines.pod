@@ -328,6 +328,10 @@ L<Imager::regmach.pod>.
 
 =head2 Matrix Transformations
 
+=over
+
+=item matrix_transform
+
 Rather than having to write code in a little language, you can use a
 matrix to perform affine transformations, using the matrix_transform()
 method:
@@ -355,5 +359,7 @@ Imager::Color or Imager::Color::Float object.  This is B<not> mixed
 transparent pixels in the middle of the source image, it is B<only>
 used for pixels where there is no corresponding pixel in the source
 image.
+
+=back
 
 =cut

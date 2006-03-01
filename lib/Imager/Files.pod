@@ -183,6 +183,10 @@ Return either a valid Imager file type, or undef.
 
 =head2 Limiting the sizes of images you read
 
+=over
+
+=item set_file_limits
+
 In some cases you will be receiving images from an untested source,
 such as submissions via CGI.  To prevent such images from consuming
 large amounts of memory, you can set limits on the dimensions of
@@ -233,11 +237,14 @@ pass:
   # only bytes is limited
   Imager->set_file_limits(reset=>1, bytes=>10_000_000);
 
+=item get_file_limits
+
 You can get the current limits with the get_file_limits() method:
 
   my ($max_width, $max_height, $max_bytes) =
      Imager->get_file_limits();
 
+=back
 
 =head1 TYPE SPECIFIC INFORMATION
 

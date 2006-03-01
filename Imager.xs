@@ -3256,18 +3256,6 @@ void
 malloc_state()
 
 void
-hashinfo(hv)
-	     PREINIT:
-	       HV* hv;
-	       int stuff;
-	     PPCODE:
-	       if (!SvROK(ST(0))) croak("Imager: Parameter 0 must be a reference to a hash\n");	       
-	       hv=(HV*)SvRV(ST(0));
-	       if (SvTYPE(hv)!=SVt_PVHV) croak("Imager: Parameter 0 must be a reference to a hash\n");
-	       if (getint(hv,"stuff",&stuff)) printf("ok: %d\n",stuff); else printf("key doesn't exist\n");
-	       if (getint(hv,"stuff2",&stuff)) printf("ok: %d\n",stuff); else printf("key doesn't exist\n");
-	       
-void
 DSO_open(filename)
              char*       filename
 	     PREINIT:

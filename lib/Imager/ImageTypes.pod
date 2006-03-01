@@ -623,6 +623,11 @@ or by code:
 
 In each case deltag() returns the number of tags deleted.
 
+=item settag
+
+settag() replaces any existing tags with a new tag.  This is
+equivalent to calling deltag() then addtag().
+
 =back
 
 =head2 Common Tags

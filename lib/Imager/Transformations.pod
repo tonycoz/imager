@@ -558,6 +558,10 @@ reason for failure.
 
 =head2 Color transformations
 
+=over
+
+=item convert
+
 You can use the convert method to transform the color space of an
 image using a matrix.  For ease of use some presets are provided.
 
@@ -689,7 +693,13 @@ alpha channel:
                                            [ 0, 0, 0, 0.5 ],
                                          ]);
 
+=back
+
 =head2 Color Mappings
+
+=over
+
+=item map
 
 You can use the map method to map the values of each channel of an
 image independently using a list of lookup tables.  It's important to
@@ -730,6 +740,8 @@ applied to the images in the rgba order.  For example to apply
 maps to the C<red> and C<blue> channels one would use:
 
   $img->map(maps=>[\@redmap, [], \@bluemap]);
+
+=back
 
 =head1 SEE ALSO
 

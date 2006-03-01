@@ -1366,6 +1366,11 @@ Revision history for Perl extension Imager.
   custom META.yml was a waste.
 - bump to 0.47_01
 
+0.48
+- removed unused hashinfo() function from Imager.xs
+- added =items for various methods, so Pod::Coverage will pick them up
+  (Pod::Coverage tests to be added in 0.49)
+
 =================================================================
 
         For latest versions check the Imager-devel pages:

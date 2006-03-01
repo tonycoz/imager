@@ -28,6 +28,26 @@ Imager::Filters - Entire Image Filtering Operations
 
 Filters are operations that have similar calling interface.
 
+=over
+
+=item filter
+
+Parameters:
+
+=over
+
+=item *
+
+type - the type of filter, see L</Types of Filters>.
+
+=item *
+
+many other possible parameters, see L</Types of Filters> below.
+
+=back
+
+=back
+
 =head2 Types of Filters
 
 Here is a list of the filters that are always avaliable in Imager.
@@ -568,7 +588,36 @@ Note: This seems to test ok on the following systems:
 Linux, Solaris, HPUX, OpenBSD, FreeBSD, TRU64/OSF1, AIX.
 If you test this on other systems please let me know.
 
+=over
+
+=item load_plugin
+
+This is a function, not a method, exported by default.  You should
+import this function explicitly for future compatibility if you need
+it.
+
+Accepts a single parameter, the name of a shared library file to load.
+
+Returns true on success.  Check Imager->errstr on failure.
+
+=item unload_plugin
+
+This is a function, not a method, which is exported by default.  You
+should import this function explicitly for future compatibility if you
+need it.
+
+Accepts a single parameter, the name of a shared library to unload.
+This library must have been previously loaded by load_plugin().
+
+Returns true on success.  Check Imager->errstr on failure.
+
+=back
+
 =head2 Image Difference
+
+=over
+
+=item difference
 
 You can create a new image that is the difference between 2 other images.
 
@@ -584,5 +633,7 @@ different?"), and for optimizing animated GIFs.
 Note that $img and $other_img must have the same number of channels.
 The width and heigh of $diff will be the minimum of each of the width
 and height of $img and $other_img.
+
+=back
 
 =cut

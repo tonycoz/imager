@@ -3389,7 +3389,7 @@ channel values
 
 masked() -  L<Imager::ImageTypes/masked> - make a masked image
 
-matrix_transform() - L<Imager::Engines/"Matrix Transformations">
+matrix_transform() - L<Imager::Engines/matrix_transform>
 
 maxcolors() - L<Imager::ImageTypes/maxcolors>
 
@@ -3415,8 +3415,6 @@ image and use the alpha channel
 
 scale() - L<Imager::Transformations/scale>
 
-setscanline() - L<Imager::Draw/setscanline>
-
 scaleX() - L<Imager::Transformations/scaleX>
 
 scaleY() - L<Imager::Transformations/scaleY>
@@ -3425,6 +3423,10 @@ setcolors() - L<Imager::ImageTypes/setcolors> - set palette colors in
 a paletted image
 
 setpixel() - L<Imager::Draw/setpixel>
+
+setscanline() - L<Imager::Draw/setscanline>
+
+settag() - L<Imager::ImageTypes/settag>
 
 set_file_limits() - L<Imager::Files/"Limiting the sizes of images you read">
 
