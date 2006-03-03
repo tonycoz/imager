@@ -1,0 +1,139 @@
+#!/usr/bin/perl -wT
+use Imager;
+use CGI qw(:standard);
+use strict;
+
+# set this the directory you're keeping the font files in
+my $fontdir = '../fonts/';
+
+# make sure we get a good font name
+my $fontname = param('font');
+if (!defined $fontname || $fontname =~ /\W/) {
+  $fontname = 'arial';
+}
+
+my $text = param('text');
+my $anim = param('anim');
+my $size = param('size') + 0;
+$size > 3 or $size=3;
+my $bgname = param('bg') || '000000';
+my $fgname = param('fg') || 'FFFFFF';
+my $border = param('border') || 2;
+my $trans = param('trans');
+
+chdir '/tmp'; # bah!
+
+my $font = Imager::Font->new(file=>$fontdir.$fontname.".ttf")
+  or print STDERR "Cannot open font\n";
+print STDERR "Font $fontname\n";
+if (!-e $fontdir.$fontname.".ttf") {
+  print STDERR "Cannot find font\n";
+}
+
+my $fg = Imager::Color->new("#$fgname");
+my $bg = Imager::Color->new("#$bgname");
+if ($trans) {
+  $bg = Imager::Color->new(($bg->rgba)[0,1,2], 0);
+}
+
+my @box = $font->bounding_box(string=>$text, size=>$size, canon=>1);
+
+my $xsize = $box[2]+$border*2;
+my $ysize = $box[3]+$border*2;
+$|=1;
+
+# we get faster quantization if we build our own palette
+# we want 20 steps between fg and bg
+my @cols;
+my @fg = $fg->rgba;
+my @bg = $bg->rgba;
+my @steps = map { $bg[$_]-$fg[$_] } 0..2;
+push (@cols, $fg, $bg);
+for my $grad (1..19) {
+  push(@cols, Imager::Color->new(map { $fg[$_]+$steps[$_]*$grad/20 } 0..2));
+}
+if ($anim) {
+  my @im;
+
+  my $steps = int($size / 3) - 2;
+  my $sz = $size - $steps * 3;
+  while ($sz <= $size) {
+    my $im = Imager->new(xsize=>$xsize, ysize=>$ysize, channels=>$trans?4:3);
+    
+    $im->box(filled=>1, color=>$bg);
+    my @sbox = $font->bounding_box(string=>$text, size=>$sz, canon=>1);
+    my $x = ($xsize-$sbox[2])/2 - $sbox[0];
+    my $y = ($ysize+$sbox[3])/2 + $sbox[1];
+    $im->string(font=>$font, text=>$text, x=>$x, 
+		y=>$y, size=>$sz, color=>$fg, aa=>1);
+    push @im, $im;
+    $sz += 3;
+  }
+  print "Content-Type: image/gif\n\n";
+  Imager->write_multi({type=>'gif', 
+		       transp=>$trans?'threshold':'none', 
+		       make_colors=>'none',
+		       colors=>\@cols,
+		       fd=>fileno(STDOUT), 
+		       gif_disposal=>[(2) x @im],
+		       gif_delays=>[(10) x @im ]}, @im);
+}
+else {
+  my $im = Imager->new(xsize=>$xsize, ysize=>$ysize,
+		      channels => $trans?4:3);
+  
+  $im->box(filled=>1, color=>$bg);
+  
+  $im->string(font=>$font, text=>$text, x=>-$box[0]+$border, 
+	      y=>$box[3]+$box[1]+$border, size=>$size, color=>$fg, aa=>1);
+  print "Content-Type: image/gif\n\n";
+  $im->write(fd=>fileno(STDOUT), type=>'gif',
+	     transp=>$trans?'threshold':'none', gifquant=>'gen');
+}
+
+__END__
+
+=head1 NAME
+
+logo - generates a simple logo using Imager
+
+=head1 SYNOPSIS
+
+  (run as a CGI script)
+
+=head1 DESCRIPTION
+
+Given a font and number of parameters, described below, I<logo> draws
+text to an image and writes that result as a GIF to STDOUT, with the
+required CGI headers.
+
+The parameters that logo takes are:
+
+=over
+
+=item font
+
+the basename of the font file to be used in drawing the text
+
+=item text
+
+the text to draw
+
+=item size
+
+the height in pixels to draw the text
+
+=item anim
+
+if this is non-zero the text is animated, from a very small size to
+the size specified by I<size>
+
+=item bg
+
+the background color of the image.  Used as the combining color if
+transparent.
+
+=back
+
+=cut
+

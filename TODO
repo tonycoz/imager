@@ -1,0 +1,400 @@
+                         *** TODO ***
+
+Release Plans (subject to change)
+-------------
+
+brown-bag bugs may add intermediate releases.  The dates are goals,
+not commitments.
+
+BEFORE 0.48:
+
+scale() fixes/docs, Imager::Transformations going over. (done)
+
+do some more malloc checks (done)
+
+scan $Config{libspath} for directories if we can. (done)
+
+0.47:
+
+- more documentation (and corresponding code cleanup)
+
+- external C API access
+
+- hooks for file reading/writing
+
+- hooks for font types
+
+- hooks for filters
+
+- hooks for fills
+
+- filter pre-processor for handling both image access methods
+
+- move existing loadable filters into separate sub-directories
+
+- write Imager::SDL
+
+- maybe Imager::Tk::Photo
+
+
+0.46: (September 2005)
+
+- check remaining memory allocation calls for integer overflows
+  http://rt.cpan.org/NoAuth/Bug.html?id=8213
+   - check *alloc() calls
+   - check llist_push() calls
+
+- fix Imager::Color warning when $ENV{HOME} isn't set from
+  _get_gimp_color() (done)
+  http://rt.cpan.org/NoAuth/Bug.html?id=13143
+
+- module version numbers (done)
+  http://rt.cpan.org/NoAuth/Bug.html?id=13047 
+
+- allow limits to be set on the size of an image read from a file.  This is
+  to prevent an attacker supplying huge images that consume all of 
+  memory causing a denial of service attack. (done)
+
+- implement gsamp()/gsampf()/plin() etc methods for those low level image
+  interfaces which don't yet have methods. (done)
+   - code (done)
+   - test (done)
+   - document (done)
+
+- add Imager::Tutorial (see Tk::UserGuide for a structure) (done)
+  don't cover installation - belongs in README or INSTALL
+  it doesn't need to cover everything - read/write/create/simple drawing
+  and simple text - other stuff belongs in the cookbook or in sample code
+
+- rename lib/Imager/Cookbook.pm to lib/Imager/Cookbook.pod (done)
+
+- add 5 more recipes to Imager::Cookbook
+
+- implement i_incomplete for png and gif files.
+
+- documentation audit, check:
+  - every method has at least one example, but if the method is complex
+    (like transform2, to_paletted, string() for example) it should include 
+    a range of examples
+  - check each method description to ensure it's reasonably clear.
+  - check POD sections (SEE ALSO in particular)
+  - multiple examples for writing GIF images.
+  - name arguments and use those names in the documentation
+    http://nntp.perl.org/group/perl.perl5.porters/102434
+  (#1521, #5608, #8231, #11429, #13058(done))
+
+- have $img->read() act like ($img) = Imager->read_multi() on GIFs (done)
+
+- figure out what the nearest_color filter does, and document it
+
+- remove image.h dependency on t1lib.h (done)
+
+- make sure dynfilt/Makefile.PL gets the same includes that
+  Makefile.PL does.
+
+0.47:
+
+- rework handling of antialiasing and other transparency against
+  transparent images
+
+  Places to check:
+   - text AA rendering
+   - AA line drawing
+   - anything that uses combine (fills in particular)
+   - image scaling? and matrix_transform()'s interpolation
+  http://rt.cpan.org/NoAuth/Bug.html?id=11972
+
+0.48:
+
+- fill out handling of large sample (16/double per sample) images
+  - filters
+  - rendering:
+    - lines
+    - text
+    - boxes
+    - polygons
+  - engines
+    - matrix transform
+    - transform()
+    - transform2()
+  - files:
+    - png
+    - tiff
+    - pnm
+
+Speculation
+-----------
+
+Some of what's listed below has been implemented.
+
+- should i_incomplete be optional?  ie. reading a short image results in
+  an error unless the user requests incomplete images.
+
+Iolayer:
+- Add scalar/mmap to iolayer
+- Add close() code to iolayer for fakeseek sources.
+- Merge callback interface into iolayer
+- and raw
+- Implment the maxread threshold (Indicates how much can
+  be read from a source before it stops reading from its
+  underlying source.  For making sure only the relevant
+  data is read from a socket for example. 
+
+Enhanched internal structure:
+
+MultiImage & metadata support:
+- Figure what interface should be between C and perl?
+- How to store data in the C interface for tags/metadata?
+  Support tiff's madness, i.e. tags and options.
+- Error handling, make a general i_errstr object and arrange
+  such that each image has an i_errstr object to hold its
+  local errors?
+- SEE design/represent.txt for proposed new structure and
+  interface design that takes these factors into account.
+- define common i_* tags for specifying attribute common among images
+  like spatial resolution (implement for other image types, especially 
+  TIFF)  (Spatial resolution is supported for all types that support 
+  it - are there any other common properties we can add?)
+- implement the i_incomplete tag for other formats  
+
+New Features:
+- Add mng support, pcx and aalib support.
+  - Windows icon files (.ico)
+  - ILBM (Amiga) images
+  - photoshop files (I think I've seen docs)
+  - XBM
+  - FITS
+  - WMF (extract bitmap data on read)
+  - gzip or bzip2 compressed raw
+  - postscript for output
+  - PAM file support (man pam in recent PNM tools)
+
+- Transforms, interpolated multidimensional lookup tables.
+  Usefull for CMYK <-> RGB table lookup.
+
+- advanced font layout (spacing, kerning, alignment) (Artur?)
+
+- ways to check if characters are present in a font, eg. checking if
+  ligatures are present (done for FreeType2)
+
+- font synthesis - synthesize a bold or slanted font from a normal font
+  (or even from an existing bold or slanted font)
+
+- utf8 support for text output
+  (available for FT1, freetype2, should be easy for Win32)
+
+- easy interfaces for text output:
+  - align text around point, including:
+    - left, center, right horizontal alignment
+    - top, center, baseline, bottom alignment
+    - choose whether to base alignment upon character cells or font 
+      metrics to avoid spacing problems between lines
+  - fill a box from text, with newline handling
+    - an option to just return the information that would be used to 
+      output the text, so it can be used for sizing calculations
+    - how much text fit in the box/how much space is left in the box
+  - fill a box with rich text (size and font changes)
+    - as above
+    - wrapping around boxes/images
+  - pod2Imager :)
+
+- tools to get more information about fonts/characters:
+  - name of font "Arial Bold Italic" vs "arialbi.ttf"
+  - ABC widths for characters (currently the only way to get the C width 
+    for a character is to get the width with a following space and without
+    and then compare)
+  - character names
+
+- encodings for text output (maybe using the Encode module to work 
+  between encodings)
+
+- image rotation, 3 ways of doing rotation:
+  - rotation by shearing, which produces makes lengths in the image larger,
+    but could be useful
+  (2 of the 3 have been done)
+
+- read_multi() needs to handle other multi-image types,
+   (handles TIFF and GIF)
+
+- write_multi() to save other multi-image types, (handles TIFF and GIF)
+  - pnm binary formats support multiple images per file
+
+- compose channels - build a new image based on channels from several
+  images
+
+- arc outlines
+
+- complex lines/curves:
+  - thick lines:
+    - dotted/dashed lines
+    - doubled lines?
+    - end-point controls (butt-end, square-end, round-end, pointy, arrows)
+  - brush-lines (as with the Gimp, or Photoshop)
+    - more complex with multiple strokes and various randomness as with
+      Fractal Design Painter (or later versions of Corel Photo Paint)
+  - complex line shapes:
+    - lines
+    - general curves (cubic or bezier, whichever is more general)
+    - easy access to general curves:
+      - points to make a nice curve from
+      - various circular curves (centre, radii, start/end angles, 
+        direction)
+  - Complex thick lines are probably more useful than brush-lines for 
+    the things I expect Imager to be used for.
+  - http://www.develop-help.com/imager/strokes.png (.jpg for smaller version)
+
+- have Imager::Color{::Float}? use Graphics::ColorNames if present.
+
+Clean up:
+- Make sure everything is doable with the OO interface
+  i_flood_fill() for example.
+  - include low-level functions like gsamp() and so on
+
+- Compile with memory debugging enabled and fix all leaks
+
+- Add mycalloc() memory allocation wrappers.
+
+- should we overload <=> or cmp for Imager::Color objects?
+  too many worms, leave it out
+
+- should the interlace option for reading raw images have 
+  symbolic names in the OO interface?
+
+- improve consistency in the interfaces, both in trying to use named
+  parameters where possible but also in using consistent names, eg.
+  (tx, ty) vs (left, top) in rubthrough() vs paste().  Do we want a (simple)
+  standard for this (suggested names)?  Remember to preserve the old 
+  interface where possible.
+
+- try to clean up the inconsistencies between font types:
+  - utf8 (even if we just treat characters over 0xFF as missing for T1)
+    (done for FT2, FT1, T1)
+  - transformations (done for FT2)
+  - has_char() method (done for FT2, FT1, T1)
+
+Format specific issues:
+- provide patches for libgif and libungif that fix their bugs
+  and give a useful extension interface.  Probe for the 
+  installation of the patches in Makefile.PL to let gif.c
+  know what features it can use.
+
+- Add options for pnm writer to save in any of the p1..P6
+  formats.  Even if the input has 1 channel, write 3 and such
+  cases.  Also allow ascii mode.  Need to be able to write 
+  pbm images which needs ties to the quantization code.
+
+- save paletted images as paletted where that's supported.  Done
+  for gif/tga/bmp/tiff.  Not done for png yet.
+
+- read other format paletted images as paletted images.  This has 
+  been done for gif/tga/bmp/tiff formats but not for png.
+
+- read/write 16-bit/sample images as such for tiff
+
+- read more metadata from images, esp tiff tags, EXIF format information 
+  from TIFF and JPEG.
+
+- handle 16-bit/sample pgm/ppm files
+
+- "jpeg lossless rotation" - directly manipulates the JPEG
+  representation to rotate, scale or in some limited cases, crop an
+  image.
+
+Documentation:
+- Add to the documentation
+- Write a tutorial?
+- sample code and Imager/Samples.pod describing them
+- Imager/Cookbook.pod
+- Write a guide to installing the helper libraries
+- Go through the entire project and add comments in pod
+  so doco.perl can be used to read them.
+- see the IRC log in design/doclayout.txt
+- method index?
+- concept index?
+
+Build/configure:
+- use prompt() (from ExtUtils::MakeMaker) for questions in Makefile.PL
+- use the library's mechanism's to find the library if needed, for
+  example, freetype-config for FT2
+- the freetype2 library is built as "freetype.lib" on Win32 and needs
+  to be renamed to be found by the configuration process and included
+  with -lfreetype.  Try to work around that.
+- freetype2 and freetype1 tend to be installed in /usr/include/freetype2
+  and /usr/include/freetype directories, or similarly named (somedir/freetype
+  for example), instead of putting these directly into the search path
+  search for the freetype{2}?/someheader and then add the subdirectory if
+  we find the file in that directory.
+- switch to Test::More
+- change headers to use more unique re-include protection macros
+
+Old release checklists
+----------------------
+
+0.44: (december 2004)
+- set i_format for every file type on read and test for it:
+  - bmp - done
+  - jpeg - done
+  - tiff - done
+  - tga - done
+  - rgb - no read function anyway
+  - png - done
+  - gif - done
+  - pnm - done
+  - raw - done
+- check each file reader for possible integer overflows
+  - bmp - done
+  - tiff
+  - tga
+  - rgb
+  - png
+  - gif
+  - pnm
+- check bmp code uses image data offset correctly - done
+- check quant code for integer overflows - done
+- check for old URLs (umich and imager.perl.org/~addi/...) - done
+
+0.45: (march 2005?)
+- resolve fills test failure under 5.8.6/darwin
+  http://www.nntp.perl.org/group/perl.cpan.testers/202802
+  add tests to check if the same problem occurs with other ?: operators
+- stop tga_header_verify() from spewing junk to stdout (done)
+- fix i_setcolors_p bug (done)
+- audit pnm.c (done)
+- audit tga.c (done)
+- audit rgb.c and add tests
+- add META.yml (bypass EU::MM's limited mechanism) (done)
+- implement i_incomplete for bmp files
+- check if freetype 2 is faster/slower than freetype 1 with Imager's glyph
+  caching.  If FT1 is faster, add caching as a TODO for FT2.
+- add XS for i_tags_get_string() and test it.  It has an apparent problem
+  in C<< sprintf(value, "%d", entry->data); >> since data is a pointer
+  (done)
+- test and fix problem with fallback value for 
+  Imager::Font::BBox->advance_width. (done)
+- check handling of string() method align parameter. (done, fixed)
+- i_tt_bbox_inst in font.c uses variable i without ever setting it. (fixed)
+- add sample CGI that handles an uploaded image (done)
+- examples for fountain filter in Imager::Filters (done)
+- allow Imager::Fountain to take color descriptions (eg. blue, FF000)
+  instead of color objects for c0 and c1 (done)
+- support newer GIMP gradient files with the Name line (done)
+- provide access to right-side bearing information from the bounding box
+  function (done for all drivers)
+- capture TIFF read warnings (i_warnings tag?) (done)
+- Imager::Matrix2d rotate method only applies offset if both x and y
+  are non-zero, it should do it if either is non-zero (done)
+- add Imager::Cookbook with at least 5 recipes (done)
+- store floating point tags in an appropriate precision (done)
+- allow image creation to fail on malloc() failure for the image data
+  rather than aborting.  The current behaviour could be a denial of
+  service attack.  This has limited utility because of the way memory
+  over commitment works on Linux (done but reverted)
+- eliminate unused variable warning (especially the RETVAL ones in Imager.xs)
+  (done)
+- handle probing for libraries better (use pkg-config or I<library>-config
+  where possible (freetype2 and libpng)) (done)
+- add concept index to Imager.pm pod (done, still working it)
+- replace testimg/penguin-base.ppm with a smaller image (done)
+- add a sample CGI HTML and image generation scripts that work together,
+  with appropriate security management (done)
+

@@ -1,0 +1,9 @@
+Makefile
+blib
+testout
+Imager-*
+Imager.c
+pm_to_blib
+Imager.bs
+t1lib.log
+imconfig.h

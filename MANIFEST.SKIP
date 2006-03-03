@@ -1,0 +1,42 @@
+# svn work files'
+^\.svn\b
+/\.svn\b
+
+# editor trash
+~$
+
+# stuff we don't distribute
+^TODO$
+^STATUS$
+^\.cvsignore$
+/\.cvsignore$
+^announce/
+^bench/
+^design/
+^fileformatdocs/
+^extraimages/
+^fontfiles/.*\.sfd$
+
+# might distribute one day
+^tools/imager$
+
+# trash left by Inline::C
+^_Inline/
+
+# build trash
+Makefile$
+Makefile\.old
+\bpm_to_blib$
+\.o$
+^testout
+^blib/
+^Flines/Flines\.c$
+^Imager\.c$
+^Mandelbrot/Mandelbrot\.c$
+^CountColor/CountColor\.c$
+^DynTest/DynTest\.c$
+^dynfilt/.*\.(so|dll)$
+\.bs$
+^meta\.tmp$
+/meta\.tmp$
+^imconfig\.h$

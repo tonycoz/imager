@@ -1,0 +1,39 @@
+filters.c             # pod (except experimental)
+font.c                # pod
+gif.c                 # pod
+image.c               # pod
+iolayer.c             # pod
+pnm.c                 # pod
+tiff.c                # pod
+
+jpeg.c                # comments
+
+conv.c                # minor comments
+datatypes.c           # minor comments
+draw.c                # minor comments
+gaussian.c            # minor comments
+png.c                 # minor comments
+raw.c                 # minor comments 
+regmach.c             # minor comments
+trans2.c              # minor comments
+dynaload.c            # minor comments
+
+io.c                  # no comments
+feat.c                # no comments
+log.c                 # no comments
+stackmach.c           # no comments
+
+quant.c               # comments, lots of changing code
+
+=====================
+
+Iolayer todo list:
+Format Read/Write
+gif:    O    O
+jpeg:   X    X
+png:    X    X
+raw:    X    X
+tiff:   X    X
+pnm:    X    X
+
+

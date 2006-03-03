@@ -1,0 +1,284 @@
+Changes
+CountColor/CountColor.pm        sample XS access to API
+CountColor/CountColor.xs
+CountColor/Makefile.PL
+CountColor/t/t00countcolor.t
+DynTest/DynTest.pm      simple conversion of the dyntest sample from dynfilt/
+DynTest/DynTest.xs
+DynTest/Makefile.PL
+DynTest/linstretch.c
+DynTest/t/t00dyntest.t
+Flines/Flines.pm
+Flines/Flines.xs
+Flines/Makefile.PL
+Flines/t/t00flines.t
+Imager.pm
+Imager.xs
+MANIFEST
+MANIFEST.SKIP
+META.yml        Module meta-data
+Mandelbrot/Makefile.PL          more complex filter
+Mandelbrot/Mandelbrot.pm
+Mandelbrot/Mandelbrot.xs
+Mandelbrot/mandel.c
+Mandelbrot/t/t00mandel.t
+Makefile.PL
+README
+apidocs.perl    Build lib/Imager/APIRef.pm
+bigtest.perl	Library selection tester
+bmp.c           Reading and writing Windows BMP files
+color.c         Color translation and handling
+conv.c
+convert.c
+doco.perl
+datatypes.c
+draw.c
+draw.h
+dynaload.c
+dynaload.h
+dynfilt/Makefile.PL
+dynfilt/compile.txt
+dynfilt/dt2.c
+dynfilt/dt2.exp
+dynfilt/dyntest.c
+dynfilt/dyntest.exp
+dynfilt/flines.c
+dynfilt/flines.exp
+dynfilt/mandelbrot.c
+dynfilt/mandelbrot.exp
+dynfilt/pluginst.h
+errep.perl
+error.c
+ext.h
+feat.c
+feat.h
+fills.c         Generic fills
+filterlist.perl
+filters.c
+font.c
+fontfiles/ExistenceTest.afm     please edit ExistenceTest.sfd in CVS
+fontfiles/ExistenceTest.pfb     to change these files, edited and
+fontfiles/ExistenceTest.ttf     generated using pfaedit
+fontfiles/ImUgly.ttf
+fontfiles/MMOne.pfb		multiple master test font
+fontfiles/NameTest.ttf          test glyph_names() - see t38ft2font.t
+fontfiles/dcr10.afm
+fontfiles/dcr10.pfb
+fontfiles/dodge.ttf
+freetyp2.c	Implements freetype2 font support
+gaussian.c
+gif.c
+hlines.c	Manage sets of horizontal line segments
+image.c
+imager.h
+imageri.h
+imdatatypes.h
+imerror.h	Error handling functions
+imext.c         Defines the function table
+imext.h         Included by external modules for API access
+imextdef.h
+imexttypes.h    Define API function table type
+imexif.c	Experimental JPEG EXIF decoding
+imexif.h
+img16.c
+imgdouble.c     Implements double/sample images
+imio.h
+imperl.h
+io.c
+iolayer.c
+iolayer.h
+jpeg.c
+lib/Imager/API.pm
+lib/Imager/APIRef.pm    API function reference
+lib/Imager/Color.pm
+lib/Imager/Color/Float.pm
+lib/Imager/Color/Table.pm
+lib/Imager/Cookbook.pod
+lib/Imager/Draw.pod
+lib/Imager/Engines.pod
+lib/Imager/ExtUtils.pm
+lib/Imager/Expr.pm
+lib/Imager/Expr/Assem.pm
+lib/Imager/Files.pod
+lib/Imager/Fill.pm
+lib/Imager/Filters.pod
+lib/Imager/Font.pm
+lib/Imager/Font/BBox.pm
+lib/Imager/Font/FreeType2.pm
+lib/Imager/Font/Image.pm
+lib/Imager/Font/Truetype.pm
+lib/Imager/Font/Type1.pm
+lib/Imager/Font/Win32.pm
+lib/Imager/Font/Wrap.pm
+lib/Imager/Fountain.pm
+lib/Imager/ImageTypes.pod
+lib/Imager/Inline.pod           Using Imager with Inline::C
+lib/Imager/Matrix2d.pm
+lib/Imager/Regops.pm
+lib/Imager/Transform.pm
+lib/Imager/Transformations.pod
+lib/Imager/Tutorial.pod
+lib/Imager/interface.pod
+lib/Imager/regmach.pod
+limits.c
+log.c
+log.h
+map.c
+maskimg.c
+palimg.c
+plug.h
+png.c
+pnm.c
+polygon.c
+ppport.h
+quant.c
+raw.c
+regmach.c
+regmach.h
+regops.perl
+rgb.c           Reading and writing SGI rgb files
+rotate.c
+samples/README
+samples/align-string.pl Demonstrate align_string method.
+samples/anaglyph.pl
+samples/border.pl       Demonstrate adding a border
+samples/inline_replace_color.pl  replace colors using Inline::C
+samples/interleave.pl
+samples/replace_color.pl replace colors using transform2()
+samples/samp-form.cgi
+samples/samp-image.cgi
+samples/samp-scale.cgi  Demonstrate image upload via a HTML form
+samples/samp-scale.html Form for samp-scale.cgi
+samples/samp-tags.cgi   Demonstrate image upload via a HTML form
+samples/samp-tags.html  Form for samp-tags.cgi
+samples/slant_text.pl   Using $font->transform() to slant text
+samples/tk-photo.pl
+spot.perl	For making an ordered dither matrix from a spot function
+stackmach.c
+stackmach.h
+t/Test/Builder.pm
+t/Test/More.pm
+t/t00basic.t
+t/t01introvert.t
+t/t020masked.t
+t/t021sixteen.t
+t/t022double.t          Test double/sample images
+t/t023palette.t		Test paletted images
+t/t05error.t
+t/t07iolayer.t
+t/t1000files.t          Format independent file tests
+t/t101jpeg.t
+t/t102png.t
+t/t103raw.t
+t/t104ppm.t
+t/t105gif.t
+t/t106tiff.t
+t/t107bmp.t
+t/t108tga.t
+t/t15color.t
+t/t16matrix.t           Tests Imager::Matrix2d
+t/t20fill.t             Tests fills
+t/t21draw.t             Basic drawing tests
+t/t30t1font.t
+t/t35ttfont.t
+t/t36oofont.t
+t/t37w32font.t		Tests Win32 GDI font support
+t/t38ft2font.t		Tests freetype2 support
+t/t40scale.t
+t/t50basicoo.t
+t/t55trans.t
+t/t56postfix.t
+t/t57infix.t
+t/t58trans2.t
+t/t59assem.t
+t/t60dyntest.t
+t/t61filters.t
+t/t64copyflip.t         Test copy, flip, rotate, matrix_transform
+t/t65crop.t
+t/t66paste.t
+t/t67convert.t
+t/t68map.t
+t/t69rubthru.t
+t/t70newgif.t
+t/t75polyaa.t
+t/t80texttools.t        Test text wrapping
+t/t81hlines.t		Test hlines.c
+t/t82inline.t           Test Inline::C integration
+t/t90cc.t
+t/t91pod.t		Test POD with Test::Pod
+t/t92samples.t
+t/testtools.pl
+tags.c
+testimg/bad1oflow.bmp   1-bit/pixel, overflow integer on 32-bit machines
+testimg/bad1wid0.bmp    1-bit/pixel, zero width
+testimg/bad24comp.bmp   24-bit/pixel, bad compression
+testimg/bad24oflow.bmp  24-bit/pixel, overflow integer on 32-bit machines
+testimg/bad24wid0.bmp   24-bit/pixel, 0 width
+testimg/bad4oflow.bmp   4-bit/pixel, overflow integer on 32-bit machines
+testimg/bad4wid0.bmp    4-bit/pixel, 0 width
+testimg/bad4widbig.bmp  4-bit/pixel, large width
+testimg/bad8comp.bmp    8-bit/pixel, bad compression
+testimg/bad8oflow.bmp   8-bit/pixel, overflow integer on 32-bit machines
+testimg/bad8useda.bmp   8-bit/pixel, bad colors used value
+testimg/bad8wid0.bmp    8-bit/pixel, width 0
+testimg/badbits.bmp     bad bits value in header
+testimg/badcomp1.bmp    bad compression for 1-bit/pixel
+testimg/badcomp4.bmp    bad compression for 4-bit/pixel
+testimg/badplanes.bmp   bad planes value in header
+testimg/badused1.bmp    1-bit/pixel, out of range colors used value
+testimg/badused4a.bmp   4-bit/pixel, badly out of range used value (SEGV test)
+testimg/badused4b.bmp   4-bit/pixel, just out of range used value (SEGV test)
+testimg/bandw.gif
+testimg/base.jpg	Base JPEG test image
+testimg/comp4.bmp       Compressed 4-bit/pixel BMP
+testimg/comp4.tif       4-bit/pixel paletted TIFF
+testimg/comp4bad.tif    corrupted 4-bit/pixel paletted TIFF
+testimg/comp8.bmp       Compressed 8-bit/pixel BMP
+testimg/comp8.tif       8-bit/pixel paletted TIFF
+testimg/exiftest.jpg	Test image for EXIF parsing
+testimg/expected.gif
+testimg/gimpgrad        A GIMP gradient file
+testimg/junk.ppm
+testimg/loccmap.gif
+testimg/longid.tga      Test TGA with a long id string
+testimg/maxval.ppm	For ppm file maxval handling
+testimg/maxval_0.ppm
+testimg/maxval_256.ppm
+testimg/maxval_4095_asc.ppm
+testimg/maxval_65536.ppm
+testimg/maxval_asc.ppm
+testimg/newgimpgrad.ggr Test GIMP Gradient file (newer type)
+testimg/nocmap.gif
+testimg/palette.png
+testimg/palette_out.png
+testimg/penguin-base.ppm
+testimg/scale.gif
+testimg/scale.ppm
+testimg/scalei.gif
+testimg/screen2.gif
+testimg/screen3.gif
+testimg/short1.bmp      1-bit/pixel, data missing from EOF
+testimg/short24.bmp     24-bit/pixel, data missing from EOF
+testimg/short4.bmp      truncated 4bit/pixel uncompressed BMP
+testimg/short4rle.bmp   truncated 4bit/pixel compressed BMP
+testimg/short8.bmp      8-bit/pixel, data missing from EOF
+testimg/short8rle.bmp   8-bit/pixel compressed, data missing from EOF
+testimg/simple.pbm
+testimg/test_gimp_pal   A simple GIMP palette file
+testimg/tiffwarn.tif	Generates a warning while being read
+testimg/trimgdesc.gif
+testimg/trmiddesc.gif
+testimg/winrgb2.bmp  1-bit bmp base
+testimg/winrgb24.bmp 24-bit bmp base
+testimg/winrgb24off.bmp 24-bit bmp with image data offset from header
+testimg/winrgb2off.bmp  1-bit bmp with image data offset from header
+testimg/winrgb4.bmp  4-bit bmp base
+testimg/winrgb4off.bmp  4-bit bmp with image data offset from header
+testimg/winrgb8.bmp  8-bit bmp base
+testimg/winrgb8off.bmp  8-bit bmp with image data offset from header
+tga.c           Reading and writing Targa files
+tiff.c
+trans2.c
+transform.perl	Shell interface to Imager::Transform
+typemap
+win32.c		Implements font support through Win32 GDI

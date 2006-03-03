@@ -1,0 +1,88 @@
+Imager 0.44 has been released and will soon be available on all CPAN
+mirrors.
+
+This is primarily a bug-fix release.  The following issues have been
+fixed:
+
+- reading or writing any TIFF image would produce a run-time error
+  with recent versions of tifflib.
+
+- Imager would fail to link or load (platform dependently) if built
+  with the IM_NOLOG option
+
+- the Win32 bounding_box() function would return the wrong number of
+  values
+
+- the pnm (pbm, pgm, ppm) reader would read the maximum sample value
+  entry (maxval) from the pnm file and then ignore that value.  This
+  meant that images with a maximum sample below 255 would be stored
+  darked than they were meant to be.  Note that Imager cannot
+  currently read binary pnm images with a maxval > 255.
+
+- attempting to convert a 3 channel image to a paletted image could
+  result in a segmentation fault if an empty target palette was
+  supplied.  This could also occur in the implicit RGB => paletted
+  conversion done when writing a GIF image.
+
+- the setcolors() method wasn't correctly returning false on failure
+  (due to an XS error)
+
+- supplying a sufficiently small scaling value to the scale() method
+  could result in a zero width or height image.
+
+- the scale() method now produces a warning when called in void
+  context
+
+- Makefile.PL now handles spaces in the INCLUDE and LIB environment
+  variables on Win32
+
+- write() didn't return false on failure to write a GIF image
+
+- if you called crop() with parameters other than the basic left,
+  right, top, bottom to specify the source rectangle, the result was
+  usually suprising.  The crop() documentation has been rewritten.
+
+- the glyph_names() method usually crashed if the string parameter
+  wasn't supplied.
+
+- the glyph_names() method would ignore all but the bottom 8 bits of
+  unicode characters.
+
+- there was a memory leak when using callbacks for reading/writing
+  images
+
+- in some cases the incorrect generated palette was returned when
+  writing a GIF image.
+
+- the BMP reader had many bugs.
+
+- reading a PNG file would set the i_yres tag to the horizontal
+  resolution of the image
+
+- all image readers now handle image sizes that would result in an
+  integer overflow by returning failure rather than by a segmentation
+  fault.
+
+- renamed io.h to imio.h to avoid a conflict on cygwin.
+
+New features:
+
+- you can now supply a background color for the rotate() and
+  matrix_transform() functions.
+
+- Imager::Color methods now have an equals() method.
+
+- Imager now includes a builtin colors table, usable by the builtin
+  parameter or as a final fallback for the name parameter.
+
+- the i_format tag is now set when reading an image to the format of
+  the image
+
+- the BMP file reader now sets more tags in the resulting image
+
+Documentation changes:
+
+- document that the most recent libungif is fixed and the most recent
+  giflib is still broken. (README and other places)
+
+- added a method index to Imager.pm

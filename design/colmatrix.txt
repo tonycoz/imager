@@ -1,0 +1,27 @@
+Times are +1000 2001 (day/month)
+7/5 23:45:19 <Addi:#Imager> If people want something smarter they can just convert to gray themselves.
+7/5 23:45:39 (irc.infobot.org) * TonyC:#Imager doesn't even know how to convert to greys in Imager
+7/5 23:46:01 <Addi:#Imager> That's what I want to add...
+7/5 23:46:03 <Addi:#Imager> But like this:
+7/5 23:46:56 <Addi:#Imager> $gray = $img->cspace( matrix=> [[ 0.3 0.3 0.4 ]] )
+7/5 23:47:09 <Addi:#Imager> Or actually
+7/5 23:47:12 (irc.infobot.org) <^_TonyC^_:#Imager> $greyimg = $img->convert([10,20,5]); # one channel output from 3
+7/5 23:47:15 <Addi:#Imager> $gray = $img->cspace( matrix=> [[ 0.3 0.3 0.4 0 ]] )
+7/5 23:47:56 <Addi:#Imager> If you have an extra parameter then you can do adds too.
+7/5 23:48:09 (irc.infobot.org) <^_TonyC^_:#Imager> $img = $img->convert([10,0,0],[9,0.5,0.5],[10,0,0]); # make it a bit less greener
+7/5 23:48:54 <Addi:#Imager> Often you have an imaginary color that is fixed to be 1
+7/5 23:49:09 (irc.infobot.org) <^_TonyC^_:#Imager> that would simplify it
+7/5 23:49:10 <Addi:#Imager> So each pixel has the form [r g b 1]
+7/5 23:49:15 <Addi:#Imager> or [r g b a 1]
+7/5 23:49:23 <Addi:#Imager> Always one more than the image actually has
+7/5 23:49:34 <Addi:#Imager> That way you can do like for grayscale
+7/5 23:49:51 <Addi:#Imager> $img -> convert( [ 0.5 0.5 ] )
+7/5 23:50:21 <Addi:#Imager> oops
+7/5 23:50:28 <Addi:#Imager> $img -> convert( [ 1 -1 ] )
+7/5 23:50:32 <Addi:#Imager> That would invert.
+7/5 23:50:43 (irc.infobot.org) <^_TonyC^_:#Imager> -1, 1 ?
+7/5 23:50:56 <Addi:#Imager> erm - yes.
+
+TC: my original idea of using simple proportional values doesn't work
+as well as Addi's absolute multipliers.
+

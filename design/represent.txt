@@ -1,0 +1,290 @@
+=head1 NAME
+
+  represent.txt - discuss image representation within Imager
+
+=head1 SYNOPSIS
+
+  Virtual Images
+  Image Subsetting
+  Varying Bits/Sample
+  Paletted Images
+  Performance
+  Robustness
+  XS Changes
+
+=head1 DESCRIPTION
+
+I'm going to try to explain what we can get from having a flexible
+representation of images within Imager.
+
+The main idea is to have all, or almost all of Imager access the
+contents of an image through function pointers embedded in the i_img
+structure.  This means that the underlying image data can be formatted
+to suit special purposes, including paletted images, images kept of
+disk (think of 64k x 64k RGB images), and virtual images (where
+there's no actual image data.)
+
+=head1 IMAGE TYPES
+
+=head2 Paletted Images
+
+This is the form we've discussed the most.  The main advantage here is
+when the user is performing simple manipulations on the image data.
+One example that came up recently was when mjd was trying to combine
+several images into a single animated GIF file.  If we were
+representing the image internally as paletted, and the GIF reader and
+writer knew how to do that we could have loaded the images into
+paletted images and then written them with no quantization required.
+
+Now we could get complicated and have writes with colours that don't
+exist in the image cause an extra entry be added to the palette, but
+this leads to complications as to when to convert the image to RGB.
+Some paletted formats support large palettes, so if we allowed a few
+hundred new colours to be drawn into the image and the tried to save
+to a format with only small palettes, not only has the user paid the
+performance cost in writing to the image (since paletted writes
+include a palette lookup), but also the hit in having to re-quantize
+the image anyway.
+
+So my idea was to have the paletted write functions be something like:
+
+  if (found entry in palette) {
+    save to the pixel
+  } else {
+    convert image to rgb
+    call rgb save function
+  }
+
+An initial implementation might only support 256 colour palettes, we
+might expand that later to support larger palettes.
+
+We could expose the quant.c functions to allow the user to create
+palettes (and possibly tune them), and to convert from RGB images to
+paletted images.
+
+For improved memory usage for large images we could also implement 4
+and 1 bit/pixel images.  If we want good support for faxing this could
+be useful.
+
+=head2 Virtual Images
+
+Another possible type of image is a B<virtual image> where the i_img
+that the user has, has no image data directly associated with it.  The
+results of retreiving pixels would simply be the result of some
+function.  Such virtualness could even be in terms of "virtual
+memory", so a 32-bit processor machine could work with 65536x65536x24
+bit images which doesn't even fit into the address-space of the 32-bit
+machine.
+
+One possible implementation of function based images would be through
+the use of the transform2() engine.  This way the user could specify
+the function to be used to generate the virtual image.  This is most
+useful for very large images, otherwise simply generating a new image
+using the transform2() function would be faster.
+
+=head3 Image Subsetting
+
+This would be mainly for when writing to an image, the user could
+supply another image where which pixels were non-black allowed writes
+to the corresponding pixels in another image.  Since access is
+controlled via another image, we aren't limited to rectangular
+subsets.
+
+One simple example might be to create a mask image that has some text
+drawn in a large font.  When a gradient or other effect is used it
+will fill the letters in the target image.  A more subtle effect could
+be lightening, darkening or blurring through the image.
+
+One implementation consideration is that if calculating the pixel
+value is expensive the caller may want a method to check if given
+pixels are writable, to avoid that extra expense.
+
+=head2 Varying Bits/Sample
+
+The typical Imager image could stay at 8 bits/sample, but some
+applications may need to work with images with a higher or lower
+colour resolution.  It may also be desirable to work with images where
+the sample values are floating point, eg. some FITS images.
+
+The problem with supporting floating point or a larger bit count is
+that we need an interface to get and put pixels/rows at the largest
+resolution for the high colour resolution.  Since working at this
+colour resolution for lower colour resolution images would be
+inefficient, we also want another interface at some lower bit-count.
+To reduce maintenance costs we want to limit the number of interfaces.
+
+=head1 INTERFACE CONSIDERATIONS
+
+Common interfaces are those interfaces which available for every image
+type.  These should include some common bits/sample, and some
+all-encompassing bits/sample, eg. 8 bits/sample for the common, and
+floating point for the all-encompassing.
+
+The idea is to make it possible for a given filtering function to have
+only one implementation at the all-encompassing bits/sample, while
+some other function has implementations at multiple bits/sample for
+improved speed.
+
+To reduce maintenance we want to reduce the number of common
+interfaces, both so that we don't have to write too much code for each
+image representation and so that we don't have someone trying to write
+five versions of the same code in an attempt to push efficiency to the
+limits.
+
+Since we want some function pointers to only be available for some
+images (like 'getpixindex' against paletted images), callers need to
+be able to detect the type of image that they are working with.
+
+=head2 Performance
+
+Why is performance last?  Well, it needs to be considered in terms of
+the other topics above.
+
+Perhaps some method to check the writability at given pixels could be
+used to avoid expensive pixel calculations.
+
+We need to strike a balance between speed and maintainability.
+
+While most x86 processors have floating point performance almost as
+fast or faster than integer performance, some architectures don't,
+hence we need to support use of integer algorithms where appropriate.
+
+=head2 Robustness
+
+By preferring access via the functions we can reduce the possibility
+of incorrect access to the image data.
+
+If an image interface function pointer isn't implemented, it should be
+set to NULL rather than being left uninitialized.  This is so that use 
+of the ununsed pointer results in an immediate crash rather than
+possibly calling the wrong function and crashing at some later point.
+
+In a debug build of Imager the image interface functions should check
+that the correct type of image pointer is being passed in.  This means
+that a caller cannot accidentally pass the wrong type of image pointer
+to an image access function.
+
+=head1 PROPOSED INTERFACE
+
+The basic interface would include:
+
+  typedef struct {
+    struct { unsigned char r,g,b,a; } rgb;
+    unsigned char channels[MAX_CHANNELS];
+    /* and others as we currently have */
+  } i_color;
+
+  typedef struct {
+    struct { double char r, g, b, a; } rgb;
+    double channels[MAX_CHANNELS];
+    /* and others as we currently have */
+  } i_fcolor;
+
+  typedef struct i_img_tag i_img;
+  typedef int (*i_f_ppix_t)(i_img *im, int x, int y, i_color *pix);
+  typedef int (*i_f_ppixf_t)(i_img *im, int x, int y, i_fcolor *pix);
+  typedef int (*i_f_plin_t)(i_img *im, int x, int r, int y, i_color *vals);
+  typedef int (*i_f_plinf_t)(i_img *im, int x, int r, int y, i_fcolor *vals);
+  typedef int (*i_f_gpix_t)(i_img *im, int x, int y, i_color *pix);
+  typedef int (*i_f_gpixf_t)(i_img *im, int x, int y, i_fcolor *pix);
+  typedef int (*i_f_glin_t)(i_img *im, int x, int r, int y, i_color *vals);
+  typedef int (*i_f_glinf_t)(i_img *im, int x, int r, int y, i_fcolor *vals);
+
+  typedef enum {
+    i_literal_type, /* keeps RGB values per pixel */
+    i_palette_type, /* keeps a palette index per pixel */
+  } i_img_types;
+
+  /* interface functions */
+  typedef int (*i_f_gpal_t)(i_img *im, int x, int r, int y, i_palidx *vals);
+  typedef int (*i_f_ppal_t)(i_img *im, int x, int r, int y, i_palidx *vals);
+  typedef int (*i_f_addcolor_t)(i_img *im, i_color *);
+  typedef int (*i_f_getcolor_t)(i_img *im, int i, i_color *);
+  typedef int (*i_f_colorcount_t)(i_img *im);
+  typedef int (*i_f_findcolor_t)(i_img *im);
+
+  typedef enum { 
+    /* bits per sample, not per pixel */
+    /* a paletted image might have one bit perl sample */
+    i_8_bits = 8,
+    i_16_bits = 16,
+    i_double_bits = 64
+  } i_img_bits;
+
+  typedef struct {
+    char *msg;
+    int code;
+  } i_errmsg;
+
+  typedef struct {
+    char *name; /* name of a given tag, might be NULL */
+    int code; /* number of a given tag, -1 if it has no meaning */
+    char *data; /* value of a given tag if it's not an int, may be NULL */
+    int idata; /* value of a given tag if data is NULL */
+  } i_img_tag;
+
+  typedef struct {
+    int count; /* how many tags have been set */
+    int alloc; /* how many tags have been allocated for */
+    i_img_tag *tags;
+  } i_img_tags;
+
+  typedef struct {
+    int channels;
+    int xsize, ysize, bytes;
+    int ch_mask;
+    i_img_bits bits;
+    i_img_type type;
+    int virtual; /* image might not keep any data, must use functions */
+    void *idata; /* renamed to force inspection of existing code */
+		 /* can be NULL if virtual is non-zero */
+    i_img_tags tags;
+
+    i_errmsg error_stack[ERRSTK]; /* Store errors with image */
+
+    /* interface functions */
+    i_f_ppix_t i_f_ppix;
+    i_f_ppixf_t i_f_ppixf;
+    i_f_plin_t i_f_plin;
+    i_f_plinf_t i_f_plinf;
+    i_f_gpix_t i_f_gpix;
+    i_f_gpixf_t i_f_gpixf;
+    i_f_glin_t i_f_glin;
+    i_f_glinf_t i_f_glinf;
+
+    /* only valid for type == i_palette_type */
+    i_f_gpal_t i_f_gpal;
+    i_f_ppal_t i_f_ppal;
+    i_f_addcolor_t i_f_addcolor;
+    i_f_getcolor_t i_f_getcolor;
+    i_f_colorcount_t i_f_colorcount;
+    i_f_findcolor_t i_f_findcolor;
+  } i_img;
+
+I'm using 8-bits for the base interface to remain compatible with
+existing code, and because it's a common sample size.
+
+I'm using double for the all-encompassing size since it's the biggest
+convenient type that supports floating point based-pixels.
+
+We might want to add functions to set/retrieve the whole palette at
+once, though setting the whole palette at once would make existing
+image data fairly useless.
+
+=head1 XS CHANGES
+
+I had been considering moving the i_img object from being an
+Imager::ImgRef object to being an Imager object.  But I don't see much
+point to it, so I'll leave it the way it is now.
+
+=head1 AUTHOR
+
+Tony Cook <tony@develop-help.com>
+
+=head1 HISTORY
+
+16May2001 - initially completed version, could use some polishing
+16May2001 - Added i_error stack to the image structure.
+24May2001 - Added XS Changes section (TC)
+
+=cut

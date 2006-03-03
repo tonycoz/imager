@@ -1,0 +1,336 @@
+================================================================
+Copyright (c) 1999-2004 Arnar M. Hrafnkelsson. All rights reserved.
+Copyright (c) 2004-2006 Anthony Cook.
+This program is free software; you can redistribute it and/or
+modify it under the same terms as Perl itself.
+================================================================
+
+>> THIS SOFTWARE COMES WITH ABSOLUTELY NO WARRANTY WHATSOEVER <<
+
+If you like or hate Imager, please let me know by sending mail 
+to imager@imager.perl.org - I love feedback.
+
+================================================================
+
+
+========================
+1. Patent infringements?
+========================
+
+Imager as such contains no patented algorithms.  The external
+libraries (which are not written by me) may or may not contain
+patented algorithms.  YOU ARE SOLELY RESPONSIBLE FOR OBTAINING
+LICENSE(S) TO USE SUCH LIBRARIES SHOULD YOU NEED ANY.
+
+
+========================
+2. Compiling and testing
+========================
+
+Some care has been taken to make the installation as smooth as
+possible.  This is rather hard due to the difference between operating
+systems and site setups.  To get started just type
+
+$ perl Makefile.PL
+
+It should blurb out a list of which libraries were found and which
+not.  If you add a library to the machine after installing Imager it
+does not automatically become available in Imager.  It only uses the
+libraries that are found.  If the list of found libraries is not what
+you expected, then the Makefile.PL is either not searching in the
+right directories or your box does not have the libraries you think it
+does.  For a list of where to get the libraries have a look at
+3. External dependencies.  To widen the search path for libraries and
+include files set the IM_INCPATH and IM_LIBPATH variables.  The
+environment variables that matter when Makefile.PL is run are
+
+IM_INCPATH      colon separated list of paths to extra include files
+IM_LIBPATH      colon separated list of paths to extra library files
+
+IM_VERBOSE      turns on verbose mode for the library scanning and such
+IM_MANUAL       to manually select which libraries are used and which not
+IM_NOLOG        if true logging will not be compiled into the module
+IM_DEBUG_MALLOC if true malloc debugging will be compiled into the module
+                do not use IM_DEBUG_MALLOC in production - this slows
+                everything down
+
+IM_CFLAGS       Extra flags to pass to the compiler
+IM_LFLAGS       Extra flags to pass to the linker
+IM_DFLAGS       Extra flags to pass to the preprocessor
+
+
+
+When finding the libraries has been sorted out it's time for
+
+$ make 
+
+and if that works then do
+
+$ make test
+
+If either fails do take a peek at the file errep.perl.  It's creates a
+file report.txt.  This is some information which will help me discover
+where the problem is so I can try to fix it in future releases.  If
+you find running it ok (just remember - no warranty!) please send the
+report.txt via email to imager@imager.perl.org.
+
+Troubleshooting tips:
+
+A common problem is that libgif/libungif are sometimes linked to the X
+libraries and then running the tests fails.  In that case something
+like:
+
+$ IM_LFLAGS="-L/usr/X11R6/lib -lX11" perl Makefile.PL
+
+Which simply sets the environment variables for the extra libraries 
+to include the X libraries (which we do not use at all, but must
+included since libgif has been linked with it).
+
+Otherwise you could just build giflib without any X11 dependencies:
+
+  # must be a clean tree
+  cd giflib-4.1.3
+  ./configure --without-x ...
+
+Also note that libgif has a few bugs: You can run something like
+
+$ perl -Iblib/lib -Iblib/arch t/t105gif.t
+
+This way you can see what comments the test script prints out.
+t/t105gif.t checks for an bug in libgif and prints out a patch
+if that bug is present, note that this bug only affects the more
+"advanced" features of libgif.
+
+If for some reason you have libungif-devel package installed but
+not libungif on RedHat then you will probably get lots of errors
+like undefined symbol: FreeSavedImages when running make test.
+Install libungif package to fix it.
+
+Stock libungif 4.1.2 or later seems to fix all of the bugs, if you
+have a problem that version of linungif (or later), let us know and
+we'll look into it.
+
+Imager needs to have a libtiff version of at least 3.5.5.  In the
+future we might consider supporting older libtiff versions.  For
+now you can either configure Imager manually (by
+setting the IM_MANUAL environment variable to 1, in sh:
+
+$ IM_MANUAL=1 perl Makefile.PL
+
+and simply say no to tiff support when asked if you want it, the same thing
+can be used to circumvent problems in gifs to get Imager going.
+
+If it worked just continue with the installation as normally 
+(with make install).
+
+Freetype 1.x vs Freetype 2.x
+----------------------------
+
+These two libraries have some conflicting include file names, but as
+long as you don't put the Freetype 2.x freetype.h directory in the
+include path it should all work.
+
+Put the directory containing ft2build.h in the include path, but not
+the directory containing the freetype 2.x freetype.h.
+
+If you see compilation errors from font.c you've probably made the
+mistake of putting the Freetype 2.x freetype.h directory into the
+include path.
+
+To see which directories should be in the include path, try:
+
+  freetype-config --cflags
+
+
+Macintosh dfont and suitcase font support
+-----------------------------------------
+
+Through Freetype 2.1, Imager can use Macintosh DFON (.dfont) fonts and
+suitcase font files.
+
+If you want to be able to use more than just the first face in the
+font file though, you will need to configure freetype2 with the
+--with-old-mac-fonts option:
+
+  ./configure --with-old-mac-fonts
+
+You can use the index option to get to the other font faces in the
+file:
+
+  # get the second face from $file
+  my $font = Imager::Font->new(file=>$file, index=>1)
+    or die Imager->errstr;
+
+If you're using a suitcase font, you will also need to force the use
+of freetype 2 with the type argument:
+
+  my $font = Imager::Font->new(file=>$suitcase, type=>'ft2', index=>$index)
+    or die Imager->errstr;
+
+
+========================
+3. External dependencies
+========================
+
+Some hints about getting the Imager module to find the libraries it
+needs for specific features.  The libraries it uses are:
+
+ jpeg: http://www.ijg.org/files/
+       ftp://ftp.uu.net/graphics/jpeg/jpegsrc.v6b.tar.gz
+
+ftp.uu.net is still linked from many places, including the Independent
+JPEG Groups's home page, but it is non-functional.
+
+  png: http://www.libpng.org/pub/png/libpng.html
+
+  you also need zlib to use png:  http://www.gzip.org/zlib/
+We have encountered problems with libpng 1.0.1, which were fixed in 1.0.5
+Note: you should probably be using zlib 1.1.4, since 1.1.3 has a 
+potential security problem.
+
+  gif: http://sourceforge.net/projects/libungif
+
+giflib/libungif has come a long way since the buggy versions around
+when Imager's gif support code was written.  Preferably you should get
+at least version 4.1.3.  If you have a recent Linux distribution you
+should be safe with whatever giflib it provides, but if you're
+building from source, please try to use the latest version.
+
+libgif 4.1.4 has no problems known to me at this point.
+
+At the time of writing you will need to manually select to install the
+4.1.2-1 of cygwin's libungif package.
+
+ tiff: http://www.libtiff.org/
+
+   t1: http://www.ibiblio.org/pub/Linux/libs/graphics/
+
+freetype2 or
+   tt: http://www.freetype.org/
+
+Precompiled versions of some of the libraries might be found at:
+
+AIX:
+   http://www.bullfreeware.com/
+
+
+
+========================
+4. Logging and debugging
+========================
+
+Logging is compiled in by default - if you should want to get of it
+from the binaries you can do so by setting the env IMAGER_NOLOG 
+to something. If you want to enable malloc debugging to check for leaks
+then set IMAGER_DEBUG_MALLOC to something.  Needless to say it is
+pretty pointless to have malloc debug enabled with no logging since you 
+can never see the malloc information that way.
+
+
+=================
+5. Win32 Support
+=================
+
+Imager can be installed on Win32 systems.  This was ported and tested
+with Microsoft Visual C++ 6.0 with build 623 of ActivePerl.  You can
+use all of the features of Imager.  You can also use Win32 GDI fonts
+directly by supplying the 'face' parameter to Imager::Font->new(...).
+
+I've tested with both MSVC++ 6.0 and cygwin (perl 5.6.1).
+
+If you see an error under cygwin during testing along the lines of:
+
+  C:\cygwin\bin\perl.exe: *** unable to remap C:\cygwin\...some dll to the 
+    same address as parent (0x...) != 0x....
+
+you will need to install the cygwin rebase package and run:
+
+  $ rebaseall -v
+
+Under cygwin you will need at least libungif 4.1.2 installed to
+prevent lockups in the gif test scripts.  At the time of writing you
+need to select libungif-4.1.2-1 manually in the setup.exe installation
+tool.
+
+If you get errors from your make tool, make sure you're using the same
+make that was used to build your perl - generally GNU make for cygwin,
+nmake for Visual C/C++ and dmake for MinGW.
+
+============
+6. Mac OS X
+============
+
+Building Imager under OS X is generally straightforward.  There are
+some exceptions though:
+
+a) you may find to need to ranlib library files in place after you've 
+   installed them, for example:
+
+     ranlib /usr/local/lib/libgif.a
+
+b) the version of GCC enabled by default on OS X 10.4 generates
+   incorrect code for some functions.  To work around this run:
+
+     gcc_select 3
+
+   before building Imager and:
+
+     gcc_select 4
+
+   after building Imager.
+
+   This problem exhibits itself as test failures in t/t20fill.t
+
+c) if you want to build GCC 4.0 from scratch and use that you will
+   need to adjust the command-line supplied during the link stage, so
+   that there is some other option before the -bundle option.
+
+   For example:
+
+     perl Makefile.PL LDDLFLAGS="`perl -MConfig -e 'print "-g $Config{lddlflags}"'`"
+   
+=======================
+7. General information
+=======================
+
+The Imager module homepage is currently at:
+
+ http://imager.perl.org/
+
+The current docs are rather bad as I've been busy adding features
+but hopefully they will be updated soon.  Until then you'll just
+have to use the source. The test scripts might also be a good idea.
+By activating the the #init_log lines in the test script you can get
+rather verbose debugging output from the C code.
+
+You can report bugs by pointing your browser at:
+
+  https://rt.cpan.org/NoAuth/ReportBug.html?Queue=Imager
+
+========================
+8. Thanks
+========================
+
+Thanks go to:
+  Tony Cook           ( TonyC )
+  Claes Jacobson      ( Claes )
+  Philip Gwyn         ( Leolo )
+  Michael Slade       ( Micksa )
+                      ( Cogent )
+  Brad Murray         ( HalfJack )
+  Nicholas Dronen     ( Veblen )
+  Michael G Schwern   ( Schwern )
+  Rocco Caputo        ( Dngor )
+  Graham barr         ( Gbarr )
+  Mark-Jason Dominus  ( Mjd )
+  Jerome
+  Jason Alexander     ( Jalex )
+  Randal R. Schwartz  ( Merlyn )
+  Tkil                ( )
+  Artur Bergman       ( Sky )
+  Luc St-Louis        ( Lucs )
+  PerlJam             ( )
+  Roderick Schertler  ( Roderick )
+  Nathan Torkington   ( gnat )
+
+(and just to play it safe) all those I forgot to mention.
