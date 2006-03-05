@@ -1385,6 +1385,8 @@ Revision history for Perl extension Imager.
   the supplied format string.
 - in some cases memory wasn't being freed during error handling when
   reading jpeg images
+- free the TIFF object correctly when reading a TIFF image and the 
+  page number is out of range.
 
 =================================================================
 

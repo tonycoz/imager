@@ -443,6 +443,7 @@ i_readtiff_wiol(io_glue *ig, int length, int page) {
       i_push_errorf(0, "could not switch to page %d", page);
       TIFFSetErrorHandler(old_handler);
       TIFFSetWarningHandler(old_warn_handler);
+      TIFFClose(tif);
       return NULL;
     }
   }
