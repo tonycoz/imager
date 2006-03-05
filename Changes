@@ -1378,6 +1378,9 @@ Revision history for Perl extension Imager.
   or through a NULL pointer if the EXIF user_comment field was less
   than 8 bytes long.
   https://rt.cpan.org/Ticket/Display.html?id=17981
+- tifflib 3.8.0 with MDI (Microsoft(tm) TIFF) support produces a 
+  different error when it reads a file with a bad magic number.
+  Update the test to handle the possible messages.
 
 =================================================================
 

@@ -401,12 +401,12 @@ SKIP:
     # we get different magic number values depending on the platform
     # byte ordering
     cmp_ok($im->errstr, '=~',
-	   "Error opening file: Not a TIFF file, bad magic number (8483 \\(0x2123\\)|8993 \\(0x2321\\))", 
+	   "Error opening file: Not a TIFF (?:or MDI )file, bad magic number (8483 \\(0x2123\\)|8993 \\(0x2321\\))", 
 	   "check error message");
     my @ims = Imager->read_multi(file =>'t/t106tiff.t', type=>'tiff');
     ok(!@ims, "fail to read_multi script as image");
     cmp_ok($im->errstr, '=~',
-	   "Error opening file: Not a TIFF file, bad magic number (8483 \\(0x2123\\)|8993 \\(0x2321\\))", 
+	   "Error opening file: Not a TIFF (?:or MDI )file, bad magic number (8483 \\(0x2123\\)|8993 \\(0x2321\\))", 
        "check error message");
   }
 }
