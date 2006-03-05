@@ -3689,6 +3689,7 @@ i_gsampf(im, l, r, y, ...)
             chans[i] = SvIV(ST(i+4));
           data = mymalloc(sizeof(i_fsample_t) * (r-l) * chan_count);
           count = i_gsampf(im, l, r, y, data, chans, chan_count);
+          myfree(chans);
           if (GIMME_V == G_ARRAY) {
             EXTEND(SP, count);
             for (i = 0; i < count; ++i)
@@ -3698,6 +3699,7 @@ i_gsampf(im, l, r, y, ...)
             EXTEND(SP, 1);
             PUSHs(sv_2mortal(newSVpv((void *)data, count * sizeof(i_fsample_t))));
           }
+          myfree(data);
         }
         else {
           if (GIMME_V != G_ARRAY) {

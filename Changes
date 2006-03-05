@@ -1382,11 +1382,13 @@ Revision history for Perl extension Imager.
   different error when it reads a file with a bad magic number.
   Update the test to handle the possible messages.
 - some jpeg.c logging calls didn't include parameters enough to match
-  the supplied format string.
+  the supplied format string. (detected by valgrind)
 - in some cases memory wasn't being freed during error handling when
-  reading jpeg images
+  reading jpeg images (detected by valgrind)
 - free the TIFF object correctly when reading a TIFF image and the 
-  page number is out of range.
+  page number is out of range. (detected by valgrind)
+- i_gsampf() (used to implement getsamples() for floating point samples)
+  was leaking memory. (detected by valgrind)
 
 =================================================================
 
