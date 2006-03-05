@@ -1381,6 +1381,10 @@ Revision history for Perl extension Imager.
 - tifflib 3.8.0 with MDI (Microsoft(tm) TIFF) support produces a 
   different error when it reads a file with a bad magic number.
   Update the test to handle the possible messages.
+- some jpeg.c logging calls didn't include parameters enough to match
+  the supplied format string.
+- in some cases memory wasn't being freed during error handling when
+  reading jpeg images
 
 =================================================================
 

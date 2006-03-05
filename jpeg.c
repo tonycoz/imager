@@ -101,7 +101,7 @@ wiol_fill_input_buffer(j_decompress_ptr cinfo) {
   wiol_src_ptr src = (wiol_src_ptr) cinfo->src;
   ssize_t nbytes; /* We assume that reads are "small" */
   
-  mm_log((1,"wiol_fill_input_buffer(cinfo 0x%p)\n"));
+  mm_log((1,"wiol_fill_input_buffer(cinfo 0x%p)\n", cinfo));
   
   nbytes = src->data->readcb(src->data, src->buffer, JPGS);
   
@@ -355,7 +355,7 @@ i_readjpeg_wiol(io_glue *data, int length, char** iptc_itext, int *itlength) {
   int row_stride;		/* physical row width in output buffer */
   jpeg_saved_marker_ptr markerp;
 
-  mm_log((1,"i_readjpeg_wiol(data 0x%p, length %d,iptc_itext 0x%p)\n", data, iptc_itext));
+  mm_log((1,"i_readjpeg_wiol(data 0x%p, length %d,iptc_itext 0x%p)\n", data, length, iptc_itext));
 
   i_clear_error();
 
@@ -383,12 +383,13 @@ i_readjpeg_wiol(io_glue *data, int length, char** iptc_itext, int *itlength) {
   if (!i_int_check_image_file_limits(cinfo.output_width, cinfo.output_height,
 				     cinfo.output_components, sizeof(i_sample_t))) {
     mm_log((1, "i_readjpeg: image size exceeds limits\n"));
-
+    wiol_term_source(&cinfo);
     jpeg_destroy_decompress(&cinfo);
     return NULL;
   }
   im=i_img_empty_ch(NULL,cinfo.output_width,cinfo.output_height,cinfo.output_components);
   if (!im) {
+    wiol_term_source(&cinfo);
     jpeg_destroy_decompress(&cinfo);
     return NULL;
   }
