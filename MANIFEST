@@ -209,6 +209,7 @@ t/t91pod.t		Test POD with Test::Pod
 t/t92samples.t
 t/testtools.pl
 tags.c
+testimg/209_yonge.jpg	Regression test: #17981
 testimg/bad1oflow.bmp   1-bit/pixel, overflow integer on 32-bit machines
 testimg/bad1wid0.bmp    1-bit/pixel, zero width
 testimg/bad24comp.bmp   24-bit/pixel, bad compression

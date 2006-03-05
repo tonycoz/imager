@@ -695,7 +695,7 @@ save_exif_ifd_tags(i_img *im, imtiff *tiff) {
       memcpy(user_comment, tiff->base + entry->offset, entry->size);
       /* the first 8 bytes indicate the encoding, make them into spaces
 	 for better presentation */
-      for (i = 0; i < 8; ++i) {
+      for (i = 0; i < entry->size && i < 8; ++i) {
 	if (user_comment[i] == '\0')
 	  user_comment[i] = ' ';
       }

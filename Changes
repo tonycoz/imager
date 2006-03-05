@@ -1366,11 +1366,18 @@ Revision history for Perl extension Imager.
   custom META.yml was a waste.
 - bump to 0.47_01
 
-0.48
+0.48 Fri 3 Mar 2006
 - removed unused hashinfo() function from Imager.xs
 - added =items for various methods, so Pod::Coverage will pick them up
   (Pod::Coverage tests to be added in 0.49)
 - bump to 0.48
+
+0.49
+- handle short EXIF user_comment fields correctly, previously Imager
+  would read (and potentially) write beyond the end of an allocated block,
+  or through a NULL pointer if the EXIF user_comment field was less
+  than 8 bytes long.
+  https://rt.cpan.org/Ticket/Display.html?id=17981
 
 =================================================================
 

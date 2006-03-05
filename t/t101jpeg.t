@@ -2,7 +2,7 @@
 use strict;
 use lib 't';
 use Imager qw(:all);
-use Test::More tests => 49;
+use Test::More tests => 51;
 
 init_log("testout/t101jpeg.log",1);
 
@@ -30,7 +30,7 @@ if (!i_has_format("jpeg")) {
     $im = Imager->new(xsize=>2, ysize=>2);
     ok(!$im->write(file=>"testout/nojpeg.jpg"), "should fail to write jpeg");
     cmp_ok($im->errstr, '=~', qr/format not supported/, "check no jpeg message");
-    skip("no jpeg support", 45);
+    skip("no jpeg support", 47);
   }
 } else {
   open(FH,">testout/t101.jpg") || die "cannot open testout/t101.jpg for writing\n";
@@ -232,6 +232,18 @@ if (!i_has_format("jpeg")) {
       }
       is_deeply($expect_tags, \%tags, "check tags for $filename");
     }
+  }
+
+  { # Issue # 17981
+    # the test image has a zero-length user_comment field
+    # the code would originally attempt to convert '\0' to ' '
+    # for the first 8 bytes, even if the string was less than 
+    # 8 bytes long
+    my $im = Imager->new;
+    ok($im->read(file => 'testimg/209_yonge.jpg', type=>'jpeg'),
+       "test read of image with invalid exif_user_comment");
+    is($im->tags(name=>'exif_user_comment'), '',
+       "check exif_user_comment set correctly");
   }
 }
 
