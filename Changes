@@ -1389,6 +1389,8 @@ Revision history for Perl extension Imager.
   page number is out of range. (detected by valgrind)
 - i_gsampf() (used to implement getsamples() for floating point samples)
   was leaking memory. (detected by valgrind)
+- writing to a PNG file was leaking one memory block
+  (detected by valgrind)
 
 =================================================================
 

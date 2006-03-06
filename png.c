@@ -67,7 +67,7 @@ check_if_png(char *file_name, FILE **fp) {
 undef_int
 i_writepng_wiol(i_img *im, io_glue *ig) {
   png_structp png_ptr;
-  png_infop info_ptr;
+  png_infop info_ptr = NULL;
   int width,height,y;
   volatile int cspace,channels;
   double xres, yres;
@@ -105,7 +105,7 @@ i_writepng_wiol(i_img *im, io_glue *ig) {
   info_ptr = png_create_info_struct(png_ptr);
 
   if (info_ptr == NULL) {
-    png_destroy_write_struct(&png_ptr, (png_infopp)NULL);
+    png_destroy_write_struct(&png_ptr, &info_ptr);
     return 0;
   }
   
@@ -113,7 +113,7 @@ i_writepng_wiol(i_img *im, io_glue *ig) {
    * error hadnling functions in the png_create_write_struct() call.
    */
   if (setjmp(png_ptr->jmpbuf)) {
-    png_destroy_write_struct(&png_ptr,  (png_infopp)NULL);
+    png_destroy_write_struct(&png_ptr, &info_ptr);
     return(0);
   }
   
@@ -170,14 +170,14 @@ i_writepng_wiol(i_img *im, io_glue *ig) {
       myfree(data);
     }
     else {
-      png_destroy_write_struct(&png_ptr, (png_infopp)NULL);
+      png_destroy_write_struct(&png_ptr, info_ptr);
       return 0;
     }
   }
 
   png_write_end(png_ptr, info_ptr);
 
-  png_destroy_write_struct(&png_ptr, (png_infopp)NULL);
+  png_destroy_write_struct(&png_ptr, &info_ptr);
 
   ig->closecb(ig);
 
