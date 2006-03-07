@@ -1393,6 +1393,7 @@ Revision history for Perl extension Imager.
   (detected by valgrind)
 - some error paths when reading GIF images weren't closing the GIF
   read object. (detected by valgrind)
+- bump to 0.49 (to get #17981 fix out)
 
 =================================================================
 
