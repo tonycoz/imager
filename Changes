@@ -1391,6 +1391,8 @@ Revision history for Perl extension Imager.
   was leaking memory. (detected by valgrind)
 - writing to a PNG file was leaking one memory block
   (detected by valgrind)
+- some error paths when reading GIF images weren't closing the GIF
+  read object. (detected by valgrind)
 
 =================================================================
 

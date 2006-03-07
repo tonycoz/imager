@@ -586,12 +586,14 @@ i_img **i_readgif_multi_low(GifFileType *GifFile, int *count, int page) {
 	if (!i_int_check_image_file_limits(Width, Height, channels, sizeof(i_sample_t))) {
 	  free_images(results, *count);
 	  mm_log((1, "i_readgif: image size exceeds limits\n"));
+	  DGifCloseFile(GifFile);
 	  myfree(GifRow);
 	  return NULL;
 	}
 	img = i_img_pal_new(Width, Height, channels, 256);
 	if (!img) {
 	  free_images(results, *count);
+	  DGifCloseFile(GifFile);
 	  return NULL;
 	}
 	/* populate the palette of the new image */
