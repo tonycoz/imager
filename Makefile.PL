@@ -892,7 +892,7 @@ sub distcheck {
     }
     if ($write_changes) {
       print "Updating Changes file\n";
-      system 'svn log -v -r 942:HEAD >Changes';
+      system 'svn log -v -r HEAD:943 >Changes';
     }
   }
 }
