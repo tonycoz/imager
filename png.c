@@ -162,17 +162,11 @@ i_writepng_wiol(i_img *im, io_glue *ig) {
   }
   else {
     unsigned char *data = mymalloc(im->xsize * im->channels);
-    if (data) {
-      for (y = 0; y < height; y++) {
-        i_gsamp(im, 0, im->xsize, y, data, NULL, im->channels);
-        png_write_row(png_ptr, (png_bytep)data);
-      }
-      myfree(data);
+    for (y = 0; y < height; y++) {
+      i_gsamp(im, 0, im->xsize, y, data, NULL, im->channels);
+      png_write_row(png_ptr, (png_bytep)data);
     }
-    else {
-      png_destroy_write_struct(&png_ptr, info_ptr);
-      return 0;
-    }
+    myfree(data);
   }
 
   png_write_end(png_ptr, info_ptr);
