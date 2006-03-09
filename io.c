@@ -221,7 +221,6 @@ void
 
 void
 malloc_state() {
-  printf("malloc_state: not in debug mode\n");
 }
 
 void*
