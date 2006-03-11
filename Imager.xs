@@ -108,7 +108,7 @@ void my_SvREFCNT_dec(void *p) {
 
 
 static void
-log_entry(char *string, int level) {
+i_log_entry(char *string, int level) {
   mm_log((level, string));
 }
 
@@ -1160,12 +1160,12 @@ i_sametype_chans(im, x, y, channels)
                int channels
 
 void
-m_init_log(name,level)
+i_init_log(name,level)
 	      char*    name
 	       int     level
 
 void
-log_entry(string,level)
+i_log_entry(string,level)
 	      char*    string
 	       int     level
 

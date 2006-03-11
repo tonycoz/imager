@@ -355,7 +355,7 @@ sub ok {
   ++$test_num;
   if ($ok) {
     print "ok $test_num # $msg\n";
-    Imager::log_entry("ok $test_num # $msg\n", 0);
+    Imager::i_log_entry("ok $test_num # $msg\n", 0);
   }
   else {
     my $err;
@@ -364,7 +364,7 @@ sub ok {
     my $line = "not ok $test_num # line ".(caller)[2].": $msg";
     $line .= ": $err" if $err;
     print $line, "\n";
-    Imager::log_entry($line."\n", 0);
+    Imager::i_log_entry($line."\n", 0);
   }
   skip($why, $skipcount) if defined $why;
   $ok;

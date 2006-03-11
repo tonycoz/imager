@@ -19,7 +19,7 @@ static char  data_buffer[DATABUFF];
  */
 
 void
-m_init_log(const char* name,int level) {
+i_init_log(const char* name,int level) {
   log_level = level;
   if (level < 0) {
     lg_file = NULL;
@@ -61,7 +61,7 @@ m_fatal(int exitcode,const char *fmt, ... ) {
  * Logging is inactive - insert dummy functions
  */
 
-void m_init_log(const char* name,int onoff) {}
+void i_init_log(const char* name,int onoff) {}
 void m_fatal(int exitcode,const char *fmt, ... ) { exit(exitcode); }
 
 
@@ -69,7 +69,7 @@ void m_fatal(int exitcode,const char *fmt, ... ) { exit(exitcode); }
 
 
 void
-m_loog(int level,const char *fmt, ... ) {
+i_loog(int level,const char *fmt, ... ) {
   va_list ap;
   if (level > log_level) return;
   if (lg_file != NULL) {
@@ -84,7 +84,7 @@ m_loog(int level,const char *fmt, ... ) {
 
 
 void
-m_lhead(const char *file, int line) {
+i_lhead(const char *file, int line) {
   time_t timi;
   struct tm *str_tm;
   

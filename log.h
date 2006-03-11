@@ -10,14 +10,14 @@
    global: creates a global variable FILE* lg_file
 */
 
-void m_lhead ( const char *file, int line  );
-void m_init_log( const char *name, int onoff );
-void m_loog(int level,const char *msg, ... );
-void m_fatal ( int exitcode,const char *fmt, ... );
+void i_lhead ( const char *file, int line  );
+void i_init_log( const char *name, int onoff );
+void i_loog(int level,const char *msg, ... );
+void i_fatal ( int exitcode,const char *fmt, ... );
 
 
 #ifdef IMAGER_LOG
-#define mm_log(x) { m_lhead(__FILE__,__LINE__); m_loog x; } 
+#define mm_log(x) { i_lhead(__FILE__,__LINE__); i_loog x; } 
 #else
 #define mm_log(x)
 #endif

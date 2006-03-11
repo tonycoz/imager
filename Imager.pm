@@ -423,8 +423,8 @@ BEGIN {
 #}
 
 sub init_log {
-	m_init_log($_[0],$_[1]);
-	log_entry("Imager $VERSION starting\n", 1);
+  i_init_log($_[0],$_[1]);
+  i_log_entry("Imager $VERSION starting\n", 1);
 }
 
 
@@ -1776,10 +1776,10 @@ sub scale {
     my ($xpix, $ypix)=( $opts{xpixels} / $self->getwidth() , 
 			$opts{ypixels} / $self->getheight() );
     if ($opts{'type'} eq 'min') { 
-      $scalefactor = min($xpix,$ypix); 
+      $scalefactor = _min($xpix,$ypix); 
     }
     elsif ($opts{'type'} eq 'max') {
-      $scalefactor = max($xpix,$ypix);
+      $scalefactor = _max($xpix,$ypix);
     }
     else {
       $self->_set_error('invalid value for type parameter');
@@ -2222,10 +2222,10 @@ sub box {
   my %opts=(color=>$dflcl,xmin=>0,ymin=>0,xmax=>$self->getwidth()-1,ymax=>$self->getheight()-1,@_);
 
   if (exists $opts{'box'}) { 
-    $opts{'xmin'} = min($opts{'box'}->[0],$opts{'box'}->[2]);
-    $opts{'xmax'} = max($opts{'box'}->[0],$opts{'box'}->[2]);
-    $opts{'ymin'} = min($opts{'box'}->[1],$opts{'box'}->[3]);
-    $opts{'ymax'} = max($opts{'box'}->[1],$opts{'box'}->[3]);
+    $opts{'xmin'} = _min($opts{'box'}->[0],$opts{'box'}->[2]);
+    $opts{'xmax'} = _max($opts{'box'}->[0],$opts{'box'}->[2]);
+    $opts{'ymin'} = _min($opts{'box'}->[1],$opts{'box'}->[3]);
+    $opts{'ymax'} = _max($opts{'box'}->[1],$opts{'box'}->[3]);
   }
 
   if ($opts{filled}) { 
@@ -2266,7 +2266,7 @@ sub arc {
   unless ($self->{IMG}) { $self->{ERRSTR}='empty input image'; return undef; }
   my $dflcl=i_color_new(255,255,255,255);
   my %opts=(color=>$dflcl,
-	    'r'=>min($self->getwidth(),$self->getheight())/3,
+	    'r'=>_min($self->getwidth(),$self->getheight())/3,
 	    'x'=>$self->getwidth()/2,
 	    'y'=>$self->getheight()/2,
 	    'd1'=>0, 'd2'=>361, @_);
@@ -3064,7 +3064,7 @@ sub def_guess_type {
 
 # get the minimum of a list
 
-sub min {
+sub _min {
   my $mx=shift;
   for(@_) { if ($_<$mx) { $mx=$_; }}
   return $mx;
@@ -3072,7 +3072,7 @@ sub min {
 
 # get the maximum of a list
 
-sub max {
+sub _max {
   my $mx=shift;
   for(@_) { if ($_>$mx) { $mx=$_; }}
   return $mx;
@@ -3080,7 +3080,7 @@ sub max {
 
 # string stuff for iptc headers
 
-sub clean {
+sub _clean {
   my($str)=$_[0];
   $str = substr($str,3);
   $str =~ s/[\n\r]//g;
@@ -3109,19 +3109,19 @@ sub parseiptc {
       @sar=split(/\034\002/);
       foreach $item (@sar) {
 	if ($item =~ m/^x/) {
-	  $caption=&clean($item);
+	  $caption = _clean($item);
 	  $i++;
 	}
 	if ($item =~ m/^P/) {
-	  $photogr=&clean($item);
+	  $photogr = _clean($item);
 	  $i++;
 	}
 	if ($item =~ m/^i/) {
-	  $headln=&clean($item);
+	  $headln = _clean($item);
 	  $i++;
 	}
 	if ($item =~ m/^n/) {
-	  $credit=&clean($item);
+	  $credit = _clean($item);
 	  $i++;
 	}
       }
