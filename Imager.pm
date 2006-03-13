@@ -3099,7 +3099,8 @@ sub parseiptc {
 
   my $str=$self->{IPTCRAW};
 
-  #print $str;
+  defined $str
+    or return;
 
   @ar=split(/8BIM/,$str);
 
