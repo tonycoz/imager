@@ -52,12 +52,12 @@ if (!i_has_format("jpeg")) {
 
   ok($diff < 10000, "difference between original and jpeg within bounds");
 
-	Imager::log_entry("Starting 4\n", 1);
+	Imager::i_log_entry("Starting 4\n", 1);
   my $imoo = Imager->new;
   ok($imoo->read(file=>'testout/t101.jpg'), "read jpeg OO");
 
   ok($imoo->write(file=>'testout/t101_oo.jpg'), "write jpeg OO");
-	Imager::log_entry("Starting 5\n", 1);
+	Imager::i_log_entry("Starting 5\n", 1);
   my $oocmp = Imager->new;
   ok($oocmp->read(file=>'testout/t101_oo.jpg'), "read jpeg OO for comparison");
 

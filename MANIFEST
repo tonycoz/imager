@@ -208,6 +208,7 @@ t/t82inline.t           Test Inline::C integration
 t/t90cc.t
 t/t91pod.t		Test POD with Test::Pod
 t/t92samples.t
+t/t93prodcover.t	POD Coverage tests
 t/testtools.pl
 tags.c
 testimg/209_yonge.jpg	Regression test: #17981
