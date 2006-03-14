@@ -3600,8 +3600,7 @@ writing an image to a file - L<Imager::Files>
 
 =head1 SUPPORT
 
-You can ask for help, report bugs or express your undying love for
-Imager on the Imager-devel mailing list.
+The best place to get help with Imager is the mailing list.
 
 To subscribe send a message with C<subscribe> in the body to:
 
@@ -3616,10 +3615,6 @@ L<http://www.molar.is/en/lists/imager-devel/>
 =back
 
 where you can also find the mailing list archive.
-
-If you're into IRC, you can typically find the developers in #Imager
-on irc.perl.org.  As with any IRC channel, the participants could be
-occupied or asleep, so please be patient.
 
 You can report bugs by pointing your browser at:
 
