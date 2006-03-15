@@ -82,7 +82,7 @@ iolayer.c - encapsulates different source of data into a single framework.
     break;
   }  
 
-  io_glue_DESTROY(ig);
+  io_glue_destroy(ig);
   // and much more
 
 =head1 DESCRIPTION
@@ -247,6 +247,17 @@ realseek_seek(io_glue *ig, off_t offset, int whence) {
   /* FIXME: How about implementing this offset handling stuff? */
 }
 
+static
+void
+realseek_destroy(io_glue *ig) {
+  io_ex_rseek *ier = ig->exdata;
+
+  if (ig->source.cb.destroycb)
+    ig->source.cb.destroycb(ig->source.cb.p);
+
+  myfree(ier);
+}
+
 /*
  * Callbacks for sources that are a fixed size buffer
  */
@@ -352,7 +363,18 @@ buffer_seek(io_glue *ig, off_t offset, int whence) {
   /* FIXME: How about implementing this offset handling stuff? */
 }
 
+static
+void
+buffer_destroy(io_glue *ig) {
+  io_ex_buffer *ieb = ig->exdata;
 
+  if (ig->source.buffer.closecb) {
+    mm_log((1,"calling close callback %p for io_buffer\n", 
+	    ig->source.buffer.closecb));
+    ig->source.buffer.closecb(ig->source.buffer.closedata);
+  }
+  myfree(ieb);
+}
 
 
 
@@ -777,10 +799,15 @@ bufchain_seek(io_glue *ig, off_t offset, int whence) {
   return ieb->gpos;
 }
 
+static
+void
+bufchain_destroy(io_glue *ig) {
+  io_ex_bchain *ieb = ig->exdata;
 
+  io_destroy_bufchain(ieb);
 
-
-
+  myfree(ieb);
+}
 
 /*
  * Methods for setting up data source
@@ -918,11 +945,12 @@ io_new_bufchain() {
   ieb->cp     = ieb->head;
   ieb->tail   = ieb->head;
   
-  ig->exdata  = ieb;
-  ig->readcb  = bufchain_read;
-  ig->writecb = bufchain_write;
-  ig->seekcb  = bufchain_seek;
-  ig->closecb = bufchain_close;
+  ig->exdata    = ieb;
+  ig->readcb    = bufchain_read;
+  ig->writecb   = bufchain_write;
+  ig->seekcb    = bufchain_seek;
+  ig->closecb   = bufchain_close;
+  ig->destroycb = bufchain_destroy;
 
   return ig;
 }
@@ -954,11 +982,12 @@ io_new_buffer(char *data, size_t len, closebufp closecb, void *closedata) {
   ieb->offset = 0;
   ieb->cpos   = 0;
   
-  ig->exdata  = ieb;
-  ig->readcb  = buffer_read;
-  ig->writecb = buffer_write;
-  ig->seekcb  = buffer_seek;
-  ig->closecb = buffer_close;
+  ig->exdata    = ieb;
+  ig->readcb    = buffer_read;
+  ig->writecb   = buffer_write;
+  ig->seekcb    = buffer_seek;
+  ig->closecb   = buffer_close;
+  ig->destroycb = buffer_destroy;
 
   return ig;
 }
@@ -988,12 +1017,13 @@ io_new_fd(int fd) {
   ig->source.fdseek.fd = fd;
   ig->flags = 0;
 
-  ig->exdata  = NULL;
-  ig->readcb  = fd_read;
-  ig->writecb = fd_write;
-  ig->seekcb  = fd_seek;
-  ig->closecb = fd_close;
-  ig->sizecb  = fd_size;
+  ig->exdata    = NULL;
+  ig->readcb    = fd_read;
+  ig->writecb   = fd_write;
+  ig->seekcb    = fd_seek;
+  ig->closecb   = fd_close;
+  ig->sizecb    = fd_size;
+  ig->destroycb = NULL;
       
   mm_log((1, "(%p) <- io_new_fd\n", ig));
   return ig;
@@ -1014,11 +1044,12 @@ io_glue *io_new_cb(void *p, readl readcb, writel writecb, seekl seekcb,
   ier->offset = 0;
   ier->cpos   = 0;
   
-  ig->exdata  = ier;
-  ig->readcb  = realseek_read;
-  ig->writecb = realseek_write;
-  ig->seekcb  = realseek_seek;
-  ig->closecb = realseek_close;
+  ig->exdata    = ier;
+  ig->readcb    = realseek_read;
+  ig->writecb   = realseek_write;
+  ig->seekcb    = realseek_seek;
+  ig->closecb   = realseek_close;
+  ig->destroycb = realseek_destroy;
 
   return ig;
 }
@@ -1126,7 +1157,7 @@ static ssize_t fd_size(io_glue *ig) {
 }
 
 /*
-=item io_glue_DESTROY(ig)
+=item io_glue_destroy(ig)
 
 A destructor method for io_glue objects.  Should clean up all related buffers.
 Might leave us with a dangling pointer issue on some buffers.
@@ -1137,39 +1168,13 @@ Might leave us with a dangling pointer issue on some buffers.
 */
 
 void
-io_glue_DESTROY(io_glue *ig) {
+io_glue_destroy(io_glue *ig) {
   io_type      inn = ig->source.type;
   mm_log((1, "io_glue_DESTROY(ig %p)\n", ig));
+
+  if (ig->destroycb)
+    ig->destroycb(ig);
   
-  switch (inn) {
-  case BUFCHAIN:
-    {
-      io_ex_bchain *ieb = ig->exdata;
-      io_destroy_bufchain(ieb);
-      myfree(ieb);
-    }
-    break;
-  case CBSEEK:
-    {
-      io_ex_rseek *ier = ig->exdata;
-      if (ig->source.cb.destroycb)
-        ig->source.cb.destroycb(ig->source.cb.p);
-      myfree(ier);
-    }
-    break;
-  case BUFFER:
-    {
-      io_ex_buffer *ieb = ig->exdata;
-      if (ig->source.buffer.closecb) {
-	mm_log((1,"calling close callback %p for io_buffer\n", ig->source.buffer.closecb));
-	ig->source.buffer.closecb(ig->source.buffer.closedata);
-      }
-      myfree(ieb);
-    }
-    break;
-  default:
-    break;
-  }
   myfree(ig);
 }
 

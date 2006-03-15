@@ -44,6 +44,7 @@ typedef void   (*closep)(io_glue *ig);
 typedef ssize_t(*sizep) (io_glue *ig);
 
 typedef void   (*closebufp)(void *p);
+typedef void (*i_io_destroy_t)(i_io_glue_t *ig);
 
 
 /* Callbacks we get */
@@ -102,6 +103,7 @@ struct i_io_glue_t {
   seekp		seekcb;
   closep	closecb;
   sizep		sizecb;
+  i_io_destroy_t destroycb;
 };
 
 void io_glue_commit_types(io_glue *ig);
@@ -114,8 +116,12 @@ io_glue *io_new_bufchain(void);
 io_glue *io_new_buffer(char *data, size_t len, closebufp closecb, void *closedata);
 io_glue *io_new_cb(void *p, readl readcb, writel writecb, seekl seekcb, closel closecb, destroyl destroycb);
 size_t   io_slurp(io_glue *ig, unsigned char **c);
-void     io_glue_DESTROY(io_glue *ig);
+void     io_glue_destroy(io_glue *ig);
 
 #define i_io_type(ig) ((ig)->source.ig_type)
+#define i_io_read(ig, buf, size) ((ig)->readcb((ig), (buf), (size)))
+#define i_io_write(ig, data, size) ((ig)->writedb((ig), (data), (size)))
+#define i_io_seek(ig, offset, whence) ((ig)->seekdb((ig), (offset), (size)))
+#define i_io_close(ig) ((ig)->closecb(ig))
 
 #endif /* _IOLAYER_H_ */

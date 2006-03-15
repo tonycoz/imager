@@ -879,6 +879,9 @@ i_int_hlines_dump(i_int_hlines *hlines) {
 #define i_exif_enabled() 0
 #endif
 
+/* trying to use more C style names, map them here */
+#define io_glue_DESTROY(ig) io_glue_destroy(ig)
+
 MODULE = Imager		PACKAGE = Imager::Color	PREFIX = ICL_
 
 Imager::Color
