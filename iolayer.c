@@ -15,6 +15,51 @@
 
 char *io_type_names[] = { "FDSEEK", "FDNOSEEK", "BUFFER", "CBSEEK", "CBNOSEEK", "BUFCHAIN" };
 
+typedef struct io_blink {
+  char buf[BBSIZ];
+  /* size_t cnt; */
+  size_t len;			/* How large is this buffer = BBZIS for now */
+  struct io_blink *next;
+  struct io_blink *prev;
+} io_blink;
+
+
+/* Structures that describe callback interfaces */
+
+typedef struct {
+  off_t offset;
+  off_t cpos;
+} io_ex_rseek;
+
+
+typedef struct {
+  off_t offset;
+  off_t cpos;
+  io_blink *head;
+  io_blink *tail;
+  io_blink *cp;
+} io_ex_fseek;
+
+
+typedef struct {
+  off_t offset;			/* Offset of the source - not used */
+  off_t length;			/* Total length of chain in bytes */
+  io_blink *head;		/* Start of chain */
+  io_blink *tail;		/* End of chain */
+  off_t tfill;			/* End of stream in last link */
+  io_blink *cp;			/* Current element of list */
+  off_t cpos;			/* Offset within the current */
+  off_t gpos;			/* Global position in stream */
+} io_ex_bchain;
+
+typedef struct {
+  off_t offset;			/* Offset of the source - not used */
+  off_t cpos;			/* Offset within the current */
+} io_ex_buffer;
+
+static void io_obj_setp_buffer(io_obj *io, char *p, size_t len, closebufp closecb, void *closedata);
+static void io_obj_setp_cb2     (io_obj *io, void *p, readl readcb, writel writecb, seekl seekcb, closel closecb, destroyl destroycb);
+
 
 /*
 =head1 NAME
@@ -753,8 +798,9 @@ Sets an io_object for reading from a buffer source
 =cut
 */
 
-void
-io_obj_setp_buffer(io_obj *io, char *p, size_t len, closebufp closecb, void *closedata) {
+static void
+io_obj_setp_buffer(io_obj *io, char *p, size_t len, closebufp closecb, 
+		   void *closedata) {
   io->buffer.type      = BUFFER;
   io->buffer.data      = p;
   io->buffer.len       = len;
@@ -762,23 +808,6 @@ io_obj_setp_buffer(io_obj *io, char *p, size_t len, closebufp closecb, void *clo
   io->buffer.closedata = closedata;
 }
 
-
-/*
-=item io_obj_setp_buchain(io)
-
-Sets an io_object for reading/writing from a buffer source
-
-   io  - io object that describes a source
-   p   - pointer to buffer
-   len - length of buffer
-
-=cut
-*/
-
-void
-io_obj_setp_bufchain(io_obj *io) {
-  io->type = BUFCHAIN;
-}
 
 
 /*
@@ -797,7 +826,7 @@ Sets an io_object for reading from a source that uses callbacks
 =cut
 */
 
-void
+static void
 io_obj_setp_cb2(io_obj *io, void *p, readl readcb, writel writecb, seekl seekcb, closel closecb, destroyl destroycb) {
   io->cb.type      = CBSEEK;
   io->cb.p         = p;
@@ -808,18 +837,10 @@ io_obj_setp_cb2(io_obj *io, void *p, readl readcb, writel writecb, seekl seekcb,
   io->cb.destroycb = destroycb;
 }
 
-void
-io_obj_setp_cb(io_obj *io, void *p, readl readcb, writel writecb, 
-               seekl seekcb) {
-  io_obj_setp_cb2(io, p, readcb, writecb, seekcb, NULL, NULL);
-}
-
 /*
 =item io_glue_commit_types(ig)
 
-Creates buffers and initializes structures to read with the chosen interface.
-
-   ig - io_glue object
+This is now effectively a no-op.
 
 =cut
 */
@@ -836,66 +857,6 @@ io_glue_commit_types(io_glue *ig) {
     return;
   }
 
-  switch (inn) {
-  case BUFCHAIN:
-    {
-      io_ex_bchain *ieb = mymalloc(sizeof(io_ex_bchain));
-      
-      ieb->offset = 0;
-      ieb->length = 0;
-      ieb->cpos   = 0;
-      ieb->gpos   = 0;
-      ieb->tfill  = 0;
-
-      ieb->head   = io_blink_new();
-      ieb->cp     = ieb->head;
-      ieb->tail   = ieb->head;
-
-      ig->exdata  = ieb;
-      ig->readcb  = bufchain_read;
-      ig->writecb = bufchain_write;
-      ig->seekcb  = bufchain_seek;
-      ig->closecb = bufchain_close;
-    }
-    break;
-  case CBSEEK:
-    {
-      io_ex_rseek *ier = mymalloc(sizeof(io_ex_rseek));
-      
-      ier->offset = 0;
-      ier->cpos   = 0;
-      
-      ig->exdata  = ier;
-      ig->readcb  = realseek_read;
-      ig->writecb = realseek_write;
-      ig->seekcb  = realseek_seek;
-      ig->closecb = realseek_close;
-    }
-    break;
-  case BUFFER:
-    {
-      io_ex_buffer *ieb = mymalloc(sizeof(io_ex_buffer));
-      ieb->offset = 0;
-      ieb->cpos   = 0;
-
-      ig->exdata  = ieb;
-      ig->readcb  = buffer_read;
-      ig->writecb = buffer_write;
-      ig->seekcb  = buffer_seek;
-      ig->closecb = buffer_close;
-    }
-    break;
-  case FDSEEK:
-    {
-      ig->exdata  = NULL;
-      ig->readcb  = fd_read;
-      ig->writecb = fd_write;
-      ig->seekcb  = fd_seek;
-      ig->closecb = fd_close;
-      ig->sizecb  = fd_size;
-      break;
-    }
-  }
   ig->flags |= 0x01; /* indicate source has been setup already */
 }
 
@@ -939,16 +900,32 @@ be written to and read from later (like a pseudo file).
 io_glue *
 io_new_bufchain() {
   io_glue *ig;
+  io_ex_bchain *ieb = mymalloc(sizeof(io_ex_bchain));
+
   mm_log((1, "io_new_bufchain()\n"));
+
   ig = mymalloc(sizeof(io_glue));
   memset(ig, 0, sizeof(*ig));
-  io_obj_setp_bufchain(&ig->source);
+  ig->source.type = BUFCHAIN;
+
+  ieb->offset = 0;
+  ieb->length = 0;
+  ieb->cpos   = 0;
+  ieb->gpos   = 0;
+  ieb->tfill  = 0;
+  
+  ieb->head   = io_blink_new();
+  ieb->cp     = ieb->head;
+  ieb->tail   = ieb->head;
+  
+  ig->exdata  = ieb;
+  ig->readcb  = bufchain_read;
+  ig->writecb = bufchain_write;
+  ig->seekcb  = bufchain_seek;
+  ig->closecb = bufchain_close;
+
   return ig;
 }
-
-
-
-
 
 /*
 =item io_new_buffer(data, len)
@@ -965,11 +942,24 @@ from specified buffer.  Note that the buffer is not copied.
 io_glue *
 io_new_buffer(char *data, size_t len, closebufp closecb, void *closedata) {
   io_glue *ig;
+  io_ex_buffer *ieb = mymalloc(sizeof(io_ex_buffer));
+  
   mm_log((1, "io_new_buffer(data %p, len %d, closecb %p, closedata %p)\n", data, len, closecb, closedata));
+
   ig = mymalloc(sizeof(io_glue));
   memset(ig, 0, sizeof(*ig));
   io_obj_setp_buffer(&ig->source, data, len, closecb, closedata);
   ig->flags = 0;
+
+  ieb->offset = 0;
+  ieb->cpos   = 0;
+  
+  ig->exdata  = ieb;
+  ig->readcb  = buffer_read;
+  ig->writecb = buffer_write;
+  ig->seekcb  = buffer_seek;
+  ig->closecb = buffer_close;
+
   return ig;
 }
 
@@ -989,19 +979,22 @@ data from the io_glue callbacks hasn't been done yet.
 io_glue *
 io_new_fd(int fd) {
   io_glue *ig;
+
   mm_log((1, "io_new_fd(fd %d)\n", fd));
+
   ig = mymalloc(sizeof(io_glue));
   memset(ig, 0, sizeof(*ig));
   ig->source.type = FDSEEK;
   ig->source.fdseek.fd = fd;
   ig->flags = 0;
-#if 0
-#ifdef _MSC_VER
-  io_obj_setp_cb(&ig->source, (void*)fd, _read, _write, _lseek);
-#else
-  io_obj_setp_cb(&ig->source, (void*)fd, read, write, lseek);
-#endif
-#endif
+
+  ig->exdata  = NULL;
+  ig->readcb  = fd_read;
+  ig->writecb = fd_write;
+  ig->seekcb  = fd_seek;
+  ig->closecb = fd_close;
+  ig->sizecb  = fd_size;
+      
   mm_log((1, "(%p) <- io_new_fd\n", ig));
   return ig;
 }
@@ -1009,6 +1002,7 @@ io_new_fd(int fd) {
 io_glue *io_new_cb(void *p, readl readcb, writel writecb, seekl seekcb, 
                    closel closecb, destroyl destroycb) {
   io_glue *ig;
+  io_ex_rseek *ier = mymalloc(sizeof(io_ex_rseek));
 
   mm_log((1, "io_new_cb(p %p, readcb %p, writecb %p, seekcb %p, closecb %p, "
           "destroycb %p)\n", p, readcb, writecb, seekcb, closecb, destroycb));
@@ -1016,6 +1010,15 @@ io_glue *io_new_cb(void *p, readl readcb, writel writecb, seekl seekcb,
   memset(ig, 0, sizeof(*ig));
   io_obj_setp_cb2(&ig->source, p, readcb, writecb, seekcb, closecb, destroycb);
   mm_log((1, "(%p) <- io_new_cb\n", ig));
+
+  ier->offset = 0;
+  ier->cpos   = 0;
+  
+  ig->exdata  = ier;
+  ig->readcb  = realseek_read;
+  ig->writecb = realseek_write;
+  ig->seekcb  = realseek_seek;
+  ig->closecb = realseek_close;
 
   return ig;
 }
