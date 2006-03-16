@@ -120,8 +120,8 @@ void     io_glue_destroy(io_glue *ig);
 
 #define i_io_type(ig) ((ig)->source.ig_type)
 #define i_io_read(ig, buf, size) ((ig)->readcb((ig), (buf), (size)))
-#define i_io_write(ig, data, size) ((ig)->writedb((ig), (data), (size)))
-#define i_io_seek(ig, offset, whence) ((ig)->seekdb((ig), (offset), (size)))
+#define i_io_write(ig, data, size) ((ig)->writecb((ig), (data), (size)))
+#define i_io_seek(ig, offset, whence) ((ig)->seekcb((ig), (offset), (whence)))
 #define i_io_close(ig) ((ig)->closecb(ig))
 
 #endif /* _IOLAYER_H_ */

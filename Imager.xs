@@ -880,7 +880,7 @@ i_int_hlines_dump(i_int_hlines *hlines) {
 #endif
 
 /* trying to use more C style names, map them here */
-#define io_glue_DESTROY(ig) io_glue_destroy(ig)
+#define i_io_DESTROY(ig) io_glue_destroy(ig)
 
 MODULE = Imager		PACKAGE = Imager::Color	PREFIX = ICL_
 
@@ -1104,18 +1104,80 @@ i_get_image_file_limits()
           PUSHs(sv_2mortal(newSViv(bytes)));
         }
 
-MODULE = Imager		PACKAGE = Imager::IO	PREFIX = io_glue_
+MODULE = Imager		PACKAGE = Imager::IO	PREFIX = i_io_
+
+int
+i_io_write(ig, data_sv)
+	Imager::IO ig
+	SV *data_sv
+      PREINIT:
+        void *data;
+	STRLEN size;
+      CODE:
+#ifdef SvUTF8
+        if (SvUTF8(data_sv)) {
+	  data_sv = sv_2mortal(newSVsv(data_sv));
+	  sv_utf8_downgrade(data_sv, FALSE);
+	}
+#endif        
+	data = SvPV(data_sv, size);
+        RETVAL = i_io_write(ig, data, size);
+      OUTPUT:
+	RETVAL
+
+SV *
+i_io_read(ig, buffer_sv, size)
+	Imager::IO ig
+	SV *buffer_sv
+	int size
+      PREINIT:
+        void *buffer;
+	int result;
+      CODE:
+        if (size < 0)
+	  croak("size negative in call to i_io_read()");
+        /* prevent an undefined value warning if they supplied an 
+	   undef buffer.
+           Orginally conditional on !SvOK(), but this will prevent the
+	   downgrade from croaking */
+	sv_setpvn(buffer_sv, "", 0);
+#ifdef SvUTF8
+	if (SvUTF8(buffer_sv))
+          sv_utf8_downgrade(buffer_sv, FALSE);
+#endif
+	buffer = SvGROW(buffer_sv, size+1);
+        result = i_io_read(ig, buffer, size);
+        if (result < 0) {
+	  RETVAL = &PL_sv_undef;
+	}
+	else {
+	  SvCUR_set(buffer_sv, result);
+	  *SvEND(buffer_sv) = '\0';
+	  SvPOK_only(buffer_sv);
+	  RETVAL = newSViv(result); /* XS will mortal this */
+	}
+      OUTPUT:
+	RETVAL
+	buffer_sv
+
+int
+i_io_seek(ig, position, whence)
+	Imager::IO ig
+	long position
+	int whence
 
 void
-io_glue_DESTROY(ig)
+i_io_close(ig)
+	Imager::IO ig
+
+void
+i_io_DESTROY(ig)
         Imager::IO     ig
 
 
 MODULE = Imager		PACKAGE = Imager
 
 PROTOTYPES: ENABLE
-
-
 
 void
 i_list_formats()

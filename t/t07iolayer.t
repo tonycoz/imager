@@ -1,6 +1,7 @@
 #!perl -w
 use strict;
-use Test::More tests => 20;
+use Test::More tests => 43;
+use Fcntl ':seek';
 
 BEGIN { use_ok(Imager => ':all') };
 
@@ -117,3 +118,40 @@ $work = '';
 ok(Imager::i_writeppm_wiol($im, $IO9), "write to short cb");
 ok($work eq $data2, "short write image match");
 
+{
+  my $buf_data = "Test data";
+  my $io9 = Imager::io_new_buffer($buf_data);
+  is(ref $io9, "Imager::IO", "check class");
+  my $work;
+  is($io9->read($work, 4), 4, "read 4 from buffer object");
+  is($work, "Test", "check data read");
+  is($io9->read($work, 5), 5, "read the rest");
+  is($work, " data", "check data read");
+  is($io9->seek(5, SEEK_SET), 5, "seek");
+  is($io9->read($work, 5), 4, "short read");
+  is($work, "data", "check data read");
+  is($io9->seek(-1, SEEK_CUR), 8, "seek relative");
+  is($io9->seek(-5, SEEK_END), 4, "seek relative to end");
+  is($io9->seek(-10, SEEK_CUR), -1, "seek failure");
+  undef $io9;
+}
+{
+  my $io = Imager::io_new_bufchain();
+  is(ref $io, "Imager::IO", "check class");
+  is($io->write("testdata"), 8, "check write");
+  is($io->seek(-8, SEEK_CUR), 0, "seek relative");
+  my $work;
+  is($io->read($work, 8), 8, "check read");
+  is($work, "testdata", "check data read");
+  is($io->seek(-3, SEEK_END), 5, "seek end relative");
+  is($io->read($work, 5), 3, "short read");
+  is($work, "ata", "check read data");
+  is($io->seek(4, SEEK_SET), 4, "absolute seek to write some");
+  is($io->write("testdata"), 8, "write");
+  is($io->seek(0, SEEK_CUR), 12, "check size");
+  $io->close();
+  
+  # grab the data
+  my $data = Imager::io_slurp($io);
+  is($data, "testtestdata", "check we have the right data");
+}

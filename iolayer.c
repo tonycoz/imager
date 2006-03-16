@@ -60,6 +60,11 @@ typedef struct {
 static void io_obj_setp_buffer(io_obj *io, char *p, size_t len, closebufp closecb, void *closedata);
 static void io_obj_setp_cb2     (io_obj *io, void *p, readl readcb, writel writecb, seekl seekcb, closel closecb, destroyl destroycb);
 
+/* turn current offset, file length, whence and offset into a new offset */
+#define calc_seek_offset(curr_off, length, offset, whence) \
+  (((whence) == SEEK_SET) ? (offset) : \
+   ((whence) == SEEK_CUR) ? (curr_off) + (offset) : \
+   ((whence) == SEEK_END) ? (length) + (offset) : -1)
 
 /*
 =head1 NAME
@@ -347,12 +352,15 @@ static
 off_t
 buffer_seek(io_glue *ig, off_t offset, int whence) {
   io_ex_buffer *ieb = ig->exdata;
-  off_t reqpos = offset 
-    + (whence == SEEK_CUR)*ieb->cpos 
-    + (whence == SEEK_END)*ig->source.buffer.len;
+  off_t reqpos = 
+    calc_seek_offset(ieb->cpos, ig->source.buffer.len, offset, whence);
   
   if (reqpos > ig->source.buffer.len) {
     mm_log((1, "seeking out of readable range\n"));
+    return (off_t)-1;
+  }
+  if (reqpos < 0) {
+    i_push_error(0, "seek before beginning of file");
     return (off_t)-1;
   }
   
@@ -701,98 +709,58 @@ static
 off_t
 bufchain_seek(io_glue *ig, off_t offset, int whence) {
   io_ex_bchain *ieb = ig->exdata;
-  io_blink *ib      = NULL;
   int wrlen;
 
-  off_t cof = 0;
-  off_t scount = offset;
+  off_t scount = calc_seek_offset(ieb->gpos, ieb->length, offset, whence);
   off_t sk;
 
   mm_log((1, "bufchain_seek(ig %p, offset %ld, whence %d)\n", ig, offset, whence));
 
-  switch (whence) {
-  case SEEK_SET: /* SEEK_SET = 0, From the top */
-    ieb->cp   = ieb->head;
-    ieb->cpos = 0;
-    ieb->gpos = 0;
+  if (scount < 0) {
+    i_push_error(0, "invalid whence supplied or seek before start of file");
+    return (off_t)-1;
+  }
 
-    while( scount ) {
-      int clen = (ieb->cp == ieb->tail) ? ieb->tfill : ieb->cp->len;
-      if (clen == ieb->cpos) {
-	if (ieb->cp == ieb->tail) break; /* EOF */
-	ieb->cp = ieb->cp->next;
-	ieb->cpos = 0;
-	clen = (ieb->cp == ieb->tail) ? ieb->tfill : ieb->cp->len;
-      }
-      
-      sk = clen - ieb->cpos;
-      sk = sk > scount ? scount : sk;
-      
-      scount    -= sk;
-      ieb->cpos += sk;
-      ieb->gpos += sk;
-    }
-
-    wrlen = scount;
-
-    if (wrlen > 0) { 
-      /*
-       * extending file - get ieb into consistent state and then
-       * call write which will get it to the correct position 
-       */
-      char TB[BBSIZ];
-      memset(TB, 0, BBSIZ);
-      ieb->gpos = ieb->length;
-      ieb->cpos = ieb->tfill;
-
-      while(wrlen > 0) {
-	ssize_t rc, wl = i_min(wrlen, BBSIZ);
-	mm_log((1, "bufchain_seek: wrlen = %d, wl = %d\n", wrlen, wl));
-	rc = bufchain_write( ig, TB, wl );
-	if (rc != wl) m_fatal(0, "bufchain_seek: Unable to extend file\n");
-	wrlen -= rc;
-      }
+  ieb->cp   = ieb->head;
+  ieb->cpos = 0;
+  ieb->gpos = 0;
+  
+  while( scount ) {
+    int clen = (ieb->cp == ieb->tail) ? ieb->tfill : ieb->cp->len;
+    if (clen == ieb->cpos) {
+      if (ieb->cp == ieb->tail) break; /* EOF */
+      ieb->cp = ieb->cp->next;
+      ieb->cpos = 0;
+      clen = (ieb->cp == ieb->tail) ? ieb->tfill : ieb->cp->len;
     }
     
-    break;
+    sk = clen - ieb->cpos;
+    sk = sk > scount ? scount : sk;
+    
+    scount    -= sk;
+    ieb->cpos += sk;
+    ieb->gpos += sk;
+  }
+  
+  wrlen = scount;
 
-  case SEEK_CUR:
-    m_fatal(123, "SEEK_CUR IS NOT IMPLEMENTED\n");
-
+  if (wrlen > 0) { 
     /*
-      case SEEK_CUR: 
-      ib = ieb->cp;
-      if (cof < 0) {
-      cof += ib->cpos;
-      cpos = 0;
-      while(cof < 0 && ib->prev) {
-      ib = ib->prev;
-      cof += ib->len;
-      }
-    */
-    
-  case SEEK_END: /* SEEK_END = 2 */
-    if (cof>0) m_fatal(0, "bufchain_seek: SEEK_END + %d : Extending files via seek not supported!\n", cof);
-
-    ieb->cp   = ieb->tail;
+     * extending file - get ieb into consistent state and then
+     * call write which will get it to the correct position 
+     */
+    char TB[BBSIZ];
+    memset(TB, 0, BBSIZ);
+    ieb->gpos = ieb->length;
     ieb->cpos = ieb->tfill;
     
-    if (cof<0) {
-      cof      += ieb->cpos;
-      ieb->cpos = 0;
-
-      while(cof<0 && ib->prev) {
-	ib   = ib->prev;
-	cof += ib->len;
-      }
-    
-      if (cof<0) m_fatal(0, "bufchain_seek: Tried to seek before start of file\n");
-      ieb->gpos = ieb->length+offset;
-      ieb->cpos = cof;
+    while(wrlen > 0) {
+      ssize_t rc, wl = i_min(wrlen, BBSIZ);
+      mm_log((1, "bufchain_seek: wrlen = %d, wl = %d\n", wrlen, wl));
+      rc = bufchain_write( ig, TB, wl );
+      if (rc != wl) m_fatal(0, "bufchain_seek: Unable to extend file\n");
+      wrlen -= rc;
     }
-    break;
-  default:
-    m_fatal(0, "bufchain_seek: Unhandled seek request: whence = %d\n", whence );
   }
 
   mm_log((2, "bufchain_seek: returning ieb->gpos = %d\n", ieb->gpos));
@@ -1169,7 +1137,6 @@ Might leave us with a dangling pointer issue on some buffers.
 
 void
 io_glue_destroy(io_glue *ig) {
-  io_type      inn = ig->source.type;
   mm_log((1, "io_glue_DESTROY(ig %p)\n", ig));
 
   if (ig->destroycb)
