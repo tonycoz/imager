@@ -30,4 +30,6 @@ typedef FT2_Fonthandle* Imager__Font__FT2;
 #define IFILL_DESTROY(fill) i_fill_destroy(fill);
 typedef i_fill_t* Imager__FillHandle;
 
+typedef io_glue *Imager__IO;
+
 #endif

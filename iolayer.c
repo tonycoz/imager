@@ -57,8 +57,8 @@ typedef struct {
   off_t cpos;			/* Offset within the current */
 } io_ex_buffer;
 
-static void io_obj_setp_buffer(io_obj *io, char *p, size_t len, closebufp closecb, void *closedata);
-static void io_obj_setp_cb2     (io_obj *io, void *p, readl readcb, writel writecb, seekl seekcb, closel closecb, destroyl destroycb);
+static void io_obj_setp_buffer(io_obj *io, char *p, size_t len, i_io_closebufp_t closecb, void *closedata);
+static void io_obj_setp_cb2     (io_obj *io, void *p, i_io_readl_t readcb, i_io_writel_t writecb, i_io_seekl_t seekcb, i_io_closel_t closecb, i_io_destroyl_t destroycb);
 
 /* turn current offset, file length, whence and offset into a new offset */
 #define calc_seek_offset(curr_off, length, offset, whence) \
@@ -794,7 +794,7 @@ Sets an io_object for reading from a buffer source
 */
 
 static void
-io_obj_setp_buffer(io_obj *io, char *p, size_t len, closebufp closecb, 
+io_obj_setp_buffer(io_obj *io, char *p, size_t len, i_io_closebufp_t closecb, 
 		   void *closedata) {
   io->buffer.type      = BUFFER;
   io->buffer.data      = p;
@@ -822,7 +822,7 @@ Sets an io_object for reading from a source that uses callbacks
 */
 
 static void
-io_obj_setp_cb2(io_obj *io, void *p, readl readcb, writel writecb, seekl seekcb, closel closecb, destroyl destroycb) {
+io_obj_setp_cb2(io_obj *io, void *p, i_io_readl_t readcb, i_io_writel_t writecb, i_io_seekl_t seekcb, i_io_closel_t closecb, i_io_destroyl_t destroycb) {
   io->cb.type      = CBSEEK;
   io->cb.p         = p;
   io->cb.readcb    = readcb;
@@ -936,7 +936,7 @@ from specified buffer.  Note that the buffer is not copied.
 */
 
 io_glue *
-io_new_buffer(char *data, size_t len, closebufp closecb, void *closedata) {
+io_new_buffer(char *data, size_t len, i_io_closebufp_t closecb, void *closedata) {
   io_glue *ig;
   io_ex_buffer *ieb = mymalloc(sizeof(io_ex_buffer));
   
@@ -997,8 +997,9 @@ io_new_fd(int fd) {
   return ig;
 }
 
-io_glue *io_new_cb(void *p, readl readcb, writel writecb, seekl seekcb, 
-                   closel closecb, destroyl destroycb) {
+io_glue *io_new_cb(void *p, i_io_readl_t readcb, i_io_writel_t writecb, 
+		   i_io_seekl_t seekcb, i_io_closel_t closecb, 
+		   i_io_destroyl_t destroycb) {
   io_glue *ig;
   io_ex_rseek *ier = mymalloc(sizeof(io_ex_rseek));
 

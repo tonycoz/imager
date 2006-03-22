@@ -88,6 +88,7 @@ imperl.h
 io.c
 iolayer.c
 iolayer.h
+iolayert.h	IO layer types
 jpeg.c
 lib/Imager/API.pm
 lib/Imager/APIRef.pm    API function reference

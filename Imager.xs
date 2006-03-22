@@ -17,8 +17,6 @@ extern "C" {
 #include "regmach.h"
 #include "imextdef.h"
 
-typedef io_glue* Imager__IO;
-
 #if i_int_hlines_testing()
 #include "imageri.h"
 #endif
