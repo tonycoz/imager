@@ -778,6 +778,115 @@ values for the first line and so on, you can use the interleave option:
 
 There are no PNG specific tags.
 
+=head1 ADDING NEW FORMATS
+
+To support a new format for reading, call the register_reader() class
+method:
+
+=over
+
+=item register_reader
+
+Registers single or multiple image read functions.
+
+Parameters:
+
+=over
+
+=item *
+
+type - the identifier of the file format, if Imager's
+i_test_format_probe() can identify the format then this value should
+match i_test_format_probe()'s result.
+
+This parameter is required.
+
+=item *
+
+single - a code ref to read a single image from a file.  This is
+supplied:
+
+=over
+
+=item *
+
+the object that read() was called on,
+
+=item *
+
+an Imager::IO object that should be used to read the file, and
+
+=item *
+
+all the parameters supplied to the read() method.
+
+=back
+
+The single parameter is required.
+
+=item *
+
+multiple - a code ref which is called to read multiple images from a
+file. This is supplied:
+
+=over
+
+=item *
+
+an Imager::IO object that should be used to read the file, and
+
+=item *
+
+all the parameters supplied to the read_multi() method.
+
+=back
+
+=back
+
+Example:
+
+  # from Imager::File::ICO
+  Imager->register_reader
+    (
+     type=>'ico',
+     single => 
+     sub { 
+       my ($im, $io, %hsh) = @_;
+       $im->{IMG} = i_readico_single($io, $hsh{page} || 0);
+
+       unless ($im->{IMG}) {
+         $im->_set_error(Imager->_error_as_msg);
+         return;
+       }
+       return $im;
+     },
+     multiple =>
+     sub {
+       my ($io, %hsh) = @_;
+     
+       my @imgs = i_readico_multi($io);
+       unless (@imgs) {
+         Imager->_set_error(Imager->_error_as_msg);
+         return;
+       }
+       return map { 
+         bless { IMG => $_, DEBUG => $Imager::DEBUG, ERRSTR => undef }, 'Imager'
+       } @imgs;
+     },
+    );
+
+=back
+
+If you name the reader module C<Imager::File::>I<your-format-name>
+where I<your-format-name> is a fully upper case version of the type
+value you would pass to read() or read_multi() then Imager will
+attempt to load that module if it has no other way to read that
+format.
+
+For example, if you create a module Imager::File::GIF and the user has
+built Imager without it's normal GIF support then an attempt to read a
+GIF image will attempt to load Imager::File::GIF.
+
 =head1 EXAMPLES
 
 =head2 Producing an image from a CGI script

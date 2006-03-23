@@ -143,6 +143,12 @@ use Imager::Font;
 		  unload_plugin
 		 )]);
 
+# registered file readers
+my %readers;
+
+# modules we attempted to autoload
+my %attempted_to_load;
+
 BEGIN {
   require Exporter;
   @ISA = qw(Exporter);
@@ -1203,6 +1209,12 @@ sub read {
     return undef;
   }
 
+  _reader_autoload($input{type});
+
+  if ($readers{$input{type}} && $readers{$input{type}}{single}) {
+    return $readers{$input{type}}{single}->($self, $IO, %input);
+  }
+
   unless ($formats{$input{'type'}}) {
     $self->_set_error("format '$input{'type'}' not supported");
     return;
@@ -1334,6 +1346,46 @@ sub read {
   }
 
   return $self;
+}
+
+sub register_reader {
+  my ($class, %opts) = @_;
+
+  defined $opts{type}
+    or die "register_reader called with no type parameter\n";
+
+  my $type = $opts{type};
+
+  defined $opts{single} || defined $opts{multiple}
+    or die "register_reader called with no single or multiple parameter\n";
+
+  $readers{$type} = {  };
+  if ($opts{single}) {
+    $readers{$type}{single} = $opts{single};
+  }
+  if ($opts{multiple}) {
+    $readers{$type}{multiple} = $opts{multiple};
+  }
+
+  return 1;
+}
+
+# probes for an Imager::File::whatever module
+sub _reader_autoload {
+  my $type = shift;
+
+  return if $formats{$type} || $readers{$type};
+
+  return unless $type =~ /^\w+$/;
+
+  my $file = "Imager/File/\U$type\E.pm";
+
+  unless ($attempted_to_load{$file}) {
+    eval {
+      ++$attempted_to_load{$file};
+      require $file;
+    };
+  }
 }
 
 sub _fix_gif_positions {
@@ -1613,19 +1665,31 @@ sub write_multi {
 sub read_multi {
   my ($class, %opts) = @_;
 
-  if ($opts{file} && !exists $opts{'type'}) {
-    # guess the type 
-    my $type = $FORMATGUESS->($opts{file});
-    $opts{'type'} = $type;
+  my ($IO, $file) = $class->_get_reader_io(\%opts, $opts{'type'})
+    or return;
+
+  my $type = $opts{'type'};
+  unless ($type) {
+    $type = i_test_format_probe($IO, -1);
   }
-  unless ($opts{'type'}) {
+
+  if ($opts{file} && !$type) {
+    # guess the type 
+    $type = $FORMATGUESS->($opts{file});
+  }
+
+  unless ($type) {
     $ERRSTR = "No type parameter supplied and it couldn't be guessed";
     return;
   }
 
-  my ($IO, $file) = $class->_get_reader_io(\%opts, $opts{'type'})
-    or return;
-  if ($opts{'type'} eq 'gif') {
+  _reader_autoload($type);
+
+  if ($readers{$type} && $readers{$type}{multiple}) {
+    return $readers{$type}{multiple}->($IO, %opts);
+  }
+
+  if ($type eq 'gif') {
     my @imgs;
     @imgs = i_readgif_multi_wiol($IO);
     if (@imgs) {
@@ -1638,7 +1702,7 @@ sub read_multi {
       return;
     }
   }
-  elsif ($opts{'type'} eq 'tiff') {
+  elsif ($type eq 'tiff') {
     my @imgs = i_readtiff_multi_wiol($IO, -1);
     if (@imgs) {
       return map { 

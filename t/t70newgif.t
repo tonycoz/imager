@@ -79,7 +79,7 @@ if (i_has_format("gif")) {
   my @imgs = Imager->read_multi();
   @imgs and print "not ";
   print "ok 9\n";
-  Imager->errstr =~ /type parameter/ or print "not ";
+  Imager->errstr =~ /callback parameter missing/ or print "not ";
   print "ok 10 # ",Imager->errstr,"\n";
 
   @imgs = Imager->read_multi(type=>'gif');

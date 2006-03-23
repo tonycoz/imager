@@ -2162,7 +2162,7 @@ i_exif_enabled()
 #endif
 
 
-char *
+const char *
 i_test_format_probe(ig, length)
         Imager::IO     ig
 	       int     length
