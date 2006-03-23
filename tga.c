@@ -329,13 +329,16 @@ tga_header_verify(unsigned char headbuf[18]) {
   default:
     /*printf("bad typecode!\n");*/
     return 0;
-  case 0:
   case 1:  /* Uncompressed, color-mapped images */ 
-  case 2:  /* Uncompressed, rgb images          */ 
   case 3:  /* Uncompressed, grayscale images    */ 
   case 9:  /* Compressed,   color-mapped images */ 
-  case 10: /* Compressed,   rgb images          */ 
   case 11: /* Compressed,   grayscale images    */ 
+    if (header.bitsperpixel != 8)
+      return 0;
+    break;
+  case 0:
+  case 2:  /* Uncompressed, rgb images          */ 
+  case 10: /* Compressed,   rgb images          */ 
 	  break;
 	}
 
@@ -343,10 +346,23 @@ tga_header_verify(unsigned char headbuf[18]) {
   default:
     /*printf("bad colourmaptype!\n");*/
     return 0;
-  case 0:
   case 1:
+    if (header.datatypecode != 1 && header.datatypecode != 9)
+      return 0; /* only get a color map on a color mapped image */
+  case 0:
   	break;
 	}
+
+  switch (header.colourmapdepth) {
+  default:
+    return 0;
+  case 0: /* can be 0 if no colour map */
+  case 15:
+  case 16:
+  case 24:
+  case 32:
+    break;
+  }
   
   return 1;
 }

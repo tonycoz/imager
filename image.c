@@ -2122,13 +2122,15 @@ Check the beginning of the supplied file for a 'magic number'
 #define FORMAT_ENTRY(magic, type) \
   { (unsigned char *)(magic ""), sizeof(magic)-1, type }
 
-char *
-i_test_format_probe(io_glue *data, int length) {
-  static struct {
+struct magic_entry {
     unsigned char *magic;
     size_t magic_size;
     char *name;
-  } formats[] = {
+};
+
+const char *
+i_test_format_probe(io_glue *data, int length) {
+  static struct magic_entry formats[] = {
     FORMAT_ENTRY("\xFF\xD8", "jpeg"),
     FORMAT_ENTRY("GIF87a", "gif"),
     FORMAT_ENTRY("GIF89a", "gif"),
@@ -2143,10 +2145,13 @@ i_test_format_probe(io_glue *data, int length) {
     FORMAT_ENTRY("P5", "pnm"),
     FORMAT_ENTRY("P6", "pnm"),
   };
+  static struct magic_entry more_formats[] = {
+    FORMAT_ENTRY("\x00\x00\x01\x00", "ico"),
+    FORMAT_ENTRY("\x00\x00\x02\x00", "ico"), /* cursor */
+  };
 
   unsigned int i;
   unsigned char head[18];
-  char *match = NULL;
   ssize_t rc;
 
   io_glue_commit_types(data);
@@ -2160,29 +2165,25 @@ i_test_format_probe(io_glue *data, int length) {
       continue;
     c = !memcmp(formats[i].magic, head, formats[i].magic_size);
     if (c) {
-      match = formats[i].name;
-      break;
+      return formats[i].name;
     }
   }
 
-  /*
-    if (match && !strcmp(match, "jpeg")) {
-    unsigned int x0, x1;
-    rc = data->readcb(data, head, 18);
-    if (rc == -1) return NULL;
-    x0 = (unsigned char)head[0];
-    x1 = (unsigned char)head[1];
-    data->seekcb(data, -rc, SEEK_CUR);
-    printf("Jpeg reread: %x %x\n", x0, x1);
-    }
-  */
-
-  if (!match && 
-      (rc == 18) &&
+  if ((rc == 18) &&
       tga_header_verify(head))
     return "tga";
 
-  return match;
+  for(i=0; i<sizeof(more_formats)/sizeof(more_formats[0]); i++) { 
+    int c;
+    if (rc < more_formats[i].magic_size)
+      continue;
+    c = !memcmp(more_formats[i].magic, head, more_formats[i].magic_size);
+    if (c) {
+      return more_formats[i].name;
+    }
+  }
+
+  return NULL;
 }
 
 

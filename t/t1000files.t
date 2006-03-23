@@ -5,7 +5,7 @@
 
 use strict;
 use lib 't';
-use Test::More tests => 18;
+use Test::More tests => 20;
 use Imager;
 
 Imager::init_log("testout/t1000files.log", 1);
@@ -73,11 +73,24 @@ probe_ok("49492A00", "tiff", "tiff intel");
 probe_ok("4D4D002A", "tiff", "tiff motorola");
 probe_ok("474946383961", "gif", "gif 89");
 probe_ok("474946383761", "gif", "gif 87");
+probe_ok(<<TGA, "tga", "TGA");
+00 00 0A 00 00 00 00 00 00 00 00 00 96 00 96 00
+18 20 FF 00 00 00 95 00 00 00 FF 00 00 00 95 00
+00 00 FF 00 00 00 95 00 00 00 FF 00 00 00 95 00
+00 00 FF 00 00 00 95 00 00 00 FF 00 00 00 95 00
+TGA
+
+probe_ok(<<ICO, "ico", "Windows Icon");
+00 00 01 00 02 00 20 20 10 00 00 00 00 00 E8 02
+00 00 26 00 00 00 20 20 00 00 00 00 00 00 A8 08
+00 00 0E 03 00 00 28 00 00 00 20 00 00 00 40 00
+ICO
 
 sub probe_ok {
   my ($packed, $exp_type, $name) = @_;
 
   my $builder = Test::Builder->new;
+  $packed =~ tr/ \r\n//d; # remove whitespace used for layout
   my $data = pack("H*", $packed);
 
   my $io = Imager::io_new_buffer($data);

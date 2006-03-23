@@ -351,7 +351,7 @@ extern i_img *i_img_double_new(int x, int y, int ch);
 extern i_img *i_img_double_new_low(i_img *im, int x, int y, int ch);
 
 
-char * i_test_format_probe(io_glue *data, int length);
+const char * i_test_format_probe(io_glue *data, int length);
 
 
 #ifdef HAVE_LIBJPEG
