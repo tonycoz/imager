@@ -339,7 +339,10 @@ tga_header_verify(unsigned char headbuf[18]) {
   case 0:
   case 2:  /* Uncompressed, rgb images          */ 
   case 10: /* Compressed,   rgb images          */ 
-	  break;
+    if (header.bitsperpixel != 15 && header.bitsperpixel != 16
+	&& header.bitsperpixel != 24 && header.bitsperpixel != 23)
+      return 0;
+    break;
 	}
 
   switch (header.colourmaptype) { 
