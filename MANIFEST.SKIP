@@ -4,6 +4,7 @@
 
 # editor trash
 ~$
+^\#.*\#$
 
 # stuff we don't distribute
 ^TODO$
@@ -40,3 +41,6 @@ Makefile\.old
 ^meta\.tmp$
 /meta\.tmp$
 ^imconfig\.h$
+^ICO/ICO\.c$
+^ICO/testout
+

@@ -13,6 +13,24 @@ Flines/Flines.pm
 Flines/Flines.xs
 Flines/Makefile.PL
 Flines/t/t00flines.t
+ICO/ICO.pm	Windows Icon file support
+ICO/ICO.xs
+ICO/Makefile.PL
+ICO/imicon.c
+ICO/imicon.h
+ICO/msicon.c
+ICO/msicon.h
+ICO/t/t10icon.t
+ICO/t/t20readone.t
+ICO/t/t21readmult.t
+ICO/testimg/combo.ico
+ICO/testimg/pal13232.ico
+ICO/testimg/pal43232.ico
+ICO/testimg/pal43232.ppm
+ICO/testimg/pal83232.ico
+ICO/testimg/pal83232.ppm
+ICO/testimg/rgba3232.ico
+ICO/testimg/rgba3232.ppm
 Imager.pm
 Imager.xs
 MANIFEST
@@ -158,6 +176,7 @@ samples/tk-photo.pl
 spot.perl	For making an ordered dither matrix from a spot function
 stackmach.c
 stackmach.h
+t/Pod/Coverage/Imager.pm
 t/Test/Builder.pm
 t/Test/More.pm
 t/t00basic.t
