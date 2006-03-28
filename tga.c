@@ -805,6 +805,8 @@ i_writetga_wiol(i_img *img, io_glue *ig, int wierdpack, int compress, char *idst
     int wierdpack = 0;
   */
 
+  io_glue_commit_types(ig);
+  
   idlen = strlen(idstring);
   mapped = img->type == i_palette_type;
 
@@ -838,8 +840,6 @@ i_writetga_wiol(i_img *img, io_glue *ig, int wierdpack, int compress, char *idst
     return 0;
   }
 
-  io_glue_commit_types(ig);
-  
   header.idlength = idlen;
   header.colourmaptype   = mapped ? 1 : 0;
   header.datatypecode    = mapped ? 1 : img->channels == 1 ? 3 : 2;

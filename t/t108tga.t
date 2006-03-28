@@ -2,7 +2,7 @@
 use Imager qw(:all);
 use strict;
 use lib 't';
-use Test::More tests=>36;
+use Test::More tests=>38;
 BEGIN { require "t/testtools.pl"; }
 init_log("testout/t108tga.log",1);
 
@@ -113,6 +113,17 @@ is($compressed, 1, "check compressed tag");
   ok($im->read(file=>$limit_file),
      "should succeed - just inside bytes limit");
   Imager->set_file_limits(reset=>1);
+}
+
+{ # Issue # 18397
+  # the issue is for 4 channel images to jpeg, but 2 channel images have
+  # a similar problem on tga
+  my $im = Imager->new(xsize=>100, ysize=>100, channels => 2);
+  my $data;
+  ok(!$im->write(data => \$data, type=>'tga'),
+     "check failure of writing a 2 channel image");
+  is($im->errstr, "Cannot store 2 channel image in targa format",
+     "check the error message");
 }
 
 sub write_test {

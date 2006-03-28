@@ -1403,6 +1403,10 @@ This is a release specifically to fix #18397
 - Skip Inline tests when we're in a directory containing spaces in the
   path, since Inline itself errors out when used in such a directory.
   fixes # 18049
+- CRITICAL: writing a 2 or 4 channel image to jpeg or a 2 channel
+  image to tga, where the output was a buffer chain would produce a
+  segmentation fault during error handling and recovery.
+  fixes # 18397
 
 =================================================================
 
