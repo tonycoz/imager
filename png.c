@@ -170,7 +170,7 @@ i_writepng_wiol(i_img *im, io_glue *ig) {
       myfree(data);
     }
     else {
-      png_destroy_write_struct(&png_ptr, info_ptr);
+      png_destroy_write_struct(&png_ptr, &info_ptr);
       return 0;
     }
   }

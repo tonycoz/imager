@@ -1395,6 +1395,12 @@ Revision history for Perl extension Imager.
   read object. (detected by valgrind)
 - bump to 0.49 (to get #17981 fix out)
 
+0.50
+This is a release specifically to fix #18397
+- correct warning in png.c from passing wrong pointer type to 
+  png_destroy_write_struct on line 173.
+  fixes # 18051
+
 =================================================================
 
         For latest versions check the Imager-devel pages:
