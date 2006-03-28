@@ -7,6 +7,10 @@ use Test::More;
 eval "require Inline::C;";
 plan skip_all => "Inline required for testing API" if $@;
 
+use Cwd 'getcwd';
+plan skip_all => "Inline won't work in directories with spaces"
+  if getcwd() =~ / /;
+
 plan tests => 8;
 require Inline;
 Inline->import(with => 'Imager');

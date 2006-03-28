@@ -1400,6 +1400,9 @@ This is a release specifically to fix #18397
 - correct warning in png.c from passing wrong pointer type to 
   png_destroy_write_struct on line 173.
   fixes # 18051
+- Skip Inline tests when we're in a directory containing spaces in the
+  path, since Inline itself errors out when used in such a directory.
+  fixes # 18049
 
 =================================================================
 
