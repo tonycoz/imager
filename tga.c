@@ -833,6 +833,7 @@ i_writetga_wiol(i_img *img, io_glue *ig, int wierdpack, int compress, char *idst
   mm_log((1, "channels %d\n", img->channels));
   
   i_clear_error();
+  io_glue_commit_types(ig);
   
   switch (img->channels) {
   case 1:
@@ -857,8 +858,6 @@ i_writetga_wiol(i_img *img, io_glue *ig, int wierdpack, int compress, char *idst
     return 0;
   }
 
-  io_glue_commit_types(ig);
-  
   header.idlength = idlen;
   header.colourmaptype   = mapped ? 1 : 0;
   header.datatypecode    = mapped ? 1 : img->channels == 1 ? 3 : 2;

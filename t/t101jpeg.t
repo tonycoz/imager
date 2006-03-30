@@ -2,7 +2,7 @@
 use strict;
 use lib 't';
 use Imager qw(:all);
-use Test::More tests => 54;
+use Test::More tests => 56;
 
 init_log("testout/t101jpeg.log",1);
 
@@ -30,7 +30,7 @@ if (!i_has_format("jpeg")) {
     $im = Imager->new(xsize=>2, ysize=>2);
     ok(!$im->write(file=>"testout/nojpeg.jpg"), "should fail to write jpeg");
     cmp_ok($im->errstr, '=~', qr/format not supported/, "check no jpeg message");
-    skip("no jpeg support", 50);
+    skip("no jpeg support", 52);
   }
 } else {
   open(FH,">testout/t101.jpg") || die "cannot open testout/t101.jpg for writing\n";
@@ -259,6 +259,18 @@ if (!i_has_format("jpeg")) {
     ok(!defined $im->{IPTCRAW}, "no iptc data");
     my %iptc = $im->parseiptc;
     ok(!$saw_warn, "should be no warnings");
+  }
+
+  { # Issue # 18397
+    # attempting to write a 4 channel image to a bufchain would
+    # cause a seg fault.
+    # it should fail still
+    my $im = Imager->new(xsize => 10, ysize => 10, channels => 4);
+    my $data;
+    ok(!$im->write(data => \$data, type => 'jpeg'),
+       "should fail to write but shouldn't crash");
+    is($im->errstr, "only 1 or 3 channels images can be saved as JPEG",
+       "check the error message");
   }
 }
 
