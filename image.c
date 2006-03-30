@@ -2109,7 +2109,39 @@ int i_free_gen_write_data(i_gen_write_data *info, int flush)
   return result;
 }
 
+struct magic_entry {
+  unsigned char *magic;
+  size_t magic_size;
+  char *name;
+  unsigned char *mask;  
+};
 
+static int
+test_magic(unsigned char *buffer, size_t length, struct magic_entry const *magic) {
+  int c;
+
+  if (length < magic->magic_size)
+    return 0;
+  if (magic->mask) {
+    int i;
+    unsigned char *bufp = buffer, 
+      *maskp = magic->mask, 
+      *magicp = magic->magic;
+
+    for (i = 0; i < magic->magic_size; ++i) {
+      int mask = *maskp == 'x' ? 0xFF : *maskp == ' ' ? 0 : *maskp;
+      ++maskp;
+
+      if ((*bufp++ & mask) != (*magicp++ & mask)) 
+	return 0;
+    }
+
+    return 1;
+  }
+  else {
+    return !memcmp(magic->magic, buffer, magic->magic_size);
+  }
+}
 
 /*
 =item i_test_format_probe(io_glue *data, int length)
@@ -2121,16 +2153,12 @@ Check the beginning of the supplied file for a 'magic number'
 
 #define FORMAT_ENTRY(magic, type) \
   { (unsigned char *)(magic ""), sizeof(magic)-1, type }
-
-struct magic_entry {
-    unsigned char *magic;
-    size_t magic_size;
-    char *name;
-};
+#define FORMAT_ENTRY2(magic, type, mask) \
+  { (unsigned char *)(magic ""), sizeof(magic)-1, type, mask }
 
 const char *
 i_test_format_probe(io_glue *data, int length) {
-  static struct magic_entry formats[] = {
+  static const struct magic_entry formats[] = {
     FORMAT_ENTRY("\xFF\xD8", "jpeg"),
     FORMAT_ENTRY("GIF87a", "gif"),
     FORMAT_ENTRY("GIF89a", "gif"),
@@ -2144,8 +2172,40 @@ i_test_format_probe(io_glue *data, int length) {
     FORMAT_ENTRY("P4", "pnm"),
     FORMAT_ENTRY("P5", "pnm"),
     FORMAT_ENTRY("P6", "pnm"),
+    FORMAT_ENTRY("/* XPM", "xpm"),
+    FORMAT_ENTRY("\x8aMNG", "mng"),
+    FORMAT_ENTRY("\x8aJNG", "jng"),
+    /* SGI RGB - with various possible parameters to avoid false positives
+       on similar files 
+       values are: 2 byte magic, rle flags (0 or 1), bytes/sample (1 or 2)
+    */
+    FORMAT_ENTRY("\x01\xDA\x00\x01", "rgb"),
+    FORMAT_ENTRY("\x01\xDA\x00\x02", "rgb"),
+    FORMAT_ENTRY("\x01\xDA\x01\x01", "rgb"),
+    FORMAT_ENTRY("\x01\xDA\x01\x02", "rgb"),
+    
+    FORMAT_ENTRY2("FORM    ILBM", "ilbm", "xxxx    xxxx"),
+
+    /* different versions of PCX format 
+       http://www.fileformat.info/format/pcx/
+    */
+    FORMAT_ENTRY("\x0A\x00\x01", "pcx"),
+    FORMAT_ENTRY("\x0A\x03\x01", "pcx"),
+    FORMAT_ENTRY("\x0A\x03\x01", "pcx"),
+    FORMAT_ENTRY("\x0A\x04\x01", "pcx"),
+    FORMAT_ENTRY("\x0A\x05\x01", "pcx"),
+
+    /* FITS - http://fits.gsfc.nasa.gov/ */
+    FORMAT_ENTRY("SIMPLE  =", "fits"),
+
+    /* PSD - Photoshop */
+    FORMAT_ENTRY("8BPS\x00\x01", "psd"),
+    
+    /* EPS - Encapsulated Postscript */
+    /* only reading 18 chars, so we don't include the F in EPSF */
+    FORMAT_ENTRY("%!PS-Adobe-2.0 EPS", "eps"),
   };
-  static struct magic_entry more_formats[] = {
+  static const struct magic_entry more_formats[] = {
     FORMAT_ENTRY("\x00\x00\x01\x00", "ico"),
     FORMAT_ENTRY("\x00\x00\x02\x00", "ico"), /* cursor */
   };
@@ -2160,13 +2220,10 @@ i_test_format_probe(io_glue *data, int length) {
   data->seekcb(data, -rc, SEEK_CUR);
 
   for(i=0; i<sizeof(formats)/sizeof(formats[0]); i++) { 
-    int c;
-    if (rc < formats[i].magic_size)
-      continue;
-    c = !memcmp(formats[i].magic, head, formats[i].magic_size);
-    if (c) {
-      return formats[i].name;
-    }
+    struct magic_entry const *entry = formats + i;
+
+    if (test_magic(head, rc, entry)) 
+      return entry->name;
   }
 
   if ((rc == 18) &&
@@ -2174,13 +2231,10 @@ i_test_format_probe(io_glue *data, int length) {
     return "tga";
 
   for(i=0; i<sizeof(more_formats)/sizeof(more_formats[0]); i++) { 
-    int c;
-    if (rc < more_formats[i].magic_size)
-      continue;
-    c = !memcmp(more_formats[i].magic, head, more_formats[i].magic_size);
-    if (c) {
-      return more_formats[i].name;
-    }
+    struct magic_entry const *entry = more_formats + i;
+
+    if (test_magic(head, rc, entry)) 
+      return entry->name;
   }
 
   return NULL;
