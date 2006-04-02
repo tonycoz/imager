@@ -936,7 +936,7 @@ tiff_load_ifd(imtiff *tiff, unsigned long offset) {
     entry->tag = tiff_get16(tiff, base);
     entry->type = tiff_get16(tiff, base+2);
     entry->count = tiff_get32(tiff, base+4);
-    if (entry->type >= 1 || entry->type <= ift_last) {
+    if (entry->type >= 1 && entry->type <= ift_last) {
       entry->item_size = type_sizes[entry->type];
       entry->size = entry->item_size * entry->count;
       if (entry->size / entry->item_size != entry->count) {
