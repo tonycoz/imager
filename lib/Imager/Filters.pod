@@ -636,4 +636,16 @@ and height of $img and $other_img.
 
 =back
 
+=head1 AUTHOR
+
+Arnar M. Hrafnkelsson, Tony Cook <tony@imager.perl.org>.
+
+=head1 SEE ALSO
+
+Imager, Imager::Filter::Flines, Imager::Filter::Mandelbrot
+
+=head1 REVISION
+
+$Revision$
+
 =cut
