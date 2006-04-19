@@ -2,7 +2,7 @@
 use strict;
 use lib 't';
 use Imager qw(:all);
-use Test::More tests => 53;
+use Test::More tests => 54;
 
 init_log("testout/t101jpeg.log",1);
 
@@ -30,7 +30,7 @@ if (!i_has_format("jpeg")) {
     $im = Imager->new(xsize=>2, ysize=>2);
     ok(!$im->write(file=>"testout/nojpeg.jpg"), "should fail to write jpeg");
     cmp_ok($im->errstr, '=~', qr/format not supported/, "check no jpeg message");
-    skip("no jpeg support", 49);
+    skip("no jpeg support", 50);
   }
 } else {
   open(FH,">testout/t101.jpg") || die "cannot open testout/t101.jpg for writing\n";
@@ -256,6 +256,18 @@ if (!i_has_format("jpeg")) {
        "should fail to write but shouldn't crash");
     is($im->errstr, "only 1 or 3 channels images can be saved as JPEG",
        "check the error message");
+  }
+ SKIP:
+  { # Issue # 18496
+    # If a jpeg with EXIF data containing an (invalid) IFD entry with a 
+    # type of zero is read then Imager crashes with a Floating point 
+    # exception
+    # testimg/zerojpeg.jpg was manually modified from exiftest.jpg to
+    # reproduce the problem.
+    Imager::i_exif_enabled()
+	or skip("no exif support", 1);
+    my $im = Imager->new;
+    ok($im->read(file=>'testimg/zerotype.jpg'), "shouldn't crash");
   }
 }
 

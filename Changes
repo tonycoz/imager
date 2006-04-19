@@ -1415,6 +1415,11 @@ This is a release specifically to fix #18397
 - fix confirmed by reporter.
 - bump to 0.50 for release
 
+0.51
+- backport fix for #18496 from dev tree:
+  fix range checking on IFD entry data types.  This could cause various 
+  crashes.
+
 =================================================================
 
         For latest versions check the Imager-devel pages:
