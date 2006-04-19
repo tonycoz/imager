@@ -1409,6 +1409,12 @@ This is a test release specifically to fix #18397
   fixes # 18397
 - bump to 0.49_01 for test release
 
+0.50 Wed 29 Mar 2006
+This is a release specifically to fix #18397
+- See also: http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=359661
+- fix confirmed by reporter.
+- bump to 0.50 for release
+
 =================================================================
 
         For latest versions check the Imager-devel pages:
