@@ -534,12 +534,7 @@ sub _color {
         $result = Imager::Color->new(%$arg);
       }
       elsif ($copy =~ /^ARRAY\(/) {
-        if (grep $_ > 1, @$arg) {
-          $result = Imager::Color->new(@$arg);
-        }
-        else {
-          $result = Imager::Color::Float->new(@$arg);
-        }
+	$result = Imager::Color->new(@$arg);
       }
       else {
         $Imager::ERRSTR = "Not a color";
