@@ -1419,6 +1419,10 @@ This is a release specifically to fix #18397
 - backport fix for #18496 from dev tree:
   fix range checking on IFD entry data types.  This could cause various 
   crashes.
+- backport fix for #18712 from dev tree:
+  Specifying the bottom edge of the source image to paste was broken in
+  a couple of different ways.
+  
 
 =================================================================
 
