@@ -637,7 +637,7 @@ sub paste {
     else {
       $src_right = $r;
     }
-    if (defined $input{src_maxx}) {
+    if (defined $input{src_maxy}) {
       $src_bottom = $input{src_maxy};
     }
     elsif (defined $input{height}) {
@@ -653,7 +653,7 @@ sub paste {
   }
 
   $src_right > $r and $src_right = $r;
-  $src_bottom > $r and $src_bottom = $b;
+  $src_bottom > $b and $src_bottom = $b;
 
   if ($src_right <= $src_left
       || $src_bottom < $src_top) {

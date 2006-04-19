@@ -1,7 +1,7 @@
 #!perl -w
 use strict;
 use lib 't';
-use Test::More tests => 15;
+use Test::More tests => 23;
 
 BEGIN { use_ok("Imager") }
 
@@ -25,16 +25,16 @@ ok($img->write(type=>'pnm',file=>'testout/t66.ppm'), "save it")
 
 # more stringent tests
 {
-  my $src = Imager->new(xsize => 100, ysize => 100);
+  my $src = Imager->new(xsize => 100, ysize => 110);
   $src->box(filled=>1, color=>'FF0000');
 
   $src->box(filled=>1, color=>'0000FF', xmin => 20, ymin=>20,
             xmax=>79, ymax=>79);
 
-  my $targ = Imager->new(xsize => 100, ysize => 100);
+  my $targ = Imager->new(xsize => 100, ysize => 110);
+  $targ->box(filled=>1, color =>'00FFFF');
   $targ->box(filled=>1, color=>'00FF00', xmin=>20, ymin=>20, xmax=>79,
              ymax=>79);
-
   my $work = $targ->copy;
   ok($work->paste(src=>$src, left => 15, top => 10), "paste whole image");
   # build comparison image
@@ -50,7 +50,7 @@ ok($img->write(type=>'pnm',file=>'testout/t66.ppm'), "save it")
   ok($work->paste(src=>$src, left=>2, top=>7, src_minx => 10, src_miny => 15),
      "paste from inside src");
   $cmp = $targ->copy;
-  $cmp->box(filled=>1, xmin=>2, ymin=>7, xmax=>91, ymax=>91, color=>'FF0000');
+  $cmp->box(filled=>1, xmin=>2, ymin=>7, xmax=>91, ymax=>101, color=>'FF0000');
   $cmp->box(filled=>1, xmin=>12, ymin=>12, xmax=>71, ymax=>71, 
             color=>'0000FF');
   is(Imager::i_img_diff($work->{IMG}, $cmp->{IMG}), 0,
@@ -84,4 +84,55 @@ ok($img->write(type=>'pnm',file=>'testout/t66.ppm'), "save it")
      "using src_coords");
   is(Imager::i_img_diff($work->{IMG}, $cmp->{IMG}), 0,
      "compare pasted and expected");
+
+  {
+    # Issue #18712
+    # supplying just src_maxx would set the internal maxy to undef
+    # supplying just src_maxy would be ignored
+    # src_maxy (or it's derived value) was being bounds checked against 
+    # the image width instead of the image height
+    $work = $targ->copy;
+    my @warns;
+    local $SIG{__WARN__} = sub { push @warns, "@_"; print "# @_"; };
+    
+    ok($work->paste(src=>$src, left => 15, top => 20,
+		    src_maxx => 50),
+       "paste with just src_maxx");
+    ok(!@warns, "shouldn't warn");
+    my $cmp = $targ->copy;
+    $cmp->box(filled=>1, color => 'FF0000', xmin => 15, ymin => 20,
+	      xmax => 64, ymax => 109);
+    $cmp->box(filled=>1, color => '0000FF', xmin => 35, ymin => 40,
+	      xmax => 64, ymax => 99);
+    is(Imager::i_img_diff($work->{IMG}, $cmp->{IMG}), 0,
+       "check correctly pasted");
+
+    $work = $targ->copy;
+    @warns = ();
+    ok($work->paste(src=>$src, left=>15, top=>20,
+		    src_maxy => 60),
+       "paste with just src_maxy");
+    ok(!@warns, "shouldn't warn");
+    $cmp = $targ->copy;
+    $cmp->box(filled => 1, color => 'FF0000', xmin => 15, ymin => 20,
+	      xmax => 99, ymax => 79);
+    $cmp->box(filled => 1, color => '0000FF', xmin => 35, ymin => 40,
+	      xmax => 94, ymax => 79);
+    is(Imager::i_img_diff($work->{IMG}, $cmp->{IMG}), 0,
+       "check pasted correctly");
+
+    $work = $targ->copy;
+    @warns = ();
+    ok($work->paste(src=>$src, left=>15, top=>20,
+		    src_miny => 20, src_maxy => 105),
+       "paste with src_maxy > source width");
+
+    $cmp = $targ->copy;
+    $cmp->box(filled => 1, color => 'FF0000', xmin => 15, ymin => 20,
+	      ymax => 104);
+    $cmp->box(filled => 1, color => '0000FF', xmin => 35, ymin => 20,
+	      xmax => 94, ymax => 79);
+    is(Imager::i_img_diff($work->{IMG}, $cmp->{IMG}), 0,
+       "check pasted correctly");
+  }
 }
