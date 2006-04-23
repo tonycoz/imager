@@ -1422,7 +1422,12 @@ This is a release specifically to fix #18397
 - backport fix for #18712 from dev tree:
   Specifying the bottom edge of the source image to paste was broken in
   a couple of different ways.
-  
+  backport fix for #18561 from dev tree:
+- Calling setpixel() with color set to [ 0, 0, 0 ] would crash with 
+  Can't locate object method "new" via package "Imager::Color::Float" ...
+- having the color parameter code create floating point colors could
+  cause other problems too, since most of the underlying functions can't
+  handle them, so removed the attempt to create float colors.
 
 =================================================================
 
