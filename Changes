@@ -1428,6 +1428,7 @@ This is a release specifically to fix #18397
 - having the color parameter code create floating point colors could
   cause other problems too, since most of the underlying functions can't
   handle them, so removed the attempt to create float colors.
+- bump to 0.51 for release
 
 =================================================================
 
