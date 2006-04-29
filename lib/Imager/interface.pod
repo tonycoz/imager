@@ -1,6 +1,6 @@
 =head1 NAME
 
-Imager::interface.pod - decribes the virtual image interface
+Imager::interface.pod - decribes the C level virtual image interface
 
 =head1 SYNOPSIS
 
@@ -27,6 +27,10 @@ As of this writing we have the following concrete image types:
 =item *
 
 16-bit/sample direct images
+
+=item *
+
+double/sample direct images
 
 =item *
 
@@ -125,7 +129,9 @@ otherwise it is implementation defined.
 =item tags
 
 will be used to store meta-data for an image, eg. tags from a TIFF
-file, or animation information from a GIF file.  Currently unused.
+file, or animation information from a GIF file.  This should be
+initialized with a call to i_tags_new() in your image constructor if
+creating a new image type.
 
 =item ext_data
 
