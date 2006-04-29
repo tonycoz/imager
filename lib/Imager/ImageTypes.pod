@@ -1,6 +1,6 @@
 =head1 NAME
 
-Imager::ImageTypes - Internal image representation information
+Imager::ImageTypes - image models for Imager
 
 =head1 SYNOPSIS
 
@@ -76,17 +76,49 @@ Imager::ImageTypes - Internal image representation information
   
 =head1 DESCRIPTION
 
-Imager supports various internal image representations of images.  The
-two major classes are direct mode and paletted mode.  In paletted mode
-an image has a numbered list of colors and the color of each pixel is
-determined by an index into the table.  In direct mode there is no
-color palette and each pixel has a seperate value for red green and
-blue for RGB images.  To complicate matters it's possible to have
-other color spaces than RGB, for example, gray, gray and alpha, or
-red, green, blue and alpha.
+Imager supports two basic models of image:
 
-In addition it's possible to have direct type images with 8 bits/channel
-16 bits/channel or double/channel (64 bits on many systems).
+=over
+
+=item *
+
+direct color - all samples are stored for every pixel.  eg. for an
+8-bit/sample RGB image, 24 bits are stored for each pixel.
+
+=item *
+
+paletted - an index into a table of colors is stored for each pixel.
+
+=back
+
+Direct color or paletted images can have 1 to 4 samples per color
+stored.  Imager treats these as follows:
+
+=over
+
+=item *
+
+1 sample per color - grayscale image.
+
+=item *
+
+2 samples per color - grayscale image with alpha channel.
+
+=item *
+
+3 samples per color - RGB image.
+
+=item *
+
+4 samples per color - RGB image with alpha channel.
+
+=back
+
+Direct color images can have sample sizes of 8-bits per sample,
+16-bits per sample or a double precision floating point number per
+sample (64-bits on many systems).
+
+Paletted images are always 8-bits/sample.
 
 To query an existing image about it's parameters see the C<bits()>,
 C<type()>, C<getwidth()>, C<getheight()>, C<getchannels()> and
