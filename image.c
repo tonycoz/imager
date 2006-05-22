@@ -2190,7 +2190,7 @@ i_test_format_probe(io_glue *data, int length) {
        http://www.fileformat.info/format/pcx/
     */
     FORMAT_ENTRY("\x0A\x00\x01", "pcx"),
-    FORMAT_ENTRY("\x0A\x03\x01", "pcx"),
+    FORMAT_ENTRY("\x0A\x02\x01", "pcx"),
     FORMAT_ENTRY("\x0A\x03\x01", "pcx"),
     FORMAT_ENTRY("\x0A\x04\x01", "pcx"),
     FORMAT_ENTRY("\x0A\x05\x01", "pcx"),
@@ -2204,10 +2204,15 @@ i_test_format_probe(io_glue *data, int length) {
     /* EPS - Encapsulated Postscript */
     /* only reading 18 chars, so we don't include the F in EPSF */
     FORMAT_ENTRY("%!PS-Adobe-2.0 EPS", "eps"),
+
+    /* Utah RLE */
+    FORMAT_ENTRY("\x52\xCC", "utah"),
   };
   static const struct magic_entry more_formats[] = {
-    FORMAT_ENTRY("\x00\x00\x01\x00", "ico"),
-    FORMAT_ENTRY("\x00\x00\x02\x00", "ico"), /* cursor */
+    /* these were originally both listed as ico, but cur files can
+       include hotspot information */
+    FORMAT_ENTRY("\x00\x00\x01\x00", "ico"), /* Windows icon */
+    FORMAT_ENTRY("\x00\x00\x02\x00", "cur"), /* Windows cursor */
   };
 
   unsigned int i;
