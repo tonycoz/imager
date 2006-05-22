@@ -409,7 +409,7 @@ int i_tags_set_float2(i_img_tags *tags, char const *name, int code,
 
 Retrieve a tag specified by name or code as an integer.
 
-On success sets the i_color *I<value> to the color and returns true.
+On success sets the int *I<value> to the integer and returns true.
 
 On failure returns false.
 
