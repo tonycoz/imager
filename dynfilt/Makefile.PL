@@ -1,12 +1,13 @@
+use strict;
 use Config;
 use ExtUtils::MakeMaker;
-$Verbose = 1;
+my $Verbose = 1;
 
-$lddl=$Config{"lddlflags"};
+my $lddl=$Config{"lddlflags"};
 
-@plugins= qw(dyntest dt2 mandelbrot flines);
+my @plugins= qw(dyntest dt2 mandelbrot flines);
 
-$libstr=join(' ',map { $_.'.$(SO)' } @plugins);
+my $libstr=join(' ',map { $_.'.$(SO)' } @plugins);
 
 #print $libstr,"\n";
 #print $objstr,"\n";

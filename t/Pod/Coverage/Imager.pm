@@ -1,4 +1,5 @@
 package Pod::Coverage::Imager;
+use strict;
 use base 'Pod::Coverage';
 
 sub _get_pods {

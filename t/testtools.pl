@@ -1,4 +1,5 @@
 # this doesn't need a new namespace - I hope
+use strict;
 use Imager qw(:all);
 use vars qw($TESTNUM);
 use Carp 'confess';

@@ -1,3 +1,5 @@
+#!perl -w
+use strict;
 use ExtUtils::MakeMaker;
 
 my %opts = 
