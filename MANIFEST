@@ -108,8 +108,8 @@ iolayer.c
 iolayer.h
 iolayert.h	IO layer types
 jpeg.c
-lib/Imager/API.pm
-lib/Imager/APIRef.pm    API function reference
+lib/Imager/API.pod
+lib/Imager/APIRef.pod    API function reference
 lib/Imager/Color.pm
 lib/Imager/Color/Float.pm
 lib/Imager/Color/Table.pm
