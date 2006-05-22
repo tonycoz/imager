@@ -1,6 +1,10 @@
 package Imager::ExtUtils;
 use strict;
 
+use vars qw($VERSION);
+
+$VERSION = "1.000";
+
 =head1 NAME
 
 Imager::ExtUtils - functions handy in writing Imager extensions
