@@ -92,3 +92,8 @@ align-string.pl
 
   This demonstrates how the various values of halign and valign
   behave.
+
+inline_capture2image.pl
+
+  Demonstrates using Inline and Imager's API to convert captured BGR
+  image data into an Imager image.
