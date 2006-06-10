@@ -182,4 +182,11 @@ extern im_ext_funcs *imager_function_ext_table;
 #define i_rubthru(im, src, tx, ty, src_minx, src_miny, src_maxx, src_maxy) \
   ((im_extt->f_i_rubthru)((im), (src), (tx), (ty), (src_minx), (src_miny), (src_maxx), (src_maxy)))
 
+#define i_set_image_file_limits(max_width, max_height, max_bytes) \
+  ((im_extt->f_i_set_image_file_limits)((max_width), (max_height), (max_bytes)))
+#define i_get_image_file_limits(max_width, max_height, max_bytes) \
+  ((im_extt->f_i_get_image_file_limits)((pmax_width), (pmax_height), (pmax_bytes)))
+#define i_int_check_image_file_limits(width, height, channels, sample_size) \
+  ((im_extt->f_i_int_check_image_file_limits)((width), (height), (channels), (sample_size)))
+
 #endif

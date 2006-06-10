@@ -529,6 +529,8 @@ extern int
 i_set_image_file_limits(int width, int height, int bytes);
 extern int
 i_get_image_file_limits(int *width, int *height, int *bytes);
+extern int
+i_int_check_image_file_limits(int width, int height, int channels, int sample_size);
 
 /* memory allocation */
 void* mymalloc(int size);
