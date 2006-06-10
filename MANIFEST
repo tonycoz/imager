@@ -18,6 +18,7 @@ ICO/ICO.xs
 ICO/Makefile.PL
 ICO/imicon.c
 ICO/imicon.h
+ICO/lib/Imager/File/CUR.pm
 ICO/msicon.c
 ICO/msicon.h
 ICO/t/t10icon.t

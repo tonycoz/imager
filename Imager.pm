@@ -146,6 +146,9 @@ use Imager::Font;
 # registered file readers
 my %readers;
 
+# registered file writers
+my %writers;
+
 # modules we attempted to autoload
 my %attempted_to_load;
 
@@ -1365,6 +1368,28 @@ sub register_reader {
   return 1;
 }
 
+sub register_writer {
+  my ($class, %opts) = @_;
+
+  defined $opts{type}
+    or die "register_writer called with no type parameter\n";
+
+  my $type = $opts{type};
+
+  defined $opts{single} || defined $opts{multiple}
+    or die "register_writer called with no single or multiple parameter\n";
+
+  $writers{$type} = {  };
+  if ($opts{single}) {
+    $writers{$type}{single} = $opts{single};
+  }
+  if ($opts{multiple}) {
+    $writers{$type}{multiple} = $opts{multiple};
+  }
+
+  return 1;
+}
+
 # probes for an Imager::File::whatever module
 sub _reader_autoload {
   my $type = shift;
@@ -1380,6 +1405,34 @@ sub _reader_autoload {
       ++$attempted_to_load{$file};
       require $file;
     };
+  }
+}
+
+# probes for an Imager::File::whatever module
+sub _writer_autoload {
+  my $type = shift;
+
+  return if $formats{$type} || $readers{$type};
+
+  return unless $type =~ /^\w+$/;
+
+  my $file = "Imager/File/\U$type\E.pm";
+
+  unless ($attempted_to_load{$file}) {
+    eval {
+      ++$attempted_to_load{$file};
+      require $file;
+    };
+    if ($@) {
+      # try to get a writer specific module
+      my $file = "Imager/File/\U$type\EWriter.pm";
+      unless ($attempted_to_load{$file}) {
+	eval {
+	  ++$attempted_to_load{$file};
+	  require $file;
+	};
+      }
+    }
   }
 }
 
@@ -1497,7 +1550,17 @@ sub write {
     return undef;
   }
 
-  if (!$formats{$input{'type'}}) { $self->{ERRSTR}='format not supported'; return undef; }
+  if ($writers{$input{type}} && $writers{$input{type}}{single}) {
+    my ($IO, $fh) = $self->_get_writer_io(\%input, $input{'type'})
+      or return undef;
+
+    return $writers{$input{type}}{single}->($self, $IO, %input);
+  }
+
+  if (!$formats{$input{'type'}}) { 
+    $self->{ERRSTR}='format not supported'; 
+    return undef;
+  }
 
   my ($IO, $fh) = $self->_get_writer_io(\%input, $input{'type'})
     or return undef;
@@ -1604,10 +1667,12 @@ sub write {
 sub write_multi {
   my ($class, $opts, @images) = @_;
 
-  if (!$opts->{'type'} && $opts->{'file'}) {
-    $opts->{'type'} = $FORMATGUESS->($opts->{'file'});
+  my $type = $opts->{type};
+
+  if (!$type && $opts->{'file'}) {
+    $type = $FORMATGUESS->($opts->{'file'});
   }
-  unless ($opts->{'type'}) {
+  unless ($type) {
     $class->_set_error('type parameter missing and not possible to guess from extension');
     return;
   }
@@ -1619,9 +1684,23 @@ sub write_multi {
   $class->_set_opts($opts, "i_", @images)
     or return;
   my @work = map $_->{IMG}, @images;
-  my ($IO, $file) = $class->_get_writer_io($opts, $opts->{'type'})
+
+  if ($writers{$type} && $writers{$type}{multiple}) {
+    my ($IO, $file) = $class->_get_writer_io($opts, $type)
+      or return undef;
+
+    return $writers{$type}{multiple}->($class, $IO, $opts, @images);
+  }
+
+  if (!$formats{$type}) { 
+    $class->_set_error("format not $type supported"); 
+    return undef;
+  }
+
+  my ($IO, $file) = $class->_get_writer_io($opts, $type)
     or return undef;
-  if ($opts->{'type'} eq 'gif') {
+
+  if ($type eq 'gif') {
     $class->_set_opts($opts, "gif_", @images)
       or return;
     my $gif_delays = $opts->{gif_delays};
@@ -1634,7 +1713,7 @@ sub write_multi {
     $res or $class->_set_error($class->_error_as_msg());
     return $res;
   }
-  elsif ($opts->{'type'} eq 'tiff') {
+  elsif ($type eq 'tiff') {
     $class->_set_opts($opts, "tiff_", @images)
       or return;
     $class->_set_opts($opts, "exif_", @images)
@@ -1651,7 +1730,7 @@ sub write_multi {
     return $res;
   }
   else {
-    $ERRSTR = "Sorry, write_multi doesn't support $opts->{'type'} yet";
+    $ERRSTR = "Sorry, write_multi doesn't support $type yet";
     return 0;
   }
 }
@@ -1710,7 +1789,7 @@ sub read_multi {
     }
   }
 
-  $ERRSTR = "Cannot read multiple images from $opts{'type'} files";
+  $ERRSTR = "Cannot read multiple images from $type files";
   return;
 }
 

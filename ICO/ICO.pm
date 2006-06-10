@@ -46,6 +46,82 @@ Imager->register_reader
    },
   );
 
+# the readers can read CUR files too
+Imager->register_reader
+  (
+   type=>'cur',
+   single => 
+   sub { 
+     my ($im, $io, %hsh) = @_;
+     $im->{IMG} = i_readico_single($io, $hsh{page} || 0);
+
+     unless ($im->{IMG}) {
+       $im->_set_error(Imager->_error_as_msg);
+       return;
+     }
+     return $im;
+   },
+   multiple =>
+   sub {
+     my ($io, %hsh) = @_;
+     
+     my @imgs = i_readico_multi($io);
+     unless (@imgs) {
+       Imager->_set_error(Imager->_error_as_msg);
+       return;
+     }
+     return map { 
+       bless { IMG => $_, DEBUG => $Imager::DEBUG, ERRSTR => undef }, 'Imager'
+     } @imgs;
+   },
+  );
+
+Imager->register_writer
+  (
+   type=>'ico',
+   single => 
+   sub { 
+     my ($im, $io, %hsh) = @_;
+
+     unless (i_writeico_wiol($io, $im->{IMG})) {
+       $im->_set_error(Imager->_error_as_msg);
+       return;
+     }
+     return $im;
+   },
+   multiple =>
+   sub {
+     my ($class, $io, $opts, @images) = @_;
+
+     
+
+     return;
+   },
+  );
+
+Imager->register_writer
+  (
+   type=>'cur',
+   single => 
+   sub { 
+     my ($im, $io, %hsh) = @_;
+
+     unless (i_writecur_wiol($io, $im->{IMG})) {
+       $im->_set_error(Imager->_error_as_msg);
+       return;
+     }
+     return $im;
+   },
+   multiple =>
+   sub {
+     my ($class, $io, $opts, @images) = @_;
+
+     
+
+     return;
+   },
+  );
+
 1;
 
 __END__

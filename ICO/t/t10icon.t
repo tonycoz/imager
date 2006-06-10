@@ -7,6 +7,8 @@ BEGIN { use_ok('Imager::File::ICO'); }
 -d 'testout' or mkdir 'testout';
 
 my $im = Imager->new;
+# type=>'ico' or 'cur' and read ico and cur since they're pretty much
+# the same
 ok($im->read(file => "testimg/rgba3232.ico", type=>"ico"),
    "read 32 bit")
   or print "# ", $im->errstr, "\n";
@@ -15,7 +17,6 @@ is($im->getwidth, 32, "check height");
 is($im->type, 'direct', "check type");
 is($im->tags(name => 'ico_bits'), 32, "check ico_bits tag");
 is($im->tags(name => 'i_format'), 'ico', "check i_format tag");
-is($im->tags(name => 'ico_type'), 'icon', "check ico_type tag");
 my $mask = '.*
 ..........................******
 ..........................******
@@ -72,7 +73,6 @@ is($im->type, 'paletted', "check type");
 is($im->colorcount, 256, "color count");
 is($im->tags(name => 'ico_bits'), 8, "check ico_bits tag");
 is($im->tags(name => 'i_format'), 'ico', "check i_format tag");
-is($im->tags(name => 'ico_type'), 'icon', "check ico_type tag");
 SKIP:
 {
   my $comp = Imager->new;
@@ -92,7 +92,6 @@ is($im->type, 'paletted', "check type");
 is($im->colorcount, 16, "color count");
 is($im->tags(name => 'ico_bits'), 4, "check ico_bits tag");
 is($im->tags(name => 'i_format'), 'ico', "check i_format tag");
-is($im->tags(name => 'ico_type'), 'icon', "check ico_type tag");
 SKIP:
 {
   my $comp = Imager->new;
@@ -110,9 +109,8 @@ is($im->getwidth, 32, "check width");
 is($im->getwidth, 32, "check height");
 is($im->type, 'paletted', "check type");
 is($im->colorcount, 2, "color count");
-is($im->tags(name => 'ico_bits'), 1, "check ico_bits tag");
-is($im->tags(name => 'i_format'), 'ico', "check i_format tag");
-is($im->tags(name => 'ico_type'), 'cursor', "check ico_type tag");
+is($im->tags(name => 'cur_bits'), 1, "check ico_bits tag");
+is($im->tags(name => 'i_format'), 'cur', "check i_format tag");
 $im->write(file=>'testout/pal13232.ppm');
 
 # combo was created with the GIMP, which has a decent mechanism for selecting
@@ -159,3 +157,19 @@ is_deeply([ $imgs[1]->getpixel(x=>31, 'y'=>31)->rgba ], [ 17, 231, 177, 255 ],
 	  "check image data 1(31,31)");
 is_deeply([ $imgs[2]->getpixel(x=>15, 'y'=>15)->rgba ], [ 17, 231, 177, 255 ],
 	  "check image data 2(15,15)");
+
+$im = Imager->new(xsize=>32, ysize=>32);
+$im->box(filled=>1, color=>'FF0000');
+$im->box(filled=>1, color=>'0000FF', xmin => 6, ymin=>0, xmax => 21, ymax=>15);
+$im->box(filled=>1, color=>'00FF00', xmin => 10, ymin=>16, xmax => 25, ymax=>31);
+
+ok($im->write(file=>'testout/t10_32.ico', type=>'ico'),
+   "write 32-bit icon");
+
+my $im2 = Imager->new;
+ok($im2->read(file=>'testout/t10_32.ico', type=>'ico'),
+   "read it back in");
+
+is(Imager::i_img_diff($im->{IMG}, $im2->{IMG}), 0,
+   "check they're the same");
+is($im->bits, $im2->bits, "check same bits");
