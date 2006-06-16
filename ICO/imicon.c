@@ -21,6 +21,7 @@ read_one_icon(ico_reader_t *file, int index) {
   image = ico_image_read(file, index, &error);
   if (!image) {
     ico_push_error(error);
+    i_push_error(0, "error reading ICO/CUR image");
     return NULL;
   }
 
@@ -83,7 +84,6 @@ read_one_icon(ico_reader_t *file, int index) {
       c.rgba.a = 255; /* so as to not confuse some code */
 
       if (i_addcolors(result, &c, 1) < 0) {
-	printf("couldn't add color to palette\n");
 	i_push_error(0, "could not add color to palette");
 	ico_image_release(image);
 	i_img_destroy(result);
@@ -155,14 +155,11 @@ i_readico_single(io_glue *ig, int index) {
   file = ico_reader_open(ig, &error);
   if (!file) {
     ico_push_error(error);
+    i_push_error(0, "error opening ICO/CUR file");
     return NULL;
   }
 
-  if (index < 0 && index >= ico_image_count(file)) {
-    i_push_error(0, "page out of range");
-    ico_reader_close(file);
-    return NULL;
-  }
+  /* the index is range checked by msicon.c - don't duplicate it here */
 
   result = read_one_icon(file, index);
   ico_reader_close(file);
@@ -177,9 +174,12 @@ i_readico_multi(io_glue *ig, int *count) {
   int error;
   i_img **imgs;
 
+  i_clear_error();
+
   file = ico_reader_open(ig, &error);
   if (!file) {
     ico_push_error(error);
+    i_push_error(0, "error opening ICO/CUR file");
     return NULL;
   }
 
@@ -188,7 +188,7 @@ i_readico_multi(io_glue *ig, int *count) {
   *count = 0;
   for (index = 0; index < ico_image_count(file); ++index) {
     i_img *im = read_one_icon(file, index);
-    if (!im) 
+    if (!im)
       break;
 
     imgs[(*count)++] = im;
@@ -455,6 +455,11 @@ i_writeico_wiol(i_io_glue_t *ig, i_img *im) {
 
   unfill_image(&ico);
 
+  if (i_io_close(ig) < 0) {
+    i_push_error(0, "error closing output");
+    return 0;
+  }
+
   return 1;
 }
 
@@ -491,6 +496,11 @@ i_writeico_multi_wiol(i_io_glue_t *ig, i_img **ims, int count) {
   for (i = 0; i < count; ++i)
     unfill_image(icons + i);
   myfree(icons);
+
+  if (i_io_close(ig) < 0) {
+    i_push_error(0, "error closing output");
+    return 0;
+  }
 
   return 1;
 }
@@ -539,6 +549,11 @@ i_writecur_wiol(i_io_glue_t *ig, i_img *im) {
 
   unfill_image(&ico);
 
+  if (i_io_close(ig) < 0) {
+    i_push_error(0, "error closing output");
+    return 0;
+  }
+
   return 1;
 }
 
@@ -550,7 +565,7 @@ i_writecur_multi_wiol(i_io_glue_t *ig, i_img **ims, int count) {
 
   i_clear_error();
 
-  if (count > 255) {
+  if (count > 0xFFFF) {
     i_push_error(0, "too many images for ico files");
     return 0;
   }
@@ -575,6 +590,11 @@ i_writecur_multi_wiol(i_io_glue_t *ig, i_img **ims, int count) {
   for (i = 0; i < count; ++i)
     unfill_image(icons + i);
   myfree(icons);
+
+  if (i_io_close(ig) < 0) {
+    i_push_error(0, "error closing output");
+    return 0;
+  }
 
   return 1;
 }

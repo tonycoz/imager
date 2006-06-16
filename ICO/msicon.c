@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <stdarg.h>
+#include <assert.h>
 
 static
 int read_packed(io_glue *ig, const char *format, ...);
@@ -255,6 +256,11 @@ ico_image_read(ico_reader_t *file, int index, int *error) {
     return NULL;
   }
 
+  if (bit_count != 1 && bit_count != 4 && bit_count != 8 && bit_count != 32) {
+    *error = ICOERR_Unknown_Bits;
+    return 0;
+  }
+
   result = malloc(sizeof(ico_image_t));
   if (!result) {
     *error = ICOERR_Out_Of_Memory;
@@ -270,7 +276,7 @@ ico_image_read(ico_reader_t *file, int index, int *error) {
   result->hotspot_x = im->hotspot_x;
   result->hotspot_y = im->hotspot_y;
     
-  if (result->direct) {
+  if (bit_count == 32) {
     result->palette_size = 0;
 
     result->image_data = malloc(result->width * result->height * sizeof(ico_color_t));
@@ -279,15 +285,7 @@ ico_image_read(ico_reader_t *file, int index, int *error) {
       *error = ICOERR_Out_Of_Memory;
       return NULL;
     }
-    if (bit_count == 32) {
-      if (!read_32bit_data(file, result, error)) {
-	free(result->image_data);
-	free(result);
-	return NULL;
-      }
-    }
-    else {
-      *error = ICOERR_Unknown_Bits;
+    if (!read_32bit_data(file, result, error)) {
       free(result->image_data);
       free(result);
       return NULL;
@@ -295,15 +293,23 @@ ico_image_read(ico_reader_t *file, int index, int *error) {
   }
   else {
     int read_result;
+
     result->palette_size = 1 << bit_count;
     result->palette = malloc(sizeof(ico_color_t) * result->palette_size);
-    result->image_data = malloc(result->width * result->height);
     if (!result->palette) {
       free(result);
       *error = ICOERR_Out_Of_Memory;
       return NULL;
     }
 
+    result->image_data = malloc(result->width * result->height);
+    if (!result->image_data) {
+      *error = ICOERR_Out_Of_Memory;
+      free(result->palette);
+      free(result);
+      return 0;
+    }      
+    
     if (!read_palette(file, result, error)) {
       free(result->palette);
       free(result->image_data);
@@ -325,8 +331,8 @@ ico_image_read(ico_reader_t *file, int index, int *error) {
       break;
 
     default:
+      assert(0); /* this can't happen in theory */
       read_result = 0;
-      *error = ICOERR_Unknown_Bits;
       break;
     }
 

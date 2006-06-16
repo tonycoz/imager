@@ -270,7 +270,7 @@ static ssize_t call_writer(struct cbdata *cbd, void const *buf, size_t size) {
   FREETMPS;
   LEAVE;
 
-  return success ? size : 0;
+  return success ? size : -1;
 }
 
 static ssize_t call_reader(struct cbdata *cbd, void *buf, size_t size, 
@@ -375,7 +375,7 @@ static off_t io_seeker(void *p, off_t offset, int whence) {
 static ssize_t io_writer(void *p, void const *data, size_t size) {
   struct cbdata *cbd = p;
 
-  /*printf("io_writer(%p, %p, %u)\n", p, data, size);*/
+  /* printf("io_writer(%p, %p, %u)\n", p, data, size); */
   if (!cbd->writing) {
     if (cbd->reading && cbd->where < cbd->used) {
       /* we read past the place where the caller expected us to be
@@ -457,11 +457,12 @@ static ssize_t io_reader(void *p, void *data, size_t size) {
   return total;
 }
 
-static void io_closer(void *p) {
+static int io_closer(void *p) {
   struct cbdata *cbd = p;
 
   if (cbd->writing && cbd->used > 0) {
-    write_flush(cbd);
+    if (write_flush(cbd) < 0)
+      return -1;
     cbd->writing = 0;
   }
 
@@ -480,6 +481,8 @@ static void io_closer(void *p) {
     FREETMPS;
     LEAVE;
   }
+
+  return 0;
 }
 
 static void io_destroyer(void *p) {
@@ -1171,7 +1174,6 @@ i_io_close(ig)
 void
 i_io_DESTROY(ig)
         Imager::IO     ig
-
 
 MODULE = Imager		PACKAGE = Imager
 
@@ -3265,6 +3267,14 @@ i_errors()
 	  PUSHs(sv_2mortal(newRV_noinc((SV*)av)));
 	  ++i;
 	}
+
+void
+i_clear_error()
+
+void
+i_push_error(code, msg)
+	int code
+	const char *msg
 
 undef_int
 i_nearest_color(im, ...)

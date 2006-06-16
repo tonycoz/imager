@@ -22,7 +22,7 @@ typedef i_io_glue_t io_glue;
 typedef ssize_t(*i_io_readp_t) (io_glue *ig, void *buf, size_t count);
 typedef ssize_t(*i_io_writep_t)(io_glue *ig, const void *buf, size_t count);
 typedef off_t  (*i_io_seekp_t) (io_glue *ig, off_t offset, int whence);
-typedef void   (*i_io_closep_t)(io_glue *ig);
+typedef int    (*i_io_closep_t)(io_glue *ig);
 typedef ssize_t(*i_io_sizep_t) (io_glue *ig);
 
 typedef void   (*i_io_closebufp_t)(void *p);
@@ -34,7 +34,7 @@ typedef void (*i_io_destroyp_t)(i_io_glue_t *ig);
 typedef ssize_t(*i_io_readl_t) (void *p, void *buf, size_t count);
 typedef ssize_t(*i_io_writel_t)(void *p, const void *buf, size_t count);
 typedef off_t  (*i_io_seekl_t) (void *p, off_t offset, int whence);
-typedef void   (*i_io_closel_t)(void *p);
+typedef int    (*i_io_closel_t)(void *p);
 typedef void   (*i_io_destroyl_t)(void *p);
 typedef ssize_t(*i_io_sizel_t) (void *p);
 

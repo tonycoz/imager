@@ -24,6 +24,7 @@ ICO/msicon.h
 ICO/t/t10icon.t
 ICO/t/t20readone.t
 ICO/t/t21readmult.t
+ICO/t/t50readfail.t
 ICO/testimg/combo.ico
 ICO/testimg/pal13232.ico
 ICO/testimg/pal43232.ico

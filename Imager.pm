@@ -1550,6 +1550,8 @@ sub write {
     return undef;
   }
 
+  _writer_autoload($input{type});
+
   if ($writers{$input{type}} && $writers{$input{type}}{single}) {
     my ($IO, $fh) = $self->_get_writer_io(\%input, $input{'type'})
       or return undef;

@@ -93,9 +93,12 @@ Imager->register_writer
    sub {
      my ($class, $io, $opts, @images) = @_;
 
-     
+     if (!i_writeico_multi_wiol($io, map $_->{IMG}, @images)) {
+       Imager->_set_error(Imager->_error_as_msg);
+       return;
+     }
 
-     return;
+     return 1;
    },
   );
 
@@ -116,9 +119,12 @@ Imager->register_writer
    sub {
      my ($class, $io, $opts, @images) = @_;
 
-     
+     if (!i_writecur_multi_wiol($io, map $_->{IMG}, @images)) {
+       Imager->_set_error(Imager->_error_as_msg);
+       return;
+     }
 
-     return;
+     return 1;
    },
   );
 

@@ -113,7 +113,7 @@ Some of these functions are internal.
 static ssize_t fd_read(io_glue *ig, void *buf, size_t count);
 static ssize_t fd_write(io_glue *ig, const void *buf, size_t count);
 static off_t fd_seek(io_glue *ig, off_t offset, int whence);
-static void fd_close(io_glue *ig);
+static int fd_close(io_glue *ig);
 static ssize_t fd_size(io_glue *ig);
 static const char *my_strerror(int err);
 
@@ -157,8 +157,8 @@ realseek_read(io_glue *ig, void *buf, size_t count) {
   size_t        bc = 0;
   char       *cbuf = buf;
 
-  IOL_DEB( printf("realseek_read: fd = %d, ier->cpos = %ld, buf = %p, "
-                  "count = %d\n", fd, (long) ier->cpos, buf, count) );
+  IOL_DEB( printf("realseek_read:  buf = %p, count = %d\n", 
+		  buf, count) );
   /* Is this a good idea? Would it be better to handle differently?
      skip handling? */
   while( count!=bc && (rc = ig->source.cb.readcb(p,cbuf+bc,count-bc))>0 ) {
@@ -218,11 +218,13 @@ actual close or not.  Does nothing for now.  Should be fixed.
 =cut */
 
 static
-void
+int
 realseek_close(io_glue *ig) {
   mm_log((1, "realseek_close(ig %p)\n", ig));
   if (ig->source.cb.closecb)
-    ig->source.cb.closecb(ig->source.cb.p);
+    return ig->source.cb.closecb(ig->source.cb.p);
+  else
+    return 0;
 }
 
 
@@ -284,7 +286,7 @@ ssize_t
 buffer_read(io_glue *ig, void *buf, size_t count) {
   io_ex_buffer *ieb = ig->exdata;
 
-  IOL_DEB( printf("buffer_read: fd = %d, ier->cpos = %ld, buf = %p, count = %d\n", fd, (long) ier->cpos, buf, count) );
+  IOL_DEB( printf("buffer_read: ieb->cpos = %ld, buf = %p, count = %d\n", (long) ieb->cpos, buf, count) );
 
   if ( ieb->cpos+count > ig->source.buffer.len ) {
     mm_log((1,"buffer_read: short read: cpos=%d, len=%d, count=%d\n", ieb->cpos, ig->source.buffer.len));
@@ -293,7 +295,7 @@ buffer_read(io_glue *ig, void *buf, size_t count) {
   
   memcpy(buf, ig->source.buffer.data+ieb->cpos, count);
   ieb->cpos += count;
-  IOL_DEB( printf("buffer_read: rc = %d, count = %d\n", rc, count) );
+  IOL_DEB( printf("buffer_read: count = %d\n", count) );
   return count;
 }
 
@@ -330,10 +332,11 @@ or not.  Does nothing for now.  Should be fixed.
 */
 
 static
-void
+int
 buffer_close(io_glue *ig) {
   mm_log((1, "buffer_close(ig %p)\n", ig));
-  /* FIXME: Do stuff here */
+
+  return 0;
 }
 
 
@@ -684,12 +687,12 @@ or not.  Does nothing for now.  Should be fixed.
 */
 
 static
-void
+int
 bufchain_close(io_glue *ig) {
   mm_log((1, "bufchain_close(ig %p)\n",ig));
   IOL_DEB( printf("bufchain_close(ig %p)\n", ig) );
-  /* FIXME: Commit a seek point here */
-  
+
+  return 0;  
 }
 
 
@@ -1115,8 +1118,9 @@ static off_t fd_seek(io_glue *ig, off_t offset, int whence) {
   return result;
 }
 
-static void fd_close(io_glue *ig) {
+static int fd_close(io_glue *ig) {
   /* no, we don't close it */
+  return 0;
 }
 
 static ssize_t fd_size(io_glue *ig) {
