@@ -1,6 +1,6 @@
 #!perl -w
 use strict;
-use Test::More tests => 60;
+use Test::More tests => 94;
 
 BEGIN { use_ok('Imager::File::ICO'); }
 
@@ -173,3 +173,151 @@ ok($im2->read(file=>'testout/t10_32.ico', type=>'ico'),
 is(Imager::i_img_diff($im->{IMG}, $im2->{IMG}), 0,
    "check they're the same");
 is($im->bits, $im2->bits, "check same bits");
+
+{
+  my $im = Imager->new(xsize => 32, ysize => 32);
+  $im->box(filled=>1, color=>'#FF00FF');
+  my $data;
+  ok(Imager->write_multi({ data => \$data, type=>'ico' }, $im, $im),
+     "write multi icons");
+  ok(length $data, "and it wrote data");
+  my @im = Imager->read_multi(data => $data);
+  is(@im, 2, "got all the images back");
+  is(Imager::i_img_diff($im->{IMG}, $im[0]{IMG}), 0, "check first image");
+  is(Imager::i_img_diff($im->{IMG}, $im[1]{IMG}), 0, "check second image");
+}
+
+{ # 1 channel image
+  my $im = Imager->new(xsize => 32, ysize => 32, channels => 1);
+  $im->box(filled=>1, color => [ 128, 0, 0 ]);
+  my $data;
+  ok($im->write(data => \$data, type=>'ico'), "write 1 channel image");
+  my $im2 = Imager->new;
+  ok($im2->read(data => $data), "read it back");
+  is($im2->getchannels, 4, "check channels");
+  my $imrgb = $im->convert(preset => 'rgb')
+    ->convert(preset => 'addalpha');
+  is(Imager::i_img_diff($imrgb->{IMG}, $im2->{IMG}), 0,
+     "check image matches expected");
+}
+
+{ # 2 channel image
+  my $base = Imager->new(xsize => 32, ysize => 32, channels => 2);
+  $base->box(filled => 1, color => [ 64, 192, 0 ]);
+  my $data;
+  ok($base->write(data => \$data, type=>'ico'), "write 2 channel image");
+  my $read = Imager->new;
+  ok($read->read(data => $data), "read it back");
+  is($read->getchannels, 4, "check channels");
+  my $imrgb = $base->convert(preset => 'rgb');
+  is(Imager::i_img_diff($imrgb->{IMG}, $read->{IMG}), 0,
+     "check image matches expected");
+}
+
+{ # 4 channel image
+  my $base = Imager->new(xsize => 32, ysize => 32, channels => 4);
+  $base->box(filled=>1, ymax => 15, color => [ 255, 0, 255, 128 ]);
+  $base->box(filled=>1, ymin => 16, color => [ 0, 255, 255, 255 ]);
+  my $data;
+  ok($base->write(data => \$data, type=>'ico'), "write 4 channel image");
+  my $read = Imager->new;
+  ok($read->read(data => $data, type=>'ico'), "read it back")
+    or print "# ", $read->errstr, "\n";
+  is(Imager::i_img_diff($base->{IMG}, $read->{IMG}), 0,
+     "check image matches expected");
+}
+
+{ # mask handling
+  my $base = Imager->new(xsize => 16, ysize => 16, channels => 3);
+  $base->box(filled=>1, xmin => 5, xmax => 10, color => '#0000FF');
+  $base->box(filled=>1, ymin => 5, ymax => 10, color => '#0000FF');
+  my $mask = <<EOS; # CR in this to test it's skipped correctly
+01
+0000011111100000
+00000111111 00000xx
+00000111111000  
+00000111111000
+0000011111100000
+1111111111111111
+1111111111111111
+1111111111111111
+1111111111111111
+1111111111111111
+1111111111111111
+1010101010101010
+1010101010101010
+1010101010101010
+1010101010101010
+1010101010101010
+EOS
+  $mask =~ s/\n/\r\n/g; # to test alternate newline handling is correct
+  $base->settag(name => 'ico_mask', value => $mask);
+  my $saved_mask = $base->tags(name => 'ico_mask');
+  my $data;
+  ok($base->write(data => \$data, type => 'ico'),
+     "write with mask tag set");
+  my $read = Imager->new;
+  ok($read->read(data => $data), "read it back");
+  my $mask2 = $mask;
+  $mask2 =~ tr/01/.*/;
+  $mask2 =~ s/\n$//;
+  $mask2 =~ tr/\r x//d;
+  $mask2 =~ s/^(.{3,19})$/$1 . "." x (16 - length $1)/gem;
+  my $read_mask = $read->tags(name => 'ico_mask');
+  is($read_mask, $mask2, "check mask is correct");
+}
+
+{ # mask too short to handle
+  my $mask = "xx";
+  my $base = Imager->new(xsize => 16, ysize => 16, channels => 3);
+  $base->box(filled=>1, xmin => 5, xmax => 10, color => '#0000FF');
+  $base->box(filled=>1, ymin => 5, ymax => 10, color => '#0000FF');
+  $base->settag(name => 'ico_mask', value => $mask);
+  my $data;
+  ok($base->write(data => \$data, type=>'ico'),
+     "save icon with short mask tag");
+  my $read = Imager->new;
+  ok($read->read(data => $data), "read it back");
+  my $read_mask = $read->tags(name => 'ico_mask');
+  my $expected_mask = ".*" . ( "\n" . "." x 16 ) x 16;
+  is($read_mask, $expected_mask, "check the mask");
+
+  # mask that doesn't match what we expect
+  $base->settag(name => 'ico_mask', value => 'abcd');
+  ok($base->write(data => \$data, type => 'ico'), 
+     "write with bad format mask tag");
+  ok($read->read(data => $data), "read it back");
+  $read_mask = $read->tags(name => 'ico_mask');
+  is($read_mask, $expected_mask, "check the mask");
+
+  # mask with invalid char
+  $base->settag(name => 'ico_mask', value => ".*\n....xxx..");
+  ok($base->write(data => \$data, type => 'ico'), 
+     "write with unexpected chars in mask");
+  ok($read->read(data => $data), "read it back");
+  $read_mask = $read->tags(name => 'ico_mask');
+  is($read_mask, $expected_mask, "check the mask");
+}
+
+{ # check handling of greyscale paletted
+  my $base = Imager->new(xsize => 16, ysize => 16, channels => 1, 
+                         type => 'paletted');
+  my @grays = map Imager::Color->new($_),
+    "000000", "666666", "CCCCCC", "FFFFFF";
+  ok($base->addcolors(colors => \@grays), "add some colors");
+  $base->box(filled => 1, color => $grays[1], xmax => 7, ymax => 7);
+  $base->box(filled => 1, color => $grays[1], xmax => 7, ymin => 8);
+  $base->box(filled => 1, color => $grays[1], xmin => 8, ymax => 7);
+  $base->box(filled => 1, color => $grays[1], xmin => 8, ymax => 8);
+  my $data;
+  ok($base->write(data => \$data, type => 'ico'),
+     "write grayscale paletted");
+  my $read = Imager->new;
+  ok($read->read(data => $data), "read it back")
+    or print "# ", $read->errstr, "\n";
+  is($read->type, 'paletted', "check type");
+  is($read->getchannels, 3, "check channels");
+  my $as_rgb = $base->convert(preset => 'rgb');
+  is(Imager::i_img_diff($base->{IMG}, $read->{IMG}), 0,
+     "check the image");
+}

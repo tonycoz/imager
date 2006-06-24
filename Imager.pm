@@ -1405,6 +1405,16 @@ sub _reader_autoload {
       ++$attempted_to_load{$file};
       require $file;
     };
+    if ($@) {
+      # try to get a reader specific module
+      my $file = "Imager/File/\U$type\EReader.pm";
+      unless ($attempted_to_load{$file}) {
+	eval {
+	  ++$attempted_to_load{$file};
+	  require $file;
+	};
+      }
+    }
   }
 }
 
@@ -1552,106 +1562,109 @@ sub write {
 
   _writer_autoload($input{type});
 
+  my ($IO, $fh);
   if ($writers{$input{type}} && $writers{$input{type}}{single}) {
-    my ($IO, $fh) = $self->_get_writer_io(\%input, $input{'type'})
+    ($IO, $fh) = $self->_get_writer_io(\%input, $input{'type'})
       or return undef;
 
-    return $writers{$input{type}}{single}->($self, $IO, %input);
+    $writers{$input{type}}{single}->($self, $IO, %input)
+      or return undef;
   }
-
-  if (!$formats{$input{'type'}}) { 
-    $self->{ERRSTR}='format not supported'; 
-    return undef;
-  }
-
-  my ($IO, $fh) = $self->_get_writer_io(\%input, $input{'type'})
-    or return undef;
-
-  if ($input{'type'} eq 'tiff') {
-    $self->_set_opts(\%input, "tiff_", $self)
+  else {
+    if (!$formats{$input{'type'}}) { 
+      $self->{ERRSTR}='format not supported'; 
+      return undef;
+    }
+    
+    ($IO, $fh) = $self->_get_writer_io(\%input, $input{'type'})
       or return undef;
-    $self->_set_opts(\%input, "exif_", $self)
-      or return undef;
-
-    if (defined $input{class} && $input{class} eq 'fax') {
-      if (!i_writetiff_wiol_faxable($self->{IMG}, $IO, $input{fax_fine})) {
-	$self->{ERRSTR} = $self->_error_as_msg();
-	return undef;
+    
+    if ($input{'type'} eq 'tiff') {
+      $self->_set_opts(\%input, "tiff_", $self)
+        or return undef;
+      $self->_set_opts(\%input, "exif_", $self)
+        or return undef;
+      
+      if (defined $input{class} && $input{class} eq 'fax') {
+        if (!i_writetiff_wiol_faxable($self->{IMG}, $IO, $input{fax_fine})) {
+          $self->{ERRSTR} = $self->_error_as_msg();
+          return undef;
+        }
+      } else {
+        if (!i_writetiff_wiol($self->{IMG}, $IO)) {
+          $self->{ERRSTR} = $self->_error_as_msg();
+          return undef;
+        }
       }
-    } else {
-      if (!i_writetiff_wiol($self->{IMG}, $IO)) {
-	$self->{ERRSTR} = $self->_error_as_msg();
-	return undef;
+    } elsif ( $input{'type'} eq 'pnm' ) {
+      $self->_set_opts(\%input, "pnm_", $self)
+        or return undef;
+      if ( ! i_writeppm_wiol($self->{IMG},$IO) ) {
+        $self->{ERRSTR} = $self->_error_as_msg();
+        return undef;
       }
-    }
-  } elsif ( $input{'type'} eq 'pnm' ) {
-    $self->_set_opts(\%input, "pnm_", $self)
-      or return undef;
-    if ( ! i_writeppm_wiol($self->{IMG},$IO) ) {
-      $self->{ERRSTR} = $self->_error_as_msg();
-      return undef;
-    }
-    $self->{DEBUG} && print "writing a pnm file\n";
-  } elsif ( $input{'type'} eq 'raw' ) {
-    $self->_set_opts(\%input, "raw_", $self)
-      or return undef;
-    if ( !i_writeraw_wiol($self->{IMG},$IO) ) {
-      $self->{ERRSTR} = $self->_error_as_msg();
-      return undef;
-    }
-    $self->{DEBUG} && print "writing a raw file\n";
-  } elsif ( $input{'type'} eq 'png' ) {
-    $self->_set_opts(\%input, "png_", $self)
-      or return undef;
-    if ( !i_writepng_wiol($self->{IMG}, $IO) ) {
-      $self->{ERRSTR}='unable to write png image';
-      return undef;
-    }
-    $self->{DEBUG} && print "writing a png file\n";
-  } elsif ( $input{'type'} eq 'jpeg' ) {
-    $self->_set_opts(\%input, "jpeg_", $self)
-      or return undef;
-    $self->_set_opts(\%input, "exif_", $self)
-      or return undef;
-    if ( !i_writejpeg_wiol($self->{IMG}, $IO, $input{jpegquality})) {
-      $self->{ERRSTR} = $self->_error_as_msg();
-      return undef;
-    }
-    $self->{DEBUG} && print "writing a jpeg file\n";
-  } elsif ( $input{'type'} eq 'bmp' ) {
-    $self->_set_opts(\%input, "bmp_", $self)
-      or return undef;
-    if ( !i_writebmp_wiol($self->{IMG}, $IO) ) {
-      $self->{ERRSTR}='unable to write bmp image';
-      return undef;
-    }
-    $self->{DEBUG} && print "writing a bmp file\n";
-  } elsif ( $input{'type'} eq 'tga' ) {
-    $self->_set_opts(\%input, "tga_", $self)
-      or return undef;
-
-    if ( !i_writetga_wiol($self->{IMG}, $IO, $input{wierdpack}, $input{compress}, $input{idstring}) ) {
-      $self->{ERRSTR}=$self->_error_as_msg();
-      return undef;
-    }
-    $self->{DEBUG} && print "writing a tga file\n";
-  } elsif ( $input{'type'} eq 'gif' ) {
-    $self->_set_opts(\%input, "gif_", $self)
-      or return undef;
-    # compatibility with the old interfaces
-    if ($input{gifquant} eq 'lm') {
-      $input{make_colors} = 'addi';
-      $input{translate} = 'perturb';
-      $input{perturb} = $input{lmdither};
-    } elsif ($input{gifquant} eq 'gen') {
-      # just pass options through
-    } else {
-      $input{make_colors} = 'webmap'; # ignored
-      $input{translate} = 'giflib';
-    }
-    if (!i_writegif_wiol($IO, \%input, $self->{IMG})) {
-      $self->{ERRSTR} = $self->_error_as_msg;
-      return;
+      $self->{DEBUG} && print "writing a pnm file\n";
+    } elsif ( $input{'type'} eq 'raw' ) {
+      $self->_set_opts(\%input, "raw_", $self)
+        or return undef;
+      if ( !i_writeraw_wiol($self->{IMG},$IO) ) {
+        $self->{ERRSTR} = $self->_error_as_msg();
+        return undef;
+      }
+      $self->{DEBUG} && print "writing a raw file\n";
+    } elsif ( $input{'type'} eq 'png' ) {
+      $self->_set_opts(\%input, "png_", $self)
+        or return undef;
+      if ( !i_writepng_wiol($self->{IMG}, $IO) ) {
+        $self->{ERRSTR}='unable to write png image';
+        return undef;
+      }
+      $self->{DEBUG} && print "writing a png file\n";
+    } elsif ( $input{'type'} eq 'jpeg' ) {
+      $self->_set_opts(\%input, "jpeg_", $self)
+        or return undef;
+      $self->_set_opts(\%input, "exif_", $self)
+        or return undef;
+      if ( !i_writejpeg_wiol($self->{IMG}, $IO, $input{jpegquality})) {
+        $self->{ERRSTR} = $self->_error_as_msg();
+        return undef;
+      }
+      $self->{DEBUG} && print "writing a jpeg file\n";
+    } elsif ( $input{'type'} eq 'bmp' ) {
+      $self->_set_opts(\%input, "bmp_", $self)
+        or return undef;
+      if ( !i_writebmp_wiol($self->{IMG}, $IO) ) {
+        $self->{ERRSTR}='unable to write bmp image';
+        return undef;
+      }
+      $self->{DEBUG} && print "writing a bmp file\n";
+    } elsif ( $input{'type'} eq 'tga' ) {
+      $self->_set_opts(\%input, "tga_", $self)
+        or return undef;
+      
+      if ( !i_writetga_wiol($self->{IMG}, $IO, $input{wierdpack}, $input{compress}, $input{idstring}) ) {
+        $self->{ERRSTR}=$self->_error_as_msg();
+        return undef;
+      }
+      $self->{DEBUG} && print "writing a tga file\n";
+    } elsif ( $input{'type'} eq 'gif' ) {
+      $self->_set_opts(\%input, "gif_", $self)
+        or return undef;
+      # compatibility with the old interfaces
+      if ($input{gifquant} eq 'lm') {
+        $input{make_colors} = 'addi';
+        $input{translate} = 'perturb';
+        $input{perturb} = $input{lmdither};
+      } elsif ($input{gifquant} eq 'gen') {
+        # just pass options through
+      } else {
+        $input{make_colors} = 'webmap'; # ignored
+        $input{translate} = 'giflib';
+      }
+      if (!i_writegif_wiol($IO, \%input, $self->{IMG})) {
+        $self->{ERRSTR} = $self->_error_as_msg;
+        return;
+      }
     }
   }
 
@@ -1687,54 +1700,72 @@ sub write_multi {
     or return;
   my @work = map $_->{IMG}, @images;
 
+  _writer_autoload($type);
+
+  my ($IO, $file);
   if ($writers{$type} && $writers{$type}{multiple}) {
-    my ($IO, $file) = $class->_get_writer_io($opts, $type)
+    ($IO, $file) = $class->_get_writer_io($opts, $type)
       or return undef;
 
-    return $writers{$type}{multiple}->($class, $IO, $opts, @images);
-  }
-
-  if (!$formats{$type}) { 
-    $class->_set_error("format not $type supported"); 
-    return undef;
-  }
-
-  my ($IO, $file) = $class->_get_writer_io($opts, $type)
-    or return undef;
-
-  if ($type eq 'gif') {
-    $class->_set_opts($opts, "gif_", @images)
-      or return;
-    my $gif_delays = $opts->{gif_delays};
-    local $opts->{gif_delays} = $gif_delays;
-    if ($opts->{gif_delays} && !ref $opts->{gif_delays}) {
-      # assume the caller wants the same delay for each frame
-      $opts->{gif_delays} = [ ($gif_delays) x @images ];
-    }
-    my $res = i_writegif_wiol($IO, $opts, @work);
-    $res or $class->_set_error($class->_error_as_msg());
-    return $res;
-  }
-  elsif ($type eq 'tiff') {
-    $class->_set_opts($opts, "tiff_", @images)
-      or return;
-    $class->_set_opts($opts, "exif_", @images)
-      or return;
-    my $res;
-    $opts->{fax_fine} = 1 unless exists $opts->{fax_fine};
-    if ($opts->{'class'} && $opts->{'class'} eq 'fax') {
-      $res = i_writetiff_multi_wiol_faxable($IO, $opts->{fax_fine}, @work);
-    }
-    else {
-      $res = i_writetiff_multi_wiol($IO, @work);
-    }
-    $res or $class->_set_error($class->_error_as_msg());
-    return $res;
+    $writers{$type}{multiple}->($class, $IO, $opts, @images)
+      or return undef;
   }
   else {
-    $ERRSTR = "Sorry, write_multi doesn't support $type yet";
-    return 0;
+    if (!$formats{$type}) { 
+      $class->_set_error("format $type not supported"); 
+      return undef;
+    }
+    
+    ($IO, $file) = $class->_get_writer_io($opts, $type)
+      or return undef;
+    
+    if ($type eq 'gif') {
+      $class->_set_opts($opts, "gif_", @images)
+        or return;
+      my $gif_delays = $opts->{gif_delays};
+      local $opts->{gif_delays} = $gif_delays;
+      if ($opts->{gif_delays} && !ref $opts->{gif_delays}) {
+        # assume the caller wants the same delay for each frame
+        $opts->{gif_delays} = [ ($gif_delays) x @images ];
+      }
+      unless (i_writegif_wiol($IO, $opts, @work)) {
+        $class->_set_error($class->_error_as_msg());
+        return undef;
+      }
+    }
+    elsif ($type eq 'tiff') {
+      $class->_set_opts($opts, "tiff_", @images)
+        or return;
+      $class->_set_opts($opts, "exif_", @images)
+        or return;
+      my $res;
+      $opts->{fax_fine} = 1 unless exists $opts->{fax_fine};
+      if ($opts->{'class'} && $opts->{'class'} eq 'fax') {
+        $res = i_writetiff_multi_wiol_faxable($IO, $opts->{fax_fine}, @work);
+      }
+      else {
+        $res = i_writetiff_multi_wiol($IO, @work);
+      }
+      unless ($res) {
+        $class->_set_error($class->_error_as_msg());
+        return undef;
+      }
+    }
+    else {
+      $ERRSTR = "Sorry, write_multi doesn't support $type yet";
+      return 0;
+    }
   }
+
+  if (exists $opts->{'data'}) {
+    my $data = io_slurp($IO);
+    if (!$data) {
+      Imager->_set_error('Could not slurp from buffer');
+      return undef;
+    }
+    ${$opts->{data}} = $data;
+  }
+  return 1;
 }
 
 # read multiple images from a file
@@ -3199,6 +3230,7 @@ sub def_guess_type {
   return 'rgb'  if ($ext eq "rgb");
   return 'gif'  if ($ext eq "gif");
   return 'raw'  if ($ext eq "raw");
+  return lc $ext; # best guess
   return ();
 }
 

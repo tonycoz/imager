@@ -1,7 +1,7 @@
 #!perl -w
 use strict;
 use lib 't';
-use Test::More tests => 101;
+use Test::More tests => 106;
 use Imager qw(:all);
 $^W=1; # warnings during command-line tests
 $|=1;  # give us some progress in the test harness
@@ -32,7 +32,7 @@ SKIP:
     $im = Imager->new(xsize=>2, ysize=>2);
     ok(!$im->write(file=>"testout/notiff.tif"), "should fail to write tiff");
     is($im->errstr, 'format not supported', "check no tiff message");
-    skip("no tiff support", 97);
+    skip("no tiff support", 102);
   }
 
   Imager::i_tags_add($img, "i_xres", 0, "300", 0);
@@ -409,4 +409,19 @@ SKIP:
 	   "Error opening file: Not a TIFF (?:or MDI )?file, bad magic number (8483 \\(0x2123\\)|8993 \\(0x2321\\))", 
        "check error message");
   }
+
+  { # write_multi to data
+    my $data;
+    my $im = Imager->new(xsize => 50, ysize => 50);
+    ok(Imager->write_multi({ data => \$data, type=>'tiff' }, $im, $im),
+       "write multi to in memory");
+    ok(length $data, "make sure something written");
+    my @im = Imager->read_multi(data => $data);
+    is(@im, 2, "make sure we can read it back");
+    is(Imager::i_img_diff($im[0]{IMG}, $im->{IMG}), 0,
+       "check first image");
+    is(Imager::i_img_diff($im[1]{IMG}, $im->{IMG}), 0,
+       "check second image");
+  }
 }
+

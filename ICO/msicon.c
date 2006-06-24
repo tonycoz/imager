@@ -155,7 +155,7 @@ ico_reader_open(i_io_glue_t *ig, int *error) {
 
     ico_reader_image_entry *image = file->images + i;
     if (type == ICON_ICON) {
-      if (!read_packed(ig, "bbxxxxxxdd", &width, &height, &bytes_in_res, 
+      if (!read_packed(ig, "bb xxxxxx dd", &width, &height, &bytes_in_res, 
 		       &image_offset)) {
 	free(file->images);
 	free(file);
@@ -167,7 +167,7 @@ ico_reader_open(i_io_glue_t *ig, int *error) {
     else {
       long hotspot_x, hotspot_y;
 
-      if (!read_packed(ig, "bbxxwwdd", &width, &height, 
+      if (!read_packed(ig, "bb xx ww dd", &width, &height, 
 		       &hotspot_x, &hotspot_y, &bytes_in_res, 
 		       &image_offset)) {
 	free(file->images);
@@ -205,7 +205,7 @@ ico_image_count(ico_reader_t *file) {
 /*
 =item ico_type
 
-  // type of file - 1 for icon, 2 for cursor
+  // type of file - ICON_ICON for icon, ICON_CURSOR for cursor
   type = ico_type(file);
 
 =cut
@@ -383,7 +383,7 @@ ico_image_release(ico_image_t *image) {
 /*
 =item ico_reader_close
 
-Releases the file structure.
+Releases the read file structure.
 
 =cut
 */
@@ -402,7 +402,36 @@ ico_reader_close(ico_reader_t *file) {
 
 =over
 
-=item ico_write
+=item ico_write(ig, images, image_count, type, &error)
+
+Parameters:
+
+=over
+
+=item *
+
+io_glue *ig - an Imager IO object.  This only needs to implement
+writing for ico_write()
+
+=item *
+
+ico_image_t *images - array of images to be written.
+
+=item *
+
+int image_count - number of images
+
+=item *
+
+int type - must be ICON_ICON or ICON_CURSOR
+
+=item *
+
+int *error - set to an error code on failure.
+
+=back
+
+Returns non-zero on success.
 
 =cut
 */
@@ -899,6 +928,7 @@ read_mask(ico_reader_t *file, ico_image_t *image, int *error) {
   unsigned char *read_buffer = malloc(line_bytes);
   int y;
   int x;
+  int mask;
   unsigned char *inp, *outp;
 
   if (!read_buffer) {
@@ -915,10 +945,14 @@ read_mask(ico_reader_t *file, ico_image_t *image, int *error) {
     
     outp = image->mask_data + y * image->width;
     inp = read_buffer;
+    mask = 0x80;
     for (x = 0; x < image->width; ++x) {
-      *outp++ = (*inp >> (7 - (x & 7))) & 1;
-      if ((x & 7) == 7)
+      *outp++ = (*inp & mask) ? 1 : 0;
+      mask >>= 1;
+      if (!mask) {
+        mask = 0x80;
 	++inp;
+      }
     }
   }
   free(read_buffer);
@@ -965,6 +999,14 @@ ico_write_validate(ico_image_t const *images, int image_count, int *error) {
   return 1;
 }
 
+/*
+=item ico_image_size
+
+Calculate how much space the icon takes up in the file.
+
+=cut
+*/
+
 static int
 ico_image_size(ico_image_t const *image, int *bits, int *colors) {
   int size = 40; /* start with the BITMAPINFOHEADER */
@@ -988,7 +1030,12 @@ ico_image_size(ico_image_t const *image, int *bits, int *colors) {
       *bits = 8;
       *colors = 0;
     }
-    size += (((image->width * 8 + *bits-1) / *bits) + 3) / 4 * 4 * image->height;
+
+    /* palette size */
+    size += *colors * 4;
+
+    /* image data size */
+    size += (image->width * *bits + 31) / 32 * 4 * image->height;
   }
 
   /* add in the mask */
@@ -996,6 +1043,14 @@ ico_image_size(ico_image_t const *image, int *bits, int *colors) {
 
   return size;
 }
+
+/*
+=item write_packed
+
+Pack numbers given a format to a stream.
+
+=cut
+*/
 
 static int 
 write_packed(i_io_glue_t *ig, char const *format, ...) {
@@ -1065,6 +1120,14 @@ write_packed(i_io_glue_t *ig, char const *format, ...) {
   return 1;
 }
 
+/*
+=item write_palette
+
+Write the palette for an icon.
+
+=cut
+*/
+
 static int
 write_palette(i_io_glue_t *ig, ico_image_t const *image, int *error) {
   int full_size = image->palette_size;
@@ -1111,22 +1174,40 @@ write_palette(i_io_glue_t *ig, ico_image_t const *image, int *error) {
   return 1;
 }
 
+/*
+=item write_bitmapinfoheader
+
+Write the BITMAPINFOHEADER for an icon image.
+
+=cut
+*/
+
 static int
 write_bitmapinfoheader(i_io_glue_t *ig, ico_image_t const *image, int *error,
 			int bit_count, int clr_used) {
   if (!write_packed(ig, "d dd w w d d dd dd", 
-		    40, /* biSize */
-		    image->width, 2 * image->height, /* biWidth/biHeight */
+		    40UL, /* biSize */
+		    (unsigned long)image->width, 
+                    (unsigned long)2 * image->height, /* biWidth/biHeight */
 		    1, bit_count, /* biPlanes, biBitCount */
-		    0, 0, /* biCompression, biSizeImage */
-		    0, 0, /* bi(X|Y)PetsPerMeter */
-		    clr_used, 0)) { /* biClrUsed, biClrImportant */
+		    0UL, 0UL, /* biCompression, biSizeImage */
+		    0UL, 0UL, /* bi(X|Y)PetsPerMeter */
+		    (unsigned long)clr_used, /* biClrUsed */
+                    0UL)) { /* biClrImportant */
     *error = ICOERR_Write_Failure;
     return 0;
   }
 
   return 1;
 }
+
+/*
+=item write_32_bit
+
+Write 32-bit image data to the icon.
+
+=cut
+*/
 
 static int
 write_32_bit(i_io_glue_t *ig, ico_image_t const *image, int *error) {
@@ -1167,6 +1248,14 @@ write_32_bit(i_io_glue_t *ig, ico_image_t const *image, int *error) {
   return 1;
 }
 
+/*
+=item write_8_bit
+
+Write 8 bit image data.
+
+=cut
+*/
+
 static int
 write_8_bit(i_io_glue_t *ig, ico_image_t const *image, int *error) {
   static const unsigned char zeros[3] = { '\0' };
@@ -1197,6 +1286,14 @@ write_8_bit(i_io_glue_t *ig, ico_image_t const *image, int *error) {
 
   return 1;
 }
+
+/*
+=item write_4_bit
+
+Write 4 bit image data.
+
+=cut
+*/
 
 static int
 write_4_bit(i_io_glue_t *ig, ico_image_t const *image, int *error) {
@@ -1244,6 +1341,14 @@ write_4_bit(i_io_glue_t *ig, ico_image_t const *image, int *error) {
 
   return 1;
 }
+
+/*
+=item write_1_bit
+
+Write 1 bit image data.
+
+=cut
+*/
 
 static int
 write_1_bit(i_io_glue_t *ig, ico_image_t const *image, int *error) {
@@ -1293,6 +1398,14 @@ write_1_bit(i_io_glue_t *ig, ico_image_t const *image, int *error) {
   return 1;
 }
 
+/*
+=item write_mask
+
+Write the AND mask.
+
+=cut
+*/
+
 static int
 write_mask(i_io_glue_t *ig, ico_image_t const *image, int *error) {
   int line_size = (image->width + 31) / 32 * 4;
@@ -1322,6 +1435,7 @@ write_mask(i_io_glue_t *ig, ico_image_t const *image, int *error) {
 	  mask = 0x80;
 	  outp++;
 	}
+        ++pixelp;
       }
       if (i_io_write(ig, writebuf, line_size) != line_size) {
 	*error = ICOERR_Write_Failure;
@@ -1331,7 +1445,7 @@ write_mask(i_io_glue_t *ig, ico_image_t const *image, int *error) {
     }
   }
   else {
-    memset(writebuf, 0xff, line_size);
+    memset(writebuf, 0, line_size);
     for (y = image->height-1; y >= 0; --y) {
       if (i_io_write(ig, writebuf, line_size) != line_size) {
 	*error = ICOERR_Write_Failure;

@@ -147,11 +147,19 @@ Imager::File::ICO - read MS Icon files
   my @imgs = Imager->read_multi(file => "foo.ico")
     or die Imager->errstr;
 
+  $img->write(file => "foo.ico")
+    or die $img->errstr;
+
+  Imager->write_multi({ file => "foo.ico" }, @imgs)
+    or die Imager->errstr;
+
 =head1 DESCRIPTION
 
-
+Imager's MS Icon support is documented in L<Imager::Files>.
 
 =head1 AUTHOR
+
+Tony Cook <tony@imager.perl.org>
 
 =head1 SEE ALSO
 

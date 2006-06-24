@@ -220,14 +220,14 @@ validate_image(i_img *im) {
 }
 
 static int
-translate_mask(i_img *im, unsigned char *out, unsigned char *in) {
+translate_mask(i_img *im, unsigned char *out, const char *in) {
   int x, y;
   int one, zero;
   int len = strlen(in);
   int pos;
   int newline; /* set to the first newline type we see */
   int notnewline; /* set to whatever in ( "\n\r" newline isn't ) */
-  
+
   if (len < 3)
     return 0;
 
@@ -245,7 +245,6 @@ translate_mask(i_img *im, unsigned char *out, unsigned char *in) {
   y = 0;
   while (y < im->ysize && pos < len) {
     x = 0;
-    
     while (x < im->xsize && pos < len) {
       if (in[pos] == newline) {
 	/* don't process it, we look for it later */
@@ -256,10 +255,12 @@ translate_mask(i_img *im, unsigned char *out, unsigned char *in) {
       }
       else if (in[pos] == one) {
 	*out++ = 1;
+        ++x;
 	++pos;
       }
       else if (in[pos] == zero) {
 	*out++ = 0;
+        ++x;
 	++pos;
       }
       else if (in[pos] == ' ' || in[pos] == '\t') {
@@ -275,6 +276,8 @@ translate_mask(i_img *im, unsigned char *out, unsigned char *in) {
     }
     while (pos < len && in[pos] != newline)
       ++pos;
+    if (pos < len && in[pos] == newline)
+      ++pos; /* actually skip the newline */
 
     ++y;
   }
@@ -287,19 +290,18 @@ translate_mask(i_img *im, unsigned char *out, unsigned char *in) {
 }
 
 static void 
-derive_mask(i_img *im, unsigned char *out) {
+derive_mask(i_img *im, ico_image_t *ico) {
 
   if (im->channels == 1 || im->channels == 3) {
-    int i;
-
-    for (i = 0; i < im->xsize * im->ysize; ++i) {
-      *out++ = 0;
-    }
+    /* msicon.c's default mask is what we want */
+    myfree(ico->mask_data);
+    ico->mask_data = NULL;
   }
   else {
     int channel = im->channels - 1;
     i_sample_t *linebuf = mymalloc(sizeof(i_sample_t) * im->xsize);
     int x, y;
+    unsigned char *out = ico->mask_data;
 
     for (y = 0; y < im->ysize; ++y) {
       i_gsamp(im, 0, im->xsize, y, linebuf, &channel, 1);
@@ -408,14 +410,15 @@ fill_image_base(i_img *im, ico_image_t *ico, const char *mask_name) {
 
   {
     /* build the mask */
-    /* can't overflow, max icon size too small */
-    int mask_size = im->xsize * im->ysize + 4;
-    char *mask_buf = mymalloc(mask_size); /* checked */
+    int mask_index;
+
     ico->mask_data = mymalloc(im->xsize * im->ysize);
-    
-    if (!i_tags_get_string(&im->tags, mask_name, 0, mask_buf, mask_size)
-	|| !translate_mask(im, ico->mask_data, mask_buf)) {
-      derive_mask(im, ico->mask_data);
+
+    if (!i_tags_find(&im->tags, mask_name, 0, &mask_index)
+        || !im->tags.tags[mask_index].data
+        || !translate_mask(im, ico->mask_data, 
+                           im->tags.tags[mask_index].data)) {
+      derive_mask(im, ico);
     }
   }
 }
@@ -471,7 +474,7 @@ i_writeico_multi_wiol(i_io_glue_t *ig, i_img **ims, int count) {
 
   i_clear_error();
 
-  if (count > 255) {
+  if (count > 0xFFFF) {
     i_push_error(0, "too many images for ico files");
     return 0;
   }
@@ -579,7 +582,7 @@ i_writecur_multi_wiol(i_io_glue_t *ig, i_img **ims, int count) {
   for (i = 0; i < count; ++i)
     fill_image_cursor(ims[i], icons + i);
 
-  if (!ico_write(ig, icons, count, ICON_ICON, &error)) {
+  if (!ico_write(ig, icons, count, ICON_CURSOR, &error)) {
     ico_push_error(error);
     for (i = 0; i < count; ++i)
       unfill_image(icons + i);
