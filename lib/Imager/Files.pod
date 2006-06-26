@@ -390,6 +390,18 @@ specification for that value appears in the derived field.  So for
 example if C<exf_metering_mode> is C<5> then
 C<exif_metering_mode_name> is set to C<Pattern>.
 
+=over
+
+=item parseiptc
+
+Historically, Imager saves IPTC data when reading a JPEG image, the
+parseiptc() method returns a list of key/value pairs resulting from a
+simple decoding of that data.
+
+Any future IPTC data decoding is likely to go into tags.
+
+=back
+
 =head2 GIF (Graphics Interchange Format)
 
 When writing one of more GIF images you can use the same

@@ -3570,6 +3570,9 @@ new() - L<Imager::ImageTypes/new>
 
 open() - L<Imager::Files> - an alias for read()
 
+parseiptc() - L<Imager::Files/parseiptc> - parse IPTC data from a JPEG
+image
+
 paste() - L<Imager::Transformations/paste> - draw an image onto an image
 
 polygon() - L<Imager::Draw/polygon>
