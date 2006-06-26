@@ -44,3 +44,7 @@ Makefile\.old
 ^ICO/ICO\.c$
 ^ICO/testout
 
+# trash from profiling
+\.gcno$
+\.gcda$
+\.gcov$

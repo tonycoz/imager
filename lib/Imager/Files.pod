@@ -778,6 +778,120 @@ values for the first line and so on, you can use the interleave option:
 
 There are no PNG specific tags.
 
+=head2 ICO (Microsoft Windows Icon) and CUR (Microsoft Windows Cursor)
+
+Icon and Cursor files are very similar, the only differences being a
+number in the header and the storage of the cursor hotspot.  I've
+treated them separately so that you're not messing with tags to
+distinguish between them.
+
+The following tags are set when reading an icon image and are used
+when writing it:
+
+=over
+
+=item ico_mask
+
+This is the AND mask of the icon.  When used as an icon in Windows 1
+bits in the mask correspond to pixels that are modified by the source
+image rather than simply replaced by the source image.
+
+Rather than requiring a binary bitmap this is accepted in a specific format:
+
+=over
+
+=item *
+
+first line consisting of the 0 placeholder, the 1 placeholder and a
+newline.
+
+=item *
+
+following lines which contain 0 and 1 placeholders for each scanline
+of the image, starting from the top of the image.
+
+=back
+
+When reading an image, '.' is used as the 0 placeholder and '*' as the
+1 placeholder.  An example:
+
+  .*
+  ..........................******
+  ..........................******
+  ..........................******
+  ..........................******
+  ...........................*****
+  ............................****
+  ............................****
+  .............................***
+  .............................***
+  .............................***
+  .............................***
+  ..............................**
+  ..............................**
+  ...............................*
+  ...............................*
+  ................................
+  ................................
+  ................................
+  ................................
+  ................................
+  ................................
+  *...............................
+  **..............................
+  **..............................
+  ***.............................
+  ***.............................
+  ****............................
+  ****............................
+  *****...........................
+  *****...........................
+  *****...........................
+  *****...........................
+
+=back
+
+The following tags are set when reading an icon:
+
+=over
+
+=item ico_bits
+
+The number of bits per pixel used to store the image.
+
+=back
+
+For cursor files the following tags are set and read when reading and
+writing:
+
+=over
+
+=item cur_mask
+
+This is the same as the ico_mask above.
+
+=item cur_hotspotx
+
+=item cur_hotspoty
+
+The "hot" spot of the cursor image.  This is the spot on the cursor
+that you click with.  If you set these to out of range values they are
+clipped to the size of the image when written to the file.
+
+=back
+
+C<cur_bits> is set when reading a cursor.
+
+Examples:
+
+  my $img = Imager->new(xsize => 32, ysize => 32, channels => 4);
+  $im->box(color => 'FF0000');
+  $im->write(file => 'box.ico');
+
+  $im->settag(name => 'cur_hotspotx', value => 16);
+  $im->settag(name => 'cur_hotspoty', value => 16);
+  $im->write(file => 'box.cur');
+
 =head1 ADDING NEW FORMATS
 
 To support a new format for reading, call the register_reader() class
@@ -875,17 +989,87 @@ Example:
      },
     );
 
+=item register_writer
+
+Registers single or multiple image write functions.
+
+Parameters:
+
+=over
+
+=item *
+
+type - the identifier of the file format.  This is typically the
+extension in lowercase.
+
+This parameter is required.
+
+=item *
+
+single - a code ref to write a single image to a file.  This is
+supplied:
+
+=over
+
+=item *
+
+the object that write() was called on,
+
+=item *
+
+an Imager::IO object that should be used to write the file, and
+
+=item *
+
+all the parameters supplied to the write() method.
+
+=back
+
+The single parameter is required.
+
+=item *
+
+multiple - a code ref which is called to write multiple images to a
+file. This is supplied:
+
+=over
+
+=item *
+
+the class name write_multi() was called on, this is typically
+C<Imager>.
+
+=item *
+
+an Imager::IO object that should be used to write the file, and
+
+=item *
+
+all the parameters supplied to the read_multi() method.
+
+=back
+
+=back
+
 =back
 
 If you name the reader module C<Imager::File::>I<your-format-name>
 where I<your-format-name> is a fully upper case version of the type
-value you would pass to read() or read_multi() then Imager will
-attempt to load that module if it has no other way to read that
-format.
+value you would pass to read(), read_multi(), write() or write_multi()
+then Imager will attempt to load that module if it has no other way to
+read or write that format.
 
 For example, if you create a module Imager::File::GIF and the user has
 built Imager without it's normal GIF support then an attempt to read a
 GIF image will attempt to load Imager::File::GIF.
+
+If your module can only handle reading then you can name your module
+C<Imager::File::>I<your-format-name>C<Reader> and Imager will attempt
+to autoload it.
+
+If your module can only handle writing then you can name your module 
+C<Imager::File::>I<your-format-name>C<Writer> and Imager will attempt
+to autoload it.
 
 =head1 EXAMPLES
 

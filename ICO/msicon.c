@@ -3,7 +3,10 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <stdarg.h>
+#include <assert.h>
 
+static
+int read_packed(io_glue *ig, const char *format, ...);
 static int 
 read_palette(ico_reader_t *file, ico_image_t *image, int *error);
 static int 
@@ -16,12 +19,31 @@ static int
 read_1bit_data(ico_reader_t *file, ico_image_t *image, int *error);
 static int 
 read_mask(ico_reader_t *file, ico_image_t *image, int *error);
+static int
+ico_write_validate(ico_image_t const *images, int image_count, int *error);
+static int
+ico_image_size(ico_image_t const *image, int *bits, int *colors);
+static int
+write_packed(i_io_glue_t *ig, char const *format, ...);
+static int
+write_palette(i_io_glue_t *ig, ico_image_t const *image, int *error);
+static int
+write_32_bit(i_io_glue_t *ig, ico_image_t const *image, int *error);
+static int
+write_8_bit(i_io_glue_t *ig, ico_image_t const *image, int *error);
+static int
+write_4_bit(i_io_glue_t *ig, ico_image_t const *image, int *error);
+static int
+write_1_bit(i_io_glue_t *ig, ico_image_t const *image, int *error);
+static int
+write_mask(i_io_glue_t *ig, ico_image_t const *image, int *error);
 
 typedef struct {
   int width;
   int height;
   long offset;
   long size;
+  int hotspot_x, hotspot_y;
 } ico_reader_image_entry;
 
 /* this was previously declared, now define it */
@@ -38,9 +60,6 @@ struct ico_reader_tag {
   /* image information from the header */
   ico_reader_image_entry *images;
 };
-
-static
-int read_packed(io_glue *ig, const char *format, ...);
 
 /*
 =head1 NAME 
@@ -133,13 +152,31 @@ ico_reader_open(i_io_glue_t *ig, int *error) {
 
   for (i = 0; i < count; ++i) {
     long width, height, bytes_in_res, image_offset;
+
     ico_reader_image_entry *image = file->images + i;
-    if (!read_packed(ig, "bbxxxxxxdd", &width, &height, &bytes_in_res, 
-		     &image_offset)) {
-      free(file->images);
-      free(file);
-      *error = ICOERR_Short_File;
-      return NULL;
+    if (type == ICON_ICON) {
+      if (!read_packed(ig, "bb xxxxxx dd", &width, &height, &bytes_in_res, 
+		       &image_offset)) {
+	free(file->images);
+	free(file);
+	*error = ICOERR_Short_File;
+	return NULL;
+      }
+      image->hotspot_x = image->hotspot_y = 0;
+    }
+    else {
+      long hotspot_x, hotspot_y;
+
+      if (!read_packed(ig, "bb xx ww dd", &width, &height, 
+		       &hotspot_x, &hotspot_y, &bytes_in_res, 
+		       &image_offset)) {
+	free(file->images);
+	free(file);
+	*error = ICOERR_Short_File;
+	return NULL;
+      }
+      image->hotspot_x = hotspot_x;
+      image->hotspot_y = hotspot_y;
     }
 
     image->width = width;
@@ -168,7 +205,7 @@ ico_image_count(ico_reader_t *file) {
 /*
 =item ico_type
 
-  // type of file - 1 for icon, 2 for cursor
+  // type of file - ICON_ICON for icon, ICON_CURSOR for cursor
   type = ico_type(file);
 
 =cut
@@ -219,6 +256,11 @@ ico_image_read(ico_reader_t *file, int index, int *error) {
     return NULL;
   }
 
+  if (bit_count != 1 && bit_count != 4 && bit_count != 8 && bit_count != 32) {
+    *error = ICOERR_Unknown_Bits;
+    return 0;
+  }
+
   result = malloc(sizeof(ico_image_t));
   if (!result) {
     *error = ICOERR_Out_Of_Memory;
@@ -231,8 +273,10 @@ ico_image_read(ico_reader_t *file, int index, int *error) {
   result->palette = NULL;
   result->image_data = NULL;
   result->mask_data = NULL;
+  result->hotspot_x = im->hotspot_x;
+  result->hotspot_y = im->hotspot_y;
     
-  if (result->direct) {
+  if (bit_count == 32) {
     result->palette_size = 0;
 
     result->image_data = malloc(result->width * result->height * sizeof(ico_color_t));
@@ -241,15 +285,7 @@ ico_image_read(ico_reader_t *file, int index, int *error) {
       *error = ICOERR_Out_Of_Memory;
       return NULL;
     }
-    if (bit_count == 32) {
-      if (!read_32bit_data(file, result, error)) {
-	free(result->image_data);
-	free(result);
-	return NULL;
-      }
-    }
-    else {
-      *error = ICOERR_Unknown_Bits;
+    if (!read_32bit_data(file, result, error)) {
       free(result->image_data);
       free(result);
       return NULL;
@@ -257,15 +293,23 @@ ico_image_read(ico_reader_t *file, int index, int *error) {
   }
   else {
     int read_result;
+
     result->palette_size = 1 << bit_count;
     result->palette = malloc(sizeof(ico_color_t) * result->palette_size);
-    result->image_data = malloc(result->width * result->height);
     if (!result->palette) {
       free(result);
       *error = ICOERR_Out_Of_Memory;
       return NULL;
     }
 
+    result->image_data = malloc(result->width * result->height);
+    if (!result->image_data) {
+      *error = ICOERR_Out_Of_Memory;
+      free(result->palette);
+      free(result);
+      return 0;
+    }      
+    
     if (!read_palette(file, result, error)) {
       free(result->palette);
       free(result->image_data);
@@ -287,8 +331,8 @@ ico_image_read(ico_reader_t *file, int index, int *error) {
       break;
 
     default:
+      assert(0); /* this can't happen in theory */
       read_result = 0;
-      *error = ICOERR_Unknown_Bits;
       break;
     }
 
@@ -339,7 +383,7 @@ ico_image_release(ico_image_t *image) {
 /*
 =item ico_reader_close
 
-Releases the file structure.
+Releases the read file structure.
 
 =cut
 */
@@ -352,6 +396,141 @@ ico_reader_close(ico_reader_t *file) {
 }
 
 /*
+=back
+
+=head1 WRITING ICON FILES
+
+=over
+
+=item ico_write(ig, images, image_count, type, &error)
+
+Parameters:
+
+=over
+
+=item *
+
+io_glue *ig - an Imager IO object.  This only needs to implement
+writing for ico_write()
+
+=item *
+
+ico_image_t *images - array of images to be written.
+
+=item *
+
+int image_count - number of images
+
+=item *
+
+int type - must be ICON_ICON or ICON_CURSOR
+
+=item *
+
+int *error - set to an error code on failure.
+
+=back
+
+Returns non-zero on success.
+
+=cut
+*/
+
+int
+ico_write(i_io_glue_t *ig, ico_image_t const *images, int image_count,
+	  int type, int *error) {
+  int i;
+  int start_offset = 6 + 16 * image_count;
+  int current_offset = start_offset;
+
+  if (type != ICON_ICON && type != ICON_CURSOR) {
+    *error = ICOERR_Bad_File_Type;
+    return 0;
+  }
+
+  /* validate the images */
+  if (!ico_write_validate(images, image_count, error))
+    return 0;
+
+  /* write the header */
+  if (!write_packed(ig, "www", 0, type, image_count)) {
+    *error = ICOERR_Write_Failure;
+    return 0;
+  }
+
+  /* work out the offsets of each image */
+  for (i = 0; i < image_count; ++i) {
+    ico_image_t const *image = images + i;
+    int bits, colors;
+    int size = ico_image_size(image, &bits, &colors);
+
+    if (type == ICON_ICON) {
+      if (!write_packed(ig, "bbbbwwdd", image->width, image->height,
+			colors, 0, 1, bits, (unsigned long)size, 
+			(unsigned long)current_offset)) {
+	*error = ICOERR_Write_Failure;
+	return 0;
+      }
+    }
+    else {
+      int hotspot_x = image->hotspot_x;
+      int hotspot_y = image->hotspot_y;
+
+      if (hotspot_x < 0)
+	hotspot_x = 0;
+      else if (hotspot_x >= image->width)
+	hotspot_x = image->width - 1;
+      if (hotspot_y < 0)
+	hotspot_y = 0;
+      else if (hotspot_y >= image->height)
+	hotspot_y = image->height - 1;
+
+      if (!write_packed(ig, "bbbbwwdd", image->width, image->height,
+			colors, 0, hotspot_x, hotspot_y, (unsigned long)size, 
+			(unsigned long)current_offset)) {
+	*error = ICOERR_Write_Failure;
+	return 0;
+      }
+    }
+    current_offset += size;
+  }
+  
+  /* write out each image */
+  for (i = 0; i < image_count; ++i) {
+    ico_image_t const *image = images + i;
+
+    if (image->direct) {
+      if (!write_32_bit(ig, image, error))
+	return 0;
+    }
+    else {
+      if (image->palette_size <= 2) {
+	if (!write_1_bit(ig, image, error))
+	  return 0;
+      }
+      else if (image->palette_size <= 16) {
+	if (!write_4_bit(ig, image, error))
+	  return 0;
+      }
+      else {
+	if (!write_8_bit(ig, image, error))
+	  return 0;
+      }
+    }
+    if (!write_mask(ig, image, error))
+      return 0;
+  }
+
+  return 1;
+}
+
+/*
+=back
+
+=head1 ERROR MESSAGES
+
+=over
+
 =item ico_error_message
 
 Converts an error code into an error message.
@@ -373,6 +552,10 @@ ico_error_message(int error, char *buffer, size_t buffer_size) {
     msg = "I/O error";
     break;
 
+  case ICOERR_Write_Failure:
+    msg = "Write failure";
+    break;
+
   case ICOERR_Invalid_File:
     msg = "Not an icon file";
     break;
@@ -383,6 +566,26 @@ ico_error_message(int error, char *buffer, size_t buffer_size) {
 
   case ICOERR_Bad_Image_Index:
     msg = "Image index out of range";
+    break;
+
+  case ICOERR_Bad_File_Type:
+    msg = "Bad file type parameter";
+    break;
+
+  case ICOERR_Invalid_Width:
+    msg = "Invalid image width";
+    break;
+
+  case ICOERR_Invalid_Height:
+    msg = "Invalid image height";
+    break;
+    
+  case ICOERR_Invalid_Palette:
+    msg = "Invalid Palette";
+    break;
+
+  case ICOERR_No_Data:
+    msg = "No image data in image supplied to ico_write";
     break;
 
   case ICOERR_Out_Of_Memory:
@@ -725,6 +928,7 @@ read_mask(ico_reader_t *file, ico_image_t *image, int *error) {
   unsigned char *read_buffer = malloc(line_bytes);
   int y;
   int x;
+  int mask;
   unsigned char *inp, *outp;
 
   if (!read_buffer) {
@@ -741,13 +945,517 @@ read_mask(ico_reader_t *file, ico_image_t *image, int *error) {
     
     outp = image->mask_data + y * image->width;
     inp = read_buffer;
+    mask = 0x80;
     for (x = 0; x < image->width; ++x) {
-      *outp++ = (*inp >> (7 - (x & 7))) & 1;
-      if ((x & 7) == 7)
+      *outp++ = (*inp & mask) ? 1 : 0;
+      mask >>= 1;
+      if (!mask) {
+        mask = 0x80;
 	++inp;
+      }
     }
   }
   free(read_buffer);
+
+  return 1;
+}
+
+/*
+=item ico_write_validate
+
+Check each image to make sure it can go into an icon file.
+
+=cut
+*/
+
+static int
+ico_write_validate(ico_image_t const *images, int image_count, int *error) {
+  int i;
+
+  for (i = 0; i < image_count; ++i) {
+    ico_image_t const *image = images + i;
+
+    if (image->width < 1 || image->width > 255) {
+      *error = ICOERR_Invalid_Width;
+      return 0;
+    }
+    if (image->height < 1 || image->height > 255) {
+      *error = ICOERR_Invalid_Height;
+      return 0;
+    }
+    if (!image->image_data) {
+      *error = ICOERR_No_Data;
+      return 0;
+    }
+    if (!image->direct) {
+      if (image->palette_size < 0 || image->palette_size > 256 
+	  || !image->palette) {
+	*error = ICOERR_Invalid_Palette;
+	return 0;
+      }
+    }
+  }
+
+  return 1;
+}
+
+/*
+=item ico_image_size
+
+Calculate how much space the icon takes up in the file.
+
+=cut
+*/
+
+static int
+ico_image_size(ico_image_t const *image, int *bits, int *colors) {
+  int size = 40; /* start with the BITMAPINFOHEADER */
+
+  /* add in the image area */
+  if (image->direct) {
+    *bits = 32;
+    *colors = 0;
+    size += image->width * 4 * image->height;
+  }
+  else {
+    if (image->palette_size <= 2) {
+      *bits = 1;
+      *colors = 2;
+    }
+    else if (image->palette_size <= 16) {
+      *bits = 4;
+      *colors = 16;
+    }
+    else {
+      *bits = 8;
+      *colors = 0;
+    }
+
+    /* palette size */
+    size += *colors * 4;
+
+    /* image data size */
+    size += (image->width * *bits + 31) / 32 * 4 * image->height;
+  }
+
+  /* add in the mask */
+  size += (image->width + 31) / 32 * 4 * image->height;
+
+  return size;
+}
+
+/*
+=item write_packed
+
+Pack numbers given a format to a stream.
+
+=cut
+*/
+
+static int 
+write_packed(i_io_glue_t *ig, char const *format, ...) {
+  unsigned char buffer[100];
+  va_list ap;
+  unsigned long p;
+  int size;
+  const char *formatp;
+  unsigned char *bufp;
+
+  /* write efficiently, work out the size of the buffer */
+  size = 0;
+  formatp = format;
+  while (*formatp) {
+    switch (*formatp++) {
+    case 'b': size++; break;
+    case 'w': size += 2; break;
+    case 'd': size += 4; break;
+    case ' ': break; /* space to separate components */
+    default:
+      fprintf(stderr, "invalid unpack char in %s\n", format);
+      exit(1);
+    }
+  }
+
+  if (size > sizeof(buffer)) {
+    /* catch if we need a bigger buffer, but 100 is plenty */
+    fprintf(stderr, "format %s too long for buffer\n", format);
+    exit(1);
+  }
+
+  va_start(ap, format);
+
+  bufp = buffer;
+  while (*format) {
+
+    switch (*format) {
+    case 'b':
+      p = va_arg(ap, int);
+      *bufp++ = p;
+      break;
+
+    case 'w':
+      p = va_arg(ap, int);
+      *bufp++ = p & 0xFF;
+      *bufp++  = (p >> 8) & 0xFF;
+      break;
+
+    case 'd':
+      p = va_arg(ap, unsigned long);
+      *bufp++ = p & 0xFF;
+      *bufp++ = (p >> 8) & 0xFF;
+      *bufp++ = (p >> 16) & 0xFF;
+      *bufp++ = (p >> 24) & 0xFF;
+      break;
+
+    case ' ':
+      /* nothing to do */
+      break;
+    }
+    ++format;
+  }
+
+  if (i_io_write(ig, buffer, size) != size)
+    return 0;
+  
+  return 1;
+}
+
+/*
+=item write_palette
+
+Write the palette for an icon.
+
+=cut
+*/
+
+static int
+write_palette(i_io_glue_t *ig, ico_image_t const *image, int *error) {
+  int full_size = image->palette_size;
+  unsigned char *writebuf, *outp;
+  ico_color_t *colorp;
+  int i;
+
+  if (image->palette_size <= 2)
+    full_size = 2;
+  else if (image->palette_size <= 16)
+    full_size = 16;
+  else
+    full_size = 256;
+
+  writebuf = calloc(full_size, 4);
+  if (!writebuf) {
+    *error = ICOERR_Out_Of_Memory;
+    return 0;
+  }
+  outp = writebuf;
+  colorp = image->palette;
+  for (i = 0; i < image->palette_size; ++i) {
+    *outp++ = colorp->b;
+    *outp++ = colorp->g;
+    *outp++ = colorp->r;
+    *outp++ = 0xFF;
+    ++colorp;
+  }
+  for (; i < full_size; ++i) {
+    *outp++ = 0;
+    *outp++ = 0;
+    *outp++ = 0;
+    *outp++ = 0;
+  }
+
+  if (i_io_write(ig, writebuf, full_size * 4) != full_size * 4) {
+    *error = ICOERR_Write_Failure;
+    free(writebuf);
+    return 0;
+  }
+
+  free(writebuf);
+
+  return 1;
+}
+
+/*
+=item write_bitmapinfoheader
+
+Write the BITMAPINFOHEADER for an icon image.
+
+=cut
+*/
+
+static int
+write_bitmapinfoheader(i_io_glue_t *ig, ico_image_t const *image, int *error,
+			int bit_count, int clr_used) {
+  if (!write_packed(ig, "d dd w w d d dd dd", 
+		    40UL, /* biSize */
+		    (unsigned long)image->width, 
+                    (unsigned long)2 * image->height, /* biWidth/biHeight */
+		    1, bit_count, /* biPlanes, biBitCount */
+		    0UL, 0UL, /* biCompression, biSizeImage */
+		    0UL, 0UL, /* bi(X|Y)PetsPerMeter */
+		    (unsigned long)clr_used, /* biClrUsed */
+                    0UL)) { /* biClrImportant */
+    *error = ICOERR_Write_Failure;
+    return 0;
+  }
+
+  return 1;
+}
+
+/*
+=item write_32_bit
+
+Write 32-bit image data to the icon.
+
+=cut
+*/
+
+static int
+write_32_bit(i_io_glue_t *ig, ico_image_t const *image, int *error) {
+  unsigned char *writebuf;
+  ico_color_t *data = image->image_data, *colorp;
+  unsigned char *writep;
+  int x, y;
+
+  if (!write_bitmapinfoheader(ig, image, error, 32, 0)) {
+    return 0;
+  }
+
+  writebuf = malloc(image->width * 4);
+  if (!writebuf) {
+    *error = ICOERR_Out_Of_Memory;
+    return 0;
+  }
+
+  for (y = image->height-1; y >= 0; --y) {
+    writep = writebuf;
+    colorp = data + y * image->width;
+    for (x = 0; x < image->width; ++x) {
+      *writep++ = colorp->b;
+      *writep++ = colorp->g;
+      *writep++ = colorp->r;
+      *writep++ = colorp->a;
+      ++colorp;
+    }
+    if (i_io_write(ig, writebuf, image->width * 4) != image->width * 4) {
+      *error = ICOERR_Write_Failure;
+      free(writebuf);
+      return 0;
+    }
+  }
+
+  free(writebuf);
+
+  return 1;
+}
+
+/*
+=item write_8_bit
+
+Write 8 bit image data.
+
+=cut
+*/
+
+static int
+write_8_bit(i_io_glue_t *ig, ico_image_t const *image, int *error) {
+  static const unsigned char zeros[3] = { '\0' };
+  int y;
+  const unsigned char *data = image->image_data;
+  int zero_count = (0U - (unsigned)image->width) & 3;
+
+  if (!write_bitmapinfoheader(ig, image, error, 8, 256)) {
+    return 0;
+  }
+
+  if (!write_palette(ig, image, error))
+    return 0;
+
+  for (y = image->height-1; y >= 0; --y) {
+    if (i_io_write(ig, data + y * image->width, 
+		   image->width) != image->width) {
+      *error = ICOERR_Write_Failure;
+      return 0;
+    }
+    if (zero_count) {
+      if (i_io_write(ig, zeros, zero_count) != zero_count) {
+	*error = ICOERR_Write_Failure;
+	return 0;
+      }
+    }
+  }
+
+  return 1;
+}
+
+/*
+=item write_4_bit
+
+Write 4 bit image data.
+
+=cut
+*/
+
+static int
+write_4_bit(i_io_glue_t *ig, ico_image_t const *image, int *error) {
+  int line_size = ((image->width + 1) / 2 + 3) / 4 * 4;
+  unsigned char *writebuf, *outp;
+  int x, y;
+  unsigned char const *data = image->image_data;
+  unsigned char const *pixelp;
+  
+  if (!write_bitmapinfoheader(ig, image, error, 4, 16)) {
+    return 0;
+  }
+
+  if (!write_palette(ig, image, error))
+    return 0;
+
+  writebuf = malloc(line_size);
+  if (!writebuf) {
+    *error = ICOERR_Out_Of_Memory;
+    return 0;
+  }
+
+  for (y = image->height-1; y >= 0; --y) {
+    pixelp = data + y * image->width;
+    outp = writebuf;
+    memset(writebuf, 0, line_size);
+    for (x = 0; x < image->width; ++x) {
+      if (x & 1) {
+	*outp |= *pixelp++ & 0x0F;
+	++outp;
+      }
+      else {
+	*outp |= *pixelp++ << 4;
+      }
+    }
+
+    if (i_io_write(ig, writebuf, line_size) != line_size) {
+      *error = ICOERR_Write_Failure;
+      free(writebuf);
+      return 0;
+    }
+  }
+
+  free(writebuf);
+
+  return 1;
+}
+
+/*
+=item write_1_bit
+
+Write 1 bit image data.
+
+=cut
+*/
+
+static int
+write_1_bit(i_io_glue_t *ig, ico_image_t const *image, int *error) {
+  int line_size = (image->width + 31) / 32 * 4;
+  unsigned char *writebuf = malloc(line_size);
+  unsigned char *outp;
+  unsigned char const *data, *pixelp;
+  int x,y;
+  unsigned mask;
+
+  if (!write_bitmapinfoheader(ig, image, error, 1, 2)) {
+    return 0;
+  }
+
+  if (!write_palette(ig, image, error))
+    return 0;
+
+  if (!writebuf) {
+    *error = ICOERR_Out_Of_Memory;
+    return 0;
+  }
+  
+  data = image->image_data;
+  for (y = image->height-1; y >= 0; --y) {
+    memset(writebuf, 0, line_size);
+    pixelp = data + y * image->width;
+    outp = writebuf;
+    mask = 0x80;
+    for (x = 0; x < image->width; ++x) {
+      if (*pixelp)
+	*outp |= mask;
+      mask >>= 1;
+      if (!mask) {
+	mask = 0x80;
+	outp++;
+      }
+    }
+    if (i_io_write(ig, writebuf, line_size) != line_size) {
+      *error = ICOERR_Write_Failure;
+      free(writebuf);
+      return 0;
+    }
+  }
+
+  free(writebuf);
+
+  return 1;
+}
+
+/*
+=item write_mask
+
+Write the AND mask.
+
+=cut
+*/
+
+static int
+write_mask(i_io_glue_t *ig, ico_image_t const *image, int *error) {
+  int line_size = (image->width + 31) / 32 * 4;
+  unsigned char *writebuf = malloc(line_size);
+  unsigned char *outp;
+  unsigned char const *data, *pixelp;
+  int x,y;
+  unsigned mask;
+
+  if (!writebuf) {
+    *error = ICOERR_Out_Of_Memory;
+    return 0;
+  }
+  
+  data = image->mask_data;
+  if (data) {
+    for (y = image->height-1; y >= 0; --y) {
+      memset(writebuf, 0, line_size);
+      pixelp = data + y * image->width;
+      outp = writebuf;
+      mask = 0x80;
+      for (x = 0; x < image->width; ++x) {
+	if (*pixelp)
+	  *outp |= mask;
+	mask >>= 1;
+	if (!mask) {
+	  mask = 0x80;
+	  outp++;
+	}
+        ++pixelp;
+      }
+      if (i_io_write(ig, writebuf, line_size) != line_size) {
+	*error = ICOERR_Write_Failure;
+	free(writebuf);
+	return 0;
+      }
+    }
+  }
+  else {
+    memset(writebuf, 0, line_size);
+    for (y = image->height-1; y >= 0; --y) {
+      if (i_io_write(ig, writebuf, line_size) != line_size) {
+	*error = ICOERR_Write_Failure;
+	free(writebuf);
+	return 0;
+      }
+    }
+  }
+
+  free(writebuf);
 
   return 1;
 }

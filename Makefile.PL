@@ -871,7 +871,7 @@ YAML
 # this is intended to only be running on the development
 # machines
 sub distcheck {
-  if (-e '.svn') {
+  if (-e '.svn' && -e 'Changes') {
     # update Changes if needed
     my $write_changes;
     # get the last revision from Changes

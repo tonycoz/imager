@@ -96,6 +96,11 @@ im_ext_funcs imager_function_table =
     i_copyto_trans,
     i_copy,
     i_rubthru,
+
+    /* IMAGER_API_LEVEL 2 functions */
+    i_set_image_file_limits,
+    i_get_image_file_limits,
+    i_int_check_image_file_limits,
   };
 
 /* in general these functions aren't called by Imager internally, but

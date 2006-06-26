@@ -2118,8 +2118,6 @@ struct magic_entry {
 
 static int
 test_magic(unsigned char *buffer, size_t length, struct magic_entry const *magic) {
-  int c;
-
   if (length < magic->magic_size)
     return 0;
   if (magic->mask) {
