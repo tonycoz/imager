@@ -199,7 +199,7 @@ imconfig.h : Makefile.PL
 	$(PERLRUN) Makefile.PL
 	$(ECHO) "==> Your Makefile has been rebuilt - re-run your make command <=="
 '.qq!
-lib/Imager/APIRef.pm : \$(C_FILES) apidocs.perl
+lib/Imager/APIRef.pod : \$(C_FILES) apidocs.perl
 	$perl apidocs.perl lib/Imager/APIRef.pod
 
 !;
