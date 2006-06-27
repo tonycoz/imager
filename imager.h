@@ -181,6 +181,8 @@ void i_poly_aa_cfill(i_img *im,int l,const double *x,const double *y,i_fill_t *f
 
 undef_int i_flood_fill  (i_img *im,int seedx,int seedy, const i_color *dcol);
 undef_int i_flood_cfill(i_img *im, int seedx, int seedy, i_fill_t *fill);
+undef_int i_flood_fill_border  (i_img *im,int seedx,int seedy, const i_color *dcol, const i_color *border);
+undef_int i_flood_cfill_border(i_img *im, int seedx, int seedy, i_fill_t *fill, const i_color *border);
 
 
 /* image processing functions */

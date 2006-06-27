@@ -2655,26 +2655,69 @@ sub flood_fill {
     return undef;
   }
 
-  if ($opts{fill}) {
-    unless (UNIVERSAL::isa($opts{fill}, 'Imager::Fill')) {
-      # assume it's a hash ref
-      require 'Imager/Fill.pm';
-      unless ($opts{fill} = Imager::Fill->new(%{$opts{fill}})) {
-        $self->{ERRSTR} = $Imager::ERRSTR;
-        return;
-      }
-    }
-    $rc = i_flood_cfill($self->{IMG}, $opts{'x'}, $opts{'y'}, $opts{fill}{fill});
-  }
-  else {
-    my $color = _color($opts{'color'});
-    unless ($color) {
-      $self->{ERRSTR} = $Imager::ERRSTR;
+  if ($opts{border}) {
+    my $border = _color($opts{border});
+    unless ($border) {
+      $self->_set_error($Imager::ERRSTR);
       return;
     }
-    $rc = i_flood_fill($self->{IMG}, $opts{'x'}, $opts{'y'}, $color);
+    if ($opts{fill}) {
+      unless (UNIVERSAL::isa($opts{fill}, 'Imager::Fill')) {
+	# assume it's a hash ref
+	require Imager::Fill;
+	unless ($opts{fill} = Imager::Fill->new(%{$opts{fill}})) {
+	  $self->{ERRSTR} = $Imager::ERRSTR;
+	  return;
+	}
+      }
+      $rc = i_flood_cfill_border($self->{IMG}, $opts{'x'}, $opts{'y'}, 
+				 $opts{fill}{fill}, $border);
+    }
+    else {
+      my $color = _color($opts{'color'});
+      unless ($color) {
+	$self->{ERRSTR} = $Imager::ERRSTR;
+	return;
+      }
+      $rc = i_flood_fill_border($self->{IMG}, $opts{'x'}, $opts{'y'}, 
+				$color, $border);
+    }
+    if ($rc) { 
+      return $self; 
+    } 
+    else { 
+      $self->{ERRSTR} = $self->_error_as_msg(); 
+      return;
+    }
   }
-  if ($rc) { $self; } else { $self->{ERRSTR} = $self->_error_as_msg(); return (); }
+  else {
+    if ($opts{fill}) {
+      unless (UNIVERSAL::isa($opts{fill}, 'Imager::Fill')) {
+	# assume it's a hash ref
+	require 'Imager/Fill.pm';
+	unless ($opts{fill} = Imager::Fill->new(%{$opts{fill}})) {
+	  $self->{ERRSTR} = $Imager::ERRSTR;
+	  return;
+	}
+      }
+      $rc = i_flood_cfill($self->{IMG}, $opts{'x'}, $opts{'y'}, $opts{fill}{fill});
+    }
+    else {
+      my $color = _color($opts{'color'});
+      unless ($color) {
+	$self->{ERRSTR} = $Imager::ERRSTR;
+	return;
+      }
+      $rc = i_flood_fill($self->{IMG}, $opts{'x'}, $opts{'y'}, $color);
+    }
+    if ($rc) { 
+      return $self; 
+    } 
+    else { 
+      $self->{ERRSTR} = $self->_error_as_msg(); 
+      return;
+    }
+  } 
 }
 
 sub setpixel {

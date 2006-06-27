@@ -700,7 +700,7 @@ static i_color interp_i_color(i_color before, i_color after, double pos,
   pos -= floor(pos);
   for (ch = 0; ch < channels; ++ch)
     out.channel[ch] = (1-pos) * before.channel[ch] + pos * after.channel[ch];
-  if (out.channel[3])
+  if (channels > 3 && out.channel[3])
     for (ch = 0; ch < channels; ++ch)
       if (ch != 3) {
         int temp = out.channel[ch] * 255 / out.channel[3];

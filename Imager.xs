@@ -1498,6 +1498,22 @@ i_flood_cfill(im,seedx,seedy,fill)
 	       int     seedy
      Imager::FillHandle     fill
 
+undef_int
+i_flood_fill_border(im,seedx,seedy,dcol, border)
+    Imager::ImgRaw     im
+	       int     seedx
+	       int     seedy
+     Imager::Color     dcol
+     Imager::Color     border
+
+undef_int
+i_flood_cfill_border(im,seedx,seedy,fill, border)
+    Imager::ImgRaw     im
+	       int     seedx
+	       int     seedy
+     Imager::FillHandle     fill
+     Imager::Color     border
+
 
 void
 i_copyto(im,src,x1,y1,x2,y2,tx,ty)

@@ -406,12 +406,17 @@ fill - the fill for the filled circle.  See L<"Fill Parameters">
 
 =item flood_fill
 
-You can fill a region that all has the same color using the
-flood_fill() method, for example:
+X<flood_fill>You can fill a region that all has the same color using
+the flood_fill() method, for example:
 
   $img->flood_fill(x=>50, y=>50, color=>$color);
 
 will fill all regions the same color connected to the point (50, 50).
+
+Alternatively you can fill a region limited by a given border color:
+
+  # stop at the red border
+  $im->flood_fill(x=>50, y=>50, color=>$color, border=>"red");
 
 You can also fill with a complex fill:
 
@@ -433,6 +438,13 @@ Default: white.  Overridden by C<fill>.
 =item *
 
 fill - the fill for the filled area.  See L<"Fill Parameters">
+
+=item *
+
+border - the border color of the region to be filled.  If this
+parameter is supplied flood_fill() will stop when it finds this color.
+If this is not supplied then a normal fill is done.  C<border> can be
+supplied as a L<"Color Parameter">.
 
 =back
 

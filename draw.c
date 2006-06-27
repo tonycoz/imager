@@ -5,6 +5,10 @@
 
 #include <limits.h>
 
+static void
+cfill_from_btm(i_img *im, i_fill_t *fill, struct i_bitmap *btm, 
+	       int bxmin, int bxmax, int bymin, int bymax);
+
 void
 i_mmarray_cr(i_mmarray *ar,int l) {
   int i;
@@ -1086,33 +1090,46 @@ crdata(int left,int right,int dadl,int dadr,int y, int dir) {
 
 /* i_ccomp compares two colors and gives true if they are the same */
 
+typedef int (*ff_cmpfunc)(i_color const *c1, i_color const *c2, int channels);
+
 static int
-i_ccomp(i_color *val1,i_color *val2,int ch) {
+i_ccomp_normal(i_color const *val1, i_color const *val2, int ch) {
   int i;
-  for(i=0;i<ch;i++) if (val1->channel[i] !=val2->channel[i]) return 0;
+  for(i = 0; i < ch; i++) 
+    if (val1->channel[i] !=val2->channel[i])
+      return 0;
   return 1;
 }
 
+static int
+i_ccomp_border(i_color const *val1, i_color const *val2, int ch) {
+  int i;
+  for(i = 0; i < ch; i++) 
+    if (val1->channel[i] !=val2->channel[i])
+      return 1;
+  return 0;
+}
 
 static int
-i_lspan(i_img *im, int seedx, int seedy, i_color *val) {
+i_lspan(i_img *im, int seedx, int seedy, i_color const *val, ff_cmpfunc cmpfunc) {
   i_color cval;
   while(1) {
     if (seedx-1 < 0) break;
     i_gpix(im,seedx-1,seedy,&cval);
-    if (!i_ccomp(val,&cval,im->channels)) break;
+    if (!cmpfunc(val,&cval,im->channels)) 
+      break;
     seedx--;
   }
   return seedx;
 }
 
 static int
-i_rspan(i_img *im, int seedx, int seedy, i_color *val) {
+i_rspan(i_img *im, int seedx, int seedy, i_color const *val, ff_cmpfunc cmpfunc) {
   i_color cval;
   while(1) {
     if (seedx+1 > im->xsize-1) break;
     i_gpix(im,seedx+1,seedy,&cval);
-    if (!i_ccomp(val,&cval,im->channels)) break;
+    if (!cmpfunc(val,&cval,im->channels)) break;
     seedx++;
   }
   return seedx;
@@ -1152,7 +1169,7 @@ i_rspan(i_img *im, int seedx, int seedy, i_color *val) {
 #define SET(x,y) btm_set(btm,x,y)
 
 /* INSIDE returns true if pixel is correct color and we haven't set it before. */
-#define INSIDE(x,y) ((!btm_test(btm,x,y) && ( i_gpix(im,x,y,&cval),i_ccomp(&val,&cval,channels)  ) ))
+#define INSIDE(x,y, seed) ((!btm_test(btm,x,y) && ( i_gpix(im,x,y,&cval),cmpfunc(seed,&cval,channels)  ) ))
 
 
 
@@ -1160,15 +1177,8 @@ i_rspan(i_img *im, int seedx, int seedy, i_color *val) {
 
 static struct i_bitmap *
 i_flood_fill_low(i_img *im,int seedx,int seedy,
-                 int *bxminp, int *bxmaxp, int *byminp, int *bymaxp) {
-
-  /*
-    int lx,rx;
-    int y;
-    int direction;
-    int dadLx,dadRx;
-    int wasIn=0;
-  */
+                 int *bxminp, int *bxmaxp, int *byminp, int *bymaxp,
+		 i_color const *seed, ff_cmpfunc cmpfunc) {
   int ltx, rtx;
   int tx = 0;
 
@@ -1181,7 +1191,7 @@ i_flood_fill_low(i_img *im,int seedx,int seedy,
   struct i_bitmap *btm;
 
   int channels,xsize,ysize;
-  i_color cval,val;
+  i_color cval;
 
   channels = im->channels;
   xsize    = im->xsize;
@@ -1190,12 +1200,9 @@ i_flood_fill_low(i_img *im,int seedx,int seedy,
   btm = btm_new(xsize, ysize);
   st  = llist_new(100, sizeof(struct stack_element*));
 
-  /* Get the reference color */
-  i_gpix(im, seedx, seedy, &val);
-
   /* Find the starting span and fill it */
-  ltx = i_lspan(im, seedx, seedy, &val);
-  rtx = i_rspan(im, seedx, seedy, &val);
+  ltx = i_lspan(im, seedx, seedy, seed, cmpfunc);
+  rtx = i_rspan(im, seedx, seedy, seed, cmpfunc);
   for(tx=ltx; tx<=rtx; tx++) SET(tx, seedy);
 
   ST_PUSH(ltx, rtx, ltx, rtx, seedy+1,  1);
@@ -1220,10 +1227,10 @@ i_flood_fill_low(i_img *im,int seedx,int seedy,
 
 
     x = lx+1;
-    if ( lx >= 0 && (wasIn = INSIDE(lx, y)) ) {
+    if ( lx >= 0 && (wasIn = INSIDE(lx, y, seed)) ) {
       SET(lx, y);
       lx--;
-      while(INSIDE(lx, y) && lx > 0) {
+      while(INSIDE(lx, y, seed) && lx > 0) {
 	SET(lx,y);
 	lx--;
       }
@@ -1234,7 +1241,7 @@ i_flood_fill_low(i_img *im,int seedx,int seedy,
       /*  printf("x=%d\n",x); */
       if (wasIn) {
 	
-	if (INSIDE(x, y)) {
+	if (INSIDE(x, y, seed)) {
 	  /* case 1: was inside, am still inside */
 	  SET(x,y);
 	} else {
@@ -1247,7 +1254,7 @@ i_flood_fill_low(i_img *im,int seedx,int seedy,
 	}
       } else {
 	if (x > rx) goto EXT;
-	if (INSIDE(x, y)) {
+	if (INSIDE(x, y, seed)) {
 	  SET(x, y);
 	  /* case 3: Wasn't inside, am now: just found the start of a new run */
 	  wasIn = 1;
@@ -1295,6 +1302,7 @@ i_flood_fill(i_img *im, int seedx, int seedy, const i_color *dcol) {
   int bxmin, bxmax, bymin, bymax;
   struct i_bitmap *btm;
   int x, y;
+  i_color val;
 
   i_clear_error();
   if (seedx < 0 || seedx >= im->xsize ||
@@ -1303,7 +1311,11 @@ i_flood_fill(i_img *im, int seedx, int seedy, const i_color *dcol) {
     return 0;
   }
 
-  btm = i_flood_fill_low(im, seedx, seedy, &bxmin, &bxmax, &bymin, &bymax);
+  /* Get the reference color */
+  i_gpix(im, seedx, seedy, &val);
+
+  btm = i_flood_fill_low(im, seedx, seedy, &bxmin, &bxmax, &bymin, &bymax,
+			 &val, i_ccomp_normal);
 
   for(y=bymin;y<=bymax;y++)
     for(x=bxmin;x<=bxmax;x++)
@@ -1331,8 +1343,7 @@ undef_int
 i_flood_cfill(i_img *im, int seedx, int seedy, i_fill_t *fill) {
   int bxmin, bxmax, bymin, bymax;
   struct i_bitmap *btm;
-  int x, y;
-  int start;
+  i_color val;
 
   i_clear_error();
   
@@ -1342,7 +1353,102 @@ i_flood_cfill(i_img *im, int seedx, int seedy, i_fill_t *fill) {
     return 0;
   }
 
-  btm = i_flood_fill_low(im, seedx, seedy, &bxmin, &bxmax, &bymin, &bymax);
+  /* Get the reference color */
+  i_gpix(im, seedx, seedy, &val);
+
+  btm = i_flood_fill_low(im, seedx, seedy, &bxmin, &bxmax, &bymin, &bymax,
+			 &val, i_ccomp_normal);
+
+  cfill_from_btm(im, fill, btm, bxmin, bxmax, bymin, bymax);
+
+  btm_destroy(btm);
+  return 1;
+}
+
+/*
+=item i_flood_fill_border(im, seedx, seedy, color, border)
+
+=category Drawing
+=synopsis i_flood_fill_border(im, 50, 50, &color, &border);
+
+Flood fills the 4-connected region starting from the point (seedx,
+seedy) with I<color>, fill stops when the fill reaches a pixels with
+color I<border>.
+
+Returns false if (seedx, seedy) are outside the image.
+
+=cut
+*/
+
+undef_int
+i_flood_fill_border(i_img *im, int seedx, int seedy, const i_color *dcol,
+		    const i_color *border) {
+  int bxmin, bxmax, bymin, bymax;
+  struct i_bitmap *btm;
+  int x, y;
+
+  i_clear_error();
+  if (seedx < 0 || seedx >= im->xsize ||
+      seedy < 0 || seedy >= im->ysize) {
+    i_push_error(0, "i_flood_cfill: Seed pixel outside of image");
+    return 0;
+  }
+
+  btm = i_flood_fill_low(im, seedx, seedy, &bxmin, &bxmax, &bymin, &bymax,
+			 border, i_ccomp_border);
+
+  for(y=bymin;y<=bymax;y++)
+    for(x=bxmin;x<=bxmax;x++)
+      if (btm_test(btm,x,y)) 
+	i_ppix(im,x,y,dcol);
+  btm_destroy(btm);
+  return 1;
+}
+
+/*
+=item i_flood_cfill_border(im, seedx, seedy, fill, border)
+
+=category Drawing
+=synopsis i_flood_cfill_border(im, 50, 50, fill, border);
+
+Flood fills the 4-connected region starting from the point (seedx,
+seedy) with I<fill>, the fill stops when it reaches pixels of color
+I<border>.
+
+Returns false if (seedx, seedy) are outside the image.
+
+=cut
+*/
+
+undef_int
+i_flood_cfill_border(i_img *im, int seedx, int seedy, i_fill_t *fill,
+		     const i_color *border) {
+  int bxmin, bxmax, bymin, bymax;
+  struct i_bitmap *btm;
+
+  i_clear_error();
+  
+  if (seedx < 0 || seedx >= im->xsize ||
+      seedy < 0 || seedy >= im->ysize) {
+    i_push_error(0, "i_flood_cfill_border: Seed pixel outside of image");
+    return 0;
+  }
+
+  btm = i_flood_fill_low(im, seedx, seedy, &bxmin, &bxmax, &bymin, &bymax,
+			 border, i_ccomp_border);
+
+  cfill_from_btm(im, fill, btm, bxmin, bxmax, bymin, bymax);
+
+  btm_destroy(btm);
+
+  return 1;
+}
+
+static void
+cfill_from_btm(i_img *im, i_fill_t *fill, struct i_bitmap *btm, 
+	       int bxmin, int bxmax, int bymin, int bymax) {
+  int x, y;
+  int start;
 
   if (im->bits == i_8_bits && fill->fill_with_color) {
     /* bxmax/bxmin are inside the image, hence this won't overflow */
@@ -1416,7 +1522,4 @@ i_flood_cfill(i_img *im, int seedx, int seedy, i_fill_t *fill) {
     if (work)
       myfree(work);
   }
-
-  btm_destroy(btm);
-  return 1;
 }

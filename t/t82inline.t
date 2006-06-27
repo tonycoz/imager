@@ -58,7 +58,7 @@ Imager do_lots(Imager src) {
   i_img *im = i_img_8_new(100, 100, 3);
   i_img *fill_im = i_img_8_new(5, 5, 3);
   i_img *testim;
-  i_color red, blue, temp_color;
+  i_color red, blue, green, black, temp_color;
   i_fcolor redf, bluef;
   i_fill_t *hatch, *fhatch_fill;
   i_fill_t *im_fill;
@@ -80,6 +80,10 @@ Imager do_lots(Imager src) {
   red.channel[3] = 255;
   blue.channel[0] = 0; blue.channel[1] = 0; blue.channel[2] = 255;
   blue.channel[3] = 255;
+  green.channel[0] = 0; green.channel[1] = 255; green.channel[2] = 0;
+  green.channel[3] = 255;
+  black.channel[0] = black.channel[1] = black.channel[2] = 0;
+  black.channel[3] = 255;
   hatch = i_new_fill_hatch(&red, &blue, 0, 1, NULL, 0, 0);
 
   i_box(im, 0, 0, 9, 9, &red);
@@ -133,6 +137,14 @@ Imager do_lots(Imager src) {
   i_flood_fill(im, 65, 15, &blue);
   i_box(im, 71, 11, 78, 18, &red);
   i_flood_cfill(im, 75, 15, hatch);
+
+  i_box_filled(im, 1, 21, 9, 24, &red);
+  i_box_filled(im, 1, 25, 9, 29, &blue);
+  i_flood_fill_border(im, 5, 25, &green, &black);
+
+  i_box_filled(im, 11, 21, 19, 24, &red);
+  i_box_filled(im, 11, 25, 19, 29, &blue);
+  i_flood_cfill_border(im, 15, 25, hatch, &black);
 
   i_fill_destroy(fount_fill);
   i_fill_destroy(fhatch_fill);

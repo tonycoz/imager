@@ -101,6 +101,9 @@ im_ext_funcs imager_function_table =
     i_set_image_file_limits,
     i_get_image_file_limits,
     i_int_check_image_file_limits,
+
+    i_flood_fill_border,
+    i_flood_cfill_border,
   };
 
 /* in general these functions aren't called by Imager internally, but

@@ -173,6 +173,8 @@ extern im_ext_funcs *imager_function_ext_table;
 #define i_circle_aa(im, x, y, rad, val) ((im_extt->f_i_circle_aa)((im), (x), (y), (rad), (val)))
 #define i_flood_fill(im, seedx, seedy, dcol) ((im_extt->f_i_flood_fill)((im), (seedx), (seedy), (dcol)))
 #define i_flood_cfill(im, seedx, seedy, fill) ((im_extt->f_i_flood_cfill)((im), (seedx), (seedy), (fill)))
+#define i_flood_fill_border(im, seedx, seedy, dcol, border) ((im_extt->f_i_flood_fill_border)((im), (seedx), (seedy), (dcol), (border)))
+#define i_flood_cfill_border(im, seedx, seedy, fill, border) ((im_extt->f_i_flood_cfill_border)((im), (seedx), (seedy), (fill), (border)))
 
 #define i_copyto(im, src, x1, y1, x2, y2, tx, ty) \
   ((im_extt->f_i_copyto)((im), (src), (x1), (y1), (x2), (y2), (tx), (ty)))

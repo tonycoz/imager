@@ -1,7 +1,7 @@
 #!perl -w
 use strict;
 use lib 't';
-use Test::More tests => 52;
+use Test::More tests => 56;
 
 use Imager ':handy';
 use Imager::Fill;
@@ -169,7 +169,8 @@ $diff = Imager::i_img_diff($rffcmp, $ffim->{IMG});
 ok(!$diff, "oo flood fill difference");
 $ffim->flood_fill('x'=>50, 'y'=>50,
                   fill=> {
-                          hatch => 'check2x2'
+                          hatch => 'check2x2',
+			  fg => '0000FF',
                          });
 #                  fill=>{
 #                         fountain=>'radial',
@@ -177,6 +178,18 @@ $ffim->flood_fill('x'=>50, 'y'=>50,
 #                         xb=>10, yb=>10,
 #                        });
 $ffim->write(file=>'testout/t20_ooflood.ppm');
+
+my $copy = $ffim->copy;
+ok($ffim->flood_fill('x' => 50, 'y' => 50,
+		     color => $red, border => '000000'),
+   "border solid flood fill");
+is(Imager::i_img_diff($ffim->{IMG}, $rffcmp), 0, "compare");
+ok($ffim->flood_fill('x' => 50, 'y' => 50,
+		     fill => { hatch => 'check2x2', fg => '0000FF', },
+		     border => '000000'),
+   "border cfill fill");
+is(Imager::i_img_diff($ffim->{IMG}, $copy->{IMG}), 0,
+   "compare");
 
 # test combining modes
 my $fill = NC(192, 128, 128, 128);
