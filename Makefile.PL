@@ -871,20 +871,20 @@ YAML
 # this is intended to only be running on the development
 # machines
 sub distcheck {
-  if (-e '.svn' && -e 'Changes') {
+  if (-e '.svn') {
     # update Changes if needed
     my $write_changes;
     # get the last revision from Changes
     if (open CHANGES, "< Changes") {
       <CHANGES>;
       my ($changes_rev) = <CHANGES> =~ /^r(\d+)/
-	or die "Could not get revision from Changes";
+	or ++$write_changes;
 
       my ($revision) = grep s/^Revision: //, `svn info`
-	or die "Could not get Revision line";
+	or die "Could not get Revision from svn";
       chomp $revision;
 
-      $write_changes = $changes_rev != $revision-1;
+      $write_changes ||= $changes_rev != $revision;
       close CHANGES;
     }
     else {
