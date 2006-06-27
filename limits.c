@@ -29,6 +29,23 @@ Setting a value of zero means that limit will be ignored.
 static int max_width, max_height;
 static int max_bytes;
 
+/*
+=item i_set_image_file_limits(width, height, bytes)
+
+=category Files
+=synopsis i_set_image_file_limits(500, 500, 1000000);
+
+Set limits on the sizes of images read by Imager.
+
+Setting a limit to 0 means that limit is ignored.
+
+Negative limits result in failure.
+
+Returns non-zero on success.
+
+=cut
+*/
+
 int
 i_set_image_file_limits(int width, int height, int bytes) {
   i_clear_error();
@@ -53,6 +70,17 @@ i_set_image_file_limits(int width, int height, int bytes) {
   return 1;
 }
 
+/*
+=item i_get_image_file_limits(&width, &height, &bytes)
+
+=category Files
+=synopsis i_get_image_file_limits(&width, &height, &bytes)
+
+Retrieves the file limits set by i_set_image_file_limits().
+
+=cut
+*/
+
 int
 i_get_image_file_limits(int *width, int *height, int *bytes) {
   i_clear_error();
@@ -63,6 +91,25 @@ i_get_image_file_limits(int *width, int *height, int *bytes) {
 
   return 1;
 }
+
+/*
+=item i_int_check_image_file_limits(width, height, channels, sample_size)
+
+=category Files
+=synopsis i_i_int_check_image_file_limits(width, height, channels, sizeof(i_sample_t))
+
+Checks the size of a file in memory against the configured image file
+limits.
+
+This also range checks the values to those permitted by Imager and
+checks for overflows in calculating the size.
+
+Returns non-zero if the file is within limits.
+
+This function is intended to be called by image file read functions.
+
+=cut
+*/
 
 int
 i_int_check_image_file_limits(int width, int height, int channels, int sample_size) {

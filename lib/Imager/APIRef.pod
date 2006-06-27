@@ -31,6 +31,11 @@ Imager::APIRef - Imager's C API.
 
   # Error handling
 
+  # Files
+  i_get_image_file_limits(&width, &height, &bytes)
+  i_i_int_check_image_file_limits(width, height, channels, sizeof(i_sample_t))
+  i_set_image_file_limits(500, 500, 1000000);
+
   # Fills
   fill = i_new_fill_fount(0, 0, 100, 100, i_ft_linear, i_ft_linear, 
                           i_fr_triangle, 0, i_fts_grid, 9, 1, segs);
@@ -417,6 +422,54 @@ and a format to produce the finally pushed error message.
 
 =for comment
 From: Line 249 in error.c
+
+
+=back
+
+=head2 Files
+
+=over
+
+=item i_get_image_file_limits(&width, &height, &bytes)
+
+
+Retrieves the file limits set by i_set_image_file_limits().
+
+
+=for comment
+From: Line 74 in limits.c
+
+=item i_int_check_image_file_limits(width, height, channels, sample_size)
+
+
+Checks the size of a file in memory against the configured image file
+limits.
+
+This also range checks the values to those permitted by Imager and
+checks for overflows in calculating the size.
+
+Returns non-zero if the file is within limits.
+
+This function is intended to be called by image file read functions.
+
+
+=for comment
+From: Line 96 in limits.c
+
+=item i_set_image_file_limits(width, height, bytes)
+
+
+Set limits on the sizes of images read by Imager.
+
+Setting a limit to 0 means that limit is ignored.
+
+Negative limits result in failure.
+
+Returns non-zero on success.
+
+
+=for comment
+From: Line 33 in limits.c
 
 
 =back
@@ -1019,30 +1072,6 @@ Sets the given tag to the integer I<idata>
 
 =for comment
 From: Line 634 in tags.c
-
-
-=back
-
-
-=head1 UNDOCUMENTED
-
-The following API functions are undocumented so far, hopefully this
-will change:
-
-=over
-
-=item *
-
-B<i_get_image_file_limits>
-
-=item *
-
-B<i_int_check_image_file_limits>
-
-=item *
-
-B<i_set_image_file_limits>
-
 
 
 =back
