@@ -217,7 +217,7 @@ wiol_empty_output_buffer(j_compress_ptr cinfo) {
   ssize_t nbytes     = JPGS - dest->pub.free_in_buffer;
   */
 
-  mm_log((1,"wiol_empty_output_buffer(cinfo 0x%p)\n"));
+  mm_log((1,"wiol_empty_output_buffer(cinfo 0x%p)\n", cinfo));
   rc = dest->data->writecb(dest->data, dest->buffer, JPGS);
 
   if (rc != JPGS) { /* XXX: Should raise some jpeg error */
