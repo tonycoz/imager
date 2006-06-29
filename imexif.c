@@ -1013,7 +1013,7 @@ tiff_get_tag_double_array(imtiff *tiff, int index, double *result,
   ifd_entry *entry;
   unsigned long offset;
   if (index < 0 || index >= tiff->ifd_size) {
-    m_fatal(3, "tiff_get_tag_double_array() tag index out of range");
+    i_fatal(3, "tiff_get_tag_double_array() tag index out of range");
   }
   
   entry = tiff->ifd + index;
@@ -1077,7 +1077,7 @@ static int
 tiff_get_tag_double(imtiff *tiff, int index, double *result) {
   ifd_entry *entry;
   if (index < 0 || index >= tiff->ifd_size) {
-    m_fatal(3, "tiff_get_tag_double() index out of range");
+    i_fatal(3, "tiff_get_tag_double() index out of range");
   }
   
   entry = tiff->ifd + index;
@@ -1108,12 +1108,12 @@ tiff_get_tag_int_array(imtiff *tiff, int index, int *result, int array_index) {
   ifd_entry *entry;
   unsigned long offset;
   if (index < 0 || index >= tiff->ifd_size) {
-    m_fatal(3, "tiff_get_tag_int_array() tag index out of range");
+    i_fatal(3, "tiff_get_tag_int_array() tag index out of range");
   }
   
   entry = tiff->ifd + index;
   if (array_index < 0 || array_index >= entry->count) {
-    m_fatal(3, "tiff_get_tag_int_array() array index out of range");
+    i_fatal(3, "tiff_get_tag_int_array() array index out of range");
   }
 
   offset = entry->offset + array_index * entry->item_size;
@@ -1163,7 +1163,7 @@ static int
 tiff_get_tag_int(imtiff *tiff, int index, int *result) {
   ifd_entry *entry;
   if (index < 0 || index >= tiff->ifd_size) {
-    m_fatal(3, "tiff_get_tag_int() index out of range");
+    i_fatal(3, "tiff_get_tag_int() index out of range");
   }
 
   entry = tiff->ifd + index;
@@ -1290,7 +1290,7 @@ copy_num_array_tags(i_img *im, imtiff *tiff, tag_map *map, int map_count) {
 	  *workstr = '\0';
 	  for (j = 0; j < entry->count; ++j) {
 	    if (!tiff_get_tag_double_array(tiff, tag_index, &value, j)) {
-	      m_fatal(3, "unexpected failure from tiff_get_tag_double_array(..., %d, ..., %d)\n", tag_index, j);
+	      i_fatal(3, "unexpected failure from tiff_get_tag_double_array(..., %d, ..., %d)\n", tag_index, j);
 	    }
 	    if (j) 
 	      strcat(workstr, " ");
@@ -1306,7 +1306,7 @@ copy_num_array_tags(i_img *im, imtiff *tiff, tag_map *map, int map_count) {
 	  *workstr = '\0';
 	  for (j = 0; j < entry->count; ++j) {
 	    if (!tiff_get_tag_int_array(tiff, tag_index, &value, j)) {
-	      m_fatal(3, "unexpected failure from tiff_get_tag_int_array(..., %d, ..., %d)\n", tag_index, j);
+	      i_fatal(3, "unexpected failure from tiff_get_tag_int_array(..., %d, ..., %d)\n", tag_index, j);
 	    }
 	    if (j) 
 	      strcat(workstr, " ");
@@ -1383,7 +1383,7 @@ Retrieve a 16 bit unsigned integer from offset.
 static unsigned
 tiff_get16(imtiff *tiff, unsigned long offset) {
   if (offset + 2 > tiff->size)
-    m_fatal(3, "attempt to get16 at %uld in %uld image", offset, tiff->size);
+    i_fatal(3, "attempt to get16 at %uld in %uld image", offset, tiff->size);
 
   if (tiff->type == tt_intel) 
     return tiff->base[offset] + 0x100 * tiff->base[offset+1];
@@ -1402,7 +1402,7 @@ Retrieve a 32-bit unsigned integer from offset.
 static unsigned
 tiff_get32(imtiff *tiff, unsigned long offset) {
   if (offset + 4 > tiff->size)
-    m_fatal(3, "attempt to get16 at %uld in %uld image", offset, tiff->size);
+    i_fatal(3, "attempt to get16 at %uld in %uld image", offset, tiff->size);
 
   if (tiff->type == tt_intel) 
     return tiff->base[offset] + 0x100 * tiff->base[offset+1] 
@@ -1447,7 +1447,7 @@ tiff_get16s(imtiff *tiff, unsigned long offset) {
   int result;
 
   if (offset + 2 > tiff->size)
-    m_fatal(3, "attempt to get16 at %uld in %uld image", offset, tiff->size);
+    i_fatal(3, "attempt to get16 at %uld in %uld image", offset, tiff->size);
 
   if (tiff->type == tt_intel) 
     result = tiff->base[offset] + 0x100 * tiff->base[offset+1];
@@ -1473,7 +1473,7 @@ tiff_get32s(imtiff *tiff, unsigned long offset) {
   unsigned work;
 
   if (offset + 4 > tiff->size)
-    m_fatal(3, "attempt to get16 at %uld in %uld image", offset, tiff->size);
+    i_fatal(3, "attempt to get16 at %uld in %uld image", offset, tiff->size);
 
   if (tiff->type == tt_intel) 
     work = tiff->base[offset] + 0x100 * tiff->base[offset+1] 
@@ -1501,7 +1501,7 @@ static double
 tiff_get_rat(imtiff *tiff, unsigned long offset) {
   unsigned long numer, denom;
   if (offset + 8 > tiff->size)
-    m_fatal(3, "attempt to get_rat at %lu in %lu image", offset, tiff->size);
+    i_fatal(3, "attempt to get_rat at %lu in %lu image", offset, tiff->size);
 
   numer = tiff_get32(tiff, offset);
   denom = tiff_get32(tiff, offset+4);
@@ -1525,7 +1525,7 @@ static double
 tiff_get_rats(imtiff *tiff, unsigned long offset) {
   long numer, denom;
   if (offset + 8 > tiff->size)
-    m_fatal(3, "attempt to get_rat at %lu in %lu image", offset, tiff->size);
+    i_fatal(3, "attempt to get_rat at %lu in %lu image", offset, tiff->size);
 
   numer = tiff_get32s(tiff, offset);
   denom = tiff_get32s(tiff, offset+4);

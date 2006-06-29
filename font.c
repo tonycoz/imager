@@ -1087,14 +1087,14 @@ i_tt_init_raster_map( TT_Raster_Map* bit, int width, int height, int smooth ) {
 
   /* rows can be 0 for some glyphs, for example ' ' */
   if (bit->rows && bit->size / bit->rows != bit->cols) {
-    m_fatal(0, "Integer overflow calculating bitmap size (%d, %d)\n",
+    i_fatal(0, "Integer overflow calculating bitmap size (%d, %d)\n",
             bit->width, bit->rows);
   }
   
   mm_log((1,"i_tt_init_raster_map: bit->width %d, bit->cols %d, bit->rows %d, bit->size %d)\n", bit->width, bit->cols, bit->rows, bit->size ));
 
   bit->bitmap = (void *) mymalloc( bit->size ); /* checked 6Nov05 tonyc */
-  if ( !bit->bitmap ) m_fatal(0,"Not enough memory to allocate bitmap (%d)!\n",bit->size );
+  if ( !bit->bitmap ) i_fatal(0,"Not enough memory to allocate bitmap (%d)!\n",bit->size );
 }
 
 

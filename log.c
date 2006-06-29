@@ -38,7 +38,7 @@ i_init_log(const char* name,int level) {
 }
 
 void
-m_fatal(int exitcode,const char *fmt, ... ) {
+i_fatal(int exitcode,const char *fmt, ... ) {
   va_list ap;
   time_t timi;
   struct tm *str_tm;
@@ -62,7 +62,7 @@ m_fatal(int exitcode,const char *fmt, ... ) {
  */
 
 void i_init_log(const char* name,int onoff) {}
-void m_fatal(int exitcode,const char *fmt, ... ) { exit(exitcode); }
+void i_fatal(int exitcode,const char *fmt, ... ) { exit(exitcode); }
 
 
 #endif

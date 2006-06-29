@@ -539,7 +539,7 @@ i_img **i_readgif_multi_low(GifFileType *GifFile, int *count, int page) {
   Size = GifFile->SWidth * sizeof(GifPixelType);
   
   if ((GifRow = (GifRowType) mymalloc(Size)) == NULL)
-    m_fatal(0,"Failed to allocate memory required, aborted."); /* First row. */
+    i_fatal(0,"Failed to allocate memory required, aborted."); /* First row. */
 
   /* Scan the content of the GIF file and load the image(s) in: */
   do {

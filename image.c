@@ -71,7 +71,7 @@ ICL_new_internal(unsigned char r,unsigned char g,unsigned char b,unsigned char a
 
   mm_log((1,"ICL_new_internal(r %d,g %d,b %d,a %d)\n", r, g, b, a));
 
-  if ( (cl=mymalloc(sizeof(i_color))) == NULL) m_fatal(2,"malloc() error\n");
+  if ( (cl=mymalloc(sizeof(i_color))) == NULL) i_fatal(2,"malloc() error\n");
   cl->rgba.r = r;
   cl->rgba.g = g;
   cl->rgba.b = b;
@@ -100,7 +100,7 @@ ICL_set_internal(i_color *cl,unsigned char r,unsigned char g,unsigned char b,uns
   mm_log((1,"ICL_set_internal(cl* %p,r %d,g %d,b %d,a %d)\n",cl,r,g,b,a));
   if (cl == NULL)
     if ( (cl=mymalloc(sizeof(i_color))) == NULL)
-      m_fatal(2,"malloc() error\n");
+      i_fatal(2,"malloc() error\n");
   cl->rgba.r=r;
   cl->rgba.g=g;
   cl->rgba.b=b;
@@ -173,7 +173,7 @@ i_fcolor *i_fcolor_new(double r, double g, double b, double a) {
 
   mm_log((1,"i_fcolor_new(r %g,g %g,b %g,a %g)\n", r, g, b, a));
 
-  if ( (cl=mymalloc(sizeof(i_fcolor))) == NULL) m_fatal(2,"malloc() error\n");
+  if ( (cl=mymalloc(sizeof(i_fcolor))) == NULL) i_fatal(2,"malloc() error\n");
   cl->rgba.r = r;
   cl->rgba.g = g;
   cl->rgba.b = b;
@@ -300,7 +300,7 @@ i_img_new() {
   
   mm_log((1,"i_img_struct()\n"));
   if ( (im=mymalloc(sizeof(i_img))) == NULL)
-    m_fatal(2,"malloc() error\n");
+    i_fatal(2,"malloc() error\n");
   
   *im = IIM_base_8bit_direct;
   im->xsize=0;
@@ -372,7 +372,7 @@ i_img_empty_ch(i_img *im,int x,int y,int ch) {
 
   if (im == NULL)
     if ( (im=mymalloc(sizeof(i_img))) == NULL)
-      m_fatal(2,"malloc() error\n");
+      i_fatal(2,"malloc() error\n");
 
   memcpy(im, &IIM_base_8bit_direct, sizeof(i_img));
   i_tags_new(&im->tags);
@@ -382,7 +382,7 @@ i_img_empty_ch(i_img *im,int x,int y,int ch) {
   im->ch_mask  = MAXINT;
   im->bytes=bytes;
   if ( (im->idata=mymalloc(im->bytes)) == NULL) 
-    m_fatal(2,"malloc() error\n"); 
+    i_fatal(2,"malloc() error\n"); 
   memset(im->idata,0,(size_t)im->bytes);
   
   im->ext_data = NULL;

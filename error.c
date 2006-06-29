@@ -321,7 +321,7 @@ int i_failed(int code, char const *msg) {
       ++sp;
     }
     /* we want to log the error too, build an error message to hand to
-       m_fatal() */
+       i_fatal() */
     total = 1; /* remember the NUL */
     for (sp = error_sp; error_stack[sp].msg; ++sp) {
       total += strlen(error_stack[sp].msg) + 2;
@@ -338,7 +338,7 @@ int i_failed(int code, char const *msg) {
     }
     /* lose the extra ": " */
     full[strlen(full)-2] = '\0';
-    m_fatal(EXIT_FAILURE, "%s", full);
+    i_fatal(EXIT_FAILURE, "%s", full);
   }
 
   return 0;

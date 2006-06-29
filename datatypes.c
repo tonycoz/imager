@@ -132,7 +132,7 @@ llist_push(struct llist *l,void *data) {
   }
   /*   fprintf(stderr,"0x%08X\n",l->t); */
   if (llist_llink_push(l,l->t,data)) { 
-    m_fatal(3, "out of memory\n");
+    i_fatal(3, "out of memory\n");
   }
 }
 
