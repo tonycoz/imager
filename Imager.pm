@@ -892,17 +892,46 @@ sub addcolors {
   my $self = shift;
   my %opts = (colors=>[], @_);
 
-  @{$opts{colors}} or return undef;
+  unless ($self->{IMG}) {
+    $self->_set_error("empty input image");
+    return;
+  }
 
-  $self->{IMG} and i_addcolors($self->{IMG}, @{$opts{colors}});
+  my @colors = @{$opts{colors}}
+    or return undef;
+
+  for my $color (@colors) {
+    $color = _color($color);
+    unless ($color) {
+      $self->_set_error($Imager::ERRSTR);
+      return;
+    }  
+  }
+
+  return i_addcolors($self->{IMG}, @colors);
 }
 
 sub setcolors {
   my $self = shift;
   my %opts = (start=>0, colors=>[], @_);
-  @{$opts{colors}} or return undef;
 
-  $self->{IMG} and i_setcolors($self->{IMG}, $opts{start}, @{$opts{colors}});
+  unless ($self->{IMG}) {
+    $self->_set_error("empty input image");
+    return;
+  }
+
+  my @colors = @{$opts{colors}}
+    or return undef;
+
+  for my $color (@colors) {
+    $color = _color($color);
+    unless ($color) {
+      $self->_set_error($Imager::ERRSTR);
+      return;
+    }  
+  }
+
+  return i_setcolors($self->{IMG}, $opts{start}, @colors);
 }
 
 sub getcolors {

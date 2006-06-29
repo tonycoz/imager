@@ -2,7 +2,7 @@
 # some of this is tested in t01introvert.t too
 use strict;
 use lib 't';
-use Test::More tests => 64;
+use Test::More tests => 70;
 BEGIN { use_ok("Imager"); }
 
 my $img = Imager->new(xsize=>50, ysize=>50, type=>'paletted');
@@ -209,6 +209,36 @@ cmp_ok(Imager->errstr, '=~', qr/Channels must be positive and <= 4/,
   ok($img->setcolors(start=>1, colors=>[ $green ]), "set the last color");
   ok(!$img->setcolors(start=>2, colors=>[ $black ]), 
      "set after the last color");
+}
+
+{ # https://rt.cpan.org/Ticket/Display.html?id=20056
+  # added named color support to addcolor/setcolor
+  my $img = Imager->new(xsize => 10, ysize => 10, type => 'paletted');
+  is($img->addcolors(colors => [ qw/000000 FF0000/ ]), "0 but true",
+     "add colors as strings instead of objects");
+  my @colors = $img->getcolors;
+  iscolor($colors[0], $black, "check first color");
+  iscolor($colors[1], $red, "check second color");
+  ok($img->setcolors(colors => [ qw/00FF00 0000FF/ ]),
+     "setcolors as strings instead of objects");
+  @colors = $img->getcolors;
+  iscolor($colors[0], $green, "check first color");
+  iscolor($colors[1], $blue, "check second color");
+}
+
+sub iscolor {
+  my ($c1, $c2, $msg) = @_;
+
+  my $builder = Test::Builder->new;
+  my @c1 = $c1->rgba;
+  my @c2 = $c2->rgba;
+  if (!$builder->ok($c1[0] == $c2[0] && $c1[1] == $c2[1] && $c1[2] == $c2[2],
+                    $msg)) {
+    $builder->diag(<<DIAG);
+      got color: [ @c1 ]
+ expected color: [ @c2 ]
+DIAG
+  }
 }
 
 sub coloreq {
