@@ -2,7 +2,7 @@
 use strict;
 use lib 't';
 use Imager qw(:all);
-use Test::More tests => 57;
+use Test::More tests => 71;
 
 init_log("testout/t101jpeg.log",1);
 
@@ -30,7 +30,7 @@ if (!i_has_format("jpeg")) {
     $im = Imager->new(xsize=>2, ysize=>2);
     ok(!$im->write(file=>"testout/nojpeg.jpg"), "should fail to write jpeg");
     cmp_ok($im->errstr, '=~', qr/format not supported/, "check no jpeg message");
-    skip("no jpeg support", 53);
+    skip("no jpeg support", 67);
   }
 } else {
   open(FH,">testout/t101.jpg") || die "cannot open testout/t101.jpg for writing\n";
@@ -45,7 +45,6 @@ if (!i_has_format("jpeg")) {
   ($cmpimg,undef) = i_readjpeg_wiol($IO);
   close(FH);
 
-  print "$cmpimg\n";
   my $diff = sqrt(i_img_diff($img,$cmpimg))/150*150;
   print "# jpeg average mean square pixel difference: ",$diff,"\n";
   ok($cmpimg, "read jpeg low level");
@@ -283,6 +282,97 @@ if (!i_has_format("jpeg")) {
 	or skip("no exif support", 1);
     my $im = Imager->new;
     ok($im->read(file=>'testimg/zerotype.jpg'), "shouldn't crash");
+  }
+
+ SKIP:
+  { # code coverage - make sure wiol_skip_input_data is called
+    open BASEDATA, "< testimg/exiftest.jpg"
+      or skip "can't open base data", 1;
+    binmode BASEDATA;
+    my $data = do { local $/; <BASEDATA> };
+    close BASEDATA;
+    
+    substr($data, 3, 1) eq "\xE1"
+      or skip "base data isn't as expected", 1;
+    # inserting a lot of marker data here means we take the branch in 
+    # wiol_skip_input_data that refills the buffer
+    my $marker = "\xFF\xE9"; # APP9 marker
+    $marker .= pack("n", 8192) . "x" x 8190;
+    $marker x= 10; # make it take up a lot of space
+    substr($data, 2, 0) = $marker;
+    my $im = Imager->new;
+    ok($im->read(data => $data), "read with a skip of data");
+  }
+  
+ SKIP:
+  { # code coverage - take the branch that provides a fake EOI
+    open BASEDATA, "< testimg/exiftest.jpg"
+      or skip "can't open base data", 1;
+    binmode BASEDATA;
+    my $data = do { local $/; <BASEDATA> };
+    close BASEDATA;
+    substr($data, -1000) = '';
+
+    my $im = Imager->new;
+    ok($im->read(data => $data), "read with image data truncated");
+  }
+
+  { # code coverage - make sure wiol_empty_output_buffer is called
+    my $im = Imager->new(xsize => 1000, ysize => 1000);
+    for my $x (0 .. 999) {
+      $im->line(x1 => $x, y1 => 0, x2 => $x, y2 => 999,
+                color => Imager::Color->new(rand 256, rand 256, rand 256));
+    }
+    my $data;
+    ok($im->write(data => \$data, type=>'jpeg', jpegquality => 100), 
+       "write big file to ensure wiol_empty_output_buffer is called");
+
+    # code coverage - write failure path in wiol_empty_output_buffer
+    ok(!$im->write(callback => sub { return },
+                   type => 'jpeg', jpegquality => 100),
+       "fail to write")
+      and print "# ", $im->errstr, "\n";
+  }
+
+  { # code coverage - virtual image branch in i_writejpeg_wiol()
+    my $im = $imoo->copy;
+    my $immask = $im->masked;
+    ok($immask, "made a virtual image (via masked)");
+    ok($immask->virtual, "check it's virtual");
+    my $mask_data;
+    ok($immask->write(data => \$mask_data, type => 'jpeg'),
+       "write masked version");
+    my $base_data;
+    ok($im->write(data => \$base_data, type=>'jpeg'),
+       "write normal version");
+    is($base_data, $mask_data, "check the data written matches");
+  }
+
+ SKIP:
+  { # code coverage - IPTC data
+    # this is dummy data
+    my $iptc = "\x04\x04" .
+      "\034\002x   My Caption"
+        . "\034\002P   Tony Cook"
+          . "\034\002i   Dummy Headline!"
+            . "\034\002n   No Credit Given";
+    
+    my $app13 = "\xFF\xED" . pack("n", 2 + length $iptc) . $iptc;
+
+    open BASEDATA, "< testimg/exiftest.jpg"
+      or skip "can't open base data", 1;
+    binmode BASEDATA;
+    my $data = do { local $/; <BASEDATA> };
+    close BASEDATA;
+    substr($data, 2, 0) = $app13;
+
+    my $im = Imager->new;
+    ok($im->read(data => $data), "read with app13 data");
+    my %iptc = $im->parseiptc;
+    is($iptc{caption}, 'My Caption', 'check iptc caption');
+    is($iptc{photogr}, 'Tony Cook', 'check iptc photogr');
+    is($iptc{headln}, 'Dummy Headline!', 'check iptc headln');
+    is($iptc{credit}, 'No Credit Given', 'check iptc credit');
   }
 }
 
