@@ -1,0 +1,109 @@
+=head1 NAME
+
+Imager::IO - Imager's io_layer object.
+
+=head1 SYNOPSIS
+
+  # Imager supplies Imager::IO objects to various callbacks
+  my $IO = ...;
+
+  my $count = $IO->write($data);
+  my $count = $IO->read($buffer, $max_count);
+  my $position = $IO->seek($offset, $whence);
+  my $status = $IO->close;
+
+=head1 DESCRIPTION
+
+Imager uses an abstraction when dealing with image files to allow the
+same code to work with disk files, in memory data and callbacks.
+
+If you're writing an Imager file handler your code will be passed an
+Imager::IO object to write to or read from.
+
+=head1 METHODS
+
+=over
+
+=item write
+
+Call to write to the file.  Returns the number of bytes written.  The
+data provided may contain only characters \x00 to \xFF - characters
+outside this range will cause this method to croak().
+
+If you supply a UTF-8 flagged string it will be converted to a byte
+string, which may have a performance impact.
+
+Returns -1 on error, though in most cases if the result of the write
+isn't the number of bytes supplied you'll want to treat it as an error
+anyway.
+
+=item read
+
+  my $buffer;
+  my $count = $io->read($buffer, $max_bytes);
+
+Reads up to I<$max_bytes> bytes from the current position in the file
+and stores them in I<$buffer>.  Returns the number of bytes read on
+success or an empty list on failure.  Note that a read of zero bytes
+is B<not> a failure, this indicates end of file.
+
+=item read2
+
+  my $buffer = $io->read2($max_bytes);
+
+An alternative interface to read, that might be simpler to use in some
+cases.
+
+Returns the data read or an empty list.
+
+=item seek
+
+  my $new_position = $io->seek($offset, $whence);
+
+Seek to a new position in the file.  Possible values for I<$whence> are:
+
+=over
+
+=item *
+
+C<SEEK_SET> - I<$offset> is the new position in the file.
+
+=item *
+
+C<SEEK_CUR> - I<$offset> is the offset from the current position in
+the file.
+
+=item *
+
+C<SEEK_END> - I<$offset> is the offset relative to the end of the
+file.
+
+=back
+
+Note that seeking past the end of the file may or may not result in an
+error.
+
+Returns the new position in the file, or -1 on error.
+
+=item close
+
+  my $result = $io->close;
+
+Call when you're with the file.  If the IO object is connected to a
+file this won't close the file handle, but buffers may be flushed (if
+any).
+
+Returns 0 on success, -1 on failure.
+
+=back
+
+=head1 AUTHOR
+
+Tony Cook <tony@imager.perl.org>
+
+=head1 SEE ALSO
+
+Imager, Imager::Files
+
+=cut
+

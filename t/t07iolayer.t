@@ -1,6 +1,6 @@
 #!perl -w
 use strict;
-use Test::More tests => 43;
+use Test::More tests => 64;
 use Fcntl ':seek';
 
 BEGIN { use_ok(Imager => ':all') };
@@ -154,4 +154,104 @@ ok($work eq $data2, "short write image match");
   # grab the data
   my $data = Imager::io_slurp($io);
   is($data, "testtestdata", "check we have the right data");
+}
+
+{ # callback failure checks
+  my $fail_io = Imager::io_new_cb(\&fail_write, \&fail_read, \&fail_seek, undef, 1);
+  # scalar context
+  my $buffer;
+  my $read_result = $fail_io->read($buffer, 10);
+  is($read_result, undef, "read failure undef in scalar context");
+  my @read_result = $fail_io->read($buffer, 10);
+  is(@read_result, 0, "empty list in list context");
+  $read_result = $fail_io->read2(10);
+  is($read_result, undef, "read2 failure (scalar)");
+  @read_result = $fail_io->read2(10);
+  is(@read_result, 0, "read2 failure (list)");
+
+  my $write_result = $fail_io->write("test");
+  is($write_result, -1, "failed write");
+
+  my $seek_result = $fail_io->seek(-1, SEEK_SET);
+  is($seek_result, -1, "failed seek");
+}
+
+{ # callback success checks
+  my $good_io = Imager::io_new_cb(\&good_write, \&good_read, \&good_seek, undef, 1);
+  # scalar context
+  my $buffer;
+  my $read_result = $good_io->read($buffer, 10);
+  is($read_result, 10, "read success (scalar)");
+  is($buffer, "testdatate", "check data");
+  my @read_result = $good_io->read($buffer, 10);
+  is_deeply(\@read_result, [ 10 ], "read success (list)");
+  is($buffer, "testdatate", "check data");
+  $read_result = $good_io->read2(10);
+  is($read_result, "testdatate", "read2 success (scalar)");
+  @read_result = $good_io->read2(10);
+  is_deeply(\@read_result, [ "testdatate" ], "read2 success (list)");
+}
+
+{ # end of file
+  my $eof_io = Imager::io_new_cb(undef, \&eof_read, undef, undef, 1);
+  my $buffer;
+  my $read_result = $eof_io->read($buffer, 10);
+  is($read_result, 0, "read eof (scalar)");
+  is($buffer, '', "check data");
+  my @read_result = $eof_io->read($buffer, 10);
+  is_deeply(\@read_result, [ 0 ], "read eof (list)");
+  is($buffer, '', "check data");
+}
+
+{ # no callbacks
+  my $none_io = Imager::io_new_cb(undef, undef, undef, undef, 0);
+  is($none_io->write("test"), -1, "write with no writecb should fail");
+  my $buffer;
+  is($none_io->read($buffer, 10), undef, "read with no readcb should fail");
+  is($none_io->seek(0, SEEK_SET), -1, "seek with no seekcb should fail");
+}
+
+SKIP:
+{ # make sure we croak when trying to write a string with characters over 0xff
+  # the write callback shouldn't get called
+  skip("no native UTF8 support in this version of perl", 2)
+    unless $] >= 5.006;
+  my $io = Imager::io_new_cb(\&good_write, undef, undef, 1);
+  my $data = chr(0x100);
+  is(ord $data, 0x100, "make sure we got what we expected");
+  my $result = 
+    eval {
+      $io->write($data);
+    };
+  ok($@, "should have croaked")
+    and print "# $@\n";
+}
+
+sub eof_read {
+  my ($max_len) = @_;
+
+  return '';
+}
+
+sub good_read {
+  my ($max_len) = @_;
+
+  my $data = "testdata";
+  length $data <= $max_len or substr($data, $max_len) = '';
+
+  print "# good_read ($max_len) => $data\n";
+
+  return $data;
+}
+
+sub fail_write {
+  return;
+}
+
+sub fail_read {
+  return;
+}
+
+sub fail_seek {
+  return -1;
 }

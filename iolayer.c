@@ -167,7 +167,7 @@ realseek_read(io_glue *ig, void *buf, size_t count) {
   
   ier->cpos += bc;
   IOL_DEB( printf("realseek_read: rc = %d, bc = %d\n", rc, bc) );
-  return bc;
+  return rc < 0 ? rc : bc;
 }
 
 
@@ -203,7 +203,7 @@ realseek_write(io_glue *ig, const void *buf, size_t count) {
 
   ier->cpos += bc;
   IOL_DEB( printf("realseek_write: rc = %d, bc = %d\n", rc, bc) );
-  return bc;
+  return rc < 0 ? rc : bc;
 }
 
 

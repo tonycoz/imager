@@ -323,9 +323,14 @@ static ssize_t call_reader(struct cbdata *cbd, void *buf, size_t size,
 static ssize_t write_flush(struct cbdata *cbd) {
   ssize_t result;
 
-  result = call_writer(cbd, cbd->buffer, cbd->used);
-  cbd->used = 0;
-  return result;
+  if (cbd->used) {
+    result = call_writer(cbd, cbd->buffer, cbd->used);
+    cbd->used = 0;
+    return result;
+  }
+  else {
+    return 1; /* success of some sort */
+  }
 }
 
 static off_t io_seeker(void *p, off_t offset, int whence) {
@@ -390,8 +395,9 @@ static ssize_t io_writer(void *p, void const *data, size_t size) {
   }
   cbd->writing = 1;
   if (cbd->used && cbd->used + size > cbd->maxlength) {
-    if (write_flush(cbd) <= 0) {
-      return 0;
+    int write_res = write_flush(cbd);
+    if (write_res <= 0) {
+      return write_res;
     }
     cbd->used = 0;
   }
@@ -404,11 +410,13 @@ static ssize_t io_writer(void *p, void const *data, size_t size) {
   return call_writer(cbd, data, size);
 }
 
-static ssize_t io_reader(void *p, void *data, size_t size) {
+static ssize_t 
+io_reader(void *p, void *data, size_t size) {
   struct cbdata *cbd = p;
   ssize_t total;
   char *out = data; /* so we can do pointer arithmetic */
 
+  /* printf("io_reader(%p, %p, %d)\n", p, data, size); */
   if (cbd->writing) {
     if (write_flush(cbd) <= 0)
       return 0;
@@ -443,6 +451,8 @@ static ssize_t io_reader(void *p, void *data, size_t size) {
       total += copy_size;
       size  -= copy_size;
     }
+    if (did_read < 0)
+      return -1;
   }
   else {
     /* just read the rest - too big for our buffer*/
@@ -452,6 +462,8 @@ static ssize_t io_reader(void *p, void *data, size_t size) {
       total += did_read;
       out   += did_read;
     }
+    if (did_read < 0)
+      return -1;
   }
 
   return total;
@@ -1118,6 +1130,7 @@ i_io_write(ig, data_sv)
 #ifdef SvUTF8
         if (SvUTF8(data_sv)) {
 	  data_sv = sv_2mortal(newSVsv(data_sv));
+          /* yes, we want this to croak() if the SV can't be downgraded */
 	  sv_utf8_downgrade(data_sv, FALSE);
 	}
 #endif        
@@ -1126,7 +1139,7 @@ i_io_write(ig, data_sv)
       OUTPUT:
 	RETVAL
 
-SV *
+void
 i_io_read(ig, buffer_sv, size)
 	Imager::IO ig
 	SV *buffer_sv
@@ -1134,8 +1147,8 @@ i_io_read(ig, buffer_sv, size)
       PREINIT:
         void *buffer;
 	int result;
-      CODE:
-        if (size < 0)
+      PPCODE:
+        if (size <= 0)
 	  croak("size negative in call to i_io_read()");
         /* prevent an undefined value warning if they supplied an 
 	   undef buffer.
@@ -1148,18 +1161,41 @@ i_io_read(ig, buffer_sv, size)
 #endif
 	buffer = SvGROW(buffer_sv, size+1);
         result = i_io_read(ig, buffer, size);
-        if (result < 0) {
-	  RETVAL = &PL_sv_undef;
-	}
-	else {
+        if (result >= 0) {
 	  SvCUR_set(buffer_sv, result);
 	  *SvEND(buffer_sv) = '\0';
 	  SvPOK_only(buffer_sv);
-	  RETVAL = newSViv(result); /* XS will mortal this */
+	  EXTEND(SP, 1);
+	  PUSHs(sv_2mortal(newSViv(result)));
 	}
-      OUTPUT:
-	RETVAL
-	buffer_sv
+	ST(1) = buffer_sv;
+	SvSETMAGIC(ST(1));
+
+void
+i_io_read2(ig, size)
+	Imager::IO ig
+	int size
+      PREINIT:
+	SV *buffer_sv;
+        void *buffer;
+	int result;
+      PPCODE:
+        if (size <= 0)
+	  croak("size negative in call to i_io_read2()");
+	buffer_sv = newSV(size);
+	buffer = SvGROW(buffer_sv, size+1);
+        result = i_io_read(ig, buffer, size);
+        if (result >= 0) {
+	  SvCUR_set(buffer_sv, result);
+	  *SvEND(buffer_sv) = '\0';
+	  SvPOK_only(buffer_sv);
+	  EXTEND(SP, 1);
+	  PUSHs(sv_2mortal(buffer_sv));
+	}
+	else {
+          /* discard it */
+	  SvREFCNT_dec(buffer_sv);
+        }
 
 int
 i_io_seek(ig, position, whence)
@@ -1167,7 +1203,7 @@ i_io_seek(ig, position, whence)
 	long position
 	int whence
 
-void
+int
 i_io_close(ig)
 	Imager::IO ig
 
