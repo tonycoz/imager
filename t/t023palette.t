@@ -2,7 +2,7 @@
 # some of this is tested in t01introvert.t too
 use strict;
 use lib 't';
-use Test::More tests => 70;
+use Test::More tests => 75;
 BEGIN { use_ok("Imager"); }
 
 my $img = Imager->new(xsize=>50, ysize=>50, type=>'paletted');
@@ -224,6 +224,15 @@ cmp_ok(Imager->errstr, '=~', qr/Channels must be positive and <= 4/,
   @colors = $img->getcolors;
   iscolor($colors[0], $green, "check first color");
   iscolor($colors[1], $blue, "check second color");
+
+  # make sure we handle bad colors correctly
+  is($img->colorcount, 2, "start from a known state");
+  is($img->addcolors(colors => [ 'XXFGXFXGXFX' ]), undef,
+     "fail to add unknown color");
+  is($img->errstr, 'No color named XXFGXFXGXFX found', 'check error message');
+  is($img->setcolors(colors => [ 'XXFGXFXGXFXZ' ]), undef,
+     "fail to set to unknown color");
+  is($img->errstr, 'No color named XXFGXFXGXFXZ found', 'check error message');
 }
 
 sub iscolor {
