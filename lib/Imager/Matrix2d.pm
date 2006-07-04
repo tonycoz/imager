@@ -349,6 +349,8 @@ You can import these methods with:
 
 =item m2d_reflect()
 
+=item m2d_scale()
+
 =back
 
 =cut

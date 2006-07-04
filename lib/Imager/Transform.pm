@@ -500,6 +500,16 @@ depending on content.
 The list contains hashrefs, which current contain only one member,
 desc, a description of the use of the input image.
 
+=item $tran->constants
+
+Return's a list of names of constants that can be set for the
+transformation.
+
+=item $tran->constants($name, $name, ...)
+
+Returns a hashref for each named constant, which contains the default
+in key C<default> and a description in key C<desc>.
+
 =item my $out = $tran->transform(\%opts, \%constants, @imgs)
 
 Perform the image transformation.
