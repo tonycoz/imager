@@ -1764,7 +1764,8 @@ fount_init_state(struct fount_state *state, double xa, double ya,
                  i_fountain_repeat repeat, int combine, int super_sample, 
                  double ssample_param, int count, i_fountain_seg *segs) {
   int i, j;
-  i_fountain_seg *my_segs = mymalloc(sizeof(i_fountain_seg) * count);
+  int bytes;
+  i_fountain_seg *my_segs = mymalloc(sizeof(i_fountain_seg) * count); /* checked 2jul06 - duplicating original */
   /*int have_alpha = im->channels == 2 || im->channels == 4;*/
   
   memset(state, 0, sizeof(*state));
@@ -1846,13 +1847,25 @@ fount_init_state(struct fount_state *state, double xa, double ya,
   switch (super_sample) {
   case i_fts_grid:
     ssample_param = floor(0.5 + sqrt(ssample_param));
-    state->ssample_data = mymalloc(sizeof(i_fcolor) * ssample_param * ssample_param);
+    bytes = ssample_param * ssample_param * sizeof(i_fcolor);
+    if (bytes / sizeof(i_fcolor) == ssample_param * ssample_param) {
+      state->ssample_data = mymalloc(sizeof(i_fcolor) * ssample_param * ssample_param); /* checked 1jul06 tonyc */
+    }
+    else {
+      super_sample = i_fts_none;
+    }
     break;
 
   case i_fts_random:
   case i_fts_circle:
     ssample_param = floor(0.5+ssample_param);
-    state->ssample_data = mymalloc(sizeof(i_fcolor) * ssample_param);
+    bytes = sizeof(i_fcolor) * ssample_param;
+    if (bytes / sizeof(i_fcolor) == ssample_param) {
+      state->ssample_data = mymalloc(sizeof(i_fcolor) * ssample_param);
+    }
+    else {
+      super_sample = i_fts_none;
+    }
     break;
   }
   state->parm = ssample_param;
