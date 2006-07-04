@@ -3589,9 +3589,9 @@ addcolors() -  L<Imager::ImageTypes/addcolors>
 
 addtag() -  L<Imager::ImageTypes/addtag> - add image tags
 
-arc() - L<Imager::Draw/arc>
-
 align_string() - L<Imager::Draw/align_string>
+
+arc() - L<Imager::Draw/arc>
 
 bits() - L<Imager::ImageTypes/bits> - number of bits per sample for the
 image
@@ -3637,6 +3637,8 @@ get_file_limits() - L<Imager::Files/"Limiting the sizes of images you read">
 
 getheight() - L<Imager::ImageTypes/getwidth>
 
+getmask() - L<Imager::ImageTypes/getmask>
+
 getpixel() - L<Imager::Draw/getpixel>
 
 getsamples() - L<Imager::Draw/getsamples>
@@ -3647,7 +3649,11 @@ getwidth() - L<Imager::ImageTypes/getwidth>
 
 img_set() - L<Imager::ImageTypes/img_set>
 
+init() - L<Imager::ImageTypes/init>
+
 line() - L<Imager::Draw/line>
+
+load_plugin() - L<Imager::Filters/load_plugin>
 
 map() - L<Imager::Transformations/"Color Mappings"> - remap color
 channel values
@@ -3658,7 +3664,17 @@ matrix_transform() - L<Imager::Engines/matrix_transform>
 
 maxcolors() - L<Imager::ImageTypes/maxcolors>
 
+NC() - L<Imager::Handy/NC>
+
 new() - L<Imager::ImageTypes/new>
+
+newcolor() - L<Imager::Handy/newcolor>
+
+newcolour() - L<Imager::Handy/newcolour>
+
+newfont() - L<Imager::Handy/newfont>
+
+NF() - L<Imager::Handy/NF>
 
 open() - L<Imager::Files> - an alias for read()
 
@@ -3676,6 +3692,12 @@ read() - L<Imager::Files> - read a single image from an image file
 read_multi() - L<Imager::Files> - read multiple images from an image
 file
 
+register_filter() - L<Imager::Filters/register_filter>
+
+register_reader() - L<Imager::Filters/register_reader>
+
+register_writer() - L<Imager::Filters/register_writer>
+
 rotate() - L<Imager::Transformations/rotate>
 
 rubthrough() - L<Imager::Transformations/rubthrough> - draw an image onto an
@@ -3690,13 +3712,15 @@ scaleY() - L<Imager::Transformations/scaleY>
 setcolors() - L<Imager::ImageTypes/setcolors> - set palette colors in
 a paletted image
 
+set_file_limits() - L<Imager::Files/"Limiting the sizes of images you read">
+
+setmask() - L<Imager::ImageTypes/setmask>
+
 setpixel() - L<Imager::Draw/setpixel>
 
 setscanline() - L<Imager::Draw/setscanline>
 
 settag() - L<Imager::ImageTypes/settag>
-
-set_file_limits() - L<Imager::Files/"Limiting the sizes of images you read">
 
 string() - L<Imager::Draw/string> - draw text on an image
 
@@ -3711,6 +3735,8 @@ transform() - L<Imager::Engines/"transform">
 transform2() - L<Imager::Engines/"transform2">
 
 type() -  L<Imager::ImageTypes/type> - type of image (direct vs paletted)
+
+unload_plugin() - L<Imager::Filters/unload_plugin>
 
 virtual() - L<Imager::ImageTypes/virtual> - whether the image has it's own
 data

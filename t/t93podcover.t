@@ -21,10 +21,11 @@ my @private =
    '^malloc_state$',
    '^init_log$',
    '^polybezier$', # not ready for public consumption
+   '^border$', # I don't know what it is, expect it to go away
   );
 my @trustme = ( '^open$',  );
 
-plan tests => 15;
+plan tests => 17;
 
 {
   pod_coverage_ok('Imager', { also_private => \@private,
@@ -51,3 +52,42 @@ plan tests => 15;
   pod_coverage_ok('Imager::Transform');
 }
 
+{
+  # check all documented methods/functions are in the method index
+  my $coverage = 
+    Pod::Coverage::Imager->new(package => 'Imager',
+			       pod_from => \@pods,
+			       trustme => \@trustme,
+			       also_private => \@private);
+  my %methods = map { $_ => 1 } $coverage->covered;
+  open IMAGER, "< Imager.pm"
+    or die "Cannot open Imager.pm: $!";
+  while (<IMAGER>) {
+    last if /^=head1 METHOD INDEX/;
+  }
+  my @indexed;
+  while (<IMAGER>) {
+    last if /^=\w/;
+
+    if (/^(\w+)\(/) {
+      push @indexed, $1;
+      delete $methods{$1};
+    }
+  }
+
+  unless (is(keys %methods, 0, "all methods in method index")) {
+    print "# the following methods are documented but not in the index:\n";
+    print "#  $_\n" for sort keys %methods;
+  }
+
+  sub dict_cmp_func;
+  is_deeply(\@indexed, [ sort dict_cmp_func @indexed ],
+	    "check method index is alphabetically sorted");
+}
+
+sub dict_cmp_func {
+  (my $tmp_a = lc $a) =~ tr/_//d;
+  (my $tmp_b = lc $b) =~ tr/_//d;
+
+  $tmp_a cmp $tmp_b;
+}
