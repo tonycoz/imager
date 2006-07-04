@@ -794,6 +794,11 @@ say how those name tables are unreliable, or how FT2 handles them.
 Both Freetype 1.x and 2.x allow support for glyph names to not be
 included.
 
+=item draw
+
+This is used by Imager's string() method to implement drawing text.
+See L<Imager::Draw/string>.
+
 =back
 
 =head1 MULTIPLE MASTER FONTS
@@ -867,6 +872,16 @@ unicode character 00C3 "LATIN CAPITAL LETTER A WITH DIAERESIS", and
 your font doesn't support it, Imager will I<not> build it from 0041
 "LATIN CAPITAL LETTER A" and 0308 "COMBINING DIAERESIS".
 
+To check if a driver supports UTF8 call the utf8 method:
+
+=over
+
+=item utf8
+
+Return true if the font supports UTF8.
+
+=back
+
 =head2 Native UTF8 Support
 
 If your version of perl supports UTF8 and the driver supports UTF8,
@@ -905,13 +920,19 @@ Since some formats can be handled by more than one driver, a priority
 list is used to choose which one should be used, if a given format can
 be handled by more than one driver.
 
-The current priority can be retrieved with:
+=over
+
+=item priorities
+
+The current priorities can be retrieved with:
 
   @drivers = Imager::Font->priorities();
 
 You can set new priorities and save the old priorities with:
 
   @old = Imager::Font->priorities(@drivers);
+
+=back
 
 If you supply driver names that are not currently supported, they will
 be ignored.

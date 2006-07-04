@@ -932,6 +932,50 @@ color table.
 
 =back
 
+=head1 INITIALIZATION
+
+This documents the Imager initialization function, which you will
+almost never need to call.
+
+=over
+
+=item init
+
+This is a function, not a method.
+
+This function is a mess, it can take the following named parameters:
+
+=over
+
+=item *
+
+log - name of a log file to log Imager's actions to.  Not all actions
+are logged, but the debugging memory allocator does log allocations
+here.  Ignored if Imager has been built without logging support.
+
+=item *
+
+loglevel - the maximum level of message to log.  Default: 1.
+
+=item *
+
+warn_obsolete - if this is non-zero then Imager will warn when you
+attempt to use obsoleted parameters or functionality.  This currently
+only includes the old gif output options instead of tags.
+
+=item *
+
+t1log - if non-zero then T1lib will be configured to produce a log
+file.  This will fail if there are any existing T1lib font objects.
+
+=back
+
+Example:
+
+  Imager::init(log => 'trace.log', loglevel => 9);
+
+=back
+
 =head1 REVISION
 
 $Revision$

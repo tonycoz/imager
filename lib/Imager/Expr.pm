@@ -538,9 +538,11 @@ To create a new Imager::Expr object, call:
 You will need to set an expression value and you may set any of the
 following:
 
-=over 4
+=over
 
-=item constants
+=item *
+
+constants
 
 A hashref defining extra constants for expression parsing.  The names
 of the constants must be valid identifiers (/[^\W\d]\w*/) and the
@@ -549,7 +551,9 @@ scalars).
 
 Imager::Expr may define it's own constants (currently just pi.)
 
-=item variables
+=item *
+
+variables
 
 A reference to an array of variable names.  These are allocated
 numeric registers starting from register zero.
@@ -600,7 +604,28 @@ I'll write this one day.
 
 Methods used by parsers:
 
-=over 4
+=over
+
+=item compile
+
+This is the main method you'll need to implement in a parser.  See the
+existing parsers for a guide.
+
+It's supplied the following parameters:
+
+=over
+
+=item *
+
+$expr - the expression to be parsed
+
+=item *
+
+$options - the options hash supplied to transform2.
+
+=back
+
+Return an array ref of array refs containing opcodes and operands.
 
 =item @vars = $self->_variables()
 
@@ -615,6 +640,29 @@ Set the return value of Imager::Expr::error()
 =item @ops = $self->stack_to_reg(@stack_ops)
 
 Converts marginally parsed RPN to register code.
+
+=item assemble
+
+Called to convert op codes into byte code.
+
+=item numre
+
+Returns a regular expression that matches floating point numbers.
+
+=item optimize
+
+Optimizes the assembly code, including attempting common subexpression
+elimination and strength reducing division by a constant into
+multiplication by a constant.
+
+=item register_type
+
+Called by a new expression parser implementation to register itself,
+call as:
+
+  YourClassName->register_type('type code');
+
+where type code is the parameter that will accept the expression.
 
 =back
 

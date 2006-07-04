@@ -238,7 +238,11 @@ You can simply calculate space usage by setting C<image> to C<undef>,
 or set C<savepos> to see how much text can fit within the given
 C<height>.
 
-=head1 OPTIONS
+=over
+
+=item wrap_text
+
+Draw word-wrapped text.
 
 =over
 
@@ -336,8 +340,6 @@ from $font->font_height.  Can be positive or negative.  Default 0.
 
 Any other parameters are passed onto Imager::Font->draw().
 
-=head1 RETURNS
-
 Returns a list:
 
   ($left, $top, $right, $bottom)
@@ -358,6 +360,8 @@ before doing it:
                                 font   => $font,
                                 width  => $xsize,
                                 image  => $image);
+
+=back
 
 =head1 BUGS
 

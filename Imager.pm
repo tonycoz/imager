@@ -3447,7 +3447,7 @@ render text and more.
 
 =item *
 
-Imager - This document - Synopsis Example, Table of Contents and
+Imager - This document - Synopsis, Example, Table of Contents and
 Overview.
 
 =item *
@@ -3551,14 +3551,32 @@ or if you want to create an empty image:
 This example creates a completely black image of width 400 and height
 300 and 4 channels.
 
-When an operation fails which can be directly associated with an image
-the error message is stored can be retrieved with
-C<$img-E<gt>errstr()>.
+=head1 ERROR HANDLING
 
-In cases where no image object is associated with an operation
-C<$Imager::ERRSTR> is used to report errors not directly associated
-with an image object.  You can also call C<Imager->errstr> to get this
-value.
+In general a method will return false when it fails, if it does use the errstr() method to find out why:
+
+=over
+
+=item errstr
+
+Returns the last error message in that context.
+
+If the last error you received was from calling an object method, such
+as read, call errstr() as an object method to find out why:
+
+  my $image = Imager->new;
+  $image->read(file => 'somefile.gif')
+     or die $image->errstr;
+
+If it was a class method then call errstr() as a class method:
+
+  my @imgs = Imager->read_multi(file => 'somefile.gif')
+    or die Imager->errstr;
+
+Note that in some cases object methods are implemented in terms of
+class methods so a failing object method may set both.
+
+=back
 
 The C<Imager-E<gt>new> method is described in detail in
 L<Imager::ImageTypes>.
@@ -3590,6 +3608,8 @@ transform the color space
 copy() - L<Imager::Transformations/copy>
 
 crop() - L<Imager::Transformations/crop> - extract part of an image
+
+def_guess_type() - L<Imager::Files/def_guess_type>
 
 deltag() -  L<Imager::ImageTypes/deltag> - delete image tags
 

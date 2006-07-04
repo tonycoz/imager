@@ -142,6 +142,7 @@ lib/Imager/Font/Type1.pm
 lib/Imager/Font/Win32.pm
 lib/Imager/Font/Wrap.pm
 lib/Imager/Fountain.pm
+lib/Imager/Handy.pod
 lib/Imager/ImageTypes.pod
 lib/Imager/Inline.pod           Using Imager with Inline::C
 lib/Imager/Matrix2d.pm

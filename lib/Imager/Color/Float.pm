@@ -11,7 +11,7 @@ $VERSION = "1.004";
 
 # Parse color spec into an a set of 4 colors
 
-sub pspec {
+sub _pspec {
   return (@_,1) if @_ == 3;
   return (@_    ) if @_ == 4;
   if ($_[0] =~ 
@@ -24,23 +24,17 @@ sub pspec {
   return ();
 }
 
-
-
 sub new {
   shift; # get rid of class name.
-  my @arg = pspec(@_);
+  my @arg = _pspec(@_);
   return @arg ? new_internal($arg[0],$arg[1],$arg[2],$arg[3]) : ();
 }
 
 sub set {
   my $self = shift;
-  my @arg = pspec(@_);
+  my @arg = _pspec(@_);
   return @arg ? set_internal($self, $arg[0],$arg[1],$arg[2],$arg[3]) : ();
 }
-
-
-
-
 
 1;
 

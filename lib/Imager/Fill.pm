@@ -170,8 +170,20 @@ sub combines {
 
 =head1 DESCRIPTION 
 
-Creates fill objects for use by some drawing functions, currently just
-the Imager box() method.
+Creates fill objects for use by most filled area drawing functions.
+
+All fills are created with the new method.
+
+=over
+
+=item new
+
+  my $fill = Imager::Fill=>new(...);
+
+The parameters depend on the type of fill being created.  See below
+for details.
+
+=back
 
 The currently available fills are:
 

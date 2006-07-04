@@ -217,7 +217,7 @@ sub _get_x_color {
 
 # Parse color spec into an a set of 4 colors
 
-sub pspec {
+sub _pspec {
   return (@_,255) if @_ == 3 && !grep /[^\d.+eE-]/, @_;
   return (@_    ) if @_ == 4 && !grep /[^\d.+eE-]/, @_;
   if ($_[0] =~ 
@@ -329,13 +329,13 @@ sub pspec {
 
 sub new {
   shift; # get rid of class name.
-  my @arg = pspec(@_);
+  my @arg = _pspec(@_);
   return @arg ? new_internal($arg[0],$arg[1],$arg[2],$arg[3]) : ();
 }
 
 sub set {
   my $self = shift;
-  my @arg = pspec(@_);
+  my @arg = _pspec(@_);
   return @arg ? set_internal($self, $arg[0],$arg[1],$arg[2],$arg[3]) : ();
 }
 

@@ -44,6 +44,10 @@ accessible.
 
 =item start_offset()
 
+=item neg_width
+
+=item left_bearing
+
 Returns the horizonatal offset from the selected drawing location to
 the left edge of the first character drawn.  If this is positive, the
 first glyph is to the right of the drawing location.
@@ -67,7 +71,9 @@ sub left_bearing {
   return $_[0][0];
 }
 
-=item end_offset()
+=item end_offset
+
+=item pos_width
 
 The offset from the selected drawing location to the right edge of the
 last character drawn.  Should always be positive.

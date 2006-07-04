@@ -831,7 +831,18 @@ The table contains the standard X11 rgb.txt colors.
 This table is not included as part of Imager::Color itself since it's
 moderately large.
 
-There is only one method: get($name).
+There is only one method:
+
+=over
+
+=item get
+
+  my @rgb = Imager::Color::Table->get('red')
+    or die "No red found";
+
+Retrieves a color from Imager::Color::Tables built-in color table.
+
+=back
 
 =head1 AUTHOR
 
