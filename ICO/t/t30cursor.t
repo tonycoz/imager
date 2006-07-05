@@ -1,10 +1,11 @@
 #!perl -w
 use strict;
+use lib '../t';
 use Test::More tests => 25;
 
 BEGIN { use_ok('Imager::File::CUR'); }
 
--d 'testout' or mkdir 'testout';
+-d 'testout' or mkdir 'testout', 0777;
 
 my $im = Imager->new;
 

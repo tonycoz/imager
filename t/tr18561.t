@@ -2,6 +2,7 @@
 # regression test for RT issue 18561
 # 
 use strict;
+use lib 't';
 use Test::More tests => 1;
 eval {
   use Imager;

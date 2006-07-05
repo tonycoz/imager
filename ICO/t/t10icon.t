@@ -1,10 +1,11 @@
 #!perl -w
 use strict;
+use lib '../t';
 use Test::More tests => 94;
 
 BEGIN { use_ok('Imager::File::ICO'); }
 
--d 'testout' or mkdir 'testout';
+-d 'testout' or mkdir 'testout', 0777;
 
 my $im = Imager->new;
 # type=>'ico' or 'cur' and read ico and cur since they're pretty much

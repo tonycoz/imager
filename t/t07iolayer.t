@@ -1,7 +1,9 @@
 #!perl -w
 use strict;
+use lib 't';
 use Test::More tests => 64;
-use Fcntl ':seek';
+# for SEEK_SET etc, Fcntl doesn't provide these in 5.005_03
+use IO::Seekable;
 
 BEGIN { use_ok(Imager => ':all') };
 

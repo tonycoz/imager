@@ -4,6 +4,7 @@
 #include "imext.h"
 #include "imperl.h"
 #include "imicon.h"
+#include "ppport.h"
 
 DEFINE_IMAGER_CALLBACKS;
 
