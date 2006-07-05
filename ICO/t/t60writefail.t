@@ -108,27 +108,27 @@ use Imager ':handy';
 
 {
   my $im = Imager->new(xsize => 10, ysize => 10);
-  ok(!$im->write(type => 'ico', callback => WriteLimit->new(6), maxbuffer => 1),
+  ok(!$im->write(type => 'ico', callback => limited_write(6), maxbuffer => 1),
      "second write (resource) should fail (ico)");
   is($im->errstr, "Write failure: limit reached", "check message");
   $im->_set_error('');
 
-  ok(!$im->write(type => 'cur', callback => WriteLimit->new(6), maxbuffer => 1),
+  ok(!$im->write(type => 'cur', callback => limited_write(6), maxbuffer => 1),
      "second (resource) write should fail (cur)");
   is($im->errstr, "Write failure: limit reached", "check message");
   $im->_set_error('');
 
-  ok(!$im->write(type => 'ico', callback => WriteLimit->new(22), maxbuffer => 1),
+  ok(!$im->write(type => 'ico', callback => limited_write(22), maxbuffer => 1),
      "third write (bmi) should fail (32-bit)");
   is($im->errstr, "Write failure: limit reached", "check message");
   $im->_set_error('');
 
-  ok(!$im->write(type => 'ico', callback => WriteLimit->new(62), maxbuffer => 1),
+  ok(!$im->write(type => 'ico', callback => limited_write(62), maxbuffer => 1),
      "fourth write (data) should fail (32-bit)");
   is($im->errstr, "Write failure: limit reached", "check message");
   $im->_set_error('');
 
-  ok(!$im->write(type => 'ico', callback => WriteLimit->new(462), maxbuffer => 1),
+  ok(!$im->write(type => 'ico', callback => limited_write(462), maxbuffer => 1),
      "mask write should fail (32-bit)");
   is($im->errstr, "Write failure: limit reached", "check message");
 }
@@ -140,14 +140,14 @@ use Imager ':handy';
   $im->addcolors(colors => [ $red, $blue ]);
   $im->box(filled => 1, color => $red, ymax => 5);
   $im->box(filled => 1, color => $blue, ymin => 6);
-  ok(!$im->write(type => 'ico', callback => WriteLimit->new(22), maxbuffer => 1),
+  ok(!$im->write(type => 'ico', callback => limited_write(22), maxbuffer => 1),
      "third write (bmi) should fail (1-bit)");
   is($im->errstr, "Write failure: limit reached", "check message");
   
-  ok(!$im->write(type => 'ico', callback => WriteLimit->new(66), maxbuffer => 1),
+  ok(!$im->write(type => 'ico', callback => limited_write(66), maxbuffer => 1),
      "fourth write (palette) should fail (1-bit)");
   is($im->errstr, "Write failure: limit reached", "check message");
-  ok(!$im->write(type => 'ico', callback => WriteLimit->new(74), maxbuffer => 1),
+  ok(!$im->write(type => 'ico', callback => limited_write(74), maxbuffer => 1),
      "fifth write (image) should fail (1-bit)");
   is($im->errstr, "Write failure: limit reached", "check message");
   my $data;
@@ -166,14 +166,14 @@ use Imager ':handy';
   $im->addcolors(colors => [ ($red, $blue) x 8 ]);
   $im->box(filled => 1, color => $red, ymax => 5);
   $im->box(filled => 1, color => $blue, ymin => 6);
-  ok(!$im->write(type => 'ico', callback => WriteLimit->new(22), maxbuffer => 1),
+  ok(!$im->write(type => 'ico', callback => limited_write(22), maxbuffer => 1),
      "third write (bmi) should fail (4-bit)");
   is($im->errstr, "Write failure: limit reached", "check message");
   
-  ok(!$im->write(type => 'ico', callback => WriteLimit->new(66), maxbuffer => 1),
+  ok(!$im->write(type => 'ico', callback => limited_write(66), maxbuffer => 1),
      "fourth write (palette) should fail (4-bit)");
   is($im->errstr, "Write failure: limit reached", "check message");
-  ok(!$im->write(type => 'ico', callback => WriteLimit->new(130), maxbuffer => 1),
+  ok(!$im->write(type => 'ico', callback => limited_write(130), maxbuffer => 1),
      "fifth write (image) should fail (4-bit)");
   is($im->errstr, "Write failure: limit reached", "check message");
   my $data;
@@ -192,17 +192,17 @@ use Imager ':handy';
   $im->addcolors(colors => [ ($red, $blue) x 9 ]);
   $im->box(filled => 1, color => $red, ymax => 5);
   $im->box(filled => 1, color => $blue, ymin => 6);
-  ok(!$im->write(type => 'ico', callback => WriteLimit->new(22), maxbuffer => 1),
+  ok(!$im->write(type => 'ico', callback => limited_write(22), maxbuffer => 1),
      "third write (bmi) should fail (8-bit)");
   is($im->errstr, "Write failure: limit reached", "check message");
   
-  ok(!$im->write(type => 'ico', callback => WriteLimit->new(62), maxbuffer => 1),
+  ok(!$im->write(type => 'ico', callback => limited_write(62), maxbuffer => 1),
      "fourth write (palette) should fail (8-bit)");
   is($im->errstr, "Write failure: limit reached", "check message");
-  ok(!$im->write(type => 'ico', callback => WriteLimit->new(62 + 1024), maxbuffer => 1),
+  ok(!$im->write(type => 'ico', callback => limited_write(62 + 1024), maxbuffer => 1),
      "fifth write (image) should fail (8-bit)");
   is($im->errstr, "Write failure: limit reached", "check message");
-  ok(!$im->write(type => 'ico', callback => WriteLimit->new(62 + 1024 + 10), maxbuffer => 1),
+  ok(!$im->write(type => 'ico', callback => limited_write(62 + 1024 + 10), maxbuffer => 1),
      "sixth write (zeroes) should fail (8-bit)");
   is($im->errstr, "Write failure: limit reached", "check message");
   my $data;
@@ -221,17 +221,10 @@ sub write_failure {
   return;
 }
 
-package WriteLimit;
-use overload 
-  '&{}' => \&limited_write,
-  'bool' => sub { 1 };
+sub limited_write {
+  my ($limit) = @_;
 
-sub new {
-  my ($class, $limit) = @_;
-
-  bless 
-    { 
-     do_write =>
+  return
      sub {
        my ($data) = @_;
        $limit -= length $data;
@@ -244,11 +237,5 @@ sub new {
          Imager::i_push_error(0, "limit reached");
          return;
        }
-     }
-    },$class;
-}
-
-sub limited_write {
-  my ($self) = @_;
-  return $self->{do_write};
+     };
 }
