@@ -433,6 +433,7 @@ sub init {
     # it can't find and it doesn't look for -L in ldflags
     #@deflib{@hidden} = @hidden;
   }
+  push @libs, grep -d, qw(/usr/local/lib);
 
   $formats{'jpeg'}={
 		    order=>'21',
@@ -828,6 +829,10 @@ sub make_metafile {
   # extract the version
   my $version = MM->parse_version($opts->{VERSION_FROM})
     or die "Could not extract version number from $opts->{VERSION_FROM}\n";
+
+  # we don't set this on older EU::MM and it corrupts META.yml
+  # so don't generate it
+  return unless $opts->{AUTHOR};
 
   my $meta = <<YAML;
 --- #YAML:1.0
