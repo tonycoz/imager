@@ -267,7 +267,7 @@ bugs.  Imager can crash or display other strange behaviour after
 reading or writing gif images.  Some of the gif tests can fail since
 they stress some parts of the buggy code.
 
-libungif or libguf 4.1.4 and later is safe.
+libungif or libgif 4.1.4 and later is safe.
 
 Of course it's possible your operating system distributor has patched
 all of these problems and you have nothing to worry about.
