@@ -111,18 +111,25 @@ if ($MANUAL) {
 gifcheck();
 
 my $lib_cflags = '';
+my $lib_lflags = '';
 my $F_LIBS = '';
 my $F_OBJECT = '';
 for my $frmkey (sort { $formats{$a}{order} <=> $formats{$b}{order} } keys %formats) {
   my $frm = $formats{$frmkey};
   push @defines, [ $frm->{def}, 1, "$frmkey available" ];
-  $F_LIBS   .= ' '  .$frm->{libfiles};
   $F_OBJECT .= ' '  .$frm->{objfiles};
   if ($frm->{cflags}) {
     $lib_cflags   .= ' '  .$frm->{cflags};
     ++$definc{$_} for map { /^-I(.*)$/ ? ($1) : () }
       grep /^-I./, split ' ', $frm->{cflags};
   }
+  if ($frm->{lflags}) {
+    $lib_lflags .= ' ' . $frm->{lflags};
+  }
+  else {
+    $F_LIBS   .= ' '  .$frm->{libfiles};
+  }
+
 }
 
 unless ($noexif) {
@@ -156,7 +163,7 @@ $Recommends{Imager} =
 my %opts=(
           'NAME'         => 'Imager',
           'VERSION_FROM' => 'Imager.pm',
-          'LIBS'         => "$LFLAGS -lm $OSLIBS $F_LIBS",
+          'LIBS'         => "$LFLAGS -lm $lib_lflags $OSLIBS $F_LIBS",
           'DEFINE'       => "$OSDEF $CFLAGS",
           'INC'          => "$lib_cflags $DFLAGS $F_INC",
           'OBJECT'       => join(' ', @objs, $F_OBJECT),
@@ -712,7 +719,7 @@ sub freetype2_probe {
 		   map "-I$_", reverse @incdirs);
   }
   $frm->{cflags} = $cflags;
-  $frm->{libfiles} = $lflags;
+  $frm->{lflags} = $lflags;
 
   printf "%10s: configured via freetype-config\n", $frmkey;
 
@@ -743,7 +750,7 @@ sub png_probe {
   chomp $cflags;
   chomp $lflags;
   $frm->{cflags} = $cflags;
-  $frm->{libfiles} = $lflags;
+  $frm->{lflags} = $lflags;
 
   printf "%10s: configured via `pkg-config $config ...`\n", $frmkey;
 
