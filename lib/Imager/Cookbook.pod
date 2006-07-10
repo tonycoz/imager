@@ -170,10 +170,7 @@ C<WARNING>: file format attacks have become a common attack vector,
 make sure you have up to date image file format libraries, otherwise
 trying to parse uploaded files, whether with Imager or some other
 tool, may result in a remote attacker being able to run their own code
-on your system.  Currently Imager makes no attempt to place size
-limits on a read image file.  This may result in consumption of large
-amounts of memory.  Future versions of Imager may provide mechanisms
-to limit the sizes of images read from files.
+on your system.
 
 If your HTML form uses the correct magic, it can upload files to your
 CGI script, in particular, you need to use C< method="post" > and
@@ -226,6 +223,16 @@ have Imager read the image
 
 See C<samples/samp-scale.cgi> and C<samples/samp-tags.cgi> in the
 Imager distribution for example code.
+
+You may also want to set limits on the size of the image read, using
+Imager's C<set_file_limits> method, documented in
+L<Imager::Files/set_file_limits>.  For example:
+
+  # limit to 10 million bytes of memory usage
+  Imager->set_file_limits(bytes => 10_000_000);
+
+  # limit to 1024 x 1024
+  Imager->set_file_limits(width => 1024, height => 1024);
 
 =head1 DRAWING
 
@@ -315,7 +322,7 @@ transformed text into.
 
 =head1 METADATA
 
-=head2 Image spatial resolution.
+=head2 Image spatial resolution
 
 Keywords: DPI
 
