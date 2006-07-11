@@ -322,7 +322,43 @@ transformed text into.
 
 =head1 METADATA
 
+=head2 Image format
+
+When Imager reads a file it does a magic number check to determine the
+file type, so "foo.png" could actually be a GIF image, and Imager will
+read it anyway.
+
+You can check the actual format of the image by looking at the
+C<i_format> tag.
+
+  my $format = $image->tags(name=>'i_format');
+
 =head2 Image spatial resolution
+
+Most image file formats store information about the physical size of
+the pixels, though in some cases that information isn't useful.
+
+Imager stores this information in the tags C<i_xres> and C<i_yres>,
+and this is always stored in dots per inch.
+
+Some formats, including TIFF and JPEG allow you to change the units
+spatial resolution information is stored in, if you set the tag that
+changes this the Imager will convert C<i_xres> and C<i_yres> to those
+units when it writes the file.
+
+For example to set the resolution to 300 dpi:
+
+  $image->settag(name => 'i_xres', value => 300);
+  $image->settag(name => 'i_yres', value => 300);
+
+If you want the file format to store the resolution in some other
+unit, for example you can write a TIFF file that stores the resolution
+in pixels per centimeter, you would do:
+
+  # 150 pixels/cm
+  $image->settag(name => 'i_xres', value => 150 * 2.54);
+  $image->settag(name => 'i_yres', value => 150 * 2.54);
+  $image->settag(name => 'tiff_resolutionunit', value => 3);
 
 Keywords: DPI
 

@@ -3778,13 +3778,14 @@ cropping - L<Imager::Transformations/crop>
 
 C<diff> images - L<Imager::Filter/"Image Difference">
 
-dpi - L<Imager::ImageTypes/i_xres>
+dpi - L<Imager::ImageTypes/i_xres>, 
+L<Imager::Cookbook/"Image spatial resolution">
 
 drawing boxes - L<Imager::Draw/box>
 
 drawing lines - L<Imager::Draw/line>
 
-drawing text - L<Imager::Font/string>, L<Imager::Font/align>
+drawing text - L<Imager::Draw/string>, L<Imager::Draw/align_string>
 
 error message - L<"Basic Overview">
 
@@ -3802,8 +3803,8 @@ flood fill - L<Imager::Draw/flood_fill>
 
 fonts - L<Imager::Font>
 
-fonts, drawing with - L<Imager::Font/string>, L<Imager::Font/align>,
-L<Imager::Font::Wrap>
+fonts, drawing with - L<Imager::Draw/string>,
+L<Imager::Draw/align_string>, L<Imager::Font::Wrap>
 
 fonts, metrics - L<Imager::Font/bounding_box>, L<Imager::Font::BBox>
 

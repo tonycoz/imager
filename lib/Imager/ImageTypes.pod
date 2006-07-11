@@ -683,6 +683,16 @@ The spatial resolution of the image in pixels per inch.  If the image
 format uses a different scale, eg. pixels per meter, then this value
 is converted.  A floating point number stored as a string.
 
+  # our image was generated as a 300 dpi image
+  $img->settag(name => 'i_xres', value => 300);
+  $img->settag(name => 'i_yres', value => 300);
+
+  # 100 pixel/cm for a TIFF image
+  $img->settag(name => 'tiff_resolutionunit', value => 3); # RESUNIT_CENTIMETER
+  # convert to pixels per inch, Imager will convert it back
+  $img->settag(name => 'i_xres', value => 100 * 2.54);
+  $img->settag(name => 'i_yres', value => 100 * 2.54);
+
 =item i_aspect_only
 
 If this is non-zero then the values in i_xres and i_yres are treated
