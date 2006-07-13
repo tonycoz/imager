@@ -1,7 +1,7 @@
 #!perl -w
 use strict;
 use lib 't';
-use Test::More tests => 106;
+use Test::More tests => 127;
 use Imager qw(:all);
 $^W=1; # warnings during command-line tests
 $|=1;  # give us some progress in the test harness
@@ -32,7 +32,7 @@ SKIP:
     $im = Imager->new(xsize=>2, ysize=>2);
     ok(!$im->write(file=>"testout/notiff.tif"), "should fail to write tiff");
     is($im->errstr, 'format not supported', "check no tiff message");
-    skip("no tiff support", 102);
+    skip("no tiff support", 123);
   }
 
   Imager::i_tags_add($img, "i_xres", 0, "300", 0);
@@ -422,6 +422,30 @@ SKIP:
        "check first image");
     is(Imager::i_img_diff($im[1]{IMG}, $im->{IMG}), 0,
        "check second image");
+  }
+
+  { # handling of an alpha channel for various images
+    my $photo_rgb = 2;
+    my $photo_cmyk = 5;
+    my $photo_cielab = 8;
+    my @alpha_images =
+      (
+       [ 'srgb.tif',    3, $photo_rgb ],
+       [ 'srgba.tif',   4, $photo_rgb  ],
+       [ 'srgbaa.tif',  4, $photo_rgb  ],
+       [ 'scmyk.tif',   3, $photo_cmyk ],
+       [ 'scmyka.tif',  4, $photo_cmyk ],
+       [ 'scmykaa.tif', 4, $photo_cmyk ],
+       [ 'slab.tif',    3, $photo_cielab ],
+      );
+    for my $test (@alpha_images) {
+      my $im = Imager->new;
+      ok($im->read(file => "testimg/$test->[0]"),
+	 "read alpha test $test->[0]");
+      is($im->getchannels, $test->[1], "channels for $test->[0] match");
+      is($im->tags(name=>'tiff_photometric'), $test->[2],
+	 "photometric for $test->[0] match");
+    }
   }
 }
 

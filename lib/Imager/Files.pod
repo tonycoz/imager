@@ -694,6 +694,24 @@ some page other than the first.  The page is 0 based:
 
 =back
 
+Note: Imager uses the TIFF*RGBA* family of libtiff functions,
+unfortunately these don't support alpha channels on CMYK images.  This
+will result in a full coverage alpha channel on CMYK images with an
+alpha channel, until this is implemented in libtiff (or Imager's TIFF
+implementation changes.)
+
+If you read an image with multiple alpha channels, then only the first
+alpha channel will be read.
+
+Currently Imager's TIFF support reads all direct color images as 8-bit
+RGB images, this may change in the future to reading 16-bit/sample
+images.
+
+Currently tags that control the output color type and compression are
+ignored when writing, this may change in the future.  If you have
+processes that rely upon Imager always producing packbits compressed
+RGB images, you should strip any tags before writing.
+
 =head2 BMP (BitMaP)
 
 Imager can write 24-bit RGB, and 8, 4 and 1-bit per pixel paletted

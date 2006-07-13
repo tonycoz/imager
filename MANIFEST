@@ -294,6 +294,9 @@ testimg/penguin-base.ppm
 testimg/scale.gif
 testimg/scale.ppm
 testimg/scalei.gif
+testimg/scmyk.tif	Simple CMYK image
+testimg/scmyka.tif	CMYK with one alpha channel
+testimg/scmykaa.tif	CMYK with 2 alpha channels
 testimg/screen2.gif
 testimg/screen3.gif
 testimg/short1.bmp      1-bit/pixel, data missing from EOF
@@ -303,6 +306,10 @@ testimg/short4rle.bmp   truncated 4bit/pixel compressed BMP
 testimg/short8.bmp      8-bit/pixel, data missing from EOF
 testimg/short8rle.bmp   8-bit/pixel compressed, data missing from EOF
 testimg/simple.pbm
+testimg/slab.tif	Lab color image
+testimg/srgb.tif	Simple RGB image
+testimg/srgba.tif	RGB with one alpha
+testimg/srgbaa.tif	RGB with 2 alpha
 testimg/test_gimp_pal   A simple GIMP palette file
 testimg/tiffwarn.tif	Generates a warning while being read
 testimg/trimgdesc.gif

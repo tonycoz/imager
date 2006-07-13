@@ -178,6 +178,26 @@ static i_img *read_one_tiff(TIFF *tif) {
   mm_log((1, "i_readtiff_wiol: %stiled\n", tiled?"":"not "));
   mm_log((1, "i_readtiff_wiol: %sbyte swapped\n", TIFFIsByteSwapped(tif)?"":"not "));
 
+  /* separated defaults to CMYK, but if the user is using some strange
+     ink system we can't work out the color anyway */
+  if (photometric == PHOTOMETRIC_SEPARATED && channels >= 4) {
+    /* TIFF can have more than one alpha channel on an image,
+       but Imager can't, only store the first one */
+    
+    channels = channels == 4 ? 3 : 4;
+
+    /* unfortunately the RGBA functions don't try to deal with the alpha
+       channel on CMYK images, at some point I'm planning on expanding
+       TIFF support to handle 16-bit/sample images and I'll deal with
+       it then */
+  }
+
+  /* TIFF images can have more than one alpha channel, but Imager can't
+     this ignores the possibility of 2 channel images with 2 alpha,
+     but there's not much I can do about that */
+  if (channels > 4)
+    channels = 4;
+
   if (photometric == PHOTOMETRIC_PALETTE && bits_per_sample <= 8) {
     channels = 3;
     im = i_img_pal_new(width, height, channels, 256);
