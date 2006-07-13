@@ -1,7 +1,7 @@
 #!perl -w
 use strict;
 use lib 't';
-use Test::More tests => 158;
+use Test::More tests => 160;
 ++$|;
 # Before `make install' is performed this script should be runnable with
 # `make test'. After `make install' it should work as `perl test.pl'
@@ -19,13 +19,13 @@ my @base_color = (64, 255, 64);
 
 SKIP:
 {
-  i_has_format("ft2") or skip("no freetype2 library found", 157);
+  i_has_format("ft2") or skip("no freetype2 library found", 159);
 
   print "# has ft2\n";
   
   my $fontname=$ENV{'TTFONTTEST'}||'./fontfiles/dodge.ttf';
 
-  -f $fontname or skip("cannot find fontfile $fontname", 157);
+  -f $fontname or skip("cannot find fontfile $fontname", 159);
 
 
   my $bgcolor=i_color_new(255,0,0,0);
@@ -399,6 +399,19 @@ SKIP:
     }
     ok($im->write(file=>'testout/t38align.ppm'), "save align image");
   }
+
+
+  { # outputting a space in non-AA could either crash 
+    # or fail (ft 2.2+)
+    my $font = Imager::Font->new(file=>'fontfiles/ImUgly.ttf', type=>'ft2');
+    my $im = Imager->new(xsize => 100, ysize => 100);
+    ok($im->string(x => 10, y => 10, string => "test space", aa => 0,
+		   color => '#FFF', size => 8, font => $font),
+       "draw space non-antialiased (color)");
+    ok($im->string(x => 10, y => 50, string => "test space", aa => 0,
+		   channel => 0, size => 8, font => $font),
+       "draw space non-antialiased (channel)");
+  }
 }
 
 sub align_test {
@@ -440,7 +453,6 @@ sub align_test {
   else {
     SKIP: { skip("couldn't draw text", 7) };
   }
-
 }
 
 sub okmatchcolor {

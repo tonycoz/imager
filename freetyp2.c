@@ -693,55 +693,57 @@ i_ft2_text(FT2_Fonthandle *handle, i_img *im, int tx, int ty, const i_color *cl,
     slot = handle->face->glyph;
     gm = &slot->metrics;
 
-    error = FT_Render_Glyph(slot, aa ? ft_render_mode_normal : ft_render_mode_mono);
-    if (error) {
-      ft2_push_message(error);
-      i_push_errorf(0, "rendering glyph 0x%04X (character \\x%02X)");
-      return 0;
-    }
-    if (slot->bitmap.pixel_mode == ft_pixel_mode_mono) {
-      bmp = slot->bitmap.buffer;
-      for (y = 0; y < slot->bitmap.rows; ++y) {
-        int pos = 0;
-        int bit = 0x80;
-        for (x = 0; x < slot->bitmap.width; ++x) {
-          if (bmp[pos] & bit)
-            i_ppix(im, tx+x+slot->bitmap_left, ty+y-slot->bitmap_top, cl);
-
-          bit >>= 1;
-          if (bit == 0) {
-            bit = 0x80;
-            ++pos;
-          }
-        }
-        bmp += slot->bitmap.pitch;
+    if (gm->width) {
+      error = FT_Render_Glyph(slot, aa ? ft_render_mode_normal : ft_render_mode_mono);
+      if (error) {
+	ft2_push_message(error);
+	i_push_errorf(0, "rendering glyph 0x%04X (character \\x%02X)");
+	return 0;
       }
-    }
-    else {
-      /* grey scale or something we can treat as greyscale */
-      /* we create a map to convert from the bitmap values to 0-255 */
-      if (last_mode != slot->bitmap.pixel_mode 
-          || last_grays != slot->bitmap.num_grays) {
-        if (!make_bmp_map(&slot->bitmap, map))
-          return 0;
-        last_mode = slot->bitmap.pixel_mode;
-        last_grays = slot->bitmap.num_grays;
+      if (slot->bitmap.pixel_mode == ft_pixel_mode_mono) {
+	bmp = slot->bitmap.buffer;
+	for (y = 0; y < slot->bitmap.rows; ++y) {
+	  int pos = 0;
+	  int bit = 0x80;
+	  for (x = 0; x < slot->bitmap.width; ++x) {
+	    if (bmp[pos] & bit)
+	      i_ppix(im, tx+x+slot->bitmap_left, ty+y-slot->bitmap_top, cl);
+	    
+	    bit >>= 1;
+	    if (bit == 0) {
+	      bit = 0x80;
+	      ++pos;
+	    }
+	  }
+	  bmp += slot->bitmap.pitch;
+	}
       }
-      
-      bmp = slot->bitmap.buffer;
-      for (y = 0; y < slot->bitmap.rows; ++y) {
-        for (x = 0; x < slot->bitmap.width; ++x) {
-          int value = map[bmp[x]];
-          if (value) {
-            i_gpix(im, tx+x+slot->bitmap_left, ty+y-slot->bitmap_top, &pel);
-            for (ch = 0; ch < im->channels; ++ch) {
-              pel.channel[ch] = 
-                ((255-value)*pel.channel[ch] + value * cl->channel[ch]) / 255;
-            }
-            i_ppix(im, tx+x+slot->bitmap_left, ty+y-slot->bitmap_top, &pel);
-          }
-        }
-        bmp += slot->bitmap.pitch;
+      else {
+	/* grey scale or something we can treat as greyscale */
+	/* we create a map to convert from the bitmap values to 0-255 */
+	if (last_mode != slot->bitmap.pixel_mode 
+	    || last_grays != slot->bitmap.num_grays) {
+	  if (!make_bmp_map(&slot->bitmap, map))
+	    return 0;
+	  last_mode = slot->bitmap.pixel_mode;
+	  last_grays = slot->bitmap.num_grays;
+	}
+	
+	bmp = slot->bitmap.buffer;
+	for (y = 0; y < slot->bitmap.rows; ++y) {
+	  for (x = 0; x < slot->bitmap.width; ++x) {
+	    int value = map[bmp[x]];
+	    if (value) {
+	      i_gpix(im, tx+x+slot->bitmap_left, ty+y-slot->bitmap_top, &pel);
+	      for (ch = 0; ch < im->channels; ++ch) {
+		pel.channel[ch] = 
+		  ((255-value)*pel.channel[ch] + value * cl->channel[ch]) / 255;
+	      }
+	      i_ppix(im, tx+x+slot->bitmap_left, ty+y-slot->bitmap_top, &pel);
+	    }
+	  }
+	  bmp += slot->bitmap.pitch;
+	}
       }
     }
 
