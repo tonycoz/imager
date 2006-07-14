@@ -2,7 +2,7 @@
 use strict;
 use lib 't';
 use Imager qw(:all);
-use Test::More tests => 71;
+use Test::More tests => 86;
 
 init_log("testout/t101jpeg.log",1);
 
@@ -30,7 +30,7 @@ if (!i_has_format("jpeg")) {
     $im = Imager->new(xsize=>2, ysize=>2);
     ok(!$im->write(file=>"testout/nojpeg.jpg"), "should fail to write jpeg");
     cmp_ok($im->errstr, '=~', qr/format not supported/, "check no jpeg message");
-    skip("no jpeg support", 67);
+    skip("no jpeg support", 82);
   }
 } else {
   open(FH,">testout/t101.jpg") || die "cannot open testout/t101.jpg for writing\n";
@@ -373,6 +373,35 @@ if (!i_has_format("jpeg")) {
     is($iptc{photogr}, 'Tony Cook', 'check iptc photogr');
     is($iptc{headln}, 'Dummy Headline!', 'check iptc headln');
     is($iptc{credit}, 'No Credit Given', 'check iptc credit');
+  }
+
+  { # handling of CMYK jpeg
+    # http://rt.cpan.org/Ticket/Display.html?id=20416
+    my $im = Imager->new;
+    ok($im->read(file => 'testimg/scmyk.jpg'), 'read a CMYK jpeg');
+    is($im->getchannels, 3, "check channel count");
+    my $col = $im->getpixel(x => 0, 'y' => 0);
+    ok($col, "got the 'black' pixel");
+    # this is jpeg, so we can't compare colors exactly
+    # older versions returned this pixel at a light color, but
+    # it's black in the image
+    my ($r, $g, $b) = $col->rgba;
+    cmp_ok($r, '<', 10, 'black - red low');
+    cmp_ok($g, '<', 10, 'black - green low');
+    cmp_ok($b, '<', 10, 'black - blue low');
+    $col = $im->getpixel(x => 15, 'y' => 0);
+    ok($col, "got the dark blue");
+    ($r, $g, $b) = $col->rgba;
+    cmp_ok($r, '<', 10, 'dark blue - red low');
+    cmp_ok($g, '<', 10, 'dark blue - green low');
+    cmp_ok($b, '>', 110, 'dark blue - blue middle (bottom)');
+    cmp_ok($b, '<', 130, 'dark blue - blue middle (top)');
+    $col = $im->getpixel(x => 0, 'y' => 15);
+    ok($col, "got the red");
+    ($r, $g, $b) = $col->rgba;
+    cmp_ok($r, '>', 245, 'red - red high');
+    cmp_ok($g, '<', 10, 'red - green low');
+    cmp_ok($b, '<', 10, 'red - blue low');
   }
 }
 

@@ -337,6 +337,45 @@ my_error_exit (j_common_ptr cinfo) {
   longjmp(myerr->setjmp_buffer, 1);
 }
 
+static void 
+transfer_cmyk_inverted(i_color *out, JSAMPARRAY in, int width) {
+  JSAMPROW inrow = *in;
+  while (width--) {
+    /* extract and convert to real CMYK */
+    /* horribly enough this is correct given cmyk values are inverted */
+    int c = *inrow++;
+    int m = *inrow++;
+    int y = *inrow++;
+    int k = *inrow++;
+    out->rgba.r = (c * k) / MAXJSAMPLE;
+    out->rgba.g = (m * k) / MAXJSAMPLE;
+    out->rgba.b = (y * k) / MAXJSAMPLE;
+    ++out;
+  }
+}
+
+static void
+transfer_rgb(i_color *out, JSAMPARRAY in, int width) {
+  JSAMPROW inrow = *in;
+  while (width--) {
+    out->rgba.r = *inrow++;
+    out->rgba.g = *inrow++;
+    out->rgba.b = *inrow++;
+    ++out;
+  }
+}
+
+static void
+transfer_gray(i_color *out, JSAMPARRAY in, int width) {
+  JSAMPROW inrow = *in;
+  while (width--) {
+    out->gray.gray_color = *inrow++;
+    ++out;
+  }
+}
+
+typedef void (*transfer_function_t)(i_color *out, JSAMPARRAY in, int width);
+
 /*
 =item i_readjpeg_wiol(data, length, iptc_itext, itlength)
 
@@ -348,12 +387,14 @@ i_readjpeg_wiol(io_glue *data, int length, char** iptc_itext, int *itlength) {
 #ifdef IMEXIF_ENABLE
   int seen_exif = 0;
 #endif
-
+  i_color *line_buffer = NULL;
   struct jpeg_decompress_struct cinfo;
   struct my_error_mgr jerr;
   JSAMPARRAY buffer;		/* Output row buffer */
   int row_stride;		/* physical row width in output buffer */
   jpeg_saved_marker_ptr markerp;
+  transfer_function_t transfer_f;
+  int channels;
 
   mm_log((1,"i_readjpeg_wiol(data 0x%p, length %d,iptc_itext 0x%p)\n", data, length, iptc_itext));
 
@@ -369,6 +410,8 @@ i_readjpeg_wiol(io_glue *data, int length, char** iptc_itext, int *itlength) {
     jpeg_destroy_decompress(&cinfo); 
     *iptc_itext=NULL;
     *itlength=0;
+    if (line_buffer)
+      myfree(line_buffer);
     return NULL;
   }
   
@@ -380,14 +423,53 @@ i_readjpeg_wiol(io_glue *data, int length, char** iptc_itext, int *itlength) {
 
   (void) jpeg_read_header(&cinfo, TRUE);
   (void) jpeg_start_decompress(&cinfo);
+
+  channels = cinfo.output_components;
+  switch (cinfo.out_color_space) {
+  case JCS_GRAYSCALE:
+    transfer_f = transfer_gray;
+    break;
+  
+  case JCS_RGB:
+    transfer_f = transfer_rgb;
+    break;
+
+  case JCS_CMYK:
+    if (cinfo.output_components == 4) {
+      /* we treat the CMYK values as inverted, because that's what that
+	 buggy photoshop does, and everyone has to follow the gorilla.
+
+	 Is there any app that still produces correct CMYK JPEGs?
+      */
+      transfer_f = transfer_cmyk_inverted;
+      channels = 3;
+    }
+    else {
+      mm_log((1, "i_readjpeg: cmyk image with %d channels\n", cinfo.output_components));
+      i_push_errorf(0, "CMYK image with invalid components %d", cinfo.output_components);
+      wiol_term_source(&cinfo);
+      jpeg_destroy_decompress(&cinfo);
+      return NULL;
+    }
+    break;
+
+  default:
+    mm_log((1, "i_readjpeg: unknown color space %d\n", cinfo.out_color_space));
+    i_push_errorf(0, "Unknown color space %d", cinfo.out_color_space);
+    wiol_term_source(&cinfo);
+    jpeg_destroy_decompress(&cinfo);
+    return NULL;
+  }
+
   if (!i_int_check_image_file_limits(cinfo.output_width, cinfo.output_height,
-				     cinfo.output_components, sizeof(i_sample_t))) {
+				     channels, sizeof(i_sample_t))) {
     mm_log((1, "i_readjpeg: image size exceeds limits\n"));
     wiol_term_source(&cinfo);
     jpeg_destroy_decompress(&cinfo);
     return NULL;
   }
-  im=i_img_empty_ch(NULL,cinfo.output_width,cinfo.output_height,cinfo.output_components);
+
+  im=i_img_empty_ch(NULL, cinfo.output_width, cinfo.output_height, channels);
   if (!im) {
     wiol_term_source(&cinfo);
     jpeg_destroy_decompress(&cinfo);
@@ -395,10 +477,13 @@ i_readjpeg_wiol(io_glue *data, int length, char** iptc_itext, int *itlength) {
   }
   row_stride = cinfo.output_width * cinfo.output_components;
   buffer = (*cinfo.mem->alloc_sarray) ((j_common_ptr) &cinfo, JPOOL_IMAGE, row_stride, 1);
+  line_buffer = mymalloc(sizeof(i_color) * cinfo.output_width);
   while (cinfo.output_scanline < cinfo.output_height) {
     (void) jpeg_read_scanlines(&cinfo, buffer, 1);
-    memcpy(im->idata+im->channels*im->xsize*(cinfo.output_scanline-1),buffer[0],row_stride);
+    transfer_f(line_buffer, buffer, cinfo.output_width);
+    i_plin(im, 0, cinfo.output_width, cinfo.output_scanline-1, line_buffer);
   }
+  myfree(line_buffer);
 
   /* check for APP1 marker and save */
   markerp = cinfo.marker_list;
@@ -415,6 +500,9 @@ i_readjpeg_wiol(io_glue *data, int length, char** iptc_itext, int *itlength) {
 
     markerp = markerp->next;
   }
+
+  i_tags_addn(&im->tags, "jpeg_out_color_space", 0, cinfo.out_color_space);
+  i_tags_addn(&im->tags, "jpeg_color_space", 0, cinfo.jpeg_color_space);
 
   if (cinfo.saw_JFIF_marker) {
     double xres = cinfo.X_density;
@@ -573,6 +661,7 @@ i_writejpeg_wiol(i_img *im, io_glue *ig, int qfactor) {
         row_pointer[0] = data;
         (void) jpeg_write_scanlines(&cinfo, row_pointer, 1);
       }
+      myfree(data);
     }
     else {
       jpeg_destroy_compress(&cinfo);
