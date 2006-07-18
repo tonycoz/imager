@@ -427,11 +427,25 @@ i_readjpeg_wiol(io_glue *data, int length, char** iptc_itext, int *itlength) {
   channels = cinfo.output_components;
   switch (cinfo.out_color_space) {
   case JCS_GRAYSCALE:
+    if (cinfo.output_components != 1) {
+      mm_log((1, "i_readjpeg: grayscale image with %d channels\n", cinfo.output_components));
+      i_push_errorf(0, "grayscale image with invalid components %d", cinfo.output_components);
+      wiol_term_source(&cinfo);
+      jpeg_destroy_decompress(&cinfo);
+      return NULL;
+    }
     transfer_f = transfer_gray;
     break;
   
   case JCS_RGB:
     transfer_f = transfer_rgb;
+    if (cinfo.output_components != 3) {
+      mm_log((1, "i_readjpeg: RGB image with %d channels\n", cinfo.output_components));
+      i_push_errorf(0, "RGB image with invalid components %d", cinfo.output_components);
+      wiol_term_source(&cinfo);
+      jpeg_destroy_decompress(&cinfo);
+      return NULL;
+    }
     break;
 
   case JCS_CMYK:
