@@ -441,7 +441,8 @@ SKIP:
     for my $test (@alpha_images) {
       my $im = Imager->new;
       ok($im->read(file => "testimg/$test->[0]"),
-	 "read alpha test $test->[0]");
+	 "read alpha test $test->[0]")
+	  or print "# ", $im->errstr, "\n";
       is($im->getchannels, $test->[1], "channels for $test->[0] match");
       is($im->tags(name=>'tiff_photometric'), $test->[2],
 	 "photometric for $test->[0] match");
