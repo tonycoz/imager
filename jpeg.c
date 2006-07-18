@@ -489,7 +489,7 @@ i_readjpeg_wiol(io_glue *data, int length, char** iptc_itext, int *itlength) {
   markerp = cinfo.marker_list;
   while (markerp != NULL) {
     if (markerp->marker == JPEG_COM) {
-      i_tags_add(&im->tags, "jpeg_comment", 0, markerp->data,
+      i_tags_add(&im->tags, "jpeg_comment", 0, (const char *)markerp->data,
 		 markerp->data_length, 0);
     }
 #ifdef IMEXIF_ENABLE
@@ -630,7 +630,8 @@ i_writejpeg_wiol(i_img *im, io_glue *ig, int qfactor) {
   jpeg_start_compress(&cinfo, TRUE);
 
   if (i_tags_find(&im->tags, "jpeg_comment", 0, &comment_entry)) {
-    jpeg_write_marker(&cinfo, JPEG_COM, im->tags.tags[comment_entry].data,
+    jpeg_write_marker(&cinfo, JPEG_COM, 
+                      (const JOCTET *)im->tags.tags[comment_entry].data,
 		      im->tags.tags[comment_entry].size);
   }
 

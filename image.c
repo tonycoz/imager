@@ -2152,7 +2152,7 @@ Check the beginning of the supplied file for a 'magic number'
 #define FORMAT_ENTRY(magic, type) \
   { (unsigned char *)(magic ""), sizeof(magic)-1, type }
 #define FORMAT_ENTRY2(magic, type, mask) \
-  { (unsigned char *)(magic ""), sizeof(magic)-1, type, mask }
+  { (unsigned char *)(magic ""), sizeof(magic)-1, type, (unsigned char *)(mask) }
 
 const char *
 i_test_format_probe(io_glue *data, int length) {
