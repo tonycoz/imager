@@ -11,6 +11,7 @@ UnderlinePosition: -100
 UnderlineWidth: 50
 Ascent: 800
 Descent: 200
+NeedsXUIDChange: 1
 FSType: 12
 PfmFamily: 17
 TTFWeight: 500
@@ -18,17 +19,42 @@ TTFWidth: 5
 Panose: 2 0 6 3 0 0 0 0 0 0
 LineGap: 90
 VLineGap: 0
-
-Encoding: adobestandard
-DisplaySize: -24
+OS2WinAscent: 0
+OS2WinAOffset: 1
+OS2WinDescent: 0
+OS2WinDOffset: 1
+HheadAscent: 0
+HheadAOffset: 1
+HheadDescent: 0
+HheadDOffset: 1
+Encoding: AdobeStandard
+UnicodeInterp: none
+DisplaySize: -48
 AntiAlias: 1
-BeginChars: 256 95
-StartChar: space
-Encoding: 32 32
-Width: 1000
+FitToEm: 1
+WinInfo: 0 16 4
+BeginChars: 256 5
+StartChar: uniFFFD
+Encoding: 0 65533 65535
+Width: 487
+Flags: HW
+HStem: 87 45<117 414> 342 54<72 363>
+VStem: 72 45<87 342> 363 51<132 396>
+Fore
+117 342 m 1
+ 117 132 l 1
+ 363 132 l 1
+ 363 342 l 1
+ 117 342 l 1
+72 396 m 1
+ 414 396 l 1
+ 414 87 l 1
+ 72 87 l 1
+ 72 396 l 1
+EndSplineSet
 EndChar
 StartChar: exclam
-Encoding: 33 33
+Encoding: 33 33 1
 Width: 310
 Flags: W
 HStem: 0 126<99 163> 180 558<99 147>
@@ -55,56 +81,8 @@ Fore
 EndSplineSet
 MinimumDistance: x2,-1 
 EndChar
-StartChar: quotedbl
-Encoding: 34 34
-Width: 1000
-EndChar
-StartChar: numbersign
-Encoding: 35 35
-Width: 1000
-EndChar
-StartChar: dollar
-Encoding: 36 36
-Width: 1000
-EndChar
-StartChar: percent
-Encoding: 37 37
-Width: 1000
-EndChar
-StartChar: ampersand
-Encoding: 38 38
-Width: 1000
-EndChar
-StartChar: parenleft
-Encoding: 40 40
-Width: 1000
-EndChar
-StartChar: parenright
-Encoding: 41 41
-Width: 1000
-EndChar
-StartChar: asterisk
-Encoding: 42 42
-Width: 1000
-EndChar
-StartChar: plus
-Encoding: 43 43
-Width: 1000
-EndChar
-StartChar: comma
-Encoding: 44 44
-Width: 1000
-EndChar
-StartChar: hyphen
-Encoding: 45 45
-Width: 1000
-EndChar
-StartChar: period
-Encoding: 46 46
-Width: 1000
-EndChar
 StartChar: slash
-Encoding: 47 47
+Encoding: 47 47 14
 Width: 761
 Flags: W
 DStem: 783.882 774.221 818.118 737.779 -59.1182 -17.7793 -24.8818 -54.2207
@@ -116,324 +94,12 @@ Fore
  -59.1182 -17.7793 l 1
 EndSplineSet
 EndChar
-StartChar: zero
-Encoding: 48 48
-Width: 1000
-EndChar
-StartChar: one
-Encoding: 49 49
-Width: 1000
-EndChar
-StartChar: two
-Encoding: 50 50
-Width: 1000
-EndChar
-StartChar: three
-Encoding: 51 51
-Width: 1000
-EndChar
-StartChar: four
-Encoding: 52 52
-Width: 1000
-EndChar
-StartChar: five
-Encoding: 53 53
-Width: 1000
-EndChar
-StartChar: six
-Encoding: 54 54
-Width: 1000
-EndChar
-StartChar: seven
-Encoding: 55 55
-Width: 1000
-EndChar
-StartChar: eight
-Encoding: 56 56
-Width: 1000
-EndChar
-StartChar: nine
-Encoding: 57 57
-Width: 1000
-EndChar
-StartChar: colon
-Encoding: 58 58
-Width: 1000
-EndChar
-StartChar: semicolon
-Encoding: 59 59
-Width: 1000
-EndChar
-StartChar: less
-Encoding: 60 60
-Width: 1000
-EndChar
-StartChar: equal
-Encoding: 61 61
-Width: 1000
-EndChar
-StartChar: greater
-Encoding: 62 62
-Width: 1000
-EndChar
-StartChar: question
-Encoding: 63 63
-Width: 1000
-EndChar
-StartChar: at
-Encoding: 64 64
-Width: 1000
-EndChar
-StartChar: A
-Encoding: 65 65
-Width: 1000
-EndChar
-StartChar: B
-Encoding: 66 66
-Width: 1000
-EndChar
-StartChar: C
-Encoding: 67 67
-Width: 1000
-EndChar
-StartChar: D
-Encoding: 68 68
-Width: 1000
-EndChar
-StartChar: E
-Encoding: 69 69
-Width: 1000
-EndChar
-StartChar: F
-Encoding: 70 70
-Width: 1000
-EndChar
-StartChar: G
-Encoding: 71 71
-Width: 1000
-EndChar
-StartChar: H
-Encoding: 72 72
-Width: 1000
-EndChar
-StartChar: I
-Encoding: 73 73
-Width: 1000
-EndChar
-StartChar: J
-Encoding: 74 74
-Width: 1000
-EndChar
-StartChar: K
-Encoding: 75 75
-Width: 1000
-EndChar
-StartChar: L
-Encoding: 76 76
-Width: 1000
-EndChar
-StartChar: M
-Encoding: 77 77
-Width: 1000
-EndChar
-StartChar: N
-Encoding: 78 78
-Width: 1000
-EndChar
-StartChar: O
-Encoding: 79 79
-Width: 1000
-EndChar
-StartChar: P
-Encoding: 80 80
-Width: 1000
-EndChar
-StartChar: Q
-Encoding: 81 81
-Width: 1000
-EndChar
-StartChar: R
-Encoding: 82 82
-Width: 1000
-EndChar
-StartChar: S
-Encoding: 83 83
-Width: 1000
-EndChar
-StartChar: T
-Encoding: 84 84
-Width: 1000
-EndChar
-StartChar: U
-Encoding: 85 85
-Width: 1000
-EndChar
-StartChar: V
-Encoding: 86 86
-Width: 1000
-EndChar
-StartChar: W
-Encoding: 87 87
-Width: 1000
-EndChar
-StartChar: X
-Encoding: 88 88
-Width: 1000
-EndChar
-StartChar: Y
-Encoding: 89 89
-Width: 1000
-EndChar
-StartChar: Z
-Encoding: 90 90
-Width: 1000
-EndChar
-StartChar: bracketleft
-Encoding: 91 91
-Width: 1000
-EndChar
-StartChar: backslash
-Encoding: 92 92
-Width: 1000
-EndChar
-StartChar: bracketright
-Encoding: 93 93
-Width: 1000
-EndChar
-StartChar: asciicircum
-Encoding: 94 94
-Width: 1000
-EndChar
-StartChar: underscore
-Encoding: 95 95
-Width: 1000
-EndChar
-StartChar: a
-Encoding: 97 97
-Width: 1000
-EndChar
-StartChar: b
-Encoding: 98 98
-Width: 1000
-EndChar
-StartChar: c
-Encoding: 99 99
-Width: 1000
-EndChar
-StartChar: d
-Encoding: 100 100
-Width: 1000
-EndChar
-StartChar: e
-Encoding: 101 101
-Width: 1000
-EndChar
-StartChar: f
-Encoding: 102 102
-Width: 1000
-EndChar
-StartChar: g
-Encoding: 103 103
-Width: 1000
-EndChar
-StartChar: h
-Encoding: 104 104
-Width: 1000
-EndChar
-StartChar: i
-Encoding: 105 105
-Width: 1000
-EndChar
-StartChar: j
-Encoding: 106 106
-Width: 1000
-EndChar
-StartChar: k
-Encoding: 107 107
-Width: 1000
-EndChar
-StartChar: l
-Encoding: 108 108
-Width: 1000
-EndChar
-StartChar: m
-Encoding: 109 109
-Width: 1000
-EndChar
-StartChar: n
-Encoding: 110 110
-Width: 1000
-EndChar
-StartChar: o
-Encoding: 111 111
-Width: 1000
-EndChar
-StartChar: p
-Encoding: 112 112
-Width: 1000
-EndChar
-StartChar: q
-Encoding: 113 113
-Width: 1000
-EndChar
-StartChar: r
-Encoding: 114 114
-Width: 1000
-EndChar
-StartChar: s
-Encoding: 115 115
-Width: 1000
-EndChar
-StartChar: t
-Encoding: 116 116
-Width: 1000
-EndChar
-StartChar: u
-Encoding: 117 117
-Width: 1000
-EndChar
-StartChar: v
-Encoding: 118 118
-Width: 1000
-EndChar
-StartChar: w
-Encoding: 119 119
-Width: 1000
-EndChar
-StartChar: x
-Encoding: 120 120
-Width: 1000
-EndChar
-StartChar: y
-Encoding: 121 121
-Width: 1000
-EndChar
-StartChar: z
-Encoding: 122 122
-Width: 1000
-EndChar
-StartChar: braceleft
-Encoding: 123 123
-Width: 1000
-EndChar
-StartChar: bar
-Encoding: 124 124
-Width: 1000
-EndChar
-StartChar: braceright
-Encoding: 125 125
-Width: 1000
-EndChar
-StartChar: asciitilde
-Encoding: 126 126
-Width: 1000
-EndChar
 StartChar: quotesingle
-Encoding: 169 39
+Encoding: 169 39 93
 Width: 1000
 EndChar
 StartChar: grave
-Encoding: 193 96
+Encoding: 193 96 94
 Width: 1000
 EndChar
 EndChars

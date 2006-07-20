@@ -8,7 +8,7 @@
 # (It may become useful if the test is moved to ./t subdirectory.)
 use strict;
 use lib 't';
-use Test::More tests => 64;
+use Test::More tests => 76;
 BEGIN { use_ok(Imager => ':all') }
 
 #$Imager::DEBUG=1;
@@ -23,13 +23,13 @@ my $fontname_afm=$ENV{'T1FONTTESTAFM'}||'./fontfiles/dcr10.afm';
 SKIP:
 {
   if (!(i_has_format("t1")) ) {
-    skip("t1lib unavailable or disabled", 63);
+    skip("t1lib unavailable or disabled", 75);
   }
   elsif (! -f $fontname_pfb) {
-    skip("cannot find fontfile for type 1 test $fontname_pfb", 63);
+    skip("cannot find fontfile for type 1 test $fontname_pfb", 75);
   }
   elsif (! -f $fontname_afm) {
-    skip("cannot find fontfile for type 1 test $fontname_afm", 63);
+    skip("cannot find fontfile for type 1 test $fontname_afm", 75);
   }
 
   print "# has t1\n";
@@ -251,6 +251,46 @@ SKIP:
       ok($im->string(%common, @$args, 'y'=>110, align=>0), "A align=0");
     }
     ok($im->write(file=>'testout/t30align.ppm'), "save align image");
+  }
+
+ SKIP:
+  {
+    # see http://rt.cpan.org/Ticket/Display.html?id=20555
+    print "# bounding box around spaces\n";
+    # SpaceTest contains 3 characters, space, ! and .undef
+    # only characters that define character zero seem to illustrate
+    # the problem we had with spaces
+    my $space_fontfile = "fontfiles/SpaceTest.pfb";
+    my $font = Imager::Font->new(file => $space_fontfile, type => 't1');
+    ok($font, "loaded $deffont")
+      or skip("failed to load $deffont" . Imager->errstr, 13);
+    my $bbox = $font->bounding_box(string => "", size => 36);
+    print "# empty string bbox: @$bbox\n";
+    is($bbox->start_offset, 0, "empty string start_offset");
+    is($bbox->end_offset, 0, "empty string end_offset");
+    is($bbox->advance_width, 0, "empty string advance_width");
+    is($bbox->ascent, 0, "empty string ascent");
+    is($bbox->descent, 0, "empty string descent");
+
+    # a single space
+    my $bbox_space = $font->bounding_box(string => " ", size => 36);
+    print "# space bbox: @$bbox_space\n";
+    is($bbox_space->start_offset, 0, "single space start_offset");
+    is($bbox_space->end_offset, $bbox_space->advance_width, 
+       "single space end_offset");
+    cmp_ok($bbox_space->ascent, '>=', $bbox_space->descent,
+	   "single space ascent/descent");
+
+    my $bbox_bang = $font->bounding_box(string => "!", size => 36);
+    print "# '!' bbox: @$bbox_bang\n";
+
+    # space ! space
+    my $bbox_spbangsp = $font->bounding_box(string => " ! ", size => 36);
+    print "# ' ! ' bbox: @$bbox_spbangsp\n";
+    my $exp_advance = $bbox_bang->advance_width + 2 * $bbox_space->advance_width;
+    is($bbox_spbangsp->advance_width, $exp_advance, "sp ! sp advance_width");
+    is($bbox_spbangsp->start_offset, 0, "sp ! sp start_offset");
+    is($bbox_spbangsp->end_offset, $exp_advance, "sp ! sp end_offset");
   }
 }
 

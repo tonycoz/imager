@@ -298,6 +298,17 @@ i_t1_cp(i_img *im,int xb,int yb,int channel,int fontnum,float points,char* str,i
   return 1;
 }
 
+static void
+t1_fix_bbox(BBox *bbox, const char *str, int len, int advance, 
+	    int space_position) {
+  /* never called with len == 0 */
+  if (str[0] == space_position && bbox->llx > 0)
+    bbox->llx = 0;
+  if (str[len-1] == space_position && bbox->urx < advance)
+    bbox->urx = advance;
+  if (bbox->lly > bbox->ury)
+    bbox->lly = bbox->ury = 0; 
+}
 
 /*
 =item i_t1_bbox(handle, fontnum, points, str, len, cords)
@@ -320,20 +331,32 @@ i_t1_bbox(int fontnum,float points,const char *str,int len,int cords[6], int utf
   BBox gbbox;
   int mod_flags = t1_get_flags(flags);
   int advance;
+  int space_position = T1_GetEncodingIndex(fontnum, "space");
   
   mm_log((1,"i_t1_bbox(fontnum %d,points %.2f,str '%.*s', len %d)\n",fontnum,points,len,str,len));
   T1_LoadFont(fontnum);  /* FIXME: Here a return code is ignored - haw haw haw */ 
-  if (utf8) {
-    int worklen;
-    char *work = t1_from_utf8(str, len, &worklen);
-    bbox = T1_GetStringBBox(fontnum,work,worklen,0,mod_flags);
-    myfree(work);
+
+  if (len == 0) {
+    /* len == 0 has special meaning to T1lib, but it means there's
+       nothing to draw, so return that */
+    bbox.llx = bbox.lly = bbox.urx = bbox.ury = 0;
+    advance = 0;
   }
   else {
-    bbox = T1_GetStringBBox(fontnum,(char *)str,len,0,mod_flags);
+    advance = T1_GetStringWidth(fontnum, (char *)str, len, 0, mod_flags);
+    if (utf8) {
+      int worklen;
+      char *work = t1_from_utf8(str, len, &worklen);
+      bbox = T1_GetStringBBox(fontnum,work,worklen,0,mod_flags);
+      t1_fix_bbox(&bbox, work, worklen, advance, space_position);
+      myfree(work);
+    }
+    else {
+      bbox = T1_GetStringBBox(fontnum,(char *)str,len,0,mod_flags);
+      t1_fix_bbox(&bbox, str, len, advance, space_position);
+    }
   }
   gbbox = T1_GetFontBBox(fontnum);
-  advance = T1_GetStringWidth(fontnum, (char *)str, len, 0, mod_flags);
   
   mm_log((1,"bbox: (%d,%d,%d,%d)\n",
 	  (int)(bbox.llx*points/1000),
