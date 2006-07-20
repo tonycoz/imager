@@ -8,7 +8,7 @@
 # (It may become useful if the test is moved to ./t subdirectory.)
 use strict;
 use lib 't';
-use Test::More tests => 76;
+use Test::More tests => 77;
 BEGIN { use_ok(Imager => ':all') }
 
 #$Imager::DEBUG=1;
@@ -23,13 +23,13 @@ my $fontname_afm=$ENV{'T1FONTTESTAFM'}||'./fontfiles/dcr10.afm';
 SKIP:
 {
   if (!(i_has_format("t1")) ) {
-    skip("t1lib unavailable or disabled", 75);
+    skip("t1lib unavailable or disabled", 76);
   }
   elsif (! -f $fontname_pfb) {
-    skip("cannot find fontfile for type 1 test $fontname_pfb", 75);
+    skip("cannot find fontfile for type 1 test $fontname_pfb", 76);
   }
   elsif (! -f $fontname_afm) {
-    skip("cannot find fontfile for type 1 test $fontname_afm", 75);
+    skip("cannot find fontfile for type 1 test $fontname_afm", 76);
   }
 
   print "# has t1\n";
@@ -291,6 +291,22 @@ SKIP:
     is($bbox_spbangsp->advance_width, $exp_advance, "sp ! sp advance_width");
     is($bbox_spbangsp->start_offset, 0, "sp ! sp start_offset");
     is($bbox_spbangsp->end_offset, $exp_advance, "sp ! sp end_offset");
+  }
+
+ SKIP:
+  { # http://rt.cpan.org/Ticket/Display.html?id=20554
+    # this is "A\xA1\x{2010}A"
+    # the t1 driver is meant to ignore any UTF8 characters over 0xff
+    print "# issue 20554\n";
+    my $text = pack("C*", 0x41, 0xC2, 0xA1, 0xE2, 0x80, 0x90, 0x41);
+    my $tran_text = "A\xA1A";
+    my $font = Imager::Font->new(file => 'fontfiles/dcr10.pfb', type => 't1');
+    $font
+      or skip("cannot load font fontfiles/fcr10.pfb:".Imager->errstr, 1);
+    my $bbox_utf8 = $font->bounding_box(string => $text, utf8 => 1, size => 36);
+    my $bbox_tran = $font->bounding_box(string => $tran_text, size => 36);
+    is($bbox_utf8->advance_width, $bbox_tran->advance_width,
+       "advance widths should match");
   }
 }
 

@@ -343,15 +343,16 @@ i_t1_bbox(int fontnum,float points,const char *str,int len,int cords[6], int utf
     advance = 0;
   }
   else {
-    advance = T1_GetStringWidth(fontnum, (char *)str, len, 0, mod_flags);
     if (utf8) {
       int worklen;
       char *work = t1_from_utf8(str, len, &worklen);
+      advance = T1_GetStringWidth(fontnum, work, worklen, 0, mod_flags);
       bbox = T1_GetStringBBox(fontnum,work,worklen,0,mod_flags);
       t1_fix_bbox(&bbox, work, worklen, advance, space_position);
       myfree(work);
     }
     else {
+      advance = T1_GetStringWidth(fontnum, (char *)str, len, 0, mod_flags);
       bbox = T1_GetStringBBox(fontnum,(char *)str,len,0,mod_flags);
       t1_fix_bbox(&bbox, str, len, advance, space_position);
     }
