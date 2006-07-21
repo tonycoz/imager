@@ -2211,6 +2211,8 @@ i_test_format_probe(io_glue *data, int length) {
        include hotspot information */
     FORMAT_ENTRY("\x00\x00\x01\x00", "ico"), /* Windows icon */
     FORMAT_ENTRY("\x00\x00\x02\x00", "cur"), /* Windows cursor */
+    FORMAT_ENTRY2("\x00\x00\x00\x00\x00\x00\x00\x07", 
+		  "xwd", "    xxxx"), /* X Windows Dump */
   };
 
   unsigned int i;

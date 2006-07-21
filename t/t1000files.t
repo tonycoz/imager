@@ -5,7 +5,7 @@
 
 use strict;
 use lib 't';
-use Test::More tests => 29;
+use Test::More tests => 30;
 use Imager;
 
 Imager::init_log("testout/t1000files.log", 1);
@@ -140,6 +140,13 @@ probe_ok(<<UTAH, "utah", "Utah RLE");
 6C 65 20 6F 6E 20 54 68 75 20 4D 61 79 20 31 31 
 20 31 36 3A 33 35 3A 34 33 20 32 30 30 36 0A 09 
 UTAH
+
+probe_ok(<<XWD, "xwd", "X Window Dump");
+00 00 00 69 00 00 00 07 00 00 00 02 00 00 00 18
+00 00 01 E4 00 00 01 3C 00 00 00 00 00 00 00 00
+00 00 00 20 00 00 00 00 00 00 00 20 00 00 00 20
+00 00 07 90 00 00 00 04 00 FF 00 00 00 00 FF 00
+XWD
 
 sub probe_ok {
   my ($packed, $exp_type, $name) = @_;
