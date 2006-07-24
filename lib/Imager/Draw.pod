@@ -73,8 +73,9 @@ Imager::Draw - Draw primitives to images
 It is possible to draw with graphics primitives onto images.  Such
 primitives include boxes, arcs, circles, polygons and lines.  The
 coordinate system in Imager has the origin C<(0,0)> in the upper left
-corner of an image.  For non antialiasing operation all coordinates are 
-rounded towards the nearest integer.  For antialiased operations floating
+corner of an image with co-ordinates increasing to the right and
+bottom.  For non antialiasing operation all coordinates are rounded
+towards the nearest integer.  For antialiased operations floating
 point coordinates are used.
 
 Drawing is assumed to take place in a coordinate system of infinite
