@@ -161,8 +161,8 @@ you may need to patch giflib to use this option for writing.
     or die $image->errstr;
 
   my $data = $row->{someblob}; # eg. from a database
-  $image->read(data => $data)
-    or die $image->errstr;
+  my @images = Imager->read_multi(data => $data)
+    or die Imager->errstr;
 
 =item callback
 
@@ -201,8 +201,8 @@ buffered data.
     $data .= unpack("H*", shift);
     1;
   }
-  $image->write(callback => \&mywrite, type => 'gif')
-    or die $image->errstr;
+  Imager->write_multi({ callback => \&mywrite, type => 'gif'}, @images)
+    or die Imager->errstr;
 
 Note that for reading you'll almost always need to provide a
 C<seekcb>.
