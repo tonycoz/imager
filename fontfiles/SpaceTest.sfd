@@ -11,8 +11,7 @@ UnderlinePosition: -100
 UnderlineWidth: 50
 Ascent: 800
 Descent: 200
-NeedsXUIDChange: 1
-XUID: [1021 918 1786090884 13370659]
+XUID: [1021 918 1786090884 13370660]
 FSType: 8
 PfmFamily: 17
 TTFWeight: 500
@@ -38,7 +37,9 @@ BeginChars: 256 3
 StartChar: uniFFFD
 Encoding: 0 65533 65535
 Width: 487
-Flags: HW
+Flags: W
+HStem: 87 45<117 414> 342 54<72 363>
+VStem: 72 45<87 342> 363 51<132 396>
 Fore
 117 342 m 1
  117 132 l 1
@@ -60,7 +61,7 @@ EndChar
 StartChar: exclam
 Encoding: 33 33 65535
 Width: 451
-Flags: WO
+Flags: W
 HStem: -24 156<221.497 237>
 VStem: 183 102<177 684>
 Fore
