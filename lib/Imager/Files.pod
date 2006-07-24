@@ -108,6 +108,17 @@ The C<file> parameter is the name of the image file to be written to
 or read from.  If Imager recognizes the extension of the file you do
 not need to supply a C<type>.
 
+  # write in tiff format
+  $image->write(file => "example.tif")
+    or die $image->errstr;
+
+  $image->write(file => 'foo.tmp', type => 'tiff')
+    or die $image->errstr;
+
+  my $image = Imager->new;
+  $image->read(file => 'example.tif')
+    or die $image->errstr;
+
 =item fh
 
 C<fh> is a file handle, typically either returned from
@@ -117,6 +128,13 @@ C<binmode> on the handle before passing it to Imager.
 Imager will set the handle to autoflush to make sure any buffered data
 is flushed , since Imager will write to the file descriptor (from
 fileno()) rather than writing at the perl level.
+
+  $image->write(fh => \*STDOUT, type => 'gif')
+    or die $image->errstr;
+
+  # for example, a file uploaded via CGI.pm
+  $image->read(fd => $cgi->param('file')) 
+    or die $image->errstr;
 
 =item fd
 
@@ -128,12 +146,23 @@ If you get this from a perl file handle, you may need to flush any
 buffered output, otherwise it may appear in the output stream after
 the image.
 
+  $image->write(fd => file(STDOUT), type => 'gif')
+    or die $image->errstr;
+
 =item data
 
 When reading data, C<data> is a scalar containing the image file data,
 when writing, C<data> is a reference to the scalar to save the image
 file data too.  For GIF images you will need giflib 4 or higher, and
 you may need to patch giflib to use this option for writing.
+
+  my $data;
+  $image->write(data => \$data, type => 'tiff')
+    or die $image->errstr;
+
+  my $data = $row->{someblob}; # eg. from a database
+  $image->read(data => $data)
+    or die $image->errstr;
 
 =item callback
 
@@ -165,6 +194,18 @@ defined in the same way as perl's seek function.
 You can also supply a C<closecb> which is called with no parameters
 when there is no more data to be written.  This could be used to flush
 buffered data.
+
+  # contrived
+  my $data;
+  sub mywrite {
+    $data .= unpack("H*", shift);
+    1;
+  }
+  $image->write(callback => \&mywrite, type => 'gif')
+    or die $image->errstr;
+
+Note that for reading you'll almost always need to provide a
+C<seekcb>.
 
 =back
 
