@@ -5,7 +5,7 @@
 
 use strict;
 use lib 't';
-use Test::More tests => 30;
+use Test::More tests => 32;
 use Imager;
 
 Imager::init_log("testout/t1000files.log", 1);
@@ -147,6 +147,20 @@ probe_ok(<<XWD, "xwd", "X Window Dump");
 00 00 00 20 00 00 00 00 00 00 00 20 00 00 00 20
 00 00 07 90 00 00 00 04 00 FF 00 00 00 00 FF 00
 XWD
+
+probe_ok(<<GZIP, "gzip", "gzip compressed");
+1F 8B 08 08 C2 81 BD 44 02 03 49 6D 61 67 65 72
+2D 30 2E 35 31 5F 30 33 2E 74 61 72 00 EC 5B 09
+40 53 C7 BA 9E 24 AC 01 D9 44 04 44 08 8B B2 8A
+C9 C9 42 92 56 41 50 20 A0 02 41 41 01 17 48 80
+GZIP
+
+probe_ok(<<BZIP2, "bzip2", "bzip2 compressed");
+42 5A 68 39 31 41 59 26 53 59 0F D8 8C 09 00 03
+28 FF FF FF FF FB 7F FB 77 FF EF BF 6B 7F BE FF
+FF DF EE C8 0F FF F3 FF FF FF FC FF FB B1 FF FB
+F4 07 DF D0 03 B8 03 60 31 82 05 2A 6A 06 83 20
+BZIP2
 
 sub probe_ok {
   my ($packed, $exp_type, $name) = @_;
