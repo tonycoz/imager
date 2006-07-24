@@ -443,6 +443,20 @@ specification for that value appears in the derived field.  So for
 example if C<exf_metering_mode> is C<5> then
 C<exif_metering_mode_name> is set to C<Pattern>.
 
+eg.
+
+  my $image = Imager->new;
+  $image->read(file => 'exiftest.jpg')
+    or die "Cannot load image: ", $image->errstr;
+  print $image->tags(name => "exif_image_description"), "\n";
+  print $image->tags(name => "exif_exposure_mode"), "\n";
+  print $image->tags(name => "exif_exposure_mode_name"), "\n";
+
+  # for the exiftest.jpg in the Imager distribution the output would be:
+  Imager Development Notes
+  0
+  Auto exposure
+
 =over
 
 =item parseiptc
