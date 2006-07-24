@@ -44,6 +44,52 @@ the L<read_multi()|Imager::Files> method to read them:
   my @images = Imager->read_multi(file=>$filename)
     or die Imager->errstr;
 
+=head2 Converting from one file format to another
+
+This is as simple as reading the original file and writing the new
+file, for single images:
+
+  my $image = Imager->new;
+  # Imager auto-detects the input file type
+  $image->read(file => $input_filename)
+    or die $image->errstr;
+  # Imager derives the output file format from the filename
+  $image->write(file => $output_filename)
+    or die $image->errstr;
+
+  # or you can supply a type parameter:
+  $image->write(file => $output_filename, type => 'gif')
+    or die $image->errstr;
+
+The main issue that can occur with this is if the input file has
+transparency and the output file format doesn't support that.  This
+can be a problem when converting from GIFs to JPEGs for example.
+
+To work around that you can compose the source image onto a background
+color:
+
+  if ($image->getchannels == 4 or $image->getchannels == 2) {
+    my $back = Imager->new(xsize => $image->getwidth, 
+                           ysize => $image->getheight);
+    # grey background for grayscale images, red for color
+    my $back_color = $image->getchannels == 2 ? [ 128 ] : 'red';
+    $back->box(filled => 1, color => $back_color);
+    $back->rubthrough(src => $image);
+    $image = $back;
+  }
+  # now we can write safely to jpeg or pnm
+
+Some formats support multiple files, so if you want to convert from
+say tiff to jpeg, you'll need multiple output files:
+
+  my @images = Imager->read_multi(file => 'input.tif')
+    or die Imager->errstr;
+  my $index = 1;
+  for my $image (@images) {
+    $image->write(file => sprintf('output%02d.jpg', $index++))
+      or die $image->errstr;
+  }
+
 =head1 IMAGE SYNTHESIS
 
 =head2 Creating an image
