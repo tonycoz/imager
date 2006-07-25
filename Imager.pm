@@ -155,7 +155,7 @@ my %attempted_to_load;
 BEGIN {
   require Exporter;
   @ISA = qw(Exporter);
-  $VERSION = '0.51_03';
+  $VERSION = '0.52';
   eval {
     require XSLoader;
     XSLoader::load(Imager => $VERSION);

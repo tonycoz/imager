@@ -1,0 +1,38 @@
+This is primarily a feature release, but contains a fair few bug
+fixes, new features:
+
+- ability to read and write MS Windows ICO and CUR files
+
+- you can now add file format plugins to support new file formats
+
+- add POD coverage tests
+
+- setcolors() and addcolors() now accept color names and so on instead
+  of requiring Imager::Color objects.
+
+- flood_fill() can now fill to a specified border color instead of
+  just to the area the same color as the seed.
+
+Bug fixes:
+
+- bounding_box for the T1 driver wasn't converting UTF8 to ascii when
+  calculating the advance width.
+
+- bounding_box for the T1 driver wasn't including leading and trailing
+  spaces in the bounding box as the other drivers did, it also produced
+  strange results for empty strings or strings containing only spaces
+
+- when reading CMYK jpeg images they were being transferred to the
+  image object as is, producing a four channel image.  It only looked
+  ok due to an old still unfixed Photoshop bug.  We now convert from
+  the inverted CMYK that photoshop (and Corel for example) produce
+  into RGB.
+
+- reading a CYMK TIFF would result in a 4 channel image, reading any
+  image with more than 4 channels (eg. RGB with 2 alpha channels)
+  would result in an error.
+
+- added /usr/local/include to the default include search path, since
+  we were already searching /usr/local/lib for libraries.
+
+And various minor fixes and documentation updates.
