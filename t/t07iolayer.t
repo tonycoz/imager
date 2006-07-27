@@ -1,7 +1,7 @@
 #!perl -w
 use strict;
 use lib 't';
-use Test::More tests => 64;
+use Test::More tests => 68;
 # for SEEK_SET etc, Fcntl doesn't provide these in 5.005_03
 use IO::Seekable;
 
@@ -227,6 +227,28 @@ SKIP:
     };
   ok($@, "should have croaked")
     and print "# $@\n";
+}
+
+{ # 0.52 left some debug code in a path that wasn't tested, make sure
+  # that path is tested
+  # http://rt.cpan.org/Ticket/Display.html?id=20705
+  my $io = Imager::io_new_cb
+    (
+     sub { 
+       print "# write $_[0]\n";
+       1 
+     }, 
+     sub { 
+       print "# read $_[0], $_[1]\n";
+       "x" x $_[1]
+     }, 
+     sub { print "# seek\n"; 0 }, 
+     sub { print "# close\n"; 1 });
+  my $buffer;
+  is($io->read($buffer, 10), 10, "read 10");
+  is($buffer, "xxxxxxxxxx", "read value");
+  ok($io->write("foo"), "write");
+  is($io->close, 0, "close");
 }
 
 sub eof_read {

@@ -387,7 +387,6 @@ static ssize_t io_writer(void *p, void const *data, size_t size) {
     if (cbd->reading && cbd->where < cbd->used) {
       /* we read past the place where the caller expected us to be
          so adjust our position a bit */
-        *(char *)0 = 0;
       if (io_seeker(p, cbd->where - cbd->used, SEEK_CUR) < 0) {
         return -1;
       }
