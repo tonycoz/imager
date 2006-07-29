@@ -6,6 +6,18 @@ Release Plans (subject to change)
 brown-bag bugs may add intermediate releases.  The dates are goals,
 not commitments.
 
+BEFORE 0.54
+
+OO interface for i_plin/i_glin
+
+remove gif query from makefile.pl
+
+fallback for read/write_multi to read/write
+
+pnmscale based alternative scale method
+
+rubthrough 4 on 4
+
 BEFORE 0.50:
 
 skip t82inline.t tests if directory has spaces in name
