@@ -89,7 +89,7 @@ included since libgif has been linked with it).
 Otherwise you could just build giflib without any X11 dependencies:
 
   # must be a clean tree
-  cd giflib-4.1.3
+  cd giflib-4.1.4
   ./configure --without-x ...
 
 Also note that libgif has a few bugs: You can run something like
@@ -106,7 +106,7 @@ not libungif on RedHat then you will probably get lots of errors
 like undefined symbol: FreeSavedImages when running make test.
 Install libungif package to fix it.
 
-Stock libungif 4.1.2 or later seems to fix all of the bugs, if you
+Stock libungif 4.1.4 or later seems to fix all of the bugs, if you
 have a problem that version of linungif (or later), let us know and
 we'll look into it.
 
@@ -190,16 +190,13 @@ potential security problem.
 
   gif: http://sourceforge.net/projects/libungif
 
-giflib/libungif has come a long way since the buggy versions around
+giflib/libungif has come a long way since the buggy versions available
 when Imager's gif support code was written.  Preferably you should get
-at least version 4.1.3.  If you have a recent Linux distribution you
+at least version 4.1.4.  If you have a recent Linux distribution you
 should be safe with whatever giflib it provides, but if you're
 building from source, please try to use the latest version.
 
 libgif 4.1.4 has no problems known to me at this point.
-
-At the time of writing you will need to manually select to install the
-4.1.2-1 of cygwin's libungif package.
 
  tiff: http://www.libtiff.org/
 
@@ -247,11 +244,6 @@ you will need to install the cygwin rebase package and run:
 
   $ rebaseall -v
 
-Under cygwin you will need at least libungif 4.1.2 installed to
-prevent lockups in the gif test scripts.  At the time of writing you
-need to select libungif-4.1.2-1 manually in the setup.exe installation
-tool.
-
 If you get errors from your make tool, make sure you're using the same
 make that was used to build your perl - generally GNU make for cygwin,
 nmake for Visual C/C++ and dmake for MinGW.
@@ -296,12 +288,6 @@ c) if you want to build GCC 4.0 from scratch and use that you will
 The Imager module homepage is currently at:
 
  http://imager.perl.org/
-
-The current docs are rather bad as I've been busy adding features
-but hopefully they will be updated soon.  Until then you'll just
-have to use the source. The test scripts might also be a good idea.
-By activating the the #init_log lines in the test script you can get
-rather verbose debugging output from the C code.
 
 You can report bugs by pointing your browser at:
 
