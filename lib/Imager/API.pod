@@ -152,6 +152,14 @@ Imager::Fill object.
 
 =head1 Create an XS module using the Imager API
 
+=head2 Foo.pm
+
+Load Imager:
+
+  use Imager 0.48;
+
+and bootstrap your XS code - see L<XSLoader> or L<DynaLoader>.
+
 =head2 Foo.xs
 
 You'll need the following in your XS source:
