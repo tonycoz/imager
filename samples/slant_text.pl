@@ -85,19 +85,6 @@ $img->string(text => $text,
 $img->write(file=>$outfile)
   or die "Cannot save $outfile: ",$img->errstr,"\n";
 
-=item transformed_bounds
-
-Returns a list of bounds:
-  (minx, miny, maxx, maxy)
-
-These are offsets from the text's starting point in font co-ordinates
-- so positive y is I<up>.
-
-Note: this returns the bounds of the transformed bounding box, in most
-cases the actual text will not be touching these boundaries.
-
-=cut
-
 sub transformed_bounds {
   my ($bbox, $matrix) = @_;
 
@@ -195,6 +182,25 @@ then draw the text as normal:
 
 But if you do need the bounds, the code above does show you how to do
 it.
+
+=head1 FUNCTIONS
+
+=over
+
+=item transformed_bounds
+
+Returns a list of bounds:
+  (minx, miny, maxx, maxy)
+
+These are offsets from the text's starting point in font co-ordinates
+- so positive y is I<up>.
+
+Note: this returns the bounds of the transformed bounding box, in most
+cases the actual text will not be touching these boundaries.
+
+=cut
+
+=back
 
 =head1 AUTHOR
 
