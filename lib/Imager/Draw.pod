@@ -749,6 +749,9 @@ pixels - either a reference to an array containing Imager::Color
 objects, an reference to an array containing Imager::Color::Float
 objects or a scalar containing packed color data.
 
+If C<type> is C<index> then this can either be a reference to an array
+of palette color indexes or a scalar containing packed indexes.
+
 See L</"Packed Color Data"> for information on the format of packed
 color data.
 
@@ -760,6 +763,9 @@ supply packed color data this defaults to '8bit', if your data is
 packed floating point color data then set this to 'float'.
 
 You can use float or 8bit samples with any image.
+
+If this is 'index' then pixels should be either an array of palette
+color indexes or a packed string of color indexes.
 
 =back
 
@@ -834,17 +840,18 @@ width - number of pixels to read.  Default: $img->getwidth - x
 
 type - the type of pixel data to return.  Default: C<8bit>.
 
-Permited values are C<8bit> and C<float>.
+Permited values are C<8bit> and C<float> and C<index>.
 
 =back
 
 In list context this method will return a list of Imager::Color
 objects when I<type> is C<8bit>, or a list of Imager::Color::Float
-objects when I<type> if C<float>.
+objects when I<type> if C<float>, or a list of integers when I<type>
+is C<index>.
 
 In scalar context this returns a packed 8-bit pixels when I<type> is
 C<8bit>, or a list of packed floating point pixels when I<type> is
-C<float>.
+C<float>, or packed palette color indexes when I<type> is C<index>.
 
 The values of samples for which the image does not have channels is
 undefined.  For example, for a single channel image the values of
@@ -969,6 +976,16 @@ To produce packed 1 byte/sample pixels, use the pack C<C> template:
 To produce packed double/sample pixels, use the pack C<d> template:
 
   my $packed_float_pixel = pack("dddd", $red, $blue, $green, $alpha);
+
+If you use a I<type> parameter of C<index> then the values are palette
+color indexes, not sample values:
+
+  my $im = Imager->new(xsize => 100, ysize => 100, type => 'paletted');
+  my $black_index = $im->addcolors(colors => [ 'black' ]);
+  my $red_index = $im->addcolors(colors => [ 'red' ]);
+  # 2 pixels
+  my $packed_index_data = pack("C*", $black_index, $red_index);
+  $im->setscanline(y => $y, pixels => $packed_index_data, type => 'index');
 
 =head1 BUGS
 

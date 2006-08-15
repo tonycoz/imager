@@ -814,6 +814,29 @@ load_fount_segs(AV *asegs, int *count) {
   return segs;
 }
 
+/* validates the indexes supplied to i_ppal
+
+i_ppal() doesn't do that for speed, but I'm not comfortable doing that
+for calls from perl.
+
+*/
+static void
+validate_i_ppal(i_img *im, i_palidx const *indexes, int count) {
+  int color_count = i_colorcount(im);
+  int i;
+
+  if (color_count == -1)
+    croak("i_plin() called on direct color image");
+  
+  for (i = 0; i < count; ++i) {
+    if (indexes[i] >= color_count) {
+      croak("i_plin() called with out of range color index %d (max %d)",
+        indexes[i], color_count-1);
+    }
+  }
+}
+
+
 /* I don't think ICLF_* names belong at the C interface
    this makes the XS code think we have them, to let us avoid 
    putting function bodies in the XS code
@@ -3536,14 +3559,41 @@ i_ppal(im, l, y, ...)
       PREINIT:
         i_palidx *work;
         int i;
+        STRLEN len;
+        int count;
       CODE:
         if (items > 3) {
           work = mymalloc(sizeof(i_palidx) * (items-3));
           for (i=0; i < items-3; ++i) {
             work[i] = SvIV(ST(i+3));
           }
+          validate_i_ppal(im, work, items - 3);
           RETVAL = i_ppal(im, l, l+items-3, y, work);
           myfree(work);
+        }
+        else {
+          RETVAL = 0;
+        }
+      OUTPUT:
+        RETVAL
+
+int
+i_ppal_p(im, l, y, data)
+        Imager::ImgRaw  im
+        int     l
+        int     y
+        SV *data
+      PREINIT:
+        i_palidx const *work;
+        int i;
+        STRLEN len;
+        int count;
+      CODE:
+        work = (i_palidx const *)SvPV(data, len);
+        len /= sizeof(i_palidx);
+        if (len > 0) {
+          validate_i_ppal(im, work, len);
+          RETVAL = i_ppal(im, l, l+len, y, work);
         }
         else {
           RETVAL = 0;

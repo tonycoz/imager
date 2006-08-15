@@ -552,6 +552,15 @@ sub _color {
   return $result;
 }
 
+sub _valid_image {
+  my ($self) = @_;
+
+  $self->{IMG} and return 1;
+
+  $self->_set_error('empty input image');
+
+  return;
+}
 
 #
 # Methods to be called on objects.
@@ -2837,6 +2846,8 @@ sub getscanline {
   my $self = shift;
   my %opts = ( type => '8bit', x=>0, @_);
 
+  $self->_valid_image or return;
+
   defined $opts{width} or $opts{width} = $self->getwidth - $opts{x};
 
   unless (defined $opts{'y'}) {
@@ -2846,11 +2857,19 @@ sub getscanline {
 
   if ($opts{type} eq '8bit') {
     return i_glin($self->{IMG}, $opts{x}, $opts{x}+$opts{width},
-		  $opts{y});
+		  $opts{'y'});
   }
   elsif ($opts{type} eq 'float') {
     return i_glinf($self->{IMG}, $opts{x}, $opts{x}+$opts{width},
-		  $opts{y});
+		  $opts{'y'});
+  }
+  elsif ($opts{type} eq 'index') {
+    unless (i_img_type($self->{IMG})) {
+      $self->_set_error("type => index only valid on paletted images");
+      return;
+    }
+    return i_gpal($self->{IMG}, $opts{x}, $opts{x} + $opts{width},
+                  $opts{'y'});
   }
   else {
     $self->_set_error("invalid type parameter - must be '8bit' or 'float'");
@@ -2861,6 +2880,8 @@ sub getscanline {
 sub setscanline {
   my $self = shift;
   my %opts = ( x=>0, @_);
+
+  $self->_valid_image or return;
 
   unless (defined $opts{'y'}) {
     $self->_set_error("missing y parameter");
@@ -2901,6 +2922,14 @@ sub setscanline {
     }
     else {
       return i_plinf($self->{IMG}, $opts{x}, $opts{'y'}, $opts{pixels});
+    }
+  }
+  elsif ($opts{type} eq 'index') {
+    if (ref $opts{pixels}) {
+      return i_ppal($self->{IMG}, $opts{x}, $opts{'y'}, @{$opts{pixels}});
+    }
+    else {
+      return i_ppal_p($self->{IMG}, $opts{x}, $opts{'y'}, $opts{pixels});
     }
   }
   else {

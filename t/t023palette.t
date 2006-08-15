@@ -2,8 +2,10 @@
 # some of this is tested in t01introvert.t too
 use strict;
 use lib 't';
-use Test::More tests => 75;
+use Test::More tests => 83;
 BEGIN { use_ok("Imager"); }
+
+sub isbin($$$);
 
 my $img = Imager->new(xsize=>50, ysize=>50, type=>'paletted');
 
@@ -235,6 +237,37 @@ cmp_ok(Imager->errstr, '=~', qr/Channels must be positive and <= 4/,
   is($img->errstr, 'No color named XXFGXFXGXFXZ found', 'check error message');
 }
 
+{ # https://rt.cpan.org/Ticket/Display.html?id=20338
+  # OO interface to i_glin/i_plin
+  my $im = Imager->new(xsize => 10, ysize => 10, type => 'paletted');
+  is($im->addcolors(colors => [ "#000", "#F00", "#0F0", "#00F" ]), "0 but true",
+     "add some test colors")
+    or print "# ", $im->errstr, "\n";
+  # set a pixel to check
+  $im->setpixel(x => 1, 'y' => 0, color => "#0F0");
+  is_deeply([ $im->getscanline('y' => 0, type=>'index') ],
+            [ 0, 2, (0) x 8 ], "getscanline index in list context");
+  isbin($im->getscanline('y' => 0, type=>'index'),
+        "\x00\x02" . "\x00" x 8,
+        "getscanline index in scalar context");
+  is($im->setscanline('y' => 0, pixels => [ 1, 2, 0, 3 ], type => 'index'),
+     4, "setscanline with list");
+  is($im->setscanline('y' => 0, x => 4, pixels => pack("C*", 3, 2, 1, 0, 3),
+                      type => 'index'),
+     5, "setscanline with pv");
+  is_deeply([ $im->getscanline(type => 'index', 'y' => 0) ],
+            [ 1, 2, 0, 3, 3, 2, 1, 0, 3, 0 ],
+            "check values set");
+  eval { # should croak on OOR index
+    $im->setscanline('y' => 1, pixels => [ 255 ], type=>'index');
+  };
+  ok($@, "croak on setscanline() to invalid index");
+  eval { # same again with pv
+    $im->setscanline('y' => 1, pixels => "\xFF", type => 'index');
+  };
+  ok($@, "croak on setscanline() with pv to invalid index");
+}
+
 sub iscolor {
   my ($c1, $c2, $msg) = @_;
 
@@ -246,6 +279,20 @@ sub iscolor {
     $builder->diag(<<DIAG);
       got color: [ @c1 ]
  expected color: [ @c2 ]
+DIAG
+  }
+}
+
+sub isbin ($$$) {
+  my ($got, $expected, $msg) = @_;
+
+  my $builder = Test::Builder->new;
+  if (!$builder->ok($got eq $expected, $msg)) {
+    (my $got_dec = $got) =~ s/([^ -~])/sprintf("\\x%02x", ord $1)/ge;
+    (my $exp_dec = $expected)  =~ s/([^ -~])/sprintf("\\x%02x", ord $1)/ge;
+    $builder->diag(<<DIAG);
+      got: "$got_dec"
+ expected: "$exp_dec"
 DIAG
   }
 }

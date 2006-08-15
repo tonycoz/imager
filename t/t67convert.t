@@ -73,7 +73,7 @@ my $black = NC(0, 0, 0);
 my $blackindex = Imager::i_addcolors($impal, $black);
 ok($blackindex, "add black to paletted");
 for my $y (0..299) {
-  Imager::i_ppal($impal, 0, $y, ($black) x 200);
+  Imager::i_ppal($impal, 0, $y, ($blackindex) x 200);
 }
 my $impalout = Imager::i_img_pal_new(200, 300, 3, 256);
 SKIP:

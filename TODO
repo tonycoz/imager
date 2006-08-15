@@ -8,9 +8,9 @@ not commitments.
 
 BEFORE 0.54
 
-OO interface for i_plin/i_glin
+OO interface for i_plin/i_glin (done)
 
-remove gif query from makefile.pl
+remove gif query from makefile.pl (done)
 
 fallback for read/write_multi to read/write
 
