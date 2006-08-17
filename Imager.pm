@@ -2034,6 +2034,18 @@ sub scale {
     }
     return $img;
   }
+  elsif ($opts{'qtype'} eq 'mixing') {
+    my $new_width = int(0.5 + $self->getwidth * $scalefactor);
+    my $new_height = int(0.5 + $self->getheight * $scalefactor);
+    $new_width >= 1 or $new_width = 1;
+    $new_height >= 1 or $new_height = 1;
+    $img->{IMG} = i_scale_mixing($self->{IMG}, $new_width, $new_height);
+    unless ($img->{IMG}) {
+      $self->_set_error(Imager->_error_as_meg);
+      return;
+    }
+    return $img;
+  }
   else {
     $self->_set_error('invalid value for qtype parameter');
     return undef;

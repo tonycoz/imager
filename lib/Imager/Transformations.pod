@@ -156,11 +156,20 @@ qtype - defines the quality of scaling performed.  Possible values are:
 
 =item *
 
-normal - high quality scaling.  This is the default.
+C<normal> - high quality scaling.  This is the default.
 
 =item *
 
-preview - lower quality.
+C<preview> - lower quality.  When scaling down this will skip input
+pixels, eg. scaling by 0.5 will skip every other pixel.  When scaling
+up this will duplicate pixels.
+
+=item *
+
+C<mixing> - implements the mixing algorithm implemented by pnmscale.
+This retains more detail when scaling down than C<normal>.  When
+scaling down this proportionally accumulates sample data from the
+pixels, resulting in a proportional mix of all of the pixels.
 
 =back
 
@@ -209,6 +218,9 @@ A mandatory warning is produced if scale() is called in void context.
   # low quality scales:
   # to half size
   my $low = $image->scale(qtype => 'preview');
+
+  # mixing scale
+  my $mixed = $image->scale(qtype => 'mixing', scalefactor => 0.1);
 
   # using an Image::Math::Constrain object
   use Image::Math::Constrain;

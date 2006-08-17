@@ -2974,6 +2974,12 @@ i_scale_nn(im,scx,scy)
              float     scy
 
 Imager::ImgRaw
+i_scale_mixing(im, width, height)
+    Imager::ImgRaw     im
+	       int     width
+	       int     height
+
+Imager::ImgRaw
 i_haar(im)
     Imager::ImgRaw     im
 

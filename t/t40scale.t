@@ -1,7 +1,7 @@
 #!perl -w
 use strict;
 use lib 't';
-use Test::More tests => 68;
+use Test::More tests => 72;
 
 BEGIN { use_ok(Imager=>':all') }
 
@@ -25,6 +25,11 @@ ok($scaleimg, "scale it (preview)") or print "# ",$img->errstr,"\n";
 
 ok($scaleimg->write(file=>'testout/t40scale2.ppm',type=>'pnm'),
    "write preview scaled image")  or print "# ",$img->errstr,"\n";
+
+$scaleimg = $img->scale(scalefactor => 0.25, qtype => 'mixing');
+ok($scaleimg, "scale it (mixing)") or print "# ", $img->errstr, "\n";
+ok($scaleimg->write(file=>'testout/t40scale3.ppm', type=>'pnm'),
+   "write mixing scaled image") or print "# ", $img->errstr, "\n";
 
 {
   # check for a warning when scale() is called in void context
@@ -60,6 +65,10 @@ ok($scaleimg->write(file=>'testout/t40scale2.ppm',type=>'pnm'),
   $out = $img->scale(scalefactor=>0.00001, qtype => 'preview');
   is($out->getwidth, 1, "min scale width (preview)");
   is($out->getheight, 1, "min scale height (preview)");
+
+  $out = $img->scale(scalefactor=>0.00001, qtype => 'mixing');
+  is($out->getwidth, 1, "min scale width (mixing)");
+  is($out->getheight, 1, "min scale height (mixing)");
 }
 
 { # error handling - NULL image
