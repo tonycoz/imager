@@ -417,6 +417,7 @@ undef_int i_writergb_wiol(i_img *img, io_glue *ig, int wierdpack, int compress, 
 
 i_img * i_scaleaxis(i_img *im, float Value, int Axis);
 i_img * i_scale_nn(i_img *im, float scx, float scy);
+i_img * i_scale_mixing(i_img *src, int width, int height);
 i_img * i_haar(i_img *im);
 int     i_count_colors(i_img *im,int maxc);
 

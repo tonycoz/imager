@@ -14,9 +14,11 @@ remove gif query from makefile.pl (done)
 
 fallback for read/write_multi to read/write
 
-pnmscale based alternative scale method
+pnmscale based alternative scale method (done)
 
 rubthrough 4 on 4
+
+replace dummy test script in dynfilt with a real one
 
 BEFORE 0.50:
 
