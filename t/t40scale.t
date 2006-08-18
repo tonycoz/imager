@@ -1,7 +1,7 @@
 #!perl -w
 use strict;
 use lib 't';
-use Test::More tests => 72;
+use Test::More tests => 213;
 
 BEGIN { use_ok(Imager=>':all') }
 
@@ -122,6 +122,22 @@ SKIP:
   scale_test($im, 'scale', 120, 72, "72 height",
 	     ypixels => 72);
 
+  # new scaling parameters in 0.54
+  scale_test($im, 'scale', 80, 48, "xscale 0.5",
+	     xscalefactor => 0.5);
+  scale_test($im, 'scale', 80, 48, "yscale 0.5",
+	     yscalefactor => 0.5);
+  scale_test($im, 'scale', 40, 48, "xscale 0.25 yscale 0.5",
+	     xscalefactor => 0.25, yscalefactor => 0.5);
+  scale_test($im, 'scale', 160, 48, "xscale 1.0 yscale 0.5",
+	     xscalefactor => 1.0, yscalefactor => 0.5);
+  scale_test($im, 'scale', 160, 48, "xpixels 160 ypixels 48 type nonprop",
+	     xpixels => 160, ypixels => 48, type => 'nonprop');
+  scale_test($im, 'scale', 160, 96, "xpixels 160 ypixels 96",
+	     xpixels => 160, ypixels => 96);
+  scale_test($im, 'scale', 80, 96, "xpixels 80 ypixels 96 type nonprop",
+	     xpixels => 80, ypixels => 96, type => 'nonprop');
+
   # scaleX
   scale_test($im, 'scaleX', 80, 96, "defaults");
   scale_test($im, 'scaleX', 40, 96, "0.25 scalefactor",
@@ -141,12 +157,14 @@ sub scale_test {
   my ($in, $method, $exp_width, $exp_height, $note, @parms) = @_;
 
   print "# $note: @parms\n";
- SKIP:
-  {
-    my $scaled = $in->$method(@parms);
-    ok($scaled, "$method $note")
-      or skip("failed to scale", 2);
-    is($scaled->getwidth, $exp_width, "check width");
-    is($scaled->getheight, $exp_height, "check height");
+  for my $qtype (qw(normal preview mixing)) {
+  SKIP:
+    {
+      my $scaled = $in->$method(@parms, qtype => $qtype);
+      ok($scaled, "$method $note qtype $qtype")
+	or skip("failed to scale", 2);
+      is($scaled->getwidth, $exp_width, "check width");
+      is($scaled->getheight, $exp_height, "check height");
+    }
   }
 }

@@ -1963,11 +1963,10 @@ sub register_filter {
 
 sub scale {
   my $self=shift;
-  my %opts=(scalefactor=>0.5,'type'=>'max',qtype=>'normal',@_);
+  my %opts=('type'=>'max',qtype=>'normal',@_);
   my $img = Imager->new();
   my $tmp = Imager->new();
-
-  my $scalefactor = $opts{scalefactor};
+  my ($x_scale, $y_scale);
 
   unless (defined wantarray) {
     my @caller = caller;
@@ -1980,45 +1979,67 @@ sub scale {
     return undef;
   }
 
+  if ($opts{'xscalefactor'} && $opts{'yscalefactor'}) {
+    $x_scale = $opts{'xscalefactor'};
+    $y_scale = $opts{'yscalefactor'};
+  }
+  elsif ($opts{'xscalefactor'}) {
+    $x_scale = $opts{'xscalefactor'};
+    $y_scale = $opts{'scalefactor'} || $x_scale;
+  }
+  elsif ($opts{'yscalefactor'}) {
+    $y_scale = $opts{'yscalefactor'};
+    $x_scale = $opts{'scalefactor'} || $y_scale;
+  }
+  else {
+    $x_scale = $y_scale = $opts{'scalefactor'} || 0.5;
+  }
+
   # work out the scaling
   if ($opts{xpixels} and $opts{ypixels} and $opts{'type'}) {
     my ($xpix, $ypix)=( $opts{xpixels} / $self->getwidth() , 
 			$opts{ypixels} / $self->getheight() );
     if ($opts{'type'} eq 'min') { 
-      $scalefactor = _min($xpix,$ypix); 
+      $x_scale = $y_scale = _min($xpix,$ypix); 
     }
     elsif ($opts{'type'} eq 'max') {
-      $scalefactor = _max($xpix,$ypix);
+      $x_scale = $y_scale = _max($xpix,$ypix);
+    }
+    elsif ($opts{'type'} eq 'nonprop' || $opts{'type'} eq 'non-proportional') {
+      $x_scale = $xpix;
+      $y_scale = $ypix;
     }
     else {
       $self->_set_error('invalid value for type parameter');
       return undef;
     }
   } elsif ($opts{xpixels}) { 
-    $scalefactor = $opts{xpixels} / $self->getwidth();
+    $x_scale = $y_scale = $opts{xpixels} / $self->getwidth();
   }
   elsif ($opts{ypixels}) { 
-    $scalefactor = $opts{ypixels}/$self->getheight();
+    $x_scale = $y_scale = $opts{ypixels}/$self->getheight();
   }
   elsif ($opts{constrain} && ref $opts{constrain}
 	 && $opts{constrain}->can('constrain')) {
     # we've been passed an Image::Math::Constrain object or something
     # that looks like one
+    my $scalefactor;
     (undef, undef, $scalefactor)
       = $opts{constrain}->constrain($self->getwidth, $self->getheight);
     unless ($scalefactor) {
       $self->_set_error('constrain method failed on constrain parameter');
       return undef;
     }
+    $x_scale = $y_scale = $scalefactor;
   }
 
   if ($opts{qtype} eq 'normal') {
-    $tmp->{IMG} = i_scaleaxis($self->{IMG}, $scalefactor, 0);
+    $tmp->{IMG} = i_scaleaxis($self->{IMG}, $x_scale, 0);
     if ( !defined($tmp->{IMG}) ) { 
       $self->{ERRSTR} = 'unable to scale image';
       return undef;
     }
-    $img->{IMG}=i_scaleaxis($tmp->{IMG}, $scalefactor, 1);
+    $img->{IMG}=i_scaleaxis($tmp->{IMG}, $y_scale, 1);
     if ( !defined($img->{IMG}) ) { 
       $self->{ERRSTR}='unable to scale image'; 
       return undef;
@@ -2027,7 +2048,7 @@ sub scale {
     return $img;
   }
   elsif ($opts{'qtype'} eq 'preview') {
-    $img->{IMG} = i_scale_nn($self->{IMG}, $scalefactor, $scalefactor); 
+    $img->{IMG} = i_scale_nn($self->{IMG}, $x_scale, $y_scale); 
     if ( !defined($img->{IMG}) ) { 
       $self->{ERRSTR}='unable to scale image'; 
       return undef;
@@ -2035,8 +2056,8 @@ sub scale {
     return $img;
   }
   elsif ($opts{'qtype'} eq 'mixing') {
-    my $new_width = int(0.5 + $self->getwidth * $scalefactor);
-    my $new_height = int(0.5 + $self->getheight * $scalefactor);
+    my $new_width = int(0.5 + $self->getwidth * $x_scale);
+    my $new_height = int(0.5 + $self->getheight * $y_scale);
     $new_width >= 1 or $new_width = 1;
     $new_height >= 1 or $new_height = 1;
     $img->{IMG} = i_scale_mixing($self->{IMG}, $new_width, $new_height);

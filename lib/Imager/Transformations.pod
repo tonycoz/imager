@@ -94,6 +94,8 @@ wide and 500 pixels tall.
   $newimg = $img->scale(xpixels=>400,ypixels=>400); # 560x400
   $newimg = $img->scale(xpixels=>400,ypixels=>400,type=>'min'); # 400x285
 
+  $newimg = $img->scale(xpixels=>400, ypixels=>400),type=>'nonprop'); # 400x400
+
   $newimg = $img->scale(scalefactor=>0.25); 175x125 
   $newimg = $img->scale(); # 350x250
 
@@ -108,9 +110,9 @@ the original.
 
 =item *
 
-xpixels, ypixels - desired size of the scaled image.  The resulting
-image is always scaled proportionally.  The C<type> parameter controls
-whether the larger or smaller of the two possible sizes is chosen.
+xpixels, ypixels - desired size of the scaled image.  The C<type>
+parameter controls whether the larger or smaller of the two possible
+sizes is chosen, or if the image is scaled non-proportionally.
 
 =item *
 
@@ -119,8 +121,15 @@ the image size should be constrained.
 
 =item *
 
-scalefactor - if none of xpixels, ypixels or constrain is supplied
-then this is used as the ratio to scale by.  Default: 0.5.
+scalefactor - if none of xpixels, ypixels, xscalefactor, yscalefactor
+or constrain is supplied then this is used as the ratio to scale by.
+Default: 0.5.
+
+=item *
+
+xscalefactor, yscalefactor - if both are supplied then the image is
+scaled as per these parameters, whether this is proportionally or not.
+New in Imager 0.54.
 
 =item *
 
@@ -136,6 +145,10 @@ min - the smaller of the 2 sizes are chosen.
 =item *
 
 max - the larger of the 2 sizes.  This is the default.
+
+=item *
+
+nonprop - non-proportional scaling.  New in Imager 0.54.
 
 =back
 
@@ -169,7 +182,9 @@ up this will duplicate pixels.
 C<mixing> - implements the mixing algorithm implemented by pnmscale.
 This retains more detail when scaling down than C<normal>.  When
 scaling down this proportionally accumulates sample data from the
-pixels, resulting in a proportional mix of all of the pixels.
+pixels, resulting in a proportional mix of all of the pixels.  When
+scaling up this will mix pixels when the sampling grid crosses a pixel
+boundary but will otherwise copy pixel values.
 
 =back
 
@@ -182,6 +197,16 @@ is best to call the scaleX() and scaleY() methods with the required
 dimensions. eg.
 
   my $scaled = $img->scaleX(pixels=>400)->scaleY(pixels=>200);
+
+From Imager 0.54 you can scale without maintaining proportions either
+by supplying both the xscalefactor and yscalefactor arguments:
+
+  my $scaled = $img->scale(xscalefactor => 0.5, yscalefactor => 0.67);
+
+or by supplying C<xpixels> and C<ypixels> and setting C<type> to
+"nonprop":
+
+  my $scaled = $im->scale(xpixels => 200, ypixels => 200, type => 'nonprop');
 
 Returns the scaled image on success.
 
@@ -219,7 +244,7 @@ A mandatory warning is produced if scale() is called in void context.
   # to half size
   my $low = $image->scale(qtype => 'preview');
 
-  # mixing scale
+  # mixing method scale
   my $mixed = $image->scale(qtype => 'mixing', scalefactor => 0.1);
 
   # using an Image::Math::Constrain object
