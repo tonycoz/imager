@@ -884,7 +884,7 @@ sub to_rgb8 {
 
   unless (defined wantarray) {
     my @caller = caller;
-    warn "to_rgb8() called in void context - to_rgb8() returns the cropped image at $caller[1] line $caller[2]\n";
+    warn "to_rgb8() called in void context - to_rgb8() returns the converted image at $caller[1] line $caller[2]\n";
     return;
   }
 
