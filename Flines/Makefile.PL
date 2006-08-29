@@ -9,7 +9,8 @@ my %opts =
    OBJECT => 'Flines.o',
    INC => '-I..'
   );
-if ($ExtUtils::MakeMaker::VERSION > 6.06) {
+my $MM_ver = eval $ExtUtils::MakeMaker::VERSION;
+if ($MM_ver > 6.06) {
   $opts{AUTHOR} = 'Tony Cook <tony@imager.perl.org>';
   $opts{ABSTRACT} = 'Flines Imager filter extension';
 }

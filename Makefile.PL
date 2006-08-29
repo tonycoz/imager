@@ -171,11 +171,13 @@ my %opts=(
           PM             => gen_PM(),
          );
 
-if ($ExtUtils::MakeMaker::VERSION > 6.06) {
+# eval to prevent warnings about versions with _ in them
+my $MM_ver = eval $ExtUtils::MakeMaker::VERSION;
+if ($MM_ver > 6.06) {
   $opts{AUTHOR} = 'Tony Cook <tony@imager.perl.org>, Arnar M. Hrafnkelsson';
   $opts{ABSTRACT} = 'Perl extension for Generating 24 bit Images';
 }
-if ($ExtUtils::MakeMaker::VERSION > 6.10) {
+if ($MM_ver > 6.10) {
   $opts{NO_META} = 1;
 }
 
