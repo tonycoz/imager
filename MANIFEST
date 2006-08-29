@@ -117,6 +117,7 @@ img16.c
 imgdouble.c     Implements double/sample images
 imio.h
 imperl.h
+imtoc.perl      Sample size adapter pre-processor
 io.c
 iolayer.c
 iolayer.h
@@ -173,6 +174,7 @@ regmach.h
 regops.perl
 rgb.c           Reading and writing SGI rgb files
 rotate.c
+rubthru.im
 samples/README
 samples/align-string.pl Demonstrate align_string method.
 samples/anaglyph.pl

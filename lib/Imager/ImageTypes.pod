@@ -127,6 +127,10 @@ C<virtual()> methods.
 The coordinate system in Imager has the origin in the upper left
 corner, see L<Imager::Draw> for details.
 
+The alpha channel when one is present is considered unassociated -
+ie. the color data has not been scaled by the alpha channel.  Note
+that not all code follows this (recent) rule, but will over time.
+
 =head2 Creating Imager Objects
 
 =over

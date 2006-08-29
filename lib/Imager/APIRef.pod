@@ -655,7 +655,7 @@ unmodified.
 
 
 =for comment
-From: File image.c
+From: File rubthru.im
 
 
 =back

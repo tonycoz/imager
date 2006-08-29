@@ -43,6 +43,7 @@ Makefile\.old
 ^imconfig\.h$
 ^ICO/ICO\.c$
 ^ICO/testout
+^rubthru\.c$
 
 # trash from profiling
 \.gcno$

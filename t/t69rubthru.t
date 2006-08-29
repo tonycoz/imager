@@ -1,7 +1,7 @@
 #!perl -w
 use strict;
 use lib 't';
-use Test::More tests => 28;
+use Test::More tests => 38;
 BEGIN { use_ok(Imager => qw(:all :handy)); }
 
 init_log("testout/t69rubthru.log", 1);
@@ -77,7 +77,7 @@ my $oogtarg = Imager->new(xsize=>100, ysize=>100, channels=>1);
 ok(!$oogtarg->rubthrough(src=>$oosrc), "check oo fails correctly");
 
 is($oogtarg->errstr, 
-   'rubthru can only work where (dest, src) channels are (3,4), (3,2) or (1,2)',
+   'rubthru can only work where (dest, src) channels are (3,4), (4,4), (3,2), (4,2), (1,2) or (2,2)',
    "check error message");
 
 { # check empty image errors
@@ -87,6 +87,60 @@ is($oogtarg->errstr,
   ok(!$oogtarg->rubthrough(src=>$empty), "check empty source");
   is($oogtarg->errstr, 'empty input image for src',
      "check error message");
+}
+
+{
+  # alpha source and target
+  my $src = Imager->new(xsize => 10, ysize => 1, channels => 4);
+  my $targ = Imager->new(xsize => 10, ysize => 2, channels => 4);
+
+  # simple initialization
+  $targ->setscanline('y' => 1, x => 1,
+                     pixels =>
+                     [
+                      NC(255, 128, 0, 255),
+                      NC(255, 128, 0, 128),
+                      NC(255, 128, 0, 0),
+                      NC(255, 128, 0, 255),
+                      NC(255, 128, 0, 128),
+                      NC(255, 128, 0, 0),
+                      NC(255, 128, 0, 255),
+                      NC(255, 128, 0, 128),
+                      NC(255, 128, 0, 0),
+                     ]);
+  $src->setscanline('y' => 0,
+                    pixels =>
+                    [
+                     NC(0, 128, 255, 0),
+                     NC(0, 128, 255, 0),
+                     NC(0, 128, 255, 0),
+                     NC(0, 128, 255, 128),
+                     NC(0, 128, 255, 128),
+                     NC(0, 128, 255, 128),
+                     NC(0, 128, 255, 255),
+                     NC(0, 128, 255, 255),
+                     NC(0, 128, 255, 255),
+                    ]);
+  ok($targ->rubthrough(src => $src,
+                       tx => 1, ty => 1), "do 4 on 4 rubthrough");
+  iscolora($targ->getpixel(x => 1, y => 1), NC(255, 128, 0, 255),
+           "check at zero source coverage on full targ coverage");
+  iscolora($targ->getpixel(x => 2, y => 1), NC(255, 128, 0, 128),
+           "check at zero source coverage on half targ coverage");
+  iscolora($targ->getpixel(x => 3, y => 1), NC(255, 128, 0, 0),
+           "check at zero source coverage on zero targ coverage");
+  iscolora($targ->getpixel(x => 4, y => 1), NC(127, 128, 128, 255),
+           "check at half source_coverage on full targ coverage");
+  iscolora($targ->getpixel(x => 5, y => 1), NC(85, 128, 170, 191),
+           "check at half source coverage on half targ coverage");
+  iscolora($targ->getpixel(x => 6, y => 1), NC(0, 128, 255, 128),
+           "check at half source coverage on zero targ coverage");
+  iscolora($targ->getpixel(x => 7, y => 1), NC(0, 128, 255, 255),
+           "check at full source_coverage on full targ coverage");
+  iscolora($targ->getpixel(x => 8, y => 1), NC(0, 128, 255, 255),
+           "check at full source coverage on half targ coverage");
+  iscolora($targ->getpixel(x => 9, y => 1), NC(0, 128, 255, 255),
+           "check at full source coverage on zero targ coverage");
 }
 
 sub color_cmp {
@@ -99,4 +153,19 @@ sub color_cmp {
       || $l[2] <=> $r[2];
 }
 
+sub iscolora {
+  my ($c1, $c2, $msg) = @_;
+
+  my $builder = Test::Builder->new;
+  my @c1 = $c1->rgba;
+  my @c2 = $c2->rgba;
+  if (!$builder->ok($c1[0] == $c2[0] && $c1[1] == $c2[1] && $c1[2] == $c2[2]
+                    && $c1[3] == $c2[3],
+                    $msg)) {
+    $builder->diag(<<DIAG);
+      got color: [ @c1 ]
+ expected color: [ @c2 ]
+DIAG
+  }
+}
 

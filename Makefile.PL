@@ -155,7 +155,7 @@ my @objs = qw(Imager.o draw.o polygon.o image.o io.o iolayer.o
               regmach.o trans2.o quant.o error.o convert.o
               map.o tags.o palimg.o maskimg.o img16.o rotate.o
               bmp.o tga.o rgb.o color.o fills.o imgdouble.o limits.o hlines.o
-              imext.o scale.o);
+              imext.o scale.o rubthru.o);
 
 $Recommends{Imager} =
   { 'Parse::RecDescent' => 0 };
@@ -194,6 +194,9 @@ exit;
 sub MY::postamble {
     my $self = shift;
     my $perl = $self->{PERLRUN} ? '$(PERLRUN)' : '$(PERL)';
+    my $mani = maniread;
+
+    my @ims = grep /\.im$/, keys %$mani;
 '
 dyntest.$(MYEXTLIB) : dynfilt/Makefile
 	cd dynfilt && $(MAKE) $(PASTHRU)
@@ -209,7 +212,20 @@ imconfig.h : Makefile.PL
 lib/Imager/APIRef.pod : \$(C_FILES) apidocs.perl
 	$perl apidocs.perl lib/Imager/APIRef.pod
 
-!;
+!.join('', map _im_rule($perl, $_), @ims)
+
+}
+
+sub _im_rule {
+  my ($perl, $im) = @_;
+
+  (my $c = $im) =~ s/\.im$/.c/;
+  return <<MAKE;
+
+$c: $im imtoc.perl
+	$perl imtoc.perl $im $c
+
+MAKE
 
 }
 

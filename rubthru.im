@@ -1,0 +1,152 @@
+#include "imager.h"
+
+static int
+rubthru_targ_noalpha(i_img *im, i_img *src,
+                     int tx, int ty, 
+                     int src_minx, int src_miny,
+                     int src_maxx, int src_maxy) {
+  int x, y, ttx, tty;
+  int chancount;
+  int chans[3];
+  int alphachan;
+  int ch;
+
+  i_clear_error();
+
+  if (im->channels == 3 && src->channels == 4) {
+    chancount = 3;
+    chans[0] = 0; chans[1] = 1; chans[2] = 2;
+    alphachan = 3;
+  }
+  else if (im->channels == 3 && src->channels == 2) {
+    chancount = 3;
+    chans[0] = chans[1] = chans[2] = 0;
+    alphachan = 1;
+  }
+  else if (im->channels == 1 && src->channels == 2) {
+    chancount = 1;
+    chans[0] = 0;
+    alphachan = 1;
+  }
+  else {
+    i_push_error(0, "rubthru can only work where (dest, src) channels are (3,4), (4,4), (3,2), (4,2), (1,2) or (2,2)");
+    return 0;
+  }
+
+#code im->bits <= 8 && src->bits <= 8
+  IM_WORK_T alpha;
+  IM_COLOR pv, orig, dest;
+
+  tty = ty;
+  for(y = src_miny; y < src_maxy; y++) {
+    ttx = tx;
+    for(x = src_minx; x < src_maxx; x++) {
+      IM_GPIX(src, x,   y,   &pv);
+      IM_GPIX(im,  ttx, tty, &orig);
+      alpha = pv.channel[alphachan];
+      for (ch = 0; ch < chancount; ++ch) {
+        dest.channel[ch] = (alpha * pv.channel[chans[ch]]
+                            + (IM_SAMPLE_MAX - alpha) * orig.channel[ch])/IM_SAMPLE_MAX;
+      }
+      IM_PPIX(im, ttx, tty, &dest);
+      ttx++;
+    }
+    tty++;
+  }
+#/code
+  return 1;
+}
+
+static int
+rubthru_targ_alpha(i_img *im, i_img *src, int tx, int ty, 
+                   int src_minx, int src_miny,
+                   int src_maxx, int src_maxy) {
+  int x, y, ttx, tty;
+  int chancount;
+  int chans[3];
+  int alphachan;
+  int ch;
+  int targ_alpha_chan;
+  
+  if (im->channels == 4 && src->channels == 4) {
+    chancount = 3;
+    chans[0] = 0; chans[1] = 1; chans[2] = 2;
+    alphachan = 3;
+  }
+  else if (im->channels == 4 && src->channels == 2) {
+    chancount = 3;
+    chans[0] = chans[1] = chans[2] = 0;
+    alphachan = 1;
+  }
+  else if (im->channels == 2 && src->channels == 2) {
+    chancount = 1;
+    chans[0] = 0;
+    alphachan = 1;
+  }
+  else {
+    i_push_error(0, "rubthru can only work where (dest, src) channels are (3,4), (4,4), (3,2), (4,2), (1,2) or (2,2)");
+    return 0;
+  }
+
+  targ_alpha_chan = im->channels - 1;
+
+#code im->bits <= 8 && src->bits <= 8
+  IM_WORK_T src_alpha, orig_alpha, dest_alpha, remains;
+  IM_COLOR pv, orig, dest;
+
+  tty = ty;
+  for(y = src_miny; y < src_maxy; y++) {
+    ttx = tx;
+    for(x = src_minx; x < src_maxx; x++) {
+      IM_GPIX(src, x,   y,   &pv);
+      src_alpha = pv.channel[alphachan];
+      if (src_alpha) {
+        remains = IM_SAMPLE_MAX - src_alpha;
+        IM_GPIX(im,  ttx, tty, &orig);
+        orig_alpha = orig.channel[targ_alpha_chan];
+        dest_alpha = src_alpha + (remains * orig_alpha) / IM_SAMPLE_MAX;
+
+        for (ch = 0; ch < chancount; ++ch) {
+          dest.channel[ch] = 
+            ( src_alpha * pv.channel[chans[ch]]
+              + remains * orig.channel[ch] * orig_alpha / IM_SAMPLE_MAX 
+              ) / dest_alpha;
+        }
+        /* dest's alpha */
+        dest.channel[targ_alpha_chan] = dest_alpha;
+        IM_PPIX(im, ttx, tty, &dest);
+      }
+      ttx++;
+    }
+    tty++;
+  }
+#/code
+  return 1;
+}
+
+/*
+=item i_rubthru(im, src, tx, ty, src_minx, src_miny, src_maxx, src_maxy )
+
+=category Image
+
+Takes the sub image I<src[src_minx, src_maxx)[src_miny, src_maxy)> and
+overlays it at (I<tx>,I<ty>) on the image object.
+
+The alpha channel of each pixel in I<src> is used to control how much
+the existing colour in I<im> is replaced, if it is 255 then the colour
+is completely replaced, if it is 0 then the original colour is left 
+unmodified.
+
+=cut
+*/
+
+int
+i_rubthru(i_img *im, i_img *src, int tx, int ty, int src_minx, int src_miny,
+	  int src_maxx, int src_maxy) {
+  if (im->channels == 1 || im->channels == 3)
+    return rubthru_targ_noalpha(im, src, tx, ty, src_minx, src_miny, 
+                                src_maxx, src_maxy);
+  else
+    return rubthru_targ_alpha(im, src, tx, ty, src_minx, src_miny,
+                              src_maxx, src_maxy);
+}

@@ -1,5 +1,6 @@
 #!perl -w
 use strict;
+use ExtUtils::Manifest 'maniread';
 
 my $outname = shift || '-';
 
@@ -9,7 +10,8 @@ my %funcs = map { $_ => 1 } @funcs;
 
 # look for files to parse
 
-my @files = grep $_ ne 'Imager.xs', glob '*.c';
+my $mani = maniread;
+my @files = grep /\.(c|im)$/, keys %$mani;
 
 # scan each file for =item <func>\b
 my $func;
