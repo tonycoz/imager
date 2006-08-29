@@ -229,7 +229,6 @@ t/t56postfix.t
 t/t57infix.t
 t/t58trans2.t
 t/t59assem.t
-t/t60dyntest.t
 t/t61filters.t
 t/t64copyflip.t         Test copy, flip, rotate, matrix_transform
 t/t65crop.t
