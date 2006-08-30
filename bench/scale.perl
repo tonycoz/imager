@@ -6,8 +6,8 @@ print "$0\n";
 my @allfiles = (@ARGV) x 120;
 my $srcdir = '.';
 
-my %opts1 = (scalefactor=>.333334);
-my %opts2 = (scalefactor=>.25);
+my %opts1 = (scalefactor=>.333334, qtype => 'mixing');
+my %opts2 = (scalefactor=>.25, qtype => 'mixing');
 my %exopts=();
 for my $file (@allfiles) {
   # print STDERR "reading $srcdir/$file\n";

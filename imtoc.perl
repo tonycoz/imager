@@ -18,7 +18,7 @@ my $failed;
 
 push @out, "#line 1 \"$src\"\n";
 while (defined(my $line = <SRC>)) {
-  if ($line =~ /^\#code (.+)$/) {
+  if ($line =~ /^\#code\s+(\S.+)$/) {
     $save_code
       and do { warn "$src:$code_line:Unclosed #code block\n"; ++$failed; };
 
@@ -27,18 +27,34 @@ while (defined(my $line = <SRC>)) {
     $code_line = $. + 1;
     $save_code = 1;
   }
+  elsif ($line =~ /^\#code\s*$/) {
+    $save_code
+      and do { warn "$src:$code_line:Unclosed #code block\n"; ++$failed; };
+
+    $cond = '';
+    $cond_line = 0;
+    $code_line = $. + 1;
+    $save_code = 1;
+  }
   elsif ($line =~ /^\#\/code$/) {
     $save_code
       or do { warn "$src:$.:#/code without #code\n"; ++$failed; next; };
 
-    push @out, "#line $cond_line \"$src\"\n";
-    push @out, "  if ($cond) {\n";
+    if ($cond) {
+      push @out, "#line $cond_line \"$src\"\n";
+      push @out, "  if ($cond) {\n";
+    }
+    push @out, "#undef IM_EIGHT_BIT\n",
+      "#define IM_EIGHT_BIT 1\n";
     push @out, "#line $code_line \"$src\"\n";
     push @out, byte_samples(@code);
-    push @out, "  }\n", "  else {\n";
+    push @out, "  }\n", "  else {\n"
+      if $cond;
+    push @out, "#undef IM_EIGHT_BIT\n";
     push @out, "#line $code_line \"$src\"\n";
     push @out, double_samples(@code);
-    push @out, "  }\n";
+    push @out, "  }\n"
+      if $cond;
     push @out, "#line $. \"$src\"\n";
     @code = ();
     $save_code = 0;
@@ -82,6 +98,7 @@ sub byte_samples {
     s/\bIM_WORK_T\b/int/g;
     s/\bIM_Sf\b/"%d"/g;
     s/\bIM_Wf\b/"%d"/g;
+    s/\bIM_SUFFIX\((\w+)\)/$1_8/g;
   }
 
   @lines;
@@ -103,6 +120,7 @@ sub double_samples {
     s/\bIM_WORK_T\b/double/g;
     s/\bIM_Sf\b/"%f"/g;
     s/\bIM_Wf\b/"%f"/g;
+    s/\bIM_SUFFIX\((\w+)\)/$1_double/g;
   }
 
   @lines;
@@ -136,6 +154,11 @@ The beginning of a sample-independent section of code is preceded by:
 
 where I<expression> should return true if processing should be done at
 8-bits/sample.
+
+You can also use a #code block around a function definition to produce
+8-bit and double sample versions of a function.  In this case #code
+has no expression and you will need to use IM_SUFFIX() to produce
+different function names.
 
 The end of a sample-independent section of code is terminated by:
 
@@ -195,6 +218,14 @@ IM_Sf - format string for the sample type, C<"%d"> or C<"%f">.
 =item *
 
 IM_Wf - format string for the work type, C<"%d"> or C<"%f">.
+
+=item *
+
+IM_SUFFIX(identifier) - adds _8 or _double onto the end of identifier.
+
+=item *
+
+IM_EIGHT_BIT - this is a macro defined only in 8-bit/sample code.
 
 =back
 

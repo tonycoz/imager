@@ -8,7 +8,7 @@ Imager::Transformations - Simple transformations of one image into another.
 
   $newimg = $img->copy();
 
-  $newimg = $img->scale(xpixels=>400);
+  $newimg = $img->scale(xpixels=>400, qtype => 'mixing');
   $newimg = $img->scale(xpixels=>400, ypixels=>400);
   $newimg = $img->scale(xpixels=>400, ypixels=>400, type=>'min');
   $newimg = $img->scale(scalefactor=>0.25);

@@ -24,13 +24,16 @@
 
 static void
 zero_row(i_fcolor *row, int width, int channels);
+
+#code
 static void
-accum_output_row(i_fcolor *accum, double fraction, i_fcolor const *in,
+IM_SUFFIX(accum_output_row)(i_fcolor *accum, double fraction, IM_COLOR const *in,
 		 int width, int channels);
 static void
-horizontal_scale(i_fcolor *out, int out_width, 
-		 i_fcolor const *in, int in_width,
-		 int channels);
+IM_SUFFIX(horizontal_scale)(IM_COLOR *out, int out_width, 
+                            i_fcolor const *in, int in_width,
+                            int channels);
+#/code
 
 /*
 =item i_scale_mixing
@@ -47,11 +50,9 @@ Adapted from pnmscale.
 i_img *
 i_scale_mixing(i_img *src, int x_out, int y_out) {
   i_img *result;
-  i_fcolor *in_row = NULL;
-  i_fcolor *xscale_row = NULL;
   i_fcolor *accum_row = NULL;
   int y;
-  int in_row_bytes, out_row_bytes;
+  int accum_row_bytes;
   double rowsleft, fracrowtofill;
   int rowsread;
   double y_scale;
@@ -70,17 +71,6 @@ i_scale_mixing(i_img *src, int x_out, int y_out) {
     return NULL;
   }
 
-  in_row_bytes = sizeof(i_fcolor) * src->xsize;
-  if (in_row_bytes / sizeof(i_fcolor) != src->xsize) {
-    i_push_error(0, "integer overflow allocating input row buffer");
-    return NULL;
-  }
-  out_row_bytes = sizeof(i_fcolor) * x_out;
-  if (out_row_bytes / sizeof(i_fcolor) != x_out) {
-    i_push_error(0, "integer overflow allocating output row buffer");
-    return NULL;
-  }
-
   if (x_out == src->xsize && y_out == src->ysize) {
     return i_copy(src);
   }
@@ -91,15 +81,50 @@ i_scale_mixing(i_img *src, int x_out, int y_out) {
   if (!result)
     return NULL;
 
+  accum_row_bytes = sizeof(i_fcolor) * src->xsize;
+  if (accum_row_bytes / sizeof(i_fcolor) != src->xsize) {
+    i_push_error(0, "integer overflow allocating accumulator row buffer");
+    return NULL;
+  }
+
+  accum_row  = mymalloc(accum_row_bytes);
+
+#code src->bits <= 8
+  IM_COLOR *in_row = NULL;
+  IM_COLOR *xscale_row = NULL;
+  int in_row_bytes, out_row_bytes;
+
+  in_row_bytes = sizeof(IM_COLOR) * src->xsize;
+  if (in_row_bytes / sizeof(IM_COLOR) != src->xsize) {
+    i_push_error(0, "integer overflow allocating input row buffer");
+    return NULL;
+  }
+  out_row_bytes = sizeof(IM_COLOR) * x_out;
+  if (out_row_bytes / sizeof(IM_COLOR) != x_out) {
+    i_push_error(0, "integer overflow allocating output row buffer");
+    return NULL;
+  }
+
   in_row     = mymalloc(in_row_bytes);
-  accum_row  = mymalloc(in_row_bytes);
   xscale_row = mymalloc(out_row_bytes);
 
   rowsread = 0;
   rowsleft = 0.0;
   for (y = 0; y < y_out; ++y) {
     if (y_out == src->ysize) {
-      i_glinf(src, 0, src->xsize, y, accum_row);
+      /* no vertical scaling, just load it */
+      int x, ch;
+#ifdef IM_EIGHT_BIT
+      /* load and convert to doubles */
+      IM_GLIN(src, 0, src->xsize, y, in_row);
+      for (x = 0; x < src->xsize; ++x) {
+        for (ch = 0; ch < src->channels; ++ch) {
+          accum_row[x].channel[ch] = in_row[x].channel[ch];
+        }
+      }
+#else
+      IM_GLIN(src, 0, src->xsize, y, accum_row);
+#endif
     }
     else {
       fracrowtofill = 1.0;
@@ -107,7 +132,7 @@ i_scale_mixing(i_img *src, int x_out, int y_out) {
       while (fracrowtofill > 0) {
 	if (rowsleft <= 0) {
 	  if (rowsread < src->ysize) {
-	    i_glinf(src, 0, src->xsize, rowsread, in_row);
+	    IM_GLIN(src, 0, src->xsize, rowsread, in_row);
 	    ++rowsread;
 	  }
 	  /* else just use the last row read */
@@ -115,34 +140,43 @@ i_scale_mixing(i_img *src, int x_out, int y_out) {
 	  rowsleft = y_scale;
 	}
 	if (rowsleft < fracrowtofill) {
-	  accum_output_row(accum_row, rowsleft, in_row, src->xsize, 
-			   src->channels);
+	  IM_SUFFIX(accum_output_row)(accum_row, rowsleft, in_row, 
+                                      src->xsize, src->channels);
 	  fracrowtofill -= rowsleft;
 	  rowsleft = 0;
 	}
 	else {
-	  accum_output_row(accum_row, fracrowtofill, in_row, src->xsize, 
-			   src->channels);
+	  IM_SUFFIX(accum_output_row)(accum_row, fracrowtofill, in_row, 
+                                      src->xsize, src->channels);
 	  rowsleft -= fracrowtofill;
 	  fracrowtofill = 0;
 	}
       }
-      /* we've accumulated a vertically scaled row */
-      if (x_out == src->xsize) {
-	/* no need to scale */
-	i_plinf(result, 0, x_out, y, accum_row);
+    }
+    /* we've accumulated a vertically scaled row */
+    if (x_out == src->xsize) {
+      int x, ch;
+#if IM_EIGHT_BIT
+      /* no need to scale, but we need to convert it */
+      for (x = 0; x < x_out; ++x) {
+        for (ch = 0; ch < result->channels; ++ch)
+          xscale_row[x].channel[ch] = accum_row[x].channel[ch];
       }
-      else {
-	horizontal_scale(xscale_row, x_out, accum_row, src->xsize, 
-			 src->channels);
-	i_plinf(result, 0, x_out, y, xscale_row);
-      }
+      IM_PLIN(result, 0, x_out, y, xscale_row);
+#else
+      IM_PLIN(result, 0, x_out, y, accum_row);
+#endif
+    }
+    else {
+      IM_SUFFIX(horizontal_scale)(xscale_row, x_out, accum_row, 
+                                  src->xsize, src->channels);
+      IM_PLIN(result, 0, x_out, y, xscale_row);
     }
   }
-
   myfree(in_row);
-  myfree(accum_row);
   myfree(xscale_row);
+#/code
+  myfree(accum_row);
 
   return result;
 }
@@ -153,18 +187,24 @@ zero_row(i_fcolor *row, int width, int channels) {
   int ch;
 
   /* with IEEE floats we could just use memset() but that's not
-     safe in general under ANSI C */
+     safe in general under ANSI C.
+     memset() is slightly faster.
+  */
   for (x = 0; x < width; ++x) {
     for (ch = 0; ch < channels; ++ch)
       row[x].channel[ch] = 0.0;
   }
 }
 
+#code
+
 static void
-accum_output_row(i_fcolor *accum, double fraction, i_fcolor const *in,
+IM_SUFFIX(accum_output_row)(i_fcolor *accum, double fraction, IM_COLOR const *in,
 		 int width, int channels) {
   int x, ch;
 
+  /* it's tempting to change this into a pointer iteration loop but
+     modern CPUs do the indexing as part of the instruction */
   for (x = 0; x < width; ++x) {
     for (ch = 0; ch < channels; ++ch) {
       accum[x].channel[ch] += in[x].channel[ch] * fraction;
@@ -173,7 +213,7 @@ accum_output_row(i_fcolor *accum, double fraction, i_fcolor const *in,
 }
 
 static void
-horizontal_scale(i_fcolor *out, int out_width, 
+IM_SUFFIX(horizontal_scale)(IM_COLOR *out, int out_width, 
 		 i_fcolor const *in, int in_width,
 		 int channels) {
   double frac_col_to_fill, frac_col_left;
@@ -219,3 +259,5 @@ horizontal_scale(i_fcolor *out, int out_width,
     }
   }
 }
+
+#/code

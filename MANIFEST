@@ -191,7 +191,7 @@ samples/samp-tags.cgi   Demonstrate image upload via a HTML form
 samples/samp-tags.html  Form for samp-tags.cgi
 samples/slant_text.pl   Using $font->transform() to slant text
 samples/tk-photo.pl
-scale.c		Newer scaling code
+scale.im	Newer scaling code
 spot.perl	For making an ordered dither matrix from a spot function
 stackmach.c
 stackmach.h

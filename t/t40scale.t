@@ -1,7 +1,7 @@
 #!perl -w
 use strict;
 use lib 't';
-use Test::More tests => 213;
+use Test::More tests => 223;
 
 BEGIN { use_ok(Imager=>':all') }
 
@@ -30,6 +30,35 @@ $scaleimg = $img->scale(scalefactor => 0.25, qtype => 'mixing');
 ok($scaleimg, "scale it (mixing)") or print "# ", $img->errstr, "\n";
 ok($scaleimg->write(file=>'testout/t40scale3.ppm', type=>'pnm'),
    "write mixing scaled image") or print "# ", $img->errstr, "\n";
+
+{ # double image scaling with mixing, since it has code to handle it
+  my $dimg = Imager->new(xsize => $img->getwidth, ysize => $img->getheight,
+                         channels => $img->getchannels,
+                         bits => 'double');
+  ok($dimg, "create double/sample image");
+  $dimg->paste(src => $img);
+  $scaleimg = $dimg->scale(scalefactor => 0.25, qtype => 'mixing');
+  ok($scaleimg, "scale it (mixing, double)");
+  ok($scaleimg->write(file => 'testout/t40mixdbl.ppm', type => 'pnm'),
+     "write double/mixing scaled image");
+  is($scaleimg->bits, 'double', "got the right image type as output");
+
+  # hscale only, mixing
+  $scaleimg = $dimg->scale(xscalefactor => 0.33, yscalefactor => 1.0,
+                           qtype => 'mixing');
+  ok($scaleimg, "scale it (hscale, mixing, double)");
+  is($scaleimg->getheight, $dimg->getheight, "same height");
+  ok($scaleimg->write(file => 'testout/t40hscdmix.ppm', type => 'pnm'),
+     "save it");
+
+  # vscale only, mixing
+  $scaleimg = $dimg->scale(xscalefactor => 1.0, yscalefactor => 0.33,
+                           qtype => 'mixing');
+  ok($scaleimg, "scale it (vscale, mixing, double)");
+  is($scaleimg->getwidth, $dimg->getwidth, "same width");
+  ok($scaleimg->write(file => 'testout/t40vscdmix.ppm', type => 'pnm'),
+     "save it");
+}
 
 {
   # check for a warning when scale() is called in void context
