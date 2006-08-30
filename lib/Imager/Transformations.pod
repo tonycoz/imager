@@ -190,6 +190,8 @@ boundary but will otherwise copy pixel values.
 
 scale() will fail if C<qtype> is set to some other value.
 
+C<preview> is faster than C<mixing> which is much faster than C<normal>.
+
 =back
 
 To scale an image on a given axis without maintaining proportions, it
