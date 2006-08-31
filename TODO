@@ -16,7 +16,7 @@ fallback for read/write_multi to read/write
 
 pnmscale based alternative scale method (done)
 
-rubthrough 4 on 4
+rubthrough 4 on 4 (done)
 
 replace dummy test script in dynfilt with a real one (done)
 
