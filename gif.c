@@ -1369,9 +1369,11 @@ static int do_comments(GifFileType *gf, i_img *img) {
 
 Internal.  Add the Netscape2.0 loop extension block, if requested.
 
-The code for this function is currently "#if 0"ed out since the giflib
-extension writing code currently doesn't seem to support writing
-application extension blocks.
+Giflib/libungif prior to 4.1.1 didn't support writing application
+extension blocks, so we don't attempt to write them for older versions.
+
+Giflib/libungif prior to 4.1.3 used the wrong write mechanism when
+writing extension blocks so that they could only be written to files.
 
 =cut
 */
@@ -1387,13 +1389,13 @@ static int do_ns_loop(GifFileType *gf, i_img *img)
      If giflib's callback interface wasn't broken by default, I'd 
      force file writes to use callbacks, but it is broken by default.
   */
-#if 0
   /* yes this was another attempt at supporting the loop extension */
+#if IM_GIFMAJOR == 4 && IM_GIFMINOR >= 1
   int loop_count;
   if (i_tags_get_int(&img->tags, "gif_loop", 0, &loop_count)) {
     unsigned char nsle[12] = "NETSCAPE2.0";
     unsigned char subblock[3];
-    if (EGifPutExtension(gf, 0xFF, 11, nsle) == GIF_ERROR) {
+    if (EGifPutExtensionFirst(gf, APPLICATION_EXT_FUNC_CODE, 11, nsle) == GIF_ERROR) {
       gif_push_error();
       i_push_error(0, "writing loop extension");
       return 0;
@@ -1401,18 +1403,14 @@ static int do_ns_loop(GifFileType *gf, i_img *img)
     subblock[0] = 1;
     subblock[1] = loop_count % 256;
     subblock[2] = loop_count / 256;
-    if (EGifPutExtension(gf, 0, 3, subblock) == GIF_ERROR) {
+    if (EGifPutExtensionLast(gf, APPLICATION_EXT_FUNC_CODE, 3, subblock) == GIF_ERROR) {
       gif_push_error();
       i_push_error(0, "writing loop extention sub-block");
       return 0;
     }
-    if (EGifPutExtension(gf, 0, 0, subblock) == GIF_ERROR) {
-      gif_push_error();
-      i_push_error(0, "writing loop extension terminator");
-      return 0;
-    }
   }
 #endif
+
   return 1;
 }
 
@@ -1487,24 +1485,53 @@ which is very broken.
 Failing to set the correct GIF version doesn't seem to cause a problem
 with readers.
 
+Modern versions (4.1.4 anyway) of giflib/libungif handle
+EGifSetGifVersion correctly.
+
+If t/t105gif.t crashes here then run Makefile.PL with
+--nogifsetversion, eg.:
+
+  perl Makefile.PL --nogifsetversion
+
+or install a less buggy giflib.
+
 =cut
 */
 
 static void gif_set_version(i_quantize *quant, i_img **imgs, int count) {
-  /* the following crashed giflib
-     the EGifSetGifVersion() is seriously borked in giflib
-     it's less borked in the ungiflib beta, but we don't have a mechanism
-     to distinguish them
-     Needs to be updated to support tags.
-     if (opts->delay_count
-     || opts->user_input_count
-     || opts->disposal_count
-     || opts->loop_count
-     || quant->transp != tr_none)
+#if (IM_GIFMAJOR >= 4 || IM_GIFMAJOR == 4 && IM_GIFMINOR >= 1) \
+	&& !defined(IM_NO_SET_GIF_VERSION)
+  int need_89a = 0;
+  int temp;
+  int i;
+
+  if (quant->transp != tr_none)
+    need_89a = 1;
+  else {
+    for (i = 0; i < count; ++i) {
+      if (i_tags_get_int(&imgs[i]->tags, "gif_delay", 0, &temp)) { 
+        need_89a = 1; 
+        break;
+      }
+      if (i_tags_get_int(&imgs[i]->tags, "gif_user_input", 0, &temp) && temp) {
+        need_89a = 1; 
+        break;
+      }
+      if (i_tags_get_int(&imgs[i]->tags, "gif_disposal", 0, &temp)) {
+        need_89a = 1;
+        break;
+      }
+      if (i_tags_get_int(&imgs[i]->tags, "gif_loop", 0, &temp)) {
+        need_89a = 1;
+        break;
+      }
+    }
+  }
+  if (need_89a)
      EGifSetGifVersion("89a");
-     else
+  else
      EGifSetGifVersion("87a");
-  */
+#endif
 }
 
 static int 

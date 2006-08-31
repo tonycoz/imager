@@ -38,6 +38,7 @@ my @incpaths; # places to look for headers
 my @libpaths; # places to look for libraries
 my $noprobe; # non-zero to disable newer probes
 my $noexif; # non-zero to disable EXIF parsing of JPEGs
+my $no_gif_set_version; # disable calling EGifSetGifVersion
 GetOptions("help" => \$help,
            "enable=s" => \@enable,
            "disable=s" => \@disable,
@@ -46,7 +47,8 @@ GetOptions("help" => \$help,
            "noprobe" => \$noprobe,
            "verbose|v" => \$VERBOSE,
            "nolog" => \$NOLOG,
-	   "noexif" => \$noexif);
+	   "noexif" => \$noexif,
+           "nogifsetversion" => \$no_gif_set_version);
 
 if ($VERBOSE) { 
   print "Verbose mode\n"; 
@@ -304,6 +306,8 @@ sub gifcheck {
 
   push @defines, [ IM_GIFMAJOR => $major, "Parsed giflib version" ];
   push @defines, [ IM_GIFMINOR => $minor ];
+  push @defines, [ IM_NO_SET_GIF_VERSION => 1, "Disable EGifSetGifVersion" ]
+    if $no_gif_set_version;
 }
 
 
