@@ -646,7 +646,10 @@ EOS
     cmp_ok($res->errstr, "=~", 'page 3 not found',
 	   "check error message");
   }
+SKIP:
   {
+    skip("gif_loop not supported on giflib before 4.1", 6) 
+      unless $gifver >= 4.1;
     # testing writing the loop extension
     my $im1 = Imager->new(xsize => 100, ysize => 100);
     $im1->box(filled => 1, color => '#FF0000');
