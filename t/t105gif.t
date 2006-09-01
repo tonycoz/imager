@@ -48,7 +48,7 @@ SKIP:
     $im = Imager->new(xsize=>2, ysize=>2);
     ok(!$im->write(file=>"testout/nogif.gif"), "should fail to write gif");
     is($im->errstr, 'format not supported', "check no gif message");
-    skip("no gif support", 103);
+    skip("no gif support", 109);
   }
     open(FH,">testout/t105.gif") || die "Cannot open testout/t105.gif\n";
     binmode(FH);
