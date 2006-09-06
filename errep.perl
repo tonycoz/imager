@@ -1,10 +1,11 @@
-
+#!perl -w
+use strict;
 
 use Config;
 
-@precommands=('uname -a','perl -V');
-@manpages=('dlopen','shl_load','dlsym','dlclose');
-@postcommands=map { "man $_ | col -bf | cat -s" } @manpages;
+my @precommands=('uname -a','perl -V');
+my @manpages=('dlopen','shl_load','dlsym','dlclose');
+my @postcommands=map { "man $_ | col -bf | cat -s" } @manpages;
 
 print <<EOF;
 
@@ -27,7 +28,7 @@ print <<EOF;
 
 EOF
 
-$a=<STDIN>;
+my $a=<STDIN>;
 chomp($a);
 die "Aborted!\n" if $a =~ /^n/i;
 
@@ -39,7 +40,8 @@ open STDERR, '>&STDOUT' or die $!;
 
 rcomm('rm testout/*');
 rcomm(@precommands);
-rcomm("$^X Makefile.PL") || rcomm("make") || rcomm("make test");
+my $make = $Config{make};
+rcomm("$^X Makefile.PL") || rcomm("$make") || rcomm("$make test TEST_VERBOSE=1");
 head("Logfiles from run");
 dumplogs();
 

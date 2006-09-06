@@ -1,4 +1,5 @@
 #!/usr/bin/perl -w
+use strict;
 
 use Cwd;
 
@@ -13,14 +14,17 @@ use Cwd;
 
 my $comm = shift or USAGE();
 
+my @files;
 if ($comm eq "-f") {
-	if (!@ARGV) {
-		getfiles();
-		@files = @CFILES;
+	if (@ARGV) {
+		@files = @ARGV;
+	}
+	else {
+		@files = getfiles();
 	}
 
 	for my $file (@files) {
-		local(*FH, $/); open(FH,"$BASE/$file") or die $!;
+		local(*FH, $/); open(FH,"< $file") or die $!;
 		my $data = <FH>; close(FH);
 		while( $data =~ m/FIXME:(.*?)\*\//sg ) {
 			printf("%10.10s:%5d %s\n", $file, ptol($data, pos($data)), $1);
@@ -33,7 +37,7 @@ if ($comm eq "-d") {
 	USAGE() if !@ARGV;
 	my $file = shift; 
 	getfiles();
-	local(*FH, $/); open(FH, "$BASE/$file") or die $!;
+	local(*FH, $/); open(FH, "< $file") or die $!;
 	my $data = <FH>; close(FH);
 	$data =~ s/^(=item)/\n$1/mg;
 	$data =~ s/^(=cut)/\n~~~~~~~~\n\n$1\n\n/mg;
@@ -58,12 +62,12 @@ EOF
 }
 
 sub getfiles {
-	$BASE=cwd;
+	my $BASE=cwd;
 	local(*FH);
 	open(FH,"$BASE/MANIFEST") or die "Cannot open MANIFEST file: $!\n";
 	my @MANIFEST = <FH>;
 	chomp(@MANIFEST);
-	@CFILES = grep { m/\.c\s*$/ } @MANIFEST;
+	return grep { m/\.(c|im)\s*$/ } @MANIFEST;
 }
 
 # string position to line number in string

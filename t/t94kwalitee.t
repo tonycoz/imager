@@ -9,7 +9,7 @@ my $manifest = maniread;
 
 # work up counts first
 
-my @pl_files = grep /\.(p[lm]|PL)$/, keys %$manifest;
+my @pl_files = grep /\.(p[lm]|PL|perl)$/, keys %$manifest;
 
 plan tests => scalar(@pl_files);
 
