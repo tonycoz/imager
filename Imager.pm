@@ -1123,9 +1123,9 @@ sub settag {
 sub _get_reader_io {
   my ($self, $input) = @_;
 
-	if ($input->{io}) {
-		return $input->{io}, undef;
-	}
+  if ($input->{io}) {
+    return $input->{io}, undef;
+  }
   elsif ($input->{fd}) {
     return io_new_fd($input->{fd});
   }
@@ -1174,7 +1174,10 @@ sub _get_reader_io {
 sub _get_writer_io {
   my ($self, $input, $type) = @_;
 
-  if ($input->{fd}) {
+  if ($input->{io}) {
+    return $input->{io};
+  }
+  elsif ($input->{fd}) {
     return io_new_fd($input->{fd});
   }
   elsif ($input->{fh}) {
@@ -1790,8 +1793,15 @@ sub write_multi {
       }
     }
     else {
-      $ERRSTR = "Sorry, write_multi doesn't support $type yet";
-      return 0;
+      if (@images == 1) {
+	unless ($images[0]->write(%$opts, io => $IO, type => $type)) {
+	  return 1;
+	}
+      }
+      else {
+	$ERRSTR = "Sorry, write_multi doesn't support $type yet";
+	return 0;
+      }
     }
   }
 
@@ -1857,6 +1867,12 @@ sub read_multi {
     else {
       $ERRSTR = _error_as_msg();
       return;
+    }
+  }
+  else {
+    my $img = Imager->new;
+    if ($img->read(%opts, io => $IO, type => $type)) {
+      return ( $img );
     }
   }
 

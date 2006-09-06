@@ -1,7 +1,7 @@
 #!perl -w
 use strict;
 use lib 't';
-use Test::More tests => 28;
+use Test::More tests => 32;
 # Before `make install' is performed this script should be runnable with
 # `make test'. After `make install' it should work as `perl test.pl'
 
@@ -42,7 +42,7 @@ if (!i_has_format("png")) {
     $im = Imager->new(xsize=>2, ysize=>2);
     ok(!$im->write(file=>"testout/nopng.png"), "should fail to write png");
     is($im->errstr, 'format not supported', "check no png message");
-    skip("no png support", 23);
+    skip("no png support", 27);
   }
 } else {
   Imager::i_tags_add($img, "i_xres", 0, "300", 0);
@@ -152,4 +152,19 @@ EOS
     Imager->set_file_limits(reset=>1);
   }
 
+  { # check if the read_multi fallback works
+    my @imgs = Imager->read_multi(file => 'testout/t102.png');
+    is(@imgs, 1, "check the image was loaded");
+    is(i_img_diff($img, $imgs[0]), 0, "check image matches");
+
+    # check the write_multi fallback
+    ok(Imager->write_multi({ file => 'testout/t102m.png', type => 'png' }, 
+			   @imgs),
+       'test write_multi() callback');
+
+    # check that we fail if we actually write 2
+    ok(!Imager->write_multi({ file => 'testout/t102m.png', type => 'png' }, 
+			   @imgs, @imgs),
+       'test write_multi() callback failure');
+  }
 }
