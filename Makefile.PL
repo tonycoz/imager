@@ -169,7 +169,7 @@ my %opts=(
           'DEFINE'       => "$OSDEF $CFLAGS",
           'INC'          => "$lib_cflags $DFLAGS $F_INC",
           'OBJECT'       => join(' ', @objs, $F_OBJECT),
-          clean          => { FILES=>'testout meta.tmp' },
+          clean          => { FILES=>'testout meta.tmp rubthru.c scale.c' },
           PM             => gen_PM(),
          );
 
