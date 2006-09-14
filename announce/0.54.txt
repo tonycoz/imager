@@ -1,0 +1,27 @@
+This is primarily a feature release:
+
+- a new qtype value 'mixing' has been added to the scale() method.
+  This is faster than 'normal', slower than 'preview'.  This is based on
+  the method used by pnmscale, and seems to produce less blurry results
+  than normal.
+
+- the rubthrough() method can now render onto images with an alpha
+  channel.
+
+- the read_multi() method now falls back to calling doing a single
+  image read via the read() method and write_multi() will now fall
+  back to calling write() if a single image is supplied.  This means
+  you can simply call the read_multi() or write_multi() functions
+  without having to check if the type is formatted by that method.
+
+- the GIF loop extension can now be written.  If you don't have
+  libungif/giflib 4.1.4 (or some distribution's bugfixed equivalent)
+  you should upgrade.
+
+- getscanline() and setscanline() can now read/write palette index
+  based data from/to the image for paletted images, by setting type to
+  'index'.
+
+- we no longer hassle you to disable GIF support
+
+- minor documentation fixes
