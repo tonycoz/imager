@@ -621,10 +621,25 @@ i_new_hatch_low(const i_color *fg, const i_color *bg,
   fill->base.fill_with_color = fill_hatch;
   fill->base.fill_with_fcolor = fill_hatchf;
   fill->base.destroy = NULL;
-  fill->fg = fg ? *fg : fcolor_to_color(ffg);
-  fill->bg = bg ? *bg : fcolor_to_color(fbg);
-  fill->ffg = ffg ? *ffg : color_to_fcolor(fg);
-  fill->fbg = fbg ? *fbg : color_to_fcolor(bg);
+  /* Some Sun C didn't like the condition expressions that were here.
+     See https://rt.cpan.org/Ticket/Display.html?id=21944
+   */
+  if (fg)
+    fill->fg = *fg;
+  else
+    fill->fg = fcolor_to_color(ffg);
+  if (bg)
+    fill->bg = *bg;
+  else
+    fill->bg = fcolor_to_color(fbg);
+  if (ffg) 
+    fill->ffg = *ffg;
+  else
+    fill->ffg = color_to_fcolor(fg);
+  if (fbg)
+    fill->fbg = *fbg;
+  else
+    fill->fbg = color_to_fcolor(bg);
   if (combine) {
     i_get_combine(combine, &fill->base.combine, &fill->base.combinef);
   }
