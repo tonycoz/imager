@@ -3254,7 +3254,7 @@ sub string {
   unless ($self->{IMG}) { $self->{ERRSTR}='empty input image'; return undef; }
 
   my %input=('x'=>0, 'y'=>0, @_);
-  $input{string}||=$input{text};
+  defined($input{string}) or $input{string} = $input{text};
 
   unless(defined $input{string}) {
     $self->{ERRSTR}="missing required parameter 'string'";
