@@ -1,4 +1,5 @@
 #!perl -w
+
 =pod
 
 IF THIS TEST CRASHES
@@ -12,7 +13,7 @@ UPGRADE.
 use strict;
 $|=1;
 use lib 't';
-use Test::More tests => 113;
+use Test::More tests => 125;
 use Imager qw(:all);
 BEGIN { require "t/testtools.pl"; }
 use Carp 'confess';
@@ -48,7 +49,7 @@ SKIP:
     $im = Imager->new(xsize=>2, ysize=>2);
     ok(!$im->write(file=>"testout/nogif.gif"), "should fail to write gif");
     is($im->errstr, 'format not supported', "check no gif message");
-    skip("no gif support", 109);
+    skip("no gif support", 121);
   }
     open(FH,">testout/t105.gif") || die "Cannot open testout/t105.gif\n";
     binmode(FH);
@@ -668,6 +669,25 @@ SKIP:
     is($im[1]->tags(name => 'gif_loop'), 5, "second loop read back");
     is($im[0]->tags(name => 'gif_delay'), 50, "first delay read back");
     is($im[1]->tags(name => 'gif_delay'), 50, "second delay read back");
+  }
+ SKIP:
+  { # check graphic control extension and ns loop tags are read correctly
+    print "# check GCE and netscape loop extension tag values\n";
+    my @im = Imager->read_multi(file => 'testimg/screen3.gif');
+    is(@im, 2, "read 2 images from screen3.gif")
+      or skip("Could not load testimg/screen3.gif:".Imager->errstr, 11);
+    is($im[0]->tags(name => 'gif_delay'),          50, "0 - gif_delay");
+    is($im[0]->tags(name => 'gif_disposal'),        2, "0 - gif_disposal");
+    is($im[0]->tags(name => 'gif_trans_index'), undef, "0 - gif_trans_index");
+    is($im[0]->tags(name => 'gif_user_input'),      0, "0 - gif_user_input");
+    is($im[0]->tags(name => 'gif_loop'),            0, "0 - gif_loop");
+    is($im[1]->tags(name => 'gif_delay'),          50, "1 - gif_delay");
+    is($im[1]->tags(name => 'gif_disposal'),        2, "1 - gif_disposal");
+    is($im[1]->tags(name => 'gif_trans_index'),     7, "1 - gif_trans_index");
+    is($im[1]->tags(name => 'gif_trans_color'), 'color(255,255,255,0)',
+       "1 - gif_trans_index");
+    is($im[1]->tags(name => 'gif_user_input'),      0, "1 - gif_user_input");
+    is($im[1]->tags(name => 'gif_loop'),            0, "1 - gif_loop");
   }
 }
 

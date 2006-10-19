@@ -519,12 +519,12 @@ i_img **i_readgif_multi_low(GifFileType *GifFile, int *count, int page) {
   
   GifRowType GifRow;
   int got_gce = 0;
-  int trans_index; /* transparent index if we see a GCE */
-  int gif_delay; /* delay from a GCE */
-  int user_input; /* user input flag from a GCE */
-  int disposal; /* disposal method from a GCE */
+  int trans_index = 0; /* transparent index if we see a GCE */
+  int gif_delay = 0; /* delay from a GCE */
+  int user_input = 0; /* user input flag from a GCE */
+  int disposal = 0; /* disposal method from a GCE */
   int got_ns_loop = 0;
-  int ns_loop;
+  int ns_loop = 0;
   char *comment = NULL; /* a comment */
   i_img **results = NULL;
   int result_alloc = 0;
@@ -748,8 +748,8 @@ i_img **i_readgif_multi_low(GifFileType *GifFile, int *count, int page) {
         else
           trans_index = -1;
         gif_delay = Extension[2] + 256 * Extension[3];
-        user_input = (Extension[0] & 2) != 0;
-        disposal = (Extension[0] >> 2) & 3;
+        user_input = (Extension[1] & 2) != 0;
+        disposal = (Extension[1] >> 2) & 7;
       }
       if (ExtCode == 0xFF && *Extension == 11) {
         if (memcmp(Extension+1, "NETSCAPE2.0", 11) == 0) {
@@ -1660,13 +1660,13 @@ Returns non-zero on success.
 
 static undef_int
 i_writegif_low(i_quantize *quant, GifFileType *gf, i_img **imgs, int count) {
-  unsigned char *result;
+  unsigned char *result = NULL;
   int color_bits;
   ColorMapObject *map;
   int scrw = 0, scrh = 0;
   int imgn, orig_count, orig_size;
   int posx, posy;
-  int trans_index;
+  int trans_index = -1;
   i_mempool mp;
   int *localmaps;
   int anylocal;
@@ -1674,11 +1674,11 @@ i_writegif_low(i_quantize *quant, GifFileType *gf, i_img **imgs, int count) {
   int glob_img_count;
   i_color *orig_colors = quant->mc_colors;
   i_color *glob_colors = NULL;
-  int glob_color_count;
+  int glob_color_count = 0;
   int glob_want_trans;
-  int glob_paletted; /* the global map was made from the image palettes */
-  int colors_paletted;
-  int want_trans;
+  int glob_paletted = 0; /* the global map was made from the image palettes */
+  int colors_paletted = 0;
+  int want_trans = 0;
   int interlace;
   int gif_background;
 
