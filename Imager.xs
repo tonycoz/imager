@@ -4192,51 +4192,77 @@ i_tags_count(im)
 #ifdef HAVE_WIN32
 
 void
-i_wf_bbox(face, size, text)
+i_wf_bbox(face, size, text_sv, utf8=0)
 	char *face
 	int size
-	char *text
+	SV *text_sv
+	int utf8
       PREINIT:
 	int cords[BOUNDING_BOX_COUNT];
         int rc, i;
+	char const *text;
+         STRLEN text_len;
       PPCODE:
-        if (rc = i_wf_bbox(face, size, text, strlen(text), cords)) {
+        text = SvPV(text_sv, text_len);
+#ifdef SvUTF8
+        if (SvUTF8(text_sv))
+          utf8 = 1;
+#endif
+        if (rc = i_wf_bbox(face, size, text, text_len, cords, utf8)) {
           EXTEND(SP, rc);  
           for (i = 0; i < rc; ++i) 
             PUSHs(sv_2mortal(newSViv(cords[i])));
         }
 
 undef_int
-i_wf_text(face, im, tx, ty, cl, size, text, align, aa)
+i_wf_text(face, im, tx, ty, cl, size, text_sv, align, aa, utf8 = 0)
 	char *face
 	Imager::ImgRaw im
 	int tx
 	int ty
 	Imager::Color cl
 	int size
-	char *text
+	SV *text_sv
 	int align
 	int aa
+ 	int utf8
+      PREINIT:
+	char const *text;
+	STRLEN text_len;
       CODE:
-	RETVAL = i_wf_text(face, im, tx, ty, cl, size, text, strlen(text), 
-	                   align, aa);
+        text = SvPV(text_sv, text_len);
+#ifdef SvUTF8
+        if (SvUTF8(text_sv))
+          utf8 = 1;
+#endif
+	RETVAL = i_wf_text(face, im, tx, ty, cl, size, text, text_len, 
+	                   align, aa, utf8);
       OUTPUT:
 	RETVAL
 
 undef_int
-i_wf_cp(face, im, tx, ty, channel, size, text, align, aa)
+i_wf_cp(face, im, tx, ty, channel, size, text_sv, align, aa, utf8 = 0)
 	char *face
 	Imager::ImgRaw im
 	int tx
 	int ty
 	int channel
 	int size
-	char *text
+	SV *text_sv
 	int align
 	int aa
+	int utf8
+      PREINIT:
+	char const *text;
+	STRLEN text_len;
       CODE:
+        text = SvPV(text_sv, text_len);
+#ifdef SvUTF8
+        if (SvUTF8(text_sv))
+          utf8 = 1;
+#endif
 	RETVAL = i_wf_cp(face, im, tx, ty, channel, size, text, strlen(text), 
-		         align, aa);
+		         align, aa, utf8);
       OUTPUT:
 	RETVAL
 

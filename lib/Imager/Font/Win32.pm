@@ -3,7 +3,7 @@ use strict;
 use vars qw(@ISA $VERSION);
 @ISA = qw(Imager::Font);
 
-$VERSION = "1.004";
+$VERSION = "1.005";
 
 # called by Imager::Font::new()
 # since Win32's HFONTs include the size information this
@@ -17,7 +17,7 @@ sub new {
 sub _bounding_box {
   my ($self, %opts) = @_;
   
-  my @bbox = Imager::i_wf_bbox($self->{face}, $opts{size}, $opts{string});
+  my @bbox = Imager::i_wf_bbox($self->{face}, $opts{size}, $opts{string}, $opts{utf8});
 }
 
 sub _draw {
@@ -27,15 +27,19 @@ sub _draw {
   if (exists $input{channel}) {
     Imager::i_wf_cp($self->{face}, $input{image}{IMG}, $input{x}, $input{'y'},
 		    $input{channel}, $input{size},
-		    $input{string}, $input{align}, $input{aa});
+		    $input{string}, $input{align}, $input{aa}, $input{utf8});
   }
   else {
     Imager::i_wf_text($self->{face}, $input{image}{IMG}, $input{x}, 
 		      $input{'y'}, $input{color}, $input{size}, 
-		      $input{string}, $input{align}, $input{aa});
+		      $input{string}, $input{align}, $input{aa}, $input{utf8});
   }
 }
 
+
+sub utf8 {
+  return 1;
+}
 
 1;
 

@@ -14,8 +14,8 @@ win32.c - implements some win32 specific code, specifically Win32 font support.
    if (i_wf_bbox(facename, size, text, text_len, bbox)) {
      // we have the bbox
    }
-   i_wf_text(face, im, tx, ty, cl, size, text, len, align, aa);
-   i_wf_cp(face, im, tx, ty, channel, size, text, len, align, aa)
+   i_wf_text(face, im, tx, ty, cl, size, text, len, align, aa, utf8);
+   i_wf_cp(face, im, tx, ty, channel, size, text, len, align, aa, utf8)
 
 =head1 DESCRIPTION
 
@@ -31,17 +31,19 @@ An Imager interface to font output using the Win32 GDI.
 static void set_logfont(const char *face, int size, LOGFONT *lf);
 
 static LPVOID render_text(const char *face, int size, const char *text, int length, int aa,
-                          HBITMAP *pbm, SIZE *psz, TEXTMETRIC *tm);
+                          HBITMAP *pbm, SIZE *psz, TEXTMETRIC *tm, int utf8);
+static LPWSTR utf8_to_wide_string(char const *text, int text_len, int *wide_chars);
 
 /*
-=item i_wf_bbox(face, size, text, length, bbox)
+=item i_wf_bbox(face, size, text, length, bbox, utf8)
 
 Calculate a bounding box for the text.
 
 =cut
 */
 
-int i_wf_bbox(const char *face, int size, const char *text, int length, int *bbox) {
+int i_wf_bbox(const char *face, int size, const char *text, int length, int *bbox,
+	      int utf8) {
   LOGFONT lf;
   HFONT font, oldFont;
   HDC dc;
@@ -49,11 +51,12 @@ int i_wf_bbox(const char *face, int size, const char *text, int length, int *bbo
   TEXTMETRIC tm;
   ABC first, last;
   GLYPHMETRICS gm;
-  int i;
   MAT2 mat;
   int ascent, descent, max_ascent = -size, min_descent = size;
+  const char *workp;
+  int work_len;
 
-  mm_log((1, "i_wf_bbox(face %s, size %d, text %p, length %d, bbox %p)\n", face, size, text, length, bbox));
+  mm_log((1, "i_wf_bbox(face %s, size %d, text %p, length %d, bbox %p, utf8 %d)\n", face, size, text, length, bbox, utf8));
 
   set_logfont(face, size, &lf);
   font = CreateFontIndirect(&lf);
@@ -69,14 +72,30 @@ int i_wf_bbox(const char *face, int size, const char *text, int length, int *bbo
     }
   }
 
-  for (i = 0; i < length; ++i) {
-    unsigned char c = text[i];
-    unsigned char cp = c > '~' ? '.' : c < ' ' ? '.' : c;
+  workp = text;
+  work_len = 0;
+  while (work_len > 0) {
+    unsigned long c;
+    unsigned char cp;
+
+    if (utf8) {
+      c = i_utf8_advance(&workp, &work_len);
+      if (c == ~0UL) {
+        i_push_error(0, "invalid UTF8 character");
+        return 0;
+      }
+    }
+    else {
+      c = (unsigned char)*text++;
+      --work_len;
+    }
+
+    cp = c > '~' ? '.' : c < ' ' ? '.' : c;
     
     memset(&mat, 0, sizeof(mat));
     mat.eM11.value = 1;
     mat.eM22.value = 1;
-    if (GetGlyphOutline(dc, c, GGO_METRICS, &gm, 0, NULL, &mat) != GDI_ERROR) {
+    if (GetGlyphOutline(dc, (UINT)c, GGO_METRICS, &gm, 0, NULL, &mat) != GDI_ERROR) {
       mm_log((2, "  glyph '%c' (%02x): bbx (%u,%u) org (%d,%d) inc(%d,%d)\n",
 	      cp, c, gm.gmBlackBoxX, gm.gmBlackBoxY, gm.gmptGlyphOrigin.x,
 		gm.gmptGlyphOrigin.y, gm.gmCellIncX, gm.gmCellIncY));
@@ -91,12 +110,31 @@ int i_wf_bbox(const char *face, int size, const char *text, int length, int *bbo
     }
   }
 
-  if (!GetTextExtentPoint32(dc, text, length, &sz)
-      || !GetTextMetrics(dc, &tm)) {
-    SelectObject(dc, oldFont);
-    ReleaseDC(NULL, dc);
-    DeleteObject(font);
-    return 0;
+  if (utf8) {
+    int wide_chars;
+    LPWSTR wide_text = utf8_to_wide_string(text, length, &wide_chars);
+
+    if (!wide_text)
+      return 0;
+
+    if (!GetTextExtentPoint32W(dc, wide_text, wide_chars, &sz)
+	|| !GetTextMetrics(dc, &tm)) {
+      SelectObject(dc, oldFont);
+      ReleaseDC(NULL, dc);
+      DeleteObject(font);
+      return 0;
+    }
+
+    myfree(wide_text);
+  }
+  else {
+    if (!GetTextExtentPoint32(dc, text, length, &sz)
+	|| !GetTextMetrics(dc, &tm)) {
+      SelectObject(dc, oldFont);
+      ReleaseDC(NULL, dc);
+      DeleteObject(font);
+      return 0;
+    }
   }
   bbox[BBOX_GLOBAL_DESCENT] = tm.tmDescent;
   bbox[BBOX_DESCENT] = min_descent == size ? tm.tmDescent : min_descent;
@@ -141,7 +179,7 @@ Draws the text in the given color.
 
 int
 i_wf_text(const char *face, i_img *im, int tx, int ty, const i_color *cl, int size, 
-	  const char *text, int len, int align, int aa) {
+	  const char *text, int len, int align, int aa, int utf8) {
   unsigned char *bits;
   HBITMAP bm;
   SIZE sz;
@@ -151,7 +189,7 @@ i_wf_text(const char *face, i_img *im, int tx, int ty, const i_color *cl, int si
   TEXTMETRIC tm;
   int top;
 
-  bits = render_text(face, size, text, len, aa, &bm, &sz, &tm);
+  bits = render_text(face, size, text, len, aa, &bm, &sz, &tm, utf8);
   if (!bits)
     return 0;
   
@@ -164,7 +202,7 @@ i_wf_text(const char *face, i_img *im, int tx, int ty, const i_color *cl, int si
   else {
     int bbox[BOUNDING_BOX_COUNT];
 
-    i_wf_bbox(face, size, text, len, bbox);
+    i_wf_bbox(face, size, text, len, bbox, utf8);
     top -= tm.tmAscent - bbox[BBOX_ASCENT];
   }
 
@@ -196,7 +234,7 @@ Draws the text in the given channel.
 
 int
 i_wf_cp(const char *face, i_img *im, int tx, int ty, int channel, int size, 
-	  const char *text, int len, int align, int aa) {
+	  const char *text, int len, int align, int aa, int utf8) {
   unsigned char *bits;
   HBITMAP bm;
   SIZE sz;
@@ -205,7 +243,7 @@ i_wf_cp(const char *face, i_img *im, int tx, int ty, int channel, int size,
   TEXTMETRIC tm;
   int top;
 
-  bits = render_text(face, size, text, len, aa, &bm, &sz, &tm);
+  bits = render_text(face, size, text, len, aa, &bm, &sz, &tm, utf8);
   if (!bits)
     return 0;
   
@@ -218,7 +256,7 @@ i_wf_cp(const char *face, i_img *im, int tx, int ty, int channel, int size,
   else {
     int bbox[BOUNDING_BOX_COUNT];
 
-    i_wf_bbox(face, size, text, len, bbox);
+    i_wf_bbox(face, size, text, len, bbox, utf8);
     top -= tm.tmAscent - bbox[BBOX_ASCENT];
   }
 
@@ -296,7 +334,7 @@ native greyscale bitmaps.
 =cut
 */
 static LPVOID render_text(const char *face, int size, const char *text, int length, int aa,
-		   HBITMAP *pbm, SIZE *psz, TEXTMETRIC *tm) {
+		   HBITMAP *pbm, SIZE *psz, TEXTMETRIC *tm, int utf8) {
   BITMAPINFO bmi;
   BITMAPINFOHEADER *bmih = &bmi.bmiHeader;
   HDC dc, bmpDc;
@@ -305,7 +343,9 @@ static LPVOID render_text(const char *face, int size, const char *text, int leng
   SIZE sz;
   HBITMAP bm, oldBm;
   LPVOID bits;
-  
+  int wide_count;
+  LPWSTR wide_text;
+
   dc = GetDC(NULL);
   set_logfont(face, size, &lf);
 
@@ -316,12 +356,22 @@ static LPVOID render_text(const char *face, int size, const char *text, int leng
   lf.lfQuality = aa ? ANTIALIASED_QUALITY : NONANTIALIASED_QUALITY;
 #endif
 
+  if (utf8) {
+    wide_text = utf8_to_wide_string(text, length, &wide_count);
+  }
+  else {
+    wide_text = NULL;
+  }
+
   bmpDc = CreateCompatibleDC(dc);
   if (bmpDc) {
     font = CreateFontIndirect(&lf);
     if (font) {
       oldFont = SelectObject(bmpDc, font);
-      GetTextExtentPoint32(bmpDc, text, length, &sz);
+      if (utf8)
+	GetTextExtentPoint32W(bmpDc, wide_text, wide_count, &sz);
+      else
+	GetTextExtentPoint32(bmpDc, text, length, &sz);
       GetTextMetrics(bmpDc, tm);
       
       memset(&bmi, 0, sizeof(bmi));
@@ -343,7 +393,12 @@ static LPVOID render_text(const char *face, int size, const char *text, int leng
 	oldBm = SelectObject(bmpDc, bm);
 	SetTextColor(bmpDc, RGB(255, 255, 255));
 	SetBkColor(bmpDc, RGB(0, 0, 0));
-	TextOut(bmpDc, 0, 0, text, length);
+	if (utf8) {
+	  TextOutW(bmpDc, 0, 0, wide_text, wide_count);
+	}
+	else {
+	  TextOut(bmpDc, 0, 0, text, length);
+	}
 	SelectObject(bmpDc, oldBm);
       }
       else {
@@ -353,12 +408,16 @@ static LPVOID render_text(const char *face, int size, const char *text, int leng
 	DeleteObject(font);
 	DeleteDC(bmpDc);
 	ReleaseDC(NULL, dc);
+	if (wide_text)
+	  myfree(wide_text);
 	return NULL;
       }
       SelectObject(bmpDc, oldFont);
       DeleteObject(font);
     }
     else {
+      if (wide_text)
+	myfree(wide_text);
       i_push_errorf(0, "Could not create logical font: %ld",
 		    GetLastError());
       DeleteDC(bmpDc);
@@ -368,10 +427,15 @@ static LPVOID render_text(const char *face, int size, const char *text, int leng
     DeleteDC(bmpDc);
   }
   else {
+    if (wide_text)
+      myfree(wide_text);
     i_push_errorf(0, "Could not create rendering DC: %ld", GetLastError());
     ReleaseDC(NULL, dc);
     return NULL;
   }
+
+  if (wide_text)
+    myfree(wide_text);
 
   ReleaseDC(NULL, dc);
 
@@ -382,6 +446,38 @@ static LPVOID render_text(const char *face, int size, const char *text, int leng
 }
 
 /*
+=item utf8_to_wide_string(text, text_len, wide_chars)
+
+=cut
+*/
+
+static
+LPWSTR
+utf8_to_wide_string(char const *text, int text_len, int *wide_chars) {
+  int wide_count = MultiByteToWideChar(CP_UTF8, 0, text, text_len, NULL, 0);
+  LPWSTR result;
+
+  if (wide_count < 0) {
+    i_push_errorf(0, "Could not convert utf8: %ld", GetLastError());
+    return NULL;
+  }
+  ++wide_count;
+  result = mymalloc(sizeof(WCHAR) * wide_count);
+  if (MultiByteToWideChar(CP_UTF8, 0, text, text_len, result, wide_count) < 0) {
+    i_push_errorf(0, "Could not convert utf8: %ld", GetLastError());
+    return NULL;
+  }
+
+  result[wide_count-1] = (WCHAR)'\0';
+  *wide_chars = wide_count - 1;
+
+  return result;
+}
+
+
+/*
+=back
+
 =head1 BUGS
 
 Should really use a structure so we can set more attributes.

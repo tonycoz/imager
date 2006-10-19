@@ -1,7 +1,7 @@
 #!perl -w
 use strict;
 use lib 't';
-use Test::More tests => 32;
+use Test::More tests => 38;
 BEGIN { use_ok(Imager => ':all') }
 ++$|;
 
@@ -9,7 +9,7 @@ init_log("testout/t37w32font.log",1);
 
 SKIP:
 {
-  i_has_format('w32') or skip("no MS Windows", 31);
+  i_has_format('w32') or skip("no MS Windows", 37);
   print "# has w32\n";
 
   my $fontname=$ENV{'TTFONTTEST'} || 'Times New Roman Bold';
@@ -130,5 +130,33 @@ SKIP:
     }
     ok($im->write(file=>'testout/t37align.ppm'), "save align image");
   }
+  { print "# utf 8 support\n";
+    my $font = Imager::Font->new(face => "Arial");
+    ok($font, "created font");
+    my $im = Imager->new(xsize => 100, ysize => 100);
+    ok($im->string(string => "\xE2\x98\xBA", size => 80, aa => 1, utf8 => 1, 
+		   color => "white", font => $font, x => 5, y => 80),
+       "draw in utf8 (hand encoded)")
+	or print "# ", $im->errstr, "\n";
+    ok($im->write(file=>'testout/t37utf8.ppm'), "save utf8 image");
 
+    # native perl utf8
+    # Win32 only supported on 5.6+
+    # since this gets compiled even on older perls we need to be careful 
+    # creating the string
+    my $text;
+    eval q{$text = "\x{263A}"}; # A, HYPHEN, A in our test font
+    my $im2 = Imager->new(xsize => 100, ysize => 100);
+    ok($im2->string(string => $text, size => 80, aa => 1,
+		    color => 'white', font => $font, x => 5, y => 80),
+       "draw in utf8 (perl utf8)")
+	or print "# ", $im->errstr, "\n";
+    ok($im2->write(file=>'testout/t37utf8b.ppm'), "save utf8 image");
+    is(Imager::i_img_diff($im->{IMG}, $im2->{IMG}), 0,
+       "check result is the same");
+
+    # bounding box
+    cmp_ok($font->bounding_box(string=>$text, size => 80)->advance_width, '<', 100,
+	   "check we only get width of single char rather than 3");
+  }
 }
