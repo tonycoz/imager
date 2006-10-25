@@ -1,7 +1,7 @@
 #!perl -w
 use strict;
 use lib 't';
-use Test::More tests => 38;
+use Test::More tests => 39;
 BEGIN { use_ok(Imager => ':all') }
 ++$|;
 
@@ -9,7 +9,7 @@ init_log("testout/t37w32font.log",1);
 
 SKIP:
 {
-  i_has_format('w32') or skip("no MS Windows", 37);
+  i_has_format('w32') or skip("no MS Windows", 38);
   print "# has w32\n";
 
   my $fontname=$ENV{'TTFONTTEST'} || 'Times New Roman Bold';

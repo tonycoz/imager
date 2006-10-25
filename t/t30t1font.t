@@ -24,7 +24,7 @@ my $fontname_afm=$ENV{'T1FONTTESTAFM'}||'./fontfiles/dcr10.afm';
 SKIP:
 {
   if (!(i_has_format("t1")) ) {
-    skip("t1lib unavailable or disabled", 88);
+    skip("t1lib unavailable or disabled", 89);
   }
   elsif (! -f $fontname_pfb) {
     skip("cannot find fontfile for type 1 test $fontname_pfb", 89);
