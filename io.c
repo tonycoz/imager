@@ -351,10 +351,14 @@ Modifies *p and *len to indicate the consumed characters.
 This doesn't support the extended UTF8 encoding used by later versions
 of Perl.
 
+This doesn't check that the UTF8 charecter is using the shortest
+possible representation.
+
 =cut
 */
 
-unsigned long i_utf8_advance(char const **p, int *len) {
+unsigned long 
+i_utf8_advance(char const **p, int *len) {
   unsigned char c;
   int i, ci, clen = 0;
   unsigned char codes[3];
@@ -365,6 +369,7 @@ unsigned long i_utf8_advance(char const **p, int *len) {
   for (i = 0; i < sizeof(utf8_sizes)/sizeof(*utf8_sizes); ++i) {
     if ((c & utf8_sizes[i].mask) == utf8_sizes[i].expect) {
       clen = utf8_sizes[i].size;
+      break;
     }
   }
   if (clen == 0 || *len < clen-1) {
