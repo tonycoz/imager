@@ -4416,7 +4416,7 @@ i_ft2_text(font, im, tx, ty, cl, cheight, cwidth, text, align, aa, vlayout, utf8
         RETVAL
 
 undef_int
-i_ft2_cp(font, im, tx, ty, channel, cheight, cwidth, text, align, aa, vlayout, utf8)
+i_ft2_cp(font, im, tx, ty, channel, cheight, cwidth, text_sv, align, aa, vlayout, utf8)
         Imager::Font::FT2 font
         Imager::ImgRaw im
         int tx
@@ -4424,18 +4424,22 @@ i_ft2_cp(font, im, tx, ty, channel, cheight, cwidth, text, align, aa, vlayout, u
         int channel
         double cheight
         double cwidth
-        char *text
+        SV *text_sv
         int align
         int aa
         int vlayout
         int utf8
+      PREINIT:
+	char const *text;
+	STRLEN len;
       CODE:
 #ifdef SvUTF8
         if (SvUTF8(ST(7)))
           utf8 = 1;
 #endif
+	text = SvPV(text_sv, len);
         RETVAL = i_ft2_cp(font, im, tx, ty, channel, cheight, cwidth, text,
-                          strlen(text), align, aa, vlayout, 1);
+                          len, align, aa, vlayout, 1);
       OUTPUT:
         RETVAL
 

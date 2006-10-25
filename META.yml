@@ -7,6 +7,8 @@ abstract: Perl extension for Generating 24 bit Images
 installdirs: site
 recommends:
   Parse::RecDescent: 0
+build_requires:
+  Test::More: 0.47
 license: perl
 dynamic_config: 1
 distribution_type: module

@@ -1,16 +1,17 @@
 #!perl -w
 use strict;
 use lib 't';
-use Test::More tests => 72;
+use Test::More tests => 85;
 
 BEGIN { use_ok(Imager => ':all') }
 require "t/testtools.pl";
+use Imager::Test qw(diff_text_with_nul);
 
 init_log("testout/t35ttfont.log",2);
 
 SKIP:
 {
-  skip("freetype 1.x unavailable or disabled", 71) 
+  skip("freetype 1.x unavailable or disabled", 84) 
     unless i_has_format("tt");
   print "# has tt\n";
   
@@ -19,7 +20,7 @@ SKIP:
 
   if (!ok(-f $fontname, "check test font file exists")) {
     print "# cannot find fontfile for truetype test $fontname\n";
-    skip('Cannot load test font', 70);
+    skip('Cannot load test font', 83);
   }
 
   i_init_fonts();
@@ -256,6 +257,24 @@ SKIP:
     my $font = Imager::Font->new(file=>'fontfiles/ImUgly.ttf', size=>14);
     ok($im->string(font=>$font, x=> 5, y => 50, string=>' '),
       "outputting just a space was crashing");
+  }
+
+  { # string output cut off at NUL ('\0')
+    # https://rt.cpan.org/Ticket/Display.html?id=21770 cont'd
+    my $font = Imager::Font->new(file=>'fontfiles/ImUgly.ttf', type=>'tt');
+    ok($font, "loaded imugly");
+
+    diff_text_with_nul("a\\0b vs a", "a\0b", "a", 
+		       font => $font, color => '#FFFFFF');
+    diff_text_with_nul("a\\0b vs a", "a\0b", "a", 
+		       font => $font, channel => 1);
+
+    # UTF8 encoded \x{2010}
+    my $dash = pack("C*", 0xE2, 0x80, 0x90);
+    diff_text_with_nul("utf8 dash\0dash vs dash", "$dash\0$dash", $dash,
+		       font => $font, color => '#FFFFFF', utf8 => 1);
+    diff_text_with_nul("utf8 dash\0dash vs dash", "$dash\0$dash", $dash,
+		       font => $font, channel => 1, utf8 => 1);
   }
 
   ok(1, "end of code");

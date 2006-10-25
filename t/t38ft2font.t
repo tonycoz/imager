@@ -1,7 +1,7 @@
 #!perl -w
 use strict;
 use lib 't';
-use Test::More tests => 165;
+use Test::More tests => 178;
 ++$|;
 # Before `make install' is performed this script should be runnable with
 # `make test'. After `make install' it should work as `perl test.pl'
@@ -13,19 +13,21 @@ use Test::More tests => 165;
 
 BEGIN { use_ok(Imager => ':all') }
 
+use Imager::Test qw(diff_text_with_nul);
+
 init_log("testout/t38ft2font.log",2);
 
 my @base_color = (64, 255, 64);
 
 SKIP:
 {
-  i_has_format("ft2") or skip("no freetype2 library found", 164);
+  i_has_format("ft2") or skip("no freetype2 library found", 177);
 
   print "# has ft2\n";
   
   my $fontname=$ENV{'TTFONTTEST'}||'./fontfiles/dodge.ttf';
 
-  -f $fontname or skip("cannot find fontfile $fontname", 164);
+  -f $fontname or skip("cannot find fontfile $fontname", 177);
 
 
   my $bgcolor=i_color_new(255,0,0,0);
@@ -414,6 +416,7 @@ SKIP:
   }
 
   { # cannot output "0"
+    # https://rt.cpan.org/Ticket/Display.html?id=21770
     my $font = Imager::Font->new(file=>'fontfiles/ImUgly.ttf', type=>'ft2');
     ok($font, "loaded imugly");
     my $imbase = Imager->new(xsize => 100, ysize => 100);
@@ -429,6 +432,23 @@ SKIP:
        "draw 0.0");
     ok(Imager::i_img_diff($im->{IMG}, $imbase->{IMG}),
        "make sure we actually drew it");
+  }
+  { # string output cut off at NUL ('\0')
+    # https://rt.cpan.org/Ticket/Display.html?id=21770 cont'd
+    my $font = Imager::Font->new(file=>'fontfiles/ImUgly.ttf', type=>'ft2');
+    ok($font, "loaded imugly");
+
+    diff_text_with_nul("a\\0b vs a", "a\0b", "a", 
+		       font => $font, color => '#FFFFFF');
+    diff_text_with_nul("a\\0b vs a", "a\0b", "a", 
+		       font => $font, channel => 1);
+
+    # UTF8 encoded \x{2010}
+    my $dash = pack("C*", 0xE2, 0x80, 0x90);
+    diff_text_with_nul("utf8 dash\0dash vs dash", "$dash\0$dash", $dash,
+		       font => $font, color => '#FFFFFF', utf8 => 1);
+    diff_text_with_nul("utf8 dash\0dash vs dash", "$dash\0$dash", $dash,
+		       font => $font, channel => 1, utf8 => 1);
   }
 }
 

@@ -151,6 +151,7 @@ lib/Imager/ImageTypes.pod
 lib/Imager/Inline.pod           Using Imager with Inline::C
 lib/Imager/Matrix2d.pm
 lib/Imager/Regops.pm
+lib/Imager/Test.pm
 lib/Imager/Transform.pm
 lib/Imager/Transformations.pod
 lib/Imager/Tutorial.pod

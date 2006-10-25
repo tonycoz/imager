@@ -8,8 +8,9 @@
 # (It may become useful if the test is moved to ./t subdirectory.)
 use strict;
 use lib 't';
-use Test::More tests => 77;
+use Test::More tests => 90;
 BEGIN { use_ok(Imager => ':all') }
+use Imager::Test qw(diff_text_with_nul);
 
 #$Imager::DEBUG=1;
 
@@ -23,13 +24,13 @@ my $fontname_afm=$ENV{'T1FONTTESTAFM'}||'./fontfiles/dcr10.afm';
 SKIP:
 {
   if (!(i_has_format("t1")) ) {
-    skip("t1lib unavailable or disabled", 76);
+    skip("t1lib unavailable or disabled", 88);
   }
   elsif (! -f $fontname_pfb) {
-    skip("cannot find fontfile for type 1 test $fontname_pfb", 76);
+    skip("cannot find fontfile for type 1 test $fontname_pfb", 89);
   }
   elsif (! -f $fontname_afm) {
-    skip("cannot find fontfile for type 1 test $fontname_afm", 76);
+    skip("cannot find fontfile for type 1 test $fontname_afm", 89);
   }
 
   print "# has t1\n";
@@ -307,6 +308,24 @@ SKIP:
     my $bbox_tran = $font->bounding_box(string => $tran_text, size => 36);
     is($bbox_utf8->advance_width, $bbox_tran->advance_width,
        "advance widths should match");
+  }
+  { # string output cut off at NUL ('\0')
+    # https://rt.cpan.org/Ticket/Display.html?id=21770 cont'd
+    my $font = Imager::Font->new(file => 'fontfiles/dcr10.pfb', type => 't1');
+    ok($font, "loaded dcr10.pfb");
+
+    diff_text_with_nul("a\\0b vs a", "a\0b", "a", 
+		       font => $font, color => '#FFFFFF');
+    diff_text_with_nul("a\\0b vs a", "a\0b", "a", 
+		       font => $font, channel => 1);
+
+    # UTF8 encoded \xBF
+    my $pound = pack("C*", 0xC2, 0xBF);
+    diff_text_with_nul("utf8 pound\0pound vs pound", "$pound\0$pound", $pound,
+		       font => $font, color => '#FFFFFF', utf8 => 1);
+    diff_text_with_nul("utf8 dash\0dash vs dash", "$pound\0$pound", $pound,
+		       font => $font, channel => 1, utf8 => 1);
+
   }
 }
 

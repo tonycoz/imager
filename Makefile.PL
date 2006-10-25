@@ -5,7 +5,7 @@ use Cwd;
 use Config;
 use File::Spec;
 use Getopt::Long;
-use vars qw(%Recommends);
+use vars qw(%Recommends %BuildRequires);
 use ExtUtils::Manifest qw(maniread);
 use vars qw(%formats $VERBOSE $INCPATH $LIBPATH $NOLOG $DEBUG_MALLOC $MANUAL $CFLAGS $LFLAGS $DFLAGS);
 
@@ -161,6 +161,8 @@ my @objs = qw(Imager.o draw.o polygon.o image.o io.o iolayer.o
 
 $Recommends{Imager} =
   { 'Parse::RecDescent' => 0 };
+$BuildRequires{Imager} =
+  { 'Test::More' => 0.47 };
 
 my %opts=(
           'NAME'         => 'Imager',
@@ -171,6 +173,7 @@ my %opts=(
           'OBJECT'       => join(' ', @objs, $F_OBJECT),
           clean          => { FILES=>'testout meta.tmp rubthru.c scale.c' },
           PM             => gen_PM(),
+	  PREREQ_PM      => $BuildRequires{Imager},
          );
 
 # eval to prevent warnings about versions with _ in them
@@ -849,6 +852,12 @@ YAML
   if (keys %{$Recommends{$opts->{NAME}}}) {
     $meta .= "recommends:\n";
     while (my ($module, $version) = each %{$Recommends{$opts->{NAME}}}) {
+      $meta .= "  $module: $version\n";
+    }
+  }
+  if (keys %{$BuildRequires{$opts->{NAME}}}) {
+    $meta .= "build_requires:\n";
+    while (my ($module, $version) = each %{$BuildRequires{$opts->{NAME}}}) {
       $meta .= "  $module: $version\n";
     }
   }
