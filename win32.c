@@ -31,7 +31,7 @@ An Imager interface to font output using the Win32 GDI.
 static void set_logfont(const char *face, int size, LOGFONT *lf);
 
 static LPVOID render_text(const char *face, int size, const char *text, int length, int aa,
-                          HBITMAP *pbm, SIZE *psz, TEXTMETRIC *tm, int utf8);
+                          HBITMAP *pbm, SIZE *psz, TEXTMETRIC *tm, int *bbox, int utf8);
 static LPWSTR utf8_to_wide_string(char const *text, int text_len, int *wide_chars);
 
 /*
@@ -55,6 +55,8 @@ int i_wf_bbox(const char *face, int size, const char *text, int length, int *bbo
   int ascent, descent, max_ascent = -size, min_descent = size;
   const char *workp;
   int work_len;
+  int got_first_ch = 0;
+  unsigned long first_ch, last_ch;
 
   mm_log((1, "i_wf_bbox(face %s, size %d, text %p, length %d, bbox %p, utf8 %d)\n", face, size, text, length, bbox, utf8));
 
@@ -73,7 +75,7 @@ int i_wf_bbox(const char *face, int size, const char *text, int length, int *bbo
   }
 
   workp = text;
-  work_len = 0;
+  work_len = length;
   while (work_len > 0) {
     unsigned long c;
     unsigned char cp;
@@ -86,9 +88,14 @@ int i_wf_bbox(const char *face, int size, const char *text, int length, int *bbo
       }
     }
     else {
-      c = (unsigned char)*text++;
+      c = (unsigned char)*workp++;
       --work_len;
     }
+    if (!got_first_ch) {
+      first_ch = c;
+      ++got_first_ch;
+    }
+    last_ch = c;
 
     cp = c > '~' ? '.' : c < ' ' ? '.' : c;
     
@@ -136,19 +143,19 @@ int i_wf_bbox(const char *face, int size, const char *text, int length, int *bbo
       return 0;
     }
   }
-  bbox[BBOX_GLOBAL_DESCENT] = tm.tmDescent;
-  bbox[BBOX_DESCENT] = min_descent == size ? tm.tmDescent : min_descent;
+  bbox[BBOX_GLOBAL_DESCENT] = -tm.tmDescent;
+  bbox[BBOX_DESCENT] = min_descent == size ? -tm.tmDescent : min_descent;
   bbox[BBOX_POS_WIDTH] = sz.cx;
   bbox[BBOX_ADVANCE_WIDTH] = sz.cx;
   bbox[BBOX_GLOBAL_ASCENT] = tm.tmAscent;
   bbox[BBOX_ASCENT] = max_ascent == -size ? tm.tmAscent : max_ascent;
   
   if (length
-      && GetCharABCWidths(dc, text[0], text[0], &first)
-      && GetCharABCWidths(dc, text[length-1], text[length-1], &last)) {
-    mm_log((1, "first: %d A: %d  B: %d  C: %d\n", text[0],
+      && GetCharABCWidths(dc, first_ch, first_ch, &first)
+      && GetCharABCWidths(dc, last_ch, last_ch, &last)) {
+    mm_log((1, "first: %d A: %d  B: %d  C: %d\n", first_ch,
 	    first.abcA, first.abcB, first.abcC));
-    mm_log((1, "last: %d A: %d  B: %d  C: %d\n", text[length-1],
+    mm_log((1, "last: %d A: %d  B: %d  C: %d\n", last_ch,
 	    last.abcA, last.abcB, last.abcC));
     bbox[BBOX_NEG_WIDTH] = first.abcA;
     bbox[BBOX_RIGHT_BEARING] = last.abcC;
@@ -188,11 +195,18 @@ i_wf_text(const char *face, i_img *im, int tx, int ty, const i_color *cl, int si
   int ch;
   TEXTMETRIC tm;
   int top;
+  int bbox[BOUNDING_BOX_COUNT];
 
-  bits = render_text(face, size, text, len, aa, &bm, &sz, &tm, utf8);
+  mm_log((1, "i_wf_text(face %s, im %p, tx %d, ty %d, cl %p, size %d, text %p, length %d, align %d, aa %d,  utf8 %d)\n", face, im, tx, ty, cl, size, text, len, align, aa, aa, utf8));
+
+  if (!i_wf_bbox(face, size, text, len, bbox, utf8))
+    return 0;
+
+  bits = render_text(face, size, text, len, aa, &bm, &sz, &tm, bbox, utf8);
   if (!bits)
     return 0;
   
+  tx += bbox[BBOX_NEG_WIDTH];
   line_width = sz.cx * 3;
   line_width = (line_width + 3) / 4 * 4;
   top = ty;
@@ -200,9 +214,6 @@ i_wf_text(const char *face, i_img *im, int tx, int ty, const i_color *cl, int si
     top -= tm.tmAscent;
   }
   else {
-    int bbox[BOUNDING_BOX_COUNT];
-
-    i_wf_bbox(face, size, text, len, bbox, utf8);
     top -= tm.tmAscent - bbox[BBOX_ASCENT];
   }
 
@@ -242,8 +253,14 @@ i_wf_cp(const char *face, i_img *im, int tx, int ty, int channel, int size,
   int x, y;
   TEXTMETRIC tm;
   int top;
+  int bbox[BOUNDING_BOX_COUNT];
 
-  bits = render_text(face, size, text, len, aa, &bm, &sz, &tm, utf8);
+  mm_log((1, "i_wf_cp(face %s, im %p, tx %d, ty %d, channel %d, size %d, text %p, length %d, align %d, aa %d,  utf8 %d)\n", face, im, tx, ty, channel, size, text, len, align, aa, aa, utf8));
+
+  if (!i_wf_bbox(face, size, text, len, bbox, utf8))
+    return 0;
+
+  bits = render_text(face, size, text, len, aa, &bm, &sz, &tm, bbox, utf8);
   if (!bits)
     return 0;
   
@@ -254,9 +271,6 @@ i_wf_cp(const char *face, i_img *im, int tx, int ty, int channel, int size,
     top -= tm.tmAscent;
   }
   else {
-    int bbox[BOUNDING_BOX_COUNT];
-
-    i_wf_bbox(face, size, text, len, bbox, utf8);
     top -= tm.tmAscent - bbox[BBOX_ASCENT];
   }
 
@@ -334,7 +348,7 @@ native greyscale bitmaps.
 =cut
 */
 static LPVOID render_text(const char *face, int size, const char *text, int length, int aa,
-		   HBITMAP *pbm, SIZE *psz, TEXTMETRIC *tm, int utf8) {
+		   HBITMAP *pbm, SIZE *psz, TEXTMETRIC *tm, int *bbox, int utf8) {
   BITMAPINFO bmi;
   BITMAPINFOHEADER *bmih = &bmi.bmiHeader;
   HDC dc, bmpDc;
@@ -368,11 +382,10 @@ static LPVOID render_text(const char *face, int size, const char *text, int leng
     font = CreateFontIndirect(&lf);
     if (font) {
       oldFont = SelectObject(bmpDc, font);
-      if (utf8)
-	GetTextExtentPoint32W(bmpDc, wide_text, wide_count, &sz);
-      else
-	GetTextExtentPoint32(bmpDc, text, length, &sz);
+
       GetTextMetrics(bmpDc, tm);
+      sz.cx = bbox[BBOX_ADVANCE_WIDTH] - bbox[BBOX_NEG_WIDTH] + bbox[BBOX_POS_WIDTH];
+      sz.cy = bbox[BBOX_GLOBAL_ASCENT] - bbox[BBOX_GLOBAL_DESCENT];
       
       memset(&bmi, 0, sizeof(bmi));
       bmih->biSize = sizeof(*bmih);
@@ -394,10 +407,10 @@ static LPVOID render_text(const char *face, int size, const char *text, int leng
 	SetTextColor(bmpDc, RGB(255, 255, 255));
 	SetBkColor(bmpDc, RGB(0, 0, 0));
 	if (utf8) {
-	  TextOutW(bmpDc, 0, 0, wide_text, wide_count);
+	  TextOutW(bmpDc, -bbox[BBOX_NEG_WIDTH], 0, wide_text, wide_count);
 	}
 	else {
-	  TextOut(bmpDc, 0, 0, text, length);
+	  TextOut(bmpDc, -bbox[BBOX_NEG_WIDTH], 0, text, length);
 	}
 	SelectObject(bmpDc, oldBm);
       }
