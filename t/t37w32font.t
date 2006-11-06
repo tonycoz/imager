@@ -1,15 +1,16 @@
 #!perl -w
 use strict;
 use lib 't';
-use Test::More tests => 39;
+use Test::More tests => 54;
 BEGIN { use_ok(Imager => ':all') }
+use Imager::Test qw(diff_text_with_nul);
 ++$|;
 
 init_log("testout/t37w32font.log",1);
 
 SKIP:
 {
-  i_has_format('w32') or skip("no MS Windows", 38);
+  i_has_format('w32') or skip("no MS Windows", 53);
   print "# has w32\n";
 
   my $fontname=$ENV{'TTFONTTEST'} || 'Times New Roman Bold';
@@ -66,7 +67,7 @@ SKIP:
 
  SKIP:
   {
-    $^O eq 'cygwin' and skip("Too hard to get correct directory for test font on cygwin", 11);
+    $^O eq 'cygwin' and skip("Too hard to get correct directory for test font on cygwin", 13);
     ok(Imager::i_wf_addfont("fontfiles/ExistenceTest.ttf"), "add test font")
       or print "# ",Imager::_error_as_msg(),"\n";
     
@@ -87,10 +88,19 @@ SKIP:
 	   "check display width (roughly)");
     
     my $im = Imager->new(xsize=>200, ysize=>200);
-    $im->string(font=>$namefont, text=>"/", x=>20, y=>100, color=>'white', size=>100);
+    $im->box(filled => 1, color => '#202020');
+    $im->box(box => [ 20 + $bbox->neg_width, 100-$bbox->ascent,
+		      20+$bbox->advance_width-$bbox->right_bearing, 100-$bbox->descent ],
+	     color => '#101010', filled => 1);
     $im->line(color=>'blue', x1=>20, y1=>0, x2=>20, y2=>199);
     my $right = 20 + $bbox->advance_width;
     $im->line(color=>'blue', x1=>$right, y1=>0, x2=>$right, y2=>199);
+    $im->line(color=>'blue', x1=>0, y1 => 100, x2=>199, y2 => 100);
+    ok($im->string(font=>$namefont, text=>"/", x=>20, y=>100, color=>'white', size=>100),
+       "draw / from ExistenceText")
+	or print "# ", $im->errstr, "\n";
+    $im->setpixel(x => 20+$bbox->neg_width, y => 100-$bbox->ascent, color => 'red');
+    $im->setpixel(x => 20+$bbox->advance_width - $bbox->right_bearing, y => 100-$bbox->descent, color => 'red');
     $im->write(file=>'testout/t37w32_slash.ppm');
     
     # check with a char that fits inside the box
@@ -103,6 +113,22 @@ SKIP:
     cmp_ok($bbox->right_bearing, '>', 0, "right bearing positive");
     cmp_ok($bbox->display_width, '<', $bbox->advance_width,
 	   "display smaller than advance");
+
+    $im = Imager->new(xsize=>200, ysize=>200);
+    $im->box(filled => 1, color => '#202020');
+    $im->box(box => [ 20 + $bbox->neg_width, 100-$bbox->ascent,
+		      20+$bbox->advance_width-$bbox->right_bearing, 100-$bbox->descent ],
+	     color => '#101010', filled => 1);
+    $im->line(color=>'blue', x1=>20, y1=>0, x2=>20, y2=>199);
+    $right = 20 + $bbox->advance_width;
+    $im->line(color=>'blue', x1=>$right, y1=>0, x2=>$right, y2=>199);
+    $im->line(color=>'blue', x1=>0, y1 => 100, x2=>199, y2 => 100);
+    ok($im->string(font=>$namefont, text=>"!", x=>20, y=>100, color=>'white', size=>100),
+       "draw / from ExistenceText")
+	or print "# ", $im->errstr, "\n";
+    $im->setpixel(x => 20+$bbox->neg_width, y => 100-$bbox->ascent, color => 'red');
+    $im->setpixel(x => 20+$bbox->advance_width - $bbox->right_bearing, y => 100-$bbox->descent, color => 'red');
+    $im->write(file=>'testout/t37w32_bang.ppm');
   }
 
  SKIP:
@@ -158,5 +184,23 @@ SKIP:
     # bounding box
     cmp_ok($font->bounding_box(string=>$text, size => 80)->advance_width, '<', 100,
 	   "check we only get width of single char rather than 3");
+  }
+
+  { # string output cut off at NUL ('\0')
+    # https://rt.cpan.org/Ticket/Display.html?id=21770 cont'd
+    my $font = Imager::Font->new(face=>'Arial', type=>'w32');
+    ok($font, "loaded Arial");
+
+    diff_text_with_nul("a\\0b vs a", "a\0b - color", "a", 
+		       font => $font, color => '#FFFFFF');
+    diff_text_with_nul("a\\0b vs a", "a\0b - channel", "a", 
+		       font => $font, channel => 1);
+
+    # UTF8 encoded \x{2010}
+    my $dash = pack("C*", 0xE2, 0x80, 0x90);
+    diff_text_with_nul("utf8 dash\0dash vs dash - color", "$dash\0$dash", $dash,
+		       font => $font, color => '#FFFFFF', utf8 => 1);
+    diff_text_with_nul("utf8 dash\0dash vs dash - channel", "$dash\0$dash", $dash,
+		       font => $font, channel => 1, utf8 => 1);
   }
 }

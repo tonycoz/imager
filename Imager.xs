@@ -4261,7 +4261,7 @@ i_wf_cp(face, im, tx, ty, channel, size, text_sv, align, aa, utf8 = 0)
         if (SvUTF8(text_sv))
           utf8 = 1;
 #endif
-	RETVAL = i_wf_cp(face, im, tx, ty, channel, size, text, strlen(text), 
+	RETVAL = i_wf_cp(face, im, tx, ty, channel, size, text, text_len, 
 		         align, aa, utf8);
       OUTPUT:
 	RETVAL
