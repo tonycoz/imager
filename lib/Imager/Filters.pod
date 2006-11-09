@@ -136,7 +136,7 @@ cover the whole possible range for the channel.  I<lsat> and I<usat>
 truncate the range by the specified fraction at the top and bottom of
 the range respectivly.
 
-  # increase contrast, losing little detail
+  # increase contrast per channel, losing little detail
   $img->filter(type=>"autolevels")
     or die $img->errstr;
 

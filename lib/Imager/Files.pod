@@ -46,6 +46,12 @@ method to read an image:
   $img->read(file=>$filename, type=>$type)
     or die "Cannot read $filename: ", $img->errstr;
 
+In most cases Imager can auto-detect the file type, so you can just
+supply the filename:
+
+  $img->read(file => $filename)
+    or die "Cannot read $filename: ", $img->errstr;
+
 =item write
 
 and the C<write()> method to write an image:
@@ -61,6 +67,9 @@ file, use the C<read_multi()> method:
   my @imgs = Imager->read_multi(file=>$filename, type=>$type)
     or die "Cannot read $filename: ", Imager->errstr;
 
+As with the read() method, Imager will normally detect the C<type>
+automatically.
+
 =item write_multi
 
 and if you want to write multiple images to a single file use the
@@ -71,10 +80,10 @@ C<write_multi()> method:
 
 =back
 
-If the I<filename> includes an extension that Imager recognizes, then
-you don't need the I<type>, but you may want to provide one anyway.
-See L</Guessing types> for information on controlling this
-recognition.
+When writing, if the I<filename> includes an extension that Imager
+recognizes, then you don't need the I<type>, but you may want to
+provide one anyway.  See L</Guessing types> for information on
+controlling this recognition.
 
 The C<type> parameter is a lowercase representation of the file type,
 and can be any of the following:
@@ -102,11 +111,11 @@ targets:
 
 =over
 
-=item file
+=item *
 
-The C<file> parameter is the name of the image file to be written to
-or read from.  If Imager recognizes the extension of the file you do
-not need to supply a C<type>.
+file - The C<file> parameter is the name of the image file to be
+written to or read from.  If Imager recognizes the extension of the
+file you do not need to supply a C<type>.
 
   # write in tiff format
   $image->write(file => "example.tif")
@@ -119,9 +128,9 @@ not need to supply a C<type>.
   $image->read(file => 'example.tif')
     or die $image->errstr;
 
-=item fh
+=item 
 
-C<fh> is a file handle, typically either returned from
+fh - C<fh> is a file handle, typically either returned from
 C<<IO::File->new()>>, or a glob from an C<open> call.  You should call
 C<binmode> on the handle before passing it to Imager.
 
@@ -136,9 +145,9 @@ fileno()) rather than writing at the perl level.
   $image->read(fd => $cgi->param('file')) 
     or die $image->errstr;
 
-=item fd
+=item 
 
-C<fd> is a file descriptor.  You can get this by calling the
+fd - C<fd> is a file descriptor.  You can get this by calling the
 C<fileno()> function on a file handle, or by using one of the standard
 file descriptor numbers.
 
@@ -149,12 +158,13 @@ the image.
   $image->write(fd => file(STDOUT), type => 'gif')
     or die $image->errstr;
 
-=item data
+=item 
 
-When reading data, C<data> is a scalar containing the image file data,
-when writing, C<data> is a reference to the scalar to save the image
-file data too.  For GIF images you will need giflib 4 or higher, and
-you may need to patch giflib to use this option for writing.
+data - When reading data, C<data> is a scalar containing the image
+file data, when writing, C<data> is a reference to the scalar to save
+the image file data too.  For GIF images you will need giflib 4 or
+higher, and you may need to patch giflib to use this option for
+writing.
 
   my $data;
   $image->write(data => \$data, type => 'tiff')
