@@ -1,16 +1,10 @@
+#!perl -w
 use strict;
-my $loaded;
-BEGIN { 
-  require "t/testtools.pl";
-  $| = 1; print "1..11\n"; 
-}
-END { okx(0, "loading") unless $loaded; }
-use Imager;
-$loaded = 1;
+use Test::More tests => 11;
 
-okx(1, "Loaded");
+BEGIN { use_ok('Imager') }
 
-requireokx("Imager/Font/Wrap.pm", "load basic wrapping");
+require_ok('Imager::Font::Wrap');
 
 my $img = Imager->new(xsize=>400, ysize=>400);
 
@@ -40,14 +34,16 @@ my $fontfile = $ENV{WRAPTESTFONT} || $ENV{TTFONTTEST} || "fontfiles/ImUgly.ttf";
 
 my $font = Imager::Font->new(file=>$fontfile);
 
-unless (Imager::i_has_format('tt') || Imager::i_has_format('ft2')) {
-  skipx(9, "Need Freetype 1.x or 2.x to test");
-  exit;
-}
+SKIP:
+{
+  Imager::i_has_format('tt') || Imager::i_has_format('ft2')
+      or skip("Need Freetype 1.x or 2.x to test", 9);
 
-if (okx($font, "loading font")) {
+  ok($font, "loading font")
+    or skip("Could not load test font", 8);
+
   Imager::Font->priorities(qw(t1 ft2 tt));
-  okx(scalar Imager::Font::Wrap->wrap_text(string => $text,
+  ok(scalar Imager::Font::Wrap->wrap_text(string => $text,
                                 font=>$font,
                                 image=>$img,
                                 size=>13,
@@ -56,8 +52,8 @@ if (okx($font, "loading font")) {
                                 justify=>'fill',
                                 color=>'FFFFFF'),
       "basic test");
-  okx($img->write(file=>'testout/t80wrapped.ppm'), "save to file");
-  okx(scalar Imager::Font::Wrap->wrap_text(string => $text,
+  ok($img->write(file=>'testout/t80wrapped.ppm'), "save to file");
+  ok(scalar Imager::Font::Wrap->wrap_text(string => $text,
                                 font=>$font,
                                 image=>undef,
                                 size=>13,
@@ -67,22 +63,19 @@ if (okx($font, "loading font")) {
                                 color=>'FFFFFF'),
       "no image test");
   my $bbox = $font->bounding_box(string=>"Xx", size=>13);
-  okx($bbox, "get height for check");
+  ok($bbox, "get height for check");
 
   my $used;
-  okx(scalar Imager::Font::Wrap->wrap_text
+  ok(scalar Imager::Font::Wrap->wrap_text
       (string=>$text, font=>$font, image=>undef, size=>13, width=>380,
        savepos=> \$used, height => $bbox->font_height), "savepos call");
-  okx($used > 20 && $used < length($text), "savepos value");
+  ok($used > 20 && $used < length($text), "savepos value");
   print "# $used\n";
   my @box = Imager::Font::Wrap->wrap_text
     (string=>substr($text, 0, $used), font=>$font, image=>undef, size=>13,
      width=>380);
 
-  okx(@box == 4, "bounds list count");
+  ok(@box == 4, "bounds list count");
   print "# @box\n";
-  okx($box[3] == $bbox->font_height, "check height");
-}
-else {
-  skipx(8, "Could not load test font");
+  ok($box[3] == $bbox->font_height, "check height");
 }

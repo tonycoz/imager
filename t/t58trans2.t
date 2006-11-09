@@ -1,16 +1,7 @@
 #!perl -w
-BEGIN { $| = 1; print "1..16\n"; }
-END {print "not ok 1\n" unless $loaded;}
-use Imager;
-
-sub ok($$);
-sub is($$$);
-my $num = 1;
-
-$loaded = 1;
-ok(1, "loaded");
-
-#$Imager::DEBUG=1;
+use strict;
+use Test::More tests => 16;
+BEGIN { use_ok('Imager'); }
 
 Imager::init('log'=>'testout/t58trans2.log');
 
@@ -104,32 +95,3 @@ my $im7 = Imager::transform2({rpnexpr=>'x y getp2', width=>100, height=>100});
 ok(!$im7, "expected failure on accessing invalid image");
 print "# ", Imager->errstr, "\n";
 ok(Imager->errstr =~ /not enough images/, "didn't get expected error");
-
-
-sub ok ($$) {
-  my ($test, $desc) = @_;
-
-  if ($test) {
-    print "ok $num # $desc\n";
-  }
-  else {
-    print "not ok $num # $desc\n";
-  }
-  ++$num;
-  $test;
-}
-
-sub is ($$$) {
-  my ($left, $right, $desc) = @_;
-
-  my $eq = $left == $right;
-  unless (ok($eq, $desc)) {
-    $left =~ s/\n/# \n/g;
-    $left =~ s/([^\n\x20-\x7E])/"\\x".sprintf("%02X", ord $1)/ge;
-    $right =~ s/\n/# \n/g;
-    $right =~ s/([^\n\x20-\x7E])/"\\x".sprintf("%02X", ord $1)/ge;
-    print "# not equal, left = '$left'\n";
-    print "# right = '$right'\n";
-  }
-  $eq;
-}
