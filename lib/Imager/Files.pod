@@ -174,10 +174,10 @@ writing.
   my @images = Imager->read_multi(data => $data)
     or die Imager->errstr;
 
-=item callback
+=item *
 
-Imager will make calls back to your supplied coderefs to read, write
-and seek from/to/through the image file.
+callback - Imager will make calls back to your supplied coderefs to
+read, write and seek from/to/through the image file.
 
 When reading from a file you can use either C<callback> or C<readcb>
 to supply the read callback, and when writing C<callback> or
