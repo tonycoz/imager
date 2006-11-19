@@ -339,6 +339,8 @@ pixel_coverage(p_line *line, pcord minx, pcord maxx, pcord  miny, pcord maxy) {
       (maxx-p_eval_aty(line, miny))*(p_eval_atx(line, maxx)-miny)/2.0;
     return r;
   }
+
+  return 0; /* silence compiler warning */
 }
 
 
@@ -532,8 +534,9 @@ static void
 i_poly_aa_low(i_img *im, int l, const double *x, const double *y, void const *ctx, scanline_flusher flusher) {
   int i ,k;			/* Index variables */
   int clc;			/* Lines inside current interval */
-  pcord tempy;
-  int cscl;			/* Current scanline */
+  /* initialize to avoid compiler warnings */
+  pcord tempy = 0;
+  int cscl = 0;			/* Current scanline */
 
   ss_scanline templine;		/* scanline accumulator */
   p_point *pset;		/* List of points in polygon */

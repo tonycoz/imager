@@ -215,6 +215,9 @@ i_img *i_matrix_transform_bg(i_img *src, int xsize, int ysize, const double *mat
             sx = (x * matrix[0] + y * matrix[1] + matrix[2]) / sz;
             sy = (x * matrix[3] + y * matrix[4] + matrix[5]) / sz;
           }
+	  else {
+	    sx = sy = 0;
+	  }
 
           /* anything outside these ranges is either a broken co-ordinate
              or outside the source */

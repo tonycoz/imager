@@ -732,6 +732,9 @@ i_readtga_wiol(io_glue *ig, int length) {
     mapped = 0;
     channels = 1;
     break;
+  default:
+    i_push_error(0, "invalid or unsupported datatype code");
+    return NULL;
   }
 
   if (!i_int_check_image_file_limits(width, height, channels, 

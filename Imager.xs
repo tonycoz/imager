@@ -437,7 +437,7 @@ io_reader(void *p, void *data, size_t size) {
   size  -= cbd->used - cbd->where;
   out   += cbd->used - cbd->where;
   if (size < sizeof(cbd->buffer)) {
-    int did_read;
+    int did_read = 0;
     int copy_size;
     while (size
 	   && (did_read = call_reader(cbd, cbd->buffer, size, 
@@ -3565,8 +3565,6 @@ i_ppal(im, l, y, ...)
       PREINIT:
         i_palidx *work;
         int i;
-        STRLEN len;
-        int count;
       CODE:
         if (items > 3) {
           work = mymalloc(sizeof(i_palidx) * (items-3));
@@ -3591,9 +3589,7 @@ i_ppal_p(im, l, y, data)
         SV *data
       PREINIT:
         i_palidx const *work;
-        int i;
         STRLEN len;
-        int count;
       CODE:
         work = (i_palidx const *)SvPV(data, len);
         len /= sizeof(i_palidx);

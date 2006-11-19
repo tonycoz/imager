@@ -616,7 +616,8 @@ makemap_mediancut(i_quantize *quant, i_img **imgs, int count) {
     color_count = 1;
     
     while (color_count < quant->mc_size) {
-      int max_index, max_ch; /* index/channel with biggest spread */
+      /* initialized to avoid compiler warnings */
+      int max_index = 0, max_ch = 0; /* index/channel with biggest spread */
       int max_size;
       medcut_partition *workpart;
       int cum_total;
@@ -1087,7 +1088,7 @@ static int rand2dist_find(i_color val, i_quantize *quant, i_dists *dists, int in
 #endif
 
 static void translate_addi(i_quantize *quant, i_img *img, i_palidx *out) {
-  int x, y, i, k, bst_idx;
+  int x, y, i, k, bst_idx = 0;
   i_color val;
   int pixdev = quant->perturb;
   CF_VARS;
@@ -1184,7 +1185,7 @@ translate_errdiff(i_quantize *quant, i_img *img, i_palidx *out) {
   int errw;
   int difftotal;
   int x, y, dx, dy;
-  int bst_idx;
+  int bst_idx = 0;
   CF_VARS;
 
   if ((quant->errdiff & ed_mask) == ed_custom) {

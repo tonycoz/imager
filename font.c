@@ -1966,7 +1966,7 @@ i_tt_glyph_name(TT_Fonthandle *handle, unsigned long ch, char *name_buf,
   }
 
   if (handle->load_cond) {
-    i_push_errorf(rc, "error loading names (%d)", handle->load_cond);
+    i_push_errorf(handle->load_cond, "error loading names (%d)", handle->load_cond);
     return 0;
   }
   
