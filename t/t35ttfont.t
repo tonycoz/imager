@@ -136,15 +136,15 @@ SKIP:
     
     my $face_name = Imager::i_tt_face_name($hcfont->{id});
     print "# face $face_name\n";
-    ok($face_name eq 'ExistenceTest', "face name");
+    is($face_name, 'ExistenceTest', "face name (function)");
     $face_name = $hcfont->face_name;
-    ok($face_name eq 'ExistenceTest', "face name");
+    is($face_name, 'ExistenceTest', "face name (OO)");
     
     # FT 1.x cheats and gives names even if the font doesn't have them
     my @glyph_names = $hcfont->glyph_names(string=>"!J/");
-    ok($glyph_names[0] eq 'exclam', "check exclam name OO");
+    is($glyph_names[0], 'exclam', "check exclam name OO");
     ok(!defined($glyph_names[1]), "check for no J name OO");
-    ok($glyph_names[2] eq 'slash', "check slash name OO");
+    is($glyph_names[2], 'slash', "check slash name OO");
     
     print "# ** name table of the test font **\n";
     Imager::i_tt_dump_names($hcfont->{id});

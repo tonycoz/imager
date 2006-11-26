@@ -180,9 +180,9 @@ SKIP:
     # names
     my $face_name = Imager::i_t1_face_name($font->{id});
     print "# face $face_name\n";
-    ok($face_name eq 'ExistenceTest', "face name");
+    is($face_name, 'ExistenceTest', "face name");
     $face_name = $font->face_name;
-    ok($face_name eq 'ExistenceTest', "face name");
+    is($face_name, 'ExistenceTest', "face name");
 
     my @glyph_names = $font->glyph_names(string=>"!J/");
     is($glyph_names[0], 'exclam', "check exclam name OO");

@@ -142,9 +142,9 @@ SKIP:
   # paletted reads
   my $img4 = Imager->new;
   ok($img4->read(file=>'testimg/comp4.tif'), "reading 4-bit paletted");
-  ok($img4->type eq 'paletted', "image isn't paletted");
+  is($img4->type, 'paletted', "image isn't paletted");
   print "# colors: ", $img4->colorcount,"\n";
-  ok($img4->colorcount <= 16, "more than 16 colors!");
+  cmp_ok($img4->colorcount, '<=', 16, "more than 16 colors!");
   #ok($img4->write(file=>'testout/t106_was4.ppm'),
   #   "Cannot write img4");
   # I know I'm using BMP before it's test, but comp4.tif started life 
@@ -156,7 +156,7 @@ SKIP:
   ok($diff == 0, "image mismatch");
   my $img8 = Imager->new;
   ok($img8->read(file=>'testimg/comp8.tif'), "reading 8-bit paletted");
-  ok($img8->type eq 'paletted', "image isn't paletted");
+  is($img8->type, 'paletted', "image isn't paletted");
   print "# colors: ", $img8->colorcount,"\n";
   #ok($img8->write(file=>'testout/t106_was8.ppm'),
   #   "Cannot write img8");
@@ -174,16 +174,16 @@ SKIP:
   ok($cmp8->read(file=>'testout/t106_pal8.tif'),
      "reading 8-bit paletted");
   #print "# ",$cmp8->errstr,"\n";
-  ok($cmp8->type eq 'paletted', "pal8 isn't paletted");
-  ok($cmp8->colorcount == 256, "pal8 bad colorcount");
+  is($cmp8->type, 'paletted', "pal8 isn't paletted");
+  is($cmp8->colorcount, 256, "pal8 bad colorcount");
   $diff = i_img_diff($img8->{IMG}, $cmp8->{IMG});
   print "# diff $diff\n";
   ok($diff == 0, "written image doesn't match read");
   ok($img4->write(file=>'testout/t106_pal4.tif'), "writing 4-bit paletted");
   ok(my $cmp4 = Imager->new->read(file=>'testout/t106_pal4.tif'),
      "reading 4-bit paletted");
-  ok($cmp4->type eq 'paletted', "pal4 isn't paletted");
-  ok($cmp4->colorcount == 16, "pal4 bad colorcount");
+  is($cmp4->type, 'paletted', "pal4 isn't paletted");
+  is($cmp4->colorcount, 16, "pal4 bad colorcount");
   $diff = i_img_diff($img4->{IMG}, $cmp4->{IMG});
   print "# diff $diff\n";
   ok($diff == 0, "written image doesn't match read");
@@ -260,7 +260,7 @@ SKIP:
                               \&io_closer);
   ok($IO4, "new writecb obj");
   ok(i_writetiff_wiol($img, $IO4), "write to cb");
-  ok($work eq $odata, "write cb match");
+  is($work, $odata, "write cb match");
   ok($did_close, "write cb did close");
   open D1, ">testout/d1.tiff" or die;
   print D1 $work;
@@ -277,7 +277,7 @@ SKIP:
                               \&io_closer, 1);
   ok($IO5, "new writecb obj 2");
   ok(i_writetiff_wiol($img, $IO5), "write to cb2");
-  ok($work eq $odata, "write cb2 match");
+  is($work, $odata, "write cb2 match");
   ok($did_close, "write cb2 did close");
 
   open D3, ">testout/d3.tiff" or die;
@@ -299,7 +299,7 @@ SKIP:
     ok(i_img_diff($imgs[$i]{IMG}, $out[$i]{IMG}) == 0,
        "comparing image $i");
     my ($tag) = $out[$i]->tags(name=>'tiff_pagename');
-    ok($tag eq "Page ".($i+1),
+    is($tag, "Page ".($i+1),
        "tag doesn't match original image");
   }
 
@@ -324,13 +324,12 @@ SKIP:
      "compare second fax image");
 
   my ($format) = $imgs[0]->tags(name=>'i_format');
-  ok(defined $format && $format eq 'tiff', "check i_format tag");
+  is($format, 'tiff', "check i_format tag");
 
   my $unit = $imgs[0]->tags(name=>'tiff_resolutionunit');
   ok(defined $unit && $unit == 2, "check tiff_resolutionunit tag");
   my $unitname = $imgs[0]->tags(name=>'tiff_resolutionunit_name');
-  ok(defined $unitname && $unitname eq 'inch', 
-     "check tiff_resolutionunit_name tag");
+  is($unitname, 'inch', "check tiff_resolutionunit_name tag");
 
   my $warned = Imager->new;
   ok($warned->read(file=>"testimg/tiffwarn.tif"), "read tiffwarn.tif");

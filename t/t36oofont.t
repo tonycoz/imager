@@ -121,7 +121,7 @@ SKIP:
   ok($font->utf8, "make sure utf8 method returns true");
 
   my $has_chars = $font->has_chars(string=>"\x01A");
-  ok($has_chars eq "\x00\x01", "has_chars scalar");
+  is($has_chars, "\x00\x01", "has_chars scalar");
   my @has_chars = $font->has_chars(string=>"\x01A");
   ok(!$has_chars[0], "has_chars list 0");
   ok($has_chars[1], "has_chars list 1");

@@ -184,7 +184,7 @@ SKIP:
   ok(@got == 2, "has_chars returned 2 items");
   ok(!$got[0], "have no chr(1)");
   ok($got[1], "have 'H'");
-  ok($oof->has_chars(string=>"H\x01") eq "\x01\x00",
+  is($oof->has_chars(string=>"H\x01"), "\x01\x00",
      "scalar has_chars()");
 
   print "# OO bounding boxes\n";
@@ -256,9 +256,9 @@ SKIP:
     if (Imager::Font::FreeType2::i_ft2_can_face_name()) {
       my $facename = Imager::Font::FreeType2::i_ft2_face_name($exfont->{id});
       print "# face name '$facename'\n";
-      ok($facename eq 'ExistenceTest', "test face name");
+      is($facename, 'ExistenceTest', "test face name");
       $facename = $exfont->face_name;
-      ok($facename eq 'ExistenceTest', "test face name OO");
+      is($facename, 'ExistenceTest', "test face name OO");
     }
     else {
       # make sure we get the error we expect

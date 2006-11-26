@@ -11,7 +11,7 @@ my $img = Imager->new(xsize=>50, ysize=>50, type=>'paletted');
 
 ok($img, "paletted image created");
 
-ok($img->type eq 'paletted', "got a paletted image");
+is($img->type, 'paletted', "got a paletted image");
 
 my $black = Imager::Color->new(0,0,0);
 my $red = Imager::Color->new(255,0,0);
@@ -80,20 +80,20 @@ $img->setcolors(start=>$red, colors=>[$red, $green]);
 
 # draw on the image, make sure it stays paletted when it should
 ok($img->box(color=>$red, filled=>1), "fill with red");
-ok($img->type eq 'paletted', "paletted after fill");
+is($img->type, 'paletted', "paletted after fill");
 ok($img->box(color=>$green, filled=>1, xmin=>10, ymin=>10,
 	      xmax=>40, ymax=>40), "green box");
-ok($img->type eq 'paletted', 'still paletted after box');
+is($img->type, 'paletted', 'still paletted after box');
 # an AA line will almost certainly convert the image to RGB, don't use
 # an AA line here
 ok($img->line(color=>$blue, x1=>10, y1=>10, x2=>40, y2=>40),
     "draw a line");
-ok($img->type eq 'paletted', 'still paletted after line');
+is($img->type, 'paletted', 'still paletted after line');
 
 # draw with white - should convert to direct
 ok($img->box(color=>$white, filled=>1, xmin=>20, ymin=>20, 
 	      xmax=>30, ymax=>30), "white box");
-ok($img->type eq 'direct', "now it should be direct");
+is($img->type, 'direct', "now it should be direct");
 
 # various attempted to make a paletted image from our now direct image
 my $palimg = $img->to_paletted;
