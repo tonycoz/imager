@@ -113,8 +113,8 @@ i_scale_mixing(i_img *src, int x_out, int y_out) {
   for (y = 0; y < y_out; ++y) {
     if (y_out == src->ysize) {
       /* no vertical scaling, just load it */
-      int x, ch;
 #ifdef IM_EIGHT_BIT
+      int x, ch;
       /* load and convert to doubles */
       IM_GLIN(src, 0, src->xsize, y, in_row);
       for (x = 0; x < src->xsize; ++x) {
@@ -155,8 +155,8 @@ i_scale_mixing(i_img *src, int x_out, int y_out) {
     }
     /* we've accumulated a vertically scaled row */
     if (x_out == src->xsize) {
-      int x, ch;
 #if IM_EIGHT_BIT
+      int x, ch;
       /* no need to scale, but we need to convert it */
       for (x = 0; x < x_out; ++x) {
         for (ch = 0; ch < result->channels; ++ch)

@@ -327,7 +327,7 @@ i_ft2_bbox(FT2_Fonthandle *handle, double cheight, double cwidth,
   FT_Glyph_Metrics *gm;
   int start = 0;
   int loadFlags = FT_LOAD_DEFAULT;
-  int rightb;
+  int rightb = 0;
 
   mm_log((1, "i_ft2_bbox(handle %p, cheight %f, cwidth %f, text %p, len %d, bbox %p)\n",
 	  handle, cheight, cwidth, text, len, bbox));

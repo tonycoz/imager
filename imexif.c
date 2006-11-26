@@ -229,8 +229,10 @@ static int tiff_init(imtiff *tiff, unsigned char *base, size_t length);
 static int tiff_load_ifd(imtiff *tiff, unsigned long offset);
 static void tiff_final(imtiff *tiff);
 static void tiff_clear_ifd(imtiff *tiff);
+#if 0 /* currently unused, but that may change */
 static int tiff_get_bytes(imtiff *tiff, unsigned char *to, size_t offset, 
 			  size_t count);
+#endif
 static int tiff_get_tag_double(imtiff *, int index, double *result);
 static int tiff_get_tag_int(imtiff *, int index, int *result);
 static unsigned tiff_get16(imtiff *, unsigned long offset);
@@ -1412,6 +1414,8 @@ tiff_get32(imtiff *tiff, unsigned long offset) {
       + 0x10000 * tiff->base[offset+1] + 0x1000000 * tiff->base[offset];
 }
 
+#if 0 /* currently unused, but that may change */
+
 /*
 =item tiff_get_bytes
 
@@ -1433,6 +1437,8 @@ tiff_get_bytes(imtiff *tiff, unsigned char *data, size_t offset,
 
   return 1;
 }
+
+#endif
 
 /*
 =item tiff_get16s

@@ -33,7 +33,7 @@ Each value is scaled into the range 0 to 1.0.
 =cut
 */
 void i_rgb_to_hsvf(i_fcolor *color) {
-  double h, s, v;
+  double h = 0, s, v;
   double temp;
   double Cr, Cg, Cb;
 
@@ -74,7 +74,7 @@ Each value is scaled into the range 0 to 255.
 =cut
 */
 void i_rgb_to_hsv(i_color *color) {
-  double h, s, v;
+  double h = 0, s, v;
   double temp;
   double Cr, Cg, Cb;
 

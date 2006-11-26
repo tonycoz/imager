@@ -93,6 +93,7 @@ rgb_header_unpack(rgb_header *header, unsigned char *headbuf) {
   header->colormap    = (headbuf[100]<<24) + (headbuf[101]<<16)+(headbuf[102]<<8)+headbuf[103];
 }
 
+#if 0 /* this is currently unused */
 
 /*
 =item rgb_header_pack(header, headbuf)
@@ -146,7 +147,7 @@ rgb_dest_write(rgb_dest *s, unsigned char *buf, size_t pixels) {
   return -1;
 }
 
-
+#endif
 
 
 
@@ -295,7 +296,7 @@ i_readrgb_wiol(io_glue *ig, int length) {
     for(y=0; y<height; y++) {
       for(c=0; c<channels; c++) {
 	unsigned long iidx = 0, oidx = 0, span = 0;
-	unsigned char cval;
+	unsigned char cval = 0;
 	int rle = 0;
 	int ci = height*c+y;
 	int datalen = lengthtab[ci];
