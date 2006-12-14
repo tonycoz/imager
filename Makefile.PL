@@ -470,7 +470,7 @@ sub init {
 		   def=>'HAVE_LIBPNG',
 		   inccheck=>sub { -e catfile($_[0], 'png.h') },
 		   libcheck=>sub { $_[0] eq "libpng$aext" or $_[0] eq "libpng.$lext" },
-		   libfiles=>'-lpng -lz',
+		   libfiles=>$^O eq 'MSWin32' ? '-lpng -lzlib' : '-lpng -lz',
 		   objfiles=>'png.o',
 		   docs=>q{
 			   Png stands for Portable Network Graphics and is intended as
