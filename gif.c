@@ -1,6 +1,6 @@
 #include "imageri.h"
 #include <gif_lib.h>
-#ifdef _MSCVER
+#ifdef _MSC_VER
 #include <io.h>
 #else
 #include <unistd.h>
