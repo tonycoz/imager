@@ -863,6 +863,9 @@ YAML
 license: perl
 dynamic_config: 1
 distribution_type: module
+meta-spec:
+  version: 1.3
+  url: http://module-build.sourceforge.net/META-spec-v1.3.html
 generated_by: $opts->{NAME} version $version
 YAML
   my $save_meta;

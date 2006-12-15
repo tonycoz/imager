@@ -7,9 +7,12 @@ abstract: Perl extension for Generating 24 bit Images
 installdirs: site
 recommends:
   Parse::RecDescent: 0
-build_requires:
+requires:
   Test::More: 0.47
 license: perl
 dynamic_config: 1
 distribution_type: module
+meta-spec:
+  version: 1.3
+  url: http://module-build.sourceforge.net/META-spec-v1.3.html
 generated_by: Imager version 0.54
