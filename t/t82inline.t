@@ -2,7 +2,6 @@
 #
 # this tests both the Inline interface and the API
 use strict;
-use lib 't';
 use Test::More;
 eval "require Inline::C;";
 plan skip_all => "Inline required for testing API" if $@;

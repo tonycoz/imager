@@ -1,6 +1,5 @@
 #!perl -w
 # packaging test - make sure we included the samples in the MANIFEST <sigh>
-use lib 't';
 use Test::More;
 use ExtUtils::Manifest qw(maniread);
 

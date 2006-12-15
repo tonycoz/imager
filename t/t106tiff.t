@@ -1,6 +1,5 @@
 #!perl -w
 use strict;
-use lib 't';
 use Test::More tests => 127;
 use Imager qw(:all);
 $^W=1; # warnings during command-line tests

@@ -1,6 +1,5 @@
 #!perl -w
 use strict;
-use lib 't';
 use Imager qw(:all);
 use Test::More tests => 86;
 

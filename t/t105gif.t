@@ -12,7 +12,6 @@ UPGRADE.
 
 use strict;
 $|=1;
-use lib 't';
 use Test::More tests => 125;
 use Imager qw(:all);
 BEGIN { require "t/testtools.pl"; }

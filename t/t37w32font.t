@@ -1,6 +1,5 @@
 #!perl -w
 use strict;
-use lib 't';
 use Test::More tests => 54;
 BEGIN { use_ok(Imager => ':all') }
 use Imager::Test qw(diff_text_with_nul);

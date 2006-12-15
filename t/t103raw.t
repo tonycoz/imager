@@ -1,6 +1,5 @@
 #!perl -w
 use strict;
-use lib 't';
 use Test::More tests => 23;
 use Imager qw(:all);
 init_log("testout/t103raw.log",1);

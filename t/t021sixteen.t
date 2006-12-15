@@ -1,6 +1,5 @@
 #!perl -w
 use strict;
-use lib 't';
 use Test::More tests => 85;
 
 BEGIN { use_ok(Imager=>qw(:all :handy)) }

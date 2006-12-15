@@ -1,6 +1,5 @@
 #!perl -w
 use strict;
-use lib 't';
 use Test::More;
 use ExtUtils::Manifest qw(maniread);
 eval "use Test::Pod 1.00;";

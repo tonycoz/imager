@@ -3,7 +3,6 @@
 # to make sure we get expected values
 
 use strict;
-use lib 't';
 use Test::More tests=>196;
 
 BEGIN { use_ok(Imager => qw(:handy :all)) }

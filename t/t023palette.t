@@ -1,7 +1,6 @@
 #!perl -w
 # some of this is tested in t01introvert.t too
 use strict;
-use lib 't';
 use Test::More tests => 83;
 BEGIN { use_ok("Imager"); }
 

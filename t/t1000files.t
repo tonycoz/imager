@@ -4,7 +4,6 @@
 # the file format
 
 use strict;
-use lib 't';
 use Test::More tests => 32;
 use Imager;
 

@@ -1,7 +1,6 @@
 #!perl -w
 use strict;
 use Imager qw(:all :handy);
-use lib 't';
 use Test::More tests=>19;
 
 Imager::init("log"=>'testout/t67convert.log');

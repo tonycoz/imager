@@ -1,7 +1,6 @@
 #!perl -w
 use strict;
 use blib;
-use lib '../t';
 use Imager;
 use Test::More tests => 3;
 

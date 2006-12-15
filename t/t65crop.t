@@ -1,6 +1,5 @@
 #!perl -w
 use strict;
-use lib 't';
 use Test::More tests => 60;
 require "t/testtools.pl";
 use Imager;

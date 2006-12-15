@@ -1,6 +1,5 @@
 #!perl -w
 # this is intended for various kwalitee tests
-use lib 't';
 use strict;
 use Test::More;
 use ExtUtils::Manifest qw(maniread);

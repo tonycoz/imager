@@ -1,7 +1,6 @@
 #!perl -w
 use strict;
 use Imager qw(:handy);
-use lib 't';
 use Test::More tests => 66;
 Imager::init_log("testout/t61filters.log", 1);
 # meant for testing the filters themselves

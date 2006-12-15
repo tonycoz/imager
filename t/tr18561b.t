@@ -3,7 +3,6 @@
 # the old _color() code could return floating colors in some cases
 # but in most cases the caller couldn't handle it
 use strict;
-use lib 't';
 use Test::More tests => 1;
 eval {
   use Imager;

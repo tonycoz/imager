@@ -1,7 +1,6 @@
 #!perl -w
 use strict;
 use Imager;
-use lib '../t';
 use Test::More tests => 40;
 
 sub get_data;
