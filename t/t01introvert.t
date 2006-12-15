@@ -424,8 +424,11 @@ cmp_ok(Imager->errstr, '=~', qr/channels must be between 1 and 4/,
   my @plin_colors2 = ( $green, $red, $blue, $red );
   is($im->setscanline('y'=>2, 'x'=>3, pixels=>\@plin_colors2), 4,
      "setscanline - arrayref");
-  is_deeply([ ([ 0,0,0,0 ]) x 3, (map [ $_->rgba ], @plin_colors2),
-	      ([ 0,0,0,0 ]) x 3 ],
+
+  # using map instead of x here due to a bug in some versions of Test::More
+  # fixed in the latest Test::More
+  is_deeply([ ( map [ 0,0,0,0 ], 1..3), (map [ $_->rgba ], @plin_colors2),
+	      ( map [ 0,0,0,0 ], 1..3) ],
 	    [ map [ $_->rgba ], $im->getscanline('y'=>2) ],
 	    "check write to middle of line");
   
