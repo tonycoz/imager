@@ -399,6 +399,9 @@ sub init {
   if ($^O =~ /win32/i && $Config{cc} =~ /\bcl\b/i) {
     push(@incs, split /;/, $ENV{INCLUDE}) if exists $ENV{INCLUDE};
   }
+  if ($Config{incpath}) {
+    push @incs, grep -d, split /\Q$Config{path_sep}/, $Config{incpath};
+  }
   push @incs, grep -d,
       qw(/sw/include 
          /usr/include/freetype2
