@@ -1,0 +1,33 @@
+This is primarily a bug fix release.
+
+Note: Test::More is now a pre-requisite for Imager and is no longer
+bundled.
+
+There is one new feature:
+
+- the Win32 font driver now supports UTF8 (RT 22166)
+
+Several bugs were fixed:
+
+- the string() method would not output the string "0" (RT 21770)
+
+- fills.c was failing to compile on Solaris 10 (compiler unknown) (RT 21944)
+
+- the gif_disposal and gif_user_input tags weren't being read from the file 
+  correctly (RT 22192)
+
+- Win32 font driver fixes:
+  - the global descent value from bounding box was the wrong sign
+  - if the first or last glyph overflowed the left or right side of
+    the advance width they would be clipped
+
+- gif.c was failing to build under MSVC (RT 23922)
+
+- in some cases strings passed to the string() method were treated as
+  terminated by NUL (chr 0) (RT 21770)
+
+- on "MSWin32" perl builds we now link to -lzlib instead of -lz since
+  that's the default build name for zlib on Win32. (RT 23064)
+
+- search $Config{incpath} for headers too, which we should have been
+  doing all along.
