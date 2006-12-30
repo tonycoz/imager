@@ -387,6 +387,7 @@ typedef enum i_make_colors_tag {
   mc_web_map, /* Use the 216 colour web colour map */
   mc_addi, /* Addi's algorithm */
   mc_median_cut, /* median cut - similar to giflib, hopefully */
+  mc_mono, /* fixed mono color map */
   mc_mask = 0xFF /* (mask for generator) */
 } i_make_colors;
 
@@ -517,6 +518,8 @@ enum {
 };
 
 #include "iolayert.h"
+
+#include "rendert.h"
 
 #endif
 

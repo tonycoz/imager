@@ -11,8 +11,6 @@ use Test::More tests => 47;
 
 BEGIN { use_ok('Imager'); };
 
-require "t/testtools.pl";
-
 init_log("testout/t15color.log",1);
 
 my $c1 = Imager::Color->new(100, 150, 200, 250);

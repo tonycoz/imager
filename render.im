@@ -1,0 +1,204 @@
+/*
+Render utilities
+*/
+#include "imager.h"
+
+#define RENDER_MAGIC 0x765AE
+
+typedef void (*render_color_f)(i_render *, int, int, int, unsigned char const *src, i_color const *color);
+
+#code
+
+static void IM_SUFFIX(render_color_alpha)(i_render *r, int x, int y, int width, unsigned char const *src, i_color const *color);
+static void IM_SUFFIX(render_color_13)(i_render *r, int x, int y, int width, unsigned char const *src, i_color const *color);
+
+static render_color_f IM_SUFFIX(render_color_tab)[] =
+  {
+    NULL,
+    IM_SUFFIX(render_color_13),
+    IM_SUFFIX(render_color_alpha),
+    IM_SUFFIX(render_color_13),
+    IM_SUFFIX(render_color_alpha),
+  };
+
+#/code
+
+void
+i_render_init(i_render *r, i_img *im, int width) {
+  r->magic = RENDER_MAGIC;
+  r->im = im;
+  r->width = width;
+  r->line_8 = NULL;
+  r->line_double = NULL;
+#code im->bits <= 8
+    r->IM_SUFFIX(line) = mymalloc(sizeof(i_fcolor) * width);
+#/code
+}
+
+void
+i_render_done(i_render *r) {
+  if (r->line_8)
+    myfree(r->line_8);
+  else
+    myfree(r->line_double);
+  r->magic = 0;
+}
+
+void
+i_render_color(i_render *r, int x, int y, int width, unsigned char const *src,
+               i_color const *color) {
+  i_img *im = r->im;
+  if (y < 0 || y >= im->ysize)
+    return;
+  if (x < 0) {
+    width += x;
+    src -= x;
+    x = 0;
+  }
+  if (x + width > im->xsize) {
+    width = im->xsize - x;
+  }
+  if (x >= im->xsize || x + width <= 0 || width <= 0)
+    return;
+
+  /* avoid as much work as we can */
+  while (width > 0 && *src == 0) {
+    --width;
+    ++src;
+    ++x;
+  }
+  while (width > 0 && src[width-1] == 0) {
+    --width;
+  }
+  if (!width)
+    return;
+
+  /* make sure our line buffer is big enough */
+  if (width > r->width) {
+    int new_width = r->width * 2;
+    if (new_width < width)
+      new_width = width;
+
+    if (r->line_8)
+      r->line_8 = myrealloc(r->line_8, sizeof(i_color) * new_width);
+    else
+      r->line_double = myrealloc(r->line_double, sizeof(i_fcolor) * new_width);
+  }
+
+#code r->im->bits <= 8
+    (IM_SUFFIX(render_color_tab)[im->channels])(r, x, y, width, src, color);
+#/code
+}
+
+static void
+dump_src(const char *note, unsigned char const *src, int width) {
+  int i;
+  printf("%s - %p/%d\n", note, src, width);
+  for (i = 0; i < width; ++i) {
+    printf("%02x ", src[i]);
+  }
+  putchar('\n');
+}
+
+#code
+
+static
+void
+IM_SUFFIX(render_color_13)(i_render *r, int x, int y, int width, 
+                unsigned char const *src, i_color const *color) {
+  i_img *im = r->im;
+  IM_COLOR *linep = r->IM_SUFFIX(line);
+  int ch, channels = im->channels;
+  int fetch_offset;
+#undef STORE_COLOR
+#ifdef IM_EIGHT_BIT
+#define STORE_COLOR (*color)
+#else
+  i_fcolor fcolor;
+
+  for (ch = 0; ch < channels; ++ch) {
+    fcolor.channel[ch] = color->channel[ch] / 255.0;
+  }
+#define STORE_COLOR fcolor
+#endif
+ 
+  fetch_offset = 0;
+  while (fetch_offset < width && *src == 0xFF) {
+    *linep++ = STORE_COLOR;
+    ++src;
+    ++fetch_offset;
+  }
+  IM_GLIN(im, x+fetch_offset, x+width, y, linep);
+  while (fetch_offset < width) {
+#ifdef IM_EIGHT_BIT
+    IM_WORK_T alpha = *src++;
+#else
+    IM_WORK_T alpha = *src++ / 255.0;
+#endif
+    if (alpha == IM_SAMPLE_MAX)
+      *linep = STORE_COLOR;
+    else if (alpha) {
+      for (ch = 0; ch < channels; ++ch) {
+        linep->channel[ch] = (linep->channel[ch] * (IM_SAMPLE_MAX - alpha) 
+                              + STORE_COLOR.channel[ch] * alpha) / IM_SAMPLE_MAX;
+      }
+    }
+    ++linep;
+    ++fetch_offset;
+  }
+  IM_PLIN(im, x, x+width, y, r->IM_SUFFIX(line));
+}
+
+static
+void
+IM_SUFFIX(render_color_alpha)(i_render *r, int x, int y, int width, 
+                unsigned char const *src, i_color const *color) {
+  IM_COLOR *linep = r->IM_SUFFIX(line);
+  int ch;
+  int alpha_channel = r->im->channels - 1;
+  int fetch_offset;
+#undef STORE_COLOR
+#ifdef IM_EIGHT_BIT
+#define STORE_COLOR (*color)
+#else
+  i_fcolor fcolor;
+
+  for (ch = 0; ch < r->im->channels; ++ch) {
+    fcolor.channel[ch] = color->channel[ch] / 255.0;
+  }
+#define STORE_COLOR fcolor
+#endif
+
+  fetch_offset = 0;
+  while (fetch_offset < width && *src == 0xFF) {
+    *linep++ = STORE_COLOR;
+    ++src;
+    ++fetch_offset;
+  }
+  IM_GLIN(r->im, x+fetch_offset, x+width, y, linep);
+  while (fetch_offset < width) {
+#ifdef IM_EIGHT_BIT
+    IM_WORK_T src_alpha = *src++;
+#else
+    IM_WORK_T src_alpha = *src++ / 255.0;
+#endif
+    if (src_alpha == IM_SAMPLE_MAX)
+      *linep = STORE_COLOR;
+    else if (src_alpha) {
+      IM_WORK_T remains =  - src_alpha;
+      IM_WORK_T orig_alpha = linep->channel[alpha_channel];
+      IM_WORK_T dest_alpha = src_alpha + (remains * orig_alpha) / IM_SAMPLE_MAX;
+      for (ch = 0; ch < alpha_channel; ++ch) {
+        linep->channel[ch] = ( src_alpha * STORE_COLOR.channel[ch]
+                               + remains * linep->channel[ch] * orig_alpha / IM_SAMPLE_MAX
+                               ) / dest_alpha;
+      }
+      linep->channel[alpha_channel] = dest_alpha;
+    }
+    ++linep;
+    ++fetch_offset;
+  }
+  IM_PLIN(r->im, x, x+width, y, r->IM_SUFFIX(line));
+}
+
+#/code

@@ -173,6 +173,7 @@ raw.c
 regmach.c
 regmach.h
 regops.perl
+render.im
 rgb.c           Reading and writing SGI rgb files
 rotate.c
 rubthru.im

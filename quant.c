@@ -6,6 +6,7 @@
 
 static void makemap_addi(i_quantize *, i_img **imgs, int count);
 static void makemap_mediancut(i_quantize *, i_img **imgs, int count);
+static void makemap_mono(i_quantize *);
 
 static
 void
@@ -69,6 +70,10 @@ i_quant_makemap(i_quantize *quant, i_img **imgs, int count) {
 
   case mc_median_cut:
     makemap_mediancut(quant, imgs, count);
+    break;
+
+  case mc_mono:
+    makemap_mono(quant);
     break;
 
   case mc_addi:
@@ -695,6 +700,19 @@ makemap_mediancut(i_quantize *quant, i_img **imgs, int count) {
   }
   /*printf("out %d colors\n", quant->mc_count);*/
   i_mempool_destroy(&mp);
+}
+
+static void
+makemap_mono(i_quantize *quant) {
+  quant->mc_colors[0].rgba.r = 0;
+  quant->mc_colors[0].rgba.g = 0;
+  quant->mc_colors[0].rgba.b = 0;
+  quant->mc_colors[0].rgba.a = 255;
+  quant->mc_colors[1].rgba.r = 255;
+  quant->mc_colors[1].rgba.g = 255;
+  quant->mc_colors[1].rgba.b = 255;
+  quant->mc_colors[1].rgba.a = 255;
+  quant->mc_count = 2;
 }
 
 #define pboxjump 32

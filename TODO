@@ -187,7 +187,7 @@ MultiImage & metadata support:
 
 New Features:
 - Add mng support, pcx and aalib support.
-  - Windows icon files (.ico)
+  - Windows icon files (.ico) (done)
   - ILBM (Amiga) images
   - photoshop files (I think I've seen docs)
   - XBM
@@ -209,7 +209,7 @@ New Features:
   (or even from an existing bold or slanted font)
 
 - utf8 support for text output
-  (available for FT1, freetype2, should be easy for Win32)
+  (available for FT1, freetype2, T1, Win32)
 
 - easy interfaces for text output:
   - align text around point, including:
@@ -304,7 +304,7 @@ Format specific issues:
 - provide patches for libgif and libungif that fix their bugs
   and give a useful extension interface.  Probe for the 
   installation of the patches in Makefile.PL to let gif.c
-  know what features it can use.
+  know what features it can use. (no need anymore)
 
 - Add options for pnm writer to save in any of the p1..P6
   formats.  Even if the input has 1 channel, write 3 and such
@@ -322,7 +322,7 @@ Format specific issues:
 - read more metadata from images, esp tiff tags, EXIF format information 
   from TIFF and JPEG.
 
-- handle 16-bit/sample pgm/ppm files
+- handle 16-bit/sample pgm/ppm files (done)
 
 - "jpeg lossless rotation" - directly manipulates the JPEG
   representation to rotate, scale or in some limited cases, crop an

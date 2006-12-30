@@ -645,6 +645,7 @@ i_ft2_text(FT2_Fonthandle *handle, i_img *im, int tx, int ty, const i_color *cl,
   int ch;
   i_color pel;
   int loadFlags = FT_LOAD_DEFAULT;
+  i_render render;
 
   mm_log((1, "i_ft2_text(handle %p, im %p, tx %d, ty %d, cl %p, cheight %f, cwidth %f, text %p, len %d, align %d, aa %d)\n",
 	  handle, im, tx, ty, cl, cheight, cwidth, text, align, aa));
@@ -662,6 +663,9 @@ i_ft2_text(FT2_Fonthandle *handle, i_img *im, int tx, int ty, const i_color *cl,
   /* set the base-line based on the string ascent */
   if (!i_ft2_bbox(handle, cheight, cwidth, text, len, bbox, utf8))
     return 0;
+
+  if (aa)
+    i_render_init(&render, im, bbox[BBOX_POS_WIDTH] - bbox[BBOX_NEG_WIDTH]);
 
   if (!align) {
     /* this may need adjustment */
@@ -688,6 +692,8 @@ i_ft2_text(FT2_Fonthandle *handle, i_img *im, int tx, int ty, const i_color *cl,
       ft2_push_message(error);
       i_push_errorf(0, "loading glyph for character \\x%02x (glyph 0x%04X)", 
                     c, index);
+      if (aa)
+        i_render_done(&render);
       return 0;
     }
     slot = handle->face->glyph;
@@ -698,6 +704,8 @@ i_ft2_text(FT2_Fonthandle *handle, i_img *im, int tx, int ty, const i_color *cl,
       if (error) {
 	ft2_push_message(error);
 	i_push_errorf(0, "rendering glyph 0x%04X (character \\x%02X)");
+      if (aa)
+        i_render_done(&render);
 	return 0;
       }
       if (slot->bitmap.pixel_mode == ft_pixel_mode_mono) {
@@ -728,20 +736,16 @@ i_ft2_text(FT2_Fonthandle *handle, i_img *im, int tx, int ty, const i_color *cl,
 	  last_mode = slot->bitmap.pixel_mode;
 	  last_grays = slot->bitmap.num_grays;
 	}
-	
+
 	bmp = slot->bitmap.buffer;
 	for (y = 0; y < slot->bitmap.rows; ++y) {
-	  for (x = 0; x < slot->bitmap.width; ++x) {
-	    int value = map[bmp[x]];
-	    if (value) {
-	      i_gpix(im, tx+x+slot->bitmap_left, ty+y-slot->bitmap_top, &pel);
-	      for (ch = 0; ch < im->channels; ++ch) {
-		pel.channel[ch] = 
-		  ((255-value)*pel.channel[ch] + value * cl->channel[ch]) / 255;
-	      }
-	      i_ppix(im, tx+x+slot->bitmap_left, ty+y-slot->bitmap_top, &pel);
-	    }
-	  }
+          if (last_mode == ft_pixel_mode_grays &&
+              last_grays != 255) {
+            for (x = 0; x < slot->bitmap.width; ++x) 
+              bmp[x] = map[bmp[x]];
+          }
+          i_render_color(&render, tx + slot->bitmap_left, ty-slot->bitmap_top+y,
+                         slot->bitmap.width, bmp, cl);
 	  bmp += slot->bitmap.pitch;
 	}
       }
@@ -750,6 +754,9 @@ i_ft2_text(FT2_Fonthandle *handle, i_img *im, int tx, int ty, const i_color *cl,
     tx += slot->advance.x / 64;
     ty -= slot->advance.y / 64;
   }
+
+  if (aa)
+    i_render_done(&render);
 
   return 1;
 }

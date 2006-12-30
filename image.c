@@ -2153,8 +2153,77 @@ i_test_format_probe(io_glue *data, int length) {
   return NULL;
 }
 
+/*
+=item i_img_is_monochrome(img, &zero_is_white)
 
+Tests an image to check it meets our monochrome tests.
 
+The idea is that a file writer can use this to test where it should
+write the image in whatever bi-level format it uses, eg. pbm for pnm.
+
+For performance of encoders we require monochrome images:
+
+=over
+
+=item *
+
+be paletted
+
+=item *
+
+have a palette of two colors, containing only (0,0,0) and
+(255,255,255) in either order.
+
+=back
+
+zero_is_white is set to non-zero iff the first palette entry is white.
+
+=cut
+*/
+
+int
+i_img_is_monochrome(i_img *im, int *zero_is_white) {
+  if (im->type == i_palette_type
+      && i_colorcount(im) == 2) {
+    i_color colors[2];
+    i_getcolors(im, 0, colors, 2);
+    if (im->channels == 3) {
+      if (colors[0].rgb.r == 255 && 
+          colors[0].rgb.g == 255 &&
+          colors[0].rgb.b == 255 &&
+          colors[1].rgb.r == 0 &&
+          colors[1].rgb.g == 0 &&
+          colors[1].rgb.b == 0) {
+        *zero_is_white = 0;
+        return 1;
+      }
+      else if (colors[0].rgb.r == 0 && 
+               colors[0].rgb.g == 0 &&
+               colors[0].rgb.b == 0 &&
+               colors[1].rgb.r == 255 &&
+               colors[1].rgb.g == 255 &&
+               colors[1].rgb.b == 255) {
+        *zero_is_white = 1;
+        return 1;
+      }
+    }
+    else if (im->channels == 1) {
+      if (colors[0].channel[0] == 255 &&
+          colors[1].channel[1] == 0) {
+        *zero_is_white = 0;
+        return 1;
+      }
+      else if (colors[0].channel[0] == 0 &&
+               colors[0].channel[0] == 255) {
+        *zero_is_white = 1;
+        return 1;         
+      }
+    }
+  }
+
+  *zero_is_white = 0;
+  return 0;
+}
 
 /*
 =back

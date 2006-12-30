@@ -1269,11 +1269,13 @@ sub read {
     return $self;
   }
 
+  my $allow_partial = $input{allow_partial};
+  defined $allow_partial or $allow_partial = 0;
+
   if ( $input{'type'} eq 'tiff' ) {
     my $page = $input{'page'};
     defined $page or $page = 0;
-    # Fixme, check if that length parameter is ever needed
-    $self->{IMG}=i_readtiff_wiol( $IO, -1, $page ); 
+    $self->{IMG}=i_readtiff_wiol( $IO, $allow_partial, $page ); 
     if ( !defined($self->{IMG}) ) {
       $self->{ERRSTR}=$self->_error_as_msg(); return undef;
     }
@@ -1282,7 +1284,7 @@ sub read {
   }
 
   if ( $input{'type'} eq 'pnm' ) {
-    $self->{IMG}=i_readpnm_wiol( $IO, -1 ); # Fixme, check if that length parameter is ever needed
+    $self->{IMG}=i_readpnm_wiol( $IO, $allow_partial );
     if ( !defined($self->{IMG}) ) {
       $self->{ERRSTR}='unable to read pnm image: '._error_as_msg(); 
       return undef;
@@ -1301,7 +1303,7 @@ sub read {
   }
 
   if ( $input{'type'} eq 'bmp' ) {
-    $self->{IMG}=i_readbmp_wiol( $IO );
+    $self->{IMG}=i_readbmp_wiol( $IO, $allow_partial );
     if ( !defined($self->{IMG}) ) {
       $self->{ERRSTR}=$self->_error_as_msg();
       return undef;

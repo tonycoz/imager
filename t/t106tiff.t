@@ -166,7 +166,8 @@ SKIP:
   print "# diff $diff\n";
   ok($diff == 0, "image mismatch");
   my $bad = Imager->new;
-  ok($bad->read(file=>'testimg/comp4bad.tif'), "bad image not returned");
+  ok($bad->read(file=>'testimg/comp4bad.tif', 
+                allow_partial=>1), "bad image not returned");
   ok(scalar $bad->tags(name=>'i_incomplete'), "incomplete tag not set");
   ok($img8->write(file=>'testout/t106_pal8.tif'), "writing 8-bit paletted");
   my $cmp8 = Imager->new;

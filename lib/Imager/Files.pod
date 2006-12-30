@@ -52,6 +52,10 @@ supply the filename:
   $img->read(file => $filename)
     or die "Cannot read $filename: ", $img->errstr;
 
+The read() method accepts the C<allow_partial> parameter.  If this is
+non-zero then read() can return true on an incomplete image and set
+the C<i_incomplete> tag.
+
 =item write
 
 and the C<write()> method to write an image:
@@ -362,6 +366,38 @@ Imager can read both the ASCII and binary versions of each of the PBM
 
 PNM does not support the spatial resolution tags.
 
+The following tags are set when reading a PNM file:
+
+=over
+
+=item *
+
+X<pnm_maxval>pnm_maxval - the maxvals number from the PGM/PPM header.
+Always set to 2 for a PBM file.
+
+=item *
+
+X<pnm_type>pnm_type - the type number from the PNM header, 1 for ASCII
+PBM files, 2 for ASCII PGM files, 3 for ASCII PPM files, 4 for binary
+PBM files, 5 for binary PGM files, 6 for binary PPM files.
+
+=back
+
+The following tag is checked when writing an image with more than
+8-bits/sample:
+
+=over
+
+=item *
+
+X<pnm_write_wide_data>pnm_write_wide_data - if this is non-zero then
+write() can write PGM/PPM files with 16-bits/sample.  Some
+applications, for example GIMP 2.2, and tools can only read
+8-bit/sample binary PNM files, so Imager will only write a 16-bit
+image when this tag is non-zero.
+
+=back
+
 =head2 JPEG
 
 You can supply a C<jpegquality> parameter (0-100) when writing a JPEG
@@ -383,7 +419,7 @@ to control output:
 =item jpeg_density_unit
 
 The value of the density unit field in the JFIF header.  This is
-ignored on writing if the i_aspect_only tag is non-zero.
+ignored on writing if the C<i_aspect_only> tag is non-zero.
 
 The C<i_xres> and C<i_yres> tags are expressed in pixels per inch no
 matter the value of this tag, they will be converted to/from the value

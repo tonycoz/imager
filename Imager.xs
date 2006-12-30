@@ -535,6 +535,8 @@ static struct value_name make_color_names[] =
   { "webmap", mc_web_map, },
   { "addi", mc_addi, },
   { "mediancut", mc_median_cut, },
+  { "mono", mc_mono, },
+  { "monochrome", mc_mono, },
 };
 
 static struct value_name translate_names[] =
@@ -2250,9 +2252,9 @@ i_test_format_probe(ig, length)
 #ifdef HAVE_LIBTIFF
 
 Imager::ImgRaw
-i_readtiff_wiol(ig, length, page=0)
+i_readtiff_wiol(ig, allow_partial, page=0)
         Imager::IO     ig
-	       int     length
+	       int     allow_partial
                int     page
 
 void
@@ -2881,9 +2883,9 @@ i_readgif_multi_wiol(ig)
 
 
 Imager::ImgRaw
-i_readpnm_wiol(ig, length)
+i_readpnm_wiol(ig, allow_partial)
         Imager::IO     ig
-	       int     length
+	       int     allow_partial
 
 
 undef_int
@@ -2912,8 +2914,9 @@ i_writebmp_wiol(im,ig)
         Imager::IO     ig
 
 Imager::ImgRaw
-i_readbmp_wiol(ig)
+i_readbmp_wiol(ig, allow_partial=0)
         Imager::IO     ig
+        int            allow_partial
 
 
 undef_int

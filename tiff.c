@@ -151,7 +151,7 @@ comp_munmap(thandle_t h, tdata_t p, toff_t off) {
   /* do nothing */
 }
 
-static i_img *read_one_tiff(TIFF *tif) {
+static i_img *read_one_tiff(TIFF *tif, int allow_partial) {
   i_img *im;
   uint32 width, height;
   uint16 channels;
@@ -296,6 +296,14 @@ static i_img *read_one_tiff(TIFF *tif) {
       ++row;
     }
     if (row < height) {
+      if (allow_partial) {
+        i_tags_setn(&im->tags, "i_lines_read", row);
+      }
+      else {
+        i_img_destroy(im);
+        _TIFFfree(buffer);
+        return NULL;
+      }
       error = 1;
     }
     /* Ideally we'd optimize the palette, but that could be expensive
@@ -382,8 +390,17 @@ static i_img *read_one_tiff(TIFF *tif) {
         uint32 newrows, i_row;
         
         if (!TIFFReadRGBAStrip(tif, row, raster)) {
-          error++;
-          break;
+          if (allow_partial) {
+            i_tags_setn(&im->tags, "i_lines_read", row);
+            error++;
+            break;
+          }
+          else {
+            i_push_error(0, "could not read TIFF image strip");
+            _TIFFfree(raster);
+            i_img_destroy(im);
+            return NULL;
+          }
         }
         
         newrows = (row+rowsperstrip > height) ? height-row : rowsperstrip;
@@ -406,7 +423,7 @@ static i_img *read_one_tiff(TIFF *tif) {
   }
   if (error) {
     mm_log((1, "i_readtiff_wiol: error during reading\n"));
-    i_tags_addn(&im->tags, "i_incomplete", 0, 1);
+    i_tags_setn(&im->tags, "i_incomplete", 1);
   }
   if (raster)
     _TIFFfree( raster );
@@ -420,7 +437,7 @@ static i_img *read_one_tiff(TIFF *tif) {
 =cut
 */
 i_img*
-i_readtiff_wiol(io_glue *ig, int length, int page) {
+i_readtiff_wiol(io_glue *ig, int allow_partial, int page) {
   TIFF* tif;
   TIFFErrorHandler old_handler;
   TIFFErrorHandler old_warn_handler;
@@ -436,7 +453,7 @@ i_readtiff_wiol(io_glue *ig, int length, int page) {
   /* Also add code to check for mmapped code */
 
   io_glue_commit_types(ig);
-  mm_log((1, "i_readtiff_wiol(ig %p, length %d)\n", ig, length));
+  mm_log((1, "i_readtiff_wiol(ig %p, allow_partial %d, page %d)\n", ig, allow_partial, page));
   
   tif = TIFFClientOpen("(Iolayer)", 
 		       "rm", 
@@ -468,7 +485,7 @@ i_readtiff_wiol(io_glue *ig, int length, int page) {
     }
   }
 
-  im = read_one_tiff(tif);
+  im = read_one_tiff(tif, allow_partial);
 
   if (TIFFLastDirectory(tif)) mm_log((1, "Last directory of tiff file\n"));
   TIFFSetErrorHandler(old_handler);
@@ -526,7 +543,7 @@ i_readtiff_multi_wiol(io_glue *ig, int length, int *count) {
 
   *count = 0;
   do {
-    i_img *im = read_one_tiff(tif);
+    i_img *im = read_one_tiff(tif, 0);
     if (!im)
       break;
     if (++*count > result_alloc) {

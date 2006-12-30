@@ -679,13 +679,12 @@ some standard information.
 
 =over
 
-=item i_xres
+=item *
 
-=item i_yres
-
-The spatial resolution of the image in pixels per inch.  If the image
-format uses a different scale, eg. pixels per meter, then this value
-is converted.  A floating point number stored as a string.
+X<i_xres tag>X<i_yres tag>X<tags, i_xres>X<tags, i_yres>i_xres, i_yres
+- The spatial resolution of the image in pixels per inch.  If the
+image format uses a different scale, eg. pixels per meter, then this
+value is converted.  A floating point number stored as a string.
 
   # our image was generated as a 300 dpi image
   $img->settag(name => 'i_xres', value => 300);
@@ -697,28 +696,39 @@ is converted.  A floating point number stored as a string.
   $img->settag(name => 'i_xres', value => 100 * 2.54);
   $img->settag(name => 'i_yres', value => 100 * 2.54);
 
-=item i_aspect_only
+=item *
 
-If this is non-zero then the values in i_xres and i_yres are treated
-as a ratio only.  If the image format does not support aspect ratios
-then this is scaled so the smaller value is 72dpi.
+X<i_aspect_only tag>X<tags, i_aspect_only>i_aspect_only - If this is
+non-zero then the values in i_xres and i_yres are treated as a ratio
+only.  If the image format does not support aspect ratios then this is
+scaled so the smaller value is 72dpi.
 
-=item i_incomplete
+=item *
 
-If this tag is present then the whole image could not be read.  This
-isn't implemented for all images yet, and may not be.
+X<i_incomplete tag>X<tags, i_incomplete>i_incomplete - If this tag is
+present then the whole image could not be read.  This isn't
+implemented for all images yet, and may not be.
 
-=item i_format
+=item *
 
-The file format this file was read from.
+X<i_lines_read tag>X<tags, i_lines_read>i_lines_read - If
+C<i_incomplete> is set then this tag may be set to the number of
+scanlines successfully read from the file.  This can be used to decide
+whether an image is worth processing.
+
+=item *
+
+X<i_format tag>X<tags, i_format>i_format - The file format this file
+was read from.
 
 =back
 
 =head2 Quantization options
 
-These options can be specified when calling write_multi() for gif
-files, when writing a single image with the gifquant option set to
-'gen', or for direct calls to i_writegif_gen and i_writegif_callback.
+These options can be specified when calling
+L<Imager::ImageTypes/to_paletted>, write_multi() for gif files, when
+writing a single image with the gifquant option set to 'gen', or for
+direct calls to i_writegif_gen and i_writegif_callback.
 
 =over
 
@@ -836,22 +846,28 @@ change.  Possible values are:
 
 =over
 
-=item none
+=item *
 
-Only colors supplied in 'colors' are used.
+none - only colors supplied in 'colors' are used.
 
-=item webmap
+=item *
 
-The web color map is used (need url here.)
+webmap - the web color map is used (need url here.)
 
-=item addi
+=item *
 
-The original code for generating the color map (Addi's code) is used.
+addi - The original code for generating the color map (Addi's code) is
+used.
 
-=item mediancut
+=item *
 
-Uses a mediancut algorithm, faster than 'addi', but not as good a
+mediancut - Uses a mediancut algorithm, faster than 'addi', but not as good a
 result.
+
+=item *
+
+mono, monochrome - a fixed black and white palette, suitable for
+producing bi-level images (eg. facsimile)
 
 =back
 

@@ -1,7 +1,8 @@
 #!perl -w
 use Imager ':all';
-use Test::More tests => 64;
+use Test::More tests => 143;
 use strict;
+use Imager::Test qw(test_image_raw test_image_16 is_color3 is_color1 is_image);
 
 init_log("testout/t104ppm.log",1);
 
@@ -9,12 +10,7 @@ my $green = i_color_new(0,255,0,255);
 my $blue  = i_color_new(0,0,255,255);
 my $red   = i_color_new(255,0,0,255);
 
-my $img    = Imager::ImgRaw::new(150,150,3);
-
-i_box_filled($img,70,25,130,125,$green);
-i_box_filled($img,20,25,80,125,$blue);
-i_arc($img,75,75,30,0,361,$red);
-i_conv($img,[0.1, 0.2, 0.4, 0.2, 0.1]);
+my $img    = test_image_raw();
 
 my $fh = openimage(">testout/t104.ppm");
 my $IO = Imager::io_new_fd(fileno($fh));
@@ -65,10 +61,12 @@ is(i_img_diff($gimg, $gcmpimg), 0,
 my $ooim = Imager->new;
 ok($ooim->read(file=>"testimg/simple.pbm"), "read simple pbm, via OO");
 
-check_gray(Imager::i_get_pixel($ooim->{IMG}, 0, 0), 255);
-check_gray(Imager::i_get_pixel($ooim->{IMG}, 0, 1), 0);
-check_gray(Imager::i_get_pixel($ooim->{IMG}, 1, 0), 0);
-check_gray(Imager::i_get_pixel($ooim->{IMG}, 1, 1), 255);
+check_gray(Imager::i_get_pixel($ooim->{IMG}, 0, 0), 0);
+check_gray(Imager::i_get_pixel($ooim->{IMG}, 0, 1), 255);
+check_gray(Imager::i_get_pixel($ooim->{IMG}, 1, 0), 255);
+check_gray(Imager::i_get_pixel($ooim->{IMG}, 1, 1), 0);
+is($ooim->type, 'paletted', "check pbm read as paletted");
+is($ooim->tags(name=>'pnm_type'), 1, "check pnm_type tag");
 
 {
   # https://rt.cpan.org/Ticket/Display.html?id=7465
@@ -87,9 +85,10 @@ check_gray(Imager::i_get_pixel($ooim->{IMG}, 1, 1), 255);
   
   # check the pixels
   ok(my ($white, $grey, $green) = $maxval->getpixel('x'=>[0,1,2], 'y'=>[0,0,0]), "fetch pixels");
-  check_color($white, 255, 255, 255, "white pixel");
-  check_color($grey,  130, 130, 130, "grey  pixel");
-  check_color($green, 125, 125, 0,   "green pixel");
+  is_color3($white, 255, 255, 255, "white pixel");
+  is_color3($grey,  130, 130, 130, "grey  pixel");
+  is_color3($green, 125, 125, 0,   "green pixel");
+  is($maxval->tags(name=>'pnm_type'), 6, "check pnm_type tag on maxval");
 
   # and do the same for ASCII images
   my $maxval_asc = Imager->new;
@@ -103,12 +102,14 @@ check_gray(Imager::i_get_pixel($ooim->{IMG}, 1, 1), 255);
   is($maxval_asc->getchannels, 3, "channel count");
   is($maxval_asc->getwidth, 3, "width");
   is($maxval_asc->getheight, 1, "height");
+
+  is($maxval->tags(name=>'pnm_type'), 6, "check pnm_type tag on maxval");
   
   # check the pixels
   ok(my ($white_asc, $grey_asc, $green_asc) = $maxval_asc->getpixel('x'=>[0,1,2], 'y'=>[0,0,0]), "fetch pixels");
-  check_color($white_asc, 255, 255, 255, "white asc pixel");
-  check_color($grey_asc,  130, 130, 130, "grey  asc pixel");
-  check_color($green_asc, 125, 125, 0,   "green asc pixel");
+  is_color3($white_asc, 255, 255, 255, "white asc pixel");
+  is_color3($grey_asc,  130, 130, 130, "grey  asc pixel");
+  is_color3($green_asc, 125, 125, 0,   "green asc pixel");
 }
 
 { # previously we didn't validate maxval at all, make sure it's
@@ -127,13 +128,15 @@ check_gray(Imager::i_get_pixel($ooim->{IMG}, 1, 1), 255);
   like($maxval65536->errstr, qr/maxval of 65536 is over 65535 - invalid pnm file/,
        "error expected from reading maxval_65536.ppm");
 
-  # maxval of 256 is valid, but Imager can't handle it yet in binary files
+  # maxval of 256 is valid, and handled as of 0.56
   my $maxval256 = Imager->new;
-  ok(!$maxval256->read(file=>'testimg/maxval_256.ppm'),
-     "should fail reading maxval 256 image");
-  print "# ",$maxval256->errstr,"\n";
-  like($maxval256->errstr, qr/maxval of 256 is over 255 - not currently supported by Imager/,
-       "error expected from reading maxval_256.ppm");
+  ok($maxval256->read(file=>'testimg/maxval_256.ppm'),
+     "should succeed reading maxval 256 image");
+  is_color3($maxval256->getpixel(x => 0, 'y' => 0),
+            0, 0, 0, "check black in maxval_256");
+  is_color3($maxval256->getpixel(x => 0, 'y' => 1),
+            255, 255, 255, "check white in maxval_256");
+  is($maxval256->bits, 16, "check bits/sample on maxval 256");
 
   # make sure we handle maxval > 255 for ascii
   my $maxval4095asc = Imager->new;
@@ -142,11 +145,12 @@ check_gray(Imager::i_get_pixel($ooim->{IMG}, 1, 1), 255);
   is($maxval4095asc->getchannels, 3, "channels");
   is($maxval4095asc->getwidth, 3, "width");
   is($maxval4095asc->getheight, 1, "height");
+  is($maxval4095asc->bits, 16, "check bits/sample on maxval 4095");
 
   ok(my ($white, $grey, $green) = $maxval4095asc->getpixel('x'=>[0,1,2], 'y'=>[0,0,0]), "fetch pixels");
-  check_color($white, 255, 255, 255, "white 4095 pixel");
-  check_color($grey,  128, 128, 128, "grey  4095 pixel");
-  check_color($green, 127, 127, 0,   "green 4095 pixel");
+  is_color3($white, 255, 255, 255, "white 4095 pixel");
+  is_color3($grey,  128, 128, 128, "grey  4095 pixel");
+  is_color3($green, 127, 127, 0,   "green 4095 pixel");
 }
 
 { # check i_format is set when reading a pnm file
@@ -194,6 +198,15 @@ check_gray(Imager::i_get_pixel($ooim->{IMG}, 1, 1), 255);
   Imager->set_file_limits(reset=>1);
 }
 
+{
+  # check we correctly sync with the data stream
+  my $im = Imager->new;
+  ok($im->read(file => 'testimg/pgm.pgm', type => 'pnm'),
+     "read pgm.pgm");
+  print "# ", $im->getsamples('y' => 0), "\n";
+  is_color1($im->getpixel(x=>0, 'y' => 0), 254, "check top left");
+}
+
 { # check error messages set correctly
   my $im = Imager->new(xsize=>100, ysize=>100, channels=>4);
   ok(!$im->write(file=>"testout/t104_fail.ppm", type=>'pnm'),
@@ -204,6 +217,242 @@ check_gray(Imager::i_get_pixel($ooim->{IMG}, 1, 1), 255);
      'should fail to read script as an image file');
   is($im->errstr, 'unable to read pnm image: bad header magic, not a PNM file',
      "check error message");
+}
+
+# various bad input files
+print "# check error handling\n";
+{
+  my $im = Imager->new;
+  ok(!$im->read(file => 'testimg/short_bin.ppm', type=>'pnm'),
+     "fail to read short bin ppm");
+  cmp_ok($im->errstr, '=~', 'short read - file truncated', 
+         "check error message");
+}
+
+{
+  my $im = Imager->new;
+  ok(!$im->read(file => 'testimg/short_bin16.ppm', type=>'pnm'),
+     "fail to read short bin ppm (maxval 65535)");
+  cmp_ok($im->errstr, '=~', 'short read - file truncated', 
+         "check error message");
+}
+
+{
+  my $im = Imager->new;
+  ok(!$im->read(file => 'testimg/short_bin.pgm', type=>'pnm'),
+     "fail to read short bin pgm");
+  cmp_ok($im->errstr, '=~', 'short read - file truncated', 
+         "check error message");
+}
+
+{
+  my $im = Imager->new;
+  ok(!$im->read(file => 'testimg/short_bin16.pgm', type=>'pnm'),
+     "fail to read short bin pgm (maxval 65535)");
+  cmp_ok($im->errstr, '=~', 'short read - file truncated', 
+         "check error message");
+}
+
+{
+  my $im = Imager->new;
+  ok(!$im->read(file => 'testimg/short_bin.pbm', type => 'pnm'),
+     "fail to read a short bin pbm");
+  cmp_ok($im->errstr, '=~', 'short read - file truncated', 
+         "check error message");
+}
+
+{
+  my $im = Imager->new;
+  ok(!$im->read(file => 'testimg/short_asc.ppm', type => 'pnm'),
+     "fail to read a short asc ppm");
+  cmp_ok($im->errstr, '=~', 'short read - file truncated', 
+         "check error message");
+}
+
+{
+  my $im = Imager->new;
+  ok(!$im->read(file => 'testimg/short_asc.pgm', type => 'pnm'),
+     "fail to read a short asc pgm");
+  cmp_ok($im->errstr, '=~', 'short read - file truncated', 
+         "check error message");
+}
+
+{
+  my $im = Imager->new;
+  ok(!$im->read(file => 'testimg/short_asc.pbm', type => 'pnm'),
+     "fail to read a short asc pbm");
+  cmp_ok($im->errstr, '=~', 'short read - file truncated', 
+         "check error message");
+}
+
+{
+  my $im = Imager->new;
+  ok(!$im->read(file => 'testimg/bad_asc.ppm', type => 'pnm'),
+     "fail to read a bad asc ppm");
+  cmp_ok($im->errstr, '=~', 'invalid data for ascii pnm', 
+         "check error message");
+}
+
+{
+  my $im = Imager->new;
+  ok(!$im->read(file => 'testimg/bad_asc.pgm', type => 'pnm'),
+     "fail to read a bad asc pgm");
+  cmp_ok($im->errstr, '=~', 'invalid data for ascii pnm', 
+         "check error message");
+}
+
+{
+  my $im = Imager->new;
+  ok(!$im->read(file => 'testimg/bad_asc.pbm', type => 'pnm'),
+     "fail to read a bad asc pbm");
+  cmp_ok($im->errstr, '=~', 'invalid data for ascii pnm', 
+         "check error message");
+}
+
+{
+  my $im = Imager->new;
+  ok($im->read(file => 'testimg/short_bin.ppm', type => 'pnm',
+                allow_partial => 1),
+     "partial read bin ppm");
+  is($im->tags(name => 'i_incomplete'), 1, "partial flag set");
+  is($im->tags(name => 'i_lines_read'), 1, "lines_read set");
+}
+
+{
+  my $im = Imager->new;
+  ok($im->read(file => 'testimg/short_bin16.ppm', type => 'pnm',
+                allow_partial => 1),
+     "partial read bin16 ppm");
+  is($im->tags(name => 'i_incomplete'), 1, "partial flag set");
+  is($im->tags(name => 'i_lines_read'), 1, "lines_read set");
+  is($im->bits, 16, "check correct bits");
+}
+
+{
+  my $im = Imager->new;
+  ok($im->read(file => 'testimg/short_bin.pgm', type => 'pnm',
+                allow_partial => 1),
+     "partial read bin pgm");
+  is($im->tags(name => 'i_incomplete'), 1, "partial flag set");
+  is($im->tags(name => 'i_lines_read'), 1, "lines_read set");
+}
+
+{
+  my $im = Imager->new;
+  ok($im->read(file => 'testimg/short_bin16.pgm', type => 'pnm',
+                allow_partial => 1),
+     "partial read bin16 pgm");
+  is($im->tags(name => 'i_incomplete'), 1, "partial flag set");
+  is($im->tags(name => 'i_lines_read'), 1, "lines_read set");
+}
+
+{
+  my $im = Imager->new;
+  ok($im->read(file => 'testimg/short_bin.pbm', type => 'pnm',
+                allow_partial => 1),
+     "partial read bin pbm");
+  is($im->tags(name => 'i_incomplete'), 1, "partial flag set");
+  is($im->tags(name => 'i_lines_read'), 1, "lines_read set");
+}
+
+{
+  my $im = Imager->new;
+  ok($im->read(file => 'testimg/short_asc.ppm', type => 'pnm',
+                allow_partial => 1),
+     "partial read asc ppm");
+  is($im->tags(name => 'i_incomplete'), 1, "partial flag set");
+  is($im->tags(name => 'i_lines_read'), 1, "lines_read set");
+}
+
+{
+  my $im = Imager->new;
+  ok($im->read(file => 'testimg/short_asc.pgm', type => 'pnm',
+                allow_partial => 1),
+     "partial read asc pgm");
+  is($im->tags(name => 'i_incomplete'), 1, "partial flag set");
+  is($im->tags(name => 'i_lines_read'), 1, "lines_read set");
+}
+
+{
+  my $im = Imager->new;
+  ok($im->read(file => 'testimg/short_asc.pbm', type => 'pnm',
+                allow_partial => 1),
+     "partial read asc pbm");
+  is($im->tags(name => 'i_incomplete'), 1, "partial flag set");
+  is($im->tags(name => 'i_lines_read'), 1, "lines_read set");
+}
+
+{
+  my $im = Imager->new;
+  ok($im->read(file => 'testimg/bad_asc.ppm', type => 'pnm',
+                allow_partial => 1),
+     "partial read bad asc ppm");
+  is($im->tags(name => 'i_incomplete'), 1, "partial flag set");
+  is($im->tags(name => 'i_lines_read'), 1, "lines_read set");
+}
+
+{
+  my $im = Imager->new;
+  ok($im->read(file => 'testimg/bad_asc.pgm', type => 'pnm',
+                allow_partial => 1),
+     "partial read bad asc pgm");
+  is($im->tags(name => 'i_incomplete'), 1, "partial flag set");
+  is($im->tags(name => 'i_lines_read'), 1, "lines_read set");
+}
+
+{
+  my $im = Imager->new;
+  ok($im->read(file => 'testimg/bad_asc.pbm', type => 'pnm',
+                allow_partial => 1),
+     "partial read bad asc pbm");
+  is($im->tags(name => 'i_incomplete'), 1, "partial flag set");
+  is($im->tags(name => 'i_lines_read'), 1, "lines_read set");
+}
+
+{
+  print "# monochrome output\n";
+  my $im = Imager->new(xsize => 10, ysize => 10, type => 'paletted');
+  ok($im->addcolors(colors => [ '#000000', '#FFFFFF' ]),
+     "add black and white");
+  $im->box(filled => 1, xmax => 4, color => '#000000');
+  $im->box(filled => 1, xmin => 5, color => '#FFFFFF');
+  is($im->type, 'paletted', 'mono still paletted');
+  ok($im->write(file => 'testout/t104_mono.pbm', type => 'pnm'),
+     "save as pbm");
+
+  # check it
+  my $imread = Imager->new;
+  ok($imread->read(file => 'testout/t104_mono.pbm', type=>'pnm'),
+     "read it back in")
+    or print "# ", $imread->errstr, "\n";
+  is($imread->type, 'paletted', "check result is paletted");
+  is($imread->tags(name => 'pnm_type'), 4, "check type");
+}
+
+{
+  print "# 16-bit output\n";
+  my $data;
+  my $im = test_image_16();
+  
+  # without tag, it should do 8-bit output
+  ok($im->write(data => \$data, type => 'pnm'),
+     "write 16-bit image as 8-bit/sample ppm");
+  my $im8 = Imager->new;
+  ok($im8->read(data => $data), "read it back");
+  is($im8->tags(name => 'pnm_maxval'), 255, "check maxval");
+  is_image($im, $im8, "check image matches");
+
+  # try 16-bit output
+  $im->settag(name => 'pnm_write_wide_data', value => 1);
+  $data = '';
+  ok($im->write(data => \$data, type => 'pnm'),
+     "write 16-bit image as 16-bit/sample ppm");
+  $im->write(file=>'testout/t104_16.ppm');
+  my $im16 = Imager->new;
+  ok($im16->read(data => $data), "read it back");
+  is($im16->tags(name => 'pnm_maxval'), 65535, "check maxval");
+  $im16->write(file=>'testout/t104_16b.ppm');
+  is_image($im, $im16, "check image matches");
 }
 
 sub openimage {
@@ -229,10 +478,3 @@ sub check_gray {
   is($g, $gray, "compare gray");
 }
 
-sub check_color {
-  my ($c, $red, $green, $blue, $note) = @_;
-
-  my ($r, $g, $b) = $c->rgba;
-  is_deeply([ $r, $g, $b], [ $red, $green, $blue ],
-	    "$note ($r, $g, $b) compared to ($red, $green, $blue)");
-}

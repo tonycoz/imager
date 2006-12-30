@@ -15,7 +15,7 @@ pnm.c - implements reading and writing ppm/pnm/pbm files, uses io layer.
 =head1 SYNOPSIS
 
    io_glue *ig = io_new_fd( fd );
-   i_img *im   = i_readpnm_wiol(ig, -1); // no limit on how much is read
+   i_img *im   = i_readpnm_wiol(ig, 0); // no limit on how much is read
    // or 
    io_glue *ig = io_new_fd( fd );
    return_code = i_writepnm_wiol(im, ig); 
@@ -75,9 +75,11 @@ Returns a pointer to the byte or NULL on failure (internal).
 =cut
 */
 
+#define gnext(mb) (((mb)->cp == (mb)->len) ? gnextf(mb) : (mb)->buf + (mb)->cp++)
+
 static
 char *
-gnext(mbuf *mb) {
+gnextf(mbuf *mb) {
   io_glue *ig = mb->ig;
   if (mb->cp == mb->len) {
     mb->cp = 0;
@@ -88,7 +90,6 @@ gnext(mbuf *mb) {
       return NULL;
     }
     if (mb->len == 0) {
-      i_push_error(errno, "unexpected end of file");
       mm_log((1, "i_readpnm: end of file\n"));
       return NULL;
     }
@@ -108,9 +109,11 @@ the byte or NULL on failure (internal).
 =cut
 */
 
+#define gpeek(mb) ((mb)->cp == (mb)->len ? gpeekf(mb) : (mb)->buf + (mb)->cp)
+
 static
 char *
-gpeek(mbuf *mb) {
+gpeekf(mbuf *mb) {
   io_glue *ig = mb->ig;
   if (mb->cp == mb->len) {
     mb->cp = 0;
@@ -121,7 +124,6 @@ gpeek(mbuf *mb) {
       return NULL;
     }
     if (mb->len == 0) {
-      i_push_error(0, "unexpected end of file");
       mm_log((1, "i_readpnm: end of file\n"));
       return NULL;
     }
@@ -129,7 +131,27 @@ gpeek(mbuf *mb) {
   return &mb->buf[mb->cp];
 }
 
-
+int
+gread(mbuf *mb, unsigned char *buf, size_t read_size) {
+  int total_read = 0;
+  if (mb->cp != mb->len) {
+    int avail_size = mb->len - mb->cp;
+    int use_size = read_size > avail_size ? avail_size : read_size;
+    memcpy(buf, mb->buf+mb->cp, use_size);
+    mb->cp += use_size;
+    total_read += use_size;
+    read_size -= use_size;
+    buf += use_size;
+  }
+  if (read_size) {
+    io_glue *ig = mb->ig;
+    int read_res = i_io_read(ig, buf, read_size);
+    if (read_res >= 0) {
+      total_read += read_res;
+    }
+  }
+  return total_read;
+}
 
 
 /*
@@ -202,6 +224,10 @@ gnum(mbuf *mb, int *i) {
 
   if (!skip_spaces(mb)) return 0; 
 
+  if (!(cp = gpeek(mb))) 
+    return 0;
+  if (!misnumber(*cp))
+    return 0;
   while( (cp = gpeek(mb)) && misnumber(*cp) ) {
     *i = *i*10+(*cp-'0');
     cp = gnext(mb);
@@ -209,35 +235,307 @@ gnum(mbuf *mb, int *i) {
   return 1;
 }
 
+static
+i_img *
+read_pgm_ppm_bin8(mbuf *mb, i_img *im, int width, int height, 
+                  int channels, int maxval, int allow_partial) {
+  i_color *line, *linep;
+  int read_size;
+  unsigned char *read_buf, *readp;
+  int x, y, ch;
+  int rounder = maxval / 2;
+
+  line = mymalloc(width * sizeof(i_color));
+  read_size = channels * width;
+  read_buf = mymalloc(read_size);
+  for(y=0;y<height;y++) {
+    linep = line;
+    readp = read_buf;
+    if (gread(mb, read_buf, read_size) != read_size) {
+      myfree(line);
+      myfree(read_buf);
+      if (allow_partial) {
+        i_tags_setn(&im->tags, "i_incomplete", 1);
+        i_tags_setn(&im->tags, "i_lines_read", y);
+        return im;
+      }
+      else {
+        i_push_error(0, "short read - file truncated?");
+        i_img_destroy(im);
+        return NULL;
+      }
+    }
+    if (maxval == 255) {
+      for(x=0; x<width; x++) {
+        for(ch=0; ch<channels; ch++) {
+          linep->channel[ch] = *readp++;
+        }
+        ++linep;
+      }
+    }
+    else {
+      for(x=0; x<width; x++) {
+        for(ch=0; ch<channels; ch++) {
+          /* we just clamp samples to the correct range */
+          unsigned sample = *readp++;
+          if (sample > maxval)
+            sample = maxval;
+          linep->channel[ch] = (sample * 255 + rounder) / maxval;
+        }
+        ++linep;
+      }
+    }
+    i_plin(im, 0, width, y, line);
+  }
+  myfree(read_buf);
+  myfree(line);
+
+  return im;
+}
+
+static
+i_img *
+read_pgm_ppm_bin16(mbuf *mb, i_img *im, int width, int height, 
+                  int channels, int maxval, int allow_partial) {
+  i_fcolor *line, *linep;
+  int read_size;
+  unsigned char *read_buf, *readp;
+  int x, y, ch;
+  double maxvalf = maxval;
+
+  line = mymalloc(width * sizeof(i_fcolor));
+  read_size = channels * width * 2;
+  read_buf = mymalloc(read_size);
+  for(y=0;y<height;y++) {
+    linep = line;
+    readp = read_buf;
+    if (gread(mb, read_buf, read_size) != read_size) {
+      myfree(line);
+      myfree(read_buf);
+      if (allow_partial) {
+        i_tags_setn(&im->tags, "i_incomplete", 1);
+        i_tags_setn(&im->tags, "i_lines_read", y);
+        return im;
+      }
+      else {
+        i_push_error(0, "short read - file truncated?");
+        i_img_destroy(im);
+        return NULL;
+      }
+    }
+    for(x=0; x<width; x++) {
+      for(ch=0; ch<channels; ch++) {
+        unsigned sample = (readp[0] << 8) + readp[1];
+        if (sample > maxval)
+          sample = maxval;
+        readp += 2;
+        linep->channel[ch] = sample / maxvalf;
+      }
+      ++linep;
+    }
+    i_plinf(im, 0, width, y, line);
+  }
+  myfree(read_buf);
+  myfree(line);
+
+  return im;
+}
+
+static 
+i_img *
+read_pbm_bin(mbuf *mb, i_img *im, int width, int height, int allow_partial) {
+  i_palidx *line, *linep;
+  int read_size;
+  unsigned char *read_buf, *readp;
+  int x, y;
+  unsigned mask;
+
+  line = mymalloc(width * sizeof(i_palidx));
+  read_size = (width + 7) / 8;
+  read_buf = mymalloc(read_size);
+  for(y = 0; y < height; y++) {
+    if (gread(mb, read_buf, read_size) != read_size) {
+      myfree(line);
+      myfree(read_buf);
+      if (allow_partial) {
+        i_tags_setn(&im->tags, "i_incomplete", 1);
+        i_tags_setn(&im->tags, "i_lines_read", y);
+        return im;
+      }
+      else {
+        i_push_error(0, "short read - file truncated?");
+        i_img_destroy(im);
+        return NULL;
+      }
+    }
+    linep = line;
+    readp = read_buf;
+    mask = 0x80;
+    for(x = 0; x < width; ++x) {
+      *linep++ = *readp & mask ? 1 : 0;
+      mask >>= 1;
+      if (mask == 0) {
+        ++readp;
+        mask = 0x80;
+      }
+    }
+    i_ppal(im, 0, width, y, line);
+  }
+  myfree(read_buf);
+  myfree(line);
+
+  return im;
+}
+
+/* unlike pgm/ppm pbm:
+  - doesn't require spaces between samples (bits)
+  - 1 (maxval) is black instead of white
+*/
+static 
+i_img *
+read_pbm_ascii(mbuf *mb, i_img *im, int width, int height, int allow_partial) {
+  i_palidx *line, *linep;
+  int x, y;
+
+  line = mymalloc(width * sizeof(i_palidx));
+  for(y = 0; y < height; y++) {
+    linep = line;
+    for(x = 0; x < width; ++x) {
+      char *cp;
+      skip_spaces(mb);
+      if (!(cp = gnext(mb)) || (*cp != '0' && *cp != '1')) {
+        myfree(line);
+        if (allow_partial) {
+          i_tags_setn(&im->tags, "i_incomplete", 1);
+          i_tags_setn(&im->tags, "i_lines_read", y);
+          return im;
+        }
+        else {
+          if (cp)
+            i_push_error(0, "invalid data for ascii pnm");
+          else
+            i_push_error(0, "short read - file truncated?");
+          i_img_destroy(im);
+          return NULL;
+        }
+      }
+      *linep++ = *cp == '0' ? 0 : 1;
+    }
+    i_ppal(im, 0, width, y, line);
+  }
+  myfree(line);
+
+  return im;
+}
+
+static
+i_img *
+read_pgm_ppm_ascii(mbuf *mb, i_img *im, int width, int height, int channels, 
+                   int maxval, int allow_partial) {
+  i_color *line, *linep;
+  int x, y, ch;
+  int rounder = maxval / 2;
+
+  line = mymalloc(width * sizeof(i_color));
+  for(y=0;y<height;y++) {
+    linep = line;
+    for(x=0; x<width; x++) {
+      for(ch=0; ch<channels; ch++) {
+        int sample;
+        
+        if (!gnum(mb, &sample)) {
+          myfree(line);
+          if (allow_partial) {
+            i_tags_setn(&im->tags, "i_incomplete", 1);
+            i_tags_setn(&im->tags, "i_lines_read", 1);
+            return im;
+          }
+          else {
+            if (gpeek(mb))
+              i_push_error(0, "invalid data for ascii pnm");
+            else
+              i_push_error(0, "short read - file truncated?");
+            i_img_destroy(im);
+            return NULL;
+          }
+        }
+        if (sample > maxval)
+          sample = maxval;
+        linep->channel[ch] = (sample * 255 + rounder) / maxval;
+      }
+      ++linep;
+    }
+    i_plin(im, 0, width, y, line);
+  }
+  myfree(line);
+
+  return im;
+}
+
+static
+i_img *
+read_pgm_ppm_ascii_16(mbuf *mb, i_img *im, int width, int height, 
+                      int channels, int maxval, int allow_partial) {
+  i_fcolor *line, *linep;
+  int x, y, ch;
+  double maxvalf = maxval;
+
+  line = mymalloc(width * sizeof(i_fcolor));
+  for(y=0;y<height;y++) {
+    linep = line;
+    for(x=0; x<width; x++) {
+      for(ch=0; ch<channels; ch++) {
+        int sample;
+        
+        if (!gnum(mb, &sample)) {
+          myfree(line);
+          if (allow_partial) {
+          }
+          else {
+            if (gpeek(mb))
+              i_push_error(0, "invalid data for ascii pnm");
+            else
+              i_push_error(0, "short read - file truncated?");
+            i_img_destroy(im);
+            return NULL;
+          }
+        }
+        if (sample > maxval)
+          sample = maxval;
+        linep->channel[ch] = sample / maxvalf;
+      }
+      ++linep;
+    }
+    i_plinf(im, 0, width, y, line);
+  }
+  myfree(line);
+
+  return im;
+}
 
 /*
-=item i_readpnm_wiol(ig, length)
+=item i_readpnm_wiol(ig, allow_partial)
 
 Retrieve an image and stores in the iolayer object. Returns NULL on fatal error.
 
    ig     - io_glue object
-   length - maximum length to read from data source, before closing it -1 
-            signifies no limit.
+   allow_partial - allows a partial file to be read successfully
 
 =cut
 */
 
 
 i_img *
-i_readpnm_wiol(io_glue *ig, int length) {
+i_readpnm_wiol(io_glue *ig, int allow_partial) {
   i_img* im;
   int type;
-  int x, y, ch;
   int width, height, maxval, channels, pcount;
   int rounder;
   char *cp;
-  unsigned char *uc;
   mbuf buf;
-  i_color val;
 
   i_clear_error();
-
-  mm_log((1,"i_readpnm(ig %p, length %d)\n", ig, length));
+  mm_log((1,"i_readpnm(ig %p, allow_partial %d)\n", ig, allow_partial));
 
   io_glue_commit_types(ig);
   init_buf(&buf, ig);
@@ -327,11 +625,6 @@ i_readpnm_wiol(io_glue *ig, int length) {
       mm_log((1, "i_readpnm: maxval of %d is over 65535 - invalid pnm file\n"));
       return NULL;
     }
-    else if (type >= 4 && maxval > 255) {
-      i_push_errorf(0, "maxval of %d is over 255 - not currently supported by Imager for binary pnm", maxval);
-      mm_log((1, "i_readpnm: maxval of %d is over 255 - not currently supported by Imager for binary pnm\n", maxval));
-      return NULL;
-    }
   } else maxval=1;
   rounder = maxval / 2;
 
@@ -350,71 +643,172 @@ i_readpnm_wiol(io_glue *ig, int length) {
   }
 
   mm_log((1, "i_readpnm: (%d x %d), channels = %d, maxval = %d\n", width, height, channels, maxval));
-  
-  im = i_img_empty_ch(NULL, width, height, channels);
 
-  i_tags_add(&im->tags, "i_format", 0, "pnm", -1, 0);
+  if (type == 1 || type == 4) {
+    i_color pbm_pal[2];
+    pbm_pal[0].channel[0] = 255;
+    pbm_pal[1].channel[0] = 0;
+    
+    im = i_img_pal_new(width, height, 1, 256);
+    i_addcolors(im, pbm_pal, 2);
+  }
+  else {
+    if (maxval > 255)
+      im = i_img_16_new(width, height, channels);
+    else
+      im = i_img_8_new(width, height, channels);
+  }
 
   switch (type) {
   case 1: /* Ascii types */
+    im = read_pbm_ascii(&buf, im, width, height, allow_partial);
+    break;
+
   case 2:
   case 3:
-    for(y=0;y<height;y++) for(x=0; x<width; x++) {
-      for(ch=0; ch<channels; ch++) {
-	int t;
-	if (gnum(&buf, &t)) val.channel[ch] = (t * 255 + rounder) / maxval;
-	else {
-	  mm_log((1,"i_readpnm: gnum() returned false in data\n"));
-	  return im;
-	}
-      }
-      i_ppix(im, x, y, &val);
-    }
+    if (maxval > 255)
+      im = read_pgm_ppm_ascii_16(&buf, im, width, height, channels, maxval, allow_partial);
+    else
+      im = read_pgm_ppm_ascii(&buf, im, width, height, channels, maxval, allow_partial);
     break;
     
   case 4: /* binary pbm */
-    for(y=0;y<height;y++) for(x=0; x<width; x+=8) {
-      if ( (uc = (unsigned char*)gnext(&buf)) ) {
-	int xt;
-	int pc = width-x < 8 ? width-x : 8;
-	/*	mm_log((1,"i_readpnm: y=%d x=%d pc=%d\n", y, x, pc)); */
-	for(xt = 0; xt<pc; xt++) {
-	  val.channel[0] = (*uc & (128>>xt)) ? 0 : 255; 
-	  i_ppix(im, x+xt, y, &val);
-	}
-      } else {
-	mm_log((1,"i_readpnm: gnext() returned false in data\n"));
-	return im;
-      }
-    }
+    im = read_pbm_bin(&buf, im, width, height, allow_partial);
     break;
 
   case 5: /* binary pgm */
   case 6: /* binary ppm */
-    for(y=0;y<height;y++) for(x=0; x<width; x++) {
-      for(ch=0; ch<channels; ch++) {
-	if ( (uc = (unsigned char*)gnext(&buf)) ) 
-	  val.channel[ch] = (*uc * 255 + rounder) / maxval;
-	else {
-	  mm_log((1,"i_readpnm: gnext() returned false in data\n"));
-	  return im;
-	}
-      }
-      i_ppix(im, x, y, &val);
-    }
+    if (maxval > 255)
+      im = read_pgm_ppm_bin16(&buf, im, width, height, channels, maxval, allow_partial);
+    else
+      im = read_pgm_ppm_bin8(&buf, im, width, height, channels, maxval, allow_partial);
     break;
+
   default:
     mm_log((1, "type %s [P%d] unsupported\n", typenames[type-1], type));
     return NULL;
   }
+
+  if (!im)
+    return NULL;
+
+  i_tags_add(&im->tags, "i_format", 0, "pnm", -1, 0);
+  i_tags_setn(&im->tags, "pnm_maxval", maxval);
+  i_tags_setn(&im->tags, "pnm_type", type);
+
   return im;
 }
 
+static
+int
+write_pbm(i_img *im, io_glue *ig, int zero_is_white) {
+  int x, y;
+  i_palidx *line;
+  int write_size;
+  unsigned char *write_buf;
+  unsigned char *writep;
+  char header[255];
+  unsigned mask;
+
+  sprintf(header, "P4\012# CREATOR: Imager\012%d %d\012", 
+          im->xsize, im->ysize);
+  if (i_io_write(ig, header, strlen(header)) < 0) {
+    i_push_error(0, "could not write pbm header");
+    return 0;
+  }
+  write_size = (im->xsize + 7) / 8;
+  line = mymalloc(sizeof(i_palidx) * im->xsize);
+  write_buf = mymalloc(write_size);
+  for (y = 0; y < im->ysize; ++y) {
+    i_gpal(im, 0, im->xsize, y, line);
+    mask = 0x80;
+    writep = write_buf;
+    memset(write_buf, 0, write_size);
+    for (x = 0; x < im->xsize; ++x) {
+      if (zero_is_white ? line[x] : !line[x])
+        *writep |= mask;
+      mask >>= 1;
+      if (!mask) {
+        ++writep;
+        mask = 0x80;
+      }
+    }
+    if (i_io_write(ig, write_buf, write_size) != write_size) {
+      i_push_error(0, "write failure");
+      myfree(write_buf);
+      myfree(line);
+      return 0;
+    }
+  }
+  myfree(write_buf);
+  myfree(line);
+
+  return 1;
+}
+
+static
+int
+write_ppm_data_8(i_img *im, io_glue *ig) {
+  int write_size = im->xsize * im->channels;
+  unsigned char *data = mymalloc(write_size);
+  int y = 0;
+  int rc = 1;
+
+  while (y < im->ysize && rc >= 0) {
+    i_gsamp(im, 0, im->xsize, y, data, NULL, im->channels);
+    if (i_io_write(ig, data, write_size) != write_size) {
+      i_push_error(errno, "could not write ppm data");
+      rc = 0;
+      break;
+    }
+    ++y;
+  }
+  myfree(data);
+
+  return rc;
+}
+
+static
+int
+write_ppm_data_16(i_img *im, io_glue *ig) {
+  int sample_count = im->channels * im->xsize;
+  int write_size = sample_count * 2;
+  int line_size = sample_count * sizeof(i_fsample_t);
+  i_fsample_t *line_buf = mymalloc(line_size);
+  i_fsample_t *samplep;
+  unsigned char *write_buf = mymalloc(write_size);
+  unsigned char *writep;
+  int sample_num;
+  int y = 0;
+  int rc = 1;
+
+  while (y < im->ysize) {
+    i_gsampf(im, 0, im->xsize, y, line_buf, NULL, im->channels);
+    samplep = line_buf;
+    writep = write_buf;
+    for (sample_num = 0; sample_num < sample_count; ++sample_num) {
+      unsigned sample16 = SampleFTo16(*samplep++);
+      *writep++ = sample16 >> 8;
+      *writep++ = sample16 & 0xFF;
+    }
+    if (i_io_write(ig, write_buf, write_size) != write_size) {
+      i_push_error(errno, "could not write ppm data");
+      rc = 0;
+      break;
+    }
+    ++y;
+  }
+  myfree(line_buf);
+  myfree(write_buf);
+
+  return rc;
+}
 
 undef_int
 i_writeppm_wiol(i_img *im, io_glue *ig) {
   char header[255];
-  int rc;
+  int zero_is_white;
+  int wide_data;
 
   mm_log((1,"i_writeppm(im %p, ig %p)\n", im, ig));
   i_clear_error();
@@ -424,83 +818,55 @@ i_writeppm_wiol(i_img *im, io_glue *ig) {
 
   io_glue_commit_types(ig);
 
-  if (im->channels == 3) {
-    sprintf(header,"P6\n#CREATOR: Imager\n%d %d\n255\n",im->xsize,im->ysize);
-    if (ig->writecb(ig,header,strlen(header))<0) {
+  if (i_img_is_monochrome(im, &zero_is_white)) {
+    return write_pbm(im, ig, zero_is_white);
+  }
+  else {
+    int type;
+    int maxval;
+
+    if (!i_tags_get_int(&im->tags, "pnm_write_wide_data", 0, &wide_data))
+      wide_data = 0;
+
+    if (im->channels == 3) {
+      type = 6;
+    }
+    else if (im->channels == 1) {
+      type = 5;
+    }
+    else {
+      i_push_error(0, "can only save 1 or 3 channel images to pnm");
+      mm_log((1,"i_writeppm: ppm/pgm is 1 or 3 channel only (current image is %d)\n",im->channels));
+      return(0);
+    }
+    if (im->bits <= 8 || !wide_data)
+      maxval = 255;
+    else
+      maxval = 65535;
+
+    sprintf(header,"P%d\n#CREATOR: Imager\n%d %d\n%d\n", 
+            type, im->xsize, im->ysize, maxval);
+
+    if (ig->writecb(ig,header,strlen(header)) != strlen(header)) {
       i_push_error(errno, "could not write ppm header");
       mm_log((1,"i_writeppm: unable to write ppm header.\n"));
       return(0);
     }
 
     if (!im->virtual && im->bits == i_8_bits && im->type == i_direct_type) {
-      rc = ig->writecb(ig,im->idata,im->bytes);
-    }
-    else {
-      unsigned char *data = mymalloc(3 * im->xsize);
-      if (data != NULL) {
-        int y = 0;
-        static int rgb_chan[3] = { 0, 1, 2 };
-
-        rc = 0;
-        while (y < im->ysize && rc >= 0) {
-          i_gsamp(im, 0, im->xsize, y, data, rgb_chan, 3);
-          rc = ig->writecb(ig, data, im->xsize * 3);
-          ++y;
-        }
-        myfree(data);
-      }
-      else {
-        i_push_error(0, "Out of memory");
+      if (ig->writecb(ig,im->idata,im->bytes) != im->bytes) {
+        i_push_error(errno, "could not write ppm data");
         return 0;
       }
     }
-    if (rc<0) {
-      i_push_error(errno, "could not write ppm data");
-      mm_log((1,"i_writeppm: unable to write ppm data.\n"));
-      return(0);
-    }
-  }
-  else if (im->channels == 1) {
-    sprintf(header, "P5\n#CREATOR: Imager\n%d %d\n255\n",
-	    im->xsize, im->ysize);
-    if (ig->writecb(ig,header, strlen(header)) < 0) {
-      i_push_error(errno, "could not write pgm header");
-      mm_log((1,"i_writeppm: unable to write pgm header.\n"));
-      return(0);
-    }
-
-    if (!im->virtual && im->bits == i_8_bits && im->type == i_direct_type) {
-      rc=ig->writecb(ig,im->idata,im->bytes);
+    else if (maxval == 255) {
+      if (!write_ppm_data_8(im, ig))
+        return 0;
     }
     else {
-      unsigned char *data = mymalloc(im->xsize);
-      if (data != NULL) {
-        int y = 0;
-        int chan = 0;
-
-        rc = 0;
-        while (y < im->ysize && rc >= 0) {
-          i_gsamp(im, 0, im->xsize, y, data, &chan, 1);
-          rc = ig->writecb(ig, data, im->xsize);
-          ++y;
-        }
-        myfree(data);
-      }
-      else {
-        i_push_error(0, "Out of memory");
+      if (!write_ppm_data_16(im, ig))
         return 0;
-      }
     }
-    if (rc<0) {
-      i_push_error(errno, "could not write pgm data");
-      mm_log((1,"i_writeppm: unable to write pgm data.\n"));
-      return(0);
-    }
-  }
-  else {
-    i_push_error(0, "can only save 1 or 3 channel images to pnm");
-    mm_log((1,"i_writeppm: ppm/pgm is 1 or 3 channel only (current image is %d)\n",im->channels));
-    return(0);
   }
   ig->closecb(ig);
 
@@ -512,7 +878,7 @@ i_writeppm_wiol(i_img *im, io_glue *ig) {
 
 =head1 AUTHOR
 
-Arnar M. Hrafnkelsson <addi@umich.edu>
+Arnar M. Hrafnkelsson <addi@umich.edu>, Tony Cook<tony@imager.perl.org>
 
 =head1 SEE ALSO
 

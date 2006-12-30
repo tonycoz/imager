@@ -45,14 +45,14 @@ static int write_8bit_data(io_glue *ig, i_img *im);
 static int write_24bit_data(io_glue *ig, i_img *im);
 static int read_bmp_pal(io_glue *ig, i_img *im, int count);
 static i_img *read_1bit_bmp(io_glue *ig, int xsize, int ysize, int clr_used, 
-                            int compression, long offbits);
+                            int compression, long offbits, int allow_partial);
 static i_img *read_4bit_bmp(io_glue *ig, int xsize, int ysize, int clr_used, 
-                            int compression, long offbits);
+                            int compression, long offbits, int allow_partial);
 static i_img *read_8bit_bmp(io_glue *ig, int xsize, int ysize, int clr_used, 
-                            int compression, long offbits);
+                            int compression, long offbits, int allow_partial);
 static i_img *read_direct_bmp(io_glue *ig, int xsize, int ysize, 
                               int bit_count, int clr_used, int compression,
-                              long offbits);
+                              long offbits, int allow_partial);
 
 /* 
 =item i_writebmp_wiol(im, io_glue)
@@ -102,7 +102,7 @@ BI_BITFIELDS images too, but I need a test image.
 */
 
 i_img *
-i_readbmp_wiol(io_glue *ig) {
+i_readbmp_wiol(io_glue *ig, int allow_partial) {
   int b_magic, m_magic, filesize, res1, res2, infohead_size;
   int xsize, ysize, planes, bit_count, compression, size_image, xres, yres;
   int clr_used, clr_important, offbits;
@@ -140,22 +140,25 @@ i_readbmp_wiol(io_glue *ig) {
   
   switch (bit_count) {
   case 1:
-    im = read_1bit_bmp(ig, xsize, ysize, clr_used, compression, offbits);
+    im = read_1bit_bmp(ig, xsize, ysize, clr_used, compression, offbits, 
+                       allow_partial);
     break;
 
   case 4:
-    im = read_4bit_bmp(ig, xsize, ysize, clr_used, compression, offbits);
+    im = read_4bit_bmp(ig, xsize, ysize, clr_used, compression, offbits, 
+                       allow_partial);
     break;
 
   case 8:
-    im = read_8bit_bmp(ig, xsize, ysize, clr_used, compression, offbits);
+    im = read_8bit_bmp(ig, xsize, ysize, clr_used, compression, offbits, 
+                       allow_partial);
     break;
 
   case 32:
   case 24:
   case 16:
     im = read_direct_bmp(ig, xsize, ysize, bit_count, clr_used, compression,
-                         offbits);
+                         offbits, allow_partial);
     break;
 
   default:
@@ -663,9 +666,9 @@ Returns the image or NULL.
 */
 static i_img *
 read_1bit_bmp(io_glue *ig, int xsize, int ysize, int clr_used, 
-              int compression, long offbits) {
+              int compression, long offbits, int allow_partial) {
   i_img *im;
-  int x, y, lasty, yinc;
+  int x, y, lasty, yinc, start_y;
   i_palidx *line, *p;
   unsigned char *packed;
   int line_size = (xsize + 7)/8;
@@ -690,17 +693,18 @@ read_1bit_bmp(io_glue *ig, int xsize, int ysize, int clr_used,
   line_size = (line_size+3) / 4 * 4;
 
   if (ysize > 0) {
-    y = ysize-1;
+    start_y = ysize-1;
     lasty = -1;
     yinc = -1;
   }
   else {
     /* when ysize is -ve it's a top-down image */
     ysize = -ysize;
-    y = 0;
+    start_y = 0;
     lasty = ysize;
     yinc = 1;
   }
+  y = start_y;
   if (!clr_used)
     clr_used = 2;
   if (clr_used < 0 || clr_used > 2) {
@@ -744,9 +748,16 @@ read_1bit_bmp(io_glue *ig, int xsize, int ysize, int clr_used,
     if (ig->readcb(ig, packed, line_size) != line_size) {
       myfree(packed);
       myfree(line);
-      i_push_error(0, "failed reading 1-bit bmp data");
-      i_img_destroy(im);
-      return NULL;
+      if (allow_partial) {
+        i_tags_setn(&im->tags, "i_incomplete", 1);
+        i_tags_setn(&im->tags, "i_lines_read", abs(start_y - y));
+        return im;
+      }
+      else {
+        i_push_error(0, "failed reading 1-bit bmp data");
+        i_img_destroy(im);
+        return NULL;
+      }
     }
     in = packed;
     bit = 0x80;
@@ -782,7 +793,7 @@ point.
 */
 static i_img *
 read_4bit_bmp(io_glue *ig, int xsize, int ysize, int clr_used, 
-              int compression, long offbits) {
+              int compression, long offbits, int allow_partial) {
   i_img *im;
   int x, y, lasty, yinc;
   i_palidx *line, *p;
@@ -791,23 +802,25 @@ read_4bit_bmp(io_glue *ig, int xsize, int ysize, int clr_used,
   unsigned char *in;
   int size, i;
   long base_offset;
+  int starty;
 
   /* line_size is going to be smaller than xsize in most cases (and
      when it's not, xsize is itself small), and hence not overflow */
   line_size = (line_size+3) / 4 * 4;
 
   if (ysize > 0) {
-    y = ysize-1;
+    starty = ysize-1;
     lasty = -1;
     yinc = -1;
   }
   else {
     /* when ysize is -ve it's a top-down image */
     ysize = -ysize;
-    y = 0;
+    starty = 0;
     lasty = ysize;
     yinc = 1;
   }
+  y = starty;
   if (!clr_used)
     clr_used = 16;
 
@@ -856,9 +869,16 @@ read_4bit_bmp(io_glue *ig, int xsize, int ysize, int clr_used,
       if (ig->readcb(ig, packed, line_size) != line_size) {
 	myfree(packed);
 	myfree(line);
-	i_push_error(0, "failed reading 4-bit bmp data");
-	i_img_destroy(im);
-	return NULL;
+        if (allow_partial) {
+          i_tags_setn(&im->tags, "i_incomplete", 1);
+          i_tags_setn(&im->tags, "i_lines_read", abs(y - starty));
+          return im;
+        }
+        else {
+          i_push_error(0, "failed reading 4-bit bmp data");
+          i_img_destroy(im);
+          return NULL;
+        }
       }
       in = packed;
       p = line;
@@ -884,9 +904,16 @@ read_4bit_bmp(io_glue *ig, int xsize, int ysize, int clr_used,
       if (ig->readcb(ig, packed, 2) != 2) {
         myfree(packed);
         myfree(line);
-        i_push_error(0, "missing data during decompression");
-        i_img_destroy(im);
-        return NULL;
+        if (allow_partial) {
+          i_tags_setn(&im->tags, "i_incomplete", 1);
+          i_tags_setn(&im->tags, "i_lines_read", abs(y - starty));
+          return im;
+        }
+        else {
+          i_push_error(0, "missing data during decompression");
+          i_img_destroy(im);
+          return NULL;
+        }
       }
       else if (packed[0]) {
         line[0] = packed[1] >> 4;
@@ -914,9 +941,16 @@ read_4bit_bmp(io_glue *ig, int xsize, int ysize, int clr_used,
           if (ig->readcb(ig, packed, 2) != 2) {
             myfree(packed);
             myfree(line);
-            i_push_error(0, "missing data during decompression");
-            i_img_destroy(im);
-            return NULL;
+            if (allow_partial) {
+              i_tags_setn(&im->tags, "i_incomplete", 1);
+              i_tags_setn(&im->tags, "i_lines_read", abs(y - starty));
+              return im;
+            }
+            else {
+              i_push_error(0, "missing data during decompression");
+              i_img_destroy(im);
+              return NULL;
+            }
           }
           x += packed[0];
           y += yinc * packed[1];
@@ -929,9 +963,16 @@ read_4bit_bmp(io_glue *ig, int xsize, int ysize, int clr_used,
           if (ig->readcb(ig, packed, read_size) != read_size) {
             myfree(packed);
             myfree(line);
-            i_push_error(0, "missing data during decompression");
-            /*i_img_destroy(im);*/
-            return im;
+            if (allow_partial) {
+              i_tags_setn(&im->tags, "i_incomplete", 1);
+              i_tags_setn(&im->tags, "i_lines_read", abs(y - starty));
+              return im;
+            }
+            else {
+              i_push_error(0, "missing data during decompression");
+              i_img_destroy(im);
+              return NULL;
+            }
           }
           for (i = 0; i < size; ++i) {
             line[0] = packed[i] >> 4;
@@ -956,7 +997,7 @@ read_4bit_bmp(io_glue *ig, int xsize, int ysize, int clr_used,
 }
 
 /*
-=item read_8bit_bmp(ig, xsize, ysize, clr_used, compression)
+=item read_8bit_bmp(ig, xsize, ysize, clr_used, compression, allow_partial)
 
 Reads in the palette and image data for a 8-bit/pixel image.
 
@@ -966,9 +1007,9 @@ Returns the image or NULL.
 */
 static i_img *
 read_8bit_bmp(io_glue *ig, int xsize, int ysize, int clr_used, 
-              int compression, long offbits) {
+              int compression, long offbits, int allow_partial) {
   i_img *im;
-  int x, y, lasty, yinc;
+  int x, y, lasty, yinc, start_y;
   i_palidx *line;
   int line_size = xsize;
   long base_offset;
@@ -980,17 +1021,18 @@ read_8bit_bmp(io_glue *ig, int xsize, int ysize, int clr_used,
   }
 
   if (ysize > 0) {
-    y = ysize-1;
+    start_y = ysize-1;
     lasty = -1;
     yinc = -1;
   }
   else {
     /* when ysize is -ve it's a top-down image */
     ysize = -ysize;
-    y = 0;
+    start_y = 0;
     lasty = ysize;
     yinc = 1;
   }
+  y = start_y;
   if (!clr_used)
     clr_used = 256;
   if (clr_used > 256 || clr_used < 0) {
@@ -1032,9 +1074,16 @@ read_8bit_bmp(io_glue *ig, int xsize, int ysize, int clr_used,
     while (y != lasty) {
       if (ig->readcb(ig, line, line_size) != line_size) {
 	myfree(line);
-	i_push_error(0, "failed reading 8-bit bmp data");
-	i_img_destroy(im);
-	return NULL;
+        if (allow_partial) {
+          i_tags_setn(&im->tags, "i_incomplete", 1);
+          i_tags_setn(&im->tags, "i_lines_read", abs(start_y - y));
+          return im;
+        }
+        else {
+          i_push_error(0, "failed reading 8-bit bmp data");
+          i_img_destroy(im);
+          return NULL;
+        }
       }
       i_ppal(im, 0, xsize, y, line);
       y += yinc;
@@ -1052,9 +1101,16 @@ read_8bit_bmp(io_glue *ig, int xsize, int ysize, int clr_used,
       /* there's always at least 2 bytes in a sequence */
       if (ig->readcb(ig, packed, 2) != 2) {
         myfree(line);
-        i_push_error(0, "missing data during decompression");
-        i_img_destroy(im);
-        return NULL;
+        if (allow_partial) {
+          i_tags_setn(&im->tags, "i_incomplete", 1);
+          i_tags_setn(&im->tags, "i_lines_read", abs(start_y-y));
+          return im;
+        }
+        else {
+          i_push_error(0, "missing data during decompression");
+          i_img_destroy(im);
+          return NULL;
+        }
       }
       if (packed[0]) {
         memset(line, packed[1], packed[0]);
@@ -1074,9 +1130,16 @@ read_8bit_bmp(io_glue *ig, int xsize, int ysize, int clr_used,
         case BMPRLE_DELTA:
           if (ig->readcb(ig, packed, 2) != 2) {
             myfree(line);
-            i_push_error(0, "missing data during decompression");
-            i_img_destroy(im);
-            return NULL;
+            if (allow_partial) {
+              i_tags_setn(&im->tags, "i_incomplete", 1);
+              i_tags_setn(&im->tags, "i_lines_read", abs(start_y-y));
+              return im;
+            }
+            else {
+              i_push_error(0, "missing data during decompression");
+              i_img_destroy(im);
+              return NULL;
+            }
           }
           x += packed[0];
           y += yinc * packed[1];
@@ -1087,9 +1150,16 @@ read_8bit_bmp(io_glue *ig, int xsize, int ysize, int clr_used,
           read_size = (count+1) / 2 * 2;
           if (ig->readcb(ig, line, read_size) != read_size) {
             myfree(line);
-            i_push_error(0, "missing data during decompression");
-            i_img_destroy(im);
-            return NULL;
+            if (allow_partial) {
+              i_tags_setn(&im->tags, "i_incomplete", 1);
+              i_tags_setn(&im->tags, "i_lines_read", abs(start_y-y));
+              return im;
+            }
+            else {
+              i_push_error(0, "missing data during decompression");
+              i_img_destroy(im);
+              return NULL;
+            }
           }
           i_ppal(im, x, x+count, y, line);
           x += count;
@@ -1129,7 +1199,7 @@ static struct bm_masks std_masks[] =
 };
 
 /*
-=item read_direct_bmp(ig, xsize, ysize, bit_count, clr_used, compression)
+=item read_direct_bmp(ig, xsize, ysize, bit_count, clr_used, compression, allow_partial)
 
 Skips the palette and reads in the image data for a direct colour image.
 
@@ -1139,7 +1209,8 @@ Returns the image or NULL.
 */
 static i_img *
 read_direct_bmp(io_glue *ig, int xsize, int ysize, int bit_count, 
-                int clr_used, int compression, long offbits) {
+                int clr_used, int compression, long offbits, 
+                int allow_partial) {
   i_img *im;
   int x, y, lasty, yinc;
   i_color *line, *p;
@@ -1244,10 +1315,17 @@ read_direct_bmp(io_glue *ig, int xsize, int ysize, int bit_count,
     for (x = 0; x < xsize; ++x) {
       unsigned pixel;
       if (!read_packed(ig, unpack_code, &pixel)) {
-        i_push_error(0, "failed reading image data");
         myfree(line);
-        i_img_destroy(im);
-        return NULL;
+        if (allow_partial) {
+          i_tags_setn(&im->tags, "i_incomplete", 1);
+          i_tags_setn(&im->tags, "i_lines_read", lasty - y);
+          return im;
+        }
+        else {
+          i_push_error(0, "failed reading image data");
+          i_img_destroy(im);
+          return NULL;
+        }
       }
       for (i = 0; i < 3; ++i) {
         if (masks.shifts[i] > 0)
