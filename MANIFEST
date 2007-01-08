@@ -117,6 +117,7 @@ img16.c
 imgdouble.c     Implements double/sample images
 imio.h
 imperl.h
+imrender.h	Buffer rending engine function declarations
 imtoc.perl      Sample size adapter pre-processor
 io.c
 iolayer.c
@@ -174,6 +175,7 @@ regmach.c
 regmach.h
 regops.perl
 render.im
+rendert.h	Buffer rendering engine types
 rgb.c           Reading and writing SGI rgb files
 rotate.c
 rubthru.im
@@ -272,6 +274,9 @@ testimg/badplanes.bmp   bad planes value in header
 testimg/badused1.bmp    1-bit/pixel, out of range colors used value
 testimg/badused4a.bmp   4-bit/pixel, badly out of range used value (SEGV test)
 testimg/badused4b.bmp   4-bit/pixel, just out of range used value (SEGV test)
+testimg/bad_asc.pbm	ASCII PBM with invalid image data
+testimg/bad_asc.pgm	ASCII PGM with invalid image data
+testimg/bad_asc.ppm	ASCII PPM with invalid image data
 testimg/bandw.gif
 testimg/base.jpg	Base JPEG test image
 testimg/comp4.bmp       Compressed 4-bit/pixel BMP
@@ -295,6 +300,7 @@ testimg/newgimpgrad.ggr Test GIMP Gradient file (newer type)
 testimg/nocmap.gif
 testimg/palette.png
 testimg/palette_out.png
+testimg/pgm.pgm		Simple pgm for testing the right sample is in the right place
 testimg/penguin-base.ppm
 testimg/scale.gif
 testimg/scale.ppm
@@ -311,6 +317,14 @@ testimg/short4.bmp      truncated 4bit/pixel uncompressed BMP
 testimg/short4rle.bmp   truncated 4bit/pixel compressed BMP
 testimg/short8.bmp      8-bit/pixel, data missing from EOF
 testimg/short8rle.bmp   8-bit/pixel compressed, data missing from EOF
+testimg/short_asc.pbm	ASCII PBM with short image section
+testimg/short_asc.pgm	ASCII PGM with short image section
+testimg/short_asc.ppm	ASCII PPM with short image section
+testimg/short_bin.pbm	Bin PBM with short image section
+testimg/short_bin.pgm	Bin PGM with short image section
+testimg/short_bin.ppm	Bin PPM with short image section
+testimg/short_bin16.pgm	16-bit Bin PGM with short image section
+testimg/short_bin16.ppm	16-bit Bin PPM with short image section
 testimg/simple.pbm
 testimg/slab.tif	Lab color image
 testimg/srgb.tif	Simple RGB image
