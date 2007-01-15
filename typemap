@@ -109,8 +109,6 @@ T_IMAGER_FULL_IMAGE
         if ($var) {
           SV *imobj = NEWSV(0, 0);
           HV *hv = newHV();
-          SV *hvref;
-          SV *imgref;
           sv_setref_pv(imobj, \"Imager::ImgRaw\", $var);
           hv_store(hv, "IMG", 3, imobj, 0);
           $arg = sv_2mortal(sv_bless(newRV((SV*)hv), gv_stashpv("Imager", 1)));
