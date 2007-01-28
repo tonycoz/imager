@@ -39,6 +39,7 @@ my @libpaths; # places to look for libraries
 my $noprobe; # non-zero to disable newer probes
 my $noexif; # non-zero to disable EXIF parsing of JPEGs
 my $no_gif_set_version; # disable calling EGifSetGifVersion
+my $coverage; # build for coverage testing
 GetOptions("help" => \$help,
            "enable=s" => \@enable,
            "disable=s" => \@disable,
@@ -48,7 +49,8 @@ GetOptions("help" => \$help,
            "verbose|v" => \$VERBOSE,
            "nolog" => \$NOLOG,
 	   "noexif" => \$noexif,
-           "nogifsetversion" => \$no_gif_set_version);
+           "nogifsetversion" => \$no_gif_set_version,
+	   'coverage' => \$coverage);
 
 if ($VERBOSE) { 
   print "Verbose mode\n"; 
@@ -173,6 +175,16 @@ my %opts=(
           PM             => gen_PM(),
 	  PREREQ_PM      => { 'Test::More' => 0.47 },
          );
+
+if ($coverage) {
+    if ($Config{gccversion}) {
+	push @ARGV, 'OPTIMIZE=-ftest-coverage -fprofile-arcs';
+	#$opts{dynamic_lib} = { OTHERLDFLAGS => '-ftest-coverage -fprofile-arcs' };
+    }
+    else {
+	die "Don't know the coverage C flags for your compiler\n";
+    }
+}
 
 # eval to prevent warnings about versions with _ in them
 my $MM_ver = eval $ExtUtils::MakeMaker::VERSION;
