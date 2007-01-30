@@ -312,7 +312,7 @@ print "# check error handling\n";
 {
   my $im = Imager->new;
   ok($im->read(file => 'testimg/short_bin.ppm', type => 'pnm',
-                allow_partial => 1),
+                allow_incomplete => 1),
      "partial read bin ppm");
   is($im->tags(name => 'i_incomplete'), 1, "partial flag set");
   is($im->tags(name => 'i_lines_read'), 1, "lines_read set");
@@ -321,7 +321,7 @@ print "# check error handling\n";
 {
   my $im = Imager->new;
   ok($im->read(file => 'testimg/short_bin16.ppm', type => 'pnm',
-                allow_partial => 1),
+                allow_incomplete => 1),
      "partial read bin16 ppm");
   is($im->tags(name => 'i_incomplete'), 1, "partial flag set");
   is($im->tags(name => 'i_lines_read'), 1, "lines_read set");
@@ -331,7 +331,7 @@ print "# check error handling\n";
 {
   my $im = Imager->new;
   ok($im->read(file => 'testimg/short_bin.pgm', type => 'pnm',
-                allow_partial => 1),
+                allow_incomplete => 1),
      "partial read bin pgm");
   is($im->tags(name => 'i_incomplete'), 1, "partial flag set");
   is($im->tags(name => 'i_lines_read'), 1, "lines_read set");
@@ -340,7 +340,7 @@ print "# check error handling\n";
 {
   my $im = Imager->new;
   ok($im->read(file => 'testimg/short_bin16.pgm', type => 'pnm',
-                allow_partial => 1),
+                allow_incomplete => 1),
      "partial read bin16 pgm");
   is($im->tags(name => 'i_incomplete'), 1, "partial flag set");
   is($im->tags(name => 'i_lines_read'), 1, "lines_read set");
@@ -349,7 +349,7 @@ print "# check error handling\n";
 {
   my $im = Imager->new;
   ok($im->read(file => 'testimg/short_bin.pbm', type => 'pnm',
-                allow_partial => 1),
+                allow_incomplete => 1),
      "partial read bin pbm");
   is($im->tags(name => 'i_incomplete'), 1, "partial flag set");
   is($im->tags(name => 'i_lines_read'), 1, "lines_read set");
@@ -358,7 +358,7 @@ print "# check error handling\n";
 {
   my $im = Imager->new;
   ok($im->read(file => 'testimg/short_asc.ppm', type => 'pnm',
-                allow_partial => 1),
+                allow_incomplete => 1),
      "partial read asc ppm");
   is($im->tags(name => 'i_incomplete'), 1, "partial flag set");
   is($im->tags(name => 'i_lines_read'), 1, "lines_read set");
@@ -367,7 +367,7 @@ print "# check error handling\n";
 {
   my $im = Imager->new;
   ok($im->read(file => 'testimg/short_asc.pgm', type => 'pnm',
-                allow_partial => 1),
+                allow_incomplete => 1),
      "partial read asc pgm");
   is($im->tags(name => 'i_incomplete'), 1, "partial flag set");
   is($im->tags(name => 'i_lines_read'), 1, "lines_read set");
@@ -376,7 +376,7 @@ print "# check error handling\n";
 {
   my $im = Imager->new;
   ok($im->read(file => 'testimg/short_asc.pbm', type => 'pnm',
-                allow_partial => 1),
+                allow_incomplete => 1),
      "partial read asc pbm");
   is($im->tags(name => 'i_incomplete'), 1, "partial flag set");
   is($im->tags(name => 'i_lines_read'), 1, "lines_read set");
@@ -385,7 +385,7 @@ print "# check error handling\n";
 {
   my $im = Imager->new;
   ok($im->read(file => 'testimg/bad_asc.ppm', type => 'pnm',
-                allow_partial => 1),
+                allow_incomplete => 1),
      "partial read bad asc ppm");
   is($im->tags(name => 'i_incomplete'), 1, "partial flag set");
   is($im->tags(name => 'i_lines_read'), 1, "lines_read set");
@@ -394,7 +394,7 @@ print "# check error handling\n";
 {
   my $im = Imager->new;
   ok($im->read(file => 'testimg/bad_asc.pgm', type => 'pnm',
-                allow_partial => 1),
+                allow_incomplete => 1),
      "partial read bad asc pgm");
   is($im->tags(name => 'i_incomplete'), 1, "partial flag set");
   is($im->tags(name => 'i_lines_read'), 1, "lines_read set");
@@ -403,7 +403,7 @@ print "# check error handling\n";
 {
   my $im = Imager->new;
   ok($im->read(file => 'testimg/bad_asc.pbm', type => 'pnm',
-                allow_partial => 1),
+                allow_incomplete => 1),
      "partial read bad asc pbm");
   is($im->tags(name => 'i_incomplete'), 1, "partial flag set");
   is($im->tags(name => 'i_lines_read'), 1, "lines_read set");
