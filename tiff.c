@@ -151,7 +151,7 @@ comp_munmap(thandle_t h, tdata_t p, toff_t off) {
   /* do nothing */
 }
 
-static i_img *read_one_tiff(TIFF *tif, int allow_partial) {
+static i_img *read_one_tiff(TIFF *tif, int allow_incomplete) {
   i_img *im;
   uint32 width, height;
   uint16 channels;
@@ -296,7 +296,7 @@ static i_img *read_one_tiff(TIFF *tif, int allow_partial) {
       ++row;
     }
     if (row < height) {
-      if (allow_partial) {
+      if (allow_incomplete) {
         i_tags_setn(&im->tags, "i_lines_read", row);
       }
       else {
@@ -390,7 +390,7 @@ static i_img *read_one_tiff(TIFF *tif, int allow_partial) {
         uint32 newrows, i_row;
         
         if (!TIFFReadRGBAStrip(tif, row, raster)) {
-          if (allow_partial) {
+          if (allow_incomplete) {
             i_tags_setn(&im->tags, "i_lines_read", row);
             error++;
             break;
@@ -437,7 +437,7 @@ static i_img *read_one_tiff(TIFF *tif, int allow_partial) {
 =cut
 */
 i_img*
-i_readtiff_wiol(io_glue *ig, int allow_partial, int page) {
+i_readtiff_wiol(io_glue *ig, int allow_incomplete, int page) {
   TIFF* tif;
   TIFFErrorHandler old_handler;
   TIFFErrorHandler old_warn_handler;
@@ -453,7 +453,7 @@ i_readtiff_wiol(io_glue *ig, int allow_partial, int page) {
   /* Also add code to check for mmapped code */
 
   io_glue_commit_types(ig);
-  mm_log((1, "i_readtiff_wiol(ig %p, allow_partial %d, page %d)\n", ig, allow_partial, page));
+  mm_log((1, "i_readtiff_wiol(ig %p, allow_incomplete %d, page %d)\n", ig, allow_incomplete, page));
   
   tif = TIFFClientOpen("(Iolayer)", 
 		       "rm", 
@@ -485,7 +485,7 @@ i_readtiff_wiol(io_glue *ig, int allow_partial, int page) {
     }
   }
 
-  im = read_one_tiff(tif, allow_partial);
+  im = read_one_tiff(tif, allow_incomplete);
 
   if (TIFFLastDirectory(tif)) mm_log((1, "Last directory of tiff file\n"));
   TIFFSetErrorHandler(old_handler);

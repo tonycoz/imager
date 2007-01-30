@@ -238,7 +238,7 @@ gnum(mbuf *mb, int *i) {
 static
 i_img *
 read_pgm_ppm_bin8(mbuf *mb, i_img *im, int width, int height, 
-                  int channels, int maxval, int allow_partial) {
+                  int channels, int maxval, int allow_incomplete) {
   i_color *line, *linep;
   int read_size;
   unsigned char *read_buf, *readp;
@@ -254,7 +254,7 @@ read_pgm_ppm_bin8(mbuf *mb, i_img *im, int width, int height,
     if (gread(mb, read_buf, read_size) != read_size) {
       myfree(line);
       myfree(read_buf);
-      if (allow_partial) {
+      if (allow_incomplete) {
         i_tags_setn(&im->tags, "i_incomplete", 1);
         i_tags_setn(&im->tags, "i_lines_read", y);
         return im;
@@ -296,7 +296,7 @@ read_pgm_ppm_bin8(mbuf *mb, i_img *im, int width, int height,
 static
 i_img *
 read_pgm_ppm_bin16(mbuf *mb, i_img *im, int width, int height, 
-                  int channels, int maxval, int allow_partial) {
+                  int channels, int maxval, int allow_incomplete) {
   i_fcolor *line, *linep;
   int read_size;
   unsigned char *read_buf, *readp;
@@ -312,7 +312,7 @@ read_pgm_ppm_bin16(mbuf *mb, i_img *im, int width, int height,
     if (gread(mb, read_buf, read_size) != read_size) {
       myfree(line);
       myfree(read_buf);
-      if (allow_partial) {
+      if (allow_incomplete) {
         i_tags_setn(&im->tags, "i_incomplete", 1);
         i_tags_setn(&im->tags, "i_lines_read", y);
         return im;
@@ -343,7 +343,7 @@ read_pgm_ppm_bin16(mbuf *mb, i_img *im, int width, int height,
 
 static 
 i_img *
-read_pbm_bin(mbuf *mb, i_img *im, int width, int height, int allow_partial) {
+read_pbm_bin(mbuf *mb, i_img *im, int width, int height, int allow_incomplete) {
   i_palidx *line, *linep;
   int read_size;
   unsigned char *read_buf, *readp;
@@ -357,7 +357,7 @@ read_pbm_bin(mbuf *mb, i_img *im, int width, int height, int allow_partial) {
     if (gread(mb, read_buf, read_size) != read_size) {
       myfree(line);
       myfree(read_buf);
-      if (allow_partial) {
+      if (allow_incomplete) {
         i_tags_setn(&im->tags, "i_incomplete", 1);
         i_tags_setn(&im->tags, "i_lines_read", y);
         return im;
@@ -393,7 +393,7 @@ read_pbm_bin(mbuf *mb, i_img *im, int width, int height, int allow_partial) {
 */
 static 
 i_img *
-read_pbm_ascii(mbuf *mb, i_img *im, int width, int height, int allow_partial) {
+read_pbm_ascii(mbuf *mb, i_img *im, int width, int height, int allow_incomplete) {
   i_palidx *line, *linep;
   int x, y;
 
@@ -405,7 +405,7 @@ read_pbm_ascii(mbuf *mb, i_img *im, int width, int height, int allow_partial) {
       skip_spaces(mb);
       if (!(cp = gnext(mb)) || (*cp != '0' && *cp != '1')) {
         myfree(line);
-        if (allow_partial) {
+        if (allow_incomplete) {
           i_tags_setn(&im->tags, "i_incomplete", 1);
           i_tags_setn(&im->tags, "i_lines_read", y);
           return im;
@@ -431,7 +431,7 @@ read_pbm_ascii(mbuf *mb, i_img *im, int width, int height, int allow_partial) {
 static
 i_img *
 read_pgm_ppm_ascii(mbuf *mb, i_img *im, int width, int height, int channels, 
-                   int maxval, int allow_partial) {
+                   int maxval, int allow_incomplete) {
   i_color *line, *linep;
   int x, y, ch;
   int rounder = maxval / 2;
@@ -445,7 +445,7 @@ read_pgm_ppm_ascii(mbuf *mb, i_img *im, int width, int height, int channels,
         
         if (!gnum(mb, &sample)) {
           myfree(line);
-          if (allow_partial) {
+          if (allow_incomplete) {
             i_tags_setn(&im->tags, "i_incomplete", 1);
             i_tags_setn(&im->tags, "i_lines_read", 1);
             return im;
@@ -475,7 +475,7 @@ read_pgm_ppm_ascii(mbuf *mb, i_img *im, int width, int height, int channels,
 static
 i_img *
 read_pgm_ppm_ascii_16(mbuf *mb, i_img *im, int width, int height, 
-                      int channels, int maxval, int allow_partial) {
+                      int channels, int maxval, int allow_incomplete) {
   i_fcolor *line, *linep;
   int x, y, ch;
   double maxvalf = maxval;
@@ -489,7 +489,10 @@ read_pgm_ppm_ascii_16(mbuf *mb, i_img *im, int width, int height,
         
         if (!gnum(mb, &sample)) {
           myfree(line);
-          if (allow_partial) {
+          if (allow_incomplete) {
+	    i_tags_setn(&im->tags, "i_incomplete", 1);
+	    i_tags_setn(&im->tags, "i_lines_read", y);
+	    return im;
           }
           else {
             if (gpeek(mb))
@@ -514,19 +517,19 @@ read_pgm_ppm_ascii_16(mbuf *mb, i_img *im, int width, int height,
 }
 
 /*
-=item i_readpnm_wiol(ig, allow_partial)
+=item i_readpnm_wiol(ig, allow_incomplete)
 
 Retrieve an image and stores in the iolayer object. Returns NULL on fatal error.
 
    ig     - io_glue object
-   allow_partial - allows a partial file to be read successfully
+   allow_incomplete - allows a partial file to be read successfully
 
 =cut
 */
 
 
 i_img *
-i_readpnm_wiol(io_glue *ig, int allow_partial) {
+i_readpnm_wiol(io_glue *ig, int allow_incomplete) {
   i_img* im;
   int type;
   int width, height, maxval, channels, pcount;
@@ -535,7 +538,7 @@ i_readpnm_wiol(io_glue *ig, int allow_partial) {
   mbuf buf;
 
   i_clear_error();
-  mm_log((1,"i_readpnm(ig %p, allow_partial %d)\n", ig, allow_partial));
+  mm_log((1,"i_readpnm(ig %p, allow_incomplete %d)\n", ig, allow_incomplete));
 
   io_glue_commit_types(ig);
   init_buf(&buf, ig);
@@ -661,27 +664,27 @@ i_readpnm_wiol(io_glue *ig, int allow_partial) {
 
   switch (type) {
   case 1: /* Ascii types */
-    im = read_pbm_ascii(&buf, im, width, height, allow_partial);
+    im = read_pbm_ascii(&buf, im, width, height, allow_incomplete);
     break;
 
   case 2:
   case 3:
     if (maxval > 255)
-      im = read_pgm_ppm_ascii_16(&buf, im, width, height, channels, maxval, allow_partial);
+      im = read_pgm_ppm_ascii_16(&buf, im, width, height, channels, maxval, allow_incomplete);
     else
-      im = read_pgm_ppm_ascii(&buf, im, width, height, channels, maxval, allow_partial);
+      im = read_pgm_ppm_ascii(&buf, im, width, height, channels, maxval, allow_incomplete);
     break;
     
   case 4: /* binary pbm */
-    im = read_pbm_bin(&buf, im, width, height, allow_partial);
+    im = read_pbm_bin(&buf, im, width, height, allow_incomplete);
     break;
 
   case 5: /* binary pgm */
   case 6: /* binary ppm */
     if (maxval > 255)
-      im = read_pgm_ppm_bin16(&buf, im, width, height, channels, maxval, allow_partial);
+      im = read_pgm_ppm_bin16(&buf, im, width, height, channels, maxval, allow_incomplete);
     else
-      im = read_pgm_ppm_bin8(&buf, im, width, height, channels, maxval, allow_partial);
+      im = read_pgm_ppm_bin8(&buf, im, width, height, channels, maxval, allow_incomplete);
     break;
 
   default:

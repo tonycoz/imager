@@ -2252,9 +2252,9 @@ i_test_format_probe(ig, length)
 #ifdef HAVE_LIBTIFF
 
 Imager::ImgRaw
-i_readtiff_wiol(ig, allow_partial, page=0)
+i_readtiff_wiol(ig, allow_incomplete, page=0)
         Imager::IO     ig
-	       int     allow_partial
+	       int     allow_incomplete
                int     page
 
 void
@@ -2883,9 +2883,9 @@ i_readgif_multi_wiol(ig)
 
 
 Imager::ImgRaw
-i_readpnm_wiol(ig, allow_partial)
+i_readpnm_wiol(ig, allow_incomplete)
         Imager::IO     ig
-	       int     allow_partial
+	       int     allow_incomplete
 
 
 undef_int
@@ -2914,9 +2914,9 @@ i_writebmp_wiol(im,ig)
         Imager::IO     ig
 
 Imager::ImgRaw
-i_readbmp_wiol(ig, allow_partial=0)
+i_readbmp_wiol(ig, allow_incomplete=0)
         Imager::IO     ig
-        int            allow_partial
+        int            allow_incomplete
 
 
 undef_int

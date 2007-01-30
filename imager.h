@@ -364,7 +364,7 @@ undef_int i_writejpeg_wiol(i_img *im, io_glue *ig, int qfactor);
 #endif /* HAVE_LIBJPEG */
 
 #ifdef HAVE_LIBTIFF
-i_img   * i_readtiff_wiol(io_glue *ig, int allow_partial, int page);
+i_img   * i_readtiff_wiol(io_glue *ig, int allow_incomplete, int page);
 i_img  ** i_readtiff_multi_wiol(io_glue *ig, int length, int *count);
 undef_int i_writetiff_wiol(i_img *im, io_glue *ig);
 undef_int i_writetiff_multi_wiol(io_glue *ig, i_img **imgs, int count);
@@ -402,11 +402,11 @@ void i_qdist(i_img *im);
 i_img   * i_readraw_wiol(io_glue *ig, int x, int y, int datachannels, int storechannels, int intrl);
 undef_int i_writeraw_wiol(i_img* im, io_glue *ig);
 
-i_img   * i_readpnm_wiol(io_glue *ig, int allow_partial);
+i_img   * i_readpnm_wiol(io_glue *ig, int allow_incomplete);
 undef_int i_writeppm_wiol(i_img *im, io_glue *ig);
 
 extern int    i_writebmp_wiol(i_img *im, io_glue *ig);
-extern i_img *i_readbmp_wiol(io_glue *ig, int allow_partial);
+extern i_img *i_readbmp_wiol(io_glue *ig, int allow_incomplete);
 
 int tga_header_verify(unsigned char headbuf[18]);
 
