@@ -1212,7 +1212,7 @@ read_direct_bmp(io_glue *ig, int xsize, int ysize, int bit_count,
                 int clr_used, int compression, long offbits, 
                 int allow_incomplete) {
   i_img *im;
-  int x, y, lasty, yinc;
+  int x, y, starty, lasty, yinc;
   i_color *line, *p;
   int pix_size = bit_count / 8;
   int line_size = xsize * pix_size;
@@ -1232,17 +1232,18 @@ read_direct_bmp(io_glue *ig, int xsize, int ysize, int bit_count,
   extras = line_size - xsize * pix_size;
 
   if (ysize > 0) {
-    y = ysize-1;
+    starty = ysize-1;
     lasty = -1;
     yinc = -1;
   }
   else {
     /* when ysize is -ve it's a top-down image */
     ysize = -ysize;
-    y = 0;
+    starty = 0;
     lasty = ysize;
     yinc = 1;
   }
+  y = starty;
   if (compression == BI_RGB) {
     compression_name = "BI_RGB";
     masks = std_masks[pix_size-2];
@@ -1318,7 +1319,7 @@ read_direct_bmp(io_glue *ig, int xsize, int ysize, int bit_count,
         myfree(line);
         if (allow_incomplete) {
           i_tags_setn(&im->tags, "i_incomplete", 1);
-          i_tags_setn(&im->tags, "i_lines_read", lasty - y);
+          i_tags_setn(&im->tags, "i_lines_read", abs(starty - y));
           return im;
         }
         else {
