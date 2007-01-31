@@ -1,9 +1,9 @@
 #!perl -w
 use strict;
-use Test::More tests => 89;
+use Test::More tests => 149;
 use Imager qw(:all);
+use Imager::Test qw(test_image_raw);
 init_log("testout/t107bmp.log",1);
-#BEGIN { require 't/testtools.pl'; } # BEGIN to apply prototypes
 
 my $base_diff = 0;
 # if you change this make sure you generate new compressed versions
@@ -11,12 +11,7 @@ my $green=i_color_new(0,255,0,255);
 my $blue=i_color_new(0,0,255,255);
 my $red=i_color_new(255,0,0,255);
 
-my $img=Imager::ImgRaw::new(150,150,3);
-
-i_box_filled($img,70,25,130,125,$green);
-i_box_filled($img,20,25,80,125,$blue);
-i_arc($img,75,75,30,0,361,$red);
-i_conv($img,[0.1, 0.2, 0.4, 0.2, 0.1]);
+my $img = test_image_raw();
 
 Imager::i_tags_add($img, 'i_xres', 0, '300', 0);
 Imager::i_tags_add($img, 'i_yres', 0, undef, 300);
@@ -182,7 +177,7 @@ for my $comp (@comp) {
 }
 
 { # check file limits are checked
-  my $limit_file = "testout/t104.ppm";
+  my $limit_file = "testout/t107_24bit.bmp";
   ok(Imager->set_file_limits(reset=>1, width=>149), "set width limit 149");
   my $im = Imager->new;
   ok(!$im->read(file=>$limit_file),
@@ -216,7 +211,206 @@ for my $comp (@comp) {
      "should succeed - just inside bytes limit");
   Imager->set_file_limits(reset=>1);
 }
-                              
+
+{ # various short read failure tests, each entry has:
+  # source filename, size, expected error
+  # these have been selected based on code coverage, to check each
+  # failure path is checked, where practical
+  my @tests =
+    (
+     [ 
+      "file truncated inside header",
+      "winrgb2.bmp", 
+      20, "file too short to be a BMP file"
+     ],
+     [
+      "1-bit, truncated inside palette",
+      "winrgb2.bmp", 
+      56, "reading BMP palette" 
+     ],
+     [ 
+      "1-bit, truncated in offset region",
+      "winrgb2off.bmp", 64, "failed skipping to image data offset" 
+     ],
+     [ 
+      "1-bit, truncated in image data",
+      "winrgb2.bmp", 96, "failed reading 1-bit bmp data"
+     ],
+     [
+      "4-bit, truncated inside palette",
+      "winrgb4.bmp",
+      56, "reading BMP palette"
+     ],
+     [
+      "4-bit, truncated in offset region",
+      "winrgb4off.bmp", 120, "failed skipping to image data offset",
+     ],
+     [
+      "4-bit, truncate in image data",
+      "winrgb4.bmp", 120, "failed reading 4-bit bmp data"
+     ],
+     [
+      "4-bit RLE, truncate in uncompressed data",
+      "comp4.bmp", 0x229, "missing data during decompression"
+     ],
+     [
+      "8-bit, truncated in palette",
+      "winrgb8.bmp", 1060, "reading BMP palette"
+      ],
+     [
+      "8-bit, truncated in offset region",
+      "winrgb8off.bmp", 1080, "failed skipping to image data offset"
+     ],
+     [
+      "8-bit, truncated in image data",
+      "winrgb8.bmp", 1080, "failed reading 8-bit bmp data"
+     ],
+     [
+      "8-bit RLE, truncate in uncompressed data",
+      "comp8.bmp", 0x68C, "missing data during decompression"
+     ],
+     [
+      "24-bit, truncate in offset region",
+      "winrgb24off.bmp", 56, "failed skipping to image data offset",
+     ],
+     [
+      "24-bit, truncate in image data",
+      "winrgb24.bmp", 100, "failed reading image data",
+     ],
+    );
+
+  my $test_index = 0;
+  for my $test (@tests) {
+    my ($desc, $srcfile, $size, $error) = @$test;
+    my $im = Imager->new;
+    open IMDATA, "< testimg/$srcfile"
+      or die "$test_index - $desc: Cannot open testimg/$srcfile: $!";
+    binmode IMDATA;
+    my $data;
+    read(IMDATA, $data, $size) == $size
+      or die "$test_index - $desc: Could not read $size data from $srcfile";
+    close IMDATA;
+    ok(!$im->read(data => $data, type =>'bmp'),
+       "$test_index - $desc: Should fail to read");
+    is($im->errstr, $error, "$test_index - $desc: check message");
+    ++$test_index;
+  }
+}
+
+{ # various short read success tests, each entry has:
+  # source filename, size, expected tags
+  print "# allow_incomplete tests\n";
+  my @tests =
+    (
+     [ 
+      "1-bit",
+      "winrgb2.bmp", 96,
+      {
+       bmp_compression_name => 'BI_RGB',
+       bmp_compression => 0,
+       bmp_used_colors => 2,
+       i_lines_read => 8,
+      },
+     ],
+     [
+      "4-bit",
+      "winrgb4.bmp", 250,
+      {
+       bmp_compression_name => 'BI_RGB',
+       bmp_compression => 0,
+       bmp_used_colors => 16,
+       i_lines_read => 11,
+      },
+     ],
+     [
+      "4-bit RLE - uncompressed seq",
+      "comp4.bmp", 0x229, 
+      {
+       bmp_compression_name => 'BI_RLE4',
+       bmp_compression => 2,
+       bmp_used_colors => 16,
+       i_lines_read => 44,
+      },
+     ],
+     [
+      "4-bit RLE - start seq",
+      "comp4.bmp", 0x97, 
+      {
+       bmp_compression_name => 'BI_RLE4',
+       bmp_compression => 2,
+       bmp_used_colors => 16,
+       i_lines_read => 8,
+      },
+     ],
+     [
+      "8-bit",
+      "winrgb8.bmp", 1250,
+      {
+       bmp_compression_name => 'BI_RGB',
+       bmp_compression => 0,
+       bmp_used_colors => 256,
+       i_lines_read => 8,
+      },
+     ],
+     [
+      "8-bit RLE - uncompressed seq",
+      "comp8.bmp", 0x68C, 
+      {
+       bmp_compression_name => 'BI_RLE8',
+       bmp_compression => 1,
+       bmp_used_colors => 256,
+       i_lines_read => 27,
+      },
+     ],
+     [
+      "8-bit RLE - initial seq",
+      "comp8.bmp", 0x487, 
+      {
+       bmp_compression_name => 'BI_RLE8',
+       bmp_compression => 1,
+       bmp_used_colors => 256,
+       i_lines_read => 20,
+      },
+     ],
+     [
+      "24-bit",
+      "winrgb24.bmp", 800,
+      {
+       bmp_compression_name => 'BI_RGB',
+       bmp_compression => 0,
+       bmp_used_colors => 0,
+       i_lines_read => 12,
+      },
+     ],
+    );
+
+  my $test_index = 0;
+  for my $test (@tests) {
+    my ($desc, $srcfile, $size, $tags) = @$test;
+    my $im = Imager->new;
+    open IMDATA, "< testimg/$srcfile"
+      or die "$test_index - $desc: Cannot open testimg/$srcfile: $!";
+    binmode IMDATA;
+    my $data;
+    read(IMDATA, $data, $size) == $size
+      or die "$test_index - $desc: Could not read $size data from $srcfile";
+    close IMDATA;
+    ok($im->read(data => $data, type =>'bmp', allow_incomplete => 1),
+       "$test_index - $desc: Should read successfully");
+    # check standard tags are set
+    is($im->tags(name => 'i_format'), 'bmp',
+       "$test_index - $desc: i_format set");
+    is($im->tags(name => 'i_incomplete'), 1, 
+       "$test_index - $desc: i_incomplete set");
+    my %check_tags;
+    for my $key (keys %$tags) {
+      $check_tags{$key} = $im->tags(name => $key);
+    }
+    is_deeply(\%check_tags, $tags, "$test_index - $desc: check tags");
+    ++$test_index;
+  }
+}
+
 sub write_test {
   my ($im, $filename) = @_;
   local *FH;
