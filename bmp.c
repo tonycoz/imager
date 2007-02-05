@@ -133,7 +133,7 @@ i_readbmp_wiol(io_glue *ig, int allow_incomplete) {
           bit_count, compression, size_image, xres, yres, clr_used, 
           clr_important));
 
-  if (!i_int_check_image_file_limits(xsize, ysize, 3, sizeof(i_sample_t))) {
+  if (!i_int_check_image_file_limits(xsize, abs(ysize), 3, sizeof(i_sample_t))) {
     mm_log((1, "i_readbmp_wiol: image size exceeds limits\n"));
     return NULL;
   }
@@ -1280,6 +1280,11 @@ read_direct_bmp(io_glue *ig, int xsize, int ysize, int bit_count,
   }
   else {
     i_push_errorf(0, "unknown 24-bit BMP compression (%d)", compression);
+    return NULL;
+  }
+
+  if (offbits < base_offset) {
+    i_push_errorf(0, "image data offset too small (%ld)", offbits);
     return NULL;
   }
 

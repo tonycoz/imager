@@ -1677,7 +1677,7 @@ sub write {
       $self->_set_opts(\%input, "bmp_", $self)
         or return undef;
       if ( !i_writebmp_wiol($self->{IMG}, $IO) ) {
-        $self->{ERRSTR}='unable to write bmp image';
+	$self->{ERRSTR} = $self->_error_as_msg;
         return undef;
       }
       $self->{DEBUG} && print "writing a bmp file\n";

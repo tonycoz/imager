@@ -194,6 +194,14 @@ No functions are exported by default.
 
 Tests is $color matches the given ($red, $blue, $green)
 
+=item is_image($im1, $im2, $comment)
+
+Tests if the 2 images have the same content.  Both images must be
+defined, have the same width, height, channels and the same color in
+each pixel.  The color comparison is done at 8-bits per pixel.  The
+color representation such as direct vs paletted, bits per sample are
+not checked.
+
 =item test_image_raw()
 
 Returns a 150x150x3 Imager::ImgRaw test image.

@@ -1,9 +1,11 @@
 #!perl -w
 use strict;
-use Test::More tests => 149;
+use Test::More tests => 183;
 use Imager qw(:all);
-use Imager::Test qw(test_image_raw);
+use Imager::Test qw(test_image_raw is_image);
 init_log("testout/t107bmp.log",1);
+
+my $debug_writes = 0;
 
 my $base_diff = 0;
 # if you change this make sure you generate new compressed versions
@@ -411,6 +413,179 @@ for my $comp (@comp) {
   }
 }
 
+{ # check handling of reading images with negative height
+  # each entry is:
+  # source file, description
+  print "# check handling of negative height values\n";
+  my @tests =
+    (
+     [ "winrgb2.bmp", "1-bit, uncompressed" ],
+     [ "winrgb4.bmp", "4-bit, uncompressed" ],
+     [ "winrgb8.bmp", "8-bit, uncompressed" ],
+     [ "winrgb24.bmp", "24-bit, uncompressed" ],
+     [ "comp4.bmp", "4-bit, RLE" ],
+     [ "comp8.bmp", "8-bit, RLE" ],
+    );
+  my $test_index = 0;
+  for my $test (@tests) {
+    my ($file, $desc) = @$test;
+    open IMDATA, "< testimg/$file"
+      or die "$test_index - Cannot open $file: $!";
+    binmode IMDATA;
+    my $data = do { local $/; <IMDATA> };
+    close IMDATA;
+    my $im_orig = Imager->new;
+    $im_orig->read(data => $data)
+      or die "Cannot load original $file: ", $im_orig->errstr;
+    
+    # now negate the height
+    my $orig_height = unpack("V", substr($data, 0x16, 4));
+    my $neg_height = 0xFFFFFFFF & ~($orig_height - 1);
+    substr($data, 0x16, 4) = pack("V", $neg_height);
+
+    # and read the modified image
+    my $im = Imager->new;
+    ok($im->read(data => $data),
+       "$test_index - $desc: read negated height image")
+      or print "# ", $im->errstr, "\n";
+
+    # flip orig to match what we should get
+    $im_orig->flip(dir => 'v');
+
+    # check it out
+    is_image($im, $im_orig, "$test_index - $desc: check image");
+
+    ++$test_index;
+  }
+}
+
+{ print "# patched data read failure tests\n";
+  # like the "various invalid format" tests, these generate fail
+  # images from other images included with Imager without providing a
+  # full bmp source, saving on dist size and focusing on the changes needed
+  # to cause the failure
+  # each entry is: source file, patches, expected error, description
+  
+  my @tests =
+    (
+     # low image data offsets
+     [ 
+      "winrgb2.bmp", 
+      { 10 => "3d 00 00 00" }, 
+      "image data offset too small (61)",
+      "1-bit, small image offset"
+     ],
+     [ 
+      "winrgb4.bmp", 
+      { 10 => "75 00 00 00" }, 
+      "image data offset too small (117)",
+      "4-bit, small image offset"
+     ],
+     [ 
+      "winrgb8.bmp", 
+      { 10 => "35 04 00 00" }, 
+      "image data offset too small (1077)",
+      "8-bit, small image offset"
+     ],
+     [ 
+      "winrgb24.bmp", 
+      { 10 => "35 00 00 00" }, 
+      "image data offset too small (53)",
+      "24-bit, small image offset"
+     ],
+    );
+  my $test_index = 0;
+  for my $test (@tests) {
+    my ($filename, $patches, $error, $desc) = @$test;
+
+    my $data = load_patched_file("testimg/$filename", $patches);
+    my $im = Imager->new;
+    ok(!$im->read(data => $data, type=>'bmp'),
+       "$test_index - $desc:should fail to read");
+    is($im->errstr, $error, "$test_index - $desc:check message");
+    ++$test_index;
+  }
+}
+
+{ # various write failure tests
+  # each entry is:
+  # source, limit, expected error, description
+  my @tests =
+    (
+     [ 
+      "winrgb2.bmp", 1, 
+      "cannot write bmp header: limit reached",
+      "1-bit, writing header" 
+     ],
+     [ 
+      "winrgb4.bmp", 1, 
+      "cannot write bmp header: limit reached",
+      "4-bit, writing header" 
+     ],
+     [ 
+      "winrgb8.bmp", 1, 
+      "cannot write bmp header: limit reached",
+      "8-bit, writing header" 
+     ],
+     [ 
+      "winrgb24.bmp", 1, 
+      "cannot write bmp header: limit reached",
+      "24-bit, writing header" 
+     ],
+     [ 
+      "winrgb2.bmp", 0x38, 
+      "cannot write palette entry: limit reached",
+      "1-bit, writing palette" 
+     ],
+     [ 
+      "winrgb4.bmp", 0x38, 
+      "cannot write palette entry: limit reached",
+      "4-bit, writing palette" 
+     ],
+     [ 
+      "winrgb8.bmp", 0x38, 
+      "cannot write palette entry: limit reached",
+      "8-bit, writing palette" 
+     ],
+     [ 
+      "winrgb2.bmp", 0x40, 
+      "writing 1 bit/pixel packed data: limit reached",
+      "1-bit, writing image data" 
+     ],
+     [ 
+      "winrgb4.bmp", 0x80, 
+      "writing 4 bit/pixel packed data: limit reached",
+      "4-bit, writing image data" 
+     ],
+     [ 
+      "winrgb8.bmp", 0x440, 
+      "writing 8 bit/pixel packed data: limit reached",
+      "8-bit, writing image data" 
+     ],
+     [ 
+      "winrgb24.bmp", 0x39, 
+      "writing image data: limit reached",
+      "24-bit, writing image data" 
+     ],
+    );
+  print "# write failure tests\n";
+  my $test_index = 0;
+  for my $test (@tests) {
+    my ($file, $limit, $error, $desc) = @$test;
+
+    my $im = Imager->new;
+    $im->read(file => "testimg/$file")
+      or die "Cannot read $file: ", $im->errstr;
+
+    ok(!$im->write(type => 'bmp', callback => limited_write($limit),
+		   maxbuffer => 1),
+       "$test_index - $desc: write should fail");
+    is($im->errstr, $error, "$test_index - $desc: check error message");
+
+    ++$test_index;
+  }
+}
+
 sub write_test {
   my ($im, $filename) = @_;
   local *FH;
@@ -485,3 +660,37 @@ sub read_test {
   }
 }
 
+sub limited_write {
+  my ($limit) = @_;
+
+  return
+     sub {
+       my ($data) = @_;
+       $limit -= length $data;
+       if ($limit >= 0) {
+         print "# write of ", length $data, " bytes successful ($limit left)\n" if $debug_writes;
+         return 1;
+       }
+       else {
+         print "# write of ", length $data, " bytes failed\n";
+         Imager::i_push_error(0, "limit reached");
+         return;
+       }
+     };
+}
+
+sub load_patched_file {
+  my ($filename, $patches) = @_;
+
+  open IMDATA, "< $filename"
+    or die "Cannot open $filename: $!";
+  binmode IMDATA;
+  my $data = do { local $/; <IMDATA> };
+  for my $offset (keys %$patches) {
+    (my $hdata = $patches->{$offset}) =~ tr/ //d;
+    my $pdata = pack("H*", $hdata);
+    substr($data, $offset, length $pdata) = $pdata;
+  }
+
+  return $data;
+}
