@@ -300,8 +300,8 @@ testimg/newgimpgrad.ggr Test GIMP Gradient file (newer type)
 testimg/nocmap.gif
 testimg/palette.png
 testimg/palette_out.png
-testimg/pgm.pgm		Simple pgm for testing the right sample is in the right place
 testimg/penguin-base.ppm
+testimg/pgm.pgm		Simple pgm for testing the right sample is in the right place
 testimg/scale.gif
 testimg/scale.ppm
 testimg/scalei.gif

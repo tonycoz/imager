@@ -202,7 +202,8 @@ is($ooim->tags(name=>'pnm_type'), 1, "check pnm_type tag");
   # check we correctly sync with the data stream
   my $im = Imager->new;
   ok($im->read(file => 'testimg/pgm.pgm', type => 'pnm'),
-     "read pgm.pgm");
+     "read pgm.pgm")
+    or print "# cannot read pgm.pgm: ", $im->errstr, "\n";
   print "# ", $im->getsamples('y' => 0), "\n";
   is_color1($im->getpixel(x=>0, 'y' => 0), 254, "check top left");
 }
