@@ -1,6 +1,6 @@
 #!perl -w
 use strict;
-use Test::More tests => 183;
+use Test::More tests => 191;
 use Imager qw(:all);
 use Imager::Test qw(test_image_raw is_image);
 init_log("testout/t107bmp.log",1);
