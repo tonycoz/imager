@@ -111,7 +111,7 @@ T_IMAGER_FULL_IMAGE
           HV *hv = newHV();
           sv_setref_pv(imobj, \"Imager::ImgRaw\", $var);
           hv_store(hv, "IMG", 3, imobj, 0);
-          $arg = sv_2mortal(sv_bless(newRV((SV*)hv), gv_stashpv("Imager", 1)));
+          $arg = sv_2mortal(sv_bless(newRV_noinc((SV*)hv), gv_stashpv("Imager", 1)));
         }
         else {
           $arg = &PL_sv_undef;

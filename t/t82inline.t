@@ -10,7 +10,7 @@ use Cwd 'getcwd';
 plan skip_all => "Inline won't work in directories with spaces"
   if getcwd() =~ / /;
 
-plan tests => 8;
+plan tests => 9;
 require Inline;
 Inline->import(with => 'Imager');
 
@@ -244,3 +244,16 @@ my $im3 = do_lots($im2);
 ok($im3, "do_lots()")
   or print "# ", Imager->_error_as_msg, "\n";
 ok($im3->write(file=>'testout/t82lots.ppm'), "write t82lots.ppm");
+
+{ # RT #24992
+  # the T_IMAGER_FULL_IMAGE typemap entry was returning a blessed
+  # hash with an extra ref, causing memory leaks
+
+  my $im = make_10x10();
+  my $im2 = Imager->new(xsize => 10, ysize => 10);
+  use B;
+  my $imb = B::svref_2object($im);
+  my $im2b = B::svref_2object($im2);
+  is ($imb->REFCNT, $im2b->REFCNT, 
+      "check refcnt of imager object hash between normal and typemap generated");
+}
