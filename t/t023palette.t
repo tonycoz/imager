@@ -1,7 +1,7 @@
 #!perl -w
 # some of this is tested in t01introvert.t too
 use strict;
-use Test::More tests => 83;
+use Test::More tests => 90;
 BEGIN { use_ok("Imager"); }
 
 sub isbin($$$);
@@ -265,6 +265,26 @@ cmp_ok(Imager->errstr, '=~', qr/Channels must be positive and <= 4/,
     $im->setscanline('y' => 1, pixels => "\xFF", type => 'index');
   };
   ok($@, "croak on setscanline() with pv to invalid index");
+}
+
+{
+  print "# make_colors => mono\n";
+  # test mono make_colors
+  my $imrgb = Imager->new(xsize => 10, ysize => 10);
+  $imrgb->setpixel(x => 0, 'y' => 0, color => '#FFF');
+  $imrgb->setpixel(x => 1, 'y' => 0, color => '#FF0');
+  $imrgb->setpixel(x => 2, 'y' => 0, color => '#000');
+  my $mono = $imrgb->to_paletted(make_colors => 'mono',
+				   translate => 'closest');
+  is($mono->type, 'paletted', "check we get right image type");
+  is($mono->colorcount, 2, "only 2 colors");
+  my @colors = $mono->getcolors;
+  iscolor($colors[0], $black, "check first entry");
+  iscolor($colors[1], $white, "check second entry");
+  my @pixels = $mono->getscanline(x => 0, 'y' => 0, width => 3, type=>'index');
+  is($pixels[0], 1, "check white pixel");
+  is($pixels[1], 1, "check yellow pixel");
+  is($pixels[2], 0, "check black pixel");
 }
 
 sub iscolor {

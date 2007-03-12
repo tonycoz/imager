@@ -12,13 +12,13 @@ checking testing of new ft2 rendering
 
 possibly: use renderer on other fonts
 
-check testing of new ppm input
+check testing of new ppm input (done)
 
-check testing of new ppm output
+check testing of new ppm output (done)
 
 check lbr's font output issue
 
-tests for monochrome makemap
+tests for monochrome makemap (done)
 
 BEFORE 0.54
 
