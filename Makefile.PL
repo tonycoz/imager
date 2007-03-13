@@ -86,7 +86,6 @@ my @libs; # all the places to look for libraries
 
 init();       # initialize global data
 pathcheck();  # Check if directories exist
-distcheck();  # for building dists
 
 if (exists $ENV{IM_ENABLE}) {
   my %en = map { $_, 1 } split ' ', $ENV{IM_ENABLE};
@@ -901,31 +900,3 @@ YAML
   }
 }
 
-# this is intended to only be running on the development
-# machines
-sub distcheck {
-  if (-e '.svn') {
-    # update Changes if needed
-    my $write_changes;
-    # get the last revision from Changes
-    if (open CHANGES, "< Changes") {
-      <CHANGES>;
-      my ($changes_rev) = <CHANGES> =~ /^r(\d+)/
-	or ++$write_changes;
-
-      my ($revision) = grep s/^Revision: //, `svn info`
-	or die "Could not get Revision from svn";
-      chomp $revision;
-
-      $write_changes ||= $changes_rev != $revision;
-      close CHANGES;
-    }
-    else {
-      ++$write_changes;
-    }
-    if ($write_changes) {
-      print "Updating Changes file\n";
-      system 'svn log -v -r HEAD:943 >Changes';
-    }
-  }
-}

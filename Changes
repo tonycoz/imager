@@ -1,0 +1,213 @@
+Imager release history.  Older releases can be found in Changes.old
+
+Imager 0.56 - 
+===========
+
+ - added support for reading 16-bit/sample PGM/PPM images
+
+ - added support for writing 16-bit/sample PGM/PPM images
+
+ - improved performance of reading PBM/PGM/PPM images
+
+ - added support for writing PBM images if the image is paletted and
+   contains only black and white
+
+ - added a new make_colors value - "mono"
+
+ - switched from the svn log Changes to a manual Changes to reduce
+   noise
+
+Bug fixes:
+
+ - CRITICAL: the "Imager" typemap entry (not used by Imager itself)
+   was returning an image object with an extra reference, this
+   resulted in a memory leak.
+   http://rt.cpan.org/Ticket/Display.html?id=24992
+
+ - fix rendering on alpha channel images for the FreeType 2.x driver
+   http://rt.cpan.org/Ticket/Display.html?id=11972
+
+ - reading bmp files now consitently handles short reads.  You can now
+   supply a parameter to treat a short read as successful and set
+   i_incomplete
+   http://rt.cpan.org/Ticket/Display.html?id=8426
+
+ - previously, reading ASCII PBM files required spaces between samples,
+   even though the format doesn't require that
+
+Imager 0.55 - 16 Dec 2006
+===========
+
+This is primarily a bug fix release.
+
+Note: Test::More is now a pre-requisite for Imager and is no longer bundled.
+
+There is one new feature:
+
+ - the Win32 font driver now supports UTF8 (RT 22166)
+   http://www.cpanforum.com/threads/3276
+   http://rt.cpan.org/Ticket/Display.html?id=22166
+
+Several bugs were fixed:
+
+ - the string() method would not output the string "0"
+   http://rt.cpan.org/Public/Bug/Display.html?id=21770
+
+ - fills.c was failing to compile on Solaris 10 (compiler unknown)
+   http://rt.cpan.org/Public/Bug/Display.html?id=21944
+
+ - the gif_disposal and gif_user_input tags weren't being read from
+   the file correctly
+   http://rt.cpan.org/Public/Bug/Display.html?id=22192
+
+ - gif.c was failing to build under MSVC
+   http://rt.cpan.org/Ticket/Display.html?id=23922
+
+ - in some cases strings passed to the string() method were treated as
+   terminated by NUL (chr 0)
+   http://rt.cpan.org/Public/Bug/Display.html?id=21770
+
+ - on "MSWin32" perl builds we now link to -lzlib instead of -lz since
+   that's the default build name for zlib on Win32.
+   http://rt.cpan.org/Ticket/Display.html?id=23064
+
+ - search $Config{incpath} for headers too, which we should have been
+   doing all along.
+
+Win32 font driver fixes:
+
+ - the global descent value from bounding box was the wrong sign
+   http://www.cpanforum.com/threads/3276
+
+ - if the first or last glyph overflowed the left or right side of the
+   advance width they would be clipped
+
+
+Imager 0.54 - 14 Sep 2006
+===========
+
+This is primarily a feature release:
+
+ - a new qtype value 'mixing' has been added to the scale()
+   method. This is faster than 'normal', slower than 'preview'. This
+   is based on the method used by pnmscale, and seems to produce less
+   blurry results than normal.
+   http://rt.cpan.org/Public/Bug/Display.html?id=20677
+
+ - the rubthrough() method can now render onto images with an alpha
+   channel.
+   http://rt.cpan.org/Ticket/Display.html?id=20678
+
+ - the read_multi() method now falls back to calling doing a single
+   image read via the read() method and write_multi() will now fall
+   back to calling write() if a single image is supplied. This means
+   you can simply call the read_multi() or write_multi() functions
+   without having to check if the type is formatted by that method.
+   http://rt.cpan.org/Ticket/Display.html?id=19457
+   http://rt.cpan.org/Ticket/Display.html?id=19458
+
+ - the GIF loop extension can now be written. If you don't have
+   libungif/giflib 4.1.4 (or some distribution's bugfixed equivalent) you
+   should upgrade.
+   http://rt.cpan.org/Ticket/Display.html?id=21185
+
+ - getscanline() and setscanline() can now read/write palette index
+   based data from/to the image for paletted images, by setting type to
+   'index'.
+   http://rt.cpan.org/Ticket/Display.html?id=20338
+
+ - we no longer hassle you to disable GIF support
+   http://rt.cpan.org/Ticket/Display.html?id=20687
+
+ - minor documentation fixes
+
+
+Imager 0.53 - 26 Jul 2006
+===========
+
+This is a bugfix release.
+
+Some test code was left in a code path not covered by the test
+suite. A test was added to cover this code path and the test code was
+removed.
+http://rt.cpan.org/Public/Bug/Display.html?id=20705
+
+
+Imager 0.52 - 25 Jul 2006
+===========
+
+This is primarily a feature release, but contains a fair few bug
+fixes, new features:
+
+ - ability to read and write MS Windows ICO and CUR files
+
+ - you can now add file format plugins to support new file formats
+
+ - add POD coverage tests
+
+ - setcolors() and addcolors() now accept color names and so on
+   instead of requiring Imager::Color objects.
+   http://rt.cpan.org/Ticket/Display.html?id=20056
+
+ - flood_fill() can now fill to a specified border color instead of
+   just to the area the same color as the seed.
+   http://rt.cpan.org/Ticket/Display.html?id=19618
+
+
+Bug fixes:
+
+ - bounding_box for the T1 driver wasn't converting UTF8 to ascii when
+   calculating the advance width.
+   http://rt.cpan.org/Public/Bug/Display.html?id=20554
+
+ - bounding_box for the T1 driver wasn't including leading and
+   trailing spaces in the bounding box as the other drivers did, it also
+   produced strange results for empty strings or strings containing only
+   spaces
+
+ - when reading CMYK jpeg images they were being transferred to the
+   image object as is, producing a four channel image. It only looked ok
+   due to an old still unfixed Photoshop bug. We now convert from the
+   inverted CMYK that photoshop (and Corel for example) produce into RGB.
+   http://rt.cpan.org/Ticket/Display.html?id=20416
+
+ - reading a CYMK TIFF would result in a 4 channel image, reading any
+   image with more than 4 channels (eg. RGB with 2 alpha channels) would
+   result in an error.
+   http://rt.cpan.org/Ticket/Display.html?id=20415
+
+ - added /usr/local/include to the default include search path, since
+   we were already searching /usr/local/lib for libraries.
+
+And various minor fixes and documentation updates.
+
+
+Imager 0.51 - 23 Apr 2006
+===========
+
+ - fix a validation bug when processing JPEG EXIF data that can cause
+   a crash
+   http://rt.cpan.org/Public/Bug/Display.html?id=18496
+
+ - fix mis-processing of the src_maxx and src_maxy parameters of the
+   paste() method
+   http://rt.cpan.org/Public/Bug/Display.html?id=18712
+
+ - fix a problem in Imager's "smart" handling of the color parameter
+   to various methods.
+   http://rt.cpan.org/Public/Bug/Display.html?id=18561
+
+
+Imager 0.50 - 29 Mar 2006
+===========
+
+ - CRITICAL: fixes a segmentation fault from attempting to write a 2
+   or 4 channel image to jpeg or a 2 channel image to tga where the
+   output is an in-memeory buffer.
+   http://rt.cpan.org/Public/Bug/Display.html?id=18397
+
+ - fixes an incorrect pointer parameter in the PNG code
+   http://rt.cpan.org/Public/Bug/Display.html?id=18051
+
+ - skip Inline::C tests when building in a directory with spaces
+   http://rt.cpan.org/Public/Bug/Display.html?id=18049
