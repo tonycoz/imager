@@ -1,6 +1,6 @@
 #!perl -w
 use strict;
-use Test::More tests => 178;
+use Test::More tests => 182;
 ++$|;
 # Before `make install' is performed this script should be runnable with
 # `make test'. After `make install' it should work as `perl test.pl'
@@ -12,7 +12,7 @@ use Test::More tests => 178;
 
 BEGIN { use_ok(Imager => ':all') }
 
-use Imager::Test qw(diff_text_with_nul);
+use Imager::Test qw(diff_text_with_nul is_color3);
 
 init_log("testout/t38ft2font.log",2);
 
@@ -20,13 +20,13 @@ my @base_color = (64, 255, 64);
 
 SKIP:
 {
-  i_has_format("ft2") or skip("no freetype2 library found", 177);
+  i_has_format("ft2") or skip("no freetype2 library found", 181);
 
   print "# has ft2\n";
   
   my $fontname=$ENV{'TTFONTTEST'}||'./fontfiles/dodge.ttf';
 
-  -f $fontname or skip("cannot find fontfile $fontname", 177);
+  -f $fontname or skip("cannot find fontfile $fontname", 181);
 
 
   my $bgcolor=i_color_new(255,0,0,0);
@@ -448,6 +448,24 @@ SKIP:
 		       font => $font, color => '#FFFFFF', utf8 => 1);
     diff_text_with_nul("utf8 dash\0dash vs dash", "$dash\0$dash", $dash,
 		       font => $font, channel => 1, utf8 => 1);
+  }
+
+  { # RT 11972
+    # when rendering to a transparent image the coverage should be
+    # expressed in terms of the alpha channel rather than the color
+    my $font = Imager::Font->new(file=>'fontfiles/ImUgly.ttf', type=>'ft2');
+    my $im = Imager->new(xsize => 40, ysize => 20, channels => 4);
+    ok($im->string(string => "AB", size => 20, aa => 1, color => '#F00',
+		   x => 0, y => 15, font => $font),
+       "draw to transparent image");
+    $im->write(file => "foo.png");
+    my $im_noalpha = $im->convert(preset => 'noalpha');
+    my $im_pal = $im->to_paletted(make_colors => 'mediancut');
+    my @colors = $im_pal->getcolors;
+    is(@colors, 2, "should be only 2 colors");
+    @colors = sort { ($a->rgba)[0] <=> ($b->rgba)[0] } @colors;
+    is_color3($colors[0], 0, 0, 0, "check we got black");
+    is_color3($colors[1], 255, 0, 0, "and red");
   }
 }
 
