@@ -44,9 +44,34 @@ while (<IN>) {
   }
 }
 print OUT "\n\@EXPORT = qw(@ops);\n\n";
-my $dumper = Data::Dumper->new([\%attr],["*Attr"]);
-$dumper->Sortkeys(1);
-print OUT $dumper->Dump;
+# previously we used Data::Dumper, with Sortkeys() 
+# to make sure the generated code only changed when the data
+# changed.  Unfortunately Sortkeys isn't supported in some versions of
+# perl we try to support, so we now generate this manually
+print OUT "%Attr =\n  (\n";
+for my $opname (sort keys %attr) {
+  my $op = $attr{$opname};
+  print OUT "  '$opname' =>\n    {\n";
+  for my $attrname (sort keys %$op) {
+    my $attr = $op->{$attrname};
+    print OUT "    '$attrname' => ";
+    if (defined $attr) {
+      if ($attr =~ /^\d+$/) {
+	print OUT $attr;
+      }
+      else {
+	print OUT "'$attr'";
+      }
+    }
+    else {
+      print OUT "undef";
+    }
+
+    print OUT ",\n";
+  }
+  print OUT "    },\n";
+}
+print OUT "  );\n";
 print OUT "\$MaxOperands = $max_opr;\n";
 print OUT qq/\$PackCode = "$reg_pack";\n/;
 print OUT <<'EOS';
