@@ -24,6 +24,8 @@ correct handling of old Data::Dumper (#24391) (done)
 
 fix unsharpmask documentation (#25531)
 
+work around compiler bug on OS X (#25561)
+
 BEFORE 0.54
 
 OO interface for i_plin/i_glin (done)

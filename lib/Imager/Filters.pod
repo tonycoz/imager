@@ -486,6 +486,24 @@ output pixel is: in + I<scale> * (in - blurred).
   $img->filter(type=>"unsharpmask", stddev=>1, scale=>0.5)
     or die $img->errstr;
 
+unsharpmark has the following parameters:
+
+=over
+
+=item *
+
+stddev - the radius of effect of the blur, this is equivalent to the
+C<Radius> value in the GIMP's unsharpmask filter.  Smaller values
+enhance smaller-scale detail.  Default: 2.0.
+
+=item *
+
+scale - the proportion of the difference between the original and
+blurred image added to the original image, equivalent to I<Amount> in
+the GIMP's unsharp mask filter.  Default: 1.0.
+
+=back
+
 =item watermark
 
 applies I<wmark> as a watermark on the image with strength I<pixdiff>,
