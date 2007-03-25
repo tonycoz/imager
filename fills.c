@@ -676,7 +676,10 @@ static void fill_hatch(i_fill_t *fill, int x, int y, int width, int channels,
   int mask = 128 >> xpos;
 
   while (width-- > 0) {
-    *data++ = (byte & mask) ? f->fg : f->bg;
+    if (byte & mask)
+      *data++ = f->fg;
+    else
+      *data++ = f->bg;
     
     if ((mask >>= 1) == 0)
       mask = 128;
@@ -698,7 +701,10 @@ static void fill_hatchf(i_fill_t *fill, int x, int y, int width, int channels,
   int mask = 128 >> xpos;
   
   while (width-- > 0) {
-    *data++ = (byte & mask) ? f->ffg : f->fbg;
+    if (byte & mask)
+      *data++ = f->ffg;
+    else
+      *data++ = f->fbg;
     
     if ((mask >>= 1) == 0)
       mask = 128;

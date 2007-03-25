@@ -22,9 +22,9 @@ tests for monochrome makemap (done)
 
 correct handling of old Data::Dumper (#24391) (done)
 
-fix unsharpmask documentation (#25531)
+fix unsharpmask documentation (#25531) (done)
 
-work around compiler bug on OS X (#25561)
+work around compiler bug on OS X (#25561) (done)
 
 BEFORE 0.54
 
