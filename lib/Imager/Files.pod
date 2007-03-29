@@ -610,7 +610,8 @@ how the next frame is displayed ("Disposal Method")
 
 =item gif_loop
 
-the number of loops from the Netscape Loop extension.  This may be zero.
+the number of loops from the Netscape Loop extension.  This may be
+zero to loop forever.
 
 =item gif_comment
 

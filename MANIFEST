@@ -183,6 +183,7 @@ samples/README
 samples/align-string.pl Demonstrate align_string method.
 samples/anaglyph.pl
 samples/border.pl       Demonstrate adding a border
+samples/flasher.gif	Animate an source image fading to a color and back
 samples/inline_capture2image.pl	 convert captured BGR data to an image
 samples/inline_replace_color.pl  replace colors using Inline::C
 samples/interleave.pl

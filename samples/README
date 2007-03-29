@@ -97,3 +97,10 @@ inline_capture2image.pl
 
   Demonstrates using Inline and Imager's API to convert captured BGR
   image data into an Imager image.
+
+flasher.pl
+
+  Animate an image fading down to a background color and back again.
+
+  Demonstrates setting an alpha channel with convert(), rubthrough(), 
+  and writing animated GIFs.
