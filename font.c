@@ -1946,6 +1946,7 @@ void i_tt_dump_names(TT_Fonthandle *handle) {
       printf("'%s'\n", name);
     }
   }
+  fflush(stdout);
 }
 
 int
