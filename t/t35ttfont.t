@@ -2,6 +2,8 @@
 use strict;
 use Test::More tests => 85;
 
+$|=1;
+
 BEGIN { use_ok(Imager => ':all') }
 require "t/testtools.pl";
 use Imager::Test qw(diff_text_with_nul);
