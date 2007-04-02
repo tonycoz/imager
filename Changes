@@ -17,6 +17,8 @@ Imager 0.56 -
  - switched from the svn log Changes to a manual Changes to reduce
    noise
 
+ - new sample code - samples/flasher.pl
+
 Bug fixes:
 
  - CRITICAL: the "Imager" typemap entry (not used by Imager itself)
@@ -34,6 +36,20 @@ Bug fixes:
 
  - previously, reading ASCII PBM files required spaces between samples,
    even though the format doesn't require that
+
+ - improved documentation of the unsharpmask filter (I hope)
+   http://rt.cpan.org/Ticket/Display.html?id=25531
+
+ - force flushing of the output from i_tt_dump_names() and test output
+   in t/t35ttfont.t to prevent output from being mixed up.
+   https://rt.cpan.org/Ticket/Display.html?id=24859
+
+ - rewrite a conditional expression as an if() to hopefully work around
+   a bug in the pre-4.0 GCC Apple shipped with OS X 10.4.
+   https://rt.cpan.org/Ticket/Display.html?id=25561
+
+ - avoid Data::Dumper in regops.perl to support older releases of perl
+   https://rt.cpan.org/Ticket/Display.html?id=24391
 
 Imager 0.55 - 16 Dec 2006
 ===========
