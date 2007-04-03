@@ -40,7 +40,8 @@ color_ok('grey', 102, 255, 255, 255, Imager::Color->new(grey=>102));
 color_ok('gray', 103, 255, 255, 255, Imager::Color->new(gray=>103));
 SKIP:
 {
-  skip "no X rgb.txt found", 1 unless -e '/usr/lib/X11/rgb.txt';
+  skip "no X rgb.txt found", 1 
+    unless grep -r, Imager::Color::_test_x_palettes();
   color_ok('xname', 0, 0, 255, 255, Imager::Color->new(xname=>'blue'));
 }
 color_ok('gimp', 255, 250, 250, 255, 

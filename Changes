@@ -1,6 +1,15 @@
 Imager release history.  Older releases can be found in Changes.old
 
-Imager 0.56 - 
+Imager 0.57 -
+===========
+
+Bug fixes:
+
+ - search another place for rgb.txt, and check all the places 
+   Imager::Color checks when deciding whether to skip testing it
+   http://rt.cpan.org/Ticket/Display.html?id=26064
+
+Imager 0.56 - 1 Apr 2007
 ===========
 
  - added support for reading 16-bit/sample PGM/PPM images

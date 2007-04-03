@@ -141,12 +141,18 @@ sub _get_gimp_color {
 
 my @x_search = 
   (
+   '/usr/share/X11/rgb.txt', # newer Xorg X11 dists use this
    '/usr/lib/X11/rgb.txt', # seems fairly standard
    '/usr/local/lib/X11/rgb.txt', # seems possible
    '/usr/X11R6/lib/X11/rgb.txt', # probably the same as the first
    '/usr/openwin/lib/rgb.txt',
    '/usr/openwin/lib/X11/rgb.txt',
   );
+
+# called by the test code to check if we can test this stuff
+sub _test_x_palettes {
+  @x_search;
+}
 
 # x rgb.txt cache
 # same structure as %gimp_cache
