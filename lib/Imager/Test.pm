@@ -4,7 +4,7 @@ use Test::Builder;
 require Exporter;
 use vars qw(@ISA @EXPORT_OK);
 @ISA = qw(Exporter);
-@EXPORT_OK = qw(diff_text_with_nul test_image_raw test_image_16 is_color3 is_color1 is_image);
+@EXPORT_OK = qw(diff_text_with_nul test_image_raw test_image_16 test_image is_color3 is_color1 is_image is_image_similar);
 
 sub diff_text_with_nul {
   my ($desc, $text1, $text2, @params) = @_;
@@ -98,6 +98,19 @@ sub test_image_raw {
   $img;
 }
 
+sub test_image {
+  my $green = Imager::Color->new(0, 255, 0, 255);
+  my $blue  = Imager::Color->new(0, 0, 255, 255);
+  my $red   = Imager::Color->new(255, 0, 0, 255);
+  my $img = Imager->new(xsize => 150, ysize => 150);
+  $img->box(filled => 1, color => $green, box => [ 70, 25, 130, 125 ]);
+  $img->box(filled => 1, color => $blue,  box => [ 20, 25, 80, 125 ]);
+  $img->arc(x => 75, y => 75, r => 30, color => $red);
+  $img->filter(type => 'conv', coef => [ 0.1, 0.2, 0.4, 0.2, 0.1 ]);
+
+  $img;
+}
+
 sub test_image_16 {
   my $green = Imager::Color->new(0, 255, 0, 255);
   my $blue  = Imager::Color->new(0, 0, 255, 255);
@@ -111,8 +124,8 @@ sub test_image_16 {
   $img;
 }
 
-sub is_image($$$) {
-  my ($left, $right, $comment) = @_;
+sub is_image_similar($$$$) {
+  my ($left, $right, $limit, $comment) = @_;
 
   my $builder = Test::Builder->new;
 
@@ -155,14 +168,23 @@ sub is_image($$$) {
     return;
   }
   my $diff = Imager::i_img_diff($left->{IMG}, $right->{IMG});
-  unless ($diff == 0) {
+  if ($diff > $limit) {
     $builder->ok(0, $comment);
-    $builder->diag("image data different - $diff");
+    $builder->diag("image data difference > $limit - $diff");
     return;
   }
   
   return $builder->ok(1, $comment);
 }
+
+sub is_image($$$) {
+  my ($left, $right, $comment) = @_;
+
+  local $Test::Builder::Level = $Test::Builder::Level + 1;
+
+  return is_image_similar($left, $right, 0, $comment);
+}
+
 
 1;
 

@@ -218,6 +218,38 @@ i_img *i_img_16_new(int x, int y, int ch) {
   return im;
 }
 
+/*
+=item i_img_to_rgb16(im)
+
+=category Image creation
+
+Returns a 16-bit/sample version of the supplied image.
+
+Returns the image on success, or NULL on failure.
+
+=cut
+*/
+
+i_img *
+i_img_to_rgb16(i_img *im) {
+  i_img *targ;
+  i_fcolor *line;
+  int y;
+
+  targ = i_img_16_new(im->xsize, im->ysize, im->channels);
+  if (!targ)
+    return NULL;
+  line = mymalloc(sizeof(i_fcolor) * im->xsize);
+  for (y = 0; y < im->ysize; ++y) {
+    i_glinf(im, 0, im->xsize, y, line);
+    i_plinf(targ, 0, im->xsize, y, line);
+  }
+
+  myfree(line);
+
+  return targ;
+}
+
 static int i_ppix_d16(i_img *im, int x, int y, const i_color *val) {
   int off, ch;
 

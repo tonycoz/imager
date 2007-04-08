@@ -1,6 +1,6 @@
 #!perl -w
 use strict;
-use Test::More tests => 85;
+use Test::More tests => 87;
 
 BEGIN { use_ok(Imager=>qw(:all :handy)) }
 
@@ -9,6 +9,7 @@ init_log("testout/t021sixteen.log", 1);
 require "t/testtools.pl";
 
 use Imager::Color::Float;
+use Imager::Test qw(test_image is_image);
 
 my $im_g = Imager::i_img_16_new(100, 101, 1);
 
@@ -150,4 +151,12 @@ cmp_ok(Imager->errstr, '=~', qr/channels must be between 1 and 4/,
   my $im = Imager->new(xsize => 10, ysize=>10, bits=>16);
 
   mask_tests($im, 1.0/65535);
+}
+
+{ # convert to rgb16
+  my $im = test_image();
+  my $im16 = $im->to_rgb16;
+  print "# check conversion to 16 bit\n";
+  is($im16->bits, 16, "check bits");
+  is_image($im, $im16, "check image data matches");
 }

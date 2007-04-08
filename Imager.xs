@@ -1698,10 +1698,10 @@ i_matrix_transform(im, xsize, ysize, matrix, ...)
       OUTPUT:
         RETVAL
 
-void
+undef_int
 i_gaussian(im,stdev)
     Imager::ImgRaw     im
-	     float     stdev
+	    double     stdev
 
 void
 i_unsharp_mask(im,stdev,scale)
@@ -4021,6 +4021,10 @@ i_img_16_new(x, y, ch)
         int x
         int y
         int ch
+
+Imager::ImgRaw
+i_img_to_rgb16(im)
+       Imager::ImgRaw im
 
 Imager::ImgRaw
 i_img_double_new(x, y, ch)

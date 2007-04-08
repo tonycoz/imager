@@ -187,7 +187,7 @@ undef_int i_flood_cfill_border(i_img *im, int seedx, int seedy, i_fill_t *fill, 
 
 /* image processing functions */
 
-void i_gaussian    (i_img *im,float stdev);
+int i_gaussian    (i_img *im, double stdev);
 void i_conv        (i_img *im,const float *coeff,int len);
 void i_unsharp_mask(i_img *im, double stddev, double scale);
 
@@ -349,6 +349,7 @@ extern i_img *i_img_masked_new(i_img *targ, i_img *mask, int x, int y,
                                int w, int h);
 extern i_img *i_img_16_new(int x, int y, int ch);
 extern i_img *i_img_16_new_low(i_img *im, int x, int y, int ch);
+extern i_img *i_img_to_rgb16(i_img *im);
 extern i_img *i_img_double_new(int x, int y, int ch);
 extern i_img *i_img_double_new_low(i_img *im, int x, int y, int ch);
 
