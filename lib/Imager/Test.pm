@@ -4,7 +4,7 @@ use Test::Builder;
 require Exporter;
 use vars qw(@ISA @EXPORT_OK);
 @ISA = qw(Exporter);
-@EXPORT_OK = qw(diff_text_with_nul test_image_raw test_image_16 test_image is_color3 is_color1 is_image is_image_similar);
+@EXPORT_OK = qw(diff_text_with_nul test_image_raw test_image_16 test_image is_color3 is_color1 is_image is_image_similar image_bounds_checks);
 
 sub diff_text_with_nul {
   my ($desc, $text1, $text2, @params) = @_;
@@ -185,6 +185,31 @@ sub is_image($$$) {
   return is_image_similar($left, $right, 0, $comment);
 }
 
+sub image_bounds_checks {
+  my $im = shift;
+
+  my $builder = Test::Builder->new;
+
+  $builder->ok(!$im->getpixel(x => -1, y => 0), 'bounds check get (-1, 0)');
+  $builder->ok(!$im->getpixel(x => 10, y => 0), 'bounds check get (10, 0)');
+  $builder->ok(!$im->getpixel(x => 0, y => -1), 'bounds check get (0, -1)');
+  $builder->ok(!$im->getpixel(x => 0, y => 10), 'bounds check get (0, 10)');
+  $builder->ok(!$im->getpixel(x => -1, y => 0), 'bounds check get (-1, 0) float');
+  $builder->ok(!$im->getpixel(x => 10, y => 0), 'bounds check get (10, 0) float');
+  $builder->ok(!$im->getpixel(x => 0, y => -1), 'bounds check get (0, -1) float');
+  $builder->ok(!$im->getpixel(x => 0, y => 10), 'bounds check get (0, 10) float');
+  my $black = Imager::Color->new(0, 0, 0);
+  require Imager::Color::Float;
+  my $blackf = Imager::Color::Float->new(0, 0, 0);
+  $builder->ok(!$im->setpixel(x => -1, y => 0, color => $black), 'bounds check set (-1, 0)');
+  $builder->ok(!$im->setpixel(x => 10, y => 0, color => $black), 'bounds check set (10, 0)');
+  $builder->ok(!$im->setpixel(x => 0, y => -1, color => $black), 'bounds check set (0, -1)');
+  $builder->ok(!$im->setpixel(x => 0, y => 10, color => $black), 'bounds check set (0, 10)');
+  $builder->ok(!$im->setpixel(x => -1, y => 0, color => $blackf), 'bounds check set (-1, 0) float');
+  $builder->ok(!$im->setpixel(x => 10, y => 0, color => $blackf), 'bounds check set (10, 0) float');
+  $builder->ok(!$im->setpixel(x => 0, y => -1, color => $blackf), 'bounds check set (0, -1) float');
+  $builder->ok(!$im->setpixel(x => 0, y => 10, color => $blackf), 'bounds check set (0, 10) float');
+}
 
 1;
 

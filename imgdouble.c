@@ -146,7 +146,7 @@ i_img *i_img_double_new(int x, int y, int ch) {
 static int i_ppix_ddoub(i_img *im, int x, int y, const i_color *val) {
   int off, ch;
 
-  if (x < 0 || x >= im->xsize || y < 0 || y > im->ysize) 
+  if (x < 0 || x >= im->xsize || y < 0 || y >= im->ysize) 
     return -1;
 
   off = (x + y * im->xsize) * im->channels;
@@ -166,7 +166,7 @@ static int i_ppix_ddoub(i_img *im, int x, int y, const i_color *val) {
 static int i_gpix_ddoub(i_img *im, int x, int y, i_color *val) {
   int off, ch;
 
-  if (x < 0 || x >= im->xsize || y < 0 || y > im->ysize) 
+  if (x < 0 || x >= im->xsize || y < 0 || y >= im->ysize) 
     return -1;
 
   off = (x + y * im->xsize) * im->channels;
@@ -179,7 +179,7 @@ static int i_gpix_ddoub(i_img *im, int x, int y, i_color *val) {
 static int i_ppixf_ddoub(i_img *im, int x, int y, const i_fcolor *val) {
   int off, ch;
 
-  if (x < 0 || x >= im->xsize || y < 0 || y > im->ysize) 
+  if (x < 0 || x >= im->xsize || y < 0 || y >= im->ysize) 
     return -1;
 
   off = (x + y * im->xsize) * im->channels;
@@ -199,7 +199,7 @@ static int i_ppixf_ddoub(i_img *im, int x, int y, const i_fcolor *val) {
 static int i_gpixf_ddoub(i_img *im, int x, int y, i_fcolor *val) {
   int off, ch;
 
-  if (x < 0 || x >= im->xsize || y < 0 || y > im->ysize) 
+  if (x < 0 || x >= im->xsize || y < 0 || y >= im->ysize) 
     return -1;
 
   off = (x + y * im->xsize) * im->channels;

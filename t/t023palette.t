@@ -1,8 +1,10 @@
 #!perl -w
 # some of this is tested in t01introvert.t too
 use strict;
-use Test::More tests => 90;
+use Test::More tests => 107;
 BEGIN { use_ok("Imager"); }
+
+use Imager::Test qw(image_bounds_checks);
 
 sub isbin($$$);
 
@@ -285,6 +287,13 @@ cmp_ok(Imager->errstr, '=~', qr/Channels must be positive and <= 4/,
   is($pixels[0], 1, "check white pixel");
   is($pixels[1], 1, "check yellow pixel");
   is($pixels[2], 0, "check black pixel");
+}
+
+{ # check bounds checking
+  my $im = Imager->new(xsize => 10, ysize => 10, type=>'paletted');
+  ok($im->addcolors(colors => [ $black ]), "add color of pixel bounds check writes");
+
+  image_bounds_checks($im);
 }
 
 sub iscolor {

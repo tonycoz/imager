@@ -1,11 +1,13 @@
 #!perl -w
 use strict;
-use Test::More tests => 81;
+use Test::More tests => 97;
 
 BEGIN { use_ok(Imager => qw(:all :handy)) }
 require "t/testtools.pl";
 
 init_log("testout/t022double.log", 1);
+
+use Imager::Test qw(image_bounds_checks);
 
 use Imager::Color::Float;
 
@@ -142,4 +144,7 @@ cmp_ok(Imager->errstr, '=~', qr/channels must be between 1 and 4/,
   mask_tests($im);
 }
 
-
+{ # bounds checking
+  my $im = Imager->new(xsize => 10, ysize=>10, bits=>'double');
+  image_bounds_checks($im);
+}

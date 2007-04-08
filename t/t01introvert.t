@@ -3,11 +3,13 @@
 # to make sure we get expected values
 
 use strict;
-use Test::More tests=>196;
+use Test::More tests => 212;
 
 BEGIN { use_ok(Imager => qw(:handy :all)) }
 
 require "t/testtools.pl";
+
+use Imager::Test qw(image_bounds_checks);
 
 init_log("testout/t01introvert.log",1);
 
@@ -480,6 +482,12 @@ cmp_ok(Imager->errstr, '=~', qr/channels must be between 1 and 4/,
   my $im = Imager->new(xsize => 10, ysize=>10, bits=>8);
 
   mask_tests($im, 0.005);
+}
+
+{ # check bounds checking
+  my $im = Imager->new(xsize => 10, ysize => 10);
+
+  image_bounds_checks($im);
 }
 
 sub check_add {
