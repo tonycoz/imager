@@ -99,7 +99,7 @@ fontfiles/dcr10.afm
 fontfiles/dcr10.pfb
 fontfiles/dodge.ttf
 freetyp2.c	Implements freetype2 font support
-gaussian.c
+gaussian.im
 gif.c
 hlines.c	Manage sets of horizontal line segments
 image.c

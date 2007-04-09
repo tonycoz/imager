@@ -9,6 +9,10 @@ Bug fixes:
    Imager::Color checks when deciding whether to skip testing it
    http://rt.cpan.org/Ticket/Display.html?id=26064
 
+ - use a convolution kernel size based on the stddev rather than a
+   fixed size when performing a gaussian blur
+   http://rt.cpan.org/Ticket/Display.html?id=25645
+
 Imager 0.56 - 1 Apr 2007
 ===========
 

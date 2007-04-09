@@ -1,8 +1,9 @@
 #!perl -w
 use strict;
 use Imager qw(:handy);
-use Test::More tests => 66;
+use Test::More tests => 69;
 Imager::init_log("testout/t61filters.log", 1);
+use Imager::Test qw(is_image_similar);
 # meant for testing the filters themselves
 my $imbase = Imager->new;
 $imbase->open(file=>'testout/t104.ppm') or die;
@@ -18,8 +19,16 @@ test($imbase, {type=>'contrast', intensity=>0.5},
 test($imbase, {type=>'conv', coef=>[ -0.5, 1, -0.5, ], },
      'testout/t61_conv.ppm');
 
-test($imbase, {type=>'gaussian', stddev=>5 },
-     'testout/t61_gaussian.ppm');
+{
+  my $gauss = test($imbase, {type=>'gaussian', stddev=>5 },
+		   'testout/t61_gaussian.ppm');
+
+  my $imbase16 = $imbase->to_rgb16;
+  my $gauss16 = test($imbase16,  {type=>'gaussian', stddev=>5 },
+		     'testout/t61_gaussian16.ppm');
+  is_image_similar($gauss, $gauss16, 200000, "8 and 16 gaussian match");
+}
+
 
 test($imbase, { type=>'gradgen', dist=>1,
                    xo=>[ 10,  10, 120 ],
@@ -244,6 +253,7 @@ sub test {
       skip("couldn't filter", 1);
     }
   }
+  $copy;
 }
 
 sub color_close {
