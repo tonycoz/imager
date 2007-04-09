@@ -247,7 +247,16 @@ Tests if the 2 images have the same content.  Both images must be
 defined, have the same width, height, channels and the same color in
 each pixel.  The color comparison is done at 8-bits per pixel.  The
 color representation such as direct vs paletted, bits per sample are
-not checked.
+not checked.  Equivalent to is_image_similar($im1, $im2, 0, $comment).
+
+=item is_image_similar($im1, $im2, $maxdiff, $comment)
+
+Tests if the 2 images have similar content.  Both images must be
+defined, have the same width, height and channels.  The cum of the
+squares of the differences of each sample are calculated and must be
+less than or equal to I<$maxdiff> for the test to pass.  The color
+comparison is done at 8-bits per pixel.  The color representation such
+as direct vs paletted, bits per sample are not checked.
 
 =item test_image_raw()
 
@@ -267,6 +276,13 @@ Extra options that should be supplied include the font and either a
 color or channel parameter.
 
 This was explicitly created for regression tests on #21770.
+
+=item image_bounds_checks($im)
+
+Attempts to write to various pixel positions outside the edge of the
+image to ensure that it fails in those locations.
+
+Any new image type should pass these tests.  Does 16 separate tests.
 
 =back
 
