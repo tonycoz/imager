@@ -256,7 +256,6 @@ is($name, "test gradient", "check the name matches");
   is_image($diff1, $cmp1, "difference() - check image with mindist 0");
 
   my $diff2 = $im1->difference(other => $im2, mindist => 1);
-  $diff2->write(file=>'foo.png');
   my $cmp2 = Imager->new(xsize => 3, ysize => 2, channels => 4);
   $cmp2->setpixel(x => 2, 'y' => 0, color => '#FF02FF');
   is_image($diff2, $cmp2, "difference() - check image with mindist 1");
@@ -279,7 +278,6 @@ is($name, "test gradient", "check the name matches");
   is_image($diff1, $cmp1, "difference() - check image with mindist 0 - large samples");
 
   my $diff2 = $im1->difference(other => $im2, mindist => 1.1);
-  $diff2->write(file=>'foo.png');
   my $cmp2 = Imager->new(xsize => 3, ysize => 2, channels => 4);
   $cmp2->setpixel(x => 2, 'y' => 0, color => '#FF02FF');
   is_image($diff2, $cmp2, "difference() - check image with mindist 1.1 - large samples");
