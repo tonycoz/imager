@@ -13,6 +13,8 @@ Bug fixes:
    fixed size when performing a gaussian blur
    http://rt.cpan.org/Ticket/Display.html?id=25645
 
+ - document the difference() method's mindist parameter, and debug it.
+
 Imager 0.56 - 1 Apr 2007
 ===========
 

@@ -1316,7 +1316,7 @@ i_unsharp_mask(i_img *im, double stddev, double scale) {
 }
 
 /*
-=item i_diff_image(im1, im2, mindiff)
+=item i_diff_image(im1, im2, mindist)
 
 Creates a new image that is transparent, except where the pixel in im2
 is different from im1, where it is the pixel from im2.
@@ -1327,7 +1327,7 @@ The samples must differ by at least mindiff to be considered different.
 */
 
 i_img *
-i_diff_image(i_img *im1, i_img *im2, int mindiff) {
+i_diff_image(i_img *im1, i_img *im2, double mindist) {
   i_img *out;
   int outchans, diffchans;
   int xsize, ysize;
@@ -1352,6 +1352,7 @@ i_diff_image(i_img *im1, i_img *im2, int mindiff) {
     i_color *line2 = mymalloc(xsize * sizeof(*line1)); /* checked 17feb2005 tonyc */
     i_color empty;
     int x, y, ch;
+    int imindist = (int)mindist;
 
     for (ch = 0; ch < MAXCHANNELS; ++ch)
       empty.channel[ch] = 0;
@@ -1368,7 +1369,7 @@ i_diff_image(i_img *im1, i_img *im2, int mindiff) {
         int diff = 0;
         for (ch = 0; ch < diffchans; ++ch) {
           if (line1[x].channel[ch] != line2[x].channel[ch]
-              && abs(line1[x].channel[ch] - line2[x].channel[ch]) > mindiff) {
+              && abs(line1[x].channel[ch] - line2[x].channel[ch]) > imindist) {
             diff = 1;
             break;
           }
@@ -1386,7 +1387,7 @@ i_diff_image(i_img *im1, i_img *im2, int mindiff) {
     i_fcolor *line2 = mymalloc(xsize * sizeof(*line2)); /* checked 17feb2005 tonyc */
     i_fcolor empty;
     int x, y, ch;
-    double dist = mindiff / 255;
+    double dist = mindist / 255.0;
 
     for (ch = 0; ch < MAXCHANNELS; ++ch)
       empty.channel[ch] = 0;
@@ -1403,7 +1404,7 @@ i_diff_image(i_img *im1, i_img *im2, int mindiff) {
         int diff = 0;
         for (ch = 0; ch < diffchans; ++ch) {
           if (line1[x].channel[ch] != line2[x].channel[ch]
-              && abs(line1[x].channel[ch] - line2[x].channel[ch]) > dist) {
+              && fabs(line1[x].channel[ch] - line2[x].channel[ch]) > dist) {
             diff = 1;
             break;
           }

@@ -448,7 +448,7 @@ void i_radnoise(i_img *im,int xo,int yo,float rscale,float ascale);
 void i_turbnoise(i_img *im,float xo,float yo,float scale);
 void i_gradgen(i_img *im, int num, int *xo, int *yo, i_color *ival, int dmeasure);
 int i_nearest_color(i_img *im, int num, int *xo, int *yo, i_color *ival, int dmeasure);
-i_img *i_diff_image(i_img *im, i_img *im2, int mindist);
+i_img *i_diff_image(i_img *im, i_img *im2, double mindist);
 int
 i_fountain(i_img *im, double xa, double ya, double xb, double yb, 
            i_fountain_type type, i_fountain_repeat repeat, 

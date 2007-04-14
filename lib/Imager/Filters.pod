@@ -653,8 +653,27 @@ This can be used for debugging image differences ("Where are they
 different?"), and for optimizing animated GIFs.
 
 Note that $img and $other_img must have the same number of channels.
-The width and heigh of $diff will be the minimum of each of the width
+The width and height of $diff will be the minimum of each of the width
 and height of $img and $other_img.
+
+Parameters:
+
+=over
+
+=item *
+
+other - the other image object to compare against
+
+=item *
+
+mindist - the difference between corresponding samples must be greater
+than I<mindist> for the pixel to be considered different.  So a value
+of zero returns all different pixels, not all pixels.  Range: 0 to 255
+inclusive.  Default: 0.
+
+For large sample images this is scaled down to the range 0 .. 1.
+
+=back
 
 =back
 

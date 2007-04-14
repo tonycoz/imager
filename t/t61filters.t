@@ -1,12 +1,13 @@
 #!perl -w
 use strict;
 use Imager qw(:handy);
-use Test::More tests => 69;
+use Test::More tests => 73;
 Imager::init_log("testout/t61filters.log", 1);
-use Imager::Test qw(is_image_similar);
+use Imager::Test qw(is_image_similar test_image is_image);
 # meant for testing the filters themselves
-my $imbase = Imager->new;
-$imbase->open(file=>'testout/t104.ppm') or die;
+
+my $imbase = test_image();
+
 my $im_other = Imager->new(xsize=>150, ysize=>150);
 $im_other->box(xmin=>30, ymin=>60, xmax=>120, ymax=>90, filled=>1);
 
@@ -237,6 +238,51 @@ is($name, "test gradient", "check the name matches");
                           defaults => { channels => [] },
                           callseq => [ qw/imager channels/ ]);
   test($imbase, { type => 'perl_test' }, 'testout/t61perl.ppm');
+}
+
+{ # check the difference method out
+  my $im1 = Imager->new(xsize => 3, ysize => 2);
+  $im1->box(filled => 1, color => '#FF0000');
+  my $im2 = $im1->copy;
+  $im1->setpixel(x => 1, 'y' => 0, color => '#FF00FF');
+  $im2->setpixel(x => 1, 'y' => 0, color => '#FF01FF');
+  $im1->setpixel(x => 2, 'y' => 0, color => '#FF00FF');
+  $im2->setpixel(x => 2, 'y' => 0, color => '#FF02FF');
+
+  my $diff1 = $im1->difference(other => $im2);
+  my $cmp1 = Imager->new(xsize => 3, ysize => 2, channels => 4);
+  $cmp1->setpixel(x => 1, 'y' => 0, color => '#FF01FF');
+  $cmp1->setpixel(x => 2, 'y' => 0, color => '#FF02FF');
+  is_image($diff1, $cmp1, "difference() - check image with mindist 0");
+
+  my $diff2 = $im1->difference(other => $im2, mindist => 1);
+  $diff2->write(file=>'foo.png');
+  my $cmp2 = Imager->new(xsize => 3, ysize => 2, channels => 4);
+  $cmp2->setpixel(x => 2, 'y' => 0, color => '#FF02FF');
+  is_image($diff2, $cmp2, "difference() - check image with mindist 1");
+}
+
+{
+  # and again with large samples
+  my $im1 = Imager->new(xsize => 3, ysize => 2, bits => 'double');
+  $im1->box(filled => 1, color => '#FF0000');
+  my $im2 = $im1->copy;
+  $im1->setpixel(x => 1, 'y' => 0, color => '#FF00FF');
+  $im2->setpixel(x => 1, 'y' => 0, color => '#FF01FF');
+  $im1->setpixel(x => 2, 'y' => 0, color => '#FF00FF');
+  $im2->setpixel(x => 2, 'y' => 0, color => '#FF02FF');
+
+  my $diff1 = $im1->difference(other => $im2);
+  my $cmp1 = Imager->new(xsize => 3, ysize => 2, channels => 4);
+  $cmp1->setpixel(x => 1, 'y' => 0, color => '#FF01FF');
+  $cmp1->setpixel(x => 2, 'y' => 0, color => '#FF02FF');
+  is_image($diff1, $cmp1, "difference() - check image with mindist 0 - large samples");
+
+  my $diff2 = $im1->difference(other => $im2, mindist => 1.1);
+  $diff2->write(file=>'foo.png');
+  my $cmp2 = Imager->new(xsize => 3, ysize => 2, channels => 4);
+  $cmp2->setpixel(x => 2, 'y' => 0, color => '#FF02FF');
+  is_image($diff2, $cmp2, "difference() - check image with mindist 1.1 - large samples");
 }
 
 sub test {

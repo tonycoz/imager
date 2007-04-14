@@ -3272,7 +3272,7 @@ Imager::ImgRaw
 i_diff_image(im, im2, mindist=0)
     Imager::ImgRaw     im
     Imager::ImgRaw     im2
-               int     mindist
+            double     mindist
 
 undef_int
 i_fountain(im, xa, ya, xb, yb, type, repeat, combine, super_sample, ssample_param, segs)
