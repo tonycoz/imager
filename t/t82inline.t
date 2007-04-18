@@ -13,6 +13,7 @@ plan skip_all => "Inline won't work in directories with spaces"
 plan tests => 9;
 require Inline;
 Inline->import(with => 'Imager');
+Inline->import("FORCE"); # force rebuild
 
 Inline->bind(C => <<'EOS');
 #include <math.h>

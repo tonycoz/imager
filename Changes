@@ -15,6 +15,10 @@ Bug fixes:
 
  - document the difference() method's mindist parameter, and debug it.
 
+ - put the Imager releaser number in the Inline::C generated code to
+   regenerate Inline code when a new release of Imager is installed.
+   http://rt.cpan.org/Ticket/Display.html?id=26278
+
 Imager 0.56 - 1 Apr 2007
 ===========
 

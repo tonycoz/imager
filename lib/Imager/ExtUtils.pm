@@ -3,7 +3,7 @@ use strict;
 
 use vars qw($VERSION);
 
-$VERSION = "1.000";
+$VERSION = "1.001";
 
 =head1 NAME
 
@@ -50,7 +50,8 @@ sub inline_config {
     {
      INC => $class->includes,
      TYPEMAPS => $class->typemap,
-     AUTO_INCLUDE => <<'CODE',
+     AUTO_INCLUDE => <<CODE,
+/* Inserted by Imager $Imager::VERSION */
 #include "imext.h"
 #include "imperl.h"
 DEFINE_IMAGER_CALLBACKS;
