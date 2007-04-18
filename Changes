@@ -3,6 +3,8 @@ Imager release history.  Older releases can be found in Changes.old
 Imager 0.57 -
 ===========
 
+ - added to_rgb16 to produce a 16-bit/sample version of an image
+
 Bug fixes:
 
  - search another place for rgb.txt, and check all the places 
