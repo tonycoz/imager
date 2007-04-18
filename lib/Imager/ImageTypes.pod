@@ -509,6 +509,15 @@ RGB image with:
 
 No parameters.
 
+=item to_rgb16
+
+You can convert a paletted image (or any image) to an 16-bit/channel
+RGB image with:
+
+  $rgbimg = $img->to_rgb16;
+
+No parameters.
+
 =item masked
 
 Creates a masked image.  A masked image lets you create an image proxy

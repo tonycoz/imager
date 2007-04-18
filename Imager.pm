@@ -3835,6 +3835,8 @@ tags() -  L<Imager::ImageTypes/tags> - fetch image tags
 
 to_paletted() -  L<Imager::ImageTypes/to_paletted>
 
+to_rgb16() - L<Imager::ImageTypes/to_rgb16>
+
 to_rgb8() - L<Imager::ImageTypes/to_rgb8>
 
 transform() - L<Imager::Engines/"transform">
