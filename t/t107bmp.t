@@ -1,6 +1,6 @@
 #!perl -w
 use strict;
-use Test::More tests => 191;
+use Test::More tests => 199;
 use Imager qw(:all);
 use Imager::Test qw(test_image_raw is_image);
 init_log("testout/t107bmp.log",1);
@@ -492,6 +492,32 @@ for my $comp (@comp) {
       { 10 => "35 00 00 00" }, 
       "image data offset too small (53)",
       "24-bit, small image offset"
+     ],
+     # compression issues
+     [
+      "comp8.bmp",
+      { 0x436 => "97" },
+      "invalid data during decompression",
+      "8bit, RLE run beyond edge of image"
+     ],
+     [
+      # caused glibc malloc or valgrind to complain
+      "comp8.bmp",
+      { 0x436 => "94 00 00 03" },
+      "invalid data during decompression",
+      "8bit, literal run beyond edge of image"
+     ],
+     [
+      "comp4.bmp",
+      { 0x76 => "FF bb FF BB" },
+      "invalid data during decompression",
+      "4bit - RLE run beyond edge of image"
+     ],
+     [
+      "comp4.bmp",
+      { 0x76 => "94 bb 00 FF" },
+      "invalid data during decompression",
+      "4bit - literal run beyond edge of image"
      ],
     );
   my $test_index = 0;
