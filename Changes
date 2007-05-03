@@ -1,6 +1,6 @@
 Imager release history.  Older releases can be found in Changes.old
 
-Imager 0.57 -
+Imager 0.58 -
 ===========
 
  - added to_rgb16 to produce a 16-bit/sample version of an image
@@ -20,6 +20,16 @@ Bug fixes:
  - put the Imager releaser number in the Inline::C generated code to
    regenerate Inline code when a new release of Imager is installed.
    http://rt.cpan.org/Ticket/Display.html?id=26278
+
+Imager 0.57 - 30 Apr 2007
+===========
+
+This is a maintenence release fixing a security issue in Imager.
+
+ - CRITICAL: a specially crafted compressed BMP file can cause a buffer
+   overflow in malloced memory.  There will be further discussion of
+   this issue in the ticket below.
+   http://rt.cpan.org/Ticket/Display.html?id=26811
 
 Imager 0.56 - 1 Apr 2007
 ===========

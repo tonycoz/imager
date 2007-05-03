@@ -916,6 +916,13 @@ read_4bit_bmp(io_glue *ig, int xsize, int ysize, int clr_used,
         }
       }
       else if (packed[0]) {
+	if (x + packed[0] > xsize) {
+	  /* this file is corrupt */
+	  myfree(line);
+	  i_push_error(0, "invalid data during decompression");
+	  i_img_destroy(im);
+	  return NULL;
+	}
         line[0] = packed[1] >> 4;
         line[1] = packed[1] & 0x0F;
         for (i = 0; i < packed[0]; i += 2) {
@@ -958,6 +965,13 @@ read_4bit_bmp(io_glue *ig, int xsize, int ysize, int clr_used,
 
         default:
           count = packed[1];
+	  if (x + count > xsize) {
+	    /* this file is corrupt */
+	    myfree(line);
+	    i_push_error(0, "invalid data during decompression");
+	    i_img_destroy(im);
+	    return NULL;
+	  }
           size = (count + 1) / 2;
           read_size = (size+1) / 2 * 2;
           if (ig->readcb(ig, packed, read_size) != read_size) {
@@ -1113,6 +1127,13 @@ read_8bit_bmp(io_glue *ig, int xsize, int ysize, int clr_used,
         }
       }
       if (packed[0]) {
+	if (x + packed[0] > xsize) {
+	  /* this file isn't incomplete, it's corrupt */
+	  myfree(line);
+	  i_push_error(0, "invalid data during decompression");
+	  i_img_destroy(im);
+	  return NULL;
+	}
         memset(line, packed[1], packed[0]);
         i_ppal(im, x, x+packed[0], y, line);
         x += packed[0];
@@ -1147,6 +1168,14 @@ read_8bit_bmp(io_glue *ig, int xsize, int ysize, int clr_used,
 
         default:
           count = packed[1];
+	  if (x + count > xsize) {
+	    /* runs shouldn't cross a line boundary */
+	    /* this file isn't incomplete, it's corrupt */
+	    myfree(line);
+	    i_push_error(0, "invalid data during decompression");
+	    i_img_destroy(im);
+	    return NULL;
+	  }
           read_size = (count+1) / 2 * 2;
           if (ig->readcb(ig, line, read_size) != read_size) {
             myfree(line);
