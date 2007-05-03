@@ -12,7 +12,7 @@ RGB file support (#8666)
 
 and probably more
 
-For 0.57:
+For 0.58:
 
 rgb.txt search (and testing) (#26064) (done)
 
@@ -21,6 +21,10 @@ guassian blur radius (#25645) (done)
 text rendering FT1 (#11972)
 
 text rendering T1 (#11972)
+
+For 0.57
+
+BMP security fix only
 
 For 0.56:
 
