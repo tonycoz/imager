@@ -5,6 +5,8 @@ Imager 0.58 -
 
  - added to_rgb16 to produce a 16-bit/sample version of an image
 
+ - improve freetype 1.x text output efficiency
+
 Bug fixes:
 
  - search another place for rgb.txt, and check all the places 

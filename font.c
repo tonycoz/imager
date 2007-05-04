@@ -873,6 +873,8 @@ Initializes the freetype font rendering engine
 undef_int
 i_init_tt() {
   TT_Error  error;
+  TT_Byte palette[] = { 0, 64, 127, 191, 255 };
+
   mm_log((1,"init_tt()\n"));
   error = TT_Init_FreeType( &engine );
   if ( error ){
@@ -887,6 +889,12 @@ i_init_tt() {
     return 1;
   }
 #endif
+
+  error = TT_Set_Raster_Gray_Palette(engine, palette);
+  if (error) {
+    mm_log((1, "Initialization of gray levels failed = 0x%x\n", error));
+    return 1;
+  }
 
   return(0);
 }
@@ -1176,7 +1184,7 @@ void
 i_tt_blit_or( TT_Raster_Map *dst, TT_Raster_Map *src,int x_off, int y_off ) {
   int  x,  y;
   int  x1, x2, y1, y2;
-  char *s, *d;
+  unsigned char *s, *d;
   
   x1 = x_off < 0 ? -x_off : 0;
   y1 = y_off < 0 ? -y_off : 0;
@@ -1192,8 +1200,8 @@ i_tt_blit_or( TT_Raster_Map *dst, TT_Raster_Map *src,int x_off, int y_off ) {
   /* do the real work now */
 
   for ( y = y1; y < y2; ++y ) {
-    s = ( (char*)src->bitmap ) + y * src->cols + x1;
-    d = ( (char*)dst->bitmap ) + ( y + y_off ) * dst->cols + x1 + x_off;
+    s = ( (unsigned char*)src->bitmap ) + y * src->cols + x1;
+    d = ( (unsigned char*)dst->bitmap ) + ( y + y_off ) * dst->cols + x1 + x_off;
     
     for ( x = x1; x < x2; ++x ) {
       if (*s > *d)
@@ -1505,31 +1513,41 @@ Function to dump a raster onto an image in color used by i_tt_text() (internal).
 static
 void
 i_tt_dump_raster_map2( i_img* im, TT_Raster_Map* bit, int xb, int yb, const i_color *cl, int smooth ) {
-  char *bmap;
+  unsigned char *bmap;
   i_color val;
   int c, i, ch, x, y;
   mm_log((1,"i_tt_dump_raster_map2(im 0x%x, bit 0x%X, xb %d, yb %d, cl 0x%X)\n",im,bit,xb,yb,cl));
   
-  bmap = (char *)bit->bitmap;
+  bmap = bit->bitmap;
 
   if ( smooth ) {
 
-    for(y=0;y<bit->rows;y++) for(x=0;x<bit->width;x++) {
-      c=(255*bmap[y*(bit->cols)+x])/4;
-      i=255-c;
-      i_gpix(im,x+xb,y+yb,&val);
-      for(ch=0;ch<im->channels;ch++) val.channel[ch]=(c*cl->channel[ch]+i*val.channel[ch])/255;
-      i_ppix(im,x+xb,y+yb,&val);
+    for(y=0;y<bit->rows;y++) {
+      for(x=0;x<bit->width;x++) {
+	c = (unsigned char)bmap[y*(bit->cols)+x];
+	i=255-c;
+	i_gpix(im,x+xb,y+yb,&val);
+	for(ch=0;ch<im->channels;ch++) 
+	  val.channel[ch] = (c*cl->channel[ch]+i*val.channel[ch])/255;
+	i_ppix(im,x+xb,y+yb,&val);
+      }
     }
 
   } else {
+    for(y=0;y<bit->rows;y++) {
+      unsigned mask = 0x80;
+      unsigned char *p = bmap + y * bit->cols;
 
-    for(y=0;y<bit->rows;y++) for(x=0;x<bit->width;x++) {
-      c=( bmap[y*bit->cols+x/8] & (128>>(x%8)) ) ? 255 : 0;
-      i=255-c;
-      i_gpix(im,x+xb,y+yb,&val);
-      for(ch=0;ch<im->channels;ch++) val.channel[ch]=(c*cl->channel[ch]+i*val.channel[ch])/255;
-      i_ppix(im,x+xb,y+yb,&val);
+      for(x = 0; x < bit->width; x++) {
+	if (*p & mask) {
+	  i_ppix(im, x+xb, y+yb, cl);
+	}
+	mask >>= 1;
+	if (!mask) {
+	  mask = 0x80;
+	  ++p;
+	}
+      }
     }
 
   }
@@ -1563,17 +1581,27 @@ i_tt_dump_raster_map_channel( i_img* im, TT_Raster_Map*  bit, int xb, int yb, in
   
   if ( smooth ) {
     for(y=0;y<bit->rows;y++) for(x=0;x<bit->width;x++) {
-      c=(255*bmap[y*(bit->cols)+x])/4;
+      c = (unsigned char)bmap[y*(bit->cols)+x];
       i_gpix(im,x+xb,y+yb,&val);
       val.channel[channel]=c;
       i_ppix(im,x+xb,y+yb,&val);
     }
   } else {
-    for(y=0;y<bit->rows;y++) for(x=0;x<bit->width;x++) {
-      c=( bmap[y*bit->cols+x/8] & (128>>(x%8)) ) ? 255 : 0;
-      i_gpix(im,x+xb,y+yb,&val);
-      val.channel[channel]=c;
-      i_ppix(im,x+xb,y+yb,&val);
+    for(y=0;y<bit->rows;y++) {
+      unsigned mask = 0x80;
+      unsigned char *p = bmap + y * bit->cols;
+
+      for(x=0;x<bit->width;x++) {
+	i_gpix(im,x+xb,y+yb,&val);
+	val.channel[channel] = (*p & mask) ? 255 : 0;
+	i_ppix(im,x+xb,y+yb,&val);
+	
+	mask >>= 1;
+	if (!mask) {
+	  ++p;
+	  mask = 0x80;
+	}
+      }
     }
   }
 }

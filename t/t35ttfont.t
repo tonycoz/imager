@@ -1,6 +1,6 @@
 #!perl -w
 use strict;
-use Test::More tests => 85;
+use Test::More tests => 87;
 
 $|=1;
 
@@ -12,7 +12,7 @@ init_log("testout/t35ttfont.log",2);
 
 SKIP:
 {
-  skip("freetype 1.x unavailable or disabled", 84) 
+  skip("freetype 1.x unavailable or disabled", 86) 
     unless i_has_format("tt");
   print "# has tt\n";
   
@@ -21,14 +21,15 @@ SKIP:
 
   if (!ok(-f $fontname, "check test font file exists")) {
     print "# cannot find fontfile for truetype test $fontname\n";
-    skip('Cannot load test font', 83);
+    skip('Cannot load test font', 85);
   }
 
   i_init_fonts();
   #     i_tt_set_aa(1);
   
   my $bgcolor = i_color_new(255,0,0,0);
-  my $overlay = Imager::ImgRaw::new(200,70,3);
+  my $overlay = Imager::ImgRaw::new(320,140,3);
+  i_box_filled($overlay, 0, 0, 319, 139, i_color_new(128, 128, 128));
   
   my $ttraw = Imager::i_tt_new($fontname);
   ok($ttraw, "create font");
@@ -38,6 +39,7 @@ SKIP:
   print "#bbox: ($bbox[0], $bbox[1]) - ($bbox[2], $bbox[3])\n";
 
   ok(i_tt_cp($ttraw,$overlay,5,50,1,50.0,'XM CLH',6,1,0), "cp output");
+  ok(i_tt_cp($ttraw,$overlay,5,120,1,50.0,'XM CLH',6,0,0), "cp output (non AA)");
   i_line($overlay,0,50,100,50,$bgcolor,1);
 
   open(FH,">testout/t35ttfont.ppm") || die "cannot open testout/t35ttfont.ppm\n";
@@ -53,6 +55,8 @@ SKIP:
   
   ok(i_tt_text($ttraw,$backgr,100,120,$bgcolor,50.0,'te st',5,1,0),
       "normal output");
+  ok(i_tt_text($ttraw,$backgr,100,200,$bgcolor,50.0,'te st',5,0,0),
+      "normal output (non AA)");
 
   my $ugly = Imager::i_tt_new("./fontfiles/ImUgly.ttf");
   ok($ugly, "create ugly font");
