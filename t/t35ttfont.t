@@ -1,18 +1,18 @@
 #!perl -w
 use strict;
-use Test::More tests => 87;
+use Test::More tests => 91;
 
 $|=1;
 
 BEGIN { use_ok(Imager => ':all') }
 require "t/testtools.pl";
-use Imager::Test qw(diff_text_with_nul);
+use Imager::Test qw(diff_text_with_nul is_color3);
 
 init_log("testout/t35ttfont.log",2);
 
 SKIP:
 {
-  skip("freetype 1.x unavailable or disabled", 86) 
+  skip("freetype 1.x unavailable or disabled", 90) 
     unless i_has_format("tt");
   print "# has tt\n";
   
@@ -21,7 +21,7 @@ SKIP:
 
   if (!ok(-f $fontname, "check test font file exists")) {
     print "# cannot find fontfile for truetype test $fontname\n";
-    skip('Cannot load test font', 85);
+    skip('Cannot load test font', 89);
   }
 
   i_init_fonts();
@@ -260,7 +260,7 @@ SKIP:
   { # introduced in 0.46 - outputting just space crashes
     my $im = Imager->new(xsize=>100, ysize=>100);
     my $font = Imager::Font->new(file=>'fontfiles/ImUgly.ttf', size=>14);
-    ok($im->string(font=>$font, x=> 5, y => 50, string=>' '),
+    ok($im->string(font=>$font, x=> 5, 'y' => 50, string=>' '),
       "outputting just a space was crashing");
   }
 
@@ -280,6 +280,24 @@ SKIP:
 		       font => $font, color => '#FFFFFF', utf8 => 1);
     diff_text_with_nul("utf8 dash\0dash vs dash", "$dash\0$dash", $dash,
 		       font => $font, channel => 1, utf8 => 1);
+  }
+
+  { # RT 11972
+    # when rendering to a transparent image the coverage should be
+    # expressed in terms of the alpha channel rather than the color
+    my $font = Imager::Font->new(file=>'fontfiles/ImUgly.ttf', type=>'tt');
+    my $im = Imager->new(xsize => 40, ysize => 20, channels => 4);
+    ok($im->string(string => "AB", size => 20, aa => 1, color => '#F00',
+		   x => 0, y => 15, font => $font),
+       "draw to transparent image");
+    #$im->write(file => "foo.png");
+    my $im_noalpha = $im->convert(preset => 'noalpha');
+    my $im_pal = $im->to_paletted(make_colors => 'mediancut');
+    my @colors = $im_pal->getcolors;
+    is(@colors, 2, "should be only 2 colors");
+    @colors = sort { ($a->rgba)[0] <=> ($b->rgba)[0] } @colors;
+    is_color3($colors[0], 0, 0, 0, "check we got black");
+    is_color3($colors[1], 255, 0, 0, "and red");
   }
 
   ok(1, "end of code");

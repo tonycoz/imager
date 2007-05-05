@@ -1,4 +1,5 @@
 #include "imager.h"
+#include "imrender.h"
 
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -1522,17 +1523,23 @@ i_tt_dump_raster_map2( i_img* im, TT_Raster_Map* bit, int xb, int yb, const i_co
 
   if ( smooth ) {
 
+    i_render r;
+    i_render_init(&r, im, bit->cols);
     for(y=0;y<bit->rows;y++) {
+#if 0
       for(x=0;x<bit->width;x++) {
-	c = (unsigned char)bmap[y*(bit->cols)+x];
-	i=255-c;
-	i_gpix(im,x+xb,y+yb,&val);
-	for(ch=0;ch<im->channels;ch++) 
-	  val.channel[ch] = (c*cl->channel[ch]+i*val.channel[ch])/255;
-	i_ppix(im,x+xb,y+yb,&val);
+       c = (unsigned char)bmap[y*(bit->cols)+x];
+       i=255-c;
+       i_gpix(im,x+xb,y+yb,&val);
+       for(ch=0;ch<im->channels;ch++) 
+         val.channel[ch] = (c*cl->channel[ch]+i*val.channel[ch])/255;
+       i_ppix(im,x+xb,y+yb,&val);
       }
+#else
+      i_render_color(&r, xb, yb+y, bit->cols, bmap + y*bit->cols, cl);
+#endif
     }
-
+    i_render_done(&r);
   } else {
     for(y=0;y<bit->rows;y++) {
       unsigned mask = 0x80;

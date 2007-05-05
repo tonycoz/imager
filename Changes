@@ -23,6 +23,9 @@ Bug fixes:
    regenerate Inline code when a new release of Imager is installed.
    http://rt.cpan.org/Ticket/Display.html?id=26278
 
+ - fix rendering on alpha channel images for the FreeType 1.x driver.
+   http://rt.cpan.org/Ticket/Display.html?id=11972
+
 Imager 0.57 - 30 Apr 2007
 ===========
 
