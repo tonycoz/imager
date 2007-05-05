@@ -32,6 +32,7 @@ This is a maintenence release fixing a security issue in Imager.
    overflow in malloced memory.  There will be further discussion of
    this issue in the ticket below.
    http://rt.cpan.org/Ticket/Display.html?id=26811
+   CVE-2007-2459
 
 Imager 0.56 - 1 Apr 2007
 ===========
