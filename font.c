@@ -411,6 +411,7 @@ i_t1_text(i_img *im,int xb,int yb,const i_color *cl,int fontnum,float points,con
   i_color val;
   unsigned char c,i;
   int mod_flags = t1_get_flags(flags);
+  i_render r;
 
   if (im == NULL) { mm_log((1,"i_t1_cp: Null image in input\n")); return(0); }
 
@@ -438,14 +439,13 @@ i_t1_text(i_img *im,int xb,int yb,const i_color *cl,int fontnum,float points,con
   mm_log((1,"width: %d height: %d\n",xsize,ysize));
 
   if (align==1) { xb+=glyph->metrics.leftSideBearing; yb-=glyph->metrics.ascent; }
-  
-  for(y=0;y<ysize;y++) for(x=0;x<xsize;x++) {
-    c=glyph->bits[y*xsize+x];
-    i=255-c;
-    i_gpix(im,x+xb,y+yb,&val);
-    for(ch=0;ch<im->channels;ch++) val.channel[ch]=(c*cl->channel[ch]+i*val.channel[ch])/255;
-    i_ppix(im,x+xb,y+yb,&val);
+
+  i_render_init(&r, im, xsize);
+  for(y=0;y<ysize;y++) {
+    i_render_color(&r, xb, yb+y, xsize, glyph->bits+y*xsize, cl);
   }
+  i_render_done(&r);
+    
   return 1;
 }
 

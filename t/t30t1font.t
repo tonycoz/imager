@@ -7,9 +7,9 @@
 # Change 1..1 below to 1..last_test_to_print .
 # (It may become useful if the test is moved to ./t subdirectory.)
 use strict;
-use Test::More tests => 90;
+use Test::More tests => 94;
 BEGIN { use_ok(Imager => ':all') }
-use Imager::Test qw(diff_text_with_nul);
+use Imager::Test qw(diff_text_with_nul is_color3);
 
 #$Imager::DEBUG=1;
 
@@ -23,13 +23,13 @@ my $fontname_afm=$ENV{'T1FONTTESTAFM'}||'./fontfiles/dcr10.afm';
 SKIP:
 {
   if (!(i_has_format("t1")) ) {
-    skip("t1lib unavailable or disabled", 89);
+    skip("t1lib unavailable or disabled", 93);
   }
   elsif (! -f $fontname_pfb) {
-    skip("cannot find fontfile for type 1 test $fontname_pfb", 89);
+    skip("cannot find fontfile for type 1 test $fontname_pfb", 93);
   }
   elsif (! -f $fontname_afm) {
-    skip("cannot find fontfile for type 1 test $fontname_afm", 89);
+    skip("cannot find fontfile for type 1 test $fontname_afm", 93);
   }
 
   print "# has t1\n";
@@ -46,7 +46,7 @@ SKIP:
 
   my $fnum=Imager::i_t1_new($fontname_pfb,$fontname_afm); # this will load the pfb font
   unless (ok($fnum >= 0, "load font $fontname_pfb")) {
-    skip("without the font I can't do a thing", 48);
+    skip("without the font I can't do a thing", 90);
   }
 
   my $bgcolor=Imager::Color->new(255,0,0,0);
@@ -325,6 +325,23 @@ SKIP:
     diff_text_with_nul("utf8 dash\0dash vs dash", "$pound\0$pound", $pound,
 		       font => $font, channel => 1, utf8 => 1);
 
+  }
+
+  { # RT 11972
+    # when rendering to a transparent image the coverage should be
+    # expressed in terms of the alpha channel rather than the color
+    my $font = Imager::Font->new(file=>'fontfiles/dcr10.pfb', type=>'t1');
+    my $im = Imager->new(xsize => 40, ysize => 20, channels => 4);
+    ok($im->string(string => "AB", size => 20, aa => 2, color => '#F00',
+		   x => 0, y => 15, font => $font),
+       "draw to transparent image");
+    my $im_noalpha = $im->convert(preset => 'noalpha');
+    my $im_pal = $im->to_paletted(make_colors => 'mediancut');
+    my @colors = $im_pal->getcolors;
+    is(@colors, 2, "should be only 2 colors");
+    @colors = sort { ($a->rgba)[0] <=> ($b->rgba)[0] } @colors;
+    is_color3($colors[0], 0, 0, 0, "check we got black");
+    is_color3($colors[1], 255, 0, 0, "and red");
   }
 }
 
