@@ -458,7 +458,6 @@ SKIP:
     ok($im->string(string => "AB", size => 20, aa => 1, color => '#F00',
 		   x => 0, y => 15, font => $font),
        "draw to transparent image");
-    $im->write(file => "foo.png");
     my $im_noalpha = $im->convert(preset => 'noalpha');
     my $im_pal = $im->to_paletted(make_colors => 'mediancut');
     my @colors = $im_pal->getcolors;
