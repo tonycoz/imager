@@ -1581,6 +1581,8 @@ i_tt_dump_raster_map_channel( i_img* im, TT_Raster_Map*  bit, int xb, int yb, in
   char *bmap;
   i_color val;
   int c,x,y;
+  int old_mask = im->ch_mask;
+  im->ch_mask = 1 << channel;
 
   mm_log((1,"i_tt_dump_raster_channel(im 0x%x, bit 0x%X, xb %d, yb %d, channel %d)\n",im,bit,xb,yb,channel));
   
@@ -1588,9 +1590,8 @@ i_tt_dump_raster_map_channel( i_img* im, TT_Raster_Map*  bit, int xb, int yb, in
   
   if ( smooth ) {
     for(y=0;y<bit->rows;y++) for(x=0;x<bit->width;x++) {
-      c = (unsigned char)bmap[y*(bit->cols)+x];
-      i_gpix(im,x+xb,y+yb,&val);
-      val.channel[channel]=c;
+      c = bmap[y*(bit->cols)+x];
+      val.channel[channel] = c;
       i_ppix(im,x+xb,y+yb,&val);
     }
   } else {
@@ -1599,7 +1600,6 @@ i_tt_dump_raster_map_channel( i_img* im, TT_Raster_Map*  bit, int xb, int yb, in
       unsigned char *p = bmap + y * bit->cols;
 
       for(x=0;x<bit->width;x++) {
-	i_gpix(im,x+xb,y+yb,&val);
 	val.channel[channel] = (*p & mask) ? 255 : 0;
 	i_ppix(im,x+xb,y+yb,&val);
 	
@@ -1611,6 +1611,7 @@ i_tt_dump_raster_map_channel( i_img* im, TT_Raster_Map*  bit, int xb, int yb, in
       }
     }
   }
+  im->ch_mask = old_mask;
 }
 
 
