@@ -824,7 +824,7 @@ sub _make_I {
   my ($inc_dir) = @_;
 
   $definc{$inc_dir}
-    or return '';
+    and return '';
 
   $inc_dir =~ / / ? qq!-I"$inc_dir"! : "-I$inc_dir";
 }
