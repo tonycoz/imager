@@ -766,16 +766,13 @@ sub freetype2_probe_scan {
     my $path = File::Spec->catfile($inc, 'ft2build.h');
     -e $path or next;
 
-    print "found $path\n";
     # try to find what it's including
     my $ftheader;
     open FT2BUILD, "< $path"
       or next;
-    print "scanning head\n";
     while (<FT2BUILD>) {
       if (m!^\s*\#\s*include\s+<([\w/.]+)>!
 	  || m!^\s*\#\s*include\s+"([\w/.]+)"!) {
-	print "found $1\n";
 	$ftheader = $1;
 	last;
       }
@@ -783,7 +780,6 @@ sub freetype2_probe_scan {
     close FT2BUILD;
     $ftheader
       or next;
-    print "header $ftheader\n";
     # non-Unix installs put this directly under the same directory in
     # theory
     if (-e File::Spec->catfile($inc, $ftheader)) {
@@ -818,7 +814,7 @@ sub freetype2_probe_scan {
   return unless $found_inc && $found_lib;
 
   $frm->{cflags} = "-I$found_inc";
-  $frm->{cflags} .= " -I$found_inc2" if $found_inc;
+  $frm->{cflags} .= " -I$found_inc2" if $found_inc2;
   $frm->{libfiles} = "-lfreetype";
 
   return 1;
