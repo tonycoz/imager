@@ -36,7 +36,6 @@ my @enable; # list of drivers to enable
 my @disable; # or list of drivers to disable
 my @incpaths; # places to look for headers
 my @libpaths; # places to look for libraries
-my $noprobe; # non-zero to disable newer probes
 my $noexif; # non-zero to disable EXIF parsing of JPEGs
 my $no_gif_set_version; # disable calling EGifSetGifVersion
 my $coverage; # build for coverage testing
@@ -45,7 +44,6 @@ GetOptions("help" => \$help,
            "disable=s" => \@disable,
            "incpath=s", \@incpaths,
            "libpath=s" => \@libpaths,
-           "noprobe" => \$noprobe,
            "verbose|v" => \$VERBOSE,
            "nolog" => \$NOLOG,
 	   "noexif" => \$noexif,
@@ -323,8 +321,8 @@ sub gifcheck {
 }
 
 
-sub gd {
-  my($path,$chk)=@_;
+sub grep_directory {
+  my($path, $chk)=@_;
 
 #    print "checking path $path\n";
   if ( !opendir(DH,$path) ) {
@@ -343,29 +341,41 @@ sub checkformat {
 
   print "  checkformat($frm)\n" if $VERBOSE;
   
-  my $code = $formats{$frm}{'code'};
-  if ($code && !$noprobe) {
+  my $probe_array = $formats{$frm}{'code'};
+  if ($probe_array) {
     print "    Calling probe function\n" if $VERBOSE;
-    return 1 if $code->($formats{$frm}, $frm);
+    if (ref $probe_array ne 'ARRAY') {
+      $probe_array = [ $probe_array ];
+    }
+    for my $func (@$probe_array) {
+      return 1 if $func->($formats{$frm}, $frm);
+    }
   }
 
-  my $libchk=$formats{$frm}{'libcheck'};
-  my $incchk=$formats{$frm}{'inccheck'};
+  my $lib_check=$formats{$frm}{'libcheck'};
+  my $inc_check=$formats{$frm}{'inccheck'};
 
-  my @l;
-  for my $lp (@libs) {
-    push(@l, gd($lp,$libchk));
+  if ($lib_check) {
+    my @l;
+    for my $lp (@libs) {
+      push(@l, grep_directory($lp,$lib_check));
+    }
+    
+    my @i;
+    for my $ip (@incs) {
+      push(@i, $ip) if $inc_check->($ip,$frm);
+    }
+    
+    printf("%10s: includes %s - libraries %s\n",$frm,(@i?'found':'not found'),(@l?'found':'not found'));
+    $formats{$frm}{incdir} = \@i;
+    $formats{$frm}{libdir} = \@l;
+    return 1 if scalar(@i && @l);
+  }
+  else {
+    printf("%10s: not available\n", $frm);
   }
 
-  my @i;
-  for my $ip (@incs) {
-    push(@i, $ip) if $incchk->($ip,$frm);
-  }
-
-  printf("%10s: includes %s - libraries %s\n",$frm,(@i?'found':'not found'),(@l?'found':'not found'));
-  $formats{$frm}{incdir} = \@i;
-  $formats{$frm}{libdir} = \@l;
-  return scalar(@i && @l);
+  return 0;
 }
 
 
@@ -565,19 +575,25 @@ Uses the Win32 GDI for rendering text.
 This currently only works on under normal Win32 and cygwin.
 DOCS
 		    };
-  $formats{'freetype2'} = {
-                           order=>'29',
-                           def=>'HAVE_FT2',
-                           inccheck=>sub { -e catfile($_[0], 'ft2build.h') },
-                           libcheck=>sub { $_[0] eq "libfreetype$aext" or $_[0] eq "libfreetype.$lext" },
-                           libfiles=>'-lfreetype',
-                           objfiles=>'freetyp2.o',
-                           docs=><<DOCS,
+  $formats{'freetype2'} = 
+  {
+   order=>'29',
+   def=>'HAVE_FT2',
+   # we always use a probe function
+   #inccheck=>sub { -e catfile($_[0], 'ft2build.h') },
+   #libcheck=>sub { $_[0] eq "libfreetype$aext" or $_[0] eq "libfreetype.$lext" },
+   libfiles=>'-lfreetype',
+   objfiles=>'freetyp2.o',
+   docs=><<DOCS,
 Freetype 2 supports both Truetype and Type 1 fonts, both of which are
 scalable.  It also supports a variety of other fonts.
 DOCS
-                           code => \&freetype2_probe,
-                          };
+   code =>
+   [ 
+    \&freetype2_probe_ftconfig,
+    \&freetype2_probe_scan
+   ],
+  };
 
   # Make fix indent
   for (keys %formats) { $formats{$_}->{docs} =~ s/^\s+/  /mg; }
@@ -698,7 +714,7 @@ sub freetype1_probe {
 }
 
 # probes for freetype2 by trying to run freetype-config
-sub freetype2_probe {
+sub freetype2_probe_ftconfig {
   my ($frm, $frmkey) = @_;
 
   is_exe('freetype-config') or return;
@@ -733,6 +749,77 @@ sub freetype2_probe {
   $frm->{lflags} = $lflags;
 
   printf "%10s: configured via freetype-config\n", $frmkey;
+
+  return 1;
+}
+
+# attempt to probe for freetype2 by scanning directories
+# we can't use the normal scan since we need to find the directory
+# containing most of the includes
+sub freetype2_probe_scan {
+  my ($frm, $frmkey) = @_;
+
+  my $found_inc;
+  my $found_inc2;
+ INCS:
+  for my $inc (@incs) {
+    my $path = File::Spec->catfile($inc, 'ft2build.h');
+    -e $path or next;
+
+    print "found $path\n";
+    # try to find what it's including
+    my $ftheader;
+    open FT2BUILD, "< $path"
+      or next;
+    print "scanning head\n";
+    while (<FT2BUILD>) {
+      if (m!^\s*\#\s*include\s+<([\w/.]+)>!
+	  || m!^\s*\#\s*include\s+"([\w/.]+)"!) {
+	print "found $1\n";
+	$ftheader = $1;
+	last;
+      }
+    }
+    close FT2BUILD;
+    $ftheader
+      or next;
+    print "header $ftheader\n";
+    # non-Unix installs put this directly under the same directory in
+    # theory
+    if (-e File::Spec->catfile($inc, $ftheader)) {
+      $found_inc = $inc;
+      last INCS;
+    }
+    for my $subdir (qw/freetype2 freetype/) {
+      $path = File::Spec->catfile($inc, $subdir, 'fterrors.h');
+      -e $path and next;
+
+      $found_inc = $inc;
+      $found_inc2 = File::Spec->catdir($inc, $subdir);
+      last INCS;
+    }
+  }
+
+  my $found_lib;
+ LIBS:
+  for my $lib (@libs) {
+    my $a_path = File::Spec->catfile($lib, "libfreetype$aext");
+    my $l_path = File::Spec->catfile($lib, "libfreetype.$lext");
+    if (-e $a_path || -e $l_path) {
+      $found_lib = $lib;
+      last LIBS;
+    }
+  }
+
+  printf("%10s: includes %s - libraries %s\n", $frmkey,
+	 ($found_inc ? 'found' : 'not found'), 
+	 ($found_lib ? 'found' : 'not found'));
+
+  return unless $found_inc && $found_lib;
+
+  $frm->{cflags} = "-I$found_inc";
+  $frm->{cflags} .= " -I$found_inc2" if $found_inc;
+  $frm->{libfiles} = "-lfreetype";
 
   return 1;
 }
@@ -799,8 +886,6 @@ Other options:
     Add to the include search path
   --libpath dir
     Add to the library search path
-  --noprobe
-    Don't use pkg-config or freetype2-config to probe for freetype2 and libpng
 EOS
   exit 1;
 
