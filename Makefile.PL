@@ -813,11 +813,20 @@ sub freetype2_probe_scan {
 
   return unless $found_inc && $found_lib;
 
-  $frm->{cflags} = "-I$found_inc";
-  $frm->{cflags} .= " -I$found_inc2" if $found_inc2;
+  $frm->{cflags} = _make_I($found_inc);
+  $frm->{cflags} .= " " . _make_I($found_inc2) if $found_inc2;
   $frm->{libfiles} = "-lfreetype";
 
   return 1;
+}
+
+sub _make_I {
+  my ($inc_dir) = @_;
+
+  $definc{$inc_dir}
+    or return '';
+
+  $inc_dir =~ / / ? qq!-I"$inc_dir"! : "-I$inc_dir";
 }
 
 # probes for libpng via pkg-config
