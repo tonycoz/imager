@@ -6,7 +6,7 @@ Release Plans (subject to change)
 brown-bag bugs may add intermediate releases.  The dates are goals,
 not commitments.
 
-For 0.58 (hopefully):
+For 0.59 (hopefully):
 
 RGB file support (#8666)
 
@@ -18,9 +18,9 @@ rgb.txt search (and testing) (#26064) (done)
 
 guassian blur radius (#25645) (done)
 
-text rendering FT1 (#11972)
+text rendering FT1 (#11972) (done)
 
-text rendering T1 (#11972)
+text rendering T1 (#11972) (done)
 
 For 0.57
 
