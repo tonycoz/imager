@@ -29,6 +29,14 @@ Bug fixes:
  - fix rendering on alpha channel images for the T1lib driver.
    http://rt.cpan.org/Ticket/Display.html?id=11972
 
+ - reworked library probing, we can now set more than one probe
+   function for a library.  Disabled the default (non-freetype-config)
+   library probe and added an extra probe function that searches for
+   both ft2build.h and whatever it includes, and adds -I as needed.
+   Hopefully this will fix build problems like
+   http://www.nntp.perl.org/group/perl.cpan.testers/2007/05/msg472281.html
+   http://rt.cpan.org/Ticket/Display.html?id=26086
+
 Imager 0.57 - 30 Apr 2007
 ===========
 
