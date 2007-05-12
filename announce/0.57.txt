@@ -1,0 +1,9 @@
+<p>Imager 0.57 is a security fix release.</p>
+
+<p>After following up on a <a
+href="http://www.securityfocus.com/archive/1/archive/1/464726/100/0/threaded">buqtraq
+message</a> describing BMP issues in some viewers I <a href="https://rt.cpan.org/Public/Bug/Display.html?id=26107">decided to test Imager</a> against the test images.</p>
+
+<p>Unfortunately Imager failed on some of the test images.</p>
+
+<p>Imager 0.57 corrects this.</p>
