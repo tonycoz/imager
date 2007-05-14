@@ -1,6 +1,6 @@
 ================================================================
 Copyright (c) 1999-2004 Arnar M. Hrafnkelsson. All rights reserved.
-Copyright (c) 2004-2006 Anthony Cook.
+Copyright (c) 2004-2007 Anthony Cook.
 This program is free software; you can redistribute it and/or
 modify it under the same terms as Perl itself.
 ================================================================
@@ -141,6 +141,9 @@ To see which directories should be in the include path, try:
 
   freetype-config --cflags
 
+Ideally, freetype-config should be in the PATH when building Imager
+with freetype 2.x support.
+
 
 Macintosh dfont and suitcase font support
 -----------------------------------------
@@ -272,6 +275,9 @@ b) the version of GCC enabled by default on OS X 10.4 generates
    after building Imager.
 
    This problem exhibits itself as test failures in t/t20fill.t
+
+   Imager 0.56 includes a workaround for this problem, but I wasn't
+   able to test it.
 
 c) if you want to build GCC 4.0 from scratch and use that you will
    need to adjust the command-line supplied during the link stage, so

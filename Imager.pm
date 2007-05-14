@@ -4031,14 +4031,47 @@ Please remember to include the versions of Imager, perl, supporting
 libraries, and any relevant code.  If you have specific images that
 cause the problems, please include those too.
 
-=head1 BUGS
+If you don't want to publish your email address on a mailing list you
+can use CPAN::Forum:
 
-Bugs are listed individually for relevant pod pages.
+  http://www.cpanforum.com/dist/Imager
+
+You will need to register to post.
+
+=head1 CONTRIBUTING TO IMAGER
+
+=head2 Feedback
+
+I like feedback.
+
+If you like or dislike Imager, you can add a public review of Imager
+at CPAN Ratings:
+
+  http://cpanratings.perl.org/dist/Imager
+
+This requires a Bitcard Account (http://www.bitcard.org).
+
+You can also send email to the maintainer below.
+
+If you send me a bug report via email, it will be copied to RT.
+
+=head2 Patches
+
+I accept patches, preferably against the main branch in subversion.
+You should include an explanation of the reason for why the patch is
+needed or useful.
+
+Your patch should include regression tests where possible, otherwise
+it will be delayed until I get a chance to write them.
 
 =head1 AUTHOR
 
-Arnar M. Hrafnkelsson and Tony Cook (tony@imager.perl.org) among
-others. See the README for a complete list.
+Tony Cook <tony@imager.perl.org> is the current maintainer for Imager.
+
+Arnar M. Hrafnkelsson is the original author of Imager.
+
+Many others have contributed to Imager, please see the README for a
+complete list.
 
 =head1 SEE ALSO
 
