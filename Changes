@@ -1,5 +1,10 @@
 Imager release history.  Older releases can be found in Changes.old
 
+Imager 0.58 - 16 May 2007
+===========
+
+No significant changes from 0.57_01.
+
 Imager 0.57_01 - 11 May 2007
 ==============
 
@@ -19,7 +24,7 @@ Bug fixes:
 
  - document the difference() method's mindist parameter, and debug it.
 
- - put the Imager releaser number in the Inline::C generated code to
+ - put the Imager release number in the Inline::C generated code to
    regenerate Inline code when a new release of Imager is installed.
    http://rt.cpan.org/Ticket/Display.html?id=26278
 
@@ -46,7 +51,9 @@ This is a maintenence release fixing a security issue in Imager.
    overflow in malloced memory.  There will be further discussion of
    this issue in the ticket below.
    http://rt.cpan.org/Ticket/Display.html?id=26811
-   CVE-2007-2459
+   CVE-2007-2459  CVE-2007-2413
+   The descriptions at cve.mitre.org varied in quality, please see the
+   ticket at rt.cpan.org for a more accurate description of the issue.
 
 Imager 0.56 - 1 Apr 2007
 ===========
