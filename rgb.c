@@ -5,6 +5,24 @@
 #include <stdlib.h>
 #include <errno.h>
 
+/* values for the storage field */
+#define SGI_STORAGE_VERBATIM 0
+#define SGI_STORAGE_RLE 1
+
+/* values for the colormap field */
+#define SGI_COLORMAP_NORMAL 0
+#define SGI_COLORMAP_DITHERED 1
+#define SGI_COLORMAP_SCREEN 2
+#define SGI_COLORMAP_COLORMAP 3
+
+static i_img *
+read_rgb_8_verbatim(i_img *im, i_mempool *mp, io_glue *ig);
+static i_img *
+read_rgb_8_rle(i_img *im, i_mempool *mp, io_glue *ig);
+static i_img *
+read_rgb_16_verbatim(i_img *im, i_mempool *mp, io_glue *ig);
+static i_img *
+read_rgb_16_rle(i_img *im, i_mempool *mp, io_glue *ig);
 
 /*
 =head1 NAME
@@ -155,7 +173,7 @@ rgb_dest_write(rgb_dest *s, unsigned char *buf, size_t pixels) {
 
 
 /*
-=item i_readrgb_wiol(ig, length)
+=item i_readrgb_wiol(ig, partial)
 
 Read in an image from the iolayer data source and return the image structure to it.
 Returns NULL on error.
@@ -168,25 +186,15 @@ Returns NULL on error.
 */
 
 i_img *
-i_readrgb_wiol(io_glue *ig, int length) {
-  i_img *img;
-  int y, c,i;
+i_readrgb_wiol(io_glue *ig, int partial) {
+  i_img *img = NULL;
   int width, height, channels;
-  unsigned long maxlen;
-
-  int savemask;
-  
   rgb_header header;
   unsigned char headbuf[512];
-  unsigned char *databuf;
-  unsigned long *starttab, *lengthtab;
-  i_color *linebuf = NULL;
   i_mempool mp;
 
-  mm_log((1,"i_readrgb(ig %p, length %d)\n", ig, length));
+  mm_log((1,"i_readrgb(ig %p, partial %d)\n", ig, partial));
   i_clear_error();
-  i_mempool_init(&mp);
-  
   io_glue_commit_types(ig);
 
   if (ig->readcb(ig, headbuf, 512) != 512) {
@@ -223,126 +231,93 @@ i_readrgb_wiol(io_glue *ig, int length) {
   height   = header.ysize;
   channels = header.zsize;
 
-  img = i_img_empty_ch(NULL, width, height, channels);
-  if (!img)
+  switch (header.dimensions) {
+  case 1:
+    channels = 1;
+    height = 1;
+    break;
+
+  case 2:
+    channels = 1;
+    break;
+
+  case 3:
+    /* fall through and use all of the dimensions */
+    break;
+
+  default:
+    i_push_error(0, "Invalid value for dimension in header");
     return NULL;
+  }
+
+  if (header.colormap != SGI_COLORMAP_NORMAL) {
+    i_push_errorf(0, "invalid value for colormap (%d)", header.colormap);
+    return NULL;
+  }
+
+  if (header.BPC != 1 && header.BPC != 2) {
+    i_push_errorf(0, "invalid value for BPC (%d)", header.BPC);
+    return NULL;
+  }
+
+  if (!i_int_check_image_file_limits(width, height, channels, header.BPC)) {
+    mm_log((1, "i_readbmp_wiol: image size exceeds limits\n"));
+    return NULL;
+  }
+
+  i_mempool_init(&mp);
   
-  i_tags_add(&img->tags, "rgb_namestr", 0, header.name, 80, 0);
-  i_tags_add(&img->tags, "i_format", 0, "rgb", -1, 0);
+  if (header.BPC == 1) {
+    img = i_img_8_new(width, height, channels);
+    if (!img)
+      goto ErrorReturn;
+
+    switch (header.storagetype) {
+    case SGI_STORAGE_VERBATIM:
+      img = read_rgb_8_verbatim(img, &mp, ig);
+      break;
+
+    case SGI_STORAGE_RLE:
+      img = read_rgb_8_rle(img, &mp, ig);
+      break;
+
+    default:
+      goto ErrorReturn;
+    }
+  }
+  else {
+    img = i_img_16_new(width, height, channels);
+    if (!img)
+      goto ErrorReturn;
+
+    switch (header.storagetype) {
+    case SGI_STORAGE_VERBATIM:
+      img = read_rgb_16_verbatim(img, &mp, ig);
+      break;
+
+    case SGI_STORAGE_RLE:
+      img = read_rgb_16_rle(img, &mp, ig);
+      break;
+
+    default:
+      goto ErrorReturn;
+    }
+  }
+
+  if (!img)
+    goto ErrorReturn;
 
   switch (header.storagetype) {
   case 0: /* uncompressed */
     
-    linebuf   = i_mempool_alloc(&mp, width*sizeof(i_color));
-    databuf   = i_mempool_alloc(&mp, width);
-
-    savemask = i_img_getmask(img);
-
-    for(c=0; c<channels; c++) {
-      i_img_setmask(img, 1<<c);
-      for(y=0; y<height; y++) {
-	int x;
-	
-	if (ig->readcb(ig, databuf, width) != width) {
-	  i_push_error(0, "SGI rgb: cannot read");
-	  goto ErrorReturn;
-	}
-
-	for(x=0; x<width; x++)
-	  linebuf[x].channel[c] = databuf[x];
-	
-	i_plin(img, 0, width, height-1-y, linebuf);
-      }
-    }
-    i_img_setmask(img, savemask);
     break;
   case 1: /* RLE compressed */
     
-    databuf   = i_mempool_alloc(&mp, height*channels*4);
-    starttab  = i_mempool_alloc(&mp, height*channels*sizeof(unsigned long));
-    lengthtab = i_mempool_alloc(&mp, height*channels*sizeof(unsigned long));
-    linebuf   = i_mempool_alloc(&mp, width*sizeof(i_color));
-    
-    /* Read offset table */
-    if (ig->readcb(ig, databuf, height*channels*4) != height*channels*4) goto ErrorReturn;
-    for(i=0; i<height*channels; i++) starttab[i] = 
-				       (databuf[i*4]<<24) | 
-				       (databuf[i*4+1]<<16) | 
-				       (databuf[i*4+2]<<8) |
-				       (databuf[i*4+3]);
-
-
-    /* Read length table */
-    if (ig->readcb(ig, databuf, height*channels*4) != height*channels*4) goto ErrorReturn;
-    for(i=0; i<height*channels; i++) lengthtab[i] = 
-				       (databuf[i*4]<<24)+
-				       (databuf[i*4+1]<<16)+
-				       (databuf[i*4+2]<<8)+
-				       (databuf[i*4+3]);
-
-    mm_log((3, "Offset/length table:\n"));
-    for(i=0; i<height*channels; i++)
-      mm_log((3, "%d: %d/%d\n", i, starttab[i], lengthtab[i]));
-
-
-    /* Find max spanlength if someone is making very badly formed RLE data */
-    maxlen = 0;
-    for(y=0; y<height; y++) maxlen = (maxlen>lengthtab[y])?maxlen:lengthtab[y];
-
-    mm_log((1, "maxlen for an rle buffer: %d\n", maxlen));
-
-    databuf = i_mempool_alloc(&mp, maxlen);
-
-    for(y=0; y<height; y++) {
-      for(c=0; c<channels; c++) {
-	unsigned long iidx = 0, oidx = 0, span = 0;
-	unsigned char cval = 0;
-	int rle = 0;
-	int ci = height*c+y;
-	int datalen = lengthtab[ci];
-
-	if (ig->seekcb(ig, starttab[ci], SEEK_SET) != starttab[ci]) {
-	  i_push_error(0, "SGI rgb: cannot seek");
-	  goto ErrorReturn;
-	}
-	if (ig->readcb(ig, databuf, datalen) != datalen) {
-	  i_push_error(0, "SGI rgb: cannot read");
-	  goto ErrorReturn;
-	}
-
-	/*
-	  mm_log((1, "Buffer length %d\n", datalen));
-	  for(i=0; i<datalen; i++) 
-	  mm_log((1, "0x%x\n", databuf[i]));
-	*/
-
-	while( iidx <= datalen && oidx < width ) {
-	  if (!span) {
-	    span = databuf[iidx] & 0x7f;
-	    rle  = !(databuf[iidx++] & 0x80);
-	    /*	    mm_log((1,"new span %d, rle %d\n", span, rle)); */
-	    if (rle) {
-	      if (iidx==datalen) {
-		i_push_error(0, "SGI rgb: bad rle data");
-		goto ErrorReturn;
-	      }
-	      cval = databuf[iidx++];
-	      /* mm_log((1, "rle value %d\n", cval)); */
-	    }
-	  }
-	  linebuf[oidx++].channel[c] = rle ? cval : databuf[iidx++];
-	  span--;
-	  /*
-	    mm_log((1,"iidx=%d/%d, oidx=%d/%d, linebuf[%d].channel[%d] %d\n", iidx-1, datalen, oidx-1, width, oidx-1, c, linebuf[oidx-1].channel[c]));
-	  */
-	}
-      }
-      i_plin(img, 0, width, height-1-y, linebuf);
-    }
     
     break;
   }
 
+  i_tags_add(&img->tags, "rgb_namestr", 0, header.name, 80, 0);
   i_tags_add(&img->tags, "i_format", 0, "rgb", -1, 0);
 
   i_mempool_destroy(&mp);
@@ -375,3 +350,221 @@ i_writergb_wiol(i_img *img, io_glue *ig, int wierdpack, int compress, char *idst
   return 0;
 }
 
+static i_img *
+read_rgb_8_verbatim(i_img *img, i_mempool *mp, io_glue *ig) {
+  i_color *linebuf;
+  unsigned char *databuf;
+  int c, y;
+  int savemask;
+  
+  linebuf   = i_mempool_alloc(mp, img->xsize * sizeof(i_color));
+  databuf   = i_mempool_alloc(mp, img->xsize);
+
+  savemask = i_img_getmask(img);
+
+  for(c = 0; c < img->channels; c++) {
+    i_img_setmask(img, 1<<c);
+    for(y = 0; y < img->ysize; y++) {
+      int x;
+      
+      if (ig->readcb(ig, databuf, img->xsize) != img->xsize) {
+	i_push_error(0, "SGI rgb: cannot read");
+	i_img_destroy(img);
+	return NULL;
+      }
+      
+      for(x = 0; x < img->xsize; x++)
+	linebuf[x].channel[c] = databuf[x];
+      
+      i_plin(img, 0, img->xsize, img->ysize-1-y, linebuf);
+    }
+  }
+  i_img_setmask(img, savemask);
+  
+  return img;
+}
+
+static int
+read_rle_tables(io_glue *ig, i_img *img, i_mempool *mp,
+		unsigned long **pstart_tab, unsigned long **plength_tab, 
+		unsigned long *pmax_length) {
+  i_img_dim height = img->ysize;
+  int channels = img->channels;
+  unsigned char *databuf;
+  unsigned long *start_tab, *length_tab;
+  unsigned long max_length = 0;
+  int i;
+
+  /* assumption: that the lengths are in bytes rather than in pixels */
+
+  databuf    = i_mempool_alloc(mp, height * channels * 4);
+  start_tab  = i_mempool_alloc(mp, height*channels*sizeof(unsigned long));
+  length_tab = i_mempool_alloc(mp, height*channels*sizeof(unsigned long));
+    
+    /* Read offset table */
+  if (ig->readcb(ig, databuf, height * channels * 4) != height * channels * 4) {
+    i_push_error(0, "short read reading RLE tables");
+    return 0;
+  }
+
+  for(i = 0; i < height * channels; i++) 
+    start_tab[i] = (databuf[i*4] << 24) | (databuf[i*4+1] << 16) | 
+      (databuf[i*4+2] << 8) | (databuf[i*4+3]);
+
+
+  /* Read length table */
+  if (ig->readcb(ig, databuf, height*channels*4) != height*channels*4) {
+    i_push_error(0, "short read reading RLE tables");
+    return 0;
+  }
+
+  for(i=0; i < height * channels; i++) {
+    length_tab[i] = (databuf[i*4] << 24) + (databuf[i*4+1] << 16)+
+      (databuf[i*4+2] << 8) + (databuf[i*4+3]);
+    if (length_tab[i] > max_length)
+      max_length = length_tab[i];
+  }
+
+  mm_log((3, "Offset/length table:\n"));
+  for(i=0; i < height * channels; i++)
+    mm_log((3, "%d: %d/%d\n", i, start_tab[i], length_tab[i]));
+
+  *pstart_tab = start_tab;
+  *plength_tab = length_tab;
+  *pmax_length = max_length;
+
+  return 1;
+}
+
+static i_img *
+read_rgb_8_rle(i_img *img, i_mempool *mp, io_glue *ig) {
+  i_color *linebuf;
+  unsigned char *databuf;
+  unsigned long *start_tab, *length_tab;
+  unsigned long max_length;
+  i_img_dim width = img->xsize;
+  i_img_dim height = img->ysize;
+  int channels = img->channels;
+  i_img_dim y;
+  int c;
+
+  if (!read_rle_tables(ig, img, mp, 
+		       &start_tab, &length_tab, &max_length)) {
+    i_img_destroy(img);
+    return NULL;
+  }
+
+  mm_log((1, "maxlen for an rle buffer: %d\n", max_length));
+
+  if (max_length > (img->xsize + 1) * 2) {
+    i_push_errorf(0, "SGI rgb: ridiculous RLE line length %uld", max_length);
+    i_img_destroy(img);
+    return NULL;
+  }
+
+  linebuf = i_mempool_alloc(mp, width*sizeof(i_color));
+  databuf = i_mempool_alloc(mp, max_length);
+
+  for(y = 0; y < img->ysize; y++) {
+    for(c = 0; c < channels; c++) {
+      int ci = height * c + y;
+      int datalen = length_tab[ci];
+      unsigned char *inp;
+      i_color *outp;
+      int data_left = datalen;
+      int pixels_left = width;
+      i_sample_t sample;
+      
+      if (ig->seekcb(ig, start_tab[ci], SEEK_SET) != start_tab[ci]) {
+	i_push_error(0, "SGI rgb: cannot seek");
+	i_img_destroy(img);
+	return NULL;
+      }
+      if (ig->readcb(ig, databuf, datalen) != datalen) {
+	i_push_error(0, "SGI rgb: cannot read");
+	i_img_destroy(img);
+	return NULL;
+      }
+      
+      inp = databuf;
+      outp = linebuf;
+      while (data_left && pixels_left) {
+	int code = *inp++;
+	int count = code & 0x7f;
+	--data_left;
+	if (count == 0)
+	  break;
+	if (code & 0x80) {
+	  /* literal run */
+	  /* sanity checks */
+	  if (count > pixels_left) {
+	    i_push_error(0, "SGI rgb: literal run overflows scanline");
+	    i_img_destroy(img);
+	    return NULL;
+	  }
+	  if (count > data_left) {
+	    i_push_error(0, "SGI rgb: literal run consume more data than available");
+	    i_img_destroy(img);
+	    return NULL;
+	  }
+	  /* copy the run */
+	  pixels_left -= count;
+	  data_left -= count;
+	  while (count-- > 0) {
+	    outp->channel[c] = *inp++;
+	    ++outp;
+	  }
+	}
+	else {
+	  /* RLE run */
+	  if (count > pixels_left) {
+	    i_push_error(0, "SGI rgb: RLE run overflows scanline");
+	    i_img_destroy(img);
+	    return NULL;
+	  }
+	  if (data_left < 1) {
+	    i_push_error(0, "SGI rgb: RLE run has no data for pixel");
+	    i_img_destroy(img);
+	    return NULL;
+	  }
+	  sample = *inp++;
+	  --data_left;
+	  pixels_left -= count;
+	  while (count-- > 0) {
+	    outp->channel[c] = sample;
+	    ++outp;
+	  }
+	}
+      }
+      /* must have a full scanline */
+      if (pixels_left) {
+	i_push_error(0, "SGI rgb: incomplete RLE scanline");
+	i_img_destroy(img);
+	return NULL;
+      }
+      /* must have used all of the data */
+      if (data_left) {
+	i_push_error(0, "SGI rgb: unused RLE data");
+	i_img_destroy(img);
+	return NULL;
+      }
+    }
+    i_plin(img, 0, width, height-1-y, linebuf);
+  }
+
+  return img;
+}
+
+static i_img *
+read_rgb_16_verbatim(i_img *img, i_mempool *mp, io_glue *ig) {
+  i_push_error(0, "SGI rgb: 16 bit uncompressed images not supported");
+  i_img_destroy(img);
+  return NULL;
+}
+
+static i_img *
+read_rgb_16_rle(i_img *img, i_mempool *mp, io_glue *ig) {
+  i_push_error(0, "SGI rgb: 16 bit RLE images not supported");
+  i_img_destroy(img);
+  return NULL;
+}
