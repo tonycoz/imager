@@ -155,7 +155,7 @@ my @objs = qw(Imager.o draw.o polygon.o image.o io.o iolayer.o
               filters.o dynaload.o stackmach.o datatypes.o
               regmach.o trans2.o quant.o error.o convert.o
               map.o tags.o palimg.o maskimg.o img16.o rotate.o
-              bmp.o tga.o rgb.o color.o fills.o imgdouble.o limits.o hlines.o
+              bmp.o tga.o color.o fills.o imgdouble.o limits.o hlines.o
               imext.o scale.o rubthru.o render.o);
 
 $Recommends{Imager} =

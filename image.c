@@ -481,6 +481,9 @@ i_img_info(i_img *im,int *info) {
 /*
 =item i_img_setmask(im, ch_mask)
 
+=synopsis // only channel 0 writeable 
+=synopsis i_img_setmask(img, 0x01);
+
 Set the image channel mask for I<im> to I<ch_mask>.
 
 =cut
@@ -492,6 +495,8 @@ i_img_setmask(i_img *im,int ch_mask) { im->ch_mask=ch_mask; }
 /*
 =item i_img_getmask(im)
 
+=synopsis mask = i_img_getmask(img);
+
 Get the image channel mask for I<im>.
 
 =cut
@@ -502,6 +507,8 @@ i_img_getmask(i_img *im) { return im->ch_mask; }
 /*
 =item i_img_getchannels(im)
 
+=synopsis channels = i_img_getchannels(img);
+
 Get the number of channels in I<im>.
 
 =cut
@@ -509,7 +516,33 @@ Get the number of channels in I<im>.
 int
 i_img_getchannels(i_img *im) { return im->channels; }
 
+/*
+=item i_img_get_width(im)
 
+=synopsis width = i_img_get_width(im);
+
+Returns the width in pixels of the image.
+
+=cut
+*/
+i_img_dim
+i_img_get_width(i_img *im) {
+  return im->xsize;
+}
+
+/*
+=item i_img_get_height(im)
+
+=synopsis height = i_img_get_height(im);
+
+Returns the height in pixels of the image.
+
+=cut
+*/
+i_img_dim
+i_img_get_height(i_img *im) {
+  return im->ysize;
+}
 
 /*
 =item i_copyto_trans(im, src, x1, y1, x2, y2, tx, ty, trans)
@@ -2079,10 +2112,10 @@ i_test_format_probe(io_glue *data, int length) {
        on similar files 
        values are: 2 byte magic, rle flags (0 or 1), bytes/sample (1 or 2)
     */
-    FORMAT_ENTRY("\x01\xDA\x00\x01", "rgb"),
-    FORMAT_ENTRY("\x01\xDA\x00\x02", "rgb"),
-    FORMAT_ENTRY("\x01\xDA\x01\x01", "rgb"),
-    FORMAT_ENTRY("\x01\xDA\x01\x02", "rgb"),
+    FORMAT_ENTRY("\x01\xDA\x00\x01", "sgi"),
+    FORMAT_ENTRY("\x01\xDA\x00\x02", "sgi"),
+    FORMAT_ENTRY("\x01\xDA\x01\x01", "sgi"),
+    FORMAT_ENTRY("\x01\xDA\x01\x02", "sgi"),
     
     FORMAT_ENTRY2("FORM    ILBM", "ilbm", "xxxx    xxxx"),
 

@@ -104,6 +104,15 @@ im_ext_funcs imager_function_table =
 
     i_flood_fill_border,
     i_flood_cfill_border,
+
+    /* IMAGER_API_LEVEL 3 functions */
+    i_img_setmask,
+    i_img_getmask,
+    i_img_getchannels,
+    i_img_get_width,
+    i_img_get_height,
+    i_lhead,
+    i_loog
   };
 
 /* in general these functions aren't called by Imager internally, but

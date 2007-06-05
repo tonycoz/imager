@@ -69,6 +69,8 @@ i_img *i_img_pal_new(int x, int y, int ch, int maxpal);
 void   i_img_setmask    (i_img *im,int ch_mask);
 int    i_img_getmask    (i_img *im);
 int    i_img_getchannels(i_img *im);
+i_img_dim i_img_get_width(i_img *im);
+i_img_dim i_img_get_height(i_img *im);
 
 /* Base functions */
 

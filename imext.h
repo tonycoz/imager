@@ -191,4 +191,12 @@ extern im_ext_funcs *imager_function_ext_table;
 #define i_int_check_image_file_limits(width, height, channels, sample_size) \
   ((im_extt->f_i_int_check_image_file_limits)((width), (height), (channels), (sample_size)))
 
+#define i_img_setmask(img, mask) ((im_extt->f_i_img_setmask)((img), (mask)))
+#define i_img_getmask(img) ((im_extt->f_i_img_getmask)(img))
+#define i_img_getchannels(img) ((im_extt->f_i_img_getchannels)(img))
+#define i_img_get_width(img) ((im_extt->f_i_img_get_width)(img))
+#define i_img_get_height(img) ((im_extt->f_i_img_get_height)(img))
+#define i_lhead(file, line) ((im_extt->f_i_lhead)((file), (line)))
+#define i_loog (im_extt->f_i_loog)
+
 #endif

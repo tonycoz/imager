@@ -1076,6 +1076,79 @@ From: File tags.c
 
 =back
 
+=head2 Uncategorized functions
+
+=over
+
+=item i_img_get_height(im)
+
+
+Returns the height in pixels of the image.
+
+
+=for comment
+From: File image.c
+
+=item i_img_get_width(im)
+
+
+Returns the width in pixels of the image.
+
+
+=for comment
+From: File image.c
+
+=item i_img_getchannels(im)
+
+
+Get the number of channels in I<im>.
+
+
+=for comment
+From: File image.c
+
+=item i_img_getmask(im)
+
+
+Get the image channel mask for I<im>.
+
+
+=for comment
+From: File image.c
+
+=item i_img_setmask(im, ch_mask)
+
+
+Set the image channel mask for I<im> to I<ch_mask>.
+
+
+=for comment
+From: File image.c
+
+
+
+=back
+
+
+=head1 UNDOCUMENTED
+
+The following API functions are undocumented so far, hopefully this
+will change:
+
+=over
+
+=item *
+
+B<i_lhead>
+
+=item *
+
+B<i_loog>
+
+
+
+=back
+
 
 =head1 AUTHOR
 

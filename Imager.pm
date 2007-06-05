@@ -1375,16 +1375,6 @@ sub read {
     $self->{DEBUG} && print "loading a tga file\n";
   }
 
-  if ( $input{'type'} eq 'rgb' ) {
-    $self->{IMG}=i_readrgb_wiol( $IO, -1 ); # Fixme, check if that length parameter is ever needed
-    if ( !defined($self->{IMG}) ) {
-      $self->{ERRSTR}=$self->_error_as_msg();
-      return undef;
-    }
-    $self->{DEBUG} && print "loading a tga file\n";
-  }
-
-
   if ( $input{'type'} eq 'raw' ) {
     my %params=(datachannels=>3,storechannels=>3,interleave=>1,%input);
 
@@ -3406,7 +3396,7 @@ sub def_guess_type {
   return 'png'  if ($ext eq "png");
   return 'bmp'  if ($ext eq "bmp" || $ext eq "dib");
   return 'tga'  if ($ext eq "tga");
-  return 'rgb'  if ($ext eq "rgb");
+  return 'sgi'  if ($ext eq "rgb" || $ext eq "bw" || $ext eq "sgi" || $ext eq "rgba");
   return 'gif'  if ($ext eq "gif");
   return 'raw'  if ($ext eq "raw");
   return lc $ext; # best guess
