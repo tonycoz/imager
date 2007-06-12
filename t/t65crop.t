@@ -1,6 +1,6 @@
 #!perl -w
 use strict;
-use Test::More tests => 60;
+use Test::More tests => 64;
 require "t/testtools.pl";
 use Imager;
 
@@ -169,4 +169,14 @@ SKIP:
   $img->crop(left=>5);
   cmp_ok($warning, '=~', 'void', "correct warning");
   cmp_ok($warning, '=~', 't65crop\\.t', "correct file");
+}
+
+{
+    my $src = test_oo_img();
+    ok(!$src->crop( top=>1000, bottom=>1500, left=>0, right=>100 ),
+                "outside of image" );
+    cmp_ok($src->errstr, '=~', qr/outside of the image/, "and message");
+    ok(!$src->crop( top=>100, bottom=>1500, left=>1000, right=>1500 ),
+                "outside of image" );
+    cmp_ok($src->errstr, '=~', qr/outside of the image/, "and message");
 }

@@ -8,6 +8,11 @@ Bug fixes:
  - fixes a regression introduced by the fixes for RT 11972
    http://rt.cpan.org/Ticket/Display.html?id=27546
 
+ - cropping outside the image would return an Imager object with
+   no low-level image object, instead of returning false.
+   Fixed by: Philip Gwyn (Leolo)
+   http://rt.cpan.org/Ticket/Display.html?id=27509
+
 Imager 0.58 - 16 May 2007
 ===========
 

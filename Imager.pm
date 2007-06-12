@@ -754,7 +754,10 @@ sub crop {
     $self->_set_error("resulting image would have no content");
     return;
   }
-
+  if( $r < $l or $b < $t ) {
+    $self->_set_error("attempting to crop outside of the image");
+    return;
+  }
   my $dst = $self->_sametype(xsize=>$r-$l, ysize=>$b-$t);
 
   i_copyto($dst->{IMG},$self->{IMG},$l,$t,$r,$b,0,0);
