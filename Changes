@@ -1,5 +1,13 @@
 Imager release history.  Older releases can be found in Changes.old
 
+Imager 0.59
+===========
+
+Bug fixes:
+
+ - fixes a regression introduced by the fixes for RT 11972
+   http://rt.cpan.org/Ticket/Display.html?id=27546
+
 Imager 0.58 - 16 May 2007
 ===========
 

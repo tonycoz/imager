@@ -1,6 +1,6 @@
 #!perl -w
 use strict;
-use Test::More tests => 182;
+use Test::More tests => 183;
 ++$|;
 # Before `make install' is performed this script should be runnable with
 # `make test'. After `make install' it should work as `perl test.pl'
@@ -20,13 +20,13 @@ my @base_color = (64, 255, 64);
 
 SKIP:
 {
-  i_has_format("ft2") or skip("no freetype2 library found", 181);
+  i_has_format("ft2") or skip("no freetype2 library found", 182);
 
   print "# has ft2\n";
   
   my $fontname=$ENV{'TTFONTTEST'}||'./fontfiles/dodge.ttf';
 
-  -f $fontname or skip("cannot find fontfile $fontname", 181);
+  -f $fontname or skip("cannot find fontfile $fontname", 182);
 
 
   my $bgcolor=i_color_new(255,0,0,0);
@@ -465,6 +465,15 @@ SKIP:
     @colors = sort { ($a->rgba)[0] <=> ($b->rgba)[0] } @colors;
     is_color3($colors[0], 0, 0, 0, "check we got black");
     is_color3($colors[1], 255, 0, 0, "and red");
+  }
+
+  { # RT 27546
+    my $im = Imager->new(xsize => 100, ysize => 100, channels => 4);
+    $im->box(filled => 1, color => '#ff0000FF');
+    my $font = Imager::Font->new(file=>'fontfiles/ImUgly.ttf', type=>'ft2');
+    ok($im->string(x => 0, 'y' => 40, text => 'test', 
+		   size => 11, sizew => 11, font => $font, aa => 1),
+       'draw on translucent image')
   }
 }
 

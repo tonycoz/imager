@@ -185,7 +185,7 @@ IM_SUFFIX(render_color_alpha)(i_render *r, int x, int y, int width,
     if (src_alpha == IM_SAMPLE_MAX)
       *linep = STORE_COLOR;
     else if (src_alpha) {
-      IM_WORK_T remains =  - src_alpha;
+      IM_WORK_T remains = IM_SAMPLE_MAX - src_alpha;
       IM_WORK_T orig_alpha = linep->channel[alpha_channel];
       IM_WORK_T dest_alpha = src_alpha + (remains * orig_alpha) / IM_SAMPLE_MAX;
       for (ch = 0; ch < alpha_channel; ++ch) {
