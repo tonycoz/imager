@@ -1,6 +1,6 @@
 --- #YAML:1.0
 name: Imager
-version: 0.58
+version: 0.59
 version_from: Imager.pm
 author: Tony Cook <tony@imager.perl.org>, Arnar M. Hrafnkelsson
 abstract: Perl extension for Generating 24 bit Images
@@ -15,4 +15,4 @@ distribution_type: module
 meta-spec:
   version: 1.3
   url: http://module-build.sourceforge.net/META-spec-v1.3.html
-generated_by: Imager version 0.58
+generated_by: Imager version 0.59
