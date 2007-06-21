@@ -12,8 +12,9 @@ UPGRADE.
 
 use strict;
 $|=1;
-use Test::More tests => 125;
+use Test::More tests => 129;
 use Imager qw(:all);
+use Imager::Test qw(is_color3);
 BEGIN { require "t/testtools.pl"; }
 use Carp 'confess';
 $SIG{__DIE__} = sub { confess @_ };
@@ -48,7 +49,7 @@ SKIP:
     $im = Imager->new(xsize=>2, ysize=>2);
     ok(!$im->write(file=>"testout/nogif.gif"), "should fail to write gif");
     is($im->errstr, 'format not supported', "check no gif message");
-    skip("no gif support", 121);
+    skip("no gif support", 124);
   }
     open(FH,">testout/t105.gif") || die "Cannot open testout/t105.gif\n";
     binmode(FH);
@@ -687,6 +688,20 @@ SKIP:
        "1 - gif_trans_index");
     is($im[1]->tags(name => 'gif_user_input'),      0, "1 - gif_user_input");
     is($im[1]->tags(name => 'gif_loop'),            0, "1 - gif_loop");
+  }
+
+  {
+    # manually modified from a small gif, this had the palette
+    # size changed to half the size, leaving an index out of range
+    my $im = Imager->new;
+    ok($im->read(file => 'testimg/badindex.gif', type => 'gif'), 
+       "read bad index gif")
+      or print "# ", $im->errstr, "\n";
+    my @indexes = $im->getscanline('y' => 0, type => 'index');
+    is_deeply(\@indexes, [ 0..4 ], "check for correct indexes");
+    is($im->colorcount, 5, "check the palette was adjusted");
+    is_color3($im->getpixel('y' => 0, x => 4), 0, 0, 0, 
+	      "check it was black added");
   }
 }
 

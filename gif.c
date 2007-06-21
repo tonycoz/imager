@@ -529,6 +529,8 @@ i_img **i_readgif_multi_low(GifFileType *GifFile, int *count, int page) {
   i_img **results = NULL;
   int result_alloc = 0;
   int channels;
+  int image_colors = 0;
+  i_color black = { 0 }; /* used to expand the palette if needed */
   
   *count = 0;
 
@@ -610,6 +612,7 @@ i_img **i_readgif_multi_low(GifFileType *GifFile, int *count, int page) {
 	  
 	  i_addcolors(img, &col, 1);
 	}
+	image_colors = ColorMapSize;
 	++*count;
 	if (*count > result_alloc) {
 	  if (result_alloc == 0) {
@@ -682,7 +685,19 @@ i_img **i_readgif_multi_low(GifFileType *GifFile, int *count, int page) {
 		myfree(GifRow);
 		return NULL;
 	      }
-	      
+
+	      /* range check the scanline if needed */
+	      if (image_colors != 256) {
+		int x;
+		for (x = 0; x < Width; ++x) {
+		  while (GifRow[x] >= image_colors) {
+		    /* expand the palette since a palette index is too big */
+		    i_addcolors(img, &black, 1);
+		    ++image_colors;
+		  }
+		}
+	      }
+
 	      i_ppal(img, 0, Width, j, GifRow);
 	    }
 	  }
@@ -698,6 +713,18 @@ i_img **i_readgif_multi_low(GifFileType *GifFile, int *count, int page) {
 	      return NULL;
 	    }
 	    
+	    /* range check the scanline if needed */
+	    if (image_colors != 256) {
+	      int x;
+	      for (x = 0; x < Width; ++x) {
+		while (GifRow[x] >= image_colors) {
+		  /* expand the palette since a palette index is too big */
+		  i_addcolors(img, &black, 1);
+		  ++image_colors;
+		}
+	      }
+	    }
+
 	    i_ppal(img, 0, Width, i, GifRow);
 	  }
 	}

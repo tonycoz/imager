@@ -1,5 +1,15 @@
 Imager release history.  Older releases can be found in Changes.old
 
+Imager 0.60
+===========
+
+Bug fixes:
+
+ - in some cases it's possible for giflib/libungif to return color 
+   indexes outside the range of colors defined by the image's palette.
+   We now expand the palette to match the indexes used.
+   Thanks to Gabriel Vasseur for reporting this.
+
 Imager 0.59 - 14 June 2007
 ===========
 

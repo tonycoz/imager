@@ -271,6 +271,7 @@ testimg/bad8wid0.bmp    8-bit/pixel, width 0
 testimg/badbits.bmp     bad bits value in header
 testimg/badcomp1.bmp    bad compression for 1-bit/pixel
 testimg/badcomp4.bmp    bad compression for 4-bit/pixel
+testimg/badindex.gif	GIF with a bad color index
 testimg/badplanes.bmp   bad planes value in header
 testimg/badused1.bmp    1-bit/pixel, out of range colors used value
 testimg/badused4a.bmp   4-bit/pixel, badly out of range used value (SEGV test)
