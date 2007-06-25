@@ -1356,7 +1356,7 @@ sub read {
       my $page = $input{'page'};
       defined $page or $page = 0;
       $self->{IMG} = i_readgif_single_wiol( $IO, $page );
-      if ($input{colors}) {
+      if ($self->{IMG} && $input{colors}) {
 	${ $input{colors} } =
 	  [ i_getcolors($self->{IMG}, 0, i_colorcount($self->{IMG})) ];
       }
