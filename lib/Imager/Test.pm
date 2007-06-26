@@ -4,7 +4,11 @@ use Test::Builder;
 require Exporter;
 use vars qw(@ISA @EXPORT_OK);
 @ISA = qw(Exporter);
-@EXPORT_OK = qw(diff_text_with_nul test_image_raw test_image_16 test_image is_color3 is_color1 is_image is_image_similar image_bounds_checks);
+@EXPORT_OK = qw(diff_text_with_nul test_image_raw test_image_16 test_image 
+                is_color3 is_color1 is_color4 
+                is_fcolor4
+                is_image is_image_similar 
+                image_bounds_checks);
 
 sub diff_text_with_nul {
   my ($desc, $text1, $text2, @params) = @_;
@@ -48,6 +52,79 @@ Color mismatch:
   Red: $red vs $cr
 Green: $green vs $cg
  Blue: $blue vs $cb
+END_DIAG
+    return;
+  }
+
+  return 1;
+}
+
+sub is_color4($$$$$$) {
+  my ($color, $red, $green, $blue, $alpha, $comment) = @_;
+
+  my $builder = Test::Builder->new;
+
+  unless (defined $color) {
+    $builder->ok(0, $comment);
+    $builder->diag("color is undef");
+    return;
+  }
+  unless ($color->can('rgba')) {
+    $builder->ok(0, $comment);
+    $builder->diag("color is not a color object");
+    return;
+  }
+
+  my ($cr, $cg, $cb, $ca) = $color->rgba;
+  unless ($builder->ok($cr == $red && $cg == $green && $cb == $blue 
+		       && $ca == $alpha, $comment)) {
+    $builder->diag(<<END_DIAG);
+Color mismatch:
+  Red: $red vs $cr
+Green: $green vs $cg
+ Blue: $blue vs $cb
+Alpha: $alpha vs $ca
+END_DIAG
+    return;
+  }
+
+  return 1;
+}
+
+sub is_fcolor4($$$$$$;$) {
+  my ($color, $red, $green, $blue, $alpha, $comment_or_diff, $comment_or_undef) = @_;
+  my ($comment, $mindiff);
+  if (defined $comment_or_undef) {
+    ( $mindiff, $comment ) = ( $comment_or_diff, $comment_or_undef )
+  }
+  else {
+    ( $mindiff, $comment ) = ( 0.001, $comment_or_diff )
+  }
+
+  my $builder = Test::Builder->new;
+
+  unless (defined $color) {
+    $builder->ok(0, $comment);
+    $builder->diag("color is undef");
+    return;
+  }
+  unless ($color->can('rgba')) {
+    $builder->ok(0, $comment);
+    $builder->diag("color is not a color object");
+    return;
+  }
+
+  my ($cr, $cg, $cb, $ca) = $color->rgba;
+  unless ($builder->ok(abs($cr - $red) <= $mindiff
+		       && abs($cg - $green) <= $mindiff
+		       && abs($cb - $blue) <= $mindiff
+		       && abs($ca - $alpha) <= $mindiff, $comment)) {
+    $builder->diag(<<END_DIAG);
+Color mismatch:
+  Red: $red vs $cr
+Green: $green vs $cg
+ Blue: $blue vs $cb
+Alpha: $alpha vs $ca
 END_DIAG
     return;
   }

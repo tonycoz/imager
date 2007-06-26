@@ -3966,6 +3966,7 @@ i_glin(im, l, r, y)
       PPCODE:
         if (l < r) {
           vals = mymalloc((r-l) * sizeof(i_color));
+          memset(vals, 0, (r-l) * sizeof(i_color));
           count = i_glin(im, l, r, y, vals);
 	  if (GIMME_V == G_ARRAY) {
             EXTEND(SP, count);
@@ -3994,9 +3995,12 @@ i_glinf(im, l, r, y)
       PREINIT:
         i_fcolor *vals;
         int count, i;
+        i_fcolor zero = { 0 };
       PPCODE:
         if (l < r) {
           vals = mymalloc((r-l) * sizeof(i_fcolor));
+          for (i = 0; i < r-l; ++i)
+	    vals[i] = zero;
           count = i_glinf(im, l, r, y, vals);
           if (GIMME_V == G_ARRAY) {
             EXTEND(SP, count);

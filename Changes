@@ -13,6 +13,11 @@ Bug fixes:
  - fixed various memory leaks that could occur when failing to read png,
    jpeg, bmp or tga files.
 
+ - to avoid confusion, channels not present in the image are returned as
+   zero by getscanline().  This has no effect on the C level i_glin()
+   and i_glinf() API functions which continue to not set the unused
+   channels.
+
 Imager 0.59 - 14 June 2007
 ===========
 

@@ -3,13 +3,13 @@
 # to make sure we get expected values
 
 use strict;
-use Test::More tests => 212;
+use Test::More tests => 223;
 
 BEGIN { use_ok(Imager => qw(:handy :all)) }
 
 require "t/testtools.pl";
 
-use Imager::Test qw(image_bounds_checks);
+use Imager::Test qw(image_bounds_checks is_color4 is_fcolor4);
 
 init_log("testout/t01introvert.log",1);
 
@@ -475,6 +475,31 @@ cmp_ok(Imager->errstr, '=~', qr/channels must be between 1 and 4/,
 	    "get channels 3..0 as scalar, float samples");
   
   print "# end OO level scanline function tests\n";
+}
+
+{ # to avoid confusion, i_glin/i_glinf modified to return 0 in unused
+  # channels at the perl level
+  my $im = Imager->new(xsize => 4, ysize => 4, channels => 2);
+  my $fill = Imager::Color->new(128, 255, 0, 0);
+  ok($im->box(filled => 1, color => $fill), 'fill it up');
+  my $data = $im->getscanline('y' => 0);
+  is(unpack("H*", $data), "80ff000080ff000080ff000080ff0000",
+     "check we get zeros");
+  my @colors = $im->getscanline('y' => 0);
+  is_color4($colors[0], 128, 255, 0, 0, "check object interface[0]");
+  is_color4($colors[1], 128, 255, 0, 0, "check object interface[1]");
+  is_color4($colors[2], 128, 255, 0, 0, "check object interface[2]");
+  is_color4($colors[3], 128, 255, 0, 0, "check object interface[3]");
+  
+  my $dataf = $im->getscanline('y' => 0, type => 'float');
+  is_deeply([ unpack("d*", $dataf) ],
+	    [ ( 128.0 / 255.0, 1.0, 0, 0, ) x 4 ],
+	    "check we get zeroes (double)");
+  my @fcolors = $im->getscanline('y' => 0, type => 'float');
+  is_fcolor4($fcolors[0], 128.0/255.0, 1.0, 0, 0, "check object interface[0]");
+  is_fcolor4($fcolors[1], 128.0/255.0, 1.0, 0, 0, "check object interface[1]");
+  is_fcolor4($fcolors[2], 128.0/255.0, 1.0, 0, 0, "check object interface[2]");
+  is_fcolor4($fcolors[3], 128.0/255.0, 1.0, 0, 0, "check object interface[3]");
 }
 
 { # check the channel mask function
