@@ -383,7 +383,7 @@ typedef void (*transfer_function_t)(i_color *out, JSAMPARRAY in, int width);
 */
 i_img*
 i_readjpeg_wiol(io_glue *data, int length, char** iptc_itext, int *itlength) {
-  i_img *im;
+  i_img * volatile im = NULL;
 #ifdef IMEXIF_ENABLE
   int seen_exif = 0;
 #endif
@@ -395,6 +395,7 @@ i_readjpeg_wiol(io_glue *data, int length, char** iptc_itext, int *itlength) {
   jpeg_saved_marker_ptr markerp;
   transfer_function_t transfer_f;
   int channels;
+  volatile int src_set = 0;
 
   mm_log((1,"i_readjpeg_wiol(data 0x%p, length %d,iptc_itext 0x%p)\n", data, length, iptc_itext));
 
@@ -407,11 +408,15 @@ i_readjpeg_wiol(io_glue *data, int length, char** iptc_itext, int *itlength) {
 
   /* Set error handler */
   if (setjmp(jerr.setjmp_buffer)) {
+    if (src_set)
+      wiol_term_source(&cinfo);
     jpeg_destroy_decompress(&cinfo); 
     *iptc_itext=NULL;
     *itlength=0;
     if (line_buffer)
       myfree(line_buffer);
+    if (im)
+      i_img_destroy(im);
     return NULL;
   }
   
@@ -420,6 +425,7 @@ i_readjpeg_wiol(io_glue *data, int length, char** iptc_itext, int *itlength) {
   jpeg_save_markers(&cinfo, JPEG_APP1, 0xFFFF);
   jpeg_save_markers(&cinfo, JPEG_COM, 0xFFFF);
   jpeg_wiol_src(&cinfo, data, length);
+  src_set = 1;
 
   (void) jpeg_read_header(&cinfo, TRUE);
   (void) jpeg_start_decompress(&cinfo);

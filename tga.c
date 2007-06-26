@@ -777,6 +777,7 @@ i_readtga_wiol(io_glue *ig, int length) {
   for(y=0; y<height; y++) {
     if (!tga_source_read(&src, databuf, width)) {
       i_push_error(errno, "read for targa data failed");
+      if (linebuf) myfree(linebuf);
       myfree(databuf);
       if (img) i_img_destroy(img);
       return NULL;

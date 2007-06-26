@@ -918,6 +918,7 @@ read_4bit_bmp(io_glue *ig, int xsize, int ysize, int clr_used,
       else if (packed[0]) {
 	if (x + packed[0] > xsize) {
 	  /* this file is corrupt */
+	  myfree(packed);
 	  myfree(line);
 	  i_push_error(0, "invalid data during decompression");
 	  i_img_destroy(im);
@@ -967,6 +968,7 @@ read_4bit_bmp(io_glue *ig, int xsize, int ysize, int clr_used,
           count = packed[1];
 	  if (x + count > xsize) {
 	    /* this file is corrupt */
+	    myfree(packed);
 	    myfree(line);
 	    i_push_error(0, "invalid data during decompression");
 	    i_img_destroy(im);

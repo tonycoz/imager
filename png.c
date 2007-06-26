@@ -184,7 +184,7 @@ static void get_png_tags(i_img *im, png_structp png_ptr, png_infop info_ptr);
 
 i_img*
 i_readpng_wiol(io_glue *ig, int length) {
-  i_img *im;
+  i_img *im = NULL;
   png_structp png_ptr;
   png_infop info_ptr;
   png_uint_32 width, height;
@@ -208,6 +208,7 @@ i_readpng_wiol(io_glue *ig, int length) {
   }
   
   if (setjmp(png_ptr->jmpbuf)) {
+    if (im) i_img_destroy(im);
     mm_log((1,"i_readpng_wiol: error.\n"));
     png_destroy_read_struct(&png_ptr, &info_ptr, (png_infopp)NULL);
     return NULL;

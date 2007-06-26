@@ -942,6 +942,7 @@ tiff_load_ifd(imtiff *tiff, unsigned long offset) {
       entry->item_size = type_sizes[entry->type];
       entry->size = entry->item_size * entry->count;
       if (entry->size / entry->item_size != entry->count) {
+	myfree(entries);
 	mm_log((1, "Integer overflow calculating tag data size processing EXIF block\n"));
 	return 0;
       }

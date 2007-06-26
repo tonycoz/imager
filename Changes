@@ -10,6 +10,9 @@ Bug fixes:
    We now expand the palette to match the indexes used.
    Thanks to Gabriel Vasseur for reporting this.
 
+ - fixed various memory leaks that could occur when failing to read png,
+   jpeg, bmp or tga files.
+
 Imager 0.59 - 14 June 2007
 ===========
 
