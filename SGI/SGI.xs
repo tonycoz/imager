@@ -17,5 +17,10 @@ i_readsgi_wiol(ig, partial)
 	Imager::IO ig
 	int partial
 
+int
+i_writesgi_wiol(ig, im)
+	Imager::IO ig
+	Imager::ImgRaw im
+
 BOOT:
 	PERL_INITIALIZE_IMAGER_CALLBACKS;

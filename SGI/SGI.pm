@@ -35,10 +35,13 @@ Imager->register_reader
 
 Imager->register_writer
   (
-   type=>'ico',
+   type=>'sgi',
    single => 
    sub { 
      my ($im, $io, %hsh) = @_;
+
+     $im->_set_opts(\%hsh, "i_", $im);
+     $im->_set_opts(\%hsh, "sgi_", $im);
 
      unless (i_writesgi_wiol($io, $im->{IMG})) {
        $im->_set_error(Imager->_error_as_msg);

@@ -21,7 +21,7 @@ Imager::init_log('testout/10read.log', 2);
   is($im_verb->tags(name => 'sgi_pixmin'), 0, "check pixmin");
   is($im_verb->tags(name => 'sgi_pixmax'), 255, "check pixmax");
   is($im_verb->tags(name => 'sgi_bpc'), 1, "check bpc");
-  is($im_verb->tags(name => 'sgi_namestr'), 'test image', 
+  is($im_verb->tags(name => 'i_comment'), 'test image', 
      "check name string");
 
   my $im_rle = Imager->new;
@@ -158,7 +158,7 @@ Imager::init_log('testout/10read.log', 2);
      ],
      [
       'verb.rgb',
-      { 100 => '00 00 00 01' },
+      { 104 => '00 00 00 01' },
       'SGI image: invalid value for colormap (1)',
       'invalid colormap field',
      ],
