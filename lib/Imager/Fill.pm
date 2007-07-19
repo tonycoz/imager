@@ -2,7 +2,7 @@ package Imager::Fill;
 use strict;
 use vars qw($VERSION);
 
-$VERSION = "1.009";
+$VERSION = "1.010";
 
 # this needs to be kept in sync with the array of hatches in fills.c
 my @hatch_types =
@@ -398,7 +398,7 @@ You can call Imager::Fill->hatches for a list of hatch names.
 
   my $fill = Imager::Fill->new(fountain=>$ftype, 
        xa=>$xa, ya=>$ya, xb=>$xb, yb=>$yb, 
-       segment=>$segments, repeat=>$repeat, combine=>$combine, 
+       segments=>$segments, repeat=>$repeat, combine=>$combine, 
        super_sample=>$super_sample, ssample_param=>$ssample_param);
 
 This fills the given region with a fountain fill.  This is exactly the

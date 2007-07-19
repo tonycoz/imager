@@ -3,7 +3,7 @@ use strict;
 use Imager::Color::Float;
 use vars qw($VERSION);
 
-$VERSION = "1.005";
+$VERSION = "1.006";
 
 =head1 NAME
 
@@ -206,7 +206,7 @@ In most cases you can ignore some of the arguments, eg.
   # assuming $f is a new Imager::Fountain in each case here
   use Imager ':handy';
   # simple transition from red to blue
-  $f->add(c0=>NC('#FF0000), c1=>NC('#0000FF'));
+  $f->add(c0=>NC('#FF0000'), c1=>NC('#0000FF'));
   # simple 2 stages from red to green to blue
   $f->add(end=>0.5, c0=>NC('#FF0000'), c1=>NC('#00FF00'))
   $f->add(start=>0.5, c0=>NC('#00FF00'), c1->NC('#0000FF'));
