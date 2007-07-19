@@ -209,7 +209,7 @@ In most cases you can ignore some of the arguments, eg.
   $f->add(c0=>NC('#FF0000'), c1=>NC('#0000FF'));
   # simple 2 stages from red to green to blue
   $f->add(end=>0.5, c0=>NC('#FF0000'), c1=>NC('#00FF00'))
-  $f->add(start=>0.5, c0=>NC('#00FF00'), c1->NC('#0000FF'));
+  $f->add(start=>0.5, c0=>NC('#00FF00'), c1=>NC('#0000FF'));
 
 =cut
 
