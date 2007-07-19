@@ -362,31 +362,34 @@ Really.  It even loads GIMP gradient files.
    );
   # across
   my $linear = $img->copy;
-  $linear->filter(type   => "fountain",
-                  ftype  => 'linear',
-                  repeat => 'sawtooth',
-                  xa     => 0,
-                  ya     => $linear->getheight / 2,
-                  xb     => $linear->getwidth - 1,
-                  yb     => $linear->getheight / 2)
+  $linear->filter(type     => "fountain",
+                  ftype    => 'linear',
+                  repeat   => 'sawtooth',
+		  segments => \@simple,
+                  xa       => 0,
+                  ya       => $linear->getheight / 2,
+                  xb       => $linear->getwidth - 1,
+                  yb       => $linear->getheight / 2)
     or die $linear->errstr;
   # around
   my $revolution = $img->copy;
-  $revolution->filter(type   => "fountain",
-                      ftype  => 'revolution',
-                      xa     => $revolution->getwidth / 2,
-                      ya     => $revolution->getheight / 2,
-                      xb     => $revolution->getwidth / 2,
-                      yb     => 0)
+  $revolution->filter(type     => "fountain",
+                      ftype    => 'revolution',
+		      segments => \@simple,
+                      xa       => $revolution->getwidth / 2,
+                      ya       => $revolution->getheight / 2,
+                      xb       => $revolution->getwidth / 2,
+                      yb       => 0)
     or die $revolution->errstr;
   # out from the middle
   my $radial = $img->copy;
-  $radial->filter(type   => "fountain",
-                  ftype  => 'radial',
-                  xa     => $im->getwidth / 2,
-                  ya     => $im->getheight / 2,
-                  xb     => $im->getwidth / 2,
-                  yb     => 0)
+  $radial->filter(type     => "fountain",
+                  ftype    => 'radial',
+		  segments => \@simple,
+                  xa       => $im->getwidth / 2,
+                  ya       => $im->getheight / 2,
+                  xb       => $im->getwidth / 2,
+                  yb       => 0)
     or die $radial->errstr;
                            
 =item gaussian
