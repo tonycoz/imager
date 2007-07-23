@@ -823,7 +823,7 @@ done with convert too:
 
 =item getscanline
 
-Read all or part of a horizonatal line of pixels from an image.  This
+Read all or part of a horizontal line of pixels from an image.  This
 method is most useful in conjunction with L</setscanline>.
 
 The parameters you can pass are:
