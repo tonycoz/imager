@@ -1731,23 +1731,19 @@ i_conv(im,pcoef)
 	     i_conv(im,coeff,len);
 	     myfree(coeff);
 
-undef_int
-i_convert(im, src, coeff)
-    Imager::ImgRaw     im
+Imager::ImgRaw
+i_convert(src, avmain)
     Imager::ImgRaw     src
+    AV *avmain
 	PREINIT:
     	  float *coeff;
 	  int outchan;
 	  int inchan;
-	  AV *avmain;
           SV **temp;
           AV *avsub;
 	  int len;
 	  int i, j;
         CODE:
-	  if (!SvROK(ST(2)) || SvTYPE(SvRV(ST(2))) != SVt_PVAV)
-	    croak("i_convert: parameter 3 must be an arrayref\n");
-          avmain = (AV*)SvRV(ST(2));
 	  outchan = av_len(avmain)+1;
           /* find the biggest */
           inchan = 0;
@@ -1774,7 +1770,7 @@ i_convert(im, src, coeff)
 	    while (i < inchan)
 	      coeff[i++ + j*inchan] = 0;
 	  }
-	  RETVAL = i_convert(im, src, coeff, outchan, inchan);
+	  RETVAL = i_convert(src, coeff, outchan, inchan);
           myfree(coeff);
 	OUTPUT:
 	  RETVAL
@@ -2940,27 +2936,6 @@ i_readtga_wiol(ig, length)
         Imager::IO     ig
                int     length
 
-
-undef_int
-i_writergb_wiol(im,ig, wierdpack, compress, idstring)
-    Imager::ImgRaw     im
-        Imager::IO     ig
-               int     wierdpack
-               int     compress
-              char*    idstring
-            PREINIT:
-                int idlen;
-	       CODE:
-                idlen  = SvCUR(ST(4));
-                RETVAL = i_writergb_wiol(im, ig, wierdpack, compress, idstring, idlen);
-                OUTPUT:
-                RETVAL
-
-
-Imager::ImgRaw
-i_readrgb_wiol(ig, length)
-        Imager::IO     ig
-               int     length
 
 
 

@@ -54,6 +54,13 @@ Mandelbrot/mandel.c
 Mandelbrot/t/t00mandel.t
 Makefile.PL
 README
+SGI/Makefile.PL
+SGI/SGI.pm
+SGI/SGI.xs
+SGI/imsgi.c
+SGI/t/00load.t
+SGI/t/10read.t
+SGI/t/20write.t
 apidocs.perl    Build lib/Imager/APIRef.pm
 bigtest.perl	Library selection tester
 bmp.c           Reading and writing Windows BMP files
@@ -177,7 +184,6 @@ regmach.h
 regops.perl
 render.im
 rendert.h	Buffer rendering engine types
-rgb.c           Reading and writing SGI rgb files
 rotate.c
 rubthru.im
 samples/README

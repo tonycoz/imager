@@ -69,6 +69,8 @@ i_img *i_img_pal_new(int x, int y, int ch, int maxpal);
 void   i_img_setmask    (i_img *im,int ch_mask);
 int    i_img_getmask    (i_img *im);
 int    i_img_getchannels(i_img *im);
+i_img_dim i_img_get_width(i_img *im);
+i_img_dim i_img_get_height(i_img *im);
 
 /* Base functions */
 
@@ -192,7 +194,7 @@ void i_conv        (i_img *im,const float *coeff,int len);
 void i_unsharp_mask(i_img *im, double stddev, double scale);
 
 /* colour manipulation */
-extern int i_convert(i_img *im, i_img *src, const float *coeff, int outchan, int inchan);
+extern i_img *i_convert(i_img *src, const float *coeff, int outchan, int inchan);
 extern void i_map(i_img *im, unsigned char (*maps)[256], unsigned int mask);
 
 float i_img_diff   (i_img *im1,i_img *im2);

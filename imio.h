@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <sys/stat.h>
 
+#include "imconfig.h"
 #include "log.h"
 
 typedef struct i_mempool {

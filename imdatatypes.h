@@ -1,8 +1,8 @@
 #ifndef _DATATYPES_H_
 #define _DATATYPES_H_
 
-#include "imio.h"
 #include "imconfig.h"
+#include "imio.h"
 
 #define MAXCHANNELS 4
 
@@ -102,9 +102,12 @@ typedef int (*i_f_setcolors_t)(i_img *im, int index, const i_color *colors,
 
 typedef void (*i_f_destroy_t)(i_img *im);
 
+typedef int i_img_dim;
+
 struct i_img_ {
   int channels;
-  int xsize,ysize,bytes;
+  i_img_dim xsize,ysize;
+  size_t bytes;
   unsigned int ch_mask;
   i_img_bits_t bits;
   i_img_type_t type;

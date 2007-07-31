@@ -3,6 +3,13 @@ Imager release history.  Older releases can be found in Changes.old
 Imager 0.60
 ===========
 
+ - Finished/rewrote Arnar's old SGI RGB file format support, so Imager
+   now has full SGI RGB image format, including RLE and 16-bit/sample
+   images.
+   https://rt.cpan.org/Ticket/Display.html?id=8666
+
+ - logging functions are now available in the API
+
 Bug fixes:
 
  - in some cases it's possible for giflib/libungif to return color 
@@ -17,6 +24,10 @@ Bug fixes:
    zero by getscanline().  This has no effect on the C level i_glin()
    and i_glinf() API functions which continue to not set the unused
    channels.
+
+ - the convert() method now returns an image of the same sample size as
+   the source image.
+   https://rt.cpan.org/Ticket/Display.html?id=28492
 
 Imager 0.59 - 14 June 2007
 ===========

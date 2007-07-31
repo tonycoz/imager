@@ -91,11 +91,11 @@ probe_ok(<<ICO, "cur", "Windows Cursor");
 00 00 0E 03 00 00 28 00 00 00 20 00 00 00 40 00
 ICO
 
-probe_ok(<<RGB, "rgb", "SGI RGB");
+probe_ok(<<SGI, "sgi", "SGI RGB");
 01 DA 01 01 00 03 00 96 00 96 00 03 00 00 00 00 
 00 00 00 FF 00 00 00 00 6E 6F 20 6E 61 6D 65 00
 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-RGB
+SGI
 
 probe_ok(<<ILBM, "ilbm", "ILBM");
 46 4F 52 4D 00 00 60 7A 49 4C 42 4D 42 4D 48 44

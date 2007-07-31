@@ -18,7 +18,7 @@
  will result in an increment of IMAGER_API_LEVEL.
 */
 
-#define IMAGER_API_LEVEL 2
+#define IMAGER_API_LEVEL 3
 
 typedef struct {
   int version;
@@ -142,7 +142,16 @@ typedef struct {
   int (*f_i_flood_fill_border)(i_img *im, int seedx, int seedy, const i_color *dcol, const i_color *border);
   int (*f_i_flood_cfill_border)(i_img *im, int seedx, int seedy, i_fill_t *fill, const i_color *border);
 
-  /* IMAGER_API_LEVEL 3 functions will be added here */
+  /* IMAGER_API_LEVEL 3 functions */
+  void (*f_i_img_setmask)(i_img *im, int ch_mask);
+  int (*f_i_img_getmask)(i_img *im);
+  int (*f_i_img_getchannels)(i_img *im);
+  i_img_dim (*f_i_img_get_width)(i_img *im);
+  i_img_dim (*f_i_img_get_height)(i_img *im);
+  void (*f_i_lhead)(const char *file, int line_number);
+  void (*f_i_loog)(int level, const char *msg, ...);
+
+  /* IMAGER_API_LEVEL 4 functions will be added here */
 } im_ext_funcs;
 
 #define PERL_FUNCTION_TABLE_NAME "Imager::__ext_func_table"

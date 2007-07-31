@@ -1051,6 +1051,43 @@ Examples:
   $im->settag(name => 'cur_hotspoty', value => 16);
   $im->write(file => 'box.cur');
 
+=head2 SGI (RGB, BW)
+
+SGI images, often called by the extensions, RGB or BW, can be stored
+either uncompressed or compressed using an RLE compression.
+
+By default, when saving to an extension of C<rgb>, C<bw>, C<sgi>,
+C<rgba> the file will be saved in SGI format.  The file extension is
+otherwise ignored, so saving a 3-channel image to a C<.bw> file will
+result in a 3-channel image on disk.
+
+The following tags are set when reading a SGI image:
+
+=over
+
+=item *
+
+i_comment - the IMAGENAME field from the image.  Also written to the
+file when writing.
+
+=item *
+
+sgi_pixmin, sgi_pixmax - the PIXMIN and PIXMAX fields from the image.
+On reading image data is expanded from this range to the full range of
+samples in the image.
+
+=item *
+
+sgi_bpc - the number of bytes per sample for the image.  Ignored when
+writing.
+
+=item *
+
+sgi_rle - whether or not the image is compressed.  If this is non-zero
+when writing the image will be compressed.
+
+=back
+
 =head1 ADDING NEW FORMATS
 
 To support a new format for reading, call the register_reader() class

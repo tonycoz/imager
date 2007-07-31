@@ -1378,16 +1378,6 @@ sub read {
     $self->{DEBUG} && print "loading a tga file\n";
   }
 
-  if ( $input{'type'} eq 'rgb' ) {
-    $self->{IMG}=i_readrgb_wiol( $IO, -1 ); # Fixme, check if that length parameter is ever needed
-    if ( !defined($self->{IMG}) ) {
-      $self->{ERRSTR}=$self->_error_as_msg();
-      return undef;
-    }
-    $self->{DEBUG} && print "loading a tga file\n";
-  }
-
-
   if ( $input{'type'} eq 'raw' ) {
     my %params=(datachannels=>3,storechannels=>3,interleave=>1,%input);
 
@@ -3155,9 +3145,9 @@ sub convert {
     $matrix = $opts{matrix};
   }
 
-  my $new = Imager->new();
-  $new->{IMG} = i_img_new();
-  unless (i_convert($new->{IMG}, $self->{IMG}, $matrix)) {
+  my $new = Imager->new;
+  $new->{IMG} = i_convert($self->{IMG}, $matrix);
+  unless ($new->{IMG}) {
     # most likely a bad matrix
     $self->{ERRSTR} = _error_as_msg();
     return undef;
@@ -3409,7 +3399,7 @@ sub def_guess_type {
   return 'png'  if ($ext eq "png");
   return 'bmp'  if ($ext eq "bmp" || $ext eq "dib");
   return 'tga'  if ($ext eq "tga");
-  return 'rgb'  if ($ext eq "rgb");
+  return 'sgi'  if ($ext eq "rgb" || $ext eq "bw" || $ext eq "sgi" || $ext eq "rgba");
   return 'gif'  if ($ext eq "gif");
   return 'raw'  if ($ext eq "raw");
   return lc $ext; # best guess
@@ -3888,6 +3878,8 @@ convolution - L<Imager::Filter/conv>
 
 cropping - L<Imager::Transformations/crop>
 
+CUR files - L<Imager::Files/"ICO (Microsoft Windows Icon) and CUR (Microsoft Windows Cursor)">
+
 C<diff> images - L<Imager::Filter/"Image Difference">
 
 dpi - L<Imager::ImageTypes/i_xres>, 
@@ -3938,6 +3930,8 @@ guassian blur - L<Imager::Filter/guassian>
 
 hatch fills - L<Imager::Fill/"Hatched fills">
 
+ICO files - L<Imager::Files/"ICO (Microsoft Windows Icon) and CUR (Microsoft Windows Cursor)">
+
 invert image - L<Imager::Filter/hardinvert>
 
 JPEG - L<Imager::Files/"JPEG">
@@ -3976,9 +3970,13 @@ rectangles, drawing - L<Imager::Draw/box>
 resizing an image - L<Imager::Transformations/scale>, 
 L<Imager::Transformations/crop>
 
+RGB (SGI) files - L<Imager::Files/"SGI (RGB, BW)">
+
 saving an image - L<Imager::Files>
 
 scaling - L<Imager::Transformations/scale>
+
+SGI files - L<Imager::Files/"SGI (RGB, BW)">
 
 sharpen - L<Imager::Filters/unsharpmask>, L<Imager::Filters/conv>
 
