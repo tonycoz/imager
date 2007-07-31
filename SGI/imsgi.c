@@ -357,8 +357,8 @@ read_rgb_8_verbatim(i_img *img, io_glue *ig, rgb_header const *header) {
   int pixmax = header->pixmax;
   int outmax = pixmax - pixmin;
   
-  linebuf   = mymalloc(width * sizeof(i_color));
-  databuf   = mymalloc(width);
+  linebuf   = mymalloc(width * sizeof(i_color)); /* checked 31Jul07 TonyC */
+  databuf   = mymalloc(width); /* checked 31Jul07 TonyC */
 
   savemask = i_img_getmask(img);
 
@@ -414,10 +414,16 @@ read_rle_tables(io_glue *ig, i_img *img,
   unsigned long *start_tab, *length_tab;
   unsigned long max_length = 0;
   int i;
+  size_t databuf_size = (size_t)height * channels * 4;
+  size_t tab_size = (size_t)height * channels * sizeof(unsigned long);
 
   /* assumption: that the lengths are in bytes rather than in pixels */
-
-  databuf    = mymalloc(height * channels * 4);
+  if (databuf_size / height / channels != 4
+      || tab_size / height / channels != sizeof(unsigned long)) {
+    i_push_error(0, "SGI image: integer overflow calculating allocation size");
+    return 0;
+  }
+  databuf    = mymalloc(height * channels * 4);  /* checked 31Jul07 TonyC */
   start_tab  = mymalloc(height*channels*sizeof(unsigned long));
   length_tab = mymalloc(height*channels*sizeof(unsigned long));
     
@@ -493,8 +499,8 @@ read_rgb_8_rle(i_img *img, io_glue *ig, rgb_header const *header) {
     goto ErrorReturn;
   }
 
-  linebuf = mymalloc(width*sizeof(i_color));
-  databuf = mymalloc(max_length);
+  linebuf = mymalloc(width*sizeof(i_color)); /* checked 31Jul07 TonyC */
+  databuf = mymalloc(max_length); /* checked 31Jul07 TonyC */
 
   for(y = 0; y < img->ysize; y++) {
     for(c = 0; c < channels; c++) {
@@ -632,8 +638,8 @@ read_rgb_16_verbatim(i_img *img, io_glue *ig, rgb_header const *header) {
   int pixmax = header->pixmax;
   int outmax = pixmax - pixmin;
   
-  linebuf   = mymalloc(width * sizeof(i_fcolor));
-  databuf   = mymalloc(width * 2);
+  linebuf   = mymalloc(width * sizeof(i_fcolor));  /* checked 31Jul07 TonyC */
+  databuf   = mymalloc(width * 2);  /* checked 31Jul07 TonyC */
 
   savemask = i_img_getmask(img);
 
@@ -707,8 +713,8 @@ read_rgb_16_rle(i_img *img, io_glue *ig, rgb_header const *header) {
     goto ErrorReturn;
   }
 
-  linebuf = mymalloc(width*sizeof(i_fcolor));
-  databuf = mymalloc(max_length);
+  linebuf = mymalloc(width*sizeof(i_fcolor)); /* checked 31Jul07 TonyC */
+  databuf = mymalloc(max_length); /* checked 31Jul07 TonyC */
 
   for(y = 0; y < img->ysize; y++) {
     for(c = 0; c < channels; c++) {
@@ -894,7 +900,7 @@ write_sgi_8_verb(i_img *img, io_glue *ig) {
   int c;
   i_img_dim y;
 
-  linebuf = mymalloc(width);
+  linebuf = mymalloc(width);  /* checked 31Jul07 TonyC */
   for (c = 0; c < img->channels; ++c) {
     for (y = img->ysize - 1; y >= 0; --y) {
       i_gsamp(img, 0, width, y, linebuf, &c, 1);
@@ -920,7 +926,7 @@ write_sgi_8_rle(i_img *img, io_glue *ig) {
   unsigned char *offsets;
   unsigned char *lengths;
   int offset_pos = 0;
-  size_t offsets_size = 4 * img->ysize * img->channels * 2;
+  size_t offsets_size = (size_t)4 * img->ysize * img->channels * 2;
   unsigned long start_offset = 512 + offsets_size;
   unsigned long current_offset = start_offset;
   int in_left;
@@ -928,8 +934,13 @@ write_sgi_8_rle(i_img *img, io_glue *ig) {
   i_sample_t *inp;
   size_t comp_size;
 
-  linebuf = mymalloc(width);
-  comp_buf = mymalloc((width + 1) * 2);
+  if (offsets_size / 2 / 4 / img->channels != img->ysize) {
+    i_push_error(0, "SGI image: integer overflow calculating allocation size");
+    return 0;
+  }
+
+  linebuf = mymalloc(width);  /* checked 31Jul07 TonyC */
+  comp_buf = mymalloc((width + 1) * 2);  /* checked 31Jul07 TonyC */
   offsets = mymalloc(offsets_size);
   memset(offsets, 0, offsets_size);
   if (i_io_write(ig, offsets, offsets_size) != offsets_size) {
@@ -1034,8 +1045,8 @@ write_sgi_16_verb(i_img *img, io_glue *ig) {
   i_img_dim x;
   i_img_dim y;
 
-  linebuf = mymalloc(width * sizeof(i_fsample_t));
-  encbuf = mymalloc(width * 2);
+  linebuf = mymalloc(width * sizeof(i_fsample_t));  /* checked 31Jul07 TonyC */
+  encbuf = mymalloc(width * 2);  /* checked 31Jul07 TonyC */
   for (c = 0; c < img->channels; ++c) {
     for (y = img->ysize - 1; y >= 0; --y) {
       i_gsampf(img, 0, width, y, linebuf, &c, 1);
@@ -1068,7 +1079,7 @@ write_sgi_16_rle(i_img *img, io_glue *ig) {
   unsigned char *offsets;
   unsigned char *lengths;
   int offset_pos = 0;
-  size_t offsets_size = 4 * img->ysize * img->channels * 2;
+  size_t offsets_size = (size_t)4 * img->ysize * img->channels * 2;
   unsigned long start_offset = 512 + offsets_size;
   unsigned long current_offset = start_offset;
   int in_left;
@@ -1077,9 +1088,14 @@ write_sgi_16_rle(i_img *img, io_glue *ig) {
   size_t comp_size;
   i_img_dim x;
 
-  sampbuf = mymalloc(width * sizeof(i_fsample_t));
-  linebuf = mymalloc(width * sizeof(unsigned short));
-  comp_buf = mymalloc((width + 1) * 2 * 2);
+  if (offsets_size / 4 / 2 / img->channels != img->ysize) {
+    i_push_error(0, "SGI image: integer overflow calculating allocation size");
+    return 0;
+  }
+
+  sampbuf = mymalloc(width * sizeof(i_fsample_t));  /* checked 31Jul07 TonyC */
+  linebuf = mymalloc(width * sizeof(unsigned short));  /* checked 31Jul07 TonyC */
+  comp_buf = mymalloc((width + 1) * 2 * 2);  /* checked 31Jul07 TonyC */
   offsets = mymalloc(offsets_size);
   memset(offsets, 0, offsets_size);
   if (i_io_write(ig, offsets, offsets_size) != offsets_size) {
