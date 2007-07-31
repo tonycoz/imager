@@ -18,11 +18,11 @@ repeated text in Imager::Files (#27589) (done)
 
 error message when loading an unsupported font format is confusing (#27571) (done)
 
+enable transparency by default for gif (#27615) (done)
+
 new color counting code (#28142)
 
 Imager doesn't load on Windows 98 (#27653)
-
-enable transparency by default for gif (#27615)
 
 sample: scaling an animated gif (#27591)
 

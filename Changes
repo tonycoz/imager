@@ -40,6 +40,9 @@ Bug fixes:
    for which the driver hasn't been built in Imager.
    http://rt.cpan.org/Ticket/Display.html?id=27571
 
+ - transparency is now enabled by default when writing GIF images
+   http://rt.cpan.org/Ticket/Display.html?id=27615
+
 Imager 0.59 - 14 June 2007
 ===========
 

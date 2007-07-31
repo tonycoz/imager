@@ -2458,6 +2458,8 @@ i_writegif_gen(fd, ...)
 	hv = (HV *)SvRV(ST(1));
 	memset(&quant, 0, sizeof(quant));
 	quant.mc_size = 256;
+	quant.transp = tr_threshold;
+	quant.tr_threshold = 127;
 	handle_quant_opts(&quant, hv);
 	img_count = items - 2;
 	RETVAL = 1;
@@ -2513,6 +2515,8 @@ i_writegif_callback(cb, maxbuffer,...)
 	hv = (HV *)SvRV(ST(2));
 	memset(&quant, 0, sizeof(quant));
 	quant.mc_size = 256;
+	quant.transp = tr_threshold;
+	quant.tr_threshold = 127;
 	handle_quant_opts(&quant, hv);
 	img_count = items - 3;
 	RETVAL = 1;
@@ -2563,6 +2567,8 @@ i_writegif_wiol(ig, opts,...)
 	hv = (HV *)SvRV(ST(1));
 	memset(&quant, 0, sizeof(quant));
 	quant.mc_size = 256;
+	quant.transp = tr_threshold;
+	quant.tr_threshold = 127;
 	handle_quant_opts(&quant, hv);
 	img_count = items - 2;
 	RETVAL = 1;
