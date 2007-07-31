@@ -1,0 +1,67 @@
+=head1 NAME
+
+Imager::LargeSamples - track/document large sample support
+
+=head1 SYNOPSIS
+
+  # make a large sample image
+  my $im = Imager->new(..., bits => 16);
+
+  # call some method
+  my $result = $im->$method(...);
+
+  # was the image modified at its full sample size
+
+=head1 DESCRIPTION
+
+Imager has had in-memory support for large samples for years now, but
+many methods still don't work at the higher sample size when supplied
+with a large sample image.
+
+This document will track which 
+
+=head1 LARGE SAMPLE SUPPORT
+
+  Method       Support    Notes
+  ------       -------    -----
+  arc
+  box
+  circle
+  convert      Full
+  copy
+  crop
+  difference
+  filter       Partial    Depends on the filter.
+  flip
+  flood_fill
+  getpixel
+  getsamples
+  getscanline
+  map
+  masked
+  matrix_transform
+  paste
+  polygon
+  polyline
+  read
+  read_multi
+  rotate
+  rubthrough   Full
+  scale        Partial    Some qtypes support large samples
+  scaleX       
+  scaleY
+  setpixel
+  setscanline
+  string       Full       Preserves large samples, but most font drivers
+                          generate 8 or fewer bits of levels of coverage.
+  transform
+  transform2
+  write
+  write_multi
+
+=head1 AUTHOR
+
+Tony Cook <tony@imager.perl.org>
+
+=cut
+
