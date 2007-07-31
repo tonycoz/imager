@@ -12,7 +12,7 @@ RGB file support (#8666) (done)
 
 convert() doesn't preserve sample size (#28492) (done)
 
-be explicit that scale*() doesn't modify the source (#28570)
+be explicit that scale*() doesn't modify the source (#28570) (done)
 
 new color counting code (#28142)
 

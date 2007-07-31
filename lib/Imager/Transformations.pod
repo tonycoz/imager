@@ -99,7 +99,7 @@ wide and 500 pixels tall.
   $newimg = $img->scale(scalefactor=>0.25); 175x125 
   $newimg = $img->scale(); # 350x250
 
-if you want to create low quality previews of images you can pass
+If you want to create low quality previews of images you can pass
 C<qtype=E<gt>'preview'> to scale and it will use nearest neighbor
 sampling instead of filtering. It is much faster but also generates
 worse looking images - especially if the original has a lot of sharp
@@ -210,7 +210,8 @@ or by supplying C<xpixels> and C<ypixels> and setting C<type> to
 
   my $scaled = $im->scale(xpixels => 200, ypixels => 200, type => 'nonprop');
 
-Returns the scaled image on success.
+Returns a new scaled image on success.  The source image is not
+modified.
 
 Returns false on failure, check the errstr() method for the reason for
 failure.
@@ -278,7 +279,8 @@ pixels - the new width of the image.
 
 =back
 
-Returns the scaled image on success.
+Returns a new scaled image on success.  The source image is not
+modified.
 
 Returns false on failure, check the errstr() method for the reason for
 failure.
@@ -306,7 +308,8 @@ pixels - the new height of the image.
 
 =back
 
-Returns the scaled image on success.
+Returns a new scaled image on success.  The source image is not
+modified.
 
 Returns false on failure, check the errstr() method for the reason for
 failure.
