@@ -292,7 +292,8 @@ i_readsgi_wiol(io_glue *ig, int partial) {
   if (!img)
     goto ErrorReturn;
 
-  i_tags_set(&img->tags, "i_comment", header.name, -1);
+  if (*header.name)
+    i_tags_set(&img->tags, "i_comment", header.name, -1);
   i_tags_setn(&img->tags, "sgi_pixmin", header.pixmin);
   i_tags_setn(&img->tags, "sgi_pixmax", header.pixmax);
   i_tags_setn(&img->tags, "sgi_bpc", header.BPC);
@@ -898,7 +899,7 @@ write_sgi_8_verb(i_img *img, io_glue *ig) {
     for (y = img->ysize - 1; y >= 0; --y) {
       i_gsamp(img, 0, width, y, linebuf, &c, 1);
       if (ig->writecb(ig, linebuf, width) != width) {
-	i_push_error(errno, "SGI image: error writing");
+	i_push_error(errno, "SGI image: error writing image data");
 	myfree(linebuf);
 	return 0;
       }
@@ -932,7 +933,7 @@ write_sgi_8_rle(i_img *img, io_glue *ig) {
   offsets = mymalloc(offsets_size);
   memset(offsets, 0, offsets_size);
   if (i_io_write(ig, offsets, offsets_size) != offsets_size) {
-    i_push_error(errno, "SGI: image error writing offsets/lengths");
+    i_push_error(errno, "SGI image: error writing offsets/lengths");
     goto Error;
   }
   lengths = offsets + img->ysize * img->channels * 4;
@@ -993,7 +994,7 @@ write_sgi_8_rle(i_img *img, io_glue *ig) {
       offset_pos += 4;
       current_offset += comp_size;
       if (ig->writecb(ig, comp_buf, comp_size) != comp_size) {
-	i_push_error(errno, "SGI image: error writing");
+	i_push_error(errno, "SGI image: error writing RLE data");
 	goto Error;
       }
     }
@@ -1043,7 +1044,7 @@ write_sgi_16_verb(i_img *img, io_glue *ig) {
 	store_16(outp, samp16);
       }
       if (ig->writecb(ig, encbuf, width * 2) != width * 2) {
-	i_push_error(errno, "SGI image: error writing");
+	i_push_error(errno, "SGI image: error writing image data");
 	myfree(linebuf);
 	myfree(encbuf);
 	return 0;
@@ -1082,7 +1083,7 @@ write_sgi_16_rle(i_img *img, io_glue *ig) {
   offsets = mymalloc(offsets_size);
   memset(offsets, 0, offsets_size);
   if (i_io_write(ig, offsets, offsets_size) != offsets_size) {
-    i_push_error(errno, "SGI: image error writing offsets/lengths");
+    i_push_error(errno, "SGI image: error writing offsets/lengths");
     goto Error;
   }
   lengths = offsets + img->ysize * img->channels * 4;
@@ -1149,7 +1150,7 @@ write_sgi_16_rle(i_img *img, io_glue *ig) {
       offset_pos += 4;
       current_offset += comp_size;
       if (ig->writecb(ig, comp_buf, comp_size) != comp_size) {
-	i_push_error(errno, "SGI image: error writing");
+	i_push_error(errno, "SGI image: error writing RLE data");
 	goto Error;
       }
     }
