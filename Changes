@@ -1,5 +1,12 @@
 Imager release history.  Older releases can be found in Changes.old
 
+Imager 0.60
+===========
+
+ - the convert() method now returns an image of the same sample size as
+   the source image.
+   https://rt.cpan.org/Ticket/Display.html?id=28492
+
 Imager 0.57_01 - 11 May 2007
 ==============
 

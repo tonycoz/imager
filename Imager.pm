@@ -3142,9 +3142,9 @@ sub convert {
     $matrix = $opts{matrix};
   }
 
-  my $new = Imager->new();
-  $new->{IMG} = i_img_new();
-  unless (i_convert($new->{IMG}, $self->{IMG}, $matrix)) {
+  my $new = Imager->new;
+  $new->{IMG} = i_convert($self->{IMG}, $matrix);
+  unless ($new->{IMG}) {
     # most likely a bad matrix
     $self->{ERRSTR} = _error_as_msg();
     return undef;

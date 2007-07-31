@@ -21,7 +21,7 @@ converting from RGBA to greyscale and back.
 
 
 /*
-=item i_convert(im, src, coeff, outchan, inchan)
+=item i_convert(src, coeff, outchan, inchan)
 
 Converts the image src into another image.
 
@@ -40,14 +40,15 @@ Now handles images with more than 8-bits/sample.
 =cut
 */
 
-int
-i_convert(i_img *im, i_img *src, const float *coeff, int outchan, int inchan) {
+i_img *
+i_convert(i_img *src, const float *coeff, int outchan, int inchan) {
   int x, y;
   int i, j;
   int ilimit;
   double work[MAXCHANNELS];
+  i_img *im = NULL;
 
-  mm_log((1,"i_convert(im %p, src, %p, coeff %p,outchan %d, inchan %d)\n",im,src, coeff,outchan, inchan));
+  mm_log((1,"i_convert(src %p, coeff %p,outchan %d, inchan %d)\n",im,src, coeff,outchan, inchan));
  
   i_clear_error();
 
@@ -59,14 +60,9 @@ i_convert(i_img *im, i_img *src, const float *coeff, int outchan, int inchan) {
     return 0;
   }
 
-  if (im->type == i_direct_type || src->type == i_direct_type) {
-    /* first check the output image */
-    if (im->channels != outchan || im->xsize != src->xsize 
-        || im->ysize != src->ysize) {
-      i_img_exorcise(im);
-      i_img_empty_ch(im, src->xsize, src->ysize, outchan);
-    }
-    if (im->bits == i_8_bits && src->bits == i_8_bits) {
+  if (src->type == i_direct_type) {
+    im = i_sametype_chans(src, src->xsize, src->ysize, outchan);
+    if (src->bits == i_8_bits) {
       i_color *vals;
 
       /* we can always allocate a single scanline of i_color */
@@ -135,13 +131,9 @@ i_convert(i_img *im, i_img *src, const float *coeff, int outchan, int inchan) {
     i_color *colors;
     i_palidx *vals;
 
-    if (im->channels != outchan || im->xsize != src->xsize 
-        || im->ysize != src->ysize
-        || i_maxcolors(im) < i_colorcount(src)) {
-      i_img_exorcise(im);
-      i_img_pal_new_low(im, src->xsize, src->ysize, outchan, 
-                        i_maxcolors(src));
-    }
+    im = i_img_pal_new(src->xsize, src->ysize, outchan, 
+		       i_maxcolors(src));
+
     /* just translate the color table */
     count = i_colorcount(src);
     outcount = i_colorcount(im);
@@ -187,7 +179,7 @@ i_convert(i_img *im, i_img *src, const float *coeff, int outchan, int inchan) {
     myfree(colors);
   }
 
-  return 1;
+  return im;
 }
 
 /*
