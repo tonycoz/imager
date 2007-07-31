@@ -29,6 +29,13 @@ Bug fixes:
    the source image.
    https://rt.cpan.org/Ticket/Display.html?id=28492
 
+ - remove repeated text in Imager::Files
+   http://rt.cpan.org/Ticket/Display.html?id=27589
+
+ - be even more explicit that scale() and friends don't modify the source
+   image, but return a new image.
+   http://rt.cpan.org/Ticket/Display.html?id=28570
+
 Imager 0.59 - 14 June 2007
 ===========
 

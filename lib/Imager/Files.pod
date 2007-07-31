@@ -558,13 +558,9 @@ non-zero if the image was interlaced ("Interlace Flag")
 =item gif_screen_height
 
 the size of the logical screen. When writing this is used as the
-minimum.  If any image being written would extend beyond this the
+minimum.  If any image being written would extend beyond this then the
 screen size is extended.  ("Logical Screen Width", "Logical Screen
 Height").
-
-When writing this is used as a minimum, if the combination of the
-image size and the image's C<gif_left> and C<gif_top> is beyond this
-size then the screen size will be expanded.
 
 =item gif_local_map
 
