@@ -36,6 +36,10 @@ Bug fixes:
    image, but return a new image.
    http://rt.cpan.org/Ticket/Display.html?id=28570
 
+ - improve the error message from errstr() when you try to load a font
+   for which the driver hasn't been built in Imager.
+   http://rt.cpan.org/Ticket/Display.html?id=27571
+
 Imager 0.59 - 14 June 2007
 ===========
 

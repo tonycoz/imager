@@ -17,16 +17,19 @@ my %drivers =
         class=>'Imager::Font::Truetype',
         module=>'Imager/Font/Truetype.pm',
         files=>'.*\.ttf$',
+	description => 'FreeType 1.x',
        },
    t1=>{
         class=>'Imager::Font::Type1',
         module=>'Imager/Font/Type1.pm',
         files=>'.*\.pfb$',
+	description => 'T1Lib',
        },
    ft2=>{
          class=>'Imager::Font::FreeType2',
          module=>'Imager/Font/FreeType2.pm',
          files=>'.*\.(pfa|pfb|otf|ttf|fon|fnt|dfont|pcf(\.gz)?)$',
+	 description => 'FreeType 2.x',
         },
    ifs=>{
          class=>'Imager::Font::Image',
@@ -36,6 +39,7 @@ my %drivers =
    w32=>{
          class=>'Imager::Font::Win32',
          module=>'Imager/Font/Win32.pm',
+	 description => 'Win32 GDI Fonts',
         },
   );
 
@@ -46,7 +50,9 @@ my @priority = qw(t1 tt ft2 ifs);
 # this function is called from Imager.pm to finish initialization
 sub __init {
   @priority = grep Imager::i_has_format($_), @priority;
-  delete @drivers{grep !Imager::i_has_format($_), keys %drivers};
+  for my $driver_name (grep Imager::i_has_format($_), keys %drivers) {
+    $drivers{$driver_name}{enabled} = 1;
+  }
 }
 
 # search method
@@ -76,7 +82,7 @@ sub new {
     }
 
     $type = $hsh{'type'};
-    if (!defined($type) or !$drivers{$type}) {
+    if (!defined($type) or !$drivers{$type} or !$drivers{$type}{enabled}) {
       for my $drv (@priority) {
         undef $type;
         my $re = $drivers{$drv}{files} or next;
@@ -87,7 +93,21 @@ sub new {
       }
     }
     if (!defined($type)) {
-      $Imager::ERRSTR = "Font type not found";
+      # some types we can support, but the driver isn't available
+      # work out which drivers support it, so we can provide the user
+      # some useful information on how to get it working
+      my @not_here;
+      for my $driver_name (keys %drivers) {
+	my $driver = $drivers{$driver_name};
+	push @not_here, "$driver_name ($driver->{description})"
+	  if $driver->{files} && $file =~ /$driver->{files}/i;
+      }
+      if (@not_here) {
+	$Imager::ERRSTR = "No font drivers enabled that can support this file, rebuild Imager with any of ".join(", ", @not_here)." to use this font file";
+      }
+      else {
+	$Imager::ERRSTR = "No font type found for $hsh{'file'}";
+      }
       return;
     }
   } elsif ($hsh{face}) {

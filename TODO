@@ -16,6 +16,8 @@ be explicit that scale*() doesn't modify the source (#28570) (done)
 
 repeated text in Imager::Files (#27589) (done)
 
+error message when loading an unsupported font format is confusing (#27571) (done)
+
 new color counting code (#28142)
 
 Imager doesn't load on Windows 98 (#27653)
@@ -23,8 +25,6 @@ Imager doesn't load on Windows 98 (#27653)
 enable transparency by default for gif (#27615)
 
 sample: scaling an animated gif (#27591)
-
-error message when loading an unsupported font format is confusing (#27571)
 
 For 0.58:
 
