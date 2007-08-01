@@ -43,6 +43,9 @@ Bug fixes:
  - transparency is now enabled by default when writing GIF images
    http://rt.cpan.org/Ticket/Display.html?id=27615
 
+ - Imager would not load on Windows 98
+   http://rt.cpan.org/Ticket/Display.html?id=27653
+
 Imager 0.59 - 14 June 2007
 ===========
 

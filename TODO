@@ -20,9 +20,9 @@ error message when loading an unsupported font format is confusing (#27571) (don
 
 enable transparency by default for gif (#27615) (done)
 
-new color counting code (#28142)
+Imager doesn't load on Windows 98 (#27653) (done)
 
-Imager doesn't load on Windows 98 (#27653)
+new color counting code (#28142)
 
 sample: scaling an animated gif (#27591)
 
