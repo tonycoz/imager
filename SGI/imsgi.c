@@ -479,7 +479,7 @@ read_rgb_8_rle(i_img *img, io_glue *ig, rgb_header const *header) {
   unsigned long max_length;
   i_img_dim width = i_img_get_width(img);
   i_img_dim height = i_img_get_height(img);
-  int channels = i_img_getchannels(img);;
+  int channels = i_img_getchannels(img);
   i_img_dim y;
   int c;
   int pixmin = header->pixmin;
@@ -693,7 +693,7 @@ read_rgb_16_rle(i_img *img, io_glue *ig, rgb_header const *header) {
   unsigned long max_length;
   i_img_dim width = i_img_get_width(img);
   i_img_dim height = i_img_get_height(img);
-  int channels = i_img_getchannels(img);;
+  int channels = i_img_getchannels(img);
   i_img_dim y;
   int c;
   int pixmin = header->pixmin;
