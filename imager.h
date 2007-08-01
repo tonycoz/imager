@@ -284,6 +284,7 @@ extern int i_wf_text(const char *face, i_img *im, int tx, int ty, const i_color 
 extern int i_wf_cp(const char *face, i_img *im, int tx, int ty, int channel, 
 		   int size, const char *text, int len, int align, int aa, int utf8);
 extern int i_wf_addfont(char const *file);
+extern int i_wf_delfont(char const *file);
 
 #endif
 

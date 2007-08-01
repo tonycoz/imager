@@ -289,12 +289,21 @@ i_wf_cp(const char *face, i_img *im, int tx, int ty, int channel, int size,
   return 1;
 }
 
+static HMODULE gdi_dll;
+typedef BOOL (CALLBACK *AddFontResourceExA_t)(LPCSTR, DWORD, PVOID);
+static AddFontResourceExA_t AddFontResourceExAp;
+typedef BOOL (CALLBACK *RemoveFontResourceExA_t)(LPCSTR, DWORD, PVOID);
+static RemoveFontResourceExA_t RemoveFontResourceExAp;
+
 /*
 =item i_wf_addfont(char const *filename, char const *resource_file)
 
 Adds a TTF font file as usable by the application.
 
-The font is always added as private to the application.
+Where possible the font is added as private to the application.
+
+Under Windows 95/98/ME the font is added globally, since we don't have
+any choice.  In either case call i_wf_delfont() to remove it.
 
 =cut
  */
@@ -302,11 +311,47 @@ int
 i_wf_addfont(char const *filename) {
   i_clear_error();
 
-  if (AddFontResourceEx(filename, FR_PRIVATE, 0)) {
+  if (!gdi_dll) {
+    gdi_dll = GetModuleHandle("GDI32");
+    if (gdi_dll) {
+      AddFontResourceExAp = (AddFontResourceExA_t)GetProcAddress(gdi_dll, "AddFontResourceExA");
+      RemoveFontResourceExAp = (RemoveFontResourceExA_t)GetProcAddress(gdi_dll, "RemoveFontResourceExA");
+    }
+  }
+
+  if (AddFontResourceExAp && RemoveFontResourceExAp
+      && AddFontResourceExAp(filename, FR_PRIVATE, 0)) {
+    return 1;
+  }
+  else if (AddFontResource(filename)) {
     return 1;
   }
   else {
     i_push_errorf(0, "Could not add resource: %ld", GetLastError());
+    return 0;
+  }
+}
+
+/*
+=item i_wf_delfont(char const *filename, char const *resource_file)
+
+Deletes a TTF font file as usable by the application.
+
+=cut
+ */
+int
+i_wf_delfont(char const *filename) {
+  i_clear_error();
+
+  if (AddFontResourceExAp && RemoveFontResourceExAp
+      && RemoveFontResourceExAp(filename, FR_PRIVATE, 0)) {
+    return 1;
+  }
+  else if (RemoveFontResource(filename)) {
+    return 1;
+  }
+  else {
+    i_push_errorf(0, "Could not remove resource: %ld", GetLastError());
     return 0;
   }
 }

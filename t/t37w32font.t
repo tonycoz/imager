@@ -128,6 +128,8 @@ SKIP:
     $im->setpixel(x => 20+$bbox->neg_width, y => 100-$bbox->ascent, color => 'red');
     $im->setpixel(x => 20+$bbox->advance_width - $bbox->right_bearing, y => 100-$bbox->descent, color => 'red');
     $im->write(file=>'testout/t37w32_bang.ppm');
+
+    Imager::i_wf_delfont("fontfiles/ExistenceTest.ttf");
   }
 
  SKIP:

@@ -4258,6 +4258,10 @@ undef_int
 i_wf_addfont(font)
         char *font
 
+undef_int
+i_wf_delfont(font)
+        char *font
+
 #endif
 
 #ifdef HAVE_FT2
