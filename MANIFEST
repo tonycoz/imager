@@ -58,9 +58,19 @@ SGI/Makefile.PL
 SGI/SGI.pm
 SGI/SGI.xs
 SGI/imsgi.c
+SGI/imsgi.h
 SGI/t/00load.t
 SGI/t/10read.t
 SGI/t/20write.t
+SGI/testimg/rle.rgb
+SGI/testimg/rle12.rgb
+SGI/testimg/rle16.rgb
+SGI/testimg/rle6.rgb
+SGI/testimg/rleagr.rgb
+SGI/testimg/verb.rgb
+SGI/testimg/verb12.rgb
+SGI/testimg/verb16.rgb
+SGI/testimg/verb6.rgb
 apidocs.perl    Build lib/Imager/APIRef.pm
 bigtest.perl	Library selection tester
 bmp.c           Reading and writing Windows BMP files
