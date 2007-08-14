@@ -3,7 +3,7 @@ use strict;
 use Imager;
 use Test::More tests => 51;
 use Imager::Test qw(test_image test_image_16 is_image);
-use Fcntl ':seek';
+use IO::Seekable;
 
 -d 'testout' or mkdir 'testout';
 
