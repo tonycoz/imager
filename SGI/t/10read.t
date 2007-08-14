@@ -4,7 +4,7 @@ use Imager;
 use Imager::Test qw(is_image is_color3);
 use Test::More tests => 103;
 
--d 'testout' or mkdir 'testout';
+-d 'testout' or mkdir 'testout', 0777;
 
 Imager::init_log('testout/10read.log', 2);
 

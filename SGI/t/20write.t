@@ -5,7 +5,7 @@ use Test::More tests => 51;
 use Imager::Test qw(test_image test_image_16 is_image);
 use IO::Seekable;
 
--d 'testout' or mkdir 'testout';
+-d 'testout' or mkdir 'testout', 0777;
 
 Imager::init_log('testout/20write.log', 2);
 
