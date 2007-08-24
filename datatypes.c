@@ -216,21 +216,22 @@ int
 octt_add(struct octt *ct,unsigned char r,unsigned char g,unsigned char b) {
   struct octt *c;
   int i,cm;
-  int ci,idx[8];
+  int ci;
   int rc;
   rc=0;
   c=ct;
   /*  printf("[r,g,b]=[%d,%d,%d]\n",r,g,b); */
-  ct->cnt++;
   for(i=7;i>-1;i--) {
     cm=1<<i;
     ci=((!!(r&cm))<<2)+((!!(g&cm))<<1)+!!(b&cm); 
     /* printf("idx[%d]=%d\n",i,ci); */
-    if (c->t[ci] == NULL) { c->t[ci]=octt_new(); rc=1; }
+    if (c->t[ci] == NULL) { 
+      c->t[ci]=octt_new(); 
+      rc=1; 
+    }
     c=c->t[ci];
-    c->cnt++;
-    idx[i]=ci;
   }
+  c->cnt++;  /* New. The only thing really needed (I think) */
   return rc;
 }
 
@@ -267,3 +268,22 @@ octt_count(struct octt *ct,int *tot,int max,int *overflow) {
   if (!c) (*tot)++;
   if ( (*tot) > (*overflow) ) *overflow=0;
 }
+
+/* This whole function is new */
+/* walk through the tree and for each colour, store its seen count in the
+   space pointed by *col_usage_it_adr */
+void
+octt_histo(struct octt *ct, unsigned int **col_usage_it_adr) {
+    int i,c;
+    c = 0;
+    for(i = 0; i < 8; i++) 
+        if (ct->t[i] != NULL) { 
+            octt_histo(ct->t[i], col_usage_it_adr);
+            c++;
+        }
+    if (!c) {
+        *(*col_usage_it_adr)++ = ct->cnt;
+    }
+}
+
+

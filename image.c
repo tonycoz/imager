@@ -1254,29 +1254,133 @@ to indicate that it was more than max colors
 
 =cut
 */
+/* This function has been changed and is now faster. It's using
+ * i_gsamp instead of i_gpix */
 int
 i_count_colors(i_img *im,int maxc) {
   struct octt *ct;
   int x,y;
-  int xsize,ysize;
-  i_color val;
   int colorcnt;
+  int channels[3];
+  int *samp_chans;
+  i_sample_t * samp;
 
-  mm_log((1,"i_count_colors(im 0x%08X,maxc %d)\n"));
-
-  xsize=im->xsize; 
-  ysize=im->ysize;
-  ct=octt_new();
- 
-  colorcnt=0;
-  for(y=0;y<ysize;y++) for(x=0;x<xsize;x++) {
-    i_gpix(im,x,y,&val);
-    colorcnt+=octt_add(ct,val.rgb.r,val.rgb.g,val.rgb.b);
-    if (colorcnt > maxc) { octt_delete(ct); return -1; }
+  int xsize = im->xsize; 
+  int ysize = im->ysize;
+  if (im->channels >= 3) {
+    samp_chans = NULL;
   }
+  else {
+    channels[0] = channels[1] = channels[2] = 0;
+    samp_chans = channels;
+  }
+  int samp_cnt = 3 * xsize;
+  ct = octt_new();
+
+  samp = (i_sample_t *) mymalloc( xsize * 3 * sizeof(i_sample_t));
+
+  colorcnt = 0;
+  for(y = 0; y < ysize; ) {
+      i_gsamp(im, 0, xsize, y++, samp, samp_chans, 3);
+      for(x = 0; x < samp_cnt; ) {
+          colorcnt += octt_add(ct, samp[x], samp[x+1], samp[x+2]);
+          x += 3;
+          if (colorcnt > maxc) { 
+              octt_delete(ct); 
+              return -1; 
+          }
+      }
+  }
+  myfree(samp);
   octt_delete(ct);
   return colorcnt;
 }
+
+/* sorts the array ra[0..n-1] into increasing order using heapsort algorithm 
+ * (adapted from the Numerical Recipes)
+ */
+/* Needed by get_anonymous_color_histo */
+void hpsort(unsigned int n, int *ra) {
+    unsigned int i,
+                 ir,
+                 j,
+                 l, 
+                 rra;
+
+    if (n < 2) return;
+    l = n >> 1;
+    ir = n - 1;
+    for(;;) {
+        if (l > 0) {
+            rra = ra[--l];
+        }
+        else {
+            rra = ra[ir];
+            ra[ir] = ra[0];
+            if (--ir == 0) {
+                ra[0] = rra;
+                break;
+            }
+        }
+        i = l;
+        j = 2 * l + 1;
+        while (j <= ir) {
+            if (j < ir && ra[j] < ra[j+1]) j++;
+            if (rra < ra[j]) {
+                ra[i] = ra[j];
+                i = j;
+                j++; j <<= 1; j--;
+            }
+            else break;
+        }
+        ra[i] = rra;
+    }
+}
+
+/* This function constructs an ordered list which represents how much the
+ * different colors are used. So for instance (100, 100, 500) means that one
+ * color is used for 500 pixels, another for 100 pixels and another for 100
+ * pixels. It's tuned for performance. You might not like the way I've hardcoded
+ * the maxc ;-) and you might want to change the name... */
+/* Uses octt_histo */
+int
+get_anonymous_color_histo(i_img *im, unsigned int **col_usage) {
+    struct octt *ct;
+    int x,y,i;
+    int colorcnt;
+    int maxc = 10000000;
+    unsigned int *col_usage_it;
+    i_sample_t * samp;
+
+    int xsize = im->xsize; 
+    int ysize = im->ysize;
+    int samp_cnt = 3 * xsize;
+    ct = octt_new();
+
+    samp = (i_sample_t *) mymalloc( xsize * 3 * sizeof(i_sample_t));
+
+    colorcnt = 0;
+    for(y = 0; y < ysize; ) {
+        i_gsamp(im, 0, xsize, y++, samp, NULL, 3);
+        for(x = 0; x < samp_cnt; ) {
+            colorcnt += octt_add(ct, samp[x], samp[x+1], samp[x+2]);
+            x += 3;
+            if (colorcnt > maxc) { 
+                octt_delete(ct); 
+                return -1; 
+            }
+        }
+    }
+    myfree(samp);
+    /* Now that we know the number of colours... */
+    col_usage_it = *col_usage = (unsigned int *) mymalloc(colorcnt * 2 * sizeof(unsigned int));
+    octt_histo(ct, &col_usage_it);
+    hpsort(colorcnt, *col_usage);
+    octt_delete(ct);
+    return colorcnt;
+}
+
+
 
 /*
 =back

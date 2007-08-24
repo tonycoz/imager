@@ -3269,6 +3269,33 @@ sub getcolorcount {
   return ($rc==-1? undef : $rc);
 }
 
+# Returns a reference to a hash. The keys are colour named (packed) and the
+# values are the number of pixels in this colour.
+sub getcolorusagehash {
+    my $self = shift;
+    my $channels= $self->getchannels;
+    # We don't want to look at the alpha channel, because some gifs using it
+    # doesn't define it for every colour (but only for some)
+    $channels -= 1 if $channels == 2 or $channels == 4;
+    my %colour_use;
+    my $height = $self->getheight;
+    for my $y (0 .. $height - 1) {
+        my $colours = $self->getsamples(y => $y, channels => [ 0 .. $channels - 1 ]);
+        while (length $colours) {
+            $colour_use{ substr($colours, 0, $channels, '') }++;
+        }
+    }
+    return \%colour_use;
+}
+
+# This will return a ordered array of the colour usage. Kind of the sorted
+# version of the values of the hash returned by getcolorusagehash.
+# You might want to add safety checks and change the names, etc...
+sub getcolorusage {
+  my $self=shift;
+  return get_anonymous_colour_usage ($self);
+}
+
 # draw string to an image
 
 sub string {
