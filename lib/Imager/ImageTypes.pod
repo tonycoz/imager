@@ -269,7 +269,9 @@ This takes exactly the same parameters as the new() method.
 
 =back
 
-=head2 Getting Information About an Imager Object
+=head2 Image Attribute functions
+
+These return basic attributes of an image object.
 
 =over
 
@@ -294,20 +296,6 @@ Same details apply as for L<getwidth>.
   print "Image has ",$img->getchannels(), " channels\n";
 
 To get the number of channels in an image C<getchannels()> is used.
-
-
-=item getcolorcount
-
-It is possible to have Imager find the number of colors in an image by
-with the C<getcolorcount()> method. It requires memory proportionally
-to the number of colors in the image so it is possible to have it stop
-sooner if you only need to know if there are more than a certain
-number of colors in the image.  If there are more colors than asked
-for the function return undef.  Examples:
-
-  if (defined($img->getcolorcount(maxcolors=>512)) {
-    print "Less than 512 colors in image\n";
-  }
 
 
 =item bits
@@ -472,6 +460,76 @@ Returns the number of colors in the image's palette:
 Returns the maximum size of the image's palette.
 
   my $maxcount = $img->maxcolors;
+
+=back
+
+=head2 Color Distribution
+
+=over
+
+=item getcolorcount
+
+Calculates the number of colors in an image.
+
+The amount of memory used by this is proportional to the number of
+colors present in the image, so to avoid using too much memory you can
+supply a maxcolors parameter to limit the memory used.
+
+Note: getcolorcount() treats the image as an 8-bit per sample image.
+
+=over
+
+=item *
+
+X<maxcolors!getcolorcount>maxcolors - the maximum number of colors to
+return.  Default: unlimited.
+
+=back
+
+  if (defined($img->getcolorcount(maxcolors=>512)) {
+    print "Less than 512 colors in image\n";
+  }
+
+=item getcolorusagehash
+
+Calculates a histogram of colors used by the image.
+
+=over
+
+=item *
+
+X<maxcolors!getcolorusagehash>maxcolors - the maximum number of colors
+to return.  Default: unlimited.
+
+=back
+
+Returns a reference to a hash where the keys are the raw color as
+bytes, and the values are the counts for that color.
+
+The alpha channel of the image is ignored.  If the image is grayscale
+then the hash keys will each be a single character.
+
+  my $colors = $img->getcolorusagehash;
+  my $blue_count = $colors->{pack("CCC", 0, 0, 255)} || 0;
+  print "#0000FF used $blue_count times\n";
+
+=item getcolorusage
+
+Calculates color usage counts and returns just the counts.
+
+=over
+
+=item *
+
+X<maxcolors!getcolorusage>maxcolors - the maximum number of colors to
+return.  Default: unlimited.
+
+=back
+
+Returns a list of the color frequencies in ascending order.
+
+  my @counts = $img->getcolorusage;
+  print "The most common color is used $counts[0] times\n";
 
 =back
 

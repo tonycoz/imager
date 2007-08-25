@@ -10,6 +10,11 @@ Imager 0.60
 
  - logging functions are now available in the API
 
+ - applied Gabriel Vasseur's patch
+   added documentation, further tests, and support for greyscale images
+   Obviously problems are my fault :)
+   https://rt.cpan.org/Ticket/Display.html?id=28142
+
 Bug fixes:
 
  - in some cases it's possible for giflib/libungif to return color 

@@ -1264,9 +1264,10 @@ i_count_colors(i_img *im,int maxc) {
   int channels[3];
   int *samp_chans;
   i_sample_t * samp;
-
   int xsize = im->xsize; 
   int ysize = im->ysize;
+  int samp_cnt = 3 * xsize;
+
   if (im->channels >= 3) {
     samp_chans = NULL;
   }
@@ -1274,7 +1275,7 @@ i_count_colors(i_img *im,int maxc) {
     channels[0] = channels[1] = channels[2] = 0;
     samp_chans = channels;
   }
-  int samp_cnt = 3 * xsize;
+
   ct = octt_new();
 
   samp = (i_sample_t *) mymalloc( xsize * 3 * sizeof(i_sample_t));
@@ -1300,7 +1301,8 @@ i_count_colors(i_img *im,int maxc) {
  * (adapted from the Numerical Recipes)
  */
 /* Needed by get_anonymous_color_histo */
-void hpsort(unsigned int n, int *ra) {
+static void
+hpsort(unsigned int n, unsigned *ra) {
     unsigned int i,
                  ir,
                  j,
@@ -1344,43 +1346,50 @@ void hpsort(unsigned int n, int *ra) {
  * the maxc ;-) and you might want to change the name... */
 /* Uses octt_histo */
 int
-get_anonymous_color_histo(i_img *im, unsigned int **col_usage) {
-    struct octt *ct;
-    int x,y,i;
-    int colorcnt;
-    int maxc = 10000000;
-    unsigned int *col_usage_it;
-    i_sample_t * samp;
+i_get_anonymous_color_histo(i_img *im, unsigned int **col_usage, int maxc) {
+  struct octt *ct;
+  int x,y;
+  int colorcnt;
+  unsigned int *col_usage_it;
+  i_sample_t * samp;
+  int channels[3];
+  int *samp_chans;
+  
+  int xsize = im->xsize; 
+  int ysize = im->ysize;
+  int samp_cnt = 3 * xsize;
+  ct = octt_new();
+  
+  samp = (i_sample_t *) mymalloc( xsize * 3 * sizeof(i_sample_t));
+  
+  if (im->channels >= 3) {
+    samp_chans = NULL;
+  }
+  else {
+    channels[0] = channels[1] = channels[2] = 0;
+    samp_chans = channels;
+  }
 
-    int xsize = im->xsize; 
-    int ysize = im->ysize;
-    int samp_cnt = 3 * xsize;
-    ct = octt_new();
-
-    samp = (i_sample_t *) mymalloc( xsize * 3 * sizeof(i_sample_t));
-
-    colorcnt = 0;
-    for(y = 0; y < ysize; ) {
-        i_gsamp(im, 0, xsize, y++, samp, NULL, 3);
-        for(x = 0; x < samp_cnt; ) {
-            colorcnt += octt_add(ct, samp[x], samp[x+1], samp[x+2]);
-            x += 3;
-            if (colorcnt > maxc) { 
-                octt_delete(ct); 
-                return -1; 
-            }
-        }
+  colorcnt = 0;
+  for(y = 0; y < ysize; ) {
+    i_gsamp(im, 0, xsize, y++, samp, samp_chans, 3);
+    for(x = 0; x < samp_cnt; ) {
+      colorcnt += octt_add(ct, samp[x], samp[x+1], samp[x+2]);
+      x += 3;
+      if (colorcnt > maxc) { 
+	octt_delete(ct); 
+	return -1; 
+      }
     }
-    myfree(samp);
-    /* Now that we know the number of colours... */
-    col_usage_it = *col_usage = (unsigned int *) mymalloc(colorcnt * 2 * sizeof(unsigned int));
-    octt_histo(ct, &col_usage_it);
-    hpsort(colorcnt, *col_usage);
-    octt_delete(ct);
-    return colorcnt;
+  }
+  myfree(samp);
+  /* Now that we know the number of colours... */
+  col_usage_it = *col_usage = (unsigned int *) mymalloc(colorcnt * sizeof(unsigned int));
+  octt_histo(ct, &col_usage_it);
+  hpsort(colorcnt, *col_usage);
+  octt_delete(ct);
+  return colorcnt;
 }
-
-
 
 /*
 =back

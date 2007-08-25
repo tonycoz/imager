@@ -229,6 +229,7 @@ int octt_add(struct octt *ct,unsigned char r,unsigned char g,unsigned char b);
 void octt_dump(struct octt *ct);
 void octt_count(struct octt *ct,int *tot,int max,int *overflow);
 void octt_delete(struct octt *ct);
+void octt_histo(struct octt *ct, unsigned int **col_usage_it_adr);
 
 /* font bounding box results */
 enum bounding_box_index_t {

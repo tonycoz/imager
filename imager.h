@@ -425,6 +425,7 @@ i_img * i_scale_nn(i_img *im, float scx, float scy);
 i_img * i_scale_mixing(i_img *src, int width, int height);
 i_img * i_haar(i_img *im);
 int     i_count_colors(i_img *im,int maxc);
+int i_get_anonymous_color_histo(i_img *im, unsigned int **col_usage, int maxc);
 
 i_img * i_transform(i_img *im, int *opx,int opxl,int *opy,int opyl,double parm[],int parmlen);
 

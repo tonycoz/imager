@@ -2973,18 +2973,17 @@ i_count_colors(im,maxc)
                int     maxc
 
 void
-get_anonymous_colour_usage(Imager::ImgRaw im)
+i_get_anonymous_color_histo(im, maxc = 0x40000000)
+   Imager::ImgRaw  im
+   int maxc
     PPCODE:
         int i;
-        unsigned int ** col_usage = (unsigned int **) mymalloc(sizeof(unsigned int *));
-        unsigned int * p;
-        int col_cnt = get_anonymous_color_histo(im, col_usage);
+        unsigned int * col_usage = NULL;
+        int col_cnt = i_get_anonymous_color_histo(im, &col_usage, maxc);
         EXTEND(SP, col_cnt);
-        p = *col_usage;
-        for (i = 0; i < col_cnt; )  {
-            PUSHs(sv_2mortal(newSViv( p[i++])));
+        for (i = 0; i < col_cnt; i++)  {
+            PUSHs(sv_2mortal(newSViv( col_usage[i])));
         }
-        myfree(p);
         myfree(col_usage);
         XSRETURN(col_cnt);
 

@@ -25,7 +25,7 @@ my @private =
   );
 my @trustme = ( '^open$',  );
 
-plan tests => 17;
+plan tests => 18;
 
 {
   pod_coverage_ok('Imager', { also_private => \@private,
@@ -66,18 +66,25 @@ plan tests => 17;
     last if /^=head1 METHOD INDEX/;
   }
   my @indexed;
+  my @unknown_indexed;
   while (<IMAGER>) {
     last if /^=\w/;
 
     if (/^(\w+)\(/) {
       push @indexed, $1;
-      delete $methods{$1};
+      unless (delete $methods{$1}) {
+	push @unknown_indexed, $1;
+      }
     }
   }
 
   unless (is(keys %methods, 0, "all methods in method index")) {
     print "# the following methods are documented but not in the index:\n";
     print "#  $_\n" for sort keys %methods;
+  }
+  unless (is(@unknown_indexed, 0, "only methods in method index")) {
+    print "# the following names are in the method index but not documented\n";
+    print "#  $_\n" for sort @unknown_indexed;
   }
 
   sub dict_cmp_func;
