@@ -1035,6 +1035,27 @@ clipped to the size of the image when written to the file.
 
 =back
 
+The following parameters can be supplied to read() or read_multi() to
+control reading of ICO/CUR files:
+
+=over
+
+=item *
+
+ico_masked - if true, the default, then the icon/cursors mask is
+applied as an alpha channel to the image.  This may result in a
+paletted image being returned as a direct color image.  Default: 1
+
+  # retrieve the image as stored, without using the mask as an alpha
+  # channel
+  $img->read(file => 'foo.ico', ico_masked => 0)
+    or die $img->errstr;
+
+This was introduced in Imager 0.60.  Previously reading ICO images
+acted as if C<<ico_masked => 0>>.
+
+=back
+
 C<cur_bits> is set when reading a cursor.
 
 Examples:

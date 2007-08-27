@@ -23,7 +23,9 @@ Imager->register_reader
    single => 
    sub { 
      my ($im, $io, %hsh) = @_;
-     $im->{IMG} = i_readico_single($io, $hsh{page} || 0);
+     my $masked = 
+       exists $hsh{ico_masked} ? $hsh{ico_masked} : 1;
+     $im->{IMG} = i_readico_single($io, $hsh{page} || 0, $masked);
 
      unless ($im->{IMG}) {
        $im->_set_error(Imager->_error_as_msg);
@@ -35,7 +37,9 @@ Imager->register_reader
    sub {
      my ($io, %hsh) = @_;
      
-     my @imgs = i_readico_multi($io);
+     my $masked = 
+       exists $hsh{ico_masked} ? $hsh{ico_masked} : 1;
+     my @imgs = i_readico_multi($io, $masked);
      unless (@imgs) {
        Imager->_set_error(Imager->_error_as_msg);
        return;
@@ -53,7 +57,9 @@ Imager->register_reader
    single => 
    sub { 
      my ($im, $io, %hsh) = @_;
-     $im->{IMG} = i_readico_single($io, $hsh{page} || 0);
+     my $masked = 
+       exists $hsh{ico_masked} ? $hsh{ico_masked} : 1;
+     $im->{IMG} = i_readico_single($io, $hsh{page} || 0, $masked);
 
      unless ($im->{IMG}) {
        $im->_set_error(Imager->_error_as_msg);
@@ -65,7 +71,9 @@ Imager->register_reader
    sub {
      my ($io, %hsh) = @_;
      
-     my @imgs = i_readico_multi($io);
+     my $masked = 
+       exists $hsh{ico_masked} ? $hsh{ico_masked} : 1;
+     my @imgs = i_readico_multi($io, $masked);
      unless (@imgs) {
        Imager->_set_error(Imager->_error_as_msg);
        return;

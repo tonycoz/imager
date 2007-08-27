@@ -1,6 +1,7 @@
 #!perl -w
 use strict;
-use Test::More tests => 94;
+use Test::More tests => 98;
+use Imager::Test qw(is_image);
 
 BEGIN { use_ok('Imager::File::ICO'); }
 
@@ -9,7 +10,7 @@ BEGIN { use_ok('Imager::File::ICO'); }
 my $im = Imager->new;
 # type=>'ico' or 'cur' and read ico and cur since they're pretty much
 # the same
-ok($im->read(file => "testimg/rgba3232.ico", type=>"ico"),
+ok($im->read(file => "testimg/rgba3232.ico", type=>"ico", ico_masked => 0),
    "read 32 bit")
   or print "# ", $im->errstr, "\n";
 is($im->getwidth, 32, "check width");
@@ -64,7 +65,7 @@ SKIP:
      "compare image data");
 }
 
-ok($im->read(file => 'testimg/pal83232.ico', type=>'ico'),
+ok($im->read(file => 'testimg/pal83232.ico', type=>'ico', ico_masked => 0),
    "read 8 bit")
   or print "# ", $im->errstr, "\n";
 is($im->getwidth, 32, "check width");
@@ -83,7 +84,7 @@ SKIP:
 }
 $im->write(file=>'testout/pal83232.ppm');
 
-ok($im->read(file => 'testimg/pal43232.ico', type=>'ico'),
+ok($im->read(file => 'testimg/pal43232.ico', type=>'ico', ico_masked => 0),
    "read 4 bit")
   or print "# ", $im->errstr, "\n";
 is($im->getwidth, 32, "check width");
@@ -102,7 +103,7 @@ SKIP:
 }
 
 $im->write(file=>'testout/pal43232.ppm');
-ok($im->read(file => 'testimg/pal13232.ico', type=>'ico'),
+ok($im->read(file => 'testimg/pal13232.ico', type=>'ico', ico_masked => 0),
    "read 1 bit")
   or print "# ", $im->errstr, "\n";
 is($im->getwidth, 32, "check width");
@@ -116,7 +117,8 @@ $im->write(file=>'testout/pal13232.ppm');
 # combo was created with the GIMP, which has a decent mechanism for selecting
 # the output format
 # you get different size icon images by making different size layers.
-my @imgs = Imager->read_multi(file => 'testimg/combo.ico', type=>'ico');
+my @imgs = Imager->read_multi(file => 'testimg/combo.ico', type=>'ico', 
+			      ico_masked => 0);
 is(scalar(@imgs), 3, "read multiple");
 is($imgs[0]->getwidth, 48, "image 0 width");
 is($imgs[0]->getheight, 48, "image 0 height");
@@ -167,7 +169,7 @@ ok($im->write(file=>'testout/t10_32.ico', type=>'ico'),
    "write 32-bit icon");
 
 my $im2 = Imager->new;
-ok($im2->read(file=>'testout/t10_32.ico', type=>'ico'),
+ok($im2->read(file=>'testout/t10_32.ico', type=>'ico', ico_masked => 0),
    "read it back in");
 
 is(Imager::i_img_diff($im->{IMG}, $im2->{IMG}), 0,
@@ -181,7 +183,7 @@ is($im->bits, $im2->bits, "check same bits");
   ok(Imager->write_multi({ data => \$data, type=>'ico' }, $im, $im),
      "write multi icons");
   ok(length $data, "and it wrote data");
-  my @im = Imager->read_multi(data => $data);
+  my @im = Imager->read_multi(data => $data, ico_masked => 0);
   is(@im, 2, "got all the images back");
   is(Imager::i_img_diff($im->{IMG}, $im[0]{IMG}), 0, "check first image");
   is(Imager::i_img_diff($im->{IMG}, $im[1]{IMG}), 0, "check second image");
@@ -193,7 +195,7 @@ is($im->bits, $im2->bits, "check same bits");
   my $data;
   ok($im->write(data => \$data, type=>'ico'), "write 1 channel image");
   my $im2 = Imager->new;
-  ok($im2->read(data => $data), "read it back");
+  ok($im2->read(data => $data, ico_masked => 0), "read it back");
   is($im2->getchannels, 4, "check channels");
   my $imrgb = $im->convert(preset => 'rgb')
     ->convert(preset => 'addalpha');
@@ -207,7 +209,7 @@ is($im->bits, $im2->bits, "check same bits");
   my $data;
   ok($base->write(data => \$data, type=>'ico'), "write 2 channel image");
   my $read = Imager->new;
-  ok($read->read(data => $data), "read it back");
+  ok($read->read(data => $data, ico_masked => 0), "read it back");
   is($read->getchannels, 4, "check channels");
   my $imrgb = $base->convert(preset => 'rgb');
   is(Imager::i_img_diff($imrgb->{IMG}, $read->{IMG}), 0,
@@ -221,7 +223,7 @@ is($im->bits, $im2->bits, "check same bits");
   my $data;
   ok($base->write(data => \$data, type=>'ico'), "write 4 channel image");
   my $read = Imager->new;
-  ok($read->read(data => $data, type=>'ico'), "read it back")
+  ok($read->read(data => $data, type=>'ico', ico_masked => 0), "read it back")
     or print "# ", $read->errstr, "\n";
   is(Imager::i_img_diff($base->{IMG}, $read->{IMG}), 0,
      "check image matches expected");
@@ -257,7 +259,7 @@ EOS
   ok($base->write(data => \$data, type => 'ico'),
      "write with mask tag set");
   my $read = Imager->new;
-  ok($read->read(data => $data), "read it back");
+  ok($read->read(data => $data, ico_masked => 0), "read it back");
   my $mask2 = $mask;
   $mask2 =~ tr/01/.*/;
   $mask2 =~ s/\n$//;
@@ -277,7 +279,7 @@ EOS
   ok($base->write(data => \$data, type=>'ico'),
      "save icon with short mask tag");
   my $read = Imager->new;
-  ok($read->read(data => $data), "read it back");
+  ok($read->read(data => $data, ico_masked => 0), "read it back");
   my $read_mask = $read->tags(name => 'ico_mask');
   my $expected_mask = ".*" . ( "\n" . "." x 16 ) x 16;
   is($read_mask, $expected_mask, "check the mask");
@@ -286,7 +288,7 @@ EOS
   $base->settag(name => 'ico_mask', value => 'abcd');
   ok($base->write(data => \$data, type => 'ico'), 
      "write with bad format mask tag");
-  ok($read->read(data => $data), "read it back");
+  ok($read->read(data => $data, ico_masked => 0), "read it back");
   $read_mask = $read->tags(name => 'ico_mask');
   is($read_mask, $expected_mask, "check the mask");
 
@@ -294,7 +296,7 @@ EOS
   $base->settag(name => 'ico_mask', value => ".*\n....xxx..");
   ok($base->write(data => \$data, type => 'ico'), 
      "write with unexpected chars in mask");
-  ok($read->read(data => $data), "read it back");
+  ok($read->read(data => $data, ico_masked => 0), "read it back");
   $read_mask = $read->tags(name => 'ico_mask');
   is($read_mask, $expected_mask, "check the mask");
 }
@@ -313,11 +315,49 @@ EOS
   ok($base->write(data => \$data, type => 'ico'),
      "write grayscale paletted");
   my $read = Imager->new;
-  ok($read->read(data => $data), "read it back")
+  ok($read->read(data => $data, ico_masked => 0), "read it back")
     or print "# ", $read->errstr, "\n";
   is($read->type, 'paletted', "check type");
   is($read->getchannels, 3, "check channels");
   my $as_rgb = $base->convert(preset => 'rgb');
   is(Imager::i_img_diff($base->{IMG}, $read->{IMG}), 0,
      "check the image");
+}
+
+{
+  # check default mask processing
+  #
+  # the query at http://www.cpanforum.com/threads/5958 made it fairly
+  # obvious that the way Imager handled the mask in 0.59 was confusing
+  # when compared with loading other images with some sort of
+  # secondary alpha channel (eg. gif)
+  # So from 0.60 the mask is applied as an alpha channel by default.
+  # make sure that application works.
+
+  # the strange mask checks the optimization paths of the mask application
+  my $mask = <<EOS;
+01
+1001
+1100
+0011
+0000
+0010
+EOS
+  chomp $mask;
+  my $im = Imager->new(xsize => 4, ysize => 5, type => 'paletted');
+  $im->addcolors(colors => [ '#FF0000' ]);
+  $im->box(filled => 1, color => '#FF0000');
+  $im->settag(name => 'ico_mask', value => $mask);
+  my $imcopy = $im->convert(preset=>'addalpha');
+  my $red_alpha = Imager::Color->new(255, 0, 0, 0);
+  $imcopy->setpixel( 'x' => [ qw/0 3 0 1 2 3 2/ ],
+		     'y' => [ qw/0 0 1 1 2 2 4/ ],
+		     color => $red_alpha);
+  my $data;
+  ok($im->write(data => \$data, type => 'ico'),
+     "save icon + mask");
+  my $im2 = Imager->new;
+  ok($im2->read(data => $data), "read ico with defaults");
+  is($im2->type, 'direct', 'expect a direct image');
+  is_image($im2, $imcopy, 'check against expected');
 }

@@ -15,6 +15,12 @@ Imager 0.60
    Obviously problems are my fault :)
    https://rt.cpan.org/Ticket/Display.html?id=28142
 
+ - the mask for ICO/CUR images is now applied as an alpha channel to
+   the returned image.  For the old behaviour, supply ico_masked => 0
+   to read() or read_multi().  This should be less confusing when
+   using Imager as a general image processor.
+   https://rt.cpan.org/Ticket/Display.html?id=29001
+
 Bug fixes:
 
  - in some cases it's possible for giflib/libungif to return color 

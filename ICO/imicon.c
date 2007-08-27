@@ -13,7 +13,7 @@ ico_push_error(int error) {
 
 static
 i_img *
-read_one_icon(ico_reader_t *file, int index) {
+read_one_icon(ico_reader_t *file, int index, int masked) {
   ico_image_t *image;
   int error;
   i_img *result;
@@ -23,6 +23,22 @@ read_one_icon(ico_reader_t *file, int index) {
     ico_push_error(error);
     i_push_error(0, "error reading ICO/CUR image");
     return NULL;
+  }
+
+  if (masked) {
+    /* check to make sure we should do the masking, if the mask has
+       nothing set we don't mask */
+    int pos;
+    int total = image->width * image->height;
+    unsigned char *inp = image->mask_data;
+
+    masked = 0;
+    for (pos = 0; pos < total; ++pos) {
+      if (*inp++) {
+	masked = 1;
+	break;
+      }
+    }
   }
 
   if (image->direct) {
@@ -63,13 +79,14 @@ read_one_icon(ico_reader_t *file, int index) {
     int pal_index;
     int y;
     unsigned char *image_data;
+    int channels = masked ? 4 : 3;
 
-    if (!i_int_check_image_file_limits(image->width, image->height, 3, 1)) {
+    if (!i_int_check_image_file_limits(image->width, image->height, channels, 1)) {
       ico_image_release(image);
       return NULL;
     }
 
-    result = i_img_pal_new(image->width, image->height, 3, 256);
+    result = i_img_pal_new(image->width, image->height, channels, 256);
     if (!result) {
       ico_image_release(image);
       return NULL;
@@ -81,7 +98,7 @@ read_one_icon(ico_reader_t *file, int index) {
       c.rgba.r = image->palette[pal_index].r;
       c.rgba.g = image->palette[pal_index].g;
       c.rgba.b = image->palette[pal_index].b;
-      c.rgba.a = 255; /* so as to not confuse some code */
+      c.rgba.a = 255;
 
       if (i_addcolors(result, &c, 1) < 0) {
 	i_push_error(0, "could not add color to palette");
@@ -128,6 +145,36 @@ read_one_icon(ico_reader_t *file, int index) {
     
     myfree(mask);
   }
+
+  /* if the user requests, treat the mask as an alpha channel.
+     Note: this converts the image into a direct image if it was paletted
+  */
+  if (masked) {
+    unsigned char *inp = image->mask_data;
+    int x, y;
+    i_color *line_buf = mymalloc(sizeof(i_color) * image->width);
+
+    for (y = 0; y < image->height; ++y) {
+      int changed = 0;
+      int first;
+      int last;
+      for (x = 0; x < image->width; ++x) {
+	if (*inp++) {
+	  if (!changed) {
+	    first = x;
+	    i_glin(result, first, image->width, y, line_buf);
+	    changed = 1;
+	  }
+	  last = x;
+	  line_buf[x-first].rgba.a = 0;
+	}
+      }
+      if (changed) {
+	i_plin(result, first, last + 1, y, line_buf);
+      }
+    }
+    myfree(line_buf);
+  }
   if (ico_type(file) == ICON_ICON) {
     i_tags_setn(&result->tags, "ico_bits", image->bit_count);
     i_tags_set(&result->tags, "i_format", "ico", 3);
@@ -145,7 +192,7 @@ read_one_icon(ico_reader_t *file, int index) {
 }
 
 i_img *
-i_readico_single(io_glue *ig, int index) {
+i_readico_single(io_glue *ig, int index, int masked) {
   ico_reader_t *file;
   i_img *result;
   int error;
@@ -161,14 +208,14 @@ i_readico_single(io_glue *ig, int index) {
 
   /* the index is range checked by msicon.c - don't duplicate it here */
 
-  result = read_one_icon(file, index);
+  result = read_one_icon(file, index, masked);
   ico_reader_close(file);
 
   return result;
 }
 
 i_img **
-i_readico_multi(io_glue *ig, int *count) {
+i_readico_multi(io_glue *ig, int *count, int masked) {
   ico_reader_t *file;
   int index;
   int error;
@@ -187,7 +234,7 @@ i_readico_multi(io_glue *ig, int *count) {
 
   *count = 0;
   for (index = 0; index < ico_image_count(file); ++index) {
-    i_img *im = read_one_icon(file, index);
+    i_img *im = read_one_icon(file, index, masked);
     if (!im)
       break;
 

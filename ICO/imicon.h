@@ -4,9 +4,9 @@
 #include "imext.h"
 
 extern i_img *
-i_readico_single(io_glue *ig, int index);
+i_readico_single(io_glue *ig, int index, int masked);
 extern i_img **
-i_readico_multi(io_glue *ig, int *count);
+i_readico_multi(io_glue *ig, int *count, int masked);
 
 extern int
 i_writeico_wiol(i_io_glue_t *ig, i_img *im);
