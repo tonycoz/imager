@@ -22,9 +22,16 @@ enable transparency by default for gif (#27615) (done)
 
 Imager doesn't load on Windows 98 (#27653) (done)
 
-new color counting code (#28142)
+new color counting code (#28142) (done)
 
 sample: scaling an animated gif (#27591)
+
+test getcolorcount() (done)
+
+do a compiler warning clean up run
+
+change the ico/cur reader to apply the mask as an alpha channel by
+default (#29001)
 
 For 0.58:
 
