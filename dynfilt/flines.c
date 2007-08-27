@@ -23,8 +23,7 @@ void
 flines(void *INP) {
   i_img *im;
   i_color vl;
-  int i,bytes,x,y;
-  int idx;
+  int x,y;
   
   if ( !getOBJ("image","Imager::ImgRaw",&im) ) {
 		fprintf(stderr,"Error: image is missing\n"); 

@@ -14,15 +14,14 @@ void
 html_art(void *INP) {
   i_img *im;
   i_color rcolor;
-  int i,x,y;
-  int info[4];
+  int x,y;
   FILE *fp;
   char *fname;
 
   if ( !getSTR("fname",&fname) ) { fprintf(stderr,"Error: filename is missing\n"); return; } 
   if ( !getOBJ("image","Imager::ImgRaw",&im) ) { fprintf(stderr,"Error: image is missing\n"); return; }
   
-  printf("parameters: (im 0x%x,fname %s)\n",im,fname); 
+  printf("parameters: (im 0x%p,fname %s)\n",im,fname); 
 
   printf("image info:\n size (%d,%d)\n channels (%d)\n channel mask (%d)\n bytes (%d)\n",im->xsize,im->ysize,im->channels,im->ch_mask,im->bytes); 
 

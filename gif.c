@@ -530,7 +530,10 @@ i_img **i_readgif_multi_low(GifFileType *GifFile, int *count, int page) {
   int result_alloc = 0;
   int channels;
   int image_colors = 0;
-  i_color black = { 0 }; /* used to expand the palette if needed */
+  i_color black; /* used to expand the palette if needed */
+
+  for (i = 0; i < MAXCHANNELS; ++i)
+    black.channel[i] = 0;
   
   *count = 0;
 

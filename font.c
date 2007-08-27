@@ -407,9 +407,7 @@ Interface to text rendering in a single color onto an image
 undef_int
 i_t1_text(i_img *im,int xb,int yb,const i_color *cl,int fontnum,float points,const char* str,int len,int align, int utf8, char const *flags) {
   GLYPH *glyph;
-  int xsize,ysize,x,y,ch;
-  i_color val;
-  unsigned char c,i;
+  int xsize,ysize,y;
   int mod_flags = t1_get_flags(flags);
   i_render r;
 
@@ -442,7 +440,7 @@ i_t1_text(i_img *im,int xb,int yb,const i_color *cl,int fontnum,float points,con
 
   i_render_init(&r, im, xsize);
   for(y=0;y<ysize;y++) {
-    i_render_color(&r, xb, yb+y, xsize, glyph->bits+y*xsize, cl);
+    i_render_color(&r, xb, yb+y, xsize, (unsigned char *)glyph->bits+y*xsize, cl);
   }
   i_render_done(&r);
     
@@ -1515,8 +1513,7 @@ static
 void
 i_tt_dump_raster_map2( i_img* im, TT_Raster_Map* bit, int xb, int yb, const i_color *cl, int smooth ) {
   unsigned char *bmap;
-  i_color val;
-  int c, i, ch, x, y;
+  int x, y;
   mm_log((1,"i_tt_dump_raster_map2(im 0x%x, bit 0x%X, xb %d, yb %d, cl 0x%X)\n",im,bit,xb,yb,cl));
   
   bmap = bit->bitmap;
@@ -1578,7 +1575,7 @@ Function to dump a raster onto a single channel image in color (internal)
 static
 void
 i_tt_dump_raster_map_channel( i_img* im, TT_Raster_Map*  bit, int xb, int yb, int channel, int smooth ) {
-  char *bmap;
+  unsigned char *bmap;
   i_color val;
   int c,x,y;
   int old_mask = im->ch_mask;
@@ -1586,7 +1583,7 @@ i_tt_dump_raster_map_channel( i_img* im, TT_Raster_Map*  bit, int xb, int yb, in
 
   mm_log((1,"i_tt_dump_raster_channel(im 0x%x, bit 0x%X, xb %d, yb %d, channel %d)\n",im,bit,xb,yb,channel));
   
-  bmap = (char *)bit->bitmap;
+  bmap = bit->bitmap;
   
   if ( smooth ) {
     for(y=0;y<bit->rows;y++) for(x=0;x<bit->width;x++) {

@@ -3991,8 +3991,10 @@ i_glinf(im, l, r, y)
       PREINIT:
         i_fcolor *vals;
         int count, i;
-        i_fcolor zero = { 0 };
+        i_fcolor zero;
       PPCODE:
+	for (i = 0; i < MAXCHANNELS; ++i)
+	  zero.channel[i] = 0;
         if (l < r) {
           vals = mymalloc((r-l) * sizeof(i_fcolor));
           for (i = 0; i < r-l; ++i)

@@ -642,8 +642,6 @@ i_ft2_text(FT2_Fonthandle *handle, i_img *im, int tx, int ty, const i_color *cl,
   unsigned char map[256];
   char last_mode = ft_pixel_mode_none; 
   int last_grays = -1;
-  int ch;
-  i_color pel;
   int loadFlags = FT_LOAD_DEFAULT;
   i_render render;
 

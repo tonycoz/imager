@@ -156,8 +156,9 @@ read_one_icon(ico_reader_t *file, int index, int masked) {
 
     for (y = 0; y < image->height; ++y) {
       int changed = 0;
-      int first;
-      int last;
+      int first = 0;
+      int last = 0;
+
       for (x = 0; x < image->width; ++x) {
 	if (*inp++) {
 	  if (!changed) {

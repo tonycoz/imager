@@ -17,7 +17,6 @@ int
 mandel(float x, float y) {
   float xn, yn;
   float xo, yo;
-  float dist;
   int iter = 1;
   /*	Z(n+1) = Z(n) ^2 + c */
 
@@ -64,7 +63,7 @@ void mandlebrot(void *INP) {
   
   if ( !getOBJ("image","Imager::ImgRaw",&im) ) { fprintf(stderr,"Error: image is missing\n"); }
   
-  fprintf(stderr,"mandlebrot: parameters: (im 0x%x)\n",im);
+  fprintf(stderr,"mandlebrot: parameters: (im %p)\n",im);
   bytes=im->bytes;
 
   fprintf(stderr, "mandlebrot: image info:\n size (%d,%d)\n channels (%d)\n channel mask (%d)\n bytes (%d)\n",im->xsize,im->ysize,im->channels,im->ch_mask,im->bytes); 
