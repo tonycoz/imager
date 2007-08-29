@@ -540,83 +540,91 @@ use most of them when writing to GIF:
 
 =over
 
-=item gif_left
+=item *
 
-the offset of the image from the left of the "screen" ("Image Left
-Position")
+gif_left - the offset of the image from the left of the "screen"
+("Image Left Position")
 
-=item gif_top
+=item *
 
-the offset of the image from the top of the "screen" ("Image Top Position")
+gif_top - the offset of the image from the top of the "screen" ("Image
+Top Position")
 
-=item gif_interlace
+=item *
 
-non-zero if the image was interlaced ("Interlace Flag")
+gif_interlace - non-zero if the image was interlaced ("Interlace
+Flag")
 
-=item gif_screen_width
+=item *
 
-=item gif_screen_height
+gif_screen_width, gif_screen_height - the size of the logical
+screen. When writing this is used as the minimum.  If any image being
+written would extend beyond this then the screen size is extended.
+("Logical Screen Width", "Logical Screen Height").
 
-the size of the logical screen. When writing this is used as the
-minimum.  If any image being written would extend beyond this then the
-screen size is extended.  ("Logical Screen Width", "Logical Screen
-Height").
+=item *
 
-=item gif_local_map
+gif_local_map - Non-zero if this image had a local color map.  If set
+for an image when writing the image is quantized separately from the
+other images in the file.
 
-Non-zero if this image had a local color map.  If set for an image
-when writing the image is quantized separately from the other images
-in the file.
+=item *
 
-=item gif_background
+gif_background - The index in the global colormap of the logical
+screen's background color.  This is only set if the current image uses
+the global colormap.  You can set this on write too, but for it to
+choose the color you want, you will need to supply only paletted
+images and set the C<gif_eliminate_unused> tag to 0.
 
-The index in the global colormap of the logical screen's background
-color.  This is only set if the current image uses the global
-colormap.  You can set this on write too, but for it to choose the
-color you want, you will need to supply only paletted images and set
-the C<gif_eliminate_unused> tag to 0.
+=item *
 
-=item gif_trans_index
+gif_trans_index - The index of the color in the colormap used for
+transparency.  If the image has a transparency then it is returned as
+a 4 channel image with the alpha set to zero in this palette entry.
+This value is not used when writing. ("Transparent Color Index")
 
-The index of the color in the colormap used for transparency.  If the
-image has a transparency then it is returned as a 4 channel image with
-the alpha set to zero in this palette entry.  This value is not used
-when writing. ("Transparent Color Index")
+=item *
 
-=item gif_trans_color
+gif_trans_color - A reference to an Imager::Color object, which is the
+colour to use for the palette entry used to represent transparency in
+the palette.  You need to set the transp option (see L<Quantization
+options>) for this value to be used.
 
-A reference to an Imager::Color object, which is the colour to use for
-the palette entry used to represent transparency in the palette.  You
-need to set the transp option (see L<Quantization options>) for this
-value to be used.
+=item *
 
-=item gif_delay
+gif_delay - The delay until the next frame is displayed, in 1/100 of a
+second.  ("Delay Time").
 
-The delay until the next frame is displayed, in 1/100 of a second. 
-("Delay Time").
+=item *
 
-=item gif_user_input
+gif_user_input - whether or not a user input is expected before
+continuing (view dependent) ("User Input Flag").
 
-whether or not a user input is expected before continuing (view dependent) 
-("User Input Flag").
+=item *
 
-=item gif_disposal
+gif_disposal - how the next frame is displayed ("Disposal Method")
 
-how the next frame is displayed ("Disposal Method")
+=item *
 
-=item gif_loop
+gif_loop - the number of loops from the Netscape Loop extension.  This
+may be zero to loop forever.
 
-the number of loops from the Netscape Loop extension.  This may be
-zero to loop forever.
+=item *
 
-=item gif_comment
+gif_comment - the first block of the first gif comment before each
+image.
 
-the first block of the first gif comment before each image.
+=item *
 
-=item gif_eliminate_unused
+gif_eliminate_unused - If this is true, when you write a paletted
+image any unused colors will be eliminated from its palette.  This is
+set by default.
 
-If this is true, when you write a paletted image any unused colors
-will be eliminated from its palette.  This is set by default.
+=item *
+
+gif_colormap_size - the original size of the color map for the image.
+The color map of the image may have been expanded to include out of
+range color indexes.
 
 =back
 
@@ -629,38 +637,38 @@ by supplying the tag and value as options.
 
 =over
 
-=item gif_each_palette
+=item *
 
-Each image in the gif file has it's own palette if this is non-zero.
-All but the first image has a local colour table (the first uses the
-global colour table.
+gif_each_palette - Each image in the gif file has it's own palette if
+this is non-zero.  All but the first image has a local colour table
+(the first uses the global colour table.
 
 Use C<gif_local_map> in new code.
 
-=item interlace
+=item *
 
-The images are written interlaced if this is non-zero.
+interlace - The images are written interlaced if this is non-zero.
 
 Use C<gif_interlace> in new code.
 
-=item gif_delays
+=item *
 
-A reference to an array containing the delays between images, in 1/100
-seconds.
+gif_delays - A reference to an array containing the delays between
+images, in 1/100 seconds.
 
 Use C<gif_delay> in new code.
 
-=item gif_positions
+=item *
 
-A reference to an array of references to arrays which represent screen
-positions for each image.
+gif_positions - A reference to an array of references to arrays which
+represent screen positions for each image.
 
 New code should use the C<gif_left> and C<gif_top> tags.
 
-=item gif_loop_count
+=item *
 
-If this is non-zero the Netscape loop extension block is generated,
-which makes the animation of the images repeat.
+gif_loop_count - If this is non-zero the Netscape loop extension block
+is generated, which makes the animation of the images repeat.
 
 This is currently unimplemented due to some limitations in giflib.
 

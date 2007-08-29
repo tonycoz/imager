@@ -636,6 +636,7 @@ i_img **i_readgif_multi_low(GifFileType *GifFile, int *count, int page) {
 	i_tags_addn(&img->tags, "gif_interlace", 0, GifFile->Image.Interlace);
 	i_tags_addn(&img->tags, "gif_screen_width", 0, GifFile->SWidth);
 	i_tags_addn(&img->tags, "gif_screen_height", 0, GifFile->SHeight);
+	i_tags_addn(&img->tags, "gif_colormap_size", 0, ColorMapSize);
 	if (GifFile->SColorMap && !GifFile->Image.ColorMap) {
 	  i_tags_addn(&img->tags, "gif_background", 0, 
 		      GifFile->SBackGroundColor);
