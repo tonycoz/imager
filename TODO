@@ -28,10 +28,10 @@ sample: scaling an animated gif (#27591)
 
 test getcolorcount() (done)
 
-do a compiler warning clean up run
+do a compiler warning clean up run (done)
 
 change the ico/cur reader to apply the mask as an alpha channel by
-default (#29001)
+default (#29001) (done)
 
 For 0.58:
 
