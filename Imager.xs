@@ -2976,10 +2976,12 @@ void
 i_get_anonymous_color_histo(im, maxc = 0x40000000)
    Imager::ImgRaw  im
    int maxc
-    PPCODE:
+    PREINIT:
         int i;
         unsigned int * col_usage = NULL;
-        int col_cnt = i_get_anonymous_color_histo(im, &col_usage, maxc);
+        int col_cnt;
+    PPCODE:
+	col_cnt = i_get_anonymous_color_histo(im, &col_usage, maxc);
         EXTEND(SP, col_cnt);
         for (i = 0; i < col_cnt; i++)  {
             PUSHs(sv_2mortal(newSViv( col_usage[i])));
