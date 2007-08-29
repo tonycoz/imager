@@ -18,46 +18,68 @@ Imager has had in-memory support for large samples for years now, but
 many methods still don't work at the higher sample size when supplied
 with a large sample image.
 
-This document will track which 
+This document will track which methods support large samples and which
+don't, for future improvements.
 
-=head1 LARGE SAMPLE SUPPORT
+=head1 Support by method
 
   Method       Support    Notes
   ------       -------    -----
-  arc
-  box
-  circle
+  arc          Partial    [1]
+  box          Partial    [1]
+  circle       Partial    [1]
   convert      Full
-  copy
-  crop
-  difference
+  copy         Full
+  crop         Full
+  difference   Full
   filter       Partial    Depends on the filter.
-  flip
-  flood_fill
-  getpixel
-  getsamples
-  getscanline
-  map
-  masked
+  flip         None
+  flood_fill   Partial    [1]
+  getpixel     Full
+  getsamples   Full
+  getscanline  Full
+  map          None
+  masked       Full
   matrix_transform
-  paste
-  polygon
-  polyline
-  read
-  read_multi
-  rotate
+               Full
+  paste        Full
+  polygon      Partial    [1]
+  polyline     None
+  read         Partial    See L<File format large sample support>
+  read_multi   Partial    See L<File format large sample support>
+  rotate       Full
   rubthrough   Full
   scale        Partial    Some qtypes support large samples
-  scaleX       
-  scaleY
-  setpixel
-  setscanline
+  scaleX       None
+  scaleY       None
+  setpixel     Full
+  setscanline  Full
   string       Full       Preserves large samples, but most font drivers
                           generate 8 or fewer bits of levels of coverage.
-  transform
-  transform2
-  write
-  write_multi
+  transform    None
+  transform2   None
+  write        Partial    See L<File format large sample support>
+  write_multi  Partial    See L<File format large sample support>
+
+[1] filling an area using the fill parameter works at the full depth
+of the image, using filled => 1 and color works at 8-bits/sample
+
+=head1 File format large sample support
+
+  Format    Format samples    Imager support
+  ------    --------------    --------------
+  BMP       8                 8
+  GIF       8                 8
+  ICO       8                 8
+  JPEG      8, 12             8
+  PBM       1                 1
+  PGM/PPM   1-16              read any, writes 8, 16
+  PNG       1, 2, 4, 8, 16    8
+  RAW                         8
+  SGI       8, 16             8, 16
+  TGA       8                 8
+  TIFF      (many)            read any, writes 8
+  
 
 =head1 AUTHOR
 
