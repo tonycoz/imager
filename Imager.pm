@@ -4087,6 +4087,14 @@ L<https://rt.cpan.org/NoAuth/ReportBug.html?Queue=Imager>
 
 =back
 
+or by sending an email to:
+
+=over
+
+bug-Imager@rt.cpan.org
+
+=back
+
 Please remember to include the versions of Imager, perl, supporting
 libraries, and any relevant code.  If you have specific images that
 cause the problems, please include those too.
