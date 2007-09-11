@@ -40,6 +40,11 @@ struct tag_name {
   uint32 tag;
 };
 
+/*static i_img *read_one_paletted_tiled(TIFF *tif, int allow_incomplete);*/
+static i_img *read_one_paletted_lines(TIFF *tif, int width, int height, int allow_incomplete);
+static i_img *read_one_rgb_tiled(TIFF *tif, int width, int height, int allow_incomplete);
+static i_img *read_one_rgb_lines(TIFF *tif, int width, int height, int allow_incomplete);
+
 static struct tag_name text_tag_names[] =
 {
   { "tiff_documentname", TIFFTAG_DOCUMENTNAME, },
@@ -155,7 +160,6 @@ static i_img *read_one_tiff(TIFF *tif, int allow_incomplete) {
   i_img *im;
   uint32 width, height;
   uint16 channels;
-  uint32* raster = NULL;
   int tiled, error;
   float xres, yres;
   uint16 resunit;
@@ -163,7 +167,6 @@ static i_img *read_one_tiff(TIFF *tif, int allow_incomplete) {
   uint16 photometric;
   uint16 bits_per_sample;
   int i;
-  int ch;
 
   error = 0;
 
@@ -178,32 +181,16 @@ static i_img *read_one_tiff(TIFF *tif, int allow_incomplete) {
   mm_log((1, "i_readtiff_wiol: %stiled\n", tiled?"":"not "));
   mm_log((1, "i_readtiff_wiol: %sbyte swapped\n", TIFFIsByteSwapped(tif)?"":"not "));
 
-  /* separated defaults to CMYK, but if the user is using some strange
-     ink system we can't work out the color anyway */
-  if (photometric == PHOTOMETRIC_SEPARATED && channels >= 4) {
-    /* TIFF can have more than one alpha channel on an image,
-       but Imager can't, only store the first one */
-    
-    channels = channels == 4 ? 3 : 4;
-
-    /* unfortunately the RGBA functions don't try to deal with the alpha
-       channel on CMYK images, at some point I'm planning on expanding
-       TIFF support to handle 16-bit/sample images and I'll deal with
-       it then */
-  }
-
-  /* TIFF images can have more than one alpha channel, but Imager can't
-     this ignores the possibility of 2 channel images with 2 alpha,
-     but there's not much I can do about that */
-  if (channels > 4)
-    channels = 4;
-
-  if (photometric == PHOTOMETRIC_PALETTE && bits_per_sample <= 8) {
-    channels = 3;
-    im = i_img_pal_new(width, height, channels, 256);
+  if (photometric == PHOTOMETRIC_PALETTE && bits_per_sample <= 8 && !tiled) {
+    im = read_one_paletted_lines(tif, width, height, allow_incomplete);
   }
   else {
-    im = i_img_empty_ch(NULL, width, height, channels);
+    if (tiled) {
+      im = read_one_rgb_tiled(tif, width, height, allow_incomplete);
+    }
+    else {
+      im = read_one_rgb_lines(tif, width, height, allow_incomplete);
+    }
   }
 
   if (!im)
@@ -262,172 +249,61 @@ static i_img *read_one_tiff(TIFF *tif, int allow_incomplete) {
     i_tags_add(&im->tags, "i_warning", 0, warn_buffer, -1, 0);
     *warn_buffer = '\0';
   }
-  
-  /*   TIFFPrintDirectory(tif, stdout, 0); good for debugging */
 
-  if (photometric == PHOTOMETRIC_PALETTE &&
-      (bits_per_sample == 4 || bits_per_sample == 8)) {
-    uint16 *maps[3];
-    char used[256];
-    int maxused;
-    uint32 row, col;
-    unsigned char *buffer;
-
-    if (!TIFFGetField(tif, TIFFTAG_COLORMAP, maps+0, maps+1, maps+2)) {
-      i_push_error(0, "Cannot get colormap for paletted image");
-      i_img_destroy(im);
-      return NULL;
-    }
-    buffer = (unsigned char *)_TIFFmalloc(width+2);
-    if (!buffer) {
-      i_push_error(0, "out of memory");
-      i_img_destroy(im);
-      return NULL;
-    }
-    row = 0;
-    memset(used, 0, sizeof(used));
-    while (row < height && TIFFReadScanline(tif, buffer, row, 0) > 0) {
-      if (bits_per_sample == 4)
-        expand_4bit_hl(buffer, (width+1)/2);
-      for (col = 0; col < width; ++col) {
-        used[buffer[col]] = 1;
-      }
-      i_ppal(im, 0, width, row, buffer);
-      ++row;
-    }
-    if (row < height) {
-      if (allow_incomplete) {
-        i_tags_setn(&im->tags, "i_lines_read", row);
-      }
-      else {
-        i_img_destroy(im);
-        _TIFFfree(buffer);
-        return NULL;
-      }
-      error = 1;
-    }
-    /* Ideally we'd optimize the palette, but that could be expensive
-       since we'd have to re-index every pixel.
-
-       Optimizing the palette (even at this level) might not 
-       be what the user wants, so I don't do it.
-
-       We'll add a function to optimize a paletted image instead.
-    */
-    maxused = (1 << bits_per_sample)-1;
-    if (!error) {
-      while (maxused >= 0 && !used[maxused])
-        --maxused;
-    }
-    for (i = 0; i < 1 << bits_per_sample; ++i) {
-      i_color c;
-      for (ch = 0; ch < 3; ++ch) {
-        c.channel[ch] = Sample16To8(maps[ch][i]);
-      }
-      i_addcolors(im, &c, 1);
-    }
-    _TIFFfree(buffer);
-  }
-  else {
-    if (tiled) {
-      int ok = 1;
-      uint32 row, col;
-      uint32 tile_width, tile_height;
-      
-      TIFFGetField(tif, TIFFTAG_TILEWIDTH, &tile_width);
-      TIFFGetField(tif, TIFFTAG_TILELENGTH, &tile_height);
-      mm_log((1, "i_readtiff_wiol: tile_width=%d, tile_height=%d\n", tile_width, tile_height));
-      
-      raster = (uint32*)_TIFFmalloc(tile_width * tile_height * sizeof (uint32));
-      if (!raster) {
-        i_img_destroy(im);
-        i_push_error(0, "No space for raster buffer");
-        return NULL;
-      }
-      
-      for( row = 0; row < height; row += tile_height ) {
-        for( col = 0; ok && col < width; col += tile_width ) {
-          uint32 i_row, x, newrows, newcols;
-          
-          /* Read the tile into an RGBA array */
-          if (!TIFFReadRGBATile(tif, col, row, raster)) {
-            ok = 0;
-            break;
-          }
-          newrows = (row+tile_height > height) ? height-row : tile_height;
-          mm_log((1, "i_readtiff_wiol: newrows=%d\n", newrows));
-          newcols = (col+tile_width  > width ) ? width-row  : tile_width;
-          for( i_row = 0; i_row < tile_height; i_row++ ) {
-            for(x = 0; x < newcols; x++) {
-              i_color val;
-              uint32 temp = raster[x+tile_width*(tile_height-i_row-1)];
-              val.rgba.r = TIFFGetR(temp);
-              val.rgba.g = TIFFGetG(temp);
-              val.rgba.b = TIFFGetB(temp);
-              val.rgba.a = TIFFGetA(temp);
-              i_ppix(im, col+x, row+i_row, &val);
-            }
-          }
-        }
-      }
-    } else {
-      uint32 rowsperstrip, row;
-      int rc = TIFFGetField(tif, TIFFTAG_ROWSPERSTRIP, &rowsperstrip);
-      mm_log((1, "i_readtiff_wiol: rowsperstrip=%d rc = %d\n", rowsperstrip, rc));
-  
-			if (rc != 1 || rowsperstrip==-1) {
-				rowsperstrip = height;
-			}
+  /* general metadata */
+  i_tags_addn(&im->tags, "tiff_bitspersample", 0, bits_per_sample);
+  i_tags_addn(&im->tags, "tiff_photometric", 0, photometric);
     
-      raster = (uint32*)_TIFFmalloc(width * rowsperstrip * sizeof (uint32));
-      if (!raster) {
-        i_img_destroy(im);
-        i_push_error(0, "No space for raster buffer");
-        return NULL;
-      }
-      
-      for( row = 0; row < height; row += rowsperstrip ) {
-        uint32 newrows, i_row;
-        
-        if (!TIFFReadRGBAStrip(tif, row, raster)) {
-          if (allow_incomplete) {
-            i_tags_setn(&im->tags, "i_lines_read", row);
-            error++;
-            break;
-          }
-          else {
-            i_push_error(0, "could not read TIFF image strip");
-            _TIFFfree(raster);
-            i_img_destroy(im);
-            return NULL;
-          }
-        }
-        
-        newrows = (row+rowsperstrip > height) ? height-row : rowsperstrip;
-        mm_log((1, "newrows=%d\n", newrows));
-        
-        for( i_row = 0; i_row < newrows; i_row++ ) { 
-          uint32 x;
-          for(x = 0; x<width; x++) {
-            i_color val;
-            uint32 temp = raster[x+width*(newrows-i_row-1)];
-            val.rgba.r = TIFFGetR(temp);
-            val.rgba.g = TIFFGetG(temp);
-            val.rgba.b = TIFFGetB(temp);
-            val.rgba.a = TIFFGetA(temp);
-            i_ppix(im, x, i_row+row, &val);
-          }
-        }
-      }
+  /* resolution tags */
+  TIFFGetFieldDefaulted(tif, TIFFTAG_RESOLUTIONUNIT, &resunit);
+  gotXres = TIFFGetField(tif, TIFFTAG_XRESOLUTION, &xres);
+  gotYres = TIFFGetField(tif, TIFFTAG_YRESOLUTION, &yres);
+  if (gotXres || gotYres) {
+    if (!gotXres)
+      xres = yres;
+    else if (!gotYres)
+      yres = xres;
+    i_tags_addn(&im->tags, "tiff_resolutionunit", 0, resunit);
+    if (resunit == RESUNIT_CENTIMETER) {
+      /* from dots per cm to dpi */
+      xres *= 2.54;
+      yres *= 2.54;
+      i_tags_add(&im->tags, "tiff_resolutionunit_name", 0, "centimeter", -1, 0);
+    }
+    else if (resunit == RESUNIT_NONE) {
+      i_tags_addn(&im->tags, "i_aspect_only", 0, 1);
+      i_tags_add(&im->tags, "tiff_resolutionunit_name", 0, "none", -1, 0);
+    }
+    else if (resunit == RESUNIT_INCH) {
+      i_tags_add(&im->tags, "tiff_resolutionunit_name", 0, "inch", -1, 0);
+    }
+    else {
+      i_tags_add(&im->tags, "tiff_resolutionunit_name", 0, "unknown", -1, 0);
+    }
+    /* tifflib doesn't seem to provide a way to get to the original rational
+       value of these, which would let me provide a more reasonable
+       precision. So make up a number. */
+    i_tags_set_float2(&im->tags, "i_xres", 0, xres, 6);
+    i_tags_set_float2(&im->tags, "i_yres", 0, yres, 6);
+  }
+
+  /* Text tags */
+  for (i = 0; i < text_tag_count; ++i) {
+    char *data;
+    if (TIFFGetField(tif, text_tag_names[i].tag, &data)) {
+      mm_log((1, "i_readtiff_wiol: tag %d has value %s\n", 
+	      text_tag_names[i].tag, data));
+      i_tags_add(&im->tags, text_tag_names[i].name, 0, data, 
+		 strlen(data), 0);
     }
   }
-  if (error) {
-    mm_log((1, "i_readtiff_wiol: error during reading\n"));
-    i_tags_setn(&im->tags, "i_incomplete", 1);
-  }
-  if (raster)
-    _TIFFfree( raster );
 
+  i_tags_add(&im->tags, "i_format", 0, "tiff", -1, 0);
+  if (warn_buffer && *warn_buffer) {
+    i_tags_add(&im->tags, "i_warning", 0, warn_buffer, -1, 0);
+    *warn_buffer = '\0';
+  }
+  
   return im;
 }
 
@@ -1220,6 +1096,223 @@ static void pack_4bit_hl(unsigned char *buf, int count) {
     buf[i/2] = (buf[i] << 4) + buf[i+1];
     i += 2;
   }
+}
+
+static i_img *
+read_one_paletted_lines(TIFF *tif, int width, int height, int allow_incomplete) {
+  uint16 bits_per_sample;
+  i_img *im;
+  uint16 *maps[3];
+  uint32 row;
+  unsigned char *buffer;
+  int i;
+  int ch;
+
+  TIFFGetFieldDefaulted(tif, TIFFTAG_BITSPERSAMPLE, &bits_per_sample);
+  
+  im = i_img_pal_new(width, height, 3, 256);
+  if (!im)
+    return NULL;
+
+  /* setup the color map */
+  if (!TIFFGetField(tif, TIFFTAG_COLORMAP, maps+0, maps+1, maps+2)) {
+    i_push_error(0, "Cannot get colormap for paletted image");
+    i_img_destroy(im);
+    return NULL;
+  }
+  for (i = 0; i < 1 << bits_per_sample; ++i) {
+    i_color c;
+    for (ch = 0; ch < 3; ++ch) {
+      c.channel[ch] = Sample16To8(maps[ch][i]);
+    }
+    i_addcolors(im, &c, 1);
+  }
+
+  /* read the image data */
+  buffer = (unsigned char *)_TIFFmalloc(width+2);
+  if (!buffer) {
+    i_push_error(0, "out of memory");
+    i_img_destroy(im);
+    return NULL;
+  }
+  row = 0;
+  while (row < height && TIFFReadScanline(tif, buffer, row, 0) > 0) {
+    if (bits_per_sample == 4)
+      expand_4bit_hl(buffer, (width+1)/2);
+    i_ppal(im, 0, width, row, buffer);
+    ++row;
+  }
+  if (row < height) {
+    if (allow_incomplete) {
+      i_tags_setn(&im->tags, "i_lines_read", row);
+      i_tags_setn(&im->tags, "i_incomplete", 1);
+    }
+    else {
+      i_img_destroy(im);
+      _TIFFfree(buffer);
+      return NULL;
+    }
+  }
+  _TIFFfree(buffer);
+
+  return im;
+}
+
+static i_img *
+make_rgb(TIFF *tif, int width, int height) {
+  uint16 photometric;
+  uint16 channels;
+
+  TIFFGetFieldDefaulted(tif, TIFFTAG_SAMPLESPERPIXEL, &channels);
+  TIFFGetFieldDefaulted(tif, TIFFTAG_PHOTOMETRIC, &photometric);
+
+  if (photometric == PHOTOMETRIC_SEPARATED && channels >= 4) {
+    /* TIFF can have more than one alpha channel on an image,
+       but Imager can't, only store the first one */
+    
+    channels = channels == 4 ? 3 : 4;
+
+    /* unfortunately the RGBA functions don't try to deal with the alpha
+       channel on CMYK images, at some point I'm planning on expanding
+       TIFF support to handle 16-bit/sample images and I'll deal with
+       it then */
+  }
+
+  /* TIFF images can have more than one alpha channel, but Imager can't
+     this ignores the possibility of 2 channel images with 2 alpha,
+     but there's not much I can do about that */
+  if (channels > 4)
+    channels = 4;
+
+  return i_img_8_new(width, height, channels);
+}
+
+static i_img *
+read_one_rgb_lines(TIFF *tif, int width, int height, int allow_incomplete) {
+  i_img *im;
+  uint32* raster = NULL;
+  uint32 rowsperstrip, row;
+
+  im = make_rgb(tif, width, height);
+  if (!im)
+    return NULL;
+
+  int rc = TIFFGetField(tif, TIFFTAG_ROWSPERSTRIP, &rowsperstrip);
+  mm_log((1, "i_readtiff_wiol: rowsperstrip=%d rc = %d\n", rowsperstrip, rc));
+  
+  if (rc != 1 || rowsperstrip==-1) {
+    rowsperstrip = height;
+  }
+  
+  raster = (uint32*)_TIFFmalloc(width * rowsperstrip * sizeof (uint32));
+  if (!raster) {
+    i_img_destroy(im);
+    i_push_error(0, "No space for raster buffer");
+    return NULL;
+  }
+  
+  for( row = 0; row < height; row += rowsperstrip ) {
+    uint32 newrows, i_row;
+    
+    if (!TIFFReadRGBAStrip(tif, row, raster)) {
+      if (allow_incomplete) {
+	i_tags_setn(&im->tags, "i_lines_read", row);
+	i_tags_setn(&im->tags, "i_incomplete", 1);
+	break;
+      }
+      else {
+	i_push_error(0, "could not read TIFF image strip");
+	_TIFFfree(raster);
+	i_img_destroy(im);
+	return NULL;
+      }
+    }
+    
+    newrows = (row+rowsperstrip > height) ? height-row : rowsperstrip;
+    mm_log((1, "newrows=%d\n", newrows));
+    
+    for( i_row = 0; i_row < newrows; i_row++ ) { 
+      uint32 x;
+      for(x = 0; x<width; x++) {
+	i_color val;
+	uint32 temp = raster[x+width*(newrows-i_row-1)];
+	val.rgba.r = TIFFGetR(temp);
+	val.rgba.g = TIFFGetG(temp);
+	val.rgba.b = TIFFGetB(temp);
+	val.rgba.a = TIFFGetA(temp);
+	i_ppix(im, x, i_row+row, &val);
+      }
+    }
+  }
+
+  _TIFFfree(raster);
+  
+  return im;
+}
+
+static i_img *
+read_one_rgb_tiled(TIFF *tif, int width, int height, int allow_incomplete) {
+  i_img *im;
+  uint32* raster = NULL;
+  int ok = 1;
+  uint32 row, col;
+  uint32 tile_width, tile_height;
+  unsigned long pixels = 0;
+  
+  im = make_rgb(tif, width, height);
+  if (!im)
+    return NULL;
+  
+  TIFFGetField(tif, TIFFTAG_TILEWIDTH, &tile_width);
+  TIFFGetField(tif, TIFFTAG_TILELENGTH, &tile_height);
+  mm_log((1, "i_readtiff_wiol: tile_width=%d, tile_height=%d\n", tile_width, tile_height));
+  
+  raster = (uint32*)_TIFFmalloc(tile_width * tile_height * sizeof (uint32));
+  if (!raster) {
+    i_img_destroy(im);
+    i_push_error(0, "No space for raster buffer");
+    return NULL;
+  }
+  
+  for( row = 0; row < height; row += tile_height ) {
+    for( col = 0; ok && col < width; col += tile_width ) {
+      uint32 i_row, x, newrows, newcols;
+      
+      /* Read the tile into an RGBA array */
+      if (!TIFFReadRGBATile(tif, col, row, raster)) {
+	_TIFFfree(raster);
+	if (allow_incomplete) {
+	  /* rough estimate of lines */
+	  i_tags_setn(&im->tags, "i_lines_read", pixels / width);
+	  i_tags_setn(&im->tags, "i_incomplete", 1);
+	  return im;
+	}
+	else {
+	  i_img_destroy(im);
+	  return NULL;
+	}
+      }
+      newrows = (row+tile_height > height) ? height-row : tile_height;
+      mm_log((1, "i_readtiff_wiol: newrows=%d\n", newrows));
+      newcols = (col+tile_width  > width ) ? width-row  : tile_width;
+      for( i_row = 0; i_row < tile_height; i_row++ ) {
+	for(x = 0; x < newcols; x++) {
+	  i_color val;
+	  uint32 temp = raster[x+tile_width*(tile_height-i_row-1)];
+	  val.rgba.r = TIFFGetR(temp);
+	  val.rgba.g = TIFFGetG(temp);
+	  val.rgba.b = TIFFGetB(temp);
+	  val.rgba.a = TIFFGetA(temp);
+	  i_ppix(im, col+x, row+i_row, &val);
+	}
+      }
+      pixels += newrows * newcols;
+    }
+  }
+  
+  _TIFFfree(raster);
+  
+  return im;
 }
 
 /*

@@ -1,7 +1,8 @@
 #!perl -w
 use strict;
-use Test::More tests => 127;
+use Test::More tests => 130;
 use Imager qw(:all);
+use Imager::Test qw(is_image);
 $^W=1; # warnings during command-line tests
 $|=1;  # give us some progress in the test harness
 init_log("testout/t106tiff.log",1);
@@ -31,7 +32,7 @@ SKIP:
     $im = Imager->new(xsize=>2, ysize=>2);
     ok(!$im->write(file=>"testout/notiff.tif"), "should fail to write tiff");
     is($im->errstr, 'format not supported', "check no tiff message");
-    skip("no tiff support", 123);
+    skip("no tiff support", 126);
   }
 
   Imager::i_tags_add($img, "i_xres", 0, "300", 0);
@@ -446,6 +447,15 @@ SKIP:
       is($im->tags(name=>'tiff_photometric'), $test->[2],
 	 "photometric for $test->[0] match");
     }
+  }
+
+  { # reading tile based images
+    my $im = Imager->new;
+    ok($im->read(file => 'testimg/pengtile.tif'), "read tiled image");
+    # compare it
+    my $comp = Imager->new;
+    ok($comp->read(file => 'testimg/penguin-base.ppm'), 'read comparison image');
+    is_image($im, $comp, 'compare them');
   }
 }
 

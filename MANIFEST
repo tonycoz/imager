@@ -320,6 +320,7 @@ testimg/nocmap.gif
 testimg/palette.png
 testimg/palette_out.png
 testimg/penguin-base.ppm
+testimg/pengtile.tif	Tiled tiff image, same as penguin-base.ppm
 testimg/pgm.pgm		Simple pgm for testing the right sample is in the right place
 testimg/scale.gif
 testimg/scale.ppm
