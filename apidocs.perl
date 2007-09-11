@@ -85,7 +85,6 @@ Imager::APIRef - Imager's C API.
 
   i_color color;
   color.rgba.red = 255; color.rgba.green = 0; color.rgba.blue = 255;
-  i_fill_t *fill = i_new_fill_...(...);
 
 EOS
 
@@ -99,8 +98,6 @@ for my $cat (sort { lc $a cmp lc $b } keys %cats) {
 }
 
 print OUT <<'EOS';
-
-   i_fill_destroy(fill);
 
 =head1 DESCRIPTION
 

@@ -12,7 +12,6 @@ Imager::APIRef - Imager's C API.
 
   i_color color;
   color.rgba.red = 255; color.rgba.green = 0; color.rgba.blue = 255;
-  i_fill_t *fill = i_new_fill_...(...);
 
 
   # Drawing
@@ -37,20 +36,31 @@ Imager::APIRef - Imager's C API.
   i_set_image_file_limits(500, 500, 1000000);
 
   # Fills
+  i_fill_destroy(fill);
   fill = i_new_fill_fount(0, 0, 100, 100, i_ft_linear, i_ft_linear, 
                           i_fr_triangle, 0, i_fts_grid, 9, 1, segs);
+  i_fill_t *fill = i_new_fill_hatch(&fg_color, &bg_color, combine, hatch, custom_hatch, dx, dy);
+  i_fill_t *fill = i_new_fill_hatchf(&fg_fcolor, &bg_fcolor, combine, hatch, custom_hatch, dx, dy);
+  i_fill_t *fill = i_new_fill_image(src_img, matrix, x_offset, y_offset, combine);
+  i_fill_t *fill = i_new_fill_solid(&color, combine);
+  i_fill_t *fill = i_new_fill_solidf(&fcolor, combine);
 
   # Image
 
-  # Image creation
+  # Image creation/destruction
+  i_img *img = i_img_16_new(width, height, channels);
+  i_img *img = i_img_8_new(width, height, channels);
+  i_img_destroy(img)
+  i_img *img = i_img_double_new(width, height, channels);
+  i_img *img = i_img_pal_new(width, height, channels, max_palette_size)
+  i_img *img = i_sametype(src, width, height);
+  i_img *img = i_sametype_chans(src, width, height, channels);
 
   # Image quantization
 
   # Paletted images
 
   # Tags
-
-   i_fill_destroy(fill);
 
 =head1 DESCRIPTION
 
@@ -612,17 +622,6 @@ pass NULL in trans for non transparent i_colors.
 =for comment
 From: File image.c
 
-=item i_img_destroy(im)
-
-
-Destroy image and free data via exorcise.
-
-   im - Image pointer
-
-
-=for comment
-From: File image.c
-
 =item i_img_info(im, info)
 
 
@@ -660,7 +659,7 @@ From: File rubthru.im
 
 =back
 
-=head2 Image creation
+=head2 Image creation/destruction
 
 =over
 
@@ -678,8 +677,18 @@ From: File img16.c
 =item i_img_8_new(x, y, ch)
 
 
+
 Creates a new image object I<x> pixels wide, and I<y> pixels high with
 I<ch> channels.
+
+
+=for comment
+From: File image.c
+
+=item i_img_destroy(img)
+
+
+Destroy an image object
 
 
 =for comment
@@ -698,6 +707,8 @@ From: File imgdouble.c
 
 
 Creates a new paletted image of the supplied dimensions.
+
+I<maxpal> is the maximum palette size and should normally be 256.
 
 Returns a new image or NULL on failure.
 

@@ -196,6 +196,7 @@ static i_fill_solid_t base_solid_fill_comb =
 =item i_fill_destroy(fill)
 
 =category Fills
+=synopsis i_fill_destroy(fill);
 
 Call to destroy any fill object.
 
@@ -213,6 +214,7 @@ i_fill_destroy(i_fill_t *fill) {
 =item i_new_fill_solidf(color, combine)
 
 =category Fills
+=synopsis i_fill_t *fill = i_new_fill_solidf(&fcolor, combine);
 
 Create a solid fill based on a float color.
 
@@ -244,6 +246,7 @@ i_new_fill_solidf(const i_fcolor *c, int combine) {
 =item i_new_fill_solid(color, combine)
 
 =category Fills
+=synopsis i_fill_t *fill = i_new_fill_solid(&color, combine);
 
 Create a solid fill based on an 8-bit color.
 
@@ -427,6 +430,7 @@ i_new_hatch_low(const i_color *fg, const i_color *bg, const i_fcolor *ffg, const
 =item i_new_fill_hatch(fg, bg, combine, hatch, cust_hatch, dx, dy)
 
 =category Fills
+=synopsis i_fill_t *fill = i_new_fill_hatch(&fg_color, &bg_color, combine, hatch, custom_hatch, dx, dy);
 
 Creates a new hatched fill with the fg color used for the 1 bits in
 the hatch and bg for the 0 bits.  If combine is non-zero alpha values
@@ -452,6 +456,7 @@ i_new_fill_hatch(const i_color *fg, const i_color *bg, int combine, int hatch,
 =item i_new_fill_hatchf(fg, bg, combine, hatch, cust_hatch, dx, dy)
 
 =category Fills
+=synopsis i_fill_t *fill = i_new_fill_hatchf(&fg_fcolor, &bg_fcolor, combine, hatch, custom_hatch, dx, dy);
 
 Creates a new hatched fill with the fg color used for the 1 bits in
 the hatch and bg for the 0 bits.  If combine is non-zero alpha values
@@ -489,6 +494,7 @@ struct i_fill_image_t {
 =item i_new_fill_image(im, matrix, xoff, yoff, combine)
 
 =category Fills
+=synopsis i_fill_t *fill = i_new_fill_image(src_img, matrix, x_offset, y_offset, combine);
 
 Create an image based fill.
 

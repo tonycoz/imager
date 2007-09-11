@@ -135,9 +135,12 @@ i_img *i_img_pal_new_low(i_img *im, int x, int y, int channels, int maxpal) {
 /*
 =item i_img_pal_new(x, y, channels, maxpal)
 
-=category Image creation
+=category Image creation/destruction
+=synopsis i_img *img = i_img_pal_new(width, height, channels, max_palette_size)
 
 Creates a new paletted image of the supplied dimensions.
+
+I<maxpal> is the maximum palette size and should normally be 256.
 
 Returns a new image or NULL on failure.
 

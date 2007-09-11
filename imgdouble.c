@@ -81,7 +81,8 @@ static i_img IIM_base_double_direct =
 /*
 =item i_img_double_new(int x, int y, int ch)
 
-=category Image creation
+=category Image creation/destruction
+=synopsis i_img *img = i_img_double_new(width, height, channels);
 
 Creates a new double per sample image.
 

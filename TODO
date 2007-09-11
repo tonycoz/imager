@@ -6,6 +6,22 @@ Release Plans (subject to change)
 brown-bag bugs may add intermediate releases.  The dates are goals,
 not commitments.
 
+For 0.61:
+
+TIFF improvements (to be detailed) (#20329)
+
+regmach.c fixes/tests (#29296)
+
+sample: scaling an animated gif (#27591)
+
+transform2() docs (#29267)
+
+read DIBS (#29055)
+
+library search path on 64-bit centos (#29045)
+
+i_gsamp() chan_count validation (#28985)
+
 For 0.60 (hopefully):
 
 RGB file support (#8666) (done)

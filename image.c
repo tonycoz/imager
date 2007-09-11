@@ -256,7 +256,9 @@ static i_img IIM_base_8bit_direct =
 
 =item i_img_8_new(x, y, ch)
 
-=category Image creation
+=category Image creation/destruction
+
+=synopsis i_img *img = i_img_8_new(width, height, channels);
 
 Creates a new image object I<x> pixels wide, and I<y> pixels high with
 I<ch> channels.
@@ -421,13 +423,12 @@ i_img_exorcise(i_img *im) {
 }
 
 /* 
-=item i_img_destroy(im)
+=item i_img_destroy(img)
 
-=category Image
+=category Image creation/destruction
+=synopsis i_img_destroy(img)
 
-Destroy image and free data via exorcise.
-
-   im - Image pointer
+Destroy an image object
 
 =cut
 */
@@ -1041,7 +1042,8 @@ i_scale_nn(i_img *im, float scx, float scy) {
 /*
 =item i_sametype(i_img *im, int xsize, int ysize)
 
-=category Image creation
+=category Image creation/destruction
+=synopsis i_img *img = i_sametype(src, width, height);
 
 Returns an image of the same type (sample size, channels, paletted/direct).
 
@@ -1083,7 +1085,8 @@ i_img *i_sametype(i_img *src, int xsize, int ysize) {
 /*
 =item i_sametype_chans(i_img *im, int xsize, int ysize, int channels)
 
-=category Image creation
+=category Image creation/destruction
+=synopsis i_img *img = i_sametype_chans(src, width, height, channels);
 
 Returns an image of the same type (sample size).
 
