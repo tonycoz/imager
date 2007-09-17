@@ -98,7 +98,7 @@ and can be any of the following:
   png   Portable Network Graphics (PNG)
   pnm   Portable aNyMap (PNM)
   raw   Raw
-  rgb   SGI .rgb files
+  sgi   SGI .rgb files
   tga   TARGA
   tiff  Tagged Image File Format (TIFF)
 
