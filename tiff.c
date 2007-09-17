@@ -62,6 +62,7 @@ static const int text_tag_count =
   sizeof(text_tag_names) / sizeof(*text_tag_names);
 
 static void error_handler(char const *module, char const *fmt, va_list ap) {
+  mm_log((1, "tiff error fmt %s\n", fmt));
   i_push_errorvf(0, fmt, ap);
 }
 
@@ -78,6 +79,8 @@ static void warn_handler(char const *module, char const *fmt, va_list ap) {
 #else
   vsprintf(buf, fmt, ap);
 #endif
+  mm_log((1, "tiff warning %s\n", buf));
+
   if (!warn_buffer || strlen(warn_buffer)+strlen(buf)+2 > warn_buffer_size) {
     int new_size = warn_buffer_size + strlen(buf) + 2;
     char *old_buffer = warn_buffer;
@@ -1250,6 +1253,94 @@ read_one_rgb_lines(TIFF *tif, int width, int height, int allow_incomplete) {
   return im;
 }
 
+/* adapted from libtiff 
+
+  libtiff's TIFFReadRGBATile succeeds even when asked to read an
+  invalid tile, which means we have no way of knowing whether the data
+  we received from it is valid or not.
+
+  So the caller here has set stoponerror to 1 so that
+  TIFFRGBAImageGet() will fail.
+
+  read_one_rgb_tiled() then takes that into account for i_incomplete
+  or failure.
+ */
+static int
+myTIFFReadRGBATile(TIFFRGBAImage *img, uint32 col, uint32 row, uint32 * raster)
+
+{
+    int 	ok;
+    uint32	tile_xsize, tile_ysize;
+    uint32	read_xsize, read_ysize;
+    uint32	i_row;
+
+    /*
+     * Verify that our request is legal - on a tile file, and on a
+     * tile boundary.
+     */
+    
+    TIFFGetFieldDefaulted(img->tif, TIFFTAG_TILEWIDTH, &tile_xsize);
+    TIFFGetFieldDefaulted(img->tif, TIFFTAG_TILELENGTH, &tile_ysize);
+    if( (col % tile_xsize) != 0 || (row % tile_ysize) != 0 )
+    {
+      i_push_errorf(0, "Row/col passed to myTIFFReadRGBATile() must be top"
+		    "left corner of a tile.");
+      return 0;
+    }
+
+    /*
+     * The TIFFRGBAImageGet() function doesn't allow us to get off the
+     * edge of the image, even to fill an otherwise valid tile.  So we
+     * figure out how much we can read, and fix up the tile buffer to
+     * a full tile configuration afterwards.
+     */
+
+    if( row + tile_ysize > img->height )
+        read_ysize = img->height - row;
+    else
+        read_ysize = tile_ysize;
+    
+    if( col + tile_xsize > img->width )
+        read_xsize = img->width - col;
+    else
+        read_xsize = tile_xsize;
+
+    /*
+     * Read the chunk of imagery.
+     */
+    
+    img->row_offset = row;
+    img->col_offset = col;
+
+    ok = TIFFRGBAImageGet(img, raster, read_xsize, read_ysize );
+        
+    /*
+     * If our read was incomplete we will need to fix up the tile by
+     * shifting the data around as if a full tile of data is being returned.
+     *
+     * This is all the more complicated because the image is organized in
+     * bottom to top format. 
+     */
+
+    if( read_xsize == tile_xsize && read_ysize == tile_ysize )
+        return( ok );
+
+    for( i_row = 0; i_row < read_ysize; i_row++ ) {
+        memmove( raster + (tile_ysize - i_row - 1) * tile_xsize,
+                 raster + (read_ysize - i_row - 1) * read_xsize,
+                 read_xsize * sizeof(uint32) );
+        _TIFFmemset( raster + (tile_ysize - i_row - 1) * tile_xsize+read_xsize,
+                     0, sizeof(uint32) * (tile_xsize - read_xsize) );
+    }
+
+    for( i_row = read_ysize; i_row < tile_ysize; i_row++ ) {
+        _TIFFmemset( raster + (tile_ysize - i_row - 1) * tile_xsize,
+                     0, sizeof(uint32) * tile_xsize );
+    }
+
+    return (ok);
+}
+
 static i_img *
 read_one_rgb_tiled(TIFF *tif, int width, int height, int allow_incomplete) {
   i_img *im;
@@ -1258,11 +1349,21 @@ read_one_rgb_tiled(TIFF *tif, int width, int height, int allow_incomplete) {
   uint32 row, col;
   uint32 tile_width, tile_height;
   unsigned long pixels = 0;
+  char 	emsg[1024] = "";
+  TIFFRGBAImage img;
+  i_color *line;
   
   im = make_rgb(tif, width, height);
   if (!im)
     return NULL;
   
+  if (!TIFFRGBAImageOK(tif, emsg) 
+      || !TIFFRGBAImageBegin(&img, tif, 1, emsg)) {
+    i_push_error(0, emsg);
+    i_img_destroy(im);
+    return( 0 );
+  }
+
   TIFFGetField(tif, TIFFTAG_TILEWIDTH, &tile_width);
   TIFFGetField(tif, TIFFTAG_TILELENGTH, &tile_height);
   mm_log((1, "i_readtiff_wiol: tile_width=%d, tile_height=%d\n", tile_width, tile_height));
@@ -1271,48 +1372,70 @@ read_one_rgb_tiled(TIFF *tif, int width, int height, int allow_incomplete) {
   if (!raster) {
     i_img_destroy(im);
     i_push_error(0, "No space for raster buffer");
+    TIFFRGBAImageEnd(&img);
     return NULL;
   }
+  line = mymalloc(tile_width * sizeof(i_color));
   
   for( row = 0; row < height; row += tile_height ) {
-    for( col = 0; ok && col < width; col += tile_width ) {
-      uint32 i_row, x, newrows, newcols;
+    for( col = 0; col < width; col += tile_width ) {
       
       /* Read the tile into an RGBA array */
-      if (!TIFFReadRGBATile(tif, col, row, raster)) {
-	_TIFFfree(raster);
+      if (myTIFFReadRGBATile(&img, col, row, raster)) {
+	uint32 i_row, x;
+	uint32 newrows = (row+tile_height > height) ? height-row : tile_height;
+	uint32 newcols = (col+tile_width  > width ) ? width-col  : tile_width;
+
+	mm_log((1, "i_readtiff_wiol: tile(%d, %d) newcols=%d newrows=%d\n", col, row, newcols, newrows));
+	for( i_row = 0; i_row < newrows; i_row++ ) {
+	  i_color *outp = line;
+	  for(x = 0; x < newcols; x++) {
+	    i_color val;
+	    uint32 temp = raster[x+tile_width*(tile_height-i_row-1)];
+	    outp->rgba.r = TIFFGetR(temp);
+	    outp->rgba.g = TIFFGetG(temp);
+	    outp->rgba.b = TIFFGetB(temp);
+	    outp->rgba.a = TIFFGetA(temp);
+	    ++outp;
+	  }
+	  i_plin(im, col, col+newcols, row+i_row, line);
+	}
+	pixels += newrows * newcols;
+      }
+      else {
 	if (allow_incomplete) {
-	  /* rough estimate of lines */
-	  i_tags_setn(&im->tags, "i_lines_read", pixels / width);
-	  i_tags_setn(&im->tags, "i_incomplete", 1);
-	  return im;
+	  ok = 0;
 	}
 	else {
-	  i_img_destroy(im);
-	  return NULL;
+	  goto error;
 	}
       }
-      newrows = (row+tile_height > height) ? height-row : tile_height;
-      mm_log((1, "i_readtiff_wiol: newrows=%d\n", newrows));
-      newcols = (col+tile_width  > width ) ? width-row  : tile_width;
-      for( i_row = 0; i_row < tile_height; i_row++ ) {
-	for(x = 0; x < newcols; x++) {
-	  i_color val;
-	  uint32 temp = raster[x+tile_width*(tile_height-i_row-1)];
-	  val.rgba.r = TIFFGetR(temp);
-	  val.rgba.g = TIFFGetG(temp);
-	  val.rgba.b = TIFFGetB(temp);
-	  val.rgba.a = TIFFGetA(temp);
-	  i_ppix(im, col+x, row+i_row, &val);
-	}
-      }
-      pixels += newrows * newcols;
     }
   }
-  
+
+  if (!ok) {
+    if (pixels == 0) {
+      i_push_error(0, "TIFF: No image data could be read from the image");
+      goto error;
+    }
+
+    /* incomplete image */
+    i_tags_setn(&im->tags, "i_incomplete", 1);
+    i_tags_setn(&im->tags, "i_lines_read", pixels / width);
+  }
+
+  myfree(line);
+  TIFFRGBAImageEnd(&img);
   _TIFFfree(raster);
   
   return im;
+
+ error:
+  myfree(line);
+  _TIFFfree(raster);
+  TIFFRGBAImageEnd(&img);
+  i_img_destroy(im);
+  return NULL;
 }
 
 /*

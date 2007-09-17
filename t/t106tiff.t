@@ -1,6 +1,6 @@
 #!perl -w
 use strict;
-use Test::More tests => 130;
+use Test::More tests => 135;
 use Imager qw(:all);
 use Imager::Test qw(is_image);
 $^W=1; # warnings during command-line tests
@@ -32,7 +32,7 @@ SKIP:
     $im = Imager->new(xsize=>2, ysize=>2);
     ok(!$im->write(file=>"testout/notiff.tif"), "should fail to write tiff");
     is($im->errstr, 'format not supported', "check no tiff message");
-    skip("no tiff support", 126);
+    skip("no tiff support", 131);
   }
 
   Imager::i_tags_add($img, "i_xres", 0, "300", 0);
@@ -456,6 +456,32 @@ SKIP:
     my $comp = Imager->new;
     ok($comp->read(file => 'testimg/penguin-base.ppm'), 'read comparison image');
     is_image($im, $comp, 'compare them');
+  }
+
+ SKIP:
+  { # failing to read tile based images
+    # we grab our tiled image and patch a tile offset to nowhere
+    ok(open(TIFF, '< testimg/pengtile.tif'), 'open pengtile.tif')
+      or skip 'cannot open testimg/pengtile.tif', 4;
+    binmode TIFF;
+    my $data = do { local $/; <TIFF>; };
+    
+    # patch a tile offset
+    substr($data, 0x5AFE, 4) = pack("H*", "1F5C0000");
+
+    #open PIPE, "| bytedump -a | less" or die;
+    #print PIPE $data;
+    #close PIPE;
+
+    my $allow = Imager->new;
+    ok($allow->read(data => $data, allow_incomplete => 1),
+       "read incomplete tiled");
+    ok($allow->tags(name => 'i_incomplete'), 'i_incomplete set');
+    is($allow->tags(name => 'i_lines_read'), 173, 
+       'check i_lines_read set appropriately');
+
+    my $fail = Imager->new;
+    ok(!$fail->read(data => $data), "read fail tiled");
   }
 }
 
