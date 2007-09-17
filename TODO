@@ -6,13 +6,20 @@ Release Plans (subject to change)
 brown-bag bugs may add intermediate releases.  The dates are goals,
 not commitments.
 
+For 0.62: (tentative)
+
+thick lines
+
+have alpha channel work treated as coverage for primitives (more
+general combine parameter)
+
 For 0.61:
 
 TIFF improvements (to be detailed) (#20329)
 
 regmach.c fixes/tests (#29296)
 
-sample: scaling an animated gif (#27591)
+sample: scaling an animated gif (#27591) (done)
 
 transform2() docs (#29267)
 

@@ -104,3 +104,9 @@ flasher.pl
 
   Demonstrates setting an alpha channel with convert(), rubthrough(), 
   and writing animated GIFs.
+
+gifscale.pl
+
+  Scales an animated GIF image, preserving GIF animation information
+  and adjusting the image screen positions to account for the scale
+  factor.
