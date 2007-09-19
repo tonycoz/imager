@@ -1438,6 +1438,11 @@ read_one_rgb_tiled(TIFF *tif, int width, int height, int allow_incomplete) {
   return NULL;
 }
 
+char const *
+i_tiff_libversion(void) {
+  return TIFFGetVersion();
+}
+
 /*
 =back
 

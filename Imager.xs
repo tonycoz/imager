@@ -2368,6 +2368,8 @@ i_writetiff_multi_wiol_faxable(ig, fine, ...)
       OUTPUT:
         RETVAL
 
+const char *
+i_tiff_libversion()
 
 #endif /* HAVE_LIBTIFF */
 

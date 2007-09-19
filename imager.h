@@ -374,6 +374,7 @@ undef_int i_writetiff_wiol(i_img *im, io_glue *ig);
 undef_int i_writetiff_multi_wiol(io_glue *ig, i_img **imgs, int count);
 undef_int i_writetiff_wiol_faxable(i_img *im, io_glue *ig, int fine);
 undef_int i_writetiff_multi_wiol_faxable(io_glue *ig, i_img **imgs, int count, int fine);
+char const * i_tiff_libversion(void);
 
 #endif /* HAVE_LIBTIFF */
 
