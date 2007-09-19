@@ -1,6 +1,6 @@
 #!perl -w
 use strict;
-use Test::More tests => 135;
+use Test::More tests => 136;
 use Imager qw(:all);
 use Imager::Test qw(is_image);
 $^W=1; # warnings during command-line tests
@@ -32,7 +32,17 @@ SKIP:
     $im = Imager->new(xsize=>2, ysize=>2);
     ok(!$im->write(file=>"testout/notiff.tif"), "should fail to write tiff");
     is($im->errstr, 'format not supported', "check no tiff message");
-    skip("no tiff support", 131);
+    skip("no tiff support", 132);
+  }
+
+  my $ver_string = Imager::i_tiff_libversion();
+  ok(my ($full, $major, $minor, $point) = 
+     $ver_string =~ /Version +((\d+)\.(\d+).(\d+))/,
+     "extract library version");
+  # make something we can compare
+  my $cmp_ver = sprintf("%03d%03d%03d", $major, $minor, $point);
+  if ($cmp_ver lt '003007000') {
+    diag("You have an old version of libtiff - $full, some tests will be skipped");
   }
 
   Imager::i_tags_add($img, "i_xres", 0, "300", 0);
@@ -430,22 +440,29 @@ SKIP:
     my $photo_cielab = 8;
     my @alpha_images =
       (
-       [ 'srgb.tif',    3, $photo_rgb ],
-       [ 'srgba.tif',   4, $photo_rgb  ],
-       [ 'srgbaa.tif',  4, $photo_rgb  ],
-       [ 'scmyk.tif',   3, $photo_cmyk ],
-       [ 'scmyka.tif',  4, $photo_cmyk ],
-       [ 'scmykaa.tif', 4, $photo_cmyk ],
-       [ 'slab.tif',    3, $photo_cielab ],
+       [ 'srgb.tif',    3, $photo_rgb,    '003005007' ],
+       [ 'srgba.tif',   4, $photo_rgb,    '003005007' ],
+       [ 'srgbaa.tif',  4, $photo_rgb,    '003005007' ],
+       [ 'scmyk.tif',   3, $photo_cmyk,   '003005007' ],
+       [ 'scmyka.tif',  4, $photo_cmyk,   '003005007' ],
+       [ 'scmykaa.tif', 4, $photo_cmyk,   '003005007' ],
+       [ 'slab.tif',    3, $photo_cielab, '003006001' ],
       );
+
     for my $test (@alpha_images) {
-      my $im = Imager->new;
-      ok($im->read(file => "testimg/$test->[0]"),
-	 "read alpha test $test->[0]")
+      my ($input, $channels, $photo, $need_ver) = @$test;
+      
+    SKIP: {
+	$need_ver le $cmp_ver
+	  or skip("Your ancient tifflib is buggy/limited for this test", 3);
+	my $im = Imager->new;
+	ok($im->read(file => "testimg/$input"),
+	   "read alpha test $input")
 	  or print "# ", $im->errstr, "\n";
-      is($im->getchannels, $test->[1], "channels for $test->[0] match");
-      is($im->tags(name=>'tiff_photometric'), $test->[2],
-	 "photometric for $test->[0] match");
+	is($im->getchannels, $channels, "channels for $input match");
+	is($im->tags(name=>'tiff_photometric'), $photo,
+	   "photometric for $input match");
+      }
     }
   }
 
@@ -463,6 +480,9 @@ SKIP:
     # we grab our tiled image and patch a tile offset to nowhere
     ok(open(TIFF, '< testimg/pengtile.tif'), 'open pengtile.tif')
       or skip 'cannot open testimg/pengtile.tif', 4;
+
+    $cmp_ver ge '0030057'
+      or skip("Your ancient tifflib has bad error handling", 4);
     binmode TIFF;
     my $data = do { local $/; <TIFF>; };
     
