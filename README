@@ -110,10 +110,11 @@ Stock libungif 4.1.4 or later seems to fix all of the bugs, if you
 have a problem that version of linungif (or later), let us know and
 we'll look into it.
 
-Imager needs to have a libtiff version of at least 3.5.5.  In the
-future we might consider supporting older libtiff versions.  For
-now you can either configure Imager manually (by
-setting the IM_MANUAL environment variable to 1, in sh:
+Imager needs to have a libtiff version of at least 3.5.5, but you
+should use a later version since some noticable bugs have been fixed.
+
+For now you can either configure Imager manually (by setting the
+IM_MANUAL environment variable to 1, in sh:
 
 $ IM_MANUAL=1 perl Makefile.PL
 
