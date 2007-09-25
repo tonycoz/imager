@@ -301,6 +301,7 @@ testimg/base.jpg	Base JPEG test image
 testimg/comp4.bmp       Compressed 4-bit/pixel BMP
 testimg/comp4.tif       4-bit/pixel paletted TIFF
 testimg/comp4bad.tif    corrupted 4-bit/pixel paletted TIFF
+testimg/comp4t.tif      4-bit/pixel paletted TIFF (tiled)
 testimg/comp8.bmp       Compressed 8-bit/pixel BMP
 testimg/comp8.tif       8-bit/pixel paletted TIFF
 testimg/exiftest.jpg	Test image for EXIF parsing

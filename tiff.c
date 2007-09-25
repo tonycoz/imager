@@ -40,8 +40,6 @@ struct tag_name {
   uint32 tag;
 };
 
-/*static i_img *read_one_paletted_tiled(TIFF *tif, int allow_incomplete);*/
-static i_img *read_one_paletted_lines(TIFF *tif, int width, int height, int allow_incomplete);
 static i_img *read_one_rgb_tiled(TIFF *tif, int width, int height, int allow_incomplete);
 static i_img *read_one_rgb_lines(TIFF *tif, int width, int height, int allow_incomplete);
 
@@ -57,6 +55,41 @@ static struct tag_name text_tag_names[] =
   { "tiff_artist", TIFFTAG_ARTIST, },
   { "tiff_hostcomputer", TIFFTAG_HOSTCOMPUTER, },
 };
+
+typedef struct read_state_tag read_state_t;
+/* the setup function creates the image object, allocates the line buffer */
+typedef int (*read_setup_t)(read_state_t *state);
+
+/* the putter writes the image data provided by the getter to the
+   image, x, y, width, height describe the target area of the image,
+   extras is the extra number of pixels stored for each scanline in
+   the raster buffer, (for tiles against the right side of the
+   image) */
+
+typedef int (*read_putter_t)(read_state_t *state, int x, int y, int width, 
+			     int height, int extras);
+
+/* reads from a tiled or strip image and calls the putter.
+   This may need a second type for handling non-contiguous images
+   at some point */
+typedef int (*read_getter_t)(read_state_t *state, read_putter_t putter);
+
+struct read_state_tag {
+  TIFF *tif;
+  i_img *img;
+  void *raster;
+  unsigned long pixels_read;
+  int allow_incomplete;
+  void *line_buf;
+  uint32 width, height;
+  uint16 bits_per_sample;
+};
+
+static int setup_paletted(read_state_t *state);
+static int tile_contig_getter(read_state_t *state, read_putter_t putter);
+static int strip_contig_getter(read_state_t *state, read_putter_t putter);
+static int paletted_putter8(read_state_t *, int, int, int, int, int);
+static int paletted_putter4(read_state_t *, int, int, int, int, int);
 
 static const int text_tag_count = 
   sizeof(text_tag_names) / sizeof(*text_tag_names);
@@ -98,8 +131,6 @@ static void warn_handler(char const *module, char const *fmt, va_list ap) {
 }
 
 static int save_tiff_tags(TIFF *tif, i_img *im);
-
-static void expand_4bit_hl(unsigned char *buf, int count);
 
 static void pack_4bit_hl(unsigned char *buf, int count);
 
@@ -169,7 +200,12 @@ static i_img *read_one_tiff(TIFF *tif, int allow_incomplete) {
   int gotXres, gotYres;
   uint16 photometric;
   uint16 bits_per_sample;
+  uint16 planar_config;
   int i;
+  read_state_t state;
+  read_setup_t setupf = NULL;
+  read_getter_t getterf = NULL;
+  read_putter_t putterf = NULL;
 
   error = 0;
 
@@ -179,13 +215,69 @@ static i_img *read_one_tiff(TIFF *tif, int allow_incomplete) {
   tiled = TIFFIsTiled(tif);
   TIFFGetFieldDefaulted(tif, TIFFTAG_PHOTOMETRIC, &photometric);
   TIFFGetFieldDefaulted(tif, TIFFTAG_BITSPERSAMPLE, &bits_per_sample);
+  TIFFGetFieldDefaulted(tif, TIFFTAG_PLANARCONFIG, &planar_config);
 
   mm_log((1, "i_readtiff_wiol: width=%d, height=%d, channels=%d\n", width, height, channels));
   mm_log((1, "i_readtiff_wiol: %stiled\n", tiled?"":"not "));
   mm_log((1, "i_readtiff_wiol: %sbyte swapped\n", TIFFIsByteSwapped(tif)?"":"not "));
 
-  if (photometric == PHOTOMETRIC_PALETTE && bits_per_sample <= 8 && !tiled) {
-    im = read_one_paletted_lines(tif, width, height, allow_incomplete);
+  if (photometric == PHOTOMETRIC_PALETTE && bits_per_sample <= 8) {
+    setupf = setup_paletted;
+    if (bits_per_sample == 8)
+      putterf = paletted_putter8;
+    else if (bits_per_sample == 4)
+      putterf = paletted_putter4;
+    else
+      mm_log((1, "unsupported paletted bits_per_sample %d\n", bits_per_sample));
+  }
+#if 0
+  else if (bits_per_sample == 16 
+	   && photometric == PHOTOMETRIC_RGB) {
+    setupf = setup_16;
+    putterf = putter_16;
+  }
+#endif
+  if (tiled) {
+    if (planar_config == PLANARCONFIG_CONTIG)
+      getterf = tile_contig_getter;
+  }
+  else {
+    if (planar_config == PLANARCONFIG_CONTIG)
+      getterf = strip_contig_getter;
+  }
+  if (setupf && getterf && putterf) {
+    unsigned long total_pixels = (unsigned long)width * height;
+    memset(&state, 0, sizeof(state));
+    state.tif = tif;
+    state.allow_incomplete = allow_incomplete;
+    state.width = width;
+    state.height = height;
+    state.bits_per_sample = bits_per_sample;
+
+    if (!setupf(&state))
+      return NULL;
+    if (!getterf(&state, putterf) || !state.pixels_read) {
+      if (state.img)
+	i_img_destroy(state.img);
+      if (state.raster)
+	_TIFFfree(state.raster);
+      if (state.line_buf)
+	myfree(state.line_buf);
+      
+      return NULL;
+    }
+
+    if (allow_incomplete && state.pixels_read < total_pixels) {
+      i_tags_setn(&(state.img->tags), "i_incomplete", 1);
+      i_tags_setn(&(state.img->tags), "i_lines_read", 
+		  state.pixels_read / width);
+    }
+    im = state.img;
+    
+    if (state.raster)
+      _TIFFfree(state.raster);
+    if (state.line_buf)
+      myfree(state.line_buf);
   }
   else {
     if (tiled) {
@@ -1073,23 +1165,12 @@ static int save_tiff_tags(TIFF *tif, i_img *im) {
 }
 
 
-/*
-=item expand_4bit_hl(buf, count)
-
-Expands 4-bit/entry packed data into 1 byte/entry.
-
-buf must contain count bytes to be expanded and have 2*count bytes total 
-space.
-
-The data is expanded in place.
-
-=cut
-*/
-
-static void expand_4bit_hl(unsigned char *buf, int count) {
-  while (--count >= 0) {
-    buf[count*2+1] = buf[count] & 0xF;
-    buf[count*2] = buf[count] >> 4;
+static void
+unpack_4bit_to(unsigned char *dest, unsigned char *src, int src_byte_count) {
+  while (src_byte_count > 0) {
+    *dest++ = *src >> 4;
+    *dest++ = *src++ & 0xf;
+    --src_byte_count;
   }
 }
 
@@ -1099,66 +1180,6 @@ static void pack_4bit_hl(unsigned char *buf, int count) {
     buf[i/2] = (buf[i] << 4) + buf[i+1];
     i += 2;
   }
-}
-
-static i_img *
-read_one_paletted_lines(TIFF *tif, int width, int height, int allow_incomplete) {
-  uint16 bits_per_sample;
-  i_img *im;
-  uint16 *maps[3];
-  uint32 row;
-  unsigned char *buffer;
-  int i;
-  int ch;
-
-  TIFFGetFieldDefaulted(tif, TIFFTAG_BITSPERSAMPLE, &bits_per_sample);
-  
-  im = i_img_pal_new(width, height, 3, 256);
-  if (!im)
-    return NULL;
-
-  /* setup the color map */
-  if (!TIFFGetField(tif, TIFFTAG_COLORMAP, maps+0, maps+1, maps+2)) {
-    i_push_error(0, "Cannot get colormap for paletted image");
-    i_img_destroy(im);
-    return NULL;
-  }
-  for (i = 0; i < 1 << bits_per_sample; ++i) {
-    i_color c;
-    for (ch = 0; ch < 3; ++ch) {
-      c.channel[ch] = Sample16To8(maps[ch][i]);
-    }
-    i_addcolors(im, &c, 1);
-  }
-
-  /* read the image data */
-  buffer = (unsigned char *)_TIFFmalloc(width+2);
-  if (!buffer) {
-    i_push_error(0, "out of memory");
-    i_img_destroy(im);
-    return NULL;
-  }
-  row = 0;
-  while (row < height && TIFFReadScanline(tif, buffer, row, 0) > 0) {
-    if (bits_per_sample == 4)
-      expand_4bit_hl(buffer, (width+1)/2);
-    i_ppal(im, 0, width, row, buffer);
-    ++row;
-  }
-  if (row < height) {
-    if (allow_incomplete) {
-      i_tags_setn(&im->tags, "i_lines_read", row);
-      i_tags_setn(&im->tags, "i_incomplete", 1);
-    }
-    else {
-      i_img_destroy(im);
-      _TIFFfree(buffer);
-      return NULL;
-    }
-  }
-  _TIFFfree(buffer);
-
-  return im;
 }
 
 static i_img *
@@ -1438,10 +1459,162 @@ read_one_rgb_tiled(TIFF *tif, int width, int height, int allow_incomplete) {
   return NULL;
 }
 
+static void
+rgb_channels(TIFF *tif, int *out_channels, int *alpha_chan) {
+  uint16 channels;
+  uint16 photometric;
+
+  TIFFGetFieldDefaulted(tif, TIFFTAG_SAMPLESPERPIXEL, &channels);
+  TIFFGetFieldDefaulted(tif, TIFFTAG_PHOTOMETRIC, &photometric);
+
+  
+}
+
+
 char const *
 i_tiff_libversion(void) {
   return TIFFGetVersion();
 }
+
+static int 
+setup_paletted(read_state_t *state) {
+  uint16 *maps[3];
+  i_color c;
+  int i, ch;
+  int color_count = 1 << state->bits_per_sample;
+
+  state->img = i_img_pal_new(state->width, state->height, 3, 256);
+  if (!state->img)
+    return 0;
+
+  /* setup the color map */
+  if (!TIFFGetField(state->tif, TIFFTAG_COLORMAP, maps+0, maps+1, maps+2)) {
+    i_push_error(0, "Cannot get colormap for paletted image");
+    i_img_destroy(state->img);
+    return 0;
+  }
+  for (i = 0; i < color_count; ++i) {
+    i_color c;
+    for (ch = 0; ch < 3; ++ch) {
+      c.channel[ch] = Sample16To8(maps[ch][i]);
+    }
+    i_addcolors(state->img, &c, 1);
+  }
+
+  return 1;
+}
+
+static int 
+tile_contig_getter(read_state_t *state, read_putter_t putter) {
+  uint32 tile_width, tile_height;
+  uint32 this_tile_height, this_tile_width;
+  uint32 rows_left, cols_left;
+  uint32 x, y;
+
+  state->raster = _TIFFmalloc(TIFFTileSize(state->tif));
+  if (!state->raster) {
+    i_push_error(0, "tiff: Out of memory allocating tile buffer");
+    return 0;
+  }
+
+  TIFFGetField(state->tif, TIFFTAG_TILEWIDTH, &tile_width);
+  TIFFGetField(state->tif, TIFFTAG_TILELENGTH, &tile_height);
+  rows_left = state->height;
+  for (y = 0; y < state->height; y += this_tile_height) {
+    this_tile_height = rows_left > tile_height ? tile_height : rows_left;
+
+    cols_left = state->width;
+    for (x = 0; x < state->width; x += this_tile_width) {
+      this_tile_width = cols_left > tile_width ? tile_width : cols_left;
+
+      if (TIFFReadTile(state->tif,
+		       state->raster,
+		       x, y, 0, 0) < 0) {
+	if (!state->allow_incomplete) {
+	  return 0;
+	}
+      }
+      else {
+	putter(state, x, y, this_tile_width, this_tile_height, tile_width - this_tile_width);
+      }
+
+      cols_left -= this_tile_width;
+    }
+
+    rows_left -= this_tile_height;
+  }
+
+  return 1;
+}
+
+static int 
+strip_contig_getter(read_state_t *state, read_putter_t putter) {
+  uint32 rows_per_strip;
+  tsize_t strip_size = TIFFStripSize(state->tif);
+  uint32 y, strip_rows, rows_left;
+
+  state->raster = _TIFFmalloc(strip_size);
+  if (!state->raster) {
+    i_push_error(0, "tiff: Out of memory allocating strip buffer");
+    return 0;
+  }
+  
+  TIFFGetFieldDefaulted(state->tif, TIFFTAG_ROWSPERSTRIP, &rows_per_strip);
+  rows_left = state->height;
+  for (y = 0; y < state->height; y += strip_rows) {
+    strip_rows = rows_left > rows_per_strip ? rows_per_strip : rows_left;
+    if (TIFFReadEncodedStrip(state->tif,
+			     TIFFComputeStrip(state->tif, y, 0),
+			     state->raster,
+			     strip_size) < 0) {
+      if (!state->allow_incomplete)
+	return 0;
+    }
+    else {
+      putter(state, 0, y, state->width, strip_rows, 0);
+    }
+    rows_left -= strip_rows;
+  }
+
+  return 1;
+}
+
+static int 
+paletted_putter8(read_state_t *state, int x, int y, int width, int height, int extras) {
+  unsigned char *p = state->raster;
+
+  state->pixels_read += (unsigned long) width * height;
+  while (height > 0) {
+    i_ppal(state->img, x, x + width, y, p);
+    p += width + extras;
+    --height;
+    ++y;
+  }
+
+  return 1;
+}
+
+static int 
+paletted_putter4(read_state_t *state, int x, int y, int width, int height, int extras) {
+  uint32 img_line_size = (width + 1) / 2;
+  uint32 skip_line_size = (width + extras + 1) / 2;
+  unsigned char *p = state->raster;
+
+  if (!state->line_buf)
+    state->line_buf = mymalloc(state->width);
+
+  state->pixels_read += (unsigned long) width * height;
+  while (height > 0) {
+    unpack_4bit_to(state->line_buf, p, img_line_size);
+    i_ppal(state->img, x, x + width, y, state->line_buf);
+    p += skip_line_size;
+    --height;
+    ++y;
+  }
+
+  return 1;
+}
+
 
 /*
 =back

@@ -1,6 +1,6 @@
 #!perl -w
 use strict;
-use Test::More tests => 136;
+use Test::More tests => 138;
 use Imager qw(:all);
 use Imager::Test qw(is_image);
 $^W=1; # warnings during command-line tests
@@ -32,7 +32,7 @@ SKIP:
     $im = Imager->new(xsize=>2, ysize=>2);
     ok(!$im->write(file=>"testout/notiff.tif"), "should fail to write tiff");
     is($im->errstr, 'format not supported', "check no tiff message");
-    skip("no tiff support", 132);
+    skip("no tiff support", 134);
   }
 
   my $ver_string = Imager::i_tiff_libversion();
@@ -151,7 +151,8 @@ SKIP:
 
   # paletted reads
   my $img4 = Imager->new;
-  ok($img4->read(file=>'testimg/comp4.tif'), "reading 4-bit paletted");
+  ok($img4->read(file=>'testimg/comp4.tif'), "reading 4-bit paletted")
+    or print "# ", $img4->errstr, "\n";
   is($img4->type, 'paletted', "image isn't paletted");
   print "# colors: ", $img4->colorcount,"\n";
   cmp_ok($img4->colorcount, '<=', 16, "more than 16 colors!");
@@ -164,6 +165,10 @@ SKIP:
   my $diff = i_img_diff($img4->{IMG}, $bmp4->{IMG});
   print "# diff $diff\n";
   ok($diff == 0, "image mismatch");
+  my $img4t = Imager->new;
+  ok($img4t->read(file => 'testimg/comp4t.tif'), "read 4-bit paletted, tiled")
+    or print "# ", $img4t->errstr, "\n";
+  is_image($bmp4, $img4t, "check tiled version matches");
   my $img8 = Imager->new;
   ok($img8->read(file=>'testimg/comp8.tif'), "reading 8-bit paletted");
   is($img8->type, 'paletted', "image isn't paletted");
