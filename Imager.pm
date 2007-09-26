@@ -3985,6 +3985,8 @@ gradient fill - L<Imager::Fill/"Fountain fills">,
 L<Imager::Filters/fountain>, L<Imager::Fountain>,
 L<Imager::Filters/gradgen>
 
+grayscale, convert image to - L<Imager::Transformations/convert>
+
 guassian blur - L<Imager::Filter/guassian>
 
 hatch fills - L<Imager::Fill/"Hatched fills">

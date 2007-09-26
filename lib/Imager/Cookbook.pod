@@ -366,6 +366,16 @@ transformed text into.
 
 =head2 Shearing an image
 
+=head2 Convert to grayscale
+
+To convert an RGB image to a grayscale image, use the convert method:
+
+  my $grey = $image->convert(preset => 'gray');
+
+convert() returns a new image.
+
+See: L<Imager::Transformations/"Color transformations">
+
 =head1 METADATA
 
 =head2 Image format
