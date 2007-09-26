@@ -83,13 +83,29 @@ struct read_state_tag {
   void *line_buf;
   uint32 width, height;
   uint16 bits_per_sample;
+
+  /* the total number of channels (samples per pixel) */
+  int samples_per_pixel;
+
+  /* if non-zero, which channel is the alpha channel, typically 3 for rgb */
+  int alpha_chan;
+
+  /* whether or not to scale the color channels based on the alpha
+     channel.  TIFF has 2 types of alpha channel, if the alpha channel
+     we use is EXTRASAMPLE_ASSOCALPHA then the color data will need to
+     be scaled to match Imager's conventions */
+  int scale_alpha;
 };
 
-static int setup_paletted(read_state_t *state);
 static int tile_contig_getter(read_state_t *state, read_putter_t putter);
 static int strip_contig_getter(read_state_t *state, read_putter_t putter);
+
+static int setup_paletted(read_state_t *state);
 static int paletted_putter8(read_state_t *, int, int, int, int, int);
 static int paletted_putter4(read_state_t *, int, int, int, int, int);
+
+static int setup_16_rgb(read_state_t *state);
+static int putter_16(read_state_t *, int, int, int, int, int);
 
 static const int text_tag_count = 
   sizeof(text_tag_names) / sizeof(*text_tag_names);
@@ -193,7 +209,7 @@ comp_munmap(thandle_t h, tdata_t p, toff_t off) {
 static i_img *read_one_tiff(TIFF *tif, int allow_incomplete) {
   i_img *im;
   uint32 width, height;
-  uint16 channels;
+  uint16 samples_per_pixel;
   int tiled, error;
   float xres, yres;
   uint16 resunit;
@@ -211,13 +227,13 @@ static i_img *read_one_tiff(TIFF *tif, int allow_incomplete) {
 
   TIFFGetField(tif, TIFFTAG_IMAGEWIDTH, &width);
   TIFFGetField(tif, TIFFTAG_IMAGELENGTH, &height);
-  TIFFGetFieldDefaulted(tif, TIFFTAG_SAMPLESPERPIXEL, &channels);
+  TIFFGetFieldDefaulted(tif, TIFFTAG_SAMPLESPERPIXEL, &samples_per_pixel);
   tiled = TIFFIsTiled(tif);
   TIFFGetFieldDefaulted(tif, TIFFTAG_PHOTOMETRIC, &photometric);
   TIFFGetFieldDefaulted(tif, TIFFTAG_BITSPERSAMPLE, &bits_per_sample);
   TIFFGetFieldDefaulted(tif, TIFFTAG_PLANARCONFIG, &planar_config);
 
-  mm_log((1, "i_readtiff_wiol: width=%d, height=%d, channels=%d\n", width, height, channels));
+  mm_log((1, "i_readtiff_wiol: width=%d, height=%d, channels=%d\n", width, height, samples_per_pixel));
   mm_log((1, "i_readtiff_wiol: %stiled\n", tiled?"":"not "));
   mm_log((1, "i_readtiff_wiol: %sbyte swapped\n", TIFFIsByteSwapped(tif)?"":"not "));
 
@@ -230,13 +246,11 @@ static i_img *read_one_tiff(TIFF *tif, int allow_incomplete) {
     else
       mm_log((1, "unsupported paletted bits_per_sample %d\n", bits_per_sample));
   }
-#if 0
   else if (bits_per_sample == 16 
 	   && photometric == PHOTOMETRIC_RGB) {
-    setupf = setup_16;
+    setupf = setup_16_rgb;
     putterf = putter_16;
   }
-#endif
   if (tiled) {
     if (planar_config == PLANARCONFIG_CONTIG)
       getterf = tile_contig_getter;
@@ -253,6 +267,7 @@ static i_img *read_one_tiff(TIFF *tif, int allow_incomplete) {
     state.width = width;
     state.height = height;
     state.bits_per_sample = bits_per_sample;
+    state.samples_per_pixel = samples_per_pixel;
 
     if (!setupf(&state))
       return NULL;
@@ -1459,18 +1474,6 @@ read_one_rgb_tiled(TIFF *tif, int width, int height, int allow_incomplete) {
   return NULL;
 }
 
-static void
-rgb_channels(TIFF *tif, int *out_channels, int *alpha_chan) {
-  uint16 channels;
-  uint16 photometric;
-
-  TIFFGetFieldDefaulted(tif, TIFFTAG_SAMPLESPERPIXEL, &channels);
-  TIFFGetFieldDefaulted(tif, TIFFTAG_PHOTOMETRIC, &photometric);
-
-  
-}
-
-
 char const *
 i_tiff_libversion(void) {
   return TIFFGetVersion();
@@ -1615,6 +1618,96 @@ paletted_putter4(read_state_t *state, int x, int y, int width, int height, int e
   return 1;
 }
 
+static void
+rgb_channels(read_state_t *state, int *out_channels) {
+  uint16 extra_count;
+  uint16 *extras;
+  
+  /* safe defaults */
+  *out_channels = 3;
+  state->alpha_chan = 0;
+  state->scale_alpha = 0;
+
+  /* plain RGB */
+  if (state->samples_per_pixel == 3)
+    return;
+ 
+  if (!TIFFGetField(state->tif, TIFFTAG_EXTRASAMPLES, &extra_count, &extras)) {
+    mm_log((1, "tiff: samples != 3 but no extra samples tag\n"));
+    return;
+  }
+
+  if (!extra_count) {
+    mm_log((1, "tiff: samples != 3 but no extra samples listed"));
+    return;
+  }
+
+  state->alpha_chan = 3;
+  switch (*extras) {
+  case EXTRASAMPLE_UNSPECIFIED:
+  case EXTRASAMPLE_ASSOCALPHA:
+    state->scale_alpha = 1;
+    break;
+
+  case EXTRASAMPLE_UNASSALPHA:
+    state->scale_alpha = 0;
+    break;
+
+  default:
+    mm_log((1, "tiff: unknown extra sample type %d, treating as assoc alpha\n",
+	    *extras));
+    state->scale_alpha = 1;
+    break;
+  }
+}
+
+static int
+setup_16_rgb(read_state_t *state) {
+  int out_channels;
+
+  rgb_channels(state, &out_channels);
+
+  state->img = i_img_16_new(state->width, state->height, out_channels);
+  if (!state->img)
+    return 0;
+  state->line_buf = mymalloc(sizeof(i_fcolor) * state->width);
+
+  return 1;
+}
+
+static int 
+putter_16(read_state_t *state, int x, int y, int width, int height, 
+	  int row_extras) {
+  uint16 *p = state->raster;
+  int out_chan = state->img->channels;
+
+  state->pixels_read += (unsigned long) width * height;
+  while (height > 0) {
+    int i;
+    int ch;
+    i_fcolor *outp = state->line_buf;
+
+    for (i = 0; i < width; ++i) {
+      for (ch = 0; ch < out_chan; ++ch) {
+	outp->channel[ch] = Sample16ToF(p[ch]);
+      }
+      if (state->alpha_chan && state->scale_alpha && outp->channel[ch]) {
+	for (ch = 0; ch < state->alpha_chan; ++ch)
+	  outp->channel[ch] /= outp->channel[state->alpha_chan];
+      }
+      p += state->samples_per_pixel;
+      ++outp;
+    }
+
+    i_plinf(state->img, x, x + width, y, state->line_buf);
+
+    p += row_extras * state->samples_per_pixel;
+    --height;
+    ++y;
+  }
+
+  return 1;
+}
 
 /*
 =back
