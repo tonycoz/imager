@@ -111,12 +111,9 @@ typedef unsigned short i_sample16_t;
 #define STORE16(bytes, offset, word) \
    (((i_sample16_t *)(bytes))[offset] = (word))
 #define STORE8as16(bytes, offset, byte) \
-   (((i_sample16_t *)(bytes))[offset] = (byte) * 256)
+   (((i_sample16_t *)(bytes))[offset] = (byte) * 256 + (byte))
 #define GET16(bytes, offset) \
      (((i_sample16_t *)(bytes))[offset])
-#define GET16as8(bytes, offset) \
-     (((i_sample16_t *)(bytes))[offset] / 256)
-
 #else
 
 /* we have to do this the hard way */
@@ -125,15 +122,16 @@ typedef unsigned short i_sample16_t;
     (((unsigned char *)(bytes))[(offset)*2+1] = (word) & 0xFF))
 #define STORE8as16(bytes, offset, byte) \
    ((((unsigned char *)(bytes))[(offset)*2] = (byte)), \
-    (((unsigned char *)(bytes))[(offset)*2+1] = 0))
+    (((unsigned char *)(bytes))[(offset)*2+1] = (byte)))
    
 #define GET16(bytes, offset) \
    (((unsigned char *)(bytes))[(offset)*2] * 256 \
     + ((unsigned char *)(bytes))[(offset)*2+1])
-#define GET16as8(bytes, offset) \
-   (((unsigned char *)(bytes))[(offset)*2] << 8)
 
 #endif
+
+#define GET16as8(bytes, offset) \
+     ((((i_sample16_t *)(bytes))[offset]+127) / 257)
 
 /*
 =item i_img_16_new_low(int x, int y, int ch)
