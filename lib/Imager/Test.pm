@@ -248,6 +248,22 @@ sub is_image_similar($$$$) {
   if ($diff > $limit) {
     $builder->ok(0, $comment);
     $builder->diag("image data difference > $limit - $diff");
+   
+    if ($limit == 0) {
+      # find the first mismatch
+      CHECK:
+      for my $y (0 .. $left->getheight()-1) {
+	for my $x (0.. $left->getwidth()-1) {
+	  my @lsamples = $left->getsamples(x => $x, y => $y, width => 1);
+	  my @rsamples = $right->getsamples(x => $x, y => $y, width => 1);
+          if ("@lsamples" ne "@rsamples") {
+            $builder->diag("first mismatch at ($x, $y) - @lsamples vs @rsamples");
+            last CHECK;
+          }
+	}
+      }
+    }
+
     return;
   }
   
