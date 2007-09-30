@@ -105,6 +105,7 @@ static int paletted_putter8(read_state_t *, int, int, int, int, int);
 static int paletted_putter4(read_state_t *, int, int, int, int, int);
 
 static int setup_16_rgb(read_state_t *state);
+static int setup_16_grey(read_state_t *state);
 static int putter_16(read_state_t *, int, int, int, int, int);
 
 static const int text_tag_count = 
@@ -249,6 +250,11 @@ static i_img *read_one_tiff(TIFF *tif, int allow_incomplete) {
   else if (bits_per_sample == 16 
 	   && photometric == PHOTOMETRIC_RGB) {
     setupf = setup_16_rgb;
+    putterf = putter_16;
+  }
+  else if (bits_per_sample == 16
+	   && photometric == PHOTOMETRIC_MINISBLACK) {
+    setupf = setup_16_grey;
     putterf = putter_16;
   }
   if (tiled) {
@@ -1666,6 +1672,63 @@ setup_16_rgb(read_state_t *state) {
   int out_channels;
 
   rgb_channels(state, &out_channels);
+
+  state->img = i_img_16_new(state->width, state->height, out_channels);
+  if (!state->img)
+    return 0;
+  state->line_buf = mymalloc(sizeof(i_fcolor) * state->width);
+
+  return 1;
+}
+
+static void
+grey_channels(read_state_t *state, int *out_channels) {
+  uint16 extra_count;
+  uint16 *extras;
+  
+  /* safe defaults */
+  *out_channels = 1;
+  state->alpha_chan = 0;
+  state->scale_alpha = 0;
+
+  /* plain grey */
+  if (state->samples_per_pixel == 1)
+    return;
+ 
+  if (!TIFFGetField(state->tif, TIFFTAG_EXTRASAMPLES, &extra_count, &extras)) {
+    mm_log((1, "tiff: samples != 1 but no extra samples tag\n"));
+    return;
+  }
+
+  if (!extra_count) {
+    mm_log((1, "tiff: samples != 1 but no extra samples listed"));
+    return;
+  }
+
+  state->alpha_chan = 1;
+  switch (*extras) {
+  case EXTRASAMPLE_UNSPECIFIED:
+  case EXTRASAMPLE_ASSOCALPHA:
+    state->scale_alpha = 1;
+    break;
+
+  case EXTRASAMPLE_UNASSALPHA:
+    state->scale_alpha = 0;
+    break;
+
+  default:
+    mm_log((1, "tiff: unknown extra sample type %d, treating as assoc alpha\n",
+	    *extras));
+    state->scale_alpha = 1;
+    break;
+  }
+}
+
+static int
+setup_16_grey(read_state_t *state) {
+  int out_channels;
+
+  grey_channels(state, &out_channels);
 
   state->img = i_img_16_new(state->width, state->height, out_channels);
   if (!state->img)

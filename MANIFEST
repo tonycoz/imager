@@ -307,6 +307,7 @@ testimg/comp8.tif       8-bit/pixel paletted TIFF
 testimg/exiftest.jpg	Test image for EXIF parsing
 testimg/expected.gif
 testimg/gimpgrad        A GIMP gradient file
+testimg/grey16.tif	16-bit/sample greyscale TIFF
 testimg/junk.ppm
 testimg/loccmap.gif
 testimg/longid.tga      Test TGA with a long id string

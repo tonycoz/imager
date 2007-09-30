@@ -1,6 +1,6 @@
 #!perl -w
 use strict;
-use Test::More tests => 143;
+use Test::More tests => 147;
 use Imager qw(:all);
 use Imager::Test qw(is_image);
 $^W=1; # warnings during command-line tests
@@ -32,7 +32,7 @@ SKIP:
     $im = Imager->new(xsize=>2, ysize=>2);
     ok(!$im->write(file=>"testout/notiff.tif"), "should fail to write tiff");
     is($im->errstr, 'format not supported', "check no tiff message");
-    skip("no tiff support", 139);
+    skip("no tiff support", 143);
   }
 
   my $ver_string = Imager::i_tiff_libversion();
@@ -517,6 +517,14 @@ SKIP:
     ok($im16t->read(file => 'testimg/rgb16t.tif'), "ready 16-bit rgb tiled");
     is($im16t->bits, 16, 'got a 16-bit image');
     is_image($im16, $im16t, 'check they match');
+
+    my $grey16 = Imager->new;
+    ok($grey16->read(file => 'testimg/grey16.tif'), "read 16-bit grey")
+      or print "# ", $grey16->errstr, "\n";
+    is($grey16->bits, 16, 'got a 16-bit image');
+    is($grey16->getchannels, 1, 'and its grey');
+    my $comp16 = $im16->convert(matrix => [ [ 0.299, 0.587, 0.114 ] ]);
+    is_image($grey16, $comp16, 'compare grey to converted');
   }
 }
 
