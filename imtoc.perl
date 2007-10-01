@@ -16,7 +16,10 @@ my $code_line;
 my @out;
 my $failed;
 
-push @out, "#line 1 \"$src\"\n";
+push @out, 
+  "#define IM_ROUND_8(x) ((int)((x)+0.5))\n",
+  "#define IM_ROUND_double(x) (x)\n",
+  "#line 1 \"$src\"\n";
 while (defined(my $line = <SRC>)) {
   if ($line =~ /^\#code\s+(\S.+)$/) {
     $save_code
@@ -99,6 +102,7 @@ sub byte_samples {
     s/\bIM_Sf\b/"%d"/g;
     s/\bIM_Wf\b/"%d"/g;
     s/\bIM_SUFFIX\((\w+)\)/$1_8/g;
+    s/\bIM_ROUND\b/IM_ROUND_8/g;
   }
 
   @lines;
@@ -121,6 +125,7 @@ sub double_samples {
     s/\bIM_Sf\b/"%f"/g;
     s/\bIM_Wf\b/"%f"/g;
     s/\bIM_SUFFIX\((\w+)\)/$1_double/g;
+    s/\bIM_ROUND\b/IM_ROUND_double/g;
   }
 
   @lines;
