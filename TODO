@@ -38,6 +38,22 @@ library search path on 64-bit centos (#29045)
 
 i_gsamp() chan_count validation (#28985)
 
+Imager::Font::Wrap doesn't correctly set savepos (#29771)
+
+testdrive warnings (#29610)
+
+Imager::Files still refers to rgb file type (#29354) (done)
+
+t/t01introvert test failure line 495 (#29413)
+
+Imager::Expr::Infix problem (#29562)
+
+Makefile.PL --incpath and --libpath should expand ~/ paths (#29484)
+
+PNG images sometimes get larger (#29268) (maybe 0.62)
+
+CMYK alpha TIFF problems with recent libtiff (#29353)
+
 For 0.60 (hopefully):
 
 RGB file support (#8666) (done)
