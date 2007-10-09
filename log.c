@@ -67,6 +67,14 @@ void i_fatal(int exitcode,const char *fmt, ... ) { exit(exitcode); }
 
 #endif
 
+/*
+=item i_loog(level, format, ...)
+=category Logging
+
+This is an internal function called by the mm_log() macro.
+
+=cut
+*/
 
 void
 i_loog(int level,const char *fmt, ... ) {

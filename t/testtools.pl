@@ -175,6 +175,3 @@ sub mask_tests {
 
 }
 
-sub NCF {
-  return Imager::Color::Float->new(@_);
-}

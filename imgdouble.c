@@ -80,15 +80,15 @@ static i_img IIM_base_double_direct =
 
 /*
 =item i_img_double_new(int x, int y, int ch)
-
 =category Image creation
 
 Creates a new double per sample image.
 
 =cut
 */
-i_img *i_img_double_new_low(i_img *im, int x, int y, int ch) {
+i_img *i_img_double_new(int x, int y, int ch) {
   int bytes;
+  i_img *im;
 
   mm_log((1,"i_img_double_new(x %d, y %d, ch %d)\n", x, y, ch));
 
@@ -106,6 +106,7 @@ i_img *i_img_double_new_low(i_img *im, int x, int y, int ch) {
     return NULL;
   }
   
+  im = i_img_alloc();
   *im = IIM_base_double_direct;
   i_tags_new(&im->tags);
   im->xsize = x;
@@ -114,31 +115,8 @@ i_img *i_img_double_new_low(i_img *im, int x, int y, int ch) {
   im->bytes = bytes;
   im->ext_data = NULL;
   im->idata = mymalloc(im->bytes);
-  if (im->idata) {
-    memset(im->idata, 0, im->bytes);
-  }
-  else {
-    i_tags_destroy(&im->tags);
-    im = NULL;
-  }
-  
-  return im;
-}
-
-i_img *i_img_double_new(int x, int y, int ch) {
-  i_img *im;
-
-  i_clear_error();
-
-  im = mymalloc(sizeof(i_img));
-  if (im) {
-    if (!i_img_double_new_low(im, x, y, ch)) {
-      myfree(im);
-      im = NULL;
-    }
-  }
-  
-  mm_log((1, "(%p) <- i_img_double_new\n", im));
+  memset(im->idata, 0, im->bytes);
+  i_img_init(im);
   
   return im;
 }

@@ -35,6 +35,13 @@ new() method.
 
   my $font = NF(file => 'foo.ttf');
 
+=item NCF
+
+Create a new L<Imager::Color::Font> object, supplying any parameter to
+the new() method.
+
+  my $colorf = NCF(1.0, 0, 0);
+
 =back
 
 =head1 BUGS

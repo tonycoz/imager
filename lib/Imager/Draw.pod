@@ -922,10 +922,21 @@ type - the type of sample data to return.  Default: C<8bit>.
 
 Permited values are C<8bit> and C<float>.
 
+As of Imager 0.61 this can be C<16bit> only for 16 bit images.
+
 =item *
 
 channels - a reference to an array of channels to return, where 0 is
 the first channel.  Default: C< [ 0 .. $self->getchannels()-1 ] >
+
+=item *
+
+target - if an array reference is supplied in target then the samples
+will be stored here instead of being returned.
+
+=item *
+
+offset - the offset within the array referenced by I<target>
 
 =back
 
@@ -936,6 +947,9 @@ between 0.0 and 1.0 inclusive when I<type> is C<float>.
 In scalar context this will return a string of packed bytes, as with
 C< pack("C*", ...) > when I<type> is C<8bit> or a string of packed
 doubles as with C< pack("d*", ...) > when I<type> is C<float>.
+
+If the I<target> option is supplied then only a count of samples is
+returned.
 
 Example: Check if any pixels in an image have a non-zero alpha
 channel:
@@ -959,6 +973,59 @@ Example: Convert a 2 channel grey image into a 4 channel RGBA image:
     my $data = $src->getsamples(y=>$y, channels=>[ 0, 0, 0, 1 ]);
     $out->setscanline(y=>$y, pixels=>$data);
   }
+
+Retrieve 16-bit samples:
+
+  if ($img->bits == 16) {
+    my @samples;
+    $img->getsamples(x => 0, y => $y, target => \@samples, type => '16bit');
+  }
+
+=item setsamples
+
+This allows writing of samples back to some images.  Currently this is
+only supported for 16-bit/sample images.
+
+Parameters:
+
+=over
+
+=item *
+
+y - vertical position of the scanline.  This parameter is required.
+
+=item *
+
+x - position to start on the scanline.  Default: 0
+
+=item *
+
+width - number of pixels to write.  Default: $img->getwidth - x.  The
+minimum of this and the number of pixels represented by the samples
+provided will be written.
+
+=item *
+
+type - the type of sample data to write.  This parameter is required.
+
+As of Imager 0.61 this can only be C<16bit> only for 16 bit images.
+
+=item *
+
+channels - a reference to an array of channels to return, where 0 is
+the first channel.  Default: C< [ 0 .. $self->getchannels()-1 ] >
+
+=item *
+
+data - a reference to an array of samples to write.  Required.
+
+=item *
+
+offset - the starting offset within the array referenced by I<data>
+
+=back
+
+Returns the number of samples written.
 
 =back
 

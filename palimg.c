@@ -74,15 +74,19 @@ static i_img IIM_base_8bit_pal =
 };
 
 /*
-=item i_img_pal_new_low(im, x, y, channels, maxpal)
+=item i_img_pal_new(x, y, channels, maxpal)
 
-Creates a new paletted image.
+=category Image creation
 
-Currently 0 < maxpal <= 256
+Creates a new paletted image of the supplied dimensions.
+
+Returns a new image or NULL on failure.
 
 =cut
 */
-i_img *i_img_pal_new_low(i_img *im, int x, int y, int channels, int maxpal) {
+i_img *
+i_img_pal_new(int x, int y, int channels, int maxpal) {
+  i_img *im;
   i_img_pal_ext *palext;
   int bytes, line_bytes;
 
@@ -114,6 +118,7 @@ i_img *i_img_pal_new_low(i_img *im, int x, int y, int channels, int maxpal) {
     return NULL;
   }
 
+  im = i_img_alloc();
   memcpy(im, &IIM_base_8bit_pal, sizeof(i_img));
   palext = mymalloc(sizeof(i_img_pal_ext));
   palext->pal = mymalloc(sizeof(i_color) * maxpal);
@@ -128,31 +133,9 @@ i_img *i_img_pal_new_low(i_img *im, int x, int y, int channels, int maxpal) {
   memset(im->idata, 0, im->bytes);
   im->xsize = x;
   im->ysize = y;
+
+  i_img_init(im);
   
-  return im;
-}
-
-/*
-=item i_img_pal_new(x, y, channels, maxpal)
-
-=category Image creation
-
-Creates a new paletted image of the supplied dimensions.
-
-Returns a new image or NULL on failure.
-
-=cut
-*/
-
-i_img *i_img_pal_new(int x, int y, int channels, int maxpal) {
-  i_img *im;
-  mm_log((1, "i_img_pal_new(x %d, y %d, channels %d, maxpal %d)\n", x, y, channels, maxpal));
-  im = mymalloc(sizeof(i_img));
-  if (!i_img_pal_new_low(im, x, y, channels, maxpal)) {
-    myfree(im);
-    im = NULL;
-  }
-
   return im;
 }
 

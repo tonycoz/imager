@@ -102,7 +102,109 @@ typedef int (*i_f_setcolors_t)(i_img *im, int index, const i_color *colors,
 
 typedef void (*i_f_destroy_t)(i_img *im);
 
+typedef int (*i_f_gsamp_bits_t)(i_img *im, int x, int r, int y, unsigned *samp,
+                           const int *chans, int chan_count, int bits);
+typedef int (*i_f_psamp_bits_t)(i_img *im, int x, int r, int y, unsigned const *samp,
+				 const int *chans, int chan_count, int bits);
+
 typedef int i_img_dim;
+
+/*
+=item i_img
+=category Data Types
+=synopsis i_img *img;
+
+This is Imager's image type.
+
+It contains the following members:
+
+=over
+
+=item *
+
+channels - the number of channels in the image
+
+=item *
+
+xsize, ysize - the width and height of the image in pixels
+
+=item *
+
+bytes - the number of bytes used to store the image data.  Undefined
+where virtual is non-zero.
+
+=item *
+
+ch_mask - a mask of writable channels.  eg. if this is 6 then only
+channels 1 and 2 are writable.  There may be bits set for which there
+are no channels in the image.
+
+=item *
+
+bits - the number of bits stored per sample.  Should be one of
+i_8_bits, i_16_bits, i_double_bits.
+
+=item *
+
+type - either i_direct_type for direct color images, or i_palette_type
+for paletted images.
+
+=item *
+
+virtual - if zero then this image is-self contained.  If non-zero then
+this image could be an interface to some other implementation.
+
+=item *
+
+idata - the image data.  This should not be directly accessed.  A new
+image implementation can use this to store its image data.
+i_img_destroy() will myfree() this pointer if it's non-null.
+
+=item *
+
+tags - a structure storing the image's tags.  This should only be
+accessed via the i_tags_*() functions.
+
+=item *
+
+ext_data - a pointer for use internal to an image implementation.
+This should be freed by the image's destroy handler.
+
+=item *
+
+im_data - data internal to Imager.  This is initialized by
+i_img_init().
+
+=item *
+
+i_f_ppix, i_f_ppixf, i_f_plin, i_f_plinf, i_f_gpix, i_f_gpixf,
+i_f_glin, i_f_glinf, i_f_gsamp, i_f_gampf - implementations for each
+of the required image functions.  An image implementation should
+initialize these between calling i_img_alloc() and i_img_init().
+
+=item *
+
+i_f_gpal, i_f_ppal, i_f_addcolors, i_f_getcolors, i_f_colorcount,
+i_f_maxcolors, i_f_findcolor, i_f_setcolors - implementations for each
+paletted image function.
+
+=item *
+
+i_f_destroy - custom image destruction function.  This should be used
+to release memory if necessary.
+
+=item *
+
+i_f_gsamp_bits - implements i_gsamp_bits() for this image.
+
+=item *
+
+i_f_psamp_bits - implements i_psamp_bits() for this image.
+
+=back
+
+=cut
+*/
 
 struct i_img_ {
   int channels;
@@ -141,6 +243,12 @@ struct i_img_ {
   i_f_setcolors_t i_f_setcolors;
 
   i_f_destroy_t i_f_destroy;
+
+  /* as of 0.61 */
+  i_f_gsamp_bits_t i_f_gsamp_bits;
+  i_f_psamp_bits_t i_f_psamp_bits;
+
+  void *im_data;
 };
 
 /* ext_data for paletted images

@@ -49,8 +49,58 @@ static int i_glinf_d(i_img *im, int l, int r, int y, i_fcolor *vals);
 static int i_plinf_d(i_img *im, int l, int r, int y, const i_fcolor *vals);
 static int i_gsamp_d(i_img *im, int l, int r, int y, i_sample_t *samps, const int *chans, int chan_count);
 static int i_gsampf_d(i_img *im, int l, int r, int y, i_fsample_t *samps, const int *chans, int chan_count);
-/*static int i_psamp_d(i_img *im, int l, int r, int y, i_sample_t *samps, int *chans, int chan_count);
-  static int i_psampf_d(i_img *im, int l, int r, int y, i_fsample_t *samps, int *chans, int chan_count);*/
+
+/*
+=item i_img_alloc()
+=category Image Implementation
+
+Allocates a new i_img structure.
+
+When implementing a new image type perform the following steps in your
+image object creation function:
+
+=over
+
+=item 1.
+
+allocate the image with i_img_alloc().
+
+=item 2.
+
+initialize any function pointers or other data as needed, you can
+overwrite the whole block if you need to.
+
+=item 3.
+
+initialize Imager's internal data by calling i_img_init() on the image
+object.
+
+=back
+
+=cut
+*/
+
+i_img *
+i_img_alloc(void) {
+  return mymalloc(sizeof(i_img));
+}
+
+/*
+=item i_img_init(img)
+=category Image Implementation
+
+Imager interal initialization of images.
+
+Currently this does very little, in the future it may be used to
+support threads, or color profiles.
+
+=cut
+*/
+
+void
+i_img_init(i_img *img) {
+  img->im_data = NULL;
+}
 
 /* 
 =item ICL_new_internal(r, g, b, a)
@@ -299,8 +349,8 @@ i_img_new() {
   i_img *im;
   
   mm_log((1,"i_img_struct()\n"));
-  if ( (im=mymalloc(sizeof(i_img))) == NULL)
-    i_fatal(2,"malloc() error\n");
+
+  im = i_img_alloc();
   
   *im = IIM_base_8bit_direct;
   im->xsize=0;
@@ -309,6 +359,8 @@ i_img_new() {
   im->ch_mask=MAXINT;
   im->bytes=0;
   im->idata=NULL;
+
+  i_img_init(im);
   
   mm_log((1,"(%p) <- i_img_struct\n",im));
   return im;
@@ -371,8 +423,7 @@ i_img_empty_ch(i_img *im,int x,int y,int ch) {
   }
 
   if (im == NULL)
-    if ( (im=mymalloc(sizeof(i_img))) == NULL)
-      i_fatal(2,"malloc() error\n");
+    im = i_img_alloc();
 
   memcpy(im, &IIM_base_8bit_direct, sizeof(i_img));
   i_tags_new(&im->tags);
@@ -386,6 +437,8 @@ i_img_empty_ch(i_img *im,int x,int y,int ch) {
   memset(im->idata,0,(size_t)im->bytes);
   
   im->ext_data = NULL;
+
+  i_img_init(im);
   
   mm_log((1,"(%p) <- i_img_empty_ch\n",im));
   return im;
@@ -704,19 +757,7 @@ i_copy(i_img *src) {
     }
   }
   else {
-    i_color temp;
-    int index;
-    int count;
     i_palidx *vals;
-
-    /* paletted image */
-    i_img_pal_new_low(im, x1, y1, src->channels, i_maxcolors(src));
-    /* copy across the palette */
-    count = i_colorcount(src);
-    for (index = 0; index < count; ++index) {
-      i_getcolors(src, index, &temp, 1);
-      i_addcolors(im, &temp, 1);
-    }
 
     vals = mymalloc(sizeof(i_palidx) * x1);
     for (y = 0; y < y1; ++y) {
