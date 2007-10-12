@@ -211,7 +211,7 @@ i_img *i_matrix_transform_bg(i_img *src, int xsize, int ysize, const double *mat
           /* dividing by sz gives us the ability to do perspective 
              transforms */
           sz = x * matrix[6] + y * matrix[7] + matrix[8];
-          if (abs(sz) > 0.0000001) {
+          if (fabs(sz) > 0.0000001) {
             sx = (x * matrix[0] + y * matrix[1] + matrix[2]) / sz;
             sy = (x * matrix[3] + y * matrix[4] + matrix[5]) / sz;
           }
@@ -221,7 +221,7 @@ i_img *i_matrix_transform_bg(i_img *src, int xsize, int ysize, const double *mat
 
           /* anything outside these ranges is either a broken co-ordinate
              or outside the source */
-          if (abs(sz) > 0.0000001 
+          if (fabs(sz) > 0.0000001 
               && sx >= -1 && sx < src->xsize
               && sy >= -1 && sy < src->ysize) {
 
@@ -289,7 +289,7 @@ i_img *i_matrix_transform_bg(i_img *src, int xsize, int ysize, const double *mat
           /* dividing by sz gives us the ability to do perspective 
              transforms */
           sz = x * matrix[6] + y * matrix[7] + matrix[8];
-          if (abs(sz) > 0.0000001) {
+          if (fabs(sz) > 0.0000001) {
             sx = (x * matrix[0] + y * matrix[1] + matrix[2]) / sz;
             sy = (x * matrix[3] + y * matrix[4] + matrix[5]) / sz;
           }
@@ -299,7 +299,7 @@ i_img *i_matrix_transform_bg(i_img *src, int xsize, int ysize, const double *mat
 
           /* anything outside these ranges is either a broken co-ordinate
              or outside the source */
-          if (abs(sz) > 0.0000001 
+          if (fabs(sz) > 0.0000001 
               && sx >= -1 && sx < src->xsize
               && sy >= -1 && sy < src->ysize) {
 

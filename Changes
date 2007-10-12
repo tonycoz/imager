@@ -7,6 +7,10 @@ Imager 0.61 - unreleased
    when scaling an animated gif
    http://rt.cpan.org/Ticket/Display.html?id=27591
 
+ - correct handling of sz in matrix_transform() - this should allow
+   perspective type transformations to work now.
+   http://rt.cpan.org/Ticket/Display.html?id=29936
+
 Imager 0.60 - 30 August 2007
 ===========
 

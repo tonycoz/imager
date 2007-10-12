@@ -1,6 +1,6 @@
 #!perl -w
 use strict;
-use Test::More tests => 61;
+use Test::More tests => 62;
 use Imager;
 
 #$Imager::DEBUG=1;
@@ -151,3 +151,22 @@ sub rot_test {
   cmp_ok($warning, '=~', 't64copyflip\\.t', "correct file");
 }
 
+{
+  # 29936 - matrix_transform() should use fabs() instead of abs()
+  # range checking sz 
+
+  # this meant that when sz was < 1 (which it often is for these
+  # transformations), it treated the values out of range, producing a
+  # blank output image
+
+  my $src = Imager->new(xsize => 20, ysize => 20);
+  $src->box(filled => 1, color => 'FF0000');
+  my $out = $src->matrix_transform(matrix => [ 1, 0, 0,
+					       0, 1, 0,
+					       0, 0, 0.9999 ])
+    or print "# ", $src->errstr, "\n";
+  my $blank = Imager->new(xsize => 20, ysize => 20);
+  # they have to be different, surely that would be easy
+  my $diff = Imager::i_img_diff($out->{IMG}, $blank->{IMG});
+  ok($diff, "RT#29936 - check non-blank output");
+}
