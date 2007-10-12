@@ -52,7 +52,10 @@ Makefile.PL --incpath and --libpath should expand ~/ paths (#29484)
 
 PNG images sometimes get larger (#29268) (maybe 0.62)
 
-CMYK alpha TIFF problems with recent libtiff (#29353)
+CMYK alpha TIFF problems with old libtiff (#29353) (done)
+
+matrix_transform() should use fabs() instead of abs() range checking
+sz (#29936)
 
 For 0.60 (hopefully):
 
