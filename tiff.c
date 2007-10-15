@@ -95,6 +95,10 @@ struct read_state_tag {
      we use is EXTRASAMPLE_ASSOCALPHA then the color data will need to
      be scaled to match Imager's conventions */
   int scale_alpha;
+
+  int chan_count;
+  int *chanp;
+  int channels[MAXCHANNELS];
 };
 
 static int tile_contig_getter(read_state_t *state, read_putter_t putter);
@@ -1432,7 +1436,6 @@ read_one_rgb_tiled(TIFF *tif, int width, int height, int allow_incomplete) {
 	for( i_row = 0; i_row < newrows; i_row++ ) {
 	  i_color *outp = line;
 	  for(x = 0; x < newcols; x++) {
-	    i_color val;
 	    uint32 temp = raster[x+tile_width*(tile_height-i_row-1)];
 	    outp->rgba.r = TIFFGetR(temp);
 	    outp->rgba.g = TIFFGetG(temp);
@@ -1488,7 +1491,6 @@ i_tiff_libversion(void) {
 static int 
 setup_paletted(read_state_t *state) {
   uint16 *maps[3];
-  i_color c;
   int i, ch;
   int color_count = 1 << state->bits_per_sample;
 
@@ -1676,7 +1678,7 @@ setup_16_rgb(read_state_t *state) {
   state->img = i_img_16_new(state->width, state->height, out_channels);
   if (!state->img)
     return 0;
-  state->line_buf = mymalloc(sizeof(i_fcolor) * state->width);
+  state->line_buf = mymalloc(sizeof(unsigned) * state->width * out_channels);
 
   return 1;
 }
@@ -1733,7 +1735,7 @@ setup_16_grey(read_state_t *state) {
   state->img = i_img_16_new(state->width, state->height, out_channels);
   if (!state->img)
     return 0;
-  state->line_buf = mymalloc(sizeof(i_fcolor) * state->width);
+  state->line_buf = mymalloc(sizeof(unsigned) * state->width * out_channels);
 
   return 1;
 }
@@ -1748,21 +1750,21 @@ putter_16(read_state_t *state, int x, int y, int width, int height,
   while (height > 0) {
     int i;
     int ch;
-    i_fcolor *outp = state->line_buf;
+    unsigned *outp = state->line_buf;
 
     for (i = 0; i < width; ++i) {
       for (ch = 0; ch < out_chan; ++ch) {
-	outp->channel[ch] = Sample16ToF(p[ch]);
+	outp[ch] = p[ch];
       }
-      if (state->alpha_chan && state->scale_alpha && outp->channel[ch]) {
+      if (state->alpha_chan && state->scale_alpha && outp[ch]) {
 	for (ch = 0; ch < state->alpha_chan; ++ch)
-	  outp->channel[ch] /= outp->channel[state->alpha_chan];
+	  outp[ch] = outp[ch] * (double)outp[state->alpha_chan] / 65535;
       }
       p += state->samples_per_pixel;
-      ++outp;
+      outp += out_chan;
     }
 
-    i_plinf(state->img, x, x + width, y, state->line_buf);
+    i_psamp_bits(state->img, x, x + width, y, state->line_buf, NULL, out_chan, 16);
 
     p += row_extras * state->samples_per_pixel;
     --height;
