@@ -1779,7 +1779,7 @@ putter_16(read_state_t *state, int x, int y, int width, int height,
 
 =head1 AUTHOR
 
-Arnar M. Hrafnkelsson <addi@umich.edu>
+Arnar M. Hrafnkelsson <addi@umich.edu>, Tony Cook <tony@imager.perl.org>
 
 =head1 SEE ALSO
 
