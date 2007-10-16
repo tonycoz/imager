@@ -308,6 +308,7 @@ testimg/comp8.tif       8-bit/pixel paletted TIFF
 testimg/exiftest.jpg	Test image for EXIF parsing
 testimg/expected.gif
 testimg/gimpgrad        A GIMP gradient file
+testimg/gralpha.tif	Grey alpha test image
 testimg/grey16.tif	16-bit/sample greyscale TIFF
 testimg/imager.pbm	Test bi-level
 testimg/imager.tif	Test bi-level

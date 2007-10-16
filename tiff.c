@@ -109,6 +109,9 @@ static int setup_16_rgb(read_state_t *state);
 static int setup_16_grey(read_state_t *state);
 static int putter_16(read_state_t *, int, int, int, int, int);
 
+static int setup_8_grey(read_state_t *state);
+static int putter_8(read_state_t *, int, int, int, int, int);
+
 static int setup_32_rgb(read_state_t *state);
 static int setup_32_grey(read_state_t *state);
 static int putter_32(read_state_t *, int, int, int, int, int);
@@ -264,6 +267,11 @@ static i_img *read_one_tiff(TIFF *tif, int allow_incomplete) {
 	   && photometric == PHOTOMETRIC_MINISBLACK) {
     setupf = setup_16_grey;
     putterf = putter_16;
+  }
+  else if (bits_per_sample == 8
+	   && photometric == PHOTOMETRIC_MINISBLACK) {
+    setupf = setup_8_grey;
+    putterf = putter_8;
   }
   else if (bits_per_sample == 32 
 	   && photometric == PHOTOMETRIC_RGB) {
@@ -1778,6 +1786,55 @@ putter_16(read_state_t *state, int x, int y, int width, int height,
     }
 
     i_psamp_bits(state->img, x, x + width, y, state->line_buf, NULL, out_chan, 16);
+
+    p += row_extras * state->samples_per_pixel;
+    --height;
+    ++y;
+  }
+
+  return 1;
+}
+
+static int
+setup_8_grey(read_state_t *state) {
+  int out_channels;
+
+  grey_channels(state, &out_channels);
+
+  state->img = i_img_8_new(state->width, state->height, out_channels);
+  if (!state->img)
+    return 0;
+  state->line_buf = mymalloc(sizeof(i_color) * state->width * out_channels);
+
+  return 1;
+}
+
+static int 
+putter_8(read_state_t *state, int x, int y, int width, int height, 
+	  int row_extras) {
+  unsigned char *p = state->raster;
+  int out_chan = state->img->channels;
+
+  state->pixels_read += (unsigned long) width * height;
+  while (height > 0) {
+    int i;
+    int ch;
+    i_color *outp = state->line_buf;
+
+    for (i = 0; i < width; ++i) {
+      for (ch = 0; ch < out_chan; ++ch) {
+	outp->channel[ch] = p[ch];
+      }
+      if (state->alpha_chan && state->scale_alpha 
+	  && outp->channel[state->alpha_chan]) {
+	for (ch = 0; ch < state->alpha_chan; ++ch)
+	  outp->channel[ch] = (outp->channel[ch] * 255 + 127) / outp->channel[state->alpha_chan];
+      }
+      p += state->samples_per_pixel;
+      outp++;
+    }
+
+    i_plin(state->img, x, x + width, y, state->line_buf);
 
     p += row_extras * state->samples_per_pixel;
     --height;

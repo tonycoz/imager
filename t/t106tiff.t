@@ -1,6 +1,6 @@
 #!perl -w
 use strict;
-use Test::More tests => 161;
+use Test::More tests => 163;
 use Imager qw(:all);
 use Imager::Test qw(is_image);
 $^W=1; # warnings during command-line tests
@@ -32,7 +32,7 @@ SKIP:
     $im = Imager->new(xsize=>2, ysize=>2);
     ok(!$im->write(file=>"testout/notiff.tif"), "should fail to write tiff");
     is($im->errstr, 'format not supported', "check no tiff message");
-    skip("no tiff support", 157);
+    skip("no tiff support", 159);
   }
 
   my $ver_string = Imager::i_tiff_libversion();
@@ -584,6 +584,33 @@ SKIP:
 	    $msg = "($x,$y)[$ch] color mismatch $c[$ch] vs $expect->[$ch]";
 	    last CHECKER;
 	  }
+	}
+      }
+    }
+    ok($ok, $msg);
+  }
+
+  { # check alpha channels scaled correctly for fallback handler
+    my $im = Imager->new;
+    ok($im->read(file=>'testimg/gralpha.tif'), 'read alpha check grey image');
+    my @greys = ( 0, 255, 52, 112 );
+    my @alphas = ( 255, 191, 127, 63 );
+    my $ok = 1;
+    my $msg = 'alpha check ok';
+  CHECKER:
+    for my $y (0 .. 3) {
+      for my $x (0 .. 3) {
+	my $c = $im->getpixel(x => $x, 'y' => $y);
+	my ($grey, $alpha) = $c->rgba;
+	if ($alpha != $alphas[$y]) {
+	  $ok = 0;
+	  $msg = "($x,$y) alpha mismatch $alpha vs $alphas[$y]";
+	  last CHECKER;
+	}
+	if (abs($greys[$x] - $grey) > 3) {
+	  $ok = 0;
+	  $msg = "($x,$y) grey mismatch $grey vs $greys[$x]";
+	  last CHECKER;
 	}
       }
     }
