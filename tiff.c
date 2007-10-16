@@ -1175,30 +1175,40 @@ static void pack_4bit_hl(unsigned char *buf, int count) {
 }
 
 static i_img *
-make_rgb(TIFF *tif, int width, int height) {
+make_rgb(TIFF *tif, int width, int height, int *alpha_chan) {
   uint16 photometric;
-  uint16 channels;
+  uint16 channels, in_channels;
+  uint16 extra_count;
+  uint16 *extras;
 
-  TIFFGetFieldDefaulted(tif, TIFFTAG_SAMPLESPERPIXEL, &channels);
+  TIFFGetFieldDefaulted(tif, TIFFTAG_SAMPLESPERPIXEL, &in_channels);
   TIFFGetFieldDefaulted(tif, TIFFTAG_PHOTOMETRIC, &photometric);
 
-  if (photometric == PHOTOMETRIC_SEPARATED && channels >= 4) {
-    /* TIFF can have more than one alpha channel on an image,
-       but Imager can't, only store the first one */
-    
-    channels = channels == 4 ? 3 : 4;
+  switch (photometric) {
+  case PHOTOMETRIC_SEPARATED:
+    channels = 3;
+    break;
+  
+  case PHOTOMETRIC_MINISWHITE:
+  case PHOTOMETRIC_MINISBLACK:
+    /* the TIFF RGBA functions expand single channel grey into RGB,
+       so reduce it, we move the alpha channel into the right place 
+       if needed */
+    channels = 1;
+    break;
 
-    /* unfortunately the RGBA functions don't try to deal with the alpha
-       channel on CMYK images, at some point I'm planning on expanding
-       TIFF support to handle 16-bit/sample images and I'll deal with
-       it then */
+  default:
+    channels = 3;
+    break;
   }
-
   /* TIFF images can have more than one alpha channel, but Imager can't
      this ignores the possibility of 2 channel images with 2 alpha,
      but there's not much I can do about that */
-  if (channels > 4)
-    channels = 4;
+  *alpha_chan = 0;
+  if (TIFFGetField(tif, TIFFTAG_EXTRASAMPLES, &extra_count, &extras)
+      && extra_count) {
+    *alpha_chan = channels++;
+  }
 
   return i_img_8_new(width, height, channels);
 }
@@ -1208,8 +1218,10 @@ read_one_rgb_lines(TIFF *tif, int width, int height, int allow_incomplete) {
   i_img *im;
   uint32* raster = NULL;
   uint32 rowsperstrip, row;
+  i_color *line_buf;
+  int alpha_chan;
 
-  im = make_rgb(tif, width, height);
+  im = make_rgb(tif, width, height, &alpha_chan);
   if (!im)
     return NULL;
 
@@ -1226,6 +1238,8 @@ read_one_rgb_lines(TIFF *tif, int width, int height, int allow_incomplete) {
     i_push_error(0, "No space for raster buffer");
     return NULL;
   }
+
+  line_buf = mymalloc(sizeof(i_color) * width);
   
   for( row = 0; row < height; row += rowsperstrip ) {
     uint32 newrows, i_row;
@@ -1249,18 +1263,33 @@ read_one_rgb_lines(TIFF *tif, int width, int height, int allow_incomplete) {
     
     for( i_row = 0; i_row < newrows; i_row++ ) { 
       uint32 x;
+      i_color *outp = line_buf;
+
       for(x = 0; x<width; x++) {
-	i_color val;
 	uint32 temp = raster[x+width*(newrows-i_row-1)];
-	val.rgba.r = TIFFGetR(temp);
-	val.rgba.g = TIFFGetG(temp);
-	val.rgba.b = TIFFGetB(temp);
-	val.rgba.a = TIFFGetA(temp);
-	i_ppix(im, x, i_row+row, &val);
+	outp->rgba.r = TIFFGetR(temp);
+	outp->rgba.g = TIFFGetG(temp);
+	outp->rgba.b = TIFFGetB(temp);
+
+	if (alpha_chan) {
+	  /* the libtiff RGBA code expands greyscale into RGBA, so put the
+	     alpha in the right place and scale it */
+	  int ch;
+	  outp->channel[alpha_chan] = TIFFGetA(temp);
+	  if (outp->channel[alpha_chan]) {
+	    for (ch = 0; ch < alpha_chan; ++ch) {
+	      outp->channel[ch] = outp->channel[ch] * 255 / outp->channel[alpha_chan];
+	    }
+	  }
+	}
+
+	outp++;
       }
+      i_plin(im, 0, width, i_row+row, line_buf);
     }
   }
 
+  myfree(line_buf);
   _TIFFfree(raster);
   
   return im;
@@ -1365,8 +1394,9 @@ read_one_rgb_tiled(TIFF *tif, int width, int height, int allow_incomplete) {
   char 	emsg[1024] = "";
   TIFFRGBAImage img;
   i_color *line;
+  int alpha_chan;
   
-  im = make_rgb(tif, width, height);
+  im = make_rgb(tif, width, height, &alpha_chan);
   if (!im)
     return NULL;
   
@@ -1408,6 +1438,20 @@ read_one_rgb_tiled(TIFF *tif, int width, int height, int allow_incomplete) {
 	    outp->rgba.g = TIFFGetG(temp);
 	    outp->rgba.b = TIFFGetB(temp);
 	    outp->rgba.a = TIFFGetA(temp);
+
+	    if (alpha_chan) {
+	      /* the libtiff RGBA code expands greyscale into RGBA, so put the
+		 alpha in the right place and scale it */
+	      int ch;
+	      outp->channel[alpha_chan] = TIFFGetA(temp);
+	      
+	      if (outp->channel[alpha_chan]) {
+		for (ch = 0; ch < alpha_chan; ++ch) {
+		  outp->channel[ch] = outp->channel[ch] * 255 / outp->channel[alpha_chan];
+		}
+	      }
+	    }
+
 	    ++outp;
 	  }
 	  i_plin(im, col, col+newcols, row+i_row, line);

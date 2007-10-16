@@ -1,6 +1,6 @@
 #!perl -w
 use strict;
-use Test::More tests => 147;
+use Test::More tests => 161;
 use Imager qw(:all);
 use Imager::Test qw(is_image);
 $^W=1; # warnings during command-line tests
@@ -32,7 +32,7 @@ SKIP:
     $im = Imager->new(xsize=>2, ysize=>2);
     ok(!$im->write(file=>"testout/notiff.tif"), "should fail to write tiff");
     is($im->errstr, 'format not supported', "check no tiff message");
-    skip("no tiff support", 143);
+    skip("no tiff support", 157);
   }
 
   my $ver_string = Imager::i_tiff_libversion();
@@ -551,6 +551,43 @@ SKIP:
     is_image($pbm, $tif, "compare them");
     is($tif->type, 'paletted', 'check image type');
     is($tif->colorcount, 2, 'check we got a "mono" image');
+  }
+
+  { # check alpha channels scaled correctly for fallback handler
+    my $im = Imager->new;
+    ok($im->read(file=>'testimg/alpha.tif'), 'read alpha check image');
+    my @colors =
+      (
+       [ 0, 0, 0 ],
+       [ 255, 255, 255 ],
+       [ 127, 0, 127 ],
+       [ 127, 127, 0 ],
+      );
+    my @alphas = ( 255, 191, 127, 63 );
+    my $ok = 1;
+    my $msg = 'alpha check ok';
+  CHECKER:
+    for my $y (0 .. 3) {
+      for my $x (0 .. 3) {
+	my $c = $im->getpixel(x => $x, 'y' => $y);
+	my @c = $c->rgba;
+	my $alpha = pop @c;
+	if ($alpha != $alphas[$y]) {
+	  $ok = 0;
+	  $msg = "($x,$y) alpha mismatch $alpha vs $alphas[$y]";
+	  last CHECKER;
+	}
+	my $expect = $colors[$x];
+	for my $ch (0 .. 2) {
+	  if (abs($expect->[$ch]-$c[$ch]) > 3) {
+	    $ok = 0;
+	    $msg = "($x,$y)[$ch] color mismatch $c[$ch] vs $expect->[$ch]";
+	    last CHECKER;
+	  }
+	}
+      }
+    }
+    ok($ok, $msg);
   }
 }
 

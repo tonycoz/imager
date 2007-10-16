@@ -273,6 +273,7 @@ t/tr18561.t		Regression tests
 t/tr18561b.t
 tags.c
 testimg/209_yonge.jpg	Regression test: #17981
+testimg/alpha.tif	Alpha scaling test image
 testimg/bad1oflow.bmp   1-bit/pixel, overflow integer on 32-bit machines
 testimg/bad1wid0.bmp    1-bit/pixel, zero width
 testimg/bad24comp.bmp   24-bit/pixel, bad compression
@@ -308,8 +309,8 @@ testimg/exiftest.jpg	Test image for EXIF parsing
 testimg/expected.gif
 testimg/gimpgrad        A GIMP gradient file
 testimg/grey16.tif	16-bit/sample greyscale TIFF
-testimg/imager.pbm
-testimg/imager.tif
+testimg/imager.pbm	Test bi-level
+testimg/imager.tif	Test bi-level
 testimg/junk.ppm
 testimg/loccmap.gif
 testimg/longid.tga      Test TGA with a long id string
