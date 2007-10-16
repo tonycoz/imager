@@ -526,5 +526,31 @@ SKIP:
     my $comp16 = $im16->convert(matrix => [ [ 0.299, 0.587, 0.114 ] ]);
     is_image($grey16, $comp16, 'compare grey to converted');
   }
+
+  { # read 16, 32-bit/sample and compare to the original
+    my $rgba = Imager->new;
+    ok($rgba->read(file => 'testimg/srgba.tif'),
+       "read base rgba image");
+    my $rgba16 = Imager->new;
+    ok($rgba16->read(file => 'testimg/srgba16.tif'),
+       "read 16-bit/sample rgba image");
+    is_image($rgba, $rgba16, "check they match");
+    is($rgba16->bits, 16, 'check we got the right type');
+    
+    my $rgba32 = Imager->new;
+    ok($rgba32->read(file => 'testimg/srgba32.tif'),
+       "read 32-bit/sample rgba image");
+    is_image($rgba, $rgba32, "check they match");
+    is($rgba32->bits, 'double', 'check we got the right type');
+  }
+  { # read bi-level
+    my $pbm = Imager->new;
+    ok($pbm->read(file => 'testimg/imager.pbm'), "read original pbm");
+    my $tif = Imager->new;
+    ok($tif->read(file => 'testimg/imager.tif'), "read mono tif");
+    is_image($pbm, $tif, "compare them");
+    is($tif->type, 'paletted', 'check image type');
+    is($tif->colorcount, 2, 'check we got a "mono" image');
+  }
 }
 

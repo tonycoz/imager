@@ -308,6 +308,8 @@ testimg/exiftest.jpg	Test image for EXIF parsing
 testimg/expected.gif
 testimg/gimpgrad        A GIMP gradient file
 testimg/grey16.tif	16-bit/sample greyscale TIFF
+testimg/imager.pbm
+testimg/imager.tif
 testimg/junk.ppm
 testimg/loccmap.gif
 testimg/longid.tga      Test TGA with a long id string
@@ -353,6 +355,8 @@ testimg/simple.pbm
 testimg/slab.tif	Lab color image
 testimg/srgb.tif	Simple RGB image
 testimg/srgba.tif	RGB with one alpha
+testimg/srgba16.tif
+testimg/srgba32.tif
 testimg/srgbaa.tif	RGB with 2 alpha
 testimg/test_gimp_pal   A simple GIMP palette file
 testimg/tiffwarn.tif	Generates a warning while being read

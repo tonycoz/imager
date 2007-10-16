@@ -83,6 +83,7 @@ struct read_state_tag {
   void *line_buf;
   uint32 width, height;
   uint16 bits_per_sample;
+  uint16 photometric;
 
   /* the total number of channels (samples per pixel) */
   int samples_per_pixel;
@@ -95,10 +96,6 @@ struct read_state_tag {
      we use is EXTRASAMPLE_ASSOCALPHA then the color data will need to
      be scaled to match Imager's conventions */
   int scale_alpha;
-
-  int chan_count;
-  int *chanp;
-  int channels[MAXCHANNELS];
 };
 
 static int tile_contig_getter(read_state_t *state, read_putter_t putter);
@@ -111,6 +108,13 @@ static int paletted_putter4(read_state_t *, int, int, int, int, int);
 static int setup_16_rgb(read_state_t *state);
 static int setup_16_grey(read_state_t *state);
 static int putter_16(read_state_t *, int, int, int, int, int);
+
+static int setup_32_rgb(read_state_t *state);
+static int setup_32_grey(read_state_t *state);
+static int putter_32(read_state_t *, int, int, int, int, int);
+
+static int setup_bilevel(read_state_t *state);
+static int putter_bilevel(read_state_t *, int, int, int, int, int);
 
 static const int text_tag_count = 
   sizeof(text_tag_names) / sizeof(*text_tag_names);
@@ -261,6 +265,22 @@ static i_img *read_one_tiff(TIFF *tif, int allow_incomplete) {
     setupf = setup_16_grey;
     putterf = putter_16;
   }
+  else if (bits_per_sample == 32 
+	   && photometric == PHOTOMETRIC_RGB) {
+    setupf = setup_32_rgb;
+    putterf = putter_32;
+  }
+  else if (bits_per_sample == 32
+	   && photometric == PHOTOMETRIC_MINISBLACK) {
+    setupf = setup_32_grey;
+    putterf = putter_32;
+  }
+  else if (bits_per_sample == 1
+	   && (photometric == PHOTOMETRIC_MINISBLACK
+	       || photometric == PHOTOMETRIC_MINISWHITE)) {
+    setupf = setup_bilevel;
+    putterf = putter_bilevel;
+  }
   if (tiled) {
     if (planar_config == PLANARCONFIG_CONTIG)
       getterf = tile_contig_getter;
@@ -278,6 +298,7 @@ static i_img *read_one_tiff(TIFF *tif, int allow_incomplete) {
     state.height = height;
     state.bits_per_sample = bits_per_sample;
     state.samples_per_pixel = samples_per_pixel;
+    state.photometric = photometric;
 
     if (!setupf(&state))
       return NULL;
@@ -315,60 +336,6 @@ static i_img *read_one_tiff(TIFF *tif, int allow_incomplete) {
 
   if (!im)
     return NULL;
-
-  /* general metadata */
-  i_tags_addn(&im->tags, "tiff_bitspersample", 0, bits_per_sample);
-  i_tags_addn(&im->tags, "tiff_photometric", 0, photometric);
-    
-  /* resolution tags */
-  TIFFGetFieldDefaulted(tif, TIFFTAG_RESOLUTIONUNIT, &resunit);
-  gotXres = TIFFGetField(tif, TIFFTAG_XRESOLUTION, &xres);
-  gotYres = TIFFGetField(tif, TIFFTAG_YRESOLUTION, &yres);
-  if (gotXres || gotYres) {
-    if (!gotXres)
-      xres = yres;
-    else if (!gotYres)
-      yres = xres;
-    i_tags_addn(&im->tags, "tiff_resolutionunit", 0, resunit);
-    if (resunit == RESUNIT_CENTIMETER) {
-      /* from dots per cm to dpi */
-      xres *= 2.54;
-      yres *= 2.54;
-      i_tags_add(&im->tags, "tiff_resolutionunit_name", 0, "centimeter", -1, 0);
-    }
-    else if (resunit == RESUNIT_NONE) {
-      i_tags_addn(&im->tags, "i_aspect_only", 0, 1);
-      i_tags_add(&im->tags, "tiff_resolutionunit_name", 0, "none", -1, 0);
-    }
-    else if (resunit == RESUNIT_INCH) {
-      i_tags_add(&im->tags, "tiff_resolutionunit_name", 0, "inch", -1, 0);
-    }
-    else {
-      i_tags_add(&im->tags, "tiff_resolutionunit_name", 0, "unknown", -1, 0);
-    }
-    /* tifflib doesn't seem to provide a way to get to the original rational
-       value of these, which would let me provide a more reasonable
-       precision. So make up a number. */
-    i_tags_set_float2(&im->tags, "i_xres", 0, xres, 6);
-    i_tags_set_float2(&im->tags, "i_yres", 0, yres, 6);
-  }
-
-  /* Text tags */
-  for (i = 0; i < text_tag_count; ++i) {
-    char *data;
-    if (TIFFGetField(tif, text_tag_names[i].tag, &data)) {
-      mm_log((1, "i_readtiff_wiol: tag %d has value %s\n", 
-	      text_tag_names[i].tag, data));
-      i_tags_add(&im->tags, text_tag_names[i].name, 0, data, 
-		 strlen(data), 0);
-    }
-  }
-
-  i_tags_add(&im->tags, "i_format", 0, "tiff", -1, 0);
-  if (warn_buffer && *warn_buffer) {
-    i_tags_add(&im->tags, "i_warning", 0, warn_buffer, -1, 0);
-    *warn_buffer = '\0';
-  }
 
   /* general metadata */
   i_tags_addn(&im->tags, "tiff_bitspersample", 0, bits_per_sample);
@@ -1650,7 +1617,52 @@ rgb_channels(read_state_t *state, int *out_channels) {
     return;
   }
 
+  ++*out_channels;
   state->alpha_chan = 3;
+  switch (*extras) {
+  case EXTRASAMPLE_UNSPECIFIED:
+  case EXTRASAMPLE_ASSOCALPHA:
+    state->scale_alpha = 1;
+    break;
+
+  case EXTRASAMPLE_UNASSALPHA:
+    state->scale_alpha = 0;
+    break;
+
+  default:
+    mm_log((1, "tiff: unknown extra sample type %d, treating as assoc alpha\n",
+	    *extras));
+    state->scale_alpha = 1;
+    break;
+  }
+}
+
+static void
+grey_channels(read_state_t *state, int *out_channels) {
+  uint16 extra_count;
+  uint16 *extras;
+  
+  /* safe defaults */
+  *out_channels = 1;
+  state->alpha_chan = 0;
+  state->scale_alpha = 0;
+
+  /* plain grey */
+  if (state->samples_per_pixel == 1)
+    return;
+ 
+  if (!TIFFGetField(state->tif, TIFFTAG_EXTRASAMPLES, &extra_count, &extras)) {
+    mm_log((1, "tiff: samples != 1 but no extra samples tag\n"));
+    return;
+  }
+
+  if (!extra_count) {
+    mm_log((1, "tiff: samples != 1 but no extra samples listed"));
+    return;
+  }
+
+  ++*out_channels;
+  state->alpha_chan = 1;
   switch (*extras) {
   case EXTRASAMPLE_UNSPECIFIED:
   case EXTRASAMPLE_ASSOCALPHA:
@@ -1683,49 +1695,6 @@ setup_16_rgb(read_state_t *state) {
   return 1;
 }
 
-static void
-grey_channels(read_state_t *state, int *out_channels) {
-  uint16 extra_count;
-  uint16 *extras;
-  
-  /* safe defaults */
-  *out_channels = 1;
-  state->alpha_chan = 0;
-  state->scale_alpha = 0;
-
-  /* plain grey */
-  if (state->samples_per_pixel == 1)
-    return;
- 
-  if (!TIFFGetField(state->tif, TIFFTAG_EXTRASAMPLES, &extra_count, &extras)) {
-    mm_log((1, "tiff: samples != 1 but no extra samples tag\n"));
-    return;
-  }
-
-  if (!extra_count) {
-    mm_log((1, "tiff: samples != 1 but no extra samples listed"));
-    return;
-  }
-
-  state->alpha_chan = 1;
-  switch (*extras) {
-  case EXTRASAMPLE_UNSPECIFIED:
-  case EXTRASAMPLE_ASSOCALPHA:
-    state->scale_alpha = 1;
-    break;
-
-  case EXTRASAMPLE_UNASSALPHA:
-    state->scale_alpha = 0;
-    break;
-
-  default:
-    mm_log((1, "tiff: unknown extra sample type %d, treating as assoc alpha\n",
-	    *extras));
-    state->scale_alpha = 1;
-    break;
-  }
-}
-
 static int
 setup_16_grey(read_state_t *state) {
   int out_channels;
@@ -1756,9 +1725,9 @@ putter_16(read_state_t *state, int x, int y, int width, int height,
       for (ch = 0; ch < out_chan; ++ch) {
 	outp[ch] = p[ch];
       }
-      if (state->alpha_chan && state->scale_alpha && outp[ch]) {
+      if (state->alpha_chan && state->scale_alpha && outp[state->alpha_chan]) {
 	for (ch = 0; ch < state->alpha_chan; ++ch)
-	  outp[ch] = outp[ch] * (double)outp[state->alpha_chan] / 65535;
+	  outp[ch] = 0.5 + (outp[ch] * 65535.0 / outp[state->alpha_chan]);
       }
       p += state->samples_per_pixel;
       outp += out_chan;
@@ -1767,6 +1736,125 @@ putter_16(read_state_t *state, int x, int y, int width, int height,
     i_psamp_bits(state->img, x, x + width, y, state->line_buf, NULL, out_chan, 16);
 
     p += row_extras * state->samples_per_pixel;
+    --height;
+    ++y;
+  }
+
+  return 1;
+}
+
+static int
+setup_32_rgb(read_state_t *state) {
+  int out_channels;
+
+  rgb_channels(state, &out_channels);
+
+  state->img = i_img_double_new(state->width, state->height, out_channels);
+  if (!state->img)
+    return 0;
+  state->line_buf = mymalloc(sizeof(i_fcolor) * state->width);
+
+  return 1;
+}
+
+static int
+setup_32_grey(read_state_t *state) {
+  int out_channels;
+
+  grey_channels(state, &out_channels);
+
+  state->img = i_img_double_new(state->width, state->height, out_channels);
+  if (!state->img)
+    return 0;
+  state->line_buf = mymalloc(sizeof(i_fcolor) * state->width);
+
+  return 1;
+}
+
+static int 
+putter_32(read_state_t *state, int x, int y, int width, int height, 
+	  int row_extras) {
+  uint32 *p = state->raster;
+  int out_chan = state->img->channels;
+
+  state->pixels_read += (unsigned long) width * height;
+  while (height > 0) {
+    int i;
+    int ch;
+    i_fcolor *outp = state->line_buf;
+
+    for (i = 0; i < width; ++i) {
+      for (ch = 0; ch < out_chan; ++ch) {
+	outp->channel[ch] = p[ch] / 4294967295.0;
+      }
+      if (state->alpha_chan && state->scale_alpha && outp->channel[state->alpha_chan]) {
+	for (ch = 0; ch < state->alpha_chan; ++ch)
+	  outp->channel[ch] /= outp->channel[state->alpha_chan];
+      }
+      p += state->samples_per_pixel;
+      outp++;
+    }
+
+    i_plinf(state->img, x, x + width, y, state->line_buf);
+
+    p += row_extras * state->samples_per_pixel;
+    --height;
+    ++y;
+  }
+
+  return 1;
+}
+
+static int
+setup_bilevel(read_state_t *state) {
+  i_color black, white;
+  state->img = i_img_pal_new(state->width, state->height, 1, 256);
+  if (!state->img)
+    return 0;
+  black.channel[0] = black.channel[1] = black.channel[2] = 
+    black.channel[3] = 0;
+  white.channel[0] = white.channel[1] = white.channel[2] = 
+    white.channel[3] = 255;
+  if (state->photometric == PHOTOMETRIC_MINISBLACK) {
+    i_addcolors(state->img, &black, 1);
+    i_addcolors(state->img, &white, 1);
+  }
+  else {
+    i_addcolors(state->img, &white, 1);
+    i_addcolors(state->img, &black, 1);
+  }
+  state->line_buf = mymalloc(state->width);
+
+  return 1;
+}
+
+static int 
+putter_bilevel(read_state_t *state, int x, int y, int width, int height, 
+	       int row_extras) {
+  unsigned char *line_in = state->raster;
+  size_t line_size = (width + row_extras + 7) / 8;
+  
+  /* tifflib returns the bits in MSB2LSB order even when the file is
+     in LSB2MSB, so we only need to handle MSB2LSB */
+  state->pixels_read += (unsigned long) width * height;
+  while (height > 0) {
+    int i;
+    unsigned char *outp = state->line_buf;
+    unsigned char *inp = line_in;
+    unsigned mask = 0x80;
+
+    for (i = 0; i < width; ++i) {
+      *outp++ = *inp & mask ? 1 : 0;
+      mask >>= 1;
+      if (!mask) {
+	++inp;
+	mask = 0x80;
+      }
+    }
+
+    i_ppal(state->img, x, x + width, y, state->line_buf);
+
+    line_in += line_size;
     --height;
     ++y;
   }
