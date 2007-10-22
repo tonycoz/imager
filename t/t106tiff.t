@@ -1,6 +1,6 @@
 #!perl -w
 use strict;
-use Test::More tests => 163;
+use Test::More tests => 170;
 use Imager qw(:all);
 use Imager::Test qw(is_image);
 $^W=1; # warnings during command-line tests
@@ -32,7 +32,7 @@ SKIP:
     $im = Imager->new(xsize=>2, ysize=>2);
     ok(!$im->write(file=>"testout/notiff.tif"), "should fail to write tiff");
     is($im->errstr, 'format not supported', "check no tiff message");
-    skip("no tiff support", 159);
+    skip("no tiff support", 166);
   }
 
   my $ver_string = Imager::i_tiff_libversion();
@@ -445,12 +445,12 @@ SKIP:
     my $photo_cielab = 8;
     my @alpha_images =
       (
-       [ 'srgb.tif',    3, $photo_rgb,    '003005007' ],
-       [ 'srgba.tif',   4, $photo_rgb,    '003005007' ],
-       [ 'srgbaa.tif',  4, $photo_rgb,    '003005007' ],
-       [ 'scmyk.tif',   3, $photo_cmyk,   '003005007' ],
-       [ 'scmyka.tif',  4, $photo_cmyk,   '003005007' ],
-       [ 'scmykaa.tif', 4, $photo_cmyk,   '003005007' ],
+       [ 'srgb.tif',    3, $photo_rgb,    '003005005' ],
+       [ 'srgba.tif',   4, $photo_rgb,    '003005005' ],
+       [ 'srgbaa.tif',  4, $photo_rgb,    '003005005' ],
+       [ 'scmyk.tif',   3, $photo_cmyk,   '003005005' ],
+       [ 'scmyka.tif',  4, $photo_cmyk,   '003005005' ],
+       [ 'scmykaa.tif', 4, $photo_cmyk,   '003005005' ],
        [ 'slab.tif',    3, $photo_cielab, '003006001' ],
       );
 
@@ -459,7 +459,7 @@ SKIP:
       
     SKIP: {
 	$need_ver le $cmp_ver
-	  or skip("Your ancient tifflib is buggy/limited for this test", 3);
+	  or skip("Your ancient tifflib is buggy/limited for this test", 4);
 	my $im = Imager->new;
 	ok($im->read(file => "testimg/$input"),
 	   "read alpha test $input")
@@ -467,6 +467,10 @@ SKIP:
 	is($im->getchannels, $channels, "channels for $input match");
 	is($im->tags(name=>'tiff_photometric'), $photo,
 	   "photometric for $input match");
+	$channels == 4
+	  or skip("No alpha, no alpha check", 1);
+	my $c = $im->getpixel(x => 0, 'y' => 7);
+	is(($c->rgba)[3], 0, "bottom row should have 0 alpha");
       }
     }
   }
@@ -581,7 +585,7 @@ SKIP:
 	for my $ch (0 .. 2) {
 	  if (abs($expect->[$ch]-$c[$ch]) > 3) {
 	    $ok = 0;
-	    $msg = "($x,$y)[$ch] color mismatch $c[$ch] vs $expect->[$ch]";
+	    $msg = "($x,$y)[$ch] color mismatch got $c[$ch] vs expected $expect->[$ch]";
 	    last CHECKER;
 	  }
 	}
@@ -590,7 +594,7 @@ SKIP:
     ok($ok, $msg);
   }
 
-  { # check alpha channels scaled correctly for fallback handler
+  { # check alpha channels scaled correctly for greyscale
     my $im = Imager->new;
     ok($im->read(file=>'testimg/gralpha.tif'), 'read alpha check grey image');
     my @greys = ( 0, 255, 52, 112 );

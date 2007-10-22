@@ -35,6 +35,9 @@ Some of these functions are internal.
      ((((x) & 0xff000000) >> 24) | (((x) & 0x00ff0000) >>  8) |     \
       (((x) & 0x0000ff00) <<  8) | (((x) & 0x000000ff) << 24))
 
+#define CLAMP8(x) ((x) < 0 ? 0 : (x) > 255 ? 255 : (x))
+#define CLAMP16(x) ((x) < 0 ? 0 : (x) > 65535 ? 65535 : (x))
+
 struct tag_name {
   char *name;
   uint32 tag;
@@ -109,6 +112,7 @@ static int setup_16_rgb(read_state_t *state);
 static int setup_16_grey(read_state_t *state);
 static int putter_16(read_state_t *, int, int, int, int, int);
 
+static int setup_8_rgb(read_state_t *state);
 static int setup_8_grey(read_state_t *state);
 static int putter_8(read_state_t *, int, int, int, int, int);
 
@@ -118,6 +122,9 @@ static int putter_32(read_state_t *, int, int, int, int, int);
 
 static int setup_bilevel(read_state_t *state);
 static int putter_bilevel(read_state_t *, int, int, int, int, int);
+
+static int setup_cmyk8(read_state_t *state);
+static int putter_cmyk8(read_state_t *, int, int, int, int, int);
 
 static const int text_tag_count = 
   sizeof(text_tag_names) / sizeof(*text_tag_names);
@@ -229,6 +236,7 @@ static i_img *read_one_tiff(TIFF *tif, int allow_incomplete) {
   uint16 photometric;
   uint16 bits_per_sample;
   uint16 planar_config;
+  uint16 inkset;
   int i;
   read_state_t state;
   read_setup_t setupf = NULL;
@@ -244,6 +252,7 @@ static i_img *read_one_tiff(TIFF *tif, int allow_incomplete) {
   TIFFGetFieldDefaulted(tif, TIFFTAG_PHOTOMETRIC, &photometric);
   TIFFGetFieldDefaulted(tif, TIFFTAG_BITSPERSAMPLE, &bits_per_sample);
   TIFFGetFieldDefaulted(tif, TIFFTAG_PLANARCONFIG, &planar_config);
+  TIFFGetFieldDefaulted(tif, TIFFTAG_INKSET, &inkset);
 
   mm_log((1, "i_readtiff_wiol: width=%d, height=%d, channels=%d\n", width, height, samples_per_pixel));
   mm_log((1, "i_readtiff_wiol: %stiled\n", tiled?"":"not "));
@@ -259,7 +268,8 @@ static i_img *read_one_tiff(TIFF *tif, int allow_incomplete) {
       mm_log((1, "unsupported paletted bits_per_sample %d\n", bits_per_sample));
   }
   else if (bits_per_sample == 16 
-	   && photometric == PHOTOMETRIC_RGB) {
+	   && photometric == PHOTOMETRIC_RGB
+	   && samples_per_pixel >= 3) {
     setupf = setup_16_rgb;
     putterf = putter_16;
   }
@@ -273,8 +283,14 @@ static i_img *read_one_tiff(TIFF *tif, int allow_incomplete) {
     setupf = setup_8_grey;
     putterf = putter_8;
   }
-  else if (bits_per_sample == 32 
+  else if (bits_per_sample == 8
 	   && photometric == PHOTOMETRIC_RGB) {
+    setupf = setup_8_rgb;
+    putterf = putter_8;
+  }
+  else if (bits_per_sample == 32 
+	   && photometric == PHOTOMETRIC_RGB
+	   && samples_per_pixel >= 3) {
     setupf = setup_32_rgb;
     putterf = putter_32;
   }
@@ -288,6 +304,13 @@ static i_img *read_one_tiff(TIFF *tif, int allow_incomplete) {
 	       || photometric == PHOTOMETRIC_MINISWHITE)) {
     setupf = setup_bilevel;
     putterf = putter_bilevel;
+  }
+  else if (bits_per_sample == 8
+	   && photometric == PHOTOMETRIC_SEPARATED
+	   && inkset == INKSET_CMYK
+	   && samples_per_pixel >= 4) {
+    setupf = setup_cmyk8;
+    putterf = putter_cmyk8;
   }
   if (tiled) {
     if (planar_config == PLANARCONFIG_CONTIG)
@@ -1687,6 +1710,7 @@ rgb_channels(read_state_t *state, int *out_channels) {
     state->scale_alpha = 1;
     break;
   }
+  mm_log((1, "tiff alpha channel %d scale %d\n", state->alpha_chan, state->scale_alpha));
 }
 
 static void
@@ -1778,8 +1802,10 @@ putter_16(read_state_t *state, int x, int y, int width, int height,
 	outp[ch] = p[ch];
       }
       if (state->alpha_chan && state->scale_alpha && outp[state->alpha_chan]) {
-	for (ch = 0; ch < state->alpha_chan; ++ch)
-	  outp[ch] = 0.5 + (outp[ch] * 65535.0 / outp[state->alpha_chan]);
+	for (ch = 0; ch < state->alpha_chan; ++ch) {
+	  int result = 0.5 + (outp[ch] * 65535.0 / outp[state->alpha_chan]);
+	  outp[ch] = CLAMP16(result);
+	}
       }
       p += state->samples_per_pixel;
       outp += out_chan;
@@ -1791,6 +1817,20 @@ putter_16(read_state_t *state, int x, int y, int width, int height,
     --height;
     ++y;
   }
+
+  return 1;
+}
+
+static int
+setup_8_rgb(read_state_t *state) {
+  int out_channels;
+
+  rgb_channels(state, &out_channels);
+
+  state->img = i_img_8_new(state->width, state->height, out_channels);
+  if (!state->img)
+    return 0;
+  state->line_buf = mymalloc(sizeof(unsigned) * state->width * out_channels);
 
   return 1;
 }
@@ -1827,8 +1867,11 @@ putter_8(read_state_t *state, int x, int y, int width, int height,
       }
       if (state->alpha_chan && state->scale_alpha 
 	  && outp->channel[state->alpha_chan]) {
-	for (ch = 0; ch < state->alpha_chan; ++ch)
-	  outp->channel[ch] = (outp->channel[ch] * 255 + 127) / outp->channel[state->alpha_chan];
+	for (ch = 0; ch < state->alpha_chan; ++ch) {
+	  int result = (outp->channel[ch] * 255 + 127) / outp->channel[state->alpha_chan];
+	
+	  outp->channel[ch] = CLAMP8(result);
+	}
       }
       p += state->samples_per_pixel;
       outp++;
@@ -1956,6 +1999,106 @@ putter_bilevel(read_state_t *state, int x, int y, int width, int height,
     i_ppal(state->img, x, x + width, y, state->line_buf);
 
     line_in += line_size;
+    --height;
+    ++y;
+  }
+
+  return 1;
+}
+
+static void
+cmyk_channels(read_state_t *state, int *out_channels) {
+  uint16 extra_count;
+  uint16 *extras;
+  
+  /* safe defaults */
+  *out_channels = 3;
+  state->alpha_chan = 0;
+  state->scale_alpha = 0;
+
+  /* plain CMYK */
+  if (state->samples_per_pixel == 4)
+    return;
+ 
+  if (!TIFFGetField(state->tif, TIFFTAG_EXTRASAMPLES, &extra_count, &extras)) {
+    mm_log((1, "tiff: CMYK samples != 4 but no extra samples tag\n"));
+    return;
+  }
+
+  if (!extra_count) {
+    mm_log((1, "tiff: CMYK samples != 4 but no extra samples listed"));
+    return;
+  }
+
+  ++*out_channels;
+  state->alpha_chan = 4;
+  switch (*extras) {
+  case EXTRASAMPLE_UNSPECIFIED:
+  case EXTRASAMPLE_ASSOCALPHA:
+    state->scale_alpha = 1;
+    break;
+
+  case EXTRASAMPLE_UNASSALPHA:
+    state->scale_alpha = 0;
+    break;
+
+  default:
+    mm_log((1, "tiff: unknown extra sample type %d, treating as assoc alpha\n",
+	    *extras));
+    state->scale_alpha = 1;
+    break;
+  }
+}
+
+static int
+setup_cmyk8(read_state_t *state) {
+  int channels;
+
+  cmyk_channels(state, &channels);
+  state->img = i_img_8_new(state->width, state->height, channels);
+
+  state->line_buf = mymalloc(sizeof(i_color) * state->width);
+
+  return 1;
+}
+
+static int 
+putter_cmyk8(read_state_t *state, int x, int y, int width, int height, 
+	       int row_extras) {
+  unsigned char *p = state->raster;
+
+  state->pixels_read += (unsigned long) width * height;
+  while (height > 0) {
+    int i;
+    int ch;
+    i_color *outp = state->line_buf;
+
+    for (i = 0; i < width; ++i) {
+      unsigned char c, m, y, k;
+      c = p[0];
+      m = p[1];
+      y = p[2];
+      k = 255 - p[3];
+      outp->rgba.r = (k * (255 - c)) / 255;
+      outp->rgba.g = (k * (255 - m)) / 255;
+      outp->rgba.b = (k * (255 - y)) / 255;
+      if (state->alpha_chan) {
+	outp->rgba.a = p[state->alpha_chan];
+	if (state->scale_alpha 
+	    && outp->rgba.a) {
+	  for (ch = 0; ch < 3; ++ch) {
+	    int result = (outp->channel[ch] * 255 + 127) / outp->rgba.a;
+	    outp->channel[ch] = CLAMP8(result);
+	  }
+	}
+      }
+      p += state->samples_per_pixel;
+      outp++;
+    }
+
+    i_plin(state->img, x, x + width, y, state->line_buf);
+
+    p += row_extras * state->samples_per_pixel;
     --height;
     ++y;
   }
