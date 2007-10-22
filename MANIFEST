@@ -336,6 +336,7 @@ testimg/scalei.gif
 testimg/scmyk.tif	Simple CMYK TIFF image
 testimg/scmyk.jpg	Simple CMYK JPEG image
 testimg/scmyka.tif	CMYK with one alpha channel
+testimg/scmyka16.tif	CMYK with one alpha channel (16-bit)
 testimg/scmykaa.tif	CMYK with 2 alpha channels
 testimg/screen2.gif
 testimg/screen3.gif

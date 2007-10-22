@@ -126,6 +126,9 @@ static int putter_bilevel(read_state_t *, int, int, int, int, int);
 static int setup_cmyk8(read_state_t *state);
 static int putter_cmyk8(read_state_t *, int, int, int, int, int);
 
+static int setup_cmyk16(read_state_t *state);
+static int putter_cmyk16(read_state_t *, int, int, int, int, int);
+
 static const int text_tag_count = 
   sizeof(text_tag_names) / sizeof(*text_tag_names);
 
@@ -258,6 +261,7 @@ static i_img *read_one_tiff(TIFF *tif, int allow_incomplete) {
   mm_log((1, "i_readtiff_wiol: %stiled\n", tiled?"":"not "));
   mm_log((1, "i_readtiff_wiol: %sbyte swapped\n", TIFFIsByteSwapped(tif)?"":"not "));
 
+  /* yes, this if() is horrible */
   if (photometric == PHOTOMETRIC_PALETTE && bits_per_sample <= 8) {
     setupf = setup_paletted;
     if (bits_per_sample == 8)
@@ -301,7 +305,8 @@ static i_img *read_one_tiff(TIFF *tif, int allow_incomplete) {
   }
   else if (bits_per_sample == 1
 	   && (photometric == PHOTOMETRIC_MINISBLACK
-	       || photometric == PHOTOMETRIC_MINISWHITE)) {
+	       || photometric == PHOTOMETRIC_MINISWHITE)
+	   && samples_per_pixel == 1) {
     setupf = setup_bilevel;
     putterf = putter_bilevel;
   }
@@ -311,6 +316,13 @@ static i_img *read_one_tiff(TIFF *tif, int allow_incomplete) {
 	   && samples_per_pixel >= 4) {
     setupf = setup_cmyk8;
     putterf = putter_cmyk8;
+  }
+  else if (bits_per_sample == 16
+	   && photometric == PHOTOMETRIC_SEPARATED
+	   && inkset == INKSET_CMYK
+	   && samples_per_pixel >= 4) {
+    setupf = setup_cmyk16;
+    putterf = putter_cmyk16;
   }
   if (tiled) {
     if (planar_config == PLANARCONFIG_CONTIG)
@@ -2097,6 +2109,65 @@ putter_cmyk8(read_state_t *state, int x, int y, int width, int height,
     }
 
     i_plin(state->img, x, x + width, y, state->line_buf);
+
+    p += row_extras * state->samples_per_pixel;
+    --height;
+    ++y;
+  }
+
+  return 1;
+}
+
+static int
+setup_cmyk16(read_state_t *state) {
+  int channels;
+
+  cmyk_channels(state, &channels);
+  state->img = i_img_16_new(state->width, state->height, channels);
+
+  state->line_buf = mymalloc(sizeof(unsigned) * state->width * channels);
+
+  return 1;
+}
+
+static int 
+putter_cmyk16(read_state_t *state, int x, int y, int width, int height, 
+	       int row_extras) {
+  uint16 *p = state->raster;
+  int out_chan = state->img->channels;
+
+  mm_log((4, "putter_cmyk16(%p, %d, %d, %d, %d, %d)\n", x, y, width, height, row_extras));
+
+  state->pixels_read += (unsigned long) width * height;
+  while (height > 0) {
+    int i;
+    int ch;
+    unsigned *outp = state->line_buf;
+
+    for (i = 0; i < width; ++i) {
+      unsigned c, m, y, k;
+      c = p[0];
+      m = p[1];
+      y = p[2];
+      k = 65535 - p[3];
+      outp[0] = (k * (65535U - c)) / 65535U;
+      outp[1] = (k * (65535U - m)) / 65535U;
+      outp[2] = (k * (65535U - y)) / 65535U;
+      if (state->alpha_chan) {
+	outp[3] = p[state->alpha_chan];
+	if (state->scale_alpha 
+	    && outp[3]) {
+	  for (ch = 0; ch < 3; ++ch) {
+	    int result = (outp[ch] * 65535 + 32767) / outp[3];
+	    outp[3] = CLAMP16(result);
+	  }
+	}
+      }
+      p += state->samples_per_pixel;
+      outp += out_chan;
+    }
+
+    i_psamp_bits(state->img, x, x + width, y, state->line_buf, NULL, out_chan, 16);
 
     p += row_extras * state->samples_per_pixel;
     --height;

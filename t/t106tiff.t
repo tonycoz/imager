@@ -1,8 +1,8 @@
 #!perl -w
 use strict;
-use Test::More tests => 170;
+use Test::More tests => 173;
 use Imager qw(:all);
-use Imager::Test qw(is_image);
+use Imager::Test qw(is_image is_image_similar);
 $^W=1; # warnings during command-line tests
 $|=1;  # give us some progress in the test harness
 init_log("testout/t106tiff.log",1);
@@ -32,7 +32,7 @@ SKIP:
     $im = Imager->new(xsize=>2, ysize=>2);
     ok(!$im->write(file=>"testout/notiff.tif"), "should fail to write tiff");
     is($im->errstr, 'format not supported', "check no tiff message");
-    skip("no tiff support", 166);
+    skip("no tiff support", 169);
   }
 
   my $ver_string = Imager::i_tiff_libversion();
@@ -546,6 +546,13 @@ SKIP:
        "read 32-bit/sample rgba image");
     is_image($rgba, $rgba32, "check they match");
     is($rgba32->bits, 'double', 'check we got the right type');
+
+    my $cmyka16 = Imager->new;
+    ok($cmyka16->read(file => 'testimg/scmyka16.tif'),
+       "read cmyk 16-bit")
+      or print "# ", $cmyka16->errstr, "\n";
+    is($cmyka16->bits, 16, "check we got the right type");
+    is_image_similar($rgba, $cmyka16, 10, "check image data");
   }
   { # read bi-level
     my $pbm = Imager->new;
