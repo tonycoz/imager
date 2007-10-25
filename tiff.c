@@ -680,7 +680,7 @@ i_writetiff_low_faxable(TIFF *tif, i_img *im, int fine) {
 }
 
 undef_int
-i_writetiff_low(TIFF *tif, i_img *im) {
+i_writetiff_low_old(TIFF *tif, i_img *im) {
   uint32 width, height;
   uint16 channels;
   uint16 predictor = 0;
@@ -719,6 +719,7 @@ i_writetiff_low(TIFF *tif, i_img *im) {
   default:
     /* This means a colorspace we don't handle yet */
     mm_log((1, "i_writetiff_wiol: don't handle %d channel images.\n", channels));
+    i_push_errorf(0, "tiff: cannot write %d channel images", channels);
     return 0;
   }
 
@@ -926,6 +927,103 @@ i_writetiff_low(TIFF *tif, i_img *im) {
   }
   if (linebuf) _TIFFfree(linebuf);
   if (colors) _TIFFfree(colors);
+  return 1;
+}
+
+static int 
+write_one_bilevel(TIFF *tif, i_img *im) {
+  return 0;
+}
+
+static int
+write_one_paletted8(TIFF *tif, i_img *im) {
+  return 0;
+}
+
+static int
+write_one_paletted4(TIFF *tif, i_img *im) {
+  return 0;
+}
+
+static int 
+write_one_16(TIFF *tif, i_img *im) {
+  return 0;
+}
+
+static int 
+write_one_8(TIFF *tif, i_img *im) {
+  return 0;
+}
+
+static int
+i_writetiff_low(TIFF *tif, i_img *im) {
+  uint32 width, height;
+  uint16 channels;
+  uint16 predictor = 0;
+  int quality = 75;
+  int jpegcolormode = JPEGCOLORMODE_RGB;
+  uint16 compression = COMPRESSION_PACKBITS;
+  i_color val;
+  uint16 photometric;
+  uint32 rowsperstrip = (uint32) -1;  /* Let library pick default */
+  unsigned char *linebuf = NULL;
+  uint32 y;
+  tsize_t linebytes;
+  int ch, ci, rc;
+  uint32 x;
+  int got_xres, got_yres, aspect_only, resunit;
+  double xres, yres;
+  uint16 bitspersample = 8;
+  uint16 samplesperpixel;
+  uint16 *colors = NULL;
+  int zero_is_white;
+
+  width    = im->xsize;
+  height   = im->ysize;
+  channels = im->channels;
+
+  mm_log((1, "i_writetiff_low: width=%d, height=%d, channels=%d\n", width, height, channels));
+  
+  if (!TIFFSetField(tif, TIFFTAG_IMAGEWIDTH,      width)   ) { 
+    mm_log((1, "i_writetiff_wiol: TIFFSetField width=%d failed\n", width)); 
+    return 0; 
+  }
+  if (!TIFFSetField(tif, TIFFTAG_IMAGELENGTH,     height)  ) { 
+    mm_log((1, "i_writetiff_wiol: TIFFSetField length=%d failed\n", height)); 
+    return 0; 
+  }
+  if (!TIFFSetField(tif, TIFFTAG_ORIENTATION,  ORIENTATION_TOPLEFT)) {
+    mm_log((1, "i_writetiff_wiol: TIFFSetField Orientation=topleft\n")); 
+    return 0; 
+  }
+  if (!TIFFSetField(tif, TIFFTAG_PLANARCONFIG, PLANARCONFIG_CONTIG)) { 
+    mm_log((1, "i_writetiff_wiol: TIFFSetField planarconfig\n")); 
+    return 0; 
+  }
+
+  if (i_img_is_monochrome(im, &zero_is_white)) {
+    if (!write_one_bilevel(tif, im, zero_is_white))
+      return 0;
+  }
+  else if (im->type == i_palette_type) {
+    if (i_colorcount(im) < 16) {
+      if (!write_one_paletted4(tif, im))
+	return 0;
+    }
+    else {
+      if (!write_one_paletted8(tif, im))
+	return 0;
+    }
+  }
+  else if (im->bits >= 16) {
+    if (!write_one_16(tif, im))
+      return 0;
+  }
+  else {
+    if (!write_one_8(tif, im))
+      return 0;
+  }
+
   return 1;
 }
 
