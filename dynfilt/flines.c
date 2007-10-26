@@ -30,8 +30,9 @@ flines(void *INP) {
 		return;
 	}
   
-  fprintf(stderr, "flines: parameters: (im 0x%x)\n",im);
-  fprintf(stderr, "flines: image info:\n size (%d,%d)\n channels (%d)\n channel mask (%d)\n bytes (%d)\n",im->xsize,im->ysize,im->channels,im->ch_mask,im->bytes); 
+  fprintf(stderr, "flines: parameters: (im %p)\n",im);
+  fprintf(stderr, "flines: image info:\n size (%d,%d)\n channels (%d)\n",
+	  im->xsize,im->ysize,im->channels);
 
   for(y = 0; y < im->ysize; y ++) {
     for(x = 0; x < im->xsize; x ++ ) {

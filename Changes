@@ -7,9 +7,15 @@ Imager 0.61 - unreleased
    when scaling an animated gif
    http://rt.cpan.org/Ticket/Display.html?id=27591
 
+Bug fixes:
+
  - correct handling of sz in matrix_transform() - this should allow
    perspective type transformations to work now.
    http://rt.cpan.org/Ticket/Display.html?id=29936
+
+ - prevent a cast to integer warning on x64 builds in datatypes.c
+   also fixed some other type warnings
+   https://rt.cpan.org/Ticket/Display.html?id=30204
 
 Imager 0.60 - 30 August 2007
 ===========

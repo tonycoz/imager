@@ -44,7 +44,8 @@ void lin_stretch(void *INP) {
 
   i_img_info(im,info); 
   for(i=0;i<4;i++) { printf("%d: %d\n",i,info[i]); } 
-  printf("image info:\n size (%d,%d)\n channels (%d)\n channel mask (%d)\n bytes (%d)\n",im->xsize,im->ysize,im->channels,im->ch_mask,im->bytes); 
+  printf("image info:\n size (%d,%d)\n channels (%d)\n",
+	 im->xsize, im->ysize, im->channels); 
 
   for(y=0;y<im->ysize;y++) for(x=0;x<im->xsize;x++) {
     i_gpix(im,x,y,&rcolor);

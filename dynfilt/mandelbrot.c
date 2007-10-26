@@ -40,7 +40,6 @@ mandel(float x, float y) {
 void mandlebrot(void *INP) {
 
   i_img *im;
-  i_color vl;
   int i,bytes,x,y;
   int idx;
   
@@ -66,7 +65,8 @@ void mandlebrot(void *INP) {
   fprintf(stderr,"mandlebrot: parameters: (im %p)\n",im);
   bytes=im->bytes;
 
-  fprintf(stderr, "mandlebrot: image info:\n size (%d,%d)\n channels (%d)\n channel mask (%d)\n bytes (%d)\n",im->xsize,im->ysize,im->channels,im->ch_mask,im->bytes); 
+  fprintf(stderr, "mandlebrot: image info:\n size (%d,%d)\n channels (%d)\n",
+	  im->xsize,im->ysize,im->channels); 
   div = 2.5;
 
   xs = 0.8*div;

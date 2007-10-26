@@ -23,7 +23,8 @@ html_art(void *INP) {
   
   printf("parameters: (im 0x%p,fname %s)\n",im,fname); 
 
-  printf("image info:\n size (%d,%d)\n channels (%d)\n channel mask (%d)\n bytes (%d)\n",im->xsize,im->ysize,im->channels,im->ch_mask,im->bytes); 
+  printf("image info:\n size (%d,%d)\n channels (%d)\n",
+	 im->xsize,im->ysize,im->channels); 
 
   fp=fopen(fname,"ab+");
   fprintf(fp,"<TABLE BORDER=\"0\" CELLPADDING=\"0\" CELLSPACING=\"0\">");

@@ -248,8 +248,12 @@ void
 octt_dump(struct octt *ct) {
 	int i;
 	/* 	printf("node [0x%08X] -> (%d)\n",ct,ct->cnt); */
-	for(i=0;i<8;i++) if (ct->t[i] != NULL) printf("[ %d ] -> 0x%08X\n",i,(unsigned int)ct->t[i]);	
-	for(i=0;i<8;i++) if (ct->t[i] != NULL) octt_dump(ct->t[i]);
+	for(i=0;i<8;i++)
+	  if (ct->t[i] != NULL) 
+	    printf("[ %d ] -> %p\n", i, (void *)ct->t[i]);	
+	for(i=0;i<8;i++) 
+	  if (ct->t[i] != NULL) 
+	    octt_dump(ct->t[i]);
 }
 
 /* note that all calls of octt_count are operating on the same overflow 

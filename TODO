@@ -57,6 +57,8 @@ CMYK alpha TIFF problems with old libtiff (#29353) (done)
 matrix_transform() should use fabs() instead of abs() range checking
 sz (#29936) (done)
 
+warning compiling datatypes.c on x64 (#30204) (done)
+
 For 0.60 (hopefully):
 
 RGB file support (#8666) (done)
