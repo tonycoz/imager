@@ -11,7 +11,7 @@ Imager::init('log'=>'../testout/t60dyntest.log');
 
 my $img=Imager->new() || die "unable to create image object\n";
 
-$img->read(file=>'../testout/t104.ppm',type=>'pnm') 
+$img->read(file=>'../testimg/penguin-base.ppm',type=>'pnm') 
   || die "failed: ",$img->{ERRSTR},"\n";
 
 my $plug='./dyntest.'.$Config{'so'};

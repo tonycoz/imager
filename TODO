@@ -59,6 +59,9 @@ sz (#29936) (done)
 
 warning compiling datatypes.c on x64 (#30204) (done)
 
+dynfilt/t/t60dyntest.t relies on a file that may not exist (#30203)
+(done)
+
 For 0.60 (hopefully):
 
 RGB file support (#8666) (done)

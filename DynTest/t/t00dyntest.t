@@ -9,7 +9,7 @@ BEGIN { use_ok('Imager::Filter::DynTest') }
 my $im = Imager->new;
 SKIP:
 {
-  ok($im->read(file => '../testout/t104.ppm'), "load source image")
+  ok($im->read(file => '../testimg/penguin-base.ppm'), "load source image")
     or skip("couldn't load work image", 2);
   ok($im->filter(type=>'lin_stretch', a => 50, b => 200),
      "try filter")

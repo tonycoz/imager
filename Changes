@@ -17,6 +17,10 @@ Bug fixes:
    also fixed some other type warnings
    https://rt.cpan.org/Ticket/Display.html?id=30204
 
+ - some sub-directory tests depended on files produced by the parent
+   directory tests
+   http://rt.cpan.org/Ticket/Display.html?id=30203
+
 Imager 0.60 - 30 August 2007
 ===========
 
