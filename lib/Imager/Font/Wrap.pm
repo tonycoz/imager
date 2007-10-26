@@ -190,7 +190,8 @@ sub wrap_text {
   }
 
   if (length $line && !$state{full}) {
-    _format_line(\%state, 0, $line, 0);
+    $linepos += length $line
+      if _format_line(\%state, 0, $line, 0);
   }
 
   if ($input{savepos}) {

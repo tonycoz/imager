@@ -21,6 +21,10 @@ Bug fixes:
    directory tests
    http://rt.cpan.org/Ticket/Display.html?id=30203
 
+ - Imager::Font::Wrap doesn't correctly set savepos
+   thanks to Nikita Dedik and Eleneldil G. Arilou for reporting this.
+   http://rt.cpan.org/Ticket/Display.html?id=29771
+
 Imager 0.60 - 30 August 2007
 ===========
 
