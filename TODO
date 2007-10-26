@@ -44,7 +44,7 @@ testdrive warnings (#29610)
 
 Imager::Files still refers to rgb file type (#29354) (done)
 
-t/t01introvert test failure line 495 (#29413)
+t/t01introvert test failure line 495 (#29413) (done)
 
 Imager::Expr::Infix problem (#29562)
 

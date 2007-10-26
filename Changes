@@ -25,6 +25,10 @@ Bug fixes:
    thanks to Nikita Dedik and Eleneldil G. Arilou for reporting this.
    http://rt.cpan.org/Ticket/Display.html?id=29771
 
+ - test 171 in t/t01introvert.t was failing on perls configured to
+   use long double.
+   http://rt.cpan.org/Ticket/Display.html?id=29413
+
 Imager 0.60 - 30 August 2007
 ===========
 

@@ -492,8 +492,10 @@ cmp_ok(Imager->errstr, '=~', qr/channels must be between 1 and 4/,
   is_color4($colors[3], 128, 255, 0, 0, "check object interface[3]");
   
   my $dataf = $im->getscanline('y' => 0, type => 'float');
+  # the extra pack/unpack is to force double precision rather than long
+  # double, otherwise the test fails
   is_deeply([ unpack("d*", $dataf) ],
-	    [ ( 128.0 / 255.0, 1.0, 0, 0, ) x 4 ],
+	    [ unpack("d*", pack("d*", ( 128.0 / 255.0, 1.0, 0, 0, ) x 4)) ],
 	    "check we get zeroes (double)");
   my @fcolors = $im->getscanline('y' => 0, type => 'float');
   is_fcolor4($fcolors[0], 128.0/255.0, 1.0, 0, 0, "check object interface[0]");
