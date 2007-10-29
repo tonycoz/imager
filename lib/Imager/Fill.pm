@@ -178,7 +178,7 @@ All fills are created with the new method.
 
 =item new
 
-  my $fill = Imager::Fill=>new(...);
+  my $fill = Imager::Fill->new(...);
 
 The parameters depend on the type of fill being created.  See below
 for details.
