@@ -33,6 +33,13 @@ Bug fixes:
    Added tests for better code coverage of the ops.
    http://rt.cpan.org/Ticket/Display.html?id=29296
 
+ - the SGI RLE compression code could overflow its compression buffer
+   http://rt.cpan.org/Ticket/Display.html?id=30334
+
+ - the 32-bit output function used by the SGI code only handled values
+   under 0x10000.  This was most noticable when writing large RLE images.
+   http://rt.cpan.org/Ticket/Display.html?id=30335
+
 Imager 0.60 - 30 August 2007
 ===========
 

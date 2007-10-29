@@ -121,7 +121,7 @@ store_16(unsigned char *buf, unsigned short value) {
 }
 
 static void
-store_32(unsigned char *buf, unsigned short value) {
+store_32(unsigned char *buf, unsigned long value) {
   buf[0] = value >> 24;
   buf[1] = (value >> 16) & 0xFF;
   buf[2] = (value >> 8) & 0xFF;
@@ -987,9 +987,8 @@ write_sgi_8_rle(i_img *img, io_glue *ig) {
 	  
 	  /* fill out the run if 2 or less samples left and there's space */
 	  if (in_left - run_length <= 2 
-	      && run_length + in_left - run_length <= 127) {
-	    run_length += in_left;
-	    in_left = 0;
+	      && in_left <= 127) {
+	    run_length = in_left;
 	  }
 	  in_left -= run_length;
 	  *outp++ = run_length | 0x80;
@@ -1145,9 +1144,8 @@ write_sgi_16_rle(i_img *img, io_glue *ig) {
 	  
 	  /* fill out the run if 2 or less samples left and there's space */
 	  if (in_left - run_length <= 2 
-	      && run_length + in_left - run_length <= 127) {
-	    run_length += in_left;
-	    in_left = 0;
+	      && in_left <= 127) {
+	    run_length = in_left;
 	  }
 	  in_left -= run_length;
 	  store_16(outp, run_length | 0x80);

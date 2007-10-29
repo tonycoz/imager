@@ -26,7 +26,7 @@ TIFF improvements (to be detailed) (#20329)
 both contig and non-contiguous
  - possible extra code for handling 8-bit CMYK (#29353)
 
-regmach.c fixes/tests (#29296)
+regmach.c fixes/tests (#29296) (done)
 
 sample: scaling an animated gif (#27591) (done)
 

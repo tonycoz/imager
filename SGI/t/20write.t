@@ -1,7 +1,7 @@
 #!perl -w
 use strict;
 use Imager;
-use Test::More tests => 51;
+use Test::More tests => 55;
 use Imager::Test qw(test_image test_image_16 is_image);
 use IO::Seekable;
 
@@ -11,6 +11,7 @@ Imager::init_log('testout/20write.log', 2);
 
 {
   my $im = test_image();
+  $im->line(x1 => 0, y1 => 0, x2 => 150, y2 => 150, color => 'FF0000');
   ok($im->write(file => 'testout/20verb.rgb'), "write 8-bit verbatim")
     or print "# ", $im->errstr, "\n";
   my $im2 = Imager->new;
@@ -36,6 +37,7 @@ Imager::init_log('testout/20write.log', 2);
 
 {
   my $im = test_image_16();
+  $im->line(x1 => 0, y1 => 0, x2 => 150, y2 => 150, color => 'FF0000');
   ok($im->write(file => 'testout/20verb16.rgb'), "write 16-bit verbatim")
     or print "# ", $im->errstr, "\n";
   my $im2 = Imager->new;
@@ -57,6 +59,24 @@ Imager::init_log('testout/20write.log', 2);
   is($im3->tags(name => 'sgi_rle'), 1, "check not rle");
   is($im3->tags(name => 'sgi_bpc'), 2, "check bpc");
   is($im3->tags(name => 'i_comment'), 'test', "check i_comment set");
+
+  my $imbig = Imager->new(xsize => 300, ysize => 300, bits => 16);
+  $imbig->paste(src => $im, tx => 0,   ty => 0);
+  $imbig->paste(src => $im, tx => 150, ty => 0);
+  $imbig->paste(src => $im, tx => 0,   ty => 150);
+  $imbig->paste(src => $im, tx => 150, ty => 150);
+  for my $t (0 .. 74) {
+    $imbig->line(x1 => $t*4, y1 => 0, x2 => 3+$t*4, y2 => 299, 
+		 color => [ 255 - $t, 0, 0 ]);
+  }
+  my $data;
+  ok($imbig->write(data => \$data, type => 'sgi', sgi_rle => 1),
+     "write larger image");
+  cmp_ok(length($data), '>', 0x10000, "check output large enough for test");
+  print "# ", length $data, "\n";
+  my $imbigcmp = Imager->new;
+  ok($imbigcmp->read(data => $data), "read larger image");
+  is_image($imbig, $imbigcmp, "check large image matches");
 }
 
 {
