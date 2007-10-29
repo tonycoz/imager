@@ -216,6 +216,7 @@ i_color i_rm_run(struct rm_op codes[], size_t code_count,
 
     case rbc_uminus:
       nout = -na;
+      break;
 
     case rbc_multp:
       cout = make_rgb(ca.rgb.r * nb, ca.rgb.g * nb, ca.rgb.b * nb, 255);

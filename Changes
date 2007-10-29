@@ -29,6 +29,10 @@ Bug fixes:
    use long double.
    http://rt.cpan.org/Ticket/Display.html?id=29413
 
+ - the code for the transform2() uminus operator was missing a break.
+   Added tests for better code coverage of the ops.
+   http://rt.cpan.org/Ticket/Display.html?id=29296
+
 Imager 0.60 - 30 August 2007
 ===========
 

@@ -1,7 +1,8 @@
 #!perl -w
 use strict;
-use Test::More tests => 16;
+use Test::More tests => 36;
 BEGIN { use_ok('Imager'); }
+use Imager::Test qw(is_color3);
 
 Imager::init('log'=>'testout/t58trans2.log');
 
@@ -72,6 +73,68 @@ if ($im9) {
   $im9->write(type=>'pnm', file=>'testout/t56-9.ppm');
 }
 
+# op tests
+sub op_test($$$$$$);
+print "# op tests\n";
+op_test('7F0000', <<EOS, 0, 127, 0, 'value hsv getp1');
+120 1.0
+0 0 getp1 value
+hsv
+EOS
+op_test("7F0000", <<EOS, 255, 0, 0, 'hue');
+0 0 getp1 hue
+1.0 1.0 hsv
+EOS
+op_test("7F0000", <<EOS, 0, 255, 0, 'sat');
+120 0 0 getp1 sat 1.0 hsv
+EOS
+op_test("4060A0", <<'EOS', 128, 128, 128, "add mult sub rgb red green blue");
+0 0 getp1 !p @p red 2 * @p green 32 + @p blue 32 - rgb
+EOS
+op_test('806040', <<'EOS', 64, 64, 64, "div uminus");
+0 0 getp1 !p @p red 2 / @p green 32 uminus add @p blue rgb
+EOS
+op_test('40087f', <<'EOS', 8, 64, 31, 'pow mod');
+0 0 getp1 !p @p red 0.5 pow @p green 2 pow @p blue 32 mod rgb
+EOS
+op_test('202122', '0 0 getp1 4 *', 128, 132, 136, 'multp');
+op_test('404040', '0 0 getp1 1 2 3 rgb +', 65, 66, 67, 'addp');
+op_test('414243', '0 0 getp1 3 2 1 rgb -', 62, 64, 66, 'subp');
+op_test('808040', <<'EOS', 64, 64, 8, 'sin cos pi sqrt');
+0 0 getp1 !p pi 6 / sin @p red * 0.1 + pi 3 / cos @p green * 0.1 + 
+@p blue sqrt rgb
+EOS
+op_test('008080', <<'EOS', 0, 0, 0, 'atan2');
+0 0 0 0 getp1 !p @p red 128 / @p green 128 / atan2 hsv
+EOS
+op_test('000000', <<'EOS', 150, 150, 150, 'distance');
+0 100 120 10 distance !d @d @d @d rgb
+EOS
+op_test('000000', <<'EOS', 100, 100, 100, 'int');
+50.75 int 2 * !i @i @i @i rgb
+EOS
+op_test('000100', <<'EOS', 128, 0, 0, 'if');
+0 0 getp1 !p @p red 0 128 if @p green 0 128 if 0 rgb
+EOS
+op_test('FF0000', <<'EOS', 0, 255, 0, 'ifp');
+0 0 0 getp1 0 255 0 rgb ifp
+EOS
+op_test('000000', <<'EOS', 1, 0, 1, 'le lt gt');
+0 1 le 1 0 lt 1 0 gt rgb
+EOS
+op_test('000000', <<'EOS', 0, 1, 0, 'ge eq ne');
+0 1 ge 0 0 eq 0 0 ne rgb
+EOS
+op_test('000000', <<'EOS', 0, 1, 1, 'and or not');
+1 0 and 1 0 or 0 not rgb
+EOS
+op_test('000000', <<'EOS', 255, 0, 255, 'abs');
+-255 abs 0 abs 255 abs rgb
+EOS
+op_test('000000', <<'EOS', 50, 82, 0, 'exp log');
+1 exp log 50 * 0.5 + 0.5 exp 50 * 0 rgb
+EOS
+
 use Imager::Transform;
 
 # some simple tests
@@ -95,3 +158,20 @@ my $im7 = Imager::transform2({rpnexpr=>'x y getp2', width=>100, height=>100});
 ok(!$im7, "expected failure on accessing invalid image");
 print "# ", Imager->errstr, "\n";
 ok(Imager->errstr =~ /not enough images/, "didn't get expected error");
+
+sub op_test ($$$$$$) {
+  my ($in_color, $code, $r, $g, $b, $comment) = @_;
+
+  my $im = Imager->new(xsize => 1, ysize => 1);
+  $im->setpixel(x => 0, y => 0, color => $in_color);
+ SKIP:
+  {
+    my $out = Imager::transform2({ rpnexpr => $code }, $im);
+    unless ($out) {
+      fail("$comment: coult not compile $code - ".Imager->errstr);
+      return;
+    }
+    my $found = $out->getpixel(x => 0, y => 0);
+    is_color3($found, $r, $g, $b, $comment);
+  }
+}
