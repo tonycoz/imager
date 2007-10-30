@@ -1,7 +1,7 @@
 #!perl -w
 use Imager qw(:all);
 use strict;
-use Test::More tests=>38;
+use Test::More tests=>40;
 BEGIN { require "t/testtools.pl"; }
 init_log("testout/t108tga.log",1);
 
@@ -123,6 +123,11 @@ is($compressed, 1, "check compressed tag");
      "check failure of writing a 2 channel image");
   is($im->errstr, "Cannot store 2 channel image in targa format",
      "check the error message");
+}
+
+{
+  ok(grep($_ eq 'tga', Imager->read_types), "check tga in read types");
+  ok(grep($_ eq 'tga', Imager->write_types), "check tga in write types");
 }
 
 sub write_test {

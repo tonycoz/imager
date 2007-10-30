@@ -1,7 +1,7 @@
 #!perl -w
 use strict;
 use Imager qw(:all);
-use Test::More tests => 86;
+use Test::More tests => 88;
 
 init_log("testout/t101jpeg.log",1);
 
@@ -28,7 +28,9 @@ if (!i_has_format("jpeg")) {
     cmp_ok($im->errstr, '=~', qr/format 'jpeg' not supported/, "check no jpeg message");
     $im = Imager->new(xsize=>2, ysize=>2);
     ok(!$im->write(file=>"testout/nojpeg.jpg"), "should fail to write jpeg");
-    cmp_ok($im->errstr, '=~', qr/format not supported/, "check no jpeg message");
+    cmp_ok($im->errstr, '=~', qr/format 'jpeg' not supported/, "check no jpeg message");
+    ok(!grep($_ eq 'jpeg', Imager->read_types), "check jpeg not in read types");
+    ok(!grep($_ eq 'jpeg', Imager->write_types), "check jpeg not in write types");
     skip("no jpeg support", 82);
   }
 } else {
@@ -401,6 +403,11 @@ if (!i_has_format("jpeg")) {
     cmp_ok($r, '>', 245, 'red - red high');
     cmp_ok($g, '<', 10, 'red - green low');
     cmp_ok($b, '<', 10, 'red - blue low');
+  }
+
+  {
+    ok(grep($_ eq 'jpeg', Imager->read_types), "check jpeg in read types");
+    ok(grep($_ eq 'jpeg', Imager->write_types), "check jpeg in write types");
   }
 }
 

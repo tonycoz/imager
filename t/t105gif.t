@@ -12,7 +12,7 @@ UPGRADE.
 
 use strict;
 $|=1;
-use Test::More tests => 130;
+use Test::More tests => 132;
 use Imager qw(:all);
 use Imager::Test qw(is_color3);
 BEGIN { require "t/testtools.pl"; }
@@ -45,10 +45,12 @@ SKIP:
   unless (i_has_format("gif")) {
     my $im = Imager->new;
     ok(!$im->read(file=>"testimg/scale.gif"), "should fail to read gif");
-    is($im->errstr, "format 'gif' not supported", "check no gif message");
+    cmp_ok($im->errstr, '=~', "format 'gif' not supported", "check no gif message");
     $im = Imager->new(xsize=>2, ysize=>2);
     ok(!$im->write(file=>"testout/nogif.gif"), "should fail to write gif");
-    is($im->errstr, 'format not supported', "check no gif message");
+    cmp_ok($im->errstr, '=~', "format 'gif' not supported", "check no gif message");
+    ok(!grep($_ eq 'gif', Imager->read_types), "check gif not in read types");
+    ok(!grep($_ eq 'gif', Imager->write_types), "check gif not in write types");
     skip("no gif support", 126);
   }
     open(FH,">testout/t105.gif") || die "Cannot open testout/t105.gif\n";
@@ -703,6 +705,11 @@ SKIP:
     is_color3($im->getpixel('y' => 0, x => 4), 0, 0, 0, 
 	      "check it was black added");
     is($im->tags(name => 'gif_colormap_size'), 4, 'color map size tag');
+  }
+
+  {
+    ok(grep($_ eq 'gif', Imager->read_types), "check gif in read types");
+    ok(grep($_ eq 'gif', Imager->write_types), "check gif in write types");
   }
 }
 

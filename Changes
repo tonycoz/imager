@@ -48,6 +48,10 @@ Bug fixes:
    http://www.nntp.perl.org/group/perl.cpan.testers/2007/09/msg650810.html
    http://rt.cpan.org/Ticket/Display.html?id=29562
 
+ - improve the error messages produced when attempting to read or write
+   an unknown image file format.
+   http://rt.cpan.org/Ticket/Display.html?id=30103
+
 Imager 0.60 - 30 August 2007
 ===========
 

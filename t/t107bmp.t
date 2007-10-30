@@ -1,6 +1,6 @@
 #!perl -w
 use strict;
-use Test::More tests => 199;
+use Test::More tests => 201;
 use Imager qw(:all);
 use Imager::Test qw(test_image_raw is_image);
 init_log("testout/t107bmp.log",1);
@@ -610,6 +610,11 @@ for my $comp (@comp) {
 
     ++$test_index;
   }
+}
+
+{
+  ok(grep($_ eq 'bmp', Imager->read_types), "check bmp in read types");
+  ok(grep($_ eq 'bmp', Imager->write_types), "check bmp in write types");
 }
 
 sub write_test {

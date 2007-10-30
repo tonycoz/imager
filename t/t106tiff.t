@@ -1,6 +1,6 @@
 #!perl -w
 use strict;
-use Test::More tests => 127;
+use Test::More tests => 129;
 use Imager qw(:all);
 $^W=1; # warnings during command-line tests
 $|=1;  # give us some progress in the test harness
@@ -27,10 +27,12 @@ SKIP:
   unless (i_has_format("tiff")) {
     my $im = Imager->new;
     ok(!$im->read(file=>"testimg/comp4.tif"), "should fail to read tif");
-    is($im->errstr, "format 'tiff' not supported", "check no tiff message");
+    cmp_ok($im->errstr, '=~', "format 'tiff' not supported", "check no tiff message");
     $im = Imager->new(xsize=>2, ysize=>2);
     ok(!$im->write(file=>"testout/notiff.tif"), "should fail to write tiff");
-    is($im->errstr, 'format not supported', "check no tiff message");
+    cmp_ok($im->errstr, '=~', "format 'tiff' not supported", "check no tiff message");
+    ok(!grep($_ eq 'tiff', Imager->read_types), "check tiff not in read types");
+    ok(!grep($_ eq 'tiff', Imager->write_types), "check tiff not in write types");
     skip("no tiff support", 123);
   }
 
@@ -446,6 +448,11 @@ SKIP:
       is($im->tags(name=>'tiff_photometric'), $test->[2],
 	 "photometric for $test->[0] match");
     }
+  }
+
+  {
+    ok(grep($_ eq 'tiff', Imager->read_types), "check tiff in read types");
+    ok(grep($_ eq 'tiff', Imager->write_types), "check tiff in write types");
   }
 }
 

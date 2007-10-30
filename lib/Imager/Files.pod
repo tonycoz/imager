@@ -20,6 +20,9 @@ Imager::Files - working with image files
 
   Imager->set_file_limits(width=>$max_width, height=>$max_height)
 
+  my @read_types = Imager->read_types;
+  my @write_types = Imager->write_types;
+
 =head1 DESCRIPTION
 
 You can read and write a variety of images formats, assuming you have
@@ -33,7 +36,8 @@ code snippet is sufficient:
   print join " ", keys %Imager::formats;
 
 This will include some other information identifying libraries rather
-than file formats.
+than file formats.  For new code you might find the L</read_types> or
+L</write_types> methods useful.
 
 =over 
 
@@ -81,6 +85,34 @@ C<write_multi()> method:
 
   Imager->write_multi({ file=> $filename, type=>$type }, @images)
     or die "Cannot write $filename: ", Imager->errstr;
+
+=item read_types
+
+This is a class method that returns a list of the image file types
+that Imager can read.
+
+  my @types = Imager->read_types;
+
+These types are the possible values for the C<type> parameter, not
+necessarily the extension of the files you're reading.
+
+It is possible for extra file read handlers to be loaded when
+attempting to read a file, which may modify the list of available read
+types.
+
+=item write_types
+
+This is a class method that returns a list of the image file types
+that Imager can write.
+
+  my @types = Imager->write_types;
+
+Note that these are the possible values for the C<type> parameter, not
+necessarily the extension of the files you're writing.
+
+It is possible for extra file write handlers to be loaded when
+attempting to write a file, which may modify the list of available
+write types.
 
 =back
 

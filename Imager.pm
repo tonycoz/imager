@@ -152,6 +152,9 @@ my %writers;
 # modules we attempted to autoload
 my %attempted_to_load;
 
+# library keys that are image file formats
+my %file_formats = map { $_ => 1 } qw/tiff pnm gif png jpeg raw bmp tga/;
+
 BEGIN {
   require Exporter;
   @ISA = qw(Exporter);
@@ -1278,7 +1281,8 @@ sub read {
   }
 
   unless ($formats{$input{'type'}}) {
-    $self->_set_error("format '$input{'type'}' not supported");
+    my $read_types = join ', ', sort Imager->read_types();
+    $self->_set_error("format '$input{'type'}' not supported - formats $read_types available for reading");
     return;
   }
 
@@ -1444,6 +1448,30 @@ sub register_writer {
   }
 
   return 1;
+}
+
+sub read_types {
+  my %types =
+    (
+     map { $_ => 1 }
+     keys %readers,
+     grep($file_formats{$_}, keys %formats),
+     qw(ico sgi), # formats not handled directly, but supplied with Imager
+    );
+
+  return keys %types;
+}
+
+sub write_types {
+  my %types =
+    (
+     map { $_ => 1 }
+     keys %writers,
+     grep($file_formats{$_}, keys %formats),
+     qw(ico sgi), # formats not handled directly, but supplied with Imager
+    );
+
+  return keys %types;
 }
 
 # probes for an Imager::File::whatever module
@@ -1628,7 +1656,8 @@ sub write {
   }
   else {
     if (!$formats{$input{'type'}}) { 
-      $self->{ERRSTR}='format not supported'; 
+      my $write_types = join ', ', sort Imager->write_types();
+      $self->_set_error("format '$input{'type'}' not supported - formats $write_types available for writing");
       return undef;
     }
     
@@ -1768,7 +1797,8 @@ sub write_multi {
   }
   else {
     if (!$formats{$type}) { 
-      $class->_set_error("format $type not supported"); 
+      my $write_types = join ', ', sort Imager->write_types();
+      $class->_set_error("format '$type' not supported - formats $write_types available for writing");
       return undef;
     }
     
@@ -1889,9 +1919,9 @@ sub read_multi {
     if ($img->read(%opts, io => $IO, type => $type)) {
       return ( $img );
     }
+    Imager->_set_error($img->errstr);
   }
 
-  $ERRSTR = "Cannot read multiple images from $type files";
   return;
 }
 
@@ -3851,6 +3881,9 @@ read() - L<Imager::Files> - read a single image from an image file
 read_multi() - L<Imager::Files> - read multiple images from an image
 file
 
+read_types() - L<Imager::Files/read_types> - list image types Imager
+can read.
+
 register_filter() - L<Imager::Filters/register_filter>
 
 register_reader() - L<Imager::Filters/register_reader>
@@ -3906,6 +3939,9 @@ write() - L<Imager::Files> - write an image to a file
 
 write_multi() - L<Imager::Files> - write multiple image to an image
 file.
+
+write_types() - L<Imager::Files/read_types> - list image types Imager
+can write.
 
 =head1 CONCEPT INDEX
 

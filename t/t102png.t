@@ -1,6 +1,6 @@
 #!perl -w
 use strict;
-use Test::More tests => 32;
+use Test::More tests => 34;
 # Before `make install' is performed this script should be runnable with
 # `make test'. After `make install' it should work as `perl test.pl'
 
@@ -37,10 +37,12 @@ if (!i_has_format("png")) {
   {
     my $im = Imager->new;
     ok(!$im->read(file=>"testimg/palette.png"), "should fail to read png");
-    is($im->errstr, "format 'png' not supported", "check no png message");
+    cmp_ok($im->errstr, '=~', "format 'png' not supported", "check no png message");
     $im = Imager->new(xsize=>2, ysize=>2);
     ok(!$im->write(file=>"testout/nopng.png"), "should fail to write png");
-    is($im->errstr, 'format not supported', "check no png message");
+    cmp_ok($im->errstr, '=~', "format 'png' not supported", "check no png message");
+    ok(!grep($_ eq 'png', Imager->read_types), "check png not in read types");
+    ok(!grep($_ eq 'png', Imager->write_types), "check png not in write types");
     skip("no png support", 27);
   }
 } else {
@@ -165,5 +167,10 @@ EOS
     ok(!Imager->write_multi({ file => 'testout/t102m.png', type => 'png' }, 
 			   @imgs, @imgs),
        'test write_multi() callback failure');
+  }
+
+  {
+    ok(grep($_ eq 'png', Imager->read_types), "check png in read types");
+    ok(grep($_ eq 'png', Imager->write_types), "check png in write types");
   }
 }

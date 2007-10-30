@@ -1,6 +1,6 @@
 #!perl -w
 use Imager ':all';
-use Test::More tests => 143;
+use Test::More tests => 145;
 use strict;
 use Imager::Test qw(test_image_raw test_image_16 is_color3 is_color1 is_image);
 
@@ -454,6 +454,11 @@ print "# check error handling\n";
   is($im16->tags(name => 'pnm_maxval'), 65535, "check maxval");
   $im16->write(file=>'testout/t104_16b.ppm');
   is_image($im, $im16, "check image matches");
+}
+
+{
+  ok(grep($_ eq 'pnm', Imager->read_types), "check pnm in read types");
+  ok(grep($_ eq 'pnm', Imager->write_types), "check pnm in write types");
 }
 
 sub openimage {

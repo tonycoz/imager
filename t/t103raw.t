@@ -1,6 +1,6 @@
 #!perl -w
 use strict;
-use Test::More tests => 23;
+use Test::More tests => 25;
 use Imager qw(:all);
 init_log("testout/t103raw.log",1);
 
@@ -176,6 +176,12 @@ SKIP:
      'read a file open for write');
   cmp_ok($im->errstr, '=~', '^error reading file: read\(\) failure', "check message");
   
+}
+
+
+{
+  ok(grep($_ eq 'raw', Imager->read_types), "check raw in read types");
+  ok(grep($_ eq 'raw', Imager->write_types), "check raw in write types");
 }
 
 sub read_test {
