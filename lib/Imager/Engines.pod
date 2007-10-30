@@ -142,9 +142,23 @@ An example equivalent to the infix expression above:
 
  $opts{rpnexpr} = 'x y getp1 !pix @pix value 0.8 gt @pix 0.8 * @pix ifp'
 
+At the end of the expression there should be a single pixel value left
+on the stack, which is used as the output pixel.
+
 =head3 Operators
 
 transform2() has a fairly rich range of operators.
+
+Each entry below includes the usage with rpnexpr, formatted as:
+
+=over
+
+I<operand> I<operand> ... B<I<operator>> -- I<result>
+
+=back
+
+If the operand or result begins with "N" it is a numeric value, if it
+begins with "C" it is a color or pixel value.
 
 =over
 
@@ -160,24 +174,78 @@ Modulo zero (or a small number) results in zero.  % is implemented
 using fmod() so you can use this to take a value mod a floating point
 value.
 
+rpnexpr usage:
+
+=over
+
+I<N1> I<N2> B<+> -- I<N>
+
+I<N1> I<N2> B<*> -- I<N>
+
+I<N1> I<N2> B<-> -- I<N>
+
+I<N1> I<N2> B</> -- I<N>
+
+I<N1> I<N2> B<**> -- I<N>
+
+I<N1> B<uminus> -- I<N>
+
+=back
+
 =item sin(N), cos(N), atan2(y,x)
 
 Some basic trig functions.  They work in radians, so you can't just
 use the hue values.
+
+rpnexpr usage:
+
+=over
+
+I<N> B<sin> -- I<N>
+
+I<N> B<cos> -- I<N>
+
+I<Ny> I<Nx> B<atan2> -- I<N>
+
+=back
 
 =item distance(x1, y1, x2, y2)
 
 Find the distance between two points.  This is handy (along with
 atan2()) for producing circular effects.
 
+rpnexpr usage:
+
+=over
+
+I<Nx1> I<Ny1> I<Nx2> I<Ny2> B<distance> -- I<N>
+
+=back
+
 =item sqrt(n)
 
 Find the square root.  I haven't had much use for this since adding
 the distance() function.
 
+rpnexpr usage:
+
+=over
+
+I<N> B<sqrt> -- I<N>
+
+=back
+
 =item abs(n)
 
 Find the absolute value.
+
+rpnexpr usage:
+
+=over
+
+I<N> B<abs> -- I<N>
+
+=back
 
 =item getp1(x,y), getp2(x,y), getp3(x, y)
 
@@ -186,30 +254,102 @@ respectively.  I may add a getpn() function at some point, but this
 prevents static checking of the instructions against the number of
 images actually passed in.
 
+rpnexpr usage:
+
+=over
+
+I<Nx> I<Ny> B<getp1> -- I<C>
+
+I<Nx> I<Ny> B<getp2> -- I<C>
+
+I<Nx> I<Ny> B<getp3> -- I<C>
+
+=back
+
 =item value(c), hue(c), sat(c), hsv(h,s,v), hsva(h,s,v,alpha)
 
 Separates a colour value into it's value (brightness), hue (colour)
 and saturation elements.  Use hsv() to put them back together (after
 suitable manipulation), or hsva() to include a tranparency value.
 
-=item red(c), green(c), blue(c), rgb(r,g,b)
+rpnexpr usage:
+
+=over
+
+I<C> B<value> -- I<N>
+
+I<C> B<hue> -- I<N>
+
+I<C> B<sat> -- I<N>
+
+I<Nh> I<Ns> I<Nv> B<hsv> -- I<C>
+
+I<Nh> I<Ns> I<Nv> I<Na> B<hsva> -- I<C>
+
+=back
+
+=item red(c), green(c), blue(c), rgb(r,g,b), rgba(r,g,b,a)
 
 Separates a colour value into it's red, green and blue colours.  Use
 rgb(r,g,b) to put it back together, or rgba() to include a
 transparency value.
 
+rpnexpr usage:
+
+=over
+
+I<C> B<red> -- I<N>
+
+I<C> B<green> -- I<N>
+
+I<C> B<blue> -- I<N>
+
+I<Nr> I<Ng> I<Nb> B<rgb> -- I<C>
+
+I<Nr> I<Ng> I<Nb> I<Na> B<rgba> -- I<C>
+
+=back
+
 =item alpha(c)
 
 Retrieve the alpha value from a colour.
+
+rpnexpr usage:
+
+=over
+
+I<C> B<alpha> -- I<N>
+
+=back
 
 =item int(n)
 
 Convert a value to an integer.  Uses a C int cast, so it may break on
 large values.
 
+rpnexpr usage:
+
+=over
+
+I<N> B<int> -- I<N>
+
+=back
+
 =item if(cond,ntrue,nfalse), if(cond,ctrue,cfalse)
 
 A simple (and inefficient) if function.
+
+rpnexpr usage:
+
+=over
+
+I<Ncond> I<N-true-result> I<N-false-result> B<if> -- I<N>
+
+I<Ncond> I<C-true-result> I<C-false-result> B<if> -- I<C>
+
+I<Ncond> I<C-true-result> I<C-false-result> B<ifp> -- I<C>
+
+=back
 
 =item <=,<,==,>=,>,!=
 
@@ -217,13 +357,51 @@ Relational operators (typically used with if()).  Since we're working
 with floating point values the equalities are 'near equalities' - an
 epsilon value is used.
 
+=over
+
+I<N1> I<N2> B<< <= >> -- I<N>
+
+I<N1> I<N2> B<< < >> -- I<N>
+
+I<N1> I<N2> B<< >= >> -- I<N>
+
+I<N1> I<N2> B<< > >> -- I<N>
+
+I<N1> I<N2> B<< == >> -- I<N>
+
+I<N1> I<N2> B<< != >> -- I<N>
+
+=back
+
 =item &&, ||, not(n)
 
 Basic logical operators.
 
+rpnexpr usage:
+
+=over
+
+I<N1> I<N2> B<and> -- I<N>
+
+I<N1> I<N2> B<or> -- I<N>
+
+I<N> B<not> -- I<N>
+
+=back
+
 =item log(n), exp(n)
 
 Natural logarithm and exponential.
+
+rpnexpr usage:
+
+=over
+
+I<N> B<log> -- I<N>
+
+I<N> B<exp> -- I<N>
+
+=back
 
 =back
 

@@ -52,6 +52,9 @@ Bug fixes:
    an unknown image file format.
    http://rt.cpan.org/Ticket/Display.html?id=30103
 
+ - improve the transform2() documentation
+   http://rt.cpan.org/Ticket/Display.html?id=29267
+
 Imager 0.60 - 30 August 2007
 ===========
 

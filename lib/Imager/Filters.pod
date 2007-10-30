@@ -125,6 +125,10 @@ value it may be omitted when calling the filter function.
 
 Every one of these filters modifies the image in place.
 
+If none of the filters here do what you need, the
+L<Imager::Engines/tranform> or L<Imager::Engines/transform2> function
+may be useful.
+
 A reference of the filters follows:
 
 =over
