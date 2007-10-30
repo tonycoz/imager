@@ -1,15 +1,14 @@
 #!perl -w
 use strict;
-use Test::More tests => 7;;
+use Test::More tests => 7;
 
 BEGIN { use_ok('Imager::Expr') }
 
 # only test this if Parse::RecDescent was loaded successfully
 SKIP:
 {
-  eval "use Parse::RecDescent";
-  $@
-    and skip("No Parse::RecDescent", 6);
+  Imager::Expr->type_registered('expr')
+      or skip("Imager::Expr::Infix not available", 6);
 
   my $opts = {expr=>'z=0.8;return hsv(x/w*360,y/h,z)', variables=>[ qw(x y) ], constants=>{h=>100,w=>100}};
   my $expr = Imager::Expr->new($opts);

@@ -51,6 +51,12 @@ sub register_type {
   $expr_types{$name} = $pack;
 }
 
+sub type_registered {
+  my ($class, $name) = @_;
+
+  $expr_types{$name};
+}
+
 sub _variables {
   return @{$_[0]->{variables}};
 }
@@ -574,7 +580,16 @@ expression object cannot be created.
 
 Imager::Expr provides only a few simple methods meant for external use:
 
-=over 4
+=over
+
+=item Imager::Expr->type_registered($keyword)
+
+Returns true if the given expression type is available.  The parameter
+is the key supplied to the new() method.
+
+  if (Imager::Expr->type_registered('expr')) {
+    # use infix expressions
+  }
 
 =item $expr->code()
 

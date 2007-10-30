@@ -44,6 +44,10 @@ Bug fixes:
    implementations.
    http://rt.cpan.org/Ticket/Display.html?id=28985
 
+ - attempt to work around the test failure at 
+   http://www.nntp.perl.org/group/perl.cpan.testers/2007/09/msg650810.html
+   http://rt.cpan.org/Ticket/Display.html?id=29562
+
 Imager 0.60 - 30 August 2007
 ===========
 
