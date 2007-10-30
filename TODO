@@ -38,15 +38,15 @@ library search path on 64-bit centos (#29045)
 
 i_gsamp() chan_count validation (#28985) (done)
 
-Imager::Font::Wrap doesn't correctly set savepos (#29771)
+Imager::Font::Wrap doesn't correctly set savepos (#29771) (done)
 
-testdrive warnings (#29610)
+testdrive warnings (#29610) (done)
 
 Imager::Files still refers to rgb file type (#29354) (done)
 
 t/t01introvert test failure line 495 (#29413) (done)
 
-Imager::Expr::Infix problem (#29562)
+Imager::Expr::Infix problem (#29562) (done)
 
 Makefile.PL --incpath and --libpath should expand ~/ paths (#29484)
 
