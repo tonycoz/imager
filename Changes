@@ -40,6 +40,10 @@ Bug fixes:
    under 0x10000.  This was most noticable when writing large RLE images.
    http://rt.cpan.org/Ticket/Display.html?id=30335
 
+ - validate chan_count for chans == NULL for each of the i_gsamp()
+   implementations.
+   http://rt.cpan.org/Ticket/Display.html?id=28985
+
 Imager 0.60 - 30 August 2007
 ===========
 

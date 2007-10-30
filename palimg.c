@@ -426,6 +426,11 @@ static int i_gsamp_p(i_img *im, int l, int r, int y, i_sample_t *samps,
       }
     }
     else {
+      if (chan_count <= 0 || chan_count > im->channels) {
+	i_push_errorf(0, "chan_count %d out of range, must be >0, <= channels", 
+		      chan_count);
+	return 0;
+      }
       for (i = 0; i < w; ++i) {
         i_palidx which = *data++;
         if (which < palsize) {

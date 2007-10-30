@@ -36,7 +36,7 @@ read DIBS (#29055)
 
 library search path on 64-bit centos (#29045)
 
-i_gsamp() chan_count validation (#28985)
+i_gsamp() chan_count validation (#28985) (done)
 
 Imager::Font::Wrap doesn't correctly set savepos (#29771)
 

@@ -452,6 +452,11 @@ static int i_gsamp_d16(i_img *im, int l, int r, int y, i_sample_t *samps,
       }
     }
     else {
+      if (chan_count <= 0 || chan_count > im->channels) {
+	i_push_errorf(0, "chan_count %d out of range, must be >0, <= channels", 
+		      chan_count);
+	return 0;
+      }
       for (i = 0; i < w; ++i) {
         for (ch = 0; ch < chan_count; ++ch) {
           *samps++ = GET16as8(im->idata, off+ch);
@@ -497,6 +502,11 @@ static int i_gsampf_d16(i_img *im, int l, int r, int y, i_fsample_t *samps,
       }
     }
     else {
+      if (chan_count <= 0 || chan_count > im->channels) {
+	i_push_errorf(0, "chan_count %d out of range, must be >0, <= channels", 
+		      chan_count);
+	return 0;
+      }
       for (i = 0; i < w; ++i) {
         for (ch = 0; ch < chan_count; ++ch) {
           *samps++ = Sample16ToF(GET16(im->idata, off+ch));
