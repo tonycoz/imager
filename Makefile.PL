@@ -947,7 +947,12 @@ sub make_metafile {
 name: $opts->{NAME}
 version: $version
 version_from: $opts->{VERSION_FROM}
-author: $opts->{AUTHOR}
+author:
+YAML
+  for my $author (split /,\s*/, $opts->{AUTHOR}) {
+    $meta .= " - $author\n";
+  }
+  $meta .= <<YAML;
 abstract: $opts->{ABSTRACT}
 installdirs: site
 YAML

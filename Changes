@@ -55,6 +55,9 @@ Bug fixes:
  - improve the transform2() documentation
    http://rt.cpan.org/Ticket/Display.html?id=29267
 
+ - correctly generate the author key in META.yml
+   http://rt.cpan.org/Ticket/Display.html?id=30377
+
 Imager 0.60 - 30 August 2007
 ===========
 

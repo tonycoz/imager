@@ -2,7 +2,9 @@
 name: Imager
 version: 0.60
 version_from: Imager.pm
-author: Tony Cook <tony@imager.perl.org>, Arnar M. Hrafnkelsson
+author:
+ - Tony Cook <tony@imager.perl.org>
+ - Arnar M. Hrafnkelsson
 abstract: Perl extension for Generating 24 bit Images
 installdirs: site
 recommends:
