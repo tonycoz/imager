@@ -17,8 +17,8 @@ For 0.61:
 
 TIFF improvements (to be detailed) (#20329)
  - read/write 16-bit RGB w/ and w/o alpha
- - read 16-bit RGB w/ and w/o alpha
- - read/write 32-bit CMYK w/ and w/o alpha
+ - read 16-bit CMYK w/ and w/o alpha
+ - read/write 32-bit RGB w/ and w/o alpha
  - read 32-bit CMYK w/ and w/o alpha
  - write mono images as bi-level
  - read bi-level image as mono/paletted
