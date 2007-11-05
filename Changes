@@ -58,6 +58,9 @@ Bug fixes:
  - correctly generate the author key in META.yml
    http://rt.cpan.org/Ticket/Display.html?id=30377
 
+ - correctly blend a rotated (or matrix_transformed()) image when
+   performing interpolation in the presence of an alpha channel.
+
 Imager 0.60 - 30 August 2007
 ===========
 

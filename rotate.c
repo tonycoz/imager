@@ -17,6 +17,7 @@ Other rotations will be added as tuits become available.
 */
 
 #include "imager.h"
+#include "imageri.h"
 #include <math.h> /* for floor() */
 
 i_img *i_rotate90(i_img *src, int degrees) {
@@ -150,7 +151,6 @@ i_img *i_rotate90(i_img *src, int degrees) {
   }
 }
 
-/* hopefully this will be inlined  (it is with -O3 with gcc 2.95.4) */
 /* linear interpolation */
 static i_color interp_i_color(i_color before, i_color after, double pos,
                               int channels) {
@@ -158,8 +158,30 @@ static i_color interp_i_color(i_color before, i_color after, double pos,
   int ch;
 
   pos -= floor(pos);
-  for (ch = 0; ch < channels; ++ch)
-    out.channel[ch] = (1-pos) * before.channel[ch] + pos * after.channel[ch];
+  if (channels == 1 || channels == 3) {
+    for (ch = 0; ch < channels; ++ch)
+      out.channel[ch] = (1-pos) * before.channel[ch] + pos * after.channel[ch];
+  }
+  else {
+    int total_cover = (1-pos) * before.channel[channels-1]
+      + pos * after.channel[channels-1];
+
+    total_cover = I_LIMIT_8(total_cover);
+    if (total_cover) {
+      double before_alpha = before.channel[channels-1] / 255.0;
+      double after_alpha = after.channel[channels-1] / 255.0;
+      double total_alpha = before_alpha * (1-pos) + after_alpha * pos;
+
+      for (ch = 0; ch < channels-1; ++ch) {
+	int out_level = ((1-pos) * before.channel[ch] * before_alpha + 
+			 pos * after.channel[ch] * after_alpha + 0.5) / total_alpha;
+
+	out.channel[ch] = I_LIMIT_8(out_level);
+      }
+    }
+
+    out.channel[channels-1] = total_cover;
+  }
 
   return out;
 }
@@ -172,8 +194,30 @@ static i_fcolor interp_i_fcolor(i_fcolor before, i_fcolor after, double pos,
   int ch;
 
   pos -= floor(pos);
-  for (ch = 0; ch < channels; ++ch)
-    out.channel[ch] = (1-pos) * before.channel[ch] + pos * after.channel[ch];
+  if (channels == 1 || channels == 3) {
+    for (ch = 0; ch < channels; ++ch)
+      out.channel[ch] = (1-pos) * before.channel[ch] + pos * after.channel[ch];
+  }
+  else {
+    double total_cover = (1-pos) * before.channel[channels-1]
+      + pos * after.channel[channels-1];
+
+    total_cover = I_LIMIT_DOUBLE(total_cover);
+    if (total_cover) {
+      double before_alpha = before.channel[channels-1];
+      double after_alpha = after.channel[channels-1];
+      double total_alpha = before_alpha * (1-pos) + after_alpha * pos;
+
+      for (ch = 0; ch < channels-1; ++ch) {
+	double out_level = ((1-pos) * before.channel[ch] * before_alpha + 
+			 pos * after.channel[ch] * after_alpha) / total_alpha;
+
+	out.channel[ch] = I_LIMIT_DOUBLE(out_level);
+      }
+    }
+
+    out.channel[channels-1] = total_cover;
+  }
 
   return out;
 }
@@ -478,9 +522,9 @@ i_img *i_rotate_exact_bg(i_img *src, double amount,
   newysize = y1 > y2 ? y1 : y2;
   /* translate the centre back to the center of the image */
   xlate2[0] = 1;
-  xlate2[2] = -newxsize/2;
+  xlate2[2] = -newxsize/2.0;
   xlate2[4] = 1;
-  xlate2[5] = -newysize/2;
+  xlate2[5] = -newysize/2.0;
   xlate2[8] = 1;
   i_matrix_mult(temp, xlate1, rotate);
   i_matrix_mult(matrix, temp, xlate2);

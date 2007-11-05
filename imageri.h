@@ -90,4 +90,7 @@ extern void i_int_hlines_destroy(i_int_hlines *hlines);
 extern void i_int_hlines_fill_color(i_img *im, i_int_hlines *hlines, const i_color *val);
 extern void i_int_hlines_fill_fill(i_img *im, i_int_hlines *hlines, i_fill_t *fill);
 
+#define I_LIMIT_8(x) ((x) < 0 ? 0 : (x) > 255 ? 255 : (x))
+#define I_LIMIT_DOUBLE(x) ((x) < 0.0 ? 0.0 : (x) > 1.0 ? 1.0 : (x))
+
 #endif

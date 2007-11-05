@@ -1,7 +1,8 @@
 #!perl -w
 use strict;
-use Test::More tests => 62;
+use Test::More tests => 65;
 use Imager;
+use Imager::Test qw(is_color3);
 
 #$Imager::DEBUG=1;
 
@@ -169,4 +170,19 @@ sub rot_test {
   # they have to be different, surely that would be easy
   my $diff = Imager::i_img_diff($out->{IMG}, $blank->{IMG});
   ok($diff, "RT#29936 - check non-blank output");
+}
+
+{
+  my $im = Imager->new(xsize => 10, ysize => 10, channels => 4);
+  $im->box(filled => 1, color => 'FF0000');
+  my $back = Imager::Color->new(0, 0, 0, 0);
+  my $rot = $im->rotate(degrees => 10, back => $back);
+  # drop the alpha and make sure there's only 2 colors used
+  my $work = $rot->convert(preset => 'noalpha');
+  my $im_pal = $work->to_paletted(make_colors => 'mediancut');
+  my @colors = $im_pal->getcolors;
+  is(@colors, 2, "should be only 2 colors");
+  @colors = sort { ($a->rgba)[0] <=> ($b->rgba)[0] } @colors;
+  is_color3($colors[0], 0, 0, 0, "check we got black");
+  is_color3($colors[1], 255, 0, 0, "and red");
 }
