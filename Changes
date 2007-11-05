@@ -60,6 +60,8 @@ Bug fixes:
 
  - correctly blend a rotated (or matrix_transformed()) image when
    performing interpolation in the presence of an alpha channel.
+   Also corrected the centring of the rotated image on the output
+   image.
 
 Imager 0.60 - 30 August 2007
 ===========
