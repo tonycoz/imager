@@ -6,14 +6,16 @@ Release Plans (subject to change)
 brown-bag bugs may add intermediate releases.  The dates are goals,
 not commitments.
 
-For 0.62: (tentative)
+For 0.63: (tentative)
 
 thick lines
 
 have alpha channel work treated as coverage for primitives (more
 general combine parameter)
 
-For 0.61:
+general alpha channel fixes
+
+For 0.62:
 
 TIFF improvements (to be detailed) (#20329)
  - read/write 16-bit RGB w/ and w/o alpha
@@ -26,15 +28,17 @@ TIFF improvements (to be detailed) (#20329)
 both contig and non-contiguous
  - possible extra code for handling 8-bit CMYK (#29353)
 
+Makefile.PL --incpath and --libpath should expand ~/ paths (#29484)
+
+scaling alpha channel image issues
+
+For 0.61:
+
 regmach.c fixes/tests (#29296) (done)
 
 sample: scaling an animated gif (#27591) (done)
 
-transform2() docs (#29267)
-
-read DIBS (#29055)
-
-library search path on 64-bit centos (#29045)
+transform2() docs (#29267) (done)
 
 i_gsamp() chan_count validation (#28985) (done)
 
@@ -47,10 +51,6 @@ Imager::Files still refers to rgb file type (#29354) (done)
 t/t01introvert test failure line 495 (#29413) (done)
 
 Imager::Expr::Infix problem (#29562) (done)
-
-Makefile.PL --incpath and --libpath should expand ~/ paths (#29484)
-
-PNG images sometimes get larger (#29268) (maybe 0.62)
 
 CMYK alpha TIFF problems with old libtiff (#29353) (done)
 
