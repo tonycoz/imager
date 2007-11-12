@@ -1,4 +1,5 @@
 #include "imager.h"
+#include "imageri.h"
 
 /*
  * i_scale_mixing() is based on code contained in pnmscale.c, part of
@@ -51,7 +52,7 @@ i_img *
 i_scale_mixing(i_img *src, int x_out, int y_out) {
   i_img *result;
   i_fcolor *accum_row = NULL;
-  int y;
+  int x, y, ch;
   int accum_row_bytes;
   double rowsleft, fracrowtofill;
   int rowsread;
@@ -125,6 +126,15 @@ i_scale_mixing(i_img *src, int x_out, int y_out) {
 #else
       IM_GLIN(src, 0, src->xsize, y, accum_row);
 #endif
+      /* alpha adjust if needed */
+      if (src->channels == 2 || src->channels == 4) {
+	for (x = 0; x < src->xsize; ++x) {
+	  for (ch = 0; ch < src->channels-1; ++ch) {
+	    accum_row[x].channel[ch] *=
+	      accum_row[x].channel[src->channels-1] / IM_SAMPLE_MAX;
+	  }
+	}
+      }
     }
     else {
       fracrowtofill = 1.0;
@@ -158,9 +168,24 @@ i_scale_mixing(i_img *src, int x_out, int y_out) {
 #if IM_EIGHT_BIT
       int x, ch;
       /* no need to scale, but we need to convert it */
-      for (x = 0; x < x_out; ++x) {
-        for (ch = 0; ch < result->channels; ++ch)
-          xscale_row[x].channel[ch] = accum_row[x].channel[ch];
+      if (result->channels == 2 || result->channels == 4) {
+	int alpha_chan = result->channels - 1;
+	for (x = 0; x < x_out; ++x) {
+	  double alpha = accum_row[x].channel[alpha_chan] / IM_SAMPLE_MAX;
+	  if (alpha) {
+	    for (ch = 0; ch < alpha_chan; ++ch) {
+	      int val = accum_row[x].channel[ch] / alpha + 0.5;
+	      xscale_row[x].channel[ch] = IM_LIMIT(val);
+	    }
+	  }
+	  xscale_row[x].channel[alpha_chan] = IM_LIMIT(accum_row[x].channel[alpha_chan]+0.5);
+	}
+      }
+      else {
+	for (x = 0; x < x_out; ++x) {
+	  for (ch = 0; ch < result->channels; ++ch)
+	    xscale_row[x].channel[ch] = IM_LIMIT(accum_row[x].channel[ch]+0.5);
+	}
       }
       IM_PLIN(result, 0, x_out, y, xscale_row);
 #else
@@ -205,9 +230,19 @@ IM_SUFFIX(accum_output_row)(i_fcolor *accum, double fraction, IM_COLOR const *in
 
   /* it's tempting to change this into a pointer iteration loop but
      modern CPUs do the indexing as part of the instruction */
-  for (x = 0; x < width; ++x) {
-    for (ch = 0; ch < channels; ++ch) {
-      accum[x].channel[ch] += in[x].channel[ch] * fraction;
+  if (channels == 2 || channels == 4) {
+    for (x = 0; x < width; ++x) {
+      for (ch = 0; ch < channels-1; ++ch) {
+	accum[x].channel[ch] += in[x].channel[ch] * fraction * in[x].channel[channels-1] / IM_SAMPLE_MAX;
+      }
+      accum[x].channel[channels-1] += in[x].channel[channels-1] * fraction;
+    }
+  }
+  else {
+    for (x = 0; x < width; ++x) {
+      for (ch = 0; ch < channels; ++ch) {
+	accum[x].channel[ch] += in[x].channel[ch] * fraction;
+      }
     }
   }
 }
@@ -231,10 +266,25 @@ IM_SUFFIX(horizontal_scale)(IM_COLOR *out, int out_width,
       for (ch = 0; ch < channels; ++ch)
 	accum[ch] += frac_col_to_fill * in[in_x].channel[ch];
 
-      for (ch = 0; ch < channels; ++ch) {
-	out[out_x].channel[ch] = accum[ch];
-	accum[ch] = 0;
+      if (channels == 2 || channels == 4) {
+	int alpha_chan = channels - 1;
+	double alpha = accum[alpha_chan] / IM_SAMPLE_MAX;
+	if (alpha) {
+	  for (ch = 0; ch < alpha_chan; ++ch) {
+	    IM_WORK_T val = IM_ROUND(accum[ch] / alpha);
+	    out[out_x].channel[ch] = IM_LIMIT(val);
+	  }
+	}
+	out[out_x].channel[alpha_chan] = IM_LIMIT(IM_ROUND(accum[alpha_chan]));
       }
+      else {
+	for (ch = 0; ch < channels; ++ch) {
+	  IM_WORK_T val = IM_ROUND(accum[ch]);
+	  out[out_x].channel[ch] = IM_LIMIT(val);
+	}
+      }
+      for (ch = 0; ch < channels; ++ch)
+	accum[ch] = 0;
       frac_col_left -= frac_col_to_fill;
       frac_col_to_fill = 1.0;
       ++out_x;
@@ -255,7 +305,23 @@ IM_SUFFIX(horizontal_scale)(IM_COLOR *out, int out_width,
   if (out_x < out_width) {
     for (ch = 0; ch < channels; ++ch) {
       accum[ch] += frac_col_to_fill * in[in_width-1].channel[ch];
-      out[out_x].channel[ch] = accum[ch];
+    }
+    if (channels == 2 || channels == 4) {
+      int alpha_chan = channels - 1;
+      double alpha = accum[alpha_chan] / IM_SAMPLE_MAX;
+      if (alpha) {
+	for (ch = 0; ch < alpha_chan; ++ch) {
+	  IM_WORK_T val = IM_ROUND(accum[ch] / alpha);
+	  out[out_x].channel[ch] = IM_LIMIT(val);
+	}
+      }
+      out[out_x].channel[alpha_chan] = IM_LIMIT(IM_ROUND(accum[alpha_chan]));
+    }
+    else {
+      for (ch = 0; ch < channels; ++ch) {
+	IM_WORK_T val = IM_ROUND(accum[ch]);
+	out[out_x].channel[ch] = IM_LIMIT(val);
+      }
     }
   }
 }

@@ -30,7 +30,7 @@ both contig and non-contiguous
 
 Makefile.PL --incpath and --libpath should expand ~/ paths (#29484)
 
-scaling alpha channel image issues
+scaling alpha channel image issues (done)
 
 For 0.61:
 

@@ -1,10 +1,11 @@
 #!perl -w
 use strict;
-use Test::More tests => 223;
+use Test::More tests => 224;
 
 BEGIN { use_ok(Imager=>':all') }
+use Imager::Test qw(is_image);
 
-require "t/testtools.pl";
+#require "t/testtools.pl";
 
 Imager::init('log'=>'testout/t40scale.log');
 my $img=Imager->new();
@@ -179,6 +180,20 @@ SKIP:
              scalefactor => 2.0);
   scale_test($im, 'scaleY', 160, 144, "pixels 144",
              pixels => 144);
+}
+
+{ # check proper alpha handling
+  my $im = Imager->new(xsize => 40, ysize => 40, channels => 4);
+  $im->box(filled => 1, color => 'C0C0C0');
+  my $rot = $im->rotate(degrees => -4)
+    or die;
+  $rot = $rot->to_rgb16;
+  my $sc = $rot->scale(qtype => 'mixing', xpixels => 40);
+  my $out = Imager->new(xsize => $sc->getwidth, ysize => $sc->getheight);
+  $out->box(filled => 1, color => 'C0C0C0');
+  my $cmp = $out->copy;
+  $out->rubthrough(src => $sc);
+  is_image($out, $cmp, "check we get the right image after scaling");
 }
 
 sub scale_test {
