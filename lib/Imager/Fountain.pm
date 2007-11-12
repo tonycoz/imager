@@ -321,8 +321,9 @@ sub _load_gimp_gradient {
   if ($count =~ /^name:\s?(.*)/i) {
     ref $name and $$name = $1;
     $count = <$fh>; # try again
+    chomp $count;
   }
-  unless ($count =~ /^\d$/) {
+  unless ($count =~ /^\d+$/) {
     $Imager::ERRSTR = "$filename is missing the segment count";
     return;
   }
