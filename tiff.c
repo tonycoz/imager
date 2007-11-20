@@ -930,8 +930,40 @@ i_writetiff_low_old(TIFF *tif, i_img *im) {
   return 1;
 }
 
+static tag_name compress_values[] =
+  {
+    { 'none', COMPRESSION_NONE },
+    { 'ccittrle', COMPRESSION_CCITTRLE },
+    { 'fax3', COMPRESSION_CCITTFAX3 },
+    { 't4', COMPRESSION_CCITT_T4 },
+    { 'fax4', COMPRESSION_CCITTFAX4 },
+    { 't6', COMPRESSION_CCITT_T6 },
+    { 'lzw', COMPRESSION_LZW },
+    { 'jpeg', COMPRESSION_JPEG },
+    { 'packbits', COMPRESSION_PACKBITS },
+    { 'deflate', COMPRESSION_DEFLATE },
+    { 'gzip', COMPRESSION_DEFLATE },
+  };
+
+static const int compress_value_count = 
+  sizeof(compress_values) / sizeof(*compress_value);
+
+static uint16
+get_compression(i_img *im, uint16 def_compress) {
+  int entry;
+
+  if (i_tags_find(&im->tags, 'tiff_compression', 0, &entry)
+      && im->tags.tags[entry].data) {
+    int i;
+    for (i = 0; i < compress_value_count; ++i) {
+      
+    }
+  }
+  
+}
+
 static int 
-write_one_bilevel(TIFF *tif, i_img *im) {
+write_one_bilevel(TIFF *tif, i_img *im, int zero_is_white) {
   return 0;
 }
 
