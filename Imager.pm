@@ -1030,6 +1030,14 @@ sub virtual {
   $self->{IMG} and i_img_virtual($self->{IMG});
 }
 
+sub is_bilevel {
+  my ($self) = @_;
+
+  $self->{IMG} or return;
+
+  return i_img_is_monochrome($self->{IMG});
+}
+
 sub tags {
   my ($self, %opts) = @_;
 
@@ -3903,6 +3911,8 @@ getwidth() - L<Imager::ImageTypes/getwidth>
 img_set() - L<Imager::ImageTypes/img_set>
 
 init() - L<Imager::ImageTypes/init>
+
+is_bilevel - L<Imager::ImageTypes/is_bilevel>
 
 line() - L<Imager::Draw/line>
 

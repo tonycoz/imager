@@ -1347,6 +1347,25 @@ i_img_getdata(im)
 	             sv_2mortal(newSVpv((char *)im->idata, im->bytes)) 
 		     : &PL_sv_undef);
 
+void
+i_img_is_monochrome(im)
+	Imager::ImgRaw im
+      PREINIT:
+	int zero_is_white;
+	int result;
+      PPCODE:
+	result = i_img_is_monochrome(im, &zero_is_white);
+	if (result) {
+	  if (GIMME_V == G_ARRAY) {
+	    EXTEND(SP, 2);
+	    PUSHs(&PL_sv_yes);
+	    PUSHs(sv_2mortal(newSViv(zero_is_white)));
+ 	  }
+	  else {
+	    EXTEND(SP, 1);
+	    PUSHs(&PL_sv_yes);
+	  }
+	}
 
 void
 i_line(im,x1,y1,x2,y2,val,endp)

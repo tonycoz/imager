@@ -2381,7 +2381,7 @@ i_img_is_monochrome(i_img *im, int *zero_is_white) {
           colors[1].rgb.r == 0 &&
           colors[1].rgb.g == 0 &&
           colors[1].rgb.b == 0) {
-        *zero_is_white = 0;
+        *zero_is_white = 1;
         return 1;
       }
       else if (colors[0].rgb.r == 0 && 
@@ -2390,19 +2390,19 @@ i_img_is_monochrome(i_img *im, int *zero_is_white) {
                colors[1].rgb.r == 255 &&
                colors[1].rgb.g == 255 &&
                colors[1].rgb.b == 255) {
-        *zero_is_white = 1;
+        *zero_is_white = 0;
         return 1;
       }
     }
     else if (im->channels == 1) {
       if (colors[0].channel[0] == 255 &&
-          colors[1].channel[1] == 0) {
-        *zero_is_white = 0;
+          colors[1].channel[0] == 0) {
+        *zero_is_white = 1;
         return 1;
       }
       else if (colors[0].channel[0] == 0 &&
-               colors[0].channel[0] == 255) {
-        *zero_is_white = 1;
+               colors[1].channel[0] == 255) {
+        *zero_is_white = 0;
         return 1;         
       }
     }
