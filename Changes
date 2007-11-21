@@ -10,6 +10,10 @@ Bug fixes:
  - the scale() method with qtype mixing now handles images with an
    alpha channel correctly.
 
+ - fixed a broken link from the "animated GIF" entry in the concept index.
+   Thanks to Slaven Rezic.
+   http://rt.cpan.org/Ticket/Display.html?id=30889
+
 Imager 0.61 - 5 November 2007
 ===========
 

@@ -3945,7 +3945,7 @@ can write.
 
 =head1 CONCEPT INDEX
 
-animated GIF - L<Imager::File/"Writing an animated GIF">
+animated GIF - L<Imager::Files/"Writing an animated GIF">
 
 aspect ratio - L<Imager::ImageTypes/i_xres>,
 L<Imager::ImageTypes/i_yres>, L<Imager::ImageTypes/i_aspect_only>
