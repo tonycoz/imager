@@ -1287,9 +1287,13 @@ i_sametype_chans(im, x, y, channels)
                int channels
 
 void
-i_init_log(name,level)
-	      char*    name
+i_init_log(name_sv,level)
+	      SV*    name_sv
 	       int     level
+	PREINIT:
+	  const char *name = SvOK(name_sv) ? SvPV_nolen(name_sv) : NULL;
+	CODE:
+	  i_init_log(name, level);
 
 void
 i_log_entry(string,level)

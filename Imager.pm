@@ -425,13 +425,19 @@ BEGIN {
 # initlize Imager
 # NOTE: this might be moved to an import override later on
 
-#sub import {
-#  my $pack = shift;
-#  (look through @_ for special tags, process, and remove them);   
-#  use Data::Dumper;
-#  print Dumper($pack);
-#  print Dumper(@_);
-#}
+sub import {
+  my $i = 1;
+  while ($i < @_) {
+    if ($_[$i] eq '-log-stderr') {
+      init_log(undef, 4);
+      splice(@_, $i, 1);
+    }
+    else {
+      ++$i;
+    }
+  }
+  goto &Exporter::import;
+}
 
 sub init_log {
   i_init_log($_[0],$_[1]);
