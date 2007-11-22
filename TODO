@@ -6,14 +6,25 @@ Release Plans (subject to change)
 brown-bag bugs may add intermediate releases.  The dates are goals,
 not commitments.
 
+For 0.64: (speculative)
+
+PNG re-work (#29268)
+
+give 4/2 channel images a background color when saving to pnm (#30074)
+
+give 4/2 channel images a background color when saving to BMP (#30075)
+
+give 4/2 channel images a background color when saving to JPEG
+(#29876)
+
 For 0.63: (tentative)
 
-thick lines
+thick lines (#28854)
 
 have alpha channel work treated as coverage for primitives (more
 general combine parameter)
 
-general alpha channel fixes
+general alpha channel fixes (#29879, etc)
 
 For 0.62:
 
@@ -31,6 +42,18 @@ both contig and non-contiguous
 Makefile.PL --incpath and --libpath should expand ~/ paths (#29484)
 
 scaling alpha channel image issues (done)
+
+PBM images inverted (#30859) (might be fixed in TIFF branch)
+
+don't load B at compile-time in t82inline.t (#30508)
+
+the hardinvert filter inverts the alpha channels, this probably isn't
+desirable (#30002)
+
+"dh-make-perl --build --cpan Imager" fails on require Makefile.PL
+(#30520)
+
+Wrong link in Imager Pod (#30889) (done)
 
 For 0.61:
 
