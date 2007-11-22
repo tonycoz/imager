@@ -1490,11 +1490,11 @@ i_writetiff_low(TIFF *tif, i_img *im) {
 	return 0;
     }
   }
-  else if (im->bits >= 32) {
+  else if (im->bits > 16) {
     if (!write_one_32(tif, im))
       return 0;
   }
-  else if (im->bits >= 16) {
+  else if (im->bits > 8) {
     if (!write_one_16(tif, im))
       return 0;
   }

@@ -15,7 +15,7 @@ Imager release history.  Older releases can be found in Changes.old
 
  - added test_image_double() to Imager::Test
 
- - 
+ - adjust which images are written as 16/32 bit/sample
 
 Imager 0.60 - 30 August 2007
 ===========
