@@ -4,7 +4,8 @@ use Test::Builder;
 require Exporter;
 use vars qw(@ISA @EXPORT_OK);
 @ISA = qw(Exporter);
-@EXPORT_OK = qw(diff_text_with_nul test_image_raw test_image_16 test_image 
+@EXPORT_OK = qw(diff_text_with_nul 
+                test_image_raw test_image_16 test_image test_image_double 
                 is_color3 is_color1 is_color4 
                 is_fcolor4
                 is_image is_image_similar 
@@ -194,6 +195,19 @@ sub test_image_16 {
   my $blue  = Imager::Color->new(0, 0, 255, 255);
   my $red   = Imager::Color->new(255, 0, 0, 255);
   my $img = Imager->new(xsize => 150, ysize => 150, bits => 16);
+  $img->box(filled => 1, color => $green, box => [ 70, 25, 130, 125 ]);
+  $img->box(filled => 1, color => $blue,  box => [ 20, 25, 80, 125 ]);
+  $img->arc(x => 75, y => 75, r => 30, color => $red);
+  $img->filter(type => 'conv', coef => [ 0.1, 0.2, 0.4, 0.2, 0.1 ]);
+
+  $img;
+}
+
+sub test_image_double {
+  my $green = Imager::Color->new(0, 255, 0, 255);
+  my $blue  = Imager::Color->new(0, 0, 255, 255);
+  my $red   = Imager::Color->new(255, 0, 0, 255);
+  my $img = Imager->new(xsize => 150, ysize => 150, bits => 'double');
   $img->box(filled => 1, color => $green, box => [ 70, 25, 130, 125 ]);
   $img->box(filled => 1, color => $blue,  box => [ 20, 25, 80, 125 ]);
   $img->arc(x => 75, y => 75, r => 30, color => $red);
@@ -508,6 +522,10 @@ Returns a 150x150x3 8-bit/sample OO test image.
 =item test_image_16()
 
 Returns a 150x150x3 16-bit/sample OO test image.
+
+=item test_image_double()
+
+Returns a 150x150x3 double/sample OO test image.
 
 =item diff_text_with_nul($test_name, $text1, $text2, @options)
 
