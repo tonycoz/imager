@@ -173,7 +173,7 @@ is($impal2->type, 'paletted', "check type");
   is($im->bits, 8, '8 bits');
   ok(!$im->virtual, 'not virtual');
   is($im->type, 'direct', 'direct image');
-  ok(!$im->is_monochrome, 'not mono');
+  ok(!$im->is_bilevel, 'not mono');
 }
 
 ok(!Imager->new(xsize=>0, ysize=>1), "fail to create 0 height image");

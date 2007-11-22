@@ -102,7 +102,7 @@ test_colorf_glin($im_rgb, 0, 1,
 my $oo16img = Imager->new(xsize=>200, ysize=>201, bits=>16);
 ok($oo16img, "make a 16-bit oo image");
 is($oo16img->bits,  16, "test bits");
-isnt($oo16img->is_monochrome, "should not be considered mono");
+isnt($oo16img->is_bilevel, "should not be considered mono");
 # make sure of error handling
 ok(!Imager->new(xsize=>0, ysize=>1, bits=>16),
     "fail to create a 0 pixel wide image");

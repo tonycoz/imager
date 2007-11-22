@@ -64,7 +64,7 @@ test_colorf_glin($im_rgb, 0, 1,
 my $ooimg = Imager->new(xsize=>200, ysize=>201, bits=>'double');
 ok($ooimg, "couldn't make double image");
 is($ooimg->bits, 'double', "oo didn't give double image");
-ok(!$ooimg->is_monochrome, 'not monochrome');
+ok(!$ooimg->is_bilevel, 'not monochrome');
 
 # check that the image is copied correctly
 my $oocopy = $ooimg->copy;
