@@ -1,8 +1,8 @@
 #!perl -w
 use strict;
-use Test::More tests => 173;
+use Test::More tests => 189;
 use Imager qw(:all);
-use Imager::Test qw(is_image is_image_similar);
+use Imager::Test qw(is_image is_image_similar test_image test_image_16 test_image_double);
 $^W=1; # warnings during command-line tests
 $|=1;  # give us some progress in the test harness
 init_log("testout/t106tiff.log",1);
@@ -32,7 +32,7 @@ SKIP:
     $im = Imager->new(xsize=>2, ysize=>2);
     ok(!$im->write(file=>"testout/notiff.tif"), "should fail to write tiff");
     is($im->errstr, 'format not supported', "check no tiff message");
-    skip("no tiff support", 169);
+    skip("no tiff support", 185);
   }
 
   my $ver_string = Imager::i_tiff_libversion();
@@ -53,7 +53,8 @@ SKIP:
   open(FH,">testout/t106.tiff") || die "cannot open testout/t106.tiff for writing\n";
   binmode(FH); 
   my $IO = Imager::io_new_fd(fileno(FH));
-  ok(i_writetiff_wiol($img, $IO), "write low level");
+  ok(i_writetiff_wiol($img, $IO), "write low level")
+    or print "# ", Imager->_error_as_msg, "\n";
   close(FH);
 
   open(FH,"testout/t106.tiff") or die "cannot open testout/t106.tiff\n";
@@ -627,5 +628,59 @@ SKIP:
     }
     ok($ok, $msg);
   }
+
+  { # 16-bit writes
+    my $orig = test_image_16();
+    my $data;
+    ok($orig->write(data => \$data, type => 'tiff', 
+		    tiff_compression => 'none'), "write 16-bit/sample");
+    my $im = Imager->new;
+    ok($im->read(data => $data), "read it back");
+    is_image($im, $orig, "check read data matches");
+    is($im->tags(name => 'tiff_bitspersample'), 16, "correct bits");
+    is($im->bits, 16, 'check image bits');
+    is($im->tags(name => 'tiff_photometric'), 2, "correct photometric");
+    is($im->tags(name => 'tiff_compression'), 1, "no compression");
+    is($im->getchannels, 3, 'correct channels');
+  }
+
+  { # 8-bit writes
+    # and check compression
+    my $compress = Imager::i_tiff_has_compression('lzw') ? 'lzw' : 'packbits';
+    my $compressn = $compress eq 'lzw' ? 5 : 32773;
+    my $orig = test_image()->convert(preset=>'grey')
+      ->convert(preset => 'addalpha');
+    my $data;
+    ok($orig->write(data => \$data, type => 'tiff',
+		    tiff_compression=> $compress),
+       "write 8 bit");
+    my $im = Imager->new;
+    ok($im->read(data => $data), "read it back");
+    is_image($im, $orig, "check read data matches");
+    is($im->tags(name => 'tiff_bitspersample'), 8, 'correct bits');
+    is($im->bits, 8, 'check image bits');
+    is($im->tags(name => 'tiff_photometric'), 1, 'correct photometric');
+    is($im->tags(name => 'tiff_compression'), $compressn,
+       "$compress compression");
+    is($im->getchannels, 2, 'correct channels');
+  }
+
+  { # double writes
+    my $orig = test_image_double();
+    my $data;
+    ok($orig->write(data => \$data, type => 'tiff', 
+		    tiff_compression => 'none'), 
+       "write 16-bit/sample from double")
+      or print "# ", $orig->errstr, "\n";
+    my $im = Imager->new;
+    ok($im->read(data => $data), "read it back");
+    is_image($im, $orig, "check read data matches");
+    is($im->tags(name => 'tiff_bitspersample'), 16, "correct bits");
+    is($im->bits, 16, 'check image bits');
+    is($im->tags(name => 'tiff_photometric'), 2, "correct photometric");
+    is($im->tags(name => 'tiff_compression'), 1, "no compression");
+    is($im->getchannels, 3, 'correct channels');
+  }
+
 }
 

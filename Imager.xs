@@ -2394,6 +2394,10 @@ i_writetiff_multi_wiol_faxable(ig, fine, ...)
 const char *
 i_tiff_libversion()
 
+bool
+i_tiff_has_compression(name)
+	const char *name
+
 #endif /* HAVE_LIBTIFF */
 
 

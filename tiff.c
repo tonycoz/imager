@@ -1,7 +1,13 @@
 #include "imager.h"
-#include "tiffio.h"
+#include <tiffio.h>
 #include "iolayer.h"
 #include "imageri.h"
+
+/* needed to implement our substitute TIFFIsCODECConfigured */
+#if TIFFLIB_VERSION < 20031121
+#include "tiffconf.h"
+static int TIFFIsCODECConfigured(uint16 scheme);
+#endif
 
 /*
 =head1 NAME
@@ -170,7 +176,8 @@ static void warn_handler(char const *module, char const *fmt, va_list ap) {
 
 static int save_tiff_tags(TIFF *tif, i_img *im);
 
-static void pack_4bit_hl(unsigned char *buf, int count);
+static void 
+pack_4bit_to(unsigned char *dest, const unsigned char *src, int count);
 
 
 static toff_t sizeproc(thandle_t x) {
@@ -240,6 +247,7 @@ static i_img *read_one_tiff(TIFF *tif, int allow_incomplete) {
   uint16 bits_per_sample;
   uint16 planar_config;
   uint16 inkset;
+  uint16 compress;
   int i;
   read_state_t state;
   read_setup_t setupf = NULL;
@@ -383,6 +391,8 @@ static i_img *read_one_tiff(TIFF *tif, int allow_incomplete) {
   /* general metadata */
   i_tags_addn(&im->tags, "tiff_bitspersample", 0, bits_per_sample);
   i_tags_addn(&im->tags, "tiff_photometric", 0, photometric);
+  TIFFGetFieldDefaulted(tif, TIFFTAG_COMPRESSION, &compress);
+  i_tags_addn(&im->tags, "tiff_compression", 0, compress);
     
   /* resolution tags */
   TIFFGetFieldDefaulted(tif, TIFFTAG_RESOLUTIONUNIT, &resunit);
@@ -679,6 +689,8 @@ i_writetiff_low_faxable(TIFF *tif, i_img *im, int fine) {
   return 1;
 }
 
+#if 0
+
 undef_int
 i_writetiff_low_old(TIFF *tif, i_img *im) {
   uint32 width, height;
@@ -930,91 +942,478 @@ i_writetiff_low_old(TIFF *tif, i_img *im) {
   return 1;
 }
 
-static tag_name compress_values[] =
+#endif
+
+static struct tag_name 
+compress_values[] =
   {
-    { 'none', COMPRESSION_NONE },
-    { 'ccittrle', COMPRESSION_CCITTRLE },
-    { 'fax3', COMPRESSION_CCITTFAX3 },
-    { 't4', COMPRESSION_CCITT_T4 },
-    { 'fax4', COMPRESSION_CCITTFAX4 },
-    { 't6', COMPRESSION_CCITT_T6 },
-    { 'lzw', COMPRESSION_LZW },
-    { 'jpeg', COMPRESSION_JPEG },
-    { 'packbits', COMPRESSION_PACKBITS },
-    { 'deflate', COMPRESSION_DEFLATE },
-    { 'gzip', COMPRESSION_DEFLATE },
+    { "none",     COMPRESSION_NONE },
+    { "ccittrle", COMPRESSION_CCITTRLE },
+    { "fax3",     COMPRESSION_CCITTFAX3 },
+    { "t4",       COMPRESSION_CCITT_T4 },
+    { "fax4",     COMPRESSION_CCITTFAX4 },
+    { "t6",       COMPRESSION_CCITT_T6 },
+    { "lzw",      COMPRESSION_LZW },
+    { "jpeg",     COMPRESSION_JPEG },
+    { "packbits", COMPRESSION_PACKBITS },
+    { "deflate",  COMPRESSION_DEFLATE },
+    { "gzip",     COMPRESSION_DEFLATE },
+    { "ccittrlew", COMPRESSION_CCITTRLEW },
   };
 
 static const int compress_value_count = 
-  sizeof(compress_values) / sizeof(*compress_value);
+  sizeof(compress_values) / sizeof(*compress_values);
+
+static uint16
+find_compression(char const *name, uint16 *compress) {
+  int i;
+
+  for (i = 0; i < compress_value_count; ++i) {
+    if (strcmp(compress_values[i].name, name) == 0) {
+      *compress = (uint16)compress_values[i].tag;
+      return 1;
+    }
+  }
+  *compress = COMPRESSION_NONE;
+
+  return 0;
+}
 
 static uint16
 get_compression(i_img *im, uint16 def_compress) {
   int entry;
+  int value;
 
-  if (i_tags_find(&im->tags, 'tiff_compression', 0, &entry)
+  if (i_tags_find(&im->tags, "tiff_compression", 0, &entry)
       && im->tags.tags[entry].data) {
-    int i;
-    for (i = 0; i < compress_value_count; ++i) {
-      
+    uint16 compress;
+    if (find_compression(im->tags.tags[entry].data, &compress)
+	&& TIFFIsCODECConfigured(compress))
+      return compress;
+  }
+  if (i_tags_get_int(&im->tags, "tiff_compression", 0, &value)) {
+    if ((uint16)value == value
+	&& TIFFIsCODECConfigured((uint16)value))
+      return (uint16)value;
+  }
+
+  return def_compress;
+}
+
+int
+i_tiff_has_compression(const char *name) {
+  uint16 compress;
+
+  if (!find_compression(name, &compress))
+    return 0;
+
+  return TIFFIsCODECConfigured(compress);
+}
+
+static int
+set_base_tags(TIFF *tif, i_img *im, uint16 compress, uint16 photometric, 
+	      uint16 bits_per_sample, uint16 samples_per_pixel) {
+  double xres, yres;
+  int resunit;
+  int got_xres, got_yres;
+  int aspect_only;
+
+  if (!TIFFSetField(tif, TIFFTAG_IMAGEWIDTH, im->xsize)) {
+    i_push_error(0, "write TIFF: setting width tag");
+    return 0;
+  }
+  if (!TIFFSetField(tif, TIFFTAG_IMAGELENGTH, im->ysize)) {
+    i_push_error(0, "write TIFF: setting length tag");
+    return 0;
+  }
+  if (!TIFFSetField(tif, TIFFTAG_ORIENTATION, ORIENTATION_TOPLEFT)) {
+    i_push_error(0, "write TIFF: setting orientation tag");
+    return 0;
+  }
+  if (!TIFFSetField(tif, TIFFTAG_PLANARCONFIG, PLANARCONFIG_CONTIG)) {
+    i_push_error(0, "write TIFF: setting planar configuration tag");
+    return 0;
+  }
+  if (!TIFFSetField(tif, TIFFTAG_PHOTOMETRIC, photometric)) {
+    i_push_error(0, "write TIFF: setting photometric tag");
+    return 0;
+  }
+  if (!TIFFSetField(tif, TIFFTAG_COMPRESSION, compress)) {
+    i_push_error(0, "write TIFF: setting compression tag");
+    return 0;
+  }
+  if (!TIFFSetField(tif, TIFFTAG_BITSPERSAMPLE, bits_per_sample)) {
+    i_push_error(0, "write TIFF: setting bits per sample tag");
+    return 0;
+  }
+  if (!TIFFSetField(tif, TIFFTAG_SAMPLESPERPIXEL, samples_per_pixel)) {
+    i_push_error(0, "write TIFF: setting samples per pixel tag");
+    return 0;
+  }
+
+  got_xres = i_tags_get_float(&im->tags, "i_xres", 0, &xres);
+  got_yres = i_tags_get_float(&im->tags, "i_yres", 0, &yres);
+  if (!i_tags_get_int(&im->tags, "i_aspect_only", 0,&aspect_only))
+    aspect_only = 0;
+  if (!i_tags_get_int(&im->tags, "tiff_resolutionunit", 0, &resunit))
+    resunit = RESUNIT_INCH;
+  if (got_xres || got_yres) {
+    if (!got_xres)
+      xres = yres;
+    else if (!got_yres)
+      yres = xres;
+    if (aspect_only) {
+      resunit = RESUNIT_NONE;
+    }
+    else {
+      if (resunit == RESUNIT_CENTIMETER) {
+	xres /= 2.54;
+	yres /= 2.54;
+      }
+      else {
+	resunit  = RESUNIT_INCH;
+      }
+    }
+    if (!TIFFSetField(tif, TIFFTAG_XRESOLUTION, (float)xres)) {
+      i_push_error(0, "write TIFF: setting xresolution tag");
+      return 0;
+    }
+    if (!TIFFSetField(tif, TIFFTAG_YRESOLUTION, (float)yres)) {
+      i_push_error(0, "write TIFF: setting yresolution tag");
+      return 0;
+    }
+    if (!TIFFSetField(tif, TIFFTAG_RESOLUTIONUNIT, (uint16)resunit)) {
+      i_push_error(0, "write TIFF: setting resolutionunit tag");
+      return 0;
     }
   }
-  
+
+  return 1;
 }
 
 static int 
 write_one_bilevel(TIFF *tif, i_img *im, int zero_is_white) {
-  return 0;
+  uint16 compress = get_compression(im, COMPRESSION_PACKBITS);
+  uint16 photometric;
+  unsigned char *in_row;
+  unsigned char *out_row;
+  unsigned out_size;
+  int x, y;
+  int invert;
+
+  mm_log((1, "tiff - write_one_bilevel(tif %p, im %p, zero_is_white %d)\n", 
+	  tif, im, zero_is_white));
+
+  /* ignore a silly choice */
+  if (compress == COMPRESSION_JPEG)
+    compress = COMPRESSION_PACKBITS;
+
+  switch (compress) {
+  case COMPRESSION_CCITTRLE:
+  case COMPRESSION_CCITTFAX3:
+  case COMPRESSION_CCITTFAX4:
+    /* natural fax photometric */
+    photometric = PHOTOMETRIC_MINISWHITE;
+    break;
+
+  default:
+    /* natural for most computer images */
+    photometric = PHOTOMETRIC_MINISBLACK;
+    break;
+  }
+
+  if (!set_base_tags(tif, im, compress, photometric, 1, 1))
+    return 0;
+
+  if (!TIFFSetField(tif, TIFFTAG_ROWSPERSTRIP, TIFFDefaultStripSize(tif, -1))) {
+    i_push_error(0, "write TIFF: setting rows per strip tag");
+    return 0; 
+  }
+
+  out_size = TIFFScanlineSize(tif);
+  out_row = (unsigned char *)_TIFFmalloc( out_size );
+  in_row = mymalloc(im->xsize);
+
+  invert = (photometric == PHOTOMETRIC_MINISWHITE) != (zero_is_white != 0);
+
+  for (y = 0; y < im->ysize; ++y) {
+    int mask = 0x80;
+    unsigned char *outp = out_row;
+    memset(out_row, 0, out_size);
+    i_gpal(im, 0, im->xsize, y, in_row);
+    for (x = 0; x < im->xsize; ++x) {
+      if (invert ? !in_row[x] : in_row[x]) {
+	*outp |= mask;
+      }
+      mask >>= 1;
+      if (!mask) {
+	++outp;
+	mask = 0x80;
+      }
+    }
+    if (TIFFWriteScanline(tif, out_row, y, 0) < 0) {
+      _TIFFfree(out_row);
+      myfree(in_row);
+      i_push_error(0, "write TIFF: write scan line failed");
+      return 0;
+    }
+  }
+
+  return 1;
+}
+
+static int
+set_palette(TIFF *tif, i_img *im, int size) {
+  int count;
+  uint16 *colors;
+  uint16 *out[3];
+  i_color c;
+  int i, ch;
+  
+  colors = (uint16 *)_TIFFmalloc(sizeof(uint16) * 3 * size);
+  out[0] = colors;
+  out[1] = colors + size;
+  out[2] = colors + 2 * size;
+    
+  count = i_colorcount(im);
+  for (i = 0; i < count; ++i) {
+    i_getcolors(im, i, &c, 1);
+    for (ch = 0; ch < 3; ++ch)
+      out[ch][i] = c.channel[ch] * 257;
+  }
+  for (; i < size; ++i) {
+    for (ch = 0; ch < 3; ++ch)
+      out[ch][i] = 0;
+  }
+  if (!TIFFSetField(tif, TIFFTAG_COLORMAP, out[0], out[1], out[2])) {
+    _TIFFfree(colors);
+    i_push_error(0, "write TIFF: setting color map");
+    return 0;
+  }
+  _TIFFfree(colors);
+  
+  return 1;
 }
 
 static int
 write_one_paletted8(TIFF *tif, i_img *im) {
-  return 0;
+  uint16 compress = get_compression(im, COMPRESSION_PACKBITS);
+  unsigned char *out_row;
+  unsigned out_size;
+  int y;
+
+  mm_log((1, "tiff - write_one_paletted8(tif %p, im %p)\n", tif, im));
+
+  /* ignore a silly choice */
+  if (compress == COMPRESSION_JPEG ||
+      compress == COMPRESSION_CCITTRLE ||
+      compress == COMPRESSION_CCITTFAX3 ||
+      compress == COMPRESSION_CCITTFAX4)
+    compress = COMPRESSION_PACKBITS;
+
+  if (!TIFFSetField(tif, TIFFTAG_ROWSPERSTRIP, TIFFDefaultStripSize(tif, -1))) {
+    i_push_error(0, "write TIFF: setting rows per strip tag");
+    return 0; 
+  }
+
+  if (!set_base_tags(tif, im, compress, PHOTOMETRIC_PALETTE, 8, 1))
+    return 0;
+
+  if (!set_palette(tif, im, 256))
+    return 0;
+
+  out_size = TIFFScanlineSize(tif);
+  out_row = (unsigned char *)_TIFFmalloc( out_size );
+
+  for (y = 0; y < im->ysize; ++y) {
+    i_gpal(im, 0, im->xsize, y, out_row);
+    if (TIFFWriteScanline(tif, out_row, y, 0) < 0) {
+      _TIFFfree(out_row);
+      i_push_error(0, "write TIFF: write scan line failed");
+      return 0;
+    }
+  }
+
+  _TIFFfree(out_row);
+
+  return 1;
 }
 
 static int
 write_one_paletted4(TIFF *tif, i_img *im) {
-  return 0;
+  uint16 compress = get_compression(im, COMPRESSION_PACKBITS);
+  unsigned char *in_row;
+  unsigned char *out_row;
+  unsigned out_size;
+  int y;
+
+  mm_log((1, "tiff - write_one_paletted4(tif %p, im %p)\n", tif, im));
+
+  /* ignore a silly choice */
+  if (compress == COMPRESSION_JPEG ||
+      compress == COMPRESSION_CCITTRLE ||
+      compress == COMPRESSION_CCITTFAX3 ||
+      compress == COMPRESSION_CCITTFAX4)
+    compress = COMPRESSION_PACKBITS;
+
+  if (!set_base_tags(tif, im, compress, PHOTOMETRIC_PALETTE, 4, 1))
+    return 0;
+
+  if (!set_palette(tif, im, 16))
+    return 0;
+
+  if (!TIFFSetField(tif, TIFFTAG_ROWSPERSTRIP, TIFFDefaultStripSize(tif, -1))) {
+    i_push_error(0, "write TIFF: setting rows per strip tag");
+    return 0; 
+  }
+
+  in_row = mymalloc(im->xsize);
+  out_size = TIFFScanlineSize(tif);
+  out_row = (unsigned char *)_TIFFmalloc( out_size );
+
+  for (y = 0; y < im->ysize; ++y) {
+    i_gpal(im, 0, im->xsize, y, in_row);
+    memset(out_row, 0, out_size);
+    pack_4bit_to(out_row, in_row, im->xsize);
+    if (TIFFWriteScanline(tif, out_row, y, 0) < 0) {
+      _TIFFfree(out_row);
+      i_push_error(0, "write TIFF: write scan line failed");
+      return 0;
+    }
+  }
+
+  myfree(in_row);
+  _TIFFfree(out_row);
+
+  return 1;
+}
+
+static int
+set_direct_tags(TIFF *tif, i_img *im, uint16 compress, 
+		uint16 bits_per_sample) {
+  uint16 extras = EXTRASAMPLE_ASSOCALPHA;
+  uint16 extra_count = im->channels == 2 || im->channels == 4;
+  uint16 photometric = im->channels >= 3 ? 
+    PHOTOMETRIC_RGB : PHOTOMETRIC_MINISBLACK;
+
+  if (!set_base_tags(tif, im, compress, photometric, bits_per_sample, 
+		     im->channels)) {
+    return 0;
+  }
+  
+  if (extra_count) {
+    if (!TIFFSetField(tif, TIFFTAG_EXTRASAMPLES, extra_count, &extras)) {
+      i_push_error(0, "write TIFF: setting extra samples tag");
+      return 0;
+    }
+  }
+
+  if (compress == COMPRESSION_JPEG) {
+    int jpeg_quality;
+    if (i_tags_get_int(&im->tags, "tiff_jpegquality", 0, &jpeg_quality)
+	&& jpeg_quality >= 0 && jpeg_quality <= 100) {
+      if (!TIFFSetField(tif, TIFFTAG_JPEGQUALITY, jpeg_quality)) {
+	i_push_error(0, "write TIFF: setting jpeg quality pseudo-tag");
+	return 0;
+      }
+    }
+  }
+
+  return 1;
 }
 
 static int 
 write_one_16(TIFF *tif, i_img *im) {
-  return 0;
+  uint16 compress = get_compression(im, COMPRESSION_PACKBITS);
+  unsigned *in_row;
+  size_t out_size;
+  uint16 *out_row;
+  int y;
+  size_t sample_count = im->xsize * im->channels;
+  size_t sample_index;
+    
+  mm_log((1, "tiff - write_one_16(tif %p, im %p)\n", tif, im));
+
+  /* only 8 and 12 bit samples are supported by jpeg compression */
+  if (compress == COMPRESSION_JPEG)
+    compress = COMPRESSION_PACKBITS;
+
+  if (!set_direct_tags(tif, im, compress, 16))
+    return 0;
+
+  in_row = mymalloc(sample_count * sizeof(unsigned));
+  out_size = TIFFScanlineSize(tif);
+  out_row = (uint16 *)_TIFFmalloc( out_size );
+
+  for (y = 0; y < im->ysize; ++y) {
+    if (i_gsamp_bits(im, 0, im->xsize, y, in_row, NULL, im->channels, 16) <= 0) {
+      i_push_error(0, "Cannot read 16-bit samples");
+      return 0;
+    }
+    for (sample_index = 0; sample_index < sample_count; ++sample_index)
+      out_row[sample_index] = in_row[sample_index];
+    if (TIFFWriteScanline(tif, out_row, y, 0) < 0) {
+      myfree(in_row);
+      _TIFFfree(out_row);
+      i_push_error(0, "write TIFF: write scan line failed");
+      return 0;
+    }
+  }
+
+  myfree(in_row);
+  _TIFFfree(out_row);
+  
+  return 1;
 }
 
 static int 
 write_one_8(TIFF *tif, i_img *im) {
-  return 0;
+  uint16 compress = get_compression(im, COMPRESSION_PACKBITS);
+  size_t out_size;
+  unsigned char *out_row;
+  int y;
+  size_t sample_count = im->xsize * im->channels;
+    
+  mm_log((1, "tiff - write_one_8(tif %p, im %p)\n", tif, im));
+
+  if (!set_direct_tags(tif, im, compress, 8))
+    return 0;
+
+  out_size = TIFFScanlineSize(tif);
+  if (out_size < sample_count)
+    out_size = sample_count;
+  out_row = (unsigned char *)_TIFFmalloc( out_size );
+
+  for (y = 0; y < im->ysize; ++y) {
+    if (i_gsamp(im, 0, im->xsize, y, out_row, NULL, im->channels) <= 0) {
+      i_push_error(0, "Cannot read 8-bit samples");
+      return 0;
+    }
+    if (TIFFWriteScanline(tif, out_row, y, 0) < 0) {
+      _TIFFfree(out_row);
+      i_push_error(0, "write TIFF: write scan line failed");
+      return 0;
+    }
+  }
+  _TIFFfree(out_row);
+  
+  return 1;
 }
 
 static int
 i_writetiff_low(TIFF *tif, i_img *im) {
   uint32 width, height;
   uint16 channels;
-  uint16 predictor = 0;
-  int quality = 75;
-  int jpegcolormode = JPEGCOLORMODE_RGB;
-  uint16 compression = COMPRESSION_PACKBITS;
-  i_color val;
-  uint16 photometric;
-  uint32 rowsperstrip = (uint32) -1;  /* Let library pick default */
-  unsigned char *linebuf = NULL;
-  uint32 y;
-  tsize_t linebytes;
-  int ch, ci, rc;
-  uint32 x;
-  int got_xres, got_yres, aspect_only, resunit;
-  double xres, yres;
-  uint16 bitspersample = 8;
-  uint16 samplesperpixel;
-  uint16 *colors = NULL;
   int zero_is_white;
 
   width    = im->xsize;
   height   = im->ysize;
   channels = im->channels;
 
-  mm_log((1, "i_writetiff_low: width=%d, height=%d, channels=%d\n", width, height, channels));
+  mm_log((1, "i_writetiff_low: width=%d, height=%d, channels=%d, bits=%d\n", width, height, channels, im->bits));
+  if (im->type == i_palette_type) {
+    mm_log((1, "i_writetiff_low: paletted, colors=%d\n", i_colorcount(im)));
+  }
   
   if (!TIFFSetField(tif, TIFFTAG_IMAGEWIDTH,      width)   ) { 
     mm_log((1, "i_writetiff_wiol: TIFFSetField width=%d failed\n", width)); 
@@ -1038,7 +1437,7 @@ i_writetiff_low(TIFF *tif, i_img *im) {
       return 0;
   }
   else if (im->type == i_palette_type) {
-    if (i_colorcount(im) < 16) {
+    if (i_colorcount(im) <= 16) {
       if (!write_one_paletted4(tif, im))
 	return 0;
     }
@@ -1055,6 +1454,9 @@ i_writetiff_low(TIFF *tif, i_img *im) {
     if (!write_one_8(tif, im))
       return 0;
   }
+
+  if (!save_tiff_tags(tif, im))
+    return 0;
 
   return 1;
 }
@@ -1331,7 +1733,8 @@ static int save_tiff_tags(TIFF *tif, i_img *im) {
 
 
 static void
-unpack_4bit_to(unsigned char *dest, unsigned char *src, int src_byte_count) {
+unpack_4bit_to(unsigned char *dest, const unsigned char *src, 
+	       int src_byte_count) {
   while (src_byte_count > 0) {
     *dest++ = *src >> 4;
     *dest++ = *src++ & 0xf;
@@ -1339,11 +1742,17 @@ unpack_4bit_to(unsigned char *dest, unsigned char *src, int src_byte_count) {
   }
 }
 
-static void pack_4bit_hl(unsigned char *buf, int count) {
+static void pack_4bit_to(unsigned char *dest, const unsigned char *src, 
+			 int pixel_count) {
   int i = 0;
-  while (i < count) {
-    buf[i/2] = (buf[i] << 4) + buf[i+1];
-    i += 2;
+  while (i < pixel_count) {
+    if ((i & 1) == 0) {
+      *dest = *src++ << 4;
+    }
+    else {
+      *dest++ |= *src++;
+    }
+    ++i;
   }
 }
 
@@ -2306,6 +2715,49 @@ putter_cmyk16(read_state_t *state, int x, int y, int width, int height,
 
   return 1;
 }
+
+/*
+
+  Older versions of tifflib we support don't define this, so define it
+  ourselves.
+
+ */
+#if TIFFLIB_VERSION < 20031121
+
+int TIFFIsCODECConfigured(uint16 scheme) {
+  switch (scheme) {
+ case COMPRESSION_NONE:
+#if PACKBITS_SUPPORT
+ case COMPRESSION_PACKBITS:
+#endif
+
+#if CCITT_SUPPORT
+ case COMPRESSION_CCITTRLE:
+ case COMPRESSION_CCITTRLEW:
+ case COMPRESSION_CCITTFAX3:
+ case COMPRESSION_CCITTFAX4:
+#endif
+
+#if JPEG_SUPPORT
+ case COMPRESSION_JPEG:
+#endif
+
+#if LZW_SUPPORT
+ case COMPRESSION_LZW:
+#endif
+
+#if ZIP_SUPPORT
+ case COMPRESSION_DEFLATE:
+ case COMPRESSION_ADOBE_DEFLATE:
+#endif
+    return 1;
+
+  default:
+    return 0;
+  }
+}
+
+#endif
 
 /*
 =back
