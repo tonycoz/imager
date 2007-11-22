@@ -956,8 +956,9 @@ compress_values[] =
     { "lzw",      COMPRESSION_LZW },
     { "jpeg",     COMPRESSION_JPEG },
     { "packbits", COMPRESSION_PACKBITS },
-    { "deflate",  COMPRESSION_DEFLATE },
-    { "gzip",     COMPRESSION_DEFLATE },
+    { "deflate",  COMPRESSION_ADOBE_DEFLATE },
+    { "zip",      COMPRESSION_ADOBE_DEFLATE },
+    { "oldzip",   COMPRESSION_DEFLATE },
     { "ccittrlew", COMPRESSION_CCITTRLEW },
   };
 
@@ -1459,23 +1460,6 @@ i_writetiff_low(TIFF *tif, i_img *im) {
     mm_log((1, "i_writetiff_low: paletted, colors=%d\n", i_colorcount(im)));
   }
   
-  if (!TIFFSetField(tif, TIFFTAG_IMAGEWIDTH,      width)   ) { 
-    mm_log((1, "i_writetiff_wiol: TIFFSetField width=%d failed\n", width)); 
-    return 0; 
-  }
-  if (!TIFFSetField(tif, TIFFTAG_IMAGELENGTH,     height)  ) { 
-    mm_log((1, "i_writetiff_wiol: TIFFSetField length=%d failed\n", height)); 
-    return 0; 
-  }
-  if (!TIFFSetField(tif, TIFFTAG_ORIENTATION,  ORIENTATION_TOPLEFT)) {
-    mm_log((1, "i_writetiff_wiol: TIFFSetField Orientation=topleft\n")); 
-    return 0; 
-  }
-  if (!TIFFSetField(tif, TIFFTAG_PLANARCONFIG, PLANARCONFIG_CONTIG)) { 
-    mm_log((1, "i_writetiff_wiol: TIFFSetField planarconfig\n")); 
-    return 0; 
-  }
-
   if (i_img_is_monochrome(im, &zero_is_white)) {
     if (!write_one_bilevel(tif, im, zero_is_white))
       return 0;

@@ -1,6 +1,6 @@
 #!perl -w
 use strict;
-use Test::More tests => 197;
+use Test::More tests => 194;
 use Imager qw(:all);
 use Imager::Test qw(is_image is_image_similar test_image test_image_16 test_image_double);
 $^W=1; # warnings during command-line tests
@@ -32,7 +32,7 @@ SKIP:
     $im = Imager->new(xsize=>2, ysize=>2);
     ok(!$im->write(file=>"testout/notiff.tif"), "should fail to write tiff");
     is($im->errstr, 'format not supported', "check no tiff message");
-    skip("no tiff support", 193);
+    skip("no tiff support", 190);
   }
 
   my $ver_string = Imager::i_tiff_libversion();
@@ -459,8 +459,9 @@ SKIP:
       my ($input, $channels, $photo, $need_ver) = @$test;
       
     SKIP: {
+	my $skipped = $channels == 4 ? 4 : 3;
 	$need_ver le $cmp_ver
-	  or skip("Your ancient tifflib is buggy/limited for this test", 4);
+	  or skip("Your ancient tifflib is buggy/limited for this test", $skipped);
 	my $im = Imager->new;
 	ok($im->read(file => "testimg/$input"),
 	   "read alpha test $input")
@@ -469,7 +470,7 @@ SKIP:
 	is($im->tags(name=>'tiff_photometric'), $photo,
 	   "photometric for $input match");
 	$channels == 4
-	  or skip("No alpha, no alpha check", 1);
+	  or next;
 	my $c = $im->getpixel(x => 0, 'y' => 7);
 	is(($c->rgba)[3], 0, "bottom row should have 0 alpha");
       }
