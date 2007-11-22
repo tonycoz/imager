@@ -1,0 +1,82 @@
+#include "imager.h"
+
+/*
+  General convolution for 2d decoupled filters
+  end effects are acounted for by increasing
+  scaling the result with the sum of used coefficients
+
+  coeff: (float array) coefficients for filter
+    len: length of filter.. number of coefficients
+           note that this has to be an odd number
+           (since the filter is even);
+*/
+
+void
+i_conv(i_img *im,const float *coeff,int len) {
+  int i,l,c,ch,center;
+  double pc;
+  double res[11];
+  i_img *timg;
+
+  mm_log((1,"i_conv(im %p, coeff %p, len %d)\n",im,coeff,len));
+ 
+  timg = i_sametype(im, im->xsize, im->ysize);
+
+  center=(len-1)/2;
+
+#code im->bits <= 8
+  IM_COLOR rcolor;
+  /* don't move the calculation of pc up here, it depends on which pixels
+     are readable */
+  for(l=0;l<im->ysize;l++) {
+    for(i=0;i<im->xsize;i++) {
+      pc=0.0;
+      for(ch=0;ch<im->channels;ch++) 
+	res[ch]=0;
+      for(c=0;c<len;c++)
+	if (IM_GPIX(im,i+c-center,l,&rcolor)!=-1) {
+	  for(ch=0;ch<im->channels;ch++) 
+            res[ch] += (rcolor.channel[ch])*coeff[c];
+	  pc+=coeff[c];
+	}
+      for(ch=0;ch<im->channels;ch++) {
+        double temp = res[ch]/pc;
+        rcolor.channel[ch] = 
+          temp < 0 ? 0 : temp > IM_SAMPLE_MAX ? IM_SAMPLE_MAX : (IM_SAMPLE_T)temp;
+      }
+      IM_PPIX(timg,i,l,&rcolor);
+    }
+  }
+
+  for(l=0;l<im->xsize;l++) {
+    for(i=0;i<im->ysize;i++) {
+      pc=0.0;	
+      for(ch=0;ch<im->channels;ch++) res[ch]=0;
+      for(c=0;c<len;c++) {
+	if (IM_GPIX(timg,l,i+c-center,&rcolor)!=-1) {
+	  for(ch=0;ch<im->channels;ch++) 
+	    res[ch] += (rcolor.channel[ch])*coeff[c];
+	  pc+=coeff[c];
+	}
+      }
+      for(ch=0;ch<im->channels;ch++) {
+	double temp = res[ch]/pc;
+	rcolor.channel[ch]= 
+	  temp < 0 ? 0 : temp > IM_SAMPLE_MAX ? IM_SAMPLE_MAX : (IM_SAMPLE_T)temp;
+      }
+      IM_PPIX(im,l,i,&rcolor);
+    }
+  }
+#/code
+
+  i_img_destroy(timg);
+}
+
+
+
+
+
+
+
+
+

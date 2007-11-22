@@ -1,5 +1,15 @@
 Imager release history.  Older releases can be found in Changes.old
 
+ - the conv filter now works at floating point precision for high bit
+   images
+
+ - added is_bilevel method to test whether an image should be written as
+   a bilevel image if the image format supports it.
+
+ - added -log-stderr as an Imager import list option
+
+ - added some important types to Imager::APIRef
+
 Imager 0.60 - 30 August 2007
 ===========
 
