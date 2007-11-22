@@ -1323,6 +1323,50 @@ set_direct_tags(TIFF *tif, i_img *im, uint16 compress,
 }
 
 static int 
+write_one_32(TIFF *tif, i_img *im) {
+  uint16 compress = get_compression(im, COMPRESSION_PACKBITS);
+  unsigned *in_row;
+  size_t out_size;
+  uint32 *out_row;
+  int y;
+  size_t sample_count = im->xsize * im->channels;
+  size_t sample_index;
+    
+  mm_log((1, "tiff - write_one_32(tif %p, im %p)\n", tif, im));
+
+  /* only 8 and 12 bit samples are supported by jpeg compression */
+  if (compress == COMPRESSION_JPEG)
+    compress = COMPRESSION_PACKBITS;
+
+  if (!set_direct_tags(tif, im, compress, 32))
+    return 0;
+
+  in_row = mymalloc(sample_count * sizeof(unsigned));
+  out_size = TIFFScanlineSize(tif);
+  out_row = (uint32 *)_TIFFmalloc( out_size );
+
+  for (y = 0; y < im->ysize; ++y) {
+    if (i_gsamp_bits(im, 0, im->xsize, y, in_row, NULL, im->channels, 32) <= 0) {
+      i_push_error(0, "Cannot read 32-bit samples");
+      return 0;
+    }
+    for (sample_index = 0; sample_index < sample_count; ++sample_index)
+      out_row[sample_index] = in_row[sample_index];
+    if (TIFFWriteScanline(tif, out_row, y, 0) < 0) {
+      myfree(in_row);
+      _TIFFfree(out_row);
+      i_push_error(0, "write TIFF: write scan line failed");
+      return 0;
+    }
+  }
+
+  myfree(in_row);
+  _TIFFfree(out_row);
+  
+  return 1;
+}
+
+static int 
 write_one_16(TIFF *tif, i_img *im) {
   uint16 compress = get_compression(im, COMPRESSION_PACKBITS);
   unsigned *in_row;
@@ -1445,6 +1489,10 @@ i_writetiff_low(TIFF *tif, i_img *im) {
       if (!write_one_paletted8(tif, im))
 	return 0;
     }
+  }
+  else if (im->bits >= 32) {
+    if (!write_one_32(tif, im))
+      return 0;
   }
   else if (im->bits >= 16) {
     if (!write_one_16(tif, im))
