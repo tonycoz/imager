@@ -500,8 +500,7 @@ i_gsamp_bits_d16(i_img *im, int l, int r, int y, unsigned *samps,
   int off;
 
   if (bits != 16) {
-    i_push_error(0, "Invalid bits for 16-bit image");
-    return -1;
+    return i_gsamp_bits_fb(im, l, r, y, samps, chans, chan_count, bits);
   }
 
   if (y >=0 && y < im->ysize && l < im->xsize && l >= 0) {

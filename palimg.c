@@ -71,6 +71,9 @@ static i_img IIM_base_8bit_pal =
   i_setcolors_p, /* i_f_setcolors */
 
   i_destroy_p, /* i_f_destroy */
+
+  i_gsamp_bits_fb,
+  NULL, /* i_f_psamp_bits */
 };
 
 /*

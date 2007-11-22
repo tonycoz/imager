@@ -72,11 +72,9 @@ test_colorf_glin($im_rgb, 0, 1,
      "i_gsamp_bits fail bad channel");
   is(Imager->_error_as_msg(), 'No channel 3 in this image', 'check message');
 
-  is(Imager::i_gsamp_bits($im_rgb, 18, 22, 1, 17, \@samples, 0, 0, 2), undef, 
-     "i_gsamp_bits fail bad bits");
-  is(Imager->_error_as_msg(), 'Invalid bits for 16-bit image', 
-     'check message');
-
+  is(Imager::i_gsamp_bits($im_rgb, 18, 22, 1, 17, \@samples, 0, 0, 2), 8, 
+     "i_gsamp_bits succeed high bits");
+  is($samples[0], 131071, "check correct with high bits");
 
   # write some samples back
   my @wr_samples = 

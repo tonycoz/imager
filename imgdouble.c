@@ -70,12 +70,17 @@ static i_img IIM_base_double_direct =
 
   NULL, /* i_f_gpal */
   NULL, /* i_f_ppal */
-  NULL, /* i_f_addcolor */
-  NULL, /* i_f_getcolor */
+  NULL, /* i_f_addcolors */
+  NULL, /* i_f_getcolors */
   NULL, /* i_f_colorcount */
+  NULL, /* i_f_maxcolors */
   NULL, /* i_f_findcolor */
+  NULL, /* i_f_setcolors */
 
   NULL, /* i_f_destroy */
+
+  i_gsamp_bits_fb,
+  NULL, /* i_f_psamp_bits */
 };
 
 /*

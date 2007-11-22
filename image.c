@@ -282,6 +282,9 @@ static i_img IIM_base_8bit_direct =
   NULL, /* i_f_setcolors */
 
   NULL, /* i_f_destroy */
+
+  i_gsamp_bits_fb,
+  NULL, /* i_f_psamp_bits */
 };
 
 /*static void set_8bit_direct(i_img *im) {
@@ -2008,6 +2011,80 @@ int i_maxcolors_forward(i_img *im) {
 */
 int i_findcolor_forward(i_img *im, const i_color *color, i_palidx *entry) {
   return i_findcolor(*(i_img **)im->ext_data, color, entry);
+}
+
+/*
+=back
+
+=head2 Fallback handler
+
+=over
+
+=item i_gsamp_bits_fb
+
+=cut
+*/
+
+int 
+i_gsamp_bits_fb(i_img *im, int l, int r, int y, unsigned *samps, 
+		const int *chans, int chan_count, int bits) {
+  if (bits < 1 || bits > 32) {
+    i_push_error(0, "Invalid bits, must be 1..32");
+    return -1;
+  }
+
+  if (y >=0 && y < im->ysize && l < im->xsize && l >= 0) {
+    double scale;
+    int ch, count, i, w;
+    
+    if (bits == 32)
+      scale = 4294967295.0;
+    else
+      scale = (double)(1 << bits) - 1;
+
+    if (r > im->xsize)
+      r = im->xsize;
+    w = r - l;
+    count = 0;
+
+    if (chans) {
+      /* make sure we have good channel numbers */
+      for (ch = 0; ch < chan_count; ++ch) {
+        if (chans[ch] < 0 || chans[ch] >= im->channels) {
+          i_push_errorf(0, "No channel %d in this image", chans[ch]);
+          return -1;
+        }
+      }
+      for (i = 0; i < w; ++i) {
+	i_fcolor c;
+	i_gpixf(im, l+i, y, &c);
+        for (ch = 0; ch < chan_count; ++ch) {
+          *samps++ = (unsigned)(c.channel[ch] * scale + 0.5);
+          ++count;
+        }
+      }
+    }
+    else {
+      if (chan_count <= 0 || chan_count > im->channels) {
+	i_push_error(0, "Invalid channel count");
+	return -1;
+      }
+      for (i = 0; i < w; ++i) {
+	i_fcolor c;
+	i_gpixf(im, l+i, y, &c);
+        for (ch = 0; ch < chan_count; ++ch) {
+          *samps++ = (unsigned)(c.channel[ch] * scale + 0.5);
+          ++count;
+        }
+      }
+    }
+
+    return count;
+  }
+  else {
+    i_push_error(0, "Image position outside of image");
+    return -1;
+  }
 }
 
 /*

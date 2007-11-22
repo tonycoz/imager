@@ -1,5 +1,8 @@
 Imager release history.  Older releases can be found in Changes.old
 
+ - added a C level image interface for accessing samples from 1-32
+   bits, exposed this at the perl level in getsamples()
+
  - the conv filter now works at floating point precision for high bit
    images
 
@@ -11,6 +14,8 @@ Imager release history.  Older releases can be found in Changes.old
  - added some important types to Imager::APIRef
 
  - added test_image_double() to Imager::Test
+
+ - 
 
 Imager 0.60 - 30 August 2007
 ===========
