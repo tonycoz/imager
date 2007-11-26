@@ -1,6 +1,6 @@
 #!perl -w
 use strict;
-use Test::More tests => 194;
+use Test::More tests => 211;
 use Imager qw(:all);
 use Imager::Test qw(is_image is_image_similar test_image test_image_16 test_image_double);
 $^W=1; # warnings during command-line tests
@@ -32,7 +32,7 @@ SKIP:
     $im = Imager->new(xsize=>2, ysize=>2);
     ok(!$im->write(file=>"testout/notiff.tif"), "should fail to write tiff");
     is($im->errstr, 'format not supported', "check no tiff message");
-    skip("no tiff support", 190);
+    skip("no tiff support", 207);
   }
 
   my $ver_string = Imager::i_tiff_libversion();
@@ -531,6 +531,17 @@ SKIP:
     is($grey16->getchannels, 1, 'and its grey');
     my $comp16 = $im16->convert(matrix => [ [ 0.299, 0.587, 0.114 ] ]);
     is_image($grey16, $comp16, 'compare grey to converted');
+
+    my $grey32 = Imager->new;
+    ok($grey32->read(file => 'testimg/grey32.tif'), "read 32-bit grey")
+      or print "# ", $grey32->errstr, "\n";
+    is($grey32->bits, 'double', 'got a double image');
+    is($grey32->getchannels, 2, 'and its grey + alpha');
+    is($grey32->tags(name => 'tiff_bitspersample'), 32, 
+       "check bits per sample");
+    my $base = test_image_double->convert(preset =>'grey')
+      ->convert(preset => 'addalpha');
+    is_image($grey32, $base, 'compare to original');
   }
 
   { # read 16, 32-bit/sample and compare to the original
@@ -641,14 +652,13 @@ SKIP:
     is($im->tags(name => 'tiff_bitspersample'), 16, "correct bits");
     is($im->bits, 16, 'check image bits');
     is($im->tags(name => 'tiff_photometric'), 2, "correct photometric");
-    is($im->tags(name => 'tiff_compression'), 1, "no compression");
+    is($im->tags(name => 'tiff_compression'), 'none', "no compression");
     is($im->getchannels, 3, 'correct channels');
   }
 
   { # 8-bit writes
     # and check compression
     my $compress = Imager::i_tiff_has_compression('lzw') ? 'lzw' : 'packbits';
-    my $compressn = $compress eq 'lzw' ? 5 : 32773;
     my $orig = test_image()->convert(preset=>'grey')
       ->convert(preset => 'addalpha');
     my $data;
@@ -661,7 +671,7 @@ SKIP:
     is($im->tags(name => 'tiff_bitspersample'), 8, 'correct bits');
     is($im->bits, 8, 'check image bits');
     is($im->tags(name => 'tiff_photometric'), 1, 'correct photometric');
-    is($im->tags(name => 'tiff_compression'), $compressn,
+    is($im->tags(name => 'tiff_compression'), $compress,
        "$compress compression");
     is($im->getchannels, 2, 'correct channels');
   }
@@ -679,9 +689,43 @@ SKIP:
     is($im->tags(name => 'tiff_bitspersample'), 32, "correct bits");
     is($im->bits, 'double', 'check image bits');
     is($im->tags(name => 'tiff_photometric'), 2, "correct photometric");
-    is($im->tags(name => 'tiff_compression'), 1, "no compression");
+    is($im->tags(name => 'tiff_compression'), 'none', "no compression");
     is($im->getchannels, 4, 'correct channels');
   }
 
+  { # bilevel
+    my $im = test_image()->convert(preset => 'grey')
+      ->to_paletted(make_colors => 'mono',
+		    translate => 'errdiff');
+    my $faxdata;
+
+    # fax compression is written as miniswhite
+    ok($im->write(data => \$faxdata, type => 'tiff', 
+		  tiff_compression => 'fax3'),
+       "write bilevel fax compressed");
+    my $fax = Imager->new;
+    ok($fax->read(data => $faxdata), "read it back");
+    ok($fax->is_bilevel, "got a bi-level image back");
+    is($fax->tags(name => 'tiff_compression'), 'fax3',
+       "check fax compression used");
+    is_image($fax, $im, "compare to original");
+
+    # other compresion written as minisblack
+    my $packdata;
+    ok($im->write(data => \$packdata, type => 'tiff',
+		  tiff_compression => 'jpeg'),
+       "write bilevel packbits compressed");
+    my $packim = Imager->new;
+    ok($packim->read(data => $packdata), "read it back");
+    ok($packim->is_bilevel, "got a bi-level image back");
+    is($packim->tags(name => 'tiff_compression'), 'packbits',
+       "check fallback compression used");
+    is_image($packim, $im, "compare to original");
+  }
+
+  { # fallback handling of tiff
+    is(Imager::i_tiff_has_compression('none'), 1, "can always do uncompresed");
+    is(Imager::i_tiff_has_compression('xxx'), '', "can't do xxx compression");
+  }
 }
 

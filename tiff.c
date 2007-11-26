@@ -65,6 +65,27 @@ static struct tag_name text_tag_names[] =
   { "tiff_hostcomputer", TIFFTAG_HOSTCOMPUTER, },
 };
 
+static struct tag_name 
+compress_values[] =
+  {
+    { "none",     COMPRESSION_NONE },
+    { "ccittrle", COMPRESSION_CCITTRLE },
+    { "fax3",     COMPRESSION_CCITTFAX3 },
+    { "t4",       COMPRESSION_CCITT_T4 },
+    { "fax4",     COMPRESSION_CCITTFAX4 },
+    { "t6",       COMPRESSION_CCITT_T6 },
+    { "lzw",      COMPRESSION_LZW },
+    { "jpeg",     COMPRESSION_JPEG },
+    { "packbits", COMPRESSION_PACKBITS },
+    { "deflate",  COMPRESSION_ADOBE_DEFLATE },
+    { "zip",      COMPRESSION_ADOBE_DEFLATE },
+    { "oldzip",   COMPRESSION_DEFLATE },
+    { "ccittrlew", COMPRESSION_CCITTRLEW },
+  };
+
+static const int compress_value_count = 
+  sizeof(compress_values) / sizeof(*compress_values);
+
 typedef struct read_state_tag read_state_t;
 /* the setup function creates the image object, allocates the line buffer */
 typedef int (*read_setup_t)(read_state_t *state);
@@ -392,7 +413,6 @@ static i_img *read_one_tiff(TIFF *tif, int allow_incomplete) {
   i_tags_addn(&im->tags, "tiff_bitspersample", 0, bits_per_sample);
   i_tags_addn(&im->tags, "tiff_photometric", 0, photometric);
   TIFFGetFieldDefaulted(tif, TIFFTAG_COMPRESSION, &compress);
-  i_tags_addn(&im->tags, "tiff_compression", 0, compress);
     
   /* resolution tags */
   TIFFGetFieldDefaulted(tif, TIFFTAG_RESOLUTIONUNIT, &resunit);
@@ -442,6 +462,13 @@ static i_img *read_one_tiff(TIFF *tif, int allow_incomplete) {
   if (warn_buffer && *warn_buffer) {
     i_tags_add(&im->tags, "i_warning", 0, warn_buffer, -1, 0);
     *warn_buffer = '\0';
+  }
+
+  for (i = 0; i < compress_value_count; ++i) {
+    if (compress_values[i].tag == compress) {
+      i_tags_add(&im->tags, "tiff_compression", 0, compress_values[i].name, -1, 0);
+      break;
+    }
   }
   
   return im;
@@ -944,27 +971,6 @@ i_writetiff_low_old(TIFF *tif, i_img *im) {
 
 #endif
 
-static struct tag_name 
-compress_values[] =
-  {
-    { "none",     COMPRESSION_NONE },
-    { "ccittrle", COMPRESSION_CCITTRLE },
-    { "fax3",     COMPRESSION_CCITTFAX3 },
-    { "t4",       COMPRESSION_CCITT_T4 },
-    { "fax4",     COMPRESSION_CCITTFAX4 },
-    { "t6",       COMPRESSION_CCITT_T6 },
-    { "lzw",      COMPRESSION_LZW },
-    { "jpeg",     COMPRESSION_JPEG },
-    { "packbits", COMPRESSION_PACKBITS },
-    { "deflate",  COMPRESSION_ADOBE_DEFLATE },
-    { "zip",      COMPRESSION_ADOBE_DEFLATE },
-    { "oldzip",   COMPRESSION_DEFLATE },
-    { "ccittrlew", COMPRESSION_CCITTRLEW },
-  };
-
-static const int compress_value_count = 
-  sizeof(compress_values) / sizeof(*compress_values);
-
 static uint16
 find_compression(char const *name, uint16 *compress) {
   int i;
@@ -1159,6 +1165,9 @@ write_one_bilevel(TIFF *tif, i_img *im, int zero_is_white) {
       return 0;
     }
   }
+
+  _TIFFfree(out_row);
+  myfree(in_row);
 
   return 1;
 }
