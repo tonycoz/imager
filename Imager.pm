@@ -117,6 +117,7 @@ use Imager::Font;
 		newcolour
 		NC
 		NF
+                NCF
 );
 
 @EXPORT=qw(
@@ -136,6 +137,7 @@ use Imager::Font;
 		newcolor
 		NF
 		NC
+                NCF
 	       )],
    all => [@EXPORT_OK],
    default => [qw(
@@ -426,13 +428,19 @@ BEGIN {
 # initlize Imager
 # NOTE: this might be moved to an import override later on
 
-#sub import {
-#  my $pack = shift;
-#  (look through @_ for special tags, process, and remove them);   
-#  use Data::Dumper;
-#  print Dumper($pack);
-#  print Dumper(@_);
-#}
+sub import {
+  my $i = 1;
+  while ($i < @_) {
+    if ($_[$i] eq '-log-stderr') {
+      init_log(undef, 4);
+      splice(@_, $i, 1);
+    }
+    else {
+      ++$i;
+    }
+  }
+  goto &Exporter::import;
+}
 
 sub init_log {
   i_init_log($_[0],$_[1]);
@@ -1023,6 +1031,14 @@ sub type {
 sub virtual {
   my $self = shift;
   $self->{IMG} and i_img_virtual($self->{IMG});
+}
+
+sub is_bilevel {
+  my ($self) = @_;
+
+  $self->{IMG} or return;
+
+  return i_img_is_monochrome($self->{IMG});
 }
 
 sub tags {
@@ -3041,7 +3057,7 @@ sub setscanline {
 
 sub getsamples {
   my $self = shift;
-  my %opts = ( type => '8bit', x=>0, @_);
+  my %opts = ( type => '8bit', x=>0, offset => 0, @_);
 
   defined $opts{width} or $opts{width} = $self->getwidth - $opts{x};
 
@@ -3054,18 +3070,103 @@ sub getsamples {
     $opts{channels} = [ 0 .. $self->getchannels()-1 ];
   }
 
-  if ($opts{type} eq '8bit') {
-    return i_gsamp($self->{IMG}, $opts{x}, $opts{x}+$opts{width},
-		   $opts{y}, @{$opts{channels}});
-  }
-  elsif ($opts{type} eq 'float') {
-    return i_gsampf($self->{IMG}, $opts{x}, $opts{x}+$opts{width},
-		    $opts{y}, @{$opts{channels}});
+  if ($opts{target}) {
+    my $target = $opts{target};
+    my $offset = $opts{offset};
+    if ($opts{type} eq '8bit') {
+      my @samples = i_gsamp($self->{IMG}, $opts{x}, $opts{x}+$opts{width},
+			    $opts{y}, @{$opts{channels}})
+	or return;
+      @{$target}{$offset .. $offset + @samples - 1} = @samples;
+      return scalar(@samples);
+    }
+    elsif ($opts{type} eq 'float') {
+      my @samples = i_gsampf($self->{IMG}, $opts{x}, $opts{x}+$opts{width},
+			     $opts{y}, @{$opts{channels}});
+      @{$target}{$offset .. $offset + @samples - 1} = @samples;
+      return scalar(@samples);
+    }
+    elsif ($opts{type} =~ /^(\d+)bit$/) {
+      my $bits = $1;
+
+      my @data;
+      my $count = i_gsamp_bits($self->{IMG}, $opts{x}, $opts{x}+$opts{width}, 
+			       $opts{y}, $bits, $target, 
+			       $offset, @{$opts{channels}});
+      unless (defined $count) {
+	$self->_set_error(Imager->_error_as_msg);
+	return;
+      }
+
+      return $count;
+    }
+    else {
+      $self->_set_error("invalid type parameter - must be '8bit' or 'float'");
+      return;
+    }
   }
   else {
-    $self->_set_error("invalid type parameter - must be '8bit' or 'float'");
+    if ($opts{type} eq '8bit') {
+      return i_gsamp($self->{IMG}, $opts{x}, $opts{x}+$opts{width},
+		     $opts{y}, @{$opts{channels}});
+    }
+    elsif ($opts{type} eq 'float') {
+      return i_gsampf($self->{IMG}, $opts{x}, $opts{x}+$opts{width},
+		      $opts{y}, @{$opts{channels}});
+    }
+    elsif ($opts{type} =~ /^(\d+)bit$/) {
+      my $bits = $1;
+
+      my @data;
+      i_gsamp_bits($self->{IMG}, $opts{x}, $opts{x}+$opts{width}, 
+		   $opts{y}, $bits, \@data, 0, @{$opts{channels}})
+	or return;
+      return @data;
+    }
+    else {
+      $self->_set_error("invalid type parameter - must be '8bit' or 'float'");
+      return;
+    }
+  }
+}
+
+sub setsamples {
+  my $self = shift;
+  my %opts = ( x => 0, offset => 0, @_ );
+
+  unless ($self->{IMG}) {
+    $self->_set_error('setsamples: empty input image');
     return;
   }
+
+  unless(defined $opts{data} && ref $opts{data}) {
+    $self->_set_error('setsamples: data parameter missing or invalid');
+    return;
+  }
+
+  unless ($opts{channels}) {
+    $opts{channels} = [ 0 .. $self->getchannels()-1 ];
+  }
+
+  unless ($opts{type} && $opts{type} =~ /^(\d+)bit$/) {
+    $self->_set_error('setsamples: type parameter missing or invalid');
+    return;
+  }
+  my $bits = $1;
+
+  unless (defined $opts{width}) {
+    $opts{width} = $self->getwidth() - $opts{x};
+  }
+
+  my $count = i_psamp_bits($self->{IMG}, $opts{x}, $opts{y}, $bits,
+			   $opts{channels}, $opts{data}, $opts{offset}, 
+			   $opts{width});
+  unless (defined $count) {
+    $self->_set_error(Imager->_error_as_msg);
+    return;
+  }
+
+  return $count;
 }
 
 # make an identity matrix of the given size
@@ -3446,6 +3547,7 @@ sub get_file_limits {
 
 sub newcolor { Imager::Color->new(@_); }
 sub newfont  { Imager::Font->new(@_); }
+sub NCF { Imager::Color::Float->new(@_) }
 
 *NC=*newcolour=*newcolor;
 *NF=*newfont;
@@ -3840,6 +3942,8 @@ img_set() - L<Imager::ImageTypes/img_set>
 
 init() - L<Imager::ImageTypes/init>
 
+is_bilevel - L<Imager::ImageTypes/is_bilevel>
+
 line() - L<Imager::Draw/line>
 
 load_plugin() - L<Imager::Filters/load_plugin>
@@ -3854,6 +3958,8 @@ matrix_transform() - L<Imager::Engines/matrix_transform>
 maxcolors() - L<Imager::ImageTypes/maxcolors>
 
 NC() - L<Imager::Handy/NC>
+
+NCF() - L<Imager::Handy/NCF>
 
 new() - L<Imager::ImageTypes/new>
 
@@ -3909,6 +4015,8 @@ set_file_limits() - L<Imager::Files/"Limiting the sizes of images you read">
 setmask() - L<Imager::ImageTypes/setmask>
 
 setpixel() - L<Imager::Draw/setpixel>
+
+setsamples() - L<Imager::Draw/setsamples>
 
 setscanline() - L<Imager::Draw/setscanline>
 

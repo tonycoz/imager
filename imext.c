@@ -112,7 +112,11 @@ im_ext_funcs imager_function_table =
     i_img_get_width,
     i_img_get_height,
     i_lhead,
-    i_loog
+    i_loog,
+
+    /* IMAGER_API_LEVEL 4 functions */
+    i_img_alloc,
+    i_img_init,
   };
 
 /* in general these functions aren't called by Imager internally, but

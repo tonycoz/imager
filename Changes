@@ -3,6 +3,24 @@ Imager release history.  Older releases can be found in Changes.old
 Imager 0.62 - not yet released
 ===========
 
+ - major TIFF support re-work
+   http://rt.cpan.org/Ticket/Display.html?id=20329
+
+ - added a C level image interface for accessing samples from 1-32
+   bits, exposed this at the perl level in getsamples()
+
+ - the conv filter now works at floating point precision for high bit
+   images
+
+ - added is_bilevel method to test whether an image should be written as
+   a bilevel image if the image format supports it.
+
+ - added -log-stderr as an Imager import list option
+
+ - added some important types to Imager::APIRef
+
+ - added test_image_double() to Imager::Test
+
 Bug fixes:
 
  - Imager::Fountain couldn't read GIMP gradient files with 10 or more

@@ -4,11 +4,13 @@ use Test::Builder;
 require Exporter;
 use vars qw(@ISA @EXPORT_OK);
 @ISA = qw(Exporter);
-@EXPORT_OK = qw(diff_text_with_nul test_image_raw test_image_16 test_image 
+@EXPORT_OK = qw(diff_text_with_nul 
+                test_image_raw test_image_16 test_image test_image_double 
                 is_color3 is_color1 is_color4 
                 is_fcolor4
                 is_image is_image_similar 
-                image_bounds_checks);
+                image_bounds_checks mask_tests
+                test_colorf_gpix test_color_gpix test_colorf_glin);
 
 sub diff_text_with_nul {
   my ($desc, $text1, $text2, @params) = @_;
@@ -201,6 +203,19 @@ sub test_image_16 {
   $img;
 }
 
+sub test_image_double {
+  my $green = Imager::Color->new(0, 255, 0, 255);
+  my $blue  = Imager::Color->new(0, 0, 255, 255);
+  my $red   = Imager::Color->new(255, 0, 0, 255);
+  my $img = Imager->new(xsize => 150, ysize => 150, bits => 'double');
+  $img->box(filled => 1, color => $green, box => [ 70, 25, 130, 125 ]);
+  $img->box(filled => 1, color => $blue,  box => [ 20, 25, 80, 125 ]);
+  $img->arc(x => 75, y => 75, r => 30, color => $red);
+  $img->filter(type => 'conv', coef => [ 0.1, 0.2, 0.4, 0.2, 0.1 ]);
+
+  $img;
+}
+
 sub is_image_similar($$$$) {
   my ($left, $right, $limit, $comment) = @_;
 
@@ -248,6 +263,22 @@ sub is_image_similar($$$$) {
   if ($diff > $limit) {
     $builder->ok(0, $comment);
     $builder->diag("image data difference > $limit - $diff");
+   
+    if ($limit == 0) {
+      # find the first mismatch
+      CHECK:
+      for my $y (0 .. $left->getheight()-1) {
+	for my $x (0.. $left->getwidth()-1) {
+	  my @lsamples = $left->getsamples(x => $x, y => $y, width => 1);
+	  my @rsamples = $right->getsamples(x => $x, y => $y, width => 1);
+          if ("@lsamples" ne "@rsamples") {
+            $builder->diag("first mismatch at ($x, $y) - @lsamples vs @rsamples");
+            last CHECK;
+          }
+	}
+      }
+    }
+
     return;
   }
   
@@ -286,6 +317,151 @@ sub image_bounds_checks {
   $builder->ok(!$im->setpixel(x => 10, y => 0, color => $blackf), 'bounds check set (10, 0) float');
   $builder->ok(!$im->setpixel(x => 0, y => -1, color => $blackf), 'bounds check set (0, -1) float');
   $builder->ok(!$im->setpixel(x => 0, y => 10, color => $blackf), 'bounds check set (0, 10) float');
+}
+
+sub test_colorf_gpix {
+  my ($im, $x, $y, $expected, $epsilon, $comment) = @_;
+
+  my $builder = Test::Builder->new;
+  
+  defined $comment or $comment = '';
+
+  my $c = Imager::i_gpixf($im, $x, $y);
+  unless ($c) {
+    $builder->ok(0, "$comment - retrieve color at ($x,$y)");
+    return;
+  }
+  unless ($builder->ok(_colorf_cmp($c, $expected, $epsilon) == 0,
+	     "$comment - got right color ($x, $y)")) {
+    print "# got: (", join(",", ($c->rgba)[0,1,2]), ")\n";
+    print "# expected: (", join(",", ($expected->rgba)[0,1,2]), ")\n";
+    return;
+  }
+  1;
+}
+
+sub test_color_gpix {
+  my ($im, $x, $y, $expected, $comment) = @_;
+
+  my $builder = Test::Builder->new;
+  
+  defined $comment or $comment = '';
+  my $c = Imager::i_get_pixel($im, $x, $y);
+  unless ($c) {
+    $builder->ok(0, "$comment - retrieve color at ($x,$y)");
+    return;
+  }
+  unless ($builder->ok(_color_cmp($c, $expected) == 0,
+     "got right color ($x, $y)")) {
+    print "# got: (", join(",", ($c->rgba)[0,1,2]), ")\n";
+    print "# expected: (", join(",", ($expected->rgba)[0,1,2]), ")\n";
+    return;
+  }
+
+  return 1;
+}
+
+sub test_colorf_glin {
+  my ($im, $x, $y, $pels, $comment) = @_;
+
+  my $builder = Test::Builder->new;
+  
+  my @got = Imager::i_glinf($im, $x, $x+@$pels, $y);
+  @got == @$pels
+    or return $builder->is_num(scalar(@got), scalar(@$pels), "$comment - pixels retrieved");
+  
+  return $builder->ok(!grep(_colorf_cmp($pels->[$_], $got[$_], 0.005), 0..$#got),
+     "$comment - check colors ($x, $y)");
+}
+
+sub _colorf_cmp {
+  my ($c1, $c2, $epsilon) = @_;
+
+  defined $epsilon or $epsilon = 0;
+
+  my @s1 = $c1->rgba;
+  my @s2 = $c2->rgba;
+
+  # print "# (",join(",", @s1[0..2]),") <=> (",join(",", @s2[0..2]),")\n";
+  return abs($s1[0]-$s2[0]) >= $epsilon && $s1[0] <=> $s2[0] 
+    || abs($s1[1]-$s2[1]) >= $epsilon && $s1[1] <=> $s2[1]
+      || abs($s1[2]-$s2[2]) >= $epsilon && $s1[2] <=> $s2[2];
+}
+
+sub _color_cmp {
+  my ($c1, $c2) = @_;
+
+  my @s1 = $c1->rgba;
+  my @s2 = $c2->rgba;
+
+  return $s1[0] <=> $s2[0] 
+    || $s1[1] <=> $s2[1]
+      || $s1[2] <=> $s2[2];
+}
+
+# these test the action of the channel mask on the image supplied
+# which should be an OO image.
+sub mask_tests {
+  my ($im, $epsilon) = @_;
+
+  my $builder = Test::Builder->new;
+
+  defined $epsilon or $epsilon = 0;
+
+  # we want to check all four of ppix() and plin(), ppix() and plinf()
+  # basic test procedure:
+  #   first using default/all 1s mask, set to white
+  #   make sure we got white
+  #   set mask to skip a channel, set to grey
+  #   make sure only the right channels set
+
+  print "# channel mask tests\n";
+  # 8-bit color tests
+  my $white = Imager::NC(255, 255, 255);
+  my $grey = Imager::NC(128, 128, 128);
+  my $white_grey = Imager::NC(128, 255, 128);
+
+  print "# with ppix\n";
+  $builder->ok($im->setmask(mask=>~0), "set to default mask");
+  $builder->ok($im->setpixel(x=>0, 'y'=>0, color=>$white), "set to white all channels");
+  test_color_gpix($im->{IMG}, 0, 0, $white, "ppix");
+  $builder->ok($im->setmask(mask=>0xF-0x2), "set channel to exclude channel1");
+  $builder->ok($im->setpixel(x=>0, 'y'=>0, color=>$grey), "set to grey, no channel 2");
+  test_color_gpix($im->{IMG}, 0, 0, $white_grey, "ppix masked");
+
+  print "# with plin\n";
+  $builder->ok($im->setmask(mask=>~0), "set to default mask");
+  $builder->ok($im->setscanline(x=>0, 'y'=>1, pixels => [$white]), 
+     "set to white all channels");
+  test_color_gpix($im->{IMG}, 0, 1, $white, "plin");
+  $builder->ok($im->setmask(mask=>0xF-0x2), "set channel to exclude channel1");
+  $builder->ok($im->setscanline(x=>0, 'y'=>1, pixels=>[$grey]), 
+     "set to grey, no channel 2");
+  test_color_gpix($im->{IMG}, 0, 1, $white_grey, "plin masked");
+
+  # float color tests
+  my $whitef = Imager::NCF(1.0, 1.0, 1.0);
+  my $greyf = Imager::NCF(0.5, 0.5, 0.5);
+  my $white_greyf = Imager::NCF(0.5, 1.0, 0.5);
+
+  print "# with ppixf\n";
+  $builder->ok($im->setmask(mask=>~0), "set to default mask");
+  $builder->ok($im->setpixel(x=>0, 'y'=>2, color=>$whitef), "set to white all channels");
+  test_colorf_gpix($im->{IMG}, 0, 2, $whitef, $epsilon, "ppixf");
+  $builder->ok($im->setmask(mask=>0xF-0x2), "set channel to exclude channel1");
+  $builder->ok($im->setpixel(x=>0, 'y'=>2, color=>$greyf), "set to grey, no channel 2");
+  test_colorf_gpix($im->{IMG}, 0, 2, $white_greyf, $epsilon, "ppixf masked");
+
+  print "# with plinf\n";
+  $builder->ok($im->setmask(mask=>~0), "set to default mask");
+  $builder->ok($im->setscanline(x=>0, 'y'=>3, pixels => [$whitef]), 
+     "set to white all channels");
+  test_colorf_gpix($im->{IMG}, 0, 3, $whitef, $epsilon, "plinf");
+  $builder->ok($im->setmask(mask=>0xF-0x2), "set channel to exclude channel1");
+  $builder->ok($im->setscanline(x=>0, 'y'=>3, pixels=>[$greyf]), 
+     "set to grey, no channel 2");
+  test_colorf_gpix($im->{IMG}, 0, 3, $white_greyf, $epsilon, "plinf masked");
+
 }
 
 1;
@@ -347,6 +523,10 @@ Returns a 150x150x3 8-bit/sample OO test image.
 
 Returns a 150x150x3 16-bit/sample OO test image.
 
+=item test_image_double()
+
+Returns a 150x150x3 double/sample OO test image.
+
 =item diff_text_with_nul($test_name, $text1, $text2, @options)
 
 Creates 2 test images and writes $text1 to the first image and $text2
@@ -364,6 +544,25 @@ Attempts to write to various pixel positions outside the edge of the
 image to ensure that it fails in those locations.
 
 Any new image type should pass these tests.  Does 16 separate tests.
+
+=item test_colorf_gpix($im, $x, $y, $expected, $epsilon, $comment)
+
+Retrieves the pixel ($x,$y) from the low-level image $im and compares
+it to the floating point color $expected, with a tolerance of epsilon.
+
+=item test_color_gpix($im, $x, $y, $expected, $comment)
+
+Retrieves the pixel ($x,$y) from the low-level image $im and compares
+it to the floating point color $expected.
+
+=item test_colorf_glin($im, $x, $y, $pels, $comment)
+
+Retrieves the floating point pixels ($x, $y)-[$x+@$pels, $y] from the
+low level image $im and compares them against @$pels.
+
+=item mask_tests($im, $epsilon)
+
+Perform a standard set of mask tests on the OO image $im.
 
 =back
 

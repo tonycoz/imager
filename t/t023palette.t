@@ -1,7 +1,7 @@
 #!perl -w
 # some of this is tested in t01introvert.t too
 use strict;
-use Test::More tests => 107;
+use Test::More tests => 121;
 BEGIN { use_ok("Imager"); }
 
 use Imager::Test qw(image_bounds_checks);
@@ -280,6 +280,9 @@ cmp_ok(Imager->errstr, '=~', qr/Channels must be positive and <= 4/,
 				   translate => 'closest');
   is($mono->type, 'paletted', "check we get right image type");
   is($mono->colorcount, 2, "only 2 colors");
+  my ($is_mono, $ziw) = $mono->is_bilevel;
+  ok($is_mono, "check monochrome check true");
+  is($ziw, 0, "check ziw false");
   my @colors = $mono->getcolors;
   iscolor($colors[0], $black, "check first entry");
   iscolor($colors[1], $white, "check second entry");
@@ -287,6 +290,36 @@ cmp_ok(Imager->errstr, '=~', qr/Channels must be positive and <= 4/,
   is($pixels[0], 1, "check white pixel");
   is($pixels[1], 1, "check yellow pixel");
   is($pixels[2], 0, "check black pixel");
+}
+
+{ # check for the various mono images we accept
+  my $mono_8_bw_3 = Imager->new(xsize => 2, ysize => 2, channels => 3, 
+			      type => 'paletted');
+  ok($mono_8_bw_3->addcolors(colors => [ qw/000000 FFFFFF/ ]), 
+     "mono8bw3 - add colors");
+  ok($mono_8_bw_3->is_bilevel, "it's mono");
+  is(($mono_8_bw_3->is_bilevel)[1], 0, 'zero not white');
+  
+  my $mono_8_wb_3 = Imager->new(xsize => 2, ysize => 2, channels => 3, 
+			      type => 'paletted');
+  ok($mono_8_wb_3->addcolors(colors => [ qw/FFFFFF 000000/ ]), 
+     "mono8wb3 - add colors");
+  ok($mono_8_wb_3->is_bilevel, "it's mono");
+  is(($mono_8_wb_3->is_bilevel)[1], 1, 'zero is white');
+  
+  my $mono_8_bw_1 = Imager->new(xsize => 2, ysize => 2, channels => 1, 
+			      type => 'paletted');
+  ok($mono_8_bw_1->addcolors(colors => [ qw/000000 FFFFFF/ ]), 
+     "mono8bw - add colors");
+  ok($mono_8_bw_1->is_bilevel, "it's mono");
+  is(($mono_8_bw_1->is_bilevel)[1], 0, 'zero not white');
+  
+  my $mono_8_wb_1 = Imager->new(xsize => 2, ysize => 2, channels => 1, 
+			      type => 'paletted');
+  ok($mono_8_wb_1->addcolors(colors => [ qw/FFFFFF 000000/ ]), 
+     "mono8wb - add colors");
+  ok($mono_8_wb_1->is_bilevel, "it's mono");
+  is(($mono_8_wb_1->is_bilevel)[1], 1, 'zero is white');
 }
 
 { # check bounds checking

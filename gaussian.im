@@ -72,7 +72,7 @@ i_gaussian(i_img *im, double stddev) {
 	}
       for(ch=0;ch<im->channels;ch++) {
 	double value = res[ch] / pc;
-	rcolor.channel[ch] = value > IM_SAMPLE_MAX ? IM_SAMPLE_MAX : value;
+	rcolor.channel[ch] = value > IM_SAMPLE_MAX ? IM_SAMPLE_MAX : IM_ROUND(value);
       }
       IM_PPIX(timg,i,l,&rcolor);
     }
@@ -91,7 +91,7 @@ i_gaussian(i_img *im, double stddev) {
 	}
       for(ch=0;ch<im->channels;ch++) {
 	double value = res[ch]/pc;
-	rcolor.channel[ch] = value > IM_SAMPLE_MAX ? IM_SAMPLE_MAX : value;
+	rcolor.channel[ch] = value > IM_SAMPLE_MAX ? IM_SAMPLE_MAX : IM_ROUND(value);
       }
       IM_PPIX(im,l,i,&rcolor);
     }

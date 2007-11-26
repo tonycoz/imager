@@ -11,7 +11,7 @@ my %funcs = map { $_ => 1 } @funcs;
 # look for files to parse
 
 my $mani = maniread;
-my @files = grep /\.(c|im)$/, keys %$mani;
+my @files = grep /\.(c|im|h)$/, keys %$mani;
 
 # scan each file for =item <func>\b
 my $func;
@@ -162,7 +162,7 @@ close OUT;
 
 
 sub make_func_list {
-  my $funcs;
+  my @funcs = qw(i_img i_color i_fcolor i_fill_t mm_log);
   open FUNCS, "< imexttypes.h"
     or die "Cannot open imexttypes.h: $!\n";
   my $in_struct;

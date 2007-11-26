@@ -3,7 +3,7 @@
 # to make sure we get expected values
 
 use strict;
-use Test::More tests => 223;
+use Test::More tests => 228;
 
 BEGIN { use_ok(Imager => qw(:handy :all)) }
 
@@ -165,6 +165,15 @@ is($impal2->type, 'paletted', "check type");
   dump_colors($impal3->getcolors);
   is($impal3->colorcount, 3, "new image has expected color table size");
   is($impal3->type, 'paletted', "and is paletted");
+}
+
+{ # basic checks, 8-bit direct images
+  my $im = Imager->new(xsize => 2, ysize => 3);
+  ok($im, 'create 8-bit direct image');
+  is($im->bits, 8, '8 bits');
+  ok(!$im->virtual, 'not virtual');
+  is($im->type, 'direct', 'direct image');
+  ok(!$im->is_bilevel, 'not mono');
 }
 
 ok(!Imager->new(xsize=>0, ysize=>1), "fail to create 0 height image");

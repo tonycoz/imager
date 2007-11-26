@@ -56,6 +56,8 @@ i_img *i_img_empty(i_img *im,int x,int y);
 i_img *i_img_empty_ch(i_img *im,int x,int y,int ch);
 void   i_img_exorcise(i_img *im);
 void   i_img_destroy(i_img *im);
+i_img *i_img_alloc(void);
+void i_img_init(i_img *im);
 
 void   i_img_info(i_img *im,int *info);
 
@@ -111,6 +113,11 @@ extern int i_setcolors(i_img *im, int index, const i_color *colors,
   (((im)->i_f_gsamp)((im), (l), (r), (y), (samps), (chans), (count)))
 #define i_gsampf(im, l, r, y, samps, chans, count) \
   (((im)->i_f_gsampf)((im), (l), (r), (y), (samps), (chans), (count)))
+
+#define i_gsamp_bits(im, l, r, y, samps, chans, count, bits) \
+  (((im)->i_f_gsamp_bits) ? ((im)->i_f_gsamp_bits)((im), (l), (r), (y), (samps), (chans), (count), (bits)) : -1)
+#define i_psamp_bits(im, l, r, y, samps, chans, count, bits) \
+  (((im)->i_f_psamp_bits) ? ((im)->i_f_psamp_bits)((im), (l), (r), (y), (samps), (chans), (count), (bits)) : -1)
 
 #define i_findcolor(im, color, entry) \
   (((im)->i_f_findcolor) ? ((im)->i_f_findcolor)((im), (color), (entry)) : 0)
@@ -345,16 +352,13 @@ extern i_palidx *i_quant_translate(i_quantize *quant, i_img *img);
 extern void i_quant_transparent(i_quantize *quant, i_palidx *indices, i_img *img, i_palidx trans_index);
 
 extern i_img *i_img_pal_new(int x, int y, int channels, int maxpal);
-extern i_img *i_img_pal_new_low(i_img *im, int x, int y, int channels, int maxpal);
 extern i_img *i_img_to_pal(i_img *src, i_quantize *quant);
 extern i_img *i_img_to_rgb(i_img *src);
 extern i_img *i_img_masked_new(i_img *targ, i_img *mask, int x, int y, 
                                int w, int h);
 extern i_img *i_img_16_new(int x, int y, int ch);
-extern i_img *i_img_16_new_low(i_img *im, int x, int y, int ch);
 extern i_img *i_img_to_rgb16(i_img *im);
 extern i_img *i_img_double_new(int x, int y, int ch);
-extern i_img *i_img_double_new_low(i_img *im, int x, int y, int ch);
 
 extern int i_img_is_monochrome(i_img *im, int *zero_is_white);
 
@@ -374,6 +378,8 @@ undef_int i_writetiff_wiol(i_img *im, io_glue *ig);
 undef_int i_writetiff_multi_wiol(io_glue *ig, i_img **imgs, int count);
 undef_int i_writetiff_wiol_faxable(i_img *im, io_glue *ig, int fine);
 undef_int i_writetiff_multi_wiol_faxable(io_glue *ig, i_img **imgs, int count, int fine);
+char const * i_tiff_libversion(void);
+int i_tiff_has_compression(char const *name);
 
 #endif /* HAVE_LIBTIFF */
 

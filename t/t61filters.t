@@ -27,7 +27,7 @@ test($imbase, {type=>'conv', coef=>[ -0.5, 1, -0.5, ], },
   my $imbase16 = $imbase->to_rgb16;
   my $gauss16 = test($imbase16,  {type=>'gaussian', stddev=>5 },
 		     'testout/t61_gaussian16.ppm');
-  is_image_similar($gauss, $gauss16, 200000, "8 and 16 gaussian match");
+  is_image_similar($gauss, $gauss16, 250000, "8 and 16 gaussian match");
 }
 
 

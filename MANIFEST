@@ -75,7 +75,7 @@ apidocs.perl    Build lib/Imager/APIRef.pm
 bigtest.perl	Library selection tester
 bmp.c           Reading and writing Windows BMP files
 color.c         Color translation and handling
-conv.c
+conv.im
 convert.c
 doco.perl
 datatypes.c
@@ -274,6 +274,7 @@ t/tr18561.t		Regression tests
 t/tr18561b.t
 tags.c
 testimg/209_yonge.jpg	Regression test: #17981
+testimg/alpha.tif	Alpha scaling test image
 testimg/bad1oflow.bmp   1-bit/pixel, overflow integer on 32-bit machines
 testimg/bad1wid0.bmp    1-bit/pixel, zero width
 testimg/bad24comp.bmp   24-bit/pixel, bad compression
@@ -302,11 +303,17 @@ testimg/base.jpg	Base JPEG test image
 testimg/comp4.bmp       Compressed 4-bit/pixel BMP
 testimg/comp4.tif       4-bit/pixel paletted TIFF
 testimg/comp4bad.tif    corrupted 4-bit/pixel paletted TIFF
+testimg/comp4t.tif      4-bit/pixel paletted TIFF (tiled)
 testimg/comp8.bmp       Compressed 8-bit/pixel BMP
 testimg/comp8.tif       8-bit/pixel paletted TIFF
 testimg/exiftest.jpg	Test image for EXIF parsing
 testimg/expected.gif
 testimg/gimpgrad        A GIMP gradient file
+testimg/gralpha.tif	Grey alpha test image
+testimg/grey16.tif	16-bit/sample greyscale TIFF
+testimg/grey32.tif	32-bit/sample greyscale+alpha TIFF
+testimg/imager.pbm	Test bi-level
+testimg/imager.tif	Test bi-level
 testimg/junk.ppm
 testimg/loccmap.gif
 testimg/longid.tga      Test TGA with a long id string
@@ -321,13 +328,17 @@ testimg/nocmap.gif
 testimg/palette.png
 testimg/palette_out.png
 testimg/penguin-base.ppm
+testimg/pengtile.tif	Tiled tiff image, same as penguin-base.ppm
 testimg/pgm.pgm		Simple pgm for testing the right sample is in the right place
+testimg/rgb16.tif	16-bit/sample RGB image - strips
+testimg/rgb16t.tif	16-bit/sample RGB image - tiled
 testimg/scale.gif
 testimg/scale.ppm
 testimg/scalei.gif
 testimg/scmyk.tif	Simple CMYK TIFF image
 testimg/scmyk.jpg	Simple CMYK JPEG image
 testimg/scmyka.tif	CMYK with one alpha channel
+testimg/scmyka16.tif	CMYK with one alpha channel (16-bit)
 testimg/scmykaa.tif	CMYK with 2 alpha channels
 testimg/screen2.gif
 testimg/screen3.gif
@@ -349,6 +360,8 @@ testimg/simple.pbm
 testimg/slab.tif	Lab color image
 testimg/srgb.tif	Simple RGB image
 testimg/srgba.tif	RGB with one alpha
+testimg/srgba16.tif
+testimg/srgba32.tif
 testimg/srgbaa.tif	RGB with 2 alpha
 testimg/test_gimp_pal   A simple GIMP palette file
 testimg/tiffwarn.tif	Generates a warning while being read

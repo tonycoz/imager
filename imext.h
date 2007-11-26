@@ -199,4 +199,7 @@ extern im_ext_funcs *imager_function_ext_table;
 #define i_lhead(file, line) ((im_extt->f_i_lhead)((file), (line)))
 #define i_loog (im_extt->f_i_loog)
 
+#define i_img_alloc() ((im_extt->f_i_img_alloc)())
+#define i_img_init(img) ((im_extt->f_i_img_init)(img))
+
 #endif

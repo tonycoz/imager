@@ -1,15 +1,14 @@
 #!perl -w
 use strict;
-use Test::More tests => 103;
+use Test::More tests => 104;
 
 BEGIN { use_ok(Imager=>qw(:all :handy)) }
 
 init_log("testout/t021sixteen.log", 1);
 
-require "t/testtools.pl";
-
 use Imager::Color::Float;
-use Imager::Test qw(test_image is_image image_bounds_checks);
+use Imager::Test qw(test_image is_image image_bounds_checks test_colorf_gpix
+                    test_colorf_glin mask_tests is_color3);
 
 my $im_g = Imager::i_img_16_new(100, 101, 1);
 
@@ -42,22 +41,66 @@ for my $y (0..101) {
 }
 pass("fill with red");
 # basic sanity
-test_colorf_gpix($im_rgb, 0,  0,   $redf);
-test_colorf_gpix($im_rgb, 99, 0,   $redf);
-test_colorf_gpix($im_rgb, 0,  100, $redf);
-test_colorf_gpix($im_rgb, 99, 100, $redf);
-test_colorf_glin($im_rgb, 0,  0,   ($redf) x 100);
-test_colorf_glin($im_rgb, 0,  100, ($redf) x 100);
+test_colorf_gpix($im_rgb, 0,  0,   $redf, 0, "top-left");
+test_colorf_gpix($im_rgb, 99, 0,   $redf, 0, "top-right");
+test_colorf_gpix($im_rgb, 0,  100, $redf, 0, "bottom left");
+test_colorf_gpix($im_rgb, 99, 100, $redf, 0, "bottom right");
+test_colorf_glin($im_rgb, 0,  0,   [ ($redf) x 100 ], "first line");
+test_colorf_glin($im_rgb, 0,  100, [ ($redf) x 100 ], "last line");
 
 Imager::i_plinf($im_rgb, 20, 1, ($greenf) x 60);
 test_colorf_glin($im_rgb, 0, 1, 
-                 ($redf) x 20, ($greenf) x 60, ($redf) x 20);
+                 [ ($redf) x 20, ($greenf) x 60, ($redf) x 20 ],
+		"added some green in the middle");
+{
+  my @samples;
+  is(Imager::i_gsamp_bits($im_rgb, 18, 22, 1, 16, \@samples, 0, 0 .. 2), 12, 
+     "i_gsamp_bits all channels - count")
+    or print "# ", Imager->_error_as_msg(), "\n";
+  is_deeply(\@samples, [ 65535, 0, 0,   65535, 0, 0,
+			 0, 65535, 0,   0, 65535, 0 ],
+	    "check samples retrieved");
+  @samples = ();
+  is(Imager::i_gsamp_bits($im_rgb, 18, 22, 1, 16, \@samples, 0, 0, 2), 8, 
+     "i_gsamp_bits some channels - count")
+    or print "# ", Imager->_error_as_msg(), "\n";
+  is_deeply(\@samples, [ 65535, 0,   65535, 0,
+			 0, 0,       0, 0     ],
+	    "check samples retrieved");
+  # fail gsamp
+  is(Imager::i_gsamp_bits($im_rgb, 18, 22, 1, 16, \@samples, 0, 0, 3), undef,
+     "i_gsamp_bits fail bad channel");
+  is(Imager->_error_as_msg(), 'No channel 3 in this image', 'check message');
+
+  is(Imager::i_gsamp_bits($im_rgb, 18, 22, 1, 17, \@samples, 0, 0, 2), 8, 
+     "i_gsamp_bits succeed high bits");
+  is($samples[0], 131071, "check correct with high bits");
+
+  # write some samples back
+  my @wr_samples = 
+    ( 
+     0, 0, 65535,
+     65535, 0, 0,  
+     0, 65535, 0,  
+     65535, 65535, 0 
+    );
+  is(Imager::i_psamp_bits($im_rgb, 18, 2, 16, [ 0 .. 2 ], \@wr_samples),
+     12, "write 16-bit samples")
+    or print "# ", Imager->_error_as_msg(), "\n";
+  @samples = ();
+  is(Imager::i_gsamp_bits($im_rgb, 18, 22, 2, 16, \@samples, 0, 0 .. 2), 12, 
+     "read them back")
+    or print "# ", Imager->_error_as_msg(), "\n";
+  is_deeply(\@samples, \@wr_samples, "check they match");
+  my $c = Imager::i_get_pixel($im_rgb, 18, 2);
+  is_color3($c, 0, 0, 255, "check it write to the right places");
+}
 
 # basic OO tests
 my $oo16img = Imager->new(xsize=>200, ysize=>201, bits=>16);
 ok($oo16img, "make a 16-bit oo image");
 is($oo16img->bits,  16, "test bits");
-
+isnt($oo16img->is_bilevel, "should not be considered mono");
 # make sure of error handling
 ok(!Imager->new(xsize=>0, ysize=>1, bits=>16),
     "fail to create a 0 pixel wide image");
@@ -164,4 +207,17 @@ cmp_ok(Imager->errstr, '=~', qr/channels must be between 1 and 4/,
 { # bounds checks
   my $im = Imager->new(xsize => 10, ysize => 10, bits => 16);
   image_bounds_checks($im);
+}
+
+{
+  my $im = Imager->new(xsize => 10, ysize => 10, bits => 16, channels => 3);
+  my @wr_samples = map int(rand 65536), 1..30;
+  is($im->setsamples('y' => 1, data => \@wr_samples, type => '16bit'),
+     30, "write 16-bit to OO image")
+    or print "# ", $im->errstr, "\n";
+  my @samples;
+  is($im->getsamples(y => 1, target => \@samples, type => '16bit'),
+     30, "read 16-bit from OO image")
+    or print "# ", $im->errstr, "\n";
+  is_deeply(\@wr_samples, \@samples, "check it matches");
 }

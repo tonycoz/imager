@@ -30,6 +30,10 @@ extern int i_findcolor_forward(i_img *im, const i_color *color,
 extern int i_setcolors_forward(i_img *im, int index, const i_color *colors, 
                                int count);
 
+/* fallback handler for gsamp_bits */
+extern int i_gsamp_bits_fb(i_img *im, int x, int r, int y, unsigned *samp, 
+			   const int *chans, int chan_count, int bits);
+
 #define SampleFTo16(num) ((int)((num) * 65535.0 + 0.01))
 /* we add that little bit to avoid rounding issues */
 #define Sample16ToF(num) ((num) / 65535.0)

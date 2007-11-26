@@ -15,6 +15,18 @@ void i_init_log( const char *name, int onoff );
 void i_loog(int level,const char *msg, ... );
 void i_fatal ( int exitcode,const char *fmt, ... );
 
+/*
+=item mm_log((level, format, ...))
+=category Logging
+
+This is the main entry point to logging. Note that the extra set of
+parentheses are required due to limitations in C89 macros.
+
+This will format a string with the current file and line number to the
+log file if logging is enabled.
+
+=cut
+*/
 
 #ifdef IMAGER_LOG
 #define mm_log(x) { i_lhead(__FILE__,__LINE__); i_loog x; } 

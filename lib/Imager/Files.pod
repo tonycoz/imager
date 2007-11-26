@@ -742,8 +742,7 @@ For greyscale images channel 0 is used, for color images channel 1
 use $img->to_paletted() to product a bi-level image.  This way you can
 use dithering:
 
-  my $bilevel = $img->to_paletted(colors=>[ NC(0,0,0), NC(255,255,255) ],
-                                  make_colors => 'none',
+  my $bilevel = $img->to_paletted(make_colors => 'mono',
                                   translate => 'errdiff',
                                   errdiff => 'stucki');
 
@@ -769,10 +768,77 @@ direct color images are read at 8-bits/sample.
 TIFF supports the spatial resolution tags.  See the
 C<tiff_resolutionunit> tag for some extra options.
 
+As of Imager 0.62 Imager reads:
+
+=over
+
+=item *
+
+16-bit grey, RGB, or CMYK image, including a possible alpha channel as
+a 16-bit/sample image.
+
+=item *
+
+32-bit grey, RGB image, including a possible alpha channel as a
+double/sample image.
+
+=item *
+
+bi-level images as paletted images containing only black and white,
+which other formats will also write as bi-level.
+
+=item *
+
+tiled paletted images are now handled correctly
+
+=back
+
 The following tags are set in a TIFF image when read, and can be set
 to control output:
 
 =over
+
+=item tiff_compression
+
+When reading an image this is set to the numeric value of the TIFF
+compression tag.
+
+On writing you can set this to either a numeric compression tag value,
+or one of the following values:
+
+  Ident     Number  Description
+  none         1    No compression
+  packbits   32773  Macintosh RLE
+  ccittrle     2    CCITT RLE
+  fax3         3    CCITT Group 3 fax encoding (T.4)
+  t4           3    As above
+  fax4         4    CCITT Group 4 fax encoding (T.6)
+  t6           4    As above
+  lzw          5    LZW
+  jpeg         7    JPEG
+  zip          8    Deflate (GZIP) Non-standard
+  deflate      8    As above.
+  oldzip     32946  Deflate with an older code.
+  ccittrlew  32771  Word aligned CCITT RLE
+
+In general a compression setting will be ignored where it doesn't make
+sense, eg. C<jpeg> will be ignored for compression if the image is
+being written as bilevel.
+
+Imager attempts to check that your build of libtiff supports the given
+compression, and will fallback to C<packbits> if it isn't enabled.
+eg. older distributions didn't include LZW compression, and JPEG
+compression is only available if libtiff is configured with libjpeg's
+location.
+
+  $im->write(file => 'foo.tif', tiff_compression => 'lzw')
+    or die $im->errstr;
+
+=item tiff_jpegquality
+
+If I<tiff_compression> if C<jpeg> then this can be a number from 1 to
+100 giving the JPEG compression quality.  High values are better
+quality and larger files.
 
 =item tiff_resolutionunit
 

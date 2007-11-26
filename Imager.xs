@@ -1287,9 +1287,13 @@ i_sametype_chans(im, x, y, channels)
                int channels
 
 void
-i_init_log(name,level)
-	      char*    name
+i_init_log(name_sv,level)
+	      SV*    name_sv
 	       int     level
+	PREINIT:
+	  const char *name = SvOK(name_sv) ? SvPV_nolen(name_sv) : NULL;
+	CODE:
+	  i_init_log(name, level);
 
 void
 i_log_entry(string,level)
@@ -1343,6 +1347,25 @@ i_img_getdata(im)
 	             sv_2mortal(newSVpv((char *)im->idata, im->bytes)) 
 		     : &PL_sv_undef);
 
+void
+i_img_is_monochrome(im)
+	Imager::ImgRaw im
+      PREINIT:
+	int zero_is_white;
+	int result;
+      PPCODE:
+	result = i_img_is_monochrome(im, &zero_is_white);
+	if (result) {
+	  if (GIMME_V == G_ARRAY) {
+	    EXTEND(SP, 2);
+	    PUSHs(&PL_sv_yes);
+	    PUSHs(sv_2mortal(newSViv(zero_is_white)));
+ 	  }
+	  else {
+	    EXTEND(SP, 1);
+	    PUSHs(&PL_sv_yes);
+	  }
+	}
 
 void
 i_line(im,x1,y1,x2,y2,val,endp)
@@ -2368,6 +2391,12 @@ i_writetiff_multi_wiol_faxable(ig, fine, ...)
       OUTPUT:
         RETVAL
 
+const char *
+i_tiff_libversion()
+
+bool
+i_tiff_has_compression(name)
+	const char *name
 
 #endif /* HAVE_LIBTIFF */
 
@@ -3772,6 +3801,108 @@ i_gsamp(im, l, r, y, ...)
           }
         }
 
+undef_neg_int
+i_gsamp_bits(im, l, r, y, bits, target, offset, ...)
+        Imager::ImgRaw im
+        int l
+        int r
+        int y
+	int bits
+	AV *target
+	int offset
+      PREINIT:
+        int *chans;
+        int chan_count;
+        unsigned *data;
+        int count, i;
+      CODE:
+	i_clear_error();
+        if (items < 8)
+          croak("No channel numbers supplied to g_samp()");
+        if (l < r) {
+          chan_count = items - 7;
+          chans = mymalloc(sizeof(int) * chan_count);
+          for (i = 0; i < chan_count; ++i)
+            chans[i] = SvIV(ST(i+7));
+          data = mymalloc(sizeof(unsigned) * (r-l) * chan_count);
+          count = i_gsamp_bits(im, l, r, y, data, chans, chan_count, bits);
+	  myfree(chans);
+	  for (i = 0; i < count; ++i) {
+	    av_store(target, i+offset, newSVuv(data[i]));
+	  }
+	  myfree(data);
+	  RETVAL = count;
+        }
+        else {
+	  RETVAL = 0;
+        }
+      OUTPUT:
+	RETVAL
+
+undef_neg_int
+i_psamp_bits(im, l, y, bits, channels_sv, data_av, data_offset = 0, pixel_count = -1)
+        Imager::ImgRaw im
+        int l
+        int y
+	int bits
+	SV *channels_sv
+	AV *data_av
+        int data_offset
+        int pixel_count
+      PREINIT:
+	int chan_count;
+	int *channels;
+	int data_count;
+	int data_used;
+	unsigned *data;
+	int i;
+      CODE:
+	i_clear_error();
+	if (SvOK(channels_sv)) {
+	  AV *channels_av;
+	  if (!SvROK(channels_sv) || SvTYPE(SvRV(channels_sv)) != SVt_PVAV) {
+	    croak("channels is not an array ref");
+	  }
+	  channels_av = (AV *)SvRV(channels_sv);
+ 	  chan_count = av_len(channels_av) + 1;
+	  if (chan_count < 1) {
+	    croak("i_psamp_bits: no channels provided");
+	  }
+	  channels = mymalloc(sizeof(int) * chan_count);
+ 	  for (i = 0; i < chan_count; ++i)
+	    channels[i] = SvIV(*av_fetch(channels_av, i, 0));
+        }
+	else {
+	  chan_count = im->channels;
+	  channels = NULL;
+	}
+
+	data_count = av_len(data_av) + 1;
+	if (data_offset < 0) {
+	  croak("data_offset must by non-negative");
+	}
+	if (data_offset > data_count) {
+	  croak("data_offset greater than number of samples supplied");
+        }
+	if (pixel_count == -1 || 
+	    data_offset + pixel_count * chan_count > data_count) {
+	  pixel_count = (data_count - data_offset) / chan_count;
+	}
+
+	data_used = pixel_count * chan_count;
+	data = mymalloc(sizeof(unsigned) * data_count);
+	for (i = 0; i < data_used; ++i)
+	  data[i] = SvUV(*av_fetch(data_av, data_offset + i, 0));
+
+	RETVAL = i_psamp_bits(im, l, l + pixel_count, y, data, channels, 
+	                      chan_count, bits);
+
+	if (data)
+	  myfree(data);
+	if (channels)
+	  myfree(channels);
+      OUTPUT:
+	RETVAL
 
 Imager::ImgRaw
 i_img_masked_new(targ, mask, x, y, w, h)

@@ -35,6 +35,10 @@ static int i_gsamp_d16(i_img *im, int l, int r, int y, i_sample_t *samps,
                        int const *chans, int chan_count);
 static int i_gsampf_d16(i_img *im, int l, int r, int y, i_fsample_t *samps, 
                         int const *chans, int chan_count);
+static int i_gsamp_bits_d16(i_img *im, int l, int r, int y, unsigned *samps, 
+			    int const *chans, int chan_count, int bits);
+static int i_psamp_bits_d16(i_img *im, int l, int r, int y, unsigned const *samps, 
+			    int const *chans, int chan_count, int bits);
 
 /*
 =item IIM_base_16bit_direct
@@ -70,12 +74,17 @@ static i_img IIM_base_16bit_direct =
 
   NULL, /* i_f_gpal */
   NULL, /* i_f_ppal */
-  NULL, /* i_f_addcolor */
-  NULL, /* i_f_getcolor */
+  NULL, /* i_f_addcolors */
+  NULL, /* i_f_getcolors */
   NULL, /* i_f_colorcount */
+  NULL, /* i_f_maxcolors */
   NULL, /* i_f_findcolor */
+  NULL, /* i_f_setcolors */
 
   NULL, /* i_f_destroy */
+
+  i_gsamp_bits_d16,
+  i_psamp_bits_d16,
 };
 
 /* it's possible some platforms won't have a 16-bit integer type,
@@ -111,12 +120,9 @@ typedef unsigned short i_sample16_t;
 #define STORE16(bytes, offset, word) \
    (((i_sample16_t *)(bytes))[offset] = (word))
 #define STORE8as16(bytes, offset, byte) \
-   (((i_sample16_t *)(bytes))[offset] = (byte) * 256)
+   (((i_sample16_t *)(bytes))[offset] = (byte) * 256 + (byte))
 #define GET16(bytes, offset) \
      (((i_sample16_t *)(bytes))[offset])
-#define GET16as8(bytes, offset) \
-     (((i_sample16_t *)(bytes))[offset] / 256)
-
 #else
 
 /* we have to do this the hard way */
@@ -125,25 +131,34 @@ typedef unsigned short i_sample16_t;
     (((unsigned char *)(bytes))[(offset)*2+1] = (word) & 0xFF))
 #define STORE8as16(bytes, offset, byte) \
    ((((unsigned char *)(bytes))[(offset)*2] = (byte)), \
-    (((unsigned char *)(bytes))[(offset)*2+1] = 0))
+    (((unsigned char *)(bytes))[(offset)*2+1] = (byte)))
    
 #define GET16(bytes, offset) \
    (((unsigned char *)(bytes))[(offset)*2] * 256 \
     + ((unsigned char *)(bytes))[(offset)*2+1])
-#define GET16as8(bytes, offset) \
-   (((unsigned char *)(bytes))[(offset)*2] << 8)
 
 #endif
 
-/*
-=item i_img_16_new_low(int x, int y, int ch)
+#define GET16as8(bytes, offset) \
+     ((((i_sample16_t *)(bytes))[offset]+127) / 257)
 
-Creates a new 16-bit per sample image.
+/*
+=item i_img_16_new(x, y, ch)
+
+=category Image creation
+=synopsis i_img *img = i_img_16_new(width, height, channels);
+
+Create a new 16-bit/sample image.
+
+Returns the image on success, or NULL on failure.
 
 =cut
 */
-i_img *i_img_16_new_low(i_img *im, int x, int y, int ch) {
+
+i_img *i_img_16_new(int x, int y, int ch) {
+  i_img *im;
   int bytes, line_bytes;
+
   mm_log((1,"i_img_16_new(x %d, y %d, ch %d)\n", x, y, ch));
 
   if (x < 1 || y < 1) {
@@ -169,6 +184,7 @@ i_img *i_img_16_new_low(i_img *im, int x, int y, int ch) {
     return NULL;
   }
 
+  im = i_img_alloc();
   *im = IIM_base_16bit_direct;
   i_tags_new(&im->tags);
   im->xsize = x;
@@ -177,45 +193,10 @@ i_img *i_img_16_new_low(i_img *im, int x, int y, int ch) {
   im->bytes = bytes;
   im->ext_data = NULL;
   im->idata = mymalloc(im->bytes);
-  if (im->idata) {
-    memset(im->idata, 0, im->bytes);
-  }
-  else {
-    i_tags_destroy(&im->tags);
-    im = NULL;
-  }
-  
-  return im;
-}
+  memset(im->idata, 0, im->bytes);
 
-/*
-=item i_img_16_new(x, y, ch)
+  i_img_init(im);
 
-=category Image creation/destruction
-=synopsis i_img *img = i_img_16_new(width, height, channels);
-
-Create a new 16-bit/sample image.
-
-Returns the image on success, or NULL on failure.
-
-=cut
-*/
-
-i_img *i_img_16_new(int x, int y, int ch) {
-  i_img *im;
-  
-  i_clear_error();
-
-  im = mymalloc(sizeof(i_img));
-  if (im) {
-    if (!i_img_16_new_low(im, x, y, ch)) {
-      myfree(im);
-      im = NULL;
-    }
-  }
-  
-  mm_log((1, "(%p) <- i_img_16_new\n", im));
-  
   return im;
 }
 
@@ -520,6 +501,121 @@ static int i_gsampf_d16(i_img *im, int l, int r, int y, i_fsample_t *samps,
   }
   else {
     return 0;
+  }
+}
+
+static int 
+i_gsamp_bits_d16(i_img *im, int l, int r, int y, unsigned *samps, 
+			    int const *chans, int chan_count, int bits) {
+  int ch, count, i, w;
+  int off;
+
+  if (bits != 16) {
+    return i_gsamp_bits_fb(im, l, r, y, samps, chans, chan_count, bits);
+  }
+
+  if (y >=0 && y < im->ysize && l < im->xsize && l >= 0) {
+    if (r > im->xsize)
+      r = im->xsize;
+    off = (l+y*im->xsize) * im->channels;
+    w = r - l;
+    count = 0;
+
+    if (chans) {
+      /* make sure we have good channel numbers */
+      for (ch = 0; ch < chan_count; ++ch) {
+        if (chans[ch] < 0 || chans[ch] >= im->channels) {
+          i_push_errorf(0, "No channel %d in this image", chans[ch]);
+          return -1;
+        }
+      }
+      for (i = 0; i < w; ++i) {
+        for (ch = 0; ch < chan_count; ++ch) {
+          *samps++ = GET16(im->idata, off+chans[ch]);
+          ++count;
+        }
+        off += im->channels;
+      }
+    }
+    else {
+      if (chan_count <= 0 || chan_count > im->channels) {
+	i_push_error(0, "Invalid channel count");
+	return -1;
+      }
+      for (i = 0; i < w; ++i) {
+        for (ch = 0; ch < chan_count; ++ch) {
+          *samps++ = GET16(im->idata, off+ch);
+          ++count;
+        }
+        off += im->channels;
+      }
+    }
+
+    return count;
+  }
+  else {
+    i_push_error(0, "Image position outside of image");
+    return -1;
+  }
+}
+
+static int 
+i_psamp_bits_d16(i_img *im, int l, int r, int y, unsigned const *samps, 
+			    int const *chans, int chan_count, int bits) {
+  int ch, count, i, w;
+  int off;
+
+  if (bits != 16) {
+    i_push_error(0, "Invalid bits for 16-bit image");
+    return -1;
+  }
+
+  if (y >=0 && y < im->ysize && l < im->xsize && l >= 0) {
+    if (r > im->xsize)
+      r = im->xsize;
+    off = (l+y*im->xsize) * im->channels;
+    w = r - l;
+    count = 0;
+
+    if (chans) {
+      /* make sure we have good channel numbers */
+      for (ch = 0; ch < chan_count; ++ch) {
+        if (chans[ch] < 0 || chans[ch] >= im->channels) {
+          i_push_errorf(0, "No channel %d in this image", chans[ch]);
+          return -1;
+        }
+      }
+      for (i = 0; i < w; ++i) {
+        for (ch = 0; ch < chan_count; ++ch) {
+	  if (im->ch_mask & (1 << ch))
+	    STORE16(im->idata, off+chans[ch], *samps);
+	  ++samps;
+	  ++count;
+        }
+        off += im->channels;
+      }
+    }
+    else {
+      if (chan_count <= 0 || chan_count > im->channels) {
+	i_push_error(0, "Invalid channel count");
+	return -1;
+      }
+      for (i = 0; i < w; ++i) {
+        for (ch = 0; ch < chan_count; ++ch) {
+	  if (im->ch_mask & (1 << ch)) 
+	    STORE16(im->idata, off+ch, *samps);
+	  ++samps;
+          ++count;
+        }
+        off += im->channels;
+      }
+    }
+
+    return count;
+  }
+  else {
+    i_push_error(0, "Image position outside of image");
+    return -1;
   }
 }
 
