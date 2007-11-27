@@ -3942,7 +3942,7 @@ img_set() - L<Imager::ImageTypes/img_set>
 
 init() - L<Imager::ImageTypes/init>
 
-is_bilevel - L<Imager::ImageTypes/is_bilevel>
+is_bilevel() - L<Imager::ImageTypes/is_bilevel>
 
 line() - L<Imager::Draw/line>
 
