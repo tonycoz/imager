@@ -55,6 +55,8 @@ desirable (#30002)
 
 Wrong link in Imager Pod (#30889) (done)
 
+more diagnostics in 5/t57infix.t
+
 For 0.61:
 
 regmach.c fixes/tests (#29296) (done)
