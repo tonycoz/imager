@@ -162,15 +162,15 @@ llist_pop(struct llist *l,void *data) {
 
 void
 llist_dump(struct llist *l) {
-  int k,j;
+  int j;
   int i=0;
   struct llink *lnk; 
   lnk=l->h;
   while(lnk != NULL) {
     for(j=0;j<lnk->fill;j++) {
       /*       memcpy(&k,(char*)(lnk->data)+l->ssize*j,sizeof(void*));*/
-      memcpy(&k,(char*)(lnk->data)+l->ssize*j,sizeof(void*));
-      printf("%d - %X\n",i,k);
+      /*memcpy(&k,(char*)(lnk->data)+l->ssize*j,sizeof(void*));*/
+      printf("%d - %p\n",i,*(void **)((lnk->data)+l->ssize*j));
       i++;
     }
     lnk=lnk->n;
