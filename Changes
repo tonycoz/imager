@@ -36,7 +36,8 @@ Bug fixes:
  - on some perl's the infix expression parser test would fail due to
    actions in the grammar returning false.  Made sure all actions return
    a true value.
-   Thanks to Richard Fairhurst for tracking down this problem.
+   Thanks to Richard Fairhurst for spending a lot of time in tracking
+   down this problem.
 
 Imager 0.61 - 5 November 2007
 ===========
