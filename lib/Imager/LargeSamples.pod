@@ -78,7 +78,9 @@ of the image, using filled => 1 and color works at 8-bits/sample
   RAW                         8
   SGI       8, 16             8, 16
   TGA       8                 8
-  TIFF      (many)            read any, writes 8
+  TIFF      (many)            read/write 8, 16, 32 contig rgb/grey images
+                              read/write bi-level
+                              read/write 4/8 paletted images
   
 
 =head1 AUTHOR
