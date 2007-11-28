@@ -4,7 +4,7 @@ use Imager::Regops;
 use strict;
 use vars qw($VERSION);
 
-$VERSION = "1.003";
+$VERSION = "1.004";
 
 my %expr_types;
 
@@ -344,6 +344,7 @@ relation : addition (relstuff)(s?)
 {
   $return = $item[1]; 
   for my $op(@{$item[2]}) { $return = [ $op->[0], $return, $op->[1] ] }
+  1;
 }
 
 relstuff : relop addition { $return = [ @item[1,2] ] }
@@ -360,6 +361,7 @@ addition : multiply (addstuff)(s?)
   $return = $item[1]; 
 #  for my $op(@{$item[2]}) { $return .= " @{$op}[1,0]"; } 
   for my $op(@{$item[2]}) { $return = [ $op->[0], $return, $op->[1] ] }
+  1;
 }
 addstuff : addop multiply { $return = [ @item[1,2] ] }
 addop : '+' { $return = 'add' }
@@ -369,6 +371,7 @@ multiply : power mulstuff(s?)
 { $return = $item[1]; 
 #  for my $op(@{$item[2]}) { $return .= " @{$op}[1,0]"; } 
   for my $op(@{$item[2]}) { $return = [ $op->[0], $return, $op->[1] ] }
+  1;
 }
 
 mulstuff : mulop power { $return = [ @item[1,2] ] }
@@ -380,6 +383,7 @@ power : powstuff(s?) atom
 {
   $return = $item[2]; 
   for my $op(reverse @{$item[1]}) { $return = [ @{$op}[1,0], $return ] }
+  1;
 }
       | atom
 powstuff : atom powop { $return = [ @item[1,2] ] }

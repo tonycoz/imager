@@ -33,6 +33,11 @@ Bug fixes:
    Thanks to Slaven Rezic.
    http://rt.cpan.org/Ticket/Display.html?id=30889
 
+ - on some perl's the infix expression parser test would fail due to
+   actions in the grammar returning false.  Made sure all actions return
+   a true value.
+   Thanks to Richard Fairhurst for tracking down this problem.
+
 Imager 0.61 - 5 November 2007
 ===========
 
