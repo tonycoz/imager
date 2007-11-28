@@ -1590,12 +1590,13 @@ read_one_rgb_lines(TIFF *tif, int width, int height, int allow_incomplete) {
   uint32 rowsperstrip, row;
   i_color *line_buf;
   int alpha_chan;
+  int rc;
 
   im = make_rgb(tif, width, height, &alpha_chan);
   if (!im)
     return NULL;
 
-  int rc = TIFFGetField(tif, TIFFTAG_ROWSPERSTRIP, &rowsperstrip);
+  rc = TIFFGetField(tif, TIFFTAG_ROWSPERSTRIP, &rowsperstrip);
   mm_log((1, "i_readtiff_wiol: rowsperstrip=%d rc = %d\n", rowsperstrip, rc));
   
   if (rc != 1 || rowsperstrip==-1) {
