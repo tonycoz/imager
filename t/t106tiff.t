@@ -34,7 +34,7 @@ SKIP:
     cmp_ok($im->errstr, '=~', "format 'tiff' not supported", "check no tiff message");
     ok(!grep($_ eq 'tiff', Imager->read_types), "check tiff not in read types");
     ok(!grep($_ eq 'tiff', Imager->write_types), "check tiff not in write types");
-    skip("no tiff support", 209);
+    skip("no tiff support", 207);
   }
 
   my $ver_string = Imager::i_tiff_libversion();
@@ -486,7 +486,8 @@ SKIP:
 
   { # reading tile based images
     my $im = Imager->new;
-    ok($im->read(file => 'testimg/pengtile.tif'), "read tiled image");
+    ok($im->read(file => 'testimg/pengtile.tif'), "read tiled image")
+      or print "# ", $im->errstr, "\n";
     # compare it
     my $comp = Imager->new;
     ok($comp->read(file => 'testimg/penguin-base.ppm'), 'read comparison image');
@@ -499,13 +500,13 @@ SKIP:
     ok(open(TIFF, '< testimg/pengtile.tif'), 'open pengtile.tif')
       or skip 'cannot open testimg/pengtile.tif', 4;
 
-    $cmp_ver ge '0030057'
+    $cmp_ver ge '003005007'
       or skip("Your ancient tifflib has bad error handling", 4);
     binmode TIFF;
     my $data = do { local $/; <TIFF>; };
     
     # patch a tile offset
-    substr($data, 0x5AFE, 4) = pack("H*", "1F5C0000");
+    substr($data, 0x1AFA0, 4) = pack("H*", "00000200");
 
     #open PIPE, "| bytedump -a | less" or die;
     #print PIPE $data;
@@ -671,7 +672,8 @@ SKIP:
     my $data;
     ok($orig->write(data => \$data, type => 'tiff',
 		    tiff_compression=> $compress),
-       "write 8 bit");
+       "write 8 bit")
+      or print "# ", $orig->errstr, "\n";
     my $im = Imager->new;
     ok($im->read(data => $data), "read it back");
     is_image($im, $orig, "check read data matches");

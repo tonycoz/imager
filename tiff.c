@@ -5,7 +5,6 @@
 
 /* needed to implement our substitute TIFFIsCODECConfigured */
 #if TIFFLIB_VERSION < 20031121
-#include "tiffconf.h"
 static int TIFFIsCODECConfigured(uint16 scheme);
 #endif
 
@@ -85,6 +84,9 @@ compress_values[] =
 
 static const int compress_value_count = 
   sizeof(compress_values) / sizeof(*compress_values);
+
+static int 
+myTIFFIsCODECConfigured(uint16 scheme);
 
 typedef struct read_state_tag read_state_t;
 /* the setup function creates the image object, allocates the line buffer */
@@ -740,12 +742,12 @@ get_compression(i_img *im, uint16 def_compress) {
       && im->tags.tags[entry].data) {
     uint16 compress;
     if (find_compression(im->tags.tags[entry].data, &compress)
-	&& TIFFIsCODECConfigured(compress))
+	&& myTIFFIsCODECConfigured(compress))
       return compress;
   }
   if (i_tags_get_int(&im->tags, "tiff_compression", 0, &value)) {
     if ((uint16)value == value
-	&& TIFFIsCODECConfigured((uint16)value))
+	&& myTIFFIsCODECConfigured((uint16)value))
       return (uint16)value;
   }
 
@@ -759,7 +761,7 @@ i_tiff_has_compression(const char *name) {
   if (!find_compression(name, &compress))
     return 0;
 
-  return TIFFIsCODECConfigured(compress);
+  return myTIFFIsCODECConfigured(compress);
 }
 
 static int
@@ -2507,43 +2509,45 @@ putter_cmyk16(read_state_t *state, int x, int y, int width, int height,
   Older versions of tifflib we support don't define this, so define it
   ourselves.
 
+  If you want this detection to do anything useful, use a newer
+  release of tifflib.
+
  */
 #if TIFFLIB_VERSION < 20031121
 
-int TIFFIsCODECConfigured(uint16 scheme) {
+int 
+TIFFIsCODECConfigured(uint16 scheme) {
   switch (scheme) {
+    /* these schemes are all shipped with tifflib */
  case COMPRESSION_NONE:
-#if PACKBITS_SUPPORT
  case COMPRESSION_PACKBITS:
-#endif
-
-#if CCITT_SUPPORT
  case COMPRESSION_CCITTRLE:
  case COMPRESSION_CCITTRLEW:
  case COMPRESSION_CCITTFAX3:
  case COMPRESSION_CCITTFAX4:
-#endif
-
-#if JPEG_SUPPORT
- case COMPRESSION_JPEG:
-#endif
-
-#if LZW_SUPPORT
- case COMPRESSION_LZW:
-#endif
-
-#if ZIP_SUPPORT
- case COMPRESSION_DEFLATE:
- case COMPRESSION_ADOBE_DEFLATE:
-#endif
     return 1;
 
+    /* these require external library support */
   default:
+ case COMPRESSION_JPEG:
+ case COMPRESSION_LZW:
+ case COMPRESSION_DEFLATE:
+ case COMPRESSION_ADOBE_DEFLATE:
     return 0;
   }
 }
 
 #endif
+
+static int 
+myTIFFIsCODECConfigured(uint16 scheme) {
+#if TIFFLIB_VERSION < 20040724
+  if (scheme == COMPRESSION_LZW)
+    return 0;
+#endif
+
+  return TIFFIsCODECConfigured(scheme);
+}
 
 /*
 =back
