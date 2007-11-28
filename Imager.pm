@@ -160,7 +160,7 @@ my %file_formats = map { $_ => 1 } qw/tiff pnm gif png jpeg raw bmp tga/;
 BEGIN {
   require Exporter;
   @ISA = qw(Exporter);
-  $VERSION = '0.61_01';
+  $VERSION = '0.61_02';
   eval {
     require XSLoader;
     XSLoader::load(Imager => $VERSION);
