@@ -170,7 +170,7 @@ llist_dump(struct llist *l) {
     for(j=0;j<lnk->fill;j++) {
       /*       memcpy(&k,(char*)(lnk->data)+l->ssize*j,sizeof(void*));*/
       /*memcpy(&k,(char*)(lnk->data)+l->ssize*j,sizeof(void*));*/
-      printf("%d - %p\n",i,*(void **)((lnk->data)+l->ssize*j));
+      printf("%d - %p\n",i,*(void **)((char *)(lnk->data)+l->ssize*j));
       i++;
     }
     lnk=lnk->n;
