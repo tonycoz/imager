@@ -995,3 +995,9 @@ YAML
   }
 }
 
+# This isn't a module, but some broken tools, like
+# Module::Depends::Instrusive insist on treating it like one.
+#
+# http://rt.cpan.org/Public/Bug/Display.html?id=21229
+
+1;

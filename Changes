@@ -9,6 +9,12 @@ Bug fixes:
    gif_left.
    Thanks to Eleneldil G. Arilou for pointing this out.
 
+ - t/t82inline.t no longer loads B at runtime, to work around a bug
+   in some 5.005_0[45] installations.
+   http://rt.cpan.org/Ticket/Display.html?id=30508
+
+ - work around Module::Depends::Intrusive bug #21229
+   http://rt.cpan.org/Ticket/Display.html?id=30520
 
 Imager 0.61_02 - 28 November 2007
 ==============

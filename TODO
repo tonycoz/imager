@@ -51,7 +51,7 @@ the hardinvert filter inverts the alpha channels, this probably isn't
 desirable (#30002)
 
 "dh-make-perl --build --cpan Imager" fails on require Makefile.PL
-(#30520)
+(#30520) (fixed)
 
 Wrong link in Imager Pod (#30889) (done)
 
