@@ -40,7 +40,7 @@ for my $in (@in) {
   $scaled->settag(name => 'gif_left', 
 		  value => $factor * $in->tags(name => 'gif_left'));
   $scaled->settag(name => 'gif_top', 
-		  value => $factor * $in->tags(name => 'gif_left'));
+		  value => $factor * $in->tags(name => 'gif_top'));
 
   $scaled->settag(name => 'gif_screen_width', value => $out_screen_width);
   $scaled->settag(name => 'gif_screen_height', value => $out_screen_height);

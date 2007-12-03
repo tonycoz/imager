@@ -1,5 +1,15 @@
 Imager release history.  Older releases can be found in Changes.old
 
+Imager 0.62 - unreleased
+===========
+
+Bug fixes:
+
+ - samples/gifscale.pl sourced the base value for gif_top from
+   gif_left.
+   Thanks to Eleneldil G. Arilou for pointing this out.
+
+
 Imager 0.61_02 - 28 November 2007
 ==============
 
