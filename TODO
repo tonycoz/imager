@@ -48,7 +48,7 @@ PBM images inverted (#30859) (might be fixed in TIFF branch)
 don't load B at compile-time in t82inline.t (#30508) (done)
 
 the hardinvert filter inverts the alpha channels, this probably isn't
-desirable (#30002)
+desirable (#30002) (done)
 
 "dh-make-perl --build --cpan Imager" fails on require Makefile.PL
 (#30520) (fixed)
@@ -56,6 +56,8 @@ desirable (#30002)
 Wrong link in Imager Pod (#30889) (done)
 
 more diagnostics in 5/t57infix.t (fixed the problem)
+
+extract out the scale() scale factor calculations
 
 For 0.61:
 
