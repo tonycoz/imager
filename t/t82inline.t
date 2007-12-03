@@ -10,6 +10,9 @@ use Cwd 'getcwd';
 plan skip_all => "Inline won't work in directories with spaces"
   if getcwd() =~ / /;
 
+plan skip_all => "perl 5.005_04, 5.005_05 too buggy"
+  if $] =~ /^5\.005_0[45]$/;
+
 plan tests => 9;
 require Inline;
 Inline->import(with => 'Imager');
@@ -252,7 +255,7 @@ ok($im3->write(file=>'testout/t82lots.ppm'), "write t82lots.ppm");
 
   my $im = make_10x10();
   my $im2 = Imager->new(xsize => 10, ysize => 10);
-  use B;
+  require B;
   my $imb = B::svref_2object($im);
   my $im2b = B::svref_2object($im2);
   is ($imb->REFCNT, $im2b->REFCNT, 

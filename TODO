@@ -45,7 +45,7 @@ scaling alpha channel image issues (done)
 
 PBM images inverted (#30859) (might be fixed in TIFF branch)
 
-don't load B at compile-time in t82inline.t (#30508)
+don't load B at compile-time in t82inline.t (#30508) (done)
 
 the hardinvert filter inverts the alpha channels, this probably isn't
 desirable (#30002)
