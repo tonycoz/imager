@@ -16,6 +16,11 @@ Bug fixes:
  - work around Module::Depends::Intrusive bug #21229
    http://rt.cpan.org/Ticket/Display.html?id=30520
 
+ - the hardinvert filter no-longer inverts the alpha channel.
+   http://rt.cpan.org/Ticket/Display.html?id=30002
+
+ - the hardinvert filter now supports large samples
+
 Imager 0.61_02 - 28 November 2007
 ==============
 

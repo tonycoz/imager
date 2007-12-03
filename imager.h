@@ -573,5 +573,6 @@ void  malloc_state(void);
 #endif /* IMAGER_MALLOC_DEBUG */
 
 #include "imrender.h"
+#include "immacros.h"
 
 #endif

@@ -2,6 +2,7 @@
 #define IMAGER_IMEXT_H_
 
 #include "imexttypes.h"
+#include "immacros.h"
 
 extern im_ext_funcs *imager_function_ext_table;
 

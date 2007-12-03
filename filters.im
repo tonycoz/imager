@@ -7,7 +7,7 @@
 /*
 =head1 NAME
 
-filters.c - implements filters that operate on images
+filters.im - implements filters that operate on images
 
 =head1 SYNOPSIS
 
@@ -107,27 +107,30 @@ Inverts the pixel values of the input image.
 void
 i_hardinvert(i_img *im) {
   int x, y;
-  unsigned char ch;
-  
-  i_color *row, *entry;
-  
-  mm_log((1,"i_hardinvert(im %p)\n", im));
+  int ch;
+  int color_channels = i_img_color_channels(im);
 
+  mm_log((1,"i_hardinvert(im %p)\n", im));
+  
+#code im->bits <= 8  
+  IM_COLOR *row, *entry;
+  
   /* always rooms to allocate a single line of i_color */
-  row = mymalloc(sizeof(i_color) * im->xsize); /* checked 17feb2005 tonyc */
+  row = mymalloc(sizeof(IM_COLOR) * im->xsize); /* checked 17feb2005 tonyc */
 
   for(y = 0; y < im->ysize; y++) {
-    i_glin(im, 0, im->xsize, y, row);
+    IM_GLIN(im, 0, im->xsize, y, row);
     entry = row;
     for(x = 0; x < im->xsize; x++) {
-      for(ch = 0; ch < im->channels; ch++) {
-	entry->channel[ch] = 255 - entry->channel[ch];
+      for(ch = 0; ch < color_channels; ch++) {
+	entry->channel[ch] = IM_SAMPLE_MAX - entry->channel[ch];
       }
       ++entry;
     }
-    i_plin(im, 0, im->xsize, y, row);
+    IM_PLIN(im, 0, im->xsize, y, row);
   }  
   myfree(row);
+#/code
 }
 
 

@@ -102,7 +102,7 @@ feat.c
 feat.h
 fills.c         Generic fills
 filterlist.perl
-filters.c
+filters.im
 font.c
 fontfiles/ExistenceTest.afm     please edit ExistenceTest.sfd in CVS
 fontfiles/ExistenceTest.pfb     to change these files, edited and
@@ -133,6 +133,7 @@ imexif.h
 img16.c
 imgdouble.c     Implements double/sample images
 imio.h
+immacros.h
 imperl.h
 imrender.h	Buffer rending engine function declarations
 imtoc.perl      Sample size adapter pre-processor

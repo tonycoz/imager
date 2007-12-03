@@ -94,7 +94,7 @@ of the image, using filled => 1 and color works at 8-bits/sample
   fountain        Yes
   gaussian        Yes
   gradgen         No
-  hardinvert      No
+  hardinvert      Yes
   mosaic          No
   postlevels      No
   radnoise        No

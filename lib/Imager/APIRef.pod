@@ -63,6 +63,8 @@ Imager::APIRef - Imager's C API.
 
   # Image Implementation
 
+  # Image Information
+
   # Image quantization
 
   # Logging
@@ -616,7 +618,7 @@ Creates a new general fill which fills with a fountain fill.
 
 
 =for comment
-From: File filters.c
+From: File filters.im
 
 =item i_new_fill_hatch(fg, bg, combine, hatch, cust_hatch, dx, dy)
 
@@ -901,6 +903,31 @@ support threads, or color profiles.
 
 =for comment
 From: File image.c
+
+
+=back
+
+=head2 Image Information
+
+=over
+
+=item i_img_color_channels(im)
+
+
+The number of channels holding color information.
+
+
+=for comment
+From: File immacros.h
+
+=item i_img_has_alpha(im)
+
+
+Return true if the image has an alpha channel.
+
+
+=for comment
+From: File immacros.h
 
 
 =back
