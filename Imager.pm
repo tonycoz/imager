@@ -2036,24 +2036,23 @@ sub register_filter {
   return 1;
 }
 
-# Scale an image to requested size and return the scaled version
+sub scale_calculate {
+  my $self = shift;
 
-sub scale {
-  my $self=shift;
-  my %opts=('type'=>'max',qtype=>'normal',@_);
-  my $img = Imager->new();
-  my $tmp = Imager->new();
+  my %opts = ('type'=>'max', @_);
+
   my ($x_scale, $y_scale);
-
-  unless (defined wantarray) {
-    my @caller = caller;
-    warn "scale() called in void context - scale() returns the scaled image at $caller[1] line $caller[2]\n";
-    return;
+  my $width = $opts{width};
+  my $height = $opts{height};
+  if (ref $self) {
+    defined $width or $width = $self->getwidth;
+    defined $height or $height = $self->getheight;
   }
-
-  unless ($self->{IMG}) { 
-    $self->_set_error('empty input image'); 
-    return undef;
+  else {
+    unless (defined $width && defined $height) {
+      $self->_set_error("scale_calculate: width and height parameters must be supplied when called as a class method");
+      return;
+    }
   }
 
   if ($opts{'xscalefactor'} && $opts{'yscalefactor'}) {
@@ -2074,8 +2073,8 @@ sub scale {
 
   # work out the scaling
   if ($opts{xpixels} and $opts{ypixels} and $opts{'type'}) {
-    my ($xpix, $ypix)=( $opts{xpixels} / $self->getwidth() , 
-			$opts{ypixels} / $self->getheight() );
+    my ($xpix, $ypix)=( $opts{xpixels} / $width , 
+			$opts{ypixels} / $height );
     if ($opts{'type'} eq 'min') { 
       $x_scale = $y_scale = _min($xpix,$ypix); 
     }
@@ -2088,13 +2087,13 @@ sub scale {
     }
     else {
       $self->_set_error('invalid value for type parameter');
-      return undef;
+      return;
     }
   } elsif ($opts{xpixels}) { 
-    $x_scale = $y_scale = $opts{xpixels} / $self->getwidth();
+    $x_scale = $y_scale = $opts{xpixels} / $width;
   }
   elsif ($opts{ypixels}) { 
-    $x_scale = $y_scale = $opts{ypixels}/$self->getheight();
+    $x_scale = $y_scale = $opts{ypixels}/$height;
   }
   elsif ($opts{constrain} && ref $opts{constrain}
 	 && $opts{constrain}->can('constrain')) {
@@ -2105,10 +2104,42 @@ sub scale {
       = $opts{constrain}->constrain($self->getwidth, $self->getheight);
     unless ($scalefactor) {
       $self->_set_error('constrain method failed on constrain parameter');
-      return undef;
+      return;
     }
     $x_scale = $y_scale = $scalefactor;
   }
+
+  my $new_width = int($x_scale * $width + 0.5);
+  $new_width > 0 or $new_width = 1;
+  my $new_height = int($y_scale * $height + 0.5);
+  $new_height > 0 or $new_height = 1;
+
+  return ($x_scale, $y_scale, $new_width, $new_height);
+  
+}
+
+# Scale an image to requested size and return the scaled version
+
+sub scale {
+  my $self=shift;
+  my %opts = (qtype=>'normal' ,@_);
+  my $img = Imager->new();
+  my $tmp = Imager->new();
+
+  unless (defined wantarray) {
+    my @caller = caller;
+    warn "scale() called in void context - scale() returns the scaled image at $caller[1] line $caller[2]\n";
+    return;
+  }
+
+  unless ($self->{IMG}) { 
+    $self->_set_error('empty input image'); 
+    return undef;
+  }
+
+  my ($x_scale, $y_scale, $new_width, $new_height) = 
+    $self->scale_calculate(%opts)
+      or return;
 
   if ($opts{qtype} eq 'normal') {
     $tmp->{IMG} = i_scaleaxis($self->{IMG}, $x_scale, 0);
@@ -2133,10 +2164,6 @@ sub scale {
     return $img;
   }
   elsif ($opts{'qtype'} eq 'mixing') {
-    my $new_width = int(0.5 + $self->getwidth * $x_scale);
-    my $new_height = int(0.5 + $self->getheight * $y_scale);
-    $new_width >= 1 or $new_width = 1;
-    $new_height >= 1 or $new_height = 1;
     $img->{IMG} = i_scale_mixing($self->{IMG}, $new_width, $new_height);
     unless ($img->{IMG}) {
       $self->_set_error(Imager->_error_as_meg);
@@ -4002,6 +4029,8 @@ rubthrough() - L<Imager::Transformations/rubthrough> - draw an image onto an
 image and use the alpha channel
 
 scale() - L<Imager::Transformations/scale>
+
+scale_calculate() - L<Imager::Transformations/scale_calculate>
 
 scaleX() - L<Imager::Transformations/scaleX>
 

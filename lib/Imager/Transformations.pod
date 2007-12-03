@@ -316,6 +316,42 @@ failure.
 
 A mandatory warning is produced if scaleY() is called in void context.
 
+=item scale_calculate
+
+Performs the same calculations that the scale() method does to
+calculate the scaling factors from the parameters you pass.
+
+scale_calculate() can be called as an object method, or as a class
+method.
+
+Takes the following parameters over scale():
+
+=over
+
+=item *
+
+width, height - the image width and height to base the scaling on.
+Required if scale_calculate() is called as a class method.  If called
+as an object method these default to the image width and height
+respectively.
+
+=back
+
+You might use scale_calculate() as a class method when generating an
+IMG tag, for example.
+
+Returns an empty list on failure.
+
+Returns a list containing horizontal scale factor, vertical scale
+factor, new width, new height, on success.
+
+  my ($x_scale, $y_scale, $new_width, $new_height) =
+	Imager->scale_calculate(width => 1024, height => 768,
+				ypixels => 180, type => 'min');
+
+  my ($x_scale, $y_scale, $new_width, $new_height) =
+	$img->scale_calculate(xpixels => 200, type => 'min');
+
 =item crop
 
 Another way to resize an image is to crop it.  The parameters to
