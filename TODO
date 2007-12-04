@@ -43,7 +43,8 @@ Makefile.PL --incpath and --libpath should expand ~/ paths (#29484)
 
 scaling alpha channel image issues (done)
 
-PBM images inverted (#30859) (might be fixed in TIFF branch)
+PBM images inverted (#30859) (might be fixed in TIFF branch) (was,
+added test, done)
 
 don't load B at compile-time in t82inline.t (#30508) (done)
 
