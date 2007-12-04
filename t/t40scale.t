@@ -1,6 +1,6 @@
 #!perl -w
 use strict;
-use Test::More tests => 224;
+use Test::More tests => 227;
 
 BEGIN { use_ok(Imager=>':all') }
 use Imager::Test qw(is_image);
@@ -194,6 +194,19 @@ SKIP:
   my $cmp = $out->copy;
   $out->rubthrough(src => $sc);
   is_image($out, $cmp, "check we get the right image after scaling");
+}
+
+{ # scale_calculate
+  my $im = Imager->new(xsize => 100, ysize => 120);
+  is_deeply([ $im->scale_calculate(scalefactor => 0.5) ],
+	    [ 0.5, 0.5, 50, 60 ],
+	    "simple scale_calculate");
+  is_deeply([ Imager->scale_calculate(scalefactor => 0.5) ],
+	    [], "failed scale_calculate");
+  is_deeply([ Imager->scale_calculate(width => 120, height => 150,
+				      xpixels => 240) ],
+	    [ 2.0, 2.0, 240, 300 ],
+	    "class method scale_factor");
 }
 
 sub scale_test {
