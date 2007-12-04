@@ -57,7 +57,7 @@ Wrong link in Imager Pod (#30889) (done)
 
 more diagnostics in 5/t57infix.t (fixed the problem)
 
-extract out the scale() scale factor calculations
+extract out the scale() scale factor calculations (done)
 
 For 0.61:
 

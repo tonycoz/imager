@@ -1,6 +1,6 @@
 #!perl -w
 use Imager ':all';
-use Test::More tests => 145;
+use Test::More tests => 153;
 use strict;
 use Imager::Test qw(test_image_raw test_image_16 is_color3 is_color1 is_image);
 
@@ -412,7 +412,7 @@ print "# check error handling\n";
 
 {
   print "# monochrome output\n";
-  my $im = Imager->new(xsize => 10, ysize => 10, type => 'paletted');
+  my $im = Imager->new(xsize => 10, ysize => 10, channels => 1, type => 'paletted');
   ok($im->addcolors(colors => [ '#000000', '#FFFFFF' ]),
      "add black and white");
   $im->box(filled => 1, xmax => 4, color => '#000000');
@@ -428,6 +428,28 @@ print "# check error handling\n";
     or print "# ", $imread->errstr, "\n";
   is($imread->type, 'paletted', "check result is paletted");
   is($imread->tags(name => 'pnm_type'), 4, "check type");
+  is_image($im, $imread, "check image matches");
+}
+
+{
+  print "# monochrome output - reversed palette\n";
+  my $im = Imager->new(xsize => 10, ysize => 10, channels => 1, type => 'paletted');
+  ok($im->addcolors(colors => [ '#FFFFFF', '#000000' ]),
+     "add white and black");
+  $im->box(filled => 1, xmax => 4, color => '#000000');
+  $im->box(filled => 1, xmin => 5, color => '#FFFFFF');
+  is($im->type, 'paletted', 'mono still paletted');
+  ok($im->write(file => 'testout/t104_mono2.pbm', type => 'pnm'),
+     "save as pbm");
+
+  # check it
+  my $imread = Imager->new;
+  ok($imread->read(file => 'testout/t104_mono2.pbm', type=>'pnm'),
+     "read it back in")
+    or print "# ", $imread->errstr, "\n";
+  is($imread->type, 'paletted', "check result is paletted");
+  is($imread->tags(name => 'pnm_type'), 4, "check type");
+  is_image($im, $imread, "check image matches");
 }
 
 {
