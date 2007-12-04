@@ -397,6 +397,29 @@ This module handles creating color objects used by imager.  The idea is
 that in the future this module will be able to handle colorspace calculations
 as well.
 
+An Imager color consists of up to four components, each in the range 0
+to 255. Unfortunately the meaning of the components can change
+depending on the type of image you're dealing with:
+
+=over
+
+=item *
+
+for 3 or 4 channel images the color components are red, green, blue,
+alpha.
+
+=item *
+
+for 1 or 2 channel images the color components are gray, alpha, with
+the other two components ignored.
+
+=back
+
+An alpha value of zero is fully transparent, an alpha value of 255 is
+fully opaque.
+
+=item METHODS
+
 =over 4
 
 =item new
@@ -572,7 +595,7 @@ list.
 
 =head1 SEE ALSO
 
-Imager(3)
+Imager(3), Imager::Color
 http://imager.perl.org/
 
 =cut
