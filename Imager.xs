@@ -3470,16 +3470,17 @@ DSO_funclist(dso_handle_v)
 	     PREINIT:
 	       int i;
 	       DSO_handle *dso_handle;
+	       func_ptr *functions;
 	     PPCODE:
 	       dso_handle=(DSO_handle*)dso_handle_v;
+	       functions = DSO_funclist(dso_handle);
 	       i=0;
-	       while( dso_handle->function_list[i].name != NULL) {
+	       while( functions[i].name != NULL) {
 	         EXTEND(SP,1);
-		 PUSHs(sv_2mortal(newSVpv(dso_handle->function_list[i].name,0)));
+		 PUSHs(sv_2mortal(newSVpv(functions[i].name,0)));
 	         EXTEND(SP,1);
-		 PUSHs(sv_2mortal(newSVpv(dso_handle->function_list[i++].pcode,0)));
+		 PUSHs(sv_2mortal(newSVpv(functions[i++].pcode,0)));
 	       }
-
 
 void
 DSO_call(handle,func_index,hv)

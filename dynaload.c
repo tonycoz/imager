@@ -1,3 +1,32 @@
+#if defined(OS_hpux)
+#include <dl.h>
+typedef shl_t minthandle_t;
+#elif defined(WIN32)
+#define WIN32_LEAN_AND_MEAN
+#include <windows.h>
+typedef HMODULE minthandle_t;
+#undef WIN32_LEAN_AND_MEAN
+#elif defined(OS_darwin)
+#define DL_LOADONCEONLY
+#define DLSYMUN
+#undef environ
+#undef bool
+
+#import <mach-o/dyld.h>
+typedef void *minthandle_t; 
+#else 
+#include <dlfcn.h>
+typedef void *minthandle_t; 
+#endif 
+
+#include "plug.h"
+
+struct DSO_handle_tag {
+  minthandle_t handle;
+  char *filename;
+  func_ptr *function_list;
+};
+
 #include "imager.h"
 #include "dynaload.h"
 /* #include "XSUB.h"  so we can compile on threaded perls */
@@ -36,6 +65,11 @@ void
 DSO_call(DSO_handle *handle,int func_index,HV* hv) {
   mm_log((1,"DSO_call(handle 0x%X, func_index %d, hv 0x%X)\n",handle,func_index,hv));
   (handle->function_list[func_index].iptr)((void*)hv);
+}
+
+func_ptr *
+DSO_funclist(DSO_handle *handle) {
+  return handle->function_list;
 }
 
 

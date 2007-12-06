@@ -412,8 +412,11 @@ sub init {
 
   my @definc = qw(/usr/include);
   @definc{@definc}=(1) x @definc;
-  @incs=(split(/\Q$Config{path_sep}/, $INCPATH),
-        map { split /\Q$Config{path_sep}/} @incpaths );
+  @incs=
+    (
+     split(/\Q$Config{path_sep}/, $INCPATH),
+     map _tilde_expand($_), map { split /\Q$Config{path_sep}/ } @incpaths 
+    );
   if ($Config{locincpth}) {
     push @incs, grep -d, split ' ', $Config{locincpth};
   }
@@ -437,7 +440,7 @@ sub init {
   }
 
   @libs= ( split(/\Q$Config{path_sep}/,$LIBPATH),
-    map { split /\Q$Config{path_sep}/} @libpaths );
+    map _tilde_expand($_), map { split /\Q$Config{path_sep}/} @libpaths );
   if ($Config{loclibpth}) {
     push @libs, grep -d, split ' ', $Config{loclibpth};
   }
@@ -993,6 +996,27 @@ YAML
     print META $meta;
     close META;
   }
+}
+
+my $home;
+sub _tilde_expand {
+  my ($path) = @_;
+
+  if ($path =~ m!^~[/\\]!) {
+    defined $home or $home = $ENV{HOME};
+    if (!defined $home && $^O eq 'MSWin32'
+       && defined $ENV{HOMEDRIVE} && defined $ENV{HOMEPATH}) {
+      $home = $ENV{HOMEDRIVE} . $ENV{HOMEPATH};
+    }
+    unless (defined $home) {
+      $home = eval { (getpwuid($<))[7] };
+    }
+    defined $home or die "You supplied $path, but I can't find your home directory\n";
+    $path =~ s/^~//;
+    $path = File::Spec->catdir($home, $path);
+  }
+
+  $path;
 }
 
 # This isn't a module, but some broken tools, like

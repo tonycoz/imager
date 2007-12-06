@@ -3,6 +3,10 @@ Imager release history.  Older releases can be found in Changes.old
 Imager 0.62 - unreleased
 ===========
 
+ - Makefile.PL now expands ~/path supplied to --incpath or --libpath
+   to /path under your home directory.
+   http://rt.cpan.org/Ticket/Display.html?id=29484
+
 Bug fixes:
 
  - samples/gifscale.pl sourced the base value for gif_top from

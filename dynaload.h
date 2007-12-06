@@ -3,38 +3,13 @@
 
 #include "log.h"
 
-#if defined(OS_hpux)
-#include <dl.h>
-typedef shl_t minthandle_t;
-#elif defined(WIN32)
-#define WIN32_LEAN_AND_MEAN
-#include <windows.h>
-typedef HMODULE minthandle_t;
-#undef WIN32_LEAN_AND_MEAN
-#elif defined(OS_darwin)
-#define DL_LOADONCEONLY
-#define DLSYMUN
-#undef environ
-#undef bool
-
-#import <mach-o/dyld.h>
-typedef void *minthandle_t; 
-#else 
-#include <dlfcn.h>
-typedef void *minthandle_t; 
-#endif 
-
 #include "EXTERN.h"
 #include "perl.h"
 #include "ppport.h"
 
 #include "ext.h"
 
-typedef struct {
-  minthandle_t handle;
-  char *filename;
-  func_ptr *function_list;
-} DSO_handle;
+typedef struct DSO_handle_tag DSO_handle;
 
 typedef struct {
   HV* hv;
@@ -50,6 +25,7 @@ int getvoid(void *hv_t,char *key,void **store);
 #endif
 
 void *DSO_open(char* file,char** evalstring);
+func_ptr *DSO_funclist(DSO_handle *handle);
 int DSO_close(void *);
 void DSO_call(DSO_handle *handle,int func_index,HV* hv);
 
