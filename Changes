@@ -7,6 +7,12 @@ Imager 0.62 - unreleased
    to /path under your home directory.
    http://rt.cpan.org/Ticket/Display.html?id=29484
 
+ - the old dynaload code used Mach API functions to load dynamic
+   libraries on Mac OS X.  These APIs have been deprecated in OS X
+   10.5 and were causing some build problems.
+   So henceforth Imager uses the dlopen() family of functions, and you 
+   will need version 10.3 or later of OS X.
+
 Bug fixes:
 
  - samples/gifscale.pl sourced the base value for gif_top from
