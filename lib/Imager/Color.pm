@@ -418,7 +418,7 @@ the other two components ignored.
 An alpha value of zero is fully transparent, an alpha value of 255 is
 fully opaque.
 
-=item METHODS
+=head1 METHODS
 
 =over 4
 
