@@ -6,14 +6,6 @@ typedef shl_t minthandle_t;
 #include <windows.h>
 typedef HMODULE minthandle_t;
 #undef WIN32_LEAN_AND_MEAN
-#elif defined(OS_darwin)
-#define DL_LOADONCEONLY
-#define DLSYMUN
-#undef environ
-#undef bool
-
-#import <mach-o/dyld.h>
-typedef void *minthandle_t; 
 #else 
 #include <dlfcn.h>
 typedef void *minthandle_t; 
@@ -201,87 +193,6 @@ dlclose(minthandle_t h) {
   return DosFreeModule(h) ? -1 : 0;
 }
 #endif /* __EMX__ */
-
-#ifdef OS_darwin
-
-#import <mach-o/dyld.h>
-
-static char *dl_error = "unknown";
-
-static char *dlopen(char *path, int mode /* mode is ignored */)
-{
-  int dyld_result;
-  NSObjectFileImage ofile;
-  NSModule handle = NULL;
-
-
-
-  dyld_result = NSCreateObjectFileImageFromFile(path, &ofile);
-  if (dyld_result != NSObjectFileImageSuccess)
-    {
-     switch (dyld_result) {
-       case NSObjectFileImageFailure:
-           dl_error = "object file setup failure";
-           break;
-       case NSObjectFileImageInappropriateFile:
-           dl_error = "not a Mach-O MH_BUNDLE file type";
-           break;
-       case NSObjectFileImageArch:
-           dl_error = "no object for this architecture";
-           break;
-       case NSObjectFileImageFormat:
-           dl_error = "bad object file format";
-           break;
-       case NSObjectFileImageAccess:
-           dl_error = "can't read object file";
-           break;
-       default:
-           dl_error = "unknown error from NSCreateObjectFileImageFromFile()";
-           break;
-     }
-    }
-    else
-      {
-        // NSLinkModule will cause the run to abort on any link error's
-        // not very friendly but the error recovery functionality is limited.
-        handle = NSLinkModule(ofile, path, TRUE);
-      }
-
-  return handle;
-}
-
-static void *
-dlsym(void *handle, char *symbol)
-{
-  void *addr;
-
-  if (NSIsSymbolNameDefined(symbol))
-  {
-    addr = NSAddressOfSymbol(NSLookupAndBindSymbol(symbol));
-  }
-  else
-  {
-    dl_error = "cannot find symbol";
-    addr = NULL;
-  }
-
-  return addr;
-}
-
-static int dlclose(void *handle) /* stub only */
-{
-  return 0;
-}
-
-static char *dlerror(void) /* stub only */
-{
-  printf("Error occurred\n");
-  return dl_error; 
-}
-
-#define RTLD_LAZY 0
-
-#endif 
 
 void*
 DSO_open(char* file,char** evalstring) {
