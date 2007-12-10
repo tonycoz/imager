@@ -47,6 +47,7 @@ Truetype, Type1 and Windows FNT.
 
 static void ft2_push_message(int code);
 
+static ft2_initialized = 0;
 static FT_Library library;
 
 /*
@@ -69,6 +70,9 @@ i_ft2_init(void) {
     i_push_error(0, "Initializing Freetype2");
     return 0;
   }
+
+  ft2_initialized = 1;
+
   return 1;
 }
 
@@ -131,6 +135,9 @@ i_ft2_new(const char *name, int index) {
   int score;
 
   mm_log((1, "i_ft2_new(name %p, index %d)\n", name, index));
+
+  if (!ft2_initialized && !i_ft2_init())
+    return NULL;
 
   i_clear_error();
   error = FT_New_Face(library, name, index, &face);

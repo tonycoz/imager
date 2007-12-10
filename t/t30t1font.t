@@ -34,7 +34,7 @@ SKIP:
 
   print "# has t1\n";
 
-  i_t1_set_aa(1);
+  #i_t1_set_aa(1);
 
   unlink "t1lib.log"; # lose it if it exists
   init(t1log=>0);
@@ -153,6 +153,7 @@ SKIP:
     is(length($exists), 2, "return scalar length");
     ok(ord(substr($exists, 0, 1)), "we have an exclamation mark");
     ok(!ord(substr($exists, 1, 1)), "we have no upper-case A");
+    i_t1_destroy($font_num);
   }
   
   my $font = Imager::Font->new(file=>$exists_font, type=>'t1');

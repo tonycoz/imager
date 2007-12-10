@@ -24,7 +24,7 @@ SKIP:
     skip('Cannot load test font', 89);
   }
 
-  i_init_fonts();
+  #i_init_fonts();
   #     i_tt_set_aa(1);
   
   my $bgcolor = i_color_new(255,0,0,0);

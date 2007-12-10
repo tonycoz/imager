@@ -173,13 +173,8 @@ BEGIN {
 }
 
 BEGIN {
-  i_init_fonts(); # Initialize font engines
   Imager::Font::__init();
   for(i_list_formats()) { $formats{$_}++; }
-
-  if ($formats{'t1'}) {
-    i_t1_set_aa(1);
-  }
 
   if (!$formats{'t1'} and !$formats{'tt'} 
       && !$formats{'ft2'} && !$formats{'w32'}) {

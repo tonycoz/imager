@@ -63,18 +63,10 @@ i_init_fonts(int t1log) {
   mm_log((1,"Initializing fonts\n"));
 
 #ifdef HAVE_LIBT1
-  i_init_t1(t1log);
-#endif
-  
-#ifdef HAVE_LIBTT
-  i_init_tt();
-#endif
-
-#ifdef HAVE_FT2
-  if (!i_ft2_init())
+  if (i_init_t1(t1log))
     return 0;
 #endif
-
+  
   return(1); /* FIXME: Always true - check the return values of the init_t1 and init_tt functions */
 }
 
@@ -104,8 +96,11 @@ i_init_t1(int t1log) {
   int init_flags = IGNORE_CONFIGFILE|IGNORE_FONTDATABASE;
   mm_log((1,"init_t1()\n"));
 
+  i_clear_error();
+
   if (t1_active_fonts) {
     mm_log((1, "Cannot re-initialize T1 - active fonts\n"));
+    i_push_error(0, "Cannot re-initialize T1 - active fonts");
     return 1;
   }
 
@@ -117,6 +112,7 @@ i_init_t1(int t1log) {
     init_flags |= LOGFILE;
   if ((T1_InitLib(init_flags) == NULL)){
     mm_log((1,"Initialization of t1lib failed\n"));
+    i_push_error(0, "T1_InitLib failed");
     return(1);
   }
   T1_SetLogLevel(T1LOG_DEBUG);
@@ -159,6 +155,11 @@ Loads the fonts with the given filenames, returns its font id
 int
 i_t1_new(char *pfb,char *afm) {
   int font_id;
+
+  i_clear_error();
+
+  if (!t1_initialized && i_init_t1(0))
+    return -1;
 
   mm_log((1,"i_t1_new(pfb %s,afm %s)\n",pfb,(afm?afm:"NULL")));
   font_id = T1_AddFont(pfb);
@@ -851,6 +852,7 @@ static undef_int i_tt_bbox_inst( TT_Fonthandle *handle, int inst ,const char *tx
 
 /* static globals needed */
 
+static int TT_initialized = 0;
 static TT_Engine    engine;
 static int  LTT_dpi    = 72; /* FIXME: this ought to be a part of the call interface */
 static int  LTT_hinted = 1;  /* FIXME: this too */
@@ -870,14 +872,18 @@ Initializes the freetype font rendering engine
 */
 
 undef_int
-i_init_tt() {
+i_init_tt(void) {
   TT_Error  error;
   TT_Byte palette[] = { 0, 64, 127, 191, 255 };
+
+  i_clear_error();
 
   mm_log((1,"init_tt()\n"));
   error = TT_Init_FreeType( &engine );
   if ( error ){
     mm_log((1,"Initialization of freetype failed, code = 0x%x\n",error));
+    i_tt_push_error(error);
+    i_push_error(0, "Could not initialize freetype 1.x");
     return(1);
   }
 
@@ -885,6 +891,9 @@ i_init_tt() {
   error = TT_Init_Post_Extension( engine );
   if (error) {
     mm_log((1, "Initialization of Post extension failed = 0x%x\n", error));
+    
+    i_tt_push_error(error);
+    i_push_error(0, "Could not initialize FT 1.x POST extension");
     return 1;
   }
 #endif
@@ -892,8 +901,12 @@ i_init_tt() {
   error = TT_Set_Raster_Gray_Palette(engine, palette);
   if (error) {
     mm_log((1, "Initialization of gray levels failed = 0x%x\n", error));
+    i_tt_push_error(error);
+    i_push_error(0, "Could not initialize FT 1.x POST extension");
     return 1;
   }
+
+  TT_initialized = 1;
 
   return(0);
 }
@@ -1018,6 +1031,11 @@ i_tt_new(const char *fontname) {
   TT_Fonthandle *handle;
   unsigned short i,n;
   unsigned short platform,encoding;
+
+  if (!TT_initialized && i_init_tt()) {
+    i_push_error(0, "Could not initialize FT1 engine");
+    return NULL;
+  }
 
   i_clear_error();
   
