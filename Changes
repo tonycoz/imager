@@ -1,6 +1,6 @@
 Imager release history.  Older releases can be found in Changes.old
 
-Imager 0.62 - unreleased
+Imager 0.62 - 10 December 2007
 ===========
 
  - Makefile.PL now expands ~/path supplied to --incpath or --libpath
