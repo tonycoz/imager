@@ -1,5 +1,14 @@
 Imager release history.  Older releases can be found in Changes.old
 
+Imager 0.63 - unreleased
+===========
+
+Bug fixes:
+
+ - Imager::Matrix2d->translate() now only requires one of the x or y
+   parameters.
+   http://rt.cpan.org/Ticket/Display.html?id=29937
+
 Imager 0.62 - 10 December 2007
 ===========
 

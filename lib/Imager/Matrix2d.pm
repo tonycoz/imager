@@ -115,16 +115,19 @@ sub rotate {
 Translates by the specify amounts.
 
 =cut
+
 sub translate {
   my ($class, %opts) = @_;
 
-  if (defined $opts{'x'} && defined $opts{'y'}) {
-    return bless [ 1, 0, $opts{'x'},
-                   0, 1, $opts{'y'},
+  if (defined $opts{'x'} || defined $opts{'y'}) {
+    my $x = $opts{'x'} || 0;
+    my $y = $opts{'y'} || 0;
+    return bless [ 1, 0, $x,
+                   0, 1, $y,
                    0, 0, 1 ], $class;
   }
 
-  $Imager::ERRSTR = 'x and y parameters required';
+  $Imager::ERRSTR = 'x or y parameter required';
   return undef;
 }
 

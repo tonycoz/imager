@@ -1,6 +1,6 @@
 #!perl -w
 use strict;
-use Test::More tests => 8;
+use Test::More tests => 10;
 use Imager;
 
 BEGIN { use_ok('Imager::Matrix2d', ':handy') }
@@ -14,6 +14,14 @@ my $trans = Imager::Matrix2d->translate('x'=>10, 'y'=>-11);
 ok(almost_equal($trans, [ 1, 0, 10,
                           0, 1, -11,
                           0, 0, 1 ]), "translate matrix");
+my $trans_x = Imager::Matrix2d->translate(x => 10);
+ok(almost_equal($trans_x, [ 1, 0, 10,
+			   0, 1, 0,
+			   0, 0, 1 ]), "translate just x");
+my $trans_y = Imager::Matrix2d->translate('y' => 11);
+ok(almost_equal($trans_y, [ 1, 0, 0,
+			   0, 1, 11,
+			   0, 0, 1 ]), "translate just y");
 
 my $rotate = Imager::Matrix2d->rotate(degrees=>90);
 ok(almost_equal($rotate, [ 0, -1, 0,
