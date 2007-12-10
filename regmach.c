@@ -421,7 +421,12 @@ i_color i_rm_run(struct rm_op codes[], size_t code_count,
       break;
 
     case rbc_print:
+      nout = na;
       printf("r%d is %g\n", codes->ra, na);
+      break;
+
+    case rbc_det:
+      nout = na*nd-nb*nc;
       break;
 
     default:

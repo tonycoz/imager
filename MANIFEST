@@ -206,6 +206,7 @@ samples/gifscale.pl	Scale an animated GIF, preserving animation info
 samples/inline_capture2image.pl	 convert captured BGR data to an image
 samples/inline_replace_color.pl  replace colors using Inline::C
 samples/interleave.pl
+samples/quad_to_square.pl	Transform a quadrilateral into a square
 samples/replace_color.pl replace colors using transform2()
 samples/samp-form.cgi
 samples/samp-image.cgi

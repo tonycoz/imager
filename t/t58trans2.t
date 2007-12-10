@@ -1,6 +1,6 @@
 #!perl -w
 use strict;
-use Test::More tests => 36;
+use Test::More tests => 37;
 BEGIN { use_ok('Imager'); }
 use Imager::Test qw(is_color3);
 
@@ -134,6 +134,9 @@ EOS
 op_test('000000', <<'EOS', 50, 82, 0, 'exp log');
 1 exp log 50 * 0.5 + 0.5 exp 50 * 0 rgb
 EOS
+op_test('800000', <<'EOS', 128, 0, 0, 'det');
+1 0 0 1 det 128 * 1 1 1 1 det 128 * 0 rgb
+EOS
 
 use Imager::Transform;
 
@@ -168,7 +171,7 @@ sub op_test ($$$$$$) {
   {
     my $out = Imager::transform2({ rpnexpr => $code }, $im);
     unless ($out) {
-      fail("$comment: coult not compile $code - ".Imager->errstr);
+      fail("$comment: could not compile $code - ".Imager->errstr);
       return;
     }
     my $found = $out->getpixel(x => 0, y => 0);

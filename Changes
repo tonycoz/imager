@@ -13,6 +13,11 @@ Imager 0.62 - unreleased
    So henceforth Imager uses the dlopen() family of functions, and you 
    will need version 10.3 or later of OS X.
 
+ - added the det() function to the transform2() engine.
+   added the sample quad_to_square.pl
+   Courtesy Richard Fairhurst.
+   http://rt.cpan.org/Ticket/Display.html?id=31244
+
 Bug fixes:
 
  - samples/gifscale.pl sourced the base value for gif_top from

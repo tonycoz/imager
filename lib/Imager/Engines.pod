@@ -403,6 +403,21 @@ I<N> B<exp> -- I<N>
 
 =back
 
+=item det(a, b, c, d)
+
+Calculate the determinant of the 2 x 2 matrix;
+
+  a b
+  c d
+
+rpnexpr usage:
+
+=over
+
+I<Na> I<Nb> I<Nc> I<Nd> B<det> -- I<N>
+
+=back
+
 =back
 
 =head3 Constants

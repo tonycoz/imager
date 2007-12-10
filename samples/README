@@ -110,3 +110,9 @@ gifscale.pl
   Scales an animated GIF image, preserving GIF animation information
   and adjusting the image screen positions to account for the scale
   factor.
+
+quad_to_square.pl
+
+  Sample from Richard Fairhurst demonstrating the use of the transform2()
+  det() function.  Transforms an arbitrary quadrilateral in the input into
+  a square on the output.
