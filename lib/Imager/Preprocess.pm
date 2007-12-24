@@ -1,96 +1,104 @@
-#!perl -w
+package Imager::Preprocess;
 use strict;
+require Exporter;
+use vars qw(@ISA @EXPORT);
 
-my $src = shift;
-my $dest = shift
-  or usage();
+@EXPORT = qw(preprocess);
+@ISA = qw(Exporter);
 
-open SRC, "< $src"
+
+sub preprocess {
+  my $src = shift @ARGV;
+  my $dest = shift @ARGV
+    or usage();
+
+  open SRC, "< $src"
   or die "Cannot open $src: $!\n";
 
-my $cond;
-my $cond_line;
-my $save_code;
-my @code;
-my $code_line;
-my @out;
-my $failed;
+  my $cond;
+  my $cond_line;
+  my $save_code;
+  my @code;
+  my $code_line;
+  my @out;
+  my $failed;
 
-push @out, 
-  "#define IM_ROUND_8(x) ((int)((x)+0.5))\n",
-  "#define IM_ROUND_double(x) (x)\n",
-  "#define IM_LIMIT_8(x) ((x) < 0 ? 0 : (x) > 255 ? 255 : (x))\n",
-  "#define IM_LIMIT_double(x) ((x) < 0.0 ? 0.0 : (x) > 1.0 ? 1.0 : (x))\n",
-  "#line 1 \"$src\"\n";
-while (defined(my $line = <SRC>)) {
-  if ($line =~ /^\#code\s+(\S.+)$/) {
-    $save_code
-      and do { warn "$src:$code_line:Unclosed #code block\n"; ++$failed; };
-
-    $cond = $1;
-    $cond_line = $.;
-    $code_line = $. + 1;
-    $save_code = 1;
-  }
-  elsif ($line =~ /^\#code\s*$/) {
-    $save_code
-      and do { warn "$src:$code_line:Unclosed #code block\n"; ++$failed; };
-
-    $cond = '';
-    $cond_line = 0;
-    $code_line = $. + 1;
-    $save_code = 1;
-  }
-  elsif ($line =~ /^\#\/code$/) {
-    $save_code
-      or do { warn "$src:$.:#/code without #code\n"; ++$failed; next; };
-
-    if ($cond) {
-      push @out, "#line $cond_line \"$src\"\n";
-      push @out, "  if ($cond) {\n";
+  push @out, 
+    "#define IM_ROUND_8(x) ((int)((x)+0.5))\n",
+      "#define IM_ROUND_double(x) (x)\n",
+	"#define IM_LIMIT_8(x) ((x) < 0 ? 0 : (x) > 255 ? 255 : (x))\n",
+	  "#define IM_LIMIT_double(x) ((x) < 0.0 ? 0.0 : (x) > 1.0 ? 1.0 : (x))\n",
+	    "#line 1 \"$src\"\n";
+  while (defined(my $line = <SRC>)) {
+    if ($line =~ /^\#code\s+(\S.+)$/) {
+      $save_code
+	and do { warn "$src:$code_line:Unclosed #code block\n"; ++$failed; };
+      
+      $cond = $1;
+      $cond_line = $.;
+      $code_line = $. + 1;
+      $save_code = 1;
     }
-    push @out, "#undef IM_EIGHT_BIT\n",
-      "#define IM_EIGHT_BIT 1\n";
-    push @out, "#line $code_line \"$src\"\n";
-    push @out, byte_samples(@code);
-    push @out, "  }\n", "  else {\n"
-      if $cond;
-    push @out, "#undef IM_EIGHT_BIT\n";
-    push @out, "#line $code_line \"$src\"\n";
-    push @out, double_samples(@code);
-    push @out, "  }\n"
-      if $cond;
-    push @out, "#line $. \"$src\"\n";
-    @code = ();
-    $save_code = 0;
+    elsif ($line =~ /^\#code\s*$/) {
+      $save_code
+	and do { warn "$src:$code_line:Unclosed #code block\n"; ++$failed; };
+      
+      $cond = '';
+      $cond_line = 0;
+      $code_line = $. + 1;
+      $save_code = 1;
+    }
+    elsif ($line =~ /^\#\/code$/) {
+      $save_code
+	or do { warn "$src:$.:#/code without #code\n"; ++$failed; next; };
+      
+      if ($cond) {
+	push @out, "#line $cond_line \"$src\"\n";
+	push @out, "  if ($cond) {\n";
+      }
+      push @out, "#undef IM_EIGHT_BIT\n",
+	"#define IM_EIGHT_BIT 1\n";
+      push @out, "#line $code_line \"$src\"\n";
+      push @out, byte_samples(@code);
+      push @out, "  }\n", "  else {\n"
+	if $cond;
+      push @out, "#undef IM_EIGHT_BIT\n";
+      push @out, "#line $code_line \"$src\"\n";
+      push @out, double_samples(@code);
+      push @out, "  }\n"
+	if $cond;
+      push @out, "#line $. \"$src\"\n";
+      @code = ();
+      $save_code = 0;
+    }
+    elsif ($save_code) {
+      push @code, $line;
+    }
+    else {
+      push @out, $line;
+    }
   }
-  elsif ($save_code) {
-    push @code, $line;
+  
+  if ($save_code) {
+    warn "$src:$code_line:#code block not closed by EOF\n";
+    ++$failed;
   }
-  else {
-    push @out, $line;
-  }
+
+  close SRC;
+  
+  $failed 
+    and die "Errors during parsing, aborting\n";
+  
+  open DEST, "> $dest"
+    or die "Cannot open $dest: $!\n";
+  print DEST @out;
+  close DEST;
 }
-
-if ($save_code) {
-  warn "$src:$code_line:#code block not closed by EOF\n";
-  ++$failed;
-}
-
-close SRC;
-
-$failed 
-  and die "Errors during parsing, aborting\n";
-
-open DEST, "> $dest"
-  or die "Cannot open $dest: $!\n";
-print DEST @out;
-close DEST;
-
+  
 sub byte_samples {
   # important we make a copy
   my @lines = @_;
-
+  
   for (@lines) {
     s/\bIM_GPIX\b/i_gpix/g;
     s/\bIM_GLIN\b/i_glin/g;
@@ -107,14 +115,14 @@ sub byte_samples {
     s/\bIM_ROUND\(/IM_ROUND_8(/g;
     s/\bIM_LIMIT\(/IM_LIMIT_8(/g;
   }
-
+  
   @lines;
 }
 
 sub double_samples {
   # important we make a copy
   my @lines = @_;
-
+  
   for (@lines) {
     s/\bIM_GPIX\b/i_gpixf/g;
     s/\bIM_GLIN\b/i_glinf/g;
@@ -135,9 +143,13 @@ sub double_samples {
   @lines;
 }
 
+1;
+
+__END__
+
 =head1 NAME
 
-imtoc.perl - simple preprocessor for handling multiple sample sizes
+Imager::Preprocess - simple preprocessor for handling multiple sample sizes
 
 =head1 SYNOPSIS
 
@@ -146,7 +158,7 @@ imtoc.perl - simple preprocessor for handling multiple sample sizes
   ... code using preprocessor types/values ...
   #/code
 
-  perl imtoc.perl foo.im foo.c
+  perl -MImager -epreprocess foo.im foo.c
 
 =head1 DESCRIPTION
 

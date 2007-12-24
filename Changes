@@ -6,6 +6,8 @@ Imager 0.63 - unreleased
  - the font libraries are now only initialized when needed.
    http://rt.cpan.org/Ticket/Display.html?id=28825
 
+ - moved the imtoc.perl code into Imager::Preprocess
+
 Bug fixes:
 
  - Imager::Matrix2d->translate() now only requires one of the x or y

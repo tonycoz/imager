@@ -136,7 +136,6 @@ imio.h
 immacros.h
 imperl.h
 imrender.h	Buffer rending engine function declarations
-imtoc.perl      Sample size adapter pre-processor
 io.c
 iolayer.c
 iolayer.h
@@ -170,6 +169,7 @@ lib/Imager/ImageTypes.pod
 lib/Imager/Inline.pod           Using Imager with Inline::C
 lib/Imager/LargeSamples.pod	Track large sample support
 lib/Imager/Matrix2d.pm
+lib/Imager/Preprocess.pm
 lib/Imager/Regops.pm
 lib/Imager/Test.pm
 lib/Imager/Transform.pm

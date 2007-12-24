@@ -168,7 +168,7 @@ my %opts=(
           'DEFINE'       => "$OSDEF $CFLAGS",
           'INC'          => "$lib_cflags $DFLAGS $F_INC",
           'OBJECT'       => join(' ', @objs, $F_OBJECT),
-          clean          => { FILES=>'testout meta.tmp rubthru.c scale.c' },
+          clean          => { FILES=>'testout meta.tmp rubthru.c scale.c conv.c  filters.c gaussian.c render.c rubthru.c' },
           PM             => gen_PM(),
 	  PREREQ_PM      => { 'Test::More' => 0.47 },
          );
@@ -236,8 +236,8 @@ sub _im_rule {
   (my $c = $im) =~ s/\.im$/.c/;
   return <<MAKE;
 
-$c: $im imtoc.perl
-	$perl imtoc.perl $im $c
+$c: $im lib/Imager/Preprocess.pm
+	$perl -Ilib -MImager::Preprocess -epreprocess $im $c
 
 MAKE
 
