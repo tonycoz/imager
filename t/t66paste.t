@@ -1,8 +1,9 @@
 #!perl -w
 use strict;
-use Test::More tests => 23;
+use Test::More tests => 54;
 
-BEGIN { use_ok("Imager") }
+use Imager;
+use Imager::Test qw(is_image);
 
 #$Imager::DEBUG=1;
 
@@ -133,5 +134,166 @@ ok($img->write(type=>'pnm',file=>'testout/t66.ppm'), "save it")
 	      xmax => 94, ymax => 79);
     is(Imager::i_img_diff($work->{IMG}, $cmp->{IMG}), 0,
        "check pasted correctly");
+  }
+}
+
+{ # https://rt.cpan.org/Ticket/Display.html?id=30908
+  # we now adapt the source channels to the target
+  # check each combination works as expected
+
+  # various source images
+  my $src1 = Imager->new(xsize => 50, ysize => 50, channels => 1);
+  my $g_grey_full = Imager::Color->new(128, 255, 0, 0);
+  my $g_white_50 = Imager::Color->new(255, 128, 0, 0);
+  $src1->box(filled => 1, xmax => 24, color => $g_grey_full);
+
+  my $src2 = Imager->new(xsize => 50, ysize => 50, channels => 2);
+  $src2->box(filled => 1, xmax => 24, color => $g_grey_full);
+  $src2->box(filled => 1, xmin => 25, color => $g_white_50);
+
+  my $c_red_full = Imager::Color->new(255, 0, 0);
+  my $c_blue_full = Imager::Color->new(0, 0, 255);
+  my $src3 = Imager->new(xsize => 50, ysize => 50, channels => 3);
+  $src3->box(filled => 1, xmax => 24, color => $c_red_full);
+  $src3->box(filled => 1, xmin => 25, color => $c_blue_full);
+
+  my $c_green_50 = Imager::Color->new(0, 255, 0, 127);
+  my $src4 = Imager->new(xsize => 50, ysize => 50, channels => 4);
+  $src4->box(filled => 1, xmax => 24, color => $c_blue_full);
+  $src4->box(filled => 1, xmin => 25, color => $c_green_50);
+
+  my @left_box = ( box => [ 25, 25, 49, 74 ] );
+  my @right_box = ( box => [ 50, 25, 74, 74 ] );
+
+  { # 1 channel output
+    my $base = Imager->new(xsize => 100, ysize => 100, channels => 1);
+    $base->box(filled => 1, color => Imager::Color->new(64, 255, 0, 0));
+
+    my $work = $base->copy;
+    ok($work->paste(left => 25, top => 25, src => $src1), "paste 1 to 1");
+    my $comp = $base->copy;
+    $comp->box(filled => 1, color => $g_grey_full, @left_box);
+    $comp->box(filled => 1, color => [ 0, 0, 0, 0 ], @right_box);
+    is_image($work, $comp, "compare paste target to expected");
+
+    $work = $base->copy;
+    ok($work->paste(left => 25, top => 25, src => $src2), "paste 2 to 1");
+    $comp = $base->copy;
+    $comp->box(filled => 1, @left_box, color => $g_grey_full);
+    $comp->box(filled => 1, @right_box, color => [ 128, 0, 0, 0 ]);
+    is_image($work, $comp, "compare paste target to expected");
+
+    $work = $base->copy;
+    ok($work->paste(left => 25, top => 25, src => $src3), "paste 3 to 1");
+     $comp = $base->copy;
+    $comp->box(filled => 1, @left_box, color => [ 57, 255, 0, 0 ]);
+    $comp->box(filled => 1, @right_box, color => [ 18, 255, 0, 0 ]);
+    is_image($work, $comp, "compare paste target to expected");
+
+    $work = $base->copy;
+    ok($work->paste(left => 25, top => 25, src => $src4), "paste 4 to 1");
+    $comp = $base->copy;
+    $comp->box(filled => 1, color => [ 18, 255, 0, 0 ], @left_box);
+    $comp->box(filled => 1, color => [ 90, 255, 0, 0 ], @right_box);
+    is_image($work, $comp, "compare paste target to expected");
+  }
+
+  { # 2 channel output
+    my $base = Imager->new(xsize => 100, ysize => 100, channels => 2);
+    $base->box(filled => 1, color => [ 128, 128, 0, 0 ]);
+    
+    my $work = $base->copy;
+    ok($work->paste(top => 25, left => 25, src => $src1), "paste 1 to 2");
+    my $comp = $base->copy;
+    $comp->box(filled => 1, color => $g_grey_full, @left_box);
+    $comp->box(filled => 1, color => [ 0, 255, 0, 0 ], @right_box);
+    is_image($work, $comp, "compare paste target to expected");
+
+    $work = $base->copy;
+    ok($work->paste(top => 25, left => 25, src => $src2), "paste 2 to 2");
+    $comp = $base->copy;
+    $comp->box(filled => 1, color => $g_grey_full, @left_box);
+    $comp->box(filled => 1, color => $g_white_50, @right_box);
+    is_image($work, $comp, "compare paste target to expected");
+
+    $work = $base->copy;
+    ok($work->paste(top => 25, left => 25, src => $src3), "paste 3 to 2");
+    $comp = $base->copy;
+    $comp->box(filled => 1, color => [ 57, 255, 0, 0 ], @left_box);
+    $comp->box(filled => 1, color => [ 18, 255, 0, 0 ], @right_box);
+    is_image($work, $comp, "compare paste target to expected");
+
+    $work = $base->copy;
+    ok($work->paste(top => 25, left => 25, src => $src4), "paste 4 to 2");
+    $comp = $base->copy;
+    $comp->box(filled => 1, color => [ 18, 255, 0, 0 ], @left_box);
+    $comp->box(filled => 1, color => [ 180, 127, 0, 0 ], @right_box);
+    is_image($work, $comp, "compare paste target to expected");
+  }
+
+  { # 3 channel output
+    my $base = Imager->new(xsize => 100, ysize => 100, channels => 3);
+    $base->box(filled => 1, color => [ 128, 255, 0, 0 ]);
+    
+    my $work = $base->copy;
+    ok($work->paste(top => 25, left => 25, src => $src1), "paste 1 to 3");
+    my $comp = $base->copy;
+    $comp->box(filled => 1, color => [ 128, 128, 128, 255 ], @left_box);
+    $comp->box(filled => 1, color => [ 0, 0, 0, 0 ], @right_box);
+    is_image($work, $comp, "compare paste target to expected");
+
+    $work = $base->copy;
+    ok($work->paste(top => 25, left => 25, src => $src2), "paste 2 to 3");
+    $comp = $base->copy;
+    $comp->box(filled => 1, color => [ 128, 128, 128, 255 ], @left_box);
+    $comp->box(filled => 1, color => [ 128, 128, 128, 255 ], @right_box);
+    is_image($work, $comp, "compare paste target to expected");
+
+    $work = $base->copy;
+    ok($work->paste(top => 25, left => 25, src => $src3), "paste 3 to 3");
+    $comp = $base->copy;
+    $comp->box(filled => 1, color => [ 255, 0, 0 ], @left_box);
+    $comp->box(filled => 1, color => [ 0, 0, 255 ], @right_box);
+    is_image($work, $comp, "compare paste target to expected");
+
+    $work = $base->copy;
+    ok($work->paste(top => 25, left => 25, src => $src4), "paste 4 to 3");
+    $comp = $base->copy;
+    $comp->box(filled => 1, color => [ 0, 0, 255 ], @left_box);
+    $comp->box(filled => 1, color => [ 0, 127, 0 ], @right_box);
+    is_image($work, $comp, "compare paste target to expected");
+  }
+
+  { # 4 channel output
+    my $base = Imager->new(xsize => 100, ysize => 100, channels => 4);
+    $base->box(filled => 1, color => [ 128, 255, 64, 128 ]);
+    
+    my $work = $base->copy;
+    ok($work->paste(top => 25, left => 25, src => $src1), "paste 1 to 4");
+    my $comp = $base->copy;
+    $comp->box(filled => 1, color => [ 128, 128, 128, 255 ], @left_box);
+    $comp->box(filled => 1, color => [ 0, 0, 0, 255 ], @right_box);
+    is_image($work, $comp, "compare paste target to expected");
+
+    $work = $base->copy;
+    ok($work->paste(top => 25, left => 25, src => $src2), "paste 2 to 4");
+    $comp = $base->copy;
+    $comp->box(filled => 1, color => [ 128, 128, 128, 255 ], @left_box);
+    $comp->box(filled => 1, color => [ 255, 255, 255, 128 ], @right_box);
+    is_image($work, $comp, "compare paste target to expected");
+
+    $work = $base->copy;
+    ok($work->paste(top => 25, left => 25, src => $src3), "paste 3 to 4");
+    $comp = $base->copy;
+    $comp->box(filled => 1, color => [ 255, 0, 0 ], @left_box);
+    $comp->box(filled => 1, color => [ 0, 0, 255 ], @right_box);
+    is_image($work, $comp, "compare paste target to expected");
+
+    $work = $base->copy;
+    ok($work->paste(top => 25, left => 25, src => $src4), "paste 4 to 4");
+    $comp = $base->copy;
+    $comp->box(filled => 1, color => $c_blue_full, @left_box);
+    $comp->box(filled => 1, color => $c_green_50, @right_box);
+    is_image($work, $comp, "compare paste target to expected");
   }
 }

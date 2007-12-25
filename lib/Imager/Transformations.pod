@@ -562,7 +562,13 @@ sub image to be pasted.
               left => 10, top => 10,
               src_minx => 20, src_miny => 20,
               src_maxx => 40, src_maxx => 40);
-              
+
+If the source image has an alpha channel and the target doesn't, then
+the source is treated as if composed onto a black background.
+
+If the source image is color and the target is grayscale, the the
+source is treated as if run through C< convert(preset=>'gray') >.
+
 =item rubthrough
 
 A more complicated way of blending images is where one image is

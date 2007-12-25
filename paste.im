@@ -1,0 +1,232 @@
+#include "imager.h"
+
+/*
+=item i_copyto(dest, src, x1, y1, x2, y2, tx, ty)
+
+=category Image
+
+Copies image data from the area (x1,y1)-[x2,y2] in the source image to
+a rectangle the same size with it's top-left corner at (tx,ty) in the
+destination image.
+
+If x1 > x2 or y1 > y2 then the corresponding co-ordinates are swapped.
+
+=cut
+*/
+
+void
+i_copyto(i_img *im, i_img *src, int x1, int y1, int x2, int y2, int tx, int ty) {
+  int x, y, t, ttx, tty;
+  
+  if (x2<x1) { t=x1; x1=x2; x2=t; }
+  if (y2<y1) { t=y1; y1=y2; y2=t; }
+  if (tx < 0) {
+    /* adjust everything equally */
+    x1 += -tx;
+    x2 += -tx;
+    tx = 0;
+  }
+  if (ty < 0) {
+    y1 += -ty;
+    y2 += -ty;
+    ty = 0;
+  }
+  if (x1 >= src->xsize || y1 >= src->ysize)
+    return; /* nothing to do */
+  if (x2 > src->xsize)
+    x2 = src->xsize;
+  if (y2 > src->ysize)
+    y2 = src->ysize;
+  if (x1 == x2 || y1 == y2)
+    return; /* nothing to do */
+
+  mm_log((1,"i_copyto(im* %p, src %p, x1 %d, y1 %d, x2 %d, y2 %d, tx %d, ty %d)\n",
+	  im, src, x1, y1, x2, y2, tx, ty));
+
+#code im->bits == i_8_bits
+  IM_COLOR *row = mymalloc(sizeof(IM_COLOR) * (x2-x1));
+  tty = ty;
+  for(y=y1; y<y2; y++) {
+    ttx = tx;
+    IM_GLIN(src, x1, x2, y, row);
+    if (src->channels != im->channels)
+      IM_ADAPT_COLORS(im->channels, src->channels, row, x2-x1);
+    IM_PLIN(im, tx, tx+x2-x1, tty, row);
+    tty++;
+  }
+  myfree(row);
+#/code
+}
+
+#define color_to_grey(col) ((col)->rgb.r * 0.222  + (col)->rgb.g * 0.707 + (col)->rgb.b * 0.071)
+
+#code
+void
+#ifdef IM_EIGHT_BIT
+i_adapt_colors
+#else
+i_adapt_fcolors
+#endif
+(int out_channels, int in_channels, IM_COLOR *colors, 
+	       size_t count) {
+  int i;
+  if (out_channels == in_channels)
+    return;
+  if (count == 0)
+    return;
+
+  switch (out_channels) {
+  case 1:
+    {
+      switch (in_channels) {
+      case 2:
+	/* apply alpha against a black background */
+	while (count) {
+	  colors->channel[0] = colors->channel[0] * colors->channel[1] / IM_SAMPLE_MAX;
+	  ++colors;
+	  --count;
+	}
+	return;
+
+      case 3:
+	/* convert to grey */
+	while (count) {
+	  colors->channel[0] = IM_ROUND(color_to_grey(colors));
+	  ++colors;
+	  --count;
+	}
+	return;
+	    
+      case 4:
+	while (count) {
+	  colors->channel[0] = IM_ROUND(color_to_grey(colors) * colors->channel[3] / IM_SAMPLE_MAX);
+	  ++colors;
+	  --count;
+	}
+	return;
+
+      default:
+	i_fatal(3, "i_adapt_colors: in_channels of %d invalid\n", in_channels);
+	return; /* avoid warnings */
+      }
+    }
+
+  case 2:
+    {
+      switch (in_channels) {
+      case 1:
+	while (count) {
+	  colors->channel[1] = IM_SAMPLE_MAX;
+	  ++colors;
+	  --count;
+	}
+	return;
+
+      case 3:
+	while (count) {
+	  colors->channel[0] = IM_ROUND(color_to_grey(colors));
+	  colors->channel[1] = IM_SAMPLE_MAX;
+	  ++colors;
+	  --count;
+	}
+	return;
+
+      case 4:
+	while (count) {
+	  colors->channel[0] = IM_ROUND(color_to_grey(colors));
+	  colors->channel[1] = colors->channel[3];
+	  ++colors;
+	  --count;
+	}
+	return;
+
+      default:
+	i_fatal(3, "i_adapt_colors: in_channels of %d invalid\n", in_channels);
+	return; /* avoid warnings */
+      }
+    }
+
+  case 3:
+    {
+      switch (in_channels) {
+      case 1:
+	while (count) {
+	  colors->channel[1] = colors->channel[2] = colors->channel[0];
+	  ++colors;
+	  --count;
+	}
+	return;
+
+      case 2:
+	while (count) {
+	  int alpha = colors->channel[1];
+	  colors->channel[0] = colors->channel[1] = colors->channel[2] =
+	    IM_ROUND(colors->channel[0] * alpha / IM_SAMPLE_MAX);
+	  ++colors;
+	  --count;
+	}
+	return;
+
+      case 4:
+	while (count) {
+	  int alpha = colors->channel[3];
+	  colors->channel[0] = 
+	    IM_ROUND(colors->channel[0] * alpha / IM_SAMPLE_MAX);
+	  colors->channel[1] = 
+	    IM_ROUND(colors->channel[1] * alpha / IM_SAMPLE_MAX);
+	  colors->channel[2] = 
+	    IM_ROUND(colors->channel[2] * alpha / IM_SAMPLE_MAX);
+	  ++colors;
+	  --count;
+	}
+	return;
+
+      default:
+	i_fatal(3, "i_adapt_colors: in_channels of %d invalid\n", in_channels);
+	return; /* avoid warnings */
+      }
+    }
+
+  case 4:
+    {
+      switch (in_channels) {
+      case 1:
+	while (count) {
+	  colors->channel[1] = colors->channel[2] = colors->channel[0];
+	  colors->channel[3] = IM_SAMPLE_MAX;
+	  ++colors;
+	  --count;
+	}
+	return;
+
+      case 2:
+	while (count) {
+	  colors->channel[3] = colors->channel[1];
+	  colors->channel[1] = colors->channel[2] = colors->channel[0];
+	  ++colors;
+	  --count;
+	}
+	return;
+
+      case 3:
+	while (count) {
+	  colors->channel[3] = IM_SAMPLE_MAX;
+	  ++colors;
+	  --count;
+	}
+	return;
+
+      default:
+	i_fatal(3, "i_adapt_colors: in_channels of %d invalid\n", in_channels);
+	return; /* avoid warnings */
+      }
+    }
+
+  default:
+    i_fatal(3, "i_adapt_colors: out_channels of %d invalid\n", out_channels);
+    return; /* avoid warnings */
+  }
+}
+
+#/code
+

@@ -183,6 +183,7 @@ log.h
 map.c
 maskimg.c
 palimg.c
+paste.im
 plug.h
 png.c
 pnm.c

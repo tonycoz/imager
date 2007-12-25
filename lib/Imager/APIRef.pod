@@ -722,7 +722,7 @@ If x1 > x2 or y1 > y2 then the corresponding co-ordinates are swapped.
 
 
 =for comment
-From: File image.c
+From: File paste.im
 
 =item i_copyto_trans(im, src, x1, y1, x2, y2, tx, ty, trans)
 

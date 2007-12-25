@@ -575,4 +575,11 @@ void  malloc_state(void);
 #include "imrender.h"
 #include "immacros.h"
 
+extern void
+i_adapt_colors(int dest_channels, int src_channels, i_color *colors, 
+	       size_t count);
+extern void
+i_adapt_fcolors(int dest_channels, int src_channels, i_fcolor *colors, 
+	       size_t count);
+
 #endif

@@ -8,6 +8,11 @@ Imager 0.63 - unreleased
 
  - moved the imtoc.perl code into Imager::Preprocess
 
+ - paste() now adapts the source image data to the destination, so you
+   can now safely paste from greyscale images to color images or back,
+   or from alpha channel images to noalpha channels or back.
+   https://rt.cpan.org/Ticket/Display.html?id=30908
+
 Bug fixes:
 
  - Imager::Matrix2d->translate() now only requires one of the x or y

@@ -113,6 +113,7 @@ sub byte_samples {
     s/\bIM_Wf\b/"%d"/g;
     s/\bIM_SUFFIX\((\w+)\)/$1_8/g;
     s/\bIM_ROUND\(/IM_ROUND_8(/g;
+    s/\bIM_ADAPT_COLORS\(/i_adapt_colors(/g;
     s/\bIM_LIMIT\(/IM_LIMIT_8(/g;
   }
   
@@ -137,6 +138,7 @@ sub double_samples {
     s/\bIM_Wf\b/"%f"/g;
     s/\bIM_SUFFIX\((\w+)\)/$1_double/g;
     s/\bIM_ROUND\(/IM_ROUND_double(/g;
+    s/\bIM_ADAPT_COLORS\(/i_adapt_fcolors(/g;
     s/\bIM_LIMIT\(/IM_LIMIT_double(/g;
   }
 
@@ -215,6 +217,12 @@ IM_GSAMP(im, l, r, y, samples, chans, chan_count)
 
 These correspond to the appropriate image function, eg. IM_GPIX()
 becomes i_gpix() or i_gpixf() as appropriate.
+
+=item *
+
+IM_ADAPT_COLORS(dest_channes, src_channels, colors, count)
+
+Call i_adapt_colors() or i_adapt_fcolors().
 
 =item *
 
