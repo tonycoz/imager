@@ -112,6 +112,10 @@ sub rotate {
 
 =item translate(x=>$dx, y=>$dy)
 
+=item translate(x=>$dx)
+
+=item translate(y=>$dy)
+
 Translates by the specify amounts.
 
 =cut
@@ -132,6 +136,10 @@ sub translate {
 }
 
 =item shear(x=>$sx, y=>$sy)
+
+=item shear(x=>$sx)
+
+=item shear(y=>$sy)
 
 Shear by the given amounts.
 
