@@ -2405,7 +2405,7 @@ sub transform2 {
 
 sub rubthrough {
   my $self=shift;
-  my %opts=(tx => 0,ty => 0, @_);
+  my %opts= @_;
 
   unless ($self->{IMG}) { 
     $self->{ERRSTR}='empty input image'; 
@@ -2422,12 +2422,21 @@ sub rubthrough {
 	   src_maxy => $opts{src}->getheight(),
 	   %opts);
 
-  unless (i_rubthru($self->{IMG}, $opts{src}->{IMG}, $opts{tx}, $opts{ty},
+  my $tx = $opts{tx};
+  defined $tx or $tx = $opts{left};
+  defined $tx or $tx = 0;
+
+  my $ty = $opts{ty};
+  defined $ty or $ty = $opts{top};
+  defined $ty or $ty = 0;
+
+  unless (i_rubthru($self->{IMG}, $opts{src}->{IMG}, $tx, $ty,
                     $opts{src_minx}, $opts{src_miny}, 
                     $opts{src_maxx}, $opts{src_maxy})) {
     $self->_set_error($self->_error_as_msg());
     return undef;
   }
+
   return $self;
 }
 
