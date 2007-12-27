@@ -1,0 +1,146 @@
+=head1 NAME
+
+draw.pod - overview of planned drawing changes
+
+=head1 SYNOPSIS
+
+  fix the processing done by the current combine modes
+  combine modes for most drawing operations
+  thick lines
+
+=head1 combine mode fixes
+
+Currently:
+
+=over
+
+=item *
+
+the calculations are just wrong
+
+=item *
+
+they don't handle adapting to the target channel count
+
+=back
+
+To do:
+
+=over
+
+=item *
+
+add a render function that calls the fill function then applies it to
+the target based on the combine mode.
+
+=item *
+
+modify fill functions to always produce RGBA
+
+=item *
+
+have the combine mode functions just generate the color, the render
+function can then alpha adjust it and apply it to the target
+
+=back
+
+=head1 combine modes for drawing functions
+
+=over
+
+=item *
+
+write versions of each function that take a combine mode
+
+=back
+
+=head1 thick lines
+
+Two possible approaches:
+
+=over
+
+=item *
+
+given a polyline, generate a polygon for the entire shape - more
+complex, overlap problems
+
+=item *
+
+add a render function that calls the fill function then applies it to
+the target based on the combine mode.
+
+=item *
+
+modify fill functions to always produce RGBA
+
+=item *
+
+have the combine mode functions just generate the color, the render
+function can then alpha adjust it and apply it to the target
+
+=back
+
+=head1 combine modes for drawing functions
+
+=over
+
+=item *
+
+write versions of each function that take a combine mode
+
+=back
+
+=head1 thick lines
+
+Two possible approaches:
+
+=over
+
+=item *
+
+given a polyline, generate a polygon for the entire shape - more
+complex, overlap problems
+
+add a render function that calls the fill function then applies it to
+the target based on the combine mode.
+
+=item *
+
+modify fill functions to always produce RGBA
+
+=item *
+
+have the combine mode functions just generate the color, the render
+function can then alpha adjust it and apply it to the target
+
+=back
+
+=head1 combine modes for drawing functions
+
+=over
+
+=item *
+
+write versions of each function that take a combine mode
+
+=back
+
+=head1 thick lines
+
+Two possible approaches:
+
+=over
+
+=item *
+
+given a polyline, generate a polygon for the entire shape - more
+complex, overlap problems
+
+=item *
+
+given a polyline, generate polygons for each segment, draw to a work
+image and use that to compose the fill - possible problems joining the
+segments
+
+=back
