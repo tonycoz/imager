@@ -564,40 +564,6 @@ fill_solidf(i_fill_t *fill, int x, int y, int width, int channels,
 }
 
 /*
-=item fill_solid_comb(fill, x, y, width, channels, data)
-
-The 8-bit sample fill function for combining solid fills.
-
-=cut
-*/
-static void
-fill_solid_comb(i_fill_t *fill, int x, int y, int width, int channels, 
-                i_color *data) {
-  i_color c = T_SOLID_FILL(fill)->c;
-
-  while (width-- > 0) {
-    *data++ = c;
-  }
-}
-
-/*
-=item fill_solidf_comb(fill, x, y, width, channels, data)
-
-The floating sample fill function for combining solid fills.
-
-=cut
-*/
-static void
-fill_solidf_comb(i_fill_t *fill, int x, int y, int width, int channels, 
-           i_fcolor *data) {
-  i_fcolor c = T_SOLID_FILL(fill)->fc;
-
-  while (width-- > 0) {
-    *data++ = c;
-  }
-}
-
-/*
 =item i_new_hatch_low(fg, bg, ffg, fbg, combine, hatch, cust_hatch, dx, dy)
 
 Implements creation of hatch fill objects.
@@ -942,8 +908,6 @@ static void fill_imagef(i_fill_t *fill, int x, int y, int width, int channels,
   }
 }
 
-static void combine_replace(i_color *, i_color *, int, int);
-static void combine_replacef(i_fcolor *, i_fcolor *, int, int);
 static void combine_alphablend(i_color *, i_color *, int, int);
 static void combine_alphablendf(i_fcolor *, i_fcolor *, int, int);
 static void combine_mult(i_color *, i_color *, int, int);
@@ -975,8 +939,8 @@ static struct i_combines {
 } combines[] =
 {
   { /* replace */
-    combine_replace,
-    combine_replacef,
+    NULL,
+    NULL,
   },
   { /* alpha blend */
     combine_alphablend,
@@ -1046,18 +1010,6 @@ void i_get_combine(int combine, i_fill_combine_f *color_func,
 
   *color_func = combines[combine].combine;
   *fcolor_func = combines[combine].combinef;
-}
-
-static void combine_replace(i_color *out, i_color *in, int channels, int count) {
-  while (count--) {
-    *out++ = *in++;
-  }
-}
-
-static void combine_replacef(i_fcolor *out, i_fcolor *in, int channels, int count) {
-  while (count--) {
-    *out++ = *in++;
-  }
 }
 
 static void combine_alphablend(i_color *out, i_color *in, int channels, int count) {
