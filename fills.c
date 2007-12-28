@@ -166,26 +166,12 @@ static void fill_solid(i_fill_t *, int x, int y, int width, int channels,
                        i_color *);
 static void fill_solidf(i_fill_t *, int x, int y, int width, int channels, 
                         i_fcolor *);
-static void fill_solid_comb(i_fill_t *, int x, int y, int width, int channels, 
-                            i_color *);
-static void fill_solidf_comb(i_fill_t *, int x, int y, int width, 
-                             int channels, i_fcolor *);
 
 static i_fill_solid_t base_solid_fill =
 {
   {
     fill_solid,
     fill_solidf,
-    NULL,
-    NULL,
-    NULL,
-  },
-};
-static i_fill_solid_t base_solid_fill_comb =
-{
-  {
-    fill_solid_comb,
-    fill_solidf_comb,
     NULL,
     NULL,
     NULL,
@@ -228,12 +214,11 @@ i_new_fill_solidf(const i_fcolor *c, int combine) {
   int ch;
   i_fill_solid_t *fill = mymalloc(sizeof(i_fill_solid_t)); /* checked 14jul05 tonyc */
   
+  *fill = base_solid_fill;
   if (combine) {
-    *fill = base_solid_fill_comb;
     i_get_combine(combine, &fill->base.combine, &fill->base.combinef);
   }
-  else
-    *fill = base_solid_fill;
+
   fill->fc = *c;
   for (ch = 0; ch < MAXCHANNELS; ++ch) {
     fill->c.channel[ch] = SampleFTo8(c->channel[ch]);
@@ -260,12 +245,11 @@ i_new_fill_solid(const i_color *c, int combine) {
   int ch;
   i_fill_solid_t *fill = mymalloc(sizeof(i_fill_solid_t)); /* checked 14jul05 tonyc */
 
+  *fill = base_solid_fill;
   if (combine) {
-    *fill = base_solid_fill_comb;
     i_get_combine(combine, &fill->base.combine, &fill->base.combinef);
   }
-  else
-    *fill = base_solid_fill;
+
   fill->c = *c;
   for (ch = 0; ch < MAXCHANNELS; ++ch) {
     fill->fc.channel[ch] = Sample8ToF(c->channel[ch]);
@@ -555,8 +539,10 @@ The 8-bit sample fill function for non-combining solid fills.
 static void
 fill_solid(i_fill_t *fill, int x, int y, int width, int channels, 
            i_color *data) {
+  i_color c = T_SOLID_FILL(fill)->c;
+  i_adapt_colors(channels > 2 ? 4 : 2, 4, &c, 1);
   while (width-- > 0) {
-    *data++ = T_SOLID_FILL(fill)->c;
+    *data++ = c;
   }
 }
 
@@ -570,8 +556,10 @@ The floating sample fill function for non-combining solid fills.
 static void
 fill_solidf(i_fill_t *fill, int x, int y, int width, int channels, 
            i_fcolor *data) {
+  i_fcolor c = T_SOLID_FILL(fill)->fc;
+  i_adapt_fcolors(channels > 2 ? 4 : 2, 4, &c, 1);
   while (width-- > 0) {
-    *data++ = T_SOLID_FILL(fill)->fc;
+    *data++ = c;
   }
 }
 
