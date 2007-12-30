@@ -21,6 +21,9 @@ static render_color_f IM_SUFFIX(render_color_tab)[] =
     IM_SUFFIX(render_color_alpha),
   };
 
+static void IM_SUFFIX(combine_line_noalpha)(int channels, IM_COLOR *out, IM_COLOR const *in, unsigned char const *levels, int count);
+static void IM_SUFFIX(combine_line_alpha)(int channels, IM_COLOR *out, IM_COLOR const *in, unsigned char const *levels, int count);
+
 #/code
 
 void
@@ -30,8 +33,10 @@ i_render_init(i_render *r, i_img *im, int width) {
   r->width = width;
   r->line_8 = NULL;
   r->line_double = NULL;
+  r->fill_line_8 = NULL;
+  r->fill_line_double = NULL;
 #code im->bits <= 8
-    r->IM_SUFFIX(line) = mymalloc(sizeof(i_fcolor) * width);
+  r->IM_SUFFIX(line) = mymalloc(sizeof(i_fcolor) * width);
 #/code
 }
 
@@ -83,10 +88,139 @@ i_render_color(i_render *r, int x, int y, int width, unsigned char const *src,
       r->line_8 = myrealloc(r->line_8, sizeof(i_color) * new_width);
     else
       r->line_double = myrealloc(r->line_double, sizeof(i_fcolor) * new_width);
+
+    r->width = new_width;
   }
 
 #code r->im->bits <= 8
     (IM_SUFFIX(render_color_tab)[im->channels])(r, x, y, width, src, color);
+#/code
+}
+
+void
+i_render_fill(i_render *r, int x, int y, int width, unsigned char const *src,
+	      i_fill_t *fill) {
+  i_img *im = r->im;
+  if (y < 0 || y >= im->ysize)
+    return;
+  if (x < 0) {
+    width += x;
+    src -= x;
+    x = 0;
+  }
+  if (x + width > im->xsize) {
+    width = im->xsize - x;
+  }
+  if (x >= im->xsize || x + width <= 0 || width <= 0)
+    return;
+
+  if (src) {
+    /* avoid as much work as we can */
+    while (width > 0 && *src == 0) {
+      --width;
+      ++src;
+      ++x;
+    }
+    while (width > 0 && src[width-1] == 0) {
+      --width;
+    }
+  }
+  if (!width)
+    return;
+
+  if (r->im->bits <= 8) {
+    if (!r->fill_line_8)
+      r->fill_line_8 = mymalloc(sizeof(i_color) * width);
+  }
+  else {
+    if (!r->fill_line_double)
+      r->fill_line_double = mymalloc(sizeof(i_fcolor) * width);
+  }
+
+  /* make sure our line buffer is big enough */
+  if (width > r->width) {
+    int new_width = r->width * 2;
+    if (new_width < width)
+      new_width = width;
+
+    if (r->line_8) {
+      r->line_8 = myrealloc(r->line_8, sizeof(i_color) * new_width);
+      r->fill_line_8 = myrealloc(r->fill_line_8, sizeof(i_color) * new_width);
+    }
+    else {
+      r->line_double = myrealloc(r->line_double, sizeof(i_fcolor) * new_width);
+      r->fill_line_double = myrealloc(r->fill_line_double, sizeof(i_fcolor) * new_width);
+    }
+    r->width = new_width;
+  }
+
+#code r->im->bits <= 8
+  if (IM_FILL_COMBINE(fill)) {
+    int channels = im->channels;
+    if (channels == 1 || channels == 3)
+      ++channels;
+    IM_COLOR *srcc = r->IM_SUFFIX(fill_line);
+    IM_COLOR *destc = r->IM_SUFFIX(line);
+    IM_FILL_FILLER(fill)(fill, x, y, width, r->im->channels, r->IM_SUFFIX(fill_line));
+    IM_GLIN(r->im, x, x+width, y, r->IM_SUFFIX(line));
+    IM_FILL_COMBINE(fill)(destc, srcc, im->channels, width);
+    switch (im->channels) {
+    case 1:
+    case 3:
+      IM_SUFFIX(combine_line_noalpha)(im->channels, r->IM_SUFFIX(line), r->IM_SUFFIX(fill_line), src, width);
+      break;
+      
+    case 2:
+    case 4:
+      IM_SUFFIX(combine_line_alpha)(im->channels, r->IM_SUFFIX(line), r->IM_SUFFIX(fill_line), src, width);
+      break;
+      
+    default:
+      i_fatal(3, "Invalid channel count %d\n", im->channels);
+    }
+  }
+  else {
+    IM_FILL_FILLER(fill)(fill, x, y, width, channels, r->IM_SUFFIX(fill_line));
+    IM_GLIN(r->im, x, x+width, y, r->IM_SUFFIX(line));
+    if (src) {
+      int work_width = width;
+      const unsigned char *levelp = src;
+      IM_COLOR *srcc = r->IM_SUFFIX(fill_line);
+      int alpha_chan = channels - 1;
+      while (work_width) {
+	if (*levelp == 0) {
+	  srcc->channel[alpha_chan] = 0;
+	}
+	else if (*levelp != 255) {
+	  srcc->channel[alpha_chan] = ( srcc->channel[alpha_chan] * *levelp + 127) / 255;
+	}
+	  --work_width;
+	  ++levelp;
+	  ++srcc;
+	}
+      }
+      while (work_width) {
+	if (*src) {
+	  for (ch = 0; ch < im->channels; ++ch) {
+	    IM_WORK_T work = (destc->channel[ch] * (IM_SAMPLE_MAX - *src)
+			      + srcc->channel[ch] * *src) / IM_SAMPLE_MAX;
+	    destc->channels[ch] = IM_LIMIT(work);
+	  }
+	}
+	
+	++srcc;
+	++destc;
+	++src;
+	--work_width;
+      }
+      IM_FILL_COMBINE(fill)(r->IM_SUFFIX(line), r->IM_SUFFIX(fill_line), 
+			    channels, width);
+    }
+    else { /* if (src) */
+      IM_FILL_FILLER(fill)(fill, x, y, width, r->im->channels, r->IM_SUFFIX(line));
+    }
+  }
+  IM_PLIN(im, x, x+width, y, r->IM_SUFFIX(line));
 #/code
 }
 
@@ -199,6 +333,36 @@ IM_SUFFIX(render_color_alpha)(i_render *r, int x, int y, int width,
     ++fetch_offset;
   }
   IM_PLIN(r->im, x, x+width, y, r->IM_SUFFIX(line));
+}
+
+static void
+IM_SUFFIX(combine_line_alpha)(int channels, IM_COLOR *out, IM_COLOR const *in, 
+			      const unsigned char *levels, int count) {
+  int ch;
+  int alpha_channel = channels - 1;
+  
+  while (count) {
+    IM_WORK_T src_alpha = *levels++;
+    if (src_alpha == IM_SAMPLE_MAX)
+      *dest = *in;
+    else if (src_alpha) {
+      IM_WORK_T remains = IM_SAMPLE_MAX - src_alpha;
+      IM_WORK_T orig_alpha = dest->channel[alpha_channel];
+      IM_WORK_T dest_alpha = src_alpha + (remains * orig_alpha) / IM_SAMPLE_MAX;
+      for (ch = 0; ch < alpha_channel; ++ch) {
+        linep->channel[ch] = ( src_alpha * STORE_COLOR.channel[ch]
+                               + remains * linep->channel[ch] * orig_alpha / IM_SAMPLE_MAX
+                               ) / dest_alpha;
+      }
+    }
+    ++out;
+    ++in;
+    --count;
+  }
+}
+
+static void
+IM_SUFFIX(combine_line_noalpha)(int channels, IM_COLOR *out, IM_COLOR const *in, int count) {
 }
 
 #/code

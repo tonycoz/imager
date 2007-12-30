@@ -25,10 +25,10 @@ sub preprocess {
 
   push @out, 
     "#define IM_ROUND_8(x) ((int)((x)+0.5))\n",
-      "#define IM_ROUND_double(x) (x)\n",
-	"#define IM_LIMIT_8(x) ((x) < 0 ? 0 : (x) > 255 ? 255 : (x))\n",
-	  "#define IM_LIMIT_double(x) ((x) < 0.0 ? 0.0 : (x) > 1.0 ? 1.0 : (x))\n",
-	    "#line 1 \"$src\"\n";
+    "#define IM_ROUND_double(x) (x)\n",
+    "#define IM_LIMIT_8(x) ((x) < 0 ? 0 : (x) > 255 ? 255 : (x))\n",
+    "#define IM_LIMIT_double(x) ((x) < 0.0 ? 0.0 : (x) > 1.0 ? 1.0 : (x))\n",
+    "#line 1 \"$src\"\n";
   while (defined(my $line = <SRC>)) {
     if ($line =~ /^\#code\s+(\S.+)$/) {
       $save_code
@@ -56,13 +56,23 @@ sub preprocess {
 	push @out, "#line $cond_line \"$src\"\n";
 	push @out, "  if ($cond) {\n";
       }
-      push @out, "#undef IM_EIGHT_BIT\n",
-	"#define IM_EIGHT_BIT 1\n";
+      push @out,
+	"#undef IM_EIGHT_BIT\n",
+	"#define IM_EIGHT_BIT 1\n",
+	"#undef IM_FILL_COMBINE\n",
+        "#define IM_FILL_COMBINE(fill) ((fill)->combine)\n",
+	"#undef IM_FILL_FILLER\n",
+        "#define IM_FILL_FILLER(fill) ((fill)->fill_with_color)\n";
       push @out, "#line $code_line \"$src\"\n";
       push @out, byte_samples(@code);
       push @out, "  }\n", "  else {\n"
 	if $cond;
-      push @out, "#undef IM_EIGHT_BIT\n";
+      push @out, 
+	"#undef IM_EIGHT_BIT\n",
+	"#undef IM_FILL_COMBINE\n",
+        "#define IM_FILL_COMBINE(fill) ((fill)->combinef)\n",
+	"#undef IM_FILL_FILLER\n",
+        "#define IM_FILL_FILLER(fill) ((fill)->fill_with_fcolor)\n";
       push @out, "#line $code_line \"$src\"\n";
       push @out, double_samples(@code);
       push @out, "  }\n"
@@ -223,6 +233,16 @@ becomes i_gpix() or i_gpixf() as appropriate.
 IM_ADAPT_COLORS(dest_channes, src_channels, colors, count)
 
 Call i_adapt_colors() or i_adapt_fcolors().
+
+=item *
+
+IM_FILL_COMBINE(fill) - retrieve the combine function from a fill
+object.
+
+=item *
+
+IM_FILL_FILLER(fill) - retrieve the fill_with_* function from a fill
+object.
 
 =item *
 
