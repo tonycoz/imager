@@ -62,7 +62,7 @@ sub preprocess {
 	"#undef IM_FILL_COMBINE\n",
         "#define IM_FILL_COMBINE(fill) ((fill)->combine)\n",
 	"#undef IM_FILL_FILLER\n",
-        "#define IM_FILL_FILLER(fill) ((fill)->fill_with_color)\n";
+        "#define IM_FILL_FILLER(fill) ((fill)->f_fill_with_color)\n";
       push @out, "#line $code_line \"$src\"\n";
       push @out, byte_samples(@code);
       push @out, "  }\n", "  else {\n"
@@ -72,12 +72,12 @@ sub preprocess {
 	"#undef IM_FILL_COMBINE\n",
         "#define IM_FILL_COMBINE(fill) ((fill)->combinef)\n",
 	"#undef IM_FILL_FILLER\n",
-        "#define IM_FILL_FILLER(fill) ((fill)->fill_with_fcolor)\n";
+        "#define IM_FILL_FILLER(fill) ((fill)->f_fill_with_fcolor)\n";
       push @out, "#line $code_line \"$src\"\n";
       push @out, double_samples(@code);
       push @out, "  }\n"
 	if $cond;
-      push @out, "#line $. \"$src\"\n";
+      push @out, "#line ",$.+1," \"$src\"\n";
       @code = ();
       $save_code = 0;
     }

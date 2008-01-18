@@ -2,7 +2,7 @@
 #include "draw.h"
 #include "log.h"
 #include "imageri.h"
-
+#include "imrender.h"
 #include <limits.h>
 
 static void
@@ -58,6 +58,7 @@ i_mmarray_render(i_img *im,i_mmarray *ar,i_color *val) {
   for(i=0;i<ar->lines;i++) if (ar->data[i].max!=-1) for(x=ar->data[i].min;x<ar->data[i].max;x++) i_ppix(im,x,i,val);
 }
 
+#if 0
 void
 i_mmarray_render_fill(i_img *im,i_mmarray *ar,i_fill_t *fill) {
   int x, w, y;
@@ -114,7 +115,7 @@ i_mmarray_render_fill(i_img *im,i_mmarray *ar,i_fill_t *fill) {
       myfree(work);
   }
 }
-
+#endif
 
 static
 void
@@ -570,6 +571,7 @@ Fills the box from (x1,y1) to (x2,y2) inclusive with fill.
 =cut
 */
 
+#if 0
 void
 i_box_cfill(i_img *im,int x1,int y1,int x2,int y2,i_fill_t *fill) {
   mm_log((1,"i_box_cfill(im* 0x%x,x1 %d,y1 %d,x2 %d,y2 %d,fill 0x%x)\n",im,x1,y1,x2,y2,fill));
@@ -628,7 +630,32 @@ i_box_cfill(i_img *im,int x1,int y1,int x2,int y2,i_fill_t *fill) {
       myfree(work);
   }
 }
+#else
+void
+i_box_cfill(i_img *im,int x1,int y1,int x2,int y2,i_fill_t *fill) {
+  i_render r;
+  mm_log((1,"i_box_cfill(im* 0x%x,x1 %d,y1 %d,x2 %d,y2 %d,fill 0x%x)\n",im,x1,y1,x2,y2,fill));
 
+  ++x2;
+  if (x1 < 0)
+    x1 = 0;
+  if (y1 < 0) 
+    y1 = 0;
+  if (x2 > im->xsize) 
+    x2 = im->xsize;
+  if (y2 >= im->ysize)
+    y2 = im->ysize-1;
+  if (x1 >= x2 || y1 > y2)
+    return;
+
+  i_render_init(&r, im, x2-x1);
+  while (y1 <= y2) {
+    i_render_fill(&r, x1, y1, x2-x1, NULL, fill);
+    ++y1;
+  }
+  i_render_done(&r);
+}
+#endif
 
 /* 
 =item i_line(im, x1, y1, x2, y2, val, endp)
@@ -1450,6 +1477,28 @@ cfill_from_btm(i_img *im, i_fill_t *fill, struct i_bitmap *btm,
   int x, y;
   int start;
 
+#if 1
+  i_render r;
+
+  i_render_init(&r, im, bxmax - bxmin + 1);
+
+  for(y=bymin; y<=bymax; y++) {
+    x = bxmin;
+    while (x <= bxmax) {
+      while (x <= bxmax && !btm_test(btm, x, y)) {
+	++x;
+      }
+      if (btm_test(btm, x, y)) {
+	start = x;
+	while (x <= bxmax && btm_test(btm, x, y)) {
+	  ++x;
+	}
+	i_render_fill(&r, start, y, x-start, NULL, fill);
+      }
+    }
+  }
+  i_render_done(&r);
+#else
   if (im->bits == i_8_bits && fill->fill_with_color) {
     /* bxmax/bxmin are inside the image, hence this won't overflow */
     i_color *line = mymalloc(sizeof(i_color) * (bxmax - bxmin)); /* checked 5jul05 tonyc */
@@ -1459,13 +1508,13 @@ cfill_from_btm(i_img *im, i_fill_t *fill, struct i_bitmap *btm,
 
     for(y=bymin; y<=bymax; y++) {
       x = bxmin;
-      while (x < bxmax) {
-        while (x < bxmax && !btm_test(btm, x, y)) {
+      while (x <= bxmax) {
+        while (x <= bxmax && !btm_test(btm, x, y)) {
           ++x;
         }
         if (btm_test(btm, x, y)) {
           start = x;
-          while (x < bxmax && btm_test(btm, x, y)) {
+          while (x <= bxmax && btm_test(btm, x, y)) {
             ++x;
           }
           if (fill->combine) {
@@ -1522,4 +1571,5 @@ cfill_from_btm(i_img *im, i_fill_t *fill, struct i_bitmap *btm,
     if (work)
       myfree(work);
   }
+#endif
 }

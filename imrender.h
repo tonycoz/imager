@@ -10,5 +10,7 @@ i_render_done(i_render *r);
 extern void
 i_render_color(i_render *r, int x, int y, int width, unsigned char const *src,
                i_color const *color);
-
+extern void
+i_render_fill(i_render *r, int x, int y, int width, unsigned char const *src,
+	      i_fill_t *fill);
 #endif

@@ -1713,6 +1713,17 @@ fill_fountf(i_fill_t *fill, int x, int y, int width, int channels,
 static void
 fount_fill_destroy(i_fill_t *fill);
 
+static i_fill_fountain_t
+fount_fill_proto =
+  {
+    {
+      NULL,
+      fill_fountf,
+      fount_fill_destroy
+    }
+  };
+
+
 /*
 =item i_new_fill_fount(xa, ya, xb, yb, type, repeat, combine, super_sample, ssample_param, count, segs)
 
@@ -1733,9 +1744,7 @@ i_new_fill_fount(double xa, double ya, double xb, double yb,
                  int count, i_fountain_seg *segs) {
   i_fill_fountain_t *fill = mymalloc(sizeof(i_fill_fountain_t));
   
-  fill->base.fill_with_color = NULL;
-  fill->base.fill_with_fcolor = fill_fountf;
-  fill->base.destroy = fount_fill_destroy;
+  *fill = fount_fill_proto;
   if (combine)
     i_get_combine(combine, &fill->base.combine, &fill->base.combinef);
   else {

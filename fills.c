@@ -474,6 +474,16 @@ struct i_fill_image_t {
   double matrix[9];
 };
 
+static struct i_fill_image_t
+image_fill_proto =
+  {
+    {
+      fill_image,
+      fill_imagef,
+      NULL
+    }
+  };
+
 /*
 =item i_new_fill_image(im, matrix, xoff, yoff, combine)
 
@@ -492,9 +502,7 @@ i_fill_t *
 i_new_fill_image(i_img *im, const double *matrix, int xoff, int yoff, int combine) {
   struct i_fill_image_t *fill = mymalloc(sizeof(*fill)); /* checked 14jul05 tonyc */
 
-  fill->base.fill_with_color = fill_image;
-  fill->base.fill_with_fcolor = fill_imagef;
-  fill->base.destroy = NULL;
+  *fill = image_fill_proto;
 
   if (combine) {
     i_get_combine(combine, &fill->base.combine, &fill->base.combinef);
@@ -563,6 +571,16 @@ fill_solidf(i_fill_t *fill, int x, int y, int width, int channels,
   }
 }
 
+static i_fill_hatch_t
+hatch_fill_proto =
+  {
+    {
+      fill_hatch,
+      fill_hatchf,
+      NULL
+    }
+  };
+
 /*
 =item i_new_hatch_low(fg, bg, ffg, fbg, combine, hatch, cust_hatch, dx, dy)
 
@@ -578,9 +596,7 @@ i_new_hatch_low(const i_color *fg, const i_color *bg,
                 int dx, int dy) {
   i_fill_hatch_t *fill = mymalloc(sizeof(i_fill_hatch_t)); /* checked 14jul05 tonyc */
 
-  fill->base.fill_with_color = fill_hatch;
-  fill->base.fill_with_fcolor = fill_hatchf;
-  fill->base.destroy = NULL;
+  *fill = hatch_fill_proto;
   /* Some Sun C didn't like the condition expressions that were here.
      See https://rt.cpan.org/Ticket/Display.html?id=21944
    */
@@ -908,30 +924,30 @@ static void fill_imagef(i_fill_t *fill, int x, int y, int width, int channels,
   }
 }
 
-static void combine_alphablend(i_color *, i_color *, int, int);
-static void combine_alphablendf(i_fcolor *, i_fcolor *, int, int);
-static void combine_mult(i_color *, i_color *, int, int);
-static void combine_multf(i_fcolor *, i_fcolor *, int, int);
-static void combine_dissolve(i_color *, i_color *, int, int);
-static void combine_dissolvef(i_fcolor *, i_fcolor *, int, int);
-static void combine_add(i_color *, i_color *, int, int);
-static void combine_addf(i_fcolor *, i_fcolor *, int, int);
-static void combine_subtract(i_color *, i_color *, int, int);
-static void combine_subtractf(i_fcolor *, i_fcolor *, int, int);
-static void combine_diff(i_color *, i_color *, int, int);
-static void combine_difff(i_fcolor *, i_fcolor *, int, int);
-static void combine_darken(i_color *, i_color *, int, int);
-static void combine_darkenf(i_fcolor *, i_fcolor *, int, int);
-static void combine_lighten(i_color *, i_color *, int, int);
-static void combine_lightenf(i_fcolor *, i_fcolor *, int, int);
-static void combine_hue(i_color *, i_color *, int, int);
-static void combine_huef(i_fcolor *, i_fcolor *, int, int);
-static void combine_sat(i_color *, i_color *, int, int);
-static void combine_satf(i_fcolor *, i_fcolor *, int, int);
-static void combine_value(i_color *, i_color *, int, int);
-static void combine_valuef(i_fcolor *, i_fcolor *, int, int);
-static void combine_color(i_color *, i_color *, int, int);
-static void combine_colorf(i_fcolor *, i_fcolor *, int, int);
+static void combine_alphablend(const i_color *, i_color *, int, int);
+static void combine_alphablendf(const i_fcolor *, i_fcolor *, int, int);
+static void combine_mult(const i_color *, i_color *, int, int);
+static void combine_multf(const i_fcolor *, i_fcolor *, int, int);
+static void combine_dissolve(const i_color *, i_color *, int, int);
+static void combine_dissolvef(const i_fcolor *, i_fcolor *, int, int);
+static void combine_add(const i_color *, i_color *, int, int);
+static void combine_addf(const i_fcolor *, i_fcolor *, int, int);
+static void combine_subtract(const i_color *, i_color *, int, int);
+static void combine_subtractf(const i_fcolor *, i_fcolor *, int, int);
+static void combine_diff(const i_color *, i_color *, int, int);
+static void combine_difff(const i_fcolor *, i_fcolor *, int, int);
+static void combine_darken(const i_color *, i_color *, int, int);
+static void combine_darkenf(const i_fcolor *, i_fcolor *, int, int);
+static void combine_lighten(const i_color *, i_color *, int, int);
+static void combine_lightenf(const i_fcolor *, i_fcolor *, int, int);
+static void combine_hue(const i_color *, i_color *, int, int);
+static void combine_huef(const i_fcolor *, i_fcolor *, int, int);
+static void combine_sat(const i_color *, i_color *, int, int);
+static void combine_satf(const i_fcolor *, i_fcolor *, int, int);
+static void combine_value(const i_color *, i_color *, int, int);
+static void combine_valuef(const i_fcolor *, i_fcolor *, int, int);
+static void combine_color(const i_color *, i_color *, int, int);
+static void combine_colorf(const i_fcolor *, i_fcolor *, int, int);
 
 static struct i_combines {
   i_fill_combine_f combine;
@@ -1012,346 +1028,353 @@ void i_get_combine(int combine, i_fill_combine_f *color_func,
   *fcolor_func = combines[combine].combinef;
 }
 
-static void combine_alphablend(i_color *out, i_color *in, int channels, int count) {
-  while (count--) {
-    COMBINE(*out, *in, channels);
-    ++out;
-    ++in;
-  }
+static void 
+combine_alphablend(const i_color *out, i_color *in, int channels, int count) {
+  /* nothing to do */
 }
 
-static void combine_alphablendf(i_fcolor *out, i_fcolor *in, int channels, int count) {
-  while (count--) {
-    COMBINEF(*out, *in, channels);
-    ++out;
-    ++in;
-  }
+static void
+combine_alphablendf(const i_fcolor *out, i_fcolor *in, int channels, int count) {
+  /* nothing to do */
 }
 
-static void combine_mult(i_color *out, i_color *in, int channels, int count) {
+static void
+combine_mult(const i_color *out, i_color *in, int channels, int count) {
   int ch;
 
   while (count--) {
-    double mult[MAXCHANNELS];
-    mult[3] = in->channel[3];
+    /*double mult[MAXCHANNELS];*/
+    for (ch = 0; ch < channels-1; ++ch) { 
+      in->channel[ch] = out->channel[ch] * in->channel[ch] / 255;
+    } 
+    /*COMBINEA(*out, mult, channels);*/
+    ++out;
+    ++in;
+  }
+}
+
+static void 
+combine_multf(const i_fcolor *out, i_fcolor *in, int channels, int count) {
+  int ch;
+
+  while (count--) {
+    for (ch = 0; ch < channels-1; ++ch) { 
+      in->channel[ch] = out->channel[ch] * in->channel[ch];
+    } 
+    /*COMBINEF(*out, c, channels);*/
+    ++out;
+    ++in;
+  }
+}
+
+static void 
+combine_dissolve(const i_color *out, i_color *in, int channels, int count) {
+  while (count--) {
+    if (in->channel[channels-1] > rand() * (255.0 / RAND_MAX))
+      in->channel[channels-1] = 255;
+    else
+      in->channel[channels-1] = 0;
+    /*COMBINE(*out, *in, channels);*/
+    ++out;
+    ++in;
+  }
+}
+
+static void
+combine_dissolvef(const i_fcolor *out, i_fcolor *in, int channels, int count) {
+  while (count--) {
+    if (in->channel[channels-1] > rand() * (1.0 / RAND_MAX))
+      in->channel[channels-1] = 1.0;
+    else
+      in->channel[channels-1] = 0;
+    /*COMBINEF(*out, *in, channels);*/
+    ++out;
+    ++in;
+  }
+}
+
+static void
+combine_add(const i_color *out, i_color *in, int channels, int count) {
+  int ch;
+
+  while (count--) {
+    /*i_color c = *in;*/
+    for (ch = 0; ch < channels-1; ++ch) { 
+      int total = out->channel[ch] + in->channel[ch];
+      if (total > 255)
+	total = 255;
+      in->channel[ch] = total;
+    } 
+    /*COMBINE(*out, c, channels);*/
+    ++out;
+    ++in;
+  }
+}
+
+static void
+combine_addf(const i_fcolor *out, i_fcolor *in, int channels, int count) {
+  int ch;
+
+  while (count--) {
+    /*i_fcolor c = *in;*/
     for (ch = 0; ch < (channels); ++ch) { 
-      if (ch != 3)
-        mult[ch] = (out->channel[ch] * in->channel[ch]) * (1.0 / 255);
+      double total = out->channel[ch] + in->channel[ch];
+      if (total > 1.0)
+	total = 1.0;
+      in->channel[ch] = total;
     } 
-    COMBINEA(*out, mult, channels);
+    /*COMBINEF(*out, c, channels);*/
     ++out;
     ++in;
   }
 }
 
-static void combine_multf(i_fcolor *out, i_fcolor *in, int channels, int count) {
+static void
+combine_subtract(const i_color *out, i_color *fill, int channels, int count) {
   int ch;
 
   while (count--) {
-    i_fcolor c = *in;
-    for (ch = 0; ch < channels; ++ch) { 
-      if (ch != 3)
-        c.channel[ch] = out->channel[ch] * in->channel[ch];
+    for (ch = 0; ch < channels-1; ++ch) { 
+      int total = out->channel[ch] - fill->channel[ch];
+      if (total < 0)
+	total = 0;
+      fill->channel[ch] = total;
     } 
-    COMBINEF(*out, c, channels);
     ++out;
-    ++in;
+    ++fill;
   }
 }
 
-static void combine_dissolve(i_color *out, i_color *in, int channels, int count) {
-  while (count--) {
-    if (in->channel[3] > rand() * (255.0 / RAND_MAX))
-      COMBINE(*out, *in, channels);
-    ++out;
-    ++in;
-  }
-}
-
-static void combine_dissolvef(i_fcolor *out, i_fcolor *in, int channels, int count) {
-  while (count--) {
-    if (in->channel[3] > rand() * (1.0 / RAND_MAX))
-      COMBINEF(*out, *in, channels);
-    ++out;
-    ++in;
-  }
-}
-
-static void combine_add(i_color *out, i_color *in, int channels, int count) {
+static void
+combine_subtractf(const i_fcolor *out, i_fcolor *fill, int channels, int count) {
   int ch;
 
   while (count--) {
-    i_color c = *in;
-    for (ch = 0; ch < (channels); ++ch) { 
-      if (ch != 3) {
-        int total = out->channel[ch] + in->channel[ch];
-        if (total > 255)
-          total = 255;
-        c.channel[ch] = total;
-      }
+    for (ch = 0; ch < channels-1; ++ch) { 
+      double total = out->channel[ch] - fill->channel[ch];
+      if (total < 0)
+	total = 0;
+      fill->channel[ch] = total;
     } 
-    COMBINE(*out, c, channels);
     ++out;
-    ++in;
+    ++fill;
   }
 }
 
-static void combine_addf(i_fcolor *out, i_fcolor *in, int channels, int count) {
+static void
+combine_diff(const i_color *out, i_color *fill, int channels, int count) {
   int ch;
 
   while (count--) {
-    i_fcolor c = *in;
-    for (ch = 0; ch < (channels); ++ch) { 
-      if (ch != 3) {
-        double total = out->channel[ch] + in->channel[ch];
-        if (total > 1.0)
-          total = 1.0;
-        out->channel[ch] = total;
-      }
+    for (ch = 0; ch < channels-1; ++ch) { 
+      fill->channel[ch] = abs(out->channel[ch] - fill->channel[ch]);
     } 
-    COMBINEF(*out, c, channels);
+
     ++out;
-    ++in;
+    ++fill;
   }
 }
 
-static void combine_subtract(i_color *out, i_color *in, int channels, int count) {
+static void
+combine_difff(const i_fcolor *out, i_fcolor *fill, int channels, int count) {
   int ch;
 
   while (count--) {
-    i_color c = *in;
-    for (ch = 0; ch < (channels); ++ch) { 
-      if (ch != 3) {
-        int total = out->channel[ch] - in->channel[ch];
-        if (total < 0)
-          total = 0;
-        c.channel[ch] = total;
-      }
-    } 
-    COMBINE(*out, c, channels);
-    ++out;
-    ++in;
-  }
-}
-
-static void combine_subtractf(i_fcolor *out, i_fcolor *in, int channels, int count) {
-  int ch;
-
-  while (count--) {
-    i_fcolor c = *in;
-    for (ch = 0; ch < channels; ++ch) { 
-      if (ch != 3) {
-        double total = out->channel[ch] - in->channel[ch];
-        if (total < 0)
-          total = 0;
-        c.channel[ch] = total;
-      }
-    } 
-    COMBINEF(*out, c, channels);
-    ++out;
-    ++in;
-  }
-}
-
-static void combine_diff(i_color *out, i_color *in, int channels, int count) {
-  int ch;
-
-  while (count--) {
-    i_color c = *in;
-    for (ch = 0; ch < (channels); ++ch) { 
-      if (ch != 3) 
-        c.channel[ch] = abs(out->channel[ch] - in->channel[ch]);
-    } 
-    COMBINE(*out, c, channels)
-    ++out;
-    ++in;
-  }
-}
-
-static void combine_difff(i_fcolor *out, i_fcolor *in, int channels, int count) {
-  int ch;
-
-  while (count--) {
-    i_fcolor c = *in;
-    for (ch = 0; ch < (channels); ++ch) { 
-      if (ch != 3)
-        c.channel[ch] = fabs(out->channel[ch] - in->channel[ch]);
+    for (ch = 0; ch < channels-1; ++ch) { 
+      fill->channel[ch] = fabs(out->channel[ch] - fill->channel[ch]);
     }
-    COMBINEF(*out, c, channels);
     ++out;
-    ++in;
+    ++fill;
   }
 }
 
-static void combine_darken(i_color *out, i_color *in, int channels, int count) {
+static void 
+combine_darken(const i_color *out, i_color *fill, int channels, int count) {
   int ch;
 
   while (count--) {
-    for (ch = 0; ch < channels; ++ch) { 
-      if (ch != 3 && out->channel[ch] < in->channel[ch])
-        in->channel[ch] = out->channel[ch];
+    for (ch = 0; ch < channels-1; ++ch) { 
+      if (out->channel[ch] < fill->channel[ch])
+        fill->channel[ch] = out->channel[ch];
     } 
-    COMBINE(*out, *in, channels);
     ++out;
-    ++in;
+    ++fill;
   }
 }
 
-static void combine_darkenf(i_fcolor *out, i_fcolor *in, int channels, int count) {
+static void
+combine_darkenf(const i_fcolor *out, i_fcolor *fill, int channels, int count) {
   int ch;
 
   while (count--) {
-    for (ch = 0; ch < channels; ++ch) { 
-      if (ch != 3 && out->channel[ch] < in->channel[ch])
-        in->channel[ch] = out->channel[ch];
+    for (ch = 0; ch < channels-1; ++ch) { 
+      if (out->channel[ch] < fill->channel[ch])
+        fill->channel[ch] = out->channel[ch];
     } 
-    COMBINEF(*out, *in, channels);
     ++out;
-    ++in;
+    ++fill;
   }
 }
 
-static void combine_lighten(i_color *out, i_color *in, int channels, int count) {
+static void 
+combine_lighten(const i_color *out, i_color *fill, int channels, int count) {
   int ch;
 
   while (count--) {
-    for (ch = 0; ch < channels; ++ch) { 
-      if (ch != 3 && out->channel[ch] > in->channel[ch])
-        in->channel[ch] = out->channel[ch];
+    for (ch = 0; ch < channels-1; ++ch) { 
+      if (out->channel[ch] > fill->channel[ch])
+        fill->channel[ch] = out->channel[ch];
     } 
-    COMBINE(*out, *in, channels);
     ++out;
-    ++in;
+    ++fill;
   }
 }
 
-static void combine_lightenf(i_fcolor *out, i_fcolor *in, int channels, int count) {
+static void 
+combine_lightenf(const i_fcolor *out, i_fcolor *fill, int channels, int count) {
   int ch;
 
   while (count--) {
-    for (ch = 0; ch < channels; ++ch) { 
-      if (ch != 3 && out->channel[ch] > in->channel[ch])
-        in->channel[ch] = out->channel[ch];
+    for (ch = 0; ch < channels-1; ++ch) { 
+      if (out->channel[ch] > fill->channel[ch])
+        fill->channel[ch] = out->channel[ch];
     } 
-    COMBINEF(*out, *in, channels);
     ++out;
-    ++in;
+    ++fill;
   }
 }
 
-static void combine_hue(i_color *out, i_color *in, int channels, int count) {
+static void 
+combine_hue(const i_color *out, i_color *fill, int channels, int count) {
+  if (channels > 2) {
+    while (count--) {
+      i_color c = *fill;
+      *fill = *out;
+      i_rgb_to_hsv(&c);
+      i_rgb_to_hsv(fill);
+      fill->channel[0] = c.channel[0];
+      i_hsv_to_rgb(fill);
+      fill->channel[3] = c.channel[3];
+      ++out;
+      ++fill;
+    }
+  }
+}
+
+static void
+combine_huef(const i_fcolor *out, i_fcolor *fill, int channels, int count) {
+  if (channels > 2) {
+    while (count--) {
+      i_fcolor c = *fill;
+      *fill = *out;
+      i_rgb_to_hsvf(&c);
+      i_rgb_to_hsvf(fill);
+      fill->channel[0] = c.channel[0];
+      i_hsv_to_rgbf(fill);
+      fill->channel[3] = c.channel[3];
+      ++out;
+      ++fill;
+    }
+  }
+}
+
+static void
+combine_sat(const i_color *out, i_color *fill, int channels, int count) {
+  if (channels > 2) {
+    while (count--) {
+      i_color c = *fill;
+      *fill = *out;
+      i_rgb_to_hsv(&c);
+      i_rgb_to_hsv(fill);
+      fill->channel[1] = c.channel[1];
+      i_hsv_to_rgb(fill);
+      fill->channel[3] = c.channel[3];
+      ++out;
+      ++fill;
+    }
+  }
+}
+
+static void 
+combine_satf(const i_fcolor *out, i_fcolor *fill, int channels, int count) {
+  if (channels > 2) {
+    while (count--) {
+      i_fcolor c = *fill;
+      *fill = *out;
+      i_rgb_to_hsvf(&c);
+      i_rgb_to_hsvf(fill);
+      fill->channel[1] = c.channel[1];
+      i_hsv_to_rgbf(&c);
+      fill->channel[3] = c.channel[3];
+      ++out;
+      ++fill;
+    }
+  }
+}
+
+static void 
+combine_value(const i_color *out, i_color *fill, int channels, int count) {
+  if (channels > 2) {
+    while (count--) {
+      i_color c = *fill;
+      *fill = *out;
+      i_rgb_to_hsv(&c);
+      i_rgb_to_hsv(fill);
+      fill->channel[2] = c.channel[2];
+      i_hsv_to_rgb(fill);
+      fill->channel[3] = c.channel[3];
+      ++out;
+      ++fill;
+    }
+  }
+}
+
+static void 
+combine_valuef(const i_fcolor *out, i_fcolor *fill, int channels, int count) {
+  if (channels > 2) {
+    while (count--) {
+      i_fcolor c = *fill;
+      *fill = *out;
+      i_rgb_to_hsvf(&c);
+      i_rgb_to_hsvf(fill);
+      fill->channel[2] = c.channel[2];
+      i_hsv_to_rgbf(fill);
+      fill->channel[3] = c.channel[3];
+      ++out;
+      ++fill;
+    }
+  }
+}
+
+static void 
+combine_color(const i_color *out, i_color *fill, int channels, int count) {
   while (count--) {
-    i_color c = *out;
+    i_color c = *fill;
+    *fill = *out;
     i_rgb_to_hsv(&c);
-    i_rgb_to_hsv(in);
-    c.channel[0] = in->channel[0];
-    i_hsv_to_rgb(&c);
-    c.channel[3] = in->channel[3];
-    COMBINE(*out, c, channels);
+    i_rgb_to_hsv(fill);
+    fill->channel[0] = c.channel[0];
+    fill->channel[1] = c.channel[1];
+    i_hsv_to_rgb(fill);
+    fill->channel[3] = c.channel[3];
     ++out;
-    ++in;
+    ++fill;
   }
 }
 
-static void combine_huef(i_fcolor *out, i_fcolor *in, int channels, int count) {
+static void
+combine_colorf(const i_fcolor *out, i_fcolor *fill, int channels, int count) {
   while (count--) {
-    i_fcolor c = *out;
+    i_fcolor c = *fill;
+    *fill = *out;
     i_rgb_to_hsvf(&c);
-    i_rgb_to_hsvf(in);
-    c.channel[0] = in->channel[0];
-    i_hsv_to_rgbf(&c);
-    c.channel[3] = in->channel[3];
-    COMBINEF(*out, c, channels);
+    i_rgb_to_hsvf(fill);
+    fill->channel[0] = c.channel[0];
+    fill->channel[1] = c.channel[1];
+    i_hsv_to_rgbf(fill);
+    fill->channel[3] = c.channel[3];
     ++out;
-    ++in;
-  }
-}
-
-static void combine_sat(i_color *out, i_color *in, int channels, int count) {
-  while (count--) {
-    i_color c = *out;
-    i_rgb_to_hsv(&c);
-    i_rgb_to_hsv(in);
-    c.channel[1] = in->channel[1];
-    i_hsv_to_rgb(&c);
-    c.channel[3] = in->channel[3];
-    COMBINE(*out, c, channels);
-    ++out;
-    ++in;
-  }
-}
-
-static void combine_satf(i_fcolor *out, i_fcolor *in, int channels, int count) {
-  while (count--) {
-    i_fcolor c = *out;
-    i_rgb_to_hsvf(&c);
-    i_rgb_to_hsvf(in);
-    c.channel[1] = in->channel[1];
-    i_hsv_to_rgbf(&c);
-    c.channel[3] = in->channel[3];
-    COMBINEF(*out, c, channels);
-    ++out;
-    ++in;
-  }
-}
-
-static void combine_value(i_color *out, i_color *in, int channels, int count) {
-  while (count--) {
-    i_color c = *out;
-    i_rgb_to_hsv(&c);
-    i_rgb_to_hsv(in);
-    c.channel[2] = in->channel[2];
-    i_hsv_to_rgb(&c);
-    c.channel[3] = in->channel[3];
-    COMBINE(*out, c, channels);
-    ++out;
-    ++in;
-  }
-}
-
-static void combine_valuef(i_fcolor *out, i_fcolor *in, int channels, 
-                           int count) {
-  while (count--) {
-    i_fcolor c = *out;
-    i_rgb_to_hsvf(&c);
-    i_rgb_to_hsvf(in);
-    c.channel[2] = in->channel[2];
-    i_hsv_to_rgbf(&c);
-    c.channel[3] = in->channel[3];
-    COMBINEF(*out, c, channels);
-    ++out;
-    ++in;
-  }
-}
-
-static void combine_color(i_color *out, i_color *in, int channels, int count) {
-  while (count--) {
-    i_color c = *out;
-    i_rgb_to_hsv(&c);
-    i_rgb_to_hsv(in);
-    c.channel[0] = in->channel[0];
-    c.channel[1] = in->channel[1];
-    i_hsv_to_rgb(&c);
-    c.channel[3] = in->channel[3];
-    COMBINE(*out, c, channels);
-    ++out;
-    ++in;
-  }
-}
-
-static void combine_colorf(i_fcolor *out, i_fcolor *in, int channels, 
-                           int count) {
-  while (count--) {
-    i_fcolor c = *out;
-    i_rgb_to_hsvf(&c);
-    i_rgb_to_hsvf(in);
-    c.channel[0] = in->channel[0];
-    c.channel[1] = in->channel[1];
-    i_hsv_to_rgbf(&c);
-    c.channel[3] = in->channel[3];
-    COMBINEF(*out, c, channels);
-    ++out;
-    ++in;
+    ++fill;
   }
 }
 
