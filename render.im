@@ -21,8 +21,8 @@ static render_color_f IM_SUFFIX(render_color_tab)[] =
     IM_SUFFIX(render_color_alpha),
   };
 
-static void IM_SUFFIX(combine_line_noalpha)(int channels, IM_COLOR *out, IM_COLOR const *in, unsigned char const *levels, int count);
-static void IM_SUFFIX(combine_line_alpha)(int channels, IM_COLOR *out, IM_COLOR const *in, unsigned char const *levels, int count);
+static void IM_SUFFIX(combine_line_noalpha)(int channels, IM_COLOR *out, IM_COLOR const *in, int count);
+static void IM_SUFFIX(combine_line_alpha)(int channels, IM_COLOR *out, IM_COLOR const *in, int count);
 
 #/code
 
@@ -203,17 +203,34 @@ i_render_fill(i_render *r, int x, int y, int width, unsigned char const *src,
     IM_COLOR *srcc = r->IM_SUFFIX(fill_line);
     IM_COLOR *destc = r->IM_SUFFIX(line);
     IM_FILL_FILLER(fill)(fill, x, y, width, fill_channels, r->IM_SUFFIX(fill_line));
+    if (src) {
+      unsigned char const *srcc = src;
+      IM_COLOR *fillc = r->IM_SUFFIX(fill_line);
+      int work_width = width;
+      while (work_width) {
+	if (*srcc == 0) {
+	  fillc->channel[fill_channels-1] = 0;
+	}
+	else if (*srcc != 255) {
+	  fillc->channel[fill_channels-1] =
+	    fillc->channel[fill_channels-1] * *srcc / 255;
+	}
+	--work_width;
+	++srcc;
+	++fillc;
+      }
+    }
     IM_GLIN(r->im, x, x+width, y, r->IM_SUFFIX(line));
     IM_FILL_COMBINE(fill)(destc, srcc, fill_channels, width);
     switch (im->channels) {
     case 1:
     case 3:
-      IM_SUFFIX(combine_line_noalpha)(im->channels, r->IM_SUFFIX(line), r->IM_SUFFIX(fill_line), src, width);
+      IM_SUFFIX(combine_line_noalpha)(im->channels, r->IM_SUFFIX(line), r->IM_SUFFIX(fill_line), width);
       break;
       
     case 2:
     case 4:
-      IM_SUFFIX(combine_line_alpha)(im->channels, r->IM_SUFFIX(line), r->IM_SUFFIX(fill_line), src, width);
+      IM_SUFFIX(combine_line_alpha)(im->channels, r->IM_SUFFIX(line), r->IM_SUFFIX(fill_line), width);
       break;
       
     default:
@@ -377,61 +394,30 @@ IM_SUFFIX(render_color_alpha)(i_render *r, int x, int y, int width,
 
 static void
 IM_SUFFIX(combine_line_alpha)(int channels, IM_COLOR *out, IM_COLOR const *in, 
-			      const unsigned char *levels, int count) {
+			      int count) {
   int ch;
   int alpha_channel = channels - 1;
   
-  if (levels) {
-    while (count) {
-      IM_WORK_T combine_level = *levels++;
-      if (combine_level) {
-	IM_WORK_T src_alpha = in->channel[alpha_channel];
-	if (combine_level != 255) {
-	  src_alpha = src_alpha * combine_level / 255;
-	}
-
-	if (src_alpha == IM_SAMPLE_MAX && combine_level == 255)
-	  *out = *in;
-	else if (src_alpha) {
-	  IM_WORK_T remains = IM_SAMPLE_MAX - src_alpha;
-	  IM_WORK_T orig_alpha = out->channel[alpha_channel];
-	  IM_WORK_T dest_alpha = src_alpha + (remains * orig_alpha) / IM_SAMPLE_MAX;
-	  
-	  for (ch = 0; ch < alpha_channel; ++ch) {
-	    out->channel[ch] = ( src_alpha * in->channel[ch]
-				 + remains * out->channel[ch] * orig_alpha / IM_SAMPLE_MAX
-				 ) / dest_alpha;
-	  }
-	}
-      }
-      ++out;
-      ++in;
-      ++levels;
-      --count;
-    }
-  }
-  else {
-    while (count) {
-      IM_WORK_T src_alpha = in->channel[alpha_channel];
+  while (count) {
+    IM_WORK_T src_alpha = in->channel[alpha_channel];
       
-      if (src_alpha == IM_SAMPLE_MAX)
-	*out = *in;
-      else if (src_alpha) {
-	IM_WORK_T remains = IM_SAMPLE_MAX - src_alpha;
-	IM_WORK_T orig_alpha = out->channel[alpha_channel];
-	IM_WORK_T dest_alpha = src_alpha + (remains * orig_alpha) / IM_SAMPLE_MAX;
+    if (src_alpha == IM_SAMPLE_MAX)
+      *out = *in;
+    else if (src_alpha) {
+      IM_WORK_T remains = IM_SAMPLE_MAX - src_alpha;
+      IM_WORK_T orig_alpha = out->channel[alpha_channel];
+      IM_WORK_T dest_alpha = src_alpha + (remains * orig_alpha) / IM_SAMPLE_MAX;
 	
-	for (ch = 0; ch < alpha_channel; ++ch) {
-	  out->channel[ch] = ( src_alpha * in->channel[ch]
-			       + remains * out->channel[ch] * orig_alpha / IM_SAMPLE_MAX
-			       ) / dest_alpha;
-	}
+      for (ch = 0; ch < alpha_channel; ++ch) {
+	out->channel[ch] = ( src_alpha * in->channel[ch]
+			     + remains * out->channel[ch] * orig_alpha / IM_SAMPLE_MAX
+			     ) / dest_alpha;
       }
-
-      ++out;
-      ++in;
-      --count;
     }
+
+    ++out;
+    ++in;
+    --count;
   }
 }
 
@@ -444,55 +430,27 @@ IM_SUFFIX(combine_line_alpha)(int channels, IM_COLOR *out, IM_COLOR const *in,
 
 static void
 IM_SUFFIX(combine_line_noalpha)
-     (int channels, IM_COLOR *out, IM_COLOR const *in, 
-      unsigned char const * levels, int count) {
+     (int channels, IM_COLOR *out, IM_COLOR const *in, int count) {
   int ch;
 
-  if (levels) {
-    while (count) {
-      IM_WORK_T combine_level = *levels;
+  while (count) {
+    IM_WORK_T src_alpha = in->channel[channels];
+    
+    if (src_alpha == IM_SAMPLE_MAX)
+      *out = *in;
+    else if (src_alpha) {
+      IM_WORK_T remains;
       
-      if (combine_level) {
-	IM_WORK_T src_alpha = in->channel[channels];
-
-	if (src_alpha == IM_SAMPLE_MAX && combine_level == 255)
-	  *out = *in;
-	else if (src_alpha) {
-	  IM_WORK_T remains;
-	  src_alpha = src_alpha * combine_level / 255;
-	  remains = 255 - src_alpha;
-	  for (ch = 0; ch < channels; ++ch) {
-	    out->channel[ch] = ( in->channel[ch] * src_alpha
-				 + out->channel[ch] * remains) / 255;
-	  }
-	}
-      }	
-      ++out;
-      ++in;
-      ++levels;
-      --count;
-    }
-  }
-  else {
-    while (count) {
-      IM_WORK_T src_alpha = in->channel[channels];
-
-      if (src_alpha == IM_SAMPLE_MAX)
-	*out = *in;
-      else if (src_alpha) {
-	IM_WORK_T remains;
-	
-	remains = 255 - src_alpha;
-	for (ch = 0; ch < channels; ++ch) {
-	  out->channel[ch] = ( in->channel[ch] * src_alpha
-			       + out->channel[ch] * remains) / 255;
-	}
+      remains = 255 - src_alpha;
+      for (ch = 0; ch < channels; ++ch) {
+	out->channel[ch] = ( in->channel[ch] * src_alpha
+			     + out->channel[ch] * remains) / 255;
       }
-
-      ++out;
-      ++in;
-      --count;
     }
+    
+    ++out;
+    ++in;
+    --count;
   }
 }
 
