@@ -58,65 +58,6 @@ i_mmarray_render(i_img *im,i_mmarray *ar,i_color *val) {
   for(i=0;i<ar->lines;i++) if (ar->data[i].max!=-1) for(x=ar->data[i].min;x<ar->data[i].max;x++) i_ppix(im,x,i,val);
 }
 
-#if 0
-void
-i_mmarray_render_fill(i_img *im,i_mmarray *ar,i_fill_t *fill) {
-  int x, w, y;
-  if (im->bits == i_8_bits && fill->fill_with_color) {
-    i_color *line = mymalloc(sizeof(i_color) * im->xsize); /* checked 5jul05 tonyc */
-    i_color *work = NULL;
-    if (fill->combine)
-      work = mymalloc(sizeof(i_color) * im->xsize); /* checked 5jul05 tonyc */
-    for(y=0;y<ar->lines;y++) {
-      if (ar->data[y].max!=-1) {
-        x = ar->data[y].min;
-        w = ar->data[y].max-ar->data[y].min;
-
-        if (fill->combine) {
-          i_glin(im, x, x+w, y, line);
-          (fill->fill_with_color)(fill, x, y, w, im->channels, work);
-          (fill->combine)(line, work, im->channels, w);
-        }
-        else {
-          (fill->fill_with_color)(fill, x, y, w, im->channels, line);
-        }
-        i_plin(im, x, x+w, y, line);
-      }
-    }
-  
-    myfree(line);
-    if (work)
-      myfree(work);
-  }
-  else {
-    i_fcolor *line = mymalloc(sizeof(i_fcolor) * im->xsize); /* checked 5jul05 tonyc */
-    i_fcolor *work = NULL;
-    if (fill->combinef)
-      work = mymalloc(sizeof(i_fcolor) * im->xsize); /* checked 5jul05 tonyc */
-    for(y=0;y<ar->lines;y++) {
-      if (ar->data[y].max!=-1) {
-        x = ar->data[y].min;
-        w = ar->data[y].max-ar->data[y].min;
-
-        if (fill->combinef) {
-          i_glinf(im, x, x+w, y, line);
-          (fill->fill_with_fcolor)(fill, x, y, w, im->channels, work);
-          (fill->combinef)(line, work, im->channels, w);
-        }
-        else {
-          (fill->fill_with_fcolor)(fill, x, y, w, im->channels, line);
-        }
-        i_plinf(im, x, x+w, y, line);
-      }
-    }
-  
-    myfree(line);
-    if (work)
-      myfree(work);
-  }
-}
-#endif
-
 static
 void
 i_arcdraw(int x1, int y1, int x2, int y2, i_mmarray *ar) {
@@ -571,66 +512,6 @@ Fills the box from (x1,y1) to (x2,y2) inclusive with fill.
 =cut
 */
 
-#if 0
-void
-i_box_cfill(i_img *im,int x1,int y1,int x2,int y2,i_fill_t *fill) {
-  mm_log((1,"i_box_cfill(im* 0x%x,x1 %d,y1 %d,x2 %d,y2 %d,fill 0x%x)\n",im,x1,y1,x2,y2,fill));
-
-  ++x2;
-  if (x1 < 0)
-    x1 = 0;
-  if (y1 < 0) 
-    y1 = 0;
-  if (x2 > im->xsize) 
-    x2 = im->xsize;
-  if (y2 >= im->ysize)
-    y2 = im->ysize-1;
-  if (x1 >= x2 || y1 > y2)
-    return;
-  if (im->bits == i_8_bits && fill->fill_with_color) {
-    i_color *line = mymalloc(sizeof(i_color) * (x2 - x1)); /* checked 5jul05 tonyc */
-    i_color *work = NULL;
-    if (fill->combine)
-      work = mymalloc(sizeof(i_color) * (x2-x1)); /* checked 5jul05 tonyc */
-    while (y1 <= y2) {
-      if (fill->combine) {
-        i_glin(im, x1, x2, y1, line);
-        (fill->fill_with_color)(fill, x1, y1, x2-x1, im->channels, work);
-        (fill->combine)(line, work, im->channels, x2-x1);
-      }
-      else {
-        (fill->fill_with_color)(fill, x1, y1, x2-x1, im->channels, line);
-      }
-      i_plin(im, x1, x2, y1, line);
-      ++y1;
-    }
-    myfree(line);
-    if (work)
-      myfree(work);
-  }
-  else {
-    i_fcolor *line = mymalloc(sizeof(i_fcolor) * (x2 - x1)); /* checked 5jul05 tonyc */
-    i_fcolor *work;
-    work = mymalloc(sizeof(i_fcolor) * (x2 - x1)); /* checked 5jul05 tonyc */
-
-    while (y1 <= y2) {
-      if (fill->combine) {
-        i_glinf(im, x1, x2, y1, line);
-        (fill->fill_with_fcolor)(fill, x1, y1, x2-x1, im->channels, work);
-        (fill->combinef)(line, work, im->channels, x2-x1);
-      }
-      else {
-        (fill->fill_with_fcolor)(fill, x1, y1, x2-x1, im->channels, line);
-      }
-      i_plinf(im, x1, x2, y1, line);
-      ++y1;
-    }
-    myfree(line);
-    if (work)
-      myfree(work);
-  }
-}
-#else
 void
 i_box_cfill(i_img *im,int x1,int y1,int x2,int y2,i_fill_t *fill) {
   i_render r;
@@ -655,7 +536,6 @@ i_box_cfill(i_img *im,int x1,int y1,int x2,int y2,i_fill_t *fill) {
   }
   i_render_done(&r);
 }
-#endif
 
 /* 
 =item i_line(im, x1, y1, x2, y2, val, endp)
@@ -1477,7 +1357,6 @@ cfill_from_btm(i_img *im, i_fill_t *fill, struct i_bitmap *btm,
   int x, y;
   int start;
 
-#if 1
   i_render r;
 
   i_render_init(&r, im, bxmax - bxmin + 1);
@@ -1498,78 +1377,4 @@ cfill_from_btm(i_img *im, i_fill_t *fill, struct i_bitmap *btm,
     }
   }
   i_render_done(&r);
-#else
-  if (im->bits == i_8_bits && fill->fill_with_color) {
-    /* bxmax/bxmin are inside the image, hence this won't overflow */
-    i_color *line = mymalloc(sizeof(i_color) * (bxmax - bxmin)); /* checked 5jul05 tonyc */
-    i_color *work = NULL;
-    if (fill->combine)
-      work = mymalloc(sizeof(i_color) * (bxmax - bxmin)); /* checked 5jul05 tonyc */
-
-    for(y=bymin; y<=bymax; y++) {
-      x = bxmin;
-      while (x <= bxmax) {
-        while (x <= bxmax && !btm_test(btm, x, y)) {
-          ++x;
-        }
-        if (btm_test(btm, x, y)) {
-          start = x;
-          while (x <= bxmax && btm_test(btm, x, y)) {
-            ++x;
-          }
-          if (fill->combine) {
-            i_glin(im, start, x, y, line);
-            (fill->fill_with_color)(fill, start, y, x-start, im->channels, 
-                                    work);
-            (fill->combine)(line, work, im->channels, x-start);
-          }
-          else {
-            (fill->fill_with_color)(fill, start, y, x-start, im->channels, 
-                                    line);
-          }
-          i_plin(im, start, x, y, line);
-        }
-      }
-    }
-    myfree(line);
-    if (work)
-      myfree(work);
-  }
-  else {
-    /* bxmax/bxmin are inside the image, hence this won't overflow */
-    i_fcolor *line = mymalloc(sizeof(i_fcolor) * (bxmax - bxmin)); /* checked 5jul05 tonyc */
-    i_fcolor *work = NULL;
-    if (fill->combinef)
-      work = mymalloc(sizeof(i_fcolor) * (bxmax - bxmin)); /* checked 5jul05 tonyc */
-    
-    for(y=bymin;y<=bymax;y++) {
-      x = bxmin;
-      while (x < bxmax) {
-        while (x < bxmax && !btm_test(btm, x, y)) {
-          ++x;
-        }
-        if (btm_test(btm, x, y)) {
-          start = x;
-          while (x < bxmax && btm_test(btm, x, y)) {
-            ++x;
-          }
-          if (fill->combinef) {
-            i_glinf(im, start, x, y, line);
-            (fill->fill_with_fcolor)(fill, start, y, x-start, im->channels, 
-                                    work);
-            (fill->combinef)(line, work, im->channels, x-start);
-          }
-          else {
-            (fill->fill_with_fcolor)(fill, start, y, x-start, im->channels, 
-                                    line);
-          }
-          i_plinf(im, start, x, y, line);
-        }
-      }
-    }
-    myfree(line);
-    if (work)
-      myfree(work);
-  }
-#endif
 }
