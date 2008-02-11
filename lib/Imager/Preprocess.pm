@@ -125,6 +125,8 @@ sub byte_samples {
     s/\bIM_ROUND\(/IM_ROUND_8(/g;
     s/\bIM_ADAPT_COLORS\(/i_adapt_colors(/g;
     s/\bIM_LIMIT\(/IM_LIMIT_8(/g;
+    s/\bIM_RENDER_LINE\(/i_render_line(/g;
+    s/\bIM_FILL_COMBINE_F\b/i_fill_combine_f/g;
   }
   
   @lines;
@@ -150,6 +152,8 @@ sub double_samples {
     s/\bIM_ROUND\(/IM_ROUND_double(/g;
     s/\bIM_ADAPT_COLORS\(/i_adapt_fcolors(/g;
     s/\bIM_LIMIT\(/IM_LIMIT_double(/g;
+    s/\bIM_RENDER_LINE\(/i_render_linef(/g;
+    s/\bIM_FILL_COMBINE_F\b/i_fill_combinef_f/g;
   }
 
   @lines;

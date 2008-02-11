@@ -75,6 +75,7 @@ apidocs.perl    Build lib/Imager/APIRef.pm
 bigtest.perl	Library selection tester
 bmp.c           Reading and writing Windows BMP files
 color.c         Color translation and handling
+compose.im
 conv.im
 convert.c
 doco.perl

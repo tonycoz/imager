@@ -1378,3 +1378,5 @@ cfill_from_btm(i_img *im, i_fill_t *fill, struct i_bitmap *btm,
   }
   i_render_done(&r);
 }
+
+	  

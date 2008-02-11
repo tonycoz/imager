@@ -175,7 +175,15 @@ void i_copyto      (i_img *im,i_img *src,int x1,int y1,int x2,int y2,int tx,int 
 void i_copyto_trans(i_img *im,i_img *src,int x1,int y1,int x2,int y2,int tx,int ty,const i_color *trans);
 i_img* i_copy        (i_img *src);
 int  i_rubthru     (i_img *im, i_img *src, int tx, int ty, int src_minx, int src_miny, int src_maxx, int src_maxy);
-
+extern int 
+i_compose_mask(i_img *out, i_img *src, i_img *mask,
+	       int out_left, int out_top, int src_left, int src_top,
+	       int mask_left, int mask_top, int width, int height,
+	       int combine, double opacity);
+extern int 
+i_compose(i_img *out, i_img *src,
+	       int out_left, int out_top, int src_left, int src_top,
+	       int width, int height, int combine, double opacity);
 
 undef_int i_flipxy (i_img *im, int direction);
 extern i_img *i_rotate90(i_img *im, int degrees);

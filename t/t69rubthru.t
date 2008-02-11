@@ -1,6 +1,6 @@
 #!perl -w
 use strict;
-use Test::More tests => 66;
+use Test::More tests => 76;
 use Imager qw(:all :handy);
 use Imager::Test qw(is_image);
 
@@ -81,56 +81,59 @@ my $oogtarg = Imager->new(xsize=>100, ysize=>100, channels=>1);
 
 {
   # alpha source and target
-  my $src = Imager->new(xsize => 10, ysize => 1, channels => 4);
-  my $targ = Imager->new(xsize => 10, ysize => 2, channels => 4);
+  for my $method (qw/rubthrough compose/) {
 
-  # simple initialization
-  $targ->setscanline('y' => 1, x => 1,
-                     pixels =>
-                     [
-                      NC(255, 128, 0, 255),
-                      NC(255, 128, 0, 128),
-                      NC(255, 128, 0, 0),
-                      NC(255, 128, 0, 255),
-                      NC(255, 128, 0, 128),
-                      NC(255, 128, 0, 0),
-                      NC(255, 128, 0, 255),
-                      NC(255, 128, 0, 128),
-                      NC(255, 128, 0, 0),
-                     ]);
-  $src->setscanline('y' => 0,
-                    pixels =>
-                    [
-                     NC(0, 128, 255, 0),
-                     NC(0, 128, 255, 0),
-                     NC(0, 128, 255, 0),
-                     NC(0, 128, 255, 128),
-                     NC(0, 128, 255, 128),
-                     NC(0, 128, 255, 128),
-                     NC(0, 128, 255, 255),
-                     NC(0, 128, 255, 255),
-                     NC(0, 128, 255, 255),
-                    ]);
-  ok($targ->rubthrough(src => $src,
-                       tx => 1, ty => 1), "do 4 on 4 rubthrough");
-  iscolora($targ->getpixel(x => 1, y => 1), NC(255, 128, 0, 255),
-           "check at zero source coverage on full targ coverage");
-  iscolora($targ->getpixel(x => 2, y => 1), NC(255, 128, 0, 128),
-           "check at zero source coverage on half targ coverage");
-  iscolora($targ->getpixel(x => 3, y => 1), NC(255, 128, 0, 0),
-           "check at zero source coverage on zero targ coverage");
-  iscolora($targ->getpixel(x => 4, y => 1), NC(127, 128, 128, 255),
-           "check at half source_coverage on full targ coverage");
-  iscolora($targ->getpixel(x => 5, y => 1), NC(85, 128, 170, 191),
-           "check at half source coverage on half targ coverage");
-  iscolora($targ->getpixel(x => 6, y => 1), NC(0, 128, 255, 128),
-           "check at half source coverage on zero targ coverage");
-  iscolora($targ->getpixel(x => 7, y => 1), NC(0, 128, 255, 255),
-           "check at full source_coverage on full targ coverage");
-  iscolora($targ->getpixel(x => 8, y => 1), NC(0, 128, 255, 255),
-           "check at full source coverage on half targ coverage");
-  iscolora($targ->getpixel(x => 9, y => 1), NC(0, 128, 255, 255),
-           "check at full source coverage on zero targ coverage");
+    my $src = Imager->new(xsize => 10, ysize => 1, channels => 4);
+    my $targ = Imager->new(xsize => 10, ysize => 2, channels => 4);
+
+    # simple initialization
+    $targ->setscanline('y' => 1, x => 1,
+		       pixels =>
+		       [
+			NC(255, 128, 0, 255),
+			NC(255, 128, 0, 128),
+			NC(255, 128, 0, 0),
+			NC(255, 128, 0, 255),
+			NC(255, 128, 0, 128),
+			NC(255, 128, 0, 0),
+			NC(255, 128, 0, 255),
+			NC(255, 128, 0, 128),
+			NC(255, 128, 0, 0),
+		       ]);
+    $src->setscanline('y' => 0,
+		      pixels =>
+		      [
+		       NC(0, 128, 255, 0),
+		       NC(0, 128, 255, 0),
+		       NC(0, 128, 255, 0),
+		       NC(0, 128, 255, 128),
+		       NC(0, 128, 255, 128),
+		       NC(0, 128, 255, 128),
+		       NC(0, 128, 255, 255),
+		       NC(0, 128, 255, 255),
+		       NC(0, 128, 255, 255),
+		      ]);
+    ok($targ->$method(src => $src, combine => 'normal',
+		      tx => 1, ty => 1), "do 4 on 4 $method");
+    iscolora($targ->getpixel(x => 1, 'y' => 1), NC(255, 128, 0, 255),
+	     "check at zero source coverage on full targ coverage");
+    iscolora($targ->getpixel(x => 2, 'y' => 1), NC(255, 128, 0, 128),
+	     "check at zero source coverage on half targ coverage");
+    iscolora($targ->getpixel(x => 3, 'y' => 1), NC(255, 128, 0, 0),
+	     "check at zero source coverage on zero targ coverage");
+    iscolora($targ->getpixel(x => 4, 'y' => 1), NC(127, 128, 128, 255),
+	     "check at half source_coverage on full targ coverage");
+    iscolora($targ->getpixel(x => 5, 'y' => 1), NC(85, 128, 170, 191),
+	     "check at half source coverage on half targ coverage");
+    iscolora($targ->getpixel(x => 6, 'y' => 1), NC(0, 128, 255, 128),
+	     "check at half source coverage on zero targ coverage");
+    iscolora($targ->getpixel(x => 7, 'y' => 1), NC(0, 128, 255, 255),
+	     "check at full source_coverage on full targ coverage");
+    iscolora($targ->getpixel(x => 8, 'y' => 1), NC(0, 128, 255, 255),
+	     "check at full source coverage on half targ coverage");
+    iscolora($targ->getpixel(x => 9, 'y' => 1), NC(0, 128, 255, 255),
+	     "check at full source coverage on zero targ coverage");
+  }
 }
 
 { # https://rt.cpan.org/Ticket/Display.html?id=30908

@@ -14,25 +14,13 @@ my @hatch_types =
 my %hatch_types;
 @hatch_types{@hatch_types} = 0..$#hatch_types;
 
-my @combine_types = 
-  qw/none normal multiply dissolve add subtract diff lighten darken
-     hue saturation value color/;
-my %combine_types;
-@combine_types{@combine_types} = 0 .. $#combine_types;
-$combine_types{mult} = $combine_types{multiply};
-$combine_types{'sub'}  = $combine_types{subtract};
-$combine_types{sat}  = $combine_types{saturation};
-
 *_color = \&Imager::_color;
 
 sub new {
   my ($class, %hsh) = @_;
 
   my $self = bless { }, $class;
-  $hsh{combine} ||= 0;
-  if (exists $combine_types{$hsh{combine}}) {
-    $hsh{combine} = $combine_types{$hsh{combine}};
-  }
+  $hsh{combine} = Imager->_combine($hsh{combine}, 0);
   if ($hsh{solid}) {
     my $solid = _color($hsh{solid});
     if (UNIVERSAL::isa($solid, 'Imager::Color')) {
@@ -151,7 +139,7 @@ sub hatches {
 }
 
 sub combines {
-  return @combine_types;
+  return Imager->combines;
 }
 
 1;
@@ -209,80 +197,8 @@ fountain (similar to gradients in paint software)
 
 =item combine
 
-The way in which the fill data is combined with the underlying image,
-possible values include:
-
-=over
-
-=item none
-
-The fill pixel replaces the target pixel.
-
-=item normal
-
-The fill pixels alpha value is used to combine it with the target pixel.
-
-=item multiply
-
-=item mult
-
-Each channel of fill and target is multiplied, and the result is
-combined using the alpha channel of the fill pixel.
-
-=item dissolve
-
-If the alpha of the fill pixel is greater than a random number, the
-fill pixel is alpha combined with the target pixel.
-
-=item add
-
-The channels of the fill and target are added together, clamped to the range of the samples and alpha combined with the target.
-
-=item subtract
-
-The channels of the fill are subtracted from the target, clamped to be
->= 0, and alpha combined with the target.
-
-=item diff
-
-The channels of the fill are subtracted from the target and the
-absolute value taken this is alpha combined with the target.
-
-=item lighten
-
-The higher value is taken from each channel of the fill and target
-pixels, which is then alpha combined with the target.
-
-=item darken
-
-The higher value is taken from each channel of the fill and target
-pixels, which is then alpha combined with the target.
-
-=item hue
-
-The combination of the saturation and value of the target is combined
-with the hue of the fill pixel, and is then alpha combined with the
-target.
-
-=item sat
-
-The combination of the hue and value of the target is combined
-with the saturation of the fill pixel, and is then alpha combined with the
-target.
-
-=item value
-
-The combination of the hue and value of the target is combined
-with the value of the fill pixel, and is then alpha combined with the
-target.
-
-=item color
-
-The combination of the value of the target is combined with the hue
-and saturation of the fill pixel, and is then alpha combined with the
-target.
-
-=back
+The way in which the fill data is combined with the underlying image.
+See L<Imager::Draw/"Combine Types">.
 
 =back
 
