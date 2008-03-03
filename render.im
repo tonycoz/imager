@@ -7,6 +7,8 @@ Render utilities
 
 typedef void (*render_color_f)(i_render *, int, int, int, unsigned char const *src, i_color const *color);
 
+#define i_color_channels(channels) ((channels) == 2 || (channels) == 4 ? (channels)-1 : (channels))
+
 #code
 
 static void IM_SUFFIX(render_color_alpha)(i_render *r, int x, int y, int width, unsigned char const *src, i_color const *color);
@@ -21,8 +23,13 @@ static render_color_f IM_SUFFIX(render_color_tab)[] =
     IM_SUFFIX(render_color_alpha),
   };
 
-static void IM_SUFFIX(combine_line_noalpha)(int channels, IM_COLOR *out, IM_COLOR const *in, int count);
-static void IM_SUFFIX(combine_line_alpha)(int channels, IM_COLOR *out, IM_COLOR const *in, int count);
+static void IM_SUFFIX(combine_line_noalpha)(IM_COLOR *out, IM_COLOR const *in, int channels, int count);
+static void IM_SUFFIX(combine_line_alpha)(IM_COLOR *out, IM_COLOR const *in, int channels, int count);
+/* the na variant doesn't touch the output alpha channel */
+static void IM_SUFFIX(combine_line_alpha_na)(IM_COLOR *out, IM_COLOR const *in, int channels, int count);
+
+static void IM_SUFFIX(combine_line)(IM_COLOR *out, IM_COLOR const *in, int channels, int count);
+static void IM_SUFFIX(combine_line_na)(IM_COLOR *out, IM_COLOR const *in, int channels, int count);
 
 #/code
 
@@ -331,21 +338,7 @@ i_render_fill(i_render *r, int x, int y, int width, unsigned char const *src,
       }
     }
     IM_GLIN(r->im, x, x+width, y, r->IM_SUFFIX(line));
-    IM_FILL_COMBINE(fill)(destc, srcc, fill_channels, width);
-    switch (im->channels) {
-    case 1:
-    case 3:
-      IM_SUFFIX(combine_line_noalpha)(im->channels, r->IM_SUFFIX(line), r->IM_SUFFIX(fill_line), width);
-      break;
-      
-    case 2:
-    case 4:
-      IM_SUFFIX(combine_line_alpha)(im->channels, r->IM_SUFFIX(line), r->IM_SUFFIX(fill_line), width);
-      break;
-      
-    default:
-      i_fatal(3, "Invalid channel count %d\n", im->channels);
-    }
+    IM_FILL_COMBINE(fill)(destc, srcc, r->im->channels, width);
   }
   else {
     if (src) {
@@ -445,22 +438,6 @@ IM_RENDER_LINE(i_render *r, int x, int y, int width, const IM_SAMPLE_T *src,
     }
     IM_GLIN(im, x, x+width, y, r->IM_SUFFIX(line));
     combine(r->IM_SUFFIX(line), line, im->channels, width);
-    switch (im->channels) {
-    case 1:
-    case 3:
-      IM_SUFFIX(combine_line_noalpha)(im->channels, r->IM_SUFFIX(line),
-				      line, width);
-      break;
-      
-    case 2:
-    case 4:
-      IM_SUFFIX(combine_line_alpha)(im->channels, r->IM_SUFFIX(line), 
-				    line, width);
-      break;
-      
-    default:
-      i_fatal(3, "Invalid channel count %d\n", im->channels);
-    }
     IM_PLIN(im, x, x+width, y, r->IM_SUFFIX(line));
   }
   else {
@@ -605,8 +582,8 @@ IM_SUFFIX(render_color_alpha)(i_render *r, int x, int y, int width,
 */
 
 static void
-IM_SUFFIX(combine_line_alpha)(int channels, IM_COLOR *out, IM_COLOR const *in, 
-			      int count) {
+IM_SUFFIX(combine_line_alpha)(IM_COLOR *out, IM_COLOR const *in, 
+			      int channels, int count) {
   int ch;
   int alpha_channel = channels - 1;
   
@@ -643,7 +620,7 @@ IM_SUFFIX(combine_line_alpha)(int channels, IM_COLOR *out, IM_COLOR const *in,
 
 static void
 IM_SUFFIX(combine_line_noalpha)
-     (int channels, IM_COLOR *out, IM_COLOR const *in, int count) {
+     (IM_COLOR *out, IM_COLOR const *in, int channels, int count) {
   int ch;
 
   while (count) {
@@ -666,5 +643,400 @@ IM_SUFFIX(combine_line_noalpha)
     --count;
   }
 }
+
+/* combine a line of image data with an output line, both the input
+   and output lines include an alpha channel.
+
+   Both input and output lines have I<channels> of data, channels
+   should be either 2 or 4.
+
+   This variant does not modify the output alpha channel.
+*/
+
+static void
+IM_SUFFIX(combine_line_alpha_na)(IM_COLOR *out, IM_COLOR const *in, 
+			      int channels, int count) {
+  int ch;
+  int alpha_channel = channels - 1;
+  
+  while (count) {
+    IM_WORK_T src_alpha = in->channel[alpha_channel];
+      
+    if (src_alpha == IM_SAMPLE_MAX)
+      *out = *in;
+    else if (src_alpha) {
+      IM_WORK_T remains = IM_SAMPLE_MAX - src_alpha;
+      IM_WORK_T orig_alpha = out->channel[alpha_channel];
+      IM_WORK_T dest_alpha = src_alpha + (remains * orig_alpha) / IM_SAMPLE_MAX;
+	
+      for (ch = 0; ch < alpha_channel; ++ch) {
+	out->channel[ch] = ( src_alpha * in->channel[ch]
+			     + remains * out->channel[ch] * orig_alpha / IM_SAMPLE_MAX
+			     ) / dest_alpha;
+      }
+    }
+
+    ++out;
+    ++in;
+    --count;
+  }
+}
+
+static void
+IM_SUFFIX(combine_line)(IM_COLOR *out, IM_COLOR const *in, int channels, int count) {
+  if (channels == 2 || channels == 4)
+    IM_SUFFIX(combine_line_alpha)(out, in, channels, count);
+  else
+    IM_SUFFIX(combine_line_noalpha)(out, in, channels, count);
+}
+
+static void
+IM_SUFFIX(combine_line_na)(IM_COLOR *out, IM_COLOR const *in, int channels, int count) {
+  if (channels == 2 || channels == 4)
+    IM_SUFFIX(combine_line_alpha_na)(out, in, channels, count);
+  else
+    IM_SUFFIX(combine_line_noalpha)(out, in, channels, count);
+}
+
+static void IM_SUFFIX(combine_alphablend)(IM_COLOR *, IM_COLOR *, int, int);
+static void IM_SUFFIX(combine_mult)(IM_COLOR *, IM_COLOR *, int, int);
+static void IM_SUFFIX(combine_dissolve)(IM_COLOR *, IM_COLOR *, int, int);
+static void IM_SUFFIX(combine_add)(IM_COLOR *, IM_COLOR *, int, int);
+static void IM_SUFFIX(combine_subtract)(IM_COLOR *, IM_COLOR *, int, int);
+static void IM_SUFFIX(combine_diff)(IM_COLOR *, IM_COLOR *, int, int);
+static void IM_SUFFIX(combine_darken)(IM_COLOR *, IM_COLOR *, int, int);
+static void IM_SUFFIX(combine_lighten)(IM_COLOR *, IM_COLOR *, int, int);
+static void IM_SUFFIX(combine_hue)(IM_COLOR *, IM_COLOR *, int, int);
+static void IM_SUFFIX(combine_sat)(IM_COLOR *, IM_COLOR *, int, int);
+static void IM_SUFFIX(combine_value)(IM_COLOR *, IM_COLOR *, int, int);
+static void IM_SUFFIX(combine_color)(IM_COLOR *, IM_COLOR *, int, int);
+
+static const IM_FILL_COMBINE_F IM_SUFFIX(combines)[] =
+{
+  NULL,
+  IM_SUFFIX(combine_alphablend),
+  IM_SUFFIX(combine_mult),
+  IM_SUFFIX(combine_dissolve),
+  IM_SUFFIX(combine_add),
+  IM_SUFFIX(combine_subtract),
+  IM_SUFFIX(combine_diff),
+  IM_SUFFIX(combine_lighten),
+  IM_SUFFIX(combine_darken),
+  IM_SUFFIX(combine_hue),
+  IM_SUFFIX(combine_sat),
+  IM_SUFFIX(combine_value),
+  IM_SUFFIX(combine_color)
+};
+
+#/code
+
+/*
+=item i_get_combine(combine, color_func, fcolor_func)
+
+=cut
+*/
+
+void i_get_combine(int combine, i_fill_combine_f *color_func, 
+                   i_fill_combinef_f *fcolor_func) {
+  if (combine < 0 || combine > sizeof(combines_8) / sizeof(*combines_8))
+    combine = 0;
+
+  *color_func = combines_8[combine];
+  *fcolor_func = combines_double[combine];
+}
+
+#code
+
+/*
+  Two good references for implementing combining modes:
+
+  http://www.pegtop.net/delphi/articles/blendmodes/
+  referenced as [pegtop]
+
+  http://gimp-savvy.com/BOOK/index.html?node55.html
+  ("The Blending Modes", if it changes)
+  referenced as [savvy]
+
+  Where differences exist, I follow the gimp practice, since I can
+  verify it.
+ */
+
+
+static void 
+IM_SUFFIX(combine_alphablend)(IM_COLOR *out, IM_COLOR *in, int channels, int count) {
+  IM_SUFFIX(combine_line)(out, in, channels, count);
+}
+
+static void
+IM_SUFFIX(combine_mult)(IM_COLOR *out, IM_COLOR *in, int channels, int count) {
+  int ch;
+  IM_COLOR *inp = in;
+  IM_COLOR const *outp = out;
+  int work_count = count;
+  int color_channels = i_color_channels(channels);
+
+  while (work_count--) {
+    if (inp->channel[color_channels]) {
+      for (ch = 0; ch < color_channels; ++ch) { 
+	inp->channel[ch] = outp->channel[ch] * inp->channel[ch] / IM_SAMPLE_MAX;
+      }
+    }
+    ++outp;
+    ++inp;
+  }
+
+  IM_SUFFIX(combine_line_na)(out, in, channels, count);
+}
+
+static void 
+IM_SUFFIX(combine_dissolve)(IM_COLOR *out, IM_COLOR *in, int channels, int count) {
+  int color_channels = i_color_channels(channels);
+  int ch;
+
+  if (channels == 2 || channels == 4) {
+    while (count--) {
+      if (in->channel[channels-1] > rand() * ((double)IM_SAMPLE_MAX / RAND_MAX)) {
+	for (ch = 0; ch < color_channels; ++ch) {
+	  out->channel[ch] = in->channel[ch];
+	}
+	out->channel[color_channels] = IM_SAMPLE_MAX;
+      }
+      ++out;
+      ++in;
+    }
+  }
+  else {
+    while (count--) {
+      if (in->channel[channels] > rand() * ((double)IM_SAMPLE_MAX / RAND_MAX)) {
+	for (ch = 0; ch < color_channels; ++ch) {
+	  out->channel[ch] = in->channel[ch];
+	}
+      }
+      ++out;
+      ++in;
+    }
+  }
+}
+
+static void
+IM_SUFFIX(combine_add)(IM_COLOR *out, IM_COLOR *in, int channels, int count) {
+  int ch;
+  int color_channels = i_color_channels(channels);
+  int work_count = count;
+  IM_COLOR *inp = in;
+  IM_COLOR const *outp = out;
+
+  while (work_count--) {
+    if (in->channel[color_channels]) {
+      for (ch = 0; ch < color_channels; ++ch) { 
+	IM_WORK_T total = out->channel[ch] + in->channel[ch];
+	if (total > IM_SAMPLE_MAX)
+	  total = IM_SAMPLE_MAX;
+	in->channel[ch] = total;
+      } 
+    }
+
+    ++outp;
+    ++inp;
+  }
+
+  IM_SUFFIX(combine_line_na)(out, in, channels, count);
+}
+
+/* 
+   [pegtop] documents this as max(A+B-256, 0) while [savvy] documents
+   it as max(A-B, 0).
+ */
+static void
+IM_SUFFIX(combine_subtract)(IM_COLOR *out, IM_COLOR *in, int channels, int count) {
+  int ch;
+  IM_COLOR *inp = in;
+  IM_COLOR const *outp = out;
+  int work_count = count;
+  int color_channels = i_color_channels(channels);
+
+  while (work_count--) {
+    if (inp->channel[color_channels]) {
+      for (ch = 0; ch < color_channels; ++ch) { 
+	IM_WORK_T total = outp->channel[ch] - inp->channel[ch];
+	if (total < 0)
+	  total = 0;
+	inp->channel[ch] = total;
+      } 
+    }
+    ++outp;
+    ++inp;
+  }
+  IM_SUFFIX(combine_line_na)(out, in, channels, count);
+}
+
+static void
+IM_SUFFIX(combine_diff)(IM_COLOR *out, IM_COLOR *in, int channels, int count) {
+  int ch;
+  IM_COLOR *inp = in;
+  IM_COLOR const *outp = out;
+  int work_count = count;
+  int color_channels = i_color_channels(channels);
+
+  while (work_count--) {
+    for (ch = 0; ch < color_channels; ++ch) { 
+#if IM_EIGHT_BIT
+      inp->channel[ch] = abs(outp->channel[ch] - inp->channel[ch]);
+#else
+      inp->channel[ch] = fabs(outp->channel[ch] - inp->channel[ch]);
+#endif
+    } 
+
+    ++outp;
+    ++inp;
+  }
+
+  IM_SUFFIX(combine_line_na)(out, in, channels, count);
+}
+
+static void 
+IM_SUFFIX(combine_darken)(IM_COLOR *out, IM_COLOR *in, int channels, 
+			  int count) {
+  int ch;
+  IM_COLOR *inp = in;
+  IM_COLOR const *outp = out;
+  int work_count = count;
+  int color_channels = i_color_channels(channels);
+
+  while (work_count--) {
+    for (ch = 0; ch < color_channels; ++ch) { 
+      if (outp->channel[ch] < inp->channel[ch])
+        inp->channel[ch] = outp->channel[ch];
+    } 
+    ++outp;
+    ++inp;
+  }
+
+  IM_SUFFIX(combine_line_na)(out, in, channels, count);
+}
+
+static void 
+IM_SUFFIX(combine_lighten)(IM_COLOR *out, IM_COLOR *in, int channels, int count) {
+  int ch;
+  IM_COLOR *inp = in;
+  IM_COLOR const *outp = out;
+  int color_channels = i_color_channels(channels);
+  int work_count = count;
+
+  while (work_count--) {
+    for (ch = 0; ch < color_channels; ++ch) { 
+      if (outp->channel[ch] > inp->channel[ch])
+        inp->channel[ch] = outp->channel[ch];
+    } 
+    ++outp;
+    ++inp;
+  }
+
+  IM_SUFFIX(combine_line_na)(out, in, channels, count);
+}
+
+#if IM_EIGHT_BIT
+#define IM_RGB_TO_HSV i_rgb_to_hsv
+#define IM_HSV_TO_RGB i_hsv_to_rgb
+#else
+#define IM_RGB_TO_HSV i_rgb_to_hsvf
+#define IM_HSV_TO_RGB i_hsv_to_rgbf
+#endif
+
+static void 
+IM_SUFFIX(combine_hue)(IM_COLOR *out, IM_COLOR *in, int channels, int count) {
+  if (channels > 2) {
+    IM_COLOR *inp = in;
+    IM_COLOR const *outp = out;
+    int work_count = count;
+
+    while (work_count--) {
+      IM_COLOR c = *inp;
+      *inp = *outp;
+      IM_RGB_TO_HSV(&c);
+      IM_RGB_TO_HSV(inp);
+      inp->channel[0] = c.channel[0];
+      IM_HSV_TO_RGB(inp);
+      inp->channel[3] = c.channel[3];
+      ++outp;
+      ++inp;
+    }
+
+    IM_SUFFIX(combine_line_na)(out, in, channels, count);
+  }
+}
+
+static void
+IM_SUFFIX(combine_sat)(IM_COLOR *out, IM_COLOR *in, int channels, int count) {
+  if (channels > 2) {
+    IM_COLOR *inp = in;
+    IM_COLOR const *outp = out;
+    int work_count = count;
+
+    while (work_count--) {
+      IM_COLOR c = *inp;
+      *inp = *outp;
+      IM_RGB_TO_HSV(&c);
+      IM_RGB_TO_HSV(inp);
+      inp->channel[1] = c.channel[1];
+      IM_HSV_TO_RGB(inp);
+      inp->channel[3] = c.channel[3];
+      ++outp;
+      ++inp;
+    }
+
+    IM_SUFFIX(combine_line_na)(out, in, channels, count);
+  }
+}
+
+static void 
+IM_SUFFIX(combine_value)(IM_COLOR *out, IM_COLOR *in, int channels, int count) {
+  if (channels > 2) {
+    IM_COLOR *inp = in;
+    IM_COLOR const *outp = out;
+    int work_count = count;
+
+    while (work_count--) {
+      IM_COLOR c = *inp;
+      *inp = *outp;
+      IM_RGB_TO_HSV(&c);
+      IM_RGB_TO_HSV(inp);
+      inp->channel[2] = c.channel[2];
+      IM_HSV_TO_RGB(inp);
+      inp->channel[3] = c.channel[3];
+      ++outp;
+      ++inp;
+    }
+  }
+
+  IM_SUFFIX(combine_line_na)(out, in, channels, count);
+}
+
+static void 
+IM_SUFFIX(combine_color)(IM_COLOR *out, IM_COLOR *in, int channels, int count) {
+  if (channels > 2) {
+    IM_COLOR *inp = in;
+    IM_COLOR const *outp = out;
+    int work_count = count;
+
+    while (work_count--) {
+      IM_COLOR c = *inp;
+      *inp = *outp;
+      IM_RGB_TO_HSV(&c);
+      IM_RGB_TO_HSV(inp);
+      inp->channel[0] = c.channel[0];
+      inp->channel[1] = c.channel[1];
+      IM_HSV_TO_RGB(inp);
+      inp->channel[3] = c.channel[3];
+      ++outp;
+      ++inp;
+    }
+  }
+
+  IM_SUFFIX(combine_line_na)(out, in, channels, count);
+}
+
+#undef IM_RGB_TO_HSV
+#undef IM_HSV_TO_RGB
 
 #/code

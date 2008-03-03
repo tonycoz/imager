@@ -362,9 +362,19 @@ typedef void (*i_fill_with_fcolor_f)
      (struct i_fill_tag *fill, int x, int y, int width, int channels,
       i_fcolor *data);
 typedef void (*i_fill_destroy_f)(struct i_fill_tag *fill);
-typedef void (*i_fill_combine_f)(const i_color *out, i_color *in, int channels, 
+
+/* combine functions modify their target and are permitted to modify
+   the source to prevent having to perform extra copying/memory
+   allocations, etc
+   The out array has I<channels> channels.
+
+   The in array has I<channels> channels + an alpha channel if one
+   isn't included in I<channels>.
+*/
+
+typedef void (*i_fill_combine_f)(i_color *out, i_color *in, int channels, 
                                  int count);
-typedef void (*i_fill_combinef_f)(const i_fcolor *out, i_fcolor *in, int channels,
+typedef void (*i_fill_combinef_f)(i_fcolor *out, i_fcolor *in, int channels,
                                   int count);
 
 /* fountain fill types */
