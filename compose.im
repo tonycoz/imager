@@ -104,7 +104,7 @@ i_compose_mask(i_img *out, i_img *src, i_img *mask,
 	++maskp;
       }
     }
-    IM_RENDER_LINE(&r, out_left, out_top, width, mask_line, src_line,
+    IM_RENDER_LINE(&r, out_left, out_top+dy, width, mask_line, src_line,
 		   IM_SUFFIX(combinef));
   }
   myfree(src_line);
@@ -197,7 +197,7 @@ i_compose(i_img *out, i_img *src,
   for (dy = 0; dy < height; ++dy) {
     IM_GLIN(src, src_left, src_left + width, src_top + dy, src_line);
     IM_ADAPT_COLORS(adapt_channels, src->channels, src_line, width);
-    IM_RENDER_LINE(&r, out_left, out_top, width, mask_line, src_line,
+    IM_RENDER_LINE(&r, out_left, out_top+dy, width, mask_line, src_line,
 		   IM_SUFFIX(combinef));
   }
   myfree(src_line);

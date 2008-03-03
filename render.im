@@ -430,14 +430,17 @@ IM_RENDER_LINE(i_render *r, int x, int y, int width, const IM_SAMPLE_T *src,
       int alpha_chan = src_chans - 1;
       
       while (work_width) {
-	if (*src) {
-	  if (*src != IM_SAMPLE_MAX) 
-	    line->channel[alpha_chan] = 
-	      line->channel[alpha_chan] * *src / IM_SAMPLE_MAX;
+	if (*srcp) {
+	  if (*srcp != IM_SAMPLE_MAX) 
+	    linep->channel[alpha_chan] = 
+	      linep->channel[alpha_chan] * *srcp / IM_SAMPLE_MAX;
 	}
 	else {
-	  line->channel[alpha_chan] = 0;
+	  linep->channel[alpha_chan] = 0;
 	}
+	--work_width;
+	++srcp;
+	++linep;
       }
     }
     IM_GLIN(im, x, x+width, y, r->IM_SUFFIX(line));
