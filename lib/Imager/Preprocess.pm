@@ -116,6 +116,7 @@ sub byte_samples {
     s/\bIM_PLIN\b/i_plin/g;
     s/\bIM_GSAMP\b/i_gsamp/g;
     s/\bIM_SAMPLE_MAX\b/255/g;
+    s/\bIM_SAMPLE_MAX2\b/65025/g;
     s/\bIM_SAMPLE_T/i_sample_t/g;
     s/\bIM_COLOR\b/i_color/g;
     s/\bIM_WORK_T\b/int/g;
@@ -143,6 +144,7 @@ sub double_samples {
     s/\bIM_PLIN\b/i_plinf/g;
     s/\bIM_GSAMP\b/i_gsampf/g;
     s/\bIM_SAMPLE_MAX\b/1.0/g;
+    s/\bIM_SAMPLE_MAX2\b/1.0/g;
     s/\bIM_SAMPLE_T/i_fsample_t/g;
     s/\bIM_COLOR\b/i_fcolor/g;
     s/\bIM_WORK_T\b/double/g;
@@ -251,6 +253,10 @@ object.
 =item *
 
 IM_SAMPLE_MAX - maximum value for a sample
+
+=item *
+
+IM_SAMPLE_MAX2 - maximum value for a sample, squared
 
 =item *
 
