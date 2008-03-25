@@ -189,39 +189,7 @@ i_render_color(i_render *r, int x, int y, int width, unsigned char const *src,
   if (!width)
     return;
 
-#if 0
-  /* make sure our line buffer is big enough */
-  if (width > r->width) {
-    int new_width = r->width * 2;
-    if (new_width < width)
-      new_width = width;
-
-    if (r->im->bits <= 8) {
-      if (r->line_8)
-	r->line_8 = myrealloc(r->line_8, sizeof(i_color) * new_width);
-      else
-	r->line_8 = mymalloc(sizeof(i_color) * new_width);
-      if (r->line_double) {
-	myfree(r->line_double);
-	r->line_double = NULL;
-      }
-    }
-    else {
-      if (r->line_double)
-	r->line_double = myrealloc(r->line_double, sizeof(i_fcolor) * new_width);
-      else
-	r->line_double = mymalloc(sizeof(i_fcolor) * new_width);
-      if (r->line_8) {
-	myfree(r->line_8);
-	r->line_double = NULL;
-      }
-    }
-
-    r->width = new_width;
-  }
-#else
   alloc_line(r, width, r->im->bits <= 8);
-#endif
 
 #code r->im->bits <= 8
   /*if (r->IM_SUFFIX(line) == NULL)
@@ -266,56 +234,8 @@ i_render_fill(i_render *r, int x, int y, int width, unsigned char const *src,
   if (!width)
     return;
 
-#if 0
-  if (r->im->bits <= 8 && fill->f_fill_with_color) {
-    if (!r->line_8)
-      r->line_8 = mymalloc(sizeof(i_color) * r->width);
-    if (!r->fill_line_8)
-      r->fill_line_8 = mymalloc(sizeof(i_color) * r->width);
-  }
-  else {
-    if (!r->line_double)
-      r->line_double = mymalloc(sizeof(i_fcolor) * r->width);
-    if (!r->fill_line_double)
-      r->fill_line_double = mymalloc(sizeof(i_fcolor) * r->width);
-  }
-
-  /* make sure our line buffer is big enough */
-  if (width > r->width) {
-    int new_width = r->width * 2;
-    if (new_width < width)
-      new_width = width;
-
-    if (r->im->bits <= 8 && fill->f_fill_with_color) {
-      r->line_8 = myrealloc(r->line_8, sizeof(i_color) * new_width);
-      r->fill_line_8 = myrealloc(r->fill_line_8, sizeof(i_color) * new_width);
-      if (r->line_double) {
-	myfree(r->line_double);
-	r->line_double = NULL;
-      }
-      if (r->fill_line_double) {
-	myfree(r->fill_line_double);
-	r->fill_line_double = NULL;
-      }
-    }
-    else {
-      r->line_double = myrealloc(r->line_double, sizeof(i_fcolor) * new_width);
-      r->fill_line_double = myrealloc(r->fill_line_double, sizeof(i_fcolor) * new_width);
-      if (r->line_8) {
-	myfree(r->line_8);
-	r->line_8 = NULL;
-      }
-      if (r->fill_line_8) {
-	myfree(r->fill_line_8);
-	r->fill_line_8 = NULL;
-      }
-    }
-    r->width = new_width;
-  }
-#else
   alloc_line(r, width, r->im->bits <= 8 && fill->f_fill_with_color != NULL);
   alloc_fill_line(r, width, r->im->bits <= 8 && fill->f_fill_with_color != NULL);
-#endif
 
 #code r->im->bits <= 8 && fill->f_fill_with_color
   if (IM_FILL_COMBINE(fill)) {
