@@ -657,90 +657,6 @@ i_line_dda(i_img *im, int x1, int y1, int x2, int y2, i_color *val) {
   }
 }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-void
-i_line_aa3(i_img *im,int x1,int y1,int x2,int y2,i_color *val) {
-  i_color tval;
-  float alpha;
-  float dsec,dfrac;
-  int temp,dx,dy,isec,ch;
-
-  mm_log((1,"i_line_aa(im* 0x%x,x1 %d,y1 %d,x2 %d,y2 %d,val 0x%x)\n",im,x1,y1,x2,y2,val));
-
-  dy=y2-y1;
-  dx=x2-x1;
-
-  if (abs(dx)>abs(dy)) { /* alpha < 1 */
-    if (x2<x1) { temp=x1; x1=x2; x2=temp; temp=y1; y1=y2; y2=temp; }
-    alpha=(float)(y2-y1)/(float)(x2-x1);
-
-    dsec=y1;
-    while(x1<=x2) {
-      isec=(int)dsec;
-      dfrac=dsec-isec;
-      /*      dfrac=1-(1-dfrac)*(1-dfrac); */
-      /* This is something we can play with to try to get better looking lines */
-
-      i_gpix(im,x1,isec,&tval);
-      for(ch=0;ch<im->channels;ch++) tval.channel[ch]=(unsigned char)(dfrac*(float)tval.channel[ch]+(1-dfrac)*(float)val->channel[ch]);
-      i_ppix(im,x1,isec,&tval);
-      
-      i_gpix(im,x1,isec+1,&tval);
-      for(ch=0;ch<im->channels;ch++) tval.channel[ch]=(unsigned char)((1-dfrac)*(float)tval.channel[ch]+dfrac*(float)val->channel[ch]);
-      i_ppix(im,x1,isec+1,&tval);
-      
-      dsec+=alpha;
-      x1++;
-    }
-  } else {
-    if (y2<y1) { temp=y1; y1=y2; y2=temp; temp=x1; x1=x2; x2=temp; }
-    alpha=(float)(x2-x1)/(float)(y2-y1);
-    dsec=x1;
-    while(y1<=y2) {
-      isec=(int)dsec;
-      dfrac=dsec-isec;
-      /*      dfrac=sqrt(dfrac); */
-      /* This is something we can play with */
-      i_gpix(im,isec,y1,&tval);
-      for(ch=0;ch<im->channels;ch++) tval.channel[ch]=(unsigned char)(dfrac*(float)tval.channel[ch]+(1-dfrac)*(float)val->channel[ch]);
-      i_ppix(im,isec,y1,&tval);
-
-      i_gpix(im,isec+1,y1,&tval);
-      for(ch=0;ch<im->channels;ch++) tval.channel[ch]=(unsigned char)((1-dfrac)*(float)tval.channel[ch]+dfrac*(float)val->channel[ch]);
-      i_ppix(im,isec+1,y1,&tval);
-
-      dsec+=alpha;
-      y1++;
-    }
-  }
-}
-
-
 /*
 =item i_line_aa(im, x1, x2, y1, y2, color, endp)
 
@@ -1378,5 +1294,3 @@ cfill_from_btm(i_img *im, i_fill_t *fill, struct i_bitmap *btm,
   }
   i_render_done(&r);
 }
-
-	  
