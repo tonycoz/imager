@@ -28,6 +28,9 @@ Imager::Transformations - Simple transformations of one image into another.
                    src_minx=>20, src_miny=>30,
                    src_maxx=>20, src_maxy=>30);
 
+  $img->compose(src => $src, tx => 30, ty => 20, combine => 'color');
+  $img->compose(src => $src, tx => 30, ty => 20, combine => 'color');
+                mask => $mask, opacity => 0.5);
 
   $img->flip(dir=>"h");       # horizontal flip
   $img->flip(dir=>"vh");      # vertical and horizontal flip
@@ -60,9 +63,9 @@ The methods described in Imager::Transformations fall into two categories.
 Either they take an existing image and modify it in place, or they 
 return a modified copy.
 
-Functions that modify inplace are C<flip()>, C<paste()> and
-C<rubthrough()>.  If the original is to be left intact it's possible
-to make a copy and alter the copy:
+Functions that modify inplace are C<flip()>, C<paste()>,
+C<rubthrough()> and C<compose()>.  If the original is to be left
+intact it's possible to make a copy and alter the copy:
 
   $flipped = $img->copy()->flip(dir=>'h');
 
@@ -562,7 +565,13 @@ sub image to be pasted.
               left => 10, top => 10,
               src_minx => 20, src_miny => 20,
               src_maxx => 40, src_maxx => 40);
-              
+
+If the source image has an alpha channel and the target doesn't, then
+the source is treated as if composed onto a black background.
+
+If the source image is color and the target is grayscale, the the
+source is treated as if run through C< convert(preset=>'gray') >.
+
 =item rubthrough
 
 A more complicated way of blending images is where one image is
@@ -617,6 +626,91 @@ right corner of the source image.
 
 rubthrough() returns true on success.  On failure check
 $target->errstr for the reason for failure.
+
+=item compose
+
+Draws the source image over the target image, with the src alpha
+channel modified by the optional mask and the opacity.
+
+  $img->compose(src=>$overlay,
+                tx=>30,       ty=>50,
+                src_minx=>20, src_miny=>30,
+                src_maxx=>20, src_maxy=>30,
+                mask => $mask, opacity => 0.5);
+
+That will take the sub image defined by I<$overlay> and
+I<[src_minx,src_maxx)[src_miny,src_maxy)> and overlay it on top of
+I<$img> with the upper left corner at (30,50).  You can rub 2 or 4
+channel images onto a 3 channel image, or a 2 channel image onto a 1
+channel image.
+
+Parameters:
+
+=over
+
+=item *
+
+src - the source image to draw onto the target.  Required.
+
+=item *
+
+tx, ty - location in the the target image ($self) to render the top
+left corner of the source.  These can also be supplied as C<left> and
+C<right>.  Default: (0, 0).
+
+=item *
+
+src_minx, src_miny - the top left corner in the source to transfer to
+the target image.  Default: (0, 0).
+
+=item *
+
+src_maxx, src_maxy - the bottom right in the source image of the sub
+image to overlay.  This position is B<non> inclusive.  Default: bottom
+right corner of the source image.
+
+=item *
+
+mask - a mask image.  The first channel of this image is used to
+modify the alpha channel of the source image.  This can me used to
+mask out portions of the source image.  Where the first channel is
+zero none of the source image will be used, where the first channel is
+max the full alpha of the source image will be used, as further
+modified by the opacity.
+
+=item *
+
+opacity - further modifies the alpha channel of the source image, in
+the range 0.0 to 1.0.  Default: 1.0.
+
+=item *
+
+combine - the method to combine the source pixels with the target.
+See the combine option documentation in Imager::Fill.  Default:
+normal.
+
+=back
+
+Calling compose() with no mask, combine set to C<normal>, opacity set
+to C<1.0> is equivalent to calling rubthrough().
+
+compose() is intended to be produce similar effects to layers in
+interactive paint software.
+
+  # overlay all of $source onto $targ
+  $targ->compose(tx => 20, ty => 25, src => $source);
+
+  # overlay the top left corner of $source onto $targ
+  $targ->compose(tx => 20, ty => 25, src => $source,
+                    src_maxx => 20, src_maxy => 20);
+
+  # overlay the bottom right corner of $source onto $targ
+  $targ->compose(tx => 20, ty => 30, src => $src,
+                    src_minx => $src->getwidth() - 20,
+                    src_miny => $src->getheight() - 20);
+
+compose() returns true on success.  On failure check $target->errstr
+for the reason for failure.
 
 =item flip
 

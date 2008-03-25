@@ -1,7 +1,7 @@
 #include "imager.h"
 #include "draw.h"
 #include "log.h"
-
+#include "imrender.h"
 
 #define IMTRUNC(x) ((int)((x)*16))
 
@@ -644,6 +644,7 @@ i_poly_aa(i_img *im, int l, const double *x, const double *y, const i_color *val
   i_poly_aa_low(im, l, x, y, val, scanline_flush);
 }
 
+#if 0
 struct poly_cfill_state {
   i_color *fillbuf;
   i_color *linebuf;
@@ -767,9 +768,52 @@ scanline_flush_cfill_f(i_img *im, ss_scanline *ss, int y, const void *ctx) {
     i_plinf(im, left, right, y, line);
   }
 }
+#endif
+
+struct poly_render_state {
+  i_render render;
+  i_fill_t *fill;
+  unsigned char *cover;
+};
+
+static void
+scanline_flush_render(i_img *im, ss_scanline *ss, int y, const void *ctx) {
+  int x, ch, tv;
+  int pos;
+  int left, right;
+  struct poly_render_state const *state = (struct poly_render_state const *)ctx;
+
+  left = 0;
+  while (left < im->xsize && ss->line[left] <= 0)
+    ++left;
+  if (left < im->xsize) {
+    right = im->xsize;
+    /* since going from the left found something, moving from the 
+       right should */
+    while (/* right > left && */ ss->line[right-1] <= 0) 
+      --right;
+    
+    /* convert to the format the render interface wants */
+    for (x = left; x < right; ++x) {
+      state->cover[x-left] = saturate(ss->line[x]);
+    }
+    i_render_fill(&state->render, left, y, right-left, state->cover, 
+		  state->fill);
+  }
+}
 
 void
-i_poly_aa_cfill(i_img *im, int l, const double *x, const double *y, i_fill_t *fill) {
+i_poly_aa_cfill(i_img *im, int l, const double *x, const double *y, 
+		i_fill_t *fill) {
+  struct poly_render_state ctx;
+
+  i_render_init(&ctx.render, im, im->xsize);
+  ctx.fill = fill;
+  ctx.cover = mymalloc(im->xsize);
+  i_poly_aa_low(im, l, x, y, &ctx, scanline_flush_render);
+  myfree(ctx.cover);
+  i_render_done(&ctx.render);
+#if 0
   if (im->bits == i_8_bits && fill->fill_with_color) {
     struct poly_cfill_state ctx;
     ctx.fillbuf = mymalloc(sizeof(i_color) * im->xsize * 2);
@@ -790,4 +834,5 @@ i_poly_aa_cfill(i_img *im, int l, const double *x, const double *y, i_fill_t *fi
     myfree(ctx.fillbuf);
     myfree(ctx.cover);
   }
+#endif
 }

@@ -1060,6 +1060,91 @@ color indexes, not sample values:
   my $packed_index_data = pack("C*", $black_index, $red_index);
   $im->setscanline(y => $y, pixels => $packed_index_data, type => 'index');
 
+=head1 Combine Types
+
+Some methods accept a C<combine> parameter, this can be any of the
+following:
+
+=over
+
+=item none
+
+The fill pixel replaces the target pixel.
+
+=item normal
+
+The fill pixels alpha value is used to combine it with the target pixel.
+
+=item multiply
+
+=item mult
+
+Each channel of fill and target is multiplied, and the result is
+combined using the alpha channel of the fill pixel.
+
+=item dissolve
+
+If the alpha of the fill pixel is greater than a random number, the
+fill pixel is alpha combined with the target pixel.
+
+=item add
+
+The channels of the fill and target are added together, clamped to the range of the samples and alpha combined with the target.
+
+=item subtract
+
+The channels of the fill are subtracted from the target, clamped to be
+>= 0, and alpha combined with the target.
+
+=item diff
+
+The channels of the fill are subtracted from the target and the
+absolute value taken this is alpha combined with the target.
+
+=item lighten
+
+The higher value is taken from each channel of the fill and target
+pixels, which is then alpha combined with the target.
+
+=item darken
+
+The higher value is taken from each channel of the fill and target
+pixels, which is then alpha combined with the target.
+
+=item hue
+
+The combination of the saturation and value of the target is combined
+with the hue of the fill pixel, and is then alpha combined with the
+target.
+
+=item sat
+
+The combination of the hue and value of the target is combined
+with the saturation of the fill pixel, and is then alpha combined with the
+target.
+
+=item value
+
+The combination of the hue and value of the target is combined
+with the value of the fill pixel, and is then alpha combined with the
+target.
+
+=item color
+
+The combination of the value of the target is combined with the hue
+and saturation of the fill pixel, and is then alpha combined with the
+target.
+
+=back
+
+=over
+
+=item combines
+
+Returns a list of possible combine types.
+
+=back
+
 =head1 BUGS
 
 box, arc, do not support antialiasing yet.  Arc, is only filled as of

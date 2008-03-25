@@ -1640,6 +1640,34 @@ i_rubthru(im,src,tx,ty,src_minx,src_miny,src_maxx,src_maxy)
 	       int     src_maxx
 	       int     src_maxy
 
+undef_int
+i_compose(out, src, out_left, out_top, src_left, src_top, width, height, combine = ic_normal, opacity = 0.0)
+    Imager::ImgRaw out
+    Imager::ImgRaw src
+	int out_left
+ 	int out_top
+	int src_left
+	int src_top
+	int width
+	int height
+	int combine
+	double opacity
+
+undef_int
+i_compose_mask(out, src, mask, out_left, out_top, src_left, src_top, mask_left, mask_top, width, height, combine = ic_normal, opacity = 0.0)
+    Imager::ImgRaw out
+    Imager::ImgRaw src
+    Imager::ImgRaw mask
+	int out_left
+ 	int out_top
+	int src_left
+	int src_top
+	int mask_left
+	int mask_top
+	int width
+	int height
+	int combine
+	double opacity
 
 undef_int
 i_flipxy(im, direction)

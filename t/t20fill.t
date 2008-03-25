@@ -1,6 +1,6 @@
 #!perl -w
 use strict;
-use Test::More tests => 56;
+use Test::More tests => 121;
 
 use Imager ':handy';
 use Imager::Fill;
@@ -193,43 +193,124 @@ is(Imager::i_img_diff($ffim->{IMG}, $copy->{IMG}), 0,
 # test combining modes
 my $fill = NC(192, 128, 128, 128);
 my $target = NC(64, 32, 64);
+my $trans_target = NC(64, 32, 64, 128);
 my %comb_tests =
   (
-   none=>{ result=>$fill },
-   normal=>{ result=>NC(128, 80, 96) },
-   multiply => { result=>NC(56, 24, 48) },
-   dissolve => { result=>[ $target, NC(128, 80, 96) ] },
-   add => { result=>NC(159, 96, 128) },
-   subtract => { result=>NC(31, 15, 31) }, # 31.87, 15.9, 31.87
-   diff => { result=>NC(96, 64, 64) },
-   lighten => { result=>NC(128, 80, 96) },
-   darken => { result=>$target },
+   none=>
+   { 
+    opaque => $fill,
+    trans => $fill,
+   },
+   normal=>
+   { 
+    opaque => NC(128, 80, 96),
+    trans => NC(150, 96, 107, 191),
+   },
+   multiply => 
+   { 
+    opaque => NC(56, 24, 48),
+    trans => NC(101, 58, 74, 192),
+   },
+   dissolve => 
+   { 
+    opaque => [ $target, NC(192, 128, 128, 255) ],
+    trans => [ $trans_target, NC(192, 128, 128, 255) ],
+   },
+   add => 
+   { 
+    opaque => NC(159, 96, 128),
+    trans => NC(128, 80, 96, 255),
+   },
+   subtract => 
+   { 
+    opaque => NC(0, 0, 0),
+    trans => NC(0, 0, 0, 255),
+   },
+   diff => 
+   { 
+    opaque => NC(96, 64, 64),
+    trans => NC(127, 85, 85, 192),
+   },
+   lighten => 
+   { 
+    opaque => NC(128, 80, 96), 
+    trans => NC(149, 95, 106, 192), 
+   },
+   darken => 
+   { 
+    opaque => $target,
+    trans => NC(106, 63, 85, 192),
+   },
    # the following results are based on the results of the tests and
    # are suspect for that reason (and were broken at one point <sigh>)
    # but trying to work them out manually just makes my head hurt - TC
-   hue => { result=>NC(64, 32, 47) },
-   saturation => { result=>NC(63, 37, 64) },
-   value => { result=>NC(127, 64, 128) },
-   color => { result=>NC(64, 37, 52) },
+   hue => 
+   { 
+    opaque => NC(64, 32, 47),
+    trans => NC(64, 32, 42, 128),
+   },
+   saturation => 
+   { 
+    opaque => NC(63, 37, 64),
+    trans => NC(64, 39, 64, 128),
+   },
+   value => 
+   { 
+    opaque => NC(127, 64, 128),
+    trans => NC(149, 75, 150, 128),
+   },
+   color => 
+   { 
+    opaque => NC(64, 37, 52),
+    trans => NC(64, 39, 50, 128),
+   },
   );
 
 for my $comb (Imager::Fill->combines) {
   my $test = $comb_tests{$comb};
-  my $targim = Imager->new(xsize=>1, ysize=>1);
-  $targim->box(filled=>1, color=>$target);
   my $fillobj = Imager::Fill->new(solid=>$fill, combine=>$comb);
-  $targim->box(fill=>$fillobj);
-  my $c = Imager::i_get_pixel($targim->{IMG}, 0, 0);
-  if ($test->{result} =~ /ARRAY/) {
-    ok(scalar grep(color_close($_, $c), @{$test->{result}}), 
-       "combine '$comb'")
-      or print "# got:",join(",", $c->rgba),"  allowed: ", 
-        join("|", map { join(",", $_->rgba) } @{$test->{result}}),"\n";
-  }
-  else {
-    ok(color_close($c, $test->{result}), "combine '$comb'")
-      or print "# got: ",join(",", $c->rgba),
-        "  allowed: ",join(",", $test->{result}->rgba),"\n";
+
+  for my $bits (qw(8 double)) {
+    {
+      my $targim = Imager->new(xsize=>4, ysize=>4, bits => $bits);
+      $targim->box(filled=>1, color=>$target);
+      $targim->box(fill=>$fillobj);
+      my $c = Imager::i_get_pixel($targim->{IMG}, 1, 1);
+      my $allowed = $test->{opaque};
+      $allowed =~ /ARRAY/ or $allowed = [ $allowed ];
+      ok(scalar grep(color_close($_, $c), @$allowed), 
+	 "opaque '$comb' $bits bits")
+	or print "# got:",join(",", $c->rgba),"  allowed: ", 
+	  join("|", map { join(",", $_->rgba) } @$allowed),"\n";
+    }
+    
+    {
+      # make sure the alpha path in the combine function produces the same
+      # or at least as sane a result as the non-alpha path
+      my $targim = Imager->new(xsize=>4, ysize=>4, channels => 4, bits => $bits);
+      $targim->box(filled=>1, color=>$target);
+      $targim->box(fill=>$fillobj);
+      my $c = Imager::i_get_pixel($targim->{IMG}, 1, 1);
+      my $allowed = $test->{opaque};
+      $allowed =~ /ARRAY/ or $allowed = [ $allowed ];
+      ok(scalar grep(color_close4($_, $c), @$allowed), 
+	 "opaque '$comb' 4-channel $bits bits")
+	or print "# got:",join(",", $c->rgba),"  allowed: ", 
+	  join("|", map { join(",", $_->rgba) } @$allowed),"\n";
+    }
+    
+    {
+      my $transim = Imager->new(xsize => 4, ysize => 4, channels => 4, bits => $bits);
+      $transim->box(filled=>1, color=>$trans_target);
+      $transim->box(fill => $fillobj);
+      my $c = $transim->getpixel(x => 1, 'y' => 1);
+      my $allowed = $test->{trans};
+      $allowed =~ /ARRAY/ or $allowed = [ $allowed ];
+      ok(scalar grep(color_close4($_, $c), @$allowed), 
+	 "translucent '$comb' $bits bits")
+	or print "# got:",join(",", $c->rgba),"  allowed: ", 
+	  join("|", map { join(",", $_->rgba) } @$allowed),"\n";
+    }
   }
 }
 
@@ -339,6 +420,20 @@ sub color_close {
   my @c2 = $c2->rgba;
 
   for my $i (0..2) {
+    if (abs($c1[$i]-$c2[$i]) > 2) {
+      return 0;
+    }
+  }
+  return 1;
+}
+
+sub color_close4 {
+  my ($c1, $c2) = @_;
+
+  my @c1 = $c1->rgba;
+  my @c2 = $c2->rgba;
+
+  for my $i (0..3) {
     if (abs($c1[$i]-$c2[$i]) > 2) {
       return 0;
     }

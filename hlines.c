@@ -263,8 +263,26 @@ i_int_hlines_fill_fill(im, hlines, fill)
 */
 void
 i_int_hlines_fill_fill(i_img *im, i_int_hlines *hlines, i_fill_t *fill) {
+  i_render r;
   int y, i;
 
+  i_render_init(&r, im, im->xsize);
+
+  for (y = hlines->start_y; y < hlines->limit_y; ++y) {
+    i_int_hline_entry *entry = hlines->entries[y - hlines->start_y];
+    if (entry) {
+      for (i = 0; i < entry->count; ++i) {
+	i_int_hline_seg *seg = entry->segs + i;
+	int width = seg->x_limit-seg->minx;
+	
+	i_render_fill(&r, seg->minx, y, width, NULL, fill);
+      }
+    }
+  }
+  i_render_done(&r);
+  
+#if 1
+#else
   if (im->bits == i_8_bits && fill->fill_with_color) {
     i_color *line = mymalloc(sizeof(i_color) * im->xsize);
     i_color *work = NULL;
@@ -327,6 +345,7 @@ i_int_hlines_fill_fill(i_img *im, i_int_hlines *hlines, i_fill_t *fill) {
     if (work)
       myfree(work);
   }
+#endif
 }
 
 /*

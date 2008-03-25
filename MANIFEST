@@ -75,6 +75,7 @@ apidocs.perl    Build lib/Imager/APIRef.pm
 bigtest.perl	Library selection tester
 bmp.c           Reading and writing Windows BMP files
 color.c         Color translation and handling
+compose.im
 conv.im
 convert.c
 doco.perl
@@ -136,7 +137,6 @@ imio.h
 immacros.h
 imperl.h
 imrender.h	Buffer rending engine function declarations
-imtoc.perl      Sample size adapter pre-processor
 io.c
 iolayer.c
 iolayer.h
@@ -170,6 +170,7 @@ lib/Imager/ImageTypes.pod
 lib/Imager/Inline.pod           Using Imager with Inline::C
 lib/Imager/LargeSamples.pod	Track large sample support
 lib/Imager/Matrix2d.pm
+lib/Imager/Preprocess.pm
 lib/Imager/Regops.pm
 lib/Imager/Test.pm
 lib/Imager/Transform.pm
@@ -183,6 +184,7 @@ log.h
 map.c
 maskimg.c
 palimg.c
+paste.im
 plug.h
 png.c
 pnm.c

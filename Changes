@@ -6,6 +6,29 @@ Imager 0.63 - unreleased
  - the font libraries are now only initialized when needed.
    http://rt.cpan.org/Ticket/Display.html?id=28825
 
+ - moved the imtoc.perl code into Imager::Preprocess
+
+ - paste() and rubthrough() now adapt the source image data to the
+   destination, so you can now safely paste/rubthrough from greyscale
+   images to color images or back, or from alpha channel images to
+   noalpha channels or back.
+   https://rt.cpan.org/Ticket/Display.html?id=30908
+
+ - rubthrough() now falls back to pasting when the source doesn't have
+   an alpha channel.  This effectively treats the source as having a
+   max alpha channel, the right thing to do.
+   http://rt.cpan.org/Ticket/Display.html?id=29944
+
+ - re-worked most of the area filling code to use a common set of
+   functions when filling.
+   Corrected normal combine mode.
+   Rewrote most of the combine modes to match the way the SVG draft
+   defines them with respect to a translucent source and destination.
+   Added tests for translucent source and destination.
+   Added tests to check 8-bit/sample and double/sample combines work
+   similarly.
+   https://rt.cpan.org/Ticket/Display.html?id=29879
+
 Bug fixes:
 
  - Imager::Matrix2d->translate() now only requires one of the x or y

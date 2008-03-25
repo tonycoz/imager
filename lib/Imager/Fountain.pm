@@ -187,12 +187,12 @@ This can take any of the following values:
 
 Each channel is simple scaled between c0 and c1.
 
-=item hsvup
+=item hueup
 
 The color is converted to a HSV value and the scaling is done such
 that the hue increases as the fill parameter increases.
 
-=item hsvdown
+=item huedown
 
 The color is converted to a HSV value and the scaling is done such
 that the hue decreases as the fill parameter increases.

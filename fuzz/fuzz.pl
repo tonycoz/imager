@@ -3,6 +3,7 @@ use blib;
 use strict;
 use Imager;
 use Getopt::Long;
+use Time::HiRes qw(time);
 
 my $count = 1000;
 GetOptions("c=i"=>\$count)
@@ -41,8 +42,15 @@ for my $i (1 .. $count) {
     print "  replace $offset/$len: ", unpack("H*", $ins), "\n";
     substr($data, $offset, $len, $ins);
   }
+  my $start = time;
   my $im = Imager->new;
-  if ($im->read(data => $data)) {
+  my $result = $im->read(data => $data);
+  my $dur = time() - $start;
+  if ($dur > 1.0) {
+    print "***Took too long to load\n";
+  }
+  printf "   Took %f seconds\n", time() - $start;
+  if ($result) {
     print "<< Success\n";
   }
   else {
