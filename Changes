@@ -19,6 +19,16 @@ Imager 0.63 - unreleased
    max alpha channel, the right thing to do.
    http://rt.cpan.org/Ticket/Display.html?id=29944
 
+ - re-worked most of the area filling code to use a common set of
+   functions when filling.
+   Corrected normal combine mode.
+   Rewrote most of the combine modes to match the way the SVG draft
+   defines them with respect to a translucent source and destination.
+   Added tests for translucent source and destination.
+   Added tests to check 8-bit/sample and double/sample combines work
+   similarly.
+   https://rt.cpan.org/Ticket/Display.html?id=29879
+
 Bug fixes:
 
  - Imager::Matrix2d->translate() now only requires one of the x or y
