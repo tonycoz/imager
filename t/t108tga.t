@@ -1,8 +1,8 @@
 #!perl -w
 use Imager qw(:all);
 use strict;
-use Test::More tests=>40;
-BEGIN { require "t/testtools.pl"; }
+use Test::More tests=>46;
+use Imager::Test qw(is_color4 is_image);
 init_log("testout/t108tga.log",1);
 
 
@@ -130,6 +130,29 @@ is($compressed, 1, "check compressed tag");
   ok(grep($_ eq 'tga', Imager->write_types), "check tga in write types");
 }
 
+{ # Issue #32926
+  # a sample image was read as all transparent
+  # it had bitsperpixel = 16 and atribute channel set to 1, so it
+  # should have an alpha channel.
+  # So we'll do what the gimp does and treat a zero value as opaque.
+
+  my $im = Imager->new;
+  ok($im->read(file => 'testimg/alpha16.tga'),
+     "read 16-bit/pixel alpha image");
+  my $c1 = $im->getpixel('x' => 0, 'y' => 0);
+  is_color4($c1, 0, 0, 0, 0, "check transparent pixel");
+  my $c2 = $im->getpixel('x' => 19, 'y' => 0);
+  is_color4($c2, 255, 0, 0, 255, "check opaque pixel");
+
+  # since this has an effect on writing too, write,it, read it, check it
+  my $data;
+  ok($im->write(data => \$data, type => 'tga', wierdpack => 1),
+     "write 16-bit/pixel w/alpha");
+  my $im2 = Imager->new;
+  ok($im2->read(data => $data), "read it back");
+  is_image($im, $im2, "check they match");
+}
+
 sub write_test {
   my ($im, $filename, $wierdpack, $compress, $idstring) = @_;
   local *FH;
@@ -169,8 +192,6 @@ sub read_test {
     fail("read $filename, open failure: $!");
   }
 }
-
-
 
 sub create_test_image {
 

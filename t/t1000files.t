@@ -4,7 +4,7 @@
 # the file format
 
 use strict;
-use Test::More tests => 32;
+use Test::More tests => 33;
 use Imager;
 
 Imager::init_log("testout/t1000files.log", 1);
@@ -77,6 +77,12 @@ probe_ok(<<TGA, "tga", "TGA");
 18 20 FF 00 00 00 95 00 00 00 FF 00 00 00 95 00
 00 00 FF 00 00 00 95 00 00 00 FF 00 00 00 95 00
 00 00 FF 00 00 00 95 00 00 00 FF 00 00 00 95 00
+TGA
+
+probe_ok(<<TGA, "tga", "TGA 32-bit");
+00 00 0A 00 00 00 00 00 00 00 00 00 0A 00 0A 00
+20 08 84 00 00 00 00 84 FF FF FF FF 84 00 00 00
+00 84 FF FF FF FF 84 00 00 00 00 84 FF FF FF FF
 TGA
 
 probe_ok(<<ICO, "ico", "Windows Icon");

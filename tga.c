@@ -107,27 +107,31 @@ bpp_to_bytes(unsigned int bpp) {
 /*
 =item bpp_to_channels(bpp)
 
-Convert bits per pixel into channels in the image
+Convert bits per pixel and the number of attribute bits into channels
+in the image
 
    bpp - bits per pixel
+   attr_bit_count - number of attribute bits
 
 =cut
 */
 
 static
 int
-bpp_to_channels(unsigned int bpp) {
+bpp_to_channels(unsigned int bpp, int attr_bit_count) {
   switch (bpp) {
   case 8:
     return 1;
+  case 16:
+    if (attr_bit_count == 1)
+      return 4;
   case 15:
     return 3;
-  case 16:
-    return 4;
+  case 32:
+    if (attr_bit_count == 8)
+      return 4;
   case 24:
     return 3;
-  case 32:
-    return 4;
   }
   return 0;
 }
@@ -167,7 +171,7 @@ color_unpack(unsigned char *buf, int bytepp, i_color *val) {
     val->rgba.r = (buf[1] & 0x7c) << 1;
     val->rgba.g = ((buf[1] & 0x03) << 6) | ((buf[0] & 0xe0) >> 2);
     val->rgba.b = (buf[0] & 0x1f) << 3;
-    val->rgba.a = (buf[1] & 0x80) ? 255 : 0;
+    val->rgba.a = (buf[1] & 0x80) ? 0 : 255;
     val->rgba.r |= val->rgba.r >> 5;
     val->rgba.g |= val->rgba.g >> 5;
     val->rgba.b |= val->rgba.b >> 5;
@@ -211,13 +215,18 @@ color_pack(unsigned char *buf, int bitspp, i_color *val) {
   case 8:
     buf[0] = val->gray.gray_color;
     break;
+  case 16:
+    buf[0]  = (val->rgba.b >> 3);
+    buf[0] |= (val->rgba.g & 0x38) << 2;
+    buf[1]  = (val->rgba.r & 0xf8)>> 1;
+    buf[1] |= (val->rgba.g >> 6);
+    buf[1] |=  val->rgba.a > 0x7f ? 0 : 0x80;
+    break;
   case 15:
     buf[0]  = (val->rgba.b >> 3);
     buf[0] |= (val->rgba.g & 0x38) << 2;
     buf[1]  = (val->rgba.r & 0xf8)>> 1;
     buf[1] |= (val->rgba.g >> 6);
-  case 16:
-    buf[1] |=  val->rgba.a & 0x80;
     break;
   case 24:
     buf[0] = val->rgb.b;
@@ -340,7 +349,7 @@ tga_header_verify(unsigned char headbuf[18]) {
   case 2:  /* Uncompressed, rgb images          */ 
   case 10: /* Compressed,   rgb images          */ 
     if (header.bitsperpixel != 15 && header.bitsperpixel != 16
-	&& header.bitsperpixel != 24 && header.bitsperpixel != 23)
+	&& header.bitsperpixel != 24 && header.bitsperpixel != 32)
       return 0;
     break;
 	}
@@ -722,7 +731,8 @@ i_readtga_wiol(io_glue *ig, int length) {
   case 9:  /* Compressed,   color-mapped images */
     if ((channels = bpp_to_channels(mapped ? 
 				   header.colourmapdepth : 
-				   header.bitsperpixel))) break;
+				   header.bitsperpixel,
+				    header.imagedescriptor & 0xF))) break;
     i_push_error(0, "Targa Image has none of 15/16/24/32 pixel layout");
     if (idstring) myfree(idstring);
     return NULL;
@@ -817,6 +827,7 @@ i_writetga_wiol(i_img *img, io_glue *ig, int wierdpack, int compress, char *idst
   tga_dest dest;
   unsigned char headbuf[18];
   unsigned int bitspp;
+  unsigned int attr_bits = 0;
   
   int mapped;
 
@@ -838,7 +849,7 @@ i_writetga_wiol(i_img *img, io_glue *ig, int wierdpack, int compress, char *idst
   
   i_clear_error();
   io_glue_commit_types(ig);
-  
+
   switch (img->channels) {
   case 1:
     bitspp = 8;
@@ -856,6 +867,7 @@ i_writetga_wiol(i_img *img, io_glue *ig, int wierdpack, int compress, char *idst
     break;
   case 4:
     bitspp = wierdpack ? 16 : 32;
+    attr_bits = wierdpack ? 1 : 8;
     break;
   default:
     i_push_error(0, "Targa only handles 1,3 and 4 channel images.");
@@ -875,7 +887,7 @@ i_writetga_wiol(i_img *img, io_glue *ig, int wierdpack, int compress, char *idst
   header.width           = img->xsize;
   header.height          = img->ysize;
   header.bitsperpixel    = mapped ? 8 : bitspp;
-  header.imagedescriptor = (1<<5); /* normal order instead of upside down */
+  header.imagedescriptor = (1<<5) | attr_bits; /* normal order instead of upside down */
 
   tga_header_pack(&header, headbuf);
 

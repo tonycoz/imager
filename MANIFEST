@@ -279,6 +279,7 @@ t/tr18561b.t
 tags.c
 testimg/209_yonge.jpg	Regression test: #17981
 testimg/alpha.tif	Alpha scaling test image
+testimg/alpha16.tga	16-bit/pixel TGA with alpha "channel" RT 32926
 testimg/bad1oflow.bmp   1-bit/pixel, overflow integer on 32-bit machines
 testimg/bad1wid0.bmp    1-bit/pixel, zero width
 testimg/bad24comp.bmp   24-bit/pixel, bad compression
