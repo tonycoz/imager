@@ -673,7 +673,10 @@ i_writejpeg_wiol(i_img *im, io_glue *ig, int qfactor) {
       (void) jpeg_write_scanlines(&cinfo, row_pointer, 1);
     }
   }
-  else if (im->channels == want_channels) {
+  else {
+    i_color bg;
+
+    i_get_file_background(im, &bg);
     data = mymalloc(im->xsize * im->channels);
     if (data) {
       while (cinfo.next_scanline < cinfo.image_height) {
@@ -681,8 +684,8 @@ i_writejpeg_wiol(i_img *im, io_glue *ig, int qfactor) {
          * Here the array is only one element long, but you could pass
          * more than one scanline at a time if that's more convenient.
          */
-        i_gsamp(im, 0, im->xsize, cinfo.next_scanline, data, 
-                NULL, im->channels);
+        i_gsamp_bg(im, 0, im->xsize, cinfo.next_scanline, data, 
+		   want_channels, &bg);
         row_pointer[0] = data;
         (void) jpeg_write_scanlines(&cinfo, row_pointer, 1);
       }
@@ -693,35 +696,6 @@ i_writejpeg_wiol(i_img *im, io_glue *ig, int qfactor) {
       i_push_error(0, "out of memory");
       return 0; /* out of memory? */
     }
-  }
-  else {
-    i_color bg;
-    int x;
-    int ch;
-    i_color const *linep;
-    unsigned char * datap;    
-    
-    line_buf = mymalloc(sizeof(i_color) * im->xsize);
-
-    i_get_file_background(im, &bg);
-
-    data = mymalloc(im->xsize * want_channels);
-    while (cinfo.next_scanline < cinfo.image_height) {
-      i_glin(im, 0, im->xsize, cinfo.next_scanline, line_buf);
-      i_adapt_colors_bg(want_channels, im->channels, line_buf, im->xsize, &bg);
-      datap = data;
-      linep = line_buf;
-      for (x = 0; x < im->xsize; ++x) {
-	for (ch = 0; ch < want_channels; ++ch) {
-	  *datap++ = linep->channel[ch];
-	}
-	++linep;
-      }
-      row_pointer[0] = data;
-      (void) jpeg_write_scanlines(&cinfo, row_pointer, 1);
-    }
-    myfree(line_buf);
-    myfree(data);
   }
 
   /* Step 6: Finish compression */

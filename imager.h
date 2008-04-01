@@ -599,4 +599,12 @@ extern void
 i_adapt_fcolors_bg(int dest_channels, int src_channels, i_fcolor *colors, 
 		   size_t count, i_fcolor const *bg);
 
+extern int
+i_gsamp_bg(i_img *im, int l, int r, int y, i_sample_t *samples, 
+	   int out_channels, i_color const *bg);
+
+extern int
+i_gsampf_bg(i_img *im, int l, int r, int y, i_fsample_t *samples, 
+	   int out_channels, i_fcolor const *bg);
+
 #endif

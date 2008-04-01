@@ -325,7 +325,125 @@ i_adapt_fcolors_bg
     }
     break;
   }
+}
 
+/*
+=item i_gsamp_bg(im, l, r, y, samples, out_channels, bg)
+
+=item i_gsampf_bg(im, l, r, y, samples, out_channels, bg)
+
+This is similar to i_adapt_colors_bg() except it can only strip an
+alpha channel.  It cannot be used to convert a source RGB image to
+greyscale.
+
+The samples parameter MUST include enough space for all samples of the
+source image.
+
+=cut
+*/
+int
+#ifdef IM_EIGHT_BIT
+i_gsamp_bg
+#else
+i_gsampf_bg
+#endif
+(i_img *im, int l, int r, int y, IM_SAMPLE_T *samples, 
+ int out_channels, IM_COLOR const *bg) {
+  if (out_channels == im->channels)
+    return IM_GSAMP(im, l, r, y, samples, NULL, im->channels);
+  
+  switch (out_channels) {
+  case 1:
+    switch (im->channels) {
+    case 2:
+      {
+	int x;
+	IM_SAMPLE_T *inp = samples, *outp = samples;
+	IM_WORK_T grey_bg = IM_ROUND(color_to_grey(bg));
+	int count;
+
+	count = IM_GSAMP(im, l, r, y, samples, NULL, im->channels);
+	if (!count)
+	  return 0;
+	
+	for (x = l; x < r; ++x) {
+	  *outp++ = ( inp[0] * inp[1] +
+		      grey_bg * (IM_SAMPLE_MAX - inp[1])) / IM_SAMPLE_MAX;
+	  inp += 2;
+	}
+
+	return count;
+      }
+      break;
+
+    default:
+      i_fatal(0, "i_gsamp_bg() can only remove alpha channels");
+      break;
+    }
+    break;
+  case 3:
+    switch (im->channels) {
+    case 1:
+      {
+	int channels[3] = { 0, 0, 0 };
+	return IM_GSAMP(im, l, r, y, samples, channels, out_channels);
+      }
+    case 2:
+      {
+	int x, ch;
+	IM_SAMPLE_T *inp = samples, *outp = samples;
+	int count;
+	int channels[4] = { 0, 0, 0, 1 };
+
+	count = IM_GSAMP(im, l, r, y, samples, channels, im->channels);
+	if (!count)
+	  return 0;
+	
+	for (x = l; x < r; ++x) {
+	  IM_WORK_T alpha = inp[3];
+	  for (ch = 0; ch < 3; ++ch) {
+	    *outp++ = ( *inp++ * alpha +
+			bg->channel[ch] * (IM_SAMPLE_MAX - alpha)) / IM_SAMPLE_MAX;
+	  }
+	  ++inp;
+	}
+
+	return count;
+      }
+
+    case 4:
+      {
+	int x, ch;
+	IM_SAMPLE_T *inp = samples, *outp = samples;
+	int count;
+
+	count = IM_GSAMP(im, l, r, y, samples, NULL, im->channels);
+	if (!count)
+	  return 0;
+	
+	for (x = l; x < r; ++x) {
+	  IM_WORK_T alpha = inp[3];
+	  for (ch = 0; ch < 3; ++ch) {
+	    *outp++ = ( *inp++ * alpha +
+			bg->channel[ch] * (IM_SAMPLE_MAX - alpha)) / IM_SAMPLE_MAX;
+	  }
+	  ++inp;
+	}
+
+	return count;
+      }
+      break;
+    default:
+      i_fatal(0, "i_gsamp_bg() can only remove alpha channels");
+      break;
+    }
+    break;
+
+  default:
+    i_fatal(0, "i_gsamp_bg() can only remove alpha channels");
+  }
+
+  return 0;
 }
 
 #/code
