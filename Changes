@@ -67,6 +67,13 @@ Bug fixes:
    compressible output files.
    http://rt.cpan.org/Ticket/Display.html?id=32324
 
+ - removed the pointless #! line from lib/Imager/Font/Wrap.pm
+   Noticed when I saw:
+   https://bugzilla.redhat.com/show_bug.cgi?id=166254
+   I'm not changing the #! lines of the sample code, since it's sample
+   code, not intended for installation.
+   http://rt.cpan.org/Ticket/Display.html?id=33408
+
 Imager 0.62 - 10 December 2007
 ===========
 

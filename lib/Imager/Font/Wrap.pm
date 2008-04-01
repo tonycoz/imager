@@ -1,4 +1,3 @@
-#!perl -w
 package Imager::Font::Wrap;
 use strict;
 use Imager;
