@@ -575,9 +575,6 @@ write_8bit_data(io_glue *ig, i_img *im) {
   return 1;
 }
 
-static int bgr_chans[] = { 2, 1, 0, };
-static int grey_chans[] = { 0, 0, 0, };
-
 /*
 =item write_24bit_data(ig, im)
 
@@ -593,6 +590,9 @@ write_24bit_data(io_glue *ig, i_img *im) {
   unsigned char *samples;
   int y;
   int line_size = 3 * im->xsize;
+  i_color bg;
+
+  i_get_file_background(im, &bg);
 
   /* just in case we implement a direct format with 2bytes/pixel
      (unlikely though) */
@@ -605,11 +605,18 @@ write_24bit_data(io_glue *ig, i_img *im) {
   
   if (!write_bmphead(ig, im, 24, line_size * im->ysize))
     return 0;
-  chans = im->channels >= 3 ? bgr_chans : grey_chans;
-  samples = mymalloc(line_size); /* checked 29jun05 tonyc */
+  samples = mymalloc(4 * im->xsize);
   memset(samples, 0, line_size);
   for (y = im->ysize-1; y >= 0; --y) {
-    i_gsamp(im, 0, im->xsize, y, samples, chans, 3);
+    unsigned char *samplep = samples;
+    int x;
+    i_gsamp_bg(im, 0, im->xsize, y, samples, 3, &bg);
+    for (x = 0; x < im->xsize; ++x) {
+      unsigned char tmp = samplep[2];
+      samplep[2] = samplep[0];
+      samplep[0] = tmp;
+      samplep += 3;
+    }
     if (ig->writecb(ig, samples, line_size) < 0) {
       i_push_error(0, "writing image data");
       myfree(samples);

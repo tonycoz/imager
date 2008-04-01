@@ -1,8 +1,8 @@
 #!perl -w
 use strict;
-use Test::More tests => 201;
+use Test::More tests => 211;
 use Imager qw(:all);
-use Imager::Test qw(test_image_raw is_image);
+use Imager::Test qw(test_image_raw is_image is_color3);
 init_log("testout/t107bmp.log",1);
 
 my $debug_writes = 0;
@@ -615,6 +615,36 @@ for my $comp (@comp) {
 {
   ok(grep($_ eq 'bmp', Imager->read_types), "check bmp in read types");
   ok(grep($_ eq 'bmp', Imager->write_types), "check bmp in write types");
+}
+
+{
+  # RT #30075
+  # give 4/2 channel images a background color when saving to BMP
+  my $im = Imager->new(xsize=>16, ysize=>16, channels=>4);
+  $im->box(filled => 1, xmin => 8, color => '#FFE0C0');
+  $im->box(filled => 1, color => NC(0, 192, 192, 128),
+	   ymin => 8, xmax => 7);
+  ok($im->write(file=>"testout/t107_alpha.bmp", type=>'bmp'),
+     "should succeed writing 4 channel image");
+  my $imread = Imager->new;
+  ok($imread->read(file => 'testout/t107_alpha.bmp'), "read it back");
+  is_color3($imread->getpixel('x' => 0, 'y' => 0), 0, 0, 0, 
+	    "check transparent became black");
+  is_color3($imread->getpixel('x' => 8, 'y' => 0), 255, 224, 192,
+	    "check color came through");
+  is_color3($imread->getpixel('x' => 0, 'y' => 15), 0, 96, 96,
+	    "check translucent came through");
+  my $data;
+  ok($im->write(data => \$data, type => 'bmp', i_background => '#FF0000'),
+     "write with red background");
+  ok($imread->read(data => $data, type => 'bmp'),
+     "read it back");
+  is_color3($imread->getpixel('x' => 0, 'y' => 0), 255, 0, 0, 
+	    "check transparent became red");
+  is_color3($imread->getpixel('x' => 8, 'y' => 0), 255, 224, 192,
+	    "check color came through");
+  is_color3($imread->getpixel('x' => 0, 'y' => 15), 127, 96, 96,
+	    "check translucent came through");
 }
 
 sub write_test {
