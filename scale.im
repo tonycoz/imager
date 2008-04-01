@@ -178,6 +178,17 @@ i_scale_mixing(i_img *src, int x_out, int y_out) {
 	      xscale_row[x].channel[ch] = IM_LIMIT(val);
 	    }
 	  }
+	  else {
+	    /* rather than leaving any color data as whatever was
+	       originally in the buffer, set it to black.  This isn't
+	       any more correct, but it gives us more compressible
+	       image data.
+	       RT #32324
+	    */
+	    for (ch = 0; ch < alpha_chan; ++ch) {
+	      xscale_row[x].channel[ch] = 0;
+	    }
+	  }
 	  xscale_row[x].channel[alpha_chan] = IM_LIMIT(accum_row[x].channel[alpha_chan]+0.5);
 	}
       }
@@ -275,6 +286,12 @@ IM_SUFFIX(horizontal_scale)(IM_COLOR *out, int out_width,
 	    out[out_x].channel[ch] = IM_LIMIT(val);
 	  }
 	}
+	else {
+	  for (ch = 0; ch < alpha_chan; ++ch) {
+	    /* See RT #32324 (and mention above) */
+	    out[out_x].channel[ch] = 0;
+	  }
+	}
 	out[out_x].channel[alpha_chan] = IM_LIMIT(IM_ROUND(accum[alpha_chan]));
       }
       else {
@@ -313,6 +330,12 @@ IM_SUFFIX(horizontal_scale)(IM_COLOR *out, int out_width,
 	for (ch = 0; ch < alpha_chan; ++ch) {
 	  IM_WORK_T val = IM_ROUND(accum[ch] / alpha);
 	  out[out_x].channel[ch] = IM_LIMIT(val);
+	}
+      }
+      else {
+	for (ch = 0; ch < alpha_chan; ++ch) {
+	  /* See RT #32324 (and mention above) */
+	  out[out_x].channel[ch] = 0;
 	}
       }
       out[out_x].channel[alpha_chan] = IM_LIMIT(IM_ROUND(accum[alpha_chan]));

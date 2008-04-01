@@ -1,9 +1,9 @@
 #!perl -w
 use strict;
-use Test::More tests => 227;
+use Test::More tests => 228;
 
 BEGIN { use_ok(Imager=>':all') }
-use Imager::Test qw(is_image);
+use Imager::Test qw(is_image is_color4);
 
 #require "t/testtools.pl";
 
@@ -194,6 +194,10 @@ SKIP:
   my $cmp = $out->copy;
   $out->rubthrough(src => $sc);
   is_image($out, $cmp, "check we get the right image after scaling");
+
+  # we now set alpha=0 pixels to zero on scaling
+  is_color4($sc->getpixel('x' => 39, 'y' => 39), 0, 0, 0, 0,
+	    "check we set alpha=0 pixels to zero on scaling");
 }
 
 { # scale_calculate

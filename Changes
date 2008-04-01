@@ -62,6 +62,11 @@ Bug fixes:
    parameters.
    http://rt.cpan.org/Ticket/Display.html?id=29937
 
+ - mixing qtype scaling now sets all channels of a pixel to zero if
+   the pixel has zero coverage (zero alpha).  This should produce more
+   compressible output files.
+   http://rt.cpan.org/Ticket/Display.html?id=32324
+
 Imager 0.62 - 10 December 2007
 ===========
 
