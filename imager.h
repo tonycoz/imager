@@ -370,6 +370,7 @@ extern i_img *i_img_double_new(int x, int y, int ch);
 
 extern int i_img_is_monochrome(i_img *im, int *zero_is_white);
 extern void i_get_file_background(i_img *im, i_color *bg);
+extern void i_get_file_backgroundf(i_img *im, i_fcolor *bg);
 
 const char * i_test_format_probe(io_glue *data, int length);
 
@@ -590,5 +591,12 @@ i_adapt_colors(int dest_channels, int src_channels, i_color *colors,
 extern void
 i_adapt_fcolors(int dest_channels, int src_channels, i_fcolor *colors, 
 	       size_t count);
+
+extern void
+i_adapt_colors_bg(int dest_channels, int src_channels, i_color *colors, 
+		  size_t count, i_color const *bg);
+extern void
+i_adapt_fcolors_bg(int dest_channels, int src_channels, i_fcolor *colors, 
+		   size_t count, i_fcolor const *bg);
 
 #endif

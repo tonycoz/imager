@@ -47,7 +47,7 @@ Truetype, Type1 and Windows FNT.
 
 static void ft2_push_message(int code);
 
-static ft2_initialized = 0;
+static int ft2_initialized = 0;
 static FT_Library library;
 
 /*

@@ -751,49 +751,73 @@ write_pbm(i_img *im, io_glue *ig, int zero_is_white) {
 
 static
 int
-write_ppm_data_8(i_img *im, io_glue *ig) {
-  int write_size = im->xsize * im->channels;
+write_ppm_data_8(i_img *im, io_glue *ig, int want_channels) {
+  int write_size = im->xsize * want_channels;
+  i_color *line_buf = mymalloc(sizeof(i_color) * im->xsize);
   unsigned char *data = mymalloc(write_size);
   int y = 0;
+  int x;
+  int ch;
   int rc = 1;
+  i_color bg;
 
+  i_get_file_background(im, &bg);
   while (y < im->ysize && rc >= 0) {
-    i_gsamp(im, 0, im->xsize, y, data, NULL, im->channels);
+    i_color *linep = line_buf;
+    unsigned char *datap = data;
+
+    i_glin(im, 0, im->xsize, y, line_buf);
+    i_adapt_colors_bg(want_channels, im->channels, line_buf, im->xsize, &bg);
+    for (x = 0; x < im->xsize; ++x) {
+      for (ch = 0; ch < want_channels; ++ch) {
+	*datap++ = linep->channel[ch];
+      }
+      ++linep;
+    }
     if (i_io_write(ig, data, write_size) != write_size) {
       i_push_error(errno, "could not write ppm data");
+      myfree(data);
+      myfree(line_buf);
       rc = 0;
       break;
     }
     ++y;
   }
   myfree(data);
+  myfree(line_buf);
 
   return rc;
 }
 
 static
 int
-write_ppm_data_16(i_img *im, io_glue *ig) {
-  int sample_count = im->channels * im->xsize;
+write_ppm_data_16(i_img *im, io_glue *ig, int want_channels) {
+  int sample_count = want_channels * im->xsize;
   int write_size = sample_count * 2;
-  int line_size = sample_count * sizeof(i_fsample_t);
-  i_fsample_t *line_buf = mymalloc(line_size);
-  i_fsample_t *samplep;
+  i_fcolor *line_buf = mymalloc(sizeof(i_fcolor) * im->xsize);
   unsigned char *write_buf = mymalloc(write_size);
-  unsigned char *writep;
-  int sample_num;
   int y = 0;
+  int x, ch;
   int rc = 1;
+  i_fcolor bg;
+
+  i_get_file_backgroundf(im, &bg);
 
   while (y < im->ysize) {
-    i_gsampf(im, 0, im->xsize, y, line_buf, NULL, im->channels);
-    samplep = line_buf;
-    writep = write_buf;
-    for (sample_num = 0; sample_num < sample_count; ++sample_num) {
-      unsigned sample16 = SampleFTo16(*samplep++);
-      *writep++ = sample16 >> 8;
-      *writep++ = sample16 & 0xFF;
+    i_fcolor *linep = line_buf;
+    unsigned char *writep = write_buf;
+
+    i_glinf(im, 0, im->xsize, y, line_buf);
+    i_adapt_fcolors_bg(want_channels, im->channels, line_buf, im->xsize, &bg);
+    for (x = 0; x < im->xsize; ++x) {
+      for (ch = 0; ch < want_channels; ++ch) {
+	unsigned sample16 = SampleFTo16(linep->channel[ch]);
+	*writep++ = sample16 >> 8;
+	*writep++ = sample16 & 0xFF;
+      }
+      ++linep;
     }
+    
     if (i_io_write(ig, write_buf, write_size) != write_size) {
       i_push_error(errno, "could not write ppm data");
       rc = 0;
@@ -827,14 +851,18 @@ i_writeppm_wiol(i_img *im, io_glue *ig) {
   else {
     int type;
     int maxval;
+    int want_channels = im->channels;
+
+    if (want_channels == 2 || want_channels == 4)
+      --want_channels;
 
     if (!i_tags_get_int(&im->tags, "pnm_write_wide_data", 0, &wide_data))
       wide_data = 0;
 
-    if (im->channels == 3) {
+    if (want_channels == 3) {
       type = 6;
     }
-    else if (im->channels == 1) {
+    else if (want_channels == 1) {
       type = 5;
     }
     else {
@@ -856,18 +884,19 @@ i_writeppm_wiol(i_img *im, io_glue *ig) {
       return(0);
     }
 
-    if (!im->virtual && im->bits == i_8_bits && im->type == i_direct_type) {
+    if (!im->virtual && im->bits == i_8_bits && im->type == i_direct_type
+	&& im->channels == want_channels) {
       if (ig->writecb(ig,im->idata,im->bytes) != im->bytes) {
         i_push_error(errno, "could not write ppm data");
         return 0;
       }
     }
     else if (maxval == 255) {
-      if (!write_ppm_data_8(im, ig))
+      if (!write_ppm_data_8(im, ig, want_channels))
         return 0;
     }
     else {
-      if (!write_ppm_data_16(im, ig))
+      if (!write_ppm_data_16(im, ig, want_channels))
         return 0;
     }
   }

@@ -2454,6 +2454,30 @@ i_get_file_background(i_img *im, i_color *bg) {
 }
 
 /*
+=item i_get_file_backgroundf(im, &bg)
+
+Retrieve the file write background color tag from the image as a
+floating point color.
+
+Implemented in terms of i_get_file_background().
+
+If not present, returns black.
+
+=cut
+*/
+
+void
+i_get_file_backgroundf(i_img *im, i_fcolor *fbg) {
+  i_color bg;
+
+  i_get_file_background(im, &bg);
+  fbg->rgba.r = Sample8ToF(bg.rgba.r);
+  fbg->rgba.g = Sample8ToF(bg.rgba.g);
+  fbg->rgba.b = Sample8ToF(bg.rgba.b);
+  fbg->rgba.a = 1.0;
+}
+
+/*
 =back
 
 =head1 AUTHOR

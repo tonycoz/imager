@@ -1,6 +1,6 @@
 #!perl -w
 use Imager ':all';
-use Test::More tests => 153;
+use Test::More tests => 173;
 use strict;
 use Imager::Test qw(test_image_raw test_image_16 is_color3 is_color1 is_image);
 
@@ -209,15 +209,74 @@ is($ooim->tags(name=>'pnm_type'), 1, "check pnm_type tag");
 }
 
 { # check error messages set correctly
-  my $im = Imager->new(xsize=>100, ysize=>100, channels=>4);
-  ok(!$im->write(file=>"testout/t104_fail.ppm", type=>'pnm'),
-     "should fail to write 4 channel image");
-  is($im->errstr, 'can only save 1 or 3 channel images to pnm',
-     "check error message");
+  my $im = Imager->new;
   ok(!$im->read(file=>'t/t104ppm.t', type=>'pnm'),
      'should fail to read script as an image file');
   is($im->errstr, 'unable to read pnm image: bad header magic, not a PNM file',
      "check error message");
+}
+
+{
+  # RT #30074
+  # give 4/2 channel images a background color when saving to pnm
+  my $im = Imager->new(xsize=>16, ysize=>16, channels=>4);
+  $im->box(filled => 1, xmin => 8, color => '#FFE0C0');
+  $im->box(filled => 1, color => NC(0, 192, 192, 128),
+	   ymin => 8, xmax => 7);
+  ok($im->write(file=>"testout/t104_alpha.ppm", type=>'pnm'),
+     "should succeed writing 4 channel image");
+  my $imread = Imager->new;
+  ok($imread->read(file => 'testout/t104_alpha.ppm'), "read it back");
+  is_color3($imread->getpixel('x' => 0, 'y' => 0), 0, 0, 0, 
+	    "check transparent became black");
+  is_color3($imread->getpixel('x' => 8, 'y' => 0), 255, 224, 192,
+	    "check color came through");
+  is_color3($imread->getpixel('x' => 0, 'y' => 15), 0, 96, 96,
+	    "check translucent came through");
+  my $data;
+  ok($im->write(data => \$data, type => 'pnm', i_background => '#FF0000'),
+     "write with red background");
+  ok($imread->read(data => $data, type => 'pnm'),
+     "read it back");
+  is_color3($imread->getpixel('x' => 0, 'y' => 0), 255, 0, 0, 
+	    "check transparent became red");
+  is_color3($imread->getpixel('x' => 8, 'y' => 0), 255, 224, 192,
+	    "check color came through");
+  is_color3($imread->getpixel('x' => 0, 'y' => 15), 127, 96, 96,
+	    "check translucent came through");
+}
+
+{
+  # more RT #30074 - 16 bit images
+  my $im = Imager->new(xsize=>16, ysize=>16, channels=>4, bits => 16);
+  $im->box(filled => 1, xmin => 8, color => '#FFE0C0');
+  $im->box(filled => 1, color => NC(0, 192, 192, 128),
+	   ymin => 8, xmax => 7);
+  ok($im->write(file=>"testout/t104_alp16.ppm", type=>'pnm', 
+		pnm_write_wide_data => 1),
+     "should succeed writing 4 channel image");
+  my $imread = Imager->new;
+  ok($imread->read(file => 'testout/t104_alp16.ppm'), "read it back");
+  is($imread->bits, 16, "check we did produce a 16 bit image");
+  is_color3($imread->getpixel('x' => 0, 'y' => 0), 0, 0, 0, 
+	    "check transparent became black");
+  is_color3($imread->getpixel('x' => 8, 'y' => 0), 255, 224, 192,
+	    "check color came through");
+  is_color3($imread->getpixel('x' => 0, 'y' => 15), 0, 96, 96,
+	    "check translucent came through");
+  my $data;
+  ok($im->write(data => \$data, type => 'pnm', i_background => '#FF0000',
+		pnm_write_wide_data => 1),
+     "write with red background");
+  ok($imread->read(data => $data, type => 'pnm'),
+     "read it back");
+  is($imread->bits, 16, "check it's 16-bit");
+  is_color3($imread->getpixel('x' => 0, 'y' => 0), 255, 0, 0, 
+	    "check transparent became red");
+  is_color3($imread->getpixel('x' => 8, 'y' => 0), 255, 224, 192,
+	    "check color came through");
+  is_color3($imread->getpixel('x' => 0, 'y' => 15), 127, 96, 96,
+	    "check translucent came through");
 }
 
 # various bad input files

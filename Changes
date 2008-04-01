@@ -46,6 +46,11 @@ Imager 0.63 - unreleased
    with the i_background tag/parameter.
    https://rt.cpan.org/Ticket/Display.html?id=29876
 
+ - writing a 2 or 4 channel image to a PGM/PPM will now write that
+   image as if composited against a background, black by default,
+   overridable with the i_background tag/parameter.
+   http://rt.cpan.org/Ticket/Display.html?id=30074
+
 Bug fixes:
 
  - Imager::Matrix2d->translate() now only requires one of the x or y
