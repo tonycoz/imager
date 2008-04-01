@@ -6,7 +6,7 @@ use vars qw(@ISA @EXPORT_OK);
 @ISA = qw(Exporter);
 @EXPORT_OK = qw(diff_text_with_nul 
                 test_image_raw test_image_16 test_image test_image_double 
-                is_color3 is_color1 is_color4 
+                is_color3 is_color1 is_color4 is_color_close3
                 is_fcolor4
                 is_image is_image_similar 
                 image_bounds_checks mask_tests
@@ -54,6 +54,38 @@ Color mismatch:
   Red: $red vs $cr
 Green: $green vs $cg
  Blue: $blue vs $cb
+END_DIAG
+    return;
+  }
+
+  return 1;
+}
+
+sub is_color_close3($$$$$$) {
+  my ($color, $red, $green, $blue, $tolerance, $comment) = @_;
+
+  my $builder = Test::Builder->new;
+
+  unless (defined $color) {
+    $builder->ok(0, $comment);
+    $builder->diag("color is undef");
+    return;
+  }
+  unless ($color->can('rgba')) {
+    $builder->ok(0, $comment);
+    $builder->diag("color is not a color object");
+    return;
+  }
+
+  my ($cr, $cg, $cb) = $color->rgba;
+  unless ($builder->ok(abs($cr - $red) <= $tolerance
+		       && abs($cg - $green) <= $tolerance
+		       && abs($cb - $blue) <= $tolerance, $comment)) {
+    $builder->diag(<<END_DIAG);
+Color out of tolerance ($tolerance):
+  Red: expected $red vs received $cr
+Green: expected $green vs received $cg
+ Blue: expected $blue vs received $cb
 END_DIAG
     return;
   }

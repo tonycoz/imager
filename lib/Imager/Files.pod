@@ -433,8 +433,9 @@ image when this tag is non-zero.
 =head2 JPEG
 
 You can supply a C<jpegquality> parameter (0-100) when writing a JPEG
-file, which defaults to 75%.  Only 1 and 3 channel images
-can be written, including 1 and 3 channel paletted images.
+file, which defaults to 75%.  If you write an image with an alpha
+channel to a jpeg file then it will be composited against the
+background set by the C<i_background> parameter (or tag).
 
   $img->write(file=>'foo.jpg', jpegquality=>90) or die $img->errstr;
 

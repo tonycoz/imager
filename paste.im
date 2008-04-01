@@ -228,5 +228,106 @@ i_adapt_fcolors
   }
 }
 
+void
+#ifdef IM_EIGHT_BIT
+i_adapt_colors_bg
+#else
+i_adapt_fcolors_bg
+#endif
+(int out_channels, int in_channels, IM_COLOR *colors, 
+	       size_t count, IM_COLOR const *bg) {
+  if (out_channels == in_channels)
+    return;
+  if (count == 0)
+    return;
+
+  switch (out_channels) {
+  case 2:
+  case 4:
+    IM_ADAPT_COLORS(out_channels, in_channels, colors, count);
+    return;
+
+  case 1:
+    switch (in_channels) {
+    case 3:
+      IM_ADAPT_COLORS(out_channels, in_channels, colors, count);
+      return;
+
+    case 2:
+      {
+	/* apply alpha against our given background */
+	IM_WORK_T grey_bg = IM_ROUND(color_to_grey(bg));
+	while (count) {
+	  colors->channel[0] = 
+	    (colors->channel[0] * colors->channel[1] +
+	     grey_bg * (IM_SAMPLE_MAX - colors->channel[1])) / IM_SAMPLE_MAX;
+	  ++colors;
+	  --count;
+	}
+      }
+      break;
+
+    case 4:
+      {
+	IM_WORK_T grey_bg = IM_ROUND(color_to_grey(bg));
+	while (count) {
+	  IM_WORK_T src_grey = IM_ROUND(color_to_grey(colors));
+	  colors->channel[0] =
+	    (src_grey * colors->channel[3]
+	     + grey_bg * (IM_SAMPLE_MAX - colors->channel[3])) / IM_SAMPLE_MAX;
+	  ++colors;
+	  --count;
+	}
+      }
+      break;
+    }
+    break;
+      
+  case 3:
+    switch (in_channels) {
+    case 1:
+      IM_ADAPT_COLORS(out_channels, in_channels, colors, count);
+      return;
+
+    case 2:
+      {
+	while (count) {
+	  int ch;
+	  IM_WORK_T src_grey = colors->channel[0];
+	  IM_WORK_T src_alpha = colors->channel[1];
+	  for (ch = 0; ch < 3; ++ch) {
+	    colors->channel[ch] =
+	      (src_grey * src_alpha
+	       + bg->channel[ch] * (IM_SAMPLE_MAX - src_alpha)) 
+	      / IM_SAMPLE_MAX;
+	  }
+	  ++colors;
+	  --count;
+	}
+      }
+      break;
+
+    case 4:
+      {
+	while (count) {
+	  int ch;
+	  IM_WORK_T src_alpha = colors->channel[3];
+	  for (ch = 0; ch < 3; ++ch) {
+	    colors->channel[ch] =
+	      (colors->channel[ch] * src_alpha
+	       + bg->channel[ch] * (IM_SAMPLE_MAX - src_alpha)) 
+	      / IM_SAMPLE_MAX;
+	  }
+	  ++colors;
+	  --count;
+	}
+      }
+      break;
+    }
+    break;
+  }
+
+}
+
 #/code
 

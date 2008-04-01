@@ -1,7 +1,8 @@
 #!perl -w
 use strict;
 use Imager qw(:all);
-use Test::More tests => 88;
+use Test::More tests => 94;
+use Imager::Test qw(is_color_close3);
 
 init_log("testout/t101jpeg.log",1);
 
@@ -31,7 +32,7 @@ if (!i_has_format("jpeg")) {
     cmp_ok($im->errstr, '=~', qr/format 'jpeg' not supported/, "check no jpeg message");
     ok(!grep($_ eq 'jpeg', Imager->read_types), "check jpeg not in read types");
     ok(!grep($_ eq 'jpeg', Imager->write_types), "check jpeg not in write types");
-    skip("no jpeg support", 82);
+    skip("no jpeg support", 88);
   }
 } else {
   open(FH,">testout/t101.jpg") || die "cannot open testout/t101.jpg for writing\n";
@@ -265,12 +266,29 @@ if (!i_has_format("jpeg")) {
     # attempting to write a 4 channel image to a bufchain would
     # cause a seg fault.
     # it should fail still
-    my $im = Imager->new(xsize => 10, ysize => 10, channels => 4);
+    # overridden by # 29876
+    # give 4/2 channel images a background color when saving to JPEG
+    my $im = Imager->new(xsize => 16, ysize => 16, channels => 4);
+    $im->box(filled => 1, xmin => 8, color => '#FFE0C0');
     my $data;
-    ok(!$im->write(data => \$data, type => 'jpeg'),
-       "should fail to write but shouldn't crash");
-    is($im->errstr, "only 1 or 3 channels images can be saved as JPEG",
-       "check the error message");
+    ok($im->write(data => \$data, type => 'jpeg'),
+       "should write with a black background");
+    my $imread = Imager->new;
+    ok($imread->read(data => $data, type => 'jpeg'), 'read it back');
+    is_color_close3($imread->getpixel('x' => 0, 'y' => 0), 0, 0, 0, 4,
+	      "check it's black");
+    is_color_close3($imread->getpixel('x' => 15, 'y' => 9), 255, 224, 192, 4,
+		    "check filled area filled");
+
+    # write with a red background
+    $data = '';
+    ok($im->write(data => \$data, type => 'jpeg', i_background => '#FF0000'),
+       "write with red background");
+    ok($imread->read(data => $data, type => 'jpeg'), "read it back");
+    is_color_close3($imread->getpixel('x' => 0, 'y' => 0), 255, 0, 0, 4,
+	      "check it's red");
+    is_color_close3($imread->getpixel('x' => 15, 'y' => 9), 255, 224, 192, 4,
+		    "check filled area filled");
   }
  SKIP:
   { # Issue # 18496

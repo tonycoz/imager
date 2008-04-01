@@ -369,6 +369,7 @@ extern i_img *i_img_to_rgb16(i_img *im);
 extern i_img *i_img_double_new(int x, int y, int ch);
 
 extern int i_img_is_monochrome(i_img *im, int *zero_is_white);
+extern void i_get_file_background(i_img *im, i_color *bg);
 
 const char * i_test_format_probe(io_glue *data, int length);
 

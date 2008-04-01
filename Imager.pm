@@ -1593,6 +1593,9 @@ my %obsolete_opts =
    gif_loop_count => 'gif_loop',
   );
 
+# options that should be converted to colors
+my %color_opts = map { $_ => 1 } qw/i_background/;
+
 sub _set_opts {
   my ($self, $opts, $prefix, @imgs) = @_;
 
@@ -1613,6 +1616,13 @@ sub _set_opts {
     }
     next unless $tagname =~ /^\Q$prefix/;
     my $value = $opts->{$opt};
+    if ($color_opts{$opt}) {
+      $value = _color($value);
+      unless ($value) {
+	$self->_set_error($Imager::ERRSTR);
+	return;
+      }
+    }
     if (ref $value) {
       if (UNIVERSAL::isa($value, "Imager::Color")) {
         my $tag = sprintf("color(%d,%d,%d,%d)", $value->rgba);

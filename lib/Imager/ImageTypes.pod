@@ -824,6 +824,15 @@ whether an image is worth processing.
 X<i_format tag>X<tags, i_format>i_format - The file format this file
 was read from.
 
+=item *
+
+X<i_background>X<tags, i_background>i_background - used when writing
+an image with an alpha channel to a file format that doesn't support
+alpha channels.  The C<write> method will convert a normal color
+specification like "#FF0000" into a color object for you, but if you
+set this as a tag you will need to format it like
+C<color(>I<red>C<,>I<green>C<,>I<blue>C<)>, eg color(255,0,0).
+
 =back
 
 =head2 Quantization options

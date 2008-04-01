@@ -2434,6 +2434,26 @@ i_img_is_monochrome(i_img *im, int *zero_is_white) {
 }
 
 /*
+=item i_get_file_background(im, &bg)
+
+Retrieve the file write background color tag from the image.
+
+If not present, returns black.
+
+=cut
+*/
+
+void
+i_get_file_background(i_img *im, i_color *bg) {
+  if (!i_tags_get_color(&im->tags, "i_background", 0, bg)) {
+    /* black default */
+    bg->channel[0] = bg->channel[1] = bg->channel[2] = 0;
+  }
+  /* always full alpha */
+  bg->channel[3] = 255;
+}
+
+/*
 =back
 
 =head1 AUTHOR
