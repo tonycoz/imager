@@ -16,7 +16,7 @@ If x1 > x2 or y1 > y2 then the corresponding co-ordinates are swapped.
 
 void
 i_copyto(i_img *im, i_img *src, int x1, int y1, int x2, int y2, int tx, int ty) {
-  int x, y, t, ttx, tty;
+  int y, t, ttx, tty;
   
   if (x2<x1) { t=x1; x1=x2; x2=t; }
   if (y2<y1) { t=y1; y1=y2; y2=t; }
@@ -69,7 +69,6 @@ i_adapt_fcolors
 #endif
 (int out_channels, int in_channels, IM_COLOR *colors, 
 	       size_t count) {
-  int i;
   if (out_channels == in_channels)
     return;
   if (count == 0)

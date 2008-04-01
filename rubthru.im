@@ -52,7 +52,6 @@ rubthru_targ_noalpha(i_img *im, i_img *src,
       }
       ++srcp;
       ++destp;
-      ttx;
     }
     IM_PLIN(im, tx, tx + width, tty, dest_line);
     tty++;
