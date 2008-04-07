@@ -3,6 +3,12 @@ Imager release history.  Older releases can be found in Changes.old
 Imager 0.63 - unreleased
 ===========
 
+This release primarily contains changes to improve ease of use -
+rather than you having to convert images to the appropriate number of
+channels, Imager handles it internally.  How to handle drawing colors
+and the default combine mode is a thornier problem left for some other
+release.
+
  - the font libraries are now only initialized when needed.
    http://rt.cpan.org/Ticket/Display.html?id=28825
 
@@ -28,18 +34,6 @@ Imager 0.63 - unreleased
    Added tests to check 8-bit/sample and double/sample combines work
    similarly.
    https://rt.cpan.org/Ticket/Display.html?id=29879
-
- - some TGA images weren't being detected correctly as TGA images
-   https://rt.cpan.org/Ticket/Display.html?id=32925
-
- - handling of the left-over bit for 16-bit/pixel TGA images has been
-   changed to match the behaviour of the GIMP.  Previously the bit
-   being set was treated as an opaque pixel, but one user reported a
-   problem with loading such an image.  I haven't been able to find any
-   tools beyond the GIMP that handle alpha-channel 16-bit TGAs, so
-   I'll match it's behaviour.  See issue 114913 in the GIMP's
-   bugzilla.
-   http://rt.cpan.org/Ticket/Display.html?id=32926
 
  - writing a 2 or 4 channel image to a JPEG file will now write that
    image as if composited against a background, black by default,
@@ -73,6 +67,18 @@ Bug fixes:
    I'm not changing the #! lines of the sample code, since it's sample
    code, not intended for installation.
    http://rt.cpan.org/Ticket/Display.html?id=33408
+
+ - some TGA images weren't being detected correctly as TGA images
+   https://rt.cpan.org/Ticket/Display.html?id=32925
+
+ - handling of the left-over bit for 16-bit/pixel TGA images has been
+   changed to match the behaviour of the GIMP.  Previously the bit
+   being set was treated as an opaque pixel, but one user reported a
+   problem with loading such an image.  I haven't been able to find any
+   tools beyond the GIMP that handle alpha-channel 16-bit TGAs, so
+   I'll match it's behaviour.  See issue 114913 in the GIMP's
+   bugzilla.
+   http://rt.cpan.org/Ticket/Display.html?id=32926
 
 Imager 0.62 - 10 December 2007
 ===========
