@@ -123,15 +123,6 @@ point_set_new(const double *x, const double *y, int l) {
   return pset;
 }
 
-#if 0
-static
-void
-p_line_dump(p_line *l) {
-  printf("%d (%d,%d)->(%d,%d) [%d-%d,%d-%d]\n", l->n, l->x1, l->y1, l->x2, l->y2, 
-	 l->minx, l->maxx, l->miny, l->maxy);
-}
-#endif
-
 static
 void
 ss_scanline_reset(ss_scanline *ss) {
@@ -179,28 +170,6 @@ lines_in_interval(p_line *lset, int l, p_slice *tllist, pcord minc, pcord maxc) 
   }
   return count;
 }
-
-#if 0
-static
-int
-lines_in_interval_old(p_line *lset, int l, p_slice *tllist, pcord cc) {
-  int k;
-  int count = 0;
-  for(k=0; k<l; k++) {
-    if (cc >= lset[k].miny && cc <=  lset[k].maxy) {
-      if (lset[k].miny == lset[k].maxy) {
-	POLY_DEB( printf(" HORIZONTAL - skipped\n") );
-      }
-      else {
-	tllist[count].x=p_eval_aty(&lset[k],cc);
-	tllist[count].n=k;
-	count++;
-      }
-    }
-  }
-  return count;
-}
-#endif
 
 /* marks the up variable for all lines in a slice */
 
@@ -264,12 +233,12 @@ saturate(int in) {
   return 0;
 }
 
-typedef void (*scanline_flusher)(i_img *im, ss_scanline *ss, int y, const void *ctx);
+typedef void (*scanline_flusher)(i_img *im, ss_scanline *ss, int y, void *ctx);
 
 /* This function must be modified later to do proper blending */
 
 static void
-scanline_flush(i_img *im, ss_scanline *ss, int y, const void *ctx) {
+scanline_flush(i_img *im, ss_scanline *ss, int y, void *ctx) {
   int x, ch, tv;
   i_color t;
   i_color *val = (i_color *)ctx;
@@ -407,99 +376,6 @@ render_slice_scanline(ss_scanline *ss, int y, p_line *l, p_line *r) {
   
 }
 
-
-#if 0
-static
-void
-render_slice_scanline_old(ss_scanline *ss, int y, p_line *l, p_line *r) {
-  
-  pcord miny, maxy;	/* y bounds in fine coordinates */
-  pcord lminx, lmaxx;	/* left line min/max within y bounds in fine coords */
-  pcord rminx, rmaxx;	/* right line min/max within y bounds in fine coords */
-  int cpix;		/* x-coordinate of current pixel */
-  int thin;		/* boolean for thin/thick segment */
-  int startpix;		/* temporary variable for "start of this interval" */
-  int stoppix;		/* temporary variable for "end of this interval" */
-
-  /* Find the y bounds of scanline_slice */
-
-  maxy = i_min( l->maxy, r->maxy );
-  miny = i_max( l->miny, r->miny );
-
-  maxy = i_min( maxy, (y+1)*16 );
-  miny = i_max( miny,  y*16 );
-
-  lminx = i_min( p_eval_aty(l, maxy), p_eval_aty(l, miny) );
-  lmaxx = i_max( p_eval_aty(l, maxy), p_eval_aty(l, miny) );
-
-  rminx = i_min( p_eval_aty(r, maxy), p_eval_aty(r, miny) );
-  rmaxx = i_max( p_eval_aty(r, maxy), p_eval_aty(r, miny) );
-
-  thin = coarse(lmaxx) >= coarse(rminx);
-
-
-  /* First step */
-  startpix = coarse(lminx);				/* includes tricky starting pixel */
-  stoppix  = i_min(coarse(lmaxx), coarse(rminx) );	/* last pixel is tricky */
-  
-  /* handle start pixel */
-
-  cpix = startpix;
-  if (cpix < stoppix) {
-    ss->line[cpix] += pixel_coverage(l, cpix*16, cpix*16+16, miny, maxy);
-    printf("%2d: step1 - start pixel\n", cpix);
-  }
-  
-  for(cpix=startpix+1; cpix<stoppix; cpix++) {
-    printf("%2d: step1 pixel\n", cpix);
-    ss->line[cpix] += l->updown == 1 ? 
-      8.0 * (2*maxy-p_eval_atx(l, 16*cpix)-p_eval_atx(l, 16*cpix+16))	/* up case */
-      :
-      8.0 * (p_eval_atx(l, 16*cpix)+p_eval_atx(l, 16*cpix+16)-2*miny);	/* down case */
-  }
-  
-  
-  /* handle stop pixel */
-
-  if (thin) { /* step 2a */
-    startpix = coarse(rminx);
-    stoppix = coarse(lmaxx+15); /* one more than needed */
-    
-    for(cpix=startpix; cpix<stoppix; cpix++) {
-      printf("%2d: step2a pixel\n", cpix);
-      ss->line[cpix] += 
-	pixel_coverage(l, cpix*16, cpix*16+16, miny, maxy)
-	+(cpix*16+16-i_min(cpix*16+16, l->maxx))*(maxy-miny)
-	-pixel_coverage(r, cpix*16, cpix*16+16, miny, maxy);
-    }
-  } else { /* step 2b */
-    stoppix = coarse(rminx);
-    for(/* cpix already correct */; cpix<stoppix; cpix++) {
-      printf("%2d: step2b pixel\n", cpix);
-      ss->line[cpix] += 16.0*(maxy-miny);
-    }
-  }
-  
-  /* step 3 */
-
-  cpix = i_max(coarse(rminx), coarse(lmaxx+15));
-  stoppix = coarse(rmaxx-15);
-  
-  printf("step3 from %d to %d\n", cpix, stoppix);
-
-  for(; cpix<stoppix; cpix++) {
-    printf("%2d: step3 pixel\n", cpix);
-    ss->line[cpix] += 0+ 
-      (l->updown == 1 ?
-       8.0 * (2*maxy-p_eval_atx(r, 16*cpix)-p_eval_atx(r, 16*cpix+16))  /* up case */
-       :
-       8.0 * (p_eval_atx(r, 16*cpix)+p_eval_atx(r, 16*cpix+16)-2*miny));  /* down case */
-  }
-  
-  ss->line[cpix] += (16.0)*(maxy-miny) - pixel_coverage(r, cpix*16, cpix*16+16, miny, maxy);
-}
-#endif
-
 /* Antialiasing polygon algorithm 
    specs:
    1. only nice polygons - no crossovers
@@ -531,7 +407,7 @@ render_slice_scanline_old(ss_scanline *ss, int y, p_line *l, p_line *r) {
 
 
 static void
-i_poly_aa_low(i_img *im, int l, const double *x, const double *y, void const *ctx, scanline_flusher flusher) {
+i_poly_aa_low(i_img *im, int l, const double *x, const double *y, void *ctx, scanline_flusher flusher) {
   int i ,k;			/* Index variables */
   int clc;			/* Lines inside current interval */
   /* initialize to avoid compiler warnings */
@@ -641,134 +517,9 @@ i_poly_aa_low(i_img *im, int l, const double *x, const double *y, void const *ct
 
 void
 i_poly_aa(i_img *im, int l, const double *x, const double *y, const i_color *val) {
-  i_poly_aa_low(im, l, x, y, val, scanline_flush);
+  i_color c = *val;
+  i_poly_aa_low(im, l, x, y, &c, scanline_flush);
 }
-
-#if 0
-struct poly_cfill_state {
-  i_color *fillbuf;
-  i_color *linebuf;
-  int *cover;
-  i_fill_t *fill;
-};
-
-static void
-scanline_flush_cfill(i_img *im, ss_scanline *ss, int y, const void *ctx) {
-  int x, ch, tv;
-  int pos;
-  int left, right;
-  struct poly_cfill_state const *state = (struct poly_cfill_state const *)ctx;
-  i_color *fillbuf = state->fillbuf;
-  i_color *line = state->linebuf;
-
-  left = 0;
-  while (left < im->xsize && ss->line[left] <= 0)
-    ++left;
-  if (left < im->xsize) {
-    right = im->xsize;
-    /* since going from the left found something, moving from the 
-       right should */
-    while (/* right > left && */ ss->line[right-1] <= 0) 
-      --right;
-    
-    (state->fill->fill_with_color)(state->fill, left, y, right-left, 
-                                   im->channels, fillbuf);
-    i_glin(im, left, right, y, line);
-    pos = 0;
-    if (state->fill->combine) {
-      for (x = left; x < right; ++x) {
-        tv = saturate(ss->line[x]);
-        fillbuf[pos].channel[3] = 
-          fillbuf[pos].channel[3] * tv / 255;
-	pos++;
-      }
-      (state->fill->combine)(line, fillbuf, im->channels, right-left);
-    }
-    else {
-      for (x = left; x < right; ++x) {
-        tv = saturate(ss->line[x]);
-        if (tv) { 
-          if (tv == 255) {
-            line[pos] = fillbuf[pos];
-          }
-          else {
-            i_color *to = line + pos;
-            i_color *from = fillbuf + pos;
-            for (ch = 0; ch < im->channels; ++ch) {
-              to->channel[ch] = (tv * from->channel[ch] + 
-                                 (255 - tv) * to->channel[ch]) / 255;
-            }
-          }
-        }
-        pos++;
-      }
-    }
-    i_plin(im, left, right, y, line);
-  }
-}
-
-struct poly_cfill_state_f {
-  i_fcolor *fillbuf;
-  i_fcolor *linebuf;
-  int *cover;
-  i_fill_t *fill;
-};
-
-static void
-scanline_flush_cfill_f(i_img *im, ss_scanline *ss, int y, const void *ctx) {
-  int x, ch, tv;
-  int pos;
-  int left, right;
-  struct poly_cfill_state_f const *state = (struct poly_cfill_state_f const *)ctx;
-  i_fcolor *fillbuf = state->fillbuf;
-  i_fcolor *line = state->linebuf;
-
-  left = 0;
-  while (left < im->xsize && ss->line[left] <= 0)
-    ++left;
-  if (left < im->xsize) {
-    right = im->xsize;
-    /* since going from the left found something, moving from the 
-       right should */
-    while (/* right > left && */ ss->line[right-1] <= 0) 
-      --right;
-    
-    (state->fill->fill_with_fcolor)(state->fill, left, y, right-left, 
-                                    im->channels, fillbuf);
-    i_glinf(im, left, right, y, line);
-    pos = 0;
-    if (state->fill->combinef) {
-      for (x = left; x < right; ++x) {
-        tv = saturate(ss->line[x]);
-        fillbuf[pos].channel[3] = 
-          fillbuf[pos].channel[3] * tv / 255;
-	pos++;
-      }
-      (state->fill->combinef)(line, fillbuf, im->channels, right-left);
-    }
-    else {
-      for (x = left; x < right; ++x) {
-        tv = saturate(ss->line[x]);
-        if (tv) { 
-          if (tv == 255) {
-            line[pos] = fillbuf[pos];
-          }
-          else {
-            i_fcolor *to = line + pos;
-            i_fcolor *from = fillbuf + pos;
-            for (ch = 0; ch < im->channels; ++ch) {
-              to->channel[ch] = (tv * from->channel[ch] + 
-                                 (255 - tv) * to->channel[ch]) / 255;
-            }
-          }
-        }
-        pos++;
-      }
-    }
-    i_plinf(im, left, right, y, line);
-  }
-}
-#endif
 
 struct poly_render_state {
   i_render render;
@@ -777,11 +528,10 @@ struct poly_render_state {
 };
 
 static void
-scanline_flush_render(i_img *im, ss_scanline *ss, int y, const void *ctx) {
-  int x, ch, tv;
-  int pos;
+scanline_flush_render(i_img *im, ss_scanline *ss, int y, void *ctx) {
+  int x;
   int left, right;
-  struct poly_render_state const *state = (struct poly_render_state const *)ctx;
+  struct poly_render_state *state = (struct poly_render_state *)ctx;
 
   left = 0;
   while (left < im->xsize && ss->line[left] <= 0)
@@ -813,26 +563,4 @@ i_poly_aa_cfill(i_img *im, int l, const double *x, const double *y,
   i_poly_aa_low(im, l, x, y, &ctx, scanline_flush_render);
   myfree(ctx.cover);
   i_render_done(&ctx.render);
-#if 0
-  if (im->bits == i_8_bits && fill->fill_with_color) {
-    struct poly_cfill_state ctx;
-    ctx.fillbuf = mymalloc(sizeof(i_color) * im->xsize * 2);
-    ctx.linebuf = ctx.fillbuf + im->xsize;
-    ctx.cover = mymalloc(sizeof(int) * im->xsize);
-    ctx.fill = fill;
-    i_poly_aa_low(im, l, x, y, &ctx, scanline_flush_cfill);
-    myfree(ctx.fillbuf);
-    myfree(ctx.cover);
-  }
-  else {
-    struct poly_cfill_state_f ctx;
-    ctx.fillbuf = mymalloc(sizeof(i_fcolor) * im->xsize * 2);
-    ctx.linebuf = ctx.fillbuf + im->xsize;
-    ctx.cover = mymalloc(sizeof(int) * im->xsize);
-    ctx.fill = fill;
-    i_poly_aa_low(im, l, x, y, &ctx, scanline_flush_cfill_f);
-    myfree(ctx.fillbuf);
-    myfree(ctx.cover);
-  }
-#endif
 }

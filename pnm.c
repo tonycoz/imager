@@ -786,7 +786,6 @@ write_ppm_data_16(i_img *im, io_glue *ig, int want_channels) {
   unsigned char *writep;
   int sample_num;
   int y = 0;
-  int x, ch;
   int rc = 1;
   i_fcolor bg;
 

@@ -586,7 +586,6 @@ Returns non-zero on success.
 */
 static int
 write_24bit_data(io_glue *ig, i_img *im) {
-  int *chans;
   unsigned char *samples;
   int y;
   int line_size = 3 * im->xsize;
