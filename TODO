@@ -6,25 +6,32 @@ Release Plans (subject to change)
 brown-bag bugs may add intermediate releases.  The dates are goals,
 not commitments.
 
-For 0.64: (speculative)
+For 0.65:
 
 PNG re-work (#29268)
 
-give 4/2 channel images a background color when saving to pnm (#30074)
-
-give 4/2 channel images a background color when saving to BMP (#30075)
-
-give 4/2 channel images a background color when saving to JPEG
-(#29876)
-
-For 0.63: (tentative)
+For 0.64: (speculative)
 
 thick lines (#28854)
 
 have alpha channel work treated as coverage for primitives (more
 general combine parameter)
 
-general alpha channel fixes (#29879, etc)
+add some extra combine modes (hard/soft light, screen)
+
+For 0.63:
+
+general alpha channel fixes (#29879, etc) (done)
+
+give 4/2 channel images a background color when saving to pnm (#30074)
+(done)
+
+give 4/2 channel images a background color when saving to BMP (#30075)
+(done)
+
+give 4/2 channel images a background color when saving to JPEG
+(#29876)
+
 
 For 0.62:
 
