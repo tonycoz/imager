@@ -1147,7 +1147,7 @@ Returns a list of possible combine types.
 
 =head1 BUGS
 
-box, arc, do not support antialiasing yet.  Arc, is only filled as of
+box() does not support antialiasing yet.  Arc, is only filled as of
 yet.  Default color is not unified yet.
 
 =head1 AUTHOR

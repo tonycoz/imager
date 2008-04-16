@@ -406,6 +406,19 @@ New Features:
 
 - arc outlines
 
+- filled/outlined ellipses and elliptical arcs
+
+  Complexities include:
+
+  a) when drawing a pie segment, are the angles specified the real
+  angles (since the scaling changes the angles if you just use sin() and
+  cos() directly) or the angle before scaling?  I can see cases where
+  both are useful.
+
+  b) can you control the angles of the axes of symmetry? (the axes would
+  remain at right angles to each other) Does this change the effect of
+  the d1 and d2 parameters?
+
 - complex lines/curves:
   - thick lines:
     - dotted/dashed lines
