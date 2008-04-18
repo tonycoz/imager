@@ -853,6 +853,7 @@ i_scaleaxis(i_img *im, float Value, int Axis) {
   i_color val,val1,val2;
   i_img *new_img;
 
+  i_clear_error();
   mm_log((1,"i_scaleaxis(im %p,Value %.2f,Axis %d)\n",im,Value,Axis));
 
 
@@ -880,6 +881,10 @@ i_scaleaxis(i_img *im, float Value, int Axis) {
   }
   
   new_img = i_img_empty_ch(NULL, hsize, vsize, im->channels);
+  if (!new_img) {
+    i_push_error(0, "cannot create output image");
+    return NULL;
+  }
   
   /* 1.4 is a magic number, setting it to 2 will cause rather blurred images */
   LanczosWidthFactor = (Value >= 1) ? 1 : (int) (1.4/Value); 

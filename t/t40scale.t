@@ -1,6 +1,6 @@
 #!perl -w
 use strict;
-use Test::More tests => 228;
+use Test::More tests => 230;
 
 BEGIN { use_ok(Imager=>':all') }
 use Imager::Test qw(is_image is_color4);
@@ -211,6 +211,14 @@ SKIP:
 				      xpixels => 240) ],
 	    [ 2.0, 2.0, 240, 300 ],
 	    "class method scale_factor");
+}
+
+{ # passing a reference for scaling parameters should fail
+  # RT #35172
+  my $im = Imager->new(xsize => 100, ysize => 100);
+  ok(!$im->scale(xpixels => {}), "can't use a reference as a size");
+  cmp_ok($im->errstr, '=~', "xpixels parameter cannot be a reference",
+	 "check error message");
 }
 
 sub scale_test {

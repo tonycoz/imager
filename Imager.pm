@@ -1197,7 +1197,7 @@ sub _get_reader_io {
   }
   elsif ($input->{fh}) {
     my $fd = fileno($input->{fh});
-    unless ($fd) {
+    unless (defined $fd) {
       $self->_set_error("Handle in fh option not opened");
       return;
     }
@@ -1248,7 +1248,7 @@ sub _get_writer_io {
   }
   elsif ($input->{fh}) {
     my $fd = fileno($input->{fh});
-    unless ($fd) {
+    unless (defined $fd) {
       $self->_set_error("Handle in fh option not opened");
       return;
     }
@@ -2075,6 +2075,14 @@ sub scale_calculate {
 
   my %opts = ('type'=>'max', @_);
 
+  # none of these should be references
+  for my $name (qw/xpixels ypixels xscalefactor yscalefactor width height/) {
+    if (defined $opts{$name} && ref $opts{$name}) {
+      $self->_set_error("scale_calculate: $name parameter cannot be a reference");
+      return;
+    }
+  }
+
   my ($x_scale, $y_scale);
   my $width = $opts{width};
   my $height = $opts{height};
@@ -2178,12 +2186,12 @@ sub scale {
   if ($opts{qtype} eq 'normal') {
     $tmp->{IMG} = i_scaleaxis($self->{IMG}, $x_scale, 0);
     if ( !defined($tmp->{IMG}) ) { 
-      $self->{ERRSTR} = 'unable to scale image';
+      $self->{ERRSTR} = 'unable to scale image: ' . $self->_error_as_msg;
       return undef;
     }
     $img->{IMG}=i_scaleaxis($tmp->{IMG}, $y_scale, 1);
     if ( !defined($img->{IMG}) ) { 
-      $self->{ERRSTR}='unable to scale image'; 
+      $self->{ERRSTR}='unable to scale image: ' . $self->_error_as_msg; 
       return undef;
     }
 
@@ -2200,7 +2208,7 @@ sub scale {
   elsif ($opts{'qtype'} eq 'mixing') {
     $img->{IMG} = i_scale_mixing($self->{IMG}, $new_width, $new_height);
     unless ($img->{IMG}) {
-      $self->_set_error(Imager->_error_as_meg);
+      $self->_set_error(Imager->_error_as_msg);
       return;
     }
     return $img;

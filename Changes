@@ -1,5 +1,23 @@
 Imager release history.  Older releases can be found in Changes.old
 
+Imager 0.64 - unreleased
+===========
+
+Bug fixes:
+
+ - check that the result of fileno($fh) is defined rather than simply
+   true when read() or write() is supplied with an fh parameter.
+   http://rt.cpan.org/Ticket/Display.html?id=35139
+
+ - i_scale_axis() wasn't checking the result of i_img_new_ch()
+   resulting in a SIGSEGV when attempting to scale an image to a size
+   too large to fit in memory.  This is a NULL pointer access issue,
+   not a buffer overflow.
+   Added a check for the failure.
+   scale_calculate() (and hence scale()) will now fail if any of the
+   scale size parameters are a reference.
+   http://rt.cpan.org/Ticket/Display.html?id=35172
+
 Imager 0.63 - 7 April 2008
 ===========
 
