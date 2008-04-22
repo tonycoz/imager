@@ -1,10 +1,11 @@
 #!perl -w
 use strict;
-use Test::More tests => 121;
+use Test::More tests => 123;
 
 use Imager ':handy';
 use Imager::Fill;
 use Imager::Color::Float;
+use Imager::Test qw(is_image);
 use Config;
 
 Imager::init_log("testout/t20fill.log", 1);
@@ -411,6 +412,27 @@ SKIP:
                                segments=>\@segs2);
   ok(!$fill2, "check handling of invalid color names");
   cmp_ok(Imager->errstr, '=~', 'No color named', "check error message");
+}
+
+{ # RT #35278
+  # hatch fills on a grey scale image don't adapt colors
+  for my $bits (8, 'double') {
+    my $im_g = Imager->new(xsize => 10, ysize => 10, channels => 1, bits => $bits);
+    $im_g->box(filled => 1, color => 'FFFFFF');
+    my $fill = Imager::Fill->new
+      (
+       combine => 'normal', 
+       hatch => 'weave', 
+       fg => '000000', 
+       bg => 'FFFFFF'
+      );
+    $im_g->box(fill => $fill);
+    my $im_c = Imager->new(xsize => 10, ysize => 10, channels => 3, bits => $bits);
+    $im_c->box(filled => 1, color => 'FFFFFF');
+    $im_c->box(fill => $fill);
+    my $im_cg = $im_g->convert(preset => 'rgb');
+    is_image($im_c, $im_cg, "check hatch is the same between color and greyscale");
+  }
 }
 
 sub color_close {

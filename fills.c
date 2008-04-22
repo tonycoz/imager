@@ -650,12 +650,20 @@ static void fill_hatch(i_fill_t *fill, int x, int y, int width, int channels,
   int byte = f->hatch[(y + f->dy) & 7];
   int xpos = (x + f->dx) & 7;
   int mask = 128 >> xpos;
+  i_color fg = f->fg;
+  i_color bg = f->bg;
+  int want_channels = channels > 2 ? 4 : 2;
+
+  if (channels < 3) {
+    i_adapt_colors(2, 4, &fg, 1);
+    i_adapt_colors(2, 4, &bg, 1);
+  }
 
   while (width-- > 0) {
     if (byte & mask)
-      *data++ = f->fg;
+      *data++ = fg;
     else
-      *data++ = f->bg;
+      *data++ = bg;
     
     if ((mask >>= 1) == 0)
       mask = 128;
@@ -675,12 +683,19 @@ static void fill_hatchf(i_fill_t *fill, int x, int y, int width, int channels,
   int byte = f->hatch[(y + f->dy) & 7];
   int xpos = (x + f->dx) & 7;
   int mask = 128 >> xpos;
+  i_fcolor fg = f->ffg;
+  i_fcolor bg = f->fbg;
+
+  if (channels < 3) {
+    i_adapt_fcolors(2, 4, &fg, 1);
+    i_adapt_fcolors(2, 4, &bg, 1);
+  }
   
   while (width-- > 0) {
     if (byte & mask)
-      *data++ = f->ffg;
+      *data++ = fg;
     else
-      *data++ = f->fbg;
+      *data++ = bg;
     
     if ((mask >>= 1) == 0)
       mask = 128;

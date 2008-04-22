@@ -18,6 +18,10 @@ Bug fixes:
    scale size parameters are a reference.
    http://rt.cpan.org/Ticket/Display.html?id=35172
 
+ - Regression: filling a greyscale image with a hatch used the wrong
+   color channels from the supplied fg/bg colors.
+   https://rt.cpan.org/Ticket/Display.html?id=35278
+
 Imager 0.63 - 7 April 2008
 ===========
 
