@@ -1,6 +1,6 @@
 #!perl -w
 use strict;
-use Test::More tests => 123;
+use Test::More tests => 129;
 
 use Imager ':handy';
 use Imager::Fill;
@@ -431,7 +431,38 @@ SKIP:
     $im_c->box(filled => 1, color => 'FFFFFF');
     $im_c->box(fill => $fill);
     my $im_cg = $im_g->convert(preset => 'rgb');
-    is_image($im_c, $im_cg, "check hatch is the same between color and greyscale");
+    is_image($im_c, $im_cg, "check hatch is the same between color and greyscale (bits $bits)");
+
+    # check the same for image fills
+    my $grey_fill = Imager::Fill->new
+      (
+       image => $im_g, 
+       combine => 'normal'
+      );
+    my $im_cfg = Imager->new(xsize => 20, ysize => 20, bits => $bits);
+    $im_cfg->box(filled => 1, color => '808080');
+    $im_cfg->box(fill => $grey_fill);
+    my $rgb_fill = Imager::Fill->new
+      (
+       image => $im_cg, 
+       combine => 'normal'
+      );
+    my $im_cfc = Imager->new(xsize => 20, ysize => 20, bits => $bits);
+    $im_cfc->box(filled => 1, color => '808080');
+    $im_cfc->box(fill => $rgb_fill);
+    is_image($im_cfg, $im_cfc, "check filling from grey image matches filling from rgb (bits = $bits)");
+
+    my $im_gfg = Imager->new(xsize => 20, ysize => 20, channels => 1, bits => $bits);
+    $im_gfg->box(filled => 1, color => '808080');
+    $im_gfg->box(fill => $grey_fill);
+    my $im_gfg_c = $im_gfg->convert(preset => 'rgb');
+    is_image($im_gfg_c, $im_cfg, "check grey filled with grey against base (bits = $bits)");
+
+    my $im_gfc = Imager->new(xsize => 20, ysize => 20, channels => 1, bits => $bits);
+    $im_gfc->box(filled => 1, color => '808080');
+    $im_gfc->box(fill => $rgb_fill);
+    my $im_gfc_c = $im_gfc->convert(preset => 'rgb');
+    is_image($im_gfc_c, $im_cfg, "check grey filled with color against base (bits = $bits)");
   }
 }
 

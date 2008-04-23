@@ -22,6 +22,12 @@ Bug fixes:
    color channels from the supplied fg/bg colors.
    https://rt.cpan.org/Ticket/Display.html?id=35278
 
+ - fixed a related problem for image fills.
+
+ - Possible security issue: The floating point sample path for image
+   based fills had a buffer overflow.  This would overwrite the end of
+   a malloc()ed buffer with double precision floats.
+
 Imager 0.63 - 7 April 2008
 ===========
 
