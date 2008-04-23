@@ -1,9 +1,17 @@
 Imager release history.  Older releases can be found in Changes.old
 
-Imager 0.64 - unreleased
+Imager 0.64 - 23 April 2008
 ===========
 
+This is a bug fix release.  This includes a fix for a possible
+security issue.
+
 Bug fixes:
+
+ - Possible security issue: The floating point sample path for image
+   based fills had a buffer overflow.  This would overwrite the end of
+   a malloc()ed buffer with double precision floats.
+   http://rt.cpan.org/Ticket/Display.html?id=35324
 
  - check that the result of fileno($fh) is defined rather than simply
    true when read() or write() is supplied with an fh parameter.
@@ -23,10 +31,6 @@ Bug fixes:
    https://rt.cpan.org/Ticket/Display.html?id=35278
 
  - fixed a related problem for image fills.
-
- - Possible security issue: The floating point sample path for image
-   based fills had a buffer overflow.  This would overwrite the end of
-   a malloc()ed buffer with double precision floats.
 
 Imager 0.63 - 7 April 2008
 ===========
