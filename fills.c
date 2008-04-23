@@ -650,12 +650,20 @@ static void fill_hatch(i_fill_t *fill, int x, int y, int width, int channels,
   int byte = f->hatch[(y + f->dy) & 7];
   int xpos = (x + f->dx) & 7;
   int mask = 128 >> xpos;
+  i_color fg = f->fg;
+  i_color bg = f->bg;
+  int want_channels = channels > 2 ? 4 : 2;
+
+  if (channels < 3) {
+    i_adapt_colors(2, 4, &fg, 1);
+    i_adapt_colors(2, 4, &bg, 1);
+  }
 
   while (width-- > 0) {
     if (byte & mask)
-      *data++ = f->fg;
+      *data++ = fg;
     else
-      *data++ = f->bg;
+      *data++ = bg;
     
     if ((mask >>= 1) == 0)
       mask = 128;
@@ -675,12 +683,19 @@ static void fill_hatchf(i_fill_t *fill, int x, int y, int width, int channels,
   int byte = f->hatch[(y + f->dy) & 7];
   int xpos = (x + f->dx) & 7;
   int mask = 128 >> xpos;
+  i_fcolor fg = f->ffg;
+  i_fcolor bg = f->fbg;
+
+  if (channels < 3) {
+    i_adapt_fcolors(2, 4, &fg, 1);
+    i_adapt_fcolors(2, 4, &bg, 1);
+  }
   
   while (width-- > 0) {
     if (byte & mask)
-      *data++ = f->ffg;
+      *data++ = fg;
     else
-      *data++ = f->fbg;
+      *data++ = bg;
     
     if ((mask >>= 1) == 0)
       mask = 128;
@@ -741,6 +756,7 @@ static void fill_image(i_fill_t *fill, int x, int y, int width, int channels,
   struct i_fill_image_t *f = (struct i_fill_image_t *)fill;
   int i = 0;
   i_color *out = data;
+  int want_channels = channels > 2 ? 4 : 2;
   
   if (f->has_matrix) {
     /* the hard way */
@@ -803,33 +819,12 @@ static void fill_image(i_fill_t *fill, int x, int y, int width, int channels,
       ++i;
     }
   }
-  if (f->src->channels == 3) {
-    /* just set the alpha */
-    for (i = 0; i <  width; ++i) {
-      data->channel[3] = 255;
-      data++;
-    }
-  }
-  else if (f->src->channels == 2) {
-    /* copy the alpha to channel 3, duplicate the grey value */
-    for (i = 0; i <  width; ++i) {
-      data->channel[3] = data->channel[1];
-      data->channel[1] = data->channel[2] = data->channel[0];
-      data++;
-    }
-  }
-  else if (f->src->channels == 1) {
-    /* set the alpha, duplicate grey */
-    for (i = 0; i <  width; ++i) {
-      data->channel[3] = 255;
-      data->channel[1] = data->channel[2] = data->channel[0];
-      data++;
-    }
-  }
+  if (f->src->channels != want_channels)
+    i_adapt_colors(want_channels, f->src->channels, data, width);
 }
 
 /*
-=item fill_image(fill, x, y, width, channels, data, work)
+=item fill_imagef(fill, x, y, width, channels, data, work)
 
 =cut
 */
@@ -837,8 +832,10 @@ static void fill_imagef(i_fill_t *fill, int x, int y, int width, int channels,
                        i_fcolor *data) {
   struct i_fill_image_t *f = (struct i_fill_image_t *)fill;
   int i = 0;
+  int want_channels = channels > 2 ? 4 : 2;
   
   if (f->has_matrix) {
+    i_fcolor *work_data = data;
     /* the hard way */
     while (i < width) {
       double rx = f->matrix[0] * (x+i) + f->matrix[1] * y + f->matrix[2];
@@ -871,11 +868,12 @@ static void fill_imagef(i_fill_t *fill, int x, int y, int width, int channels,
         }
         c2[dy] = interp_i_fcolor(c[dy][0], c[dy][1], rx, f->src->channels);
       }
-      *data++ = interp_i_fcolor(c2[0], c2[1], ry, f->src->channels);
+      *work_data++ = interp_i_fcolor(c2[0], c2[1], ry, f->src->channels);
       ++i;
     }
   }
   else {
+    i_fcolor *work_data = data;
     /* the easy way */
     /* this should be possible to optimize to use i_glin() */
     while (i < width) {
@@ -894,34 +892,13 @@ static void fill_imagef(i_fill_t *fill, int x, int y, int width, int channels,
       }
       rx -= ix * f->src->xsize;
       ry -= iy * f->src->ysize;
-      i_gpixf(f->src, rx, ry, data);
-      ++data;
+      i_gpixf(f->src, rx, ry, work_data);
+      ++work_data;
       ++i;
     }
   }
-  if (f->src->channels == 3) {
-    /* just set the alpha */
-    for (i = 0; i <  width; ++i) {
-      data->channel[3] = 1.0;
-      data++;
-    }
-  }
-  else if (f->src->channels == 2) {
-    /* copy the alpha to channel 3, duplicate the grey value */
-    for (i = 0; i <  width; ++i) {
-      data->channel[3] = data->channel[1];
-      data->channel[1] = data->channel[2] = data->channel[0];
-      data++;
-    }
-  }
-  else if (f->src->channels == 1) {
-    /* set the alpha, duplicate grey */
-    for (i = 0; i <  width; ++i) {
-      data->channel[3] = 1.0;
-      data->channel[1] = data->channel[2] = data->channel[0];
-      data++;
-    }
-  }
+  if (f->src->channels != want_channels)
+    i_adapt_fcolors(want_channels, f->src->channels, data, width);
 }
 
 
