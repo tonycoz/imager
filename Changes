@@ -12,6 +12,7 @@ Bug fixes:
    based fills had a buffer overflow.  This would overwrite the end of
    a malloc()ed buffer with double precision floats.
    http://rt.cpan.org/Ticket/Display.html?id=35324
+   CVE-2008-1928
 
  - check that the result of fileno($fh) is defined rather than simply
    true when read() or write() is supplied with an fh parameter.
