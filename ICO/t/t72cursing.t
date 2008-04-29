@@ -2,10 +2,10 @@
 use strict;
 use Test::More tests => 1;
 use Imager;
-require '../t/testtools.pl';
+use Imager::Test qw(test_image);
 
 # checks that we load the CUR write handler automatically
-my $img = test_oo_img();
+my $img = test_image();
 ok($img->write(file => 'testout/cursing.cur'),
    "write cur with autoload")
   or print "# ",$img->errstr,"\n";

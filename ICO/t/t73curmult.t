@@ -2,10 +2,10 @@
 use strict;
 use Test::More tests => 1;
 use Imager;
-require '../t/testtools.pl';
+use Imager::Test qw(test_image);
 
 # checks that we load the CUR write handler automatically
-my $img = test_oo_img();
+my $img = test_image();
 ok(Imager->write_multi({ file => 'testout/icomult.cur' }, $img, $img),
    "write_multi cur with autoload")
   or print "# ",Imager->errstr,"\n";

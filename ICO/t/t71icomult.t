@@ -2,10 +2,10 @@
 use strict;
 use Test::More tests => 1;
 use Imager;
-require '../t/testtools.pl';
+use Imager::Test qw(test_image);
 
 # checks that we load the ICO write handler automatically
-my $img = test_oo_img();
+my $img = test_image();
 ok(Imager->write_multi({ file => 'testout/icomult.ico' }, $img, $img),
    "write_multi ico with autoload")
   or print "# ",Imager->errstr,"\n";

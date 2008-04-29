@@ -273,7 +273,6 @@ t/t91pod.t		Test POD with Test::Pod
 t/t92samples.t
 t/t93podcover.t	POD Coverage tests
 t/t94kwalitee.t		Various "kwalitee" tests
-t/testtools.pl
 t/tr18561.t		Regression tests
 t/tr18561b.t
 tags.c
