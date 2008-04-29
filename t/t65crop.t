@@ -1,8 +1,8 @@
 #!perl -w
 use strict;
 use Test::More tests => 64;
-require "t/testtools.pl";
 use Imager;
+use Imager::Test qw(test_image);
 
 #$Imager::DEBUG=1;
 
@@ -46,7 +46,7 @@ SKIP:
   # the left of the image, even if left/top are provided, despite the
   # sample in the docs
   # Let's make sure that things happen as documented
-  my $src = test_oo_img();
+  my $src = test_image();
   # make sure we get what we want
   is($src->getwidth, 150, "src width");
   is($src->getheight, 150, "src height");
@@ -146,7 +146,7 @@ SKIP:
 { # https://rt.cpan.org/Ticket/Display.html?id=7581
   # previously we didn't check that the result had some pixels
   # make sure we do
-  my $src = test_oo_img();
+  my $src = test_image();
   ok(!$src->crop(left=>50, right=>50), "nothing across");
   cmp_ok($src->errstr, '=~', qr/resulting image would have no content/,
 	 "and message");
@@ -172,7 +172,7 @@ SKIP:
 }
 
 {
-    my $src = test_oo_img();
+    my $src = test_image();
     ok(!$src->crop( top=>1000, bottom=>1500, left=>0, right=>100 ),
                 "outside of image" );
     cmp_ok($src->errstr, '=~', qr/outside of the image/, "and message");

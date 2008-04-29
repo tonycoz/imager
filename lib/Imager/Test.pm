@@ -4,13 +4,26 @@ use Test::Builder;
 require Exporter;
 use vars qw(@ISA @EXPORT_OK);
 @ISA = qw(Exporter);
-@EXPORT_OK = qw(diff_text_with_nul 
-                test_image_raw test_image_16 test_image test_image_double 
-                is_color3 is_color1 is_color4 is_color_close3
-                is_fcolor4
-                is_image is_image_similar 
-                image_bounds_checks mask_tests
-                test_colorf_gpix test_color_gpix test_colorf_glin);
+@EXPORT_OK = 
+  qw(
+     diff_text_with_nul 
+     test_image_raw
+     test_image_16
+     test_image
+     test_image_double 
+     is_color1
+     is_color3
+     is_color4
+     is_color_close3
+     is_fcolor4
+     color_cmp
+     is_image
+     is_image_similar 
+     image_bounds_checks
+     mask_tests
+     test_colorf_gpix
+     test_color_gpix
+     test_colorf_glin);
 
 sub diff_text_with_nul {
   my ($desc, $text1, $text2, @params) = @_;
@@ -363,11 +376,14 @@ sub test_colorf_gpix {
     $builder->ok(0, "$comment - retrieve color at ($x,$y)");
     return;
   }
-  unless ($builder->ok(_colorf_cmp($c, $expected, $epsilon) == 0,
+  unless ($builder->ok(colorf_cmp($c, $expected, $epsilon) == 0,
 	     "$comment - got right color ($x, $y)")) {
-    print "# got: (", join(",", ($c->rgba)[0,1,2]), ")\n";
-    print "# expected: (", join(",", ($expected->rgba)[0,1,2]), ")\n";
-    return;
+    my @c = $c->rgba;
+    my @exp = $expected->rgba;
+    $builder->diag(<<EOS);
+# got: ($c[0], $c[1], $c[2])
+# expected: ($exp[0], $exp[1], $exp[2])
+EOS
   }
   1;
 }
@@ -383,10 +399,14 @@ sub test_color_gpix {
     $builder->ok(0, "$comment - retrieve color at ($x,$y)");
     return;
   }
-  unless ($builder->ok(_color_cmp($c, $expected) == 0,
+  unless ($builder->ok(color_cmp($c, $expected) == 0,
      "got right color ($x, $y)")) {
-    print "# got: (", join(",", ($c->rgba)[0,1,2]), ")\n";
-    print "# expected: (", join(",", ($expected->rgba)[0,1,2]), ")\n";
+    my @c = $c->rgba;
+    my @exp = $expected->rgba;
+    $builder->diag(<<EOS);
+# got: ($c[0], $c[1], $c[2])
+# expected: ($exp[0], $exp[1], $exp[2])
+EOS
     return;
   }
 
@@ -402,11 +422,11 @@ sub test_colorf_glin {
   @got == @$pels
     or return $builder->is_num(scalar(@got), scalar(@$pels), "$comment - pixels retrieved");
   
-  return $builder->ok(!grep(_colorf_cmp($pels->[$_], $got[$_], 0.005), 0..$#got),
+  return $builder->ok(!grep(colorf_cmp($pels->[$_], $got[$_], 0.005), 0..$#got),
      "$comment - check colors ($x, $y)");
 }
 
-sub _colorf_cmp {
+sub colorf_cmp {
   my ($c1, $c2, $epsilon) = @_;
 
   defined $epsilon or $epsilon = 0;
@@ -420,7 +440,7 @@ sub _colorf_cmp {
       || abs($s1[2]-$s2[2]) >= $epsilon && $s1[2] <=> $s2[2];
 }
 
-sub _color_cmp {
+sub color_cmp {
   my ($c1, $c2) = @_;
 
   my @s1 = $c1->rgba;

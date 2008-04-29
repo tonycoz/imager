@@ -3,13 +3,11 @@
 # to make sure we get expected values
 
 use strict;
-use Test::More tests => 228;
+use Test::More tests => 220;
 
 BEGIN { use_ok(Imager => qw(:handy :all)) }
 
-require "t/testtools.pl";
-
-use Imager::Test qw(image_bounds_checks is_color4 is_fcolor4);
+use Imager::Test qw(image_bounds_checks is_color3 is_color4 is_fcolor4 color_cmp mask_tests);
 
 init_log("testout/t01introvert.log",1);
 
@@ -82,10 +80,10 @@ is($samp, "\xFF\0\0" x 50 . "\0\0\xFF" x 50, "gsamp scalar bytes");
 # reading indicies as colors
 my $c_red = Imager::i_get_pixel($im_pal, 0, 0);
 ok($c_red, "got the red pixel");
-ok(color_cmp($red, $c_red) == 0, "and it's red");
+is_color3($c_red, 255, 0, 0, "and it's red");
 my $c_blue = Imager::i_get_pixel($im_pal, 50, 0);
 ok($c_blue, "got the blue pixel");
-ok(color_cmp($blue, $c_blue) == 0, "and it's blue");
+is_color3($c_blue, 0, 0, 255, "and it's blue");
 
 # drawing with colors
 ok(Imager::i_ppix($im_pal, 0, 0, $green) == 0, "draw with color in palette");
@@ -94,7 +92,7 @@ is(Imager::i_img_type($im_pal), 1, "image still paletted");
 
 my $c_green = Imager::i_get_pixel($im_pal, 0, 0);
 ok($c_green, "got green pixel");
-ok(color_cmp($green, $c_green) == 0, "and it's green");
+is_color3($c_green, 0, 255, 0, "and it's green");
 
 is(Imager::i_colorcount($im_pal), 3, "still 3 colors in palette");
 is(Imager::i_findcolor($im_pal, $green), 1, "and green is the second");
@@ -132,7 +130,7 @@ is($impal2->type, 'paletted', "check type");
   is($blue_idx, 1, "and it's expected index for blue");
   my $green_idx = $blue_idx + 1;
   my $c = $impal2->getcolors(start=>$green_idx);
-  ok(color_cmp($green, $c) == 0, "found green where expected");
+  is_color3($c, 0, 255, 0, "found green where expected");
   my @cols = $impal2->getcolors;
   is(@cols, 3, "got 3 colors");
   my @exp = ( $red, $blue, $green );
@@ -267,8 +265,8 @@ cmp_ok(Imager->errstr, '=~', qr/channels must be between 1 and 4/,
 
   my @row = Imager::i_glin($im->{IMG}, 0, 2, 0);
   is(@row, 2, "got 2 pixels from i_glin");
-  ok(color_cmp($row[0], $red) == 0, "red first");
-  ok(color_cmp($row[1], $blue) == 0, "then blue");
+  is_color3($row[0], 255, 0, 0, "red first");
+  is_color3($row[1], 0, 0, 255, "then blue");
 }
 
 { # general tag tests

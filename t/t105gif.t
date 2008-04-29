@@ -15,7 +15,7 @@ $|=1;
 use Test::More tests => 132;
 use Imager qw(:all);
 use Imager::Test qw(is_color3);
-BEGIN { require "t/testtools.pl"; }
+
 use Carp 'confess';
 $SIG{__DIE__} = sub { confess @_ };
 
@@ -186,9 +186,9 @@ SKIP:
       skip("giflib3 doesn't support callbacks", 1) unless $gifver >= 4.0;
       ++$can_write_callback;
       my $good = ext_test(14, <<'ENDOFCODE');
-use Imager;
-require "t/testtools.pl";
-my $timg = test_img();
+use Imager qw(:all);
+use Imager::Test qw(test_image_raw);
+my $timg = test_image_raw();
 my @gif_delays = (50) x 5;
 my @gif_disposal = (2) x 5;
 my @imgs = ($timg) x 5;

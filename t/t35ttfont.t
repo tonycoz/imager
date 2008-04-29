@@ -1,18 +1,17 @@
 #!perl -w
 use strict;
-use Test::More tests => 91;
+use Test::More tests => 92;
 
 $|=1;
 
 BEGIN { use_ok(Imager => ':all') }
-require "t/testtools.pl";
 use Imager::Test qw(diff_text_with_nul is_color3);
 
 init_log("testout/t35ttfont.log",2);
 
 SKIP:
 {
-  skip("freetype 1.x unavailable or disabled", 90) 
+  skip("freetype 1.x unavailable or disabled", 91) 
     unless i_has_format("tt");
   print "# has tt\n";
   
@@ -276,16 +275,19 @@ SKIP:
 
     # UTF8 encoded \x{2010}
     my $dash = pack("C*", 0xE2, 0x80, 0x90);
-    diff_text_with_nul("utf8 dash\0dash vs dash", "$dash\0$dash", $dash,
+    diff_text_with_nul("utf8 dash\\0dash vs dash", "$dash\0$dash", $dash,
 		       font => $font, color => '#FFFFFF', utf8 => 1);
-    diff_text_with_nul("utf8 dash\0dash vs dash", "$dash\0$dash", $dash,
+    diff_text_with_nul("utf8 dash\\0dash vs dash", "$dash\0$dash", $dash,
 		       font => $font, channel => 1, utf8 => 1);
   }
 
+ SKIP:
   { # RT 11972
     # when rendering to a transparent image the coverage should be
     # expressed in terms of the alpha channel rather than the color
     my $font = Imager::Font->new(file=>'fontfiles/ImUgly.ttf', type=>'tt');
+    ok($font, "loaded fontfiles/ImUgly.ttf")
+      or skip("Could not load test font: ".Imager->errstr, 4);
     my $im = Imager->new(xsize => 40, ysize => 20, channels => 4);
     ok($im->string(string => "AB", size => 20, aa => 1, color => '#F00',
 		   x => 0, y => 15, font => $font),

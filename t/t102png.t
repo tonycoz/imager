@@ -10,7 +10,6 @@ use Test::More tests => 34;
 # (It may become useful if the test is moved to ./t subdirectory.)
 use lib qw(blib/lib blib/arch);
 
-BEGIN { require 't/testtools.pl'; }
 BEGIN { use_ok('Imager', ':all') }
 init_log("testout/t102png.log",1);
 

@@ -1,13 +1,12 @@
 #!perl -w
 use strict;
-use Test::More tests => 98;
+use Test::More tests => 83;
 
 BEGIN { use_ok(Imager => qw(:all :handy)) }
-require "t/testtools.pl";
 
 init_log("testout/t022double.log", 1);
 
-use Imager::Test qw(image_bounds_checks);
+use Imager::Test qw(image_bounds_checks test_colorf_gpix test_colorf_glin mask_tests);
 
 use Imager::Color::Float;
 
@@ -53,12 +52,13 @@ test_colorf_gpix($im_rgb, 0,  0,   $redf);
 test_colorf_gpix($im_rgb, 99, 0,   $redf);
 test_colorf_gpix($im_rgb, 0,  100, $redf);
 test_colorf_gpix($im_rgb, 99, 100, $redf);
-test_colorf_glin($im_rgb, 0,  0,   ($redf) x 100);
-test_colorf_glin($im_rgb, 0,  100, ($redf) x 100);
+test_colorf_glin($im_rgb, 0,  0,   [ ($redf) x 100 ], 'sanity glin @0');
+test_colorf_glin($im_rgb, 0,  100, [ ($redf) x 100 ], 'sanity glin @100');
 
 Imager::i_plinf($im_rgb, 20, 1, ($greenf) x 60);
 test_colorf_glin($im_rgb, 0, 1, 
-                 ($redf) x 20, ($greenf) x 60, ($redf) x 20);
+                 [ ($redf) x 20, ($greenf) x 60, ($redf) x 20 ],
+		 'check after write');
 
 # basic OO tests
 my $ooimg = Imager->new(xsize=>200, ysize=>201, bits=>'double');
