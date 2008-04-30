@@ -387,7 +387,7 @@ i_readjpeg_wiol(io_glue *data, int length, char** iptc_itext, int *itlength) {
 #ifdef IMEXIF_ENABLE
   int seen_exif = 0;
 #endif
-  i_color *line_buffer = NULL;
+  i_color * volatile line_buffer = NULL;
   struct jpeg_decompress_struct cinfo;
   struct my_error_mgr jerr;
   JSAMPARRAY buffer;		/* Output row buffer */
@@ -504,6 +504,7 @@ i_readjpeg_wiol(io_glue *data, int length, char** iptc_itext, int *itlength) {
     i_plin(im, 0, cinfo.output_width, cinfo.output_scanline-1, line_buffer);
   }
   myfree(line_buffer);
+  line_buffer = NULL;
 
   /* check for APP1 marker and save */
   markerp = cinfo.marker_list;

@@ -1,5 +1,17 @@
 Imager release history.  Older releases can be found in Changes.old
 
+Imager 0.65 - unreleased
+===========
+
+Bug fixes:
+
+ - In some cases when an error occurs reading those parts of a JPEG
+   file after the image the scan-line buffer could be freed a second
+   time.  In cases where the the error occured while reading the image
+   data it's possible that the buffer could have leaked.
+   Thanks to Gabriel Vasseur for reporting this and help in tracking
+   it down.
+
 Imager 0.64 - 23 April 2008
 ===========
 
