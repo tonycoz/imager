@@ -190,6 +190,9 @@ myfree_file_line(void *p, char *file, int line) {
   char  *pp = p;
   int match = 0;
   int i;
+
+  if (p == NULL)
+    return;
   
   for(i=0; i<MAXMAL; i++) if (malloc_pointers[i].ptr == p) {
     mm_log((1,"myfree_file_line: pointer %i (%s) freed at %s (%i)\n", i, malloc_pointers[i].comm, file, line));
