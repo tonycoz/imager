@@ -12,7 +12,7 @@ UPGRADE.
 
 use strict;
 $|=1;
-use Test::More tests => 132;
+use Test::More tests => 140;
 use Imager qw(:all);
 use Imager::Test qw(is_color3);
 
@@ -51,7 +51,7 @@ SKIP:
     cmp_ok($im->errstr, '=~', "format 'gif' not supported", "check no gif message");
     ok(!grep($_ eq 'gif', Imager->read_types), "check gif not in read types");
     ok(!grep($_ eq 'gif', Imager->write_types), "check gif not in write types");
-    skip("no gif support", 126);
+    skip("no gif support", 134);
   }
     open(FH,">testout/t105.gif") || die "Cannot open testout/t105.gif\n";
     binmode(FH);
@@ -710,6 +710,37 @@ SKIP:
   {
     ok(grep($_ eq 'gif', Imager->read_types), "check gif in read types");
     ok(grep($_ eq 'gif', Imager->write_types), "check gif in write types");
+  }
+
+  {
+    # check screen tags handled correctly note the screen size
+    # supplied is larger than the box covered by the images
+    my $im1 = Imager->new(xsize => 10, ysize => 8);
+    $im1->settag(name => 'gif_top', value => 4);
+    $im1->settag(name => 'gif_screen_width', value => 18);
+    $im1->settag(name => 'gif_screen_height', value => 16);
+    my $im2 = Imager->new(xsize => 7, ysize => 10);
+    $im2->settag(name => 'gif_left', value => 3);
+    my @im = ( $im1, $im2 );
+
+    my $data;
+    ok(Imager->write_multi({ data => \$data, type => 'gif' }, @im),
+       "write with screen settings")
+      or print "# ", Imager->errstr, "\n";
+    my @result = Imager->read_multi(data => $data);
+    is(@result, 2, "got 2 images back");
+    is($result[0]->tags(name => 'gif_screen_width'), 18,
+       "check result screen width");
+    is($result[0]->tags(name => 'gif_screen_height'), 16,
+       "check result screen height");
+    is($result[0]->tags(name => 'gif_left'), 0,
+       "check first gif_left");
+    is($result[0]->tags(name => 'gif_top'), 4,
+       "check first gif_top");
+    is($result[1]->tags(name => 'gif_left'), 3,
+       "check second gif_left");
+    is($result[1]->tags(name => 'gif_top'), 0,
+       "check second gif_top");
   }
 }
 

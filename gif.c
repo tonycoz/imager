@@ -1733,7 +1733,7 @@ i_writegif_low(i_quantize *quant, GifFileType *gf, i_img **imgs, int count) {
 
   if (!i_tags_get_int(&imgs[0]->tags, "gif_screen_width", 0, &scrw))
     scrw = 0;
-  if (!i_tags_get_int(&imgs[0]->tags, "gif_screen_height", 0, &scrw))
+  if (!i_tags_get_int(&imgs[0]->tags, "gif_screen_height", 0, &scrh))
     scrw = 0;
 
   anylocal = 0;

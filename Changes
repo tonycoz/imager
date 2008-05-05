@@ -12,6 +12,10 @@ Bug fixes:
    Thanks to Gabriel Vasseur for reporting this and help in tracking
    it down.
 
+ - the gif_screen_height tag was overriding the screen width and being
+   ignored for the screen height when present.
+   https://rt.cpan.org/Public/Bug/Display.html?id=35568
+
 Imager 0.64 - 23 April 2008
 ===========
 
