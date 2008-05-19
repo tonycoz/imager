@@ -14,6 +14,8 @@ typedef i_fcolor* Imager__Color__Float;
 typedef i_img*   Imager__ImgRaw;
 typedef int undef_neg_int;
 typedef i_img * Imager;
+typedef i_pen_t * Imager__Pen__Raw;
+typedef i_polyline_t * Imager__Polyline;
 
 #ifdef HAVE_LIBTT
 typedef TT_Fonthandle* Imager__Font__TT;

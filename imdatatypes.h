@@ -109,6 +109,53 @@ typedef int (*i_f_psamp_bits_t)(i_img *im, int x, int r, int y, unsigned const *
 
 typedef int i_img_dim;
 
+typedef struct {
+  double x, y;
+} i_point_t;
+
+
+typedef struct i_pen_t i_pen_t;
+
+typedef struct {
+  /* whether the line should be closed */
+  int closed;
+
+  /* the number of points that points points at */
+  int point_count;
+
+  /* the points that make up the line */
+  i_point_t *points;
+} i_polyline_t;
+
+typedef int (*i_pen_draw_t)(struct i_pen_t *, i_img *im, int line_count, const i_polyline_t **lines);
+typedef void (*i_pen_destroy_t)(struct i_pen_t *);
+typedef struct i_pen_t * (*i_pen_clone_t)(struct i_pen_t *);
+
+typedef struct {
+  i_pen_draw_t draw;
+  i_pen_destroy_t destroy;
+  i_pen_clone_t clone;
+} i_pen_vtable_t;
+
+struct i_pen_t {
+  i_pen_vtable_t const *vtable;
+};
+
+typedef enum i_pen_thick_corner_t {
+  i_ptc_cut,
+  i_ptc_round,
+  i_ptc_30, /* pointed if no tighter than 30 degrees, cut otherwise */
+} i_pen_thick_corner_t;
+
+typedef enum i_pen_thick_end_t {
+  i_pte_square, /* square at the end point */
+  i_pte_block, /* square 0.5 * thick past the end point */
+  i_pte_round, /* semicircle centered on the end point */
+  i_pte_custom_attached, /* custom end attached */
+  i_pte_custom_detached /* custom end detached */
+} i_pen_thick_end_t;
+
+
 /*
 =item i_img
 =category Data Types
@@ -362,6 +409,7 @@ typedef void (*i_fill_with_fcolor_f)
      (struct i_fill_tag *fill, int x, int y, int width, int channels,
       i_fcolor *data);
 typedef void (*i_fill_destroy_f)(struct i_fill_tag *fill);
+typedef struct i_fill_tag * (*i_fill_clone_t)(struct i_fill_tag *);
 
 /* combine functions modify their target and are permitted to modify
    the source to prevent having to perform extra copying/memory
@@ -431,6 +479,9 @@ typedef struct i_fill_tag
   /* called for other sample sizes */
   /* this must be non-NULL */
   i_fill_with_fcolor_f f_fill_with_fcolor;
+
+  /* clone the fill */
+  i_fill_clone_t clone;
 
   /* called if non-NULL to release any extra resources */
   i_fill_destroy_f destroy;

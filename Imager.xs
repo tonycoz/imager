@@ -920,6 +920,7 @@ i_int_hlines_dump(i_int_hlines *hlines) {
 
 /* trying to use more C style names, map them here */
 #define i_io_DESTROY(ig) io_glue_destroy(ig)
+#define i_pen_DESTROY(pen) i_pen_destroy(pen)
 
 MODULE = Imager		PACKAGE = Imager::Color	PREFIX = ICL_
 
@@ -4876,6 +4877,113 @@ i_new_fill_image(src, matrix, xoff, yoff, combine)
         RETVAL = i_new_fill_image(src, matrixp, xoff, yoff, combine);
       OUTPUT:
         RETVAL
+
+MODULE = Imager::Pen::Raw PACKAGE=Imager::Pen::Raw PREFIX=i_pen_
+
+Imager::Pen::Raw
+i_pen_clone(pen)
+  Imager::Pen::Raw pen
+
+void
+i_pen_DESTROY(pen)
+  Imager::Pen::Raw pen
+
+int
+i_pen_draw(pen, im, ...)
+    Imager::Pen::Raw pen
+    Imager::ImgRaw im
+  PREINIT:
+    int i;
+    int line_count = items - 2;
+    const i_polyline_t **lines = mymalloc(sizeof(i_polyline_t *) * line_count);
+  CODE:
+    for (i = 2; i < items; ++i) {
+      SV *sv = ST(i);
+      if (sv_derived_from(sv, "Imager::Polyline")) {
+	IV tmp = SvIV((SV *)SvRV(sv));
+	lines[i-2] = INT2PTR(const i_polyline_t *, tmp);
+      }
+      else {
+        myfree(lines);
+        croak("i_pen_draw: usage raw_pen->draw(img, polylines...)");
+      }
+    }
+    RETVAL = i_pen_draw(pen, im, line_count, lines);
+    myfree(lines);
+  OUTPUT:
+    RETVAL
+
+MODULE = Imager::Polyline PACKAGE = Imager::Polyline PREFIX=i_polyline_
+
+Imager::Polyline
+i_polyline_new(cls, closed, ...)
+    int closed;
+  PREINIT:
+    int i;
+  CODE:
+    RETVAL = mymalloc(sizeof(i_polyline_t));
+    RETVAL->closed = closed;
+    if ((items-2) % 2 || (items-2) < 2) {
+      myfree(RETVAL);
+      croak("Usage: Imager::Polyline->new(closed, x, y, x, y, ...)");
+    }
+    RETVAL->point_count = (items-2) / 2;
+    RETVAL->points = mymalloc(sizeof(i_point_t) * RETVAL->point_count);
+    for (i = 0; i < RETVAL->point_count; ++i) {
+      RETVAL->points[i].x = SvNV(ST(2+i*2));
+      RETVAL->points[i].y = SvNV(ST(3+i*2));
+    }
+  OUTPUT:
+    RETVAL
+
+void
+i_polyline_DESTROY(poly)
+    Imager::Polyline poly
+  CODE:
+    myfree(poly->points);
+    myfree(poly);
+
+MODULE = Imager PACKAGE = Imager::Pen::Thick PREFIX=i
+
+Imager::Pen::Raw
+i_new_thick_pen_color(thickness, color, combine = ic_normal, corner=i_ptc_cut, front=i_pte_square, back=i_pte_square, front_pts_sv = NULL, back_pts_sv = NULL)
+	double thickness
+	Imager::Color color
+	int combine
+	int corner
+	int front
+	int back
+	SV *front_pts_sv
+	SV *back_pts_sv
+  PREINIT:
+    int front_count = 0;
+    i_point_t *front_pts = NULL;
+    int back_count = 0;
+    i_point_t *back_pts = NULL;
+  CODE:
+    RETVAL = i_new_thick_pen_color(thickness, color, combine, corner, front, back, front_count, front_pts, back_count, back_pts);
+  OUTPUT:
+    RETVAL
+
+Imager::Pen::Raw
+i_new_thick_pen_fill(thickness, fill, corner=i_ptc_cut, front=i_pte_square, back=i_pte_square, front_pts_sv = NULL, back_pts_sv = NULL)
+	double thickness
+	Imager::FillHandle fill
+	int corner
+	int front
+	int back
+	SV *front_pts_sv
+	SV *back_pts_sv
+  PREINIT:
+    int front_count = 0;
+    i_point_t *front_pts = NULL;
+    int back_count = 0;
+    i_point_t *back_pts = NULL;
+  CODE:
+    RETVAL = i_new_thick_pen_fill(thickness, fill, corner, front, back, front_count, front_pts, back_count, back_pts);
+  OUTPUT:
+    RETVAL
+
 
 MODULE = Imager  PACKAGE = Imager::Internal::Hlines  PREFIX=i_int_hlines_
 

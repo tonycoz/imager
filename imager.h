@@ -156,6 +156,7 @@ i_new_fill_hatchf(const i_fcolor *fg, const i_fcolor *bg, int combine, int hatch
 extern i_fill_t *
 i_new_fill_image(i_img *im, const double *matrix, int xoff, int yoff, int combine);
 extern void i_fill_destroy(i_fill_t *fill);
+#define i_fill_clone(fill) ((fill->clone)(fill))
 
 float i_gpix_pch(i_img *im,int x,int y,int ch);
 
@@ -606,5 +607,31 @@ i_gsamp_bg(i_img *im, int l, int r, int y, i_sample_t *samples,
 extern int
 i_gsampf_bg(i_img *im, int l, int r, int y, i_fsample_t *samples, 
 	   int out_channels, i_fcolor const *bg);
+
+extern i_pen_t *
+i_new_thick_pen_color(double thickness,
+		      i_color const *color,
+		      int combine,
+		      i_pen_thick_corner_t corner, 
+		      i_pen_thick_end_t front,
+		      i_pen_thick_end_t back,
+		      int custom_front_count,
+		      i_point_t *custom_front_points,
+		      int custom_back_count,
+		      i_point_t *custom_back_points);
+extern i_pen_t *
+i_new_thick_pen_fill(double thickness,
+		     i_fill_t *fill,
+		     i_pen_thick_corner_t corner,
+		     i_pen_thick_end_t front,
+		     i_pen_thick_end_t back,
+		     int custom_front_count,
+		     i_point_t *custom_front_points,
+		     int custom_back_count,
+		     i_point_t *custom_back_points);
+
+#define i_pen_destroy(pen) (((pen)->vtable->destroy)(pen))
+#define i_pen_clone(pen) (((pen)->vtable->clone)(pen))
+#define i_pen_draw(pen, im, line_count, lines) (((pen)->vtable->draw)((pen), (im), (line_count), (lines)))
 
 #endif

@@ -170,6 +170,8 @@ lib/Imager/ImageTypes.pod
 lib/Imager/Inline.pod           Using Imager with Inline::C
 lib/Imager/LargeSamples.pod	Track large sample support
 lib/Imager/Matrix2d.pm
+lib/Imager/Pen.pm
+lib/Imager/Pen/Thick.pm
 lib/Imager/Preprocess.pm
 lib/Imager/Regops.pm
 lib/Imager/Test.pm

@@ -7,6 +7,8 @@ Imager::IO              T_PTROBJ
 Imager::Font::FT2       T_PTROBJ
 Imager::FillHandle      T_PTROBJ
 Imager::Internal::Hlines T_PTROBJ
+Imager::Pen::Raw	T_PTROBJ
+Imager::Polyline	T_PTROBJ
 const char *		T_PV
 float			T_FLOAT
 float*			T_ARRAY

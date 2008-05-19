@@ -1515,7 +1515,7 @@ struct fount_state {
   double cos;
   double sin;
   double theta;
-  int xa, ya;
+  double xa, ya;
   void *ssample_data;
   fount_func ffunc;
   fount_repeat rpfunc;
@@ -1523,12 +1523,19 @@ struct fount_state {
   double parm;
   i_fountain_seg *segs;
   int count;
+
+  /* to simplify cloning */
+  double xb, yb;
+  i_fountain_type type;
+  i_fountain_repeat repeat;
+  int super_sample;
+  double ssample_param;
 };
 
 static void
 fount_init_state(struct fount_state *state, double xa, double ya, 
                  double xb, double yb, i_fountain_type type, 
-                 i_fountain_repeat repeat, int combine, int super_sample, 
+                 i_fountain_repeat repeat, int super_sample, 
                  double ssample_param, int count, i_fountain_seg *segs);
 
 static void
@@ -1671,7 +1678,7 @@ i_fountain(i_img *im, double xa, double ya, double xb, double yb,
   if (combinef_func)
     work = mymalloc(line_bytes); /* checked 17feb2005 tonyc */
 
-  fount_init_state(&state, xa, ya, xb, yb, type, repeat, combine, 
+  fount_init_state(&state, xa, ya, xb, yb, type, repeat, 
                    super_sample, ssample_param, count, segs);
   my_segs = state.segs;
 
@@ -1712,6 +1719,8 @@ fill_fountf(i_fill_t *fill, int x, int y, int width, int channels,
             i_fcolor *data);
 static void
 fount_fill_destroy(i_fill_t *fill);
+static i_fill_t *
+fount_fill_clone(i_fill_t *src);
 
 static i_fill_fountain_t
 fount_fill_proto =
@@ -1719,7 +1728,8 @@ fount_fill_proto =
     {
       NULL,
       fill_fountf,
-      fount_fill_destroy
+      fount_fill_clone,
+      fount_fill_destroy,
     }
   };
 
@@ -1751,7 +1761,7 @@ i_new_fill_fount(double xa, double ya, double xb, double yb,
     fill->base.combine = NULL;
     fill->base.combinef = NULL;
   }
-  fount_init_state(&fill->state, xa, ya, xb, yb, type, repeat, combine, 
+  fount_init_state(&fill->state, xa, ya, xb, yb, type, repeat, 
                    super_sample, ssample_param, count, segs);
 
   return &fill->base;
@@ -1774,7 +1784,7 @@ Used by both the fountain fill filter and the fountain fill.
 static void
 fount_init_state(struct fount_state *state, double xa, double ya, 
                  double xb, double yb, i_fountain_type type, 
-                 i_fountain_repeat repeat, int combine, int super_sample, 
+                 i_fountain_repeat repeat, int super_sample, 
                  double ssample_param, int count, i_fountain_seg *segs) {
   int i, j;
   int bytes;
@@ -1888,6 +1898,14 @@ fount_init_state(struct fount_state *state, double xa, double ya,
   state->rpfunc = fount_repeats[repeat];
   state->segs = my_segs;
   state->count = count;
+
+  /* needed to clone */
+  state->xb = xb;
+  state->yb = yb;
+  state->type = type;
+  state->repeat = repeat;
+  state->super_sample = super_sample;
+  state->ssample_param = ssample_param;
 }
 
 static void
@@ -2374,6 +2392,26 @@ static void
 fount_fill_destroy(i_fill_t *fill) {
   i_fill_fountain_t *f = (i_fill_fountain_t *)fill;
   fount_finish_state(&f->state);
+}
+
+/*
+=item fount_fill_clone(fill)
+
+=cut
+*/
+static i_fill_t *
+fount_fill_clone(i_fill_t *srcf) {
+  i_fill_fountain_t *src = (i_fill_fountain_t *)srcf;
+  i_fill_fountain_t *fill = mymalloc(sizeof(i_fill_fountain_t));
+  struct fount_state *state = &src->state;
+
+  *fill = *src;
+
+  fount_init_state(&fill->state, state->xa, state->ya, state->xb, state->yb, 
+		   state->type, state->repeat, state->super_sample, 
+		   state->ssample_param, state->count, state->segs);
+
+  return (i_fill_t *)fill;
 }
 
 /*

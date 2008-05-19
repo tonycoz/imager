@@ -166,15 +166,17 @@ static void fill_solid(i_fill_t *, int x, int y, int width, int channels,
                        i_color *);
 static void fill_solidf(i_fill_t *, int x, int y, int width, int channels, 
                         i_fcolor *);
+static i_fill_t *clone_solid(i_fill_t *);
 
 static i_fill_solid_t base_solid_fill =
 {
   {
     fill_solid,
     fill_solidf,
-    NULL,
-    NULL,
-    NULL,
+    clone_solid,
+    NULL, /* destroy */
+    NULL, /* combine */
+    NULL, /* combinef */
   },
 };
 
@@ -404,6 +406,8 @@ static void fill_hatch(i_fill_t *fill, int x, int y, int width, int channels,
                        i_color *data);
 static void fill_hatchf(i_fill_t *fill, int x, int y, int width, int channels, 
                         i_fcolor *data);
+static i_fill_t *clone_hatch(i_fill_t *fill);
+
 static
 i_fill_t *
 i_new_hatch_low(const i_color *fg, const i_color *bg, const i_fcolor *ffg, const i_fcolor *fbg, 
@@ -466,6 +470,7 @@ static void fill_image(i_fill_t *fill, int x, int y, int width, int channels,
                        i_color *data);
 static void fill_imagef(i_fill_t *fill, int x, int y, int width, int channels,
                        i_fcolor *data);
+static i_fill_t *clone_image_fill(i_fill_t *src);
 struct i_fill_image_t {
   i_fill_t base;
   i_img *src;
@@ -480,7 +485,10 @@ image_fill_proto =
     {
       fill_image,
       fill_imagef,
-      NULL
+      clone_image_fill,
+      NULL, /* destroy */
+      NULL, /* combine */
+      NULL, /* combinef */
     }
   };
 
@@ -571,13 +579,32 @@ fill_solidf(i_fill_t *fill, int x, int y, int width, int channels,
   }
 }
 
+/*
+=item clone_solid(fill)
+
+Clone a solid fill
+
+=cut
+*/
+static i_fill_t *
+clone_solid(i_fill_t *src) {
+  i_fill_solid_t *fill = mymalloc(sizeof(i_fill_solid_t)); /* checked 14jul05 tonyc */
+
+  *fill = *T_SOLID_FILL(src);
+
+  return (i_fill_t *)fill;
+}
+
 static i_fill_hatch_t
 hatch_fill_proto =
   {
     {
       fill_hatch,
       fill_hatchf,
-      NULL
+      clone_hatch,
+      NULL, /* destroy */
+      NULL, /* combine */
+      NULL, /* combinef */
     }
   };
 
@@ -685,6 +712,22 @@ static void fill_hatchf(i_fill_t *fill, int x, int y, int width, int channels,
     if ((mask >>= 1) == 0)
       mask = 128;
   }
+}
+
+/*
+=item clone_solid(fill)
+
+Clone a hatch fill
+
+=cut
+*/
+static i_fill_t *
+clone_hatch(i_fill_t *src) {
+  i_fill_hatch_t *fill = mymalloc(sizeof(i_fill_hatch_t));
+
+  *fill = *(i_fill_hatch_t *)src;
+
+  return (i_fill_t *)fill;
 }
 
 /* hopefully this will be inlined  (it is with -O3 with gcc 2.95.4) */
@@ -924,6 +967,14 @@ static void fill_imagef(i_fill_t *fill, int x, int y, int width, int channels,
   }
 }
 
+static i_fill_t *
+clone_image_fill(i_fill_t *src) {
+  struct i_fill_image_t *fill = mymalloc(sizeof(struct i_fill_image_t));
+  
+  *fill = *(struct i_fill_image_t *)src;
+
+  return (i_fill_t *)fill;
+}
 
 /*
 =back
