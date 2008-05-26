@@ -121,7 +121,7 @@ rubthru_targ_alpha(i_img *im, i_img *src, int tx, int ty,
       ttx = work_left;
       IM_GLIN(im, work_left, work_left + work_width, tty, dest_line);
       
-      for(x = src_minx; x < src_maxx; x++) {
+      for(x = min_x; x < max_x; x++) {
 	src_alpha = srcp->channel[alphachan];
 	if (src_alpha) {
 	  remains = IM_SAMPLE_MAX - src_alpha;

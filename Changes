@@ -1,5 +1,14 @@
 Imager release history.  Older releases can be found in Changes.old
 
+Imager 0.66 - unreleased
+===========
+
+Bug fixes:
+
+ - an optimization skipping 0 src alpha values could cause the
+   rubthrough() to read past the end of a buffer.
+   http://www.nntp.perl.org/group/perl.cpan.testers/2008/05/msg1509184.html
+
 Imager 0.65 - 20 May 2008
 ===========
 
