@@ -3,6 +3,8 @@ Imager release history.  Older releases can be found in Changes.old
 Imager 0.66 - unreleased
 ===========
 
+ - 24-bit color .ICO/.CUR files can now be read.
+
 Bug fixes:
 
  - an optimization skipping 0 src alpha values could cause the

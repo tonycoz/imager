@@ -1,6 +1,6 @@
 #!perl -w
 use strict;
-use Test::More tests => 98;
+use Test::More tests => 100;
 use Imager::Test qw(is_image);
 
 BEGIN { use_ok('Imager::File::ICO'); }
@@ -360,4 +360,14 @@ EOS
   ok($im2->read(data => $data), "read ico with defaults");
   is($im2->type, 'direct', 'expect a direct image');
   is_image($im2, $imcopy, 'check against expected');
+}
+
+{
+  # read 24-bit images
+  my $im = Imager->new;
+  ok($im->read(file => 'testimg/rgb1616.ico'), "read 24-bit data image")
+    or print "# ", $im->errstr, "\n";
+  my $vs = Imager->new(xsize => 16, ysize => 16);
+  $vs->box(filled => 1, color => '#333366');
+  is_image($im, $vs, "check we got the right colors");
 }

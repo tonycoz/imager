@@ -46,13 +46,15 @@ read_one_icon(ico_reader_t *file, int index, int masked) {
     i_color *line_buf;
     i_color *outp;
     ico_color_t *inp = image->image_data;
+    int channels = masked || image->bit_count == 32 ? 4 : 3;
 
-    if (!i_int_check_image_file_limits(image->width, image->height, 4, 1)) {
+    if (!i_int_check_image_file_limits(image->width, image->height, channels, 1)) {
       ico_image_release(image);
       return NULL;
     }
 
-    result = i_img_8_new(image->width, image->height, 4);
+    
+    result = i_img_8_new(image->width, image->height, channels);
     if (!result) {
       ico_image_release(image);
       return NULL;

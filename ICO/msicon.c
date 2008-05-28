@@ -10,6 +10,8 @@ int read_packed(io_glue *ig, const char *format, ...);
 static int 
 read_palette(ico_reader_t *file, ico_image_t *image, int *error);
 static int 
+read_24bit_data(ico_reader_t *file, ico_image_t *image, int *error);
+static int 
 read_32bit_data(ico_reader_t *file, ico_image_t *image, int *error);
 static int 
 read_8bit_data(ico_reader_t *file, ico_image_t *image, int *error);
@@ -256,7 +258,8 @@ ico_image_read(ico_reader_t *file, int index, int *error) {
     return NULL;
   }
 
-  if (bit_count != 1 && bit_count != 4 && bit_count != 8 && bit_count != 32) {
+  if (bit_count != 1 && bit_count != 4 && bit_count != 8
+      && bit_count != 24 && bit_count != 32) {
     *error = ICOERR_Unknown_Bits;
     return 0;
   }
@@ -286,6 +289,21 @@ ico_image_read(ico_reader_t *file, int index, int *error) {
       return NULL;
     }
     if (!read_32bit_data(file, result, error)) {
+      free(result->image_data);
+      free(result);
+      return NULL;
+    }
+  }
+  else if (bit_count == 24) {
+    result->palette_size = 0;
+
+    result->image_data = malloc(result->width * result->height * sizeof(ico_color_t));
+    if (!result->image_data) {
+      free(result);
+      *error = ICOERR_Out_Of_Memory;
+      return NULL;
+    }
+    if (!read_24bit_data(file, result, error)) {
       free(result->image_data);
       free(result);
       return NULL;
@@ -773,6 +791,56 @@ read_32bit_data(ico_reader_t *file, ico_image_t *image, int *error) {
       outp->a = inp[3];
       ++outp;
       inp += 4;
+    }
+  }
+  free(buffer);
+
+  return 1;
+}
+
+/*
+=item read_24bit_data
+
+Reads 24 bit image data.
+
+=cut
+*/
+
+static
+int
+read_24bit_data(ico_reader_t *file, ico_image_t *image, int *error) {
+  int line_bytes = image->width * 3;
+  unsigned char *buffer;
+  int y;
+  int x;
+  unsigned char *inp;
+  ico_color_t *outp;
+
+  line_bytes = (line_bytes + 3) / 4 * 4;
+
+  buffer = malloc(line_bytes);
+
+  if (!buffer) {
+    *error = ICOERR_Out_Of_Memory;
+    return 0;
+  }
+
+  for (y = image->height - 1; y >= 0; --y) {
+    if (i_io_read(file->ig, buffer, line_bytes) != line_bytes) {
+      free(buffer);
+      *error = ICOERR_Short_File;
+      return 0;
+    }
+    outp = image->image_data;
+    outp += y * image->width;
+    inp = buffer;
+    for (x = 0; x < image->width; ++x) {
+      outp->b = inp[0];
+      outp->g = inp[1];
+      outp->r = inp[2];
+      outp->a = 255;
+      ++outp;
+      inp += 3;
     }
   }
   free(buffer);
