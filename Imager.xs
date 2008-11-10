@@ -18,6 +18,7 @@ extern "C" {
 #include "dynaload.h"
 #include "regmach.h"
 #include "imextdef.h"
+#include "impolyline.h"
 
 #if i_int_hlines_testing()
 #include "imageri.h"
@@ -845,6 +846,7 @@ validate_i_ppal(i_img *im, i_palidx const *indexes, int count) {
 */
 #define ICLF_new_internal(r, g, b, a) i_fcolor_new((r), (g), (b), (a))
 #define ICLF_DESTROY(cl) i_fcolor_destroy(cl)
+#define i_polyline_DESTROY(poly) i_polyline_delete(poly)
 
 
 /* the m_init_log() function was called init_log(), renamed to reduce
@@ -4927,11 +4929,12 @@ i_polyline_new(cls, closed, ...)
       myfree(RETVAL);
       croak("Usage: Imager::Polyline->new(closed, x, y, x, y, ...)");
     }
-    RETVAL->point_count = (items-2) / 2;
-    RETVAL->points = mymalloc(sizeof(i_point_t) * RETVAL->point_count);
+    RETVAL->point_alloc = RETVAL->point_count = (items-2) / 2;
+    RETVAL->x = mymalloc(sizeof(double) * RETVAL->point_count);
+    RETVAL->y = mymalloc(sizeof(double) * RETVAL->point_count);
     for (i = 0; i < RETVAL->point_count; ++i) {
-      RETVAL->points[i].x = SvNV(ST(2+i*2));
-      RETVAL->points[i].y = SvNV(ST(3+i*2));
+      RETVAL->x[i] = SvNV(ST(2+i*2));
+      RETVAL->y[i] = SvNV(ST(3+i*2));
     }
   OUTPUT:
     RETVAL
@@ -4939,9 +4942,31 @@ i_polyline_new(cls, closed, ...)
 void
 i_polyline_DESTROY(poly)
     Imager::Polyline poly
-  CODE:
-    myfree(poly->points);
-    myfree(poly);
+
+void
+i_polyline_add_points(poly, ...)
+    Imager::Polyline poly
+  PREINIT:
+    int i;
+    i_point_t *points;
+    int count;
+    int result;
+  PPCODE:
+    if ((items-1) % 2) {
+      croak("Usage: $poly->add_points(x, y, x, y, ...)");
+    }
+    count = (items-1) / 2;
+    points = mymalloc(sizeof(i_point_t) * count);
+    for (i = 0; i < count; ++i) {
+      points[i].x = SvNV(ST(1+i*2));   
+      points[i].y = SvNV(ST(2+i*2));   
+    }
+    result = i_polyline_add_points(poly, count, points);
+    if (result) {
+      EXTEND(SP, 1);
+      PUSHs(sv_2mortal(newSViv(result)));
+    }
+    myfree(points);
 
 MODULE = Imager PACKAGE = Imager::Pen::Thick PREFIX=i
 

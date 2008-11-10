@@ -121,10 +121,14 @@ typedef struct {
   int closed;
 
   /* the number of points that points points at */
-  int point_count;
+  size_t point_count;
 
   /* the points that make up the line */
-  i_point_t *points;
+  double *x;
+  double *y;
+
+  /* the space allocated for points */
+  size_t point_alloc;
 } i_polyline_t;
 
 typedef int (*i_pen_draw_t)(struct i_pen_t *, i_img *im, int line_count, const i_polyline_t **lines);
