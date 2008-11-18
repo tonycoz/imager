@@ -41,17 +41,7 @@ typedef struct {
 typedef struct {
   int *line;		/* temporary buffer for scanline */
   int linelen;		/* length of scanline */
-  ss_pair *ss_list;	/* list of start stop linepairs */
-  int ssnext;		/* index of the next pair to use */
-  int sslen;		/* maximum number of start stop pairs */
 } ss_scanline;
-
-
-
-
-
-
-
 
 static
 int
@@ -126,7 +116,6 @@ point_set_new(const double *x, const double *y, int l) {
 static
 void
 ss_scanline_reset(ss_scanline *ss) {
-  ss->ssnext = 0;
   memset(ss->line, 0, sizeof(int) * ss->linelen);
 }
 
@@ -135,16 +124,12 @@ void
 ss_scanline_init(ss_scanline *ss, int linelen, int linepairs) {
   ss->line    = mymalloc( sizeof(int) * linelen );
   ss->linelen = linelen;
-  ss->ss_list = mymalloc( sizeof(ss_pair) * linepairs );
-  ss->sslen   = linepairs;
-  ss_scanline_reset(ss);
 }
 
 static
 void
 ss_scanline_exorcise(ss_scanline *ss) {
   myfree(ss->line);
-  myfree(ss->ss_list);
 }
   
 		     
