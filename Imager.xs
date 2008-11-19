@@ -721,7 +721,7 @@ static void copy_colors_back(HV *hv, i_quantize *quant) {
   if (!sv || !*sv || !SvROK(*sv) || SvTYPE(SvRV(*sv)) != SVt_PVAV) {
     SV *ref;
     av = newAV();
-    ref = newRV_inc((SV*) av);
+    ref = newRV_noinc((SV*) av);
     sv = hv_store(hv, "colors", 6, ref, 0);
   }
   else {
