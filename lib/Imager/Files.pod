@@ -8,8 +8,17 @@ Imager::Files - working with image files
   $img->write(file=>$filename, type=>$type)
     or die "Cannot write: ",$img->errstr;
 
+  # type is optional if we can guess the format from the filename
+  $img->write(file => "foo.png")
+    or die "Cannot write: ",$img->errstr;
+
   $img = Imager->new;
   $img->read(file=>$filename, type=>$type)
+    or die "Cannot read: ", $img->errstr;
+
+  # type is optional if we can guess the type from the file data
+  # and we normally can guess
+  $img->read(file => $filename)
     or die "Cannot read: ", $img->errstr;
 
   Imager->write_multi({ file=> $filename, ... }, @images)
@@ -22,6 +31,24 @@ Imager::Files - working with image files
 
   my @read_types = Imager->read_types;
   my @write_types = Imager->write_types;
+
+  # we can write/write_multi to things other than filenames
+  my $data;
+  $img->write(data => \$data, type => $type) or die;
+
+  my $fh = ... ; # eg. IO::File
+  $img->write(fh => $fh, type => $type) or die;
+
+  $img->write(fd => fileno($fh), type => $type) or die;
+
+  # some file types need seek callbacks too
+  $img->write(callback => \&write_callback, type => $type) or die;
+
+  # and similarly for read/read_multi
+  $img->read(data => $data) or die;
+  $img->read(fh => $fh) or die;
+  $img->read(fd => fileno($fh)) or die;
+  $img->read(callback => \&read_callback) or die;
 
 =head1 DESCRIPTION
 
