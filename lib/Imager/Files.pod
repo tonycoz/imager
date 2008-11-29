@@ -164,7 +164,7 @@ file you do not need to supply a C<type>.
   $image->read(file => 'example.tif')
     or die $image->errstr;
 
-=item 
+=item *
 
 fh - C<fh> is a file handle, typically either returned from
 C<<IO::File->new()>>, or a glob from an C<open> call.  You should call
@@ -181,7 +181,7 @@ fileno()) rather than writing at the perl level.
   $image->read(fd => $cgi->param('file')) 
     or die $image->errstr;
 
-=item 
+=item *
 
 fd - C<fd> is a file descriptor.  You can get this by calling the
 C<fileno()> function on a file handle, or by using one of the standard
@@ -194,7 +194,7 @@ the image.
   $image->write(fd => file(STDOUT), type => 'gif')
     or die $image->errstr;
 
-=item 
+=item *
 
 data - When reading data, C<data> is a scalar containing the image
 file data, when writing, C<data> is a reference to the scalar to save
