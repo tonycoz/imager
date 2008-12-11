@@ -5,7 +5,11 @@ Imager 0.67 - unreleased
 
 Bug fixes:
 
- - corrected a reference leak where writing GIFs would leak memory
+ - corrected a reference leak where writing GIFs would leak memory.
+   This could also happen calling to_paletted().
+   Also documented the underlying long existing feature where the
+   colors parameter is filled with the generated color table and added
+   tests for it.
    http://rt.cpan.org/Ticket/Display.html?id=41028
 
 Imager 0.66 - 22 April 2008

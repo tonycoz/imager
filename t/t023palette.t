@@ -1,10 +1,10 @@
 #!perl -w
 # some of this is tested in t01introvert.t too
 use strict;
-use Test::More tests => 121;
+use Test::More tests => 126;
 BEGIN { use_ok("Imager"); }
 
-use Imager::Test qw(image_bounds_checks);
+use Imager::Test qw(image_bounds_checks test_image is_color3);
 
 sub isbin($$$);
 
@@ -327,6 +327,20 @@ cmp_ok(Imager->errstr, '=~', qr/Channels must be positive and <= 4/,
   ok($im->addcolors(colors => [ $black ]), "add color of pixel bounds check writes");
 
   image_bounds_checks($im);
+}
+
+{ # test colors array returns colors
+  my $data;
+  my $im = test_image();
+  my @colors;
+  my $imp = $im->to_paletted(colors => \@colors, 
+			     make_colors => 'webmap', 
+			     translate => 'closest');
+  ok($imp, "made paletted");
+  is(@colors, 216, "should be 216 colors in the webmap");
+  is_color3($colors[0], 0, 0, 0, "first should be 000000");
+  is_color3($colors[1], 0, 0, 0x33, "second should be 000033");
+  is_color3($colors[8], 0, 0x33, 0x66, "9th should be 003366");
 }
 
 sub iscolor {

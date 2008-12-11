@@ -719,14 +719,12 @@ static void copy_colors_back(HV *hv, i_quantize *quant) {
 
   sv = hv_fetch(hv, "colors", 6, 0);
   if (!sv || !*sv || !SvROK(*sv) || SvTYPE(SvRV(*sv)) != SVt_PVAV) {
-    SV *ref;
-    av = newAV();
-    ref = newRV_noinc((SV*) av);
-    sv = hv_store(hv, "colors", 6, ref, 0);
+    /* nothing to do */
+    return;
   }
-  else {
-    av = (AV *)SvRV(*sv);
-  }
+
+  av = (AV *)SvRV(*sv);
+  av_clear(av);
   av_extend(av, quant->mc_count+1);
   for (i = 0; i < quant->mc_count; ++i) {
     i_color *in = quant->mc_colors+i;
@@ -734,9 +732,7 @@ static void copy_colors_back(HV *hv, i_quantize *quant) {
     work = sv_newmortal();
     sv_setref_pv(work, "Imager::Color", (void *)c);
     SvREFCNT_inc(work);
-    if (!av_store(av, i, work)) {
-      SvREFCNT_dec(work);
-    }
+    av_push(av, work);
   }
 }
 

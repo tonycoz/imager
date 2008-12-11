@@ -12,9 +12,9 @@ UPGRADE.
 
 use strict;
 $|=1;
-use Test::More tests => 140;
+use Test::More tests => 145;
 use Imager qw(:all);
-use Imager::Test qw(is_color3);
+use Imager::Test qw(is_color3 test_image);
 
 use Carp 'confess';
 $SIG{__DIE__} = sub { confess @_ };
@@ -51,7 +51,7 @@ SKIP:
     cmp_ok($im->errstr, '=~', "format 'gif' not supported", "check no gif message");
     ok(!grep($_ eq 'gif', Imager->read_types), "check gif not in read types");
     ok(!grep($_ eq 'gif', Imager->write_types), "check gif not in write types");
-    skip("no gif support", 134);
+    skip("no gif support", 139);
   }
     open(FH,">testout/t105.gif") || die "Cannot open testout/t105.gif\n";
     binmode(FH);
@@ -741,6 +741,23 @@ SKIP:
        "check second gif_left");
     is($result[1]->tags(name => 'gif_top'), 0,
        "check second gif_top");
+  }
+
+  { # test colors array returns colors
+    my $data;
+    my $im = test_image();
+    my @colors;
+    ok($im->write(data => \$data, 
+		  colors => \@colors, 
+		  make_colors => 'webmap', 
+		  translate => 'closest',
+		  gifquant => 'gen',
+		  type => 'gif'),
+       "write using webmap to check color table");
+    is(@colors, 216, "should be 216 colors in the webmap");
+    is_color3($colors[0], 0, 0, 0, "first should be 000000");
+    is_color3($colors[1], 0, 0, 0x33, "second should be 000033");
+    is_color3($colors[8], 0, 0x33, 0x66, "9th should be 003366");
   }
 }
 

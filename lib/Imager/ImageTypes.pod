@@ -847,7 +847,8 @@ direct calls to i_writegif_gen and i_writegif_callback.
 =item colors
 
 A arrayref of colors that are fixed.  Note that some color generators
-will ignore this.
+will ignore this.  If this is supplied it will be filled with the
+color table generated for the image.
 
 =item transp
 
@@ -989,8 +990,8 @@ Other methods may be added in the future.
 
 A arrayref containing Imager::Color objects, which represents the
 starting set of colors to use in translating the images.  webmap will
-ignore this.  The final colors used are copied back into this array
-(which is expanded if necessary.)
+ignore this.  On return the final colors used are copied back into
+this array (which is expanded if necessary.)
 
 =item max_colors
 

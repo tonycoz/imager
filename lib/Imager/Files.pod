@@ -753,6 +753,10 @@ C<gif_consolidate> parameter set to a true value:
 
   $img->read(file=>$some_gif_file, gif_consolidate=>1);
 
+As with the to_paletted() method, if you supply a colors parameter as
+a reference to an array, this will be filled with Imager::Color
+objects of the color table generated for the image file.
+
 =head2 TIFF (Tagged Image File Format)
 
 Imager can write images to either paletted or RGB TIFF images,
