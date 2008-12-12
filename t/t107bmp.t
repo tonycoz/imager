@@ -1,8 +1,8 @@
 #!perl -w
 use strict;
-use Test::More tests => 211;
+use Test::More tests => 213;
 use Imager qw(:all);
-use Imager::Test qw(test_image_raw is_image is_color3);
+use Imager::Test qw(test_image_raw is_image is_color3 test_image);
 init_log("testout/t107bmp.log",1);
 
 my $debug_writes = 0;
@@ -645,6 +645,14 @@ for my $comp (@comp) {
 	    "check color came through");
   is_color3($imread->getpixel('x' => 0, 'y' => 15), 127, 96, 96,
 	    "check translucent came through");
+}
+
+{ # RT 41406
+  my $data;
+  my $im = test_image();
+  ok($im->write(data => \$data, type => 'bmp'), "write using OO");
+  my $size = unpack("V", substr($data, 34, 4));
+  is($size, 67800, "check data size");
 }
 
 sub write_test {

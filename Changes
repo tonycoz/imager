@@ -12,6 +12,9 @@ Bug fixes:
    tests for it.
    http://rt.cpan.org/Ticket/Display.html?id=41028
 
+ - write out the image size in bytes field of a BMP correctly.
+   http://rt.cpan.org/Ticket/Display.html?id=41406
+
 Imager 0.66 - 22 April 2008
 ===========
 

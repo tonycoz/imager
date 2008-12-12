@@ -367,7 +367,7 @@ int write_bmphead(io_glue *ig, i_img *im, int bit_count, int data_size) {
 
   if (!write_packed(ig, "CCVvvVVVVvvVVVVVV", 'B', 'M', data_size+offset, 
 		    0, 0, offset, INFOHEAD_SIZE, im->xsize, im->ysize, 1, 
-		    bit_count, BI_RGB, 0, (int)(xres+0.5), (int)(yres+0.5), 
+		    bit_count, BI_RGB, data_size, (int)(xres+0.5), (int)(yres+0.5), 
 		    colors_used, colors_used)){
     i_push_error(0, "cannot write bmp header");
     return 0;
