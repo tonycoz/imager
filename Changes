@@ -1,9 +1,15 @@
 Imager release history.  Older releases can be found in Changes.old
 
-Imager 0.67 - unreleased
+Imager 0.66 - unreleased
 ===========
 
+ - 24-bit color .ICO/.CUR files can now be read.
+
 Bug fixes:
+
+ - an optimization skipping 0 src alpha values could cause the
+   rubthrough() to read past the end of a buffer.
+   http://www.nntp.perl.org/group/perl.cpan.testers/2008/05/msg1509184.html
 
  - corrected a reference leak where writing GIFs would leak memory.
    This could also happen calling to_paletted().
@@ -21,16 +27,11 @@ Bug fixes:
    a relative path could cause failures using Inline::C.
    http://rt.cpan.org/Ticket/Display.html?id=37353
 
-Imager 0.66 - 22 April 2008
-===========
-
- - 24-bit color .ICO/.CUR files can now be read.
-
-Bug fixes:
-
- - an optimization skipping 0 src alpha values could cause the
-   rubthrough() to read past the end of a buffer.
-   http://www.nntp.perl.org/group/perl.cpan.testers/2008/05/msg1509184.html
+ - re-arrange the POD for Imager::Font::BBox:
+   - mark total_width(), pos_width(), end_offset() obsolete, since
+     they're mostly for backwards compatibility
+   - group width methods and height methods
+   https://rt.cpan.org/Ticket/Display.html?id=39999
 
 Imager 0.65 - 20 May 2008
 ===========

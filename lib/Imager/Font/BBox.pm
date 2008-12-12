@@ -71,24 +71,53 @@ sub left_bearing {
   return $_[0][0];
 }
 
-=item end_offset
+=item advance_width()
 
-=item pos_width
-
-The offset from the selected drawing location to the right edge of the
-last character drawn.  Should always be positive.
-
-You can use the alias pos_width() if you are used to the
-bounding_box() documentation for list context.
+The advance width of the string, if the driver supports that,
+otherwise the same as end_offset.
 
 =cut
 
-sub end_offset {
-  return $_[0][2];
+sub advance_width {
+  my $self = shift;
+
+  @$self > 6 ? $self->[6] : $self->[2];
 }
 
-sub pos_width {
-  return $_[0][2];
+=item right_bearing
+
+The distance from the right of the last glyph to the end of the advance
+point.
+
+If the glyph overflows the right side of the advance width this value
+is negative.
+
+=cut
+
+sub right_bearing {
+  my $self = shift;
+
+  @$self >= 8 && return $self->[7]; # driver gives it to us
+
+  # otherwise the closest we have is the difference between the 
+  # end_pos and advance_width
+  return $self->advance_width - $self->pos_width;
+}
+
+=item display_width
+
+The distance from the left-most pixel of the left-most glyph to the
+right-most pixel of the right-most glyph.
+
+Equals advance_width - left_bearing - right_bearing (and implemented
+that way.)
+
+=cut
+
+sub display_width {
+  my ($self) = @_;
+
+  $self->advance_width - $self->left_bearing - $self->right_bearing;
 }
 
 =item global_descent()
@@ -139,31 +168,6 @@ sub ascent {
   return $_[0][5];
 }
 
-=item advance_width()
-
-The advance width of the string, if the driver supports that,
-otherwise the same as end_offset.
-
-=cut
-
-sub advance_width {
-  my $self = shift;
-
-  @$self > 6 ? $self->[6] : $self->[2];
-}
-
-=item total_width()
-
-The total displayed width of the string.
-
-=cut
-
-sub total_width {
-  my $self = shift;
-
-  $self->end_offset - $self->start_offset;
-}
-
 =item font_height()
 
 The maximum displayed height of any string using this font.
@@ -187,40 +191,53 @@ sub text_height {
   $self->ascent - $self->descent;
 }
 
-=item right_bearing
+=back
 
-The distance from the right of the last glyph to the end of the advance
-point.
+=head1 OBSOLETE METHODS
 
-If the glyph overflows the right side of the advance width this value
-is negative.
+These methods include bugs kept for backwards compatibility and
+shouldn't be used in new code.
+
+=over
+
+=item total_width()
+
+The total displayed width of the string.
+
+New code should use display_width().
+
+This depends on end_offset(), and is limited by it's backward
+compatibility.
 
 =cut
 
-sub right_bearing {
+sub total_width {
   my $self = shift;
 
-  @$self >= 8 && return $self->[7]; # driver gives it to us
-
-  # otherwise the closest we have is the difference between the 
-  # end_pos and advance_width
-  return $self->advance_width - $self->pos_width;
+  $self->end_offset - $self->start_offset;
 }
 
-=item display_width
+=item end_offset
 
-The distance from the left-most pixel of the left-most glyph to the
-right-most pixel of the right-most glyph.
+=item pos_width
 
-Equals advance_width - left_bearing - right_bearing (and implemented
-that way.)
+The offset from the selected drawing location to the right edge of the
+last character drawn.  Should always be positive.
+
+You can use the alias pos_width() if you are used to the
+bounding_box() documentation for list context.
+
+For backwards compatibility this method returns the maximum of the
+advance width and the offset of the right edge of the last glyph.
 
 =cut
 
-sub display_width {
-  my ($self) = @_;
+sub end_offset {
+  return $_[0][2];
+}
 
-  $self->advance_width - $self->left_bearing - $self->right_bearing;
+sub pos_width {
+  return $_[0][2];
 }
 
 =back
