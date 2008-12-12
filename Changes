@@ -15,6 +15,12 @@ Bug fixes:
  - write out the image size in bytes field of a BMP correctly.
    http://rt.cpan.org/Ticket/Display.html?id=41406
 
+ - add limited tests for Imager::ExtUtils
+
+ - make Imager::ExtUtils->includes use an absolute path, since
+   a relative path could cause failures using Inline::C.
+   http://rt.cpan.org/Ticket/Display.html?id=37353
+
 Imager 0.66 - 22 April 2008
 ===========
 

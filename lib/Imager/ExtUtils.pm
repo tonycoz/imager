@@ -1,9 +1,10 @@
 package Imager::ExtUtils;
 use strict;
+use File::Spec;
 
 use vars qw($VERSION);
 
-$VERSION = "1.001";
+$VERSION = "1.002";
 
 =head1 NAME
 
@@ -27,9 +28,13 @@ Returns the base directory where Imager is installed.
 
 # figure out where Imager is installed
 sub base_dir {
-  for my $dir (@INC) {
-    if (-e "$dir/Imager.pm") {
-      return $dir;
+  for my $inc_dir (@INC) {
+    if (-e "$inc_dir/Imager.pm") {
+      my $base_dir = $inc_dir;
+      unless (File::Spec->file_name_is_absolute($base_dir)) {
+	$base_dir = File::Spec->rel2abs($base_dir);
+      }
+      return $base_dir;
     }
   }
 
