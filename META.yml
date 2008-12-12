@@ -1,6 +1,6 @@
 --- #YAML:1.0
 name: Imager
-version: 0.65
+version: 0.67
 version_from: Imager.pm
 author:
  - Tony Cook <tony@imager.perl.org>
@@ -17,4 +17,4 @@ distribution_type: module
 meta-spec:
   version: 1.3
   url: http://module-build.sourceforge.net/META-spec-v1.3.html
-generated_by: Imager version 0.65
+generated_by: Imager version 0.67
