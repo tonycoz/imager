@@ -1,6 +1,6 @@
 Imager release history.  Older releases can be found in Changes.old
 
-Imager 0.66 - unreleased
+Imager 0.66 - 12 Dec 2008
 ===========
 
  - 24-bit color .ICO/.CUR files can now be read.

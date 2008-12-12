@@ -173,7 +173,7 @@ my %defaults;
 BEGIN {
   require Exporter;
   @ISA = qw(Exporter);
-  $VERSION = '0.65';
+  $VERSION = '0.66';
   eval {
     require XSLoader;
     XSLoader::load(Imager => $VERSION);
