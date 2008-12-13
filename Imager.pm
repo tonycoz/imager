@@ -3875,7 +3875,7 @@ Imager - Perl extension for Generating 24 bit Images
   # try to save in one of these formats
   SAVE:
 
-  for $format ( qw( png gif jpg tiff ppm ) ) {
+  for $format ( qw( png gif jpeg tiff ppm ) ) {
     # Check if given format is supported
     if ($Imager::formats{$format}) {
       $file.="_low.$format";
