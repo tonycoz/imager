@@ -500,6 +500,11 @@ i_poly_aa_low(i_img *im, int l, const double *x, const double *y, void *ctx, sca
   
 } /* Function */
 
+static void
+i_poly_poly_aa_low(i_img *im, int count, const i_polyline_t *polys, void *ctx, scanline_flusher flusher) {
+  
+}
+
 void
 i_poly_aa(i_img *im, int l, const double *x, const double *y, const i_color *val) {
   i_color c = *val;

@@ -13,7 +13,8 @@ my $im = Imager->new(xsize => 100, ysize => 100);
      thickness => 9, 
      fill => Imager::Fill->new(solid => '#888', combine => 'normal'), 
      front => 'round', 
-     back => 'round'
+     back => 'round',
+     corner => 'round',
     );
   
   my $line = Imager::Polyline->new(0, 10, 10, 90, 10, 10, 90, 90, 90);#, 10, 90);

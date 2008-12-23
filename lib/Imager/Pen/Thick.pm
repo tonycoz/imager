@@ -12,12 +12,25 @@ my %end_types =
    round => 2,
   );
 
+my %corner_types =
+  (
+   cut => 0,
+   round => 1,
+   ptc_30 => 2,
+  );
+
 sub new {
   my ($class, %opts) = @_;
 
   my $thickness = delete $opts{thickness};
   defined $thickness or $thickness = 1;
-  my $corner = 0;
+  my $corner = $opts{corner};
+  defined $corner or $corner = 0;
+  exists $corner_types{$corner} and $corner = $corner_types{$corner};
+  unless ($corner =~ /^\d+$/) {
+    Imager->_set_error("Imager::Pen::Thick::new: Unknown value for corner");
+    return;
+  }
   my $front = _end_type('front', delete $opts{front});
   defined $front or return;
   my $back = _end_type('back', delete $opts{back});

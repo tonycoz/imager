@@ -398,6 +398,93 @@ make_poly_cut(thick_seg *segs, int seg_count, int closed,
   return poly;
 }
 
+static i_polyline_t *
+make_poly_round(thick_seg *segs, int seg_count, int closed, 
+	      i_pen_thick_t *pen) {
+  int side_count = seg_count * 3 + 2; /* just rough */
+  int i;
+  int add_start = 1;
+  i_polyline_t *poly = i_polyline_new_empty(1, side_count);
+  double radius = pen->thickness / 2.0;
+  int circle_steps = pen->thickness > 8 ? pen->thickness : 8;
+  double step = PI / circle_steps / 2;
+
+  /* up one side of the line */
+  for (i = 0; i < seg_count; ++i) {
+    thick_seg *seg = segs + i;
+    double start = seg->left.start < 0 ? 0 : seg->left.start;
+    double end = seg->left.end > 1.0 ? 1.0 : seg->left.end;
+
+    if (add_start) {
+      double startx = line_x(&seg->left, start);
+      double starty = line_y(&seg->left, start);
+#if 1
+      if (i) { /* if not the first point */
+	/* curve to the new point */
+	double start_angle = atan2(-segs[i-1].cos_slope, -segs[i-1].sin_slope);
+	double end_angle = atan2(-segs[i].cos_slope, -segs[i-1].sin_slope);
+	double angle;
+	double cx = (seg->left.a.x + seg->right.b.x) / 2.0;
+	double cy = (seg->left.a.y + seg->right.b.y) / 2.0;
+
+	if (end_angle < start_angle) 
+	  end_angle += 2 * PI;
+	printf("drawing round corners start %g end %g step %g\n", start_angle * 180/PI, end_angle * 180 / PI, step * 180 / PI);
+	for (angle = start_angle + step; angle < end_angle; angle += step) {
+	  i_polyline_add_point_xy(poly,
+				  cx + radius * cos(angle),
+				  cy + radius * sin(angle));
+	  printf("pt %g %g\n", cx + radius * cos(angle), cy + radius * sin(angle));
+	}
+      }
+#endif
+      i_polyline_add_point_xy(poly, startx, starty);
+    }
+    
+    if (end > start) {
+      i_polyline_add_point_xy(poly,
+			      line_x(&seg->left, end),
+			      line_y(&seg->left, end));
+    }
+
+    add_start = end == 1.0;
+  }
+
+  if (!closed) {
+    thick_seg *seg = segs + seg_count - 1;
+    line_end(poly, seg, &seg->left, &seg->right, pen->front, pen);
+  }
+
+  add_start = 1;
+  /* and down the other */
+  for (i = seg_count-1; i >= 0; --i) {
+    thick_seg *seg = segs + i;
+    double start = seg->right.start < 0 ? 0 : seg->right.start;
+    double end = seg->right.end > 1.0 ? 1.0 : seg->right.end;
+    printf("  right %g - %g\n", start, end);
+
+    //add_start=1;
+    if (add_start) {
+      i_polyline_add_point_xy(poly,
+			      line_x(&seg->right, start),
+			      line_y(&seg->right, start));
+    }
+    
+    if (end > start) {
+      i_polyline_add_point_xy(poly,
+			      line_x(&seg->right, end),
+			      line_y(&seg->right, end));
+    }
+    add_start = end == 1.0;
+  }
+
+  if (!closed) {
+    line_end(poly, segs, &segs->right, &segs->left, pen->back, pen);
+  }
+
+  return poly;
+}
+
 static void
 marker(i_img *im, int x, int y, const i_color *c) {
   i_ppix(im, x, y, c);
@@ -407,7 +494,7 @@ marker(i_img *im, int x, int y, const i_color *c) {
   i_ppix(im, x, y-1, c);
 }
 
-static int
+static i_polyline_t *
 thick_draw_line(i_img *im, i_pen_thick_t *thick, const i_polyline_t *line) {
   thick_seg *segs = mymalloc(sizeof(thick_seg) * line->point_count);
   int seg_count = fill_segs(thick, segs, line);
@@ -507,17 +594,19 @@ thick_draw_line(i_img *im, i_pen_thick_t *thick, const i_polyline_t *line) {
 #endif
 
   switch (thick->corner) {
-  case i_ptc_cut:
   case i_ptc_round:
+    poly = make_poly_round(segs, seg_count, line->closed, thick);
+    break;
+
+  case i_ptc_cut:
   case i_ptc_30:
   default:
     poly = make_poly_cut(segs, seg_count, line->closed, thick);
     break;
   }
 
+#if 1
   if (poly->point_count) {
-    i_polyline_dump(poly);
-    i_poly_aa_cfill(im, poly->point_count, poly->x, poly->y, thick->fill);
 #if 0
     {
       i_color red;
@@ -534,34 +623,34 @@ thick_draw_line(i_img *im, i_pen_thick_t *thick, const i_polyline_t *line) {
     }
 #endif
    
-#if 0
+#if 1
     {
       int i;
       i_color white;
-      white.rgba.r = white.rgba.g = white.rgba.b = 128;
+      white.rgba.r = white.rgba.g = white.rgba.b = 255;
       for (i = 0; i < poly->point_count; ++i) {
 	marker(im, floor(poly->x[i]+0.5), floor(poly->y[i]+0.5), &white);
       }
     }
 #endif
   }
+#endif
   
   myfree(segs);
-  i_polyline_delete(poly);
 
-  return 1;
+  return poly;
 }
 
 static int
 thick_draw(i_pen_t *pen, i_img *im, int line_count, const i_polyline_t **lines) {
   i_pen_thick_t *thick = (i_pen_thick_t *)pen;
-  int result = 0;
   int i;
 
   for (i = 0; i < line_count; ++i) {
-    if (thick_draw_line(im, thick, lines[i]))
-      result = 1;
+    i_polyline_t *poly = thick_draw_line(im, thick, lines[i]);
+    i_poly_aa_cfill(im, poly->point_count, poly->x, poly->y, thick->fill);
+    i_polyline_delete(poly);
   }
 
-  return result;
+  return 1;
 }
