@@ -422,7 +422,7 @@ make_poly_round(thick_seg *segs, int seg_count, int closed,
       if (i) { /* if not the first point */
 	/* curve to the new point */
 	double start_angle = atan2(-segs[i-1].cos_slope, -segs[i-1].sin_slope);
-	double end_angle = atan2(-segs[i].cos_slope, -segs[i-1].sin_slope);
+	double end_angle = atan2(-segs[i].cos_slope, segs[i].sin_slope);
 	double angle;
 	double cx = (seg->left.a.x + seg->right.b.x) / 2.0;
 	double cy = (seg->left.a.y + seg->right.b.y) / 2.0;
@@ -607,7 +607,7 @@ thick_draw_line(i_img *im, i_pen_thick_t *thick, const i_polyline_t *line) {
 
 #if 1
   if (poly->point_count) {
-#if 0
+#if 1
     {
       i_color red;
       int i;
@@ -617,13 +617,13 @@ thick_draw_line(i_img *im, i_pen_thick_t *thick, const i_polyline_t *line) {
       red.rgba.g = red.rgba.b = 0;
 
       for (i = 0; i < poly->point_count-1; ++i) {
-	i_line(im, x[i], y[i], x[i+1], y[i+1], &red, 0);
+	i_line(im, x[i]+0.5, y[i]+0.5, x[i+1]+0.5, y[i+1]+0.5, &red, 0);
       }
-      i_line(im, x[poly->point_count-1], y[poly->point_count-1], x[0], y[0], &red, 0);
+      i_line(im, x[poly->point_count-1]+0.5, y[poly->point_count-1]+0.5, x[0]+0.5, y[0]+0.5, &red, 0);
     }
 #endif
    
-#if 1
+#if 0
     {
       int i;
       i_color white;
@@ -648,7 +648,10 @@ thick_draw(i_pen_t *pen, i_img *im, int line_count, const i_polyline_t **lines) 
 
   for (i = 0; i < line_count; ++i) {
     i_polyline_t *poly = thick_draw_line(im, thick, lines[i]);
+    //i_polyline_dump(poly);
+#if 0
     i_poly_aa_cfill(im, poly->point_count, poly->x, poly->y, thick->fill);
+#endif
     i_polyline_delete(poly);
   }
 

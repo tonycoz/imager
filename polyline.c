@@ -120,5 +120,5 @@ i_polyline_dump(const i_polyline_t *poly) {
   printf("Points: %d (%d allocated)\n", poly->point_count,
 	 poly->point_alloc);
   for (i = 0; i < poly->point_count; ++i)
-    printf(" %4d: (%g,%g)\n", i, poly->x[i], poly->y[i]);
+    printf(" %4d: (%.3f,%.3f) (%d, %d)\n", i, poly->x[i], poly->y[i], (int)(poly->x[i]+0.5), (int)(poly->y[i]+0.5));
 }
