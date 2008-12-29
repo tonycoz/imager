@@ -124,6 +124,7 @@ void
 ss_scanline_init(ss_scanline *ss, int linelen, int linepairs) {
   ss->line    = mymalloc( sizeof(int) * linelen );
   ss->linelen = linelen;
+  ss_scanline_reset(ss);
 }
 
 static
