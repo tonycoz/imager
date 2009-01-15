@@ -1,5 +1,27 @@
 Imager release history.  Older releases can be found in Changes.old
 
+Imager 0.68 - unreleased
+===========
+
+Bug fixes:
+
+ - correct documentation of default of raw image interleave read
+   parameter
+   https://rt.cpan.org/Ticket/Display.html?id=42074
+
+ - add raw_ prefix to raw read parameters, though the original names
+   still work.
+
+ - fail the read if an invalid raw_interleave parameter is supplied
+
+ - warn if no interleave or raw_interleave parameter is supplied,
+   since the documented default was wrong, and incompatible with the
+   write format
+
+ - for reading raw images, if raw_storechannels > raw_datachannels,
+   set the extra channels in the image to 0
+
+
 Imager 0.67 - 12 Dec 2008
 ===========
 

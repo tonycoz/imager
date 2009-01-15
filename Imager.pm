@@ -597,6 +597,14 @@ sub _valid_image {
   return;
 }
 
+# returns first defined parameter
+sub _first {
+  for (@_) {
+    return $_ if defined $_;
+  }
+  return undef;
+}
+
 #
 # Methods to be called on objects.
 #
@@ -1423,19 +1431,26 @@ sub read {
   }
 
   if ( $input{'type'} eq 'raw' ) {
-    my %params=(datachannels=>3,storechannels=>3,interleave=>1,%input);
-
-    if ( !($params{xsize} && $params{ysize}) ) {
-      $self->{ERRSTR}='missing xsize or ysize parameter for raw';
+    unless ( $input{xsize} && $input{ysize} ) {
+      $self->_set_error('missing xsize or ysize parameter for raw');
       return undef;
     }
 
+    my $interleave = _first($input{raw_interleave}, $input{interleave});
+    unless (defined $interleave) {
+      my @caller = caller;
+      warn "read(type => 'raw') $caller[2] line $caller[1]: supply interleave or raw_interleave for future compatibility\n";
+      $interleave = 1;
+    }
+    my $data_ch = _first($input{raw_datachannels}, $input{datachannels}, 3);
+    my $store_ch = _first($input{raw_storechannels}, $input{storechannels}, 3);
+
     $self->{IMG} = i_readraw_wiol( $IO,
-				   $params{xsize},
-				   $params{ysize},
-				   $params{datachannels},
-				   $params{storechannels},
-				   $params{interleave});
+				   $input{xsize},
+				   $input{ysize},
+				   $data_ch,
+				   $store_ch,
+				   $interleave);
     if ( !defined($self->{IMG}) ) {
       $self->{ERRSTR}=$self->_error_as_msg();
       return undef;

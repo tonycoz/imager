@@ -3518,8 +3518,6 @@ DSO_call(handle,func_index,hv)
 	       if (SvTYPE(hv)!=SVt_PVHV) croak("Imager: Parameter 2 must be a reference to a hash\n");
 	       DSO_call( (DSO_handle *)handle,func_index,hv);
 
-
-
 SV *
 i_get_pixel(im, x, y)
 	Imager::ImgRaw im

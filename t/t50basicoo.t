@@ -42,7 +42,7 @@ my $img = Imager->new();
 my %files;
 @files{@types} = ({ file => "testout/t101.jpg"  },
 		  { file => "testout/t102.png"  },
-		  { file => "testout/t103.raw", xsize=>150, ysize=>150, type=>'raw'},
+		  { file => "testout/t103.raw", xsize=>150, ysize=>150, type=>'raw', interleave => 0},
 		  { file => "testout/t104.ppm"  },
 		  { file => "testout/t105.gif"  },
 		  { file => "testout/t106.tiff" },

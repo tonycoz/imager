@@ -1058,13 +1058,62 @@ values for each pixel you could do:
 	     storechannels=>3)
     or die "Cannot read raw image\n";
 
-Normally the raw image is expected to have the value for channel 1
-immediately following channel 0 and channel 2 immediately following
-channel 1 for each pixel.  If your input image has all the channel 0
-values for the first line of the image, followed by all the channel 1
-values for the first line and so on, you can use the interleave option:
+Read parameters:
 
-  $img->read(file=>'foo.raw', xsize=100, ysize=>100, interleave=>1)
+=over
+
+=item *
+
+raw_interleave - controls the ordering of samples within the image.
+Default: 1.  Alternatively and historically spelled C<interleave>.
+Possible values:
+
+=over
+
+=item *
+
+0 - samples are pixel by pixel, so all samples for the first pixel,
+then all samples for the second pixel and so on.  eg. for a four pixel
+scanline the channels would be laid out as:
+
+  012012012012
+
+=item *
+
+1 - samples are line by line, so channel 0 for the entire scanline is
+followed by channel 1 for the entire scanline and so on.  eg. for a
+four pixel scanline the channels would be laid out as:
+
+  000011112222
+
+This is the default.
+
+=back
+
+Unfortunately, historically, the default C<raw_interleave> for read
+has been 1, while writing only supports the C<raw_interleave> = 0
+format.
+
+For future compatibility, you should always supply the
+C<raw_interleave> (or C<interleave>) parameter.  As of 0.68, Imager
+will warn if you attempt to read a raw image without a
+C<raw_interleave> parameter.
+
+=item *
+
+raw_storechannels - the number of channels to store in the image.
+Range: 1 to 4.  Default: 3.  Alternatively and historically spelled
+C<storechannels>.
+
+=item *
+
+raw_datachannels - the number of channels to read from the file.
+Range: 1 or more.  Default: 3.  Alternatively and historically spelled
+C<datachannels>.
+
+=back
+
+  $img->read(file=>'foo.raw', xsize=100, ysize=>100, raw_interleave=>1)
     or die "Cannot read raw image\n";
 
 =head2 PNG

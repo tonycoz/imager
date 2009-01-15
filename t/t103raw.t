@@ -1,8 +1,11 @@
 #!perl -w
 use strict;
-use Test::More tests => 25;
+use Test::More tests => 47;
 use Imager qw(:all);
+use Imager::Test qw/is_color3 is_color4/;
 init_log("testout/t103raw.log",1);
+
+$| = 1;
 
 my $green=i_color_new(0,255,0,255);
 my $blue=i_color_new(0,0,255,255);
@@ -167,12 +170,12 @@ SKIP:
   close RAW;
 
   # should get an error reading an empty file
-  ok(!$im->read(file => 'testout/t103_empty.raw', xsize => 50, ysize=>50, type=>'raw'),
+  ok(!$im->read(file => 'testout/t103_empty.raw', xsize => 50, ysize=>50, type=>'raw', interleave => 1),
      'read an empty file');
   is($im->errstr, 'premature end of file', "check message");
   open RAW, "> testout/t103_empty.raw"
     or die "Cannot create testout/t103_empty.raw: $!";
-  ok(!$im->read(fh => \*RAW, , xsize => 50, ysize=>50, type=>'raw'),
+  ok(!$im->read(fh => \*RAW, , xsize => 50, ysize=>50, type=>'raw', interleave => 1),
      'read a file open for write');
   cmp_ok($im->errstr, '=~', '^error reading file: read\(\) failure', "check message");
   
@@ -183,6 +186,90 @@ SKIP:
   ok(grep($_ eq 'raw', Imager->read_types), "check raw in read types");
   ok(grep($_ eq 'raw', Imager->write_types), "check raw in write types");
 }
+
+
+{ # OO no interleave warning
+  my $im = Imager->new;
+  my $msg;
+  local $SIG{__WARN__} = sub { $msg = "@_" };
+  ok($im->read(file => "testout/t103_line_int.raw", xsize => 4, ysize => 4,
+	       type => "raw"),
+     "read without interleave parameter")
+    or print "# ", $im->errstr, "\n";
+  ok($msg, "should have warned");
+  like($msg, qr/interleave/, "check warning is ok");
+  # check we got the right value
+  is_color3($im->getpixel(x => 0, y => 0), 0x00, 0x11, 0x22,
+	    "check the image was read correctly");
+
+  # check no warning if either is supplied
+  $im = Imager->new;
+  undef $msg;
+  ok($im->read(file => "testout/t103_base.raw", xsize => 4, ysize => 4, type => "raw", interleave => 0), 
+     "read with interleave 0");
+  is($msg, undef, "no warning");
+  is_color3($im->getpixel(x => 0, y => 0), 0x00, 0x11, 0x22,
+	    "check read non-interleave");
+
+  $im = Imager->new;
+  undef $msg;
+  ok($im->read(file => "testout/t103_base.raw", xsize => 4, ysize => 4, type => "raw", raw_interleave => 0), 
+     "read with raw_interleave 0");
+  is($msg, undef, "no warning");
+  is_color3($im->getpixel(x => 1, y => 0), 0x01, 0x12, 0x23,
+	    "check read non-interleave");
+
+  # make sure set to 1 is sane
+  $im = Imager->new;
+  undef $msg;
+  ok($im->read(file => "testout/t103_line_int.raw", xsize => 4, ysize => 4, type => "raw", raw_interleave => 1), 
+     "read with raw_interleave 1");
+  is($msg, undef, "no warning");
+  is_color3($im->getpixel(x => 2, y => 0), 0x02, 0x13, 0x24,
+	    "check read interleave = 1");
+}
+
+{ # invalid interleave error handling
+  my $im = Imager->new;
+  ok(!$im->read(file => "testout/t103_base.raw", raw_interleave => 2, type => "raw", xsize => 4, ysize => 4),
+     "invalid interleave");
+  is($im->errstr, "raw_interleave must be 0 or 1", "check message");
+}
+
+{ # store/data channel behaviour
+  my $im = Imager->new;
+  ok($im->read(file => "testout/t103_3to4.raw", xsize => 4, ysize => 4, 
+	       raw_datachannels => 4, raw_interleave => 0, type => "raw"),
+     "read 4 channel file as 3 channels")
+    or print "# ", $im->errstr, "\n";
+  is_color3($im->getpixel(x => 2, y => 1), 0x12, 0x23, 0x34,
+	    "check read correctly");
+}
+
+{ # should fail to read with storechannels > 4
+  my $im = Imager->new;
+  ok(!$im->read(file => "testout/t103_line_int.raw", type => "raw",
+		raw_interleave => 1, xsize => 4, ysize => 4,
+		raw_storechannels => 5),
+     "read with large storechannels");
+  is($im->errstr, "raw_storechannels must be between 1 and 4", 
+     "check error message");
+}
+
+{ # should zero spare channels if storechannels > datachannels
+  my $im = Imager->new;
+  ok($im->read(file => "testout/t103_base.raw", type => "raw",
+		raw_interleave => 0, xsize => 4, ysize => 4,
+		raw_storechannels => 4),
+     "read with storechannels > datachannels");
+  is($im->getchannels, 4, "should have 4 channels");
+  is_color4($im->getpixel(x => 2, y => 1), 0x12, 0x23, 0x34, 0x00,
+	    "check last channel zeroed");
+}
+
+unlink(qw(testout/t103_base.raw testout/t103_3to4.raw
+          testout/t103_line_int.raw testout/t103_img_int.raw))
+  unless $ENV{IMAGER_KEEP_FILES};
 
 sub read_test {
   my ($in, $xsize, $ysize, $data, $store, $intrl, $base) = @_;

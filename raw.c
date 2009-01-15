@@ -23,7 +23,7 @@
           intrl: interlace flag,
                        0 = sample interleaving
                        1 = line interleaving
-                       2 = image interleaving
+                       2 = image interleaving (not implemented)
 
 */
 
@@ -41,12 +41,17 @@ interleave(unsigned char *inbuffer,unsigned char *outbuffer,int rowsize,int chan
 static
 void
 expandchannels(unsigned char *inbuffer, unsigned char *outbuffer, 
-	       int chunks, int datachannels, int storechannels) {
-  int ch,i;
-  if (inbuffer == outbuffer) return; /* Check if data is already in expanded format */
-  for(ch=0; ch<chunks; ch++) 
-    for (i=0; i<storechannels; i++) 
-      outbuffer[ch*storechannels+i] = inbuffer[ch*datachannels+i];
+	       int xsize, int datachannels, int storechannels) {
+  int x, ch;
+  int copy_chans = storechannels > datachannels ? datachannels : storechannels;
+  if (inbuffer == outbuffer)
+    return; /* Check if data is already in expanded format */
+  for(x = 0; x < xsize; x++) {
+    for (ch = 0; ch < copy_chans; ch++) 
+      outbuffer[x*storechannels+ch] = inbuffer[x*datachannels+ch];
+    for (; ch < storechannels; ch++)
+      outbuffer[x*storechannels+ch] = 0;
+  }
 }
 
 i_img *
@@ -65,6 +70,15 @@ i_readraw_wiol(io_glue *ig, int x, int y, int datachannels, int storechannels, i
   io_glue_commit_types(ig);
   mm_log((1, "i_readraw(ig %p,x %d,y %d,datachannels %d,storechannels %d,intrl %d)\n",
 	  ig, x, y, datachannels, storechannels, intrl));
+
+  if (intrl != 0 && intrl != 1) {
+    i_push_error(0, "raw_interleave must be 0 or 1");
+    return NULL;
+  }
+  if (storechannels < 1 || storechannels > 4) {
+    i_push_error(0, "raw_storechannels must be between 1 and 4");
+    return NULL;
+  }
   
   im = i_img_empty_ch(NULL,x,y,storechannels);
   if (!im)
