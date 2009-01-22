@@ -398,6 +398,10 @@ make_poly_cut(thick_seg *segs, int seg_count, int closed,
   return poly;
 }
 
+static void
+corner_curve(const thick_seg *from, const thick_seg *to, double angle) {
+}
+
 static i_polyline_t *
 make_poly_round(thick_seg *segs, int seg_count, int closed, 
 	      i_pen_thick_t *pen) {
@@ -407,7 +411,7 @@ make_poly_round(thick_seg *segs, int seg_count, int closed,
   i_polyline_t *poly = i_polyline_new_empty(1, side_count);
   double radius = pen->thickness / 2.0;
   int circle_steps = pen->thickness > 8 ? pen->thickness : 8;
-  double step = PI / circle_steps / 2;
+  double step = PI / circle_steps * 2;
 
   /* up one side of the line */
   for (i = 0; i < seg_count; ++i) {
@@ -420,12 +424,21 @@ make_poly_round(thick_seg *segs, int seg_count, int closed,
       double starty = line_y(&seg->left, start);
 #if 1
       if (i) { /* if not the first point */
-	/* curve to the new point */
-	double start_angle = atan2(-segs[i-1].cos_slope, -segs[i-1].sin_slope);
+	/* curve to the new point 
+	   start_angle is the line angle - 90 degrees
+	   sin(start+90) = sin(start).cos(-90) + cos(start).sin(-90)
+                         = -cos(start)
+           cos(start+90) = cos(start).cos(-90) - sin(start).sin(-90)
+	                 = sin(start)
+           same for the end angle, but on the other seg
+	 */
+	double start_angle = atan2(-segs[i-1].cos_slope, segs[i-1].sin_slope);
 	double end_angle = atan2(-segs[i].cos_slope, segs[i].sin_slope);
 	double angle;
 	double cx = (seg->left.a.x + seg->right.b.x) / 2.0;
 	double cy = (seg->left.a.y + seg->right.b.y) / 2.0;
+
+	fprintf(stderr, "start %g end %g\n", start_angle, end_angle);
 
 	if (end_angle < start_angle) 
 	  end_angle += 2 * PI;
@@ -607,7 +620,7 @@ thick_draw_line(i_img *im, i_pen_thick_t *thick, const i_polyline_t *line) {
 
 #if 1
   if (poly->point_count) {
-#if 1
+#if 0
     {
       i_color red;
       int i;
@@ -623,7 +636,7 @@ thick_draw_line(i_img *im, i_pen_thick_t *thick, const i_polyline_t *line) {
     }
 #endif
    
-#if 0
+#if 1
     {
       int i;
       i_color white;
@@ -649,7 +662,7 @@ thick_draw(i_pen_t *pen, i_img *im, int line_count, const i_polyline_t **lines) 
   for (i = 0; i < line_count; ++i) {
     i_polyline_t *poly = thick_draw_line(im, thick, lines[i]);
     //i_polyline_dump(poly);
-#if 0
+#if 1
     i_poly_aa_cfill(im, poly->point_count, poly->x, poly->y, thick->fill);
 #endif
     i_polyline_delete(poly);
