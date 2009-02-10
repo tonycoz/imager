@@ -1536,6 +1536,7 @@ i_poly_aa(im,xc,yc,val)
              i_poly_aa(im,len,x,y,val);
              myfree(x);
              myfree(y);
+             XSRETURN_YES;
 
 void
 i_poly_aa_cfill(im,xc,yc,fill)
@@ -1569,6 +1570,7 @@ i_poly_aa_cfill(im,xc,yc,fill)
              i_poly_aa_cfill(im,len,x,y,fill);
              myfree(x);
              myfree(y);
+	     XSRETURN_YES;
 
 
 
