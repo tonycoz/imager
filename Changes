@@ -1,5 +1,15 @@
 Imager release history.  Older releases can be found in Changes.old
 
+Imager 0.68
+
+Bug fixes:
+
+ - for polygons with two (or more) vertical lobes, if one side on a
+   lobe had a point vertically not on a pixel boundary, the scanline
+   on the other lobe would be doubly processed at full coverage,
+   causing artifacts along the edge of the lobe.
+   http://rt.cpan.org/Ticket/Display.html?id=43518
+
 Imager 0.64 - unreleased
 ===========
 

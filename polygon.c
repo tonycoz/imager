@@ -8,7 +8,7 @@
 #define coarse(x) ((x)/16)
 #define fine(x)   ((x)%16)
 
-#define DEBUG_POLY
+/*#define DEBUG_POLY*/
 #ifdef DEBUG_POLY
 #define POLY_DEB(x) x
 #else
@@ -324,9 +324,8 @@ pixel_coverage(p_line *line, pcord minx, pcord maxx, pcord  miny, pcord maxy) {
 
 static
 void
-render_slice_scanline(ss_scanline *ss, int y, p_line *l, p_line *r) {
+render_slice_scanline(ss_scanline *ss, int y, p_line *l, p_line *r, pcord miny, pcord maxy) {
   
-  pcord miny, maxy;	/* y bounds in fine coordinates */
   pcord lminx, lmaxx;	/* left line min/max within y bounds in fine coords */
   pcord rminx, rmaxx;	/* right line min/max within y bounds in fine coords */
   int cpix;		/* x-coordinate of current pixel */
@@ -349,14 +348,6 @@ render_slice_scanline(ss_scanline *ss, int y, p_line *l, p_line *r) {
 	    r->updown);
      );
   
-  maxy = i_min( l->maxy, r->maxy );
-  miny = i_max( l->miny, r->miny );
-
-  POLY_DEB(  printf("  before miny=%g maxy=%g\n", miny/16.0, maxy/16.0)  );
-
-  maxy = i_min( maxy, (y+1)*16 );
-  miny = i_max( miny,  y*16 );
-
   lminx = i_min( p_eval_aty(l, maxy), p_eval_aty(l, miny) );
   lmaxx = i_max( p_eval_aty(l, maxy), p_eval_aty(l, miny) );
 
@@ -468,6 +459,8 @@ i_poly_aa_low(i_img *im, int l, const double *x, const double *y, void *ctx, sca
   for(i=0; i<l-1; i++) {
     int startscan = i_max( coarse(pset[i].y), 0);
     int stopscan = i_min( coarse(pset[i+1].y+15), im->ysize);
+    pcord miny, maxy;	/* y bounds in fine coordinates */
+
     POLY_DEB( pcord cc = (pset[i].y + pset[i+1].y)/2 );
 
     POLY_DEB(
@@ -501,12 +494,27 @@ i_poly_aa_low(i_img *im, int l, const double *x, const double *y, void *ctx, sca
 	   
        }
        );
+    maxy = im->ysize * 16;
+    miny = 0;
+    for (k = 0; k < clc; ++k) {
+      p_line const * line = lset + tllist[k].n;
+      if (line->miny > miny)
+	miny = line->miny;
+      if (line->maxy < maxy)
+	maxy = line->maxy;
+      POLY_DEB( printf(" line miny %g maxy %g\n", line->miny/16.0, line->maxy/16.0) );
+    }
+    POLY_DEB( printf("miny %g maxy %g\n", miny/16.0, maxy/16.0) );
+
     for(cscl=startscan; cscl<stopscan; cscl++) {
+      pcord scan_miny = i_max(miny, cscl * 16);
+      pcord scan_maxy = i_min(maxy, (cscl + 1 ) * 16);
+      
       tempy = i_min(cscl*16+16, pset[i+1].y);
       POLY_DEB( printf("evaluating scan line %d \n", cscl) );
       for(k=0; k<clc-1; k+=2) {
 	POLY_DEB( printf("evaluating slice %d\n", k) );
-	render_slice_scanline(&templine, cscl, lset+tllist[k].n, lset+tllist[k+1].n);
+	render_slice_scanline(&templine, cscl, lset+tllist[k].n, lset+tllist[k+1].n, scan_miny, scan_maxy);
       }
       if (16*coarse(tempy) == tempy) {
 	POLY_DEB( printf("flushing scan line %d\n", cscl) );
