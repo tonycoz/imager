@@ -3,6 +3,12 @@
 #include <math.h>
 #include "impolyline.h"
 
+#define DEBUG_TL_MARKERS 0
+#define DEBUG_TL_TRACE 0
+#define DEBUG_TL_TRACE_INITIAL 0
+#define DEBUG_TL_TRACE_FINAL 0
+#define DEBUG_TL_NOFILL 0
+
 typedef struct {
   i_pen_t base;
   i_pen_thick_corner_t corner;
@@ -152,7 +158,9 @@ make_seg(i_pen_thick_t *thick, double ax, double ay, double bx, double by, thick
   double length = sqrt(dx*dx + dy*dy);
   double cos_thick_2, sin_thick_2;
 
+#if DEBUG_TL_TRACE  
   printf("make_seg thick %g (%g, %g) - (%g, %g)\n", thick->thickness, ax, ay, bx, by);
+#endif
 
   if (length < 0.1)
     return 0;
@@ -179,9 +187,11 @@ make_seg(i_pen_thick_t *thick, double ax, double ay, double bx, double by, thick
   seg->right.diff.x = -dx;
   seg->right.diff.y = -dy;
 
+#if DEBUG_TL_TRACE
   printf("seg len %g sin %g cos %g\n", seg->length, seg->sin_slope, seg->cos_slope);
   printf("    left (%g, %g) - (%g, %g)\n", seg->left.a.x, seg->left.a.y, seg->left.b.x, seg->left.b.y);
   printf("   right (%g, %g) - (%g, %g)\n", seg->right.a.x, seg->right.a.y, seg->right.b.x, seg->right.b.y);
+#endif
 
   return 1;
 }
@@ -226,9 +236,11 @@ intersect_two_segs(line_seg *first, line_seg *next) {
   double denom = next_dy * first_dx - next_dx * first_dy;
   double ufirst, unext;
 
+#if DEBUG_TL_TRACE
   printf("P1(%g, %g) P2(%g,%g) P3(%g,%g) P4(%g,%g)\n",
 	 first->a.x, first->a.y, first->b.x, first->b.y, 
 	 next->a.x, next->a.y, next->b.x, next->b.y);
+#endif
   if (denom == 0) {
     /* lines are co-incident (since we know they pass through the same
        point), so leave start/end alone
@@ -241,7 +253,9 @@ intersect_two_segs(line_seg *first, line_seg *next) {
   unext = ( first_dx * (first->a.y - next->a.y) 
     - first_dy * (first->a.x - next->a.x) ) / denom;
 
+#if DEBUG_TL_TRACE
   printf("intersect -> (%g, %g)\n", ufirst, unext);
+#endif
 
   first->end = ufirst;
   next->start = unext;
@@ -374,7 +388,9 @@ make_poly_cut(thick_seg *segs, int seg_count, int closed,
     thick_seg *seg = segs + i;
     double start = seg->right.start < 0 ? 0 : seg->right.start;
     double end = seg->right.end > 1.0 ? 1.0 : seg->right.end;
+#if DEBUG_TL_TRACE
     printf("  right %g - %g\n", start, end);
+#endif
 
     //add_start=1;
     if (add_start) {
@@ -399,7 +415,73 @@ make_poly_cut(thick_seg *segs, int seg_count, int closed,
 }
 
 static void
-corner_curve(const thick_seg *from, const thick_seg *to, double angle) {
+corner_curve(i_polyline_t *poly, const thick_seg *from, const thick_seg *to, double step, double radius) {
+  /* curve to the new point 
+     start_angle is the line angle - 90 degrees
+     sin(start+90) = sin(start).cos(-90) + cos(start).sin(-90)
+     = -cos(start)
+     cos(start+90) = cos(start).cos(-90) - sin(start).sin(-90)
+     = sin(start)
+     same for the end angle, but on the other seg
+  */
+  double start_angle = atan2(-from->cos_slope, from->sin_slope);
+  double end_angle = atan2(-to->cos_slope, to->sin_slope);
+  double angle;
+  double cx = (to->left.a.x + to->right.b.x) / 2.0;
+  double cy = (to->left.a.y + to->right.b.y) / 2.0;
+  
+#if DEBUG_TL_TRACE
+  fprintf(stderr, "start %g end %g\n", start_angle, end_angle);
+#endif
+  
+  if (end_angle < start_angle) 
+    end_angle += 2 * PI;
+#if DEBUG_TL_TRACE
+  printf("drawing round corners start %g end %g step %g\n", start_angle * 180/PI, end_angle * 180 / PI, step * 180 / PI);
+#endif
+  for (angle = start_angle + step; angle < end_angle; angle += step) {
+    i_polyline_add_point_xy(poly,
+			    cx + radius * cos(angle),
+			    cy + radius * sin(angle));
+#if DEBUG_TL_TRACE
+    printf("pt %g %g\n", cx + radius * cos(angle), cy + radius * sin(angle));
+#endif
+  }
+}
+
+static void
+corner_curve2(i_polyline_t *poly, const thick_seg *from, const thick_seg *to, double step, double radius) {
+  /* curve to the new point 
+     start_angle is the line angle - 90 degrees
+     sin(start+90) = sin(start).cos(-90) + cos(start).sin(-90)
+     = -cos(start)
+     cos(start+90) = cos(start).cos(-90) - sin(start).sin(-90)
+     = sin(start)
+     same for the end angle, but on the other seg
+  */
+  double start_angle = atan2(from->cos_slope, -from->sin_slope);
+  double end_angle = atan2(to->cos_slope, -to->sin_slope);
+  double angle;
+  double cx = (to->right.a.x + to->left.b.x) / 2.0;
+  double cy = (to->right.a.y + to->left.b.y) / 2.0;
+  
+#if DEBUG_TL_TRACE
+  fprintf(stderr, "start %g end %g\n", start_angle, end_angle);
+#endif
+  
+  if (end_angle < start_angle) 
+    end_angle += 2 * PI;
+#if DEBUG_TL_TRACE
+  printf("drawing round corners start %g end %g step %g\n", start_angle * 180/PI, end_angle * 180 / PI, step * 180 / PI);
+#endif
+  for (angle = start_angle + step; angle < end_angle; angle += step) {
+    i_polyline_add_point_xy(poly,
+			    cx + radius * cos(angle),
+			    cy + radius * sin(angle));
+#if DEBUG_TL_TRACE
+    printf("pt %g %g\n", cx + radius * cos(angle), cy + radius * sin(angle));
+#endif
+  }
 }
 
 static i_polyline_t *
@@ -424,31 +506,7 @@ make_poly_round(thick_seg *segs, int seg_count, int closed,
       double starty = line_y(&seg->left, start);
 #if 1
       if (i) { /* if not the first point */
-	/* curve to the new point 
-	   start_angle is the line angle - 90 degrees
-	   sin(start+90) = sin(start).cos(-90) + cos(start).sin(-90)
-                         = -cos(start)
-           cos(start+90) = cos(start).cos(-90) - sin(start).sin(-90)
-	                 = sin(start)
-           same for the end angle, but on the other seg
-	 */
-	double start_angle = atan2(-segs[i-1].cos_slope, segs[i-1].sin_slope);
-	double end_angle = atan2(-segs[i].cos_slope, segs[i].sin_slope);
-	double angle;
-	double cx = (seg->left.a.x + seg->right.b.x) / 2.0;
-	double cy = (seg->left.a.y + seg->right.b.y) / 2.0;
-
-	fprintf(stderr, "start %g end %g\n", start_angle, end_angle);
-
-	if (end_angle < start_angle) 
-	  end_angle += 2 * PI;
-	printf("drawing round corners start %g end %g step %g\n", start_angle * 180/PI, end_angle * 180 / PI, step * 180 / PI);
-	for (angle = start_angle + step; angle < end_angle; angle += step) {
-	  i_polyline_add_point_xy(poly,
-				  cx + radius * cos(angle),
-				  cy + radius * sin(angle));
-	  printf("pt %g %g\n", cx + radius * cos(angle), cy + radius * sin(angle));
-	}
+	corner_curve(poly, segs+i-1, segs+i, step, radius);
       }
 #endif
       i_polyline_add_point_xy(poly, startx, starty);
@@ -463,7 +521,14 @@ make_poly_round(thick_seg *segs, int seg_count, int closed,
     add_start = end == 1.0;
   }
 
-  if (!closed) {
+  if (closed) {
+    /* continue the curve around */
+    if (add_start) {
+      corner_curve(poly, segs+seg_count-1, segs, step, radius);
+      i_polyline_add_point_xy(poly, segs[0].left.a.x, segs[0].left.a.y);
+    }
+  }
+  else {
     thick_seg *seg = segs + seg_count - 1;
     line_end(poly, seg, &seg->left, &seg->right, pen->front, pen);
   }
@@ -474,14 +539,27 @@ make_poly_round(thick_seg *segs, int seg_count, int closed,
     thick_seg *seg = segs + i;
     double start = seg->right.start < 0 ? 0 : seg->right.start;
     double end = seg->right.end > 1.0 ? 1.0 : seg->right.end;
+#if DEBUG_TL_TRACE
     printf("  right %g - %g\n", start, end);
+#endif
 
-    //add_start=1;
+    if (add_start) {
+      double startx = line_x(&seg->right, start);
+      double starty = line_y(&seg->right, start);
+#if 1
+      if (i != seg_count-1) { /* if not the first point */
+	corner_curve2(poly, segs+i+1, segs+i, step, radius);
+      }
+#endif
+      i_polyline_add_point_xy(poly, startx, starty);
+    }
+#if 0
     if (add_start) {
       i_polyline_add_point_xy(poly,
 			      line_x(&seg->right, start),
 			      line_y(&seg->right, start));
     }
+#endif
     
     if (end > start) {
       i_polyline_add_point_xy(poly,
@@ -491,7 +569,13 @@ make_poly_round(thick_seg *segs, int seg_count, int closed,
     add_start = end == 1.0;
   }
 
-  if (!closed) {
+  if (closed) {
+    if (add_start) {
+      corner_curve2(poly, segs, segs+seg_count-1, step, radius);
+      i_polyline_add_point_xy(poly, segs[seg_count-1].right.a.x, segs[seg_count-1].right.a.y);
+    }
+  }
+  else {
     line_end(poly, segs, &segs->right, &segs->left, pen->back, pen);
   }
 
@@ -513,13 +597,15 @@ thick_draw_line(i_img *im, i_pen_thick_t *thick, const i_polyline_t *line) {
   int seg_count = fill_segs(thick, segs, line);
   i_polyline_t *poly;
 
+#if DEBUG_TL_TRACE
   {
     int i;
     for (i = 0; i < line->point_count; ++i) {
       printf("%d: (%g, %g)\n", i, line->x[i], line->y[i]);
     }
   }
-#if 0
+#endif
+#if DEBUG_TL_MARKERS
   {
     int i;
     i_color blue, green;
@@ -545,23 +631,23 @@ thick_draw_line(i_img *im, i_pen_thick_t *thick, const i_polyline_t *line) {
   }
 #endif
 
-#if 0
-    {
-      int i;
-      i_color white;
-      white.rgba.r = white.rgba.g = white.rgba.b = 255;
-      for (i = 0; i < seg_count; ++i) {
-	marker(im, floor(line_x(&segs[i].left, 0)+0.5), 
-	       floor(line_y(&segs[i].left, 0)+0.5), &white);
-	marker(im, floor(line_x(&segs[i].left, 1)+0.5), 
-	       floor(line_y(&segs[i].left, 1)+0.5), &white);
-
-	marker(im, floor(line_x(&segs[i].right, 0)+0.5), 
-	       floor(line_y(&segs[i].right, 0)+0.5), &white);
-	marker(im, floor(line_x(&segs[i].right, 1)+0.5), 
-	       floor(line_y(&segs[i].right, 1)+0.5), &white);
-      }
+#if DEBUG_TL_TRACE
+  {
+    int i;
+    i_color white;
+    white.rgba.r = white.rgba.g = white.rgba.b = 255;
+    for (i = 0; i < seg_count; ++i) {
+      marker(im, floor(line_x(&segs[i].left, 0)+0.5), 
+	     floor(line_y(&segs[i].left, 0)+0.5), &white);
+      marker(im, floor(line_x(&segs[i].left, 1)+0.5), 
+	     floor(line_y(&segs[i].left, 1)+0.5), &white);
+      
+      marker(im, floor(line_x(&segs[i].right, 0)+0.5), 
+	     floor(line_y(&segs[i].right, 0)+0.5), &white);
+      marker(im, floor(line_x(&segs[i].right, 1)+0.5), 
+	     floor(line_y(&segs[i].right, 1)+0.5), &white);
     }
+  }
 #endif
 
 #if 1
@@ -569,7 +655,7 @@ thick_draw_line(i_img *im, i_pen_thick_t *thick, const i_polyline_t *line) {
     intersect_segs(thick, segs, seg_count, line->closed);
 #endif
 
-#if 0
+#if DEBUG_TL_TRACE_INITIAL
   {
     int i;
     i_color blue, green;
@@ -618,9 +704,9 @@ thick_draw_line(i_img *im, i_pen_thick_t *thick, const i_polyline_t *line) {
     break;
   }
 
-#if 1
+#if DEBUG_TL_TRACE_FINAL
   if (poly->point_count) {
-#if 0
+#if 1
     {
       i_color red;
       int i;
@@ -662,7 +748,7 @@ thick_draw(i_pen_t *pen, i_img *im, int line_count, const i_polyline_t **lines) 
   for (i = 0; i < line_count; ++i) {
     i_polyline_t *poly = thick_draw_line(im, thick, lines[i]);
     //i_polyline_dump(poly);
-#if 1
+#if !DEBUG_TL_NOFILL
     i_poly_aa_cfill(im, poly->point_count, poly->x, poly->y, thick->fill);
 #endif
     i_polyline_delete(poly);

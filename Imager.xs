@@ -4970,6 +4970,16 @@ i_polyline_add_points(poly, ...)
     }
     myfree(points);
 
+void
+i_polyline_dump(poly)
+    Imager::Polyline poly
+  PREINIT:
+    int i;
+  CODE:
+    for (i = 0; i < poly->point_count; ++i)
+      fprintf(stderr, "%d: (%.5g, %.5g)\n", i, poly->x[i], poly->y[i]);
+   
+
 MODULE = Imager PACKAGE = Imager::Pen::Thick PREFIX=i
 
 Imager::Pen::Raw
