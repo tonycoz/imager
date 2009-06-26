@@ -1,6 +1,6 @@
 #!perl -w
 use strict;
-use Test::More tests => 3;
+use Test::More tests => 45;
 use Imager;
 use Imager::Fill;
 
@@ -63,10 +63,42 @@ my @septagon = map
        "draw heptagon $corner corners");
     my $line2 = Imager::Polyline->new(1, map @$_, reverse @septagon);
     #$line2->dump;
-    ok($pen2->draw(image => $im, lines => [ $line2 ]),
-       "draw heptagon $corner corners (reverse order)");
+    #ok($pen2->draw(image => $im, lines => [ $line2 ]),
+    #   "draw heptagon $corner corners (reverse order)");
     ok($im->write(file => "testout/t22c$corner.ppm"), "save it");
   }
+}
+
+{
+  my $im = Imager->new(xsize => 200, ysize => 200);
+  my $step = PI / 18;
+  my $start = PI - $step / 2;
+  my $y = 20;
+  for my $corner (qw(round cut ptc_30)) {
+    my $pen = Imager::Pen::Thick->new
+      (
+       thickness => 10,
+       color => '#888',
+       corner => $corner,
+      );
+    my $x = 10;
+    my $angle = $start;
+    while ($x < 180) {
+      my $line = Imager::Polyline->new
+	(
+	 0,
+	 $x, $y+50,
+	 $x, $y,
+	 $x+sin($angle)*50, $y-cos($angle)*50
+	);
+      ok($pen->draw(image => $im, lines => [ $line ]),
+	 "corner $corner, angle $angle");
+      $x += 20;
+      $angle -= $step;
+    }
+    $y += 60;
+  }
+  ok($im->write(file => 'testout/t22angles.ppm'), "save angles");
 }
 
 { # failure checks
@@ -80,3 +112,4 @@ my @septagon = map
   is(Imager->errstr, "Imager::Pen::Thick::new: Unknown value for corner",
      "check error message");
 }
+

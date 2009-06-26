@@ -9,6 +9,15 @@
 #define DEBUG_TL_TRACE_FINAL 0
 #define DEBUG_TL_NOFILL 0
 
+/* cos(150 degrees) */
+#define COS_150_DEG -0.866025403784439
+
+/* cos(135 degrees) */
+#define COS_135_DEG -0.707106781186547
+
+/* cos(120 degrees) */
+#define COS_120_DEG -0.5
+
 typedef struct {
   i_pen_t base;
   i_pen_thick_corner_t corner;
@@ -348,6 +357,91 @@ line_end(i_polyline_t *poly, thick_seg *seg,
 }
 
 static i_polyline_t *
+make_poly_cut30(thick_seg *segs, int seg_count, int closed, 
+	      i_pen_thick_t *pen) {
+  int side_count = seg_count * 3 + 2; /* just rough */
+  int i;
+  int add_start = 1;
+  i_polyline_t *poly = i_polyline_new_empty(1, side_count);
+
+  /* up one side of the line */
+  for (i = 0; i < seg_count; ++i) {
+    thick_seg *seg = segs + i;
+    double start = seg->left.start < 0 ? 0 : seg->left.start;
+    double end = seg->left.end > 1.0 ? 1.0 : seg->left.end;
+
+    if (add_start) {
+      i_polyline_add_point_xy(poly, 
+			      line_x(&seg->left, start), 
+			      line_y(&seg->left, start));
+    }
+
+    if (end > start) {
+      if (seg->left.end > 1 && i < seg_count-1) {
+	thick_seg *next = segs + i + 1;
+	double cos_x_m_y = 
+	  seg->cos_slope * next->cos_slope + seg->sin_slope * next->sin_slope;
+        if (cos_x_m_y > COS_150_DEG) {
+	  end = seg->left.end;
+	}
+	else {
+	  add_start = 1;
+	}
+      }
+      else 
+	add_start = end == 1.0;
+
+      i_polyline_add_point_xy(poly,
+			      line_x(&seg->left, end),
+			      line_y(&seg->left, end));
+    }
+    else 
+      add_start = end == 1.0;
+  }
+
+  if (closed) {
+    if (add_start) {
+      
+    }
+  }
+  else {
+    thick_seg *seg = segs + seg_count - 1;
+    line_end(poly, seg, &seg->left, &seg->right, pen->front, pen);
+  }
+
+  add_start = 1;
+  /* and down the other */
+  for (i = seg_count-1; i >= 0; --i) {
+    thick_seg *seg = segs + i;
+    double start = seg->right.start < 0 ? 0 : seg->right.start;
+    double end = seg->right.end > 1.0 ? 1.0 : seg->right.end;
+#if DEBUG_TL_TRACE
+    printf("  right %g - %g\n", start, end);
+#endif
+
+    //add_start=1;
+    if (add_start) {
+      i_polyline_add_point_xy(poly,
+			      line_x(&seg->right, start),
+			      line_y(&seg->right, start));
+    }
+    
+    if (end > start) {
+      i_polyline_add_point_xy(poly,
+			      line_x(&seg->right, end),
+			      line_y(&seg->right, end));
+    }
+    add_start = end == 1.0;
+  }
+
+  if (!closed) {
+    line_end(poly, segs, &segs->right, &segs->left, pen->back, pen);
+  }
+
+  return poly;
+}
+
+static i_polyline_t *
 make_poly_cut(thick_seg *segs, int seg_count, int closed, 
 	      i_pen_thick_t *pen) {
   int side_count = seg_count * 3 + 2; /* just rough */
@@ -361,13 +455,12 @@ make_poly_cut(thick_seg *segs, int seg_count, int closed,
     double start = seg->left.start < 0 ? 0 : seg->left.start;
     double end = seg->left.end > 1.0 ? 1.0 : seg->left.end;
 
-    //add_start=1;
     if (add_start) {
       i_polyline_add_point_xy(poly, 
 			      line_x(&seg->left, start), 
 			      line_y(&seg->left, start));
     }
-    
+
     if (end > start) {
       i_polyline_add_point_xy(poly,
 			      line_x(&seg->left, end),
@@ -697,8 +790,11 @@ thick_draw_line(i_img *im, i_pen_thick_t *thick, const i_polyline_t *line) {
     poly = make_poly_round(segs, seg_count, line->closed, thick);
     break;
 
-  case i_ptc_cut:
   case i_ptc_30:
+    poly = make_poly_cut30(segs, seg_count, line->closed, thick);
+    break;
+
+  case i_ptc_cut:
   default:
     poly = make_poly_cut(segs, seg_count, line->closed, thick);
     break;
