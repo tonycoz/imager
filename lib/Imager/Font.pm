@@ -338,6 +338,8 @@ Imager::Font - Font handling for Imager.
 
 =head1 SYNOPSIS
 
+  use Imager;
+
   $t1font = Imager::Font->new(file => 'pathtofont.pfb');
   $ttfont = Imager::Font->new(file => 'pathtofont.ttf');
   $w32font = Imager::Font->new(face => 'Times New Roman');
