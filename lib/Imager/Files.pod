@@ -4,6 +4,7 @@ Imager::Files - working with image files
 
 =head1 SYNOPSIS
 
+  use Imager;
   my $img = ...;
   $img->write(file=>$filename, type=>$type)
     or die "Cannot write: ",$img->errstr;
