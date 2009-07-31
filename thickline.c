@@ -520,7 +520,14 @@ make_poly_cut(thick_seg *segs, int seg_count, int closed,
     add_start = end == 1.0;
   }
 
-  if (!closed) {
+  if (closed) {
+    if (add_start) {
+      i_polyline_add_point_xy(poly,
+			      line_x(&segs->left, 0),
+			      line_y(&segs->left, 0));
+    }
+  }
+  else {
     thick_seg *seg = segs + seg_count - 1;
     line_end(poly, seg, &seg->left, &seg->right, pen->front, pen);
   }
@@ -550,7 +557,15 @@ make_poly_cut(thick_seg *segs, int seg_count, int closed,
     add_start = end == 1.0;
   }
 
-  if (!closed) {
+  if (closed) {
+    if (add_start) {
+      thick_seg *last_seg = segs + seg_count - 1;
+      i_polyline_add_point_xy(poly,
+			      line_x(&last_seg->right, 0),
+			      line_y(&last_seg->right, 0));
+    }
+  }
+  else {
     line_end(poly, segs, &segs->right, &segs->left, pen->back, pen);
   }
 
