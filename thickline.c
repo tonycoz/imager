@@ -401,7 +401,21 @@ make_poly_cut30(thick_seg *segs, int seg_count, int closed,
 
   if (closed) {
     if (add_start) {
-      
+      thick_seg *last_seg = segs + seg_count - 1;
+      double cos_x_m_y = 
+	last_seg->cos_slope * segs->cos_slope + last_seg->sin_slope * segs->sin_slope;
+      if (cos_x_m_y > COS_150_DEG) {
+	double end = last_seg->left.end;
+	i_polyline_add_point_xy(poly,
+				line_x(&last_seg->left, end),
+				line_y(&last_seg->left, end));
+	i_polyline_add_point_xy(poly,
+				line_x(&segs->left, 0),
+				line_y(&segs->left, 0));
+      }
+      else {
+	add_start = 1;
+      }
     }
   }
   else {
@@ -427,6 +441,20 @@ make_poly_cut30(thick_seg *segs, int seg_count, int closed,
     }
     
     if (end > start) {
+      if (seg->right.end > 1 && i > 0) {
+	thick_seg *next = segs + i - 1;
+	double cos_x_m_y = 
+	  seg->cos_slope * next->cos_slope + seg->sin_slope * next->sin_slope;
+        if (cos_x_m_y > COS_150_DEG) {
+	  end = seg->right.end;
+	}
+	else {
+	  add_start = 1;
+	}
+      }
+      else 
+	add_start = end == 1.0;
+	
       i_polyline_add_point_xy(poly,
 			      line_x(&seg->right, end),
 			      line_y(&seg->right, end));
@@ -434,7 +462,29 @@ make_poly_cut30(thick_seg *segs, int seg_count, int closed,
     add_start = end == 1.0;
   }
 
-  if (!closed) {
+  if (closed) {
+    if (add_start) {
+      thick_seg *last_seg = segs + seg_count - 1;
+      double cos_x_m_y = 
+	last_seg->cos_slope * segs->cos_slope + last_seg->sin_slope * segs->sin_slope;
+      if (cos_x_m_y > COS_150_DEG) {
+	double start = last_seg->right.start;
+	i_polyline_add_point_xy(poly,
+				line_x(&last_seg->right, start),
+				line_y(&last_seg->right, start));
+      }
+#if 0
+      i_polyline_add_point_xy(poly,
+			      line_x(&last_seg->right, 0.0),
+			      line_y(&last_seg->right, 0.0));
+#else
+      i_polyline_add_point_xy(poly,
+			      last_seg->right.a.x,
+			      last_seg->right.a.y);
+#endif
+    }
+  }
+  else {
     line_end(poly, segs, &segs->right, &segs->left, pen->back, pen);
   }
 

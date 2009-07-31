@@ -52,7 +52,7 @@ my @septagon = map
       or diag(Imager->errstr);
     my $pen2 = Imager::Pen::Thick->new
       (
-       thickness => 35, 
+       thickness => 31, 
        color => '#0F0',
        corner => $corner,
       );
@@ -62,28 +62,31 @@ my @septagon = map
     ok($pen1->draw(image => $im, lines => [ $line ]),
        "draw heptagon $corner corners");
     my $line2 = Imager::Polyline->new(1, map @$_, reverse @septagon);
-    #$line2->dump;
-    #ok($pen2->draw(image => $im, lines => [ $line2 ]),
-    #   "draw heptagon $corner corners (reverse order)");
+    $line2->dump;
+    ok($pen2->draw(image => $im, lines => [ $line2 ]),
+       "draw heptagon $corner corners (reverse order)");
     ok($im->write(file => "testout/t22c$corner.ppm"), "save it");
   }
 }
 
 {
   my $im = Imager->new(xsize => 200, ysize => 200);
-  my $step = PI / 18;
+  my $step = PI / 15;
   my $start = PI - $step / 2;
   my $y = 20;
+  my $green = 64;
+  my $blue = 255;
   for my $corner (qw(round cut ptc_30)) {
-    my $pen = Imager::Pen::Thick->new
-      (
-       thickness => 10,
-       color => '#888',
-       corner => $corner,
-      );
+    my $red = 64;
     my $x = 10;
     my $angle = $start;
     while ($x < 180) {
+      my $pen = Imager::Pen::Thick->new
+	(
+	 thickness => 10,
+	 color => [ $red, $green, $blue, 192 ],
+	 corner => $corner,
+	);
       my $line = Imager::Polyline->new
 	(
 	 0,
@@ -93,10 +96,12 @@ my @septagon = map
 	);
       ok($pen->draw(image => $im, lines => [ $line ]),
 	 "corner $corner, angle $angle");
-      $x += 20;
+      $x += 30;
       $angle -= $step;
+      $red += 32;
     }
     $y += 60;
+    $green += 40;
   }
   ok($im->write(file => 'testout/t22angles.ppm'), "save angles");
 }
