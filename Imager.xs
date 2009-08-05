@@ -923,6 +923,7 @@ i_int_hlines_dump(i_int_hlines *hlines) {
 /* trying to use more C style names, map them here */
 #define i_io_DESTROY(ig) io_glue_destroy(ig)
 #define i_pen_DESTROY(pen) i_pen_destroy(pen)
+typedef i_pte_custom_t *Imager__Pen__Thick__End;
 
 MODULE = Imager		PACKAGE = Imager::Color	PREFIX = ICL_
 
@@ -4983,44 +4984,62 @@ i_polyline_dump(poly)
 MODULE = Imager PACKAGE = Imager::Pen::Thick PREFIX=i
 
 Imager::Pen::Raw
-i_new_thick_pen_color(thickness, color, combine = ic_normal, corner=i_ptc_cut, front=i_pte_square, back=i_pte_square, front_pts_sv = NULL, back_pts_sv = NULL)
+i_new_thick_pen_color(thickness, color, combine = ic_normal, corner=i_ptc_cut, front=i_pte_square, back=i_pte_square, custom_front = NULL, custom_back = NULL)
 	double thickness
 	Imager::Color color
 	int combine
 	int corner
 	int front
 	int back
-	SV *front_pts_sv
-	SV *back_pts_sv
-  PREINIT:
-    int front_count = 0;
-    i_point_t *front_pts = NULL;
-    int back_count = 0;
-    i_point_t *back_pts = NULL;
-  CODE:
-    RETVAL = i_new_thick_pen_color(thickness, color, combine, corner, front, back, front_count, front_pts, back_count, back_pts);
-  OUTPUT:
-    RETVAL
+	Imager::Pen::Thick::End custom_front
+	Imager::Pen::Thick::End custom_back
 
 Imager::Pen::Raw
-i_new_thick_pen_fill(thickness, fill, corner=i_ptc_cut, front=i_pte_square, back=i_pte_square, front_pts_sv = NULL, back_pts_sv = NULL)
+i_new_thick_pen_fill(thickness, fill, corner=i_ptc_cut, front=i_pte_square, back=i_pte_square, custom_front = NULL, custom_back = NULL)
 	double thickness
 	Imager::FillHandle fill
 	int corner
 	int front
 	int back
-	SV *front_pts_sv
-	SV *back_pts_sv
+	Imager::Pen::Thick::End custom_front
+	Imager::Pen::Thick::End custom_back
+
+MODULE = Imager PACKAGE = Imager::Pen::Thick::End PREFIX=i_thick_end_
+
+Imager::Pen::Thick::End
+new(cls, min_scale, fit_space, ...)
+	double min_scale
+ 	double fit_space
   PREINIT:
-    int front_count = 0;
-    i_point_t *front_pts = NULL;
-    int back_count = 0;
-    i_point_t *back_pts = NULL;
+    int i;
+    int st_i;
+    i_point_t *pts;
   CODE:
-    RETVAL = i_new_thick_pen_fill(thickness, fill, corner, front, back, front_count, front_pts, back_count, back_pts);
+fprintf(stderr, "items %d\n", (int)items);
+    if ((items-3) % 2 || items == 3) {
+      croak("Usage: Imager::Pen::Thick::End->new(min_scale, fit_space, x, y, x, y, ...)");
+    }
+    RETVAL = mymalloc(sizeof(i_pte_custom_t));
+    RETVAL->min_scale = min_scale;
+    RETVAL->fit_space = fit_space;
+    RETVAL->pt_count = (items - 2) / 2;
+    pts = mymalloc(sizeof(i_point_t) * RETVAL->pt_count);
+    for (i = 0, st_i = 3; i < RETVAL->pt_count; ++i, st_i += 2) {
+      pts[i].x = SvNV(ST(st_i));
+      pts[i].y = SvNV(ST(st_i+1));
+    }
+    RETVAL->pts = pts;
   OUTPUT:
     RETVAL
 
+void
+DESTROY(end)
+	Imager::Pen::Thick::End end
+  CODE:
+    if (end) {
+      myfree((void *)(end->pts));
+      myfree(end);
+    }
 
 MODULE = Imager  PACKAGE = Imager::Internal::Hlines  PREFIX=i_int_hlines_
 

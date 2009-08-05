@@ -155,10 +155,23 @@ typedef enum i_pen_thick_end_t {
   i_pte_square, /* square at the end point */
   i_pte_block, /* square 0.5 * thick past the end point */
   i_pte_round, /* semicircle centered on the end point */
-  i_pte_custom_attached, /* custom end attached */
-  i_pte_custom_detached /* custom end detached */
+  i_pte_sarrowh, /* simple arrowhead */
+  i_pte_parrowh, /* pointy arrowhead */
+  i_pte_sarrowb, /* simple arrowbase */
+  i_pte_custom /* custom end */
 } i_pen_thick_end_t;
 
+typedef struct {
+  /* the minimum scale to draw the end at */
+  double min_scale;
+
+  /* the amount to shorten the line to fit the end in */
+  double fit_space;
+
+  /* points making up the end in line thickness units */
+  int pt_count;
+  const i_point_t *pts;
+} i_pte_custom_t;
 
 /*
 =item i_img

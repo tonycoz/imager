@@ -1,6 +1,6 @@
 #!perl -w
 use strict;
-use Test::More tests => 45;
+use Test::More tests => 72;
 use Imager;
 use Imager::Fill;
 
@@ -22,13 +22,13 @@ use_ok('Imager::Pen::Thick');
   my @pts = ( [ 20, 20 ], [ 180, 20 ], [ 20, 180 ], [ 180, 180 ]);#, [ 10, 90 ]);
   my $line = Imager::Polyline->new(0, map @$_, @pts);
   ok($line, "made a polyline object");
- # ok($pen->draw(image => $im, lines => [ $line ]), "draw it");
+  ok($pen->draw(image => $im, lines => [ $line ]), "draw it");
   $im->setpixel(x => [ map $_->[0], @pts ], 
 		'y' => [ map $_->[1], @pts], 
 		color => '#00f');
-  #my $line2 = Imager::Polyline->new(0, map @$_, reverse,@pts);
-  #my $pen2 = Imager::Pen::Thick->new(thickness => 5, color => 'red');
-  #ok($pen2->draw(image => $im, lines => [ $line2 ]), "draw another");
+  my $line2 = Imager::Polyline->new(0, map @$_, reverse,@pts);
+  my $pen2 = Imager::Pen::Thick->new(thickness => 5, color => 'red');
+  ok($pen2->draw(image => $im, lines => [ $line2 ]), "draw another");
   ok($im->write(file => 'testout/t22one.ppm'), "save it");
 }
 
@@ -118,3 +118,79 @@ my @septagon = map
      "check error message");
 }
 
+{ # end types
+  my $im = Imager->new(xsize => 400, ysize => 400);
+  my $offset = 0;
+  # simple barbed arrow
+  my $barbed_custom = Imager::Pen::Thick::End->new
+    (
+     1.0,
+     2.0,
+     -1.1, -0.40,
+     -1.1, -0.20,
+     -0.5, 0.20,
+     -0.5, 0.40,
+     -1.1, 0.00,
+     -1.1, 0.20,
+     -0.5, 0.60,
+     -0.5, 0.8,
+     -1.1, 0.4,
+     0, 2,
+     1.1, 0.4,
+     0.5, 0.8,
+     0.5, 0.6,
+     1.1, 0.2,
+     1.1, 0.0,
+     0.5, 0.40,
+     0.5, 0.2,
+     1.1, -0.2,
+     1.1, -0.4,
+    );
+  for my $end (qw/square block round sarrowh parrowh sarrowb custom/) {
+    my $pen = Imager::Pen::Thick->new
+      (
+       thickness => 15,
+       corner => "ptc_30",
+       color => '#FFF',
+       front => $end,
+       custom_front => $barbed_custom,
+       back => $end,
+       custom_back =>  $barbed_custom,
+      );
+    ok($pen, "make pen with end $end")
+      or diag("making end $end pen:".Imager->errstr);
+    my $line = Imager::Polyline->new
+      (
+       0, # open
+       20 + $offset, 380,
+       40 + $offset, 40 + $offset,
+       380, 20 + $offset
+      );
+    ok($pen->draw(image => $im, lines => [ $line ],),
+       "draw with end $end");
+    $offset += 30;
+  }
+  ok($im->write(file => "testout/t22ends.ppm"), "save ends test");
+}
+{ # angle check
+  my $angle = 0;
+  my $im = Imager->new(xsize => 300, ysize => 300);
+  my $pen = Imager::Pen::Thick->new
+    (
+     thickness => 11, 
+     color => '#FFF',
+     front => 'sarrowb'
+    );
+  while ($angle < 2*PI) {
+    my $line = Imager::Polyline->new
+      (
+       0, # open
+       150, 150,
+       150 + 120 * cos($angle), 150 + 120 * sin($angle)
+      );
+    ok($pen->draw(image=>$im, lines => [ $line ]),
+       "draw at angle $angle");
+    $angle += PI / 7.2;
+  }
+  ok($im->write(file => "testout/t22angles.ppm"), "save ends test");
+}

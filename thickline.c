@@ -24,10 +24,8 @@ typedef struct {
   i_pen_thick_end_t front;
   i_pen_thick_end_t back;
   double thickness;
-  int custom_front_count;
-  i_point_t *custom_front;
-  int custom_back_count;
-  i_point_t *custom_back;
+  i_pte_custom_t custom_front;
+  i_pte_custom_t custom_back;
   i_fill_t *fill;
 } i_pen_thick_t;
 
@@ -41,16 +39,55 @@ static const i_pen_vtable_t thick_vtable = {
   thick_clone
 };
 
+static i_point_t simple_arrow_head_pts[] = {
+  { -1, 0 },
+  { 0, 1 },
+  { 1, 0 }
+};
+
+static const i_pte_custom_t simple_arrow_head = {
+  1.0,
+  1.0,
+  sizeof(simple_arrow_head_pts) / sizeof(*simple_arrow_head_pts),
+  simple_arrow_head_pts
+};
+
+static i_point_t pointy_arrow_head_pts[] = {
+  { -1.1, -0.3 },
+  { 0, 1.8 },
+  { 1.1, -0.3 }
+};
+
+static const i_pte_custom_t pointy_arrow_head = {
+  1.0,
+  1.8,
+  sizeof(pointy_arrow_head_pts) / sizeof(*pointy_arrow_head_pts),
+  pointy_arrow_head_pts
+};
+
+static i_point_t simple_arrow_base_pts[] = {
+  { -1, 0.5 },
+  { -1, 1.5 },
+  { 0, 0.5 },
+  { 1, 1.5 },
+  { 1, 0.5 }
+};
+
+static const i_pte_custom_t simple_arrow_base = {
+  1.0,
+  1.5,
+  sizeof(simple_arrow_base_pts) / sizeof(*simple_arrow_base_pts),
+  simple_arrow_base_pts
+};
+
 static i_pen_t *
 i_new_thick_pen_low(double thickness,
 		    i_fill_t *fill,
 		    i_pen_thick_corner_t corner, 
 		    i_pen_thick_end_t front,
 		    i_pen_thick_end_t back,
-		    int custom_front_count,
-		    i_point_t *custom_front_points,
-		    int custom_back_count,
-		    i_point_t *custom_back_points) {
+		    i_pte_custom_t *custom_front,
+		    i_pte_custom_t *custom_back) {
   i_pen_thick_t *pen = mymalloc(sizeof(i_pen_thick_t));
   int i;
 
@@ -60,28 +97,36 @@ i_new_thick_pen_low(double thickness,
   pen->back = back;
   pen->thickness = thickness;
   pen->fill = fill;
-  if (custom_front_points) {
-    pen->custom_front_count = custom_front_count;
-    pen->custom_front = mymalloc(sizeof(i_point_t) * custom_front_count);
-    for (i = 0; i < custom_front_count; ++i) {
-      pen->custom_front[i] = custom_front_points[i];
+  if (custom_front && front == i_pte_custom) {
+    i_point_t *pts;
+    pen->custom_front = *custom_front;
+    pts = mymalloc(sizeof(i_point_t) * custom_front->pt_count);
+    for (i = 0; i < custom_front->pt_count; ++i) {
+      pts[i] = custom_front->pts[i];
     }
+    pen->custom_front.pts = pts;
   }
   else {
-    pen->custom_front_count = 0;
-    pen->custom_front = NULL;
+    pen->custom_front.pt_count = 0;
+    pen->custom_front.pts = NULL;
+    if (pen->front == i_pte_custom)
+      pen->front = i_pte_square;
   }
 
-  if (custom_back_points) {
-    pen->custom_back_count = custom_back_count;
-    pen->custom_back = mymalloc(sizeof(i_point_t) * custom_back_count);
-    for (i = 0; i < custom_back_count; ++i) {
-      pen->custom_back[i] = custom_back_points[i];
+  if (custom_back && back == i_pte_custom) {
+    i_point_t *pts;
+    pen->custom_back = *custom_back;
+    pts = mymalloc(sizeof(i_point_t) * custom_back->pt_count);
+    for (i = 0; i < custom_back->pt_count; ++i) {
+      pts[i] = custom_back->pts[i];
     }
+    pen->custom_back.pts = pts;
   }
   else {
-    pen->custom_back_count = 0;
-    pen->custom_back = NULL;
+    pen->custom_back.pt_count = 0;
+    pen->custom_back.pts = NULL;
+    if (pen->back == i_pte_custom)
+      pen->back = i_pte_square;
   }
 
   return (i_pen_t *)pen;
@@ -94,15 +139,12 @@ i_new_thick_pen_color(double thickness,
 		      i_pen_thick_corner_t corner, 
 		      i_pen_thick_end_t front,
 		      i_pen_thick_end_t back,
-		      int custom_front_count,
-		      i_point_t *custom_front_points,
-		      int custom_back_count,
-		      i_point_t *custom_back_points) {
+		      i_pte_custom_t *custom_front,
+		      i_pte_custom_t *custom_back) {
   i_fill_t *fill = i_new_fill_solid(color, combine);
 
   return i_new_thick_pen_low(thickness, fill, corner, front, back, 
-			     custom_front_count, custom_front_points, 
-			     custom_back_count, custom_back_points);
+			     custom_front, custom_back);
 }
 		
 i_pen_t *
@@ -111,25 +153,22 @@ i_new_thick_pen_fill(double thickness,
 		     i_pen_thick_corner_t corner,
 		     i_pen_thick_end_t front,
 		     i_pen_thick_end_t back,
-		     int custom_front_count,
-		     i_point_t *custom_front_points,
-		     int custom_back_count,
-		     i_point_t *custom_back_points) {
+		     i_pte_custom_t *custom_front,
+		     i_pte_custom_t *custom_back) {
   i_fill_t *cloned = i_fill_clone(fill);
 
   return i_new_thick_pen_low(thickness, cloned, corner, front, back, 
-			     custom_front_count, custom_front_points, 
-			     custom_back_count, custom_back_points);
+			     custom_front, custom_back);
 }
 		
 static void
 thick_destroy(i_pen_t *pen) {
   i_pen_thick_t *thick = (i_pen_thick_t *)pen;
 
-  if (thick->custom_front)
-    myfree(thick->custom_front);
-  if (thick->custom_back)
-    myfree(thick->custom_back);
+  if (thick->custom_front.pts)
+    myfree((void *)thick->custom_front.pts);
+  if (thick->custom_back.pts)
+    myfree((void *)thick->custom_back.pts);
   myfree(thick);
 }
 
@@ -142,10 +181,8 @@ thick_clone(i_pen_t *pen) {
 			      thick->corner,
 			      thick->front,
 			      thick->back,
-			      thick->custom_front_count,
-			      thick->custom_front,
-			      thick->custom_back_count,
-			      thick->custom_back);
+			      &thick->custom_front,
+			      &thick->custom_back);
 }
 
 typedef struct {
@@ -336,10 +373,59 @@ line_end_round(i_polyline_t *poly, thick_seg *seg,
   }
 }
 
+static void 
+line_end_custom(i_polyline_t *poly, thick_seg *seg,
+		line_seg *begin, line_seg *end, i_pen_thick_t *pen,
+		i_pte_custom_t *line_end) {
+  double scale = pen->thickness;
+  /* perhaps these should be passed in */
+  double cos_slope = (begin->b.x - begin->a.x) / seg->length;
+  double sin_slope = (begin->b.y - begin->a.y) / seg->length;
+  double fit_frac;
+  int i;
+  double scaled_cos, scaled_sin;
+  double start_x, start_y;
+  double end_x, end_y;
+  double base_x, base_y;
+
+  if (scale < line_end->min_scale)
+    scale = line_end->min_scale;
+
+  scaled_cos = cos_slope * scale;
+  scaled_sin = sin_slope * scale;
+
+  fit_frac = line_end->fit_space * scale / seg->length;
+  if (begin->start > 1.0 - fit_frac)
+    fit_frac = 1.0 - begin->start;
+  if (end->end < fit_frac)
+    fit_frac = end->end;
+
+  start_x = line_x(begin, 1.0 - fit_frac);
+  start_y = line_y(begin, 1.0 - fit_frac);
+
+  end_x = line_x(end, fit_frac);
+  end_y = line_y(end, fit_frac);
+
+  base_x = (start_x + end_x) / 2;
+  base_y = (start_y + end_y) / 2;
+
+  i_polyline_add_point_xy(poly, start_x, start_y);
+
+  for (i = 0; i < line_end->pt_count; ++i) {
+    double px = line_end->pts[i].x;
+    double py = line_end->pts[i].y;
+    i_polyline_add_point_xy(poly,
+			    base_x + py * scaled_cos - px * scaled_sin,
+			    base_y + py * scaled_sin + px * scaled_cos);
+  }
+  
+  i_polyline_add_point_xy(poly, end_x, end_y);
+}
+
 static void
 line_end(i_polyline_t *poly, thick_seg *seg, 
 	 line_seg *begin, line_seg *end, i_pen_thick_end_t end_type,
-	 i_pen_thick_t *pen) {
+	 i_pen_thick_t *pen, i_pte_custom_t *end_type_custom) {
   switch (end_type) {
   case i_pte_square:
   default:
@@ -353,6 +439,22 @@ line_end(i_polyline_t *poly, thick_seg *seg,
   case i_pte_round:
     line_end_round(poly, seg, begin, end, pen);
     break;
+
+  case i_pte_sarrowh:
+    line_end_custom(poly, seg, begin, end, pen, &simple_arrow_head);
+    break;
+
+  case i_pte_parrowh:
+    line_end_custom(poly, seg, begin, end, pen, &pointy_arrow_head);
+    break;
+
+  case i_pte_sarrowb:
+    line_end_custom(poly, seg, begin, end, pen, &simple_arrow_base);
+    break;
+
+  case i_pte_custom:
+    line_end_custom(poly, seg, begin, end, pen, end_type_custom);
+    break;
   }
 }
 
@@ -361,7 +463,7 @@ make_poly_cut30(thick_seg *segs, int seg_count, int closed,
 	      i_pen_thick_t *pen) {
   int side_count = seg_count * 3 + 2; /* just rough */
   int i;
-  int add_start = 1;
+  int add_start = 0;
   i_polyline_t *poly = i_polyline_new_empty(1, side_count);
 
   /* up one side of the line */
@@ -376,8 +478,8 @@ make_poly_cut30(thick_seg *segs, int seg_count, int closed,
 			      line_y(&seg->left, start));
     }
 
-    if (end > start) {
-      if (seg->left.end > 1 && i < seg_count-1) {
+    if (end > start && i < seg_count-1) {
+      if (seg->left.end > 1) {
 	thick_seg *next = segs + i + 1;
 	double cos_x_m_y = 
 	  seg->cos_slope * next->cos_slope + seg->sin_slope * next->sin_slope;
@@ -420,10 +522,10 @@ make_poly_cut30(thick_seg *segs, int seg_count, int closed,
   }
   else {
     thick_seg *seg = segs + seg_count - 1;
-    line_end(poly, seg, &seg->left, &seg->right, pen->front, pen);
+    line_end(poly, seg, &seg->left, &seg->right, pen->front, pen, &pen->custom_front);
   }
 
-  add_start = 1;
+  add_start = 0;
   /* and down the other */
   for (i = seg_count-1; i >= 0; --i) {
     thick_seg *seg = segs + i;
@@ -440,8 +542,8 @@ make_poly_cut30(thick_seg *segs, int seg_count, int closed,
 			      line_y(&seg->right, start));
     }
     
-    if (end > start) {
-      if (seg->right.end > 1 && i > 0) {
+    if (end > start && i > 0) {
+      if (seg->right.end > 1) {
 	thick_seg *next = segs + i - 1;
 	double cos_x_m_y = 
 	  seg->cos_slope * next->cos_slope + seg->sin_slope * next->sin_slope;
@@ -485,7 +587,7 @@ make_poly_cut30(thick_seg *segs, int seg_count, int closed,
     }
   }
   else {
-    line_end(poly, segs, &segs->right, &segs->left, pen->back, pen);
+    line_end(poly, segs, &segs->right, &segs->left, pen->back, pen, &pen->custom_back);
   }
 
   return poly;
@@ -496,7 +598,7 @@ make_poly_cut(thick_seg *segs, int seg_count, int closed,
 	      i_pen_thick_t *pen) {
   int side_count = seg_count * 3 + 2; /* just rough */
   int i;
-  int add_start = 1;
+  int add_start = 0;
   i_polyline_t *poly = i_polyline_new_empty(1, side_count);
 
   /* up one side of the line */
@@ -511,7 +613,7 @@ make_poly_cut(thick_seg *segs, int seg_count, int closed,
 			      line_y(&seg->left, start));
     }
 
-    if (end > start) {
+    if (end > start && i != seg_count-1) {
       i_polyline_add_point_xy(poly,
 			      line_x(&seg->left, end),
 			      line_y(&seg->left, end));
@@ -529,10 +631,11 @@ make_poly_cut(thick_seg *segs, int seg_count, int closed,
   }
   else {
     thick_seg *seg = segs + seg_count - 1;
-    line_end(poly, seg, &seg->left, &seg->right, pen->front, pen);
+    line_end(poly, seg, &seg->left, &seg->right, pen->front, pen,
+	     &pen->custom_front);
   }
 
-  add_start = 1;
+  add_start = 0;
   /* and down the other */
   for (i = seg_count-1; i >= 0; --i) {
     thick_seg *seg = segs + i;
@@ -549,7 +652,7 @@ make_poly_cut(thick_seg *segs, int seg_count, int closed,
 			      line_y(&seg->right, start));
     }
     
-    if (end > start) {
+    if (end > start && i != 0) {
       i_polyline_add_point_xy(poly,
 			      line_x(&seg->right, end),
 			      line_y(&seg->right, end));
@@ -566,7 +669,8 @@ make_poly_cut(thick_seg *segs, int seg_count, int closed,
     }
   }
   else {
-    line_end(poly, segs, &segs->right, &segs->left, pen->back, pen);
+    line_end(poly, segs, &segs->right, &segs->left, pen->back, pen,
+	     &pen->custom_back);
   }
 
   return poly;
@@ -647,7 +751,7 @@ make_poly_round(thick_seg *segs, int seg_count, int closed,
 	      i_pen_thick_t *pen) {
   int side_count = seg_count * 3 + 2; /* just rough */
   int i;
-  int add_start = 1;
+  int add_start = 0;
   i_polyline_t *poly = i_polyline_new_empty(1, side_count);
   double radius = pen->thickness / 2.0;
   int circle_steps = pen->thickness > 8 ? pen->thickness : 8;
@@ -670,7 +774,7 @@ make_poly_round(thick_seg *segs, int seg_count, int closed,
       i_polyline_add_point_xy(poly, startx, starty);
     }
     
-    if (end > start) {
+    if (end > start && i != seg_count-1) {
       i_polyline_add_point_xy(poly,
 			      line_x(&seg->left, end),
 			      line_y(&seg->left, end));
@@ -688,10 +792,11 @@ make_poly_round(thick_seg *segs, int seg_count, int closed,
   }
   else {
     thick_seg *seg = segs + seg_count - 1;
-    line_end(poly, seg, &seg->left, &seg->right, pen->front, pen);
+    line_end(poly, seg, &seg->left, &seg->right, pen->front, pen,
+	     &pen->custom_front);
   }
 
-  add_start = 1;
+  add_start = 0;
   /* and down the other */
   for (i = seg_count-1; i >= 0; --i) {
     thick_seg *seg = segs + i;
@@ -719,7 +824,7 @@ make_poly_round(thick_seg *segs, int seg_count, int closed,
     }
 #endif
     
-    if (end > start) {
+    if (end > start && i != 0) {
       i_polyline_add_point_xy(poly,
 			      line_x(&seg->right, end),
 			      line_y(&seg->right, end));
@@ -734,7 +839,8 @@ make_poly_round(thick_seg *segs, int seg_count, int closed,
     }
   }
   else {
-    line_end(poly, segs, &segs->right, &segs->left, pen->back, pen);
+    line_end(poly, segs, &segs->right, &segs->left, pen->back, pen,
+	     &pen->custom_back);
   }
 
   return poly;

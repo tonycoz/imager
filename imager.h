@@ -615,20 +615,16 @@ i_new_thick_pen_color(double thickness,
 		      i_pen_thick_corner_t corner, 
 		      i_pen_thick_end_t front,
 		      i_pen_thick_end_t back,
-		      int custom_front_count,
-		      i_point_t *custom_front_points,
-		      int custom_back_count,
-		      i_point_t *custom_back_points);
+		      i_pte_custom_t *custom_front,
+		      i_pte_custom_t *custom_back);
 extern i_pen_t *
 i_new_thick_pen_fill(double thickness,
 		     i_fill_t *fill,
 		     i_pen_thick_corner_t corner,
 		     i_pen_thick_end_t front,
 		     i_pen_thick_end_t back,
-		     int custom_front_count,
-		     i_point_t *custom_front_points,
-		     int custom_back_count,
-		     i_point_t *custom_back_points);
+		     i_pte_custom_t *custom_front,
+		     i_pte_custom_t *custom_back);
 
 #define i_pen_destroy(pen) (((pen)->vtable->destroy)(pen))
 #define i_pen_clone(pen) (((pen)->vtable->clone)(pen))
