@@ -870,9 +870,16 @@ sub catfile {
 sub is_exe {
   my ($name) = @_;
 
+  my @exe_suffix = $Config{_exe};
+  if ($^O eq 'MSWin32') {
+    push @exe_suffix, qw/.bat .cmd/;
+  }
+
   for my $dir (File::Spec->path) {
-    -x catfile($dir, "$name$Config{_exe}")
-      and return 1;
+    for my $suffix (@exe_suffix) {
+      -x catfile($dir, "$name$suffix")
+	and return 1;
+    }
   }
 
   return;
