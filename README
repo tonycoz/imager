@@ -1,6 +1,6 @@
 ================================================================
 Copyright (c) 1999-2004 Arnar M. Hrafnkelsson. All rights reserved.
-Copyright (c) 2004-2007 Anthony Cook.
+Copyright (c) 2004-2009 Anthony Cook.
 This program is free software; you can redistribute it and/or
 modify it under the same terms as Perl itself.
 ================================================================
@@ -177,22 +177,78 @@ of freetype 2 with the type argument:
 ========================
 
 Some hints about getting the Imager module to find the libraries it
-needs for specific features.  The libraries it uses are:
+needs for specific features.
 
- jpeg: http://www.ijg.org/files/
-       ftp://ftp.uu.net/graphics/jpeg/jpegsrc.v6b.tar.gz
+Most Linux distributions pre-package these.  For each library I've
+listed the Debian and Redhat package names.
 
-ftp.uu.net is still linked from many places, including the Independent
-JPEG Groups's home page, but it is non-functional.
+For Debian or Debian based system, such as Ubuntu, you would run:
 
-  png: http://www.libpng.org/pub/png/libpng.html
+  aptitude install package-name
 
-  you also need zlib to use png:  http://www.gzip.org/zlib/
-We have encountered problems with libpng 1.0.1, which were fixed in 1.0.5
-Note: you should probably be using zlib 1.1.4, since 1.1.3 has a 
+or:
+
+  apt-get install package-name
+
+at a root shell (or via sudo).
+
+eg.
+
+  apt-get install libjpeg62-dev
+
+For a Redhat based system such as CentOS or Fedora you would run:
+
+  yum install package-name
+
+at a root shell.
+
+eg.
+
+  yum install libjpeg-devel
+
+I strongly recommend using your distribution's packages if possible,
+this will mean any security updates to those packages will be applied
+when you install security updates.
+
+3.1 libjpeg
+-----------
+
+  http://www.ijg.org/files/
+  ftp://ftp.uu.net/graphics/jpeg/jpegsrc.v6b.tar.gz
+
+Provides read and write access to JPEG images.
+
+Make sure you run:
+
+  make install-lib
+
+to install the development headers and libraries before attempting to
+build Imager.
+
+Debian: libjpeg62-dev
+Redhat: libjpeg-devel
+
+3.2 libpng
+----------
+
+  http://www.libpng.org/pub/png/libpng.html
+
+Provides read and write access to PNG images.
+
+You also need zlib to use png: http://www.gzip.org/zlib/ We have
+encountered problems with libpng 1.0.1, which were fixed in 1.0.5
+Note: you should probably be using zlib 1.1.4, since 1.1.3 has a
 potential security problem.
 
-  gif: http://sourceforge.net/projects/libungif
+Debian: libpng12-dev
+Redhat: libpng-devel
+
+3.3 giflib
+----------
+
+  http://sourceforge.net/projects/giflib/
+
+Provides read and write access to GIF images.
 
 giflib/libungif has come a long way since the buggy versions available
 when Imager's gif support code was written.  Preferably you should get
@@ -200,21 +256,74 @@ at least version 4.1.4.  If you have a recent Linux distribution you
 should be safe with whatever giflib it provides, but if you're
 building from source, please try to use the latest version.
 
+With the expiration of the LZQ patent there's no reason to use
+libungif.
+
 libgif 4.1.4 has no problems known to me at this point.
 
- tiff: http://www.libtiff.org/
+Debian: libgif-dev
+Redhat: giflib-devel
 
-   t1: http://www.ibiblio.org/pub/Linux/libs/graphics/
+3.4 libtiff
+-----------
 
-freetype2 or
-   tt: http://www.freetype.org/
+ http://www.remotesensing.org/libtiff/
+
+Provides read and write access to TIFF images.
+
+Note: libtiff 3.9.0 shouldn't be used due to a bug in
+TIFFWriteDirectory().
+
+Debian: libtiff4-dev
+Redhat: libtiff-devel
+
+3.5 T1Lib
+---------
+
+  http://www.t1lib.org/
+  ftp://sunsite.unc.edu/pub/Linux/libs/graphics/
+
+Support for text drawing with Type 1 Postscript fonts.
+
+Debian: libt1-dev
+Redhat: t1lib-devel
+
+3.6 Freetype 2.x (libfreetype)
+------------------------------
+
+  http://www.freetype.org/
+
+Support for text drawing with a large number of font formats,
+including Truetype, Type 1, Opentype and some bitmap formats.
+
+Debian: libfreetype6-dev
+Redhat: freetype-devel
+
+3.7 Freetype 1.x (libttf)
+-------------------------
+
+  http://www.freetype.org/
+
+Support for text drawing with Truetype fonts.
+
+This library has been superceded by Freetype 2, and some Linux
+distributions are phasing it out.
+
+Debian: libttf-dev
+Redhat: freetype1-devel
+
+3.8 Binaries
+------------
 
 Precompiled versions of some of the libraries might be found at:
 
 AIX:
-   http://www.bullfreeware.com/
 
+  http://www.bullfreeware.com/
 
+Solaris:
+
+  http://www.sunfreeware.com/
 
 ========================
 4. Logging and debugging
@@ -237,7 +346,7 @@ with Microsoft Visual C++ 6.0 with build 623 of ActivePerl.  You can
 use all of the features of Imager.  You can also use Win32 GDI fonts
 directly by supplying the 'face' parameter to Imager::Font->new(...).
 
-I've tested with both MSVC++ 6.0 and cygwin (perl 5.6.1).
+I've tested with MSVC++ 6.0, cygwin (perl 5.6.1) and gcc (MinGW).
 
 If you see an error under cygwin during testing along the lines of:
 
@@ -325,5 +434,6 @@ Thanks go to:
   PerlJam             ( )
   Roderick Schertler  ( Roderick )
   Nathan Torkington   ( gnat )
+  Gabriel Vasseur
 
 (and just to play it safe) all those I forgot to mention.

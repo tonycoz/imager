@@ -25,6 +25,11 @@ Bug fixes:
    and .cmd on MSWin32, as well as .exe.
    https://rt.cpan.org/Ticket/Display.html?id=49275
 
+ - re-work the external libraries section of README:
+   - list Debian and Redhat package names for each library
+   - reformatting
+   - update URLs
+
 Imager 0.67 - 12 Dec 2008
 ===========
 
