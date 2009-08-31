@@ -30,6 +30,10 @@ Bug fixes:
    - reformatting
    - update URLs
 
+ - use the new EU::MM META_MERGE facility instead of generating
+   META.yml from scratch
+   https://rt.cpan.org/Ticket/Display.html?id=47888
+
 Imager 0.67 - 12 Dec 2008
 ===========
 

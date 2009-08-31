@@ -5,7 +5,6 @@ use Cwd;
 use Config;
 use File::Spec;
 use Getopt::Long;
-use vars qw(%Recommends);
 use ExtUtils::Manifest qw(maniread);
 use vars qw(%formats $VERBOSE $INCPATH $LIBPATH $NOLOG $DEBUG_MALLOC $MANUAL $CFLAGS $LFLAGS $DFLAGS);
 
@@ -158,9 +157,6 @@ my @objs = qw(Imager.o draw.o polygon.o image.o io.o iolayer.o
               bmp.o tga.o color.o fills.o imgdouble.o limits.o hlines.o
               imext.o scale.o rubthru.o render.o paste.o compose.o);
 
-$Recommends{Imager} =
-  { 'Parse::RecDescent' => 0 };
-
 my %opts=(
           'NAME'         => 'Imager',
           'VERSION_FROM' => 'Imager.pm',
@@ -168,7 +164,7 @@ my %opts=(
           'DEFINE'       => "$OSDEF $CFLAGS",
           'INC'          => "$lib_cflags $DFLAGS $F_INC",
           'OBJECT'       => join(' ', @objs, $F_OBJECT),
-          clean          => { FILES=>'testout meta.tmp rubthru.c scale.c conv.c  filters.c gaussian.c render.c rubthru.c' },
+          clean          => { FILES=>'testout rubthru.c scale.c conv.c  filters.c gaussian.c render.c rubthru.c' },
           PM             => gen_PM(),
 	  PREREQ_PM      => { 'Test::More' => 0.47 },
          );
@@ -189,16 +185,23 @@ if ($MM_ver > 6.06) {
   $opts{AUTHOR} = 'Tony Cook <tony@imager.perl.org>, Arnar M. Hrafnkelsson';
   $opts{ABSTRACT} = 'Perl extension for Generating 24 bit Images';
 }
-if ($MM_ver > 6.10) {
-  $opts{NO_META} = 1;
+
+if ($MM_ver >= 6.46) {
+  $opts{META_MERGE} =
+    {
+     recommends =>
+     {
+      "Parse::RecDescent" => 0
+     },
+     license => "perl",
+     dynamic_config => 1,
+    };
 }
 
 make_imconfig(\@defines);
 
 if ($VERBOSE) { print Dumper(\%opts); }
 mkdir('testout',0777); # since we cannot include it in the archive.
-
-make_metafile(\%opts);
 
 WriteMakefile(%opts);
 
@@ -939,70 +942,6 @@ sub gen_PM {
   $pm{"imconfig.h"} = $instbase . '/Imager/include/imconfig.h';
 
   \%pm;
-}
-
-sub make_metafile {
-  my ($opts) = @_;
-
-  # extract the version
-  my $version = MM->parse_version($opts->{VERSION_FROM})
-    or die "Could not extract version number from $opts->{VERSION_FROM}\n";
-
-  # we don't set this on older EU::MM and it corrupts META.yml
-  # so don't generate it
-  return unless $opts->{AUTHOR};
-
-  my $meta = <<YAML;
---- #YAML:1.0
-name: $opts->{NAME}
-version: $version
-version_from: $opts->{VERSION_FROM}
-author:
-YAML
-  for my $author (split /,\s*/, $opts->{AUTHOR}) {
-    $meta .= " - $author\n";
-  }
-  $meta .= <<YAML;
-abstract: $opts->{ABSTRACT}
-installdirs: site
-YAML
-  if (keys %{$Recommends{$opts->{NAME}}}) {
-    $meta .= "recommends:\n";
-    while (my ($module, $version) = each %{$Recommends{$opts->{NAME}}}) {
-      $meta .= "  $module: $version\n";
-    }
-  }
-  if ($opts->{PREREQ_PM}) {
-    $meta .= "requires:\n";
-    while (my ($module, $version) = each %{$opts->{PREREQ_PM}}) {
-      $meta .= "  $module: $version\n";
-    }
-  }
-  $meta .= <<YAML;
-license: perl
-dynamic_config: 1
-distribution_type: module
-meta-spec:
-  version: 1.3
-  url: http://module-build.sourceforge.net/META-spec-v1.3.html
-generated_by: $opts->{NAME} version $version
-YAML
-  my $save_meta;
-  if (open META, "< META.yml") {
-    my $old_meta = do { local $/; <META> };
-    close META;
-
-    $save_meta = $old_meta ne $meta;
-  }
-  else {
-    ++$save_meta;
-  }
-  if ($save_meta) {
-    print "Updating META.yml\n";
-    open META, "> META.yml" or die "Cannot create META.yml: $!";
-    print META $meta;
-    close META;
-  }
 }
 
 my $home;
