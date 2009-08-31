@@ -373,6 +373,8 @@ Imager::Color - Color handling for Imager.
 
 =head1 SYNOPSIS
 
+  use Imager;
+
   $color = Imager::Color->new($red, $green, $blue);
   $color = Imager::Color->new($red, $green, $blue, $alpha);
   $color = Imager::Color->new("#C0C0FF"); # html color specification

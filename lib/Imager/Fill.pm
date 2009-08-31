@@ -150,6 +150,9 @@ sub combines {
 
 =head1 SYNOPSIS
 
+  use Imager;
+  use Imager::Fill;
+
   my $fill1 = Imager::Fill->new(solid=>$color, combine=>$combine);
   my $fill2 = Imager::Fill->new(hatch=>'vline2', fg=>$color1, bg=>$color2,
                                 dx=>$dx, dy=>$dy);
