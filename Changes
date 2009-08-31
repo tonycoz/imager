@@ -21,6 +21,9 @@ Bug fixes:
  - for reading raw images, if raw_storechannels > raw_datachannels,
    set the extra channels in the image to 0
 
+ - when probing for executables like freetype-config, search for .bat
+   and .cmd on MSWin32, as well as .exe.
+   https://rt.cpan.org/Ticket/Display.html?id=49275
 
 Imager 0.67 - 12 Dec 2008
 ===========
