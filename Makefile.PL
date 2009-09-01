@@ -1003,6 +1003,14 @@ sub postcheck_tiff {
 
   my $tiffver_name = "probe/tiffver.txt";
 
+  my $lib;
+  if ($Config{cc} =~ /\b(cl|bcc)\b/) {
+    $lib = "libtiff";
+  }
+  else {
+    $lib = "tiff";
+  }
+
   my $good =
     eval {
       assert_lib
@@ -1010,7 +1018,7 @@ sub postcheck_tiff {
 	 debug => $VERBOSE,
 	 incpath => $format->{incdir},
 	 libpath => $format->{libdir},
-	 lib => "tiff",
+	 lib => $lib,
 	 header => [ qw(stdio.h tiffio.h) ],
 	 function => <<FUNCTION,
   {

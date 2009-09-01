@@ -266,9 +266,9 @@ sub assert_lib {
                 $cfile,
                 "${lib}.lib",
                 "/Fe$exefile", 
+                (map { '/I'.Win32::GetShortPathName($_) } @incpaths),
                 "/link",
                 (map {'/libpath:'.Win32::GetShortPathName($_)} @libpaths),
-                (map { '/I'.Win32::GetShortPathName($_) } @incpaths)
             );
         } elsif($Config{cc} eq 'CC/DECC') {          # VMS
         } elsif($Config{cc} =~ /bcc32(\.exe)?/) {    # Borland
