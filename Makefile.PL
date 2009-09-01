@@ -7,6 +7,8 @@ use File::Spec;
 use Getopt::Long;
 use ExtUtils::Manifest qw(maniread);
 use vars qw(%formats $VERBOSE $INCPATH $LIBPATH $NOLOG $DEBUG_MALLOC $MANUAL $CFLAGS $LFLAGS $DFLAGS);
+use lib 'inc';
+use Devel::CheckLib;
 
 #
 # IM_INCPATH      colon seperated list of paths to extra include paths
@@ -24,6 +26,8 @@ use vars qw(%formats $VERBOSE $INCPATH $LIBPATH $NOLOG $DEBUG_MALLOC $MANUAL $CF
 # IM_LFLAGS       Extra flags to pass to the linker
 # IM_DFLAGS       Extra flags to pass to the preprocessor
 # IM_SUPPRESS_PROMPT  Suppress the prompt asking about gif support
+
+my $KEEP_FILES = $ENV{IMAGER_KEEP_FILES};
 
 getenv();     # get environment variables
 
@@ -203,6 +207,8 @@ make_imconfig(\@defines);
 if ($VERBOSE) { print Dumper(\%opts); }
 mkdir('testout',0777); # since we cannot include it in the archive.
 
+-d "probe" and rmdir "probe";
+
 WriteMakefile(%opts);
 
 exit;
@@ -338,22 +344,8 @@ sub grep_directory {
   return map $path, @l;
 }
 
-
-sub checkformat {
-  my $frm=shift;
-
-  print "  checkformat($frm)\n" if $VERBOSE;
-  
-  my $probe_array = $formats{$frm}{'code'};
-  if ($probe_array) {
-    print "    Calling probe function\n" if $VERBOSE;
-    if (ref $probe_array ne 'ARRAY') {
-      $probe_array = [ $probe_array ];
-    }
-    for my $func (@$probe_array) {
-      return 1 if $func->($formats{$frm}, $frm);
-    }
-  }
+sub _probe_default {
+  my ($format, $frm) = @_;
 
   my $lib_check=$formats{$frm}{'libcheck'};
   my $inc_check=$formats{$frm}{'inccheck'};
@@ -379,6 +371,44 @@ sub checkformat {
   }
 
   return 0;
+}
+
+sub checkformat {
+  my $frm=shift;
+
+  print "  checkformat($frm)\n" if $VERBOSE;
+  
+  my $format = $formats{$frm};
+
+  my @probes;
+  if (my $code = $format->{'code'}) {
+    if (ref $code eq 'ARRAY') {
+      push @probes, @$code;
+    }
+    else {
+      push @probes, $code;
+    }
+  }
+  push @probes, \&_probe_default;
+
+  print "    Calling probe function\n" if $VERBOSE;
+  my $found;
+  for my $func (@probes) {
+    if ($func->($format, $frm)) {
+      ++$found;
+      last;
+    }
+  }
+
+  $found or return;
+
+  if ($format->{postcheck}) {
+    print "    Calling postcheck function\n" if $VERBOSE;
+    $format->{postcheck}->($format, $frm)
+      or return;
+  }
+
+  return 1;
 }
 
 
@@ -490,7 +520,8 @@ sub init {
 		    objfiles=>'tiff.o',
 		    docs=>q{
 			    In order to use tiff with this module you need to have libtiff
-			    installed on your computer}
+			    installed on your computer},
+		    postcheck => \&postcheck_tiff,
 		   };
 
   $formats{'png'}={
@@ -963,6 +994,66 @@ sub _tilde_expand {
   }
 
   $path;
+}
+
+sub postcheck_tiff {
+  my ($format, $frm) = @_;
+
+  -d "probe" or mkdir "probe";
+
+  my $tiffver_name = "probe/tiffver.txt";
+
+  my $good =
+    eval {
+      assert_lib
+	(
+	 debug => $VERBOSE,
+	 incpath => $format->{incdir},
+	 libpath => $format->{libdir},
+	 lib => "tiff",
+	 header => [ qw(stdio.h tiffio.h) ],
+	 function => <<FUNCTION,
+  {
+    const char *vers = TIFFGetVersion();
+    FILE *f = fopen("$tiffver_name", "wb");
+    if (!f)
+      return 1;
+    fputs(vers, f);
+    if (fclose(f))
+      return 1;
+    return 0;
+  }
+FUNCTION
+	);
+      1;
+    };
+
+  unless ($good && -s $tiffver_name
+	  && open(VERS, "< probe/tiffver.txt")) {
+    unlink $tiffver_name unless $KEEP_FILES;
+    print <<EOS;
+    **tiff: cannot determine libtiff version number
+      tiff: DISABLED
+EOS
+    return;
+  }
+
+  # version file seems to be there, load it up
+  my $ver_str = do { local $/; <VERS> };
+  close VERS;
+  unlink $tiffver_name unless $KEEP_FILES;
+
+  my ($version) = $ver_str =~ /(\d+\.\d+\.\d+)/;
+
+  if ($version eq '3.9.0') {
+    print <<EOS;
+    **tiff: libtiff 3.9.0 introduced a serious bug, please install 3.9.1
+      tiff: DISABLED
+EOS
+    return;
+  }
+
+  return 1;
 }
 
 # This isn't a module, but some broken tools, like

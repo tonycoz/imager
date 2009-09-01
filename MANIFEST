@@ -138,6 +138,7 @@ imio.h
 immacros.h
 imperl.h
 imrender.h	Buffer rending engine function declarations
+inc/Devel/CheckLib.pm  David Cantrell's Devel::CheckLib
 io.c
 iolayer.c
 iolayer.h
