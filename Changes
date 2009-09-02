@@ -36,7 +36,8 @@ Bug fixes:
 
  - use Devel::CheckLib (bundled, modified) to check which release of
    libtiff is installed and reject 3.9.0
-
+   http://bugzilla.maptools.org/show_bug.cgi?id=2088
+   http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=543079
 
 Imager 0.67 - 12 Dec 2008
 ===========
