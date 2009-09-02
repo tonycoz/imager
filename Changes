@@ -1,6 +1,6 @@
 Imager release history.  Older releases can be found in Changes.old
 
-Imager 0.68 - unreleased
+Imager 0.67 - unreleased
 ===========
 
 Bug fixes:
@@ -33,6 +33,10 @@ Bug fixes:
  - use the new EU::MM META_MERGE facility instead of generating
    META.yml from scratch
    https://rt.cpan.org/Ticket/Display.html?id=47888
+
+ - use Devel::CheckLib (bundled, modified) to check which release of
+   libtiff is installed and reject 3.9.0
+
 
 Imager 0.67 - 12 Dec 2008
 ===========
