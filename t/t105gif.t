@@ -53,6 +53,9 @@ SKIP:
     ok(!grep($_ eq 'gif', Imager->write_types), "check gif not in write types");
     skip("no gif support", 139);
   }
+    my $gifver = Imager::i_giflib_version();
+  diag("giflib version (from header) $gifver");
+
     open(FH,">testout/t105.gif") || die "Cannot open testout/t105.gif\n";
     binmode(FH);
     ok(i_writegifmc($img,fileno(FH),6), "write low") or
@@ -112,7 +115,6 @@ SKIP:
     close FH;
     is($datai, $datani, "images match");
 
-    my $gifver = Imager::i_giflib_version();
   SKIP:
     {
       skip("giflib3 doesn't support callbacks", 4) unless $gifver >= 4.0;
