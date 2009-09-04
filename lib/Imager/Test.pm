@@ -311,14 +311,14 @@ sub is_image_similar($$$$) {
    
     if ($limit == 0) {
       # find the first mismatch
-      CHECK:
+      PIXELS:
       for my $y (0 .. $left->getheight()-1) {
 	for my $x (0.. $left->getwidth()-1) {
 	  my @lsamples = $left->getsamples(x => $x, y => $y, width => 1);
 	  my @rsamples = $right->getsamples(x => $x, y => $y, width => 1);
           if ("@lsamples" ne "@rsamples") {
             $builder->diag("first mismatch at ($x, $y) - @lsamples vs @rsamples");
-            last CHECK;
+            last PIXELS;
           }
 	}
       }

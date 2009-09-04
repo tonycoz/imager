@@ -1,5 +1,13 @@
 Imager release history.  Older releases can be found in Changes.old
 
+Imager 0.68 - unrelease
+===========
+
+Bug fixes:
+
+ - avoid using CHECK as a label in Imager::Test
+   http://nntp.x.perl.org/group/perl.cpan.testers/5220921
+
 Imager 0.67_01 - 02 Sep 2009
 ==============
 
