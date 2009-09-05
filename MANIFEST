@@ -242,7 +242,8 @@ t/t103raw.t
 t/t104ppm.t
 t/t105gif.t		Test gif support
 t/t105nogif.t		Test handling when gif not available
-t/t106tiff.t
+t/t106notiff.t		Test handling when tiff not available
+t/t106tiff.t		Test tiff support
 t/t107bmp.t
 t/t108tga.t
 t/t15color.t

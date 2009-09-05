@@ -2,7 +2,12 @@
 use strict;
 use Imager;
 use Imager::Test qw(is_image);
-use Test::More tests => 2;
+use Test::More;
+
+Imager::i_has_format("tiff")
+  or plan skip_all => "no tiff support";
+
+plan tests => 2;
 
 my $dest = Imager->new(xsize => 100, ysize => 100, channels => 4);
 $dest->box(filled => 1, color => '0000FF');
