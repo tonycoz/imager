@@ -196,8 +196,9 @@ i_rubthru(i_img *im, i_img *src, int tx, int ty, int src_minx, int src_miny,
   if (tx >= im->xsize || ty >= im->ysize
       || src_minx >= src_maxx || src_miny >= src_maxy) {
     i_clear_error();
-    i_push_error(0, "rubthrough: nothing to do");
-    return 0;
+    /* just do nothing, attempting to rubthrough outside the target isn't
+       worth being an error */
+    return 1;
   }
 
   if (im->channels == 1 || im->channels == 3)

@@ -8,6 +8,14 @@ Bug fixes:
  - avoid using CHECK as a label in Imager::Test
    http://nntp.x.perl.org/group/perl.cpan.testers/5220921
 
+ - re-work most image file test files that require a library into
+   separate library present/not present files to remove stupidly long
+   conditionals
+
+ - don't treat rubthrough() outside the bounds of the target image as
+   an error.
+   http://nntp.x.perl.org/group/perl.cpan.testers/5185716
+
 Imager 0.67_01 - 02 Sep 2009
 ==============
 
