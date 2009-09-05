@@ -236,7 +236,8 @@ t/t07iolayer.t
 t/t1000files.t          Format independent file tests
 t/t101jpeg.t		Test jpeg support
 t/t101nojpeg.t		Test handling when jpeg not available
-t/t102png.t
+t/t102nopng.t		Test handling when png not available
+t/t102png.t		Test png support
 t/t103raw.t
 t/t104ppm.t
 t/t105gif.t
