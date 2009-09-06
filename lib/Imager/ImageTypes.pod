@@ -148,6 +148,10 @@ method on later.
   $img = Imager->new(%opts); # create direct mode RGBA image
   $img = Imager->new(%opts, channels=>4); # create direct mode RGBA image
 
+You can also read a file from new():
+
+  $img = Imager->new(file => "someimage.png");
+
 The parameters for new are:
 
 =over
@@ -211,6 +215,23 @@ image.
 C<maxcolors> - the maximum number of colors in a paletted image.
 Default: 256.  This must be in the range 1 through 256.
 
+=item *
+
+C<file>, C<fh>, C<fd>, C<callback>, C<readcb> - specify a filename,
+filehandle, file descriptor or callback to read image data from.  See
+L<Imager::Files> for details.  The typical use is:
+
+  my $im = Imager->new(file => $filename);
+
+=item *
+
+C<filetype> - treated as the file format parameter, as for C<type>
+with the read() method, eg:
+
+  my $im = Imager->new(file => $filename, type => "gif");
+
+In most cases Imager will detect the file's format itself.
+
 =back
 
 In the simplest case just supply the width and height of the image:
@@ -256,6 +277,12 @@ call new() with no parameters:
   my $img = Imager->new;
   $img->read(file=>$filename)
     or die $img->errstr;
+
+Though it's much easier now to just call new() with a C<file>
+parameter:
+
+  my $img = Imager->new(file => $filename)
+    or die Imager->errstr;
 
 =item img_set
 

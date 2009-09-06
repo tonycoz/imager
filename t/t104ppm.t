@@ -1,6 +1,6 @@
 #!perl -w
 use Imager ':all';
-use Test::More tests => 173;
+use Test::More tests => 177;
 use strict;
 use Imager::Test qw(test_image_raw test_image_16 is_color3 is_color1 is_image);
 
@@ -540,6 +540,18 @@ print "# check error handling\n";
 {
   ok(grep($_ eq 'pnm', Imager->read_types), "check pnm in read types");
   ok(grep($_ eq 'pnm', Imager->write_types), "check pnm in write types");
+}
+
+{ # test new() loading an image
+  my $im = Imager->new(file => "testimg/penguin-base.ppm");
+  ok($im, "received an image");
+  is($im->getwidth, 164, "check width matches image");
+
+  # fail to load an image
+  my $im2 = Imager->new(file => "Imager.pm", filetype => "pnm");
+  ok(!$im2, "no image when file failed to load");
+  cmp_ok(Imager->errstr, '=~', "bad header magic, not a PNM file",
+	 "check error message transferred");
 }
 
 sub openimage {

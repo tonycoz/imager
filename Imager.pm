@@ -621,13 +621,32 @@ sub new {
   $self->{IMG}=undef;    # Just to indicate what exists
   $self->{ERRSTR}=undef; #
   $self->{DEBUG}=$DEBUG;
-  $self->{DEBUG} && print "Initialized Imager\n";
-  if (defined $hsh{xsize} && defined $hsh{ysize}) { 
+  $self->{DEBUG} and print "Initialized Imager\n";
+  if (defined $hsh{xsize} || defined $hsh{ysize}) { 
     unless ($self->img_set(%hsh)) {
       $Imager::ERRSTR = $self->{ERRSTR};
       return;
     }
   }
+  elsif (defined $hsh{file} || 
+	 defined $hsh{fh} ||
+	 defined $hsh{fd} ||
+	 defined $hsh{callback} ||
+	 defined $hsh{readcb}) {
+    # allow $img = Imager->new(file => $filename)
+    my %extras;
+    
+    # type is already used as a parameter to new(), rename it for the
+    # call to read()
+    if ($hsh{filetype}) {
+      $extras{type} = $hsh{filetype};
+    }
+    unless ($self->read(%hsh, %extras)) {
+      $Imager::ERRSTR = $self->{ERRSTR};
+      return;
+    }
+  }
+
   return $self;
 }
 
