@@ -145,7 +145,7 @@ typedef unsigned short i_sample16_t;
 /*
 =item i_img_16_new(x, y, ch)
 
-=category Image creation
+=category Image creation/destruction
 =synopsis i_img *img = i_img_16_new(width, height, channels);
 
 Create a new 16-bit/sample image.

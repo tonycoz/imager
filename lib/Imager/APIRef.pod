@@ -6,64 +6,76 @@ you can find the documentation.
 
 =head1 NAME
 
-Imager::APIRef - Imager's C API.
+Imager::APIRef - Imager's C API - reference.
 
 =head1 SYNOPSIS
 
   i_color color;
-  color.rgba.red = 255; color.rgba.green = 0; color.rgba.blue = 255;
+  color.rgba.r = 255; color.rgba.g = 0; color.rgba.b = 255;
 
 
   # Data Types
   i_img *img;
+  i_color black;
+  black.rgba.r = black.rgba.g = black.rgba.b = black.rgba.a = 0;
+  i_fill_t *fill;
+  i_img_dim x;
 
   # Drawing
   i_arc(im, 50, 50, 20, 45, 135, &color);
+  i_arc_cfill(im, 50, 50, 35, 90, 135, fill);
   i_arc_aa(im, 50, 50, 35, 90, 135, &color);
   i_arc_aa_cfill(im, 50, 50, 35, 90, 135, fill);
-  i_arc_cfill(im, 50, 50, 35, 90, 135, fill);
-  i_box(im, 0, 0, im->xsize-1, im->ysize-1, &color).
-  i_box_cfill(im, 0, 0, im->xsize-1, im->ysize-1, fill);
-  i_box_filled(im, 0, 0, im->xsize-1, im->ysize-1, &color);
   i_circle_aa(im, 50, 50, 45, &color);
-  i_flood_cfill(im, 50, 50, fill);
-  i_flood_cfill_border(im, 50, 50, fill, border);
+  i_box(im, 0, 0, im->xsize-1, im->ysize-1, &color).
+  i_box_filled(im, 0, 0, im->xsize-1, im->ysize-1, &color);
+  i_box_cfill(im, 0, 0, im->xsize-1, im->ysize-1, fill);
   i_flood_fill(im, 50, 50, &color);
+  i_flood_cfill(im, 50, 50, fill);
   i_flood_fill_border(im, 50, 50, &color, &border);
+  i_flood_cfill_border(im, 50, 50, fill, border);
 
   # Error handling
+  i_clear_error();
+  i_push_error(0, "Yep, it's broken");
+  i_push_error(errno, "Error writing");
+  i_push_errorf(errno, "Cannot open file %s: %d", filename, errno);
 
   # Files
+  i_set_image_file_limits(500, 500, 1000000);
   i_get_image_file_limits(&width, &height, &bytes)
   i_i_int_check_image_file_limits(width, height, channels, sizeof(i_sample_t))
-  i_set_image_file_limits(500, 500, 1000000);
 
   # Fills
-  i_fill_destroy(fill);
-  fill = i_new_fill_fount(0, 0, 100, 100, i_ft_linear, i_ft_linear, 
-                          i_fr_triangle, 0, i_fts_grid, 9, 1, segs);
+  i_fill_t *fill = i_new_fill_solidf(&fcolor, combine);
+  i_fill_t *fill = i_new_fill_solid(&color, combine);
   i_fill_t *fill = i_new_fill_hatch(&fg_color, &bg_color, combine, hatch, custom_hatch, dx, dy);
   i_fill_t *fill = i_new_fill_hatchf(&fg_fcolor, &bg_fcolor, combine, hatch, custom_hatch, dx, dy);
   i_fill_t *fill = i_new_fill_image(src_img, matrix, x_offset, y_offset, combine);
-  i_fill_t *fill = i_new_fill_solid(&color, combine);
-  i_fill_t *fill = i_new_fill_solidf(&fcolor, combine);
+  fill = i_new_fill_fount(0, 0, 100, 100, i_ft_linear, i_ft_linear, 
+                          i_fr_triangle, 0, i_fts_grid, 9, 1, segs);
+  i_fill_destroy(fill);
 
   # Image
 
-  # Image creation
-  i_img *img = i_img_16_new(width, height, channels);
-
   # Image creation/destruction
   i_img *img = i_img_8_new(width, height, channels);
-  i_img_destroy(img)
-  i_img *img = i_img_double_new(width, height, channels);
-  i_img *img = i_img_pal_new(width, height, channels, max_palette_size)
   i_img *img = i_sametype(src, width, height);
   i_img *img = i_sametype_chans(src, width, height, channels);
+  i_img *img = i_img_pal_new(width, height, channels, max_palette_size)
+  i_img *img = i_img_double_new(width, height, channels);
+  i_img *img = i_img_16_new(width, height, channels);
+  i_img_destroy(img)
 
   # Image Implementation
 
   # Image Information
+  // only channel 0 writeable 
+  i_img_setmask(img, 0x01);
+  int mask = i_img_getmask(img);
+  int channels = i_img_getchannels(img);
+  i_img_dim width = i_img_get_width(im);
+  i_img_dim height = i_img_get_height(im);
 
   # Image quantization
 
@@ -72,6 +84,9 @@ Imager::APIRef - Imager's C API.
   # Paletted images
 
   # Tags
+  i_tags_set(&img->tags, "i_comment", -1);
+  i_tags_setn(&img->tags, "i_xres", 204);
+  i_tags_setn(&img->tags, "i_yres", 196);
 
 =head1 DESCRIPTION
 
@@ -169,6 +184,76 @@ i_f_gsamp_bits - implements i_gsamp_bits() for this image.
 i_f_psamp_bits - implements i_psamp_bits() for this image.
 
 =back
+
+
+=for comment
+From: File imdatatypes.h
+
+=item i_color
+
+Type for 8-bit/sample color.
+
+Samples as per;
+
+  i_color c;
+
+i_color is a union of:
+
+=over
+
+=item *
+
+gray - contains a single element gray_color, eg. c.gray.gray_color
+
+=item *
+
+rgb - contains three elements r, g, b, eg. c.rgb.r
+
+=item *
+
+rgba - contains four elements r, g, b, a, eg. c.rgba.a
+
+=item *
+
+cmyk - contains four elements c, m, y, k, eg. C<c.cmyk.y>.  Note that
+Imager never uses CMYK colors except when reading/writing files.
+
+=item *
+
+channels - an array of four channels, eg C<c.channels[2]>.
+
+=back
+
+
+=for comment
+From: File imdatatypes.h
+
+=item i_fcolor
+
+This is the double/sample color type.
+
+Its layout exactly corresponds to i_color.
+
+
+=for comment
+From: File imdatatypes.h
+
+=item i_fill_t
+
+This is the "abstract" base type for Imager's fill types.
+
+Unless you're implementing a new fill type you'll typically treat this
+as an opaque type.
+
+
+=for comment
+From: File imdatatypes.h
+
+=item i_img_dim
+
+A signed integer type that represents an image dimension or ordinate.
+
+May be larger than int on some platforms.
 
 
 =for comment
@@ -505,7 +590,6 @@ From: File imext.c
 
 =item i_clear_error()
 
-
 Clears the error stack.
 
 Called by any imager function before doing any other processing.
@@ -516,8 +600,7 @@ From: File error.c
 
 =item i_push_error(int code, char const *msg)
 
-
-Called by an imager function to push an error message onto the stack.
+Called by an Imager function to push an error message onto the stack.
 
 No message is pushed if the stack is full (since this means someone
 forgot to call i_clear_error(), or that a function that doesn't do
@@ -529,8 +612,9 @@ From: File error.c
 
 =item i_push_errorf(int code, char const *fmt, ...)
 
-
 A version of i_push_error() that does printf() like formating.
+
+Does not support perl specific format codes.
 
 
 =for comment
@@ -541,6 +625,8 @@ From: File error.c
 
 Intended for use by higher level functions, takes a varargs pointer
 and a format to produce the finally pushed error message.
+
+Does not support perl specific format codes.
 
 
 =for comment
@@ -600,15 +686,6 @@ From: File limits.c
 =head2 Fills
 
 =over
-
-=item i_fill_destroy(fill)
-
-
-Call to destroy any fill object.
-
-
-=for comment
-From: File fills.c
 
 =item i_new_fill_fount(xa, ya, xb, yb, type, repeat, combine, super_sample, ssample_param, count, segs)
 
@@ -686,6 +763,14 @@ From: File fills.c
 Create a solid fill based on a float color.
 
 If combine is non-zero then alpha values will be combined.
+
+
+=for comment
+From: File fills.c
+
+=item i_fill_destroy(fill)
+
+Call to destroy any fill object.
 
 
 =for comment
@@ -772,7 +857,7 @@ From: File rubthru.im
 
 =back
 
-=head2 Image creation
+=head2 Image creation/destruction
 
 =over
 
@@ -787,28 +872,12 @@ Returns the image on success, or NULL on failure.
 =for comment
 From: File img16.c
 
-
-=back
-
-=head2 Image creation/destruction
-
-=over
-
 =item i_img_8_new(x, y, ch)
 
 
 
 Creates a new image object I<x> pixels wide, and I<y> pixels high with
 I<ch> channels.
-
-
-=for comment
-From: File image.c
-
-=item i_img_destroy(img)
-
-
-Destroy an image object
 
 
 =for comment
@@ -852,6 +921,14 @@ From: File image.c
 Returns an image of the same type (sample size).
 
 For paletted images the equivalent direct type is returned.
+
+
+=for comment
+From: File image.c
+
+=item i_img_destroy(img)
+
+Destroy an image object
 
 
 =for comment
@@ -920,6 +997,38 @@ The number of channels holding color information.
 =for comment
 From: File immacros.h
 
+=item i_img_get_height(im)
+
+Returns the height in pixels of the image.
+
+
+=for comment
+From: File image.c
+
+=item i_img_get_width(im)
+
+Returns the width in pixels of the image.
+
+
+=for comment
+From: File image.c
+
+=item i_img_getchannels(im)
+
+Get the number of channels in I<im>.
+
+
+=for comment
+From: File image.c
+
+=item i_img_getmask(im)
+
+Get the image channel mask for I<im>.
+
+
+=for comment
+From: File image.c
+
 =item i_img_has_alpha(im)
 
 
@@ -928,6 +1037,17 @@ Return true if the image has an alpha channel.
 
 =for comment
 From: File immacros.h
+
+=item i_img_setmask(im, ch_mask)
+
+Set the image channel mask for I<im> to I<ch_mask>.
+
+The image channel mask gives some control over which channels can be
+written to in the image.
+
+
+=for comment
+From: File image.c
 
 
 =back
@@ -984,6 +1104,14 @@ From: File quant.c
 =head2 Logging
 
 =over
+
+=item i_lhead(file, line)
+
+This is an internal function called by the mm_log() macro.
+
+
+=for comment
+From: File log.c
 
 =item i_loog(level, format, ...)
 
@@ -1255,8 +1383,12 @@ From: File tags.c
 
 =item i_tags_set(tags, name, data, size)
 
-
 Sets the given tag to the string I<data>
+
+If size is -1 then the strlen(I<data>) bytes are stored.
+
+Even on failure, if an existing tag I<name> exists, it will be
+removed.
 
 
 =for comment
@@ -1295,93 +1427,14 @@ From: File tags.c
 
 =item i_tags_setn(tags, name, idata)
 
-
 Sets the given tag to the integer I<idata>
+
+Even on failure, if an existing tag I<name> exists, it will be
+removed.
 
 
 =for comment
 From: File tags.c
-
-
-=back
-
-=head2 Uncategorized functions
-
-=over
-
-=item i_img_get_height(im)
-
-
-Returns the height in pixels of the image.
-
-
-=for comment
-From: File image.c
-
-=item i_img_get_width(im)
-
-
-Returns the width in pixels of the image.
-
-
-=for comment
-From: File image.c
-
-=item i_img_getchannels(im)
-
-
-Get the number of channels in I<im>.
-
-
-=for comment
-From: File image.c
-
-=item i_img_getmask(im)
-
-
-Get the image channel mask for I<im>.
-
-
-=for comment
-From: File image.c
-
-=item i_img_setmask(im, ch_mask)
-
-
-Set the image channel mask for I<im> to I<ch_mask>.
-
-
-=for comment
-From: File image.c
-
-
-
-=back
-
-
-=head1 UNDOCUMENTED
-
-The following API functions are undocumented so far, hopefully this
-will change:
-
-=over
-
-=item *
-
-B<i_color>
-
-=item *
-
-B<i_fcolor>
-
-=item *
-
-B<i_fill_t>
-
-=item *
-
-B<i_lhead>
-
 
 
 =back

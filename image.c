@@ -480,7 +480,7 @@ i_img_exorcise(i_img *im) {
 
 /* 
 =item i_img_destroy(img)
-
+=order 90
 =category Image creation/destruction
 =synopsis i_img_destroy(img)
 
@@ -537,11 +537,14 @@ i_img_info(i_img *im,int *info) {
 
 /*
 =item i_img_setmask(im, ch_mask)
-
+=category Image Information
 =synopsis // only channel 0 writeable 
 =synopsis i_img_setmask(img, 0x01);
 
 Set the image channel mask for I<im> to I<ch_mask>.
+
+The image channel mask gives some control over which channels can be
+written to in the image.
 
 =cut
 */
@@ -551,8 +554,8 @@ i_img_setmask(i_img *im,int ch_mask) { im->ch_mask=ch_mask; }
 
 /*
 =item i_img_getmask(im)
-
-=synopsis mask = i_img_getmask(img);
+=category Image Information
+=synopsis int mask = i_img_getmask(img);
 
 Get the image channel mask for I<im>.
 
@@ -563,8 +566,8 @@ i_img_getmask(i_img *im) { return im->ch_mask; }
 
 /*
 =item i_img_getchannels(im)
-
-=synopsis channels = i_img_getchannels(img);
+=category Image Information
+=synopsis int channels = i_img_getchannels(img);
 
 Get the number of channels in I<im>.
 
@@ -575,8 +578,8 @@ i_img_getchannels(i_img *im) { return im->channels; }
 
 /*
 =item i_img_get_width(im)
-
-=synopsis width = i_img_get_width(im);
+=category Image Information
+=synopsis i_img_dim width = i_img_get_width(im);
 
 Returns the width in pixels of the image.
 
@@ -589,8 +592,8 @@ i_img_get_width(i_img *im) {
 
 /*
 =item i_img_get_height(im)
-
-=synopsis height = i_img_get_height(im);
+=category Image Information
+=synopsis i_img_dim height = i_img_get_height(im);
 
 Returns the height in pixels of the image.
 

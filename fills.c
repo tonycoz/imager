@@ -180,7 +180,7 @@ static i_fill_solid_t base_solid_fill =
 
 /*
 =item i_fill_destroy(fill)
-
+=order 90
 =category Fills
 =synopsis i_fill_destroy(fill);
 

@@ -90,6 +90,14 @@ i_loog(int level,const char *fmt, ... ) {
   }
 }
 
+/*
+=item i_lhead(file, line)
+=category Logging
+
+This is an internal function called by the mm_log() macro.
+
+=cut
+*/
 
 void
 i_lhead(const char *file, int line) {

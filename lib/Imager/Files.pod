@@ -1252,7 +1252,7 @@ paletted image being returned as a direct color image.  Default: 1
     or die $img->errstr;
 
 This was introduced in Imager 0.60.  Previously reading ICO images
-acted as if C<<ico_masked => 0>>.
+acted as if C<ico_masked =E<gt> 0>.
 
 =back
 

@@ -22,6 +22,48 @@ typedef struct { i_sample_t c,m,y,k; } cmyk_color;
 
 typedef int undef_int; /* special value to put in typemaps to retun undef on 0 and 1 on 1 */
 
+/*
+=item i_color
+=category Data Types
+=synopsis i_color black;
+=synopsis black.rgba.r = black.rgba.g = black.rgba.b = black.rgba.a = 0;
+
+Type for 8-bit/sample color.
+
+Samples as per;
+
+  i_color c;
+
+i_color is a union of:
+
+=over
+
+=item *
+
+gray - contains a single element gray_color, eg. c.gray.gray_color
+
+=item *
+
+rgb - contains three elements r, g, b, eg. c.rgb.r
+
+=item *
+
+rgba - contains four elements r, g, b, a, eg. c.rgba.a
+
+=item *
+
+cmyk - contains four elements c, m, y, k, eg. C<c.cmyk.y>.  Note that
+Imager never uses CMYK colors except when reading/writing files.
+
+=item *
+
+channels - an array of four channels, eg C<c.channels[2]>.
+
+=back
+
+=cut
+*/
+
 typedef union {
   gray_color gray;
   rgb_color rgb;
@@ -39,6 +81,17 @@ typedef struct { i_fsample_t gray_color; } i_fgray_color_t;
 typedef struct { i_fsample_t r, g, b; } i_frgb_color_t;
 typedef struct { i_fsample_t r, g, b, a; } i_frgba_color_t;
 typedef struct { i_fsample_t c, m, y, k; } i_fcmyk_color_t;
+
+/*
+=item i_fcolor
+=category Data Types
+
+This is the double/sample color type.
+
+Its layout exactly corresponds to i_color.
+
+=cut
+*/
 
 typedef union {
   i_fgray_color_t gray;
@@ -107,12 +160,25 @@ typedef int (*i_f_gsamp_bits_t)(i_img *im, int x, int r, int y, unsigned *samp,
 typedef int (*i_f_psamp_bits_t)(i_img *im, int x, int r, int y, unsigned const *samp,
 				 const int *chans, int chan_count, int bits);
 
+/*
+=item i_img_dim
+=category Data Types
+=synopsis i_img_dim x;
+=order 90
+
+A signed integer type that represents an image dimension or ordinate.
+
+May be larger than int on some platforms.
+
+=cut
+*/
 typedef int i_img_dim;
 
 /*
 =item i_img
 =category Data Types
 =synopsis i_img *img;
+=order 10
 
 This is Imager's image type.
 
@@ -270,10 +336,6 @@ typedef struct {
 
 */
 
-
-
-
-
 /* bitmap mask */
 
 struct i_bitmap {
@@ -285,12 +347,6 @@ struct i_bitmap* btm_new(int xsize,int ysize);
 void btm_destroy(struct i_bitmap *btm);
 int btm_test(struct i_bitmap *btm,int x,int y);
 void btm_set(struct i_bitmap *btm,int x,int y);
-
-
-
-
-
-
 
 
 /* Stack/Linked list */
@@ -421,6 +477,18 @@ typedef enum {
   i_fts_circle
 } i_ft_supersample;
 
+/*
+=item i_fill_t
+=category Data Types
+=synopsis i_fill_t *fill;
+
+This is the "abstract" base type for Imager's fill types.
+
+Unless you're implementing a new fill type you'll typically treat this
+as an opaque type.
+
+=cut
+*/
 
 typedef struct i_fill_tag
 {

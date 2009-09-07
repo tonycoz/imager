@@ -183,7 +183,7 @@ the mark.
 =over
 
 =item i_clear_error()
-
+=synopsis i_clear_error();
 =category Error handling
 
 Clears the error stack.
@@ -209,10 +209,11 @@ void i_clear_error() {
 
 /*
 =item i_push_error(int code, char const *msg)
-
+=synopsis i_push_error(0, "Yep, it's broken");
+=synopsis i_push_error(errno, "Error writing");
 =category Error handling
 
-Called by an imager function to push an error message onto the stack.
+Called by an Imager function to push an error message onto the stack.
 
 No message is pushed if the stack is full (since this means someone
 forgot to call i_clear_error(), or that a function that doesn't do
@@ -253,6 +254,8 @@ void i_push_error(int code, char const *msg) {
 Intended for use by higher level functions, takes a varargs pointer
 and a format to produce the finally pushed error message.
 
+Does not support perl specific format codes.
+
 =cut
 */
 void i_push_errorvf(int code, char const *fmt, va_list ap) {
@@ -271,10 +274,12 @@ void i_push_errorvf(int code, char const *fmt, va_list ap) {
 
 /*
 =item i_push_errorf(int code, char const *fmt, ...)
-
+=synopsis i_push_errorf(errno, "Cannot open file %s: %d", filename, errno);
 =category Error handling
 
 A version of i_push_error() that does printf() like formating.
+
+Does not support perl specific format codes.
 
 =cut
 */

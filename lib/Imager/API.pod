@@ -235,6 +235,16 @@ include Imager 0.48 as a PREREQ_PM:
     Imager => 0.48,
    },
 
+=item *
+
+Since you use Imager::ExtUtils in Makefile.PL (or Build.PL) you should
+include Imager in your configure_requires:
+
+   META_MERGE =>
+   {
+     configure_requires => { Imager => "0.48" }
+   },
+
 =back
 
 =head1 AUTHOR

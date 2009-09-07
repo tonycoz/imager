@@ -83,7 +83,7 @@ void i_tags_new(i_img_tags *tags) {
 
 Adds a tag that has an integer value.  A simple wrapper around i_tags_add().
 
-Duplicate tags can be added.
+Use i_tags_setn() instead, this function may be removed in the future.
 
 Returns non-zero on success.
 
@@ -99,7 +99,7 @@ int i_tags_addn(i_img_tags *tags, char const *name, int code, int idata) {
 
 Adds a tag to the tags list.
 
-Duplicate tags can be added.
+Use i_tags_set() instead, this function may be removed in the future.
 
 Returns non-zero on success.
 
@@ -615,10 +615,15 @@ int i_tags_get_string(i_img_tags *tags, char const *name, int code,
 
 /*
 =item i_tags_set(tags, name, data, size)
-
+=synopsis i_tags_set(&img->tags, "i_comment", -1);
 =category Tags
 
 Sets the given tag to the string I<data>
+
+If size is -1 then the strlen(I<data>) bytes are stored.
+
+Even on failure, if an existing tag I<name> exists, it will be
+removed.
 
 =cut
 */
@@ -632,10 +637,14 @@ i_tags_set(i_img_tags *tags, char const *name, char const *data, int size) {
 
 /*
 =item i_tags_setn(tags, name, idata)
-
+=synopsis i_tags_setn(&img->tags, "i_xres", 204);
+=synopsis i_tags_setn(&img->tags, "i_yres", 196);
 =category Tags
 
 Sets the given tag to the integer I<idata>
+
+Even on failure, if an existing tag I<name> exists, it will be
+removed.
 
 =cut
 */

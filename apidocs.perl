@@ -4,7 +4,6 @@ use ExtUtils::Manifest 'maniread';
 
 my $outname = shift || '-';
 
-
 my @funcs = make_func_list();
 my %funcs = map { $_ => 1 } @funcs;
 
@@ -24,6 +23,8 @@ my %funccats;
 my %cats;
 my $synopsis = '';
 my %funcsyns;
+my $order;
+my %order;
 for my $file (@files) {
   open SRC, "< $file"
     or die "Cannot open $file for documentation: $!\n";
@@ -44,9 +45,12 @@ for my $file (@files) {
         if ($synopsis) {
           $funcsyns{$func} = $synopsis;
         }
+	defined $order or $order = 50;
+	$order{$func} = $order;
       }
       undef $func;
       undef $category;
+      undef $order;
       $synopsis = '';
     }
     elsif ($func) {
@@ -55,6 +59,11 @@ for my $file (@files) {
       }
       elsif (/^=synopsis (.*)/) {
         $synopsis .= "$1\n";
+      }
+      elsif (/^=order (.*)$/) {
+	$order = $1;
+	$order =~ /^\d+$/
+	  or die "=order must specify a number for $func in $file\n";
       }
       else {
         push @funcdocs, $_;
@@ -79,18 +88,18 @@ you can find the documentation.
 
 =head1 NAME
 
-Imager::APIRef - Imager's C API.
+Imager::APIRef - Imager's C API - reference.
 
 =head1 SYNOPSIS
 
   i_color color;
-  color.rgba.red = 255; color.rgba.green = 0; color.rgba.blue = 255;
+  color.rgba.r = 255; color.rgba.g = 0; color.rgba.b = 255;
 
 EOS
 
 for my $cat (sort { lc $a cmp lc $b } keys %cats) {
   print OUT "\n  # $cat\n";
-  for my $func (grep $funcsyns{$_}, sort @{$cats{$cat}}) {
+  for my $func (grep $funcsyns{$_}, sort { $order{$a} <=> $order{$b} } @{$cats{$cat}}) {
     my $syn = $funcsyns{$func};
     $syn =~ s/^/  /gm;
     print OUT $syn;
@@ -107,7 +116,11 @@ my %undoc = %funcs;
 
 for my $cat (sort { lc $a cmp lc $b } keys %cats) {
   print OUT "=head2 $cat\n\n=over\n\n";
-  for my $func (sort @{$cats{$cat}}) {
+  my @ordered_funcs = sort {
+    $order{$a} <=> $order{$b}
+      || lc $a cmp lc $b
+    } @{$cats{$cat}};
+  for my $func (@ordered_funcs) {
     print OUT @{$alldocs{$func}}, "\n";
     print OUT "=for comment\nFrom: $from{$func}\n\n";
     delete $undoc{$func};
@@ -118,12 +131,12 @@ for my $cat (sort { lc $a cmp lc $b } keys %cats) {
 # see if we have an uncategorized section
 if (grep $alldocs{$_}, keys %undoc) {
   print OUT "=head2 Uncategorized functions\n\n=over\n\n";
-  for my $func (sort @funcs) {
-    if ($undoc{$func} && $alldocs{$func}) {
-      print OUT @{$alldocs{$func}}, "\n";
-      print OUT "=for comment\nFrom: $from{$func}\n\n";
-      delete $undoc{$func};
-    }
+  #print join(",", grep !exists $order{$_}, @funcs), "\n";
+  for my $func (sort { $order{$a} <=> $order{$b} || $a cmp $b }
+		grep $undoc{$_} && $alldocs{$_}, @funcs) {
+    print OUT @{$alldocs{$func}}, "\n";
+    print OUT "=for comment\nFrom: $from{$func}\n\n";
+    delete $undoc{$func};
   }
   print OUT "\n\n=back\n\n";
 }
@@ -162,7 +175,7 @@ close OUT;
 
 
 sub make_func_list {
-  my @funcs = qw(i_img i_color i_fcolor i_fill_t mm_log i_img_color_channels i_img_has_alpha);
+  my @funcs = qw(i_img i_color i_fcolor i_fill_t mm_log i_img_color_channels i_img_has_alpha i_img_dim);
   open FUNCS, "< imexttypes.h"
     or die "Cannot open imexttypes.h: $!\n";
   my $in_struct;
@@ -186,3 +199,45 @@ sub make_func_list {
     die "Found neither the start nor end of the functions structure\n";
   }
 }
+
+=head1 NAME
+
+apidocs.perl - parse Imager's source for POD documenting the C API
+
+=head1 SYNOPSIS
+
+  perl apidocs.perl lib/Imager/APIRef.pod
+
+=head1 DESCRIPTION
+
+Parses Imager's C sources, including .c, .h and .im files searching
+for function documentation.
+
+Besides the normal POD markup, the following can be included:
+
+=over
+
+=item =category I<category-name>
+
+The category the function should be in.
+
+=item =synopsis I<sample-code>
+
+Sample code using the function to include in the Imager::APIRef SYNOPSIS
+
+=item =order I<integer>
+
+Allows a function to be listed out of order.  If this isn't specified
+it defaults to 50, so a value of 10 will cause the function to be
+listed at the beginning of its category, or 90 to list at the end.
+
+Functions with equal order are otherwise ordered by name.
+
+=back
+
+=head1 AUTHOR
+
+Tony Cook <tonyc@cpan.org>
+
+=cut
+
