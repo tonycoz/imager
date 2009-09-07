@@ -228,7 +228,7 @@ L<Imager::Files> for details.  The typical use is:
 C<filetype> - treated as the file format parameter, as for C<type>
 with the read() method, eg:
 
-  my $im = Imager->new(file => $filename, type => "gif");
+  my $im = Imager->new(file => $filename, filetype => "gif");
 
 In most cases Imager will detect the file's format itself.
 

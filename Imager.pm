@@ -3893,9 +3893,9 @@ Imager - Perl extension for Generating 24 bit Images
 
   my $format;
 
-  my $img = Imager->new();
   # see Imager::Files for information on the read() method
-  $img->read(file=>$file) or die $img->errstr();
+  my $im = Imager->new(file=>$file)
+    or die Imager->errstr();
 
   $file =~ s/\.[^.]*$//;
 
@@ -4073,54 +4073,67 @@ L<Imager::ImageTypes>.
 
 Where to find information on methods for Imager class objects.
 
-addcolors() -  L<Imager::ImageTypes/addcolors>
+addcolors() - L<Imager::ImageTypes/addcolors> - add colors to a
+paletted image
 
 addtag() -  L<Imager::ImageTypes/addtag> - add image tags
 
-align_string() - L<Imager::Draw/align_string>
+align_string() - L<Imager::Draw/align_string> - draw text aligned on a
+point
 
-arc() - L<Imager::Draw/arc>
+arc() - L<Imager::Draw/arc> - draw a filled arc
 
 bits() - L<Imager::ImageTypes/bits> - number of bits per sample for the
 image
 
-box() - L<Imager::Draw/box>
+box() - L<Imager::Draw/box> - draw a filled or outline box.
 
-circle() - L<Imager::Draw/circle>
+circle() - L<Imager::Draw/circle> - draw a filled circle
 
-colorcount() - L<Imager::Draw/colorcount>
+colorcount() - L<Imager::Draw/colorcount> - the number of colors in an
+image's palette (paletted images only)
 
-combines() - L<Imager::Draw/combines>
+combines() - L<Imager::Draw/combines> - return a list of the different
+combine type keywords
 
-compose() - L<Imager::Transformations/compose>
+compose() - L<Imager::Transformations/compose> - compose one image
+over another.
 
 convert() - L<Imager::Transformations/"Color transformations"> -
 transform the color space
 
-copy() - L<Imager::Transformations/copy>
+copy() - L<Imager::Transformations/copy> - make a duplicate of an
+image
 
 crop() - L<Imager::Transformations/crop> - extract part of an image
 
-def_guess_type() - L<Imager::Files/def_guess_type>
+def_guess_type() - L<Imager::Files/def_guess_type> - default function
+used to guess the output file format based on the output filename
 
 deltag() -  L<Imager::ImageTypes/deltag> - delete image tags
 
-difference() - L<Imager::Filters/"Image Difference">
+difference() - L<Imager::Filters/"Image Difference"> - produce a
+difference images from two input images.
 
-errstr() - L<"Basic Overview">
+errstr() - L<"Basic Overview"> - the error from the last failed
+operation.
 
-filter() - L<Imager::Filters>
+filter() - L<Imager::Filters> - image filtering
 
-findcolor() - L<Imager::ImageTypes/findcolor> - search the image palette, if it
-has one
+findcolor() - L<Imager::ImageTypes/findcolor> - search the image
+palette, if it has one
 
-flip() - L<Imager::Transformations/flip>
+flip() - L<Imager::Transformations/flip> - flip an image, vertically,
+horizontally
 
-flood_fill() - L<Imager::Draw/flood_fill>
+flood_fill() - L<Imager::Draw/flood_fill> - fill an enclosed or same
+color area
 
-getchannels() -  L<Imager::ImageTypes/getchannels>
+getchannels() - L<Imager::ImageTypes/getchannels> - the number of
+samples per pixel for an image
 
-getcolorcount() -  L<Imager::ImageTypes/getcolorcount>
+getcolorcount() - L<Imager::ImageTypes/getcolorcount> - the number of
+different colors used by an image (works for direct color images)
 
 getcolors() - L<Imager::ImageTypes/getcolors> - get colors from the image
 palette, if it has one
@@ -4131,25 +4144,33 @@ getcolorusagehash() - L<Imager::ImageTypes/getcolorusagehash>
 
 get_file_limits() - L<Imager::Files/"Limiting the sizes of images you read">
 
-getheight() - L<Imager::ImageTypes/getwidth>
+getheight() - L<Imager::ImageTypes/getwidth> - height of the image in
+pixels
 
-getmask() - L<Imager::ImageTypes/getmask>
+getmask() - L<Imager::ImageTypes/getmask> - write mask for the image
 
-getpixel() - L<Imager::Draw/getpixel>
+getpixel() - L<Imager::Draw/getpixel> - retrieve one or more pixel
+colors
 
-getsamples() - L<Imager::Draw/getsamples>
+getsamples() - L<Imager::Draw/getsamples> - retrieve samples from a
+row or subrow of pixels.
 
-getscanline() - L<Imager::Draw/getscanline>
+getscanline() - L<Imager::Draw/getscanline> - retrieve colors for a
+row or subrow of pixels.
 
-getwidth() - L<Imager::ImageTypes/getwidth>
+getwidth() - L<Imager::ImageTypes/getwidth> - width of the image in
+pixels.
 
-img_set() - L<Imager::ImageTypes/img_set>
+img_set() - L<Imager::ImageTypes/img_set> - re-use an Imager object
+for a new image.
 
 init() - L<Imager::ImageTypes/init>
 
-is_bilevel() - L<Imager::ImageTypes/is_bilevel>
+is_bilevel() - L<Imager::ImageTypes/is_bilevel> - returns whether
+image write functions should write the image in their bi-level (blank
+and white, no grey levels) format
 
-line() - L<Imager::Draw/line>
+line() - L<Imager::Draw/line> - draw an interval
 
 load_plugin() - L<Imager::Filters/load_plugin>
 
@@ -4197,9 +4218,9 @@ can read.
 
 register_filter() - L<Imager::Filters/register_filter>
 
-register_reader() - L<Imager::Filters/register_reader>
+register_reader() - L<Imager::Files/register_reader>
 
-register_writer() - L<Imager::Filters/register_writer>
+register_writer() - L<Imager::Files/register_writer>
 
 rotate() - L<Imager::Transformations/rotate>
 
@@ -4272,25 +4293,25 @@ blur - L<Imager::Filters/guassian>, L<Imager::Filters/conv>
 
 boxes, drawing - L<Imager::Draw/box>
 
-changes between image - L<Imager::Filter/"Image Difference">
+changes between image - L<Imager::Filters/"Image Difference">
 
 color - L<Imager::Color>
 
 color names - L<Imager::Color>, L<Imager::Color::Table>
 
-combine modes - L<Imager::Fill/combine>
+combine modes - L<Imager::Draw/"Combine Types">
 
-compare images - L<Imager::Filter/"Image Difference">
+compare images - L<Imager::Filters/"Image Difference">
 
-contrast - L<Imager::Filter/contrast>, L<Imager::Filter/autolevels>
+contrast - L<Imager::Filters/contrast>, L<Imager::Filters/autolevels>
 
-convolution - L<Imager::Filter/conv>
+convolution - L<Imager::Filters/conv>
 
 cropping - L<Imager::Transformations/crop>
 
 CUR files - L<Imager::Files/"ICO (Microsoft Windows Icon) and CUR (Microsoft Windows Cursor)">
 
-C<diff> images - L<Imager::Filter/"Image Difference">
+C<diff> images - L<Imager::Filters/"Image Difference">
 
 dpi - L<Imager::ImageTypes/i_xres>, 
 L<Imager::Cookbook/"Image spatial resolution">
@@ -4301,7 +4322,7 @@ drawing lines - L<Imager::Draw/line>
 
 drawing text - L<Imager::Draw/string>, L<Imager::Draw/align_string>
 
-error message - L<"Basic Overview">
+error message - L<"ERROR HANDLING">
 
 files, font - L<Imager::Font>
 
@@ -4338,13 +4359,13 @@ L<Imager::Filters/gradgen>
 
 grayscale, convert image to - L<Imager::Transformations/convert>
 
-guassian blur - L<Imager::Filter/guassian>
+guassian blur - L<Imager::Filters/guassian>
 
 hatch fills - L<Imager::Fill/"Hatched fills">
 
 ICO files - L<Imager::Files/"ICO (Microsoft Windows Icon) and CUR (Microsoft Windows Cursor)">
 
-invert image - L<Imager::Filter/hardinvert>
+invert image - L<Imager::Filters/hardinvert>
 
 JPEG - L<Imager::Files/"JPEG">
 
@@ -4358,12 +4379,12 @@ L<Imager::Font/transform>
 
 metadata, image - L<Imager::ImageTypes/"Tags">
 
-mosaic - L<Imager::Filter/mosaic>
+mosaic - L<Imager::Filters/mosaic>
 
-noise, filter - L<Imager::Filter/noise>
+noise, filter - L<Imager::Filters/noise>
 
-noise, rendered - L<Imager::Filter/turbnoise>,
-L<Imager::Filter/radnoise>
+noise, rendered - L<Imager::Filters/turbnoise>,
+L<Imager::Filters/radnoise>
 
 paste - L<Imager::Transformations/paste>,
 L<Imager::Transformations/rubthrough>
@@ -4371,7 +4392,7 @@ L<Imager::Transformations/rubthrough>
 pseudo-color image - L<Imager::ImageTypes/to_paletted>,
 L<Imager::ImageTypes/new>
 
-posterize - L<Imager::Filter/postlevels>
+posterize - L<Imager::Filters/postlevels>
 
 png files - L<Imager::Files>, L<Imager::Files/"PNG">
 
@@ -4406,11 +4427,11 @@ text, wrapping text in an area - L<Imager::Font::Wrap>
 
 text, measuring - L<Imager::Font/bounding_box>, L<Imager::Font::BBox>
 
-tiles, color - L<Imager::Filter/mosaic>
+tiles, color - L<Imager::Filters/mosaic>
 
-unsharp mask - L<Imager::Filter/unsharpmask>
+unsharp mask - L<Imager::Filters/unsharpmask>
 
-watermark - L<Imager::Filter/watermark>
+watermark - L<Imager::Filters/watermark>
 
 writing an image to a file - L<Imager::Files>
 

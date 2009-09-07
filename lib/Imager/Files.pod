@@ -51,6 +51,10 @@ Imager::Files - working with image files
   $img->read(fd => fileno($fh)) or die;
   $img->read(callback => \&read_callback) or die;
 
+  use Imager 0.68;
+  my $img = Imager->new(file => $filename)
+    or die Imager->errstr;
+
 =head1 DESCRIPTION
 
 You can read and write a variety of images formats, assuming you have
@@ -87,6 +91,14 @@ supply the filename:
 The read() method accepts the C<allow_partial> parameter.  If this is
 non-zero then read() can return true on an incomplete image and set
 the C<i_incomplete> tag.
+
+From Imager 0.68 you can supply most read() parameters to the new()
+method to read the image file on creation.  If the read fails, check
+Imager->errstr() for the cause:
+
+  use Imager 0.68;
+  my $img = Imager->new(file => $filename)
+    or die "Cannot read $filename: ", Imager->errstr;
 
 =item write
 
