@@ -1,12 +1,17 @@
 Imager release history.  Older releases can be found in Changes.old
 
-Imager 0.69
+Imager 0.69 - 08 Sep 2009
 ===========
 
-Bug fixes
+Bug fixes:
 
  - broken test fix - was attempting to call a function skip_all, when
    that should be a parameter to plan().
+
+ - briefly document apidocs.perl, the tool used to build
+   Imager::APIRef and make some minor enhancements
+
+ - various minor documentation enhancements and fixes.
 
 Imager 0.68 - 07 Sep 2009
 ===========
