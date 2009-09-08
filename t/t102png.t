@@ -7,7 +7,7 @@ use Imager::Test qw(test_image_raw);
 init_log("testout/t102png.log",1);
 
 i_has_format("png")
-  or skip_all("No png support");
+  or plan skip_all => "No png support";
 
 plan tests => 33;
 
