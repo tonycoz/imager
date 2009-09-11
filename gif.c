@@ -554,6 +554,8 @@ i_img **i_readgif_multi_low(GifFileType *GifFile, int *count, int page) {
       free_images(results, *count);
       DGifCloseFile(GifFile);
       myfree(GifRow);
+      if (comment)
+	myfree(comment);
       return NULL;
     }
     
@@ -565,6 +567,8 @@ i_img **i_readgif_multi_low(GifFileType *GifFile, int *count, int page) {
         free_images(results, *count);
 	DGifCloseFile(GifFile);
 	myfree(GifRow);
+	if (comment)
+	  myfree(comment);
 	return NULL;
       }
 
@@ -582,6 +586,8 @@ i_img **i_readgif_multi_low(GifFileType *GifFile, int *count, int page) {
 	  free_images(results, *count);
 	  DGifCloseFile(GifFile);
 	  myfree(GifRow);
+	  if (comment)
+	    myfree(comment);
 	  return NULL;
 	}
 	
@@ -593,12 +599,17 @@ i_img **i_readgif_multi_low(GifFileType *GifFile, int *count, int page) {
 	  mm_log((1, "i_readgif: image size exceeds limits\n"));
 	  DGifCloseFile(GifFile);
 	  myfree(GifRow);
+	  if (comment)
+	    myfree(comment);
 	  return NULL;
 	}
 	img = i_img_pal_new(Width, Height, channels, 256);
 	if (!img) {
 	  free_images(results, *count);
 	  DGifCloseFile(GifFile);
+	  if (comment)
+	    myfree(comment);
+	  myfree(GifRow);
 	  return NULL;
 	}
 	/* populate the palette of the new image */
@@ -673,6 +684,8 @@ i_img **i_readgif_multi_low(GifFileType *GifFile, int *count, int page) {
 	  free_images(results, *count);        
 	  DGifCloseFile(GifFile);
 	  myfree(GifRow);
+	  if (comment)
+	    myfree(comment);
 	  return(0);
 	}
 	
@@ -687,6 +700,8 @@ i_img **i_readgif_multi_low(GifFileType *GifFile, int *count, int page) {
 		free_images(results, *count);
 		DGifCloseFile(GifFile);
 		myfree(GifRow);
+		if (comment)
+		  myfree(comment);
 		return NULL;
 	      }
 
@@ -714,6 +729,8 @@ i_img **i_readgif_multi_low(GifFileType *GifFile, int *count, int page) {
 	      free_images(results, *count);
 	      DGifCloseFile(GifFile);
 	      myfree(GifRow);
+	      if (comment)
+		myfree(comment);
 	      return NULL;
 	    }
 	    
@@ -737,6 +754,8 @@ i_img **i_readgif_multi_low(GifFileType *GifFile, int *count, int page) {
 	if (page != -1) {
 	  myfree(GifRow);
 	  DGifCloseFile(GifFile);
+	  if (comment)
+	    myfree(comment);
 	  return results;
 	}
       }
@@ -751,6 +770,8 @@ i_img **i_readgif_multi_low(GifFileType *GifFile, int *count, int page) {
 	    free_images(results, *count);
 	    myfree(GifRow);
 	    DGifCloseFile(GifFile);
+	    if (comment) 
+	      myfree(comment);
 	    return NULL;
 	  }
 	}
@@ -769,7 +790,10 @@ i_img **i_readgif_multi_low(GifFileType *GifFile, int *count, int page) {
 	gif_push_error();
 	i_push_error(0, "Reading extension record");
         free_images(results, *count);
+	myfree(GifRow);
 	DGifCloseFile(GifFile);
+	if (comment)
+	  myfree(comment);
 	return NULL;
       }
       if (ExtCode == 0xF9) {
@@ -788,7 +812,10 @@ i_img **i_readgif_multi_low(GifFileType *GifFile, int *count, int page) {
             gif_push_error();
             i_push_error(0, "reading loop extension");
             free_images(results, *count);
-            DGifCloseFile(GifFile);
+	    myfree(GifRow);
+	    DGifCloseFile(GifFile);
+	    if (comment)
+	      myfree(comment);
             return NULL;
           }
           if (Extension && *Extension == 3) {
@@ -815,7 +842,10 @@ i_img **i_readgif_multi_low(GifFileType *GifFile, int *count, int page) {
 	  gif_push_error();
 	  i_push_error(0, "reading next block of extension");
           free_images(results, *count);
+	  myfree(GifRow);
 	  DGifCloseFile(GifFile);
+	  if (comment)
+	    myfree(comment);
 	  return NULL;
 	}
       }
