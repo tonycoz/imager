@@ -796,6 +796,9 @@ i_img **i_readgif_multi_low(GifFileType *GifFile, int *count, int page) {
 	  myfree(comment);
 	return NULL;
       }
+      /* possibly this should be an error, but "be liberal in what you accept" */
+      if (!Extension)
+	break;
       if (ExtCode == 0xF9) {
         got_gce = 1;
         if (Extension[1] & 1)

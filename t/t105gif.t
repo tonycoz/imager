@@ -26,7 +26,7 @@ init_log("testout/t105gif.log",1);
 i_has_format("gif")
   or plan skip_all => "no gif support";
 
-plan tests => 145;
+plan tests => 146;
 
 my $green=i_color_new(0,255,0,255);
 my $blue=i_color_new(0,0,255,255);
@@ -741,6 +741,11 @@ SKIP:
   is_color3($colors[0], 0, 0, 0, "first should be 000000");
   is_color3($colors[1], 0, 0, 0x33, "second should be 000033");
   is_color3($colors[8], 0, 0x33, 0x66, "9th should be 003366");
+}
+
+{ # a zero length extension could make read_/read_multi crash
+  my ($im) = Imager->read_multi(file => "testimg/zerocomm.gif");
+  ok($im, "read image with zero-length extension");
 }
 
 sub test_readgif_cb {

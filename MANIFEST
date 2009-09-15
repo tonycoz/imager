@@ -387,6 +387,7 @@ testimg/winrgb4off.bmp  4-bit bmp with image data offset from header
 testimg/winrgb8.bmp  8-bit bmp base
 testimg/winrgb8off.bmp  8-bit bmp with image data offset from header
 testimg/zerotype.jpg	Image with a zero type entry in the EXIF data
+testimg/zerocomm.gif	Image with a zero-length comment extension
 tga.c           Reading and writing Targa files
 tiff.c
 trans2.c
