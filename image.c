@@ -1002,13 +1002,14 @@ i_scale_nn(i_img *im, float scx, float scy) {
   nxsize = (int) ((float) im->xsize * scx);
   if (nxsize < 1) {
     nxsize = 1;
-    scx = 1 / im->xsize;
+    scx = 1.0 / im->xsize;
   }
   nysize = (int) ((float) im->ysize * scy);
   if (nysize < 1) {
     nysize = 1;
-    scy = 1 / im->ysize;
+    scy = 1.0 / im->ysize;
   }
+  im_assert(scx != 0 && scy != 0);
     
   new_img=i_img_empty_ch(NULL,nxsize,nysize,im->channels);
   

@@ -41,6 +41,7 @@ my @libpaths; # places to look for libraries
 my $noexif; # non-zero to disable EXIF parsing of JPEGs
 my $no_gif_set_version; # disable calling EGifSetGifVersion
 my $coverage; # build for coverage testing
+my $assert; # build with assertions
 GetOptions("help" => \$help,
            "enable=s" => \@enable,
            "disable=s" => \@disable,
@@ -50,7 +51,12 @@ GetOptions("help" => \$help,
            "nolog" => \$NOLOG,
 	   "noexif" => \$noexif,
            "nogifsetversion" => \$no_gif_set_version,
-	   'coverage' => \$coverage);
+	   'coverage' => \$coverage,
+	   "assert|a" => \$assert);
+
+if ($ENV{AUTOMATED_TESTING}) {
+  $assert = 1;
+}
 
 if ($VERBOSE) { 
   print "Verbose mode\n"; 
@@ -67,6 +73,10 @@ my @defines;
 if ($NOLOG)   { print "Logging not compiled into module\n"; }
 else { 
   push @defines, [ IMAGER_LOG => 1, "Logging system" ];
+}
+
+if ($assert) {
+  push @defines, [ IM_ASSERT => 1, "im_assert() are effective" ];
 }
 
 if ($DEBUG_MALLOC) {

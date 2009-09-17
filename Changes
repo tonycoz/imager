@@ -12,6 +12,13 @@ Bug fixes:
    pointer dereference
    Thanks to Krzysztof Wojtaś for the test data and fix for this.
 
+ - an integer division meant that preview scaling to below 1 pixel
+   wide or high (which isn't too useful anyway) was calculating using
+   NaNs on most platforms, and causing an exception on others.
+   Thanks to David Cantrell for producing a backtrace of the crash on
+   his Alpha-NetBSD CPAN test box which made it possible to track this
+   down.
+
 Imager 0.69 - 08 Sep 2009
 ===========
 

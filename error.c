@@ -352,6 +352,21 @@ int i_failed(int code, char const *msg) {
 #endif
 
 /*
+=item im_assert_fail(file, line, message)
+
+Called when an im_assert() assertion fails.
+
+=cut
+*/
+
+void
+im_assert_fail(char const *file, int line, char const *message) {
+  fprintf(stderr, "Assertion failed line %d file %s: %s\n", 
+	  line, file, message);
+  exit(EXIT_FAILURE);
+}
+
+/*
 =back
 
 =head1 BUGS
