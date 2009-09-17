@@ -25,7 +25,6 @@ use Devel::CheckLib;
 # IM_CFLAGS       Extra flags to pass to the compiler
 # IM_LFLAGS       Extra flags to pass to the linker
 # IM_DFLAGS       Extra flags to pass to the preprocessor
-# IM_SUPPRESS_PROMPT  Suppress the prompt asking about gif support
 
 my $KEEP_FILES = $ENV{IMAGER_KEEP_FILES};
 
