@@ -97,13 +97,13 @@ extern void i_int_hlines_fill_fill(i_img *im, i_int_hlines *hlines, i_fill_t *fi
 #define I_LIMIT_8(x) ((x) < 0 ? 0 : (x) > 255 ? 255 : (x))
 #define I_LIMIT_DOUBLE(x) ((x) < 0.0 ? 0.0 : (x) > 1.0 ? 1.0 : (x))
 
-#define I_STRING(x) #x
+#define IM_STRING(x) #x
 
 /* I considered using assert.h here, but perl does it's own thing with 
    assert() and the NDEBUG test is opposite to the direction I prefer */
 #ifdef IM_ASSERT
 extern void im_assert_fail(char const *, int, char const *);
-#define im_assert(x) ((x) ? (void)(0) : im_assert_fail(__FILE__, __LINE__, I_STRING(x)))
+#define im_assert(x) ((x) ? (void)(0) : im_assert_fail(__FILE__, __LINE__, IM_STRING(x)))
 #else
 #define im_assert(x) (void)(0)
 #endif 
