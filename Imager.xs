@@ -5015,7 +5015,6 @@ new(cls, min_scale, fit_space, ...)
     int st_i;
     i_point_t *pts;
   CODE:
-fprintf(stderr, "items %d\n", (int)items);
     if ((items-3) % 2 || items == 3) {
       croak("Usage: Imager::Pen::Thick::End->new(min_scale, fit_space, x, y, x, y, ...)");
     }
