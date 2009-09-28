@@ -1,7 +1,7 @@
 #!perl -w
 use strict;
 use Imager qw(:handy);
-use Test::More tests => 73;
+use Test::More tests => 79;
 Imager::init_log("testout/t61filters.log", 1);
 use Imager::Test qw(is_image_similar test_image is_image);
 # meant for testing the filters themselves
@@ -17,8 +17,31 @@ test($imbase, {type=>'contrast', intensity=>0.5},
      'testout/t61_contrast.ppm');
 
 # this one's kind of cool
-test($imbase, {type=>'conv', coef=>[ -0.5, 1, -0.5, ], },
-     'testout/t61_conv.ppm');
+test($imbase, {type=>'conv', coef=>[ 0.3, 1, 0.3, ], },
+     'testout/t61_conv_blur.ppm');
+
+{
+  my $work8 = $imbase->copy;
+  ok(!$work8->filter(type => "conv", coef => "ABC"),
+     "coef not an array");
+}
+{
+  my $work8 = $imbase->copy;
+  ok(!$work8->filter(type => "conv", coef => [ -1, 2, -1 ]),
+     "should fail if sum of coef is 0");
+  is($work8->errstr, "sum of coefficients is zero", "check message");
+}
+
+{
+  my $work8 = $imbase->copy;
+  my $work16 = $imbase->to_rgb16;
+  my $coef = [ -0.2, 1, -0.2 ];
+  ok($work8->filter(type => "conv", coef => $coef),
+     "filter 8 bit image");
+  ok($work16->filter(type => "conv", , coef => $coef),
+     "filter 16 bit image");
+  is_image_similar($work8, $work16, 80000, "8 and 16 bit conv match");
+}
 
 {
   my $gauss = test($imbase, {type=>'gaussian', stddev=>5 },
@@ -292,6 +315,7 @@ sub test {
       or print "# ",$copy->errstr,"\n";
   }
   else {
+    diag($copy->errstr);
   SKIP: 
     {
       skip("couldn't filter", 1);

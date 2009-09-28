@@ -198,6 +198,10 @@ coefficients must be non-zero.
   $img->filter(type=>"conv", coef=>[ 1, 2, 1 ])
     or die $img->errstr;
 
+  # error
+  $img->filter(type=>"conv", coef=>[ -0.5, 1, -0.5 ])
+    or die $img->errstr;
+
 =item fountain
 
 renders a fountain fill, similar to the gradient tool in most paint

@@ -243,11 +243,17 @@ BEGIN {
 		       callsub => sub { my %hsh=@_; i_radnoise($hsh{image},$hsh{xo},$hsh{yo},$hsh{rscale},$hsh{ascale}); }
 		      };
 
-  $filters{conv} ={
-		       callseq => ['image', 'coef'],
-		       defaults => { },
-		       callsub => sub { my %hsh=@_; i_conv($hsh{image},$hsh{coef}); }
-		      };
+  $filters{conv} =
+    {
+     callseq => ['image', 'coef'],
+     defaults => { },
+     callsub => 
+     sub { 
+       my %hsh=@_;
+       i_conv($hsh{image},$hsh{coef})
+	 or die Imager->_error_as_msg() . "\n";
+     }
+    };
 
   $filters{gradgen} =
     {

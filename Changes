@@ -1,5 +1,18 @@
 Imager release history.  Older releases can be found in Changes.old
 
+Imager 0.71 - unreleased
+===========
+
+Bug fixes:
+
+ - the conv filter now enforces that the sum of the coefficients is
+   non-zero.  Also, rather than skipping pixels off the edge off the
+   edge of the image, the closest edge pixel is used.  Previously
+   dividing by the zero sum of coefficients could cause invalid
+   results or runtime exceptions.
+   Thanks to David Cantrell's Alpha-NetBSD CPAN test box for revealing
+   this bug.
+
 Imager 0.70 - 21 Sep 2009
 ===========
 

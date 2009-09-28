@@ -205,7 +205,7 @@ undef_int i_flood_cfill_border(i_img *im, int seedx, int seedy, i_fill_t *fill, 
 /* image processing functions */
 
 int i_gaussian    (i_img *im, double stdev);
-void i_conv        (i_img *im,const float *coeff,int len);
+int i_conv        (i_img *im,const double *coeff,int len);
 void i_unsharp_mask(i_img *im, double stddev, double scale);
 
 /* colour manipulation */
