@@ -376,7 +376,7 @@ line_end_round(i_polyline_t *poly, thick_seg *seg,
 static void 
 line_end_custom(i_polyline_t *poly, thick_seg *seg,
 		line_seg *begin, line_seg *end, i_pen_thick_t *pen,
-		i_pte_custom_t *line_end) {
+		const i_pte_custom_t *line_end) {
   double scale = pen->thickness;
   /* perhaps these should be passed in */
   double cos_slope = (begin->b.x - begin->a.x) / seg->length;
@@ -600,33 +600,63 @@ make_poly_cut(thick_seg *segs, int seg_count, int closed,
   int i;
   int add_start = 0;
   i_polyline_t *poly = i_polyline_new_empty(1, side_count);
+  double left0x = 0, left0y = 0, right0x = 0, right0y = 0;
 
   /* up one side of the line */
-  for (i = 0; i < seg_count; ++i) {
-    thick_seg *seg = segs + i;
-    double start = seg->left.start < 0 ? 0 : seg->left.start;
-    double end = seg->left.end > 1.0 ? 1.0 : seg->left.end;
-
-    if (add_start) {
+  /* starting point */
+  if (closed) {
+    thick_seg *before = segs + seg_count - 1;
+    thick_seg *after = segs;
+    if (before->left.end > 1.0) {
       i_polyline_add_point_xy(poly, 
-			      line_x(&seg->left, start), 
-			      line_y(&seg->left, start));
+			      line_x(&after->left, 0.0),
+			      line_y(&after->left, 0.0));
     }
-
-    if (end > start && i != seg_count-1) {
-      i_polyline_add_point_xy(poly,
-			      line_x(&seg->left, end),
-			      line_y(&seg->left, end));
+    else {
+      i_polyline_add_point_xy(poly, 
+			      line_x(&before->left, before->left.end),
+			      line_y(&before->left, before->left.end));
     }
+  }
 
-    add_start = end == 1.0;
+  /* for each corner */
+  for (i = 0; i < seg_count-1; ++i) {
+    thick_seg *before = segs + i;
+    thick_seg *after = before + 1;
+    if (before->left.end > 1.0) {
+      /* outside corner */
+      i_polyline_add_point_xy(poly, 
+			      line_x(&before->left, 1.0),
+			      line_y(&before->left, 1.0));
+      i_polyline_add_point_xy(poly, 
+			      line_x(&after->left, 0.0),
+			      line_y(&after->left, 0.0));
+    }
+    else {
+      /* inside corner */
+      i_polyline_add_point_xy(poly, 
+			      line_x(&before->left, before->left.end),
+			      line_y(&before->left, before->left.end));
+    }
   }
 
   if (closed) {
-    if (add_start) {
-      i_polyline_add_point_xy(poly,
-			      line_x(&segs->left, 0),
-			      line_y(&segs->left, 0));
+    thick_seg *before = segs + seg_count - 1;
+    thick_seg *after = segs;
+    if (before->left.end > 1.0) {
+      /* outside corner */
+      i_polyline_add_point_xy(poly, 
+			      line_x(&before->left, 1.0),
+			      line_y(&before->left, 1.0));
+      i_polyline_add_point_xy(poly, 
+			      line_x(&after->left, 0.0),
+			      line_y(&after->left, 0.0));
+    }
+    else {
+      /* inside corner */
+      i_polyline_add_point_xy(poly, 
+			      line_x(&before->left, before->left.end),
+			      line_y(&before->left, before->left.end));
     }
   }
   else {
@@ -634,38 +664,58 @@ make_poly_cut(thick_seg *segs, int seg_count, int closed,
     line_end(poly, seg, &seg->left, &seg->right, pen->front, pen,
 	     &pen->custom_front);
   }
-
-  add_start = 0;
-  /* and down the other */
-  for (i = seg_count-1; i >= 0; --i) {
-    thick_seg *seg = segs + i;
-    double start = seg->right.start < 0 ? 0 : seg->right.start;
-    double end = seg->right.end > 1.0 ? 1.0 : seg->right.end;
-#if DEBUG_TL_TRACE
-    printf("  right %g - %g\n", start, end);
-#endif
-
-    //add_start=1;
-    if (add_start) {
+  /* in reverse, for the right side */
+  if (closed) {
+    thick_seg *after = segs + seg_count - 1;
+    thick_seg *before = segs;
+    if (before->right.end > 1.0) {
       i_polyline_add_point_xy(poly,
-			      line_x(&seg->right, start),
-			      line_y(&seg->right, start));
+			      line_x(&after->right, 0.0),
+			      line_y(&after->right, 0.0));
     }
-    
-    if (end > start && i != 0) {
+    else {
       i_polyline_add_point_xy(poly,
-			      line_x(&seg->right, end),
-			      line_y(&seg->right, end));
+			      line_x(&after->right, after->right.start),
+			      line_y(&after->right, after->right.start));
     }
-    add_start = end == 1.0;
+  }
+  for (i = seg_count-2; i >= 0; --i) {
+    thick_seg *after = segs + i;
+    thick_seg *before = after + 1;
+    if (before->right.end > 1.0) {
+      /* outside corner */
+      i_polyline_add_point_xy(poly,
+			      line_x(&before->right, 1.0),
+			      line_y(&before->right, 1.0));
+      i_polyline_add_point_xy(poly,
+			      line_x(&after->right, 0.0),
+			      line_y(&after->right, 0.0));
+    }
+    else {
+      /* inside corner */
+      i_polyline_add_point_xy(poly,
+			      line_x(&before->right, before->right.end),
+			      line_y(&before->right, before->right.end));
+    }
   }
 
   if (closed) {
-    if (add_start) {
-      thick_seg *last_seg = segs + seg_count - 1;
+    thick_seg *before = segs;
+    thick_seg *after = segs + seg_count - 1;
+    if (before->right.end > 1.0) {
+      /* outside corner */
       i_polyline_add_point_xy(poly,
-			      line_x(&last_seg->right, 0),
-			      line_y(&last_seg->right, 0));
+			      line_x(&before->right, 1.0),
+			      line_y(&before->right, 1.0));
+      i_polyline_add_point_xy(poly,
+			      line_x(&after->right, 0.0),
+			      line_y(&after->right, 0.0));
+    }
+    else {
+      /* inside corner */
+      i_polyline_add_point_xy(poly,
+			      line_x(&before->right, before->right.end),
+			      line_y(&before->right, before->right.end));
     }
   }
   else {
@@ -999,6 +1049,13 @@ thick_draw_line(i_img *im, i_pen_thick_t *thick, const i_polyline_t *line) {
       }
     }
 #endif
+  }
+#endif
+#if 0
+  {
+      i_color white;
+      white.rgba.r = white.rgba.g = white.rgba.b = 255;
+    marker(im, floor(poly->x[0]+0.5), floor(poly->y[0]+0.5), &white);
   }
 #endif
   

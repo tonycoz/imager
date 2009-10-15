@@ -62,7 +62,7 @@ my @septagon = map
     ok($pen1->draw(image => $im, lines => [ $line ]),
        "draw heptagon $corner corners");
     my $line2 = Imager::Polyline->new(1, map @$_, reverse @septagon);
-    $line2->dump;
+    #$line2->dump;
     ok($pen2->draw(image => $im, lines => [ $line2 ]),
        "draw heptagon $corner corners (reverse order)");
     ok($im->write(file => "testout/t22c$corner.ppm"), "save it");
@@ -192,5 +192,5 @@ my @septagon = map
        "draw at angle $angle");
     $angle += PI / 7.2;
   }
-  ok($im->write(file => "testout/t22angles.ppm"), "save ends test");
+  ok($im->write(file => "testout/t22around.ppm"), "save ends test");
 }
