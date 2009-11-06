@@ -131,9 +131,20 @@ sub new {
       Imager->_set_error("'other' parameter required to create alpha fill");
       return;
     }
-    unless (eval { $other_fill->isa("Imager::Fill") }) {
-      Imager->_set_error("'other' parameter must be an Imager::Fill object to create an alpha fill");
-      return;
+    unless (ref $other_fill &&
+	    eval { $other_fill->isa("Imager::Fill") }) {
+      # try to auto convert to a fill object
+      if (ref $other_fill && $other_fill =~ /HASH/) {
+	$other_fill = Imager::Fill->new(%$other_fill)
+	  or return;
+      }
+      else {
+	undef $other_fill;
+      }
+      unless ($other_fill) {
+	Imager->_set_error("'other' parameter must be an Imager::Fill object to create an alpha fill");
+	return;
+      }
     }
 
     my $raw_fill = $other_fill->{fill};

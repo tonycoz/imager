@@ -1,6 +1,6 @@
 #!perl -w
 use strict;
-use Test::More tests => 143;
+use Test::More tests => 148;
 
 use Imager ':handy';
 use Imager::Fill;
@@ -566,6 +566,19 @@ SKIP:
     is_fcolor4($out->getpixel(x => 6, y => 3, type => "float"),
 	      0, 0.25, 0, 1, "check drawn against background at 6,3");
   }
+  ok(!Imager::Fill->new(type => "opacity"),
+     "should fail to make an opacity fill with no other fill object");
+  is(Imager->errstr, "'other' parameter required to create alpha fill",
+     "check error message");
+  ok(!Imager::Fill->new(type => "opacity", other => "xx"),
+     "should fail to make an opacity fill with a bad other parameter");
+  is(Imager->errstr, "'other' parameter must be an Imager::Fill object to create an alpha fill", 
+	 "check error message");
+
+  # check auto conversion of hashes
+  ok(Imager::Fill->new(type => "opacity", other => { solid => "FF0000" }),
+     "check we auto-create fills")
+    or print "# ", Imager->errstr, "\n";
 }
 
 sub color_close {
