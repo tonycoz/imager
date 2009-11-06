@@ -127,10 +127,10 @@ sub is_color4($$$$$$) {
 		       && $ca == $alpha, $comment)) {
     $builder->diag(<<END_DIAG);
 Color mismatch:
-  Red: $red vs $cr
-Green: $green vs $cg
- Blue: $blue vs $cb
-Alpha: $alpha vs $ca
+  Red: $cr vs $red
+Green: $cg vs $green
+ Blue: $cb vs $blue
+Alpha: $ca vs $alpha
 END_DIAG
     return;
   }
@@ -168,10 +168,10 @@ sub is_fcolor4($$$$$$;$) {
 		       && abs($ca - $alpha) <= $mindiff, $comment)) {
     $builder->diag(<<END_DIAG);
 Color mismatch:
-  Red: $red vs $cr
-Green: $green vs $cg
- Blue: $blue vs $cb
-Alpha: $alpha vs $ca
+  Red: $cr vs $red
+Green: $cg vs $green
+ Blue: $cb vs $blue
+Alpha: $ca vs $alpha
 END_DIAG
     return;
   }

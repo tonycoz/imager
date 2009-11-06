@@ -3379,6 +3379,11 @@ i_new_fill_fount(xa, ya, xb, yb, type, repeat, combine, super_sample, ssample_pa
       OUTPUT:
         RETVAL
 
+Imager::FillHandle
+i_new_fill_opacity(other_fill, alpha_mult)
+    Imager::FillHandle other_fill
+    double alpha_mult
+
 void
 i_errors()
       PREINIT:

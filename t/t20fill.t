@@ -1,11 +1,11 @@
 #!perl -w
 use strict;
-use Test::More tests => 129;
+use Test::More tests => 143;
 
 use Imager ':handy';
 use Imager::Fill;
 use Imager::Color::Float;
-use Imager::Test qw(is_image);
+use Imager::Test qw(is_image is_color4 is_fcolor4);
 use Config;
 
 Imager::init_log("testout/t20fill.log", 1);
@@ -463,6 +463,108 @@ SKIP:
     $im_gfc->box(fill => $rgb_fill);
     my $im_gfc_c = $im_gfc->convert(preset => 'rgb');
     is_image($im_gfc_c, $im_cfg, "check grey filled with color against base (bits = $bits)");
+  }
+}
+
+{ # alpha modifying fills
+  { # 8-bit/sample
+    my $base_img = Imager->new(xsize => 4, ysize => 2, channels => 4);
+    $base_img->setscanline
+      (
+       x => 0, 
+       y => 0, 
+       pixels => 
+       [
+	map Imager::Color->new($_),
+	qw/FF000020 00FF0080 00008040 FFFF00FF/,
+       ],
+      );
+    $base_img->setscanline
+      (
+       x => 0, 
+       y => 1, 
+       pixels => 
+       [
+	map Imager::Color->new($_),
+	qw/FFFF00FF FF000000 00FF0080 00008040/
+       ]
+      );
+    my $base_fill = Imager::Fill->new
+      (
+       image => $base_img,
+       combine => "normal",
+      );
+    ok($base_fill, "make the base image fill");
+    my $fill50 = Imager::Fill->new(type => "opacity", opacity => 0.5, other => $base_fill)
+      or print "# ", Imager->errstr, "\n";
+    ok($fill50, "make 50% alpha translation fill");
+    my $out = Imager->new(xsize => 10, ysize => 10, channels => 4);
+    $out->box(fill => $fill50);
+    is_color4($out->getpixel(x => 0, y => 0),
+	      255, 0, 0, 16, "check alpha output");
+    is_color4($out->getpixel(x => 2, y => 1),
+	      0, 255, 0, 64, "check alpha output");
+    $out->box(filled => 1, color => "000000");
+    is_color4($out->getpixel(x => 0, y => 0),
+	      0, 0, 0, 255, "check after clear");
+    $out->box(fill => $fill50);
+    is_color4($out->getpixel(x => 4, y => 2),
+	      16, 0, 0, 255, "check drawn against background");
+    is_color4($out->getpixel(x => 6, y => 3),
+	      0, 64, 0, 255, "check drawn against background");
+  }
+  { # double/sample
+    use Imager::Color::Float;
+    my $base_img = Imager->new(xsize => 4, ysize => 2, channels => 4, bits => "double");
+    $base_img->setscanline
+      (
+       x => 0, 
+       y => 0, 
+       pixels => 
+       [
+	map Imager::Color::Float->new(@$_),
+	[ 1, 0, 0, 0.125 ],
+	[ 0, 1, 0, 0.5 ],
+	[ 0, 0, 0.5, 0.25 ],
+	[ 1, 1, 0, 1 ],
+       ],
+      );
+    $base_img->setscanline
+      (
+       x => 0, 
+       y => 1, 
+       pixels => 
+       [
+	map Imager::Color::Float->new(@$_),
+	[ 1, 1, 0, 1 ],
+	[ 1, 0, 0, 0 ],
+	[ 0, 1, 0, 0.5 ],
+	[ 0, 0, 0.5, 0.25 ],
+       ]
+      );
+    my $base_fill = Imager::Fill->new
+      (
+       image => $base_img,
+       combine => "normal",
+      );
+    ok($base_fill, "make the base image fill");
+    my $fill50 = Imager::Fill->new(type => "opacity", opacity => 0.5, other => $base_fill)
+      or print "# ", Imager->errstr, "\n";
+    ok($fill50, "make 50% alpha translation fill");
+    my $out = Imager->new(xsize => 10, ysize => 10, channels => 4, bits => "double");
+    $out->box(fill => $fill50);
+    is_fcolor4($out->getpixel(x => 0, y => 0, type => "float"),
+	      1, 0, 0, 0.0625, "check alpha output at 0,0");
+    is_fcolor4($out->getpixel(x => 2, y => 1, type => "float"),
+	      0, 1, 0, 0.25, "check alpha output at 2,1");
+    $out->box(filled => 1, color => "000000");
+    is_fcolor4($out->getpixel(x => 0, y => 0, type => "float"),
+	      0, 0, 0, 1, "check after clear");
+    $out->box(fill => $fill50);
+    is_fcolor4($out->getpixel(x => 4, y => 2, type => "float"),
+	      0.0625, 0, 0, 1, "check drawn against background at 4,2");
+    is_fcolor4($out->getpixel(x => 6, y => 3, type => "float"),
+	      0, 0.25, 0, 1, "check drawn against background at 6,3");
   }
 }
 

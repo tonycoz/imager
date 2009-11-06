@@ -17,6 +17,7 @@ fills.c - implements the basic general fills
   fill = i_new_fill_hatchf(&fc1, &fc2, combine, hatch, cust_hash, dx, dy);
   fill = i_new_fill_hatch(&c1, &c2, combine, hatch, cust_hash, dx, dy);
   fill = i_new_fill_image(im, matrix, xoff, yoff, combine);
+  fill = i_new_fill_opacity(fill, alpha_mult);
   i_fill_destroy(fill);
 
 =head1 DESCRIPTION
@@ -528,6 +529,38 @@ i_new_fill_image(i_img *im, const double *matrix, int xoff, int yoff, int combin
   return &fill->base;
 }
 
+static void fill_opacity(i_fill_t *fill, int x, int y, int width, int channels,
+                       i_color *data);
+static void fill_opacityf(i_fill_t *fill, int x, int y, int width, int channels,
+                       i_fcolor *data);
+
+struct i_fill_opacity_t {
+  i_fill_t base;
+  i_fill_t *other_fill;
+  double alpha_mult;
+};
+
+static struct i_fill_opacity_t
+opacity_fill_proto =
+  {
+    fill_opacity,
+    fill_opacityf,
+    NULL
+  };
+
+i_fill_t *
+i_new_fill_opacity(i_fill_t *base_fill, double alpha_mult) {
+  struct i_fill_opacity_t *fill = mymalloc(sizeof(*fill));
+  *fill = opacity_fill_proto;
+
+  fill->base.combine = base_fill->combine;
+  fill->base.combinef = base_fill->combinef;
+
+  fill->other_fill = base_fill;
+  fill->alpha_mult = alpha_mult;
+
+  return &fill->base;
+}
 
 #define T_SOLID_FILL(fill) ((i_fill_solid_t *)(fill))
 
@@ -901,6 +934,45 @@ static void fill_imagef(i_fill_t *fill, int x, int y, int width, int channels,
     i_adapt_fcolors(want_channels, f->src->channels, data, width);
 }
 
+static void 
+fill_opacity(i_fill_t *fill, int x, int y, int width, int channels,
+	     i_color *data) {
+  struct i_fill_opacity_t *f = (struct i_fill_opacity_t *)fill;
+  int alpha_chan = channels-1; /* channels is always 2 or 4 */
+  i_color *datap = data;
+  
+  (f->other_fill->f_fill_with_color)(f->other_fill, x, y, width, channels, data);
+  while (width--) {
+    double new_alpha = datap->channel[alpha_chan] * f->alpha_mult;
+    if (new_alpha < 0) 
+      datap->channel[alpha_chan] = 0;
+    else if (new_alpha > 255)
+      datap->channel[alpha_chan] = 255;
+    else datap->channel[alpha_chan] = (int)(new_alpha + 0.5);
+
+    ++datap;
+  }
+}
+static void 
+fill_opacityf(i_fill_t *fill, int x, int y, int width, int channels,
+	    i_fcolor *data) {
+  struct i_fill_opacity_t *f = (struct i_fill_alpha_t *)fill;
+  int alpha_chan = channels-1; /* channels is always 2 or 4 */
+  i_fcolor *datap = data;
+  
+  (f->other_fill->f_fill_with_fcolor)(f->other_fill, x, y, width, channels, data);
+  
+  while (width--) {
+    double new_alpha = datap->channel[alpha_chan] * f->alpha_mult;
+    if (new_alpha < 0) 
+      datap->channel[alpha_chan] = 0;
+    else if (new_alpha > 1.0)
+      datap->channel[alpha_chan] = 1.0;
+    else datap->channel[alpha_chan] = new_alpha;
+
+    ++datap;
+  }
+}
 
 /*
 =back

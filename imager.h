@@ -155,6 +155,7 @@ i_new_fill_hatchf(const i_fcolor *fg, const i_fcolor *bg, int combine, int hatch
                   const unsigned char *cust_hatch, int dx, int dy);
 extern i_fill_t *
 i_new_fill_image(i_img *im, const double *matrix, int xoff, int yoff, int combine);
+extern i_fill_t *i_new_fill_opacity(i_fill_t *, double alpha_mult);
 extern void i_fill_destroy(i_fill_t *fill);
 
 float i_gpix_pch(i_img *im,int x,int y,int ch);

@@ -125,6 +125,24 @@ sub new {
                                $hsh{yoff}, $hsh{combine});
     $self->{DEPS} = [ $hsh{image}{IMG} ];
   }
+  elsif (defined $hsh{type} && $hsh{type} eq "opacity") {
+    my $other_fill = delete $hsh{other};
+    unless (defined $other_fill) {
+      Imager->_set_error("'other' parameter required to create alpha fill");
+      return;
+    }
+    unless (eval { $other_fill->isa("Imager::Fill") }) {
+      Imager->_set_error("'other' parameter must be an Imager::Fill object to create an alpha fill");
+      return;
+    }
+
+    my $raw_fill = $other_fill->{fill};
+    my $opacity = delete $hsh{opacity};
+    defined $opacity or $opacity = 0.5; # some sort of default
+    $self->{fill} = 
+      Imager::i_new_fill_opacity($raw_fill, $opacity);
+    $self->{DEPS} = [ $other_fill ]; # keep reference to old fill and its deps
+  }
   else {
     $Imager::ERRSTR = "No fill type specified";
     warn "No fill type!";
@@ -158,6 +176,7 @@ sub combines {
                                 dx=>$dx, dy=>$dy);
   my $fill3 = Imager::Fill->new(fountain=>$type, ...);
   my $fill4 = Imager::Fill->new(image=>$img, ...);
+  my $fill5 = Imager::Fill->new(type => "alpha", other => $fill, alpha => ...);
 
 =head1 DESCRIPTION 
 
@@ -340,6 +359,35 @@ Linear interpolation is used to determine the fill pixel.  You can use
 the L<Imager::Matrix2d> class to create transformation matrices.
 
 The matrix parameter will significantly slow down the fill.
+
+=head2 Opacity modification fill
+
+  my $fill = Imager::Fill->new(type => "opacity"
+
+This can be used to make a fill that is a more translucent of opaque
+version of an existing fill.  This is intended for use where you
+receive a fill object as a parameter and need to change the opacity.
+
+Parameters:
+
+=over
+
+=item *
+
+type => "alpha" - Required
+
+=item *
+
+other - the fill to produce a modified version of.  This must be an
+Imager::Fill object.  Required.
+
+=item *
+
+opacity - multiplier for the source fill opacity.  Default: 0.5.
+
+=back
+
+The source fill's combine mode is used.
 
 =head1 OTHER METHODS
 
