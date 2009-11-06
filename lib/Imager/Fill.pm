@@ -362,7 +362,8 @@ The matrix parameter will significantly slow down the fill.
 
 =head2 Opacity modification fill
 
-  my $fill = Imager::Fill->new(type => "opacity"
+  my $fill = Imager::Fill->new(type => "opacity",
+      other => $fill, opacity => 0.25);
 
 This can be used to make a fill that is a more translucent of opaque
 version of an existing fill.  This is intended for use where you
@@ -374,7 +375,7 @@ Parameters:
 
 =item *
 
-type => "alpha" - Required
+type => "opacity" - Required
 
 =item *
 
