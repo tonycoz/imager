@@ -944,6 +944,12 @@ Other options:
     Add to the include search path
   --libpath dir
     Add to the library search path
+  --coverage
+    Build for coverage testing.
+  --assert
+    Build with assertions active.
+  --noexif
+    Disable EXIF parsing.
 EOS
   exit 1;
 
