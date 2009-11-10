@@ -568,11 +568,11 @@ SKIP:
   }
   ok(!Imager::Fill->new(type => "opacity"),
      "should fail to make an opacity fill with no other fill object");
-  is(Imager->errstr, "'other' parameter required to create alpha fill",
+  is(Imager->errstr, "'other' parameter required to create opacity fill",
      "check error message");
   ok(!Imager::Fill->new(type => "opacity", other => "xx"),
      "should fail to make an opacity fill with a bad other parameter");
-  is(Imager->errstr, "'other' parameter must be an Imager::Fill object to create an alpha fill", 
+  is(Imager->errstr, "'other' parameter must be an Imager::Fill object to create an opacity fill", 
 	 "check error message");
 
   # check auto conversion of hashes

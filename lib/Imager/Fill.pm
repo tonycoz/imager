@@ -128,7 +128,7 @@ sub new {
   elsif (defined $hsh{type} && $hsh{type} eq "opacity") {
     my $other_fill = delete $hsh{other};
     unless (defined $other_fill) {
-      Imager->_set_error("'other' parameter required to create alpha fill");
+      Imager->_set_error("'other' parameter required to create opacity fill");
       return;
     }
     unless (ref $other_fill &&
@@ -142,7 +142,7 @@ sub new {
 	undef $other_fill;
       }
       unless ($other_fill) {
-	Imager->_set_error("'other' parameter must be an Imager::Fill object to create an alpha fill");
+	Imager->_set_error("'other' parameter must be an Imager::Fill object to create an opacity fill");
 	return;
       }
     }
@@ -187,7 +187,8 @@ sub combines {
                                 dx=>$dx, dy=>$dy);
   my $fill3 = Imager::Fill->new(fountain=>$type, ...);
   my $fill4 = Imager::Fill->new(image=>$img, ...);
-  my $fill5 = Imager::Fill->new(type => "alpha", other => $fill, alpha => ...);
+  my $fill5 = Imager::Fill->new(type => "opacity", other => $fill,
+                                opacity => ...);
 
 =head1 DESCRIPTION 
 
@@ -376,7 +377,7 @@ The matrix parameter will significantly slow down the fill.
   my $fill = Imager::Fill->new(type => "opacity",
       other => $fill, opacity => 0.25);
 
-This can be used to make a fill that is a more translucent of opaque
+This can be used to make a fill that is a more translucent or opaque
 version of an existing fill.  This is intended for use where you
 receive a fill object as a parameter and need to change the opacity.
 
