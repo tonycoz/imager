@@ -1,6 +1,6 @@
 Imager release history.  Older releases can be found in Changes.old
 
-Imager 0.71 - unreleased
+Imager 0.71 - 16 Nov 2009
 ===========
 
  - add the opacity fill type - an adaptor that modifies the opacity of
