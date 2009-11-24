@@ -570,7 +570,7 @@ If the source image has an alpha channel and the target doesn't, then
 the source is treated as if composed onto a black background.
 
 If the source image is color and the target is grayscale, the the
-source is treated as if run through C< convert(preset=>'gray') >.
+source is treated as if run through C<< convert(preset=>'gray') >>.
 
 =item rubthrough
 

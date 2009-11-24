@@ -412,7 +412,7 @@ file containing more than one face, for example, from a Macintosh font
 suitcase or a .dfont file.
 
 If any of the C<color>, C<size> or C<aa> parameters are omitted when
-calling C<Imager::Font->new()> the they take the following values:
+calling C<< Imager::Font->new() >> the they take the following values:
 
   color => Imager::Color->new(255, 0, 0, 0);  # this default should be changed
   size  => 15

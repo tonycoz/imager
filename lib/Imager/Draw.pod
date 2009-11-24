@@ -927,7 +927,7 @@ As of Imager 0.61 this can be C<16bit> only for 16 bit images.
 =item *
 
 channels - a reference to an array of channels to return, where 0 is
-the first channel.  Default: C< [ 0 .. $self->getchannels()-1 ] >
+the first channel.  Default: C<< [ 0 .. $self->getchannels()-1 ] >>
 
 =item *
 
@@ -1013,7 +1013,7 @@ As of Imager 0.61 this can only be C<16bit> only for 16 bit images.
 =item *
 
 channels - a reference to an array of channels to return, where 0 is
-the first channel.  Default: C< [ 0 .. $self->getchannels()-1 ] >
+the first channel.  Default: C<< [ 0 .. $self->getchannels()-1 ] >>
 
 =item *
 

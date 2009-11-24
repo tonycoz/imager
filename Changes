@@ -13,6 +13,9 @@ Bug fixes:
    8-bit sample operations.
    https://rt.cpan.org/Ticket/Display.html?id=39280
 
+ - fix POD nits
+   https://rt.cpan.org/Ticket/Display.html?id=51874
+
 Imager 0.71 - 16 Nov 2009
 ===========
 
