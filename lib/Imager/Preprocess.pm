@@ -48,7 +48,7 @@ sub preprocess {
       $code_line = $. + 1;
       $save_code = 1;
     }
-    elsif ($line =~ /^\#\/code$/) {
+    elsif ($line =~ /^\#\/code\s*$/) {
       $save_code
 	or do { warn "$src:$.:#/code without #code\n"; ++$failed; next; };
       
