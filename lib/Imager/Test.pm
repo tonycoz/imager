@@ -18,6 +18,7 @@ use vars qw(@ISA @EXPORT_OK);
      is_fcolor4
      color_cmp
      is_image
+     is_imaged
      is_image_similar 
      image_bounds_checks
      mask_tests
@@ -261,8 +262,8 @@ sub test_image_double {
   $img;
 }
 
-sub is_image_similar($$$$) {
-  my ($left, $right, $limit, $comment) = @_;
+sub _low_image_diff_check {
+  my ($left, $right, $comment) = @_;
 
   my $builder = Test::Builder->new;
 
@@ -304,6 +305,22 @@ sub is_image_similar($$$$) {
                    . $right->getchannels);
     return;
   }
+
+  return 1;
+}
+
+sub is_image_similar($$$$) {
+  my ($left, $right, $limit, $comment) = @_;
+
+  {
+    local $Test::Builder::Level = $Test::Builder::Level + 1;
+
+    _low_image_diff_check($left, $right, $comment)
+      or return;
+  }
+
+  my $builder = Test::Builder->new;
+
   my $diff = Imager::i_img_diff($left->{IMG}, $right->{IMG});
   if ($diff > $limit) {
     $builder->ok(0, $comment);
@@ -336,6 +353,42 @@ sub is_image($$$) {
   local $Test::Builder::Level = $Test::Builder::Level + 1;
 
   return is_image_similar($left, $right, 0, $comment);
+}
+
+sub is_imaged($$$) {
+  my ($left, $right, $comment) = @_;
+
+  {
+    local $Test::Builder::Level = $Test::Builder::Level + 1;
+
+    _low_image_diff_check($left, $right, $comment)
+      or return;
+  }
+
+  my $builder = Test::Builder->new;
+
+  my $diff = Imager::i_img_diffd($left->{IMG}, $right->{IMG});
+  if ($diff > 0) {
+    $builder->ok(0, $comment);
+    $builder->diag("image data difference: $diff");
+   
+    # find the first mismatch
+  PIXELS:
+    for my $y (0 .. $left->getheight()-1) {
+      for my $x (0.. $left->getwidth()-1) {
+	my @lsamples = $left->getsamples(x => $x, y => $y, width => 1);
+	my @rsamples = $right->getsamples(x => $x, y => $y, width => 1);
+	if ("@lsamples" ne "@rsamples") {
+	  $builder->diag("first mismatch at ($x, $y) - @lsamples vs @rsamples");
+	  last PIXELS;
+	}
+      }
+    }
+
+    return;
+  }
+  
+  return $builder->ok(1, $comment);
 }
 
 sub image_bounds_checks {
@@ -553,6 +606,11 @@ defined, have the same width, height, channels and the same color in
 each pixel.  The color comparison is done at 8-bits per pixel.  The
 color representation such as direct vs paletted, bits per sample are
 not checked.  Equivalent to is_image_similar($im1, $im2, 0, $comment).
+
+=item is_imaged($im, $im2, $comment)
+
+Tests if the two images have the same content at the double/sample
+level.
 
 =item is_image_similar($im1, $im2, $maxdiff, $comment)
 

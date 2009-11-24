@@ -214,6 +214,7 @@ extern i_img *i_convert(i_img *src, const float *coeff, int outchan, int inchan)
 extern void i_map(i_img *im, unsigned char (*maps)[256], unsigned int mask);
 
 float i_img_diff   (i_img *im1,i_img *im2);
+double i_img_diffd(i_img *im1,i_img *im2);
 
 /* font routines */
 

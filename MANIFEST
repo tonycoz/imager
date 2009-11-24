@@ -105,6 +105,7 @@ feat.h
 fills.c         Generic fills
 filterlist.perl
 filters.im
+flip.im
 font.c
 fontfiles/ExistenceTest.afm     please edit ExistenceTest.sfd in CVS
 fontfiles/ExistenceTest.pfb     to change these files, edited and

@@ -709,114 +709,6 @@ i_copy(i_img *src) {
 }
 
 
-/*
-=item i_flipxy(im, axis)
-
-Flips the image inplace around the axis specified.
-Returns 0 if parameters are invalid.
-
-   im   - Image pointer
-   axis - 0 = x, 1 = y, 2 = both
-
-=cut
-*/
-
-undef_int
-i_flipxy(i_img *im, int direction) {
-  int x, x2, y, y2, xm, ym;
-  int xs = im->xsize;
-  int ys = im->ysize;
-  
-  mm_log((1, "i_flipxy(im %p, direction %d)\n", im, direction ));
-
-  if (!im) return 0;
-
-  switch (direction) {
-  case XAXIS: /* Horizontal flip */
-    xm = xs/2;
-    ym = ys;
-    for(y=0; y<ym; y++) {
-      x2 = xs-1;
-      for(x=0; x<xm; x++) {
-	i_color val1, val2;
-	i_gpix(im, x,  y,  &val1);
-	i_gpix(im, x2, y,  &val2);
-	i_ppix(im, x,  y,  &val2);
-	i_ppix(im, x2, y,  &val1);
-	x2--;
-      }
-    }
-    break;
-  case YAXIS: /* Vertical flip */
-    xm = xs;
-    ym = ys/2;
-    y2 = ys-1;
-    for(y=0; y<ym; y++) {
-      for(x=0; x<xm; x++) {
-	i_color val1, val2;
-	i_gpix(im, x,  y,  &val1);
-	i_gpix(im, x,  y2, &val2);
-	i_ppix(im, x,  y,  &val2);
-	i_ppix(im, x,  y2, &val1);
-      }
-      y2--;
-    }
-    break;
-  case XYAXIS: /* Horizontal and Vertical flip */
-    xm = xs/2;
-    ym = ys/2;
-    y2 = ys-1;
-    for(y=0; y<ym; y++) {
-      x2 = xs-1;
-      for(x=0; x<xm; x++) {
-	i_color val1, val2;
-	i_gpix(im, x,  y,  &val1);
-	i_gpix(im, x2, y2, &val2);
-	i_ppix(im, x,  y,  &val2);
-	i_ppix(im, x2, y2, &val1);
-
-	i_gpix(im, x2, y,  &val1);
-	i_gpix(im, x,  y2, &val2);
-	i_ppix(im, x2, y,  &val2);
-	i_ppix(im, x,  y2, &val1);
-	x2--;
-      }
-      y2--;
-    }
-    if (xm*2 != xs) { /* odd number of column */
-      mm_log((1, "i_flipxy: odd number of columns\n"));
-      x = xm;
-      y2 = ys-1;
-      for(y=0; y<ym; y++) {
-	i_color val1, val2;
-	i_gpix(im, x,  y,  &val1);
-	i_gpix(im, x,  y2, &val2);
-	i_ppix(im, x,  y,  &val2);
-	i_ppix(im, x,  y2, &val1);
-	y2--;
-      }
-    }
-    if (ym*2 != ys) { /* odd number of rows */
-      mm_log((1, "i_flipxy: odd number of rows\n"));
-      y = ym;
-      x2 = xs-1;
-      for(x=0; x<xm; x++) {
-	i_color val1, val2;
-	i_gpix(im, x,  y,  &val1);
-	i_gpix(im, x2, y,  &val2);
-	i_ppix(im, x,  y,  &val2);
-	i_ppix(im, x2, y,  &val1);
-	x2--;
-      }
-    }
-    break;
-  default:
-    mm_log((1, "i_flipxy: direction is invalid\n" ));
-    return 0;
-  }
-  return 1;
-}
-
 
 
 
@@ -1159,6 +1051,7 @@ can return zero.
 
 =cut
 */
+
 float
 i_img_diff(i_img *im1,i_img *im2) {
   int x,y,ch,xb,yb,chb;
@@ -1181,6 +1074,50 @@ i_img_diff(i_img *im1,i_img *im2) {
     for(ch=0;ch<chb;ch++) tdiff+=(val1.channel[ch]-val2.channel[ch])*(val1.channel[ch]-val2.channel[ch]);
   }
   mm_log((1,"i_img_diff <- (%.2f)\n",tdiff));
+  return tdiff;
+}
+
+/*
+=item i_img_diffd(im1, im2)
+
+Calculates the sum of the squares of the differences between
+correspoding channels in two images.
+
+If the images are not the same size then only the common area is 
+compared, hence even if images are different sizes this function 
+can return zero.
+
+This is like i_img_diff() but looks at floating point samples instead.
+
+=cut
+*/
+
+double
+i_img_diffd(i_img *im1,i_img *im2) {
+  int x,y,ch,xb,yb,chb;
+  double tdiff;
+  i_fcolor val1,val2;
+
+  mm_log((1,"i_img_diffd(im1 0x%x,im2 0x%x)\n",im1,im2));
+
+  xb=(im1->xsize<im2->xsize)?im1->xsize:im2->xsize;
+  yb=(im1->ysize<im2->ysize)?im1->ysize:im2->ysize;
+  chb=(im1->channels<im2->channels)?im1->channels:im2->channels;
+
+  mm_log((1,"i_img_diff: xb=%d xy=%d chb=%d\n",xb,yb,chb));
+
+  tdiff=0;
+  for(y=0;y<yb;y++) for(x=0;x<xb;x++) {
+    i_gpixf(im1,x,y,&val1);
+    i_gpixf(im2,x,y,&val2);
+
+    for(ch=0;ch<chb;ch++) {
+      double sdiff = val1.channel[ch]-val2.channel[ch];
+      tdiff += sdiff * sdiff;
+    }
+  }
+  mm_log((1,"i_img_diffd <- (%.2f)\n",tdiff));
+
   return tdiff;
 }
 

@@ -1868,7 +1868,10 @@ i_img_diff(im1,im2)
     Imager::ImgRaw     im1
     Imager::ImgRaw     im2
 
-
+double
+i_img_diffd(im1,im2)
+    Imager::ImgRaw     im1
+    Imager::ImgRaw     im2
 
 undef_int	  
 i_init_fonts(t1log=0)

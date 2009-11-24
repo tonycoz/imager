@@ -33,7 +33,7 @@ don't, for future improvements.
   crop         Full
   difference   Full
   filter       Partial    Depends on the filter.
-  flip         None
+  flip         Full
   flood_fill   Partial    [1]
   getpixel     Full
   getsamples   Full
