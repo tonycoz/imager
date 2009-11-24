@@ -956,7 +956,7 @@ fill_opacity(i_fill_t *fill, int x, int y, int width, int channels,
 static void 
 fill_opacityf(i_fill_t *fill, int x, int y, int width, int channels,
 	    i_fcolor *data) {
-  struct i_fill_opacity_t *f = (struct i_fill_alpha_t *)fill;
+  struct i_fill_opacity_t *f = (struct i_fill_opacity_t *)fill;
   int alpha_chan = channels-1; /* channels is always 2 or 4 */
   i_fcolor *datap = data;
   
