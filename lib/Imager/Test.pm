@@ -19,7 +19,8 @@ use vars qw(@ISA @EXPORT_OK);
      color_cmp
      is_image
      is_imaged
-     is_image_similar 
+     is_image_similar
+     isnt_image
      image_bounds_checks
      mask_tests
      test_colorf_gpix
@@ -389,6 +390,16 @@ sub is_imaged($$$) {
   }
   
   return $builder->ok(1, $comment);
+}
+
+sub isnt_image {
+  my ($left, $right, $comment) = @_;
+
+  my $builder = Test::Builder->new;
+
+  my $diff = Imager::i_img_diff($left->{IMG}, $right->{IMG});
+
+  return $builder->ok($diff, "$comment");
 }
 
 sub image_bounds_checks {

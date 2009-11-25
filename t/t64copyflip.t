@@ -1,8 +1,8 @@
 #!perl -w
 use strict;
-use Test::More tests => 69;
+use Test::More tests => 77;
 use Imager;
-use Imager::Test qw(is_color3 is_image is_imaged test_image_double);
+use Imager::Test qw(is_color3 is_image is_imaged test_image_double test_image isnt_image);
 
 #$Imager::DEBUG=1;
 
@@ -42,6 +42,19 @@ is_image($img, $nimg, "check flip with hv matches flip v then flip h");
   is_imaged($imsrc, $imcp, "flip h twice");
   $imcp->flip(dir=>"h")->flip(dir=>"v")->flip(dir=>"hv");
   is_imaged($imsrc, $imcp, "flip h,v,hv twice");
+}
+
+{
+  my $impal = test_image()->to_paletted;
+  my $imcp = $impal->copy;
+  is($impal->type, "paletted", "check paletted test image is");
+  is($imcp->type, "paletted", "check copy test image is paletted");
+  ok($impal->flip(dir => "h"), "flip paletted h");
+  isnt_image($impal, $imcp, "check it changed");
+  ok($impal->flip(dir => "v"), "flip paletted v");
+  ok($impal->flip(dir => "hv"), "flip paletted hv");
+  is_image($impal, $imcp, "should be back to original image");
+  is($impal->type, "paletted", "and still paletted");
 }
 
 rot_test($img, 90, 4);
