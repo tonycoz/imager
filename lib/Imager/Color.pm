@@ -363,6 +363,8 @@ sub equals {
   return 1;
 }
 
+sub CLONE_SKIP { 1 }
+
 1;
 
 __END__

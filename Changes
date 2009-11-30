@@ -16,6 +16,11 @@ Bug fixes:
  - fix POD nits
    https://rt.cpan.org/Ticket/Display.html?id=51874
 
+ - prevent double-frees when someone creates Imager objects and then
+   creates a thread.  Note: this just handles some simple cases,
+   Imager doesn't support perl threads, and isn't likely to.
+   https://rt.cpan.org/Ticket/Display.html?id=52268
+
 Imager 0.71 - 16 Nov 2009
 ===========
 

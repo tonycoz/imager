@@ -323,12 +323,18 @@ BEGIN {
 		  cd => 1.0,
 		  cs => 40,
 		  n => 1.3,
-		  Ia => Imager::Color->new(rgb=>[0,0,0]),
-		  Il => Imager::Color->new(rgb=>[255,255,255]),
-		  Is => Imager::Color->new(rgb=>[255,255,255]),
+		  Ia => [0,0,0],
+		  Il => [255,255,255],
+		  Is => [255,255,255],
 		 },
      callsub => sub {
        my %hsh = @_;
+       for my $cname (qw/Ia Il Is/) {
+	 my $old = $hsh{$cname};
+	 my $new_color = _color($old)
+	   or die $Imager::ERRSTR, "\n";
+	 $hsh{$cname} = $new_color;
+       }
        i_bumpmap_complex($hsh{image}, $hsh{bump}{IMG}, $hsh{channel},
                  $hsh{tx}, $hsh{ty}, $hsh{Lx}, $hsh{Ly}, $hsh{Lz},
 		 $hsh{cd}, $hsh{cs}, $hsh{n}, $hsh{Ia}, $hsh{Il},
@@ -394,8 +400,8 @@ BEGIN {
                    super_sample => 0, ssample_param => 4,
                    segments=>[ 
                               [ 0, 0.5, 1,
-                                Imager::Color->new(0,0,0),
-                                Imager::Color->new(255, 255, 255),
+                                [0,0,0],
+                                [255, 255, 255],
                                 0, 0,
                               ],
                              ],
@@ -3878,6 +3884,9 @@ sub Inline {
   return Imager::ExtUtils->inline_config;
 }
 
+# threads shouldn't try to close raw Imager objects
+sub Imager::ImgRaw::CLONE_SKIP { 1 }
+
 1;
 __END__
 # Below is the stub of documentation for your module. You better edit it!
@@ -4440,6 +4449,15 @@ unsharp mask - L<Imager::Filters/unsharpmask>
 watermark - L<Imager::Filters/watermark>
 
 writing an image to a file - L<Imager::Files>
+
+=head1 THREADS
+
+Imager doesn't support perl threads.
+
+Imager has limited code to prevent double frees if you create images,
+colors etc, and then create a thread, but has no code to prevent two
+threads entering Imager's error handling code, and none is likely to
+be added.
 
 =head1 SUPPORT
 

@@ -36,6 +36,8 @@ sub set {
   return @arg ? set_internal($self, $arg[0],$arg[1],$arg[2],$arg[3]) : ();
 }
 
+sub CLONE_SKIP { 1 }
+
 1;
 
 __END__
