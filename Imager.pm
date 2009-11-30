@@ -2791,12 +2791,17 @@ sub box {
 sub arc {
   my $self=shift;
   unless ($self->{IMG}) { $self->{ERRSTR}='empty input image'; return undef; }
-  my $dflcl=i_color_new(255,255,255,255);
-  my %opts=(color=>$dflcl,
-	    'r'=>_min($self->getwidth(),$self->getheight())/3,
-	    'x'=>$self->getwidth()/2,
-	    'y'=>$self->getheight()/2,
-	    'd1'=>0, 'd2'=>361, @_);
+  my $dflcl= [ 255, 255, 255, 255];
+  my %opts=
+    (
+     color=>$dflcl,
+     'r'=>_min($self->getwidth(),$self->getheight())/3,
+     'x'=>$self->getwidth()/2,
+     'y'=>$self->getheight()/2,
+     'd1'=>0, 'd2'=>361, 
+     filled => 1,
+     @_,
+    );
   if ($opts{aa}) {
     if ($opts{fill}) {
       unless (UNIVERSAL::isa($opts{fill}, 'Imager::Fill')) {
@@ -2845,8 +2850,19 @@ sub arc {
 	$self->{ERRSTR} = $Imager::ERRSTR; 
 	return; 
       }
-      i_arc($self->{IMG},$opts{'x'},$opts{'y'},$opts{'r'},
-	    $opts{'d1'}, $opts{'d2'}, $color); 
+      if ($opts{filled}) {
+	i_arc($self->{IMG},$opts{'x'},$opts{'y'},$opts{'r'},
+	      $opts{'d1'}, $opts{'d2'}, $color); 
+      }
+      else {
+	if ($opts{d1} == 0 && $opts{d2} == 361) {
+	  i_circle_out($self->{IMG}, $opts{x}, $opts{y}, $opts{r}, $color);
+	}
+	else {
+	  $self->_set_error("Can't outline partial arcs");
+	  return undef;
+	}
+      }
     }
   }
 

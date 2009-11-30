@@ -459,6 +459,83 @@ i_circle_aa(i_img *im, float x, float y, float rad, const i_color *val) {
 }
 
 /*
+=item i_circle_out(im, x, y, r, col)
+
+=category Drawing
+=synopsis i_circle_out(im, 50, 50, 45, &color);
+
+Draw a circle outline centered at (x,y) with radius r,
+non-anti-aliased.
+
+Parameters:
+
+=over
+
+=item *
+
+(x, y) - the center of the circle
+
+=item *
+
+r - the radius of the circle in pixels, must be non-negative
+
+=back
+
+Returns non-zero on success.
+
+Implementation:
+
+=cut
+*/
+
+int
+i_circle_out(i_img *im, i_img_dim xc, i_img_dim yc, i_img_dim r,
+	     const i_color *col) {
+  i_img_dim x, y;
+  i_img_dim dx, dy;
+  int error;
+
+  i_clear_error();
+
+  if (r < 0) {
+    i_push_error(0, "circle: radius must be non-negative");
+    return 0;
+  }
+
+  i_ppix(im, xc+r, yc, col);
+  i_ppix(im, xc-r, yc, col);
+  i_ppix(im, xc, yc+r, col);
+  i_ppix(im, xc, yc-r, col);
+
+  x = 0;
+  y = r;
+  dx = 1;
+  dy = -2 * r;
+  error = 1 - r;
+  while (x < y) {
+    if (error >= 0) {
+      --y;
+      dy += 2;
+      error += dy;
+    }
+    ++x;
+    dx += 2;
+    error += dx;
+
+    i_ppix(im, xc + x, yc + y, col);
+    i_ppix(im, xc + x, yc - y, col);
+    i_ppix(im, xc - x, yc + y, col);
+    i_ppix(im, xc - x, yc - y, col);
+    i_ppix(im, xc + y, yc + x, col);
+    i_ppix(im, xc + y, yc - x, col);
+    i_ppix(im, xc - y, yc + x, col);
+    i_ppix(im, xc - y, yc - x, col);
+  }
+
+  return 1;
+}
+
+/*
 =item i_box(im, x1, y1, x2, y2, color)
 
 =category Drawing

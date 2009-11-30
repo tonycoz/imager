@@ -14,6 +14,7 @@ undef_int		T_IV_U
 undef_neg_int           T_IV_NEGU
 HASH			T_HVREF
 utf8_str		T_UTF8_STR
+i_img_dim		T_IV
 
 # these types are for use by Inline, which can't handle types containing ::
 Imager__Color           T_PTROBJ_INV
