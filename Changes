@@ -3,7 +3,8 @@ Imager release history.  Older releases can be found in Changes.old
 Imager 0.71_02 - 1 Dec 2009
 ==============
 
- - adjust the way we load the threads module for the threads test
+ - adjust the way we load the threads module for the threads test so
+   it works with non-threaded perls
 
 Imager 0.71_01 - 30 Nov 2009
 ===========
