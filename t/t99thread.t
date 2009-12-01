@@ -3,8 +3,13 @@ use strict;
 use Imager;
 use Imager::Color::Float;
 use Imager::Fill;
-use threads;
 use Config;
+BEGIN {
+  if ($Config{useithreads}) {
+    require threads;
+    threads->import;
+  }
+}
 use Test::More;
 
 $Config{useithreads}
