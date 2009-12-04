@@ -4,16 +4,25 @@ use Imager;
 use Imager::Color::Float;
 use Imager::Fill;
 use Config;
+my $loaded_threads;
 BEGIN {
-  if ($Config{useithreads}) {
-    require threads;
-    threads->import;
+  if ($Config{useithreads} && $] > 5.008007) {
+    $loaded_threads =
+      eval {
+	require threads;
+	threads->import;
+	1;
+      };
   }
 }
 use Test::More;
 
 $Config{useithreads}
   or plan skip_all => "can't test Imager's lack of threads support with no threads";
+$] > 5.008007
+  or plan skip_all => "require a perl with CLONE_SKIP to test Imager's lack of threads support";
+$loaded_threads
+  or plan skip_all => "couldn't load threads";
 
 plan tests => 11;
 
