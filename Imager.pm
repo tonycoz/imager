@@ -2792,6 +2792,7 @@ sub arc {
   my $self=shift;
   unless ($self->{IMG}) { $self->{ERRSTR}='empty input image'; return undef; }
   my $dflcl= [ 255, 255, 255, 255];
+  my $good = 1;
   my %opts=
     (
      color=>$dflcl,
@@ -2848,7 +2849,7 @@ sub arc {
       my $color = _color($opts{'color'});
       unless ($color) { 
 	$self->{ERRSTR} = $Imager::ERRSTR; 
-	return; 
+	return;
       }
       if ($opts{filled}) {
 	i_arc($self->{IMG},$opts{'x'},$opts{'y'},$opts{'r'},
@@ -2856,14 +2857,17 @@ sub arc {
       }
       else {
 	if ($opts{d1} == 0 && $opts{d2} == 361) {
-	  i_circle_out($self->{IMG}, $opts{x}, $opts{y}, $opts{r}, $color);
+	  $good = i_circle_out($self->{IMG}, $opts{x}, $opts{y}, $opts{r}, $color);
 	}
 	else {
-	  $self->_set_error("Can't outline partial arcs");
-	  return undef;
+	  $good = i_arc_out($self->{IMG}, $opts{x}, $opts{y}, $opts{r}, $opts{d1}, $opts{d2}, $color);
 	}
       }
     }
+  }
+  unless ($good) {
+    $self->_set_error($self->_error_as_msg);
+    return;
   }
 
   return $self;

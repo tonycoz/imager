@@ -536,6 +536,152 @@ i_circle_out(i_img *im, i_img_dim xc, i_img_dim yc, i_img_dim r,
 }
 
 /*
+=item arc_seg(angle)
+
+Convert an angle in degrees into an angle measure we can generate
+simply from the numbers we have when drawing the circle.
+
+=back
+*/
+
+static float
+arc_seg(double angle) {
+  int seg = (angle + 45) / 90;
+  double remains = angle - seg * 90; /* should be in the range [-45,45] */
+
+  while (seg > 4)
+    seg -= 4;
+  if (seg == 4 && remains > 0)
+    seg = 0;
+
+  return seg * 2 + sin(remains * PI/180);
+}
+
+/*
+=item i_arc_out(im, x, y, r, d1, d2, col)
+
+=category Drawing
+=synopsis i_arc_out(im, 50, 50, 45, 45, 135, &color);
+
+Draw an arc outline centered at (x,y) with radius r, non-anti-aliased
+over the angle range d1 through d2 degrees.
+
+Parameters:
+
+=over
+
+=item *
+
+(x, y) - the center of the circle
+
+=item *
+
+r - the radius of the circle in pixels, must be non-negative
+
+=item *
+
+d1, d2 - the range of angles to draw the arc over, in degrees.
+
+=back
+
+Returns non-zero on success.
+
+Implementation:
+
+=cut
+*/
+
+int
+i_arc_out(i_img *im, i_img_dim xc, i_img_dim yc, i_img_dim r,
+	  float d1, float d2, const i_color *col) {
+  i_img_dim x, y;
+  i_img_dim dx, dy;
+  int error;
+  float segs[2][2];
+  int seg_count;
+  double sin_th;
+  double seg_d1, seg_d2;
+  int seg_num;
+  double inv_r;
+
+  i_clear_error();
+
+  if (r <= 0) {
+    i_push_error(0, "arc: radius must be non-negative");
+    return 0;
+  }
+
+  inv_r = 1.0 / r;
+  seg_d1 = arc_seg(d1);
+  seg_d2 = arc_seg(d2);
+  if (seg_d2 < seg_d1) {
+    /* split into two segments */
+    segs[0][0] = 0;
+    segs[0][1] = seg_d2;
+    segs[1][0] = seg_d1;
+    segs[1][1] = 8;
+    seg_count = 2;
+  }
+  else {
+    segs[0][0] = seg_d1;
+    segs[0][1] = seg_d2;
+    seg_count = 1;
+  }
+
+  for (seg_num = 0; seg_num < seg_count; ++seg_num) {
+    float seg_start = segs[seg_num][0];
+    float seg_end = segs[seg_num][1];
+    if (seg_start <= 0)
+      i_ppix(im, xc+r, yc, col);
+    if (seg_start <= 2 && seg_end >= 2)
+      i_ppix(im, xc, yc+r, col);
+    if (seg_start <= 4 && seg_end >= 4)
+      i_ppix(im, xc-r, yc, col);
+    if (seg_start <= 6 && seg_end >= 6)
+      i_ppix(im, xc, yc-r, col);
+
+    y = 0;
+    x = r;
+    dy = 1;
+    dx = -2 * r;
+    error = 1 - r;
+    while (y < x) {
+      if (error >= 0) {
+	--x;
+	dx += 2;
+	error += dx;
+      }
+      ++y;
+      dy += 2;
+      error += dy;
+      
+      sin_th = (double)y * inv_r;
+      if (seg_start <= sin_th && seg_end >= sin_th)
+	i_ppix(im, xc + x, yc + y, col);
+      if (seg_start <= 2-sin_th && seg_end >= 2-sin_th)
+	i_ppix(im, xc + y, yc + x, col);
+
+      if (seg_start <= 2+sin_th && seg_end >= 2+sin_th)
+	i_ppix(im, xc - y, yc + x, col);
+      if (seg_start <= 4-sin_th && seg_end >= 4-sin_th)
+	i_ppix(im, xc - x, yc + y, col);
+      
+      if (seg_start <= 4+sin_th && seg_end >= 4+sin_th)
+	i_ppix(im, xc - x, yc - y, col);
+      if (seg_start <= 6-sin_th && seg_end >= 6-sin_th)
+	i_ppix(im, xc - y, yc - x, col);
+
+      if (seg_start <= 6+sin_th && seg_end >= 6+sin_th)
+	i_ppix(im, xc + y, yc - x, col);
+      if (seg_start <= 8-sin_th && seg_end >= 8-sin_th)
+	i_ppix(im, xc + x, yc - y, col);
+    }
+  }
+
+  return 1;
+}
+
+/*
 =item i_box(im, x1, y1, x2, y2, color)
 
 =category Drawing

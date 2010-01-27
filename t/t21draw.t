@@ -1,13 +1,6 @@
 #!perl -w
-# Before `make install' is performed this script should be runnable with
-# `make test'. After `make install' it should work as `perl test.pl'
-
-######################### We start with some black magic to print on failure.
-
-# Change 1..1 below to 1..last_test_to_print .
-# (It may become useful if the test is moved to ./t subdirectory.)
 use strict;
-use Test::More tests => 47;
+use Test::More tests => 98;
 use Imager ':all';
 use Imager::Test qw(is_color3);
 
@@ -151,6 +144,26 @@ my $white = '#FFFFFF';
      "draw circle outline");
   is_color3($im->getpixel(x => 23, y => 25), 0, 0, 0,
 	    "check center not filled");
+  ok($im->arc(x => 25, y => 25, r => 24, filled => 0, color => "#0ff"),
+     "draw circle outline");
+  ok($im->write(file => "testout/t21circout.ppm"),
+     "save arc outline");
+}
+
+{
+  my $im = Imager->new(xsize => 400, ysize => 400);
+  my $d1 = 0;
+  my $r = 20;
+  while ($d1 < 350) {
+    ok($im->arc(x => 198, y => 202, r => $r, d1 => $d1, d2 => $d1+300, filled => 0),
+       "draw arc outline r$r d1$d1 len 300");
+    ok($im->arc(x => 198, y => 202, r => $r+3, d1 => $d1, d2 => $d1+40, filled => 0, color => '#FFFF00'),
+       "draw arc outline r$r d1$d1 len 40");
+    $d1 += 15;
+    $r += 6;
+  }
+  is_color3($im->getpixel(x => 198, y => 202), 0, 0, 0,
+	    "check center not filled");
   ok($im->write(file => "testout/t21arcout.ppm"),
      "save arc outline");
 }
@@ -159,6 +172,7 @@ malloc_state();
 
 unless ($ENV{IMAGER_KEEP_FILES}) {
   unlink "testout/t21draw.ppm";
+  unlink "testout/t21circout.ppm";
   unlink "testout/t21arcout.ppm";
 }
 
