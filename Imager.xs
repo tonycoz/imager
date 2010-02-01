@@ -1477,6 +1477,14 @@ i_circle_out(im,x,y,rad,val)
 	   Imager::Color    val
 
 int
+i_circle_out_aa(im,x,y,rad,val)
+    Imager::ImgRaw     im
+	     i_img_dim     x
+	     i_img_dim     y
+             i_img_dim     rad
+	   Imager::Color    val
+
+int
 i_arc_out(im,x,y,rad,d1,d2,val)
     Imager::ImgRaw     im
 	     i_img_dim     x

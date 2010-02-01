@@ -1,6 +1,6 @@
 #!perl -w
 use strict;
-use Test::More tests => 98;
+use Test::More tests => 104;
 use Imager ':all';
 use Imager::Test qw(is_color3);
 
@@ -168,11 +168,29 @@ my $white = '#FFFFFF';
      "save arc outline");
 }
 
+{
+  my $im = Imager->new(xsize => 50, ysize => 50);
+  ok($im->arc(x => 25, y => 27, r => 10, filled => 0, aa => 1, color => 'white'),
+     "draw circle outline");
+  is_color3($im->getpixel(x => 25, y => 27), 0, 0, 0,
+	    "check center not filled");
+  ok($im->arc(x => 23, y => 25, r => 13, filled => 0, color => "#f88", aa => 1),
+     "draw circle outline");
+  is_color3($im->getpixel(x => 23, y => 25), 0, 0, 0,
+	    "check center not filled");
+  ok($im->arc(x => 25, y => 25, r => 24, filled => 0, color => "#0ff", aa => 1),
+     "draw circle outline");
+  ok($im->write(file => "testout/t21aacircout.ppm"),
+     "save arc outline");
+}
+
+
 malloc_state();
 
 unless ($ENV{IMAGER_KEEP_FILES}) {
   unlink "testout/t21draw.ppm";
   unlink "testout/t21circout.ppm";
+  unlink "testout/t21aacircout.ppm";
   unlink "testout/t21arcout.ppm";
 }
 

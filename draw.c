@@ -5,6 +5,74 @@
 #include "imrender.h"
 #include <limits.h>
 
+int
+i_ppix_norm(i_img *im, i_img_dim x, i_img_dim y, i_color const *col) {
+  i_color src;
+  i_color work;
+  int dest_alpha;
+  int remains;
+
+  if (!col->channel[3])
+    return 0;
+
+  switch (im->channels) {
+  case 1:
+    work = *col;
+    i_adapt_colors(2, 4, &work, 1);
+    i_gpix(im, x, y, &src);
+    remains = 255 - work.channel[1];
+    src.channel[0] = (src.channel[0] * remains
+		      + work.channel[0] * work.channel[1]) / 255;
+    return i_ppix(im, x, y, &src);
+
+  case 2:
+    work = *col;
+    i_adapt_colors(2, 4, &work, 1);
+    i_gpix(im, x, y, &src);
+    dest_alpha = work.channel[1] + remains * src.channel[1] / 255;
+    if (work.channel[1] == 255) {
+      return i_ppix(im, x, y, &work);
+    }
+    else {
+      src.channel[0] = (work.channel[1] * work.channel[0]
+			+ remains * src.channel[0] * src.channel[1] / 255) / dest_alpha;
+      src.channel[1] = dest_alpha;
+      return i_ppix(im, x, y, &src);
+    }
+
+  case 3:
+    work = *col;
+    i_gpix(im, x, y, &src);
+    remains = 255 - work.channel[3];
+    src.channel[0] = (src.channel[0] * remains
+		      + work.channel[0] * work.channel[3]) / 255;
+    src.channel[1] = (src.channel[1] * remains
+		      + work.channel[1] * work.channel[3]) / 255;
+    src.channel[2] = (src.channel[2] * remains
+		      + work.channel[2] * work.channel[3]) / 255;
+    return i_ppix(im, x, y, &src);
+
+  case 4:
+    work = *col;
+    i_gpix(im, x, y, &src);
+    dest_alpha = work.channel[3] + remains * src.channel[3] / 255;
+    if (work.channel[3] == 255) {
+      return i_ppix(im, x, y, &work);
+    }
+    else {
+      src.channel[0] = (work.channel[3] * work.channel[0]
+			+ remains * src.channel[0] * src.channel[3] / 255) / dest_alpha;
+      src.channel[1] = (work.channel[3] * work.channel[1]
+			+ remains * src.channel[1] * src.channel[3] / 255) / dest_alpha;
+      src.channel[2] = (work.channel[3] * work.channel[2]
+			+ remains * src.channel[2] * src.channel[3] / 255) / dest_alpha;
+      src.channel[3] = dest_alpha;
+      return i_ppix(im, x, y, &src);
+    }
+  }
+  return 0;
+}
+
 static void
 cfill_from_btm(i_img *im, i_fill_t *fill, struct i_bitmap *btm, 
 	       int bxmin, int bxmax, int bymin, int bymax);
@@ -526,10 +594,12 @@ i_circle_out(i_img *im, i_img_dim xc, i_img_dim yc, i_img_dim r,
     i_ppix(im, xc + x, yc - y, col);
     i_ppix(im, xc - x, yc + y, col);
     i_ppix(im, xc - x, yc - y, col);
-    i_ppix(im, xc + y, yc + x, col);
-    i_ppix(im, xc + y, yc - x, col);
-    i_ppix(im, xc - y, yc + x, col);
-    i_ppix(im, xc - y, yc - x, col);
+    if (x != y) {
+      i_ppix(im, xc + y, yc + x, col);
+      i_ppix(im, xc + y, yc - x, col);
+      i_ppix(im, xc - y, yc + x, col);
+      i_ppix(im, xc - y, yc - x, col);
+    }
   }
 
   return 1;
@@ -676,6 +746,105 @@ i_arc_out(i_img *im, i_img_dim xc, i_img_dim yc, i_img_dim r,
       if (seg_start <= 8-sin_th && seg_end >= 8-sin_th)
 	i_ppix(im, xc + x, yc - y, col);
     }
+  }
+
+  return 1;
+}
+
+static int
+cover(i_img_dim r, i_img_dim j) {
+  float rjsqrt = sqrt(r*r - j*j);
+
+  return (int)(255 * (ceil(rjsqrt) - rjsqrt) + 0.5);
+}
+
+/*
+=item i_circle_out_aa(im, xc, yc, r, col)
+
+=synopsis i_circle_out_aa(im, 50, 50, 45, &color);
+
+Draw a circle outline centered at (x,y) with radius r, anti-aliased.
+
+Parameters:
+
+=over
+
+=item *
+
+(x, y) - the center of the circle
+
+=item *
+
+r - the radius of the circle in pixels, must be non-negative
+
+=back
+
+Returns non-zero on success.
+
+=cut
+
+Based on "Fast Anti-Aliased Circle Generation", Xiaolin Wu, Graphics
+Gems.
+
+*/
+
+int
+i_circle_out_aa(i_img *im, i_img_dim xc, i_img_dim yc, i_img_dim r, const i_color *col) {
+  i_img_dim i, j;
+  int t;
+  i_color workc = *col;
+  int orig_alpha = col->channel[3];
+
+  i_clear_error();
+  if (r <= 0) {
+    i_push_error(0, "arc: radius must be non-negative");
+    return 0;
+  }
+  i = r;
+  j = 0;
+  t = 0;
+  i_ppix_norm(im, xc+i, yc+j, col);
+  i_ppix_norm(im, xc-i, yc+j, col);
+  i_ppix_norm(im, xc+j, yc+i, col);
+  i_ppix_norm(im, xc+j, yc-i, col);
+
+  while (i > j) {
+    int d, inv_d;
+    i_color p;
+    int ch;
+    j++;
+    d = cover(r, j);
+    inv_d = 255-d;
+    if (d < t) {
+      --i;
+    }
+    if (inv_d) {
+      workc.channel[3] = orig_alpha * inv_d / 255;
+      i_ppix_norm(im, xc+i, yc+j, &workc);
+      i_ppix_norm(im, xc-i, yc+j, &workc);
+      i_ppix_norm(im, xc+i, yc-j, &workc);
+      i_ppix_norm(im, xc-i, yc-j, &workc);
+
+      if (i != j) {
+	i_ppix_norm(im, xc+j, yc+i, &workc);
+	i_ppix_norm(im, xc-j, yc+i, &workc);
+	i_ppix_norm(im, xc+j, yc-i, &workc);
+	i_ppix_norm(im, xc-j, yc-i, &workc);
+      }
+    }
+    if (d) {
+      workc.channel[3] = orig_alpha * d / 255;
+      i_ppix_norm(im, xc+i-1, yc+j, &workc);
+      i_ppix_norm(im, xc-i+1, yc+j, &workc);
+      i_ppix_norm(im, xc+i-1, yc-j, &workc);
+      i_ppix_norm(im, xc-i+1, yc-j, &workc);
+
+      i_ppix_norm(im, xc+j, yc+i-1, &workc);
+      i_ppix_norm(im, xc-j, yc+i-1, &workc);
+      i_ppix_norm(im, xc+j, yc-i+1, &workc);
+      i_ppix_norm(im, xc-j, yc-i+1, &workc);
+    }
+    t = d;
   }
 
   return 1;

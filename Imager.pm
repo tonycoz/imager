@@ -2816,7 +2816,7 @@ sub arc {
       i_arc_aa_cfill($self->{IMG},$opts{'x'},$opts{'y'},$opts{'r'},$opts{'d1'},
 		     $opts{'d2'}, $opts{fill}{fill});
     }
-    else {
+    elsif ($opts{filled}) {
       my $color = _color($opts{'color'});
       unless ($color) { 
 	$self->{ERRSTR} = $Imager::ERRSTR; 
@@ -2829,6 +2829,16 @@ sub arc {
       else {
 	i_arc_aa($self->{IMG},$opts{'x'},$opts{'y'},$opts{'r'},
 		 $opts{'d1'}, $opts{'d2'}, $color); 
+      }
+    }
+    else {
+      my $color = _color($opts{'color'});
+      if ($opts{d2} - $opts{d1} >= 360) {
+	$good = i_circle_out_aa($self->{IMG}, $opts{'x'}, $opts{'y'}, $opts{'r'}, $color);
+      }
+      else {
+	$self->_set_error("Partial aa arcs not implemented");
+	return;
       }
     }
   }
