@@ -3,6 +3,7 @@ use strict;
 use Test::More tests => 104;
 use Imager ':all';
 use Imager::Test qw(is_color3);
+use constant PI => 3.1415926536;
 
 init_log("testout/t21draw.log",1);
 
@@ -152,6 +153,19 @@ my $white = '#FFFFFF';
 
 {
   my $im = Imager->new(xsize => 400, ysize => 400);
+  {
+    my $lc = Imager::Color->new(32, 32, 32);
+    my $an = 0;
+    while ($an < 360) {
+      my $an_r = $an * PI / 180;
+      my $ca = cos($an_r);
+      my $sa = sin($an_r);
+      $im->line(aa => 1, color => $lc,
+		x1 => 198 + 5 * $ca, y1 => 202 + 5 * $sa,
+		x2 => 198 + 190 * $ca, y2 => 202 + 190 * $sa);
+      $an += 5;
+    }
+  }
   my $d1 = 0;
   my $r = 20;
   while ($d1 < 350) {
@@ -178,7 +192,7 @@ my $white = '#FFFFFF';
      "draw circle outline");
   is_color3($im->getpixel(x => 23, y => 25), 0, 0, 0,
 	    "check center not filled");
-  ok($im->arc(x => 25, y => 25, r => 24, filled => 0, color => "#0ff", aa => 1),
+  ok($im->arc(x => 25, y => 25, r => 24, filled => 0, color => [0,0, 255, 128], aa => 1),
      "draw circle outline");
   ok($im->write(file => "testout/t21aacircout.ppm"),
      "save arc outline");
