@@ -1,6 +1,6 @@
 #!perl -w
 use strict;
-use Test::More tests => 104;
+use Test::More tests => 154;
 use Imager ':all';
 use Imager::Test qw(is_color3);
 use constant PI => 3.1415926536;
@@ -183,18 +183,54 @@ my $white = '#FFFFFF';
 }
 
 {
-  my $im = Imager->new(xsize => 50, ysize => 50);
-  ok($im->arc(x => 25, y => 27, r => 10, filled => 0, aa => 1, color => 'white'),
+  my $im = Imager->new(xsize => 400, ysize => 400);
+  ok($im->arc(x => 197, y => 201, r => 10, filled => 0, aa => 1, color => 'white'),
      "draw circle outline");
-  is_color3($im->getpixel(x => 25, y => 27), 0, 0, 0,
+  is_color3($im->getpixel(x => 197, y => 201), 0, 0, 0,
 	    "check center not filled");
-  ok($im->arc(x => 23, y => 25, r => 13, filled => 0, color => "#f88", aa => 1),
+  ok($im->arc(x => 197, y => 205, r => 13, filled => 0, color => "#f88", aa => 1),
      "draw circle outline");
-  is_color3($im->getpixel(x => 23, y => 25), 0, 0, 0,
+  is_color3($im->getpixel(x => 197, y => 205), 0, 0, 0,
 	    "check center not filled");
-  ok($im->arc(x => 25, y => 25, r => 24, filled => 0, color => [0,0, 255, 128], aa => 1),
+  ok($im->arc(x => 190, y => 215, r => 24, filled => 0, color => [0,0, 255, 128], aa => 1),
      "draw circle outline");
+  my $r = 40;
+  while ($r < 180) {
+    ok($im->arc(x => 197, y => 201, r => $r, filled => 0, aa => 1, color => '#ff0'), "draw aa circle rad $r");
+    $r += 15;
+  }
   ok($im->write(file => "testout/t21aacircout.ppm"),
+     "save arc outline");
+}
+
+{
+  my $im = Imager->new(xsize => 400, ysize => 400);
+  {
+    my $lc = Imager::Color->new(32, 32, 32);
+    my $an = 0;
+    while ($an < 360) {
+      my $an_r = $an * PI / 180;
+      my $ca = cos($an_r);
+      my $sa = sin($an_r);
+      $im->line(aa => 1, color => $lc,
+		x1 => 198 + 5 * $ca, y1 => 202 + 5 * $sa,
+		x2 => 198 + 190 * $ca, y2 => 202 + 190 * $sa);
+      $an += 5;
+    }
+  }
+  my $d1 = 0;
+  my $r = 20;
+  while ($d1 < 350) {
+    ok($im->arc(x => 198, y => 202, r => $r, d1 => $d1, d2 => $d1+300, filled => 0, aa => 1),
+       "draw aa arc outline r$r d1$d1 len 300");
+    ok($im->arc(x => 198, y => 202, r => $r+3, d1 => $d1, d2 => $d1+40, filled => 0, color => '#FFFF00', aa => 1),
+       "draw aa arc outline r$r d1$d1 len 40");
+    $d1 += 15;
+    $r += 6;
+  }
+  is_color3($im->getpixel(x => 198, y => 202), 0, 0, 0,
+	    "check center not filled");
+  ok($im->write(file => "testout/t21aaarcout.ppm"),
      "save arc outline");
 }
 
@@ -206,6 +242,7 @@ unless ($ENV{IMAGER_KEEP_FILES}) {
   unlink "testout/t21circout.ppm";
   unlink "testout/t21aacircout.ppm";
   unlink "testout/t21arcout.ppm";
+  unlink "testout/t21aaarcout.ppm";
 }
 
 sub color_cmp {

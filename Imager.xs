@@ -1494,6 +1494,16 @@ i_arc_out(im,x,y,rad,d1,d2,val)
 	     float d2
 	   Imager::Color    val
 
+int
+i_arc_out_aa(im,x,y,rad,d1,d2,val)
+    Imager::ImgRaw     im
+	     i_img_dim     x
+	     i_img_dim     y
+             i_img_dim     rad
+	     float d1
+	     float d2
+	   Imager::Color    val
+
 
 void
 i_bezier_multi(im,xc,yc,val)

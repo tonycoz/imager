@@ -169,6 +169,7 @@ void i_line        (i_img *im,int x1,int y1,int x2,int y2,const i_color *val, in
 void i_line_aa     (i_img *im,int x1,int y1,int x2,int y2,const i_color *val, int endp);
 void i_arc         (i_img *im,int x,int y,float rad,float d1,float d2,const i_color *val);
 int i_arc_out(i_img *im,i_img_dim x,i_img_dim y,i_img_dim rad,float d1,float d2,const i_color *val);
+int i_arc_out_aa(i_img *im,i_img_dim x,i_img_dim y,i_img_dim rad,float d1,float d2,const i_color *val);
 void i_arc_aa         (i_img *im, double x, double y, double rad, double d1, double d2, const i_color *val);
 void i_arc_cfill(i_img *im,int x,int y,float rad,float d1,float d2,i_fill_t *fill);
 void i_arc_aa_cfill(i_img *im,double x,double y,double rad,double d1,double d2,i_fill_t *fill);

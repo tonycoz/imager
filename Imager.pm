@@ -2837,8 +2837,7 @@ sub arc {
 	$good = i_circle_out_aa($self->{IMG}, $opts{'x'}, $opts{'y'}, $opts{'r'}, $color);
       }
       else {
-	$self->_set_error("Partial aa arcs not implemented");
-	return;
+	$good = i_arc_out_aa($self->{IMG}, $opts{'x'}, $opts{'y'}, $opts{'r'}, $opts{'d1'}, $opts{'d2'}, $color);
       }
     }
   }
