@@ -1,6 +1,6 @@
 #!perl -w
 use strict;
-use Test::More tests => 154;
+use Test::More tests => 186;
 use Imager ':all';
 use Imager::Test qw(is_color3);
 use constant PI => 3.1415926536;
@@ -136,17 +136,23 @@ my $white = '#FFFFFF';
 }
 
 {
-  my $im = Imager->new(xsize => 50, ysize => 50);
-  ok($im->arc(x => 25, y => 27, r => 10, filled => 0),
+  my $im = Imager->new(xsize => 400, ysize => 400);
+  ok($im->arc(x => 200, y => 202, r => 10, filled => 0),
      "draw circle outline");
-  is_color3($im->getpixel(x => 25, y => 27), 0, 0, 0,
+  is_color3($im->getpixel(x => 200, y => 202), 0, 0, 0,
 	    "check center not filled");
-  ok($im->arc(x => 23, y => 25, r => 13, filled => 0, color => "#f88"),
+  ok($im->arc(x => 198, y => 200, r => 13, filled => 0, color => "#f88"),
      "draw circle outline");
-  is_color3($im->getpixel(x => 23, y => 25), 0, 0, 0,
+  is_color3($im->getpixel(x => 198, y => 200), 0, 0, 0,
 	    "check center not filled");
-  ok($im->arc(x => 25, y => 25, r => 24, filled => 0, color => "#0ff"),
+  ok($im->arc(x => 200, y => 200, r => 24, filled => 0, color => "#0ff"),
      "draw circle outline");
+  my $r = 40;
+  while ($r < 180) {
+    ok($im->arc(x => 200, y => 200, r => $r, filled => 0, color => "#ff0"),
+       "draw circle outline r $r");
+    $r += 15;
+  }
   ok($im->write(file => "testout/t21circout.ppm"),
      "save arc outline");
 }
@@ -195,9 +201,9 @@ my $white = '#FFFFFF';
   ok($im->arc(x => 190, y => 215, r => 24, filled => 0, color => [0,0, 255, 128], aa => 1),
      "draw circle outline");
   my $r = 40;
-  while ($r < 180) {
+  while ($r < 190) {
     ok($im->arc(x => 197, y => 201, r => $r, filled => 0, aa => 1, color => '#ff0'), "draw aa circle rad $r");
-    $r += 15;
+    $r += 7;
   }
   ok($im->write(file => "testout/t21aacircout.ppm"),
      "save arc outline");
@@ -254,8 +260,6 @@ sub color_cmp {
     || $l[1] <=> $r[1]
       || $l[2] <=> $r[2];
 }
-
-use constant PI => 4 * atan2(1,1);
 
 sub angle_marker {
   my ($img, $x, $y, $radius, @angles) = @_;

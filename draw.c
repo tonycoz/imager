@@ -764,11 +764,11 @@ i_arc_out(i_img *im, i_img_dim xc, i_img_dim yc, i_img_dim r,
   return 1;
 }
 
-static int
+static double
 cover(i_img_dim r, i_img_dim j) {
   float rjsqrt = sqrt(r*r - j*j);
 
-  return (int)(255 * (ceil(rjsqrt) - rjsqrt) + 0.5);
+  return ceil(rjsqrt) - rjsqrt;
 }
 
 /*
@@ -803,12 +803,16 @@ Returns non-zero on success.
 Based on "Fast Anti-Aliased Circle Generation", Xiaolin Wu, Graphics
 Gems.
 
+I use floating point for I<D> since for large circles the precision of
+a [0,255] value isn't sufficient when approaching the end of the
+octant.
+
 */
 
 int
 i_circle_out_aa(i_img *im, i_img_dim xc, i_img_dim yc, i_img_dim r, const i_color *col) {
   i_img_dim i, j;
-  int t;
+  double t;
   i_color workc = *col;
   int orig_alpha = col->channel[3];
 
@@ -825,18 +829,20 @@ i_circle_out_aa(i_img *im, i_img_dim xc, i_img_dim yc, i_img_dim r, const i_colo
   i_ppix_norm(im, xc+j, yc+i, col);
   i_ppix_norm(im, xc+j, yc-i, col);
 
-  while (i > j) {
-    int d, inv_d;
+  while (i > j+1) {
+    double d;
+    int cv, inv_cv;
     i_color p;
     int ch;
     j++;
     d = cover(r, j);
-    inv_d = 255-d;
+    cv = (int)(d * 255 + 0.5);
+    inv_cv = 255-cv;
     if (d < t) {
       --i;
     }
-    if (inv_d) {
-      workc.channel[3] = orig_alpha * inv_d / 255;
+    if (inv_cv) {
+      workc.channel[3] = orig_alpha * inv_cv / 255;
       i_ppix_norm(im, xc+i, yc+j, &workc);
       i_ppix_norm(im, xc-i, yc+j, &workc);
       i_ppix_norm(im, xc+i, yc-j, &workc);
@@ -849,17 +855,19 @@ i_circle_out_aa(i_img *im, i_img_dim xc, i_img_dim yc, i_img_dim r, const i_colo
 	i_ppix_norm(im, xc-j, yc-i, &workc);
       }
     }
-    if (d) {
-      workc.channel[3] = orig_alpha * d / 255;
+    if (cv && i > j) {
+      workc.channel[3] = orig_alpha * cv / 255;
       i_ppix_norm(im, xc+i-1, yc+j, &workc);
       i_ppix_norm(im, xc-i+1, yc+j, &workc);
       i_ppix_norm(im, xc+i-1, yc-j, &workc);
       i_ppix_norm(im, xc-i+1, yc-j, &workc);
 
-      i_ppix_norm(im, xc+j, yc+i-1, &workc);
-      i_ppix_norm(im, xc-j, yc+i-1, &workc);
-      i_ppix_norm(im, xc+j, yc-i+1, &workc);
-      i_ppix_norm(im, xc-j, yc-i+1, &workc);
+      if (j != i-1) {
+	i_ppix_norm(im, xc+j, yc+i-1, &workc);
+	i_ppix_norm(im, xc-j, yc+i-1, &workc);
+	i_ppix_norm(im, xc+j, yc-i+1, &workc);
+	i_ppix_norm(im, xc-j, yc-i+1, &workc);
+      }
     }
     t = d;
   }
@@ -906,7 +914,7 @@ Gems.
 int
 i_arc_out_aa(i_img *im, i_img_dim xc, i_img_dim yc, i_img_dim r, float d1, float d2, const i_color *col) {
   i_img_dim i, j;
-  int t;
+  double t;
   i_color workc = *col;
   i_img_dim segs[2][2];
   int seg_count;
@@ -967,19 +975,21 @@ i_arc_out_aa(i_img *im, i_img_dim xc, i_img_dim yc, i_img_dim r, float d1, float
     if (seg_start <= seg3 && seg_end >= seg3)
       i_ppix_norm(im, xc+j, yc-i, col);
     
-    while (i > j) {
-      int d, inv_d;
+    while (i > j+1) {
+      int cv, inv_cv;
       i_color p;
       int ch;
+      double d;
       j++;
       d = cover(r, j);
-      inv_d = 255-d;
+      cv = (int)(d * 255 + 0.5);
+      inv_cv = 255-cv;
       if (d < t) {
 	--i;
       }
       sin_th = j;
-      if (inv_d) {
-	workc.channel[3] = orig_alpha * inv_d / 255;
+      if (inv_cv) {
+	workc.channel[3] = orig_alpha * inv_cv / 255;
 
 	if (seg_start <= sin_th && seg_end >= sin_th)
 	  i_ppix_norm(im, xc+i, yc+j, &workc);
@@ -1001,8 +1011,8 @@ i_arc_out_aa(i_img *im, i_img_dim xc, i_img_dim yc, i_img_dim r, float d1, float
 	    i_ppix_norm(im, xc-j, yc-i, &workc);
 	}
       }
-      if (d) {
-	workc.channel[3] = orig_alpha * d / 255;
+      if (cv && i > j) {
+	workc.channel[3] = orig_alpha * cv / 255;
 	if (seg_start <= sin_th && seg_end >= sin_th)
 	  i_ppix_norm(im, xc+i-1, yc+j, &workc);
 	if (seg_start <= seg2 - sin_th && seg_end >= seg2 - sin_th)
