@@ -1,9 +1,9 @@
 #!perl -w
 use strict;
-use Test::More tests => 186;
+use Test::More tests => 235;
 use Imager ':all';
 use Imager::Test qw(is_color3);
-use constant PI => 3.1415926536;
+use constant PI => 3.14159265358979;
 
 init_log("testout/t21draw.log",1);
 
@@ -240,6 +240,28 @@ my $white = '#FFFFFF';
      "save arc outline");
 }
 
+{
+  my $im = Imager->new(xsize => 400, ysize => 400);
+
+  my $an = 0;
+  my $step = 15;
+  while ($an <= 360-$step) {
+    my $cx = int(200 + 20 * cos(($an+$step/2) * PI / 180));
+    my $cy = int(200 + 20 * sin(($an+$step/2) * PI / 180));
+
+    ok($im->arc(x => $cx, y => $cy, aa => 1, color => "#fff", 
+		d1 => $an, d2 => $an+$step, filled => 0, r => 170),
+      "angle starting from $an");
+    ok($im->arc(x => $cx+0.5, y => $cy+0.5, aa => 1, color => "#ff0", 
+		d1 => $an, d2 => $an+$step, r => 168),
+      "filled angle starting from $an");
+
+    $an += $step;
+  }
+  ok($im->write(file => "testout/t21aaarcs.ppm"),
+     "save arc outline");
+}
+
 
 malloc_state();
 
@@ -249,6 +271,7 @@ unless ($ENV{IMAGER_KEEP_FILES}) {
   unlink "testout/t21aacircout.ppm";
   unlink "testout/t21arcout.ppm";
   unlink "testout/t21aaarcout.ppm";
+  unlink "testout/t21aaarcs.ppm";
 }
 
 sub color_cmp {
