@@ -2791,12 +2791,18 @@ sub box {
 sub arc {
   my $self=shift;
   unless ($self->{IMG}) { $self->{ERRSTR}='empty input image'; return undef; }
-  my $dflcl=i_color_new(255,255,255,255);
-  my %opts=(color=>$dflcl,
-	    'r'=>_min($self->getwidth(),$self->getheight())/3,
-	    'x'=>$self->getwidth()/2,
-	    'y'=>$self->getheight()/2,
-	    'd1'=>0, 'd2'=>361, @_);
+  my $dflcl= [ 255, 255, 255, 255];
+  my $good = 1;
+  my %opts=
+    (
+     color=>$dflcl,
+     'r'=>_min($self->getwidth(),$self->getheight())/3,
+     'x'=>$self->getwidth()/2,
+     'y'=>$self->getheight()/2,
+     'd1'=>0, 'd2'=>361, 
+     filled => 1,
+     @_,
+    );
   if ($opts{aa}) {
     if ($opts{fill}) {
       unless (UNIVERSAL::isa($opts{fill}, 'Imager::Fill')) {
@@ -2810,7 +2816,7 @@ sub arc {
       i_arc_aa_cfill($self->{IMG},$opts{'x'},$opts{'y'},$opts{'r'},$opts{'d1'},
 		     $opts{'d2'}, $opts{fill}{fill});
     }
-    else {
+    elsif ($opts{filled}) {
       my $color = _color($opts{'color'});
       unless ($color) { 
 	$self->{ERRSTR} = $Imager::ERRSTR; 
@@ -2823,6 +2829,15 @@ sub arc {
       else {
 	i_arc_aa($self->{IMG},$opts{'x'},$opts{'y'},$opts{'r'},
 		 $opts{'d1'}, $opts{'d2'}, $color); 
+      }
+    }
+    else {
+      my $color = _color($opts{'color'});
+      if ($opts{d2} - $opts{d1} >= 360) {
+	$good = i_circle_out_aa($self->{IMG}, $opts{'x'}, $opts{'y'}, $opts{'r'}, $color);
+      }
+      else {
+	$good = i_arc_out_aa($self->{IMG}, $opts{'x'}, $opts{'y'}, $opts{'r'}, $opts{'d1'}, $opts{'d2'}, $color);
       }
     }
   }
@@ -2843,11 +2858,25 @@ sub arc {
       my $color = _color($opts{'color'});
       unless ($color) { 
 	$self->{ERRSTR} = $Imager::ERRSTR; 
-	return; 
+	return;
       }
-      i_arc($self->{IMG},$opts{'x'},$opts{'y'},$opts{'r'},
-	    $opts{'d1'}, $opts{'d2'}, $color); 
+      if ($opts{filled}) {
+	i_arc($self->{IMG},$opts{'x'},$opts{'y'},$opts{'r'},
+	      $opts{'d1'}, $opts{'d2'}, $color); 
+      }
+      else {
+	if ($opts{d1} == 0 && $opts{d2} == 361) {
+	  $good = i_circle_out($self->{IMG}, $opts{x}, $opts{y}, $opts{r}, $color);
+	}
+	else {
+	  $good = i_arc_out($self->{IMG}, $opts{x}, $opts{y}, $opts{r}, $opts{d1}, $opts{d2}, $color);
+	}
+      }
     }
+  }
+  unless ($good) {
+    $self->_set_error($self->_error_as_msg);
+    return;
   }
 
   return $self;

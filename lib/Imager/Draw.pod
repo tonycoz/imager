@@ -276,11 +276,16 @@ filled.  See L<"Fill Parameters">.
   $img->arc(color=>$red, r=>20, x=>200, y=>100, d1=>10, d2=>20 );
 
 This creates a filled red arc with a 'center' at (200, 100) and spans
-10 degrees and the slice has a radius of 20. [NOTE: arc has a BUG in
-it right now for large differences in angles.]
+10 degrees and the slice has a radius of 20.
+
 It's also possible to supply a C<fill> parameter.
 
+To draw just an arc outline - just the curve, not the radius lines,
+set filled to 0:
+
 Parameters:
+
+  $img->arc(color=>$red, r=>20, x=>200, y=>100, d1=>10, d2=>20, filled=>0 );
 
 =over
 
@@ -316,6 +321,10 @@ aa - if true the filled arc is drawn anti-aliased.  Default: false.
 Anti-aliased arc() is experimental for now, I'm not entirely happy
 with the results in some cases.
 
+=item *
+
+filled - set to 0 to draw only an outline.
+
 =back
 
   # arc going through angle zero:
@@ -335,8 +344,9 @@ instead of a color parameter.
 
   $img->circle(r => 50, x=> 150, y => 150, fill=>{ hatch => 'stipple' });
 
-The circle is always filled but that might change, so always pass a 
-filled=>1 parameter if you want it to be filled.
+To draw a circular outline, set C<filled> to 0:
+
+  $img->circle(color=>$green, r=>50, x=>200, y=>100, aa=>1, filled=>0);
 
 =over
 
@@ -360,6 +370,10 @@ fill - the fill for the filled circle.  See L<"Fill Parameters">
 =item *
 
 aa - if true the filled circle is drawn anti-aliased.  Default: false.
+
+=item *
+
+filled - set to 0 to just draw an outline.
 
 =back
 

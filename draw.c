@@ -5,6 +5,74 @@
 #include "imrender.h"
 #include <limits.h>
 
+int
+i_ppix_norm(i_img *im, i_img_dim x, i_img_dim y, i_color const *col) {
+  i_color src;
+  i_color work;
+  int dest_alpha;
+  int remains;
+
+  if (!col->channel[3])
+    return 0;
+
+  switch (im->channels) {
+  case 1:
+    work = *col;
+    i_adapt_colors(2, 4, &work, 1);
+    i_gpix(im, x, y, &src);
+    remains = 255 - work.channel[1];
+    src.channel[0] = (src.channel[0] * remains
+		      + work.channel[0] * work.channel[1]) / 255;
+    return i_ppix(im, x, y, &src);
+
+  case 2:
+    work = *col;
+    i_adapt_colors(2, 4, &work, 1);
+    i_gpix(im, x, y, &src);
+    dest_alpha = work.channel[1] + remains * src.channel[1] / 255;
+    if (work.channel[1] == 255) {
+      return i_ppix(im, x, y, &work);
+    }
+    else {
+      src.channel[0] = (work.channel[1] * work.channel[0]
+			+ remains * src.channel[0] * src.channel[1] / 255) / dest_alpha;
+      src.channel[1] = dest_alpha;
+      return i_ppix(im, x, y, &src);
+    }
+
+  case 3:
+    work = *col;
+    i_gpix(im, x, y, &src);
+    remains = 255 - work.channel[3];
+    src.channel[0] = (src.channel[0] * remains
+		      + work.channel[0] * work.channel[3]) / 255;
+    src.channel[1] = (src.channel[1] * remains
+		      + work.channel[1] * work.channel[3]) / 255;
+    src.channel[2] = (src.channel[2] * remains
+		      + work.channel[2] * work.channel[3]) / 255;
+    return i_ppix(im, x, y, &src);
+
+  case 4:
+    work = *col;
+    i_gpix(im, x, y, &src);
+    dest_alpha = work.channel[3] + remains * src.channel[3] / 255;
+    if (work.channel[3] == 255) {
+      return i_ppix(im, x, y, &work);
+    }
+    else {
+      src.channel[0] = (work.channel[3] * work.channel[0]
+			+ remains * src.channel[0] * src.channel[3] / 255) / dest_alpha;
+      src.channel[1] = (work.channel[3] * work.channel[1]
+			+ remains * src.channel[1] * src.channel[3] / 255) / dest_alpha;
+      src.channel[2] = (work.channel[3] * work.channel[2]
+			+ remains * src.channel[2] * src.channel[3] / 255) / dest_alpha;
+      src.channel[3] = dest_alpha;
+      return i_ppix(im, x, y, &src);
+    }
+  }
+  return 0;
+}
+
 static void
 cfill_from_btm(i_img *im, i_fill_t *fill, struct i_bitmap *btm, 
 	       int bxmin, int bxmax, int bymin, int bymax);
@@ -290,7 +358,7 @@ i_arc_aa(i_img *im, double x, double y, double rad, double d1, double d2,
   double *xvals, *yvals;
   int count;
 
-  arc_poly(&count, &xvals, &yvals, x, y, rad, d1, d2);
+  arc_poly(&count, &xvals, &yvals, x+0.5, y+0.5, rad, d1, d2);
 
   i_poly_aa(im, count, xvals, yvals, val);
 
@@ -456,6 +524,518 @@ i_circle_aa(i_img *im, float x, float y, float rad, const i_color *val) {
     }
   }
   i_mmarray_dst(&dot);
+}
+
+/*
+=item i_circle_out(im, x, y, r, col)
+
+=category Drawing
+=synopsis i_circle_out(im, 50, 50, 45, &color);
+
+Draw a circle outline centered at (x,y) with radius r,
+non-anti-aliased.
+
+Parameters:
+
+=over
+
+=item *
+
+(x, y) - the center of the circle
+
+=item *
+
+r - the radius of the circle in pixels, must be non-negative
+
+=back
+
+Returns non-zero on success.
+
+Implementation:
+
+=cut
+*/
+
+int
+i_circle_out(i_img *im, i_img_dim xc, i_img_dim yc, i_img_dim r,
+	     const i_color *col) {
+  i_img_dim x, y;
+  i_img_dim dx, dy;
+  int error;
+
+  i_clear_error();
+
+  if (r < 0) {
+    i_push_error(0, "circle: radius must be non-negative");
+    return 0;
+  }
+
+  i_ppix(im, xc+r, yc, col);
+  i_ppix(im, xc-r, yc, col);
+  i_ppix(im, xc, yc+r, col);
+  i_ppix(im, xc, yc-r, col);
+
+  x = 0;
+  y = r;
+  dx = 1;
+  dy = -2 * r;
+  error = 1 - r;
+  while (x < y) {
+    if (error >= 0) {
+      --y;
+      dy += 2;
+      error += dy;
+    }
+    ++x;
+    dx += 2;
+    error += dx;
+
+    i_ppix(im, xc + x, yc + y, col);
+    i_ppix(im, xc + x, yc - y, col);
+    i_ppix(im, xc - x, yc + y, col);
+    i_ppix(im, xc - x, yc - y, col);
+    if (x != y) {
+      i_ppix(im, xc + y, yc + x, col);
+      i_ppix(im, xc + y, yc - x, col);
+      i_ppix(im, xc - y, yc + x, col);
+      i_ppix(im, xc - y, yc - x, col);
+    }
+  }
+
+  return 1;
+}
+
+/*
+=item arc_seg(angle)
+
+Convert an angle in degrees into an angle measure we can generate
+simply from the numbers we have when drawing the circle.
+
+=back
+*/
+
+static i_img_dim
+arc_seg(double angle, int scale) {
+  i_img_dim seg = (angle + 45) / 90;
+  double remains = angle - seg * 90; /* should be in the range [-45,45] */
+  int sign = remains < 0 ? -1 : remains ? 1 : 0;
+
+  while (seg > 4)
+    seg -= 4;
+  if (seg == 4 && remains > 0)
+    seg = 0;
+
+  return scale * (seg * 2 + sin(remains * PI/180));
+}
+
+/*
+=item i_arc_out(im, x, y, r, d1, d2, col)
+
+=category Drawing
+=synopsis i_arc_out(im, 50, 50, 45, 45, 135, &color);
+
+Draw an arc outline centered at (x,y) with radius r, non-anti-aliased
+over the angle range d1 through d2 degrees.
+
+Parameters:
+
+=over
+
+=item *
+
+(x, y) - the center of the circle
+
+=item *
+
+r - the radius of the circle in pixels, must be non-negative
+
+=item *
+
+d1, d2 - the range of angles to draw the arc over, in degrees.
+
+=back
+
+Returns non-zero on success.
+
+Implementation:
+
+=cut
+*/
+
+int
+i_arc_out(i_img *im, i_img_dim xc, i_img_dim yc, i_img_dim r,
+	  float d1, float d2, const i_color *col) {
+  i_img_dim x, y;
+  i_img_dim dx, dy;
+  int error;
+  i_img_dim segs[2][2];
+  int seg_count;
+  i_img_dim sin_th;
+  i_img_dim seg_d1, seg_d2;
+  int seg_num;
+  double inv_r;
+  i_img_dim scale = r + 1;
+  i_img_dim seg1 = scale * 2;
+  i_img_dim seg2 = scale * 4;
+  i_img_dim seg3 = scale * 6;
+  i_img_dim seg4 = scale * 8;
+
+  i_clear_error();
+
+  if (r <= 0) {
+    i_push_error(0, "arc: radius must be non-negative");
+    return 0;
+  }
+  if (d1 + 360 <= d2)
+    return i_circle_out(im, xc, yc, r, col);
+
+  if (d1 < 0)
+    d1 += 360 * floor((-d1 + 359) / 360);
+  if (d2 < 0)
+    d2 += 360 * floor((-d2 + 359) / 360);
+  d1 = fmod(d1, 360);
+  d2 = fmod(d2, 360);
+  seg_d1 = arc_seg(d1, scale);
+  seg_d2 = arc_seg(d2, scale);
+  if (seg_d2 < seg_d1) {
+    /* split into two segments */
+    segs[0][0] = 0;
+    segs[0][1] = seg_d2;
+    segs[1][0] = seg_d1;
+    segs[1][1] = seg4;
+    seg_count = 2;
+  }
+  else {
+    segs[0][0] = seg_d1;
+    segs[0][1] = seg_d2;
+    seg_count = 1;
+  }
+
+  for (seg_num = 0; seg_num < seg_count; ++seg_num) {
+    i_img_dim seg_start = segs[seg_num][0];
+    i_img_dim seg_end = segs[seg_num][1];
+    if (seg_start == 0)
+      i_ppix(im, xc+r, yc, col);
+    if (seg_start <= seg1 && seg_end >= seg1)
+      i_ppix(im, xc, yc+r, col);
+    if (seg_start <= seg2 && seg_end >= seg2)
+      i_ppix(im, xc-r, yc, col);
+    if (seg_start <= seg3 && seg_end >= seg3)
+      i_ppix(im, xc, yc-r, col);
+
+    y = 0;
+    x = r;
+    dy = 1;
+    dx = -2 * r;
+    error = 1 - r;
+    while (y < x) {
+      if (error >= 0) {
+	--x;
+	dx += 2;
+	error += dx;
+      }
+      ++y;
+      dy += 2;
+      error += dy;
+      
+      sin_th = y;
+      if (seg_start <= sin_th && seg_end >= sin_th)
+	i_ppix(im, xc + x, yc + y, col);
+      if (seg_start <= seg1 - sin_th && seg_end >= seg1 - sin_th)
+	i_ppix(im, xc + y, yc + x, col);
+
+      if (seg_start <= seg1 + sin_th && seg_end >= seg1 + sin_th)
+	i_ppix(im, xc - y, yc + x, col);
+      if (seg_start <= seg2 - sin_th && seg_end >= seg2 - sin_th)
+	i_ppix(im, xc - x, yc + y, col);
+      
+      if (seg_start <= seg2 + sin_th && seg_end >= seg2 + sin_th)
+	i_ppix(im, xc - x, yc - y, col);
+      if (seg_start <= seg3 - sin_th && seg_end >= seg3 - sin_th)
+	i_ppix(im, xc - y, yc - x, col);
+
+      if (seg_start <= seg3 + sin_th && seg_end >= seg3 + sin_th)
+	i_ppix(im, xc + y, yc - x, col);
+      if (seg_start <= seg4 - sin_th && seg_end >= seg4 - sin_th)
+	i_ppix(im, xc + x, yc - y, col);
+    }
+  }
+
+  return 1;
+}
+
+static double
+cover(i_img_dim r, i_img_dim j) {
+  float rjsqrt = sqrt(r*r - j*j);
+
+  return ceil(rjsqrt) - rjsqrt;
+}
+
+/*
+=item i_circle_out_aa(im, xc, yc, r, col)
+
+=synopsis i_circle_out_aa(im, 50, 50, 45, &color);
+
+Draw a circle outline centered at (x,y) with radius r, anti-aliased.
+
+Parameters:
+
+=over
+
+=item *
+
+(xc, yc) - the center of the circle
+
+=item *
+
+r - the radius of the circle in pixels, must be non-negative
+
+=item *
+
+col - an i_color for the color to draw in.
+
+=back
+
+Returns non-zero on success.
+
+=cut
+
+Based on "Fast Anti-Aliased Circle Generation", Xiaolin Wu, Graphics
+Gems.
+
+I use floating point for I<D> since for large circles the precision of
+a [0,255] value isn't sufficient when approaching the end of the
+octant.
+
+*/
+
+int
+i_circle_out_aa(i_img *im, i_img_dim xc, i_img_dim yc, i_img_dim r, const i_color *col) {
+  i_img_dim i, j;
+  double t;
+  i_color workc = *col;
+  int orig_alpha = col->channel[3];
+
+  i_clear_error();
+  if (r <= 0) {
+    i_push_error(0, "arc: radius must be non-negative");
+    return 0;
+  }
+  i = r;
+  j = 0;
+  t = 0;
+  i_ppix_norm(im, xc+i, yc+j, col);
+  i_ppix_norm(im, xc-i, yc+j, col);
+  i_ppix_norm(im, xc+j, yc+i, col);
+  i_ppix_norm(im, xc+j, yc-i, col);
+
+  while (i > j+1) {
+    double d;
+    int cv, inv_cv;
+    i_color p;
+    int ch;
+    j++;
+    d = cover(r, j);
+    cv = (int)(d * 255 + 0.5);
+    inv_cv = 255-cv;
+    if (d < t) {
+      --i;
+    }
+    if (inv_cv) {
+      workc.channel[3] = orig_alpha * inv_cv / 255;
+      i_ppix_norm(im, xc+i, yc+j, &workc);
+      i_ppix_norm(im, xc-i, yc+j, &workc);
+      i_ppix_norm(im, xc+i, yc-j, &workc);
+      i_ppix_norm(im, xc-i, yc-j, &workc);
+
+      if (i != j) {
+	i_ppix_norm(im, xc+j, yc+i, &workc);
+	i_ppix_norm(im, xc-j, yc+i, &workc);
+	i_ppix_norm(im, xc+j, yc-i, &workc);
+	i_ppix_norm(im, xc-j, yc-i, &workc);
+      }
+    }
+    if (cv && i > j) {
+      workc.channel[3] = orig_alpha * cv / 255;
+      i_ppix_norm(im, xc+i-1, yc+j, &workc);
+      i_ppix_norm(im, xc-i+1, yc+j, &workc);
+      i_ppix_norm(im, xc+i-1, yc-j, &workc);
+      i_ppix_norm(im, xc-i+1, yc-j, &workc);
+
+      if (j != i-1) {
+	i_ppix_norm(im, xc+j, yc+i-1, &workc);
+	i_ppix_norm(im, xc-j, yc+i-1, &workc);
+	i_ppix_norm(im, xc+j, yc-i+1, &workc);
+	i_ppix_norm(im, xc-j, yc-i+1, &workc);
+      }
+    }
+    t = d;
+  }
+
+  return 1;
+}
+
+/*
+=item i_arc_out_aa(im, xc, yc, r, d1, d2, col)
+
+=synopsis i_arc_out_aa(im, 50, 50, 45, 45, 125, &color);
+
+Draw a circle arc outline centered at (x,y) with radius r, from angle
+d1 degrees through angle d2 degrees, anti-aliased.
+
+Parameters:
+
+=over
+
+=item *
+
+(xc, yc) - the center of the circle
+
+=item *
+
+r - the radius of the circle in pixels, must be non-negative
+
+=item *
+
+d1, d2 - the range of angle in degrees to draw the arc through.  If
+d2-d1 >= 360 a full circle is drawn.
+
+=back
+
+Returns non-zero on success.
+
+=cut
+
+Based on "Fast Anti-Aliased Circle Generation", Xiaolin Wu, Graphics
+Gems.
+
+*/
+
+int
+i_arc_out_aa(i_img *im, i_img_dim xc, i_img_dim yc, i_img_dim r, float d1, float d2, const i_color *col) {
+  i_img_dim i, j;
+  double t;
+  i_color workc = *col;
+  i_img_dim segs[2][2];
+  int seg_count;
+  i_img_dim sin_th;
+  i_img_dim seg_d1, seg_d2;
+  int seg_num;
+  int orig_alpha = col->channel[3];
+  i_img_dim scale = r + 1;
+  i_img_dim seg1 = scale * 2;
+  i_img_dim seg2 = scale * 4;
+  i_img_dim seg3 = scale * 6;
+  i_img_dim seg4 = scale * 8;
+
+  i_clear_error();
+  if (r <= 0) {
+    i_push_error(0, "arc: radius must be non-negative");
+    return 0;
+  }
+  if (d1 + 360 <= d2)
+    return i_circle_out_aa(im, xc, yc, r, col);
+
+  if (d1 < 0)
+    d1 += 360 * floor((-d1 + 359) / 360);
+  if (d2 < 0)
+    d2 += 360 * floor((-d2 + 359) / 360);
+  d1 = fmod(d1, 360);
+  d2 = fmod(d2, 360);
+  seg_d1 = arc_seg(d1, scale);
+  seg_d2 = arc_seg(d2, scale);
+  if (seg_d2 < seg_d1) {
+    /* split into two segments */
+    segs[0][0] = 0;
+    segs[0][1] = seg_d2;
+    segs[1][0] = seg_d1;
+    segs[1][1] = seg4;
+    seg_count = 2;
+  }
+  else {
+    segs[0][0] = seg_d1;
+    segs[0][1] = seg_d2;
+    seg_count = 1;
+  }
+
+  for (seg_num = 0; seg_num < seg_count; ++seg_num) {
+    i_img_dim seg_start = segs[seg_num][0];
+    i_img_dim seg_end = segs[seg_num][1];
+
+    i = r;
+    j = 0;
+    t = 0;
+
+    if (seg_start == 0)
+      i_ppix_norm(im, xc+i, yc+j, col);
+    if (seg_start <= seg1 && seg_end >= seg1)
+      i_ppix_norm(im, xc+j, yc+i, col);
+    if (seg_start <= seg2 && seg_end >= seg2)
+      i_ppix_norm(im, xc-i, yc+j, col);
+    if (seg_start <= seg3 && seg_end >= seg3)
+      i_ppix_norm(im, xc+j, yc-i, col);
+    
+    while (i > j+1) {
+      int cv, inv_cv;
+      i_color p;
+      int ch;
+      double d;
+      j++;
+      d = cover(r, j);
+      cv = (int)(d * 255 + 0.5);
+      inv_cv = 255-cv;
+      if (d < t) {
+	--i;
+      }
+      sin_th = j;
+      if (inv_cv) {
+	workc.channel[3] = orig_alpha * inv_cv / 255;
+
+	if (seg_start <= sin_th && seg_end >= sin_th)
+	  i_ppix_norm(im, xc+i, yc+j, &workc);
+	if (seg_start <= seg2 - sin_th && seg_end >= seg2 - sin_th)
+	  i_ppix_norm(im, xc-i, yc+j, &workc);
+	if (seg_start <= seg4 - sin_th && seg_end >= seg4 - sin_th)
+	  i_ppix_norm(im, xc+i, yc-j, &workc);
+	if (seg_start <= seg2 + sin_th && seg_end >= seg2 + sin_th)
+	  i_ppix_norm(im, xc-i, yc-j, &workc);
+	
+	if (i != j) {
+	  if (seg_start <= seg1 - sin_th && seg_end >= seg1 - sin_th)
+	    i_ppix_norm(im, xc+j, yc+i, &workc);
+	  if (seg_start <= seg1 + sin_th && seg_end >= seg1 + sin_th)
+	    i_ppix_norm(im, xc-j, yc+i, &workc);
+	  if (seg_start <= seg3 + sin_th && seg_end >= seg3 + sin_th)
+	    i_ppix_norm(im, xc+j, yc-i, &workc);
+	  if (seg_start <= seg3 - sin_th && seg_end >= seg3 - sin_th)
+	    i_ppix_norm(im, xc-j, yc-i, &workc);
+	}
+      }
+      if (cv && i > j) {
+	workc.channel[3] = orig_alpha * cv / 255;
+	if (seg_start <= sin_th && seg_end >= sin_th)
+	  i_ppix_norm(im, xc+i-1, yc+j, &workc);
+	if (seg_start <= seg2 - sin_th && seg_end >= seg2 - sin_th)
+	  i_ppix_norm(im, xc-i+1, yc+j, &workc);
+	if (seg_start <= seg4 - sin_th && seg_end >= seg4 - sin_th)
+	  i_ppix_norm(im, xc+i-1, yc-j, &workc);
+	if (seg_start <= seg2 + sin_th && seg_end >= seg2 + sin_th)
+	  i_ppix_norm(im, xc-i+1, yc-j, &workc);
+	
+	if (seg_start <= seg1 - sin_th && seg_end >= seg1 - sin_th)
+	  i_ppix_norm(im, xc+j, yc+i-1, &workc);
+	if (seg_start <= seg1 + sin_th && seg_end >= seg1 + sin_th)
+	  i_ppix_norm(im, xc-j, yc+i-1, &workc);
+	if (seg_start <= seg3 + sin_th && seg_end >= seg3 + sin_th)
+	  i_ppix_norm(im, xc+j, yc-i+1, &workc);
+	if (seg_start <= seg3 - sin_th && seg_end >= seg3 - sin_th)
+	  i_ppix_norm(im, xc-j, yc-i+1, &workc);
+      }
+      t = d;
+    }
+  }
+
+  return 1;
 }
 
 /*
