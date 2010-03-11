@@ -252,7 +252,7 @@ my $white = '#FFFFFF';
     ok($im->arc(x => $cx, y => $cy, aa => 1, color => "#fff", 
 		d1 => $an, d2 => $an+$step, filled => 0, r => 170),
       "angle starting from $an");
-    ok($im->arc(x => $cx, y => $cy, aa => 1, color => "#ff0", 
+    ok($im->arc(x => $cx+0.5, y => $cy+0.5, aa => 1, color => "#ff0", 
 		d1 => $an, d2 => $an+$step, r => 168),
       "filled angle starting from $an");
 
