@@ -358,7 +358,7 @@ i_arc_aa(i_img *im, double x, double y, double rad, double d1, double d2,
   double *xvals, *yvals;
   int count;
 
-  arc_poly(&count, &xvals, &yvals, x+0.5, y+0.5, rad, d1, d2);
+  arc_poly(&count, &xvals, &yvals, x, y, rad, d1, d2);
 
   i_poly_aa(im, count, xvals, yvals, val);
 
