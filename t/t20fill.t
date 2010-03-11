@@ -1,11 +1,11 @@
 #!perl -w
 use strict;
-use Test::More tests => 148;
+use Test::More tests => 153;
 
 use Imager ':handy';
 use Imager::Fill;
 use Imager::Color::Float;
-use Imager::Test qw(is_image is_color4 is_fcolor4);
+use Imager::Test qw(is_image is_color4 is_fcolor4 is_color3);
 use Config;
 
 Imager::init_log("testout/t20fill.log", 1);
@@ -498,20 +498,33 @@ SKIP:
     my $fill50 = Imager::Fill->new(type => "opacity", opacity => 0.5, other => $base_fill)
       or print "# ", Imager->errstr, "\n";
     ok($fill50, "make 50% alpha translation fill");
-    my $out = Imager->new(xsize => 10, ysize => 10, channels => 4);
-    $out->box(fill => $fill50);
-    is_color4($out->getpixel(x => 0, y => 0),
-	      255, 0, 0, 16, "check alpha output");
-    is_color4($out->getpixel(x => 2, y => 1),
-	      0, 255, 0, 64, "check alpha output");
-    $out->box(filled => 1, color => "000000");
-    is_color4($out->getpixel(x => 0, y => 0),
-	      0, 0, 0, 255, "check after clear");
-    $out->box(fill => $fill50);
-    is_color4($out->getpixel(x => 4, y => 2),
-	      16, 0, 0, 255, "check drawn against background");
-    is_color4($out->getpixel(x => 6, y => 3),
-	      0, 64, 0, 255, "check drawn against background");
+
+    { # 4 channel image
+      my $out = Imager->new(xsize => 10, ysize => 10, channels => 4);
+      $out->box(fill => $fill50);
+      is_color4($out->getpixel(x => 0, y => 0),
+		255, 0, 0, 16, "check alpha output");
+      is_color4($out->getpixel(x => 2, y => 1),
+		0, 255, 0, 64, "check alpha output");
+      $out->box(filled => 1, color => "000000");
+      is_color4($out->getpixel(x => 0, y => 0),
+		0, 0, 0, 255, "check after clear");
+      $out->box(fill => $fill50);
+      is_color4($out->getpixel(x => 4, y => 2),
+		16, 0, 0, 255, "check drawn against background");
+      is_color4($out->getpixel(x => 6, y => 3),
+		0, 64, 0, 255, "check drawn against background");
+    }
+    { # 3 channel image
+      my $out = Imager->new(xsize => 10, ysize => 10, channels => 3);
+      $out->box(fill => $fill50);
+      is_color3($out->getpixel(x => 0, y => 0),
+		16, 0, 0, "check alpha output");
+      is_color3($out->getpixel(x => 2, y => 1),
+		0, 64, 0, "check alpha output");
+      is_color3($out->getpixel(x => 0, y => 1),
+		128, 128, 0, "check alpha output");
+    }
   }
   { # double/sample
     use Imager::Color::Float;
@@ -579,6 +592,22 @@ SKIP:
   ok(Imager::Fill->new(type => "opacity", other => { solid => "FF0000" }),
      "check we auto-create fills")
     or print "# ", Imager->errstr, "\n";
+
+  {
+    # fill with combine none was modifying the wrong channel for a
+    # no-alpha target image
+    my $fill = Imager::Fill->new(solid => "#FFF", combine => "none");
+    my $fill2 = Imager::Fill->new
+      (
+       type => "opacity", 
+       opacity => 0.5,
+       other => $fill
+      );
+    my $im = Imager->new(xsize => 1, ysize => 1);
+    ok($im->box(fill => $fill2), "fill with replacement opacity fill");
+    is_color3($im->getpixel(x => 0, y => 0), 255, 255, 255,
+	      "check for correct colour");
+  }
 }
 
 sub color_close {

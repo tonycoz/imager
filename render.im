@@ -291,7 +291,7 @@ i_render_fill(i_render *r, int x, int y, int width, unsigned char const *src,
       }
     }
     else { /* if (src) */
-      IM_FILL_FILLER(fill)(fill, x, y, width, r->im->channels, r->IM_SUFFIX(line));
+      IM_FILL_FILLER(fill)(fill, x, y, width, fill_channels, r->IM_SUFFIX(line));
     }
   }
   IM_PLIN(im, x, x+width, y, r->IM_SUFFIX(line));

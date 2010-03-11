@@ -6,6 +6,9 @@ Imager 0.73 - unreleased
  - implement outline circles, both anti-aliased and not
    https://rt.cpan.org/Ticket/Display.html?id=19755
 
+ - a combine => "none" fill to a 1 or 3 channel image would produce
+   the incorrect colour.
+
 Imager 0.72 - 09 Dec 2009
 ===========
 
