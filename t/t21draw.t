@@ -1,6 +1,6 @@
 #!perl -w
 use strict;
-use Test::More tests => 235;
+use Test::More tests => 238;
 use Imager ':all';
 use Imager::Test qw(is_color3);
 use constant PI => 3.14159265358979;
@@ -262,6 +262,17 @@ my $white = '#FFFFFF';
      "save arc outline");
 }
 
+{
+  # we document that drawing from d1 to d2 where d2 > d1 will draw an
+  # arc going through 360 degrees, test that
+  my $im = Imager->new(xsize => 200, ysize => 200);
+  ok($im->arc(x => 100, y => 100, aa => 0, filled => 0, color => '#fff',
+	      d1 => 270, d2 => 90, r => 90), "draw non-aa arc through 0");
+  ok($im->arc(x => 100, y => 100, aa => 1, filled => 0, color => '#fff',
+	      d1 => 270, d2 => 90, r => 80), "draw aa arc through 0");
+  ok($im->write(file => "testout/t21arc0.ppm"),
+     "save arc through 0");
+}
 
 malloc_state();
 
@@ -272,6 +283,7 @@ unless ($ENV{IMAGER_KEEP_FILES}) {
   unlink "testout/t21arcout.ppm";
   unlink "testout/t21aaarcout.ppm";
   unlink "testout/t21aaarcs.ppm";
+  unlink "testout/t21arc0.ppm";
 }
 
 sub color_cmp {
