@@ -334,6 +334,14 @@ filled - set to 0 to draw only an outline.
   $img->arc(d1=>135, d2=>45, x=>100, y=>150, r=>50, 
             fill=>{ solid=>'red', combine=>'diff' });
 
+  # draw an anti-aliased circle outline
+  $img->arc(x => 100, y => 150, r => 150, filled => 0, 
+            color => '#F00', aa => 1);
+
+  # draw an anti-aliased arc
+  $img->arc(x => 100, y => 150, r => 90, filled => 0,
+            color => '#0f0', aa => 1, d1 => 90, d2 => 180);
+
 =item circle
 
   $img->circle(color=>$green, r=>50, x=>200, y=>100, aa=>1, filled=>1);
