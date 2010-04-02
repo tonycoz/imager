@@ -1985,6 +1985,12 @@ sub read_multi {
     return $readers{$type}{multiple}->($IO, %opts);
   }
 
+  unless ($formats{$type}) {
+    my $read_types = join ', ', sort Imager->read_types();
+    Imager->_set_error("format '$type' not supported - formats $read_types available for reading");
+    return;
+  }
+
   if ($type eq 'gif') {
     my @imgs;
     @imgs = i_readgif_multi_wiol($IO);
