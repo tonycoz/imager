@@ -182,7 +182,7 @@ void i_tags_destroy(i_img_tags *tags) {
 
 =category Tags
 
-Searchs for a tag of the given I<name> starting from index I<start>.
+Searches for a tag of the given I<name> starting from index I<start>.
 
 On success returns true and sets *I<entry>.
 

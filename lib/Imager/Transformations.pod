@@ -77,7 +77,7 @@ A list of the transformations that do not alter the source image follows:
 
 =item copy
 
-To create a copy of an image use the C<copy()> method.  This is usefull
+To create a copy of an image use the C<copy()> method.  This is useful
 if you want to keep an original after doing something that changes the image.
 
   $newimg = $orig->copy();

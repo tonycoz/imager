@@ -1469,7 +1469,7 @@ static int do_ns_loop(GifFileType *gf, i_img *img)
     subblock[2] = loop_count / 256;
     if (EGifPutExtensionLast(gf, APPLICATION_EXT_FUNC_CODE, 3, subblock) == GIF_ERROR) {
       gif_push_error();
-      i_push_error(0, "writing loop extention sub-block");
+      i_push_error(0, "writing loop extension sub-block");
       return 0;
     }
   }

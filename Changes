@@ -9,6 +9,9 @@ Bug fixes:
    aborting on failing to call i_readgif_multi_wiol() or
    i_readtiff_multi_wiol().
 
+ - fix spelling errors patched by Debian (please report the issues you
+   patch)
+
 Imager 0.73 - 15 Mar 2010
 ===========
 

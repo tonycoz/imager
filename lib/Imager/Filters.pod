@@ -50,7 +50,7 @@ many other possible parameters, see L</Types of Filters> below.
 
 =head2 Types of Filters
 
-Here is a list of the filters that are always avaliable in Imager.
+Here is a list of the filters that are always available in Imager.
 This list can be obtained by running the C<filterlist.perl> script
 that comes with the module source.
 
@@ -592,7 +592,7 @@ L</Imager::API> and L<External Filters> for details
 
 It is possible to add filters to the module without recompiling the
 module itself.  This is done by using DSOs (Dynamic shared object)
-avaliable on most systems.  This way you can maintain our own filters
+available on most systems.  This way you can maintain our own filters
 and not have to get me to add it, or worse patch every new version of
 the Module.  Modules can be loaded AND UNLOADED at runtime.  This
 means that you can have a server/daemon thingy that can do something

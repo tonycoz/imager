@@ -80,7 +80,7 @@ point coordinates are used.
 
 Drawing is assumed to take place in a coordinate system of infinite
 resolution.  This is the typical convention and really only matters when
-it is necessary to check for off-by-one cases.  Typically it's usefull to 
+it is necessary to check for off-by-one cases.  Typically it's useful to 
 think of C<(10, 20)> as C<(10.00, 20.00)> and consider the consiquences.
 
 =head2 Color Parameters
