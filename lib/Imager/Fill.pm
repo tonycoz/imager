@@ -2,7 +2,7 @@ package Imager::Fill;
 use strict;
 use vars qw($VERSION);
 
-$VERSION = "1.010";
+$VERSION = "1.011";
 
 # this needs to be kept in sync with the array of hatches in fills.c
 my @hatch_types =
@@ -270,75 +270,74 @@ Current hatch names are:
 
 =over
 
-=item check1x1, check2x2, check4x4
+=item *
 
-checkerboards at varios sizes
+C<check1x1>, C<check2x2>, C<check4x4> - checkerboards at various sizes
 
-=item vline1, vline2, vline4
+=item *
 
-1, 2, or 4 vertical lines per cell
+C<vline1>, C<vline2>, C<vline4> - 1, 2, or 4 vertical lines per cell
 
-=item hline1, hline2, hline4
+=item *
 
-1, 2, or 4 horizontal lines per cell
+C<hline1>, C<hline2>, C<hline4> - 1, 2, or 4 horizontal lines per cell
 
-=item slash1,  slash2
+=item *
 
-1 or 2 / lines per cell.
+C<slash1>, C<slash2> - 1 or 2 / lines per cell.
 
-=item slosh1,  slosh2
+=item *
 
-1 or 2 \ lines per cell
+C<slosh1>, C<slosh2> - 1 or 2 \ lines per cell
 
-=item grid1,  grid2,  grid4
+=item *
 
-1, 2, or 4 vertical and horizontal lines per cell
+C<grid1>, C<grid2>, C<grid4> - 1, 2, or 4 vertical and horizontal
+lines per cell
 
-=item dots1, dots4, dots16
+=item *
 
-1, 4 or 16 dots per cell
+C<dots1>, C<dots4>, C<dots16> - 1, 4 or 16 dots per cell
 
-=item stipple, stipple2
+=item *
 
-see the samples
+C<stipple>, C<stipple2> - see the samples
 
-=item weave
+=item *
 
-I hope this one is obvious.
+C<weave> - I hope this one is obvious.
 
-=item cross1,  cross2
+=item *
 
-2 densities of crosshatch
+C<cross1>, C<cross2> - 2 densities of crosshatch
 
-=item vlozenge,  hlozenge
+=item *
 
-something like lozenge tiles
+C<vlozenge>, C<hlozenge> - something like lozenge tiles
 
-=item scalesdown,  scalesup,  scalesleft,  scalesright
+=item *
 
-Vaguely like fish scales in each direction.
+C<scalesdown>, C<scalesup>, C<scalesleft>, C<scalesright> - Vaguely
+like fish scales in each direction.
 
-=item tile_L
+=item *
 
-L-shaped tiles
+C<tile_L> - L-shaped tiles
 
 =back
 
-=item fg
+=item *
 
-=item bg
+C<fg>, C<bg> - The C<fg> color is rendered where bits are set in the
+hatch, and the C<bg> where they are clear.  If you use a transparent
+C<fg> or C<bg>, and set combine, you can overlay the hatch onto an
+existing image.
 
-The fg color is rendered where bits are set in the hatch, and the bg
-where they are clear.  If you use a transparent fg or bg, and set
-combine, you can overlay the hatch onto an existing image.
+C<fg> defaults to black, C<bg> to white.
 
-fg defaults to black, bg to white.
+=item *
 
-=item dx
-
-=item dy
-
-An offset into the hatch cell.  Both default to zero.
+C<dx>, C<dy> - An offset into the hatch cell.  Both default to zero.
 
 =back
 
@@ -362,8 +361,8 @@ and is required.
                                matrix=>$matrix, $combine);
 
 Fills the given image with a tiled version of the given image.  The
-first non-zero value of xoff or yoff will provide an offset along the
-given axis between rows or columns of tiles respectively.
+first non-zero value of C<xoff> or C<yoff> will provide an offset
+along the given axis between rows or columns of tiles respectively.
 
 The matrix parameter performs a co-ordinate transformation from the
 co-ordinates in the target image to the fill image co-ordinates.
@@ -400,7 +399,7 @@ opacity - multiplier for the source fill opacity.  Default: 0.5.
 
 =back
 
-The source fill's combine mode is used.
+The source fills combine mode is used.
 
 =head1 OTHER METHODS
 
@@ -422,17 +421,17 @@ I'm planning on adding the following types of fills:
 
 =over
 
-=item checkerboard
+=item *
 
-combines 2 other fills in a checkerboard
+C<checkerboard> - combines 2 other fills in a checkerboard
 
-=item combine
+=item *
 
-combines 2 other fills using the levels of an image
+C<combine> - combines 2 other fills using the levels of an image
 
-=item regmach
+=item *
 
-uses the transform2() register machine to create fills
+C<regmach> - uses the transform2() register machine to create fills
 
 =back
 

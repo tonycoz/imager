@@ -4,7 +4,7 @@ use Imager;
 use Imager::Expr::Assem;
 use vars qw($VERSION);
 
-$VERSION = "1.004";
+$VERSION = "1.005";
 
 my %funcs =
   (
@@ -497,12 +497,12 @@ transformation.
 Returns a list of input image descriptions, or the number of them,
 depending on content.
 
-The list contains hashrefs, which current contain only one member,
-desc, a description of the use of the input image.
+The list contains hash references, which current contain only one
+member, C<desc>, a description of the use of the input image.
 
 =item $tran->constants
 
-Return's a list of names of constants that can be set for the
+Returns a list of names of constants that can be set for the
 transformation.
 
 =item $tran->constants($name, $name, ...)
@@ -529,6 +529,6 @@ Needs more transformations.
 
 =head1 SEE ALSO
 
-Imager(3), transform.perl
+Imager(3), F<transform.perl>
 
 =cut

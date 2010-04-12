@@ -4,7 +4,7 @@ use Imager::Color;
 use strict;
 use vars qw($VERSION);
 
-$VERSION = "1.033";
+$VERSION = "1.034";
 
 # the aim here is that we can:
 #  - add file based types in one place: here
@@ -371,11 +371,13 @@ Imager::Font - Font handling for Imager.
 
 =head1 DESCRIPTION
 
-This module handles creating Font objects used by imager.  The module
+=for stopwords TrueType FreeType
+
+This module handles creating Font objects used by Imager.  The module
 also handles querying fonts for sizes and such.  If both T1lib and
-freetype were avaliable at the time of compilation then Imager should
-be able to work with both truetype fonts and t1 postscript fonts.  To
-check if Imager is t1 or truetype capable you can use something like
+FreeType were available at the time of compilation then Imager should
+be able to work with both TrueType fonts and t1 Postscript fonts.  To
+check if Imager is t1 or TrueType capable you can use something like
 this:
 
   use Imager;
@@ -396,20 +398,21 @@ This creates a font object to pass to functions that take a font argument.
 			    size  => 30,
 			    aa    => 1);
 
-This creates a font which is the truetype font denmark.ttf.  It's
+This creates a font which is the TrueType font F<denmark.ttf>.  It's
 default color is $blue, default size is 30 pixels and it's rendered
-antialised by default.  Imager can see which type of font a file is by
-looking at the suffix of the filename for the font.  A suffix of 'ttf'
-is taken to mean a truetype font while a suffix of 'pfb' is taken to
-mean a t1 postscript font.  If Imager cannot tell which type a font is
-you can tell it explicitly by using the C<type> parameter:
+anti-aliased by default.  Imager can see which type of font a file is
+by looking at the suffix of the file name for the font.  A suffix of
+C<ttf> is taken to mean a TrueType font while a suffix of C<pfb> is
+taken to mean a Type 1 Postscript font.  If Imager cannot tell which
+type a font is you can tell it explicitly by using the C<type>
+parameter:
 
   $t1font = Imager::Font->new(file => 'fruitcase', type => 't1');
   $ttfont = Imager::Font->new(file => 'arglebarf', type => 'tt');
 
 The C<index> parameter is used to select a single face from a font
 file containing more than one face, for example, from a Macintosh font
-suitcase or a .dfont file.
+suitcase or a C<.dfont> file.
 
 If any of the C<color>, C<size> or C<aa> parameters are omitted when
 calling C<< Imager::Font->new() >> the they take the following values:
@@ -419,13 +422,13 @@ calling C<< Imager::Font->new() >> the they take the following values:
   aa    => 0
   index => 0
 
-To use Win32 fonts supply the facename of the font:
+To use Win32 fonts supply the face name of the font:
 
   $font = Imager::Font->new(face=>'Arial Bold Italic');
 
 There isn't any access to other logical font attributes, but this
 typically isn't necessary for Win32 TrueType fonts, since you can
-contruct the full name of the font as above.
+construct the full name of the font as above.
 
 Other logical font attributes may be added if there is sufficient demand.
 
@@ -435,67 +438,71 @@ Parameters:
 
 =item *
 
-file - name of the file to load the font from.
+C<file> - name of the file to load the font from.
 
 =item *
 
-face - face name.  This is used only under Win32 to create a GDI based
+=for stopwords GDI
+
+C<face> - face name.  This is used only under Win32 to create a GDI based
 font.  This is ignored if the C<file> parameter is supplied.
 
 =item *
 
-type - font driver to use.  Currently the permitted values for this are:
+C<type> - font driver to use.  Currently the permitted values for this are:
 
 =over
 
 =item *
 
-tt - Freetype 1.x driver.  Supports TTF fonts.
+C<tt> - FreeType 1.x driver.  Supports TrueType (C<.ttf>) fonts.
 
 =item *
 
-t1 - T1 Lib driver.  Supports Postscript Type 1 fonts.  Allows for
+=for stopwords strikethrough overline
+
+C<t1> - T1 Lib driver.  Supports Postscript Type 1 fonts.  Allows for
 synthesis of underline, strikethrough and overline.
 
 =item *
 
-ft2 - Freetype 2.x driver.  Supports many different font formats.
+C<ft2> - FreeType 2.x driver.  Supports many different font formats.
 Also supports the transform() method.
 
 =back
 
 =item *
 
-color - the default color used with this font.  Default: red.
+C<color> - the default color used with this font.  Default: red.
 
 =item *
 
-size - the default size used with this font.  Default: 15.
+C<size> - the default size used with this font.  Default: 15.
 
 =item *
 
-utf8 - if non-zero then text supplied to $img->string(...) and
-$font->bounding_box(...) is assumed to be UTF 8 encoded by default.
+C<utf8> - if non-zero then text supplied to $img->string(...) and
+$font->bounding_box(...) is assumed to be UTF-8 encoded by default.
 
 =item *
 
-align - the default value for the $img->string(...) C<align>
+C<align> - the default value for the $img->string(...) C<align>
 parameter.  Default: 1.
 
 =item *
 
-vlayout - the default value for the $img->string(...) C<vlayout>
+C<vlayout> - the default value for the $img->string(...) C<vlayout>
 parameter.  Default: 0.
 
 =item *
 
-aa - the default value for the $im->string(...) C<aa> parameter.
+C<aa> - the default value for the $im->string(...) C<aa> parameter.
 Default: 0.
 
 =item *
 
-index - for font file containing multiple fonts this selects which
-font to use.  This is useful for Macintosh DFON (.dfont) and suitcase
+C<index> - for font file containing multiple fonts this selects which
+font to use.  This is useful for Macintosh C<DFON> (F<.dfont>) and suitcase
 font files.
 
 If you want to use a suitcase font you will need to tell Imager to use
@@ -581,14 +588,14 @@ the space needed for the string:
 
   @metrics = $font->bounding_box(string=>"testing",size=>15,canon=>1);
 
-This returns tha same values in $metrics[0] and $metrics[1],
+This returns the same values in $metrics[0] and $metrics[1],
 but:
 
  $bbox[2] - horizontal space taken by glyphs
  $bbox[3] - vertical space taken by glyphs
 
 Returns an L<Imager::Font::BBox> object in scalar context, so you can
-avoid all those confusing indices.  This has methods as named above,
+avoid all those confusing indexes.  This has methods as named above,
 with some extra convenience methods.
 
 Parameters are:
@@ -597,45 +604,45 @@ Parameters are:
 
 =item *
 
-string - the string to calculate the bounding box for.  Required.
+C<string> - the string to calculate the bounding box for.  Required.
 
 =item *
 
-size - the font size to use.  Default: value set in
+C<size> - the font size to use.  Default: value set in
 Imager::Font->new(), or 15.
 
 =item *
 
-sizew - the font width to use.  Default to the value of the C<size>
+C<sizew> - the font width to use.  Default to the value of the C<size>
 parameter.
 
 =item *
 
-utf8 - For drivers that support it, treat the string as UTF8 encoded.
+C<utf8> - For drivers that support it, treat the string as UTF-8 encoded.
 For versions of perl that support Unicode (5.6 and later), this will
-be enabled automatically if the 'string' parameter is already a UTF8
-string. See L<UTF8> for more information.  Default: the C<utf8> value
+be enabled automatically if the 'string' parameter is already a UTF-8
+string. See L<UTF-8> for more information.  Default: the C<utf8> value
 passed to Imager::Font->new(...) or 0.
 
 =item *
 
-x, y - offsets applied to @box[0..3] to give you a adjusted bounding
+C<x>, C<y> - offsets applied to @box[0..3] to give you a adjusted bounding
 box.  Ignored in scalar context.
 
 =item *
 
-canon - if non-zero and the C<x>, C<y> parameters are not supplied,
+C<canon> - if non-zero and the C<x>, C<y> parameters are not supplied,
 then $pos_width and $global_ascent values will returned as the width
 and height of the text instead.
 
 =back
 
-=item string
+=item string()
 
 The $img->string(...) method is now documented in
 L<Imager::Draw/string>
 
-=item align(string=>$text, size=>$size, x=>..., y=>..., valign => ..., halign=>...)
+=item align(string=>$text,size=>$size,x=>...,y=>...,valign => ...,halign=>...)
 
 Higher level text output - outputs the text aligned as specified
 around the given point (x,y).
@@ -652,60 +659,62 @@ parameters:
 
 =over
 
-=item valign
+=item *
 
-Possible values are:
+C<valign> - Possible values are:
 
 =over
 
-=item top
+=item C<top>
 
 Point is at the top of the text.
 
-=item bottom
+=item C<bottom>
 
 Point is at the bottom of the text.
 
-=item baseline
+=item C<baseline>
 
 Point is on the baseline of the text (default.)
 
-=item center
+=item C<center>
 
 Point is vertically centered within the text.
 
 =back
 
-=item halign
+=item *
+
+C<halign>
 
 =over
 
-=item left
+=item *
 
-The point is at the left of the text.
+C<left> - the point is at the left of the text.
 
-=item start
+=item *
 
-The point is at the start point of the text.
+C<start> - the point is at the start point of the text.
 
-=item center
+=item *
 
-The point is horizontally centered within the text.
+C<center> - the point is horizontally centered within the text.
 
-=item right
+=item *
 
-The point is at the right end of the text.
+C<right> - the point is at the right end of the text.
 
-=item end
+=item *
 
-The point is at the end point of the text.
+C<end> - the point is at the end point of the text.
 
 =back
 
-=item image
+=item *
 
-The image to draw to.  Set to C<undef> to avoid drawing but still
-calculate the bounding box.
+C<image> - The image to draw to.  Set to C<undef> to avoid drawing but
+still calculate the bounding box.
 
 =back
 
@@ -728,16 +737,16 @@ Possible parameters are:
 
 =item *
 
-xdpi, ydpi - set the horizontal and vertical resolution in dots per
-inch.
+C<xdpi>, C<ydpi> - set the horizontal and vertical resolution in dots
+per inch.
 
 =item *
 
-dpi - set both horizontal and vertical resolution to this value.
+C<dpi> - set both horizontal and vertical resolution to this value.
 
 =back
 
-Returns a list containing the previous xdpi, ydpi values.
+Returns a list containing the previous C<xdpi>, C<ydpi> values.
 
 =item transform(matrix=>$matrix)
 
@@ -753,7 +762,7 @@ It's possible that a driver will disable hinting if you use a
 transformation, to prevent discontinuities in the transformations.
 See the end of the test script t/t38ft2font.t for an example.
 
-Currently only the ft2 (Freetype 2.x) driver supports the transform()
+Currently only the ft2 (FreeType 2.x) driver supports the transform()
 method.
 
 See samples/slant_text.pl for a sample using this function.
@@ -768,8 +777,8 @@ Checks if the characters in $text are defined by the font.
 
 In a list context returns a list of true or false value corresponding
 to the characters in $text, true if the character is defined, false if
-not.  In scalar context returns a string of NUL or non-NUL
-characters.  Supports UTF8 where the font driver supports UTF8.
+not.  In scalar context returns a string of C<NUL> or non-C<NUL>
+characters.  Supports UTF-8 where the font driver supports UTF-8.
 
 Not all fonts support this method (use $font->can("has_chars") to
 check.)
@@ -778,16 +787,16 @@ check.)
 
 =item *
 
-string - string of characters to check for.  Required.  Must contain
+C<string> - string of characters to check for.  Required.  Must contain
 at least one character.
 
 =item *
 
-utf8 - For drivers that support it, treat the string as UTF8 encoded.
-For versions of perl that support Unicode (5.6 and later), this will
-be enabled automatically if the 'string' parameter is already a UTF8
-string. See L<UTF8> for more information.  Default: the C<utf8> value
-passed to Imager::Font->new(...) or 0.
+C<utf8> - For drivers that support it, treat the string as UTF-8
+encoded.  For versions of perl that support Unicode (5.6 and later),
+this will be enabled automatically if the 'string' parameter is
+already a UTF-8 string. See L<UTF-8> for more information.  Default:
+the C<utf8> value passed to Imager::Font->new(...) or 0.
 
 =back
 
@@ -802,18 +811,18 @@ Returns a list of glyph names for each of the characters in the
 string.  If the character has no name then C<undef> is returned for
 the character.
 
-Some font files do not include glyph names, in this case Freetype 2
-will not return any names.  Freetype 1 can return standard names even
+Some font files do not include glyph names, in this case FreeType 2
+will not return any names.  FreeType 1 can return standard names even
 if there are no glyph names in the font.
 
-Freetype 2 has an API function that returns true only if the font has
+FreeType 2 has an API function that returns true only if the font has
 "reliable glyph names", unfortunately this always returns false for
-TTF fonts.  This can avoid the check of this API by supplying
+TrueType fonts.  This can avoid the check of this API by supplying
 C<reliable_only> as 0.  The consequences of using this on an unknown
-font may be unpredictable, since the Freetype documentation doesn't
+font may be unpredictable, since the FreeType documentation doesn't
 say how those name tables are unreliable, or how FT2 handles them.
 
-Both Freetype 1.x and 2.x allow support for glyph names to not be
+Both FreeType 1.x and 2.x allow support for glyph names to not be
 included.
 
 =item draw
@@ -825,7 +834,7 @@ See L<Imager::Draw/string>.
 
 =head1 MULTIPLE MASTER FONTS
 
-The Freetype 2 driver supports multiple master fonts:
+The FreeType 2 driver supports multiple master fonts:
 
 =over
 
@@ -871,7 +880,7 @@ It's possible other drivers will support multiple master fonts in the
 future, check if your selected font object supports the is_mm() method
 using the can() method.
 
-=head1 UTF8
+=head1 UTF-8
 
 There are 2 ways of rendering Unicode characters with Imager:
 
@@ -879,58 +888,58 @@ There are 2 ways of rendering Unicode characters with Imager:
 
 =item *
 
-For versions of perl that support it, use perl's native UTF8 strings.
+For versions of perl that support it, use perl's native UTF-8 strings.
 This is the simplest method.
 
 =item *
 
-Hand build your own UTF8 encoded strings.  Only recommended if your
-version of perl has no UTF8 support.
+Hand build your own UTF-8 encoded strings.  Only recommended if your
+version of perl has no UTF-8 support.
 
 =back
 
 Imager won't construct characters for you, so if want to output
-unicode character 00C3 "LATIN CAPITAL LETTER A WITH DIAERESIS", and
+Unicode character 00C3 "LATIN CAPITAL LETTER A WITH DIAERESIS", and
 your font doesn't support it, Imager will I<not> build it from 0041
 "LATIN CAPITAL LETTER A" and 0308 "COMBINING DIAERESIS".
 
-To check if a driver supports UTF8 call the utf8 method:
+To check if a driver supports UTF-8 call the utf8() method:
 
 =over
 
-=item utf8
+=item utf8()
 
-Return true if the font supports UTF8.
+Return true if the font supports UTF-8.
 
 =back
 
-=head2 Native UTF8 Support
+=head2 Native UTF-8 Support
 
-If your version of perl supports UTF8 and the driver supports UTF8,
+If your version of perl supports UTF-8 and the driver supports UTF-8,
 just use the $im->string() method, and it should do the right thing.
 
 =head2 Build your own
 
-In this case you need to build your own UTF8 encoded characters.
+In this case you need to build your own UTF-8 encoded characters.
 
 For example:
 
  $x = pack("C*", 0xE2, 0x80, 0x90); # character code 0x2010 HYPHEN
 
-You need to be be careful with versions of perl that have UTF8
-support, since your string may end up doubly UTF8 encoded.
+You need to be be careful with versions of perl that have UTF-8
+support, since your string may end up doubly UTF-8 encoded.
 
 For example:
 
  $x = "A\xE2\x80\x90\x41\x{2010}";
  substr($x, -1, 0) = ""; 
- # at this point $x is has the UTF8 flag set, but has 5 characters,
- # none, of which is the constructed UTF8 character
+ # at this point $x is has the UTF-8 flag set, but has 5 characters,
+ # none, of which is the constructed UTF-8 character
 
 The test script t/t38ft2font.t has a small example of this after the 
 comment:
 
-  # an attempt using emulation of UTF8
+  # an attempt using emulation of UTF-8
 
 =head1 DRIVER CONTROL
 
@@ -959,9 +968,9 @@ You can set new priorities and save the old priorities with:
 If you supply driver names that are not currently supported, they will
 be ignored.
 
-Imager supports both T1Lib and Freetype2 for working with Type 1
+Imager supports both T1Lib and FreeType 2 for working with Type 1
 fonts, but currently only T1Lib does any caching, so by default T1Lib
-is given a higher priority.  Since Imager's Freetype2 support can also
+is given a higher priority.  Since Imager's FreeType 2 support can also
 do font transformations, you may want to give that a higher priority:
 
   my @old = Imager::Font->priorities(qw(tt ft2 t1));
@@ -969,7 +978,7 @@ do font transformations, you may want to give that a higher priority:
 =head1 AUTHOR
 
 Arnar M. Hrafnkelsson, addi@umich.edu
-And a great deal of help from others - see the README for a complete
+And a great deal of help from others - see the F<README> for a complete
 list.
 
 =head1 BUGS
@@ -978,7 +987,7 @@ You need to modify this class to add new font types.
 
 The $pos_width member returned by the bounding_box() method has
 historically returned different values from different drivers.  The
-Freetype 1.x and 2.x, and the Win32 drivers return the max of the
+FreeType 1.x and 2.x, and the Win32 drivers return the max of the
 advance width and the right edge of the right-most glyph.  The Type 1
 driver always returns the right edge of the right-most glyph.
 

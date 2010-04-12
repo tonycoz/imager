@@ -209,7 +209,7 @@ int i_tags_find(i_img_tags *tags, char const *name, int start, int *entry) {
 
 =category Tags
 
-Searchs for a tag of the given I<code> starting from index I<start>.
+Searches for a tag of the given I<code> starting from index I<start>.
 
 On success returns true and sets *I<entry>.
 
@@ -580,7 +580,7 @@ On failure returns false.
 value_size must be at least large enough for a string representation
 of an integer.
 
-The copied value is always NUL terminated.
+The copied value is always C<NUL> terminated.
 
 =cut
 */
@@ -636,14 +636,14 @@ i_tags_set(i_img_tags *tags, char const *name, char const *data, int size) {
 }
 
 /*
-=item i_tags_setn(tags, name, idata)
+=item i_tags_setn(C<tags>, C<name>, C<idata>)
 =synopsis i_tags_setn(&img->tags, "i_xres", 204);
 =synopsis i_tags_setn(&img->tags, "i_yres", 196);
 =category Tags
 
-Sets the given tag to the integer I<idata>
+Sets the given tag to the integer C<idata>
 
-Even on failure, if an existing tag I<name> exists, it will be
+Even on failure, if an existing tag C<name> exists, it will be
 removed.
 
 =cut

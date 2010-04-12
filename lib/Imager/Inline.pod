@@ -19,11 +19,13 @@ Imager::Inline - using Imager with Inline::C.
 
 =head1 DESCRIPTION
 
+=for stopwords inline Inline Inline's
+
 Imager hooks into Inline's C<with> syntax to make it easier to write
 Inline::C code that works with Imager, you can call Imager functions
 without having to include headers or perform initialization.
 
-Imager's inline C<with> support does the following:
+Imager's Inline C<with> support does the following:
 
 =over
 

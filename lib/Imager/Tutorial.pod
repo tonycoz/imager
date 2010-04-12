@@ -10,6 +10,8 @@ If you have the necessary knowledge, install the image format
 libraries you want Imager image file support for, and Imager itself,
 otherwise arrange to have it done.
 
+=for stopwords Photoshop
+
 You will also want some sort of image viewer tool, whether an image
 editor like Photoshop or the GIMP, or a web browser.
 

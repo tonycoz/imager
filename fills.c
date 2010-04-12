@@ -412,21 +412,23 @@ i_new_hatch_low(const i_color *fg, const i_color *bg, const i_fcolor *ffg, const
                 int dx, int dy);
 
 /*
-=item i_new_fill_hatch(fg, bg, combine, hatch, cust_hatch, dx, dy)
+=item i_new_fill_hatch(C<fg>, C<bg>, C<combine>, C<hatch>, C<cust_hatch>, C<dx>, C<dy>)
 
 =category Fills
 =synopsis i_fill_t *fill = i_new_fill_hatch(&fg_color, &bg_color, combine, hatch, custom_hatch, dx, dy);
 
-Creates a new hatched fill with the fg color used for the 1 bits in
-the hatch and bg for the 0 bits.  If combine is non-zero alpha values
-will be combined.
+Creates a new hatched fill with the C<fg> color used for the 1 bits in
+the hatch and C<bg> for the 0 bits.  If C<combine> is non-zero alpha
+values will be combined.
 
-If cust_hatch is non-NULL it should be a pointer to 8 bytes of the
+If C<cust_hatch> is non-NULL it should be a pointer to 8 bytes of the
 hash definition, with the high-bits to the left.
 
-If cust_hatch is NULL then one of the standard hatches is used.
+If C<cust_hatch> is NULL then one of the standard hatches is used.
 
-(dx, dy) are an offset into the hatch which can be used to unalign adjoining areas, or to align the origin of a hatch with the the side of a filled area.
+(C<dx>, C<dy>) are an offset into the hatch which can be used to hatch
+adjoining areas out of alignment, or to align the origin of a hatch
+with the the side of a filled area.
 
 =cut
 */
@@ -438,21 +440,23 @@ i_new_fill_hatch(const i_color *fg, const i_color *bg, int combine, int hatch,
 }
 
 /*
-=item i_new_fill_hatchf(fg, bg, combine, hatch, cust_hatch, dx, dy)
+=item i_new_fill_hatchf(C<fg>, C<bg>, C<combine>, C<hatch>, C<cust_hatch>, C<dx>, C<dy>)
 
 =category Fills
 =synopsis i_fill_t *fill = i_new_fill_hatchf(&fg_fcolor, &bg_fcolor, combine, hatch, custom_hatch, dx, dy);
 
-Creates a new hatched fill with the fg color used for the 1 bits in
-the hatch and bg for the 0 bits.  If combine is non-zero alpha values
-will be combined.
+Creates a new hatched fill with the C<fg> color used for the 1 bits in
+the hatch and C<bg> for the 0 bits.  If C<combine> is non-zero alpha
+values will be combined.
 
-If cust_hatch is non-NULL it should be a pointer to 8 bytes of the
+If C<cust_hatch> is non-NULL it should be a pointer to 8 bytes of the
 hash definition, with the high-bits to the left.
 
-If cust_hatch is NULL then one of the standard hatches is used.
+If C<cust_hatch> is NULL then one of the standard hatches is used.
 
-(dx, dy) are an offset into the hatch which can be used to unalign adjoining areas, or to align the origin of a hatch with the the side of a filled area.
+(C<dx>, C<dy>) are an offset into the hatch which can be used to hatch
+adjoining areas out of alignment, or to align the origin of a hatch
+with the the side of a filled area.
 
 =cut
 */
@@ -486,7 +490,7 @@ image_fill_proto =
   };
 
 /*
-=item i_new_fill_image(im, matrix, xoff, yoff, combine)
+=item i_new_fill_image(C<im>, C<matrix>, C<xoff>, C<yoff>, C<combine>)
 
 =category Fills
 =synopsis i_fill_t *fill = i_new_fill_image(src_img, matrix, x_offset, y_offset, combine);
@@ -495,7 +499,7 @@ Create an image based fill.
 
 matrix is an array of 9 doubles representing a transformation matrix.
 
-xoff and yoff are the offset into the image to start filling from.
+C<xoff> and C<yoff> are the offset into the image to start filling from.
 
 =cut
 */

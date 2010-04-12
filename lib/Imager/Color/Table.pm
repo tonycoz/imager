@@ -2,7 +2,7 @@ package Imager::Color::Table;
 use strict;
 use vars qw($VERSION);
 
-$VERSION = "1.002";
+$VERSION = "1.003";
 
     my %colors;
 
@@ -826,7 +826,7 @@ Imager::Color::Table - built-in Imager color table
 
 This class provides a base color table for use in resolving color names.
 
-The table contains the standard X11 rgb.txt colors.
+The table contains the standard X11 C<rgb.txt> colors.
 
 This table is not included as part of Imager::Color itself since it's
 moderately large.

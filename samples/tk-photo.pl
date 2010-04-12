@@ -27,6 +27,8 @@ MainLoop;
 
 =head1 NAME
 
+=for stopwords tk-photo.pl
+
 tk-photo.pl - display an Imager image under Tk
 
 =head1 SYNOPSIS

@@ -497,7 +497,7 @@ __END__
 
 =head1 NAME
 
-Imager::Regops - generated information about the register based VM
+Imager::Regops - generated information about the register based virtual machine
 
 =head1 SYNOPSIS
 
@@ -511,7 +511,7 @@ Imager::Regops - generated information about the register based VM
 
 =head1 DESCRIPTION
 
-This module is generated automatically from regmach.h so we don't need to 
+This module is generated automatically from F<regmach.h> so we don't need to
 maintain the same information in at least one extra place.
 
 At least that's the idea.

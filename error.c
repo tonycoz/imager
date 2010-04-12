@@ -188,7 +188,7 @@ the mark.
 
 Clears the error stack.
 
-Called by any imager function before doing any other processing.
+Called by any Imager function before doing any other processing.
 
 =cut
 */
@@ -247,7 +247,7 @@ void i_push_error(int code, char const *msg) {
 }
 
 /*
-=item i_push_errorvf(int code, char const *fmt, va_list ap)
+=item i_push_errorvf(int C<code>, char const *C<fmt>, va_list C<ap>)
 
 =category Error handling
 
@@ -277,7 +277,7 @@ void i_push_errorvf(int code, char const *fmt, va_list ap) {
 =synopsis i_push_errorf(errno, "Cannot open file %s: %d", filename, errno);
 =category Error handling
 
-A version of i_push_error() that does printf() like formating.
+A version of i_push_error() that does printf() like formatting.
 
 Does not support perl specific format codes.
 

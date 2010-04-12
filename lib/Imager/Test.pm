@@ -2,7 +2,10 @@ package Imager::Test;
 use strict;
 use Test::Builder;
 require Exporter;
-use vars qw(@ISA @EXPORT_OK);
+use vars qw(@ISA @EXPORT_OK $VERSION);
+
+$VERSION = "1.000";
+
 @ISA = qw(Exporter);
 @EXPORT_OK = 
   qw(
@@ -604,6 +607,8 @@ No functions are exported by default.
 
 =head1 FUNCTIONS
 
+=for stopwords OO
+
 =over
 
 =item is_color3($color, $red, $blue, $green, $comment)
@@ -651,8 +656,8 @@ Returns a 150x150x3 double/sample OO test image.
 =item diff_text_with_nul($test_name, $text1, $text2, @options)
 
 Creates 2 test images and writes $text1 to the first image and $text2
-to the second image with the string() method.  Each call adds 3 ok/not
-ok to the output of the test script.
+to the second image with the string() method.  Each call adds 3
+C<ok>/C<not ok> to the output of the test script.
 
 Extra options that should be supplied include the font and either a
 color or channel parameter.

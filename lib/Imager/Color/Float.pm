@@ -4,7 +4,7 @@ use Imager;
 use strict;
 use vars qw($VERSION);
 
-$VERSION = "1.004";
+$VERSION = "1.005";
 
 # It's just a front end to the XS creation functions.
 
@@ -44,7 +44,7 @@ __END__
 
 =head1 NAME
 
-Imager::Color::Float - Rough floating point sample colour handling
+Imager::Color::Float - Rough floating point sample color handling
 
 =head1 SYNOPSIS
 
@@ -64,9 +64,9 @@ Imager::Color::Float - Rough floating point sample colour handling
 
 =head1 DESCRIPTION
 
-This module handles creating color objects used by imager.  The idea is
-that in the future this module will be able to handle colorspace calculations
-as well.
+This module handles creating color objects used by Imager.  The idea
+is that in the future this module will be able to handle color space
+calculations as well.
 
 A floating point Imager color consists of up to four components, each
 in the range 0.0 to 1.0. Unfortunately the meaning of the components
@@ -102,20 +102,21 @@ This creates a color object to pass to functions that need a color argument.
 This changes an already defined color.  Note that this does not affect any places
 where the color has been used previously.
 
-=item rgba
+=item rgba()
 
-This returns the rgba code of the color the object contains.
+This returns the red, green, blue and alpha channels of the color the
+object contains.
 
 =item info
 
-Calling info merely dumps the relevant colorcode to the log.
+Calling info merely dumps the relevant color to the log.
 
 =back
 
 =head1 AUTHOR
 
 Arnar M. Hrafnkelsson, addi@umich.edu
-And a great deal of help from others - see the README for a complete
+And a great deal of help from others - see the C<README> for a complete
 list.
 
 =head1 SEE ALSO

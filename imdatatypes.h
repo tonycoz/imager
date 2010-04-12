@@ -40,20 +40,21 @@ i_color is a union of:
 
 =item *
 
-gray - contains a single element gray_color, eg. c.gray.gray_color
+gray - contains a single element gray_color, eg. C<c.gray.gray_color>
 
 =item *
 
-rgb - contains three elements r, g, b, eg. c.rgb.r
+C<rgb> - contains three elements C<r>, C<g>, C<b>, eg. C<c.rgb.r>
 
 =item *
 
-rgba - contains four elements r, g, b, a, eg. c.rgba.a
+C<rgba> - contains four elements C<r>, C<g>, C<b>, C<a>, eg. C<c.rgba.a>
 
 =item *
 
-cmyk - contains four elements c, m, y, k, eg. C<c.cmyk.y>.  Note that
-Imager never uses CMYK colors except when reading/writing files.
+C<cmyk> - contains four elements C<c>, C<m>, C<y>, C<k>,
+eg. C<c.cmyk.y>.  Note that Imager never uses CMYK colors except when
+reading/writing files.
 
 =item *
 
@@ -188,57 +189,57 @@ It contains the following members:
 
 =item *
 
-channels - the number of channels in the image
+C<channels> - the number of channels in the image
 
 =item *
 
-xsize, ysize - the width and height of the image in pixels
+C<xsize>, C<ysize> - the width and height of the image in pixels
 
 =item *
 
-bytes - the number of bytes used to store the image data.  Undefined
+C<bytes> - the number of bytes used to store the image data.  Undefined
 where virtual is non-zero.
 
 =item *
 
-ch_mask - a mask of writable channels.  eg. if this is 6 then only
+C<ch_mask> - a mask of writable channels.  eg. if this is 6 then only
 channels 1 and 2 are writable.  There may be bits set for which there
 are no channels in the image.
 
 =item *
 
-bits - the number of bits stored per sample.  Should be one of
+C<bits> - the number of bits stored per sample.  Should be one of
 i_8_bits, i_16_bits, i_double_bits.
 
 =item *
 
-type - either i_direct_type for direct color images, or i_palette_type
+C<type> - either i_direct_type for direct color images, or i_palette_type
 for paletted images.
 
 =item *
 
-virtual - if zero then this image is-self contained.  If non-zero then
-this image could be an interface to some other implementation.
+C<virtual> - if zero then this image is-self contained.  If non-zero
+then this image could be an interface to some other implementation.
 
 =item *
 
-idata - the image data.  This should not be directly accessed.  A new
+C<idata> - the image data.  This should not be directly accessed.  A new
 image implementation can use this to store its image data.
 i_img_destroy() will myfree() this pointer if it's non-null.
 
 =item *
 
-tags - a structure storing the image's tags.  This should only be
+C<tags> - a structure storing the image's tags.  This should only be
 accessed via the i_tags_*() functions.
 
 =item *
 
-ext_data - a pointer for use internal to an image implementation.
+C<ext_data> - a pointer for use internal to an image implementation.
 This should be freed by the image's destroy handler.
 
 =item *
 
-im_data - data internal to Imager.  This is initialized by
+C<im_data> - data internal to Imager.  This is initialized by
 i_img_init().
 
 =item *

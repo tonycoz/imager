@@ -4,7 +4,7 @@ use Imager;
 use vars qw($VERSION @ISA);
 
 BEGIN {
-  $VERSION = "0.01";
+  $VERSION = "0.02";
   
   eval {
     require XSLoader;
@@ -39,7 +39,7 @@ Imager::Filter::Flines - dim alternate lines to emulate a video display
 
 =head1 DESCRIPTION
 
-This is an adaption of the flines dynamically loadable filter
+This is an adaption of the C<flines> dynamically loadable filter
 provided in dynfilt/ in previous releases of Imager.
 
 This filter has no parameters.

@@ -4,7 +4,7 @@ use Imager::Color;
 use vars qw(@ISA $VERSION);
 @ISA = qw(Imager::Font);
 
-$VERSION = "1.010";
+$VERSION = "1.011";
 
 *_first = \&Imager::Font::_first;
 
@@ -148,7 +148,7 @@ __END__
 =head1 DESCRIPTION
 
 Imager::Font creates a Imager::Font::Type1 object when asked to create
-a font object based on a .pfb file.
+a font object based on a C<.pfb> file.
 
 See Imager::Font to see how to use this type.
 
@@ -165,19 +165,21 @@ This must be called before creating any fonts.
 Currently specific to Imager::Font::Type1, you can use the following
 flags when drawing text or calculating a bounding box:
 
+=for stopwords overline strikethrough
+
 =over
 
-=item underline
+=item *
 
-Draw the text with an underline.
+C<underline> - Draw the text with an underline.
 
-=item overline
+=item *
 
-Draw the text with an overline.
+C<overline> - Draw the text with an overline.
 
-=item strikethrough
+=item *
 
-Draw the text with a strikethrough.
+C<strikethrough> - Draw the text with a strikethrough.
 
 =back
 

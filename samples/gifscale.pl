@@ -61,15 +61,17 @@ Imager->write_multi({ file => $out_name }, @out)
 
 =head1 NAME
 
+=for stopwords gifscale.pl
+
 gifscale.pl - demonstrates adjusting tags when scaling a GIF image
 
 =head1 SYNOPSIS
 
-perl gifscale.pl scalefactor input.gif output.gif
+  perl gifscale.pl scalefactor input.gif output.gif
 
 =head1 DESCRIPTION
 
-Scales an input multi-image GIF file.  Unlike a simple scale each file
+Scales an input multiple-image GIF file.  Unlike a simple scale each file
 solution this:
 
 =over

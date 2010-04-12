@@ -57,7 +57,7 @@ __END__
 
 =head1 NAME
 
-inline_capture2image.pl - convert captured BGR data to any Imager supported format
+inline_capture2image.pl - convert captured C<BGR> data to any Imager supported format
 
 =head1 SYNOPSIS
 

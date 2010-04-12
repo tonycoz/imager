@@ -68,7 +68,7 @@ plan tests => 18;
   my @indexed;
   my @unknown_indexed;
   while (<IMAGER>) {
-    last if /^=\w/;
+    last if /^=\w/ && !/^=for\b/;
 
     if (/^(\w+)\(/) {
       push @indexed, $1;

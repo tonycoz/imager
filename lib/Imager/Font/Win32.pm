@@ -3,7 +3,7 @@ use strict;
 use vars qw(@ISA $VERSION);
 @ISA = qw(Imager::Font);
 
-$VERSION = "1.005";
+$VERSION = "1.006";
 
 # called by Imager::Font::new()
 # since Win32's HFONTs include the size information this
@@ -46,6 +46,8 @@ sub utf8 {
 __END__
 
 =head1 NAME
+
+=for stopwords GDI
 
 Imager::Font::Win32 - uses Win32 GDI services for text output
 

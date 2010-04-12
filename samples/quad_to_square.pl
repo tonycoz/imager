@@ -48,6 +48,8 @@ quad_to_square.pl - transform an arbitrary quadrilateral to a square.
 
 =head1 DESCRIPTION
 
+=for stopwords Fairhurst resized
+
 Courtesy Richard Fairhurst:
 
 I've been using it to rectify ("square up") a load of roughly scanned

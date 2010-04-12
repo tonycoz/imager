@@ -107,6 +107,8 @@ EXPR
 
 =head1 NAME
 
+=for stopwords anaglyph anaglyph.pl
+
 anaglyph.pl - create a anaglyph from the source images
 
 =head1 SYNOPSIS
@@ -140,6 +142,8 @@ though obviously the interactive component is missing.
 =head1 AUTHOR
 
 Tony Cook <tony@imager.perl.org>
+
+=for stopwords Oppenheim
 
 Thanks to Dan Oppenheim, who provided the impetus for this sample.
 

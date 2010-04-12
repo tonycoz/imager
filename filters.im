@@ -1725,7 +1725,7 @@ fount_fill_proto =
 
 
 /*
-=item i_new_fill_fount(xa, ya, xb, yb, type, repeat, combine, super_sample, ssample_param, count, segs)
+=item i_new_fill_fount(C<xa>, C<ya>, C<xb>, C<yb>, C<type>, C<repeat>, C<combine>, C<super_sample>, C<ssample_param>, C<count>, C<segs>)
 
 =category Fills
 =synopsis fill = i_new_fill_fount(0, 0, 100, 100, i_ft_linear, i_ft_linear, 

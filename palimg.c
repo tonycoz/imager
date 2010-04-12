@@ -77,14 +77,14 @@ static i_img IIM_base_8bit_pal =
 };
 
 /*
-=item i_img_pal_new(x, y, channels, maxpal)
+=item i_img_pal_new(C<x>, C<y>, C<channels>, C<maxpal>)
 
 =category Image creation/destruction
 =synopsis i_img *img = i_img_pal_new(width, height, channels, max_palette_size)
 
 Creates a new paletted image of the supplied dimensions.
 
-I<maxpal> is the maximum palette size and should normally be 256.
+C<maxpal> is the maximum palette size and should normally be 256.
 
 Returns a new image or NULL on failure.
 

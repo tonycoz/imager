@@ -153,16 +153,16 @@ rubthru_targ_alpha(i_img *im, i_img *src, int tx, int ty,
 }
 
 /*
-=item i_rubthru(im, src, tx, ty, src_minx, src_miny, src_maxx, src_maxy )
+=item i_rubthru(C<im>, C<src>, C<tx>, C<ty>, C<src_minx>, C<src_miny>, C<src_maxx>, C<src_maxy>)
 
 =category Image
 
-Takes the sub image I<src[src_minx, src_maxx)[src_miny, src_maxy)> and
-overlays it at (I<tx>,I<ty>) on the image object.
+Takes the sub image C<src>[C<src_minx>, C<src_maxx>)[C<src_miny>, C<src_maxy>)> and
+overlays it at (C<tx>,C<ty>) on the image object.
 
-The alpha channel of each pixel in I<src> is used to control how much
-the existing colour in I<im> is replaced, if it is 255 then the colour
-is completely replaced, if it is 0 then the original colour is left 
+The alpha channel of each pixel in C<src> is used to control how much
+the existing color in C<im> is replaced, if it is 255 then the color
+is completely replaced, if it is 0 then the original color is left
 unmodified.
 
 =cut

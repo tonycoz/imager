@@ -1,6 +1,6 @@
 =head1 NAME
 
-Imager::interface.pod - decribes the C level virtual image interface
+Imager::interface.pod - describes the C level virtual image interface
 
 =head1 SYNOPSIS
 
@@ -65,12 +65,14 @@ Other possible concrete images include:
 
 Some other possible virtual images:
 
+=for stopwords GIMP Photoshop
+
 =over
 
 =item *
 
 image alpha combining, where the combining function can be specified
-(see the layer modes in graphical editors like the GIMP or photoshop.
+(see the layer modes in graphical editors like the GIMP or Photoshop.
 
 =back
 
@@ -84,61 +86,64 @@ can be used to determine the structure of the image:
 
 =over
 
-=item channels
+=item *
 
-the number of samples kept for each pixel in the image.  For paletted
-images the samples are kept for each entry in the palette.
+C<channels> - the number of samples kept for each pixel in the image.
+For paletted images the samples are kept for each entry in the
+palette.
 
-=item xsize, ysize
+=item *
 
-the dimensions of the image in pixels.
+C<xsize>, C<ysize> - the dimensions of the image in pixels.
 
-=item bytes
+=item *
 
-the number of bytes of data kept for the image.  Zero for virtual
-images.  Does not include the space required for the palette for
-paletted images.
+C<bytes> - the number of bytes of data kept for the image.  Zero for
+virtual images.  Does not include the space required for the palette
+for paletted images.
 
-=item ch_mask
+=item *
 
-controls which samples will be written to for direct images.
+C<ch_mask> - controls which samples will be written to for direct
+images.
 
-=item bits
+=item *
 
-the number of bits kept for each sample.  There are enum values
-i_8_bits, i_16_bits and i_double_bits (64).
+C<bits> - the number of bits kept for each sample.  There are enum
+values i_8_bits, i_16_bits and i_double_bits (64).
 
-=item type
+=item *
 
-the type of image, either i_direct_type or i_palette_type.  Direct
-images keep the samples for every pixel image, while i_palette_type
-images keep an index into a color table for each pixel.
+C<type> - the type of image, either i_direct_type or i_palette_type.
+Direct images keep the samples for every pixel image, while
+i_palette_type images keep an index into a color table for each pixel.
 
-=item virtual
+=item *
 
-whether the image keeps any pixel data.  If this is non-zero then
-idata points to image data, otherwise it points to implementation
-defined data, though ext_data is more likely to be used for that.
+C<virtual> - whether the image keeps any pixel data.  If this is
+non-zero then C<idata> points to image data, otherwise it points to
+implementation defined data, though C<ext_data> is more likely to be
+used for that.
 
-=item idata
+=item *
 
-image data.  If the image is 8-bit direct, non-virtual, then this
-consists of each sample of the image stored one after another,
-otherwise it is implementation defined.
+C<idata> - image data.  If the image is 8-bit direct, non-virtual,
+then this consists of each sample of the image stored one after
+another, otherwise it is implementation defined.
 
-=item tags
+=item *
 
-will be used to store meta-data for an image, eg. tags from a TIFF
-file, or animation information from a GIF file.  This should be
+C<tags> - will be used to store meta-data for an image, eg. tags from
+a TIFF file, or animation information from a GIF file.  This should be
 initialized with a call to i_tags_new() in your image constructor if
 creating a new image type.
 
-=item ext_data
+=item *
 
-for internal use of image types.  This is not released by the standard
-i_img_exorcise() function.  If you create a new image type and want to
-store a pointer to allocated memory here you should point i_f_destroy
-at a function that will release the data.
+C<ext_data> - for internal use of image types.  This is not released
+by the standard i_img_exorcise() function.  If you create a new image
+type and want to store a pointer to allocated memory here you should
+point i_f_destroy at a function that will release the data.
 
 =back
 
@@ -154,53 +159,53 @@ in the range 0 to 1 inclusive.
 
 =over
 
-=item i_f_ppix(im, x, y, color)
+=item i_f_ppix(im,x,y,color)
 
-=item i_f_ppixf(im, x, y, fcolor)
+=item i_f_ppixf(im,x,y,fcolor)
 
 stores the specified color at pixel (x,y) in the image.  If the pixel
 can be stored return 0, otherwise -1.  An image type may choose to
 return 0 under some circumstances, eg. writing to a masked area of an
-image.  The color or fcolor always contains the actual samples to be
+image.  The C<color> or C<fcolor> always contains the actual samples to be
 written, rather than a palette index.
 
-=item i_f_plin(im, l, r, y, colors)
+=item i_f_plin(im,l,r,y,colors)
 
-=item i_f_plinf(im, l, r, y, fcolors)
+=item i_f_plinf(im,l,r,y,fcolors)
 
 stores (r-l) pixels at positions (l,y) ... (r-1, y) from the array
-specified by colors (or fcolors).  Returns the number of pixels
-written to.  If l is negative it will return 0.  If r > im->xsize then
-only (im->xsize - l) will be written.
+specified by C<colors> (or C<fcolors>).  Returns the number of pixels
+written to.  If l is negative it will return 0.  If C<< r > im->xsize
+>> then only C<< (im->xsize - l) >> will be written.
 
-=item i_f_gpix(im, x, y, color)
+=item i_f_gpix(im,x,y,color)
 
-=item i_f_gpixf(im, x, y, fcolor)
+=item i_f_gpixf(im,x,y,fcolor)
 
 retrieves a single pixel from position (x,y).  This returns the
 samples rather than the index for paletted images.
 
-=item i_f_glin(im, l, r, y, colors)
+=item i_f_glin(im,l,r,y,colors)
 
-=item i_f_glinf(im, l, r, y, fcolors)
+=item i_f_glinf(im,l,r,y,fcolors)
 
 retrieves (r-l) pixels from positions (l, y) through (r-1, y) into the
 array specified by colors.  Returns the number of pixels retrieved.
-If l < 0 no pixels are retrieved.  If r > im->xsize then pixels (l, y)
-... (im->xsize-1, y) are retrieved.  Retrieves the samples rather than
-the color indexes for paletted images.
+If l < 0 no pixels are retrieved.  If C<< r > im->xsize >> then pixels
+C<< (l, y) >> ... C<< (im->xsize-1, y) >> are retrieved.  Retrieves
+the samples rather than the color indexes for paletted images.
 
-=item i_f_gsamp(im, l, r, y, samples, chans, chan_count)
+=item i_f_gsamp(im,l,r,y,samples,chans,chan_count)
 
-=item i_f_gsampf(im, l, r, y, fsamples, chans, chan_count)
+=item i_f_gsampf(im,l,r,y,fsamples,chans,chan_count)
 
-Retrieves samples from channels specified by chans (for length
-chan_count) from pixels at positions (l,y) ... (r-1, y).  If chans is
-NULL then samples from channels 0 ... chan_count-1 will be retrieved.
-Returns the number of sample retrieved (_not_ the number of channels).
-If a channel in chans is not present in the image or l < 0, returns 0.
-If r > im->xsize, then the samples from (l,y) ... (im->xsize-1, y) are
-returned.
+Retrieves samples from channels specified by C<chans> (for length
+C<chan_count>) from pixels at positions (l,y) ... (r-1, y).  If
+C<chans> is NULL then samples from channels 0 ... C<chan_count-1> will
+be retrieved.  Returns the number of sample retrieved (I<not> the
+number of channels).  If a channel in C<chans> is not present in the
+image or l < 0, returns 0.  If C<< r > im->xsize >>, then the samples
+from C<(l,y)> ... C<< (im->xsize-1, y) >> are returned.
 
 =back
 
@@ -208,25 +213,25 @@ The following are for images where type == i_palette_type only.
 
 =over
 
-=item i_f_gpal(im, l, r, y, vals)
+=item i_f_gpal(im,l,r,y,vals)
 
 Retrieves color indexes from the image for pixels (l, y) ... (r-1, y)
-into vals.  Returns the number of indexes retrieved.
+into C<vals>.  Returns the number of indexes retrieved.
 
-=item i_f_ppal(im, l, r, y, vals)
+=item i_f_ppal(im,l,r,y,vals)
 
 Stores color indexes into the image for pixels (l, y) ... (r-1, y)
-from vals.  Returns the number of indexes retrieved.  If indices are
+from C<vals>.  Returns the number of indexes retrieved.  If indexes are
 outside the range of the images palette, then you may have problems
 reading those pixels with i_gpix() or i_glin().
 
-=item i_f_addcolors(im, colors, count)
+=item i_f_addcolors(im,colors,count)
 
 Adds the count colors to the image's palette.  Returns the index of
 the first color added, or -1 if there is not enough space for count
 colors.
 
-=item i_f_getcolors(im, index, colors, count)
+=item i_f_getcolors(im,index,colors,count)
 
 Retrieves count colors from the image's palette starting from entry
 index in the palette.  Returns non-zero on success.
@@ -241,13 +246,13 @@ this is not a paletted image.
 Returns the maximum number of colors that can fit in the image's
 palette.  Returns -1 if this is not a paletted image.
 
-=item i_f_findcolor(im, color, entry)
+=item i_f_findcolor(im,color,entry)
 
 Searches the image's palette for the specified color, setting *entry
 to the index and returning non-zero.  Returns zero if the color is not
 found.
 
-=item i_f_setcolors_t(im, index, colors, count)
+=item i_f_setcolors_t(im,index,colors,count)
 
 Sets count colors starting from index in the image from the array
 colors.  The colors to be set must already have entries in the image's
@@ -268,7 +273,7 @@ same number of channels.
 
 Several functions have been written to simplify creating new image types.
 
-These tools are available by including imagei.h.
+These tools are available by including F<imagei.h>.
 
 =head2 Floating point wrappers
 
@@ -318,10 +323,10 @@ If this is not the case then these functions will just crash :)
 
 =head2 Sample macros
 
-Imagei.h defines several macros for converting samples between
+C<Imagei.h> defines several macros for converting samples between
 different sizes.
 
-Each macro is of the form SampleI<size>ToI<size> where I<size> is one
+Each macro is of the form C<Sample>I<size>C<To>I<size> where I<size> is one
 of 8, 16, or F (for floating-point samples).
 
 =over

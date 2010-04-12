@@ -1,10 +1,12 @@
 package Imager::Preprocess;
 use strict;
 require Exporter;
-use vars qw(@ISA @EXPORT);
+use vars qw(@ISA @EXPORT $VERSION);
 
 @EXPORT = qw(preprocess);
 @ISA = qw(Exporter);
+
+$VERSION = "1.000";
 
 
 sub preprocess {
@@ -167,6 +169,8 @@ __END__
 
 =head1 NAME
 
+=for stopwords preprocessor
+
 Imager::Preprocess - simple preprocessor for handling multiple sample sizes
 
 =head1 SYNOPSIS
@@ -184,8 +188,8 @@ This is a simple preprocessor that aims to reduce duplication of
 source code when implementing an algorithm both for 8-bit samples and
 double samples in Imager.
 
-Imager's Makefile.PL currently scans the MANIFEST for .im files and
-adds Makefile files to convert these to .c files.
+Imager's C<Makefile.PL> currently scans the F<MANIFEST> for F<.im>
+files and adds Makefile files to convert these to F<.c> files.
 
 The beginning of a sample-independent section of code is preceded by:
 
@@ -213,41 +217,41 @@ The following types and values are defined in a #code section:
 
 =item *
 
-IM_GPIX(im, x, y, &col)
+IM_GPIX(C<im>, C<x>, C<y>, C<&col>)
 
 =item *
 
-IM_GLIN(im, l, r, y, colors)
+IM_GLIN(C<im>, C<l>, C<r>, C<y>, C<colors>)
 
 =item *
 
-IM_PPIX(im, x, y, &col)
+IM_PPIX(C<im>, C<x>, C<y>, C<&col>)
 
 =item *
 
-IM_PLIN(im, x, y, colors)
+IM_PLIN(C<im>, C<x>, C<y>, C<colors>)
 
 =item *
 
-IM_GSAMP(im, l, r, y, samples, chans, chan_count)
+IM_GSAMP(C<im>, C<l>, C<r>, C<y>, C<samples>, C<chans>, C<chan_count>)
 
 These correspond to the appropriate image function, eg. IM_GPIX()
 becomes i_gpix() or i_gpixf() as appropriate.
 
 =item *
 
-IM_ADAPT_COLORS(dest_channes, src_channels, colors, count)
+IM_ADAPT_COLORS(C<dest_channels>, C<src_channels>, C<colors>, C<count>)
 
 Call i_adapt_colors() or i_adapt_fcolors().
 
 =item *
 
-IM_FILL_COMBINE(fill) - retrieve the combine function from a fill
+IM_FILL_COMBINE(C<fill>) - retrieve the combine function from a fill
 object.
 
 =item *
 
-IM_FILL_FILLER(fill) - retrieve the fill_with_* function from a fill
+IM_FILL_FILLER(C<fill>) - retrieve the fill_with_* function from a fill
 object.
 
 =item *

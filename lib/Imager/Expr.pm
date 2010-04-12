@@ -4,7 +4,7 @@ use Imager::Regops;
 use strict;
 use vars qw($VERSION);
 
-$VERSION = "1.004";
+$VERSION = "1.005";
 
 my %expr_types;
 
@@ -447,7 +447,7 @@ sub compile {
     # generate the final result
     my $result = $self->gencode($optree->[1]);
     if ($result !~ /^p\d+$/) {
-      $self->error("You must return a colour value");
+      $self->error("You must return a color value");
       return;
     }
     push(@{$self->{genops}}, [ 'ret', $result, (0) x $MaxOperands ])
@@ -570,8 +570,10 @@ numeric registers starting from register zero.
 
 =back
 
-By default you can define a 'rpnexpr' key (which emulates RPN) or
-'expr' (an infix expression).  It's also possible to write other
+=for stopwords RPN
+
+By default you can define a C<rpnexpr> key (which emulates RPN) or
+C<expr> (an infix expression).  It's also possible to write other
 expression parsers that will use other keys.  Only one expression key
 should be defined.
 
@@ -583,6 +585,8 @@ expression object cannot be created.
 =head2 Methods
 
 Imager::Expr provides only a few simple methods meant for external use:
+
+=for stopwords VM
 
 =over
 
@@ -605,7 +609,7 @@ Returns a reference to the array of numeric registers.
 
 =item $expr->cregs()
 
-Returns a reference to the array of colour registers.
+Returns a reference to the array of color registers.
 
 =item $expr->dumpops()
 
@@ -613,7 +617,7 @@ Returns a string with the generated VM "machine code".
 
 =item $expr->dumpcode()
 
-Returns a string with the unassembled VM "machine code".
+Returns a string with the disassembled VM "machine code".
 
 =back
 
@@ -660,21 +664,21 @@ Set the return value of Imager::Expr::error()
 
 Converts marginally parsed RPN to register code.
 
-=item assemble
+=item assemble()
 
 Called to convert op codes into byte code.
 
-=item numre
+=item numre()
 
 Returns a regular expression that matches floating point numbers.
 
-=item optimize
+=item optimize()
 
 Optimizes the assembly code, including attempting common subexpression
 elimination and strength reducing division by a constant into
 multiplication by a constant.
 
-=item register_type
+=item register_type()
 
 Called by a new expression parser implementation to register itself,
 call as:

@@ -98,11 +98,11 @@ stored.  Imager treats these as follows:
 
 =item *
 
-1 sample per color - grayscale image.
+1 sample per color - gray scale image.
 
 =item *
 
-2 samples per color - grayscale image with alpha channel.
+2 samples per color - gray scale image with alpha channel.
 
 =item *
 
@@ -128,7 +128,7 @@ The coordinate system in Imager has the origin in the upper left
 corner, see L<Imager::Draw> for details.
 
 The alpha channel when one is present is considered unassociated -
-ie. the color data has not been scaled by the alpha channel.  Note
+ie the color data has not been scaled by the alpha channel.  Note
 that not all code follows this (recent) rule, but will over time.
 
 =head2 Creating Imager Objects
@@ -217,7 +217,7 @@ Default: 256.  This must be in the range 1 through 256.
 
 =item *
 
-C<file>, C<fh>, C<fd>, C<callback>, C<readcb> - specify a filename,
+C<file>, C<fh>, C<fd>, C<callback>, C<readcb> - specify a file name,
 filehandle, file descriptor or callback to read image data from.  See
 L<Imager::Files> for details.  The typical use is:
 
@@ -251,7 +251,7 @@ To create paletted images, set the 'type' parameter to 'paletted':
 
   $img = Imager->new(xsize=>200, ysize=>200, type=>'paletted');
 
-which creates an image with a maxiumum of 256 colors, which you can
+which creates an image with a maximum of 256 colors, which you can
 change by supplying the C<maxcolors> parameter.
 
 For improved color precision you can use the bits parameter to specify
@@ -284,7 +284,7 @@ parameter:
   my $img = Imager->new(file => $filename)
     or die Imager->errstr;
 
-=item img_set
+=item img_set()
 
 img_set destroys the image data in the object and creates a new one
 with the given dimensions and channels.  For a way to convert image
@@ -302,30 +302,30 @@ These return basic attributes of an image object.
 
 =over
 
-=item getwidth
+=item getwidth()
 
   print "Image width: ", $img->getwidth(), "\n";
 
 The C<getwidth()> method returns the width of the image.  This value
-comes either from C<new()> with xsize,ysize parameters or from reading
-data from a file with C<read()>.  If called on an image that has no
-valid data in it like C<Imager-E<gt>new()> returns, the return value
-of C<getwidth()> is undef.
+comes either from C<new()> with C<xsize>, C<ysize> parameters or from
+reading data from a file with C<read()>.  If called on an image that
+has no valid data in it like C<Imager-E<gt>new()> returns, the return
+value of C<getwidth()> is undef.
 
-=item getheight
+=item getheight()
 
   print "Image height: ", $img->getheight(), "\n";
 
 Same details apply as for L<getwidth>.
 
-=item getchannels
+=item getchannels()
 
   print "Image has ",$img->getchannels(), " channels\n";
 
 To get the number of channels in an image C<getchannels()> is used.
 
 
-=item bits
+=item bits()
 
 The bits() method retrieves the number of bits used to represent each
 channel in a pixel, 8 for a normal image, 16 for 16-bit image and
@@ -338,9 +338,9 @@ channel in a pixel, 8 for a normal image, 16 for 16-bit image and
     # slower but more precise
   }
 
-=item type
+=item type()
 
-The type() method returns either 'direct' for truecolor images or
+The type() method returns either 'direct' for direct color images or
 'paletted' for paletted images.
 
   if ($img->type eq 'paletted') {
@@ -350,15 +350,17 @@ The type() method returns either 'direct' for truecolor images or
     }
   }
 
-=item virtual
+=item virtual()
 
 The virtual() method returns non-zero if the image contains no actual
 pixels, for example masked images.
 
+=for stopwords SDL
+
 This may also be used for non-native Imager images in the future, for
 example, for an Imager object that draws on an SDL surface.
 
-=item is_bilevel
+=item is_bilevel()
 
 Tests if the image will be written as a monochrome or bi-level image
 for formats that support that image organization.
@@ -403,7 +405,7 @@ image.
 
 =over
 
-=item getmask
+=item getmask()
 
   @rgbanames = qw( red green blue alpha );
   my $mask = $img->getmask();
@@ -412,13 +414,15 @@ image.
     print $rgbanames[$_],"\n" if $mask & 1<<$_;
   }
 
+=for stopwords th
+
 C<getmask()> is used to fetch the current channel mask.  The mask
 determines what channels are currently modifiable in the image.  The
-channel mask is an integer value, if the i-th lsb is set the i-th
-channel is modifiable.  eg. a channel mask of 0x5 means only channels
-0 and 2 are writable.
+channel mask is an integer value, if the C<i-th> least significant bit
+is set the C<i-th> channel is modifiable.  eg. a channel mask of 0x5
+means only channels 0 and 2 are writable.
 
-=item setmask
+=item setmask()
 
   $mask = $img->getmask();
   $img->setmask(mask=>8);     # modify alpha only
@@ -448,7 +452,7 @@ C<getcolors()> and C<findcolor()>:
 
 =over
 
-=item addcolors
+=item addcolors()
 
 You can add colors to a paletted image with the addcolors() method:
 
@@ -462,7 +466,7 @@ adding the colors would overflow the palette.
 The only parameter is C<colors> which must be a reference to an array
 of Imager::Color objects.
 
-=item setcolors
+=item setcolors()
 
   $img->setcolors(start=>$start, colors=>\@colors);
 
@@ -483,7 +487,7 @@ colors - reference to an array of Imager::Color objects.
 
 =back
 
-=item getcolors
+=item getcolors()
 
 To retrieve existing colors from the palette use the getcolors() method:
 
@@ -494,7 +498,7 @@ To retrieve existing colors from the palette use the getcolors() method:
   # get a range of colors
   my @colors = $img->getcolors(start=>$index, count=>$count);
 
-=item findcolor
+=item findcolor()
 
 To quickly find a color in the palette use findcolor():
 
@@ -512,13 +516,13 @@ color - an Imager::Color object.
 
 =back
 
-=item colorcount
+=item colorcount()
 
 Returns the number of colors in the image's palette:
 
   my $count = $img->colorcount;
 
-=item maxcolors
+=item maxcolors()
 
 Returns the maximum size of the image's palette.
 
@@ -530,13 +534,13 @@ Returns the maximum size of the image's palette.
 
 =over
 
-=item getcolorcount
+=item getcolorcount()
 
 Calculates the number of colors in an image.
 
 The amount of memory used by this is proportional to the number of
 colors present in the image, so to avoid using too much memory you can
-supply a maxcolors parameter to limit the memory used.
+supply a maxcolors() parameter to limit the memory used.
 
 Note: getcolorcount() treats the image as an 8-bit per sample image.
 
@@ -544,7 +548,7 @@ Note: getcolorcount() treats the image as an 8-bit per sample image.
 
 =item *
 
-X<maxcolors!getcolorcount>maxcolors - the maximum number of colors to
+X<maxcolors!getcolorcount>C<maxcolors> - the maximum number of colors to
 return.  Default: unlimited.
 
 =back
@@ -553,7 +557,7 @@ return.  Default: unlimited.
     print "Less than 512 colors in image\n";
   }
 
-=item getcolorusagehash
+=item getcolorusagehash()
 
 Calculates a histogram of colors used by the image.
 
@@ -561,7 +565,7 @@ Calculates a histogram of colors used by the image.
 
 =item *
 
-X<maxcolors!getcolorusagehash>maxcolors - the maximum number of colors
+X<maxcolors!getcolorusagehash>C<maxcolors> - the maximum number of colors
 to return.  Default: unlimited.
 
 =back
@@ -569,14 +573,14 @@ to return.  Default: unlimited.
 Returns a reference to a hash where the keys are the raw color as
 bytes, and the values are the counts for that color.
 
-The alpha channel of the image is ignored.  If the image is grayscale
+The alpha channel of the image is ignored.  If the image is gray scale
 then the hash keys will each be a single character.
 
   my $colors = $img->getcolorusagehash;
   my $blue_count = $colors->{pack("CCC", 0, 0, 255)} || 0;
   print "#0000FF used $blue_count times\n";
 
-=item getcolorusage
+=item getcolorusage()
 
 Calculates color usage counts and returns just the counts.
 
@@ -584,8 +588,8 @@ Calculates color usage counts and returns just the counts.
 
 =item *
 
-X<maxcolors!getcolorusage>maxcolors - the maximum number of colors to
-return.  Default: unlimited.
+X<maxcolors!getcolorusage>C<maxcolors> - the maximum number of colors
+to return.  Default: unlimited.
 
 =back
 
@@ -621,7 +625,7 @@ where %opts contains the options specified under L<Quantization options>.
   my $optimag = $img->to_paletted({ make_colors => 'mediancut',
                                     translate => 'errdiff' });
 
-=item to_rgb8
+=item to_rgb8()
 
 You can convert a paletted image (or any image) to an 8-bit/channel
 RGB image with:
@@ -630,7 +634,7 @@ RGB image with:
 
 No parameters.
 
-=item to_rgb16
+=item to_rgb16()
 
 You can convert a paletted image (or any image) to an 16-bit/channel
 RGB image with:
@@ -674,7 +678,7 @@ Parameters:
 
 mask - the mask image.  If not supplied then all pixels in the target
 image are writable.  On each write to the masked image, only pixels
-that have non-zero in chennel 0 of the mask image will be written to
+that have non-zero in channel 0 of the mask image will be written to
 the original image.  Default: none, if not supplied then no masking is
 done, but the other parameters are still honored.
 
@@ -705,7 +709,7 @@ For example, given a base image called $img:
   # now draw on $maskedimg and it will only draw on areas of $img 
   # where $mask is non-zero in channel 0.
 
-You can specifiy the region of the underlying image that is masked
+You can specify the region of the underlying image that is masked
 using the left, top, right and bottom options.
 
 If you just want a subset of the image, without masking, just specify
@@ -733,7 +737,7 @@ the code or name of the tag followed by the value of the tag.
 
 =over
 
-=item tags
+=item tags()
 
 Retrieve tags from the image.
 
@@ -763,7 +767,7 @@ or a given code:
 
   my @tags = $img->tags(code=>$code);
 
-=item addtag
+=item addtag()
 
 You can add tags using the addtag() method, either by name:
 
@@ -773,7 +777,7 @@ or by code:
 
   my $index = $img->addtag(code=>$code, value=>$value);
 
-=item deltag
+=item deltag()
 
 You can remove tags with the deltag() method, either by index:
 
@@ -789,7 +793,7 @@ or by code:
 
 In each case deltag() returns the number of tags deleted.
 
-=item settag
+=item settag()
 
 settag() replaces any existing tags with a new tag.  This is
 equivalent to calling deltag() then addtag().
@@ -811,7 +815,7 @@ some standard information.
 
 =item *
 
-X<i_xres tag>X<i_yres tag>X<tags, i_xres>X<tags, i_yres>i_xres, i_yres
+X<i_xres tag>X<i_yres tag>X<tags, i_xres>X<tags, i_yres>C<i_xres>, C<i_yres>
 - The spatial resolution of the image in pixels per inch.  If the
 image format uses a different scale, eg. pixels per meter, then this
 value is converted.  A floating point number stored as a string.
@@ -828,22 +832,22 @@ value is converted.  A floating point number stored as a string.
 
 =item *
 
-X<i_aspect_only tag>X<tags, i_aspect_only>i_aspect_only - If this is
+X<i_aspect_only tag>X<tags, i_aspect_only>C<i_aspect_only> - If this is
 non-zero then the values in i_xres and i_yres are treated as a ratio
 only.  If the image format does not support aspect ratios then this is
-scaled so the smaller value is 72dpi.
+scaled so the smaller value is 72 DPI.
 
 =item *
 
-X<i_incomplete tag>X<tags, i_incomplete>i_incomplete - If this tag is
+X<i_incomplete tag>X<tags, i_incomplete>C<i_incomplete> - If this tag is
 present then the whole image could not be read.  This isn't
 implemented for all images yet, and may not be.
 
 =item *
 
-X<i_lines_read tag>X<tags, i_lines_read>i_lines_read - If
+X<i_lines_read tag>X<tags, i_lines_read>C<i_lines_read> - If
 C<i_incomplete> is set then this tag may be set to the number of
-scanlines successfully read from the file.  This can be used to decide
+scan lines successfully read from the file.  This can be used to decide
 whether an image is worth processing.
 
 =item *
@@ -865,240 +869,235 @@ C<color(>I<red>C<,>I<green>C<,>I<blue>C<)>, eg color(255,0,0).
 =head2 Quantization options
 
 These options can be specified when calling
-L<Imager::ImageTypes/to_paletted>, write_multi() for gif files, when
-writing a single image with the gifquant option set to 'gen', or for
-direct calls to i_writegif_gen and i_writegif_callback.
+L<Imager::ImageTypes/to_paletted>, write_multi() for GIF files, when
+writing a single image with the C<gifquant> option set to C<gen>, or for
+direct calls to i_writegif_gen() and i_writegif_callback().
 
 =over
 
-=item colors
+=item *
 
-A arrayref of colors that are fixed.  Note that some color generators
-will ignore this.  If this is supplied it will be filled with the
-color table generated for the image.
+C<colors> - An arrayref of colors that are fixed.  Note that some
+color generators will ignore this.  If this is supplied it will be
+filled with the color table generated for the image.
 
-=item transp
+=item *
 
-The type of transparency processing to perform for images with an
-alpha channel where the output format does not have a proper alpha
-channel (eg. gif).  This can be any of:
+C<transp> - The type of transparency processing to perform for images
+with an alpha channel where the output format does not have a proper
+alpha channel (eg. GIF).  This can be any of:
 
 =over
 
-=item none
+=item *
 
-No transparency processing is done. (default)
+C<none> - No transparency processing is done. (default)
 
-=item threshold
+=item *
 
-Pixels more transparent that tr_threshold are rendered as transparent.
+C<threshold> - pixels more transparent than C<tr_threshold> are
+rendered as transparent.
 
-=item errdiff
+=item *
 
-An error diffusion dither is done on the alpha channel.  Note that
-this is independent of the translation performed on the colour
-channels, so some combinations may cause undesired artifacts.
+C<errdiff> - An error diffusion dither is done on the alpha channel.
+Note that this is independent of the translation performed on the
+color channels, so some combinations may cause undesired artifacts.
 
-=item ordered
+=item *
 
-The ordered dither specified by tr_orddith is performed on the alpha
-channel.
+C<ordered> - the ordered dither specified by tr_orddith is performed
+on the alpha channel.
 
 =back
 
 This will only be used if the image has an alpha channel, and if there
-is space in the palette for a transparency colour.
+is space in the palette for a transparency color.
 
-=item tr_threshold
+=item *
 
-The highest alpha value at which a pixel will be made transparent when
-transp is 'threshold'. (0-255, default 127)
+C<tr_threshold> - the highest alpha value at which a pixel will be
+made transparent when C<transp> is 'threshold'. (0-255, default 127)
 
-=item tr_errdiff
+=item *
 
-The type of error diffusion to perform on the alpha channel when
-transp is 'errdiff'.  This can be any defined error diffusion type
-except for custom (see errdiff below).
+C<tr_errdiff> - The type of error diffusion to perform on the alpha
+channel when C<transp> is C<errdiff>.  This can be any defined error
+diffusion type except for custom (see C<errdiff> below).
 
-=item tr_orddith
+=item *
 
-The type of ordered dither to perform on the alpha channel when transp
-is 'ordered'.  Possible values are:
+C<tr_orddith> - The type of ordered dither to perform on the alpha
+channel when C<transp> is 'ordered'.  Possible values are:
 
 =over
 
-=item random
+=item *
 
-A semi-random map is used.  The map is the same each time.
+C<random> - A semi-random map is used.  The map is the same each time.
 
-=item dot8
+=item *
 
-8x8 dot dither.
+C<dot8> - 8x8 dot dither.
 
-=item dot4
+=item *
 
-4x4 dot dither
+C<dot4> - 4x4 dot dither
 
-=item hline
+=item *
 
-horizontal line dither.
+C<hline> - horizontal line dither.
 
-=item vline
+=item *
 
-vertical line dither.
+C<vline> - vertical line dither.
 
-=item "/line"
+=item *
 
-=item slashline
+C</line>, C<slashline> - diagonal line dither
 
-diagonal line dither
+=item *
 
-=item '\line'
+C<\line>, C<backline> - diagonal line dither
 
-=item backline
+=item *
 
-diagonal line dither
+C<tiny> - dot matrix dither (currently the default).  This is probably
+the best for displays (like web pages).
 
-=item tiny
+=item *
 
-dot matrix dither (currently the default).  This is probably the best
-for displays (like web pages).
-
-=item custom
-
-A custom dither matrix is used - see tr_map
+C<custom> - A custom dither matrix is used - see C<tr_map>.
 
 =back
 
-=item tr_map
+=item *
 
-When tr_orddith is custom this defines an 8 x 8 matrix of integers
-representing the transparency threshold for pixels corresponding to
-each position.  This should be a 64 element array where the first 8
-entries correspond to the first row of the matrix.  Values should be
-betweern 0 and 255.
+C<tr_map> - When tr_orddith is custom this defines an 8 x 8 matrix of
+integers representing the transparency threshold for pixels
+corresponding to each position.  This should be a 64 element array
+where the first 8 entries correspond to the first row of the matrix.
+Values should be between 0 and 255.
 
-=item make_colors
+=item *
 
-Defines how the quantization engine will build the palette(s).
-Currently this is ignored if 'translate' is 'giflib', but that may
-change.  Possible values are:
+C<make_colors> - Defines how the quantization engine will build the
+palette(s).  Currently this is ignored if C<translate> is C<giflib>,
+but that may change.  Possible values are:
 
 =over
 
 =item *
 
-none - only colors supplied in 'colors' are used.
+C<none> - only colors supplied in 'colors' are used.
 
 =item *
 
-webmap - the web color map is used (need url here.)
+C<webmap> - the web color map is used (need URL here.)
 
 =item *
 
-addi - The original code for generating the color map (Addi's code) is
+C<addi> - The original code for generating the color map (Addi's code) is
 used.
 
 =item *
 
-mediancut - Uses a mediancut algorithm, faster than 'addi', but not as good a
-result.
+C<mediancut> - Uses a median-cut algorithm, faster than C<addi>, but not
+as good a result.
 
 =item *
 
-mono, monochrome - a fixed black and white palette, suitable for
+C<mono>, C<monochrome> - a fixed black and white palette, suitable for
 producing bi-level images (eg. facsimile)
 
 =back
 
 Other methods may be added in the future.
 
-=item colors
+=item *
 
-A arrayref containing Imager::Color objects, which represents the
-starting set of colors to use in translating the images.  webmap will
-ignore this.  On return the final colors used are copied back into
-this array (which is expanded if necessary.)
+C<colors> - an arrayref containing Imager::Color objects, which
+represents the starting set of colors to use in translating the
+images.  C<webmap> will ignore this.  On return the final colors used
+are copied back into this array (which is expanded if necessary.)
 
-=item max_colors
+=item *
 
-The maximum number of colors to use in the image.
+C<max_colors> - the maximum number of colors to use in the image.
 
-=item translate
+=item *
 
-The method used to translate the RGB values in the source image into
-the colors selected by make_colors.  Note that make_colors is ignored
-whene translate is 'giflib'.
+C<translate> - The method used to translate the RGB values in the
+source image into the colors selected by make_colors.  Note that
+make_colors is ignored when C<translate> is C<giflib>.
 
 Possible values are:
 
 =over
 
-=item giflib
+=item *
 
-The giflib native quantization function is used.
+C<giflib> - the C<giflib> native quantization function is used.
 
-=item closest
+=item *
 
-The closest color available is used.
+C<closest> - the closest color available is used.
 
-=item perturb
+=item *
 
-The pixel color is modified by perturb, and the closest color is chosen.
+C<perturb> - the pixel color is modified by C<perturb>, and the
+closest color is chosen.
 
-=item errdiff
+=item *
 
-An error diffusion dither is performed.
+C<errdiff> - an error diffusion dither is performed.
 
 =back
 
-It's possible other transate values will be added.
+It's possible other C<translate> values will be added.
 
-=item errdiff
+=item *
 
-The type of error diffusion dither to perform.  These values (except
-for custom) can also be used in tr_errdif.
+C<errdiff> - The type of error diffusion dither to perform.  These
+values (except for custom) can also be used in tr_errdif.
+
+=for stopwords Floyd-Steinberg Jarvis Judice Ninke Stucki
 
 =over
 
-=item floyd
+=item *
 
-Floyd-Steinberg dither
+C<floyd> - Floyd-Steinberg dither
 
-=item jarvis
+=item *
 
-Jarvis, Judice and Ninke dither
+C<jarvis> - Jarvis, Judice and Ninke dither
 
-=item stucki
+=item *
 
-Stucki dither
+C<stucki> - Stucki dither
 
-=item custom
+=item *
 
-Custom.  If you use this you must also set errdiff_width,
-errdiff_height and errdiff_map.
+C<custom> - custom.  If you use this you must also set C<errdiff_width>,
+C<errdiff_height> and C<errdiff_map>.
 
 =back
 
-=item errdiff_width
+=item *
 
-=item errdiff_height
+C<errdiff_width>, C<errdiff_height>, C<errdiff_orig>, C<errdiff_map> -
+When C<translate> is C<errdiff> and C<errdiff> is C<custom> these
+define a custom error diffusion map.  C<errdiff_width> and
+C<errdiff_height> define the size of the map in the arrayref in
+C<errdiff_map>.  C<errdiff_orig> is an integer which indicates the
+current pixel position in the top row of the map.
 
-=item errdiff_orig
+=item *
 
-=item errdiff_map
-
-When translate is 'errdiff' and errdiff is 'custom' these define a
-custom error diffusion map.  errdiff_width and errdiff_height define
-the size of the map in the arrayref in errdiff_map.  errdiff_orig is
-an integer which indicates the current pixel position in the top row
-of the map.
-
-=item perturb
-
-When translate is 'perturb' this is the magnitude of the random bias
-applied to each channel of the pixel before it is looked up in the
-color table.
+C<perturb> - When translate is C<perturb> this is the magnitude of the
+random bias applied to each channel of the pixel before it is looked
+up in the color table.
 
 =back
 
@@ -1109,7 +1108,7 @@ almost never need to call.
 
 =over
 
-=item init
+=item init()
 
 This is a function, not a method.
 
@@ -1119,23 +1118,23 @@ This function is a mess, it can take the following named parameters:
 
 =item *
 
-log - name of a log file to log Imager's actions to.  Not all actions
+C<log> - name of a log file to log Imager's actions to.  Not all actions
 are logged, but the debugging memory allocator does log allocations
 here.  Ignored if Imager has been built without logging support.
 
 =item *
 
-loglevel - the maximum level of message to log.  Default: 1.
+C<loglevel> - the maximum level of message to log.  Default: 1.
 
 =item *
 
-warn_obsolete - if this is non-zero then Imager will warn when you
+C<warn_obsolete> - if this is non-zero then Imager will warn when you
 attempt to use obsoleted parameters or functionality.  This currently
-only includes the old gif output options instead of tags.
+only includes the old GIF output options instead of tags.
 
 =item *
 
-t1log - if non-zero then T1lib will be configured to produce a log
+C<t1log> - if non-zero then T1lib will be configured to produce a log
 file.  This will fail if there are any existing T1lib font objects.
 
 =back

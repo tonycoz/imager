@@ -104,57 +104,57 @@ It contains the following members:
 
 =item *
 
-channels - the number of channels in the image
+C<channels> - the number of channels in the image
 
 =item *
 
-xsize, ysize - the width and height of the image in pixels
+C<xsize>, C<ysize> - the width and height of the image in pixels
 
 =item *
 
-bytes - the number of bytes used to store the image data.  Undefined
+C<bytes> - the number of bytes used to store the image data.  Undefined
 where virtual is non-zero.
 
 =item *
 
-ch_mask - a mask of writable channels.  eg. if this is 6 then only
+C<ch_mask> - a mask of writable channels.  eg. if this is 6 then only
 channels 1 and 2 are writable.  There may be bits set for which there
 are no channels in the image.
 
 =item *
 
-bits - the number of bits stored per sample.  Should be one of
+C<bits> - the number of bits stored per sample.  Should be one of
 i_8_bits, i_16_bits, i_double_bits.
 
 =item *
 
-type - either i_direct_type for direct color images, or i_palette_type
+C<type> - either i_direct_type for direct color images, or i_palette_type
 for paletted images.
 
 =item *
 
-virtual - if zero then this image is-self contained.  If non-zero then
-this image could be an interface to some other implementation.
+C<virtual> - if zero then this image is-self contained.  If non-zero
+then this image could be an interface to some other implementation.
 
 =item *
 
-idata - the image data.  This should not be directly accessed.  A new
+C<idata> - the image data.  This should not be directly accessed.  A new
 image implementation can use this to store its image data.
 i_img_destroy() will myfree() this pointer if it's non-null.
 
 =item *
 
-tags - a structure storing the image's tags.  This should only be
+C<tags> - a structure storing the image's tags.  This should only be
 accessed via the i_tags_*() functions.
 
 =item *
 
-ext_data - a pointer for use internal to an image implementation.
+C<ext_data> - a pointer for use internal to an image implementation.
 This should be freed by the image's destroy handler.
 
 =item *
 
-im_data - data internal to Imager.  This is initialized by
+C<im_data> - data internal to Imager.  This is initialized by
 i_img_init().
 
 =item *
@@ -203,20 +203,21 @@ i_color is a union of:
 
 =item *
 
-gray - contains a single element gray_color, eg. c.gray.gray_color
+gray - contains a single element gray_color, eg. C<c.gray.gray_color>
 
 =item *
 
-rgb - contains three elements r, g, b, eg. c.rgb.r
+C<rgb> - contains three elements C<r>, C<g>, C<b>, eg. C<c.rgb.r>
 
 =item *
 
-rgba - contains four elements r, g, b, a, eg. c.rgba.a
+C<rgba> - contains four elements C<r>, C<g>, C<b>, C<a>, eg. C<c.rgba.a>
 
 =item *
 
-cmyk - contains four elements c, m, y, k, eg. C<c.cmyk.y>.  Note that
-Imager never uses CMYK colors except when reading/writing files.
+C<cmyk> - contains four elements C<c>, C<m>, C<y>, C<k>,
+eg. C<c.cmyk.y>.  Note that Imager never uses CMYK colors except when
+reading/writing files.
 
 =item *
 
@@ -279,7 +280,7 @@ From: File draw.c
 =item i_arc_aa(im, x, y, rad, d1, d2, color)
 
 
-Antialias fills an arc centered at (x,y) with radius I<rad> covering
+Anti-alias fills an arc centered at (x,y) with radius I<rad> covering
 the range of angles in degrees from d1 to d2, with the color.
 
 
@@ -289,7 +290,7 @@ From: File draw.c
 =item i_arc_aa_cfill(im, x, y, rad, d1, d2, fill)
 
 
-Antialias fills an arc centered at (x,y) with radius I<rad> covering
+Anti-alias fills an arc centered at (x,y) with radius I<rad> covering
 the range of angles in degrees from d1 to d2, with the fill object.
 
 
@@ -336,58 +337,58 @@ From: File draw.c
 =item i_circle_aa(im, x, y, rad, color)
 
 
-Antialias fills a circle centered at (x,y) for radius I<rad> with
+Anti-alias fills a circle centered at (x,y) for radius I<rad> with
 color.
 
 
 =for comment
 From: File draw.c
 
-=item i_flood_cfill(im, seedx, seedy, fill)
+=item i_flood_cfill(C<im>, C<seedx>, C<seedy>, C<fill>)
 
 
-Flood fills the 4-connected region starting from the point (seedx,
-seedy) with I<fill>.
+Flood fills the 4-connected region starting from the point (C<seedx>,
+C<seedy>) with C<fill>.
 
-Returns false if (seedx, seedy) are outside the image.
-
-
-=for comment
-From: File draw.c
-
-=item i_flood_cfill_border(im, seedx, seedy, fill, border)
-
-
-Flood fills the 4-connected region starting from the point (seedx,
-seedy) with I<fill>, the fill stops when it reaches pixels of color
-I<border>.
-
-Returns false if (seedx, seedy) are outside the image.
+Returns false if (C<seedx>, C<seedy>) are outside the image.
 
 
 =for comment
 From: File draw.c
 
-=item i_flood_fill(im, seedx, seedy, color)
+=item i_flood_cfill_border(C<im>, C<seedx>, C<seedy>, C<fill>, C<border>)
 
 
-Flood fills the 4-connected region starting from the point (seedx,
-seedy) with I<color>.
+Flood fills the 4-connected region starting from the point (C<seedx>,
+C<seedy>) with C<fill>, the fill stops when it reaches pixels of color
+C<border>.
 
-Returns false if (seedx, seedy) are outside the image.
+Returns false if (C<seedx>, C<seedy>) are outside the image.
 
 
 =for comment
 From: File draw.c
 
-=item i_flood_fill_border(im, seedx, seedy, color, border)
+=item i_flood_fill(C<im>, C<seedx>, C<seedy>, C<color>)
 
 
-Flood fills the 4-connected region starting from the point (seedx,
-seedy) with I<color>, fill stops when the fill reaches a pixels with
-color I<border>.
+Flood fills the 4-connected region starting from the point (C<seedx>,
+C<seedy>) with I<color>.
 
-Returns false if (seedx, seedy) are outside the image.
+Returns false if (C<seedx>, C<seedy>) are outside the image.
+
+
+=for comment
+From: File draw.c
+
+=item i_flood_fill_border(C<im>, C<seedx>, C<seedy>, C<color>, C<border>)
+
+
+Flood fills the 4-connected region starting from the point (C<seedx>,
+C<seedy>) with C<color>, fill stops when the fill reaches a pixels
+with color C<border>.
+
+Returns false if (C<seedx>, C<seedy>) are outside the image.
 
 
 =for comment
@@ -416,11 +417,11 @@ Returns the number of pixels retrieved.
 =for comment
 From: File imext.c
 
-=item i_gpal(im, x, r, y, indexes)
+=item i_gpal(im, left, right, y, indexes)
 
 
-Reads palette indexes for the horizontal line (x, y) to (r-1, y) into
-indexes.
+Reads palette indexes for the horizontal line (left, y) to (right-1,
+y) into C<indexes>.
 
 Returns the number of indexes read.
 
@@ -430,10 +431,10 @@ Always returns 0 for direct color images.
 =for comment
 From: File imext.c
 
-=item i_gpix(im, x, y, color)
+=item i_gpix(im, C<x>, C<y>, C<color>)
 
 
-Retrieves the I<color> of the pixel (x,y).
+Retrieves the C<color> of the pixel (x,y).
 
 Returns 0 if the pixel was retrieved, or -1 if not.
 
@@ -441,11 +442,11 @@ Returns 0 if the pixel was retrieved, or -1 if not.
 =for comment
 From: File imext.c
 
-=item i_gpixf(im, x, y, fcolor)
+=item i_gpixf(im, C<x>, C<y>, C<fcolor>)
 
 
 Retrieves the color of the pixel (x,y) as a floating point color into
-I<fcolor>.
+C<fcolor>.
 
 Returns 0 if the pixel was retrieved, or -1 if not.
 
@@ -453,63 +454,65 @@ Returns 0 if the pixel was retrieved, or -1 if not.
 =for comment
 From: File imext.c
 
-=item i_gsamp(im, l, r, y, samp, chans, chan_count)
+=item i_gsamp(im, left, right, y, samples, channels, channel_count)
 
 
-Reads sample values from im for the horizontal line (l, y) to (r-1,y)
-for the channels specified by chans, an array of int with chan_count
-elements.
+Reads sample values from C<im> for the horizontal line (left, y) to
+(right-1,y) for the channels specified by C<channels>, an array of int
+with C<channel_count> elements.
 
-If chans is NULL then the first chan_count channels are retrieved for
+If channels is NULL then the first channels_count channels are retrieved for
 each pixel.
 
-Returns the number of samples read (which should be (r-l) *
-chan_count)
+Returns the number of samples read (which should be (right-left) *
+channel_count)
 
 
 =for comment
 From: File imext.c
 
-=item i_gsampf(im, l, r, y, samp, chans, chan_count)
+=item i_gsampf(im, left, right, y, samples, channels, channel_count)
 
 
-Reads floating point sample values from im for the horizontal line (l,
-y) to (r-1,y) for the channels specified by chans, an array of int
-with chan_count elements.
+Reads floating point sample values from C<im> for the horizontal line
+(left, y) to (right-1,y) for the channels specified by C<channels>, an
+array of int with channel_count elements.
 
-If chans is NULL then the first chan_count channels are retrieved for
-each pixel.
+If C<channels> is NULL then the first C<channel_count> channels are
+retrieved for each pixel.
 
-Returns the number of samples read (which should be (r-l) *
-chan_count)
+Returns the number of samples read (which should be (C<right>-C<left>)
+* C<channel_count>)
 
 
 =for comment
 From: File imext.c
 
-=item i_line(im, x1, y1, x2, y2, val, endp)
+=item i_line(C<im>, C<x1>, C<y1>, C<x2>, C<y2>, C<color>, C<endp>)
 
 
-Draw a line to image using bresenhams linedrawing algorithm
+=for stopwords Bresenham's
 
-   im   - image to draw to
-   x1   - starting x coordinate
-   y1   - starting x coordinate
-   x2   - starting x coordinate
-   y2   - starting x coordinate
-   val  - color to write to image
-   endp - endpoint flag (boolean)
+Draw a line to image using Bresenham's line drawing algorithm
+
+   im    - image to draw to
+   x1    - starting x coordinate
+   y1    - starting x coordinate
+   x2    - starting x coordinate
+   y2    - starting x coordinate
+   color - color to write to image
+   endp  - endpoint flag (boolean)
 
 
 =for comment
 From: File draw.c
 
-=item i_line_aa(im, x1, x2, y1, y2, color, endp)
+=item i_line_aa(C<im>, C<x1>, C<x2>, C<y1>, C<y2>, C<color>, C<endp>)
 
 
-Antialias draws a line from (x1,y1) to (x2, y2) in color.
+Anti-alias draws a line from (x1,y1) to (x2, y2) in color.
 
-The point (x2, y2) is drawn only if endp is set.
+The point (x2, y2) is drawn only if C<endp> is set.
 
 
 =for comment
@@ -527,11 +530,11 @@ Returns the number of pixels set.
 =for comment
 From: File imext.c
 
-=item i_plinf(im, l, r, fcolors)
+=item i_plinf(im, C<left>, C<right>, C<fcolors>)
 
 
-Sets (r-l) pixels starting from (l,y) using (r-l) floating point
-colors from I<colors>.
+Sets (right-left) pixels starting from (left,y) using (right-left)
+floating point colors from C<fcolors>.
 
 Returns the number of pixels set.
 
@@ -539,11 +542,11 @@ Returns the number of pixels set.
 =for comment
 From: File imext.c
 
-=item i_ppal(im, x, r, y, indexes)
+=item i_ppal(im, left, right, y, indexes)
 
 
-Writes palette indexes for the horizontal line (x, y) to (r-1, y) from
-indexes.
+Writes palette indexes for the horizontal line (left, y) to (right-1,
+y) from C<indexes>.
 
 Returns the number of indexes written.
 
@@ -567,10 +570,10 @@ color to the image.
 =for comment
 From: File imext.c
 
-=item i_ppixf(im, x, y, fcolor)
+=item i_ppixf(im, C<x>, C<y>, C<fcolor>)
 
 
-Sets the pixel at (x,y) to the floating point color I<fcolor>.
+Sets the pixel at (C<x>,C<y>) to the floating point color C<fcolor>.
 
 Returns 0 if the pixel was drawn, or -1 if not.
 
@@ -592,7 +595,7 @@ From: File imext.c
 
 Clears the error stack.
 
-Called by any imager function before doing any other processing.
+Called by any Imager function before doing any other processing.
 
 
 =for comment
@@ -612,7 +615,7 @@ From: File error.c
 
 =item i_push_errorf(int code, char const *fmt, ...)
 
-A version of i_push_error() that does printf() like formating.
+A version of i_push_error() that does printf() like formatting.
 
 Does not support perl specific format codes.
 
@@ -620,7 +623,7 @@ Does not support perl specific format codes.
 =for comment
 From: File error.c
 
-=item i_push_errorvf(int code, char const *fmt, va_list ap)
+=item i_push_errorvf(int C<code>, char const *C<fmt>, va_list C<ap>)
 
 
 Intended for use by higher level functions, takes a varargs pointer
@@ -687,7 +690,7 @@ From: File limits.c
 
 =over
 
-=item i_new_fill_fount(xa, ya, xb, yb, type, repeat, combine, super_sample, ssample_param, count, segs)
+=item i_new_fill_fount(C<xa>, C<ya>, C<xb>, C<yb>, C<type>, C<repeat>, C<combine>, C<super_sample>, C<ssample_param>, C<count>, C<segs>)
 
 
 
@@ -697,50 +700,54 @@ Creates a new general fill which fills with a fountain fill.
 =for comment
 From: File filters.im
 
-=item i_new_fill_hatch(fg, bg, combine, hatch, cust_hatch, dx, dy)
+=item i_new_fill_hatch(C<fg>, C<bg>, C<combine>, C<hatch>, C<cust_hatch>, C<dx>, C<dy>)
 
 
-Creates a new hatched fill with the fg color used for the 1 bits in
-the hatch and bg for the 0 bits.  If combine is non-zero alpha values
-will be combined.
+Creates a new hatched fill with the C<fg> color used for the 1 bits in
+the hatch and C<bg> for the 0 bits.  If C<combine> is non-zero alpha
+values will be combined.
 
-If cust_hatch is non-NULL it should be a pointer to 8 bytes of the
+If C<cust_hatch> is non-NULL it should be a pointer to 8 bytes of the
 hash definition, with the high-bits to the left.
 
-If cust_hatch is NULL then one of the standard hatches is used.
+If C<cust_hatch> is NULL then one of the standard hatches is used.
 
-(dx, dy) are an offset into the hatch which can be used to unalign adjoining areas, or to align the origin of a hatch with the the side of a filled area.
+(C<dx>, C<dy>) are an offset into the hatch which can be used to hatch
+adjoining areas out of alignment, or to align the origin of a hatch
+with the the side of a filled area.
 
 
 =for comment
 From: File fills.c
 
-=item i_new_fill_hatchf(fg, bg, combine, hatch, cust_hatch, dx, dy)
+=item i_new_fill_hatchf(C<fg>, C<bg>, C<combine>, C<hatch>, C<cust_hatch>, C<dx>, C<dy>)
 
 
-Creates a new hatched fill with the fg color used for the 1 bits in
-the hatch and bg for the 0 bits.  If combine is non-zero alpha values
-will be combined.
+Creates a new hatched fill with the C<fg> color used for the 1 bits in
+the hatch and C<bg> for the 0 bits.  If C<combine> is non-zero alpha
+values will be combined.
 
-If cust_hatch is non-NULL it should be a pointer to 8 bytes of the
+If C<cust_hatch> is non-NULL it should be a pointer to 8 bytes of the
 hash definition, with the high-bits to the left.
 
-If cust_hatch is NULL then one of the standard hatches is used.
+If C<cust_hatch> is NULL then one of the standard hatches is used.
 
-(dx, dy) are an offset into the hatch which can be used to unalign adjoining areas, or to align the origin of a hatch with the the side of a filled area.
+(C<dx>, C<dy>) are an offset into the hatch which can be used to hatch
+adjoining areas out of alignment, or to align the origin of a hatch
+with the the side of a filled area.
 
 
 =for comment
 From: File fills.c
 
-=item i_new_fill_image(im, matrix, xoff, yoff, combine)
+=item i_new_fill_image(C<im>, C<matrix>, C<xoff>, C<yoff>, C<combine>)
 
 
 Create an image based fill.
 
 matrix is an array of 9 doubles representing a transformation matrix.
 
-xoff and yoff are the offset into the image to start filling from.
+C<xoff> and C<yoff> are the offset into the image to start filling from.
 
 
 =for comment
@@ -783,10 +790,10 @@ From: File fills.c
 
 =over
 
-=item i_copy(src)
+=item i_copy(source)
 
 
-Creates a new image that is a copy of src.
+Creates a new image that is a copy of the image C<source>.
 
 Tags are not copied, only the image data.
 
@@ -796,25 +803,26 @@ Returns: i_img *
 =for comment
 From: File image.c
 
-=item i_copyto(dest, src, x1, y1, x2, y2, tx, ty)
+=item i_copyto(C<dest>, C<src>, C<x1>, C<y1>, C<x2>, C<y2>, C<tx>, C<ty>)
 
 
-Copies image data from the area (x1,y1)-[x2,y2] in the source image to
-a rectangle the same size with it's top-left corner at (tx,ty) in the
-destination image.
+Copies image data from the area (C<x1>,C<y1>)-[C<x2>,C<y2>] in the
+source image to a rectangle the same size with it's top-left corner at
+(C<tx>,C<ty>) in the destination image.
 
-If x1 > x2 or y1 > y2 then the corresponding co-ordinates are swapped.
+If C<x1> > C<x2> or C<y1> > C<y2> then the corresponding co-ordinates
+are swapped.
 
 
 =for comment
 From: File paste.im
 
-=item i_copyto_trans(im, src, x1, y1, x2, y2, tx, ty, trans)
+=item i_copyto_trans(C<im>, C<src>, C<x1>, C<y1>, C<x2>, C<y2>, C<tx>, C<ty>, C<trans>)
 
 
-(x1,y1) (x2,y2) specifies the region to copy (in the source coordinates)
-(tx,ty) specifies the upper left corner for the target image.
-pass NULL in trans for non transparent i_colors.
+(C<x1>,C<y1>) (C<x2>,C<y2>) specifies the region to copy (in the
+source coordinates) (C<tx>,C<ty>) specifies the upper left corner for
+the target image.  pass NULL in C<trans> for non transparent i_colors.
 
 
 =for comment
@@ -839,15 +847,15 @@ info is an array of 4 integers with the following values:
 =for comment
 From: File image.c
 
-=item i_rubthru(im, src, tx, ty, src_minx, src_miny, src_maxx, src_maxy )
+=item i_rubthru(C<im>, C<src>, C<tx>, C<ty>, C<src_minx>, C<src_miny>, C<src_maxx>, C<src_maxy>)
 
 
-Takes the sub image I<src[src_minx, src_maxx)[src_miny, src_maxy)> and
-overlays it at (I<tx>,I<ty>) on the image object.
+Takes the sub image C<src>[C<src_minx>, C<src_maxx>)[C<src_miny>, C<src_maxy>)> and
+overlays it at (C<tx>,C<ty>) on the image object.
 
-The alpha channel of each pixel in I<src> is used to control how much
-the existing colour in I<im> is replaced, if it is 255 then the colour
-is completely replaced, if it is 0 then the original colour is left 
+The alpha channel of each pixel in C<src> is used to control how much
+the existing color in C<im> is replaced, if it is 255 then the color
+is completely replaced, if it is 0 then the original color is left
 unmodified.
 
 
@@ -891,12 +899,12 @@ Creates a new double per sample image.
 =for comment
 From: File imgdouble.c
 
-=item i_img_pal_new(x, y, channels, maxpal)
+=item i_img_pal_new(C<x>, C<y>, C<channels>, C<maxpal>)
 
 
 Creates a new paletted image of the supplied dimensions.
 
-I<maxpal> is the maximum palette size and should normally be 256.
+C<maxpal> is the maximum palette size and should normally be 256.
 
 Returns a new image or NULL on failure.
 
@@ -904,7 +912,7 @@ Returns a new image or NULL on failure.
 =for comment
 From: File palimg.c
 
-=item i_sametype(i_img *im, int xsize, int ysize)
+=item i_sametype(C<im>, C<xsize>, C<ysize>)
 
 
 Returns an image of the same type (sample size, channels, paletted/direct).
@@ -915,7 +923,7 @@ For paletted images the palette is copied from the source.
 =for comment
 From: File image.c
 
-=item i_sametype_chans(i_img *im, int xsize, int ysize, int channels)
+=item i_sametype_chans(C<im>, C<xsize>, C<ysize>, C<channels>)
 
 
 Returns an image of the same type (sample size).
@@ -926,7 +934,7 @@ For paletted images the equivalent direct type is returned.
 =for comment
 From: File image.c
 
-=item i_img_destroy(img)
+=item i_img_destroy(C<img>)
 
 Destroy an image object
 
@@ -970,9 +978,9 @@ object.
 =for comment
 From: File image.c
 
-=item i_img_init(img)
+=item i_img_init(C<img>)
 
-Imager interal initialization of images.
+Imager internal initialization of images.
 
 Currently this does very little, in the future it may be used to
 support threads, or color profiles.
@@ -988,7 +996,7 @@ From: File image.c
 
 =over
 
-=item i_img_color_channels(im)
+=item i_img_color_channels(C<im>)
 
 
 The number of channels holding color information.
@@ -997,7 +1005,7 @@ The number of channels holding color information.
 =for comment
 From: File immacros.h
 
-=item i_img_get_height(im)
+=item i_img_get_height(C<im>)
 
 Returns the height in pixels of the image.
 
@@ -1005,7 +1013,7 @@ Returns the height in pixels of the image.
 =for comment
 From: File image.c
 
-=item i_img_get_width(im)
+=item i_img_get_width(C<im>)
 
 Returns the width in pixels of the image.
 
@@ -1013,23 +1021,23 @@ Returns the width in pixels of the image.
 =for comment
 From: File image.c
 
-=item i_img_getchannels(im)
+=item i_img_getchannels(C<im>)
 
-Get the number of channels in I<im>.
-
-
-=for comment
-From: File image.c
-
-=item i_img_getmask(im)
-
-Get the image channel mask for I<im>.
+Get the number of channels in C<im>.
 
 
 =for comment
 From: File image.c
 
-=item i_img_has_alpha(im)
+=item i_img_getmask(C<im>)
+
+Get the image channel mask for C<im>.
+
+
+=for comment
+From: File image.c
+
+=item i_img_has_alpha(C<im>)
 
 
 Return true if the image has an alpha channel.
@@ -1038,9 +1046,9 @@ Return true if the image has an alpha channel.
 =for comment
 From: File immacros.h
 
-=item i_img_setmask(im, ch_mask)
+=item i_img_setmask(C<im>, C<ch_mask>)
 
-Set the image channel mask for I<im> to I<ch_mask>.
+Set the image channel mask for C<im> to C<ch_mask>.
 
 The image channel mask gives some control over which channels can be
 written to in the image.
@@ -1056,24 +1064,24 @@ From: File image.c
 
 =over
 
-=item i_quant_makemap(quant, imgs, count)
+=item i_quant_makemap(C<quant>, C<imgs>, C<count>)
 
 
-Analyzes the I<count> images in I<imgs> according to the rules in
-I<quant> to build a color map (optimal or not depending on
-quant->make_colors).
+Analyzes the C<count> images in C<imgs> according to the rules in
+C<quant> to build a color map (optimal or not depending on
+C<< quant->make_colors >>).
 
 
 =for comment
 From: File quant.c
 
-=item i_quant_translate(quant, img)
+=item i_quant_translate(C<quant>, C<img>)
 
 
-Quantize the image given the palette in quant.
+Quantize the image given the palette in C<quant>.
 
-On success returns a pointer to a memory block of img->xsize *
-img->ysize i_palidx entries.
+On success returns a pointer to a memory block of C<< img->xsize *
+img->ysize >> C<i_palidx> entries.
 
 On failure returns NULL.
 
@@ -1086,13 +1094,13 @@ This function will fail if the supplied palette contains no colors.
 =for comment
 From: File quant.c
 
-=item i_quant_transparent(quant, data, img, trans_index)
+=item i_quant_transparent(C<quant>, C<data>, C<img>, C<trans_index>)
 
 
-Dither the alpha channel on I<img> into the palette indexes in
-I<data>.  Pixels to be transparent are replaced with I<trans_pixel>.
+Dither the alpha channel on C<img> into the palette indexes in
+C<data>.  Pixels to be transparent are replaced with C<trans_pixel>.
 
-The method used depends on the tr_* members of quant.
+The method used depends on the tr_* members of C<quant>.
 
 
 =for comment
@@ -1217,7 +1225,7 @@ From: File imext.c
 
 Sets I<count> colors starting from I<index> in the image's palette.
 
-On sucess returns true.
+On success returns true.
 
 On failure returns false.
 
@@ -1282,7 +1290,7 @@ From: File tags.c
 =item i_tags_find(tags, name, start, &entry)
 
 
-Searchs for a tag of the given I<name> starting from index I<start>.
+Searches for a tag of the given I<name> starting from index I<start>.
 
 On success returns true and sets *I<entry>.
 
@@ -1295,7 +1303,7 @@ From: File tags.c
 =item i_tags_findn(tags, code, start, &entry)
 
 
-Searchs for a tag of the given I<code> starting from index I<start>.
+Searches for a tag of the given I<code> starting from index I<start>.
 
 On success returns true and sets *I<entry>.
 
@@ -1360,7 +1368,7 @@ On failure returns false.
 value_size must be at least large enough for a string representation
 of an integer.
 
-The copied value is always NUL terminated.
+The copied value is always C<NUL> terminated.
 
 
 =for comment
@@ -1425,11 +1433,11 @@ storage at the precision specified by C<places>.
 =for comment
 From: File tags.c
 
-=item i_tags_setn(tags, name, idata)
+=item i_tags_setn(C<tags>, C<name>, C<idata>)
 
-Sets the given tag to the integer I<idata>
+Sets the given tag to the integer C<idata>
 
-Even on failure, if an existing tag I<name> exists, it will be
+Even on failure, if an existing tag C<name> exists, it will be
 removed.
 
 

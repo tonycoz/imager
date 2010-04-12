@@ -3,7 +3,7 @@ use strict;
 use Imager::Color::Float;
 use vars qw($VERSION);
 
-$VERSION = "1.006";
+$VERSION = "1.007";
 
 =head1 NAME
 
@@ -127,75 +127,83 @@ Adds a new segment to the fountain fill, the possible options are:
 
 =over
 
-=item start
+=item *
 
-The start position in the gradient where this segment
-takes effect between 0 and 1.  Default: 0.
+C<start> - the start position in the gradient where this segment takes
+effect between 0 and 1.  Default: 0.
 
-=item middle
+=item *
 
-The mid-point of the transition between the 2
-colors, between 0 and 1.  Default: average of I<start> and I<end>.
+C<middle> - the mid-point of the transition between the 2
+colors, between 0 and 1.  Default: average of C<start> and C<end>.
 
-=item end
+=item *
 
-The end of the gradient, from 0 to 1.  Default: 1.
+C<end> - the end of the gradient, from 0 to 1.  Default: 1.
 
-=item c0
+=item *
 
-The color of the fountain fill where the fill parameter is equal
-to I<start>.  Default: opaque black.
+C<c0> - the color of the fountain fill where the fill parameter is
+equal to I<start>.  Default: opaque black.
 
-=item c1
+=item *
 
-The color of the fountain fill where the fill parameter is equal to
-I<end>.  Default: opaque black.
+C<c1> - the color of the fountain fill where the fill parameter is
+equal to I<end>.  Default: opaque black.
 
-=item type
+=item *
 
-The type of segment, controls the way in which the fill parameter
+C<type> - the type of segment, controls the way in which the fill parameter
 moves from 0 to 1.  Default: linear.
 
 This can take any of the following values:
 
 =over
 
-=item linear
+=item *
 
-=item curved
+C<linear>
 
-Unimplemented so far.
+=item *
 
-=item sine
+C<curved> - unimplemented so far.
 
-=item sphereup
+=item *
 
-=item spheredown
+C<sine>
+
+=item *
+
+C<sphereup>
+
+=item *
+
+C<spheredown>
 
 =back
 
-=item color
+=item *
 
-The way in which the color transitions between I<c0> and I<c1>.
+C<color> - the way in which the color transitions between C<c0> and C<c1>.
 Default: direct.
 
 This can take any of the following values:
 
 =over
 
-=item direct
+=item *
 
-Each channel is simple scaled between c0 and c1.
+C<direct> - each channel is simple scaled between c0 and c1.
 
-=item hueup
+=item *
 
-The color is converted to a HSV value and the scaling is done such
-that the hue increases as the fill parameter increases.
+C<hueup> - the color is converted to a HSV value and the scaling is
+done such that the hue increases as the fill parameter increases.
 
-=item huedown
+=item *
 
-The color is converted to a HSV value and the scaling is done such
-that the hue decreases as the fill parameter increases.
+C<huedown> - the color is converted to a HSV value and the scaling is
+done such that the hue decreases as the fill parameter increases.
 
 =back
 
@@ -253,8 +261,8 @@ sub add {
 
 Creates a simple fountain fill object consisting of linear segments.
 
-The arrayrefs passed as positions and colors must have the same number
-of elements.  They must have at least 2 elements each.
+The array references passed as positions and colors must have the same
+number of elements.  They must have at least 2 elements each.
 
 colors must contain Imager::Color or Imager::Color::Float objects.
 
@@ -393,7 +401,7 @@ through the following steps:
 =item 1.
 
 calculate the base value, which is typically a distance or an angle of
-some sort.  This can be positive or occasinally negative, depending on
+some sort.  This can be positive or occasionally negative, depending on
 the type of fill being performed (linear, radial, etc).
 
 =item 2.

@@ -9,8 +9,10 @@ Bug fixes:
    aborting on failing to call i_readgif_multi_wiol() or
    i_readtiff_multi_wiol().
 
- - fix spelling errors patched by Debian (please report the issues you
-   patch)
+ - fix spelling errors patched by Debian
+   http://svn.debian.org/viewsvn/pkg-perl/trunk/libimager-perl/debian/patches/spelling.patch?revision=54839&view=markup
+
+ - add an (unshipped) author test to spellcheck Imager's POD.
 
 Imager 0.73 - 15 Mar 2010
 ===========

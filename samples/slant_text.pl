@@ -190,6 +190,7 @@ it.
 =item transformed_bounds
 
 Returns a list of bounds:
+
   (minx, miny, maxx, maxy)
 
 These are offsets from the text's starting point in font co-ordinates

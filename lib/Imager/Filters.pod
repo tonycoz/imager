@@ -133,12 +133,12 @@ A reference of the filters follows:
 
 =over
 
-=item autolevels
+=item C<autolevels>
 
 scales the value of each channel so that the values in the image will
-cover the whole possible range for the channel.  I<lsat> and I<usat>
+cover the whole possible range for the channel.  C<lsat> and C<usat>
 truncate the range by the specified fraction at the top and bottom of
-the range respectivly.
+the range respectively.
 
   # increase contrast per channel, losing little detail
   $img->filter(type=>"autolevels")
@@ -148,32 +148,32 @@ the range respectivly.
   $img->filter(type=>"autolevels", lsat=>0.2, usat=>0.2)
     or die $img->errstr;
 
-=item bumpmap
+=item C<bumpmap>
 
-uses the channel I<elevation> image I<bump> as a bumpmap on your
-image, with the light at (I<lightx>, I<lightty>), with a shadow length
-of I<st>.
+uses the channel C<elevation> image C<bump> as a bump map on your
+image, with the light at (C<lightx>, C<lightty>), with a shadow length
+of C<st>.
 
   $img->filter(type=>"bumpmap", bump=>$bumpmap_img,
                lightx=>10, lighty=>10, st=>5)
     or die $img->errstr;
 
-=item bumpmap_complex
+=item C<bumpmap_complex>
 
-uses the channel I<channel> image I<bump> as a bumpmap on your image.
-If Lz<0 the three L parameters are considered to be the direction of
-the light.  If Lz>0 the L parameters are considered to be the light
-position.  I<Ia> is the ambient colour, I<Il> is the light colour,
-I<Is> is the color of specular highlights.  I<cd> is the diffuse
-coefficient and I<cs> is the specular coefficient.  I<n> is the
-shininess of the surface.
+uses the channel C<channel> image C<bump> as a bump map on your image.
+If C<< Lz < 0 >> the three L parameters are considered to be the
+direction of the light.  If C<< Lz > 0 >> the L parameters are
+considered to be the light position.  C<Ia> is the ambient color,
+C<Il> is the light color, C<Is> is the color of specular highlights.
+C<cd> is the diffuse coefficient and C<cs> is the specular
+coefficient.  C<n> is the shininess of the surface.
 
   $img->filter(type=>"bumpmap_complex", bump=>$bumpmap_img)
     or die $img->errstr;
 
-=item contrast
+=item C<contrast>
 
-scales each channel by I<intensity>.  Values of I<intensity> < 1.0
+scales each channel by C<intensity>.  Values of C<intensity> < 1.0
 will reduce the contrast.
 
   # higher contrast
@@ -184,10 +184,10 @@ will reduce the contrast.
   $img->filter(type=>"contrast", intensity=>0.8)
     or die $img->errstr;
 
-=item conv
+=item C<conv>
 
 performs 2 1-dimensional convolutions on the image using the values
-from I<coef>.  I<coef> should be have an odd length and the sum of the
+from C<coef>.  C<coef> should be have an odd length and the sum of the
 coefficients must be non-zero.
 
   # sharper
@@ -202,42 +202,44 @@ coefficients must be non-zero.
   $img->filter(type=>"conv", coef=>[ -0.5, 1, -0.5 ])
     or die $img->errstr;
 
-=item fountain
+=item C<fountain>
 
 renders a fountain fill, similar to the gradient tool in most paint
 software.  The default fill is a linear fill from opaque black to
-opaque white.  The points A(xa, ya) and B(xb, yb) control the way the
-fill is performed, depending on the ftype parameter:
+opaque white.  The points C<A(Cxa, ya)> and C<B(xb, yb)> control the
+way the fill is performed, depending on the C<ftype> parameter:
+
+=for stopwords ramping
 
 =over
 
-=item linear
+=item C<linear>
 
 the fill ramps from A through to B.
 
-=item bilinear
+=item C<bilinear>
 
 the fill ramps in both directions from A, where AB defines the length
 of the gradient.
 
-=item radial
+=item C<radial>
 
 A is the center of a circle, and B is a point on it's circumference.
 The fill ramps from the center out to the circumference.
 
-=item radial_square
+=item C<radial_square>
 
 A is the center of a square and B is the center of one of it's sides.
 This can be used to rotate the square.  The fill ramps out to the
 edges of the square.
 
-=item revolution
+=item C<revolution>
 
-A is the centre of a circle and B is a point on it's circumference.  B
+A is the center of a circle and B is a point on its circumference.  B
 marks the 0 and 360 point on the circle, with the fill ramping
 clockwise.
 
-=item conical
+=item C<conical>
 
 A is the center of a circle and B is a point on it's circumference.  B
 marks the 0 and point on the circle, with the fill ramping in both
@@ -245,31 +247,31 @@ directions to meet opposite.
 
 =back
 
-The I<repeat> option controls how the fill is repeated for some
-I<ftype>s after it leaves the AB range:
+The C<repeat> option controls how the fill is repeated for some
+C<ftype>s after it leaves the AB range:
 
 =over
 
-=item none
+=item C<none>
 
 no repeats, points outside of each range are treated as if they were
 on the extreme end of that range.
 
-=item sawtooth
+=item C<sawtooth>
 
 the fill simply repeats in the positive direction
 
-=item triangle
+=item C<triangle>
 
 the fill repeats in reverse and then forward and so on, in the
 positive direction
 
-=item saw_both
+=item C<saw_both>
 
 the fill repeats in both the positive and negative directions (only
 meaningful for a linear fill).
 
-=item tri_both
+=item C<tri_both>
 
 as for triangle, but in the negative direction too (only meaningful
 for a linear fill).
@@ -399,17 +401,19 @@ Really.  It even loads GIMP gradient files.
                   xb       => $im->getwidth / 2,
                   yb       => 0)
     or die $radial->errstr;
-                           
-=item gaussian
 
-performs a gaussian blur of the image, using I<stddev> as the standard
+=for stopwords Gaussian
+                           
+=item C<gaussian>
+
+performs a Gaussian blur of the image, using C<stddev> as the standard
 deviation of the curve used to combine pixels, larger values give
 bigger blurs.  For a definition of Gaussian Blur, see:
 
   http://www.maths.abdn.ac.uk/~igc/tch/mx4002/notes/node99.html
 
-Values of C<stddev> around 0.5 provide a barely noticable blur, values
-around 5 provide a very strong blur.
+Values of C<stddev> around 0.5 provide a barely noticeable blur,
+values around 5 provide a very strong blur.
 
   # only slightly blurred
   $img->filter(type=>"gaussian", stddev=>0.5)
@@ -419,11 +423,11 @@ around 5 provide a very strong blur.
   $img->filter(type=>"gaussian", stddev=>5)
     or die $img->errstr;
 
-=item gradgen
+=item C<gradgen>
 
 renders a gradient, with the given I<colors> at the corresponding
-points (x,y) in I<xo> and I<yo>.  You can specify the way distance is
-measured for color blending by setting I<dist> to 0 for Euclidean, 1
+points (x,y) in C<xo> and C<yo>.  You can specify the way distance is
+measured for color blending by setting C<dist> to 0 for Euclidean, 1
 for Euclidean squared, and 2 for Manhattan distance.
 
   $img->filter(type="gradgen", 
@@ -431,7 +435,7 @@ for Euclidean squared, and 2 for Manhattan distance.
                yo=>[ 10, 50, 50 ],
                colors=>[ qw(red blue green) ]);
 
-=item hardinvert
+=item C<hardinvert>
 
 inverts the image, black to white, white to black.  All channels are
 inverted, including the alpha channel if any.
@@ -439,16 +443,16 @@ inverted, including the alpha channel if any.
   $img->filter(type=>"hardinvert")
     or die $img->errstr;
 
-=item mosaic
+=item C<mosaic>
 
-produces averaged tiles of the given I<size>.
+produces averaged tiles of the given C<size>.
 
   $img->filter(type=>"mosaic", size=>5)
     or die $img->errstr;
 
-=item noise
+=item C<noise>
 
-adds noise of the given I<amount> to the image.  If I<subtype> is
+adds noise of the given C<amount> to the image.  If C<subtype> is
 zero, the noise is even to each channel, otherwise noise is added to
 each channel independently.
 
@@ -460,69 +464,78 @@ each channel independently.
   $img->filter(type=>"noise", amount=>20, subtype=>1)
     or die $img->errstr;
 
-=item radnoise
+=for stopwords Perlin
 
-renders radiant Perlin turbulent noise.  The centre of the noise is at
-(I<xo>, I<yo>), I<ascale> controls the angular scale of the noise ,
-and I<rscale> the radial scale, higher numbers give more detail.
+=item C<radnoise>
+
+renders radiant Perlin turbulent noise.  The center of the noise is at
+(C<xo>, C<yo>), C<ascale> controls the angular scale of the noise ,
+and C<rscale> the radial scale, higher numbers give more detail.
 
   $img->filter(type=>"radnoise", xo=>50, yo=>50,
                ascale=>1, rscale=>0.02)
     or die $img->errstr;
 
-=item postlevels
+=item C<postlevels>
 
-alters the image to have only I<levels> distinct level in each
+alters the image to have only C<levels> distinct level in each
 channel.
 
   $img->filter(type=>"postlevels", levels=>10)
     or die $img->errstr;
 
-=item turbnoise
+=item C<turbnoise>
 
-renders Perlin turbulent noise.  (I<xo>, I<yo>) controls the origin of
-the noise, and I<scale> the scale of the noise, with lower numbers
+renders Perlin turbulent noise.  (C<xo>, C<yo>) controls the origin of
+the noise, and C<scale> the scale of the noise, with lower numbers
 giving more detail.
 
   $img->filter(type=>"turbnoise", xo=>10, yo=>10, scale=>10)
     or die $img->errstr;
 
-=item unsharpmask
+=for stopwords unsharp
+
+=item C<unsharpmask>
 
 performs an unsharp mask on the image.  This increases the contrast of
 edges in the image.
 
-This is the result of subtracting a gaussian blurred version of the
-image from the original.  I<stddev> controls the stddev parameter of
-the gaussian blur.  Each output pixel is: in + I<scale> * (in -
-blurred).
+This is the result of subtracting a Gaussian blurred version of the
+image from the original.  C<stddev> controls the C<stddev> parameter
+of the Gaussian blur.  Each output pixel is:
+
+  in + scale * (in - blurred)
+
+eg.
 
   $img->filter(type=>"unsharpmask", stddev=>1, scale=>0.5)
     or die $img->errstr;
 
-unsharpmark has the following parameters:
+C<unsharpmark> has the following parameters:
+
+=for stopwords GIMP GIMP's
 
 =over
 
 =item *
 
-stddev - this is equivalent to the C<Radius> value in the GIMP's
-unsharpmask filter.  This controls the size of the contrast increase
+C<stddev> - this is equivalent to the C<Radius> value in the GIMP's
+unsharp mask filter.  This controls the size of the contrast increase
 around edges, larger values will remove fine detail. You should
-probably experiement on the types of images you plan to work with.
+probably experiment on the types of images you plan to work with.
 Default: 2.0.
 
 =item *
 
-scale - controls the strength of the edge enhancement, equivalent to
-I<Amount> in the GIMP's unsharp mask filter.  Default: 1.0.
+C<scale> - controls the strength of the edge enhancement, equivalent
+to I<Amount> in the GIMP's unsharp mask filter.  Default: 1.0.
 
 =back
 
-=item watermark
+=item C<watermark>
 
-applies I<wmark> as a watermark on the image with strength I<pixdiff>,
-with an origin at (I<tx>, I<ty>)
+applies C<wmark> as a watermark on the image with strength C<pixdiff>,
+with an origin at (C<tx>, C<ty>)
 
   $img->filter(type=>"watermark", tx=>10, ty=>50, 
                wmark=>$wmark_image, pixdiff=>50)
@@ -557,20 +570,20 @@ The following parameters are needed:
 
 =item *
 
-type - the type value that will be supplied to filter() to use your
+C<type> - the type value that will be supplied to filter() to use your
 filter.
 
 =item *
 
-defaults - a hash of defaults for the filter's parameters
+C<defaults> - a hash of defaults for the filter's parameters
 
 =item *
 
-callseq - a reference to an array of required parameter names.
+C<callseq> - a reference to an array of required parameter names.
 
 =item *
 
-callsub - a code reference called to execute your filter.  The
+C<callsub> - a code reference called to execute your filter.  The
 parameters passed to filter() are supplied as a list of parameter
 name, value ... which can be assigned to a hash.
 
@@ -585,16 +598,18 @@ See Imager::Filter::Mandelbrot for an example.
 
 =back
 
-=head2 Plugins
+=for stopwords DSOs
 
-The plugin interface is deprecated.  Please use the Imager API, see
+=head2 Plug-ins
+
+The plug in interface is deprecated.  Please use the Imager API, see
 L</Imager::API> and L<External Filters> for details
 
 It is possible to add filters to the module without recompiling the
 module itself.  This is done by using DSOs (Dynamic shared object)
 available on most systems.  This way you can maintain our own filters
 and not have to get me to add it, or worse patch every new version of
-the Module.  Modules can be loaded AND UNLOADED at runtime.  This
+the Module.  Modules can be loaded AND UNLOADED at run time.  This
 means that you can have a server/daemon thingy that can do something
 like:
 
@@ -607,7 +622,7 @@ like:
     or die "unable to load plugin\n";
 
 Someone decides that the filter is not working as it should -
-dyntest.c modified and recompiled.
+F<dyntest.c> modified and recompiled.
 
   load_plugin("dynfilt/dyntest.so")
     or die "unable to load plugin\n";
@@ -617,9 +632,11 @@ dyntest.c modified and recompiled.
 An example plugin comes with the module - Please send feedback to
 addi@umich.edu if you test this.
 
-Note: This seems to test ok on the following systems:
-Linux, Solaris, HPUX, OpenBSD, FreeBSD, TRU64/OSF1, AIX.
-If you test this on other systems please let me know.
+=for stopwords Linux Solaris HPUX OpenBSD FreeBSD TRU64 OSF1 AIX
+
+Note: This seems to test successfully on the following systems: Linux,
+Solaris, HPUX, OpenBSD, FreeBSD, TRU64/OSF1, AIX.  If you test this on
+other systems please let me know.
 
 =over
 
@@ -650,7 +667,7 @@ Returns true on success.  Check Imager->errstr on failure.
 
 =over
 
-=item difference
+=item difference()
 
 You can create a new image that is the difference between 2 other images.
 
@@ -673,14 +690,14 @@ Parameters:
 
 =item *
 
-other - the other image object to compare against
+C<other> - the other image object to compare against
 
 =item *
 
-mindist - the difference between corresponding samples must be greater
-than I<mindist> for the pixel to be considered different.  So a value
-of zero returns all different pixels, not all pixels.  Range: 0 to 255
-inclusive.  Default: 0.
+C<mindist> - the difference between corresponding samples must be
+greater than C<mindist> for the pixel to be considered different.  So
+a value of zero returns all different pixels, not all pixels.  Range:
+0 to 255 inclusive.  Default: 0.
 
 For large sample images this is scaled down to the range 0 .. 1.
 

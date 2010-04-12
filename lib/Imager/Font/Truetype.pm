@@ -3,7 +3,7 @@ use strict;
 use vars qw(@ISA $VERSION);
 @ISA = qw(Imager::Font);
 
-$VERSION = "1.010";
+$VERSION = "1.011";
 
 *_first = \&Imager::Font::_first;
 
@@ -112,8 +112,8 @@ __END__
 
 =head1 DESCRIPTION
 
-Imager::Font creates a Imager::Font::Truetype object when asked to create
-a font object based on a .ttf file.
+Imager::Font creates a Imager::Font::Truetype object when asked to
+create a font object based on a F<.ttf> file.
 
 See Imager::Font to see how to use this type.
 

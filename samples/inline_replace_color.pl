@@ -4,6 +4,8 @@ use Imager;
 
 =head1 NAME
 
+=for stopwords Inline
+
 inline_replace_color.pl - replace one color with another in an image, using Inline
 
 =head1 SYNOPSIS

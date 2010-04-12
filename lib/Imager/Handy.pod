@@ -15,27 +15,27 @@ number of functions that can shorter your code.
 
 =over
 
-=item NC
+=item NC()
 
-=item newcolor
+=item newcolor()
 
-=item newcolour
+=item newcolour()
 
 Create a new Imager::Color object, supplying any parameters to the
 new() method.
 
   my $color = NC('red');
 
-=item NF
+=item NF()
 
-=item newfont
+=item newfont()
 
 Create a new Imager::Font object, supplying any parameters to the
 new() method.
 
   my $font = NF(file => 'foo.ttf');
 
-=item NCF
+=item NCF()
 
 Create a new L<Imager::Color::Font> object, supplying any parameter to
 the new() method.

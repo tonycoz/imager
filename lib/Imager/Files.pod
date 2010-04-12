@@ -83,7 +83,7 @@ method to read an image:
     or die "Cannot read $filename: ", $img->errstr;
 
 In most cases Imager can auto-detect the file type, so you can just
-supply the filename:
+supply the file name:
 
   $img->read(file => $filename)
     or die "Cannot read $filename: ", $img->errstr;
@@ -156,8 +156,8 @@ write types.
 
 =back
 
-When writing, if the I<filename> includes an extension that Imager
-recognizes, then you don't need the I<type>, but you may want to
+When writing, if the C<filename> includes an extension that Imager
+recognizes, then you don't need the C<type>, but you may want to
 provide one anyway.  See L</Guessing types> for information on
 controlling this recognition.
 
@@ -189,7 +189,7 @@ targets:
 
 =item *
 
-file - The C<file> parameter is the name of the image file to be
+C<file> - The C<file> parameter is the name of the image file to be
 written to or read from.  If Imager recognizes the extension of the
 file you do not need to supply a C<type>.
 
@@ -206,7 +206,7 @@ file you do not need to supply a C<type>.
 
 =item *
 
-fh - C<fh> is a file handle, typically either returned from
+C<fh> - C<fh> is a file handle, typically either returned from
 C<<IO::File->new()>>, or a glob from an C<open> call.  You should call
 C<binmode> on the handle before passing it to Imager.
 
@@ -223,7 +223,7 @@ fileno()) rather than writing at the perl level.
 
 =item *
 
-fd - C<fd> is a file descriptor.  You can get this by calling the
+C<fd> - C<fd> is a file descriptor.  You can get this by calling the
 C<fileno()> function on a file handle, or by using one of the standard
 file descriptor numbers.
 
@@ -236,10 +236,10 @@ the image.
 
 =item *
 
-data - When reading data, C<data> is a scalar containing the image
+C<data> - When reading data, C<data> is a scalar containing the image
 file data, when writing, C<data> is a reference to the scalar to save
-the image file data too.  For GIF images you will need giflib 4 or
-higher, and you may need to patch giflib to use this option for
+the image file data too.  For GIF images you will need C<giflib> 4 or
+higher, and you may need to patch C<giflib> to use this option for
 writing.
 
   my $data;
@@ -252,7 +252,7 @@ writing.
 
 =item *
 
-callback - Imager will make calls back to your supplied coderefs to
+C<callback> - Imager will make calls back to your supplied coderefs to
 read, write and seek from/to/through the image file.
 
 When reading from a file you can use either C<callback> or C<readcb>
@@ -298,7 +298,7 @@ C<seekcb>.
 =head2 Guessing types
 
 When writing to a file, if you don't supply a C<type> parameter Imager
-will attempt to guess it from the filename.  This is done by calling
+will attempt to guess it from the file name.  This is done by calling
 the code reference stored in C<$Imager::FORMATGUESS>.  This is only
 done when write() or write_multi() is called with a C<file> parameter.
 
@@ -312,7 +312,7 @@ C<\&Imager::def_guess_type>.
 This is the default function Imager uses to derive a file type from a
 file name.  This is a function, not a method.
 
-Accepts a single parameter, the filename and returns the type or
+Accepts a single parameter, the file name and returns the type or
 undef.
 
 =back
@@ -328,10 +328,12 @@ When reading a file Imager examines beginning of the file for
 identifying information.  The current implementation attempts to
 detect the following image types beyond those supported by Imager:
 
+=for stopwords Photoshop
+
 =over
 
-xpm, mng, jng, SGI RGB, ilbm, pcx, fits, psd (Photoshop), eps, Utah
-RLE
+C<xpm>, C<mng>, C<jng>, C<ilbm>, C<pcx>, C<fits>, C<psd> (Photoshop), C<eps>, Utah
+C<RLE>.
 
 =back
 
@@ -422,17 +424,20 @@ the C<warn_obsolete> option set to false:
 At some point in the future these obsolete options will no longer be
 supported.
 
+=for stopwords aNy PixMaps BitMap
+
 =head2 PNM (Portable aNy Map)
 
-Imager can write PGM (Portable Gray Map) and PPM (Portable PixMaps)
-files, depending on the number of channels in the image.  Currently
-the images are written in binary formats.  Only 1 and 3 channel images
-can be written, including 1 and 3 channel paletted images.
+Imager can write C<PGM> (Portable Gray Map) and C<PPM> (Portable
+PixMaps) files, depending on the number of channels in the image.
+Currently the images are written in binary formats.  Only 1 and 3
+channel images can be written, including 1 and 3 channel paletted
+images.
 
   $img->write(file=>'foo.ppm') or die $img->errstr;
 
-Imager can read both the ASCII and binary versions of each of the PBM
-(Portable BitMap), PGM and PPM formats.
+Imager can read both the ASCII and binary versions of each of the
+C<PBM> (Portable BitMap), C<PGM> and C<PPM> formats.
 
   $img->read(file=>'foo.ppm') or die $img->errstr;
 
@@ -444,14 +449,14 @@ The following tags are set when reading a PNM file:
 
 =item *
 
-X<pnm_maxval>pnm_maxval - the maxvals number from the PGM/PPM header.
-Always set to 2 for a PBM file.
+X<pnm_maxval>C<pnm_maxval> - the C<maxvals> number from the PGM/PPM header.
+Always set to 2 for a C<PBM> file.
 
 =item *
 
-X<pnm_type>pnm_type - the type number from the PNM header, 1 for ASCII
-PBM files, 2 for ASCII PGM files, 3 for ASCII PPM files, 4 for binary
-PBM files, 5 for binary PGM files, 6 for binary PPM files.
+X<pnm_type>C<pnm_type> - the type number from the C<PNM> header, 1 for ASCII
+C<PBM> files, 2 for ASCII C<PGM> files, 3 for ASCII c<PPM> files, 4 for binary
+C<PBM> files, 5 for binary C<PGM> files, 6 for binary C<PPM> files.
 
 =back
 
@@ -463,7 +468,7 @@ The following tag is checked when writing an image with more than
 =item *
 
 X<pnm_write_wide_data>pnm_write_wide_data - if this is non-zero then
-write() can write PGM/PPM files with 16-bits/sample.  Some
+write() can write C<PGM>/C<PPM> files with 16-bits/sample.  Some
 applications, for example GIMP 2.2, and tools can only read
 8-bit/sample binary PNM files, so Imager will only write a 16-bit
 image when this tag is non-zero.
@@ -472,14 +477,16 @@ image when this tag is non-zero.
 
 =head2 JPEG
 
+=for stopwords composited
+
 You can supply a C<jpegquality> parameter (0-100) when writing a JPEG
 file, which defaults to 75%.  If you write an image with an alpha
-channel to a jpeg file then it will be composited against the
+channel to a JPEG file then it will be composited against the
 background set by the C<i_background> parameter (or tag).
 
   $img->write(file=>'foo.jpg', jpegquality=>90) or die $img->errstr;
 
-Imager will read a grayscale JPEG as a 1 channel image and a color
+Imager will read a gray scale JPEG as a 1 channel image and a color
 JPEG as a 3 channel image.
 
   $img->read(file=>'foo.jpg') or die $img->errstr;
@@ -489,24 +496,24 @@ to control output:
 
 =over
 
-=item jpeg_density_unit
+=item C<jpeg_density_unit>
 
-The value of the density unit field in the JFIF header.  This is
+The value of the density unit field in the C<JFIF> header.  This is
 ignored on writing if the C<i_aspect_only> tag is non-zero.
 
 The C<i_xres> and C<i_yres> tags are expressed in pixels per inch no
 matter the value of this tag, they will be converted to/from the value
 stored in the JPEG file.
 
-=item jpeg_density_unit_name
+=item C<jpeg_density_unit_name>
 
 This is set when reading a JPEG file to the name of the unit given by
 C<jpeg_density_unit>.  Possible results include C<inch>,
 C<centimeter>, C<none> (the C<i_aspect_only> tag is also set reading
-these files).  If the value of jpeg_density_unit is unknown then this
-tag isn't set.
+these files).  If the value of C<jpeg_density_unit> is unknown then
+this tag isn't set.
 
-=item jpeg_comment
+=item C<jpeg_comment>
 
 Text comment.
 
@@ -515,7 +522,9 @@ Text comment.
 JPEG supports the spatial resolution tags C<i_xres>, C<i_yres> and
 C<i_aspect_only>.
 
-If an APP1 block containing EXIF information is found, then any of the
+=for stopwords EXIF
+
+If an C<APP1> block containing EXIF information is found, then any of the
 following tags can be set:
 
 =over
@@ -576,9 +585,11 @@ eg.
   0
   Auto exposure
 
+=for stopwords IPTC
+
 =over
 
-=item parseiptc
+=item parseiptc()
 
 Historically, Imager saves IPTC data when reading a JPEG image, the
 parseiptc() method returns a list of key/value pairs resulting from a
@@ -643,15 +654,15 @@ other images in the file.
 
 =item *
 
-gif_background - The index in the global colormap of the logical
+gif_background - The index in the global color map of the logical
 screen's background color.  This is only set if the current image uses
-the global colormap.  You can set this on write too, but for it to
+the global color map.  You can set this on write too, but for it to
 choose the color you want, you will need to supply only paletted
 images and set the C<gif_eliminate_unused> tag to 0.
 
 =item *
 
-gif_trans_index - The index of the color in the colormap used for
+gif_trans_index - The index of the color in the color map used for
 transparency.  If the image has a transparency then it is returned as
 a 4 channel image with the alpha set to zero in this palette entry.
 This value is not used when writing. ("Transparent Color Index")
@@ -659,8 +670,8 @@ This value is not used when writing. ("Transparent Color Index")
 =item *
 
 gif_trans_color - A reference to an Imager::Color object, which is the
-colour to use for the palette entry used to represent transparency in
-the palette.  You need to set the transp option (see L<Quantization
+color to use for the palette entry used to represent transparency in
+the palette.  You need to set the C<transp> option (see L<Quantization
 options>) for this value to be used.
 
 =item *
@@ -684,7 +695,7 @@ may be zero to loop forever.
 
 =item *
 
-gif_comment - the first block of the first gif comment before each
+gif_comment - the first block of the first GIF comment before each
 image.
 
 =item *
@@ -701,10 +712,10 @@ range color indexes.
 
 =back
 
-Where applicable, the ("name") is the name of that field from the GIF89 
+Where applicable, the ("name") is the name of that field from the C<GIF89>
 standard.
 
-The following gif writing options are obsolete, you should set the
+The following GIF writing options are obsolete, you should set the
 corresponding tag in the image, either by using the tags functions, or
 by supplying the tag and value as options.
 
@@ -712,9 +723,9 @@ by supplying the tag and value as options.
 
 =item *
 
-gif_each_palette - Each image in the gif file has it's own palette if
-this is non-zero.  All but the first image has a local colour table
-(the first uses the global colour table.
+gif_each_palette - Each image in the GIF file has it's own palette if
+this is non-zero.  All but the first image has a local color table
+(the first uses the global color table.
 
 Use C<gif_local_map> in new code.
 
@@ -743,7 +754,7 @@ New code should use the C<gif_left> and C<gif_top> tags.
 gif_loop_count - If this is non-zero the Netscape loop extension block
 is generated, which makes the animation of the images repeat.
 
-This is currently unimplemented due to some limitations in giflib.
+This is currently unimplemented due to some limitations in C<giflib>.
 
 =back
 
@@ -754,14 +765,14 @@ some page other than the first.  The page is 0 based:
   $image->read(file=>"example.gif", page=>1)
     or die "Cannot read second page: ",$image->errstr,"\n";
 
-Before release 0.46, Imager would read multi-image GIF image files
+Before release 0.46, Imager would read multiple image GIF image files
 into a single image, overlaying each of the images onto the virtual
 GIF screen.
 
 As of 0.46 the default is to read the first image from the file, as if
 called with C<< page => 0 >>.
 
-You can return to the previous behaviour by calling read with the
+You can return to the previous behavior by calling read with the
 C<gif_consolidate> parameter set to a true value:
 
   $img->read(file=>$some_gif_file, gif_consolidate=>1);
@@ -782,7 +793,7 @@ parameter set to C<fax>.  By default the image is written in fine
 mode, but this can be overridden by setting the I<fax_fine> parameter
 to zero.  Since a fax image is bi-level, Imager uses a threshold to
 decide if a given pixel is black or white, based on a single channel.
-For greyscale images channel 0 is used, for color images channel 1
+For gray scale images channel 0 is used, for color images channel 1
 (green) is used.  If you want more control over the conversion you can
 use $img->to_paletted() to product a bi-level image.  This way you can
 use dithering:
@@ -819,12 +830,12 @@ As of Imager 0.62 Imager reads:
 
 =item *
 
-16-bit grey, RGB, or CMYK image, including a possible alpha channel as
+16-bit gray, RGB, or CMYK image, including a possible alpha channel as
 a 16-bit/sample image.
 
 =item *
 
-32-bit grey, RGB image, including a possible alpha channel as a
+32-bit gray, RGB image, including a possible alpha channel as a
 double/sample image.
 
 =item *
@@ -870,11 +881,13 @@ In general a compression setting will be ignored where it doesn't make
 sense, eg. C<jpeg> will be ignored for compression if the image is
 being written as bilevel.
 
-Imager attempts to check that your build of libtiff supports the given
-compression, and will fallback to C<packbits> if it isn't enabled.
-eg. older distributions didn't include LZW compression, and JPEG
-compression is only available if libtiff is configured with libjpeg's
-location.
+=for stopwords LZW
+
+Imager attempts to check that your build of C<libtiff> supports the
+given compression, and will fallback to C<packbits> if it isn't
+enabled.  eg. older distributions didn't include LZW compression, and
+JPEG compression is only available if C<libtiff> is configured with
+C<libjpeg>'s location.
 
   $im->write(file => 'foo.tif', tiff_compression => 'lzw')
     or die $im->errstr;
@@ -887,7 +900,7 @@ quality and larger files.
 
 =item tiff_resolutionunit
 
-The value of the ResolutionUnit tag.  This is ignored on writing if
+The value of the C<ResolutionUnit> tag.  This is ignored on writing if
 the i_aspect_only tag is non-zero.
 
 The C<i_xres> and C<i_yres> tags are expressed in pixels per inch no
@@ -908,8 +921,9 @@ an image, it is only set on a read image.
 
 =item tiff_photometric
 
-Value of the PhotometricInterpretation tag from the image.  This value
-is not used when writing an image, it is only set on a read image.
+Value of the C<PhotometricInterpretation> tag from the image.  This
+value is not used when writing an image, it is only set on a read
+image.
 
 =item tiff_documentname
 
@@ -943,10 +957,10 @@ some page other than the first.  The page is 0 based:
   $image->read(file=>"example.tif", page=>1)
     or die "Cannot read second page: ",$image->errstr,"\n";
 
-Note: Imager uses the TIFF*RGBA* family of libtiff functions,
+Note: Imager uses the TIFF*RGBA* family of C<libtiff> functions,
 unfortunately these don't support alpha channels on CMYK images.  This
 will result in a full coverage alpha channel on CMYK images with an
-alpha channel, until this is implemented in libtiff (or Imager's TIFF
+alpha channel, until this is implemented in C<libtiff> (or Imager's TIFF
 implementation changes.)
 
 If you read an image with multiple alpha channels, then only the first
@@ -958,10 +972,10 @@ images.
 
 Currently tags that control the output color type and compression are
 ignored when writing, this may change in the future.  If you have
-processes that rely upon Imager always producing packbits compressed
-RGB images, you should strip any tags before writing.
+processes that rely upon Imager always producing C<packbits>
+compressed RGB images, you should strip any tags before writing.
 
-=head2 BMP (BitMaP)
+=head2 BMP (Windows Bitmap)
 
 Imager can write 24-bit RGB, and 8, 4 and 1-bit per pixel paletted
 Windows BMP files.  Currently you cannot write compressed BMP files
@@ -971,7 +985,7 @@ Imager can read 24-bit RGB, and 8, 4 and 1-bit perl pixel paletted
 Windows BMP files.  There is some support for reading 16-bit per pixel
 images, but I haven't found any for testing.
 
-BMP has no support for multi-image files.
+BMP has no support for multiple image files.
 
 BMP files support the spatial resolution tags, but since BMP has no
 support for storing only an aspect ratio, if C<i_aspect_only> is set
@@ -986,6 +1000,8 @@ The following tags are set when you read an image from a BMP file:
 
 The type of compression, if any.  This can be any of the following
 values:
+
+=for stopwords RLE
 
 =over
 
@@ -1029,16 +1045,17 @@ Number of bits stored per pixel. (24, 8, 4 or 1)
 
 =back
 
-=head2 TGA (TarGA)
+=for stopwords Targa
 
-When storing targa images rle compression can be activated with the
-'compress' parameter, the 'idstring' parameter can be used to set the
-targa comment field and the 'wierdpack' option can be used to use the
-15 and 16 bit targa formats for rgb and rgba data.  The 15 bit format
+=head2 TGA (Targa)
+
+When storing Targa images RLE compression can be activated with the
+C<compress> parameter, the C<idstring> parameter can be used to set the
+Targa comment field and the C<wierdpack> option can be used to use the
+15 and 16 bit Targa formats for RGB and RGBA data.  The 15 bit format
 has 5 of each red, green and blue.  The 16 bit format in addition
 allows 1 bit of alpha.  The most significant bits are used for each
 channel.
-
 
 Tags:
 
@@ -1055,14 +1072,14 @@ Tags:
 =head2 RAW
 
 When reading raw images you need to supply the width and height of the
-image in the xsize and ysize options:
+image in the C<xsize> and C<ysize> options:
 
   $img->read(file=>'foo.raw', xsize=>100, ysize=>100)
     or die "Cannot read raw image\n";
 
 If your input file has more channels than you want, or (as is common),
-junk in the fourth channel, you can use the datachannels and
-storechannels options to control the number of channels in your input
+junk in the fourth channel, you can use the C<datachannels> and
+C<storechannels> options to control the number of channels in your input
 file and the resulting channels in your image.  For example, if your
 input image uses 32-bits per pixel with red, green, blue and junk
 values for each pixel you could do:
@@ -1087,15 +1104,15 @@ Possible values:
 
 0 - samples are pixel by pixel, so all samples for the first pixel,
 then all samples for the second pixel and so on.  eg. for a four pixel
-scanline the channels would be laid out as:
+scan line the channels would be laid out as:
 
   012012012012
 
 =item *
 
-1 - samples are line by line, so channel 0 for the entire scanline is
-followed by channel 1 for the entire scanline and so on.  eg. for a
-four pixel scanline the channels would be laid out as:
+1 - samples are line by line, so channel 0 for the entire scan line is
+followed by channel 1 for the entire scan line and so on.  eg. for a
+four pixel scan line the channels would be laid out as:
 
   000011112222
 
@@ -1136,7 +1153,7 @@ There are no PNG specific tags.
 =head2 ICO (Microsoft Windows Icon) and CUR (Microsoft Windows Cursor)
 
 Icon and Cursor files are very similar, the only differences being a
-number in the header and the storage of the cursor hotspot.  I've
+number in the header and the storage of the cursor hot spot.  I've
 treated them separately so that you're not messing with tags to
 distinguish between them.
 
@@ -1162,7 +1179,7 @@ newline.
 
 =item *
 
-following lines which contain 0 and 1 placeholders for each scanline
+following lines which contain 0 and 1 placeholders for each scan line
 of the image, starting from the top of the image.
 
 =back
@@ -1268,6 +1285,8 @@ Examples:
   $im->settag(name => 'cur_hotspoty', value => 16);
   $im->write(file => 'box.cur');
 
+=for stopwords BW
+
 =head2 SGI (RGB, BW)
 
 SGI images, often called by the extensions, RGB or BW, can be stored
@@ -1284,14 +1303,14 @@ The following tags are set when reading a SGI image:
 
 =item *
 
-i_comment - the IMAGENAME field from the image.  Also written to the
-file when writing.
+i_comment - the C<IMAGENAME> field from the image.  Also written to
+the file when writing.
 
 =item *
 
-sgi_pixmin, sgi_pixmax - the PIXMIN and PIXMAX fields from the image.
-On reading image data is expanded from this range to the full range of
-samples in the image.
+sgi_pixmin, sgi_pixmax - the C<PIXMIN> and C<PIXMAX> fields from the
+image.  On reading image data is expanded from this range to the full
+range of samples in the image.
 
 =item *
 
@@ -1490,6 +1509,8 @@ to autoload it.
 
 Once you have an image the basic mechanism is:
 
+=for stopwords STDOUT
+
 =over
 
 =item 1.
@@ -1540,7 +1561,7 @@ The basic idea is simple, just use write_multi():
 
 If your images are RGB images the default quantization mechanism will
 produce a very good result, but can take a long time to execute.  You
-could either use the standard webmap:
+could either use the standard web color map:
 
   Imager->write_multi({ file=>$filename, 
                         type=>'gif',
@@ -1554,7 +1575,7 @@ or use a median cut algorithm to built a fairly optimal color map:
                         make_colors=>'mediancut' },
                       @imgs);
 
-By default all of the images will use the same global colormap, which
+By default all of the images will use the same global color map, which
 will produce a smaller image.  If your images have significant color
 differences, you may want to generate a new palette for each image:
 
@@ -1597,9 +1618,9 @@ This is pretty simple:
 
 =head1 BUGS
 
-When saving Gif images the program does NOT try to shave of extra
+When saving GIF images the program does NOT try to shave off extra
 colors if it is possible.  If you specify 128 colors and there are
-only 2 colors used - it will have a 128 colortable anyway.
+only 2 colors used - it will have a 128 color table anyway.
 
 =head1 SEE ALSO
 

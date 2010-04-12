@@ -4,7 +4,7 @@ use Imager;
 use Imager::Font;
 use vars qw($VERSION);
 
-$VERSION = "1.002";
+$VERSION = "1.003";
 
 *_first = \&Imager::Font::_first;
 
@@ -240,33 +240,32 @@ C<height>.
 
 =over
 
-=item wrap_text
+=item wrap_text()
 
 Draw word-wrapped text.
 
 =over
 
-=item x
+=item *
 
-=item y
+C<x>, C<y> - The top-left corner of the rectangle the text is
+formatted into.  Defaults to (0, 0).
 
-The top-left corner of the rectangle the text is formatted into.
-Defaults to (0, 0).
+=item *
 
-=item width
+C<width> - The width of the formatted text in pixels.  Defaults to the
+horizontal gap between the top-left corner and the right edge of the
+image.  If no image is supplied then this is required.
 
-The width of the formatted text in pixels.  Defaults to the horizontal
-gap between the top-left corner and the right edge of the image.  If
-no image is supplied then this is required.
+=item *
 
-=item height
+C<height> - The maximum height of the formatted text in pixels.  Not
+required.
 
-The maximum height of the formated text in pixels.  Not required.
+=item *
 
-=item savepos
-
-The amount of text consumed (as a count of characters) will be stored
-into the scalar this refers to.
+C<savepos> - The amount of text consumed (as a count of characters)
+will be stored into the scalar this refers to.
 
   my $pagenum = 1;
   my $string = "...";
@@ -284,57 +283,60 @@ into the scalar this refers to.
     $img->write(file=>"page$pagenum.ppm");
   }
 
-=item image
+=item *
 
-The image to render the text to.  Can be supplied as C<undef> to
-simply calculate the bounding box.
+C<image> - The image to render the text to.  Can be supplied as
+C<undef> to simply calculate the bounding box.
 
-=item font
+=item *
 
-The font used to render the text.  Required.
+C<font> - The font used to render the text.  Required.
 
-=item size
+=item *
 
-The size to render the font in.  Defaults to the size stored in the
-font object.  Required if it isn't stored in the font object.
+C<size> - The size to render the font in.  Defaults to the size stored
+in the font object.  Required if it isn't stored in the font object.
 
-=item string
+=item *
 
-The text to render.  This can contain non-whitespace, blanks (ASCII
-0x20), and newlines.
+C<string> - The text to render.  This can contain non-white-space,
+blanks (ASCII 0x20), and newlines.
 
-Newlines must match /(?:\x0A\x0D?|\x0D\x0A?)/.  Whitespace other than
+Newlines must match /(?:\x0A\x0D?|\x0D\x0A?)/.  White-space other than
 blanks and newlines are completely ignored.
 
-=item justify
+=item *
+
+C<justify>
 
 The way text is formatted within each line.  Possible values include:
 
 =over
 
-=item left
+=item *
 
-Left aligned against the left edge of the text box.
+C<left> - left aligned against the left edge of the text box.
 
-=item right
+=item *
 
-Right aligned against the right edge of the text box.
+C<right> - right aligned against the right edge of the text box.
 
-=item center
+=item *
 
-Centered horizontally in the text box.
+C<center> - centered horizontally in the text box.
 
-=item fill
+=item *
 
-All but the final line of the paragraph has spaces expanded so that
-the line fills from the left to the right edge of the text box.
+fill - all but the final line of the paragraph has spaces expanded so
+that the line fills from the left to the right edge of the text box.
 
 =back
 
-=item linegap
+=item *
 
-Gap between lines of text in pixels.  This is in addition to the size
-from $font->font_height.  Can be positive or negative.  Default 0.
+C<linegap> - Gap between lines of text in pixels.  This is in addition
+to the size from C<< $font->font_height >>.  Can be positive or
+negative.  Default 0.
 
 =back
 
@@ -365,7 +367,7 @@ before doing it:
 
 =head1 BUGS
 
-Imager::Font can handle UTF8 encoded text itself, but this module
+Imager::Font can handle UTF-8 encoded text itself, but this module
 doesn't support that (and probably won't).  This could probably be
 done with regex magic.
 

@@ -4,7 +4,7 @@ use Imager;
 use vars qw($VERSION @ISA);
 
 BEGIN {
-  $VERSION = "0.01";
+  $VERSION = "0.02";
   
   eval {
     require XSLoader;
@@ -56,8 +56,8 @@ Imager::Filter::Mandelbrot - filter that renders the Mandelbrot set.
 
 =head1 DESCRIPTION
 
-This is a expansion of the mandelbrot dynamically loadable filter
-provided in dynfilt in previous releases of Imager.
+This is a expansion of the C<mandelbrot> dynamically loadable filter
+provided in C<dynfilt> in previous releases of Imager.
 
 Valid filter parameters are:
 
@@ -65,16 +65,16 @@ Valid filter parameters are:
 
 =item *
 
-minx, maxx - the range of x values to render.  Defaults: -2.5, 1.5.
+C<minx>, C<maxx> - the range of x values to render.  Defaults: -2.5, 1.5.
 
 =item *
 
-miny, maxy - the range of y values to render.  Defaults: -1.5, 1.5
+C<miny>, C<maxy> - the range of y values to render.  Defaults: -1.5, 1.5
 
 =item *
 
-maxiter - the maximum number of iterations to perform when checking if
-the sequence tend towards infinity.
+C<maxiter> - the maximum number of iterations to perform when checking
+if the sequence tend towards infinity.
 
 =back
 

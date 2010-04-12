@@ -1,15 +1,16 @@
 #include "imager.h"
 
 /*
-=item i_copyto(dest, src, x1, y1, x2, y2, tx, ty)
+=item i_copyto(C<dest>, C<src>, C<x1>, C<y1>, C<x2>, C<y2>, C<tx>, C<ty>)
 
 =category Image
 
-Copies image data from the area (x1,y1)-[x2,y2] in the source image to
-a rectangle the same size with it's top-left corner at (tx,ty) in the
-destination image.
+Copies image data from the area (C<x1>,C<y1>)-[C<x2>,C<y2>] in the
+source image to a rectangle the same size with it's top-left corner at
+(C<tx>,C<ty>) in the destination image.
 
-If x1 > x2 or y1 > y2 then the corresponding co-ordinates are swapped.
+If C<x1> > C<x2> or C<y1> > C<y2> then the corresponding co-ordinates
+are swapped.
 
 =cut
 */

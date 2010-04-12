@@ -2,7 +2,7 @@ package Imager::Matrix2d;
 use strict;
 use vars qw($VERSION);
 
-$VERSION = "1.008";
+$VERSION = "1.009";
 
 =head1 NAME
 
@@ -207,7 +207,7 @@ sub reflect {
 
 Scales at the given ratios.
 
-You can also specify a center for the scaling with the cx and cy
+You can also specify a center for the scaling with the C<cx> and C<cy>
 parameters.
 
 =cut
@@ -398,7 +398,7 @@ Tony Cook <tony@develop-help.com>
 
 =head1 BUGS
 
-Needs a way to invert matrixes.
+Needs a way to invert a matrix.
 
 =head1 SEE ALSO
 

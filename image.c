@@ -86,10 +86,10 @@ i_img_alloc(void) {
 }
 
 /*
-=item i_img_init(img)
+=item i_img_init(C<img>)
 =category Image Implementation
 
-Imager interal initialization of images.
+Imager internal initialization of images.
 
 Currently this does very little, in the future it may be used to
 support threads, or color profiles.
@@ -479,7 +479,7 @@ i_img_exorcise(i_img *im) {
 }
 
 /* 
-=item i_img_destroy(img)
+=item i_img_destroy(C<img>)
 =order 90
 =category Image creation/destruction
 =synopsis i_img_destroy(img)
@@ -536,12 +536,12 @@ i_img_info(i_img *im,int *info) {
 }
 
 /*
-=item i_img_setmask(im, ch_mask)
+=item i_img_setmask(C<im>, C<ch_mask>)
 =category Image Information
 =synopsis // only channel 0 writeable 
 =synopsis i_img_setmask(img, 0x01);
 
-Set the image channel mask for I<im> to I<ch_mask>.
+Set the image channel mask for C<im> to C<ch_mask>.
 
 The image channel mask gives some control over which channels can be
 written to in the image.
@@ -553,11 +553,11 @@ i_img_setmask(i_img *im,int ch_mask) { im->ch_mask=ch_mask; }
 
 
 /*
-=item i_img_getmask(im)
+=item i_img_getmask(C<im>)
 =category Image Information
 =synopsis int mask = i_img_getmask(img);
 
-Get the image channel mask for I<im>.
+Get the image channel mask for C<im>.
 
 =cut
 */
@@ -565,11 +565,11 @@ int
 i_img_getmask(i_img *im) { return im->ch_mask; }
 
 /*
-=item i_img_getchannels(im)
+=item i_img_getchannels(C<im>)
 =category Image Information
 =synopsis int channels = i_img_getchannels(img);
 
-Get the number of channels in I<im>.
+Get the number of channels in C<im>.
 
 =cut
 */
@@ -577,7 +577,7 @@ int
 i_img_getchannels(i_img *im) { return im->channels; }
 
 /*
-=item i_img_get_width(im)
+=item i_img_get_width(C<im>)
 =category Image Information
 =synopsis i_img_dim width = i_img_get_width(im);
 
@@ -591,7 +591,7 @@ i_img_get_width(i_img *im) {
 }
 
 /*
-=item i_img_get_height(im)
+=item i_img_get_height(C<im>)
 =category Image Information
 =synopsis i_img_dim height = i_img_get_height(im);
 
@@ -605,13 +605,13 @@ i_img_get_height(i_img *im) {
 }
 
 /*
-=item i_copyto_trans(im, src, x1, y1, x2, y2, tx, ty, trans)
+=item i_copyto_trans(C<im>, C<src>, C<x1>, C<y1>, C<x2>, C<y2>, C<tx>, C<ty>, C<trans>)
 
 =category Image
 
-(x1,y1) (x2,y2) specifies the region to copy (in the source coordinates)
-(tx,ty) specifies the upper left corner for the target image.
-pass NULL in trans for non transparent i_colors.
+(C<x1>,C<y1>) (C<x2>,C<y2>) specifies the region to copy (in the
+source coordinates) (C<tx>,C<ty>) specifies the upper left corner for
+the target image.  pass NULL in C<trans> for non transparent i_colors.
 
 =cut
 */
@@ -647,11 +647,11 @@ i_copyto_trans(i_img *im,i_img *src,int x1,int y1,int x2,int y2,int tx,int ty,co
 }
 
 /*
-=item i_copy(src)
+=item i_copy(source)
 
 =category Image
 
-Creates a new image that is a copy of src.
+Creates a new image that is a copy of the image C<source>.
 
 Tags are not copied, only the image data.
 
@@ -916,7 +916,7 @@ i_scale_nn(i_img *im, float scx, float scy) {
 }
 
 /*
-=item i_sametype(i_img *im, int xsize, int ysize)
+=item i_sametype(C<im>, C<xsize>, C<ysize>)
 
 =category Image creation/destruction
 =synopsis i_img *img = i_sametype(src, width, height);
@@ -959,7 +959,7 @@ i_img *i_sametype(i_img *src, int xsize, int ysize) {
 }
 
 /*
-=item i_sametype_chans(i_img *im, int xsize, int ysize, int channels)
+=item i_sametype_chans(C<im>, C<xsize>, C<ysize>, C<channels>)
 
 =category Image creation/destruction
 =synopsis i_img *img = i_sametype_chans(src, width, height, channels);

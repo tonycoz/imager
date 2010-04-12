@@ -4,7 +4,7 @@ use Imager::Expr;
 use Imager::Regops;
 use vars qw($VERSION);
 
-$VERSION = "1.002";
+$VERSION = "1.003";
 
 use vars qw(@ISA);
 @ISA = qw(Imager::Expr);
@@ -194,7 +194,7 @@ __END__
 
 This module is a simple Imager::Expr compiler that compiles a
 low-level language that has a nearly 1-to-1 relationship to the
-internal representation used for compiled regmach code.
+internal representation used for compiled register machine code.
 
 =head2 Syntax
 
@@ -214,11 +214,11 @@ C<var> I<name>:I<type>
 
 =back
 
-defines variable I<name> to have I<type>, which can be any of 'n' or
-'num' for a numeric type or 'pixel', 'p' or 'c' for a pixel or color
-type.
+defines variable I<name> to have I<type>, which can be any of C<n> or
+C<num> for a numeric type or C<pixel>, C<p> or C<c> for a pixel or
+color type.
 
-Variable names cannot include whitespace.
+Variable names cannot include white-space.
 
 =item operators
 
@@ -241,8 +241,8 @@ I<operator> I<operand>
 
 =back
 
-where operator is any valid regmach operator, result is any variable
-defined with C<var>, and operands are variables, constants or
+where operator is any valid register machine operator, result is any
+variable defined with C<var>, and operands are variables, constants or
 literals, or for jump operators, labels.
 
 The set operator can be simplified to:
@@ -253,7 +253,7 @@ I<result> = I<operator>
 
 =back
 
-All operators maybe preceded by a label, which is any non-whitespace
+All operators maybe preceded by a label, which is any non-white-space
 text immediately followed by a colon (':').
 
 =back
@@ -263,7 +263,7 @@ text immediately followed by a colon (':').
 Note that the current optimizer may produce incorrect optimization for
 your code, fortunately the optimizer will disable itself if you
 include any jump operator in your code.  A single jump to anywhere
-after your final ret operator can be used to disable the optimizer
+after your final C<ret> operator can be used to disable the optimizer
 without slowing down your code.
 
 There's currently no high-level code generation that can generate code
@@ -271,7 +271,7 @@ with loops or real conditions.
 
 =head1 SEE ALSO
 
-Imager(3), transform.perl, regmach.c
+Imager(3), F<transform.perl>, F<regmach.c>
 
 =head1 AUTHOR
 

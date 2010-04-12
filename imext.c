@@ -148,11 +148,11 @@ int
 }
 
 /*
-=item i_gpix(im, x, y, color)
+=item i_gpix(im, C<x>, C<y>, C<color>)
 
 =category Drawing
 
-Retrieves the I<color> of the pixel (x,y).
+Retrieves the C<color> of the pixel (x,y).
 
 Returns 0 if the pixel was retrieved, or -1 if not.
 
@@ -165,11 +165,11 @@ int
 }
 
 /*
-=item i_ppixf(im, x, y, fcolor)
+=item i_ppixf(im, C<x>, C<y>, C<fcolor>)
 
 =category Drawing
 
-Sets the pixel at (x,y) to the floating point color I<fcolor>.
+Sets the pixel at (C<x>,C<y>) to the floating point color C<fcolor>.
 
 Returns 0 if the pixel was drawn, or -1 if not.
 
@@ -184,12 +184,12 @@ int
 }
 
 /*
-=item i_gpixf(im, x, y, fcolor)
+=item i_gpixf(im, C<x>, C<y>, C<fcolor>)
 
 =category Drawing
 
 Retrieves the color of the pixel (x,y) as a floating point color into
-I<fcolor>.
+C<fcolor>.
 
 Returns 0 if the pixel was retrieved, or -1 if not.
 
@@ -237,12 +237,12 @@ int
 }
 
 /*
-=item i_plinf(im, l, r, fcolors)
+=item i_plinf(im, C<left>, C<right>, C<fcolors>)
 
 =category Drawing
 
-Sets (r-l) pixels starting from (l,y) using (r-l) floating point
-colors from I<colors>.
+Sets (right-left) pixels starting from (left,y) using (right-left)
+floating point colors from C<fcolors>.
 
 Returns the number of pixels set.
 
@@ -273,19 +273,19 @@ int
 }
 
 /*
-=item i_gsamp(im, l, r, y, samp, chans, chan_count)
+=item i_gsamp(im, left, right, y, samples, channels, channel_count)
 
 =category Drawing
 
-Reads sample values from im for the horizontal line (l, y) to (r-1,y)
-for the channels specified by chans, an array of int with chan_count
-elements.
+Reads sample values from C<im> for the horizontal line (left, y) to
+(right-1,y) for the channels specified by C<channels>, an array of int
+with C<channel_count> elements.
 
-If chans is NULL then the first chan_count channels are retrieved for
+If channels is NULL then the first channels_count channels are retrieved for
 each pixel.
 
-Returns the number of samples read (which should be (r-l) *
-chan_count)
+Returns the number of samples read (which should be (right-left) *
+channel_count)
 
 =cut
 */
@@ -296,19 +296,19 @@ int
 }
 
 /*
-=item i_gsampf(im, l, r, y, samp, chans, chan_count)
+=item i_gsampf(im, left, right, y, samples, channels, channel_count)
 
 =category Drawing
 
-Reads floating point sample values from im for the horizontal line (l,
-y) to (r-1,y) for the channels specified by chans, an array of int
-with chan_count elements.
+Reads floating point sample values from C<im> for the horizontal line
+(left, y) to (right-1,y) for the channels specified by C<channels>, an
+array of int with channel_count elements.
 
-If chans is NULL then the first chan_count channels are retrieved for
-each pixel.
+If C<channels> is NULL then the first C<channel_count> channels are
+retrieved for each pixel.
 
-Returns the number of samples read (which should be (r-l) *
-chan_count)
+Returns the number of samples read (which should be (C<right>-C<left>)
+* C<channel_count>)
 
 =cut
 */
@@ -319,12 +319,12 @@ int
 }
 
 /*
-=item i_gpal(im, x, r, y, indexes)
+=item i_gpal(im, left, right, y, indexes)
 
 =category Drawing
 
-Reads palette indexes for the horizontal line (x, y) to (r-1, y) into
-indexes.
+Reads palette indexes for the horizontal line (left, y) to (right-1,
+y) into C<indexes>.
 
 Returns the number of indexes read.
 
@@ -338,12 +338,12 @@ int
 }
 
 /*
-=item i_ppal(im, x, r, y, indexes)
+=item i_ppal(im, left, right, y, indexes)
 
 =category Drawing
 
-Writes palette indexes for the horizontal line (x, y) to (r-1, y) from
-indexes.
+Writes palette indexes for the horizontal line (left, y) to (right-1,
+y) from C<indexes>.
 
 Returns the number of indexes written.
 
@@ -464,7 +464,7 @@ int
 
 Sets I<count> colors starting from I<index> in the image's palette.
 
-On sucess returns true.
+On success returns true.
 
 On failure returns false.
 

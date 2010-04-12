@@ -19,6 +19,8 @@ Imager::API - Imager's C API - introduction.
 
 =head1 DESCRIPTION
 
+=for stopwords XS
+
 The API allows you to access Imager functions at the C level from XS
 and from Inline::C.
 
@@ -38,7 +40,7 @@ core Imager object, for example, Imager::SDL.
 
 =item *
 
-write C code that hooks into Imagers existing methods, such as filter
+write C code that hooks into Imager's existing methods, such as filter
 or file format handlers.
 
 =back
@@ -86,15 +88,16 @@ font functions are not visible through Imager's API.
 
 =head2 i_img - images
 
-This contains the dimensions of the image (xsize, ysize, channels),
-image metadata (ch_mask, bits, type, virtual), potentially image data
-(idata) and the a function table, with pointers to functions to
-perform various low level image operations.
+This contains the dimensions of the image (C<xsize>, C<ysize>,
+C<channels>), image metadata (C<ch_mask>, C<bits>, C<type>,
+C<virtual>), potentially image data (C<idata>) and the a function
+table, with pointers to functions to perform various low level image
+operations.
 
 The only time you should directly write to any value in this type is
 if you're implementing your own image type.
 
-The typemap includes typenames Imager and Imager::ImgRaw as typedefs
+The typemap includes type names Imager and Imager::ImgRaw as typedefs
 for C<i_img *>.
 
 For incoming parameters the typemap will accept either Imager or
@@ -104,7 +107,7 @@ For return values the typemap will produce a full Imager object for an
 Imager return type and a raw image object for an Imager::ImgRaw return
 type.
 
-=head2 i_color - 8-bit color
+=head2 C<i_color> - 8-bit color
 
 Represents an 8-bit per sample color.  This is a union containing
 several different structs for access to components of a color:
@@ -113,32 +116,32 @@ several different structs for access to components of a color:
 
 =item *
 
-gray - single member gray_color.
+C<gray> - single member C<gray_color>.
 
 =item *
 
-rgb - r, g, b members.
+C<rgb> - C<r>, C<g>, C<b> members.
 
 =item *
 
-rgba - r, g, b, a members.
+C<rgba> - C<r>, C<g>, C<b>, C<a> members.
 
 =item *
 
-channels - array of channels.
+C<channels> - array of channels.
 
 =back
 
 Use Imager::Color for parameter and return value types.
 
-=head2 i_fcolor - floating point color
+=head2 C<i_fcolor> - floating point color
 
-Similar to i_color except that each component is a double instead of
+Similar to C<i_color> except that each component is a double instead of
 an unsigned char.
 
 Use Imager::Color::Float for parameter and return value types.
 
-=head2 i_fill_t - fill objects
+=head2 C<i_fill_t> - fill objects
 
 Abstract type containing pointers called to perform low level fill
 operations.
@@ -160,7 +163,7 @@ Load Imager:
 
 and bootstrap your XS code - see L<XSLoader> or L<DynaLoader>.
 
-=head2 Foo.xs
+=head2 C<Foo.xs>
 
 You'll need the following in your XS source:
 
@@ -181,7 +184,7 @@ create the variables used to hold the callback table:
 
 =item *
 
-initialize the callback table in your BOOT code:
+initialize the callback table in your C<BOOT> code:
 
   BOOT:
     PERL_INITIALIZE_IMAGER_CALLBACKS;
@@ -203,10 +206,10 @@ include the Imager external API header:
 
 =back
 
-=head2 Makefile.PL
+=head2 C<Makefile.PL>
 
 If you're creating an XS module that depends on Imager's API your
-Makefile.PL will need to do the following:
+C<Makefile.PL> will need to do the following:
 
 =over
 
@@ -237,8 +240,8 @@ include Imager 0.48 as a PREREQ_PM:
 
 =item *
 
-Since you use Imager::ExtUtils in Makefile.PL (or Build.PL) you should
-include Imager in your configure_requires:
+Since you use Imager::ExtUtils in C<Makefile.PL> (or C<Build.PL>) you
+should include Imager in your configure_requires:
 
    META_MERGE =>
    {

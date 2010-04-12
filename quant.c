@@ -28,13 +28,13 @@ setcol(i_color *cl,unsigned char r,unsigned char g,unsigned char b,unsigned char
 */
 
 /*
-=item i_quant_makemap(quant, imgs, count)
+=item i_quant_makemap(C<quant>, C<imgs>, C<count>)
 
 =category Image quantization
 
-Analyzes the I<count> images in I<imgs> according to the rules in
-I<quant> to build a color map (optimal or not depending on
-quant->make_colors).
+Analyzes the C<count> images in C<imgs> according to the rules in
+C<quant> to build a color map (optimal or not depending on
+C<< quant->make_colors >>).
 
 =cut
 */
@@ -88,14 +88,14 @@ static void translate_errdiff(i_quantize *, i_img *, i_palidx *);
 static void translate_addi(i_quantize *, i_img *, i_palidx *);
 
 /*
-=item i_quant_translate(quant, img)
+=item i_quant_translate(C<quant>, C<img>)
 
 =category Image quantization
 
-Quantize the image given the palette in quant.
+Quantize the image given the palette in C<quant>.
 
-On success returns a pointer to a memory block of img->xsize *
-img->ysize i_palidx entries.
+On success returns a pointer to a memory block of C<< img->xsize *
+img->ysize >> C<i_palidx> entries.
 
 On failure returns NULL.
 
@@ -1486,14 +1486,14 @@ static void transparent_errdiff(i_quantize *, i_palidx *, i_img *, i_palidx);
 static void transparent_ordered(i_quantize *, i_palidx *, i_img *, i_palidx);
 
 /*
-=item i_quant_transparent(quant, data, img, trans_index)
+=item i_quant_transparent(C<quant>, C<data>, C<img>, C<trans_index>)
 
 =category Image quantization
 
-Dither the alpha channel on I<img> into the palette indexes in
-I<data>.  Pixels to be transparent are replaced with I<trans_pixel>.
+Dither the alpha channel on C<img> into the palette indexes in
+C<data>.  Pixels to be transparent are replaced with C<trans_pixel>.
 
-The method used depends on the tr_* members of quant.
+The method used depends on the tr_* members of C<quant>.
 
 =cut
 */

@@ -4,7 +4,7 @@ use Imager::Color;
 use vars qw(@ISA $VERSION);
 @ISA = qw(Imager::Font);
 
-$VERSION = "1.013";
+$VERSION = "1.014";
 
 *_first = \&Imager::Font::_first;
 
@@ -207,11 +207,17 @@ The following parameters:
 
 =over
 
-=item utf8
+=item *
 
-=item vlayour
+C<utf8>
 
-=item sizew
+=item *
+
+C<vlayout>
+
+=item *
+
+C<sizew>
 
 =back
 

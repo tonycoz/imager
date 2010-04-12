@@ -22,7 +22,7 @@ See L<Imager::Files>.
 
   $image->write(file=>$filename) or die $image->errstr;
 
-=head2 Write an animated gif.
+=head2 Write an animated GIF
 
   # build an array of images to use in the gif
   my  @images;
@@ -63,7 +63,8 @@ file, for single images:
 
 The main issue that can occur with this is if the input file has
 transparency and the output file format doesn't support that.  This
-can be a problem when converting from GIFs to JPEGs for example.
+can be a problem when converting from GIF files to JPEG files for
+example.
 
 To work around that you can compose the source image onto a background
 color:
@@ -80,7 +81,7 @@ color:
   # now we can write safely to jpeg or pnm
 
 Some formats support multiple files, so if you want to convert from
-say tiff to jpeg, you'll need multiple output files:
+say TIFF to JPEG, you'll need multiple output files:
 
   my @images = Imager->read_multi(file => 'input.tif')
     or die Imager->errstr;
@@ -103,11 +104,11 @@ If you also want an alpha channel:
 
   my $rgb_alpha = Imager->new(xsize=>$width, ysize=>$height, channels=>4);
 
-To make a grayscale image:
+To make a gray-scale image:
 
   my $gray = Imager->new(xsize=>$width, ysize=>$height, channels=>1);
 
-and a grayscale image with an alpha channel:
+and a gray-scale image with an alpha channel:
 
   my $gray_alpha = Imager->new(xsize=>$width, ysize=>$height, channels=>2);
 
@@ -301,7 +302,7 @@ Then paste the source image into the new image:
 
 Whether you draw the border before or after pasting the original image
 depends on whether you want the border to overlap the image, for
-example a semi-tranparent border drawn after pasting the source image
+example a semi-transparent border drawn after pasting the source image
 could overlap the edge without hiding it.
 
 If you want a solid border you could just fill the image before
@@ -325,8 +326,8 @@ pasting the source for simplicity:
 
 =head2 Shearing (slanting) or Rotating text
 
-This requires that you have Imager installed with Freetype 2.x support
-installed, and that the font be created using the Freetype 2.x driver,
+This requires that you have Imager installed with FreeType 2.x support
+installed, and that the font be created using the FreeType 2.x driver,
 for example:
 
   my $font = Imager::Font->new(file=>$fontfile, type=>'ft2');
@@ -366,9 +367,9 @@ transformed text into.
 
 =head2 Shearing an image
 
-=head2 Convert to grayscale
+=head2 Convert to gray-scale
 
-To convert an RGB image to a grayscale image, use the convert method:
+To convert an RGB image to a gray-scale image, use the convert method:
 
   my $grey = $image->convert(preset => 'gray');
 
@@ -381,8 +382,8 @@ See: L<Imager::Transformations/"Color transformations">
 =head2 Image format
 
 When Imager reads a file it does a magic number check to determine the
-file type, so "foo.png" could actually be a GIF image, and Imager will
-read it anyway.
+file type, so C<foo.png> could actually be a GIF image, and Imager
+will read it anyway.
 
 You can check the actual format of the image by looking at the
 C<i_format> tag.

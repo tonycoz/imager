@@ -7,7 +7,7 @@
 #define IMAGER_IMMACROS_H_
 
 /*
-=item i_img_has_alpha(im)
+=item i_img_has_alpha(C<im>)
 
 =category Image Information
 
@@ -19,7 +19,7 @@ Return true if the image has an alpha channel.
 #define i_img_has_alpha(im) ((im)->channels == 2 || (im)->channels == 4)
 
 /*
-=item i_img_color_channels(im)
+=item i_img_color_channels(C<im>)
 
 =category Image Information
 

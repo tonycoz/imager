@@ -4038,7 +4038,7 @@ C<transform()>, C<transform2()> and C<matrix_transform()>.
 =item *
 
 L<Imager::Filters> - Filters, sharpen, blur, noise, convolve etc. and
-filter plugins.
+filter plug-ins.
 
 =item *
 
@@ -4091,11 +4091,11 @@ This example creates a completely black image of width 400 and height
 =head1 ERROR HANDLING
 
 In general a method will return false when it fails, if it does use
-the errstr() method to find out why:
+the C<errstr()> method to find out why:
 
 =over
 
-=item errstr
+=item C<errstr>
 
 Returns the last error message in that context.
 
@@ -4158,7 +4158,7 @@ image
 crop() - L<Imager::Transformations/crop> - extract part of an image
 
 def_guess_type() - L<Imager::Files/def_guess_type> - default function
-used to guess the output file format based on the output filename
+used to guess the output file format based on the output file name
 
 deltag() -  L<Imager::ImageTypes/deltag> - delete image tags
 
@@ -4203,10 +4203,10 @@ getpixel() - L<Imager::Draw/getpixel> - retrieve one or more pixel
 colors
 
 getsamples() - L<Imager::Draw/getsamples> - retrieve samples from a
-row or subrow of pixels.
+row or partial row of pixels.
 
 getscanline() - L<Imager::Draw/getscanline> - retrieve colors for a
-row or subrow of pixels.
+row or partial row of pixels.
 
 getwidth() - L<Imager::ImageTypes/getwidth> - width of the image in
 pixels.
@@ -4217,8 +4217,8 @@ for a new image.
 init() - L<Imager::ImageTypes/init>
 
 is_bilevel() - L<Imager::ImageTypes/is_bilevel> - returns whether
-image write functions should write the image in their bi-level (blank
-and white, no grey levels) format
+image write functions should write the image in their bilevel (blank
+and white, no gray levels) format
 
 line() - L<Imager::Draw/line> - draw an interval
 
@@ -4248,6 +4248,8 @@ newfont() - L<Imager::Handy/newfont>
 NF() - L<Imager::Handy/NF>
 
 open() - L<Imager::Files> - an alias for read()
+
+=for stopwords IPTC
 
 parseiptc() - L<Imager::Files/parseiptc> - parse IPTC data from a JPEG
 image
@@ -4407,7 +4409,7 @@ gradient fill - L<Imager::Fill/"Fountain fills">,
 L<Imager::Filters/fountain>, L<Imager::Fountain>,
 L<Imager::Filters/gradgen>
 
-grayscale, convert image to - L<Imager::Transformations/convert>
+gray scale, convert image to - L<Imager::Transformations/convert>
 
 guassian blur - L<Imager::Filters/guassian>
 
@@ -4442,11 +4444,13 @@ L<Imager::Transformations/rubthrough>
 pseudo-color image - L<Imager::ImageTypes/to_paletted>,
 L<Imager::ImageTypes/new>
 
+=for stopwords posterize
+
 posterize - L<Imager::Filters/postlevels>
 
-png files - L<Imager::Files>, L<Imager::Files/"PNG">
+PNG files - L<Imager::Files>, L<Imager::Files/"PNG">
 
-pnm - L<Imager::Files/"PNM (Portable aNy Map)">
+PNM - L<Imager::Files/"PNM (Portable aNy Map)">
 
 rectangles, drawing - L<Imager::Draw/box>
 
@@ -4478,6 +4482,8 @@ text, wrapping text in an area - L<Imager::Font::Wrap>
 text, measuring - L<Imager::Font/bounding_box>, L<Imager::Font::BBox>
 
 tiles, color - L<Imager::Filters/mosaic>
+
+=for stopwords unsharp
 
 unsharp mask - L<Imager::Filters/unsharpmask>
 
@@ -4550,11 +4556,14 @@ at CPAN Ratings:
 
   http://cpanratings.perl.org/dist/Imager
 
-This requires a Bitcard Account (http://www.bitcard.org).
+=for stopwords Bitcard
+
+This requires a Bitcard account (http://www.bitcard.org).
 
 You can also send email to the maintainer below.
 
-If you send me a bug report via email, it will be copied to RT.
+If you send me a bug report via email, it will be copied to Request
+Tracker.
 
 =head2 Patches
 
@@ -4571,7 +4580,7 @@ Tony Cook <tony@imager.perl.org> is the current maintainer for Imager.
 
 Arnar M. Hrafnkelsson is the original author of Imager.
 
-Many others have contributed to Imager, please see the README for a
+Many others have contributed to Imager, please see the C<README> for a
 complete list.
 
 =head1 SEE ALSO

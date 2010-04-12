@@ -4,7 +4,7 @@ use Imager;
 use strict;
 use vars qw($VERSION);
 
-$VERSION = "1.010";
+$VERSION = "1.011";
 
 # It's just a front end to the XS creation functions.
 
@@ -397,9 +397,9 @@ Imager::Color - Color handling for Imager.
 
 =head1 DESCRIPTION
 
-This module handles creating color objects used by imager.  The idea is
-that in the future this module will be able to handle colorspace calculations
-as well.
+This module handles creating color objects used by Imager.  The idea
+is that in the future this module will be able to handle color space
+calculations as well.
 
 An Imager color consists of up to four components, each in the range 0
 to 255. Unfortunately the meaning of the components can change
@@ -435,13 +435,14 @@ This creates a color object to pass to functions that need a color argument.
 This changes an already defined color.  Note that this does not affect any places
 where the color has been used previously.
 
-=item rgba
+=item rgba()
 
-This returns the rgba code of the color the object contains.
+This returns the red, green, blue and alpha channels of the color the
+object contains.
 
 =item info
 
-Calling info merely dumps the relevant colorcode to the log.
+Calling info merely dumps the relevant color to the log.
 
 =item equals(other=>$other_color)
 
@@ -466,20 +467,20 @@ simple numeric parameters - if you supply 3 or 4 numeric arguments, you get a co
 
 =item *
 
-a six hex digit web color, either 'RRGGBB' or '#RRGGBB'
+a six hex digit web color, either C<RRGGBB> or C<#RRGGBB>
 
 =item *
 
-an eight hex digit web color, either 'RRGGBBAA' or '#RRGGBBAA'.
+an eight hex digit web color, either C<RRGGBBAA> or C<#RRGGBBAA>.
 
 =item *
 
-a 3 hex digit web color, '#RGB' - a value of F becomes 255.
+a 3 hex digit web color, C<#RGB> - a value of F becomes 255.
 
 =item *
 
-a color name, from whichever of the gimp Named_Colors file or X
-rgb.txt is found first.  The same as using the name keyword.
+a color name, from whichever of the gimp C<Named_Colors> file or X
+C<rgb.txt> is found first.  The same as using the C<name> keyword.
 
 =back
 
@@ -499,8 +500,8 @@ The color components in the range 0 to 255.
 
 =item *
 
-'hue', 'saturation' and 'value', optionally shortened to 'h', 's' and
-'v', to specify a HSV color.  0 <= hue < 360, 0 <= s <= 1 and 0 <= v
+C<hue>, C<saturation> and C<value>, optionally shortened to C<h>, C<s> and
+C<v>, to specify a HSV color.  0 <= hue < 360, 0 <= s <= 1 and 0 <= v
 <= 1.
 
   # the same as RGB(127,255,127)
@@ -509,14 +510,14 @@ The color components in the range 0 to 255.
 
 =item *
 
-'web', which can specify a 6 or 3 hex digit web color, in any of the
-forms '#RRGGBB', '#RGB', 'RRGGBB' or 'RGB'.
+C<web>, which can specify a 6 or 3 hex digit web color, in any of the
+forms C<#RRGGBB>, C<#RGB>, C<RRGGBB> or C<RGB>.
 
   my $c1 = Imager::Color->new(web=>'#FFC0C0'); # pale red
 
 =item *
 
-'gray' or 'grey' which specifies a single channel, from 0 to 255.
+C<gray> or C<grey> which specifies a single channel, from 0 to 255.
 
   # exactly the same
   my $c1 = Imager::Color->new(gray=>128);
@@ -524,7 +525,7 @@ forms '#RRGGBB', '#RGB', 'RRGGBB' or 'RGB'.
 
 =item *
 
-'rgb' which takes a 3 member arrayref, containing each of the red,
+C<rgb> which takes a 3 member arrayref, containing each of the red,
 green and blue values.
 
   # the same
@@ -533,7 +534,7 @@ green and blue values.
 
 =item *
 
-'hsv' which takes a 3 member arrayref, containting each of hue,
+C<hsv> which takes a 3 member arrayref, containing each of hue,
 saturation and value.
 
   # the same
@@ -542,37 +543,37 @@ saturation and value.
 
 =item *
 
-'gimp' which specifies a color from a GIMP palette file.  You can
-specify the filename of the palette file with the 'palette' parameter,
-or let Imager::Color look in various places, typically
-"$HOME/gimp-1.x/palettes/Named_Colors" with and without the version
-number, and in /usr/share/gimp/palettes/.  The palette file must have
-color names.
+C<gimp> which specifies a color from a GIMP palette file.  You can
+specify the file name of the palette file with the 'palette'
+parameter, or let Imager::Color look in various places, typically
+C<$HOME/gimp-1.x/palettes/Named_Colors> with and without the version
+number, and in C</usr/share/gimp/palettes/>.  The palette file must
+have color names.
 
   my $c1 = Imager::Color->new(gimp=>'snow');
   my $c1 = Imager::Color->new(gimp=>'snow', palette=>'testimg/test_gimp_pal);
 
 =item *
 
-'xname' which specifies a color from an X11 rgb.txt file.  You can
-specify the filename of the rgb.txt file with the 'palette' parameter,
-or let Imager::Color look in various places, typically
-'/usr/lib/X11/rgb.txt'.
+C<xname> which specifies a color from an X11 C<rgb.txt> file.  You can
+specify the file name of the C<rgb.txt> file with the C<palette>
+parameter, or let Imager::Color look in various places, typically
+C</usr/lib/X11/rgb.txt>.
 
   my $c1 = Imager::Color->new(xname=>'blue') # usually RGB(0, 0, 255)
 
 =item *
 
-'builtin' which specifies a color from the built-in color table in
+C<builtin> which specifies a color from the built-in color table in
 Imager::Color::Table.  The colors in this module are the same as the
-default X11 rgb.txt file.
+default X11 C<rgb.txt> file.
 
   my $c1 = Imager::Color->new(builtin=>'black') # always RGB(0, 0, 0)
 
 =item *
 
-'name' which specifies a name from either a GIMP palette, an X rgb.txt
-file or the built-in color table, whichever is found first.
+C<name> which specifies a name from either a GIMP palette, an X
+C<rgb.txt> file or the built-in color table, whichever is found first.
 
 =item *
 
@@ -594,7 +595,7 @@ set() method.
 =head1 AUTHOR
 
 Arnar M. Hrafnkelsson, addi@umich.edu
-And a great deal of help from others - see the README for a complete
+And a great deal of help from others - see the C<README> for a complete
 list.
 
 =head1 SEE ALSO

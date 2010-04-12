@@ -2,7 +2,7 @@ package Imager::Font::BBox;
 use strict;
 use vars qw($VERSION);
 
-$VERSION = "1.005";
+$VERSION = "1.006";
 
 =head1 NAME
 
@@ -48,7 +48,7 @@ accessible.
 
 =item left_bearing
 
-Returns the horizonatal offset from the selected drawing location to
+Returns the horizontal offset from the selected drawing location to
 the left edge of the first character drawn.  If this is positive, the
 first glyph is to the right of the drawing location.
 

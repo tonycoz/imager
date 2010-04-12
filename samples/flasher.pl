@@ -122,8 +122,8 @@ flasher.pl - produces a slowly flashing GIF based on an input image
 
 =head1 DESCRIPTION
 
-flasher.pl generates an animation from the given image to I<lowpct>%
-coverage on a blank image of color I<back>.
+flasher.pl generates an animation from the given image to C<lowpct>%
+coverage on a blank image of color C<back>.
 
 =head1 OPTIONS
 
@@ -131,29 +131,27 @@ coverage on a blank image of color I<back>.
 
 =item *
 
--f I<frames>, --frames I<frames> - the total number of frames.  This is
- always rounded up to the next even number.  Default: 20
+C<-f> I<frames>, C<--frames> I<frames> - the total number of frames.
+This is always rounded up to the next even number.  Default: 20
 
 =item *
 
--d I<delay>, --delay I<delay> - the delay in 1/100 second between
- frames.  Default: 10.
+C<-d> I<delay>, C<--delay> I<delay> - the delay in 1/100 second between
+frames.  Default: 10.
 
 =item *
 
--p I<percent>, --lowpct I<percent> - the lowest coverage of the image.
- Default: 30
+C<-p> I<percent>, C<--lowpct> I<percent> - the lowest coverage of the image.
+Default: 30
 
 =item *
 
--b I<color>, --back I<color> - the background color to fade to.  
+C<-b> I<color>, C<--back> I<color> - the background color to fade to.  
 Default: #FFFFFF.
 
 =item *
 
--v, --verbose - produce progress information.
-
-=item 
+C<-v>, C<--verbose> - produce progress information.
 
 =back
 

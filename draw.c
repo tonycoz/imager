@@ -346,7 +346,7 @@ arc_poly(int *count, double **xvals, double **yvals,
 =category Drawing
 =synopsis i_arc_aa(im, 50, 50, 35, 90, 135, &color);
 
-Antialias fills an arc centered at (x,y) with radius I<rad> covering
+Anti-alias fills an arc centered at (x,y) with radius I<rad> covering
 the range of angles in degrees from d1 to d2, with the color.
 
 =cut
@@ -372,7 +372,7 @@ i_arc_aa(i_img *im, double x, double y, double rad, double d1, double d2,
 =category Drawing
 =synopsis i_arc_aa_cfill(im, 50, 50, 35, 90, 135, fill);
 
-Antialias fills an arc centered at (x,y) with radius I<rad> covering
+Anti-alias fills an arc centered at (x,y) with radius I<rad> covering
 the range of angles in degrees from d1 to d2, with the fill object.
 
 =cut
@@ -478,7 +478,7 @@ i_pixel_coverage(i_mmarray *dot, int x, int y) {
 =category Drawing
 =synopsis i_circle_aa(im, 50, 50, 45, &color);
 
-Antialias fills a circle centered at (x,y) for radius I<rad> with
+Anti-alias fills a circle centered at (x,y) for radius I<rad> with
 color.
 
 =cut
@@ -1118,19 +1118,21 @@ i_box_cfill(i_img *im,int x1,int y1,int x2,int y2,i_fill_t *fill) {
 }
 
 /* 
-=item i_line(im, x1, y1, x2, y2, val, endp)
+=item i_line(C<im>, C<x1>, C<y1>, C<x2>, C<y2>, C<color>, C<endp>)
 
 =category Drawing
 
-Draw a line to image using bresenhams linedrawing algorithm
+=for stopwords Bresenham's
 
-   im   - image to draw to
-   x1   - starting x coordinate
-   y1   - starting x coordinate
-   x2   - starting x coordinate
-   y2   - starting x coordinate
-   val  - color to write to image
-   endp - endpoint flag (boolean)
+Draw a line to image using Bresenham's line drawing algorithm
+
+   im    - image to draw to
+   x1    - starting x coordinate
+   y1    - starting x coordinate
+   x2    - starting x coordinate
+   y2    - starting x coordinate
+   color - color to write to image
+   endp  - endpoint flag (boolean)
 
 =cut
 */
@@ -1238,13 +1240,13 @@ i_line_dda(i_img *im, int x1, int y1, int x2, int y2, i_color *val) {
 }
 
 /*
-=item i_line_aa(im, x1, x2, y1, y2, color, endp)
+=item i_line_aa(C<im>, C<x1>, C<x2>, C<y1>, C<y2>, C<color>, C<endp>)
 
 =category Drawing
 
-Antialias draws a line from (x1,y1) to (x2, y2) in color.
+Anti-alias draws a line from (x1,y1) to (x2, y2) in color.
 
-The point (x2, y2) is drawn only if endp is set.
+The point (x2, y2) is drawn only if C<endp> is set.
 
 =cut
 */
@@ -1687,15 +1689,15 @@ i_flood_fill_low(i_img *im,int seedx,int seedy,
 }
 
 /*
-=item i_flood_fill(im, seedx, seedy, color)
+=item i_flood_fill(C<im>, C<seedx>, C<seedy>, C<color>)
 
 =category Drawing
 =synopsis i_flood_fill(im, 50, 50, &color);
 
-Flood fills the 4-connected region starting from the point (seedx,
-seedy) with I<color>.
+Flood fills the 4-connected region starting from the point (C<seedx>,
+C<seedy>) with I<color>.
 
-Returns false if (seedx, seedy) are outside the image.
+Returns false if (C<seedx>, C<seedy>) are outside the image.
 
 =cut
 */
@@ -1729,15 +1731,15 @@ i_flood_fill(i_img *im, int seedx, int seedy, const i_color *dcol) {
 }
 
 /*
-=item i_flood_cfill(im, seedx, seedy, fill)
+=item i_flood_cfill(C<im>, C<seedx>, C<seedy>, C<fill>)
 
 =category Drawing
 =synopsis i_flood_cfill(im, 50, 50, fill);
 
-Flood fills the 4-connected region starting from the point (seedx,
-seedy) with I<fill>.
+Flood fills the 4-connected region starting from the point (C<seedx>,
+C<seedy>) with C<fill>.
 
-Returns false if (seedx, seedy) are outside the image.
+Returns false if (C<seedx>, C<seedy>) are outside the image.
 
 =cut
 */
@@ -1769,16 +1771,16 @@ i_flood_cfill(i_img *im, int seedx, int seedy, i_fill_t *fill) {
 }
 
 /*
-=item i_flood_fill_border(im, seedx, seedy, color, border)
+=item i_flood_fill_border(C<im>, C<seedx>, C<seedy>, C<color>, C<border>)
 
 =category Drawing
 =synopsis i_flood_fill_border(im, 50, 50, &color, &border);
 
-Flood fills the 4-connected region starting from the point (seedx,
-seedy) with I<color>, fill stops when the fill reaches a pixels with
-color I<border>.
+Flood fills the 4-connected region starting from the point (C<seedx>,
+C<seedy>) with C<color>, fill stops when the fill reaches a pixels
+with color C<border>.
 
-Returns false if (seedx, seedy) are outside the image.
+Returns false if (C<seedx>, C<seedy>) are outside the image.
 
 =cut
 */
@@ -1809,16 +1811,16 @@ i_flood_fill_border(i_img *im, int seedx, int seedy, const i_color *dcol,
 }
 
 /*
-=item i_flood_cfill_border(im, seedx, seedy, fill, border)
+=item i_flood_cfill_border(C<im>, C<seedx>, C<seedy>, C<fill>, C<border>)
 
 =category Drawing
 =synopsis i_flood_cfill_border(im, 50, 50, fill, border);
 
-Flood fills the 4-connected region starting from the point (seedx,
-seedy) with I<fill>, the fill stops when it reaches pixels of color
-I<border>.
+Flood fills the 4-connected region starting from the point (C<seedx>,
+C<seedy>) with C<fill>, the fill stops when it reaches pixels of color
+C<border>.
 
-Returns false if (seedx, seedy) are outside the image.
+Returns false if (C<seedx>, C<seedy>) are outside the image.
 
 =cut
 */

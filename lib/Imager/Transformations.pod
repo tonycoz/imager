@@ -84,12 +84,12 @@ if you want to keep an original after doing something that changes the image.
 
 =item scale
 
-X<scale>To scale an image so porportions are maintained use the
-C<$img-E<gt>scale()> method.  if you give either a xpixels or ypixels
-parameter they will determine the width or height respectively.  If
-both are given the one resulting in a larger image is used, unless you
-set the C<type> parameter to C<'min'>.  example: C<$img> is 700 pixels
-wide and 500 pixels tall.
+X<scale>To scale an image so proportions are maintained use the
+C<$img-E<gt>scale()> method.  if you give either a C<xpixels> or
+C<ypixels> parameter they will determine the width or height
+respectively.  If both are given the one resulting in a larger image
+is used, unless you set the C<type> parameter to C<'min'>.  example:
+C<$img> is 700 pixels wide and 500 pixels tall.
 
   $newimg = $img->scale(xpixels=>400); # 400x285
   $newimg = $img->scale(ypixels=>400); # 560x400
@@ -113,45 +113,46 @@ the original.
 
 =item *
 
-xpixels, ypixels - desired size of the scaled image.  The C<type>
-parameter controls whether the larger or smaller of the two possible
-sizes is chosen, or if the image is scaled non-proportionally.
+C<xpixels>, C<ypixels> - desired size of the scaled image.  The
+C<type> parameter controls whether the larger or smaller of the two
+possible sizes is chosen, or if the image is scaled
+non-proportionally.
 
 =item *
 
-constrain - an Image::Math::Constrain object defining the way in which
-the image size should be constrained.
+C<constrain> - an Image::Math::Constrain object defining the way in
+which the image size should be constrained.
 
 =item *
 
-scalefactor - if none of xpixels, ypixels, xscalefactor, yscalefactor
-or constrain is supplied then this is used as the ratio to scale by.
-Default: 0.5.
+C<scalefactor> - if none of C<xpixels>, C<ypixels>, C<xscalefactor>,
+C<yscalefactor> or C<constrain> is supplied then this is used as the
+ratio to scale by.  Default: 0.5.
 
 =item *
 
-xscalefactor, yscalefactor - if both are supplied then the image is
+C<xscalefactor>, C<yscalefactor> - if both are supplied then the image is
 scaled as per these parameters, whether this is proportionally or not.
 New in Imager 0.54.
 
 =item *
 
-type - controls whether the larger or smaller of the two possible
+C<type> - controls whether the larger or smaller of the two possible
 sizes is chosen, possible values are:
 
 =over
 
 =item *
 
-min - the smaller of the 2 sizes are chosen.
+C<min> - the smaller of the 2 sizes are chosen.
 
 =item *
 
-max - the larger of the 2 sizes.  This is the default.
+C<max> - the larger of the 2 sizes.  This is the default.
 
 =item *
 
-nonprop - non-proportional scaling.  New in Imager 0.54.
+C<nonprop> - non-proportional scaling.  New in Imager 0.54.
 
 =back
 
@@ -166,7 +167,7 @@ C<type> is only used if both C<xpixels> and C<ypixels> are supplied.
 
 =item *
 
-qtype - defines the quality of scaling performed.  Possible values are:
+C<qtype> - defines the quality of scaling performed.  Possible values are:
 
 =over
 
@@ -182,12 +183,12 @@ up this will duplicate pixels.
 
 =item *
 
-C<mixing> - implements the mixing algorithm implemented by pnmscale.
-This retains more detail when scaling down than C<normal>.  When
-scaling down this proportionally accumulates sample data from the
-pixels, resulting in a proportional mix of all of the pixels.  When
-scaling up this will mix pixels when the sampling grid crosses a pixel
-boundary but will otherwise copy pixel values.
+C<mixing> - implements the mixing algorithm implemented by
+F<pnmscale>.  This retains more detail when scaling down than
+C<normal>.  When scaling down this proportionally accumulates sample
+data from the pixels, resulting in a proportional mix of all of the
+pixels.  When scaling up this will mix pixels when the sampling grid
+crosses a pixel boundary but will otherwise copy pixel values.
 
 =back
 
@@ -204,12 +205,12 @@ dimensions. eg.
   my $scaled = $img->scaleX(pixels=>400)->scaleY(pixels=>200);
 
 From Imager 0.54 you can scale without maintaining proportions either
-by supplying both the xscalefactor and yscalefactor arguments:
+by supplying both the C<xscalefactor> and C<yscalefactor> arguments:
 
   my $scaled = $img->scale(xscalefactor => 0.5, yscalefactor => 0.67);
 
 or by supplying C<xpixels> and C<ypixels> and setting C<type> to
-"nonprop":
+<nonprop>:
 
   my $scaled = $im->scale(xpixels => 200, ypixels => 200, type => 'nonprop');
 
@@ -261,7 +262,7 @@ A mandatory warning is produced if scale() is called in void context.
   # same as Image::Math::Constrain version
   my $scaled2 = $image->scale(xpixels => 800, ypixels => 600, type => 'min');
 
-=item scaleX
+=item scaleX()
 
 scaleX() will scale along the X dimension, return a new image with the
 new width:
@@ -273,12 +274,12 @@ new width:
 
 =item *
 
-scalefactor - the amount to scale the X axis.  Ignored if C<pixels> is
+C<scalefactor> - the amount to scale the X axis.  Ignored if C<pixels> is
 provided.  Default: 0.5.
 
 =item *
 
-pixels - the new width of the image.
+C<pixels> - the new width of the image.
 
 =back
 
@@ -290,7 +291,7 @@ failure.
 
 A mandatory warning is produced if scaleX() is called in void context.
 
-=item scaleY
+=item scaleY()
 
 scaleY() will scale along the Y dimension, return a new image with the
 new height:
@@ -302,12 +303,12 @@ new height:
 
 =item *
 
-scalefactor - the amount to scale the Y axis.  Ignored if C<pixels> is
+C<scalefactor> - the amount to scale the Y axis.  Ignored if C<pixels> is
 provided.  Default: 0.5.
 
 =item *
 
-pixels - the new height of the image.
+C<pixels> - the new height of the image.
 
 =back
 
@@ -319,7 +320,7 @@ failure.
 
 A mandatory warning is produced if scaleY() is called in void context.
 
-=item scale_calculate
+=item scale_calculate()
 
 Performs the same calculations that the scale() method does to
 calculate the scaling factors from the parameters you pass.
@@ -333,7 +334,7 @@ Takes the following parameters over scale():
 
 =item *
 
-width, height - the image width and height to base the scaling on.
+C<width>, C<height> - the image width and height to base the scaling on.
 Required if scale_calculate() is called as a class method.  If called
 as an object method these default to the image width and height
 respectively.
@@ -341,7 +342,7 @@ respectively.
 =back
 
 You might use scale_calculate() as a class method when generating an
-IMG tag, for example.
+HTML C<IMG> tag, for example.
 
 Returns an empty list on failure.
 
@@ -355,7 +356,9 @@ factor, new width, new height, on success.
   my ($x_scale, $y_scale, $new_width, $new_height) =
 	$img->scale_calculate(xpixels => 200, type => 'min');
 
-=item crop
+=item crop()
+
+=for stopwords resize
 
 Another way to resize an image is to crop it.  The parameters to
 crop are the edges of the area that you want in the returned image,
@@ -439,7 +442,7 @@ returns false and $img->errstr is an appropriate error message.
 
 A mandatory warning is produced if crop() is called in void context.
 
-=item rotate
+=item rotate()
 
 Use the rotate() method to rotate an image.  This method will return a
 new, rotated image.
@@ -473,20 +476,20 @@ Parameters:
 
 =item *
 
-right - rotate by an exact multiple of 90 degrees, specified in
-degreess.
+C<right> - rotate by an exact multiple of 90 degrees, specified in
+degrees.
 
 =item *
 
-radians - rotate by an angle specified in radians.
+C<radians> - rotate by an angle specified in radians.
 
 =item *
 
-degrees - rotate by an angle specified in degrees.
+C<degrees> - rotate by an angle specified in degrees.
 
 =item *
 
-back - for C<radians> and C<degrees> this is the color used for the
+C<back> - for C<radians> and C<degrees> this is the color used for the
 areas not covered by the original image.  For example, the corners of
 an image rotated by 45 degrees.
 
@@ -533,28 +536,28 @@ Parameters:
 
 =item *
 
-src, img - the source image.  I<src> added for compatibility with
+C<src>, C<img> - the source image.  C<src> added for compatibility with
 rubthrough().
 
 =item *
 
-left, top - position in output of the top left of the pasted image.
+C<left>, C<top> - position in output of the top left of the pasted image.
 Default: (0,0)
 
 =item *
 
-src_minx, src_miny - the top left corner in the source image to start
+C<src_minx>, C<src_miny> - the top left corner in the source image to start
 the paste from.  Default: (0, 0)
 
 =item *
 
-src_maxx, src_maxy - the bottom right in the source image of the sub
+C<src_maxx>, C<src_maxy> - the bottom right in the source image of the sub
 image to paste.  This position is B<non> inclusive.  Default: bottom
 right corner of the source image.
 
 =item *
 
-width, height - if the corresponding src_maxx or src_maxy is not
+C<width>, C<height> - if the corresponding src_maxx or src_maxy is not
 defined then width or height is used for the width or height of the
 sub image to be pasted.
 
@@ -569,14 +572,14 @@ sub image to be pasted.
 If the source image has an alpha channel and the target doesn't, then
 the source is treated as if composed onto a black background.
 
-If the source image is color and the target is grayscale, the the
+If the source image is color and the target is gray scale, the the
 source is treated as if run through C<< convert(preset=>'gray') >>.
 
-=item rubthrough
+=item rubthrough()
 
 A more complicated way of blending images is where one image is
 put 'over' the other with a certain amount of opaqueness.  The
-method that does this is rubthrough.
+method that does this is rubthrough().
 
   $img->rubthrough(src=>$overlay,
                    tx=>30,       ty=>50,
@@ -596,17 +599,17 @@ Parameters:
 
 =item *
 
-tx, ty - location in the the target image ($self) to render the top
-left corner of the source.
+C<tx>, C<ty> - location in the the target image ($self) to render the
+top left corner of the source.
 
 =item *
 
-src_minx, src_miny - the top left corner in the source to transfer to
+C<src_minx>, C<src_miny> - the top left corner in the source to transfer to
 the target image.  Default: (0, 0).
 
 =item *
 
-src_maxx, src_maxy - the bottom right in the source image of the sub
+C<src_maxx>, C<src_maxy> - the bottom right in the source image of the sub
 image to overlay.  This position is B<non> inclusive.  Default: bottom
 right corner of the source image.
 
@@ -625,11 +628,11 @@ right corner of the source image.
                     src_miny => $src->getheight() - 20);
 
 rubthrough() returns true on success.  On failure check
-$target->errstr for the reason for failure.
+C<< $target->errstr >> for the reason for failure.
 
-=item compose
+=item compose()
 
-Draws the source image over the target image, with the src alpha
+Draws the source image over the target image, with the source alpha
 channel modified by the optional mask and the opacity.
 
   $img->compose(src=>$overlay,
@@ -650,32 +653,32 @@ Parameters:
 
 =item *
 
-src - the source image to draw onto the target.  Required.
+C<src> - the source image to draw onto the target.  Required.
 
 =item *
 
-tx, ty - location in the the target image ($self) to render the top
+C<tx>, C<ty> - location in the the target image ($self) to render the top
 left corner of the source.  These can also be supplied as C<left> and
 C<right>.  Default: (0, 0).
 
 =item *
 
-src_minx, src_miny - the top left corner in the source to transfer to
+C<src_minx>, C<src_miny> - the top left corner in the source to transfer to
 the target image.  Default: (0, 0).
 
 =item *
 
-src_maxx, src_maxy - the bottom right in the source image of the sub
+C<src_maxx>, C<src_maxy> - the bottom right in the source image of the sub
 image to overlay.  This position is B<non> inclusive.  Default: bottom
 right corner of the source image.
 
 =item *
 
-mask - a mask image.  The first channel of this image is used to
-modify the alpha channel of the source image.  This can me used to
+C<mask> - a mask image.  The first channel of this image is used to
+modify the alpha channel of the source image.  This can be used to
 mask out portions of the source image.  Where the first channel is
 zero none of the source image will be used, where the first channel is
-max the full alpha of the source image will be used, as further
+maximum the full alpha of the source image will be used, as further
 modified by the opacity.
 
 =item *
@@ -743,11 +746,11 @@ The convert method can be used to:
 
 =item *
 
-convert an RGB or RGBA image to grayscale.
+convert an RGB or RGBA image to gray scale.
 
 =item *
 
-convert a grayscale image to RGB.
+convert a gray scale image to RGB.
 
 =item *
 
@@ -763,68 +766,67 @@ The currently defined presets are:
 
 =over
 
-=item gray
+=item *
 
-=item grey
-
-converts an RGBA image into a grayscale image with alpha channel, or
-an RGB image into a grayscale image without an alpha channel.
+C<gray>, C<grey> - converts an RGBA image into a gray scale image with
+alpha channel, or an RGB image into a gray scale image without an
+alpha channel.
 
 This weights the RGB channels at 22.2%, 70.7% and 7.1% respectively.
 
-=item noalpha
+=item *
 
-removes the alpha channel from a 2 or 4 channel image.  An identity
-for other images.
+C<noalpha> - removes the alpha channel from a 2 or 4 channel image.
+An identity for other images.
 
-=item red
+=item *
 
-=item channel0
+C<red>, C<channel0> - extracts the first channel of the image into a
+single channel image
 
-extracts the first channel of the image into a single channel image
+=item *
 
-=item green
+C<green>, C<channel1> - extracts the second channel of the image into
+a single channel image
 
-=item channel1
+=item *
 
-extracts the second channel of the image into a single channel image
+C<blue>, C<channel2> - extracts the third channel of the image into a
+single channel image
 
-=item blue
+=item *
 
-=item channel2
+C<alpha> - extracts the alpha channel of the image into a single
+channel image.
 
-extracts the third channel of the image into a single channel image
-
-=item alpha
-
-extracts the alpha channel of the image into a single channel image.
-
-If the image has 1 or 3 channels (assumed to be grayscale of RGB) then
+If the image has 1 or 3 channels (assumed to be gray scale or RGB) then
 the resulting image will be all white.
 
-=item rgb
+=item *
 
-converts a grayscale image to RGB, preserving the alpha channel if any
+C<rgb>
 
-=item addalpha
+converts a gray scale image to RGB, preserving the alpha channel if any
 
-adds an alpha channel to a grayscale or RGB image.  Preserves an
-existing alpha channel for a 2 or 4 channel image.
+=item *
+
+C<addalpha> - adds an alpha channel to a gray scale or RGB image.
+Preserves an existing alpha channel for a 2 or 4 channel image.
 
 =back
 
-For example, to convert an RGB image into a greyscale image:
+For example, to convert an RGB image into a gray scale image:
 
   $new = $img->convert(preset=>'grey'); # or gray
 
-or to convert a grayscale image to an RGB image:
+or to convert a gray scale image to an RGB image:
 
   $new = $img->convert(preset=>'rgb');
 
 The presets aren't necessary simple constants in the code, some are
 generated based on the number of channels in the input image.
 
-If you want to perform some other colour transformation, you can use
+If you want to perform some other color transformation, you can use
 the 'matrix' parameter.
 
 For each output pixel the following matrix multiplication is done:
@@ -841,12 +843,12 @@ So if you want to swap the red and green channels on a 3 channel image:
                                  [ 1, 0, 0 ],
                                  [ 0, 0, 1 ] ]);
 
-or to convert a 3 channel image to greyscale using equal weightings:
+or to convert a 3 channel image to gray scale using equal weightings:
 
   $new = $img->convert(matrix=>[ [ 0.333, 0.333, 0.334 ] ])
 
-Convert a 2 channel image (grayscale with alpha) to an RGBA image with
-the grey converted to the specified RGB color:
+Convert a 2 channel image (gray scale with alpha) to an RGBA image with
+the gray converted to the specified RGB color:
 
   # set (RGB) scaled on the grey scale portion and copy the alpha
   # channel as is
@@ -874,11 +876,11 @@ alpha channel:
 =item map
 
 You can use the map method to map the values of each channel of an
-image independently using a list of lookup tables.  It's important to
+image independently using a list of look-up tables.  It's important to
 realize that the modification is made inplace.  The function simply
 returns the input image again or undef on failure.
 
-Each channel is mapped independently through a lookup table with 256
+Each channel is mapped independently through a look-up table with 256
 entries.  The elements in the table should not be less than 0 and not
 greater than 255.  If they are out of the 0..255 range they are
 clamped to the range.  If a table does not contain 256 entries it is
@@ -908,7 +910,7 @@ Since C<[]> contains fewer than 256 element the gamma channel is
 unaffected.
 
 It is also possible to simply specify an array of maps that are
-applied to the images in the rgba order.  For example to apply
+applied to the images in the RGBA order.  For example to apply
 maps to the C<red> and C<blue> channels one would use:
 
   $img->map(maps=>[\@redmap, [], \@bluemap]);

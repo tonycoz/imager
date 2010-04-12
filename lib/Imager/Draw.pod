@@ -74,14 +74,14 @@ It is possible to draw with graphics primitives onto images.  Such
 primitives include boxes, arcs, circles, polygons and lines.  The
 coordinate system in Imager has the origin C<(0,0)> in the upper left
 corner of an image with co-ordinates increasing to the right and
-bottom.  For non antialiasing operation all coordinates are rounded
-towards the nearest integer.  For antialiased operations floating
+bottom.  For non anti-aliasing operation all coordinates are rounded
+towards the nearest integer.  For anti-aliased operations floating
 point coordinates are used.
 
 Drawing is assumed to take place in a coordinate system of infinite
 resolution.  This is the typical convention and really only matters when
 it is necessary to check for off-by-one cases.  Typically it's useful to 
-think of C<(10, 20)> as C<(10.00, 20.00)> and consider the consiquences.
+think of C<(10, 20)> as C<(10.00, 20.00)> and consider the consequences.
 
 =head2 Color Parameters
 
@@ -122,9 +122,9 @@ L<Imager::Fill> for more information.
                             y1=>20, y2=>50, aa=>1, endp=>1 );
 
 X<line method>Draws a line from (x1,y1) to (x2,y2).  The endpoint
-(x2,y2) is drawn by default.  If endp of 0 is specified then the
+(x2,y2) is drawn by default.  If C<endp> of 0 is specified then the
 endpoint will not be drawn.  If C<aa> is set then the line will be
-drawn antialiased.  The I<antialias> parameter is still available for
+drawn anti-aliased.  The C<antialias> parameter is still available for
 backwards compatibility.
 
 Parameters:
@@ -133,41 +133,41 @@ Parameters:
 
 =item *
 
-x1, y1 - starting point of the line.  Required.
+C<x1>, C<y1> - starting point of the line.  Required.
 
 =item *
 
-x2, y2 - end point of the line. Required.
+C<x2>, C<y2> - end point of the line. Required.
 
 =item *
 
-color - the color of the line.  See L<"Color Parameters">.  Default:
+C<color> - the color of the line.  See L<"Color Parameters">.  Default:
 black.
 
 =item *
 
-endp - if zero the end point of the line is not drawn.  Default: 1 -
-the end point is drawn.  This is useful to set to 0 when drawning a
+C<endp> - if zero the end point of the line is not drawn.  Default: 1
+- the end point is drawn.  This is useful to set to 0 when drawing a
 series of connected lines.
 
 =item *
 
-aa - if true the line is drawn anti-aliased.  Default: 0.
+C<aa> - if true the line is drawn anti-aliased.  Default: 0.
 
 =back
 
-=item polyline
+=item polyline(points => [ [ x, y ], [ x, y ], ... ], color => color)
 
   $img->polyline(points=>[[$x0,$y0],[$x1,$y1],[$x2,$y2]],color=>$red);
   $img->polyline(x=>[$x0,$x1,$x2], y=>[$y0,$y1,$y2], aa=>1);
 
-X<polyline method>Polyline is used to draw multilple lines between a
+X<polyline method>C<polyline> is used to draw multiple lines between a
 series of points.  The point set can either be specified as an
 arrayref to an array of array references (where each such array
 represents a point).  The other way is to specify two array
 references.
 
-The I<antialias> parameter is still available for backwards compatibility.
+The C<antialias> parameter is still available for backwards compatibility.
 
 =over
 
@@ -191,13 +191,13 @@ to supplying the C<points> parameter.
 
 =item *
 
-color - the color of the line.  See L<"Color Parameters">.  Default:
-black.
+C<color> - the color of the line.  See L<"Color Parameters">.
+Default: black.
 
 =item *
 
-aa - if true the line is drawn anti-aliased.  Default: 0.  Can also be
-supplied as C<antialias> for backward compatibility.
+C<aa> - if true the line is drawn anti-aliased.  Default: 0.  Can also
+be supplied as C<antialias> for backward compatibility.
 
 =back
 
@@ -207,9 +207,9 @@ supplied as C<antialias> for backward compatibility.
   $img->box(color => $blue, xmin=>10, ymin=>30, xmax=>200, ymax=>300, 
             filled=>1);
 
-X<box method>If any of the edges of the box are ommited it will snap
+X<box method>If any of the edges of the box are omitted it will snap
 to the outer edge of the image in that direction.  If C<filled> is
-ommited the box is drawn as an outline.  Instead of a color it is
+omitted the box is drawn as an outline.  Instead of a color it is
 possible to use a C<fill> pattern:
 
   $fill = Imager::Fill->new(hatch=>'stipple');
@@ -229,44 +229,44 @@ Parameters:
 
 =item *
 
-xmin - left side of the box.  Default: 0 (left edge of the image)
+C<xmin> - left side of the box.  Default: 0 (left edge of the image)
 
 =item *
 
-ymin - top side of the box.  Default: 0 (top edge of the image)
+C<ymin> - top side of the box.  Default: 0 (top edge of the image)
 
 =item *
 
-xmax - right side of the box.  Default: $img->getwidth-1. (right edge
-of the image)
+C<xmax> - right side of the box.  Default: C<< $img->getwidth-1
+>>. (right edge of the image)
 
 =item *
 
-ymax - bottom side of the box.  Default: $img->getheight-1. (bottom
-edge of the image)
+C<ymax> - bottom side of the box.  Default: C<< $img->getheight-1
+>>. (bottom edge of the image)
 
-Note: xmax and ymax are I<inclusive> - the number of pixels drawn for
-a filled box is (xmax-xmin+1) * (ymax-ymin+1).
-
-=item *
-
-box - a reference to an array of (left, top, right, bottom)
-co-ordinates.  This is an alternative to supplying xmin, ymin, xmax,
-ymax and overrides their values.
+Note: C<xmax> and C<ymax> are I<inclusive> - the number of pixels
+drawn for a filled box is C<(xmax-xmin+1) * (ymax-ymin+1)>.
 
 =item *
 
-color - the color of the line.  See L<"Color Parameters">.  Default:
-white.  This is ignored if the filled parameter 
+C<box> - a reference to an array of (left, top, right, bottom)
+co-ordinates.  This is an alternative to supplying C<xmin>, C<ymin>,
+C<xmax>, C<ymax> and overrides their values.
 
 =item *
 
-filled - if non-zero the box is filled with I<color> instead of
+C<color> - the color of the line.  See L<"Color Parameters">.
+Default: white.  This is ignored if the filled parameter
+
+=item *
+
+C<filled> - if non-zero the box is filled with I<color> instead of
 outlined.  Default: an outline is drawn.
 
 =item *
 
-fill - the fill for the box.  If this is supplied then the box will be
+C<fill> - the fill for the box.  If this is supplied then the box will be
 filled.  See L<"Fill Parameters">.
 
 =back
@@ -291,39 +291,39 @@ Parameters:
 
 =item *
 
-x, y - center of the filled arc.  Default: center of the image.
+C<x>, C<y> - center of the filled arc.  Default: center of the image.
 
 =item *
 
-r - radius of the arc.  Default: 1/3 of min(image height, image width).
+C<r> - radius of the arc.  Default: 1/3 of min(image height, image width).
 
 =item *
 
-d1 - starting angle of the arc, in degrees.  Default: 0
+C<d1> - starting angle of the arc, in degrees.  Default: 0
 
 =item *
 
-d2 - ending angle of the arc, in degrees.  Default: 361.
+C<d2> - ending angle of the arc, in degrees.  Default: 361.
 
 =item *
 
-color - the color of the filled arc.  See L<"Color Parameters">.
+C<color> - the color of the filled arc.  See L<"Color Parameters">.
 Default: white.  Overridden by C<fill>.
 
 =item *
 
-fill - the fill for the filled arc.  See L<"Fill Parameters">
+C<fill> - the fill for the filled arc.  See L<"Fill Parameters">
 
 =item *
 
-aa - if true the filled arc is drawn anti-aliased.  Default: false.
+C<aa> - if true the filled arc is drawn anti-aliased.  Default: false.
 
 Anti-aliased arc() is experimental for now, I'm not entirely happy
 with the results in some cases.
 
 =item *
 
-filled - set to 0 to draw only an outline.
+C<filled> - set to 0 to draw only an outline.
 
 =back
 
@@ -346,7 +346,7 @@ filled - set to 0 to draw only an outline.
 
   $img->circle(color=>$green, r=>50, x=>200, y=>100, aa=>1, filled=>1);
 
-This creates an antialiased green circle with its center at (200, 100)
+This creates an anti-aliased green circle with its center at (200, 100)
 and has a radius of 50.  It's also possible to supply a C<fill> parameter
 instead of a color parameter.
 
@@ -360,39 +360,39 @@ To draw a circular outline, set C<filled> to 0:
 
 =item *
 
-x, y - center of the filled circle.  Default: center of the image.
+C<x>, C<y> - center of the filled circle.  Default: center of the image.
 
 =item *
 
-r - radius of the circle.  Default: 1/3 of min(image height, image width).
+C<r> - radius of the circle.  Default: 1/3 of min(image height, image width).
 
 =item *
 
-color - the color of the filled circle.  See L<"Color Parameters">.
+C<color> - the color of the filled circle.  See L<"Color Parameters">.
 Default: white.  Overridden by C<fill>.
 
 =item *
 
-fill - the fill for the filled circle.  See L<"Fill Parameters">
+C<fill> - the fill for the filled circle.  See L<"Fill Parameters">
 
 =item *
 
-aa - if true the filled circle is drawn anti-aliased.  Default: false.
+C<aa> - if true the filled circle is drawn anti-aliased.  Default: false.
 
 =item *
 
-filled - set to 0 to just draw an outline.
+C<filled> - set to 0 to just draw an outline.
 
 =back
 
-=item polygon
+=item polygon()
 
   $img->polygon(points=>[[$x0,$y0],[$x1,$y1],[$x2,$y2]],color=>$red);
   $img->polygon(x=>[$x0,$x1,$x2], y=>[$y0,$y1,$y2], fill=>$fill);
 
 Polygon is used to draw a filled polygon.  Currently the polygon is
-always drawn antialiased, although that will change in the future.
-Like other antialiased drawing functions its coordinates can be
+always drawn anti-aliased, although that will change in the future.
+Like other anti-aliased drawing functions its coordinates can be
 specified with floating point values.  As with other filled shapes 
 it's possible to use a C<fill> instead of a color.
 
@@ -400,7 +400,7 @@ it's possible to use a C<fill> instead of a color.
 
 =item *
 
-points - a reference to an array of references to arrays containing
+C<points> - a reference to an array of references to arrays containing
 the co-ordinates of the points in the line, for example:
 
   my @points = ( [ 0, 0 ], [ 100, 0 ], [ 100, 100 ], [ 0, 100 ] );
@@ -408,7 +408,7 @@ the co-ordinates of the points in the line, for example:
 
 =item *
 
-x, y - each is an array of x or y ordinates.  This is an alternative
+C<x>, C<y> - each is an array of x or y ordinates.  This is an alternative
 to supplying the C<points> parameter.
 
   # same as the above points example
@@ -418,16 +418,16 @@ to supplying the C<points> parameter.
 
 =item *
 
-color - the color of the filled polygon.  See L<"Color Parameters">.
+C<color> - the color of the filled polygon.  See L<"Color Parameters">.
 Default: black.  Overridden by C<fill>.
 
 =item *
 
-fill - the fill for the filled circle.  See L<"Fill Parameters">
+C<fill> - the fill for the filled circle.  See L<"Fill Parameters">
 
 =back
 
-=item flood_fill
+=item flood_fill()
 
 X<flood_fill>You can fill a region that all has the same color using
 the flood_fill() method, for example:
@@ -451,27 +451,27 @@ Parameters:
 
 =item *
 
-x, y - the start point of the fill.  
+C<x>, C<y> - the start point of the fill.  
 
 =item *
 
-color - the color of the filled area.  See L<"Color Parameters">.
+C<color> - the color of the filled area.  See L<"Color Parameters">.
 Default: white.  Overridden by C<fill>.
 
 =item *
 
-fill - the fill for the filled area.  See L<"Fill Parameters">
+C<fill> - the fill for the filled area.  See L<"Fill Parameters">
 
 =item *
 
-border - the border color of the region to be filled.  If this
+C<border> - the border color of the region to be filled.  If this
 parameter is supplied flood_fill() will stop when it finds this color.
 If this is not supplied then a normal fill is done.  C<border> can be
 supplied as a L<"Color Parameter">.
 
 =back
 
-=item setpixel
+=item setpixel()
 
   $img->setpixel(x=>50, y=>70, color=>$color);
   $img->setpixel(x=>[ 50, 60, 70 ], y=>[20, 30, 40], color=>$color);
@@ -500,7 +500,7 @@ successfully set, or false if none.
 When called with scalars for x and y, return $img on success, false on
 failure.
 
-=item getpixel
+=item getpixel()
 
   my $color = $img->getpixel(x=>50, y=>70);
   my @colors = $img->getpixel(x=>[ 50, 60, 70 ], y=>[20, 30, 40]);
@@ -514,7 +514,7 @@ scalar x and y parameters, or set each to an arrayref of ordinates.
 When called with arrays, getpixel() will return a list of colors in
 list context, and an arrayref in scalar context.
 
-To receive floating point colors from getpixel, set the C<type>
+To receive floating point colors from getpixel(), set the C<type>
 parameter to 'float'.
 
 Parameters:
@@ -552,31 +552,31 @@ Parameters:
 
 =item *
 
-x, y - the point to draw the text from.  If C<align> is 0 this is the
-top left of the string.  If C<align> is 1 (the default) then this is
-the left of the string on the baseline.  Required.
+C<x>, C<y> - the point to draw the text from.  If C<align> is 0 this
+is the top left of the string.  If C<align> is 1 (the default) then
+this is the left of the string on the baseline.  Required.
 
 =item *
 
-string - the text to draw.  Required unless you supply the C<text>
+C<string> - the text to draw.  Required unless you supply the C<text>
 parameter.
 
 =item *
 
-font - an L<Imager::Font> object representing the font to draw the
+C<font> - an L<Imager::Font> object representing the font to draw the
 text with.  Required.
 
 =item *
 
-aa - if non-zero the output will be anti-aliased.  Default: the value
+C<aa> - if non-zero the output will be anti-aliased.  Default: the value
 set in Imager::Font->new() or 0 if not set.
 
 =item *
 
-align - if non-zero the point supplied in (x,y) will be on the
+C<align> - if non-zero the point supplied in (x,y) will be on the
 base-line, if zero then (x,y) will be at the top-left of the string.
 
-ie. if drawing the string "yA" and align is 0 the point (x,y) will
+i.e. if drawing the string C<"yA"> and align is 0 the point (x,y) will
 aligned with the top of the A.  If align is 1 (the default) it will be
 aligned with the baseline of the font, typically bottom of the A,
 depending on the font used.
@@ -585,39 +585,40 @@ Default: the value set in Imager::Font->new, or 1 if not set.
 
 =item *
 
-channel - if present, the text will be written to the specified
+C<channel> - if present, the text will be written to the specified
 channel of the image and the color parameter will be ignore.
 
 =item *
 
-color - the color to draw the text in.  Default: the color supplied to
+C<color> - the color to draw the text in.  Default: the color supplied to
 Imager::Font->new, or red if none.
 
 =item *
 
-size - the point size to draw the text at.  Default: the size supplied
-to Imager::Font->new, or 15.
+C<size> - the point size to draw the text at.  Default: the size
+supplied to Imager::Font->new, or 15.
 
 =item *
 
-sizew - the width scaling to draw the text at.  Default: the value of
-C<size>.
+C<sizew> - the width scaling to draw the text at.  Default: the value
+of C<size>.
 
 =item *
 
-utf8 - for drivers that support it, treat the string as UTF8 encoded.
-For versions of perl that support Unicode (5.6 and later), this will
-be enabled automatically if the C<string> parameter is already a UTF8
-string. See L<Imager::Font/"UTF8"> for more information.
+C<utf8> - for drivers that support it, treat the string as UTF-8
+encoded.  For versions of perl that support Unicode (5.6 and later),
+this will be enabled automatically if the C<string> parameter is
+already a UTF-8 string. See L<Imager::Font/"UTF8"> for more
+information.
 
 =item *
 
-vlayout - for drivers that support it, draw the text vertically.
+C<vlayout> - for drivers that support it, draw the text vertically.
 Note: I haven't found a font that has the appropriate metrics yet.
 
 =item *
 
-text - alias for the C<string> parameter.
+C<text> - alias for the C<string> parameter.
 
 =back
 
@@ -641,123 +642,125 @@ Parameters:
 
 =item *
 
-x, y - the point to draw the text from.  If C<align> is 0 this is the
-top left of the string.  If C<align> is 1 (the default) then this is
-the left of the string on the baseline.  Required.
+C<x>, C<y> - the point to draw the text from.  If C<align> is 0 this
+is the top left of the string.  If C<align> is 1 (the default) then
+this is the left of the string on the baseline.  Required.
 
 =item *
 
-string - the text to draw.  Required unless you supply the C<text> parameter.
+C<string> - the text to draw.  Required unless you supply the C<text>
+parameter.
 
 =item *
 
-font - an L<Imager::Font> object representing the font to draw the
+C<font> - an L<Imager::Font> object representing the font to draw the
 text with.  Required.
 
 =item *
 
-aa - if non-zero the output will be anti-aliased
+C<aa> - if non-zero the output will be anti-aliased
 
 =item *
 
-valign - vertical alignment of the text against (x,y)
+C<valign> - vertical alignment of the text against (x,y)
 
 =over
 
 =item *
 
-top - Point is at the top of the text.
+C<top> - Point is at the top of the text.
 
 =item *
 
-bottom - Point is at the bottom of the text.
+C<bottom> - Point is at the bottom of the text.
 
 =item *
 
-baseline - Point is on the baseline of the text.  This is the default.
+C<baseline> - Point is on the baseline of the text.  This is the default.
 
 =item *
 
-center - Point is vertically centered within the text.
+C<center> - Point is vertically centered within the text.
 
 =back
 
 =item *
 
-halign - horizontal alignment of the text against (x,y)
+C<halign> - horizontal alignment of the text against (x,y)
 
 =over
 
 =item *
 
-left - The point is at the left of the text.  This is the default.
+C<left> - The point is at the left of the text.  This is the default.
 
 =item *
 
-start - The point is at the start point of the text.
+C<start> - The point is at the start point of the text.
 
 =item *
 
-center - The point is horizontally centered within the text.
+C<center> - The point is horizontally centered within the text.
 
 =item *
 
-right - The point is at the right end of the text.
+C<right> - The point is at the right end of the text.
 
 =item *
 
-end - The point is at the end point of the text.
+C<end> - The point is at the end point of the text.
 
 =back
 
 =item *
 
-channel - if present, the text will be written to the specified
+C<channel> - if present, the text will be written to the specified
 channel of the image and the color parameter will be ignore.
 
 =item *
 
-color - the color to draw the text in.  Default: the color supplied to
+C<color> - the color to draw the text in.  Default: the color supplied to
 Imager::Font->new, or red if none.
 
 =item *
 
-size - the point size to draw the text at.  Default: the size supplied
+C<size> - the point size to draw the text at.  Default: the size supplied
 to Imager::Font->new, or 15.
 
 =item *
 
-sizew - the width scaling to draw the text at.  Default: the value of
+C<sizew> - the width scaling to draw the text at.  Default: the value of
 C<size>.
 
 =item *
 
-utf8 - for drivers that support it, treat the string as UTF8 encoded.
-For versions of perl that support Unicode (5.6 and later), this will
-be enabled automatically if the C<string> parameter is already a UTF8
-string. See L<Imager::Font/"UTF8"> for more information.
+C<utf8> - for drivers that support it, treat the string as UTF-8
+encoded.  For versions of perl that support Unicode (5.6 and later),
+this will be enabled automatically if the C<string> parameter is
+already a UTF-8 string. See L<Imager::Font/"UTF-8"> for more
+information.
 
 =item *
 
-vlayout - for drivers that support it, draw the text vertically.
+C<vlayout> - for drivers that support it, draw the text vertically.
 Note: I haven't found a font that has the appropriate metrics yet.
 
 =item *
 
-text - alias for the C<string> parameter.
+C<text> - alias for the C<string> parameter.
 
 =back
 
 On success returns a list of bounds of the drawn text, in the order
 left, top, right, bottom.
 
-On error, align_string() returns an empty list and you can use
-$img->errstr to get the reason for the error.
+On error, align_string() returns an empty list and you can use 
+C<< $img->errstr >> to get the reason for the error.
 
-=item setscanline
+=item setscanline()
 
 Set all or part of a horizontal line of pixels to an image.  This
-method is most useful in conjuction with L</getscanline>.
+method is most useful in conjunction with L</getscanline>.
 
 The parameters you can pass are:
 
@@ -765,15 +768,15 @@ The parameters you can pass are:
 
 =item *
 
-y - vertical position of the scanline.  This parameter is required.
+C<y> - vertical position of the scan line.  This parameter is required.
 
 =item *
 
-x - position to start on the scanline.  Default: 0
+C<x> - position to start on the scan line.  Default: 0
 
 =item *
 
-pixels - either a reference to an array containing Imager::Color
+C<pixels> - either a reference to an array containing Imager::Color
 objects, an reference to an array containing Imager::Color::Float
 objects or a scalar containing packed color data.
 
@@ -785,12 +788,12 @@ color data.
 
 =item *
 
-type - the type of pixel data supplied.  If you supply an array
+C<type> - the type of pixel data supplied.  If you supply an array
 reference of object then this is determined automatically.  If you
-supply packed color data this defaults to '8bit', if your data is
-packed floating point color data then set this to 'float'.
+supply packed color data this defaults to C<'8bit'>, if your data is
+packed floating point color data then set this to C<'float'>.
 
-You can use float or 8bit samples with any image.
+You can use C<float> or C<8bit> samples with any image.
 
 If this is 'index' then pixels should be either an array of palette
 color indexes or a packed string of color indexes.
@@ -843,7 +846,7 @@ done with convert too:
     $im->setscanline(y=>$y, pixels=>$row);
   }
 
-=item getscanline
+=item getscanline()
 
 Read all or part of a horizontal line of pixels from an image.  This
 method is most useful in conjunction with L</setscanline>.
@@ -854,21 +857,21 @@ The parameters you can pass are:
 
 =item *
 
-y - vertical position of the scanline.  This parameter is required.
+C<y> - vertical position of the scan line.  This parameter is required.
 
 =item *
 
-x - position to start on the scanline.  Default: 0
+C<x> - position to start on the scan line.  Default: 0
 
 =item *
 
-width - number of pixels to read.  Default: $img->getwidth - x
+C<width> - number of pixels to read.  Default: $img->getwidth - x
 
 =item *
 
-type - the type of pixel data to return.  Default: C<8bit>.
+C<type> - the type of pixel data to return.  Default: C<8bit>.
 
-Permited values are C<8bit> and C<float> and C<index>.
+Permitted values are C<8bit> and C<float> and C<index>.
 
 =back
 
@@ -917,7 +920,7 @@ Or do it using packed data:
 
 Some of the examples for L</setscanline> for more examples.
 
-=item getsamples
+=item getsamples()
 
 Read specified channels from all or part of a horizontal line of
 pixels from an image.
@@ -928,37 +931,37 @@ The parameters you can pass are:
 
 =item *
 
-y - vertical position of the scanline.  This parameter is required.
+C<y> - vertical position of the scan line.  This parameter is required.
 
 =item *
 
-x - position to start on the scanline.  Default: 0
+C<x> - position to start on the scan line.  Default: 0
 
 =item *
 
-width - number of pixels to read.  Default: $img->getwidth - x
+C<width> - number of pixels to read.  Default: C<< $img->getwidth - x >>
 
 =item *
 
-type - the type of sample data to return.  Default: C<8bit>.
+C<type> - the type of sample data to return.  Default: C<8bit>.
 
-Permited values are C<8bit> and C<float>.
+Permitted values are C<8bit> and C<float>.
 
 As of Imager 0.61 this can be C<16bit> only for 16 bit images.
 
 =item *
 
-channels - a reference to an array of channels to return, where 0 is
-the first channel.  Default: C<< [ 0 .. $self->getchannels()-1 ] >>
+C<channels> - a reference to an array of channels to return, where 0
+is the first channel.  Default: C<< [ 0 .. $self->getchannels()-1 ] >>
 
 =item *
 
-target - if an array reference is supplied in target then the samples
+C<target> - if an array reference is supplied in target then the samples
 will be stored here instead of being returned.
 
 =item *
 
-offset - the offset within the array referenced by I<target>
+C<offset> - the offset within the array referenced by I<target>
 
 =back
 
@@ -985,7 +988,7 @@ channel:
     }
   }
 
-Example: Convert a 2 channel grey image into a 4 channel RGBA image:
+Example: Convert a 2 channel gray image into a 4 channel RGBA image:
 
   # this could be done with convert() instead
   my $out = Imager->new(xsize => $src->getwidth(), 
@@ -1003,7 +1006,7 @@ Retrieve 16-bit samples:
     $img->getsamples(x => 0, y => $y, target => \@samples, type => '16bit');
   }
 
-=item setsamples
+=item setsamples()
 
 This allows writing of samples back to some images.  Currently this is
 only supported for 16-bit/sample images.
@@ -1014,36 +1017,36 @@ Parameters:
 
 =item *
 
-y - vertical position of the scanline.  This parameter is required.
+C<y> - vertical position of the scan line.  This parameter is required.
 
 =item *
 
-x - position to start on the scanline.  Default: 0
+C<x> - position to start on the scan line.  Default: 0
 
 =item *
 
-width - number of pixels to write.  Default: $img->getwidth - x.  The
-minimum of this and the number of pixels represented by the samples
-provided will be written.
+C<width> - number of pixels to write.  Default: C<< $img->getwidth - x >>.
+The minimum of this and the number of pixels represented by the
+samples provided will be written.
 
 =item *
 
-type - the type of sample data to write.  This parameter is required.
+C<type> - the type of sample data to write.  This parameter is required.
 
 As of Imager 0.61 this can only be C<16bit> only for 16 bit images.
 
 =item *
 
-channels - a reference to an array of channels to return, where 0 is
+C<channels> - a reference to an array of channels to return, where 0 is
 the first channel.  Default: C<< [ 0 .. $self->getchannels()-1 ] >>
 
 =item *
 
-data - a reference to an array of samples to write.  Required.
+C<data> - a reference to an array of samples to write.  Required.
 
 =item *
 
-offset - the starting offset within the array referenced by I<data>
+C<offset> - the starting offset within the array referenced by I<data>
 
 =back
 
@@ -1089,69 +1092,69 @@ following:
 
 =over
 
-=item none
+=item C<none>
 
 The fill pixel replaces the target pixel.
 
-=item normal
+=item C<normal>
 
 The fill pixels alpha value is used to combine it with the target pixel.
 
-=item multiply
+=item C<multiply>
 
-=item mult
+=item C<mult>
 
 Each channel of fill and target is multiplied, and the result is
 combined using the alpha channel of the fill pixel.
 
-=item dissolve
+=item C<dissolve>
 
 If the alpha of the fill pixel is greater than a random number, the
 fill pixel is alpha combined with the target pixel.
 
-=item add
+=item C<add>
 
 The channels of the fill and target are added together, clamped to the range of the samples and alpha combined with the target.
 
-=item subtract
+=item C<subtract>
 
 The channels of the fill are subtracted from the target, clamped to be
 >= 0, and alpha combined with the target.
 
-=item diff
+=item C<diff>
 
 The channels of the fill are subtracted from the target and the
 absolute value taken this is alpha combined with the target.
 
-=item lighten
+=item C<lighten>
 
 The higher value is taken from each channel of the fill and target
 pixels, which is then alpha combined with the target.
 
-=item darken
+=item C<darken>
 
 The higher value is taken from each channel of the fill and target
 pixels, which is then alpha combined with the target.
 
-=item hue
+=item C<hue>
 
 The combination of the saturation and value of the target is combined
 with the hue of the fill pixel, and is then alpha combined with the
 target.
 
-=item sat
+=item C<sat>
 
 The combination of the hue and value of the target is combined
 with the saturation of the fill pixel, and is then alpha combined with the
 target.
 
-=item value
+=item C<value>
 
 The combination of the hue and value of the target is combined
 with the value of the fill pixel, and is then alpha combined with the
 target.
 
-=item color
+=item C<color>
 
 The combination of the value of the target is combined with the hue
 and saturation of the fill pixel, and is then alpha combined with the
@@ -1161,7 +1164,7 @@ target.
 
 =over
 
-=item combines
+=item combines()
 
 Returns a list of possible combine types.
 
@@ -1169,8 +1172,8 @@ Returns a list of possible combine types.
 
 =head1 BUGS
 
-box() does not support antialiasing yet.  Arc, is only filled as of
-yet.  Default color is not unified yet.
+box() does not support anti-aliasing yet.  Default color is not
+unified yet.
 
 =head1 AUTHOR
 

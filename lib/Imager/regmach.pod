@@ -6,7 +6,7 @@ Imager::transform2().
 =head1 SYNOPSIS
 
 The register machine is a complete rewrite of the stack machine
-orginally used by Imager::transform(), written for use by
+originally used by Imager::transform(), written for use by
 Imager::transform2().
 
 =head1 DESCRIPTION
@@ -15,7 +15,7 @@ Imager::transform2().
 
 The register machine is a fast implementation of a small instruction
 set designed for evaluating an arithmetic expression to produce a
-colour for an image.
+color for an image.
 
 The machine takes as input:
 
@@ -30,26 +30,26 @@ An array of instructions
 An array of numeric registers.  Some registers are initialized as
 literals.
 
-=item colour registers
+=item color registers
 
-An array of colour registers.  Currently these registers aren't
+An array of color registers.  Currently these registers aren't
 initialized.
 
 =item input images
 
-An array of Imager i_img pointers.  The getpn operators read pixels
+An array of Imager i_img pointers.  The C<getpn> operators read pixels
 from these images.
 
 =back
 
-The instructions supplied each take up to 4 input numeric or colour
-registers with a single output numeric or colour register.  The
+The instructions supplied each take up to 4 input numeric or color
+registers with a single output numeric or color register.  The
 machine attempts to execute instructions as safely as possible,
 assuming that correct instructions have been provided, eg. the machine
 protects against divide by zero, but doesn't check register numbers
 for validity.
 
-The final instruction must be a 'ret' instruction, which returns the
+The final instruction must be a C<ret> instruction, which returns the
 result ;)
 
 =head2 Adding new instructions
@@ -60,15 +60,15 @@ To add a new instruction:
 
 =item 1
 
-Add a new opcode to the enumeration in regmach.h - make sure to add
-comment after the enum name giving the input registers (rX for
-numeric, pX for colour) that the instruction takes.  These must be in
+Add a new opcode to the enumeration in F<regmach.h> - make sure to add
+comment after the enum name giving the input registers (C<rX> for
+numeric, C<pX> for color) that the instruction takes.  These must be in
 the order that the instruction expects to take the.  Put a letter (r
 or p) after -> to indicate the result type.
 
 =item 2
 
-Add a case to regmach.c that executes the instruction.
+Add a case to F<regmach.c> that executes the instruction.
 
 =item 3
 
@@ -76,7 +76,7 @@ make
 
 =back
 
-The makefile should rebuild the Regops.pm file, and your new
+The F<Makefile> should rebuild the F<Regops.pm> file, and your new
 instruction will be added as a function.
 
 If you want to add a single alternative instruction that might take
@@ -97,7 +97,7 @@ performance loss.
 =head1 WARNINGS
 
 If you feed bad 'machine code' to the register machine, you have a
-good chance of a SIGSEGV.
+good chance of a C<SIGSEGV>.
 
 =cut
 
