@@ -14,6 +14,9 @@ Bug fixes:
 
  - add an (unshipped) author test to spellcheck Imager's POD.
 
+ - update the TIFF file format documentation
+   https://rt.cpan.org/Ticket/Display.html?id=56510
+
 Imager 0.73 - 15 Mar 2010
 ===========
 

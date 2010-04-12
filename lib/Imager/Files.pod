@@ -784,9 +784,40 @@ objects of the color table generated for the image file.
 =head2 TIFF (Tagged Image File Format)
 
 Imager can write images to either paletted or RGB TIFF images,
-depending on the type of the source image.  Currently if you write a
-16-bit/sample or double/sample image it will be written as an
-8-bit/sample image.  Only 1 or 3 channel images can be written.
+depending on the type of the source image.
+
+When writing direct color images to TIFF the sample size of the
+output file depends on the input:
+
+=over
+
+=item *
+
+double/sample - written as 32-bit/sample TIFF
+
+=item *
+
+16-bit/sample - written as 16-bit/sample TIFF
+
+=item *
+
+8-bit/sample - written as 8-bit/sample TIFF
+
+=back
+
+For paletted images:
+
+=over
+
+=item *
+
+C<< $img->is_bilevel >> is true - the image is written as bi-level
+
+=item *
+
+otherwise - image is written as paletted.
+
+=back
 
 If you are creating images for faxing you can set the I<class>
 parameter set to C<fax>.  By default the image is written in fine
@@ -804,22 +835,23 @@ use dithering:
 
 =over
 
-=item class
+=item *
 
-If set to 'fax' the image will be written as a bi-level fax image.
+C<class> - If set to 'fax' the image will be written as a bi-level fax
+image.
 
-=item fax_fine
+=item *
 
-By default when I<class> is set to 'fax' the image is written in fine
-mode, you can select normal mode by setting I<fax_fine> to 0.
+C<fax_fine> - By default when C<class> is set to 'fax' the image is
+written in fine mode, you can select normal mode by setting
+C<fax_fine> to 0.
 
 =back
 
 Imager should be able to read any TIFF image you supply.  Paletted
 TIFF images are read as paletted Imager images, since paletted TIFF
 images have 16-bits/sample (48-bits/color) this means the bottom
-8-bits are lost, but this shouldn't be a big deal.  Currently all
-direct color images are read at 8-bits/sample.
+8-bits are lost, but this shouldn't be a big deal.
 
 TIFF supports the spatial resolution tags.  See the
 C<tiff_resolutionunit> tag for some extra options.
@@ -827,6 +859,11 @@ C<tiff_resolutionunit> tag for some extra options.
 As of Imager 0.62 Imager reads:
 
 =over
+
+=item *
+
+8-bit/sample gray, RGB or CMYK images, including a possible alpha
+channel as an 8-bit/sample image.
 
 =item *
 
@@ -847,6 +884,11 @@ which other formats will also write as bi-level.
 
 tiled paletted images are now handled correctly
 
+=item *
+
+other images are read using C<tifflib>'s RGBA interface as
+8-bit/sample images.
+
 =back
 
 The following tags are set in a TIFF image when read, and can be set
@@ -854,10 +896,10 @@ to control output:
 
 =over
 
-=item tiff_compression
+=item *
 
-When reading an image this is set to the numeric value of the TIFF
-compression tag.
+C<tiff_compression> - When reading an image this is set to the numeric
+value of the TIFF compression tag.
 
 On writing you can set this to either a numeric compression tag value,
 or one of the following values:
@@ -892,61 +934,51 @@ C<libjpeg>'s location.
   $im->write(file => 'foo.tif', tiff_compression => 'lzw')
     or die $im->errstr;
 
-=item tiff_jpegquality
+=item *
 
-If I<tiff_compression> if C<jpeg> then this can be a number from 1 to
-100 giving the JPEG compression quality.  High values are better
-quality and larger files.
+C<tags, tiff_jpegquality>C<tiff_jpegquality> - If C<tiff_compression>
+is C<jpeg> then this can be a number from 1 to 100 giving the JPEG
+compression quality.  High values are better quality and larger files.
 
-=item tiff_resolutionunit
+=item *
 
-The value of the C<ResolutionUnit> tag.  This is ignored on writing if
-the i_aspect_only tag is non-zero.
+X<tags, tiff_resolutionunit>C<tiff_resolutionunit> - The value of the
+C<ResolutionUnit> tag.  This is ignored on writing if the
+i_aspect_only tag is non-zero.
 
 The C<i_xres> and C<i_yres> tags are expressed in pixels per inch no
 matter the value of this tag, they will be converted to/from the value
 stored in the TIFF file.
 
-=item tiff_resolutionunit_name
+=item *
 
-This is set when reading a TIFF file to the name of the unit given by
+X<tags, tiff_resolutionunit_name>C<tiff_resolutionunit_name> - This is
+set when reading a TIFF file to the name of the unit given by
 C<tiff_resolutionunit>.  Possible results include C<inch>,
 C<centimeter>, C<none> (the C<i_aspect_only> tag is also set reading
 these files) or C<unknown>.
 
-=item tiff_bitspersample
+=item *
 
-Bits per sample from the image.  This value is not used when writing
-an image, it is only set on a read image.
+X<tags, tiff_bitspersample>C<tiff_bitspersample> - Bits per sample
+from the image.  This value is not used when writing an image, it is
+only set on a read image.
 
-=item tiff_photometric
+=item *
 
-Value of the C<PhotometricInterpretation> tag from the image.  This
-value is not used when writing an image, it is only set on a read
-image.
+X<tags, tiff_photometric>C<tiff_photometric> - Value of the
+C<PhotometricInterpretation> tag from the image.  This value is not
+used when writing an image, it is only set on a read image.
 
-=item tiff_documentname
+=item *
 
-=item tiff_imagedescription
-
-=item tiff_make
-
-=item tiff_model
-
-=item tiff_pagename
-
-=item tiff_software
-
-=item tiff_datetime
-
-=item tiff_artist
-
-=item tiff_hostcomputer
-
-Various strings describing the image.  tiff_datetime must be formatted
-as "YYYY:MM:DD HH:MM:SS".  These correspond directly to the mixed case
-names in the TIFF specification.  These are set in images read from a
-TIFF and saved when writing a TIFF image.
+C<tiff_documentname>, C<tiff_imagedescription>, C<tiff_make>,
+C<tiff_model>, C<tiff_pagename>, C<tiff_software>, C<tiff_datetime>,
+C<tiff_artist>, C<tiff_hostcomputer> - Various strings describing the
+image.  C<tiff_datetime> must be formatted as "YYYY:MM:DD HH:MM:SS".
+These correspond directly to the mixed case names in the TIFF
+specification.  These are set in images read from a TIFF and saved
+when writing a TIFF image.
 
 =back
 
@@ -957,23 +989,8 @@ some page other than the first.  The page is 0 based:
   $image->read(file=>"example.tif", page=>1)
     or die "Cannot read second page: ",$image->errstr,"\n";
 
-Note: Imager uses the TIFF*RGBA* family of C<libtiff> functions,
-unfortunately these don't support alpha channels on CMYK images.  This
-will result in a full coverage alpha channel on CMYK images with an
-alpha channel, until this is implemented in C<libtiff> (or Imager's TIFF
-implementation changes.)
-
 If you read an image with multiple alpha channels, then only the first
 alpha channel will be read.
-
-Currently Imager's TIFF support reads all direct color images as 8-bit
-RGB images, this may change in the future to reading 16-bit/sample
-images.
-
-Currently tags that control the output color type and compression are
-ignored when writing, this may change in the future.  If you have
-processes that rely upon Imager always producing C<packbits>
-compressed RGB images, you should strip any tags before writing.
 
 =head2 BMP (Windows Bitmap)
 
