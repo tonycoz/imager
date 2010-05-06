@@ -1,3 +1,4 @@
+#define PERL_NO_GET_CONTEXT
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -27,6 +28,7 @@ extern "C" {
 
 /* These functions are all shared - then comes platform dependant code */
 static int getstr(void *hv_t,char *key,char **store) {
+  dTHX;
   SV** svpp;
   HV* hv=(HV*)hv_t;
 
@@ -41,6 +43,7 @@ static int getstr(void *hv_t,char *key,char **store) {
 }
 
 static int getint(void *hv_t,char *key,int *store) {
+  dTHX;
   SV** svpp;
   HV* hv=(HV*)hv_t;  
 
@@ -54,6 +57,7 @@ static int getint(void *hv_t,char *key,int *store) {
 }
 
 static int getdouble(void *hv_t,char* key,double *store) {
+  dTHX;
   SV** svpp;
   HV* hv=(HV*)hv_t;
 
@@ -66,6 +70,7 @@ static int getdouble(void *hv_t,char* key,double *store) {
 }
 
 static int getvoid(void *hv_t,char* key,void **store) {
+  dTHX;
   SV** svpp;
   HV* hv=(HV*)hv_t;
 
@@ -80,6 +85,7 @@ static int getvoid(void *hv_t,char* key,void **store) {
 }
 
 static int getobj(void *hv_t,char *key,char *type,void **store) {
+  dTHX;
   SV** svpp;
   HV* hv=(HV*)hv_t;
 
@@ -103,6 +109,7 @@ static int getobj(void *hv_t,char *key,char *type,void **store) {
 UTIL_table_t i_UTIL_table={getstr,getint,getdouble,getvoid,getobj};
 
 void my_SvREFCNT_dec(void *p) {
+  dTHX;
   SvREFCNT_dec((SV*)p);
 }
 
@@ -121,6 +128,7 @@ typedef struct i_reader_data_tag
 
 /* used by functions that want callbacks */
 static int read_callback(char *userdata, char *buffer, int need, int want) {
+  dTHX;
   i_reader_data *rd = (i_reader_data *)userdata;
   int count;
   int result;
@@ -172,6 +180,7 @@ typedef struct
 
 /* used by functions that want callbacks */
 static int write_callback(char *userdata, char const *data, int size) {
+  dTHX;
   i_writer_data *wd = (i_writer_data *)userdata;
   int count;
   int success;
@@ -243,6 +252,7 @@ Low-level function to call the perl writer callback.
 */
 
 static ssize_t call_writer(struct cbdata *cbd, void const *buf, size_t size) {
+  dTHX;
   int count;
   int success;
   SV *sv;
@@ -277,6 +287,7 @@ static ssize_t call_writer(struct cbdata *cbd, void const *buf, size_t size) {
 
 static ssize_t call_reader(struct cbdata *cbd, void *buf, size_t size, 
                            size_t maxread) {
+  dTHX;
   int count;
   int result;
   SV *data;
@@ -323,6 +334,7 @@ static ssize_t call_reader(struct cbdata *cbd, void *buf, size_t size,
 }
 
 static ssize_t write_flush(struct cbdata *cbd) {
+  dTHX;
   ssize_t result;
 
   if (cbd->used) {
@@ -336,6 +348,7 @@ static ssize_t write_flush(struct cbdata *cbd) {
 }
 
 static off_t io_seeker(void *p, off_t offset, int whence) {
+  dTHX;
   struct cbdata *cbd = p;
   int count;
   off_t result;
@@ -380,6 +393,7 @@ static off_t io_seeker(void *p, off_t offset, int whence) {
 }
 
 static ssize_t io_writer(void *p, void const *data, size_t size) {
+  dTHX;
   struct cbdata *cbd = p;
 
   /* printf("io_writer(%p, %p, %u)\n", p, data, size); */
@@ -413,6 +427,7 @@ static ssize_t io_writer(void *p, void const *data, size_t size) {
 
 static ssize_t 
 io_reader(void *p, void *data, size_t size) {
+  dTHX;
   struct cbdata *cbd = p;
   ssize_t total;
   char *out = data; /* so we can do pointer arithmetic */
@@ -471,6 +486,7 @@ io_reader(void *p, void *data, size_t size) {
 }
 
 static int io_closer(void *p) {
+  dTHX;
   struct cbdata *cbd = p;
 
   if (cbd->writing && cbd->used > 0) {
@@ -499,6 +515,7 @@ static int io_closer(void *p) {
 }
 
 static void io_destroyer(void *p) {
+  dTHX;
   struct cbdata *cbd = p;
 
   SvREFCNT_dec(cbd->writecb);
@@ -573,7 +590,7 @@ static struct value_name orddith_names[] =
 };
 
 /* look through the hash for quantization options */
-static void handle_quant_opts(i_quantize *quant, HV *hv)
+static void handle_quant_opts(pTHX_ i_quantize *quant, HV *hv)
 {
   /*** POSSIBLY BROKEN: do I need to unref the SV from hv_fetch ***/
   SV **sv;
@@ -711,7 +728,7 @@ static void cleanup_quant_opts(i_quantize *quant) {
 }
 
 /* copies the color map from the hv into the colors member of the HV */
-static void copy_colors_back(HV *hv, i_quantize *quant) {
+static void copy_colors_back(pTHX_ HV *hv, i_quantize *quant) {
   SV **sv;
   AV *av;
   int i;
@@ -738,7 +755,7 @@ static void copy_colors_back(HV *hv, i_quantize *quant) {
 
 /* loads the segments of a fountain fill into an array */
 static i_fountain_seg *
-load_fount_segs(AV *asegs, int *count) {
+load_fount_segs(pTHX_ AV *asegs, int *count) {
   /* Each element of segs must contain:
      [ start, middle, end, c0, c1, segtype, colortrans ]
      start, middle, end are doubles from 0 to 1
@@ -884,6 +901,7 @@ static int seg_compare(const void *vleft, const void *vright) {
 
 static SV *
 i_int_hlines_dump(i_int_hlines *hlines) {
+  dTHX;
   SV *dump = newSVpvf("start_y: %d limit_y: %d start_x: %d limit_x: %d\n",
 	hlines->start_y, hlines->limit_y, hlines->start_x, hlines->limit_x);
   int y;
@@ -2566,7 +2584,7 @@ i_writegif_gen(fd, ...)
 	quant.mc_size = 256;
 	quant.transp = tr_threshold;
 	quant.tr_threshold = 127;
-	handle_quant_opts(&quant, hv);
+	handle_quant_opts(aTHX_ &quant, hv);
 	img_count = items - 2;
 	RETVAL = 1;
 	if (img_count < 1) {
@@ -2594,7 +2612,7 @@ i_writegif_gen(fd, ...)
           }
 	  myfree(imgs);
           if (RETVAL) {
-	    copy_colors_back(hv, &quant);
+	    copy_colors_back(aTHX_ hv, &quant);
           }
 	}
         ST(0) = sv_newmortal();
@@ -2623,7 +2641,7 @@ i_writegif_callback(cb, maxbuffer,...)
 	quant.mc_size = 256;
 	quant.transp = tr_threshold;
 	quant.tr_threshold = 127;
-	handle_quant_opts(&quant, hv);
+	handle_quant_opts(aTHX_ &quant, hv);
 	img_count = items - 3;
 	RETVAL = 1;
 	if (img_count < 1) {
@@ -2648,7 +2666,7 @@ i_writegif_callback(cb, maxbuffer,...)
           }
 	  myfree(imgs);
           if (RETVAL) {
-	    copy_colors_back(hv, &quant);
+	    copy_colors_back(aTHX_ hv, &quant);
           }
 	}
 	ST(0) = sv_newmortal();
@@ -2675,7 +2693,7 @@ i_writegif_wiol(ig, opts,...)
 	quant.mc_size = 256;
 	quant.transp = tr_threshold;
 	quant.tr_threshold = 127;
-	handle_quant_opts(&quant, hv);
+	handle_quant_opts(aTHX_ &quant, hv);
 	img_count = items - 2;
 	RETVAL = 1;
 	if (img_count < 1) {
@@ -2699,7 +2717,7 @@ i_writegif_wiol(ig, opts,...)
           }
 	  myfree(imgs);
           if (RETVAL) {
-	    copy_colors_back(hv, &quant);
+	    copy_colors_back(aTHX_ hv, &quant);
           }
 	}
 	ST(0) = sv_newmortal();
@@ -3399,7 +3417,7 @@ i_fountain(im, xa, ya, xb, yb, type, repeat, combine, super_sample, ssample_para
 	    croak("i_fountain: argument 11 must be an array ref");
         
 	asegs = (AV *)SvRV(ST(10));
-        segs = load_fount_segs(asegs, &count);
+        segs = load_fount_segs(aTHX_ asegs, &count);
         RETVAL = i_fountain(im, xa, ya, xb, yb, type, repeat, combine, 
                             super_sample, ssample_param, count, segs);
         myfree(segs);
@@ -3426,7 +3444,7 @@ i_new_fill_fount(xa, ya, xb, yb, type, repeat, combine, super_sample, ssample_pa
 	    croak("i_fountain: argument 11 must be an array ref");
         
 	asegs = (AV *)SvRV(ST(9));
-        segs = load_fount_segs(asegs, &count);
+        segs = load_fount_segs(aTHX_ asegs, &count);
         RETVAL = i_new_fill_fount(xa, ya, xb, yb, type, repeat, combine, 
                                   super_sample, ssample_param, count, segs);
         myfree(segs);        
@@ -3623,10 +3641,10 @@ i_img_to_pal(src, quant)
         hv = (HV *)SvRV(ST(1));
         memset(&quant, 0, sizeof(quant));
         quant.mc_size = 256;
-	handle_quant_opts(&quant, hv);
+	handle_quant_opts(aTHX_ &quant, hv);
         RETVAL = i_img_to_pal(src, &quant);
         if (RETVAL) {
-          copy_colors_back(hv, &quant);
+          copy_colors_back(aTHX_ hv, &quant);
         }
 	cleanup_quant_opts(&quant);
       OUTPUT:
