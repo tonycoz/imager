@@ -17,6 +17,8 @@ Bug fixes:
  - update the TIFF file format documentation
    https://rt.cpan.org/Ticket/Display.html?id=56510
 
+ - lib/Imager/IO.pod was written almost 4 years ago but never shipped.
+
 Imager 0.73 - 15 Mar 2010
 ===========
 

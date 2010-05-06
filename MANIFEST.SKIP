@@ -4,7 +4,7 @@
 
 # editor trash
 ~$
-^\#.*\#$
+(^|/)\#.*\#$
 
 # stuff we don't distribute
 ^TODO$
@@ -14,22 +14,31 @@
 ^announce/
 ^bench/
 ^design/
+^fuzz/
 ^fileformatdocs/
 ^extraimages/
 ^fontfiles/.*\.sfd$
+^t/x.*\.t$
+^imcover.perl$
 
 # might distribute one day
 ^tools/imager$
 
+
 # trash left by Inline::C
 ^_Inline/
+
+# distributions built
+^Imager-\d\.\d\d(_\d\d)?\.tar\.gz$
 
 # build trash
 Makefile$
 Makefile\.old
 \bpm_to_blib$
 \.o$
-^testout
+^testout/
+^SGI/testout/
+^SGI/SGI.c
 ^blib/
 ^Flines/Flines\.c$
 ^Imager\.c$
@@ -43,9 +52,10 @@ Makefile\.old
 ^imconfig\.h$
 ^ICO/ICO\.c$
 ^ICO/testout
-^rubthru\.c$
+^(rubthru|paste|render|scale|flip|conv|filters|gaussian|compose)\.c$
 
 # trash from profiling
 \.gcno$
 \.gcda$
 \.gcov$
+\bcover_db\b

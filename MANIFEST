@@ -171,6 +171,7 @@ lib/Imager/Fountain.pm
 lib/Imager/Handy.pod
 lib/Imager/ImageTypes.pod
 lib/Imager/Inline.pod           Using Imager with Inline::C
+lib/Imager/IO.pod		Document Imager::IO objects
 lib/Imager/LargeSamples.pod	Track large sample support
 lib/Imager/Matrix2d.pm
 lib/Imager/Preprocess.pm
