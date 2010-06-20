@@ -1558,7 +1558,7 @@ i_bezier_multi(im,xc,yc,val)
              myfree(y);
 
 
-void
+int
 i_poly_aa(im,xc,yc,val)
     Imager::ImgRaw     im
              Imager::Color  val
@@ -1570,7 +1570,7 @@ i_poly_aa(im,xc,yc,val)
 	     SV       *sv1;
 	     SV       *sv2;
 	     int i;
-	     PPCODE:
+	     CODE:
 	     ICL_info(val);
 	     if (!SvROK(ST(1))) croak("Imager: Parameter 1 to i_poly_aa must be a reference to an array\n");
 	     if (SvTYPE(SvRV(ST(1))) != SVt_PVAV) croak("Imager: Parameter 1 to i_poly_aa must be a reference to an array\n");
@@ -1588,11 +1588,13 @@ i_poly_aa(im,xc,yc,val)
 	       x[i]=(double)SvNV(sv1);
 	       y[i]=(double)SvNV(sv2);
 	     }
-             i_poly_aa(im,len,x,y,val);
+             RETVAL = i_poly_aa(im,len,x,y,val);
              myfree(x);
              myfree(y);
+	     OUTPUT:
+	       RETVAL
 
-void
+int
 i_poly_aa_cfill(im,xc,yc,fill)
     Imager::ImgRaw     im
      Imager::FillHandle     fill
@@ -1604,7 +1606,7 @@ i_poly_aa_cfill(im,xc,yc,fill)
 	     SV       *sv1;
 	     SV       *sv2;
 	     int i;
-	     PPCODE:
+	     CODE:
 	     if (!SvROK(ST(1))) croak("Imager: Parameter 1 to i_poly_aa_cfill must be a reference to an array\n");
 	     if (SvTYPE(SvRV(ST(1))) != SVt_PVAV) croak("Imager: Parameter 1 to i_poly_aa_cfill must be a reference to an array\n");
 	     if (!SvROK(ST(2))) croak("Imager: Parameter 1 to i_poly_aa_cfill must be a reference to an array\n");
@@ -1621,9 +1623,11 @@ i_poly_aa_cfill(im,xc,yc,fill)
 	       x[i]=(double)SvNV(sv1);
 	       y[i]=(double)SvNV(sv2);
 	     }
-             i_poly_aa_cfill(im,len,x,y,fill);
+             RETVAL = i_poly_aa_cfill(im,len,x,y,fill);
              myfree(x);
              myfree(y);
+	     OUTPUT:
+	       RETVAL
 
 
 

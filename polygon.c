@@ -8,8 +8,12 @@
 #define coarse(x) ((x)/16)
 #define fine(x)   ((x)%16)
 
+/*#define DEBUG_POLY*/
+#ifdef DEBUG_POLY
+#define POLY_DEB(x) x
+#else
 #define POLY_DEB(x)
-
+#endif
 
 
 typedef int pcord;
@@ -41,17 +45,7 @@ typedef struct {
 typedef struct {
   int *line;		/* temporary buffer for scanline */
   int linelen;		/* length of scanline */
-  ss_pair *ss_list;	/* list of start stop linepairs */
-  int ssnext;		/* index of the next pair to use */
-  int sslen;		/* maximum number of start stop pairs */
 } ss_scanline;
-
-
-
-
-
-
-
 
 static
 int
@@ -126,7 +120,6 @@ point_set_new(const double *x, const double *y, int l) {
 static
 void
 ss_scanline_reset(ss_scanline *ss) {
-  ss->ssnext = 0;
   memset(ss->line, 0, sizeof(int) * ss->linelen);
 }
 
@@ -135,8 +128,6 @@ void
 ss_scanline_init(ss_scanline *ss, int linelen, int linepairs) {
   ss->line    = mymalloc( sizeof(int) * linelen );
   ss->linelen = linelen;
-  ss->ss_list = mymalloc( sizeof(ss_pair) * linepairs );
-  ss->sslen   = linepairs;
   ss_scanline_reset(ss);
 }
 
@@ -144,7 +135,6 @@ static
 void
 ss_scanline_exorcise(ss_scanline *ss) {
   myfree(ss->line);
-  myfree(ss->ss_list);
 }
   
 		     
@@ -242,6 +232,7 @@ scanline_flush(i_img *im, ss_scanline *ss, int y, void *ctx) {
   int x, ch, tv;
   i_color t;
   i_color *val = (i_color *)ctx;
+  POLY_DEB( printf("Flushing line %d\n", y) );
   for(x=0; x<im->xsize; x++) {
     tv = saturate(ss->line[x]);
     i_gpix(im, x, y, &t);
@@ -274,6 +265,12 @@ pixel_coverage(p_line *line, pcord minx, pcord maxx, pcord  miny, pcord maxy) {
   double lycross, rycross;
   int l, r;
 
+  POLY_DEB
+    (
+     printf("    pixel_coverage(..., minx %g, maxx%g, miny %g, maxy %g)\n", 
+	    minx/16.0, maxx/16.0, miny/16.0, maxy/16.0)
+     );
+
   if (!line->updown) {
     l = r = 0;
   } else {
@@ -283,9 +280,9 @@ pixel_coverage(p_line *line, pcord minx, pcord maxx, pcord  miny, pcord maxy) {
     r = rycross <= maxy && rycross >= miny; /* true if it enters through left side */
   }
   POLY_DEB(
- 	   printf("%4s(%+d): ", line->updown ?  line->updown == 1 ? "up" : "down" : "vert", line->updown);
-	   printf("(%2d,%2d) [%3d-%3d, %3d-%3d] lycross=%.2f rycross=%.2f", coarse(minx), coarse(miny), minx, maxx, miny, maxy, lycross, rycross);
-	   printf("    l=%d r=%d\n", l, r)
+ 	   printf("    %4s(%+d): ", line->updown ?  line->updown == 1 ? "up" : "down" : "vert", line->updown);
+	   printf(" (%2d,%2d) [%3d-%3d, %3d-%3d] lycross=%.2f rycross=%.2f", coarse(minx), coarse(miny), minx, maxx, miny, maxy, lycross, rycross);
+	   printf(" l=%d r=%d\n", l, r)
 	   );
   
   if (l && r) 
@@ -327,9 +324,8 @@ pixel_coverage(p_line *line, pcord minx, pcord maxx, pcord  miny, pcord maxy) {
 
 static
 void
-render_slice_scanline(ss_scanline *ss, int y, p_line *l, p_line *r) {
+render_slice_scanline(ss_scanline *ss, int y, p_line *l, p_line *r, pcord miny, pcord maxy) {
   
-  pcord miny, maxy;	/* y bounds in fine coordinates */
   pcord lminx, lmaxx;	/* left line min/max within y bounds in fine coords */
   pcord rminx, rmaxx;	/* right line min/max within y bounds in fine coords */
   int cpix;		/* x-coordinate of current pixel */
@@ -339,12 +335,19 @@ render_slice_scanline(ss_scanline *ss, int y, p_line *l, p_line *r) {
 
   /* Find the y bounds of scanline_slice */
 
-  maxy = i_min( l->maxy, r->maxy );
-  miny = i_max( l->miny, r->miny );
-
-  maxy = i_min( maxy, (y+1)*16 );
-  miny = i_max( miny,  y*16 );
-
+  POLY_DEB
+    (
+     printf("render_slice_scanline(..., y=%d)\n");
+     printf("  left  n=%d p1(%.2g, %.2g) p2(%.2g,%.2g) min(%.2g, %.2g) max(%.2g,%.2g) updown(%d)\n",
+	    l->n, l->x1/16.0, l->y1/16.0, l->x2/16.0, l->y2/16.0, 
+	    l->minx/16.0, l->miny/16.0, l->maxx/16.0, l->maxy/16.0,
+	    l->updown);
+     printf("  right n=%d p1(%.2g, %.2g) p2(%.2g,%.2g) min(%.2g, %.2g) max(%.2g,%.2g) updown(%d)\n",
+	    r->n, r->x1/16.0, r->y1/16.0, r->x2/16.0, r->y2/16.0, 
+	    r->minx/16.0, r->miny/16.0, r->maxx/16.0, r->maxy/16.0,
+	    r->updown);
+     );
+  
   lminx = i_min( p_eval_aty(l, maxy), p_eval_aty(l, miny) );
   lmaxx = i_max( p_eval_aty(l, maxy), p_eval_aty(l, miny) );
 
@@ -355,6 +358,8 @@ render_slice_scanline(ss_scanline *ss, int y, p_line *l, p_line *r) {
 
   startpix = i_max( coarse(lminx), 0 );
   stoppix  = i_min( coarse(rmaxx-1), ss->linelen-1 );
+
+  POLY_DEB(  printf("  miny=%g maxy=%g\n", miny/16.0, maxy/16.0)  );
   
   for(cpix=startpix; cpix<=stoppix; cpix++) {
     int lt = coarse(lmaxx-1) >= cpix;
@@ -362,18 +367,18 @@ render_slice_scanline(ss_scanline *ss, int y, p_line *l, p_line *r) {
     
     int A, B, C;
     
-    POLY_DEB( printf("(%d,%d) lt=%d rt=%d\n", cpix, y, lt, rt) );
+    POLY_DEB( printf("  (%d,%d) lt=%d rt=%d\n", cpix, y, lt, rt) );
 
     A = lt ? pixel_coverage(l, cpix*16, cpix*16+16, miny, maxy) : 0;
     B = lt ? 0 : 16*(maxy-miny);
     C = rt ? pixel_coverage(r, cpix*16, cpix*16+16, miny, maxy) : 0;
 
-    POLY_DEB( printf("A=%d B=%d C=%d\n", A, B, C) );
+    POLY_DEB( printf("  A=%d B=%d C=%d\n", A, B, C) );
 
     ss->line[cpix] += A+B-C;
 
   }
-  
+  POLY_DEB( printf("end render_slice_scanline()\n") );
 }
 
 /* Antialiasing polygon algorithm 
@@ -454,42 +459,62 @@ i_poly_aa_low(i_img *im, int l, const double *x, const double *y, void *ctx, sca
   for(i=0; i<l-1; i++) {
     int startscan = i_max( coarse(pset[i].y), 0);
     int stopscan = i_min( coarse(pset[i+1].y+15), im->ysize);
+    pcord miny, maxy;	/* y bounds in fine coordinates */
 
-    if (pset[i].y == pset[i+1].y) {
-      POLY_DEB( printf("current slice thickness = 0 => skipping\n") );
-      continue;
-    }
+    POLY_DEB( pcord cc = (pset[i].y + pset[i+1].y)/2 );
 
     POLY_DEB(
 	     printf("current slice is %d: %d to %d ( cpoint %d ) scanlines %d to %d\n", 
 		    i, pset[i].y, pset[i+1].y, cc, startscan, stopscan)
 	     );
     
-    
+    if (pset[i].y == pset[i+1].y) {
+      POLY_DEB( printf("current slice thickness = 0 => skipping\n") );
+      continue;
+    }
+
     clc = lines_in_interval(lset, l, tllist, pset[i].y, pset[i+1].y);
     qsort(tllist, clc, sizeof(p_slice), (int(*)(const void *,const void *))p_compx);
 
     mark_updown_slices(lset, tllist, clc);
 
-    POLY_DEB( printf("Interval contains %d lines\n", clc) );
-
-    for(k=0; k<clc; k++) {
-      POLY_DEB(
-	       printf("%d:  line #%2d: (%2d, %2d)->(%2d, %2d) (%2d/%2d, %2d/%2d) -> (%2d/%2d, %2d/%2d) alignment=%s\n",
-		      k, lno, ln->x1, ln->y1, ln->x2, ln->y2, 
-		      coarse(ln->x1), fine(ln->x1), 
-		      coarse(ln->y1), fine(ln->y1), 
-		      coarse(ln->x2), fine(ln->x2), 
-		      coarse(ln->y2), fine(ln->y2),
-		      ln->updown == 0 ? "vert" : ln->updown == 1 ? "up" : "down")
-	       );
+    POLY_DEB
+      (
+       printf("Interval contains %d lines\n", clc);
+       for(k=0; k<clc; k++) {
+	 int lno = tllist[k].n;
+	 p_line *ln = lset+lno;
+	 printf("%d:  line #%2d: (%2d, %2d)->(%2d, %2d) (%2d/%2d, %2d/%2d) -> (%2d/%2d, %2d/%2d) alignment=%s\n",
+		k, lno, ln->x1, ln->y1, ln->x2, ln->y2, 
+		coarse(ln->x1), fine(ln->x1), 
+		coarse(ln->y1), fine(ln->y1), 
+		coarse(ln->x2), fine(ln->x2), 
+		coarse(ln->y2), fine(ln->y2),
+		ln->updown == 0 ? "vert" : ln->updown == 1 ? "up" : "down");
+	   
+       }
+       );
+    maxy = im->ysize * 16;
+    miny = 0;
+    for (k = 0; k < clc; ++k) {
+      p_line const * line = lset + tllist[k].n;
+      if (line->miny > miny)
+	miny = line->miny;
+      if (line->maxy < maxy)
+	maxy = line->maxy;
+      POLY_DEB( printf(" line miny %g maxy %g\n", line->miny/16.0, line->maxy/16.0) );
     }
+    POLY_DEB( printf("miny %g maxy %g\n", miny/16.0, maxy/16.0) );
+
     for(cscl=startscan; cscl<stopscan; cscl++) {
+      pcord scan_miny = i_max(miny, cscl * 16);
+      pcord scan_maxy = i_min(maxy, (cscl + 1 ) * 16);
+      
       tempy = i_min(cscl*16+16, pset[i+1].y);
       POLY_DEB( printf("evaluating scan line %d \n", cscl) );
       for(k=0; k<clc-1; k+=2) {
 	POLY_DEB( printf("evaluating slice %d\n", k) );
-	render_slice_scanline(&templine, cscl, lset+tllist[k].n, lset+tllist[k+1].n);
+	render_slice_scanline(&templine, cscl, lset+tllist[k].n, lset+tllist[k+1].n, scan_miny, scan_maxy);
       }
       if (16*coarse(tempy) == tempy) {
 	POLY_DEB( printf("flushing scan line %d\n", cscl) );
@@ -515,10 +540,11 @@ i_poly_aa_low(i_img *im, int l, const double *x, const double *y, void *ctx, sca
   
 } /* Function */
 
-void
+int
 i_poly_aa(i_img *im, int l, const double *x, const double *y, const i_color *val) {
   i_color c = *val;
   i_poly_aa_low(im, l, x, y, &c, scanline_flush);
+  return 1;
 }
 
 struct poly_render_state {
@@ -552,7 +578,7 @@ scanline_flush_render(i_img *im, ss_scanline *ss, int y, void *ctx) {
   }
 }
 
-void
+int
 i_poly_aa_cfill(i_img *im, int l, const double *x, const double *y, 
 		i_fill_t *fill) {
   struct poly_render_state ctx;
@@ -563,4 +589,5 @@ i_poly_aa_cfill(i_img *im, int l, const double *x, const double *y,
   i_poly_aa_low(im, l, x, y, &ctx, scanline_flush_render);
   myfree(ctx.cover);
   i_render_done(&ctx.render);
+  return 1;
 }

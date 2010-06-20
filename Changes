@@ -11,6 +11,9 @@ Bugs:
  - an opacity fill based on a fountain fill would segfault when
    filling an 8-bit/sample image.
 
+ - merge thickline branch polygon fix
+   https://rt.cpan.org/Ticket/Display.html?id=43518
+
 Imager 0.74 - 7 May 2010
 ===========
 
