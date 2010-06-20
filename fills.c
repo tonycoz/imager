@@ -563,6 +563,11 @@ i_new_fill_opacity(i_fill_t *base_fill, double alpha_mult) {
   fill->other_fill = base_fill;
   fill->alpha_mult = alpha_mult;
 
+  if (!base_fill->f_fill_with_color) {
+    /* base fill only does floating, so we only do that too */
+    fill->base.f_fill_with_color = NULL;
+  }
+
   return &fill->base;
 }
 

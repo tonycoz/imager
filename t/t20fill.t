@@ -1,6 +1,6 @@
 #!perl -w
 use strict;
-use Test::More tests => 153;
+use Test::More tests => 156;
 
 use Imager ':handy';
 use Imager::Fill;
@@ -607,6 +607,32 @@ SKIP:
     ok($im->box(fill => $fill2), "fill with replacement opacity fill");
     is_color3($im->getpixel(x => 0, y => 0), 255, 255, 255,
 	      "check for correct colour");
+  }
+
+  {
+    require Imager::Fountain;
+    my $fount = Imager::Fountain->new;
+    $fount->add(c1 => "FFFFFF"); # simple white to black
+    # base fill is a fountain
+    my $base_fill = Imager::Fill->new
+      (
+       fountain => "linear",
+       segments => $fount,
+       xa => 0, 
+       ya => 0,
+       xb => 100,
+       yb => 100,
+      );
+    ok($base_fill, "made fountain fill base");
+    my $op_fill = Imager::Fill->new
+      (
+       type => "opacity",
+       other => $base_fill,
+       opacity => 0.5,
+      );
+    ok($op_fill, "made opacity fountain fill");
+    my $im = Imager->new(xsize => 100, ysize => 100);
+    ok($im->box(fill => $op_fill), "draw with it");
   }
 }
 
