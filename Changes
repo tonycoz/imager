@@ -6,6 +6,8 @@ Imager 0.75
  - use PERL_NO_GET_CONTEXT to slightly improve performance on threaded
    perls (not measured)
 
+Bugs:
+
  - an opacity fill based on a fountain fill would segfault when
    filling an 8-bit/sample image.
 
