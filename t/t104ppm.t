@@ -1,6 +1,6 @@
 #!perl -w
 use Imager ':all';
-use Test::More tests => 177;
+use Test::More tests => 181;
 use strict;
 use Imager::Test qw(test_image_raw test_image_16 is_color3 is_color1 is_image);
 
@@ -552,6 +552,19 @@ print "# check error handling\n";
   ok(!$im2, "no image when file failed to load");
   cmp_ok(Imager->errstr, '=~', "bad header magic, not a PNM file",
 	 "check error message transferred");
+
+  # load from data
+ SKIP:
+  {
+    ok(open(FH, "< testimg/penguin-base.ppm"), "open test file")
+      or skip("couldn't open data source", 4);
+    my $imdata = do { local $/; <FH> };
+    close FH;
+    ok(length $imdata, "we got the data");
+    my $im3 = Imager->new(data => $imdata);
+    ok($im3, "read the file data");
+    is($im3->getwidth, 164, "check width matches image");
+  }
 }
 
 sub openimage {

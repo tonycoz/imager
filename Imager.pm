@@ -644,7 +644,8 @@ sub new {
 	 defined $hsh{fh} ||
 	 defined $hsh{fd} ||
 	 defined $hsh{callback} ||
-	 defined $hsh{readcb}) {
+	 defined $hsh{readcb} ||
+	 defined $hsh{data}) {
     # allow $img = Imager->new(file => $filename)
     my %extras;
     
