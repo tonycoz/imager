@@ -9,6 +9,11 @@ Bugs:
    $data
    https://rt.cpan.org/Ticket/Display.html?id=58761
 
+ - t/t50basicoo.t no longer depends on the other tests to generate its 
+   input files.
+   https://rt.cpan.org/Ticket/Display.html?id=9798
+   Also, it wasn't testing pnm (pnm vs ppm mix-up)
+
 Imager 0.75 - 20 Jun 2010
 ===========
 

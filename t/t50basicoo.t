@@ -14,7 +14,7 @@ my $buggy_giflib_file = "buggy_giflib.txt";
 Imager::init("log"=>"testout/t50basicoo.log");
 
 # single image/file types
-my @types = qw( jpeg png raw ppm gif tiff bmp tga );
+my @types = qw( jpeg png raw pnm gif tiff bmp tga );
 
 # multiple image/file formats
 my @mtypes = qw(tiff gif);
@@ -40,14 +40,14 @@ for(keys %hsh) { print "# $_\n"; }
 my $img = Imager->new();
 
 my %files;
-@files{@types} = ({ file => "testout/t101.jpg"  },
-		  { file => "testout/t102.png"  },
-		  { file => "testout/t103.raw", xsize=>150, ysize=>150, type=>'raw', interleave => 0},
-		  { file => "testout/t104.ppm"  },
-		  { file => "testout/t105.gif"  },
-		  { file => "testout/t106.tiff" },
-                  { file => "testout/t107_24bit.bmp" },
-                  { file => "testout/t108_24bit.tga" }, );
+@files{@types} = ({ file => "testimg/209_yonge.jpg"  },
+		  { file => "testimg/test.png"  },
+		  { file => "testimg/test.raw", xsize=>150, ysize=>150, type=>'raw', interleave => 0},
+		  { file => "testimg/penguin-base.ppm"  },
+		  { file => "testimg/expected.gif"  },
+		  { file => "testimg/comp8.tif" },
+                  { file => "testimg/winrgb24.bmp" },
+                  { file => "testimg/test.tga" }, );
 my %writeopts =
   (
    gif=> { make_colors=>'webmap', translate=>'closest', gifquant=>'gen',
@@ -176,7 +176,7 @@ for my $type (@types) {
   my $wimg = Imager->new;
   # if this doesn't work, we're so screwed up anyway
   
-  ok($wimg->read(file=>"testout/t104.ppm"),
+  ok($wimg->read(file=>"testimg/penguin-base.ppm"),
      "cannot read base file", $wimg);
 
   # first to a file

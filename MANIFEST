@@ -377,6 +377,9 @@ testimg/srgba.tif	RGB with one alpha
 testimg/srgba16.tif
 testimg/srgba32.tif
 testimg/srgbaa.tif	RGB with 2 alpha
+testimg/test.png	Standard test image as PNG
+testimg/test.raw	Standard test image as RAW
+testimg/test.tga	Standard test image as TGA
 testimg/test_gimp_pal   A simple GIMP palette file
 testimg/tiffwarn.tif	Generates a warning while being read
 testimg/trimgdesc.gif
