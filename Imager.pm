@@ -1992,30 +1992,15 @@ sub read_multi {
     return;
   }
 
-  if ($type eq 'gif') {
     my @imgs;
+  if ($type eq 'gif') {
     @imgs = i_readgif_multi_wiol($IO);
-    if (@imgs) {
-      return map { 
-        bless { IMG=>$_, DEBUG=>$DEBUG, ERRSTR=>undef }, 'Imager' 
-      } @imgs;
-    }
-    else {
-      $ERRSTR = _error_as_msg();
-      return;
-    }
   }
   elsif ($type eq 'tiff') {
-    my @imgs = i_readtiff_multi_wiol($IO, -1);
-    if (@imgs) {
-      return map { 
-        bless { IMG=>$_, DEBUG=>$DEBUG, ERRSTR=>undef }, 'Imager' 
-      } @imgs;
+    @imgs = i_readtiff_multi_wiol($IO, -1);
     }
-    else {
-      $ERRSTR = _error_as_msg();
-      return;
-    }
+  elsif ($type eq 'pnm') {
+    @imgs = i_readpnm_multi_wiol($IO, $opts{allow_incomplete}||0);
   }
   else {
     my $img = Imager->new;
@@ -2023,9 +2008,16 @@ sub read_multi {
       return ( $img );
     }
     Imager->_set_error($img->errstr);
+    return;
   }
 
+  if (!@imgs) {
+    $ERRSTR = _error_as_msg();
   return;
+  }
+  return map { 
+        bless { IMG=>$_, DEBUG=>$DEBUG, ERRSTR=>undef }, 'Imager' 
+      } @imgs;
 }
 
 # Destroy an Imager object

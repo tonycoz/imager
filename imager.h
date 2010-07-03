@@ -429,6 +429,7 @@ i_img   * i_readraw_wiol(io_glue *ig, int x, int y, int datachannels, int storec
 undef_int i_writeraw_wiol(i_img* im, io_glue *ig);
 
 i_img   * i_readpnm_wiol(io_glue *ig, int allow_incomplete);
+i_img   ** i_readpnm_multi_wiol(io_glue *ig, int *count, int allow_incomplete);
 undef_int i_writeppm_wiol(i_img *im, io_glue *ig);
 
 extern int    i_writebmp_wiol(i_img *im, io_glue *ig);

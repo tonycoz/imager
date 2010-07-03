@@ -526,24 +526,29 @@ Retrieve an image and stores in the iolayer object. Returns NULL on fatal error.
 
 =cut
 */
-
+static i_img *i_readpnm_wiol_low( mbuf*, int);
 
 i_img *
 i_readpnm_wiol(io_glue *ig, int allow_incomplete) {
+  mbuf buf;
+  io_glue_commit_types(ig);
+  init_buf(&buf, ig);
+
+  return i_readpnm_wiol_low( &buf, allow_incomplete );
+}
+
+static i_img *
+i_readpnm_wiol_low( mbuf *buf, int allow_incomplete) {
   i_img* im;
   int type;
   int width, height, maxval, channels, pcount;
   int rounder;
   char *cp;
-  mbuf buf;
 
   i_clear_error();
-  mm_log((1,"i_readpnm(ig %p, allow_incomplete %d)\n", ig, allow_incomplete));
+  mm_log((1,"i_readpnm(ig %p, allow_incomplete %d)\n", buf->ig, allow_incomplete));
 
-  io_glue_commit_types(ig);
-  init_buf(&buf, ig);
-
-  cp = gnext(&buf);
+  cp = gnext(buf);
 
   if (!cp || *cp != 'P') {
     i_push_error(0, "bad header magic, not a PNM file");
@@ -551,7 +556,7 @@ i_readpnm_wiol(io_glue *ig, int allow_incomplete) {
     return NULL;
   }
 
-  if ( !(cp = gnext(&buf)) ) {
+  if ( !(cp = gnext(buf)) ) {
     mm_log((1, "i_readpnm: Could not read header of file\n"));
     return NULL;
   }
@@ -564,7 +569,7 @@ i_readpnm_wiol(io_glue *ig, int allow_incomplete) {
     return NULL;
   }
 
-  if ( !(cp = gnext(&buf)) ) {
+  if ( !(cp = gnext(buf)) ) {
     mm_log((1, "i_readpnm: Could not read header of file\n"));
     return NULL;
   }
@@ -580,38 +585,38 @@ i_readpnm_wiol(io_glue *ig, int allow_incomplete) {
   
   /* Read sizes and such */
 
-  if (!skip_comment(&buf)) {
+  if (!skip_comment(buf)) {
     i_push_error(0, "while skipping to width");
     mm_log((1, "i_readpnm: error reading before width\n"));
     return NULL;
   }
   
-  if (!gnum(&buf, &width)) {
+  if (!gnum(buf, &width)) {
     i_push_error(0, "could not read image width");
     mm_log((1, "i_readpnm: error reading width\n"));
     return NULL;
   }
 
-  if (!skip_comment(&buf)) {
+  if (!skip_comment(buf)) {
     i_push_error(0, "while skipping to height");
     mm_log((1, "i_readpnm: error reading before height\n"));
     return NULL;
   }
 
-  if (!gnum(&buf, &height)) {
+  if (!gnum(buf, &height)) {
     i_push_error(0, "could not read image height");
     mm_log((1, "i_readpnm: error reading height\n"));
     return NULL;
   }
   
   if (!(type == 1 || type == 4)) {
-    if (!skip_comment(&buf)) {
+    if (!skip_comment(buf)) {
       i_push_error(0, "while skipping to maxval");
       mm_log((1, "i_readpnm: error reading before maxval\n"));
       return NULL;
     }
 
-    if (!gnum(&buf, &maxval)) {
+    if (!gnum(buf, &maxval)) {
       i_push_error(0, "could not read maxval");
       mm_log((1, "i_readpnm: error reading maxval\n"));
       return NULL;
@@ -631,7 +636,7 @@ i_readpnm_wiol(io_glue *ig, int allow_incomplete) {
   } else maxval=1;
   rounder = maxval / 2;
 
-  if (!(cp = gnext(&buf)) || !misspace(*cp)) {
+  if (!(cp = gnext(buf)) || !misspace(*cp)) {
     i_push_error(0, "garbage in header, invalid PNM file");
     mm_log((1, "i_readpnm: garbage in header\n"));
     return NULL;
@@ -664,27 +669,27 @@ i_readpnm_wiol(io_glue *ig, int allow_incomplete) {
 
   switch (type) {
   case 1: /* Ascii types */
-    im = read_pbm_ascii(&buf, im, width, height, allow_incomplete);
+    im = read_pbm_ascii(buf, im, width, height, allow_incomplete);
     break;
 
   case 2:
   case 3:
     if (maxval > 255)
-      im = read_pgm_ppm_ascii_16(&buf, im, width, height, channels, maxval, allow_incomplete);
+      im = read_pgm_ppm_ascii_16(buf, im, width, height, channels, maxval, allow_incomplete);
     else
-      im = read_pgm_ppm_ascii(&buf, im, width, height, channels, maxval, allow_incomplete);
+      im = read_pgm_ppm_ascii(buf, im, width, height, channels, maxval, allow_incomplete);
     break;
     
   case 4: /* binary pbm */
-    im = read_pbm_bin(&buf, im, width, height, allow_incomplete);
+    im = read_pbm_bin(buf, im, width, height, allow_incomplete);
     break;
 
   case 5: /* binary pgm */
   case 6: /* binary ppm */
     if (maxval > 255)
-      im = read_pgm_ppm_bin16(&buf, im, width, height, channels, maxval, allow_incomplete);
+      im = read_pgm_ppm_bin16(buf, im, width, height, channels, maxval, allow_incomplete);
     else
-      im = read_pgm_ppm_bin8(&buf, im, width, height, channels, maxval, allow_incomplete);
+      im = read_pgm_ppm_bin8(buf, im, width, height, channels, maxval, allow_incomplete);
     break;
 
   default:
@@ -701,6 +706,64 @@ i_readpnm_wiol(io_glue *ig, int allow_incomplete) {
 
   return im;
 }
+
+static void free_images(i_img **imgs, int count) {
+  int i;
+
+  if (count) {
+    for (i = 0; i < count; ++i)
+      i_img_destroy(imgs[i]);
+    myfree(imgs);
+  }
+}
+
+i_img **i_readpnm_multi_wiol(io_glue *ig, int *count, int allow_incomplete) {
+    i_img **results = NULL;
+    i_img *img = NULL;
+    char *cp = NULL;
+    mbuf buf;
+    int result_alloc = 0, 
+        value = 0, 
+        eof = 0;
+    *count=0;
+    io_glue_commit_types(ig);
+    init_buf(&buf, ig);
+    do {
+        mm_log((1, "read image %i\n", 1+*count));
+        img = i_readpnm_wiol_low( &buf, allow_incomplete );
+        if( !img ) {
+            free_images( results, *count );
+            return NULL;
+        }
+        ++*count;
+        if (*count > result_alloc) {
+            if (result_alloc == 0) {
+                result_alloc = 5;
+                results = mymalloc(result_alloc * sizeof(i_img *));
+            }
+            else {
+                /* myrealloc never fails (it just dies if it can't allocate) */
+                result_alloc *= 2;
+                results = myrealloc(results, result_alloc * sizeof(i_img *));
+            }
+        }
+        results[*count-1] = img;
+
+
+        if( i_tags_get_int(&img->tags, "i_incomplete", 0, &value ) && value) {
+            eof = 1;
+        }
+        else if( skip_spaces( &buf ) && ( cp=gpeek( &buf ) ) && *cp == 'P' ) {
+            eof = 0;
+        }
+        else {
+            eof = 1;
+        }
+    } while(!eof);
+    return results;
+}
+
+
 
 static
 int
@@ -892,7 +955,8 @@ i_writeppm_wiol(i_img *im, io_glue *ig) {
 
 =head1 AUTHOR
 
-Arnar M. Hrafnkelsson <addi@umich.edu>, Tony Cook<tony@imager.perl.org>
+Arnar M. Hrafnkelsson <addi@umich.edu>, Tony Cook<tony@imager.perl.org>,
+Philip Gwyn <gwyn@cpan.org>.
 
 =head1 SEE ALSO
 

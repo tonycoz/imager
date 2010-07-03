@@ -1,6 +1,6 @@
 #!perl -w
 use Imager ':all';
-use Test::More tests => 181;
+use Test::More tests => 191;
 use strict;
 use Imager::Test qw(test_image_raw test_image_16 is_color3 is_color1 is_image);
 
@@ -440,6 +440,20 @@ print "# check error handling\n";
      "partial read asc pbm");
   is($im->tags(name => 'i_incomplete'), 1, "partial flag set");
   is($im->tags(name => 'i_lines_read'), 1, "lines_read set");
+}
+
+{
+  my @imgs = Imager->read_multi(file => 'testimg/multiple.ppm');
+  is( 0+@imgs, 3, "Read 3 images");
+  is( $imgs[0]->tags( name => 'pnm_type' ), 1, "Image 1 is type 1" );
+  is( $imgs[0]->getwidth, 2, " ... width=2" );
+  is( $imgs[0]->getheight, 2, " ... width=2" );
+  is( $imgs[1]->tags( name => 'pnm_type' ), 6, "Image 2 is type 6" );
+  is( $imgs[1]->getwidth, 164, " ... width=164" );
+  is( $imgs[1]->getheight, 180, " ... width=180" );
+  is( $imgs[2]->tags( name => 'pnm_type' ), 5, "Image 3 is type 5" );
+  is( $imgs[2]->getwidth, 2, " ... width=2" );
+  is( $imgs[2]->getheight, 2, " ... width=2" );
 }
 
 {
