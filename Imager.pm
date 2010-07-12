@@ -3105,9 +3105,18 @@ sub flood_fill {
 }
 
 sub setpixel {
-  my $self = shift;
+  my ($self, %opts) = @_;
 
-  my %opts = ( color=>$self->{fg} || NC(255, 255, 255), @_);
+  my $color = $opts{color};
+  unless (defined $color) {
+    $color = $self->{fg};
+    defined $color or $color = NC(255, 255, 255);
+  }
+
+  unless (ref $color && UNIVERSAL::isa($color, "Imager::Color")) {
+    $color = _color($color)
+      or return undef;
+  }
 
   unless (exists $opts{'x'} && exists $opts{'y'}) {
     $self->{ERRSTR} = 'missing x and y parameters';
@@ -3116,8 +3125,6 @@ sub setpixel {
 
   my $x = $opts{'x'};
   my $y = $opts{'y'};
-  my $color = _color($opts{color})
-    or return undef;
   if (ref $x && ref $y) {
     unless (@$x == @$y) {
       $self->{ERRSTR} = 'length of x and y mismatch';
