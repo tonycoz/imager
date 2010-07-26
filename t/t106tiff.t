@@ -7,7 +7,7 @@ use Imager::Test qw(is_image is_image_similar test_image test_image_16 test_imag
 i_has_format("tiff")
   or plan skip_all => "no tiff support";
 
-plan tests => 213;
+plan tests => 215;
 
 $|=1;  # give us some progress in the test harness
 init_log("testout/t106tiff.log",1);
@@ -511,7 +511,7 @@ SKIP:
   ok($im16->read(file => 'testimg/rgb16.tif'), "read 16-bit rgb");
   is($im16->bits, 16, 'got a 16-bit image');
   my $im16t = Imager->new;
-  ok($im16t->read(file => 'testimg/rgb16t.tif'), "ready 16-bit rgb tiled");
+  ok($im16t->read(file => 'testimg/rgb16t.tif'), "read 16-bit rgb tiled");
   is($im16t->bits, 16, 'got a 16-bit image');
   is_image($im16, $im16t, 'check they match');
   
@@ -557,6 +557,12 @@ SKIP:
     or print "# ", $cmyka16->errstr, "\n";
   is($cmyka16->bits, 16, "check we got the right type");
   is_image_similar($rgba, $cmyka16, 10, "check image data");
+
+  # tiled, non-contig, should fallback to RGBA code
+  my $rgbatsep = Imager->new;
+  ok($rgbatsep->read(file => 'testimg/rgbatsep.tif'),
+     "read base rgba image");
+  is_image($rgba, $rgbatsep, "check they match");
 }
 { # read bi-level
   my $pbm = Imager->new;
