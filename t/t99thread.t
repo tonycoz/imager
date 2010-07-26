@@ -24,6 +24,9 @@ $] > 5.008007
 $loaded_threads
   or plan skip_all => "couldn't load threads";
 
+$INC{"Devel/Cover.pm"}
+  and plan skip_all => "threads and Devel::Cover don't get along";
+
 plan tests => 11;
 
 my $thread = threads->create(sub { 1; });
