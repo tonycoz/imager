@@ -6,6 +6,7 @@ use Config;
 use File::Spec;
 use Getopt::Long;
 use ExtUtils::Manifest qw(maniread);
+use ExtUtils::Liblist;
 use vars qw(%formats $VERBOSE $INCPATH $LIBPATH $NOLOG $DEBUG_MALLOC $MANUAL $CFLAGS $LFLAGS $DFLAGS);
 use lib 'inc';
 use Devel::CheckLib;
@@ -1026,6 +1027,17 @@ sub postcheck_tiff {
     $lib = "tiff";
   }
 
+  # setup LD_RUN_PATH to match link time
+  my $lopts = join " " , map("-L$_", @{$format->{libdir}}), " -ltiff";
+  my ($extra, $bs_load, $ld_load, $ld_run_path) =
+    ExtUtils::Liblist->ext($lopts, $VERBOSE);
+  local $ENV{LD_RUN_PATH};
+
+  if ($ld_run_path) {
+    print "Setting LD_RUN_PATH=$ld_run_path for TIFF probe\n" if $VERBOSE;
+    $ENV{LD_RUN_PATH} = $ld_run_path;
+  }
+
   my $good =
     eval {
       assert_lib
@@ -1052,7 +1064,7 @@ FUNCTION
     };
 
   unless ($good && -s $tiffver_name
-	  && open(VERS, "< probe/tiffver.txt")) {
+	  && open(VERS, "< $tiffver_name")) {
     unlink $tiffver_name unless $KEEP_FILES;
     print <<EOS;
     **tiff: cannot determine libtiff version number

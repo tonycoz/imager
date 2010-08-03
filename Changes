@@ -25,6 +25,10 @@ Bugs:
  - added hardinvertall filter which also inverts the alpha channel
    (sorry for the mess)
 
+ - when probing for TIFF, set LD_RUN_PATH just as the Makefile does so
+   the probe can find the library for the test run.
+   https://rt.cpan.org/Ticket/Display.html?id=57518
+
 Imager 0.75 - 20 Jun 2010
 ===========
 
