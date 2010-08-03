@@ -19,6 +19,9 @@ Bugs:
    https://rt.cpan.org/Ticket/Display.html?id=9798
    Also, it wasn't testing pnm (pnm vs ppm mix-up)
 
+ - update the documentation of hardinvert to match the change in 0.62.
+   https://rt.cpan.org/Ticket/Display.html?id=59785
+
 Imager 0.75 - 20 Jun 2010
 ===========
 

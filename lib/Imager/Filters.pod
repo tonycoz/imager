@@ -437,8 +437,8 @@ for Euclidean squared, and 2 for Manhattan distance.
 
 =item C<hardinvert>
 
-inverts the image, black to white, white to black.  All channels are
-inverted, including the alpha channel if any.
+inverts the image, black to white, white to black.  All color channels
+are inverted, excluding the alpha channel if any.
 
   $img->filter(type=>"hardinvert")
     or die $img->errstr;
