@@ -22,6 +22,9 @@ Bugs:
  - update the documentation of hardinvert to match the change in 0.62.
    https://rt.cpan.org/Ticket/Display.html?id=59785
 
+ - added hardinvertall filter which also inverts the alpha channel
+   (sorry for the mess)
+
 Imager 0.75 - 20 Jun 2010
 ===========
 

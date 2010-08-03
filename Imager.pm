@@ -225,6 +225,13 @@ BEGIN {
 			 callsub => sub { my %hsh=@_; i_hardinvert($hsh{image}); }
 			};
 
+  $filters{hardinvertall} =
+    {
+     callseq => ['image'],
+     defaults => { },
+     callsub => sub { my %hsh=@_; i_hardinvertall($hsh{image}); }
+    };
+
   $filters{autolevels} ={
 			 callseq => ['image','lsat','usat','skew'],
 			 defaults => { lsat=>0.1,usat=>0.1,skew=>0.0 },
@@ -4417,7 +4424,8 @@ hatch fills - L<Imager::Fill/"Hatched fills">
 
 ICO files - L<Imager::Files/"ICO (Microsoft Windows Icon) and CUR (Microsoft Windows Cursor)">
 
-invert image - L<Imager::Filters/hardinvert>
+invert image - L<Imager::Filters/hardinvert>,
+L<Imager::Filters/hardinvertall>
 
 JPEG - L<Imager::Files/"JPEG">
 

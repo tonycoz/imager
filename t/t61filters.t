@@ -1,9 +1,9 @@
 #!perl -w
 use strict;
 use Imager qw(:handy);
-use Test::More tests => 79;
+use Test::More tests => 91;
 Imager::init_log("testout/t61filters.log", 1);
-use Imager::Test qw(is_image_similar test_image is_image);
+use Imager::Test qw(is_image_similar test_image is_image is_color4 is_fcolor4);
 # meant for testing the filters themselves
 
 my $imbase = test_image();
@@ -63,6 +63,36 @@ test($imbase, { type=>'gradgen', dist=>1,
 test($imbase, {type=>'mosaic', size=>8}, 'testout/t61_mosaic.ppm');
 
 test($imbase, {type=>'hardinvert'}, 'testout/t61_hardinvert.ppm');
+
+{ # invert - 8 bit
+  my $im = Imager->new(xsize => 1, ysize => 1, channels => 4);
+  ok($im, "make test image for invert test");
+  ok($im->setpixel(x => 0, y => 0, color => "000010C0"),
+     "set a test pixel");
+  my $copy = $im->copy;
+  ok($im->filter(type => "hardinvert"), "hardinvert it");
+  is_color4($im->getpixel(x => 0, y => 0), 255, 255, 0xEF, 0xC0,
+	    "check only colour inverted");
+  ok($copy->filter(type => "hardinvertall"), "hardinvertall copy");
+  is_color4($copy->getpixel(x => 0, y => 0), 255, 255, 0xEF, 0x3f,
+	    "check all inverted");
+}
+
+{ # invert - double image
+  my $im = Imager->new(xsize => 1, ysize => 1, channels => 4, bits => "double");
+  ok($im, "make double test image for invert test");
+  ok($im->setpixel(x => 0, y => 0, color => Imager::Color::Float->new(0, 0, 0.125, 0.75)),
+     "set a test pixel");
+  my $copy = $im->copy;
+  ok($im->filter(type => "hardinvert"), "hardinvert it");
+  is_fcolor4($im->getpixel(x => 0, y => 0, type => "double"),
+	     1.0, 1.0, 0.875, 0.75, 1e-5,
+	     "check only colour inverted");
+  ok($copy->filter(type => "hardinvertall"), "hardinvertall copy");
+  is_fcolor4($copy->getpixel(x => 0, y => 0, type =>"double"),
+	     1.0, 1.0, 0.875, 0.25, 1e-5,
+	     "check all inverted");
+}
 
 test($imbase, {type=>'noise'}, 'testout/t61_noise.ppm');
 

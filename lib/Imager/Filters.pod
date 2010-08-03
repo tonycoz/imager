@@ -96,6 +96,8 @@ that comes with the module source.
 
   hardinvert
 
+  hardinvertall
+
   mosaic          size         20
 
   noise           amount       3
@@ -436,11 +438,21 @@ for Euclidean squared, and 2 for Manhattan distance.
                colors=>[ qw(red blue green) ]);
 
 =item C<hardinvert>
+X<filters, hardinvert>X<hardinvert>
 
 inverts the image, black to white, white to black.  All color channels
 are inverted, excluding the alpha channel if any.
 
   $img->filter(type=>"hardinvert")
+    or die $img->errstr;
+
+=item C<hardinvertall>
+X<filters, hardinvertall>X<hardinvertall>
+
+inverts the image, black to white, white to black.  All channels are
+inverted, including the alpha channel if any.
+
+  $img->filter(type=>"hardinvertall")
     or die $img->errstr;
 
 =item C<mosaic>

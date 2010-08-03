@@ -3291,6 +3291,10 @@ i_hardinvert(im)
     Imager::ImgRaw     im
 
 void
+i_hardinvertall(im)
+    Imager::ImgRaw     im
+
+void
 i_noise(im,amount,type)
     Imager::ImgRaw     im
              float     amount

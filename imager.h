@@ -463,6 +463,7 @@ i_img * i_transform2(int width, int height, int channels,
 
 void i_contrast(i_img *im, float intensity);
 void i_hardinvert(i_img *im);
+void i_hardinvertall(i_img *im);
 void i_noise(i_img *im, float amount, unsigned char type);
 void i_bumpmap(i_img *im,i_img *bump,int channel,int light_x,int light_y,int strength);
 void i_bumpmap_complex(i_img *im, i_img *bump, int channel, int tx, int ty, float Lx, float Ly, 

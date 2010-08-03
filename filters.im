@@ -14,8 +14,9 @@ filters.im - implements filters that operate on images
   
   i_contrast(im, 0.8);
   i_hardinvert(im);
+  i_hardinvertall(im);
   i_unsharp_mask(im, 2.0, 1.0);
-  // and more
+  ... and more
 
 =head1 DESCRIPTION
 
@@ -94,21 +95,11 @@ i_contrast(i_img *im, float intensity) {
 }
 
 
-/* 
-=item i_hardinvert(im)
-
-Inverts the pixel values of the input image.
-
-  im        - image object
-
-=cut
-*/
-
-void
-i_hardinvert(i_img *im) {
+static int
+s_hardinvert_low(i_img *im, int all) {
   int x, y;
   int ch;
-  int color_channels = i_img_color_channels(im);
+  int invert_channels = all ? im->channels : i_img_color_channels(im);
 
   mm_log((1,"i_hardinvert(im %p)\n", im));
   
@@ -122,7 +113,7 @@ i_hardinvert(i_img *im) {
     IM_GLIN(im, 0, im->xsize, y, row);
     entry = row;
     for(x = 0; x < im->xsize; x++) {
-      for(ch = 0; ch < color_channels; ch++) {
+      for(ch = 0; ch < invert_channels; ch++) {
 	entry->channel[ch] = IM_SAMPLE_MAX - entry->channel[ch];
       }
       ++entry;
@@ -131,9 +122,39 @@ i_hardinvert(i_img *im) {
   }  
   myfree(row);
 #/code
+
+  return 1;
 }
 
+/* 
+=item i_hardinvert(im)
 
+Inverts the color channels of the input image.
+
+  im        - image object
+
+=cut
+*/
+
+void
+i_hardinvert(i_img *im) {
+  s_hardinvert_low(im, 0);
+}
+
+/* 
+=item i_hardinvertall(im)
+
+Inverts all channels of the input image.
+
+  im        - image object
+
+=cut
+*/
+
+void
+i_hardinvertall(i_img *im) {
+  s_hardinvert_low(im, 1);
+}
 
 /*
 =item i_noise(im, amount, type)
