@@ -5,7 +5,7 @@ Devel::CheckLib;
 
 use strict;
 use vars qw($VERSION @ISA @EXPORT);
-$VERSION = '0.699_001';
+$VERSION = '0.699_002';
 use Config;
 
 use File::Spec;
@@ -13,7 +13,7 @@ use File::Temp;
 
 require Exporter;
 @ISA = qw(Exporter);
-@EXPORT = qw(assert_lib check_lib_or_exit);
+@EXPORT = qw(assert_lib check_lib_or_exit check_lib);
 
 # localising prevents the warningness leaking out of this module
 local $^W = 1;    # use warnings is a 5.6-ism
@@ -151,6 +151,11 @@ causing a CPAN Testers 'FAIL' report.  CPAN Testers should ignore this
 result -- which is what you want if an external library dependency is not
 available.
 
+=head2 check_lib
+
+This behaves exactly the same as C<assert_lib()> except that it is silent,
+returning false instead of dieing, or true otherwise.
+
 =cut
 
 sub check_lib_or_exit {
@@ -159,6 +164,11 @@ sub check_lib_or_exit {
         warn $@;
         exit;
     }
+}
+
+sub check_lib {
+    eval 'assert_lib(@_)';
+    return $@ ? 0 : 1;
 }
 
 sub assert_lib {
@@ -261,6 +271,7 @@ sub assert_lib {
             my @libpath = map { 
                 q{/libpath:} . Win32::GetShortPathName($_)
             } @libpaths; 
+            # this is horribly sensitive to the order of arguments
             @sys_cmd = (
                 @cc,
                 $cfile,
