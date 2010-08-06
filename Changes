@@ -1,7 +1,9 @@
 Imager release history.  Older releases can be found in Changes.old
 
-Imager 0.76
-===========
+Imager 0.75_01 - 06 Aug 2010
+==============
+
+Test release for the new PNG probe.
 
  - added the ability to read multiple-image PNM files.
    Note that unlike the pbm/pgm/ppm specification this accepts mixed
