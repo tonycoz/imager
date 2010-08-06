@@ -55,6 +55,15 @@ Mandelbrot/mandel.c
 Mandelbrot/t/t00mandel.t
 Makefile.PL
 README
+PNG/Makefile.PL
+PNG/PNG.pm
+PNG/PNG.xs
+PNG/impng.c
+PNG/impng.h
+PNG/t/00load.t
+PNG/t/10png.t		Test png support
+PNG/testimg/palette.png
+PNG/testimg/palette_out.png
 SGI/Makefile.PL
 SGI/SGI.pm
 SGI/SGI.xs
@@ -175,6 +184,7 @@ lib/Imager/IO.pod		Document Imager::IO objects
 lib/Imager/LargeSamples.pod	Track large sample support
 lib/Imager/Matrix2d.pm
 lib/Imager/Preprocess.pm
+lib/Imager/Probe.pm		Library probes
 lib/Imager/Regops.pm
 lib/Imager/Test.pm
 lib/Imager/Transform.pm
@@ -190,7 +200,6 @@ maskimg.c
 palimg.c
 paste.im
 plug.h
-png.c
 pnm.c
 polygon.c
 ppport.h
@@ -239,7 +248,6 @@ t/t1000files.t          Format independent file tests
 t/t101jpeg.t		Test jpeg support
 t/t101nojpeg.t		Test handling when jpeg not available
 t/t102nopng.t		Test handling when png not available
-t/t102png.t		Test png support
 t/t103raw.t
 t/t104ppm.t
 t/t105gif.t		Test gif support
@@ -340,8 +348,6 @@ testimg/maxval_asc.ppm
 testimg/multiple.ppm	Test multiple PPM reading
 testimg/newgimpgrad.ggr Test GIMP Gradient file (newer type)
 testimg/nocmap.gif
-testimg/palette.png
-testimg/palette_out.png
 testimg/penguin-base.ppm
 testimg/pengtile.tif	Tiled tiff image, same as penguin-base.ppm
 testimg/pgm.pgm		Simple pgm for testing the right sample is in the right place

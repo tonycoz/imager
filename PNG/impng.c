@@ -1,5 +1,4 @@
-#include "iolayer.h"
-#include "imageri.h"
+#include "impng.h"
 #include "png.h"
 
 /* Check to see if a file is a PNG file using png_sig_cmp().  png_sig_cmp()
@@ -73,7 +72,6 @@ i_writepng_wiol(i_img *im, io_glue *ig) {
   double xres, yres;
   int aspect_only, have_res;
 
-  io_glue_commit_types(ig);
   mm_log((1,"i_writepng(im %p ,ig %p)\n", im, ig));
   
   height = im->ysize;
@@ -183,7 +181,7 @@ i_writepng_wiol(i_img *im, io_glue *ig) {
 static void get_png_tags(i_img *im, png_structp png_ptr, png_infop info_ptr);
 
 i_img*
-i_readpng_wiol(io_glue *ig, int length) {
+i_readpng_wiol(io_glue *ig) {
   i_img *im = NULL;
   png_structp png_ptr;
   png_infop info_ptr;
@@ -195,8 +193,7 @@ i_readpng_wiol(io_glue *ig, int length) {
 
   sig_read  = 0;
 
-  io_glue_commit_types(ig);
-  mm_log((1,"i_readpng_wiol(ig %p, length %d)\n", ig, length));
+  mm_log((1,"i_readpng_wiol(ig %p)\n", ig));
 
   png_ptr = png_create_read_struct(PNG_LIBPNG_VER_STRING,NULL,NULL,NULL);
   png_set_read_fn(png_ptr, (png_voidp) (ig), wiol_read_data);
@@ -253,7 +250,7 @@ i_readpng_wiol(io_glue *ig, int length) {
   mm_log((1,"number of passes=%d\n",number_passes));
   png_read_update_info(png_ptr, info_ptr);
   
-  im = i_img_empty_ch(NULL,width,height,channels);
+  im = i_img_8_new(width,height,channels);
   if (!im) {
     png_destroy_read_struct(&png_ptr, &info_ptr, (png_infopp)NULL);
     return NULL;
@@ -277,7 +274,7 @@ static void get_png_tags(i_img *im, png_structp png_ptr, png_infop info_ptr) {
   png_uint_32 xres, yres;
   int unit_type;
 
-  i_tags_add(&im->tags, "i_format", 0, "png", -1, 0);
+  i_tags_set(&im->tags, "i_format", "png", -1);
   if (png_get_pHYs(png_ptr, info_ptr, &xres, &yres, &unit_type)) {
     mm_log((1,"pHYs (%d, %d) %d\n", xres, yres, unit_type));
     if (unit_type == PNG_RESOLUTION_METER) {
@@ -285,9 +282,9 @@ static void get_png_tags(i_img *im, png_structp png_ptr, png_infop info_ptr) {
       i_tags_set_float2(&im->tags, "i_yres", 0, yres * 0.0254, 5);
     }
     else {
-      i_tags_addn(&im->tags, "i_xres", 0, xres);
-      i_tags_addn(&im->tags, "i_yres", 0, yres);
-      i_tags_addn(&im->tags, "i_aspect_only", 0, 1);
+      i_tags_setn(&im->tags, "i_xres", xres);
+      i_tags_setn(&im->tags, "i_yres", yres);
+      i_tags_setn(&im->tags, "i_aspect_only", 1);
     }
   }
 }

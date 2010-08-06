@@ -3,7 +3,7 @@ use strict;
 use Imager qw(:all);
 use Test::More;
 
-i_has_format("png")
+$Imager::formats{"png"}
   and plan skip_all => "png available, and this tests the lack of it";
 
 plan tests => 6;

@@ -572,6 +572,7 @@ print "# check error handling\n";
   {
     ok(open(FH, "< testimg/penguin-base.ppm"), "open test file")
       or skip("couldn't open data source", 4);
+    binmode FH;
     my $imdata = do { local $/; <FH> };
     close FH;
     ok(length $imdata, "we got the data");

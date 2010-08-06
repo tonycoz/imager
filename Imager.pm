@@ -81,9 +81,6 @@ use Imager::Font;
 		i_writetiff_wiol
 		i_writetiff_wiol_faxable
 
-		i_readpng_wiol
-		i_writepng_wiol
-
 		i_readgif
 		i_readgif_wiol
 		i_readgif_callback
@@ -185,15 +182,25 @@ BEGIN {
   }
 }
 
+my %formats_low;
+my %format_classes =
+  (
+   png => "Imager::File::PNG",
+   gif => "Imager::File::GIF",
+   tiff => "Imager::File::TIFF",
+   jpeg => "Imager::File::JPEG",
+  );
+
+tie %formats, "Imager::FORMATS", \%formats_low, \%format_classes;
+
 BEGIN {
   Imager::Font::__init();
-  for(i_list_formats()) { $formats{$_}++; }
+  for(i_list_formats()) { $formats_low{$_}++; }
 
-  if (!$formats{'t1'} and !$formats{'tt'} 
-      && !$formats{'ft2'} && !$formats{'w32'}) {
+  if (!$formats_low{'t1'} and !$formats_low{'tt'} 
+      && !$formats_low{'ft2'} && !$formats_low{'w32'}) {
     $fontstate='no font support';
   }
-
   %OPCODES=(Add=>[0],Sub=>[1],Mult=>[2],Div=>[3],Parm=>[4],'sin'=>[5],'cos'=>[6],'x'=>[4,0],'y'=>[4,1]);
 
   $DEBUG=0;
@@ -1367,7 +1374,7 @@ sub read {
     return $readers{$input{type}}{single}->($self, $IO, %input);
   }
 
-  unless ($formats{$input{'type'}}) {
+  unless ($formats_low{$input{'type'}}) {
     my $read_types = join ', ', sort Imager->read_types();
     $self->_set_error("format '$input{'type'}' not supported - formats $read_types available for reading");
     return;
@@ -1405,15 +1412,6 @@ sub read {
     }
     $self->{DEBUG} && print "loading a pnm file\n";
     return $self;
-  }
-
-  if ( $input{'type'} eq 'png' ) {
-    $self->{IMG}=i_readpng_wiol( $IO, -1 ); # Fixme, check if that length parameter is ever needed
-    if ( !defined($self->{IMG}) ) {
-      $self->{ERRSTR} = $self->_error_as_msg();
-      return undef;
-    }
-    $self->{DEBUG} && print "loading a png file\n";
   }
 
   if ( $input{'type'} eq 'bmp' ) {
@@ -1572,7 +1570,7 @@ sub write_types {
 sub _reader_autoload {
   my $type = shift;
 
-  return if $formats{$type} || $readers{$type};
+  return if $formats_low{$type} || $readers{$type};
 
   return unless $type =~ /^\w+$/;
 
@@ -1600,7 +1598,7 @@ sub _reader_autoload {
 sub _writer_autoload {
   my $type = shift;
 
-  return if $formats{$type} || $readers{$type};
+  return if $formats_low{$type} || $readers{$type};
 
   return unless $type =~ /^\w+$/;
 
@@ -1759,7 +1757,7 @@ sub write {
       or return undef;
   }
   else {
-    if (!$formats{$input{'type'}}) { 
+    if (!$formats_low{$input{'type'}}) { 
       my $write_types = join ', ', sort Imager->write_types();
       $self->_set_error("format '$input{'type'}' not supported - formats $write_types available for writing");
       return undef;
@@ -3928,6 +3926,106 @@ sub Inline {
 
 # threads shouldn't try to close raw Imager objects
 sub Imager::ImgRaw::CLONE_SKIP { 1 }
+
+# backward compatibility for %formats
+package Imager::FORMATS;
+use strict;
+use constant IX_FORMATS => 0;
+use constant IX_LIST => 1;
+use constant IX_INDEX => 2;
+use constant IX_CLASSES => 3;
+
+sub TIEHASH {
+  my ($class, $formats, $classes) = @_;
+
+  return bless [ $formats, [ ], 0, $classes ], $class;
+}
+
+sub _check {
+  my ($self, $key) = @_;
+
+  (my $file = $self->[IX_CLASSES]{$key} . ".pm") =~ s(::)(/)g;
+  my $value;
+  if (eval { require $file; 1 }) {
+    $value = 1;
+  }
+  else {
+    $value = undef;
+  }
+  $self->[IX_FORMATS]{$key} = $value;
+
+  return $value;
+}
+
+sub FETCH {
+  my ($self, $key) = @_;
+
+  exists $self->[IX_FORMATS]{$key} and return $self->[IX_FORMATS]{$key};
+
+  $self->[IX_CLASSES]{$key} or return undef;
+
+  return $self->_check($key);
+}
+
+sub STORE {
+  die "%Imager::formats is not user monifiable";
+}
+
+sub DELETE {
+  die "%Imager::formats is not user monifiable";
+}
+
+sub CLEAR {
+  die "%Imager::formats is not user monifiable";
+}
+
+sub EXISTS {
+  my ($self, $key) = @_;
+
+  if (exists $self->[IX_FORMATS]{$key}) {
+    my $value = $self->[IX_FORMATS]{$key}
+      or return;
+    return 1;
+  }
+
+  $self->_check($key) or return 1==0;
+
+  return 1==1;
+}
+
+sub FIRSTKEY {
+  my ($self) = @_;
+
+  unless (@{$self->[IX_LIST]}) {
+    # full populate it
+    @{$self->[IX_LIST]} = keys %{$self->[IX_FORMATS]};
+
+    for my $key (keys %{$self->[IX_CLASSES]}) {
+      $self->[IX_FORMATS]{$key} and next;
+      $self->_check($key)
+	and push @{$self->[IX_LIST]}, $key;
+    }
+  }
+
+  @{$self->[IX_LIST]} or return;
+  $self->[IX_INDEX] = 1;
+  return $self->[IX_LIST][0];
+}
+
+sub NEXTKEY {
+  my ($self) = @_;
+
+  $self->[IX_INDEX] < @{$self->[IX_LIST]}
+    or return;
+
+  return $self->[IX_LIST][$self->[IX_INDEX]++];
+}
+
+sub SCALAR {
+  my ($self) = @_;
+
+  return scalar @{$self->[IX_LIST]};
+}
 
 1;
 __END__

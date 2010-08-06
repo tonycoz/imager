@@ -399,11 +399,6 @@ int i_tiff_has_compression(char const *name);
 
 #endif /* HAVE_LIBTIFF */
 
-#ifdef HAVE_LIBPNG
-i_img    *i_readpng_wiol(io_glue *ig, int length);
-undef_int i_writepng_wiol(i_img *im, io_glue *ig);
-#endif /* HAVE_LIBPNG */
-
 #ifdef HAVE_LIBGIF
 i_img *i_readgif(int fd, int **colour_table, int *colours);
 i_img *i_readgif_wiol(io_glue *ig, int **colour_table, int *colours);

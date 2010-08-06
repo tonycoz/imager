@@ -4,9 +4,11 @@ use Imager qw(:all);
 use Test::More;
 use Imager::Test qw(test_image_raw);
 
+-d "testout" or mkdir "testout";
+
 init_log("testout/t102png.log",1);
 
-i_has_format("png")
+$Imager::formats{"png"}
   or plan skip_all => "No png support";
 
 plan tests => 33;
@@ -29,13 +31,13 @@ Imager::i_tags_add($img, "i_yres", 0, undef, 200);
 open(FH,">testout/t102.png") || die "cannot open testout/t102.png for writing\n";
 binmode(FH);
 my $IO = Imager::io_new_fd(fileno(FH));
-ok(i_writepng_wiol($img, $IO), "write");
+ok(Imager::File::PNG::i_writepng_wiol($img, $IO), "write");
 close(FH);
 
 open(FH,"testout/t102.png") || die "cannot open testout/t102.png\n";
 binmode(FH);
 $IO = Imager::io_new_fd(fileno(FH));
-my $cmpimg = i_readpng_wiol($IO, -1);
+my $cmpimg = Imager::File::PNG::i_readpng_wiol($IO);
 close(FH);
 ok($cmpimg, "read png");
 
@@ -52,14 +54,14 @@ open FH, "> testout/t102_trans.png"
   or die "Cannot open testout/t102_trans.png: $!";
 binmode FH;
 $IO = Imager::io_new_fd(fileno(FH));
-ok(i_writepng_wiol($timg, $IO), "write tranparent");
+ok(Imager::File::PNG::i_writepng_wiol($timg, $IO), "write tranparent");
 close FH;
 
 open FH,"testout/t102_trans.png" 
   or die "cannot open testout/t102_trans.png\n";
 binmode(FH);
 $IO = Imager::io_new_fd(fileno(FH));
-$cmpimg = i_readpng_wiol($IO, -1);
+$cmpimg = Imager::File::PNG::i_readpng_wiol($IO);
 ok($cmpimg, "read transparent");
 close(FH);
 
@@ -74,7 +76,7 @@ open FH, "< testimg/palette.png"
 binmode FH;
 $IO = Imager::io_new_fd(fileno(FH));
 # 1.1 may segfault here (it does with libefence)
-my $pimg = i_readpng_wiol($IO,-1);
+my $pimg = Imager::File::PNG::i_readpng_wiol($IO);
 ok($pimg, "read transparent paletted image");
 close FH;
 
@@ -82,7 +84,7 @@ open FH, "< testimg/palette_out.png"
   or die "cannot open testimg/palette_out.png: $!\n";
 binmode FH;
 $IO = Imager::io_new_fd(fileno(FH));
-my $poimg = i_readpng_wiol($IO, -1);
+my $poimg = Imager::File::PNG::i_readpng_wiol($IO);
 ok($poimg, "read palette_out image");
 close FH;
 if (!is(i_img_diff($pimg, $poimg), 0, "images the same")) {

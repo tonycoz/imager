@@ -8,6 +8,12 @@ Imager 0.76
    format files and allows white space padding between files.
    Thanks to Philip Gwyn (Leolo) for this patch.
 
+ - moved the PNG file handling code into a sub-module in preparation
+   for separate distribution.
+   https://rt.cpan.org/Ticket/Display.html?id=49616 (partial)
+   Also helps avoid complications from -I/-L compile/link options from
+   other libraries.
+
 Bugs:
 
  - Imager->new(data => $data) didn't try to process image file data in

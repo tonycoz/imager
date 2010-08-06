@@ -2502,18 +2502,6 @@ i_tiff_has_compression(name)
 
 #ifdef HAVE_LIBPNG
 
-Imager::ImgRaw
-i_readpng_wiol(ig, length)
-        Imager::IO     ig
-	       int     length
-
-
-undef_int
-i_writepng_wiol(im, ig)
-    Imager::ImgRaw     im
-        Imager::IO     ig
-
-
 #endif
 
 
