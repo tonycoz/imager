@@ -220,8 +220,7 @@ sub _probe_test {
 	 function => $req->{testcode},
 	);
   unless ($good) {
-    print "$req->{name}: Test code failed checklib probe: $@\n"
-      if $req->{verbose};
+    print "$req->{name}: Test code failed: $@";
     return;
   }
 
