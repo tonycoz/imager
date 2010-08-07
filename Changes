@@ -1,5 +1,12 @@
 Imager release history.  Older releases can be found in Changes.old
 
+Imager 0.75_02 - 07 Aug 2010
+==============
+
+Bug fixes:
+
+ - add file missing from MANIFEST, which was causing TIFF failures.
+
 Imager 0.75_01 - 06 Aug 2010
 ==============
 
