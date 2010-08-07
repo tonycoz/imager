@@ -353,6 +353,7 @@ testimg/pengtile.tif	Tiled tiff image, same as penguin-base.ppm
 testimg/pgm.pgm		Simple pgm for testing the right sample is in the right place
 testimg/rgb16.tif	16-bit/sample RGB image - strips
 testimg/rgb16t.tif	16-bit/sample RGB image - tiled
+testimg/rgbatsep.tif	Tiled/separated for testing RGBA codepath
 testimg/scale.gif
 testimg/scale.ppm
 testimg/scalei.gif

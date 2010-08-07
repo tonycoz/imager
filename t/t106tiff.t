@@ -561,7 +561,8 @@ SKIP:
   # tiled, non-contig, should fallback to RGBA code
   my $rgbatsep = Imager->new;
   ok($rgbatsep->read(file => 'testimg/rgbatsep.tif'),
-     "read base rgba image");
+     "read tiled, separated rgba image")
+    or diag($rgbatsep->errstr);
   is_image($rgba, $rgbatsep, "check they match");
 }
 { # read bi-level
