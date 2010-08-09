@@ -185,6 +185,11 @@ sub assert_lib {
     @incpaths = (ref($args{incpath}) ? @{$args{incpath}} : $args{incpath}) 
         if $args{incpath};
 
+    # each entry is an arrayref containing:
+    # 0: arrayref of library search paths
+    # 1: arrayref of library names
+    my @link_cfgs = map [ \@libpaths, [ $_ ] ], @libs;
+
     # work-a-like for Makefile.PL's LIBS and INC arguments
     # if given as command-line argument, append to %args
     for my $arg (@ARGV) {
@@ -197,12 +202,14 @@ sub assert_lib {
             }
         }
     }
-
     # using special form of split to trim whitespace
     if(defined($args{LIBS})) {
-        foreach my $arg (split(' ', $args{LIBS})) {
-            die("LIBS argument badly-formed: $arg\n") unless($arg =~ /^-l/i);
-            push @{$arg =~ /^-l/ ? \@libs : \@libpaths}, substr($arg, 2);
+	my @LIBS = ref $args{LIBS} ? @{$args{LIBS}} : split ' ', $args{LIBS};
+        foreach my $arg (@LIBS) {
+	    my @sep = split ' ', $arg;
+	    my @libs = map { /^-l(.+)$/ ? $1 : () } @sep;
+	    my @paths = map { /^-L(.+)$/ ? $1 : () } @sep;
+	    push @link_cfgs, [ \@paths, \@libs ];
         }
     }
     if(defined($args{INC})) {
@@ -263,7 +270,8 @@ sub assert_lib {
     print $ch qq{#include <$_>\n} foreach (@headers);
     print $ch "int main(void) { ".($args{function} || 'return 0;')." }\n";
     close($ch);
-    for my $lib ( @libs ) {
+    for my $link_cfg ( @link_cfgs ) {
+	my ($paths, $libs) = @$link_cfg;
         my $exefile = File::Temp::mktemp( 'assertlibXXXXXXXX' ) . $Config{_exe};
         my @sys_cmd;
         if ( $Config{cc} eq 'cl' ) {                 # Microsoft compiler
@@ -275,20 +283,20 @@ sub assert_lib {
             @sys_cmd = (
                 @cc,
                 $cfile,
-                "${lib}.lib",
+                ( map { "$_.lib" } @$libs ),
                 "/Fe$exefile", 
                 (map { '/I'.Win32::GetShortPathName($_) } @incpaths),
                 "/link",
-                (map {'/libpath:'.Win32::GetShortPathName($_)} @libpaths),
+                (map {'/libpath:'.Win32::GetShortPathName($_)} @$paths),
             );
         } elsif($Config{cc} eq 'CC/DECC') {          # VMS
         } elsif($Config{cc} =~ /bcc32(\.exe)?/) {    # Borland
             @sys_cmd = (
                 @cc,
                 "-o$exefile",
-                "-l$lib",
+                (map { "-l$_" } @$libs ),
                 (map { "-I$_" } @incpaths),
-                (map { "-L$_" } @libpaths),
+                (map { "-L$_" } @$paths),
                 $cfile);
         } else {                                     # Unix-ish
                                                      # gcc, Sun, AIX (gcc, cc)
@@ -296,15 +304,15 @@ sub assert_lib {
                 @cc,
                 $cfile,
                 "-o", "$exefile",
-                "-l$lib",
+                (map { "-l$_" } @$libs ),
                 (map { "-I$_" } @incpaths),
-                (map { "-L$_" } @libpaths)
+                (map { "-L$_" } @$paths)
             );
         }
         warn "# @sys_cmd\n" if $args{debug};
         my $rv = $args{debug} ? system(@sys_cmd) : _quiet_system(@sys_cmd);
-        push @missing, $lib if $rv != 0 || ! -x $exefile;
-        push @wrongresult, $lib if $rv == 0 && -x $exefile && system(File::Spec->rel2abs($exefile)) != 0; 
+        push @missing, @$libs if $rv != 0 || ! -x $exefile;
+        push @wrongresult, @$libs if $rv == 0 && -x $exefile && system(File::Spec->rel2abs($exefile)) != 0; 
         _cleanup_exe($exefile);
     } 
     unlink $cfile;

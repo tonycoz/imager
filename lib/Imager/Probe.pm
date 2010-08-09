@@ -214,7 +214,7 @@ sub _probe_test {
     Devel::CheckLib::check_lib
 	(
 	 debug => $req->{verbose},
-	 LIBS => $result->{LIBS},
+	 LIBS => [ $result->{LIBS} ],
 	 INC => $result->{INC},
 	 header => $req->{testcodeheaders},
 	 function => $req->{testcode},
