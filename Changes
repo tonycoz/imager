@@ -1,5 +1,16 @@
 Imager release history.  Older releases can be found in Changes.old
 
+Imager 0.75_03 - 09 Aug 2010
+==============
+
+Bug fixes:
+
+ - read_types() and write_types() would include png when it wasn't
+   available due to a problem with the %formats tie
+
+ - handle dependent libraries correctly (eg -lpng requiring -lz) in
+   the code run phase of library probing.
+
 Imager 0.75_02 - 07 Aug 2010
 ==============
 
