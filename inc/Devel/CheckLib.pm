@@ -204,13 +204,23 @@ sub assert_lib {
     }
     # using special form of split to trim whitespace
     if(defined($args{LIBS})) {
-	my @LIBS = ref $args{LIBS} ? @{$args{LIBS}} : split ' ', $args{LIBS};
-        foreach my $arg (@LIBS) {
-	    my @sep = split ' ', $arg;
-	    my @libs = map { /^-l(.+)$/ ? $1 : () } @sep;
-	    my @paths = map { /^-L(.+)$/ ? $1 : () } @sep;
-	    push @link_cfgs, [ \@paths, \@libs ];
-        }
+        if (ref $args{LIBS}) {
+	    foreach my $arg (@{$args{LIBS}}) {
+		my @sep = split ' ', $arg;
+		my @libs = map { /^-l(.+)$/ ? $1 : () } @sep;
+		my @paths = map { /^-L(.+)$/ ? $1 : () } @sep;
+		push @link_cfgs, [ \@paths, \@libs ];
+	    }
+	}
+	else {
+	    my @libs;
+	    my @paths;
+	    foreach my $arg (split(' ', $args{LIBS})) {
+		die("LIBS argument badly-formed: $arg\n") unless($arg =~ /^-l/i);
+		push @{$arg =~ /^-l/ ? \@libs : \@paths}, substr($arg, 2);
+	    }
+	    push @link_cfgs, map [ \@paths, [ $_ ] ], @libs;
+	}
     }
     if(defined($args{INC})) {
         foreach my $arg (split(' ', $args{INC})) {
