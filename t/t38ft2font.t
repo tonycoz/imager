@@ -1,6 +1,6 @@
 #!perl -w
 use strict;
-use Test::More tests => 183;
+use Test::More tests => 187;
 ++$|;
 # Before `make install' is performed this script should be runnable with
 # `make test'. After `make install' it should work as `perl test.pl'
@@ -20,13 +20,13 @@ my @base_color = (64, 255, 64);
 
 SKIP:
 {
-  i_has_format("ft2") or skip("no freetype2 library found", 182);
+  i_has_format("ft2") or skip("no freetype2 library found", 186);
 
   print "# has ft2\n";
   
   my $fontname=$ENV{'TTFONTTEST'}||'./fontfiles/dodge.ttf';
 
-  -f $fontname or skip("cannot find fontfile $fontname", 182);
+  -f $fontname or skip("cannot find fontfile $fontname", 186);
 
 
   my $bgcolor=i_color_new(255,0,0,0);
@@ -474,6 +474,21 @@ SKIP:
     ok($im->string(x => 0, 'y' => 40, text => 'test', 
 		   size => 11, sizew => 11, font => $font, aa => 1),
        'draw on translucent image')
+  }
+
+  { # RT 60199
+    # not ft2 specific, but Imager
+    my $im = Imager->new(xsize => 100, ysize => 100);
+    my $font = Imager::Font->new(file=>'fontfiles/ImUgly.ttf', type=>'ft2');
+    my $imcopy = $im->copy;
+    ok($im, "make test image");
+    ok($font, "make test font");
+    ok($im->align_string(valign => "center", halign => "center",
+			 x => 50, y => 50, string => "0", color => "#FFF",
+			 font => $font),
+       "draw 0 aligned");
+    ok(Imager::i_img_diff($im->{IMG}, $imcopy->{IMG}),
+       "make sure we drew the '0'");
   }
 }
 

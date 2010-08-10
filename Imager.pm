@@ -3745,7 +3745,8 @@ sub align_string {
   }
 
   my %input=('x'=>0, 'y'=>0, @_);
-  $input{string}||=$input{text};
+  defined $input{string}
+    or $input{string} = $input{text};
 
   unless(exists $input{string}) {
     $self->_set_error("missing required parameter 'string'");

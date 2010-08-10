@@ -1,5 +1,15 @@
 Imager release history.  Older releases can be found in Changes.old
 
+Imager 0.76 - unreleased
+===========
+
+Bug fixes:
+
+ - the align_string() method would ignore a string of "0" due to a
+   mis-use of C< ||= >.
+   Thanks to Maurice Height for reporting this.
+   https://rt.cpan.org/Ticket/Display.html?id=60199
+
 Imager 0.75_03 - 09 Aug 2010
 ==============
 
