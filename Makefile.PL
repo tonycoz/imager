@@ -215,6 +215,28 @@ if ($MM_ver >= 6.46) {
      },
      license => "perl",
      dynamic_config => 1,
+     no_index =>
+     {
+      directory =>
+      [
+       "PNG",
+      ],
+     },
+     resources =>
+     {
+      homepage => "http://imager.perl.org/",
+      repository =>
+      {
+       url => "http://imager.perl.org/svn/",
+       web => "http://imager.perl.org/svnweb/public/browse/trunk/Imager",
+       type => "svn",
+      },
+      bugtracker =>
+      {
+       web => "http://rt.cpan.org/NoAuth/Bugs.html?Dist=Imager",
+       mailto => 'bug-Imager@rt.cpan.org',
+      },
+     },
     };
 }
 
