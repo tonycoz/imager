@@ -256,7 +256,7 @@ at least version 4.1.4.  If you have a recent Linux distribution you
 should be safe with whatever giflib it provides, but if you're
 building from source, please try to use the latest version.
 
-With the expiration of the LZQ patent there's no reason to use
+With the expiration of the LZW patent there's no reason to use
 libungif.
 
 libgif 4.1.4 has no problems known to me at this point.
