@@ -361,6 +361,9 @@ If you get errors from your make tool, make sure you're using the same
 make that was used to build your perl - generally GNU make for cygwin,
 nmake for Visual C/C++ and dmake for MinGW.
 
+Imager and all of the libraries it requires are supplied with
+Strawberry Perl.
+
 ============
 6. Mac OS X
 ============
