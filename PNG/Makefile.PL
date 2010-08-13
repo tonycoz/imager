@@ -2,6 +2,7 @@
 use strict;
 use ExtUtils::MakeMaker qw(WriteMakefile WriteEmptyMakefile);
 use Getopt::Long;
+use Config;
 
 my $verbose = $ENV{IM_VERBOSE};
 my @libpaths;
@@ -25,16 +26,17 @@ my %opts =
 my @inc;
 if ($BUILDING_IMAGER) {
   push @inc, "-I..";
-  push @INC, "../lib";
+  unshift @INC, "../lib";
 }
 else {
+  unshift @INC, "inc";
   print "PNG: building independently\n";
   require Imager::ExtUtils;
   push @inc, Imager::ExtUtils->includes;
   $opts{TYPEMAPS} = [ Imager::ExtUtils->typemap ];
 
   # Imager required configure through use
-  my @Imager_req = ( Imager => "0.76" );
+  my @Imager_req = ( Imager => "0.77" );
   if ($MM_ver >= 6.46) {
     $opts{META_MERGE} =
       {
@@ -46,7 +48,17 @@ else {
        {
 	@Imager_req,
 	"Test::More" => "0.47",
-       }
+       },
+       resources =>
+       {
+	homepage => "http://imager.perl.org/",
+	repository =>
+	{
+	 url => "http://imager.perl.org/svn/trunk/Imager-File-PNG",
+	 web => "http://imager.perl.org/svnweb/public/browse/trunk/Imager-File-PNG",
+	 type => "svn",
+	},
+       },
       };
     $opts{PREREQ_PM} =
       {
@@ -65,6 +77,8 @@ my %probe =
    libbase => "png",
    testcode => _png_test_code(),
    testcodeheaders => [ "png.h", "stdio.h" ],
+   incpath => join($Config{path_sep}, @incpaths),
+   libpath => join($Config{path_sep}, @libpaths),
   );
 
 my $probe_res = Imager::Probe->probe(\%probe);
