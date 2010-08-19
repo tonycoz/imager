@@ -75,8 +75,7 @@ sub _probe_pkg {
   my @pkgcfg_paths = map { "$_/pkgconfig" } _lib_paths( $req );
   push @pkgcfg_paths, $ENV{ 'PKG_CONFIG_PATH' } if $ENV{ 'PKG_CONFIG_PATH' };
 
-  my $pathsep = $^O eq 'MSWin32' ? q{;} : q{:};
-  local $ENV{ 'PKG_CONFIG_PATH' } = join $pathsep, @pkgcfg_paths;
+  local $ENV{ 'PKG_CONFIG_PATH' } = join $Config{path_sep}, @pkgcfg_paths;
 
   is_exe('pkg-config') or return;
   my $redir = $^O eq 'MSWin32' ? '' : '2>/dev/null';
