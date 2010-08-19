@@ -70,6 +70,14 @@ sub is_exe {
 sub _probe_pkg {
   my ($req) = @_;
 
+  # Setup pkg-config's environment variable to search non-standard paths
+  # which may be provided by --libdirs.
+  my @pkgcfg_paths = map { "$_/pkgconfig" } _lib_paths( $req );
+  push @pkgcfg_paths, $ENV{ 'PKG_CONFIG_PATH' } if $ENV{ 'PKG_CONFIG_PATH' };
+
+  my $pathsep = $^O eq 'MSWin32' ? q{;} : q{:};
+  local $ENV{ 'PKG_CONFIG_PATH' } = join $pathsep, @pkgcfg_paths;
+
   is_exe('pkg-config') or return;
   my $redir = $^O eq 'MSWin32' ? '' : '2>/dev/null';
 
@@ -202,11 +210,11 @@ sub _probe_test {
   require Devel::CheckLib;
   # setup LD_RUN_PATH to match link time
   my ($extra, $bs_load, $ld_load, $ld_run_path) =
-    ExtUtils::Liblist->ext($req->{LIBS}, $req->{verbose});
+    ExtUtils::Liblist->ext($result->{LIBS}, $req->{verbose});
   local $ENV{LD_RUN_PATH};
 
   if ($ld_run_path) {
-    print "Setting LD_RUN_PATH=$ld_run_path for TIFF probe\n"
+    print "Setting LD_RUN_PATH=$ld_run_path for $req->{name} probe\n"
       if $req->{verbose};
     $ENV{LD_RUN_PATH} = $ld_run_path;
   }

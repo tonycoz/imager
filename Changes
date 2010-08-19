@@ -1,5 +1,20 @@
 Imager release history.  Older releases can be found in Changes.old
 
+Imager 0.78 - unreleased
+===========
+
+ - add each library-directory/pkgconfig/ to the pkg-config search path
+   in Imager::Probe.
+   Thanks to Justin Davis.
+   https://rt.cpan.org/Ticket/Display.html?id=60491
+
+Bug fixes:
+
+ - Imager::Probe was calling ExtUtils::Liblist to initialize
+   LD_RUN_PATH supplying an undefined value rather than the found
+   directory.  Thanks to Justin Davis.
+   https://rt.cpan.org/Ticket/Display.html?id=60491
+
 Imager 0.77 - 11 Aug 2010
 ===========
 
