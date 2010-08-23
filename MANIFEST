@@ -268,7 +268,6 @@ t/t101nojpeg.t		Test handling when jpeg not available
 t/t102nopng.t		Test handling when png not available
 t/t103raw.t
 t/t104ppm.t
-t/t105gif.t		Test gif support
 t/t105nogif.t		Test handling when gif not available
 t/t106notiff.t		Test handling when tiff not available
 t/t106tiff.t		Test tiff support
@@ -297,7 +296,6 @@ t/t66paste.t
 t/t67convert.t
 t/t68map.t
 t/t69rubthru.t
-t/t70newgif.t
 t/t75polyaa.t
 t/t80texttools.t        Test text wrapping
 t/t81hlines.t		Test hlines.c
