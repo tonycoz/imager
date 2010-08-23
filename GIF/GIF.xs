@@ -15,7 +15,7 @@ DEFINE_IMAGER_PERL_CALLBACKS;
 
 MODULE = Imager::File::GIF  PACKAGE = Imager::File::GIF
 
-long
+double
 i_giflib_version()
 
 undef_int

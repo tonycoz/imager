@@ -7,11 +7,12 @@
 #endif
 #include <errno.h>
 #include <string.h>
+#include <stdlib.h>
 
 /*
 =head1 NAME
 
-gif.c - read and write gif files for Imager
+imgif.c - read and write gif files for Imager
 
 =head1 SYNOPSIS
 
@@ -91,9 +92,20 @@ i_colortable_copy(int **colour_table, int *colours, ColorMapObject *colourmap) {
   }
 }
 
-long
+static const
+char gif_version_str[] = GIF_LIB_VERSION;
+
+double
 i_giflib_version(void) {
-  return 10;
+  const char *p = gif_version_str;
+
+  while (*p && (*p < '0' || *p > '9'))
+    ++p;
+
+  if (!*p)
+    return 0;
+
+  return strtod(p, NULL);
 }
 
 /*
