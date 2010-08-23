@@ -1,6 +1,7 @@
 #!perl -w
 use strict;
-use Test::More tests => 187;
+use Test::More tests => 189;
+use Cwd qw(getcwd abs_path);
 ++$|;
 # Before `make install' is performed this script should be runnable with
 # `make test'. After `make install' it should work as `perl test.pl'
@@ -16,17 +17,19 @@ use Imager::Test qw(diff_text_with_nul is_color3);
 
 init_log("testout/t38ft2font.log",2);
 
+my $deffont = "fontfiles/dodge.ttf";
+
 my @base_color = (64, 255, 64);
 
 SKIP:
 {
-  i_has_format("ft2") or skip("no freetype2 library found", 186);
+  i_has_format("ft2") or skip("no freetype2 library found", 188);
 
   print "# has ft2\n";
   
-  my $fontname=$ENV{'TTFONTTEST'}||'./fontfiles/dodge.ttf';
+  my $fontname=$ENV{'TTFONTTEST'} || $deffont;
 
-  -f $fontname or skip("cannot find fontfile $fontname", 186);
+  -f $fontname or skip("cannot find fontfile $fontname", 188);
 
 
   my $bgcolor=i_color_new(255,0,0,0);
@@ -490,6 +493,34 @@ SKIP:
     ok(Imager::i_img_diff($im->{IMG}, $imcopy->{IMG}),
        "make sure we drew the '0'");
   }
+
+ SKIP:
+  { # RT 60509
+    # checks that a c:foo or c:\foo path is handled correctly on win32
+    my $type = "ft2";
+    $^O eq "MSWin32" || $^O eq "cygwin"
+      or skip("only for win32", 2);
+    my $dir = getcwd
+      or skip("Cannot get cwd", 2);
+    if ($^O eq "cygwin") {
+      $dir = Cygwin::posix_to_win_path($dir);
+    }
+    my $abs_path = abs_path($deffont);
+    my $font = Imager::Font->new(file => $abs_path, type => $type);
+    ok($font, "found font by absolute path")
+      or print "# path $abs_path\n";
+    undef $font;
+
+    $^O eq "cygwin"
+      and skip("cygwin doesn't support drive relative DOSsish paths", 1);
+    my ($drive) = $dir =~ /^([a-z]:)/i
+      or skip("cwd has no drive letter", 2);
+    my $drive_path = $drive . $deffont;
+    $font = Imager::Font->new(file => $drive_path, type => $type);
+    ok($font, "found font by drive relative path")
+      or print "# path $drive_path\n";
+  }
+
 }
 
 sub align_test {

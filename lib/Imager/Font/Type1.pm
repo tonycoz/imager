@@ -38,7 +38,10 @@ sub new {
     $Imager::ERRSTR = "Type 1 fonts not supported in this build";
     return;
   }
-  unless ($hsh{file} =~ m!^/! || $hsh{file} =~ m!^\./!) {
+  # we want to avoid T1Lib's file search mechanism
+  unless ($hsh{file} =~ m!^/!
+	  || $hsh{file} =~ m!^\.\/?/!
+	  || $^O =~ /^(MSWin32|cygwin)$/ && $hsh{file} =~ /^[a-z]:/) {
     $hsh{file} = './' . $hsh{file};
   }
 
@@ -47,7 +50,9 @@ sub new {
 	    $Imager::ERRSTR = "Afm file $hsh{afm} not found";
 	    return;
 	  }
-	  unless ($hsh{afm} =~ m!^/! || $hsh{afm} =~ m!^\./!) {
+	  unless ($hsh{afm} =~ m!^/!
+		  || $hsh{afm} =~ m!^\./!
+		  || $^O =~ /^(MSWin32|cygwin)$/ && $hsh{file} =~ /^[a-z]:/) {
 	    $hsh{file} = './' . $hsh{file};
 	  }
   } else {

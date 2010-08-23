@@ -3,6 +3,8 @@ Imager release history.  Older releases can be found in Changes.old
 Imager 0.78 - unreleased
 ===========
 
+TODO: fix i_giflib_version()
+
  - add each library-directory/pkgconfig/ to the pkg-config search path
    in Imager::Probe.
    Thanks to Justin Davis.
@@ -18,6 +20,11 @@ Bug fixes:
    LD_RUN_PATH supplying an undefined value rather than the found
    directory.  Thanks to Justin Davis.
    https://rt.cpan.org/Ticket/Display.html?id=60491
+
+ - only prepend ./ to font filenames when passing them to T1Lib and
+   then only when it would use its search mechanisms.
+   https://rt.cpan.org/Ticket/Display.html?id=60509
+
 
 Imager 0.77 - 11 Aug 2010
 ===========

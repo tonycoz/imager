@@ -7,31 +7,32 @@
 # Change 1..1 below to 1..last_test_to_print .
 # (It may become useful if the test is moved to ./t subdirectory.)
 use strict;
-use Test::More tests => 94;
-BEGIN { use_ok(Imager => ':all') }
+use Test::More;
+use Imager ':all';
 use Imager::Test qw(diff_text_with_nul is_color3);
+use Cwd qw(getcwd abs_path);
 
 #$Imager::DEBUG=1;
 
+i_has_format("t1")
+  or plan skip_all => "t1lib unavailble or disabled";
+
+plan tests => 95;
+
 init_log("testout/t30t1font.log",1);
 
-my $deffont = './fontfiles/dcr10.pfb';
+my $deffont = 'fontfiles/dcr10.pfb';
 
 my $fontname_pfb=$ENV{'T1FONTTESTPFB'}||$deffont;
 my $fontname_afm=$ENV{'T1FONTTESTAFM'}||'./fontfiles/dcr10.afm';
 
+-f $fontname_pfb
+  or skip_all("cannot find fontfile for type 1 test $fontname_pfb");
+-f $fontname_afm
+  or skip_all("cannot find fontfile for type 1 test $fontname_afm");
+
 SKIP:
 {
-  if (!(i_has_format("t1")) ) {
-    skip("t1lib unavailable or disabled", 93);
-  }
-  elsif (! -f $fontname_pfb) {
-    skip("cannot find fontfile for type 1 test $fontname_pfb", 93);
-  }
-  elsif (! -f $fontname_afm) {
-    skip("cannot find fontfile for type 1 test $fontname_afm", 93);
-  }
-
   print "# has t1\n";
 
   #i_t1_set_aa(1);
@@ -343,6 +344,33 @@ SKIP:
     @colors = sort { ($a->rgba)[0] <=> ($b->rgba)[0] } @colors;
     is_color3($colors[0], 0, 0, 0, "check we got black");
     is_color3($colors[1], 255, 0, 0, "and red");
+  }
+
+ SKIP:
+  { # RT 60509
+    # checks that a c:foo or c:\foo path is handled correctly on win32
+    my $type = "t1";
+    $^O eq "MSWin32" || $^O eq "cygwin"
+      or skip("only for win32", 2);
+    my $dir = getcwd
+      or skip("Cannot get cwd", 2);
+    if ($^O eq "cygwin") {
+      $dir = Cygwin::posix_to_win_path($dir);
+    }
+    my $abs_path = abs_path($deffont);
+    my $font = Imager::Font->new(file => $abs_path, type => $type);
+    ok($font, "found font by absolute path")
+      or print "# path $abs_path\n";
+    undef $font;
+
+    $^O eq "cygwin"
+      and skip("cygwin doesn't support drive relative DOSsish paths", 1);
+    my ($drive) = $dir =~ /^([a-z]:)/i
+      or skip("cwd has no drive letter", 2);
+    my $drive_path = $drive . $deffont;
+    $font = Imager::Font->new(file => $drive_path, type => $type);
+    ok($font, "found font by drive relative path")
+      or print "# path $drive_path\n";
   }
 }
 
