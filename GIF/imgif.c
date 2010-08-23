@@ -1,4 +1,4 @@
-#include "imageri.h"
+#include "imgif.h"
 #include <gif_lib.h>
 #ifdef _MSC_VER
 #include <io.h>
@@ -6,7 +6,7 @@
 #include <unistd.h>
 #endif
 #include <errno.h>
-/* XXX: Reading still needs to support reading all those gif properties */
+#include <string.h>
 
 /*
 =head1 NAME
@@ -60,52 +60,7 @@ functionality with giflib3.
 static char const *gif_error_msg(int code);
 static void gif_push_error(void);
 
-#if IM_GIFMAJOR >= 4
-
 static int gif_read_callback(GifFileType *gft, GifByteType *buf, int length);
-
-/*
-=item gif_scalar_info
-
-Internal.  A structure passed to the reader function used for reading
-GIFs from scalars.
-
-Used with giflib 4 and later.
-
-=cut
-*/
-
-struct gif_scalar_info {
-  char *data;
-  int length;
-  int cpos;
-};
-
-/*
-=item my_gif_inputfunc(GifFileType *gft, GifByteType *buf, int length)
-
-Internal.  The reader callback passed to giflib.
-
-Used with giflib 4 and later.
-
-=cut
-*/
-
-int
-my_gif_inputfunc(GifFileType* gft, GifByteType *buf,int length) {
-  struct gif_scalar_info *gsi=(struct gif_scalar_info *)gft->UserData;
-  /*   fprintf(stderr,"my_gif_inputfunc: length=%d cpos=%d tlength=%d\n",length,gsi->cpos,gsi->length); */
-
-  if (gsi->cpos == gsi->length) return 0;
-  if (gsi->cpos+length > gsi->length) length=gsi->length-gsi->cpos; /* Don't read too much */
-  memcpy(buf,gsi->data+gsi->cpos,length);
-  gsi->cpos+=length;
-  return length;
-}
-
-#endif
-
-
 
 /* Make some variables global, so we could access them faster: */
 
@@ -136,6 +91,10 @@ i_colortable_copy(int **colour_table, int *colours, ColorMapObject *colourmap) {
   }
 }
 
+long
+i_giflib_version(void) {
+  return 10;
+}
 
 /*
 =item i_readgif_low(GifFileType *GifFile, int **colour_table, int *colours)
@@ -187,7 +146,7 @@ i_readgif_low(GifFileType *GifFile, int **colour_table, int *colours) {
     return NULL;
   }
 
-  im = i_img_empty_ch(NULL, GifFile->SWidth, GifFile->SHeight, 3);
+  im = i_img_8_new(GifFile->SWidth, GifFile->SHeight, 3);
   if (!im) {
     if (colour_table && *colour_table) {
       myfree(*colour_table);
@@ -372,41 +331,9 @@ i_readgif_low(GifFileType *GifFile, int **colour_table, int *colours) {
     return NULL;
   }
 
-  i_tags_add(&im->tags, "i_format", 0, "gif", -1, 0);
+  i_tags_set(&im->tags, "i_format", "gif", -1);
 
   return im;
-}
-
-/*
-=item i_readgif(int fd, int **colour_table, int *colours)
-
-Reads in a GIF file from a file handle and converts it to an Imager
-RGB image object.
-
-Returns the palette for the object in colour_table for colours
-colours.
-
-Returns NULL on failure.
-
-=cut
-*/
-
-i_img *
-i_readgif(int fd, int **colour_table, int *colours) {
-  GifFileType *GifFile;
-
-  i_clear_error();
-  
-  mm_log((1,"i_readgif(fd %d, colour_table %p, colours %p)\n", fd, colour_table, colours));
-
-  if ((GifFile = DGifOpenFileHandle(fd)) == NULL) {
-    gif_push_error();
-    i_push_error(0, "Cannot create giflib file object");
-    mm_log((1,"i_readgif: Unable to open file\n"));
-    return NULL;
-  }
-
-  return i_readgif_low(GifFile, colour_table, colours);
 }
 
 /*
@@ -543,8 +470,7 @@ i_img **i_readgif_multi_low(GifFileType *GifFile, int *count, int page) {
 
   Size = GifFile->SWidth * sizeof(GifPixelType);
   
-  if ((GifRow = (GifRowType) mymalloc(Size)) == NULL)
-    i_fatal(0,"Failed to allocate memory required, aborted."); /* First row. */
+  GifRow = (GifRowType) mymalloc(Size);
 
   /* Scan the content of the GIF file and load the image(s) in: */
   do {
@@ -640,37 +566,37 @@ i_img **i_readgif_multi_low(GifFileType *GifFile, int *count, int page) {
 	  }
 	}
 	results[*count-1] = img;
-	i_tags_add(&img->tags, "i_format", 0, "gif", -1, 0);
-	i_tags_addn(&img->tags, "gif_left", 0, GifFile->Image.Left);
+	i_tags_set(&img->tags, "i_format", "gif", -1);
+	i_tags_setn(&img->tags, "gif_left", GifFile->Image.Left);
 	/**(char *)0 = 1;*/
-	i_tags_addn(&img->tags, "gif_top",  0, GifFile->Image.Top);
-	i_tags_addn(&img->tags, "gif_interlace", 0, GifFile->Image.Interlace);
-	i_tags_addn(&img->tags, "gif_screen_width", 0, GifFile->SWidth);
-	i_tags_addn(&img->tags, "gif_screen_height", 0, GifFile->SHeight);
-	i_tags_addn(&img->tags, "gif_colormap_size", 0, ColorMapSize);
+	i_tags_setn(&img->tags, "gif_top",  GifFile->Image.Top);
+	i_tags_setn(&img->tags, "gif_interlace", GifFile->Image.Interlace);
+	i_tags_setn(&img->tags, "gif_screen_width", GifFile->SWidth);
+	i_tags_setn(&img->tags, "gif_screen_height", GifFile->SHeight);
+	i_tags_setn(&img->tags, "gif_colormap_size", ColorMapSize);
 	if (GifFile->SColorMap && !GifFile->Image.ColorMap) {
-	  i_tags_addn(&img->tags, "gif_background", 0, 
+	  i_tags_setn(&img->tags, "gif_background",
 		      GifFile->SBackGroundColor);
 	}
 	if (GifFile->Image.ColorMap) {
-	  i_tags_addn(&img->tags, "gif_localmap", 0, 1);
+	  i_tags_setn(&img->tags, "gif_localmap", 1);
 	}
 	if (got_gce) {
 	  if (trans_index >= 0) {
 	    i_color trans;
-	    i_tags_addn(&img->tags, "gif_trans_index", 0, trans_index);
+	    i_tags_setn(&img->tags, "gif_trans_index", trans_index);
 	    i_getcolors(img, trans_index, &trans, 1);
 	    i_tags_set_color(&img->tags, "gif_trans_color", 0, &trans);
 	  }
-	  i_tags_addn(&img->tags, "gif_delay", 0, gif_delay);
-	  i_tags_addn(&img->tags, "gif_user_input", 0, user_input);
-	  i_tags_addn(&img->tags, "gif_disposal", 0, disposal);
+	  i_tags_setn(&img->tags, "gif_delay", gif_delay);
+	  i_tags_setn(&img->tags, "gif_user_input", user_input);
+	  i_tags_setn(&img->tags, "gif_disposal", disposal);
 	}
 	got_gce = 0;
 	if (got_ns_loop)
-	  i_tags_addn(&img->tags, "gif_loop", 0, ns_loop);
+	  i_tags_setn(&img->tags, "gif_loop", ns_loop);
 	if (comment) {
-	  i_tags_add(&img->tags, "gif_comment", 0, comment, strlen(comment), 0);
+	  i_tags_set(&img->tags, "gif_comment", comment, strlen(comment));
 	  myfree(comment);
 	  comment = NULL;
 	}
@@ -862,8 +788,8 @@ i_img **i_readgif_multi_low(GifFileType *GifFile, int *count, int page) {
 
   if (comment) {
     if (*count) {
-      i_tags_add(&(results[*count-1]->tags), "gif_comment", 0, comment, 
-                 strlen(comment), 0);
+      i_tags_set(&(results[*count-1]->tags), "gif_comment", comment, 
+                 strlen(comment));
     }
     myfree(comment);
   }
@@ -887,12 +813,7 @@ i_img **i_readgif_multi_low(GifFileType *GifFile, int *count, int page) {
   return results;
 }
 
-#if IM_GIFMAJOR >= 4
-/* giflib declares this incorrectly as EgifOpen */
-extern GifFileType *EGifOpen(void *userData, OutputFunc writeFunc);
-
 static int io_glue_read_cb(GifFileType *gft, GifByteType *buf, int length);
-#endif
 
 /*
 =item i_readgif_multi_wiol(ig, int *count)
@@ -902,285 +823,19 @@ static int io_glue_read_cb(GifFileType *gft, GifByteType *buf, int length);
 
 i_img **
 i_readgif_multi_wiol(io_glue *ig, int *count) {
-  io_glue_commit_types(ig);
-
-  if (ig->source.type == FDSEEK || ig->source.type == FDNOSEEK) {
-    return i_readgif_multi(ig->source.fdseek.fd, count);
-  }
-  else {
-#if IM_GIFMAJOR >= 4
-    GifFileType *GifFile;
-
-    i_clear_error();
-
-    if ((GifFile = DGifOpen((void *)ig, io_glue_read_cb )) == NULL) {
-      gif_push_error();
-      i_push_error(0, "Cannot create giflib callback object");
-      mm_log((1,"i_readgif_multi_wiol: Unable to open callback datasource.\n"));
-      return NULL;
-    }
-    
-    return i_readgif_multi_low(GifFile, count, -1);
-#else
-    i_clear_error();
-    i_push_error(0, "callbacks not supported with giflib3");
-    
-    return NULL;
-#endif
-  }
-}
-
-/*
-=item i_readgif_multi(int fd, int *count)
-
-=cut
-*/
-i_img **
-i_readgif_multi(int fd, int *count) {
   GifFileType *GifFile;
-
+  
   i_clear_error();
   
-  mm_log((1,"i_readgif_multi(fd %d, &count %p)\n", fd, count));
-
-  if ((GifFile = DGifOpenFileHandle(fd)) == NULL) {
+  if ((GifFile = DGifOpen((void *)ig, io_glue_read_cb )) == NULL) {
     gif_push_error();
-    i_push_error(0, "Cannot create giflib file object");
-    mm_log((1,"i_readgif: Unable to open file\n"));
+    i_push_error(0, "Cannot create giflib callback object");
+    mm_log((1,"i_readgif_multi_wiol: Unable to open callback datasource.\n"));
     return NULL;
   }
-
+    
   return i_readgif_multi_low(GifFile, count, -1);
 }
-
-/*
-=item i_readgif_multi_scalar(char *data, int length, int *count)
-
-=cut
-*/
-i_img **
-i_readgif_multi_scalar(char *data, int length, int *count) {
-#if IM_GIFMAJOR >= 4
-  GifFileType *GifFile;
-  struct gif_scalar_info gsi;
-
-  i_clear_error();
-  
-  gsi.cpos=0;
-  gsi.length=length;
-  gsi.data=data;
-
-  mm_log((1,"i_readgif_multi_scalar(data %p, length %d, &count %p)\n", 
-          data, length, count));
-
-  if ((GifFile = DGifOpen( (void*) &gsi, my_gif_inputfunc )) == NULL) {
-    gif_push_error();
-    i_push_error(0, "Cannot create giflib callback object");
-    mm_log((1,"i_readgif_multi_scalar: Unable to open scalar datasource.\n"));
-    return NULL;
-  }
-
-  return i_readgif_multi_low(GifFile, count, -1);
-#else
-  return NULL;
-#endif
-}
-
-/*
-=item i_readgif_callback(i_read_callback_t cb, char *userdata, int **colour_table, int *colours)
-
-Read a GIF file into an Imager RGB file, the data of the GIF file is
-retreived by callin the user supplied callback function.
-
-This function is only used with giflib 4 and higher.
-
-=cut
-*/
-
-i_img**
-i_readgif_multi_callback(i_read_callback_t cb, char *userdata, int *count) {
-#if IM_GIFMAJOR >= 4
-  GifFileType *GifFile;
-  i_img **result;
-
-  i_gen_read_data *gci = i_gen_read_data_new(cb, userdata);
-
-  i_clear_error();
-  
-  mm_log((1,"i_readgif_multi_callback(callback %p, userdata %p, count %p)\n", cb, userdata, count));
-  if ((GifFile = DGifOpen( (void*) gci, gif_read_callback )) == NULL) {
-    gif_push_error();
-    i_push_error(0, "Cannot create giflib callback object");
-    mm_log((1,"i_readgif_callback: Unable to open callback datasource.\n"));
-    myfree(gci);
-    return NULL;
-  }
-
-  result = i_readgif_multi_low(GifFile, count, -1);
-  i_free_gen_read_data(gci);
-
-  return result;
-#else
-  return NULL;
-#endif
-}
-
-/*
-=item i_writegif(i_img *im, int fd, int max_colors, int pixdev, int fixedlen, i_color fixed[])
-
-Write I<img> to the file handle I<fd>.  The resulting GIF will use a
-maximum of 1<<I<max_colours> colours, with the first I<fixedlen>
-colours taken from I<fixed>.
-
-Returns non-zero on success.
-
-=cut
-*/
-
-undef_int
-i_writegif(i_img *im, int fd, int max_colors, int pixdev, int fixedlen, i_color fixed[]) {
-  i_color colors[256];
-  i_quantize quant;
-  
-  memset(&quant, 0, sizeof(quant));
-  quant.make_colors = mc_addi;
-  quant.mc_colors = colors;
-  quant.mc_size = 1<<max_colors;
-  quant.mc_count = fixedlen;
-  memcpy(colors, fixed, fixedlen * sizeof(i_color));
-  quant.translate = pt_perturb;
-  quant.perturb = pixdev;
-  return i_writegif_gen(&quant, fd, &im, 1);
-}
-
-/*
-=item i_writegifmc(i_img *im, int fd, int max_colors)
-
-Write I<img> to the file handle I<fd>.  The resulting GIF will use a
-maximum of 1<<I<max_colours> colours.
-
-Returns non-zero on success.
-
-=cut
-*/
-
-undef_int
-i_writegifmc(i_img *im, int fd, int max_colors) {
-  i_color colors[256];
-  i_quantize quant;
-
-/*    *(char *)0 = 1; */
-  
-  memset(&quant, 0, sizeof(quant));
-  quant.make_colors = mc_none; /* ignored for pt_giflib */
-  quant.mc_colors = colors;
-  quant.mc_size = 1 << max_colors;
-  quant.mc_count = 0;
-  quant.translate = pt_giflib;
-  return i_writegif_gen(&quant, fd, &im, 1);
-}
-
-
-/*
-=item i_readgif_scalar(char *data, int length, int **colour_table, int *colours)
-
-Reads a GIF file from an in memory copy of the file.  This can be used
-if you get the 'file' from some source other than an actual file (or
-some other file handle).
-
-This function is only available with giflib 4 and higher.
-
-=cut
-*/
-i_img*
-i_readgif_scalar(char *data, int length, int **colour_table, int *colours) {
-#if IM_GIFMAJOR >= 4
-  GifFileType *GifFile;
-  struct gif_scalar_info gsi;
-
-  i_clear_error();
-
-  gsi.cpos=0;
-  gsi.length=length;
-  gsi.data=data;
-
-  mm_log((1,"i_readgif_scalar(char* data, int length, colour_table %p, colours %p)\n", data, length, colour_table, colours));
-  if ((GifFile = DGifOpen( (void*) &gsi, my_gif_inputfunc )) == NULL) {
-    gif_push_error();
-    i_push_error(0, "Cannot create giflib callback object");
-    mm_log((1,"i_readgif_scalar: Unable to open scalar datasource.\n"));
-    return NULL;
-  }
-
-  return i_readgif_low(GifFile, colour_table, colours);
-#else
-  return NULL;
-#endif
-}
-
-#if IM_GIFMAJOR >= 4
-
-/*
-=item gif_read_callback(GifFileType *gft, GifByteType *buf, int length)
-
-Internal.  The reader callback wrapper passed to giflib.
-
-This function is only used with giflib 4 and higher.
-
-=cut
-*/
-
-static int
-gif_read_callback(GifFileType *gft, GifByteType *buf, int length) {
-  return i_gen_reader((i_gen_read_data *)gft->UserData, (char*)buf, length);
-}
-
-#endif
-
-
-/*
-=item i_readgif_callback(i_read_callback_t cb, char *userdata, int **colour_table, int *colours)
-
-Read a GIF file into an Imager RGB file, the data of the GIF file is
-retreived by callin the user supplied callback function.
-
-This function is only used with giflib 4 and higher.
-
-=cut
-*/
-
-i_img*
-i_readgif_callback(i_read_callback_t cb, char *userdata, int **colour_table, int *colours) {
-#if IM_GIFMAJOR >= 4
-  GifFileType *GifFile;
-  i_img *result;
-
-  i_gen_read_data *gci = i_gen_read_data_new(cb, userdata);
-
-  i_clear_error();
-  
-  mm_log((1,"i_readgif_callback(callback %p, userdata %p, colour_table %p, colours %p)\n", cb, userdata, colour_table, colours));
-  if ((GifFile = DGifOpen( (void*) gci, gif_read_callback )) == NULL) {
-    gif_push_error();
-    i_push_error(0, "Cannot create giflib callback object");
-    mm_log((1,"i_readgif_callback: Unable to open callback datasource.\n"));
-    myfree(gci);
-    return NULL;
-  }
-
-  result = i_readgif_low(GifFile, colour_table, colours);
-  i_free_gen_read_data(gci);
-
-  return result;
-#else
-  i_clear_error();
-  i_push_error(0, "callbacks not supported with giflib3");
-
-  return NULL;
-#endif
-}
-
-#if IM_GIFMAJOR >= 4
 
 static int
 io_glue_read_cb(GifFileType *gft, GifByteType *buf, int length) {
@@ -1189,42 +844,20 @@ io_glue_read_cb(GifFileType *gft, GifByteType *buf, int length) {
   return ig->readcb(ig, buf, length);
 }
 
-#endif
-
 i_img *
 i_readgif_wiol(io_glue *ig, int **color_table, int *colors) {
-  io_glue_commit_types(ig);
+  GifFileType *GifFile;
 
-  if (ig->source.type == FDSEEK || ig->source.type == FDNOSEEK) {
-    int fd = dup(ig->source.fdseek.fd);
-    if (fd < 0) {
-      i_push_error(errno, "dup() failed");
-      return 0;
-    }
-    return i_readgif(fd, color_table, colors);
-  }
-  else {
-#if IM_GIFMAJOR >= 4
-    GifFileType *GifFile;
-
-    i_clear_error();
-
-    if ((GifFile = DGifOpen((void *)ig, io_glue_read_cb )) == NULL) {
-      gif_push_error();
-      i_push_error(0, "Cannot create giflib callback object");
-      mm_log((1,"i_readgif_wiol: Unable to open callback datasource.\n"));
-      return NULL;
-    }
-    
-    return i_readgif_low(GifFile, color_table, colors);
-  
-#else
   i_clear_error();
-  i_push_error(0, "callbacks not supported with giflib3");
 
-  return NULL;
-#endif
+  if ((GifFile = DGifOpen((void *)ig, io_glue_read_cb )) == NULL) {
+    gif_push_error();
+    i_push_error(0, "Cannot create giflib callback object");
+    mm_log((1,"i_readgif_wiol: Unable to open callback datasource.\n"));
+    return NULL;
   }
+    
+  return i_readgif_low(GifFile, color_table, colors);
 }
 
 /*
@@ -1268,8 +901,6 @@ Returns NULL if the page isn't found.
 
 i_img *
 i_readgif_single_wiol(io_glue *ig, int page) {
-  io_glue_commit_types(ig);
-
   i_clear_error();
 
   if (page < 0) {
@@ -1277,39 +908,16 @@ i_readgif_single_wiol(io_glue *ig, int page) {
     return NULL;
   }
 
-  if (ig->source.type == FDSEEK || ig->source.type == FDNOSEEK) {
-    GifFileType *GifFile;
-    int fd = dup(ig->source.fdseek.fd);
-    if (fd < 0) {
-      i_push_error(errno, "dup() failed");
-      return NULL;
-    }
-    if ((GifFile = DGifOpenFileHandle(fd)) == NULL) {
-      gif_push_error();
-      i_push_error(0, "Cannot create giflib file object");
-      mm_log((1,"i_readgif: Unable to open file\n"));
-      return NULL;
-    }
-    return i_readgif_single_low(GifFile, page);
-  }
-  else {
-#if IM_GIFMAJOR >= 4
-    GifFileType *GifFile;
+  GifFileType *GifFile;
 
-    if ((GifFile = DGifOpen((void *)ig, io_glue_read_cb )) == NULL) {
-      gif_push_error();
-      i_push_error(0, "Cannot create giflib callback object");
-      mm_log((1,"i_readgif_wiol: Unable to open callback datasource.\n"));
-      return NULL;
-    }
-    
-    return i_readgif_single_low(GifFile, page);
-#else
-    i_push_error(0, "callbacks not supported with giflib3");
-
+  if ((GifFile = DGifOpen((void *)ig, io_glue_read_cb )) == NULL) {
+    gif_push_error();
+    i_push_error(0, "Cannot create giflib callback object");
+    mm_log((1,"i_readgif_wiol: Unable to open callback datasource.\n"));
     return NULL;
-#endif
   }
+    
+  return i_readgif_single_low(GifFile, page);
 }
 
 /*
@@ -1454,7 +1062,6 @@ static int do_ns_loop(GifFileType *gf, i_img *img)
      force file writes to use callbacks, but it is broken by default.
   */
   /* yes this was another attempt at supporting the loop extension */
-#if IM_GIFMAJOR == 4 && IM_GIFMINOR >= 1
   int loop_count;
   if (i_tags_get_int(&img->tags, "gif_loop", 0, &loop_count)) {
     unsigned char nsle[12] = "NETSCAPE2.0";
@@ -1473,7 +1080,6 @@ static int do_ns_loop(GifFileType *gf, i_img *img)
       return 0;
     }
   }
-#endif
 
   return 1;
 }
@@ -1563,8 +1169,6 @@ or install a less buggy giflib.
 */
 
 static void gif_set_version(i_quantize *quant, i_img **imgs, int count) {
-#if (IM_GIFMAJOR >= 4 || IM_GIFMAJOR == 4 && IM_GIFMINOR >= 1) \
-	&& !defined(IM_NO_SET_GIF_VERSION)
   int need_89a = 0;
   int temp;
   int i;
@@ -1595,7 +1199,6 @@ static void gif_set_version(i_quantize *quant, i_img **imgs, int count) {
      EGifSetGifVersion("89a");
   else
      EGifSetGifVersion("87a");
-#endif
 }
 
 static int 
@@ -1731,7 +1334,6 @@ i_writegif_low(i_quantize *quant, GifFileType *gf, i_img **imgs, int count) {
   int imgn, orig_count, orig_size;
   int posx, posy;
   int trans_index = -1;
-  i_mempool mp;
   int *localmaps;
   int anylocal;
   i_img **glob_imgs; /* images that will use the global color map */
@@ -1756,8 +1358,6 @@ i_writegif_low(i_quantize *quant, GifFileType *gf, i_img **imgs, int count) {
     return 0; /* what are you smoking? */
   }
 
-  i_mempool_init(&mp);
-
   /* sanity is nice */
   if (quant->mc_size > 256) 
     quant->mc_size = 256;
@@ -1770,8 +1370,8 @@ i_writegif_low(i_quantize *quant, GifFileType *gf, i_img **imgs, int count) {
     scrw = 0;
 
   anylocal = 0;
-  localmaps = i_mempool_alloc(&mp, sizeof(int) * count);
-  glob_imgs = i_mempool_alloc(&mp, sizeof(i_img *) * count);
+  localmaps = mymalloc(sizeof(int) * count);
+  glob_imgs = mymalloc(sizeof(i_img *) * count);
   glob_img_count = 0;
   glob_want_trans = 0;
   for (imgn = 0; imgn < count; ++imgn) {
@@ -1800,7 +1400,7 @@ i_writegif_low(i_quantize *quant, GifFileType *gf, i_img **imgs, int count) {
 
   if (glob_img_count) {
     /* this is ugly */
-    glob_colors = i_mempool_alloc(&mp, sizeof(i_color) * quant->mc_size);
+    glob_colors = mymalloc(sizeof(i_color) * quant->mc_size);
     quant->mc_colors = glob_colors;
     memcpy(glob_colors, orig_colors, sizeof(i_color) * quant->mc_count);
     /* we have some images that want to use the global map */
@@ -1848,7 +1448,9 @@ i_writegif_low(i_quantize *quant, GifFileType *gf, i_img **imgs, int count) {
     }
   }
   if ((map = make_gif_map(quant, imgs[0], want_trans)) == NULL) {
-    i_mempool_destroy(&mp);
+    myfree(glob_colors);
+    myfree(localmaps);
+    myfree(glob_imgs);
     quant->mc_colors = orig_colors;
     EGifCloseFile(gf);
     mm_log((1, "Error in MakeMapObject"));
@@ -1871,7 +1473,9 @@ i_writegif_low(i_quantize *quant, GifFileType *gf, i_img **imgs, int count) {
   
   if (EGifPutScreenDesc(gf, scrw, scrh, color_bits, 
                         gif_background, map) == GIF_ERROR) {
-    i_mempool_destroy(&mp);
+    myfree(glob_colors);
+    myfree(localmaps);
+    myfree(glob_imgs);
     quant->mc_colors = orig_colors;
     gif_push_error();
     i_push_error(0, "Could not save screen descriptor");
@@ -1917,7 +1521,9 @@ i_writegif_low(i_quantize *quant, GifFileType *gf, i_img **imgs, int count) {
         i_quant_makemap(quant, imgs, 1);
       }
       if ((map = make_gif_map(quant, imgs[0], want_trans)) == NULL) {
-        i_mempool_destroy(&mp);
+	myfree(glob_colors);
+	myfree(localmaps);
+	myfree(glob_imgs);
         EGifCloseFile(gf);
         quant->mc_colors = orig_colors;
         mm_log((1, "Error in MakeMapObject"));
@@ -1936,7 +1542,9 @@ i_writegif_low(i_quantize *quant, GifFileType *gf, i_img **imgs, int count) {
   else
     result = i_quant_translate(quant, imgs[0]);
   if (!result) {
-    i_mempool_destroy(&mp);
+    myfree(glob_colors);
+    myfree(localmaps);
+    myfree(glob_imgs);
     quant->mc_colors = orig_colors;
     EGifCloseFile(gf);
     return 0;
@@ -1947,13 +1555,17 @@ i_writegif_low(i_quantize *quant, GifFileType *gf, i_img **imgs, int count) {
   }
 
   if (!do_ns_loop(gf, imgs[0])) {
-    i_mempool_destroy(&mp);
+    myfree(glob_colors);
+    myfree(localmaps);
+    myfree(glob_imgs);
     quant->mc_colors = orig_colors;
     return 0;
   }
 
   if (!do_gce(gf, imgs[0], want_trans, trans_index)) {
-    i_mempool_destroy(&mp);
+    myfree(glob_colors);
+    myfree(localmaps);
+    myfree(glob_imgs);
     quant->mc_colors = orig_colors;
     myfree(result);
     EGifCloseFile(gf);
@@ -1961,7 +1573,9 @@ i_writegif_low(i_quantize *quant, GifFileType *gf, i_img **imgs, int count) {
   }
 
   if (!do_comments(gf, imgs[0])) {
-    i_mempool_destroy(&mp);
+    myfree(glob_colors);
+    myfree(localmaps);
+    myfree(glob_imgs);
     quant->mc_colors = orig_colors;
     myfree(result);
     EGifCloseFile(gf);
@@ -1972,7 +1586,9 @@ i_writegif_low(i_quantize *quant, GifFileType *gf, i_img **imgs, int count) {
     interlace = 0;
   if (EGifPutImageDesc(gf, posx, posy, imgs[0]->xsize, imgs[0]->ysize, 
                        interlace, map) == GIF_ERROR) {
-    i_mempool_destroy(&mp);
+    myfree(glob_colors);
+    myfree(localmaps);
+    myfree(glob_imgs);
     quant->mc_colors = orig_colors;
     gif_push_error();
     i_push_error(0, "Could not save image descriptor");
@@ -1984,7 +1600,9 @@ i_writegif_low(i_quantize *quant, GifFileType *gf, i_img **imgs, int count) {
     FreeMapObject(map);
 
   if (!do_write(gf, interlace, imgs[0], result)) {
-    i_mempool_destroy(&mp);
+    myfree(glob_colors);
+    myfree(localmaps);
+    myfree(glob_imgs);
     quant->mc_colors = orig_colors;
     EGifCloseFile(gf);
     myfree(result);
@@ -2017,7 +1635,9 @@ i_writegif_low(i_quantize *quant, GifFileType *gf, i_img **imgs, int count) {
         result = i_quant_translate(quant, imgs[imgn]);
       }
       if (!result) {
-        i_mempool_destroy(&mp);
+	myfree(glob_colors);
+	myfree(localmaps);
+	myfree(glob_imgs);
         quant->mc_colors = orig_colors;
         EGifCloseFile(gf);
         mm_log((1, "error in i_quant_translate()"));
@@ -2029,7 +1649,9 @@ i_writegif_low(i_quantize *quant, GifFileType *gf, i_img **imgs, int count) {
       }
 
       if ((map = make_gif_map(quant, imgs[imgn], want_trans)) == NULL) {
-        i_mempool_destroy(&mp);
+	myfree(glob_colors);
+	myfree(localmaps);
+	myfree(glob_imgs);
         quant->mc_colors = orig_colors;
         myfree(result);
         EGifCloseFile(gf);
@@ -2053,7 +1675,9 @@ i_writegif_low(i_quantize *quant, GifFileType *gf, i_img **imgs, int count) {
     }
 
     if (!do_gce(gf, imgs[imgn], want_trans, trans_index)) {
-      i_mempool_destroy(&mp);
+      myfree(glob_colors);
+      myfree(localmaps);
+      myfree(glob_imgs);
       quant->mc_colors = orig_colors;
       myfree(result);
       EGifCloseFile(gf);
@@ -2061,7 +1685,9 @@ i_writegif_low(i_quantize *quant, GifFileType *gf, i_img **imgs, int count) {
     }
 
     if (!do_comments(gf, imgs[imgn])) {
-      i_mempool_destroy(&mp);
+      myfree(glob_colors);
+      myfree(localmaps);
+      myfree(glob_imgs);
       quant->mc_colors = orig_colors;
       myfree(result);
       EGifCloseFile(gf);
@@ -2077,7 +1703,9 @@ i_writegif_low(i_quantize *quant, GifFileType *gf, i_img **imgs, int count) {
       interlace = 0;
     if (EGifPutImageDesc(gf, posx, posy, imgs[imgn]->xsize, 
                          imgs[imgn]->ysize, interlace, map) == GIF_ERROR) {
-      i_mempool_destroy(&mp);
+      myfree(glob_colors);
+      myfree(localmaps);
+      myfree(glob_imgs);
       quant->mc_colors = orig_colors;
       gif_push_error();
       i_push_error(0, "Could not save image descriptor");
@@ -2092,7 +1720,9 @@ i_writegif_low(i_quantize *quant, GifFileType *gf, i_img **imgs, int count) {
       FreeMapObject(map);
     
     if (!do_write(gf, interlace, imgs[imgn], result)) {
-      i_mempool_destroy(&mp);
+      myfree(glob_colors);
+      myfree(localmaps);
+      myfree(glob_imgs);
       quant->mc_colors = orig_colors;
       EGifCloseFile(gf);
       myfree(result);
@@ -2102,7 +1732,9 @@ i_writegif_low(i_quantize *quant, GifFileType *gf, i_img **imgs, int count) {
   }
 
   if (EGifCloseFile(gf) == GIF_ERROR) {
-    i_mempool_destroy(&mp);
+    myfree(glob_colors);
+    myfree(localmaps);
+    myfree(glob_imgs);
     gif_push_error();
     i_push_error(0, "Could not close GIF file");
     mm_log((1, "Error in EGifCloseFile\n"));
@@ -2114,109 +1746,13 @@ i_writegif_low(i_quantize *quant, GifFileType *gf, i_img **imgs, int count) {
       orig_colors[i] = glob_colors[i];
   }
 
-  i_mempool_destroy(&mp);
+  myfree(glob_colors);
+  myfree(localmaps);
+  myfree(glob_imgs);
   quant->mc_colors = orig_colors;
 
   return 1;
 }
-
-/*
-=item i_writegif_gen(i_quantize *quant, int fd, i_img **imgs, int count, i_gif_opts *opts)
-
-General high-level function to write a GIF to a file.
-
-Writes the GIF images to the specified file handle using the options
-in quant and opts.  See L<image.h/i_quantize> and
-L<image.h/i_gif_opts>.
-
-Returns non-zero on success.
-
-=cut
-*/
-
-undef_int
-i_writegif_gen(i_quantize *quant, int fd, i_img **imgs, int count) {
-  GifFileType *gf;
-
-  i_clear_error();
-  mm_log((1, "i_writegif_gen(quant %p, fd %d, imgs %p, count %d)\n", 
-	  quant, fd, imgs, count));
-
-  gif_set_version(quant, imgs, count);
-
-  if ((gf = EGifOpenFileHandle(fd)) == NULL) {
-    gif_push_error();
-    i_push_error(0, "Cannot create GIF file object");
-    mm_log((1, "Error in EGifOpenFileHandle, unable to write image.\n"));
-    return 0;
-  }
-
-  return i_writegif_low(quant, gf, imgs, count);
-}
-
-#if IM_GIFMAJOR >= 4
-
-/*
-=item gif_writer_callback(GifFileType *gf, const GifByteType *data, int size)
-
-Internal.  Wrapper for the user write callback function.
-
-=cut
-*/
-
-static int gif_writer_callback(GifFileType *gf, const GifByteType *data, int size)
-{
-  i_gen_write_data *gwd = (i_gen_write_data *)gf->UserData;
-
-  return i_gen_writer(gwd, (char*)data, size) ? size : 0;
-}
-
-#endif
-
-/*
-=item i_writegif_callback(i_quantize *quant, i_write_callback_t cb, char *userdata, int maxlength, i_img **imgs, int count, i_gif_opts *opts)
-
-General high-level function to write a GIF using callbacks to send
-back the data.
-
-Returns non-zero on success.
-
-=cut
-*/
-
-undef_int
-i_writegif_callback(i_quantize *quant, i_write_callback_t cb, char *userdata,
-		    int maxlength, i_img **imgs, int count)
-{
-#if IM_GIFMAJOR >= 4
-  GifFileType *gf;
-  i_gen_write_data *gwd = i_gen_write_data_new(cb, userdata, maxlength);
-  int result;
-
-  i_clear_error();
-
-  mm_log((1, "i_writegif_callback(quant %p, i_write_callback_t %p, userdata $p, maxlength %d, imgs %p, count %d)\n", 
-	  quant, cb, userdata, maxlength, imgs, count));
-  
-  if ((gf = EGifOpen(gwd, &gif_writer_callback)) == NULL) {
-    gif_push_error();
-    i_push_error(0, "Cannot create GIF file object");
-    mm_log((1, "Error in EGifOpenFileHandle, unable to write image.\n"));
-    i_free_gen_write_data(gwd, 0);
-    return 0;
-  }
-
-  result = i_writegif_low(quant, gf, imgs, count);
-  return i_free_gen_write_data(gwd, result);
-#else
-  i_clear_error();
-  i_push_error(0, "callbacks not supported with giflib3");
-
-  return 0;
-#endif
-}
-
-#if IM_GIFMAJOR >= 4
 
 static int
 io_glue_write_cb(GifFileType *gft, const GifByteType *data, int length) {
@@ -2225,7 +1761,6 @@ io_glue_write_cb(GifFileType *gft, const GifByteType *data, int length) {
   return ig->writecb(ig, data, length);
 }
 
-#endif
 
 /*
 =item i_writegif_wiol(ig, quant, opts, imgs, count)
@@ -2235,46 +1770,25 @@ io_glue_write_cb(GifFileType *gft, const GifByteType *data, int length) {
 undef_int
 i_writegif_wiol(io_glue *ig, i_quantize *quant, i_img **imgs,
                 int count) {
-  io_glue_commit_types(ig);
+  GifFileType *GifFile;
+  int result;
 
-  if (ig->source.type == FDSEEK || ig->source.type == FDNOSEEK) {
-    int fd = dup(ig->source.fdseek.fd);
-    if (fd < 0) {
-      i_push_error(errno, "dup() failed");
-      return 0;
-    }
-    /* giflib opens the fd with fdopen(), which is then closed when fclose()
-       is called - dup it so the caller's fd isn't closed */
-    return i_writegif_gen(quant, fd, imgs, count);
-  }
-  else {
-#if IM_GIFMAJOR >= 4
-    GifFileType *GifFile;
-    int result;
+  i_clear_error();
 
-    i_clear_error();
-
-    gif_set_version(quant, imgs, count);
-
-    if ((GifFile = EGifOpen((void *)ig, io_glue_write_cb )) == NULL) {
-      gif_push_error();
-      i_push_error(0, "Cannot create giflib callback object");
-      mm_log((1,"i_writegif_wiol: Unable to open callback datasource.\n"));
-      return 0;
-    }
-    
-    result = i_writegif_low(quant, GifFile, imgs, count);
-    
-    ig->closecb(ig);
-
-    return result;
-#else
-    i_clear_error();
-    i_push_error(0, "callbacks not supported with giflib3");
-    
+  gif_set_version(quant, imgs, count);
+  
+  if ((GifFile = EGifOpen((void *)ig, io_glue_write_cb )) == NULL) {
+    gif_push_error();
+    i_push_error(0, "Cannot create giflib callback object");
+    mm_log((1,"i_writegif_wiol: Unable to open callback datasource.\n"));
     return 0;
-#endif
   }
+  
+  result = i_writegif_low(quant, GifFile, imgs, count);
+  
+  ig->closecb(ig);
+  
+  return result;
 }
 
 /*

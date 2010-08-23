@@ -4,7 +4,7 @@ $|=1;
 use Test::More;
 use Imager qw(:all);
 
-i_has_format("gif")
+$Imager::formats{"gif"}
   and plan skip_all => "gif support available and this tests the lack of it";
 
 plan tests => 12;

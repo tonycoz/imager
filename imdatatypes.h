@@ -624,6 +624,8 @@ typedef struct i_gif_pos_tag {
 
 /* passed into i_writegif_gen() to control quantization */
 typedef struct i_quantize_tag {
+  int version;
+
   /* how to handle transparency */
   i_transp transp;
   /* the threshold at which to make pixels opaque */
@@ -659,6 +661,7 @@ typedef struct i_quantize_tag {
 
   /* the amount of perturbation to use for translate is mc_perturb */
   int perturb;
+  /* version 2 members after here */
 } i_quantize;
 
 typedef struct i_gif_opts {

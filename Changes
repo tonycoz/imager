@@ -8,6 +8,10 @@ Imager 0.78 - unreleased
    Thanks to Justin Davis.
    https://rt.cpan.org/Ticket/Display.html?id=60491
 
+ - moved the GIF file handling code into a sub-module in preparation
+   for separate distribution.
+   https://rt.cpan.org/Ticket/Display.html?id=49616 (partial)
+
 Bug fixes:
 
  - Imager::Probe was calling ExtUtils::Liblist to initialize

@@ -44,7 +44,6 @@ my @disable; # or list of drivers to disable
 my @incpaths; # places to look for headers
 my @libpaths; # places to look for libraries
 my $noexif; # non-zero to disable EXIF parsing of JPEGs
-my $no_gif_set_version; # disable calling EGifSetGifVersion
 my $coverage; # build for coverage testing
 my $assert; # build with assertions
 GetOptions("help" => \$help,
@@ -55,7 +54,6 @@ GetOptions("help" => \$help,
            "verbose|v" => \$VERBOSE,
            "nolog" => \$NOLOG,
 	   "noexif" => \$noexif,
-           "nogifsetversion" => \$no_gif_set_version,
 	   'coverage' => \$coverage,
 	   "assert|a" => \$assert);
 
@@ -126,9 +124,6 @@ if ($MANUAL) {
 } else {
   automatic();
 }
-
-# Make sure there isn't a clash between the gif libraries.
-gifcheck();
 
 my $lib_cflags = '';
 my $lib_lflags = '';
@@ -220,6 +215,7 @@ if ($MM_ver >= 6.46) {
       directory =>
       [
        "PNG",
+       "GIF",
       ],
      },
      resources =>
@@ -329,43 +325,43 @@ sub automatic {
 }
 
 
-sub gifcheck {
-  if ($formats{'gif'} and $formats{'ungif'}) {
-    print "ungif and gif can not coexist - removing ungif support\n";
-    delete $formats{'ungif'};
-  }
+# sub gifcheck {
+#   if ($formats{'gif'} and $formats{'ungif'}) {
+#     print "ungif and gif can not coexist - removing ungif support\n";
+#     delete $formats{'ungif'};
+#   }
 
-  for my $frm (qw(gif ungif)) {
-    checkformat($frm) if ($MANUAL and $formats{$frm});
-  }
+#   for my $frm (qw(gif ungif)) {
+#     checkformat($frm) if ($MANUAL and $formats{$frm});
+#   }
 
-  my @dirs;
-  for my $frm (grep $formats{$_}, qw(gif ungif)) {
-    push(@dirs, @{$formats{$frm}{incdir}}) if $formats{$frm}{incdir};
-  }
-  my $minor = 0;
-  my $major = 0;
-  FILES: for my $dir (@dirs) {
-    my $h = "$dir/gif_lib.h";
-    open H, "< $h" or next;
-    while (<H>) {
-      if (/GIF_LIB_VERSION\s+"\s*version\s*(\d+)\.(\d+)/i) {
-	$major = $1;
-	$minor = $2;
-	close H;
-	last FILES;
-      }
-    }
-    close H;
-  }
+#   my @dirs;
+#   for my $frm (grep $formats{$_}, qw(gif ungif)) {
+#     push(@dirs, @{$formats{$frm}{incdir}}) if $formats{$frm}{incdir};
+#   }
+#   my $minor = 0;
+#   my $major = 0;
+#   FILES: for my $dir (@dirs) {
+#     my $h = "$dir/gif_lib.h";
+#     open H, "< $h" or next;
+#     while (<H>) {
+#       if (/GIF_LIB_VERSION\s+"\s*version\s*(\d+)\.(\d+)/i) {
+# 	$major = $1;
+# 	$minor = $2;
+# 	close H;
+# 	last FILES;
+#       }
+#     }
+#     close H;
+#   }
 
-  # we need the version in a #ifdefable form
+#   # we need the version in a #ifdefable form
 
-  push @defines, [ IM_GIFMAJOR => $major, "Parsed giflib version" ];
-  push @defines, [ IM_GIFMINOR => $minor ];
-  push @defines, [ IM_NO_SET_GIF_VERSION => 1, "Disable EGifSetGifVersion" ]
-    if $no_gif_set_version;
-}
+#   push @defines, [ IM_GIFMAJOR => $major, "Parsed giflib version" ];
+#   push @defines, [ IM_GIFMINOR => $minor ];
+#   push @defines, [ IM_NO_SET_GIF_VERSION => 1, "Disable EGifSetGifVersion" ]
+#     if $no_gif_set_version;
+# }
 
 
 sub grep_directory {
@@ -576,34 +572,34 @@ sub init {
 #                    code => \&png_probe,
 # 		  };
 
-  $formats{'gif'}={
-		   order=>'20',
-		   def=>'HAVE_LIBGIF',
-		   inccheck=>sub { -e catfile($_[0], 'gif_lib.h') },
-		   libcheck=>sub { $_[0] eq "libgif$aext" or $_[0] eq "libgif.$lext" },
-		   libfiles=>'-lgif',
-		   objfiles=>'gif.o',
-		   docs=>q{
-			   gif is the de facto standard for webgraphics at the moment,
-			   it does have some patent problems. If you have giflib and
-			   are not in violation with the unisys patent you should use
-			   this instead of the 'ungif' option.  Note that they cannot
-			   be in use at the same time}
-		  };
+#   $formats{'gif'}={
+# 		   order=>'20',
+# 		   def=>'HAVE_LIBGIF',
+# 		   inccheck=>sub { -e catfile($_[0], 'gif_lib.h') },
+# 		   libcheck=>sub { $_[0] eq "libgif$aext" or $_[0] eq "libgif.$lext" },
+# 		   libfiles=>'-lgif',
+# 		   objfiles=>'gif.o',
+# 		   docs=>q{
+# 			   gif is the de facto standard for webgraphics at the moment,
+# 			   it does have some patent problems. If you have giflib and
+# 			   are not in violation with the unisys patent you should use
+# 			   this instead of the 'ungif' option.  Note that they cannot
+# 			   be in use at the same time}
+# 		  };
 
-  $formats{'ungif'}={
-		     order=>'21',
-		     def=>'HAVE_LIBGIF',
-		     inccheck=>sub { -e catfile($_[0], 'gif_lib.h') },
-		     libcheck=>sub { $_[0] eq "libungif$aext" or $_[0] eq "libungif.$lext" },
-		     libfiles=>'-lungif',
-		     objfiles=>'gif.o',
-		     docs=>q{
-			     gif is the de facto standard for webgraphics at the moment,
-			     it does have some patent problems. If you have libungif and
-			     want to create images free from LZW patented compression you
-			     should use this option instead of the 'gif' option}
-		    };
+#   $formats{'ungif'}={
+# 		     order=>'21',
+# 		     def=>'HAVE_LIBGIF',
+# 		     inccheck=>sub { -e catfile($_[0], 'gif_lib.h') },
+# 		     libcheck=>sub { $_[0] eq "libungif$aext" or $_[0] eq "libungif.$lext" },
+# 		     libfiles=>'-lungif',
+# 		     objfiles=>'gif.o',
+# 		     docs=>q{
+# 			     gif is the de facto standard for webgraphics at the moment,
+# 			     it does have some patent problems. If you have libungif and
+# 			     want to create images free from LZW patented compression you
+# 			     should use this option instead of the 'gif' option}
+# 		    };
 
   $formats{'T1-fonts'}={
 			order=>'30',
@@ -970,7 +966,7 @@ Usage: $0 [--enable feature1,feature2,...] [other options]
        $0 [--disable feature1,feature2,...]  [other options]
        $0 --help
 Possible feature names are:
-  png gif ungif jpeg tiff T1-fonts TT-fonts freetype2
+  jpeg tiff T1-fonts TT-fonts freetype2
 Other options:
   --verbose | -v
     Verbose library probing (or set IM_VERBOSE in the environment)

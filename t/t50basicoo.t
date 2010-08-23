@@ -44,7 +44,7 @@ my %files;
 		  { file => "testimg/test.png"  },
 		  { file => "testimg/test.raw", xsize=>150, ysize=>150, type=>'raw', interleave => 0},
 		  { file => "testimg/penguin-base.ppm"  },
-		  { file => "testimg/expected.gif"  },
+		  { file => "GIF/testimg/expected.gif"  },
 		  { file => "testimg/comp8.tif" },
                   { file => "testimg/winrgb24.bmp" },
                   { file => "testimg/test.tga" }, );
@@ -99,71 +99,66 @@ for my $type (@types) {
     skip("couldn't open the damn file: $!", 7);
   }
 
-  if ($type ne 'gif' || Imager::i_giflib_version() >= 4) {
-    # read from a memory buffer
-    open DATA, "< $opts{file}"
-      or die "Cannot open $opts{file}: $!";
-    binmode DATA;
-    my $data = do { local $/; <DATA> };
-    close DATA;
-    my $bimg = Imager->new;
-    
-    if (ok($bimg->read(data=>$data, %mopts, type=>$type), "read from buffer", 
-           $img)) {
-      ok(Imager::i_img_diff($img->{IMG}, $bimg->{IMG}) == 0,
-         "comparing buffer read image");
-    }
-    else {
-      skip("nothing to compare");
-    }
-    
-    # read from callbacks, both with minimum and maximum reads
-    my $buf = $data;
-    my $seekpos = 0;
-    my $reader_min = 
-      sub { 
-        my ($size, $maxread) = @_;
-        my $out = substr($buf, $seekpos, $size);
-        $seekpos += length $out;
-        $out;
-      };
-    my $reader_max = 
-      sub { 
-        my ($size, $maxread) = @_;
-        my $out = substr($buf, $seekpos, $maxread);
-        $seekpos += length $out;
-        $out;
-      };
-    my $seeker =
-      sub {
-        my ($offset, $whence) = @_;
-        #print "io_seeker($offset, $whence)\n";
-        if ($whence == SEEK_SET) {
-          $seekpos = $offset;
-        }
-        elsif ($whence == SEEK_CUR) {
-          $seekpos += $offset;
-        }
-        else { # SEEK_END
-          $seekpos = length($buf) + $offset;
-        }
-        #print "-> $seekpos\n";
-        $seekpos;
-      };
-    my $cbimg = Imager->new;
-    ok($cbimg->read(callback=>$reader_min, seekcb=>$seeker, type=>$type, %mopts),
-       "read from callback min", $cbimg);
-    ok(Imager::i_img_diff($cbimg->{IMG}, $img->{IMG}) == 0,
-       "comparing mincb image");
-    $seekpos = 0;
-    ok($cbimg->read(callback=>$reader_max, seekcb=>$seeker, type=>$type, %mopts),
-       "read from callback max", $cbimg);
-    ok(Imager::i_img_diff($cbimg->{IMG}, $img->{IMG}) == 0,
-       "comparing maxcb image");
+  # read from a memory buffer
+  open DATA, "< $opts{file}"
+    or die "Cannot open $opts{file}: $!";
+  binmode DATA;
+  my $data = do { local $/; <DATA> };
+  close DATA;
+  my $bimg = Imager->new;
+  
+  if (ok($bimg->read(data=>$data, %mopts, type=>$type), "read from buffer", 
+	 $img)) {
+    ok(Imager::i_img_diff($img->{IMG}, $bimg->{IMG}) == 0,
+       "comparing buffer read image");
   }
   else {
-    skip("giflib < 4 doesn't support callbacks", 6);
+    skip("nothing to compare");
   }
+  
+  # read from callbacks, both with minimum and maximum reads
+  my $buf = $data;
+  my $seekpos = 0;
+  my $reader_min = 
+    sub { 
+      my ($size, $maxread) = @_;
+      my $out = substr($buf, $seekpos, $size);
+      $seekpos += length $out;
+      $out;
+    };
+  my $reader_max = 
+    sub { 
+      my ($size, $maxread) = @_;
+      my $out = substr($buf, $seekpos, $maxread);
+      $seekpos += length $out;
+      $out;
+    };
+  my $seeker =
+    sub {
+      my ($offset, $whence) = @_;
+      #print "io_seeker($offset, $whence)\n";
+      if ($whence == SEEK_SET) {
+	$seekpos = $offset;
+      }
+      elsif ($whence == SEEK_CUR) {
+	$seekpos += $offset;
+      }
+      else { # SEEK_END
+	$seekpos = length($buf) + $offset;
+      }
+      #print "-> $seekpos\n";
+      $seekpos;
+    };
+  my $cbimg = Imager->new;
+  ok($cbimg->read(callback=>$reader_min, seekcb=>$seeker, type=>$type, %mopts),
+     "read from callback min", $cbimg);
+  ok(Imager::i_img_diff($cbimg->{IMG}, $img->{IMG}) == 0,
+     "comparing mincb image");
+  $seekpos = 0;
+  ok($cbimg->read(callback=>$reader_max, seekcb=>$seeker, type=>$type, %mopts),
+     "read from callback max", $cbimg);
+  ok(Imager::i_img_diff($cbimg->{IMG}, $img->{IMG}) == 0,
+     "comparing maxcb image");
 }
 
 for my $type (@types) {
@@ -199,106 +194,95 @@ for my $type (@types) {
      "write to FH after writing $type");
   ok($fh->close, "closing FH after writing $type");
 
-  if ($type ne 'gif' || 
-      (Imager::i_giflib_version() >= 4 && !-e $buggy_giflib_file)) {
-    if (ok(open(DATA, "< $file"), "opening data source")) {
-      binmode DATA;
-      my $data = do { local $/; <DATA> };
-      close DATA;
+  if (ok(open(DATA, "< $file"), "opening data source")) {
+    binmode DATA;
+    my $data = do { local $/; <DATA> };
+    close DATA;
 
-      # writing to a buffer
-      print "# writing $type to a buffer\n";
-      my $buf = '';
-      ok($wimg->write(data=>\$buf, %extraopts, type=>$type),
-         "writing $type to a buffer", $wimg);
-      $buf .= "SUFFIX\n";
-      open DATA, "> testout/t50_buf.$type"
-        or die "Cannot create $type buffer file: $!";
-      binmode DATA;
-      print DATA $buf;
-      close DATA;
-      ok($data eq $buf, "comparing file data to buffer");
+    # writing to a buffer
+    print "# writing $type to a buffer\n";
+    my $buf = '';
+    ok($wimg->write(data=>\$buf, %extraopts, type=>$type),
+       "writing $type to a buffer", $wimg);
+    $buf .= "SUFFIX\n";
+    open DATA, "> testout/t50_buf.$type"
+      or die "Cannot create $type buffer file: $!";
+    binmode DATA;
+    print DATA $buf;
+    close DATA;
+    ok($data eq $buf, "comparing file data to buffer");
 
-      $buf = '';
-      my $seekpos = 0;
-      my $did_close;
-      my $writer = 
-        sub {
-          my ($what) = @_;
-          if ($seekpos > length $buf) {
-            $buf .= "\0" x ($seekpos - length $buf);
-          }
-          substr($buf, $seekpos, length $what) = $what;
-          $seekpos += length $what;
-          $did_close = 0; # the close must be last
-          1;
-        };
-      my $reader_min = 
-        sub { 
-          my ($size, $maxread) = @_;
-          my $out = substr($buf, $seekpos, $size);
-          $seekpos += length $out;
-          $out;
-        };
-      my $reader_max = 
-        sub { 
-          my ($size, $maxread) = @_;
-          my $out = substr($buf, $seekpos, $maxread);
-          $seekpos += length $out;
-          $out;
-        };
-      use IO::Seekable;
-      my $seeker =
-        sub {
-          my ($offset, $whence) = @_;
-          #print "io_seeker($offset, $whence)\n";
-          if ($whence == SEEK_SET) {
-            $seekpos = $offset;
-          }
-          elsif ($whence == SEEK_CUR) {
-            $seekpos += $offset;
-          }
-          else { # SEEK_END
-            $seekpos = length($buf) + $offset;
-          }
-          #print "-> $seekpos\n";
-          $seekpos;
-        };
-      
-      my $closer = sub { ++$did_close; };
-      
-      print "# writing $type via callbacks (mb=1)\n";
-      ok($wimg->write(writecb=>$writer, seekcb=>$seeker, closecb=>$closer,
-                   readcb=>$reader_min,
-                   %extraopts, type=>$type, maxbuffer=>1),
-         "writing $type to callback (mb=1)", $wimg);
+    $buf = '';
+    my $seekpos = 0;
+    my $did_close;
+    my $writer = 
+      sub {
+	my ($what) = @_;
+	if ($seekpos > length $buf) {
+	  $buf .= "\0" x ($seekpos - length $buf);
+	}
+	substr($buf, $seekpos, length $what) = $what;
+	$seekpos += length $what;
+	$did_close = 0; # the close must be last
+	1;
+      };
+    my $reader_min = 
+      sub { 
+	my ($size, $maxread) = @_;
+	my $out = substr($buf, $seekpos, $size);
+	$seekpos += length $out;
+	$out;
+      };
+    my $reader_max = 
+      sub { 
+	my ($size, $maxread) = @_;
+	my $out = substr($buf, $seekpos, $maxread);
+	$seekpos += length $out;
+	$out;
+      };
+    use IO::Seekable;
+    my $seeker =
+      sub {
+	my ($offset, $whence) = @_;
+	#print "io_seeker($offset, $whence)\n";
+	if ($whence == SEEK_SET) {
+	  $seekpos = $offset;
+	}
+	elsif ($whence == SEEK_CUR) {
+	  $seekpos += $offset;
+	}
+	else { # SEEK_END
+	  $seekpos = length($buf) + $offset;
+	}
+	#print "-> $seekpos\n";
+	$seekpos;
+      };
 
-      ok($did_close, "checking closecb called");
-      $buf .= "SUFFIX\n";
-      ok($data eq $buf, "comparing callback output to file data");
-      print "# writing $type via callbacks (no mb)\n";
-      $buf = '';
-      $did_close = 0;
-      $seekpos = 0;
-      # we don't use the closecb here - used to make sure we don't get 
-      # a warning/error on an attempt to call an undef close sub
-      ok($wimg->write(writecb=>$writer, seekcb=>$seeker, readcb=>$reader_min,
-                   %extraopts, type=>$type),
-         "writing $type to callback (no mb)", $wimg);
-      $buf .= "SUFFIX\n";
-      ok($data eq $buf, "comparing callback output to file data");
-    }
-    else {
-      skip("couldn't open data source", 7);
-    }
+    my $closer = sub { ++$did_close; };
+
+    print "# writing $type via callbacks (mb=1)\n";
+    ok($wimg->write(writecb=>$writer, seekcb=>$seeker, closecb=>$closer,
+		    readcb=>$reader_min,
+		    %extraopts, type=>$type, maxbuffer=>1),
+       "writing $type to callback (mb=1)", $wimg);
+
+    ok($did_close, "checking closecb called");
+    $buf .= "SUFFIX\n";
+    ok($data eq $buf, "comparing callback output to file data");
+    print "# writing $type via callbacks (no mb)\n";
+    $buf = '';
+    $did_close = 0;
+    $seekpos = 0;
+    # we don't use the closecb here - used to make sure we don't get 
+    # a warning/error on an attempt to call an undef close sub
+    ok($wimg->write(writecb=>$writer, seekcb=>$seeker, readcb=>$reader_min,
+		    %extraopts, type=>$type),
+       "writing $type to callback (no mb)", $wimg);
+    $buf .= "SUFFIX\n";
+    ok($data eq $buf, "comparing callback output to file data");
   }
   else {
-    if (-e $buggy_giflib_file) {
-      skip("see $buggy_giflib_file", 8);
-    }
-    else {
-      skip("giflib < 4 doesn't support callbacks", 8);
-    }
+    skip("couldn't open data source", 7);
   }
 }
 

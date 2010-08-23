@@ -81,14 +81,6 @@ use Imager::Font;
 		i_writetiff_wiol
 		i_writetiff_wiol_faxable
 
-		i_readgif
-		i_readgif_wiol
-		i_readgif_callback
-		i_writegif
-		i_writegifmc
-		i_writegif_gen
-		i_writegif_callback
-
 		i_readpnm_wiol
 		i_writeppm_wiol
 
@@ -1907,21 +1899,7 @@ sub write_multi {
     ($IO, $file) = $class->_get_writer_io($opts, $type)
       or return undef;
     
-    if ($type eq 'gif') {
-      $class->_set_opts($opts, "gif_", @images)
-        or return;
-      my $gif_delays = $opts->{gif_delays};
-      local $opts->{gif_delays} = $gif_delays;
-      if ($opts->{gif_delays} && !ref $opts->{gif_delays}) {
-        # assume the caller wants the same delay for each frame
-        $opts->{gif_delays} = [ ($gif_delays) x @images ];
-      }
-      unless (i_writegif_wiol($IO, $opts, @work)) {
-        $class->_set_error($class->_error_as_msg());
-        return undef;
-      }
-    }
-    elsif ($type eq 'tiff') {
+    if ($type eq 'tiff') {
       $class->_set_opts($opts, "tiff_", @images)
         or return;
       $class->_set_opts($opts, "exif_", @images)

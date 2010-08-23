@@ -19,6 +19,7 @@ extern "C" {
 #include "dynaload.h"
 #include "regmach.h"
 #include "imextdef.h"
+#include "imextpltypes.h"
 
 #if i_int_hlines_testing()
 #include "imageri.h"
@@ -590,7 +591,8 @@ static struct value_name orddith_names[] =
 };
 
 /* look through the hash for quantization options */
-static void handle_quant_opts(pTHX_ i_quantize *quant, HV *hv)
+static void
+ip_handle_quant_opts(pTHX_ i_quantize *quant, HV *hv)
 {
   /*** POSSIBLY BROKEN: do I need to unref the SV from hv_fetch ***/
   SV **sv;
@@ -721,14 +723,16 @@ static void handle_quant_opts(pTHX_ i_quantize *quant, HV *hv)
     quant->perturb = SvIV(*sv);
 }
 
-static void cleanup_quant_opts(i_quantize *quant) {
+static void
+ip_cleanup_quant_opts(pTHX_ i_quantize *quant) {
   myfree(quant->mc_colors);
   if (quant->ed_map)
     myfree(quant->ed_map);
 }
 
 /* copies the color map from the hv into the colors member of the HV */
-static void copy_colors_back(pTHX_ HV *hv, i_quantize *quant) {
+static void
+ip_copy_colors_back(pTHX_ HV *hv, i_quantize *quant) {
   SV **sv;
   AV *av;
   int i;
@@ -927,6 +931,18 @@ i_int_hlines_dump(i_int_hlines *hlines) {
 }
 
 #endif
+
+static im_pl_ext_funcs im_perl_funcs =
+{
+  IMAGER_PL_API_VERSION,
+  IMAGER_PL_API_LEVEL,
+  ip_handle_quant_opts,
+  ip_cleanup_quant_opts,
+  ip_copy_colors_back
+};
+
+#define PERL_PL_SET_GLOBAL_CALLBACKS \
+  sv_setiv(get_sv(PERL_PL_FUNCTION_TABLE_NAME, 1), PTR2IV(&im_perl_funcs));
 
 #ifdef IMEXIF_ENABLE
 #define i_exif_enabled() 1
@@ -2505,499 +2521,6 @@ i_tiff_has_compression(name)
 #endif
 
 
-#ifdef HAVE_LIBGIF
-
-void
-i_giflib_version()
-	PPCODE:
-	  PUSHs(sv_2mortal(newSVnv(IM_GIFMAJOR+IM_GIFMINOR*0.1)));
-
-undef_int
-i_writegif(im,fd,colors,pixdev,fixed)
-    Imager::ImgRaw     im
-	       int     fd
-	       int     colors
-               int     pixdev
-	     PREINIT:
-             int     fixedlen;
-	     Imager__Color  fixed;
-	     Imager__Color  tmp;
-	     AV* av;
-	     SV* sv1;
-             IV  Itmp;
-	     int i;
-	     CODE:
-	     if (!SvROK(ST(4))) croak("Imager: Parameter 4 must be a reference to an array\n");
-	     if (SvTYPE(SvRV(ST(4))) != SVt_PVAV) croak("Imager: Parameter 4 must be a reference to an array\n");
-	     av=(AV*)SvRV(ST(4));
-	     fixedlen=av_len(av)+1;
-	     fixed=mymalloc( fixedlen*sizeof(i_color) );
-	     for(i=0;i<fixedlen;i++) {
-	       sv1=(*(av_fetch(av,i,0)));
-               if (sv_derived_from(sv1, "Imager::Color")) {
-                 Itmp = SvIV((SV*)SvRV(sv1));
-                 tmp = INT2PTR(i_color*, Itmp);
-               } else croak("Imager: one of the elements of array ref is not of Imager::Color type\n");
-               fixed[i]=*tmp;
-	     }
-	     RETVAL=i_writegif(im,fd,colors,pixdev,fixedlen,fixed);
-             myfree(fixed);
-             ST(0) = sv_newmortal();
-             if (RETVAL == 0) ST(0)=&PL_sv_undef;
-             else sv_setiv(ST(0), (IV)RETVAL);
-
-
-
-
-undef_int
-i_writegifmc(im,fd,colors)
-    Imager::ImgRaw    im
-	       int     fd
-	       int     colors
-
-
-undef_int
-i_writegif_gen(fd, ...)
-	       int     fd
-      PROTOTYPE: $$@
-      PREINIT:
-	i_quantize quant;
-	i_img **imgs = NULL;
-	int img_count;
-	int i;
-	HV *hv;
-      CODE:
-	if (items < 3)
-	    croak("Usage: i_writegif_gen(fd,hashref, images...)");
-	if (!SvROK(ST(1)) || ! SvTYPE(SvRV(ST(1))))
-	    croak("i_writegif_gen: Second argument must be a hash ref");
-	hv = (HV *)SvRV(ST(1));
-	memset(&quant, 0, sizeof(quant));
-	quant.mc_size = 256;
-	quant.transp = tr_threshold;
-	quant.tr_threshold = 127;
-	handle_quant_opts(aTHX_ &quant, hv);
-	img_count = items - 2;
-	RETVAL = 1;
-	if (img_count < 1) {
-	  RETVAL = 0;
-	  i_clear_error();
-	  i_push_error(0, "You need to specify images to save");
-	}
-	else {
-          imgs = mymalloc(sizeof(i_img *) * img_count);
-          for (i = 0; i < img_count; ++i) {
-	    SV *sv = ST(2+i);
-	    imgs[i] = NULL;
-	    if (SvROK(sv) && sv_derived_from(sv, "Imager::ImgRaw")) {
-	      imgs[i] = INT2PTR(i_img *, SvIV((SV*)SvRV(sv)));
-	    }
-	    else {
-	      i_clear_error();
-	      i_push_error(0, "Only images can be saved");
-	      RETVAL = 0;
-	      break;
-            }
-	  }
-          if (RETVAL) {
-	    RETVAL = i_writegif_gen(&quant, fd, imgs, img_count);
-          }
-	  myfree(imgs);
-          if (RETVAL) {
-	    copy_colors_back(aTHX_ hv, &quant);
-          }
-	}
-        ST(0) = sv_newmortal();
-        if (RETVAL == 0) ST(0)=&PL_sv_undef;
-        else sv_setiv(ST(0), (IV)RETVAL);
-	cleanup_quant_opts(&quant);
-
-
-undef_int
-i_writegif_callback(cb, maxbuffer,...)
-	int maxbuffer;
-      PREINIT:
-	i_quantize quant;
-	i_img **imgs = NULL;
-	int img_count;
-	int i;
-	HV *hv;
-        i_writer_data wd;
-      CODE:
-	if (items < 4)
-	    croak("Usage: i_writegif_callback(\\&callback,maxbuffer,hashref, images...)");
-	if (!SvROK(ST(2)) || ! SvTYPE(SvRV(ST(2))))
-	    croak("i_writegif_callback: Second argument must be a hash ref");
-	hv = (HV *)SvRV(ST(2));
-	memset(&quant, 0, sizeof(quant));
-	quant.mc_size = 256;
-	quant.transp = tr_threshold;
-	quant.tr_threshold = 127;
-	handle_quant_opts(aTHX_ &quant, hv);
-	img_count = items - 3;
-	RETVAL = 1;
-	if (img_count < 1) {
-	  RETVAL = 0;
-	}
-	else {
-          imgs = mymalloc(sizeof(i_img *) * img_count);
-          for (i = 0; i < img_count; ++i) {
-	    SV *sv = ST(3+i);
-	    imgs[i] = NULL;
-	    if (SvROK(sv) && sv_derived_from(sv, "Imager::ImgRaw")) {
-	      imgs[i] = INT2PTR(i_img *, SvIV((SV*)SvRV(sv)));
-	    }
-	    else {
-	      RETVAL = 0;
-	      break;
-            }
-	  }
-          if (RETVAL) {
-	    wd.sv = ST(0);
-	    RETVAL = i_writegif_callback(&quant, write_callback, (char *)&wd, maxbuffer, imgs, img_count);
-          }
-	  myfree(imgs);
-          if (RETVAL) {
-	    copy_colors_back(aTHX_ hv, &quant);
-          }
-	}
-	ST(0) = sv_newmortal();
-	if (RETVAL == 0) ST(0)=&PL_sv_undef;
-	else sv_setiv(ST(0), (IV)RETVAL);
-	cleanup_quant_opts(&quant);
-
-undef_int
-i_writegif_wiol(ig, opts,...)
-	Imager::IO ig
-      PREINIT:
-	i_quantize quant;
-	i_img **imgs = NULL;
-	int img_count;
-	int i;
-	HV *hv;
-      CODE:
-	if (items < 3)
-	    croak("Usage: i_writegif_wiol(IO,hashref, images...)");
-	if (!SvROK(ST(1)) || ! SvTYPE(SvRV(ST(1))))
-	    croak("i_writegif_callback: Second argument must be a hash ref");
-	hv = (HV *)SvRV(ST(1));
-	memset(&quant, 0, sizeof(quant));
-	quant.mc_size = 256;
-	quant.transp = tr_threshold;
-	quant.tr_threshold = 127;
-	handle_quant_opts(aTHX_ &quant, hv);
-	img_count = items - 2;
-	RETVAL = 1;
-	if (img_count < 1) {
-	  RETVAL = 0;
-	}
-	else {
-          imgs = mymalloc(sizeof(i_img *) * img_count);
-          for (i = 0; i < img_count; ++i) {
-	    SV *sv = ST(2+i);
-	    imgs[i] = NULL;
-	    if (SvROK(sv) && sv_derived_from(sv, "Imager::ImgRaw")) {
-	      imgs[i] = INT2PTR(i_img *, SvIV((SV*)SvRV(sv)));
-	    }
-	    else {
-	      RETVAL = 0;
-	      break;
-            }
-	  }
-          if (RETVAL) {
-	    RETVAL = i_writegif_wiol(ig, &quant, imgs, img_count);
-          }
-	  myfree(imgs);
-          if (RETVAL) {
-	    copy_colors_back(aTHX_ hv, &quant);
-          }
-	}
-	ST(0) = sv_newmortal();
-	if (RETVAL == 0) ST(0)=&PL_sv_undef;
-	else sv_setiv(ST(0), (IV)RETVAL);
-	cleanup_quant_opts(&quant);
-
-void
-i_readgif(fd)
-	       int     fd
-	      PREINIT:
-	        int*    colour_table;
-	        int     colours, q, w;
-	      i_img*    rimg;
-                 SV*    temp[3];
-                 AV*    ct; 
-                 SV*    r;
-	       PPCODE:
- 	       colour_table = NULL;
-               colours = 0;
-
-	if(GIMME_V == G_ARRAY) {
-            rimg = i_readgif(fd,&colour_table,&colours);
-        } else {
-            /* don't waste time with colours if they aren't wanted */
-            rimg = i_readgif(fd,NULL,NULL);
-        }
-	
-	if (colour_table == NULL) {
-            EXTEND(SP,1);
-            r=sv_newmortal();
-            sv_setref_pv(r, "Imager::ImgRaw", (void*)rimg);
-            PUSHs(r);
-	} else {
-            /* the following creates an [[r,g,b], [r, g, b], [r, g, b]...] */
-            /* I don't know if I have the reference counts right or not :( */
-            /* Neither do I :-) */
-            /* No Idea here either */
-
-            ct=newAV();
-            av_extend(ct, colours);
-            for(q=0; q<colours; q++) {
-                for(w=0; w<3; w++)
-                    temp[w]=sv_2mortal(newSViv(colour_table[q*3 + w]));
-                av_store(ct, q, (SV*)newRV_noinc((SV*)av_make(3, temp)));
-            }
-            myfree(colour_table);
-
-            EXTEND(SP,2);
-            r = sv_newmortal();
-            sv_setref_pv(r, "Imager::ImgRaw", (void*)rimg);
-            PUSHs(r);
-            PUSHs(newRV_noinc((SV*)ct));
-        }
-
-void
-i_readgif_wiol(ig)
-     Imager::IO         ig
-	      PREINIT:
-	        int*    colour_table;
-	        int     colours, q, w;
-	      i_img*    rimg;
-                 SV*    temp[3];
-                 AV*    ct; 
-                 SV*    r;
-	       PPCODE:
- 	       colour_table = NULL;
-               colours = 0;
-
-	if(GIMME_V == G_ARRAY) {
-            rimg = i_readgif_wiol(ig,&colour_table,&colours);
-        } else {
-            /* don't waste time with colours if they aren't wanted */
-            rimg = i_readgif_wiol(ig,NULL,NULL);
-        }
-	
-	if (colour_table == NULL) {
-            EXTEND(SP,1);
-            r=sv_newmortal();
-            sv_setref_pv(r, "Imager::ImgRaw", (void*)rimg);
-            PUSHs(r);
-	} else {
-            /* the following creates an [[r,g,b], [r, g, b], [r, g, b]...] */
-            /* I don't know if I have the reference counts right or not :( */
-            /* Neither do I :-) */
-            /* No Idea here either */
-
-            ct=newAV();
-            av_extend(ct, colours);
-            for(q=0; q<colours; q++) {
-                for(w=0; w<3; w++)
-                    temp[w]=sv_2mortal(newSViv(colour_table[q*3 + w]));
-                av_store(ct, q, (SV*)newRV_noinc((SV*)av_make(3, temp)));
-            }
-            myfree(colour_table);
-
-            EXTEND(SP,2);
-            r = sv_newmortal();
-            sv_setref_pv(r, "Imager::ImgRaw", (void*)rimg);
-            PUSHs(r);
-            PUSHs(newRV_noinc((SV*)ct));
-        }
-
-Imager::ImgRaw
-i_readgif_single_wiol(ig, page=0)
-	Imager::IO	ig
-        int		page
-
-void
-i_readgif_scalar(...)
-          PROTOTYPE: $
-            PREINIT:
-               char*    data;
-             STRLEN     length;
-	        int*    colour_table;
-	        int     colours, q, w;
-	      i_img*    rimg;
-                 SV*    temp[3];
-                 AV*    ct; 
-                 SV*    r;
-	       PPCODE:
-        data = (char *)SvPV(ST(0), length);
-        colour_table=NULL;
-        colours=0;
-
-	if(GIMME_V == G_ARRAY) {  
-            rimg=i_readgif_scalar(data,length,&colour_table,&colours);
-        } else {
-            /* don't waste time with colours if they aren't wanted */
-            rimg=i_readgif_scalar(data,length,NULL,NULL);
-        }
-
-	if (colour_table == NULL) {
-            EXTEND(SP,1);
-            r=sv_newmortal();
-            sv_setref_pv(r, "Imager::ImgRaw", (void*)rimg);
-            PUSHs(r);
-	} else {
-            /* the following creates an [[r,g,b], [r, g, b], [r, g, b]...] */
-            /* I don't know if I have the reference counts right or not :( */
-            /* Neither do I :-) */
-            ct=newAV();
-            av_extend(ct, colours);
-            for(q=0; q<colours; q++) {
-                for(w=0; w<3; w++)
-                    temp[w]=sv_2mortal(newSViv(colour_table[q*3 + w]));
-                av_store(ct, q, (SV*)newRV_noinc((SV*)av_make(3, temp)));
-            }
-            myfree(colour_table);
-            
-            EXTEND(SP,2);
-            r=sv_newmortal();
-            sv_setref_pv(r, "Imager::ImgRaw", (void*)rimg);
-            PUSHs(r);
-            PUSHs(newRV_noinc((SV*)ct));
-        }
-
-void
-i_readgif_callback(...)
-          PROTOTYPE: &
-            PREINIT:
-	        int*    colour_table;
-	        int     colours, q, w;
-	      i_img*    rimg;
-                 SV*    temp[3];
-                 AV*    ct; 
-                 SV*    r;
-       i_reader_data    rd;
-	       PPCODE:
-	rd.sv = ST(0);
-        colour_table=NULL;
-        colours=0;
-
-	if(GIMME_V == G_ARRAY) {  
-            rimg=i_readgif_callback(read_callback, (char *)&rd,&colour_table,&colours);
-        } else {
-            /* don't waste time with colours if they aren't wanted */
-            rimg=i_readgif_callback(read_callback, (char *)&rd,NULL,NULL);
-        }
-
-	if (colour_table == NULL) {
-            EXTEND(SP,1);
-            r=sv_newmortal();
-            sv_setref_pv(r, "Imager::ImgRaw", (void*)rimg);
-            PUSHs(r);
-	} else {
-            /* the following creates an [[r,g,b], [r, g, b], [r, g, b]...] */
-            /* I don't know if I have the reference counts right or not :( */
-            /* Neither do I :-) */
-            /* Neither do I - maybe I'll move this somewhere */
-            ct=newAV();
-            av_extend(ct, colours);
-            for(q=0; q<colours; q++) {
-                for(w=0; w<3; w++)
-                    temp[w]=sv_2mortal(newSViv(colour_table[q*3 + w]));
-                av_store(ct, q, (SV*)newRV_noinc((SV*)av_make(3, temp)));
-            }
-            myfree(colour_table);
-            
-            EXTEND(SP,2);
-            r=sv_newmortal();
-            sv_setref_pv(r, "Imager::ImgRaw", (void*)rimg);
-            PUSHs(r);
-            PUSHs(newRV_noinc((SV*)ct));
-        }
-
-void
-i_readgif_multi(fd)
-        int     fd
-      PREINIT:
-        i_img **imgs;
-        int count;
-        int i;
-      PPCODE:
-        imgs = i_readgif_multi(fd, &count);
-        if (imgs) {
-          EXTEND(SP, count);
-          for (i = 0; i < count; ++i) {
-            SV *sv = sv_newmortal();
-            sv_setref_pv(sv, "Imager::ImgRaw", (void *)imgs[i]);
-            PUSHs(sv);
-          }
-          myfree(imgs);
-        }
-
-void
-i_readgif_multi_scalar(data)
-      PREINIT:
-        i_img **imgs;
-        int count;
-        char *data;
-        STRLEN length;
-        int i;
-      PPCODE:
-        data = (char *)SvPV(ST(0), length);
-        imgs = i_readgif_multi_scalar(data, length, &count);
-        if (imgs) {
-          EXTEND(SP, count);
-          for (i = 0; i < count; ++i) {
-            SV *sv = sv_newmortal();
-            sv_setref_pv(sv, "Imager::ImgRaw", (void *)imgs[i]);
-            PUSHs(sv);
-          }
-          myfree(imgs);
-        }
-
-void
-i_readgif_multi_callback(cb)
-      PREINIT:
-        i_reader_data rd;
-        i_img **imgs;
-        int count;
-        int i;
-      PPCODE:
-        rd.sv = ST(0);
-        imgs = i_readgif_multi_callback(read_callback, (char *)&rd, &count);
-        if (imgs) {
-          EXTEND(SP, count);
-          for (i = 0; i < count; ++i) {
-            SV *sv = sv_newmortal();
-            sv_setref_pv(sv, "Imager::ImgRaw", (void *)imgs[i]);
-            PUSHs(sv);
-          }
-          myfree(imgs);
-        }
-
-void
-i_readgif_multi_wiol(ig)
-        Imager::IO ig
-      PREINIT:
-        i_img **imgs;
-        int count;
-        int i;
-      PPCODE:
-        imgs = i_readgif_multi_wiol(ig, &count);
-        if (imgs) {
-          EXTEND(SP, count);
-          for (i = 0; i < count; ++i) {
-            SV *sv = sv_newmortal();
-            sv_setref_pv(sv, "Imager::ImgRaw", (void *)imgs[i]);
-            PUSHs(sv);
-          }
-          myfree(imgs);
-        }
-
-
-#endif
-
 
 
 Imager::ImgRaw
@@ -3659,13 +3182,14 @@ i_img_to_pal(src, quant)
           croak("i_img_to_pal: second argument must be a hash ref");
         hv = (HV *)SvRV(ST(1));
         memset(&quant, 0, sizeof(quant));
+	quant.version = 1;
         quant.mc_size = 256;
-	handle_quant_opts(aTHX_ &quant, hv);
+	ip_handle_quant_opts(aTHX_ &quant, hv);
         RETVAL = i_img_to_pal(src, &quant);
         if (RETVAL) {
-          copy_colors_back(aTHX_ hv, &quant);
+          ip_copy_colors_back(aTHX_ hv, &quant);
         }
-	cleanup_quant_opts(&quant);
+	ip_cleanup_quant_opts(aTHX_ &quant);
       OUTPUT:
         RETVAL
 
@@ -5023,3 +4547,4 @@ i_int_hlines_CLONE_SKIP(cls)
 
 BOOT:
         PERL_SET_GLOBAL_CALLBACKS;
+	PERL_PL_SET_GLOBAL_CALLBACKS;
