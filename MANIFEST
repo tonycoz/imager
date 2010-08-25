@@ -98,6 +98,39 @@ SGI/testimg/verb.rgb
 SGI/testimg/verb12.rgb
 SGI/testimg/verb16.rgb
 SGI/testimg/verb6.rgb
+TIFF/Makefile.PL
+TIFF/TIFF.pm
+TIFF/TIFF.xs
+TIFF/imtiff.c
+TIFF/imtiff.h
+TIFF/testimg/alpha.tif	Alpha scaling test image
+TIFF/testimg/comp4.bmp       Compressed 4-bit/pixel BMP
+TIFF/testimg/comp4.tif       4-bit/pixel paletted TIFF
+TIFF/testimg/comp4bad.tif    corrupted 4-bit/pixel paletted TIFF
+TIFF/testimg/comp4t.tif      4-bit/pixel paletted TIFF (tiled)
+TIFF/testimg/comp8.bmp       Compressed 8-bit/pixel BMP
+TIFF/testimg/comp8.tif       8-bit/pixel paletted TIFF
+TIFF/testimg/gralpha.tif	Grey alpha test image
+TIFF/testimg/grey16.tif	16-bit/sample greyscale TIFF
+TIFF/testimg/grey32.tif	32-bit/sample greyscale+alpha TIFF
+TIFF/testimg/imager.pbm	Test bi-level
+TIFF/testimg/imager.tif	Test bi-level
+TIFF/testimg/penguin-base.ppm
+TIFF/testimg/pengtile.tif	Tiled tiff image, same as penguin-base.ppm
+TIFF/testimg/rgb16.tif	16-bit/sample RGB image - strips
+TIFF/testimg/rgb16t.tif	16-bit/sample RGB image - tiled
+TIFF/testimg/rgbatsep.tif	Tiled/separated for testing RGBA codepath
+TIFF/testimg/scmyk.tif	Simple CMYK TIFF image
+TIFF/testimg/scmyka.tif	CMYK with one alpha channel
+TIFF/testimg/scmyka16.tif	CMYK with one alpha channel (16-bit)
+TIFF/testimg/scmykaa.tif	CMYK with 2 alpha channels
+TIFF/testimg/slab.tif	Lab color image
+TIFF/testimg/srgb.tif	Simple RGB image
+TIFF/testimg/srgba.tif	RGB with one alpha
+TIFF/testimg/srgba16.tif
+TIFF/testimg/srgba32.tif
+TIFF/testimg/srgbaa.tif	RGB with 2 alpha
+TIFF/testimg/tiffwarn.tif	Generates a warning while being read
 apidocs.perl    Build lib/Imager/APIRef.pm
 bigtest.perl	Library selection tester
 bmp.c           Reading and writing Windows BMP files
@@ -311,7 +344,6 @@ t/tr18561.t		Regression tests
 t/tr18561b.t
 tags.c
 testimg/209_yonge.jpg	Regression test: #17981
-testimg/alpha.tif	Alpha scaling test image
 testimg/alpha16.tga	16-bit/pixel TGA with alpha "channel" RT 32926
 testimg/bad1oflow.bmp   1-bit/pixel, overflow integer on 32-bit machines
 testimg/bad1wid0.bmp    1-bit/pixel, zero width
@@ -337,18 +369,10 @@ testimg/bad_asc.pgm	ASCII PGM with invalid image data
 testimg/bad_asc.ppm	ASCII PPM with invalid image data
 testimg/base.jpg	Base JPEG test image
 testimg/comp4.bmp       Compressed 4-bit/pixel BMP
-testimg/comp4.tif       4-bit/pixel paletted TIFF
-testimg/comp4bad.tif    corrupted 4-bit/pixel paletted TIFF
-testimg/comp4t.tif      4-bit/pixel paletted TIFF (tiled)
 testimg/comp8.bmp       Compressed 8-bit/pixel BMP
-testimg/comp8.tif       8-bit/pixel paletted TIFF
 testimg/exiftest.jpg	Test image for EXIF parsing
 testimg/gimpgrad        A GIMP gradient file
-testimg/gralpha.tif	Grey alpha test image
-testimg/grey16.tif	16-bit/sample greyscale TIFF
-testimg/grey32.tif	32-bit/sample greyscale+alpha TIFF
 testimg/imager.pbm	Test bi-level
-testimg/imager.tif	Test bi-level
 testimg/junk.ppm
 testimg/longid.tga      Test TGA with a long id string
 testimg/maxval.ppm	For ppm file maxval handling
@@ -360,17 +384,9 @@ testimg/maxval_asc.ppm
 testimg/multiple.ppm	Test multiple PPM reading
 testimg/newgimpgrad.ggr Test GIMP Gradient file (newer type)
 testimg/penguin-base.ppm
-testimg/pengtile.tif	Tiled tiff image, same as penguin-base.ppm
 testimg/pgm.pgm		Simple pgm for testing the right sample is in the right place
-testimg/rgb16.tif	16-bit/sample RGB image - strips
-testimg/rgb16t.tif	16-bit/sample RGB image - tiled
-testimg/rgbatsep.tif	Tiled/separated for testing RGBA codepath
 testimg/scale.ppm
-testimg/scmyk.tif	Simple CMYK TIFF image
 testimg/scmyk.jpg	Simple CMYK JPEG image
-testimg/scmyka.tif	CMYK with one alpha channel
-testimg/scmyka16.tif	CMYK with one alpha channel (16-bit)
-testimg/scmykaa.tif	CMYK with 2 alpha channels
 testimg/short1.bmp      1-bit/pixel, data missing from EOF
 testimg/short24.bmp     24-bit/pixel, data missing from EOF
 testimg/short4.bmp      truncated 4bit/pixel uncompressed BMP
@@ -386,17 +402,10 @@ testimg/short_bin.ppm	Bin PPM with short image section
 testimg/short_bin16.pgm	16-bit Bin PGM with short image section
 testimg/short_bin16.ppm	16-bit Bin PPM with short image section
 testimg/simple.pbm
-testimg/slab.tif	Lab color image
-testimg/srgb.tif	Simple RGB image
-testimg/srgba.tif	RGB with one alpha
-testimg/srgba16.tif
-testimg/srgba32.tif
-testimg/srgbaa.tif	RGB with 2 alpha
 testimg/test.png	Standard test image as PNG
 testimg/test.raw	Standard test image as RAW
 testimg/test.tga	Standard test image as TGA
 testimg/test_gimp_pal   A simple GIMP palette file
-testimg/tiffwarn.tif	Generates a warning while being read
 testimg/winrgb2.bmp  1-bit bmp base
 testimg/winrgb24.bmp 24-bit bmp base
 testimg/winrgb24off.bmp 24-bit bmp with image data offset from header
@@ -407,7 +416,6 @@ testimg/winrgb8.bmp  8-bit bmp base
 testimg/winrgb8off.bmp  8-bit bmp with image data offset from header
 testimg/zerotype.jpg	Image with a zero type entry in the EXIF data
 tga.c           Reading and writing Targa files
-tiff.c
 trans2.c
 transform.perl	Shell interface to Imager::Transform
 typemap

@@ -77,10 +77,6 @@ use Imager::Font;
 		i_readjpeg_wiol
 		i_writejpeg_wiol
 
-		i_readtiff_wiol
-		i_writetiff_wiol
-		i_writetiff_wiol_faxable
-
 		i_readpnm_wiol
 		i_writeppm_wiol
 
@@ -1385,17 +1381,6 @@ sub read {
   my $allow_incomplete = $input{allow_incomplete};
   defined $allow_incomplete or $allow_incomplete = 0;
 
-  if ( $input{'type'} eq 'tiff' ) {
-    my $page = $input{'page'};
-    defined $page or $page = 0;
-    $self->{IMG}=i_readtiff_wiol( $IO, $allow_incomplete, $page ); 
-    if ( !defined($self->{IMG}) ) {
-      $self->{ERRSTR}=$self->_error_as_msg(); return undef;
-    }
-    $self->{DEBUG} && print "loading a tiff file\n";
-    return $self;
-  }
-
   if ( $input{'type'} eq 'pnm' ) {
     $self->{IMG}=i_readpnm_wiol( $IO, $allow_incomplete );
     if ( !defined($self->{IMG}) ) {
@@ -1758,24 +1743,7 @@ sub write {
     ($IO, $fh) = $self->_get_writer_io(\%input, $input{'type'})
       or return undef;
     
-    if ($input{'type'} eq 'tiff') {
-      $self->_set_opts(\%input, "tiff_", $self)
-        or return undef;
-      $self->_set_opts(\%input, "exif_", $self)
-        or return undef;
-      
-      if (defined $input{class} && $input{class} eq 'fax') {
-        if (!i_writetiff_wiol_faxable($self->{IMG}, $IO, $input{fax_fine})) {
-          $self->{ERRSTR} = $self->_error_as_msg();
-          return undef;
-        }
-      } else {
-        if (!i_writetiff_wiol($self->{IMG}, $IO)) {
-          $self->{ERRSTR} = $self->_error_as_msg();
-          return undef;
-        }
-      }
-    } elsif ( $input{'type'} eq 'pnm' ) {
+    if ( $input{'type'} eq 'pnm' ) {
       $self->_set_opts(\%input, "pnm_", $self)
         or return undef;
       if ( ! i_writeppm_wiol($self->{IMG},$IO) ) {
@@ -1791,14 +1759,6 @@ sub write {
         return undef;
       }
       $self->{DEBUG} && print "writing a raw file\n";
-    } elsif ( $input{'type'} eq 'png' ) {
-      $self->_set_opts(\%input, "png_", $self)
-        or return undef;
-      if ( !i_writepng_wiol($self->{IMG}, $IO) ) {
-        $self->{ERRSTR}='unable to write png image';
-        return undef;
-      }
-      $self->{DEBUG} && print "writing a png file\n";
     } elsif ( $input{'type'} eq 'jpeg' ) {
       $self->_set_opts(\%input, "jpeg_", $self)
         or return undef;
@@ -1899,23 +1859,7 @@ sub write_multi {
     ($IO, $file) = $class->_get_writer_io($opts, $type)
       or return undef;
     
-    if ($type eq 'tiff') {
-      $class->_set_opts($opts, "tiff_", @images)
-        or return;
-      $class->_set_opts($opts, "exif_", @images)
-        or return;
-      my $res;
-      $opts->{fax_fine} = 1 unless exists $opts->{fax_fine};
-      if ($opts->{'class'} && $opts->{'class'} eq 'fax') {
-        $res = i_writetiff_multi_wiol_faxable($IO, $opts->{fax_fine}, @work);
-      }
-      else {
-        $res = i_writetiff_multi_wiol($IO, @work);
-      }
-      unless ($res) {
-        $class->_set_error($class->_error_as_msg());
-        return undef;
-      }
+    if (0) { # eventually PNM in here, now that TIFF/GIF are elsewhere
     }
     else {
       if (@images == 1) {
@@ -1975,14 +1919,8 @@ sub read_multi {
     return;
   }
 
-    my @imgs;
-  if ($type eq 'gif') {
-    @imgs = i_readgif_multi_wiol($IO);
-  }
-  elsif ($type eq 'tiff') {
-    @imgs = i_readtiff_multi_wiol($IO, -1);
-    }
-  elsif ($type eq 'pnm') {
+  my @imgs;
+  if ($type eq 'pnm') {
     @imgs = i_readpnm_multi_wiol($IO, $opts{allow_incomplete}||0);
   }
   else {

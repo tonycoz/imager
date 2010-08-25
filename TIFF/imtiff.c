@@ -1,7 +1,7 @@
-#include "imager.h"
 #include <tiffio.h>
-#include "iolayer.h"
-#include "imageri.h"
+#include <string.h>
+#include "imtiff.h"
+#include "imext.h"
 
 /* needed to implement our substitute TIFFIsCODECConfigured */
 #if TIFFLIB_VERSION < 20031121
@@ -42,6 +42,8 @@ Some of these functions are internal.
 
 #define CLAMP8(x) ((x) < 0 ? 0 : (x) > 255 ? 255 : (x))
 #define CLAMP16(x) ((x) < 0 ? 0 : (x) > 65535 ? 65535 : (x))
+
+#define Sample16To8(num) ((num) / 257)
 
 struct tag_name {
   char *name;
@@ -412,8 +414,8 @@ static i_img *read_one_tiff(TIFF *tif, int allow_incomplete) {
     return NULL;
 
   /* general metadata */
-  i_tags_addn(&im->tags, "tiff_bitspersample", 0, bits_per_sample);
-  i_tags_addn(&im->tags, "tiff_photometric", 0, photometric);
+  i_tags_setn(&im->tags, "tiff_bitspersample", bits_per_sample);
+  i_tags_setn(&im->tags, "tiff_photometric", photometric);
   TIFFGetFieldDefaulted(tif, TIFFTAG_COMPRESSION, &compress);
     
   /* resolution tags */
@@ -425,22 +427,22 @@ static i_img *read_one_tiff(TIFF *tif, int allow_incomplete) {
       xres = yres;
     else if (!gotYres)
       yres = xres;
-    i_tags_addn(&im->tags, "tiff_resolutionunit", 0, resunit);
+    i_tags_setn(&im->tags, "tiff_resolutionunit", resunit);
     if (resunit == RESUNIT_CENTIMETER) {
       /* from dots per cm to dpi */
       xres *= 2.54;
       yres *= 2.54;
-      i_tags_add(&im->tags, "tiff_resolutionunit_name", 0, "centimeter", -1, 0);
+      i_tags_set(&im->tags, "tiff_resolutionunit_name", "centimeter", -1);
     }
     else if (resunit == RESUNIT_NONE) {
-      i_tags_addn(&im->tags, "i_aspect_only", 0, 1);
-      i_tags_add(&im->tags, "tiff_resolutionunit_name", 0, "none", -1, 0);
+      i_tags_setn(&im->tags, "i_aspect_only", 1);
+      i_tags_set(&im->tags, "tiff_resolutionunit_name", "none", -1);
     }
     else if (resunit == RESUNIT_INCH) {
-      i_tags_add(&im->tags, "tiff_resolutionunit_name", 0, "inch", -1, 0);
+      i_tags_set(&im->tags, "tiff_resolutionunit_name", "inch", -1);
     }
     else {
-      i_tags_add(&im->tags, "tiff_resolutionunit_name", 0, "unknown", -1, 0);
+      i_tags_set(&im->tags, "tiff_resolutionunit_name", "unknown", -1);
     }
     /* tifflib doesn't seem to provide a way to get to the original rational
        value of these, which would let me provide a more reasonable
@@ -455,20 +457,19 @@ static i_img *read_one_tiff(TIFF *tif, int allow_incomplete) {
     if (TIFFGetField(tif, text_tag_names[i].tag, &data)) {
       mm_log((1, "i_readtiff_wiol: tag %d has value %s\n", 
 	      text_tag_names[i].tag, data));
-      i_tags_add(&im->tags, text_tag_names[i].name, 0, data, 
-		 strlen(data), 0);
+      i_tags_set(&im->tags, text_tag_names[i].name, data, -1);
     }
   }
 
-  i_tags_add(&im->tags, "i_format", 0, "tiff", -1, 0);
+  i_tags_set(&im->tags, "i_format", "tiff", 4);
   if (warn_buffer && *warn_buffer) {
-    i_tags_add(&im->tags, "i_warning", 0, warn_buffer, -1, 0);
+    i_tags_set(&im->tags, "i_warning", warn_buffer, -1);
     *warn_buffer = '\0';
   }
 
   for (i = 0; i < compress_value_count; ++i) {
     if (compress_values[i].tag == compress) {
-      i_tags_add(&im->tags, "tiff_compression", 0, compress_values[i].name, -1, 0);
+      i_tags_set(&im->tags, "tiff_compression", compress_values[i].name, -1);
       break;
     }
   }
@@ -497,7 +498,6 @@ i_readtiff_wiol(io_glue *ig, int allow_incomplete, int page) {
   /* Add code to get the filename info from the iolayer */
   /* Also add code to check for mmapped code */
 
-  io_glue_commit_types(ig);
   mm_log((1, "i_readtiff_wiol(ig %p, allow_incomplete %d, page %d)\n", ig, allow_incomplete, page));
   
   tif = TIFFClientOpen("(Iolayer)", 
@@ -540,14 +540,14 @@ i_readtiff_wiol(io_glue *ig, int allow_incomplete, int page) {
 }
 
 /*
-=item i_readtiff_multi_wiol(ig, length, *count)
+=item i_readtiff_multi_wiol(ig, *count)
 
 Reads multiple images from a TIFF.
 
 =cut
 */
 i_img**
-i_readtiff_multi_wiol(io_glue *ig, int length, int *count) {
+i_readtiff_multi_wiol(io_glue *ig, int *count) {
   TIFF* tif;
   TIFFErrorHandler old_handler;
   TIFFErrorHandler old_warn_handler;
@@ -564,8 +564,7 @@ i_readtiff_multi_wiol(io_glue *ig, int length, int *count) {
   /* Add code to get the filename info from the iolayer */
   /* Also add code to check for mmapped code */
 
-  io_glue_commit_types(ig);
-  mm_log((1, "i_readtiff_wiol(ig %p, length %d)\n", ig, length));
+  mm_log((1, "i_readtiff_wiol(ig %p, length %d)\n", ig));
   
   tif = TIFFClientOpen("(Iolayer)", 
 		       "rm", 
@@ -1268,7 +1267,6 @@ i_writetiff_multi_wiol(io_glue *ig, i_img **imgs, int count) {
 
   old_handler = TIFFSetErrorHandler(error_handler);
 
-  io_glue_commit_types(ig);
   i_clear_error();
   mm_log((1, "i_writetiff_multi_wiol(ig 0x%p, imgs 0x%p, count %d)\n", 
           ig, imgs, count));
@@ -1337,7 +1335,6 @@ i_writetiff_multi_wiol_faxable(io_glue *ig, i_img **imgs, int count, int fine) {
 
   old_handler = TIFFSetErrorHandler(error_handler);
 
-  io_glue_commit_types(ig);
   i_clear_error();
   mm_log((1, "i_writetiff_multi_wiol(ig 0x%p, imgs 0x%p, count %d)\n", 
           ig, imgs, count));
@@ -1402,7 +1399,6 @@ i_writetiff_wiol(i_img *img, io_glue *ig) {
 
   old_handler = TIFFSetErrorHandler(error_handler);
 
-  io_glue_commit_types(ig);
   i_clear_error();
   mm_log((1, "i_writetiff_wiol(img %p, ig 0x%p)\n", img, ig));
 
@@ -1464,7 +1460,6 @@ i_writetiff_wiol_faxable(i_img *im, io_glue *ig, int fine) {
 
   old_handler = TIFFSetErrorHandler(error_handler);
 
-  io_glue_commit_types(ig);
   i_clear_error();
   mm_log((1, "i_writetiff_wiol(img %p, ig 0x%p)\n", im, ig));
 

@@ -545,18 +545,18 @@ sub init {
 			    installed on your computer}
 		   };
 
-  $formats{'tiff'}={
-		    order=>'23',
-		    def=>'HAVE_LIBTIFF',
-		    inccheck=>sub { -e catfile($_[0], 'tiffio.h') },
-		    libcheck=>sub { $_[0] eq "libtiff$aext" or $_ eq "libtiff.$lext" },
-		    libfiles=>'-ltiff',
-		    objfiles=>'tiff.o',
-		    docs=>q{
-			    In order to use tiff with this module you need to have libtiff
-			    installed on your computer},
-		    postcheck => \&postcheck_tiff,
-		   };
+#   $formats{'tiff'}={
+# 		    order=>'23',
+# 		    def=>'HAVE_LIBTIFF',
+# 		    inccheck=>sub { -e catfile($_[0], 'tiffio.h') },
+# 		    libcheck=>sub { $_[0] eq "libtiff$aext" or $_ eq "libtiff.$lext" },
+# 		    libfiles=>'-ltiff',
+# 		    objfiles=>'tiff.o',
+# 		    docs=>q{
+# 			    In order to use tiff with this module you need to have libtiff
+# 			    installed on your computer},
+# 		    postcheck => \&postcheck_tiff,
+# 		   };
 
 #   $formats{'png'}={
 # 		   order=>'22',
@@ -966,7 +966,7 @@ Usage: $0 [--enable feature1,feature2,...] [other options]
        $0 [--disable feature1,feature2,...]  [other options]
        $0 --help
 Possible feature names are:
-  jpeg tiff T1-fonts TT-fonts freetype2
+  jpeg T1-fonts TT-fonts freetype2
 Other options:
   --verbose | -v
     Verbose library probing (or set IM_VERBOSE in the environment)
@@ -1043,84 +1043,84 @@ sub _tilde_expand {
   $path;
 }
 
-sub postcheck_tiff {
-  my ($format, $frm) = @_;
+# sub postcheck_tiff {
+#   my ($format, $frm) = @_;
 
-  -d "probe" or mkdir "probe";
+#   -d "probe" or mkdir "probe";
 
-  my $tiffver_name = "probe/tiffver.txt";
+#   my $tiffver_name = "probe/tiffver.txt";
 
-  my $lib;
-  if ($Config{cc} =~ /\b(cl|bcc)\b/) {
-    $lib = "libtiff";
-  }
-  else {
-    $lib = "tiff";
-  }
+#   my $lib;
+#   if ($Config{cc} =~ /\b(cl|bcc)\b/) {
+#     $lib = "libtiff";
+#   }
+#   else {
+#     $lib = "tiff";
+#   }
 
-  # setup LD_RUN_PATH to match link time
-  my $lopts = join " " , map("-L$_", @{$format->{libdir}}), " -ltiff";
-  my ($extra, $bs_load, $ld_load, $ld_run_path) =
-    ExtUtils::Liblist->ext($lopts, $VERBOSE);
-  local $ENV{LD_RUN_PATH};
+#   # setup LD_RUN_PATH to match link time
+#   my $lopts = join " " , map("-L$_", @{$format->{libdir}}), " -ltiff";
+#   my ($extra, $bs_load, $ld_load, $ld_run_path) =
+#     ExtUtils::Liblist->ext($lopts, $VERBOSE);
+#   local $ENV{LD_RUN_PATH};
 
-  if ($ld_run_path) {
-    print "Setting LD_RUN_PATH=$ld_run_path for TIFF probe\n" if $VERBOSE;
-    $ENV{LD_RUN_PATH} = $ld_run_path;
-  }
+#   if ($ld_run_path) {
+#     print "Setting LD_RUN_PATH=$ld_run_path for TIFF probe\n" if $VERBOSE;
+#     $ENV{LD_RUN_PATH} = $ld_run_path;
+#   }
 
-  my $good =
-    eval {
-      assert_lib
-	(
-	 debug => $VERBOSE,
-	 incpath => $format->{incdir},
-	 libpath => $format->{libdir},
-	 lib => $lib,
-	 header => [ qw(stdio.h tiffio.h) ],
-	 function => <<FUNCTION,
-  {
-    const char *vers = TIFFGetVersion();
-    FILE *f = fopen("$tiffver_name", "wb");
-    if (!f)
-      return 1;
-    fputs(vers, f);
-    if (fclose(f))
-      return 1;
-    return 0;
-  }
-FUNCTION
-	);
-      1;
-    };
+#   my $good =
+#     eval {
+#       assert_lib
+# 	(
+# 	 debug => $VERBOSE,
+# 	 incpath => $format->{incdir},
+# 	 libpath => $format->{libdir},
+# 	 lib => $lib,
+# 	 header => [ qw(stdio.h tiffio.h) ],
+# 	 function => <<FUNCTION,
+#   {
+#     const char *vers = TIFFGetVersion();
+#     FILE *f = fopen("$tiffver_name", "wb");
+#     if (!f)
+#       return 1;
+#     fputs(vers, f);
+#     if (fclose(f))
+#       return 1;
+#     return 0;
+#   }
+# FUNCTION
+# 	);
+#       1;
+#     };
 
-  unless ($good && -s $tiffver_name
-	  && open(VERS, "< $tiffver_name")) {
-    unlink $tiffver_name unless $KEEP_FILES;
-    print <<EOS;
-    **tiff: cannot determine libtiff version number
-      tiff: DISABLED
-EOS
-    return;
-  }
+#   unless ($good && -s $tiffver_name
+# 	  && open(VERS, "< $tiffver_name")) {
+#     unlink $tiffver_name unless $KEEP_FILES;
+#     print <<EOS;
+#     **tiff: cannot determine libtiff version number
+#       tiff: DISABLED
+# EOS
+#     return;
+#   }
 
-  # version file seems to be there, load it up
-  my $ver_str = do { local $/; <VERS> };
-  close VERS;
-  unlink $tiffver_name unless $KEEP_FILES;
+#   # version file seems to be there, load it up
+#   my $ver_str = do { local $/; <VERS> };
+#   close VERS;
+#   unlink $tiffver_name unless $KEEP_FILES;
 
-  my ($version) = $ver_str =~ /(\d+\.\d+\.\d+)/;
+#   my ($version) = $ver_str =~ /(\d+\.\d+\.\d+)/;
 
-  if ($version eq '3.9.0') {
-    print <<EOS;
-    **tiff: libtiff 3.9.0 introduced a serious bug, please install 3.9.1
-      tiff: DISABLED
-EOS
-    return;
-  }
+#   if ($version eq '3.9.0') {
+#     print <<EOS;
+#     **tiff: libtiff 3.9.0 introduced a serious bug, please install 3.9.1
+#       tiff: DISABLED
+# EOS
+#     return;
+#   }
 
-  return 1;
-}
+#   return 1;
+# }
 
 # This isn't a module, but some broken tools, like
 # Module::Depends::Instrusive insist on treating it like one.

@@ -387,39 +387,6 @@ i_readjpeg_wiol(io_glue *ig, int length, char** iptc_itext, int *itlength);
 undef_int i_writejpeg_wiol(i_img *im, io_glue *ig, int qfactor);
 #endif /* HAVE_LIBJPEG */
 
-#ifdef HAVE_LIBTIFF
-i_img   * i_readtiff_wiol(io_glue *ig, int allow_incomplete, int page);
-i_img  ** i_readtiff_multi_wiol(io_glue *ig, int length, int *count);
-undef_int i_writetiff_wiol(i_img *im, io_glue *ig);
-undef_int i_writetiff_multi_wiol(io_glue *ig, i_img **imgs, int count);
-undef_int i_writetiff_wiol_faxable(i_img *im, io_glue *ig, int fine);
-undef_int i_writetiff_multi_wiol_faxable(io_glue *ig, i_img **imgs, int count, int fine);
-char const * i_tiff_libversion(void);
-int i_tiff_has_compression(char const *name);
-
-#endif /* HAVE_LIBTIFF */
-
-#ifdef HAVE_LIBGIF
-i_img *i_readgif(int fd, int **colour_table, int *colours);
-i_img *i_readgif_wiol(io_glue *ig, int **colour_table, int *colours);
-i_img *i_readgif_scalar(char *data, int length, int **colour_table, int *colours);
-i_img *i_readgif_callback(i_read_callback_t callback, char *userdata, int **colour_table, int *colours);
-i_img *i_readgif_single_wiol(io_glue *ig, int page);
-extern i_img **i_readgif_multi(int fd, int *count);
-extern i_img **i_readgif_multi_scalar(char *data, int length, int *count);
-extern i_img **i_readgif_multi_callback(i_read_callback_t callback, char *userdata, int *count);
-extern i_img **i_readgif_multi_wiol(io_glue *ig, int *count);
-undef_int i_writegif(i_img *im,int fd,int colors,int pixdev,int fixedlen,i_color fixed[]);
-undef_int i_writegifmc(i_img *im,int fd,int colors);
-undef_int i_writegifex(i_img *im,int fd);
-undef_int i_writegif_gen(i_quantize *quant, int fd, i_img **imgs, int count);
-undef_int i_writegif_callback(i_quantize *quant, i_write_callback_t cb, char *userdata, int maxbuffer, i_img **imgs, int count);
-undef_int i_writegif_wiol(io_glue *ig, i_quantize *quant, 
-                          i_img **imgs, int count);
-void i_qdist(i_img *im);
-
-#endif /* HAVE_LIBGIF */
-
 i_img   * i_readraw_wiol(io_glue *ig, int x, int y, int datachannels, int storechannels, int intrl);
 undef_int i_writeraw_wiol(i_img* im, io_glue *ig);
 

@@ -45,7 +45,7 @@ my %files;
 		  { file => "testimg/test.raw", xsize=>150, ysize=>150, type=>'raw', interleave => 0},
 		  { file => "testimg/penguin-base.ppm"  },
 		  { file => "GIF/testimg/expected.gif"  },
-		  { file => "testimg/comp8.tif" },
+		  { file => "TIFF/testimg/comp8.tif" },
                   { file => "testimg/winrgb24.bmp" },
                   { file => "testimg/test.tga" }, );
 my %writeopts =

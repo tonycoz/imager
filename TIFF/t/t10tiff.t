@@ -1,13 +1,13 @@
 #!perl -w
 use strict;
-use Test::More;
+use Test::More tests => 216;
 use Imager qw(:all);
 use Imager::Test qw(is_image is_image_similar test_image test_image_16 test_image_double test_image_raw);
 
-i_has_format("tiff")
-  or plan skip_all => "no tiff support";
+BEGIN { use_ok("Imager::File::TIFF"); }
 
-plan tests => 215;
+-d "testout"
+  or mkdir "testout";
 
 $|=1;  # give us some progress in the test harness
 init_log("testout/t106tiff.log",1);
@@ -18,7 +18,7 @@ my $red=i_color_new(255,0,0,255);
 
 my $img=test_image_raw();
 
-my $ver_string = Imager::i_tiff_libversion();
+my $ver_string = Imager::File::TIFF::i_tiff_libversion();
 ok(my ($full, $major, $minor, $point) = 
    $ver_string =~ /Version +((\d+)\.(\d+).(\d+))/,
    "extract library version")
@@ -38,14 +38,14 @@ Imager::i_tags_add($img, "tiff_software", 0, "t106tiff.t", 0);
 open(FH,">testout/t106.tiff") || die "cannot open testout/t106.tiff for writing\n";
 binmode(FH); 
 my $IO = Imager::io_new_fd(fileno(FH));
-ok(i_writetiff_wiol($img, $IO), "write low level")
+ok(Imager::File::TIFF::i_writetiff_wiol($img, $IO), "write low level")
   or print "# ", Imager->_error_as_msg, "\n";
 close(FH);
 
 open(FH,"testout/t106.tiff") or die "cannot open testout/t106.tiff\n";
 binmode(FH);
 $IO = Imager::io_new_fd(fileno(FH));
-my $cmpimg = i_readtiff_wiol($IO, -1);
+my $cmpimg = Imager::File::TIFF::i_readtiff_wiol($IO);
 ok($cmpimg, "read low-level");
 
 close(FH);
@@ -66,7 +66,7 @@ is($tags{tiff_bitspersample}, 8, "tiff_bitspersample");
 
 $IO = Imager::io_new_bufchain();
 
-ok(Imager::i_writetiff_wiol($img, $IO), "write to buffer chain");
+ok(Imager::File::TIFF::i_writetiff_wiol($img, $IO), "write to buffer chain");
 my $tiffdata = Imager::io_slurp($IO);
 
 open(FH,"testout/t106.tiff");
@@ -97,7 +97,7 @@ open FH, "> testout/t106tiff_fax.tiff"
   or die "Cannot create testout/t106tiff_fax.tiff: $!";
 binmode FH;
 $IO = Imager::io_new_fd(fileno(FH));
-ok(i_writetiff_wiol_faxable($faximg, $IO, 1), "write faxable, low level");
+ok(Imager::File::TIFF::i_writetiff_wiol_faxable($faximg, $IO, 1), "write faxable, low level");
 close FH;
 
 # test the OO interface
@@ -242,7 +242,7 @@ $work = $tiffdata;
 $seekpos = 0;
 my $IO2 = Imager::io_new_cb(undef, \&io_reader, \&io_seeker, undef);
 ok($IO2, "new readcb obj");
-my $img5 = i_readtiff_wiol($IO2, -1);
+my $img5 = Imager::File::TIFF::i_readtiff_wiol($IO2);
 ok($img5, "read via cb");
 ok(i_img_diff($img5, $img) == 0, "read from cb diff");
 
@@ -251,7 +251,7 @@ $work = $tiffdata;
 $seekpos = 0;
 my $IO3 = Imager::io_new_cb(undef, \&io_reader2, \&io_seeker, undef);
 ok($IO3, "new readcb2 obj");
-my $img6 = i_readtiff_wiol($IO3, -1);
+my $img6 = Imager::File::TIFF::i_readtiff_wiol($IO3);
 ok($img6, "read via cb2");
 ok(i_img_diff($img6, $img) == 0, "read from cb2 diff");
 
@@ -261,7 +261,7 @@ $seekpos = 0;
 my $IO4 = Imager::io_new_cb(\&io_writer, \&io_reader, \&io_seeker,
 			    \&io_closer);
 ok($IO4, "new writecb obj");
-ok(i_writetiff_wiol($img, $IO4), "write to cb");
+ok(Imager::File::TIFF::i_writetiff_wiol($img, $IO4), "write to cb");
 is($work, $odata, "write cb match");
 ok($did_close, "write cb did close");
 open D1, ">testout/d1.tiff" or die;
@@ -278,7 +278,7 @@ $did_close = 0;
 my $IO5 = Imager::io_new_cb(\&io_writer, \&io_reader, \&io_seeker,
 			    \&io_closer, 1);
 ok($IO5, "new writecb obj 2");
-ok(i_writetiff_wiol($img, $IO5), "write to cb2");
+ok(Imager::File::TIFF::i_writetiff_wiol($img, $IO5), "write to cb2");
 is($work, $odata, "write cb2 match");
 ok($did_close, "write cb2 did close");
 
@@ -397,7 +397,7 @@ ok(defined $warning && $warning =~ /unknown field with tag 28712/,
 { # test reading returns an error correctly - use test script as an
   # invalid TIFF file
   my $im = Imager->new;
-  ok(!$im->read(file=>'t/t106tiff.t', type=>'tiff'),
+  ok(!$im->read(file=>'t/t10tiff.t', type=>'tiff'),
      "fail to read script as image");
   # we get different magic number values depending on the platform
   # byte ordering
@@ -656,7 +656,7 @@ SKIP:
 
 { # 8-bit writes
   # and check compression
-  my $compress = Imager::i_tiff_has_compression('lzw') ? 'lzw' : 'packbits';
+  my $compress = Imager::File::TIFF::i_tiff_has_compression('lzw') ? 'lzw' : 'packbits';
   my $orig = test_image()->convert(preset=>'grey')
     ->convert(preset => 'addalpha');
   my $data;
@@ -723,8 +723,8 @@ SKIP:
 }
 
 { # fallback handling of tiff
-  is(Imager::i_tiff_has_compression('none'), 1, "can always do uncompresed");
-  is(Imager::i_tiff_has_compression('xxx'), '', "can't do xxx compression");
+  is(Imager::File::TIFF::i_tiff_has_compression('none'), 1, "can always do uncompresed");
+  is(Imager::File::TIFF::i_tiff_has_compression('xxx'), '', "can't do xxx compression");
 }
 
 

@@ -117,6 +117,9 @@ im_ext_funcs imager_function_table =
     /* IMAGER_API_LEVEL 4 functions */
     i_img_alloc,
     i_img_init,
+
+    /* IMAGER_API_LEVEL 5 functions */
+    i_img_is_monochrome
   };
 
 /* in general these functions aren't called by Imager internally, but

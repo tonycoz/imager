@@ -2310,10 +2310,13 @@ i_test_format_probe(io_glue *data, int length) {
 /*
 =item i_img_is_monochrome(img, &zero_is_white)
 
+=category Image Information
+
 Tests an image to check it meets our monochrome tests.
 
 The idea is that a file writer can use this to test where it should
-write the image in whatever bi-level format it uses, eg. pbm for pnm.
+write the image in whatever bi-level format it uses, eg. C<pbm> for
+C<pnm>.
 
 For performance of encoders we require monochrome images:
 
@@ -2325,12 +2328,12 @@ be paletted
 
 =item *
 
-have a palette of two colors, containing only (0,0,0) and
-(255,255,255) in either order.
+have a palette of two colors, containing only C<(0,0,0)> and
+C<(255,255,255)> in either order.
 
 =back
 
-zero_is_white is set to non-zero iff the first palette entry is white.
+C<zero_is_white> is set to non-zero if the first palette entry is white.
 
 =cut
 */

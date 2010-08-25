@@ -8,7 +8,7 @@ Imager 0.78 - unreleased
    Thanks to Justin Davis.
    https://rt.cpan.org/Ticket/Display.html?id=60491
 
- - moved the GIF file handling code into a sub-module in preparation
+ - moved GIF, TIFF file handling code into sub-modules in preparation
    for separate distribution.
    https://rt.cpan.org/Ticket/Display.html?id=49616 (partial)
 

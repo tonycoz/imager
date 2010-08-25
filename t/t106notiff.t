@@ -3,7 +3,7 @@ use strict;
 use Test::More;
 use Imager qw(:all);
 
-i_has_format("tiff")
+$Imager::formats{"tiff"}
   and plan skip_all => "tiff support available - this tests the lack of it";
 
 plan tests => 12;

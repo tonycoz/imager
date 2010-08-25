@@ -4,7 +4,7 @@ use Imager;
 use Imager::Test qw(is_image);
 use Test::More;
 
-Imager::i_has_format("tiff")
+$Imager::formats{"tiff"}
   or plan skip_all => "no tiff support";
 
 plan tests => 2;

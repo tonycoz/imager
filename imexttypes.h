@@ -18,7 +18,7 @@
  will result in an increment of IMAGER_API_LEVEL.
 */
 
-#define IMAGER_API_LEVEL 4
+#define IMAGER_API_LEVEL 6
 
 typedef struct {
   int version;
@@ -156,6 +156,10 @@ typedef struct {
   void (*f_i_img_init)(i_img *);
 
   /* IMAGER_API_LEVEL 5 functions will be added here */
+  /* added i_psampf?_bits macros */
+  int (*f_i_img_is_monochrome)(i_img *, int *zero_is_white);
+
+  /* IMAGER_API_LEVEL 6 functions will be added here */
 } im_ext_funcs;
 
 #define PERL_FUNCTION_TABLE_NAME "Imager::__ext_func_table"

@@ -1046,6 +1046,36 @@ Return true if the image has an alpha channel.
 =for comment
 From: File immacros.h
 
+=item i_img_is_monochrome(img, &zero_is_white)
+
+
+Tests an image to check it meets our monochrome tests.
+
+The idea is that a file writer can use this to test where it should
+write the image in whatever bi-level format it uses, eg. C<pbm> for
+C<pnm>.
+
+For performance of encoders we require monochrome images:
+
+=over
+
+=item *
+
+be paletted
+
+=item *
+
+have a palette of two colors, containing only C<(0,0,0)> and
+C<(255,255,255)> in either order.
+
+=back
+
+C<zero_is_white> is set to non-zero if the first palette entry is white.
+
+
+=for comment
+From: File image.c
+
 =item i_img_setmask(C<im>, C<ch_mask>)
 
 Set the image channel mask for C<im> to C<ch_mask>.
