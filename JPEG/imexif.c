@@ -1,6 +1,8 @@
+#include "imext.h"
 #include "imexif.h"
 #include <stdlib.h>
 #include <float.h>
+#include <string.h>
 
 /*
 =head1 NAME
@@ -704,7 +706,7 @@ save_exif_ifd_tags(i_img *im, imtiff *tiff) {
       /* find the actual end of the string */
       while (i < entry->size && user_comment[i])
 	++i;
-      i_tags_add(&im->tags, "exif_user_comment", 0, user_comment, i, 0);
+      i_tags_set(&im->tags, "exif_user_comment", user_comment, i);
       myfree(user_comment);
       break;
 
@@ -1016,7 +1018,8 @@ tiff_get_tag_double_array(imtiff *tiff, int index, double *result,
   ifd_entry *entry;
   unsigned long offset;
   if (index < 0 || index >= tiff->ifd_size) {
-    i_fatal(3, "tiff_get_tag_double_array() tag index out of range");
+    mm_log((3, "tiff_get_tag_double_array() tag index out of range"));
+    return 0;
   }
   
   entry = tiff->ifd + index;
@@ -1080,7 +1083,8 @@ static int
 tiff_get_tag_double(imtiff *tiff, int index, double *result) {
   ifd_entry *entry;
   if (index < 0 || index >= tiff->ifd_size) {
-    i_fatal(3, "tiff_get_tag_double() index out of range");
+    mm_log((3, "tiff_get_tag_double() index out of range"));
+    return 0;
   }
   
   entry = tiff->ifd + index;
@@ -1111,12 +1115,14 @@ tiff_get_tag_int_array(imtiff *tiff, int index, int *result, int array_index) {
   ifd_entry *entry;
   unsigned long offset;
   if (index < 0 || index >= tiff->ifd_size) {
-    i_fatal(3, "tiff_get_tag_int_array() tag index out of range");
+    mm_log((3, "tiff_get_tag_int_array() tag index out of range"));
+    return 0;
   }
   
   entry = tiff->ifd + index;
   if (array_index < 0 || array_index >= entry->count) {
-    i_fatal(3, "tiff_get_tag_int_array() array index out of range");
+    mm_log((3, "tiff_get_tag_int_array() array index out of range"));
+    return 0;
   }
 
   offset = entry->offset + array_index * entry->item_size;
@@ -1166,7 +1172,8 @@ static int
 tiff_get_tag_int(imtiff *tiff, int index, int *result) {
   ifd_entry *entry;
   if (index < 0 || index >= tiff->ifd_size) {
-    i_fatal(3, "tiff_get_tag_int() index out of range");
+    mm_log((3, "tiff_get_tag_int() index out of range"));
+    return 0;
   }
 
   entry = tiff->ifd + index;
@@ -1207,7 +1214,7 @@ copy_int_tags(i_img *im, imtiff *tiff, tag_map *map, int map_count) {
       int value;
       if (map[i].tag == entry->tag
 	  && tiff_get_tag_int(tiff, tag_index, &value)) {
-	i_tags_addn(&im->tags, map[i].name, 0, value);
+	i_tags_setn(&im->tags, map[i].name, value);
 	break;
       }
     }
@@ -1258,8 +1265,8 @@ copy_string_tags(i_img *im, imtiff *tiff, tag_map *map, int map_count) {
     for (i = 0; i < map_count; ++i) {
       if (map[i].tag == entry->tag) {
 	int len = entry->type == ift_ascii ? entry->size - 1 : entry->size;
-	i_tags_add(&im->tags, map[i].name, 0,
-		   (char const *)(tiff->base + entry->offset), len, 0);
+	i_tags_set(&im->tags, map[i].name,
+		   (char const *)(tiff->base + entry->offset), len);
 	break;
       }
     }
@@ -1293,13 +1300,14 @@ copy_num_array_tags(i_img *im, imtiff *tiff, tag_map *map, int map_count) {
 	  *workstr = '\0';
 	  for (j = 0; j < entry->count; ++j) {
 	    if (!tiff_get_tag_double_array(tiff, tag_index, &value, j)) {
-	      i_fatal(3, "unexpected failure from tiff_get_tag_double_array(..., %d, ..., %d)\n", tag_index, j);
+	      mm_log((3, "unexpected failure from tiff_get_tag_double_array(..., %d, ..., %d)\n", tag_index, j));
+	      return;
 	    }
 	    if (j) 
 	      strcat(workstr, " ");
 	    sprintf(workstr + strlen(workstr), "%.6g", value);
 	  }
-	  i_tags_add(&im->tags, map[i].name, 0, workstr, -1, 0);
+	  i_tags_set(&im->tags, map[i].name, workstr, -1);
 	}
 	else if (entry->type == ift_short || entry->type == ift_long
 		 || entry->type == ift_sshort || entry->type == ift_slong
@@ -1309,13 +1317,14 @@ copy_num_array_tags(i_img *im, imtiff *tiff, tag_map *map, int map_count) {
 	  *workstr = '\0';
 	  for (j = 0; j < entry->count; ++j) {
 	    if (!tiff_get_tag_int_array(tiff, tag_index, &value, j)) {
-	      i_fatal(3, "unexpected failure from tiff_get_tag_int_array(..., %d, ..., %d)\n", tag_index, j);
+	      mm_log((3, "unexpected failure from tiff_get_tag_int_array(..., %d, ..., %d)\n", tag_index, j));
+	      return;
 	    }
 	    if (j) 
 	      strcat(workstr, " ");
 	    sprintf(workstr + strlen(workstr), "%d", value);
 	  }
-	  i_tags_add(&im->tags, map[i].name, 0, workstr, -1, 0);
+	  i_tags_set(&im->tags, map[i].name, workstr, -1);
 	}
 	break;
       }
@@ -1353,7 +1362,7 @@ copy_name_tags(i_img *im, imtiff *tiff, tag_value_map *map, int map_count) {
 	  }
 	}
 	if (found) {
-	  i_tags_add(&im->tags, map[i].name, 0, found->name, -1, 0);
+	  i_tags_set(&im->tags, map[i].name, found->name, -1);
 	}
 	break;
       }
@@ -1385,8 +1394,10 @@ Retrieve a 16 bit unsigned integer from offset.
 
 static unsigned
 tiff_get16(imtiff *tiff, unsigned long offset) {
-  if (offset + 2 > tiff->size)
-    i_fatal(3, "attempt to get16 at %uld in %uld image", offset, tiff->size);
+  if (offset + 2 > tiff->size) {
+    mm_log((3, "attempt to get16 at %uld in %uld image", offset, tiff->size));
+    return 0;
+  }
 
   if (tiff->type == tt_intel) 
     return tiff->base[offset] + 0x100 * tiff->base[offset+1];
@@ -1404,8 +1415,10 @@ Retrieve a 32-bit unsigned integer from offset.
 
 static unsigned
 tiff_get32(imtiff *tiff, unsigned long offset) {
-  if (offset + 4 > tiff->size)
-    i_fatal(3, "attempt to get16 at %uld in %uld image", offset, tiff->size);
+  if (offset + 4 > tiff->size) {
+    mm_log((3, "attempt to get16 at %uld in %uld image", offset, tiff->size));
+    return 0;
+  }
 
   if (tiff->type == tt_intel) 
     return tiff->base[offset] + 0x100 * tiff->base[offset+1] 
@@ -1453,8 +1466,10 @@ static int
 tiff_get16s(imtiff *tiff, unsigned long offset) {
   int result;
 
-  if (offset + 2 > tiff->size)
-    i_fatal(3, "attempt to get16 at %uld in %uld image", offset, tiff->size);
+  if (offset + 2 > tiff->size) {
+    mm_log((3, "attempt to get16 at %uld in %uld image", offset, tiff->size));
+    return 0;
+  }
 
   if (tiff->type == tt_intel) 
     result = tiff->base[offset] + 0x100 * tiff->base[offset+1];
@@ -1479,8 +1494,10 @@ static int
 tiff_get32s(imtiff *tiff, unsigned long offset) {
   unsigned work;
 
-  if (offset + 4 > tiff->size)
-    i_fatal(3, "attempt to get16 at %uld in %uld image", offset, tiff->size);
+  if (offset + 4 > tiff->size) {
+    mm_log((3, "attempt to get16 at %uld in %uld image", offset, tiff->size));
+    return 0;
+  }
 
   if (tiff->type == tt_intel) 
     work = tiff->base[offset] + 0x100 * tiff->base[offset+1] 
@@ -1507,8 +1524,10 @@ Retrieve an unsigned rational from offset.
 static double
 tiff_get_rat(imtiff *tiff, unsigned long offset) {
   unsigned long numer, denom;
-  if (offset + 8 > tiff->size)
-    i_fatal(3, "attempt to get_rat at %lu in %lu image", offset, tiff->size);
+  if (offset + 8 > tiff->size) {
+    mm_log((3, "attempt to get_rat at %lu in %lu image", offset, tiff->size));
+    return 0;
+  }
 
   numer = tiff_get32(tiff, offset);
   denom = tiff_get32(tiff, offset+4);
@@ -1531,8 +1550,10 @@ Retrieve an signed rational from offset.
 static double
 tiff_get_rats(imtiff *tiff, unsigned long offset) {
   long numer, denom;
-  if (offset + 8 > tiff->size)
-    i_fatal(3, "attempt to get_rat at %lu in %lu image", offset, tiff->size);
+  if (offset + 8 > tiff->size) {
+    mm_log((3, "attempt to get_rat at %lu in %lu image", offset, tiff->size));
+    return 0;
+  }
 
   numer = tiff_get32s(tiff, offset);
   denom = tiff_get32s(tiff, offset+4);

@@ -4,9 +4,11 @@ use Imager qw(:all);
 use Test::More;
 use Imager::Test qw(is_color_close3 test_image_raw);
 
+-d "testout" or mkdir "testout";
+
 init_log("testout/t101jpeg.log",1);
 
-i_has_format("jpeg")
+$Imager::formats{"jpeg"}
   or plan skip_all => "no jpeg support";
 
 plan tests => 94;
@@ -22,13 +24,13 @@ open(FH,">testout/t101.jpg")
   || die "cannot open testout/t101.jpg for writing\n";
 binmode(FH);
 my $IO = Imager::io_new_fd(fileno(FH));
-ok(i_writejpeg_wiol($img,$IO,30), "write jpeg low level");
+ok(Imager::File::JPEG::i_writejpeg_wiol($img,$IO,30), "write jpeg low level");
 close(FH);
 
 open(FH, "testout/t101.jpg") || die "cannot open testout/t101.jpg\n";
 binmode(FH);
 $IO = Imager::io_new_fd(fileno(FH));
-($cmpimg,undef) = i_readjpeg_wiol($IO);
+($cmpimg,undef) = Imager::File::JPEG::i_readjpeg_wiol($IO);
 close(FH);
 
 my $diff = sqrt(i_img_diff($img,$cmpimg))/150*150;
@@ -113,10 +115,6 @@ SKIP:
      exif_white_balance => 0,
      exif_white_balance_name => "Auto white balance",
     );
-  
-  # exif tests
-  Imager::i_exif_enabled()
-      or skip("no exif support", scalar keys %expected_tags);
   
   my $im = Imager->new;
   $im->read(file=>"testimg/exiftest.jpg")
@@ -281,8 +279,6 @@ SKIP:
   # exception
   # testimg/zerojpeg.jpg was manually modified from exiftest.jpg to
   # reproduce the problem.
-  Imager::i_exif_enabled()
-      or skip("no exif support", 1);
   my $im = Imager->new;
   ok($im->read(file=>'testimg/zerotype.jpg'), "shouldn't crash");
 }

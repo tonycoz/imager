@@ -43,7 +43,6 @@ my @enable; # list of drivers to enable
 my @disable; # or list of drivers to disable
 my @incpaths; # places to look for headers
 my @libpaths; # places to look for libraries
-my $noexif; # non-zero to disable EXIF parsing of JPEGs
 my $coverage; # build for coverage testing
 my $assert; # build with assertions
 GetOptions("help" => \$help,
@@ -53,7 +52,6 @@ GetOptions("help" => \$help,
            "libpath=s" => \@libpaths,
            "verbose|v" => \$VERBOSE,
            "nolog" => \$NOLOG,
-	   "noexif" => \$noexif,
 	   'coverage' => \$coverage,
 	   "assert|a" => \$assert);
 
@@ -147,12 +145,6 @@ for my $frmkey (sort { $formats{$a}{order} <=> $formats{$b}{order} } keys %forma
 
 }
 
-unless ($noexif) {
-  print "EXIF support enabled\n";
-  push @defines, [ 'IMEXIF_ENABLE', 1, "Enable experimental EXIF support" ];
-  $F_OBJECT .= ' imexif.o';
-}
-
 my $F_INC  = join ' ', map "-I$_", map / / ? qq{"$_"} : $_, 
   grep !$definc{$_}, @incs;
 $F_LIBS = join(' ',map "-L$_", map / / ? qq{"$_"} : $_, 
@@ -216,6 +208,8 @@ if ($MM_ver >= 6.46) {
       [
        "PNG",
        "GIF",
+       "TIFF",
+       "JPEG",
       ],
      },
      resources =>
@@ -533,17 +527,17 @@ sub init {
   }
   push @libs, grep -d, qw(/usr/local/lib);
 
-  $formats{'jpeg'}={
-		    order=>'21',
-		    def=>'HAVE_LIBJPEG',
-		    inccheck=>sub { -e catfile($_[0], 'jpeglib.h') },
-		    libcheck=>sub { $_[0] eq "libjpeg$aext" or $_ eq "libjpeg.$lext" },
-		    libfiles=>'-ljpeg',
-		    objfiles=>'jpeg.o',
-		    docs=>q{
-			    In order to use jpeg with this module you need to have libjpeg
-			    installed on your computer}
-		   };
+#   $formats{'jpeg'}={
+# 		    order=>'21',
+# 		    def=>'HAVE_LIBJPEG',
+# 		    inccheck=>sub { -e catfile($_[0], 'jpeglib.h') },
+# 		    libcheck=>sub { $_[0] eq "libjpeg$aext" or $_ eq "libjpeg.$lext" },
+# 		    libfiles=>'-ljpeg',
+# 		    objfiles=>'jpeg.o',
+# 		    docs=>q{
+# 			    In order to use jpeg with this module you need to have libjpeg
+# 			    installed on your computer}
+# 		   };
 
 #   $formats{'tiff'}={
 # 		    order=>'23',
@@ -966,7 +960,7 @@ Usage: $0 [--enable feature1,feature2,...] [other options]
        $0 [--disable feature1,feature2,...]  [other options]
        $0 --help
 Possible feature names are:
-  jpeg T1-fonts TT-fonts freetype2
+  T1-fonts TT-fonts freetype2
 Other options:
   --verbose | -v
     Verbose library probing (or set IM_VERBOSE in the environment)
@@ -980,8 +974,6 @@ Other options:
     Build for coverage testing.
   --assert
     Build with assertions active.
-  --noexif
-    Disable EXIF parsing.
 EOS
   exit 1;
 

@@ -74,9 +74,6 @@ use Imager::Font;
 		i_tt_text
 		i_tt_bbox
 
-		i_readjpeg_wiol
-		i_writejpeg_wiol
-
 		i_readpnm_wiol
 		i_writeppm_wiol
 
@@ -1366,16 +1363,6 @@ sub read {
     my $read_types = join ', ', sort Imager->read_types();
     $self->_set_error("format '$input{'type'}' not supported - formats $read_types available for reading");
     return;
-  }
-
-  # Setup data source
-  if ( $input{'type'} eq 'jpeg' ) {
-    ($self->{IMG},$self->{IPTCRAW}) = i_readjpeg_wiol( $IO );
-    if ( !defined($self->{IMG}) ) {
-      $self->{ERRSTR}=$self->_error_as_msg(); return undef;
-    }
-    $self->{DEBUG} && print "loading a jpeg file\n";
-    return $self;
   }
 
   my $allow_incomplete = $input{allow_incomplete};

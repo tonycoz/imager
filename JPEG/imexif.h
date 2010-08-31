@@ -3,7 +3,7 @@
 #define IMAGER_IMEXIF_H
 
 #include <stddef.h>
-#include "imageri.h"
+#include "imdatatypes.h"
 
 extern int i_int_decode_exif(i_img *im, unsigned char *data, size_t length);
 

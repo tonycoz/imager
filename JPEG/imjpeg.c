@@ -20,6 +20,8 @@ Reads and writes JPEG images
 =cut
 */
 
+#include "imjpeg.h"
+#include "imext.h"
 #include <stdio.h>
 #include <sys/stat.h>
 #ifndef _MSC_VER
@@ -27,14 +29,10 @@ Reads and writes JPEG images
 #endif
 #include <setjmp.h>
 
-#include "iolayer.h"
-#include "imageri.h"
 #include "jpeglib.h"
 #include "jerror.h"
 #include <errno.h>
-#ifdef IMEXIF_ENABLE
-#include "imexif.h"
-#endif
+#include <stdlib.h>
 
 #define JPEG_APP13       0xED    /* APP13 marker code */
 #define JPEG_APP1 (JPEG_APP0 + 1)
@@ -163,7 +161,6 @@ jpeg_wiol_src(j_decompress_ptr cinfo, io_glue *ig, int length) {
   }
 
   /* put the request method call in here later */
-  io_glue_commit_types(ig);
   
   src         = (wiol_src_ptr) cinfo->src;
   src->data   = ig;
@@ -384,9 +381,7 @@ typedef void (*transfer_function_t)(i_color *out, JSAMPARRAY in, int width);
 i_img*
 i_readjpeg_wiol(io_glue *data, int length, char** iptc_itext, int *itlength) {
   i_img * volatile im = NULL;
-#ifdef IMEXIF_ENABLE
   int seen_exif = 0;
-#endif
   i_color * volatile line_buffer = NULL;
   struct jpeg_decompress_struct cinfo;
   struct my_error_mgr jerr;
@@ -489,7 +484,7 @@ i_readjpeg_wiol(io_glue *data, int length, char** iptc_itext, int *itlength) {
     return NULL;
   }
 
-  im=i_img_empty_ch(NULL, cinfo.output_width, cinfo.output_height, channels);
+  im = i_img_8_new(cinfo.output_width, cinfo.output_height, channels);
   if (!im) {
     wiol_term_source(&cinfo);
     jpeg_destroy_decompress(&cinfo);
@@ -510,38 +505,36 @@ i_readjpeg_wiol(io_glue *data, int length, char** iptc_itext, int *itlength) {
   markerp = cinfo.marker_list;
   while (markerp != NULL) {
     if (markerp->marker == JPEG_COM) {
-      i_tags_add(&im->tags, "jpeg_comment", 0, (const char *)markerp->data,
-		 markerp->data_length, 0);
+      i_tags_set(&im->tags, "jpeg_comment", (const char *)markerp->data,
+		 markerp->data_length);
     }
-#ifdef IMEXIF_ENABLE
     else if (markerp->marker == JPEG_APP1 && !seen_exif) {
       seen_exif = i_int_decode_exif(im, markerp->data, markerp->data_length);
     }
-#endif      
 
     markerp = markerp->next;
   }
 
-  i_tags_addn(&im->tags, "jpeg_out_color_space", 0, cinfo.out_color_space);
-  i_tags_addn(&im->tags, "jpeg_color_space", 0, cinfo.jpeg_color_space);
+  i_tags_setn(&im->tags, "jpeg_out_color_space", cinfo.out_color_space);
+  i_tags_setn(&im->tags, "jpeg_color_space", cinfo.jpeg_color_space);
 
   if (cinfo.saw_JFIF_marker) {
     double xres = cinfo.X_density;
     double yres = cinfo.Y_density;
     
-    i_tags_addn(&im->tags, "jpeg_density_unit", 0, cinfo.density_unit);
+    i_tags_setn(&im->tags, "jpeg_density_unit", cinfo.density_unit);
     switch (cinfo.density_unit) {
     case 0: /* values are just the aspect ratio */
-      i_tags_addn(&im->tags, "i_aspect_only", 0, 1);
-      i_tags_add(&im->tags, "jpeg_density_unit_name", 0, "none", -1, 0);
+      i_tags_setn(&im->tags, "i_aspect_only", 1);
+      i_tags_set(&im->tags, "jpeg_density_unit_name", "none", -1);
       break;
 
     case 1: /* per inch */
-      i_tags_add(&im->tags, "jpeg_density_unit_name", 0, "inch", -1, 0);
+      i_tags_set(&im->tags, "jpeg_density_unit_name", "inch", -1);
       break;
 
     case 2: /* per cm */
-      i_tags_add(&im->tags, "jpeg_density_unit_name", 0, "centimeter", -1, 0);
+      i_tags_set(&im->tags, "jpeg_density_unit_name", "centimeter", -1);
       xres *= 2.54;
       yres *= 2.54;
       break;
@@ -554,7 +547,7 @@ i_readjpeg_wiol(io_glue *data, int length, char** iptc_itext, int *itlength) {
   jpeg_destroy_decompress(&cinfo);
   *itlength=tlength;
 
-  i_tags_add(&im->tags, "i_format", 0, "jpeg", 4, 0);
+  i_tags_set(&im->tags, "i_format", "jpeg", 4);
 
   mm_log((1,"i_readjpeg_wiol -> (0x%x)\n",im));
   return im;
@@ -586,7 +579,6 @@ i_writejpeg_wiol(i_img *im, io_glue *ig, int qfactor) {
   mm_log((1,"i_writejpeg(im %p, ig %p, qfactor %d)\n", im, ig, qfactor));
   
   i_clear_error();
-  io_glue_commit_types(ig);
 
   if (!(im->channels==1 || im->channels==3)) { 
     want_channels = im->channels - 1;

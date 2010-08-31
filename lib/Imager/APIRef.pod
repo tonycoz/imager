@@ -488,6 +488,19 @@ Returns the number of samples read (which should be (C<right>-C<left>)
 =for comment
 From: File imext.c
 
+=item i_gsampf_bg(im, l, r, y, samples, out_channels, background)
+
+
+Like C<i_gsampf()> but applies the source image color over a supplied
+background color.
+
+This is intended for output to image formats that don't support alpha
+channels.
+
+
+=for comment
+From: File paste.im
+
 =item i_line(C<im>, C<x1>, C<y1>, C<x2>, C<y2>, C<color>, C<endp>)
 
 
@@ -641,6 +654,31 @@ From: File error.c
 =head2 Files
 
 =over
+
+=item i_get_file_background(im, &bg)
+
+
+Retrieve the file write background color tag from the image.
+
+If not present, returns black.
+
+
+=for comment
+From: File image.c
+
+=item i_get_file_backgroundf(im, &bg)
+
+
+Retrieve the file write background color tag from the image as a
+floating point color.
+
+Implemented in terms of i_get_file_background().
+
+If not present, returns black.
+
+
+=for comment
+From: File image.c
 
 =item i_get_image_file_limits(&width, &height, &bytes)
 
@@ -1473,6 +1511,22 @@ removed.
 
 =for comment
 From: File tags.c
+
+
+=back
+
+
+=head1 UNDOCUMENTED
+
+The following API functions are undocumented so far, hopefully this
+will change:
+
+=over
+
+=item *
+
+B<i_gsamp_bg>
+
 
 
 =back

@@ -5,7 +5,7 @@ use Imager qw(:all);
 
 init_log("testout/t101jpeg.log",1);
 
-i_has_format("jpeg")
+$Imager::formats{"jpeg"}
   and plan skip_all => "have jpeg support - this tests the lack of it";
 
 plan tests => 6;

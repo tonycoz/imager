@@ -329,16 +329,25 @@ i_adapt_fcolors_bg
 }
 
 /*
-=item i_gsamp_bg(im, l, r, y, samples, out_channels, bg)
+=item i_gsamp_bg(im, l, r, y, samples, out_channels, background)
 
-=item i_gsampf_bg(im, l, r, y, samples, out_channels, bg)
+=category Drawing
 
-This is similar to i_adapt_colors_bg() except it can only strip an
-alpha channel.  It cannot be used to convert a source RGB image to
-greyscale.
+Like C<i_gsampf()> but applies the source image color over a supplied
+background color.
 
-The samples parameter MUST include enough space for all samples of the
-source image.
+This is intended for output to image formats that don't support alpha
+channels.
+
+=item i_gsampf_bg(im, l, r, y, samples, out_channels, background)
+
+=category Drawing
+
+Like C<i_gsampf()> but applies the source image color over a supplied
+background color.
+
+This is intended for output to image formats that don't support alpha
+channels.
 
 =cut
 */

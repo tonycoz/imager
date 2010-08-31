@@ -119,7 +119,11 @@ im_ext_funcs imager_function_table =
     i_img_init,
 
     /* IMAGER_API_LEVEL 5 functions */
-    i_img_is_monochrome
+    i_img_is_monochrome,
+    i_gsamp_bg,
+    i_gsampf_bg,
+    i_get_file_background,
+    i_get_file_backgroundf
   };
 
 /* in general these functions aren't called by Imager internally, but

@@ -158,6 +158,12 @@ typedef struct {
   /* IMAGER_API_LEVEL 5 functions will be added here */
   /* added i_psampf?_bits macros */
   int (*f_i_img_is_monochrome)(i_img *, int *zero_is_white);
+  int (*f_i_gsamp_bg)(i_img *im, int l, int r, int y, i_sample_t *samples,
+		      int out_channels, i_color const * bg);
+  int (*f_i_gsampf_bg)(i_img *im, int l, int r, int y, i_fsample_t *samples,
+		      int out_channels, i_fcolor const * bg);
+  void (*f_i_get_file_background)(i_img *im, i_color *bg);
+  void (*f_i_get_file_backgroundf)(i_img *im, i_fcolor *bg);
 
   /* IMAGER_API_LEVEL 6 functions will be added here */
 } im_ext_funcs;

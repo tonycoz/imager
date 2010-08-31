@@ -2334,56 +2334,10 @@ i_tt_glyph_name(handle, text_sv, utf8 = 0)
 
 #endif 
 
-
-#ifdef HAVE_LIBJPEG
-undef_int
-i_writejpeg_wiol(im, ig, qfactor)
-    Imager::ImgRaw     im
-        Imager::IO     ig
-	       int     qfactor
-
-
-void
-i_readjpeg_wiol(ig)
-        Imager::IO     ig
-	     PREINIT:
-	      char*    iptc_itext;
-	       int     tlength;
-	     i_img*    rimg;
-                SV*    r;
-	     PPCODE:
- 	      iptc_itext = NULL;
-	      rimg = i_readjpeg_wiol(ig,-1,&iptc_itext,&tlength);
-	      if (iptc_itext == NULL) {
-		    r = sv_newmortal();
-	            EXTEND(SP,1);
-	            sv_setref_pv(r, "Imager::ImgRaw", (void*)rimg);
- 		    PUSHs(r);
-	      } else {
-		    r = sv_newmortal();
-	            EXTEND(SP,2);
-	            sv_setref_pv(r, "Imager::ImgRaw", (void*)rimg);
- 		    PUSHs(r);
-		    PUSHs(sv_2mortal(newSVpv(iptc_itext,tlength)));
-                    myfree(iptc_itext);
-	      }
-
-int
-i_exif_enabled()
-
-#endif
-
-
 const char *
 i_test_format_probe(ig, length)
         Imager::IO     ig
 	       int     length
-
-
-
-
-
-
 
 Imager::ImgRaw
 i_readpnm_wiol(ig, allow_incomplete)

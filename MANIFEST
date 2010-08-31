@@ -62,6 +62,19 @@ ICO/testimg/rgba3232.ico
 ICO/testimg/rgba3232.ppm
 Imager.pm
 Imager.xs
+JPEG/JPEG.pm
+JPEG/JPEG.xs
+JPEG/Makefile.PL
+JPEG/imexif.c	Experimental JPEG EXIF decoding
+JPEG/imexif.h
+JPEG/imjpeg.c
+JPEG/imjpeg.h
+JPEG/t/t00load.t
+JPEG/t/t10jpeg.t		Test jpeg support
+JPEG/testimg/209_yonge.jpg	Regression test: #17981
+JPEG/testimg/exiftest.jpg	Test image for EXIF parsing
+JPEG/testimg/scmyk.jpg	Simple CMYK JPEG image
+JPEG/testimg/zerotype.jpg	Image with a zero type entry in the EXIF data
 MANIFEST
 MANIFEST.SKIP
 META.yml        Module meta-data
@@ -103,6 +116,7 @@ TIFF/TIFF.pm
 TIFF/TIFF.xs
 TIFF/imtiff.c
 TIFF/imtiff.h
+TIFF/t/t10tiff.t	Test tiff support
 TIFF/testimg/alpha.tif	Alpha scaling test image
 TIFF/testimg/comp4.bmp       Compressed 4-bit/pixel BMP
 TIFF/testimg/comp4.tif       4-bit/pixel paletted TIFF
@@ -191,8 +205,6 @@ imextdef.h
 imextpl.h	Included by external modules for Perl API access
 imextpltypes.h	Define Perl API function table type
 imexttypes.h    Define API function table type
-imexif.c	Experimental JPEG EXIF decoding
-imexif.h
 img16.c
 imgdouble.c     Implements double/sample images
 imio.h
@@ -204,7 +216,6 @@ io.c
 iolayer.c
 iolayer.h
 iolayert.h	IO layer types
-jpeg.c
 lib/Imager/API.pod
 lib/Imager/APIRef.pod    API function reference
 lib/Imager/Color.pm
@@ -296,14 +307,12 @@ t/t023palette.t		Test paletted images
 t/t05error.t
 t/t07iolayer.t
 t/t1000files.t          Format independent file tests
-t/t101jpeg.t		Test jpeg support
 t/t101nojpeg.t		Test handling when jpeg not available
 t/t102nopng.t		Test handling when png not available
 t/t103raw.t
 t/t104ppm.t
 t/t105nogif.t		Test handling when gif not available
 t/t106notiff.t		Test handling when tiff not available
-t/t106tiff.t		Test tiff support
 t/t107bmp.t
 t/t108tga.t
 t/t15color.t
@@ -343,7 +352,6 @@ t/t99thread.t		Test wrt to perl threads
 t/tr18561.t		Regression tests
 t/tr18561b.t
 tags.c
-testimg/209_yonge.jpg	Regression test: #17981
 testimg/alpha16.tga	16-bit/pixel TGA with alpha "channel" RT 32926
 testimg/bad1oflow.bmp   1-bit/pixel, overflow integer on 32-bit machines
 testimg/bad1wid0.bmp    1-bit/pixel, zero width
@@ -370,7 +378,6 @@ testimg/bad_asc.ppm	ASCII PPM with invalid image data
 testimg/base.jpg	Base JPEG test image
 testimg/comp4.bmp       Compressed 4-bit/pixel BMP
 testimg/comp8.bmp       Compressed 8-bit/pixel BMP
-testimg/exiftest.jpg	Test image for EXIF parsing
 testimg/gimpgrad        A GIMP gradient file
 testimg/imager.pbm	Test bi-level
 testimg/junk.ppm
@@ -386,7 +393,6 @@ testimg/newgimpgrad.ggr Test GIMP Gradient file (newer type)
 testimg/penguin-base.ppm
 testimg/pgm.pgm		Simple pgm for testing the right sample is in the right place
 testimg/scale.ppm
-testimg/scmyk.jpg	Simple CMYK JPEG image
 testimg/short1.bmp      1-bit/pixel, data missing from EOF
 testimg/short24.bmp     24-bit/pixel, data missing from EOF
 testimg/short4.bmp      truncated 4bit/pixel uncompressed BMP
@@ -414,7 +420,6 @@ testimg/winrgb4.bmp  4-bit bmp base
 testimg/winrgb4off.bmp  4-bit bmp with image data offset from header
 testimg/winrgb8.bmp  8-bit bmp base
 testimg/winrgb8off.bmp  8-bit bmp with image data offset from header
-testimg/zerotype.jpg	Image with a zero type entry in the EXIF data
 tga.c           Reading and writing Targa files
 trans2.c
 transform.perl	Shell interface to Imager::Transform

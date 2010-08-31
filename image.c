@@ -2385,6 +2385,8 @@ i_img_is_monochrome(i_img *im, int *zero_is_white) {
 /*
 =item i_get_file_background(im, &bg)
 
+=category Files
+
 Retrieve the file write background color tag from the image.
 
 If not present, returns black.
@@ -2404,6 +2406,8 @@ i_get_file_background(i_img *im, i_color *bg) {
 
 /*
 =item i_get_file_backgroundf(im, &bg)
+
+=category Files
 
 Retrieve the file write background color tag from the image as a
 floating point color.

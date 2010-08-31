@@ -40,7 +40,7 @@ for(keys %hsh) { print "# $_\n"; }
 my $img = Imager->new();
 
 my %files;
-@files{@types} = ({ file => "testimg/209_yonge.jpg"  },
+@files{@types} = ({ file => "JPEG/testimg/209_yonge.jpg"  },
 		  { file => "testimg/test.png"  },
 		  { file => "testimg/test.raw", xsize=>150, ysize=>150, type=>'raw', interleave => 0},
 		  { file => "testimg/penguin-base.ppm"  },
