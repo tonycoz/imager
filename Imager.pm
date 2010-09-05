@@ -2652,8 +2652,7 @@ sub i_color_set {
 sub box {
   my $self=shift;
   unless ($self->{IMG}) { $self->{ERRSTR}='empty input image'; return undef; }
-  my $dflcl=i_color_new(255,255,255,255);
-  my %opts=(color=>$dflcl,xmin=>0,ymin=>0,xmax=>$self->getwidth()-1,ymax=>$self->getheight()-1,@_);
+  my %opts=(xmin=>0,ymin=>0,xmax=>$self->getwidth()-1,ymax=>$self->getheight()-1,@_);
 
   if (exists $opts{'box'}) { 
     $opts{'xmin'} = _min($opts{'box'}->[0],$opts{'box'}->[2]);
@@ -2663,13 +2662,25 @@ sub box {
   }
 
   if ($opts{filled}) { 
-    my $color = _color($opts{'color'});
-    unless ($color) { 
-      $self->{ERRSTR} = $Imager::ERRSTR; 
-      return; 
+    my $color = $opts{'color'};
+
+    if (defined $color) {
+      unless (ref $color &&
+	      (UNIVERSAL::isa($color, "Imager::Color")
+	       || UNIVERSAL::isa($color, "Imager::Color::Float"))) {
+	$color = _color($color);
+	unless ($color) { 
+	  $self->{ERRSTR} = $Imager::ERRSTR; 
+	  return;
+	}
+      }
     }
+    else {
+      $color = i_color_new(255,255,255,255);
+    }
+
     i_box_filled($self->{IMG},$opts{xmin},$opts{ymin},$opts{xmax},
-                 $opts{ymax}, $color); 
+                 $opts{ymax}, $color);
   }
   elsif ($opts{fill}) {
     unless (UNIVERSAL::isa($opts{fill}, 'Imager::Fill')) {
@@ -2684,7 +2695,21 @@ sub box {
                 $opts{ymax},$opts{fill}{fill});
   }
   else {
-    my $color = _color($opts{'color'});
+    my $color = $opts{'color'};
+    if (defined $color) {
+      unless (ref $color &&
+	      (UNIVERSAL::isa($color, "Imager::Color")
+	       || UNIVERSAL::isa($color, "Imager::Color::Float"))) {
+	$color = _color($color);
+	unless ($color) { 
+	  $self->{ERRSTR} = $Imager::ERRSTR;
+	  return;
+	}
+      }
+    }
+    else {
+      $color = i_color_new(255, 255, 255, 255);
+    }
     unless ($color) { 
       $self->{ERRSTR} = $Imager::ERRSTR;
       return;
