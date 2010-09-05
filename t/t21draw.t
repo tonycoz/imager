@@ -1,6 +1,6 @@
 #!perl -w
 use strict;
-use Test::More tests => 238;
+use Test::More tests => 244;
 use Imager ':all';
 use Imager::Test qw(is_color3);
 use constant PI => 3.14159265358979;
@@ -272,6 +272,27 @@ my $white = '#FFFFFF';
 	      d1 => 270, d2 => 90, r => 80), "draw aa arc through 0");
   ok($im->write(file => "testout/t21arc0.ppm"),
      "save arc through 0");
+}
+
+{
+  # test drawing color defaults
+  {
+    my $im = Imager->new(xsize => 10, ysize => 10);
+    ok($im->box(), "default outline the image"); # should outline the image
+    is_color3($im->getpixel(x => 0, y => 0), 255, 255, 255,
+	      "check outline default color TL");
+    is_color3($im->getpixel(x => 9, y => 5), 255, 255, 255,
+	      "check outline default color MR");
+  }
+
+  {
+    my $im = Imager->new(xsize => 10, ysize => 10);
+    ok($im->box(filled => 1), "default fill the image"); # should fill the image
+    is_color3($im->getpixel(x => 0, y => 0), 255, 255, 255,
+	      "check fill default color TL");
+    is_color3($im->getpixel(x => 5, y => 5), 255, 255, 255,
+	      "check fill default color MM");
+  }
 }
 
 malloc_state();
