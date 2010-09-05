@@ -951,6 +951,9 @@ static im_pl_ext_funcs im_perl_funcs =
 /* trying to use more C style names, map them here */
 #define i_io_DESTROY(ig) io_glue_destroy(ig)
 
+#define i_img_get_width(im) ((im)->xsize)
+#define i_img_get_height(im) ((im)->ysize)
+
 MODULE = Imager		PACKAGE = Imager::Color	PREFIX = ICL_
 
 Imager::Color
@@ -1383,6 +1386,15 @@ i_img_getdata(im)
                PUSHs(im->idata ? 
 	             sv_2mortal(newSVpv((char *)im->idata, im->bytes)) 
 		     : &PL_sv_undef);
+
+IV
+i_img_get_width(im)
+    Imager::ImgRaw	im
+
+IV
+i_img_get_height(im)
+    Imager::ImgRaw	im
+
 
 void
 i_img_is_monochrome(im)

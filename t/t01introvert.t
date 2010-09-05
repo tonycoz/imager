@@ -3,7 +3,7 @@
 # to make sure we get expected values
 
 use strict;
-use Test::More tests => 220;
+use Test::More tests => 224;
 
 BEGIN { use_ok(Imager => qw(:handy :all)) }
 
@@ -28,6 +28,8 @@ ok(Imager::i_img_getmask($im_g) & 1, "1 channel image mask");
 ok(!Imager::i_img_virtual($im_g), "1 channel image not virtual");
 is(Imager::i_img_bits($im_g), 8, "1 channel image has 8 bits/sample");
 is(Imager::i_img_type($im_g), 0, "1 channel image is direct");
+is(Imager::i_img_get_width($im_g), 100, "100 pixels wide");
+is(Imager::i_img_get_height($im_g), 101, "101 pixels high");
 
 my @ginfo = Imager::i_img_info($im_g);
 is($ginfo[0], 100, "1 channel image width");
@@ -120,6 +122,8 @@ ok($impal2, "make paletted via OO");
 is($impal2->getchannels, 3, "check channels");
 is($impal2->bits, 8, "check bits");
 is($impal2->type, 'paletted', "check type");
+is($impal2->getwidth, 200, "check width");
+is($impal2->getheight, 201, "check height");
 
 {
   my $red_idx = $impal2->addcolors(colors=>[$red]);

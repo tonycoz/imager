@@ -2651,14 +2651,27 @@ sub i_color_set {
 # Draws a box between the specified corner points.
 sub box {
   my $self=shift;
-  unless ($self->{IMG}) { $self->{ERRSTR}='empty input image'; return undef; }
-  my %opts=(xmin=>0,ymin=>0,xmax=>$self->getwidth()-1,ymax=>$self->getheight()-1,@_);
+  my $raw = $self->{IMG};
 
+  unless ($raw) {
+    $self->{ERRSTR}='empty input image';
+    return undef;
+  }
+
+  my %opts = @_;
+
+  my ($xmin, $ymin, $xmax, $ymax);
   if (exists $opts{'box'}) { 
-    $opts{'xmin'} = _min($opts{'box'}->[0],$opts{'box'}->[2]);
-    $opts{'xmax'} = _max($opts{'box'}->[0],$opts{'box'}->[2]);
-    $opts{'ymin'} = _min($opts{'box'}->[1],$opts{'box'}->[3]);
-    $opts{'ymax'} = _max($opts{'box'}->[1],$opts{'box'}->[3]);
+    $xmin = _min($opts{'box'}->[0],$opts{'box'}->[2]);
+    $xmax = _max($opts{'box'}->[0],$opts{'box'}->[2]);
+    $ymin = _min($opts{'box'}->[1],$opts{'box'}->[3]);
+    $ymax = _max($opts{'box'}->[1],$opts{'box'}->[3]);
+  }
+  else {
+    defined($xmin = $opts{xmin}) or $xmin = 0;
+    defined($xmax = $opts{xmax}) or $xmax = $self->getwidth()-1;
+    defined($ymin = $opts{ymin}) or $ymin = 0;
+    defined($ymax = $opts{ymax}) or $ymax = $self->getheight()-1;
   }
 
   if ($opts{filled}) { 
@@ -2679,8 +2692,7 @@ sub box {
       $color = i_color_new(255,255,255,255);
     }
 
-    i_box_filled($self->{IMG},$opts{xmin},$opts{ymin},$opts{xmax},
-                 $opts{ymax}, $color);
+    i_box_filled($raw, $xmin, $ymin,$xmax, $ymax, $color);
   }
   elsif ($opts{fill}) {
     unless (UNIVERSAL::isa($opts{fill}, 'Imager::Fill')) {
@@ -2691,8 +2703,7 @@ sub box {
         return undef;
       }
     }
-    i_box_cfill($self->{IMG},$opts{xmin},$opts{ymin},$opts{xmax},
-                $opts{ymax},$opts{fill}{fill});
+    i_box_cfill($raw, $xmin, $ymin, $xmax, $ymax, $opts{fill}{fill});
   }
   else {
     my $color = $opts{'color'};
@@ -2714,9 +2725,9 @@ sub box {
       $self->{ERRSTR} = $Imager::ERRSTR;
       return;
     }
-    i_box($self->{IMG},$opts{xmin},$opts{ymin},$opts{xmax},$opts{ymax},
-          $color);
+    i_box($raw, $xmin, $ymin, $xmax, $ymax, $color);
   }
+
   return $self;
 }
 
@@ -3520,16 +3531,26 @@ sub border {
 
 sub getwidth {
   my $self = shift;
-  if (!defined($self->{IMG})) { $self->{ERRSTR} = 'image is empty'; return undef; }
-  return (i_img_info($self->{IMG}))[0];
+
+  if (my $raw = $self->{IMG}) {
+    return i_img_get_width($raw);
+  }
+  else {
+    $self->{ERRSTR} = 'image is empty'; return undef;
+  }
 }
 
 # Get the height of an image
 
 sub getheight {
   my $self = shift;
-  if (!defined($self->{IMG})) { $self->{ERRSTR} = 'image is empty'; return undef; }
-  return (i_img_info($self->{IMG}))[1];
+
+  if (my $raw = $self->{IMG}) {
+    return i_img_get_height($raw);
+  }
+  else {
+    $self->{ERRSTR} = 'image is empty'; return undef;
+  }
 }
 
 # Get number of channels in an image
