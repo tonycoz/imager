@@ -2678,9 +2678,7 @@ sub box {
     my $color = $opts{'color'};
 
     if (defined $color) {
-      unless (ref $color &&
-	      (UNIVERSAL::isa($color, "Imager::Color")
-	       || UNIVERSAL::isa($color, "Imager::Color::Float"))) {
+      unless (_is_color_object($color)) {
 	$color = _color($color);
 	unless ($color) { 
 	  $self->{ERRSTR} = $Imager::ERRSTR; 
@@ -2708,9 +2706,7 @@ sub box {
   else {
     my $color = $opts{'color'};
     if (defined $color) {
-      unless (ref $color &&
-	      (UNIVERSAL::isa($color, "Imager::Color")
-	       || UNIVERSAL::isa($color, "Imager::Color::Float"))) {
+      unless (_is_color_object($color)) {
 	$color = _color($color);
 	unless ($color) { 
 	  $self->{ERRSTR} = $Imager::ERRSTR;

@@ -1969,6 +1969,17 @@ undef_int
 i_init_fonts(t1log=0)
     int t1log
 
+bool
+_is_color_object(sv)
+	SV* sv
+    CODE:
+        SvGETMAGIC(sv);
+        RETVAL = SvOK(sv) && SvROK(sv) &&
+	   (sv_derived_from(sv, "Imager::Color")
+          || sv_derived_from(sv, "Imager::Color::Float"));
+    OUTPUT:
+        RETVAL
+
 #ifdef HAVE_LIBT1
 
 void
