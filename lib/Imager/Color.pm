@@ -63,6 +63,8 @@ my @gimp_search =
    '/usr/share/gimp/palettes/Named_Colors',
   );
 
+my $default_gimp_palette;
+
 sub _load_gimp_palette {
   my ($filename) = @_;
 
@@ -105,6 +107,17 @@ sub _get_gimp_color {
   if ($args{palette}) {
     $filename = $args{palette};
   }
+  elsif (defined $default_gimp_palette) {
+    # don't search again and again and again ...
+    if (!length $default_gimp_palette
+	|| !-f $default_gimp_palette) {
+      $Imager::ERRSTR = "No GIMP palette found";
+      $default_gimp_palette = "";
+      return;
+    }
+
+    $filename = $default_gimp_palette;
+  }
   else {
     # try to make one up - this is intended to die if tainting is
     # enabled and $ENV{HOME} is tainted.  To avoid that untaint $ENV{HOME}
@@ -121,8 +134,11 @@ sub _get_gimp_color {
     }
     if (!$filename) {
       $Imager::ERRSTR = "No GIMP palette found";
+      $default_gimp_palette = "";
       return ();
     }
+
+    $default_gimp_palette = $filename;
   }
 
   if ((!$gimp_cache{$filename} 
@@ -148,6 +164,8 @@ my @x_search =
    '/usr/openwin/lib/rgb.txt',
    '/usr/openwin/lib/X11/rgb.txt',
   );
+
+my $default_x_rgb;
 
 # called by the test code to check if we can test this stuff
 sub _test_x_palettes {
@@ -194,6 +212,13 @@ sub _get_x_color {
   if ($args{palette}) {
     $filename = $args{palette};
   }
+  elsif (defined $default_x_rgb) {
+    unless (length $default_x_rgb) {
+      $Imager::ERRSTR = "No X rgb.txt palette found";
+      return ();
+    }
+    $filename = $default_x_rgb;
+  }
   else {
     for my $attempt (@x_search) {
       if (-e $attempt) {
@@ -203,15 +228,18 @@ sub _get_x_color {
     }
     if (!$filename) {
       $Imager::ERRSTR = "No X rgb.txt palette found";
+      $default_x_rgb = "";
       return ();
     }
   }
 
   if ((!$x_cache{$filename} 
-      || (stat $filename)[9] != $x_cache{$filename})
+      || (stat $filename)[9] != $x_cache{$filename}{mod_time})
      && !_load_x_rgb($filename)) {
     return ();
   }
+
+  $default_x_rgb = $filename;
 
   if (!$x_cache{$filename}{colors}{lc $args{name}}) {
     $Imager::ERRSTR = "Color '$args{name}' isn't in $filename";
