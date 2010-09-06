@@ -31,6 +31,14 @@ Bug fixes:
    code that managed 3400 10x10 pixel boxes/second sped up to 25700
    boxes/second.
 
+ - clarify that Imager doesn't write EXIF metadata to images.
+   https://rt.cpan.org/Ticket/Display.html?id=60637
+
+ - Imager::Probe can now search subdirectories under its include path.
+   Used by the PNG Makefile.PL to find headers and libraries when they
+   aren't in the base directory, as in cygwin.
+   https://rt.cpan.org/Ticket/Display.html?id=60635
+
 Imager 0.77 - 11 Aug 2010
 ===========
 
