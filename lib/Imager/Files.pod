@@ -525,7 +525,7 @@ C<i_aspect_only>.
 =for stopwords EXIF
 
 If an C<APP1> block containing EXIF information is found, then any of the
-following tags can be set:
+following tags can be set when reading a JPEG image:
 
 =over
 
@@ -550,7 +550,7 @@ exif_version exif_white_balance exif_x_resolution exif_y_resolution
 
 =back
 
-The following derived tags can also be set:
+The following derived tags can also be set when reading a JPEG image:
 
 =over
 
@@ -584,6 +584,9 @@ eg.
   Imager Development Notes
   0
   Auto exposure
+
+Imager will not write EXIF tags to any type of image, if you need more
+advanced EXIF handling, consider L<Image::ExifTool>.
 
 =for stopwords IPTC
 
