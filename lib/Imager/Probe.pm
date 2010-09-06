@@ -3,6 +3,8 @@ use strict;
 use File::Spec;
 use Config;
 
+my @alt_transfer = qw/altname incsuffix libbase/;
+
 sub probe {
   my ($class, $req) = @_;
 
@@ -17,7 +19,24 @@ sub probe {
     $result = _probe_pkg($req);
   }
   if (!$result && $req->{inccheck} && ($req->{libcheck} || $req->{libbase})) {
+    $req->{altname} ||= "main";
     $result = _probe_check($req);
+  }
+  if (!$result && $req->{alternatives}) {
+  ALTCHECK:
+    my $index = 1;
+    for my $alt (@{$req->{alternatives}}) {
+      $req->{altname} ||= "alt $index";
+      $req->{verbose}
+	and print "$req->{name}: Trying alternative $index\n";
+      my %work = %$req;
+      for my $key (@alt_transfer) {
+	exists $alt->{$key} and $work{$key} = $alt->{$key};
+      }
+      $result = _probe_check(\%work)
+	and last;
+      ++$index;
+    }
   }
 
   if (!$result && $req->{testcode}) {
@@ -149,7 +168,11 @@ sub _probe_check {
     }
   }
 
-  print "$req->{name}: includes ", $found_incpath ? "" : "not ",
+  my $alt = "";
+  if ($req->{alternatives}) {
+    $alt = " $req->{altname}:";
+  }
+  print "$req->{name}:$alt includes ", $found_incpath ? "" : "not ",
     "found - libraries ", $found_libpath ? "" : "not ", "found\n";
 
   $found_libpath && $found_incpath
@@ -255,7 +278,7 @@ sub _lib_paths {
 sub _inc_paths {
   my ($req) = @_;
 
-  return _paths
+  my @paths = _paths
     (
      $ENV{IM_INCPATH},
      $req->{incpath},
@@ -269,6 +292,12 @@ sub _inc_paths {
      "/usr/include",
      "/usr/local/include",
     );
+
+  if ($req->{incsuffix}) {
+    @paths = map File::Spec->catdir($_, $req->{incsuffix}), @paths;
+  }
+
+  return @paths;
 }
 
 sub _paths {

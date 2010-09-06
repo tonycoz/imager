@@ -72,6 +72,7 @@ require Imager::Probe;
 my %probe =
   (
    name => "PNG",
+   altname => "Generic",
    pkg => [ qw/libpng14 libpng12 libpng10 libpng/ ],
    inccheck => sub { -e File::Spec->catfile($_[0], "png.h") },
    libbase => "png",
@@ -79,6 +80,24 @@ my %probe =
    testcodeheaders => [ "png.h", "stdio.h" ],
    incpath => join($Config{path_sep}, @incpaths),
    libpath => join($Config{path_sep}, @libpaths),
+   alternatives =>
+   [
+    {
+     altname => "v1.4",
+     incsuffix => "libpng14",
+     libbase => "png14",
+    },
+    {
+     altname => "v1.2",
+     incsuffix => "libpng12",
+     libbase => "png12",
+    },
+    {
+     altname => "v1.0",
+     incsuffix => "libpng10",
+     libbase => "png10",
+    },
+   ],
   );
 
 my $probe_res = Imager::Probe->probe(\%probe);
