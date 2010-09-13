@@ -268,10 +268,12 @@ sub _lib_paths {
      (
       map { split ' ' }
       grep $_,
-      @Config{qw/loclibpath libpth libspath/}
+      @Config{qw/loclibpth libpth libspath/}
      ),
      $^O eq "MSWin32" ? $ENV{LIB} : "",
      $^O eq "cygwin" ? "/usr/lib/w32api" : "",
+     "/usr/lib",
+     "/usr/local/lib",
     );
 }
 
@@ -287,7 +289,7 @@ sub _inc_paths {
      (
       map { split ' ' }
       grep $_,
-      @Config{qw/locincpath incpath/}
+      @Config{qw/locincpth incpath/}
      ),
      "/usr/include",
      "/usr/local/include",
