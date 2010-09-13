@@ -26,10 +26,10 @@ Bug fixes:
    https://rt.cpan.org/Ticket/Display.html?id=60509
 
  - fix the cache check for the X rgb.txt loader.  This is typically
-   used for color translation on Unix-like systems, and improves
-   performance of supplying colors by name by about 80 times.  Test
-   code that managed 3400 10x10 pixel boxes/second sped up to 25700
-   boxes/second.
+   used for color translation on Unix-like systems, and the fix
+   improves performance of supplying colors by name by about 80 times.
+   Test code that managed 3400 10x10 pixel boxes/second sped up to
+   25700 boxes/second.
 
  - clarify that Imager doesn't write EXIF metadata to images.
    https://rt.cpan.org/Ticket/Display.html?id=60637

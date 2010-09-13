@@ -74,8 +74,8 @@ my %probe =
    name => "JPEG",
    inccheck => sub { -e File::Spec->catfile($_[0], "jpeglib.h") },
    libbase => "jpeg",
-   #testcode => _jpeg_test_code(),
-   #testcodeheaders => [ "stdio.h", "stddef.h", "jpeglib.h", "jerror.h" ],
+   testcode => _jpeg_test_code(),
+   testcodeheaders => [ "stdio.h", "stddef.h", "jpeglib.h" ],
    incpath => join($Config{path_sep}, @incpaths),
    libpath => join($Config{path_sep}, @libpaths),
   );
@@ -106,8 +106,12 @@ else {
 
 sub _jpeg_test_code {
   return <<'CODE';
+struct jpeg_decompress_struct cinfo;
+struct jpeg_error_mgr jerr;
 
-/*fprintf(stderr, "PNG: library version %ld, header version %ld\n", (long)png_access_version_number(),  (long)PNG_LIBPNG_VER);*/
+cinfo.err = jpeg_std_error(&jerr);
+jpeg_create_decompress(&cinfo);
+
 return 0;
 CODE
 }
