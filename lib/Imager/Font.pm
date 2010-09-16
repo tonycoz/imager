@@ -37,8 +37,8 @@ my %drivers =
          files=>'.*\.ifs$',
         },
    w32=>{
-         class=>'Imager::Font::Win32',
-         module=>'Imager/Font/Win32.pm',
+         class=>'Imager::Font::W32',
+         module=>'Imager/Font/W32.pm',
 	 description => 'Win32 GDI Fonts',
         },
   );
