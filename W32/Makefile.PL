@@ -23,6 +23,7 @@ my %opts =
    NAME => 'Imager::Font::W32',
    VERSION_FROM => 'W32.pm',
    OBJECT => 'W32.o win32.o',
+   clean => { FILES => 'testout' },
   );
 
 my @inc;
