@@ -5,7 +5,7 @@ use Imager qw(:all);
 use Imager::Test qw(diff_text_with_nul);
 ++$|;
 
-ok(-d "testout" or mkdir "testout", "testout directory");
+ok(-d "testout" or mkdir("testout"), "testout directory");
 
 ok($Imager::formats{w32}, "\$formats{w32} populated");
 
