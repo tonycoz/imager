@@ -219,4 +219,6 @@ extern im_ext_funcs *imager_function_ext_table;
 #define i_get_file_backgroundf(im, bg) \
   ((im_extt->f_i_get_file_backgroundf)((im), (bg)))
 
+#define i_utf8_advance(p, s) ((im_extt->f_i_utf8_advance)((p), (s)))
+
 #endif

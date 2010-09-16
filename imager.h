@@ -229,12 +229,12 @@ undef_int i_init_fonts( int t1log );
 undef_int i_init_t1( int t1log );
 int       i_t1_new( char *pfb, char *afm );
 int       i_t1_destroy( int font_id );
-undef_int i_t1_cp( i_img *im, int xb, int yb, int channel, int fontnum, float points, char* str, int len, int align, int utf8, char const *flags );
-undef_int i_t1_text( i_img *im, int xb, int yb, const i_color *cl, int fontnum, float points, const char* str, int len, int align, int utf8, char const *flags );
-int      i_t1_bbox( int fontnum, float point, const char *str, int len, int cords[6], int utf8, char const *flags );
+undef_int i_t1_cp( i_img *im, int xb, int yb, int channel, int fontnum, float points, char* str, size_t len, int align, int utf8, char const *flags );
+undef_int i_t1_text( i_img *im, int xb, int yb, const i_color *cl, int fontnum, float points, const char* str, size_t len, int align, int utf8, char const *flags );
+int      i_t1_bbox( int fontnum, float point, const char *str, size_t len, int cords[6], int utf8, char const *flags );
 void      i_t1_set_aa( int st );
 void      close_t1( void );
-int       i_t1_has_chars(int font_num, char const *text, int len, int utf8, char *out);
+int       i_t1_has_chars(int font_num, char const *text, size_t len, int utf8, char *out);
 extern int i_t1_face_name(int font_num, char *name_buf, size_t name_buf_size);
 extern int i_t1_glyph_name(int font_num, unsigned long ch, char *name_buf, 
                            size_t name_buf_size);
@@ -245,10 +245,10 @@ extern int i_t1_glyph_name(int font_num, unsigned long ch, char *name_buf,
 undef_int i_init_tt( void );
 TT_Fonthandle* i_tt_new(const char *fontname);
 void i_tt_destroy( TT_Fonthandle *handle );
-undef_int i_tt_cp( TT_Fonthandle *handle,i_img *im,int xb,int yb,int channel,float points,char const* txt,int len,int smooth, int utf8, int align);
-undef_int i_tt_text( TT_Fonthandle *handle, i_img *im, int xb, int yb, const i_color *cl, float points, char const* txt, int len, int smooth, int utf8, int align);
-undef_int i_tt_bbox( TT_Fonthandle *handle, float points,const char *txt,int len,int cords[6], int utf8);
-int i_tt_has_chars(TT_Fonthandle *handle, char const *text, int len, int utf8, char *out);
+undef_int i_tt_cp( TT_Fonthandle *handle,i_img *im,int xb,int yb,int channel,float points,char const* txt,size_t len,int smooth, int utf8, int align);
+undef_int i_tt_text( TT_Fonthandle *handle, i_img *im, int xb, int yb, const i_color *cl, float points, char const* txt, size_t len, int smooth, int utf8, int align);
+undef_int i_tt_bbox( TT_Fonthandle *handle, float points,const char *txt,size_t len,int cords[6], int utf8);
+int i_tt_has_chars(TT_Fonthandle *handle, char const *text, size_t len, int utf8, char *out);
 void i_tt_dump_names(TT_Fonthandle *handle);
 int i_tt_face_name(TT_Fonthandle *handle, char *name_buf, 
                    size_t name_buf_size);
@@ -267,18 +267,18 @@ extern int i_ft2_getdpi(FT2_Fonthandle *handle, int *xdpi, int *ydpi);
 extern int i_ft2_settransform(FT2_Fonthandle *handle, const double *matrix);
 extern int i_ft2_sethinting(FT2_Fonthandle *handle, int hinting);
 extern int i_ft2_bbox(FT2_Fonthandle *handle, double cheight, double cwidth, 
-                      char const *text, int len, int *bbox, int utf8);
+                      char const *text, size_t len, int *bbox, int utf8);
 extern int i_ft2_bbox_r(FT2_Fonthandle *handle, double cheight, double cwidth, 
-		      char const *text, int len, int vlayout, int utf8, int *bbox);
+		      char const *text, size_t len, int vlayout, int utf8, int *bbox);
 extern int i_ft2_text(FT2_Fonthandle *handle, i_img *im, int tx, int ty, 
                       const i_color *cl, double cheight, double cwidth, 
-                      char const *text, int len, int align, int aa, 
+                      char const *text, size_t len, int align, int aa, 
                       int vlayout, int utf8);
 extern int i_ft2_cp(FT2_Fonthandle *handle, i_img *im, int tx, int ty, 
                     int channel, double cheight, double cwidth, 
-                    char const *text, int len, int align, int aa, int vlayout, 
-                    int utf8);
-extern int i_ft2_has_chars(FT2_Fonthandle *handle, char const *text, int len,
+                    char const *text, size_t len, int align, int aa, 
+		    int vlayout, int utf8);
+extern int i_ft2_has_chars(FT2_Fonthandle *handle, char const *text, size_t len,
                            int utf8, char *work);
 extern int i_ft2_face_name(FT2_Fonthandle *handle, char *name_buf, 
                            size_t name_buf_size);
@@ -295,18 +295,6 @@ extern int
 i_ft2_is_multiple_master(FT2_Fonthandle *handle);
 extern int
 i_ft2_set_mm_coords(FT2_Fonthandle *handle, int coord_count, const long *coords);
-#endif
-
-#ifdef WIN32
-
-extern int i_wf_bbox(const char *face, int size, const char *text, int length, int *bbox, int utf8);
-extern int i_wf_text(const char *face, i_img *im, int tx, int ty, const i_color *cl, 
-		     int size, const char *text, int len, int align, int aa, int utf8);
-extern int i_wf_cp(const char *face, i_img *im, int tx, int ty, int channel, 
-		   int size, const char *text, int len, int align, int aa, int utf8);
-extern int i_wf_addfont(char const *file);
-extern int i_wf_delfont(char const *file);
-
 #endif
 
 /* functions for reading and writing formats */

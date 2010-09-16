@@ -11,7 +11,6 @@ BEGIN {
     XSLoader::load('Imager::File::TIFF', $VERSION);
     1;
   } or do {
-print STDERR "Falling back to DynaLoader ($@)\n";
     require DynaLoader;
     push @ISA, 'DynaLoader';
     bootstrap Imager::File::TIFF $VERSION;

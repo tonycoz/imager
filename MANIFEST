@@ -145,6 +145,14 @@ TIFF/testimg/srgba16.tif
 TIFF/testimg/srgba32.tif
 TIFF/testimg/srgbaa.tif	RGB with 2 alpha
 TIFF/testimg/tiffwarn.tif	Generates a warning while being read
+W32/fontfiles/ExistenceTest.ttf
+W32/imw32.h
+W32/lib/Imager/Font/Win32.pm
+W32/t/t10win32.t	Tests Win32 GDI font support
+W32/win32.c		Implements font support through Win32 GDI
+W32/Makefile.PL
+W32/W32.pm
+W32/W32.xs
 apidocs.perl    Build lib/Imager/APIRef.pm
 bigtest.perl	Library selection tester
 bmp.c           Reading and writing Windows BMP files
@@ -236,7 +244,6 @@ lib/Imager/Font/FreeType2.pm
 lib/Imager/Font/Image.pm
 lib/Imager/Font/Truetype.pm
 lib/Imager/Font/Type1.pm
-lib/Imager/Font/Win32.pm
 lib/Imager/Font/Wrap.pm
 lib/Imager/Fountain.pm
 lib/Imager/Handy.pod
@@ -322,7 +329,6 @@ t/t21draw.t             Basic drawing tests
 t/t30t1font.t
 t/t35ttfont.t
 t/t36oofont.t
-t/t37w32font.t		Tests Win32 GDI font support
 t/t38ft2font.t		Tests freetype2 support
 t/t40scale.t
 t/t50basicoo.t
@@ -424,4 +430,3 @@ tga.c           Reading and writing Targa files
 trans2.c
 transform.perl	Shell interface to Imager::Transform
 typemap
-win32.c		Implements font support through Win32 GDI

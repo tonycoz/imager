@@ -76,7 +76,7 @@ i_init_fonts(int t1log) {
 #ifdef HAVE_LIBT1
 
 static int t1_get_flags(char const *flags);
-static char *t1_from_utf8(char const *in, int len, int *outlen);
+static char *t1_from_utf8(char const *in, size_t len, int *outlen);
 
 static void t1_push_error(void);
 
@@ -254,7 +254,7 @@ Interface to text rendering into a single channel in an image
 */
 
 undef_int
-i_t1_cp(i_img *im,int xb,int yb,int channel,int fontnum,float points,char* str,int len,int align, int utf8, char const *flags) {
+i_t1_cp(i_img *im,int xb,int yb,int channel,int fontnum,float points,char* str,size_t len,int align, int utf8, char const *flags) {
   GLYPH *glyph;
   int xsize,ysize,x,y;
   i_color val;
@@ -301,7 +301,7 @@ i_t1_cp(i_img *im,int xb,int yb,int channel,int fontnum,float points,char* str,i
 }
 
 static void
-t1_fix_bbox(BBox *bbox, const char *str, int len, int advance, 
+t1_fix_bbox(BBox *bbox, const char *str, size_t len, int advance, 
 	    int space_position) {
   /* never called with len == 0 */
   if (str[0] == space_position && bbox->llx > 0)
@@ -328,7 +328,7 @@ function to get a strings bounding box given the font id and sizes
 */
 
 int
-i_t1_bbox(int fontnum,float points,const char *str,int len,int cords[6], int utf8,char const *flags) {
+i_t1_bbox(int fontnum,float points,const char *str,size_t len,int cords[6], int utf8,char const *flags) {
   BBox bbox;
   BBox gbbox;
   int mod_flags = t1_get_flags(flags);
@@ -406,7 +406,7 @@ Interface to text rendering in a single color onto an image
 */
 
 undef_int
-i_t1_text(i_img *im,int xb,int yb,const i_color *cl,int fontnum,float points,const char* str,int len,int align, int utf8, char const *flags) {
+i_t1_text(i_img *im,int xb,int yb,const i_color *cl,int fontnum,float points,const char* str,size_t len,int align, int utf8, char const *flags) {
   GLYPH *glyph;
   int xsize,ysize,y;
   int mod_flags = t1_get_flags(flags);
@@ -473,7 +473,7 @@ t1_get_flags(char const *flags) {
 }
 
 /*
-=item t1_from_utf8(char const *in, int len, int *outlen)
+=item t1_from_utf8(char const *in, size_t len, int *outlen)
 
 Produces an unencoded version of I<in> by dropping any Unicode
 character over 255.
@@ -485,7 +485,7 @@ Sets *outlen to the number of bytes used in the output string.
 */
 
 static char *
-t1_from_utf8(char const *in, int len, int *outlen) {
+t1_from_utf8(char const *in, size_t len, int *outlen) {
   /* at this point len is from a perl SV, so can't approach MAXINT */
   char *out = mymalloc(len+1); /* checked 5Nov05 tonyc */
   char *p = out;
@@ -527,7 +527,7 @@ Returns the number of characters that were checked.
 */
 
 int
-i_t1_has_chars(int font_num, const char *text, int len, int utf8,
+i_t1_has_chars(int font_num, const char *text, size_t len, int utf8,
                char *out) {
   int count = 0;
   
@@ -841,13 +841,13 @@ i_tt_render_glyph( TT_Glyph glyph, TT_Glyph_Metrics* gmetrics,
 static int
 i_tt_render_all_glyphs( TT_Fonthandle *handle, int inst, TT_Raster_Map *bit, 
                         TT_Raster_Map *small_bit, int cords[6], 
-                        char const* txt, int len, int smooth, int utf8 );
+                        char const* txt, size_t len, int smooth, int utf8 );
 static void i_tt_dump_raster_map2( i_img* im, TT_Raster_Map* bit, int xb, int yb, const i_color *cl, int smooth );
 static void i_tt_dump_raster_map_channel( i_img* im, TT_Raster_Map* bit, int xb, int yb, int channel, int smooth );
 static  int
 i_tt_rasterize( TT_Fonthandle *handle, TT_Raster_Map *bit, int cords[6], 
-                float points, char const* txt, int len, int smooth, int utf8 );
-static undef_int i_tt_bbox_inst( TT_Fonthandle *handle, int inst ,const char *txt, int len, int cords[6], int utf8 );
+                float points, char const* txt, size_t len, int smooth, int utf8 );
+static undef_int i_tt_bbox_inst( TT_Fonthandle *handle, int inst ,const char *txt, size_t len, int cords[6], int utf8 );
 
 
 /* static globals needed */
@@ -1337,7 +1337,7 @@ Returns the number of characters that were checked.
 */
 
 int
-i_tt_has_chars(TT_Fonthandle *handle, char const *text, int len, int utf8,
+i_tt_has_chars(TT_Fonthandle *handle, char const *text, size_t len, int utf8,
                char *out) {
   int count = 0;
   mm_log((1, "i_tt_has_chars(handle %p, text %p, len %d, utf8 %d)\n", 
@@ -1471,7 +1471,7 @@ static
 int
 i_tt_render_all_glyphs( TT_Fonthandle *handle, int inst, TT_Raster_Map *bit,
                         TT_Raster_Map *small_bit, int cords[6], 
-                        char const* txt, int len, int smooth, int utf8 ) {
+                        char const* txt, size_t len, int smooth, int utf8 ) {
   unsigned long j;
   TT_F26Dot6 x,y;
   
@@ -1648,7 +1648,7 @@ interface for generating single channel raster of text (internal)
 
 static
 int
-i_tt_rasterize( TT_Fonthandle *handle, TT_Raster_Map *bit, int cords[6], float points, char const* txt, int len, int smooth, int utf8 ) {
+i_tt_rasterize( TT_Fonthandle *handle, TT_Raster_Map *bit, int cords[6], float points, char const* txt, size_t len, int smooth, int utf8 ) {
   int inst;
   int width, height;
   TT_Raster_Map small_bit;
@@ -1709,7 +1709,7 @@ Interface to text rendering into a single channel in an image
 */
 
 undef_int
-i_tt_cp( TT_Fonthandle *handle, i_img *im, int xb, int yb, int channel, float points, char const* txt, int len, int smooth, int utf8, int align ) {
+i_tt_cp( TT_Fonthandle *handle, i_img *im, int xb, int yb, int channel, float points, char const* txt, size_t len, int smooth, int utf8, int align ) {
 
   int cords[BOUNDING_BOX_COUNT];
   int ascent, st_offset, y;
@@ -1747,7 +1747,7 @@ Interface to text rendering in a single color onto an image
 */
 
 undef_int
-i_tt_text( TT_Fonthandle *handle, i_img *im, int xb, int yb, const i_color *cl, float points, char const* txt, int len, int smooth, int utf8, int align) {
+i_tt_text( TT_Fonthandle *handle, i_img *im, int xb, int yb, const i_color *cl, float points, char const* txt, size_t len, int smooth, int utf8, int align) {
   int cords[BOUNDING_BOX_COUNT];
   int ascent, st_offset, y;
   TT_Raster_Map bit;
@@ -1783,7 +1783,7 @@ Function to get texts bounding boxes given the instance of the font (internal)
 
 static
 undef_int
-i_tt_bbox_inst( TT_Fonthandle *handle, int inst ,const char *txt, int len, int cords[BOUNDING_BOX_COUNT], int utf8 ) {
+i_tt_bbox_inst( TT_Fonthandle *handle, int inst ,const char *txt, size_t len, int cords[BOUNDING_BOX_COUNT], int utf8 ) {
   int upm, casc, cdesc, first;
   
   int start    = 0;
@@ -1883,7 +1883,7 @@ Interface to get a strings bounding box
 */
 
 undef_int
-i_tt_bbox( TT_Fonthandle *handle, float points,const char *txt,int len,int cords[6], int utf8) {
+i_tt_bbox( TT_Fonthandle *handle, float points,const char *txt,size_t len,int cords[6], int utf8) {
   int inst;
 
   i_clear_error();

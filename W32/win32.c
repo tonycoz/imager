@@ -1,7 +1,8 @@
 #define _WIN32_WINNT 0x500
-#include "imager.h"
+#include "imw32.h"
 #define STRICT
 #include <windows.h>
+#include "imext.h"
 
 /*
 =head1 NAME

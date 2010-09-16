@@ -123,7 +123,8 @@ im_ext_funcs imager_function_table =
     i_gsamp_bg,
     i_gsampf_bg,
     i_get_file_background,
-    i_get_file_backgroundf
+    i_get_file_backgroundf,
+    i_utf8_advance
   };
 
 /* in general these functions aren't called by Imager internally, but

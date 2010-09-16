@@ -24,7 +24,7 @@ void  i_mempool_destroy(i_mempool *mp);
 #undef max
 #endif
 
-extern unsigned long i_utf8_advance(char const **p, int *len);
+extern unsigned long i_utf8_advance(char const **p, size_t *len);
 
 /* XXX Shouldn't these go away? */
 

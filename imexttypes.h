@@ -164,6 +164,7 @@ typedef struct {
 		      int out_channels, i_fcolor const * bg);
   void (*f_i_get_file_background)(i_img *im, i_color *bg);
   void (*f_i_get_file_backgroundf)(i_img *im, i_fcolor *bg);
+  unsigned long (*f_i_utf8_advance)(char const **p, size_t *len);
 
   /* IMAGER_API_LEVEL 6 functions will be added here */
 } im_ext_funcs;

@@ -1527,6 +1527,10 @@ will change:
 
 B<i_gsamp_bg>
 
+=item *
+
+B<i_utf8_advance>
+
 
 
 =back

@@ -626,20 +626,20 @@ visual quality esp on low resultions. The freetype library is
 used to rasterize for us. The only drawback is that there
 are alot of badly designed fonts out there.}
 		       };
-  $formats{'w32'} = {
-		     order=>40,
-		     def=>'HAVE_WIN32',
-		     inccheck=>sub { -e catfile($_[0], 'windows.h') },
-		     libcheck=>sub { lc $_[0] eq 'gdi32.lib' 
-				       || lc $_[0] eq 'libgdi32.a' },
-		     libfiles=>$^O eq 'cygwin' ? '-lgdi32' : '',
-		     objfiles=>'win32.o',
-		     docs => <<DOCS
-Uses the Win32 GDI for rendering text.
+#   $formats{'w32'} = {
+# 		     order=>40,
+# 		     def=>'HAVE_WIN32',
+# 		     inccheck=>sub { -e catfile($_[0], 'windows.h') },
+# 		     libcheck=>sub { lc $_[0] eq 'gdi32.lib' 
+# 				       || lc $_[0] eq 'libgdi32.a' },
+# 		     libfiles=>$^O eq 'cygwin' ? '-lgdi32' : '',
+# 		     objfiles=>'win32.o',
+# 		     docs => <<DOCS
+# Uses the Win32 GDI for rendering text.
 
-This currently only works on under normal Win32 and cygwin.
-DOCS
-		    };
+# This currently only works on under normal Win32 and cygwin.
+# DOCS
+# 		    };
   $formats{'freetype2'} = 
   {
    order=>'29',

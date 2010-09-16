@@ -1,15 +1,18 @@
 #!perl -w
 use strict;
-use Test::More tests => 54;
-BEGIN { use_ok(Imager => ':all') }
+use Test::More tests => 55;
+use Imager qw(:all);
 use Imager::Test qw(diff_text_with_nul);
 ++$|;
 
-init_log("testout/t37w32font.log",1);
+ok(-d "testout" or mkdir "testout", "testout directory");
+
+ok($Imager::formats{w32}, "\$formats{w32} populated");
+
+init_log("testout/t10w32font.log",1);
 
 SKIP:
 {
-  i_has_format('w32') or skip("no MS Windows", 53);
   print "# has w32\n";
 
   my $fontname=$ENV{'TTFONTTEST'} || 'Times New Roman Bold';
@@ -19,14 +22,14 @@ SKIP:
   my $bgcolor=i_color_new(255,0,0,0);
   my $overlay=Imager::ImgRaw::new(200,70,3);
   
-  my @bbox=Imager::i_wf_bbox($fontname, 50.0,'XMCLH');
+  my @bbox=Imager::Font::W32::i_wf_bbox($fontname, 50.0,'XMCLH');
   print "#bbox: ($bbox[0], $bbox[1]) - ($bbox[2], $bbox[3])\n";
   
-  ok(Imager::i_wf_cp($fontname,$overlay,5,50,1,50.0,'XMCLH',1,1),
+  ok(Imager::Font::W32::i_wf_cp($fontname,$overlay,5,50,1,50.0,'XMCLH',1,1),
      "i_wf_cp smoke test");
   i_line($overlay,0,50,100,50,$bgcolor, 1);
   
-  open(FH,">testout/t37w32font.ppm") || die "cannot open testout/t37w32font.ppm\n";
+  open(FH,">testout/t10font.ppm") || die "cannot open testout/t10font.ppm\n";
   binmode(FH);
   my $io = Imager::io_new_fd(fileno(FH));
   i_writeppm_wiol($overlay,$io);
@@ -35,11 +38,11 @@ SKIP:
   $bgcolor=i_color_set($bgcolor,200,200,200,0);
   my $backgr=Imager::ImgRaw::new(500,300,3);
   
-  ok(Imager::i_wf_text($fontname,$backgr,100,100,$bgcolor,100,'MAW.',1, 1),
+  ok(Imager::Font::W32::i_wf_text($fontname,$backgr,100,100,$bgcolor,100,'MAW.',1, 1),
      "i_wf_text smoke test");
   i_line($backgr,0, 100, 499, 100, NC(0, 0, 255), 1);
   
-  open(FH,">testout/t37w32font2.ppm") || die "cannot open testout/t37w32font2.ppm\n";
+  open(FH,">testout/t10font2.ppm") || die "cannot open testout/t10font2.ppm\n";
   binmode(FH);
   $io = Imager::io_new_fd(fileno(FH));
   i_writeppm_wiol($backgr,$io);
@@ -51,7 +54,7 @@ SKIP:
 	       font=>$font),
      "string with win32 smoke test")
     or print "# ",$img->errstr,"\n";
-  $img->write(file=>'testout/t37_oo.ppm') or print "not ";
+  $img->write(file=>'testout/t10_oo.ppm') or print "not ";
   my @bbox2 = $font->bounding_box(string=>'Imager');
   is(@bbox2, 8, "got 8 values from bounding_box");
 
@@ -67,7 +70,7 @@ SKIP:
  SKIP:
   {
     $^O eq 'cygwin' and skip("Too hard to get correct directory for test font on cygwin", 13);
-    ok(Imager::i_wf_addfont("fontfiles/ExistenceTest.ttf"), "add test font")
+    ok(Imager::Font::W32::i_wf_addfont("fontfiles/ExistenceTest.ttf"), "add test font")
       or print "# ",Imager::_error_as_msg(),"\n";
     
     my $namefont = Imager::Font->new(face=>"ExistenceTest");
@@ -100,7 +103,7 @@ SKIP:
 	or print "# ", $im->errstr, "\n";
     $im->setpixel(x => 20+$bbox->neg_width, y => 100-$bbox->ascent, color => 'red');
     $im->setpixel(x => 20+$bbox->advance_width - $bbox->right_bearing, y => 100-$bbox->descent, color => 'red');
-    $im->write(file=>'testout/t37w32_slash.ppm');
+    $im->write(file=>'testout/t10_slash.ppm');
     
     # check with a char that fits inside the box
     $bbox = $namefont->bounding_box(string=>"!", size=>100);
@@ -127,9 +130,9 @@ SKIP:
 	or print "# ", $im->errstr, "\n";
     $im->setpixel(x => 20+$bbox->neg_width, y => 100-$bbox->ascent, color => 'red');
     $im->setpixel(x => 20+$bbox->advance_width - $bbox->right_bearing, y => 100-$bbox->descent, color => 'red');
-    $im->write(file=>'testout/t37w32_bang.ppm');
+    $im->write(file=>'testout/t10_bang.ppm');
 
-    Imager::i_wf_delfont("fontfiles/ExistenceTest.ttf");
+    Imager::Font::W32::i_wf_delfont("fontfiles/ExistenceTest.ttf");
   }
 
  SKIP:
@@ -155,7 +158,7 @@ SKIP:
       ok($im->string(%common, @$args, 'y'=>90, align=>1), "A align=1");
       ok($im->string(%common, @$args, 'y'=>110, align=>0), "A align=0");
     }
-    ok($im->write(file=>'testout/t37align.ppm'), "save align image");
+    ok($im->write(file=>'testout/t10align.ppm'), "save align image");
   }
   { print "# utf 8 support\n";
     my $font = Imager::Font->new(face => "Arial");
@@ -165,7 +168,7 @@ SKIP:
 		   color => "white", font => $font, x => 5, y => 80),
        "draw in utf8 (hand encoded)")
 	or print "# ", $im->errstr, "\n";
-    ok($im->write(file=>'testout/t37utf8.ppm'), "save utf8 image");
+    ok($im->write(file=>'testout/t10utf8.ppm'), "save utf8 image");
 
     # native perl utf8
     # Win32 only supported on 5.6+
@@ -178,7 +181,7 @@ SKIP:
 		    color => 'white', font => $font, x => 5, y => 80),
        "draw in utf8 (perl utf8)")
 	or print "# ", $im->errstr, "\n";
-    ok($im2->write(file=>'testout/t37utf8b.ppm'), "save utf8 image");
+    ok($im2->write(file=>'testout/t10utf8b.ppm'), "save utf8 image");
     is(Imager::i_img_diff($im->{IMG}, $im2->{IMG}), 0,
        "check result is the same");
 

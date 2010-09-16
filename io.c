@@ -361,7 +361,7 @@ possible representation.
 */
 
 unsigned long 
-i_utf8_advance(char const **p, int *len) {
+i_utf8_advance(char const **p, size_t *len) {
   unsigned char c;
   int i, ci, clen = 0;
   unsigned char codes[3];

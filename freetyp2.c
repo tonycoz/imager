@@ -313,7 +313,7 @@ int i_ft2_sethinting(FT2_Fonthandle *handle, int hinting) {
 }
 
 /*
-=item i_ft2_bbox(FT2_Fonthandle *handle, double cheight, double cwidth, char *text, int len, int *bbox)
+=item i_ft2_bbox(FT2_Fonthandle *handle, double cheight, double cwidth, char *text, size_t len, int *bbox)
 
 Retrieves bounding box information for the font at the given 
 character width and height.  This ignores the transformation matrix.
@@ -324,7 +324,7 @@ Returns non-zero on success.
 */
 int
 i_ft2_bbox(FT2_Fonthandle *handle, double cheight, double cwidth, 
-           char const *text, int len, int *bbox, int utf8) {
+           char const *text, size_t len, int *bbox, int utf8) {
   FT_Error error;
   int width;
   int index;
@@ -469,7 +469,7 @@ static void expand_bounds(int bbox[4], int bbox2[4]) {
 }
 
 /*
-=item i_ft2_bbox_r(FT2_Fonthandle *handle, double cheight, double cwidth, char *text, int len, int vlayout, int utf8, int *bbox)
+=item i_ft2_bbox_r(FT2_Fonthandle *handle, double cheight, double cwidth, char *text, size_t len, int vlayout, int utf8, int *bbox)
 
 Retrieves bounding box information for the font at the given 
 character width and height.
@@ -490,7 +490,7 @@ Returns non-zero on success.
 */
 int
 i_ft2_bbox_r(FT2_Fonthandle *handle, double cheight, double cwidth, 
-           char const *text, int len, int vlayout, int utf8, int *bbox) {
+           char const *text, size_t len, int vlayout, int utf8, int *bbox) {
   FT_Error error;
   int width;
   int index;
@@ -619,7 +619,7 @@ static int
 make_bmp_map(FT_Bitmap *bitmap, unsigned char *map);
 
 /*
-=item i_ft2_text(FT2_Fonthandle *handle, i_img *im, int tx, int ty, i_color *cl, double cheight, double cwidth, char *text, int len, int align, int aa)
+=item i_ft2_text(FT2_Fonthandle *handle, i_img *im, int tx, int ty, i_color *cl, double cheight, double cwidth, char *text, size_t len, int align, int aa)
 
 Renders I<text> to (I<tx>, I<ty>) in I<im> using color I<cl> at the given 
 I<cheight> and I<cwidth>.
@@ -637,8 +637,8 @@ Returns non-zero on success.
 */
 int
 i_ft2_text(FT2_Fonthandle *handle, i_img *im, int tx, int ty, const i_color *cl,
-           double cheight, double cwidth, char const *text, int len, int align,
-           int aa, int vlayout, int utf8) {
+           double cheight, double cwidth, char const *text, size_t len,
+	   int align, int aa, int vlayout, int utf8) {
   FT_Error error;
   int index;
   FT_Glyph_Metrics *gm;
@@ -767,7 +767,7 @@ i_ft2_text(FT2_Fonthandle *handle, i_img *im, int tx, int ty, const i_color *cl,
 }
 
 /*
-=item i_ft2_cp(FT2_Fonthandle *handle, i_img *im, int tx, int ty, int channel, double cheight, double cwidth, char *text, int len, int align, int aa)
+=item i_ft2_cp(FT2_Fonthandle *handle, i_img *im, int tx, int ty, int channel, double cheight, double cwidth, char *text, size_t len, int align, int aa)
 
 Renders I<text> to (I<tx>, I<ty>) in I<im> to I<channel> at the given 
 I<cheight> and I<cwidth>.
@@ -786,7 +786,7 @@ Returns non-zero on success.
 
 int
 i_ft2_cp(FT2_Fonthandle *handle, i_img *im, int tx, int ty, int channel,
-         double cheight, double cwidth, char const *text, int len, int align,
+         double cheight, double cwidth, char const *text, size_t len, int align,
          int aa, int vlayout, int utf8) {
   int bbox[8];
   i_img *work;
@@ -830,7 +830,7 @@ i_ft2_cp(FT2_Fonthandle *handle, i_img *im, int tx, int ty, int channel,
 }
 
 /*
-=item i_ft2_has_chars(handle, char *text, int len, int utf8, char *out)
+=item i_ft2_has_chars(handle, char *text, size_t len, int utf8, char *out)
 
 Check if the given characters are defined by the font.
 
@@ -838,7 +838,7 @@ Returns the number of characters that were checked.
 
 =cut
 */
-int i_ft2_has_chars(FT2_Fonthandle *handle, char const *text, int len, 
+int i_ft2_has_chars(FT2_Fonthandle *handle, char const *text, size_t len, 
                     int utf8, char *out) {
   int count = 0;
   mm_log((1, "i_ft2_has_chars(handle %p, text %p, len %d, utf8 %d)\n", 

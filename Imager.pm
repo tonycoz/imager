@@ -174,6 +174,7 @@ my %format_classes =
    gif => "Imager::File::GIF",
    tiff => "Imager::File::TIFF",
    jpeg => "Imager::File::JPEG",
+   w32 => "Imager::Font::W32",
   );
 
 tie %formats, "Imager::FORMATS", \%formats_low, \%format_classes;
@@ -3905,6 +3906,8 @@ sub _check {
 
 sub FETCH {
   my ($self, $key) = @_;
+
+  $DB::single = 1;
 
   exists $self->[IX_FORMATS]{$key} and return $self->[IX_FORMATS]{$key};
 
