@@ -212,7 +212,7 @@ sub _probe_fake {
     $lopts = $req->{libbase} ? "-l$req->{libbase}" : "";
   }
   if (defined $lopts) {
-    print "$req->{name}: Checking if the compiler can find them on it's own\n";
+    print "$req->{name}: Checking if the compiler can find them on its own\n";
     return
       {
        INC => "",
