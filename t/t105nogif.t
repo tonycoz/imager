@@ -10,10 +10,10 @@ $Imager::formats{"gif"}
 plan tests => 12;
 
 my $im = Imager->new;
-ok(!$im->read(file=>"testimg/scale.gif"), "should fail to read gif");
+ok(!$im->read(file=>"GIF/testimg/scale.gif"), "should fail to read gif");
 cmp_ok($im->errstr, '=~', "format 'gif' not supported",
        "check no gif message");
-ok(!Imager->read_multi(file=>"testimg/scale.gif"), 
+ok(!Imager->read_multi(file=>"GIF/testimg/scale.gif"), 
    "should fail to read multi gif");
 cmp_ok($im->errstr, '=~', "format 'gif' not supported",
        "check no gif message");

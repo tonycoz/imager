@@ -8,6 +8,11 @@ Imager 0.77_02 - unreleased
    Uses Imager::Probe now.
    https://rt.cpan.org/Public/Bug/Display.html?id=61328
 
+Bug fixes:
+
+ - from _01: look for missing file support test files in the right
+   places.
+
 Imager 0.77_01 - 13 Sep 2010
 ==============
 

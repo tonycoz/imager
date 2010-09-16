@@ -10,11 +10,11 @@ plan tests => 12;
 
 my $im = Imager->new;
 
-ok(!$im->read(file=>"testimg/comp4.tif"), "should fail to read tif");
+ok(!$im->read(file=>"TIFF/testimg/comp4.tif"), "should fail to read tif");
 cmp_ok($im->errstr, '=~', "format 'tiff' not supported",
        "check no tiff message");
 
-ok(!$im->read_multi(file => "testimg/comp4.tif"),
+ok(!$im->read_multi(file => "TIFF/testimg/comp4.tif"),
    "should fail to read multi tiff");
 cmp_ok($im->errstr, '=~', "format 'tiff' not supported",
        "check no tiff message");
