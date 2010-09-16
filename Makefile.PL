@@ -210,6 +210,7 @@ if ($MM_ver >= 6.46) {
        "GIF",
        "TIFF",
        "JPEG",
+       "W32",
       ],
      },
      resources =>
