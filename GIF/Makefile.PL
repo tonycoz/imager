@@ -21,6 +21,7 @@ my %opts =
    NAME => 'Imager::File::GIF',
    VERSION_FROM => 'GIF.pm',
    OBJECT => 'GIF.o imgif.o',
+   clean => { FILES => 'testout' },
   );
 
 my @inc;

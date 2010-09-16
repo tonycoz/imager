@@ -21,6 +21,7 @@ my %opts =
    NAME => 'Imager::File::JPEG',
    VERSION_FROM => 'JPEG.pm',
    OBJECT => 'JPEG.o imjpeg.o imexif.o',
+   clean => { FILES => 'testout' },
   );
 
 my @inc;

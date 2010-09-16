@@ -21,6 +21,7 @@ my %opts =
    NAME => 'Imager::File::TIFF',
    VERSION_FROM => 'TIFF.pm',
    OBJECT => 'TIFF.o imtiff.o',
+   clean => { FILES => 'testout' },
   );
 
 my @inc;
