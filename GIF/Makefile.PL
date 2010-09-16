@@ -112,7 +112,6 @@ const char vers[] = GIF_LIB_VERSION;
 const char *versp = vers;
 int ver_maj;
 int ver_min;
-fprintf(stderr, "GIF: header version '%s'\n", GIF_LIB_VERSION);
 gf=DGifOpenFileName("testimg/expected.gif");
 if (!gf) {
   fprintf(stderr, "GIF: Cannot open testimg/expected.gif\n");
