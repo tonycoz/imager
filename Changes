@@ -16,6 +16,10 @@ Bug fixes:
  - from _01: look for missing file support test files in the right
    places.
 
+ - flood_fill() wouldn't fill the right side of a single scan-line
+   fill area.
+   Thanks to Nicolas Roggli for reporting this.
+
 Imager 0.77_01 - 13 Sep 2010
 ==============
 

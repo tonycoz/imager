@@ -1,8 +1,8 @@
 #!perl -w
 use strict;
-use Test::More tests => 244;
+use Test::More tests => 250;
 use Imager ':all';
-use Imager::Test qw(is_color3);
+use Imager::Test qw(is_color3 is_image);
 use constant PI => 3.14159265358979;
 
 init_log("testout/t21draw.log",1);
@@ -293,6 +293,21 @@ my $white = '#FFFFFF';
     is_color3($im->getpixel(x => 5, y => 5), 255, 255, 255,
 	      "check fill default color MM");
   }
+}
+
+{ # flood_fill wouldn't fill to the right if the area was just a 
+  # single scan-line
+  my $im = Imager->new(xsize => 5, ysize => 3);
+  ok($im, "make flood_fill test image");
+  ok($im->line(x1 => 0, y1 => 1, x2 => 4, y2 => 1, color => "white"),
+     "create fill area");
+  ok($im->flood_fill(x => 3, y => 1, color => "blue"),
+     "fill it");
+  my $cmp = Imager->new(xsize => 5, ysize => 3);
+  ok($cmp, "make test image");
+  ok($cmp->line(x1 => 0, y1 => 1, x2 => 4, y2 => 1, color => "blue"),
+     "synthezied filled area");
+  is_image($im, $cmp, "flood_fill filled horizontal line");
 }
 
 malloc_state();

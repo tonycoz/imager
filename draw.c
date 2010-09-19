@@ -1650,6 +1650,8 @@ i_flood_fill_low(i_img *im,int seedx,int seedy,
   ltx = i_lspan(im, seedx, seedy, seed, cmpfunc);
   rtx = i_rspan(im, seedx, seedy, seed, cmpfunc);
   for(tx=ltx; tx<=rtx; tx++) SET(tx, seedy);
+  bxmin = ltx;
+  bxmax = rtx;
 
   ST_PUSH(ltx, rtx, ltx, rtx, seedy+1,  1);
   ST_PUSH(ltx, rtx, ltx, rtx, seedy-1, -1);
