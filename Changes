@@ -8,6 +8,9 @@ Imager 0.77_02 - unreleased
    Uses Imager::Probe now.
    https://rt.cpan.org/Public/Bug/Display.html?id=61328
 
+ - tested successfully with jpeg-8b
+   https://rt.cpan.org/Ticket/Display.html?id=60221
+
 Bug fixes:
 
  - from _01: look for missing file support test files in the right
