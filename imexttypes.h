@@ -165,6 +165,20 @@ typedef struct {
   void (*f_i_get_file_background)(i_img *im, i_color *bg);
   void (*f_i_get_file_backgroundf)(i_img *im, i_fcolor *bg);
   unsigned long (*f_i_utf8_advance)(char const **p, size_t *len);
+  i_render *(*f_i_render_new)(i_img *im, i_img_dim width);
+  void (*f_i_render_delete)(i_render *r);
+  void (*f_i_render_color)(i_render *r, i_img_dim x, i_img_dim y,
+			   i_img_dim width, unsigned char const *src,
+			   i_color const *color);
+  void (*f_i_render_fill)(i_render *r, i_img_dim x, i_img_dim y,
+			  i_img_dim width, unsigned char const *src,
+			  i_fill_t *fill);
+  void (*f_i_render_line)(i_render *r, i_img_dim x, i_img_dim y,
+			  i_img_dim width, const i_sample_t *src,
+			  i_color *line, i_fill_combine_f combine);
+  void (*f_i_render_linef)(i_render *r, i_img_dim x, i_img_dim y,
+			  i_img_dim width, const double *src,
+			  i_fcolor *line, i_fill_combinef_f combine);
 
   /* IMAGER_API_LEVEL 6 functions will be added here */
 } im_ext_funcs;

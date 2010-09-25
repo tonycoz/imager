@@ -1,7 +1,7 @@
 package Imager;
 
 use strict;
-use vars qw($VERSION @ISA @EXPORT @EXPORT_OK %EXPORT_TAGS %formats $DEBUG %filters %DSOs $ERRSTR $fontstate %OPCODES $I2P $FORMATGUESS $warn_obsolete);
+use vars qw($VERSION @ISA @EXPORT @EXPORT_OK %EXPORT_TAGS %formats $DEBUG %filters %DSOs $ERRSTR %OPCODES $I2P $FORMATGUESS $warn_obsolete);
 use IO::File;
 
 use Imager::Color;
@@ -175,18 +175,14 @@ my %format_classes =
    tiff => "Imager::File::TIFF",
    jpeg => "Imager::File::JPEG",
    w32 => "Imager::Font::W32",
+   ft2 => "Imager::Font::FT2",
   );
 
 tie %formats, "Imager::FORMATS", \%formats_low, \%format_classes;
 
 BEGIN {
-  Imager::Font::__init();
   for(i_list_formats()) { $formats_low{$_}++; }
 
-  if (!$formats_low{'t1'} and !$formats_low{'tt'} 
-      && !$formats_low{'ft2'} && !$formats_low{'w32'}) {
-    $fontstate='no font support';
-  }
   %OPCODES=(Add=>[0],Sub=>[1],Mult=>[2],Div=>[3],Parm=>[4],'sin'=>[5],'cos'=>[6],'x'=>[4,0],'y'=>[4,1]);
 
   $DEBUG=0;
@@ -3906,8 +3902,6 @@ sub _check {
 
 sub FETCH {
   my ($self, $key) = @_;
-
-  $DB::single = 1;
 
   exists $self->[IX_FORMATS]{$key} and return $self->[IX_FORMATS]{$key};
 

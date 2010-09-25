@@ -44,6 +44,8 @@ RGBA
 postfix
 infix
 unary
+Uncategorized
+Blit
 /;
 
 local %Pod::Wordlist::Wordlist = %Pod::Wordlist::Wordlist;

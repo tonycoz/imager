@@ -3,6 +3,7 @@
    8-bit (or bigger indexed) png files at some point
 */
 #include "imager.h"
+#include "imageri.h"
 
 static void makemap_addi(i_quantize *, i_img **imgs, int count);
 static void makemap_mediancut(i_quantize *, i_img **imgs, int count);

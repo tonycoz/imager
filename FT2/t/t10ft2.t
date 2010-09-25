@@ -2,18 +2,12 @@
 use strict;
 use Test::More tests => 189;
 use Cwd qw(getcwd abs_path);
-++$|;
-# Before `make install' is performed this script should be runnable with
-# `make test'. After `make install' it should work as `perl test.pl'
 
-######################### We start with some black magic to print on failure.
-
-# Change 1..1 below to 1..last_test_to_print .
-# (It may become useful if the test is moved to ./t subdirectory.)
-
-BEGIN { use_ok(Imager => ':all') }
+use Imager qw(:all);
 
 use Imager::Test qw(diff_text_with_nul is_color3);
+
+-d "testout" or mkdir "testout";
 
 init_log("testout/t38ft2font.log",2);
 
@@ -23,10 +17,8 @@ my @base_color = (64, 255, 64);
 
 SKIP:
 {
-  i_has_format("ft2") or skip("no freetype2 library found", 188);
+  ok($Imager::formats{ft2}, "ft2 should be in %formats");
 
-  print "# has ft2\n";
-  
   my $fontname=$ENV{'TTFONTTEST'} || $deffont;
 
   -f $fontname or skip("cannot find fontfile $fontname", 188);
@@ -35,17 +27,17 @@ SKIP:
   my $bgcolor=i_color_new(255,0,0,0);
   my $overlay=Imager::ImgRaw::new(200,70,3);
   
-  my $ttraw=Imager::Font::FreeType2::i_ft2_new($fontname, 0);
+  my $ttraw=Imager::Font::FT2::i_ft2_new($fontname, 0);
   
   $ttraw or print Imager::_error_as_msg(),"\n";
   ok($ttraw, "loaded raw font");
 
-  my @bbox=Imager::Font::FreeType2::i_ft2_bbox($ttraw, 50.0, 0, 'XMCLH', 0);
+  my @bbox=Imager::Font::FT2::i_ft2_bbox($ttraw, 50.0, 0, 'XMCLH', 0);
   print "#bbox @bbox\n";
   
   is(@bbox, 8, "i_ft2_bbox() returns 8 values");
 
-  ok(Imager::Font::FreeType2::i_ft2_cp($ttraw,$overlay,5,50,1,50.0,50, 'XMCLH',1,1, 0, 0), "drawn to channel");
+  ok(Imager::Font::FT2::i_ft2_cp($ttraw,$overlay,5,50,1,50.0,50, 'XMCLH',1,1, 0, 0), "drawn to channel");
   i_line($overlay,0,50,100,50,$bgcolor,1);
 
   open(FH,">testout/t38ft2font.ppm") || die "cannot open testout/t38ft2font.ppm\n";
@@ -58,9 +50,9 @@ SKIP:
   my $backgr=Imager::ImgRaw::new(500,300,3);
   
   #     i_tt_set_aa(2);
-  ok(Imager::Font::FreeType2::i_ft2_text($ttraw,$backgr,100,150,NC(255, 64, 64),200.0,50, 'MAW',1,1,0, 0), "drew MAW");
-  Imager::Font::FreeType2::i_ft2_settransform($ttraw, [0.9659, 0.2588, 0, -0.2588, 0.9659, 0 ]);
-  ok(Imager::Font::FreeType2::i_ft2_text($ttraw,$backgr,100,150,NC(0, 128, 0),200.0,50, 'MAW',0,1, 0, 0), "drew rotated MAW");
+  ok(Imager::Font::FT2::i_ft2_text($ttraw,$backgr,100,150,NC(255, 64, 64),200.0,50, 'MAW',1,1,0, 0), "drew MAW");
+  Imager::Font::FT2::i_ft2_settransform($ttraw, [0.9659, 0.2588, 0, -0.2588, 0.9659, 0 ]);
+  ok(Imager::Font::FT2::i_ft2_text($ttraw,$backgr,100,150,NC(0, 128, 0),200.0,50, 'MAW',0,1, 0, 0), "drew rotated MAW");
   i_line($backgr, 0,150, 499, 150, NC(0, 0, 255),1);
 
   open(FH,">testout/t38ft2font2.ppm") || die "cannot open testout/t38ft2font.ppm\n";
@@ -228,8 +220,10 @@ SKIP:
                                  type=>'ft2');
   SKIP:
   {
-    ok($exfont, "loaded existence font") or
-      skip("couldn't load test font", 11);
+    ok($exfont, "loaded existence font")
+      or diag(Imager->errstr);
+    $exfont
+      or skip("couldn't load test font", 11);
 
     # the test font is known to have a shorter advance width for that char
     my @bbox = $exfont->bounding_box(string=>"/", size=>100);
@@ -255,8 +249,8 @@ SKIP:
 
     # name tests
     # make sure the number of tests on each branch match
-    if (Imager::Font::FreeType2::i_ft2_can_face_name()) {
-      my $facename = Imager::Font::FreeType2::i_ft2_face_name($exfont->{id});
+    if (Imager::Font::FT2::i_ft2_can_face_name()) {
+      my $facename = Imager::Font::FT2::i_ft2_face_name($exfont->{id});
       print "# face name '$facename'\n";
       is($facename, 'ExistenceTest', "test face name");
       $facename = $exfont->face_name;
@@ -264,7 +258,7 @@ SKIP:
     }
     else {
       # make sure we get the error we expect
-      my $facename = Imager::Font::FreeType2::i_ft2_face_name($exfont->{id});
+      my $facename = Imager::Font::FT2::i_ft2_face_name($exfont->{id});
       my ($msg) = Imager::_error_as_msg();
       ok(!defined($facename), "test face name not supported");
       print "# $msg\n";
@@ -274,7 +268,7 @@ SKIP:
 
   SKIP:
   {
-    Imager::Font::FreeType2->can_glyph_names
+    Imager::Font::FT2->can_glyph_names
         or skip("FT2 compiled without glyph names support", 9);
         
     # FT2 considers POST tables in TTF fonts unreliable, so use
@@ -286,7 +280,7 @@ SKIP:
       ok($exfont, "load Type 1 via FT2")
         or skip("couldn't load type 1 with FT2", 8);
       my @glyph_names = 
-        Imager::Font::FreeType2::i_ft2_glyph_name($exfont->{id}, "!J/");
+        Imager::Font::FT2::i_ft2_glyph_name($exfont->{id}, "!J/");
       #use Data::Dumper;
       #print Dumper \@glyph_names;
       is($glyph_names[0], 'exclam', "check exclam name");
@@ -331,7 +325,7 @@ SKIP:
   }
 
   # check that error codes are translated correctly
-  my $errfont = Imager::Font->new(file=>"t/t38ft2font.t", type=>"ft2");
+  my $errfont = Imager::Font->new(file=>"t/t10ft2.t", type=>"ft2");
   is($errfont, undef, "new font vs non font");
   cmp_ok(Imager->errstr, '=~', qr/unknown file format/, "check error message");
 

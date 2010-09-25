@@ -9,6 +9,7 @@
 #endif
 #include <string.h>
 #include <errno.h>
+#include "imageri.h"
 
 #define IOL_DEB(x)
 

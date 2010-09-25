@@ -1,6 +1,7 @@
 #ifndef _DATATYPES_H_
 #define _DATATYPES_H_
 
+#include <stddef.h>
 #include "imconfig.h"
 #include "imio.h"
 
@@ -173,6 +174,7 @@ May be larger than int on some platforms.
 
 =cut
 */
+
 typedef int i_img_dim;
 
 /*
@@ -413,10 +415,10 @@ enum bounding_box_index_t {
 struct i_fill_tag;
 
 typedef void (*i_fill_with_color_f)
-     (struct i_fill_tag *fill, int x, int y, int width, int channels, 
+(struct i_fill_tag *fill, i_img_dim x, i_img_dim y, i_img_dim width, int channels, 
       i_color *data);
 typedef void (*i_fill_with_fcolor_f)
-     (struct i_fill_tag *fill, int x, int y, int width, int channels,
+     (struct i_fill_tag *fill, i_img_dim x, i_img_dim y, i_img_dim width, int channels,
       i_fcolor *data);
 typedef void (*i_fill_destroy_f)(struct i_fill_tag *fill);
 
@@ -430,9 +432,9 @@ typedef void (*i_fill_destroy_f)(struct i_fill_tag *fill);
 */
 
 typedef void (*i_fill_combine_f)(i_color *out, i_color *in, int channels, 
-                                 int count);
+                                 i_img_dim count);
 typedef void (*i_fill_combinef_f)(i_fcolor *out, i_fcolor *in, int channels,
-                                  int count);
+                                  i_img_dim count);
 
 /* fountain fill types */
 typedef enum {
@@ -555,12 +557,6 @@ typedef struct i_font_mm_tag {
 struct TT_Fonthandle_;
 
 typedef struct TT_Fonthandle_ TT_Fonthandle;
-
-#endif
-
-#ifdef HAVE_FT2
-
-typedef struct FT2_Fonthandle FT2_Fonthandle;
 
 #endif
 
@@ -713,7 +709,7 @@ enum {
 
 #include "iolayert.h"
 
-#include "rendert.h"
+typedef struct i_render_tag i_render;
 
 #endif
 

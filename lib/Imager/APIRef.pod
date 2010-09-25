@@ -14,6 +14,8 @@ Imager::APIRef - Imager's C API - reference.
   color.rgba.r = 255; color.rgba.g = 0; color.rgba.b = 255;
 
 
+  # Blit tools
+
   # Data Types
   i_img *img;
   i_color black;
@@ -89,6 +91,67 @@ Imager::APIRef - Imager's C API - reference.
   i_tags_setn(&img->tags, "i_yres", 196);
 
 =head1 DESCRIPTION
+
+=head2 Blit tools
+
+=over
+
+=item i_render_color(r, x, y, width, source, color)
+
+Render the given color with the coverage specified by C<source[0]> to
+C<source[width-1]>.
+
+Renders in normal combine mode.
+
+
+=for comment
+From: File render.im
+
+=item i_render_delete(r)
+
+Release an C<i_render> object.
+
+
+=for comment
+From: File render.im
+
+=item i_render_fill(r, x, y, width, source, fill)
+
+Render the given fill with the coverage in C<source[0]> through
+C<source[width-1]>.
+
+
+=for comment
+From: File render.im
+
+=item i_render_line(r, x, y, width, source, fill)
+
+Render the given fill with the coverage in C<source[0]> through
+C<source[width-1]>.
+
+
+=for comment
+From: File render.im
+
+=item i_render_linef(r, x, y, width, source, fill)
+
+Render the given fill with the coverage in C<source[0]> through
+C<source[width-1]>.
+
+
+=for comment
+From: File render.im
+
+=item i_render_new(im, width)
+
+Allocate a new C<i_render> object and initialize it.
+
+
+=for comment
+From: File render.im
+
+
+=back
 
 =head2 Data Types
 
@@ -470,6 +533,19 @@ channel_count)
 
 =for comment
 From: File imext.c
+
+=item i_gsamp_bg(im, l, r, y, samples, out_channels, background)
+
+
+Like C<i_gsampf()> but applies the source image color over a supplied
+background color.
+
+This is intended for output to image formats that don't support alpha
+channels.
+
+
+=for comment
+From: File paste.im
 
 =item i_gsampf(im, left, right, y, samples, channels, channel_count)
 
@@ -1515,21 +1591,25 @@ From: File tags.c
 
 =back
 
-
-=head1 UNDOCUMENTED
-
-The following API functions are undocumented so far, hopefully this
-will change:
+=head2 Uncategorized functions
 
 =over
 
-=item *
+=item i_utf8_advance(char **p, size_t *len)
 
-B<i_gsamp_bg>
+Retrieve a C<UTF-8> character from the stream.
 
-=item *
+Modifies *p and *len to indicate the consumed characters.
 
-B<i_utf8_advance>
+This doesn't support the extended C<UTF-8> encoding used by later
+versions of Perl.
+
+This doesn't check that the C<UTF-8> character is using the shortest
+possible representation.
+
+
+=for comment
+From: File io.c
 
 
 

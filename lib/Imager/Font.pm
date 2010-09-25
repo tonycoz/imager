@@ -26,8 +26,8 @@ my %drivers =
 	description => 'T1Lib',
        },
    ft2=>{
-         class=>'Imager::Font::FreeType2',
-         module=>'Imager/Font/FreeType2.pm',
+         class=>'Imager::Font::FT2',
+         module=>'Imager/Font/FT2.pm',
          files=>'.*\.(pfa|pfb|otf|ttf|fon|fnt|dfont|pcf(\.gz)?)$',
 	 description => 'FreeType 2.x',
         },
@@ -46,21 +46,6 @@ my %drivers =
 # this currently should only contain file based types, don't add w32
 my @priority = qw(t1 tt ft2 ifs);
 
-# when Imager::Font is loaded, Imager.xs has not been bootstrapped yet
-# this function is called from Imager.pm to finish initialization
-sub __init {
-  @priority = grep Imager::i_has_format($_), @priority;
-  for my $driver_name (grep Imager::i_has_format($_), keys %drivers) {
-    $drivers{$driver_name}{enabled} = 1;
-  }
-}
-
-# search method
-# 1. start by checking if file is the parameter
-# 1a. if so qualify path and compare to the cache.
-# 2a. if in cache - take it's id from there and increment count.
-#
-
 sub new {
   my $class = shift;
   my $self = {};
@@ -75,7 +60,18 @@ sub new {
     $file = $hsh{'file'};
 
     $type = $hsh{'type'};
-    if (!defined($type) or !$drivers{$type} or !$drivers{$type}{enabled}) {
+    if (defined $type) {
+      unless ($drivers{$type}) {
+	Imager->_set_error("Unknown font type $type");
+	return;
+      }
+
+      unless ($Imager::formats{$type}) {
+	Imager->_set_error("The $type {$drivers{$type}) font driver is not installed");
+	return;
+      }
+    }
+    else {
       for my $drv (@priority) {
         undef $type;
         my $re = $drivers{$drv}{files} or next;

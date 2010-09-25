@@ -1729,7 +1729,7 @@ typedef struct {
 } i_fill_fountain_t;
 
 static void
-fill_fountf(i_fill_t *fill, int x, int y, int width, int channels, 
+fill_fountf(i_fill_t *fill, i_img_dim x, i_img_dim y, i_img_dim width, int channels, 
             i_fcolor *data);
 static void
 fount_fill_destroy(i_fill_t *fill);
@@ -2367,8 +2367,8 @@ The fill function for fountain fills.
 =cut
 */
 static void
-fill_fountf(i_fill_t *fill, int x, int y, int width, int channels, 
-            i_fcolor *data) {
+fill_fountf(i_fill_t *fill, i_img_dim x, i_img_dim y, i_img_dim width,
+	    int channels, i_fcolor *data) {
   i_fill_fountain_t *f = (i_fill_fountain_t *)fill;
   
   while (width--) {

@@ -339,6 +339,8 @@ background color.
 This is intended for output to image formats that don't support alpha
 channels.
 
+=cut
+
 =item i_gsampf_bg(im, l, r, y, samples, out_channels, background)
 
 =category Drawing

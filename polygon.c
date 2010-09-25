@@ -2,6 +2,7 @@
 #include "draw.h"
 #include "log.h"
 #include "imrender.h"
+#include "imageri.h"
 
 #define IMTRUNC(x) ((int)((x)*16))
 

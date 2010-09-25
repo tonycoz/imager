@@ -641,25 +641,25 @@ are alot of badly designed fonts out there.}
 # This currently only works on under normal Win32 and cygwin.
 # DOCS
 # 		    };
-  $formats{'freetype2'} = 
-  {
-   order=>'29',
-   def=>'HAVE_FT2',
-   # we always use a probe function
-   #inccheck=>sub { -e catfile($_[0], 'ft2build.h') },
-   #libcheck=>sub { $_[0] eq "libfreetype$aext" or $_[0] eq "libfreetype.$lext" },
-   libfiles=>'-lfreetype',
-   objfiles=>'freetyp2.o',
-   docs=><<DOCS,
-Freetype 2 supports both Truetype and Type 1 fonts, both of which are
-scalable.  It also supports a variety of other fonts.
-DOCS
-   code =>
-   [ 
-    \&freetype2_probe_ftconfig,
-    \&freetype2_probe_scan
-   ],
-  };
+#   $formats{'freetype2'} = 
+#   {
+#    order=>'29',
+#    def=>'HAVE_FT2',
+#    # we always use a probe function
+#    #inccheck=>sub { -e catfile($_[0], 'ft2build.h') },
+#    #libcheck=>sub { $_[0] eq "libfreetype$aext" or $_[0] eq "libfreetype.$lext" },
+#    libfiles=>'-lfreetype',
+#    objfiles=>'freetyp2.o',
+#    docs=><<DOCS,
+# Freetype 2 supports both Truetype and Type 1 fonts, both of which are
+# scalable.  It also supports a variety of other fonts.
+# DOCS
+#    code =>
+#    [ 
+#     \&freetype2_probe_ftconfig,
+#     \&freetype2_probe_scan
+#    ],
+#   };
 
   # Make fix indent
   for (keys %formats) { $formats{$_}->{docs} =~ s/^\s+/  /mg; }
@@ -726,17 +726,17 @@ EOS
   close CONFIG;
 }
 
-# use pkg-config to probe for libraries
-# works around the junk that pkg-config dumps on FreeBSD
-sub _pkg_probe {
-  my ($pkg) = @_;
+# # use pkg-config to probe for libraries
+# # works around the junk that pkg-config dumps on FreeBSD
+# sub _pkg_probe {
+#   my ($pkg) = @_;
 
-  is_exe('pkg-config') or return;
+#   is_exe('pkg-config') or return;
 
-  my $redir = $^O eq 'MSWin32' ? '' : '2>/dev/null';
+#   my $redir = $^O eq 'MSWin32' ? '' : '2>/dev/null';
 
-  !system("pkg-config $pkg --exists $redir");
-}
+#   !system("pkg-config $pkg --exists $redir");
+# }
 
 # probes for freetype1 by scanning @incs for the includes and 
 # @libs for the libs.  This is done separately because freetype's headers
@@ -787,111 +787,111 @@ sub freetype1_probe {
 }
 
 # probes for freetype2 by trying to run freetype-config
-sub freetype2_probe_ftconfig {
-  my ($frm, $frmkey) = @_;
+# sub freetype2_probe_ftconfig {
+#   my ($frm, $frmkey) = @_;
 
-  is_exe('freetype-config') or return;
+#   is_exe('freetype-config') or return;
 
-  my $cflags = `freetype-config --cflags`
-    and !$? or return;
-  chomp $cflags;
+#   my $cflags = `freetype-config --cflags`
+#     and !$? or return;
+#   chomp $cflags;
 
-  my $lflags = `freetype-config --libs`
-    and !$? or return;
-  chomp $lflags;
+#   my $lflags = `freetype-config --libs`
+#     and !$? or return;
+#   chomp $lflags;
 
-  # before 2.1.5 freetype-config --cflags could output
-  # the -I options in the wrong order, causing a conflict with
-  # freetype1.x installed with the same --prefix
-  #
-  # can happen iff:
-  #  - both -Iprefix/include and -Iprefix/include/freetype2 are in cflags
-  #    in that order
-  #  - freetype 1.x headers are in prefix/include/freetype
-  my @incdirs = map substr($_, 2), grep /^-I/, split ' ', $cflags;
-  if (@incdirs == 2 
-      && $incdirs[1] eq "$incdirs[0]/freetype2"
-      && -e "$incdirs[0]/freetype/freetype.h"
-      && -e "$incdirs[0]/freetype/fterrid.h") {
-    print "** freetype-config provided -I options out of order, correcting\n"
-      if $VERBOSE;
-    $cflags = join(' ', grep(!/-I/, split ' ', $cflags),
-		   map "-I$_", reverse @incdirs);
-  }
-  $frm->{cflags} = $cflags;
-  $frm->{lflags} = $lflags;
+#   # before 2.1.5 freetype-config --cflags could output
+#   # the -I options in the wrong order, causing a conflict with
+#   # freetype1.x installed with the same --prefix
+#   #
+#   # can happen iff:
+#   #  - both -Iprefix/include and -Iprefix/include/freetype2 are in cflags
+#   #    in that order
+#   #  - freetype 1.x headers are in prefix/include/freetype
+#   my @incdirs = map substr($_, 2), grep /^-I/, split ' ', $cflags;
+#   if (@incdirs == 2 
+#       && $incdirs[1] eq "$incdirs[0]/freetype2"
+#       && -e "$incdirs[0]/freetype/freetype.h"
+#       && -e "$incdirs[0]/freetype/fterrid.h") {
+#     print "** freetype-config provided -I options out of order, correcting\n"
+#       if $VERBOSE;
+#     $cflags = join(' ', grep(!/-I/, split ' ', $cflags),
+# 		   map "-I$_", reverse @incdirs);
+#   }
+#   $frm->{cflags} = $cflags;
+#   $frm->{lflags} = $lflags;
 
-  printf "%10s: configured via freetype-config\n", $frmkey;
+#   printf "%10s: configured via freetype-config\n", $frmkey;
 
-  return 1;
-}
+#   return 1;
+# }
 
 # attempt to probe for freetype2 by scanning directories
 # we can't use the normal scan since we need to find the directory
 # containing most of the includes
-sub freetype2_probe_scan {
-  my ($frm, $frmkey) = @_;
+# sub freetype2_probe_scan {
+#   my ($frm, $frmkey) = @_;
 
-  my $found_inc;
-  my $found_inc2;
- INCS:
-  for my $inc (@incs) {
-    my $path = File::Spec->catfile($inc, 'ft2build.h');
-    -e $path or next;
+#   my $found_inc;
+#   my $found_inc2;
+#  INCS:
+#   for my $inc (@incs) {
+#     my $path = File::Spec->catfile($inc, 'ft2build.h');
+#     -e $path or next;
 
-    # try to find what it's including
-    my $ftheader;
-    open FT2BUILD, "< $path"
-      or next;
-    while (<FT2BUILD>) {
-      if (m!^\s*\#\s*include\s+<([\w/.]+)>!
-	  || m!^\s*\#\s*include\s+"([\w/.]+)"!) {
-	$ftheader = $1;
-	last;
-      }
-    }
-    close FT2BUILD;
-    $ftheader
-      or next;
-    # non-Unix installs put this directly under the same directory in
-    # theory
-    if (-e File::Spec->catfile($inc, $ftheader)) {
-      $found_inc = $inc;
-      last INCS;
-    }
-    for my $subdir (qw/freetype2 freetype/) {
-      $path = File::Spec->catfile($inc, $subdir, 'fterrors.h');
-      -e $path and next;
+#     # try to find what it's including
+#     my $ftheader;
+#     open FT2BUILD, "< $path"
+#       or next;
+#     while (<FT2BUILD>) {
+#       if (m!^\s*\#\s*include\s+<([\w/.]+)>!
+# 	  || m!^\s*\#\s*include\s+"([\w/.]+)"!) {
+# 	$ftheader = $1;
+# 	last;
+#       }
+#     }
+#     close FT2BUILD;
+#     $ftheader
+#       or next;
+#     # non-Unix installs put this directly under the same directory in
+#     # theory
+#     if (-e File::Spec->catfile($inc, $ftheader)) {
+#       $found_inc = $inc;
+#       last INCS;
+#     }
+#     for my $subdir (qw/freetype2 freetype/) {
+#       $path = File::Spec->catfile($inc, $subdir, 'fterrors.h');
+#       -e $path and next;
 
-      $found_inc = $inc;
-      $found_inc2 = File::Spec->catdir($inc, $subdir);
-      last INCS;
-    }
-  }
+#       $found_inc = $inc;
+#       $found_inc2 = File::Spec->catdir($inc, $subdir);
+#       last INCS;
+#     }
+#   }
 
-  my $found_lib;
- LIBS:
-  for my $lib (@libs) {
-    my $a_path = File::Spec->catfile($lib, "libfreetype$aext");
-    my $l_path = File::Spec->catfile($lib, "libfreetype.$lext");
-    if (-e $a_path || -e $l_path) {
-      $found_lib = $lib;
-      last LIBS;
-    }
-  }
+#   my $found_lib;
+#  LIBS:
+#   for my $lib (@libs) {
+#     my $a_path = File::Spec->catfile($lib, "libfreetype$aext");
+#     my $l_path = File::Spec->catfile($lib, "libfreetype.$lext");
+#     if (-e $a_path || -e $l_path) {
+#       $found_lib = $lib;
+#       last LIBS;
+#     }
+#   }
 
-  printf("%10s: includes %s - libraries %s\n", $frmkey,
-	 ($found_inc ? 'found' : 'not found'), 
-	 ($found_lib ? 'found' : 'not found'));
+#   printf("%10s: includes %s - libraries %s\n", $frmkey,
+# 	 ($found_inc ? 'found' : 'not found'), 
+# 	 ($found_lib ? 'found' : 'not found'));
 
-  return unless $found_inc && $found_lib;
+#   return unless $found_inc && $found_lib;
 
-  $frm->{cflags} = _make_I($found_inc);
-  $frm->{cflags} .= " " . _make_I($found_inc2) if $found_inc2;
-  $frm->{libfiles} = "-lfreetype";
+#   $frm->{cflags} = _make_I($found_inc);
+#   $frm->{cflags} .= " " . _make_I($found_inc2) if $found_inc2;
+#   $frm->{libfiles} = "-lfreetype";
 
-  return 1;
-}
+#   return 1;
+# }
 
 sub _make_I {
   my ($inc_dir) = @_;
@@ -903,57 +903,57 @@ sub _make_I {
 }
 
 # probes for libpng via pkg-config
-sub png_probe {
-  my ($frm, $frmkey) = @_;
+# sub png_probe {
+#   my ($frm, $frmkey) = @_;
 
-  is_exe('pkg-config') or return;
+#   is_exe('pkg-config') or return;
 
-  my $config;
-  for my $check_conf (qw(libpng libpng12 libpng10)) {
-    if (_pkg_probe($check_conf)) {
-      $config = $check_conf;
-      last;
-    }
-  }
-  $config or return;
+#   my $config;
+#   for my $check_conf (qw(libpng libpng12 libpng10)) {
+#     if (_pkg_probe($check_conf)) {
+#       $config = $check_conf;
+#       last;
+#     }
+#   }
+#   $config or return;
 
-  my $cflags = `pkg-config $config --cflags`
-    and !$? or return;
+#   my $cflags = `pkg-config $config --cflags`
+#     and !$? or return;
 
-  my $lflags = `pkg-config $config --libs`
-    and !$? or return;
+#   my $lflags = `pkg-config $config --libs`
+#     and !$? or return;
 
-  chomp $cflags;
-  chomp $lflags;
-  $frm->{cflags} = $cflags;
-  $frm->{lflags} = $lflags;
+#   chomp $cflags;
+#   chomp $lflags;
+#   $frm->{cflags} = $cflags;
+#   $frm->{lflags} = $lflags;
 
-  printf "%10s: configured via `pkg-config $config ...`\n", $frmkey;
+#   printf "%10s: configured via `pkg-config $config ...`\n", $frmkey;
 
-  return 1;
-}
+#   return 1;
+# }
 
 sub catfile {
   return File::Spec->catfile(@_);
 }
 
-sub is_exe {
-  my ($name) = @_;
+# sub is_exe {
+#   my ($name) = @_;
 
-  my @exe_suffix = $Config{_exe};
-  if ($^O eq 'MSWin32') {
-    push @exe_suffix, qw/.bat .cmd/;
-  }
+#   my @exe_suffix = $Config{_exe};
+#   if ($^O eq 'MSWin32') {
+#     push @exe_suffix, qw/.bat .cmd/;
+#   }
 
-  for my $dir (File::Spec->path) {
-    for my $suffix (@exe_suffix) {
-      -x catfile($dir, "$name$suffix")
-	and return 1;
-    }
-  }
+#   for my $dir (File::Spec->path) {
+#     for my $suffix (@exe_suffix) {
+#       -x catfile($dir, "$name$suffix")
+# 	and return 1;
+#     }
+#   }
 
-  return;
-}
+#   return;
+# }
 
 sub usage {
   print STDERR <<EOS;

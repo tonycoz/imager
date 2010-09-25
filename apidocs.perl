@@ -128,7 +128,7 @@ for my $cat (sort { lc $a cmp lc $b } keys %cats) {
   print OUT "\n=back\n\n";
 }
 
-# see if we have an uncategorized section
+# see if we have an uncategorised section
 if (grep $alldocs{$_}, keys %undoc) {
   print OUT "=head2 Uncategorized functions\n\n=over\n\n";
   #print join(",", grep !exists $order{$_}, @funcs), "\n";

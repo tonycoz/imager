@@ -1,5 +1,6 @@
 #include "imexttypes.h"
 #include "imager.h"
+#include "imio.h"
 
 /*
  DON'T ADD CASTS TO THESE
@@ -124,7 +125,13 @@ im_ext_funcs imager_function_table =
     i_gsampf_bg,
     i_get_file_background,
     i_get_file_backgroundf,
-    i_utf8_advance
+    i_utf8_advance,
+    i_render_new,
+    i_render_delete,
+    i_render_color,
+    i_render_fill,
+    i_render_line,
+    i_render_linef
   };
 
 /* in general these functions aren't called by Imager internally, but

@@ -1,5 +1,6 @@
 #include "regmach.h"
 #include <float.h>
+#include "imageri.h"
 
 /*#define DEBUG*/
 #ifdef DEBUG

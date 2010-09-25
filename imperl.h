@@ -19,10 +19,6 @@ typedef i_img * Imager;
 typedef TT_Fonthandle* Imager__Font__TT;
 #endif
 
-#ifdef HAVE_FT2
-typedef FT2_Fonthandle* Imager__Font__FT2;
-#endif
-
 /* for the fill objects
    Since a fill object may later have dependent images, (or fills!)
    we need perl wrappers - oh well

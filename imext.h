@@ -221,4 +221,15 @@ extern im_ext_funcs *imager_function_ext_table;
 
 #define i_utf8_advance(p, s) ((im_extt->f_i_utf8_advance)((p), (s)))
 
+#define i_render_new(im, width) ((im_extt->f_i_render_new)((im), (width)))
+#define i_render_delete(r) ((im_extt->f_i_render_delete)(r))
+#define i_render_color(r, x, y, width, src, color) \
+  ((im_extt->f_i_render_color)((r), (x), (y), (width), (src), (color)))
+#define i_render_fill(r, x, y, width, src, fill) \
+  ((im_extt->f_i_render_fill)((r), (x), (y), (width), (src), (fill)))
+#define i_render_line(r, x, y, width, src, line, combine) \
+  ((im_extt->f_i_render_line)((r), (x), (y), (width), (src), (line), (combine)))
+#define i_render_linef(r, x, y, width, src, line, combine) \
+  ((im_extt->f_i_render_linef)((r), (x), (y), (width), (src), (line), (combine)))
+
 #endif

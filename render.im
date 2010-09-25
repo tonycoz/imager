@@ -5,7 +5,7 @@ Render utilities
 
 #define RENDER_MAGIC 0x765AE
 
-typedef void (*render_color_f)(i_render *, int, int, int, unsigned char const *src, i_color const *color);
+typedef void (*render_color_f)(i_render *, i_img_dim, i_img_dim, i_img_dim, unsigned char const *src, i_color const *color);
 
 #define i_has_alpha(channels) ((channels) == 2 || (channels) == 4)
 
@@ -13,8 +13,8 @@ typedef void (*render_color_f)(i_render *, int, int, int, unsigned char const *s
 
 #code
 
-static void IM_SUFFIX(render_color_alpha)(i_render *r, int x, int y, int width, unsigned char const *src, i_color const *color);
-static void IM_SUFFIX(render_color_13)(i_render *r, int x, int y, int width, unsigned char const *src, i_color const *color);
+static void IM_SUFFIX(render_color_alpha)(i_render *r, i_img_dim x, i_img_dim y, i_img_dim width, unsigned char const *src, i_color const *color);
+static void IM_SUFFIX(render_color_13)(i_render *r, i_img_dim x, i_img_dim y, i_img_dim width, unsigned char const *src, i_color const *color);
 
 static render_color_f IM_SUFFIX(render_color_tab)[] =
   {
@@ -25,18 +25,51 @@ static render_color_f IM_SUFFIX(render_color_tab)[] =
     IM_SUFFIX(render_color_alpha),
   };
 
-static void IM_SUFFIX(combine_line_noalpha)(IM_COLOR *out, IM_COLOR const *in, int channels, int count);
-static void IM_SUFFIX(combine_line_alpha)(IM_COLOR *out, IM_COLOR const *in, int channels, int count);
+static void IM_SUFFIX(combine_line_noalpha)(IM_COLOR *out, IM_COLOR const *in, int channels, i_img_dim count);
+static void IM_SUFFIX(combine_line_alpha)(IM_COLOR *out, IM_COLOR const *in, int channels, i_img_dim count);
 /* the copy variant copies the source alpha to the the output alpha channel */
-static void IM_SUFFIX(combine_line_alpha_na)(IM_COLOR *out, IM_COLOR const *in, int channels, int count);
+static void IM_SUFFIX(combine_line_alpha_na)(IM_COLOR *out, IM_COLOR const *in, int channels, i_img_dim count);
 
-static void IM_SUFFIX(combine_line)(IM_COLOR *out, IM_COLOR const *in, int channels, int count);
-static void IM_SUFFIX(combine_line_na)(IM_COLOR *out, IM_COLOR const *in, int channels, int count);
+static void IM_SUFFIX(combine_line)(IM_COLOR *out, IM_COLOR const *in, int channels, i_img_dim count);
+static void IM_SUFFIX(combine_line_na)(IM_COLOR *out, IM_COLOR const *in, int channels, i_img_dim count);
 
 #/code
 
+/* 
+=item i_render_new(im, width)
+=category Blit tools
+
+Allocate a new C<i_render> object and initialize it.
+
+=cut
+*/
+
+i_render *
+i_render_new(i_img *im, i_img_dim width) {
+  i_render *r = mymalloc(sizeof(i_render));
+
+  i_render_init(r, im, width);
+
+  return r;
+}
+
+/*
+=item i_render_delete(r)
+=category Blit tools
+
+Release an C<i_render> object.
+
+=cut
+*/
+
 void
-i_render_init(i_render *r, i_img *im, int width) {
+i_render_delete(i_render *r) {
+  i_render_done(r);
+  myfree(r);
+}
+
+void
+i_render_init(i_render *r, i_img *im, i_img_dim width) {
   r->magic = RENDER_MAGIC;
   r->im = im;
   r->line_width = width;
@@ -61,9 +94,9 @@ i_render_done(i_render *r) {
 }
 
 static void
-alloc_line(i_render *r, int width, int eight_bit) {
+alloc_line(i_render *r, i_img_dim width, i_img_dim eight_bit) {
   if (width > r->line_width) {
-    int new_width = r->line_width * 2;
+    i_img_dim new_width = r->line_width * 2;
     if (new_width < width)
       new_width = width;
 
@@ -111,9 +144,9 @@ alloc_line(i_render *r, int width, int eight_bit) {
 }
 
 static void
-alloc_fill_line(i_render *r, int width, int eight_bit) {
+alloc_fill_line(i_render *r, i_img_dim width, int eight_bit) {
   if (width > r->fill_width) {
-    int new_width = r->fill_width * 2;
+    i_img_dim new_width = r->fill_width * 2;
     if (new_width < width)
       new_width = width;
 
@@ -160,9 +193,21 @@ alloc_fill_line(i_render *r, int width, int eight_bit) {
   }
 }
 
+/*
+=item i_render_color(r, x, y, width, source, color)
+=category Blit tools
+
+Render the given color with the coverage specified by C<source[0]> to
+C<source[width-1]>.
+
+Renders in normal combine mode.
+
+=cut
+*/
+
 void
-i_render_color(i_render *r, int x, int y, int width, unsigned char const *src,
-               i_color const *color) {
+i_render_color(i_render *r, i_img_dim x, i_img_dim y, i_img_dim width,
+	       unsigned char const *src, i_color const *color) {
   i_img *im = r->im;
   if (y < 0 || y >= im->ysize)
     return;
@@ -198,9 +243,19 @@ i_render_color(i_render *r, int x, int y, int width, unsigned char const *src,
 #/code
 }
 
+/*
+=item i_render_fill(r, x, y, width, source, fill)
+=category Blit tools
+
+Render the given fill with the coverage in C<source[0]> through
+C<source[width-1]>.
+
+=cut
+*/
+
 void
-i_render_fill(i_render *r, int x, int y, int width, unsigned char const *src,
-	      i_fill_t *fill) {
+i_render_fill(i_render *r, i_img_dim x, i_img_dim y, i_img_dim width,
+	      unsigned char const *src, i_fill_t *fill) {
   i_img *im = r->im;
   int fill_channels = im->channels;
   
@@ -245,7 +300,7 @@ i_render_fill(i_render *r, int x, int y, int width, unsigned char const *src,
     if (src) {
       unsigned char const *srcc = src;
       IM_COLOR *fillc = r->IM_SUFFIX(fill_line);
-      int work_width = width;
+      i_img_dim work_width = width;
       while (work_width) {
 	if (*srcc == 0) {
 	  fillc->channel[fill_channels-1] = 0;
@@ -264,7 +319,7 @@ i_render_fill(i_render *r, int x, int y, int width, unsigned char const *src,
   }
   else {
     if (src) {
-      int work_width = width;
+      i_img_dim work_width = width;
       IM_COLOR *srcc = r->IM_SUFFIX(fill_line);
       IM_COLOR *destc = r->IM_SUFFIX(line);
       int ch;
@@ -299,8 +354,8 @@ i_render_fill(i_render *r, int x, int y, int width, unsigned char const *src,
 }
 
 static void
-dump_src(const char *note, unsigned char const *src, int width) {
-  int i;
+dump_src(const char *note, unsigned char const *src, i_img_dim width) {
+  i_img_dim i;
   printf("%s - %p/%d\n", note, src, width);
   for (i = 0; i < width; ++i) {
     printf("%02x ", src[i]);
@@ -310,9 +365,28 @@ dump_src(const char *note, unsigned char const *src, int width) {
 
 #code
 
+/*
+=item i_render_line(r, x, y, width, source, fill)
+=category Blit tools
+
+Render the given fill with the coverage in C<source[0]> through
+C<source[width-1]>.
+
+=cut
+
+=item i_render_linef(r, x, y, width, source, fill)
+=category Blit tools
+
+Render the given fill with the coverage in C<source[0]> through
+C<source[width-1]>.
+
+=cut
+*/
+
 void
-IM_RENDER_LINE(i_render *r, int x, int y, int width, const IM_SAMPLE_T *src,
-	      IM_COLOR *line, IM_FILL_COMBINE_F combine) {
+IM_RENDER_LINE(i_render *r, i_img_dim x, i_img_dim y, i_img_dim width,
+	       const IM_SAMPLE_T *src, IM_COLOR *line,
+	       IM_FILL_COMBINE_F combine) {
   i_img *im = r->im;
   int src_chans = im->channels;
 
@@ -339,7 +413,7 @@ IM_RENDER_LINE(i_render *r, int x, int y, int width, const IM_SAMPLE_T *src,
 
   if (combine) {
     if (src) {
-      int work_width = width;
+      i_img_dim work_width = width;
       IM_COLOR *linep = line;
       const IM_SAMPLE_T *srcp = src;
       int alpha_chan = src_chans - 1;
@@ -364,7 +438,7 @@ IM_RENDER_LINE(i_render *r, int x, int y, int width, const IM_SAMPLE_T *src,
   }
   else {
     if (src) {
-      int work_width = width;
+      i_img_dim work_width = width;
       IM_COLOR *srcc = line;
       IM_COLOR *destc = r->IM_SUFFIX(line);
 
@@ -398,12 +472,13 @@ IM_RENDER_LINE(i_render *r, int x, int y, int width, const IM_SAMPLE_T *src,
 
 static
 void
-IM_SUFFIX(render_color_13)(i_render *r, int x, int y, int width, 
-                unsigned char const *src, i_color const *color) {
+IM_SUFFIX(render_color_13)(i_render *r, i_img_dim x, i_img_dim y,
+			   i_img_dim width, unsigned char const *src,
+			   i_color const *color) {
   i_img *im = r->im;
   IM_COLOR *linep = r->IM_SUFFIX(line);
   int ch, channels = im->channels;
-  int fetch_offset;
+  i_img_dim fetch_offset;
 #undef STORE_COLOR
 #ifdef IM_EIGHT_BIT
 #define STORE_COLOR (*color)
@@ -445,12 +520,13 @@ IM_SUFFIX(render_color_13)(i_render *r, int x, int y, int width,
 
 static
 void
-IM_SUFFIX(render_color_alpha)(i_render *r, int x, int y, int width, 
-                unsigned char const *src, i_color const *color) {
+IM_SUFFIX(render_color_alpha)(i_render *r, i_img_dim x, i_img_dim y,
+			      i_img_dim width, unsigned char const *src,
+			      i_color const *color) {
   IM_COLOR *linep = r->IM_SUFFIX(line);
   int ch;
   int alpha_channel = r->im->channels - 1;
-  int fetch_offset;
+  i_img_dim fetch_offset;
 #undef STORE_COLOR
 #ifdef IM_EIGHT_BIT
 #define STORE_COLOR (*color)
@@ -505,7 +581,7 @@ IM_SUFFIX(render_color_alpha)(i_render *r, int x, int y, int width,
 
 static void
 IM_SUFFIX(combine_line_alpha)(IM_COLOR *out, IM_COLOR const *in, 
-			      int channels, int count) {
+			      int channels, i_img_dim count) {
   int ch;
   int alpha_channel = channels - 1;
   
@@ -542,7 +618,7 @@ IM_SUFFIX(combine_line_alpha)(IM_COLOR *out, IM_COLOR const *in,
 
 static void
 IM_SUFFIX(combine_line_noalpha)
-     (IM_COLOR *out, IM_COLOR const *in, int channels, int count) {
+     (IM_COLOR *out, IM_COLOR const *in, int channels, i_img_dim count) {
   int ch;
 
   while (count) {
@@ -577,7 +653,7 @@ IM_SUFFIX(combine_line_noalpha)
 
 static void
 IM_SUFFIX(combine_line_alpha_na)(IM_COLOR *out, IM_COLOR const *in, 
-				   int channels, int count) {
+				   int channels, i_img_dim count) {
   int ch;
   int alpha_channel = channels - 1;
   
@@ -605,7 +681,7 @@ IM_SUFFIX(combine_line_alpha_na)(IM_COLOR *out, IM_COLOR const *in,
 }
 
 static void
-IM_SUFFIX(combine_line)(IM_COLOR *out, IM_COLOR const *in, int channels, int count) {
+IM_SUFFIX(combine_line)(IM_COLOR *out, IM_COLOR const *in, int channels, i_img_dim count) {
   if (channels == 2 || channels == 4)
     IM_SUFFIX(combine_line_alpha)(out, in, channels, count);
   else
@@ -613,25 +689,25 @@ IM_SUFFIX(combine_line)(IM_COLOR *out, IM_COLOR const *in, int channels, int cou
 }
 
 static void
-IM_SUFFIX(combine_line_na)(IM_COLOR *out, IM_COLOR const *in, int channels, int count) {
+IM_SUFFIX(combine_line_na)(IM_COLOR *out, IM_COLOR const *in, int channels, i_img_dim count) {
   if (channels == 2 || channels == 4)
     IM_SUFFIX(combine_line_alpha_na)(out, in, channels, count);
   else
     IM_SUFFIX(combine_line_noalpha)(out, in, channels, count);
 }
 
-static void IM_SUFFIX(combine_alphablend)(IM_COLOR *, IM_COLOR *, int, int);
-static void IM_SUFFIX(combine_mult)(IM_COLOR *, IM_COLOR *, int, int);
-static void IM_SUFFIX(combine_dissolve)(IM_COLOR *, IM_COLOR *, int, int);
-static void IM_SUFFIX(combine_add)(IM_COLOR *, IM_COLOR *, int, int);
-static void IM_SUFFIX(combine_subtract)(IM_COLOR *, IM_COLOR *, int, int);
-static void IM_SUFFIX(combine_diff)(IM_COLOR *, IM_COLOR *, int, int);
-static void IM_SUFFIX(combine_darken)(IM_COLOR *, IM_COLOR *, int, int);
-static void IM_SUFFIX(combine_lighten)(IM_COLOR *, IM_COLOR *, int, int);
-static void IM_SUFFIX(combine_hue)(IM_COLOR *, IM_COLOR *, int, int);
-static void IM_SUFFIX(combine_sat)(IM_COLOR *, IM_COLOR *, int, int);
-static void IM_SUFFIX(combine_value)(IM_COLOR *, IM_COLOR *, int, int);
-static void IM_SUFFIX(combine_color)(IM_COLOR *, IM_COLOR *, int, int);
+static void IM_SUFFIX(combine_alphablend)(IM_COLOR *, IM_COLOR *, int, i_img_dim);
+static void IM_SUFFIX(combine_mult)(IM_COLOR *, IM_COLOR *, int, i_img_dim);
+static void IM_SUFFIX(combine_dissolve)(IM_COLOR *, IM_COLOR *, int, i_img_dim);
+static void IM_SUFFIX(combine_add)(IM_COLOR *, IM_COLOR *, int, i_img_dim);
+static void IM_SUFFIX(combine_subtract)(IM_COLOR *, IM_COLOR *, int, i_img_dim);
+static void IM_SUFFIX(combine_diff)(IM_COLOR *, IM_COLOR *, int, i_img_dim);
+static void IM_SUFFIX(combine_darken)(IM_COLOR *, IM_COLOR *, int, i_img_dim);
+static void IM_SUFFIX(combine_lighten)(IM_COLOR *, IM_COLOR *, int, i_img_dim);
+static void IM_SUFFIX(combine_hue)(IM_COLOR *, IM_COLOR *, int, i_img_dim);
+static void IM_SUFFIX(combine_sat)(IM_COLOR *, IM_COLOR *, int, i_img_dim);
+static void IM_SUFFIX(combine_value)(IM_COLOR *, IM_COLOR *, int, i_img_dim);
+static void IM_SUFFIX(combine_color)(IM_COLOR *, IM_COLOR *, int, i_img_dim);
 
 static const IM_FILL_COMBINE_F IM_SUFFIX(combines)[] =
 {
@@ -688,7 +764,7 @@ void i_get_combine(int combine, i_fill_combine_f *color_func,
 
 
 static void 
-IM_SUFFIX(combine_alphablend)(IM_COLOR *out, IM_COLOR *in, int channels, int count) {
+IM_SUFFIX(combine_alphablend)(IM_COLOR *out, IM_COLOR *in, int channels, i_img_dim count) {
   IM_SUFFIX(combine_line)(out, in, channels, count);
 }
 
@@ -702,11 +778,11 @@ When Da=1
 Dc' = Sc.Sa.Dc + Dc.(1 - Sa)
  */
 static void
-IM_SUFFIX(combine_mult)(IM_COLOR *out, IM_COLOR *in, int channels, int count) {
+IM_SUFFIX(combine_mult)(IM_COLOR *out, IM_COLOR *in, int channels, i_img_dim count) {
   int ch;
   IM_COLOR *inp = in;
   IM_COLOR *outp = out;
-  int work_count = count;
+  i_img_dim work_count = count;
   int color_channels = i_color_channels(channels);
 
   if (i_has_alpha(channels)) {
@@ -751,7 +827,7 @@ IM_SUFFIX(combine_mult)(IM_COLOR *out, IM_COLOR *in, int channels, int count) {
 }
 
 static void 
-IM_SUFFIX(combine_dissolve)(IM_COLOR *out, IM_COLOR *in, int channels, int count) {
+IM_SUFFIX(combine_dissolve)(IM_COLOR *out, IM_COLOR *in, int channels, i_img_dim count) {
   int color_channels = i_color_channels(channels);
   int ch;
 
@@ -788,10 +864,10 @@ Da'  = Sa.Da + Da.Sa + Sa.(1 - Da) + Da.(1 - Sa)
 */
 
 static void
-IM_SUFFIX(combine_add)(IM_COLOR *out, IM_COLOR *in, int channels, int count) {
+IM_SUFFIX(combine_add)(IM_COLOR *out, IM_COLOR *in, int channels, i_img_dim count) {
   int ch;
   int color_channels = i_color_channels(channels);
-  int work_count = count;
+  i_img_dim work_count = count;
   IM_COLOR *inp = in;
   IM_COLOR *outp = out;
 
@@ -843,11 +919,11 @@ IM_SUFFIX(combine_add)(IM_COLOR *out, IM_COLOR *in, int channels, int count) {
    channel to apply that to the target.
  */
 static void
-IM_SUFFIX(combine_subtract)(IM_COLOR *out, IM_COLOR *in, int channels, int count) {
+IM_SUFFIX(combine_subtract)(IM_COLOR *out, IM_COLOR *in, int channels, i_img_dim count) {
   int ch;
   IM_COLOR const *inp = in;
   IM_COLOR *outp = out;
-  int work_count = count;
+  i_img_dim work_count = count;
   int color_channels = i_color_channels(channels);
 
   if (i_has_alpha(channels)) {
@@ -901,11 +977,11 @@ Dca' = abs(Dca.Sa - Sca.Da) + Sca.(1 - Da) + Dca.(1 - Sa)
 Da'  = Sa + Da - Sa.Da 
 */
 static void
-IM_SUFFIX(combine_diff)(IM_COLOR *out, IM_COLOR *in, int channels, int count) {
+IM_SUFFIX(combine_diff)(IM_COLOR *out, IM_COLOR *in, int channels, i_img_dim count) {
   int ch;
   IM_COLOR const *inp = in;
   IM_COLOR *outp = out;
-  int work_count = count;
+  i_img_dim work_count = count;
   int color_channels = i_color_channels(channels);
 
   if (i_has_alpha(channels)) {
@@ -969,11 +1045,11 @@ IM_SUFFIX(combine_diff)(IM_COLOR *out, IM_COLOR *in, int channels, int count) {
  */
 static void 
 IM_SUFFIX(combine_darken)(IM_COLOR *out, IM_COLOR *in, int channels, 
-			  int count) {
+			  i_img_dim count) {
   int ch;
   IM_COLOR const *inp = in;
   IM_COLOR *outp = out;
-  int work_count = count;
+  i_img_dim work_count = count;
   int color_channels = i_color_channels(channels);
 
   if (i_has_alpha(channels)) {
@@ -1024,11 +1100,11 @@ IM_SUFFIX(combine_darken)(IM_COLOR *out, IM_COLOR *in, int channels,
 }
 
 static void 
-IM_SUFFIX(combine_lighten)(IM_COLOR *out, IM_COLOR *in, int channels, int count) {
+IM_SUFFIX(combine_lighten)(IM_COLOR *out, IM_COLOR *in, int channels, i_img_dim count) {
   int ch;
   IM_COLOR const *inp = in;
   IM_COLOR *outp = out;
-  int work_count = count;
+  i_img_dim work_count = count;
   int color_channels = i_color_channels(channels);
 
   if (i_has_alpha(channels)) {
@@ -1087,11 +1163,11 @@ IM_SUFFIX(combine_lighten)(IM_COLOR *out, IM_COLOR *in, int channels, int count)
 #endif
 
 static void 
-IM_SUFFIX(combine_hue)(IM_COLOR *out, IM_COLOR *in, int channels, int count) {
+IM_SUFFIX(combine_hue)(IM_COLOR *out, IM_COLOR *in, int channels, i_img_dim count) {
   if (channels > 2) {
     IM_COLOR *inp = in;
     IM_COLOR const *outp = out;
-    int work_count = count;
+    i_img_dim work_count = count;
 
     if (i_has_alpha(channels)) {
       while (work_count--) {
@@ -1148,11 +1224,11 @@ IM_SUFFIX(combine_hue)(IM_COLOR *out, IM_COLOR *in, int channels, int count) {
 }
 
 static void
-IM_SUFFIX(combine_sat)(IM_COLOR *out, IM_COLOR *in, int channels, int count) {
+IM_SUFFIX(combine_sat)(IM_COLOR *out, IM_COLOR *in, int channels, i_img_dim count) {
   if (channels > 2) {
     IM_COLOR *inp = in;
     IM_COLOR const *outp = out;
-    int work_count = count;
+    i_img_dim work_count = count;
 
     while (work_count--) {
       IM_COLOR c = *inp;
@@ -1171,11 +1247,11 @@ IM_SUFFIX(combine_sat)(IM_COLOR *out, IM_COLOR *in, int channels, int count) {
 }
 
 static void 
-IM_SUFFIX(combine_value)(IM_COLOR *out, IM_COLOR *in, int channels, int count) {
+IM_SUFFIX(combine_value)(IM_COLOR *out, IM_COLOR *in, int channels, i_img_dim count) {
   if (channels > 2) {
     IM_COLOR *inp = in;
     IM_COLOR const *outp = out;
-    int work_count = count;
+    i_img_dim work_count = count;
 
     while (work_count--) {
       IM_COLOR c = *inp;
@@ -1196,11 +1272,11 @@ IM_SUFFIX(combine_value)(IM_COLOR *out, IM_COLOR *in, int channels, int count) {
 }
 
 static void 
-IM_SUFFIX(combine_color)(IM_COLOR *out, IM_COLOR *in, int channels, int count) {
+IM_SUFFIX(combine_color)(IM_COLOR *out, IM_COLOR *in, int channels, i_img_dim count) {
   if (channels > 2) {
     IM_COLOR *inp = in;
     IM_COLOR const *outp = out;
-    int work_count = count;
+    i_img_dim work_count = count;
 
     while (work_count--) {
       IM_COLOR c = *inp;

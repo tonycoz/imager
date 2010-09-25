@@ -108,4 +108,10 @@ extern void im_assert_fail(char const *, int, char const *);
 #define im_assert(x) (void)(0)
 #endif 
 
+i_img_dim i_minx(i_img_dim a, i_img_dim b);
+i_img_dim i_maxx(i_img_dim x, i_img_dim y);
+
+#define i_min(a, b) i_minx((a), (b))
+#define i_max(a, b) i_maxx((a), (b))
+
 #endif

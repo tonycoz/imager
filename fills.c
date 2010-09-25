@@ -163,10 +163,10 @@ typedef struct
   i_fcolor fc;
 } i_fill_solid_t;
 
-static void fill_solid(i_fill_t *, int x, int y, int width, int channels, 
-                       i_color *);
-static void fill_solidf(i_fill_t *, int x, int y, int width, int channels, 
-                        i_fcolor *);
+static void fill_solid(i_fill_t *, i_img_dim x, i_img_dim y, i_img_dim width,
+		       int channels, i_color *);
+static void fill_solidf(i_fill_t *, i_img_dim x, i_img_dim y, i_img_dim width,
+			int channels, i_fcolor *);
 
 static i_fill_solid_t base_solid_fill =
 {
@@ -401,10 +401,10 @@ typedef struct
   int dx, dy;
 } i_fill_hatch_t;
 
-static void fill_hatch(i_fill_t *fill, int x, int y, int width, int channels, 
-                       i_color *data);
-static void fill_hatchf(i_fill_t *fill, int x, int y, int width, int channels, 
-                        i_fcolor *data);
+static void fill_hatch(i_fill_t *fill, i_img_dim x, i_img_dim y,
+		       i_img_dim width, int channels, i_color *data);
+static void fill_hatchf(i_fill_t *fill, i_img_dim x, i_img_dim y,
+			i_img_dim width, int channels, i_fcolor *data);
 static
 i_fill_t *
 i_new_hatch_low(const i_color *fg, const i_color *bg, const i_fcolor *ffg, const i_fcolor *fbg, 
@@ -467,10 +467,10 @@ i_new_fill_hatchf(const i_fcolor *fg, const i_fcolor *bg, int combine, int hatch
                          dx, dy);
 }
 
-static void fill_image(i_fill_t *fill, int x, int y, int width, int channels,
-                       i_color *data);
-static void fill_imagef(i_fill_t *fill, int x, int y, int width, int channels,
-                       i_fcolor *data);
+static void fill_image(i_fill_t *fill, i_img_dim x, i_img_dim y,
+		       i_img_dim width, int channels, i_color *data);
+static void fill_imagef(i_fill_t *fill, i_img_dim x, i_img_dim y,
+			i_img_dim width, int channels, i_fcolor *data);
 struct i_fill_image_t {
   i_fill_t base;
   i_img *src;
@@ -533,10 +533,10 @@ i_new_fill_image(i_img *im, const double *matrix, int xoff, int yoff, int combin
   return &fill->base;
 }
 
-static void fill_opacity(i_fill_t *fill, int x, int y, int width, int channels,
-                       i_color *data);
-static void fill_opacityf(i_fill_t *fill, int x, int y, int width, int channels,
-                       i_fcolor *data);
+static void fill_opacity(i_fill_t *fill, i_img_dim x, i_img_dim y,
+			 i_img_dim width, int channels, i_color *data);
+static void fill_opacityf(i_fill_t *fill, i_img_dim x, i_img_dim y,
+			  i_img_dim width, int channels, i_fcolor *data);
 
 struct i_fill_opacity_t {
   i_fill_t base;
@@ -587,8 +587,8 @@ The 8-bit sample fill function for non-combining solid fills.
 =cut
 */
 static void
-fill_solid(i_fill_t *fill, int x, int y, int width, int channels, 
-           i_color *data) {
+fill_solid(i_fill_t *fill, i_img_dim x, i_img_dim y, i_img_dim width,
+	   int channels, i_color *data) {
   i_color c = T_SOLID_FILL(fill)->c;
   i_adapt_colors(channels > 2 ? 4 : 2, 4, &c, 1);
   while (width-- > 0) {
@@ -604,8 +604,8 @@ The floating sample fill function for non-combining solid fills.
 =cut
 */
 static void
-fill_solidf(i_fill_t *fill, int x, int y, int width, int channels, 
-           i_fcolor *data) {
+fill_solidf(i_fill_t *fill, i_img_dim x, i_img_dim y, i_img_dim width,
+	    int channels, i_fcolor *data) {
   i_fcolor c = T_SOLID_FILL(fill)->fc;
   i_adapt_fcolors(channels > 2 ? 4 : 2, 4, &c, 1);
   while (width-- > 0) {
@@ -686,8 +686,9 @@ The 8-bit sample fill function for hatched fills.
 
 =cut
 */
-static void fill_hatch(i_fill_t *fill, int x, int y, int width, int channels, 
-                       i_color *data) {
+static void 
+fill_hatch(i_fill_t *fill, i_img_dim x, i_img_dim y, i_img_dim width,
+	   int channels, i_color *data) {
   i_fill_hatch_t *f = (i_fill_hatch_t *)fill;
   int byte = f->hatch[(y + f->dy) & 7];
   int xpos = (x + f->dx) & 7;
@@ -719,8 +720,9 @@ The floating sample fill function for hatched fills.
 
 =back
 */
-static void fill_hatchf(i_fill_t *fill, int x, int y, int width, int channels, 
-                        i_fcolor *data) {
+static void
+fill_hatchf(i_fill_t *fill, i_img_dim x, i_img_dim y, i_img_dim width,
+	    int channels, i_fcolor *data) {
   i_fill_hatch_t *f = (i_fill_hatch_t *)fill;
   int byte = f->hatch[(y + f->dy) & 7];
   int xpos = (x + f->dx) & 7;
@@ -793,10 +795,11 @@ static i_fcolor interp_i_fcolor(i_fcolor before, i_fcolor after, double pos,
 
 =cut
 */
-static void fill_image(i_fill_t *fill, int x, int y, int width, int channels,
-                       i_color *data) {
+static void
+fill_image(i_fill_t *fill, i_img_dim x, i_img_dim y, i_img_dim width,
+	   int channels, i_color *data) {
   struct i_fill_image_t *f = (struct i_fill_image_t *)fill;
-  int i = 0;
+  i_img_dim i = 0;
   i_color *out = data;
   int want_channels = channels > 2 ? 4 : 2;
   
@@ -809,7 +812,7 @@ static void fill_image(i_fill_t *fill, int x, int y, int width, int channels,
       double iy = floor(ry / f->src->ysize);
       i_color c[2][2];
       i_color c2[2];
-      int dy;
+      i_img_dim dy;
 
       if (f->xoff) {
         rx += iy * f->xoff;
@@ -841,10 +844,10 @@ static void fill_image(i_fill_t *fill, int x, int y, int width, int channels,
     /* the easy way */
     /* this should be possible to optimize to use i_glin() */
     while (i < width) {
-      int rx = x+i;
-      int ry = y;
-      int ix = rx / f->src->xsize;
-      int iy = ry / f->src->ysize;
+      i_img_dim rx = x+i;
+      i_img_dim ry = y;
+      i_img_dim ix = rx / f->src->xsize;
+      i_img_dim iy = ry / f->src->ysize;
 
       if (f->xoff) {
         rx += iy * f->xoff;
@@ -870,10 +873,11 @@ static void fill_image(i_fill_t *fill, int x, int y, int width, int channels,
 
 =cut
 */
-static void fill_imagef(i_fill_t *fill, int x, int y, int width, int channels,
-                       i_fcolor *data) {
+static void
+fill_imagef(i_fill_t *fill, i_img_dim x, i_img_dim y, i_img_dim width,
+	    int channels, i_fcolor *data) {
   struct i_fill_image_t *f = (struct i_fill_image_t *)fill;
-  int i = 0;
+  i_img_dim i = 0;
   int want_channels = channels > 2 ? 4 : 2;
   
   if (f->has_matrix) {
@@ -886,7 +890,7 @@ static void fill_imagef(i_fill_t *fill, int x, int y, int width, int channels,
       double iy = floor(ry / f->src->ysize);
       i_fcolor c[2][2];
       i_fcolor c2[2];
-      int dy;
+      i_img_dim dy;
 
       if (f->xoff) {
         rx += iy * f->xoff;
@@ -919,10 +923,10 @@ static void fill_imagef(i_fill_t *fill, int x, int y, int width, int channels,
     /* the easy way */
     /* this should be possible to optimize to use i_glin() */
     while (i < width) {
-      int rx = x+i;
-      int ry = y;
-      int ix = rx / f->src->xsize;
-      int iy = ry / f->src->ysize;
+      i_img_dim rx = x+i;
+      i_img_dim ry = y;
+      i_img_dim ix = rx / f->src->xsize;
+      i_img_dim iy = ry / f->src->ysize;
 
       if (f->xoff) {
         rx += iy * f->xoff;
@@ -944,8 +948,8 @@ static void fill_imagef(i_fill_t *fill, int x, int y, int width, int channels,
 }
 
 static void 
-fill_opacity(i_fill_t *fill, int x, int y, int width, int channels,
-	     i_color *data) {
+fill_opacity(i_fill_t *fill, i_img_dim x, i_img_dim y, i_img_dim width,
+	     int channels, i_color *data) {
   struct i_fill_opacity_t *f = (struct i_fill_opacity_t *)fill;
   int alpha_chan = channels > 2 ? 3 : 1;
   i_color *datap = data;
@@ -963,8 +967,8 @@ fill_opacity(i_fill_t *fill, int x, int y, int width, int channels,
   }
 }
 static void 
-fill_opacityf(i_fill_t *fill, int x, int y, int width, int channels,
-	    i_fcolor *data) {
+fill_opacityf(i_fill_t *fill, i_img_dim x, i_img_dim y, i_img_dim width,
+	      int channels, i_fcolor *data) {
   struct i_fill_opacity_t *f = (struct i_fill_opacity_t *)fill;
   int alpha_chan = channels > 2 ? 3 : 1;
   i_fcolor *datap = data;

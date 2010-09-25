@@ -1,4 +1,5 @@
 #include "imager.h"
+#include "imageri.h"
 #include <stdlib.h>
 #ifndef _MSC_VER
 #include <unistd.h>
@@ -320,13 +321,13 @@ i_mempool_destroy(i_mempool *mp) {
 #undef min
 #undef max
 
-int
-i_min(int a,int b) {
+i_img_dim
+i_minx(i_img_dim a, i_img_dim b) {
   if (a<b) return a; else return b;
 }
 
-int
-i_max(int a,int b) {
+i_img_dim
+i_maxx(i_img_dim a, i_img_dim b) {
   if (a>b) return a; else return b;
 }
 
@@ -345,16 +346,16 @@ struct utf8_size utf8_sizes[] =
 };
 
 /*
-=item utf8_advance(char **p, int *len)
+=item i_utf8_advance(char **p, size_t *len)
 
-Retreive a UTF8 character from the stream.
+Retrieve a C<UTF-8> character from the stream.
 
 Modifies *p and *len to indicate the consumed characters.
 
-This doesn't support the extended UTF8 encoding used by later versions
-of Perl.
+This doesn't support the extended C<UTF-8> encoding used by later
+versions of Perl.
 
-This doesn't check that the UTF8 charecter is using the shortest
+This doesn't check that the C<UTF-8> character is using the shortest
 possible representation.
 
 =cut

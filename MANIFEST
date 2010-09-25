@@ -9,6 +9,19 @@ DynTest/DynTest.xs
 DynTest/Makefile.PL
 DynTest/linstretch.c
 DynTest/t/t00dyntest.t
+FT2/Makefile.PL
+FT2/FT2.pm
+FT2/FT2.xs
+FT2/freetyp2.c	Implements freetype2 font support
+FT2/fontfiles/dodge.ttf
+FT2/fontfiles/ExistenceTest.afm
+FT2/fontfiles/ExistenceTest.pfb
+FT2/fontfiles/ExistenceTest.ttf
+FT2/fontfiles/ImUgly.ttf
+FT2/fontfiles/MMOne.pfb		multiple master test font
+FT2/fontfiles/NameTest.ttf
+FT2/imft2.h
+FT2/typemap
 Flines/Flines.pm
 Flines/Flines.xs
 Flines/Makefile.PL
@@ -192,14 +205,12 @@ fontfiles/ExistenceTest.afm     please edit ExistenceTest.sfd in CVS
 fontfiles/ExistenceTest.pfb     to change these files, edited and
 fontfiles/ExistenceTest.ttf     generated using pfaedit
 fontfiles/ImUgly.ttf
-fontfiles/MMOne.pfb		multiple master test font
-fontfiles/NameTest.ttf          test glyph_names() - see t38ft2font.t
+fontfiles/NameTest.ttf          test glyph_names() - see FT2/t/t10ft2.t
 fontfiles/SpaceTest.afm
 fontfiles/SpaceTest.pfb		test bounding box with spaces in t30t1font.t
 fontfiles/dcr10.afm
 fontfiles/dcr10.pfb
 fontfiles/dodge.ttf
-freetyp2.c	Implements freetype2 font support
 gaussian.im
 hlines.c	Manage sets of horizontal line segments
 image.c
@@ -329,7 +340,6 @@ t/t21draw.t             Basic drawing tests
 t/t30t1font.t
 t/t35ttfont.t
 t/t36oofont.t
-t/t38ft2font.t		Tests freetype2 support
 t/t40scale.t
 t/t50basicoo.t
 t/t55trans.t

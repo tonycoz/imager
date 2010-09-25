@@ -17,18 +17,11 @@ void  i_mempool_extend(i_mempool *mp);
 void *i_mempool_alloc(i_mempool *mp, size_t size);
 void  i_mempool_destroy(i_mempool *mp);
 
-
-
 #ifdef _MSC_VER
 #undef min
 #undef max
 #endif
 
 extern unsigned long i_utf8_advance(char const **p, size_t *len);
-
-/* XXX Shouldn't these go away? */
-
-int i_min(int a,int b);
-int i_max(int x,int y);
 
 #endif
