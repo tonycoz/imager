@@ -138,6 +138,23 @@ This can also be supplied on the command-line.
 
 =back
 
+If you need to perform know more than "does it link?" you can provide
+code to be compiled and run:
+
+=over
+
+=item function
+
+the body of the <main()> function.  If not provided C<return 0;> is
+used.
+
+=item prologue
+
+code to insert between the C<#include> of the headers and the
+definition of main.
+
+=back
+
 =head2 check_lib_or_exit
 
 This behaves exactly the same as C<assert_lib()> except that instead of
@@ -281,6 +298,7 @@ sub assert_lib {
         'assertlibXXXXXXXX', SUFFIX => '.c'
     );
     print $ch qq{#include <$_>\n} foreach (@headers);
+    print $ch "\n$args{prologue}\n" if $args{prologue};
     print $ch "int main(void) { ".($args{function} || 'return 0;')." }\n";
     close($ch);
     for my $link_cfg ( @link_cfgs ) {

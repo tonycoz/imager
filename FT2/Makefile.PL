@@ -81,6 +81,7 @@ my %probe =
    libbase => "freetype",
    testcode => _ft2_test_code(),
    testcodeheaders => [ "stdio.h", "string.h", "ft2build.h" ],
+   testcodeprologue => _ft2_test_code_prologue(),
    incpath => join($Config{path_sep}, @incpaths),
    libpath => join($Config{path_sep}, @libpaths),
    alternatives =>
@@ -120,7 +121,27 @@ else {
 
 sub _ft2_test_code {
   return <<'CODE';
+FT_Library library = 0;
+FT_Face face = 0;
+FT_Error error;
+error = FT_Init_FreeType(&library);
+if (error) {
+  fprintf(stderr, "FreeType 2: cannot initialize library: %d\n", error);
+  return 1;
+}
+error = FT_New_Face(library, "fontfiles/dodge.ttf", 0, &face);
+if (error) {
+  fprintf(stderr, "FreeType 2: cannot load font: %d\n", error);
+  return 1;
+}
 return 0;
+CODE
+}
+
+sub _ft2_test_code_prologue {
+  return <<'CODE';
+#include FT_FREETYPE_H
+
 CODE
 }
 
