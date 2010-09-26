@@ -211,6 +211,7 @@ if ($MM_ver >= 6.46) {
        "TIFF",
        "JPEG",
        "W32",
+       "FT2",
       ],
      },
      resources =>
