@@ -3,7 +3,7 @@ Imager release history.  Older releases can be found in Changes.old
 Imager 0.77_02 - unreleased
 ==============
 
- - moved Win32 font support into a sub-module.
+ - moved Win32, FreeType 2 font support into sub-modules.
    https://rt.cpan.org/Ticket/Display.html?id=49616 (partial)
    Uses Imager::Probe now.
    https://rt.cpan.org/Public/Bug/Display.html?id=61328
@@ -18,6 +18,10 @@ Bug fixes:
 
  - flood_fill() wouldn't fill the right side of a single scan-line
    fill area.
+   Thanks to Nicolas Roggli for reporting this.
+
+ - flood_fill wouldn't fill to the left edge of the image if the
+   starting line didn't reach the left edge.
    Thanks to Nicolas Roggli for reporting this.
 
 Imager 0.77_01 - 13 Sep 2010

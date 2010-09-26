@@ -1678,7 +1678,7 @@ i_flood_fill_low(i_img *im,int seedx,int seedy,
     if ( lx >= 0 && (wasIn = INSIDE(lx, y, seed)) ) {
       SET(lx, y);
       lx--;
-      while(INSIDE(lx, y, seed) && lx > 0) {
+      while(lx >= 0 && INSIDE(lx, y, seed)) {
 	SET(lx,y);
 	lx--;
       }
