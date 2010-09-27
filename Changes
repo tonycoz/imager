@@ -1,5 +1,13 @@
 Imager release history.  Older releases can be found in Changes.old
 
+Imager 0.78 - unreleased
+===========
+
+Bug fixes:
+
+ - don't access deprecated members of the png_structp.
+   https://rt.cpan.org/Ticket/Display.html?id=60242
+
 Imager 0.77_02 - 27 Sep 2010
 ==============
 

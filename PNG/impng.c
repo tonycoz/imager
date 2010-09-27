@@ -33,7 +33,7 @@ static int CC2C[PNG_COLOR_MASK_PALETTE|PNG_COLOR_MASK_COLOR|PNG_COLOR_MASK_ALPHA
 
 static void
 wiol_read_data(png_structp png_ptr, png_bytep data, png_size_t length) {
-  io_glue *ig = (io_glue *)png_ptr->io_ptr;
+  io_glue *ig = png_get_io_ptr(png_ptr);
   int rc = ig->readcb(ig, data, length);
   if (rc != length) png_error(png_ptr, "Read overflow error on an iolayer source.");
 }
@@ -41,7 +41,7 @@ wiol_read_data(png_structp png_ptr, png_bytep data, png_size_t length) {
 static void
 wiol_write_data(png_structp png_ptr, png_bytep data, png_size_t length) {
   int rc;
-  io_glue *ig = (io_glue *)png_ptr->io_ptr;
+  io_glue *ig = png_get_io_ptr(png_ptr);
   rc = ig->writecb(ig, data, length);
   if (rc != length) png_error(png_ptr, "Write error on an iolayer source.");
 }
@@ -110,13 +110,12 @@ i_writepng_wiol(i_img *im, io_glue *ig) {
   /* Set error handling.  REQUIRED if you aren't supplying your own
    * error hadnling functions in the png_create_write_struct() call.
    */
-  if (setjmp(png_ptr->jmpbuf)) {
+  if (setjmp(png_jmpbuf(png_ptr))) {
     png_destroy_write_struct(&png_ptr, &info_ptr);
     return(0);
   }
   
   png_set_write_fn(png_ptr, (png_voidp) (ig), wiol_write_data, wiol_flush_data);
-  png_ptr->io_ptr = (png_voidp) ig;
 
   /* Set the image information here.  Width and height are up to 2^31,
    * bit_depth is one of 1, 2, 4, 8, or 16, but valid values also depend on
@@ -204,14 +203,13 @@ i_readpng_wiol(io_glue *ig) {
     return NULL;
   }
   
-  if (setjmp(png_ptr->jmpbuf)) {
+  if (setjmp(png_jmpbuf(png_ptr))) {
     if (im) i_img_destroy(im);
     mm_log((1,"i_readpng_wiol: error.\n"));
     png_destroy_read_struct(&png_ptr, &info_ptr, (png_infopp)NULL);
     return NULL;
   }
 
-  png_ptr->io_ptr = (png_voidp) ig;
   png_set_sig_bytes(png_ptr, sig_read);
   png_read_info(png_ptr, info_ptr);
   png_get_IHDR(png_ptr, info_ptr, &width, &height, &bit_depth, &color_type, &interlace_type, NULL, NULL);
