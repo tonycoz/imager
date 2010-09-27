@@ -1,6 +1,6 @@
 #!perl -w
 use strict;
-use Test::More tests => 13;
+use Test::More tests => 15;
 use Imager;
 use Imager::Test qw(is_image);
 
