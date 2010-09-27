@@ -395,6 +395,7 @@ testimg/bad_asc.ppm	ASCII PPM with invalid image data
 testimg/base.jpg	Base JPEG test image
 testimg/comp4.bmp       Compressed 4-bit/pixel BMP
 testimg/comp8.bmp       Compressed 8-bit/pixel BMP
+testimg/filltest.ppm	Test for flood fills
 testimg/gimpgrad        A GIMP gradient file
 testimg/imager.pbm	Test bi-level
 testimg/junk.ppm
