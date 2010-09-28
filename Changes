@@ -12,6 +12,9 @@ Bug fixes:
    by name, etc.
    https://rt.cpan.org/Ticket/Display.html?id=61047
 
+ - Imager::Probe now accepts array references for incpath and libpath.
+   https://rt.cpan.org/Ticket/Display.html?id=60244
+
 Imager 0.77_02 - 27 Sep 2010
 ==============
 

@@ -308,6 +308,9 @@ sub _paths {
 
   my @out;
 
+  # expand any array refs
+  @in = map { ref() ? @$_ : $_ } @in;
+
   for my $path (@in) {
     $path or next;
     $path = _tilde_expand($path);
@@ -445,12 +448,12 @@ main function.
 =item *
 
 C<incpath> - C<$Config{path_sep}> separated list of header file
-directories to check.
+directories to check, or a reference to an array of such.
 
 =item *
 
 C<libpath> - C<$Config{path_sep}> separated list of library file
-directories to check.
+directories to check, or a reference to an array of such.
 
 =back
 

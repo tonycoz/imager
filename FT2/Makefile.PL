@@ -82,8 +82,8 @@ my %probe =
    testcode => _ft2_test_code(),
    testcodeheaders => [ "stdio.h", "string.h", "ft2build.h" ],
    testcodeprologue => _ft2_test_code_prologue(),
-   incpath => join($Config{path_sep}, @incpaths),
-   libpath => join($Config{path_sep}, @libpaths),
+   incpath => \@incpaths,
+   libpath => \@libpaths,
    alternatives =>
    [
     {

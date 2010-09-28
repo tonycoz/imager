@@ -79,8 +79,8 @@ my %probe =
    libbase => "gdi32",
    testcode => _win32_test_code(),
    testcodeheaders => [ "stdio.h", "string.h", "windows.h" ],
-   incpath => join($Config{path_sep}, @incpaths),
-   libpath => join($Config{path_sep}, @libpaths),
+   incpath => \@incpaths,
+   libpath => \@libpaths,
   );
 
 my $probe_res = Imager::Probe->probe(\%probe);

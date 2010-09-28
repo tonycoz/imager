@@ -79,8 +79,8 @@ my %probe =
    libbase => "png",
    testcode => _png_test_code(),
    testcodeheaders => [ "png.h", "stdio.h" ],
-   incpath => join($Config{path_sep}, @incpaths),
-   libpath => join($Config{path_sep}, @libpaths),
+   incpath => \@incpaths,
+   libpath => \@libpaths,
    alternatives =>
    [
     {

@@ -77,8 +77,8 @@ my %probe =
    libbase => "gif",
    testcode => _gif_test_code(),
    testcodeheaders => [ "gif_lib.h", "stdio.h" ],
-   incpath => join($Config{path_sep}, @incpaths),
-   libpath => join($Config{path_sep}, @libpaths),
+   incpath => \@incpaths,
+   libpath => \@libpaths,
   );
 
 my $probe_res = Imager::Probe->probe(\%probe);
