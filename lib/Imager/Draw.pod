@@ -95,6 +95,15 @@ values, for example:
   $image->line(..., color=>'#FF0000');
   $image->flood_fill(..., color=>[ 255, 0, 255 ]);
 
+While supplying colors as names, array references or CSS color
+specifiers is convenient, for maximum performance you should supply
+the color as an L<Imager::Color> object:
+
+  my @colors = map Imager::Color->new($_), qw/red green blue/
+  for my $i (1..1000) {
+    $image->box(..., color => $colors[rand @colors]);
+  }
+
 =head2 Fill Parameters
 
 X<fill parameters>All filled primitives, i.e. C<arc()>, C<box()>,

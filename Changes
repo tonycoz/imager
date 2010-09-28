@@ -8,6 +8,10 @@ Bug fixes:
  - don't access deprecated members of the png_structp.
    https://rt.cpan.org/Ticket/Display.html?id=60242
 
+ - document that using color objects is faster than supplying colors
+   by name, etc.
+   https://rt.cpan.org/Ticket/Display.html?id=61047
+
 Imager 0.77_02 - 27 Sep 2010
 ==============
 
