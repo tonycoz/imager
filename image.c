@@ -2267,6 +2267,14 @@ i_test_format_probe(io_glue *data, int length) {
 
     /* bzip2 compressed */
     FORMAT_ENTRY("BZh", "bzip2"),
+
+    /* WEBP
+       http://code.google.com/speed/webp/docs/riff_container.html */
+    FORMAT_ENTRY2("RIFF    WEBP", "webp", "xxxx    xxxx"),
+
+    /* JPEG 2000 
+       This might match a little loosely */
+    FORMAT_ENTRY("\x00\x00\x00\x0CjP  \x0D\x0A\x87\x0A", "jp2"),
   };
   static const struct magic_entry more_formats[] = {
     /* these were originally both listed as ico, but cur files can

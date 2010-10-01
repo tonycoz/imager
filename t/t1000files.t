@@ -4,7 +4,7 @@
 # the file format
 
 use strict;
-use Test::More tests => 33;
+use Test::More tests => 35;
 use Imager;
 
 Imager::init_log("testout/t1000files.log", 1);
@@ -166,6 +166,23 @@ probe_ok(<<BZIP2, "bzip2", "bzip2 compressed");
 FF DF EE C8 0F FF F3 FF FF FF FC FF FB B1 FF FB
 F4 07 DF D0 03 B8 03 60 31 82 05 2A 6A 06 83 20
 BZIP2
+
+probe_ok(<<WEBP, "webp", "Google WEBP");
+52 49 46 46 2C 99 00 00 57 45 42 50 56 50 38 20
+20 99 00 00 70 7A 02 9D 01 2A E0 01 80 02 00 87
+08 85 85 88 85 84 88 88 83 AF E2 F7 64 1F 98 55
+1B 6A 70 F5 8A 45 09 95 0C 09 7E 25 D9 2E 46 44
+07 84 FB 01 FD 2C 8A 2F 97 CC ED DB 50 0F 11 3B
+WEBP
+
+probe_ok(<<JPEG2K, "jp2", "JPEG 2000");
+00 00 00 0C 6A 50 20 20 0D 0A 87 0A 00 00 00 14
+66 74 79 70 6A 70 32 20 00 00 00 00 6A 70 32 20
+00 00 00 2D 6A 70 32 68 00 00 00 16 69 68 64 72
+00 00 02 80 00 00 01 E0 00 03 07 07 00 00 00 00
+00 0F 63 6F 6C 72 01 00 00 00 00 00 10 00 00 00
+00 6A 70 32 63 FF 4F FF 51 00 2F 00 00 00 00 01
+JPEG2K
 
 sub probe_ok {
   my ($packed, $exp_type, $name) = @_;
