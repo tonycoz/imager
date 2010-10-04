@@ -1,0 +1,15 @@
+Imager-File-PNG 0.77
+====================
+
+Bug fixes:
+
+ - add inc at the front of @INC so we don't pick up old installed 
+   Devel::CheckLib
+
+Imager-File-PNG 0.76
+====================
+
+Initial release based on Imager 0.77
+
+The idea here is that you can depend on Imager::File::PNG and be sure
+of PNG support.
