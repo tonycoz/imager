@@ -57,8 +57,8 @@ else {
 	homepage => "http://imager.perl.org/",
 	repository =>
 	{
-	 url => "http://imager.perl.org/svn/trunk/Imager-Font-W32",
-	 web => "http://imager.perl.org/svnweb/public/browse/trunk/Imager-Font-W32",
+	 url => "http://imager.perl.org/svn/trunk/Imager/W32",
+	 web => "http://imager.perl.org/svnweb/public/browse/trunk/Imager/W32",
 	 type => "svn",
 	},
        },

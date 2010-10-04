@@ -57,8 +57,8 @@ else {
 	homepage => "http://imager.perl.org/",
 	repository =>
 	{
-	 url => "http://imager.perl.org/svn/trunk/Imager-Font-FT2",
-	 web => "http://imager.perl.org/svnweb/public/browse/trunk/Imager-Font-FT2",
+	 url => "http://imager.perl.org/svn/trunk/Imager/FT2",
+	 web => "http://imager.perl.org/svnweb/public/browse/trunk/Imager/FT2",
 	 type => "svn",
 	},
        },

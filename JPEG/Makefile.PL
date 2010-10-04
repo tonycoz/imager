@@ -55,8 +55,8 @@ else {
 	homepage => "http://imager.perl.org/",
 	repository =>
 	{
-	 url => "http://imager.perl.org/svn/trunk/Imager-File-JPEG",
-	 web => "http://imager.perl.org/svnweb/public/browse/trunk/Imager-File-JPEG",
+	 url => "http://imager.perl.org/svn/trunk/Imager/JPEG",
+	 web => "http://imager.perl.org/svnweb/public/browse/trunk/Imager/JPEG",
 	 type => "svn",
 	},
        },
