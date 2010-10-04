@@ -1,3 +1,13 @@
+Imager-File-PNG 0.78
+====================
+
+Bug fixes:
+
+ - don't access deprecated members of the png_structp.
+   https://rt.cpan.org/Ticket/Display.html?id=60242
+
+ - cleanup testout on make clean
+
 Imager-File-PNG 0.77
 ====================
 
