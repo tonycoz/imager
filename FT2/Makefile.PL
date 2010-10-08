@@ -14,8 +14,6 @@ GetOptions("incpath=s", \@incpaths,
 
 our $BUILDING_IMAGER;
 
-$DB::single = 1;
-
 my $MM_ver = eval $ExtUtils::MakeMaker::VERSION;
 
 my %opts = 
@@ -155,7 +153,7 @@ sub is_exe {
 
   for my $dir (File::Spec->path) {
     for my $suffix (@exe_suffix) {
-      -x catfile($dir, "$name$suffix")
+      -x File::Spec->catfile($dir, "$name$suffix")
 	and return 1;
     }
   }
