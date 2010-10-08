@@ -139,6 +139,10 @@ Implementation based on the description at
 http://www.recordedlight.com/stereo/tutorials/ps/anaglyph/pstut04.htm
 though obviously the interactive component is missing.
 
+=head1 CAVEAT
+
+Using JPEG as the output format is not recommended.
+
 =head1 AUTHOR
 
 Tony Cook <tony@imager.perl.org>
