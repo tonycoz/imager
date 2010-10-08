@@ -14,8 +14,6 @@ GetOptions("incpath=s", \@incpaths,
 
 our $BUILDING_IMAGER;
 
-$DB::single = 1;
-
 my $MM_ver = eval $ExtUtils::MakeMaker::VERSION;
 
 my %opts = 
