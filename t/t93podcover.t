@@ -25,7 +25,7 @@ my @private =
   );
 my @trustme = ( '^open$',  );
 
-plan tests => 18;
+plan tests => 19;
 
 {
   pod_coverage_ok('Imager', { also_private => \@private,
@@ -50,6 +50,7 @@ plan tests => 18;
   pod_coverage_ok('Imager::Matrix2d');
   pod_coverage_ok('Imager::Regops');
   pod_coverage_ok('Imager::Transform');
+  pod_coverage_ok('Imager::Test');
 }
 
 {

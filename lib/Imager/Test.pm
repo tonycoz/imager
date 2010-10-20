@@ -18,6 +18,7 @@ $VERSION = "1.000";
      is_color3
      is_color4
      is_color_close3
+     is_fcolor3
      is_fcolor4
      color_cmp
      is_image
@@ -177,6 +178,45 @@ Color mismatch:
 Green: $cg vs $green
  Blue: $cb vs $blue
 Alpha: $ca vs $alpha
+END_DIAG
+    return;
+  }
+
+  return 1;
+}
+
+sub is_fcolor3($$$$$;$) {
+  my ($color, $red, $green, $blue, $comment_or_diff, $comment_or_undef) = @_;
+  my ($comment, $mindiff);
+  if (defined $comment_or_undef) {
+    ( $mindiff, $comment ) = ( $comment_or_diff, $comment_or_undef )
+  }
+  else {
+    ( $mindiff, $comment ) = ( 0.001, $comment_or_diff )
+  }
+
+  my $builder = Test::Builder->new;
+
+  unless (defined $color) {
+    $builder->ok(0, $comment);
+    $builder->diag("color is undef");
+    return;
+  }
+  unless ($color->can('rgba')) {
+    $builder->ok(0, $comment);
+    $builder->diag("color is not a color object");
+    return;
+  }
+
+  my ($cr, $cg, $cb) = $color->rgba;
+  unless ($builder->ok(abs($cr - $red) <= $mindiff
+		       && abs($cg - $green) <= $mindiff
+		       && abs($cb - $blue) <= $mindiff, $comment)) {
+    $builder->diag(<<END_DIAG);
+Color mismatch:
+  Red: $cr vs $red
+Green: $cg vs $green
+ Blue: $cb vs $blue
 END_DIAG
     return;
   }
@@ -607,13 +647,37 @@ No functions are exported by default.
 
 =head1 FUNCTIONS
 
+=head2 Test functions
+
 =for stopwords OO
 
 =over
 
-=item is_color3($color, $red, $blue, $green, $comment)
+=item is_color1($color, $grey, $comment)
 
-Tests is $color matches the given ($red, $blue, $green)
+Tests if the first channel of $color matches $grey.
+
+=item is_color3($color, $red, $green, $blue, $comment)
+
+Tests if $color matches the given ($red, $green, $blue)
+
+=item is_color4($color, $red, $green, $blue, $alpha, $comment)
+
+Tests if $color matches the given ($red, $green, $blue, $alpha)
+
+=item is_fcolor3($fcolor, $red, $green, $blue, $comment)
+
+=item is_fcolor3($fcolor, $red, $green, $blue, $epsilon, $comment)
+
+Tests if $fcolor's channels are within $epsilon of ($red, $green,
+$blue).  For the first form $epsilon is taken as 0.001.
+
+=item is_fcolor4($fcolor, $red, $green, $blue, $alpha, $comment)
+
+=item is_fcolor4($fcolor, $red, $green, $blue, $alpha, $epsilon, $comment)
+
+Tests if $fcolor's channels are within $epsilon of ($red, $green,
+$blue, $alpha).  For the first form $epsilon is taken as 0.001.
 
 =item is_image($im1, $im2, $comment)
 
@@ -637,39 +701,11 @@ less than or equal to I<$maxdiff> for the test to pass.  The color
 comparison is done at 8-bits per pixel.  The color representation such
 as direct vs paletted, bits per sample are not checked.
 
-=item test_image_raw()
+=item isnt_image($im1, $im2, $comment)
 
-Returns a 150x150x3 Imager::ImgRaw test image.
-
-=item test_image()
-
-Returns a 150x150x3 8-bit/sample OO test image.
-
-=item test_image_16()
-
-Returns a 150x150x3 16-bit/sample OO test image.
-
-=item test_image_double()
-
-Returns a 150x150x3 double/sample OO test image.
-
-=item diff_text_with_nul($test_name, $text1, $text2, @options)
-
-Creates 2 test images and writes $text1 to the first image and $text2
-to the second image with the string() method.  Each call adds 3
-C<ok>/C<not ok> to the output of the test script.
-
-Extra options that should be supplied include the font and either a
-color or channel parameter.
-
-This was explicitly created for regression tests on #21770.
-
-=item image_bounds_checks($im)
-
-Attempts to write to various pixel positions outside the edge of the
-image to ensure that it fails in those locations.
-
-Any new image type should pass these tests.  Does 16 separate tests.
+Tests that the two images are different.  For regressions tests where
+something (like text output of "0") produced no change, but should
+have produced a change.
 
 =item test_colorf_gpix($im, $x, $y, $expected, $epsilon, $comment)
 
@@ -686,9 +722,72 @@ it to the floating point color $expected.
 Retrieves the floating point pixels ($x, $y)-[$x+@$pels, $y] from the
 low level image $im and compares them against @$pels.
 
+=item is_color_close3($color, $red, $green, $blue, $tolerance, $comment)
+
+Tests if $color's first three channels are within $tolerance of ($red,
+$green, $blue).
+
+=back
+
+=head2 Test suite functions
+
+Functions that perform one or more tests, typically used to test
+various parts of Imager's implementation.
+
+=over
+
+=item image_bounds_checks($im)
+
+Attempts to write to various pixel positions outside the edge of the
+image to ensure that it fails in those locations.
+
+Any new image type should pass these tests.  Does 16 separate tests.
+
 =item mask_tests($im, $epsilon)
 
-Perform a standard set of mask tests on the OO image $im.
+Perform a standard set of mask tests on the OO image $im.  Does 24
+separate tests.
+
+=item diff_text_with_nul($test_name, $text1, $text2, @options)
+
+Creates 2 test images and writes $text1 to the first image and $text2
+to the second image with the string() method.  Each call adds 3
+C<ok>/C<not ok> to the output of the test script.
+
+Extra options that should be supplied include the font and either a
+color or channel parameter.
+
+This was explicitly created for regression tests on #21770.
+
+=back
+
+=head2 Helper functions
+
+=over
+
+=item test_image_raw()
+
+Returns a 150x150x3 Imager::ImgRaw test image.
+
+=item test_image()
+
+Returns a 150x150x3 8-bit/sample OO test image.
+
+=item test_image_16()
+
+Returns a 150x150x3 16-bit/sample OO test image.
+
+=item test_image_double()
+
+Returns a 150x150x3 double/sample OO test image.
+
+=item color_cmp($c1, $c2)
+
+Performs an ordering of 3-channel colors (like <=>).
+
+=item colorf_cmp($c1, $c2)
+
+Performs an ordering of 3-channel floating point colors (like <=>).
 
 =back
 
