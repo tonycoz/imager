@@ -3738,7 +3738,10 @@ sub get_file_limits {
 
 sub newcolor { Imager::Color->new(@_); }
 sub newfont  { Imager::Font->new(@_); }
-sub NCF { Imager::Color::Float->new(@_) }
+sub NCF {
+  require Imager::Color::Float;
+  return Imager::Color::Float->new(@_);
+}
 
 *NC=*newcolour=*newcolor;
 *NF=*newfont;
