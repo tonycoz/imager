@@ -1,7 +1,8 @@
 #!perl -w
 use strict;
 use Imager qw(:all :handy);
-use Test::More tests=>21;
+use Test::More tests => 27;
+use Imager::Test qw(test_colorf_gpix is_fcolor1 is_fcolor3);
 
 Imager::init("log"=>'testout/t67convert.log');
 
@@ -49,23 +50,41 @@ SKIP:
 }
 
 # test against 16-bit/sample images
-SKIP:
 {
-  my $imbase16 = Imager::i_img_16_new(200, 200, 3);
-  
-  my $im16targ = i_convert($imbase16, [ [ 0, 0, 0, 1 ],
-					[ 0, 0, 0, 0 ],
-					[ 0, 0, 0, 0 ] ]);
-  skip("could not convert 16-bit image", 2)
-    unless ok($im16targ, "convert 16/bit sample image");
-  # image should still be 16-bit
-  is(Imager::i_img_bits($im16targ), 16, "Image still 16-bit/sample");
-  # make sure that it's roughly red
-  my $c = Imager::i_gpixf($im16targ, 0, 0);
-  my @ch = $c->rgba;
-  ok(abs($ch[0] - 1) <= 0.0001 && abs($ch[1]) <= 0.0001 && abs($ch[2]) <= 0.0001,
-     "image roughly red")
-    or print "# @ch\n";
+ SKIP:
+  {
+    my $imbase16 = Imager::i_img_16_new(200, 200, 3);
+
+    my $im16targ = i_convert($imbase16, [ [ 0, 0, 0, 1 ],
+					  [ 0, 0, 0, 0 ],
+					  [ 0, 0, 0, 0 ] ]);
+    ok($im16targ, "convert 16/bit sample image")
+      or skip("could not convert 16-bit image", 2);
+
+    # image should still be 16-bit
+    is(Imager::i_img_bits($im16targ), 16, "Image still 16-bit/sample");
+
+    # make sure that it's roughly red
+    test_colorf_gpix($im16targ, 0, 0, NCF(1, 0, 0), 0.001, "image roughly red");
+  }
+ SKIP:
+  {
+    my $imbase16 = Imager->new(xsize => 10, ysize => 10, bits => 16);
+    ok($imbase16->setpixel
+       (x => 5, y => 2, color => Imager::Color::Float->new(0.1, 0.2, 0.3)),
+       "set a sample pixel");
+    my $c1 = $imbase16->getpixel(x => 5, y => 2, type => "float");
+    is_fcolor3($c1, 0.1, 0.2, 0.3, "check it was set")
+      or print "#", join(",", $c1->rgba), "\n";
+    
+    my $targ16 = $imbase16->convert(matrix => [ [ 0.05, 0.15, 0.01, 0.5 ] ]);
+    ok($targ16, "convert another 16/bit sample image")
+      or skip("could not convert", 3);
+    is($targ16->getchannels, 1, "convert should be 1 channel");
+    is($targ16->bits, 16, "and 16-bits");
+    my $c = $targ16->getpixel(x => 5, y => 2, type => "float");
+    is_fcolor1($c, 0.538, 1/32768, "check grey value");
+  }
 }
 
 # test against palette based images
@@ -95,6 +114,7 @@ SKIP:
 }
 
 { # http://rt.cpan.org/NoAuth/Bug.html?id=9672
+  # methods that return a new image should warn in void context
   my $warning;
   local $SIG{__WARN__} = 
     sub { 
@@ -111,6 +131,7 @@ SKIP:
 }
 
 { # http://rt.cpan.org/NoAuth/Bug.html?id=28492
+  # convert() doesn't preserve image sample size
   my $im = Imager->new(xsize => 20, ysize => 20, channels => 3, 
 		       bits => 'double');
   is($im->bits, 'double', 'check source bits');

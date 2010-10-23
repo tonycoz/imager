@@ -1,5 +1,15 @@
 Imager release history.  Older releases can be found in Changes.old
 
+Imager 0.79 - unreleased
+===========
+
+ - add Imager::Test to the POD coverage tests and document the missing
+   functions.
+
+Bug fixes:
+
+ - treat the co-efficients for convert() as doubles instead of floats.
+
 Imager 0.78 - 4 Oct 2010
 ===========
 

@@ -1874,7 +1874,7 @@ i_convert(src, avmain)
     Imager::ImgRaw     src
     AV *avmain
 	PREINIT:
-    	  float *coeff;
+    	  double *coeff;
 	  int outchan;
 	  int inchan;
           SV **temp;
@@ -1894,7 +1894,7 @@ i_convert(src, avmain)
 		inchan = len;
 	    }
           }
-          coeff = mymalloc(sizeof(float) * outchan * inchan);
+          coeff = mymalloc(sizeof(double) * outchan * inchan);
 	  for (j = 0; j < outchan; ++j) {
 	    avsub = (AV*)SvRV(*av_fetch(avmain, j, 0));
 	    len = av_len(avsub)+1;

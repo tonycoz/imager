@@ -172,7 +172,7 @@ bmp.c           Reading and writing Windows BMP files
 color.c         Color translation and handling
 compose.im
 conv.im
-convert.c
+convert.im
 doco.perl
 datatypes.c
 draw.c

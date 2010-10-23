@@ -18,6 +18,7 @@ $VERSION = "1.000";
      is_color3
      is_color4
      is_color_close3
+     is_fcolor1
      is_fcolor3
      is_fcolor4
      color_cmp
@@ -68,7 +69,7 @@ sub is_color3($$$$$) {
 
   my ($cr, $cg, $cb) = $color->rgba;
   unless ($builder->ok($cr == $red && $cg == $green && $cb == $blue, $comment)) {
-    $builder->diag(<<END_DIAG);
+    print <<END_DIAG;
 Color mismatch:
   Red: $red vs $cr
 Green: $green vs $cg
@@ -178,6 +179,41 @@ Color mismatch:
 Green: $cg vs $green
  Blue: $cb vs $blue
 Alpha: $ca vs $alpha
+END_DIAG
+    return;
+  }
+
+  return 1;
+}
+
+sub is_fcolor1($$$;$) {
+  my ($color, $grey, $comment_or_diff, $comment_or_undef) = @_;
+  my ($comment, $mindiff);
+  if (defined $comment_or_undef) {
+    ( $mindiff, $comment ) = ( $comment_or_diff, $comment_or_undef )
+  }
+  else {
+    ( $mindiff, $comment ) = ( 0.001, $comment_or_diff )
+  }
+
+  my $builder = Test::Builder->new;
+
+  unless (defined $color) {
+    $builder->ok(0, $comment);
+    $builder->diag("color is undef");
+    return;
+  }
+  unless ($color->can('rgba')) {
+    $builder->ok(0, $comment);
+    $builder->diag("color is not a color object");
+    return;
+  }
+
+  my ($cgrey) = $color->rgba;
+  unless ($builder->ok(abs($cgrey - $grey) <= $mindiff, $comment)) {
+    print <<END_DIAG;
+Color mismatch:
+  Gray: $cgrey vs $grey
 END_DIAG
     return;
   }
@@ -664,6 +700,13 @@ Tests if $color matches the given ($red, $green, $blue)
 =item is_color4($color, $red, $green, $blue, $alpha, $comment)
 
 Tests if $color matches the given ($red, $green, $blue, $alpha)
+
+=item is_fcolor1($fcolor, $grey, $comment)
+
+=item is_fcolor1($fcolor, $grey, $epsilon, $comment)
+
+Tests if $fcolor's first channel is within $epsilon of ($grey).  For
+the first form $epsilon is taken as 0.001.
 
 =item is_fcolor3($fcolor, $red, $green, $blue, $comment)
 
