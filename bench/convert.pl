@@ -49,8 +49,15 @@ __END__
 
 Original:
 
-addalpha: 0.9 /s (1.082000 / iter)
-gray: 3.3 /s (0.303529 / iter)
-green: 4.1 /s (0.244286 / iter)
-noalpha: 1.1 /s (0.876667 / iter)
+addalpha: 1.3 /s (0.797143 / iter)
+gray: 4.3 /s (0.233636 / iter)
+green: 4.9 /s (0.205600 / iter)
+noalpha: 1.6 /s (0.608889 / iter)
+
+convert_via_copy:
+
+addalpha: 4.9 /s (0.205600 / iter)
+gray: 4.2 /s (0.235909 / iter)
+green: 8.6 /s (0.115682 / iter)
+noalpha: 5.4 /s (0.185556 / iter)
 

@@ -6,6 +6,11 @@ Imager 0.79 - unreleased
  - add Imager::Test to the POD coverage tests and document the missing
    functions.
 
+ - the convert() method now optimizes the case where all output
+   channels are either 0, sourced from a single input channel or 1.
+   This significantly speeds up presets like "addalpha", "green".
+   https://rt.cpan.org/Ticket/Display.html?id=51254
+
 Bug fixes:
 
  - treat the co-efficients for convert() as doubles instead of floats.
