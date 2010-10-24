@@ -11,6 +11,8 @@ Imager 0.79 - unreleased
    This significantly speeds up presets like "addalpha", "green".
    https://rt.cpan.org/Ticket/Display.html?id=51254
 
+ - add wiggle.pl sample, as suggested by Dan Oppenheim.
+
 Bug fixes:
 
  - treat the co-efficients for convert() as doubles instead of floats.
