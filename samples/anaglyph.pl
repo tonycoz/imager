@@ -46,7 +46,7 @@ else {
   $out = anaglyph_images($left, $right);
 }
 
-$out->write(file=>$out_name)
+$out->write(file=>$out_name, jpegquality => 100)
   or die "Cannot write $out_name: ", $out->errstr, "\n";
 
 sub usage {
