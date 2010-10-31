@@ -5,7 +5,7 @@
 
 =head1 SYNOPSIS
 
-  i_convert(outimage, srcimage, coeff, outchans, inchans)
+  out = i_convert(srcimage, coeff, outchans, inchans)
 
 =head1 DESCRIPTION
 
