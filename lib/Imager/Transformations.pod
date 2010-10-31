@@ -48,6 +48,11 @@ Imager::Transformations - Simple transformations of one image into another.
                                  [ 1, 0, 0 ],
                                  [ 0, 0, 1 ] ]);
 
+  # build an image using channels from multiple input images
+  $new = $img->combine(src => [ $im1, $im2, $im3 ]);
+  $new = $img->combine(src => [ $im1, $im2, $im3 ],
+                       channels => [ 2, 1, 0 ]);
+
   # limit the range of red channel from 0..255 to 0..127
   @map = map { int( $_/2 } 0..255;
   $img->map( red=>\@map );
@@ -866,6 +871,41 @@ alpha channel:
                                            [ 0, 0, 1, 0 ],
                                            [ 0, 0, 0, 0.5 ],
                                          ]);
+
+=item combine
+X<combine>
+
+Combine channels from one or more input images into a new image.
+
+Parameters:
+
+=over
+
+=item *
+
+C<src> - a reference to an array of input images.  There must be at least
+one input image.  A given image may appear more than once in C<src>.
+
+=item *
+
+C<channels> - a reference to an array of channels corresponding to the
+source images.  If C<channels> is not supplied then the first channel
+from each input image is used.  If the array referenced by C<channels>
+is shorter than that referenced by C<src> then the first channel is
+used from the extra images.
+
+=back
+
+  # make an rgb image from red, green, and blue images
+  my $rgb = Imager->combine(src => [ $red, $green, $blue ]);
+
+  # convert a BGR image into RGB
+  my $rgb = Imager->combine(src => [ $bgr, $bgr, $bgr ],
+                            channels => [ 2, 1, 0 ]);
+
+  # add an alpha channel from another image
+  my $rgba = Imager->combine(src => [ $rgb, $rgb, $rgb, $alpha ],
+                     channels => [ 0, 1, 2, 0 ]);
 
 =back
 

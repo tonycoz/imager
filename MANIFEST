@@ -170,6 +170,7 @@ apidocs.perl    Build lib/Imager/APIRef.pm
 bigtest.perl	Library selection tester
 bmp.c           Reading and writing Windows BMP files
 color.c         Color translation and handling
+combine.im	Channel combine
 compose.im
 conv.im
 convert.im
@@ -311,6 +312,7 @@ samples/samp-tags.cgi   Demonstrate image upload via a HTML form
 samples/samp-tags.html  Form for samp-tags.cgi
 samples/slant_text.pl   Using $font->transform() to slant text
 samples/tk-photo.pl
+samples/wiggle.pl	"Wiggle" stereoscopy
 scale.im	Newer scaling code
 spot.perl	For making an ordered dither matrix from a spot function
 stackmach.c
@@ -349,6 +351,7 @@ t/t57infix.t
 t/t58trans2.t
 t/t59assem.t
 t/t61filters.t
+t/t63combine.t		Test combine() method
 t/t64copyflip.t         Test copy, flip, rotate, matrix_transform
 t/t65crop.t
 t/t66paste.t

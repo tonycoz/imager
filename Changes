@@ -13,6 +13,10 @@ Imager 0.79 - unreleased
 
  - add wiggle.pl sample, as suggested by Dan Oppenheim.
 
+ - add the combine() method to combine channels from multiple source
+   images into a new image
+   https://rt.cpan.org/Ticket/Display.html?id=11872
+
 Bug fixes:
 
  - treat the co-efficients for convert() as doubles instead of floats.

@@ -3466,6 +3466,46 @@ sub convert {
   return $new;
 }
 
+# combine channels from multiple input images, a class method
+sub combine {
+  my ($class, %opts) = @_;
+
+  my $src = delete $opts{src};
+  unless ($src) {
+    $class->_set_error("src parameter missing");
+    return;
+  }
+  my @imgs;
+  my $index = 0;
+  for my $img (@$src) {
+    unless (eval { $img->isa("Imager") }) {
+      $class->_set_error("src must contain image objects");
+      return;
+    }
+    unless ($img->{IMG}) {
+      $class->_set_error("empty input image");
+      return;
+    }
+    push @imgs, $img->{IMG};
+  }
+  my $result;
+  if (my $channels = delete $opts{channels}) {
+    $result = i_combine(\@imgs, $channels);
+  }
+  else {
+    $result = i_combine(\@imgs);
+  }
+  unless ($result) {
+    $class->_set_error($class->_error_as_msg);
+    return;
+  }
+
+  my $img = $class->new;
+  $img->{IMG} = $result;
+
+  return $img;
+}
+
 
 # general function to map an image through lookup tables
 
@@ -4195,6 +4235,9 @@ circle() - L<Imager::Draw/circle> - draw a filled circle
 colorcount() - L<Imager::Draw/colorcount> - the number of colors in an
 image's palette (paletted images only)
 
+combine() - L<Imager::Transformations/combine> - combine channels from one or
+more images.
+
 combines() - L<Imager::Draw/combines> - return a list of the different
 combine type keywords
 
@@ -4398,6 +4441,8 @@ blur - L<Imager::Filters/guassian>, L<Imager::Filters/conv>
 boxes, drawing - L<Imager::Draw/box>
 
 changes between image - L<Imager::Filters/"Image Difference">
+
+channels, combine into one image - L<Imager::Transformations/combine>
 
 color - L<Imager::Color>
 

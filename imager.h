@@ -190,6 +190,9 @@ i_compose(i_img *out, i_img *src,
 	       int out_left, int out_top, int src_left, int src_top,
 	       int width, int height, int combine, double opacity);
 
+extern i_img *
+i_combine(i_img **src, const int *channels, int in_count);
+
 undef_int i_flipxy (i_img *im, int direction);
 extern i_img *i_rotate90(i_img *im, int degrees);
 extern i_img *i_rotate_exact(i_img *im, double amount);

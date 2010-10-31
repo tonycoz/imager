@@ -157,7 +157,7 @@ if ($^O eq 'hpux')                { $OSLIBS .= ' -ldld'; }
 if (defined $Config{'d_dlsymun'}) { $OSDEF  .= ' -DDLSYMUN'; }
 
 my @objs = qw(Imager.o draw.o polygon.o image.o io.o iolayer.o
-              log.o gaussian.o conv.o pnm.o raw.o feat.o font.o
+              log.o gaussian.o conv.o pnm.o raw.o feat.o font.o combine.o
               filters.o dynaload.o stackmach.o datatypes.o
               regmach.o trans2.o quant.o error.o convert.o
               map.o tags.o palimg.o maskimg.o img16.o rotate.o
