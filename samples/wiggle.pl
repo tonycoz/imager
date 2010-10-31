@@ -56,6 +56,9 @@ stereoscopy.
 
 =head1 CREDITS
 
+=for stopwords
+Oppenheim
+
 Dan Oppenheim <droppenheim@yahoo.com> described the effect and asked
 how to implement it.
 
