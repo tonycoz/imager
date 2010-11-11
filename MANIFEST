@@ -317,6 +317,7 @@ scale.im	Newer scaling code
 spot.perl	For making an ordered dither matrix from a spot function
 stackmach.c
 stackmach.h
+t/GoodTestFont.pm	A dummy (hardly implemented) font driver.
 t/Pod/Coverage/Imager.pm
 t/t00basic.t
 t/t01introvert.t
@@ -341,6 +342,7 @@ t/t20fill.t             Tests fills
 t/t21draw.t             Basic drawing tests
 t/t22flood.t		Flood fill tests
 t/t30t1font.t
+t/t31font.t		General font interface tests
 t/t35ttfont.t
 t/t36oofont.t
 t/t40scale.t

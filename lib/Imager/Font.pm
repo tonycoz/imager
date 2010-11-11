@@ -18,12 +18,14 @@ my %drivers =
         module=>'Imager/Font/Truetype.pm',
         files=>'.*\.ttf$',
 	description => 'FreeType 1.x',
+	checktype => 1,
        },
    t1=>{
         class=>'Imager::Font::Type1',
         module=>'Imager/Font/Type1.pm',
         files=>'.*\.pfb$',
 	description => 'T1Lib',
+	checktype => 1,
        },
    ft2=>{
          class=>'Imager::Font::FT2',
@@ -76,8 +78,10 @@ sub new {
         undef $type;
         my $re = $drivers{$drv}{files} or next;
         if ($file =~ /$re/i) {
-          $type = $drv;
-          last;
+	  if (eval { require $drivers{$drv}{module}; 1 }) {
+	    $type = $drv;
+	    last;
+	  }
         }
       }
     }
@@ -106,7 +110,7 @@ sub new {
     return;
   }
 
-  if (!$Imager::formats{$type}) {
+  if ($drivers{$type}{checktype} && !$Imager::formats{$type}) {
     $Imager::ERRSTR = "`$type' not enabled";
     return;
   }
@@ -312,9 +316,48 @@ sub priorities {
   my @old = @priority;
 
   if (@_) {
-    @priority = grep Imager::i_has_format($_), @_;
+    @priority = @_;
   }
   return @old;
+}
+
+sub register {
+  my ($self, %opts) = @_;
+
+  my $type = delete $opts{type};
+  my $class = delete $opts{class};
+  my $files = delete $opts{files};
+  my $description = delete $opts{description} || $class;
+
+  defined $type
+    or return Imager->_set_error("No type parameter supplied to Imager::Font->regster");
+
+  defined $class
+    or return Imager->_set_error("No class parameter supplied to Imager::Font->register");
+
+  if ($files) {
+    eval { qr/$files/ }
+      or return Imager->_set_error("files isn't a valid regexp");
+  }
+
+  if ($drivers{$type} && $drivers{$type}{class} ne $class) {
+    Imager->_set_error("Font type $type already registered as $drivers{$type}{class}");
+    return;
+  }
+
+  (my $module = $class . ".pm") =~ s(::)(/)g;
+
+  my $driver =
+    {
+     class => $class,
+     module => $module,
+     description => $description,
+    };
+  $files and $driver->{files} = $files;
+
+  $drivers{$type} = $driver;
+
+  1;
 }
 
 1;
@@ -952,8 +995,6 @@ You can set new priorities and save the old priorities with:
 
   @old = Imager::Font->priorities(@drivers);
 
-=back
-
 If you supply driver names that are not currently supported, they will
 be ignored.
 
@@ -964,6 +1005,39 @@ do font transformations, you may want to give that a higher priority:
 
   my @old = Imager::Font->priorities(qw(tt ft2 t1));
 
+=item register
+
+Registers an extra font driver.  Accepts the following parameters:
+
+=over
+
+=item *
+
+type - a brief identifier for the font driver.  You can supply this
+value to C<< Imager::Font->new() >> to create fonts of this type.
+Required.
+
+=item *
+
+class - the font class name.  Imager will attempted to load this
+module by name.  Required.
+
+=item *
+
+files - a regular expression to match against file names.  If supplied
+this must be a valid perl regular expression.  If not supplied you can
+only create fonts of this type by supplying the C<type> parameter to
+C<< Imager::Font->new() >>
+
+=item *
+
+description - a brief description of the font driver.  Defaults to the
+value supplied in C<class>.
+
+=back
+
+=back
+
 =head1 AUTHOR
 
 Arnar M. Hrafnkelsson, addi@umich.edu
@@ -971,8 +1045,6 @@ And a great deal of help from others - see the F<README> for a complete
 list.
 
 =head1 BUGS
-
-You need to modify this class to add new font types.
 
 The $pos_width member returned by the bounding_box() method has
 historically returned different values from different drivers.  The

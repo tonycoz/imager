@@ -21,6 +21,10 @@ Bug fixes:
 
  - treat the co-efficients for convert() as doubles instead of floats.
 
+ - If a higher (earlier) priority font failed to load, that would
+   crash preventing loading of later fonts.
+   https://rt.cpan.org/Ticket/Display.html?id=62855
+
 Imager 0.78 - 4 Oct 2010
 ===========
 
