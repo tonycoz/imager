@@ -4681,6 +4681,17 @@ Arnar M. Hrafnkelsson is the original author of Imager.
 Many others have contributed to Imager, please see the C<README> for a
 complete list.
 
+=head1 LICENSE
+
+Imager is licensed under the same terms as perl itself.
+
+=for stopwords
+makeblendedfont Fontforge
+
+A test font, FT2/fontfiles/MMOne.pfb, contains a Postscript operator
+definition copyrighted by Adobe.  See adobe.txt in the source for
+license information.
+
 =head1 SEE ALSO
 
 L<perl>(1), L<Imager::ImageTypes>(3), L<Imager::Files>(3),

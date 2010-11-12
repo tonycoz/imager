@@ -166,6 +166,7 @@ W32/win32.c		Implements font support through Win32 GDI
 W32/Makefile.PL
 W32/W32.pm
 W32/W32.xs
+adobe.txt	License for makeblended font
 apidocs.perl    Build lib/Imager/APIRef.pm
 bigtest.perl	Library selection tester
 bmp.c           Reading and writing Windows BMP files
