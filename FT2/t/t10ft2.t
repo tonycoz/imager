@@ -344,7 +344,8 @@ SKIP:
   print "# Try a multiple master font\n";
   my $mmfont = Imager::Font->new(file=>"fontfiles/MMOne.pfb", type=>"ft2", 
                                  color=>"white", aa=>1, size=>60);
-  ok($mmfont, "loaded MM font");
+  ok($mmfont, "loaded MM font")
+    or print "# ", Imager->errstr, "\n";
   ok($mmfont->is_mm, "font is multiple master");
   my @axes = $mmfont->mm_axes;
   is(@axes, 2, "check we got both axes");
