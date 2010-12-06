@@ -120,7 +120,7 @@ sub _probe_pkg {
 	{
 	 INC => $cflags,
 	 LIBS => $lflags,
-	 DEFINES => $defines,
+	 DEFINE => $defines,
 	};
     }
   }
@@ -197,6 +197,7 @@ sub _probe_check {
     {
      INC => "-I$found_incpath",
      LIBS => "@libs",
+     DEFINE => "",
     };
 }
 
@@ -221,7 +222,7 @@ sub _probe_fake {
       {
        INC => "",
        LIBS => $lopts,
-       DEFINES => "",
+       DEFINE => "",
       };
   }
   else {
