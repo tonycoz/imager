@@ -91,6 +91,25 @@ say TIFF to JPEG, you'll need multiple output files:
       or die $image->errstr;
   }
 
+=head2 Transparent PNG
+
+To save to a transparent PNG (or GIF or TIFF) you need to start with
+an image with transparency.
+
+To make a transparent image, create an image object with 2 or 4
+channels:
+
+  # RGB with alpha channel
+  my $rgba = Imager->new(xsize => $width, ysize => $height, channels => 4);
+
+  # Gray with alpha channel
+  my $graya = Imager->new(xsize => $width, ysize => $height, channels => 2);
+
+By default, the created image will be transparent.
+
+Otherwise, if you have an existing image file with transparency,
+simply read it, and the transparency will be preserved.
+
 =head1 IMAGE SYNTHESIS
 
 =head2 Creating an image

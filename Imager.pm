@@ -4581,6 +4581,9 @@ text, measuring - L<Imager::Font/bounding_box>, L<Imager::Font::BBox>
 
 tiles, color - L<Imager::Filters/mosaic>
 
+transparent images - L<Imager::ImageTypes>,
+L<Imager::Cookbook/"Transparent PNG">
+
 =for stopwords unsharp
 
 unsharp mask - L<Imager::Filters/unsharpmask>

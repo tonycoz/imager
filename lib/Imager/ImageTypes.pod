@@ -102,7 +102,8 @@ stored.  Imager treats these as follows:
 
 =item *
 
-2 samples per color - gray scale image with alpha channel.
+2 samples per color - gray scale image with alpha channel, allowing
+transparency.
 
 =item *
 
@@ -110,7 +111,8 @@ stored.  Imager treats these as follows:
 
 =item *
 
-4 samples per color - RGB image with alpha channel.
+4 samples per color - RGB image with alpha channel, allowing
+transparency.
 
 =back
 
