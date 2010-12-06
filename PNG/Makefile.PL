@@ -1,6 +1,6 @@
 #!perl -w
 use strict;
-use ExtUtils::MakeMaker qw(WriteMakefile WriteEmptyMakefile);
+use ExtUtils::MakeMaker;
 use Getopt::Long;
 use Config;
 
@@ -117,7 +117,7 @@ if ($probe_res) {
 }
 else {
   if ($BUILDING_IMAGER) {
-    WriteEmptyMakefile(%opts);
+    ExtUtils::MakeMaker::WriteEmptyMakefile(%opts);
   }
   else {
     # fail in good way
