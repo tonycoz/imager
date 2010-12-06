@@ -4689,7 +4689,7 @@ Imager is licensed under the same terms as perl itself.
 makeblendedfont Fontforge
 
 A test font, FT2/fontfiles/MMOne.pfb, contains a Postscript operator
-definition copyrighted by Adobe.  See adobe.txt in the source for
+definition copyrighted by Adobe.  See F<adobe.txt> in the source for
 license information.
 
 =head1 SEE ALSO
