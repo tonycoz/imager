@@ -105,7 +105,7 @@ my $probe_res = Imager::Probe->probe(\%probe);
 if ($probe_res) {
   push @inc, $probe_res->{INC};
   $opts{LIBS} = $probe_res->{LIBS};
-  
+  $opts{DEFINE} = $probe_res->{DEFINE};
   $opts{INC} = "@inc";
   
   if ($MM_ver > 6.06) {
