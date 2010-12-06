@@ -401,6 +401,10 @@ C<INC> - C<-I> and other C options
 
 C<LIBS> - C<-L>, C<-l> and other link-time options
 
+=item *
+
+C<DEFINE> - C<-D> options, if any.
+
 =back
 
 The possible values for the hash supplied to the probe() method are:
