@@ -26,7 +26,7 @@ sub probe {
   ALTCHECK:
     my $index = 1;
     for my $alt (@{$req->{alternatives}}) {
-      $req->{altname} ||= "alt $index";
+      $req->{altname} = $alt->{altname} || "alt $index";
       $req->{verbose}
 	and print "$req->{name}: Trying alternative $index\n";
       my %work = %$req;
@@ -110,6 +110,9 @@ sub _probe_pkg {
       my $lflags = `pkg-config $pkg --libs`
 	and !$? or return;
 
+      my $defines = '';
+      $cflags =~ s/(-D\S+)/$defines .= " $1"; ''/ge;
+
       chomp $cflags;
       chomp $lflags;
       print "$req->{name}: Found via pkg-config $pkg\n";
@@ -117,6 +120,7 @@ sub _probe_pkg {
 	{
 	 INC => $cflags,
 	 LIBS => $lflags,
+	 DEFINES => $defines,
 	};
     }
   }
@@ -169,7 +173,7 @@ sub _probe_check {
   }
 
   my $alt = "";
-  if ($req->{alternatives}) {
+  if ($req->{altname}) {
     $alt = " $req->{altname}:";
   }
   print "$req->{name}:$alt includes ", $found_incpath ? "" : "not ",
@@ -186,7 +190,7 @@ sub _probe_check {
     push @libs, "-l$libbase";
   }
   else {
-    die "$req->{name}: inccheck but no libbase or libopts";
+    die "$req->{altname}: inccheck but no libbase or libopts";
   }
 
   return
@@ -217,6 +221,7 @@ sub _probe_fake {
       {
        INC => "",
        LIBS => $lopts,
+       DEFINES => "",
       };
   }
   else {

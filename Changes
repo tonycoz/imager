@@ -25,6 +25,10 @@ Bug fixes:
    crash preventing loading of later fonts.
    https://rt.cpan.org/Ticket/Display.html?id=62855
 
+ - parse defines from the options returned by pkg-config --cflags
+   https://rt.cpan.org/Ticket/Display.html?id=63223
+   
+
 Imager 0.78 - 4 Oct 2010
 ===========
 
