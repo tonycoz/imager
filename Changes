@@ -21,8 +21,8 @@ Bug fixes:
 
  - treat the co-efficients for convert() as doubles instead of floats.
 
- - If a higher (earlier) priority font failed to load, that would
-   crash preventing loading of later fonts.
+ - If a higher (earlier) priority font handler failed to load, that
+   would crash preventing loading of later font handlers.
    https://rt.cpan.org/Ticket/Display.html?id=62855
 
  - parse defines from the options returned by pkg-config --cflags
