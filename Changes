@@ -27,7 +27,9 @@ Bug fixes:
 
  - parse defines from the options returned by pkg-config --cflags
    https://rt.cpan.org/Ticket/Display.html?id=63223
-   
+
+ - a regen of the MANIFEST revealed that GIF and FT2 tests weren't
+   included in the tarball.  They are now included.
 
 Imager 0.78 - 4 Oct 2010
 ===========
