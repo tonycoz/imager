@@ -1,6 +1,15 @@
 Imager release history.  Older releases can be found in Changes.old
 
-Imager 0.79 - unreleased
+Imager 0.80 - unreleased
+===========
+
+Bug fixes:
+
+ - images with an translucent alpha channel were not scaled correctly
+   by the default (qtype=normal) scaling method.
+   https://rt.cpan.org/Public/Bug/Display.html?id=63922
+
+Imager 0.79 - 10 Dec 2010
 ===========
 
  - add Imager::Test to the POD coverage tests and document the missing

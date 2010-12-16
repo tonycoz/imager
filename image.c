@@ -747,10 +747,11 @@ i_scaleaxis(i_img *im, float Value, int Axis) {
   short psave;
   i_color val,val1,val2;
   i_img *new_img;
+  int has_alpha = i_img_has_alpha(im);
+  int color_chans = i_img_color_channels(im);
 
   i_clear_error();
   mm_log((1,"i_scaleaxis(im %p,Value %.2f,Axis %d)\n",im,Value,Axis));
-
 
   if (Axis == XAXIS) {
     hsize = (int)(0.5 + im->xsize * Value);
@@ -823,15 +824,46 @@ i_scaleaxis(i_img *im, float Value, int Axis) {
 	  
 	  i_gpix(im, Mx, i, &val1);
 	  i_gpix(im, mx, i, &val2);
-	  
-	  for (k=0; k<im->channels; k++) {
-	    PictureValue[k] += l1[l]        * val1.channel[k];
-	    PictureValue[k] += l0[lMax-l-1] * val2.channel[k];
+
+	  if (has_alpha) {
+	    i_sample_t alpha1 = val1.channel[color_chans];
+	    i_sample_t alpha2 = val2.channel[color_chans];
+	    for (k=0; k < color_chans; k++) {
+	      PictureValue[k] += l1[l]        * val1.channel[k] * alpha1 / 255;
+	      PictureValue[k] += l0[lMax-l-1] * val2.channel[k] * alpha2 / 255;
+	    }
+	    PictureValue[color_chans] += l1[l] * val1.channel[color_chans];
+	    PictureValue[color_chans] += l0[lMax-l-1] * val2.channel[color_chans];
+	  }
+	  else {
+	    for (k=0; k<im->channels; k++) {
+	      PictureValue[k] += l1[l]        * val1.channel[k];
+	      PictureValue[k] += l0[lMax-l-1] * val2.channel[k];
+	    }
 	  }
 	}
-	for(k=0;k<im->channels;k++) {
-	  psave = (short)(0.5+(PictureValue[k] / LanczosWidthFactor));
-	  val.channel[k]=minmax(0,255,psave);
+
+	if (has_alpha) {
+	  float fa = PictureValue[color_chans] / LanczosWidthFactor;
+	  int alpha = minmax(0, 255, fa+0.5);
+	  if (alpha) {
+	    for (k = 0; k < color_chans; ++k) {
+	      psave = (short)(0.5+(PictureValue[k] / LanczosWidthFactor * 255 / fa));
+	      val.channel[k]=minmax(0,255,psave);
+	    }
+	    val.channel[color_chans] = alpha;
+	  }
+	  else {
+	    /* zero alpha, so the pixel has no color */
+	    for (k = 0; k < im->channels; ++k)
+	      val.channel[k] = 0;
+	  }
+	}
+	else {
+	  for(k=0;k<im->channels;k++) {
+	    psave = (short)(0.5+(PictureValue[k] / LanczosWidthFactor));
+	    val.channel[k]=minmax(0,255,psave);
+	  }
 	}
 	i_ppix(new_img, j, i, &val);
       }
@@ -848,14 +880,43 @@ i_scaleaxis(i_img *im, float Value, int Axis) {
 
 	  i_gpix(im, i, Mx, &val1);
 	  i_gpix(im, i, mx, &val2);
-	  for (k=0; k<im->channels; k++) {
-	    PictureValue[k] += l1[l]        * val1.channel[k];
-	    PictureValue[k] += l0[lMax-l-1] * val2.channel[k]; 
+	  if (has_alpha) {
+	    i_sample_t alpha1 = val1.channel[color_chans];
+	    i_sample_t alpha2 = val2.channel[color_chans];
+	    for (k=0; k < color_chans; k++) {
+	      PictureValue[k] += l1[l]        * val1.channel[k] * alpha1 / 255;
+	      PictureValue[k] += l0[lMax-l-1] * val2.channel[k] * alpha2 / 255;
+	    }
+	    PictureValue[color_chans] += l1[l] * val1.channel[color_chans];
+	    PictureValue[color_chans] += l0[lMax-l-1] * val2.channel[color_chans];
+	  }
+	  else {
+	    for (k=0; k<im->channels; k++) {
+	      PictureValue[k] += l1[l]        * val1.channel[k];
+	      PictureValue[k] += l0[lMax-l-1] * val2.channel[k];
+	    }
 	  }
 	}
-	for (k=0; k<im->channels; k++) {
-	  psave = (short)(0.5+(PictureValue[k] / LanczosWidthFactor));
-	  val.channel[k] = minmax(0, 255, psave);
+	if (has_alpha) {
+	  float fa = PictureValue[color_chans] / LanczosWidthFactor;
+	  int alpha = minmax(0, 255, fa+0.5);
+	  if (alpha) {
+	    for (k = 0; k < color_chans; ++k) {
+	      psave = (short)(0.5+(PictureValue[k] / LanczosWidthFactor * 255 / fa));
+	      val.channel[k]=minmax(0,255,psave);
+	    }
+	    val.channel[color_chans] = alpha;
+	  }
+	  else {
+	    for (k = 0; k < im->channels; ++k)
+	      val.channel[k] = 0;
+	  }
+	}
+	else {
+	  for(k=0;k<im->channels;k++) {
+	    psave = (short)(0.5+(PictureValue[k] / LanczosWidthFactor));
+	    val.channel[k]=minmax(0,255,psave);
+	  }
 	}
 	i_ppix(new_img, i, j, &val);
       }

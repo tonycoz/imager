@@ -1,9 +1,9 @@
 #!perl -w
 use strict;
-use Test::More tests => 230;
+use Test::More tests => 232;
 
 BEGIN { use_ok(Imager=>':all') }
-use Imager::Test qw(is_image is_color4);
+use Imager::Test qw(is_image is_color4 is_image_similar);
 
 Imager::init('log'=>'testout/t40scale.log');
 my $img=Imager->new();
@@ -180,7 +180,7 @@ SKIP:
              pixels => 144);
 }
 
-{ # check proper alpha handling
+{ # check proper alpha handling for mixing
   my $im = Imager->new(xsize => 40, ysize => 40, channels => 4);
   $im->box(filled => 1, color => 'C0C0C0');
   my $rot = $im->rotate(degrees => -4)
@@ -191,7 +191,24 @@ SKIP:
   $out->box(filled => 1, color => 'C0C0C0');
   my $cmp = $out->copy;
   $out->rubthrough(src => $sc);
-  is_image($out, $cmp, "check we get the right image after scaling");
+  is_image($out, $cmp, "check we get the right image after scaling (mixing)");
+
+  # we now set alpha=0 pixels to zero on scaling
+  is_color4($sc->getpixel('x' => 39, 'y' => 39), 0, 0, 0, 0,
+	    "check we set alpha=0 pixels to zero on scaling");
+}
+
+{ # check proper alpha handling for default scaling
+  my $im = Imager->new(xsize => 40, ysize => 40, channels => 4);
+  $im->box(filled => 1, color => 'C0C0C0');
+  my $rot = $im->rotate(degrees => -4)
+    or die;
+  my $sc = $rot->scale(qtype => "normal", xpixels => 40);
+  my $out = Imager->new(xsize => $sc->getwidth, ysize => $sc->getheight);
+  $out->box(filled => 1, color => 'C0C0C0');
+  my $cmp = $out->copy;
+  $out->rubthrough(src => $sc);
+  is_image_similar($out, $cmp, 100, "check we get the right image after scaling (normal)");
 
   # we now set alpha=0 pixels to zero on scaling
   is_color4($sc->getpixel('x' => 39, 'y' => 39), 0, 0, 0, 0,
