@@ -1,0 +1,957 @@
+size: 8
+name: tiny
+
+name: A
+design:
+ xxx
+x   x
+xxxxx
+x   x
+x   x
+----- .
+.
+
+name: B
+design:
+xxx
+x  x
+xxx
+x  xx
+xxxx
+----- .
+.
+
+name: C
+design:
+ xxx
+x   x
+x
+x   x
+ xxx
+----- .
+.
+
+name: D
+design:
+xxx
+x  x
+x   x
+x  x
+xxx
+----- .
+.
+
+name: E
+design:
+xxxxx
+x
+xxx
+x
+xxxxx
+----- .
+.
+
+name: F
+design:
+xxxxx
+x
+xxx
+x
+x
+----- .
+.
+
+name: G
+design:
+ xxx
+x
+x  xx
+x   x
+ xxx
+----- .
+.
+
+name: H
+design:
+x   x
+x   x
+xxxxx
+x   x
+x   x
+----- .
+.
+
+name: I
+design:
+xxx
+ x
+ x
+ x
+xxx
+--- .
+.
+
+name: J
+design:
+  xxx
+   x
+   x
+x  x
+ xx
+----- .
+.
+
+name: K
+design:
+x  x
+x x
+xxx
+x  x
+x   x
+------ .
+.
+
+name: L
+design:
+x
+x
+x
+x
+xxxx
+---- .
+.
+
+name: M
+design:
+x     x
+xx   xx
+x x x x
+x  x  x
+x     x
+------- .
+.
+
+name: N
+design:
+x   x
+xx  x
+x x x
+x  xx
+x   x
+----- .
+.
+
+name: O
+design:
+ xxx
+x   x
+x   x
+x   x
+ xxx
+----- .
+.
+
+name: P
+design:
+xxxx
+x   x
+xxxx
+x
+x
+----- .
+.
+
+name: Q
+design:
+ xxx
+x   x
+x   x
+x x x
+ xxx
+----- .
+    x
+.
+
+name: R
+design:
+xxxx
+x   x
+xxxx
+x   x
+x   x
+----- .
+.
+
+name: S
+design:
+ xxx
+x
+ xxx
+    x
+ xxx
+----- .
+.
+
+name: T
+design:
+xxxxx
+  x
+  x
+  x
+  x
+----- .
+.
+
+name: U
+design:
+x   x
+x   x
+x   x
+x   x
+ xxx
+----- .
+.
+
+name: V
+design:
+x   x
+x   x
+ x x
+ x x
+  x
+----- .
+.
+
+name: W
+design:
+x     x
+x     x
+ x x x
+ x x x
+  x x
+------- .
+.
+
+name: X
+design:
+x   x
+ x x
+  x
+ x x
+x   x
+----- .
+.
+
+name: Y
+design:
+x   x
+ x x
+  x
+  x
+  x
+----- .
+.
+
+name: Z
+design:
+xxxxx
+   x
+  x
+ x
+xxxxx
+----- .
+.
+
+name: a
+design:
+ xxx
+x  x
+ xxx
+---- .
+.
+
+name: b
+design:
+x
+x
+xxx
+x  x
+xxx
+---- .
+.
+
+name: c
+design:
+ xxx
+x
+ xxx
+---- .
+.
+
+name: d
+design:
+   x
+   x
+ xxx
+x  x
+ xxx
+---- .
+.
+
+name: e
+design:
+ xx
+xxxx
+x
+ xxx
+---- .
+.
+
+name: f
+design:
+  x
+ x
+xxx
+ x
+ x
+--- .
+.
+
+name: g
+design:
+ xxx
+x  x
+ xxx
+---- .
+   x
+ xx
+.
+
+name: h
+design:
+x
+x
+xxx
+x  x
+x  x
+---- .
+.
+
+name: i
+design:
+x
+
+x
+x
+x
+- .
+.
+
+name: j
+design:
+  x
+
+  x
+  x
+  x
+--- .
+  x
+xx
+.
+
+name: k
+design:
+x
+x
+x  x
+xxx
+x  x
+---- .
+.
+
+name: l
+design:
+x
+x
+x
+x
+x
+- .
+.
+
+name: m
+design:
+xx x
+x x x
+x x x
+----- .
+.
+
+name: n
+design:
+xxx
+x  x
+x  x
+---- .
+.
+
+name: o
+design:
+ xx
+x  x
+ xx
+---- .
+.
+
+name: p
+design:
+xxx
+x  x
+xxx
+---- .
+x
+x
+.
+
+name: q
+design:
+ xxx
+x  x
+ xxx
+---- .
+   x
+   x
+.
+
+name: r
+design:
+xxx
+x
+x
+--- .
+.
+
+name: s
+design:
+ xx
+x
+ xx
+   x
+---- .
+ xx
+.
+
+name: t
+design:
+ x
+xxx
+ x
+ x
+ x
+--- .
+.
+
+name: u
+design:
+x x
+x x
+ xx
+--- .
+.
+
+name: v
+design:
+x x
+x x
+ x
+--- .
+.
+
+name: w
+design:
+x   x
+x x x
+ x x
+----- .
+.
+
+name: x
+design:
+x x
+ x
+x x
+--- .
+.
+
+name: y
+design:
+x   x
+ x x
+  x
+----- .
+ x
+x
+.
+
+name: z
+design:
+xxxx
+  x
+ x
+xxxx
+---- .
+.
+
+name: exclam
+char: !
+design:
+x
+x
+x
+
+x
+- .
+.
+
+name: space
+charcode: 32
+design:
+---.
+.
+
+name: dquot
+char: "
+design:
+x x
+x x
+
+
+
+--- .
+.
+
+name: number
+char: #
+design:
+ x x
+xxxxx
+ x x
+xxxxx
+----- .
+ x x
+.
+
+name: percent
+char: %
+design:
+x  x
+   x
+  x
+ x
+x  x
+---- .
+.
+
+name: amp
+char: &
+design:
+ x
+x x
+ x
+x xx
+ xx
+---- .
+.
+
+name: apos
+char: '
+design:
+x
+x
+
+
+
+- .
+.
+
+name: lparen
+char: (
+design:
+   x
+  x
+  x
+  x
+   x
+----.
+.
+
+name: rparen
+char: )
+design:
+x
+ x
+ x
+ x
+x
+----.
+.
+
+name: asterisk
+char: *
+design:
+x x
+ x
+x x
+
+
+----.
+.
+
+name: plus
+char: +
+design:
+  x
+ xxx
+  x
+-----.
+.
+
+name: comma
+char: ,
+design:
+ x
+--.
+x
+.
+
+name: hyphen
+char: -
+design:
+xxx
+
+---.
+.
+
+name: period
+char: .
+default:
+design:
+x
+- .
+.
+
+name: slash
+char: /
+design:
+    x
+   x
+  x
+ x
+x
+-----.
+.
+
+name: colon
+char: :
+design:
+x
+
+x
+--.
+.
+
+name: semicolon
+char: ;
+design:
+ x
+
+ x
+-- .
+x
+.
+
+name: lt
+char: <
+design:
+   xx
+ xx
+x
+ xx
+----- .
+   xx
+.
+
+name: equals
+char: =
+design:
+xxxx
+
+xxxx
+
+---- .
+.
+
+name: gt
+char: >
+design:
+xx
+  xx
+    x
+  xx
+----- .
+xx
+.
+
+name: question
+char: ?
+design:
+ xxx
+x   x
+   x
+  x
+
+----- .
+  x
+.
+
+name: at
+char: @
+design:
+ xxx
+x   x
+x xxx
+x xxx
+x
+----- .
+ xxxx
+.
+
+name: lbracket
+char: [
+design:
+  xx
+  x
+  x
+  x
+  xx
+----.
+.
+
+name: backslash
+char: \
+design:
+x
+ x
+  x
+   x
+    x
+-----.
+.
+
+name: rbracket
+char: ]
+design:
+xx
+ x
+ x
+ x
+xx
+----.
+.
+
+name: caret
+char: ^
+design:
+ x
+x x
+
+
+
+----.
+.
+
+name: underline
+char: _
+design:
+------.
+xxxxxx
+.
+
+name: bquot
+char: `
+design:
+x
+ x
+
+
+
+-- .
+.
+
+name: lbrace
+char: {
+design:
+   x
+  x
+  x
+ x
+  x
+----.
+  x
+   x
+.
+
+name: pipe
+char: |
+design:
+ x
+ x
+ x
+ x
+ x
+---.
+ x
+.
+
+name: tilde
+char: ~
+design:
+ x x
+x x
+
+
+
+---- .
+.
+
+name: rbrace
+char: }
+design:
+x
+ x
+ x
+  x
+ x
+----.
+ x
+x
+.
+
+name: mdash
+charcode: 0x2014
+design:
+xxxxxxxxx
+
+
+-
+.
+
+name: ndash
+charcode: 0x2013
+design:
+xxxxx
+
+
+-
+.
+
+name: 0
+design:
+ xx
+x  x
+x  x
+x  x
+ xx
+---- .
+.
+
+name: 1
+design:
+  x
+ xx
+  x
+  x
+ xxx
+---- .
+.
+
+name: 2
+design:
+ xx
+x  x
+  x
+ x
+xxxx
+---- .
+.
+
+name: 3
+design:
+xxx
+   x
+  x
+   x
+xxx
+---- .
+.
+
+name: 4
+design:
+  x
+ xx
+x x
+xxxx
+  x
+---- .
+.
+
+name: 5
+design:
+xxxx
+x
+xxx
+   x
+xxx
+---- .
+.
+
+name: 6
+design:
+ xx
+x
+xxx
+x  x
+ xx
+---- .
+.
+
+name: 7
+design:
+xxxx
+   x
+  x
+ x
+ x
+---- .
+.
+
+name: 8
+design:
+ xx
+x  x
+ xx
+x  x
+ xx
+---- .
+.
+
+name: 9
+design:
+ xx
+x  x
+ xxx
+   x
+ xx
+---- .
+.
+

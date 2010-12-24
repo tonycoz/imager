@@ -6,7 +6,7 @@ my %opts =
   (
    NAME => 'Imager::Font::BuiltIn',
    VERSION_FROM => 'BuiltIn.pm',
-   OBJECT => 'BuiltIn.o imbif.o',
+   OBJECT => 'BuiltIn.o imbif.o tiny.o',
    INC => '-I..',
   );
 my $MM_ver = eval $ExtUtils::MakeMaker::VERSION;
@@ -17,4 +17,11 @@ if ($MM_ver > 6.06) {
 
 WriteMakefile(%opts);
 
+sub MY::postamble {
+  return <<'MAKE'
 
+tiny.c : tiny8.imf immkfont.pl
+	perl immkfont.pl tiny
+
+MAKE
+}

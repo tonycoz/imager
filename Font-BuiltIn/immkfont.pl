@@ -17,7 +17,7 @@ print HSRC <<EOS;
 #define \U$in\E_H_
 #include "imbiff.h"
 
-extern i_bif_face i_face_$in;
+extern const i_bif_face i_face_$in;
 
 #endif
 EOS
@@ -29,13 +29,13 @@ EOS
 
 my @fonts;
 
-for my $file (glob "$in*.img") {
+for my $file (glob "$in*.imf") {
   my %font;
   
   my %glyphs;
   my %chars;
   
-  open IN, "< $in"
+  open IN, "< $file"
     or die "Could not open $in: $!\n";
   
   # load in the global font info
@@ -43,7 +43,7 @@ for my $file (glob "$in*.img") {
     /\S/ or last;
 
     chomp;
-    my ($key, $value) = split /:/, $_, 2;
+    my ($key, $value) = split /: */, $_, 2;
     $font{$key} = $value;
   }
   
@@ -52,7 +52,7 @@ for my $file (glob "$in*.img") {
   }
   my $size = $font{size};
   unless ($font{name} eq $in) {
-    print STDERR "Skipping $file, $font{name} != $in\n";
+    print STDERR "Skipping $file, '$font{name}' != '$in'\n";
     next;
   }
   
@@ -60,6 +60,7 @@ for my $file (glob "$in*.img") {
   $font{descender} = 0;
   $font{advance} = 0;
   $font{height} = 0;
+  my $defname;
   
   # work through the glyphs
   while (1) {
@@ -155,17 +156,25 @@ for my $file (glob "$in*.img") {
     $glyph{descender} = @design - $baseline;
     $glyph{height} = @design;
     $glyph{design} = \@design;
-    for my $key (qw/descender ascender advance height/) {
+    for my $key (qw/descender advance height/) {
+      defined $glyph{$key} or die "Bad $key in $char\n";
       $glyph{$key} > $font{$key}
 	and $font{$key} = $glyph{$key};
     }
+    $glyph{baseline} > $font{ascender}
+      and $font{ascender} = $glyph{baseline};
+
+    if (exists $glyph{default}) {
+      $defname = $name;
+    }
+
     $glyphs{$name} = \%glyph;
   }
   
   for my $glyph (@glyphs{sort keys %glyphs}) {
     my $line_bytes = ($glyph->{width} + 7) / 8;
     my @bytes;
-    print CSRC "static unsigned char\ndesign_$glyph->{name}\[\] = \n{\n";
+    print CSRC "static unsigned char\ndesign_$glyph->{name}_$size\[\] = \n{\n";
     for my $row (@{$glyph->{design}}) {
       print CSRC "  ";
       my $byte = 0;
@@ -190,49 +199,54 @@ for my $file (glob "$in*.img") {
     print CSRC <<EOS;
 static i_bif_glyph
 glyph_$glyph->{name}_$size = {
-  $glyph->{width},
-  $glyph->{height},
-  $glyph->{baseline},
-  $glyph->{offset},
-  $glyph->{advance},
-  design_$glyph->{name}_$size,
+  $glyph->{width}, /* width */
+  $glyph->{height}, /* height */
+  $glyph->{baseline}, /* ascent */
+  $glyph->{offset}, /* offset */
+  $glyph->{advance}, /* advance */
+  design_$glyph->{name}_$size, /* bits */
   sizeof(design_$glyph->{name}_$size),
 };
 
 EOS
   }
 
-  print CSRC "static i_bif_mapping\nmapping_$size[] =\n{\n";
+  print CSRC "static i_bif_mapping\nmapping_${size}[] =\n{\n";
   for my $glyph (@glyphs{sort { ord($glyphs{$a}{char}) <=> ord($glyphs{$b}{char}) } keys %glyphs}) {
-    printf CSRC "  { %#x, glyph_%s_%s },\n", ord($glyph->{char}), $glyph->{name}, $size;
+    printf CSRC "  { %#x, &glyph_%s_%s },\n", ord($glyph->{char}), $glyph->{name}, $size;
   }
+  my $x_width = $glyphs{x}{width};
   print CSRC "};\n\n";
   print CSRC <<EOS;
 static i_bif_font
 font_$size = {
-  $size,
-  $font{ascender},
-  $font{descender},
-  $x_width,
-  mapping_$size,
-  sizeof(mapping_$size) / sizeof(*mapping_$size);
+  $size, /* size */
+  $font{ascender}, /* global ascent */
+  $font{descender}, /* global descent */
+  $x_width, /* x width */
+  &glyph_${defname}_$size, /* default glyph */
+  mapping_$size, /* code mapping */
+  sizeof(mapping_$size) / sizeof(*mapping_$size)
 };
 
 EOS
   push @fonts, $size;
 }
 
-print CSRC "static i_bif_font*\nface_fonts[] =\n {\n";
-for my $size (sort { $a <=> $b } @fonts) {
-  print CSRC "  font_$size,\n";
+print CSRC "static i_bif_font*\nface_fonts[] = {\n";
+@fonts = sort { $a <=> $b } @fonts;
+my $index = 0;
+for my $size (@fonts) {
+  my $comma = $index++ == $#fonts ? "" : ",";
+  print CSRC "  &font_$size$comma\n";
 }
 print CSRC "};\n";
 
 print CSRC <<EOS;
-i_bif_face i_face_$in = {
-  "$in",
-  face_fonts,
-  sizeof(face_fonts) / sizeof(*face_conts)
+const i_bif_face i_face_$in = {
+  "$in", /* face name */
+  face_fonts, /* fonts */
+  sizeof(face_fonts) / sizeof(*face_fonts)
 };
 EOS
 

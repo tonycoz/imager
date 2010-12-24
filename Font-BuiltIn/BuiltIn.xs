@@ -28,7 +28,7 @@ i_bif_new(face)
 	const char *face
 
 int
-i_bif_text(font, im, tx, ty, size, cl, text_sv, align, utf8)
+i_bif_text(font, im, tx, ty, size, cl, text_sv, align, utf8=0, dir=0)
 	Imager::Font::BI font
 	Imager::ImgRaw im
 	int tx
@@ -38,6 +38,7 @@ i_bif_text(font, im, tx, ty, size, cl, text_sv, align, utf8)
 	SV *text_sv
 	int align
 	int utf8
+	int dir
       PREINIT:
 	char *text;
 	STRLEN len;
@@ -48,7 +49,7 @@ i_bif_text(font, im, tx, ty, size, cl, text_sv, align, utf8)
         }
 #endif
 	text = SvPV(text_sv, len);
-	RETVAL = i_bif_text(font, im, tx, ty, size, cl, text, len, align, utf8);
+	RETVAL = i_bif_text(font, im, tx, ty, size, cl, text, len, align, utf8, dir);
       OUTPUT:
 	RETVAL
 
