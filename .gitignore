@@ -1,5 +1,6 @@
 *.o
 Makefile
+Makefile.old
 pm_to_blib
 blib
 
@@ -30,4 +31,11 @@ testout/
 # editor droppings
 *~
 .#*
+
+# coverage testing
+*.gcda
+*.gcno
+*.gcov
+cover_db/
+*/cover_db/
 
