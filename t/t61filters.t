@@ -1,7 +1,7 @@
 #!perl -w
 use strict;
 use Imager qw(:handy);
-use Test::More tests => 91;
+use Test::More tests => 113;
 Imager::init_log("testout/t61filters.log", 1);
 use Imager::Test qw(is_image_similar test_image is_image is_color4 is_fcolor4);
 # meant for testing the filters themselves
@@ -139,6 +139,48 @@ test($imbase, { type=>'fountain', xa=>75, ya=>75, xb=>90, yb=>15,
                     segments=>$f3, super_sample=>'grid',
                     ftype=>'radial_square', combine=>'color' },
      'testout/t61_fount_gimp.ppm');
+{ # test new fountain with no parameters
+  my $warn = '';
+  local $SIG{__WARN__} = sub { $warn .= "@_" };
+  my $f4 = Imager::Fountain->read();
+  ok(!$f4, "read with no parameters does nothing");
+  like($warn, qr/Nothing to do!/, "check the warning");
+}
+{ # test with missing file
+  my $warn = '';
+  local $SIG{__WARN__} = sub { $warn .= "@_" };
+  my $f = Imager::Fountain->read(gimp => "no-such-file");
+  ok(!$f, "try to read a fountain defintion that doesn't exist");
+  is($warn, "", "should be no warning");
+  like(Imager->errstr, qr/^Cannot open no-such-file: /, "check message");
+}
+SKIP:
+{
+  my $fh = IO::File->new("testimg/gimpgrad", "r");
+  ok($fh, "opened gradient")
+    or skip "Couldn't open gradient: $!", 1;
+  my $f = Imager::Fountain->read(gimp => $fh);
+  ok($f, "read gradient from file handle");
+}
+{
+  # not a gradient
+  my $f = Imager::Fountain->read(gimp => "t/t61filters.t");
+  ok(!$f, "fail to read non-gradient");
+  is(Imager->errstr, "t/t61filters.t is not a GIMP gradient file",
+     "check error message");
+}
+{ # an invalid gradient file
+  my $f = Imager::Fountain->read(gimp => "testimg/gradbad.ggr");
+  ok(!$f, "fail to read bad gradient (bad seg count)");
+  is(Imager->errstr, "testimg/gradbad.ggr is missing the segment count",
+     "check error message");
+}
+{ # an invalid gradient file
+  my $f = Imager::Fountain->read(gimp => "testimg/gradbad2.ggr");
+  ok(!$f, "fail to read bad gradient (bad segment)");
+  is(Imager->errstr, "Bad segment definition",
+     "check error message");
+}
 test($imbase, { type=>'unsharpmask', stddev=>2.0 },
      'testout/t61_unsharp.ppm');
 test($imbase, {type=>'conv', coef=>[ -1, 3, -1, ], },
@@ -229,6 +271,40 @@ is($name, "test gradient", "check the name matches");
                   xa=>0, ya=>30, xb=>49, yb=>30), 
      "fountain with invalid color name");
   cmp_ok($im->errstr, '=~', 'No color named', "check error message");
+}
+
+{
+  # test simple gradient creation
+  my @colors = map Imager::Color->new($_), qw/white blue red/;
+  my $s = Imager::Fountain->simple(positions => [ 0, 0.3, 1.0 ],
+				   colors => \@colors);
+  ok($s, "made simple gradient");
+  my $start = $s->[0];
+  is($start->[0], 0, "check start of first correct");
+  is_color4($start->[3], 255, 255, 255, 255, "check color at start");
+}
+{
+  # simple gradient error modes
+  {
+    my $warn = '';
+    local $SIG{__WARN__} = sub { $warn .= "@_" };
+    my $s = Imager::Fountain->simple();
+    ok(!$s, "no parameters to simple()");
+    like($warn, qr/Nothing to do/);
+  }
+  {
+    my $s = Imager::Fountain->simple(positions => [ 0, 1 ],
+				     colors => [ NC(0, 0, 0) ]);
+    ok(!$s, "mismatch of positions and colors fails");
+    is(Imager->errstr, "positions and colors must be the same size",
+       "check message");
+  }
+  {
+    my $s = Imager::Fountain->simple(positions => [ 0 ],
+				     colors => [ NC(0, 0, 0) ]);
+    ok(!$s, "not enough positions");
+    is(Imager->errstr, "not enough segments");
+  }
 }
 
 {

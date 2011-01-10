@@ -62,7 +62,7 @@ sub read {
     return $class->_load_gimp_gradient($fh, $opts{gimp}, $name_ref);
   }
   else {
-    warn "$class::read: Nothing to do!";
+    warn "${class}::read: Nothing to do!";
     return;
   }
 }

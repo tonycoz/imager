@@ -364,6 +364,8 @@ testimg/comp4.bmp		Compressed 4-bit/pixel BMP
 testimg/comp8.bmp		Compressed 8-bit/pixel BMP
 testimg/filltest.ppm		Test for flood fills
 testimg/gimpgrad		A GIMP gradient file
+testimg/gradbad.ggr		A bad GIMP gradient file (bad seg count)
+testimg/gradbad2.ggr		A bad GIMP gradient file (bad segment)
 testimg/imager.pbm		Test bi-level
 testimg/junk.ppm
 testimg/longid.tga		Test TGA with a long id string
