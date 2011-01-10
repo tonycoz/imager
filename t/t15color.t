@@ -7,9 +7,10 @@
 # Change 1..1 below to 1..last_test_to_print .
 # (It may become useful if the test is moved to ./t subdirectory.)
 
-use Test::More tests => 47;
+use Test::More tests => 55;
 
-BEGIN { use_ok('Imager'); };
+use Imager;
+use Imager::Test qw(is_fcolor4);
 
 init_log("testout/t15color.log",1);
 
@@ -126,7 +127,35 @@ color_ok('builtin black', 0, 0, 0, 255,
   is(@warnings, 0, "Should be no warnings")
     or do { print "# $_" for @warnings };
 }
- 
+
+{
+  # float color from hex triple
+  my $f3white = Imager::Color::Float->new("#FFFFFF");
+  is_fcolor4($f3white, 1.0, 1.0, 1.0, 1.0, "check color #FFFFFF");
+  my $f3black = Imager::Color::Float->new("#000000");
+  is_fcolor4($f3black, 0, 0, 0, 1.0, "check color #000000");
+  my $f3grey = Imager::Color::Float->new("#808080");
+  is_fcolor4($f3grey, 0x80/0xff, 0x80/0xff, 0x80/0xff, 1.0, "check color #808080");
+
+  my $f4white = Imager::Color::Float->new("#FFFFFF80");
+  is_fcolor4($f4white, 1.0, 1.0, 1.0, 0x80/0xff, "check color #FFFFFF80");
+}
+
+{
+  # fail to make a color
+  ok(!Imager::Color::Float->new("-unknown-"), "try to make float color -unknown-");
+}
+
+{
+  # set after creation
+  my $c = Imager::Color::Float->new(0, 0, 0);
+  is_fcolor4($c, 0, 0, 0, 1.0, "check simple init of float color");
+  ok($c->set(1.0, 0.5, 0.25, 1.0), "set() the color");
+  is_fcolor4($c, 1.0, 0.5, 0.25, 1.0, "check after set");
+
+  ok(!$c->set("-unknown-"), "set to unknown");
+}
+
 sub test_col {
   my ($c, $r, $g, $b, $a) = @_;
   unless ($c) {

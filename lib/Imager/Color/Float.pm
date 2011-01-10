@@ -16,10 +16,10 @@ sub _pspec {
   return (@_    ) if @_ == 4;
   if ($_[0] =~ 
       /^\#?([\da-f][\da-f])([\da-f][\da-f])([\da-f][\da-f])([\da-f][\da-f])/i) {
-    return (hex($1)/255.99,hex($2)/255.99,hex($3)/255.99,hex($4)/255.99);
+    return (hex($1)/255,hex($2)/255,hex($3)/255,hex($4)/255);
   }
   if ($_[0] =~ /^\#?([\da-f][\da-f])([\da-f][\da-f])([\da-f][\da-f])/i) {
-    return (hex($1)/255.99,hex($2)/255.99,hex($3)/255.99,1);
+    return (hex($1)/255,hex($2)/255,hex($3)/255,1);
   }
   return ();
 }

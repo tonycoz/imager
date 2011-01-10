@@ -9,6 +9,9 @@ Bug fixes:
    by the default (qtype=normal) scaling method.
    https://rt.cpan.org/Public/Bug/Display.html?id=63922
 
+ - Imager::Color::Float now translates "#FFFFFF" to white instead of
+   just a little darker.
+
 Imager 0.79 - 10 Dec 2010
 ===========
 
