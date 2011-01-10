@@ -1,0 +1,33 @@
+*.o
+Makefile
+pm_to_blib
+blib
+
+# generated code
+Imager.c
+combine.c
+compose.c
+conv.c
+convert.c
+filters.c
+flip.c
+gaussian.c
+imconfig.h
+paste.c
+render.c
+paste.c
+rubthru.c
+scale.c
+
+# build generated files
+*.bs
+*/Makefile
+
+# test generated files
+_Inline/
+testout/
+
+# editor droppings
+*~
+.#*
+
