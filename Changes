@@ -1,5 +1,15 @@
 Imager release history.  Older releases can be found in Changes.old
 
+Imager 0.81 - unreleased
+===========
+
+ - added coverage tests for masked images (maskimg.c @100% test coverage)
+
+Bug fixes:
+
+ - paletted writes to a masked image are now masked correctly.
+   Revealed by new coverage tests.
+
 Imager 0.80 - 17 Jan 2011
 ===========
 
@@ -22,6 +32,8 @@ Bug fixes:
    changes the default color map builder for writing GIFs back to what
    it was in 0.77, reverting a performance regression.
    https://rt.cpan.org/Ticket/Display.html?id=64785
+
+ - handle failure to create a masked image correctly
 
 Imager 0.79 - 10 Dec 2010
 ===========

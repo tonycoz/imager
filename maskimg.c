@@ -242,7 +242,7 @@ static int i_plin_masked(i_img *im, int l, int r, int y, const i_color *vals) {
 
       i_gsamp(ext->mask, l, r, y, samps, NULL, 1);
       if (w < 10)
-        simple = 0;
+        simple = 1;
       else {
         /* the idea is to make a fast scan to see how often the state
            changes */
@@ -319,7 +319,7 @@ static int i_plinf_masked(i_img *im, int l, int r, int y, const i_fcolor *vals) 
 
       i_gsamp(ext->mask, l, r, y, samps, NULL, 1);
       if (w < 10)
-        simple = 0;
+        simple = 1;
       else {
         /* the idea is to make a fast scan to see how often the state
            changes */
@@ -488,6 +488,7 @@ static int i_ppal_masked(i_img *im, int l, int r, int y, const i_palidx *vals) {
       int w = r - l;
       int start;
       
+      i_gsamp(ext->mask, l, r, y, samps, NULL, 1);
       i = 0;
       while (i < w) {
         while (i < w && !samps[i])

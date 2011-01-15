@@ -1,16 +1,23 @@
 #!perl -w
 use strict;
-use Test::More tests => 34;
+use Test::More tests => 142;
 use Imager qw(:all :handy);
-use Imager::Test qw(is_color3);
+use Imager::Test qw(is_color3 is_fcolor3);
 init_log("testout/t020masked.log", 1);
 
 my $base_rgb = Imager::ImgRaw::new(100, 100, 3);
 # put something in there
+my $black = NC(0, 0, 0);
 my $red = NC(255, 0, 0);
 my $green = NC(0, 255, 0);
 my $blue = NC(0, 0, 255);
 my $white = NC(255, 255, 255);
+my $grey = NC(128, 128, 128);
+use Imager::Color::Float;
+my $redf = Imager::Color::Float->new(1, 0, 0);
+my $greenf = Imager::Color::Float->new(0, 1, 0);
+my $bluef = Imager::Color::Float->new(0, 0, 1);
+my $greyf = Imager::Color::Float->new(0.5, 0.5, 0.5);
 my @cols = ($red, $green, $blue);
 for my $y (0..99) {
   Imager::i_plin($base_rgb, 0, $y, ($cols[$y % 3] ) x 100);
@@ -126,4 +133,396 @@ for my $test (@color_tests) {
   undef $base;
   $m_img->box(color=>$blue, filled=>1);
   pass("didn't crash unreffing base or mask for masked image");
+}
+
+# 35.7% cover on maskimg.c up to here
+
+{ # error handling:
+  my $base = Imager->new(xsize => 100, ysize => 100);
+  ok($base, "make base");
+  { #  make masked image subset outside of the base image
+    my $masked = $base->masked(left => 100);
+    ok (!$masked, "fail to make empty masked");
+    is($base->errstr, "subset outside of target image", "check message");
+  }
+}
+
+{ # size limiting
+  my $base = Imager->new(xsize => 10, ysize => 10);
+  ok($base, "make base for size limit tests");
+  {
+    my $masked = $base->masked(left => 5, right => 15);
+    ok($masked, "make masked");
+    is($masked->getwidth, 5, "check width truncated");
+  }
+  {
+    my $masked = $base->masked(top => 5, bottom => 15);
+    ok($masked, "make masked");
+    is($masked->getheight, 5, "check height truncated");
+  }
+}
+# 36.7% up to here
+
+$mask = Imager->new(xsize => 80, ysize => 80, channels => 1);
+$mask->box(filled => 1, color => $white, xmax => 39, ymax => 39);
+$mask->box(fill => { hatch => "check1x1" }, ymin => 40, xmax => 39);
+
+{
+  my $base = Imager->new(xsize => 100, ysize => 100, bits => "double");
+  ok($base, "base for single pixel tests");
+  is($base->type, "direct", "check type");
+  my $masked = $base->masked(mask => $mask, left => 1, top => 2);
+  my $limited = $base->masked(left => 1, top => 2);
+
+  is($masked->type, "direct", "check masked is same type as base");
+  is($limited->type, "direct", "check limited is same type as base");
+
+  {
+    # single pixel writes, masked
+    {
+      ok($masked->setpixel(x => 1, y => 3, color => $green),
+	 "set (1,3) in masked (2, 5) in based");
+      my $c = $base->getpixel(x => 2, y => 5);
+      is_color3($c, 0, 255, 0, "check it wrote through");
+      ok($masked->setpixel(x => 45, y => 2, color => $red),
+	 "set (45,2) in masked (46,4) in base (no mask)");
+    $c = $base->getpixel(x => 46, y => 4);
+      is_color3($c, 0, 0, 0, "shouldn't have written through");
+    }
+    {
+      ok($masked->setpixel(x => 2, y => 3, color => $redf),
+	 "write float red to (2,3) base(3,5)");
+      my $c = $base->getpixel(x => 3, y => 5);
+      is_color3($c, 255, 0, 0, "check it wrote through");
+      ok($masked->setpixel(x => 45, y => 3, color => $greenf),
+	 "set float (45,3) in masked (46,5) in base (no mask)");
+      $c = $base->getpixel(x => 46, y => 5);
+      is_color3($c, 0, 0, 0, "check it didn't write");
+    }
+    {
+      # write out of range should fail
+      ok(!$masked->setpixel(x => 80, y => 0, color => $green),
+	 "write 8-bit color out of range");
+      ok(!$masked->setpixel(x => 0, y => 80, color => $greenf),
+	 "write float color out of range");
+    }
+  }
+
+  # 46.9
+
+  {
+    note("plin coverage");
+    {
+      $base->box(filled => 1, color => $black);
+      # plin masked
+      # simple path
+      is($masked->setscanline(x => 76, y => 1, pixels => [ ($red, $green) x 3 ]),
+	 4, "try to write 6 pixels, but only write 4");
+      is_deeply([ $base->getsamples(x => 77, y => 3, width => 4) ],
+		[ ( 0 ) x 12 ],
+		"check not written through");
+      # !simple path
+      is($masked->setscanline(x => 4, y => 2, pixels => [ ($red, $green, $blue, $grey) x (72/4) ]),
+	 72, "write many pixels (masked)");
+      is_deeply([ $base->getsamples(x => 5, y => 4, width => 72) ],
+		[ ( (255, 0, 0), (0, 255, 0), (0, 0, 255), (128, 128, 128)) x 9,
+		  ( 0, 0, 0 ) x 36 ],
+		"check written through to base");
+      
+      # simple path, due to number of transitions
+      is($masked->setscanline(x => 0, y => 40, pixels => [ ($red, $green, $blue, $grey) x 5 ]),
+	 20, "try to write 20 pixels, with alternating write through");
+      is_deeply([ $base->getsamples(x => 1, y => 42, width => 20) ],
+		[ ( (0, 0, 0), (0,255,0), (0,0,0), (128,128,128) ) x 5 ],
+		"check correct pixels written through");
+    }
+    
+    {
+      $base->box(filled => 1, color => $black);
+      # plin, non-masked path
+      is($limited->setscanline(x => 4, y => 2, pixels => [ ($red, $green, $blue, $grey) x (72/4) ]),
+	 72, "write many pixels (limited)");
+      is_deeply([ $base->getsamples(x => 5, y => 4, width => 72) ],
+		[ ( (255, 0, 0), (0, 255, 0), (0, 0, 255), (128, 128, 128)) x 18 ],
+		"check written through to based");
+    }
+    
+    {
+      # draw outside fails
+      is($masked->setscanline(x => 80, y => 2, pixels => [ $red, $green ]),
+	 0, "check writing no pixels");
+    }
+  }
+
+  {
+    note("plinf coverage");
+    {
+      $base->box(filled => 1, color => $black);
+      # plinf masked
+      # simple path
+      is($masked->setscanline(x => 76, y => 1, pixels => [ ($redf, $greenf) x 3 ]),
+	 4, "try to write 6 pixels, but only write 4");
+      is_deeply([ $base->getsamples(x => 77, y => 3, width => 4, type => "float") ],
+		[ ( 0 ) x 12 ],
+		"check not written through");
+      # !simple path
+      is($masked->setscanline(x => 4, y => 2, pixels => [ ($redf, $greenf, $bluef, $greyf) x (72/4) ]),
+	 72, "write many pixels (masked)");
+      is_deeply([ $base->getsamples(x => 5, y => 4, width => 72, type => "float") ],
+		[ ( (1, 0, 0), (0, 1, 0), (0, 0, 1), (0.5, 0.5, 0.5)) x 9,
+		  ( 0, 0, 0 ) x 36 ],
+		"check written through to base");
+      
+      # simple path, due to number of transitions
+      is($masked->setscanline(x => 0, y => 40, pixels => [ ($redf, $greenf, $bluef, $greyf) x 5 ]),
+	 20, "try to write 20 pixels, with alternating write through");
+      is_deeply([ $base->getsamples(x => 1, y => 42, width => 20, type => "float") ],
+		[ ( (0, 0, 0), (0,1,0), (0,0,0), (0.5,0.5,0.5) ) x 5 ],
+		"check correct pixels written through");
+    }
+    
+    {
+      $base->box(filled => 1, color => $black);
+      # plinf, non-masked path
+      is($limited->setscanline(x => 4, y => 2, pixels => [ ($redf, $greenf, $bluef, $greyf) x (72/4) ]),
+	 72, "write many pixels (limited)");
+      is_deeply([ $base->getsamples(x => 5, y => 4, width => 72, type => "float") ],
+		[ ( (1, 0, 0), (0, 1, 0), (0, 0, 1), (0.5, 0.5, 0.5)) x 18 ],
+		"check written through to based");
+    }
+    
+    {
+      # draw outside fails
+      is($masked->setscanline(x => 80, y => 2, pixels => [ $redf, $greenf ]),
+	 0, "check writing no pixels");
+    }
+  }
+  # 71.4%
+  {
+    {
+      note("gpix");
+      # gpix
+      $base->box(filled => 1, color => $black);
+      ok($base->setpixel(x => 4, y => 10, color => $red),
+	 "set base(4,10) to red");
+      is_fcolor3($masked->getpixel(x => 3, y => 8),
+		 255, 0, 0, "check pixel written");
+
+      # out of range
+      is($masked->getpixel(x => -1, y => 1),
+	 undef, "check failure to left");
+      is($masked->getpixel(x => 0, y => -1),
+	 undef, "check failure to top");
+      is($masked->getpixel(x => 80, y => 1),
+	 undef, "check failure to right");
+      is($masked->getpixel(x => 0, y => 80),
+	 undef, "check failure to bottom");
+    }
+    {
+      note("gpixf");
+      # gpixf
+      $base->box(filled => 1, color => $black);
+      ok($base->setpixel(x => 4, y => 10, color => $redf),
+	 "set base(4,10) to red");
+      is_fcolor3($masked->getpixel(x => 3, y => 8, type => "float"),
+		 1.0, 0, 0, 0, "check pixel written");
+
+      # out of range
+      is($masked->getpixel(x => -1, y => 1, type => "float"),
+	 undef, "check failure to left");
+      is($masked->getpixel(x => 0, y => -1, type => "float"),
+	 undef, "check failure to top");
+      is($masked->getpixel(x => 80, y => 1, type => "float"),
+	 undef, "check failure to right");
+      is($masked->getpixel(x => 0, y => 80, type => "float"),
+	 undef, "check failure to bottom");
+    }
+  }
+  # 74.5
+  {
+    {
+      note("glin");
+      $base->box(filled => 1, color => $black);
+      is($base->setscanline(x => 31, y => 3, 
+			    pixels => [ ( $red, $green) x 10 ]),
+	 20, "write 20 pixels to base image");
+      my @colors = $masked->
+	getscanline(x => 30, y => 1, width => 20);
+      is(@colors, 20, "check we got right number of colors");
+      is_color3($colors[0], 255, 0, 0, "check first pixel");
+      is_color3($colors[19], 0, 255, 0, "check last pixel");
+
+      @colors = $masked->getscanline(x => 76, y => 2, width => 10);
+      is(@colors, 4, "read line from right edge");
+      is_color3($colors[0], 0, 0, 0, "check pixel");
+
+      is_deeply([ $masked->getscanline(x => -1, y => 0, width => 1) ],
+	 [], "fail read left of image");
+      is_deeply([ $masked->getscanline(x => 0, y => -1, width => 1) ],
+	 [], "fail read top of image");
+      is_deeply([$masked->getscanline(x => 80, y => 0, width => 1)],
+	 [], "fail read right of image");
+      is_deeply([$masked->getscanline(x => 0, y => 80, width => 1)],
+	 [], "fail read bottom of image");
+    }
+    {
+      note("glinf");
+      $base->box(filled => 1, color => $black);
+      is($base->setscanline(x => 31, y => 3, 
+			    pixels => [ ( $redf, $greenf) x 10 ]),
+	 20, "write 20 pixels to base image");
+      my @colors = $masked->
+	getscanline(x => 30, y => 1, width => 20, type => "float");
+      is(@colors, 20, "check we got right number of colors");
+      is_fcolor3($colors[0], 1.0, 0, 0, 0, "check first pixel");
+      is_fcolor3($colors[19], 0, 1.0, 0, 0, "check last pixel");
+
+      @colors = $masked->
+	getscanline(x => 76, y => 2, width => 10, type => "float");
+      is(@colors, 4, "read line from right edge");
+      is_fcolor3($colors[0], 0, 0, 0, 0, "check pixel");
+
+      is_deeply([ $masked->getscanline(x => -1, y => 0, width => 1, type => "float") ],
+	 [], "fail read left of image");
+      is_deeply([ $masked->getscanline(x => 0, y => -1, width => 1, type => "float") ],
+	 [], "fail read top of image");
+      is_deeply([$masked->getscanline(x => 80, y => 0, width => 1, type => "float")],
+	 [], "fail read right of image");
+      is_deeply([$masked->getscanline(x => 0, y => 80, width => 1, type => "float")],
+	 [], "fail read bottom of image");
+    }
+  }
+  # 81.6%
+  {
+    {
+      note("gsamp");
+      $base->box(filled => 1, color => $black);
+      is($base->setscanline(x => 31, y => 3, 
+			    pixels => [ ( $red, $green) x 10 ]),
+	 20, "write 20 pixels to base image");
+      my @samps = $masked->
+	getsamples(x => 30, y => 1, width => 20);
+      is(@samps, 60, "check we got right number of samples");
+      is_deeply(\@samps,
+		[ (255, 0, 0, 0, 255, 0) x 10 ],
+		"check it");
+
+      @samps = $masked->
+	getsamples(x => 76, y => 2, width => 10);
+      is(@samps, 12, "read line from right edge");
+      is_deeply(\@samps, [ (0, 0, 0) x 4], "check result");
+
+      is_deeply([ $masked->getsamples(x => -1, y => 0, width => 1) ],
+	 [], "fail read left of image");
+      is_deeply([ $masked->getsamples(x => 0, y => -1, width => 1) ],
+	 [], "fail read top of image");
+      is_deeply([$masked->getsamples(x => 80, y => 0, width => 1)],
+	 [], "fail read right of image");
+      is_deeply([$masked->getsamples(x => 0, y => 80, width => 1)],
+	 [], "fail read bottom of image");
+    }
+    {
+      note("gsampf");
+      $base->box(filled => 1, color => $black);
+      is($base->setscanline(x => 31, y => 3, 
+			    pixels => [ ( $redf, $greenf) x 10 ]),
+	 20, "write 20 pixels to base image");
+      my @samps = $masked->
+	getsamples(x => 30, y => 1, width => 20, type => "float");
+      is(@samps, 60, "check we got right number of samples");
+      is_deeply(\@samps,
+		[ (1.0, 0, 0, 0, 1.0, 0) x 10 ],
+		"check it");
+
+      @samps = $masked->
+	getsamples(x => 76, y => 2, width => 10, type => "float");
+      is(@samps, 12, "read line from right edge");
+      is_deeply(\@samps, [ (0, 0, 0) x 4], "check result");
+
+      is_deeply([ $masked->getsamples(x => -1, y => 0, width => 1, type => "float") ],
+	 [], "fail read left of image");
+      is_deeply([ $masked->getsamples(x => 0, y => -1, width => 1, type => "float") ],
+	 [], "fail read top of image");
+      is_deeply([$masked->getsamples(x => 80, y => 0, width => 1, type => "float")],
+	 [], "fail read right of image");
+      is_deeply([$masked->getsamples(x => 0, y => 80, width => 1, type => "float")],
+	 [], "fail read bottom of image");
+    }
+  }
+  # 86.2%
+}
+
+{
+  my $base = Imager->new(xsize => 100, ysize => 100, type => "paletted");
+  ok($base, "make paletted base");
+  is($base->type, "paletted", "check we got paletted");
+  is($base->addcolors(colors => [ $black, $red, $green, $blue ]),
+     "0 but true",
+     "add some colors to base");
+  my $masked = $base->masked(mask => $mask, left => 1, top => 2);
+  my $limited = $base->masked(left => 1, top => 2);
+
+  is($masked->type, "paletted", "check masked is same type as base");
+  is($limited->type, "paletted", "check limited is same type as base");
+
+  {
+    # make sure addcolors forwarded
+    is($masked->addcolors(colors => [ $grey ]), 4,
+       "test addcolors forwarded");
+    my @colors = $masked->getcolors();
+    is(@colors, 5, "check getcolors forwarded");
+    is_color3($colors[1], 255, 0, 0, "check color from palette");
+  }
+
+  my ($blacki, $redi, $greeni, $bluei, $greyi) = 0 .. 4;
+
+  { # gpal
+    note("gpal");
+    $base->box(filled => 1, color => $black);
+    is($base->setscanline(x => 0, y => 5, type => "index",
+			  pixels => [ ( $redi, $greeni, $bluei, $greyi) x 25 ]),
+       100, "write some pixels to base");
+    my @indexes = $masked->getscanline(y => 3, type => "index", width => "81");
+    is(@indexes, 80, "got 80 indexes");
+    is_deeply(\@indexes,
+	      [ ( $greeni, $bluei, $greyi, $redi) x 20 ],
+	      "check values");
+
+    is_deeply([ $masked->getscanline(x => -1, y => 3, type => "index") ],
+	      [], "fail read left of image");
+  }
+  # 89.8%
+
+  { # ppal, unmasked
+    note("ppal");
+    $base->box(filled => 1, color => $black);
+    is($limited->setscanline(x => 1, y => 1, type => "index",
+			     pixels => [ ( $redi, $greeni, $bluei) x 3 ]),
+       9, "ppal limited");
+    is_deeply([ $base->getscanline(x => 2, y => 3, type => "index", 
+				   width => 9) ],
+	      [ ( $redi, $greeni, $bluei) x 3 ],
+	      "check set in base");
+  }
+  { # ppal, masked
+    $base->box(filled => 1, color => $black);
+    is($masked->setscanline(x => 1, y => 2, type => "index",
+			    pixels => [ ( $redi, $greeni, $bluei, $greyi) x 12 ]),
+       48, "ppal masked");
+    is_deeply([ $base->getscanline(x => 0, y => 4, type => "index") ],
+	      [ 0, 0,
+		( $redi, $greeni, $bluei, $greyi ) x 9,
+		$redi, $greeni, $bluei, ( 0 ) x 59 ],
+	      "check written");
+  }
+  {
+    # ppal, errors
+    is($masked->setscanline(x => -1, y => 0, type => "index",
+			    pixels => [ $redi, $bluei ]),
+       0, "fail to write ppal");
+
+    is($masked->setscanline(x => 78, y => 0, type => "index",
+			   pixels => [ $redi, $bluei, $greeni, $greyi ]),
+       2, "write over right side");
+  }
 }

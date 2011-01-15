@@ -913,11 +913,16 @@ sub masked {
   $result->{IMG} = i_img_masked_new($self->{IMG}, $mask, $opts{left}, 
                                     $opts{top}, $opts{right} - $opts{left},
                                     $opts{bottom} - $opts{top});
+  unless ($result->{IMG}) {
+    $self->_set_error(Imager->_error_as_msg);
+    return;
+  }
+
   # keep references to the mask and base images so they don't
   # disappear on us
   $result->{DEPENDS} = [ $self->{IMG}, $mask ];
 
-  $result;
+  return $result;
 }
 
 # convert an RGB image into a paletted image
