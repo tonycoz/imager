@@ -12,6 +12,9 @@ Bug fixes:
  - Imager::Color::Float now translates "#FFFFFF" to white instead of
    just a little darker.
 
+ - make the default color map build algorithm "mediancut".
+   https://rt.cpan.org/Ticket/Display.html?id=64785
+
 Imager 0.79 - 10 Dec 2010
 ===========
 

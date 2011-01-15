@@ -641,7 +641,7 @@ ip_handle_quant_opts(pTHX_ i_quantize *quant, HV *hv)
       }
     }
   }
-  quant->make_colors = mc_addi;
+  quant->make_colors = mc_median_cut;
   sv = hv_fetch(hv, "make_colors", 11, 0);
   if (sv && *sv && (str = SvPV(*sv, len))) {
     quant->make_colors = 
