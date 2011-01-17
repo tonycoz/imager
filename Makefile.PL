@@ -219,9 +219,9 @@ if ($MM_ver >= 6.46) {
       homepage => "http://imager.perl.org/",
       repository =>
       {
-       url => "http://imager.perl.org/svn/trunk/Imager",
-       web => "http://imager.perl.org/svnweb/public/browse/trunk/Imager",
-       type => "svn",
+       url => "git://git.imager.perl.org/imager.git",
+       web => "http://git.imager.perl.org/imager.git",
+       type => "git",
       },
       bugtracker =>
       {

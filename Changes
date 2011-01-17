@@ -3,6 +3,12 @@ Imager release history.  Older releases can be found in Changes.old
 Imager 0.80 - unreleased
 ===========
 
+ - added coverage tests for Imager::Fountain and Imager::Color::Float
+
+ - Imager is now maintained in git
+   http://git.imager.perl.org/imager.git
+   git://git.imager.perl.org/imager.git
+
 Bug fixes:
 
  - images with an translucent alpha channel were not scaled correctly
@@ -12,7 +18,9 @@ Bug fixes:
  - Imager::Color::Float now translates "#FFFFFF" to white instead of
    just a little darker.
 
- - make the default color map build algorithm "mediancut".
+ - make the default color map build algorithm "mediancut".  This
+   changes the default color map builder for writing GIFs back to what
+   it was in 0.77, reverting a performance regression.
    https://rt.cpan.org/Ticket/Display.html?id=64785
 
 Imager 0.79 - 10 Dec 2010
