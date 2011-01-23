@@ -1,6 +1,6 @@
 #!perl -w
 use strict;
-use Test::More tests => 10;
+use Test::More tests => 13;
 use Imager;
 
 BEGIN { use_ok('Imager::Matrix2d', ':handy') }
@@ -38,6 +38,11 @@ ok(almost_equal($scale, [ 1.2, 0,   0,
                           0,   0.8, 0,
                           0,   0,   1 ]), "scale matrix");
 
+my $custom = Imager::Matrix2d->matrix(1, 0, 0, 0, 1, 0, 0, 0, 1);
+ok(almost_equal($custom, [ 1, 0, 0,
+                       0, 1, 0,
+                       0, 0, 1 ]), "custom matrix");
+
 my $trans_called;
 $rotate = Imager::Matrix2d::Test->rotate(degrees=>90, x=>50);
 ok($trans_called, "translate called on rotate with just x");
@@ -45,6 +50,9 @@ ok($trans_called, "translate called on rotate with just x");
 $trans_called = 0;
 $rotate = Imager::Matrix2d::Test->rotate(degrees=>90, 'y'=>50);
 ok($trans_called, "translate called on rotate with just y");
+
+ok(!Imager::Matrix2d->matrix(), "bad custom matrix");
+is(Imager->errstr, "9 co-efficients required", "check error");
 
 sub almost_equal {
   my ($m1, $m2) = @_;
@@ -66,3 +74,4 @@ sub translate {
   ++$trans_called;
   return $class->SUPER::translate(%opts);
 }
+

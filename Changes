@@ -13,6 +13,10 @@ Bug fixes:
  - update the filter plugin documentation.
    https://rt.cpan.org/Ticket/Display.html?id=56513
 
+ - add the matrix() method to Imager::Matrix2d to allow creation of a
+   matrix with specified co-efficients.
+   https://rt.cpan.org/Ticket/Display.html?id=29938
+
 Imager 0.80 - 17 Jan 2011
 ===========
 

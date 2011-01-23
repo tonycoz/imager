@@ -17,6 +17,9 @@ $VERSION = "1.009";
   $m4 = Imager::Matrix2d->shear(x=>$sx, y=>$sy);
   $m5 = Imager::Matrix2d->reflect(axis=>$axis);
   $m6 = Imager::Matrix2d->scale(x=>$xratio, y=>$yratio);
+  $m8 = Imager::Matric2d->matrix($v11, $v12, $v13,
+                                 $v21, $v22, $v23,
+                                 $v31, $v32, $v33);
   $m6 = $m1 * $m2;
   $m7 = $m1 + $m2;
   use Imager::Matrix2d qw(:handy);
@@ -232,6 +235,24 @@ sub scale {
   else {
     $Imager::ERRSTR = 'x or y parameter required';
     return undef;
+  }
+}
+
+=item matrix($v11, $v12, $v13, $v21, $v22, $v23, $v31, $v32, $v33)
+
+Create a matrix with custom co-efficients.
+
+=cut
+
+sub matrix {
+  my ($class, @self) = @_;
+
+  if (@self == 9) {
+    return bless \@self, $class;
+  }
+  else {
+    $Imager::ERRSTR = "9 co-efficients required";
+    return;
   }
 }
 
