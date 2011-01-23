@@ -606,7 +606,7 @@ The function you supply must modify the image in place.
 
 =back
 
-See Imager::Filter::Mandelbrot for an example.
+See L<Imager::Filter::Mandelbrot> for an example.
 
 =back
 
@@ -615,15 +615,14 @@ See Imager::Filter::Mandelbrot for an example.
 =head2 Plug-ins
 
 The plug in interface is deprecated.  Please use the Imager API, see
-L</Imager::API> and L<External Filters> for details
+L<Imager::API> and L<External Filters> for details
 
-It is possible to add filters to the module without recompiling the
-module itself.  This is done by using DSOs (Dynamic shared object)
-available on most systems.  This way you can maintain our own filters
-and not have to get me to add it, or worse patch every new version of
-the Module.  Modules can be loaded AND UNLOADED at run time.  This
-means that you can have a server/daemon thingy that can do something
-like:
+It is possible to add filters to the module without recompiling Imager
+itself.  This is done by using DSOs (Dynamic shared object) available
+on most systems.  This way you can maintain your own filters and not
+have to have it added to Imager, or worse patch every new version of
+Imager.  Modules can be loaded AND UNLOADED at run time.  This means
+that you can have a server/daemon thingy that can do something like:
 
   load_plugin("dynfilt/dyntest.so")
     or die "unable to load plugin\n";
@@ -634,21 +633,17 @@ like:
     or die "unable to load plugin\n";
 
 Someone decides that the filter is not working as it should -
-F<dyntest.c> modified and recompiled.
+F<dyntest.c> can be modified and recompiled, and then reloaded:
 
   load_plugin("dynfilt/dyntest.so")
     or die "unable to load plugin\n";
 
   $img->filter(%hsh);
 
-An example plugin comes with the module - Please send feedback to
-addi@umich.edu if you test this.
+=for stopwords Linux Solaris HPUX OpenBSD FreeBSD TRU64 OSF1 AIX Win32 OS X
 
-=for stopwords Linux Solaris HPUX OpenBSD FreeBSD TRU64 OSF1 AIX
-
-Note: This seems to test successfully on the following systems: Linux,
-Solaris, HPUX, OpenBSD, FreeBSD, TRU64/OSF1, AIX.  If you test this on
-other systems please let me know.
+Note: This has been tested successfully on the following systems:
+Linux, Solaris, HPUX, OpenBSD, FreeBSD, TRU64/OSF1, AIX, Win32, OS X.
 
 =over
 
@@ -672,6 +667,36 @@ Accepts a single parameter, the name of a shared library to unload.
 This library must have been previously loaded by load_plugin().
 
 Returns true on success.  Check Imager->errstr on failure.
+
+=back
+
+A few example plug-ins are included and built (but not installed):
+
+=over
+
+=item *
+
+F<plugins/dyntest.c> - provides the C<null> (no action) filter, and
+C<lin_stretch> filters.  C<lin_stretch> stretches sample values
+between C<a> and C<b> out to the full sample range.
+
+=item *
+
+F<plugins/dt2.c> - provides the C<html_art> filter that writes the
+image to the HTML fragment file supplied in C<fname> as a HTML table.
+
+=item *
+
+F<plugins/flines.c> - provides the C<flines> filter that dims
+alternate lines to emulate an old CRT display.
+L<Imager::Filter::Flines> provides the same functionality.
+
+=item *
+
+F<plugins/mandelbrot.c> - provides the C<mandelbrot> filter that
+renders the Mandelbrot set within the given range of x [-2, 0.5) and y
+[-1.25, 1,25).  L<Imager::Filter::Mandelbrot> provides a more flexible
+Mandelbrot set renderer.
 
 =back
 

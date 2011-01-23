@@ -10,6 +10,9 @@ Bug fixes:
  - paletted writes to a masked image are now masked correctly.
    Revealed by new coverage tests.
 
+ - update the filter plugin documentation.
+   https://rt.cpan.org/Ticket/Display.html?id=56513
+
 Imager 0.80 - 17 Jan 2011
 ===========
 

@@ -44,6 +44,7 @@ RGBA
 postfix
 infix
 unary
+renderer
 Uncategorized
 Blit
 /;
