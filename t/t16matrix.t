@@ -1,6 +1,6 @@
 #!perl -w
 use strict;
-use Test::More tests => 13;
+use Test::More tests => 23;
 use Imager;
 
 BEGIN { use_ok('Imager::Matrix2d', ':handy') }
@@ -53,6 +53,61 @@ ok($trans_called, "translate called on rotate with just y");
 
 ok(!Imager::Matrix2d->matrix(), "bad custom matrix");
 is(Imager->errstr, "9 co-efficients required", "check error");
+
+{
+  my @half = ( 0.5, 0, 0,
+	       0, 0.5, 0,
+	       0, 0, 1 );
+  my @quart = ( 0, 0.25, 0,
+		1, 0, 0,
+		0, 0, 1 );
+  my $half_matrix = Imager::Matrix2d->matrix(@half);
+  my $quart_matrix = Imager::Matrix2d->matrix(@quart);
+  my $result = $half_matrix * $quart_matrix;
+  is_deeply($half_matrix * \@quart, $result, "mult by unblessed matrix");
+  is_deeply(\@half * $quart_matrix, $result, "mult with unblessed matrix");
+
+  my $half_three = Imager::Matrix2d->matrix(1.5, 0, 0, 0, 1.5, 0, 0, 0, 3);
+  is_deeply($half_matrix * 3, $half_three, "mult by three");
+  is_deeply(3 * $half_matrix, $half_three, "mult with three");
+
+  {
+    # check error handling - bad ref type
+    my $died = 
+      !eval {
+      my $foo = $half_matrix * +{};
+      1;
+    };
+    ok($died, "mult by hash ref died");
+    like($@, qr/multiply by array ref or number/, "check message");
+  }
+
+  {
+    # check error handling - bad array
+    $@ = '';
+    my $died = 
+      !eval {
+      my $foo = $half_matrix * [ 1 .. 8 ];
+      1;
+    };
+    ok($died, "mult by short array ref died");
+    like($@, qr/9 elements required in array ref/, "check message");
+  }
+
+  {
+    # check error handling - bad value
+    $@ = '';
+    my $died = 
+      !eval {
+      my $foo = $half_matrix * "abc";
+      1;
+    };
+    ok($died, "mult by bad scalar died");
+    like($@, qr/multiply by array ref or number/, "check message");
+  }
+  
+}
+
 
 sub almost_equal {
   my ($m1, $m2) = @_;

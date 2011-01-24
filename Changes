@@ -14,7 +14,8 @@ Bug fixes:
    https://rt.cpan.org/Ticket/Display.html?id=56513
 
  - add the matrix() method to Imager::Matrix2d to allow creation of a
-   matrix with specified co-efficients.
+   matrix with specified co-efficients.  You can now multiple an
+   Imager::Matrix2d object by a 9 element array ref or a number.
    https://rt.cpan.org/Ticket/Display.html?id=29938
 
 Imager 0.80 - 17 Jan 2011

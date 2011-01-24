@@ -1,6 +1,8 @@
 package Imager::Matrix2d;
 use strict;
 use vars qw($VERSION);
+use Scalar::Util qw(reftype looks_like_number);
+use Carp qw(croak);
 
 $VERSION = "1.009";
 
@@ -264,28 +266,41 @@ Currently both the left and right-hand sides of the operator must be
 an Imager::Matrix2d.
 
 =cut
+
 sub _mult {
   my ($left, $right, $order) = @_;
 
-  if (ref($right) && UNIVERSAL::isa($right, __PACKAGE__)) {
-    if ($order) {
-      ($left, $right) = ($right, $left);
-    }
-    my @result;
-    for my $i (0..2) {
-      for my $j (0..2) {
-        my $accum = 0;
-        for my $k (0..2) {
-          $accum += $left->[3*$i + $k] * $right->[3*$k + $j];
-        }
-        $result[3*$i+$j] = $accum;
+  if (ref($right)) {
+    if (reftype($right) eq "ARRAY") {
+      @$right == 9
+	or croak "9 elements required in array ref";
+      if ($order) {
+	($left, $right) = ($right, $left);
       }
+      my @result;
+      for my $i (0..2) {
+	for my $j (0..2) {
+	  my $accum = 0;
+	  for my $k (0..2) {
+	    $accum += $left->[3*$i + $k] * $right->[3*$k + $j];
+	  }
+	  $result[3*$i+$j] = $accum;
+	}
+      }
+      return bless \@result, __PACKAGE__;
     }
+    else {
+      croak "multiply by array ref or number";
+    }
+  }
+  elsif (defined $right && looks_like_number($right)) {
+    my @result = map $_ * $right, @$left;
+
     return bless \@result, __PACKAGE__;
   }
   else {
-    # presumably N * matrix or matrix * N
-    return undef; # for now
+    # something we don't handle
+    croak "multiply by array ref or number";
   }
 }
 
