@@ -5,6 +5,10 @@ Imager 0.81 - unreleased
 
  - added coverage tests for masked images (maskimg.c @100% test coverage)
 
+ - add hsv() method to Imager::Color
+   Thanks to Leolo (Philip Gwyn)
+   https://rt.cpan.org/Ticket/Display.html?id=65385
+
 Bug fixes:
 
  - paletted writes to a masked image are now masked correctly.
@@ -17,6 +21,11 @@ Bug fixes:
    matrix with specified co-efficients.  You can now multiple an
    Imager::Matrix2d object by a 9 element array ref or a number.
    https://rt.cpan.org/Ticket/Display.html?id=29938
+
+ - really fix loading TTF fonts with FT2 when FT1 isn't available.
+   Thanks to Leolo (Philip Gwyn)
+   https://rt.cpan.org/Ticket/Display.html?id=65386
+   https://rt.cpan.org/Ticket/Display.html?id=62855
 
 Imager 0.80 - 17 Jan 2011
 ===========
