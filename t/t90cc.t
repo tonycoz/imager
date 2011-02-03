@@ -4,6 +4,8 @@ use Test::More tests => 16;
 
 use Imager;
 
+-d "testout" or mkdir "testout";
+
 Imager::init('log'=>'testout/t90cc.log');
 
 {

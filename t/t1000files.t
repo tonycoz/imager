@@ -7,6 +7,8 @@ use strict;
 use Test::More tests => 35;
 use Imager;
 
+-d "testout" or mkdir "testout";
+
 Imager::init_log("testout/t1000files.log", 1);
 
 SKIP:

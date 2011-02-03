@@ -7,6 +7,8 @@ use Test::More;
 $Imager::formats{"tiff"}
   or plan skip_all => "no tiff support";
 
+-d "testout" or mkdir "testout";
+
 plan tests => 2;
 
 my $dest = Imager->new(xsize => 100, ysize => 100, channels => 4);

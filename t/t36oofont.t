@@ -14,6 +14,8 @@ use Test::More tests => 20;
 
 BEGIN { use_ok('Imager') };
 
+-d "testout" or mkdir "testout";
+
 init_log("testout/t36oofont.log", 1);
 
 my $fontname_tt=$ENV{'TTFONTTEST'}||'./fontfiles/dodge.ttf';

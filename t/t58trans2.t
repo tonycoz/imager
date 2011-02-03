@@ -4,6 +4,8 @@ use Test::More tests => 37;
 BEGIN { use_ok('Imager'); }
 use Imager::Test qw(is_color3);
 
+-d "testout" or mkdir "testout";
+
 Imager::init('log'=>'testout/t58trans2.log');
 
 my $im1 = Imager->new();

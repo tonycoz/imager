@@ -16,6 +16,8 @@ plan skip_all => "Inline won't work in directories with spaces"
 plan skip_all => "perl 5.005_04, 5.005_05 too buggy"
   if $] =~ /^5\.005_0[45]$/;
 
+-d "testout" or mkdir "testout";
+
 plan tests => 9;
 require Inline;
 Inline->import(with => 'Imager');

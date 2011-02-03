@@ -14,6 +14,8 @@ use Test::More tests => 21;
 use Imager qw(:all :handy);
 use Imager::Test qw(test_image is_color3);
 
+-d "testout" or mkdir "testout";
+
 Imager::init('log'=>'testout/t70newgif.log');
 
 my $green=i_color_new(0,255,0,0);

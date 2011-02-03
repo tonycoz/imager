@@ -9,6 +9,8 @@ BEGIN { use_ok(Imager => qw(:handy :all)) }
 
 use Imager::Test qw(image_bounds_checks is_color3 is_color4 is_fcolor4 color_cmp mask_tests);
 
+-d "testout" or mkdir "testout";
+
 init_log("testout/t01introvert.log",1);
 
 my $im_g = Imager::ImgRaw::new(100, 101, 1);

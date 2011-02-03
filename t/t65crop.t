@@ -6,6 +6,8 @@ use Imager::Test qw(test_image);
 
 #$Imager::DEBUG=1;
 
+-d "testout" or mkdir "testout";
+
 Imager::init('log'=>'testout/t65crop.log');
 
 my $img=Imager->new() || die "unable to create image object\n";

@@ -4,6 +4,8 @@ use Imager qw(:all :handy);
 use Test::More tests => 27;
 use Imager::Test qw(test_colorf_gpix is_fcolor1 is_fcolor3);
 
+-d "testout" or mkdir "testout";
+
 Imager::init("log"=>'testout/t67convert.log');
 
 my $imbase = Imager::ImgRaw::new(200,300,3);

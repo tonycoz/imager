@@ -3,6 +3,8 @@ use strict;
 use Test::More;
 use Imager qw(:all);
 
+-d "testout" or mkdir "testout";
+
 init_log("testout/t101jpeg.log",1);
 
 $Imager::formats{"jpeg"}

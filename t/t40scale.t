@@ -5,6 +5,8 @@ use Test::More tests => 232;
 BEGIN { use_ok(Imager=>':all') }
 use Imager::Test qw(is_image is_color4 is_image_similar);
 
+-d "testout" or mkdir "testout";
+
 Imager::init('log'=>'testout/t40scale.log');
 my $img=Imager->new();
 

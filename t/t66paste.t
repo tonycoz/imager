@@ -7,6 +7,8 @@ use Imager::Test qw(is_image);
 
 #$Imager::DEBUG=1;
 
+-d "testout" or mkdir "testout";
+
 Imager::init('log'=>'testout/t66paste.log');
 
 # the original smoke tests

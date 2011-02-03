@@ -7,6 +7,8 @@ $|=1;
 BEGIN { use_ok(Imager => ':all') }
 use Imager::Test qw(diff_text_with_nul is_color3);
 
+-d "testout" or mkdir "testout";
+
 init_log("testout/t35ttfont.log",2);
 
 SKIP:

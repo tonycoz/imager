@@ -27,6 +27,9 @@ Bug fixes:
    https://rt.cpan.org/Ticket/Display.html?id=65386
    https://rt.cpan.org/Ticket/Display.html?id=62855
 
+ - make sure each test script that needs testout/ creates it.
+   https://rt.cpan.org/Ticket/Display.html?id=65088
+
 Imager 0.80 - 17 Jan 2011
 ===========
 

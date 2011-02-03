@@ -3,6 +3,9 @@ END { print "not ok 1\n" unless $loaded; };
 use Imager qw(:all);
 ++$loaded;
 print "ok 1\n";
+
+-d "testout" or mkdir "testout";
+
 init_log("testout/t05error.log", 1);
 
 # try to read an invalid pnm file

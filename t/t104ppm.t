@@ -4,6 +4,8 @@ use Test::More tests => 191;
 use strict;
 use Imager::Test qw(test_image_raw test_image_16 is_color3 is_color1 is_image);
 
+-d "testout" or mkdir "testout";
+
 init_log("testout/t104ppm.log",1);
 
 my $green = i_color_new(0,255,0,255);

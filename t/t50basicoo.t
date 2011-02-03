@@ -11,6 +11,8 @@ use IO::Seekable;
 
 my $buggy_giflib_file = "buggy_giflib.txt";
 
+-d "testout" or mkdir "testout";
+
 Imager::init("log"=>"testout/t50basicoo.log");
 
 # single image/file types

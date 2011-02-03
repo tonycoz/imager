@@ -8,6 +8,8 @@ use Imager::Color::Float;
 use Imager::Test qw(is_image is_color4 is_fcolor4 is_color3);
 use Config;
 
+-d "testout" or mkdir "testout";
+
 Imager::init_log("testout/t20fill.log", 1);
 
 my $blue = NC(0,0,255);

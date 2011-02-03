@@ -4,6 +4,8 @@ use Test::More tests => 15;
 use Imager;
 use Imager::Test qw(is_image);
 
+-d "testout" or mkdir "testout";
+
 { # flood_fill wouldn't fill to the right if the area was just a
   # single scan-line
   my $im = Imager->new(xsize => 5, ysize => 3);

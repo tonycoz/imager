@@ -3,8 +3,10 @@ use Imager qw(:all);
 use strict;
 use Test::More tests=>46;
 use Imager::Test qw(is_color4 is_image);
-init_log("testout/t108tga.log",1);
 
+-d "testout" or mkdir "testout";
+
+init_log("testout/t108tga.log",1);
 
 my $img = create_test_image();
 my $base_diff = 0;

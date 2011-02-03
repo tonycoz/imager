@@ -8,6 +8,8 @@ use Imager::Test qw(is_image is_color3);
 
 sub PI () { 3.14159265358979323846 }
 
+-d "testout" or mkdir "testout";
+
 Imager::init_log("testout/t75aapolyaa.log",1);
 
 my $red   = Imager::Color->new(255,0,0);

@@ -3,6 +3,9 @@ use strict;
 use Test::More tests => 47;
 use Imager qw(:all);
 use Imager::Test qw/is_color3 is_color4/;
+
+-d "testout" or mkdir "testout";
+
 init_log("testout/t103raw.log",1);
 
 $| = 1;

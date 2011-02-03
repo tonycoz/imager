@@ -4,6 +4,8 @@ use Test::More tests => 104;
 
 BEGIN { use_ok(Imager=>qw(:all :handy)) }
 
+-d "testout" or mkdir "testout";
+
 init_log("testout/t021sixteen.log", 1);
 
 use Imager::Color::Float;

@@ -4,6 +4,8 @@ use Test::More tests => 13;
 
 BEGIN { use_ok('Imager') }
 
+-d "testout" or mkdir "testout";
+
 require_ok('Imager::Font::Wrap');
 
 my $img = Imager->new(xsize=>400, ysize=>400);

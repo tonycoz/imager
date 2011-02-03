@@ -4,6 +4,8 @@ use Test::More tests => 83;
 
 BEGIN { use_ok(Imager => qw(:all :handy)) }
 
+-d "testout" or mkdir "testout";
+
 init_log("testout/t022double.log", 1);
 
 use Imager::Test qw(image_bounds_checks test_colorf_gpix test_colorf_glin mask_tests);

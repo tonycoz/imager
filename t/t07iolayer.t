@@ -6,6 +6,8 @@ use IO::Seekable;
 
 BEGIN { use_ok(Imager => ':all') };
 
+-d "testout" or mkdir "testout";
+
 init_log("testout/t07iolayer.log", 1);
 
 undef($/);

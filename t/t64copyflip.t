@@ -6,6 +6,8 @@ use Imager::Test qw(is_color3 is_image is_imaged test_image_double test_image is
 
 #$Imager::DEBUG=1;
 
+-d "testout" or mkdir "testout";
+
 Imager::init('log'=>'testout/t64copyflip.log');
 
 my $img=Imager->new() or die "unable to create image object\n";

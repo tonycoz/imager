@@ -1,3 +1,5 @@
+-d "testout" or mkdir "testout";
+
 Imager::init("log"=>'testout/t68map.log');
 
 use Imager qw(:all :handy);

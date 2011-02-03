@@ -3,6 +3,9 @@ use strict;
 use Test::More tests => 142;
 use Imager qw(:all :handy);
 use Imager::Test qw(is_color3 is_fcolor3);
+
+-d "testout" or mkdir "testout";
+
 init_log("testout/t020masked.log", 1);
 
 my $base_rgb = Imager::ImgRaw::new(100, 100, 3);

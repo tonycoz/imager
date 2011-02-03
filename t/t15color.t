@@ -12,6 +12,8 @@ use Test::More tests => 70;
 use Imager;
 use Imager::Test qw(is_fcolor4);
 
+-d "testout" or mkdir "testout";
+
 init_log("testout/t15color.log",1);
 
 my $c1 = Imager::Color->new(100, 150, 200, 250);

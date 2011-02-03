@@ -5,6 +5,8 @@ use Imager ':all';
 use Imager::Test qw(is_color3 is_image);
 use constant PI => 3.14159265358979;
 
+-d "testout" or mkdir "testout";
+
 init_log("testout/t21draw.log",1);
 
 my $redobj = NC(255, 0, 0);

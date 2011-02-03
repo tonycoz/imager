@@ -4,6 +4,8 @@ use Test::More tests => 76;
 use Imager qw(:all :handy);
 use Imager::Test qw(is_image);
 
+-d "testout" or mkdir "testout";
+
 init_log("testout/t69rubthru.log", 1);
 
 my $src_height = 80;

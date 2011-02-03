@@ -19,6 +19,8 @@ i_has_format("t1")
 
 plan tests => 95;
 
+-d "testout" or mkdir "testout";
+
 init_log("testout/t30t1font.log",1);
 
 my $deffont = 'fontfiles/dcr10.pfb';

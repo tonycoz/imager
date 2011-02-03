@@ -2,6 +2,9 @@
 use strict;
 use Imager qw(:handy);
 use Test::More tests => 113;
+
+-d "testout" or mkdir "testout";
+
 Imager::init_log("testout/t61filters.log", 1);
 use Imager::Test qw(is_image_similar test_image is_image is_color4 is_fcolor4);
 # meant for testing the filters themselves

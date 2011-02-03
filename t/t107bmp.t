@@ -3,6 +3,9 @@ use strict;
 use Test::More tests => 213;
 use Imager qw(:all);
 use Imager::Test qw(test_image_raw is_image is_color3 test_image);
+
+-d "testout" or mkdir "testout";
+
 init_log("testout/t107bmp.log",1);
 
 my $debug_writes = 0;
