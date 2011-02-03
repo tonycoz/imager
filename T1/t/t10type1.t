@@ -14,8 +14,6 @@ ok($Imager::formats{t1}, "must have t1");
 
 ok((-d "testout" or mkdir "testout"), "make output directory");
 
--d "testout" or mkdir "testout";
-
 init_log("testout/t10type1.log",1);
 
 my $deffont = 'fontfiles/dcr10.pfb';
