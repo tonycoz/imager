@@ -9,7 +9,7 @@ $VERSION = "1.011";
 # It's just a front end to the XS creation functions.
 
 # used in converting hsv to rgb
-my @hsv_map = 
+my @hsv_map =
   (
    'vkm', 'nvm', 'mvk', 'mnv', 'kmv', 'vmn'
   );
@@ -17,7 +17,7 @@ my @hsv_map =
 sub _hsv_to_rgb {
   my ($hue, $sat, $val) = @_;
 
-  # HSV conversions from pages 401-403 "Procedural Elements for Computer 
+  # HSV conversions from pages 401-403 "Procedural Elements for Computer
   # Graphics", 1985, ISBN 0-07-053534-5.
 
   my @result;
@@ -141,7 +141,7 @@ sub _get_gimp_color {
     $default_gimp_palette = $filename;
   }
 
-  if ((!$gimp_cache{$filename} 
+  if ((!$gimp_cache{$filename}
       || (stat $filename)[9] != $gimp_cache{$filename})
      && !_load_gimp_palette($filename)) {
     return ();
@@ -155,7 +155,7 @@ sub _get_gimp_color {
   return @{$gimp_cache{$filename}{colors}{lc $args{name}}};
 }
 
-my @x_search = 
+my @x_search =
   (
    '/usr/share/X11/rgb.txt', # newer Xorg X11 dists use this
    '/usr/lib/X11/rgb.txt', # seems fairly standard
@@ -233,7 +233,7 @@ sub _get_x_color {
     }
   }
 
-  if ((!$x_cache{$filename} 
+  if ((!$x_cache{$filename}
       || (stat $filename)[9] != $x_cache{$filename}{mod_time})
      && !_load_x_rgb($filename)) {
     return ();
@@ -254,7 +254,7 @@ sub _get_x_color {
 sub _pspec {
   return (@_,255) if @_ == 3 && !grep /[^\d.+eE-]/, @_;
   return (@_    ) if @_ == 4 && !grep /[^\d.+eE-]/, @_;
-  if ($_[0] =~ 
+  if ($_[0] =~
       /^\#?([\da-f][\da-f])([\da-f][\da-f])([\da-f][\da-f])([\da-f][\da-f])/i) {
     return (hex($1),hex($2),hex($3),hex($4));
   }
@@ -279,14 +279,14 @@ sub _pspec {
   elsif (exists $args{grey}) {
     @result = $args{grey};
   }
-  elsif ((exists $args{red} || exists $args{r}) 
+  elsif ((exists $args{red} || exists $args{r})
          && (exists $args{green} || exists $args{g})
          && (exists $args{blue} || exists $args{b})) {
     @result = ( exists $args{red} ? $args{red} : $args{r},
                 exists $args{green} ? $args{green} : $args{g},
                 exists $args{blue} ? $args{blue} : $args{b} );
   }
-  elsif ((exists $args{hue} || exists $args{h}) 
+  elsif ((exists $args{hue} || exists $args{h})
          && (exists $args{saturation} || exists $args{'s'})
          && (exists $args{value} || exists $args{v})) {
     my $hue = exists $args{hue}        ? $args{hue}        : $args{h};
@@ -340,7 +340,7 @@ sub _pspec {
   elsif (exists $args{channel0} || $args{c0}) {
     my $i = 0;
     while (exists $args{"channel$i"} || exists $args{"c$i"}) {
-      push(@result, 
+      push(@result,
            exists $args{"channel$i"} ? $args{"channel$i"} : $args{"c$i"});
       ++$i;
     }
@@ -387,13 +387,13 @@ sub equals {
     $left[$ch] == $right[$ch]
       or return;
   }
-  
+
   return 1;
 }
 
 sub CLONE_SKIP { 1 }
 
-# Lifted from Graphics::Color::RGB 
+# Lifted from Graphics::Color::RGB
 # Thank you very much
 sub hsv {
     my( $self ) = @_;
@@ -404,32 +404,32 @@ sub hsv {
     my $min = $red;
 
     if($green > $max) {
-        $max = $green; 
-        $maxc = 'g';   
+        $max = $green;
+        $maxc = 'g';
     }
     if($blue > $max) {
-        $max = $blue; 
-        $maxc = 'b';  
+        $max = $blue;
+        $maxc = 'b';
     }
 
     if($green < $min) {
-        $min = $green; 
+        $min = $green;
     }
     if($blue < $min) {
-        $min = $blue; 
+        $min = $blue;
     }
 
     my ($h, $s, $v);
 
     if($max == $min) {
         $h = 0;
-    } 
+    }
     elsif($maxc eq 'r') {
         $h = 60 * (($green - $blue) / ($max - $min)) % 360;
-    } 
+    }
     elsif($maxc eq 'g') {
         $h = (60 * (($blue - $red) / ($max - $min)) + 120);
-    } 
+    }
     elsif($maxc eq 'b') {
         $h = (60 * (($red - $green) / ($max - $min)) + 240);
     }
@@ -437,7 +437,7 @@ sub hsv {
     $v = $max/255;
     if($max == 0) {
         $s = 0;
-    } 
+    }
     else {
         $s = 1 - ($min / $max);
     }
@@ -471,7 +471,7 @@ Imager::Color - Color handling for Imager.
 
   $color->info();
 
-  if ($color->equals(other=>$other_color)) { 
+  if ($color->equals(other=>$other_color)) {
     ...
   }
 
@@ -660,7 +660,7 @@ C<rgb.txt> file or the built-in color table, whichever is found first.
 
 'channel0', 'channel1', etc, each of which specifies a single channel.  These can be abbreviated to 'c0', 'c1' etc.
 
-=item * 
+=item *
 
 'channels' which takes an arrayref of the channel values.
 
