@@ -393,6 +393,59 @@ sub equals {
 
 sub CLONE_SKIP { 1 }
 
+# Lifted from Graphics::Color::RGB 
+# Thank you very much
+sub hsv {
+    my( $self ) = @_;
+
+    my( $red, $green, $blue, $alpha ) = $self->rgba;
+    my $max = $red;
+    my $maxc = 'r';
+    my $min = $red;
+
+    if($green > $max) {
+        $max = $green; 
+        $maxc = 'g';   
+    }
+    if($blue > $max) {
+        $max = $blue; 
+        $maxc = 'b';  
+    }
+
+    if($green < $min) {
+        $min = $green; 
+    }
+    if($blue < $min) {
+        $min = $blue; 
+    }
+
+    my ($h, $s, $v);
+
+    if($max == $min) {
+        $h = 0;
+    } 
+    elsif($maxc eq 'r') {
+        $h = 60 * (($green - $blue) / ($max - $min)) % 360;
+    } 
+    elsif($maxc eq 'g') {
+        $h = (60 * (($blue - $red) / ($max - $min)) + 120);
+    } 
+    elsif($maxc eq 'b') {
+        $h = (60 * (($red - $green) / ($max - $min)) + 240);
+    }
+
+    $v = $max/255;
+    if($max == 0) {
+        $s = 0;
+    } 
+    else {
+        $s = 1 - ($min / $max);
+    }
+
+    return int($h), $s, $v, $alpha;
+
+}
+
 1;
 
 __END__
@@ -414,7 +467,7 @@ Imager::Color - Color handling for Imager.
   $color->set("#C0C0FF"); # html color specification
 
   ($red, $green, $blue, $alpha) = $color->rgba();
-  @hsv = $color->hsv(); # not implemented but proposed
+  @hsv = $color->hsv();
 
   $color->info();
 
@@ -619,6 +672,14 @@ Optionally you can add an alpha channel to a color with the 'alpha' or
 These color specifications can be used for both constructing new
 colors with the new() method and modifying existing colors with the
 set() method.
+
+=head1 METHODS
+
+=head2 hsv
+
+    my($h, $s, $v, $alpha) = $colour->hsv();
+
+Returns the colour as a Hue/Saturation/Value/Alpha tuple.
 
 =head1 AUTHOR
 

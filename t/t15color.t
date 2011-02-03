@@ -7,7 +7,7 @@
 # Change 1..1 below to 1..last_test_to_print .
 # (It may become useful if the test is moved to ./t subdirectory.)
 
-use Test::More tests => 55;
+use Test::More tests => 70;
 
 use Imager;
 use Imager::Test qw(is_fcolor4);
@@ -154,6 +154,39 @@ color_ok('builtin black', 0, 0, 0, 255,
   is_fcolor4($c, 1.0, 0.5, 0.25, 1.0, "check after set");
 
   ok(!$c->set("-unknown-"), "set to unknown");
+}
+
+{
+  # test ->hsv
+  my $c = Imager::Color->new(255, 0, 0);
+  my($h,$s,$v) = $c->hsv;
+  is($h,0,'red hue');
+  is($s,1,'red saturation');
+  is($v,1,'red value');
+
+  $c = Imager::Color->new(0, 255, 0);
+  ($h,$s,$v) = $c->hsv;
+  is($h,120,'green hue');
+  is($s,1,'green saturation');
+  is($v,1,'green value');
+
+  $c = Imager::Color->new(0, 0, 255);
+  ($h,$s,$v) = $c->hsv;
+  is($h,240,'blue hue');
+  is($s,1,'blue saturation');
+  is($v,1,'blue value');
+
+  $c = Imager::Color->new(255, 255, 255);
+  ($h,$s,$v) = $c->hsv;
+  is($h,0,'white hue');
+  is($s,0,'white saturation');
+  is($v,1,'white value');
+
+  $c = Imager::Color->new(0, 0, 0);
+  ($h,$s,$v) = $c->hsv;
+  is($h,0,'black hue');
+  is($s,0,'black saturation');
+  is($v,0,'black value');
 }
 
 sub test_col {
