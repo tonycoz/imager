@@ -78,7 +78,7 @@ sub new {
         undef $type;
         my $re = $drivers{$drv}{files} or next;
         if ($file =~ /$re/i) {
-	  if (eval { require $drivers{$drv}{module}; 1 }) {
+	  if (eval { require $drivers{$drv}{module}; 1 } and !( $drivers{$drv}{checktype} && !$Imager::formats{$drv} )) {
 	    $type = $drv;
 	    last;
 	  }
