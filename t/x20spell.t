@@ -47,6 +47,7 @@ unary
 renderer
 Uncategorized
 Blit
+tuple
 /;
 
 local %Pod::Wordlist::Wordlist = %Pod::Wordlist::Wordlist;

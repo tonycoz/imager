@@ -675,11 +675,15 @@ set() method.
 
 =head1 METHODS
 
-=head2 hsv
+=over
 
-    my($h, $s, $v, $alpha) = $colour->hsv();
+=item hsv()
 
-Returns the colour as a Hue/Saturation/Value/Alpha tuple.
+    my($h, $s, $v, $alpha) = $color->hsv();
+
+Returns the color as a Hue/Saturation/Value/Alpha tuple.
+
+=back
 
 =head1 AUTHOR
 
