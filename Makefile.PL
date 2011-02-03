@@ -597,19 +597,19 @@ sub init {
 # 			     should use this option instead of the 'gif' option}
 # 		    };
 
-  $formats{'T1-fonts'}={
-			order=>'30',
-			def=>'HAVE_LIBT1',
-			inccheck=>sub { -e catfile($_[0], 't1lib.h') },
-			libcheck=>sub { $_[0] eq "libt1$aext" or $_[0] eq "libt1.$lext" },
-			libfiles=>'-lt1',
-			objfiles=>'',
-			docs=>q{
-				postscript t1 fonts are scalable fonts. They can include 
-				ligatures and kerning information and generally yield good
-				visual quality. We depend on libt1 to rasterize the fonts
-				for use in images.}
-		       };
+#   $formats{'T1-fonts'}={
+# 			order=>'30',
+# 			def=>'HAVE_LIBT1',
+# 			inccheck=>sub { -e catfile($_[0], 't1lib.h') },
+# 			libcheck=>sub { $_[0] eq "libt1$aext" or $_[0] eq "libt1.$lext" },
+# 			libfiles=>'-lt1',
+# 			objfiles=>'',
+# 			docs=>q{
+# 				postscript t1 fonts are scalable fonts. They can include 
+# 				ligatures and kerning information and generally yield good
+# 				visual quality. We depend on libt1 to rasterize the fonts
+# 				for use in images.}
+# 		       };
 
   $formats{'TT-fonts'}=
     {

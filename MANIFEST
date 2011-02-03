@@ -50,16 +50,10 @@ Flines/Makefile.PL
 Flines/t/t00flines.t
 flip.im
 font.c
-fontfiles/dcr10.afm
-fontfiles/dcr10.pfb
 fontfiles/dodge.ttf
-fontfiles/ExistenceTest.afm	please edit ExistenceTest.sfd in CVS
-fontfiles/ExistenceTest.pfb	to change these files, edited and
 fontfiles/ExistenceTest.ttf	generated using pfaedit
 fontfiles/ImUgly.ttf
 fontfiles/NameTest.ttf		test glyph_names() - see FT2/t/t10ft2.t
-fontfiles/SpaceTest.afm
-fontfiles/SpaceTest.pfb		test bounding box with spaces in t30t1font.t
 FT2/fontfiles/dodge.ttf
 FT2/fontfiles/ExistenceTest.afm
 FT2/fontfiles/ExistenceTest.pfb
@@ -181,7 +175,7 @@ lib/Imager/Font/BBox.pm
 lib/Imager/Font/FreeType2.pm
 lib/Imager/Font/Image.pm
 lib/Imager/Font/Truetype.pm
-lib/Imager/Font/Type1.pm
+lib/Imager/Font/Type1.pm	Compatibilty wrapper for Imager::Font::T1
 lib/Imager/Font/Wrap.pm
 lib/Imager/Fountain.pm
 lib/Imager/Handy.pod
@@ -335,6 +329,19 @@ t/t94kwalitee.t			Various "kwalitee" tests
 t/t99thread.t			Test wrt to perl threads
 t/tr18561.t			Regression tests
 t/tr18561b.t
+T1/fontfiles/dcr10.afm
+T1/fontfiles/dcr10.pfb
+T1/fontfiles/ExistenceTest.afm	please edit ExistenceTest.sfd in CVS
+T1/fontfiles/ExistenceTest.pfb	to change these files, edited and
+T1/fontfiles/SpaceTest.afm	test bounding box with spaces in t10type1.t
+T1/fontfiles/SpaceTest.pfb
+T1/imt1.c
+T1/imt1.h
+T1/Makefile.PL
+T1/t/t10type1.t
+T1/t/t20oo.t
+T1/T1.pm
+T1/T1.xs
 tags.c
 testimg/alpha16.tga		16-bit/pixel TGA with alpha "channel" RT 32926
 testimg/bad1oflow.bmp		1-bit/pixel, overflow integer on 32-bit machines

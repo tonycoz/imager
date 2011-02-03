@@ -14,6 +14,10 @@
 ^\.svn\b
 /\.svn\b
 
+# git work files
+^\.git/
+^(?:.*/)?\.gitignore$
+
 # editor trash
 ~$
 (^|/)\#.*\#$
@@ -58,6 +62,7 @@ Makefile\.old$
 ^PNG/testout/
 ^SGI/testout/
 ^TIFF/testout/
+^T1/testout/
 
 # generated from .xs
 ^CountColor/CountColor\.c$
@@ -70,6 +75,7 @@ Makefile\.old$
 ^PNG/PNG\.c$
 ^SGI/SGI\.c$
 ^TIFF/TIFF\.c$
+^T1/T1\.c$
 
 ^.*/Changes$
 ^blib/

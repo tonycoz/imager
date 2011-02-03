@@ -10,7 +10,7 @@ use strict;
 
 # Change 1..1 below to 1..last_test_to_print .
 # (It may become useful if the test is moved to ./t subdirectory.)
-use Test::More tests => 20;
+use Test::More tests => 12;
 
 BEGIN { use_ok('Imager') };
 
@@ -19,64 +19,11 @@ BEGIN { use_ok('Imager') };
 init_log("testout/t36oofont.log", 1);
 
 my $fontname_tt=$ENV{'TTFONTTEST'}||'./fontfiles/dodge.ttf';
-my $fontname_pfb=$ENV{'T1FONTTESTPFB'}||'./fontfiles/dcr10.pfb';
-
 
 my $green=Imager::Color->new(92,205,92,128);
 die $Imager::ERRSTR unless $green;
 my $red=Imager::Color->new(205, 92, 92, 255);
 die $Imager::ERRSTR unless $red;
-
-SKIP:
-{
-  i_has_format("t1") && -f $fontname_pfb
-    or skip("T1lib missing or disabled", 8);
-
-  my $img=Imager->new(xsize=>300, ysize=>100) or die "$Imager::ERRSTR\n";
-
-  my $font=Imager::Font->new(file=>$fontname_pfb,size=>25)
-    or die $img->{ERRSTR};
-
-  ok(1, "created font");
-
-  ok($img->string(font=>$font, text=>"XMCLH", 'x'=>100, 'y'=>100),
-      "draw text");
-  $img->line(x1=>0, x2=>300, y1=>50, y2=>50, color=>$green);
-
-  my $text="LLySja";
-  my @bbox=$font->bounding_box(string=>$text, 'x'=>0, 'y'=>50);
-
-  is(@bbox, 8, "bounding box list length");
-
-  $img->box(box=>\@bbox, color=>$green);
-
-  # "utf8" support
-  $text = pack("C*", 0x41, 0xE2, 0x80, 0x90, 0x41);
-  ok($img->string(font=>$font, text=>$text, 'x'=>100, 'y'=>50, utf8=>1,
-                   overline=>1),
-      "draw 'utf8' hand-encoded text");
-
-  ok($img->string(font=>$font, text=>$text, 'x'=>140, 'y'=>50, utf8=>1, 
-                   underline=>1, channel=>2),
-      "channel 'utf8' hand-encoded text");
-
- SKIP:
-  {
-    $] >= 5.006
-      or skip("perl too old for native utf8", 2);
-    eval q{$text = "A\x{2010}A"};
-    ok($img->string(font=>$font, text=>$text, 'x'=>180, 'y'=>50,
-                    strikethrough=>1),
-       "draw native UTF8 text");
-    ok($img->string(font=>$font, text=>$text, 'x'=>220, 'y'=>50, channel=>1),
-       "channel native UTF8 text");
-  }
-
-  ok($img->write(file=>"testout/t36oofont1.ppm", type=>'pnm'),
-      "write t36oofont1.ppm")
-    or print "# ",$img->errstr,"\n";
-
-}
 
 SKIP:
 {

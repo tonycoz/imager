@@ -1,27 +1,22 @@
 #!perl -w
-# Before `make install' is performed this script should be runnable with
-# `make test'. After `make install' it should work as `perl test.pl'
-
-######################### We start with some black magic to print on failure.
-
-# Change 1..1 below to 1..last_test_to_print .
-# (It may become useful if the test is moved to ./t subdirectory.)
 use strict;
 use Test::More;
 use Imager ':all';
 use Imager::Test qw(diff_text_with_nul is_color3);
+use Imager::Font::T1;
 use Cwd qw(getcwd abs_path);
 
 #$Imager::DEBUG=1;
 
-i_has_format("t1")
-  or plan skip_all => "t1lib unavailble or disabled";
+plan tests => 97;
 
-plan tests => 95;
+ok($Imager::formats{t1}, "must have t1");
+
+ok((-d "testout" or mkdir "testout"), "make output directory");
 
 -d "testout" or mkdir "testout";
 
-init_log("testout/t30t1font.log",1);
+init_log("testout/t10type1.log",1);
 
 my $deffont = 'fontfiles/dcr10.pfb';
 
@@ -47,7 +42,7 @@ SKIP:
   init(t1log=>0);
   unlink "t1lib.log";
 
-  my $fnum=Imager::i_t1_new($fontname_pfb,$fontname_afm); # this will load the pfb font
+  my $fnum=Imager::Font::T1::i_t1_new($fontname_pfb,$fontname_afm); # this will load the pfb font
   unless (ok($fnum >= 0, "load font $fontname_pfb")) {
     skip("without the font I can't do a thing", 90);
   }
@@ -55,11 +50,11 @@ SKIP:
   my $bgcolor=Imager::Color->new(255,0,0,0);
   my $overlay=Imager::ImgRaw::new(200,70,3);
   
-  ok(i_t1_cp($overlay,5,50,1,$fnum,50.0,'XMCLH',5,1), "i_t1_cp");
+  ok(Imager::Font::T1::i_t1_cp($overlay,5,50,1,$fnum,50.0,'XMCLH',5,1), "i_t1_cp");
 
   i_line($overlay,0,50,100,50,$bgcolor,1);
 
-  my @bbox=i_t1_bbox(0,50.0,'XMCLH',5);
+  my @bbox=Imager::Font::T1::i_t1_bbox(0,50.0,'XMCLH',5);
   is(@bbox, 8, "i_t1_bbox");
   print "# bbox: ($bbox[0], $bbox[1]) - ($bbox[2], $bbox[3])\n";
 
@@ -72,8 +67,8 @@ SKIP:
   $bgcolor=Imager::Color::set($bgcolor,200,200,200,0);
   my $backgr=Imager::ImgRaw::new(280,300,3);
 
-  i_t1_set_aa(2);
-  ok(i_t1_text($backgr,10,100,$bgcolor,$fnum,150.0,'test',4,1), "i_t1_text");
+  Imager::Font::T1::i_t1_set_aa(2);
+  ok(Imager::Font::T1::i_t1_text($backgr,10,100,$bgcolor,$fnum,150.0,'test',4,1), "i_t1_text");
 
   # "UTF8" tests
   # for perl < 5.6 we can hand-encode text
@@ -84,9 +79,9 @@ SKIP:
   my $text = pack("C*", 0x41, 0xC2, 0xA1, 0xE2, 0x80, 0x90, 0x41);
   my $alttext = "A\xA1A";
   
-  my @utf8box = i_t1_bbox($fnum, 50.0, $text, length($text), 1);
+  my @utf8box = Imager::Font::T1::i_t1_bbox($fnum, 50.0, $text, length($text), 1);
   is(@utf8box, 8, "utf8 bbox element count");
-  my @base = i_t1_bbox($fnum, 50.0, $alttext, length($alttext), 0);
+  my @base = Imager::Font::T1::i_t1_bbox($fnum, 50.0, $alttext, length($alttext), 0);
   is(@base, 8, "alt bbox element count");
   my $maxdiff = $fontname_pfb eq $deffont ? 0 : $base[2] / 3;
   print "# (@utf8box vs @base)\n";
@@ -94,9 +89,9 @@ SKIP:
       "compare box sizes $utf8box[2] vs $base[2] (maxerror $maxdiff)");
 
   # hand-encoded UTF8 drawing
-  ok(i_t1_text($backgr, 10, 140, $bgcolor, $fnum, 32, $text, length($text), 1,1), "draw hand-encoded UTF8");
+  ok(Imager::Font::T1::i_t1_text($backgr, 10, 140, $bgcolor, $fnum, 32, $text, length($text), 1,1), "draw hand-encoded UTF8");
 
-  ok(i_t1_cp($backgr, 80, 140, 1, $fnum, 32, $text, length($text), 1, 1), 
+  ok(Imager::Font::T1::i_t1_cp($backgr, 80, 140, 1, $fnum, 32, $text, length($text), 1, 1), 
       "cp hand-encoded UTF8");
 
   # ok, try native perl UTF8 if available
@@ -108,16 +103,16 @@ SKIP:
     # versions
     eval q{$text = "A\xA1\x{2010}A"}; # A, a with ogonek, HYPHEN, A in our test font
     #$text = "A".chr(0xA1).chr(0x2010)."A"; # this one works too
-    ok(i_t1_text($backgr, 10, 180, $bgcolor, $fnum, 32, $text, length($text), 1),
+    ok(Imager::Font::T1::i_t1_text($backgr, 10, 180, $bgcolor, $fnum, 32, $text, length($text), 1),
         "draw UTF8");
-    ok(i_t1_cp($backgr, 80, 180, 1, $fnum, 32, $text, length($text), 1),
+    ok(Imager::Font::T1::i_t1_cp($backgr, 80, 180, 1, $fnum, 32, $text, length($text), 1),
         "cp UTF8");
-    @utf8box = i_t1_bbox($fnum, 50.0, $text, length($text), 0);
+    @utf8box = Imager::Font::T1::i_t1_bbox($fnum, 50.0, $text, length($text), 0);
     is(@utf8box, 8, "native utf8 bbox element count");
     ok(abs($utf8box[2] - $base[2]) <= $maxdiff, 
       "compare box sizes native $utf8box[2] vs $base[2] (maxerror $maxdiff)");
     eval q{$text = "A\xA1\xA2\x01\x1F\x{0100}A"};
-    ok(i_t1_text($backgr, 10, 220, $bgcolor, $fnum, 32, $text, 0, 1, 0, "uso"),
+    ok(Imager::Font::T1::i_t1_text($backgr, 10, 220, $bgcolor, $fnum, 32, $text, 0, 1, 0, "uso"),
        "more complex output");
   }
 
@@ -127,36 +122,36 @@ SKIP:
   i_writeppm_wiol($backgr, $IO);
   close(FH);
 
-  my $rc=i_t1_destroy($fnum);
+  my $rc=Imager::Font::T1::i_t1_destroy($fnum);
   unless (ok($rc >= 0, "i_t1_destroy")) {
     print "# i_t1_destroy failed: rc=$rc\n";
   }
 
-  print "# debug: ",join(" x ",i_t1_bbox(0,50,"eses",4) ),"\n";
-  print "# debug: ",join(" x ",i_t1_bbox(0,50,"llll",4) ),"\n";
+  print "# debug: ",join(" x ",Imager::Font::T1::i_t1_bbox(0,50,"eses",4) ),"\n";
+  print "# debug: ",join(" x ",Imager::Font::T1::i_t1_bbox(0,50,"llll",4) ),"\n";
 
   # character existance tests - uses the special ExistenceTest font
   my $exists_font = 'fontfiles/ExistenceTest.pfb';
   my $exists_afm = 'fontfiles/ExistenceText.afm';
   
-  -e $exists_font or die;
+  -e $exists_font or die "$exists_font not found";
     
-  my $font_num = Imager::i_t1_new($exists_font, $exists_afm);
+  my $font_num = Imager::Font::T1::i_t1_new($exists_font, $exists_afm);
   SKIP: {
     ok($font_num >= 0, 'loading test font')
       or skip('Could not load test font', 6);
     # first the list interface
-    my @exists = Imager::i_t1_has_chars($font_num, "!A");
+    my @exists = Imager::Font::T1::i_t1_has_chars($font_num, "!A");
     is(@exists, 2, "return count from has_chars");
     ok($exists[0], "we have an exclamation mark");
     ok(!$exists[1], "we have no uppercase A");
 
     # then the scalar interface
-    my $exists = Imager::i_t1_has_chars($font_num, "!A");
+    my $exists = Imager::Font::T1::i_t1_has_chars($font_num, "!A");
     is(length($exists), 2, "return scalar length");
     ok(ord(substr($exists, 0, 1)), "we have an exclamation mark");
     ok(!ord(substr($exists, 1, 1)), "we have no upper-case A");
-    i_t1_destroy($font_num);
+    Imager::Font::T1::i_t1_destroy($font_num);
   }
   
   my $font = Imager::Font->new(file=>$exists_font, type=>'t1');
@@ -181,7 +176,7 @@ SKIP:
     isnt($bbox[2], $bbox[5], "different advance to pos_width");
 
     # names
-    my $face_name = Imager::i_t1_face_name($font->{id});
+    my $face_name = Imager::Font::T1::i_t1_face_name($font->{id});
     print "# face $face_name\n";
     is($face_name, 'ExistenceTest', "face name");
     $face_name = $font->face_name;
@@ -266,8 +261,8 @@ SKIP:
     # the problem we had with spaces
     my $space_fontfile = "fontfiles/SpaceTest.pfb";
     my $font = Imager::Font->new(file => $space_fontfile, type => 't1');
-    ok($font, "loaded $deffont")
-      or skip("failed to load $deffont" . Imager->errstr, 13);
+    ok($font, "loaded $space_fontfile")
+      or skip("failed to load $space_fontfile" . Imager->errstr, 13);
     my $bbox = $font->bounding_box(string => "", size => 36);
     print "# empty string bbox: @$bbox\n";
     is($bbox->start_offset, 0, "empty string start_offset");

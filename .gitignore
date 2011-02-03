@@ -1,6 +1,7 @@
 *.o
 Makefile
 Makefile.old
+MANIFEST.bak
 pm_to_blib
 blib
 
@@ -23,6 +24,7 @@ scale.c
 # build generated files
 *.bs
 */Makefile
+Imager-[0-9]*
 
 # test generated files
 _Inline/
