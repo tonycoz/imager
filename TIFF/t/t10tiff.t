@@ -1,6 +1,6 @@
 #!perl -w
 use strict;
-use Test::More tests => 216;
+use Test::More tests => 217;
 use Imager qw(:all);
 use Imager::Test qw(is_image is_image_similar test_image test_image_16 test_image_double test_image_raw);
 
@@ -336,8 +336,9 @@ is($unitname, 'inch', "check tiff_resolutionunit_name tag");
 my $warned = Imager->new;
 ok($warned->read(file=>"testimg/tiffwarn.tif"), "read tiffwarn.tif");
 my ($warning) = $warned->tags(name=>'i_warning');
-ok(defined $warning && $warning =~ /unknown field with tag 28712/,
-   "check that warning tag set and correct");
+ok(defined $warning, "check warning is set");
+like($warning, qr/[Uu]nknown field with tag 28712/,
+     "check that warning tag correct");
 
 { # support for reading a given page
   # first build a simple test image

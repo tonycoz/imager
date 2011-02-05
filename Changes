@@ -30,6 +30,9 @@ Bug fixes:
  - make sure each test script that needs testout/ creates it.
    https://rt.cpan.org/Ticket/Display.html?id=65088
 
+ - handle a slightly different warning from libtiff 4.x
+   https://rt.cpan.org/Ticket/Display.html?id=65268
+
 Imager 0.80 - 17 Jan 2011
 ===========
 
