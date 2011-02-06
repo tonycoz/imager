@@ -25,7 +25,6 @@ my %drivers =
         module=>'Imager/Font/T1.pm',
         files=>'.*\.pfb$',
 	description => 'T1Lib',
-	checktype => 1,
        },
    ft2=>{
          class=>'Imager::Font::FT2',
