@@ -4,7 +4,7 @@ use Imager::Color;
 use strict;
 use vars qw($VERSION);
 
-$VERSION = "1.034";
+$VERSION = "1.035";
 
 # the aim here is that we can:
 #  - add file based types in one place: here
