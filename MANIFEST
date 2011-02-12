@@ -297,7 +297,6 @@ t/t16matrix.t			Tests Imager::Matrix2d
 t/t20fill.t			Tests fills
 t/t21draw.t			Basic drawing tests
 t/t22flood.t			Flood fill tests
-t/t30t1font.t
 t/t31font.t			General font interface tests
 t/t35ttfont.t
 t/t36oofont.t
