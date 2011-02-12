@@ -1523,6 +1523,25 @@ If your module can only handle writing then you can name your module
 C<Imager::File::>I<your-format-name>C<Writer> and Imager will attempt
 to autoload it.
 
+=head1 PRELOADING FILE MODULES
+
+=over
+
+=item preload
+
+This preloads the file support modules included with or that have been
+included with Imager in the past.  This is intended for use in forking
+servers such as mod_perl.
+
+If the module is not available no error occurs.
+
+Preserves $@.
+
+  use Imager;
+  Imager->preload;
+
+=back
+
 =head1 EXAMPLES
 
 =head2 Producing an image from a CGI script

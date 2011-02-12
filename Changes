@@ -12,6 +12,10 @@ Imager 0.81 - unreleased
  - split libt1 Type 1 font support into a sub-module
    https://rt.cpan.org/Ticket/Display.html?id=49616 (partial)
 
+ - add a preload() class method for use in forking servers, and to
+   work around limitations in PAR.
+   https://rt.cpan.org/Ticket/Display.html?id=65665
+
 Bug fixes:
 
  - paletted writes to a masked image are now masked correctly.

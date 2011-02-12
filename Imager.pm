@@ -3908,6 +3908,24 @@ sub Inline {
 # threads shouldn't try to close raw Imager objects
 sub Imager::ImgRaw::CLONE_SKIP { 1 }
 
+sub preload {
+  # this serves two purposes:
+  # - a class method to load the file support modules included with Image
+  #   (or were included, once the library dependent modules are split out)
+  # - something for Module::ScanDeps to analyze
+  # https://rt.cpan.org/Ticket/Display.html?id=6566
+  local $@;
+  eval { require Imager::File::GIF };
+  eval { require Imager::File::JPEG };
+  eval { require Imager::File::PNG };
+  eval { require Imager::File::SGI };
+  eval { require Imager::File::TIFF };
+  eval { require Imager::File::ICO };
+  eval { require Imager::Font::W32 };
+  eval { require Imager::Font::FT2 };
+  eval { require Imager::Font::T1 };
+}
+
 # backward compatibility for %formats
 package Imager::FORMATS;
 use strict;
@@ -4349,6 +4367,8 @@ paste() - L<Imager::Transformations/paste> - draw an image onto an image
 polygon() - L<Imager::Draw/polygon>
 
 polyline() - L<Imager::Draw/polyline>
+
+preload() - L<Imager::Files/preload>
 
 read() - L<Imager::Files> - read a single image from an image file
 
