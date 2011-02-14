@@ -1,6 +1,6 @@
 #!perl -w
 use strict;
-use Test::More tests => 37;
+use Test::More tests => 38;
 BEGIN { use_ok('Imager'); }
 use Imager::Test qw(is_color3);
 
@@ -138,6 +138,9 @@ op_test('000000', <<'EOS', 50, 82, 0, 'exp log');
 EOS
 op_test('800000', <<'EOS', 128, 0, 0, 'det');
 1 0 0 1 det 128 * 1 1 1 1 det 128 * 0 rgb
+EOS
+op_test('FF80C0', <<'EOS', 127, 0, 0, 'sat');
+0 0 getp1 sat 255 * 0.01 + 0 0 rgb
 EOS
 
 use Imager::Transform;

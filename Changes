@@ -40,6 +40,9 @@ Bug fixes:
  - handle a slightly different warning from libtiff 4.x
    https://rt.cpan.org/Ticket/Display.html?id=65268
 
+ - the sat transform2() op returned an incorrect saturation.
+   https://rt.cpan.org/Ticket/Display.html?id=65391
+
 Imager 0.80 - 17 Jan 2011
 ===========
 

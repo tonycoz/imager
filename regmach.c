@@ -66,7 +66,7 @@ static double hsv_sat(i_color color) {
     return 0;
   }
   else {
-    int temp = i_min(i_max(color.rgb.r, color.rgb.g), color.rgb.b);
+    int temp = i_min(i_min(color.rgb.r, color.rgb.g), color.rgb.b);
     return (value - temp) / (double)value;
   }
 }
