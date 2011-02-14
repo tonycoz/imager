@@ -4,7 +4,7 @@ use Imager::Font::T1;
 use vars qw(@ISA $VERSION);
 @ISA = qw(Imager::Font::FT2);
 
-$VERSION = "1.000";
+$VERSION = "1.012";
 
 1;
 
