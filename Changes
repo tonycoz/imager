@@ -9,6 +9,16 @@ Bug fixes:
    Win32.  Thanks to kmx for the report and fix.
    https://rt.cpan.org/Ticket/Display.html?id=67963
 
+ - compose() with the target, source or mask position off the top or
+   left of the target image didn't clip the source image correctly.
+   https://rt.cpan.org/Ticket/Display.html?id=67220
+
+ - compose() now returns a useful error message on a non-positive
+   opacity.
+
+ - compose.im now at 100% test coverage. (As opposed to, umm, much,
+   much less.)
+
 Imager 0.82 - 14 Mar 2011
 ===========
 

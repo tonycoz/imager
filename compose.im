@@ -16,6 +16,11 @@ i_compose_mask(i_img *out, i_img *src, i_img *mask,
   i_fill_combinef_f combinef_double;
   int channel_zero = 0;
 
+  mm_log((1, "i_compose_mask(out %p, src %p, mask %p, out(%d, %d), src(%d, %d),"
+	  " mask(%d,%d), size(%d,%d), combine %d opacity %f\n", out, src, 
+	  mask, out_left, out_top, src_left, src_top, mask_left, mask_top, width,
+	  height, combine, opacity));
+
   i_clear_error();
   if (out_left >= out->xsize
       || out_top >= out->ysize
@@ -35,6 +40,8 @@ i_compose_mask(i_img *out, i_img *src, i_img *mask,
 
   if (out_left < 0) {
     width = out_left + width;
+    src_left -= out_left;
+    mask_left -= out_left;
     out_left = 0;
   }
   if (out_left + width > out->xsize)
@@ -42,6 +49,8 @@ i_compose_mask(i_img *out, i_img *src, i_img *mask,
 
   if (out_top < 0) {
     height = out_top + height;
+    mask_top -= out_top;
+    src_top -= out_top;
     out_top = 0;
   }
   if (out_top + height > out->ysize)
@@ -49,6 +58,8 @@ i_compose_mask(i_img *out, i_img *src, i_img *mask,
 
   if (src_left < 0) {
     width = src_left + width;
+    out_left -= src_left;
+    mask_left -= src_left;
     src_left = 0;
   }
   if (src_left + width > src->xsize)
@@ -56,29 +67,42 @@ i_compose_mask(i_img *out, i_img *src, i_img *mask,
 
   if (src_top < 0) {
     height = src_top + height;
+    out_top -= src_top;
+    mask_top -= src_top;
     src_top = 0;
   }
   if (src_top + height > src->ysize)
-    height = src->ysize - src_left;
+    height = src->ysize - src_top;
 
   if (mask_left < 0) {
     width = mask_left + width;
+    out_left -= mask_left;
+    src_left -= mask_left;
     mask_left = 0;
   }
   if (mask_left + width > mask->xsize)
     width = mask->xsize - mask_left;
   
   if (mask_top < 0) {
-    height = mask->ysize + height;
+    height = mask_top + height;
+    src_top -= mask_top;
+    out_top -= mask_top;
     mask_top = 0;
   }
   if (mask_top + height > mask->ysize)
-    height = mask->xsize - mask_top;
+    height = mask->ysize - mask_top;
 
   if (opacity > 1.0)
     opacity = 1.0;
-  else if (opacity <= 0)
+  else if (opacity <= 0) {
+    i_push_error(0, "opacity must be positive");
     return 0;
+  }
+
+  mm_log((1, "after adjustments: (out(%d, %d), src(%d, %d),"
+	  " mask(%d,%d), size(%d,%d)\n", 
+	  out_left, out_top, src_left, src_top, mask_left, mask_top, width,
+	  height));
 
   i_get_combine(combine, &combinef_8, &combinef_double);
 
@@ -128,6 +152,10 @@ i_compose(i_img *out, i_img *src,
   i_fill_combine_f combinef_8;
   i_fill_combinef_f combinef_double;
 
+  mm_log((1, "i_compose(out %p, src %p, out(%d, %d), src(%d, %d), size(%d,%d),"
+	  " combine %d opacity %f\n", out, src, out_left, out_top,
+	  src_left, src_top, width, height, combine, opacity));
+
   i_clear_error();
   if (out_left >= out->xsize
       || out_top >= out->ysize
@@ -143,6 +171,7 @@ i_compose(i_img *out, i_img *src,
 
   if (out_left < 0) {
     width = out_left + width;
+    src_left -= out_left;
     out_left = 0;
   }
   if (out_left + width > out->xsize)
@@ -150,6 +179,7 @@ i_compose(i_img *out, i_img *src,
 
   if (out_top < 0) {
     height = out_top + height;
+    src_top -= out_top;
     out_top = 0;
   }
   if (out_top + height > out->ysize)
@@ -157,6 +187,7 @@ i_compose(i_img *out, i_img *src,
 
   if (src_left < 0) {
     width = src_left + width;
+    out_left -= src_left;
     src_left = 0;
   }
   if (src_left + width > src->xsize)
@@ -164,15 +195,18 @@ i_compose(i_img *out, i_img *src,
 
   if (src_top < 0) {
     height = src_top + height;
+    out_top -= src_top;
     src_top = 0;
   }
   if (src_top + height > src->ysize)
-    height = src->ysize - src_left;
+    height = src->ysize - src_top;
 
   if (opacity > 1.0)
     opacity = 1.0;
-  else if (opacity <= 0)
+  else if (opacity <= 0) {
+    i_push_error(0, "opacity must be positive");
     return 0;
+  }
 
   i_get_combine(combine, &combinef_8, &combinef_double);
 

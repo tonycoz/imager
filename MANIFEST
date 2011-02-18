@@ -308,6 +308,7 @@ t/t57infix.t
 t/t58trans2.t
 t/t59assem.t
 t/t61filters.t
+t/t62compose.t
 t/t63combine.t			Test combine() method
 t/t64copyflip.t			Test copy, flip, rotate, matrix_transform
 t/t65crop.t

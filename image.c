@@ -1165,7 +1165,7 @@ i_img_diffd(i_img *im1,i_img *im2) {
   yb=(im1->ysize<im2->ysize)?im1->ysize:im2->ysize;
   chb=(im1->channels<im2->channels)?im1->channels:im2->channels;
 
-  mm_log((1,"i_img_diff: xb=%d xy=%d chb=%d\n",xb,yb,chb));
+  mm_log((1,"i_img_diffd: xb=%d xy=%d chb=%d\n",xb,yb,chb));
 
   tdiff=0;
   for(y=0;y<yb;y++) for(x=0;x<xb;x++) {
