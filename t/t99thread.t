@@ -27,6 +27,11 @@ $loaded_threads
 $INC{"Devel/Cover.pm"}
   and plan skip_all => "threads and Devel::Cover don't get along";
 
+# https://rt.cpan.org/Ticket/Display.html?id=65812
+# https://github.com/schwern/test-more/issues/labels/Test-Builder2#issue/100
+$Test::More::VERSION =~ /^2\.00_/
+  and plan skip_all => "threads are hosed in 2.00_06 and presumably all 2.00_*";
+
 plan tests => 11;
 
 my $thread = threads->create(sub { 1; });

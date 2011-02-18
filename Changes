@@ -15,6 +15,9 @@ Bug fixes:
    that I don't feel a need to require a Test::More upgrade for it.
    https://rt.cpan.org/Ticket/Display.html?id=65864
 
+ - skip the threads tests on Test::More 2.00_*
+   https://rt.cpan.org/Ticket/Display.html?id=65812
+
 Imager 0.81 - 14 Feb 2011
 ===========
 
