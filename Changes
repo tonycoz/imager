@@ -10,6 +10,11 @@ Bug fixes:
    i_has_format() from the functions exposed via XS.
    https://rt.cpan.org/Ticket/Display.html?id=65863
 
+ - eliminate calls to note(), which isn't in the (very old) version of
+   Test::More we have as a pre-requisite.  note() is modern enough
+   that I don't feel a need to require a Test::More upgrade for it.
+   https://rt.cpan.org/Ticket/Display.html?id=65864
+
 Imager 0.81 - 14 Feb 2011
 ===========
 
