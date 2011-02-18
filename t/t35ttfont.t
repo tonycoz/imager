@@ -14,7 +14,7 @@ init_log("testout/t35ttfont.log",2);
 SKIP:
 {
   skip("freetype 1.x unavailable or disabled", 91) 
-    unless i_has_format("tt");
+    unless $Imager::formats{"tt"};
   print "# has tt\n";
   
   my $deffont = './fontfiles/dodge.ttf';

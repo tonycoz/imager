@@ -19,7 +19,6 @@ use Imager::Font;
 		unload_plugin
 
 		i_list_formats
-		i_has_format
 
 		i_color_new
 		i_color_set

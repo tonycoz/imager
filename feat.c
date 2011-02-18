@@ -1,5 +1,6 @@
 #include "feat.h"
 
+/* only for use as a placeholder in the old dynamic module code */
 undef_int
 i_has_format(char *frmt) {
   int rc,i;

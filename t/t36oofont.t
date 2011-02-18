@@ -27,7 +27,7 @@ die $Imager::ERRSTR unless $red;
 
 SKIP:
 {
-  i_has_format("tt") && -f $fontname_tt
+  $Imager::formats{"tt"} && -f $fontname_tt
     or skip("FT1.x missing or disabled", 10);
 
   my $img=Imager->new(xsize=>300, ysize=>100) or die "$Imager::ERRSTR\n";

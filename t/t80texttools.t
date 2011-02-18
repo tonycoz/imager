@@ -38,7 +38,7 @@ my $font = Imager::Font->new(file=>$fontfile);
 
 SKIP:
 {
-  Imager::i_has_format('tt') || Imager::i_has_format('ft2')
+  $Imager::formats{'tt'} || $Imager::formats{'ft2'}
       or skip("Need Freetype 1.x or 2.x to test", 11);
 
   ok($font, "loading font")

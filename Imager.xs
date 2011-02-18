@@ -1293,10 +1293,6 @@ i_list_formats()
 		      PUSHs(sv_2mortal(newSVpv(item,0)));
 	       }
 
-undef_int
-i_has_format(frmt)
-              char*    frmt
-
 Imager::ImgRaw
 i_img_new()
 
