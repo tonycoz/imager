@@ -214,7 +214,7 @@ $mask->box(fill => { hatch => "check1x1" }, ymin => 40, xmax => 39);
   # 46.9
 
   {
-    note("plin coverage");
+    print "# plin coverage\n";
     {
       $base->box(filled => 1, color => $black);
       # plin masked
@@ -258,7 +258,7 @@ $mask->box(fill => { hatch => "check1x1" }, ymin => 40, xmax => 39);
   }
 
   {
-    note("plinf coverage");
+    print "# plinf coverage\n";
     {
       $base->box(filled => 1, color => $black);
       # plinf masked
@@ -303,7 +303,7 @@ $mask->box(fill => { hatch => "check1x1" }, ymin => 40, xmax => 39);
   # 71.4%
   {
     {
-      note("gpix");
+      print "# gpix\n";
       # gpix
       $base->box(filled => 1, color => $black);
       ok($base->setpixel(x => 4, y => 10, color => $red),
@@ -322,7 +322,7 @@ $mask->box(fill => { hatch => "check1x1" }, ymin => 40, xmax => 39);
 	 undef, "check failure to bottom");
     }
     {
-      note("gpixf");
+      print "# gpixf\n";
       # gpixf
       $base->box(filled => 1, color => $black);
       ok($base->setpixel(x => 4, y => 10, color => $redf),
@@ -344,7 +344,7 @@ $mask->box(fill => { hatch => "check1x1" }, ymin => 40, xmax => 39);
   # 74.5
   {
     {
-      note("glin");
+      print "# glin\n";
       $base->box(filled => 1, color => $black);
       is($base->setscanline(x => 31, y => 3, 
 			    pixels => [ ( $red, $green) x 10 ]),
@@ -369,7 +369,7 @@ $mask->box(fill => { hatch => "check1x1" }, ymin => 40, xmax => 39);
 	 [], "fail read bottom of image");
     }
     {
-      note("glinf");
+      print "# glinf\n";
       $base->box(filled => 1, color => $black);
       is($base->setscanline(x => 31, y => 3, 
 			    pixels => [ ( $redf, $greenf) x 10 ]),
@@ -398,7 +398,7 @@ $mask->box(fill => { hatch => "check1x1" }, ymin => 40, xmax => 39);
   # 81.6%
   {
     {
-      note("gsamp");
+      print "# gsamp\n";
       $base->box(filled => 1, color => $black);
       is($base->setscanline(x => 31, y => 3, 
 			    pixels => [ ( $red, $green) x 10 ]),
@@ -425,7 +425,7 @@ $mask->box(fill => { hatch => "check1x1" }, ymin => 40, xmax => 39);
 	 [], "fail read bottom of image");
     }
     {
-      note("gsampf");
+      print "# gsampf\n";
       $base->box(filled => 1, color => $black);
       is($base->setscanline(x => 31, y => 3, 
 			    pixels => [ ( $redf, $greenf) x 10 ]),
@@ -480,7 +480,7 @@ $mask->box(fill => { hatch => "check1x1" }, ymin => 40, xmax => 39);
   my ($blacki, $redi, $greeni, $bluei, $greyi) = 0 .. 4;
 
   { # gpal
-    note("gpal");
+    print "# gpal\n";
     $base->box(filled => 1, color => $black);
     is($base->setscanline(x => 0, y => 5, type => "index",
 			  pixels => [ ( $redi, $greeni, $bluei, $greyi) x 25 ]),
@@ -497,7 +497,7 @@ $mask->box(fill => { hatch => "check1x1" }, ymin => 40, xmax => 39);
   # 89.8%
 
   { # ppal, unmasked
-    note("ppal");
+    print "# ppal\n";
     $base->box(filled => 1, color => $black);
     is($limited->setscanline(x => 1, y => 1, type => "index",
 			     pixels => [ ( $redi, $greeni, $bluei) x 3 ]),
