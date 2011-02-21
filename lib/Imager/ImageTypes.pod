@@ -137,7 +137,7 @@ that not all code follows this (recent) rule, but will over time.
 
 =over
 
-=item new
+=item new()
 
   $img = Imager->new();
   $img->read(file=>"alligator.ppm") or die $img->errstr;
@@ -318,7 +318,7 @@ value of C<getwidth()> is undef.
 
   print "Image height: ", $img->getheight(), "\n";
 
-Same details apply as for L<getwidth>.
+Same details apply as for L</getwidth()>.
 
 =item getchannels()
 
@@ -434,7 +434,7 @@ means only channels 0 and 2 are writable.
   $img->setmask(mask=>$mask); # restore previous mask
 
 C<setmask()> is used to set the channel mask of the image.  See
-L<getmask> for details.
+L</getmask()> for details.
 
 =back
 
@@ -609,14 +609,14 @@ the palette, the image will be internally converted to a normal image.
 
 =over
 
-=item to_paletted
+=item to_paletted()
 
 You can create a new paletted image from an existing image using the
 to_paletted() method:
 
  $palimg = $img->to_paletted(\%opts)
 
-where %opts contains the options specified under L<Quantization options>.
+where %opts contains the options specified under L</Quantization options>.
 
   # convert to a paletted image using the web palette
   # use the closest color to each pixel
@@ -645,7 +645,7 @@ RGB image with:
 
 No parameters.
 
-=item masked
+=item masked()
 
 Creates a masked image.  A masked image lets you create an image proxy
 object that protects parts of the underlying target image.
@@ -871,7 +871,7 @@ C<color(>I<red>C<,>I<green>C<,>I<blue>C<)>, eg color(255,0,0).
 =head2 Quantization options
 
 These options can be specified when calling
-L<Imager::ImageTypes/to_paletted>, write_multi() for GIF files, when
+L<Imager::ImageTypes/to_paletted()>, write_multi() for GIF files, when
 writing a single image with the C<gifquant> option set to C<gen>, or for
 direct calls to i_writegif_gen() and i_writegif_callback().
 

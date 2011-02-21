@@ -4199,7 +4199,7 @@ the C<errstr()> method to find out why:
 
 =over
 
-=item C<errstr>
+=item errstr()
 
 Returns the last error message in that context.
 
@@ -4227,209 +4227,210 @@ L<Imager::ImageTypes>.
 
 Where to find information on methods for Imager class objects.
 
-addcolors() - L<Imager::ImageTypes/addcolors> - add colors to a
+addcolors() - L<Imager::ImageTypes/addcolors()> - add colors to a
 paletted image
 
-addtag() -  L<Imager::ImageTypes/addtag> - add image tags
+addtag() -  L<Imager::ImageTypes/addtag()> - add image tags
 
-align_string() - L<Imager::Draw/align_string> - draw text aligned on a
+align_string() - L<Imager::Draw/align_string()> - draw text aligned on a
 point
 
-arc() - L<Imager::Draw/arc> - draw a filled arc
+arc() - L<Imager::Draw/arc()> - draw a filled arc
 
-bits() - L<Imager::ImageTypes/bits> - number of bits per sample for the
+bits() - L<Imager::ImageTypes/bits()> - number of bits per sample for the
 image
 
-box() - L<Imager::Draw/box> - draw a filled or outline box.
+box() - L<Imager::Draw/box()> - draw a filled or outline box.
 
-circle() - L<Imager::Draw/circle> - draw a filled circle
+circle() - L<Imager::Draw/circle()> - draw a filled circle
 
-colorcount() - L<Imager::Draw/colorcount> - the number of colors in an
-image's palette (paletted images only)
+colorcount() - L<Imager::ImageTypes/colorcount()> - the number of
+colors in an image's palette (paletted images only)
 
-combine() - L<Imager::Transformations/combine> - combine channels from one or
-more images.
+combine() - L<Imager::Transformations/combine()> - combine channels
+from one or more images.
 
-combines() - L<Imager::Draw/combines> - return a list of the different
-combine type keywords
+combines() - L<Imager::Draw/combines()> - return a list of the
+different combine type keywords
 
-compose() - L<Imager::Transformations/compose> - compose one image
+compose() - L<Imager::Transformations/compose()> - compose one image
 over another.
 
 convert() - L<Imager::Transformations/"Color transformations"> -
 transform the color space
 
-copy() - L<Imager::Transformations/copy> - make a duplicate of an
+copy() - L<Imager::Transformations/copy()> - make a duplicate of an
 image
 
-crop() - L<Imager::Transformations/crop> - extract part of an image
+crop() - L<Imager::Transformations/crop()> - extract part of an image
 
-def_guess_type() - L<Imager::Files/def_guess_type> - default function
+def_guess_type() - L<Imager::Files/def_guess_type()> - default function
 used to guess the output file format based on the output file name
 
-deltag() -  L<Imager::ImageTypes/deltag> - delete image tags
+deltag() -  L<Imager::ImageTypes/deltag()> - delete image tags
 
 difference() - L<Imager::Filters/"Image Difference"> - produce a
 difference images from two input images.
 
-errstr() - L<"Basic Overview"> - the error from the last failed
+errstr() - L</"Basic Overview"> - the error from the last failed
 operation.
 
 filter() - L<Imager::Filters> - image filtering
 
-findcolor() - L<Imager::ImageTypes/findcolor> - search the image
+findcolor() - L<Imager::ImageTypes/findcolor()> - search the image
 palette, if it has one
 
-flip() - L<Imager::Transformations/flip> - flip an image, vertically,
+flip() - L<Imager::Transformations/flip()> - flip an image, vertically,
 horizontally
 
-flood_fill() - L<Imager::Draw/flood_fill> - fill an enclosed or same
+flood_fill() - L<Imager::Draw/flood_fill()> - fill an enclosed or same
 color area
 
-getchannels() - L<Imager::ImageTypes/getchannels> - the number of
+getchannels() - L<Imager::ImageTypes/getchannels()> - the number of
 samples per pixel for an image
 
-getcolorcount() - L<Imager::ImageTypes/getcolorcount> - the number of
+getcolorcount() - L<Imager::ImageTypes/getcolorcount()> - the number of
 different colors used by an image (works for direct color images)
 
-getcolors() - L<Imager::ImageTypes/getcolors> - get colors from the image
+getcolors() - L<Imager::ImageTypes/getcolors()> - get colors from the image
 palette, if it has one
 
-getcolorusage() - L<Imager::ImageTypes/getcolorusage>
+getcolorusage() - L<Imager::ImageTypes/getcolorusage()>
 
-getcolorusagehash() - L<Imager::ImageTypes/getcolorusagehash>
+getcolorusagehash() - L<Imager::ImageTypes/getcolorusagehash()>
 
 get_file_limits() - L<Imager::Files/"Limiting the sizes of images you read">
 
-getheight() - L<Imager::ImageTypes/getwidth> - height of the image in
+getheight() - L<Imager::ImageTypes/getwidth()> - height of the image in
 pixels
 
-getmask() - L<Imager::ImageTypes/getmask> - write mask for the image
+getmask() - L<Imager::ImageTypes/getmask()> - write mask for the image
 
-getpixel() - L<Imager::Draw/getpixel> - retrieve one or more pixel
+getpixel() - L<Imager::Draw/getpixel()> - retrieve one or more pixel
 colors
 
-getsamples() - L<Imager::Draw/getsamples> - retrieve samples from a
+getsamples() - L<Imager::Draw/getsamples()> - retrieve samples from a
 row or partial row of pixels.
 
-getscanline() - L<Imager::Draw/getscanline> - retrieve colors for a
+getscanline() - L<Imager::Draw/getscanline()> - retrieve colors for a
 row or partial row of pixels.
 
-getwidth() - L<Imager::ImageTypes/getwidth> - width of the image in
+getwidth() - L<Imager::ImageTypes/getwidth()> - width of the image in
 pixels.
 
-img_set() - L<Imager::ImageTypes/img_set> - re-use an Imager object
+img_set() - L<Imager::ImageTypes/img_set()> - re-use an Imager object
 for a new image.
 
-init() - L<Imager::ImageTypes/init>
+init() - L<Imager::ImageTypes/init()>
 
-is_bilevel() - L<Imager::ImageTypes/is_bilevel> - returns whether
+is_bilevel() - L<Imager::ImageTypes/is_bilevel()> - returns whether
 image write functions should write the image in their bilevel (blank
 and white, no gray levels) format
 
-line() - L<Imager::Draw/line> - draw an interval
+line() - L<Imager::Draw/line()> - draw an interval
 
-load_plugin() - L<Imager::Filters/load_plugin>
+load_plugin() - L<Imager::Filters/load_plugin()>
 
 map() - L<Imager::Transformations/"Color Mappings"> - remap color
 channel values
 
-masked() -  L<Imager::ImageTypes/masked> - make a masked image
+masked() -  L<Imager::ImageTypes/masked()> - make a masked image
 
-matrix_transform() - L<Imager::Engines/matrix_transform>
+matrix_transform() - L<Imager::Engines/matrix_transform()>
 
-maxcolors() - L<Imager::ImageTypes/maxcolors>
+maxcolors() - L<Imager::ImageTypes/maxcolors()>
 
-NC() - L<Imager::Handy/NC>
+NC() - L<Imager::Handy/NC()>
 
-NCF() - L<Imager::Handy/NCF>
+NCF() - L<Imager::Handy/NCF()>
 
-new() - L<Imager::ImageTypes/new>
+new() - L<Imager::ImageTypes/new()>
 
-newcolor() - L<Imager::Handy/newcolor>
+newcolor() - L<Imager::Handy/newcolor()>
 
-newcolour() - L<Imager::Handy/newcolour>
+newcolour() - L<Imager::Handy/newcolour()>
 
-newfont() - L<Imager::Handy/newfont>
+newfont() - L<Imager::Handy/newfont()>
 
-NF() - L<Imager::Handy/NF>
+NF() - L<Imager::Handy/NF()>
 
 open() - L<Imager::Files> - an alias for read()
 
 =for stopwords IPTC
 
-parseiptc() - L<Imager::Files/parseiptc> - parse IPTC data from a JPEG
+parseiptc() - L<Imager::Files/parseiptc()> - parse IPTC data from a JPEG
 image
 
-paste() - L<Imager::Transformations/paste> - draw an image onto an image
+paste() - L<Imager::Transformations/paste()> - draw an image onto an
+image
 
-polygon() - L<Imager::Draw/polygon>
+polygon() - L<Imager::Draw/polygon()>
 
-polyline() - L<Imager::Draw/polyline>
+polyline() - L<Imager::Draw/polyline()>
 
-preload() - L<Imager::Files/preload>
+preload() - L<Imager::Files/preload()>
 
 read() - L<Imager::Files> - read a single image from an image file
 
 read_multi() - L<Imager::Files> - read multiple images from an image
 file
 
-read_types() - L<Imager::Files/read_types> - list image types Imager
+read_types() - L<Imager::Files/read_types()> - list image types Imager
 can read.
 
-register_filter() - L<Imager::Filters/register_filter>
+register_filter() - L<Imager::Filters/register_filter()>
 
-register_reader() - L<Imager::Files/register_reader>
+register_reader() - L<Imager::Files/register_reader()>
 
-register_writer() - L<Imager::Files/register_writer>
+register_writer() - L<Imager::Files/register_writer()>
 
-rotate() - L<Imager::Transformations/rotate>
+rotate() - L<Imager::Transformations/rotate()>
 
-rubthrough() - L<Imager::Transformations/rubthrough> - draw an image onto an
-image and use the alpha channel
+rubthrough() - L<Imager::Transformations/rubthrough()> - draw an image
+onto an image and use the alpha channel
 
-scale() - L<Imager::Transformations/scale>
+scale() - L<Imager::Transformations/scale()>
 
-scale_calculate() - L<Imager::Transformations/scale_calculate>
+scale_calculate() - L<Imager::Transformations/scale_calculate()>
 
-scaleX() - L<Imager::Transformations/scaleX>
+scaleX() - L<Imager::Transformations/scaleX()>
 
-scaleY() - L<Imager::Transformations/scaleY>
+scaleY() - L<Imager::Transformations/scaleY()>
 
-setcolors() - L<Imager::ImageTypes/setcolors> - set palette colors in
-a paletted image
+setcolors() - L<Imager::ImageTypes/setcolors()> - set palette colors
+in a paletted image
 
 set_file_limits() - L<Imager::Files/"Limiting the sizes of images you read">
 
-setmask() - L<Imager::ImageTypes/setmask>
+setmask() - L<Imager::ImageTypes/setmask()>
 
-setpixel() - L<Imager::Draw/setpixel>
+setpixel() - L<Imager::Draw/setpixel()>
 
-setsamples() - L<Imager::Draw/setsamples>
+setsamples() - L<Imager::Draw/setsamples()>
 
-setscanline() - L<Imager::Draw/setscanline>
+setscanline() - L<Imager::Draw/setscanline()>
 
-settag() - L<Imager::ImageTypes/settag>
+settag() - L<Imager::ImageTypes/settag()>
 
-string() - L<Imager::Draw/string> - draw text on an image
+string() - L<Imager::Draw/string()> - draw text on an image
 
-tags() -  L<Imager::ImageTypes/tags> - fetch image tags
+tags() -  L<Imager::ImageTypes/tags()> - fetch image tags
 
-to_paletted() -  L<Imager::ImageTypes/to_paletted>
+to_paletted() -  L<Imager::ImageTypes/to_paletted()>
 
-to_rgb16() - L<Imager::ImageTypes/to_rgb16>
+to_rgb16() - L<Imager::ImageTypes/to_rgb16()>
 
-to_rgb8() - L<Imager::ImageTypes/to_rgb8>
+to_rgb8() - L<Imager::ImageTypes/to_rgb8()>
 
-transform() - L<Imager::Engines/"transform">
+transform() - L<Imager::Engines/"transform()">
 
-transform2() - L<Imager::Engines/"transform2">
+transform2() - L<Imager::Engines/"transform2()">
 
-type() -  L<Imager::ImageTypes/type> - type of image (direct vs paletted)
+type() -  L<Imager::ImageTypes/type()> - type of image (direct vs paletted)
 
-unload_plugin() - L<Imager::Filters/unload_plugin>
+unload_plugin() - L<Imager::Filters/unload_plugin()>
 
-virtual() - L<Imager::ImageTypes/virtual> - whether the image has it's own
+virtual() - L<Imager::ImageTypes/virtual()> - whether the image has it's own
 data
 
 write() - L<Imager::Files> - write an image to a file
@@ -4437,26 +4438,26 @@ write() - L<Imager::Files> - write an image to a file
 write_multi() - L<Imager::Files> - write multiple image to an image
 file.
 
-write_types() - L<Imager::Files/read_types> - list image types Imager
+write_types() - L<Imager::Files/read_types()> - list image types Imager
 can write.
 
 =head1 CONCEPT INDEX
 
 animated GIF - L<Imager::Files/"Writing an animated GIF">
 
-aspect ratio - L<Imager::ImageTypes/i_xres>,
-L<Imager::ImageTypes/i_yres>, L<Imager::ImageTypes/i_aspect_only>
+aspect ratio - C<i_xres>, C<i_yres>, C<i_aspect_only> in
+L<Imager::ImageTypes/"Common Tags">.
 
 blend - alpha blending one image onto another
-L<Imager::Transformations/rubthrough>
+L<Imager::Transformations/rubthrough()>
 
-blur - L<Imager::Filters/guassian>, L<Imager::Filters/conv>
+blur - L<Imager::Filters/gaussian>, L<Imager::Filters/conv>
 
-boxes, drawing - L<Imager::Draw/box>
+boxes, drawing - L<Imager::Draw/box()>
 
 changes between image - L<Imager::Filters/"Image Difference">
 
-channels, combine into one image - L<Imager::Transformations/combine>
+channels, combine into one image - L<Imager::Transformations/combine()>
 
 color - L<Imager::Color>
 
@@ -4470,22 +4471,22 @@ contrast - L<Imager::Filters/contrast>, L<Imager::Filters/autolevels>
 
 convolution - L<Imager::Filters/conv>
 
-cropping - L<Imager::Transformations/crop>
+cropping - L<Imager::Transformations/crop()>
 
 CUR files - L<Imager::Files/"ICO (Microsoft Windows Icon) and CUR (Microsoft Windows Cursor)">
 
 C<diff> images - L<Imager::Filters/"Image Difference">
 
-dpi - L<Imager::ImageTypes/i_xres>, 
+dpi - C<i_xres>, C<i_yres> in L<Imager::ImageTypes/"Common Tags">,
 L<Imager::Cookbook/"Image spatial resolution">
 
-drawing boxes - L<Imager::Draw/box>
+drawing boxes - L<Imager::Draw/box()>
 
-drawing lines - L<Imager::Draw/line>
+drawing lines - L<Imager::Draw/line()>
 
-drawing text - L<Imager::Draw/string>, L<Imager::Draw/align_string>
+drawing text - L<Imager::Draw/string()>, L<Imager::Draw/align_string()>
 
-error message - L<"ERROR HANDLING">
+error message - L</"ERROR HANDLING">
 
 files, font - L<Imager::Font>
 
@@ -4493,18 +4494,18 @@ files, image - L<Imager::Files>
 
 filling, types of fill - L<Imager::Fill>
 
-filling, boxes - L<Imager::Draw/box>
+filling, boxes - L<Imager::Draw/box()>
 
-filling, flood fill - L<Imager::Draw/flood_fill>
+filling, flood fill - L<Imager::Draw/flood_fill()>
 
-flood fill - L<Imager::Draw/flood_fill>
+flood fill - L<Imager::Draw/flood_fill()>
 
 fonts - L<Imager::Font>
 
-fonts, drawing with - L<Imager::Draw/string>,
-L<Imager::Draw/align_string>, L<Imager::Font::Wrap>
+fonts, drawing with - L<Imager::Draw/string()>,
+L<Imager::Draw/align_string()>, L<Imager::Font::Wrap>
 
-fonts, metrics - L<Imager::Font/bounding_box>, L<Imager::Font::BBox>
+fonts, metrics - L<Imager::Font/bounding_box()>, L<Imager::Font::BBox>
 
 fonts, multiple master - L<Imager::Font/"MULTIPLE MASTER FONTS">
 
@@ -4514,15 +4515,15 @@ L<Imager::Filters/gradgen>
 
 GIF files - L<Imager::Files/"GIF">
 
-GIF files, animated - L<Imager::File/"Writing an animated GIF">
+GIF files, animated - L<Imager::Files/"Writing an animated GIF">
 
 gradient fill - L<Imager::Fill/"Fountain fills">,
 L<Imager::Filters/fountain>, L<Imager::Fountain>,
 L<Imager::Filters/gradgen>
 
-gray scale, convert image to - L<Imager::Transformations/convert>
+gray scale, convert image to - L<Imager::Transformations/convert()>
 
-guassian blur - L<Imager::Filters/guassian>
+gaussian blur - L<Imager::Filters/gaussian>
 
 hatch fills - L<Imager::Fill/"Hatched fills">
 
@@ -4535,11 +4536,11 @@ JPEG - L<Imager::Files/"JPEG">
 
 limiting image sizes - L<Imager::Files/"Limiting the sizes of images you read">
 
-lines, drawing - L<Imager::Draw/line>
+lines, drawing - L<Imager::Draw/line()>
 
 matrix - L<Imager::Matrix2d>, 
-L<Imager::Transformations/"Matrix Transformations">,
-L<Imager::Font/transform>
+L<Imager::Engines/"Matrix Transformations">,
+L<Imager::Font/transform()>
 
 metadata, image - L<Imager::ImageTypes/"Tags">
 
@@ -4550,11 +4551,11 @@ noise, filter - L<Imager::Filters/noise>
 noise, rendered - L<Imager::Filters/turbnoise>,
 L<Imager::Filters/radnoise>
 
-paste - L<Imager::Transformations/paste>,
-L<Imager::Transformations/rubthrough>
+paste - L<Imager::Transformations/paste()>,
+L<Imager::Transformations/rubthrough()>
 
-pseudo-color image - L<Imager::ImageTypes/to_paletted>,
-L<Imager::ImageTypes/new>
+pseudo-color image - L<Imager::ImageTypes/to_paletted()>,
+L<Imager::ImageTypes/new()>
 
 =for stopwords posterize
 
@@ -4564,34 +4565,34 @@ PNG files - L<Imager::Files>, L<Imager::Files/"PNG">
 
 PNM - L<Imager::Files/"PNM (Portable aNy Map)">
 
-rectangles, drawing - L<Imager::Draw/box>
+rectangles, drawing - L<Imager::Draw/box()>
 
-resizing an image - L<Imager::Transformations/scale>, 
-L<Imager::Transformations/crop>
+resizing an image - L<Imager::Transformations/scale()>, 
+L<Imager::Transformations/crop()>
 
 RGB (SGI) files - L<Imager::Files/"SGI (RGB, BW)">
 
 saving an image - L<Imager::Files>
 
-scaling - L<Imager::Transformations/scale>
+scaling - L<Imager::Transformations/scale()>
 
 SGI files - L<Imager::Files/"SGI (RGB, BW)">
 
 sharpen - L<Imager::Filters/unsharpmask>, L<Imager::Filters/conv>
 
-size, image - L<Imager::ImageTypes/getwidth>,
-L<Imager::ImageTypes/getheight>
+size, image - L<Imager::ImageTypes/getwidth()>,
+L<Imager::ImageTypes/getheight()>
 
-size, text - L<Imager::Font/bounding_box>
+size, text - L<Imager::Font/bounding_box()>
 
 tags, image metadata - L<Imager::ImageTypes/"Tags">
 
-text, drawing - L<Imager::Draw/string>, L<Imager::Draw/align_string>,
+text, drawing - L<Imager::Draw/string()>, L<Imager::Draw/align_string()>,
 L<Imager::Font::Wrap>
 
 text, wrapping text in an area - L<Imager::Font::Wrap>
 
-text, measuring - L<Imager::Font/bounding_box>, L<Imager::Font::BBox>
+text, measuring - L<Imager::Font/bounding_box()>, L<Imager::Font::BBox>
 
 tiles, color - L<Imager::Filters/mosaic>
 

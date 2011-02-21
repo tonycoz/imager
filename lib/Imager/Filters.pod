@@ -128,14 +128,18 @@ value it may be omitted when calling the filter function.
 Every one of these filters modifies the image in place.
 
 If none of the filters here do what you need, the
-L<Imager::Engines/tranform> or L<Imager::Engines/transform2> function
-may be useful.
+L<Imager::Engines/transform()> or L<Imager::Engines/transform2()>
+function may be useful.
+
+=for stopwords
+autolevels bumpmap bumpmap_complex conv gaussian hardinvert hardinvertall
+radnoise turbnoise unsharpmask gradgen postlevels
 
 A reference of the filters follows:
 
 =over
 
-=item C<autolevels>
+=item autolevels
 
 scales the value of each channel so that the values in the image will
 cover the whole possible range for the channel.  C<lsat> and C<usat>
@@ -150,7 +154,7 @@ the range respectively.
   $img->filter(type=>"autolevels", lsat=>0.2, usat=>0.2)
     or die $img->errstr;
 
-=item C<bumpmap>
+=item bumpmap
 
 uses the channel C<elevation> image C<bump> as a bump map on your
 image, with the light at (C<lightx>, C<lightty>), with a shadow length
@@ -160,7 +164,7 @@ of C<st>.
                lightx=>10, lighty=>10, st=>5)
     or die $img->errstr;
 
-=item C<bumpmap_complex>
+=item bumpmap_complex
 
 uses the channel C<channel> image C<bump> as a bump map on your image.
 If C<< Lz < 0 >> the three L parameters are considered to be the
@@ -173,7 +177,7 @@ coefficient.  C<n> is the shininess of the surface.
   $img->filter(type=>"bumpmap_complex", bump=>$bumpmap_img)
     or die $img->errstr;
 
-=item C<contrast>
+=item contrast
 
 scales each channel by C<intensity>.  Values of C<intensity> < 1.0
 will reduce the contrast.
@@ -186,7 +190,7 @@ will reduce the contrast.
   $img->filter(type=>"contrast", intensity=>0.8)
     or die $img->errstr;
 
-=item C<conv>
+=item conv
 
 performs 2 1-dimensional convolutions on the image using the values
 from C<coef>.  C<coef> should be have an odd length and the sum of the
@@ -204,7 +208,7 @@ coefficients must be non-zero.
   $img->filter(type=>"conv", coef=>[ -0.5, 1, -0.5 ])
     or die $img->errstr;
 
-=item C<fountain>
+=item fountain
 
 renders a fountain fill, similar to the gradient tool in most paint
 software.  The default fill is a linear fill from opaque black to
@@ -406,7 +410,7 @@ Really.  It even loads GIMP gradient files.
 
 =for stopwords Gaussian
                            
-=item C<gaussian>
+=item gaussian
 
 performs a Gaussian blur of the image, using C<stddev> as the standard
 deviation of the curve used to combine pixels, larger values give
@@ -425,7 +429,7 @@ values around 5 provide a very strong blur.
   $img->filter(type=>"gaussian", stddev=>5)
     or die $img->errstr;
 
-=item C<gradgen>
+=item gradgen
 
 renders a gradient, with the given I<colors> at the corresponding
 points (x,y) in C<xo> and C<yo>.  You can specify the way distance is
@@ -437,7 +441,7 @@ for Euclidean squared, and 2 for Manhattan distance.
                yo=>[ 10, 50, 50 ],
                colors=>[ qw(red blue green) ]);
 
-=item C<hardinvert>
+=item hardinvert
 X<filters, hardinvert>X<hardinvert>
 
 inverts the image, black to white, white to black.  All color channels
@@ -446,7 +450,7 @@ are inverted, excluding the alpha channel if any.
   $img->filter(type=>"hardinvert")
     or die $img->errstr;
 
-=item C<hardinvertall>
+=item hardinvertall
 X<filters, hardinvertall>X<hardinvertall>
 
 inverts the image, black to white, white to black.  All channels are
@@ -455,14 +459,14 @@ inverted, including the alpha channel if any.
   $img->filter(type=>"hardinvertall")
     or die $img->errstr;
 
-=item C<mosaic>
+=item mosaic
 
 produces averaged tiles of the given C<size>.
 
   $img->filter(type=>"mosaic", size=>5)
     or die $img->errstr;
 
-=item C<noise>
+=item noise
 
 adds noise of the given C<amount> to the image.  If C<subtype> is
 zero, the noise is even to each channel, otherwise noise is added to
@@ -478,7 +482,7 @@ each channel independently.
 
 =for stopwords Perlin
 
-=item C<radnoise>
+=item radnoise
 
 renders radiant Perlin turbulent noise.  The center of the noise is at
 (C<xo>, C<yo>), C<ascale> controls the angular scale of the noise ,
@@ -488,7 +492,7 @@ and C<rscale> the radial scale, higher numbers give more detail.
                ascale=>1, rscale=>0.02)
     or die $img->errstr;
 
-=item C<postlevels>
+=item postlevels
 
 alters the image to have only C<levels> distinct level in each
 channel.
@@ -496,7 +500,7 @@ channel.
   $img->filter(type=>"postlevels", levels=>10)
     or die $img->errstr;
 
-=item C<turbnoise>
+=item turbnoise
 
 renders Perlin turbulent noise.  (C<xo>, C<yo>) controls the origin of
 the noise, and C<scale> the scale of the noise, with lower numbers
@@ -507,7 +511,7 @@ giving more detail.
 
 =for stopwords unsharp
 
-=item C<unsharpmask>
+=item unsharpmask
 
 performs an unsharp mask on the image.  This increases the contrast of
 edges in the image.
@@ -544,7 +548,7 @@ to I<Amount> in the GIMP's unsharp mask filter.  Default: 1.0.
 
 =back
 
-=item C<watermark>
+=item watermark
 
 applies C<wmark> as a watermark on the image with strength C<pixdiff>,
 with an origin at (C<tx>, C<ty>)
@@ -566,7 +570,7 @@ them into Imager's filter() method:
 
 =over
 
-=item register_filter
+=item register_filter()
 
 Registers a filter so it is visible via Imager's filter() method.
 
@@ -615,7 +619,7 @@ See L<Imager::Filter::Mandelbrot> for an example.
 =head2 Plug-ins
 
 The plug in interface is deprecated.  Please use the Imager API, see
-L<Imager::API> and L<External Filters> for details
+L<Imager::API> and L</External Filters> for details
 
 It is possible to add filters to the module without recompiling Imager
 itself.  This is done by using DSOs (Dynamic shared object) available
@@ -647,7 +651,7 @@ Linux, Solaris, HPUX, OpenBSD, FreeBSD, TRU64/OSF1, AIX, Win32, OS X.
 
 =over
 
-=item load_plugin
+=item load_plugin()
 
 This is a function, not a method, exported by default.  You should
 import this function explicitly for future compatibility if you need
@@ -657,7 +661,7 @@ Accepts a single parameter, the name of a shared library file to load.
 
 Returns true on success.  Check Imager->errstr on failure.
 
-=item unload_plugin
+=item unload_plugin()
 
 This is a function, not a method, which is exported by default.  You
 should import this function explicitly for future compatibility if you

@@ -80,14 +80,14 @@ A list of the transformations that do not alter the source image follows:
 
 =over
 
-=item copy
+=item copy()
 
 To create a copy of an image use the C<copy()> method.  This is useful
 if you want to keep an original after doing something that changes the image.
 
   $newimg = $orig->copy();
 
-=item scale
+=item scale()
 
 X<scale>To scale an image so proportions are maintained use the
 C<$img-E<gt>scale()> method.  if you give either a C<xpixels> or
@@ -525,7 +525,7 @@ A list of the transformations that alter the source image follows:
 
 =over
 
-=item paste
+=item paste()
 
 X<paste>To copy an image to onto another image use the C<paste()>
 method.
@@ -720,7 +720,7 @@ interactive paint software.
 compose() returns true on success.  On failure check $target->errstr
 for the reason for failure.
 
-=item flip
+=item flip()
 
 An inplace horizontal or vertical flip is possible by calling the
 C<flip()> method.  If the original is to be preserved it's possible to
@@ -740,7 +740,7 @@ reason for failure.
 
 =over
 
-=item convert
+=item convert()
 
 You can use the convert method to transform the color space of an
 image using a matrix.  For ease of use some presets are provided.
@@ -872,7 +872,7 @@ alpha channel:
                                            [ 0, 0, 0, 0.5 ],
                                          ]);
 
-=item combine
+=item combine()
 X<combine>
 
 Combine channels from one or more input images into a new image.
@@ -913,7 +913,7 @@ used from the extra images.
 
 =over
 
-=item map
+=item map()
 
 You can use the map method to map the values of each channel of an
 image independently using a list of look-up tables.  It's important to

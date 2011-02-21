@@ -68,8 +68,8 @@ code snippet is sufficient:
   print join " ", keys %Imager::formats;
 
 This will include some other information identifying libraries rather
-than file formats.  For new code you might find the L</read_types> or
-L</write_types> methods useful.
+than file formats.  For new code you might find the L</read_types()>
+or L</write_types()> methods useful.
 
 =over 
 
@@ -126,7 +126,7 @@ C<write_multi()> method:
   Imager->write_multi({ file=> $filename, type=>$type }, @images)
     or die "Cannot write $filename: ", Imager->errstr;
 
-=item read_types
+=item read_types()
 
 This is a class method that returns a list of the image file types
 that Imager can read.
@@ -140,7 +140,7 @@ It is possible for extra file read handlers to be loaded when
 attempting to read a file, which may modify the list of available read
 types.
 
-=item write_types
+=item write_types()
 
 This is a class method that returns a list of the image file types
 that Imager can write.
@@ -307,7 +307,7 @@ C<\&Imager::def_guess_type>.
 
 =over
 
-=item def_guess_type
+=item def_guess_type()
 
 This is the default function Imager uses to derive a file type from a
 file name.  This is a function, not a method.
@@ -602,7 +602,7 @@ Any future IPTC data decoding is likely to go into tags.
 
 =back
 
-=head2 GIF (Graphics Interchange Format)
+=head2 GIF
 
 When writing one of more GIF images you can use the same
 L<Quantization Options|Imager::ImageTypes> as you can when converting
@@ -674,8 +674,9 @@ This value is not used when writing. ("Transparent Color Index")
 
 gif_trans_color - A reference to an Imager::Color object, which is the
 color to use for the palette entry used to represent transparency in
-the palette.  You need to set the C<transp> option (see L<Quantization
-options>) for this value to be used.
+the palette.  You need to set the C<transp> option (see
+L<Imager::ImageTypes/"Quantization options">) for this value to be
+used.
 
 =item *
 
@@ -1351,7 +1352,7 @@ method:
 
 =over
 
-=item register_reader
+=item register_reader()
 
 Registers single or multiple image read functions.
 
@@ -1441,7 +1442,7 @@ Example:
      },
     );
 
-=item register_writer
+=item register_writer()
 
 Registers single or multiple image write functions.
 
@@ -1527,7 +1528,7 @@ to autoload it.
 
 =over
 
-=item preload
+=item preload()
 
 This preloads the file support modules included with or that have been
 included with Imager in the past.  This is intended for use in forking

@@ -125,7 +125,7 @@ L<Imager::Fill> for more information.
 
 =over
 
-=item line
+=item line()
 
   $img->line(color=>$green, x1=>10, x2=>100,
                             y1=>20, y2=>50, aa=>1, endp=>1 );
@@ -150,7 +150,7 @@ C<x2>, C<y2> - end point of the line. Required.
 
 =item *
 
-C<color> - the color of the line.  See L<"Color Parameters">.  Default:
+C<color> - the color of the line.  See L</"Color Parameters">.  Default:
 black.
 
 =item *
@@ -165,7 +165,7 @@ C<aa> - if true the line is drawn anti-aliased.  Default: 0.
 
 =back
 
-=item polyline(points => [ [ x, y ], [ x, y ], ... ], color => color)
+=item polyline()
 
   $img->polyline(points=>[[$x0,$y0],[$x1,$y1],[$x2,$y2]],color=>$red);
   $img->polyline(x=>[$x0,$x1,$x2], y=>[$y0,$y1,$y2], aa=>1);
@@ -200,7 +200,7 @@ to supplying the C<points> parameter.
 
 =item *
 
-C<color> - the color of the line.  See L<"Color Parameters">.
+C<color> - the color of the line.  See L</"Color Parameters">.
 Default: black.
 
 =item *
@@ -210,7 +210,7 @@ be supplied as C<antialias> for backward compatibility.
 
 =back
 
-=item box
+=item box()
 
   $blue = Imager::Color->new( 0, 0, 255 );
   $img->box(color => $blue, xmin=>10, ymin=>30, xmax=>200, ymax=>300, 
@@ -265,7 +265,7 @@ C<xmax>, C<ymax> and overrides their values.
 
 =item *
 
-C<color> - the color of the line.  See L<"Color Parameters">.
+C<color> - the color of the line.  See L</"Color Parameters">.
 Default: white.  This is ignored if the filled parameter
 
 =item *
@@ -276,11 +276,11 @@ outlined.  Default: an outline is drawn.
 =item *
 
 C<fill> - the fill for the box.  If this is supplied then the box will be
-filled.  See L<"Fill Parameters">.
+filled.  See L</"Fill Parameters">.
 
 =back
 
-=item arc
+=item arc()
 
   $img->arc(color=>$red, r=>20, x=>200, y=>100, d1=>10, d2=>20 );
 
@@ -316,12 +316,12 @@ C<d2> - ending angle of the arc, in degrees.  Default: 361.
 
 =item *
 
-C<color> - the color of the filled arc.  See L<"Color Parameters">.
+C<color> - the color of the filled arc.  See L</"Color Parameters">.
 Default: white.  Overridden by C<fill>.
 
 =item *
 
-C<fill> - the fill for the filled arc.  See L<"Fill Parameters">
+C<fill> - the fill for the filled arc.  See L</"Fill Parameters">
 
 =item *
 
@@ -351,7 +351,7 @@ C<filled> - set to 0 to draw only an outline.
   $img->arc(x => 100, y => 150, r => 90, filled => 0,
             color => '#0f0', aa => 1, d1 => 90, d2 => 180);
 
-=item circle
+=item circle()
 
   $img->circle(color=>$green, r=>50, x=>200, y=>100, aa=>1, filled=>1);
 
@@ -377,12 +377,12 @@ C<r> - radius of the circle.  Default: 1/3 of min(image height, image width).
 
 =item *
 
-C<color> - the color of the filled circle.  See L<"Color Parameters">.
+C<color> - the color of the filled circle.  See L</"Color Parameters">.
 Default: white.  Overridden by C<fill>.
 
 =item *
 
-C<fill> - the fill for the filled circle.  See L<"Fill Parameters">
+C<fill> - the fill for the filled circle.  See L</"Fill Parameters">
 
 =item *
 
@@ -427,12 +427,12 @@ to supplying the C<points> parameter.
 
 =item *
 
-C<color> - the color of the filled polygon.  See L<"Color Parameters">.
+C<color> - the color of the filled polygon.  See L</"Color Parameters">.
 Default: black.  Overridden by C<fill>.
 
 =item *
 
-C<fill> - the fill for the filled circle.  See L<"Fill Parameters">
+C<fill> - the fill for the filled circle.  See L</"Fill Parameters">
 
 =back
 
@@ -464,19 +464,19 @@ C<x>, C<y> - the start point of the fill.
 
 =item *
 
-C<color> - the color of the filled area.  See L<"Color Parameters">.
+C<color> - the color of the filled area.  See L</"Color Parameters">.
 Default: white.  Overridden by C<fill>.
 
 =item *
 
-C<fill> - the fill for the filled area.  See L<"Fill Parameters">
+C<fill> - the fill for the filled area.  See L</"Fill Parameters">
 
 =item *
 
 C<border> - the border color of the region to be filled.  If this
 parameter is supplied flood_fill() will stop when it finds this color.
 If this is not supplied then a normal fill is done.  C<border> can be
-supplied as a L<"Color Parameter">.
+supplied as a L</"Color Parameters">.
 
 =back
 
@@ -498,7 +498,7 @@ array references containing a set of pixels to be set.
 
 =item *
 
-color - the color of the pixels drawn.  See L<"Color Parameters">.
+color - the color of the pixels drawn.  See L</"Color Parameters">.
 Default: white.
 
 =back
@@ -543,7 +543,7 @@ Default: C<'8bit'>.
 
 =back
 
-=item string
+=item string()
 
   my $font = Imager::Font->new(file=>"foo.ttf");
   $img->string(x => 50, y => 70,
@@ -617,7 +617,7 @@ of C<size>.
 C<utf8> - for drivers that support it, treat the string as UTF-8
 encoded.  For versions of perl that support Unicode (5.6 and later),
 this will be enabled automatically if the C<string> parameter is
-already a UTF-8 string. See L<Imager::Font/"UTF8"> for more
+already a UTF-8 string. See L<Imager::Font/"UTF-8"> for more
 information.
 
 =item *
@@ -634,7 +634,7 @@ C<text> - alias for the C<string> parameter.
 On error, string() returns false and you can use $img->errstr to get
 the reason for the error.
 
-=item align_string
+=item align_string()
 
 Draws text aligned around a point on the image.
 
@@ -769,7 +769,7 @@ C<< $img->errstr >> to get the reason for the error.
 =item setscanline()
 
 Set all or part of a horizontal line of pixels to an image.  This
-method is most useful in conjunction with L</getscanline>.
+method is most useful in conjunction with L</getscanline()>.
 
 The parameters you can pass are:
 
@@ -858,7 +858,7 @@ done with convert too:
 =item getscanline()
 
 Read all or part of a horizontal line of pixels from an image.  This
-method is most useful in conjunction with L</setscanline>.
+method is most useful in conjunction with L</setscanline()>.
 
 The parameters you can pass are:
 
@@ -927,7 +927,7 @@ Or do it using packed data:
     }
   }
 
-Some of the examples for L</setscanline> for more examples.
+Some of the examples for L</setscanline()> for more examples.
 
 =item getsamples()
 

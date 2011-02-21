@@ -508,7 +508,7 @@ A spiral built on top of a color wheel.
 
 For details on expression parsing see L<Imager::Expr>.  For details on
 the virtual machine used to transform the images, see
-L<Imager::regmach.pod>.
+L<Imager::regmach>.
 
   # generate a colorful spiral
   # requires that Parse::RecDescent be installed
@@ -537,7 +537,7 @@ L<Imager::regmach.pod>.
 
 =over
 
-=item matrix_transform
+=item matrix_transform()
 
 Rather than having to write code in a little language, you can use a
 matrix to perform affine transformations, using the matrix_transform()

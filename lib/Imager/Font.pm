@@ -544,9 +544,7 @@ the FreeType 2.x driver by setting C<type> to C<'ft2'>:
 
 =back
 
-
-
-=item bounding_box
+=item bounding_box()
 
 Returns the bounding box for the specified string.  Example:
 
@@ -652,7 +650,7 @@ parameter.
 C<utf8> - For drivers that support it, treat the string as UTF-8 encoded.
 For versions of perl that support Unicode (5.6 and later), this will
 be enabled automatically if the 'string' parameter is already a UTF-8
-string. See L<UTF-8> for more information.  Default: the C<utf8> value
+string. See L</UTF-8> for more information.  Default: the C<utf8> value
 passed to Imager::Font->new(...) or 0.
 
 =item *
@@ -671,7 +669,7 @@ and height of the text instead.
 =item string()
 
 The $img->string(...) method is now documented in
-L<Imager::Draw/string>
+L<Imager::Draw/string()>
 
 =item align(string=>$text,size=>$size,x=>...,y=>...,valign => ...,halign=>...)
 
@@ -779,7 +777,9 @@ C<dpi> - set both horizontal and vertical resolution to this value.
 
 Returns a list containing the previous C<xdpi>, C<ydpi> values.
 
-=item transform(matrix=>$matrix)
+=item transform()
+
+  $font->transform(matrix=>$matrix);
 
 Applies a transformation to the font, where matrix is an array ref of
 numbers representing a 2 x 3 matrix:
@@ -826,7 +826,7 @@ at least one character.
 C<utf8> - For drivers that support it, treat the string as UTF-8
 encoded.  For versions of perl that support Unicode (5.6 and later),
 this will be enabled automatically if the 'string' parameter is
-already a UTF-8 string. See L<UTF-8> for more information.  Default:
+already a UTF-8 string. See L</UTF-8> for more information.  Default:
 the C<utf8> value passed to Imager::Font->new(...) or 0.
 
 =back
@@ -859,7 +859,7 @@ included.
 =item draw
 
 This is used by Imager's string() method to implement drawing text.
-See L<Imager::Draw/string>.
+See L<Imager::Draw/string()>.
 
 =back
 

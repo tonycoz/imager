@@ -38,7 +38,7 @@ bilevel
 const
 dpi
 eg
-guassian
+gaussian
 ie
 infix
 metadata

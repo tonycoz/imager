@@ -37,7 +37,7 @@ new() method.
 
 =item NCF()
 
-Create a new L<Imager::Color::Font> object, supplying any parameters
+Create a new L<Imager::Color::Float> object, supplying any parameters
 to the new() method.
 
   my $colorf = NCF(1.0, 0, 0);
