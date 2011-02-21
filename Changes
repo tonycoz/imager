@@ -18,6 +18,9 @@ Bug fixes:
  - skip the threads tests on Test::More 2.00_*
    https://rt.cpan.org/Ticket/Display.html?id=65812
 
+ - add an (unshipped) test to check Imager's internal POD links
+   https://rt.cpan.org/Ticket/Display.html?id=65749
+
 Imager 0.81 - 14 Feb 2011
 ===========
 
