@@ -3,7 +3,7 @@
 # to make sure we get expected values
 
 use strict;
-use Test::More tests => 224;
+use Test::More tests => 230;
 
 BEGIN { use_ok(Imager => qw(:handy :all)) }
 
@@ -106,17 +106,29 @@ my $black = NC(0, 0, 0);
 ok(Imager::i_ppix($im_pal, 1, 0, $black) == 0, "draw with black (not in palette)");
 is(Imager::i_img_type($im_pal), 0, "pal img shouldn't be paletted now");
 
-my %quant =
-  (
-   colors => [$red, $green, $blue, $black],
-   makemap => 'none',
-  );
-my $im_pal2 = Imager::i_img_to_pal($im_pal, \%quant);
-ok($im_pal2, "got an image from quantizing");
-is(@{$quant{colors}}, 4, "has the right number of colours");
-is(Imager::i_gsamp($im_pal2, 0, 100, 0, 0, 1, 2),
-  "\0\xFF\0\0\0\0"."\xFF\0\0" x 48 . "\0\0\xFF" x 50,
-   "colors are still correct");
+{
+  my %quant =
+    (
+     colors => [$red, $green, $blue, $black],
+     make_colors => 'none',
+    );
+  my $im_pal2 = Imager::i_img_to_pal($im_pal, \%quant);
+  ok($im_pal2, "got an image from quantizing");
+  is(@{$quant{colors}}, 4, "quant has the right number of colours");
+  is(Imager::i_colorcount($im_pal2), 4, "and so does the image");
+  my @colors = Imager::i_getcolors($im_pal2, 0, 4);
+  my ($first) = Imager::i_getcolors($im_pal2, 0);
+  my @first = $colors[0]->rgba;
+  is_color3($first, $first[0], $first[1], $first[2],
+	   "check first color is first for multiple or single fetch");
+  is_color3($colors[0], 255, 0, 0, "still red");
+  is_color3($colors[1], 0, 255, 0, "still green");
+  is_color3($colors[2], 0, 0, 255, "still blue");
+  is_color3($colors[3], 0, 0, 0, "still black");
+  is(Imager::i_gsamp($im_pal2, 0, 100, 0, 0, 1, 2),
+     "\0\xFF\0\0\0\0"."\xFF\0\0" x 48 . "\0\0\xFF" x 50,
+     "colors are still correct");
+}
 
 # test the OO interfaces
 my $impal2 = Imager->new(type=>'pseudo', xsize=>200, ysize=>201);
