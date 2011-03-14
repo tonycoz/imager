@@ -245,6 +245,15 @@ sub _probe_test {
     print "Setting LD_RUN_PATH=$ld_run_path for $req->{name} probe\n"
       if $req->{verbose};
     $ENV{LD_RUN_PATH} = $ld_run_path;
+    if ($Config{lddlflags} =~ /([^ ]*-(?:rpath|R)[,=]?)([^ ]+)/
+	&& -d $2) {
+      # hackety, hackety
+      # LD_RUN_PATH is ignored when there's already an -rpath option
+      # so provide one
+      my $prefix = $1;
+      $result->{LDDLFLAGS} = $Config{lddlflags} . " " .
+	join " ", map "$prefix$_", split $Config{path_sep}, $ld_run_path;
+    }
   }
   my $good =
     Devel::CheckLib::check_lib

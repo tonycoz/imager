@@ -37,7 +37,7 @@ else {
   $opts{TYPEMAPS} = [ Imager::ExtUtils->typemap ];
 
   # Imager required configure through use
-  my @Imager_req = ( Imager => "0.78" );
+  my @Imager_req = ( Imager => "0.82" );
   if ($MM_ver >= 6.46) {
     $opts{META_MERGE} =
       {
@@ -99,6 +99,8 @@ if ($probe_res) {
   $opts{LIBS} = $probe_res->{LIBS};
   $opts{DEFINE} = $probe_res->{DEFINE};
   $opts{INC} = "@inc";
+  $opts{LDDLFLAGS} = $probe_res->{LDDLFLAGS}
+    if $probe_res->{LDDLFLAGS};
 
   if ($MM_ver > 6.06) {
     $opts{AUTHOR} = 'Tony Cook <tony@imager.perl.org>';
