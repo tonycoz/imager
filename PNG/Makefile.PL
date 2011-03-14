@@ -13,6 +13,7 @@ GetOptions("incpath=s", \@incpaths,
            "verbose|v" => \$verbose);
 
 our $BUILDING_IMAGER;
+our %IMAGER_LIBS;
 
 my $MM_ver = eval $ExtUtils::MakeMaker::VERSION;
 
@@ -103,6 +104,8 @@ my %probe =
 
 my $probe_res = Imager::Probe->probe(\%probe);
 if ($probe_res) {
+  $IMAGER_LIBS{PNG} = 1;
+
   push @inc, $probe_res->{INC};
   $opts{LIBS} = $probe_res->{LIBS};
   $opts{DEFINE} = $probe_res->{DEFINE};
@@ -116,6 +119,8 @@ if ($probe_res) {
   WriteMakefile(%opts);
 }
 else {
+  $IMAGER_LIBS{PNG} = 0;
+
   if ($BUILDING_IMAGER) {
     ExtUtils::MakeMaker::WriteEmptyMakefile(%opts);
   }

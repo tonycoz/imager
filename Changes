@@ -21,6 +21,9 @@ Bug fixes:
  - add an (unshipped) test to check Imager's internal POD links
    https://rt.cpan.org/Ticket/Display.html?id=65749
 
+ - improve the library detection summary
+   https://rt.cpan.org/Ticket/Display.html?id=9675
+
 Imager 0.81 - 14 Feb 2011
 ===========
 

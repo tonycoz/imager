@@ -15,6 +15,9 @@ use Devel::CheckLib;
 # see this
 our $BUILDING_IMAGER = 1;
 
+# used to display a summary after we've probed the world
+our %IMAGER_LIBS;
+
 #
 # IM_INCPATH      colon seperated list of paths to extra include paths
 # IM_LIBPATH      colon seperated list of paths to extra library paths
@@ -240,6 +243,23 @@ mkdir('testout',0777); # since we cannot include it in the archive.
 -d "probe" and rmdir "probe";
 
 WriteMakefile(%opts);
+
+my @good;
+my @bad;
+for my $name (sort { lc $a cmp lc $b } keys %IMAGER_LIBS) {
+  if ($IMAGER_LIBS{$name}) {
+    push @good, $name;
+  }
+  else {
+    push @bad, $name;
+  }
+}
+
+print "\n";
+print "Libraries found:\n" if @good;
+print "  $_\n" for @good;
+print "Libraries *not* found:\n" if @bad;
+print "  $_\n" for @bad;
 
 exit;
 
