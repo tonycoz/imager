@@ -24,6 +24,15 @@ Bug fixes:
  - improve the library detection summary
    https://rt.cpan.org/Ticket/Display.html?id=9675
 
+ - increase the version of Imager::Font::Type1 so that upgrades don't
+   downgrade the version in this file.
+   https://rt.cpan.org/Ticket/Display.html?id=66250
+
+ - if we see an -rpath (or -R) option in $Config{lddlflags} supply
+   that option for the directories that would normally go in
+   LD_RUN_PATH.  Typically an explicit -rpath overrides LD_RUN_PATH.
+   https://rt.cpan.org/Ticket/Display.html?id=65955
+
 Imager 0.81 - 14 Feb 2011
 ===========
 
