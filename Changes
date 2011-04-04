@@ -1,5 +1,14 @@
 Imager release history.  Older releases can be found in Changes.old
 
+Imager 0.83 - unreleased
+===========
+
+Bug fixes:
+
+ - compose() with the target position off the top or left of the
+   target image didn't clip the source image correctly.
+   https://rt.cpan.org/Ticket/Display.html?id=67220
+
 Imager 0.82 - 14 Mar 2011
 ===========
 

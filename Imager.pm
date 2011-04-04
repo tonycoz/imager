@@ -2501,16 +2501,20 @@ sub compose {
     defined $mask_top or $mask_top = $opts{mask_miny};
     defined $mask_top or $mask_top = 0;
 
-    i_compose_mask($self->{IMG}, $src->{IMG}, $opts{mask}{IMG}, 
+    unless (i_compose_mask($self->{IMG}, $src->{IMG}, $opts{mask}{IMG}, 
 		   $left, $top, $src_left, $src_top,
 		   $mask_left, $mask_top, $width, $height, 
-		   $combine, $opts{opacity})
-      or return;
+			   $combine, $opts{opacity})) {
+      $self->_set_error(Imager->_error_as_msg);
+      return;
+    }
   }
   else {
-    i_compose($self->{IMG}, $src->{IMG}, $left, $top, $src_left, $src_top,
-	      $width, $height, $combine, $opts{opacity})
-      or return;
+    unless (i_compose($self->{IMG}, $src->{IMG}, $left, $top, $src_left, $src_top,
+		      $width, $height, $combine, $opts{opacity})) {
+      $self->_set_error(Imager->_error_as_msg);
+      return;
+    }
   }
 
   return $self;
