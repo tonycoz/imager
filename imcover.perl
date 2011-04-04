@@ -2,6 +2,7 @@
 use strict;
 use Config;
 use ExtUtils::Manifest 'maniread';
+use Cwd;
 
 my $make = $Config{make};
 # if there's a way to make with profiling for a recursive build like
@@ -15,7 +16,10 @@ system "perl Makefile.PL --coverage"
 system "$make 'OTHERLDFLAGS=-ftest-coverage -fprofile-arcs'"
   and die;
 
-system "$make test HARNESS_PERL_SWITCHES=-MDevel::Cover";
+{
+  local $ENV{DEVEL_COVER_OPTIONS} = "-db," . getcwd() . "/cover_db";
+  system "$make test TEST_VERBOSE=1 HARNESS_PERL_SWITCHES=-MDevel::Cover";
+}
 
 # build gcov files
 my $mani = maniread();
@@ -45,5 +49,5 @@ for my $path (keys %paths) {
 }
 
 my @dbs = "cover_db", map "$_/cover_db", grep $_, keys %paths;
-system "cover @dbs";
+system "cover -ignore_re '^t/'";
 
