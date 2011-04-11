@@ -50,6 +50,7 @@ i_compose_mask(i_img *out, i_img *src, i_img *mask,
   if (out_top < 0) {
     height = out_top + height;
     mask_top -= out_top;
+    src_top -= out_top;
     out_top = 0;
   }
   if (out_top + height > out->ysize)
@@ -69,7 +70,7 @@ i_compose_mask(i_img *out, i_img *src, i_img *mask,
     src_top = 0;
   }
   if (src_top + height > src->ysize)
-    height = src->ysize - src_left;
+    height = src->ysize - src_top;
 
   if (mask_left < 0) {
     width = mask_left + width;
@@ -187,7 +188,7 @@ i_compose(i_img *out, i_img *src,
     src_top = 0;
   }
   if (src_top + height > src->ysize)
-    height = src->ysize - src_left;
+    height = src->ysize - src_top;
 
   if (opacity > 1.0)
     opacity = 1.0;
