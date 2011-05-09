@@ -5,7 +5,7 @@ use vars qw(@ISA $VERSION);
 @ISA = qw(Imager::Font);
 
 BEGIN {
-  $VERSION = "1.011";
+  $VERSION = "1.012";
 
   eval {
     require XSLoader;
@@ -54,7 +54,7 @@ sub new {
   # we want to avoid T1Lib's file search mechanism
   unless ($hsh{file} =~ m!^/!
 	  || $hsh{file} =~ m!^\.\/?/!
-	  || $^O =~ /^(MSWin32|cygwin)$/ && $hsh{file} =~ /^[a-z]:/) {
+	  || $^O =~ /^(MSWin32|cygwin)$/ && $hsh{file} =~ /^[a-z]:/i) {
     $hsh{file} = './' . $hsh{file};
   }
 
@@ -65,7 +65,7 @@ sub new {
 	  }
 	  unless ($hsh{afm} =~ m!^/!
 		  || $hsh{afm} =~ m!^\./!
-		  || $^O =~ /^(MSWin32|cygwin)$/ && $hsh{file} =~ /^[a-z]:/) {
+		  || $^O =~ /^(MSWin32|cygwin)$/ && $hsh{file} =~ /^[a-z]:/i) {
 	    $hsh{file} = './' . $hsh{file};
 	  }
   } else {
