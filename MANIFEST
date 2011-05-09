@@ -337,6 +337,7 @@ T1/fontfiles/SpaceTest.pfb
 T1/imt1.c
 T1/imt1.h
 T1/Makefile.PL
+T1/README
 T1/t/t10type1.t
 T1/t/t20oo.t
 T1/T1.pm

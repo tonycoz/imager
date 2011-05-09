@@ -78,6 +78,7 @@ Makefile\.old$
 ^T1/T1\.c$
 
 ^.*/Changes$
+^.*/MANIFEST(\.SKIP)?$
 ^blib/
 ^Flines/Flines\.c$
 ^Imager\.c$

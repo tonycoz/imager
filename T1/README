@@ -1,0 +1,4 @@
+This module provides Type 1 font support for Imager via T1Lib.
+
+  http://imager.perl.org/
+  http://www.t1lib.org/

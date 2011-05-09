@@ -1,0 +1,12 @@
+\.o(bj)?$
+^Makefile(\.old)?$
+^MANIFEST\.bak
+^testout/
+~$
+^\#
+pm_to_blib
+^blib/
+^\.git/
+^\.gitignore$
+^T1\.c$
+^T1\.bs$

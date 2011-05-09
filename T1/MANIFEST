@@ -1,0 +1,17 @@
+fontfiles/dcr10.afm
+fontfiles/dcr10.pfb
+fontfiles/ExistenceTest.afm
+fontfiles/ExistenceTest.pfb
+fontfiles/SpaceTest.afm
+fontfiles/SpaceTest.pfb
+imt1.c
+imt1.h
+inc/Devel/CheckLib.pm
+Makefile.PL
+MANIFEST
+MANIFEST.SKIP
+README
+t/t10type1.t
+t/t20oo.t
+T1.pm
+T1.xs

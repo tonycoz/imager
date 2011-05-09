@@ -1,1 +1,12 @@
+Makefile
+Makefile.old
+MANIFEST.bak
+*~
+Imager-Font-T1-[0-9]*
+T1.bs
+T1.o
 T1.c
+blib
+*.o
+pm_to_blib
+testout
