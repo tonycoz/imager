@@ -1,5 +1,14 @@
 Imager release history.  Older releases can be found in Changes.old
 
+Imager 0.83
+===========
+
+Bug fixes:
+
+ - Imager::Font::T1 incorrectly checked for absolute filename under
+   Win32.  Thanks to kmx for the report and fix.
+   https://rt.cpan.org/Ticket/Display.html?id=67963
+
 Imager 0.82 - 14 Mar 2011
 ===========
 
