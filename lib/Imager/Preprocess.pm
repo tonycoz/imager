@@ -2,14 +2,22 @@ package Imager::Preprocess;
 use strict;
 require Exporter;
 use vars qw(@ISA @EXPORT $VERSION);
+use Getopt::Long;
+use Text::ParseWords;
 
 @EXPORT = qw(preprocess);
 @ISA = qw(Exporter);
 
 $VERSION = "1.000";
 
-
 sub preprocess {
+  unshift @ARGV, grep /^-/, shellwords($ENV{IMAGER_PREPROCESS_OPTS})
+    if $ENV{IMAGER_PREPROCESS_OPTS};
+  my $skip_lines = 0;
+  GetOptions("l" => \$skip_lines)
+    or usage();
+  my $keep_lines = !$skip_lines;
+
   my $src = shift @ARGV;
   my $dest = shift @ARGV
     or usage();
@@ -29,8 +37,8 @@ sub preprocess {
     "#define IM_ROUND_8(x) ((int)((x)+0.5))\n",
     "#define IM_ROUND_double(x) (x)\n",
     "#define IM_LIMIT_8(x) ((x) < 0 ? 0 : (x) > 255 ? 255 : (x))\n",
-    "#define IM_LIMIT_double(x) ((x) < 0.0 ? 0.0 : (x) > 1.0 ? 1.0 : (x))\n",
-    "#line 1 \"$src\"\n";
+    "#define IM_LIMIT_double(x) ((x) < 0.0 ? 0.0 : (x) > 1.0 ? 1.0 : (x))\n";
+  push @out, "#line 1 \"$src\"\n" if $keep_lines;
   while (defined(my $line = <SRC>)) {
     if ($line =~ /^\#code\s+(\S.+)$/) {
       $save_code
@@ -55,7 +63,7 @@ sub preprocess {
 	or do { warn "$src:$.:#/code without #code\n"; ++$failed; next; };
       
       if ($cond) {
-	push @out, "#line $cond_line \"$src\"\n";
+	push @out, "#line $cond_line \"$src\"\n" if $keep_lines;
 	push @out, "  if ($cond) {\n";
       }
       push @out,
@@ -65,7 +73,7 @@ sub preprocess {
         "#define IM_FILL_COMBINE(fill) ((fill)->combine)\n",
 	"#undef IM_FILL_FILLER\n",
         "#define IM_FILL_FILLER(fill) ((fill)->f_fill_with_color)\n";
-      push @out, "#line $code_line \"$src\"\n";
+      push @out, "#line $code_line \"$src\"\n" if $keep_lines;
       push @out, byte_samples(@code);
       push @out, "  }\n", "  else {\n"
 	if $cond;
@@ -75,11 +83,11 @@ sub preprocess {
         "#define IM_FILL_COMBINE(fill) ((fill)->combinef)\n",
 	"#undef IM_FILL_FILLER\n",
         "#define IM_FILL_FILLER(fill) ((fill)->f_fill_with_fcolor)\n";
-      push @out, "#line $code_line \"$src\"\n";
+      push @out, "#line $code_line \"$src\"\n" if $keep_lines;
       push @out, double_samples(@code);
       push @out, "  }\n"
 	if $cond;
-      push @out, "#line ",$.+1," \"$src\"\n";
+      push @out, "#line ",$.+1," \"$src\"\n" if $keep_lines;
       @code = ();
       $save_code = 0;
     }
@@ -163,6 +171,17 @@ sub double_samples {
   @lines;
 }
 
+sub usage {
+  die <<EOS;
+Usage: perl -MImager::Preprocess -epreprocess [-l] infile outfile
+  -l don't produce #line directives
+  infile - input file
+  outfile output file
+
+See perldoc Imager::Preprocess for details.
+EOS
+}
+
 1;
 
 __END__
@@ -180,7 +199,11 @@ Imager::Preprocess - simple preprocessor for handling multiple sample sizes
   ... code using preprocessor types/values ...
   #/code
 
-  perl -MImager -epreprocess foo.im foo.c
+  # process and make #line directives
+  perl -MImager::Preprocess -epreprocess foo.im foo.c
+
+  # process and no #line directives
+  perl -MImager::Preprocess -epreprocess -l foo.im foo.c
 
 =head1 DESCRIPTION
 
