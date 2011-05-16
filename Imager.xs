@@ -1453,6 +1453,15 @@ i_box_filled(im,x1,y1,x2,y2,val)
 	       int     y2
 	   Imager::Color    val
 
+int
+i_box_filledf(im,x1,y1,x2,y2,val)
+    Imager::ImgRaw     im
+	       int     x1
+	       int     y1
+	       int     x2
+	       int     y2
+	   Imager::Color::Float    val
+
 void
 i_box_cfill(im,x1,y1,x2,y2,fill)
     Imager::ImgRaw     im

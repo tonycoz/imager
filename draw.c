@@ -1123,6 +1123,65 @@ i_box_filled(i_img *im,int x1,int y1,int x2,int y2, const i_color *val) {
 }
 
 /*
+=item i_box_filledf(im, x1, y1, x2, y2, color)
+
+=category Drawing
+=synopsis i_box_filledf(im, 0, 0, im->xsize-1, im->ysize-1, &fcolor);
+
+Fills the box from (x1,y1) to (x2,y2) inclusive with a floating point
+color.
+
+=cut
+*/
+
+int
+i_box_filledf(i_img *im,int x1,int y1,int x2,int y2, const i_fcolor *val) {
+  i_img_dim x, y, width;
+  i_palidx index;
+
+  mm_log((1,"i_box_filledf(im* 0x%x,x1 %d,y1 %d,x2 %d,y2 %d,val 0x%x)\n",im,x1,y1,x2,y2,val));
+
+  if (x1 > x2 || y1 > y2
+      || x2 < 0 || y2 < 0
+      || x1 >= im->xsize || y1 > im->ysize)
+    return 0;
+
+  if (x1 < 0)
+    x1 = 0;
+  if (x2 >= im->xsize)
+    x2 = im->xsize - 1;
+  if (y1 < 0)
+    y1 = 0;
+  if (y2 >= im->ysize)
+    y2 = im->ysize - 1;
+
+  width = x2 - x1 + 1;
+
+  if (im->bits <= 8) {
+    i_color c;
+    c.rgba.r = SampleFTo8(val->rgba.r);
+    c.rgba.g = SampleFTo8(val->rgba.g);
+    c.rgba.b = SampleFTo8(val->rgba.b);
+    c.rgba.a = SampleFTo8(val->rgba.a);
+
+    i_box_filled(im, x1, y1, x2, y2, &c);
+  }
+  else {
+    i_fcolor *line = mymalloc(sizeof(i_fcolor) * width);
+    
+    for (x = 0; x < width; ++x)
+      line[x] = *val;
+    
+    for (y = y1; y <= y2; ++y)
+      i_plinf(im, x1, x2+1, y, line);
+    
+    myfree(line);
+  }
+  
+  return 1;
+}
+
+/*
 =item i_box_cfill(im, x1, y1, x2, y2, fill)
 
 =category Drawing

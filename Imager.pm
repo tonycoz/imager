@@ -2681,7 +2681,12 @@ sub box {
       $color = i_color_new(255,255,255,255);
     }
 
-    i_box_filled($raw, $xmin, $ymin,$xmax, $ymax, $color);
+    if ($color->isa("Imager::Color")) {
+      i_box_filled($raw, $xmin, $ymin,$xmax, $ymax, $color);
+    }
+    else {
+      i_box_filledf($raw, $xmin, $ymin,$xmax, $ymax, $color);
+    }
   }
   elsif ($opts{fill}) {
     unless (UNIVERSAL::isa($opts{fill}, 'Imager::Fill')) {

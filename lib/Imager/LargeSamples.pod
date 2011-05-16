@@ -26,7 +26,7 @@ don't, for future improvements.
   Method       Support    Notes
   ------       -------    -----
   arc          Partial    [1]
-  box          Partial    [1]
+  box          Partial    [2]
   circle       Partial    [1]
   convert      Full
   copy         Full
@@ -63,6 +63,9 @@ don't, for future improvements.
 
 [1] filling an area using the fill parameter works at the full depth
 of the image, using filled => 1 and color works at 8-bits/sample
+
+[2] box() will fill the area at the supplied color, but outline at
+8-bits/sample.
 
 =head1 File format large sample support
 

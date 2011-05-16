@@ -164,6 +164,7 @@ float i_gpix_pch(i_img *im,int x,int y,int ch);
 
 void i_box         (i_img *im,int x1,int y1,int x2,int y2,const i_color *val);
 void i_box_filled  (i_img *im,int x1,int y1,int x2,int y2,const i_color *val);
+int i_box_filledf  (i_img *im,int x1,int y1,int x2,int y2,const i_fcolor *val);
 void i_box_cfill(i_img *im, int x1, int y1, int x2, int y2, i_fill_t *fill);
 void i_line        (i_img *im,int x1,int y1,int x2,int y2,const i_color *val, int endp);
 void i_line_aa     (i_img *im,int x1,int y1,int x2,int y2,const i_color *val, int endp);
