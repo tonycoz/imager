@@ -436,6 +436,11 @@ sub is_image($$$) {
 }
 
 sub is_imaged($$$) {
+  my $epsilon = Imager::i_img_epsilonf();
+  if (@_ > 3) {
+    ($epsilon) = splice @_, 2, 1;
+  }
+
   my ($left, $right, $comment) = @_;
 
   {
@@ -447,17 +452,17 @@ sub is_imaged($$$) {
 
   my $builder = Test::Builder->new;
 
-  my $diff = Imager::i_img_diffd($left->{IMG}, $right->{IMG});
-  if ($diff > 0) {
+  my $same = Imager::i_img_samef($left->{IMG}, $right->{IMG}, $epsilon, $comment);
+  if (!$same) {
     $builder->ok(0, $comment);
-    $builder->diag("image data difference: $diff");
-   
+    $builder->diag("images different");
+
     # find the first mismatch
   PIXELS:
     for my $y (0 .. $left->getheight()-1) {
       for my $x (0.. $left->getwidth()-1) {
-	my @lsamples = $left->getsamples(x => $x, y => $y, width => 1);
-	my @rsamples = $right->getsamples(x => $x, y => $y, width => 1);
+	my @lsamples = $left->getsamples(x => $x, y => $y, width => 1, type => "float");
+	my @rsamples = $right->getsamples(x => $x, y => $y, width => 1, type => "float");
 	if ("@lsamples" ne "@rsamples") {
 	  $builder->diag("first mismatch at ($x, $y) - @lsamples vs @rsamples");
 	  last PIXELS;
@@ -732,8 +737,11 @@ not checked.  Equivalent to is_image_similar($im1, $im2, 0, $comment).
 
 =item is_imaged($im, $im2, $comment)
 
+=item is_imaged($im, $im2, $epsilon, $comment)
+
 Tests if the two images have the same content at the double/sample
-level.
+level.  C<$epsilon> defaults to the platform DBL_EPSILON multiplied by
+four.
 
 =item is_image_similar($im1, $im2, $maxdiff, $comment)
 

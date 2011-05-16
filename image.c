@@ -1182,6 +1182,41 @@ i_img_diffd(i_img *im1,i_img *im2) {
   return tdiff;
 }
 
+int
+i_img_samef(i_img *im1,i_img *im2, double epsilon, char const *what) {
+  int x,y,ch,xb,yb,chb;
+  i_fcolor val1,val2;
+
+  if (what == NULL)
+    what = "(null)";
+
+  mm_log((1,"i_img_samef(im1 0x%x,im2 0x%x, epsilon %g, what '%s')\n", im1, im2, epsilon, what));
+
+  xb=(im1->xsize<im2->xsize)?im1->xsize:im2->xsize;
+  yb=(im1->ysize<im2->ysize)?im1->ysize:im2->ysize;
+  chb=(im1->channels<im2->channels)?im1->channels:im2->channels;
+
+  mm_log((1,"i_img_samef: xb=%d xy=%d chb=%d\n",xb,yb,chb));
+
+  for(y = 0; y < yb; y++) {
+    for(x = 0; x < xb; x++) {
+      i_gpixf(im1, x, y, &val1);
+      i_gpixf(im2, x, y, &val2);
+      
+      for(ch = 0; ch < chb; ch++) {
+	double sdiff = val1.channel[ch] - val2.channel[ch];
+	if (fabs(sdiff) > epsilon) {
+	  mm_log((1,"i_img_samef <- different %g @(%d,%d)\n", sdiff, x, y));
+	  return 0;
+	}
+      }
+    }
+  }
+  mm_log((1,"i_img_samef <- same\n"));
+
+  return 1;
+}
+
 /* just a tiny demo of haar wavelets */
 
 i_img*

@@ -222,6 +222,7 @@ extern void i_map(i_img *im, unsigned char (*maps)[256], unsigned int mask);
 
 float i_img_diff   (i_img *im1,i_img *im2);
 double i_img_diffd(i_img *im1,i_img *im2);
+int i_img_samef(i_img *im1,i_img *im2, double epsilon, const char *what);
 
 /* font routines */
 
