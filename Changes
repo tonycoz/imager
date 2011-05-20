@@ -1,5 +1,14 @@
 Imager release history.  Older releases can be found in Changes.old
 
+Imager 0.83
+===========
+
+Bug fixes:
+
+ - diag() the error message on failure for some TIFF tests that are
+   failing on a Solaris smoker.
+   http://www.cpantesters.org/cpan/report/6396db1e-8090-11e0-9682-112b785ebe45
+
 Imager 0.82_01 - 17 May 2011
 ==============
 
