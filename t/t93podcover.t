@@ -17,7 +17,6 @@ my @private =
    '^DSO_',
    '^Inline$',
    '^yatf$',
-   '^m_init_log$',
    '^malloc_state$',
    '^init_log$',
    '^polybezier$', # not ready for public consumption

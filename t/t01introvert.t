@@ -11,7 +11,7 @@ use Imager::Test qw(image_bounds_checks is_color3 is_color4 is_fcolor4 color_cmp
 
 -d "testout" or mkdir "testout";
 
-init_log("testout/t01introvert.log",1);
+Imager->open_log(log => "testout/t01introvert.log");
 
 my $im_g = Imager::ImgRaw::new(100, 101, 1);
 
@@ -540,6 +540,12 @@ cmp_ok(Imager->errstr, '=~', qr/channels must be between 1 and 4/,
   my $im = Imager->new(xsize => 10, ysize => 10);
 
   image_bounds_checks($im);
+}
+
+Imager->close_log();
+
+unless ($ENV{IMAGER_KEEP_FILES}) {
+  unlink "testout/t01introvert.log";
 }
 
 sub check_add {

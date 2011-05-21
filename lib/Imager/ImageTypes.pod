@@ -1120,9 +1120,10 @@ This function is a mess, it can take the following named parameters:
 
 =item *
 
-C<log> - name of a log file to log Imager's actions to.  Not all actions
-are logged, but the debugging memory allocator does log allocations
-here.  Ignored if Imager has been built without logging support.
+C<log> - name of a log file to log Imager's actions to.  Not all
+actions are logged, but the debugging memory allocator does log
+allocations here.  Ignored if Imager has been built without logging
+support.  Preferably use the open_log() method instead.
 
 =item *
 
@@ -1144,6 +1145,69 @@ file.  This will fail if there are any existing T1lib font objects.
 Example:
 
   Imager::init(log => 'trace.log', loglevel => 9);
+
+=back
+
+=head1 LOGGING METHODS
+
+Imager can open an internal log to send debugging information to.
+This log is extensively used in Imager's tests, but you're unlikely to
+use it otherwise.
+
+If Imager has been built with logging disabled, the methods fail
+quietly.
+
+=over
+
+=item open_log()
+
+Open the Imager debugging log file.
+
+=over
+
+=item *
+
+C<log> - the file name to log to.  If this is undef logging information
+is sent to the standard error stream.
+
+=item *
+
+C<loglevel> the level of logging to produce.  Default: 1.
+
+=back
+
+Returns a true value if the log file was opened successfully.
+
+  # send debug output to test.log
+  Imager->open_log(log => "test.log");
+
+  # send debug output to stderr
+  Imager->open_log();
+
+=item close_log()
+
+Close the Imager debugging log file and disable debug logging.
+
+No parameters.
+
+  Imager->close_log();
+
+=item log()
+
+ Imager->log($message)
+ Imager->log($message, $level)
+
+This method does not use named parameters.
+
+The default for C<$level> is 1.
+
+Send a message to the debug log.
+
+  Imager->log("My code got here!");
+
+=item is_logging()
+
+Returns a true value if logging is enabled.
 
 =back
 

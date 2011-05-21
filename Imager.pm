@@ -453,15 +453,14 @@ sub import {
 }
 
 sub init_log {
-  i_init_log($_[0],$_[1]);
-  i_log_entry("Imager $VERSION starting\n", 1);
+  Imager->open_log(log => $_[0], level => $_[1]);
 }
 
 
 sub init {
   my %parms=(loglevel=>1,@_);
   if ($parms{'log'}) {
-    init_log($parms{'log'},$parms{'loglevel'});
+    Imager->open_log(log => $parms{log}, level => $parms{loglevel});
   }
 
   if (exists $parms{'warn_obsolete'}) {
@@ -472,6 +471,42 @@ sub init {
     if ($formats{t1}) {
       Imager::Font::T1::i_init_t1($parms{'t1log'});
     }
+  }
+}
+
+{
+  my $is_logging = 0;
+
+  sub open_log {
+    my $class = shift;
+    my (%opts) = ( loglevel => 1, @_ );
+
+    $is_logging = i_init_log($opts{log}, $opts{loglevel});
+    unless ($is_logging) {
+      Imager->_set_error(Imager->_error_as_msg());
+      return;
+    }
+
+    Imager->log("Imager $VERSION starting\n", 1);
+
+    return $is_logging;
+  }
+
+  sub close_log {
+    i_init_log(undef, -1);
+    $is_logging = 0;
+  }
+
+  sub log {
+    my ($class, $message, $level) = @_;
+
+    defined $level or $level = 1;
+
+    i_log_entry($message, $level);
+  }
+
+  sub is_logging {
+    return $is_logging;
   }
 }
 
@@ -4255,6 +4290,9 @@ box() - L<Imager::Draw/box()> - draw a filled or outline box.
 
 circle() - L<Imager::Draw/circle()> - draw a filled circle
 
+close_log() - L<Imager::ImageTypes/close_log()> - close the Imager
+debugging log.
+
 colorcount() - L<Imager::ImageTypes/colorcount()> - the number of
 colors in an image's palette (paletted images only)
 
@@ -4338,9 +4376,15 @@ is_bilevel() - L<Imager::ImageTypes/is_bilevel()> - returns whether
 image write functions should write the image in their bilevel (blank
 and white, no gray levels) format
 
+is_logging() L<Imager::ImageTypes/is_logging()> - test if the debug
+log is active.
+
 line() - L<Imager::Draw/line()> - draw an interval
 
 load_plugin() - L<Imager::Filters/load_plugin()>
+
+log() - L<Imager::ImageTypes/log()> - send a message to the debugging
+log.
 
 map() - L<Imager::Transformations/"Color Mappings"> - remap color
 channel values
@@ -4366,6 +4410,8 @@ newfont() - L<Imager::Handy/newfont()>
 NF() - L<Imager::Handy/NF()>
 
 open() - L<Imager::Files> - an alias for read()
+
+open_log() - L<Imager::ImageTypes/open_log()> - open the debug log.
 
 =for stopwords IPTC
 

@@ -6,6 +6,11 @@ Imager 0.84
  - Imager no longer inherits from Exporter (unless you're running an
    old, old perl.
 
+Bug fixes:
+
+ - re-work, document and test Imager's logging facility.
+   https://rt.cpan.org/Ticket/Display.html?id=65227
+
 Imager 0.83 - 21 May 2011
 ===========
 

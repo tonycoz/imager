@@ -1,6 +1,9 @@
 #include "imconfig.h"
 #include "log.h"
 #include <stdlib.h>
+#include <errno.h>
+
+#ifdef IMAGER_LOG
 
 #define DTBUFF 50
 #define DATABUFF DTBUFF+3+10+1+5+1+1
@@ -12,14 +15,13 @@ static char  date_buffer[DTBUFF];
 static char  data_buffer[DATABUFF];
 
 
-#ifdef IMAGER_LOG
-
 /*
  * Logging is active
  */
 
-void
+int
 i_init_log(const char* name,int level) {
+  i_clear_error();
   log_level = level;
   if (level < 0) {
     lg_file = NULL;
@@ -28,13 +30,17 @@ i_init_log(const char* name,int level) {
       lg_file = stderr;
     } else {
       if (NULL == (lg_file = fopen(name, "w+")) ) { 
-	fprintf(stderr,"Cannot open file '%s'\n",name);
-	exit(2);
+	i_push_errorf(errno, "Cannot open file '%s': (%d)", name, errno);
+	return 0;
       }
     }
   }
-  setvbuf(lg_file, NULL, _IONBF, BUFSIZ);
-  mm_log((0,"Imager - log started (level = %d)\n", level));
+  if (lg_file) {
+    setvbuf(lg_file, NULL, _IONBF, BUFSIZ);
+    mm_log((0,"Imager - log started (level = %d)\n", level));
+  }
+
+  return lg_file != NULL;
 }
 
 void
@@ -55,17 +61,6 @@ i_fatal(int exitcode,const char *fmt, ... ) {
   exit(exitcode);
 }
 
-#else
-
-/*
- * Logging is inactive - insert dummy functions
- */
-
-void i_init_log(const char* name,int onoff) {}
-void i_fatal(int exitcode,const char *fmt, ... ) { exit(exitcode); }
-
-
-#endif
 
 /*
 =item i_loog(level, format, ...)
@@ -111,3 +106,26 @@ i_lhead(const char *file, int line) {
     sprintf(data_buffer, "[%s] %10s:%-5d ", date_buffer, file, line);
   }
 }
+
+#else
+
+/*
+ * Logging is inactive - insert dummy functions
+ */
+
+int i_init_log(const char* name,int onoff) {
+  i_clear_error();
+  i_push_error(0, "Logging disabled");
+  return 0;
+}
+
+void i_fatal(int exitcode,const char *fmt, ... ) { exit(exitcode); }
+
+void
+i_loog(int level,const char *fmt, ... ) {
+}
+
+void
+i_lhead(const char *file, int line) { }
+
+#endif

@@ -10,10 +10,10 @@
    global: creates a global variable FILE* lg_file
 */
 
-void i_lhead ( const char *file, int line  );
-void i_init_log( const char *name, int onoff );
-void i_loog(int level,const char *msg, ... );
+int i_init_log( const char *name, int onoff );
 void i_fatal ( int exitcode,const char *fmt, ... );
+void i_lhead ( const char *file, int line  );
+void i_loog(int level,const char *msg, ... );
 
 /*
 =item mm_log((level, format, ...))
