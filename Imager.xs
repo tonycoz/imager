@@ -862,11 +862,6 @@ validate_i_ppal(i_img *im, i_palidx const *indexes, int count) {
 #define ICLF_new_internal(r, g, b, a) i_fcolor_new((r), (g), (b), (a))
 #define ICLF_DESTROY(cl) i_fcolor_destroy(cl)
 
-
-/* the m_init_log() function was called init_log(), renamed to reduce
-    potential naming conflicts */
-#define init_log m_init_log
-
 #if i_int_hlines_testing()
 
 typedef i_int_hlines *Imager__Internal__Hlines;
