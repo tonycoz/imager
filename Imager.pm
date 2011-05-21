@@ -145,7 +145,9 @@ my %defaults;
 
 BEGIN {
   require Exporter;
-  @ISA = qw(Exporter);
+  if ($Exporter::VERSION < 5.57) {
+    @ISA = qw(Exporter);
+  }
   $VERSION = '0.83';
   eval {
     require XSLoader;
