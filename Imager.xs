@@ -3529,6 +3529,10 @@ i_img_double_new(x, y, ch)
         int y
         int ch
 
+Imager::ImgRaw
+i_img_to_drgb(im)
+       Imager::ImgRaw im
+
 undef_int
 i_tags_addn(im, name, code, idata)
         Imager::ImgRaw im

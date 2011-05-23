@@ -399,6 +399,37 @@ static int i_gsampf_ddoub(i_img *im, int l, int r, int y, i_fsample_t *samps,
   }
 }
 
+/*
+=item i_img_to_drgb(im)
+
+=category Image creation
+
+Returns a double/sample version of the supplied image.
+
+Returns the image on success, or NULL on failure.
+
+=cut
+*/
+
+i_img *
+i_img_to_drgb(i_img *im) {
+  i_img *targ;
+  i_fcolor *line;
+  int y;
+
+  targ = i_img_double_new(im->xsize, im->ysize, im->channels);
+  if (!targ)
+    return NULL;
+  line = mymalloc(sizeof(i_fcolor) * im->xsize);
+  for (y = 0; y < im->ysize; ++y) {
+    i_glinf(im, 0, im->xsize, y, line);
+    i_plinf(targ, 0, im->xsize, y, line);
+  }
+
+  myfree(line);
+
+  return targ;
+}
 
 /*
 =back

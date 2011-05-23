@@ -326,6 +326,7 @@ extern i_img *i_img_masked_new(i_img *targ, i_img *mask, int x, int y,
 extern i_img *i_img_16_new(int x, int y, int ch);
 extern i_img *i_img_to_rgb16(i_img *im);
 extern i_img *i_img_double_new(int x, int y, int ch);
+extern i_img *i_img_to_drgb(i_img *im);
 
 extern int i_img_is_monochrome(i_img *im, int *zero_is_white);
 extern void i_get_file_background(i_img *im, i_color *bg);

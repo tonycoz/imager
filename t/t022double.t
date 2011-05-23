@@ -1,8 +1,9 @@
 #!perl -w
 use strict;
-use Test::More tests => 83;
-
+use Test::More tests => 88;
 BEGIN { use_ok(Imager => qw(:all :handy)) }
+
+use Imager::Test qw(test_image is_image);
 
 -d "testout" or mkdir "testout";
 
@@ -150,4 +151,20 @@ cmp_ok(Imager->errstr, '=~', qr/channels must be between 1 and 4/,
 { # bounds checking
   my $im = Imager->new(xsize => 10, ysize=>10, bits=>'double');
   image_bounds_checks($im);
+}
+
+
+{ # convert to rgb double
+  my $im = test_image();
+  my $imdb = $im->to_rgb_double;
+  print "# check conversion to double\n";
+  is($imdb->bits, "double", "check bits");
+  is_image($im, $imdb, "check image data matches");
+}
+
+{ # empty image handling
+  my $im = Imager->new;
+  ok($im, "make empty image");
+  ok(!$im->to_rgb_double, "convert empty image to double");
+  is($im->errstr, "empty input image", "check message");
 }

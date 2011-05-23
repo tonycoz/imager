@@ -16,6 +16,9 @@ Bug fixes:
 
  - test and add error reporting to to_*() family methods
 
+ - add to_rgb_double() method.
+   https://rt.cpan.org/Ticket/Display.html?id=65101
+
 Imager 0.83 - 21 May 2011
 ===========
 

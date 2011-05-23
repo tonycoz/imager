@@ -1024,6 +1024,28 @@ sub to_rgb16 {
   return $result;
 }
 
+# convert a paletted (or any image) to an double/channel RGB image
+sub to_rgb_double {
+  my $self = shift;
+
+  unless (defined wantarray) {
+    my @caller = caller;
+    warn "to_rgb16() called in void context - to_rgb_double() returns the converted image at $caller[1] line $caller[2]\n";
+    return;
+  }
+
+  $self->_valid_image
+    or return;
+
+  my $result = Imager->new;
+  unless ($result->{IMG} = i_img_to_drgb($self->{IMG})) {
+    $self->_set_error(Imager->_error_as_msg());
+    return;
+  }
+
+  return $result;
+}
+
 sub addcolors {
   my $self = shift;
   my %opts = (colors=>[], @_);
@@ -4480,6 +4502,9 @@ to_paletted() -  L<Imager::ImageTypes/to_paletted()>
 to_rgb16() - L<Imager::ImageTypes/to_rgb16()>
 
 to_rgb8() - L<Imager::ImageTypes/to_rgb8()>
+
+to_rgb_double() - L<Imager::ImageTypes/to_rgb_double()> - convert to
+double per sample image.
 
 transform() - L<Imager::Engines/"transform()">
 

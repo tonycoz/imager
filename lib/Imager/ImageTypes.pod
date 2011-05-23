@@ -638,10 +638,18 @@ No parameters.
 
 =item to_rgb16()
 
-You can convert a paletted image (or any image) to an 16-bit/channel
-RGB image with:
+Convert a paletted image (or any image) to a 16-bit/channel RGB image.
 
   $rgbimg = $img->to_rgb16;
+
+No parameters.
+
+=item to_rgb_double()
+
+Convert a paletted image (or any image) to an double/channel direct
+color image.
+
+  $rgbimg = $img->to_rgb_double;
 
 No parameters.
 
