@@ -1,8 +1,7 @@
-BEGIN { $|=1; print "1..2\n"; }
-END { print "not ok 1\n" unless $loaded; };
-use Imager qw(:all);
-++$loaded;
-print "ok 1\n";
+#!perl -w
+use strict;
+use Test::More tests => 7;
+BEGIN { use_ok("Imager", ":all") }
 
 -d "testout" or mkdir "testout";
 
@@ -14,34 +13,26 @@ open FH, "< testimg/junk.ppm"
 binmode(FH);
 my $IO = Imager::io_new_fd(fileno(FH));
 my $im = i_readpnm_wiol($IO, -1);
-if ($im) {
-  print "not ok 2 # read of junk.ppm should have failed\n";
-}
-else {
+SKIP:{
+  ok(!$im, "read of junk.ppm should have failed")
+    or skip("read didn't fail!", 5);
+
   my @errors = Imager::i_errors();
-  unless (@errors) {
-    print "not ok 2 # no errors from i_errors()\n";
-  }
-  else {
-    # each entry must be an array ref with 2 elements
-    my $bad;
-    for (@errors) {
-      $bad = 1;
-      if (ref ne 'ARRAY') {
-	print "not ok 2 # element not an array ref\n";
-	last;
-      }
-      if (@$_ != 2) {
-	print "not ok 2 # elements array didn't have 2 elements\n";
-	last;
-      }
-      $bad = 0;
-    }
-    unless ($bad) {
-      print "ok 2\n";
-      for (@errors) {
-	print "# $_->[0]/$_->[1]\n";
-      }
-    }
+
+  is(scalar @errors, 1, "got the errors")
+    or skip("no errors to check", 4);
+
+ SKIP:
+  {
+    my $error0 = $errors[0];
+    is(ref $error0, "ARRAY", "entry 0 is an array ref")
+      or skip("entry 0 not an array", 3);
+
+    is(scalar @$error0, 2, "entry 0 has 2 elements")
+      or skip("entry 0 doesn't have enough elements", 2);
+
+    is($error0->[0], "while skipping to height", "check message");
+    is($error0->[1], "0", "error code should be 0");
   }
 }
+
