@@ -1,55 +1,46 @@
-BEGIN { $| = 1; print "1..5\n"; }
-END {print "not ok 1\n" unless $loaded;}
-use Imager;
+#!perl -w
+use strict;
+use Test::More tests => 7;
 
-$loaded = 1;
+BEGIN { $| = 1; use_ok("Imager"); }
 
 #$Imager::DEBUG=1;
 
 -d "testout" or mkdir "testout";
 
-Imager::init('log'=>'testout/t55trans.log');
+Imager->open_log('log'=>'testout/t55trans.log');
 
-$img=Imager->new() || die "unable to create image object\n";
+my $img=Imager->new();
 
-print "ok 1\n";
+SKIP:
+{
+  ok($img, "make image object")
+    or skip("can't make image object", 5);
 
-$img->open(file=>'testimg/scale.ppm',type=>'pnm');
+  ok($img->open(file=>'testimg/scale.ppm',type=>'pnm'),
+     "read sample image")
+    or skip("couldn't load test image", 4);
 
-sub skip { 
-    print "ok 2 # skip $_[0]\n";
-    print "ok 3 # skip $_[0]\n";
-    print "ok 4 # skip $_[0]\n";
-    print "ok 5 # skip $_[0]\n";
-    exit(0);
+ SKIP:
+  {
+    my $nimg=$img->transform(xexpr=>'x',yexpr=>'y+10*sin((x+y)/10)');
+    ok($nimg, "do transformation")
+      or skip ( "warning ".$img->errstr, 1 );
+
+    #	xopcodes=>[qw( x y Add)],yopcodes=>[qw( x y Sub)],parm=>[]
+
+    ok($nimg->write(type=>'pnm',file=>'testout/t55.ppm'), "save to file");
+  }
+
+ SKIP:
+  {
+    my $nimg=$img->transform(xexpr=>'x+0.1*y+5*sin(y/10.0+1.57)',
+			     yexpr=>'y+10*sin((x+y-0.785)/10)');
+    ok($nimg, "more complex transform")
+      or skip("couldn't make image", 1);
+
+    ok($nimg->write(type=>'pnm',file=>'testout/t55b.ppm'), "save to file");
+  }
 }
-
-
-$nimg=$img->transform(xexpr=>'x',yexpr=>'y+10*sin((x+y)/10)') || skip ( "\# warning ".$img->{'ERRSTR'} );
-
-#	xopcodes=>[qw( x y Add)],yopcodes=>[qw( x y Sub)],parm=>[]
-
-print "ok 2\n";
-$nimg->write(type=>'pnm',file=>'testout/t55.ppm') || die "error in write()\n";
-
-print "ok 3\n";
-
-# the original test didn't produce many parameters - this one
-# produces more parameters, which revealed a memory allocation bug
-# (sizeof(double) vs sizeof(int))
-sub skip2 { 
-    print "ok 4 # skip $_[0]\n";
-    print "ok 5 # skip $_[0]\n";
-    exit(0);
-}
-$nimg=$img->transform(xexpr=>'x+0.1*y+5*sin(y/10.0+1.57)',
-	yexpr=>'y+10*sin((x+y-0.785)/10)') 
-	|| skip2 ( "\# warning ".$img->{'ERRSTR'} );
-
-print "ok 4\n";
-$nimg->write(type=>'pnm',file=>'testout/t55b.ppm') 
-	|| die "error in write()\n";
-
-print "ok 5\n";
 
 
