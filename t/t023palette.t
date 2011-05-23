@@ -6,6 +6,8 @@ BEGIN { use_ok("Imager"); }
 
 use Imager::Test qw(image_bounds_checks test_image is_color3);
 
+Imager->open_log(log => "testout/t023palette.log");
+
 sub isbin($$$);
 
 my $img = Imager->new(xsize=>50, ysize=>50, type=>'paletted');
@@ -341,6 +343,12 @@ cmp_ok(Imager->errstr, '=~', qr/Channels must be positive and <= 4/,
   is_color3($colors[0], 0, 0, 0, "first should be 000000");
   is_color3($colors[1], 0, 0, 0x33, "second should be 000033");
   is_color3($colors[8], 0, 0x33, 0x66, "9th should be 003366");
+}
+
+Imager->close_log;
+
+unless ($ENV{IMAGER_KEEP_FILES}) {
+  unlink "testout/t023palette.log"
 }
 
 sub iscolor {

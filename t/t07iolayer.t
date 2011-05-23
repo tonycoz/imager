@@ -8,7 +8,7 @@ BEGIN { use_ok(Imager => ':all') };
 
 -d "testout" or mkdir "testout";
 
-init_log("testout/t07iolayer.log", 1);
+Imager->open_log(log => "testout/t07iolayer.log");
 
 undef($/);
 # start by testing io buffer
@@ -250,6 +250,12 @@ SKIP:
   is($buffer, "xxxxxxxxxx", "read value");
   ok($io->write("foo"), "write");
   is($io->close, 0, "close");
+}
+
+Imager->close_log;
+
+unless ($ENV{IMAGER_KEEP_FILES}) {
+  unlink "testout/t07.ppm", "testout/t07iolayer.log";
 }
 
 sub eof_read {

@@ -6,7 +6,7 @@ BEGIN { use_ok(Imager=>qw(:all :handy)) }
 
 -d "testout" or mkdir "testout";
 
-init_log("testout/t021sixteen.log", 1);
+Imager->open_log(log => "testout/t021sixteen.log");
 
 use Imager::Color::Float;
 use Imager::Test qw(test_image is_image image_bounds_checks test_colorf_gpix
@@ -229,4 +229,10 @@ cmp_ok(Imager->errstr, '=~', qr/channels must be between 1 and 4/,
      30, "read 16-bit from OO image")
     or print "# ", $im->errstr, "\n";
   is_deeply(\@wr_samples, \@samples, "check it matches");
+}
+
+Imager->close_log;
+
+unless ($ENV{IMAGER_KEEP_FILES}) {
+  unlink "testout/t021sixteen.log";
 }

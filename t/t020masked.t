@@ -6,7 +6,7 @@ use Imager::Test qw(is_color3 is_fcolor3);
 
 -d "testout" or mkdir "testout";
 
-init_log("testout/t020masked.log", 1);
+Imager->open_log(log => "testout/t020masked.log");
 
 my $base_rgb = Imager::ImgRaw::new(100, 100, 3);
 # put something in there
@@ -528,4 +528,10 @@ $mask->box(fill => { hatch => "check1x1" }, ymin => 40, xmax => 39);
 			   pixels => [ $redi, $bluei, $greeni, $greyi ]),
        2, "write over right side");
   }
+}
+
+Imager->close_log();
+
+unless ($ENV{IMAGER_KEEP_FILES}) {
+  unlink "testout/t020masked.log";
 }

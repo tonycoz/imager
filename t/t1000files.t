@@ -9,7 +9,7 @@ use Imager;
 
 -d "testout" or mkdir "testout";
 
-Imager::init_log("testout/t1000files.log", 1);
+Imager->open_log(log => "testout/t1000files.log");
 
 SKIP:
 {
@@ -185,6 +185,12 @@ probe_ok(<<JPEG2K, "jp2", "JPEG 2000");
 00 0F 63 6F 6C 72 01 00 00 00 00 00 10 00 00 00
 00 6A 70 32 63 FF 4F FF 51 00 2F 00 00 00 00 01
 JPEG2K
+
+Imager->close_log;
+
+unless ($ENV{IMAGER_KEEP_FILES}) {
+  unlink "testout/t1000files.log";
+}
 
 sub probe_ok {
   my ($packed, $exp_type, $name) = @_;

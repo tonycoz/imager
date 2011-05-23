@@ -6,15 +6,18 @@ use Imager::Test qw(test_image_raw test_image_16 is_color3 is_color1 is_image);
 
 -d "testout" or mkdir "testout";
 
-init_log("testout/t104ppm.log",1);
+Imager->open_log(log => "testout/t104ppm.log");
 
 my $green = i_color_new(0,255,0,255);
 my $blue  = i_color_new(0,0,255,255);
 my $red   = i_color_new(255,0,0,255);
 
+my @files;
+
 my $img    = test_image_raw();
 
 my $fh = openimage(">testout/t104.ppm");
+push @files, "t104.ppm";
 my $IO = Imager::io_new_fd(fileno($fh));
 ok(i_writeppm_wiol($img, $IO), "write pnm low")
   or die "Cannot write testout/t104.ppm\n";
@@ -46,6 +49,7 @@ i_box_filled($gimg, 20, 20, 130, 130, $gray);
 i_box_filled($gimg, 40, 40, 110, 110, $dgray);
 i_arc($gimg, 75, 75, 30, 0, 361, $white);
 
+push @files, "t104_gray.pgm";
 open FH, "> testout/t104_gray.pgm" or die "Cannot create testout/t104_gray.pgm: $!\n";
 binmode FH;
 $IO = Imager::io_new_fd(fileno(FH));
@@ -225,6 +229,7 @@ is($ooim->tags(name=>'pnm_type'), 1, "check pnm_type tag");
   $im->box(filled => 1, xmin => 8, color => '#FFE0C0');
   $im->box(filled => 1, color => NC(0, 192, 192, 128),
 	   ymin => 8, xmax => 7);
+  push @files, "t104_alpha.ppm";
   ok($im->write(file=>"testout/t104_alpha.ppm", type=>'pnm'),
      "should succeed writing 4 channel image");
   my $imread = Imager->new;
@@ -254,6 +259,7 @@ is($ooim->tags(name=>'pnm_type'), 1, "check pnm_type tag");
   $im->box(filled => 1, xmin => 8, color => '#FFE0C0');
   $im->box(filled => 1, color => NC(0, 192, 192, 128),
 	   ymin => 8, xmax => 7);
+  push @files, "t104_alp16.ppm";
   ok($im->write(file=>"testout/t104_alp16.ppm", type=>'pnm', 
 		pnm_write_wide_data => 1),
      "should succeed writing 4 channel image");
@@ -493,6 +499,7 @@ print "# check error handling\n";
   $im->box(filled => 1, xmax => 4, color => '#000000');
   $im->box(filled => 1, xmin => 5, color => '#FFFFFF');
   is($im->type, 'paletted', 'mono still paletted');
+  push @files, "t104_mono.pbm";
   ok($im->write(file => 'testout/t104_mono.pbm', type => 'pnm'),
      "save as pbm");
 
@@ -514,6 +521,7 @@ print "# check error handling\n";
   $im->box(filled => 1, xmax => 4, color => '#000000');
   $im->box(filled => 1, xmin => 5, color => '#FFFFFF');
   is($im->type, 'paletted', 'mono still paletted');
+  push @files, "t104_mono2.pbm";
   ok($im->write(file => 'testout/t104_mono2.pbm', type => 'pnm'),
      "save as pbm");
 
@@ -545,10 +553,12 @@ print "# check error handling\n";
   $data = '';
   ok($im->write(data => \$data, type => 'pnm'),
      "write 16-bit image as 16-bit/sample ppm");
+  push @files, "t104_16.ppm";
   $im->write(file=>'testout/t104_16.ppm');
   my $im16 = Imager->new;
   ok($im16->read(data => $data), "read it back");
   is($im16->tags(name => 'pnm_maxval'), 65535, "check maxval");
+  push @files, "t104_16b.ppm";
   $im16->write(file=>'testout/t104_16b.ppm');
   is_image($im, $im16, "check image matches");
 }
@@ -582,6 +592,13 @@ print "# check error handling\n";
     ok($im3, "read the file data");
     is($im3->getwidth, 164, "check width matches image");
   }
+}
+
+Imager->close_log;
+
+unless ($ENV{IMAGER_KEEP_FILES}) {
+  unlink "testout/t104ppm.log";
+  unlink map "testout/$_", @files;
 }
 
 sub openimage {

@@ -5,7 +5,7 @@ BEGIN { use_ok("Imager", ":all") }
 
 -d "testout" or mkdir "testout";
 
-init_log("testout/t05error.log", 1);
+Imager->open_log(log => "testout/t05error.log");
 
 # try to read an invalid pnm file
 open FH, "< testimg/junk.ppm"
@@ -36,3 +36,8 @@ SKIP:{
   }
 }
 
+Imager->close_log;
+
+unless ($ENV{IMAGER_KEEP_FILES}) {
+  unlink "testout/t05error.log";
+}

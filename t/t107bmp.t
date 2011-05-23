@@ -6,8 +6,9 @@ use Imager::Test qw(test_image_raw is_image is_color3 test_image);
 
 -d "testout" or mkdir "testout";
 
-init_log("testout/t107bmp.log",1);
+Imager->open_log(log => "testout/t107bmp.log");
 
+my @files;
 my $debug_writes = 0;
 
 my $base_diff = 0;
@@ -21,10 +22,12 @@ my $img = test_image_raw();
 Imager::i_tags_add($img, 'i_xres', 0, '300', 0);
 Imager::i_tags_add($img, 'i_yres', 0, undef, 300);
 write_test($img, "testout/t107_24bit.bmp");
+push @files, "t107_24bit.bmp";
 # 'webmap' is noticably faster than the default
 my $im8 = Imager::i_img_to_pal($img, { make_colors=>'webmap', 
 				       translate=>'errdiff'});
 write_test($im8, "testout/t107_8bit.bmp");
+push @files, "t107_8bit.bmp";
 # use a fixed palette so we get reproducible results for the compressed
 # version
 my @pal16 = map { NC($_) } 
@@ -32,9 +35,11 @@ my @pal16 = map { NC($_) }
      2ead1b 0000f8 004b01 fd0000 0e1695 000002);
 my $im4 = Imager::i_img_to_pal($img, { colors=>\@pal16, make_colors=>'none' });
 write_test($im4, "testout/t107_4bit.bmp");
+push @files, "t107_4bit.bmp";
 my $im1 = Imager::i_img_to_pal($img, { colors=>[ NC(0, 0, 0), NC(176, 160, 144) ],
 			       make_colors=>'none', translate=>'errdiff' });
 write_test($im1, "testout/t107_1bit.bmp");
+push @files, "t107_1bit.bmp";
 my $bi_rgb = 0;
 my $bi_rle8 = 1;
 my $bi_rle4 = 2;
@@ -62,6 +67,7 @@ ok($imoo->read(file=>'testout/t107_24bit.bmp'), "read via OO")
 
 ok($imoo->write(file=>'testout/t107_oo.bmp'), "write via OO")
   or print "# ",$imoo->errstr,"\n";
+push @files, "t107_oo.bmp";
 
 # various invalid format tests
 # we have so many different test images to try to detect all the possible
@@ -629,6 +635,7 @@ for my $comp (@comp) {
 	   ymin => 8, xmax => 7);
   ok($im->write(file=>"testout/t107_alpha.bmp", type=>'bmp'),
      "should succeed writing 4 channel image");
+  push @files, "t107_alpha.bmp";
   my $imread = Imager->new;
   ok($imread->read(file => 'testout/t107_alpha.bmp'), "read it back");
   is_color3($imread->getpixel('x' => 0, 'y' => 0), 0, 0, 0, 
@@ -656,6 +663,13 @@ for my $comp (@comp) {
   ok($im->write(data => \$data, type => 'bmp'), "write using OO");
   my $size = unpack("V", substr($data, 34, 4));
   is($size, 67800, "check data size");
+}
+
+Imager->close_log;
+
+unless ($ENV{IMAGER_KEEP_FILES}) {
+  unlink map "testout/$_", @files;
+  unlink "testout/t107bmp.log";
 }
 
 sub write_test {

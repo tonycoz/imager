@@ -6,7 +6,7 @@ use Imager::Test qw/is_color3 is_color4/;
 
 -d "testout" or mkdir "testout";
 
-init_log("testout/t103raw.log",1);
+Imager->open_log(log => "testout/t103raw.log");
 
 $| = 1;
 
@@ -270,9 +270,13 @@ SKIP:
 	    "check last channel zeroed");
 }
 
-unlink(qw(testout/t103_base.raw testout/t103_3to4.raw
-          testout/t103_line_int.raw testout/t103_img_int.raw))
-  unless $ENV{IMAGER_KEEP_FILES};
+Imager->close_log;
+
+unless ($ENV{IMAGER_KEEP_FILES}) {
+  unlink "testout/t103raw.log";
+  unlink(qw(testout/t103_base.raw testout/t103_3to4.raw
+	    testout/t103_line_int.raw testout/t103_img_int.raw))
+}
 
 sub read_test {
   my ($in, $xsize, $ysize, $data, $store, $intrl, $base) = @_;
