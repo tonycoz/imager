@@ -94,14 +94,6 @@ use Imager::Font;
 );
 
 @EXPORT=qw(
-	   init_log
-	   i_list_formats
-	   i_has_format
-	   malloc_state
-	   i_color_new
-
-	   i_img_empty
-	   i_img_empty_ch
 	  );
 
 %EXPORT_TAGS=

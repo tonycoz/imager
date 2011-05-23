@@ -14,7 +14,7 @@ die $Imager::ERRSTR unless $red;
 
 ok((-d "testout" or mkdir "testout"), "make output directory");
 
-init_log("testout/t20oo.log", 1);
+Imager::init_log("testout/t20oo.log", 1);
 
 my $img=Imager->new(xsize=>300, ysize=>100) or die "$Imager::ERRSTR\n";
 

@@ -19,6 +19,9 @@ Bug fixes:
  - add to_rgb_double() method.
    https://rt.cpan.org/Ticket/Display.html?id=65101
 
+ - Imager no longer exports anything by default
+   https://rt.cpan.org/Ticket/Display.html?id=65228
+
 Imager 0.83 - 21 May 2011
 ===========
 
