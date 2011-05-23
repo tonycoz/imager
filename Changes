@@ -11,6 +11,9 @@ Bug fixes:
  - re-work, document and test Imager's logging facility.
    https://rt.cpan.org/Ticket/Display.html?id=65227
 
+ - fix META.yml testing and the generated META.yml
+   https://rt.cpan.org/Ticket/Display.html?id=65235
+
 Imager 0.83 - 21 May 2011
 ===========
 

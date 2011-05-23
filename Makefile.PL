@@ -220,17 +220,8 @@ if ($MM_ver >= 6.46) {
      resources =>
      {
       homepage => "http://imager.perl.org/",
-      repository =>
-      {
-       url => "git://git.imager.perl.org/imager.git",
-       web => "http://git.imager.perl.org/imager.git",
-       type => "git",
-      },
-      bugtracker =>
-      {
-       web => "http://rt.cpan.org/NoAuth/Bugs.html?Dist=Imager",
-       mailto => 'bug-Imager@rt.cpan.org',
-      },
+      repository => "git://git.imager.perl.org/imager.git",
+      bugtracker => "http://rt.cpan.org/NoAuth/Bugs.html?Dist=Imager",
      },
     };
 }
