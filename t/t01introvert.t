@@ -3,7 +3,7 @@
 # to make sure we get expected values
 
 use strict;
-use Test::More tests => 230;
+use Test::More tests => 233;
 
 BEGIN { use_ok(Imager => qw(:handy :all)) }
 
@@ -132,7 +132,8 @@ is(Imager::i_img_type($im_pal), 0, "pal img shouldn't be paletted now");
 
 # test the OO interfaces
 my $impal2 = Imager->new(type=>'pseudo', xsize=>200, ysize=>201);
-ok($impal2, "make paletted via OO");
+ok($impal2, "make paletted via OO")
+  or diag(Imager->errstr);
 is($impal2->getchannels, 3, "check channels");
 is($impal2->bits, 8, "check bits");
 is($impal2->type, 'paletted', "check type");
@@ -167,7 +168,8 @@ is($impal2->getheight, 201, "check height");
      "we can setcolors");
 
   # make an rgb version
-  my $imrgb2 = $impal2->to_rgb8();
+  my $imrgb2 = $impal2->to_rgb8()
+    or diag($impal2->errstr);
   is($imrgb2->type, 'direct', "converted is direct");
 
   # and back again, specifying the palette
@@ -181,6 +183,13 @@ is($impal2->getheight, 201, "check height");
   dump_colors($impal3->getcolors);
   is($impal3->colorcount, 3, "new image has expected color table size");
   is($impal3->type, 'paletted', "and is paletted");
+}
+
+{ # to_rgb on incomplete image
+  my $im = Imager->new;
+  ok($im, "make empty image");
+  ok(!$im->to_rgb8, "convert to rgb8");
+  is($im->errstr, "empty input image", "check message");
 }
 
 { # basic checks, 8-bit direct images

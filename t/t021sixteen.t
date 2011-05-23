@@ -1,6 +1,6 @@
 #!perl -w
 use strict;
-use Test::More tests => 104;
+use Test::More tests => 107;
 
 BEGIN { use_ok(Imager=>qw(:all :handy)) }
 
@@ -204,6 +204,13 @@ cmp_ok(Imager->errstr, '=~', qr/channels must be between 1 and 4/,
   print "# check conversion to 16 bit\n";
   is($im16->bits, 16, "check bits");
   is_image($im, $im16, "check image data matches");
+}
+
+{ # empty image handling
+  my $im = Imager->new;
+  ok($im, "make empty image");
+  ok(!$im->to_rgb16, "convert empty image to 16-bit");
+  is($im->errstr, "empty input image", "check message");
 }
 
 { # bounds checks

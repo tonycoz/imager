@@ -968,24 +968,21 @@ sub to_paletted {
     return;
   }
 
+  $self->_valid_image
+    or return;
+
   my $result = Imager->new;
-  $result->{IMG} = i_img_to_pal($self->{IMG}, $opts);
-
-  #print "Type ", i_img_type($result->{IMG}), "\n";
-
-  if ($result->{IMG}) {
-    return $result;
-  }
-  else {
-    $self->{ERRSTR} = $self->_error_as_msg;
+  unless ($result->{IMG} = i_img_to_pal($self->{IMG}, $opts)) {
+    $self->_set_error(Imager->_error_as_msg);
     return;
   }
+
+  return $result;
 }
 
-# convert a paletted (or any image) to an 8-bit/channel RGB images
+# convert a paletted (or any image) to an 8-bit/channel RGB image
 sub to_rgb8 {
   my $self = shift;
-  my $result;
 
   unless (defined wantarray) {
     my @caller = caller;
@@ -993,30 +990,35 @@ sub to_rgb8 {
     return;
   }
 
-  if ($self->{IMG}) {
-    $result = Imager->new;
-    $result->{IMG} = i_img_to_rgb($self->{IMG})
-      or undef $result;
+  $self->_valid_image
+    or return;
+
+  my $result = Imager->new;
+  unless ($result->{IMG} = i_img_to_rgb($self->{IMG})) {
+    $self->_set_error(Imager->_error_as_msg());
+    return;
   }
 
   return $result;
 }
 
-# convert a paletted (or any image) to an 8-bit/channel RGB images
+# convert a paletted (or any image) to a 16-bit/channel RGB image
 sub to_rgb16 {
   my $self = shift;
-  my $result;
 
   unless (defined wantarray) {
     my @caller = caller;
-    warn "to_rgb16() called in void context - to_rgb8() returns the converted image at $caller[1] line $caller[2]\n";
+    warn "to_rgb16() called in void context - to_rgb16() returns the converted image at $caller[1] line $caller[2]\n";
     return;
   }
 
-  if ($self->{IMG}) {
-    $result = Imager->new;
-    $result->{IMG} = i_img_to_rgb16($self->{IMG})
-      or undef $result;
+  $self->_valid_image
+    or return;
+
+  my $result = Imager->new;
+  unless ($result->{IMG} = i_img_to_rgb16($self->{IMG})) {
+    $self->_set_error(Imager->_error_as_msg());
+    return;
   }
 
   return $result;

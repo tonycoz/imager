@@ -14,6 +14,8 @@ Bug fixes:
  - fix META.yml testing and the generated META.yml
    https://rt.cpan.org/Ticket/Display.html?id=65235
 
+ - test and add error reporting to to_*() family methods
+
 Imager 0.83 - 21 May 2011
 ===========
 
