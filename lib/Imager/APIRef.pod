@@ -1003,7 +1003,7 @@ I<ch> channels.
 
 
 =for comment
-From: File image.c
+From: File img8.c
 
 =item i_img_double_new(int x, int y, int ch)
 

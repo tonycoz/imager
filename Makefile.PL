@@ -163,7 +163,7 @@ my @objs = qw(Imager.o draw.o polygon.o image.o io.o iolayer.o
               log.o gaussian.o conv.o pnm.o raw.o feat.o font.o combine.o
               filters.o dynaload.o stackmach.o datatypes.o
               regmach.o trans2.o quant.o error.o convert.o
-              map.o tags.o palimg.o maskimg.o img16.o rotate.o
+              map.o tags.o palimg.o maskimg.o img8.o img16.o rotate.o
               bmp.o tga.o color.o fills.o imgdouble.o limits.o hlines.o
               imext.o scale.o rubthru.o render.o paste.o compose.o flip.o);
 

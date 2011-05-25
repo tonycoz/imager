@@ -132,7 +132,8 @@ imextdef.h
 imextpl.h			Included by external modules for Perl API access
 imextpltypes.h			Define Perl API function table type
 imexttypes.h			Define API function table type
-img16.c
+img16.c				Implements 16-bit/sample images
+img8.c				Implements 8-bit/sample images
 imgdouble.c			Implements double/sample images
 imio.h
 immacros.h
@@ -175,7 +176,7 @@ lib/Imager/Font/BBox.pm
 lib/Imager/Font/FreeType2.pm
 lib/Imager/Font/Image.pm
 lib/Imager/Font/Truetype.pm
-lib/Imager/Font/Type1.pm	Compatibilty wrapper for Imager::Font::T1
+lib/Imager/Font/Type1.pm	Compatibility wrapper for Imager::Font::T1
 lib/Imager/Font/Wrap.pm
 lib/Imager/Fountain.pm
 lib/Imager/Handy.pod
