@@ -76,6 +76,7 @@ GIF/imgif.h
 GIF/Makefile.PL
 GIF/t/t10gif.t
 GIF/t/t20new.t
+GIF/t/t30fixed.t
 GIF/testimg/badindex.gif	GIF with a bad color index
 GIF/testimg/bandw.gif
 GIF/testimg/expected.gif

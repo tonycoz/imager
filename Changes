@@ -1,6 +1,6 @@
 Imager release history.  Older releases can be found in Changes.old
 
-Imager 0.84
+Imager 0.84 (** update GIF version!)
 ===========
 
  - Imager no longer inherits from Exporter (unless you're running an
@@ -26,6 +26,11 @@ Bug fixes:
    contains only grays when performing error diffusion color
    translation.
    https://rt.cpan.org/Ticket/Display.html?id=68508
+
+ - writing a paletted image to GIF wouldn't always use the colors
+   supplied (or generated, eg. via make_colors => "mono"), which was
+   confusing at best.
+   https://rt.cpan.org/Ticket/Display.html?id=67912
 
 Imager 0.83 - 21 May 2011
 ===========

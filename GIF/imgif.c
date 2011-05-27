@@ -1229,23 +1229,26 @@ in_palette(i_color *c, i_quantize *quant, int size) {
 }
 
 /*
-=item has_common_palette(imgs, count, quant, want_trans)
+=item has_common_palette(imgs, count, quant)
 
-Tests if all the given images are paletted and have a common palette,
-if they do it builds that palette.
+Tests if all the given images are paletted and their colors are in the
+palette produced.
 
-A possible improvement might be to eliminate unused colors in the
-images palettes.
+Previously this would build a consolidated palette from the source,
+but that meant that if the caller supplied a static palette (or
+specified a fixed palette like "webmap") then we wouldn't be
+quantizing to the caller specified palette.
 
 =cut
 */
+
 static int
-has_common_palette(i_img **imgs, int count, i_quantize *quant, 
-                   int want_trans) {
+has_common_palette(i_img **imgs, int count, i_quantize *quant) {
   int size = quant->mc_count;
   int i;
   int imgn;
   char used[256];
+  int col_count;
 
   /* we try to build a common palette here, if we can manage that, then
      that's the palette we use */
@@ -1277,25 +1280,22 @@ has_common_palette(i_img **imgs, int count, i_quantize *quant,
       memset(used, 1, sizeof(used));
     }
 
-    for (i = 0; i < i_colorcount(imgs[imgn]); ++i) {
+    col_count = i_colorcount(imgs[imgn]);
+    for (i = 0; i < col_count; ++i) {
       i_color c;
       
       i_getcolors(imgs[imgn], i, &c, 1);
       if (used[i]) {
-        if (in_palette(&c, quant, size) < 0) {
-          if (size < quant->mc_size) {
-            quant->mc_colors[size++] = c;
-          }
-          else {
-            /* oops, too many colors */
-            return 0;
-          }
+        if (in_palette(&c, quant, quant->mc_count) < 0) {
+	  mm_log((1, "  color not found in palette, no palette shortcut\n"));
+  
+	  return 0;
         }
       }
     }
   }
 
-  quant->mc_count = size;
+  mm_log((1, "  all colors found in palette, palette shortcut\n"));
 
   return 1;
 }
@@ -1424,13 +1424,9 @@ i_writegif_low(i_quantize *quant, GifFileType *gf, i_img **imgs, int count) {
       mm_log((2, "  reserving color for transparency\n"));
       --quant->mc_size;
     }
-    if (has_common_palette(glob_imgs, glob_img_count, quant, want_trans)) {
-      glob_paletted = 1;
-    }
-    else {
-      glob_paletted = 0;
-      i_quant_makemap(quant, glob_imgs, glob_img_count);
-    }
+
+    i_quant_makemap(quant, glob_imgs, glob_img_count);
+    glob_paletted = has_common_palette(glob_imgs, glob_img_count, quant);
     glob_color_count = quant->mc_count;
     quant->mc_colors = orig_colors;
   }
@@ -1451,14 +1447,10 @@ i_writegif_low(i_quantize *quant, GifFileType *gf, i_img **imgs, int count) {
   }
   else {
     want_trans = quant->transp != tr_none && imgs[0]->channels == 4;
-    if (has_common_palette(imgs, 1, quant, want_trans)) {
-      colors_paletted = 1;
-    }
-    else {
-      colors_paletted = 0;
-      i_quant_makemap(quant, imgs, 1);
-    }
+    i_quant_makemap(quant, imgs, 1);
+    colors_paletted = has_common_palette(imgs, 1, quant);
   }
+
   if ((map = make_gif_map(quant, imgs[0], want_trans)) == NULL) {
     myfree(glob_colors);
     myfree(localmaps);
@@ -1525,13 +1517,8 @@ i_writegif_low(i_quantize *quant, GifFileType *gf, i_img **imgs, int count) {
          to give room for a transparency colour */
       if (want_trans && quant->mc_size == 256)
         --quant->mc_size;
-      if (has_common_palette(imgs, 1, quant, want_trans)) {
-        colors_paletted = 1;
-      }
-      else {
-        colors_paletted = 0;
-        i_quant_makemap(quant, imgs, 1);
-      }
+      i_quant_makemap(quant, imgs, 1);
+      colors_paletted = has_common_palette(imgs, 1, quant);
       if ((map = make_gif_map(quant, imgs[0], want_trans)) == NULL) {
 	myfree(glob_colors);
 	myfree(localmaps);
@@ -1639,7 +1626,7 @@ i_writegif_low(i_quantize *quant, GifFileType *gf, i_img **imgs, int count) {
       if (want_trans && quant->mc_size == 256)
 	--quant->mc_size;
 
-      if (has_common_palette(imgs+imgn, 1, quant, want_trans)) {
+      if (has_common_palette(imgs+imgn, 1, quant)) {
         result = quant_paletted(quant, imgs[imgn]);
       }
       else {

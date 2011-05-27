@@ -5,9 +5,12 @@
 #include "imager.h"
 #include "imageri.h"
 
+static void makemap_webmap(i_quantize *);
 static void makemap_addi(i_quantize *, i_img **imgs, int count);
 static void makemap_mediancut(i_quantize *, i_img **imgs, int count);
 static void makemap_mono(i_quantize *);
+
+static int makemap_palette(i_quantize *, i_img **imgs, int count);
 
 static
 void
@@ -58,15 +61,7 @@ i_quant_makemap(i_quantize *quant, i_img **imgs, int count) {
     /* use user's specified map */
     break;
   case mc_web_map:
-    {
-      int r, g, b;
-      int i = 0;
-      for (r = 0; r < 256; r+=0x33)
-	for (g = 0; g < 256; g+=0x33)
-	  for (b = 0; b < 256; b += 0x33)
-	    setcol(quant->mc_colors+i++, r, g, b, 255);
-      quant->mc_count = i;
-    }
+    makemap_webmap(quant);
     break;
 
   case mc_median_cut:
@@ -299,6 +294,9 @@ makemap_addi(i_quantize *quant, i_img **imgs, int count) {
 
   mm_log((1, "makemap_addi(quant %p { mc_count=%d, mc_colors=%p }, imgs %p, count %d)\n", 
           quant, quant->mc_count, quant->mc_colors, imgs, count));
+
+  if (makemap_palette(quant, imgs, count))
+    return;
          
   i_mempool_init(&mp);
 
@@ -446,6 +444,8 @@ makemap_addi(i_quantize *quant, i_img **imgs, int count) {
 #endif
 
   i_mempool_destroy(&mp);
+
+  mm_log((1, "makemap_addi() - %d colors\n", quant->mc_count));
 }
 
 typedef struct {
@@ -549,7 +549,11 @@ makemap_mediancut(i_quantize *quant, i_img **imgs, int count) {
      this isn't terribly efficient, but it should work */
   int chan_count; 
 
-  /*printf("images %d  pal size %d\n", count, quant->mc_size);*/
+  mm_log((1, "makemap_mediancut(quant %p { mc_count=%d, mc_colors=%p }, imgs %p, count %d)\n", 
+          quant, quant->mc_count, quant->mc_colors, imgs, count));
+
+  if (makemap_palette(quant, imgs, count))
+    return;
 
   i_mempool_init(&mp);
 
@@ -704,6 +708,8 @@ makemap_mediancut(i_quantize *quant, i_img **imgs, int count) {
   }
   /*printf("out %d colors\n", quant->mc_count);*/
   i_mempool_destroy(&mp);
+
+  mm_log((1, "makemap_mediancut() - %d colors\n", quant->mc_count));
 }
 
 static void
@@ -717,6 +723,112 @@ makemap_mono(i_quantize *quant) {
   quant->mc_colors[1].rgba.b = 255;
   quant->mc_colors[1].rgba.a = 255;
   quant->mc_count = 2;
+}
+
+static void
+makemap_webmap(i_quantize *quant) {
+  int r, g, b;
+
+  int i = 0;
+  for (r = 0; r < 256; r+=0x33)
+    for (g = 0; g < 256; g+=0x33)
+      for (b = 0; b < 256; b += 0x33)
+	setcol(quant->mc_colors+i++, r, g, b, 255);
+  quant->mc_count = i;
+}
+
+static int 
+in_palette(i_color *c, i_quantize *quant, int size) {
+  int i;
+
+  for (i = 0; i < size; ++i) {
+    if (c->channel[0] == quant->mc_colors[i].channel[0]
+        && c->channel[1] == quant->mc_colors[i].channel[1]
+        && c->channel[2] == quant->mc_colors[i].channel[2]) {
+      return i;
+    }
+  }
+
+  return -1;
+}
+
+/*
+=item makemap_palette(quant, imgs, count)
+
+Tests if all the given images are paletted and have a common palette,
+if they do it builds that palette.
+
+A possible improvement might be to eliminate unused colors in the
+images palettes.
+
+=cut
+*/
+
+static int
+makemap_palette(i_quantize *quant, i_img **imgs, int count) {
+  int size = quant->mc_count;
+  int i;
+  int imgn;
+  char used[256];
+  int col_count;
+
+  mm_log((1, "makemap_palette(quant %p { mc_count=%d, mc_colors=%p }, imgs %p, count %d)\n", 
+          quant, quant->mc_count, quant->mc_colors, imgs, count));
+  /* we try to build a common palette here, if we can manage that, then
+     that's the palette we use */
+  for (imgn = 0; imgn < count; ++imgn) {
+    int eliminate_unused;
+    if (imgs[imgn]->type != i_palette_type) {
+      mm_log((1, "makemap_palette() -> 0 (non-palette image)\n"));
+      return 0;
+    }
+
+    if (!i_tags_get_int(&imgs[imgn]->tags, "gif_eliminate_unused", 0, 
+                        &eliminate_unused)) {
+      eliminate_unused = 1;
+    }
+
+    if (eliminate_unused) {
+      i_palidx *line = mymalloc(sizeof(i_palidx) * imgs[imgn]->xsize);
+      int x, y;
+      memset(used, 0, sizeof(used));
+
+      for (y = 0; y < imgs[imgn]->ysize; ++y) {
+        i_gpal(imgs[imgn], 0, imgs[imgn]->xsize, y, line);
+        for (x = 0; x < imgs[imgn]->xsize; ++x)
+          used[line[x]] = 1;
+      }
+
+      myfree(line);
+    }
+    else {
+      /* assume all are in use */
+      memset(used, 1, sizeof(used));
+    }
+
+    col_count = i_colorcount(imgs[imgn]);
+    for (i = 0; i < col_count; ++i) {
+      i_color c;
+      
+      i_getcolors(imgs[imgn], i, &c, 1);
+      if (used[i]) {
+        if (in_palette(&c, quant, size) < 0) {
+          if (size < quant->mc_size) {
+            quant->mc_colors[size++] = c;
+          }
+          else {
+	    mm_log((1, "makemap_palette() -> 0 (too many colors)\n"));
+            return 0;
+          }
+        }
+      }
+    }
+  }
+
+  mm_log((1, "makemap_palette() -> 1 (%d total colors)\n", size));
+  quant->mc_count = size;
+
+  return 1;
 }
 
 #define pboxjump 32
