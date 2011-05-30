@@ -1,8 +1,12 @@
 #!perl -w
 use strict;
-use Test::More tests => 7;
+use Test::More;
+use Imager;
 
-BEGIN { $| = 1; use_ok("Imager"); }
+eval "use Affix::Infix2Postfix; 1;"
+  or plan skip_all => "No Affix::Infix2Postfix";
+
+plan tests => 6;
 
 #$Imager::DEBUG=1;
 
