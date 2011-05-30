@@ -1,10 +1,10 @@
 #!perl -w
 # some of this is tested in t01introvert.t too
 use strict;
-use Test::More tests => 126;
+use Test::More tests => 128;
 BEGIN { use_ok("Imager"); }
 
-use Imager::Test qw(image_bounds_checks test_image is_color3);
+use Imager::Test qw(image_bounds_checks test_image is_color3 isnt_image);
 
 Imager->open_log(log => "testout/t023palette.log");
 
@@ -343,6 +343,15 @@ cmp_ok(Imager->errstr, '=~', qr/Channels must be positive and <= 4/,
   is_color3($colors[0], 0, 0, 0, "first should be 000000");
   is_color3($colors[1], 0, 0, 0x33, "second should be 000033");
   is_color3($colors[8], 0, 0x33, 0x66, "9th should be 003366");
+}
+
+{ # RT 68508
+  my $im = Imager->new(xsize => 10, ysize => 10);
+  $im->box(filled => 1, color => Imager::Color->new(255, 0, 0));
+  my $palim = $im->to_paletted(make_colors => "mono", translate => "errdiff");
+  ok($palim, "convert to mono with error diffusion");
+  my $blank = Imager->new(xsize => 10, ysize => 10);
+  isnt_image($palim, $blank, "make sure paletted isn't all black");
 }
 
 Imager->close_log;

@@ -223,9 +223,12 @@ eucl_d_ch(cvec* cv,i_sample_t *chans) {
     + PWR2(cv->b - chans[2]);
 }
 
-static
-int
-ceucl_d(i_color *c1, i_color *c2) { return PWR2(c1->channel[0]-c2->channel[0])+PWR2(c1->channel[1]-c2->channel[1])+PWR2(c1->channel[2]-c2->channel[2]); }
+static int
+ceucl_d(i_color *c1, i_color *c2) {
+return PWR2(c1->channel[0]-c2->channel[0])
+  +PWR2(c1->channel[1]-c2->channel[1])
+  +PWR2(c1->channel[2]-c2->channel[2]);
+}
 
 static const int
 gray_samples[] = { 0, 0, 0 };
@@ -755,6 +758,23 @@ makemap_mono(i_quantize *quant) {
 /*#define IM_CFRAND2DIST*/
 #endif
 
+/* return true if the color map contains only grays */
+static int
+is_gray_map(const i_quantize *quant) {
+  int i;
+
+  for (i = 0; i < quant->mc_count; ++i) {
+    if (quant->mc_colors[i].rgb.r != quant->mc_colors[i].rgb.g
+	|| quant->mc_colors[i].rgb.r != quant->mc_colors[i].rgb.b) {
+      mm_log((1, "  not a gray map\n"));
+      return 0;
+    }
+  }
+
+  mm_log((1, "  is a gray map\n"));
+  return 1;
+}
+
 #ifdef IM_CFHASHBOX
 
 /* The original version I wrote for this used the sort.
@@ -1205,6 +1225,7 @@ translate_errdiff(i_quantize *quant, i_img *img, i_palidx *out) {
   int difftotal;
   int x, y, dx, dy;
   int bst_idx = 0;
+  int is_gray = is_gray_map(quant);
   CF_VARS;
 
   if ((quant->errdiff & ed_mask) == ed_custom) {
@@ -1248,6 +1269,10 @@ translate_errdiff(i_quantize *quant, i_img *img, i_palidx *out) {
       i_gpix(img, x, y, &val);
       if (img->channels < 3) {
         val.channel[1] = val.channel[2] = val.channel[0];
+      }
+      else if (is_gray) {
+	int gray = 0.5 + color_to_grey(&val);
+	val.channel[0] = val.channel[1] = val.channel[2] = gray;
       }
       perr = err[x+mapo];
       perr.r = perr.r < 0 ? -((-perr.r)/difftotal) : perr.r/difftotal;

@@ -1047,7 +1047,8 @@ Possible values are:
 
 =item *
 
-C<giflib> - the C<giflib> native quantization function is used.
+C<giflib> - this is a historical equivalent for C<closest> that also
+forces C<make_colors> to C<mediancut>.
 
 =item *
 
@@ -1060,7 +1061,9 @@ closest color is chosen.
 
 =item *
 
-C<errdiff> - an error diffusion dither is performed.
+C<errdiff> - an error diffusion dither is performed.  If the supplied
+(or generated) palette contains only grays the source colors are
+converted to gray before error diffusion is performed.
 
 =back
 

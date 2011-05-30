@@ -22,6 +22,11 @@ Bug fixes:
  - Imager no longer exports anything by default
    https://rt.cpan.org/Ticket/Display.html?id=65228
 
+ - convert colors to grayscale if the supplied (or generated) palette
+   contains only grays when performing error diffusion color
+   translation.
+   https://rt.cpan.org/Ticket/Display.html?id=68508
+
 Imager 0.83 - 21 May 2011
 ===========
 

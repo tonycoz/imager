@@ -114,4 +114,6 @@ i_img_dim i_maxx(i_img_dim x, i_img_dim y);
 #define i_min(a, b) i_minx((a), (b))
 #define i_max(a, b) i_maxx((a), (b))
 
+#define color_to_grey(col) ((col)->rgb.r * 0.222  + (col)->rgb.g * 0.707 + (col)->rgb.b * 0.071)
+
 #endif

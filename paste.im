@@ -1,4 +1,5 @@
 #include "imager.h"
+#include "imageri.h"
 
 /*
 =item i_copyto(C<dest>, C<src>, C<x1>, C<y1>, C<x2>, C<y2>, C<tx>, C<ty>)
@@ -58,8 +59,6 @@ i_copyto(i_img *im, i_img *src, int x1, int y1, int x2, int y2, int tx, int ty) 
   myfree(row);
 #/code
 }
-
-#define color_to_grey(col) ((col)->rgb.r * 0.222  + (col)->rgb.g * 0.707 + (col)->rgb.b * 0.071)
 
 #code
 void
