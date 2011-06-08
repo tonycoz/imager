@@ -145,7 +145,7 @@ Using JPEG as the output format is not recommended.
 
 =head1 AUTHOR
 
-Tony Cook <tony@imager.perl.org>
+Tony Cook <tonyc@cpan.org>
 
 =for stopwords Oppenheim
 

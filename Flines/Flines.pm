@@ -48,7 +48,7 @@ This filter has no parameters.
 
 Original by Arnar M. Hrafnkelsson.
 
-Adapted by Tony Cook <tony@imager.perl.org>
+Adapted by Tony Cook <tonyc@cpan.org>
 
 =head1 SEE ALSO
 

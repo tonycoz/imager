@@ -82,7 +82,7 @@ if the sequence tend towards infinity.
 
 Original by Arnar M. Hrafnkelsson.
 
-Adapted and expanded by Tony Cook <tony@imager.perl.org>
+Adapted and expanded by Tony Cook <tonyc@cpan.org>
 
 =head1 SEE ALSO
 

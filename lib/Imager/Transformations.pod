@@ -963,7 +963,7 @@ L<Imager>, L<Imager::Engines>
 
 =head1 AUTHOR
 
-Tony Cook <tony@imager.perl.org>, Arnar M. Hrafnkelsson
+Tony Cook <tonyc@cpan.org>, Arnar M. Hrafnkelsson
 
 =head1 REVISION
 

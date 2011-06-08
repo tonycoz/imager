@@ -1533,7 +1533,7 @@ write_mask(i_io_glue_t *ig, ico_image_t const *image, int *error) {
 
 =head1 AUTHOR
 
-Tony Cook <tony@imager.perl.org>
+Tony Cook <tonyc@cpan.org>
 
 =head1 REVISION
 

@@ -1,6 +1,6 @@
 ================================================================
 Copyright (c) 1999-2004 Arnar M. Hrafnkelsson. All rights reserved.
-Copyright (c) 2004-2010 Anthony Cook.
+Copyright (c) 2004-2011 Anthony Cook.
 This program is free software; you can redistribute it and/or
 modify it under the same terms as Perl itself.
 
@@ -11,7 +11,7 @@ copyrighted by Adobe.  See adobe.txt for license information.
 >> THIS SOFTWARE COMES WITH ABSOLUTELY NO WARRANTY WHATSOEVER <<
 
 If you like or hate Imager, please let me know by sending mail 
-to imager@imager.perl.org - I love feedback.
+to tonyc@cpan.org - I love feedback.
 
 ================================================================
 
@@ -75,7 +75,7 @@ If either fails do take a peek at the file errep.perl.  It's creates a
 file report.txt.  This is some information which will help me discover
 where the problem is so I can try to fix it in future releases.  If
 you find running it ok (just remember - no warranty!) please send the
-report.txt via email to imager@imager.perl.org.
+report.txt via email to tonyc@cpan.org.
 
 Troubleshooting tips:
 

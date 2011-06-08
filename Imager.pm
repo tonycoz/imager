@@ -4768,7 +4768,7 @@ it will be delayed until I get a chance to write them.
 
 =head1 AUTHOR
 
-Tony Cook <tony@imager.perl.org> is the current maintainer for Imager.
+Tony Cook <tonyc@cpan.org> is the current maintainer for Imager.
 
 Arnar M. Hrafnkelsson is the original author of Imager.
 

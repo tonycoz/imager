@@ -106,7 +106,7 @@ if ($probe_res) {
     if $probe_res->{LDDLFLAGS};
 
   if ($MM_ver > 6.06) {
-    $opts{AUTHOR} = 'Tony Cook <tony@imager.perl.org>';
+    $opts{AUTHOR} = 'Tony Cook <tonyc@cpan.org>';
     $opts{ABSTRACT} = 'FreeType 2 font driver for Imager';
   }
   

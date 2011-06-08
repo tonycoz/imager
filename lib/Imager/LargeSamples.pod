@@ -107,7 +107,7 @@ of the image, using filled => 1 and color works at 8-bits/sample
 
 =head1 AUTHOR
 
-Tony Cook <tony@imager.perl.org>
+Tony Cook <tonyc@cpan.org>
 
 =cut
 

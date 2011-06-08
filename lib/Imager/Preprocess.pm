@@ -319,6 +319,6 @@ Other types, functions and values may be added in the future.
 
 =head1 AUTHOR
 
-Tony Cook <tony@imager.perl.org>
+Tony Cook <tonyc@cpan.org>
 
 =cut

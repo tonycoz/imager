@@ -748,7 +748,7 @@ For large sample images this is scaled down to the range 0 .. 1.
 
 =head1 AUTHOR
 
-Arnar M. Hrafnkelsson, Tony Cook <tony@imager.perl.org>.
+Arnar M. Hrafnkelsson, Tony Cook <tonyc@cpan.org>.
 
 =head1 SEE ALSO
 

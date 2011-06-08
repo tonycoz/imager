@@ -122,7 +122,7 @@ might be useful.
 
 =head1 AUTHOR
 
-Tony Cook <tony@imager.perl.org>
+Tony Cook <tonyc@cpan.org>
 
 =for stopwords Oppenheim
 

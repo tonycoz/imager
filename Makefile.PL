@@ -192,7 +192,7 @@ if ($coverage) {
 # eval to prevent warnings about versions with _ in them
 my $MM_ver = eval $ExtUtils::MakeMaker::VERSION;
 if ($MM_ver > 6.06) {
-  $opts{AUTHOR} = 'Tony Cook <tony@imager.perl.org>, Arnar M. Hrafnkelsson';
+  $opts{AUTHOR} = 'Tony Cook <tonyc@cpan.org>, Arnar M. Hrafnkelsson';
   $opts{ABSTRACT} = 'Perl extension for Generating 24 bit Images';
 }
 

@@ -11,7 +11,7 @@ my %opts =
   );
 my $MM_ver = eval $ExtUtils::MakeMaker::VERSION;
 if ($MM_ver > 6.06) {
-  $opts{AUTHOR} = 'Tony Cook <tony@imager.perl.org>';
+  $opts{AUTHOR} = 'Tony Cook <tonyc@cpan.org>';
   $opts{ABSTRACT} = 'Demo Imager filter extension';
 }
 

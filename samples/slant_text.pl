@@ -205,7 +205,7 @@ cases the actual text will not be touching these boundaries.
 
 =head1 AUTHOR
 
-Tony Cook <tony@imager.perl.org>
+Tony Cook <tonyc@cpan.org>
 
 =head1 REVISION
 

@@ -92,7 +92,7 @@ if ($probe_res) {
   $opts{INC} = "@inc";
 
   if ($MM_ver > 6.06) {
-    $opts{AUTHOR} = 'Tony Cook <tony@imager.perl.org>';
+    $opts{AUTHOR} = 'Tony Cook <tonyc@cpan.org>';
     $opts{ABSTRACT} = 'Win32 font file support for Imager';
   }
   

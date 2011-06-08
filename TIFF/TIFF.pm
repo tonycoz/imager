@@ -131,7 +131,7 @@ Imager's TIFF support is documented in L<Imager::Files>.
 
 =head1 AUTHOR
 
-Tony Cook <tony@imager.perl.org>
+Tony Cook <tonyc@cpan.org>
 
 =head1 SEE ALSO
 

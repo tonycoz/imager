@@ -2550,7 +2550,7 @@ myTIFFIsCODECConfigured(uint16 scheme) {
 
 =head1 AUTHOR
 
-Arnar M. Hrafnkelsson <addi@umich.edu>, Tony Cook <tony@imager.perl.org>
+Arnar M. Hrafnkelsson <addi@umich.edu>, Tony Cook <tonyc@cpan.org>
 
 =head1 SEE ALSO
 

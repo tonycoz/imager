@@ -1,6 +1,6 @@
 Imager release history.  Older releases can be found in Changes.old
 
-Imager 0.84 (** update GIF version!)
+Imager 0.84 (** update GIF, TIFF, W32, PNG, JPEG, FT2 versions!)
 ===========
 
  - Imager no longer inherits from Exporter (unless you're running an
@@ -31,6 +31,10 @@ Bug fixes:
    supplied (or generated, eg. via make_colors => "mono"), which was
    confusing at best.
    https://rt.cpan.org/Ticket/Display.html?id=67912
+
+ - replace (imager|tony)@imager.perl.org in the doc, since I don't
+   plan to continue receiving mail at that address.
+   https://rt.cpan.org/Ticket/Display.html?id=68591
 
 Imager 0.83 - 21 May 2011
 ===========
