@@ -496,26 +496,32 @@ to control output:
 
 =over
 
-=item C<jpeg_density_unit>
+=item *
 
-The value of the density unit field in the C<JFIF> header.  This is
-ignored on writing if the C<i_aspect_only> tag is non-zero.
+C<jpeg_density_unit> - The value of the density unit field in the
+C<JFIF> header.  This is ignored on writing if the C<i_aspect_only>
+tag is non-zero.
 
 The C<i_xres> and C<i_yres> tags are expressed in pixels per inch no
 matter the value of this tag, they will be converted to/from the value
 stored in the JPEG file.
 
-=item C<jpeg_density_unit_name>
+=item *
 
-This is set when reading a JPEG file to the name of the unit given by
-C<jpeg_density_unit>.  Possible results include C<inch>,
-C<centimeter>, C<none> (the C<i_aspect_only> tag is also set reading
-these files).  If the value of C<jpeg_density_unit> is unknown then
-this tag isn't set.
+C<jpeg_density_unit_name> - This is set when reading a JPEG file to
+the name of the unit given by C<jpeg_density_unit>.  Possible results
+include C<inch>, C<centimeter>, C<none> (the C<i_aspect_only> tag is
+also set reading these files).  If the value of C<jpeg_density_unit>
+is unknown then this tag isn't set.
 
-=item C<jpeg_comment>
+=item *
 
-Text comment.
+C<jpeg_comment> - Text comment.
+
+=item *
+
+C<jpeg_progressive> - Whether the JPEG file is a progressive
+file. (Imager 0.84)
 
 =back
 

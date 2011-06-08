@@ -6,6 +6,9 @@ Imager 0.84 (** update GIF, TIFF, W32, PNG, JPEG, FT2 versions!)
  - Imager no longer inherits from Exporter (unless you're running an
    old, old perl.
 
+ - Imager can now write progressive JPEGs (it could always read them).
+   https://rt.cpan.org/Ticket/Display.html?id=68691
+
 Bug fixes:
 
  - re-work, document and test Imager's logging facility.

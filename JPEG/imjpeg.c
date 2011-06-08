@@ -543,6 +543,14 @@ i_readjpeg_wiol(io_glue *data, int length, char** iptc_itext, int *itlength) {
     i_tags_set_float2(&im->tags, "i_yres", 0, yres, 6);
   }
 
+  /* I originally used jpeg_has_multiple_scans() here, but that can
+   * return true for non-progressive files too.  The progressive_mode
+   * member is available at least as far back as 6b and does the right
+   * thing.
+   */
+  i_tags_setn(&im->tags, "jpeg_progressive", 
+	      cinfo.progressive_mode ? 1 : 0);
+
   (void) jpeg_finish_decompress(&cinfo);
   jpeg_destroy_decompress(&cinfo);
   *itlength=tlength;
@@ -567,6 +575,7 @@ i_writejpeg_wiol(i_img *im, io_glue *ig, int qfactor) {
   double xres, yres;
   int comment_entry;
   int want_channels = im->channels;
+  int progressive = 0;
 
   struct jpeg_compress_struct cinfo;
   struct my_error_mgr jerr;
@@ -617,6 +626,12 @@ i_writejpeg_wiol(i_img *im, io_glue *ig, int qfactor) {
 
   jpeg_set_defaults(&cinfo);
   jpeg_set_quality(&cinfo, quality, TRUE);  /* limit to baseline-JPEG values */
+
+  if (!i_tags_get_int(&im->tags, "jpeg_progressive", 0, &progressive))
+    progressive = 0;
+  if (progressive) {
+    jpeg_simple_progression(&cinfo);
+  }
 
   got_xres = i_tags_get_float(&im->tags, "i_xres", 0, &xres);
   got_yres = i_tags_get_float(&im->tags, "i_yres", 0, &yres);

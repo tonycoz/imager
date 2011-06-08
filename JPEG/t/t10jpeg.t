@@ -2,7 +2,7 @@
 use strict;
 use Imager qw(:all);
 use Test::More;
-use Imager::Test qw(is_color_close3 test_image_raw);
+use Imager::Test qw(is_color_close3 test_image_raw test_image is_image);
 
 -d "testout" or mkdir "testout";
 
@@ -11,7 +11,7 @@ init_log("testout/t101jpeg.log",1);
 $Imager::formats{"jpeg"}
   or plan skip_all => "no jpeg support";
 
-plan tests => 94;
+plan tests => 101;
 
 my $green=i_color_new(0,255,0,255);
 my $blue=i_color_new(0,0,255,255);
@@ -408,4 +408,27 @@ SKIP:
   ok(grep($_ eq 'jpeg', Imager->write_types), "check jpeg in write types");
 }
 
+{ # progressive JPEG
+  # https://rt.cpan.org/Ticket/Display.html?id=68691
+  my $im = test_image();
+  my $progim = $im->copy;
 
+  ok($progim->write(file => "testout/t10prog.jpg", type => "jpeg",
+		    jpeg_progressive => 1),
+     "write progressive jpeg");
+
+  my $rdprog = Imager->new(file => "testout/t10prog.jpg");
+  ok($rdprog, "read progressive jpeg");
+  my @prog = $rdprog->tags(name => "jpeg_progressive");
+  is($prog[0], 1, "check progressive flag set on read");
+
+  my $data;
+  ok($im->write(data => \$data, type => "jpeg"), 
+     "save as non-progressive to compare");
+  my $norm = Imager->new(data => $data);
+  ok($norm, "read non-progressive file");
+  my @nonprog = $norm->tags(name => "jpeg_progressive");
+  is($nonprog[0], 0, "check progressive flag 0 for non prog file");
+
+  is_image($rdprog, $norm, "prog vs norm should be the same image");
+}
