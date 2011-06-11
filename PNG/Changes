@@ -1,3 +1,7 @@
+
+ - improve error reporting to actually report the error text from
+   libpng.
+
 Imager-File-PNG 0.84
 ====================
 
@@ -38,6 +42,10 @@ Imager-File-PNG 0.79
  - replace (imager|tony)@imager.perl.org in the doc, since I don't
    plan to continue receiving mail at that address.
    https://rt.cpan.org/Ticket/Display.html?id=68591
+
+ - Makefile.PL updates to report library detection info back to the
+   main Imager Makefile.PL.
+   https://rt.cpan.org/Ticket/Display.html?id=9675
 
 Imager-File-PNG 0.78
 ====================
