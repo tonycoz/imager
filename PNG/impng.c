@@ -34,13 +34,13 @@ static int CC2C[PNG_COLOR_MASK_PALETTE|PNG_COLOR_MASK_COLOR|PNG_COLOR_MASK_ALPHA
 static void
 wiol_read_data(png_structp png_ptr, png_bytep data, png_size_t length) {
   io_glue *ig = png_get_io_ptr(png_ptr);
-  int rc = i_io_read(ig, data, length);
+  ssize_t rc = i_io_read(ig, data, length);
   if (rc != length) png_error(png_ptr, "Read overflow error on an iolayer source.");
 }
 
 static void
 wiol_write_data(png_structp png_ptr, png_bytep data, png_size_t length) {
-  int rc;
+  ssize_t rc;
   io_glue *ig = png_get_io_ptr(png_ptr);
   rc = i_io_write(ig, data, length);
   if (rc != length) png_error(png_ptr, "Write error on an iolayer source.");
@@ -63,11 +63,34 @@ check_if_png(char *file_name, FILE **fp) {
 }
 */
 
+static void
+error_handler(png_structp png_ptr, png_const_charp msg) {
+  mm_log((1, "PNG error: '%s'\n", msg));
+
+  i_push_error(0, msg);
+  longjmp(png_jmpbuf(png_ptr), 1);
+}
+
+/*
+
+For writing a warning might have information about an error, so send
+it to the error stack.
+
+*/
+static void
+write_warn_handler(png_structp png_ptr, png_const_charp msg) {
+  mm_log((1, "PNG write warning '%s'\n", msg));
+
+  i_push_error(0, msg);
+}
+
+#define PNG_DIM_MAX 0x7fffffffL
+
 undef_int
 i_writepng_wiol(i_img *im, io_glue *ig) {
   png_structp png_ptr;
   png_infop info_ptr = NULL;
-  int width,height,y;
+  i_img_dim width,height,y;
   volatile int cspace,channels;
   double xres, yres;
   int aspect_only, have_res;
@@ -83,6 +106,20 @@ i_writepng_wiol(i_img *im, io_glue *ig) {
 
   height = im->ysize;
   width  = im->xsize;
+
+  /* if we ever have 64-bit i_img_dim
+   * the libpng docs state that png_set_user_limits() can be used to
+   * override the PNG_USER_*_MAX limits, but as implemented they
+   * don't.  We check against the theoretical limit of PNG here, and
+   * try to override the limits below, in case the libpng
+   * implementation ever matches the documentation.
+   *
+   * https://sourceforge.net/tracker/?func=detail&atid=105624&aid=3314943&group_id=5624
+  */
+  if (width > PNG_DIM_MAX || height > PNG_DIM_MAX) {
+    i_push_error(0, "Image too large for PNG");
+    return 0;
+  }
 
   channels=im->channels;
 
@@ -101,7 +138,8 @@ i_writepng_wiol(i_img *im, io_glue *ig) {
    * in case we are using dynamically linked libraries.  REQUIRED.
    */
   
-  png_ptr = png_create_write_struct(PNG_LIBPNG_VER_STRING,NULL,NULL,NULL);
+  png_ptr = png_create_write_struct(PNG_LIBPNG_VER_STRING, NULL, 
+				    error_handler, write_warn_handler);
   
   if (png_ptr == NULL) return 0;
 
@@ -132,6 +170,12 @@ i_writepng_wiol(i_img *im, io_glue *ig) {
    * PNG_INTERLACE_ADAM7, and the compression_type and filter_type MUST
    * currently be PNG_COMPRESSION_TYPE_BASE and PNG_FILTER_TYPE_BASE. REQUIRED
    */
+
+  /* by default, libpng (not PNG) limits the image size to a maximum
+   * 1000000 pixels in each direction, but Imager doesn't.
+   * Configure libpng to avoid that limit.
+   */
+  png_set_user_limits(png_ptr, width, height);
 
   png_set_IHDR(png_ptr, info_ptr, width, height, 8, cspace,
 	       PNG_INTERLACE_NONE, PNG_COMPRESSION_TYPE_BASE, PNG_FILTER_TYPE_BASE);
@@ -183,9 +227,18 @@ i_writepng_wiol(i_img *im, io_glue *ig) {
   return(1);
 }
 
+static void 
+get_png_tags(i_img *im, png_structp png_ptr, png_infop info_ptr);
 
+typedef struct {
+  char *warnings;
+} i_png_read_state, *i_png_read_statep;
 
-static void get_png_tags(i_img *im, png_structp png_ptr, png_infop info_ptr);
+static void
+read_warn_handler(png_structp, png_const_charp);
+
+static void
+cleanup_read_state(i_png_read_statep);
 
 i_img*
 i_readpng_wiol(io_glue *ig) {
@@ -197,17 +250,26 @@ i_readpng_wiol(io_glue *ig) {
   int number_passes,y;
   int channels,pass;
   unsigned int sig_read;
+  i_png_read_state rs;
 
+  rs.warnings = NULL;
   sig_read  = 0;
 
   mm_log((1,"i_readpng_wiol(ig %p)\n", ig));
+  i_clear_error();
 
-  png_ptr = png_create_read_struct(PNG_LIBPNG_VER_STRING,NULL,NULL,NULL);
+  png_ptr = png_create_read_struct(PNG_LIBPNG_VER_STRING, &rs, 
+				   error_handler, read_warn_handler);
+  if (!png_ptr) {
+    i_push_error(0, "Cannot create PNG read structure");
+    return NULL;
+  }
   png_set_read_fn(png_ptr, (png_voidp) (ig), wiol_read_data);
   
   info_ptr = png_create_info_struct(png_ptr);
   if (info_ptr == NULL) {
     png_destroy_read_struct(&png_ptr, (png_infopp)NULL, (png_infopp)NULL);
+    i_push_error(0, "Cannot create PNG info structure");
     return NULL;
   }
   
@@ -215,6 +277,7 @@ i_readpng_wiol(io_glue *ig) {
     if (im) i_img_destroy(im);
     mm_log((1,"i_readpng_wiol: error.\n"));
     png_destroy_read_struct(&png_ptr, &info_ptr, (png_infopp)NULL);
+    cleanup_read_state(&rs);
     return NULL;
   }
 
@@ -270,13 +333,19 @@ i_readpng_wiol(io_glue *ig) {
   get_png_tags(im, png_ptr, info_ptr);
 
   png_destroy_read_struct(&png_ptr, &info_ptr, (png_infopp)NULL);
+
+  if (rs.warnings) {
+    i_tags_set(&im->tags, "png_warnings", rs.warnings, -1);
+  }
+  cleanup_read_state(&rs);
   
   mm_log((1,"(0x%08X) <- i_readpng_scalar\n", im));  
   
   return im;
 }
 
-static void get_png_tags(i_img *im, png_structp png_ptr, png_infop info_ptr) {
+static void
+get_png_tags(i_img *im, png_structp png_ptr, png_infop info_ptr) {
   png_uint_32 xres, yres;
   int unit_type;
 
@@ -293,4 +362,36 @@ static void get_png_tags(i_img *im, png_structp png_ptr, png_infop info_ptr) {
       i_tags_setn(&im->tags, "i_aspect_only", 1);
     }
   }
+}
+
+static void
+read_warn_handler(png_structp png_ptr, png_const_charp msg) {
+  i_png_read_statep rs = (i_png_read_statep)png_get_error_ptr(png_ptr);
+  char *workp;
+  size_t new_size;
+
+  mm_log((1, "PNG read warning '%s'\n", msg));
+
+  /* in case this is part of an error report */
+  i_push_error(0, msg);
+  
+  /* and save in the warnings so if we do manage to succeed, we 
+   * can save it as a tag
+   */
+  new_size = (rs->warnings ? strlen(rs->warnings) : 0)
+    + 1 /* NUL */
+    + strlen(msg) /* new text */
+    + 1; /* newline */
+  workp = myrealloc(rs->warnings, new_size);
+  if (!rs->warnings)
+    *workp = '\0';
+  strcat(workp, msg);
+  strcat(workp, "\n");
+  rs->warnings = workp;
+}
+
+static void
+cleanup_read_state(i_png_read_statep rs) {
+  if (rs->warnings)
+    myfree(rs->warnings);
 }

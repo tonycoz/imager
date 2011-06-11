@@ -4,6 +4,8 @@ use Imager qw(:all);
 use Test::More;
 use Imager::Test qw(test_image_raw test_image);
 
+my $debug_writes = 1;
+
 -d "testout" or mkdir "testout";
 
 init_log("testout/t102png.log",1);
@@ -11,7 +13,7 @@ init_log("testout/t102png.log",1);
 $Imager::formats{"png"}
   or plan skip_all => "No png support";
 
-plan tests => 35;
+plan tests => 39;
 
 my $green  = i_color_new(0,   255, 0,   255);
 my $blue   = i_color_new(0,   0,   255, 255);
@@ -165,3 +167,36 @@ EOS
   ok(grep($_ eq 'png', Imager->write_types), "check png in write types");
 }
 
+{ # read error reporting
+  my $im = Imager->new;
+  ok(!$im->read(file => "testimg/badcrc.png", type => "png"),
+     "read png with bad CRC chunk should fail");
+  is($im->errstr, "IHDR: CRC error", "check error message");
+}
+
+{ # write error reporting
+  my $im = test_image();
+  ok(!$im->write(type => "png", callback => limited_write(1), buffered => 0),
+     "write limited to 1 byte should fail");
+  is($im->errstr, "Write error on an iolayer source.: limit reached",
+     "check error message");
+}
+
+sub limited_write {
+  my ($limit) = @_;
+
+  return
+     sub {
+       my ($data) = @_;
+       $limit -= length $data;
+       if ($limit >= 0) {
+         print "# write of ", length $data, " bytes successful ($limit left)\n" if $debug_writes;
+         return 1;
+       }
+       else {
+         print "# write of ", length $data, " bytes failed\n";
+         Imager::i_push_error(0, "limit reached");
+         return;
+       }
+     };
+}
