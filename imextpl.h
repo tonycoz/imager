@@ -17,7 +17,7 @@ extern im_pl_ext_funcs *imager_perl_function_ext_table;
     imager_perl_function_ext_table = INT2PTR(im_pl_ext_funcs *, SvIV(get_sv(PERL_PL_FUNCTION_TABLE_NAME, 1))); \
     if (!imager_perl_function_ext_table) \
       croak("Imager Perl API function table not found!"); \
-    if (imager_perl_function_ext_table->version != IMAGER_API_VERSION) \
+    if (imager_perl_function_ext_table->version != IMAGER_PL_API_VERSION) \
       croak("Imager Perl API version incorrect"); \
     if (imager_perl_function_ext_table->level < IMAGER_MIN_PL_API_LEVEL) \
       croak("perl API level %d below minimum of %d", imager_perl_function_ext_table->level, IMAGER_MIN_PL_API_LEVEL); \
