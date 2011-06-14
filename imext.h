@@ -194,7 +194,7 @@ extern im_ext_funcs *imager_function_ext_table;
 
 #define i_set_image_file_limits(max_width, max_height, max_bytes) \
   ((im_extt->f_i_set_image_file_limits)((max_width), (max_height), (max_bytes)))
-#define i_get_image_file_limits(max_width, max_height, max_bytes) \
+#define i_get_image_file_limits(pmax_width, pmax_height, pmax_bytes) \
   ((im_extt->f_i_get_image_file_limits)((pmax_width), (pmax_height), (pmax_bytes)))
 #define i_int_check_image_file_limits(width, height, channels, sample_size) \
   ((im_extt->f_i_int_check_image_file_limits)((width), (height), (channels), (sample_size)))
