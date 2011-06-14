@@ -158,7 +158,7 @@ color to the image.
 */
 
 int 
-(i_ppix)(i_img *im, int x, int y, const i_color *val) {
+(i_ppix)(i_img *im, i_img_dim x, i_img_dim y, const i_color *val) {
   return i_ppix(im, x, y, val);
 }
 
@@ -175,7 +175,7 @@ Returns 0 if the pixel was retrieved, or -1 if not.
 */
 
 int
-(i_gpix)(i_img *im,int x,int y,i_color *val) {
+(i_gpix)(i_img *im,i_img_dim x,i_img_dim y,i_color *val) {
   return i_gpix(im, x, y, val);
 }
 
@@ -194,7 +194,7 @@ color to the image.
 =cut
 */
 int
-(i_ppixf)(i_img *im, int x, int y, const i_fcolor *val) {
+(i_ppixf)(i_img *im, i_img_dim x, i_img_dim y, const i_fcolor *val) {
   return i_ppixf(im, x, y, val);
 }
 
@@ -212,7 +212,7 @@ Returns 0 if the pixel was retrieved, or -1 if not.
 */
 
 int
-(i_gpixf)(i_img *im,int x,int y,i_fcolor *val) {
+(i_gpixf)(i_img *im,i_img_dim x,i_img_dim y,i_fcolor *val) {
   return i_gpixf(im, x, y, val);
 }
 
@@ -229,8 +229,8 @@ Returns the number of pixels set.
 =cut
 */
 
-int
-(i_plin)(i_img *im, int l, int r, int y, const i_color *vals) {
+i_img_dim
+(i_plin)(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, const i_color *vals) {
   return i_plin(im, l, r, y, vals);
 }
 
@@ -246,8 +246,8 @@ Returns the number of pixels retrieved.
 =cut
 */
 
-int
-(i_glin)(i_img *im, int l, int r, int y, i_color *vals) {
+i_img_dim
+(i_glin)(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, i_color *vals) {
   return i_glin(im, l, r, y, vals);
 }
 
@@ -264,8 +264,8 @@ Returns the number of pixels set.
 =cut
 */
 
-int
-(i_plinf)(i_img *im, int l, int r, int y, const i_fcolor *vals) {
+i_img_dim
+(i_plinf)(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, const i_fcolor *vals) {
   return i_plinf(im, l, r, y, vals);
 }
 
@@ -282,8 +282,8 @@ Returns the number of pixels retrieved.
 =cut
 */
 
-int
-(i_glinf)(i_img *im, int l, int r, int y, i_fcolor *vals) {
+i_img_dim
+(i_glinf)(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, i_fcolor *vals) {
   return i_glinf(im, l, r, y, vals);
 }
 
@@ -304,8 +304,8 @@ channel_count)
 
 =cut
 */
-int
-(i_gsamp)(i_img *im, int l, int r, int y, i_sample_t *samp, 
+i_img_dim
+(i_gsamp)(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, i_sample_t *samp, 
                    const int *chans, int chan_count) {
   return i_gsamp(im, l, r, y, samp, chans, chan_count);
 }
@@ -327,8 +327,8 @@ Returns the number of samples read (which should be (C<right>-C<left>)
 
 =cut
 */
-int
-(i_gsampf)(i_img *im, int l, int r, int y, i_fsample_t *samp, 
+i_img_dim
+(i_gsampf)(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, i_fsample_t *samp, 
            const int *chans, int chan_count) {
   return i_gsampf(im, l, r, y, samp, chans, chan_count);
 }
@@ -347,8 +347,8 @@ Always returns 0 for direct color images.
 
 =cut
 */
-int
-(i_gpal)(i_img *im, int x, int r, int y, i_palidx *vals) {
+i_img_dim
+(i_gpal)(i_img *im, i_img_dim x, i_img_dim r, i_img_dim y, i_palidx *vals) {
   return i_gpal(im, x, r, y, vals);
 }
 
@@ -366,8 +366,8 @@ Always returns 0 for direct color images.
 
 =cut
 */
-int
-(i_ppal)(i_img *im, int x, int r, int y, const i_palidx *vals) {
+i_img_dim
+(i_ppal)(i_img *im, i_img_dim x, i_img_dim r, i_img_dim y, const i_palidx *vals) {
   return i_ppal(im, x, r, y, vals);
 }
 

@@ -17,7 +17,7 @@
 #endif
 
 
-typedef int pcord;
+typedef i_img_dim pcord;
 
 typedef struct {
   int n;
@@ -39,13 +39,8 @@ typedef struct {
 } p_slice;
 
 typedef struct {
-  int start;
-  int stop;
-} ss_pair;
-
-typedef struct {
   int *line;		/* temporary buffer for scanline */
-  int linelen;		/* length of scanline */
+  i_img_dim linelen;	/* length of scanline */
 } ss_scanline;
 
 static
@@ -126,7 +121,7 @@ ss_scanline_reset(ss_scanline *ss) {
 
 static
 void
-ss_scanline_init(ss_scanline *ss, int linelen, int linepairs) {
+ss_scanline_init(ss_scanline *ss, i_img_dim linelen, int linepairs) {
   ss->line    = mymalloc( sizeof(int) * linelen );
   ss->linelen = linelen;
   ss_scanline_reset(ss);
@@ -329,10 +324,10 @@ render_slice_scanline(ss_scanline *ss, int y, p_line *l, p_line *r, pcord miny, 
   
   pcord lminx, lmaxx;	/* left line min/max within y bounds in fine coords */
   pcord rminx, rmaxx;	/* right line min/max within y bounds in fine coords */
-  int cpix;		/* x-coordinate of current pixel */
+  i_img_dim cpix;	/* x-coordinate of current pixel */
   int thin;		/* boolean for thin/thick segment */
-  int startpix;		/* temporary variable for "start of this interval" */
-  int stoppix;		/* temporary variable for "end of this interval" */
+  i_img_dim startpix;	/* temporary variable for "start of this interval" */
+  i_img_dim stoppix;	/* temporary variable for "end of this interval" */
 
   /* Find the y bounds of scanline_slice */
 
@@ -415,10 +410,10 @@ render_slice_scanline(ss_scanline *ss, int y, p_line *l, p_line *r, pcord miny, 
 static void
 i_poly_aa_low(i_img *im, int l, const double *x, const double *y, void *ctx, scanline_flusher flusher) {
   int i ,k;			/* Index variables */
-  int clc;			/* Lines inside current interval */
+  i_img_dim clc;		/* Lines inside current interval */
   /* initialize to avoid compiler warnings */
   pcord tempy = 0;
-  int cscl = 0;			/* Current scanline */
+  i_img_dim cscl = 0;			/* Current scanline */
 
   ss_scanline templine;		/* scanline accumulator */
   p_point *pset;		/* List of points in polygon */
@@ -458,8 +453,8 @@ i_poly_aa_low(i_img *im, int l, const double *x, const double *y, void *ctx, sca
 
   /* loop on intervals */
   for(i=0; i<l-1; i++) {
-    int startscan = i_max( coarse(pset[i].y), 0);
-    int stopscan = i_min( coarse(pset[i+1].y+15), im->ysize);
+    i_img_dim startscan = i_max( coarse(pset[i].y), 0);
+    i_img_dim stopscan = i_min( coarse(pset[i+1].y+15), im->ysize);
     pcord miny, maxy;	/* y bounds in fine coordinates */
 
     POLY_DEB( pcord cc = (pset[i].y + pset[i+1].y)/2 );
@@ -556,8 +551,8 @@ struct poly_render_state {
 
 static void
 scanline_flush_render(i_img *im, ss_scanline *ss, int y, void *ctx) {
-  int x;
-  int left, right;
+  i_img_dim x;
+  i_img_dim left, right;
   struct poly_render_state *state = (struct poly_render_state *)ctx;
 
   left = 0;

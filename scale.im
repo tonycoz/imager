@@ -24,15 +24,15 @@
 
 
 static void
-zero_row(i_fcolor *row, int width, int channels);
+zero_row(i_fcolor *row, i_img_dim width, int channels);
 
 #code
 static void
 IM_SUFFIX(accum_output_row)(i_fcolor *accum, double fraction, IM_COLOR const *in,
-		 int width, int channels);
+		 i_img_dim width, int channels);
 static void
-IM_SUFFIX(horizontal_scale)(IM_COLOR *out, int out_width, 
-                            i_fcolor const *in, int in_width,
+IM_SUFFIX(horizontal_scale)(IM_COLOR *out, i_img_dim out_width, 
+                            i_fcolor const *in, i_img_dim in_width,
                             int channels);
 #/code
 
@@ -49,26 +49,27 @@ Adapted from pnmscale.
 =cut
 */
 i_img *
-i_scale_mixing(i_img *src, int x_out, int y_out) {
+i_scale_mixing(i_img *src, i_img_dim x_out, i_img_dim y_out) {
   i_img *result;
   i_fcolor *accum_row = NULL;
-  int x, y, ch;
-  int accum_row_bytes;
+  i_img_dim x, y;
+  int ch;
+  size_t accum_row_bytes;
   double rowsleft, fracrowtofill;
-  int rowsread;
+  i_img_dim rowsread;
   double y_scale;
 
-  mm_log((1, "i_scale_mixing(src %p, x_out %d, y_out %d)\n", 
-	  src, x_out, y_out));
+  mm_log((1, "i_scale_mixing(src %p, out(" i_DFp "))\n", 
+	  src, i_DFcp(x_out, y_out)));
 
   i_clear_error();
 
   if (x_out <= 0) {
-    i_push_errorf(0, "output width %d invalid", x_out);
+    i_push_errorf(0, "output width %" i_DF " invalid", i_DFc(x_out));
     return NULL;
   }
   if (y_out <= 0) {
-    i_push_errorf(0, "output height %d invalid", y_out);
+    i_push_errorf(0, "output height %" i_DF " invalid", i_DFc(y_out));
     return NULL;
   }
 
@@ -93,7 +94,7 @@ i_scale_mixing(i_img *src, int x_out, int y_out) {
 #code src->bits <= 8
   IM_COLOR *in_row = NULL;
   IM_COLOR *xscale_row = NULL;
-  int in_row_bytes, out_row_bytes;
+  size_t in_row_bytes, out_row_bytes;
 
   in_row_bytes = sizeof(IM_COLOR) * src->xsize;
   if (in_row_bytes / sizeof(IM_COLOR) != src->xsize) {
@@ -115,7 +116,8 @@ i_scale_mixing(i_img *src, int x_out, int y_out) {
     if (y_out == src->ysize) {
       /* no vertical scaling, just load it */
 #ifdef IM_EIGHT_BIT
-      int x, ch;
+      i_img_dim x;
+      int ch;
       /* load and convert to doubles */
       IM_GLIN(src, 0, src->xsize, y, in_row);
       for (x = 0; x < src->xsize; ++x) {
@@ -166,7 +168,8 @@ i_scale_mixing(i_img *src, int x_out, int y_out) {
     /* we've accumulated a vertically scaled row */
     if (x_out == src->xsize) {
 #if IM_EIGHT_BIT
-      int x, ch;
+      i_img_dim x;
+      int ch;
       /* no need to scale, but we need to convert it */
       if (result->channels == 2 || result->channels == 4) {
 	int alpha_chan = result->channels - 1;
@@ -218,8 +221,8 @@ i_scale_mixing(i_img *src, int x_out, int y_out) {
 }
 
 static void
-zero_row(i_fcolor *row, int width, int channels) {
-  int x;
+zero_row(i_fcolor *row, i_img_dim width, int channels) {
+  i_img_dim x;
   int ch;
 
   /* with IEEE floats we could just use memset() but that's not
@@ -236,8 +239,9 @@ zero_row(i_fcolor *row, int width, int channels) {
 
 static void
 IM_SUFFIX(accum_output_row)(i_fcolor *accum, double fraction, IM_COLOR const *in,
-		 int width, int channels) {
-  int x, ch;
+		 i_img_dim width, int channels) {
+  i_img_dim x;
+  int ch;
 
   /* it's tempting to change this into a pointer iteration loop but
      modern CPUs do the indexing as part of the instruction */
@@ -259,12 +263,12 @@ IM_SUFFIX(accum_output_row)(i_fcolor *accum, double fraction, IM_COLOR const *in
 }
 
 static void
-IM_SUFFIX(horizontal_scale)(IM_COLOR *out, int out_width, 
-		 i_fcolor const *in, int in_width,
+IM_SUFFIX(horizontal_scale)(IM_COLOR *out, i_img_dim out_width, 
+		 i_fcolor const *in, i_img_dim in_width,
 		 int channels) {
   double frac_col_to_fill, frac_col_left;
-  int in_x;
-  int out_x;
+  i_img_dim in_x;
+  i_img_dim out_x;
   double x_scale = (double)out_width / in_width;
   int ch;
   double accum[MAXCHANNELS] = { 0 };

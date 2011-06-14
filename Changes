@@ -1,5 +1,39 @@
 Imager release history.  Older releases can be found in Changes.old
 
+Imager 0.85
+===========
+
+Massive types re-work:
+
+ - the type used internally for pixel co-ordinates and image sizes is
+   now 64-bit on 64-bit platforms (at least sane ones).
+
+ - size_t is now used consistently for memory block sizes.
+
+ - since this changes the binary interface, the Imager API version has
+   been incremented.  Any module that uses the API will need to be
+   rebuilt.  In most cases that will be enough, but calls to any APIs
+   that take a pointer to image sizes may need source changes.
+
+ - you should be able to create very large images on 64-bit systems,
+   if you have enough memory.  Successfully created a 32768 x 49192 x
+   3 channel image, filled with a tiled image and scaled it.  The
+   unscaled image was also successfully saved to a JPEG.
+
+ - check the image size before attempting to write BMP, GIF, JPEG,
+   PNG, SGI, TGA, TIFF images.
+
+ - correctly handle reading TGA images over 32767 pixels wide or tall.
+
+Incidental changes:
+
+ - the gif_left and gif_top tags are now clamped to non-negative
+   values when writing a GIF image.
+
+ - removed dead callback read/write code
+
+The default maximum memory size when reading files is now 1G.
+
 Imager 0.84 - 20 Jun 2011
 ===========
 

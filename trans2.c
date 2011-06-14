@@ -29,14 +29,14 @@ over the image - most of the work is done in L<regmach.c>
 =cut
 */
 
-i_img* i_transform2(int width, int height, int channels,
+i_img* i_transform2(i_img_dim width, i_img_dim height, int channels,
 		    struct rm_op *ops, int ops_count, 
 		    double *n_regs, int n_regs_count, 
 		    i_color *c_regs, int c_regs_count, 
 		    i_img **in_imgs, int in_imgs_count)
 {
   i_img *new_img;
-  int x, y;
+  i_img_dim x, y;
   i_color val;
   int i;
   int need_images;

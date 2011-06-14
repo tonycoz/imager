@@ -353,15 +353,21 @@ i_render_fill(i_render *r, i_img_dim x, i_img_dim y, i_img_dim width,
 #/code
 }
 
+#if 0
+
+/* for debuggin */
+
 static void
 dump_src(const char *note, unsigned char const *src, i_img_dim width) {
   i_img_dim i;
-  printf("%s - %p/%d\n", note, src, width);
+  printf("%s - %p/%" i_DF "\n", note, src, i_DFc(width));
   for (i = 0; i < width; ++i) {
     printf("%02x ", src[i]);
   }
   putchar('\n');
 }
+
+#endif
 
 #code
 

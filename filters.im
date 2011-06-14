@@ -69,7 +69,7 @@ Scales the pixel values by the amount specified.
 
 void
 i_contrast(i_img *im, float intensity) {
-  int x, y;
+  i_img_dim x, y;
   unsigned char ch;
   unsigned int new_color;
   i_color rcolor;
@@ -97,7 +97,7 @@ i_contrast(i_img *im, float intensity) {
 
 static int
 s_hardinvert_low(i_img *im, int all) {
-  int x, y;
+  i_img_dim x, y;
   int ch;
   int invert_channels = all ? im->channels : i_img_color_channels(im);
 
@@ -159,7 +159,10 @@ i_hardinvertall(i_img *im) {
 /*
 =item i_noise(im, amount, type)
 
-Inverts the pixel values by the amount specified.
+Adjusts the sample values randomly by the amount specified.
+
+If type is 0, adjust all channels in a pixel by the same (random)
+amount amount, if non-zero adjust each sample independently.
 
   im     - image object
   amount - deviation in pixel values
@@ -175,7 +178,7 @@ Inverts the pixel values by the amount specified.
 
 void
 i_noise(i_img *im, float amount, unsigned char type) {
-  int x, y;
+  i_img_dim x, y;
   unsigned char ch;
   int new_color;
   float damount = amount * 2;
@@ -216,63 +219,6 @@ i_noise(i_img *im, float amount, unsigned char type) {
   }
 }
 
-
-/* 
-=item i_noise(im, amount, type)
-
-Inverts the pixel values by the amount specified.
-
-  im     - image object
-  amount - deviation in pixel values
-  type   - noise individual for each channel if true
-
-=cut
-*/
-
-
-/*
-=item i_applyimage(im, add_im, mode)
-
-Apply's an image to another image
-
-  im     - target image
-  add_im - image that is applied to target
-  mode   - what method is used in applying:
-
-  0   Normal	
-  1   Multiply
-  2   Screen
-  3   Overlay
-  4   Soft Light
-  5   Hard Light
-  6   Color dodge
-  7   Color Burn
-  8   Darker
-  9   Lighter
-  10  Add
-  11  Subtract
-  12  Difference
-  13  Exclusion
-	
-=cut
-*/
-
-void i_applyimage(i_img *im, i_img *add_im, unsigned char mode) {
-  int x, y;
-  int mx, my;
-
-  mm_log((1, "i_applyimage(im %p, add_im %p, mode %d", im, add_im, mode));
-  
-  mx = (add_im->xsize <= im->xsize) ? add_im->xsize : add_im->xsize;
-  my = (add_im->ysize <= im->ysize) ? add_im->ysize : add_im->ysize;
-  
-  for(x = 0; x < mx; x++) {		
-    for(y = 0; y < my; y++) {
-    }
-  }
-}
-
-
 /* 
 =item i_bumpmap(im, bump, channel, light_x, light_y, st)
 
@@ -289,9 +235,10 @@ Makes a bumpmap on image im using the bump image as the elevation map.
 */
 
 void
-i_bumpmap(i_img *im, i_img *bump, int channel, int light_x, int light_y, int st) {
-  int x, y, ch;
-  int mx, my;
+i_bumpmap(i_img *im, i_img *bump, int channel, i_img_dim light_x, i_img_dim light_y, i_img_dim st) {
+  i_img_dim x, y;
+  int ch;
+  i_img_dim mx, my;
   i_color x1_color, y1_color, x2_color, y2_color, dst_color;
   double nX, nY;
   double tX, tY, tZ;
@@ -301,8 +248,8 @@ i_bumpmap(i_img *im, i_img *bump, int channel, int light_x, int light_y, int st)
   
   i_img new_im;
 
-  mm_log((1, "i_bumpmap(im %p, add_im %p, channel %d, light_x %d, light_y %d, st %d)\n",
-	  im, bump, channel, light_x, light_y, st));
+  mm_log((1, "i_bumpmap(im %p, add_im %p, channel %d, light(" i_DFp "), st %" i_DF ")\n",
+	  im, bump, channel, i_DFcp(light_x, light_y), i_DFc(st)));
 
 
   if(channel >= bump->channels) {
@@ -342,8 +289,8 @@ i_bumpmap(i_img *im, i_img *bump, int channel, int light_x, int light_y, int st)
 
       fZ = (sqrt((nX * nX) + (nY * nY)) / aL);
  
-      tX = abs(x - light_x) / aL;
-      tY = abs(y - light_y) / aL;
+      tX = i_abs(x - light_x) / aL;
+      tY = i_abs(y - light_y) / aL;
 
       tZ = 1 - (sqrt((tX * tX) + (tY * tY)) * fZ);
       
@@ -357,7 +304,7 @@ i_bumpmap(i_img *im, i_img *bump, int channel, int light_x, int light_y, int st)
     }
   }
 
-  i_copyto(im, &new_im, 0, 0, (int)im->xsize, (int)im->ysize, 0, 0);
+  i_copyto(im, &new_im, 0, 0, im->xsize, im->ysize, 0, 0);
   
   i_img_exorcise(&new_im);
 }
@@ -366,7 +313,7 @@ i_bumpmap(i_img *im, i_img *bump, int channel, int light_x, int light_y, int st)
 
 
 typedef struct {
-  float x,y,z;
+  double x,y,z;
 } fvec;
 
 
@@ -450,11 +397,11 @@ void
 i_bumpmap_complex(i_img *im,
 		  i_img *bump,
 		  int channel,
-		  int tx,
-		  int ty,
-		  float Lx,
-		  float Ly,
-		  float Lz,
+		  i_img_dim tx,
+		  i_img_dim ty,
+		  double Lx,
+		  double Ly,
+		  double Lz,
 		  float cd,
 		  float cs,
 		  float n,
@@ -464,8 +411,9 @@ i_bumpmap_complex(i_img *im,
   i_img new_im;
   
   int inflight;
-  int x, y, ch;
-  int mx, Mx, my, My;
+  i_img_dim x, y;
+  int ch;
+  i_img_dim mx, Mx, my, My;
   
   float cdc[MAXCHANNELS];
   float csc[MAXCHANNELS];
@@ -479,8 +427,9 @@ i_bumpmap_complex(i_img *im,
   fvec R;         /* Reflection vector    */
   fvec V;         /* Vision vector        */
 
-  mm_log((1, "i_bumpmap_complex(im %p, bump %p, channel %d, tx %d, ty %d, Lx %.2f, Ly %.2f, Lz %.2f, cd %.2f, cs %.2f, n %.2f, Ia %p, Il %p, Is %p)\n",
-	  im, bump, channel, tx, ty, Lx, Ly, Lz, cd, cs, n, Ia, Il, Is));
+  mm_log((1, "i_bumpmap_complex(im %p, bump %p, channel %d, t(" i_DFp 
+	  "), Lx %.2f, Ly %.2f, Lz %.2f, cd %.2f, cs %.2f, n %.2f, Ia %p, Il %p, Is %p)\n",
+	  im, bump, channel, i_DFcp(tx, ty), Lx, Ly, Lz, cd, cs, n, Ia, Il, Is));
   
   if (channel >= bump->channels) {
     mm_log((1, "i_bumpmap_complex: channel = %d while bump image only has %d channels\n", channel, bump->channels));
@@ -566,7 +515,7 @@ i_bumpmap_complex(i_img *im,
     }
   }
   
-  i_copyto(im, &new_im, 0, 0, (int)im->xsize, (int)im->ysize, 0, 0);
+  i_copyto(im, &new_im, 0, 0, im->xsize, im->ysize, 0, 0);
   i_img_exorcise(&new_im);
 }
 
@@ -584,7 +533,8 @@ Quantizes Images to fewer levels.
 
 void
 i_postlevels(i_img *im, int levels) {
-  int x, y, ch;
+  i_img_dim x, y;
+  int ch;
   float pv;
   int rv;
   float av;
@@ -623,9 +573,10 @@ Makes an image looks like a mosaic with tilesize of size
 */
 
 void
-i_mosaic(i_img *im, int size) {
-  int x, y, ch;
-  int lx, ly, z;
+i_mosaic(i_img *im, i_img_dim size) {
+  i_img_dim x, y;
+  int ch, z;
+  i_img_dim lx, ly;
   long sqrsize;
 
   i_color rcolor;
@@ -673,12 +624,13 @@ Applies a watermark to the target image
 */
 
 void
-i_watermark(i_img *im, i_img *wmark, int tx, int ty, int pixdiff) {
-  int vx, vy, ch;
+i_watermark(i_img *im, i_img *wmark, i_img_dim tx, i_img_dim ty, int pixdiff) {
+  i_img_dim vx, vy;
+  int ch;
   i_color val, wval;
 
-	int mx = wmark->xsize;
-	int my = wmark->ysize;
+	i_img_dim mx = wmark->xsize;
+	i_img_dim my = wmark->ysize;
 
   for(vx=0;vx<mx;vx++) for(vy=0;vy<my;vy++) {
     
@@ -711,11 +663,11 @@ occur when changing the contrast.
 void
 i_autolevels(i_img *im, float lsat, float usat, float skew) {
   i_color val;
-  int i, x, y, rhist[256], ghist[256], bhist[256];
-  int rsum, rmin, rmax;
-  int gsum, gmin, gmax;
-  int bsum, bmin, bmax;
-  int rcl, rcu, gcl, gcu, bcl, bcu;
+  i_img_dim i, x, y, rhist[256], ghist[256], bhist[256];
+  i_img_dim rsum, rmin, rmax;
+  i_img_dim gsum, gmin, gmax;
+  i_img_dim bsum, bmin, bmax;
+  i_img_dim rcl, rcu, gcl, gcu, bcl, bcu;
 
   mm_log((1,"i_autolevels(im %p, lsat %f,usat %f,skew %f)\n", im, lsat,usat,skew));
 
@@ -772,9 +724,9 @@ Pseudo noise utility function used to generate perlin noise. (internal)
 */
 
 static
-float
-Noise(int x, int y) {
-  int n = x + y * 57; 
+double
+Noise(i_img_dim x, i_img_dim y) {
+  i_img_dim n = x + y * 57; 
   n = (n<<13) ^ n;
   return ( 1.0 - ( (n * (n * n * 15731 + 789221) + 1376312589) & 0x7fffffff) / 1073741824.0);
 }
@@ -791,11 +743,11 @@ Pseudo noise utility function used to generate perlin noise. (internal)
 */
 
 static
-float
-SmoothedNoise1(float x, float y) {
-  float corners = ( Noise(x-1, y-1)+Noise(x+1, y-1)+Noise(x-1, y+1)+Noise(x+1, y+1) ) / 16;
-  float sides   = ( Noise(x-1, y)  +Noise(x+1, y)  +Noise(x, y-1)  +Noise(x, y+1) ) /  8;
-  float center  =  Noise(x, y) / 4;
+double
+SmoothedNoise1(double x, double y) {
+  double corners = ( Noise(x-1, y-1)+Noise(x+1, y-1)+Noise(x-1, y+1)+Noise(x+1, y+1) ) / 16;
+  double sides   = ( Noise(x-1, y)  +Noise(x+1, y)  +Noise(x, y-1)  +Noise(x, y+1) ) /  8;
+  double center  =  Noise(x, y) / 4;
   return corners + sides + center;
 }
 
@@ -809,10 +761,11 @@ Utility function used to generate perlin noise. (internal)
 */
 
 static
-float C_Interpolate(float a, float b, float x) {
+double
+C_Interpolate(double a, double b, double x) {
   /*  float ft = x * 3.1415927; */
-  float ft = x * PI;
-  float f = (1 - cos(ft)) * .5;
+  double ft = x * PI;
+  double f = (1 - cos(ft)) * .5;
   return  a*(1-f) + b*f;
 }
 
@@ -826,21 +779,21 @@ Utility function used to generate perlin noise. (internal)
 */
 
 static
-float
-InterpolatedNoise(float x, float y) {
+double
+InterpolatedNoise(double x, double y) {
 
-  int integer_X = x;
-  float fractional_X = x - integer_X;
-  int integer_Y = y;
-  float fractional_Y = y - integer_Y;
+  i_img_dim integer_X = x;
+  double fractional_X = x - integer_X;
+  i_img_dim integer_Y = y;
+  double fractional_Y = y - integer_Y;
 
-  float v1 = SmoothedNoise1(integer_X,     integer_Y);
-  float v2 = SmoothedNoise1(integer_X + 1, integer_Y);
-  float v3 = SmoothedNoise1(integer_X,     integer_Y + 1);
-  float v4 = SmoothedNoise1(integer_X + 1, integer_Y + 1);
+  double v1 = SmoothedNoise1(integer_X,     integer_Y);
+  double v2 = SmoothedNoise1(integer_X + 1, integer_Y);
+  double v3 = SmoothedNoise1(integer_X,     integer_Y + 1);
+  double v4 = SmoothedNoise1(integer_X + 1, integer_Y + 1);
 
-  float i1 = C_Interpolate(v1 , v2 , fractional_X);
-  float i2 = C_Interpolate(v3 , v4 , fractional_X);
+  double i1 = C_Interpolate(v1 , v2 , fractional_X);
+  double i2 = C_Interpolate(v3 , v4 , fractional_X);
 
   return C_Interpolate(i1 , i2 , fractional_Y);
 }
@@ -859,8 +812,8 @@ static
 float
 PerlinNoise_2D(float x, float y) {
   int i,frequency;
-  float amplitude;
-  float total = 0;
+  double amplitude;
+  double total = 0;
   int Number_Of_Octaves=6;
   int n = Number_Of_Octaves - 1;
 
@@ -889,16 +842,17 @@ Perlin-like radial noise.
 */
 
 void
-i_radnoise(i_img *im, int xo, int yo, float rscale, float ascale) {
-  int x, y, ch;
+i_radnoise(i_img *im, i_img_dim xo, i_img_dim yo, double rscale, double ascale) {
+  i_img_dim x, y;
+  int ch;
   i_color val;
   unsigned char v;
-  float xc, yc, r;
+  double xc, yc, r;
   double a;
   
   for(y = 0; y < im->ysize; y++) for(x = 0; x < im->xsize; x++) {
-    xc = (float)x-xo+0.5;
-    yc = (float)y-yo+0.5;
+    xc = (double)x-xo+0.5;
+    yc = (double)y-yo+0.5;
     r = rscale*sqrt(xc*xc+yc*yc)+1.2;
     a = (PI+atan2(yc,xc))*ascale;
     v = saturate(128+100*(PerlinNoise_2D(a,r)));
@@ -923,14 +877,15 @@ Perlin-like 2d noise noise.
 */
 
 void
-i_turbnoise(i_img *im, float xo, float yo, float scale) {
-  int x,y,ch;
+i_turbnoise(i_img *im, double xo, double yo, double scale) {
+  i_img_dim x,y;
+  int ch;
   unsigned char v;
   i_color val;
 
   for(y = 0; y < im->ysize; y++) for(x = 0; x < im->xsize; x++) {
     /*    v=saturate(125*(1.0+PerlinNoise_2D(xo+(float)x/scale,yo+(float)y/scale))); */
-    v = saturate(120*(1.0+sin(xo+(float)x/scale+PerlinNoise_2D(xo+(float)x/scale,yo+(float)y/scale))));
+    v = saturate(120*(1.0+sin(xo+(double)x/scale+PerlinNoise_2D(xo+(double)x/scale,yo+(float)y/scale))));
     for(ch=0; ch<im->channels; ch++) val.channel[ch] = v;
     i_ppix(im, x, y, &val);
   }
@@ -958,21 +913,22 @@ Gradient generating function.
 
 
 void
-i_gradgen(i_img *im, int num, int *xo, int *yo, i_color *ival, int dmeasure) {
+i_gradgen(i_img *im, int num, i_img_dim *xo, i_img_dim *yo, i_color *ival, int dmeasure) {
   
   i_color val;
-  int p, x, y, ch;
+  int p, ch;
+  i_img_dim x, y;
   int channels = im->channels;
-  int xsize    = im->xsize;
-  int ysize    = im->ysize;
-  int bytes;
+  i_img_dim xsize    = im->xsize;
+  i_img_dim ysize    = im->ysize;
+  size_t bytes;
 
-  float *fdist;
+  double *fdist;
 
   mm_log((1,"i_gradgen(im %p, num %d, xo %p, yo %p, ival %p, dmeasure %d)\n", im, num, xo, yo, ival, dmeasure));
   
   for(p = 0; p<num; p++) {
-    mm_log((1,"i_gradgen: (%d, %d)\n", xo[p], yo[p]));
+    mm_log((1,"i_gradgen: p%d(" i_DFp ")\n", p, i_DFcp(xo[p], yo[p])));
     ICL_info(&ival[p]);
   }
 
@@ -984,19 +940,19 @@ i_gradgen(i_img *im, int num, int *xo, int *yo, i_color *ival, int dmeasure) {
      overflow is a programming error rather than an end-user error, so
      calling exit() is justified.
   */
-  bytes = sizeof(float) * num;
-  if (bytes / num != sizeof(float)) {
+  bytes = sizeof(double) * num;
+  if (bytes / num != sizeof(double)) {
     fprintf(stderr, "integer overflow calculating memory allocation");
     exit(1);
   }
   fdist = mymalloc( bytes ); /* checked 14jul05 tonyc */
   
   for(y = 0; y<ysize; y++) for(x = 0; x<xsize; x++) {
-    float cs = 0;
-    float csd = 0;
+    double cs = 0;
+    double csd = 0;
     for(p = 0; p<num; p++) {
-      int xd    = x-xo[p];
-      int yd    = y-yo[p];
+      i_img_dim xd    = x-xo[p];
+      i_img_dim yd    = y-yo[p];
       switch (dmeasure) {
       case 0: /* euclidean */
 	fdist[p]  = sqrt(xd*xd + yd*yd); /* euclidean distance */
@@ -1029,26 +985,27 @@ i_gradgen(i_img *im, int num, int *xo, int *yo, i_color *ival, int dmeasure) {
 }
 
 void
-i_nearest_color_foo(i_img *im, int num, int *xo, int *yo, i_color *ival, int dmeasure) {
+i_nearest_color_foo(i_img *im, int num, i_img_dim *xo, i_img_dim *yo, i_color *ival, int dmeasure) {
 
-  int p, x, y;
-  int xsize    = im->xsize;
-  int ysize    = im->ysize;
+  int p;
+  i_img_dim x, y;
+  i_img_dim xsize    = im->xsize;
+  i_img_dim ysize    = im->ysize;
 
   mm_log((1,"i_gradgen(im %p, num %d, xo %p, yo %p, ival %p, dmeasure %d)\n", im, num, xo, yo, ival, dmeasure));
   
   for(p = 0; p<num; p++) {
-    mm_log((1,"i_gradgen: (%d, %d)\n", xo[p], yo[p]));
+    mm_log((1,"i_gradgen: p%d(" i_DFp ")\n", p, i_DFcp(xo[p], yo[p])));
     ICL_info(&ival[p]);
   }
 
   for(y = 0; y<ysize; y++) for(x = 0; x<xsize; x++) {
-    int   midx    = 0;
-    float mindist = 0;
-    float curdist = 0;
+    int    midx    = 0;
+    double mindist = 0;
+    double curdist = 0;
 
-    int xd        = x-xo[0];
-    int yd        = y-yo[0];
+    i_img_dim xd        = x-xo[0];
+    i_img_dim yd        = y-yo[0];
 
     switch (dmeasure) {
     case 0: /* euclidean */
@@ -1112,11 +1069,11 @@ int num - number of points/colors in xo, yo, oval
 
 =item *
 
-int *xo - array of I<num> x positions
+i_img_dim *xo - array of I<num> x positions
 
 =item *
 
-int *yo - array of I<num> y positions
+i_img_dim *yo - array of I<num> y positions
 
 =item *
 
@@ -1157,16 +1114,17 @@ An invalid value causes an error exit (the program is aborted).
  */
 
 int
-i_nearest_color(i_img *im, int num, int *xo, int *yo, i_color *oval, int dmeasure) {
+i_nearest_color(i_img *im, int num, i_img_dim *xo, i_img_dim *yo, i_color *oval, int dmeasure) {
   i_color *ival;
   float *tval;
-  float c1, c2;
+  double c1, c2;
   i_color val;
-  int p, x, y, ch;
-  int xsize    = im->xsize;
-  int ysize    = im->ysize;
+  int p, ch;
+  i_img_dim x, y;
+  i_img_dim xsize    = im->xsize;
+  i_img_dim ysize    = im->ysize;
   int *cmatch;
-  int ival_bytes, tval_bytes;
+  size_t ival_bytes, tval_bytes;
 
   mm_log((1,"i_nearest_color(im %p, num %d, xo %p, yo %p, oval %p, dmeasure %d)\n", im, num, xo, yo, oval, dmeasure));
 
@@ -1204,11 +1162,11 @@ i_nearest_color(i_img *im, int num, int *xo, int *yo, i_color *oval, int dmeasur
   
   for(y = 0; y<ysize; y++) for(x = 0; x<xsize; x++) {
     int   midx    = 0;
-    float mindist = 0;
-    float curdist = 0;
+    double mindist = 0;
+    double curdist = 0;
     
-    int xd        = x-xo[0];
-    int yd        = y-yo[0];
+    i_img_dim xd        = x-xo[0];
+    i_img_dim yd        = y-yo[0];
 
     switch (dmeasure) {
     case 0: /* euclidean */
@@ -1257,8 +1215,14 @@ i_nearest_color(i_img *im, int num, int *xo, int *yo, i_color *oval, int dmeasur
   
   }
 
-  for(p = 0; p<num; p++) for(ch = 0; ch<im->channels; ch++)
-    ival[p].channel[ch] = tval[p*im->channels + ch];
+  for(p = 0; p<num; p++) {
+    for(ch = 0; ch<im->channels; ch++)
+      ival[p].channel[ch] = tval[p*im->channels + ch];
+
+    /* avoid uninitialized value messages from valgrind */
+    while (ch < MAXCHANNELS)
+      ival[p].channel[ch++] = 0;
+  }
 
   i_nearest_color_foo(im, num, xo, yo, ival, dmeasure);
 
@@ -1277,7 +1241,8 @@ image from double the original.
 void
 i_unsharp_mask(i_img *im, double stddev, double scale) {
   i_img *copy;
-  int x, y, ch;
+  i_img_dim x, y;
+  int ch;
 
   if (scale < 0)
     return;
@@ -1354,7 +1319,7 @@ i_img *
 i_diff_image(i_img *im1, i_img *im2, double mindist) {
   i_img *out;
   int outchans, diffchans;
-  int xsize, ysize;
+  i_img_dim xsize, ysize;
 
   i_clear_error();
   if (im1->channels != im2->channels) {
@@ -1375,7 +1340,8 @@ i_diff_image(i_img *im1, i_img *im2, double mindist) {
     i_color *line1 = mymalloc(xsize * sizeof(*line1)); /* checked 17feb2005 tonyc */
     i_color *line2 = mymalloc(xsize * sizeof(*line1)); /* checked 17feb2005 tonyc */
     i_color empty;
-    int x, y, ch;
+    i_img_dim x, y;
+    int ch;
     int imindist = (int)mindist;
 
     for (ch = 0; ch < MAXCHANNELS; ++ch)
@@ -1410,7 +1376,8 @@ i_diff_image(i_img *im1, i_img *im2, double mindist) {
     i_fcolor *line1 = mymalloc(xsize * sizeof(*line1)); /* checked 17feb2005 tonyc */
     i_fcolor *line2 = mymalloc(xsize * sizeof(*line2)); /* checked 17feb2005 tonyc */
     i_fcolor empty;
-    int x, y, ch;
+    i_img_dim x, y;
+    int ch;
     double dist = mindist / 255.0;
 
     for (ch = 0; ch < MAXCHANNELS; ++ch)
@@ -1536,7 +1503,7 @@ struct fount_state {
   double cos;
   double sin;
   double theta;
-  int xa, ya;
+  i_img_dim xa, ya;
   void *ssample_data;
   fount_func ffunc;
   fount_repeat rpfunc;
@@ -1668,10 +1635,10 @@ i_fountain(i_img *im, double xa, double ya, double xb, double yb,
            int combine, int super_sample, double ssample_param, 
            int count, i_fountain_seg *segs) {
   struct fount_state state;
-  int x, y;
+  i_img_dim x, y;
   i_fcolor *line = NULL;
   i_fcolor *work = NULL;
-  int line_bytes;
+  size_t line_bytes;
   i_fountain_seg *my_segs;
   i_fill_combine_f combine_func = NULL;
   i_fill_combinef_f combinef_func = NULL;
@@ -1798,7 +1765,7 @@ fount_init_state(struct fount_state *state, double xa, double ya,
                  i_fountain_repeat repeat, int combine, int super_sample, 
                  double ssample_param, int count, i_fountain_seg *segs) {
   int i, j;
-  int bytes;
+  size_t bytes;
   i_fountain_seg *my_segs = mymalloc(sizeof(i_fountain_seg) * count); /* checked 2jul06 - duplicating original */
   /*int have_alpha = im->channels == 2 || im->channels == 4;*/
   
@@ -2005,7 +1972,7 @@ square.
 */
 static double
 square_fount_f(double x, double y, struct fount_state *state) {
-  int xc, yc; /* centred on A */
+  i_img_dim xc, yc; /* centred on A */
   double xt, yt; /* rotated by theta */
   xc = x - state->xa;
   yc = y - state->ya;
@@ -2187,7 +2154,7 @@ Simple grid-based super-sampling.
 static int
 simple_ssample(i_fcolor *out, double x, double y, struct fount_state *state) {
   i_fcolor *work = state->ssample_data;
-  int dx, dy;
+  i_img_dim dx, dy;
   int grid = state->parm;
   double base = -0.5 + 0.5 / grid;
   double step = 1.0 / grid;

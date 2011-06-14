@@ -6,7 +6,7 @@
   end effects are acounted for by increasing
   scaling the result with the sum of used coefficients
 
-  coeff: (float array) coefficients for filter
+  coeff: (double array) coefficients for filter
     len: length of filter.. number of coefficients
            note that this has to be an odd number
            (since the filter is even);
@@ -14,7 +14,7 @@
 
 int
 i_conv(i_img *im, const double *coeff,int len) {
-  int xo, yo; /* output pixel co-ordinate */
+  i_img_dim xo, yo; /* output pixel co-ordinate */
   int c, ch, center;
   double pc;
   double res[MAXCHANNELS];
@@ -45,7 +45,7 @@ i_conv(i_img *im, const double *coeff,int len) {
       for(ch = 0;ch < im->channels; ch++) 
 	res[ch] = 0;
       for(c = 0;c < len; c++) {
-	int xi = xo + c - center;
+	i_img_dim xi = xo + c - center;
 	if (xi < 0)
 	  xi = 0;
 	else if (xi >= im->xsize)
@@ -71,7 +71,7 @@ i_conv(i_img *im, const double *coeff,int len) {
       for(ch =  0; ch < im->channels; ch++)
 	res[ch] = 0;
       for(c = 0; c < len; c++) {
-	int yi = yo + c - center;
+	i_img_dim yi = yo + c - center;
 	if (yi < 0)
 	  yi = 0;
 	else if (yi >= im->ysize)

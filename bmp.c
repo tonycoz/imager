@@ -35,6 +35,11 @@ Reads and writes Windows BMP files.
 #define BMPRLE_ENDOFBMP 1
 #define BMPRLE_DELTA 2
 
+#define SIGNBIT32 ((i_upacked_t)1U << 31)
+#define SIGNBIT16 ((i_upacked_t)1U << 15)
+
+#define SIGNMAX32 ((1UL << 31) - 1)
+
 static int read_packed(io_glue *ig, char *format, ...);
 static int write_packed(io_glue *ig, char *format, ...);
 static int write_bmphead(io_glue *ig, i_img *im, int bit_count, 
@@ -53,6 +58,11 @@ static i_img *read_8bit_bmp(io_glue *ig, int xsize, int ysize, int clr_used,
 static i_img *read_direct_bmp(io_glue *ig, int xsize, int ysize, 
                               int bit_count, int clr_used, int compression,
                               long offbits, int allow_incomplete);
+
+/* used for the read_packed() and write_packed() functions, an integer
+ * type */
+typedef long i_packed_t;
+typedef unsigned long i_upacked_t;
 
 /* 
 =item i_writebmp_wiol(im, io_glue)
@@ -103,9 +113,9 @@ BI_BITFIELDS images too, but I need a test image.
 
 i_img *
 i_readbmp_wiol(io_glue *ig, int allow_incomplete) {
-  int b_magic, m_magic, filesize, res1, res2, infohead_size;
-  int xsize, ysize, planes, bit_count, compression, size_image, xres, yres;
-  int clr_used, clr_important, offbits;
+  i_packed_t b_magic, m_magic, filesize, res1, res2, infohead_size;
+  i_packed_t xsize, ysize, planes, bit_count, compression, size_image, xres, yres;
+  i_packed_t clr_used, clr_important, offbits;
   i_img *im;
 
   mm_log((1, "i_readbmp_wiol(ig %p)\n", ig));
@@ -113,7 +123,7 @@ i_readbmp_wiol(io_glue *ig, int allow_incomplete) {
   io_glue_commit_types(ig);
   i_clear_error();
 
-  if (!read_packed(ig, "CCVvvVVVVvvVVVVVV", &b_magic, &m_magic, &filesize, 
+  if (!read_packed(ig, "CCVvvVVV!V!vvVVVVVV", &b_magic, &m_magic, &filesize, 
 		   &res1, &res2, &offbits, &infohead_size, 
                    &xsize, &ysize, &planes,
 		   &bit_count, &compression, &size_image, &xres, &yres, 
@@ -129,9 +139,10 @@ i_readbmp_wiol(io_glue *ig, int allow_incomplete) {
 
   mm_log((1, " bmp header: filesize %d offbits %d xsize %d ysize %d planes %d "
           "bit_count %d compression %d size %d xres %d yres %d clr_used %d "
-          "clr_important %d\n", filesize, offbits, xsize, ysize, planes, 
-          bit_count, compression, size_image, xres, yres, clr_used, 
-          clr_important));
+          "clr_important %d\n", (int)filesize, (int)offbits, (int)xsize,
+	  (int)ysize, (int)planes, (int)bit_count, (int)compression, 
+	  (int)size_image, (int)xres, (int)yres, (int)clr_used, 
+          (int)clr_important));
 
   if (!i_int_check_image_file_limits(xsize, abs(ysize), 3, sizeof(i_sample_t))) {
     mm_log((1, "i_readbmp_wiol: image size exceeds limits\n"));
@@ -162,7 +173,7 @@ i_readbmp_wiol(io_glue *ig, int allow_incomplete) {
     break;
 
   default:
-    i_push_errorf(0, "unknown bit count for BMP file (%d)", bit_count);
+    i_push_errorf(0, "unknown bit count for BMP file (%d)", (int)bit_count);
     return NULL;
   }
 
@@ -206,28 +217,43 @@ Returns non-zero if all of the arguments were read.
 
 =cut
 */
-static
-int read_packed(io_glue *ig, char *format, ...) {
+static int
+read_packed(io_glue *ig, char *format, ...) {
   unsigned char buf[4];
   va_list ap;
-  int *p;
+  i_packed_t *p;
+  i_packed_t work;
+  int code;
+  int shrieking; /* format code has a ! flag */
 
   va_start(ap, format);
 
   while (*format) {
-    p = va_arg(ap, int *);
+    p = va_arg(ap, i_packed_t *);
 
-    switch (*format) {
+    code = *format++;
+    shrieking = *format == '!';
+    if (shrieking) ++format;
+
+    switch (code) {
     case 'v':
       if (ig->readcb(ig, buf, 2) != 2)
 	return 0;
-      *p = buf[0] + (buf[1] << 8);
+      work = buf[0] + ((i_packed_t)buf[1] << 8);
+      if (shrieking)
+	*p = (work ^ SIGNBIT16) - SIGNBIT16;
+      else
+	*p = work;
       break;
 
     case 'V':
       if (ig->readcb(ig, buf, 4) != 4)
 	return 0;
-      *p = buf[0] + (buf[1] << 8) + (buf[2] << 16) + (buf[3] << 24);
+      work = buf[0] + (buf[1] << 8) + ((i_packed_t)buf[2] << 16) + ((i_packed_t)buf[3] << 24);
+      if (shrieking)
+	*p = (work ^ SIGNBIT32) - SIGNBIT32;
+      else
+	*p = work;
       break;
 
     case 'C':
@@ -245,13 +271,12 @@ int read_packed(io_glue *ig, char *format, ...) {
     case '3': /* extension - 24-bit number */
       if (ig->readcb(ig, buf, 3) != 3)
         return 0;
-      *p = buf[0] + (buf[1] << 8) + (buf[2] << 16);
+      *p = buf[0] + (buf[1] << 8) + ((i_packed_t)buf[2] << 16);
       break;
       
     default:
-      i_fatal(1, "Unknown read_packed format code 0x%02x", *format);
+      i_fatal(1, "Unknown read_packed format code 0x%02x", code);
     }
-    ++format;
   }
   return 1;
 }
@@ -275,7 +300,7 @@ write_packed(io_glue *ig, char *format, ...) {
   va_start(ap, format);
 
   while (*format) {
-    i = va_arg(ap, unsigned int);
+    i = va_arg(ap, i_upacked_t);
 
     switch (*format) {
     case 'v':
@@ -328,6 +353,11 @@ int write_bmphead(io_glue *ig, i_img *im, int bit_count, int data_size) {
   int colors_used = 0;
   int offset = FILEHEAD_SIZE + INFOHEAD_SIZE;
 
+  if (im->xsize > SIGNMAX32 || im->ysize > SIGNMAX32) {
+    i_push_error(0, "image too large to write to BMP");
+    return 0;
+  }
+
   got_xres = i_tags_get_float(&im->tags, "i_xres", 0, &xres);
   got_yres = i_tags_get_float(&im->tags, "i_yres", 0, &yres);
   if (!i_tags_get_int(&im->tags, "i_aspect_only", 0,&aspect_only))
@@ -365,10 +395,15 @@ int write_bmphead(io_glue *ig, i_img *im, int bit_count, int data_size) {
     offset += 4 * colors_used;
   }
 
-  if (!write_packed(ig, "CCVvvVVVVvvVVVVVV", 'B', 'M', data_size+offset, 
-		    0, 0, offset, INFOHEAD_SIZE, im->xsize, im->ysize, 1, 
-		    bit_count, BI_RGB, data_size, (int)(xres+0.5), (int)(yres+0.5), 
-		    colors_used, colors_used)){
+  if (!write_packed(ig, "CCVvvVVVVvvVVVVVV", 'B', 'M', 
+		    (i_upacked_t)(data_size+offset), 
+		    (i_upacked_t)0, (i_upacked_t)0, (i_upacked_t)offset,
+		    (i_upacked_t)INFOHEAD_SIZE, (i_upacked_t)im->xsize,
+		    (i_upacked_t)im->ysize, (i_upacked_t)1, 
+		    (i_upacked_t)bit_count, (i_upacked_t)BI_RGB,
+		    (i_upacked_t)data_size, 
+		    (i_upacked_t)(xres+0.5), (i_upacked_t)(yres+0.5), 
+		    (i_upacked_t)colors_used, (i_upacked_t)colors_used)){
     i_push_error(0, "cannot write bmp header");
     return 0;
   }
@@ -379,15 +414,16 @@ int write_bmphead(io_glue *ig, i_img *im, int bit_count, int data_size) {
     for (i = 0; i < colors_used; ++i) {
       i_getcolors(im, i, &c, 1);
       if (im->channels >= 3) {
-	if (!write_packed(ig, "CCCC", c.channel[2], c.channel[1], 
-			  c.channel[0], 0)) {
+	if (!write_packed(ig, "CCCC", (i_upacked_t)(c.channel[2]), 
+			  (i_upacked_t)(c.channel[1]), 
+			  (i_upacked_t)(c.channel[0]), (i_upacked_t)0)) {
 	  i_push_error(0, "cannot write palette entry");
 	  return 0;
 	}
       }
       else {
-	if (!write_packed(ig, "CCCC", c.channel[0], c.channel[0], 
-			  c.channel[0], 0)) {
+	i_upacked_t v = c.channel[0];
+	if (!write_packed(ig, "CCCC", v, v, v, 0)) {
 	  i_push_error(0, "cannot write palette entry");
 	  return 0;
 	}
@@ -641,7 +677,7 @@ Returns non-zero on success.
 static int
 read_bmp_pal(io_glue *ig, i_img *im, int count) {
   int i;
-  int r, g, b, x;
+  i_packed_t r, g, b, x;
   i_color c;
   
   for (i = 0; i < count; ++i) {
@@ -1300,10 +1336,12 @@ read_direct_bmp(io_glue *ig, int xsize, int ysize, int bit_count,
     compression_name = "BI_BITFIELDS";
 
     for (i = 0; i < 3; ++i) {
-      if (!read_packed(ig, "V", masks.masks+i)) {
+      i_packed_t rmask;
+      if (!read_packed(ig, "V", &rmask)) {
         i_push_error(0, "reading pixel masks");
         return 0;
       }
+      masks.masks[i] = rmask;
       /* work out a shift for the mask */
       pos = 0;
       bit = masks.masks[i] & -masks.masks[i];
@@ -1356,7 +1394,7 @@ read_direct_bmp(io_glue *ig, int xsize, int ysize, int bit_count,
   while (y != lasty) {
     p = line;
     for (x = 0; x < xsize; ++x) {
-      unsigned pixel;
+      i_packed_t pixel;
       if (!read_packed(ig, unpack_code, &pixel)) {
         myfree(line);
         if (allow_incomplete) {

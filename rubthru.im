@@ -2,13 +2,13 @@
 
 static int
 rubthru_targ_noalpha(i_img *im, i_img *src,
-                     int tx, int ty, 
-                     int src_minx, int src_miny,
-                     int src_maxx, int src_maxy) {
-  int x, y, ttx, tty;
+                     i_img_dim tx, i_img_dim ty, 
+                     i_img_dim src_minx, i_img_dim src_miny,
+                     i_img_dim src_maxx, i_img_dim src_maxy) {
+  i_img_dim x, y, ttx, tty;
   int alphachan;
   int ch;
-  int width = src_maxx - src_minx;
+  i_img_dim width = src_maxx - src_minx;
   int want_channels;
 
   i_clear_error();
@@ -64,15 +64,15 @@ rubthru_targ_noalpha(i_img *im, i_img *src,
 }
 
 static int
-rubthru_targ_alpha(i_img *im, i_img *src, int tx, int ty, 
-                   int src_minx, int src_miny,
-                   int src_maxx, int src_maxy) {
-  int x, y, ttx, tty;
+rubthru_targ_alpha(i_img *im, i_img *src, i_img_dim tx, i_img_dim ty, 
+                   i_img_dim src_minx, i_img_dim src_miny,
+                   i_img_dim src_maxx, i_img_dim src_maxy) {
+  i_img_dim x, y, ttx, tty;
   int want_channels;
   int alphachan;
   int ch;
   int targ_alpha_chan;
-  int width = src_maxx - src_minx;
+  i_img_dim width = src_maxx - src_minx;
   
   if (im->channels == 4 && (src->channels == 4 || src->channels == 2)) {
     alphachan = 3;
@@ -98,7 +98,7 @@ rubthru_targ_alpha(i_img *im, i_img *src, int tx, int ty,
 
   tty = ty;
   for(y = src_miny; y < src_maxy; y++) {
-    int min_x, max_x;
+    i_img_dim min_x, max_x;
     IM_COLOR *srcp = src_line;
     IM_COLOR *destp = dest_line;
     IM_GLIN(src, src_minx, src_maxx, y, src_line);
@@ -116,8 +116,8 @@ rubthru_targ_alpha(i_img *im, i_img *src, int tx, int ty,
     }
 
     if (max_x > min_x) {
-      int work_left = tx + min_x - src_minx;
-      int work_width = max_x - min_x;
+      i_img_dim work_left = tx + min_x - src_minx;
+      i_img_dim work_width = max_x - min_x;
       ttx = work_left;
       IM_GLIN(im, work_left, work_left + work_width, tty, dest_line);
       
@@ -169,8 +169,8 @@ unmodified.
 */
 
 int
-i_rubthru(i_img *im, i_img *src, int tx, int ty, int src_minx, int src_miny,
-	  int src_maxx, int src_maxy) {
+i_rubthru(i_img *im, i_img *src, i_img_dim tx, i_img_dim ty, i_img_dim src_minx, i_img_dim src_miny,
+	  i_img_dim src_maxx, i_img_dim src_maxy) {
   if (src_minx < 0) {
     tx -= src_minx;
     src_minx = 0;

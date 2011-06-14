@@ -17,7 +17,8 @@ DEFINE_IMAGER_CALLBACKS;
 
 int
 count_color(i_img *im, i_color *color) {
-  int x, y, chan;
+  i_img_dim x, y;
+  int chan;
   i_color c;
   int count = 0;
 

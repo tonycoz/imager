@@ -398,7 +398,7 @@ typedef struct
   i_color fg, bg;
   i_fcolor ffg, fbg;
   unsigned char hatch[8];
-  int dx, dy;
+  i_img_dim dx, dy;
 } i_fill_hatch_t;
 
 static void fill_hatch(i_fill_t *fill, i_img_dim x, i_img_dim y,
@@ -409,7 +409,7 @@ static
 i_fill_t *
 i_new_hatch_low(const i_color *fg, const i_color *bg, const i_fcolor *ffg, const i_fcolor *fbg, 
                 int combine, int hatch, const unsigned char *cust_hatch,
-                int dx, int dy);
+                i_img_dim dx, i_img_dim dy);
 
 /*
 =item i_new_fill_hatch(C<fg>, C<bg>, C<combine>, C<hatch>, C<cust_hatch>, C<dx>, C<dy>)
@@ -434,7 +434,7 @@ with the the side of a filled area.
 */
 i_fill_t *
 i_new_fill_hatch(const i_color *fg, const i_color *bg, int combine, int hatch, 
-            const unsigned char *cust_hatch, int dx, int dy) {
+            const unsigned char *cust_hatch, i_img_dim dx, i_img_dim dy) {
   return i_new_hatch_low(fg, bg, NULL, NULL, combine, hatch, cust_hatch, 
                          dx, dy);
 }
@@ -462,7 +462,7 @@ with the the side of a filled area.
 */
 i_fill_t *
 i_new_fill_hatchf(const i_fcolor *fg, const i_fcolor *bg, int combine, int hatch, 
-		  const unsigned char *cust_hatch, int dx, int dy) {
+		  const unsigned char *cust_hatch, i_img_dim dx, i_img_dim dy) {
   return i_new_hatch_low(NULL, NULL, fg, bg, combine, hatch, cust_hatch, 
                          dx, dy);
 }
@@ -474,7 +474,7 @@ static void fill_imagef(i_fill_t *fill, i_img_dim x, i_img_dim y,
 struct i_fill_image_t {
   i_fill_t base;
   i_img *src;
-  int xoff, yoff;
+  i_img_dim xoff, yoff;
   int has_matrix;
   double matrix[9];
 };
@@ -504,7 +504,7 @@ C<xoff> and C<yoff> are the offset into the image to start filling from.
 =cut
 */
 i_fill_t *
-i_new_fill_image(i_img *im, const double *matrix, int xoff, int yoff, int combine) {
+i_new_fill_image(i_img *im, const double *matrix, i_img_dim xoff, i_img_dim yoff, int combine) {
   struct i_fill_image_t *fill = mymalloc(sizeof(*fill)); /* checked 14jul05 tonyc */
 
   *fill = image_fill_proto;
@@ -547,9 +547,11 @@ struct i_fill_opacity_t {
 static struct i_fill_opacity_t
 opacity_fill_proto =
   {
-    fill_opacity,
-    fill_opacityf,
-    NULL
+    {
+      fill_opacity,
+      fill_opacityf,
+      NULL
+    }
   };
 
 i_fill_t *
@@ -635,7 +637,7 @@ i_fill_t *
 i_new_hatch_low(const i_color *fg, const i_color *bg, 
 		const i_fcolor *ffg, const i_fcolor *fbg, 
                 int combine, int hatch, const unsigned char *cust_hatch,
-                int dx, int dy) {
+                i_img_dim dx, i_img_dim dy) {
   i_fill_hatch_t *fill = mymalloc(sizeof(i_fill_hatch_t)); /* checked 14jul05 tonyc */
 
   *fill = hatch_fill_proto;
@@ -695,7 +697,6 @@ fill_hatch(i_fill_t *fill, i_img_dim x, i_img_dim y, i_img_dim width,
   int mask = 128 >> xpos;
   i_color fg = f->fg;
   i_color bg = f->bg;
-  int want_channels = channels > 2 ? 4 : 2;
 
   if (channels < 3) {
     i_adapt_colors(2, 4, &fg, 1);
@@ -826,12 +827,12 @@ fill_image(i_fill_t *fill, i_img_dim x, i_img_dim y, i_img_dim width,
       ry -= iy * f->src->ysize;
 
       for (dy = 0; dy < 2; ++dy) {
-        if ((int)rx == f->src->xsize-1) {
-          i_gpix(f->src, f->src->xsize-1, ((int)ry+dy) % f->src->ysize, &c[dy][0]);
-          i_gpix(f->src, 0, ((int)ry+dy) % f->src->xsize, &c[dy][1]);
+        if ((i_img_dim)rx == f->src->xsize-1) {
+          i_gpix(f->src, f->src->xsize-1, ((i_img_dim)ry+dy) % f->src->ysize, &c[dy][0]);
+          i_gpix(f->src, 0, ((i_img_dim)ry+dy) % f->src->xsize, &c[dy][1]);
         }
         else {
-          i_glin(f->src, (int)rx, (int)rx+2, ((int)ry+dy) % f->src->ysize, 
+          i_glin(f->src, (i_img_dim)rx, (i_img_dim)rx+2, ((i_img_dim)ry+dy) % f->src->ysize, 
                  c[dy]);
         }
         c2[dy] = interp_i_color(c[dy][0], c[dy][1], rx, f->src->channels);
@@ -904,12 +905,12 @@ fill_imagef(i_fill_t *fill, i_img_dim x, i_img_dim y, i_img_dim width,
       ry -= iy * f->src->ysize;
 
       for (dy = 0; dy < 2; ++dy) {
-        if ((int)rx == f->src->xsize-1) {
-          i_gpixf(f->src, f->src->xsize-1, ((int)ry+dy) % f->src->ysize, &c[dy][0]);
-          i_gpixf(f->src, 0, ((int)ry+dy) % f->src->xsize, &c[dy][1]);
+        if ((i_img_dim)rx == f->src->xsize-1) {
+          i_gpixf(f->src, f->src->xsize-1, ((i_img_dim)ry+dy) % f->src->ysize, &c[dy][0]);
+          i_gpixf(f->src, 0, ((i_img_dim)ry+dy) % f->src->xsize, &c[dy][1]);
         }
         else {
-          i_glinf(f->src, (int)rx, (int)rx+2, ((int)ry+dy) % f->src->ysize, 
+          i_glinf(f->src, (i_img_dim)rx, (i_img_dim)rx+2, ((i_img_dim)ry+dy) % f->src->ysize, 
                  c[dy]);
         }
         c2[dy] = interp_i_fcolor(c[dy][0], c[dy][1], rx, f->src->channels);

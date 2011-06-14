@@ -32,8 +32,10 @@ void lin_stretch(void *INP) {
   int a, b;
   i_img *im;
   i_color rcolor;
-  int i,bytes,x,y;
-  int info[4];
+  int i;
+  i_img_dim x,y;
+  size_t bytes;
+  i_img_dim info[4];
 
   if ( !getOBJ("image","Imager::ImgRaw",&im) ) { fprintf(stderr,"Error: image is missing\n"); }
   if ( !getINT("a",&a) ) { fprintf(stderr,"Error: a is missing\n"); }
@@ -43,9 +45,9 @@ void lin_stretch(void *INP) {
   bytes=im->bytes;
 
   i_img_info(im,info); 
-  for(i=0;i<4;i++) { printf("%d: %d\n",i,info[i]); } 
-  printf("image info:\n size (%d,%d)\n channels (%d)\n",
-	 im->xsize, im->ysize, im->channels); 
+  for(i=0;i<4;i++) { printf("%d: %" i_DF "\n", i, i_DFc(info[i])); } 
+  printf("image info:\n size (" i_DFp ")\n channels (%d)\n",
+	 i_DFcp(im->xsize, im->ysize), im->channels); 
 
   for(y=0;y<im->ysize;y++) for(x=0;x<im->xsize;x++) {
     i_gpix(im,x,y,&rcolor);

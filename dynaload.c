@@ -55,7 +55,8 @@ static symbol_table_t symbol_table=
 
 void
 DSO_call(DSO_handle *handle,int func_index,HV* hv) {
-  mm_log((1,"DSO_call(handle 0x%X, func_index %d, hv 0x%X)\n",handle,func_index,hv));
+  mm_log((1,"DSO_call(handle %p, func_index %d, hv %p)\n",
+	  handle, func_index, hv));
   (handle->function_list[func_index].iptr)((void*)hv);
 }
 
@@ -129,7 +130,7 @@ DSO_open(char *file, char **evalstring) {
   
   void (*f)(void *s,void *u); /* these will just have to be void for now */
 
-  mm_log( (1,"DSO_open(file '%s' (0x%08X), evalstring 0x%08X)\n",file,file,evalstring) );
+  mm_log( (1,"DSO_open(file '%s' (%p), evalstring %p)\n",file,file,evalstring) );
 
   *evalstring = NULL;
   if ((d_handle = LoadLibrary(file)) == NULL) {
@@ -169,7 +170,7 @@ DSO_open(char *file, char **evalstring) {
   }
   strcpy(dso_handle->filename,file);
 
-  mm_log( (1,"DSO_open <- 0x%X\n",dso_handle) );
+  mm_log( (1,"DSO_open <- %p\n",dso_handle) );
   return (void*)dso_handle;
 
 }
@@ -204,7 +205,8 @@ DSO_open(char* file,char** evalstring) {
   
   *evalstring=NULL;
 
-  mm_log( (1,"DSO_open(file '%s' (0x%08X), evalstring 0x%08X)\n",file,file,evalstring) );
+  mm_log( (1,"DSO_open(file '%s' (%p), evalstring %p)\n",
+	   file, file, evalstring) );
 
   if ( (d_handle = dlopen(file, RTLD_LAZY)) == NULL) {
     mm_log( (1,"DSO_open: dlopen failed: %s.\n",dlerror()) );
@@ -265,14 +267,14 @@ DSO_open(char* file,char** evalstring) {
   }
   strcpy(dso_handle->filename,file);
 
-  mm_log( (1,"DSO_open <- 0x%X\n",dso_handle) );
+  mm_log( (1,"DSO_open <- %p\n",dso_handle) );
   return (void*)dso_handle;
 }
 
 undef_int
 DSO_close(void *ptr) {
   DSO_handle *handle;
-  mm_log((1,"DSO_close(ptr 0x%X)\n",ptr));
+  mm_log((1,"DSO_close(ptr %p)\n",ptr));
   handle=(DSO_handle*) ptr;
   return !dlclose(handle->handle);
 }

@@ -222,7 +222,7 @@ error handling is calling function that does.).
 =cut
 */
 void i_push_error(int code, char const *msg) {
-  int size = strlen(msg)+1;
+  size_t size = strlen(msg)+1;
 
   if (error_sp <= 0)
     /* bad, bad programmer */
@@ -315,7 +315,7 @@ int i_failed(int code, char const *msg) {
     failed_cb(error_stack + error_sp);
   if (failures_fatal) {
     int sp;
-    int total; /* total length of error messages */
+    size_t total; /* total length of error messages */
     char *full; /* full message for logging */
     if (argv0)
       fprintf(stderr, "%s: ", argv0);
@@ -329,7 +329,11 @@ int i_failed(int code, char const *msg) {
        i_fatal() */
     total = 1; /* remember the NUL */
     for (sp = error_sp; error_stack[sp].msg; ++sp) {
-      total += strlen(error_stack[sp].msg) + 2;
+      size_t new_total += strlen(error_stack[sp].msg) + 2;
+      if (new_total < total) {
+	/* overflow, somehow */
+	break;
+      }
     }
     full = mymalloc(total);
     if (!full) {

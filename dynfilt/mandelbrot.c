@@ -14,9 +14,9 @@ char evalstr[]="Mandlebrot renderer";
 
 static
 int
-mandel(float x, float y) {
-  float xn, yn;
-  float xo, yo;
+mandel(double x, double y) {
+  double xn, yn;
+  double xo, yo;
   int iter = 1;
   /*	Z(n+1) = Z(n) ^2 + c */
 
@@ -40,11 +40,12 @@ mandel(float x, float y) {
 void mandlebrot(void *INP) {
 
   i_img *im;
-  int i,bytes,x,y;
+  int i;
+  i_img_dim x,y;
   int idx;
   
-  float xs, ys;
-  float div;
+  double xs, ys;
+  double div;
 
   i_color icl[256];
   srand(12235);
@@ -63,10 +64,9 @@ void mandlebrot(void *INP) {
   if ( !getOBJ("image","Imager::ImgRaw",&im) ) { fprintf(stderr,"Error: image is missing\n"); }
   
   fprintf(stderr,"mandlebrot: parameters: (im %p)\n",im);
-  bytes=im->bytes;
 
-  fprintf(stderr, "mandlebrot: image info:\n size (%d,%d)\n channels (%d)\n",
-	  im->xsize,im->ysize,im->channels); 
+  fprintf(stderr, "mandlebrot: image info:\n size (" i_DFp ")\n channels (%d)\n",
+	  i_DFcp(im->xsize,im->ysize),im->channels); 
   div = 2.5;
 
   xs = 0.8*div;

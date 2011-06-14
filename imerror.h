@@ -19,7 +19,7 @@ extern int i_set_errors_fatal(int new_fatal);
 extern i_errmsg *i_errors(void);
 
 extern void i_push_error(int code, char const *msg);
-extern void i_push_errorf(int code, char const *fmt, ...);
+extern void i_push_errorf(int code, char const *fmt, ...) I_FORMAT_ATTR(2, 3);
 extern void i_push_errorvf(int code, char const *fmt, va_list);
 extern void i_clear_error(void);
 extern int i_failed(int code, char const *msg);

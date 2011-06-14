@@ -47,6 +47,8 @@ sub _draw {
 	      $input{'y'}, $input{color}, $input{size}, 
 	      $input{string}, $input{align}, $input{aa}, $input{utf8});
   }
+
+  return 1;
 }
 
 

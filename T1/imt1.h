@@ -19,13 +19,13 @@ extern void
 i_t1_set_aa(int st);
 
 extern undef_int
-i_t1_cp(i_img *im,int xb,int yb,int channel,int fontnum,float points,char* str,size_t len,int align, int utf8, char const *flags);
+i_t1_cp(i_img *im,i_img_dim xb,i_img_dim yb,int channel,int fontnum,double points,char* str,size_t len,int align, int utf8, char const *flags);
 
 extern int
-i_t1_bbox(int fontnum,float points,const char *str,size_t len,int cords[6], int utf8,char const *flags);
+i_t1_bbox(int fontnum,double points,const char *str,size_t len,i_img_dim *cords, int utf8,char const *flags);
 
 extern undef_int
-i_t1_text(i_img *im,int xb,int yb,const i_color *cl,int fontnum,float points,const char* str,size_t len,int align, int utf8, char const *flags);
+i_t1_text(i_img *im,i_img_dim xb,i_img_dim yb,const i_color *cl,int fontnum,double points,const char* str,size_t len,int align, int utf8, char const *flags);
 
 extern int
 i_t1_has_chars(int font_num, const char *text, size_t len, int utf8,

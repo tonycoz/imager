@@ -292,7 +292,7 @@ Imager distribution for example code.
 
 You may also want to set limits on the size of the image read, using
 Imager's C<set_file_limits> method, documented in
-L<Imager::Files/set_file_limits>.  For example:
+L<Imager::Files/set_file_limits()>.  For example:
 
   # limit to 10 million bytes of memory usage
   Imager->set_file_limits(bytes => 10_000_000);

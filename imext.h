@@ -234,4 +234,11 @@ extern im_ext_funcs *imager_function_ext_table;
 #define i_render_linef(r, x, y, width, src, line, combine) \
   ((im_extt->f_i_render_linef)((r), (x), (y), (width), (src), (line), (combine)))
 
+#ifdef IMAGER_LOG
+#define mm_log(x) { i_lhead(__FILE__,__LINE__); i_loog x; } 
+#else
+#define mm_log(x)
+#endif
+
+
 #endif

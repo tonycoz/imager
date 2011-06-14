@@ -229,7 +229,13 @@ gnum(mbuf *mb, int *i) {
   if (!misnumber(*cp))
     return 0;
   while( (cp = gpeek(mb)) && misnumber(*cp) ) {
-    *i = *i*10+(*cp-'0');
+    int work = *i*10+(*cp-'0');
+    if (work < *i) {
+      /* overflow */
+      i_push_error(0, "integer overflow");
+      return 0;
+    }
+    *i = work;
     cp = gnext(mb);
   }
   return 1;
@@ -541,7 +547,7 @@ static i_img *
 i_readpnm_wiol_low( mbuf *buf, int allow_incomplete) {
   i_img* im;
   int type;
-  int width, height, maxval, channels, pcount;
+  int width, height, maxval, channels;
   int rounder;
   char *cp;
 
@@ -630,7 +636,7 @@ i_readpnm_wiol_low( mbuf *buf, int allow_incomplete) {
     else if (maxval > 65535) {
       i_push_errorf(0, "maxval of %d is over 65535 - invalid pnm file", 
 		    maxval);
-      mm_log((1, "i_readpnm: maxval of %d is over 65535 - invalid pnm file\n"));
+      mm_log((1, "i_readpnm: maxval of %d is over 65535 - invalid pnm file\n", maxval));
       return NULL;
     }
   } else maxval=1;
@@ -643,7 +649,6 @@ i_readpnm_wiol_low( mbuf *buf, int allow_incomplete) {
   }
 
   channels = (type == 3 || type == 6) ? 3:1;
-  pcount = width*height*channels;
 
   if (!i_int_check_image_file_limits(width, height, channels, sizeof(i_sample_t))) {
     mm_log((1, "i_readpnm: image size exceeds limits\n"));
@@ -770,14 +775,14 @@ int
 write_pbm(i_img *im, io_glue *ig, int zero_is_white) {
   int x, y;
   i_palidx *line;
-  int write_size;
+  i_img_dim write_size;
   unsigned char *write_buf;
   unsigned char *writep;
   char header[255];
   unsigned mask;
 
-  sprintf(header, "P4\012# CREATOR: Imager\012%d %d\012", 
-          im->xsize, im->ysize);
+  sprintf(header, "P4\012# CREATOR: Imager\012%" i_DF " %" i_DF "\012", 
+          i_DFc(im->xsize), i_DFc(im->ysize));
   if (i_io_write(ig, header, strlen(header)) < 0) {
     i_push_error(0, "could not write pbm header");
     return 0;
@@ -815,10 +820,10 @@ write_pbm(i_img *im, io_glue *ig, int zero_is_white) {
 static
 int
 write_ppm_data_8(i_img *im, io_glue *ig, int want_channels) {
-  int write_size = im->xsize * want_channels;
-  int buf_size = im->xsize * im->channels;
+  size_t write_size = im->xsize * want_channels;
+  size_t buf_size = im->xsize * im->channels;
   unsigned char *data = mymalloc(buf_size);
-  int y = 0;
+  i_img_dim y = 0;
   int rc = 1;
   i_color bg;
 
@@ -840,15 +845,15 @@ write_ppm_data_8(i_img *im, io_glue *ig, int want_channels) {
 static
 int
 write_ppm_data_16(i_img *im, io_glue *ig, int want_channels) {
-  int line_size = im->channels * im->xsize * sizeof(i_fsample_t);
-  int sample_count = want_channels * im->xsize;
-  int write_size = sample_count * 2;
+  size_t line_size = im->channels * im->xsize * sizeof(i_fsample_t);
+  size_t sample_count = want_channels * im->xsize;
+  size_t write_size = sample_count * 2;
   i_fsample_t *line_buf = mymalloc(line_size);
   i_fsample_t *samplep;
   unsigned char *write_buf = mymalloc(write_size);
   unsigned char *writep;
-  int sample_num;
-  int y = 0;
+  size_t sample_num;
+  i_img_dim y = 0;
   int rc = 1;
   i_fcolor bg;
 
@@ -920,8 +925,8 @@ i_writeppm_wiol(i_img *im, io_glue *ig) {
     else
       maxval = 65535;
 
-    sprintf(header,"P%d\n#CREATOR: Imager\n%d %d\n%d\n", 
-            type, im->xsize, im->ysize, maxval);
+    sprintf(header,"P%d\n#CREATOR: Imager\n%" i_DF " %" i_DF"\n%d\n", 
+            type, i_DFc(im->xsize), i_DFc(im->ysize), maxval);
 
     if (ig->writecb(ig,header,strlen(header)) != strlen(header)) {
       i_push_error(errno, "could not write ppm header");

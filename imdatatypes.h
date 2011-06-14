@@ -3,7 +3,6 @@
 
 #include <stddef.h>
 #include "imconfig.h"
-#include "imio.h"
 
 #define MAXCHANNELS 4
 
@@ -22,6 +21,21 @@ typedef struct { i_sample_t r,g,b,a; } rgba_color;
 typedef struct { i_sample_t c,m,y,k; } cmyk_color;
 
 typedef int undef_int; /* special value to put in typemaps to retun undef on 0 and 1 on 1 */
+
+/*
+=item i_img_dim
+=category Data Types
+=synopsis i_img_dim x, y;
+=order 90
+
+A signed integer type that represents an image dimension or ordinate.
+
+May be larger than int on some platforms.
+
+=cut
+*/
+
+typedef ptrdiff_t i_img_dim;
 
 /*
 =item i_color
@@ -131,22 +145,22 @@ typedef struct {
 } i_img_tags;
 
 typedef struct i_img_ i_img;
-typedef int (*i_f_ppix_t)(i_img *im, int x, int y, const i_color *pix);
-typedef int (*i_f_ppixf_t)(i_img *im, int x, int y, const i_fcolor *pix);
-typedef int (*i_f_plin_t)(i_img *im, int x, int r, int y, const i_color *vals);
-typedef int (*i_f_plinf_t)(i_img *im, int x, int r, int y, const i_fcolor *vals);
-typedef int (*i_f_gpix_t)(i_img *im, int x, int y, i_color *pix);
-typedef int (*i_f_gpixf_t)(i_img *im, int x, int y, i_fcolor *pix);
-typedef int (*i_f_glin_t)(i_img *im, int x, int r, int y, i_color *vals);
-typedef int (*i_f_glinf_t)(i_img *im, int x, int r, int y, i_fcolor *vals);
+typedef int (*i_f_ppix_t)(i_img *im, i_img_dim x, i_img_dim y, const i_color *pix);
+typedef int (*i_f_ppixf_t)(i_img *im, i_img_dim x, i_img_dim y, const i_fcolor *pix);
+typedef i_img_dim (*i_f_plin_t)(i_img *im, i_img_dim x, i_img_dim r, i_img_dim y, const i_color *vals);
+typedef i_img_dim (*i_f_plinf_t)(i_img *im, i_img_dim x, i_img_dim r, i_img_dim y, const i_fcolor *vals);
+typedef int (*i_f_gpix_t)(i_img *im, i_img_dim x, i_img_dim y, i_color *pix);
+typedef int (*i_f_gpixf_t)(i_img *im, i_img_dim x, i_img_dim y, i_fcolor *pix);
+typedef i_img_dim (*i_f_glin_t)(i_img *im, i_img_dim x, i_img_dim r, i_img_dim y, i_color *vals);
+typedef i_img_dim (*i_f_glinf_t)(i_img *im, i_img_dim x, i_img_dim r, i_img_dim y, i_fcolor *vals);
 
-typedef int (*i_f_gsamp_t)(i_img *im, int x, int r, int y, i_sample_t *samp,
+typedef i_img_dim (*i_f_gsamp_t)(i_img *im, i_img_dim x, i_img_dim r, i_img_dim y, i_sample_t *samp,
                            const int *chans, int chan_count);
-typedef int (*i_f_gsampf_t)(i_img *im, int x, int r, int y, i_fsample_t *samp,
+typedef i_img_dim (*i_f_gsampf_t)(i_img *im, i_img_dim x, i_img_dim r, i_img_dim y, i_fsample_t *samp,
                             const int *chan, int chan_count);
 
-typedef int (*i_f_gpal_t)(i_img *im, int x, int r, int y, i_palidx *vals);
-typedef int (*i_f_ppal_t)(i_img *im, int x, int r, int y, const i_palidx *vals);
+typedef i_img_dim (*i_f_gpal_t)(i_img *im, i_img_dim x, i_img_dim r, i_img_dim y, i_palidx *vals);
+typedef i_img_dim (*i_f_ppal_t)(i_img *im, i_img_dim x, i_img_dim r, i_img_dim y, const i_palidx *vals);
 typedef int (*i_f_addcolors_t)(i_img *im, const i_color *colors, int count);
 typedef int (*i_f_getcolors_t)(i_img *im, int i, i_color *, int count);
 typedef int (*i_f_colorcount_t)(i_img *im);
@@ -157,25 +171,10 @@ typedef int (*i_f_setcolors_t)(i_img *im, int index, const i_color *colors,
 
 typedef void (*i_f_destroy_t)(i_img *im);
 
-typedef int (*i_f_gsamp_bits_t)(i_img *im, int x, int r, int y, unsigned *samp,
+typedef i_img_dim (*i_f_gsamp_bits_t)(i_img *im, i_img_dim x, i_img_dim r, i_img_dim y, unsigned *samp,
                            const int *chans, int chan_count, int bits);
-typedef int (*i_f_psamp_bits_t)(i_img *im, int x, int r, int y, unsigned const *samp,
+typedef i_img_dim (*i_f_psamp_bits_t)(i_img *im, i_img_dim x, i_img_dim r, i_img_dim y, unsigned const *samp,
 				 const int *chans, int chan_count, int bits);
-
-/*
-=item i_img_dim
-=category Data Types
-=synopsis i_img_dim x;
-=order 90
-
-A signed integer type that represents an image dimension or ordinate.
-
-May be larger than int on some platforms.
-
-=cut
-*/
-
-typedef int i_img_dim;
 
 /*
 =item i_img
@@ -342,14 +341,14 @@ typedef struct {
 /* bitmap mask */
 
 struct i_bitmap {
-  int xsize,ysize;
+  i_img_dim xsize,ysize;
   char *data;
 };
 
-struct i_bitmap* btm_new(int xsize,int ysize);
+struct i_bitmap* btm_new(i_img_dim xsize,i_img_dim ysize);
 void btm_destroy(struct i_bitmap *btm);
-int btm_test(struct i_bitmap *btm,int x,int y);
-void btm_set(struct i_bitmap *btm,int x,int y);
+int btm_test(struct i_bitmap *btm,i_img_dim x,i_img_dim y);
+void btm_set(struct i_bitmap *btm,i_img_dim x,i_img_dim y);
 
 
 /* Stack/Linked list */
@@ -363,21 +362,16 @@ struct llink {
 struct llist {
   struct llink *h,*t;
   int multip;		/* # of copies in a single chain  */
-  int ssize;		/* size of each small element     */
+  size_t ssize;		/* size of each small element     */
   int count;           /* number of elements on the list */
 };
 
 
-/* Links */
-
-struct llink *llink_new( struct llink* p,int size );
-int  llist_llink_push( struct llist *lst, struct llink *lnk, void *data );
-
 /* Lists */
 
-struct llist *llist_new( int multip, int ssize );
+struct llist *llist_new( int multip, size_t ssize );
 void llist_destroy( struct llist *l );
-void llist_push( struct llist *l, void *data );
+void llist_push( struct llist *l, const void *data );
 void llist_dump( struct llist *l );
 int llist_pop( struct llist *l,void *data );
 
@@ -710,6 +704,58 @@ enum {
 #include "iolayert.h"
 
 typedef struct i_render_tag i_render;
+
+#ifdef IMAGER_FORMAT_ATTR
+#define I_FORMAT_ATTR(format_index, va_index) \
+  __attribute ((format (printf, format_index, va_index)))
+#else
+#define I_FORMAT_ATTR(format_index, va_index)
+#endif
+
+/*
+=item i_DF
+=category Data Types
+=synopsis printf("left %" i_DF "\n", i_DFc(x));
+=order 95
+
+This is a constant string that can be used with functions like
+printf() to format i_img_dim values after they're been cast with i_DFc().
+
+Does not include the leading C<%>.
+
+=cut
+
+=item i_DFc
+=category Data Types
+=order 95
+
+Cast an C<i_img_dim> value to a type for use with the i_DF format
+string.
+
+=cut
+
+=item i_DFp
+=category Data Types
+=synopsis printf("point (" i_DFp ")\n", i_DFcp(x, y));
+=order 95
+
+Format a pair of C<i_img_dim> values.  This format string I<does>
+include the leading C<%>.
+
+=cut
+
+=item i_DFcp
+=category Data Types
+=order 95
+
+Casts two C<i_img_dim> values for use with the i_DF (or i_DFp) format.
+
+=cut
+ */
+
+#define i_DFc(x) ((i_dim_format_t)(x))
+#define i_DFcp(x, y) i_DFc(x), i_DFc(y)
+#define i_DFp "%" i_DF ", %" i_DF
 
 #endif
 

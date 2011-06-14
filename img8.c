@@ -1,16 +1,16 @@
 #include "imager.h"
 #include "imageri.h"
 
-static int i_ppix_d(i_img *im, int x, int y, const i_color *val);
-static int i_gpix_d(i_img *im, int x, int y, i_color *val);
-static int i_glin_d(i_img *im, int l, int r, int y, i_color *vals);
-static int i_plin_d(i_img *im, int l, int r, int y, const i_color *vals);
-static int i_ppixf_d(i_img *im, int x, int y, const i_fcolor *val);
-static int i_gpixf_d(i_img *im, int x, int y, i_fcolor *val);
-static int i_glinf_d(i_img *im, int l, int r, int y, i_fcolor *vals);
-static int i_plinf_d(i_img *im, int l, int r, int y, const i_fcolor *vals);
-static int i_gsamp_d(i_img *im, int l, int r, int y, i_sample_t *samps, const int *chans, int chan_count);
-static int i_gsampf_d(i_img *im, int l, int r, int y, i_fsample_t *samps, const int *chans, int chan_count);
+static int i_ppix_d(i_img *im, i_img_dim x, i_img_dim y, const i_color *val);
+static int i_gpix_d(i_img *im, i_img_dim x, i_img_dim y, i_color *val);
+static i_img_dim i_glin_d(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, i_color *vals);
+static i_img_dim i_plin_d(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, const i_color *vals);
+static int i_ppixf_d(i_img *im, i_img_dim x, i_img_dim y, const i_fcolor *val);
+static int i_gpixf_d(i_img *im, i_img_dim x, i_img_dim y, i_fcolor *val);
+static i_img_dim i_glinf_d(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, i_fcolor *vals);
+static i_img_dim i_plinf_d(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, const i_fcolor *vals);
+static i_img_dim i_gsamp_d(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, i_sample_t *samps, const int *chans, int chan_count);
+static i_img_dim i_gsampf_d(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, i_fsample_t *samps, const int *chans, int chan_count);
 
 /*
 =item IIM_base_8bit_direct (static)
@@ -91,9 +91,11 @@ I<ch> channels.
 
 
 i_img *
-IIM_new(int x,int y,int ch) {
+IIM_new(i_img_dim x,i_img_dim y,int ch) {
   i_img *im;
-  mm_log((1,"IIM_new(x %d,y %d,ch %d)\n",x,y,ch));
+
+  mm_log((1,"IIM_new(x %" i_DF ", y %" i_DF ", ch %d)\n",
+	  i_DFc(x), i_DFc(y), ch));
 
   im=i_img_empty_ch(NULL,x,y,ch);
   
@@ -158,8 +160,9 @@ Should this just call i_img_empty_ch()?
 */
 
 i_img *
-i_img_empty(i_img *im,int x,int y) {
-  mm_log((1,"i_img_empty(*im %p, x %d, y %d)\n",im, x, y));
+i_img_empty(i_img *im,i_img_dim x,i_img_dim y) {
+  mm_log((1,"i_img_empty(*im %p, x %" i_DF ", y %" i_DF ")\n",
+	  im, i_DFc(x), i_DFc(y)));
   return i_img_empty_ch(im, x, y, 3);
 }
 
@@ -177,10 +180,11 @@ Re-new image reference
 */
 
 i_img *
-i_img_empty_ch(i_img *im,int x,int y,int ch) {
-  int bytes;
+i_img_empty_ch(i_img *im,i_img_dim x,i_img_dim y,int ch) {
+  size_t bytes;
 
-  mm_log((1,"i_img_empty_ch(*im %p, x %d, y %d, ch %d)\n", im, x, y, ch));
+  mm_log((1,"i_img_empty_ch(*im %p, x %" i_DF ", y %" i_DF ", ch %d)\n",
+	  im, i_DFc(x), i_DFc(y), ch));
 
   if (x < 1 || y < 1) {
     i_push_error(0, "Image sizes must be positive");
@@ -239,7 +243,7 @@ Returns 0 if the pixel could be set, -1 otherwise.
 */
 static
 int
-i_ppix_d(i_img *im, int x, int y, const i_color *val) {
+i_ppix_d(i_img *im, i_img_dim x, i_img_dim y, const i_color *val) {
   int ch;
   
   if ( x>-1 && x<im->xsize && y>-1 && y<im->ysize ) {
@@ -265,7 +269,7 @@ Returns 0 if the pixel could be set, -1 otherwise.
 */
 static
 int 
-i_gpix_d(i_img *im, int x, int y, i_color *val) {
+i_gpix_d(i_img *im, i_img_dim x, i_img_dim y, i_color *val) {
   int ch;
   if (x>-1 && x<im->xsize && y>-1 && y<im->ysize) {
     for(ch=0;ch<im->channels;ch++) 
@@ -293,9 +297,10 @@ Returns the number of pixels copied (eg. if r, l or y is out of range)
 =cut
 */
 static
-int
-i_glin_d(i_img *im, int l, int r, int y, i_color *vals) {
-  int ch, count, i;
+i_img_dim
+i_glin_d(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, i_color *vals) {
+  int ch;
+  i_img_dim count, i;
   unsigned char *data;
   if (y >=0 && y < im->ysize && l < im->xsize && l >= 0) {
     if (r > im->xsize)
@@ -330,9 +335,10 @@ Returns the number of pixels copied (eg. if r, l or y is out of range)
 =cut
 */
 static
-int
-i_plin_d(i_img *im, int l, int r, int y, const i_color *vals) {
-  int ch, count, i;
+i_img_dim
+i_plin_d(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, const i_color *vals) {
+  int ch;
+  i_img_dim count, i;
   unsigned char *data;
   if (y >=0 && y < im->ysize && l < im->xsize && l >= 0) {
     if (r > im->xsize)
@@ -360,7 +366,7 @@ i_plin_d(i_img *im, int l, int r, int y, const i_color *vals) {
 */
 static
 int
-i_ppixf_d(i_img *im, int x, int y, const i_fcolor *val) {
+i_ppixf_d(i_img *im, i_img_dim x, i_img_dim y, const i_fcolor *val) {
   int ch;
   
   if ( x>-1 && x<im->xsize && y>-1 && y<im->ysize ) {
@@ -381,7 +387,7 @@ i_ppixf_d(i_img *im, int x, int y, const i_fcolor *val) {
 */
 static
 int
-i_gpixf_d(i_img *im, int x, int y, i_fcolor *val) {
+i_gpixf_d(i_img *im, i_img_dim x, i_img_dim y, i_fcolor *val) {
   int ch;
   if (x>-1 && x<im->xsize && y>-1 && y<im->ysize) {
     for(ch=0;ch<im->channels;ch++) {
@@ -410,9 +416,10 @@ Returns the number of pixels copied (eg. if r, l or y is out of range)
 =cut
 */
 static
-int
-i_glinf_d(i_img *im, int l, int r, int y, i_fcolor *vals) {
-  int ch, count, i;
+i_img_dim
+i_glinf_d(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, i_fcolor *vals) {
+  int ch;
+  i_img_dim count, i;
   unsigned char *data;
   if (y >=0 && y < im->ysize && l < im->xsize && l >= 0) {
     if (r > im->xsize)
@@ -447,9 +454,10 @@ Returns the number of pixels copied (eg. if r, l or y is out of range)
 =cut
 */
 static
-int
-i_plinf_d(i_img *im, int l, int r, int y, const i_fcolor *vals) {
-  int ch, count, i;
+i_img_dim
+i_plinf_d(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, const i_fcolor *vals) {
+  int ch;
+  i_img_dim count, i;
   unsigned char *data;
   if (y >=0 && y < im->ysize && l < im->xsize && l >= 0) {
     if (r > im->xsize)
@@ -471,7 +479,7 @@ i_plinf_d(i_img *im, int l, int r, int y, const i_fcolor *vals) {
 }
 
 /*
-=item i_gsamp_d(i_img *im, int l, int r, int y, i_sample_t *samps, int *chans, int chan_count)
+=item i_gsamp_d(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, i_sample_t *samps, int *chans, int chan_count)
 
 Reads sample values from im for the horizontal line (l, y) to (r-1,y)
 for the channels specified by chans, an array of int with chan_count
@@ -482,10 +490,11 @@ Returns the number of samples read (which should be (r-l) * bits_set(chan_mask)
 =cut
 */
 static
-int
-i_gsamp_d(i_img *im, int l, int r, int y, i_sample_t *samps, 
+i_img_dim
+i_gsamp_d(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, i_sample_t *samps, 
               const int *chans, int chan_count) {
-  int ch, count, i, w;
+  int ch;
+  i_img_dim count, i, w;
   unsigned char *data;
 
   if (y >=0 && y < im->ysize && l < im->xsize && l >= 0) {
@@ -534,7 +543,7 @@ i_gsamp_d(i_img *im, int l, int r, int y, i_sample_t *samps,
 }
 
 /*
-=item i_gsampf_d(i_img *im, int l, int r, int y, i_fsample_t *samps, int *chans, int chan_count)
+=item i_gsampf_d(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, i_fsample_t *samps, int *chans, int chan_count)
 
 Reads sample values from im for the horizontal line (l, y) to (r-1,y)
 for the channels specified by chan_mask, where bit 0 is the first
@@ -545,10 +554,11 @@ Returns the number of samples read (which should be (r-l) * bits_set(chan_mask)
 =cut
 */
 static
-int
-i_gsampf_d(i_img *im, int l, int r, int y, i_fsample_t *samps, 
+i_img_dim
+i_gsampf_d(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, i_fsample_t *samps, 
            const int *chans, int chan_count) {
-  int ch, count, i, w;
+  int ch;
+  i_img_dim count, i, w;
   unsigned char *data;
   for (ch = 0; ch < chan_count; ++ch) {
     if (chans[ch] < 0 || chans[ch] >= im->channels) {

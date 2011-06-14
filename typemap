@@ -25,6 +25,8 @@ Imager__IO              T_PTROBJ_INV
 # mostly intended for non-Imager-core use
 Imager                  T_IMAGER_FULL_IMAGE
 
+off_t			T_OFF_T
+
 #############################################################################
 INPUT
 T_PTR_NULL
@@ -84,6 +86,8 @@ T_PTROBJ_INV
         else
             croak(\"$var is not of type ${(my $ntt=$ntype)=~s/__/::/g;\$ntt}\");
 
+T_OFF_T
+  $var = i_sv_off_t(aTHX_ $arg);
 
 #############################################################################
 OUTPUT
@@ -116,3 +120,5 @@ T_IMAGER_FULL_IMAGE
         else {
           $arg = &PL_sv_undef;
         }
+T_OFF_T
+	$arg = i_new_sv_off_t(aTHX_ $var);

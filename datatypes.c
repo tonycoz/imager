@@ -8,14 +8,15 @@
 */
 
 struct i_bitmap*
-btm_new(int xsize,int ysize) {
-  int i;
-  int bytes;
+btm_new(i_img_dim xsize,i_img_dim ysize) {
+  i_img_dim i;
+  size_t bytes;
   struct i_bitmap *btm;
   btm=(struct i_bitmap*)mymalloc(sizeof(struct i_bitmap)); /* checked 4jul05 tonyc */
   bytes = (xsize*ysize+8)/8;
   if (bytes * 8 / ysize < xsize-1) { /* this is kind of rough */
-    fprintf(stderr, "Integer overflow allocating bitmap %d x %d", xsize, ysize);
+    fprintf(stderr, "Integer overflow allocating bitmap (" i_DFp ")",
+	    i_DFcp(xsize, ysize));
     exit(3);
   }
   btm->data=(char*)mymalloc(bytes); /* checked 4jul05 tonyc */
@@ -34,16 +35,16 @@ btm_destroy(struct i_bitmap *btm) {
 
 
 int
-btm_test(struct i_bitmap *btm,int x,int y) {
-  int btno;
+btm_test(struct i_bitmap *btm,i_img_dim x,i_img_dim y) {
+  i_img_dim btno;
   if (x<0 || x>btm->xsize-1 || y<0 || y>btm->ysize-1) return 0;
   btno=btm->xsize*y+x;
   return (1<<(btno%8))&(btm->data[btno/8]);
 }
 
 void
-btm_set(struct i_bitmap *btm,int x,int y) {
-  int btno;
+btm_set(struct i_bitmap *btm,i_img_dim x,i_img_dim y) {
+  i_img_dim btno;
   if (x<0 || x>btm->xsize-1 || y<0 || y>btm->ysize-1) abort();
   btno=btm->xsize*y+x;
   btm->data[btno/8]|=1<<(btno%8);
@@ -57,49 +58,38 @@ btm_set(struct i_bitmap *btm,int x,int y) {
   Bucketed linked list - stack type 
 */
 
-struct llink *
-llink_new(struct llink* p,int size) {
-  struct llink *l;
-  l       = mymalloc(sizeof(struct llink)); /* checked 4jul05 tonyc */
-  l->n    = NULL;
-  l->p    = p;
-  l->fill = 0;
-  l->data = mymalloc(size); /* checked 4jul05 tonyc - depends on caller to llist_push */
-  return l;
-}
+static struct llink *
+llink_new(struct llink* p,size_t size);
+static int
+llist_llink_push(struct llist *lst, struct llink *lnk,const void *data);
+static void
+llink_destroy(struct llink* l);
 
-/* free's the data pointer, itself, and sets the previous' next pointer to null */
+/*
+=item llist_new()
+=synopsis struct llist *l = llist_new(100, sizeof(foo);
 
-void
-llink_destroy(struct llink* l) {
-  if (l->p != NULL) { l->p->n=NULL; }
-  myfree(l->data);
-  myfree(l);
-}
+Create a new stack structure.  Implemented as a linked list of pools.
 
+Parameters:
 
-/* if it returns true there wasn't room for the
-   item on the link */
+=over
 
-int
-llist_llink_push(struct llist *lst, struct llink *lnk,void *data) {
-  int multip;
-  multip = lst->multip;
+=item *
 
-  /*   fprintf(stderr,"llist_llink_push: data=0x%08X -> 0x%08X\n",data,*(int*)data);
-       fprintf(stderr,"ssize = %d, multip = %d, fill = %d\n",lst->ssize,lst->multip,lnk->fill); */
-  if (lnk->fill == lst->multip) return 1;
-  /*   memcpy((char*)(lnk->data)+lnk->fill*lst->ssize,data,lst->ssize); */
-  memcpy((char*)(lnk->data)+lnk->fill*lst->ssize,data,lst->ssize);
-  
-  /*   printf("data=%X res=%X\n",*(int*)data,*(int*)(lnk->data));*/
-  lnk->fill++;
-  lst->count++;
-  return 0;
-}
+multip - number of entries in each pool
+
+=item *
+
+ssize - size of the objects being pushed/popped
+
+=back
+
+=cut
+*/
 
 struct llist *
-llist_new(int multip, int ssize) {
+llist_new(int multip, size_t ssize) {
   struct llist *l;
   l         = mymalloc(sizeof(struct llist)); /* checked 4jul05 tonyc */
   l->h      = NULL;
@@ -110,9 +100,18 @@ llist_new(int multip, int ssize) {
   return l;
 }
 
+/*
+=item llist_push()
+=synopsis llist_push(l, &foo);
+
+Push an item on the stack.
+
+=cut
+*/
+
 void
-llist_push(struct llist *l,void *data) {
-  int ssize  = l->ssize;
+llist_push(struct llist *l,const void *data) {
+  size_t ssize  = l->ssize;
   int multip = l->multip;
   
   /*  fprintf(stderr,"llist_push: data=0x%08X\n",data);
@@ -136,7 +135,15 @@ llist_push(struct llist *l,void *data) {
   }
 }
 
-/* returns 0 if the list is empty */
+/* 
+=item llist_pop()
+
+Pop an item off the list, storing it at C<data> which must have enough room for an object of the size supplied to llist_new().
+
+returns 0 if the list is empty
+
+=cut
+*/
 
 int
 llist_pop(struct llist *l,void *data) {
@@ -177,6 +184,14 @@ llist_dump(struct llist *l) {
   }
 }
 
+/*
+=item llist_destroy()
+
+Destroy a linked-list based stack.
+
+=cut
+*/
+
 void
 llist_destroy(struct llist *l) {
   struct llink *t,*lnk = l->h;
@@ -188,10 +203,48 @@ llist_destroy(struct llist *l) {
   myfree(l);
 }
 
+/* Links */
+
+static struct llink *
+llink_new(struct llink* p,size_t size) {
+  struct llink *l;
+  l       = mymalloc(sizeof(struct llink)); /* checked 4jul05 tonyc */
+  l->n    = NULL;
+  l->p    = p;
+  l->fill = 0;
+  l->data = mymalloc(size); /* checked 4jul05 tonyc - depends on caller to llist_push */
+  return l;
+}
+
+/* free's the data pointer, itself, and sets the previous' next pointer to null */
+
+static void
+llink_destroy(struct llink* l) {
+  if (l->p != NULL) { l->p->n=NULL; }
+  myfree(l->data);
+  myfree(l);
+}
 
 
+/* if it returns true there wasn't room for the
+   item on the link */
 
+static int
+llist_llink_push(struct llist *lst, struct llink *lnk, const void *data) {
+  int multip;
+  multip = lst->multip;
 
+  /*   fprintf(stderr,"llist_llink_push: data=0x%08X -> 0x%08X\n",data,*(int*)data);
+       fprintf(stderr,"ssize = %d, multip = %d, fill = %d\n",lst->ssize,lst->multip,lnk->fill); */
+  if (lnk->fill == lst->multip) return 1;
+  /*   memcpy((char*)(lnk->data)+lnk->fill*lst->ssize,data,lst->ssize); */
+  memcpy((char*)(lnk->data)+lnk->fill*lst->ssize,data,lst->ssize);
+  
+  /*   printf("data=%X res=%X\n",*(int*)data,*(int*)(lnk->data));*/
+  lnk->fill++;
+  lst->count++;
+  return 0;
+}
 
 /*
   Oct-tree implementation 
@@ -291,3 +344,7 @@ octt_histo(struct octt *ct, unsigned int **col_usage_it_adr) {
 }
 
 
+i_img_dim
+i_abs(i_img_dim x) {
+  return x < 0 ? -x : x;
+}

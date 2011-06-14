@@ -22,6 +22,7 @@ FT2_DESTROY(font)
 int
 FT2_CLONE_SKIP(...)
     CODE:
+        (void)items;
         RETVAL = 1;
     OUTPUT:
         RETVAL
@@ -90,7 +91,7 @@ i_ft2_bbox(font, cheight, cwidth, text_sv, utf8)
         SV *text_sv
 	int utf8
       PREINIT:
-        int bbox[BOUNDING_BOX_COUNT];
+        i_img_dim bbox[BOUNDING_BOX_COUNT];
         int i;
         char *text;
         STRLEN text_len;
@@ -117,7 +118,7 @@ i_ft2_bbox_r(font, cheight, cwidth, text, vlayout, utf8)
         int vlayout
         int utf8
       PREINIT:
-        int bbox[8];
+        i_img_dim bbox[8];
         int i;
       PPCODE:
 #ifdef SvUTF8
@@ -135,8 +136,8 @@ undef_int
 i_ft2_text(font, im, tx, ty, cl, cheight, cwidth, text, align, aa, vlayout, utf8)
         Imager::Font::FT2x font
         Imager::ImgRaw im
-        int tx
-        int ty
+        i_img_dim tx
+        i_img_dim ty
         Imager::Color cl
         double cheight
         double cwidth
@@ -163,8 +164,8 @@ undef_int
 i_ft2_cp(font, im, tx, ty, channel, cheight, cwidth, text_sv, align, aa, vlayout, utf8)
         Imager::Font::FT2x font
         Imager::ImgRaw im
-        int tx
-        int ty
+        i_img_dim tx
+        i_img_dim ty
         int channel
         double cheight
         double cwidth
@@ -190,12 +191,12 @@ i_ft2_cp(font, im, tx, ty, channel, cheight, cwidth, text_sv, align, aa, vlayout
 void
 ft2_transform_box(font, x0, x1, x2, x3)
         Imager::Font::FT2x font
-        int x0
-        int x1
-        int x2
-        int x3
+        i_img_dim x0
+        i_img_dim x1
+        i_img_dim x2
+        i_img_dim x3
       PREINIT:
-        int box[4];
+        i_img_dim box[4];
       PPCODE:
         box[0] = x0; box[1] = x1; box[2] = x2; box[3] = x3;
         ft2_transform_box(font, box);
@@ -214,8 +215,8 @@ i_ft2_has_chars(handle, text_sv, utf8)
         char *text;
         STRLEN len;
         char *work;
-        int count;
-        int i;
+        size_t count;
+        size_t i;
       PPCODE:
 #ifdef SvUTF8
         if (SvUTF8(text_sv))
@@ -241,7 +242,7 @@ i_ft2_face_name(handle)
         Imager::Font::FT2x handle
       PREINIT:
         char name[255];
-        int len;
+        size_t len;
       PPCODE:
         len = i_ft2_face_name(handle, name, sizeof(name));
         if (len) {

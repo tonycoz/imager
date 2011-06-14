@@ -34,11 +34,11 @@ i_t1_destroy(font_id)
 undef_int
 i_t1_cp(im,xb,yb,channel,fontnum,points,str_sv,len_ignored,align,utf8=0,flags="")
     Imager::ImgRaw     im
-	       int     xb
-	       int     yb
+	 i_img_dim     xb
+	 i_img_dim     yb
 	       int     channel
 	       int     fontnum
-             float     points
+            double     points
 	        SV*    str_sv
 	       int     align
                int     utf8
@@ -61,14 +61,14 @@ i_t1_cp(im,xb,yb,channel,fontnum,points,str_sv,len_ignored,align,utf8=0,flags=""
 void
 i_t1_bbox(fontnum,point,str_sv,len_ignored,utf8=0,flags="")
                int     fontnum
-	     float     point
+	    double     point
 	        SV*    str_sv
                int     utf8
               char*    flags
 	     PREINIT:
                char *str;
                STRLEN len;
-	       int     cords[BOUNDING_BOX_COUNT];
+	       i_img_dim     cords[BOUNDING_BOX_COUNT];
                int i;
                int rc;
 	     PPCODE:
@@ -89,11 +89,11 @@ i_t1_bbox(fontnum,point,str_sv,len_ignored,utf8=0,flags="")
 undef_int
 i_t1_text(im,xb,yb,cl,fontnum,points,str_sv,len_ignored,align,utf8=0,flags="")
     Imager::ImgRaw     im
-	       int     xb
-	       int     yb
+	 i_img_dim     xb
+	 i_img_dim     yb
      Imager::Color    cl
 	       int     fontnum
-             float     points
+            double     points
 	        SV*    str_sv
 	       int     align
                int     utf8

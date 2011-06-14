@@ -49,10 +49,10 @@ PERL
 # test the file limit functions
 # by default the limits are zero (unlimited)
 print "# image file limits\n";
-is_deeply([ Imager->get_file_limits() ], [0, 0, 0],
+is_deeply([ Imager->get_file_limits() ], [0, 0, 0x40000000 ],
 	  "check defaults");
 ok(Imager->set_file_limits(width=>100), "set only width");
-is_deeply([ Imager->get_file_limits() ], [100, 0, 0 ],
+is_deeply([ Imager->get_file_limits() ], [100, 0, 0x40000000 ],
 	  "check width set");
 ok(Imager->set_file_limits(height=>150, bytes=>10000),
    "set height and bytes");

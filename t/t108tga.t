@@ -1,7 +1,7 @@
 #!perl -w
 use Imager qw(:all);
 use strict;
-use Test::More tests=>46;
+use Test::More tests=>66;
 use Imager::Test qw(is_color4 is_image);
 
 -d "testout" or mkdir "testout";
@@ -153,6 +153,83 @@ is($compressed, 1, "check compressed tag");
   my $im2 = Imager->new;
   ok($im2->read(data => $data), "read it back");
   is_image($im, $im2, "check they match");
+}
+
+{ # prior to the types re-work we treated the tga xsize/ysize as
+  # signed short, which is wrong
+ SKIP:
+  {
+    my $im = Imager->new(xsize => 40960, ysize => 1);
+    my $data;
+    ok($im->write(data => \$data, type => "tga"),
+       "write a wide (but not too wide) image out");
+    my $im2 = Imager->new(data => $data);
+    ok($im2, "read it back in")
+      or skip("Couldn't read the wide image", 2);
+    is($im2->getwidth, 40960, "make sure the width survived the trip");
+    is($im2->getheight, 1, "make sure the height survived the trip");
+  }
+
+ SKIP:
+  {
+    my $im = Imager->new(xsize => 1, ysize => 40960);
+    my $data;
+    ok($im->write(data => \$data, type => "tga"),
+       "write a tall (but not too tall) image out");
+    my $im2 = Imager->new(data => $data);
+    ok($im2, "read it back in")
+      or skip("Couldn't read the tall image", 2);
+    is($im2->getwidth, 1, "make sure the width survived the trip");
+    is($im2->getheight, 40960, "make sure the height survived the trip");
+  }
+}
+
+{
+  # TGA files are limited to 0xFFFF x 0xFFFF pixels
+  my $max_dim = 0xFFFF;
+  {
+    my $im = Imager->new(xsize => 1+$max_dim, ysize => 1);
+    my $data = '';
+    ok(!$im->write(data => \$data, type => "tga"),
+       "fail to write too wide an image");
+    is($im->errstr, "image too large for TGA",
+       "check error message");
+  }
+ SKIP:
+  {
+    my $im = Imager->new(xsize => $max_dim, ysize => 1);
+    $im->box(fill => { hatch => "check4x4" });
+    my $data = '';
+    ok($im->write(data => \$data, type => "tga"),
+       "write image at width limit")
+      or print "# ", $im->errstr, "\n";
+    my $im2 = Imager->new(data => $data, ftype => "tga");
+    ok($im2, "read it ok")
+      or skip("cannot load the wide image", 1);
+    is($im->getwidth, $max_dim, "check width");
+    is($im->getheight, 1, "check height");
+  }
+  {
+    my $im = Imager->new(xsize => 1, ysize => 1+$max_dim);
+    my $data = '';
+    ok(!$im->write(data => \$data, type => "tga"),
+       "fail to write too tall an image");
+    is($im->errstr, "image too large for TGA",
+       "check error message");
+  }
+ SKIP:
+  {
+    my $im = Imager->new(xsize => 1, ysize => $max_dim);
+    $im->box(fill => { hatch => "check2x2" });
+    my $data = '';
+    ok($im->write(data => \$data, type => "tga"),
+       "write image at width limit");
+    my $im2 = Imager->new(data => $data, ftype => "tga");
+    ok($im2, "read it ok")
+      or skip("cannot load the wide image", 1);
+    is($im->getwidth, 1, "check width");
+    is($im->getheight, $max_dim, "check height");
+  }
 }
 
 sub write_test {

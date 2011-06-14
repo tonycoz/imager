@@ -29,8 +29,9 @@
 
 static
 void
-interleave(unsigned char *inbuffer,unsigned char *outbuffer,int rowsize,int channels) {
-  int ch,ind,i;
+interleave(unsigned char *inbuffer,unsigned char *outbuffer,i_img_dim rowsize,int channels) {
+  i_img_dim ind,i;
+  int ch;
   i=0;
   if (inbuffer == outbuffer) return; /* Check if data is already in interleaved format */
   for (ind=0; ind<rowsize; ind++) 
@@ -41,8 +42,9 @@ interleave(unsigned char *inbuffer,unsigned char *outbuffer,int rowsize,int chan
 static
 void
 expandchannels(unsigned char *inbuffer, unsigned char *outbuffer, 
-	       int xsize, int datachannels, int storechannels) {
-  int x, ch;
+	       i_img_dim xsize, int datachannels, int storechannels) {
+  i_img_dim x;
+  int ch;
   int copy_chans = storechannels > datachannels ? datachannels : storechannels;
   if (inbuffer == outbuffer)
     return; /* Check if data is already in expanded format */
@@ -55,21 +57,22 @@ expandchannels(unsigned char *inbuffer, unsigned char *outbuffer,
 }
 
 i_img *
-i_readraw_wiol(io_glue *ig, int x, int y, int datachannels, int storechannels, int intrl) {
+i_readraw_wiol(io_glue *ig, i_img_dim x, i_img_dim y, int datachannels, int storechannels, int intrl) {
   i_img* im;
-  int rc,k;
+  ssize_t rc;
+  i_img_dim k;
 
   unsigned char *inbuffer;
   unsigned char *ilbuffer;
   unsigned char *exbuffer;
   
-  int inbuflen,ilbuflen,exbuflen;
+  size_t inbuflen,ilbuflen,exbuflen;
 
   i_clear_error();
   
   io_glue_commit_types(ig);
-  mm_log((1, "i_readraw(ig %p,x %d,y %d,datachannels %d,storechannels %d,intrl %d)\n",
-	  ig, x, y, datachannels, storechannels, intrl));
+  mm_log((1, "i_readraw(ig %p,x %" i_DF ",y %" i_DF ",datachannels %d,storechannels %d,intrl %d)\n",
+	  ig, i_DFc(x), i_DFc(y), datachannels, storechannels, intrl));
 
   if (intrl != 0 && intrl != 1) {
     i_push_error(0, "raw_interleave must be 0 or 1");
@@ -88,7 +91,8 @@ i_readraw_wiol(io_glue *ig, int x, int y, int datachannels, int storechannels, i
   ilbuflen = inbuflen;
   exbuflen = im->xsize*storechannels;
   inbuffer = (unsigned char*)mymalloc(inbuflen);
-  mm_log((1,"inbuflen: %d, ilbuflen: %d, exbuflen: %d.\n",inbuflen,ilbuflen,exbuflen));
+  mm_log((1,"inbuflen: %ld, ilbuflen: %ld, exbuflen: %ld.\n",
+	  (long)inbuflen, (long)ilbuflen, (long)exbuflen));
 
   if (intrl==0) ilbuffer = inbuffer; 
   else ilbuffer=mymalloc(inbuflen);
@@ -130,7 +134,7 @@ i_readraw_wiol(io_glue *ig, int x, int y, int datachannels, int storechannels, i
 
 undef_int
 i_writeraw_wiol(i_img* im, io_glue *ig) {
-  int rc;
+  ssize_t rc;
 
   io_glue_commit_types(ig);
   i_clear_error();
@@ -148,10 +152,10 @@ i_writeraw_wiol(i_img* im, io_glue *ig) {
     if (im->type == i_direct_type) {
       /* just save it as 8-bits, maybe support saving higher bit count
          raw images later */
-      int line_size = im->xsize * im->channels;
+      size_t line_size = im->xsize * im->channels;
       unsigned char *data = mymalloc(line_size);
 
-      int y = 0;
+      i_img_dim y = 0;
       rc = line_size;
       while (rc == line_size && y < im->ysize) {
 	i_gsamp(im, 0, im->xsize, y, data, NULL, im->channels);
@@ -167,10 +171,10 @@ i_writeraw_wiol(i_img* im, io_glue *ig) {
       /* paletted image - assumes the caller puts the palette somewhere 
          else
       */
-      int line_size = sizeof(i_palidx) * im->xsize;
+      size_t line_size = sizeof(i_palidx) * im->xsize;
       i_palidx *data = mymalloc(sizeof(i_palidx) * im->xsize);
 
-      int y = 0;
+      i_img_dim y = 0;
       rc = line_size;
       while (rc == line_size && y < im->ysize) {
 	i_gpal(im, 0, im->xsize, y, data);

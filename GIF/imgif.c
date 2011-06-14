@@ -8,6 +8,7 @@
 #include <errno.h>
 #include <string.h>
 #include <stdlib.h>
+#include <stdio.h>
 
 /*
 =head1 NAME
@@ -60,8 +61,6 @@ functionality with giflib3.
 
 static char const *gif_error_msg(int code);
 static void gif_push_error(void);
-
-static int gif_read_callback(GifFileType *gft, GifByteType *buf, int length);
 
 /* Make some variables global, so we could access them faster: */
 
@@ -1244,7 +1243,6 @@ quantizing to the caller specified palette.
 
 static int
 has_common_palette(i_img **imgs, int count, i_quantize *quant) {
-  int size = quant->mc_count;
   int i;
   int imgn;
   char used[256];
@@ -1306,7 +1304,7 @@ quant_paletted(i_quantize *quant, i_img *img) {
   i_palidx *p = data;
   i_palidx trans[256];
   int i;
-  int x, y;
+  i_img_dim x, y;
 
   /* build a translation table */
   for (i = 0; i < i_colorcount(img); ++i) {
@@ -1379,7 +1377,7 @@ i_writegif_low(i_quantize *quant, GifFileType *gf, i_img **imgs, int count) {
   if (!i_tags_get_int(&imgs[0]->tags, "gif_screen_width", 0, &scrw))
     scrw = 0;
   if (!i_tags_get_int(&imgs[0]->tags, "gif_screen_height", 0, &scrh))
-    scrw = 0;
+    scrh = 0;
 
   anylocal = 0;
   localmaps = mymalloc(sizeof(int) * count);
@@ -1387,25 +1385,38 @@ i_writegif_low(i_quantize *quant, GifFileType *gf, i_img **imgs, int count) {
   glob_img_count = 0;
   glob_want_trans = 0;
   for (imgn = 0; imgn < count; ++imgn) {
+    i_img *im = imgs[imgn];
+    if (im->xsize > 0xFFFF || im->ysize > 0xFFFF) {
+      i_push_error(0, "image too large for GIF");
+      return 0;
+    }
+    
     posx = posy = 0;
-    i_tags_get_int(&imgs[imgn]->tags, "gif_left", 0, &posx);
-    i_tags_get_int(&imgs[imgn]->tags, "gif_top", 0, &posy);
-    if (imgs[imgn]->xsize + posx > scrw)
-      scrw = imgs[imgn]->xsize + posx;
-    if (imgs[imgn]->ysize + posy > scrh)
-      scrh = imgs[imgn]->ysize + posy;
-    if (!i_tags_get_int(&imgs[imgn]->tags, "gif_local_map", 0, localmaps+imgn))
+    i_tags_get_int(&im->tags, "gif_left", 0, &posx);
+    if (posx < 0) posx = 0;
+    i_tags_get_int(&im->tags, "gif_top", 0, &posy);
+    if (posy < 0) posy = 0;
+    if (im->xsize + posx > scrw)
+      scrw = im->xsize + posx;
+    if (im->ysize + posy > scrh)
+      scrh = im->ysize + posy;
+    if (!i_tags_get_int(&im->tags, "gif_local_map", 0, localmaps+imgn))
       localmaps[imgn] = 0;
     if (localmaps[imgn])
       anylocal = 1;
     else {
-      if (imgs[imgn]->channels == 4) {
+      if (im->channels == 4) {
         glob_want_trans = 1;
       }
-      glob_imgs[glob_img_count++] = imgs[imgn];
+      glob_imgs[glob_img_count++] = im;
     }
   }
   glob_want_trans = glob_want_trans && quant->transp != tr_none ;
+
+  if (scrw > 0xFFFF || scrh > 0xFFFF) {
+    i_push_error(0, "screen size too large for GIF");
+    return 0;
+  }
 
   orig_count = quant->mc_count;
   orig_size = quant->mc_size;

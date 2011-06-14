@@ -29,6 +29,7 @@ i_ppix_norm(i_img *im, i_img_dim x, i_img_dim y, i_color const *col) {
     work = *col;
     i_adapt_colors(2, 4, &work, 1);
     i_gpix(im, x, y, &src);
+    remains = 255 - work.channel[1];
     dest_alpha = work.channel[1] + remains * src.channel[1] / 255;
     if (work.channel[1] == 255) {
       return i_ppix(im, x, y, &work);
@@ -55,6 +56,7 @@ i_ppix_norm(i_img *im, i_img_dim x, i_img_dim y, i_color const *col) {
   case 4:
     work = *col;
     i_gpix(im, x, y, &src);
+    remains = 255 - work.channel[3];
     dest_alpha = work.channel[3] + remains * src.channel[3] / 255;
     if (work.channel[3] == 255) {
       return i_ppix(im, x, y, &work);
@@ -75,12 +77,12 @@ i_ppix_norm(i_img *im, i_img_dim x, i_img_dim y, i_color const *col) {
 
 static void
 cfill_from_btm(i_img *im, i_fill_t *fill, struct i_bitmap *btm, 
-	       int bxmin, int bxmax, int bymin, int bymax);
+	       i_img_dim bxmin, i_img_dim bxmax, i_img_dim bymin, i_img_dim bymax);
 
 void
-i_mmarray_cr(i_mmarray *ar,int l) {
-  int i;
-  int alloc_size;
+i_mmarray_cr(i_mmarray *ar,i_img_dim l) {
+  i_img_dim i;
+  size_t alloc_size;
 
   ar->lines=l;
   alloc_size = sizeof(minmax) * l;
@@ -100,7 +102,7 @@ i_mmarray_dst(i_mmarray *ar) {
 }
 
 void
-i_mmarray_add(i_mmarray *ar,int x,int y) {
+i_mmarray_add(i_mmarray *ar,i_img_dim x,i_img_dim y) {
   if (y>-1 && y<ar->lines)
     {
       if (x<ar->data[y].min) ar->data[y].min=x;
@@ -109,29 +111,32 @@ i_mmarray_add(i_mmarray *ar,int x,int y) {
 }
 
 int
-i_mmarray_gmin(i_mmarray *ar,int y) {
+i_mmarray_gmin(i_mmarray *ar,i_img_dim y) {
   if (y>-1 && y<ar->lines) return ar->data[y].min;
   else return -1;
 }
 
 int
-i_mmarray_getm(i_mmarray *ar,int y) {
+i_mmarray_getm(i_mmarray *ar,i_img_dim y) {
   if (y>-1 && y<ar->lines) return ar->data[y].max;
   else return MAXINT;
 }
 
+#if 0
+/* unused? */
 void
 i_mmarray_render(i_img *im,i_mmarray *ar,i_color *val) {
-  int i,x;
+  i_img_dim i,x;
   for(i=0;i<ar->lines;i++) if (ar->data[i].max!=-1) for(x=ar->data[i].min;x<ar->data[i].max;x++) i_ppix(im,x,i,val);
 }
+#endif
 
 static
 void
-i_arcdraw(int x1, int y1, int x2, int y2, i_mmarray *ar) {
+i_arcdraw(i_img_dim x1, i_img_dim y1, i_img_dim x2, i_img_dim y2, i_mmarray *ar) {
   double alpha;
   double dsec;
-  int temp;
+  i_img_dim temp;
   alpha=(double)(y2-y1)/(double)(x2-x1);
   if (fabs(alpha) <= 1) 
     {
@@ -139,7 +144,7 @@ i_arcdraw(int x1, int y1, int x2, int y2, i_mmarray *ar) {
       dsec=y1;
       while(x1<=x2)
 	{
-	  i_mmarray_add(ar,x1,(int)(dsec+0.5));
+	  i_mmarray_add(ar,x1,(i_img_dim)(dsec+0.5));
 	  dsec+=alpha;
 	  x1++;
 	}
@@ -151,7 +156,7 @@ i_arcdraw(int x1, int y1, int x2, int y2, i_mmarray *ar) {
       dsec=x1;
       while(y1<=y2)
 	{
-	  i_mmarray_add(ar,(int)(dsec+0.5),y1);
+	  i_mmarray_add(ar,(i_img_dim)(dsec+0.5),y1);
 	  dsec+=alpha;
 	  y1++;
 	}
@@ -160,32 +165,33 @@ i_arcdraw(int x1, int y1, int x2, int y2, i_mmarray *ar) {
 
 void
 i_mmarray_info(i_mmarray *ar) {
-  int i;
+  i_img_dim i;
   for(i=0;i<ar->lines;i++)
-  if (ar->data[i].max!=-1) printf("line %d: min=%d, max=%d.\n",i,ar->data[i].min,ar->data[i].max);
+  if (ar->data[i].max!=-1)
+    printf("line %"i_DF ": min=%" i_DF ", max=%" i_DF ".\n",
+	   i_DFc(i), i_DFc(ar->data[i].min), i_DFc(ar->data[i].max));
 }
 
 static void
-i_arc_minmax(i_int_hlines *hlines,int x,int y,float rad,float d1,float d2) {
+i_arc_minmax(i_int_hlines *hlines,i_img_dim x,i_img_dim y, double rad,float d1,float d2) {
   i_mmarray dot;
-  float f,fx,fy;
-  int x1,y1;
-
-  /*mm_log((1,"i_arc(im* 0x%x,x %d,y %d,rad %.2f,d1 %.2f,d2 %.2f,val 0x%x)\n",im,x,y,rad,d1,d2,val));*/
+  double f,fx,fy;
+  i_img_dim x1,y1;
 
   i_mmarray_cr(&dot, hlines->limit_y);
 
-  x1=(int)(x+0.5+rad*cos(d1*PI/180.0));
-  y1=(int)(y+0.5+rad*sin(d1*PI/180.0));
+  x1=(i_img_dim)(x+0.5+rad*cos(d1*PI/180.0));
+  y1=(i_img_dim)(y+0.5+rad*sin(d1*PI/180.0));
   fx=(float)x1; fy=(float)y1;
 
   /*  printf("x1: %d.\ny1: %d.\n",x1,y1); */
   i_arcdraw(x, y, x1, y1, &dot);
 
-  x1=(int)(x+0.5+rad*cos(d2*PI/180.0));
-  y1=(int)(y+0.5+rad*sin(d2*PI/180.0));
+  x1=(i_img_dim)(x+0.5+rad*cos(d2*PI/180.0));
+  y1=(i_img_dim)(y+0.5+rad*sin(d2*PI/180.0));
 
-  for(f=d1;f<=d2;f+=0.01) i_mmarray_add(&dot,(int)(x+0.5+rad*cos(f*PI/180.0)),(int)(y+0.5+rad*sin(f*PI/180.0)));
+  for(f=d1;f<=d2;f+=0.01)
+    i_mmarray_add(&dot,(i_img_dim)(x+0.5+rad*cos(f*PI/180.0)),(i_img_dim)(y+0.5+rad*sin(f*PI/180.0)));
   
   /*  printf("x1: %d.\ny1: %d.\n",x1,y1); */
   i_arcdraw(x, y, x1, y1, &dot);
@@ -193,7 +199,7 @@ i_arc_minmax(i_int_hlines *hlines,int x,int y,float rad,float d1,float d2) {
   /* render the minmax values onto the hlines */
   for (y = 0; y < dot.lines; y++) {
     if (dot.data[y].max!=-1) {
-      int minx, width;
+      i_img_dim minx, width;
       minx = dot.data[y].min;
       width = dot.data[y].max - dot.data[y].min + 1;
       i_int_hlines_add(hlines, y, minx, width);
@@ -205,7 +211,7 @@ i_arc_minmax(i_int_hlines *hlines,int x,int y,float rad,float d1,float d2) {
 }
 
 static void
-i_arc_hlines(i_int_hlines *hlines,int x,int y,float rad,float d1,float d2) {
+i_arc_hlines(i_int_hlines *hlines,i_img_dim x,i_img_dim y,double rad,float d1,float d2) {
   if (d1 <= d2) {
     i_arc_minmax(hlines, x, y, rad, d1, d2);
   }
@@ -228,7 +234,7 @@ of angles in degrees from d1 to d2, with the color.
 */
 
 void
-i_arc(i_img *im,int x,int y,float rad,float d1,float d2,const i_color *val) {
+i_arc(i_img *im, i_img_dim x, i_img_dim y,double rad,double d1,double d2,const i_color *val) {
   i_int_hlines hlines;
 
   i_int_init_hlines_img(&hlines, im);
@@ -256,7 +262,7 @@ of angles in degrees from d1 to d2, with the fill object.
 #define MAX_CIRCLE_STEPS 360
 
 void
-i_arc_cfill(i_img *im,int x,int y,float rad,float d1,float d2,i_fill_t *fill) {
+i_arc_cfill(i_img *im, i_img_dim x, i_img_dim y,double rad,double d1,double d2,i_fill_t *fill) {
   i_int_hlines hlines;
 
   i_int_init_hlines_img(&hlines, im);
@@ -273,7 +279,7 @@ arc_poly(int *count, double **xvals, double **yvals,
 	 double x, double y, double rad, double d1, double d2) {
   double d1_rad, d2_rad;
   double circum;
-  int steps, point_count;
+  i_img_dim steps, point_count;
   double angle_inc;
 
   /* normalize the angles */
@@ -395,19 +401,19 @@ i_arc_aa_cfill(i_img *im, double x, double y, double rad, double d1, double d2,
 /* Temporary AA HACK */
 
 
-typedef int frac;
-static  frac float_to_frac(float x) { return (frac)(0.5+x*16.0); }
+typedef i_img_dim frac;
+static  frac float_to_frac(double x) { return (frac)(0.5+x*16.0); }
 
 static 
 void
-polar_to_plane(float cx, float cy, float angle, float radius, frac *x, frac *y) {
+polar_to_plane(double cx, double cy, float angle, double radius, frac *x, frac *y) {
   *x = float_to_frac(cx+radius*cos(angle));
   *y = float_to_frac(cy+radius*sin(angle));
 }
 
 static
 void
-make_minmax_list(i_mmarray *dot, float x, float y, float radius) {
+make_minmax_list(i_mmarray *dot, double x, double y, double radius) {
   float angle = 0.0;
   float astep = radius>0.1 ? .5/radius : 10;
   frac cx, cy, lx, ly, sx, sy;
@@ -452,7 +458,7 @@ make_minmax_list(i_mmarray *dot, float x, float y, float radius) {
 
 static
 int
-i_pixel_coverage(i_mmarray *dot, int x, int y) {
+i_pixel_coverage(i_mmarray *dot, i_img_dim x, i_img_dim y) {
   frac minx = x*16;
   frac maxx = minx+15;
   frac cy;
@@ -484,12 +490,13 @@ color.
 =cut
 */
 void
-i_circle_aa(i_img *im, float x, float y, float rad, const i_color *val) {
+i_circle_aa(i_img *im, double x, double y, double rad, const i_color *val) {
   i_mmarray dot;
   i_color temp;
-  int ly;
+  i_img_dim ly;
 
-  mm_log((1, "i_circle_aa(im %p, x %d, y %d, rad %.2f, val %p)\n", im, x, y, rad, val));
+  mm_log((1, "i_circle_aa(im %p, centre(" i_DFp "), rad %.2f, val %p)\n",
+	  im, i_DFcp(x, y), rad, val));
 
   i_mmarray_cr(&dot,16*im->ysize);
   make_minmax_list(&dot, x, y, rad);
@@ -618,7 +625,6 @@ static i_img_dim
 arc_seg(double angle, int scale) {
   i_img_dim seg = (angle + 45) / 90;
   double remains = angle - seg * 90; /* should be in the range [-45,45] */
-  int sign = remains < 0 ? -1 : remains ? 1 : 0;
 
   while (seg > 4)
     seg -= 4;
@@ -664,7 +670,7 @@ Implementation:
 
 int
 i_arc_out(i_img *im, i_img_dim xc, i_img_dim yc, i_img_dim r,
-	  float d1, float d2, const i_color *col) {
+	  double d1, double d2, const i_color *col) {
   i_img_dim x, y;
   i_img_dim dx, dy;
   int error;
@@ -673,7 +679,6 @@ i_arc_out(i_img *im, i_img_dim xc, i_img_dim yc, i_img_dim r,
   i_img_dim sin_th;
   i_img_dim seg_d1, seg_d2;
   int seg_num;
-  double inv_r;
   i_img_dim scale = r + 1;
   i_img_dim seg1 = scale * 2;
   i_img_dim seg2 = scale * 4;
@@ -766,7 +771,7 @@ i_arc_out(i_img *im, i_img_dim xc, i_img_dim yc, i_img_dim r,
 
 static double
 cover(i_img_dim r, i_img_dim j) {
-  float rjsqrt = sqrt(r*r - j*j);
+  double rjsqrt = sqrt(r*r - j*j);
 
   return ceil(rjsqrt) - rjsqrt;
 }
@@ -832,8 +837,6 @@ i_circle_out_aa(i_img *im, i_img_dim xc, i_img_dim yc, i_img_dim r, const i_colo
   while (i > j+1) {
     double d;
     int cv, inv_cv;
-    i_color p;
-    int ch;
     j++;
     d = cover(r, j);
     cv = (int)(d * 255 + 0.5);
@@ -912,7 +915,7 @@ Gems.
 */
 
 int
-i_arc_out_aa(i_img *im, i_img_dim xc, i_img_dim yc, i_img_dim r, float d1, float d2, const i_color *col) {
+i_arc_out_aa(i_img *im, i_img_dim xc, i_img_dim yc, i_img_dim r, double d1, double d2, const i_color *col) {
   i_img_dim i, j;
   double t;
   i_color workc = *col;
@@ -977,8 +980,6 @@ i_arc_out_aa(i_img *im, i_img_dim xc, i_img_dim yc, i_img_dim r, float d1, float
     
     while (i > j+1) {
       int cv, inv_cv;
-      i_color p;
-      int ch;
       double d;
       j++;
       d = cover(r, j);
@@ -1050,9 +1051,10 @@ Outlines the box from (x1,y1) to (x2,y2) inclusive with I<color>.
 */
 
 void
-i_box(i_img *im,int x1,int y1,int x2,int y2,const i_color *val) {
-  int x,y;
-  mm_log((1,"i_box(im* 0x%x,x1 %d,y1 %d,x2 %d,y2 %d,val 0x%x)\n",im,x1,y1,x2,y2,val));
+i_box(i_img *im,i_img_dim x1,i_img_dim y1,i_img_dim x2,i_img_dim y2,const i_color *val) {
+  i_img_dim x,y;
+  mm_log((1,"i_box(im* %p, p1(" i_DFp "), p2(" i_DFp "),val %p)\n",
+	  im, i_DFcp(x1,y1), i_DFcp(x2,y2), val));
   for(x=x1;x<x2+1;x++) {
     i_ppix(im,x,y1,val);
     i_ppix(im,x,y2,val);
@@ -1075,11 +1077,12 @@ Fills the box from (x1,y1) to (x2,y2) inclusive with color.
 */
 
 void
-i_box_filled(i_img *im,int x1,int y1,int x2,int y2, const i_color *val) {
+i_box_filled(i_img *im,i_img_dim x1,i_img_dim y1,i_img_dim x2,i_img_dim y2, const i_color *val) {
   i_img_dim x, y, width;
   i_palidx index;
 
-  mm_log((1,"i_box_filled(im* 0x%x,x1 %d,y1 %d,x2 %d,y2 %d,val 0x%x)\n",im,x1,y1,x2,y2,val));
+  mm_log((1,"i_box_filled(im* %p, p1(" i_DFp "), p2(" i_DFp "),val %p)\n",
+	  im, i_DFcp(x1, y1), i_DFcp(x2,y2) ,val));
 
   if (x1 > x2 || y1 > y2
       || x2 < 0 || y2 < 0
@@ -1135,11 +1138,11 @@ color.
 */
 
 int
-i_box_filledf(i_img *im,int x1,int y1,int x2,int y2, const i_fcolor *val) {
+i_box_filledf(i_img *im,i_img_dim x1,i_img_dim y1,i_img_dim x2,i_img_dim y2, const i_fcolor *val) {
   i_img_dim x, y, width;
-  i_palidx index;
 
-  mm_log((1,"i_box_filledf(im* 0x%x,x1 %d,y1 %d,x2 %d,y2 %d,val 0x%x)\n",im,x1,y1,x2,y2,val));
+  mm_log((1,"i_box_filledf(im* %p, p1(" i_DFp "), p2(" i_DFp "),val %p)\n",
+	  im, i_DFcp(x1, y1), i_DFcp(x2, y2), val));
 
   if (x1 > x2 || y1 > y2
       || x2 < 0 || y2 < 0
@@ -1193,9 +1196,11 @@ Fills the box from (x1,y1) to (x2,y2) inclusive with fill.
 */
 
 void
-i_box_cfill(i_img *im,int x1,int y1,int x2,int y2,i_fill_t *fill) {
+i_box_cfill(i_img *im,i_img_dim x1,i_img_dim y1,i_img_dim x2,i_img_dim y2,i_fill_t *fill) {
   i_render r;
-  mm_log((1,"i_box_cfill(im* 0x%x,x1 %d,y1 %d,x2 %d,y2 %d,fill 0x%x)\n",im,x1,y1,x2,y2,fill));
+
+  mm_log((1,"i_box_cfill(im* %p, p1(" i_DFp "), p2(" i_DFp "), fill %p)\n",
+	  im, i_DFcp(x1, y1), i_DFcp(x2,y2), fill));
 
   ++x2;
   if (x1 < 0)
@@ -1238,27 +1243,27 @@ Draw a line to image using Bresenham's line drawing algorithm
 */
 
 void
-i_line(i_img *im, int x1, int y1, int x2, int y2, const i_color *val, int endp) {
-  int x, y;
-  int dx, dy;
-  int p;
+i_line(i_img *im, i_img_dim x1, i_img_dim y1, i_img_dim x2, i_img_dim y2, const i_color *val, int endp) {
+  i_img_dim x, y;
+  i_img_dim dx, dy;
+  i_img_dim p;
 
   dx = x2 - x1;
   dy = y2 - y1;
 
 
   /* choose variable to iterate on */
-  if (abs(dx)>abs(dy)) {
-    int dx2, dy2, cpy;
+  if (i_abs(dx) > i_abs(dy)) {
+    i_img_dim dx2, dy2, cpy;
 
     /* sort by x */
     if (x1 > x2) {
-      int t;
+      i_img_dim t;
       t = x1; x1 = x2; x2 = t;
       t = y1; y1 = y2; y2 = t;
     }
     
-    dx = abs(dx);
+    dx = i_abs(dx);
     dx2 = dx*2;
     dy = y2 - y1;
 
@@ -1283,16 +1288,16 @@ i_line(i_img *im, int x1, int y1, int x2, int y2, const i_color *val, int endp) 
       i_ppix(im, x+1, y, val);
     }
   } else {
-    int dy2, dx2, cpx;
+    i_img_dim dy2, dx2, cpx;
 
     /* sort bx y */
     if (y1 > y2) {
-      int t;
+      i_img_dim t;
       t = x1; x1 = x2; x2 = t;
       t = y1; y1 = y2; y2 = t;
     }
     
-    dy = abs(dy);
+    dy = i_abs(dy);
     dx = x2 - x1;
     dy2 = dy*2;
 
@@ -1328,14 +1333,14 @@ i_line(i_img *im, int x1, int y1, int x2, int y2, const i_color *val, int endp) 
 
 
 void
-i_line_dda(i_img *im, int x1, int y1, int x2, int y2, i_color *val) {
+i_line_dda(i_img *im, i_img_dim x1, i_img_dim y1, i_img_dim x2, i_img_dim y2, i_color *val) {
 
-  float dy;
-  int x;
+  double dy;
+  i_img_dim x;
   
   for(x=x1; x<=x2; x++) {
-    dy = y1+ (x-x1)/(float)(x2-x1)*(y2-y1);
-    i_ppix(im, x, (int)(dy+0.5), val);
+    dy = y1+ (x-x1)/(double)(x2-x1)*(y2-y1);
+    i_ppix(im, x, (i_img_dim)(dy+0.5), val);
   }
 }
 
@@ -1352,26 +1357,26 @@ The point (x2, y2) is drawn only if C<endp> is set.
 */
 
 void
-i_line_aa(i_img *im, int x1, int y1, int x2, int y2, const i_color *val, int endp) {
-  int x, y;
-  int dx, dy;
-  int p;
+i_line_aa(i_img *im, i_img_dim x1, i_img_dim y1, i_img_dim x2, i_img_dim y2, const i_color *val, int endp) {
+  i_img_dim x, y;
+  i_img_dim dx, dy;
+  i_img_dim p;
 
   dx = x2 - x1;
   dy = y2 - y1;
 
   /* choose variable to iterate on */
-  if (abs(dx)>abs(dy)) {
-    int dx2, dy2, cpy;
+  if (i_abs(dx) > i_abs(dy)) {
+    i_img_dim dx2, dy2, cpy;
     
     /* sort by x */
     if (x1 > x2) {
-      int t;
+      i_img_dim t;
       t = x1; x1 = x2; x2 = t;
       t = y1; y1 = y2; y2 = t;
     }
     
-    dx = abs(dx);
+    dx = i_abs(dx);
     dx2 = dx*2;
     dy = y2 - y1;
 
@@ -1389,8 +1394,8 @@ i_line_aa(i_img *im, int x1, int y1, int x2, int y2, const i_color *val, int end
     for(x=x1; x<x2-1; x++) {
       int ch;
       i_color tval;
-      float t = (dy) ? -(float)(p)/(float)(dx2) : 1;
-      float t1, t2;
+      double t = (dy) ? -(float)(p)/(float)(dx2) : 1;
+      double t1, t2;
 
       if (t<0) t = 0;
       t1 = 1-t;
@@ -1414,16 +1419,16 @@ i_line_aa(i_img *im, int x1, int y1, int x2, int y2, const i_color *val, int end
       }
     }
   } else {
-    int dy2, dx2, cpx;
+    i_img_dim dy2, dx2, cpx;
 
     /* sort bx y */
     if (y1 > y2) {
-      int t;
+      i_img_dim t;
       t = x1; x1 = x2; x2 = t;
       t = y1; y1 = y2; y2 = t;
     }
     
-    dy = abs(dy);
+    dy = i_abs(dy);
     dx = x2 - x1;
     dy2 = dy*2;
 
@@ -1441,8 +1446,8 @@ i_line_aa(i_img *im, int x1, int y1, int x2, int y2, const i_color *val, int end
     for(y=y1; y<y2-1; y++) {
       int ch;
       i_color tval;
-      float t = (dx) ? -(float)(p)/(float)(dy2) : 1;
-      float t1, t2;
+      double t = (dx) ? -(double)(p)/(double)(dy2) : 1;
+      double t1, t2;
       
       if (t<0) t = 0;
       t1 = 1-t;
@@ -1450,12 +1455,12 @@ i_line_aa(i_img *im, int x1, int y1, int x2, int y2, const i_color *val, int end
 
       i_gpix(im,x,y+1,&tval);
       for(ch=0;ch<im->channels;ch++)
-	tval.channel[ch]=(unsigned char)(t1*(float)tval.channel[ch]+t2*(float)val->channel[ch]);
+	tval.channel[ch]=(unsigned char)(t1*(double)tval.channel[ch]+t2*(double)val->channel[ch]);
       i_ppix(im,x,y+1,&tval);
 
       i_gpix(im,x+cpx,y+1,&tval);
       for(ch=0;ch<im->channels;ch++)
-	tval.channel[ch]=(unsigned char)(t2*(float)tval.channel[ch]+t1*(float)val->channel[ch]);
+	tval.channel[ch]=(unsigned char)(t2*(double)tval.channel[ch]+t1*(double)val->channel[ch]);
       i_ppix(im,x+cpx,y+1,&tval);
 
       if (p<0) {
@@ -1480,9 +1485,9 @@ i_line_aa(i_img *im, int x1, int y1, int x2, int y2, const i_color *val, int end
 
 
 static double
-perm(int n,int k) {
+perm(i_img_dim n,i_img_dim k) {
   double r;
-  int i;
+  i_img_dim i;
   r=1;
   for(i=k+1;i<=n;i++) r*=i;
   for(i=1;i<=(n-k);i++) r/=i;
@@ -1500,7 +1505,7 @@ i_bezier_multi(i_img *im,int l,const double *x,const double *y, const i_color *v
   double *bzcoef;
   double t,cx,cy;
   int k,i;
-  int lx = 0,ly = 0;
+  i_img_dim lx = 0,ly = 0;
   int n=l-1;
   double itr,ccoef;
 
@@ -1526,11 +1531,11 @@ i_bezier_multi(i_img *im,int l,const double *x,const double *y, const i_color *v
     }
     /*    printf("%f -> (%d,%d)\n",t,(int)(0.5+cx),(int)(0.5+cy)); */
     if (i++) { 
-      i_line_aa(im,lx,ly,(int)(0.5+cx),(int)(0.5+cy),val, 1);
+      i_line_aa(im,lx,ly,(i_img_dim)(0.5+cx),(i_img_dim)(0.5+cy),val, 1);
     }
-      /*     i_ppix(im,(int)(0.5+cx),(int)(0.5+cy),val); */
-    lx=(int)(0.5+cx);
-    ly=(int)(0.5+cy);
+      /*     i_ppix(im,(i_img_dim)(0.5+cx),(i_img_dim)(0.5+cy),val); */
+    lx=(i_img_dim)(0.5+cx);
+    ly=(i_img_dim)(0.5+cy);
   }
   ICL_info(val);
   myfree(bzcoef);
@@ -1559,9 +1564,9 @@ i_bezier_multi(i_img *im,int l,const double *x,const double *y, const i_color *v
 
 /*
 struct stc {
-  int mylx,myrx; 
-  int dadlx,dadrx;
-  int myy;
+  i_img_dim mylx,myrx; 
+  i_img_dim dadlx,dadrx;
+  i_img_dim myy;
   int mydirection;
 };
 
@@ -1570,9 +1575,9 @@ Not used code???
 
 
 struct stack_element {
-  int myLx,myRx;
-  int dadLx,dadRx;
-  int myY;
+  i_img_dim myLx,myRx;
+  i_img_dim dadLx,dadRx;
+  i_img_dim myY;
   int myDirection;
 };
 
@@ -1581,7 +1586,7 @@ struct stack_element {
 
 static
 struct stack_element*
-crdata(int left,int right,int dadl,int dadr,int y, int dir) {
+crdata(i_img_dim left,i_img_dim right,i_img_dim dadl,i_img_dim dadr,i_img_dim y, int dir) {
   struct stack_element *ste;
   ste              = mymalloc(sizeof(struct stack_element)); /* checked 5jul05 tonyc */
   ste->myLx        = left;
@@ -1616,7 +1621,7 @@ i_ccomp_border(i_color const *val1, i_color const *val2, int ch) {
 }
 
 static int
-i_lspan(i_img *im, int seedx, int seedy, i_color const *val, ff_cmpfunc cmpfunc) {
+i_lspan(i_img *im, i_img_dim seedx, i_img_dim seedy, i_color const *val, ff_cmpfunc cmpfunc) {
   i_color cval;
   while(1) {
     if (seedx-1 < 0) break;
@@ -1629,7 +1634,7 @@ i_lspan(i_img *im, int seedx, int seedy, i_color const *val, ff_cmpfunc cmpfunc)
 }
 
 static int
-i_rspan(i_img *im, int seedx, int seedy, i_color const *val, ff_cmpfunc cmpfunc) {
+i_rspan(i_img *im, i_img_dim seedx, i_img_dim seedy, i_color const *val, ff_cmpfunc cmpfunc) {
   i_color cval;
   while(1) {
     if (seedx+1 > im->xsize-1) break;
@@ -1663,8 +1668,8 @@ i_rspan(i_img *im, int seedx, int seedy, i_color const *val, ff_cmpfunc cmpfunc)
 } while (0)
 
 #define ST_STACK(dir,dadLx,dadRx,lx,rx,y) do {                    \
-  int pushrx = rx+1;                                              \
-  int pushlx = lx-1;                                              \
+  i_img_dim pushrx = rx+1;                                              \
+  i_img_dim pushlx = lx-1;                                              \
   ST_PUSH(lx,rx,pushlx,pushrx,y+dir,dir);                         \
   if (rx > dadRx)                                                 \
     ST_PUSH(dadRx+1,rx,pushlx,pushrx,y-dir,-dir);                 \
@@ -1681,21 +1686,22 @@ i_rspan(i_img *im, int seedx, int seedy, i_color const *val, ff_cmpfunc cmpfunc)
 /* The function that does all the real work */
 
 static struct i_bitmap *
-i_flood_fill_low(i_img *im,int seedx,int seedy,
-                 int *bxminp, int *bxmaxp, int *byminp, int *bymaxp,
+i_flood_fill_low(i_img *im,i_img_dim seedx,i_img_dim seedy,
+                 i_img_dim *bxminp, i_img_dim *bxmaxp, i_img_dim *byminp, i_img_dim *bymaxp,
 		 i_color const *seed, ff_cmpfunc cmpfunc) {
-  int ltx, rtx;
-  int tx = 0;
+  i_img_dim ltx, rtx;
+  i_img_dim tx = 0;
 
-  int bxmin = seedx;
-  int bxmax = seedx;
-  int bymin = seedy;
-  int bymax = seedy;
+  i_img_dim bxmin = seedx;
+  i_img_dim bxmax = seedx;
+  i_img_dim bymin = seedy;
+  i_img_dim bymax = seedy;
 
   struct llist *st;
   struct i_bitmap *btm;
 
-  int channels,xsize,ysize;
+  int channels;
+  i_img_dim xsize,ysize;
   i_color cval;
 
   channels = im->channels;
@@ -1717,12 +1723,12 @@ i_flood_fill_low(i_img *im,int seedx,int seedy,
 
   while(st->count) {
     /* Stack variables */
-    int lx,rx;
-    int dadLx,dadRx;
-    int y;
+    i_img_dim lx,rx;
+    i_img_dim dadLx,dadRx;
+    i_img_dim y;
     int direction;
 
-    int x;
+    i_img_dim x;
     int wasIn=0;
 
     ST_POP(); /* sets lx, rx, dadLx, dadRx, y, direction */
@@ -1805,10 +1811,10 @@ Returns false if (C<seedx>, C<seedy>) are outside the image.
 */
 
 undef_int
-i_flood_fill(i_img *im, int seedx, int seedy, const i_color *dcol) {
-  int bxmin, bxmax, bymin, bymax;
+i_flood_fill(i_img *im, i_img_dim seedx, i_img_dim seedy, const i_color *dcol) {
+  i_img_dim bxmin, bxmax, bymin, bymax;
   struct i_bitmap *btm;
-  int x, y;
+  i_img_dim x, y;
   i_color val;
 
   i_clear_error();
@@ -1847,8 +1853,8 @@ Returns false if (C<seedx>, C<seedy>) are outside the image.
 */
 
 undef_int
-i_flood_cfill(i_img *im, int seedx, int seedy, i_fill_t *fill) {
-  int bxmin, bxmax, bymin, bymax;
+i_flood_cfill(i_img *im, i_img_dim seedx, i_img_dim seedy, i_fill_t *fill) {
+  i_img_dim bxmin, bxmax, bymin, bymax;
   struct i_bitmap *btm;
   i_color val;
 
@@ -1888,11 +1894,11 @@ Returns false if (C<seedx>, C<seedy>) are outside the image.
 */
 
 undef_int
-i_flood_fill_border(i_img *im, int seedx, int seedy, const i_color *dcol,
+i_flood_fill_border(i_img *im, i_img_dim seedx, i_img_dim seedy, const i_color *dcol,
 		    const i_color *border) {
-  int bxmin, bxmax, bymin, bymax;
+  i_img_dim bxmin, bxmax, bymin, bymax;
   struct i_bitmap *btm;
-  int x, y;
+  i_img_dim x, y;
 
   i_clear_error();
   if (seedx < 0 || seedx >= im->xsize ||
@@ -1928,9 +1934,9 @@ Returns false if (C<seedx>, C<seedy>) are outside the image.
 */
 
 undef_int
-i_flood_cfill_border(i_img *im, int seedx, int seedy, i_fill_t *fill,
+i_flood_cfill_border(i_img *im, i_img_dim seedx, i_img_dim seedy, i_fill_t *fill,
 		     const i_color *border) {
-  int bxmin, bxmax, bymin, bymax;
+  i_img_dim bxmin, bxmax, bymin, bymax;
   struct i_bitmap *btm;
 
   i_clear_error();
@@ -1953,9 +1959,9 @@ i_flood_cfill_border(i_img *im, int seedx, int seedy, i_fill_t *fill,
 
 static void
 cfill_from_btm(i_img *im, i_fill_t *fill, struct i_bitmap *btm, 
-	       int bxmin, int bxmax, int bymin, int bymax) {
-  int x, y;
-  int start;
+	       i_img_dim bxmin, i_img_dim bxmax, i_img_dim bymin, i_img_dim bymax) {
+  i_img_dim x, y;
+  i_img_dim start;
 
   i_render r;
 

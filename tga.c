@@ -46,8 +46,8 @@ typedef struct {
   char  colourmapdepth;
   short int x_origin;
   short int y_origin;
-  short width;
-  short height;
+  int width;
+  int height;
   char  bitsperpixel;
   char  imagedescriptor;
 } tga_header;
@@ -57,7 +57,7 @@ typedef enum { NoInit, Raw, Rle } rle_state;
 
 typedef struct {
   int compressed;
-  int bytepp;
+  size_t bytepp;
   rle_state state;
   unsigned char cval[4];
   int len;
@@ -72,7 +72,7 @@ typedef struct {
   io_glue *ig;
 } tga_dest;
 
-
+#define TGA_MAX_DIM 0xFFFF
 
 /*
 =item bpp_to_bytes(bpp)
@@ -86,7 +86,7 @@ Convert bits per pixel into bytes per pixel
 
 
 static
-int
+size_t
 bpp_to_bytes(unsigned int bpp) {
   switch (bpp) {
   case 8:
@@ -590,7 +590,7 @@ static
 int
 tga_palette_write(io_glue *ig, i_img *img, int bitspp, int colourmaplength) {
   int i;
-  int bytepp = bpp_to_bytes(bitspp);
+  size_t bytepp = bpp_to_bytes(bitspp);
   size_t palbsize = i_colorcount(img)*bytepp;
   unsigned char *palbuf = mymalloc(palbsize);
   
@@ -664,6 +664,7 @@ i_readtga_wiol(io_glue *ig, int length) {
   mm_log((1,"Descriptor:        %d\n",header.imagedescriptor));
 
   if (header.idlength) {
+    /* max of 256, so this is safe */
     idstring = mymalloc(header.idlength+1);
     if (ig->readcb(ig, idstring, header.idlength) != header.idlength) {
       i_push_error(errno, "short read on targa idstring");
@@ -781,7 +782,9 @@ i_readtga_wiol(io_glue *ig, int length) {
   }
   
   /* Allocate buffers */
+  /* width is max 0xffff, src.bytepp is max 4, so this is safe */
   databuf = mymalloc(width*src.bytepp);
+  /* similarly here */
   if (!mapped) linebuf = mymalloc(width*sizeof(i_color));
   
   for(y=0; y<height; y++) {
@@ -842,13 +845,17 @@ i_writetga_wiol(i_img *img, io_glue *ig, int wierdpack, int compress, char *idst
   idlen = strlen(idstring);
   mapped = img->type == i_palette_type;
 
-  mm_log((1,"i_writetga_wiol(img %p, ig %p, idstring %p, idlen %d, wierdpack %d, compress %d)\n",
-	  img, ig, idstring, idlen, wierdpack, compress));
+  mm_log((1,"i_writetga_wiol(img %p, ig %p, idstring %p, idlen %ld, wierdpack %d, compress %d)\n",
+	  img, ig, idstring, (long)idlen, wierdpack, compress));
   mm_log((1, "virtual %d, paletted %d\n", img->virtual, mapped));
   mm_log((1, "channels %d\n", img->channels));
   
   i_clear_error();
-  io_glue_commit_types(ig);
+
+  if (img->xsize > TGA_MAX_DIM || img->ysize > TGA_MAX_DIM) {
+    i_push_error(0, "image too large for TGA");
+    return 0;
+  }
 
   switch (img->channels) {
   case 1:
@@ -930,8 +937,8 @@ i_writetga_wiol(i_img *img, io_glue *ig, int wierdpack, int compress, char *idst
     }
   } else { /* direct type */
     int x, y;
-    int bytepp = wierdpack ? 2 : bpp_to_bytes(bitspp);
-    int lsize = bytepp * img->xsize;
+    size_t bytepp = wierdpack ? 2 : bpp_to_bytes(bitspp);
+    size_t lsize = bytepp * img->xsize;
     i_color *vals = mymalloc(img->xsize*sizeof(i_color));
     unsigned char *buf = mymalloc(lsize);
     

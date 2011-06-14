@@ -27,27 +27,27 @@ image.
 typedef struct {
   i_img *targ;
   i_img *mask;
-  int xbase, ybase;
+  i_img_dim xbase, ybase;
   i_sample_t *samps; /* temp space */
 } i_img_mask_ext;
 
 #define MASKEXT(im) ((i_img_mask_ext *)((im)->ext_data))
 
 static void i_destroy_masked(i_img *im);
-static int i_ppix_masked(i_img *im, int x, int y, const i_color *pix);
-static int i_ppixf_masked(i_img *im, int x, int y, const i_fcolor *pix);
-static int i_plin_masked(i_img *im, int l, int r, int y, const i_color *vals);
-static int i_plinf_masked(i_img *im, int l, int r, int y, const i_fcolor *vals);
-static int i_gpix_masked(i_img *im, int x, int y, i_color *pix);
-static int i_gpixf_masked(i_img *im, int x, int y, i_fcolor *pix);
-static int i_glin_masked(i_img *im, int l, int r, int y, i_color *vals);
-static int i_glinf_masked(i_img *im, int l, int r, int y, i_fcolor *vals);
-static int i_gsamp_masked(i_img *im, int l, int r, int y, i_sample_t *samp, 
+static int i_ppix_masked(i_img *im, i_img_dim x, i_img_dim y, const i_color *pix);
+static int i_ppixf_masked(i_img *im, i_img_dim x, i_img_dim y, const i_fcolor *pix);
+static i_img_dim i_plin_masked(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, const i_color *vals);
+static i_img_dim i_plinf_masked(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, const i_fcolor *vals);
+static int i_gpix_masked(i_img *im, i_img_dim x, i_img_dim y, i_color *pix);
+static int i_gpixf_masked(i_img *im, i_img_dim x, i_img_dim y, i_fcolor *pix);
+static i_img_dim i_glin_masked(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, i_color *vals);
+static i_img_dim i_glinf_masked(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, i_fcolor *vals);
+static i_img_dim i_gsamp_masked(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, i_sample_t *samp, 
                           int const *chans, int chan_count);
-static int i_gsampf_masked(i_img *im, int l, int r, int y, i_fsample_t *samp, 
+static i_img_dim i_gsampf_masked(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, i_fsample_t *samp, 
                            int const *chans, int chan_count);
-static int i_gpal_masked(i_img *im, int l, int r, int y, i_palidx *vals);
-static int i_ppal_masked(i_img *im, int l, int r, int y, const i_palidx *vals);
+static i_img_dim i_gpal_masked(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, i_palidx *vals);
+static i_img_dim i_ppal_masked(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, const i_palidx *vals);
 
 /*
 =item IIM_base_masked
@@ -92,7 +92,7 @@ static i_img IIM_base_masked =
 };
 
 /*
-=item i_img_masked_new(i_img *targ, i_img *mask, int xbase, int ybase, int w, int h)
+=item i_img_masked_new(i_img *targ, i_img *mask, i_img_dim xbase, i_img_dim ybase, i_img_dim w, i_img_dim h)
 
 Create a new masked image.
 
@@ -112,7 +112,7 @@ sample is treated as boolean.
 =cut
 */
 
-i_img *i_img_masked_new(i_img *targ, i_img *mask, int x, int y, int w, int h) {
+i_img *i_img_masked_new(i_img *targ, i_img *mask, i_img_dim x, i_img_dim y, i_img_dim w, i_img_dim h) {
   i_img *im;
   i_img_mask_ext *ext;
 
@@ -168,7 +168,7 @@ static void i_destroy_masked(i_img *im) {
 }
 
 /*
-=item i_ppix_masked(i_img *im, int x, int y, const i_color *pix)
+=item i_ppix_masked(i_img *im, i_img_dim x, i_img_dim y, const i_color *pix)
 
 Write a pixel to a masked image.
 
@@ -176,7 +176,7 @@ Internal function.
 
 =cut
 */
-static int i_ppix_masked(i_img *im, int x, int y, const i_color *pix) {
+static int i_ppix_masked(i_img *im, i_img_dim x, i_img_dim y, const i_color *pix) {
   i_img_mask_ext *ext = MASKEXT(im);
   int result;
 
@@ -194,7 +194,7 @@ static int i_ppix_masked(i_img *im, int x, int y, const i_color *pix) {
 }
 
 /*
-=item i_ppixf_masked(i_img *im, int x, int y, const i_fcolor *pix)
+=item i_ppixf_masked(i_img *im, i_img_dim x, i_img_dim y, const i_fcolor *pix)
 
 Write a pixel to a masked image.
 
@@ -202,7 +202,7 @@ Internal function.
 
 =cut
 */
-static int i_ppixf_masked(i_img *im, int x, int y, const i_fcolor *pix) {
+static int i_ppixf_masked(i_img *im, i_img_dim x, i_img_dim y, const i_fcolor *pix) {
   i_img_mask_ext *ext = MASKEXT(im);
   int result;
 
@@ -220,7 +220,7 @@ static int i_ppixf_masked(i_img *im, int x, int y, const i_fcolor *pix) {
 }
 
 /*
-=item i_plin_masked(i_img *im, int l, int r, int y, const i_color *vals)
+=item i_plin_masked(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, const i_color *vals)
 
 Write a row of data to a masked image.
 
@@ -228,17 +228,17 @@ Internal function.
 
 =cut
 */
-static int i_plin_masked(i_img *im, int l, int r, int y, const i_color *vals) {
+static i_img_dim i_plin_masked(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, const i_color *vals) {
   i_img_mask_ext *ext = MASKEXT(im);
 
   if (y >= 0 && y < im->ysize && l < im->xsize && l >= 0) {
     if (r > im->xsize)
       r = im->xsize;
     if (ext->mask) {
-      int i;
+      i_img_dim i;
       int simple = 0;
       i_sample_t *samps = ext->samps;
-      int w = r - l;
+      i_img_dim w = r - l;
 
       i_gsamp(ext->mask, l, r, y, samps, NULL, 1);
       if (w < 10)
@@ -246,7 +246,7 @@ static int i_plin_masked(i_img *im, int l, int r, int y, const i_color *vals) {
       else {
         /* the idea is to make a fast scan to see how often the state
            changes */
-        int changes = 0;
+        i_img_dim changes = 0;
         for (i = 0; i < w-1; ++i)
           if (!samps[i] != !samps[i+1])
             ++changes;
@@ -269,7 +269,7 @@ static int i_plin_masked(i_img *im, int l, int r, int y, const i_color *vals) {
         /* the scan above indicates there should be some contiguous 
            regions, look for them and render
         */
-        int start;
+        i_img_dim start;
         i = 0;
         while (i < w) {
           while (i < w && !samps[i])
@@ -286,7 +286,7 @@ static int i_plin_masked(i_img *im, int l, int r, int y, const i_color *vals) {
       }
     }
     else {
-      int result = i_plin(ext->targ, l + ext->xbase, r + ext->xbase, 
+      i_img_dim result = i_plin(ext->targ, l + ext->xbase, r + ext->xbase, 
                           y + ext->ybase, vals);
       im->type = ext->targ->type;
       return result;
@@ -298,7 +298,7 @@ static int i_plin_masked(i_img *im, int l, int r, int y, const i_color *vals) {
 }
 
 /*
-=item i_plinf_masked(i_img *im, int l, int r, int y, const i_fcolor *vals)
+=item i_plinf_masked(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, const i_fcolor *vals)
 
 Write a row of data to a masked image.
 
@@ -306,16 +306,16 @@ Internal function.
 
 =cut
 */
-static int i_plinf_masked(i_img *im, int l, int r, int y, const i_fcolor *vals) {
+static i_img_dim i_plinf_masked(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, const i_fcolor *vals) {
   i_img_mask_ext *ext = MASKEXT(im);
   if (y >= 0 && y < im->ysize && l < im->xsize && l >= 0) {
     if (r > im->xsize)
       r = im->xsize;
     if (ext->mask) {
-      int i;
+      i_img_dim i;
       int simple = 0;
       i_sample_t *samps = ext->samps;
-      int w = r - l;
+      i_img_dim w = r - l;
 
       i_gsamp(ext->mask, l, r, y, samps, NULL, 1);
       if (w < 10)
@@ -323,7 +323,7 @@ static int i_plinf_masked(i_img *im, int l, int r, int y, const i_fcolor *vals) 
       else {
         /* the idea is to make a fast scan to see how often the state
            changes */
-        int changes = 0;
+        i_img_dim changes = 0;
         for (i = 0; i < w-1; ++i)
           if (!samps[i] != !samps[i+1])
             ++changes;
@@ -346,7 +346,7 @@ static int i_plinf_masked(i_img *im, int l, int r, int y, const i_fcolor *vals) 
         /* the scan above indicates there should be some contiguous 
            regions, look for them and render
         */
-        int start;
+        i_img_dim start;
         i = 0;
         while (i < w) {
           while (i < w && !samps[i])
@@ -363,7 +363,7 @@ static int i_plinf_masked(i_img *im, int l, int r, int y, const i_fcolor *vals) 
       }
     }
     else {
-      int result = i_plinf(ext->targ, l + ext->xbase, r + ext->xbase, 
+      i_img_dim result = i_plinf(ext->targ, l + ext->xbase, r + ext->xbase, 
                            y + ext->ybase, vals);
       im->type = ext->targ->type;
       return result;
@@ -375,7 +375,7 @@ static int i_plinf_masked(i_img *im, int l, int r, int y, const i_fcolor *vals) 
 }
 
 /*
-=item i_gpix_masked(i_img *im, int x, int y, i_color *pix)
+=item i_gpix_masked(i_img *im, i_img_dim x, i_img_dim y, i_color *pix)
 
 Read a pixel from a masked image.
 
@@ -383,7 +383,7 @@ Internal.
 
 =cut
 */
-static int i_gpix_masked(i_img *im, int x, int y, i_color *pix) {
+static int i_gpix_masked(i_img *im, i_img_dim x, i_img_dim y, i_color *pix) {
   i_img_mask_ext *ext = MASKEXT(im);
 
   if (x < 0 || x >= im->xsize || y < 0 || y >= im->ysize)
@@ -393,7 +393,7 @@ static int i_gpix_masked(i_img *im, int x, int y, i_color *pix) {
 }
 
 /*
-=item i_gpixf_masked(i_img *im, int x, int y, i_fcolor *pix)
+=item i_gpixf_masked(i_img *im, i_img_dim x, i_img_dim y, i_fcolor *pix)
 
 Read a pixel from a masked image.
 
@@ -401,7 +401,7 @@ Internal.
 
 =cut
 */
-static int i_gpixf_masked(i_img *im, int x, int y, i_fcolor *pix) {
+static int i_gpixf_masked(i_img *im, i_img_dim x, i_img_dim y, i_fcolor *pix) {
   i_img_mask_ext *ext = MASKEXT(im);
 
   if (x < 0 || x >= im->xsize || y < 0 || y >= im->ysize)
@@ -410,7 +410,7 @@ static int i_gpixf_masked(i_img *im, int x, int y, i_fcolor *pix) {
   return i_gpixf(ext->targ, x + ext->xbase, y + ext->ybase, pix);
 }
 
-static int i_glin_masked(i_img *im, int l, int r, int y, i_color *vals) {
+static i_img_dim i_glin_masked(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, i_color *vals) {
   i_img_mask_ext *ext = MASKEXT(im);
   if (y >= 0 && y < im->ysize && l < im->xsize && l >= 0) {
     if (r > im->xsize)
@@ -423,7 +423,7 @@ static int i_glin_masked(i_img *im, int l, int r, int y, i_color *vals) {
   }
 }
 
-static int i_glinf_masked(i_img *im, int l, int r, int y, i_fcolor *vals) {
+static i_img_dim i_glinf_masked(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, i_fcolor *vals) {
   i_img_mask_ext *ext = MASKEXT(im);
   if (y >= 0 && y < im->ysize && l < im->xsize && l >= 0) {
     if (r > im->xsize)
@@ -436,7 +436,7 @@ static int i_glinf_masked(i_img *im, int l, int r, int y, i_fcolor *vals) {
   }
 }
 
-static int i_gsamp_masked(i_img *im, int l, int r, int y, i_sample_t *samp, 
+static i_img_dim i_gsamp_masked(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, i_sample_t *samp, 
                           int const *chans, int chan_count) {
   i_img_mask_ext *ext = MASKEXT(im);
   if (y >= 0 && y < im->ysize && l < im->xsize && l >= 0) {
@@ -450,7 +450,7 @@ static int i_gsamp_masked(i_img *im, int l, int r, int y, i_sample_t *samp,
   }
 }
 
-static int i_gsampf_masked(i_img *im, int l, int r, int y, i_fsample_t *samp, 
+static i_img_dim i_gsampf_masked(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, i_fsample_t *samp, 
                           int const *chans, int chan_count) {
   i_img_mask_ext *ext = MASKEXT(im);
   if (y >= 0 && y < im->ysize && l < im->xsize && l >= 0) {
@@ -464,7 +464,7 @@ static int i_gsampf_masked(i_img *im, int l, int r, int y, i_fsample_t *samp,
   }
 }
 
-static int i_gpal_masked(i_img *im, int l, int r, int y, i_palidx *vals) {
+static i_img_dim i_gpal_masked(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, i_palidx *vals) {
   i_img_mask_ext *ext = MASKEXT(im);
   if (y >= 0 && y < im->ysize && l < im->xsize && l >= 0) {
     if (r > im->xsize)
@@ -477,16 +477,16 @@ static int i_gpal_masked(i_img *im, int l, int r, int y, i_palidx *vals) {
   }
 }
 
-static int i_ppal_masked(i_img *im, int l, int r, int y, const i_palidx *vals) {
+static i_img_dim i_ppal_masked(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, const i_palidx *vals) {
   i_img_mask_ext *ext = MASKEXT(im);
   if (y >= 0 && y < im->ysize && l < im->xsize && l >= 0) {
     if (r > im->xsize)
       r = im->xsize;
     if (ext->mask) {
-      int i;
+      i_img_dim i;
       i_sample_t *samps = ext->samps;
-      int w = r - l;
-      int start;
+      i_img_dim w = r - l;
+      i_img_dim start;
       
       i_gsamp(ext->mask, l, r, y, samps, NULL, 1);
       i = 0;

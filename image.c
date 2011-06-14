@@ -37,7 +37,7 @@ Some of these functions are internal.
 #define minmax(a,b,i) ( ((a>=i)?a: ( (b<=i)?b:i   )) )
 
 /* Hack around an obscure linker bug on solaris - probably due to builtin gcc thingies */
-static void fake(void) { ceil(1); }
+void i_linker_bug_fake(void) { ceil(1); }
 
 /*
 =item i_img_alloc()
@@ -243,7 +243,7 @@ Free image data.
 
 void
 i_img_exorcise(i_img *im) {
-  mm_log((1,"i_img_exorcise(im* 0x%x)\n",im));
+  mm_log((1,"i_img_exorcise(im* %p)\n",im));
   i_tags_destroy(&im->tags);
   if (im->i_f_destroy)
     (im->i_f_destroy)(im);
@@ -296,11 +296,13 @@ info is an array of 4 integers with the following values:
 
 
 void
-i_img_info(i_img *im,int *info) {
-  mm_log((1,"i_img_info(im 0x%x)\n",im));
+i_img_info(i_img *im, i_img_dim *info) {
+  mm_log((1,"i_img_info(im %p)\n",im));
   if (im != NULL) {
-    mm_log((1,"i_img_info: xsize=%d ysize=%d channels=%d mask=%ud\n",im->xsize,im->ysize,im->channels,im->ch_mask));
-    mm_log((1,"i_img_info: idata=0x%d\n",im->idata));
+    mm_log((1,"i_img_info: xsize=%" i_DF " ysize=%" i_DF " channels=%d "
+	    "mask=%ud\n",
+	    i_DFc(im->xsize), i_DFc(im->ysize), im->channels,im->ch_mask));
+    mm_log((1,"i_img_info: idata=%p\n",im->idata));
     info[0] = im->xsize;
     info[1] = im->ysize;
     info[2] = im->channels;
@@ -395,12 +397,14 @@ the target image.  pass NULL in C<trans> for non transparent i_colors.
 */
 
 void
-i_copyto_trans(i_img *im,i_img *src,int x1,int y1,int x2,int y2,int tx,int ty,const i_color *trans) {
+i_copyto_trans(i_img *im,i_img *src,i_img_dim x1,i_img_dim y1,i_img_dim x2,i_img_dim y2,i_img_dim tx,i_img_dim ty,const i_color *trans) {
   i_color pv;
-  int x,y,t,ttx,tty,tt,ch;
+  i_img_dim x,y,t,ttx,tty,tt;
+  int ch;
 
-  mm_log((1,"i_copyto_trans(im* %p,src 0x%x, x1 %d, y1 %d, x2 %d, y2 %d, tx %d, ty %d, trans* 0x%x)\n",
-	  im, src, x1, y1, x2, y2, tx, ty, trans));
+  mm_log((1,"i_copyto_trans(im* %p,src %p, p1(" i_DFp "), p2(" i_DFp "), "
+	  "to(" i_DFp "), trans* %p)\n",
+	  im, src, i_DFcp(x1, y1), i_DFcp(x2, y2), i_DFcp(tx, ty), trans));
   
   if (x2<x1) { t=x1; x1=x2; x2=t; }
   if (y2<y1) { t=y1; y1=y2; y2=t; }
@@ -440,7 +444,7 @@ Returns: i_img *
 
 i_img *
 i_copy(i_img *src) {
-  int y, y1, x1;
+  i_img_dim y, y1, x1;
   i_img *im = i_sametype(src, src->xsize, src->ysize);
 
   mm_log((1,"i_copy(src %p)\n", src));
@@ -486,10 +490,11 @@ i_copy(i_img *src) {
   return im;
 }
 
+/*
 
+http://en.wikipedia.org/wiki/Lanczos_resampling
 
-
-
+*/
 
 static
 float
@@ -515,12 +520,13 @@ wither the x-axis (I<axis> == 0) or the y-axis (I<axis> == 1).
 */
 
 i_img*
-i_scaleaxis(i_img *im, float Value, int Axis) {
-  int hsize, vsize, i, j, k, l, lMax, iEnd, jEnd;
-  int LanczosWidthFactor;
-  float *l0, *l1, OldLocation;
-  int T; 
-  float t;
+i_scaleaxis(i_img *im, double Value, int Axis) {
+  i_img_dim hsize, vsize, i, j, k, l, lMax, iEnd, jEnd;
+  i_img_dim LanczosWidthFactor;
+  float *l0, *l1;
+  double OldLocation;
+  i_img_dim T; 
+  double t;
   float F, PictureValue[MAXCHANNELS];
   short psave;
   i_color val,val1,val2;
@@ -532,7 +538,7 @@ i_scaleaxis(i_img *im, float Value, int Axis) {
   mm_log((1,"i_scaleaxis(im %p,Value %.2f,Axis %d)\n",im,Value,Axis));
 
   if (Axis == XAXIS) {
-    hsize = (int)(0.5 + im->xsize * Value);
+    hsize = (i_img_dim)(0.5 + im->xsize * Value);
     if (hsize < 1) {
       hsize = 1;
       Value = 1.0 / im->xsize;
@@ -543,7 +549,7 @@ i_scaleaxis(i_img *im, float Value, int Axis) {
     iEnd = vsize;
   } else {
     hsize = im->xsize;
-    vsize = (int)(0.5 + im->ysize * Value);
+    vsize = (i_img_dim)(0.5 + im->ysize * Value);
 
     if (vsize < 1) {
       vsize = 1;
@@ -561,16 +567,16 @@ i_scaleaxis(i_img *im, float Value, int Axis) {
   }
   
   /* 1.4 is a magic number, setting it to 2 will cause rather blurred images */
-  LanczosWidthFactor = (Value >= 1) ? 1 : (int) (1.4/Value); 
+  LanczosWidthFactor = (Value >= 1) ? 1 : (i_img_dim) (1.4/Value); 
   lMax = LanczosWidthFactor << 1;
   
   l0 = mymalloc(lMax * sizeof(float));
   l1 = mymalloc(lMax * sizeof(float));
   
   for (j=0; j<jEnd; j++) {
-    OldLocation = ((float) j) / Value;
-    T = (int) (OldLocation);
-    F = OldLocation - (float) T;
+    OldLocation = ((double) j) / Value;
+    T = (i_img_dim) (OldLocation);
+    F = OldLocation - T;
     
     for (l = 0; l<lMax; l++) {
       l0[lMax-l-1] = Lanczos(((float) (lMax-l-1) + F) / (float) LanczosWidthFactor);
@@ -583,7 +589,7 @@ i_scaleaxis(i_img *im, float Value, int Axis) {
       t+=l0[l];
       t+=l1[l];
     }
-    t /= (float)LanczosWidthFactor;
+    t /= (double)LanczosWidthFactor;
     
     for(l=0; l<lMax; l++) {
       l0[l] /= t;
@@ -595,8 +601,8 @@ i_scaleaxis(i_img *im, float Value, int Axis) {
       for (i=0; i<iEnd; i++) {
 	for (k=0; k<im->channels; k++) PictureValue[k] = 0.0;
 	for (l=0; l<lMax; l++) {
-	  int mx = T-lMax+l+1;
-	  int Mx = T+l+1;
+	  i_img_dim mx = T-lMax+l+1;
+	  i_img_dim Mx = T+l+1;
 	  mx = (mx < 0) ? 0 : mx;
 	  Mx = (Mx >= im->xsize) ? im->xsize-1 : Mx;
 	  
@@ -651,8 +657,8 @@ i_scaleaxis(i_img *im, float Value, int Axis) {
       for (i=0; i<iEnd; i++) {
 	for (k=0; k<im->channels; k++) PictureValue[k] = 0.0;
 	for (l=0; l < lMax; l++) {
-	  int mx = T-lMax+l+1;
-	  int Mx = T+l+1;
+	  i_img_dim mx = T-lMax+l+1;
+	  i_img_dim Mx = T+l+1;
 	  mx = (mx < 0) ? 0 : mx;
 	  Mx = (Mx >= im->ysize) ? im->ysize-1 : Mx;
 
@@ -722,20 +728,20 @@ nothing is gained by doing it in two steps
 
 
 i_img*
-i_scale_nn(i_img *im, float scx, float scy) {
+i_scale_nn(i_img *im, double scx, double scy) {
 
-  int nxsize,nysize,nx,ny;
+  i_img_dim nxsize,nysize,nx,ny;
   i_img *new_img;
   i_color val;
 
-  mm_log((1,"i_scale_nn(im 0x%x,scx %.2f,scy %.2f)\n",im,scx,scy));
+  mm_log((1,"i_scale_nn(im %p,scx %.2f,scy %.2f)\n",im,scx,scy));
 
-  nxsize = (int) ((float) im->xsize * scx);
+  nxsize = (i_img_dim) ((double) im->xsize * scx);
   if (nxsize < 1) {
     nxsize = 1;
     scx = 1.0 / im->xsize;
   }
-  nysize = (int) ((float) im->ysize * scy);
+  nysize = (i_img_dim) ((double) im->ysize * scy);
   if (nysize < 1) {
     nysize = 1;
     scy = 1.0 / im->ysize;
@@ -745,11 +751,11 @@ i_scale_nn(i_img *im, float scx, float scy) {
   new_img=i_img_empty_ch(NULL,nxsize,nysize,im->channels);
   
   for(ny=0;ny<nysize;ny++) for(nx=0;nx<nxsize;nx++) {
-    i_gpix(im,((float)nx)/scx,((float)ny)/scy,&val);
+    i_gpix(im,((double)nx)/scx,((double)ny)/scy,&val);
     i_ppix(new_img,nx,ny,&val);
   }
 
-  mm_log((1,"(0x%x) <- i_scale_nn\n",new_img));
+  mm_log((1,"(%p) <- i_scale_nn\n",new_img));
 
   return new_img;
 }
@@ -767,7 +773,7 @@ For paletted images the palette is copied from the source.
 =cut
 */
 
-i_img *i_sametype(i_img *src, int xsize, int ysize) {
+i_img *i_sametype(i_img *src, i_img_dim xsize, i_img_dim ysize) {
   if (src->type == i_direct_type) {
     if (src->bits == 8) {
       return i_img_empty_ch(NULL, xsize, ysize, src->channels);
@@ -810,7 +816,7 @@ For paletted images the equivalent direct type is returned.
 =cut
 */
 
-i_img *i_sametype_chans(i_img *src, int xsize, int ysize, int channels) {
+i_img *i_sametype_chans(i_img *src, i_img_dim xsize, i_img_dim ysize, int channels) {
   if (src->bits == 8) {
     return i_img_empty_ch(NULL, xsize, ysize, channels);
   }
@@ -848,11 +854,11 @@ The operators for this function are defined in L<stackmach.c>.
 i_img*
 i_transform(i_img *im, int *opx,int opxl,int *opy,int opyl,double parm[],int parmlen) {
   double rx,ry;
-  int nxsize,nysize,nx,ny;
+  i_img_dim nxsize,nysize,nx,ny;
   i_img *new_img;
   i_color val;
   
-  mm_log((1,"i_transform(im 0x%x, opx 0x%x, opxl %d, opy 0x%x, opyl %d, parm 0x%x, parmlen %d)\n",im,opx,opxl,opy,opyl,parm,parmlen));
+  mm_log((1,"i_transform(im %p, opx %p, opxl %d, opy %p, opyl %d, parm %p, parmlen %d)\n",im,opx,opxl,opy,opyl,parm,parmlen));
 
   nxsize = im->xsize;
   nysize = im->ysize ;
@@ -874,7 +880,7 @@ i_transform(i_img *im, int *opx,int opxl,int *opy,int opyl,double parm[],int par
     i_ppix(new_img,nx,ny,&val);
   }
 
-  mm_log((1,"(0x%x) <- i_transform\n",new_img));
+  mm_log((1,"(%p) <- i_transform\n",new_img));
   return new_img;
 }
 
@@ -893,17 +899,19 @@ can return zero.
 
 float
 i_img_diff(i_img *im1,i_img *im2) {
-  int x,y,ch,xb,yb,chb;
+  i_img_dim x, y, xb, yb;
+  int ch, chb;
   float tdiff;
   i_color val1,val2;
 
-  mm_log((1,"i_img_diff(im1 0x%x,im2 0x%x)\n",im1,im2));
+  mm_log((1,"i_img_diff(im1 %p,im2 %p)\n",im1,im2));
 
   xb=(im1->xsize<im2->xsize)?im1->xsize:im2->xsize;
   yb=(im1->ysize<im2->ysize)?im1->ysize:im2->ysize;
   chb=(im1->channels<im2->channels)?im1->channels:im2->channels;
 
-  mm_log((1,"i_img_diff: xb=%d xy=%d chb=%d\n",xb,yb,chb));
+  mm_log((1,"i_img_diff: b=(" i_DFp ") chb=%d\n",
+	  i_DFcp(xb,yb), chb));
 
   tdiff=0;
   for(y=0;y<yb;y++) for(x=0;x<xb;x++) {
@@ -933,17 +941,19 @@ This is like i_img_diff() but looks at floating point samples instead.
 
 double
 i_img_diffd(i_img *im1,i_img *im2) {
-  int x,y,ch,xb,yb,chb;
+  i_img_dim x, y, xb, yb;
+  int ch, chb;
   double tdiff;
   i_fcolor val1,val2;
 
-  mm_log((1,"i_img_diffd(im1 0x%x,im2 0x%x)\n",im1,im2));
+  mm_log((1,"i_img_diffd(im1 %p,im2 %p)\n",im1,im2));
 
   xb=(im1->xsize<im2->xsize)?im1->xsize:im2->xsize;
   yb=(im1->ysize<im2->ysize)?im1->ysize:im2->ysize;
   chb=(im1->channels<im2->channels)?im1->channels:im2->channels;
 
-  mm_log((1,"i_img_diffd: xb=%d xy=%d chb=%d\n",xb,yb,chb));
+  mm_log((1,"i_img_diffd: b(" i_DFp ") chb=%d\n",
+	  i_DFcp(xb, yb), chb));
 
   tdiff=0;
   for(y=0;y<yb;y++) for(x=0;x<xb;x++) {
@@ -962,19 +972,21 @@ i_img_diffd(i_img *im1,i_img *im2) {
 
 int
 i_img_samef(i_img *im1,i_img *im2, double epsilon, char const *what) {
-  int x,y,ch,xb,yb,chb;
+  i_img_dim x,y,xb,yb;
+  int ch, chb;
   i_fcolor val1,val2;
 
   if (what == NULL)
     what = "(null)";
 
-  mm_log((1,"i_img_samef(im1 0x%x,im2 0x%x, epsilon %g, what '%s')\n", im1, im2, epsilon, what));
+  mm_log((1,"i_img_samef(im1 %p,im2 %p, epsilon %g, what '%s')\n", im1, im2, epsilon, what));
 
   xb=(im1->xsize<im2->xsize)?im1->xsize:im2->xsize;
   yb=(im1->ysize<im2->ysize)?im1->ysize:im2->ysize;
   chb=(im1->channels<im2->channels)?im1->channels:im2->channels;
 
-  mm_log((1,"i_img_samef: xb=%d xy=%d chb=%d\n",xb,yb,chb));
+  mm_log((1,"i_img_samef: b(" i_DFp ") chb=%d\n",
+	  i_DFcp(xb, yb), chb));
 
   for(y = 0; y < yb; y++) {
     for(x = 0; x < xb; x++) {
@@ -984,7 +996,8 @@ i_img_samef(i_img *im1,i_img *im2, double epsilon, char const *what) {
       for(ch = 0; ch < chb; ch++) {
 	double sdiff = val1.channel[ch] - val2.channel[ch];
 	if (fabs(sdiff) > epsilon) {
-	  mm_log((1,"i_img_samef <- different %g @(%d,%d)\n", sdiff, x, y));
+	  mm_log((1,"i_img_samef <- different %g @(" i_DFp ")\n",
+		  sdiff, i_DFcp(x, y)));
 	  return 0;
 	}
       }
@@ -999,9 +1012,9 @@ i_img_samef(i_img *im1,i_img *im2, double epsilon, char const *what) {
 
 i_img*
 i_haar(i_img *im) {
-  int mx,my;
-  int fx,fy;
-  int x,y;
+  i_img_dim mx,my;
+  i_img_dim fx,fy;
+  i_img_dim x,y;
   int ch,c;
   i_img *new_img,*new_img2;
   i_color val1,val2,dval1,dval2;
@@ -1057,13 +1070,13 @@ to indicate that it was more than max colors
 int
 i_count_colors(i_img *im,int maxc) {
   struct octt *ct;
-  int x,y;
+  i_img_dim x,y;
   int colorcnt;
   int channels[3];
   int *samp_chans;
   i_sample_t * samp;
-  int xsize = im->xsize; 
-  int ysize = im->ysize;
+  i_img_dim xsize = im->xsize; 
+  i_img_dim ysize = im->ysize;
   int samp_cnt = 3 * xsize;
 
   if (im->channels >= 3) {
@@ -1146,15 +1159,15 @@ hpsort(unsigned int n, unsigned *ra) {
 int
 i_get_anonymous_color_histo(i_img *im, unsigned int **col_usage, int maxc) {
   struct octt *ct;
-  int x,y;
+  i_img_dim x,y;
   int colorcnt;
   unsigned int *col_usage_it;
   i_sample_t * samp;
   int channels[3];
   int *samp_chans;
   
-  int xsize = im->xsize; 
-  int ysize = im->ysize;
+  i_img_dim xsize = im->xsize; 
+  i_img_dim ysize = im->ysize;
   int samp_cnt = 3 * xsize;
   ct = octt_new();
   
@@ -1199,12 +1212,12 @@ i_sample_t versions.
 
 =over
 
-=item i_ppixf_fp(i_img *im, int x, int y, i_fcolor *pix)
+=item i_ppixf_fp(i_img *im, i_img_dim x, i_img_dim y, i_fcolor *pix)
 
 =cut
 */
 
-int i_ppixf_fp(i_img *im, int x, int y, const i_fcolor *pix) {
+int i_ppixf_fp(i_img *im, i_img_dim x, i_img_dim y, const i_fcolor *pix) {
   i_color temp;
   int ch;
 
@@ -1215,11 +1228,11 @@ int i_ppixf_fp(i_img *im, int x, int y, const i_fcolor *pix) {
 }
 
 /*
-=item i_gpixf_fp(i_img *im, int x, int y, i_fcolor *pix)
+=item i_gpixf_fp(i_img *im, i_img_dim x, i_img_dim y, i_fcolor *pix)
 
 =cut
 */
-int i_gpixf_fp(i_img *im, int x, int y, i_fcolor *pix) {
+int i_gpixf_fp(i_img *im, i_img_dim x, i_img_dim y, i_fcolor *pix) {
   i_color temp;
   int ch;
 
@@ -1233,19 +1246,21 @@ int i_gpixf_fp(i_img *im, int x, int y, i_fcolor *pix) {
 }
 
 /*
-=item i_plinf_fp(i_img *im, int l, int r, int y, i_fcolor *pix)
+=item i_plinf_fp(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, i_fcolor *pix)
 
 =cut
 */
-int i_plinf_fp(i_img *im, int l, int r, int y, const i_fcolor *pix) {
+i_img_dim
+i_plinf_fp(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, const i_fcolor *pix) {
   i_color *work;
 
   if (y >= 0 && y < im->ysize && l < im->xsize && l >= 0) {
     if (r > im->xsize)
       r = im->xsize;
     if (r > l) {
-      int ret;
-      int i, ch;
+      i_img_dim ret;
+      i_img_dim i;
+      int ch;
       work = mymalloc(sizeof(i_color) * (r-l));
       for (i = 0; i < r-l; ++i) {
         for (ch = 0; ch < im->channels; ++ch) 
@@ -1266,19 +1281,21 @@ int i_plinf_fp(i_img *im, int l, int r, int y, const i_fcolor *pix) {
 }
 
 /*
-=item i_glinf_fp(i_img *im, int l, int r, int y, i_fcolor *pix)
+=item i_glinf_fp(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, i_fcolor *pix)
 
 =cut
 */
-int i_glinf_fp(i_img *im, int l, int r, int y, i_fcolor *pix) {
+i_img_dim
+i_glinf_fp(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, i_fcolor *pix) {
   i_color *work;
 
   if (y >= 0 && y < im->ysize && l < im->xsize && l >= 0) {
     if (r > im->xsize)
       r = im->xsize;
     if (r > l) {
-      int ret;
-      int i, ch;
+      i_img_dim ret;
+      i_img_dim i;
+      int ch;
       work = mymalloc(sizeof(i_color) * (r-l));
       ret = i_plin(im, l, r, y, work);
       for (i = 0; i < r-l; ++i) {
@@ -1299,11 +1316,13 @@ int i_glinf_fp(i_img *im, int l, int r, int y, i_fcolor *pix) {
 }
 
 /*
-=item i_gsampf_fp(i_img *im, int l, int r, int y, i_fsample_t *samp, int *chans, int chan_count)
+=item i_gsampf_fp(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, i_fsample_t *samp, int *chans, int chan_count)
 
 =cut
 */
-int i_gsampf_fp(i_img *im, int l, int r, int y, i_fsample_t *samp, 
+
+i_img_dim
+i_gsampf_fp(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, i_fsample_t *samp, 
                 int const *chans, int chan_count) {
   i_sample_t *work;
 
@@ -1311,8 +1330,8 @@ int i_gsampf_fp(i_img *im, int l, int r, int y, i_fsample_t *samp,
     if (r > im->xsize)
       r = im->xsize;
     if (r > l) {
-      int ret;
-      int i;
+      i_img_dim ret;
+      i_img_dim i;
       work = mymalloc(sizeof(i_sample_t) * (r-l));
       ret = i_gsamp(im, l, r, y, work, chans, chan_count);
       for (i = 0; i < ret; ++i) {
@@ -1407,8 +1426,8 @@ int i_findcolor_forward(i_img *im, const i_color *color, i_palidx *entry) {
 =cut
 */
 
-int 
-i_gsamp_bits_fb(i_img *im, int l, int r, int y, unsigned *samps, 
+i_img_dim
+i_gsamp_bits_fb(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, unsigned *samps, 
 		const int *chans, int chan_count, int bits) {
   if (bits < 1 || bits > 32) {
     i_push_error(0, "Invalid bits, must be 1..32");
@@ -1417,7 +1436,8 @@ i_gsamp_bits_fb(i_img *im, int l, int r, int y, unsigned *samps,
 
   if (y >=0 && y < im->ysize && l < im->xsize && l >= 0) {
     double scale;
-    int ch, count, i, w;
+    int ch;
+    i_img_dim count, i, w;
     
     if (bits == 32)
       scale = 4294967295.0;
@@ -1937,7 +1957,7 @@ i_get_file_backgroundf(i_img *im, i_fcolor *fbg) {
 
 Arnar M. Hrafnkelsson <addi@umich.edu>
 
-Tony Cook <tony@develop-help.com>
+Tony Cook <tonyc@cpan.org>
 
 =head1 SEE ALSO
 

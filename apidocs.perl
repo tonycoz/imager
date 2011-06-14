@@ -58,7 +58,11 @@ for my $file (@files) {
         $category = $1;
       }
       elsif (/^=synopsis (.*)/) {
+	unless (length $synopsis) {
+	  push @funcdocs, "\n";
+	}
         $synopsis .= "$1\n";
+	push @funcdocs, "  $1\n";
       }
       elsif (/^=order (.*)$/) {
 	$order = $1;
@@ -179,7 +183,7 @@ close OUT;
 
 
 sub make_func_list {
-  my @funcs = qw(i_img i_color i_fcolor i_fill_t mm_log i_img_color_channels i_img_has_alpha i_img_dim);
+  my @funcs = qw(i_img i_color i_fcolor i_fill_t mm_log i_img_color_channels i_img_has_alpha i_img_dim i_DF i_DFc i_DFp i_DFcp);
   open FUNCS, "< imexttypes.h"
     or die "Cannot open imexttypes.h: $!\n";
   my $in_struct;

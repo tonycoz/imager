@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <float.h>
 #include <string.h>
+#include <stdio.h>
 
 /*
 =head1 NAME

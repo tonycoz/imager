@@ -20,6 +20,9 @@
 /* we add that little bit to avoid rounding issues */
 #define SampleFTo16(num) ((int)((num) * 65535.0 + 0.01))
 
+/* maximum size of an SGI image */
+#define SGI_DIM_LIMIT 0xFFFF
+
 typedef struct {
   unsigned short imagic;
   unsigned char storagetype;
@@ -324,6 +327,11 @@ i_writesgi_wiol(io_glue *ig, i_img *img) {
   int bpc2;
 
   i_clear_error();
+
+  if (img->xsize > SGI_DIM_LIMIT || img->ysize > SGI_DIM_LIMIT) {
+    i_push_error(0, "image too large for SGI");
+    return 0;
+  }
 
   if (!write_sgi_header(img, ig, &rle, &bpc2))
     return 0;

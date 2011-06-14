@@ -37,7 +37,7 @@ maps im inplace into another image.
 void
 i_map(i_img *im, unsigned char (*maps)[256], unsigned int mask) {
   i_color *vals;
-  int x, y;
+  i_img_dim x, y;
   int i, ch;
   int minset = -1, maxset = 0;
 

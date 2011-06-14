@@ -2,6 +2,7 @@
 #include "log.h"
 #include <stdlib.h>
 #include <errno.h>
+#include "imerror.h"
 
 #ifdef IMAGER_LOG
 

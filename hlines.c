@@ -59,13 +59,13 @@ range.  Any x or y values outside the given ranges will be ignored.
 void
 i_int_init_hlines(
 		  i_int_hlines *hlines, 
-		  int start_y, 
-		  int count_y,
-		  int start_x, 
-		  int width_x
+		  i_img_dim start_y, 
+		  i_img_dim count_y,
+		  i_img_dim start_x, 
+		  i_img_dim width_x
 		  )
 {
-  int bytes = count_y * sizeof(i_int_hline_entry *);
+  size_t bytes = count_y * sizeof(i_int_hline_entry *);
 
   if (bytes / count_y != sizeof(i_int_hline_entry *)) {
     i_fatal(3, "integer overflow calculating memory allocation\n");
@@ -107,8 +107,8 @@ Add to the list, merging with existing entries.
 */
 
 void
-i_int_hlines_add(i_int_hlines *hlines, int y, int x, int width) {
-  int x_limit = x + width;
+i_int_hlines_add(i_int_hlines *hlines, i_img_dim y, i_img_dim x, i_img_dim width) {
+  i_img_dim x_limit = x + width;
 
   if (width < 0) {
     i_fatal(3, "negative width %d passed to i_int_hlines_add\n", width);
@@ -132,7 +132,7 @@ i_int_hlines_add(i_int_hlines *hlines, int y, int x, int width) {
 
   if (hlines->entries[y - hlines->start_y]) {
     i_int_hline_entry *entry = hlines->entries[y - hlines->start_y];
-    int i, found = -1;
+    i_img_dim i, found = -1;
     
     for (i = 0; i < entry->count; ++i) {
       i_int_hline_seg *seg = entry->segs + i;
@@ -183,7 +183,7 @@ i_int_hlines_add(i_int_hlines *hlines, int y, int x, int width) {
       /* add a new segment */
       if (entry->count == entry->alloc) {
 	/* expand it */
-	int alloc = entry->alloc * 3 / 2;
+	size_t alloc = entry->alloc * 3 / 2;
 	entry = myrealloc(entry, sizeof(i_int_hline_entry) +
 			   sizeof(i_int_hline_seg) * (alloc - 1));
 	entry->alloc = alloc;
@@ -218,8 +218,8 @@ Releases all memory associated with the structure.
 
 void
 i_int_hlines_destroy(i_int_hlines *hlines) {
-  int entry_count = hlines->limit_y - hlines->start_y;
-  int i;
+  size_t entry_count = hlines->limit_y - hlines->start_y;
+  size_t i;
   
   for (i = 0; i < entry_count; ++i) {
     if (hlines->entries[i])
@@ -240,7 +240,7 @@ Fill the areas given by hlines with color.
 
 void
 i_int_hlines_fill_color(i_img *im, i_int_hlines *hlines, const i_color *col) {
-  int y, i, x;
+  i_img_dim y, i, x;
 
   for (y = hlines->start_y; y < hlines->limit_y; ++y) {
     i_int_hline_entry *entry = hlines->entries[y - hlines->start_y];
@@ -264,7 +264,7 @@ i_int_hlines_fill_fill(im, hlines, fill)
 void
 i_int_hlines_fill_fill(i_img *im, i_int_hlines *hlines, i_fill_t *fill) {
   i_render r;
-  int y, i;
+  i_img_dim y, i;
 
   i_render_init(&r, im, im->xsize);
 
@@ -273,7 +273,7 @@ i_int_hlines_fill_fill(i_img *im, i_int_hlines *hlines, i_fill_t *fill) {
     if (entry) {
       for (i = 0; i < entry->count; ++i) {
 	i_int_hline_seg *seg = entry->segs + i;
-	int width = seg->x_limit-seg->minx;
+	i_img_dim width = seg->x_limit-seg->minx;
 	
 	i_render_fill(&r, seg->minx, y, width, NULL, fill);
       }
@@ -293,7 +293,7 @@ i_int_hlines_fill_fill(i_img *im, i_int_hlines *hlines, i_fill_t *fill) {
       if (entry) {
 	for (i = 0; i < entry->count; ++i) {
 	  i_int_hline_seg *seg = entry->segs + i;
-	  int width = seg->x_limit-seg->minx;
+	  i_img_dim width = seg->x_limit-seg->minx;
 
 	  if (fill->combine) {
 	    i_glin(im, seg->minx, seg->x_limit, y, line);
@@ -324,7 +324,7 @@ i_int_hlines_fill_fill(i_img *im, i_int_hlines *hlines, i_fill_t *fill) {
       if (entry) {
 	for (i = 0; i < entry->count; ++i) {
 	  i_int_hline_seg *seg = entry->segs + i;
-	  int width = seg->x_limit-seg->minx;
+	  i_img_dim width = seg->x_limit-seg->minx;
 
 	  if (fill->combinef) {
 	    i_glinf(im, seg->minx, seg->x_limit, y, line);

@@ -5,7 +5,7 @@ img16.c - implements 16-bit images
 
 =head1 SYNOPSIS
 
-  i_img *im = i_img_16_new(int x, int y, int channels);
+  i_img *im = i_img_16_new(i_img_dim x, i_img_dim y, int channels);
   # use like a normal image
 
 =head1 DESCRIPTION
@@ -23,21 +23,21 @@ sample image type to work with.
 #include "imager.h"
 #include "imageri.h"
 
-static int i_ppix_d16(i_img *im, int x, int y, const i_color *val);
-static int i_gpix_d16(i_img *im, int x, int y, i_color *val);
-static int i_glin_d16(i_img *im, int l, int r, int y, i_color *vals);
-static int i_plin_d16(i_img *im, int l, int r, int y, const i_color *vals);
-static int i_ppixf_d16(i_img *im, int x, int y, const i_fcolor *val);
-static int i_gpixf_d16(i_img *im, int x, int y, i_fcolor *val);
-static int i_glinf_d16(i_img *im, int l, int r, int y, i_fcolor *vals);
-static int i_plinf_d16(i_img *im, int l, int r, int y, const i_fcolor *vals);
-static int i_gsamp_d16(i_img *im, int l, int r, int y, i_sample_t *samps, 
+static int i_ppix_d16(i_img *im, i_img_dim x, i_img_dim y, const i_color *val);
+static int i_gpix_d16(i_img *im, i_img_dim x, i_img_dim y, i_color *val);
+static i_img_dim i_glin_d16(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, i_color *vals);
+static i_img_dim i_plin_d16(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, const i_color *vals);
+static int i_ppixf_d16(i_img *im, i_img_dim x, i_img_dim y, const i_fcolor *val);
+static int i_gpixf_d16(i_img *im, i_img_dim x, i_img_dim y, i_fcolor *val);
+static i_img_dim i_glinf_d16(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, i_fcolor *vals);
+static i_img_dim i_plinf_d16(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, const i_fcolor *vals);
+static i_img_dim i_gsamp_d16(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, i_sample_t *samps, 
                        int const *chans, int chan_count);
-static int i_gsampf_d16(i_img *im, int l, int r, int y, i_fsample_t *samps, 
+static i_img_dim i_gsampf_d16(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, i_fsample_t *samps, 
                         int const *chans, int chan_count);
-static int i_gsamp_bits_d16(i_img *im, int l, int r, int y, unsigned *samps, 
+static i_img_dim i_gsamp_bits_d16(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, unsigned *samps, 
 			    int const *chans, int chan_count, int bits);
-static int i_psamp_bits_d16(i_img *im, int l, int r, int y, unsigned const *samps, 
+static i_img_dim i_psamp_bits_d16(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, unsigned const *samps, 
 			    int const *chans, int chan_count, int bits);
 
 /*
@@ -155,11 +155,12 @@ Returns the image on success, or NULL on failure.
 =cut
 */
 
-i_img *i_img_16_new(int x, int y, int ch) {
+i_img *i_img_16_new(i_img_dim x, i_img_dim y, int ch) {
   i_img *im;
-  int bytes, line_bytes;
+  size_t bytes, line_bytes;
 
-  mm_log((1,"i_img_16_new(x %d, y %d, ch %d)\n", x, y, ch));
+  mm_log((1,"i_img_16_new(x %" i_DF ", y %" i_DF ", ch %d)\n",
+	  i_DFc(x), i_DFc(y), ch));
 
   if (x < 1 || y < 1) {
     i_push_error(0, "Image sizes must be positive");
@@ -216,7 +217,7 @@ i_img *
 i_img_to_rgb16(i_img *im) {
   i_img *targ;
   i_fcolor *line;
-  int y;
+  i_img_dim y;
 
   targ = i_img_16_new(im->xsize, im->ysize, im->channels);
   if (!targ)
@@ -232,8 +233,9 @@ i_img_to_rgb16(i_img *im) {
   return targ;
 }
 
-static int i_ppix_d16(i_img *im, int x, int y, const i_color *val) {
-  int off, ch;
+static int i_ppix_d16(i_img *im, i_img_dim x, i_img_dim y, const i_color *val) {
+  i_img_dim off;
+  int ch;
 
   if (x < 0 || x >= im->xsize || y < 0 || y >= im->ysize) 
     return -1;
@@ -252,8 +254,9 @@ static int i_ppix_d16(i_img *im, int x, int y, const i_color *val) {
   return 0;
 }
 
-static int i_gpix_d16(i_img *im, int x, int y, i_color *val) {
-  int off, ch;
+static int i_gpix_d16(i_img *im, i_img_dim x, i_img_dim y, i_color *val) {
+  i_img_dim off;
+  int ch;
 
   if (x < 0 || x >= im->xsize || y < 0 || y >= im->ysize) 
     return -1;
@@ -265,8 +268,9 @@ static int i_gpix_d16(i_img *im, int x, int y, i_color *val) {
   return 0;
 }
 
-static int i_ppixf_d16(i_img *im, int x, int y, const i_fcolor *val) {
-  int off, ch;
+static int i_ppixf_d16(i_img *im, i_img_dim x, i_img_dim y, const i_fcolor *val) {
+  i_img_dim off;
+  int ch;
 
   if (x < 0 || x >= im->xsize || y < 0 || y >= im->ysize) 
     return -1;
@@ -285,8 +289,9 @@ static int i_ppixf_d16(i_img *im, int x, int y, const i_fcolor *val) {
   return 0;
 }
 
-static int i_gpixf_d16(i_img *im, int x, int y, i_fcolor *val) {
-  int off, ch;
+static int i_gpixf_d16(i_img *im, i_img_dim x, i_img_dim y, i_fcolor *val) {
+  i_img_dim off;
+  int ch;
 
   if (x < 0 || x >= im->xsize || y < 0 || y >= im->ysize) 
     return -1;
@@ -298,9 +303,10 @@ static int i_gpixf_d16(i_img *im, int x, int y, i_fcolor *val) {
   return 0;
 }
 
-static int i_glin_d16(i_img *im, int l, int r, int y, i_color *vals) {
-  int ch, count, i;
-  int off;
+static i_img_dim i_glin_d16(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, i_color *vals) {
+  int ch;
+  i_img_dim count, i;
+  i_img_dim off;
   if (y >=0 && y < im->ysize && l < im->xsize && l >= 0) {
     if (r > im->xsize)
       r = im->xsize;
@@ -319,9 +325,10 @@ static int i_glin_d16(i_img *im, int l, int r, int y, i_color *vals) {
   }
 }
 
-static int i_plin_d16(i_img *im, int l, int r, int y, const i_color *vals) {
-  int ch, count, i;
-  int off;
+static i_img_dim i_plin_d16(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, const i_color *vals) {
+  int ch;
+  i_img_dim count, i;
+  i_img_dim off;
   if (y >=0 && y < im->ysize && l < im->xsize && l >= 0) {
     if (r > im->xsize)
       r = im->xsize;
@@ -351,9 +358,10 @@ static int i_plin_d16(i_img *im, int l, int r, int y, const i_color *vals) {
   }
 }
 
-static int i_glinf_d16(i_img *im, int l, int r, int y, i_fcolor *vals) {
-  int ch, count, i;
-  int off;
+static i_img_dim i_glinf_d16(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, i_fcolor *vals) {
+  int ch;
+  i_img_dim count, i;
+  i_img_dim off;
   if (y >=0 && y < im->ysize && l < im->xsize && l >= 0) {
     if (r > im->xsize)
       r = im->xsize;
@@ -372,9 +380,10 @@ static int i_glinf_d16(i_img *im, int l, int r, int y, i_fcolor *vals) {
   }
 }
 
-static int i_plinf_d16(i_img *im, int l, int r, int y, const i_fcolor *vals) {
-  int ch, count, i;
-  int off;
+static i_img_dim i_plinf_d16(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, const i_fcolor *vals) {
+  int ch;
+  i_img_dim count, i;
+  i_img_dim off;
   if (y >=0 && y < im->ysize && l < im->xsize && l >= 0) {
     if (r > im->xsize)
       r = im->xsize;
@@ -404,10 +413,11 @@ static int i_plinf_d16(i_img *im, int l, int r, int y, const i_fcolor *vals) {
   }
 }
 
-static int i_gsamp_d16(i_img *im, int l, int r, int y, i_sample_t *samps, 
+static i_img_dim i_gsamp_d16(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, i_sample_t *samps, 
                        int const *chans, int chan_count) {
-  int ch, count, i, w;
-  int off;
+  int ch;
+  i_img_dim count, i, w;
+  i_img_dim off;
 
   if (y >=0 && y < im->ysize && l < im->xsize && l >= 0) {
     if (r > im->xsize)
@@ -454,10 +464,11 @@ static int i_gsamp_d16(i_img *im, int l, int r, int y, i_sample_t *samps,
   }
 }
 
-static int i_gsampf_d16(i_img *im, int l, int r, int y, i_fsample_t *samps, 
+static i_img_dim i_gsampf_d16(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, i_fsample_t *samps, 
                         int const *chans, int chan_count) {
-  int ch, count, i, w;
-  int off;
+  int ch;
+  i_img_dim count, i, w;
+  i_img_dim off;
 
   if (y >=0 && y < im->ysize && l < im->xsize && l >= 0) {
     if (r > im->xsize)
@@ -504,11 +515,12 @@ static int i_gsampf_d16(i_img *im, int l, int r, int y, i_fsample_t *samps,
   }
 }
 
-static int 
-i_gsamp_bits_d16(i_img *im, int l, int r, int y, unsigned *samps, 
+static i_img_dim 
+i_gsamp_bits_d16(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, unsigned *samps, 
 			    int const *chans, int chan_count, int bits) {
-  int ch, count, i, w;
-  int off;
+  int ch;
+  i_img_dim count, i, w;
+  i_img_dim off;
 
   if (bits != 16) {
     return i_gsamp_bits_fb(im, l, r, y, samps, chans, chan_count, bits);
@@ -559,11 +571,12 @@ i_gsamp_bits_d16(i_img *im, int l, int r, int y, unsigned *samps,
   }
 }
 
-static int 
-i_psamp_bits_d16(i_img *im, int l, int r, int y, unsigned const *samps, 
+static i_img_dim 
+i_psamp_bits_d16(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, unsigned const *samps, 
 			    int const *chans, int chan_count, int bits) {
-  int ch, count, i, w;
-  int off;
+  int ch;
+  i_img_dim count, i, w;
+  i_img_dim off;
 
   if (bits != 16) {
     i_push_error(0, "Invalid bits for 16-bit image");

@@ -341,7 +341,7 @@ C<RLE>.
 
 =over
 
-=item set_file_limits
+=item set_file_limits()
 
 In some cases you will be receiving images from an untested source,
 such as submissions via CGI.  To prevent such images from consuming
@@ -376,10 +376,10 @@ pass are left as they were.
 
 Any limit of zero is treated as unlimited.
 
-By default, all of the limits are zero, or unlimited.
+By default, the width and height limits are zero, or unlimited.  The
+default memory size limit is one gigabyte.
 
-You can reset all of the limited to their defaults by passing in the
-reset parameter as a true value:
+You can reset all limits to unlimited with the reset parameter:
 
   # no limits
   Imager->set_file_limits(reset=>1);
@@ -393,7 +393,7 @@ pass:
   # only bytes is limited
   Imager->set_file_limits(reset=>1, bytes=>10_000_000);
 
-=item get_file_limits
+=item get_file_limits()
 
 You can get the current limits with the get_file_limits() method:
 

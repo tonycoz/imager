@@ -201,7 +201,10 @@ sub rot_test {
   my $work = $rot->convert(preset => 'noalpha');
   my $im_pal = $work->to_paletted(make_colors => 'mediancut');
   my @colors = $im_pal->getcolors;
-  is(@colors, 2, "should be only 2 colors");
+  is(@colors, 2, "should be only 2 colors")
+    or do {
+      print "# ", join(",", $_->rgba), "\n" for @colors;
+    };
   @colors = sort { ($a->rgba)[0] <=> ($b->rgba)[0] } @colors;
   is_color3($colors[0], 0, 0, 0, "check we got black");
   is_color3($colors[1], 255, 0, 0, "and red");

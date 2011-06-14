@@ -147,8 +147,8 @@ cmp_ok(Imager->errstr, '=~', qr/channels must be between 1 and 4/,
   # type of exit
  SKIP: {
     use Config;
-    $Config{intsize} == 4
-      or skip("don't want to allocate 4Gb", 8);
+    $Config{ptrsize} == 4
+      or skip("don't want to allocate 4Gb", 10);
     my $uint_range = 256 ** $Config{intsize};
     print "# range $uint_range\n";
     my $dim1 = int(sqrt($uint_range/2))+1;

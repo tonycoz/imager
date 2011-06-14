@@ -734,6 +734,28 @@ EOS
     }
     print CONFIG "#define $define->[0] $define->[1]\n";
   }
+  if ($Config{gccversion} && $Config{gccversion} > 3) {
+    print CONFIG <<EOS;
+/*
+
+Compiler supports the GCC __attribute__((format...)) syntax.
+
+*/
+
+#define IMAGER_FORMAT_ATTR 1
+EOS
+  }
+
+  print CONFIG <<EOS;
+/*
+ Type and format code for formatted output as with printf.
+
+ This is intended for formatting i_img_dim values.
+*/
+typedef $Config{ivtype} i_dim_format_t;
+#define i_DF $Config{ivdformat}
+EOS
+
   print CONFIG "\n#endif\n";
   close CONFIG;
 }

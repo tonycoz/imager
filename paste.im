@@ -17,8 +17,8 @@ are swapped.
 */
 
 void
-i_copyto(i_img *im, i_img *src, int x1, int y1, int x2, int y2, int tx, int ty) {
-  int y, t, ttx, tty;
+i_copyto(i_img *im, i_img *src, i_img_dim x1, i_img_dim y1, i_img_dim x2, i_img_dim y2, i_img_dim tx, i_img_dim ty) {
+  i_img_dim y, t, ttx, tty;
   
   if (x2<x1) { t=x1; x1=x2; x2=t; }
   if (y2<y1) { t=y1; y1=y2; y2=t; }
@@ -42,8 +42,9 @@ i_copyto(i_img *im, i_img *src, int x1, int y1, int x2, int y2, int tx, int ty) 
   if (x1 == x2 || y1 == y2)
     return; /* nothing to do */
 
-  mm_log((1,"i_copyto(im* %p, src %p, x1 %d, y1 %d, x2 %d, y2 %d, tx %d, ty %d)\n",
-	  im, src, x1, y1, x2, y2, tx, ty));
+  mm_log((1,"i_copyto(im* %p, src %p, p1(" i_DFp "), p2(" i_DFp "), t("
+	  i_DFp "))\n",
+	  im, src, i_DFcp(x1, y1), i_DFcp(x2, y2), i_DFcp(tx, ty)));
 
 #code im->bits == i_8_bits
   IM_COLOR *row = mymalloc(sizeof(IM_COLOR) * (x2-x1));
@@ -358,7 +359,7 @@ i_gsamp_bg
 #else
 i_gsampf_bg
 #endif
-(i_img *im, int l, int r, int y, IM_SAMPLE_T *samples, 
+(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, IM_SAMPLE_T *samples, 
  int out_channels, IM_COLOR const *bg) {
   if (out_channels == im->channels)
     return IM_GSAMP(im, l, r, y, samples, NULL, im->channels);
@@ -368,10 +369,10 @@ i_gsampf_bg
     switch (im->channels) {
     case 2:
       {
-	int x;
+	i_img_dim x;
 	IM_SAMPLE_T *inp = samples, *outp = samples;
 	IM_WORK_T grey_bg = IM_ROUND(color_to_grey(bg));
-	int count;
+	i_img_dim count;
 
 	count = IM_GSAMP(im, l, r, y, samples, NULL, im->channels);
 	if (!count)
@@ -401,9 +402,10 @@ i_gsampf_bg
       }
     case 2:
       {
-	int x, ch;
+	i_img_dim x;
+	int ch;
 	IM_SAMPLE_T *inp = samples, *outp = samples;
-	int count;
+	i_img_dim count;
 	int channels[4] = { 0, 0, 0, 1 };
 
 	count = IM_GSAMP(im, l, r, y, samples, channels, im->channels);
@@ -424,9 +426,10 @@ i_gsampf_bg
 
     case 4:
       {
-	int x, ch;
+	i_img_dim x;
+	int ch;
 	IM_SAMPLE_T *inp = samples, *outp = samples;
-	int count;
+	i_img_dim count;
 
 	count = IM_GSAMP(im, l, r, y, samples, NULL, im->channels);
 	if (!count)

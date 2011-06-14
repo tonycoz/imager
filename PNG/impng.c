@@ -73,7 +73,14 @@ i_writepng_wiol(i_img *im, io_glue *ig) {
   int aspect_only, have_res;
 
   mm_log((1,"i_writepng(im %p ,ig %p)\n", im, ig));
-  
+
+  i_clear_error();
+
+  if (im->xsize > PNG_UINT_31_MAX || im->ysize > PNG_UINT_31_MAX) {
+    i_push_error(0, "image too large for PNG");
+    return 0;
+  }
+
   height = im->ysize;
   width  = im->xsize;
 

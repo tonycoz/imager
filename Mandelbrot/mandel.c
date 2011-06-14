@@ -36,7 +36,8 @@ mandel(double x, double y, int max_iter) {
 void 
 mandelbrot(i_img *im, double minx, double miny, double maxx, double maxy, int max_iter) {
 
-  int i,x,y;
+  int i;
+  i_img_dim x,y;
   int idx;
   double divx, divy;
 

@@ -4,22 +4,24 @@
 
 int
 i_compose_mask(i_img *out, i_img *src, i_img *mask, 
-	       int out_left, int out_top,
-	       int src_left, int src_top,
-	       int mask_left, int mask_top,
-	       int width, int height,
+	       i_img_dim out_left, i_img_dim out_top,
+	       i_img_dim src_left, i_img_dim src_top,
+	       i_img_dim mask_left, i_img_dim mask_top,
+	       i_img_dim width, i_img_dim height,
 	       int combine,
 	       double opacity) {
   i_render r;
-  int dy;
+  i_img_dim dy;
   i_fill_combine_f combinef_8;
   i_fill_combinef_f combinef_double;
   int channel_zero = 0;
 
-  mm_log((1, "i_compose_mask(out %p, src %p, mask %p, out(%d, %d), src(%d, %d),"
-	  " mask(%d,%d), size(%d,%d), combine %d opacity %f\n", out, src, 
-	  mask, out_left, out_top, src_left, src_top, mask_left, mask_top, width,
-	  height, combine, opacity));
+  mm_log((1, "i_compose_mask(out %p, src %p, mask %p, out(" i_DFp "), "
+	  "src(" i_DFp "), mask(" i_DFp "), size(" i_DFp "),"
+	  " combine %d opacity %f\n", out, src, 
+	  mask, i_DFcp(out_left, out_top), i_DFcp(src_left, src_top),
+	  i_DFcp(mask_left, mask_top), i_DFcp(width, height),
+	  combine, opacity));
 
   i_clear_error();
   if (out_left >= out->xsize
@@ -99,10 +101,10 @@ i_compose_mask(i_img *out, i_img *src, i_img *mask,
     return 0;
   }
 
-  mm_log((1, "after adjustments: (out(%d, %d), src(%d, %d),"
-	  " mask(%d,%d), size(%d,%d)\n", 
-	  out_left, out_top, src_left, src_top, mask_left, mask_top, width,
-	  height));
+  mm_log((1, "after adjustments: (out(" i_DFp "), src(" i_DFp "),"
+	  " mask(" i_DFp "), size(" i_DFp ")\n", 
+	  i_DFcp(out_left, out_top), i_DFcp(src_left, src_top),
+	  i_DFcp(mask_left, mask_top), i_DFcp(width, height)));
 
   i_get_combine(combine, &combinef_8, &combinef_double);
 
@@ -121,7 +123,7 @@ i_compose_mask(i_img *out, i_img *src, i_img *mask,
     IM_GSAMP(mask, mask_left, mask_left + width, mask_top + dy, 
 	     mask_line, &channel_zero, 1);
     if (opacity < 1.0) {
-      int i;
+      i_img_dim i;
       IM_SAMPLE_T *maskp = mask_line;
       for (i = 0; i < width; ++i) {
 	*maskp = IM_ROUND(*maskp * opacity);
@@ -142,19 +144,20 @@ i_compose_mask(i_img *out, i_img *src, i_img *mask,
 
 int
 i_compose(i_img *out, i_img *src,
-	  int out_left, int out_top,
-	  int src_left, int src_top,
-	  int width, int height,
+	  i_img_dim out_left, i_img_dim out_top,
+	  i_img_dim src_left, i_img_dim src_top,
+	  i_img_dim width, i_img_dim height,
 	  int combine,
 	  double opacity) {
   i_render r;
-  int dy;
+  i_img_dim dy;
   i_fill_combine_f combinef_8;
   i_fill_combinef_f combinef_double;
 
-  mm_log((1, "i_compose(out %p, src %p, out(%d, %d), src(%d, %d), size(%d,%d),"
-	  " combine %d opacity %f\n", out, src, out_left, out_top,
-	  src_left, src_top, width, height, combine, opacity));
+  mm_log((1, "i_compose(out %p, src %p, out(" i_DFp "), src(" i_DFp "), "
+	  "size(" i_DFp "), combine %d opacity %f\n", out, src,
+	  i_DFcp(out_left, out_top), i_DFcp(src_left, src_top),
+	  i_DFcp(width, height), combine, opacity));
 
   i_clear_error();
   if (out_left >= out->xsize
@@ -217,7 +220,7 @@ i_compose(i_img *out, i_img *src,
   int adapt_channels = out->channels;
 
   if (opacity != 1.0) {
-    int i;
+    i_img_dim i;
     IM_SAMPLE_T mask_value = IM_ROUND(opacity * IM_SAMPLE_MAX);
     mask_line = mymalloc(sizeof(IM_SAMPLE_T) * width);
 

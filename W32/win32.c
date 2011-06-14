@@ -11,7 +11,7 @@ win32.c - implements some win32 specific code, specifically Win32 font support.
 
 =head1 SYNOPSIS
 
-   int bbox[6];
+   i_img_dim bbox[6];
    if (i_wf_bbox(facename, size, text, text_len, bbox)) {
      // we have the bbox
    }
@@ -32,7 +32,7 @@ An Imager interface to font output using the Win32 GDI.
 static void set_logfont(const char *face, int size, LOGFONT *lf);
 
 static LPVOID render_text(const char *face, int size, const char *text, int length, int aa,
-                          HBITMAP *pbm, SIZE *psz, TEXTMETRIC *tm, int *bbox, int utf8);
+                          HBITMAP *pbm, SIZE *psz, TEXTMETRIC *tm, i_img_dim *bbox, int utf8);
 static LPWSTR utf8_to_wide_string(char const *text, int text_len, int *wide_chars);
 
 /*
@@ -43,8 +43,8 @@ Calculate a bounding box for the text.
 =cut
 */
 
-int i_wf_bbox(const char *face, int size, const char *text, int length, int *bbox,
-	      int utf8) {
+int i_wf_bbox(const char *face, i_img_dim size, const char *text, size_t length,
+	      i_img_dim *bbox, int utf8) {
   LOGFONT lf;
   HFONT font, oldFont;
   HDC dc;
@@ -58,6 +58,8 @@ int i_wf_bbox(const char *face, int size, const char *text, int length, int *bbo
   size_t work_len;
   int got_first_ch = 0;
   unsigned long first_ch, last_ch;
+
+  i_clear_error();
 
   mm_log((1, "i_wf_bbox(face %s, size %d, text %p, length %d, bbox %p, utf8 %d)\n", face, size, text, length, bbox, utf8));
 
@@ -172,7 +174,11 @@ int i_wf_bbox(const char *face, int size, const char *text, int length, int *bbo
   ReleaseDC(NULL, dc);
   DeleteObject(font);
 
-  mm_log((1, " bbox=> negw=%d glob_desc=%d pos_wid=%d glob_asc=%d desc=%d asc=%d adv_width=%d rightb=%d\n", bbox[0], bbox[1], bbox[2], bbox[3], bbox[4], bbox[5], bbox[6], bbox[7]));
+  mm_log((1, " bbox=> negw=%" i_DF " glob_desc=%" i_DF " pos_wid=%" i_DF
+	  " glob_asc=%" i_DF " desc=%" i_DF " asc=%" i_DF " adv_width=%" i_DF 
+	  " rightb=%" i_DF "\n", i_DFc(bbox[0]), i_DFc(bbox[1]), i_DFc(bbox[2]),
+	  i_DFc(bbox[3]), i_DFc(bbox[4]), i_DFc(bbox[5]), i_DFc(bbox[6]),
+	  i_DFc(bbox[7])));
 
   return BBOX_RIGHT_BEARING + 1;
 }
@@ -186,19 +192,21 @@ Draws the text in the given color.
 */
 
 int
-i_wf_text(const char *face, i_img *im, int tx, int ty, const i_color *cl, int size, 
-	  const char *text, int len, int align, int aa, int utf8) {
+i_wf_text(const char *face, i_img *im, i_img_dim tx, i_img_dim ty, const i_color *cl, i_img_dim size, 
+	  const char *text, size_t len, int align, int aa, int utf8) {
   unsigned char *bits;
   HBITMAP bm;
   SIZE sz;
-  int line_width;
-  int x, y;
+  i_img_dim line_width;
+  i_img_dim x, y;
   int ch;
   TEXTMETRIC tm;
   int top;
-  int bbox[BOUNDING_BOX_COUNT];
+  i_img_dim bbox[BOUNDING_BOX_COUNT];
 
-  mm_log((1, "i_wf_text(face %s, im %p, tx %d, ty %d, cl %p, size %d, text %p, length %d, align %d, aa %d,  utf8 %d)\n", face, im, tx, ty, cl, size, text, len, align, aa, aa, utf8));
+  i_clear_error();
+
+  mm_log((1, "i_wf_text(face %s, im %p, tx %" i_DF ", ty %" i_DF ", cl %p, size %" i_DF ", text %p, length %lu, align %d, aa %d,  utf8 %d)\n", face, im, i_DFcp(tx, ty), cl, i_DFc(size), text, (unsigned long)len, align, aa, aa, utf8));
 
   if (!i_wf_bbox(face, size, text, len, bbox, utf8))
     return 0;
@@ -245,18 +253,20 @@ Draws the text in the given channel.
 */
 
 int
-i_wf_cp(const char *face, i_img *im, int tx, int ty, int channel, int size, 
-	  const char *text, int len, int align, int aa, int utf8) {
+i_wf_cp(const char *face, i_img *im, i_img_dim tx, i_img_dim ty, int channel, i_img_dim size, 
+	  const char *text, size_t len, int align, int aa, int utf8) {
   unsigned char *bits;
   HBITMAP bm;
   SIZE sz;
   int line_width;
-  int x, y;
+  i_img_dim x, y;
   TEXTMETRIC tm;
-  int top;
-  int bbox[BOUNDING_BOX_COUNT];
+  i_img_dim top;
+  i_img_dim bbox[BOUNDING_BOX_COUNT];
 
-  mm_log((1, "i_wf_cp(face %s, im %p, tx %d, ty %d, channel %d, size %d, text %p, length %d, align %d, aa %d,  utf8 %d)\n", face, im, tx, ty, channel, size, text, len, align, aa, aa, utf8));
+  i_clear_error();
+
+  mm_log((1, "i_wf_cp(face %s, im %p, tx %" i_DF ", ty %" i_DF ", channel %d, size %" i_DF ", text %p, length %lu, align %d, aa %d,  utf8 %d)\n", face, im, i_DFcp(tx, ty), channel, i_DFc(size), text, (unsigned long)len, align, aa, aa, utf8));
 
   if (!i_wf_bbox(face, size, text, len, bbox, utf8))
     return 0;
@@ -394,7 +404,7 @@ native greyscale bitmaps.
 =cut
 */
 static LPVOID render_text(const char *face, int size, const char *text, int length, int aa,
-		   HBITMAP *pbm, SIZE *psz, TEXTMETRIC *tm, int *bbox, int utf8) {
+		   HBITMAP *pbm, SIZE *psz, TEXTMETRIC *tm, i_img_dim *bbox, int utf8) {
   BITMAPINFO bmi;
   BITMAPINFOHEADER *bmih = &bmi.bmiHeader;
   HDC dc, bmpDc;

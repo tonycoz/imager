@@ -29,14 +29,11 @@ saturate(int in) {
 void lin_stretch(i_img *im, int a, int b) {
 
   i_color rcolor;
-  int i,bytes,x,y;
-  int info[4];
+  i_img_dim x,y;
+  int i;
 
   
   /*   fprintf(stderr,"parameters: (im 0x%x,a %d,b %d)\n",im,a,b);*/
-  bytes=im->bytes;
-
-  i_img_info(im,info); 
  
   for(y=0;y<im->ysize;y++) for(x=0;x<im->xsize;x++) {
     i_gpix(im,x,y,&rcolor);

@@ -181,7 +181,7 @@ Interface to text rendering into a single channel in an image
 */
 
 undef_int
-i_t1_cp(i_img *im,int xb,int yb,int channel,int fontnum,float points,char* str,size_t len,int align, int utf8, char const *flags) {
+i_t1_cp(i_img *im,i_img_dim xb,i_img_dim yb,int channel,int fontnum,double points,char* str,size_t len,int align, int utf8, char const *flags) {
   GLYPH *glyph;
   int xsize,ysize,x,y;
   i_color val;
@@ -255,11 +255,11 @@ function to get a strings bounding box given the font id and sizes
 */
 
 int
-i_t1_bbox(int fontnum,float points,const char *str,size_t len,int cords[6], int utf8,char const *flags) {
+i_t1_bbox(int fontnum, double points,const char *str,size_t len, i_img_dim cords[6], int utf8,char const *flags) {
   BBox bbox;
   BBox gbbox;
   int mod_flags = t1_get_flags(flags);
-  int advance;
+  i_img_dim advance;
   int space_position = T1_GetEncodingIndex(fontnum, "space");
   
   mm_log((1,"i_t1_bbox(fontnum %d,points %.2f,str '%.*s', len %d)\n",fontnum,points,len,str,len));
@@ -297,16 +297,16 @@ i_t1_bbox(int fontnum,float points,const char *str,size_t len,int cords[6], int 
 	  (int)(bbox.ury*points/1000) ));
 
 
-  cords[BBOX_NEG_WIDTH]=((float)bbox.llx*points)/1000;
-  cords[BBOX_POS_WIDTH]=((float)bbox.urx*points)/1000;
+  cords[BBOX_NEG_WIDTH]=((double)bbox.llx*points)/1000;
+  cords[BBOX_POS_WIDTH]=((double)bbox.urx*points)/1000;
 
-  cords[BBOX_GLOBAL_DESCENT]=((float)gbbox.lly*points)/1000;
-  cords[BBOX_GLOBAL_ASCENT]=((float)gbbox.ury*points)/1000;
+  cords[BBOX_GLOBAL_DESCENT]=((double)gbbox.lly*points)/1000;
+  cords[BBOX_GLOBAL_ASCENT]=((double)gbbox.ury*points)/1000;
 
-  cords[BBOX_DESCENT]=((float)bbox.lly*points)/1000;
-  cords[BBOX_ASCENT]=((float)bbox.ury*points)/1000;
+  cords[BBOX_DESCENT]=((double)bbox.lly*points)/1000;
+  cords[BBOX_ASCENT]=((double)bbox.ury*points)/1000;
 
-  cords[BBOX_ADVANCE_WIDTH] = ((float)advance * points)/1000;
+  cords[BBOX_ADVANCE_WIDTH] = ((double)advance * points)/1000;
   cords[BBOX_RIGHT_BEARING] = 
     cords[BBOX_ADVANCE_WIDTH] - cords[BBOX_POS_WIDTH];
 
@@ -333,7 +333,7 @@ Interface to text rendering in a single color onto an image
 */
 
 undef_int
-i_t1_text(i_img *im,int xb,int yb,const i_color *cl,int fontnum,float points,const char* str,size_t len,int align, int utf8, char const *flags) {
+i_t1_text(i_img *im, i_img_dim xb, i_img_dim yb,const i_color *cl,int fontnum, double points,const char* str,size_t len,int align, int utf8, char const *flags) {
   GLYPH *glyph;
   int xsize,ysize,y;
   int mod_flags = t1_get_flags(flags);
@@ -413,8 +413,9 @@ Sets *outlen to the number of bytes used in the output string.
 
 static char *
 t1_from_utf8(char const *in, size_t len, int *outlen) {
-  /* at this point len is from a perl SV, so can't approach MAXINT */
-  char *out = mymalloc(len+1); /* checked 5Nov05 tonyc */
+  /* at this point len is from a STRLEN which should be size_t and can't
+     be too big for mymalloc */
+  char *out = mymalloc(len+1); /* rechecked 29jul11 tonyc */
   char *p = out;
   unsigned long c;
 

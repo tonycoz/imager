@@ -23,7 +23,7 @@ font.c - implements font handling functions for t1 and truetype fonts
 
   #ifdef HAVE_LIBT1
   fontnum = i_t1_new(path_to_pfb, path_to_afm);
-  i_t1_bbox(fontnum, points, "foo", 3, int cords[6]);
+  i_t1_bbox(fontnum, points, "foo", 3, i_img_dim cords[BOUNDING_BOX_COUNT]);
   rc = i_t1_destroy(fontnum);
   #endif
 
@@ -94,8 +94,8 @@ struct TT_Instancehandle_ {
   TT_Glyph_Metrics gmetrics[256];
   i_tt_glyph_entry glyphs[256];
   int smooth;
-  int ptsize;
   int order;
+  i_img_dim ptsize;
 };
 
 typedef struct TT_Instancehandle_ TT_Instancehandle;
@@ -120,26 +120,26 @@ static void i_tt_push_error(TT_Error rc);
 
 /* Prototypes */
 
-static  int i_tt_get_instance( TT_Fonthandle *handle, int points, int smooth );
-static void i_tt_init_raster_map( TT_Raster_Map* bit, int width, int height, int smooth );
+static  int i_tt_get_instance( TT_Fonthandle *handle, i_img_dim points, int smooth );
+static void i_tt_init_raster_map( TT_Raster_Map* bit, i_img_dim width, i_img_dim height, int smooth );
 static void i_tt_done_raster_map( TT_Raster_Map *bit );
 static void i_tt_clear_raster_map( TT_Raster_Map* bit );
-static void i_tt_blit_or( TT_Raster_Map *dst, TT_Raster_Map *src,int x_off, int y_off );
+static void i_tt_blit_or( TT_Raster_Map *dst, TT_Raster_Map *src,i_img_dim x_off, i_img_dim y_off );
 static  int i_tt_get_glyph( TT_Fonthandle *handle, int inst, unsigned long j );
 static void 
 i_tt_render_glyph( TT_Glyph glyph, TT_Glyph_Metrics* gmetrics, 
                    TT_Raster_Map *bit, TT_Raster_Map *small_bit, 
-                   int x_off, int y_off, int smooth );
+                   i_img_dim x_off, i_img_dim y_off, int smooth );
 static int
 i_tt_render_all_glyphs( TT_Fonthandle *handle, int inst, TT_Raster_Map *bit, 
-                        TT_Raster_Map *small_bit, int cords[6], 
+                        TT_Raster_Map *small_bit, i_img_dim cords[6], 
                         char const* txt, size_t len, int smooth, int utf8 );
-static void i_tt_dump_raster_map2( i_img* im, TT_Raster_Map* bit, int xb, int yb, const i_color *cl, int smooth );
-static void i_tt_dump_raster_map_channel( i_img* im, TT_Raster_Map* bit, int xb, int yb, int channel, int smooth );
+static void i_tt_dump_raster_map2( i_img* im, TT_Raster_Map* bit, i_img_dim xb, i_img_dim yb, const i_color *cl, int smooth );
+static void i_tt_dump_raster_map_channel( i_img* im, TT_Raster_Map* bit, i_img_dim xb, i_img_dim yb, int channel, int smooth );
 static  int
-i_tt_rasterize( TT_Fonthandle *handle, TT_Raster_Map *bit, int cords[6], 
-                float points, char const* txt, size_t len, int smooth, int utf8 );
-static undef_int i_tt_bbox_inst( TT_Fonthandle *handle, int inst ,const char *txt, size_t len, int cords[6], int utf8 );
+i_tt_rasterize( TT_Fonthandle *handle, TT_Raster_Map *bit, i_img_dim cords[6], 
+                double points, char const* txt, size_t len, int smooth, int utf8 );
+static undef_int i_tt_bbox_inst( TT_Fonthandle *handle, int inst ,const char *txt, size_t len, i_img_dim cords[6], int utf8 );
 
 
 /* static globals needed */
@@ -173,7 +173,8 @@ i_init_tt(void) {
   mm_log((1,"init_tt()\n"));
   error = TT_Init_FreeType( &engine );
   if ( error ){
-    mm_log((1,"Initialization of freetype failed, code = 0x%x\n",error));
+    mm_log((1,"Initialization of freetype failed, code = 0x%x\n",
+	    (unsigned)error));
     i_tt_push_error(error);
     i_push_error(0, "Could not initialize freetype 1.x");
     return(1);
@@ -182,7 +183,8 @@ i_init_tt(void) {
 #ifdef FTXPOST
   error = TT_Init_Post_Extension( engine );
   if (error) {
-    mm_log((1, "Initialization of Post extension failed = 0x%x\n", error));
+    mm_log((1, "Initialization of Post extension failed = 0x%x\n",
+	    (unsigned)error));
     
     i_tt_push_error(error);
     i_push_error(0, "Could not initialize FT 1.x POST extension");
@@ -192,7 +194,8 @@ i_init_tt(void) {
 
   error = TT_Set_Raster_Gray_Palette(engine, palette);
   if (error) {
-    mm_log((1, "Initialization of gray levels failed = 0x%x\n", error));
+    mm_log((1, "Initialization of gray levels failed = 0x%x\n",
+	    (unsigned)error));
     i_tt_push_error(error);
     i_push_error(0, "Could not initialize FT 1.x POST extension");
     return 1;
@@ -220,12 +223,12 @@ allocates room and returns its cache entry
 
 static
 int
-i_tt_get_instance( TT_Fonthandle *handle, int points, int smooth ) {
+i_tt_get_instance( TT_Fonthandle *handle, i_img_dim points, int smooth ) {
   int i,idx;
   TT_Error error;
   
-  mm_log((1,"i_tt_get_instance(handle 0x%X, points %d, smooth %d)\n",
-          handle,points,smooth));
+  mm_log((1,"i_tt_get_instance(handle %p, points %" i_DF ", smooth %d)\n",
+          handle, i_DFc(points), smooth));
   
   if (smooth == -1) { /* Smooth doesn't matter for this search */
     for(i=0;i<TT_CHC;i++) {
@@ -252,7 +255,7 @@ i_tt_get_instance( TT_Fonthandle *handle, int points, int smooth ) {
   }
 
   mm_log((1,"i_tt_get_instance: lru item is %d\n",idx));
-  mm_log((1,"i_tt_get_instance: lru pointer 0x%X\n",
+  mm_log((1,"i_tt_get_instance: lru pointer %p\n",
           USTRCT(handle->instanceh[idx].instance) ));
   
   if ( USTRCT(handle->instanceh[idx].instance) ) {
@@ -280,7 +283,8 @@ i_tt_get_instance( TT_Fonthandle *handle, int points, int smooth ) {
 	  ( error = TT_Set_Instance_CharSize( handle->instanceh[idx].instance, points*64 ) ) );
   
   if ( error ) {
-    mm_log((1, "Could not create and initialize instance: error 0x%x.\n",error ));
+    mm_log((1, "Could not create and initialize instance: error %x.\n",
+	    (unsigned)error ));
     return -1;
   }
   
@@ -345,7 +349,7 @@ i_tt_new(const char *fontname) {
     }
     else {
       mm_log((1, "Error while opening %s, error code = 0x%x.\n",fontname, 
-              error )); 
+              (unsigned)error )); 
     }
     i_tt_push_error(error);
     return NULL;
@@ -385,7 +389,7 @@ i_tt_new(const char *fontname) {
   handle->loaded_names = 0;
 #endif
 
-  mm_log((1,"i_tt_new <- 0x%X\n",handle));
+  mm_log((1,"i_tt_new <- %p\n",handle));
   return handle;
 }
 
@@ -410,9 +414,10 @@ Allocates internal memory for the bitmap as needed by the parameters (internal)
 
 static
 void
-i_tt_init_raster_map( TT_Raster_Map* bit, int width, int height, int smooth ) {
+i_tt_init_raster_map( TT_Raster_Map* bit, i_img_dim width, i_img_dim height, int smooth ) {
 
-  mm_log((1,"i_tt_init_raster_map( bit 08x%08X, width %d, height %d, smooth %d)\n", bit, width, height, smooth));
+  mm_log((1,"i_tt_init_raster_map( bit %p, width %" i_DF ", height %" i_DF
+	  ", smooth %d)\n", bit, i_DFc(width), i_DFc(height), smooth));
   
   bit->rows  = height;
   bit->width = ( width + 3 ) & -4;
@@ -432,7 +437,7 @@ i_tt_init_raster_map( TT_Raster_Map* bit, int width, int height, int smooth ) {
             bit->width, bit->rows);
   }
   
-  mm_log((1,"i_tt_init_raster_map: bit->width %d, bit->cols %d, bit->rows %d, bit->size %d)\n", bit->width, bit->cols, bit->rows, bit->size ));
+  mm_log((1,"i_tt_init_raster_map: bit->width %d, bit->cols %d, bit->rows %d, bit->size %ld)\n", bit->width, bit->cols, bit->rows, bit->size ));
 
   bit->bitmap = (void *) mymalloc( bit->size ); /* checked 6Nov05 tonyc */
   if ( !bit->bitmap ) i_fatal(0,"Not enough memory to allocate bitmap (%d)!\n",bit->size );
@@ -490,9 +495,9 @@ function that blits one raster map into another (internal)
 
 static
 void
-i_tt_blit_or( TT_Raster_Map *dst, TT_Raster_Map *src,int x_off, int y_off ) {
-  int  x,  y;
-  int  x1, x2, y1, y2;
+i_tt_blit_or( TT_Raster_Map *dst, TT_Raster_Map *src,i_img_dim x_off, i_img_dim y_off ) {
+  i_img_dim  x,  y;
+  i_img_dim  x1, x2, y1, y2;
   unsigned char *s, *d;
   
   x1 = x_off < 0 ? -x_off : 0;
@@ -557,14 +562,14 @@ i_tt_get_glyph( TT_Fonthandle *handle, int inst, unsigned long j) {
   unsigned short load_flags, code;
   TT_Error error;
 
-  mm_log((1, "i_tt_get_glyph(handle 0x%X, inst %d, j %d (%c))\n",
-          handle,inst,j, ((j >= ' ' && j <= '~') ? j : '.')));
+  mm_log((1, "i_tt_get_glyph(handle %p, inst %d, j %lu (%c))\n",
+          handle,inst,j, (int)((j >= ' ' && j <= '~') ? j : '.')));
   
   /*mm_log((1, "handle->instanceh[inst].glyphs[j]=0x%08X\n",handle->instanceh[inst].glyphs[j] ));*/
 
   if ( TT_VALID(handle->instanceh[inst].glyphs[TT_HASH(j)].glyph)
        && handle->instanceh[inst].glyphs[TT_HASH(j)].ch == j) {
-    mm_log((1,"i_tt_get_glyph: %d in cache\n",j));
+    mm_log((1,"i_tt_get_glyph: %lu in cache\n",j));
     return 1;
   }
 
@@ -585,12 +590,12 @@ i_tt_get_glyph( TT_Fonthandle *handle, int inst, unsigned long j) {
   } else code = TT_Char_Index( handle->char_map, j );
   
   if ( (error = TT_New_Glyph( handle->face, &handle->instanceh[inst].glyphs[TT_HASH(j)].glyph)) ) {
-    mm_log((1, "Cannot allocate and load glyph: error 0x%x.\n", error ));
+    mm_log((1, "Cannot allocate and load glyph: error %#x.\n", (unsigned)error ));
     i_push_error(error, "TT_New_Glyph()");
     return 0;
   }
   if ( (error = TT_Load_Glyph( handle->instanceh[inst].instance, handle->instanceh[inst].glyphs[TT_HASH(j)].glyph, code, load_flags)) ) {
-    mm_log((1, "Cannot allocate and load glyph: error 0x%x.\n", error ));
+    mm_log((1, "Cannot allocate and load glyph: error %#x.\n", (unsigned)error ));
     /* Don't leak */
     TT_Done_Glyph( handle->instanceh[inst].glyphs[TT_HASH(j)].glyph );
     USTRCT( handle->instanceh[inst].glyphs[TT_HASH(j)].glyph ) = NULL;
@@ -605,7 +610,7 @@ i_tt_get_glyph( TT_Fonthandle *handle, int inst, unsigned long j) {
   error = TT_Get_Glyph_Metrics( handle->instanceh[inst].glyphs[TT_HASH(j)].glyph, 
                                 &handle->instanceh[inst].gmetrics[TT_HASH(j)] );
   if (error) {
-    mm_log((1, "TT_Get_Glyph_Metrics: error 0x%x.\n", error ));
+    mm_log((1, "TT_Get_Glyph_Metrics: error %#x.\n", (unsigned)error ));
     TT_Done_Glyph( handle->instanceh[inst].glyphs[TT_HASH(j)].glyph );
     USTRCT( handle->instanceh[inst].glyphs[TT_HASH(j)].glyph ) = NULL;
     handle->instanceh[inst].glyphs[TT_HASH(j)].ch = TT_NOCHAR;
@@ -628,12 +633,12 @@ Returns the number of characters that were checked.
 =cut
 */
 
-int
+size_t
 i_tt_has_chars(TT_Fonthandle *handle, char const *text, size_t len, int utf8,
                char *out) {
-  int count = 0;
-  mm_log((1, "i_tt_has_chars(handle %p, text %p, len %d, utf8 %d)\n", 
-          handle, text, len, utf8));
+  size_t count = 0;
+  mm_log((1, "i_tt_has_chars(handle %p, text %p, len %ld, utf8 %d)\n", 
+          handle, text, (long)len, utf8));
 
   while (len) {
     unsigned long c;
@@ -722,10 +727,11 @@ Renders a single glyph into the bit rastermap (internal)
 
 static
 void
-i_tt_render_glyph( TT_Glyph glyph, TT_Glyph_Metrics* gmetrics, TT_Raster_Map *bit, TT_Raster_Map *small_bit, int x_off, int y_off, int smooth ) {
+i_tt_render_glyph( TT_Glyph glyph, TT_Glyph_Metrics* gmetrics, TT_Raster_Map *bit, TT_Raster_Map *small_bit, i_img_dim x_off, i_img_dim y_off, int smooth ) {
   
-  mm_log((1,"i_tt_render_glyph(glyph 0x0%X, gmetrics 0x0%X, bit 0x%X, small_bit 0x%X, x_off %d, y_off %d, smooth %d)\n",
-	  USTRCT(glyph), gmetrics, bit, small_bit, x_off,y_off,smooth));
+  mm_log((1,"i_tt_render_glyph(glyph %p, gmetrics %p, bit %p, small_bit %p, x_off %" i_DF ", y_off %" i_DF ", smooth %d)\n",
+	  USTRCT(glyph), gmetrics, bit, small_bit, i_DFc(x_off),
+	  i_DFc(y_off), smooth));
   
   if ( !smooth ) TT_Get_Glyph_Bitmap( glyph, bit, x_off * 64, y_off * 64);
   else {
@@ -762,13 +768,13 @@ calls i_tt_render_glyph to render each glyph into the bit rastermap (internal)
 static
 int
 i_tt_render_all_glyphs( TT_Fonthandle *handle, int inst, TT_Raster_Map *bit,
-                        TT_Raster_Map *small_bit, int cords[6], 
+                        TT_Raster_Map *small_bit, i_img_dim cords[6], 
                         char const* txt, size_t len, int smooth, int utf8 ) {
   unsigned long j;
   TT_F26Dot6 x,y;
   
-  mm_log((1,"i_tt_render_all_glyphs( handle 0x%X, inst %d, bit 0x%X, small_bit 0x%X, txt '%.*s', len %d, smooth %d, utf8 %d)\n",
-	  handle, inst, bit, small_bit, len, txt, len, smooth, utf8));
+  mm_log((1,"i_tt_render_all_glyphs( handle %p, inst %d, bit %p, small_bit %p, txt '%.*s', len %ld, smooth %d, utf8 %d)\n",
+	  handle, inst, bit, small_bit, (int)len, txt, (long)len, smooth, utf8));
   
   /* 
      y=-( handle->properties.horizontal->Descender * handle->instanceh[inst].imetrics.y_ppem )/(handle->properties.header->Units_Per_EM);
@@ -821,10 +827,11 @@ Function to dump a raster onto an image in color used by i_tt_text() (internal).
 
 static
 void
-i_tt_dump_raster_map2( i_img* im, TT_Raster_Map* bit, int xb, int yb, const i_color *cl, int smooth ) {
+i_tt_dump_raster_map2( i_img* im, TT_Raster_Map* bit, i_img_dim xb, i_img_dim yb, const i_color *cl, int smooth ) {
   unsigned char *bmap;
-  int x, y;
-  mm_log((1,"i_tt_dump_raster_map2(im 0x%x, bit 0x%X, xb %d, yb %d, cl 0x%X)\n",im,bit,xb,yb,cl));
+  i_img_dim x, y;
+  mm_log((1,"i_tt_dump_raster_map2(im %p, bit %p, xb %" i_DF ", yb %" i_DF ", cl %p)\n",
+	  im, bit, i_DFc(xb), i_DFc(yb), cl));
   
   bmap = bit->bitmap;
 
@@ -833,18 +840,7 @@ i_tt_dump_raster_map2( i_img* im, TT_Raster_Map* bit, int xb, int yb, const i_co
     i_render r;
     i_render_init(&r, im, bit->cols);
     for(y=0;y<bit->rows;y++) {
-#if 0
-      for(x=0;x<bit->width;x++) {
-       c = (unsigned char)bmap[y*(bit->cols)+x];
-       i=255-c;
-       i_gpix(im,x+xb,y+yb,&val);
-       for(ch=0;ch<im->channels;ch++) 
-         val.channel[ch] = (c*cl->channel[ch]+i*val.channel[ch])/255;
-       i_ppix(im,x+xb,y+yb,&val);
-      }
-#else
       i_render_color(&r, xb, yb+y, bit->cols, bmap + y*bit->cols, cl);
-#endif
     }
     i_render_done(&r);
   } else {
@@ -884,14 +880,16 @@ Function to dump a raster onto a single channel image in color (internal)
 
 static
 void
-i_tt_dump_raster_map_channel( i_img* im, TT_Raster_Map*  bit, int xb, int yb, int channel, int smooth ) {
+i_tt_dump_raster_map_channel( i_img* im, TT_Raster_Map*  bit, i_img_dim xb, i_img_dim yb, int channel, int smooth ) {
   unsigned char *bmap;
   i_color val;
-  int c,x,y;
+  int c;
+  i_img_dim x,y;
   int old_mask = im->ch_mask;
   im->ch_mask = 1 << channel;
 
-  mm_log((1,"i_tt_dump_raster_channel(im 0x%x, bit 0x%X, xb %d, yb %d, channel %d)\n",im,bit,xb,yb,channel));
+  mm_log((1,"i_tt_dump_raster_channel(im %p, bit %p, xb %" i_DF ", yb %" i_DF ", channel %d)\n",
+	  im, bit, i_DFc(xb), i_DFc(yb), channel));
   
   bmap = bit->bitmap;
   
@@ -940,9 +938,9 @@ interface for generating single channel raster of text (internal)
 
 static
 int
-i_tt_rasterize( TT_Fonthandle *handle, TT_Raster_Map *bit, int cords[6], float points, char const* txt, size_t len, int smooth, int utf8 ) {
+i_tt_rasterize( TT_Fonthandle *handle, TT_Raster_Map *bit, i_img_dim cords[6], double points, char const* txt, size_t len, int smooth, int utf8 ) {
   int inst;
-  int width, height;
+  i_img_dim width, height;
   TT_Raster_Map small_bit;
   
   /* find or install an instance */
@@ -959,7 +957,8 @@ i_tt_rasterize( TT_Fonthandle *handle, TT_Raster_Map *bit, int cords[6], float p
   width  = cords[2]-cords[0];
   height = cords[5]-cords[4];
   
-  mm_log((1,"i_tt_rasterize: width=%d, height=%d\n",width, height )); 
+  mm_log((1,"i_tt_rasterize: width=%" i_DF ", height=%" i_DF "\n",
+	  i_DFc(width), i_DFc(height) )); 
   
   i_tt_init_raster_map ( bit, width, height, smooth );
   i_tt_clear_raster_map( bit );
@@ -1001,10 +1000,10 @@ Interface to text rendering into a single channel in an image
 */
 
 undef_int
-i_tt_cp( TT_Fonthandle *handle, i_img *im, int xb, int yb, int channel, float points, char const* txt, size_t len, int smooth, int utf8, int align ) {
+i_tt_cp( TT_Fonthandle *handle, i_img *im, i_img_dim xb, i_img_dim yb, int channel, double points, char const* txt, size_t len, int smooth, int utf8, int align ) {
 
-  int cords[BOUNDING_BOX_COUNT];
-  int ascent, st_offset, y;
+  i_img_dim cords[BOUNDING_BOX_COUNT];
+  i_img_dim ascent, st_offset, y;
   TT_Raster_Map bit;
   
   i_clear_error();
@@ -1039,9 +1038,9 @@ Interface to text rendering in a single color onto an image
 */
 
 undef_int
-i_tt_text( TT_Fonthandle *handle, i_img *im, int xb, int yb, const i_color *cl, float points, char const* txt, size_t len, int smooth, int utf8, int align) {
-  int cords[BOUNDING_BOX_COUNT];
-  int ascent, st_offset, y;
+i_tt_text( TT_Fonthandle *handle, i_img *im, i_img_dim xb, i_img_dim yb, const i_color *cl, double points, char const* txt, size_t len, int smooth, int utf8, int align) {
+  i_img_dim cords[BOUNDING_BOX_COUNT];
+  i_img_dim ascent, st_offset, y;
   TT_Raster_Map bit;
 
   i_clear_error();
@@ -1075,11 +1074,11 @@ Function to get texts bounding boxes given the instance of the font (internal)
 
 static
 undef_int
-i_tt_bbox_inst( TT_Fonthandle *handle, int inst ,const char *txt, size_t len, int cords[BOUNDING_BOX_COUNT], int utf8 ) {
+i_tt_bbox_inst( TT_Fonthandle *handle, int inst ,const char *txt, size_t len, i_img_dim cords[BOUNDING_BOX_COUNT], int utf8 ) {
   int upm, casc, cdesc, first;
   
   int start    = 0;
-  int width    = 0;
+  i_img_dim width    = 0;
   int gdescent = 0;
   int gascent  = 0;
   int descent  = 0;
@@ -1090,7 +1089,8 @@ i_tt_bbox_inst( TT_Fonthandle *handle, int inst ,const char *txt, size_t len, in
   unsigned char *ustr;
   ustr=(unsigned char*)txt;
 
-  mm_log((1,"i_tt_box_inst(handle 0x%X,inst %d,txt '%.*s', len %d, utf8 %d)\n",handle,inst,len,txt,len, utf8));
+  mm_log((1,"i_tt_box_inst(handle %p,inst %d,txt '%.*s', len %ld, utf8 %d)\n",
+	  handle, inst, (int)len, txt, (long)len, utf8));
 
   upm     = handle->properties.header->Units_Per_EM;
   gascent  = ( handle->properties.horizontal->Ascender  * handle->instanceh[inst].imetrics.y_ppem + upm - 1) / upm;
@@ -1121,7 +1121,7 @@ i_tt_bbox_inst( TT_Fonthandle *handle, int inst ,const char *txt, size_t len, in
       cdesc  = (gm->bbox.yMin-63) / 64;
 
       mm_log((1, "i_tt_box_inst: glyph='%c' casc=%d cdesc=%d\n", 
-              ((j >= ' ' && j <= '~') ? j : '.'), casc, cdesc));
+              (int)((j >= ' ' && j <= '~') ? j : '.'), casc, cdesc));
 
       if (first) {
 	start    = gm->bbox.xMin / 64;
@@ -1175,11 +1175,12 @@ Interface to get a strings bounding box
 */
 
 undef_int
-i_tt_bbox( TT_Fonthandle *handle, float points,const char *txt,size_t len,int cords[6], int utf8) {
+i_tt_bbox( TT_Fonthandle *handle, double points,const char *txt,size_t len,i_img_dim cords[6], int utf8) {
   int inst;
 
   i_clear_error();
-  mm_log((1,"i_tt_box(handle 0x%X,points %f,txt '%.*s', len %d, utf8 %d)\n",handle,points,len,txt,len, utf8));
+  mm_log((1,"i_tt_box(handle %p,points %f,txt '%.*s', len %ld, utf8 %d)\n",
+	  handle, points, (int)len, txt, (long)len, utf8));
 
   if ( (inst=i_tt_get_instance(handle,points,-1)) < 0) {
     i_push_errorf(0, "i_tt_get_instance(%g)", points);
@@ -1199,7 +1200,7 @@ This is complicated by the need to handle encodings and so on.
 
 =cut
  */
-int
+size_t
 i_tt_face_name(TT_Fonthandle *handle, char *name_buf, size_t name_buf_size) {
   TT_Face_Properties props;
   int name_count;
@@ -1292,7 +1293,7 @@ void i_tt_dump_names(TT_Fonthandle *handle) {
   fflush(stdout);
 }
 
-int
+size_t
 i_tt_glyph_name(TT_Fonthandle *handle, unsigned long ch, char *name_buf, 
                  size_t name_buf_size) {
 #ifdef FTXPOST
@@ -1310,7 +1311,8 @@ i_tt_glyph_name(TT_Fonthandle *handle, unsigned long ch, char *name_buf,
   }
 
   if (handle->load_cond) {
-    i_push_errorf(handle->load_cond, "error loading names (%d)", handle->load_cond);
+    i_push_errorf(handle->load_cond, "error loading names (%#x)",
+		  (unsigned)handle->load_cond);
     return 0;
   }
   

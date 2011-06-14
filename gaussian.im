@@ -3,7 +3,7 @@
 
 static double
 gauss(int x, double std) {
-  return 1.0/(sqrt(2.0*PI)*std)*exp(-(double)(x)*(float)(x)/(2*std*std));
+  return 1.0/(sqrt(2.0*PI)*std)*exp(-(double)(x)*(double)(x)/(2*std*std));
 }
 
 /* Counters are as follows
@@ -18,7 +18,8 @@ gauss(int x, double std) {
 
 int
 i_gaussian(i_img *im, double stddev) {
-  int i,l,c,ch;
+  int i, c, ch;
+  i_img_dim x, y;
   double pc;
   double *coeff;
   double res[MAXCHANNELS];
@@ -59,13 +60,13 @@ i_gaussian(i_img *im, double stddev) {
 
 #code im->bits <= 8
   IM_COLOR rcolor;
-  for(l=0;l<im->ysize;l++) {
-    for(i=0;i<im->xsize;i++) {
+  for(y = 0; y < im->ysize; y++) {
+    for(x = 0; x < im->xsize; x++) {
       pc=0.0;
       for(ch=0;ch<im->channels;ch++) 
 	res[ch]=0; 
       for(c = 0;c < diameter; c++)
-	if (IM_GPIX(im,i+c-radius,l,&rcolor)!=-1) {
+	if (IM_GPIX(im,x+c-radius,y,&rcolor)!=-1) {
 	  for(ch=0;ch<im->channels;ch++) 
 	    res[ch]+= rcolor.channel[ch] * coeff[c];
 	  pc+=coeff[c];
@@ -74,17 +75,17 @@ i_gaussian(i_img *im, double stddev) {
 	double value = res[ch] / pc;
 	rcolor.channel[ch] = value > IM_SAMPLE_MAX ? IM_SAMPLE_MAX : IM_ROUND(value);
       }
-      IM_PPIX(timg,i,l,&rcolor);
+      IM_PPIX(timg, x, y, &rcolor);
     }
   }
   
-  for(l=0;l<im->xsize;l++) {
-    for(i=0;i<im->ysize;i++) {
+  for(x = 0;x < im->xsize; x++) {
+    for(y = 0; y < im->ysize; y++) {
       pc=0.0;
       for(ch=0; ch<im->channels; ch++)
 	res[ch]=0; 
       for(c=0; c < diameter; c++)
-	if (IM_GPIX(timg,l,i+c-radius,&rcolor)!=-1) {
+	if (IM_GPIX(timg, x, y+c-radius, &rcolor)!=-1) {
 	  for(ch=0;ch<im->channels;ch++) 
 	    res[ch]+= rcolor.channel[ch] * coeff[c];
 	  pc+=coeff[c];
@@ -93,7 +94,7 @@ i_gaussian(i_img *im, double stddev) {
 	double value = res[ch]/pc;
 	rcolor.channel[ch] = value > IM_SAMPLE_MAX ? IM_SAMPLE_MAX : IM_ROUND(value);
       }
-      IM_PPIX(im,l,i,&rcolor);
+      IM_PPIX(im, x, y, &rcolor);
     }
   }
 #/code

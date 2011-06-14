@@ -22,13 +22,13 @@ Basic 8-bit/sample paletted image
 #include "imageri.h"
 
 #define PALEXT(im) ((i_img_pal_ext*)((im)->ext_data))
-static int i_ppix_p(i_img *im, int x, int y, const i_color *val);
-static int i_gpix_p(i_img *im, int x, int y, i_color *val);
-static int i_glin_p(i_img *im, int l, int r, int y, i_color *vals);
-static int i_plin_p(i_img *im, int l, int r, int y, const i_color *vals);
-static int i_gsamp_p(i_img *im, int l, int r, int y, i_sample_t *samps, int const *chans, int chan_count);
-static int i_gpal_p(i_img *pm, int l, int r, int y, i_palidx *vals);
-static int i_ppal_p(i_img *pm, int l, int r, int y, const i_palidx *vals);
+static int i_ppix_p(i_img *im, i_img_dim x, i_img_dim y, const i_color *val);
+static int i_gpix_p(i_img *im, i_img_dim x, i_img_dim y, i_color *val);
+static i_img_dim i_glin_p(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, i_color *vals);
+static i_img_dim i_plin_p(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, const i_color *vals);
+static i_img_dim i_gsamp_p(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, i_sample_t *samps, int const *chans, int chan_count);
+static i_img_dim i_gpal_p(i_img *pm, i_img_dim l, i_img_dim r, i_img_dim y, i_palidx *vals);
+static i_img_dim i_ppal_p(i_img *pm, i_img_dim l, i_img_dim r, i_img_dim y, const i_palidx *vals);
 static int i_addcolors_p(i_img *im, const i_color *color, int count);
 static int i_getcolors_p(i_img *im, int i, i_color *color, int count);
 static int i_colorcount_p(i_img *im);
@@ -91,10 +91,10 @@ Returns a new image or NULL on failure.
 =cut
 */
 i_img *
-i_img_pal_new(int x, int y, int channels, int maxpal) {
+i_img_pal_new(i_img_dim x, i_img_dim y, int channels, int maxpal) {
   i_img *im;
   i_img_pal_ext *palext;
-  int bytes, line_bytes;
+  size_t bytes, line_bytes;
 
   i_clear_error();
   if (maxpal < 1 || maxpal > 256) {
@@ -159,7 +159,7 @@ same width, height and channels.
 */
 static void i_img_rgb_convert(i_img *targ, i_img *src) {
   i_color *row = mymalloc(sizeof(i_color) * targ->xsize);
-  int y;
+  i_img_dim y;
   for (y = 0; y < targ->ysize; ++y) {
     i_glin(src, 0, src->xsize, y, row);
     i_plin(targ, 0, src->xsize, y, row);
@@ -263,7 +263,7 @@ static void i_destroy_p(i_img *im) {
 }
 
 /*
-=item i_ppix_p(i_img *im, int x, int y, const i_color *val)
+=item i_ppix_p(i_img *im, i_img_dim x, i_img_dim y, const i_color *val)
 
 Write to a pixel in the image.
 
@@ -273,7 +273,7 @@ present in the image.
 =cut
 */
 static int 
-i_ppix_p(i_img *im, int x, int y, const i_color *val) {
+i_ppix_p(i_img *im, i_img_dim x, i_img_dim y, const i_color *val) {
   i_palidx which;
   if (x < 0 || x >= im->xsize || y < 0 || y >= im->ysize)
     return -1;
@@ -291,13 +291,13 @@ i_ppix_p(i_img *im, int x, int y, const i_color *val) {
 }
 
 /*
-=item i_gpix_p(i_img *im, int x, int y, i_color *val)
+=item i_gpix_p(i_img *im, i_img_dim x, i_img_dim y, i_color *val)
 
 Retrieve a pixel, converting from a palette index to a color.
 
 =cut
 */
-static int i_gpix_p(i_img *im, int x, int y, i_color *val) {
+static int i_gpix_p(i_img *im, i_img_dim x, i_img_dim y, i_color *val) {
   i_palidx which;
   if (x < 0 || x >= im->xsize || y < 0 || y >= im->ysize) {
     return -1;
@@ -311,18 +311,18 @@ static int i_gpix_p(i_img *im, int x, int y, i_color *val) {
 }
 
 /*
-=item i_glinp(i_img *im, int l, int r, int y, i_color *vals)
+=item i_glinp(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, i_color *vals)
 
 Retrieve a row of pixels.
 
 =cut
 */
-static int i_glin_p(i_img *im, int l, int r, int y, i_color *vals) {
+static i_img_dim i_glin_p(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, i_color *vals) {
   if (y >= 0 && y < im->ysize && l < im->xsize && l >= 0) {
     int palsize = PALEXT(im)->count;
     i_color *pal = PALEXT(im)->pal;
     i_palidx *data;
-    int count, i;
+    i_img_dim count, i;
     if (r > im->xsize)
       r = im->xsize;
     data = ((i_palidx *)im->idata) + l + y * im->xsize;
@@ -340,7 +340,7 @@ static int i_glin_p(i_img *im, int l, int r, int y, i_color *vals) {
 }
 
 /*
-=item i_plin_p(i_img *im, int l, int r, int y, const i_color *vals)
+=item i_plin_p(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, const i_color *vals)
 
 Write a line of color data to the image.
 
@@ -349,9 +349,9 @@ RGB.
 
 =cut
 */
-static int 
-i_plin_p(i_img *im, int l, int r, int y, const i_color *vals) {
-  int count, i;
+static i_img_dim 
+i_plin_p(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, const i_color *vals) {
+  i_img_dim count, i;
   i_palidx *data;
   i_palidx which;
   if (y >=0 && y < im->ysize && l < im->xsize && l >= 0) {
@@ -377,18 +377,18 @@ i_plin_p(i_img *im, int l, int r, int y, const i_color *vals) {
 }
 
 /*
-=item i_gsamp_p(i_img *im, int l, int r, int y, i_sample_t *samps, int chans, int chan_count)
+=item i_gsamp_p(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, i_sample_t *samps, int chans, int chan_count)
 
 =cut
 */
-static int i_gsamp_p(i_img *im, int l, int r, int y, i_sample_t *samps, 
+static i_img_dim i_gsamp_p(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, i_sample_t *samps, 
               int const *chans, int chan_count) {
   int ch;
   if (y >= 0 && y < im->ysize && l < im->xsize && l >= 0) {
     int palsize = PALEXT(im)->count;
     i_color *pal = PALEXT(im)->pal;
     i_palidx *data;
-    int count, i, w;
+    i_img_dim count, i, w;
     if (r > im->xsize)
       r = im->xsize;
     data = ((i_palidx *)im->idata) + l + y * im->xsize;
@@ -435,15 +435,15 @@ static int i_gsamp_p(i_img *im, int l, int r, int y, i_sample_t *samps,
 }
 
 /*
-=item i_gpal_p(i_img *im, int l, int r, int y, i_palidx *vals)
+=item i_gpal_p(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, i_palidx *vals)
 
 =cut
 */
 
-static int i_gpal_p(i_img *im, int l, int r, int y, i_palidx *vals) {
+static i_img_dim i_gpal_p(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, i_palidx *vals) {
   if (y >= 0 && y < im->ysize && l < im->xsize && l >= 0) {
     i_palidx *data;
-    int i, w;
+    i_img_dim i, w;
     if (r > im->xsize)
       r = im->xsize;
     data = ((i_palidx *)im->idata) + l + y * im->xsize;
@@ -459,15 +459,15 @@ static int i_gpal_p(i_img *im, int l, int r, int y, i_palidx *vals) {
 }
 
 /*
-=item i_ppal_p(i_img *im, int l, int r, int y, const i_palidx *vals)
+=item i_ppal_p(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, const i_palidx *vals)
 
 =cut
 */
 
-static int i_ppal_p(i_img *im, int l, int r, int y, const i_palidx *vals) {
+static i_img_dim i_ppal_p(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, const i_palidx *vals) {
   if (y >= 0 && y < im->ysize && l < im->xsize && l >= 0) {
     i_palidx *data;
-    int i, w;
+    i_img_dim i, w;
     if (r > im->xsize)
       r = im->xsize;
     data = ((i_palidx *)im->idata) + l + y * im->xsize;

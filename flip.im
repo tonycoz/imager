@@ -87,7 +87,7 @@ IM_SUFFIX(flip_row)(IM_COLOR *row, i_img_dim width) {
 
 static void
 flip_h(i_img *im) {
-  int y;
+  i_img_dim y;
   if (im->type == i_palette_type) {
     i_palidx *line = mymalloc(im->xsize * sizeof(i_palidx));
     for (y = 0; y < im->ysize; ++y) {
@@ -112,8 +112,8 @@ flip_h(i_img *im) {
 
 static void
 flip_v(i_img *im) {
-  int topy = 0;
-  int boty = im->ysize - 1;
+  i_img_dim topy = 0;
+  i_img_dim boty = im->ysize - 1;
   if (im->type == i_palette_type) {
     i_palidx *top_line = mymalloc(im->xsize * sizeof(i_palidx));
     i_palidx *bot_line = mymalloc(im->xsize * sizeof(i_palidx));
@@ -148,8 +148,8 @@ flip_v(i_img *im) {
 
 static void
 flip_hv(i_img *im) {
-  int topy = 0;
-  int boty = im->ysize - 1;
+  i_img_dim topy = 0;
+  i_img_dim boty = im->ysize - 1;
   if (im->type == i_palette_type) {
     i_palidx *top_line = mymalloc(im->xsize * sizeof(i_palidx));
     i_palidx *bot_line = mymalloc(im->xsize * sizeof(i_palidx));

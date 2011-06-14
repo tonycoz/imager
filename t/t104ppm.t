@@ -1,6 +1,6 @@
 #!perl -w
 use Imager ':all';
-use Test::More tests => 191;
+use Test::More tests => 195;
 use strict;
 use Imager::Test qw(test_image_raw test_image_16 is_color3 is_color1 is_image);
 
@@ -595,6 +595,21 @@ print "# check error handling\n";
 }
 
 Imager->close_log;
+
+{ # image too large handling
+  {
+    ok(!Imager->new(file => "testimg/toowide.ppm", filetype => "pnm"),
+       "fail to read a too wide image");
+    is(Imager->errstr, "unable to read pnm image: could not read image width: integer overflow",
+       "check error message");
+  }
+  {
+    ok(!Imager->new(file => "testimg/tootall.ppm", filetype => "pnm"),
+       "fail to read a too wide image");
+    is(Imager->errstr, "unable to read pnm image: could not read image height: integer overflow",
+       "check error message");
+  }
+}
 
 unless ($ENV{IMAGER_KEEP_FILES}) {
   unlink "testout/t104ppm.log";

@@ -12,7 +12,7 @@ freetyp2.c - font support via the FreeType library version 2.
   if (!i_ft2_getdpi(font, &xdpi, &ydpi)) { error }
   double matrix[6];
   if (!i_ft2_settransform(font, matrix)) { error }
-  int bbox[BOUNDING_BOX_COUNT];
+  i_img_dim bbox[BOUNDING_BOX_COUNT];
   if (!i_ft2_bbox(font, cheight, cwidth, text, length, bbox, utf8)) { error }
   i_img *im = ...;
   i_color cl;
@@ -52,8 +52,8 @@ static void ft2_push_message(int code);
 static int ft2_initialized = 0;
 static FT_Library library;
 
-static int i_min(int a, int b);
-static int i_max(int a, int b);
+static i_img_dim i_min(i_img_dim a, i_img_dim b);
+static i_img_dim i_max(i_img_dim a, i_img_dim b);
 
 /*
 =item i_ft2_init(void)
@@ -318,7 +318,7 @@ int i_ft2_sethinting(FT2_Fonthandle *handle, int hinting) {
 }
 
 /*
-=item i_ft2_bbox(FT2_Fonthandle *handle, double cheight, double cwidth, char *text, size_t len, int *bbox)
+=item i_ft2_bbox(FT2_Fonthandle *handle, double cheight, double cwidth, char *text, size_t len, i_img_dim *bbox)
 
 Retrieves bounding box information for the font at the given 
 character width and height.  This ignores the transformation matrix.
@@ -329,9 +329,9 @@ Returns non-zero on success.
 */
 int
 i_ft2_bbox(FT2_Fonthandle *handle, double cheight, double cwidth, 
-           char const *text, size_t len, int *bbox, int utf8) {
+           char const *text, size_t len, i_img_dim *bbox, int utf8) {
   FT_Error error;
-  int width;
+  i_img_dim width;
   int index;
   int first;
   int ascent = 0, descent = 0;
@@ -439,7 +439,7 @@ too much hard work.
 
 =cut
 */
-void ft2_transform_box(FT2_Fonthandle *handle, int bbox[4]) {
+void ft2_transform_box(FT2_Fonthandle *handle, i_img_dim bbox[4]) {
   double work[8];
   double *matrix = handle->matrix;
   
@@ -466,7 +466,7 @@ bounding box in bbox[] that encloses both.
 
 =cut
 */
-static void expand_bounds(int bbox[4], int bbox2[4]) {
+static void expand_bounds(i_img_dim bbox[4], i_img_dim bbox2[4]) {
   bbox[0] = i_min(bbox[0], bbox2[0]);
   bbox[1] = i_min(bbox[1], bbox2[1]);
   bbox[2] = i_max(bbox[2], bbox2[2]);
@@ -474,7 +474,7 @@ static void expand_bounds(int bbox[4], int bbox2[4]) {
 }
 
 /*
-=item i_ft2_bbox_r(FT2_Fonthandle *handle, double cheight, double cwidth, char *text, size_t len, int vlayout, int utf8, int *bbox)
+=item i_ft2_bbox_r(FT2_Fonthandle *handle, double cheight, double cwidth, char *text, size_t len, int vlayout, int utf8, i_img_dim *bbox)
 
 Retrieves bounding box information for the font at the given 
 character width and height.
@@ -495,16 +495,16 @@ Returns non-zero on success.
 */
 int
 i_ft2_bbox_r(FT2_Fonthandle *handle, double cheight, double cwidth, 
-           char const *text, size_t len, int vlayout, int utf8, int *bbox) {
+           char const *text, size_t len, int vlayout, int utf8, i_img_dim *bbox) {
   FT_Error error;
-  int width;
+  i_img_dim width;
   int index;
   int first;
-  int ascent = 0, descent = 0;
+  i_img_dim ascent = 0, descent = 0;
   int glyph_ascent, glyph_descent;
   FT_Glyph_Metrics *gm;
-  int work[4];
-  int bounds[4];
+  i_img_dim work[4];
+  i_img_dim bounds[4];
   double x = 0, y = 0;
   int i;
   FT_GlyphSlot slot;
@@ -641,13 +641,13 @@ Returns non-zero on success.
 =cut
 */
 int
-i_ft2_text(FT2_Fonthandle *handle, i_img *im, int tx, int ty, const i_color *cl,
+i_ft2_text(FT2_Fonthandle *handle, i_img *im, i_img_dim tx, i_img_dim ty, const i_color *cl,
            double cheight, double cwidth, char const *text, size_t len,
 	   int align, int aa, int vlayout, int utf8) {
   FT_Error error;
   int index;
   FT_Glyph_Metrics *gm;
-  int bbox[BOUNDING_BOX_COUNT];
+  i_img_dim bbox[BOUNDING_BOX_COUNT];
   FT_GlyphSlot slot;
   int x, y;
   unsigned char *bmp;
@@ -790,10 +790,10 @@ Returns non-zero on success.
 */
 
 int
-i_ft2_cp(FT2_Fonthandle *handle, i_img *im, int tx, int ty, int channel,
+i_ft2_cp(FT2_Fonthandle *handle, i_img *im, i_img_dim tx, i_img_dim ty, int channel,
          double cheight, double cwidth, char const *text, size_t len, int align,
          int aa, int vlayout, int utf8) {
-  int bbox[8];
+  i_img_dim bbox[8];
   i_img *work;
   i_color cl, cl2;
   int x, y;
@@ -843,7 +843,8 @@ Returns the number of characters that were checked.
 
 =cut
 */
-int i_ft2_has_chars(FT2_Fonthandle *handle, char const *text, size_t len, 
+size_t
+i_ft2_has_chars(FT2_Fonthandle *handle, char const *text, size_t len, 
                     int utf8, char *out) {
   int count = 0;
   mm_log((1, "i_ft2_has_chars(handle %p, text %p, len %d, utf8 %d)\n", 
@@ -953,10 +954,12 @@ make_bmp_map(FT_Bitmap *bitmap, unsigned char *map) {
 Fills the given buffer with the Postscript Face name of the font,
 if there is one.
 
+Returns the number of bytes copied, including the terminating NUL.
+
 =cut
 */
 
-int
+size_t
 i_ft2_face_name(FT2_Fonthandle *handle, char *name_buf, size_t name_buf_size) {
 #if IM_HAS_FACE_NAME
   char const *name = FT_Get_Postscript_Name(handle->face);
@@ -1134,13 +1137,13 @@ i_ft2_set_mm_coords(FT2_Fonthandle *handle, int coord_count, const long *coords)
 #endif
 }
 
-static int
-i_min(int a, int b) {
+static i_img_dim
+i_min(i_img_dim a, i_img_dim b) {
   return a < b ? a : b;
 }
 
-static int
-i_max(int a, int b) {
+static i_img_dim
+i_max(i_img_dim a, i_img_dim b) {
   return a > b ? a : b;
 }
 

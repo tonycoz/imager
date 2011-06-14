@@ -105,7 +105,7 @@ This function will fail if the supplied palette contains no colors.
 i_palidx *
 i_quant_translate(i_quantize *quant, i_img *img) {
   i_palidx *result;
-  int bytes;
+  size_t bytes;
 
   mm_log((1, "quant_translate(quant %p, img %p)\n", quant, img));
 
@@ -283,12 +283,13 @@ for each side of the cube, but this will require even more memory.
 static void
 makemap_addi(i_quantize *quant, i_img **imgs, int count) {
   cvec *clr;
-  int cnum, i, x, y, bst_idx=0, ld, cd, iter, currhb, img_num;
+  int cnum, i, bst_idx=0, ld, cd, iter, currhb, img_num;
+  i_img_dim x, y;
   i_sample_t *val;
   float dlt, accerr;
   hashbox *hb;
   i_mempool mp;
-  int maxwidth = 0;
+  i_img_dim maxwidth = 0;
   i_sample_t *line;
   const int *sample_indices;
 
@@ -471,7 +472,7 @@ typedef struct {
   i_sample_t max[3]; /* maximum for each channel */
   i_sample_t width[3]; /* width for each channel */
   int start, size;   /* beginning and size of the partition */
-  int pixels; /* number of pixels represented by this partition */
+  i_img_dim pixels; /* number of pixels represented by this partition */
 } medcut_partition;
 
 /*
@@ -537,11 +538,11 @@ static void
 makemap_mediancut(i_quantize *quant, i_img **imgs, int count) {
   quant_color_entry *colors;
   i_mempool mp;
-  int imgn, x, y, i, ch;
-  int max_width;
+  int imgn, i, ch;
+  i_img_dim x, y, max_width;
   i_color *line;
   int color_count;
-  int total_pixels;
+  i_img_dim total_pixels;
   medcut_partition *parts;
   int part_num;
   int in, out;
@@ -790,7 +791,7 @@ makemap_palette(i_quantize *quant, i_img **imgs, int count) {
 
     if (eliminate_unused) {
       i_palidx *line = mymalloc(sizeof(i_palidx) * imgs[imgn]->xsize);
-      int x, y;
+      i_img_dim x, y;
       memset(used, 0, sizeof(used));
 
       for (y = 0; y < imgs[imgn]->ysize; ++y) {
@@ -1239,7 +1240,8 @@ static int rand2dist_find(i_color val, i_quantize *quant, i_dists *dists, int in
 #endif
 
 static void translate_addi(i_quantize *quant, i_img *img, i_palidx *out) {
-  int x, y, i, k, bst_idx = 0;
+  i_img_dim x, y, k;
+  int i, bst_idx = 0;
   i_color val;
   int pixdev = quant->perturb;
   CF_VARS;
@@ -1333,9 +1335,9 @@ translate_errdiff(i_quantize *quant, i_img *img, i_palidx *out) {
   int mapw, maph, mapo;
   int i;
   errdiff_t *err;
-  int errw;
+  i_img_dim errw;
   int difftotal;
-  int x, y, dx, dy;
+  i_img_dim x, y, dx, dy;
   int bst_idx = 0;
   int is_gray = is_gray_map(quant);
   CF_VARS;
@@ -1376,7 +1378,6 @@ translate_errdiff(i_quantize *quant, i_img *img, i_palidx *out) {
   for (y = 0; y < img->ysize; ++y) {
     for (x = 0; x < img->xsize; ++x) {
       i_color val;
-      long ld, cd;
       errdiff_t perr;
       i_gpix(img, x, y, &val);
       if (img->channels < 3) {
@@ -1423,7 +1424,8 @@ translate_errdiff(i_quantize *quant, i_img *img, i_palidx *out) {
 
 
 static void prescan(i_img **imgs,int count, int cnum, cvec *clr, i_sample_t *line) {
-  int i,k,j,x,y;
+  int i,k,j;
+  i_img_dim x,y;
   i_sample_t *val;
   const int *chans;
 
@@ -1665,7 +1667,7 @@ static void
 transparent_threshold(i_quantize *quant, i_palidx *data, i_img *img,
 		      i_palidx trans_index)
 {
-  int x, y;
+  i_img_dim x, y;
   i_sample_t *line = mymalloc(img->xsize * sizeof(i_sample_t));
   int trans_chan = img->channels > 2 ? 3 : 1;
   
@@ -1688,7 +1690,8 @@ transparent_errdiff(i_quantize *quant, i_palidx *data, i_img *img,
   int mapw, maph, mapo;
   int errw, *err, *errp;
   int difftotal, out, error;
-  int x, y, dx, dy, i;
+  i_img_dim x, y, dx, dy;
+  int i;
   i_sample_t *line;
   int trans_chan = img->channels > 2 ? 3 : 1;
 
@@ -1847,7 +1850,7 @@ transparent_ordered(i_quantize *quant, i_palidx *data, i_img *img,
 		    i_palidx trans_index)
 {
   unsigned char *spot;
-  int x, y;
+  i_img_dim x, y;
   i_sample_t *line;
   int trans_chan = img->channels > 2 ? 3 : 1;
   if (quant->tr_orddith == od_custom)

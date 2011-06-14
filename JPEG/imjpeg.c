@@ -33,10 +33,14 @@ Reads and writes JPEG images
 #include "jerror.h"
 #include <errno.h>
 #include <stdlib.h>
+#include <stdio.h>
+#include "imexif.h"
 
 #define JPEG_APP13       0xED    /* APP13 marker code */
 #define JPEG_APP1 (JPEG_APP0 + 1)
 #define JPGS 16384
+
+#define JPEG_DIM_MAX JPEG_MAX_DIMENSION
 
 static unsigned char fake_eoi[]={(JOCTET) 0xFF,(JOCTET) JPEG_EOI};
 
@@ -99,7 +103,7 @@ wiol_fill_input_buffer(j_decompress_ptr cinfo) {
   wiol_src_ptr src = (wiol_src_ptr) cinfo->src;
   ssize_t nbytes; /* We assume that reads are "small" */
   
-  mm_log((1,"wiol_fill_input_buffer(cinfo 0x%p)\n", cinfo));
+  mm_log((1,"wiol_fill_input_buffer(cinfo %p)\n", cinfo));
   
   nbytes = src->data->readcb(src->data, src->buffer, JPGS);
   
@@ -214,7 +218,7 @@ wiol_empty_output_buffer(j_compress_ptr cinfo) {
   ssize_t nbytes     = JPGS - dest->pub.free_in_buffer;
   */
 
-  mm_log((1,"wiol_empty_output_buffer(cinfo 0x%p)\n", cinfo));
+  mm_log((1,"wiol_empty_output_buffer(cinfo %p)\n", cinfo));
   rc = dest->data->writecb(dest->data, dest->buffer, JPGS);
 
   if (rc != JPGS) { /* XXX: Should raise some jpeg error */
@@ -392,7 +396,7 @@ i_readjpeg_wiol(io_glue *data, int length, char** iptc_itext, int *itlength) {
   int channels;
   volatile int src_set = 0;
 
-  mm_log((1,"i_readjpeg_wiol(data 0x%p, length %d,iptc_itext 0x%p)\n", data, length, iptc_itext));
+  mm_log((1,"i_readjpeg_wiol(data %p, length %d,iptc_itext %p)\n", data, length, iptc_itext));
 
   i_clear_error();
 
@@ -588,6 +592,11 @@ i_writejpeg_wiol(i_img *im, io_glue *ig, int qfactor) {
   mm_log((1,"i_writejpeg(im %p, ig %p, qfactor %d)\n", im, ig, qfactor));
   
   i_clear_error();
+
+  if (im->xsize > JPEG_DIM_MAX || im->ysize > JPEG_DIM_MAX) {
+    i_push_error(0, "image too large for JPEG");
+    return 0;
+  }
 
   if (!(im->channels==1 || im->channels==3)) { 
     want_channels = im->channels - 1;

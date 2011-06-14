@@ -65,12 +65,13 @@ Now handles images with more than 8-bits/sample.
 i_img *
 i_convert(i_img *src, const double *coeff, int outchan, int inchan) {
   double work[MAXCHANNELS];
-  int x, y;
+  i_img_dim x, y;
   int i, j;
   int ilimit;
   i_img *im = NULL;
 
-  mm_log((1,"i_convert(src %p, coeff %p,outchan %d, inchan %d)\n",im,src, coeff,outchan, inchan));
+  mm_log((1,"i_convert(im %p, src %p, coeff %p,outchan %d, inchan %d)\n",
+	  im, src, coeff, outchan, inchan));
  
   i_clear_error();
 

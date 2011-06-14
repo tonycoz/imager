@@ -75,17 +75,18 @@ set_entry(int i, char *buf, size_t size, char *file, int line) {
 
 void
 malloc_state(void) {
-  int i, total = 0;
+  int i;
+  size_t total = 0;
 
   i_clear_error();
   mm_log((0,"malloc_state()\n"));
   bndcheck_all();
   for(i=0; i<MAXMAL; i++) if (malloc_pointers[i].ptr != NULL) {
-    mm_log((0,"%d: %d (0x%x) : %s\n", i, malloc_pointers[i].size, malloc_pointers[i].ptr, malloc_pointers[i].comm));
+      mm_log((0,"%d: %lu (%p) : %s\n", i, (unsigned long)malloc_pointers[i].size, malloc_pointers[i].ptr, malloc_pointers[i].comm));
     total += malloc_pointers[i].size;
   }
   if (total == 0) mm_log((0,"No memory currently used!\n"))
-		    else mm_log((0,"total: %d\n",total));
+    else mm_log((0,"total: %lu\n", (unsigned long)total));
 }
 
 
@@ -104,17 +105,17 @@ mymalloc_file_line(size_t size, char* file, int line) {
   }
 
   if ( (buf = malloc(size+UNDRRNVAL+OVERRNVAL)) == NULL ) {
-    mm_log((1,"Unable to allocate %i for %s (%i)\n", size, file, line));
+    mm_log((1,"Unable to allocate %ld for %s (%i)\n", (long)size, file, line));
     exit(3);
   }
   
   buf = set_entry(i, buf, size, file, line);
-  mm_log((1,"mymalloc_file_line: slot <%d> %d bytes allocated at %p for %s (%d)\n", i, size, buf, file, line));
+  mm_log((1,"mymalloc_file_line: slot <%d> %ld bytes allocated at %p for %s (%d)\n", i, (long)size, buf, file, line));
   return buf;
 }
 
 void *
-(mymalloc)(int size) {
+(mymalloc)(size_t size) {
   return mymalloc_file_line(size, "unknown", 0);
 }
 
@@ -143,12 +144,13 @@ myrealloc_file_line(void *ptr, size_t newsize, char* file, int line) {
   }
   
   if ( (buf = realloc(((char *)ptr)-UNDRRNVAL, UNDRRNVAL+OVERRNVAL+newsize)) == NULL ) {
-    mm_log((1,"Unable to reallocate %i bytes at %p for %s (%i)\n", newsize, ptr, file, line));
+    mm_log((1,"Unable to reallocate %ld bytes at %p for %s (%i)\n", (long)
+	    newsize, ptr, file, line));
     exit(3); 
   }
   
   buf = set_entry(i, buf, newsize, file, line);
-  mm_log((1,"realloc_file_line: slot <%d> %d bytes allocated at %p for %s (%d)\n", i, newsize, buf, file, line));
+  mm_log((1,"realloc_file_line: slot <%d> %ld bytes allocated at %p for %s (%d)\n", i, (long)newsize, buf, file, line));
   return buf;
 }
 
@@ -168,13 +170,15 @@ bndcheck(int idx) {
     return;
   }
   
-  for(i=0;i<UNDRRNVAL;i++)
-     if (pp[-(1+i)] != PADBYTE)
-     mm_log((1,"bndcheck: UNDERRUN OF %d bytes detected: slot = %d, point = %p, size = %d\n", i+1, idx, pp, s ));
+  for(i=0;i<UNDRRNVAL;i++) {
+    if (pp[-(1+i)] != PADBYTE)
+      mm_log((1,"bndcheck: UNDERRUN OF %d bytes detected: slot = %d, point = %p, size = %ld\n", i+1, idx, pp, (long)s ));
+  }
   
-     for(i=0;i<OVERRNVAL;i++)
+  for(i=0;i<OVERRNVAL;i++) {
     if (pp[s+i] != PADBYTE)
-      mm_log((1,"bndcheck: OVERRUN OF %d bytes detected: slot = %d, point = %p, size = %d\n", i+1, idx, pp, s ));
+      mm_log((1,"bndcheck: OVERRUN OF %d bytes detected: slot = %d, point = %p, size = %ld\n", i+1, idx, pp, (long)s ));
+  }
 }
 
 void
@@ -221,26 +225,24 @@ void
 
 #else 
 
-#define malloc_comm(a,b) (mymalloc(a))
-
 void
 malloc_state() {
 }
 
 void*
-mymalloc(int size) {
+mymalloc(size_t size) {
   void *buf;
 
   if (size < 0) {
-    fprintf(stderr, "Attempt to allocate size %d\n", size);
+    fprintf(stderr, "Attempt to allocate size %ld\n", (long)size);
     exit(3);
   }
 
   if ( (buf = malloc(size)) == NULL ) {
-    mm_log((1, "mymalloc: unable to malloc %d\n", size));
-    fprintf(stderr,"Unable to malloc %d.\n", size); exit(3);
+    mm_log((1, "mymalloc: unable to malloc %ld\n", (long)size));
+    fprintf(stderr,"Unable to malloc %ld.\n", (long)size); exit(3);
   }
-  mm_log((1, "mymalloc(size %d) -> %p\n", size, buf));
+  mm_log((1, "mymalloc(size %ld) -> %p\n", (long)size, buf));
   return buf;
 }
 
@@ -264,7 +266,7 @@ void *
 myrealloc(void *block, size_t size) {
   void *result;
 
-  mm_log((1, "myrealloc(block %p, size %u)\n", block, size));
+  mm_log((1, "myrealloc(block %p, size %ld)\n", block, (long)size));
   if ((result = realloc(block, size)) == NULL) {
     mm_log((1, "myrealloc: out of memory\n"));
     fprintf(stderr, "Out of memory.\n");
@@ -353,10 +355,14 @@ Retrieve a C<UTF-8> character from the stream.
 Modifies *p and *len to indicate the consumed characters.
 
 This doesn't support the extended C<UTF-8> encoding used by later
-versions of Perl.
+versions of Perl.  Since this is typically used to implement text
+output by font drivers, the strings supplied shouldn't have such out
+of range characters.
 
 This doesn't check that the C<UTF-8> character is using the shortest
 possible representation.
+
+Returns ~0UL on failure.
 
 =cut
 */

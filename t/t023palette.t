@@ -145,7 +145,7 @@ cmp_ok(Imager->errstr, '=~', qr/Channels must be positive and <= 4/,
  SKIP:
   {
     skip("don't want to allocate 4Gb", 10)
-      unless $Config{intsize} == 4;
+      unless $Config{ptrsize} == 4;
 
     my $uint_range = 256 ** $Config{intsize};
     my $dim1 = int(sqrt($uint_range))+1;
@@ -180,7 +180,7 @@ cmp_ok(Imager->errstr, '=~', qr/Channels must be positive and <= 4/,
     # test the scanline allocation check
     # divide by 2 to get int range, by 3 so that the image (one byte/pixel)
     # doesn't integer overflow, but the scanline of i_color (4/pixel) does
-    my $dim4 = $uint_range / 2 / 3;
+    my $dim4 = $uint_range / 3;
     my $im_o = Imager->new(xsize=>$dim4, ysize=>1, channels=>3, type=>'paletted');
     is($im_o, undef, "integer overflow check - scanline size");
     cmp_ok(Imager->errstr, '=~', 

@@ -15,12 +15,12 @@ MODULE = Imager::Font::W32  PACKAGE = Imager::Font::W32
 
 void
 i_wf_bbox(face, size, text_sv, utf8=0)
-	char *face
-	int size
+	const char *face
+	i_img_dim size
 	SV *text_sv
 	int utf8
       PREINIT:
-	int cords[BOUNDING_BOX_COUNT];
+	i_img_dim cords[BOUNDING_BOX_COUNT];
         int rc, i;
 	char const *text;
          STRLEN text_len;
@@ -38,12 +38,12 @@ i_wf_bbox(face, size, text_sv, utf8=0)
 
 undef_int
 i_wf_text(face, im, tx, ty, cl, size, text_sv, align, aa, utf8 = 0)
-	char *face
+	const char *face
 	Imager::ImgRaw im
-	int tx
-	int ty
+	i_img_dim tx
+	i_img_dim ty
 	Imager::Color cl
-	int size
+	i_img_dim size
 	SV *text_sv
 	int align
 	int aa
@@ -64,12 +64,12 @@ i_wf_text(face, im, tx, ty, cl, size, text_sv, align, aa, utf8 = 0)
 
 undef_int
 i_wf_cp(face, im, tx, ty, channel, size, text_sv, align, aa, utf8 = 0)
-	char *face
+	const char *face
 	Imager::ImgRaw im
-	int tx
-	int ty
+	i_img_dim tx
+	i_img_dim ty
 	int channel
-	int size
+	i_img_dim size
 	SV *text_sv
 	int align
 	int aa

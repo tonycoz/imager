@@ -34,7 +34,7 @@ static int getstr(void *hv_t,char *key,char **store) {
   SV** svpp;
   HV* hv=(HV*)hv_t;
 
-  mm_log((1,"getstr(hv_t 0x%X, key %s, store 0x%X)\n",hv_t,key,store));
+  mm_log((1,"getstr(hv_t %p, key %s, store %p)\n",hv_t,key,store));
 
   if ( !hv_exists(hv,key,strlen(key)) ) return 0;
 
@@ -49,7 +49,7 @@ static int getint(void *hv_t,char *key,int *store) {
   SV** svpp;
   HV* hv=(HV*)hv_t;  
 
-  mm_log((1,"getint(hv_t 0x%X, key %s, store 0x%X)\n",hv_t,key,store));
+  mm_log((1,"getint(hv_t %p, key %s, store %p)\n",hv_t,key,store));
 
   if ( !hv_exists(hv,key,strlen(key)) ) return 0;
 
@@ -63,11 +63,11 @@ static int getdouble(void *hv_t,char* key,double *store) {
   SV** svpp;
   HV* hv=(HV*)hv_t;
 
-  mm_log((1,"getdouble(hv_t 0x%X, key %s, store 0x%X)\n",hv_t,key,store));
+  mm_log((1,"getdouble(hv_t %p, key %s, store %p)\n",hv_t,key,store));
 
   if ( !hv_exists(hv,key,strlen(key)) ) return 0;
   svpp=hv_fetch(hv, key, strlen(key), 0);
-  *store=(float)SvNV(*svpp);
+  *store=(double)SvNV(*svpp);
   return 1;
 }
 
@@ -76,7 +76,7 @@ static int getvoid(void *hv_t,char* key,void **store) {
   SV** svpp;
   HV* hv=(HV*)hv_t;
 
-  mm_log((1,"getvoid(hv_t 0x%X, key %s, store 0x%X)\n",hv_t,key,store));
+  mm_log((1,"getvoid(hv_t %p, key %s, store %p)\n",hv_t,key,store));
 
   if ( !hv_exists(hv,key,strlen(key)) ) return 0;
 
@@ -91,7 +91,7 @@ static int getobj(void *hv_t,char *key,char *type,void **store) {
   SV** svpp;
   HV* hv=(HV*)hv_t;
 
-  mm_log((1,"getobj(hv_t 0x%X, key %s,type %s, store 0x%X)\n",hv_t,key,type,store));
+  mm_log((1,"getobj(hv_t %p, key %s,type %s, store %p)\n",hv_t,key,type,store));
 
   if ( !hv_exists(hv,key,strlen(key)) ) return 0;
 
@@ -121,98 +121,6 @@ i_log_entry(char *string, int level) {
   mm_log((level, string));
 }
 
-
-typedef struct i_reader_data_tag
-{
-  /* presumably a CODE ref or name of a sub */
-  SV *sv;
-} i_reader_data;
-
-/* used by functions that want callbacks */
-static int read_callback(char *userdata, char *buffer, int need, int want) {
-  dTHX;
-  i_reader_data *rd = (i_reader_data *)userdata;
-  int count;
-  int result;
-  SV *data;
-  dSP; dTARG = sv_newmortal();
-  /* thanks to Simon Cozens for help with the dTARG above */
-
-  ENTER;
-  SAVETMPS;
-  EXTEND(SP, 2);
-  PUSHMARK(SP);
-  PUSHi(want);
-  PUSHi(need);
-  PUTBACK;
-
-  count = perl_call_sv(rd->sv, G_SCALAR);
-
-  SPAGAIN;
-
-  if (count != 1)
-    croak("Result of perl_call_sv(..., G_SCALAR) != 1");
-
-  data = POPs;
-
-  if (SvOK(data)) {
-    STRLEN len;
-    char *ptr = SvPV(data, len);
-    if (len > want)
-      croak("Too much data returned in reader callback");
-    
-    memcpy(buffer, ptr, len);
-    result = len;
-  }
-  else {
-    result = -1;
-  }
-
-  PUTBACK;
-  FREETMPS;
-  LEAVE;
-
-  return result;
-}
-
-typedef struct
-{
-  SV *sv; /* a coderef or sub name */
-} i_writer_data;
-
-/* used by functions that want callbacks */
-static int write_callback(char *userdata, char const *data, int size) {
-  dTHX;
-  i_writer_data *wd = (i_writer_data *)userdata;
-  int count;
-  int success;
-  SV *sv;
-  dSP; 
-
-  ENTER;
-  SAVETMPS;
-  EXTEND(SP, 1);
-  PUSHMARK(SP);
-  XPUSHs(sv_2mortal(newSVpv((char *)data, size)));
-  PUTBACK;
-
-  count = perl_call_sv(wd->sv, G_SCALAR);
-
-  SPAGAIN;
-
-  if (count != 1)
-    croak("Result of perl_call_sv(..., G_SCALAR) != 1");
-
-  sv = POPs;
-  success = SvTRUE(sv);
-
-
-  PUTBACK;
-  FREETMPS;
-  LEAVE;
-
-  return success;
-}
 
 #define CBDATA_BUFSIZE 8192
 
@@ -873,7 +781,7 @@ validate_i_ppal(i_img *im, i_palidx const *indexes, int count) {
 typedef i_int_hlines *Imager__Internal__Hlines;
 
 static i_int_hlines *
-i_int_hlines_new(int start_y, int count_y, int start_x, int count_x) {
+i_int_hlines_new(i_img_dim start_y, i_img_dim count_y, i_img_dim start_x, i_img_dim count_x) {
   i_int_hlines *result = mymalloc(sizeof(i_int_hlines));
   i_int_init_hlines(result, start_y, count_y, start_x, count_x);
 
@@ -906,9 +814,9 @@ static int seg_compare(const void *vleft, const void *vright) {
 static SV *
 i_int_hlines_dump(i_int_hlines *hlines) {
   dTHX;
-  SV *dump = newSVpvf("start_y: %d limit_y: %d start_x: %d limit_x: %d\n",
-	hlines->start_y, hlines->limit_y, hlines->start_x, hlines->limit_x);
-  int y;
+  SV *dump = newSVpvf("start_y: %" i_DF " limit_y: %" i_DF " start_x: %" i_DF " limit_x: %" i_DF"\n",
+	i_DFc(hlines->start_y), i_DFc(hlines->limit_y), i_DFc(hlines->start_x), i_DFc(hlines->limit_x));
+  i_img_dim y;
   
   for (y = hlines->start_y; y < hlines->limit_y; ++y) {
     i_int_hline_entry *entry = hlines->entries[y-hlines->start_y];
@@ -918,10 +826,10 @@ i_int_hlines_dump(i_int_hlines *hlines) {
       if (entry->count)
         qsort(entry->segs, entry->count, sizeof(i_int_hline_seg), seg_compare);
 
-      sv_catpvf(dump, " %d (%d):", y, entry->count);
+      sv_catpvf(dump, " %" i_DF " (%" i_DF "):", i_DFc(y), i_DFc(entry->count));
       for (i = 0; i < entry->count; ++i) {
-        sv_catpvf(dump, " [%d, %d)", entry->segs[i].minx, 
-                  entry->segs[i].x_limit);
+        sv_catpvf(dump, " [%" i_DF ", %" i_DF ")", i_DFc(entry->segs[i].minx), 
+                  i_DFc(entry->segs[i].x_limit));
       }
       sv_catpv(dump, "\n");
     }
@@ -931,6 +839,24 @@ i_int_hlines_dump(i_int_hlines *hlines) {
 }
 
 #endif
+
+static off_t
+i_sv_off_t(pTHX_ SV *sv) {
+#if LSEEKSIZE > IVSIZE
+  return (off_t)SvNV(sv);
+#else
+  return (off_t)SvIV(sv);
+#endif
+}
+
+static SV *
+i_new_sv_off_t(pTHX_ off_t off) {
+#if LSEEKSIZE > IVSIZE
+  return newSVnv(off);
+#else
+  return newSViv(off);
+#endif
+}
 
 static im_pl_ext_funcs im_perl_funcs =
 {
@@ -1085,8 +1011,8 @@ MODULE = Imager		PACKAGE = Imager::ImgRaw	PREFIX = IIM_
 
 Imager::ImgRaw
 IIM_new(x,y,ch)
-               int     x
-	       int     y
+               i_img_dim     x
+	       i_img_dim     y
 	       int     ch
 
 void
@@ -1164,20 +1090,21 @@ io_slurp(ig)
 
 undef_int
 i_set_image_file_limits(width, height, bytes)
-	int width
-	int height
-	int bytes
+	i_img_dim width
+	i_img_dim height
+	size_t bytes
 
 void
 i_get_image_file_limits()
       PREINIT:
-        int width, height, bytes;
+        i_img_dim width, height;
+	size_t bytes;
       PPCODE:
         if (i_get_image_file_limits(&width, &height, &bytes)) {
 	  EXTEND(SP, 3);
           PUSHs(sv_2mortal(newSViv(width)));
           PUSHs(sv_2mortal(newSViv(height)));
-          PUSHs(sv_2mortal(newSViv(bytes)));
+          PUSHs(sv_2mortal(newSVuv(bytes)));
         }
 
 MODULE = Imager		PACKAGE = Imager::IO	PREFIX = i_io_
@@ -1206,10 +1133,10 @@ void
 i_io_read(ig, buffer_sv, size)
 	Imager::IO ig
 	SV *buffer_sv
-	int size
+	IV size
       PREINIT:
         void *buffer;
-	int result;
+	ssize_t result;
       PPCODE:
         if (size <= 0)
 	  croak("size negative in call to i_io_read()");
@@ -1237,11 +1164,11 @@ i_io_read(ig, buffer_sv, size)
 void
 i_io_read2(ig, size)
 	Imager::IO ig
-	int size
+	IV size
       PREINIT:
 	SV *buffer_sv;
         void *buffer;
-	int result;
+	ssize_t result;
       PPCODE:
         if (size <= 0)
 	  croak("size negative in call to i_io_read2()");
@@ -1260,10 +1187,10 @@ i_io_read2(ig, size)
 	  SvREFCNT_dec(buffer_sv);
         }
 
-int
+off_t
 i_io_seek(ig, position, whence)
 	Imager::IO ig
-	long position
+	off_t position
 	int whence
 
 int
@@ -1277,6 +1204,7 @@ i_io_DESTROY(ig)
 int
 i_io_CLONE_SKIP(...)
     CODE:
+        (void)items; /* avoid unused warning for XS variable */
 	RETVAL = 1;
     OUTPUT:
 	RETVAL
@@ -1303,27 +1231,27 @@ i_img_new()
 Imager::ImgRaw
 i_img_empty(im,x,y)
     Imager::ImgRaw     im
-               int     x
-	       int     y
+               i_img_dim     x
+	       i_img_dim     y
 
 Imager::ImgRaw
 i_img_empty_ch(im,x,y,ch)
     Imager::ImgRaw     im
-               int     x
-	       int     y
+               i_img_dim     x
+	       i_img_dim     y
 	       int     ch
 
 Imager::ImgRaw
 i_sametype(im, x, y)
     Imager::ImgRaw im
-               int x
-               int y
+               i_img_dim x
+               i_img_dim y
 
 Imager::ImgRaw
 i_sametype_chans(im, x, y, channels)
     Imager::ImgRaw im
-               int x
-               int y
+               i_img_dim x
+               i_img_dim y
                int channels
 
 int
@@ -1357,7 +1285,7 @@ void
 i_img_info(im)
     Imager::ImgRaw     im
 	     PREINIT:
-	       int     info[4];
+	       i_img_dim     info[4];
 	     PPCODE:
    	       i_img_info(im,info);
                EXTEND(SP, 4);
@@ -1423,67 +1351,67 @@ i_img_is_monochrome(im)
 void
 i_line(im,x1,y1,x2,y2,val,endp)
     Imager::ImgRaw     im
-	       int     x1
-	       int     y1
-	       int     x2
-	       int     y2
+	       i_img_dim     x1
+	       i_img_dim     y1
+	       i_img_dim     x2
+	       i_img_dim     y2
      Imager::Color     val
 	       int     endp
 
 void
 i_line_aa(im,x1,y1,x2,y2,val,endp)
     Imager::ImgRaw     im
-	       int     x1
-	       int     y1
-	       int     x2
-	       int     y2
+	       i_img_dim     x1
+	       i_img_dim     y1
+	       i_img_dim     x2
+	       i_img_dim     y2
      Imager::Color     val
 	       int     endp
 
 void
 i_box(im,x1,y1,x2,y2,val)
     Imager::ImgRaw     im
-	       int     x1
-	       int     y1
-	       int     x2
-	       int     y2
+	       i_img_dim     x1
+	       i_img_dim     y1
+	       i_img_dim     x2
+	       i_img_dim     y2
      Imager::Color     val
 
 void
 i_box_filled(im,x1,y1,x2,y2,val)
     Imager::ImgRaw     im
-	       int     x1
-	       int     y1
-	       int     x2
-	       int     y2
+	       i_img_dim     x1
+	       i_img_dim     y1
+	       i_img_dim     x2
+	       i_img_dim     y2
 	   Imager::Color    val
 
 int
 i_box_filledf(im,x1,y1,x2,y2,val)
     Imager::ImgRaw     im
-	       int     x1
-	       int     y1
-	       int     x2
-	       int     y2
+	       i_img_dim     x1
+	       i_img_dim     y1
+	       i_img_dim     x2
+	       i_img_dim     y2
 	   Imager::Color::Float    val
 
 void
 i_box_cfill(im,x1,y1,x2,y2,fill)
     Imager::ImgRaw     im
-	       int     x1
-	       int     y1
-	       int     x2
-	       int     y2
+	       i_img_dim     x1
+	       i_img_dim     y1
+	       i_img_dim     x2
+	       i_img_dim     y2
 	   Imager::FillHandle    fill
 
 void
 i_arc(im,x,y,rad,d1,d2,val)
     Imager::ImgRaw     im
-	       int     x
-	       int     y
-             float     rad
-             float     d1
-             float     d2
+	       i_img_dim     x
+	       i_img_dim     y
+             double     rad
+             double     d1
+             double     d2
 	   Imager::Color    val
 
 void
@@ -1499,11 +1427,11 @@ i_arc_aa(im,x,y,rad,d1,d2,val)
 void
 i_arc_cfill(im,x,y,rad,d1,d2,fill)
     Imager::ImgRaw     im
-	       int     x
-	       int     y
-             float     rad
-             float     d1
-             float     d2
+	       i_img_dim     x
+	       i_img_dim     y
+             double     rad
+             double     d1
+             double     d2
 	   Imager::FillHandle    fill
 
 void
@@ -1520,9 +1448,9 @@ i_arc_aa_cfill(im,x,y,rad,d1,d2,fill)
 void
 i_circle_aa(im,x,y,rad,val)
     Imager::ImgRaw     im
-	     float     x
-	     float     y
-             float     rad
+	     double     x
+	     double     y
+             double     rad
 	   Imager::Color    val
 
 int
@@ -1547,8 +1475,8 @@ i_arc_out(im,x,y,rad,d1,d2,val)
 	     i_img_dim     x
 	     i_img_dim     y
              i_img_dim     rad
-	     float d1
-	     float d2
+	     double d1
+	     double d2
 	   Imager::Color    val
 
 int
@@ -1557,8 +1485,8 @@ i_arc_out_aa(im,x,y,rad,d1,d2,val)
 	     i_img_dim     x
 	     i_img_dim     y
              i_img_dim     rad
-	     float d1
-	     float d2
+	     double d1
+	     double d2
 	   Imager::Color    val
 
 
@@ -1673,30 +1601,30 @@ i_poly_aa_cfill(im,xc,yc,fill)
 undef_int
 i_flood_fill(im,seedx,seedy,dcol)
     Imager::ImgRaw     im
-	       int     seedx
-	       int     seedy
+	       i_img_dim     seedx
+	       i_img_dim     seedy
      Imager::Color     dcol
 
 undef_int
 i_flood_cfill(im,seedx,seedy,fill)
     Imager::ImgRaw     im
-	       int     seedx
-	       int     seedy
+	       i_img_dim     seedx
+	       i_img_dim     seedy
      Imager::FillHandle     fill
 
 undef_int
 i_flood_fill_border(im,seedx,seedy,dcol, border)
     Imager::ImgRaw     im
-	       int     seedx
-	       int     seedy
+	       i_img_dim     seedx
+	       i_img_dim     seedy
      Imager::Color     dcol
      Imager::Color     border
 
 undef_int
 i_flood_cfill_border(im,seedx,seedy,fill, border)
     Imager::ImgRaw     im
-	       int     seedx
-	       int     seedy
+	       i_img_dim     seedx
+	       i_img_dim     seedy
      Imager::FillHandle     fill
      Imager::Color     border
 
@@ -1705,24 +1633,24 @@ void
 i_copyto(im,src,x1,y1,x2,y2,tx,ty)
     Imager::ImgRaw     im
     Imager::ImgRaw     src
-	       int     x1
-	       int     y1
-	       int     x2
-	       int     y2
-	       int     tx
-	       int     ty
+	       i_img_dim     x1
+	       i_img_dim     y1
+	       i_img_dim     x2
+	       i_img_dim     y2
+	       i_img_dim     tx
+	       i_img_dim     ty
 
 
 void
 i_copyto_trans(im,src,x1,y1,x2,y2,tx,ty,trans)
     Imager::ImgRaw     im
     Imager::ImgRaw     src
-	       int     x1
-	       int     y1
-	       int     x2
-	       int     y2
-	       int     tx
-	       int     ty
+	       i_img_dim     x1
+	       i_img_dim     y1
+	       i_img_dim     x2
+	       i_img_dim     y2
+	       i_img_dim     tx
+	       i_img_dim     ty
      Imager::Color     trans
 
 Imager::ImgRaw
@@ -1734,23 +1662,23 @@ undef_int
 i_rubthru(im,src,tx,ty,src_minx,src_miny,src_maxx,src_maxy)
     Imager::ImgRaw     im
     Imager::ImgRaw     src
-	       int     tx
-	       int     ty
-	       int     src_minx
-	       int     src_miny
-	       int     src_maxx
-	       int     src_maxy
+	       i_img_dim     tx
+	       i_img_dim     ty
+	       i_img_dim     src_minx
+	       i_img_dim     src_miny
+	       i_img_dim     src_maxx
+	       i_img_dim     src_maxy
 
 undef_int
 i_compose(out, src, out_left, out_top, src_left, src_top, width, height, combine = ic_normal, opacity = 0.0)
     Imager::ImgRaw out
     Imager::ImgRaw src
-	int out_left
- 	int out_top
-	int src_left
-	int src_top
-	int width
-	int height
+	i_img_dim out_left
+ 	i_img_dim out_top
+	i_img_dim src_left
+	i_img_dim src_top
+	i_img_dim width
+	i_img_dim height
 	int combine
 	double opacity
 
@@ -1759,14 +1687,14 @@ i_compose_mask(out, src, mask, out_left, out_top, src_left, src_top, mask_left, 
     Imager::ImgRaw out
     Imager::ImgRaw src
     Imager::ImgRaw mask
-	int out_left
- 	int out_top
-	int src_left
-	int src_top
-	int mask_left
-	int mask_top
-	int width
-	int height
+	i_img_dim out_left
+ 	i_img_dim out_top
+	i_img_dim src_left
+	i_img_dim src_top
+	i_img_dim mask_left
+	i_img_dim mask_top
+	i_img_dim width
+	i_img_dim height
 	int combine
 	double opacity
 
@@ -1851,8 +1779,8 @@ i_rotate_exact(im, amount, ...)
 Imager::ImgRaw
 i_matrix_transform(im, xsize, ysize, matrix, ...)
     Imager::ImgRaw      im
-               int      xsize
-               int      ysize
+               i_img_dim      xsize
+               i_img_dim      ysize
       PREINIT:
         double matrix[9];
         AV *av;
@@ -1899,7 +1827,7 @@ i_gaussian(im,stdev)
 void
 i_unsharp_mask(im,stdev,scale)
     Imager::ImgRaw     im
-	     float     stdev
+	     double    stdev
              double    scale
 
 int
@@ -2040,9 +1968,6 @@ _is_color_object(sv)
     OUTPUT:
         RETVAL
 
-#ifdef HAVE_LIBT1
-#endif 
-
 #ifdef HAVE_LIBTT
 
 
@@ -2062,6 +1987,7 @@ TT_DESTROY(handle)
 int
 TT_CLONE_SKIP(...)
     CODE:
+        (void)items; /* avoid unused warning */
         RETVAL = 1;
     OUTPUT:
         RETVAL
@@ -2074,10 +2000,10 @@ undef_int
 i_tt_text(handle,im,xb,yb,cl,points,str_sv,len_ignored,smooth,utf8,align=1)
   Imager::Font::TT     handle
     Imager::ImgRaw     im
-	       int     xb
-	       int     yb
+	       i_img_dim     xb
+	       i_img_dim     yb
      Imager::Color     cl
-             float     points
+             double     points
 	      SV *     str_sv
 	       int     smooth
                int     utf8
@@ -2101,10 +2027,10 @@ undef_int
 i_tt_cp(handle,im,xb,yb,channel,points,str_sv,len_ignored,smooth,utf8,align=1)
   Imager::Font::TT     handle
     Imager::ImgRaw     im
-	       int     xb
-	       int     yb
+	       i_img_dim     xb
+	       i_img_dim     yb
 	       int     channel
-             float     points
+             double     points
 	      SV *     str_sv
 	       int     smooth
                int     utf8
@@ -2127,11 +2053,12 @@ i_tt_cp(handle,im,xb,yb,channel,points,str_sv,len_ignored,smooth,utf8,align=1)
 void
 i_tt_bbox(handle,point,str_sv,len_ignored, utf8)
   Imager::Font::TT     handle
-	     float     point
+	     double     point
 	       SV*    str_sv
                int     utf8
 	     PREINIT:
-	       int     cords[BOUNDING_BOX_COUNT],rc;
+	       i_img_dim cords[BOUNDING_BOX_COUNT];
+	       int rc;
                char *  str;
                STRLEN len;
                int i;
@@ -2157,8 +2084,8 @@ i_tt_has_chars(handle, text_sv, utf8)
         char const *text;
         STRLEN len;
         char *work;
-        int count;
-        int i;
+        size_t count;
+        size_t i;
       PPCODE:
 #ifdef SvUTF8
         if (SvUTF8(text_sv))
@@ -2188,12 +2115,12 @@ i_tt_face_name(handle)
         Imager::Font::TT handle
       PREINIT:
         char name[255];
-        int len;
+        size_t len;
       PPCODE:
         len = i_tt_face_name(handle, name, sizeof(name));
         if (len) {
           EXTEND(SP, 1);
-          PUSHs(sv_2mortal(newSVpv(name, strlen(name))));
+          PUSHs(sv_2mortal(newSVpv(name, len-1)));
         }
 
 void
@@ -2205,7 +2132,7 @@ i_tt_glyph_name(handle, text_sv, utf8 = 0)
         char const *text;
         STRLEN work_len;
         size_t len;
-        int outsize;
+        size_t outsize;
         char name[255];
       PPCODE:
 #ifdef SvUTF8
@@ -2281,8 +2208,8 @@ i_writeppm_wiol(im, ig)
 Imager::ImgRaw
 i_readraw_wiol(ig,x,y,datachannels,storechannels,intrl)
         Imager::IO     ig
-	       int     x
-	       int     y
+	       i_img_dim     x
+	       i_img_dim     y
 	       int     datachannels
 	       int     storechannels
 	       int     intrl
@@ -2330,20 +2257,20 @@ i_readtga_wiol(ig, length)
 Imager::ImgRaw
 i_scaleaxis(im,Value,Axis)
     Imager::ImgRaw     im
-             float     Value
+             double     Value
 	       int     Axis
 
 Imager::ImgRaw
 i_scale_nn(im,scx,scy)
     Imager::ImgRaw     im
-             float     scx
-             float     scy
+             double    scx
+             double    scy
 
 Imager::ImgRaw
 i_scale_mixing(im, width, height)
     Imager::ImgRaw     im
-	       int     width
-	       int     height
+	       i_img_dim     width
+	       i_img_dim     height
 
 Imager::ImgRaw
 i_haar(im)
@@ -2377,8 +2304,8 @@ i_transform(im,opx,opy,parm)
     Imager::ImgRaw     im
              PREINIT:
              double* parm;
-             int*    opx;
-             int*    opy;
+             int *opx;
+             int *opy;
              int     opxl;
              int     opyl;
              int     parmlen;
@@ -2431,8 +2358,8 @@ i_transform2(sv_width,sv_height,channels,sv_ops,av_n_regs,av_c_regs,av_in_imgs)
 	AV *av_in_imgs
 	int channels
 	     PREINIT:
-             int width;
-             int height;
+             i_img_dim width;
+             i_img_dim height;
 	     struct rm_op *ops;
 	     STRLEN ops_len;
 	     int ops_count;
@@ -2536,9 +2463,9 @@ i_bumpmap(im,bump,channel,light_x,light_y,strength)
     Imager::ImgRaw     im
     Imager::ImgRaw     bump
                int     channel
-               int     light_x
-               int     light_y
-               int     strength
+         i_img_dim     light_x
+         i_img_dim     light_y
+         i_img_dim     strength
 
 
 void
@@ -2546,11 +2473,11 @@ i_bumpmap_complex(im,bump,channel,tx,ty,Lx,Ly,Lz,cd,cs,n,Ia,Il,Is)
     Imager::ImgRaw     im
     Imager::ImgRaw     bump
                int     channel
-               int     tx
-               int     ty
-             float     Lx
-             float     Ly
-             float     Lz
+               i_img_dim     tx
+               i_img_dim     ty
+             double     Lx
+             double     Ly
+             double     Lz
              float     cd
              float     cs
              float     n
@@ -2568,14 +2495,14 @@ i_postlevels(im,levels)
 void
 i_mosaic(im,size)
     Imager::ImgRaw     im
-               int     size
+         i_img_dim     size
 
 void
 i_watermark(im,wmark,tx,ty,pixdiff)
     Imager::ImgRaw     im
     Imager::ImgRaw     wmark
-               int     tx
-               int     ty
+               i_img_dim     tx
+               i_img_dim     ty
                int     pixdiff
 
 
@@ -2607,8 +2534,8 @@ i_gradgen(im, ...)
     Imager::ImgRaw     im
       PREINIT:
 	int num;
-	int *xo;
-	int *yo;
+	i_img_dim *xo;
+	i_img_dim *yo;
         i_color *ival;
 	int dmeasure;
 	int i;
@@ -2634,12 +2561,12 @@ i_gradgen(im, ...)
 	num = num <= av_len(ac) ? num : av_len(ac);
 	num++; 
 	if (num < 2) croak("Usage: i_gradgen array refs must have more than 1 entry each");
-	xo = mymalloc( sizeof(int) * num );
-	yo = mymalloc( sizeof(int) * num );
+	xo = mymalloc( sizeof(i_img_dim) * num );
+	yo = mymalloc( sizeof(i_img_dim) * num );
 	ival = mymalloc( sizeof(i_color) * num );
 	for(i = 0; i<num; i++) {
-	  xo[i]   = (int)SvIV(* av_fetch(axx, i, 0));
-	  yo[i]   = (int)SvIV(* av_fetch(ayy, i, 0));
+	  xo[i]   = (i_img_dim)SvIV(* av_fetch(axx, i, 0));
+	  yo[i]   = (i_img_dim)SvIV(* av_fetch(ayy, i, 0));
           sv = *av_fetch(ac, i, 0);
 	  if ( !sv_derived_from(sv, "Imager::Color") ) {
 	    free(axx); free(ayy); free(ac);
@@ -2755,8 +2682,8 @@ i_nearest_color(im, ...)
     Imager::ImgRaw     im
       PREINIT:
 	int num;
-	int *xo;
-	int *yo;
+	i_img_dim *xo;
+	i_img_dim *yo;
         i_color *ival;
 	int dmeasure;
 	int i;
@@ -2782,12 +2709,12 @@ i_nearest_color(im, ...)
 	num = num <= av_len(ac) ? num : av_len(ac);
 	num++; 
 	if (num < 2) croak("Usage: i_nearest_color array refs must have more than 1 entry each");
-	xo = mymalloc( sizeof(int) * num );
-	yo = mymalloc( sizeof(int) * num );
+	xo = mymalloc( sizeof(i_img_dim) * num );
+	yo = mymalloc( sizeof(i_img_dim) * num );
 	ival = mymalloc( sizeof(i_color) * num );
 	for(i = 0; i<num; i++) {
-	  xo[i]   = (int)SvIV(* av_fetch(axx, i, 0));
-	  yo[i]   = (int)SvIV(* av_fetch(ayy, i, 0));
+	  xo[i]   = (i_img_dim)SvIV(* av_fetch(axx, i, 0));
+	  yo[i]   = (i_img_dim)SvIV(* av_fetch(ayy, i, 0));
           sv = *av_fetch(ac, i, 0);
 	  if ( !sv_derived_from(sv, "Imager::Color") ) {
 	    free(axx); free(ayy); free(ac);
@@ -2859,8 +2786,8 @@ DSO_call(handle,func_index,hv)
 SV *
 i_get_pixel(im, x, y)
 	Imager::ImgRaw im
-	int x
-	int y;
+	i_img_dim x
+	i_img_dim y;
       PREINIT:
         i_color *color;
       CODE:
@@ -2880,14 +2807,14 @@ i_get_pixel(im, x, y)
 int
 i_ppix(im, x, y, cl)
         Imager::ImgRaw im
-        int x
-        int y
+        i_img_dim x
+        i_img_dim y
         Imager::Color cl
 
 Imager::ImgRaw
 i_img_pal_new(x, y, channels, maxpal)
-	int	x
-        int	y
+	i_img_dim x
+        i_img_dim y
         int     channels
 	int	maxpal
 
@@ -2920,9 +2847,9 @@ i_img_to_rgb(src)
 void
 i_gpal(im, l, r, y)
         Imager::ImgRaw  im
-        int     l
-        int     r
-        int     y
+        i_img_dim     l
+        i_img_dim     r
+        i_img_dim     y
       PREINIT:
         i_palidx *work;
         int count, i;
@@ -2952,8 +2879,8 @@ i_gpal(im, l, r, y)
 int
 i_ppal(im, l, y, ...)
         Imager::ImgRaw  im
-        int     l
-        int     y
+        i_img_dim     l
+        i_img_dim     y
       PREINIT:
         i_palidx *work;
         int i;
@@ -2976,8 +2903,8 @@ i_ppal(im, l, y, ...)
 int
 i_ppal_p(im, l, y, data)
         Imager::ImgRaw  im
-        int     l
-        int     y
+        i_img_dim     l
+        i_img_dim     y
         SV *data
       PREINIT:
         i_palidx const *work;
@@ -3126,14 +3053,14 @@ i_img_virtual(im)
 void
 i_gsamp(im, l, r, y, ...)
         Imager::ImgRaw im
-        int l
-        int r
-        int y
+        i_img_dim l
+        i_img_dim r
+        i_img_dim y
       PREINIT:
         int *chans;
         int chan_count;
         i_sample_t *data;
-        int count, i;
+        i_img_dim count, i;
       PPCODE:
         if (items < 5)
           croak("No channel numbers supplied to g_samp()");
@@ -3166,17 +3093,17 @@ i_gsamp(im, l, r, y, ...)
 undef_neg_int
 i_gsamp_bits(im, l, r, y, bits, target, offset, ...)
         Imager::ImgRaw im
-        int l
-        int r
-        int y
+        i_img_dim l
+        i_img_dim r
+        i_img_dim y
 	int bits
 	AV *target
-	int offset
+	STRLEN offset
       PREINIT:
         int *chans;
         int chan_count;
         unsigned *data;
-        int count, i;
+        i_img_dim count, i;
       CODE:
 	i_clear_error();
         if (items < 8)
@@ -3204,8 +3131,8 @@ i_gsamp_bits(im, l, r, y, bits, target, offset, ...)
 undef_neg_int
 i_psamp_bits(im, l, y, bits, channels_sv, data_av, data_offset = 0, pixel_count = -1)
         Imager::ImgRaw im
-        int l
-        int y
+        i_img_dim l
+        i_img_dim y
 	int bits
 	SV *channels_sv
 	AV *data_av
@@ -3214,10 +3141,10 @@ i_psamp_bits(im, l, y, bits, channels_sv, data_av, data_offset = 0, pixel_count 
       PREINIT:
 	int chan_count;
 	int *channels;
-	int data_count;
-	int data_used;
+	STRLEN data_count;
+	size_t data_used;
 	unsigned *data;
-	int i;
+	ptrdiff_t i;
       CODE:
 	i_clear_error();
 	if (SvOK(channels_sv)) {
@@ -3269,10 +3196,10 @@ i_psamp_bits(im, l, y, bits, channels_sv, data_av, data_offset = 0, pixel_count 
 Imager::ImgRaw
 i_img_masked_new(targ, mask, x, y, w, h)
         Imager::ImgRaw targ
-        int x
-        int y
-        int w
-        int h
+        i_img_dim x
+        i_img_dim y
+        i_img_dim w
+        i_img_dim h
       PREINIT:
         i_img *mask;
       CODE:
@@ -3292,13 +3219,13 @@ i_img_masked_new(targ, mask, x, y, w, h)
 int
 i_plin(im, l, y, ...)
         Imager::ImgRaw  im
-        int     l
-        int     y
+        i_img_dim     l
+        i_img_dim     y
       PREINIT:
         i_color *work;
-        int i;
+        STRLEN i;
         STRLEN len;
-        int count;
+        size_t count;
       CODE:
         if (items > 3) {
           if (items == 4 && SvOK(ST(3)) && !SvROK(ST(3))) {
@@ -3336,21 +3263,21 @@ i_plin(im, l, y, ...)
 int
 i_ppixf(im, x, y, cl)
         Imager::ImgRaw im
-        int x
-        int y
+        i_img_dim x
+        i_img_dim y
         Imager::Color::Float cl
 
 void
 i_gsampf(im, l, r, y, ...)
         Imager::ImgRaw im
-        int l
-        int r
-        int y
+        i_img_dim l
+        i_img_dim r
+        i_img_dim y
       PREINIT:
         int *chans;
         int chan_count;
         i_fsample_t *data;
-        int count, i;
+        i_img_dim count, i;
       PPCODE:
         if (items < 5)
           croak("No channel numbers supplied to g_sampf()");
@@ -3383,13 +3310,13 @@ i_gsampf(im, l, r, y, ...)
 int
 i_plinf(im, l, y, ...)
         Imager::ImgRaw  im
-        int     l
-        int     y
+        i_img_dim     l
+        i_img_dim     y
       PREINIT:
         i_fcolor *work;
-        int i;
+        i_img_dim i;
         STRLEN len;
-        int count;
+        size_t count;
       CODE:
         if (items > 3) {
           if (items == 4 && SvOK(ST(3)) && !SvROK(ST(3))) {
@@ -3428,8 +3355,8 @@ i_plinf(im, l, y, ...)
 SV *
 i_gpixf(im, x, y)
 	Imager::ImgRaw im
-	int x
-	int y;
+	i_img_dim x
+	i_img_dim y;
       PREINIT:
         i_fcolor *color;
       CODE:
@@ -3448,12 +3375,12 @@ i_gpixf(im, x, y)
 void
 i_glin(im, l, r, y)
         Imager::ImgRaw im
-        int l
-        int r
-        int y
+        i_img_dim l
+        i_img_dim r
+        i_img_dim y
       PREINIT:
         i_color *vals;
-        int count, i;
+        i_img_dim count, i;
       PPCODE:
         if (l < r) {
           vals = mymalloc((r-l) * sizeof(i_color));
@@ -3480,12 +3407,12 @@ i_glin(im, l, r, y)
 void
 i_glinf(im, l, r, y)
         Imager::ImgRaw im
-        int l
-        int r
-        int y
+        i_img_dim l
+        i_img_dim r
+        i_img_dim y
       PREINIT:
         i_fcolor *vals;
-        int count, i;
+        i_img_dim count, i;
         i_fcolor zero;
       PPCODE:
 	for (i = 0; i < MAXCHANNELS; ++i)
@@ -3515,8 +3442,8 @@ i_glinf(im, l, r, y)
 
 Imager::ImgRaw
 i_img_16_new(x, y, ch)
-        int x
-        int y
+        i_img_dim x
+        i_img_dim y
         int ch
 
 Imager::ImgRaw
@@ -3525,8 +3452,8 @@ i_img_to_rgb16(im)
 
 Imager::ImgRaw
 i_img_double_new(x, y, ch)
-        int x
-        int y
+        i_img_dim x
+        i_img_dim y
         int ch
 
 Imager::ImgRaw
@@ -3704,6 +3631,7 @@ IFILL_DESTROY(fill)
 int
 IFILL_CLONE_SKIP(...)
     CODE:
+        (void)items; /* avoid unused warning for XS variable */
         RETVAL = 1;
     OUTPUT:
         RETVAL
@@ -3726,8 +3654,8 @@ i_new_fill_hatch(fg, bg, combine, hatch, cust_hatch, dx, dy)
         Imager::Color bg
         int combine
         int hatch
-        int dx
-        int dy
+        i_img_dim dx
+        i_img_dim dy
       PREINIT:
         unsigned char *cust_hatch;
         STRLEN len;
@@ -3747,8 +3675,8 @@ i_new_fill_hatchf(fg, bg, combine, hatch, cust_hatch, dx, dy)
         Imager::Color::Float bg
         int combine
         int hatch
-        int dx
-        int dy
+        i_img_dim dx
+        i_img_dim dy
       PREINIT:
         unsigned char *cust_hatch;
         STRLEN len;
@@ -3765,8 +3693,8 @@ i_new_fill_hatchf(fg, bg, combine, hatch, cust_hatch, dx, dy)
 Imager::FillHandle
 i_new_fill_image(src, matrix, xoff, yoff, combine)
         Imager::ImgRaw src
-        int xoff
-        int yoff
+        i_img_dim xoff
+        i_img_dim yoff
         int combine
       PREINIT:
         double matrix[9];
@@ -3809,9 +3737,9 @@ i_int_hlines_testing()
 
 Imager::Internal::Hlines
 i_int_hlines_new(start_y, count_y, start_x, count_x)
-	int start_y
+	i_img_dim start_y
 	int count_y
-	int start_x
+	i_img_dim start_x
 	int count_x
 
 Imager::Internal::Hlines
@@ -3821,9 +3749,9 @@ i_int_hlines_new_img(im)
 void
 i_int_hlines_add(hlines, y, minx, width)
 	Imager::Internal::Hlines hlines
-	int y
-	int minx
-	int width
+	i_img_dim y
+	i_img_dim minx
+	i_img_dim width
 
 void
 i_int_hlines_DESTROY(hlines)
@@ -3835,7 +3763,6 @@ i_int_hlines_dump(hlines)
 
 int
 i_int_hlines_CLONE_SKIP(cls)
-	SV *cls
 
 #endif
 

@@ -236,7 +236,7 @@ cmp_ok(Imager->errstr, '=~', qr/channels must be between 1 and 4/,
  SKIP:
   {
     use Config;
-    skip("don't want to allocate 4Gb", 8) unless $Config{intsize} == 4;
+    skip("don't want to allocate 4Gb", 8) unless $Config{ptrsize} == 4;
 
     my $uint_range = 256 ** $Config{intsize};
     print "# range $uint_range\n";

@@ -14,17 +14,17 @@ void
 html_art(void *INP) {
   i_img *im;
   i_color rcolor;
-  int x,y;
+  i_img_dim x,y;
   FILE *fp;
   char *fname;
 
   if ( !getSTR("fname",&fname) ) { fprintf(stderr,"Error: filename is missing\n"); return; } 
   if ( !getOBJ("image","Imager::ImgRaw",&im) ) { fprintf(stderr,"Error: image is missing\n"); return; }
   
-  printf("parameters: (im 0x%p,fname %s)\n",im,fname); 
+  printf("parameters: (im %p,fname %s)\n",im,fname); 
 
-  printf("image info:\n size (%d,%d)\n channels (%d)\n",
-	 im->xsize,im->ysize,im->channels); 
+  printf("image info:\n size ("i_DFp ")\n channels (%d)\n",
+	 i_DFcp(im->xsize, im->ysize), im->channels); 
 
   fp=fopen(fname,"ab+");
   fprintf(fp,"<TABLE BORDER=\"0\" CELLPADDING=\"0\" CELLSPACING=\"0\">");

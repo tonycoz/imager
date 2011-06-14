@@ -140,14 +140,15 @@ my @tests =
      'bad compression (24-bit)' ],
   );
 use Config;
-my $intsize = $Config{intsize};
+my $ptrsize = $Config{ptrsize};
 for my $test (@tests) {
   my ($file, $error, $comment, $bit32only) = @$test;
  SKIP:
   {
     skip("only tested on 32-bit machines", 2)
-      if $bit32only && $intsize != 4;
+      if $bit32only && $ptrsize != 4;
     ok(!$imoo->read(file=>"testimg/$file"), $comment);
+    print "# ", $imoo->errstr, "\n";
     is($imoo->errstr, $error, "check error message");
   }
 }

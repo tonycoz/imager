@@ -26,8 +26,8 @@ Setting a value of zero means that limit will be ignored.
 
 #include "imageri.h"
 
-static int max_width, max_height;
-static int max_bytes;
+static i_img_dim max_width, max_height;
+static size_t max_bytes = 0x40000000;
 
 /*
 =item i_set_image_file_limits(width, height, bytes)
@@ -41,13 +41,27 @@ Setting a limit to 0 means that limit is ignored.
 
 Negative limits result in failure.
 
+Parameters:
+
+=over
+
+=item *
+
+i_img_dim width, height - maximum width and height.
+
+=item *
+
+size_t bytes - maximum size in memory in bytes
+
+=back
+
 Returns non-zero on success.
 
 =cut
 */
 
 int
-i_set_image_file_limits(int width, int height, int bytes) {
+i_set_image_file_limits(i_img_dim width, i_img_dim height, size_t bytes) {
   i_clear_error();
 
   if (width < 0) {
@@ -78,11 +92,23 @@ i_set_image_file_limits(int width, int height, int bytes) {
 
 Retrieves the file limits set by i_set_image_file_limits().
 
+=over
+
+=item *
+
+i_img_dim *width, *height - the maximum width and height of the image.
+
+=item *
+
+size_t *bytes - size in memory of the image in bytes.
+
+=back
+
 =cut
 */
 
 int
-i_get_image_file_limits(int *width, int *height, int *bytes) {
+i_get_image_file_limits(i_img_dim *width, i_img_dim *height, size_t *bytes) {
   i_clear_error();
 
   *width = max_width;
@@ -112,30 +138,30 @@ This function is intended to be called by image file read functions.
 */
 
 int
-i_int_check_image_file_limits(int width, int height, int channels, int sample_size) {
-  int bytes;
+i_int_check_image_file_limits(i_img_dim width, i_img_dim height, int channels, size_t sample_size) {
+  size_t bytes;
   i_clear_error();
   
   if (width <= 0) {
-    i_push_errorf(0, "file size limit - image width of %d is not positive",
-		  width);
+    i_push_errorf(0, "file size limit - image width of %" i_DF " is not positive",
+		  i_DFc(width));
     return 0;
   }
   if (max_width && width > max_width) {
-    i_push_errorf(0, "file size limit - image width of %d exceeds limit of %d",
-		 width, max_width);
+    i_push_errorf(0, "file size limit - image width of %" i_DF " exceeds limit of %" i_DF,
+		  i_DFc(width), i_DFc(max_width));
     return 0;
   }
 
   if (height <= 0) {
-    i_push_errorf(0, "file size limit - image height %d is not positive",
-		  height);
+    i_push_errorf(0, "file size limit - image height %" i_DF " is not positive",
+		  i_DFc(height));
     return 0;
   }
 
   if (max_height && height > max_height) {
-    i_push_errorf(0, "file size limit - image height of %d "
-		  "exceeds limit of %d", height, max_height);
+    i_push_errorf(0, "file size limit - image height of %" i_DF
+		  " exceeds limit of %" i_DF, i_DFc(height), i_DFc(max_height));
     return 0;
   }
 
@@ -146,8 +172,8 @@ i_int_check_image_file_limits(int width, int height, int channels, int sample_si
   }
   
   if (sample_size < 1 || sample_size > sizeof(long double)) {
-    i_push_errorf(0, "file size limit - sample_size %d out of range",
-		  sample_size);
+    i_push_errorf(0, "file size limit - sample_size %ld out of range",
+		  (long)sample_size);
     return 0;
   }
 
@@ -163,8 +189,9 @@ i_int_check_image_file_limits(int width, int height, int channels, int sample_si
   }
   if (max_bytes) {
     if (bytes > max_bytes) {
-      i_push_errorf(0, "file size limit - storage size of %d "
-		    "exceeds limit of %d", bytes, max_bytes);
+      i_push_errorf(0, "file size limit - storage size of %lu "
+		    "exceeds limit of %lu", (unsigned long)bytes,
+		    (unsigned long)max_bytes);
       return 0;
     }
   }

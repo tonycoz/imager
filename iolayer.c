@@ -246,7 +246,7 @@ off_t
 realseek_seek(io_glue *ig, off_t offset, int whence) {
   /*  io_ex_rseek *ier = ig->exdata; Needed later */
   void *p = ig->source.cb.p;
-  int rc;
+  off_t rc;
   IOL_DEB( printf("realseek_seek(ig %p, offset %ld, whence %d)\n", ig, (long) offset, whence) );
   rc = ig->source.cb.seekcb(p, offset, whence);
 
@@ -290,13 +290,13 @@ buffer_read(io_glue *ig, void *buf, size_t count) {
   IOL_DEB( printf("buffer_read: ieb->cpos = %ld, buf = %p, count = %d\n", (long) ieb->cpos, buf, count) );
 
   if ( ieb->cpos+count > ig->source.buffer.len ) {
-    mm_log((1,"buffer_read: short read: cpos=%d, len=%d, count=%d\n", ieb->cpos, ig->source.buffer.len));
+    mm_log((1,"buffer_read: short read: cpos=%ld, len=%ld, count=%ld\n", (long)ieb->cpos, (long)ig->source.buffer.len, (long)count));
     count = ig->source.buffer.len - ieb->cpos;
   }
   
   memcpy(buf, ig->source.buffer.data+ieb->cpos, count);
   ieb->cpos += count;
-  IOL_DEB( printf("buffer_read: count = %d\n", count) );
+  IOL_DEB( printf("buffer_read: count = %ld\n", (long)count) );
   return count;
 }
 
@@ -597,7 +597,7 @@ bufchain_read(io_glue *ig, void *buf, size_t count) {
   char        *cbuf = buf;
   size_t         sk;
 
-  mm_log((1, "bufchain_read(ig %p, buf %p, count %ld)\n", ig, buf, count));
+  mm_log((1, "bufchain_read(ig %p, buf %p, count %ld)\n", ig, buf, (long)count));
 
   while( scount ) {
     int clen = (ieb->cp == ieb->tail) ? ieb->tfill : ieb->cp->len;
@@ -617,7 +617,7 @@ bufchain_read(io_glue *ig, void *buf, size_t count) {
     ieb->gpos += sk;
   }
 
-  mm_log((1, "bufchain_read: returning %d\n", count-scount));
+  mm_log((1, "bufchain_read: returning %ld\n", (long)(count-scount)));
   return count-scount;
 }
 
@@ -645,14 +645,14 @@ bufchain_write(io_glue *ig, const void *buf, size_t count) {
   size_t         ocount = count;
   size_t         sk;
 
-  mm_log((1, "bufchain_write: ig = %p, buf = %p, count = %d\n", ig, buf, count));
+  mm_log((1, "bufchain_write: ig = %p, buf = %p, count = %ld\n", ig, buf, (long)count));
 
-  IOL_DEB( printf("bufchain_write: ig = %p, ieb->cpos = %ld, buf = %p, count = %d\n", ig, (long) ieb->cpos, buf, count) );
+  IOL_DEB( printf("bufchain_write: ig = %p, ieb->cpos = %ld, buf = %p, count = %ld\n", ig, (long) ieb->cpos, buf, (long)count) );
   
   while(count) {
-    mm_log((2, "bufchain_write: - looping - count = %d\n", count));
+    mm_log((2, "bufchain_write: - looping - count = %ld\n", (long)count));
     if (ieb->cp->len == ieb->cpos) {
-      mm_log((1, "bufchain_write: cp->len == ieb->cpos = %d - advancing chain\n", (long) ieb->cpos));
+      mm_log((1, "bufchain_write: cp->len == ieb->cpos = %ld - advancing chain\n", (long) ieb->cpos));
       io_bchain_advance(ieb);
     }
 
@@ -718,7 +718,7 @@ bufchain_seek(io_glue *ig, off_t offset, int whence) {
   off_t scount = calc_seek_offset(ieb->gpos, ieb->length, offset, whence);
   off_t sk;
 
-  mm_log((1, "bufchain_seek(ig %p, offset %ld, whence %d)\n", ig, offset, whence));
+  mm_log((1, "bufchain_seek(ig %p, offset %ld, whence %d)\n", ig, (long)offset, whence));
 
   if (scount < 0) {
     i_push_error(0, "invalid whence supplied or seek before start of file");
@@ -760,14 +760,14 @@ bufchain_seek(io_glue *ig, off_t offset, int whence) {
     
     while(wrlen > 0) {
       ssize_t rc, wl = i_min(wrlen, BBSIZ);
-      mm_log((1, "bufchain_seek: wrlen = %d, wl = %d\n", wrlen, wl));
+      mm_log((1, "bufchain_seek: wrlen = %d, wl = %ld\n", wrlen, (long)wl));
       rc = bufchain_write( ig, TB, wl );
       if (rc != wl) i_fatal(0, "bufchain_seek: Unable to extend file\n");
       wrlen -= rc;
     }
   }
 
-  mm_log((2, "bufchain_seek: returning ieb->gpos = %d\n", ieb->gpos));
+  mm_log((2, "bufchain_seek: returning ieb->gpos = %ld\n", (long)ieb->gpos));
   return ieb->gpos;
 }
 
@@ -944,7 +944,7 @@ io_new_buffer(char *data, size_t len, i_io_closebufp_t closecb, void *closedata)
   io_glue *ig;
   io_ex_buffer *ieb = mymalloc(sizeof(io_ex_buffer));
   
-  mm_log((1, "io_new_buffer(data %p, len %d, closecb %p, closedata %p)\n", data, len, closecb, closedata));
+  mm_log((1, "io_new_buffer(data %p, len %ld, closecb %p, closedata %p)\n", data, (long)len, closecb, closedata));
 
   ig = mymalloc(sizeof(io_glue));
   memset(ig, 0, sizeof(*ig));

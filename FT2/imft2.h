@@ -15,21 +15,23 @@ extern int i_ft2_getdpi(FT2_Fonthandle *handle, int *xdpi, int *ydpi);
 extern int i_ft2_settransform(FT2_Fonthandle *handle, const double *matrix);
 extern int i_ft2_sethinting(FT2_Fonthandle *handle, int hinting);
 extern int i_ft2_bbox(FT2_Fonthandle *handle, double cheight, double cwidth, 
-                      char const *text, size_t len, int *bbox, int utf8);
+                      char const *text, size_t len, i_img_dim *bbox, int utf8);
 extern int i_ft2_bbox_r(FT2_Fonthandle *handle, double cheight, double cwidth, 
-		      char const *text, size_t len, int vlayout, int utf8, int *bbox);
-extern int i_ft2_text(FT2_Fonthandle *handle, i_img *im, int tx, int ty, 
+		      char const *text, size_t len, int vlayout, int utf8, i_img_dim *bbox);
+extern int i_ft2_text(FT2_Fonthandle *handle, i_img *im, i_img_dim tx, i_img_dim ty, 
                       const i_color *cl, double cheight, double cwidth, 
                       char const *text, size_t len, int align, int aa, 
                       int vlayout, int utf8);
-extern int i_ft2_cp(FT2_Fonthandle *handle, i_img *im, int tx, int ty, 
+extern int i_ft2_cp(FT2_Fonthandle *handle, i_img *im, i_img_dim tx, i_img_dim ty, 
                     int channel, double cheight, double cwidth, 
                     char const *text, size_t len, int align, int aa, 
 		    int vlayout, int utf8);
-extern int i_ft2_has_chars(FT2_Fonthandle *handle, char const *text, size_t len,
+extern size_t
+i_ft2_has_chars(FT2_Fonthandle *handle, char const *text, size_t len,
                            int utf8, char *work);
-extern int i_ft2_face_name(FT2_Fonthandle *handle, char *name_buf, 
-                           size_t name_buf_size);
+extern size_t
+i_ft2_face_name(FT2_Fonthandle *handle, char *name_buf, 
+		size_t name_buf_size);
 extern int i_ft2_can_face_name(void);
 extern int i_ft2_glyph_name(FT2_Fonthandle *handle, unsigned long ch, 
                             char *name_buf, size_t name_buf_size,
@@ -43,5 +45,8 @@ extern int
 i_ft2_is_multiple_master(FT2_Fonthandle *handle);
 extern int
 i_ft2_set_mm_coords(FT2_Fonthandle *handle, int coord_count, const long *coords);
+
+void ft2_transform_box(FT2_Fonthandle *handle, i_img_dim bbox[4]);
+
 #endif
 

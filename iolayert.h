@@ -6,6 +6,7 @@
 #endif
 #include <sys/types.h>
 #include <stddef.h>
+#include <stdio.h>
 
 typedef enum { FDSEEK, FDNOSEEK, BUFFER, CBSEEK, CBNOSEEK, BUFCHAIN } io_type;
 

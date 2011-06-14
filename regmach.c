@@ -168,7 +168,7 @@ static i_color make_rgb(int r, int g, int b, int a) {
    It isn't currently used for inequalities 
 */
 
-#define n_epsilon(x, y) (abs(x)+abs(y))*0.001
+#define n_epsilon(x, y) (fabs(x)+fabs(y))*0.001
 static i_color bcol = {{ 0 }};
 
 i_color i_rm_run(struct rm_op codes[], size_t code_count, 
@@ -196,14 +196,14 @@ i_color i_rm_run(struct rm_op codes[], size_t code_count,
       break;
       
     case rbc_div:
-      if (abs(nb) < 1e-10)
+      if (fabs(nb) < 1e-10)
 	nout = 1e10;
       else
 	nout = na / nb;
       break;
       
     case rbc_mod:
-      if (abs(nb) > 1e-10) {
+      if (fabs(nb) > 1e-10) {
 	nout = fmod(na, nb);
       }
       else {
@@ -343,11 +343,11 @@ i_color i_rm_run(struct rm_op codes[], size_t code_count,
       break;
 
     case rbc_eq:
-      nout = abs(na-nb) <= n_epsilon(na,nb);
+      nout = fabs(na-nb) <= n_epsilon(na,nb);
       break;
 
     case rbc_ne:
-      nout = abs(na-nb) > n_epsilon(na,nb);
+      nout = fabs(na-nb) > n_epsilon(na,nb);
       break;
 
     case rbc_and:
@@ -363,7 +363,7 @@ i_color i_rm_run(struct rm_op codes[], size_t code_count,
       break;
 
     case rbc_abs:
-      nout = abs(na);
+      nout = fabs(na);
       break;
 
     case rbc_ret:

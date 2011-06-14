@@ -22,7 +22,7 @@ Other rotations will be added as tuits become available.
 
 i_img *i_rotate90(i_img *src, int degrees) {
   i_img *targ;
-  int x, y;
+  i_img_dim x, y;
 
   i_clear_error();
 
@@ -80,8 +80,8 @@ i_img *i_rotate90(i_img *src, int degrees) {
     return targ;
   }
   else if (degrees == 270 || degrees == 90) {
-    int tx, txstart, txinc;
-    int ty, tystart, tyinc;
+    i_img_dim tx, txstart, txinc;
+    i_img_dim ty, tystart, tyinc;
 
     if (degrees == 270) {
       txstart = 0;
@@ -222,12 +222,12 @@ static i_fcolor interp_i_fcolor(i_fcolor before, i_fcolor after, double pos,
   return out;
 }
 
-i_img *i_matrix_transform_bg(i_img *src, int xsize, int ysize, const double *matrix,
+i_img *i_matrix_transform_bg(i_img *src, i_img_dim xsize, i_img_dim ysize, const double *matrix,
 			     const i_color *backp, const i_fcolor *fbackp) {
   i_img *result = i_sametype(src, xsize, ysize);
-  int x, y;
+  i_img_dim x, y;
   int ch;
-  int i, j;
+  i_img_dim i, j;
   double sx, sy, sz;
 
   if (src->type == i_direct_type) {
@@ -269,8 +269,8 @@ i_img *i_matrix_transform_bg(i_img *src, int xsize, int ysize, const double *mat
               && sx >= -1 && sx < src->xsize
               && sy >= -1 && sy < src->ysize) {
 
-            if (sx != (int)sx) {
-              if (sy != (int)sy) {
+            if (sx != (i_img_dim)sx) {
+              if (sy != (i_img_dim)sy) {
                 i_color c[2][2]; 
                 i_color ci2[2];
                 for (i = 0; i < 2; ++i)
@@ -290,7 +290,7 @@ i_img *i_matrix_transform_bg(i_img *src, int xsize, int ysize, const double *mat
               }
             }
             else {
-              if (sy != (int)sy) {
+              if (sy != (i_img_dim)sy) {
                 i_color ci2[2];
                 for (i = 0; i < 2; ++i)
                   if (i_gpix(src, sx, floor(sy)+i, ci2+i))
@@ -347,8 +347,8 @@ i_img *i_matrix_transform_bg(i_img *src, int xsize, int ysize, const double *mat
               && sx >= -1 && sx < src->xsize
               && sy >= -1 && sy < src->ysize) {
 
-            if (sx != (int)sx) {
-              if (sy != (int)sy) {
+            if (sx != (i_img_dim)sx) {
+              if (sy != (i_img_dim)sy) {
                 i_fcolor c[2][2]; 
                 i_fcolor ci2[2];
                 for (i = 0; i < 2; ++i)
@@ -368,7 +368,7 @@ i_img *i_matrix_transform_bg(i_img *src, int xsize, int ysize, const double *mat
               }
             }
             else {
-              if (sy != (int)sy) {
+              if (sy != (i_img_dim)sy) {
                 i_fcolor ci2[2];
                 for (i = 0; i < 2; ++i)
                   if (i_gpixf(src, sx, floor(sy)+i, ci2+i))
@@ -397,7 +397,7 @@ i_img *i_matrix_transform_bg(i_img *src, int xsize, int ysize, const double *mat
     i_palidx back = 0;
     i_color min;
     int minval = 256 * 4;
-    int ix, iy;
+    i_img_dim ix, iy;
     i_color want_back;
     i_fsample_t fsamp;
 
@@ -451,8 +451,8 @@ i_img *i_matrix_transform_bg(i_img *src, int xsize, int ysize, const double *mat
             && sy >= -0.5 && sy < src->ysize-0.5) {
           
           /* all the world's an integer */
-          ix = (int)(sx+0.5);
-          iy = (int)(sy+0.5);
+          ix = (i_img_dim)(sx+0.5);
+          iy = (i_img_dim)(sy+0.5);
           if (!i_gpal(src, ix, ix+1, iy, vals+x))
 	    vals[i] = back;
         }
@@ -468,7 +468,7 @@ i_img *i_matrix_transform_bg(i_img *src, int xsize, int ysize, const double *mat
   return result;
 }
 
-i_img *i_matrix_transform(i_img *src, int xsize, int ysize, const double *matrix) {
+i_img *i_matrix_transform(i_img *src, i_img_dim xsize, i_img_dim ysize, const double *matrix) {
   return i_matrix_transform_bg(src, xsize, ysize, matrix, NULL, NULL);
 }
 
@@ -494,7 +494,7 @@ i_img *i_rotate_exact_bg(i_img *src, double amount,
   double rotate[9];
   double xlate2[9] = { 0 };
   double temp[9], matrix[9];
-  int x1, x2, y1, y2, newxsize, newysize;
+  i_img_dim x1, x2, y1, y2, newxsize, newysize;
 
   /* first translate the centre of the image to (0,0) */
   xlate1[0] = 1;
@@ -514,10 +514,10 @@ i_img *i_rotate_exact_bg(i_img *src, double amount,
   rotate[7] = 0;
   rotate[8] = 1;
 
-  x1 = ceil(abs(src->xsize * rotate[0] + src->ysize * rotate[1]));
-  x2 = ceil(abs(src->xsize * rotate[0] - src->ysize * rotate[1]));
-  y1 = ceil(abs(src->xsize * rotate[3] + src->ysize * rotate[4]));
-  y2 = ceil(abs(src->xsize * rotate[3] - src->ysize * rotate[4]));
+  x1 = ceil(i_abs(src->xsize * rotate[0] + src->ysize * rotate[1]));
+  x2 = ceil(i_abs(src->xsize * rotate[0] - src->ysize * rotate[1]));
+  y1 = ceil(i_abs(src->xsize * rotate[3] + src->ysize * rotate[4]));
+  y2 = ceil(i_abs(src->xsize * rotate[3] - src->ysize * rotate[4]));
   newxsize = x1 > x2 ? x1 : x2;
   newysize = y1 > y2 ? y1 : y2;
   /* translate the centre back to the center of the image */
