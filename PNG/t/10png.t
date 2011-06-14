@@ -13,7 +13,7 @@ init_log("testout/t102png.log",1);
 $Imager::formats{"png"}
   or plan skip_all => "No png support";
 
-plan tests => 51;
+plan tests => 63;
 
 diag("Library version " . Imager::File::PNG::i_png_lib_version());
 
@@ -222,6 +222,40 @@ SKIP:
     is($im->getheight, 1000001, "check height");
     is($im->getchannels, 1, "check channels");
   }
+}
+
+{ # test grayscale read as greyscale
+  my $im = Imager->new;
+  ok($im->read(file => "testimg/gray.png", type => "png"),
+     "read grayscale");
+  is($im->getchannels, 1, "check channel count");
+  is($im->type, "direct", "check type");
+}
+
+{ # test grayscale + alpha read as greyscale + alpha
+  my $im = Imager->new;
+  ok($im->read(file => "testimg/graya.png", type => "png"),
+     "read grayscale + alpha");
+  is($im->getchannels, 2, "check channel count");
+  is($im->type, "direct", "check type");
+}
+
+{ # test paletted + alpha read as paletted
+  my $im = Imager->new;
+  ok($im->read(file => "testimg/paltrans.png", type => "png"),
+     "read paletted with alpha");
+  is($im->getchannels, 4, "check channel count");
+  local $TODO = "Not yet implemented";
+  is($im->type, "paletted", "check type");
+}
+
+{ # test paletted read as paletted
+  my $im = Imager->new;
+  ok($im->read(file => "testimg/pal.png", type => "png"),
+     "read paletted with alpha");
+  is($im->getchannels, 3, "check channel count");
+  local $TODO = "Not yet implemented";
+  is($im->type, "paletted", "check type");
 }
 
 sub limited_write {
