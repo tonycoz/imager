@@ -13,7 +13,7 @@ init_log("testout/t102png.log",1);
 $Imager::formats{"png"}
   or plan skip_all => "No png support";
 
-plan tests => 39;
+plan tests => 51;
 
 diag("Library version " . Imager::File::PNG::i_png_lib_version());
 
@@ -155,6 +155,7 @@ EOS
   my $im = test_image();
   my $fail_close = sub {
     Imager::i_push_error(0, "synthetic close failure");
+    print "# closecb called\n";
     return 0;
   };
   ok(!$im->write(type => "png", callback => sub { 1 },
@@ -182,6 +183,45 @@ EOS
      "write limited to 1 byte should fail");
   is($im->errstr, "Write error on an iolayer source.: limit reached",
      "check error message");
+}
+
+SKIP:
+{ # https://sourceforge.net/tracker/?func=detail&aid=3314943&group_id=5624&atid=105624
+  # large images
+  Imager::File::PNG::i_png_lib_version() >= 10503
+      or skip("older libpng limits image sizes", 12);
+
+  {
+    my $im = Imager->new(xsize => 1000001, ysize => 1, channels => 1);
+    ok($im, "make a wide image");
+    my $data;
+    ok($im->write(data => \$data, type => "png"),
+       "write wide image as png")
+      or diag("write wide: " . $im->errstr);
+    my $im2 = Imager->new;
+    ok($im->read(data => $data, type => "png"),
+       "read wide image as png")
+      or diag("read wide: " . $im->errstr);
+    is($im->getwidth, 1000001, "check width");
+    is($im->getheight, 1, "check height");
+    is($im->getchannels, 1, "check channels");
+  }
+
+  {
+    my $im = Imager->new(xsize => 1, ysize => 1000001, channels => 1);
+    ok($im, "make a tall image");
+    my $data;
+    ok($im->write(data => \$data, type => "png"),
+       "write wide image as png")
+      or diag("write tall: " . $im->errstr);
+    my $im2 = Imager->new;
+    ok($im->read(data => $data, type => "png"),
+       "read tall image as png")
+      or diag("read tall: " . $im->errstr);
+    is($im->getwidth, 1, "check width");
+    is($im->getheight, 1000001, "check height");
+    is($im->getchannels, 1, "check channels");
+  }
 }
 
 sub limited_write {
