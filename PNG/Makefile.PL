@@ -72,7 +72,7 @@ my %probe =
   (
    name => "PNG",
    altname => "Generic",
-   pkg => [ qw/libpng14 libpng12 libpng10 libpng/ ],
+   pkg => [ qw/libpng15 libpng14 libpng12 libpng10 libpng/ ],
    inccheck => sub { -e File::Spec->catfile($_[0], "png.h") },
    libbase => "png",
    testcode => _png_test_code(),
@@ -81,6 +81,11 @@ my %probe =
    libpath => \@libpaths,
    alternatives =>
    [
+    {
+     altname => "v1.5",
+     incsuffix => "libpng14",
+     libbase => "png14",
+    },
     {
      altname => "v1.4",
      incsuffix => "libpng14",
