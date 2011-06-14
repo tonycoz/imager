@@ -29,7 +29,10 @@ static int CC2C[PNG_COLOR_MASK_PALETTE|PNG_COLOR_MASK_COLOR|PNG_COLOR_MASK_ALPHA
 
 #define PNG_BYTES_TO_CHECK 4
  
-
+unsigned
+i_png_lib_version(void) {
+  return png_access_version_number();
+}
 
 static void
 wiol_read_data(png_structp png_ptr, png_bytep data, png_size_t length) {
@@ -115,6 +118,7 @@ i_writepng_wiol(i_img *im, io_glue *ig) {
    * implementation ever matches the documentation.
    *
    * https://sourceforge.net/tracker/?func=detail&atid=105624&aid=3314943&group_id=5624
+   * fixed in libpng 1.5.3
   */
   if (width > PNG_DIM_MAX || height > PNG_DIM_MAX) {
     i_push_error(0, "Image too large for PNG");
@@ -251,6 +255,8 @@ i_readpng_wiol(io_glue *ig) {
   int channels,pass;
   unsigned int sig_read;
   i_png_read_state rs;
+  i_img_dim wmax, hmax;
+  size_t bytes;
 
   rs.warnings = NULL;
   sig_read  = 0;
@@ -280,6 +286,9 @@ i_readpng_wiol(io_glue *ig) {
     cleanup_read_state(&rs);
     return NULL;
   }
+  
+  /* we do our own limit checks */
+  png_set_user_limits(png_ptr, PNG_DIM_MAX, PNG_DIM_MAX);
 
   png_set_sig_bytes(png_ptr, sig_read);
   png_read_info(png_ptr, info_ptr);

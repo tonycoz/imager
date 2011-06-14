@@ -22,5 +22,8 @@ i_writepng_wiol(im, ig)
     Imager::ImgRaw     im
         Imager::IO     ig
 
+unsigned
+i_png_lib_version()
+
 BOOT:
 	PERL_INITIALIZE_IMAGER_CALLBACKS;
