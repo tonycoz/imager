@@ -15,6 +15,8 @@ $Imager::formats{"png"}
 
 plan tests => 39;
 
+diag("Library version " . Imager::File::PNG::i_png_lib_version());
+
 my $green  = i_color_new(0,   255, 0,   255);
 my $blue   = i_color_new(0,   0,   255, 255);
 my $red    = i_color_new(255, 0,   0,   255);
