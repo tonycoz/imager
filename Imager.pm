@@ -137,7 +137,8 @@ my %defaults;
 
 BEGIN {
   require Exporter;
-  if ($Exporter::VERSION < 5.57) {
+  my $ex_version = eval $Exporter::VERSION;
+  if ($ex_version < 5.57) {
     @ISA = qw(Exporter);
   }
   $VERSION = '0.83';
