@@ -41,3 +41,11 @@ testout/
 cover_db/
 */cover_db/
 
+# Win32
+*/*.def
+dll.base
+dll.exp
+*/dll.exp
+*/dll.base
+Imager.def
+dynfilt/*.dll
