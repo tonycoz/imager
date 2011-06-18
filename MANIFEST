@@ -208,7 +208,6 @@ MANIFEST
 MANIFEST.SKIP
 map.c
 maskimg.c
-META.yml			Module meta-data
 palimg.c
 paste.im
 plug.h
