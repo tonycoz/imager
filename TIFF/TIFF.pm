@@ -4,7 +4,7 @@ use Imager;
 use vars qw($VERSION @ISA);
 
 BEGIN {
-  $VERSION = "0.78";
+  $VERSION = "0.79";
 
   eval {
     require XSLoader;
