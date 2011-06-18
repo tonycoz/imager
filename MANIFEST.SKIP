@@ -79,6 +79,7 @@ Makefile\.old$
 
 ^.*/Changes$
 ^.*/MANIFEST(\.SKIP)?$
+^.+/inc/Devel/CheckLib\.pm$
 ^blib/
 ^Flines/Flines\.c$
 ^Imager\.c$
