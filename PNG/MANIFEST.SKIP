@@ -17,3 +17,5 @@
 # editor
 ^#
 ~$
+
+^\.gitignore$
