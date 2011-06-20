@@ -55,7 +55,7 @@ int i_wf_bbox(const char *face, int size, const char *text, int length, int *bbo
   MAT2 mat;
   int ascent, descent, max_ascent = -size, min_descent = size;
   const char *workp;
-  int work_len;
+  size_t work_len;
   int got_first_ch = 0;
   unsigned long first_ch, last_ch;
 
