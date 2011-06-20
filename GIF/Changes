@@ -6,6 +6,10 @@ Imager-File-GIF 0.79
    confusing at best.  Requires changes from Imager 0.84.
    https://rt.cpan.org/Ticket/Display.html?id=67912
 
+ - replace (imager|tony)@imager.perl.org in the doc, since I don't
+   plan to continue receiving mail at that address.
+   https://rt.cpan.org/Ticket/Display.html?id=68591
+
 Imager-File-GIF 0.78
 ====================
 

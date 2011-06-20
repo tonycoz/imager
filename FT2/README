@@ -1,0 +1,10 @@
+Imager::Font::FT2 provides font support to Imager via the FreeType 2
+library.
+
+It requires libfreetype and its development header files to be
+installed.
+
+This is currently shipped as part of Imager, but but Imager may
+install with out installing Imager::Font::FT2, if your module or
+application requires FreeType 2 support then add Imager::Font::FT2 as
+a prerequisite.

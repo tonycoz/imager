@@ -1,0 +1,21 @@
+# build products
+\.o$
+\.bs$
+^GIF\.c$
+^blib/
+^pm_to_blib$
+^Makefile$
+^MANIFEST\.bak$
+
+# test products
+^testout
+
+# system
+^\.svn/
+/\.svn/
+
+# editor
+^#
+~$
+
+^\.gitignore$

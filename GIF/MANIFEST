@@ -1,0 +1,24 @@
+Changes
+GIF.pm
+GIF.xs
+imgif.c
+imgif.h
+inc/Devel/CheckLib.pm
+Makefile.PL
+MANIFEST			This list of files
+MANIFEST.SKIP
+t/t10gif.t
+t/t20new.t
+t/t30fixed.t
+testimg/badindex.gif
+testimg/bandw.gif
+testimg/expected.gif
+testimg/loccmap.gif
+testimg/nocmap.gif
+testimg/scale.gif
+testimg/scalei.gif
+testimg/screen2.gif
+testimg/screen3.gif
+testimg/trimgdesc.gif
+testimg/trmiddesc.gif
+testimg/zerocomm.gif

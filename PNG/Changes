@@ -1,3 +1,10 @@
+Imager-File-PNG 0.79
+====================
+
+ - replace (imager|tony)@imager.perl.org in the doc, since I don't
+   plan to continue receiving mail at that address.
+   https://rt.cpan.org/Ticket/Display.html?id=68591
+
 Imager-File-PNG 0.78
 ====================
 

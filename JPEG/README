@@ -1,0 +1,7 @@
+Imager::File::JPEG provides JPEG file format support for Imager.
+
+It requires libjpeg to be installed.
+
+This is currently shipped as part of Imager, but Imager may install
+with out installing Imager::File::JPEG, so if you need JPEG support,
+add a dependency on Imager::File::JPEG.

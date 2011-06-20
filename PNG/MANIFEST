@@ -1,0 +1,13 @@
+Changes
+impng.c
+impng.h
+inc/Devel/CheckLib.pm
+Makefile.PL
+MANIFEST			This list of files
+MANIFEST.SKIP
+PNG.pm
+PNG.xs
+t/00load.t
+t/10png.t
+testimg/palette.png
+testimg/palette_out.png

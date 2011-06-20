@@ -1,0 +1,39 @@
+Changes
+imtiff.c
+imtiff.h
+inc/Devel/CheckLib.pm
+Makefile.PL
+MANIFEST			This list of files
+MANIFEST.SKIP
+README
+t/t10tiff.t
+testimg/alpha.tif		Alpha scaling test image
+testimg/comp4.bmp		Compressed 4-bit/pixel BMP
+testimg/comp4.tif		4-bit/pixel paletted TIFF
+testimg/comp4bad.tif		corrupted 4-bit/pixel paletted TIFF
+testimg/comp4t.tif		4-bit/pixel paletted TIFF (tiled)
+testimg/comp8.bmp		Compressed 8-bit/pixel BMP
+testimg/comp8.tif		8-bit/pixel paletted TIFF
+testimg/gralpha.tif		Grey alpha test image
+testimg/grey16.tif		16-bit/sample greyscale TIFF
+testimg/grey32.tif		32-bit/sample greyscale+alpha TIFF
+testimg/imager.pbm		Test bi-level
+testimg/imager.tif		Test bi-level
+testimg/pengtile.tif		Tiled tiff image, same as penguin-base.ppm
+testimg/penguin-base.ppm
+testimg/rgb16.tif		16-bit/sample RGB image - strips
+testimg/rgb16t.tif		16-bit/sample RGB image - tiled
+testimg/rgbatsep.tif		Tiled/separated for testing RGBA codepath
+testimg/scmyk.tif		Simple CMYK TIFF image
+testimg/scmyka.tif		CMYK with one alpha channel
+testimg/scmyka16.tif		CMYK with one alpha channel (16-bit)
+testimg/scmykaa.tif		CMYK with 2 alpha channels
+testimg/slab.tif		Lab color image
+testimg/srgb.tif		Simple RGB image
+testimg/srgba.tif		RGB with one alpha
+testimg/srgba16.tif
+testimg/srgba32.tif
+testimg/srgbaa.tif		RGB with 2 alpha
+testimg/tiffwarn.tif		Generates a warning while being read
+TIFF.pm
+TIFF.xs

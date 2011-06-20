@@ -54,12 +54,8 @@ else {
        resources =>
        {
 	homepage => "http://imager.perl.org/",
-	repository =>
-	{
-	 url => "http://imager.perl.org/svn/trunk/Imager/FT2",
-	 web => "http://imager.perl.org/svnweb/public/browse/trunk/Imager/FT2",
-	 type => "svn",
-	},
+	repository => "git://git.imager.perl.org/imager.git",
+	bugtracker => "http://rt.cpan.org/NoAuth/Bugs.html?Dist=Imager",
        },
       };
     $opts{PREREQ_PM} =

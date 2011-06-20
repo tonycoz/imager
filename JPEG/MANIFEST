@@ -1,0 +1,18 @@
+Changes
+imexif.c
+imexif.h
+imjpeg.c
+imjpeg.h
+inc/Devel/CheckLib.pm
+JPEG.pm
+JPEG.xs
+Makefile.PL
+MANIFEST			This list of files
+MANIFEST.SKIP
+README
+t/t00load.t
+t/t10jpeg.t
+testimg/209_yonge.jpg		Regression test: #17981
+testimg/exiftest.jpg		Test image for EXIF parsing
+testimg/scmyk.jpg		Simple CMYK JPEG image
+testimg/zerotype.jpg		Image with a zero type entry in the EXIF data

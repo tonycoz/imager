@@ -1,0 +1,13 @@
+Changes
+fontfiles/ExistenceTest.ttf
+imw32.h
+inc/Devel/CheckLib.pm
+lib/Imager/Font/Win32.pm
+Makefile.PL
+MANIFEST			This list of files
+MANIFEST.SKIP
+README
+t/t10win32.t
+W32.pm
+W32.xs
+win32.c

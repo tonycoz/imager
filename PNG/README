@@ -1,0 +1,7 @@
+Imager::File::PNG provides PNG file format support for Imager.
+
+It requires libpng to be installed.
+
+This is currently shipped as part of Imager, but Imager may install
+with out installing Imager::File::PNG, so if you need PNG support,
+add a dependency on Imager::File::PNG.

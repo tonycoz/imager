@@ -1,3 +1,13 @@
+Imager-File-TIFF 0.79
+=====================
+
+ - handle slightly different warning from libtiff 4.x
+   https://rt.cpan.org/Ticket/Display.html?id=65268
+
+ - replace (imager|tony)@imager.perl.org in the doc, since I don't
+   plan to continue receiving mail at that address.
+   https://rt.cpan.org/Ticket/Display.html?id=68591
+
 Imager-File-TIFF 0.78
 =====================
 

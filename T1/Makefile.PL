@@ -54,12 +54,8 @@ else {
        resources =>
        {
 	homepage => "http://imager.perl.org/",
-	repository =>
-	{
-	 url => "git://git.imager.perl.org/imager-type1.git",
-	 web => "http://git.imager.perl.org/imager-type1.git/",
-	 type => "git",
-	},
+	repository => "git://git.imager.perl.org/imager.git",
+	bugtracker => "http://rt.cpan.org/NoAuth/Bugs.html?Dist=Imager",
        },
       };
     $opts{PREREQ_PM} =
