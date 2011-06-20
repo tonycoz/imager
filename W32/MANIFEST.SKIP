@@ -23,3 +23,6 @@
 # editor
 ^#
 ~$
+
+# sometimes these get left by probes
+\.exe$

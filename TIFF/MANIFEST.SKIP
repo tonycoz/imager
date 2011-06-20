@@ -19,3 +19,8 @@
 # editor
 ^#
 ~$
+
+# Win32 junk
+^dll\.(base|exp)$
+^TIFF\.def$
+^TIFF_def\.old$

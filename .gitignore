@@ -43,9 +43,12 @@ cover_db/
 
 # Win32
 */*.def
+*/*_def.old
+*/*.exe
 dll.base
 dll.exp
 */dll.exp
 */dll.base
 Imager.def
+Imager_def.old
 dynfilt/*.dll

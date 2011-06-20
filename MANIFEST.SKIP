@@ -63,6 +63,7 @@ Makefile\.old$
 ^SGI/testout/
 ^TIFF/testout/
 ^T1/testout/
+^W32/testout/
 
 # generated from .xs
 ^CountColor/CountColor\.c$
@@ -76,10 +77,12 @@ Makefile\.old$
 ^SGI/SGI\.c$
 ^TIFF/TIFF\.c$
 ^T1/T1\.c$
+^W32/W32\.c$
 
 ^.*/Changes$
 ^.*/MANIFEST(\.SKIP)?$
 ^.+/inc/Devel/CheckLib\.pm$
+^.+/blib/
 ^blib/
 ^Flines/Flines\.c$
 ^Imager\.c$
@@ -114,3 +117,12 @@ Makefile\.old$
 ^samples/logo$
 ^samples/transform\.pl$
 ^samples/transform1\.ppm$
+
+# Win32 junk
+^(.+/)?dll\.(base|exp)$
+^(.+/)?\w+\.def$
+^(.+/)?\w+\_def.old$
+\.exe$
+
+# sub-module build junk
+\.bak$

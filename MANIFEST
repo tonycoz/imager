@@ -66,6 +66,7 @@ FT2/FT2.pm
 FT2/FT2.xs
 FT2/imft2.h
 FT2/Makefile.PL
+FT2/README
 FT2/t/t10ft2.t
 FT2/typemap
 gaussian.im
@@ -74,6 +75,7 @@ GIF/GIF.xs
 GIF/imgif.c
 GIF/imgif.h
 GIF/Makefile.PL
+GIF/README
 GIF/t/t10gif.t
 GIF/t/t20new.t
 GIF/t/t30fixed.t
@@ -152,6 +154,7 @@ JPEG/imjpeg.h
 JPEG/JPEG.pm
 JPEG/JPEG.xs
 JPEG/Makefile.PL
+JPEG/README
 JPEG/t/t00load.t
 JPEG/t/t10jpeg.t		Test jpeg support
 JPEG/testimg/209_yonge.jpg	Regression test: #17981
@@ -216,6 +219,7 @@ PNG/impng.h
 PNG/Makefile.PL
 PNG/PNG.pm
 PNG/PNG.xs
+PNG/README
 PNG/t/00load.t
 PNG/t/10png.t			Test png support
 PNG/testimg/palette.png
@@ -422,6 +426,7 @@ tga.c				Reading and writing Targa files
 TIFF/imtiff.c
 TIFF/imtiff.h
 TIFF/Makefile.PL
+TIFF/README
 TIFF/t/t10tiff.t		Test tiff support
 TIFF/testimg/alpha.tif		Alpha scaling test image
 TIFF/testimg/comp4.bmp		Compressed 4-bit/pixel BMP
@@ -460,6 +465,7 @@ W32/fontfiles/ExistenceTest.ttf
 W32/imw32.h
 W32/lib/Imager/Font/Win32.pm
 W32/Makefile.PL
+W32/README
 W32/t/t10win32.t		Tests Win32 GDI font support
 W32/W32.pm
 W32/W32.xs
