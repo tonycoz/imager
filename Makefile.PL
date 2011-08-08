@@ -734,7 +734,7 @@ EOS
     }
     print CONFIG "#define $define->[0] $define->[1]\n";
   }
-  if ($Config{gccversion} && $Config{gccversion} > 3) {
+  if ($Config{gccversion} && $Config{gccversion} =~ /^([0-9]+)/ && $1 > 3) {
     print CONFIG <<EOS;
 /*
 
@@ -743,6 +743,7 @@ Compiler supports the GCC __attribute__((format...)) syntax.
 */
 
 #define IMAGER_FORMAT_ATTR 1
+
 EOS
   }
 
