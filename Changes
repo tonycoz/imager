@@ -1,7 +1,9 @@
 Imager release history.  Older releases can be found in Changes.old
 
-Imager 0.85
-===========
+Imager 0.84_01 - 8 Aug 2011
+==============
+
+Development release as a sanity check for the types re-work.
 
 Massive types re-work:
 
