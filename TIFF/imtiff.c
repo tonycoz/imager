@@ -159,6 +159,14 @@ static int putter_cmyk8(read_state_t *, i_img_dim, i_img_dim, i_img_dim, i_img_d
 
 static int setup_cmyk16(read_state_t *state);
 static int putter_cmyk16(read_state_t *, i_img_dim, i_img_dim, i_img_dim, i_img_dim, int);
+static void
+rgb_channels(read_state_t *state, int *out_channels);
+static void
+grey_channels(read_state_t *state, int *out_channels);
+static void
+cmyk_channels(read_state_t *state, int *out_channels);
+static void
+fallback_rgb_channels(TIFF *tif, i_img_dim width, i_img_dim height, int *channels, int *alpha_chan);
 
 static const int text_tag_count = 
   sizeof(text_tag_names) / sizeof(*text_tag_names);
@@ -278,6 +286,9 @@ static i_img *read_one_tiff(TIFF *tif, int allow_incomplete) {
   read_setup_t setupf = NULL;
   read_getter_t getterf = NULL;
   read_putter_t putterf = NULL;
+  int channels = MAXCHANNELS;
+  size_t sample_size = ~0; /* force failure if some code doesn't set it */
+  i_img_dim total_pixels;
 
   error = 0;
 
@@ -294,6 +305,16 @@ static i_img *read_one_tiff(TIFF *tif, int allow_incomplete) {
   mm_log((1, "i_readtiff_wiol: %stiled\n", tiled?"":"not "));
   mm_log((1, "i_readtiff_wiol: %sbyte swapped\n", TIFFIsByteSwapped(tif)?"":"not "));
 
+  total_pixels = width * height;
+  memset(&state, 0, sizeof(state));
+  state.tif = tif;
+  state.allow_incomplete = allow_incomplete;
+  state.width = width;
+  state.height = height;
+  state.bits_per_sample = bits_per_sample;
+  state.samples_per_pixel = samples_per_pixel;
+  state.photometric = photometric;
+
   /* yes, this if() is horrible */
   if (photometric == PHOTOMETRIC_PALETTE && bits_per_sample <= 8) {
     setupf = setup_paletted;
@@ -303,38 +324,53 @@ static i_img *read_one_tiff(TIFF *tif, int allow_incomplete) {
       putterf = paletted_putter4;
     else
       mm_log((1, "unsupported paletted bits_per_sample %d\n", bits_per_sample));
+
+    sample_size = sizeof(i_sample_t);
+    channels = 1;
   }
   else if (bits_per_sample == 16 
 	   && photometric == PHOTOMETRIC_RGB
 	   && samples_per_pixel >= 3) {
     setupf = setup_16_rgb;
     putterf = putter_16;
+    sample_size = 2;
+    rgb_channels(&state, &channels);
   }
   else if (bits_per_sample == 16
 	   && photometric == PHOTOMETRIC_MINISBLACK) {
     setupf = setup_16_grey;
     putterf = putter_16;
+    sample_size = 2;
+    grey_channels(&state, &channels);
   }
   else if (bits_per_sample == 8
 	   && photometric == PHOTOMETRIC_MINISBLACK) {
     setupf = setup_8_grey;
     putterf = putter_8;
+    sample_size = 1;
+    grey_channels(&state, &channels);
   }
   else if (bits_per_sample == 8
 	   && photometric == PHOTOMETRIC_RGB) {
     setupf = setup_8_rgb;
     putterf = putter_8;
+    sample_size = 1;
+    rgb_channels(&state, &channels);
   }
   else if (bits_per_sample == 32 
 	   && photometric == PHOTOMETRIC_RGB
 	   && samples_per_pixel >= 3) {
     setupf = setup_32_rgb;
     putterf = putter_32;
+    sample_size = sizeof(i_fsample_t);
+    rgb_channels(&state, &channels);
   }
   else if (bits_per_sample == 32
 	   && photometric == PHOTOMETRIC_MINISBLACK) {
     setupf = setup_32_grey;
     putterf = putter_32;
+    sample_size = sizeof(i_fsample_t);
+    grey_channels(&state, &channels);
   }
   else if (bits_per_sample == 1
 	   && (photometric == PHOTOMETRIC_MINISBLACK
@@ -342,6 +378,8 @@ static i_img *read_one_tiff(TIFF *tif, int allow_incomplete) {
 	   && samples_per_pixel == 1) {
     setupf = setup_bilevel;
     putterf = putter_bilevel;
+    sample_size = sizeof(i_palidx);
+    channels = 1;
   }
   else if (bits_per_sample == 8
 	   && photometric == PHOTOMETRIC_SEPARATED
@@ -349,6 +387,8 @@ static i_img *read_one_tiff(TIFF *tif, int allow_incomplete) {
 	   && samples_per_pixel >= 4) {
     setupf = setup_cmyk8;
     putterf = putter_cmyk8;
+    sample_size = 1;
+    cmyk_channels(&state, &channels);
   }
   else if (bits_per_sample == 16
 	   && photometric == PHOTOMETRIC_SEPARATED
@@ -356,7 +396,19 @@ static i_img *read_one_tiff(TIFF *tif, int allow_incomplete) {
 	   && samples_per_pixel >= 4) {
     setupf = setup_cmyk16;
     putterf = putter_cmyk16;
+    sample_size = 2;
+    cmyk_channels(&state, &channels);
   }
+  else {
+    int alpha;
+    fallback_rgb_channels(tif, width, height, &channels, &alpha);
+    sample_size = 1;
+  }
+
+  if (!i_int_check_image_file_limits(width, height, channels, sample_size)) {
+    return NULL;
+  }
+
   if (tiled) {
     if (planar_config == PLANARCONFIG_CONTIG)
       getterf = tile_contig_getter;
@@ -366,15 +418,6 @@ static i_img *read_one_tiff(TIFF *tif, int allow_incomplete) {
       getterf = strip_contig_getter;
   }
   if (setupf && getterf && putterf) {
-    i_img_dim total_pixels = width * height;
-    memset(&state, 0, sizeof(state));
-    state.tif = tif;
-    state.allow_incomplete = allow_incomplete;
-    state.width = width;
-    state.height = height;
-    state.bits_per_sample = bits_per_sample;
-    state.samples_per_pixel = samples_per_pixel;
-    state.photometric = photometric;
 
     if (!setupf(&state))
       return NULL;
@@ -1549,10 +1592,19 @@ static void pack_4bit_to(unsigned char *dest, const unsigned char *src,
   }
 }
 
-static i_img *
-make_rgb(TIFF *tif, i_img_dim width, i_img_dim height, int *alpha_chan) {
+/*
+=item fallback_rgb_channels
+
+Calculate the number of output channels when we fallback to the RGBA
+family of functions.
+
+=cut
+*/
+
+static void
+fallback_rgb_channels(TIFF *tif, i_img_dim width, i_img_dim height, int *channels, int *alpha_chan) {
   uint16 photometric;
-  uint16 channels, in_channels;
+  uint16 in_channels;
   uint16 extra_count;
   uint16 *extras;
 
@@ -1561,7 +1613,7 @@ make_rgb(TIFF *tif, i_img_dim width, i_img_dim height, int *alpha_chan) {
 
   switch (photometric) {
   case PHOTOMETRIC_SEPARATED:
-    channels = 3;
+    *channels = 3;
     break;
   
   case PHOTOMETRIC_MINISWHITE:
@@ -1569,11 +1621,11 @@ make_rgb(TIFF *tif, i_img_dim width, i_img_dim height, int *alpha_chan) {
     /* the TIFF RGBA functions expand single channel grey into RGB,
        so reduce it, we move the alpha channel into the right place 
        if needed */
-    channels = 1;
+    *channels = 1;
     break;
 
   default:
-    channels = 3;
+    *channels = 3;
     break;
   }
   /* TIFF images can have more than one alpha channel, but Imager can't
@@ -1582,8 +1634,15 @@ make_rgb(TIFF *tif, i_img_dim width, i_img_dim height, int *alpha_chan) {
   *alpha_chan = 0;
   if (TIFFGetField(tif, TIFFTAG_EXTRASAMPLES, &extra_count, &extras)
       && extra_count) {
-    *alpha_chan = channels++;
+    *alpha_chan = (*channels)++;
   }
+}
+
+static i_img *
+make_rgb(TIFF *tif, i_img_dim width, i_img_dim height, int *alpha_chan) {
+  int channels = 0;
+
+  fallback_rgb_channels(tif, width, height, &channels, alpha_chan);
 
   return i_img_8_new(width, height, channels);
 }

@@ -1,3 +1,8 @@
+Imager-File-TIFF 0.80
+=====================
+
+ - check image file limits set by set_file_limits()
+
 Imager-File-TIFF 0.79
 =====================
 
