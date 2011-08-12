@@ -119,6 +119,13 @@ my %writers;
 # modules we attempted to autoload
 my %attempted_to_load;
 
+# errors from loading files
+my %file_load_errors;
+
+# what happened when we tried to load
+my %reader_load_errors;
+my %writer_load_errors;
+
 # library keys that are image file formats
 my %file_formats = map { $_ => 1 } qw/tiff pnm gif png jpeg raw bmp tga/;
 
@@ -1322,7 +1329,7 @@ sub _get_reader_io {
 }
 
 sub _get_writer_io {
-  my ($self, $input, $type) = @_;
+  my ($self, $input) = @_;
 
   if ($input->{io}) {
     return $input->{io};
@@ -1389,31 +1396,32 @@ sub read {
 
   my ($IO, $fh) = $self->_get_reader_io(\%input) or return;
 
-  unless ($input{'type'}) {
-    $input{'type'} = i_test_format_probe($IO, -1);
+  my $type = $input{'type'};
+  unless ($type) {
+    $type = i_test_format_probe($IO, -1);
   }
 
-  unless ($input{'type'}) {
-	  $self->_set_error('type parameter missing and not possible to guess from extension'); 
+  unless ($type) {
+    $self->_set_error('type parameter missing and not possible to guess from extension'); 
     return undef;
   }
 
-  _reader_autoload($input{type});
+  _reader_autoload($type);
 
-  if ($readers{$input{type}} && $readers{$input{type}}{single}) {
-    return $readers{$input{type}}{single}->($self, $IO, %input);
+  if ($readers{$type} && $readers{$type}{single}) {
+    return $readers{$type}{single}->($self, $IO, %input);
   }
 
-  unless ($formats_low{$input{'type'}}) {
+  unless ($formats_low{$type}) {
     my $read_types = join ', ', sort Imager->read_types();
-    $self->_set_error("format '$input{'type'}' not supported - formats $read_types available for reading");
+    $self->_set_error("format '$type' not supported - formats $read_types available for reading - $reader_load_errors{$type}");
     return;
   }
 
   my $allow_incomplete = $input{allow_incomplete};
   defined $allow_incomplete or $allow_incomplete = 0;
 
-  if ( $input{'type'} eq 'pnm' ) {
+  if ( $type eq 'pnm' ) {
     $self->{IMG}=i_readpnm_wiol( $IO, $allow_incomplete );
     if ( !defined($self->{IMG}) ) {
       $self->{ERRSTR}='unable to read pnm image: '._error_as_msg(); 
@@ -1423,7 +1431,7 @@ sub read {
     return $self;
   }
 
-  if ( $input{'type'} eq 'bmp' ) {
+  if ( $type eq 'bmp' ) {
     $self->{IMG}=i_readbmp_wiol( $IO, $allow_incomplete );
     if ( !defined($self->{IMG}) ) {
       $self->{ERRSTR}=$self->_error_as_msg();
@@ -1432,7 +1440,7 @@ sub read {
     $self->{DEBUG} && print "loading a bmp file\n";
   }
 
-  if ( $input{'type'} eq 'gif' ) {
+  if ( $type eq 'gif' ) {
     if ($input{colors} && !ref($input{colors})) {
       # must be a reference to a scalar that accepts the colour map
       $self->{ERRSTR} = "option 'colors' must be a scalar reference";
@@ -1467,7 +1475,7 @@ sub read {
     $self->{DEBUG} && print "loading a gif file\n";
   }
 
-  if ( $input{'type'} eq 'tga' ) {
+  if ( $type eq 'tga' ) {
     $self->{IMG}=i_readtga_wiol( $IO, -1 ); # Fixme, check if that length parameter is ever needed
     if ( !defined($self->{IMG}) ) {
       $self->{ERRSTR}=$self->_error_as_msg();
@@ -1476,7 +1484,7 @@ sub read {
     $self->{DEBUG} && print "loading a tga file\n";
   }
 
-  if ( $input{'type'} eq 'raw' ) {
+  if ( $type eq 'raw' ) {
     unless ( $input{xsize} && $input{ysize} ) {
       $self->_set_error('missing xsize or ysize parameter for raw');
       return undef;
@@ -1575,6 +1583,40 @@ sub write_types {
   return keys %types;
 }
 
+sub _load_file {
+  my ($file, $error) = @_;
+
+  if ($attempted_to_load{$file}) {
+    if ($file_load_errors{$file}) {
+      $$error = $file_load_errors{$file};
+      return 0;
+    }
+    else {
+      return 1;
+    }
+  }
+  else {
+    local $SIG{__DIE__};
+    my $loaded = eval {
+      ++$attempted_to_load{$file};
+      require $file;
+      return 1;
+    };
+    if ($loaded) {
+      return 1;
+    }
+    else {
+      my $work = $@ || "Unknown error loading $file";
+      chomp $work;
+      $work =~ s/\n?Compilation failed in require at .*Imager\.pm line .*\z//m;
+      $work =~ s/\n/\\n/g;
+      $file_load_errors{$file} = $work;
+      $$error = $work;
+      return 0;
+    }
+  }
+}
+
 # probes for an Imager::File::whatever module
 sub _reader_autoload {
   my $type = shift;
@@ -1585,21 +1627,17 @@ sub _reader_autoload {
 
   my $file = "Imager/File/\U$type\E.pm";
 
-  unless ($attempted_to_load{$file}) {
-    eval {
-      ++$attempted_to_load{$file};
-      require $file;
-    };
-    if ($@) {
-      # try to get a reader specific module
-      my $file = "Imager/File/\U$type\EReader.pm";
-      unless ($attempted_to_load{$file}) {
-	eval {
-	  ++$attempted_to_load{$file};
-	  require $file;
-	};
-      }
+  my $error;
+  my $loaded = _load_file($file, \$error);
+  if (!$loaded && $error =~ /^Can't locate /) {
+    my $filer = "Imager/File/\U$type\EReader.pm";
+    $loaded = _load_file($filer, \$error);
+    if ($error =~ /^Can't locate /) {
+      $error = "Can't locate $file or $filer";
     }
+  }
+  unless ($loaded) {
+    $reader_load_errors{$type} = $error;
   }
 }
 
@@ -1607,27 +1645,23 @@ sub _reader_autoload {
 sub _writer_autoload {
   my $type = shift;
 
-  return if $formats_low{$type} || $readers{$type};
+  return if $formats_low{$type} || $writers{$type};
 
   return unless $type =~ /^\w+$/;
 
   my $file = "Imager/File/\U$type\E.pm";
 
-  unless ($attempted_to_load{$file}) {
-    eval {
-      ++$attempted_to_load{$file};
-      require $file;
-    };
-    if ($@) {
-      # try to get a writer specific module
-      my $file = "Imager/File/\U$type\EWriter.pm";
-      unless ($attempted_to_load{$file}) {
-	eval {
-	  ++$attempted_to_load{$file};
-	  require $file;
-	};
-      }
+  my $error;
+  my $loaded = _load_file($file, \$error);
+  if (!$loaded && $error =~ /^Can't locate /) {
+    my $filew = "Imager/File/\U$type\EWriter.pm";
+    $loaded = _load_file($filew, \$error);
+    if ($error =~ /^Can't locate /) {
+      $error = "Can't locate $file or $filew";
     }
+  }
+  unless ($loaded) {
+    $writer_load_errors{$type} = $error;
   }
 }
 
@@ -1747,35 +1781,36 @@ sub write {
 
   unless ($self->{IMG}) { $self->{ERRSTR}='empty input image'; return undef; }
 
-  if (!$input{'type'} and $input{file}) { 
-    $input{'type'}=$FORMATGUESS->($input{file});
+  my $type = $input{'type'};
+  if (!$type and $input{file}) { 
+    $type = $FORMATGUESS->($input{file});
   }
-  if (!$input{'type'}) { 
+  unless ($type) { 
     $self->{ERRSTR}='type parameter missing and not possible to guess from extension';
     return undef;
   }
 
-  _writer_autoload($input{type});
+  _writer_autoload($type);
 
   my ($IO, $fh);
-  if ($writers{$input{type}} && $writers{$input{type}}{single}) {
-    ($IO, $fh) = $self->_get_writer_io(\%input, $input{'type'})
+  if ($writers{$type} && $writers{$type}{single}) {
+    ($IO, $fh) = $self->_get_writer_io(\%input)
       or return undef;
 
-    $writers{$input{type}}{single}->($self, $IO, %input)
+    $writers{$type}{single}->($self, $IO, %input, type => $type)
       or return undef;
   }
   else {
-    if (!$formats_low{$input{'type'}}) { 
+    if (!$formats_low{$type}) { 
       my $write_types = join ', ', sort Imager->write_types();
-      $self->_set_error("format '$input{'type'}' not supported - formats $write_types available for writing");
+      $self->_set_error("format '$type' not supported - formats $write_types available for writing - $writer_load_errors{$type}");
       return undef;
     }
     
-    ($IO, $fh) = $self->_get_writer_io(\%input, $input{'type'})
+    ($IO, $fh) = $self->_get_writer_io(\%input, $type)
       or return undef;
-    
-    if ( $input{'type'} eq 'pnm' ) {
+  
+    if ( $type eq 'pnm' ) {
       $self->_set_opts(\%input, "pnm_", $self)
         or return undef;
       if ( ! i_writeppm_wiol($self->{IMG},$IO) ) {
@@ -1783,7 +1818,8 @@ sub write {
         return undef;
       }
       $self->{DEBUG} && print "writing a pnm file\n";
-    } elsif ( $input{'type'} eq 'raw' ) {
+    }
+    elsif ( $type eq 'raw' ) {
       $self->_set_opts(\%input, "raw_", $self)
         or return undef;
       if ( !i_writeraw_wiol($self->{IMG},$IO) ) {
@@ -1791,17 +1827,8 @@ sub write {
         return undef;
       }
       $self->{DEBUG} && print "writing a raw file\n";
-    } elsif ( $input{'type'} eq 'jpeg' ) {
-      $self->_set_opts(\%input, "jpeg_", $self)
-        or return undef;
-      $self->_set_opts(\%input, "exif_", $self)
-        or return undef;
-      if ( !i_writejpeg_wiol($self->{IMG}, $IO, $input{jpegquality})) {
-        $self->{ERRSTR} = $self->_error_as_msg();
-        return undef;
-      }
-      $self->{DEBUG} && print "writing a jpeg file\n";
-    } elsif ( $input{'type'} eq 'bmp' ) {
+    }
+    elsif ( $type eq 'bmp' ) {
       $self->_set_opts(\%input, "bmp_", $self)
         or return undef;
       if ( !i_writebmp_wiol($self->{IMG}, $IO) ) {
@@ -1809,7 +1836,8 @@ sub write {
         return undef;
       }
       $self->{DEBUG} && print "writing a bmp file\n";
-    } elsif ( $input{'type'} eq 'tga' ) {
+    }
+    elsif ( $type eq 'tga' ) {
       $self->_set_opts(\%input, "tga_", $self)
         or return undef;
       
@@ -1818,24 +1846,6 @@ sub write {
         return undef;
       }
       $self->{DEBUG} && print "writing a tga file\n";
-    } elsif ( $input{'type'} eq 'gif' ) {
-      $self->_set_opts(\%input, "gif_", $self)
-        or return undef;
-      # compatibility with the old interfaces
-      if ($input{gifquant} eq 'lm') {
-        $input{make_colors} = 'addi';
-        $input{translate} = 'perturb';
-        $input{perturb} = $input{lmdither};
-      } elsif ($input{gifquant} eq 'gen') {
-        # just pass options through
-      } else {
-        $input{make_colors} = 'webmap'; # ignored
-        $input{translate} = 'giflib';
-      }
-      if (!i_writegif_wiol($IO, \%input, $self->{IMG})) {
-        $self->{ERRSTR} = $self->_error_as_msg;
-        return;
-      }
     }
   }
 
@@ -4007,10 +4017,16 @@ sub _check {
 
   (my $file = $self->[IX_CLASSES]{$key} . ".pm") =~ s(::)(/)g;
   my $value;
-  if (eval { require $file; 1 }) {
+  my $error;
+  my $loaded = Imager::_load_file($file, \$error);
+  if ($loaded) {
     $value = 1;
   }
   else {
+    if ($error =~ /^Can't locate /) {
+      $error = "Can't locate $file";
+    }
+    $reader_load_errors{$key} = $writer_load_errors{$key} = $error;
     $value = undef;
   }
   $self->[IX_FORMATS]{$key} = $value;

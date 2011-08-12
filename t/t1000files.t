@@ -4,7 +4,7 @@
 # the file format
 
 use strict;
-use Test::More tests => 35;
+use Test::More tests => 43;
 use Imager;
 
 -d "testout" or mkdir "testout";
@@ -66,6 +66,42 @@ ok(Imager->set_file_limits(reset=>1),
    "just reset");
 is_deeply([ Imager->get_file_limits() ], [ 0, 0, 0 ],
 	  "check all are reset");
+
+# test error handling for loading file handers
+{
+  # first, no module at all
+  {
+    my $data = "abc";
+    ok(!Imager->new(data => $data, filetype => "unknown"),
+       "try to read an unknown file type");
+   like(Imager->errstr, qr(^format 'unknown' not supported - formats .* - Can't locate Imager/File/UNKNOWN.pm or Imager/File/UNKNOWNReader.pm$),
+	"check error message");
+  }
+  {
+    my $data;
+    my $im = Imager->new(xsize => 10, ysize => 10);
+    ok(!$im->write(data => \$data, type => "unknown"),
+       "try to write an unknown file type");
+   like($im->errstr, qr(^format 'unknown' not supported - formats .* - Can't locate Imager/File/UNKNOWN.pm or Imager/File/UNKNOWNWriter.pm$),
+	"check error message");
+  }
+  push @INC, "t/t1000lib";
+  {
+    my $data = "abc";
+    ok(!Imager->new(data => $data, filetype => "bad"),
+       "try to read an bad (other load failure) file type");
+   like(Imager->errstr, qr(^format 'bad' not supported - formats .* available for reading - This module fails to load$),
+	"check error message");
+  }
+  {
+    my $data;
+    my $im = Imager->new(xsize => 10, ysize => 10);
+    ok(!$im->write(data => \$data, type => "bad"),
+       "try to write an bad file type");
+   like($im->errstr, qr(^format 'bad' not supported - formats .* available for writing - This module fails to load$),
+	"check error message");
+  }
+}
 
 # check file type probe
 probe_ok("49492A41", undef, "not quite tiff");

@@ -1,6 +1,6 @@
 Imager release history.  Older releases can be found in Changes.old
 
-Imager 0.84 - unreleased
+Imager 0.85 - unreleased
 ===========
 
 Bug fixes:
@@ -8,6 +8,10 @@ Bug fixes:
  - the image file limits set by set_file_limits() weren't being
    checked when reading TIFF files.
    https://rt.cpan.org/Ticket/Display.html?id=69915
+
+ - Provide more information about file format module load errors on a
+   failed image file read() or write().
+   https://rt.cpan.org/Ticket/Display.html?id=69194
 
 Imager 0.84_01 - 8 Aug 2011
 ==============

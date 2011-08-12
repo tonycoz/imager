@@ -268,7 +268,7 @@ SGI/SGI.xs
 SGI/t/00load.t
 SGI/t/10read.t
 SGI/t/20write.t
-SGI/t/30limit.t		Test size limit checking
+SGI/t/30limit.t			Test size limit checking
 SGI/testimg/rle.rgb
 SGI/testimg/rle12.rgb
 SGI/testimg/rle16.rgb
@@ -292,6 +292,7 @@ t/t023palette.t			Test paletted images
 t/t05error.t
 t/t07iolayer.t
 t/t1000files.t			Format independent file tests
+t/t1000lib/Imager/File/BAD.pm	Test failing to load a file handler
 t/t101nojpeg.t			Test handling when jpeg not available
 t/t102nopng.t			Test handling when png not available
 t/t103raw.t
