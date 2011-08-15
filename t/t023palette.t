@@ -1,7 +1,7 @@
 #!perl -w
 # some of this is tested in t01introvert.t too
 use strict;
-use Test::More tests => 128;
+use Test::More tests => 132;
 BEGIN { use_ok("Imager"); }
 
 use Imager::Test qw(image_bounds_checks test_image is_color3 isnt_image);
@@ -352,6 +352,39 @@ cmp_ok(Imager->errstr, '=~', qr/Channels must be positive and <= 4/,
   ok($palim, "convert to mono with error diffusion");
   my $blank = Imager->new(xsize => 10, ysize => 10);
   isnt_image($palim, $blank, "make sure paletted isn't all black");
+}
+
+{ # check validation of palette entries
+  my $im = Imager->new(xsize => 10, ysize => 10, type => 'paletted');
+  $im->addcolors(colors => [ $black, $red ]);
+  {
+    my $no_croak = eval {
+      $im->setscanline(y => 0, type => 'index', pixels => [ 0, 1 ]);
+      1;
+    };
+    ok($no_croak, "valid values don't croak");
+  }
+  {
+    my $no_croak = eval {
+      $im->setscanline(y => 0, type => 'index', pixels => pack("C*", 0, 1));
+      1;
+    };
+    ok($no_croak, "valid values don't croak (packed)");
+  }
+  {
+    my $no_croak = eval {
+      $im->setscanline(y => 0, type => 'index', pixels => [ 2, 255 ]);
+      1;
+    };
+    ok(!$no_croak, "invalid values do croak");
+  }
+  {
+    my $no_croak = eval {
+      $im->setscanline(y => 0, type => 'index', pixels => pack("C*", 2, 255));
+      1;
+    };
+    ok(!$no_croak, "invalid values do croak (packed)");
+  }
 }
 
 Imager->close_log;

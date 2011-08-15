@@ -28,6 +28,19 @@ extern "C" {
 
 #include "imperl.h"
 
+/*
+
+Allocate memory that will be discarded when mortals are discarded.
+
+*/
+
+static void *
+malloc_temp(pTHX_ size_t size) {
+  SV *sv = sv_2mortal(newSV(size));
+
+  return SvPVX(sv);
+}
+
 /* These functions are all shared - then comes platform dependant code */
 static int getstr(void *hv_t,char *key,char **store) {
   dTHX;
@@ -2883,16 +2896,15 @@ i_ppal(im, l, y, ...)
         i_img_dim     y
       PREINIT:
         i_palidx *work;
-        int i;
+        i_img_dim i;
       CODE:
         if (items > 3) {
-          work = mymalloc(sizeof(i_palidx) * (items-3));
+          work = malloc_temp(aTHX_ sizeof(i_palidx) * (items-3));
           for (i=0; i < items-3; ++i) {
             work[i] = SvIV(ST(i+3));
           }
           validate_i_ppal(im, work, items - 3);
           RETVAL = i_ppal(im, l, l+items-3, y, work);
-          myfree(work);
         }
         else {
           RETVAL = 0;
