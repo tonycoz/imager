@@ -768,3 +768,40 @@ SKIP:
      "should succeed - just inside bytes limit");
   Imager->set_file_limits(reset=>1);
 }
+
+{
+  # this image has an IFD loop, which sends some TIFF readers into a
+  # loop, including Corel PhotoPaint and the GIMP's tiff reader.
+  my $ifdloop_hex = <<HEX;
+49 49 2A 00 0A 00 00 00 FE 00 0A 00 00 01 03 00
+01 00 00 00 01 00 00 00 01 01 03 00 01 00 00 00
+01 00 00 00 02 01 03 00 03 00 00 00 88 00 00 00
+03 01 03 00 01 00 00 00 05 80 00 00 06 01 03 00
+01 00 00 00 02 00 00 00 11 01 04 00 01 00 00 00
+08 00 00 00 12 01 03 00 01 00 00 00 01 00 00 00
+15 01 03 00 01 00 00 00 03 00 00 00 17 01 04 00
+01 00 00 00 02 00 00 00 1C 01 03 00 01 00 00 00
+01 00 00 00 90 00 00 00 08 00 08 00 08 00 FE 00
+0A 00 00 01 03 00 01 00 00 00 01 00 00 00 01 01
+03 00 01 00 00 00 01 00 00 00 02 01 03 00 03 00
+00 00 0E 01 00 00 03 01 03 00 01 00 00 00 05 80
+00 00 06 01 03 00 01 00 00 00 02 00 00 00 11 01
+04 00 01 00 00 00 8E 00 00 00 12 01 03 00 01 00
+00 00 01 00 00 00 15 01 03 00 01 00 00 00 03 00
+00 00 17 01 04 00 01 00 00 00 02 00 00 00 1C 01
+03 00 01 00 00 00 01 00 00 00 0A 00 00 00 08 00
+08 00 08 00
+HEX
+  $ifdloop_hex =~ tr/0-9A-F//cd;
+  my $ifdloop = pack("H*", $ifdloop_hex);
+
+  my $im = Imager->new;
+  ok($im->read(data => $ifdloop, type => "tiff", page => 1),
+     "read what should be valid");
+  ok(!$im->read(data => $ifdloop, type => "tiff", page => 2),
+     "third page is after looping back to the start, if this fails, upgrade tifflib")
+    or skip("tifflib is broken", 1);
+  print "# ", $im->errstr, "\n";
+  my @im = Imager->read_multi(type => "tiff", data => $ifdloop);
+  is(@im, 2, "should be only 2 images");
+}

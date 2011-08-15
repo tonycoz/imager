@@ -531,6 +531,7 @@ i_readtiff_wiol(io_glue *ig, int allow_incomplete, int page) {
   TIFFErrorHandler old_handler;
   TIFFErrorHandler old_warn_handler;
   i_img *im;
+  int current_page;
 
   i_clear_error();
   old_handler = TIFFSetErrorHandler(error_handler);
@@ -562,8 +563,8 @@ i_readtiff_wiol(io_glue *ig, int allow_incomplete, int page) {
     return NULL;
   }
 
-  if (page != 0) {
-    if (!TIFFSetDirectory(tif, page)) {
+  for (current_page = 0; current_page < page; ++current_page) {
+    if (!TIFFReadDirectory(tif)) {
       mm_log((1, "i_readtiff_wiol: Unable to switch to directory %d\n", page));
       i_push_errorf(0, "could not switch to page %d", page);
       TIFFSetErrorHandler(old_handler);
@@ -650,7 +651,7 @@ i_readtiff_multi_wiol(io_glue *ig, int *count) {
       }
     }
     results[*count-1] = im;
-  } while (TIFFSetDirectory(tif, ++dirnum));
+  } while (TIFFReadDirectory(tif));
 
   TIFFSetWarningHandler(old_warn_handler);
   TIFFSetErrorHandler(old_handler);
