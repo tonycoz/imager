@@ -35,22 +35,21 @@ flines(void *INP) {
 	  i_DFcp(im->xsize,im->ysize), im->channels);
 
   for(y = 0; y < im->ysize; y ++) {
+    float yf, mf;
+    if (!(y%2)) {
+      yf = y/(double)im->ysize;
+    }
+    else {
+      yf = (im->ysize-y)/(double)im->ysize;
+    }
+    mf = 1.2-0.8*yf;
+
     for(x = 0; x < im->xsize; x ++ ) {
       i_gpix(im,x,y,&vl); 
-			if (!(y%2)) {
-				float yf = y/(double)im->ysize;
-				float mf = 1.2-0.8*yf;
-				vl.rgb.r = saturate(vl.rgb.r*mf);
-				vl.rgb.g = saturate(vl.rgb.g*mf);
-				vl.rgb.b = saturate(vl.rgb.b*mf);
-			} else {
-				float yf = (im->ysize-y)/(double)im->ysize;
-				float mf = 1.2-0.8*yf;
-				vl.rgb.r = saturate(vl.rgb.r*mf);
-				vl.rgb.g = saturate(vl.rgb.g*mf);
-				vl.rgb.b = saturate(vl.rgb.b*mf);
-			} 
-     i_ppix(im,x,y,&vl); 
+      vl.rgb.r = saturate(vl.rgb.r*mf);
+      vl.rgb.g = saturate(vl.rgb.g*mf);
+      vl.rgb.b = saturate(vl.rgb.b*mf);
+      i_ppix(im,x,y,&vl); 
     }
   }
 }

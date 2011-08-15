@@ -25,6 +25,10 @@ Bug fixes:
    CPAN::Meta::YAML are available.
    https://rt.cpan.org/Ticket/Display.html?id=69008
 
+ - hoist the per-line calculations for the flines implementations, and
+   modernize the tests a bit.
+   https://rt.cpan.org/Ticket/Display.html?id=70126
+
 Imager 0.84_01 - 8 Aug 2011
 ==============
 
