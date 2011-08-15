@@ -17,6 +17,14 @@ Bug fixes:
    through TIFF images, since it checks for IFD loops.
    https://rt.cpan.org/Ticket/Display.html?id=69914
 
+ - don't leak memory when out of range palette indexes are supplied to
+   setscanline().
+   https://rt.cpan.org/Ticket/Display.html?id=69242
+
+ - require a later version of CPAN::Meta to ensure JSON::PP and
+   CPAN::Meta::YAML are available.
+   https://rt.cpan.org/Ticket/Display.html?id=69008
+
 Imager 0.84_01 - 8 Aug 2011
 ==============
 
