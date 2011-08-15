@@ -1,12 +1,16 @@
 # $Id: CheckLib.pm,v 1.25 2008/10/27 12:16:23 drhyde Exp $
+# This is a modified version of Devel::CheckLib 0.93 including the patches from
+# RT issues 60176 and 61645
 
 package #
 Devel::CheckLib;
 
+use 5.00405; #postfix foreach
 use strict;
 use vars qw($VERSION @ISA @EXPORT);
-$VERSION = '0.699_002';
-use Config;
+$VERSION = '0.93_001';
+use Config qw(%Config);
+use Text::ParseWords 'quotewords';
 
 use File::Spec;
 use File::Temp;
@@ -210,7 +214,7 @@ sub assert_lib {
     # work-a-like for Makefile.PL's LIBS and INC arguments
     # if given as command-line argument, append to %args
     for my $arg (@ARGV) {
-        for my $mm_attr_key qw(LIBS INC) {
+        for my $mm_attr_key (qw(LIBS INC)) {
             if (my ($mm_attr_value) = $arg =~ /\A $mm_attr_key = (.*)/x) {
             # it is tempting to put some \s* into the expression, but the
             # MM command-line parser only accepts LIBS etc. followed by =,
@@ -219,6 +223,7 @@ sub assert_lib {
             }
         }
     }
+
     # using special form of split to trim whitespace
     if(defined($args{LIBS})) {
         if (ref $args{LIBS}) {
@@ -249,9 +254,9 @@ sub assert_lib {
     my @cc = _findcc();
     my @missing;
     my @wrongresult;
+    my @use_headers;
 
     # first figure out which headers we can't find ...
-    my @use_headers;
     for my $header (@headers) {
         push @use_headers, $header;
         my($ch, $cfile) = File::Temp::tempfile(
@@ -343,7 +348,9 @@ sub assert_lib {
         warn "# @sys_cmd\n" if $args{debug};
         my $rv = $args{debug} ? system(@sys_cmd) : _quiet_system(@sys_cmd);
         push @missing, @$libs if $rv != 0 || ! -x $exefile;
-        push @wrongresult, @$libs if $rv == 0 && -x $exefile && system(File::Spec->rel2abs($exefile)) != 0; 
+        my $absexefile = File::Spec->rel2abs($exefile);
+        $absexefile = '"'.$absexefile.'"' if $absexefile =~ m/\s/;
+        push @wrongresult, @$libs if $rv == 0 && -x $exefile && system($absexefile) != 0;
         _cleanup_exe($exefile);
     } 
     unlink $cfile;
@@ -365,12 +372,15 @@ sub _cleanup_exe {
 }
     
 sub _findcc {
+    # Need to use $keep=1 to work with MSWin32 backslashes and quotes
+    my @Config_ccflags_ldflags =  @Config{qw(ccflags ldflags)};  # use copy so ASPerl will compile
+    my @flags = grep { length } map { quotewords('\s+', 1, $_ || ()) } @Config_ccflags_ldflags;
     my @paths = split(/$Config{path_sep}/, $ENV{PATH});
     my @cc = split(/\s+/, $Config{cc});
-    return @cc if -x $cc[0];
+    return (@cc, @flags) if -x $cc[0];
     foreach my $path (@paths) {
         my $compiler = File::Spec->catfile($path, $cc[0]) . $Config{_exe};
-        return ($compiler, @cc[1 .. $#cc]) if -x $compiler;
+        return ($compiler, @cc[1 .. $#cc], @flags) if -x $compiler;
     }
     die("Couldn't find your C compiler\n");
 }
@@ -459,10 +469,14 @@ David Cantrell E<lt>david@cantrell.org.ukE<gt>
 
 David Golden E<lt>dagolden@cpan.orgE<gt>
 
+Yasuhiro Matsumoto E<lt>mattn@cpan.orgE<gt>
+
 Thanks to the cpan-testers-discuss mailing list for prompting us to write it
 in the first place;
 
-to Chris Williams for help with Borland support.
+to Chris Williams for help with Borland support;
+
+to Tony Cook for help with Microsoft compiler command-line options
 
 =head1 COPYRIGHT and LICENCE
 
