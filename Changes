@@ -13,6 +13,10 @@ Bug fixes:
    failed image file read() or write().
    https://rt.cpan.org/Ticket/Display.html?id=69194
 
+ - use TIFFReadDirectory() instead of TIFFSetDirectory() to iterate
+   through TIFF images, since it checks for IFD loops.
+   https://rt.cpan.org/Ticket/Display.html?id=69914
+
 Imager 0.84_01 - 8 Aug 2011
 ==============
 
