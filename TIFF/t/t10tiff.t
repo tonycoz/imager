@@ -1,6 +1,6 @@
 #!perl -w
 use strict;
-use Test::More tests => 232;
+use Test::More tests => 235;
 use Imager qw(:all);
 use Imager::Test qw(is_image is_image_similar test_image test_image_16 test_image_double test_image_raw);
 
