@@ -215,6 +215,7 @@ if ($MM_ver >= 6.46) {
        "JPEG",
        "W32",
        "FT2",
+       "T1",
       ],
      },
      resources =>
@@ -330,46 +331,6 @@ sub automatic {
     delete $formats{$frm} if !checkformat($frm);	
   }
 }
-
-
-# sub gifcheck {
-#   if ($formats{'gif'} and $formats{'ungif'}) {
-#     print "ungif and gif can not coexist - removing ungif support\n";
-#     delete $formats{'ungif'};
-#   }
-
-#   for my $frm (qw(gif ungif)) {
-#     checkformat($frm) if ($MANUAL and $formats{$frm});
-#   }
-
-#   my @dirs;
-#   for my $frm (grep $formats{$_}, qw(gif ungif)) {
-#     push(@dirs, @{$formats{$frm}{incdir}}) if $formats{$frm}{incdir};
-#   }
-#   my $minor = 0;
-#   my $major = 0;
-#   FILES: for my $dir (@dirs) {
-#     my $h = "$dir/gif_lib.h";
-#     open H, "< $h" or next;
-#     while (<H>) {
-#       if (/GIF_LIB_VERSION\s+"\s*version\s*(\d+)\.(\d+)/i) {
-# 	$major = $1;
-# 	$minor = $2;
-# 	close H;
-# 	last FILES;
-#       }
-#     }
-#     close H;
-#   }
-
-#   # we need the version in a #ifdefable form
-
-#   push @defines, [ IM_GIFMAJOR => $major, "Parsed giflib version" ];
-#   push @defines, [ IM_GIFMINOR => $minor ];
-#   push @defines, [ IM_NO_SET_GIF_VERSION => 1, "Disable EGifSetGifVersion" ]
-#     if $no_gif_set_version;
-# }
-
 
 sub grep_directory {
   my($path, $chk)=@_;
@@ -540,88 +501,6 @@ sub init {
   }
   push @libs, grep -d, qw(/usr/local/lib);
 
-#   $formats{'jpeg'}={
-# 		    order=>'21',
-# 		    def=>'HAVE_LIBJPEG',
-# 		    inccheck=>sub { -e catfile($_[0], 'jpeglib.h') },
-# 		    libcheck=>sub { $_[0] eq "libjpeg$aext" or $_ eq "libjpeg.$lext" },
-# 		    libfiles=>'-ljpeg',
-# 		    objfiles=>'jpeg.o',
-# 		    docs=>q{
-# 			    In order to use jpeg with this module you need to have libjpeg
-# 			    installed on your computer}
-# 		   };
-
-#   $formats{'tiff'}={
-# 		    order=>'23',
-# 		    def=>'HAVE_LIBTIFF',
-# 		    inccheck=>sub { -e catfile($_[0], 'tiffio.h') },
-# 		    libcheck=>sub { $_[0] eq "libtiff$aext" or $_ eq "libtiff.$lext" },
-# 		    libfiles=>'-ltiff',
-# 		    objfiles=>'tiff.o',
-# 		    docs=>q{
-# 			    In order to use tiff with this module you need to have libtiff
-# 			    installed on your computer},
-# 		    postcheck => \&postcheck_tiff,
-# 		   };
-
-#   $formats{'png'}={
-# 		   order=>'22',
-# 		   def=>'HAVE_LIBPNG',
-# 		   inccheck=>sub { -e catfile($_[0], 'png.h') },
-# 		   libcheck=>sub { $_[0] eq "libpng$aext" or $_[0] eq "libpng.$lext" },
-# 		   libfiles=>$^O eq 'MSWin32' ? '-lpng -lzlib' : '-lpng -lz',
-# 		   objfiles=>'png.o',
-# 		   docs=>q{
-# 			   Png stands for Portable Network Graphics and is intended as
-# 			   a replacement for gif on the web. It is patent free and
-# 			   is recommended by the w3c, you need libpng to use these formats},
-#                    code => \&png_probe,
-# 		  };
-
-#   $formats{'gif'}={
-# 		   order=>'20',
-# 		   def=>'HAVE_LIBGIF',
-# 		   inccheck=>sub { -e catfile($_[0], 'gif_lib.h') },
-# 		   libcheck=>sub { $_[0] eq "libgif$aext" or $_[0] eq "libgif.$lext" },
-# 		   libfiles=>'-lgif',
-# 		   objfiles=>'gif.o',
-# 		   docs=>q{
-# 			   gif is the de facto standard for webgraphics at the moment,
-# 			   it does have some patent problems. If you have giflib and
-# 			   are not in violation with the unisys patent you should use
-# 			   this instead of the 'ungif' option.  Note that they cannot
-# 			   be in use at the same time}
-# 		  };
-
-#   $formats{'ungif'}={
-# 		     order=>'21',
-# 		     def=>'HAVE_LIBGIF',
-# 		     inccheck=>sub { -e catfile($_[0], 'gif_lib.h') },
-# 		     libcheck=>sub { $_[0] eq "libungif$aext" or $_[0] eq "libungif.$lext" },
-# 		     libfiles=>'-lungif',
-# 		     objfiles=>'gif.o',
-# 		     docs=>q{
-# 			     gif is the de facto standard for webgraphics at the moment,
-# 			     it does have some patent problems. If you have libungif and
-# 			     want to create images free from LZW patented compression you
-# 			     should use this option instead of the 'gif' option}
-# 		    };
-
-#   $formats{'T1-fonts'}={
-# 			order=>'30',
-# 			def=>'HAVE_LIBT1',
-# 			inccheck=>sub { -e catfile($_[0], 't1lib.h') },
-# 			libcheck=>sub { $_[0] eq "libt1$aext" or $_[0] eq "libt1.$lext" },
-# 			libfiles=>'-lt1',
-# 			objfiles=>'',
-# 			docs=>q{
-# 				postscript t1 fonts are scalable fonts. They can include 
-# 				ligatures and kerning information and generally yield good
-# 				visual quality. We depend on libt1 to rasterize the fonts
-# 				for use in images.}
-# 		       };
-
   $formats{'TT-fonts'}=
     {
      order=>'31',
@@ -639,40 +518,6 @@ visual quality esp on low resultions. The freetype library is
 used to rasterize for us. The only drawback is that there
 are alot of badly designed fonts out there.}
 		       };
-#   $formats{'w32'} = {
-# 		     order=>40,
-# 		     def=>'HAVE_WIN32',
-# 		     inccheck=>sub { -e catfile($_[0], 'windows.h') },
-# 		     libcheck=>sub { lc $_[0] eq 'gdi32.lib' 
-# 				       || lc $_[0] eq 'libgdi32.a' },
-# 		     libfiles=>$^O eq 'cygwin' ? '-lgdi32' : '',
-# 		     objfiles=>'win32.o',
-# 		     docs => <<DOCS
-# Uses the Win32 GDI for rendering text.
-
-# This currently only works on under normal Win32 and cygwin.
-# DOCS
-# 		    };
-#   $formats{'freetype2'} = 
-#   {
-#    order=>'29',
-#    def=>'HAVE_FT2',
-#    # we always use a probe function
-#    #inccheck=>sub { -e catfile($_[0], 'ft2build.h') },
-#    #libcheck=>sub { $_[0] eq "libfreetype$aext" or $_[0] eq "libfreetype.$lext" },
-#    libfiles=>'-lfreetype',
-#    objfiles=>'freetyp2.o',
-#    docs=><<DOCS,
-# Freetype 2 supports both Truetype and Type 1 fonts, both of which are
-# scalable.  It also supports a variety of other fonts.
-# DOCS
-#    code =>
-#    [ 
-#     \&freetype2_probe_ftconfig,
-#     \&freetype2_probe_scan
-#    ],
-#   };
-
   # Make fix indent
   for (keys %formats) { $formats{$_}->{docs} =~ s/^\s+/  /mg; }
 }
@@ -761,18 +606,6 @@ EOS
   close CONFIG;
 }
 
-# # use pkg-config to probe for libraries
-# # works around the junk that pkg-config dumps on FreeBSD
-# sub _pkg_probe {
-#   my ($pkg) = @_;
-
-#   is_exe('pkg-config') or return;
-
-#   my $redir = $^O eq 'MSWin32' ? '' : '2>/dev/null';
-
-#   !system("pkg-config $pkg --exists $redir");
-# }
-
 # probes for freetype1 by scanning @incs for the includes and 
 # @libs for the libs.  This is done separately because freetype's headers
 # are stored in a freetype or freetype1 directory under PREFIX/include.
@@ -821,174 +654,9 @@ sub freetype1_probe {
   return 1;
 }
 
-# probes for freetype2 by trying to run freetype-config
-# sub freetype2_probe_ftconfig {
-#   my ($frm, $frmkey) = @_;
-
-#   is_exe('freetype-config') or return;
-
-#   my $cflags = `freetype-config --cflags`
-#     and !$? or return;
-#   chomp $cflags;
-
-#   my $lflags = `freetype-config --libs`
-#     and !$? or return;
-#   chomp $lflags;
-
-#   # before 2.1.5 freetype-config --cflags could output
-#   # the -I options in the wrong order, causing a conflict with
-#   # freetype1.x installed with the same --prefix
-#   #
-#   # can happen iff:
-#   #  - both -Iprefix/include and -Iprefix/include/freetype2 are in cflags
-#   #    in that order
-#   #  - freetype 1.x headers are in prefix/include/freetype
-#   my @incdirs = map substr($_, 2), grep /^-I/, split ' ', $cflags;
-#   if (@incdirs == 2 
-#       && $incdirs[1] eq "$incdirs[0]/freetype2"
-#       && -e "$incdirs[0]/freetype/freetype.h"
-#       && -e "$incdirs[0]/freetype/fterrid.h") {
-#     print "** freetype-config provided -I options out of order, correcting\n"
-#       if $VERBOSE;
-#     $cflags = join(' ', grep(!/-I/, split ' ', $cflags),
-# 		   map "-I$_", reverse @incdirs);
-#   }
-#   $frm->{cflags} = $cflags;
-#   $frm->{lflags} = $lflags;
-
-#   printf "%10s: configured via freetype-config\n", $frmkey;
-
-#   return 1;
-# }
-
-# attempt to probe for freetype2 by scanning directories
-# we can't use the normal scan since we need to find the directory
-# containing most of the includes
-# sub freetype2_probe_scan {
-#   my ($frm, $frmkey) = @_;
-
-#   my $found_inc;
-#   my $found_inc2;
-#  INCS:
-#   for my $inc (@incs) {
-#     my $path = File::Spec->catfile($inc, 'ft2build.h');
-#     -e $path or next;
-
-#     # try to find what it's including
-#     my $ftheader;
-#     open FT2BUILD, "< $path"
-#       or next;
-#     while (<FT2BUILD>) {
-#       if (m!^\s*\#\s*include\s+<([\w/.]+)>!
-# 	  || m!^\s*\#\s*include\s+"([\w/.]+)"!) {
-# 	$ftheader = $1;
-# 	last;
-#       }
-#     }
-#     close FT2BUILD;
-#     $ftheader
-#       or next;
-#     # non-Unix installs put this directly under the same directory in
-#     # theory
-#     if (-e File::Spec->catfile($inc, $ftheader)) {
-#       $found_inc = $inc;
-#       last INCS;
-#     }
-#     for my $subdir (qw/freetype2 freetype/) {
-#       $path = File::Spec->catfile($inc, $subdir, 'fterrors.h');
-#       -e $path and next;
-
-#       $found_inc = $inc;
-#       $found_inc2 = File::Spec->catdir($inc, $subdir);
-#       last INCS;
-#     }
-#   }
-
-#   my $found_lib;
-#  LIBS:
-#   for my $lib (@libs) {
-#     my $a_path = File::Spec->catfile($lib, "libfreetype$aext");
-#     my $l_path = File::Spec->catfile($lib, "libfreetype.$lext");
-#     if (-e $a_path || -e $l_path) {
-#       $found_lib = $lib;
-#       last LIBS;
-#     }
-#   }
-
-#   printf("%10s: includes %s - libraries %s\n", $frmkey,
-# 	 ($found_inc ? 'found' : 'not found'), 
-# 	 ($found_lib ? 'found' : 'not found'));
-
-#   return unless $found_inc && $found_lib;
-
-#   $frm->{cflags} = _make_I($found_inc);
-#   $frm->{cflags} .= " " . _make_I($found_inc2) if $found_inc2;
-#   $frm->{libfiles} = "-lfreetype";
-
-#   return 1;
-# }
-
-sub _make_I {
-  my ($inc_dir) = @_;
-
-  $definc{$inc_dir}
-    and return '';
-
-  $inc_dir =~ / / ? qq!-I"$inc_dir"! : "-I$inc_dir";
-}
-
-# probes for libpng via pkg-config
-# sub png_probe {
-#   my ($frm, $frmkey) = @_;
-
-#   is_exe('pkg-config') or return;
-
-#   my $config;
-#   for my $check_conf (qw(libpng libpng12 libpng10)) {
-#     if (_pkg_probe($check_conf)) {
-#       $config = $check_conf;
-#       last;
-#     }
-#   }
-#   $config or return;
-
-#   my $cflags = `pkg-config $config --cflags`
-#     and !$? or return;
-
-#   my $lflags = `pkg-config $config --libs`
-#     and !$? or return;
-
-#   chomp $cflags;
-#   chomp $lflags;
-#   $frm->{cflags} = $cflags;
-#   $frm->{lflags} = $lflags;
-
-#   printf "%10s: configured via `pkg-config $config ...`\n", $frmkey;
-
-#   return 1;
-# }
-
 sub catfile {
   return File::Spec->catfile(@_);
 }
-
-# sub is_exe {
-#   my ($name) = @_;
-
-#   my @exe_suffix = $Config{_exe};
-#   if ($^O eq 'MSWin32') {
-#     push @exe_suffix, qw/.bat .cmd/;
-#   }
-
-#   for my $dir (File::Spec->path) {
-#     for my $suffix (@exe_suffix) {
-#       -x catfile($dir, "$name$suffix")
-# 	and return 1;
-#     }
-#   }
-
-#   return;
-# }
 
 sub usage {
   print STDERR <<EOS;
@@ -996,7 +664,7 @@ Usage: $0 [--enable feature1,feature2,...] [other options]
        $0 [--disable feature1,feature2,...]  [other options]
        $0 --help
 Possible feature names are:
-  T1-fonts TT-fonts freetype2
+  T1-fonts
 Other options:
   --verbose | -v
     Verbose library probing (or set IM_VERBOSE in the environment)
@@ -1070,89 +738,5 @@ sub _tilde_expand {
 
   $path;
 }
-
-# sub postcheck_tiff {
-#   my ($format, $frm) = @_;
-
-#   -d "probe" or mkdir "probe";
-
-#   my $tiffver_name = "probe/tiffver.txt";
-
-#   my $lib;
-#   if ($Config{cc} =~ /\b(cl|bcc)\b/) {
-#     $lib = "libtiff";
-#   }
-#   else {
-#     $lib = "tiff";
-#   }
-
-#   # setup LD_RUN_PATH to match link time
-#   my $lopts = join " " , map("-L$_", @{$format->{libdir}}), " -ltiff";
-#   my ($extra, $bs_load, $ld_load, $ld_run_path) =
-#     ExtUtils::Liblist->ext($lopts, $VERBOSE);
-#   local $ENV{LD_RUN_PATH};
-
-#   if ($ld_run_path) {
-#     print "Setting LD_RUN_PATH=$ld_run_path for TIFF probe\n" if $VERBOSE;
-#     $ENV{LD_RUN_PATH} = $ld_run_path;
-#   }
-
-#   my $good =
-#     eval {
-#       assert_lib
-# 	(
-# 	 debug => $VERBOSE,
-# 	 incpath => $format->{incdir},
-# 	 libpath => $format->{libdir},
-# 	 lib => $lib,
-# 	 header => [ qw(stdio.h tiffio.h) ],
-# 	 function => <<FUNCTION,
-#   {
-#     const char *vers = TIFFGetVersion();
-#     FILE *f = fopen("$tiffver_name", "wb");
-#     if (!f)
-#       return 1;
-#     fputs(vers, f);
-#     if (fclose(f))
-#       return 1;
-#     return 0;
-#   }
-# FUNCTION
-# 	);
-#       1;
-#     };
-
-#   unless ($good && -s $tiffver_name
-# 	  && open(VERS, "< $tiffver_name")) {
-#     unlink $tiffver_name unless $KEEP_FILES;
-#     print <<EOS;
-#     **tiff: cannot determine libtiff version number
-#       tiff: DISABLED
-# EOS
-#     return;
-#   }
-
-#   # version file seems to be there, load it up
-#   my $ver_str = do { local $/; <VERS> };
-#   close VERS;
-#   unlink $tiffver_name unless $KEEP_FILES;
-
-#   my ($version) = $ver_str =~ /(\d+\.\d+\.\d+)/;
-
-#   if ($version eq '3.9.0') {
-#     print <<EOS;
-#     **tiff: libtiff 3.9.0 introduced a serious bug, please install 3.9.1
-#       tiff: DISABLED
-# EOS
-#     return;
-#   }
-
-#   return 1;
-# }
-
-# This isn't a module, but some broken tools, like
-# Module::Depends::Instrusive insist on treating it like one.
-#
-# http://rt.cpan.org/Public/Bug/Display.html?id=21229
 
 1;
