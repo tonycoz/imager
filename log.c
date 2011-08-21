@@ -104,7 +104,11 @@ i_lhead(const char *file, int line) {
     timi = time(NULL);
     str_tm = localtime(&timi);
     strftime(date_buffer, DTBUFF, date_format, str_tm);
+#ifdef IMAGER_SNPRINTF
+    snprintf(data_buffer, sizeof(data_buffer), "[%s] %10s:%-5d ", date_buffer, file, line);
+#else
     sprintf(data_buffer, "[%s] %10s:%-5d ", date_buffer, file, line);
+#endif
   }
 }
 

@@ -29,6 +29,10 @@ Bug fixes:
    modernize the tests a bit.
    https://rt.cpan.org/Ticket/Display.html?id=70126
 
+ - detect snprintf()/vsnprintf() (cheat by using Config.pm) and use
+   them when available.
+   https://rt.cpan.org/Ticket/Display.html?id=69147
+
 Imager 0.84_01 - 8 Aug 2011
 ==============
 

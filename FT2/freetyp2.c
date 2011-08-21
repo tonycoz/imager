@@ -897,14 +897,22 @@ Pushes an error message corresponding to code onto the error stack.
 
 =cut
 */
-static void ft2_push_message(int code) {
+
+#define UNKNOWN_ERROR_FORMAT "Unknown Freetype2 error code 0x%04X"
+
+static void
+ft2_push_message(int code) {
   char unknown[40];
 
   switch (code) {
 #include FT_ERRORS_H
   }
 
-  sprintf(unknown, "Unknown Freetype2 error code 0x%04X\n", code);
+#ifdef IMAGER_SNPRINTF
+  snprintf(unknown, sizeof(unknown), UNKNOWN_ERROR_FORMAT, code);
+#else
+  sprintf(unknown, UNKNOWN_ERROR_FORMAT, code);
+#endif
   i_push_error(code, unknown);
 }
 

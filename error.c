@@ -260,7 +260,9 @@ Does not support perl specific format codes.
 */
 void i_push_errorvf(int code, char const *fmt, va_list ap) {
   char buf[1024];
-#if defined(_MSC_VER)
+#if defined(IMAGER_VSNPRINTF)
+  vsnprintf(buf, sizeof(buf), fmt, ap);
+#elif defined(_MSC_VER)
   _vsnprintf(buf, sizeof(buf), fmt, ap);
 #else
   /* is there a way to detect vsnprintf()? 

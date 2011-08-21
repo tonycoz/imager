@@ -1037,7 +1037,11 @@ static int do_comments(GifFileType *gf, i_img *img) {
     }
     else {
       char buf[50];
+#ifdef IMAGER_SNPRINTF
+      snprintf(buf, sizeof(buf), "%d", img->tags.tags[pos].idata);
+#else
       sprintf(buf, "%d", img->tags.tags[pos].idata);
+#endif
       if (EGifPutComment(gf, buf) == GIF_ERROR) {
         return 0;
       }
@@ -1887,7 +1891,11 @@ static char const *gif_error_msg(int code) {
     return "Unexpected EOF - invalid file";
 
   default:
+#ifdef IMAGER_SNPRINTF
+    snprintf(msg, sizeof(msg), "Unknown giflib error code %d", code);
+#else
     sprintf(msg, "Unknown giflib error code %d", code);
+#endif
     return msg;
   }
 }

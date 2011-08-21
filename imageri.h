@@ -53,12 +53,6 @@ extern void i_get_combine(int combine, i_fill_combine_f *, i_fill_combinef_f *);
 
 extern UTIL_table_t i_UTIL_table;
 
-/* Ideally this will move into imconfig.h if we ever probe */
-#if defined(_GNU_SOURCE) || __STDC_VERSION__ >= 199901L
-/* snprintf() is part of C99 and provided by Glibc */
-#define HAVE_SNPRINTF
-#endif
-
 /* test if all channels are writable */
 #define I_ALL_CHANNELS_WRITABLE(im) (((im)->ch_mask & 0xF) == 0xf)
 

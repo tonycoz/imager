@@ -592,6 +592,22 @@ Compiler supports the GCC __attribute__((format...)) syntax.
 EOS
   }
 
+  if ($Config{d_snprintf}) {
+    print CONFIG <<EOS;
+/* We can use snprintf() */
+#define IMAGER_SNPRINTF 1
+
+EOS
+  }
+
+  if ($Config{d_vsnprintf}) {
+    print CONFIG <<EOS;
+/* We can use vsnprintf() */
+#define IMAGER_VSNPRINTF 1
+
+EOS
+  }
+
   print CONFIG <<EOS;
 /*
  Type and format code for formatted output as with printf.

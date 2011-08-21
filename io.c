@@ -69,7 +69,12 @@ set_entry(int i, char *buf, size_t size, char *file, int line) {
   buf += UNDRRNVAL;
   malloc_pointers[i].ptr  = buf;
   malloc_pointers[i].size = size;
+#ifdef IMAGER_SNPRINTF
+  snprintf(malloc_pointers[i].comm, sizeof(malloc_pointers[i].comm), 
+	   "%s (%d)", file, line);
+#else
   sprintf(malloc_pointers[i].comm,"%s (%d)", file, line);
+#endif
   return buf;
 }
 

@@ -1299,14 +1299,26 @@ copy_num_array_tags(i_img *im, imtiff *tiff, tag_map *map, int map_count) {
 	  double value;
 	  char workstr[MAX_ARRAY_STRING];
 	  *workstr = '\0';
+	  size_t len = 0, item_len;
 	  for (j = 0; j < entry->count; ++j) {
 	    if (!tiff_get_tag_double_array(tiff, tag_index, &value, j)) {
 	      mm_log((3, "unexpected failure from tiff_get_tag_double_array(..., %d, ..., %d)\n", tag_index, j));
 	      return;
 	    }
-	    if (j) 
+	    if (len >= sizeof(workstr) - 1) {
+	      mm_log((3, "Buffer would overflow reading tag %#x\n", entry->tag));
+	      return;
+	    }
+	    if (j) {
 	      strcat(workstr, " ");
-	    sprintf(workstr + strlen(workstr), "%.6g", value);
+	      ++len;
+	    }
+#ifdef IMAGER_SNPRINTF
+	    item_len = snprintf(workstr + len, sizeof(workstr)-len, "%.6g", value);
+#else
+	    item_len = sprintf(workstr + len, "%.6g", value);
+#endif
+	    len += item_len;
 	  }
 	  i_tags_set(&im->tags, map[i].name, workstr, -1);
 	}
@@ -1315,15 +1327,27 @@ copy_num_array_tags(i_img *im, imtiff *tiff, tag_map *map, int map_count) {
 		 || entry->type == ift_byte) {
 	  int value;
 	  char workstr[MAX_ARRAY_STRING];
+	  size_t len = 0, item_len;
 	  *workstr = '\0';
 	  for (j = 0; j < entry->count; ++j) {
 	    if (!tiff_get_tag_int_array(tiff, tag_index, &value, j)) {
 	      mm_log((3, "unexpected failure from tiff_get_tag_int_array(..., %d, ..., %d)\n", tag_index, j));
 	      return;
 	    }
-	    if (j) 
+	    if (len >= sizeof(workstr) - 1) {
+	      mm_log((3, "Buffer would overflow reading tag %#x\n", entry->tag));
+	      return;
+	    }
+	    if (j) {
 	      strcat(workstr, " ");
-	    sprintf(workstr + strlen(workstr), "%d", value);
+	      ++len;
+	    }
+#ifdef IMAGER_SNPRINTF
+	    item_len = snprintf(workstr + len, sizeof(workstr) - len, "%d", value);
+#else
+	    item_len = sprintf(workstr + len, "%d", value);
+#endif
+	    len += item_len;
 	  }
 	  i_tags_set(&im->tags, map[i].name, workstr, -1);
 	}

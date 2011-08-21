@@ -184,7 +184,7 @@ static void warn_handler(char const *module, char const *fmt, va_list ap) {
   char buf[1000];
 
   buf[0] = '\0';
-#ifdef HAVE_SNPRINTF
+#ifdef IMAGER_VSNPRINTF
   vsnprintf(buf, sizeof(buf), fmt, ap);
 #else
   vsprintf(buf, fmt, ap);
