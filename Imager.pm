@@ -459,19 +459,26 @@ sub init_log {
 
 sub init {
   my %parms=(loglevel=>1,@_);
-  if ($parms{'log'}) {
-    Imager->open_log(log => $parms{log}, level => $parms{loglevel});
-  }
 
   if (exists $parms{'warn_obsolete'}) {
     $warn_obsolete = $parms{'warn_obsolete'};
   }
 
+  if ($parms{'log'}) {
+    Imager->open_log(log => $parms{log}, level => $parms{loglevel})
+      or return;
+  }
+
   if (exists $parms{'t1log'}) {
     if ($formats{t1}) {
-      Imager::Font::T1::i_init_t1($parms{'t1log'});
+      if (Imager::Font::T1::i_init_t1($parms{'t1log'})) {
+	Imager->_set_error(Imager->_error_as_msg);
+	return;
+      }
     }
   }
+
+  return 1;
 }
 
 {

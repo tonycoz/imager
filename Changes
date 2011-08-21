@@ -33,6 +33,10 @@ Bug fixes:
    them when available.
    https://rt.cpan.org/Ticket/Display.html?id=69147
 
+ - if t1lib failed to reinitialize it would be left as marked
+   initialized.
+   https://rt.cpan.org/Ticket/Display.html?id=69877
+
 Imager 0.84_01 - 8 Aug 2011
 ==============
 

@@ -34,6 +34,7 @@ i_init_t1(int t1log) {
 
   if (t1_initialized) {
     T1_CloseLib();
+    t1_initialized = 0;
   }
   
   if (t1log)
