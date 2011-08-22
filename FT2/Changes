@@ -1,3 +1,17 @@
+Imager-Font-FT2 0.82
+====================
+
+ - update the bundled (and still modified) Devel::CheckLib
+   https://rt.cpan.org/Ticket/Display.html?id=69170
+
+ - use snprintf() when imconfig.h indicates it's available
+   https://rt.cpan.org/Ticket/Display.html?id=69147
+
+Imager-Font-FT2 0.81
+====================
+
+ - the big types cleanup
+
 Imager-Font-FT2 0.78
 ====================
 

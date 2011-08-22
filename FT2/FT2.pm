@@ -5,7 +5,7 @@ use vars qw($VERSION @ISA);
 @ISA = qw(Imager::Font);
 
 BEGIN {
-  $VERSION = "0.81";
+  $VERSION = "0.82";
 
   eval {
     require XSLoader;

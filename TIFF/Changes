@@ -1,7 +1,18 @@
-Imager-File-TIFF 0.80
+Imager-File-TIFF 0.81
 =====================
 
  - check image file limits set by set_file_limits()
+
+ - use TIFFReadDirectory() instead of TIFFSetDirectory() to step
+   through IFDs, since that handles IFD loops.
+
+ - update the bundled (and still modified) Devel::CheckLib
+   https://rt.cpan.org/Ticket/Display.html?id=69170
+
+Imager-File-TIFF 0.80
+=====================
+
+ - the big types cleanup
 
 Imager-File-TIFF 0.79
 =====================

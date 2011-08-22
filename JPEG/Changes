@@ -1,3 +1,19 @@
+Imager-File-JPEG 0.81
+=====================
+
+ - update the bundled (and still modified) Devel::CheckLib
+   https://rt.cpan.org/Ticket/Display.html?id=69170
+
+ - use snprintf() when imconfig.h indicates it's available
+   https://rt.cpan.org/Ticket/Display.html?id=69147
+
+Imager-File-JPEG 0.80
+=====================
+
+ - the big types cleanup
+
+ - fail writing an image that is too large for JPEG to support.
+
 Imager-File-JPEG 0.79
 =====================
 
