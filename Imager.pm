@@ -4390,7 +4390,7 @@ getcolorusagehash() - L<Imager::ImageTypes/getcolorusagehash()>
 
 get_file_limits() - L<Imager::Files/"Limiting the sizes of images you read">
 
-getheight() - L<Imager::ImageTypes/getwidth()> - height of the image in
+getheight() - L<Imager::ImageTypes/getheight()> - height of the image in
 pixels
 
 getmask() - L<Imager::ImageTypes/getmask()> - write mask for the image
