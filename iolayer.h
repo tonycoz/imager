@@ -4,10 +4,9 @@
 
 /* How the IO layer works:
  * 
- * Start by getting an io_glue object.  Then define its
- * datasource via io_obj_setp_buffer or io_obj_setp_cb.  Before
- * using the io_glue object be sure to call io_glue_commit_types().
- * After that data can be read via the io_glue->readcb() method.
+ * Start by getting an io_glue object by calling the appropriate
+ * io_new...() function.  After that data can be read via the
+ * io_glue->readcb() method.
  *
  */
 
@@ -20,7 +19,6 @@
 #define IO_TEMP_SEEK 1<<1L
 
 
-void io_glue_commit_types(io_glue *ig);
 void io_glue_gettypes    (io_glue *ig, int reqmeth);
 
 /* XS functions */

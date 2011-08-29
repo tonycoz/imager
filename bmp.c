@@ -76,7 +76,6 @@ Never compresses the image.
 */
 int
 i_writebmp_wiol(i_img *im, io_glue *ig) {
-  io_glue_commit_types(ig);
   i_clear_error();
 
   /* pick a format */
@@ -120,7 +119,6 @@ i_readbmp_wiol(io_glue *ig, int allow_incomplete) {
 
   mm_log((1, "i_readbmp_wiol(ig %p)\n", ig));
   
-  io_glue_commit_types(ig);
   i_clear_error();
 
   if (!read_packed(ig, "CCVvvVVV!V!vvVVVVVV", &b_magic, &m_magic, &filesize, 

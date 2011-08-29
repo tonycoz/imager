@@ -70,7 +70,6 @@ i_readraw_wiol(io_glue *ig, i_img_dim x, i_img_dim y, int datachannels, int stor
 
   i_clear_error();
   
-  io_glue_commit_types(ig);
   mm_log((1, "i_readraw(ig %p,x %" i_DF ",y %" i_DF ",datachannels %d,storechannels %d,intrl %d)\n",
 	  ig, i_DFc(x), i_DFc(y), datachannels, storechannels, intrl));
 
@@ -136,7 +135,6 @@ undef_int
 i_writeraw_wiol(i_img* im, io_glue *ig) {
   ssize_t rc;
 
-  io_glue_commit_types(ig);
   i_clear_error();
   mm_log((1,"writeraw(im %p,ig %p)\n", im, ig));
   

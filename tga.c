@@ -641,8 +641,6 @@ i_readtga_wiol(io_glue *ig, int length) {
 
   mm_log((1,"i_readtga(ig %p, length %d)\n", ig, length));
   
-  io_glue_commit_types(ig);
-
   if (ig->readcb(ig, &headbuf, 18) != 18) {
     i_push_error(errno, "could not read targa header");
     return NULL;

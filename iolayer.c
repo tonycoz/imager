@@ -76,7 +76,7 @@ iolayer.c - encapsulates different source of data into a single framework.
 
   io_glue *ig = io_new_fd( fileno(stdin) );
   method = io_reqmeth( IOL_NOSEEK | IOL_MMAP ); // not implemented yet
-  io_glue_commit_types(ig);                     // always assume IOL_SEEK for now
+
   switch (method) {
   case IOL_NOSEEK:
     code that uses ig->readcb()
@@ -835,57 +835,6 @@ io_obj_setp_cb2(io_obj *io, void *p, i_io_readl_t readcb, i_io_writel_t writecb,
   io->cb.closecb   = closecb;
   io->cb.destroycb = destroycb;
 }
-
-/*
-=item io_glue_commit_types(ig)
-
-This is now effectively a no-op.
-
-=cut
-*/
-
-void
-io_glue_commit_types(io_glue *ig) {
-  io_type      inn = ig->source.type;
-
-  mm_log((1, "io_glue_commit_types(ig %p)\n", ig));
-  mm_log((1, "io_glue_commit_types: source type %d (%s)\n", inn, io_type_names[inn]));
-
-  if (ig->flags & 0x01) {
-    mm_log((1, "io_glue_commit_types: type already set up\n"));
-    return;
-  }
-
-  ig->flags |= 0x01; /* indicate source has been setup already */
-}
-
-/*
-=item io_glue_gettypes(ig, reqmeth)
-
-Returns a set of compatible interfaces to read data with.
-
-  ig      - io_glue object
-  reqmeth - request mask
-
-The request mask is a bit mask (of something that hasn't been implemented yet)
-of interfaces that it would like to read data from the source which the ig
-describes.
-
-=cut
-*/
-
-void
-io_glue_gettypes(io_glue *ig, int reqmeth) {
-
-  ig = NULL;
-  reqmeth = 0;
-  
-  /* FIXME: Implement this function! */
-  /* if (ig->source.type = 
-     if (reqmeth & IO_BUFF) */ 
-
-}
-
 
 /*
 =item io_new_bufchain()

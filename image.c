@@ -1801,7 +1801,6 @@ i_test_format_probe(io_glue *data, int length) {
   unsigned char head[18];
   ssize_t rc;
 
-  io_glue_commit_types(data);
   rc = data->readcb(data, head, 18);
   if (rc == -1) return NULL;
   data->seekcb(data, -rc, SEEK_CUR);

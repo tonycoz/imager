@@ -537,7 +537,7 @@ static i_img *i_readpnm_wiol_low( mbuf*, int);
 i_img *
 i_readpnm_wiol(io_glue *ig, int allow_incomplete) {
   mbuf buf;
-  io_glue_commit_types(ig);
+
   init_buf(&buf, ig);
 
   return i_readpnm_wiol_low( &buf, allow_incomplete );
@@ -731,7 +731,6 @@ i_img **i_readpnm_multi_wiol(io_glue *ig, int *count, int allow_incomplete) {
         value = 0, 
         eof = 0;
     *count=0;
-    io_glue_commit_types(ig);
     init_buf(&buf, ig);
     do {
         mm_log((1, "read image %i\n", 1+*count));
@@ -892,8 +891,6 @@ i_writeppm_wiol(i_img *im, io_glue *ig) {
 
   /* Add code to get the filename info from the iolayer */
   /* Also add code to check for mmapped code */
-
-  io_glue_commit_types(ig);
 
   if (i_img_is_monochrome(im, &zero_is_white)) {
     return write_pbm(im, ig, zero_is_white);
