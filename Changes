@@ -1,7 +1,15 @@
 Imager release history.  Older releases can be found in Changes.old
 
-Imager 0.85 - unreleased
+Imager 0.85 - 29 Aug 2011
 ===========
+
+The main changes in the release versus 0.84 are:
+
+ - on 64-bit systems, 64-bit types are consistently used for image
+   dimensions and co-ordinated, and for memory block sizes.
+
+ - handle IFD loops in TIFF files correctly.  Previously this would
+   lead to an infinite loop.
 
 Bug fixes:
 
