@@ -46,42 +46,9 @@ extern char *io_type_names[];
 
 /* Structures to describe data sources */
 
-typedef struct {
-  io_type	type;
-  int		fd;
-} io_fdseek;
-
-typedef struct {
-  io_type	type;		/* Must be first parameter */
-  char		*name;		/* Data source name */
-  char		*data;
-  size_t	len;
-  i_io_closebufp_t     closecb;        /* free memory mapped segment or decrement refcount */
-  void          *closedata;
-} io_buffer;
-
-typedef struct {
-  io_type	type;		/* Must be first parameter */
-  char		*name;		/* Data source name */
-  void		*p;		/* Callback data */
-  i_io_readl_t	readcb;
-  i_io_writel_t	writecb;
-  i_io_seekl_t	seekcb;
-  i_io_closel_t closecb;
-  i_io_destroyl_t      destroycb;
-} io_cb;
-
-typedef union {
-  io_type       type;
-  io_fdseek     fdseek;
-  io_buffer	buffer;
-  io_cb		cb;
-} io_obj;
-
 struct i_io_glue_t {
-  io_obj	source;
-  int		flags;		/* Flags */
-  void		*exdata;	/* Pair specific data */
+  io_type type;
+  void *exdata;
   i_io_readp_t	readcb;
   i_io_writep_t	writecb;
   i_io_seekp_t	seekcb;
