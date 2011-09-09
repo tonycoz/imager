@@ -1,6 +1,6 @@
 #!perl -w
 use strict;
-use Test::More tests => 68;
+use Test::More tests => 74;
 # for SEEK_SET etc, Fcntl doesn't provide these in 5.005_03
 use IO::Seekable;
 
@@ -126,33 +126,33 @@ is($work, $data2, "short write image match");
   my $io9 = Imager::io_new_buffer($buf_data);
   is(ref $io9, "Imager::IO", "check class");
   my $work;
-  is($io9->read($work, 4), 4, "read 4 from buffer object");
+  is($io9->raw_read($work, 4), 4, "read 4 from buffer object");
   is($work, "Test", "check data read");
-  is($io9->read($work, 5), 5, "read the rest");
+  is($io9->raw_read($work, 5), 5, "read the rest");
   is($work, " data", "check data read");
-  is($io9->seek(5, SEEK_SET), 5, "seek");
-  is($io9->read($work, 5), 4, "short read");
+  is($io9->raw_seek(5, SEEK_SET), 5, "seek");
+  is($io9->raw_read($work, 5), 4, "short read");
   is($work, "data", "check data read");
-  is($io9->seek(-1, SEEK_CUR), 8, "seek relative");
-  is($io9->seek(-5, SEEK_END), 4, "seek relative to end");
-  is($io9->seek(-10, SEEK_CUR), -1, "seek failure");
+  is($io9->raw_seek(-1, SEEK_CUR), 8, "seek relative");
+  is($io9->raw_seek(-5, SEEK_END), 4, "seek relative to end");
+  is($io9->raw_seek(-10, SEEK_CUR), -1, "seek failure");
   undef $io9;
 }
 {
   my $io = Imager::io_new_bufchain();
   is(ref $io, "Imager::IO", "check class");
-  is($io->write("testdata"), 8, "check write");
-  is($io->seek(-8, SEEK_CUR), 0, "seek relative");
+  is($io->raw_write("testdata"), 8, "check write");
+  is($io->raw_seek(-8, SEEK_CUR), 0, "seek relative");
   my $work;
-  is($io->read($work, 8), 8, "check read");
+  is($io->raw_read($work, 8), 8, "check read");
   is($work, "testdata", "check data read");
-  is($io->seek(-3, SEEK_END), 5, "seek end relative");
-  is($io->read($work, 5), 3, "short read");
+  is($io->raw_seek(-3, SEEK_END), 5, "seek end relative");
+  is($io->raw_read($work, 5), 3, "short read");
   is($work, "ata", "check read data");
-  is($io->seek(4, SEEK_SET), 4, "absolute seek to write some");
-  is($io->write("testdata"), 8, "write");
-  is($io->seek(0, SEEK_CUR), 12, "check size");
-  $io->close();
+  is($io->raw_seek(4, SEEK_SET), 4, "absolute seek to write some");
+  is($io->raw_write("testdata"), 8, "write");
+  is($io->raw_seek(0, SEEK_CUR), 12, "check size");
+  $io->raw_close();
   
   # grab the data
   my $data = Imager::io_slurp($io);
@@ -163,19 +163,19 @@ is($work, $data2, "short write image match");
   my $fail_io = Imager::io_new_cb(\&fail_write, \&fail_read, \&fail_seek, undef, 1);
   # scalar context
   my $buffer;
-  my $read_result = $fail_io->read($buffer, 10);
+  my $read_result = $fail_io->raw_read($buffer, 10);
   is($read_result, undef, "read failure undef in scalar context");
-  my @read_result = $fail_io->read($buffer, 10);
+  my @read_result = $fail_io->raw_read($buffer, 10);
   is(@read_result, 0, "empty list in list context");
-  $read_result = $fail_io->read2(10);
-  is($read_result, undef, "read2 failure (scalar)");
-  @read_result = $fail_io->read2(10);
-  is(@read_result, 0, "read2 failure (list)");
+  $read_result = $fail_io->raw_read2(10);
+  is($read_result, undef, "raw_read2 failure (scalar)");
+  @read_result = $fail_io->raw_read2(10);
+  is(@read_result, 0, "raw_read2 failure (list)");
 
-  my $write_result = $fail_io->write("test");
+  my $write_result = $fail_io->raw_write("test");
   is($write_result, -1, "failed write");
 
-  my $seek_result = $fail_io->seek(-1, SEEK_SET);
+  my $seek_result = $fail_io->raw_seek(-1, SEEK_SET);
   is($seek_result, -1, "failed seek");
 }
 
@@ -183,35 +183,35 @@ is($work, $data2, "short write image match");
   my $good_io = Imager::io_new_cb(\&good_write, \&good_read, \&good_seek, undef, 1);
   # scalar context
   my $buffer;
-  my $read_result = $good_io->read($buffer, 10);
+  my $read_result = $good_io->raw_read($buffer, 10);
   is($read_result, 10, "read success (scalar)");
   is($buffer, "testdatate", "check data");
-  my @read_result = $good_io->read($buffer, 10);
+  my @read_result = $good_io->raw_read($buffer, 10);
   is_deeply(\@read_result, [ 10 ], "read success (list)");
   is($buffer, "testdatate", "check data");
-  $read_result = $good_io->read2(10);
+  $read_result = $good_io->raw_read2(10);
   is($read_result, "testdatate", "read2 success (scalar)");
-  @read_result = $good_io->read2(10);
+  @read_result = $good_io->raw_read2(10);
   is_deeply(\@read_result, [ "testdatate" ], "read2 success (list)");
 }
 
 { # end of file
   my $eof_io = Imager::io_new_cb(undef, \&eof_read, undef, undef, 1);
   my $buffer;
-  my $read_result = $eof_io->read($buffer, 10);
+  my $read_result = $eof_io->raw_read($buffer, 10);
   is($read_result, 0, "read eof (scalar)");
   is($buffer, '', "check data");
-  my @read_result = $eof_io->read($buffer, 10);
+  my @read_result = $eof_io->raw_read($buffer, 10);
   is_deeply(\@read_result, [ 0 ], "read eof (list)");
   is($buffer, '', "check data");
 }
 
 { # no callbacks
   my $none_io = Imager::io_new_cb(undef, undef, undef, undef, 0);
-  is($none_io->write("test"), -1, "write with no writecb should fail");
+  is($none_io->raw_write("test"), -1, "write with no writecb should fail");
   my $buffer;
-  is($none_io->read($buffer, 10), undef, "read with no readcb should fail");
-  is($none_io->seek(0, SEEK_SET), -1, "seek with no seekcb should fail");
+  is($none_io->raw_read($buffer, 10), undef, "read with no readcb should fail");
+  is($none_io->raw_seek(0, SEEK_SET), -1, "seek with no seekcb should fail");
 }
 
 SKIP:
@@ -224,7 +224,7 @@ SKIP:
   is(ord $data, 0x100, "make sure we got what we expected");
   my $result = 
     eval {
-      $io->write($data);
+      $io->raw_write($data);
     };
   ok($@, "should have croaked")
     and print "# $@\n";
@@ -246,10 +246,31 @@ SKIP:
      sub { print "# seek\n"; 0 }, 
      sub { print "# close\n"; 1 });
   my $buffer;
-  is($io->read($buffer, 10), 10, "read 10");
+  is($io->raw_read($buffer, 10), 10, "read 10");
   is($buffer, "xxxxxxxxxx", "read value");
-  ok($io->write("foo"), "write");
-  is($io->close, 0, "close");
+  ok($io->raw_write("foo"), "write");
+  is($io->raw_close, 0, "close");
+}
+
+{ # buffered I/O
+  my $data="P2\n2 2\n255\n 255 0\n0 255\n";
+  my $io = Imager::io_new_buffer($data);
+
+  my $c = $io->getc();
+
+  is($c, ord "P", "getc");
+  my $peekc = $io->peekc();
+
+  is($peekc, ord "2", "peekc");
+
+  my $peekn = $io->peekn(2);
+  is($peekn, "2\n", "peekn");
+
+  $c = $io->getc();
+  is($c, ord "2", "getc after peekc/peekn");
+
+  is($io->seek(0, SEEK_SET), "0", "seek");
+  is($io->getc, ord "P", "check we got back to the start");
 }
 
 Imager->close_log;

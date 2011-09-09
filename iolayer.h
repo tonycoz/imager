@@ -29,4 +29,21 @@ io_glue *io_new_cb(void *p, i_io_readl_t readcb, i_io_writel_t writecb, i_io_see
 size_t   io_slurp(io_glue *ig, unsigned char **c);
 void     io_glue_destroy(io_glue *ig);
 
+void i_io_dump(io_glue *ig, int flags);
+
+extern void
+i_io_init(io_glue *ig, int type, i_io_readp_t readcb, i_io_writep_t writecb,
+	  i_io_seekp_t seekcb);
+
+/* Buffered I/O */
+extern int i_io_getc_imp(io_glue *ig);
+extern int i_io_peekc_imp(io_glue *ig);
+extern ssize_t i_io_peekn(io_glue *ig, void *buf, size_t size);
+extern int i_io_putc_imp(io_glue *ig, int c);
+extern ssize_t i_io_read(io_glue *ig, void *buf, size_t size);
+extern ssize_t i_io_write(io_glue *ig, const void *buf, size_t size);
+extern off_t i_io_seek(io_glue *ig, off_t offset, int whence);
+extern int i_io_flush(io_glue *ig);
+extern int i_io_close(io_glue *ig);
+
 #endif /* _IOLAYER_H_ */

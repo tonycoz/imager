@@ -240,7 +240,8 @@ static ssize_t call_reader(struct cbdata *cbd, void *buf, size_t size,
     STRLEN len;
     char *ptr = SvPV(data, len);
     if (len > maxread)
-      croak("Too much data returned in reader callback");
+      croak("Too much data returned in reader callback (wanted %d, got %d, expected %d)",
+      (int)size, (int)len, (int)maxread);
     
     memcpy(buf, ptr, len);
     result = len;
@@ -396,7 +397,7 @@ io_reader(void *p, void *data, size_t size) {
   else {
     /* just read the rest - too big for our buffer*/
     int did_read;
-    while ((did_read = call_reader(cbd, out, size, size)) > 0) {
+    while (size > 0 && (did_read = call_reader(cbd, out, size, size)) > 0) {
       size  -= did_read;
       total += did_read;
       out   += did_read;
@@ -1123,7 +1124,7 @@ i_get_image_file_limits()
 MODULE = Imager		PACKAGE = Imager::IO	PREFIX = i_io_
 
 int
-i_io_write(ig, data_sv)
+i_io_raw_write(ig, data_sv)
 	Imager::IO ig
 	SV *data_sv
       PREINIT:
@@ -1138,9 +1139,142 @@ i_io_write(ig, data_sv)
 	}
 #endif        
 	data = SvPV(data_sv, size);
-        RETVAL = i_io_write(ig, data, size);
+        RETVAL = i_io_raw_write(ig, data, size);
       OUTPUT:
 	RETVAL
+
+void
+i_io_raw_read(ig, buffer_sv, size)
+	Imager::IO ig
+	SV *buffer_sv
+	IV size
+      PREINIT:
+        void *buffer;
+	ssize_t result;
+      PPCODE:
+        if (size <= 0)
+	  croak("size negative in call to i_io_read()");
+        /* prevent an undefined value warning if they supplied an 
+	   undef buffer.
+           Orginally conditional on !SvOK(), but this will prevent the
+	   downgrade from croaking */
+	sv_setpvn(buffer_sv, "", 0);
+#ifdef SvUTF8
+	if (SvUTF8(buffer_sv))
+          sv_utf8_downgrade(buffer_sv, FALSE);
+#endif
+	buffer = SvGROW(buffer_sv, size+1);
+        result = i_io_raw_read(ig, buffer, size);
+        if (result >= 0) {
+	  SvCUR_set(buffer_sv, result);
+	  *SvEND(buffer_sv) = '\0';
+	  SvPOK_only(buffer_sv);
+	  EXTEND(SP, 1);
+	  PUSHs(sv_2mortal(newSViv(result)));
+	}
+	ST(1) = buffer_sv;
+	SvSETMAGIC(ST(1));
+
+void
+i_io_raw_read2(ig, size)
+	Imager::IO ig
+	IV size
+      PREINIT:
+	SV *buffer_sv;
+        void *buffer;
+	ssize_t result;
+      PPCODE:
+        if (size <= 0)
+	  croak("size negative in call to i_io_read2()");
+	buffer_sv = newSV(size);
+	buffer = SvGROW(buffer_sv, size+1);
+        result = i_io_raw_read(ig, buffer, size);
+        if (result >= 0) {
+	  SvCUR_set(buffer_sv, result);
+	  *SvEND(buffer_sv) = '\0';
+	  SvPOK_only(buffer_sv);
+	  EXTEND(SP, 1);
+	  PUSHs(sv_2mortal(buffer_sv));
+	}
+	else {
+          /* discard it */
+	  SvREFCNT_dec(buffer_sv);
+        }
+
+off_t
+i_io_raw_seek(ig, position, whence)
+	Imager::IO ig
+	off_t position
+	int whence
+
+int
+i_io_raw_close(ig)
+	Imager::IO ig
+
+void
+i_io_DESTROY(ig)
+        Imager::IO     ig
+
+int
+i_io_CLONE_SKIP(...)
+    CODE:
+        (void)items; /* avoid unused warning for XS variable */
+	RETVAL = 1;
+    OUTPUT:
+	RETVAL
+
+int
+i_io_getc(ig)
+	Imager::IO ig
+
+int
+i_io_putc(ig, c)
+	Imager::IO ig
+        int c
+
+int
+i_io_close(ig)
+	Imager::IO ig
+
+int
+i_io_flush(ig)
+	Imager::IO ig
+
+int
+i_io_peekc(ig)
+	Imager::IO ig
+
+int
+i_io_seek(ig, off, whence)
+	Imager::IO ig
+	off_t off
+        int whence
+
+void
+i_io_peekn(ig, size)
+	Imager::IO ig
+	STRLEN size
+      PREINIT:
+	SV *buffer_sv;
+        void *buffer;
+	size_t result;
+      PPCODE:
+        if (size == 0)
+	  croak("size zero in call to peekn()");
+	buffer_sv = newSV(size);
+	buffer = SvGROW(buffer_sv, size+1);
+        result = i_io_peekn(ig, buffer, size);
+        if (result > 0) {
+	  SvCUR_set(buffer_sv, result);
+	  *SvEND(buffer_sv) = '\0';
+	  SvPOK_only(buffer_sv);
+	  EXTEND(SP, 1);
+	  PUSHs(sv_2mortal(buffer_sv));
+	}
+	else {
+          /* discard it */
+	  SvREFCNT_dec(buffer_sv);
+        }
 
 void
 i_io_read(ig, buffer_sv, size)
@@ -1177,18 +1311,18 @@ i_io_read(ig, buffer_sv, size)
 void
 i_io_read2(ig, size)
 	Imager::IO ig
-	IV size
+	STRLEN size
       PREINIT:
 	SV *buffer_sv;
         void *buffer;
-	ssize_t result;
+	size_t result;
       PPCODE:
-        if (size <= 0)
-	  croak("size negative in call to i_io_read2()");
+        if (size == 0)
+	  croak("size zero in call to bread()");
 	buffer_sv = newSV(size);
 	buffer = SvGROW(buffer_sv, size+1);
         result = i_io_read(ig, buffer, size);
-        if (result >= 0) {
+        if (result > 0) {
 	  SvCUR_set(buffer_sv, result);
 	  *SvEND(buffer_sv) = '\0';
 	  SvPOK_only(buffer_sv);
@@ -1200,27 +1334,35 @@ i_io_read2(ig, size)
 	  SvREFCNT_dec(buffer_sv);
         }
 
-off_t
-i_io_seek(ig, position, whence)
+size_t
+i_io_write(ig, data_sv)
 	Imager::IO ig
-	off_t position
-	int whence
-
-int
-i_io_close(ig)
-	Imager::IO ig
+	SV *data_sv
+      PREINIT:
+        void *data;
+	STRLEN size;
+      CODE:
+#ifdef SvUTF8
+        if (SvUTF8(data_sv)) {
+	  data_sv = sv_2mortal(newSVsv(data_sv));
+          /* yes, we want this to croak() if the SV can't be downgraded */
+	  sv_utf8_downgrade(data_sv, FALSE);
+	}
+#endif        
+	data = SvPV(data_sv, size);
+        RETVAL = i_io_write(ig, data, size);
+      OUTPUT:
+	RETVAL
 
 void
-i_io_DESTROY(ig)
-        Imager::IO     ig
+i_io_dump(ig, flags = I_IO_DUMP_DEFAULT)
+	Imager::IO ig
+	int flags
 
-int
-i_io_CLONE_SKIP(...)
-    CODE:
-        (void)items; /* avoid unused warning for XS variable */
-	RETVAL = 1;
-    OUTPUT:
-	RETVAL
+void
+i_io_set_buffered(ig, flag = 1)
+	Imager::IO ig
+	int flag
 
 MODULE = Imager		PACKAGE = Imager
 

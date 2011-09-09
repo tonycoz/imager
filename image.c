@@ -1801,9 +1801,17 @@ i_test_format_probe(io_glue *data, int length) {
   unsigned char head[18];
   ssize_t rc;
 
-  rc = data->readcb(data, head, 18);
+  rc = i_io_peekn(data, head, 18);
   if (rc == -1) return NULL;
-  data->seekcb(data, -rc, SEEK_CUR);
+#if 0
+  {
+    int i;
+    fprintf(stderr, "%d bytes -", (int)rc);
+    for (i = 0; i < rc; ++i)
+      fprintf(stderr, " %02x", head[i]);
+    fprintf(stderr, "\n");
+  }
+#endif
 
   for(i=0; i<sizeof(formats)/sizeof(formats[0]); i++) { 
     struct magic_entry const *entry = formats + i;

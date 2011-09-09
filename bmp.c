@@ -235,7 +235,7 @@ read_packed(io_glue *ig, char *format, ...) {
 
     switch (code) {
     case 'v':
-      if (ig->readcb(ig, buf, 2) != 2)
+      if (i_io_read(ig, buf, 2) != 2)
 	return 0;
       work = buf[0] + ((i_packed_t)buf[1] << 8);
       if (shrieking)
@@ -245,7 +245,7 @@ read_packed(io_glue *ig, char *format, ...) {
       break;
 
     case 'V':
-      if (ig->readcb(ig, buf, 4) != 4)
+      if (i_io_read(ig, buf, 4) != 4)
 	return 0;
       work = buf[0] + (buf[1] << 8) + ((i_packed_t)buf[2] << 16) + ((i_packed_t)buf[3] << 24);
       if (shrieking)
@@ -255,19 +255,19 @@ read_packed(io_glue *ig, char *format, ...) {
       break;
 
     case 'C':
-      if (ig->readcb(ig, buf, 1) != 1)
+      if (i_io_read(ig, buf, 1) != 1)
 	return 0;
       *p = buf[0];
       break;
 
     case 'c':
-      if (ig->readcb(ig, buf, 1) != 1)
+      if (i_io_read(ig, buf, 1) != 1)
 	return 0;
       *p = (char)buf[0];
       break;
       
     case '3': /* extension - 24-bit number */
-      if (ig->readcb(ig, buf, 3) != 3)
+      if (i_io_read(ig, buf, 3) != 3)
         return 0;
       *p = buf[0] + (buf[1] << 8) + ((i_packed_t)buf[2] << 16);
       break;
@@ -304,7 +304,7 @@ write_packed(io_glue *ig, char *format, ...) {
     case 'v':
       buf[0] = i & 255;
       buf[1] = i / 256;
-      if (ig->writecb(ig, buf, 2) == -1)
+      if (i_io_write(ig, buf, 2) == -1)
 	return 0;
       break;
 
@@ -313,14 +313,14 @@ write_packed(io_glue *ig, char *format, ...) {
       buf[1] = (i >> 8) & 0xFF;
       buf[2] = (i >> 16) & 0xFF;
       buf[3] = (i >> 24) & 0xFF;
-      if (ig->writecb(ig, buf, 4) == -1)
+      if (i_io_write(ig, buf, 4) == -1)
 	return 0;
       break;
 
     case 'C':
     case 'c':
       buf[0] = i & 0xFF;
-      if (ig->writecb(ig, buf, 1) == -1)
+      if (i_io_write(ig, buf, 1) == -1)
 	return 0;
       break;
 
@@ -489,7 +489,7 @@ write_1bit_data(io_glue *ig, i_img *im) {
     if (mask != 0x80) {
       *out++ = byte;
     }
-    if (ig->writecb(ig, packed, line_size) < 0) {
+    if (i_io_write(ig, packed, line_size) < 0) {
       myfree(packed);
       myfree(line);
       i_push_error(0, "writing 1 bit/pixel packed data");
@@ -499,7 +499,7 @@ write_1bit_data(io_glue *ig, i_img *im) {
   myfree(packed);
   myfree(line);
 
-  ig->closecb(ig);
+  i_io_close(ig);
 
   return 1;
 }
@@ -548,7 +548,7 @@ write_4bit_data(io_glue *ig, i_img *im) {
     for (x = 0; x < im->xsize; x += 2) {
       *out++ = (line[x] << 4) + line[x+1];
     }
-    if (ig->writecb(ig, packed, line_size) < 0) {
+    if (i_io_write(ig, packed, line_size) < 0) {
       myfree(packed);
       myfree(line);
       i_push_error(0, "writing 4 bit/pixel packed data");
@@ -558,7 +558,7 @@ write_4bit_data(io_glue *ig, i_img *im) {
   myfree(packed);
   myfree(line);
 
-  ig->closecb(ig);
+  i_io_close(ig);
 
   return 1;
 }
@@ -596,7 +596,7 @@ write_8bit_data(io_glue *ig, i_img *im) {
   
   for (y = im->ysize-1; y >= 0; --y) {
     i_gpal(im, 0, im->xsize, y, line);
-    if (ig->writecb(ig, line, line_size) < 0) {
+    if (i_io_write(ig, line, line_size) < 0) {
       myfree(line);
       i_push_error(0, "writing 8 bit/pixel packed data");
       return 0;
@@ -604,7 +604,7 @@ write_8bit_data(io_glue *ig, i_img *im) {
   }
   myfree(line);
 
-  ig->closecb(ig);
+  i_io_close(ig);
 
   return 1;
 }
@@ -650,7 +650,7 @@ write_24bit_data(io_glue *ig, i_img *im) {
       samplep[0] = tmp;
       samplep += 3;
     }
-    if (ig->writecb(ig, samples, line_size) < 0) {
+    if (i_io_write(ig, samples, line_size) < 0) {
       i_push_error(0, "writing image data");
       myfree(samples);
       return 0;
@@ -658,7 +658,7 @@ write_24bit_data(io_glue *ig, i_img *im) {
   }
   myfree(samples);
 
-  ig->closecb(ig);
+  i_io_close(ig);
 
   return 1;
 }
@@ -771,7 +771,7 @@ read_1bit_bmp(io_glue *ig, int xsize, int ysize, int clr_used,
        rare */
     char buffer;
     while (base_offset < offbits) {
-      if (ig->readcb(ig, &buffer, 1) != 1) {
+      if (i_io_read(ig, &buffer, 1) != 1) {
         i_img_destroy(im);
         i_push_error(0, "failed skipping to image data offset");
         return NULL;
@@ -785,7 +785,7 @@ read_1bit_bmp(io_glue *ig, int xsize, int ysize, int clr_used,
   packed = mymalloc(line_size); /* checked 29jun05 tonyc */
   line = mymalloc(xsize+8); /* checked 29jun05 tonyc */
   while (y != lasty) {
-    if (ig->readcb(ig, packed, line_size) != line_size) {
+    if (i_io_read(ig, packed, line_size) != line_size) {
       myfree(packed);
       myfree(line);
       if (allow_incomplete) {
@@ -888,7 +888,7 @@ read_4bit_bmp(io_glue *ig, int xsize, int ysize, int clr_used,
        rare */
     char buffer;
     while (base_offset < offbits) {
-      if (ig->readcb(ig, &buffer, 1) != 1) {
+      if (i_io_read(ig, &buffer, 1) != 1) {
         i_img_destroy(im);
         i_push_error(0, "failed skipping to image data offset");
         return NULL;
@@ -906,7 +906,7 @@ read_4bit_bmp(io_glue *ig, int xsize, int ysize, int clr_used,
   if (compression == BI_RGB) {
     i_tags_add(&im->tags, "bmp_compression_name", 0, "BI_RGB", -1, 0);
     while (y != lasty) {
-      if (ig->readcb(ig, packed, line_size) != line_size) {
+      if (i_io_read(ig, packed, line_size) != line_size) {
 	myfree(packed);
 	myfree(line);
         if (allow_incomplete) {
@@ -941,7 +941,7 @@ read_4bit_bmp(io_glue *ig, int xsize, int ysize, int clr_used,
     x = 0;
     while (1) {
       /* there's always at least 2 bytes in a sequence */
-      if (ig->readcb(ig, packed, 2) != 2) {
+      if (i_io_read(ig, packed, 2) != 2) {
         myfree(packed);
         myfree(line);
         if (allow_incomplete) {
@@ -986,7 +986,7 @@ read_4bit_bmp(io_glue *ig, int xsize, int ysize, int clr_used,
           return im;
 
         case BMPRLE_DELTA:
-          if (ig->readcb(ig, packed, 2) != 2) {
+          if (i_io_read(ig, packed, 2) != 2) {
             myfree(packed);
             myfree(line);
             if (allow_incomplete) {
@@ -1016,7 +1016,7 @@ read_4bit_bmp(io_glue *ig, int xsize, int ysize, int clr_used,
 	  }
           size = (count + 1) / 2;
           read_size = (size+1) / 2 * 2;
-          if (ig->readcb(ig, packed, read_size) != read_size) {
+          if (i_io_read(ig, packed, read_size) != read_size) {
             myfree(packed);
             myfree(line);
             if (allow_incomplete) {
@@ -1115,7 +1115,7 @@ read_8bit_bmp(io_glue *ig, int xsize, int ysize, int clr_used,
        rare */
     char buffer;
     while (base_offset < offbits) {
-      if (ig->readcb(ig, &buffer, 1) != 1) {
+      if (i_io_read(ig, &buffer, 1) != 1) {
         i_img_destroy(im);
         i_push_error(0, "failed skipping to image data offset");
         return NULL;
@@ -1128,7 +1128,7 @@ read_8bit_bmp(io_glue *ig, int xsize, int ysize, int clr_used,
   if (compression == BI_RGB) {
     i_tags_add(&im->tags, "bmp_compression_name", 0, "BI_RGB", -1, 0);
     while (y != lasty) {
-      if (ig->readcb(ig, line, line_size) != line_size) {
+      if (i_io_read(ig, line, line_size) != line_size) {
 	myfree(line);
         if (allow_incomplete) {
           i_tags_setn(&im->tags, "i_incomplete", 1);
@@ -1155,7 +1155,7 @@ read_8bit_bmp(io_glue *ig, int xsize, int ysize, int clr_used,
     x = 0;
     while (1) {
       /* there's always at least 2 bytes in a sequence */
-      if (ig->readcb(ig, packed, 2) != 2) {
+      if (i_io_read(ig, packed, 2) != 2) {
         myfree(line);
         if (allow_incomplete) {
           i_tags_setn(&im->tags, "i_incomplete", 1);
@@ -1191,7 +1191,7 @@ read_8bit_bmp(io_glue *ig, int xsize, int ysize, int clr_used,
           return im;
 
         case BMPRLE_DELTA:
-          if (ig->readcb(ig, packed, 2) != 2) {
+          if (i_io_read(ig, packed, 2) != 2) {
             myfree(line);
             if (allow_incomplete) {
               i_tags_setn(&im->tags, "i_incomplete", 1);
@@ -1219,7 +1219,7 @@ read_8bit_bmp(io_glue *ig, int xsize, int ysize, int clr_used,
 	    return NULL;
 	  }
           read_size = (count+1) / 2 * 2;
-          if (ig->readcb(ig, line, read_size) != read_size) {
+          if (i_io_read(ig, line, read_size) != read_size) {
             myfree(line);
             if (allow_incomplete) {
               i_tags_setn(&im->tags, "i_incomplete", 1);
@@ -1322,7 +1322,7 @@ read_direct_bmp(io_glue *ig, int xsize, int ysize, int bit_count,
     /* there's a potential "palette" after the header */
     for (i = 0; i < clr_used; ++clr_used) {
       char buf[4];
-      if (ig->readcb(ig, buf, 4) != 4) {
+      if (i_io_read(ig, buf, 4) != 4) {
         i_push_error(0, "skipping colors");
         return 0;
       }
@@ -1366,7 +1366,7 @@ read_direct_bmp(io_glue *ig, int xsize, int ysize, int bit_count,
        rare */
     char buffer;
     while (base_offset < offbits) {
-      if (ig->readcb(ig, &buffer, 1) != 1) {
+      if (i_io_read(ig, &buffer, 1) != 1) {
         i_push_error(0, "failed skipping to image data offset");
         return NULL;
       }
@@ -1416,7 +1416,7 @@ read_direct_bmp(io_glue *ig, int xsize, int ysize, int bit_count,
     }
     i_plin(im, 0, xsize, y, line);
     if (extras)
-      ig->readcb(ig, junk, extras);
+      i_io_read(ig, junk, extras);
     y += yinc;
   }
   myfree(line);

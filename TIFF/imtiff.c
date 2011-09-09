@@ -234,7 +234,7 @@ static
 toff_t
 comp_seek(thandle_t h, toff_t o, int w) {
   io_glue *ig = (io_glue*)h;
-  return (toff_t) ig->seekcb(ig, o, w);
+  return (toff_t) i_io_seek(ig, o, w);
 }
 
 /*
@@ -266,6 +266,21 @@ This shouldn't ever be called but newer tifflibs want it anyway.
 static void
 comp_munmap(thandle_t h, tdata_t p, toff_t off) {
   /* do nothing */
+}
+
+static tsize_t
+comp_read(thandle_t h, tdata_t p, tsize_t size) {
+  return i_io_read((io_glue *)h, p, size);
+}
+
+static tsize_t
+comp_write(thandle_t h, tdata_t p, tsize_t size) {
+  return i_io_write((io_glue *)h, p, size);
+}
+
+static int
+comp_close(thandle_t h) {
+  return i_io_close((io_glue *)h);
 }
 
 static i_img *read_one_tiff(TIFF *tif, int allow_incomplete) {
@@ -547,13 +562,13 @@ i_readtiff_wiol(io_glue *ig, int allow_incomplete, int page) {
   tif = TIFFClientOpen("(Iolayer)", 
 		       "rm", 
 		       (thandle_t) ig,
-		       (TIFFReadWriteProc) ig->readcb,
-		       (TIFFReadWriteProc) ig->writecb,
-		       (TIFFSeekProc) comp_seek,
-		       (TIFFCloseProc) ig->closecb,
-		       ig->sizecb ? (TIFFSizeProc) ig->sizecb : (TIFFSizeProc) sizeproc,
-		       (TIFFMapFileProc) comp_mmap,
-		       (TIFFUnmapFileProc) comp_munmap);
+		       comp_read,
+		       comp_write,
+		       comp_seek,
+		       comp_close,
+		       sizeproc,
+		       comp_mmap,
+		       comp_munmap);
   
   if (!tif) {
     mm_log((1, "i_readtiff_wiol: Unable to open tif file\n"));
@@ -613,13 +628,13 @@ i_readtiff_multi_wiol(io_glue *ig, int *count) {
   tif = TIFFClientOpen("(Iolayer)", 
 		       "rm", 
 		       (thandle_t) ig,
-		       (TIFFReadWriteProc) ig->readcb,
-		       (TIFFReadWriteProc) ig->writecb,
-		       (TIFFSeekProc) comp_seek,
-		       (TIFFCloseProc) ig->closecb,
-		       ig->sizecb ? (TIFFSizeProc) ig->sizecb : (TIFFSizeProc) sizeproc,
-		       (TIFFMapFileProc) comp_mmap,
-		       (TIFFUnmapFileProc) comp_munmap);
+		       comp_read,
+		       comp_write,
+		       comp_seek,
+		       comp_close,
+		       sizeproc,
+		       comp_mmap,
+		       comp_munmap);
   
   if (!tif) {
     mm_log((1, "i_readtiff_wiol: Unable to open tif file\n"));

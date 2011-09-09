@@ -12,7 +12,9 @@
 #include "imageri.h"
 
 #define IOL_DEB(x)
+#define IOL_DEBs stderr
 
+#define IO_BUF_SIZE 8192
 
 char *io_type_names[] = { "FDSEEK", "FDNOSEEK", "BUFFER", "CBSEEK", "CBNOSEEK", "BUFCHAIN" };
 
@@ -102,8 +104,6 @@ typedef struct {
   off_t cpos;			/* Offset within the current */
 } io_ex_buffer;
 
-static void io_obj_setp_buffer(io_buffer *io, char *p, size_t len, i_io_closebufp_t closecb, void *closedata);
-static void io_obj_setp_cb2     (io_cb *io, void *p, i_io_readl_t readcb, i_io_writel_t writecb, i_io_seekl_t seekcb, i_io_closel_t closecb, i_io_destroyl_t destroycb);
 
 /* turn current offset, file length, whence and offset into a new offset */
 #define calc_seek_offset(curr_off, length, offset, whence) \
@@ -203,7 +203,7 @@ realseek_read(io_glue *igo, void *buf, size_t count) {
   size_t        bc = 0;
   char       *cbuf = buf;
 
-  IOL_DEB( printf("realseek_read:  buf = %p, count = %d\n", 
+  IOL_DEB( fprintf(IOL_DEBs, "realseek_read:  buf = %p, count = %d\n", 
 		  buf, count) );
   /* Is this a good idea? Would it be better to handle differently?
      skip handling? */
@@ -212,7 +212,7 @@ realseek_read(io_glue *igo, void *buf, size_t count) {
   }
   
   ier->cpos += bc;
-  IOL_DEB( printf("realseek_read: rc = %d, bc = %d\n", rc, bc) );
+  IOL_DEB( fprintf(IOL_DEBs, "realseek_read: rc = %d, bc = %d\n", rc, bc) );
   return rc < 0 ? rc : bc;
 }
 
@@ -239,7 +239,7 @@ realseek_write(io_glue *igo, const void *buf, size_t count) {
   size_t        bc = 0;
   char       *cbuf = (char*)buf; 
   
-  IOL_DEB( printf("realseek_write: ig = %p, ier->cpos = %ld, buf = %p, "
+  IOL_DEB( fprintf(IOL_DEBs, "realseek_write: ig = %p, ier->cpos = %ld, buf = %p, "
                   "count = %d\n", ig, (long) ier->cpos, buf, count) );
 
   /* Is this a good idea? Would it be better to handle differently? 
@@ -249,7 +249,7 @@ realseek_write(io_glue *igo, const void *buf, size_t count) {
   }
 
   ier->cpos += bc;
-  IOL_DEB( printf("realseek_write: rc = %d, bc = %d\n", rc, bc) );
+  IOL_DEB( fprintf(IOL_DEBs, "realseek_write: rc = %d, bc = %d\n", rc, bc) );
   return rc < 0 ? rc : bc;
 }
 
@@ -268,6 +268,8 @@ static
 int
 realseek_close(io_glue *igo) {
   io_cb *ig = (io_cb *)igo;
+
+  IOL_DEB(fprintf(IOL_DEBs, "realseek_close(%p)\n", ig));
   mm_log((1, "realseek_close(ig %p)\n", ig));
   if (ig->closecb)
     return ig->closecb(ig->p);
@@ -295,10 +297,10 @@ realseek_seek(io_glue *igo, off_t offset, int whence) {
   io_cb *ig = (io_cb *)igo;
   void *p = ig->p;
   off_t rc;
-  IOL_DEB( printf("realseek_seek(ig %p, offset %ld, whence %d)\n", ig, (long) offset, whence) );
+  IOL_DEB( fprintf(IOL_DEBs, "realseek_seek(ig %p, offset %ld, whence %d)\n", ig, (long) offset, whence) );
   rc = ig->seekcb(p, offset, whence);
 
-  IOL_DEB( printf("realseek_seek: rc %ld\n", (long) rc) );
+  IOL_DEB( fprintf(IOL_DEBs, "realseek_seek: rc %ld\n", (long) rc) );
   return rc;
   /* FIXME: How about implementing this offset handling stuff? */
 }
@@ -337,7 +339,7 @@ buffer_read(io_glue *igo, void *buf, size_t count) {
   io_buffer *ig = (io_buffer *)igo;
   io_ex_buffer *ieb = igo->exdata;
 
-  IOL_DEB( printf("buffer_read: ieb->cpos = %ld, buf = %p, count = %d\n", (long) ieb->cpos, buf, count) );
+  IOL_DEB( fprintf(IOL_DEBs, "buffer_read: ieb->cpos = %ld, buf = %p, count = %d\n", (long) ieb->cpos, buf, count) );
 
   if ( ieb->cpos+count > ig->len ) {
     mm_log((1,"buffer_read: short read: cpos=%ld, len=%ld, count=%ld\n", (long)ieb->cpos, (long)ig->len, (long)count));
@@ -346,7 +348,7 @@ buffer_read(io_glue *igo, void *buf, size_t count) {
   
   memcpy(buf, ig->data+ieb->cpos, count);
   ieb->cpos += count;
-  IOL_DEB( printf("buffer_read: count = %ld\n", (long)count) );
+  IOL_DEB( fprintf(IOL_DEBs, "buffer_read: count = %ld\n", (long)count) );
   return count;
 }
 
@@ -420,7 +422,7 @@ buffer_seek(io_glue *igo, off_t offset, int whence) {
   }
   
   ieb->cpos = reqpos;
-  IOL_DEB( printf("buffer_seek(ig %p, offset %ld, whence %d)\n", ig, (long) offset, whence) );
+  IOL_DEB( fprintf(IOL_DEBs, "buffer_seek(ig %p, offset %ld, whence %d)\n", ig, (long) offset, whence) );
 
   return reqpos;
   /* FIXME: How about implementing this offset handling stuff? */
@@ -699,7 +701,7 @@ bufchain_write(io_glue *ig, const void *buf, size_t count) {
 
   mm_log((1, "bufchain_write: ig = %p, buf = %p, count = %ld\n", ig, buf, (long)count));
 
-  IOL_DEB( printf("bufchain_write: ig = %p, ieb->cpos = %ld, buf = %p, count = %ld\n", ig, (long) ieb->cpos, buf, (long)count) );
+  IOL_DEB( fprintf(IOL_DEBs, "bufchain_write: ig = %p, ieb->cpos = %ld, buf = %p, count = %ld\n", ig, (long) ieb->cpos, buf, (long)count) );
   
   while(count) {
     mm_log((2, "bufchain_write: - looping - count = %ld\n", (long)count));
@@ -743,7 +745,7 @@ static
 int
 bufchain_close(io_glue *ig) {
   mm_log((1, "bufchain_close(ig %p)\n",ig));
-  IOL_DEB( printf("bufchain_close(ig %p)\n", ig) );
+  IOL_DEB( fprintf(IOL_DEBs, "bufchain_close(ig %p)\n", ig) );
 
   return 0;  
 }
@@ -837,6 +839,7 @@ bufchain_destroy(io_glue *ig) {
  * Methods for setting up data source
  */
 
+#if 0
 /*
 =item io_obj_setp_buffer(io, p, len)
 
@@ -852,41 +855,9 @@ Sets an io_object for reading from a buffer source
 static void
 io_obj_setp_buffer(io_buffer *io, char *p, size_t len, i_io_closebufp_t closecb, 
 		   void *closedata) {
-  io->base.type      = BUFFER;
-  io->data      = p;
-  io->len       = len;
-  io->closecb   = closecb;
-  io->closedata = closedata;
 }
 
-
-
-/*
-=item io_obj_setp_cb2(io, p, readcb, writecb, seekcb, closecb, destroycb)
-
-Sets an io_object for reading from a source that uses callbacks
-
-   io      - io object that describes a source
-   p         - pointer to data for callbacks
-   readcb    - read callback to read from source
-   writecb   - write callback to write to source
-   seekcb    - seek callback to seek on source
-   closecb   - flush any pending data
-   destroycb - release any extra resources
-
-=cut
-*/
-
-static void
-io_obj_setp_cb2(io_cb *io, void *p, i_io_readl_t readcb, i_io_writel_t writecb, i_io_seekl_t seekcb, i_io_closel_t closecb, i_io_destroyl_t destroycb) {
-  io->base.type      = CBSEEK;
-  io->p         = p;
-  io->readcb    = readcb;
-  io->writecb   = writecb;
-  io->seekcb    = seekcb;
-  io->closecb   = closecb;
-  io->destroycb = destroycb;
-}
+#endif
 
 /*
 =item io_new_bufchain()
@@ -906,7 +877,7 @@ io_new_bufchain() {
 
   ig = mymalloc(sizeof(io_glue));
   memset(ig, 0, sizeof(*ig));
-  ig->type = BUFCHAIN;
+  i_io_init(ig, BUFCHAIN, bufchain_read, bufchain_write, bufchain_seek);
 
   ieb->offset = 0;
   ieb->length = 0;
@@ -919,9 +890,6 @@ io_new_bufchain() {
   ieb->tail   = ieb->head;
   
   ig->exdata    = ieb;
-  ig->readcb    = bufchain_read;
-  ig->writecb   = bufchain_write;
-  ig->seekcb    = bufchain_seek;
   ig->closecb   = bufchain_close;
   ig->destroycb = bufchain_destroy;
 
@@ -949,14 +917,16 @@ io_new_buffer(char *data, size_t len, i_io_closebufp_t closecb, void *closedata)
 
   ig = mymalloc(sizeof(io_buffer));
   memset(ig, 0, sizeof(*ig));
-  io_obj_setp_buffer(ig, data, len, closecb, closedata);
+  i_io_init(&ig->base, BUFFER, buffer_read, buffer_write, buffer_seek);
+  ig->data      = data;
+  ig->len       = len;
+  ig->closecb   = closecb;
+  ig->closedata = closedata;
+
   ieb->offset = 0;
   ieb->cpos   = 0;
   
   ig->base.exdata    = ieb;
-  ig->base.readcb    = buffer_read;
-  ig->base.writecb   = buffer_write;
-  ig->base.seekcb    = buffer_seek;
   ig->base.closecb   = buffer_close;
   ig->base.destroycb = buffer_destroy;
 
@@ -984,13 +954,9 @@ io_new_fd(int fd) {
 
   ig = mymalloc(sizeof(io_fdseek));
   memset(ig, 0, sizeof(*ig));
-  ig->base.type = FDSEEK;
+  i_io_init(&ig->base, FDSEEK, fd_read, fd_write, fd_seek);
   ig->fd = fd;
 
-  ig->base.exdata    = NULL;
-  ig->base.readcb    = fd_read;
-  ig->base.writecb   = fd_write;
-  ig->base.seekcb    = fd_seek;
   ig->base.closecb   = fd_close;
   ig->base.sizecb    = fd_size;
   ig->base.destroycb = NULL;
@@ -1009,18 +975,22 @@ io_glue *io_new_cb(void *p, i_io_readl_t readcb, i_io_writel_t writecb,
           "destroycb %p)\n", p, readcb, writecb, seekcb, closecb, destroycb));
   ig = mymalloc(sizeof(io_cb));
   memset(ig, 0, sizeof(*ig));
-  io_obj_setp_cb2(ig, p, readcb, writecb, seekcb, closecb, destroycb);
+  i_io_init(&ig->base, CBSEEK, realseek_read, realseek_write, realseek_seek);
   mm_log((1, "(%p) <- io_new_cb\n", ig));
 
   ier->offset = 0;
   ier->cpos   = 0;
   
   ig->base.exdata    = ier;
-  ig->base.readcb    = realseek_read;
-  ig->base.writecb   = realseek_write;
-  ig->base.seekcb    = realseek_seek;
   ig->base.closecb   = realseek_close;
   ig->base.destroycb = realseek_destroy;
+
+  ig->p         = p;
+  ig->readcb    = readcb;
+  ig->writecb   = writecb;
+  ig->seekcb    = seekcb;
+  ig->closecb   = closecb;
+  ig->destroycb = destroycb;
 
   return (io_glue *)ig;
 }
@@ -1148,6 +1118,9 @@ io_glue_destroy(io_glue *ig) {
 
   if (ig->destroycb)
     ig->destroycb(ig);
+
+  if (ig->buffer)
+    myfree(ig->buffer);
   
   myfree(ig);
 }
@@ -1172,11 +1145,496 @@ wrapper ensures we only get non-NULL values.
 static
 const char *my_strerror(int err) {
   const char *result = strerror(err);
-
+  
   if (!result)
     result = "Unknown error";
+  
+  return result;
+}
+
+static void
+i_io_setup_buffer(io_glue *ig) {
+  ig->buffer = mymalloc(ig->buf_size);
+}
+
+static void
+i_io_start_write(io_glue *ig) {
+  ig->write_ptr = ig->buffer;
+  ig->write_end = ig->buffer + ig->buf_size;
+}
+
+static int
+i_io_read_fill(io_glue *ig) {
+  unsigned char *buf_end = ig->buffer + ig->buf_size;
+  unsigned char *buf_start = ig->buffer;
+  unsigned char *work = ig->buffer;
+  ssize_t rc;
+  int good = 0;
+
+  if (ig->err_code)
+    return 0;
+
+  while (work < buf_end && (rc = i_io_raw_read(ig, work, buf_end - work)) > 0) {
+    work += rc;
+    good = 1;
+  }
+
+  if (good) {
+    ig->read_ptr = buf_start;
+    ig->read_end = work;
+  }
+  
+  return good;
+}
+
+/*
+=item i_iob_getc(ig)
+
+Read a single byte from a buffered I/O glue object.
+
+Returns EOF on failure, or a byte.
+
+=cut
+*/
+
+int
+i_io_getc_imp(io_glue *ig) {
+  if (ig->write_ptr)
+    return EOF;
+  
+  if (!ig->buffer)
+    i_io_setup_buffer(ig);
+  
+  if (ig->err_code)
+    return EOF;
+  
+  if (!ig->read_ptr || ig->read_ptr == ig->read_end) {
+    if (!i_io_read_fill(ig))
+      return EOF;
+  }
+  
+  return *(ig->read_ptr++);
+}
+
+int
+i_io_peekc_imp(io_glue *ig) {
+  if (ig->write_ptr)
+    return EOF;
+
+  if (ig->err_code)
+    return EOF;
+
+  if (!ig->buffer)
+    i_io_setup_buffer(ig);
+
+  if (!ig->read_ptr || ig->read_ptr == ig->read_end) {
+    if (!i_io_read_fill(ig))
+      return EOF;
+  }
+
+  return *(ig->read_ptr);
+}
+
+ssize_t
+i_io_peekn(io_glue *ig, void *buf, size_t size) {
+  IOL_DEB(fprintf(IOL_DEBs, "i_io_peekn(%p, %p, %d)\n", ig, buf, (int)size));
+
+  if (ig->write_ptr) {
+    IOL_DEB(fprintf(IOL_DEBs, "i_io_peekn() => -1 (write_ptr set)\n"));
+    return -1;
+  }
+
+  if (ig->err_code) {
+    IOL_DEB(fprintf(IOL_DEBs, "i_io_peekn() => -1 (err_code set: %d)\n", ig->err_code));
+    return -1;
+  }
+
+  if (!ig->buffer)
+    i_io_setup_buffer(ig);
+
+  if (!ig->read_ptr) {
+    if (!i_io_read_fill(ig)) {
+      IOL_DEB(fprintf(IOL_DEBs, "i_io_peekn() => -1 (read fill failed)\n"));
+      return -1;
+    }
+  }
+  
+  if (size > ig->read_end - ig->read_ptr)
+    size = ig->read_end - ig->read_ptr;
+
+  memcpy(buf, ig->read_ptr, size);
+
+  IOL_DEB(fprintf(IOL_DEBs, "i_io_peekn() => %d\n", (int)size));
+
+  return size;
+}
+
+int
+i_io_putc_imp(io_glue *ig, int c) {
+  IOL_DEB(fprintf(IOL_DEBs, "i_io_putc_imp(%p, %d)\n", ig, c));
+
+  if (!ig->buffered) {
+    char buf = c;
+    ssize_t write_result = i_io_raw_write(ig, &buf, 1);
+    int result = write_result == 1 ? c : EOF;
+    IOL_DEB(fprintf(IOL_DEBs, "  unbuffered: result %d\n", result));
+
+    return result;
+  }
+
+  if (ig->read_ptr)
+    return EOF;
+
+  if (ig->err_code)
+    return EOF;
+
+  if (!ig->buffer)
+    i_io_setup_buffer(ig);
+
+  if (ig->write_ptr && ig->write_ptr == ig->write_end) {
+    if (!i_io_flush(ig))
+      return EOF;
+  }
+
+  i_io_start_write(ig);
+
+  *(ig->write_ptr)++ = c;
+
+  return (unsigned char)c;
+}
+
+ssize_t
+i_io_read(io_glue *ig, void *buf, size_t size) {
+  unsigned char *pbuf = buf;
+  ssize_t read_total = 0;
+
+  IOL_DEB(fprintf(IOL_DEBs, "i_io_read(%p, %p, %u)\n", ig, buf, (unsigned)size));
+
+  if (ig->write_ptr) {
+    IOL_DEB(fprintf(IOL_DEBs, "i_io_read() => 0 (read_ptr set)\n"));
+    return -1;
+  }
+
+  if (ig->err_code) {
+    IOL_DEB(fprintf(IOL_DEBs, "i_io_read() => 0 (err_code set: %d)\n", ig->err_code));
+    return -1;
+  }
+
+  if (!ig->buffer)
+    i_io_setup_buffer(ig);
+
+  if (ig->read_ptr && ig->read_ptr < ig->read_end) {
+    size_t alloc = ig->read_end - ig->read_ptr;
+    
+    if (alloc > size)
+      alloc = size;
+
+    memcpy(pbuf, ig->read_ptr, alloc);
+    ig->read_ptr += alloc;
+    pbuf += alloc;
+    size -= alloc;
+    read_total += alloc;
+  }
+
+  if (size > ig->buf_size) {
+    ssize_t rc;
+
+    while (size > 0 && (rc = i_io_raw_read(ig, pbuf, size)) > 0) {
+      size -= rc;
+      pbuf += rc;
+      read_total += rc;
+    }
+
+    IOL_DEB(fprintf(IOL_DEBs, "i_io_read() => %d (raw read)\n", (int)read_total));
+
+    return read_total;
+  }
+  else if (size > 0) {
+    if (i_io_read_fill(ig)) {
+      size_t alloc = ig->read_end - ig->read_ptr;
+      if (alloc > size)
+	alloc = size;
+      
+      memcpy(pbuf, ig->read_ptr, alloc);
+      ig->read_ptr += alloc;
+      pbuf += alloc;
+      size -= alloc;
+      read_total += alloc;
+    }
+    else {
+      if (!read_total && ig->err_code) {
+	IOL_DEB(fprintf(IOL_DEBs, "i_io_read() => -1 (fill failure)\n"));
+	return -1;
+      }
+    }
+  }
+
+  IOL_DEB(fprintf(IOL_DEBs, "i_io_read() => %d\n", (int)read_total));
+
+  return read_total;
+}
+
+ssize_t
+i_io_write(io_glue *ig, const void *buf, size_t size) {
+  const unsigned char *pbuf = buf;
+  size_t write_count = 0;
+
+  IOL_DEB(fprintf(IOL_DEBs, "i_io_write(%p, %p, %u)\n", ig, buf, (unsigned)size));
+
+  if (!ig->buffered) {
+    ssize_t result = i_io_raw_write(ig, buf, size);
+
+    IOL_DEB(fprintf(IOL_DEBs, "  unbuffered, result: %d\n", (int)result));
+
+    return result;
+  }
+
+  if (ig->read_ptr) {
+    IOL_DEB(fprintf(IOL_DEBs, "i_io_write() => -1 (read_ptr set)\n"));
+    return -1;
+  }
+
+  if (ig->err_code) {
+    IOL_DEB(fprintf(IOL_DEBs, "i_io_write() => -1 (err_code set: %d)\n", ig->err_code));
+    return -1;
+  }
+
+  if (!ig->buffer)
+    i_io_setup_buffer(ig);
+
+  if (!ig->write_ptr)
+    i_io_start_write(ig);
+
+  if (ig->write_ptr && ig->write_ptr + size <= ig->write_end) {
+    size_t alloc = ig->write_end - ig->write_ptr;
+    if (alloc > size)
+      alloc = size;
+    memcpy(ig->write_ptr, pbuf, alloc);
+    write_count += alloc;
+    size -= alloc;
+    pbuf += alloc;
+    ig->write_ptr += alloc;
+  }
+
+  if (size) {
+    if (!i_io_flush(ig)) {
+      IOL_DEB(fprintf(IOL_DEBs, "i_io_write() => %d (i_io_flush failure)\n", (int)write_count));
+      return write_count ? write_count : -1;
+    }
+
+    i_io_start_write(ig);
+    
+    if (size > ig->buf_size) {
+      ssize_t rc;
+      while (size > 0 && (rc = i_io_raw_write(ig, pbuf, size)) > 0) {
+	write_count += rc;
+	pbuf += rc;
+	size -= rc;
+      }
+      if (rc <= 0) {
+	if (!ig->err_code) {
+	  ig->err_code = 1;
+	}
+      }
+    }
+    else {
+      memcpy(ig->write_ptr, pbuf, size);
+      write_count += size;
+      ig->write_ptr += size;
+    }
+  }
+
+  IOL_DEB(fprintf(IOL_DEBs, "i_io_write() => %d\n", (int)write_count));
+
+  return write_count;
+}
+
+off_t
+i_io_seek(io_glue *ig, off_t offset, int whence) {
+  off_t new_off;
+
+  IOL_DEB(fprintf(IOL_DEBs, "i_io_seek(%p, %ld, %d)\n", ig, (long)offset, whence));
+
+  if (ig->write_ptr && ig->write_ptr != ig->write_end)
+    i_io_flush(ig);
+
+  ig->read_ptr = ig->read_end = NULL;
+  ig->write_ptr = ig->write_end = NULL;
+  ig->err_code = 0;
+  ig->buf_eof = 0;
+  
+  new_off = i_io_raw_seek(ig, offset, whence);
+  if (new_off < 0 && !ig->err_code)
+    ig->err_code = 1;
+
+  IOL_DEB(fprintf(IOL_DEBs, "i_io_seek() => %ld\n", (long)new_off));
+
+  return new_off;
+}
+
+int
+i_io_flush(io_glue *ig) {
+  unsigned char *bufp;
+
+  IOL_DEB(fprintf(IOL_DEBs, "i_io_flush(%p)\n", ig));
+
+  /* nothing to do */
+  if (!ig->write_ptr)
+    return 1;
+
+  bufp = ig->buffer;
+  while (bufp < ig->write_ptr) {
+    ssize_t rc = i_io_raw_write(ig, bufp, ig->write_ptr - bufp);
+    if (rc <= 0) {
+      if (!ig->err_code) ig->err_code = 0;
+      return 0;
+    }
+    
+    bufp += rc;
+  }
+
+  ig->write_ptr = ig->write_end = NULL;
+
+  return 1;
+}
+
+int
+i_io_close(io_glue *ig) {
+  int flush_res = 0;
+  int result = 0;
+
+  IOL_DEB(fprintf(IOL_DEBs, "i_io_close(%p)\n", ig));
+  if (ig->write_ptr && !i_io_flush(ig))
+    result = -1;
+
+  if (i_io_raw_close(ig))
+    result = -1;
+
+  IOL_DEB(fprintf(IOL_DEBs, "i_io_close() => %d\n", result));
 
   return result;
+}
+
+/*
+=item i_io_init(ig, readcb, writecb, seekcb)
+
+Do common initialization for io_glue objects.
+
+=cut
+*/
+
+void
+i_io_init(io_glue *ig, int type, i_io_readp_t readcb, i_io_writep_t writecb,
+	  i_io_seekp_t seekcb) {
+  ig->type = type;
+  ig->exdata = NULL;
+  ig->readcb = readcb;
+  ig->writecb = writecb;
+  ig->seekcb = seekcb;
+  ig->closecb = NULL;
+  ig->sizecb = NULL;
+  ig->destroycb = NULL;
+
+  ig->buffer = NULL;
+  ig->read_ptr = NULL;
+  ig->read_end = NULL;
+  ig->write_ptr = NULL;
+  ig->write_end = NULL;
+  ig->buf_size = IO_BUF_SIZE;
+  ig->buf_eof = 0;
+  ig->err_code = 0;
+  ig->buffered = 1;
+}
+
+static void dump_data(unsigned char *start, unsigned char *end, int bias) {
+  unsigned char *p;
+  size_t count = end - start;
+
+  if (start == end) {
+    fprintf(IOL_DEBs, "(empty)");
+    return;
+  }
+
+  if (count > 15) {
+    if (bias) {
+      fprintf(IOL_DEBs, "... ");
+      start = end - 14;
+    }
+    else {
+      end = start + 14;
+    }
+      
+    for (p = start; p < end; ++p) {
+      fprintf(IOL_DEBs, " %02x", *p);
+    }
+    putc(' ', IOL_DEBs);
+    putc('<', IOL_DEBs);
+    for (p = start; p < end; ++p) {
+      if (*p < ' ' || *p > '~')
+	putc('.', IOL_DEBs);
+      else
+	putc(*p, IOL_DEBs);
+    }
+    putc('>', IOL_DEBs);
+    if (!bias)
+      fprintf(IOL_DEBs, " ...");
+  }
+  else {
+    for (p = start; p < end; ++p) {
+      fprintf(IOL_DEBs, " %02x", *p);
+    }
+    putc(' ', IOL_DEBs);
+    for (p = start; p < end; ++p) {
+      if (*p < ' ' || *p > '~')
+	putc('.', IOL_DEBs);
+      else
+	putc(*p, IOL_DEBs);
+    }
+  }
+}
+
+/*
+=item i_io_dump(ig)
+
+Dump the base fields of an io_glue object to stdout.
+
+=cut
+*/
+void
+i_io_dump(io_glue *ig, int flags) {
+  fprintf(IOL_DEBs, "ig %p:\n", ig);
+  fprintf(IOL_DEBs, "  type: %d\n", ig->type);  
+  fprintf(IOL_DEBs, "  exdata: %p\n", ig->exdata);
+  if (flags & I_IO_DUMP_CALLBACKS) {
+    fprintf(IOL_DEBs, "  readcb: %p\n", ig->readcb);
+    fprintf(IOL_DEBs, "  writecb: %d\n", ig->writecb);
+    fprintf(IOL_DEBs, "  seekcb: %d\n", ig->seekcb);
+    fprintf(IOL_DEBs, "  closecb: %d\n", ig->closecb);
+    fprintf(IOL_DEBs, "  sizecb: %d\n", ig->sizecb);
+  }
+  if (flags & I_IO_DUMP_BUFFER) {
+    fprintf(IOL_DEBs, "  buffer: %p\n", ig->buffer);
+    fprintf(IOL_DEBs, "  read_ptr: %p\n", ig->read_ptr);
+    if (ig->read_ptr) {
+      fprintf(IOL_DEBs, "    ");
+      dump_data(ig->read_ptr, ig->read_end, 0);
+      putc('\n', IOL_DEBs);
+    }
+    fprintf(IOL_DEBs, "  read_end: %p\n", ig->read_end);
+    fprintf(IOL_DEBs, "  write_ptr: %p\n", ig->write_ptr);
+    if (ig->write_ptr) {
+      fprintf(IOL_DEBs, "    ");
+      dump_data(ig->buffer, ig->write_ptr, 1);
+      putc('\n', IOL_DEBs);
+    }
+    fprintf(IOL_DEBs, "  write_end: %p\n", ig->write_end);
+    fprintf(IOL_DEBs, "  buf_size: %u\n", (unsigned)(ig->buf_size));
+  }
+  if (flags & I_IO_DUMP_STATUS) {
+    fprintf(IOL_DEBs, "  buf_eof: %d\n", ig->buf_eof);
+    fprintf(IOL_DEBs, "  err_code: %d\n", ig->err_code);
+    fprintf(IOL_DEBs, "  buffered: %d\n", ig->buffered);
+  }
 }
 
 /*

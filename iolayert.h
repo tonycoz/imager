@@ -55,13 +55,44 @@ struct i_io_glue_t {
   i_io_closep_t	closecb;
   i_io_sizep_t	sizecb;
   i_io_destroyp_t destroycb;
+  unsigned char *buffer;
+  unsigned char *read_ptr;
+  unsigned char *read_end;
+  unsigned char *write_ptr;
+  unsigned char *write_end;
+  size_t buf_size;
+  int buf_eof;
+  int err_code;
+
+  /* if non-zero we do write buffering (enabled by default) */
+  int buffered;
 };
 
-#define i_io_type(ig) ((ig)->source.ig_type)
-#define i_io_read(ig, buf, size) ((ig)->readcb((ig), (buf), (size)))
-#define i_io_write(ig, data, size) ((ig)->writecb((ig), (data), (size)))
-#define i_io_seek(ig, offset, whence) ((ig)->seekcb((ig), (offset), (whence)))
-#define i_io_close(ig) ((ig)->closecb(ig))
+#define I_IO_DUMP_CALLBACKS 1
+#define I_IO_DUMP_BUFFER 2
+#define I_IO_DUMP_STATUS 4
+#define I_IO_DUMP_DEFAULT (I_IO_DUMP_BUFFER | I_IO_DUMP_STATUS)
 
+#define i_io_type(ig) ((ig)->source.ig_type)
+#define i_io_raw_read(ig, buf, size) ((ig)->readcb((ig), (buf), (size)))
+#define i_io_raw_write(ig, data, size) ((ig)->writecb((ig), (data), (size)))
+#define i_io_raw_seek(ig, offset, whence) ((ig)->seekcb((ig), (offset), (whence)))
+#define i_io_raw_close(ig) ((ig)->closecb(ig))
+#define i_io_set_error(ig, code) ((ig)->err_code = (code))
+#define i_io_set_buffered(ig, flag) ((ig)->buffered = (flag))
+#define i_io_error(ig) ((ig)->err_code)
+
+#define i_io_getc(ig) \
+  ((ig)->read_ptr < (ig)->read_end ? \
+     *((ig)->read_ptr++) : \
+     i_io_getc_imp(ig))
+#define i_io_peekc(ig) \
+  ((ig)->read_ptr < (ig)->read_end ? \
+   *((ig)->read_ptr) :		     \
+     i_io_peekc_imp(ig))
+#define i_io_putc(ig, c) \
+  ((ig)->write_ptr < (ig)->write_end ? \
+     *(ig)->write_ptr++ : \
+     i_io_putc_imp(ig, c))
 
 #endif

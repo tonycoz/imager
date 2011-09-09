@@ -23,7 +23,7 @@
  will result in an increment of IMAGER_API_LEVEL.
 */
 
-#define IMAGER_API_LEVEL 6
+#define IMAGER_API_LEVEL 7
 
 typedef struct {
   int version;
@@ -185,7 +185,20 @@ typedef struct {
 			  i_img_dim width, const double *src,
 			  i_fcolor *line, i_fill_combinef_f combine);
 
-  /* IMAGER_API_LEVEL 6 functions will be added here */
+  /* Level 6 lost to mis-numbering */
+  /* IMAGER_API_LEVEL 7 */
+  int (*f_i_io_getc_imp)(io_glue *ig);
+  int (*f_i_io_peekc_imp)(io_glue *ig);
+  ssize_t (*f_i_io_peekn)(io_glue *ig, void *buf, size_t size);
+  int (*f_i_io_putc_imp)(io_glue *ig, int c);
+  ssize_t (*f_i_io_read)(io_glue *, void *buf, size_t size);
+  ssize_t (*f_i_io_write)(io_glue *, const void *buf, size_t size);
+  off_t (*f_i_io_seek)(io_glue *, off_t offset, int whence);
+  int (*f_i_io_flush)(io_glue *ig);
+  int (*f_i_io_close)(io_glue *ig);
+
+  /* IMAGER_API_LEVEL 7 functions will be added here */
+  
 } im_ext_funcs;
 
 #define PERL_FUNCTION_TABLE_NAME "Imager::__ext_func_table"

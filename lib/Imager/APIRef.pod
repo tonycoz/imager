@@ -1780,6 +1780,54 @@ From: File io.c
 =back
 
 
+=head1 UNDOCUMENTED
+
+The following API functions are undocumented so far, hopefully this
+will change:
+
+=over
+
+=item *
+
+B<i_io_close>
+
+=item *
+
+B<i_io_flush>
+
+=item *
+
+B<i_io_getc_imp>
+
+=item *
+
+B<i_io_peekc_imp>
+
+=item *
+
+B<i_io_peekn>
+
+=item *
+
+B<i_io_putc_imp>
+
+=item *
+
+B<i_io_read>
+
+=item *
+
+B<i_io_seek>
+
+=item *
+
+B<i_io_write>
+
+
+
+=back
+
+
 =head1 AUTHOR
 
 Tony Cook <tonyc@cpan.org>

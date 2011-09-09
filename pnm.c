@@ -83,7 +83,7 @@ gnextf(mbuf *mb) {
   io_glue *ig = mb->ig;
   if (mb->cp == mb->len) {
     mb->cp = 0;
-    mb->len = ig->readcb(ig, mb->buf, BSIZ);
+    mb->len = i_io_read(ig, mb->buf, BSIZ);
     if (mb->len == -1) {
       i_push_error(errno, "file read error");
       mm_log((1, "i_readpnm: read error\n"));
@@ -117,7 +117,7 @@ gpeekf(mbuf *mb) {
   io_glue *ig = mb->ig;
   if (mb->cp == mb->len) {
     mb->cp = 0;
-    mb->len = ig->readcb(ig, mb->buf, BSIZ);
+    mb->len = i_io_read(ig, mb->buf, BSIZ);
     if (mb->len == -1) {
       i_push_error(errno, "read error");
       mm_log((1, "i_readpnm: read error\n"));
@@ -893,7 +893,8 @@ i_writeppm_wiol(i_img *im, io_glue *ig) {
   /* Also add code to check for mmapped code */
 
   if (i_img_is_monochrome(im, &zero_is_white)) {
-    return write_pbm(im, ig, zero_is_white);
+    if (!write_pbm(im, ig, zero_is_white))
+      return 0;
   }
   else {
     int type;
@@ -925,7 +926,7 @@ i_writeppm_wiol(i_img *im, io_glue *ig) {
     sprintf(header,"P%d\n#CREATOR: Imager\n%" i_DF " %" i_DF"\n%d\n", 
             type, i_DFc(im->xsize), i_DFc(im->ysize), maxval);
 
-    if (ig->writecb(ig,header,strlen(header)) != strlen(header)) {
+    if (i_io_write(ig,header,strlen(header)) != strlen(header)) {
       i_push_error(errno, "could not write ppm header");
       mm_log((1,"i_writeppm: unable to write ppm header.\n"));
       return(0);
@@ -933,7 +934,7 @@ i_writeppm_wiol(i_img *im, io_glue *ig) {
 
     if (!im->virtual && im->bits == i_8_bits && im->type == i_direct_type
 	&& im->channels == want_channels) {
-      if (ig->writecb(ig,im->idata,im->bytes) != im->bytes) {
+      if (i_io_write(ig,im->idata,im->bytes) != im->bytes) {
         i_push_error(errno, "could not write ppm data");
         return 0;
       }
@@ -947,7 +948,10 @@ i_writeppm_wiol(i_img *im, io_glue *ig) {
         return 0;
     }
   }
-  ig->closecb(ig);
+  if (i_io_close(ig)) {
+    i_push_errorf(i_io_error(ig), "Error closing stream: %d", i_io_error(ig));
+    return 0;
+  }
 
   return(1);
 }

@@ -182,7 +182,7 @@ i_readsgi_wiol(io_glue *ig, int partial) {
   mm_log((1,"i_readsgi(ig %p, partial %d)\n", ig, partial));
   i_clear_error();
 
-  if (ig->readcb(ig, headbuf, 512) != 512) {
+  if (i_io_read(ig, headbuf, 512) != 512) {
     i_push_error(errno, "SGI image: could not read header");
     return NULL;
   }
@@ -375,7 +375,7 @@ read_rgb_8_verbatim(i_img *img, io_glue *ig, rgb_header const *header) {
     for(y = 0; y < height; y++) {
       int x;
       
-      if (ig->readcb(ig, databuf, width) != width) {
+      if (i_io_read(ig, databuf, width) != width) {
 	i_push_error(0, "SGI image: cannot read image data");
 	i_img_destroy(img);
 	myfree(linebuf);
@@ -436,7 +436,7 @@ read_rle_tables(io_glue *ig, i_img *img,
   length_tab = mymalloc(height*channels*sizeof(unsigned long));
     
     /* Read offset table */
-  if (ig->readcb(ig, databuf, height * channels * 4) != height * channels * 4) {
+  if (i_io_read(ig, databuf, height * channels * 4) != height * channels * 4) {
     i_push_error(0, "SGI image: short read reading RLE start table");
     goto ErrorReturn;
   }
@@ -447,7 +447,7 @@ read_rle_tables(io_glue *ig, i_img *img,
 
 
   /* Read length table */
-  if (ig->readcb(ig, databuf, height*channels*4) != height*channels*4) {
+  if (i_io_read(ig, databuf, height*channels*4) != height*channels*4) {
     i_push_error(0, "SGI image: short read reading RLE length table");
     goto ErrorReturn;
   }
@@ -520,11 +520,11 @@ read_rgb_8_rle(i_img *img, io_glue *ig, rgb_header const *header) {
       int pixels_left = width;
       i_sample_t sample;
       
-      if (ig->seekcb(ig, start_tab[ci], SEEK_SET) != start_tab[ci]) {
+      if (i_io_seek(ig, start_tab[ci], SEEK_SET) != start_tab[ci]) {
 	i_push_error(0, "SGI image: cannot seek to RLE data");
 	goto ErrorReturn;
       }
-      if (ig->readcb(ig, databuf, datalen) != datalen) {
+      if (i_io_read(ig, databuf, datalen) != datalen) {
 	i_push_error(0, "SGI image: cannot read RLE data");
 	goto ErrorReturn;
       }
@@ -656,7 +656,7 @@ read_rgb_16_verbatim(i_img *img, io_glue *ig, rgb_header const *header) {
     for(y = 0; y < height; y++) {
       int x;
       
-      if (ig->readcb(ig, databuf, width*2) != width*2) {
+      if (i_io_read(ig, databuf, width*2) != width*2) {
 	i_push_error(0, "SGI image: cannot read image data");
 	i_img_destroy(img);
 	myfree(linebuf);
@@ -738,11 +738,11 @@ read_rgb_16_rle(i_img *img, io_glue *ig, rgb_header const *header) {
 	i_push_error(0, "SGI image: invalid RLE length value for BPC=2");
 	goto ErrorReturn;
       }
-      if (ig->seekcb(ig, start_tab[ci], SEEK_SET) != start_tab[ci]) {
+      if (i_io_seek(ig, start_tab[ci], SEEK_SET) != start_tab[ci]) {
 	i_push_error(0, "SGI image: cannot seek to RLE data");
 	goto ErrorReturn;
       }
-      if (ig->readcb(ig, databuf, datalen) != datalen) {
+      if (i_io_read(ig, databuf, datalen) != datalen) {
 	i_push_error(0, "SGI image: cannot read RLE data");
 	goto ErrorReturn;
       }
@@ -912,7 +912,7 @@ write_sgi_8_verb(i_img *img, io_glue *ig) {
   for (c = 0; c < img->channels; ++c) {
     for (y = img->ysize - 1; y >= 0; --y) {
       i_gsamp(img, 0, width, y, linebuf, &c, 1);
-      if (ig->writecb(ig, linebuf, width) != width) {
+      if (i_io_write(ig, linebuf, width) != width) {
 	i_push_error(errno, "SGI image: error writing image data");
 	myfree(linebuf);
 	return 0;
@@ -920,6 +920,9 @@ write_sgi_8_verb(i_img *img, io_glue *ig) {
     }
   }
   myfree(linebuf);
+
+  if (i_io_close(ig))
+    return 0;
 
   return 1;
 }
@@ -1011,7 +1014,7 @@ write_sgi_8_rle(i_img *img, io_glue *ig) {
       store_32(lengths + offset_pos, comp_size);
       offset_pos += 4;
       current_offset += comp_size;
-      if (ig->writecb(ig, comp_buf, comp_size) != comp_size) {
+      if (i_io_write(ig, comp_buf, comp_size) != comp_size) {
 	i_push_error(errno, "SGI image: error writing RLE data");
 	goto Error;
       }
@@ -1032,6 +1035,9 @@ write_sgi_8_rle(i_img *img, io_glue *ig) {
   myfree(offsets);
   myfree(comp_buf);
   myfree(linebuf);
+
+  if (i_io_close(ig))
+    return 0;
 
   return 1;
 
@@ -1061,7 +1067,7 @@ write_sgi_16_verb(i_img *img, io_glue *ig) {
 	unsigned short samp16 = SampleFTo16(linebuf[x]);
 	store_16(outp, samp16);
       }
-      if (ig->writecb(ig, encbuf, width * 2) != width * 2) {
+      if (i_io_write(ig, encbuf, width * 2) != width * 2) {
 	i_push_error(errno, "SGI image: error writing image data");
 	myfree(linebuf);
 	myfree(encbuf);
@@ -1071,6 +1077,9 @@ write_sgi_16_verb(i_img *img, io_glue *ig) {
   }
   myfree(linebuf);
   myfree(encbuf);
+
+  if (i_io_close(ig))
+    return 0;
 
   return 1;
 }
@@ -1171,7 +1180,7 @@ write_sgi_16_rle(i_img *img, io_glue *ig) {
       store_32(lengths + offset_pos, comp_size);
       offset_pos += 4;
       current_offset += comp_size;
-      if (ig->writecb(ig, comp_buf, comp_size) != comp_size) {
+      if (i_io_write(ig, comp_buf, comp_size) != comp_size) {
 	i_push_error(errno, "SGI image: error writing RLE data");
 	goto Error;
       }
@@ -1193,6 +1202,9 @@ write_sgi_16_rle(i_img *img, io_glue *ig) {
   myfree(comp_buf);
   myfree(linebuf);
   myfree(sampbuf);
+
+  if (i_io_close(ig))
+    return 0;
 
   return 1;
 

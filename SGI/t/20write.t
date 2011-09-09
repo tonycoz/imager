@@ -161,12 +161,22 @@ Imager::init_log('testout/20write.log', 2);
     );
   for my $test (@tests) {
     my ($im, $limit, $expected_msg, $desc) = @$test;
-    my ($writecb, $seekcb) = limited_write($limit);
-    ok(!$im->write(type => 'sgi', writecb => $writecb,
-		   seekcb => $seekcb, maxbuffer => 1),
+    my $io = limited_write_io($limit);
+    ok(!$im->write(type => 'sgi', io => $io),
        "write should fail - $desc");
     is($im->errstr, "$expected_msg: limit reached", "check error - $desc");
   }
+}
+
+sub limited_write_io {
+  my ($limit) = @_;
+
+  my ($writecb, $seekcb) = limited_write($limit);
+
+  my $io = Imager::io_new_cb($writecb, undef, $seekcb, undef, 1);
+  $io->set_buffered(0);
+
+  return $io;
 }
 
 sub limited_write {

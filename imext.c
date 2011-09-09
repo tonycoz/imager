@@ -131,7 +131,19 @@ im_ext_funcs imager_function_table =
     i_render_color,
     i_render_fill,
     i_render_line,
-    i_render_linef
+    i_render_linef,
+
+    /* level 6 */
+    i_io_getc_imp,
+    i_io_peekc_imp,
+    i_io_peekn,
+    i_io_putc_imp,
+    i_io_read,
+    i_io_write,
+    i_io_seek,
+    i_io_flush,
+    i_io_close
+    
   };
 
 /* in general these functions aren't called by Imager internally, but

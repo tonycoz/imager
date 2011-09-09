@@ -4,6 +4,8 @@ use Test::More tests => 195;
 use strict;
 use Imager::Test qw(test_image_raw test_image_16 is_color3 is_color1 is_image);
 
+$| = 1;
+
 -d "testout" or mkdir "testout";
 
 Imager->open_log(log => "testout/t104ppm.log");
@@ -65,7 +67,8 @@ is(i_img_diff($gimg, $gcmpimg), 0,
    "compare written and read greyscale images");
 
 my $ooim = Imager->new;
-ok($ooim->read(file=>"testimg/simple.pbm"), "read simple pbm, via OO");
+ok($ooim->read(file=>"testimg/simple.pbm"), "read simple pbm, via OO")
+  or print "# ", $ooim->errstr, "\n";
 
 check_gray(Imager::i_get_pixel($ooim->{IMG}, 0, 0), 0);
 check_gray(Imager::i_get_pixel($ooim->{IMG}, 0, 1), 255);
@@ -233,7 +236,8 @@ is($ooim->tags(name=>'pnm_type'), 1, "check pnm_type tag");
   ok($im->write(file=>"testout/t104_alpha.ppm", type=>'pnm'),
      "should succeed writing 4 channel image");
   my $imread = Imager->new;
-  ok($imread->read(file => 'testout/t104_alpha.ppm'), "read it back");
+  ok($imread->read(file => 'testout/t104_alpha.ppm'), "read it back")
+    or print "# ", $imread->errstr, "\n";
   is_color3($imread->getpixel('x' => 0, 'y' => 0), 0, 0, 0, 
 	    "check transparent became black");
   is_color3($imread->getpixel('x' => 8, 'y' => 0), 255, 224, 192,

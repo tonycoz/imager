@@ -55,7 +55,9 @@ ok($diff < 10000, "difference between original and jpeg within bounds");
 # write failure test
 open FH, "< testout/t101.jpg" or die "Cannot open testout/t101.jpg: $!";
 binmode FH;
-ok(!$imoo->write(fd=>fileno(FH), type=>'jpeg'), 'failure handling');
+my $io = Imager::io_new_fd(fileno(FH));
+$io->set_buffered(0);
+ok(!$imoo->write(io => $io, type=>'jpeg'), 'failure handling');
 close FH;
 print "# ",$imoo->errstr,"\n";
 
@@ -324,7 +326,8 @@ SKIP:
   }
   my $data;
   ok($im->write(data => \$data, type=>'jpeg', jpegquality => 100), 
-     "write big file to ensure wiol_empty_output_buffer is called");
+     "write big file to ensure wiol_empty_output_buffer is called")
+    or print "# ", $im->errstr, "\n";
   
   # code coverage - write failure path in wiol_empty_output_buffer
   ok(!$im->write(callback => sub { return },

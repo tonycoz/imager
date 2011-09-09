@@ -613,8 +613,10 @@ for my $comp (@comp) {
     $im->read(file => "testimg/$file")
       or die "Cannot read $file: ", $im->errstr;
 
-    ok(!$im->write(type => 'bmp', callback => limited_write($limit),
-		   maxbuffer => 1),
+    my $io = Imager::io_new_cb(limited_write($limit), undef, undef, undef, 1);
+    $io->set_buffered(0);
+    print "# writing with limit of $limit\n";
+    ok(!$im->write(type => 'bmp', io => $io),
        "$test_index - $desc: write should fail");
     is($im->errstr, $error, "$test_index - $desc: check error message");
 
