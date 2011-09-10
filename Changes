@@ -23,6 +23,9 @@ Imager release history.  Older releases can be found in Changes.old
    - the callback IO object new tests the result of calling the close
      callback, which should return true for success.
 
+   - the PNM reader did its own buffering.  This buffering has been
+     removed to avoid redundancy with the common io_glue buffering.
+
 To do:
 
  - make sure i_io_close() is called and the result is checked
