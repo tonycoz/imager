@@ -1,5 +1,30 @@
 Imager release history.  Older releases can be found in Changes.old
 
+ - io_glue I/O buffering re-work:
+
+   - reorganize io_glue to do it's own buffering by default
+
+   - use the new i_io_peekn() when checking for file magic to avoid
+     seek, allowing Imager to detect the file type and read the file
+     from a read only stream (for formats that don't use random
+     access)
+
+   - fix the TGA performance problem, most noticably on Win32
+     https://rt.cpan.org/Ticket/Display.html?id=70037
+
+   - TIFF now uses wrapper functions of the correct types to avoid casts
+     https://rt.cpan.org/Ticket/Display.html?id=69912
+
+To do:
+
+ - make sure i_io_close() is called and the result is checked
+
+ - remove other buffering
+
+ - allow _get_writer() to produce unbuffered writers
+
+ - coverage/functional tests for the buffering code
+
 Imager 0.86
 ===========
 
