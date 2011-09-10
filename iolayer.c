@@ -203,8 +203,8 @@ realseek_read(io_glue *igo, void *buf, size_t count) {
   size_t        bc = 0;
   char       *cbuf = buf;
 
-  IOL_DEB( fprintf(IOL_DEBs, "realseek_read:  buf = %p, count = %d\n", 
-		  buf, count) );
+  IOL_DEB( fprintf(IOL_DEBs, "realseek_read:  buf = %p, count = %u\n", 
+		   buf, (unsigned)count) );
   /* Is this a good idea? Would it be better to handle differently?
      skip handling? */
   while( count!=bc && (rc = ig->readcb(p,cbuf+bc,count-bc))>0 ) {
@@ -212,7 +212,7 @@ realseek_read(io_glue *igo, void *buf, size_t count) {
   }
   
   ier->cpos += bc;
-  IOL_DEB( fprintf(IOL_DEBs, "realseek_read: rc = %d, bc = %d\n", rc, bc) );
+  IOL_DEB( fprintf(IOL_DEBs, "realseek_read: rc = %d, bc = %u\n", (int)rc, (unsigned)bc) );
   return rc < 0 ? rc : bc;
 }
 
@@ -240,7 +240,7 @@ realseek_write(io_glue *igo, const void *buf, size_t count) {
   char       *cbuf = (char*)buf; 
   
   IOL_DEB( fprintf(IOL_DEBs, "realseek_write: ig = %p, ier->cpos = %ld, buf = %p, "
-                  "count = %d\n", ig, (long) ier->cpos, buf, count) );
+		   "count = %u\n", ig, (long) ier->cpos, buf, (unsigned)count) );
 
   /* Is this a good idea? Would it be better to handle differently? 
      skip handling? */
@@ -249,7 +249,7 @@ realseek_write(io_glue *igo, const void *buf, size_t count) {
   }
 
   ier->cpos += bc;
-  IOL_DEB( fprintf(IOL_DEBs, "realseek_write: rc = %d, bc = %d\n", rc, bc) );
+  IOL_DEB( fprintf(IOL_DEBs, "realseek_write: rc = %d, bc = %u\n", (int)rc, (unsigned)bc) );
   return rc < 0 ? rc : bc;
 }
 
@@ -339,7 +339,7 @@ buffer_read(io_glue *igo, void *buf, size_t count) {
   io_buffer *ig = (io_buffer *)igo;
   io_ex_buffer *ieb = igo->exdata;
 
-  IOL_DEB( fprintf(IOL_DEBs, "buffer_read: ieb->cpos = %ld, buf = %p, count = %d\n", (long) ieb->cpos, buf, count) );
+  IOL_DEB( fprintf(IOL_DEBs, "buffer_read: ieb->cpos = %ld, buf = %p, count = %u\n", (long) ieb->cpos, buf, (unsigned)count) );
 
   if ( ieb->cpos+count > ig->len ) {
     mm_log((1,"buffer_read: short read: cpos=%ld, len=%ld, count=%ld\n", (long)ieb->cpos, (long)ig->len, (long)count));
@@ -1500,7 +1500,6 @@ i_io_flush(io_glue *ig) {
 
 int
 i_io_close(io_glue *ig) {
-  int flush_res = 0;
   int result = 0;
 
   IOL_DEB(fprintf(IOL_DEBs, "i_io_close(%p)\n", ig));
@@ -1607,10 +1606,10 @@ i_io_dump(io_glue *ig, int flags) {
   fprintf(IOL_DEBs, "  exdata: %p\n", ig->exdata);
   if (flags & I_IO_DUMP_CALLBACKS) {
     fprintf(IOL_DEBs, "  readcb: %p\n", ig->readcb);
-    fprintf(IOL_DEBs, "  writecb: %d\n", ig->writecb);
-    fprintf(IOL_DEBs, "  seekcb: %d\n", ig->seekcb);
-    fprintf(IOL_DEBs, "  closecb: %d\n", ig->closecb);
-    fprintf(IOL_DEBs, "  sizecb: %d\n", ig->sizecb);
+    fprintf(IOL_DEBs, "  writecb: %p\n", ig->writecb);
+    fprintf(IOL_DEBs, "  seekcb: %p\n", ig->seekcb);
+    fprintf(IOL_DEBs, "  closecb: %p\n", ig->closecb);
+    fprintf(IOL_DEBs, "  sizecb: %p\n", ig->sizecb);
   }
   if (flags & I_IO_DUMP_BUFFER) {
     fprintf(IOL_DEBs, "  buffer: %p\n", ig->buffer);

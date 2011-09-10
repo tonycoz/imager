@@ -15,6 +15,14 @@ Imager release history.  Older releases can be found in Changes.old
    - TIFF now uses wrapper functions of the correct types to avoid casts
      https://rt.cpan.org/Ticket/Display.html?id=69912
 
+   - the callback IO object did its own buffering, controlled by the
+     maxbuffer parameter supplied to the read() and write() methods.
+     This buffering has been removed, to avoid redundancy with the
+     common io_glue buffering.
+
+   - the callback IO object new tests the result of calling the close
+     callback, which should return true for success.
+
 To do:
 
  - make sure i_io_close() is called and the result is checked
@@ -24,6 +32,14 @@ To do:
  - allow _get_writer() to produce unbuffered writers
 
  - coverage/functional tests for the buffering code
+
+ - document the new Imager::IO methods
+
+ - document the io_glue C callbacks properly
+
+ - document the Imager::io_new_cb() callback functions properly.
+
+ - fix buffered seeks
 
 Imager 0.86
 ===========

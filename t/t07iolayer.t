@@ -1,6 +1,6 @@
 #!perl -w
 use strict;
-use Test::More tests => 74;
+use Test::More tests => 76;
 # for SEEK_SET etc, Fcntl doesn't provide these in 5.005_03
 use IO::Seekable;
 
@@ -271,6 +271,20 @@ SKIP:
 
   is($io->seek(0, SEEK_SET), "0", "seek");
   is($io->getc, ord "P", "check we got back to the start");
+}
+
+{ # test closecb result is propagated
+  my $success_cb = sub { 1 };
+  my $failure_cb = sub { 0 };
+
+  {
+    my $io = Imager::io_new_cb(undef, $success_cb, undef, $success_cb);
+    is($io->close(), 0, "test successful close");
+  }
+  {
+    my $io = Imager::io_new_cb(undef, $success_cb, undef, $failure_cb);
+    is($io->close(), -1, "test failed close");
+  }
 }
 
 Imager->close_log;
