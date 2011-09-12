@@ -3,6 +3,7 @@ use strict;
 use Test::Builder;
 require Exporter;
 use vars qw(@ISA @EXPORT_OK $VERSION);
+use Carp qw(croak);
 
 $VERSION = "1.000";
 
@@ -14,6 +15,10 @@ $VERSION = "1.000";
      test_image_16
      test_image
      test_image_double 
+     test_image_mono
+     test_image_gray
+     test_image_gray_16
+     test_image_named
      is_color1
      is_color3
      is_color4
@@ -321,8 +326,8 @@ sub test_image_16 {
   my $blue  = Imager::Color->new(0, 0, 255, 255);
   my $red   = Imager::Color->new(255, 0, 0, 255);
   my $img = Imager->new(xsize => 150, ysize => 150, bits => 16);
-  $img->box(filled => 1, color => $green, box => [ 70, 25, 130, 125 ]);
-  $img->box(filled => 1, color => $blue,  box => [ 20, 25, 80, 125 ]);
+  $img->box(filled => 1, color => $green, box => [ 70, 24, 130, 124 ]);
+  $img->box(filled => 1, color => $blue,  box => [ 20, 26, 80, 126 ]);
   $img->arc(x => 75, y => 75, r => 30, color => $red);
   $img->filter(type => 'conv', coef => [ 0.1, 0.2, 0.4, 0.2, 0.1 ]);
 
@@ -334,12 +339,71 @@ sub test_image_double {
   my $blue  = Imager::Color->new(0, 0, 255, 255);
   my $red   = Imager::Color->new(255, 0, 0, 255);
   my $img = Imager->new(xsize => 150, ysize => 150, bits => 'double');
-  $img->box(filled => 1, color => $green, box => [ 70, 25, 130, 125 ]);
-  $img->box(filled => 1, color => $blue,  box => [ 20, 25, 80, 125 ]);
+  $img->box(filled => 1, color => $green, box => [ 70, 24, 130, 124 ]);
+  $img->box(filled => 1, color => $blue,  box => [ 20, 26, 80, 126 ]);
   $img->arc(x => 75, y => 75, r => 30, color => $red);
   $img->filter(type => 'conv', coef => [ 0.1, 0.2, 0.4, 0.2, 0.1 ]);
 
   $img;
+}
+
+sub test_image_gray {
+  my $g50 = Imager::Color->new(128, 128, 128);
+  my $g30  = Imager::Color->new(76, 76, 76);
+  my $g70   = Imager::Color->new(178, 178, 178);
+  my $img = Imager->new(xsize => 150, ysize => 150, channels => 1);
+  $img->box(filled => 1, color => $g50, box => [ 70, 24, 130, 124 ]);
+  $img->box(filled => 1, color => $g30,  box => [ 20, 26, 80, 126 ]);
+  $img->arc(x => 75, y => 75, r => 30, color => $g70);
+  $img->filter(type => 'conv', coef => [ 0.1, 0.2, 0.4, 0.2, 0.1 ]);
+
+  return $img;
+}
+
+sub test_image_gray_16 {
+  my $g50 = Imager::Color->new(128, 128, 128);
+  my $g30  = Imager::Color->new(76, 76, 76);
+  my $g70   = Imager::Color->new(178, 178, 178);
+  my $img = Imager->new(xsize => 150, ysize => 150, channels => 1, bits => 16);
+  $img->box(filled => 1, color => $g50, box => [ 70, 24, 130, 124 ]);
+  $img->box(filled => 1, color => $g30,  box => [ 20, 26, 80, 126 ]);
+  $img->arc(x => 75, y => 75, r => 30, color => $g70);
+  $img->filter(type => 'conv', coef => [ 0.1, 0.2, 0.4, 0.2, 0.1 ]);
+
+  return $img;
+}
+
+sub test_image_mono {
+  require Imager::Fill;
+  my $fh = Imager::Fill->new(hatch => 'check1x1');
+  my $img = Imager->new(xsize => 150, ysize => 150, type => "paletted");
+  my $black = Imager::Color->new(0, 0, 0);
+  my $white = Imager::Color->new(255, 255, 255);
+  $img->addcolors(colors => [ $black, $white ]);
+  $img->box(fill => $fh, box => [ 70, 24, 130, 124 ]);
+  $img->box(filled => 1, color => $white,  box => [ 20, 26, 80, 126 ]);
+  $img->arc(x => 75, y => 75, r => 30, color => $black, aa => 0);
+
+  return $img;
+}
+
+my %name_to_sub =
+  (
+   basic => \&test_image,
+   basic16 => \&test_image_16,
+   basic_double => \&test_image_double,
+   gray => \&test_image_gray,
+   gray16 => \&test_image_gray_16,
+   mono => \&test_image_mono,
+  );
+
+sub test_image_named {
+  my $name = shift
+    or croak("No name supplied to test_image_named()");
+  my $sub = $name_to_sub{$name}
+    or croak("Unknown name $name supplied to test_image_named()");
+
+  return $sub->();
 }
 
 sub _low_image_diff_check {

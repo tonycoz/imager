@@ -1,5 +1,10 @@
 Imager release history.  Older releases can be found in Changes.old
 
+Imager 0.86
+===========
+
+ - add simple tests for the Imager::Test test_image generators
+
 Imager 0.85 - 29 Aug 2011
 ===========
 
