@@ -886,15 +886,33 @@ Returns a 150x150x3 Imager::ImgRaw test image.
 
 =item test_image()
 
-Returns a 150x150x3 8-bit/sample OO test image.
+Returns a 150x150x3 8-bit/sample OO test image. Name: C<basic>.
 
 =item test_image_16()
 
-Returns a 150x150x3 16-bit/sample OO test image.
+Returns a 150x150x3 16-bit/sample OO test image. Name: C<basic16>
 
 =item test_image_double()
 
-Returns a 150x150x3 double/sample OO test image.
+Returns a 150x150x3 double/sample OO test image. Name: C<basic_double>.
+
+=item test_image_gray()
+
+Returns a 150x150 single channel OO test image. Name: C<gray>.
+
+=item test_image_gray_16()
+
+Returns a 150x150 16-bit/sample single channel OO test image. Name:
+C<gray16>.
+
+=item test_image_mono()
+
+Returns a 150x150 bilevel image that passes the is_bilevel() test.
+Name: C<mono>.
+
+=item test_image_named($name)
+
+Return one of the other test images above based on name.
 
 =item color_cmp($c1, $c2)
 
