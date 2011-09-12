@@ -1,7 +1,7 @@
 #!perl -w
 use strict;
 use Imager;
-use Test::More tests => 55;
+use Test::More tests => 57;
 use Imager::Test qw(test_image test_image_16 is_image);
 use IO::Seekable;
 
@@ -166,6 +166,20 @@ Imager::init_log('testout/20write.log', 2);
        "write should fail - $desc");
     is($im->errstr, "$expected_msg: limit reached", "check error - $desc");
   }
+}
+
+
+{ # check close failures are handled correctly
+  my $im = test_image();
+  my $fail_close = sub {
+    Imager::i_push_error(0, "synthetic close failure");
+    return 0;
+  };
+  ok(!$im->write(type => "sgi", callback => sub { 1 },
+		 closecb => $fail_close),
+     "check failing close fails");
+    like($im->errstr, qr/synthetic close failure/,
+	 "check error message");
 }
 
 sub limited_write_io {

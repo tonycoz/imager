@@ -101,7 +101,7 @@ i_readraw_wiol(io_glue *ig, i_img_dim x, i_img_dim y, int datachannels, int stor
   
   k=0;
   while( k<im->ysize ) {
-    rc = ig->readcb(ig, inbuffer, inbuflen);
+    rc = i_io_read(ig, inbuffer, inbuflen);
     if (rc != inbuflen) { 
       if (rc < 0)
 	i_push_error(0, "error reading file");
@@ -140,7 +140,7 @@ i_writeraw_wiol(i_img* im, io_glue *ig) {
   
   if (im == NULL) { mm_log((1,"Image is empty\n")); return(0); }
   if (!im->virtual) {
-    rc = ig->writecb(ig,im->idata,im->bytes);
+    rc = i_io_write(ig,im->idata,im->bytes);
     if (rc != im->bytes) { 
       i_push_error(errno, "Could not write to file");
       mm_log((1,"i_writeraw: Couldn't write to file\n")); 
@@ -157,7 +157,7 @@ i_writeraw_wiol(i_img* im, io_glue *ig) {
       rc = line_size;
       while (rc == line_size && y < im->ysize) {
 	i_gsamp(im, 0, im->xsize, y, data, NULL, im->channels);
-	rc = ig->writecb(ig, data, line_size);
+	rc = i_io_write(ig, data, line_size);
 	++y;
       }
       if (rc != line_size) {
@@ -176,7 +176,7 @@ i_writeraw_wiol(i_img* im, io_glue *ig) {
       rc = line_size;
       while (rc == line_size && y < im->ysize) {
 	i_gpal(im, 0, im->xsize, y, data);
-	rc = ig->writecb(ig, data, line_size);
+	rc = i_io_write(ig, data, line_size);
 	++y;
       }
       myfree(data);
@@ -187,7 +187,8 @@ i_writeraw_wiol(i_img* im, io_glue *ig) {
     }
   }
 
-  ig->closecb(ig);
+  if (i_io_close(ig))
+    return 0;
 
   return(1);
 }

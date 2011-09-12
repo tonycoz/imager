@@ -1,8 +1,8 @@
 #!perl -w
 use Imager qw(:all);
 use strict;
-use Test::More tests=>66;
-use Imager::Test qw(is_color4 is_image);
+use Test::More tests=>68;
+use Imager::Test qw(is_color4 is_image test_image);
 
 -d "testout" or mkdir "testout";
 
@@ -230,6 +230,19 @@ is($compressed, 1, "check compressed tag");
     is($im->getwidth, 1, "check width");
     is($im->getheight, $max_dim, "check height");
   }
+}
+
+{ # check close failures are handled correctly
+  my $im = test_image();
+  my $fail_close = sub {
+    Imager::i_push_error(0, "synthetic close failure");
+    return 0;
+  };
+  ok(!$im->write(type => "tga", callback => sub { 1 },
+		 closecb => $fail_close),
+     "check failing close fails");
+    like($im->errstr, qr/synthetic close failure/,
+	 "check error message");
 }
 
 sub write_test {

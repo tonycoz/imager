@@ -721,7 +721,8 @@ i_writejpeg_wiol(i_img *im, io_glue *ig, int qfactor) {
 
   jpeg_destroy_compress(&cinfo);
 
-  i_io_close(ig);
+  if (i_io_close(ig))
+    return 0;
 
   return(1);
 }

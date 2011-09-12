@@ -11,7 +11,7 @@ init_log("testout/t101jpeg.log",1);
 $Imager::formats{"jpeg"}
   or plan skip_all => "no jpeg support";
 
-plan tests => 101;
+plan tests => 103;
 
 my $green=i_color_new(0,255,0,255);
 my $blue=i_color_new(0,0,255,255);
@@ -434,4 +434,17 @@ SKIP:
   is($nonprog[0], 0, "check progressive flag 0 for non prog file");
 
   is_image($rdprog, $norm, "prog vs norm should be the same image");
+}
+
+{ # check close failures are handled correctly
+  my $im = test_image();
+  my $fail_close = sub {
+    Imager::i_push_error(0, "synthetic close failure");
+    return 0;
+  };
+  ok(!$im->write(type => "jpeg", callback => sub { 1 },
+		 closecb => $fail_close),
+     "check failing close fails");
+    like($im->errstr, qr/synthetic close failure/,
+	 "check error message");
 }

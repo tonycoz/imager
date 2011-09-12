@@ -1800,7 +1800,8 @@ i_writegif_wiol(io_glue *ig, i_quantize *quant, i_img **imgs,
   
   result = i_writegif_low(quant, GifFile, imgs, count);
   
-  i_io_close(ig);
+  if (i_io_close(ig))
+    return 0;
   
   return result;
 }

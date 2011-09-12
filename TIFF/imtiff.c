@@ -1345,13 +1345,13 @@ i_writetiff_multi_wiol(io_glue *ig, i_img **imgs, int count) {
   tif = TIFFClientOpen("No name", 
 		       "wm",
 		       (thandle_t) ig, 
-		       (TIFFReadWriteProc) ig->readcb,
-		       (TIFFReadWriteProc) ig->writecb,
-		       (TIFFSeekProc)      comp_seek,
-		       (TIFFCloseProc)     ig->closecb, 
-		       ig->sizecb ? (TIFFSizeProc) ig->sizecb : (TIFFSizeProc) sizeproc,
-		       (TIFFMapFileProc)   comp_mmap,
-		       (TIFFUnmapFileProc) comp_munmap);
+		       comp_read,
+		       comp_write,
+		       comp_seek,
+		       comp_close, 
+		       sizeproc,
+		       comp_mmap,
+		       comp_munmap);
   
 
 
@@ -1379,6 +1379,9 @@ i_writetiff_multi_wiol(io_glue *ig, i_img **imgs, int count) {
 
   TIFFSetErrorHandler(old_handler);
   (void) TIFFClose(tif);
+
+  if (i_io_close(ig))
+    return 0;
 
   return 1;
 }
@@ -1413,13 +1416,13 @@ i_writetiff_multi_wiol_faxable(io_glue *ig, i_img **imgs, int count, int fine) {
   tif = TIFFClientOpen("No name", 
 		       "wm",
 		       (thandle_t) ig, 
-		       (TIFFReadWriteProc) ig->readcb,
-		       (TIFFReadWriteProc) ig->writecb,
-		       (TIFFSeekProc)      comp_seek,
-		       (TIFFCloseProc)     ig->closecb, 
-		       ig->sizecb ? (TIFFSizeProc) ig->sizecb : (TIFFSizeProc) sizeproc,
-		       (TIFFMapFileProc)   comp_mmap,
-		       (TIFFUnmapFileProc) comp_munmap);
+		       comp_read,
+		       comp_write,
+		       comp_seek,
+		       comp_close, 
+		       sizeproc,
+		       comp_mmap,
+		       comp_munmap);
   
 
 
@@ -1447,6 +1450,9 @@ i_writetiff_multi_wiol_faxable(io_glue *ig, i_img **imgs, int count, int fine) {
 
   (void) TIFFClose(tif);
   TIFFSetErrorHandler(old_handler);
+
+  if (i_io_close(ig))
+    return 0;
 
   return 1;
 }
@@ -1476,13 +1482,13 @@ i_writetiff_wiol(i_img *img, io_glue *ig) {
   tif = TIFFClientOpen("No name", 
 		       "wm",
 		       (thandle_t) ig, 
-		       (TIFFReadWriteProc) ig->readcb,
-		       (TIFFReadWriteProc) ig->writecb,
-		       (TIFFSeekProc)      comp_seek,
-		       (TIFFCloseProc)     ig->closecb, 
-		       ig->sizecb ? (TIFFSizeProc) ig->sizecb : (TIFFSizeProc) sizeproc,
-		       (TIFFMapFileProc)   comp_mmap,
-		       (TIFFUnmapFileProc) comp_munmap);
+		       comp_read,
+		       comp_write,
+		       comp_seek,
+		       comp_close, 
+		       sizeproc,
+		       comp_mmap,
+		       comp_munmap);
   
 
 
@@ -1501,6 +1507,9 @@ i_writetiff_wiol(i_img *img, io_glue *ig) {
 
   (void) TIFFClose(tif);
   TIFFSetErrorHandler(old_handler);
+
+  if (i_io_close(ig))
+    return 0;
 
   return 1;
 }
@@ -1537,13 +1546,13 @@ i_writetiff_wiol_faxable(i_img *im, io_glue *ig, int fine) {
   tif = TIFFClientOpen("No name", 
 		       "wm",
 		       (thandle_t) ig, 
-		       (TIFFReadWriteProc) ig->readcb,
-		       (TIFFReadWriteProc) ig->writecb,
-		       (TIFFSeekProc)      comp_seek,
-		       (TIFFCloseProc)     ig->closecb, 
-		       ig->sizecb ? (TIFFSizeProc) ig->sizecb : (TIFFSizeProc) sizeproc,
-		       (TIFFMapFileProc)   comp_mmap,
-		       (TIFFUnmapFileProc) comp_munmap);
+		       comp_read,
+		       comp_write,
+		       comp_seek,
+		       comp_close, 
+		       sizeproc,
+		       comp_mmap,
+		       comp_munmap);
   
 
 
@@ -1562,6 +1571,9 @@ i_writetiff_wiol_faxable(i_img *im, io_glue *ig, int fine) {
 
   (void) TIFFClose(tif);
   TIFFSetErrorHandler(old_handler);
+
+  if (i_io_close(ig))
+    return 0;
 
   return 1;
 }

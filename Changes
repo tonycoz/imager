@@ -18,7 +18,9 @@ Imager release history.  Older releases can be found in Changes.old
    - the callback IO object did its own buffering, controlled by the
      maxbuffer parameter supplied to the read() and write() methods.
      This buffering has been removed, to avoid redundancy with the
-     common io_glue buffering.
+     common io_glue buffering.  This also avoids a bug in that code
+     which could rarely pass a zero length to the read callback and
+     then panic about the result.
 
    - the callback IO object new tests the result of calling the close
      callback, which should return true for success.
@@ -29,6 +31,8 @@ Imager release history.  Older releases can be found in Changes.old
 To do:
 
  - make sure i_io_close() is called and the result is checked
+
+ - remove the other cast functions from imtiff.c
 
  - remove other buffering
 

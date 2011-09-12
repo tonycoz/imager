@@ -1,7 +1,7 @@
 #!perl -w
 use strict;
-use Test::More tests => 100;
-use Imager::Test qw(is_image);
+use Test::More tests => 102;
+use Imager::Test qw(is_image test_image);
 
 BEGIN { use_ok('Imager::File::ICO'); }
 
@@ -370,4 +370,18 @@ EOS
   my $vs = Imager->new(xsize => 16, ysize => 16);
   $vs->box(filled => 1, color => '#333366');
   is_image($im, $vs, "check we got the right colors");
+}
+
+
+{ # check close failures are handled correctly
+  my $im = test_image();
+  my $fail_close = sub {
+    Imager::i_push_error(0, "synthetic close failure");
+    return 0;
+  };
+  ok(!$im->write(type => "ico", callback => sub { 1 },
+		 closecb => $fail_close),
+     "check failing close fails");
+    like($im->errstr, qr/synthetic close failure/,
+	 "check error message");
 }

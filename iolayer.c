@@ -1050,6 +1050,9 @@ static ssize_t fd_read(io_glue *igo, void *buf, size_t count) {
   result = read(ig->fd, buf, count);
 #endif
 
+  IOL_DEB(fprintf(IOL_DEBs, "fd_read(%p, %p, %u) => %d\n", ig, buf,
+		  (unsigned)count, (int)result));
+
   /* 0 is valid - means EOF */
   if (result < 0) {
     i_push_errorf(0, "read() failure: %s (%d)", my_strerror(errno), errno);
@@ -1178,6 +1181,9 @@ i_io_read_fill(io_glue *ig) {
     work += rc;
     good = 1;
   }
+
+  if (rc < 0 && !ig->err_code)
+    ig->err_code = 1;
 
   if (good) {
     ig->read_ptr = buf_start;
@@ -1457,6 +1463,9 @@ i_io_seek(io_glue *ig, off_t offset, int whence) {
 
   if (ig->write_ptr && ig->write_ptr != ig->write_end)
     i_io_flush(ig);
+
+  if (whence == SEEK_CUR && ig->read_ptr && ig->read_ptr != ig->read_end)
+    offset -= ig->read_end - ig->read_ptr;
 
   ig->read_ptr = ig->read_end = NULL;
   ig->write_ptr = ig->write_end = NULL;

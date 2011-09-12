@@ -14,7 +14,7 @@ use strict;
 $|=1;
 use Test::More;
 use Imager qw(:all);
-use Imager::Test qw(is_color3 test_image test_image_raw);
+use Imager::Test qw(is_color3 test_image test_image_raw test_image_mono);
 use Imager::File::GIF;
 
 use Carp 'confess';
@@ -24,7 +24,7 @@ $SIG{__DIE__} = sub { confess @_ };
 
 init_log("testout/t105gif.log",1);
 
-plan tests => 144;
+plan tests => 146;
 
 my $green=i_color_new(0,255,0,255);
 my $blue=i_color_new(0,0,255,255);
@@ -737,6 +737,21 @@ SKIP:
   my ($im) = Imager->read_multi(file => "testimg/zerocomm.gif");
   ok($im, "read image with zero-length extension");
 }
+
+
+{ # check close failures are handled correctly
+  my $im = test_image_mono();
+  my $fail_close = sub {
+    Imager::i_push_error(0, "synthetic close failure");
+    return 0;
+  };
+  ok(!$im->write(type => "gif", callback => sub { 1 },
+		 closecb => $fail_close),
+     "check failing close fails");
+    like($im->errstr, qr/synthetic close failure/,
+	 "check error message");
+}
+
 
 sub test_readgif_cb {
   my ($size) = @_;

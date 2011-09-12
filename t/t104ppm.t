@@ -1,8 +1,8 @@
 #!perl -w
 use Imager ':all';
-use Test::More tests => 195;
+use Test::More tests => 205;
 use strict;
-use Imager::Test qw(test_image_raw test_image_16 is_color3 is_color1 is_image);
+use Imager::Test qw(test_image_raw test_image_16 is_color3 is_color1 is_image test_image_named);
 
 $| = 1;
 
@@ -598,8 +598,6 @@ print "# check error handling\n";
   }
 }
 
-Imager->close_log;
-
 { # image too large handling
   {
     ok(!Imager->new(file => "testimg/toowide.ppm", filetype => "pnm"),
@@ -614,6 +612,24 @@ Imager->close_log;
        "check error message");
   }
 }
+
+{ # make sure close is checked for each image type
+  my $fail_close = sub {
+    Imager::i_push_error(0, "synthetic close failure");
+    return 0;
+  };
+
+  for my $type (qw(basic basic16 gray gray16 mono)) {
+    my $im = test_image_named($type);
+    my $io = Imager::io_new_cb(sub { 1 }, undef, undef, $fail_close);
+    ok(!$im->write(io => $io, type => "pnm"),
+       "write $type image with a failing close handler");
+    like($im->errstr, qr/synthetic close failure/,
+	 "check error message");
+  }
+}
+
+Imager->close_log;
 
 unless ($ENV{IMAGER_KEEP_FILES}) {
   unlink "testout/t104ppm.log";

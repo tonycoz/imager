@@ -177,7 +177,8 @@ i_writepng_wiol(i_img *im, io_glue *ig) {
 
   png_destroy_write_struct(&png_ptr, &info_ptr);
 
-  i_io_close(ig);
+  if (i_io_close(ig))
+    return 0;
 
   return(1);
 }

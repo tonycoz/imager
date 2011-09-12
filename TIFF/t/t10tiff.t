@@ -1,6 +1,6 @@
 #!perl -w
 use strict;
-use Test::More tests => 235;
+use Test::More tests => 239;
 use Imager qw(:all);
 use Imager::Test qw(is_image is_image_similar test_image test_image_16 test_image_double test_image_raw);
 
@@ -204,14 +204,17 @@ sub io_writer {
 }
 sub io_reader {
   my ($size, $maxread) = @_;
-  #print "io_reader($size, $maxread) pos $seekpos\n";
+  print "# io_reader($size, $maxread) pos $seekpos\n";
+  if ($seekpos + $maxread > length $work) {
+    $maxread = length($work) - $seekpos;
+  }
   my $out = substr($work, $seekpos, $maxread);
   $seekpos += length $out;
   $out;
 }
 sub io_reader2 {
   my ($size, $maxread) = @_;
-  #print "io_reader2($size, $maxread) pos $seekpos\n";
+  print "# io_reader2($size, $maxread) pos $seekpos\n";
   my $out = substr($work, $seekpos, $size);
   $seekpos += length $out;
   $out;
@@ -219,7 +222,7 @@ sub io_reader2 {
 use IO::Seekable;
 sub io_seeker {
   my ($offset, $whence) = @_;
-  #print "io_seeker($offset, $whence)\n";
+  print "# io_seeker($offset, $whence)\n";
   if ($whence == SEEK_SET) {
     $seekpos = $offset;
   }
@@ -285,6 +288,44 @@ ok($did_close, "write cb2 did close");
 open D3, ">testout/d3.tiff" or die;
 print D3 $work;
 close D3;
+
+
+{ # check close failures are handled correctly
+  { # single image
+    my $im = test_image();
+    my $fail_close = sub {
+      Imager::i_push_error(0, "synthetic close failure");
+      return 0;
+    };
+    $work = '';
+    $seekpos = 0;
+    ok(!$im->write(type => "tiff",
+		   readcb => \&io_reader,
+		   writecb => \&io_writer,
+		   seekcb => \&io_seeker,
+		   closecb => $fail_close),
+       "check failing close fails");
+    like($im->errstr, qr/synthetic close failure/,
+	 "check error message");
+  }
+  { # multiple images
+    my $im = test_image();
+    my $fail_close = sub {
+      Imager::i_push_error(0, "synthetic close failure");
+      return 0;
+    };
+    $work = '';
+    $seekpos = 0;
+    ok(!Imager->write_multi({type => "tiff",
+			     readcb => \&io_reader,
+			     writecb => \&io_writer,
+			     seekcb => \&io_seeker,
+			     closecb => $fail_close}, $im, $im),
+       "check failing close fails");
+    like(Imager->errstr, qr/synthetic close failure/,
+	 "check error message");
+  }
+}
 
 # multi-image write/read
 my @imgs;

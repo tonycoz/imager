@@ -499,7 +499,8 @@ write_1bit_data(io_glue *ig, i_img *im) {
   myfree(packed);
   myfree(line);
 
-  i_io_close(ig);
+  if (i_io_close(ig))
+    return 0;
 
   return 1;
 }
@@ -558,7 +559,8 @@ write_4bit_data(io_glue *ig, i_img *im) {
   myfree(packed);
   myfree(line);
 
-  i_io_close(ig);
+  if (i_io_close(ig))
+    return 0;
 
   return 1;
 }
@@ -604,7 +606,8 @@ write_8bit_data(io_glue *ig, i_img *im) {
   }
   myfree(line);
 
-  i_io_close(ig);
+  if (i_io_close(ig))
+    return 0;
 
   return 1;
 }
@@ -658,7 +661,8 @@ write_24bit_data(io_glue *ig, i_img *im) {
   }
   myfree(samples);
 
-  i_io_close(ig);
+  if (i_io_close(ig))
+    return 0;
 
   return 1;
 }
