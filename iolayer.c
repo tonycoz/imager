@@ -1070,7 +1070,11 @@ static ssize_t fd_write(io_glue *igo, const void *buf, size_t count) {
   result = write(ig->fd, buf, count);
 #endif
 
+  IOL_DEB(fprintf(IOL_DEBs, "fd_write(%p, %p, %u) => %d\n", ig, buf,
+		  (unsigned)count, (int)result));
+
   if (result <= 0) {
+    i_io_set_error(&ig->base, errno);
     i_push_errorf(errno, "write() failure: %s (%d)", my_strerror(errno), errno);
   }
 
@@ -1462,7 +1466,8 @@ i_io_seek(io_glue *ig, off_t offset, int whence) {
   IOL_DEB(fprintf(IOL_DEBs, "i_io_seek(%p, %ld, %d)\n", ig, (long)offset, whence));
 
   if (ig->write_ptr && ig->write_ptr != ig->write_end)
-    i_io_flush(ig);
+    if (!i_io_flush(ig))
+      return (off_t)(-1);
 
   if (whence == SEEK_CUR && ig->read_ptr && ig->read_ptr != ig->read_end)
     offset -= ig->read_end - ig->read_ptr;
@@ -1495,7 +1500,7 @@ i_io_flush(io_glue *ig) {
   while (bufp < ig->write_ptr) {
     ssize_t rc = i_io_raw_write(ig, bufp, ig->write_ptr - bufp);
     if (rc <= 0) {
-      if (!ig->err_code) ig->err_code = 0;
+      if (!ig->err_code) ig->err_code = 1;
       return 0;
     }
     
@@ -1512,6 +1517,9 @@ i_io_close(io_glue *ig) {
   int result = 0;
 
   IOL_DEB(fprintf(IOL_DEBs, "i_io_close(%p)\n", ig));
+  if (ig->err_code)
+    return -1;
+
   if (ig->write_ptr && !i_io_flush(ig))
     result = -1;
 
