@@ -422,19 +422,19 @@ like($warning, qr/[Uu]nknown field with tag 28712/,
     or skip "Cannot open testout/t106_empty.tif for reading", 8;
   binmode TIFF;
   my $im = Imager->new(xsize=>100, ysize=>100);
-  ok(!$im->write(fh => \*TIFF, type=>'tiff'),
+  ok(!$im->write(fh => \*TIFF, type=>'tiff', buffered => 0),
      "fail to write to read only handle");
   cmp_ok($im->errstr, '=~', 'Could not create TIFF object: Error writing TIFF header: write\(\)',
 	 "check error message");
-  ok(!Imager->write_multi({ type => 'tiff', fh => \*TIFF }, $im),
+  ok(!Imager->write_multi({ type => 'tiff', fh => \*TIFF, buffered => 0 }, $im),
      "fail to write multi to read only handle");
   cmp_ok(Imager->errstr, '=~', 'Could not create TIFF object: Error writing TIFF header: write\(\)',
 	 "check error message");
-  ok(!$im->write(fh => \*TIFF, type=>'tiff', class=>'fax'),
+  ok(!$im->write(fh => \*TIFF, type=>'tiff', class=>'fax', buffered => 0),
      "fail to write to read only handle (fax)");
   cmp_ok($im->errstr, '=~', 'Could not create TIFF object: Error writing TIFF header: write\(\)',
 	 "check error message");
-  ok(!Imager->write_multi({ type => 'tiff', fh => \*TIFF, class=>'fax' }, $im),
+  ok(!Imager->write_multi({ type => 'tiff', fh => \*TIFF, class=>'fax', buffered => 0 }, $im),
      "fail to write multi to read only handle (fax)");
   cmp_ok(Imager->errstr, '=~', 'Could not create TIFF object: Error writing TIFF header: write\(\)',
 	 "check error message");
