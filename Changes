@@ -30,13 +30,11 @@ Imager release history.  Older releases can be found in Changes.old
 
 To do:
 
- - make sure i_io_close() is called and the result is checked
-
  - remove the other cast functions from imtiff.c
 
  - remove other buffering
 
- - allow _get_writer() to produce unbuffered writers
+ - document unbuffered parameter to write/write_multi
 
  - coverage/functional tests for the buffering code
 
