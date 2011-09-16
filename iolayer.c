@@ -205,6 +205,7 @@ realseek_read(io_glue *igo, void *buf, size_t count) {
 
   IOL_DEB( fprintf(IOL_DEBs, "realseek_read:  buf = %p, count = %u\n", 
 		   buf, (unsigned)count) );
+#if 0
   /* Is this a good idea? Would it be better to handle differently?
      skip handling? */
   while( count!=bc && (rc = ig->readcb(p,cbuf+bc,count-bc))>0 ) {
@@ -214,6 +215,13 @@ realseek_read(io_glue *igo, void *buf, size_t count) {
   ier->cpos += bc;
   IOL_DEB( fprintf(IOL_DEBs, "realseek_read: rc = %d, bc = %u\n", (int)rc, (unsigned)bc) );
   return rc < 0 ? rc : bc;
+#else
+  rc = ig->readcb(p,buf,count);
+
+  IOL_DEB( fprintf(IOL_DEBs, "realseek_read: rc = %d\n", (int)rc) );
+
+  return rc;
+#endif
 }
 
 
@@ -1074,7 +1082,6 @@ static ssize_t fd_write(io_glue *igo, const void *buf, size_t count) {
 		  (unsigned)count, (int)result));
 
   if (result <= 0) {
-    i_io_set_error(&ig->base, errno);
     i_push_errorf(errno, "write() failure: %s (%d)", my_strerror(errno), errno);
   }
 
@@ -1171,23 +1178,32 @@ i_io_start_write(io_glue *ig) {
 }
 
 static int
-i_io_read_fill(io_glue *ig) {
+i_io_read_fill(io_glue *ig, ssize_t needed) {
   unsigned char *buf_end = ig->buffer + ig->buf_size;
   unsigned char *buf_start = ig->buffer;
   unsigned char *work = ig->buffer;
   ssize_t rc;
   int good = 0;
 
-  if (ig->err_code)
+  if (ig->error || ig->buf_eof)
     return 0;
+
+  if (needed > ig->buf_size)
+    needed = ig->buf_size;
 
   while (work < buf_end && (rc = i_io_raw_read(ig, work, buf_end - work)) > 0) {
     work += rc;
     good = 1;
+    if (needed < rc)
+      break;
+
+    needed -= rc;
   }
 
-  if (rc < 0 && !ig->err_code)
-    ig->err_code = 1;
+  if (rc < 0)
+    ig->error = 1;
+  else if (rc == 0)
+    ig->buf_eof = 1;
 
   if (good) {
     ig->read_ptr = buf_start;
@@ -1212,14 +1228,30 @@ i_io_getc_imp(io_glue *ig) {
   if (ig->write_ptr)
     return EOF;
   
+  if (ig->error || ig->buf_eof)
+    return EOF;
+  
+  if (!ig->buffered) {
+    unsigned char buf;
+    ssize_t rc = i_io_raw_read(ig, &buf, 1);
+    if (rc > 0) {
+      return buf;
+    }
+    else if (rc == 0) {
+      ig->buf_eof = 1;
+      return EOF;
+    }
+    else {
+      ig->error = 1;
+      return EOF;
+    }
+  }
+
   if (!ig->buffer)
     i_io_setup_buffer(ig);
   
-  if (ig->err_code)
-    return EOF;
-  
   if (!ig->read_ptr || ig->read_ptr == ig->read_end) {
-    if (!i_io_read_fill(ig))
+    if (!i_io_read_fill(ig, 1))
       return EOF;
   }
   
@@ -1231,14 +1263,30 @@ i_io_peekc_imp(io_glue *ig) {
   if (ig->write_ptr)
     return EOF;
 
-  if (ig->err_code)
-    return EOF;
-
   if (!ig->buffer)
     i_io_setup_buffer(ig);
 
+  if (!ig->buffered) {
+    ssize_t rc = i_io_raw_read(ig, ig->buffer, 1);
+    if (rc > 0) {
+      ig->read_ptr = ig->buffer;
+      ig->read_end = ig->buffer + 1;
+      return *(ig->buffer);
+    }
+    else if (rc == 0) {
+      ig->buf_eof = 1;
+      return EOF;
+    }
+    else {
+      return EOF;
+    }
+  }
+
   if (!ig->read_ptr || ig->read_ptr == ig->read_end) {
-    if (!i_io_read_fill(ig))
+    if (ig->error || ig->buf_eof)
+      return EOF;
+    
+    if (!i_io_read_fill(ig, 1))
       return EOF;
   }
 
@@ -1254,18 +1302,24 @@ i_io_peekn(io_glue *ig, void *buf, size_t size) {
     return -1;
   }
 
-  if (ig->err_code) {
-    IOL_DEB(fprintf(IOL_DEBs, "i_io_peekn() => -1 (err_code set: %d)\n", ig->err_code));
-    return -1;
-  }
-
   if (!ig->buffer)
     i_io_setup_buffer(ig);
 
-  if (!ig->read_ptr) {
-    if (!i_io_read_fill(ig)) {
-      IOL_DEB(fprintf(IOL_DEBs, "i_io_peekn() => -1 (read fill failed)\n"));
+  if (!ig->read_ptr || ig->read_ptr == ig->read_end) {
+    if (ig->error) {
+      IOL_DEB(fprintf(IOL_DEBs, "i_io_peekn() => -1 (error set)\n"));
       return -1;
+    }
+    if (ig->buf_eof) {
+      IOL_DEB(fprintf(IOL_DEBs, "i_io_peekn() => 0 (eof set)\n"));
+      return 0;
+    }
+
+    if (!i_io_read_fill(ig, size)) {
+      ssize_t result = ig->error ? -1 : 0;
+      IOL_DEB(fprintf(IOL_DEBs, "i_io_peekn() => %d (read fill failed)\n",
+		      (int)result));
+      return result;
     }
   }
   
@@ -1295,7 +1349,7 @@ i_io_putc_imp(io_glue *ig, int c) {
   if (ig->read_ptr)
     return EOF;
 
-  if (ig->err_code)
+  if (ig->error)
     return EOF;
 
   if (!ig->buffer)
@@ -1321,16 +1375,16 @@ i_io_read(io_glue *ig, void *buf, size_t size) {
   IOL_DEB(fprintf(IOL_DEBs, "i_io_read(%p, %p, %u)\n", ig, buf, (unsigned)size));
 
   if (ig->write_ptr) {
-    IOL_DEB(fprintf(IOL_DEBs, "i_io_read() => 0 (read_ptr set)\n"));
+    IOL_DEB(fprintf(IOL_DEBs, "i_io_read() => -1 (write_ptr set)\n"));
     return -1;
   }
 
-  if (ig->err_code) {
-    IOL_DEB(fprintf(IOL_DEBs, "i_io_read() => 0 (err_code set: %d)\n", ig->err_code));
+  if (ig->error) {
+    IOL_DEB(fprintf(IOL_DEBs, "i_io_read() => -1 (error set)\n"));
     return -1;
   }
 
-  if (!ig->buffer)
+  if (!ig->buffer && ig->buffered)
     i_io_setup_buffer(ig);
 
   if (ig->read_ptr && ig->read_ptr < ig->read_end) {
@@ -1346,38 +1400,49 @@ i_io_read(io_glue *ig, void *buf, size_t size) {
     read_total += alloc;
   }
 
-  if (size > ig->buf_size) {
-    ssize_t rc;
-
-    while (size > 0 && (rc = i_io_raw_read(ig, pbuf, size)) > 0) {
-      size -= rc;
-      pbuf += rc;
-      read_total += rc;
-    }
-
-    IOL_DEB(fprintf(IOL_DEBs, "i_io_read() => %d (raw read)\n", (int)read_total));
-
-    return read_total;
-  }
-  else if (size > 0) {
-    if (i_io_read_fill(ig)) {
-      size_t alloc = ig->read_end - ig->read_ptr;
-      if (alloc > size)
-	alloc = size;
+  if (size > 0 && !(ig->error || ig->buf_eof)) {
+    if (!ig->buffered || size > ig->buf_size) {
+      ssize_t rc;
       
-      memcpy(pbuf, ig->read_ptr, alloc);
-      ig->read_ptr += alloc;
-      pbuf += alloc;
-      size -= alloc;
-      read_total += alloc;
+      while (size > 0 && (rc = i_io_raw_read(ig, pbuf, size)) > 0) {
+	size -= rc;
+	pbuf += rc;
+	read_total += rc;
+      }
+      
+      IOL_DEB(fprintf(IOL_DEBs, "i_io_read() => %d (raw read)\n", (int)read_total));
+
+      if (rc < 0)
+	ig->error = 1;
+      else if (rc == 0)
+	ig->buf_eof = 1;
+
+      if (!read_total)
+	return rc;
     }
     else {
-      if (!read_total && ig->err_code) {
-	IOL_DEB(fprintf(IOL_DEBs, "i_io_read() => -1 (fill failure)\n"));
-	return -1;
+      if (i_io_read_fill(ig, size)) {
+	size_t alloc = ig->read_end - ig->read_ptr;
+	if (alloc > size)
+	  alloc = size;
+	
+	memcpy(pbuf, ig->read_ptr, alloc);
+	ig->read_ptr += alloc;
+	pbuf += alloc;
+	size -= alloc;
+	read_total += alloc;
+      }
+      else {
+	if (!read_total && ig->error) {
+	  IOL_DEB(fprintf(IOL_DEBs, "i_io_read() => -1 (fill failure)\n"));
+	  return -1;
+	}
       }
     }
   }
+
+  if (!read_total && ig->error)
+    read_total = -1;
 
   IOL_DEB(fprintf(IOL_DEBs, "i_io_read() => %d\n", (int)read_total));
 
@@ -1404,8 +1469,8 @@ i_io_write(io_glue *ig, const void *buf, size_t size) {
     return -1;
   }
 
-  if (ig->err_code) {
-    IOL_DEB(fprintf(IOL_DEBs, "i_io_write() => -1 (err_code set: %d)\n", ig->err_code));
+  if (ig->error) {
+    IOL_DEB(fprintf(IOL_DEBs, "i_io_write() => -1 (error)\n"));
     return -1;
   }
 
@@ -1442,9 +1507,7 @@ i_io_write(io_glue *ig, const void *buf, size_t size) {
 	size -= rc;
       }
       if (rc <= 0) {
-	if (!ig->err_code) {
-	  ig->err_code = 1;
-	}
+	ig->error = 1;
       }
     }
     else {
@@ -1474,12 +1537,12 @@ i_io_seek(io_glue *ig, off_t offset, int whence) {
 
   ig->read_ptr = ig->read_end = NULL;
   ig->write_ptr = ig->write_end = NULL;
-  ig->err_code = 0;
+  ig->error = 0;
   ig->buf_eof = 0;
   
   new_off = i_io_raw_seek(ig, offset, whence);
-  if (new_off < 0 && !ig->err_code)
-    ig->err_code = 1;
+  if (new_off < 0)
+    ig->error = 1;
 
   IOL_DEB(fprintf(IOL_DEBs, "i_io_seek() => %ld\n", (long)new_off));
 
@@ -1500,7 +1563,7 @@ i_io_flush(io_glue *ig) {
   while (bufp < ig->write_ptr) {
     ssize_t rc = i_io_raw_write(ig, bufp, ig->write_ptr - bufp);
     if (rc <= 0) {
-      if (!ig->err_code) ig->err_code = 1;
+      ig->error = 1;
       return 0;
     }
     
@@ -1517,8 +1580,8 @@ i_io_close(io_glue *ig) {
   int result = 0;
 
   IOL_DEB(fprintf(IOL_DEBs, "i_io_close(%p)\n", ig));
-  if (ig->err_code)
-    return -1;
+  if (ig->error)
+    result = -1;
 
   if (ig->write_ptr && !i_io_flush(ig))
     result = -1;
@@ -1558,7 +1621,7 @@ i_io_init(io_glue *ig, int type, i_io_readp_t readcb, i_io_writep_t writecb,
   ig->write_end = NULL;
   ig->buf_size = IO_BUF_SIZE;
   ig->buf_eof = 0;
-  ig->err_code = 0;
+  ig->error = 0;
   ig->buffered = 1;
 }
 
@@ -1648,7 +1711,7 @@ i_io_dump(io_glue *ig, int flags) {
   }
   if (flags & I_IO_DUMP_STATUS) {
     fprintf(IOL_DEBs, "  buf_eof: %d\n", ig->buf_eof);
-    fprintf(IOL_DEBs, "  err_code: %d\n", ig->err_code);
+    fprintf(IOL_DEBs, "  error: %d\n", ig->error);
     fprintf(IOL_DEBs, "  buffered: %d\n", ig->buffered);
   }
 }

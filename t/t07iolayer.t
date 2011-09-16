@@ -1,12 +1,14 @@
 #!perl -w
 use strict;
-use Test::More tests => 76;
+use Test::More tests => 110;
 # for SEEK_SET etc, Fcntl doesn't provide these in 5.005_03
 use IO::Seekable;
 
 BEGIN { use_ok(Imager => ':all') };
 
 -d "testout" or mkdir "testout";
+
+$| = 1;
 
 Imager->open_log(log => "testout/t07iolayer.log");
 
@@ -184,15 +186,15 @@ is($work, $data2, "short write image match");
   # scalar context
   my $buffer;
   my $read_result = $good_io->raw_read($buffer, 10);
-  is($read_result, 10, "read success (scalar)");
-  is($buffer, "testdatate", "check data");
+  is($read_result, 8, "read success (scalar)");
+  is($buffer, "testdata", "check data");
   my @read_result = $good_io->raw_read($buffer, 10);
-  is_deeply(\@read_result, [ 10 ], "read success (list)");
-  is($buffer, "testdatate", "check data");
+  is_deeply(\@read_result, [ 8 ], "read success (list)");
+  is($buffer, "testdata", "check data");
   $read_result = $good_io->raw_read2(10);
-  is($read_result, "testdatate", "read2 success (scalar)");
+  is($read_result, "testdata", "read2 success (scalar)");
   @read_result = $good_io->raw_read2(10);
-  is_deeply(\@read_result, [ "testdatate" ], "read2 success (list)");
+  is_deeply(\@read_result, [ "testdata" ], "read2 success (list)");
 }
 
 { # end of file
@@ -252,6 +254,94 @@ SKIP:
   is($io->raw_close, 0, "close");
 }
 
+SKIP:
+{ # fd_seek write failure
+  -c "/dev/full"
+    or skip("No /dev/full", 3);
+  open my $fh, "> /dev/full"
+    or skip("Can't open /dev/full: $!", 3);
+  my $io = Imager::io_new_fd(fileno($fh));
+  ok($io, "make fd io for /dev/full");
+  Imager::i_clear_error();
+  is($io->raw_write("test"), -1, "fail to write");
+  my $msg = Imager->_error_as_msg;
+  like($msg, qr/^write\(\) failure: /, "check error message");
+  print "# $msg\n";
+
+  # /dev/full succeeds on seek on Linux
+
+  undef $io;
+}
+
+SKIP:
+{ # fd_seek seek failure
+  my $seekfail = "testout/t07seekfail.dat";
+  open my $fh, "> $seekfail"
+    or skip("Can't open $seekfail: $!", 3);
+  my $io = Imager::io_new_fd(fileno($fh));
+  ok($io, "make fd io for $seekfail");
+
+  Imager::i_clear_error();
+  is($io->raw_seek(-1, SEEK_SET), -1, "shouldn't be able to seek to -1");
+  my $msg = Imager->_error_as_msg;
+  like($msg, qr/^lseek\(\) failure: /, "check error message");
+  print "# $msg\n";
+
+  undef $io;
+  close $fh;
+  unlink $seekfail;
+}
+
+SKIP:
+{ # fd_seek read failure
+  open my $fh, "> testout/t07writeonly.txt"
+    or skip("Can't open testout/t07writeonly.txt: $!", 3);
+  my $io = Imager::io_new_fd(fileno($fh));
+  ok($io, "make fd io for write-only");
+
+  Imager::i_clear_error();
+  my $buf;
+  is($io->raw_read($buf, 10), undef,
+     "file open for write shouldn't be readable");
+  my $msg = Imager->_error_as_msg;
+  like($msg, qr/^read\(\) failure: /, "check error message");
+  print "# $msg\n";
+
+  undef $io;
+}
+
+SKIP:
+{ # fd_seek eof
+  open my $fh, "> testout/t07readeof.txt"
+    or skip("Can't open testout/t07readeof.txt: $!", 5);
+  binmode $fh;
+  print $fh "test";
+  close $fh;
+  open my $fhr, "< testout/t07readeof.txt",
+    or skip("Can't open testout/t07readeof.txt: $!", 5);
+  my $io = Imager::io_new_fd(fileno($fhr));
+  ok($io, "make fd io for read eof");
+
+  Imager::i_clear_error();
+  my $buf;
+  is($io->raw_read($buf, 10), 4,
+     "10 byte read on 4 byte file should return 4");
+  my $msg = Imager->_error_as_msg;
+  is($msg, "", "should be no error message")
+    or print STDERR "# read(4) message is: $msg\n";
+
+  Imager::i_clear_error();
+  $buf = '';
+  is($io->raw_read($buf, 10), 0,
+     "10 byte read at end of 4 byte file should return 0 (eof)");
+
+  $msg = Imager->_error_as_msg;
+  is($msg, "", "should be no error message")
+    or print STDERR "# read(4), eof message is: $msg\n";
+
+  undef $io;
+}
+
 { # buffered I/O
   my $data="P2\n2 2\n255\n 255 0\n0 255\n";
   my $io = Imager::io_new_buffer($data);
@@ -284,6 +374,93 @@ SKIP:
   {
     my $io = Imager::io_new_cb(undef, $success_cb, undef, $failure_cb);
     is($io->close(), -1, "test failed close");
+  }
+}
+
+{ # buffered coverage/function tests
+  # some data to play with
+  my $base = pack "C*", map rand(26) + ord("a"), 0 .. 20_001;
+
+  { # initial i_io_read(), buffered
+    my $pos = 0;
+    my $ops = "";
+    my $work = $base;
+    my $read = sub {
+      my ($size) = @_;
+
+      my $req_size = $size;
+
+      if ($pos + $size > length $work) {
+	$size = length($work) - $pos;
+      }
+
+      my $result = substr($work, $pos, $size);
+      $pos += $size;
+      $ops .= "R$req_size>$size;";
+
+      print "# read $req_size>$size\n";
+
+      return $result;
+    };
+    my $write = sub {
+      my ($data) = @_;
+
+      substr($work, $pos, length($data), $data);
+
+      return 1;
+    };
+    {
+      my $io = Imager::io_new_cb(undef, $read, undef, undef);
+      my $buf;
+      is($io->read($buf, 1000), 1000, "read initial 1000");
+      is($buf, substr($base, 0, 1000), "check data read");
+      is($ops, "R8192>8192;", "check read op happened to buffer size");
+
+      undef $buf;
+      is($io->read($buf, 1001), 1001, "read another 1001");
+      is($buf, substr($base, 1000, 1001), "check data read");
+      is($ops, "R8192>8192;", "should be no further reads");
+
+      undef $buf;
+      is($io->read($buf, 40_000), length($base) - 2001,
+	 "read the rest in one chunk");
+      is($buf, substr($base, 2001), "check the data read");
+      my $buffer_left = 8192 - 2001;
+      my $after_buffer = length($base) - 8192;
+      is($ops, "R8192>8192;R".(40_000 - $buffer_left).">$after_buffer;R21999>0;",
+	 "check we tried to read the remainder");
+    }
+    {
+      # read after write errors
+      my $io = Imager::io_new_cb($write, $read, undef, undef);
+      is($io->write("test"), 4, "write 4 bytes, io in write mode");
+      is($io->read2(10), undef, "read should fail");
+      is($io->peekn(10), undef, "peekn should fail");
+      is($io->getc(), -1, "getc should fail");
+      is($io->peekc(), -1, "peekc should fail");
+    }
+  }
+
+  {
+    my $io = Imager::io_new_buffer($base);
+    print "# buffer fill check\n";
+    ok($io, "make memory io");
+    my $buf;
+    is($io->read($buf, 4096), 4096, "read 4k");
+    is($buf, substr($base, 0, 4096), "check data is correct");
+
+    # peek a bit
+    undef $buf;
+    is($io->peekn(5120), substr($base, 4096, 4096),
+       "peekn() 5120, which should exceed the buffer, and only read the left overs");
+  }
+
+  { # initial peekn
+    my $io = Imager::io_new_buffer($base);
+    is($io->peekn(10), substr($base, 0, 10),
+       "make sure initial peekn() is sane");
+    is($io->read2(10), substr($base, 0, 10),
+       "and that reading 10 gets the expected data");
   }
 }
 
