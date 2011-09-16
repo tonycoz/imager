@@ -61,8 +61,12 @@ struct i_io_glue_t {
   unsigned char *write_ptr;
   unsigned char *write_end;
   size_t buf_size;
+
+  /* non-zero if we encountered EOF */
   int buf_eof;
-  int err_code;
+
+  /* non-zero if we've seen an error */
+  int error;
 
   /* if non-zero we do write buffering (enabled by default) */
   int buffered;
@@ -78,9 +82,7 @@ struct i_io_glue_t {
 #define i_io_raw_write(ig, data, size) ((ig)->writecb((ig), (data), (size)))
 #define i_io_raw_seek(ig, offset, whence) ((ig)->seekcb((ig), (offset), (whence)))
 #define i_io_raw_close(ig) ((ig)->closecb(ig))
-#define i_io_set_error(ig, code) ((ig)->err_code = (code))
 #define i_io_set_buffered(ig, flag) ((ig)->buffered = (flag))
-#define i_io_error(ig) ((ig)->err_code)
 
 #define i_io_getc(ig) \
   ((ig)->read_ptr < (ig)->read_end ? \
@@ -94,5 +96,9 @@ struct i_io_glue_t {
   ((ig)->write_ptr < (ig)->write_end ? \
      *(ig)->write_ptr++ : \
      i_io_putc_imp(ig, c))
+#define i_io_at_eof(ig) \
+  ((ig)->read_ptr == (ig)->read_end && (ig)->buf_eof)
+#define i_io_error(ig) \
+  ((ig)->read_ptr == (ig)->read_end && (ig)->error)
 
 #endif

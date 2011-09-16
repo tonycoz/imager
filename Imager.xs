@@ -268,6 +268,7 @@ io_writer(void *p, void const *data, size_t size) {
 
 static ssize_t 
 io_reader(void *p, void *data, size_t size) {
+#if 0
   dTHX;
   struct cbdata *cbd = p;
   ssize_t total = 0;
@@ -283,6 +284,11 @@ io_reader(void *p, void *data, size_t size) {
     return -1;
 
   return total;
+#else
+  struct cbdata *cbd = p;
+
+  return call_reader(cbd, data, size, size);
+#endif
 }
 
 static int io_closer(void *p) {
@@ -1026,7 +1032,7 @@ i_io_raw_read(ig, buffer_sv, size)
 	ssize_t result;
       PPCODE:
         if (size <= 0)
-	  croak("size negative in call to i_io_read()");
+	  croak("size negative in call to i_io_raw_read()");
         /* prevent an undefined value warning if they supplied an 
 	   undef buffer.
            Orginally conditional on !SvOK(), but this will prevent the
@@ -1130,7 +1136,7 @@ i_io_peekn(ig, size)
       PREINIT:
 	SV *buffer_sv;
         void *buffer;
-	size_t result;
+	ssize_t result;
       PPCODE:
         if (size == 0)
 	  croak("size zero in call to peekn()");
@@ -1188,7 +1194,7 @@ i_io_read2(ig, size)
       PREINIT:
 	SV *buffer_sv;
         void *buffer;
-	size_t result;
+	ssize_t result;
       PPCODE:
         if (size == 0)
 	  croak("size zero in call to bread()");
