@@ -96,7 +96,7 @@ struct i_io_glue_t {
   ((ig)->write_ptr < (ig)->write_end ? \
      *(ig)->write_ptr++ : \
      i_io_putc_imp(ig, c))
-#define i_io_at_eof(ig) \
+#define i_io_eof(ig) \
   ((ig)->read_ptr == (ig)->read_end && (ig)->buf_eof)
 #define i_io_error(ig) \
   ((ig)->read_ptr == (ig)->read_end && (ig)->error)
