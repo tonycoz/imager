@@ -1,6 +1,6 @@
 #!perl -w
 use strict;
-use Test::More tests => 115;
+use Test::More tests => 159;
 # for SEEK_SET etc, Fcntl doesn't provide these in 5.005_03
 use IO::Seekable;
 
@@ -463,7 +463,14 @@ SKIP:
        "and that reading 10 gets the expected data");
   }
 
-  { # small peekn then large peekn
+  { # oversize peekn
+    my $io = Imager::io_new_buffer($base);
+    is($io->peekn(10_000), substr($base, 0, 8192),
+       "peekn() larger than buffer should return buffer-size bytes");
+  }
+
+  { # small peekn then large peekn with a small I/O back end
+    # this might happen when reading from a socket
     my $work = $base;
     my $pos = 0;
     my $ops = '';
@@ -496,6 +503,124 @@ SKIP:
     is($io->peekn(65), substr($base, 0, 65), "peek 65");
     is($ops, "R8192>10;R8182>10;R8172>10;R8162>10;R8152>10;R8142>10;R8132>10;",
        "check we got the raw calls expected");
+  }
+  { # peekn followed by errors
+    my $read = 0;
+    my $base = "abcdef";
+    my $pos = 0;
+    my $reader = sub {
+      my $size = shift;
+      my $req_size = $size;
+      if ($pos + $size > length $base) {
+	$size = length($base) - $pos;
+      }
+      # error instead of eof
+      if ($size == 0) {
+	print "# read $req_size>error\n";
+	return;
+      }
+      my $result = substr($base, $pos, $size);
+      $pos += $size;
+
+      print "# read $req_size>$size\n";
+
+      return $result;
+    };
+    my $io = Imager::io_new_cb(undef, $reader, undef, undef);
+    is($io->peekn(5), "abcde", "peekn until just before error");
+    is($io->peekn(6), "abcdef", "peekn until error");
+    is($io->peekn(7), "abcdef", "peekn past error");
+    ok(!$io->error, "should be no error indicator, since data buffered");
+    ok(!$io->eof, "should be no eof indicator, since data buffered");
+
+    # consume it
+    is($io->read2(6), "abcdef", "consume the buffer");
+    is($io->peekn(10), undef, "should get an error indicator");
+    ok($io->error, "should be an error state");
+    ok(!$io->eof, "but not eof");
+  }
+  { # getc through a whole file (buffered)
+    my $io = Imager::io_new_buffer($base);
+    my $out = '';
+    while ((my $c = $io->getc()) != -1) {
+      $out .= chr($c);
+    }
+    is($out, $base, "getc should return the file byte by byte (buffered)");
+    is($io->getc, -1, "another getc after eof should fail too");
+    ok($io->eof, "should be marked eof");
+    ok(!$io->error, "shouldn't be marked in error");
+  }
+  { # getc through a whole file (unbuffered)
+    my $io = Imager::io_new_buffer($base);
+    $io->set_buffered(0);
+    my $out = '';
+    while ((my $c = $io->getc()) != -1) {
+      $out .= chr($c);
+    }
+    is($out, $base, "getc should return the file byte by byte (unbuffered)");
+    is($io->getc, -1, "another getc after eof should fail too");
+    ok($io->eof, "should be marked eof");
+    ok(!$io->error, "shouldn't be marked in error");
+  }
+  { # buffered getc with an error
+    my $io = Imager::io_new_cb(undef, sub { return; }, undef, undef);
+    is($io->getc, -1, "buffered getc error");
+    ok($io->error, "io marked in error");
+    ok(!$io->eof, "but not eof");
+  }
+  { # unbuffered getc with an error
+    my $io = Imager::io_new_cb(undef, sub { return; }, undef, undef);
+    $io->set_buffered(0);
+    is($io->getc, -1, "unbuffered getc error");
+    ok($io->error, "io marked in error");
+    ok(!$io->eof, "but not eof");
+  }
+  { # initial peekc - buffered
+    my $io = Imager::io_new_buffer($base);
+    my $c = $io->peekc;
+    is($c, ord($base), "buffered peekc matches");
+    is($io->peekc, $c, "duplicate peekc matchess");
+  }
+  { # initial peekc - unbuffered
+    my $io = Imager::io_new_buffer($base);
+    $io->set_buffered(0);
+    my $c = $io->peekc;
+    is($c, ord($base), "unbuffered peekc matches");
+    is($io->peekc, $c, "duplicate peekc matchess");
+  }
+  { # initial peekc eof - buffered
+    my $io = Imager::io_new_cb(undef, sub { "" }, undef, undef);
+    my $c = $io->peekc;
+    is($c, -1, "buffered eof peekc is -1");
+    is($io->peekc, $c, "duplicate matches");
+    ok($io->eof, "io marked eof");
+    ok(!$io->error, "but not error");
+  }
+  { # initial peekc eof - unbuffered
+    my $io = Imager::io_new_cb(undef, sub { "" }, undef, undef);
+    $io->set_buffered(0);
+    my $c = $io->peekc;
+    is($c, -1, "buffered eof peekc is -1");
+    is($io->peekc, $c, "duplicate matches");
+    ok($io->eof, "io marked eof");
+    ok(!$io->error, "but not error");
+  }
+  { # initial peekc error - buffered
+    my $io = Imager::io_new_cb(undef, sub { return; }, undef, undef);
+    my $c = $io->peekc;
+    is($c, -1, "buffered error peekc is -1");
+    is($io->peekc, $c, "duplicate matches");
+    ok($io->error, "io marked error");
+    ok(!$io->eof, "but not eof");
+  }
+  { # initial peekc error - unbuffered
+    my $io = Imager::io_new_cb(undef, sub { return; }, undef, undef);
+    $io->set_buffered(0);
+    my $c = $io->peekc;
+    is($c, -1, "unbuffered error peekc is -1");
+    is($io->peekc, $c, "duplicate matches");
+    ok($io->error, "io marked error");
+    ok(!$io->eof, "but not eof");
   }
 }
 

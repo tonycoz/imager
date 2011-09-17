@@ -1243,6 +1243,14 @@ i_io_set_buffered(ig, flag = 1)
 	Imager::IO ig
 	int flag
 
+bool
+i_io_eof(ig)
+	Imager::IO ig
+
+bool
+i_io_error(ig)
+	Imager::IO ig
+
 MODULE = Imager		PACKAGE = Imager
 
 PROTOTYPES: ENABLE

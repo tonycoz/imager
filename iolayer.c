@@ -1298,6 +1298,7 @@ i_io_peekc_imp(io_glue *ig) {
       return EOF;
     }
     else {
+      ig->error = 1;
       return EOF;
     }
   }
@@ -1312,6 +1313,28 @@ i_io_peekc_imp(io_glue *ig) {
 
   return *(ig->read_ptr);
 }
+
+/*
+=item i_io_peekn(ig, buffer, size)
+=category I/O layers
+=synopsis ssize_t count = i_io_peekn(ig, buffer, sizeof(buffer));
+
+Buffer at least C<size> (at most C<< ig->buf_size >> bytes of data
+from the stream and return C<size> bytes of it to the caller in
+C<buffer>.
+
+This ignores the buffered state of the stream, and will always setup
+buffering if needed.
+
+If no C<type> parameter is provided to Imager::read() or
+Imager::read_multi(), Imager will call C<i_io_peekn()> when probing
+for the file format.
+
+Returns -1 on error, 0 if there is no data before EOF, or the number
+of bytes read into C<buffer>.
+
+=cut
+*/
 
 ssize_t
 i_io_peekn(io_glue *ig, void *buf, size_t size) {
@@ -1396,11 +1419,6 @@ i_io_read(io_glue *ig, void *buf, size_t size) {
 
   if (ig->write_ptr) {
     IOL_DEB(fprintf(IOL_DEBs, "i_io_read() => -1 (write_ptr set)\n"));
-    return -1;
-  }
-
-  if (ig->error) {
-    IOL_DEB(fprintf(IOL_DEBs, "i_io_read() => -1 (error set)\n"));
     return -1;
   }
 
