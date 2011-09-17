@@ -1,6 +1,6 @@
 #!perl -w
 use strict;
-use Test::More tests => 110;
+use Test::More tests => 115;
 # for SEEK_SET etc, Fcntl doesn't provide these in 5.005_03
 use IO::Seekable;
 
@@ -451,7 +451,7 @@ SKIP:
 
     # peek a bit
     undef $buf;
-    is($io->peekn(5120), substr($base, 4096, 4096),
+    is($io->peekn(5120), substr($base, 4096, 5120),
        "peekn() 5120, which should exceed the buffer, and only read the left overs");
   }
 
@@ -461,6 +461,41 @@ SKIP:
        "make sure initial peekn() is sane");
     is($io->read2(10), substr($base, 0, 10),
        "and that reading 10 gets the expected data");
+  }
+
+  { # small peekn then large peekn
+    my $work = $base;
+    my $pos = 0;
+    my $ops = '';
+    my $reader = sub {
+      my ($size) = @_;
+
+      my $req_size = $size;
+      # do small reads, to trigger a possible bug
+      if ($size > 10) {
+	$size = 10;
+      }
+
+      if ($pos + $size > length $work) {
+	$size = length($work) - $pos;
+      }
+
+      my $result = substr($work, $pos, $size);
+      $pos += $size;
+      $ops .= "R$req_size>$size;";
+
+      print "# read $req_size>$size\n";
+
+      return $result;
+    };
+    my $io = Imager::io_new_cb(undef, $reader, undef, undef);
+    ok($io, "small reader io");
+    is($io->peekn(25), substr($base, 0, 25), "peek 25");
+    is($ops, "R8192>10;R8182>10;R8172>10;",
+       "check we got the raw calls expected");
+    is($io->peekn(65), substr($base, 0, 65), "peek 65");
+    is($ops, "R8192>10;R8182>10;R8172>10;R8162>10;R8152>10;R8142>10;R8132>10;",
+       "check we got the raw calls expected");
   }
 }
 
