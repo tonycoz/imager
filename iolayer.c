@@ -1185,11 +1185,31 @@ i_io_read_fill(io_glue *ig, ssize_t needed) {
   ssize_t rc;
   int good = 0;
 
+  /* this condition may be unused, callers should also be checking it */
   if (ig->error || ig->buf_eof)
     return 0;
 
   if (needed > ig->buf_size)
     needed = ig->buf_size;
+
+  if (ig->read_ptr && ig->read_ptr < ig->read_end) {
+    size_t kept = ig->read_end - ig->read_ptr;
+
+    if (needed < kept) {
+      IOL_DEB(fprintf(IOL_DEBs, "i_io_read_fill(%u) -> 1 (already have enough)\n", (unsigned)needed));
+      return 1;
+    }
+
+    if (ig->read_ptr != ig->buffer)
+      memmove(ig->buffer, ig->read_ptr, kept);
+
+    good = 1; /* we have *something* available to read */
+    work = buf_start + kept;
+    needed -= kept;
+  }
+  else {
+    work = ig->buffer;
+  }
 
   while (work < buf_end && (rc = i_io_raw_read(ig, work, buf_end - work)) > 0) {
     work += rc;
@@ -1305,7 +1325,7 @@ i_io_peekn(io_glue *ig, void *buf, size_t size) {
   if (!ig->buffer)
     i_io_setup_buffer(ig);
 
-  if (!ig->read_ptr || ig->read_ptr == ig->read_end) {
+  if (!ig->read_ptr || size > ig->read_end - ig->read_ptr) {
     if (ig->error) {
       IOL_DEB(fprintf(IOL_DEBs, "i_io_peekn() => -1 (error set)\n"));
       return -1;
