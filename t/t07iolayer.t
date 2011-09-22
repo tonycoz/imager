@@ -1,6 +1,6 @@
 #!perl -w
 use strict;
-use Test::More tests => 159;
+use Test::More tests => 198;
 # for SEEK_SET etc, Fcntl doesn't provide these in 5.005_03
 use IO::Seekable;
 
@@ -504,7 +504,8 @@ SKIP:
     is($ops, "R8192>10;R8182>10;R8172>10;R8162>10;R8152>10;R8142>10;R8132>10;",
        "check we got the raw calls expected");
   }
-  { # peekn followed by errors
+  for my $buffered (1, 0) { # peekn followed by errors
+    my $buffered_desc = $buffered ? "buffered" : "unbuffered";
     my $read = 0;
     my $base = "abcdef";
     my $pos = 0;
@@ -527,17 +528,47 @@ SKIP:
       return $result;
     };
     my $io = Imager::io_new_cb(undef, $reader, undef, undef);
-    is($io->peekn(5), "abcde", "peekn until just before error");
-    is($io->peekn(6), "abcdef", "peekn until error");
-    is($io->peekn(7), "abcdef", "peekn past error");
-    ok(!$io->error, "should be no error indicator, since data buffered");
-    ok(!$io->eof, "should be no eof indicator, since data buffered");
+    ok($io, "make $buffered_desc cb with error after 6 bytes");
+    is($io->peekn(5), "abcde",
+       "peekn until just before error ($buffered_desc)");
+    is($io->peekn(6), "abcdef", "peekn until error ($buffered_desc)");
+    is($io->peekn(7), "abcdef", "peekn past error ($buffered_desc)");
+    ok(!$io->error,
+       "should be no error indicator, since data buffered ($buffered_desc)");
+    ok(!$io->eof,
+       "should be no eof indicator, since data buffered ($buffered_desc)");
 
     # consume it
-    is($io->read2(6), "abcdef", "consume the buffer");
-    is($io->peekn(10), undef, "should get an error indicator");
-    ok($io->error, "should be an error state");
+    is($io->read2(6), "abcdef", "consume the buffer ($buffered_desc)");
+    is($io->peekn(10), undef,
+       "peekn should get an error indicator ($buffered_desc)");
+    ok($io->error, "should be an error state ($buffered_desc)");
+    ok(!$io->eof, "but not eof ($buffered_desc)");
+  }
+  { # peekn on an empty file
+    my $io = Imager::io_new_buffer("");
+    is($io->peekn(10), "", "peekn on empty source");
+    ok($io->eof, "should be in eof state");
+    ok(!$io->error, "but not error");
+  }
+  { # peekn on error source
+    my $io = Imager::io_new_cb(undef, sub { return; }, undef, undef);
+    is($io->peekn(10), undef, "peekn on empty source");
+    ok($io->error, "should be in error state");
     ok(!$io->eof, "but not eof");
+  }
+  { # peekn on short source
+    my $io = Imager::io_new_buffer("abcdef");
+    is($io->peekn(4), "abcd", "peekn 4 on 6 byte source");
+    is($io->peekn(10), "abcdef", "followed by peekn 10 on 6 byte source");
+    is($io->peekn(10), "abcdef", "and again, now eof is set");
+  }
+  { # peekn(0)
+    Imager::i_clear_error();
+    my $io = Imager::io_new_buffer("abcdef");
+    is($io->peekn(0), undef, "peekn 0 on 6 byte source");
+    my $msg = Imager->_error_as_msg;
+    is($msg, "peekn size must be positive");
   }
   { # getc through a whole file (buffered)
     my $io = Imager::io_new_buffer($base);
@@ -621,6 +652,51 @@ SKIP:
     is($io->peekc, $c, "duplicate matches");
     ok($io->error, "io marked error");
     ok(!$io->eof, "but not eof");
+  }
+  { # initial putc
+    my $io = Imager::io_new_bufchain();
+    is($io->putc(ord "A"), ord "A", "initial putc buffered");
+    is($io->close, 0, "close it");
+    is(Imager::io_slurp($io), "A", "check it was written");
+  }
+  { # initial putc - unbuffered
+    my $io = Imager::io_new_bufchain();
+    $io->set_buffered(0);
+    is($io->putc(ord "A"), ord "A", "initial putc unbuffered");
+    is($io->close, 0, "close it");
+    is(Imager::io_slurp($io), "A", "check it was written");
+  }
+  { # putc unbuffered with error
+    my $io = Imager::io_new_cb(undef, undef, undef, undef);
+    $io->set_buffered(0);
+    is($io->putc(ord "A"), -1, "initial putc unbuffered error");
+    ok($io->error, "io in error");
+    is($io->putc(ord "B"), -1, "still in error");
+  }
+  { # putc while in read state
+    my $io = Imager::io_new_cb(sub { 1 }, sub { return "AA" }, undef, undef);
+    is($io->getc, ord "A", "read to setup read buffer");
+    is($io->putc(ord "B"), -1, "putc should fail");
+  }
+  { # buffered putc error handling
+    # tests the check for error state in the buffered putc code
+    my $io = Imager::io_new_cb(undef, undef, undef, undef);
+    $io->putc(ord "A");
+    ok(!$io->flush, "flush should fail");
+    ok($io->error, "should be in error state");
+    is($io->putc(ord "B"), -1, "check for error");
+  }
+  { # buffered putc flush error handling
+    # test handling of flush failure and of the error state resulting
+    # from that
+    my $io = Imager::io_new_cb(undef, undef, undef, undef);
+    my $i = 0;
+    while (++$i < 100_000 && $io->putc(ord "A") == ord "A") {
+      # until we have to flush and fail doing do
+    }
+    is($i, 8193, "should have failed on 8193rd byte");
+    ok($io->error, "should be in error state");
+    is($io->putc(ord "B"), -1, "next putc should fail");
   }
 }
 

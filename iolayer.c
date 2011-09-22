@@ -1198,7 +1198,9 @@ i_io_read_fill(io_glue *ig, ssize_t needed) {
   ssize_t rc;
   int good = 0;
 
-  /* this condition may be unused, callers should also be checking it */
+  IOL_DEB(fprintf(IOL_DEBs, "i_io_read_fill(%p, %d)\n", ig, (int)needed));
+
+  /* these conditions may be unused, callers should also be checking them */
   if (ig->error || ig->buf_eof)
     return 0;
 
@@ -1233,16 +1235,23 @@ i_io_read_fill(io_glue *ig, ssize_t needed) {
     needed -= rc;
   }
 
-  if (rc < 0)
+  if (rc < 0) {
     ig->error = 1;
-  else if (rc == 0)
+    IOL_DEB(fprintf(IOL_DEBs, " i_io_read_fill -> rc %d, setting error\n",
+		    (int)rc));
+  }
+  else if (rc == 0) {
     ig->buf_eof = 1;
+    IOL_DEB(fprintf(IOL_DEBs, " i_io_read_fill -> rc 0, setting eof\n"));
+  }
 
   if (good) {
     ig->read_ptr = buf_start;
     ig->read_end = work;
   }
   
+  IOL_DEB(fprintf(IOL_DEBs, "i_io_read_fill => %d, %u buffered\n", good,
+		  (unsigned)(ig->read_end - ig->read_ptr)));
   return good;
 }
 
@@ -1353,6 +1362,12 @@ ssize_t
 i_io_peekn(io_glue *ig, void *buf, size_t size) {
   IOL_DEB(fprintf(IOL_DEBs, "i_io_peekn(%p, %p, %d)\n", ig, buf, (int)size));
 
+  if (size == 0) {
+    i_push_error(0, "peekn size must be positive");
+    IOL_DEB(fprintf(IOL_DEBs, "i_io_peekn() => -1 (zero size)\n"));
+    return -1;
+  }
+
   if (ig->write_ptr) {
     IOL_DEB(fprintf(IOL_DEBs, "i_io_peekn() => -1 (write_ptr set)\n"));
     return -1;
@@ -1361,28 +1376,28 @@ i_io_peekn(io_glue *ig, void *buf, size_t size) {
   if (!ig->buffer)
     i_io_setup_buffer(ig);
 
-  if (!ig->read_ptr || size > ig->read_end - ig->read_ptr) {
-    if (ig->error) {
-      IOL_DEB(fprintf(IOL_DEBs, "i_io_peekn() => -1 (error set)\n"));
-      return -1;
-    }
-    if (ig->buf_eof) {
-      IOL_DEB(fprintf(IOL_DEBs, "i_io_peekn() => 0 (eof set)\n"));
-      return 0;
-    }
-
-    if (!i_io_read_fill(ig, size)) {
-      ssize_t result = ig->error ? -1 : 0;
-      IOL_DEB(fprintf(IOL_DEBs, "i_io_peekn() => %d (read fill failed)\n",
-		      (int)result));
-      return result;
-    }
+  if ((!ig->read_ptr || size > ig->read_end - ig->read_ptr)
+      && !(ig->buf_eof || ig->error)) {
+    i_io_read_fill(ig, size);
   }
   
   if (size > ig->read_end - ig->read_ptr)
     size = ig->read_end - ig->read_ptr;
 
-  memcpy(buf, ig->read_ptr, size);
+  if (size)
+    memcpy(buf, ig->read_ptr, size);
+  else if (ig->buf_eof) {
+    IOL_DEB(fprintf(IOL_DEBs, "i_io_peekn() => 0 (eof)\n"));
+    return 0;
+  }
+  else if (ig->error) {
+    IOL_DEB(fprintf(IOL_DEBs, "i_io_peekn() => -1 (error)\n"));
+    return -1;
+  }
+  else {
+    IOL_DEB(fprintf(IOL_DEBs, "i_io_peekn() - size 0 but not eof or error!\n"));
+    return -1;
+  }
 
   IOL_DEB(fprintf(IOL_DEBs, "i_io_peekn() => %d\n", (int)size));
 
@@ -1395,8 +1410,18 @@ i_io_putc_imp(io_glue *ig, int c) {
 
   if (!ig->buffered) {
     char buf = c;
-    ssize_t write_result = i_io_raw_write(ig, &buf, 1);
-    int result = write_result == 1 ? c : EOF;
+    ssize_t write_result;
+
+    if (ig->error)
+      return EOF;
+
+    write_result = i_io_raw_write(ig, &buf, 1);
+    int result = c;
+    if (write_result != 1) {
+      ig->error = 1;
+      result = EOF;
+      IOL_DEB(fprintf(IOL_DEBs, "  unbuffered putc() failed, setting error mode\n"));
+    }
     IOL_DEB(fprintf(IOL_DEBs, "  unbuffered: result %d\n", result));
 
     return result;
