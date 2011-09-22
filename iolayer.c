@@ -1171,6 +1171,19 @@ i_io_setup_buffer(io_glue *ig) {
   ig->buffer = mymalloc(ig->buf_size);
 }
 
+int
+i_io_set_buffered(io_glue *ig, int buffered) {
+  if (!buffered && ig->write_ptr) {
+    if (!i_io_flush(ig)) {
+      ig->error = 1;
+      return 0;
+    }
+  }
+  ig->buffered = 0;
+
+  return 1;
+}
+
 static void
 i_io_start_write(io_glue *ig) {
   ig->write_ptr = ig->buffer;
