@@ -1849,6 +1849,10 @@ B<i_io_seek>
 
 =item *
 
+B<i_io_set_buffered>
+
+=item *
+
 B<i_io_write>
 
 

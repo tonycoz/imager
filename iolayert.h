@@ -82,7 +82,6 @@ struct i_io_glue_t {
 #define i_io_raw_write(ig, data, size) ((ig)->writecb((ig), (data), (size)))
 #define i_io_raw_seek(ig, offset, whence) ((ig)->seekcb((ig), (offset), (whence)))
 #define i_io_raw_close(ig) ((ig)->closecb(ig))
-#define i_io_set_buffered(ig, flag) ((ig)->buffered = (flag))
 
 #define i_io_getc(ig) \
   ((ig)->read_ptr < (ig)->read_end ? \

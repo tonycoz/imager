@@ -196,6 +196,7 @@ typedef struct {
   off_t (*f_i_io_seek)(io_glue *, off_t offset, int whence);
   int (*f_i_io_flush)(io_glue *ig);
   int (*f_i_io_close)(io_glue *ig);
+  int (*f_i_io_set_buffered)(io_glue *ig, int buffered);
 
   /* IMAGER_API_LEVEL 7 functions will be added here */
   

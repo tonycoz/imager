@@ -45,5 +45,6 @@ extern ssize_t i_io_write(io_glue *ig, const void *buf, size_t size);
 extern off_t i_io_seek(io_glue *ig, off_t offset, int whence);
 extern int i_io_flush(io_glue *ig);
 extern int i_io_close(io_glue *ig);
+extern int i_io_set_buffered(io_glue *ig, int buffered);
 
 #endif /* _IOLAYER_H_ */
