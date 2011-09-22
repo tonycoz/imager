@@ -1138,12 +1138,10 @@ i_io_peekn(ig, size)
         void *buffer;
 	ssize_t result;
       PPCODE:
-        if (size == 0)
-	  croak("size zero in call to peekn()");
-	buffer_sv = newSV(size);
+	buffer_sv = newSV(size+1);
 	buffer = SvGROW(buffer_sv, size+1);
         result = i_io_peekn(ig, buffer, size);
-        if (result > 0) {
+        if (result >= 0) {
 	  SvCUR_set(buffer_sv, result);
 	  *SvEND(buffer_sv) = '\0';
 	  SvPOK_only(buffer_sv);
