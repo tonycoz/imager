@@ -612,7 +612,6 @@ i_readtiff_multi_wiol(io_glue *ig, int *count) {
   TIFFErrorHandler old_warn_handler;
   i_img **results = NULL;
   int result_alloc = 0;
-  int dirnum = 0;
 
   i_clear_error();
   old_handler = TIFFSetErrorHandler(error_handler);
