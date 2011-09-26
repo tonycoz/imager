@@ -1002,7 +1002,7 @@ i_get_image_file_limits()
 
 MODULE = Imager		PACKAGE = Imager::IO	PREFIX = i_io_
 
-int
+IV
 i_io_raw_write(ig, data_sv)
 	Imager::IO ig
 	SV *data_sv
@@ -1211,7 +1211,7 @@ i_io_read2(ig, size)
 	  SvREFCNT_dec(buffer_sv);
         }
 
-size_t
+IV
 i_io_write(ig, data_sv)
 	Imager::IO ig
 	SV *data_sv
@@ -1236,10 +1236,14 @@ i_io_dump(ig, flags = I_IO_DUMP_DEFAULT)
 	Imager::IO ig
 	int flags
 
-void
+bool
 i_io_set_buffered(ig, flag = 1)
 	Imager::IO ig
 	int flag
+
+bool
+i_io_is_buffered(ig)
+	Imager::IO ig
 
 bool
 i_io_eof(ig)
