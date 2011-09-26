@@ -1,6 +1,6 @@
 #!perl -w
 use strict;
-use Test::More tests => 198;
+use Test::More tests => 238;
 # for SEEK_SET etc, Fcntl doesn't provide these in 5.005_03
 use IO::Seekable;
 
@@ -380,6 +380,14 @@ SKIP:
   # some data to play with
   my $base = pack "C*", map rand(26) + ord("a"), 0 .. 20_001;
 
+  { # buffered accessors
+    my $io = Imager::io_new_buffer($base);
+    ok($io->set_buffered(0), "set unbuffered");
+    ok(!$io->is_buffered, "verify unbuffered");
+    ok($io->set_buffered(1), "set buffered");
+    ok($io->is_buffered, "verify buffered");
+  }
+
   { # initial i_io_read(), buffered
     my $pos = 0;
     my $ops = "";
@@ -672,10 +680,11 @@ SKIP:
     ok($io->error, "io in error");
     is($io->putc(ord "B"), -1, "still in error");
   }
-  { # putc while in read state
+  { # writes while in read state
     my $io = Imager::io_new_cb(sub { 1 }, sub { return "AA" }, undef, undef);
     is($io->getc, ord "A", "read to setup read buffer");
     is($io->putc(ord "B"), -1, "putc should fail");
+    is($io->write("test"), -1, "write should fail");
   }
   { # buffered putc error handling
     # tests the check for error state in the buffered putc code
@@ -696,6 +705,89 @@ SKIP:
     is($i, 8193, "should have failed on 8193rd byte");
     ok($io->error, "should be in error state");
     is($io->putc(ord "B"), -1, "next putc should fail");
+  }
+  { # buffered write flush error handling
+    # test handling of flush failure and of the error state resulting
+    # from that
+    my $io = Imager::io_new_cb(undef, undef, undef, undef);
+    my $i = 0;
+    while (++$i < 100_000 && $io->write("A") == 1) {
+      # until we have to flush and fail doing do
+    }
+    is($i, 8193, "should have failed on 8193rd byte");
+    ok($io->error, "should be in error state");
+    is($io->write("B"), -1, "next write should fail");
+  }
+  { # buffered read error
+    my $io = Imager::io_new_cb(undef, undef, undef, undef);
+    is($io->read2(10), undef, "initial read returning error");
+    ok($io->error, "should be in error state");
+  }
+  { # unbuffered read error
+    my $io = Imager::io_new_cb(undef, undef, undef, undef);
+    $io->set_buffered(0);
+    is($io->read2(10), undef, "initial read returning error");
+    ok($io->error, "should be in error state");
+  }
+  { # unbuffered write error
+    my $count = 0;
+    my $io = Imager::io_new_cb(sub { return $count++; }, undef, undef, undef);
+    $io->set_buffered(0);
+    is($io->write("A"), -1, "unbuffered write failure");
+    ok($io->error, "should be in error state");
+    is($io->write("BC"), -1, "should still fail");
+  }
+  { # buffered write + large write
+    my $io = Imager::io_new_bufchain();
+    is($io->write(substr($base, 0, 4096)), 4096,
+       "should be buffered");
+    is($io->write(substr($base, 4096)), length($base) - 4096,
+       "large write, should fill buffer and fall back to direct write");
+    is($io->close, 0, "close it");
+    is(Imager::io_slurp($io), $base, "make sure the data is correct");
+  }
+  { # initial large write with failure
+    # tests error handling for the case where we bypass the buffer
+    # when the write is too large to fit
+    my $io = Imager::io_new_cb(undef, undef, undef, undef);
+    ok($io->flush, "flush with nothing buffered should succeed");
+    is($io->write($base), -1, "large write failure");
+    ok($io->error, "should be in error state");
+    is($io->close, -1, "should fail to close");
+  }
+  { # write that causes a flush then fills the buffer a bit
+    my $io = Imager::io_new_bufchain();
+    is($io->write(substr($base, 0, 6000)), 6000, "fill the buffer a bit");
+    is($io->write(substr($base, 6000, 4000)), 4000,
+       "cause it to flush and then fill some more");
+    is($io->write(substr($base, 10000)), length($base)-10000,
+       "write out the rest of our test data");
+    is($io->close, 0, "close the stream");
+    is(Imager::io_slurp($io), $base, "make sure the data is right");
+  }
+  { # failure on flush on close
+    my $io = Imager::io_new_cb(undef, undef, undef, undef);
+    is($io->putc(ord "A"), ord "A", "something in the buffer");
+    ok(!$io->error, "should be no error yet");
+    is($io->close, -1, "close should failure due to flush error");
+  }
+  { # seek failure
+    my $io = Imager::io_new_cb(undef, undef, undef, undef);
+    is($io->seek(0, SEEK_SET), -1, "seek failure");
+  }
+  { # read a little and seek
+    my $io = Imager::io_new_buffer($base);
+    is($io->getc, ord $base, "read one");
+    is($io->getc, ord substr($base, 1, 1), "read another");
+    is($io->seek(-1, SEEK_CUR), 1, "seek relative back to origin+1");
+    is($io->getc, ord substr($base, 1, 1), "read another again");
+  }
+  { # seek with failing flush
+    my $io = Imager::io_new_cb(undef, undef, undef, undef);
+    is($io->putc(ord "A"), ord "A", "write one");
+    ok(!$io->error, "not in error mode (yet)");
+    is($io->seek(0, SEEK_SET), -1, "seek failure due to flush");
+    ok($io->error, "in error mode");
   }
 }
 

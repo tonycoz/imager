@@ -30,8 +30,6 @@ Imager release history.  Older releases can be found in Changes.old
 
 To do:
 
- - coverage/functional tests for the buffering code
-
  - remove the other cast functions from imtiff.c
 
  - remove other buffering
@@ -44,13 +42,13 @@ To do:
 
  - document the Imager::io_new_cb() callback functions properly.
 
- - fix buffered seeks
-
  - i_io_gets()
 
  - document 1 to 1 relationship for i_io_raw_read()
 
  - modify i_io_read() to look on raw_read calls in unbuffered mode
+
+ - re-order iolayer.c to put the internals at the end
 
 Imager 0.86
 ===========

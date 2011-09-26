@@ -1179,7 +1179,7 @@ i_io_set_buffered(io_glue *ig, int buffered) {
       return 0;
     }
   }
-  ig->buffered = 0;
+  ig->buffered = buffered;
 
   return 1;
 }
@@ -1533,7 +1533,19 @@ i_io_write(io_glue *ig, const void *buf, size_t size) {
   IOL_DEB(fprintf(IOL_DEBs, "i_io_write(%p, %p, %u)\n", ig, buf, (unsigned)size));
 
   if (!ig->buffered) {
-    ssize_t result = i_io_raw_write(ig, buf, size);
+    ssize_t result;
+
+    if (ig->error) {
+      IOL_DEB(fprintf(IOL_DEBs, "  unbuffered, error state\n"));
+      return -1;
+    }
+
+    result = i_io_raw_write(ig, buf, size);
+
+    if (result != size) {
+      ig->error = 1;
+      IOL_DEB(fprintf(IOL_DEBs, "  unbuffered, setting error flag\n"));
+    }
 
     IOL_DEB(fprintf(IOL_DEBs, "  unbuffered, result: %d\n", (int)result));
 
@@ -1584,6 +1596,10 @@ i_io_write(io_glue *ig, const void *buf, size_t size) {
       }
       if (rc <= 0) {
 	ig->error = 1;
+	if (!write_count) {
+	  IOL_DEB(fprintf(IOL_DEBs, "i_io_write() => -1 (direct write failure)\n"));
+	  return -1;
+	}
       }
     }
     else {
@@ -1604,9 +1620,10 @@ i_io_seek(io_glue *ig, off_t offset, int whence) {
 
   IOL_DEB(fprintf(IOL_DEBs, "i_io_seek(%p, %ld, %d)\n", ig, (long)offset, whence));
 
-  if (ig->write_ptr && ig->write_ptr != ig->write_end)
+  if (ig->write_ptr && ig->write_ptr != ig->write_end) {
     if (!i_io_flush(ig))
       return (off_t)(-1);
+  }
 
   if (whence == SEEK_CUR && ig->read_ptr && ig->read_ptr != ig->read_end)
     offset -= ig->read_end - ig->read_ptr;
