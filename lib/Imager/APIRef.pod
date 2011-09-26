@@ -62,6 +62,8 @@ Imager::APIRef - Imager's C API - reference.
 
   # I/O layers
   ssize_t count = i_io_peekn(ig, buffer, sizeof(buffer));
+  char buffer[BUFSIZ]
+  ssize_t len = i_io_gets(buffer, sizeof(buffer), '\n');
 
   # Image
 
@@ -1036,6 +1038,23 @@ From: File fills.c
 =head2 I/O layers
 
 =over
+
+=item i_io_gets(ig, buffer, size, eol)
+
+  char buffer[BUFSIZ]
+  ssize_t len = i_io_gets(buffer, sizeof(buffer), '\n');
+
+Read up to C<size>-1 bytes from the stream C<ig> into C<buffer>.
+
+If the byte C<eol> is seen then no further bytes will be read.
+
+Returns the number of bytes read.
+
+Always NUL terminates the buffer.
+
+
+=for comment
+From: File iolayer.c
 
 =item i_io_peekn(ig, buffer, size)
 

@@ -1,6 +1,6 @@
 #!perl -w
 use strict;
-use Test::More tests => 238;
+use Test::More tests => 246;
 # for SEEK_SET etc, Fcntl doesn't provide these in 5.005_03
 use IO::Seekable;
 
@@ -789,6 +789,22 @@ SKIP:
     ok(!$io->error, "not in error mode (yet)");
     is($io->seek(0, SEEK_SET), -1, "seek failure due to flush");
     ok($io->error, "in error mode");
+  }
+  { # gets()
+    my $data = "test1\ntest2\ntest3";
+    my $io = Imager::io_new_buffer($data);
+    is($io->gets(6), "test1\n", "gets(6)");
+    is($io->gets(5), "test2", "gets(5) (short for the line)");
+    is($io->gets(10), "\n", "gets(10) the rest of the line (the newline)");
+    is($io->gets(), "test3", "gets(default) unterminated line");
+  }
+  { # more gets()
+    my $data = "test1\ntest2\ntest3";
+    my $io = Imager::io_new_buffer($data);
+    is($io->gets(6, ord("1")), "test1", "gets(6) (line terminator 1)");
+    is($io->gets(6, ord("2")), "\ntest2", "gets(6) (line terminator 2)");
+    is($io->gets(6, ord("3")), "\ntest3", "gets(6) (line terminator 3)");
+    is($io->getc, -1, "should be eof");
   }
 }
 

@@ -781,6 +781,9 @@ static im_pl_ext_funcs im_perl_funcs =
 
 #define i_img_epsilonf() (DBL_EPSILON * 4)
 
+/* avoid some xsubpp strangeness */
+#define NEWLINE '\n'
+
 MODULE = Imager		PACKAGE = Imager::Color	PREFIX = ICL_
 
 Imager::Color
@@ -1195,7 +1198,7 @@ i_io_read2(ig, size)
 	ssize_t result;
       PPCODE:
         if (size == 0)
-	  croak("size zero in call to bread()");
+	  croak("size zero in call to read2()");
 	buffer_sv = newSV(size);
 	buffer = SvGROW(buffer_sv, size+1);
         result = i_io_read(ig, buffer, size);
@@ -1210,6 +1213,29 @@ i_io_read2(ig, size)
           /* discard it */
 	  SvREFCNT_dec(buffer_sv);
         }
+
+void
+i_io_gets(ig, size = 8192, eol = NEWLINE)
+	Imager::IO ig
+	STRLEN size
+	int eol
+      PREINIT:
+	SV *buffer_sv;
+        void *buffer;
+	ssize_t result;
+      PPCODE:
+        if (size < 2)
+	  croak("size too small in call to gets()");
+	buffer_sv = sv_2mortal(newSV(size+1));
+	buffer = SvPVX(buffer_sv);
+        result = i_io_gets(ig, buffer, size+1, eol);
+        if (result > 0) {
+	  SvCUR_set(buffer_sv, result);
+	  *SvEND(buffer_sv) = '\0';
+	  SvPOK_only(buffer_sv);
+	  EXTEND(SP, 1);
+	  PUSHs(buffer_sv);
+	}
 
 IV
 i_io_write(ig, data_sv)

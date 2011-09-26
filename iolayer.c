@@ -1685,6 +1685,44 @@ i_io_close(io_glue *ig) {
 }
 
 /*
+=item i_io_gets(ig, buffer, size, eol)
+=category I/O layers
+=synopsis char buffer[BUFSIZ]
+=synopsis ssize_t len = i_io_gets(buffer, sizeof(buffer), '\n');
+
+Read up to C<size>-1 bytes from the stream C<ig> into C<buffer>.
+
+If the byte C<eol> is seen then no further bytes will be read.
+
+Returns the number of bytes read.
+
+Always NUL terminates the buffer.
+
+=cut
+*/
+
+ssize_t
+i_io_gets(io_glue *ig, char *buffer, size_t size, int eol) {
+  ssize_t read_count = 0;
+  if (size < 2)
+    return 0;
+  --size; /* room for nul */
+  while (size > 0) {
+    int byte = i_io_getc(ig);
+    if (byte == EOF)
+      break;
+    *buffer++ = byte;
+    ++read_count;
+    if (byte == eol)
+      break;
+    --size;
+  }
+  *buffer++ = '\0';
+
+  return read_count;
+}
+
+/*
 =item i_io_init(ig, readcb, writecb, seekcb)
 
 Do common initialization for io_glue objects.

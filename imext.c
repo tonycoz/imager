@@ -143,7 +143,8 @@ im_ext_funcs imager_function_table =
     i_io_seek,
     i_io_flush,
     i_io_close,
-    i_io_set_buffered
+    i_io_set_buffered,
+    i_io_gets
   };
 
 /* in general these functions aren't called by Imager internally, but

@@ -46,5 +46,6 @@ extern off_t i_io_seek(io_glue *ig, off_t offset, int whence);
 extern int i_io_flush(io_glue *ig);
 extern int i_io_close(io_glue *ig);
 extern int i_io_set_buffered(io_glue *ig, int buffered);
+extern ssize_t i_io_gets(io_glue *ig, char *, size_t, int);
 
 #endif /* _IOLAYER_H_ */
