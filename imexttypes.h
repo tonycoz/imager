@@ -197,6 +197,7 @@ typedef struct {
   int (*f_i_io_flush)(io_glue *ig);
   int (*f_i_io_close)(io_glue *ig);
   int (*f_i_io_set_buffered)(io_glue *ig, int buffered);
+  ssize_t (*f_i_io_gets)(io_glue *ig, char *, size_t, int);
 
   /* IMAGER_API_LEVEL 7 functions will be added here */
   

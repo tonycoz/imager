@@ -28,6 +28,9 @@ Imager release history.  Older releases can be found in Changes.old
    - the PNM reader did its own buffering.  This buffering has been
      removed to avoid redundancy with the common io_glue buffering.
 
+ - removed the long unused i_gen_reader() and i_gen_writer() utility
+   functions.
+
 To do:
 
  - remove other buffering
@@ -40,8 +43,6 @@ To do:
 
  - document the Imager::io_new_cb() callback functions properly.
 
- - i_io_gets()
-
  - document 1 to 1 relationship for i_io_raw_read()
 
  - modify i_io_read() to look on raw_read calls in unbuffered mode
@@ -49,6 +50,9 @@ To do:
  - re-order iolayer.c to put the internals at the end
 
  - clean up junk structures in iolayer.c
+
+ - re-work error state handling (error state prevents all ops,
+   including seek)
 
 Imager 0.86
 ===========

@@ -244,6 +244,7 @@ extern im_ext_funcs *imager_function_ext_table;
 #define i_io_flush (im_extt->f_i_io_flush)
 #define i_io_close (im_extt->f_i_io_close)
 #define i_io_set_buffered (im_extt->f_i_set_buffered)
+#define i_io_gets (im_extt->f_i_gets)
 
 #ifdef IMAGER_LOG
 #define mm_log(x) { i_lhead(__FILE__,__LINE__); i_loog x; } 
