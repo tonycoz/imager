@@ -197,11 +197,8 @@ static
 ssize_t 
 realseek_read(io_glue *igo, void *buf, size_t count) {
   io_cb        *ig = (io_cb *)igo;
-  io_ex_rseek *ier = igo->exdata;
   void *p          = ig->p;
   ssize_t       rc = 0;
-  size_t        bc = 0;
-  char       *cbuf = buf;
 
   IOL_DEB( fprintf(IOL_DEBs, "realseek_read:  buf = %p, count = %u\n", 
 		   buf, (unsigned)count) );

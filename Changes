@@ -30,8 +30,6 @@ Imager release history.  Older releases can be found in Changes.old
 
 To do:
 
- - remove the other cast functions from imtiff.c
-
  - remove other buffering
 
  - document unbuffered parameter to write/write_multi
@@ -49,6 +47,8 @@ To do:
  - modify i_io_read() to look on raw_read calls in unbuffered mode
 
  - re-order iolayer.c to put the internals at the end
+
+ - clean up junk structures in iolayer.c
 
 Imager 0.86
 ===========
