@@ -1645,6 +1645,11 @@ i_io_flush(io_glue *ig) {
 
   IOL_DEB(fprintf(IOL_DEBs, "i_io_flush(%p)\n", ig));
 
+  if (ig->error) {
+    IOL_DEB(fprintf(IOL_DEBs, "i_io_flush() => 0 (error set)\n", ig));
+    return 0;
+  }
+
   /* nothing to do */
   if (!ig->write_ptr)
     return 1;
@@ -1653,6 +1658,7 @@ i_io_flush(io_glue *ig) {
   while (bufp < ig->write_ptr) {
     ssize_t rc = i_io_raw_write(ig, bufp, ig->write_ptr - bufp);
     if (rc <= 0) {
+      IOL_DEB(fprintf(IOL_DEBs, "i_io_flush() => 0 (write error)\n", ig));
       ig->error = 1;
       return 0;
     }
@@ -1661,6 +1667,8 @@ i_io_flush(io_glue *ig) {
   }
 
   ig->write_ptr = ig->write_end = NULL;
+
+  IOL_DEB(fprintf(IOL_DEBs, "i_io_flush() => 1\n", ig));
 
   return 1;
 }
@@ -1685,18 +1693,18 @@ i_io_close(io_glue *ig) {
 }
 
 /*
-=item i_io_gets(ig, buffer, size, eol)
+=item i_io_gets(ig, buffer, size, end_of_line)
 =category I/O layers
 =synopsis char buffer[BUFSIZ]
 =synopsis ssize_t len = i_io_gets(buffer, sizeof(buffer), '\n');
 
 Read up to C<size>-1 bytes from the stream C<ig> into C<buffer>.
 
-If the byte C<eol> is seen then no further bytes will be read.
+If the byte C<end_of_line> is seen then no further bytes will be read.
 
 Returns the number of bytes read.
 
-Always NUL terminates the buffer.
+Always C<NUL> terminates the buffer.
 
 =cut
 */

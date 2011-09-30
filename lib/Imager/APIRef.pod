@@ -1039,18 +1039,18 @@ From: File fills.c
 
 =over
 
-=item i_io_gets(ig, buffer, size, eol)
+=item i_io_gets(ig, buffer, size, end_of_line)
 
   char buffer[BUFSIZ]
   ssize_t len = i_io_gets(buffer, sizeof(buffer), '\n');
 
 Read up to C<size>-1 bytes from the stream C<ig> into C<buffer>.
 
-If the byte C<eol> is seen then no further bytes will be read.
+If the byte C<end_of_line> is seen then no further bytes will be read.
 
 Returns the number of bytes read.
 
-Always NUL terminates the buffer.
+Always C<NUL> terminates the buffer.
 
 
 =for comment

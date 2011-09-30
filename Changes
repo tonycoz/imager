@@ -51,9 +51,6 @@ To do:
 
  - clean up junk structures in iolayer.c
 
- - re-work error state handling (error state prevents all ops,
-   including seek)
-
 Imager 0.86
 ===========
 
