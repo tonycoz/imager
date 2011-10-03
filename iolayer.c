@@ -38,6 +38,7 @@ typedef struct {
   size_t	len;
   i_io_closebufp_t     closecb;        /* free memory mapped segment or decrement refcount */
   void          *closedata;
+  off_t cpos;
 } io_buffer;
 
 typedef struct {
@@ -50,44 +51,6 @@ typedef struct {
   i_io_destroyl_t      destroycb;
 } io_cb;
 
-#if 0
-typedef union {
-  io_type       type;
-  io_fdseek     fdseek;
-  io_buffer	buffer;
-  io_cb		cb;
-} io_obj;
-
-struct i_io_glue_t {
-  io_obj	source;
-  int		flags;		/* Flags */
-  void		*exdata;	/* Pair specific data */
-  i_io_readp_t	readcb;
-  i_io_writep_t	writecb;
-  i_io_seekp_t	seekcb;
-  i_io_closep_t	closecb;
-  i_io_sizep_t	sizecb;
-  i_io_destroyp_t destroycb;
-};
-#endif
-
-/* Structures that describe callback interfaces */
-
-typedef struct {
-  off_t offset;
-  off_t cpos;
-} io_ex_rseek;
-
-
-typedef struct {
-  off_t offset;
-  off_t cpos;
-  io_blink *head;
-  io_blink *tail;
-  io_blink *cp;
-} io_ex_fseek;
-
-
 typedef struct {
   off_t offset;			/* Offset of the source - not used */
   off_t length;			/* Total length of chain in bytes */
@@ -98,12 +61,6 @@ typedef struct {
   off_t cpos;			/* Offset within the current */
   off_t gpos;			/* Global position in stream */
 } io_ex_bchain;
-
-typedef struct {
-  off_t offset;			/* Offset of the source - not used */
-  off_t cpos;			/* Offset within the current */
-} io_ex_buffer;
-
 
 /* turn current offset, file length, whence and offset into a new offset */
 #define calc_seek_offset(curr_off, length, offset, whence) \
@@ -238,14 +195,13 @@ static
 ssize_t 
 realseek_write(io_glue *igo, const void *buf, size_t count) {
   io_cb        *ig = (io_cb *)igo;
-  io_ex_rseek *ier = igo->exdata;
   void          *p = ig->p;
   ssize_t       rc = 0;
   size_t        bc = 0;
   char       *cbuf = (char*)buf; 
   
-  IOL_DEB( fprintf(IOL_DEBs, "realseek_write: ig = %p, ier->cpos = %ld, buf = %p, "
-		   "count = %u\n", ig, (long) ier->cpos, buf, (unsigned)count) );
+  IOL_DEB( fprintf(IOL_DEBs, "realseek_write: ig = %p, buf = %p, "
+		   "count = %u\n", ig, buf, (unsigned)count) );
 
   /* Is this a good idea? Would it be better to handle differently? 
      skip handling? */
@@ -253,7 +209,6 @@ realseek_write(io_glue *igo, const void *buf, size_t count) {
     bc+=rc;
   }
 
-  ier->cpos += bc;
   IOL_DEB( fprintf(IOL_DEBs, "realseek_write: rc = %d, bc = %u\n", (int)rc, (unsigned)bc) );
   return rc < 0 ? rc : bc;
 }
@@ -298,7 +253,6 @@ have an offset into a file that is different from what the underlying library th
 static
 off_t
 realseek_seek(io_glue *igo, off_t offset, int whence) {
-  /*  io_ex_rseek *ier = ig->exdata; Needed later */
   io_cb *ig = (io_cb *)igo;
   void *p = ig->p;
   off_t rc;
@@ -314,12 +268,9 @@ static
 void
 realseek_destroy(io_glue *igo) {
   io_cb *ig = (io_cb *)igo;
-  io_ex_rseek *ier = igo->exdata;
 
   if (ig->destroycb)
     ig->destroycb(ig->p);
-
-  myfree(ier);
 }
 
 /*
@@ -342,17 +293,16 @@ static
 ssize_t 
 buffer_read(io_glue *igo, void *buf, size_t count) {
   io_buffer *ig = (io_buffer *)igo;
-  io_ex_buffer *ieb = igo->exdata;
 
-  IOL_DEB( fprintf(IOL_DEBs, "buffer_read: ieb->cpos = %ld, buf = %p, count = %u\n", (long) ieb->cpos, buf, (unsigned)count) );
+  IOL_DEB( fprintf(IOL_DEBs, "buffer_read: ig->cpos = %ld, buf = %p, count = %u\n", (long) ig->cpos, buf, (unsigned)count) );
 
-  if ( ieb->cpos+count > ig->len ) {
-    mm_log((1,"buffer_read: short read: cpos=%ld, len=%ld, count=%ld\n", (long)ieb->cpos, (long)ig->len, (long)count));
-    count = ig->len - ieb->cpos;
+  if ( ig->cpos+count > ig->len ) {
+    mm_log((1,"buffer_read: short read: cpos=%ld, len=%ld, count=%ld\n", (long)ig->cpos, (long)ig->len, (long)count));
+    count = ig->len - ig->cpos;
   }
   
-  memcpy(buf, ig->data+ieb->cpos, count);
-  ieb->cpos += count;
+  memcpy(buf, ig->data+ig->cpos, count);
+  ig->cpos += count;
   IOL_DEB( fprintf(IOL_DEBs, "buffer_read: count = %ld\n", (long)count) );
   return count;
 }
@@ -413,9 +363,8 @@ static
 off_t
 buffer_seek(io_glue *igo, off_t offset, int whence) {
   io_buffer *ig = (io_buffer *)igo;
-  io_ex_buffer *ieb = igo->exdata;
   off_t reqpos = 
-    calc_seek_offset(ieb->cpos, ig->len, offset, whence);
+    calc_seek_offset(ig->cpos, ig->len, offset, whence);
   
   if (reqpos > ig->len) {
     mm_log((1, "seeking out of readable range\n"));
@@ -426,7 +375,7 @@ buffer_seek(io_glue *igo, off_t offset, int whence) {
     return (off_t)-1;
   }
   
-  ieb->cpos = reqpos;
+  ig->cpos = reqpos;
   IOL_DEB( fprintf(IOL_DEBs, "buffer_seek(ig %p, offset %ld, whence %d)\n", ig, (long) offset, whence) );
 
   return reqpos;
@@ -437,14 +386,12 @@ static
 void
 buffer_destroy(io_glue *igo) {
   io_buffer *ig = (io_buffer *)igo;
-  io_ex_buffer *ieb = igo->exdata;
 
   if (ig->closecb) {
     mm_log((1,"calling close callback %p for io_buffer\n", 
 	    ig->closecb));
     ig->closecb(ig->closedata);
   }
-  myfree(ieb);
 }
 
 
@@ -625,16 +572,6 @@ chaincert( io_glue *ig) {
   mm_log((1, "csize = %d %s ieb->length = %d\n", csize, csize == ieb->length ? "==" : "!=", ieb->length));
 }
 */
-
-
-
-
-
-
-
-
-
-
 
 /*
 =item bufchain_read(ig, buf, count)
@@ -844,26 +781,6 @@ bufchain_destroy(io_glue *ig) {
  * Methods for setting up data source
  */
 
-#if 0
-/*
-=item io_obj_setp_buffer(io, p, len)
-
-Sets an io_object for reading from a buffer source
-
-   io  - io object that describes a source
-   p   - pointer to buffer
-   len - length of buffer
-
-=cut
-*/
-
-static void
-io_obj_setp_buffer(io_buffer *io, char *p, size_t len, i_io_closebufp_t closecb, 
-		   void *closedata) {
-}
-
-#endif
-
 /*
 =item io_new_bufchain()
 
@@ -916,7 +833,6 @@ from specified buffer.  Note that the buffer is not copied.
 io_glue *
 io_new_buffer(char *data, size_t len, i_io_closebufp_t closecb, void *closedata) {
   io_buffer *ig;
-  io_ex_buffer *ieb = mymalloc(sizeof(io_ex_buffer));
   
   mm_log((1, "io_new_buffer(data %p, len %ld, closecb %p, closedata %p)\n", data, (long)len, closecb, closedata));
 
@@ -928,10 +844,8 @@ io_new_buffer(char *data, size_t len, i_io_closebufp_t closecb, void *closedata)
   ig->closecb   = closecb;
   ig->closedata = closedata;
 
-  ieb->offset = 0;
-  ieb->cpos   = 0;
+  ig->cpos   = 0;
   
-  ig->base.exdata    = ieb;
   ig->base.closecb   = buffer_close;
   ig->base.destroycb = buffer_destroy;
 
@@ -974,7 +888,6 @@ io_glue *io_new_cb(void *p, i_io_readl_t readcb, i_io_writel_t writecb,
 		   i_io_seekl_t seekcb, i_io_closel_t closecb, 
 		   i_io_destroyl_t destroycb) {
   io_cb *ig;
-  io_ex_rseek *ier = mymalloc(sizeof(io_ex_rseek));
 
   mm_log((1, "io_new_cb(p %p, readcb %p, writecb %p, seekcb %p, closecb %p, "
           "destroycb %p)\n", p, readcb, writecb, seekcb, closecb, destroycb));
@@ -983,10 +896,6 @@ io_glue *io_new_cb(void *p, i_io_readl_t readcb, i_io_writel_t writecb,
   i_io_init(&ig->base, CBSEEK, realseek_read, realseek_write, realseek_seek);
   mm_log((1, "(%p) <- io_new_cb\n", ig));
 
-  ier->offset = 0;
-  ier->cpos   = 0;
-  
-  ig->base.exdata    = ier;
   ig->base.closecb   = realseek_close;
   ig->base.destroycb = realseek_destroy;
 
@@ -1043,6 +952,8 @@ io_slurp(io_glue *ig, unsigned char **c) {
 
 /*
 =item fd_read(ig, buf, count)
+
+Read callback for file descriptor IO objects.
 
 =cut
 */
