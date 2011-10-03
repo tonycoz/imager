@@ -37,8 +37,6 @@ To do:
 
  - document unbuffered parameter to write/write_multi
 
- - document the new Imager::IO methods
-
  - document the io_glue C callbacks properly
 
  - document the Imager::io_new_cb() callback functions properly.

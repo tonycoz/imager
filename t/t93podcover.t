@@ -3,6 +3,7 @@ use strict;
 use lib 't';
 use Test::More;
 use ExtUtils::Manifest qw(maniread);
+#sub Pod::Coverage::TRACE_ALL() { 1 }
 eval "use Test::Pod::Coverage 1.08;";
 # 1.08 required for coverage_class support
 plan skip_all => "Test::Pod::Coverage 1.08 required for POD coverage" if $@;
@@ -24,7 +25,7 @@ my @private =
   );
 my @trustme = ( '^open$',  );
 
-plan tests => 19;
+plan tests => 20;
 
 {
   pod_coverage_ok('Imager', { also_private => \@private,
@@ -50,6 +51,12 @@ plan tests => 19;
   pod_coverage_ok('Imager::Regops');
   pod_coverage_ok('Imager::Transform');
   pod_coverage_ok('Imager::Test');
+  pod_coverage_ok('Imager::IO',
+		  {
+		   pod_from => "lib/Imager/IO.pod",
+		   coverage_class => "Pod::Coverage::Imager",
+		   module => "Imager",
+		  });
 }
 
 {
