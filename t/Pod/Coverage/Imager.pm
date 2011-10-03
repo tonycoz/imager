@@ -26,4 +26,20 @@ sub _get_pods {
   return $pod->{identifiers} || [];
 }
 
+sub _get_syms {
+  my ($self, $package) = @_;
+
+  if ($self->{module}) {
+    eval "require $self->{module}";
+    return if $@;
+
+    # fake out require
+    (my $file = $package) =~ s(::)(/)g;
+    $file .= ".pm";
+    $INC{$file} = 1;
+  }
+
+  return $self->SUPER::_get_syms($package);
+}
+
 1;
