@@ -47,10 +47,6 @@ To do:
 
  - modify i_io_read() to look on raw_read calls in unbuffered mode
 
- - re-order iolayer.c to put the internals at the end
-
- - clean up junk structures in iolayer.c
-
 Imager 0.86
 ===========
 

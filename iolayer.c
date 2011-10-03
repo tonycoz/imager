@@ -118,664 +118,31 @@ static off_t fd_seek(io_glue *ig, off_t offset, int whence);
 static int fd_close(io_glue *ig);
 static ssize_t fd_size(io_glue *ig);
 static const char *my_strerror(int err);
-
-/*
- * Callbacks for sources that cannot seek
- */
-
-/* fakeseek_read: read method for when emulating a seekable source
-static
-ssize_t
-fakeseek_read(io_glue *ig, void *buf, size_t count) {
-  io_ex_fseek *exdata = ig->exdata; 
-  return 0;
-}
-*/
-
-
-
-/*
- * Callbacks for sources that can seek 
- */
-
-/*
-=item realseek_read(ig, buf, count)
-
-Does the reading from a source that can be seeked on
-
-   ig    - io_glue object
-   buf   - buffer to return data in
-   count - number of bytes to read into buffer max
-
-=cut
-*/
-
-static
-ssize_t 
-realseek_read(io_glue *igo, void *buf, size_t count) {
-  io_cb        *ig = (io_cb *)igo;
-  void *p          = ig->p;
-  ssize_t       rc = 0;
-
-  IOL_DEB( fprintf(IOL_DEBs, "realseek_read:  buf = %p, count = %u\n", 
-		   buf, (unsigned)count) );
-#if 0
-  /* Is this a good idea? Would it be better to handle differently?
-     skip handling? */
-  while( count!=bc && (rc = ig->readcb(p,cbuf+bc,count-bc))>0 ) {
-    bc+=rc;
-  }
-  
-  ier->cpos += bc;
-  IOL_DEB( fprintf(IOL_DEBs, "realseek_read: rc = %d, bc = %u\n", (int)rc, (unsigned)bc) );
-  return rc < 0 ? rc : bc;
-#else
-  rc = ig->readcb(p,buf,count);
-
-  IOL_DEB( fprintf(IOL_DEBs, "realseek_read: rc = %d\n", (int)rc) );
-
-  return rc;
-#endif
-}
-
-
-/*
-=item realseek_write(ig, buf, count)
-
-Does the writing to a 'source' that can be seeked on
-
-   ig    - io_glue object
-   buf   - buffer that contains data
-   count - number of bytes to write
-
-=cut
-*/
-
-static
-ssize_t 
-realseek_write(io_glue *igo, const void *buf, size_t count) {
-  io_cb        *ig = (io_cb *)igo;
-  void          *p = ig->p;
-  ssize_t       rc = 0;
-  size_t        bc = 0;
-  char       *cbuf = (char*)buf; 
-  
-  IOL_DEB( fprintf(IOL_DEBs, "realseek_write: ig = %p, buf = %p, "
-		   "count = %u\n", ig, buf, (unsigned)count) );
-
-  /* Is this a good idea? Would it be better to handle differently? 
-     skip handling? */
-  while( count!=bc && (rc = ig->writecb(p,cbuf+bc,count-bc))>0 ) {
-    bc+=rc;
-  }
-
-  IOL_DEB( fprintf(IOL_DEBs, "realseek_write: rc = %d, bc = %u\n", (int)rc, (unsigned)bc) );
-  return rc < 0 ? rc : bc;
-}
-
-
-/*
-=item realseek_close(ig)
-
-Closes a source that can be seeked on.  Not sure if this should be an
-actual close or not.  Does nothing for now.  Should be fixed.
-
-   ig - data source
-
-=cut */
-
-static
-int
-realseek_close(io_glue *igo) {
-  io_cb *ig = (io_cb *)igo;
-
-  IOL_DEB(fprintf(IOL_DEBs, "realseek_close(%p)\n", ig));
-  mm_log((1, "realseek_close(ig %p)\n", ig));
-  if (ig->closecb)
-    return ig->closecb(ig->p);
-  else
-    return 0;
-}
-
-
-/* realseek_seek(ig, offset, whence)
-
-Implements seeking for a source that is seekable, the purpose of having this is to be able to
-have an offset into a file that is different from what the underlying library thinks.
-
-   ig     - data source
-   offset - offset into stream
-   whence - whence argument a la lseek
-
-=cut
-*/
-
-static
-off_t
-realseek_seek(io_glue *igo, off_t offset, int whence) {
-  io_cb *ig = (io_cb *)igo;
-  void *p = ig->p;
-  off_t rc;
-  IOL_DEB( fprintf(IOL_DEBs, "realseek_seek(ig %p, offset %ld, whence %d)\n", ig, (long) offset, whence) );
-  rc = ig->seekcb(p, offset, whence);
-
-  IOL_DEB( fprintf(IOL_DEBs, "realseek_seek: rc %ld\n", (long) rc) );
-  return rc;
-  /* FIXME: How about implementing this offset handling stuff? */
-}
-
-static
-void
-realseek_destroy(io_glue *igo) {
-  io_cb *ig = (io_cb *)igo;
-
-  if (ig->destroycb)
-    ig->destroycb(ig->p);
-}
-
-/*
- * Callbacks for sources that are a fixed size buffer
- */
-
-/*
-=item buffer_read(ig, buf, count)
-
-Does the reading from a buffer source
-
-   ig    - io_glue object
-   buf   - buffer to return data in
-   count - number of bytes to read into buffer max
-
-=cut
-*/
-
-static
-ssize_t 
-buffer_read(io_glue *igo, void *buf, size_t count) {
-  io_buffer *ig = (io_buffer *)igo;
-
-  IOL_DEB( fprintf(IOL_DEBs, "buffer_read: ig->cpos = %ld, buf = %p, count = %u\n", (long) ig->cpos, buf, (unsigned)count) );
-
-  if ( ig->cpos+count > ig->len ) {
-    mm_log((1,"buffer_read: short read: cpos=%ld, len=%ld, count=%ld\n", (long)ig->cpos, (long)ig->len, (long)count));
-    count = ig->len - ig->cpos;
-  }
-  
-  memcpy(buf, ig->data+ig->cpos, count);
-  ig->cpos += count;
-  IOL_DEB( fprintf(IOL_DEBs, "buffer_read: count = %ld\n", (long)count) );
-  return count;
-}
-
-
-/*
-=item buffer_write(ig, buf, count)
-
-Does nothing, returns -1
-
-   ig    - io_glue object
-   buf   - buffer that contains data
-   count - number of bytes to write
-
-=cut
-*/
-
-static
-ssize_t 
-buffer_write(io_glue *ig, const void *buf, size_t count) {
-  mm_log((1, "buffer_write called, this method should never be called.\n"));
-  return -1;
-}
-
-
-/*
-=item buffer_close(ig)
-
-Closes a source that can be seeked on.  Not sure if this should be an actual close
-or not.  Does nothing for now.  Should be fixed.
-
-   ig - data source
-
-=cut
-*/
-
-static
-int
-buffer_close(io_glue *ig) {
-  mm_log((1, "buffer_close(ig %p)\n", ig));
-
-  return 0;
-}
-
-
-/* buffer_seek(ig, offset, whence)
-
-Implements seeking for a buffer source.
-
-   ig     - data source
-   offset - offset into stream
-   whence - whence argument a la lseek
-
-=cut
-*/
-
-static
-off_t
-buffer_seek(io_glue *igo, off_t offset, int whence) {
-  io_buffer *ig = (io_buffer *)igo;
-  off_t reqpos = 
-    calc_seek_offset(ig->cpos, ig->len, offset, whence);
-  
-  if (reqpos > ig->len) {
-    mm_log((1, "seeking out of readable range\n"));
-    return (off_t)-1;
-  }
-  if (reqpos < 0) {
-    i_push_error(0, "seek before beginning of file");
-    return (off_t)-1;
-  }
-  
-  ig->cpos = reqpos;
-  IOL_DEB( fprintf(IOL_DEBs, "buffer_seek(ig %p, offset %ld, whence %d)\n", ig, (long) offset, whence) );
-
-  return reqpos;
-  /* FIXME: How about implementing this offset handling stuff? */
-}
-
-static
-void
-buffer_destroy(io_glue *igo) {
-  io_buffer *ig = (io_buffer *)igo;
-
-  if (ig->closecb) {
-    mm_log((1,"calling close callback %p for io_buffer\n", 
-	    ig->closecb));
-    ig->closecb(ig->closedata);
-  }
-}
-
-
-
-/*
- * Callbacks for sources that are a chain of variable sized buffers
- */
-
-
-
-/* Helper functions for buffer chains */
-
-static
-io_blink*
-io_blink_new(void) {
-  io_blink *ib;
-
-  mm_log((1, "io_blink_new()\n"));
-
-  ib = mymalloc(sizeof(io_blink));
-
-  ib->next = NULL;
-  ib->prev = NULL;
-  ib->len  = BBSIZ;
-
-  memset(&ib->buf, 0, ib->len);
-  return ib;
-}
-
-
-
-/*
-=item io_bchain_advance(ieb)
-
-Advances the buffer chain to the next link - extending if
-necessary.  Also adjusts the cpos and tfill counters as needed.
-
-   ieb   - buffer chain object
-
-=cut
-*/
-
-static
-void
-io_bchain_advance(io_ex_bchain *ieb) {
-  if (ieb->cp->next == NULL) {
-    ieb->tail = io_blink_new();
-    ieb->tail->prev = ieb->cp;
-    ieb->cp->next   = ieb->tail;
-
-    ieb->tfill = 0; /* Only set this if we added a new slice */
-  }
-  ieb->cp    = ieb->cp->next;
-  ieb->cpos  = 0;
-}
-
-
-
-/*
-=item io_bchain_destroy()
-
-frees all resources used by a buffer chain.
-
-=cut
-*/
-
-void
-io_destroy_bufchain(io_ex_bchain *ieb) {
-  io_blink *cp;
-  mm_log((1, "io_destroy_bufchain(ieb %p)\n", ieb));
-  cp = ieb->head;
-  
-  while(cp) {
-    io_blink *t = cp->next;
-    myfree(cp);
-    cp = t;
-  }
-}
-
-
-
-
-/*
-
-static
-void
-bufchain_dump(io_ex_bchain *ieb) {
-  mm_log((1, "  buf_chain_dump(ieb %p)\n"));
-  mm_log((1, "  buf_chain_dump: ieb->offset = %d\n", ieb->offset));
-  mm_log((1, "  buf_chain_dump: ieb->length = %d\n", ieb->length));
-  mm_log((1, "  buf_chain_dump: ieb->head   = %p\n", ieb->head  ));
-  mm_log((1, "  buf_chain_dump: ieb->tail   = %p\n", ieb->tail  ));
-  mm_log((1, "  buf_chain_dump: ieb->tfill  = %d\n", ieb->tfill ));
-  mm_log((1, "  buf_chain_dump: ieb->cp     = %p\n", ieb->cp    ));
-  mm_log((1, "  buf_chain_dump: ieb->cpos   = %d\n", ieb->cpos  ));
-  mm_log((1, "  buf_chain_dump: ieb->gpos   = %d\n", ieb->gpos  ));
-}
-*/
-
-/*
- * TRUE if lengths are NOT equal
- */
-
-/*
-static
-void
-chainlencert( io_glue *ig ) {
-  int clen;
-  int cfl           = 0;
-  size_t csize      = 0;
-  size_t cpos       = 0;
-  io_ex_bchain *ieb = ig->exdata;
-  io_blink *cp      = ieb->head;
-  
-
-  if (ieb->gpos > ieb->length) mm_log((1, "BBAR : ieb->gpos = %d, ieb->length = %d\n", ieb->gpos, ieb->length));
-
-  while(cp) {
-    clen = (cp == ieb->tail) ? ieb->tfill : cp->len;
-    if (ieb->head == cp && cp->prev) mm_log((1, "Head of chain has a non null prev\n"));
-    if (ieb->tail == cp && cp->next) mm_log((1, "Tail of chain has a non null next\n"));
-    
-    if (ieb->head != cp && !cp->prev) mm_log((1, "Middle of chain has a null prev\n"));
-    if (ieb->tail != cp && !cp->next) mm_log((1, "Middle of chain has a null next\n"));
-    
-    if (cp->prev && cp->prev->next != cp) mm_log((1, "%p = cp->prev->next != cp\n", cp->prev->next));
-    if (cp->next && cp->next->prev != cp) mm_log((1, "%p cp->next->prev != cp\n", cp->next->prev));
-
-    if (cp == ieb->cp) {
-      cfl = 1;
-      cpos += ieb->cpos;
-    }
-
-    if (!cfl) cpos += clen;
-
-    csize += clen;
-    cp     = cp->next;
-  }
-  if (( csize != ieb->length )) mm_log((1, "BAR : csize = %d, ieb->length = %d\n", csize, ieb->length));
-  if (( cpos  != ieb->gpos   )) mm_log((1, "BAR : cpos  = %d, ieb->gpos   = %d\n", cpos,  ieb->gpos  ));
-}
-
-
-static
-void
-chaincert( io_glue *ig) {
-  size_t csize   = 0;
-  io_ex_bchain *ieb = ig->exdata;
-  io_blink *cp   = ieb->head;
-  
-  mm_log((1, "Chain verification.\n"));
-
-  mm_log((1, "  buf_chain_dump: ieb->offset = %d\n", ieb->offset));
-  mm_log((1, "  buf_chain_dump: ieb->length = %d\n", ieb->length));
-  mm_log((1, "  buf_chain_dump: ieb->head   = %p\n", ieb->head  ));
-  mm_log((1, "  buf_chain_dump: ieb->tail   = %p\n", ieb->tail  ));
-  mm_log((1, "  buf_chain_dump: ieb->tfill  = %d\n", ieb->tfill ));
-  mm_log((1, "  buf_chain_dump: ieb->cp     = %p\n", ieb->cp    ));
-  mm_log((1, "  buf_chain_dump: ieb->cpos   = %d\n", ieb->cpos  ));
-  mm_log((1, "  buf_chain_dump: ieb->gpos   = %d\n", ieb->gpos  ));
-
-  while(cp) {
-    int clen = cp == ieb->tail ? ieb->tfill : cp->len;
-    mm_log((1, "link: %p <- %p -> %p\n", cp->prev, cp, cp->next));
-    if (ieb->head == cp && cp->prev) mm_log((1, "Head of chain has a non null prev\n"));
-    if (ieb->tail == cp && cp->next) mm_log((1, "Tail of chain has a non null next\n"));
-    
-    if (ieb->head != cp && !cp->prev) mm_log((1, "Middle of chain has a null prev\n"));
-    if (ieb->tail != cp && !cp->next) mm_log((1, "Middle of chain has a null next\n"));
-    
-    if (cp->prev && cp->prev->next != cp) mm_log((1, "%p = cp->prev->next != cp\n", cp->prev->next));
-    if (cp->next && cp->next->prev != cp) mm_log((1, "%p cp->next->prev != cp\n", cp->next->prev));
-
-    csize += clen;
-    cp     = cp->next;
-  }
-
-  mm_log((1, "csize = %d %s ieb->length = %d\n", csize, csize == ieb->length ? "==" : "!=", ieb->length));
-}
-*/
-
-/*
-=item bufchain_read(ig, buf, count)
-
-Does the reading from a source that can be seeked on
-
-   ig    - io_glue object
-   buf   - buffer to return data in
-   count - number of bytes to read into buffer max
-
-=cut
-*/
-
-static
-ssize_t 
-bufchain_read(io_glue *ig, void *buf, size_t count) {
-  io_ex_bchain *ieb = ig->exdata;
-  size_t     scount = count;
-  char        *cbuf = buf;
-  size_t         sk;
-
-  mm_log((1, "bufchain_read(ig %p, buf %p, count %ld)\n", ig, buf, (long)count));
-
-  while( scount ) {
-    int clen = (ieb->cp == ieb->tail) ? ieb->tfill : ieb->cp->len;
-    if (clen == ieb->cpos) {
-      if (ieb->cp == ieb->tail) break; /* EOF */
-      ieb->cp = ieb->cp->next;
-      ieb->cpos = 0;
-      clen = (ieb->cp == ieb->tail) ? ieb->tfill : ieb->cp->len;
-    }
-
-    sk = clen - ieb->cpos;
-    sk = sk > scount ? scount : sk;
-
-    memcpy(&cbuf[count-scount], &ieb->cp->buf[ieb->cpos], sk);
-    scount    -= sk;
-    ieb->cpos += sk;
-    ieb->gpos += sk;
-  }
-
-  mm_log((1, "bufchain_read: returning %ld\n", (long)(count-scount)));
-  return count-scount;
-}
-
-
-
-
-
-/*
-=item bufchain_write(ig, buf, count)
-
-Does the writing to a 'source' that can be seeked on
-
-   ig    - io_glue object
-   buf   - buffer that contains data
-   count - number of bytes to write
-
-=cut
-*/
-
-static
-ssize_t
-bufchain_write(io_glue *ig, const void *buf, size_t count) {
-  char *cbuf = (char *)buf;
-  io_ex_bchain *ieb = ig->exdata;
-  size_t         ocount = count;
-  size_t         sk;
-
-  mm_log((1, "bufchain_write: ig = %p, buf = %p, count = %ld\n", ig, buf, (long)count));
-
-  IOL_DEB( fprintf(IOL_DEBs, "bufchain_write: ig = %p, ieb->cpos = %ld, buf = %p, count = %ld\n", ig, (long) ieb->cpos, buf, (long)count) );
-  
-  while(count) {
-    mm_log((2, "bufchain_write: - looping - count = %ld\n", (long)count));
-    if (ieb->cp->len == ieb->cpos) {
-      mm_log((1, "bufchain_write: cp->len == ieb->cpos = %ld - advancing chain\n", (long) ieb->cpos));
-      io_bchain_advance(ieb);
-    }
-
-    sk = ieb->cp->len - ieb->cpos;
-    sk = sk > count ? count : sk;
-    memcpy(&ieb->cp->buf[ieb->cpos], &cbuf[ocount-count], sk);
-
-    if (ieb->cp == ieb->tail) {
-      int extend = ieb->cpos + sk - ieb->tfill;
-      mm_log((2, "bufchain_write: extending tail by %d\n", extend));
-      if (extend > 0) {
-	ieb->length += extend;
-	ieb->tfill  += extend;
-      }
-    }
-
-    ieb->cpos += sk;
-    ieb->gpos += sk;
-    count     -= sk;
-  }
-  return ocount;
-}
-
-/*
-=item bufchain_close(ig)
-
-Closes a source that can be seeked on.  Not sure if this should be an actual close
-or not.  Does nothing for now.  Should be fixed.
-
-   ig - data source
-
-=cut
-*/
-
-static
-int
-bufchain_close(io_glue *ig) {
-  mm_log((1, "bufchain_close(ig %p)\n",ig));
-  IOL_DEB( fprintf(IOL_DEBs, "bufchain_close(ig %p)\n", ig) );
-
-  return 0;  
-}
-
-
-/* bufchain_seek(ig, offset, whence)
-
-Implements seeking for a source that is seekable, the purpose of having this is to be able to
-have an offset into a file that is different from what the underlying library thinks.
-
-   ig     - data source
-   offset - offset into stream
-   whence - whence argument a la lseek
-
-=cut
-*/
-
-static
-off_t
-bufchain_seek(io_glue *ig, off_t offset, int whence) {
-  io_ex_bchain *ieb = ig->exdata;
-  int wrlen;
-
-  off_t scount = calc_seek_offset(ieb->gpos, ieb->length, offset, whence);
-  off_t sk;
-
-  mm_log((1, "bufchain_seek(ig %p, offset %ld, whence %d)\n", ig, (long)offset, whence));
-
-  if (scount < 0) {
-    i_push_error(0, "invalid whence supplied or seek before start of file");
-    return (off_t)-1;
-  }
-
-  ieb->cp   = ieb->head;
-  ieb->cpos = 0;
-  ieb->gpos = 0;
-  
-  while( scount ) {
-    int clen = (ieb->cp == ieb->tail) ? ieb->tfill : ieb->cp->len;
-    if (clen == ieb->cpos) {
-      if (ieb->cp == ieb->tail) break; /* EOF */
-      ieb->cp = ieb->cp->next;
-      ieb->cpos = 0;
-      clen = (ieb->cp == ieb->tail) ? ieb->tfill : ieb->cp->len;
-    }
-    
-    sk = clen - ieb->cpos;
-    sk = sk > scount ? scount : sk;
-    
-    scount    -= sk;
-    ieb->cpos += sk;
-    ieb->gpos += sk;
-  }
-  
-  wrlen = scount;
-
-  if (wrlen > 0) { 
-    /*
-     * extending file - get ieb into consistent state and then
-     * call write which will get it to the correct position 
-     */
-    char TB[BBSIZ];
-    memset(TB, 0, BBSIZ);
-    ieb->gpos = ieb->length;
-    ieb->cpos = ieb->tfill;
-    
-    while(wrlen > 0) {
-      ssize_t rc, wl = i_min(wrlen, BBSIZ);
-      mm_log((1, "bufchain_seek: wrlen = %d, wl = %ld\n", wrlen, (long)wl));
-      rc = bufchain_write( ig, TB, wl );
-      if (rc != wl) i_fatal(0, "bufchain_seek: Unable to extend file\n");
-      wrlen -= rc;
-    }
-  }
-
-  mm_log((2, "bufchain_seek: returning ieb->gpos = %ld\n", (long)ieb->gpos));
-  return ieb->gpos;
-}
-
-static
-void
-bufchain_destroy(io_glue *ig) {
-  io_ex_bchain *ieb = ig->exdata;
-
-  io_destroy_bufchain(ieb);
-
-  myfree(ieb);
-}
+static void i_io_setup_buffer(io_glue *ig);
+static void
+i_io_start_write(io_glue *ig);
+static int
+i_io_read_fill(io_glue *ig, ssize_t needed);
+static void
+dump_data(unsigned char *start, unsigned char *end, int bias);
+static ssize_t realseek_read(io_glue *igo, void *buf, size_t count);
+static ssize_t realseek_write(io_glue *igo, const void *buf, size_t count);
+static int realseek_close(io_glue *igo);
+static off_t realseek_seek(io_glue *igo, off_t offset, int whence);
+static void realseek_destroy(io_glue *igo);
+static ssize_t buffer_read(io_glue *igo, void *buf, size_t count);
+static ssize_t buffer_write(io_glue *ig, const void *buf, size_t count);
+static int buffer_close(io_glue *ig);
+static off_t buffer_seek(io_glue *igo, off_t offset, int whence);
+static void buffer_destroy(io_glue *igo);
+static io_blink*io_blink_new(void);
+static void io_bchain_advance(io_ex_bchain *ieb);
+static void io_destroy_bufchain(io_ex_bchain *ieb);
+static ssize_t bufchain_read(io_glue *ig, void *buf, size_t count);
+static ssize_t bufchain_write(io_glue *ig, const void *buf, size_t count);
+static int bufchain_close(io_glue *ig);
+static off_t bufchain_seek(io_glue *ig, off_t offset, int whence);
+static void bufchain_destroy(io_glue *ig);
 
 /*
  * Methods for setting up data source
@@ -884,9 +251,10 @@ io_new_fd(int fd) {
   return (io_glue *)ig;
 }
 
-io_glue *io_new_cb(void *p, i_io_readl_t readcb, i_io_writel_t writecb, 
-		   i_io_seekl_t seekcb, i_io_closel_t closecb, 
-		   i_io_destroyl_t destroycb) {
+io_glue *
+io_new_cb(void *p, i_io_readl_t readcb, i_io_writel_t writecb, 
+	  i_io_seekl_t seekcb, i_io_closel_t closecb, 
+	  i_io_destroyl_t destroycb) {
   io_cb *ig;
 
   mm_log((1, "io_new_cb(p %p, readcb %p, writecb %p, seekcb %p, closecb %p, "
@@ -951,79 +319,6 @@ io_slurp(io_glue *ig, unsigned char **c) {
 }
 
 /*
-=item fd_read(ig, buf, count)
-
-Read callback for file descriptor IO objects.
-
-=cut
-*/
-static ssize_t fd_read(io_glue *igo, void *buf, size_t count) {
-  io_fdseek *ig = (io_fdseek *)igo;
-  ssize_t result;
-#ifdef _MSC_VER
-  result = _read(ig->fd, buf, count);
-#else
-  result = read(ig->fd, buf, count);
-#endif
-
-  IOL_DEB(fprintf(IOL_DEBs, "fd_read(%p, %p, %u) => %d\n", ig, buf,
-		  (unsigned)count, (int)result));
-
-  /* 0 is valid - means EOF */
-  if (result < 0) {
-    i_push_errorf(0, "read() failure: %s (%d)", my_strerror(errno), errno);
-  }
-
-  return result;
-}
-
-static ssize_t fd_write(io_glue *igo, const void *buf, size_t count) {
-  io_fdseek *ig = (io_fdseek *)igo;
-  ssize_t result;
-#ifdef _MSC_VER
-  result = _write(ig->fd, buf, count);
-#else
-  result = write(ig->fd, buf, count);
-#endif
-
-  IOL_DEB(fprintf(IOL_DEBs, "fd_write(%p, %p, %u) => %d\n", ig, buf,
-		  (unsigned)count, (int)result));
-
-  if (result <= 0) {
-    i_push_errorf(errno, "write() failure: %s (%d)", my_strerror(errno), errno);
-  }
-
-  return result;
-}
-
-static off_t fd_seek(io_glue *igo, off_t offset, int whence) {
-  io_fdseek *ig = (io_fdseek *)igo;
-  off_t result;
-#ifdef _MSC_VER
-  result = _lseek(ig->fd, offset, whence);
-#else
-  result = lseek(ig->fd, offset, whence);
-#endif
-
-  if (result == (off_t)-1) {
-    i_push_errorf(errno, "lseek() failure: %s (%d)", my_strerror(errno), errno);
-  }
-
-  return result;
-}
-
-static int fd_close(io_glue *ig) {
-  /* no, we don't close it */
-  return 0;
-}
-
-static ssize_t fd_size(io_glue *ig) {
-  mm_log((1, "fd_size(ig %p) unimplemented\n", ig));
-  
-  return -1;
-}
-
-/*
 =item io_glue_destroy(ig)
 
 A destructor method for io_glue objects.  Should clean up all related buffers.
@@ -1045,122 +340,6 @@ io_glue_destroy(io_glue *ig) {
     myfree(ig->buffer);
   
   myfree(ig);
-}
-
-/*
-=back
-
-=head1 INTERNAL FUNCTIONS
-
-=over
-
-=item my_strerror
-
-Calls strerror() and ensures we don't return NULL.
-
-On some platforms it's possible for strerror() to return NULL, this
-wrapper ensures we only get non-NULL values.
-
-=cut
-*/
-
-static
-const char *my_strerror(int err) {
-  const char *result = strerror(err);
-  
-  if (!result)
-    result = "Unknown error";
-  
-  return result;
-}
-
-static void
-i_io_setup_buffer(io_glue *ig) {
-  ig->buffer = mymalloc(ig->buf_size);
-}
-
-int
-i_io_set_buffered(io_glue *ig, int buffered) {
-  if (!buffered && ig->write_ptr) {
-    if (!i_io_flush(ig)) {
-      ig->error = 1;
-      return 0;
-    }
-  }
-  ig->buffered = buffered;
-
-  return 1;
-}
-
-static void
-i_io_start_write(io_glue *ig) {
-  ig->write_ptr = ig->buffer;
-  ig->write_end = ig->buffer + ig->buf_size;
-}
-
-static int
-i_io_read_fill(io_glue *ig, ssize_t needed) {
-  unsigned char *buf_end = ig->buffer + ig->buf_size;
-  unsigned char *buf_start = ig->buffer;
-  unsigned char *work = ig->buffer;
-  ssize_t rc;
-  int good = 0;
-
-  IOL_DEB(fprintf(IOL_DEBs, "i_io_read_fill(%p, %d)\n", ig, (int)needed));
-
-  /* these conditions may be unused, callers should also be checking them */
-  if (ig->error || ig->buf_eof)
-    return 0;
-
-  if (needed > ig->buf_size)
-    needed = ig->buf_size;
-
-  if (ig->read_ptr && ig->read_ptr < ig->read_end) {
-    size_t kept = ig->read_end - ig->read_ptr;
-
-    if (needed < kept) {
-      IOL_DEB(fprintf(IOL_DEBs, "i_io_read_fill(%u) -> 1 (already have enough)\n", (unsigned)needed));
-      return 1;
-    }
-
-    if (ig->read_ptr != ig->buffer)
-      memmove(ig->buffer, ig->read_ptr, kept);
-
-    good = 1; /* we have *something* available to read */
-    work = buf_start + kept;
-    needed -= kept;
-  }
-  else {
-    work = ig->buffer;
-  }
-
-  while (work < buf_end && (rc = i_io_raw_read(ig, work, buf_end - work)) > 0) {
-    work += rc;
-    good = 1;
-    if (needed < rc)
-      break;
-
-    needed -= rc;
-  }
-
-  if (rc < 0) {
-    ig->error = 1;
-    IOL_DEB(fprintf(IOL_DEBs, " i_io_read_fill -> rc %d, setting error\n",
-		    (int)rc));
-  }
-  else if (rc == 0) {
-    ig->buf_eof = 1;
-    IOL_DEB(fprintf(IOL_DEBs, " i_io_read_fill -> rc 0, setting eof\n"));
-  }
-
-  if (good) {
-    ig->read_ptr = buf_start;
-    ig->read_end = work;
-  }
-  
-  IOL_DEB(fprintf(IOL_DEBs, "i_io_read_fill => %d, %u buffered\n", good,
-		  (unsigned)(ig->read_end - ig->read_ptr)));
-  return good;
 }
 
 /*
@@ -1672,7 +851,179 @@ i_io_init(io_glue *ig, int type, i_io_readp_t readcb, i_io_writep_t writecb,
   ig->buffered = 1;
 }
 
-static void dump_data(unsigned char *start, unsigned char *end, int bias) {
+int
+i_io_set_buffered(io_glue *ig, int buffered) {
+  if (!buffered && ig->write_ptr) {
+    if (!i_io_flush(ig)) {
+      ig->error = 1;
+      return 0;
+    }
+  }
+  ig->buffered = buffered;
+
+  return 1;
+}
+
+/*
+=item i_io_dump(ig)
+
+Dump the base fields of an io_glue object to stdout.
+
+=cut
+*/
+void
+i_io_dump(io_glue *ig, int flags) {
+  fprintf(IOL_DEBs, "ig %p:\n", ig);
+  fprintf(IOL_DEBs, "  type: %d\n", ig->type);  
+  fprintf(IOL_DEBs, "  exdata: %p\n", ig->exdata);
+  if (flags & I_IO_DUMP_CALLBACKS) {
+    fprintf(IOL_DEBs, "  readcb: %p\n", ig->readcb);
+    fprintf(IOL_DEBs, "  writecb: %p\n", ig->writecb);
+    fprintf(IOL_DEBs, "  seekcb: %p\n", ig->seekcb);
+    fprintf(IOL_DEBs, "  closecb: %p\n", ig->closecb);
+    fprintf(IOL_DEBs, "  sizecb: %p\n", ig->sizecb);
+  }
+  if (flags & I_IO_DUMP_BUFFER) {
+    fprintf(IOL_DEBs, "  buffer: %p\n", ig->buffer);
+    fprintf(IOL_DEBs, "  read_ptr: %p\n", ig->read_ptr);
+    if (ig->read_ptr) {
+      fprintf(IOL_DEBs, "    ");
+      dump_data(ig->read_ptr, ig->read_end, 0);
+      putc('\n', IOL_DEBs);
+    }
+    fprintf(IOL_DEBs, "  read_end: %p\n", ig->read_end);
+    fprintf(IOL_DEBs, "  write_ptr: %p\n", ig->write_ptr);
+    if (ig->write_ptr) {
+      fprintf(IOL_DEBs, "    ");
+      dump_data(ig->buffer, ig->write_ptr, 1);
+      putc('\n', IOL_DEBs);
+    }
+    fprintf(IOL_DEBs, "  write_end: %p\n", ig->write_end);
+    fprintf(IOL_DEBs, "  buf_size: %u\n", (unsigned)(ig->buf_size));
+  }
+  if (flags & I_IO_DUMP_STATUS) {
+    fprintf(IOL_DEBs, "  buf_eof: %d\n", ig->buf_eof);
+    fprintf(IOL_DEBs, "  error: %d\n", ig->error);
+    fprintf(IOL_DEBs, "  buffered: %d\n", ig->buffered);
+  }
+}
+
+/*
+=back
+
+=head1 INTERNAL FUNCTIONS
+
+=over
+
+=item my_strerror
+
+Calls strerror() and ensures we don't return NULL.
+
+On some platforms it's possible for strerror() to return NULL, this
+wrapper ensures we only get non-NULL values.
+
+=cut
+*/
+
+static
+const char *my_strerror(int err) {
+  const char *result = strerror(err);
+  
+  if (!result)
+    result = "Unknown error";
+  
+  return result;
+}
+
+static void
+i_io_setup_buffer(io_glue *ig) {
+  ig->buffer = mymalloc(ig->buf_size);
+}
+
+static void
+i_io_start_write(io_glue *ig) {
+  ig->write_ptr = ig->buffer;
+  ig->write_end = ig->buffer + ig->buf_size;
+}
+
+static int
+i_io_read_fill(io_glue *ig, ssize_t needed) {
+  unsigned char *buf_end = ig->buffer + ig->buf_size;
+  unsigned char *buf_start = ig->buffer;
+  unsigned char *work = ig->buffer;
+  ssize_t rc;
+  int good = 0;
+
+  IOL_DEB(fprintf(IOL_DEBs, "i_io_read_fill(%p, %d)\n", ig, (int)needed));
+
+  /* these conditions may be unused, callers should also be checking them */
+  if (ig->error || ig->buf_eof)
+    return 0;
+
+  if (needed > ig->buf_size)
+    needed = ig->buf_size;
+
+  if (ig->read_ptr && ig->read_ptr < ig->read_end) {
+    size_t kept = ig->read_end - ig->read_ptr;
+
+    if (needed < kept) {
+      IOL_DEB(fprintf(IOL_DEBs, "i_io_read_fill(%u) -> 1 (already have enough)\n", (unsigned)needed));
+      return 1;
+    }
+
+    if (ig->read_ptr != ig->buffer)
+      memmove(ig->buffer, ig->read_ptr, kept);
+
+    good = 1; /* we have *something* available to read */
+    work = buf_start + kept;
+    needed -= kept;
+  }
+  else {
+    work = ig->buffer;
+  }
+
+  while (work < buf_end && (rc = i_io_raw_read(ig, work, buf_end - work)) > 0) {
+    work += rc;
+    good = 1;
+    if (needed < rc)
+      break;
+
+    needed -= rc;
+  }
+
+  if (rc < 0) {
+    ig->error = 1;
+    IOL_DEB(fprintf(IOL_DEBs, " i_io_read_fill -> rc %d, setting error\n",
+		    (int)rc));
+  }
+  else if (rc == 0) {
+    ig->buf_eof = 1;
+    IOL_DEB(fprintf(IOL_DEBs, " i_io_read_fill -> rc 0, setting eof\n"));
+  }
+
+  if (good) {
+    ig->read_ptr = buf_start;
+    ig->read_end = work;
+  }
+  
+  IOL_DEB(fprintf(IOL_DEBs, "i_io_read_fill => %d, %u buffered\n", good,
+		  (unsigned)(ig->read_end - ig->read_ptr)));
+  return good;
+}
+
+/*
+=item dump_data(start, end, bias)
+
+Hex dump the data between C<start> and C<end>.
+
+If there is more than a pleasing amount of data, either dump the
+beginning (C<bias == 0>) or dump the end C(<bias != 0>) of the range.
+
+=cut
+*/
+
+static void
+dump_data(unsigned char *start, unsigned char *end, int bias) {
   unsigned char *p;
   size_t count = end - start;
 
@@ -1720,48 +1071,713 @@ static void dump_data(unsigned char *start, unsigned char *end, int bias) {
 }
 
 /*
-=item i_io_dump(ig)
+ * Callbacks for sources that cannot seek
+ */
 
-Dump the base fields of an io_glue object to stdout.
+/*
+ * Callbacks for sources that can seek 
+ */
+
+/*
+=item realseek_read(ig, buf, count)
+
+Does the reading from a source that can be seeked on
+
+   ig    - io_glue object
+   buf   - buffer to return data in
+   count - number of bytes to read into buffer max
 
 =cut
 */
+
+static
+ssize_t 
+realseek_read(io_glue *igo, void *buf, size_t count) {
+  io_cb        *ig = (io_cb *)igo;
+  void *p          = ig->p;
+  ssize_t       rc = 0;
+
+  IOL_DEB( fprintf(IOL_DEBs, "realseek_read:  buf = %p, count = %u\n", 
+		   buf, (unsigned)count) );
+  rc = ig->readcb(p,buf,count);
+
+  IOL_DEB( fprintf(IOL_DEBs, "realseek_read: rc = %d\n", (int)rc) );
+
+  return rc;
+}
+
+
+/*
+=item realseek_write(ig, buf, count)
+
+Does the writing to a 'source' that can be seeked on
+
+   ig    - io_glue object
+   buf   - buffer that contains data
+   count - number of bytes to write
+
+=cut
+*/
+
+static
+ssize_t 
+realseek_write(io_glue *igo, const void *buf, size_t count) {
+  io_cb        *ig = (io_cb *)igo;
+  void          *p = ig->p;
+  ssize_t       rc = 0;
+  size_t        bc = 0;
+  char       *cbuf = (char*)buf; 
+  
+  IOL_DEB( fprintf(IOL_DEBs, "realseek_write: ig = %p, buf = %p, "
+		   "count = %u\n", ig, buf, (unsigned)count) );
+
+  /* Is this a good idea? Would it be better to handle differently? 
+     skip handling? */
+  while( count!=bc && (rc = ig->writecb(p,cbuf+bc,count-bc))>0 ) {
+    bc+=rc;
+  }
+
+  IOL_DEB( fprintf(IOL_DEBs, "realseek_write: rc = %d, bc = %u\n", (int)rc, (unsigned)bc) );
+  return rc < 0 ? rc : bc;
+}
+
+
+/*
+=item realseek_close(ig)
+
+Closes a source that can be seeked on.  Not sure if this should be an
+actual close or not.  Does nothing for now.  Should be fixed.
+
+   ig - data source
+
+=cut */
+
+static
+int
+realseek_close(io_glue *igo) {
+  io_cb *ig = (io_cb *)igo;
+
+  IOL_DEB(fprintf(IOL_DEBs, "realseek_close(%p)\n", ig));
+  mm_log((1, "realseek_close(ig %p)\n", ig));
+  if (ig->closecb)
+    return ig->closecb(ig->p);
+  else
+    return 0;
+}
+
+
+/* realseek_seek(ig, offset, whence)
+
+Implements seeking for a source that is seekable, the purpose of having this is to be able to
+have an offset into a file that is different from what the underlying library thinks.
+
+   ig     - data source
+   offset - offset into stream
+   whence - whence argument a la lseek
+
+=cut
+*/
+
+static
+off_t
+realseek_seek(io_glue *igo, off_t offset, int whence) {
+  io_cb *ig = (io_cb *)igo;
+  void *p = ig->p;
+  off_t rc;
+  IOL_DEB( fprintf(IOL_DEBs, "realseek_seek(ig %p, offset %ld, whence %d)\n", ig, (long) offset, whence) );
+  rc = ig->seekcb(p, offset, whence);
+
+  IOL_DEB( fprintf(IOL_DEBs, "realseek_seek: rc %ld\n", (long) rc) );
+  return rc;
+  /* FIXME: How about implementing this offset handling stuff? */
+}
+
+static
 void
-i_io_dump(io_glue *ig, int flags) {
-  fprintf(IOL_DEBs, "ig %p:\n", ig);
-  fprintf(IOL_DEBs, "  type: %d\n", ig->type);  
-  fprintf(IOL_DEBs, "  exdata: %p\n", ig->exdata);
-  if (flags & I_IO_DUMP_CALLBACKS) {
-    fprintf(IOL_DEBs, "  readcb: %p\n", ig->readcb);
-    fprintf(IOL_DEBs, "  writecb: %p\n", ig->writecb);
-    fprintf(IOL_DEBs, "  seekcb: %p\n", ig->seekcb);
-    fprintf(IOL_DEBs, "  closecb: %p\n", ig->closecb);
-    fprintf(IOL_DEBs, "  sizecb: %p\n", ig->sizecb);
+realseek_destroy(io_glue *igo) {
+  io_cb *ig = (io_cb *)igo;
+
+  if (ig->destroycb)
+    ig->destroycb(ig->p);
+}
+
+/*
+ * Callbacks for sources that are a fixed size buffer
+ */
+
+/*
+=item buffer_read(ig, buf, count)
+
+Does the reading from a buffer source
+
+   ig    - io_glue object
+   buf   - buffer to return data in
+   count - number of bytes to read into buffer max
+
+=cut
+*/
+
+static
+ssize_t 
+buffer_read(io_glue *igo, void *buf, size_t count) {
+  io_buffer *ig = (io_buffer *)igo;
+
+  IOL_DEB( fprintf(IOL_DEBs, "buffer_read: ig->cpos = %ld, buf = %p, count = %u\n", (long) ig->cpos, buf, (unsigned)count) );
+
+  if ( ig->cpos+count > ig->len ) {
+    mm_log((1,"buffer_read: short read: cpos=%ld, len=%ld, count=%ld\n", (long)ig->cpos, (long)ig->len, (long)count));
+    count = ig->len - ig->cpos;
   }
-  if (flags & I_IO_DUMP_BUFFER) {
-    fprintf(IOL_DEBs, "  buffer: %p\n", ig->buffer);
-    fprintf(IOL_DEBs, "  read_ptr: %p\n", ig->read_ptr);
-    if (ig->read_ptr) {
-      fprintf(IOL_DEBs, "    ");
-      dump_data(ig->read_ptr, ig->read_end, 0);
-      putc('\n', IOL_DEBs);
-    }
-    fprintf(IOL_DEBs, "  read_end: %p\n", ig->read_end);
-    fprintf(IOL_DEBs, "  write_ptr: %p\n", ig->write_ptr);
-    if (ig->write_ptr) {
-      fprintf(IOL_DEBs, "    ");
-      dump_data(ig->buffer, ig->write_ptr, 1);
-      putc('\n', IOL_DEBs);
-    }
-    fprintf(IOL_DEBs, "  write_end: %p\n", ig->write_end);
-    fprintf(IOL_DEBs, "  buf_size: %u\n", (unsigned)(ig->buf_size));
+  
+  memcpy(buf, ig->data+ig->cpos, count);
+  ig->cpos += count;
+  IOL_DEB( fprintf(IOL_DEBs, "buffer_read: count = %ld\n", (long)count) );
+  return count;
+}
+
+
+/*
+=item buffer_write(ig, buf, count)
+
+Does nothing, returns -1
+
+   ig    - io_glue object
+   buf   - buffer that contains data
+   count - number of bytes to write
+
+=cut
+*/
+
+static
+ssize_t 
+buffer_write(io_glue *ig, const void *buf, size_t count) {
+  mm_log((1, "buffer_write called, this method should never be called.\n"));
+  return -1;
+}
+
+
+/*
+=item buffer_close(ig)
+
+Closes a source that can be seeked on.  Not sure if this should be an actual close
+or not.  Does nothing for now.  Should be fixed.
+
+   ig - data source
+
+=cut
+*/
+
+static
+int
+buffer_close(io_glue *ig) {
+  mm_log((1, "buffer_close(ig %p)\n", ig));
+
+  return 0;
+}
+
+
+/* buffer_seek(ig, offset, whence)
+
+Implements seeking for a buffer source.
+
+   ig     - data source
+   offset - offset into stream
+   whence - whence argument a la lseek
+
+=cut
+*/
+
+static
+off_t
+buffer_seek(io_glue *igo, off_t offset, int whence) {
+  io_buffer *ig = (io_buffer *)igo;
+  off_t reqpos = 
+    calc_seek_offset(ig->cpos, ig->len, offset, whence);
+  
+  if (reqpos > ig->len) {
+    mm_log((1, "seeking out of readable range\n"));
+    return (off_t)-1;
   }
-  if (flags & I_IO_DUMP_STATUS) {
-    fprintf(IOL_DEBs, "  buf_eof: %d\n", ig->buf_eof);
-    fprintf(IOL_DEBs, "  error: %d\n", ig->error);
-    fprintf(IOL_DEBs, "  buffered: %d\n", ig->buffered);
+  if (reqpos < 0) {
+    i_push_error(0, "seek before beginning of file");
+    return (off_t)-1;
+  }
+  
+  ig->cpos = reqpos;
+  IOL_DEB( fprintf(IOL_DEBs, "buffer_seek(ig %p, offset %ld, whence %d)\n", ig, (long) offset, whence) );
+
+  return reqpos;
+  /* FIXME: How about implementing this offset handling stuff? */
+}
+
+static
+void
+buffer_destroy(io_glue *igo) {
+  io_buffer *ig = (io_buffer *)igo;
+
+  if (ig->closecb) {
+    mm_log((1,"calling close callback %p for io_buffer\n", 
+	    ig->closecb));
+    ig->closecb(ig->closedata);
   }
 }
+
+
+
+/*
+ * Callbacks for sources that are a chain of variable sized buffers
+ */
+
+
+
+/* Helper functions for buffer chains */
+
+static
+io_blink*
+io_blink_new(void) {
+  io_blink *ib;
+
+  mm_log((1, "io_blink_new()\n"));
+
+  ib = mymalloc(sizeof(io_blink));
+
+  ib->next = NULL;
+  ib->prev = NULL;
+  ib->len  = BBSIZ;
+
+  memset(&ib->buf, 0, ib->len);
+  return ib;
+}
+
+
+
+/*
+=item io_bchain_advance(ieb)
+
+Advances the buffer chain to the next link - extending if
+necessary.  Also adjusts the cpos and tfill counters as needed.
+
+   ieb   - buffer chain object
+
+=cut
+*/
+
+static
+void
+io_bchain_advance(io_ex_bchain *ieb) {
+  if (ieb->cp->next == NULL) {
+    ieb->tail = io_blink_new();
+    ieb->tail->prev = ieb->cp;
+    ieb->cp->next   = ieb->tail;
+
+    ieb->tfill = 0; /* Only set this if we added a new slice */
+  }
+  ieb->cp    = ieb->cp->next;
+  ieb->cpos  = 0;
+}
+
+
+
+/*
+=item io_bchain_destroy()
+
+frees all resources used by a buffer chain.
+
+=cut
+*/
+
+static void
+io_destroy_bufchain(io_ex_bchain *ieb) {
+  io_blink *cp;
+  mm_log((1, "io_destroy_bufchain(ieb %p)\n", ieb));
+  cp = ieb->head;
+  
+  while(cp) {
+    io_blink *t = cp->next;
+    myfree(cp);
+    cp = t;
+  }
+}
+
+
+
+
+/*
+
+static
+void
+bufchain_dump(io_ex_bchain *ieb) {
+  mm_log((1, "  buf_chain_dump(ieb %p)\n"));
+  mm_log((1, "  buf_chain_dump: ieb->offset = %d\n", ieb->offset));
+  mm_log((1, "  buf_chain_dump: ieb->length = %d\n", ieb->length));
+  mm_log((1, "  buf_chain_dump: ieb->head   = %p\n", ieb->head  ));
+  mm_log((1, "  buf_chain_dump: ieb->tail   = %p\n", ieb->tail  ));
+  mm_log((1, "  buf_chain_dump: ieb->tfill  = %d\n", ieb->tfill ));
+  mm_log((1, "  buf_chain_dump: ieb->cp     = %p\n", ieb->cp    ));
+  mm_log((1, "  buf_chain_dump: ieb->cpos   = %d\n", ieb->cpos  ));
+  mm_log((1, "  buf_chain_dump: ieb->gpos   = %d\n", ieb->gpos  ));
+}
+*/
+
+/*
+ * TRUE if lengths are NOT equal
+ */
+
+/*
+static
+void
+chainlencert( io_glue *ig ) {
+  int clen;
+  int cfl           = 0;
+  size_t csize      = 0;
+  size_t cpos       = 0;
+  io_ex_bchain *ieb = ig->exdata;
+  io_blink *cp      = ieb->head;
+  
+
+  if (ieb->gpos > ieb->length) mm_log((1, "BBAR : ieb->gpos = %d, ieb->length = %d\n", ieb->gpos, ieb->length));
+
+  while(cp) {
+    clen = (cp == ieb->tail) ? ieb->tfill : cp->len;
+    if (ieb->head == cp && cp->prev) mm_log((1, "Head of chain has a non null prev\n"));
+    if (ieb->tail == cp && cp->next) mm_log((1, "Tail of chain has a non null next\n"));
+    
+    if (ieb->head != cp && !cp->prev) mm_log((1, "Middle of chain has a null prev\n"));
+    if (ieb->tail != cp && !cp->next) mm_log((1, "Middle of chain has a null next\n"));
+    
+    if (cp->prev && cp->prev->next != cp) mm_log((1, "%p = cp->prev->next != cp\n", cp->prev->next));
+    if (cp->next && cp->next->prev != cp) mm_log((1, "%p cp->next->prev != cp\n", cp->next->prev));
+
+    if (cp == ieb->cp) {
+      cfl = 1;
+      cpos += ieb->cpos;
+    }
+
+    if (!cfl) cpos += clen;
+
+    csize += clen;
+    cp     = cp->next;
+  }
+  if (( csize != ieb->length )) mm_log((1, "BAR : csize = %d, ieb->length = %d\n", csize, ieb->length));
+  if (( cpos  != ieb->gpos   )) mm_log((1, "BAR : cpos  = %d, ieb->gpos   = %d\n", cpos,  ieb->gpos  ));
+}
+
+
+static
+void
+chaincert( io_glue *ig) {
+  size_t csize   = 0;
+  io_ex_bchain *ieb = ig->exdata;
+  io_blink *cp   = ieb->head;
+  
+  mm_log((1, "Chain verification.\n"));
+
+  mm_log((1, "  buf_chain_dump: ieb->offset = %d\n", ieb->offset));
+  mm_log((1, "  buf_chain_dump: ieb->length = %d\n", ieb->length));
+  mm_log((1, "  buf_chain_dump: ieb->head   = %p\n", ieb->head  ));
+  mm_log((1, "  buf_chain_dump: ieb->tail   = %p\n", ieb->tail  ));
+  mm_log((1, "  buf_chain_dump: ieb->tfill  = %d\n", ieb->tfill ));
+  mm_log((1, "  buf_chain_dump: ieb->cp     = %p\n", ieb->cp    ));
+  mm_log((1, "  buf_chain_dump: ieb->cpos   = %d\n", ieb->cpos  ));
+  mm_log((1, "  buf_chain_dump: ieb->gpos   = %d\n", ieb->gpos  ));
+
+  while(cp) {
+    int clen = cp == ieb->tail ? ieb->tfill : cp->len;
+    mm_log((1, "link: %p <- %p -> %p\n", cp->prev, cp, cp->next));
+    if (ieb->head == cp && cp->prev) mm_log((1, "Head of chain has a non null prev\n"));
+    if (ieb->tail == cp && cp->next) mm_log((1, "Tail of chain has a non null next\n"));
+    
+    if (ieb->head != cp && !cp->prev) mm_log((1, "Middle of chain has a null prev\n"));
+    if (ieb->tail != cp && !cp->next) mm_log((1, "Middle of chain has a null next\n"));
+    
+    if (cp->prev && cp->prev->next != cp) mm_log((1, "%p = cp->prev->next != cp\n", cp->prev->next));
+    if (cp->next && cp->next->prev != cp) mm_log((1, "%p cp->next->prev != cp\n", cp->next->prev));
+
+    csize += clen;
+    cp     = cp->next;
+  }
+
+  mm_log((1, "csize = %d %s ieb->length = %d\n", csize, csize == ieb->length ? "==" : "!=", ieb->length));
+}
+*/
+
+/*
+=item bufchain_read(ig, buf, count)
+
+Does the reading from a source that can be seeked on
+
+   ig    - io_glue object
+   buf   - buffer to return data in
+   count - number of bytes to read into buffer max
+
+=cut
+*/
+
+static
+ssize_t 
+bufchain_read(io_glue *ig, void *buf, size_t count) {
+  io_ex_bchain *ieb = ig->exdata;
+  size_t     scount = count;
+  char        *cbuf = buf;
+  size_t         sk;
+
+  mm_log((1, "bufchain_read(ig %p, buf %p, count %ld)\n", ig, buf, (long)count));
+
+  while( scount ) {
+    int clen = (ieb->cp == ieb->tail) ? ieb->tfill : ieb->cp->len;
+    if (clen == ieb->cpos) {
+      if (ieb->cp == ieb->tail) break; /* EOF */
+      ieb->cp = ieb->cp->next;
+      ieb->cpos = 0;
+      clen = (ieb->cp == ieb->tail) ? ieb->tfill : ieb->cp->len;
+    }
+
+    sk = clen - ieb->cpos;
+    sk = sk > scount ? scount : sk;
+
+    memcpy(&cbuf[count-scount], &ieb->cp->buf[ieb->cpos], sk);
+    scount    -= sk;
+    ieb->cpos += sk;
+    ieb->gpos += sk;
+  }
+
+  mm_log((1, "bufchain_read: returning %ld\n", (long)(count-scount)));
+  return count-scount;
+}
+
+
+
+
+
+/*
+=item bufchain_write(ig, buf, count)
+
+Does the writing to a 'source' that can be seeked on
+
+   ig    - io_glue object
+   buf   - buffer that contains data
+   count - number of bytes to write
+
+=cut
+*/
+
+static
+ssize_t
+bufchain_write(io_glue *ig, const void *buf, size_t count) {
+  char *cbuf = (char *)buf;
+  io_ex_bchain *ieb = ig->exdata;
+  size_t         ocount = count;
+  size_t         sk;
+
+  mm_log((1, "bufchain_write: ig = %p, buf = %p, count = %ld\n", ig, buf, (long)count));
+
+  IOL_DEB( fprintf(IOL_DEBs, "bufchain_write: ig = %p, ieb->cpos = %ld, buf = %p, count = %ld\n", ig, (long) ieb->cpos, buf, (long)count) );
+  
+  while(count) {
+    mm_log((2, "bufchain_write: - looping - count = %ld\n", (long)count));
+    if (ieb->cp->len == ieb->cpos) {
+      mm_log((1, "bufchain_write: cp->len == ieb->cpos = %ld - advancing chain\n", (long) ieb->cpos));
+      io_bchain_advance(ieb);
+    }
+
+    sk = ieb->cp->len - ieb->cpos;
+    sk = sk > count ? count : sk;
+    memcpy(&ieb->cp->buf[ieb->cpos], &cbuf[ocount-count], sk);
+
+    if (ieb->cp == ieb->tail) {
+      int extend = ieb->cpos + sk - ieb->tfill;
+      mm_log((2, "bufchain_write: extending tail by %d\n", extend));
+      if (extend > 0) {
+	ieb->length += extend;
+	ieb->tfill  += extend;
+      }
+    }
+
+    ieb->cpos += sk;
+    ieb->gpos += sk;
+    count     -= sk;
+  }
+  return ocount;
+}
+
+/*
+=item bufchain_close(ig)
+
+Closes a source that can be seeked on.  Not sure if this should be an actual close
+or not.  Does nothing for now.  Should be fixed.
+
+   ig - data source
+
+=cut
+*/
+
+static
+int
+bufchain_close(io_glue *ig) {
+  mm_log((1, "bufchain_close(ig %p)\n",ig));
+  IOL_DEB( fprintf(IOL_DEBs, "bufchain_close(ig %p)\n", ig) );
+
+  return 0;  
+}
+
+
+/* bufchain_seek(ig, offset, whence)
+
+Implements seeking for a source that is seekable, the purpose of having this is to be able to
+have an offset into a file that is different from what the underlying library thinks.
+
+   ig     - data source
+   offset - offset into stream
+   whence - whence argument a la lseek
+
+=cut
+*/
+
+static
+off_t
+bufchain_seek(io_glue *ig, off_t offset, int whence) {
+  io_ex_bchain *ieb = ig->exdata;
+  int wrlen;
+
+  off_t scount = calc_seek_offset(ieb->gpos, ieb->length, offset, whence);
+  off_t sk;
+
+  mm_log((1, "bufchain_seek(ig %p, offset %ld, whence %d)\n", ig, (long)offset, whence));
+
+  if (scount < 0) {
+    i_push_error(0, "invalid whence supplied or seek before start of file");
+    return (off_t)-1;
+  }
+
+  ieb->cp   = ieb->head;
+  ieb->cpos = 0;
+  ieb->gpos = 0;
+  
+  while( scount ) {
+    int clen = (ieb->cp == ieb->tail) ? ieb->tfill : ieb->cp->len;
+    if (clen == ieb->cpos) {
+      if (ieb->cp == ieb->tail) break; /* EOF */
+      ieb->cp = ieb->cp->next;
+      ieb->cpos = 0;
+      clen = (ieb->cp == ieb->tail) ? ieb->tfill : ieb->cp->len;
+    }
+    
+    sk = clen - ieb->cpos;
+    sk = sk > scount ? scount : sk;
+    
+    scount    -= sk;
+    ieb->cpos += sk;
+    ieb->gpos += sk;
+  }
+  
+  wrlen = scount;
+
+  if (wrlen > 0) { 
+    /*
+     * extending file - get ieb into consistent state and then
+     * call write which will get it to the correct position 
+     */
+    char TB[BBSIZ];
+    memset(TB, 0, BBSIZ);
+    ieb->gpos = ieb->length;
+    ieb->cpos = ieb->tfill;
+    
+    while(wrlen > 0) {
+      ssize_t rc, wl = i_min(wrlen, BBSIZ);
+      mm_log((1, "bufchain_seek: wrlen = %d, wl = %ld\n", wrlen, (long)wl));
+      rc = bufchain_write( ig, TB, wl );
+      if (rc != wl) i_fatal(0, "bufchain_seek: Unable to extend file\n");
+      wrlen -= rc;
+    }
+  }
+
+  mm_log((2, "bufchain_seek: returning ieb->gpos = %ld\n", (long)ieb->gpos));
+  return ieb->gpos;
+}
+
+static
+void
+bufchain_destroy(io_glue *ig) {
+  io_ex_bchain *ieb = ig->exdata;
+
+  io_destroy_bufchain(ieb);
+
+  myfree(ieb);
+}
+
+/*
+=item fd_read(ig, buf, count)
+
+Read callback for file descriptor IO objects.
+
+=cut
+*/
+static ssize_t fd_read(io_glue *igo, void *buf, size_t count) {
+  io_fdseek *ig = (io_fdseek *)igo;
+  ssize_t result;
+#ifdef _MSC_VER
+  result = _read(ig->fd, buf, count);
+#else
+  result = read(ig->fd, buf, count);
+#endif
+
+  IOL_DEB(fprintf(IOL_DEBs, "fd_read(%p, %p, %u) => %d\n", ig, buf,
+		  (unsigned)count, (int)result));
+
+  /* 0 is valid - means EOF */
+  if (result < 0) {
+    i_push_errorf(0, "read() failure: %s (%d)", my_strerror(errno), errno);
+  }
+
+  return result;
+}
+
+static ssize_t fd_write(io_glue *igo, const void *buf, size_t count) {
+  io_fdseek *ig = (io_fdseek *)igo;
+  ssize_t result;
+#ifdef _MSC_VER
+  result = _write(ig->fd, buf, count);
+#else
+  result = write(ig->fd, buf, count);
+#endif
+
+  IOL_DEB(fprintf(IOL_DEBs, "fd_write(%p, %p, %u) => %d\n", ig, buf,
+		  (unsigned)count, (int)result));
+
+  if (result <= 0) {
+    i_push_errorf(errno, "write() failure: %s (%d)", my_strerror(errno), errno);
+  }
+
+  return result;
+}
+
+static off_t fd_seek(io_glue *igo, off_t offset, int whence) {
+  io_fdseek *ig = (io_fdseek *)igo;
+  off_t result;
+#ifdef _MSC_VER
+  result = _lseek(ig->fd, offset, whence);
+#else
+  result = lseek(ig->fd, offset, whence);
+#endif
+
+  if (result == (off_t)-1) {
+    i_push_errorf(errno, "lseek() failure: %s (%d)", my_strerror(errno), errno);
+  }
+
+  return result;
+}
+
+static int fd_close(io_glue *ig) {
+  /* no, we don't close it */
+  return 0;
+}
+
+static ssize_t fd_size(io_glue *ig) {
+  mm_log((1, "fd_size(ig %p) unimplemented\n", ig));
+  
+  return -1;
+}
+
 
 /*
 =back
