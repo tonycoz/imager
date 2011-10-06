@@ -176,7 +176,7 @@ call_reader(struct cbdata *cbd, void *buf, size_t size,
 
   if (SvOK(data)) {
     STRLEN len;
-    char *ptr = SvPV(data, len);
+    char *ptr = SvPVbyte(data, len);
     if (len > maxread)
       croak("Too much data returned in reader callback (wanted %d, got %d, expected %d)",
       (int)size, (int)len, (int)maxread);

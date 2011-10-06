@@ -41,8 +41,6 @@ To do:
 
  - modify i_io_read() to look on raw_read calls in unbuffered mode
 
- - call_reader() should use SvPV_byte() in Imager.xs
-
  - document Imager::IO constructors (make new ones in the Imager::IO
    namespace)
 
