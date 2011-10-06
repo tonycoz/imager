@@ -1343,7 +1343,7 @@ sub _get_writer_io {
   my $io;
   my @extras;
   if ($input->{io}) {
-    return $input->{io};
+    $io = $input->{io};
   }
   elsif ($input->{fd}) {
     $io = io_new_fd($input->{fd});
@@ -4351,8 +4351,8 @@ different combine type keywords
 compose() - L<Imager::Transformations/compose()> - compose one image
 over another.
 
-convert() - L<Imager::Transformations/"Color transformations"> -
-transform the color space
+convert() - L<Imager::Transformations/convert()> - transform the color
+space
 
 copy() - L<Imager::Transformations/copy()> - make a duplicate of an
 image
@@ -4364,13 +4364,12 @@ used to guess the output file format based on the output file name
 
 deltag() -  L<Imager::ImageTypes/deltag()> - delete image tags
 
-difference() - L<Imager::Filters/"Image Difference"> - produce a
-difference images from two input images.
+difference() - L<Imager::Filters/difference()> - produce a difference
+images from two input images.
 
-errstr() - L</"Basic Overview"> - the error from the last failed
-operation.
+errstr() - L</errstr()> - the error from the last failed operation.
 
-filter() - L<Imager::Filters> - image filtering
+filter() - L<Imager::Filters/filter()> - image filtering
 
 findcolor() - L<Imager::ImageTypes/findcolor()> - search the image
 palette, if it has one
@@ -4473,9 +4472,9 @@ polyline() - L<Imager::Draw/polyline()>
 
 preload() - L<Imager::Files/preload()>
 
-read() - L<Imager::Files> - read a single image from an image file
+read() - L<Imager::Files/read()> - read a single image from an image file
 
-read_multi() - L<Imager::Files> - read multiple images from an image
+read_multi() - L<Imager::Files/read_multi()> - read multiple images from an image
 file
 
 read_types() - L<Imager::Files/read_types()> - list image types Imager
@@ -4539,9 +4538,9 @@ unload_plugin() - L<Imager::Filters/unload_plugin()>
 virtual() - L<Imager::ImageTypes/virtual()> - whether the image has it's own
 data
 
-write() - L<Imager::Files> - write an image to a file
+write() - L<Imager::Files/write()> - write an image to a file
 
-write_multi() - L<Imager::Files> - write multiple image to an image
+write_multi() - L<Imager::Files/write_multi()> - write multiple image to an image
 file.
 
 write_types() - L<Imager::Files/read_types()> - list image types Imager

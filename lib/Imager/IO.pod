@@ -20,6 +20,11 @@ same code to work with disk files, in memory data and callbacks.
 If you're writing an Imager file handler your code will be passed an
 Imager::IO object to write to or read from.
 
+X<UTF-8>X<Unicode>Note that Imager::IO can only work with collections of bytes -
+if you need to read UTF-8 data you will need to read the bytes and
+decode them.  If you want to write UTF-8 data you will need to encode
+your characters to bytes and write the bytes.
+
 =head1 BUFFERED I/O METHODS
 
 These methods use buffered I/O to improve performance unless you call
@@ -29,7 +34,7 @@ Prior to Imager 0.86 the write and read methods performed raw I/O.
 
 =over
 
-=item write
+=item write($data)
 
 Call to write to the file.  Returns the number of bytes written.  The
 data provided may contain only characters \x00 to \xFF - characters
@@ -42,7 +47,7 @@ Returns -1 on error, though in most cases if the result of the write
 isn't the number of bytes supplied you'll want to treat it as an error
 anyway.
 
-=item read
+=item read($buffer, $size)
 
   my $buffer;
   my $count = $io->read($buffer, $max_bytes);
@@ -52,16 +57,17 @@ and stores them in I<$buffer>.  Returns the number of bytes read on
 success or an empty list on failure.  Note that a read of zero bytes
 is B<not> a failure, this indicates end of file.
 
-=item read2
+=item read2($size)
 
   my $buffer = $io->read2($max_bytes);
 
 An alternative interface to read, that might be simpler to use in some
 cases.
 
-Returns the data read or an empty list.
+Returns the data read or an empty list.  At end of file the data read
+will be an empty string.
 
-=item seek
+=item seek($offset, $whence)
 
   my $new_position = $io->seek($offset, $whence);
 
@@ -93,7 +99,7 @@ return -1.
 
 Returns the new position in the file, or -1 on error.
 
-=item getc
+=item getc()
 
 Return the next byte from the stream.
 
@@ -105,9 +111,9 @@ Returns the ordinal of the byte or -1 on error or end of file.
 
 =item gets()
 
-=item gets(max_size)
+=item gets($max_size)
 
-=item gets(max_size, end_of_line)
+=item gets($max_size, $end_of_line)
 
 Returns the next line of input from the stream, as terminated by
 C<end_of_line>.
@@ -158,7 +164,7 @@ Write a single character to the stream.
 
 Returns C<code> on success, or -1 on failure.
 
-=item close
+=item close()
 
   my $result = $io->close;
 
@@ -168,14 +174,14 @@ a file this won't close the file handle, but buffers may be flushed
 
 Returns 0 on success, -1 on failure.
 
-=item eof
+=item eof()
 
   $io->eof
 
 Test if the stream is at end of file.  No further read requests will
 be passed to your read callback until you seek().
 
-=item error
+=item error()
 
 Test if the stream has encountered a read or write error.
 
@@ -186,7 +192,7 @@ Test if the stream has encountered a read or write error.
 When the stream has the error flag set no further read or write
 requests will be passed to your callbacks until you seek.
 
-=item flush
+=item flush()
 
   $io->flush
     or die "Flush error";
@@ -196,7 +202,7 @@ the stream has it's error flag set.
 
 Returns a true value on success.
 
-=item is_buffered
+=item is_buffered()
 
 Test if buffering is enabled for this stream.
 
@@ -221,7 +227,7 @@ These call the underlying I/O abstraction directly.
 
 =over
 
-=item raw_write
+=item raw_write()
 
 Call to write to the file.  Returns the number of bytes written.  The
 data provided may contain only characters \x00 to \xFF - characters
@@ -234,7 +240,7 @@ Returns -1 on error, though in most cases if the result of the write
 isn't the number of bytes supplied you'll want to treat it as an error
 anyway.
 
-=item raw_read
+=item raw_read()
 
   my $buffer;
   my $count = $io->raw_read($buffer, $max_bytes);
@@ -244,7 +250,7 @@ and stores them in I<$buffer>.  Returns the number of bytes read on
 success or an empty list on failure.  Note that a read of zero bytes
 is B<not> a failure, this indicates end of file.
 
-=item raw_read2
+=item raw_read2()
 
   my $buffer = $io->raw_read2($max_bytes);
 
@@ -253,7 +259,7 @@ cases.
 
 Returns the data read or an empty list.
 
-=item raw_seek
+=item raw_seek()
 
   my $new_position = $io->raw_seek($offset, $whence);
 
@@ -282,7 +288,7 @@ error.
 
 Returns the new position in the file, or -1 on error.
 
-=item raw_close
+=item raw_close()
 
   my $result = $io->raw_close;
 

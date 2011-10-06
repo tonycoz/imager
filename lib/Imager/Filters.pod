@@ -30,7 +30,7 @@ Filters are operations that have similar calling interface.
 
 =over
 
-=item filter
+=item filter()
 
 Parameters:
 
