@@ -35,15 +35,16 @@ To do:
 
  - remove other buffering
 
- - document unbuffered parameter to write/write_multi
-
  - document the io_glue C callbacks properly
-
- - document the Imager::io_new_cb() callback functions properly.
 
  - document 1 to 1 relationship for i_io_raw_read()
 
  - modify i_io_read() to look on raw_read calls in unbuffered mode
+
+ - call_reader() should use SvPV_byte() in Imager.xs
+
+ - document Imager::IO constructors (make new ones in the Imager::IO
+   namespace)
 
 Imager 0.86
 ===========
