@@ -34,7 +34,7 @@ typedef struct {
 
 typedef struct {
   i_io_glue_t   base;
-  char		*data;
+  const char	*data;
   size_t	len;
   i_io_closebufp_t     closecb;        /* free memory mapped segment or decrement refcount */
   void          *closedata;
@@ -112,6 +112,10 @@ Some of these functions are internal.
 =cut
 */
 
+static void
+i_io_init(io_glue *ig, int type, i_io_readp_t readcb, i_io_writep_t writecb,
+	  i_io_seekp_t seekcb);
+
 static ssize_t fd_read(io_glue *ig, void *buf, size_t count);
 static ssize_t fd_write(io_glue *ig, const void *buf, size_t count);
 static off_t fd_seek(io_glue *ig, off_t offset, int whence);
@@ -150,6 +154,7 @@ static void bufchain_destroy(io_glue *ig);
 
 /*
 =item io_new_bufchain()
+=category I/O Layers
 
 returns a new io_glue object that has the 'empty' source and but can
 be written to and read from later (like a pseudo file).
@@ -186,19 +191,20 @@ io_new_bufchain() {
 }
 
 /*
-=item io_new_buffer(data, len)
+=item io_new_buffer(data, length)
+=category I/O Layers
 
 Returns a new io_glue object that has the source defined as reading
 from specified buffer.  Note that the buffer is not copied.
 
    data - buffer to read from
-   len - length of buffer
+   length - length of buffer
 
 =cut
 */
 
 io_glue *
-io_new_buffer(char *data, size_t len, i_io_closebufp_t closecb, void *closedata) {
+io_new_buffer(const char *data, size_t len, i_io_closebufp_t closecb, void *closedata) {
   io_buffer *ig;
   
   mm_log((1, "io_new_buffer(data %p, len %ld, closecb %p, closedata %p)\n", data, (long)len, closecb, closedata));
@@ -222,9 +228,10 @@ io_new_buffer(char *data, size_t len, i_io_closebufp_t closecb, void *closedata)
 
 /*
 =item io_new_fd(fd)
+=category I/O Layers
 
 returns a new io_glue object that has the source defined as reading
-from specified filedescriptor.  Note that the the interface to recieving
+from specified file descriptor.  Note that the the interface to receiving
 data from the io_glue callbacks hasn't been done yet.
 
    fd - file descriptor to read/write from
@@ -250,6 +257,21 @@ io_new_fd(int fd) {
   mm_log((1, "(%p) <- io_new_fd\n", ig));
   return (io_glue *)ig;
 }
+
+/*
+=item io_new_cb(p, read_cb, write_cb, seek_cb, close_cb, destroy_cb)
+=category I/O Layers
+=order 10
+
+Create a new I/O layer object that calls your supplied callbacks.
+
+In general the callbacks should behave like the corresponding POSIX
+primitives.
+
+C<close_cb> should return 0 on success, -1 on failure.
+
+=cut
+*/
 
 io_glue *
 io_new_cb(void *p, i_io_readl_t readcb, i_io_writel_t writecb, 
@@ -278,12 +300,13 @@ io_new_cb(void *p, i_io_readl_t readcb, i_io_writel_t writecb,
 }
 
 /*
-=item io_slurp(ig)
+=item io_slurp(ig, c)
+=category I/O Layers
 
-Takes the source that the io_glue is bound to and allocates space
-for a return buffer and returns the entire content in a single buffer.
-Note: This only works for io_glue objects that contain a bufchain.  It
-is usefull for saving to scalars and such.
+Takes the source that the io_glue is bound to and allocates space for
+a return buffer and returns the entire content in a single buffer.
+Note: This only works for io_glue objects created by
+io_new_bufchain().  It is useful for saving to scalars and such.
 
    ig - io_glue object
    c  - pointer to a pointer to where data should be copied to
@@ -320,9 +343,11 @@ io_slurp(io_glue *ig, unsigned char **c) {
 
 /*
 =item io_glue_destroy(ig)
+=category I/O Layers
+=order 90
+=synopsis io_glue_destroy(ig);
 
-A destructor method for io_glue objects.  Should clean up all related buffers.
-Might leave us with a dangling pointer issue on some buffers.
+Destroy an io_glue objects.  Should clean up all related buffers.
 
    ig - io_glue object to destroy.
 
@@ -343,9 +368,10 @@ io_glue_destroy(io_glue *ig) {
 }
 
 /*
-=item i_iob_getc(ig)
+=item i_io_getc(ig)
+=category I/O Layers
 
-Read a single byte from a buffered I/O glue object.
+A macro to read a single byte from a buffered I/O glue object.
 
 Returns EOF on failure, or a byte.
 
@@ -386,6 +412,19 @@ i_io_getc_imp(io_glue *ig) {
   
   return *(ig->read_ptr++);
 }
+
+/*
+=item i_io_peekc(ig)
+=category I/O Layers
+
+Read the next character from the stream without advancing the stream.
+
+On error or end of file, return EOF.
+
+For unbuffered streams a single character buffer will be setup.
+
+=cut
+*/
 
 int
 i_io_peekc_imp(io_glue *ig) {
@@ -491,6 +530,17 @@ i_io_peekn(io_glue *ig, void *buf, size_t size) {
   return size;
 }
 
+/*
+=item i_io_putc(ig, c)
+=category I/O Layers
+
+Write a single character to the stream.
+
+On success return c, on error returns EOF
+
+=cut
+*/
+
 int
 i_io_putc_imp(io_glue *ig, int c) {
   IOL_DEB(fprintf(IOL_DEBs, "i_io_putc_imp(%p, %d)\n", ig, c));
@@ -534,6 +584,18 @@ i_io_putc_imp(io_glue *ig, int c) {
 
   return (unsigned char)c;
 }
+
+/*
+=item i_io_read(io, buffer, size)
+=category I/O Layers
+
+Read up to C<size> bytes from the stream C<io> into C<buffer>.
+
+Returns the number of bytes read.  Returns 0 on end of file.  Returns
+-1 on error.
+
+=cut
+*/
 
 ssize_t
 i_io_read(io_glue *ig, void *buf, size_t size) {
@@ -611,6 +673,18 @@ i_io_read(io_glue *ig, void *buf, size_t size) {
 
   return read_total;
 }
+
+/*
+=item i_io_write(io, buffer, size)
+=category I/O Layers
+=synopsis ssize_t result = i_io_write(io, buffer, size)
+
+Write to the given I/O stream.
+
+Returns the number of bytes written.
+
+=cut
+*/
 
 ssize_t
 i_io_write(io_glue *ig, const void *buf, size_t size) {
@@ -701,6 +775,17 @@ i_io_write(io_glue *ig, const void *buf, size_t size) {
   return write_count;
 }
 
+/*
+=item i_io_seek(io, offset, whence)
+=category I/O Layers
+
+Seek within the stream.
+
+Acts like perl's seek.
+
+=cut
+ */
+
 off_t
 i_io_seek(io_glue *ig, off_t offset, int whence) {
   off_t new_off;
@@ -728,6 +813,17 @@ i_io_seek(io_glue *ig, off_t offset, int whence) {
 
   return new_off;
 }
+
+/*
+=item i_io_flush(io)
+=category I/O Layers
+
+Flush any buffered output.
+
+Returns true on success,
+
+=cut
+*/
 
 int
 i_io_flush(io_glue *ig) {
@@ -762,6 +858,17 @@ i_io_flush(io_glue *ig) {
 
   return 1;
 }
+
+/*
+=item i_io_close(io)
+=category I/O Layers
+
+Flush any pending output and perform the close action for the stream.
+
+Returns 0 on success.
+
+=cut
+*/
 
 int
 i_io_close(io_glue *ig) {
@@ -828,7 +935,7 @@ Do common initialization for io_glue objects.
 =cut
 */
 
-void
+static void
 i_io_init(io_glue *ig, int type, i_io_readp_t readcb, i_io_writep_t writecb,
 	  i_io_seekp_t seekcb) {
   ig->type = type;
@@ -850,6 +957,33 @@ i_io_init(io_glue *ig, int type, i_io_readp_t readcb, i_io_writep_t writecb,
   ig->error = 0;
   ig->buffered = 1;
 }
+
+/*
+=item i_io_set_buffered(io, buffered)
+=category I/O Layers
+
+Set the buffering mode of the stream.
+
+If you switch buffering off on a stream with buffering on:
+
+=over
+
+=item *
+
+any buffered output will be flushed.
+
+=item *
+
+any existing buffered input will be consumed before reads become
+unbuffered.
+
+=back
+
+Returns true on success.  This may fail if any buffered output cannot
+be flushed.
+
+=cut
+*/
 
 int
 i_io_set_buffered(io_glue *ig, int buffered) {

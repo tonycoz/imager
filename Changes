@@ -28,6 +28,10 @@ Imager release history.  Older releases can be found in Changes.old
    - the PNM reader did its own buffering.  This buffering has been
      removed to avoid redundancy with the common io_glue buffering.
 
+   - previously the read handlers for fd and callback I/O layers would
+     call the underlying interface (POSIX read or your supplied callback)
+     until it filled the buffer.  It now only makes one call.
+
  - removed the long unused i_gen_reader() and i_gen_writer() utility
    functions.
 
@@ -37,9 +41,8 @@ To do:
 
  - document the io_glue C callbacks properly
 
- - document 1 to 1 relationship for i_io_raw_read()
-
- - modify i_io_read() to look on raw_read calls in unbuffered mode
+ - modify i_io_read() to loop on raw_read calls in unbuffered mode to
+   fill the buffer instead of making a single call.
 
  - document Imager::IO constructors (make new ones in the Imager::IO
    namespace)
