@@ -65,6 +65,10 @@ Imager::APIRef - Imager's C API - reference.
   char buffer[BUFSIZ]
   ssize_t len = i_io_gets(buffer, sizeof(buffer), '\n');
 
+  # I/O Layers
+  ssize_t result = i_io_write(io, buffer, size)
+  io_glue_destroy(ig);
+
   # Image
 
   # Image creation/destruction
@@ -1081,6 +1085,196 @@ From: File iolayer.c
 
 =back
 
+=head2 I/O Layers
+
+=over
+
+=item io_new_cb(p, read_cb, write_cb, seek_cb, close_cb, destroy_cb)
+
+Create a new I/O layer object that calls your supplied callbacks.
+
+In general the callbacks should behave like the corresponding POSIX
+primitives.
+
+C<close_cb> should return 0 on success, -1 on failure.
+
+
+=for comment
+From: File iolayer.c
+
+=item i_io_close(io)
+
+Flush any pending output and perform the close action for the stream.
+
+Returns 0 on success.
+
+
+=for comment
+From: File iolayer.c
+
+=item i_io_flush(io)
+
+Flush any buffered output.
+
+Returns true on success,
+
+
+=for comment
+From: File iolayer.c
+
+=item i_io_getc(ig)
+
+A macro to read a single byte from a buffered I/O glue object.
+
+Returns EOF on failure, or a byte.
+
+
+=for comment
+From: File iolayer.c
+
+=item i_io_peekc(ig)
+
+Read the next character from the stream without advancing the stream.
+
+On error or end of file, return EOF.
+
+For unbuffered streams a single character buffer will be setup.
+
+
+=for comment
+From: File iolayer.c
+
+=item i_io_putc(ig, c)
+
+Write a single character to the stream.
+
+On success return c, on error returns EOF
+
+
+=for comment
+From: File iolayer.c
+
+=item i_io_read(io, buffer, size)
+
+Read up to C<size> bytes from the stream C<io> into C<buffer>.
+
+Returns the number of bytes read.  Returns 0 on end of file.  Returns
+-1 on error.
+
+
+=for comment
+From: File iolayer.c
+
+=item i_io_seek(io, offset, whence)
+
+Seek within the stream.
+
+Acts like perl's seek.
+
+
+=for comment
+From: File iolayer.c
+
+=item i_io_set_buffered(io, buffered)
+
+Set the buffering mode of the stream.
+
+If you switch buffering off on a stream with buffering on:
+
+=over
+
+=item *
+
+any buffered output will be flushed.
+
+=item *
+
+any existing buffered input will be consumed before reads become
+unbuffered.
+
+=back
+
+Returns true on success.  This may fail if any buffered output cannot
+be flushed.
+
+
+=for comment
+From: File iolayer.c
+
+=item i_io_write(io, buffer, size)
+
+  ssize_t result = i_io_write(io, buffer, size)
+
+Write to the given I/O stream.
+
+Returns the number of bytes written.
+
+
+=for comment
+From: File iolayer.c
+
+=item io_new_bufchain()
+
+returns a new io_glue object that has the 'empty' source and but can
+be written to and read from later (like a pseudo file).
+
+
+=for comment
+From: File iolayer.c
+
+=item io_new_buffer(data, length)
+
+Returns a new io_glue object that has the source defined as reading
+from specified buffer.  Note that the buffer is not copied.
+
+   data - buffer to read from
+   length - length of buffer
+
+
+=for comment
+From: File iolayer.c
+
+=item io_new_fd(fd)
+
+returns a new io_glue object that has the source defined as reading
+from specified file descriptor.  Note that the the interface to receiving
+data from the io_glue callbacks hasn't been done yet.
+
+   fd - file descriptor to read/write from
+
+
+=for comment
+From: File iolayer.c
+
+=item io_slurp(ig, c)
+
+Takes the source that the io_glue is bound to and allocates space for
+a return buffer and returns the entire content in a single buffer.
+Note: This only works for io_glue objects created by
+io_new_bufchain().  It is useful for saving to scalars and such.
+
+   ig - io_glue object
+   c  - pointer to a pointer to where data should be copied to
+
+
+=for comment
+From: File iolayer.c
+
+=item io_glue_destroy(ig)
+
+  io_glue_destroy(ig);
+
+Destroy an io_glue objects.  Should clean up all related buffers.
+
+   ig - io_glue object to destroy.
+
+
+=for comment
+From: File iolayer.c
+
+
+=back
+
 =head2 Image
 
 =over
@@ -1825,54 +2019,6 @@ Returns ~0UL on failure.
 
 =for comment
 From: File io.c
-
-
-
-=back
-
-
-=head1 UNDOCUMENTED
-
-The following API functions are undocumented so far, hopefully this
-will change:
-
-=over
-
-=item *
-
-B<i_io_close>
-
-=item *
-
-B<i_io_flush>
-
-=item *
-
-B<i_io_getc_imp>
-
-=item *
-
-B<i_io_peekc_imp>
-
-=item *
-
-B<i_io_putc_imp>
-
-=item *
-
-B<i_io_read>
-
-=item *
-
-B<i_io_seek>
-
-=item *
-
-B<i_io_set_buffered>
-
-=item *
-
-B<i_io_write>
 
 
 

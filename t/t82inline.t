@@ -18,10 +18,11 @@ plan skip_all => "perl 5.005_04, 5.005_05 too buggy"
 
 -d "testout" or mkdir "testout";
 
-plan tests => 9;
+plan tests => 16;
 require Inline;
 Inline->import(with => 'Imager');
 Inline->import("FORCE"); # force rebuild
+#Inline->import(C => Config => OPTIMIZE => "-g");
 
 Inline->bind(C => <<'EOS');
 #include <math.h>
@@ -233,6 +234,135 @@ Imager do_lots(Imager src) {
   return im;
 }
 
+void
+io_fd(int fd) {
+  Imager::IO io = io_new_fd(fd);
+  i_io_write(io, "test", 4);
+  i_io_close(io);
+  io_glue_destroy(io);
+}
+
+int
+io_bufchain_test() {
+  Imager::IO io = io_new_bufchain();
+  unsigned char *result;
+  size_t size;
+  if (i_io_write(io, "test2", 5) != 5) {
+    fprintf(stderr, "write failed\n");
+    return 0;
+  }
+  if (!i_io_flush(io)) {
+    fprintf(stderr, "flush failed\n");
+    return 0;
+  }
+  if (i_io_close(io) != 0) {
+    fprintf(stderr, "close failed\n");
+    return 0;
+  }
+  size = io_slurp(io, &result);
+  if (size != 5) {
+    fprintf(stderr, "wrong size\n");
+    return 0;
+  }
+  if (memcmp(result, "test2", 5)) {
+    fprintf(stderr, "data mismatch\n");
+    return 0;
+  }
+  if (i_io_seek(io, 0, 0) != 0) {
+    fprintf(stderr, "seek failure\n");
+    return 0;
+  }
+  myfree(result);
+  io_glue_destroy(io);
+
+  return 1;
+}
+
+const char *
+io_buffer_test(SV *in) {
+  STRLEN len;
+  const char *in_str = SvPV(in, len);
+  static char buf[100];
+  Imager::IO io = io_new_buffer(in_str, len, NULL, NULL);
+  ssize_t read_size;
+
+  read_size = i_io_read(io, buf, sizeof(buf)-1);
+  io_glue_destroy(io);
+  if (read_size < 0 || read_size >= sizeof(buf)) {
+    return "";
+  }
+
+  buf[read_size] = '\0';
+
+  return buf;
+}
+
+const char *
+io_peekn_test(SV *in) {
+  STRLEN len;
+  const char *in_str = SvPV(in, len);
+  static char buf[100];
+  Imager::IO io = io_new_buffer(in_str, len, NULL, NULL);
+  ssize_t read_size;
+
+  read_size = i_io_peekn(io, buf, sizeof(buf)-1);
+  io_glue_destroy(io);
+  if (read_size < 0 || read_size >= sizeof(buf)) {
+    return "";
+  }
+
+  buf[read_size] = '\0';
+
+  return buf;
+}
+
+const char *
+io_gets_test(SV *in) {
+  STRLEN len;
+  const char *in_str = SvPV(in, len);
+  static char buf[100];
+  Imager::IO io = io_new_buffer(in_str, len, NULL, NULL);
+  ssize_t read_size;
+
+  read_size = i_io_gets(io, buf, sizeof(buf), 's');
+  io_glue_destroy(io);
+  if (read_size < 0 || read_size >= sizeof(buf)) {
+    return "";
+  }
+
+  return buf;
+}
+
+int
+io_getc_test(SV *in) {
+  STRLEN len;
+  const char *in_str = SvPV(in, len);
+  static char buf[100];
+  Imager::IO io = io_new_buffer(in_str, len, NULL, NULL);
+  int result;
+
+  result = i_io_getc(io);
+  io_glue_destroy(io);
+
+  return result;
+}
+
+int
+io_peekc_test(SV *in) {
+  STRLEN len;
+  const char *in_str = SvPV(in, len);
+  static char buf[100];
+  Imager::IO io = io_new_buffer(in_str, len, NULL, NULL);
+  int result;
+
+  i_io_set_buffered(io, 0);
+
+  result = i_io_peekc(io);
+  io_glue_destroy(io);
+
+  return result;
+}
+
 EOS
 
 my $im = Imager->new(xsize=>50, ysize=>50);
@@ -266,3 +396,34 @@ ok($im3->write(file=>'testout/t82lots.ppm'), "write t82lots.ppm");
   is ($imb->REFCNT, $im2b->REFCNT, 
       "check refcnt of imager object hash between normal and typemap generated");
 }
+
+SKIP:
+{
+  use IO::File;
+  my $fd_filename = "testout/t82fd.txt";
+  {
+    my $fh = IO::File->new($fd_filename, "w")
+      or skip("Can't create file: $!", 1);
+    io_fd(fileno($fh));
+    $fh->close;
+  }
+  {
+    my $fh = IO::File->new($fd_filename, "r")
+      or skip("Can't open file: $!", 1);
+    my $data = <$fh>;
+    is($data, "test", "make sure data written to fd");
+  }
+  unlink $fd_filename;
+}
+
+ok(io_bufchain_test(), "check bufchain functions");
+
+is(io_buffer_test("test3"), "test3", "check io_new_buffer() and i_io_read");
+
+is(io_peekn_test("test5"), "test5", "check i_io_peekn");
+
+is(io_gets_test("test"), "tes", "check i_io_gets()");
+
+is(io_getc_test("ABC"), ord "A", "check i_io_getc(_imp)?");
+
+is(io_getc_test("XYZ"), ord "X", "check i_io_peekc(_imp)?");
