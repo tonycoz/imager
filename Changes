@@ -4,10 +4,16 @@ Imager release history.  Older releases can be found in Changes.old
 
    - reorganize io_glue to do it's own buffering by default
 
+   - the unbuffered functions are available as i_io_raw_read() (or
+     raw_read() from perl) etc but are not recommended for typical
+     use.
+
    - use the new i_io_peekn() when checking for file magic to avoid
      seek, allowing Imager to detect the file type and read the file
-     from a read only stream (for formats that don't use random
+     from an unseekable stream (for formats that don't use random
      access)
+
+   - added several new I/O layer API functions.
 
    - fix the TGA performance problem, most noticably on Win32
      https://rt.cpan.org/Ticket/Display.html?id=70037
@@ -22,7 +28,7 @@ Imager release history.  Older releases can be found in Changes.old
      which could rarely pass a zero length to the read callback and
      then panic about the result.
 
-   - the callback IO object new tests the result of calling the close
+   - the callback IO object now tests the result of calling the close
      callback, which should return true for success.
 
    - the PNM reader did its own buffering.  This buffering has been
@@ -32,14 +38,22 @@ Imager release history.  Older releases can be found in Changes.old
      call the underlying interface (POSIX read or your supplied callback)
      until it filled the buffer.  It now only makes one call.
 
+   - added public constructors for I/O layer objects (see Imager::IO)
+
+   - all core file handlers now use the i_io_foo() wrappers to gain
+     access to buffered I/O rather than calling the I/O layer
+     callbacks directly.
+
+   - all core file handlers now check for error on close.
+
+   - Backward compatibility: if you hava custom file handlers, you can
+     use i_io_write() etc since they're available as macros in older
+     versions of Imager.
+
+   - eliminate the final remnants of io_glue_commit_types().
+
  - removed the long unused i_gen_reader() and i_gen_writer() utility
    functions.
-
-To do:
-
- - remove other buffering
-
- - document the io_glue C callbacks properly
 
 Imager 0.86
 ===========
