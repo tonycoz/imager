@@ -344,7 +344,8 @@ defined in the same way as perl's seek function.
 
 Previously you always needed a C<seekcb> callback if you called
 Imager's L</read()> or L</read_multi()> without a C<type> parameter,
-but this is no longer necessary.
+but this is no longer necessary unless the file handler requires
+seeking, such as for TIFF files.
 
 Returns the new position in the file, or -1 on failure.
 

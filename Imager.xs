@@ -268,27 +268,9 @@ io_writer(void *p, void const *data, size_t size) {
 
 static ssize_t 
 io_reader(void *p, void *data, size_t size) {
-#if 0
-  dTHX;
-  struct cbdata *cbd = p;
-  ssize_t total = 0;
-  char *out = data; /* so we can do pointer arithmetic */
-
-  int did_read;
-  while (size > 0 && (did_read = call_reader(cbd, out, size, size)) > 0) {
-    size  -= did_read;
-    total += did_read;
-    out   += did_read;
-  }
-  if (total == 0 && did_read < 0)
-    return -1;
-
-  return total;
-#else
   struct cbdata *cbd = p;
 
   return call_reader(cbd, data, size, size);
-#endif
 }
 
 static int io_closer(void *p) {
@@ -330,6 +312,30 @@ static void io_destroyer(void *p) {
   SvREFCNT_dec(cbd->seekcb);
   SvREFCNT_dec(cbd->closecb);
   myfree(cbd);
+}
+
+static i_io_glue_t *
+do_io_new_buffer(pTHX_ SV *data_sv) {
+  const char *data;
+  STRLEN length;
+
+  data = SvPVbyte(data_sv, length);
+  SvREFCNT_inc(data_sv);
+  return io_new_buffer(data, length, my_SvREFCNT_dec, data_sv);
+}
+
+static i_io_glue_t *
+do_io_new_cb(pTHX_ SV *writecb, SV *readcb, SV *seekcb, SV *closecb) {
+  struct cbdata *cbd;
+
+  cbd = mymalloc(sizeof(struct cbdata));
+  cbd->writecb = newSVsv(writecb);
+  cbd->readcb = newSVsv(readcb);
+  cbd->seekcb = newSVsv(seekcb);
+  cbd->closecb = newSVsv(closecb);
+
+  return io_new_cb(cbd, io_reader, io_writer, io_seeker, io_closer, 
+		   io_destroyer);
 }
 
 struct value_name {
@@ -935,14 +941,10 @@ io_new_bufchain()
 
 
 Imager::IO
-io_new_buffer(data)
-	  char   *data
-	PREINIT:
-	  size_t length;
+io_new_buffer(data_sv)
+	  SV   *data_sv
 	CODE:
-	  SvPV(ST(0), length);
-          SvREFCNT_inc(ST(0));
-	  RETVAL = io_new_buffer(data, length, my_SvREFCNT_dec, ST(0));
+	  RETVAL = do_io_new_buffer(aTHX_ data_sv);
         OUTPUT:
           RETVAL
 
@@ -953,35 +955,24 @@ io_new_cb(writecb, readcb, seekcb, closecb, maxwrite = CBDATA_BUFSIZE)
         SV *seekcb;
         SV *closecb;
         int maxwrite;
-      PREINIT:
-        struct cbdata *cbd;
       CODE:
-        cbd = mymalloc(sizeof(struct cbdata));
-        SvREFCNT_inc(writecb);
-        cbd->writecb = writecb;
-        SvREFCNT_inc(readcb);
-        cbd->readcb = readcb;
-        SvREFCNT_inc(seekcb);
-        cbd->seekcb = seekcb;
-        SvREFCNT_inc(closecb);
-        cbd->closecb = closecb;
-        RETVAL = io_new_cb(cbd, io_reader, io_writer, io_seeker, io_closer, 
-                           io_destroyer);
+        RETVAL = do_io_new_cb(aTHX_ writecb, readcb, seekcb, closecb);
       OUTPUT:
         RETVAL
 
-void
+SV *
 io_slurp(ig)
         Imager::IO     ig
 	     PREINIT:
 	      unsigned char*    data;
 	      size_t    tlength;
-	     PPCODE:
+	     CODE:
  	      data    = NULL;
               tlength = io_slurp(ig, &data);
-              EXTEND(SP,1);
-              PUSHs(sv_2mortal(newSVpv((char *)data,tlength)));
+              RETVAL = newSVpv((char *)data,tlength);
               myfree(data);
+	     OUTPUT:
+	      RETVAL
 
 
 undef_int
@@ -1002,6 +993,56 @@ i_get_image_file_limits()
           PUSHs(sv_2mortal(newSViv(height)));
           PUSHs(sv_2mortal(newSVuv(bytes)));
         }
+
+MODULE = Imager		PACKAGE = Imager::IO	PREFIX = io_
+
+Imager::IO
+io_new_fd(class, fd)
+	int fd
+    CODE:
+	RETVAL = io_new_fd(fd);
+    OUTPUT:
+	RETVAL
+
+Imager::IO
+io_new_buffer(class, data_sv)
+	SV *data_sv
+    CODE:
+        RETVAL = do_io_new_buffer(aTHX_ data_sv);
+    OUTPUT:
+        RETVAL
+
+Imager::IO
+io_new_cb(class, writecb, readcb, seekcb, closecb)
+        SV *writecb;
+        SV *readcb;
+        SV *seekcb;
+        SV *closecb;
+    CODE:
+        RETVAL = do_io_new_cb(aTHX_ writecb, readcb, seekcb, closecb);
+    OUTPUT:
+        RETVAL
+
+Imager::IO
+io_new_bufchain(class)
+    CODE:
+	RETVAL = io_new_bufchain();
+    OUTPUT:
+        RETVAL
+
+SV *
+io_slurp(class, ig)
+        Imager::IO     ig
+    PREINIT:
+	unsigned char*    data;
+	size_t    tlength;
+    CODE:
+	data    = NULL;
+	tlength = io_slurp(ig, &data);
+	RETVAL = newSVpv((char *)data,tlength);
+	myfree(data);
+    OUTPUT:
+	RETVAL
 
 MODULE = Imager		PACKAGE = Imager::IO	PREFIX = i_io_
 

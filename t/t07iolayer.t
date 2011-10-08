@@ -33,7 +33,7 @@ open(FH, "<testimg/penguin-base.ppm");
 binmode(FH);
 $data = <FH>;
 close(FH);
-my $IO3 = Imager::io_new_buffer($data);
+my $IO3 = Imager::IO->new_buffer($data);
 #undef($data);
 $im = Imager::i_readpnm_wiol($IO3, -1);
 
@@ -43,7 +43,7 @@ undef $IO3;
 open(FH, "<testimg/penguin-base.ppm") or die $!;
 binmode(FH);
 $fd = fileno(FH);
-my $IO4 = Imager::io_new_fd( $fd );
+my $IO4 = Imager::IO->new_fd( $fd );
 my $im2 = Imager::i_readpnm_wiol($IO4, -1);
 close(FH);
 undef($IO4);
@@ -79,7 +79,7 @@ sub io_reader2 {
   $pos += length $out;
   $out;
 }
-my $IO7 = Imager::io_new_cb(undef, \&io_reader, undef, undef);
+my $IO7 = Imager::IO->new_cb(undef, \&io_reader, undef, undef);
 ok($IO7, "making readcb object");
 my $im4 = Imager::i_readpnm_wiol($IO7, -1);
 ok($im4, "read from cb");
@@ -141,7 +141,7 @@ is($work, $data2, "short write image match");
   undef $io9;
 }
 {
-  my $io = Imager::io_new_bufchain();
+  my $io = Imager::IO->new_bufchain();
   is(ref $io, "Imager::IO", "check class");
   is($io->raw_write("testdata"), 8, "check write");
   is($io->raw_seek(-8, SEEK_CUR), 0, "seek relative");

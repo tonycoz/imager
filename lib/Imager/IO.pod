@@ -25,6 +25,41 @@ if you need to read UTF-8 data you will need to read the bytes and
 decode them.  If you want to write UTF-8 data you will need to encode
 your characters to bytes and write the bytes.
 
+=head1 CONSTRUCTORS
+
+=over
+
+=item new_fd($fd)
+
+Create a new I/O layer based on a file descriptor.
+
+  my $io = Imager::IO->new(fileno($fh));
+
+=item new_buffer($data)
+
+Create a new I/O layer based on a memory buffer.
+
+The supplied variable must not be changed on the the life of the I/O
+object.
+
+Buffer I/O layers are read only.
+
+=item new_cb($writecb, $readcb, $seekcb, $closecb)
+
+Create a new I/O layer based on callbacks.  See 
+L<Imager::Files/"I/O Callbacks"> for details on the behavior of 
+the callbacks.
+
+=item new_bufchain()
+
+Create a new C<bufchain> based I/O layer.  This accumulates the file
+data as a chain of buffers starting from an empty stream.
+
+Use the L</slurp()> method to retrieve the accumulated content into a
+perl string.
+
+=back
+
 =head1 BUFFERED I/O METHODS
 
 These methods use buffered I/O to improve performance unless you call
@@ -302,6 +337,13 @@ Returns 0 on success, -1 on failure.
 =head1 UTILITY METHODS
 
 =over
+
+=item slurp()
+
+Retrieve the data accumulated from an I/O layer object created with
+the new_bufchain() method.
+
+  my $data = $io->slurp;
 
 =item dump()
 
