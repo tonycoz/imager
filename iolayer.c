@@ -154,6 +154,7 @@ static void bufchain_destroy(io_glue *ig);
 
 /*
 =item io_new_bufchain()
+=order 10
 =category I/O Layers
 
 returns a new io_glue object that has the 'empty' source and but can
@@ -192,6 +193,7 @@ io_new_bufchain() {
 
 /*
 =item io_new_buffer(data, length)
+=order 10
 =category I/O Layers
 
 Returns a new io_glue object that has the source defined as reading
@@ -228,6 +230,7 @@ io_new_buffer(const char *data, size_t len, i_io_closebufp_t closecb, void *clos
 
 /*
 =item io_new_fd(fd)
+=order 10
 =category I/O Layers
 
 returns a new io_glue object that has the source defined as reading
@@ -268,7 +271,34 @@ Create a new I/O layer object that calls your supplied callbacks.
 In general the callbacks should behave like the corresponding POSIX
 primitives.
 
-C<close_cb> should return 0 on success, -1 on failure.
+=over
+
+=item *
+
+C<read_cb>(p, buffer, length) should read up to C<length> bytes into
+C<buffer> and return the number of bytes read.  At end of file, return
+0.  On error, return -1.
+
+=item *
+
+C<write_cb>(p, buffer, length) should write up to C<length> bytes from
+C<buffer> and return the number of bytes written.  A return value <= 0
+will be treated as an error.
+
+=item *
+
+C<seekcb>(p, offset, whence) should seek and return the new offset.
+
+=item *
+
+C<close_cb>(p) should return 0 on success, -1 on failure.
+
+=item *
+
+C<destroy_cb>(p) should release any memory specific to your callback
+handlers.
+
+=back
 
 =cut
 */
@@ -310,6 +340,14 @@ io_new_bufchain().  It is useful for saving to scalars and such.
 
    ig - io_glue object
    c  - pointer to a pointer to where data should be copied to
+
+  char *data;
+  size_t size = io_slurp(ig, &data);
+  ... do something with the data ...
+  myfree(data);
+
+io_slurp() will abort the program if the supplied I/O layer is not
+from io_new_bufchain().
 
 =cut
 */
@@ -464,7 +502,7 @@ i_io_peekc_imp(io_glue *ig) {
 
 /*
 =item i_io_peekn(ig, buffer, size)
-=category I/O layers
+=category I/O Layers
 =synopsis ssize_t count = i_io_peekn(ig, buffer, sizeof(buffer));
 
 Buffer at least C<size> (at most C<< ig->buf_size >> bytes of data
@@ -891,7 +929,7 @@ i_io_close(io_glue *ig) {
 
 /*
 =item i_io_gets(ig, buffer, size, end_of_line)
-=category I/O layers
+=category I/O Layers
 =synopsis char buffer[BUFSIZ]
 =synopsis ssize_t len = i_io_gets(buffer, sizeof(buffer), '\n');
 
