@@ -60,13 +60,11 @@ Imager::APIRef - Imager's C API - reference.
                           i_fr_triangle, 0, i_fts_grid, 9, 1, segs);
   i_fill_destroy(fill);
 
-  # I/O layers
+  # I/O Layers
   ssize_t count = i_io_peekn(ig, buffer, sizeof(buffer));
+  ssize_t result = i_io_write(io, buffer, size)
   char buffer[BUFSIZ]
   ssize_t len = i_io_gets(buffer, sizeof(buffer), '\n');
-
-  # I/O Layers
-  ssize_t result = i_io_write(io, buffer, size)
   io_glue_destroy(ig);
 
   # Image
@@ -1039,55 +1037,30 @@ From: File fills.c
 
 =back
 
-=head2 I/O layers
-
-=over
-
-=item i_io_gets(ig, buffer, size, end_of_line)
-
-  char buffer[BUFSIZ]
-  ssize_t len = i_io_gets(buffer, sizeof(buffer), '\n');
-
-Read up to C<size>-1 bytes from the stream C<ig> into C<buffer>.
-
-If the byte C<end_of_line> is seen then no further bytes will be read.
-
-Returns the number of bytes read.
-
-Always C<NUL> terminates the buffer.
-
-
-=for comment
-From: File iolayer.c
-
-=item i_io_peekn(ig, buffer, size)
-
-  ssize_t count = i_io_peekn(ig, buffer, sizeof(buffer));
-
-Buffer at least C<size> (at most C<< ig->buf_size >> bytes of data
-from the stream and return C<size> bytes of it to the caller in
-C<buffer>.
-
-This ignores the buffered state of the stream, and will always setup
-buffering if needed.
-
-If no C<type> parameter is provided to Imager::read() or
-Imager::read_multi(), Imager will call C<i_io_peekn()> when probing
-for the file format.
-
-Returns -1 on error, 0 if there is no data before EOF, or the number
-of bytes read into C<buffer>.
-
-
-=for comment
-From: File iolayer.c
-
-
-=back
-
 =head2 I/O Layers
 
 =over
+
+=item io_new_bufchain()
+
+returns a new io_glue object that has the 'empty' source and but can
+be written to and read from later (like a pseudo file).
+
+
+=for comment
+From: File iolayer.c
+
+=item io_new_buffer(data, length)
+
+Returns a new io_glue object that has the source defined as reading
+from specified buffer.  Note that the buffer is not copied.
+
+   data - buffer to read from
+   length - length of buffer
+
+
+=for comment
+From: File iolayer.c
 
 =item io_new_cb(p, read_cb, write_cb, seek_cb, close_cb, destroy_cb)
 
@@ -1096,7 +1069,46 @@ Create a new I/O layer object that calls your supplied callbacks.
 In general the callbacks should behave like the corresponding POSIX
 primitives.
 
-C<close_cb> should return 0 on success, -1 on failure.
+=over
+
+=item *
+
+C<read_cb>(p, buffer, length) should read up to C<length> bytes into
+C<buffer> and return the number of bytes read.  At end of file, return
+0.  On error, return -1.
+
+=item *
+
+C<write_cb>(p, buffer, length) should write up to C<length> bytes from
+C<buffer> and return the number of bytes written.  A return value <= 0
+will be treated as an error.
+
+=item *
+
+C<seekcb>(p, offset, whence) should seek and return the new offset.
+
+=item *
+
+C<close_cb>(p) should return 0 on success, -1 on failure.
+
+=item *
+
+C<destroy_cb>(p) should release any memory specific to your callback
+handlers.
+
+=back
+
+
+=for comment
+From: File iolayer.c
+
+=item io_new_fd(fd)
+
+returns a new io_glue object that has the source defined as reading
+from specified file descriptor.  Note that the the interface to receiving
+data from the io_glue callbacks hasn't been done yet.
+
+   fd - file descriptor to read/write from
 
 
 =for comment
@@ -1132,6 +1144,23 @@ Returns EOF on failure, or a byte.
 =for comment
 From: File iolayer.c
 
+=item i_io_gets(ig, buffer, size, end_of_line)
+
+  char buffer[BUFSIZ]
+  ssize_t len = i_io_gets(buffer, sizeof(buffer), '\n');
+
+Read up to C<size>-1 bytes from the stream C<ig> into C<buffer>.
+
+If the byte C<end_of_line> is seen then no further bytes will be read.
+
+Returns the number of bytes read.
+
+Always C<NUL> terminates the buffer.
+
+
+=for comment
+From: File iolayer.c
+
 =item i_io_peekc(ig)
 
 Read the next character from the stream without advancing the stream.
@@ -1139,6 +1168,28 @@ Read the next character from the stream without advancing the stream.
 On error or end of file, return EOF.
 
 For unbuffered streams a single character buffer will be setup.
+
+
+=for comment
+From: File iolayer.c
+
+=item i_io_peekn(ig, buffer, size)
+
+  ssize_t count = i_io_peekn(ig, buffer, sizeof(buffer));
+
+Buffer at least C<size> (at most C<< ig->buf_size >> bytes of data
+from the stream and return C<size> bytes of it to the caller in
+C<buffer>.
+
+This ignores the buffered state of the stream, and will always setup
+buffering if needed.
+
+If no C<type> parameter is provided to Imager::read() or
+Imager::read_multi(), Imager will call C<i_io_peekn()> when probing
+for the file format.
+
+Returns -1 on error, 0 if there is no data before EOF, or the number
+of bytes read into C<buffer>.
 
 
 =for comment
@@ -1213,39 +1264,6 @@ Returns the number of bytes written.
 =for comment
 From: File iolayer.c
 
-=item io_new_bufchain()
-
-returns a new io_glue object that has the 'empty' source and but can
-be written to and read from later (like a pseudo file).
-
-
-=for comment
-From: File iolayer.c
-
-=item io_new_buffer(data, length)
-
-Returns a new io_glue object that has the source defined as reading
-from specified buffer.  Note that the buffer is not copied.
-
-   data - buffer to read from
-   length - length of buffer
-
-
-=for comment
-From: File iolayer.c
-
-=item io_new_fd(fd)
-
-returns a new io_glue object that has the source defined as reading
-from specified file descriptor.  Note that the the interface to receiving
-data from the io_glue callbacks hasn't been done yet.
-
-   fd - file descriptor to read/write from
-
-
-=for comment
-From: File iolayer.c
-
 =item io_slurp(ig, c)
 
 Takes the source that the io_glue is bound to and allocates space for
@@ -1255,6 +1273,14 @@ io_new_bufchain().  It is useful for saving to scalars and such.
 
    ig - io_glue object
    c  - pointer to a pointer to where data should be copied to
+
+  char *data;
+  size_t size = io_slurp(ig, &data);
+  ... do something with the data ...
+  myfree(data);
+
+io_slurp() will abort the program if the supplied I/O layer is not
+from io_new_bufchain().
 
 
 =for comment
