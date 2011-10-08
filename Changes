@@ -52,6 +52,8 @@ Imager release history.  Older releases can be found in Changes.old
 
    - eliminate the final remnants of io_glue_commit_types().
 
+   - bump IMAGER_API_VERSION, since the above may break assumptions.
+
  - removed the long unused i_gen_reader() and i_gen_writer() utility
    functions.
 

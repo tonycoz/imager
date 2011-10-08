@@ -14,8 +14,13 @@
  Version 2 changed the types of some parameters and pointers.  A
  simple recompile should be enough in most cases.
 
+ Version 3 changed the behaviour of some of the I/O layer functions,
+ and in some cases the initial seek position when calling file
+ readers.  Switching away from calling readcb etc to i_io_read() etc
+ should fix your code.
+
 */
-#define IMAGER_API_VERSION 2
+#define IMAGER_API_VERSION 3
 
 /*
  IMAGER_API_LEVEL is the level of the structure.  New function pointers
