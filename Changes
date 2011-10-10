@@ -8,6 +8,12 @@ Bug fixes:
  - eliminate unused i_gif_opts type (clean-up)
    https://rt.cpan.org/Ticket/Display.html?id=69245
 
+ - fix combine=0 fill color anti-aliasing on the double/sample path
+   https://rt.cpan.org/Ticket/Display.html?id=71309
+
+ - make default text color non-transparent
+   https://rt.cpan.org/Ticket/Display.html?id=71469
+
 Imager 0.85_01 - 10 Oct 2011
 ==============
 
