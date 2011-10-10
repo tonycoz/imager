@@ -73,7 +73,7 @@ or L</write_types()> methods useful.
 
 =over 
 
-=item read
+=item read()
 
 Reading writing to and from files is simple, use the C<read()>
 method to read an image:
@@ -88,8 +88,8 @@ supply the file name:
   $img->read(file => $filename)
     or die "Cannot read $filename: ", $img->errstr;
 
-The read() method accepts the C<allow_partial> parameter.  If this is
-non-zero then read() can return true on an incomplete image and set
+The read() method accepts the C<allow_incomplete> parameter.  If this
+is non-zero then read() can return true on an incomplete image and set
 the C<i_incomplete> tag.
 
 From Imager 0.68 you can supply most read() parameters to the new()
@@ -100,14 +100,14 @@ Imager->errstr() for the cause:
   my $img = Imager->new(file => $filename)
     or die "Cannot read $filename: ", Imager->errstr;
 
-=item write
+=item write()
 
 and the C<write()> method to write an image:
 
   $img->write(file=>$filename, type=>$type)
     or die "Cannot write $filename: ", $img->errstr;
 
-=item read_multi
+=item read_multi()
 
 If you're reading from a format that supports multiple images per
 file, use the C<read_multi()> method:
@@ -118,7 +118,7 @@ file, use the C<read_multi()> method:
 As with the read() method, Imager will normally detect the C<type>
 automatically.
 
-=item write_multi
+=item write_multi()
 
 and if you want to write multiple images to a single file use the
 C<write_multi()> method:
@@ -252,34 +252,33 @@ writing.
 
 =item *
 
-C<callback> - Imager will make calls back to your supplied coderefs to
-read, write and seek from/to/through the image file.
+C<callback>, C<readcb>, C<writecb>, C<seekcb>, C<closecb> - Imager
+will make calls back to your supplied coderefs to read, write and seek
+from/to/through the image file.  See L</"I/O Callbacks"> below for details.
+
+=item *
+
+C<io> - an L<Imager::IO> object.
+
+=back
+
+X<buffering>X<unbuffered>By default Imager will use buffered I/O when
+reading or writing an image.  You can disabled buffering for output by
+supplying a C<< buffered => 0 >> parameter to C<write()> or
+C<write_multi()>.
+
+=head2 I/O Callbacks
 
 When reading from a file you can use either C<callback> or C<readcb>
 to supply the read callback, and when writing C<callback> or
 C<writecb> to supply the write callback.
 
-When writing you can also supply the C<maxbuffer> option to set the
-maximum amount of data that will be buffered before your write
-callback is called.  Note: the amount of data supplied to your
-callback can be smaller or larger than this size.
+Some file formats, currently only C<TIFF>, also require a C<seekcb>
+parameter to change position in the file.  If no C<seekcb> parameter
+is provided a default will be provided that fails.
 
-The read callback is called with 2 parameters, the minimum amount of
-data required, and the maximum amount that Imager will store in it's C
-level buffer.  You may want to return the minimum if you have a slow
-data source, or the maximum if you have a fast source and want to
-prevent many calls to your perl callback.  The read data should be
-returned as a scalar.
-
-Your write callback takes exactly one parameter, a scalar containing
-the data to be written.  Return true for success.
-
-The seek callback takes 2 parameters, a I<POSITION>, and a I<WHENCE>,
-defined in the same way as perl's seek function.
-
-You can also supply a C<closecb> which is called with no parameters
-when there is no more data to be written.  This could be used to flush
-buffered data.
+You can also provide a C<closecb> parameter called when writing the
+file is complete. 
 
   # contrived
   my $data;
@@ -290,12 +289,76 @@ buffered data.
   Imager->write_multi({ callback => \&mywrite, type => 'gif'}, @images)
     or die Imager->errstr;
 
-Note that for reading you'll almost always need to provide a
-C<seekcb>.
+=head3 C<readcb>
+
+The read callback is called with 2 parameters:
+
+=over
+
+=item *
+
+C<size> - the minimum amount of data required.
+
+=item *
+
+C<maxsize> - previously this was the maximum amount of data returnable
+- currently it's always the same as C<size>
 
 =back
 
+Your read callback should return the data as a scalar:
+
+=over
+
+=item *
+
+on success, a string containing the bytes read.
+
+=item *
+
+on end of file, an empty string
+
+=item *
+
+on error, C<undef>.
+
+=back
+
+If your return value contains more data than C<size> Imager will
+panic.
+
+Your return value must not contain any characters over C<\xFF> or
+Imager will panic.
+
+=head3 C<writecb>
+
+Your write callback takes exactly one parameter, a scalar containing
+the data to be written.
+
+Return true for success.
+
+=head3 C<seekcb>
+
+The seek callback takes 2 parameters, a I<POSITION>, and a I<WHENCE>,
+defined in the same way as perl's seek function.
+
+Previously you always needed a C<seekcb> callback if you called
+Imager's L</read()> or L</read_multi()> without a C<type> parameter,
+but this is no longer necessary unless the file handler requires
+seeking, such as for TIFF files.
+
+Returns the new position in the file, or -1 on failure.
+
+=head3 C<closecb>
+
+You can also supply a C<closecb> which is called with no parameters
+when there is no more data to be written.  This could be used to flush
+buffered data.
+
+Return true on success.
+
 =head2 Guessing types
+X<FORMATGUESS>
 
 When writing to a file, if you don't supply a C<type> parameter Imager
 will attempt to guess it from the file name.  This is done by calling
@@ -308,6 +371,7 @@ C<\&Imager::def_guess_type>.
 =over
 
 =item def_guess_type()
+X<methods, def_guess_type()>
 
 This is the default function Imager uses to derive a file type from a
 file name.  This is a function, not a method.

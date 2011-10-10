@@ -1,6 +1,6 @@
 #!perl -w
 use strict;
-use Test::More tests => 213;
+use Test::More tests => 215;
 use Imager qw(:all);
 use Imager::Test qw(test_image_raw is_image is_color3 test_image);
 
@@ -613,8 +613,10 @@ for my $comp (@comp) {
     $im->read(file => "testimg/$file")
       or die "Cannot read $file: ", $im->errstr;
 
-    ok(!$im->write(type => 'bmp', callback => limited_write($limit),
-		   maxbuffer => 1),
+    my $io = Imager::io_new_cb(limited_write($limit), undef, undef, undef, 1);
+    $io->set_buffered(0);
+    print "# writing with limit of $limit\n";
+    ok(!$im->write(type => 'bmp', io => $io),
        "$test_index - $desc: write should fail");
     is($im->errstr, $error, "$test_index - $desc: check error message");
 
@@ -664,6 +666,19 @@ for my $comp (@comp) {
   ok($im->write(data => \$data, type => 'bmp'), "write using OO");
   my $size = unpack("V", substr($data, 34, 4));
   is($size, 67800, "check data size");
+}
+
+{ # check close failures are handled correctly
+  my $im = test_image();
+  my $fail_close = sub {
+    Imager::i_push_error(0, "synthetic close failure");
+    return 0;
+  };
+  ok(!$im->write(type => "bmp", callback => sub { 1 },
+		 closecb => $fail_close),
+     "check failing close fails");
+    like($im->errstr, qr/synthetic close failure/,
+	 "check error message");
 }
 
 Imager->close_log;

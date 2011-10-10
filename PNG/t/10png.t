@@ -2,7 +2,7 @@
 use strict;
 use Imager qw(:all);
 use Test::More;
-use Imager::Test qw(test_image_raw);
+use Imager::Test qw(test_image_raw test_image);
 
 -d "testout" or mkdir "testout";
 
@@ -11,7 +11,7 @@ init_log("testout/t102png.log",1);
 $Imager::formats{"png"}
   or plan skip_all => "No png support";
 
-plan tests => 33;
+plan tests => 35;
 
 my $green  = i_color_new(0,   255, 0,   255);
 my $blue   = i_color_new(0,   0,   255, 255);
@@ -145,6 +145,19 @@ EOS
   ok(!Imager->write_multi({ file => 'testout/t102m.png', type => 'png' }, 
 			   @imgs, @imgs),
      'test write_multi() callback failure');
+}
+
+{ # check close failures are handled correctly
+  my $im = test_image();
+  my $fail_close = sub {
+    Imager::i_push_error(0, "synthetic close failure");
+    return 0;
+  };
+  ok(!$im->write(type => "png", callback => sub { 1 },
+		 closecb => $fail_close),
+     "check failing close fails");
+    like($im->errstr, qr/synthetic close failure/,
+	 "check error message");
 }
 
 {

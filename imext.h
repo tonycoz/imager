@@ -234,6 +234,26 @@ extern im_ext_funcs *imager_function_ext_table;
 #define i_render_linef(r, x, y, width, src, line, combine) \
   ((im_extt->f_i_render_linef)((r), (x), (y), (width), (src), (line), (combine)))
 
+#define i_io_getc_imp (im_extt->f_i_io_getc_imp)
+#define i_io_peekc_imp (im_extt->f_i_io_peekc_imp)
+#define i_io_peekn (im_extt->f_i_io_peekn)
+#define i_io_putc_imp (im_extt->f_i_io_putc_imp)
+#define i_io_read (im_extt->f_i_io_read)
+#define i_io_write (im_extt->f_i_io_write)
+#define i_io_seek (im_extt->f_i_io_seek)
+#define i_io_flush (im_extt->f_i_io_flush)
+#define i_io_close (im_extt->f_i_io_close)
+#define i_io_set_buffered (im_extt->f_i_io_set_buffered)
+#define i_io_gets (im_extt->f_i_io_gets)
+#define io_new_fd(fd) ((im_extt->f_io_new_fd)(fd))
+#define io_new_bufchain() ((im_extt->f_io_new_bufchain)())
+#define io_new_buffer(data, len, closecb, closedata) \
+  ((im_extt->f_io_new_buffer)((data), (len), (closecb), (closedata)))
+#define io_new_cb(p, readcb, writecb, seekcb, closecb, destroycb) \
+  ((im_extt->f_io_new_cb)((p), (readcb), (writecb), (seekcb), (closecb), (destroycb)))
+#define io_slurp(ig, datap) ((im_extt->f_io_slurp)((ig), (datap)))
+#define io_glue_destroy(ig) ((im_extt->f_io_glue_destroy)(ig))
+
 #ifdef IMAGER_LOG
 #define mm_log(x) { i_lhead(__FILE__,__LINE__); i_loog x; } 
 #else

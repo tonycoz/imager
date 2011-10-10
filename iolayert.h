@@ -46,55 +46,59 @@ extern char *io_type_names[];
 
 /* Structures to describe data sources */
 
-typedef struct {
-  io_type	type;
-  int		fd;
-} io_fdseek;
-
-typedef struct {
-  io_type	type;		/* Must be first parameter */
-  char		*name;		/* Data source name */
-  char		*data;
-  size_t	len;
-  i_io_closebufp_t     closecb;        /* free memory mapped segment or decrement refcount */
-  void          *closedata;
-} io_buffer;
-
-typedef struct {
-  io_type	type;		/* Must be first parameter */
-  char		*name;		/* Data source name */
-  void		*p;		/* Callback data */
-  i_io_readl_t	readcb;
-  i_io_writel_t	writecb;
-  i_io_seekl_t	seekcb;
-  i_io_closel_t closecb;
-  i_io_destroyl_t      destroycb;
-} io_cb;
-
-typedef union {
-  io_type       type;
-  io_fdseek     fdseek;
-  io_buffer	buffer;
-  io_cb		cb;
-} io_obj;
-
 struct i_io_glue_t {
-  io_obj	source;
-  int		flags;		/* Flags */
-  void		*exdata;	/* Pair specific data */
+  io_type type;
+  void *exdata;
   i_io_readp_t	readcb;
   i_io_writep_t	writecb;
   i_io_seekp_t	seekcb;
   i_io_closep_t	closecb;
   i_io_sizep_t	sizecb;
   i_io_destroyp_t destroycb;
+  unsigned char *buffer;
+  unsigned char *read_ptr;
+  unsigned char *read_end;
+  unsigned char *write_ptr;
+  unsigned char *write_end;
+  size_t buf_size;
+
+  /* non-zero if we encountered EOF */
+  int buf_eof;
+
+  /* non-zero if we've seen an error */
+  int error;
+
+  /* if non-zero we do write buffering (enabled by default) */
+  int buffered;
 };
 
-#define i_io_type(ig) ((ig)->source.ig_type)
-#define i_io_read(ig, buf, size) ((ig)->readcb((ig), (buf), (size)))
-#define i_io_write(ig, data, size) ((ig)->writecb((ig), (data), (size)))
-#define i_io_seek(ig, offset, whence) ((ig)->seekcb((ig), (offset), (whence)))
-#define i_io_close(ig) ((ig)->closecb(ig))
+#define I_IO_DUMP_CALLBACKS 1
+#define I_IO_DUMP_BUFFER 2
+#define I_IO_DUMP_STATUS 4
+#define I_IO_DUMP_DEFAULT (I_IO_DUMP_BUFFER | I_IO_DUMP_STATUS)
 
+#define i_io_type(ig) ((ig)->source.ig_type)
+#define i_io_raw_read(ig, buf, size) ((ig)->readcb((ig), (buf), (size)))
+#define i_io_raw_write(ig, data, size) ((ig)->writecb((ig), (data), (size)))
+#define i_io_raw_seek(ig, offset, whence) ((ig)->seekcb((ig), (offset), (whence)))
+#define i_io_raw_close(ig) ((ig)->closecb(ig))
+#define i_io_is_buffered(ig) ((int)((ig)->buffered))
+
+#define i_io_getc(ig) \
+  ((ig)->read_ptr < (ig)->read_end ? \
+     *((ig)->read_ptr++) : \
+     i_io_getc_imp(ig))
+#define i_io_peekc(ig) \
+  ((ig)->read_ptr < (ig)->read_end ? \
+   *((ig)->read_ptr) :		     \
+     i_io_peekc_imp(ig))
+#define i_io_putc(ig, c) \
+  ((ig)->write_ptr < (ig)->write_end && !(ig)->error ?	\
+    *(ig)->write_ptr++ = (c) :	       \
+      i_io_putc_imp(ig, (c)))
+#define i_io_eof(ig) \
+  ((ig)->read_ptr == (ig)->read_end && (ig)->buf_eof)
+#define i_io_error(ig) \
+  ((ig)->read_ptr == (ig)->read_end && (ig)->error)
 
 #endif

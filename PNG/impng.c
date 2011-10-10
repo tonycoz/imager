@@ -34,7 +34,7 @@ static int CC2C[PNG_COLOR_MASK_PALETTE|PNG_COLOR_MASK_COLOR|PNG_COLOR_MASK_ALPHA
 static void
 wiol_read_data(png_structp png_ptr, png_bytep data, png_size_t length) {
   io_glue *ig = png_get_io_ptr(png_ptr);
-  int rc = ig->readcb(ig, data, length);
+  int rc = i_io_read(ig, data, length);
   if (rc != length) png_error(png_ptr, "Read overflow error on an iolayer source.");
 }
 
@@ -42,7 +42,7 @@ static void
 wiol_write_data(png_structp png_ptr, png_bytep data, png_size_t length) {
   int rc;
   io_glue *ig = png_get_io_ptr(png_ptr);
-  rc = ig->writecb(ig, data, length);
+  rc = i_io_write(ig, data, length);
   if (rc != length) png_error(png_ptr, "Write error on an iolayer source.");
 }
 
@@ -177,7 +177,8 @@ i_writepng_wiol(i_img *im, io_glue *ig) {
 
   png_destroy_write_struct(&png_ptr, &info_ptr);
 
-  ig->closecb(ig);
+  if (i_io_close(ig))
+    return 0;
 
   return(1);
 }

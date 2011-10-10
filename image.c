@@ -1489,194 +1489,6 @@ i_gsamp_bits_fb(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, unsigned *samp
   }
 }
 
-/*
-=back
-
-=head2 Stream reading and writing wrapper functions
-
-=over
-
-=item i_gen_reader(i_gen_read_data *info, char *buf, int length)
-
-Performs general read buffering for file readers that permit reading
-to be done through a callback.
-
-The final callback gets two parameters, a I<need> value, and a I<want>
-value, where I<need> is the amount of data that the file library needs
-to read, and I<want> is the amount of space available in the buffer
-maintained by these functions.
-
-This means if you need to read from a stream that you don't know the
-length of, you can return I<need> bytes, taking the performance hit of
-possibly expensive callbacks (eg. back to perl code), or if you are
-reading from a stream where it doesn't matter if some data is lost, or
-if the total length of the stream is known, you can return I<want>
-bytes.
-
-=cut 
-*/
-
-int
-i_gen_reader(i_gen_read_data *gci, char *buf, int length) {
-  int total;
-
-  if (length < gci->length - gci->cpos) {
-    /* simplest case */
-    memcpy(buf, gci->buffer+gci->cpos, length);
-    gci->cpos += length;
-    return length;
-  }
-  
-  total = 0;
-  memcpy(buf, gci->buffer+gci->cpos, gci->length-gci->cpos);
-  total  += gci->length - gci->cpos;
-  length -= gci->length - gci->cpos;
-  buf    += gci->length - gci->cpos;
-  if (length < (int)sizeof(gci->buffer)) {
-    int did_read;
-    int copy_size;
-    while (length
-	   && (did_read = (gci->cb)(gci->userdata, gci->buffer, length, 
-				    sizeof(gci->buffer))) > 0) {
-      gci->cpos = 0;
-      gci->length = did_read;
-
-      copy_size = i_min(length, gci->length);
-      memcpy(buf, gci->buffer, copy_size);
-      gci->cpos += copy_size;
-      buf += copy_size;
-      total += copy_size;
-      length -= copy_size;
-    }
-  }
-  else {
-    /* just read the rest - too big for our buffer*/
-    int did_read;
-    while ((did_read = (gci->cb)(gci->userdata, buf, length, length)) > 0) {
-      length -= did_read;
-      total += did_read;
-      buf += did_read;
-    }
-  }
-  return total;
-}
-
-/*
-=item i_gen_read_data_new(i_read_callback_t cb, char *userdata)
-
-For use by callback file readers to initialize the reader buffer.
-
-Allocates, initializes and returns the reader buffer.
-
-See also L<image.c/free_gen_read_data> and L<image.c/i_gen_reader>.
-
-=cut
-*/
-i_gen_read_data *
-i_gen_read_data_new(i_read_callback_t cb, char *userdata) {
-  i_gen_read_data *self = mymalloc(sizeof(i_gen_read_data));
-  self->cb = cb;
-  self->userdata = userdata;
-  self->length = 0;
-  self->cpos = 0;
-
-  return self;
-}
-
-/*
-=item i_free_gen_read_data(i_gen_read_data *)
-
-Cleans up.
-
-=cut
-*/
-void i_free_gen_read_data(i_gen_read_data *self) {
-  myfree(self);
-}
-
-/*
-=item i_gen_writer(i_gen_write_data *info, char const *data, int size)
-
-Performs write buffering for a callback based file writer.
-
-Failures are considered fatal, if a write fails then data will be
-dropped.
-
-=cut
-*/
-int 
-i_gen_writer(
-i_gen_write_data *self, 
-char const *data, 
-int size)
-{
-  if (self->filledto && self->filledto+size > self->maxlength) {
-    if (self->cb(self->userdata, self->buffer, self->filledto)) {
-      self->filledto = 0;
-    }
-    else {
-      self->filledto = 0;
-      return 0;
-    }
-  }
-  if (self->filledto+size <= self->maxlength) {
-    /* just save it */
-    memcpy(self->buffer+self->filledto, data, size);
-    self->filledto += size;
-    return 1;
-  }
-  /* doesn't fit - hand it off */
-  return self->cb(self->userdata, data, size);
-}
-
-/*
-=item i_gen_write_data_new(i_write_callback_t cb, char *userdata, int max_length)
-
-Allocates and initializes the data structure used by i_gen_writer.
-
-This should be released with L<image.c/i_free_gen_write_data>
-
-=cut
-*/
-i_gen_write_data *i_gen_write_data_new(i_write_callback_t cb, 
-				       char *userdata, int max_length)
-{
-  i_gen_write_data *self = mymalloc(sizeof(i_gen_write_data));
-  self->cb = cb;
-  self->userdata = userdata;
-  self->maxlength = i_min(max_length, sizeof(self->buffer));
-  if (self->maxlength < 0)
-    self->maxlength = sizeof(self->buffer);
-  self->filledto = 0;
-
-  return self;
-}
-
-/*
-=item i_free_gen_write_data(i_gen_write_data *info, int flush)
-
-Cleans up the write buffer.
-
-Will flush any left-over data if I<flush> is non-zero.
-
-Returns non-zero if flush is zero or if info->cb() returns non-zero.
-
-Return zero only if flush is non-zero and info->cb() returns zero.
-ie. if it fails.
-
-=cut
-*/
-
-int i_free_gen_write_data(i_gen_write_data *info, int flush)
-{
-  int result = !flush || 
-    info->filledto == 0 ||
-    info->cb(info->userdata, info->buffer, info->filledto);
-  myfree(info);
-
-  return result;
-}
-
 struct magic_entry {
   unsigned char *magic;
   size_t magic_size;
@@ -1801,10 +1613,17 @@ i_test_format_probe(io_glue *data, int length) {
   unsigned char head[18];
   ssize_t rc;
 
-  io_glue_commit_types(data);
-  rc = data->readcb(data, head, 18);
+  rc = i_io_peekn(data, head, 18);
   if (rc == -1) return NULL;
-  data->seekcb(data, -rc, SEEK_CUR);
+#if 0
+  {
+    int i;
+    fprintf(stderr, "%d bytes -", (int)rc);
+    for (i = 0; i < rc; ++i)
+      fprintf(stderr, " %02x", head[i]);
+    fprintf(stderr, "\n");
+  }
+#endif
 
   for(i=0; i<sizeof(formats)/sizeof(formats[0]); i++) { 
     struct magic_entry const *entry = formats + i;

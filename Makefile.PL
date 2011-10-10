@@ -181,8 +181,8 @@ my %opts=(
 
 if ($coverage) {
     if ($Config{gccversion}) {
-	push @ARGV, 'OPTIMIZE=-ftest-coverage -fprofile-arcs';
-	#$opts{dynamic_lib} = { OTHERLDFLAGS => '-ftest-coverage -fprofile-arcs' };
+	push @ARGV, 'OPTIMIZE=-ftest-coverage -fprofile-arcs -g';
+	$opts{dynamic_lib} = { OTHERLDFLAGS => '-ftest-coverage -fprofile-arcs' };
     }
     else {
 	die "Don't know the coverage C flags for your compiler\n";

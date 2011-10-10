@@ -36,169 +36,66 @@ Some of these functions are internal.
 */
 
 
-#define BSIZ 1024
 #define misspace(x) (x==' ' || x=='\n' || x=='\r' || x=='\t' || x=='\f' || x=='\v')
 #define misnumber(x) (x <= '9' && x>='0')
 
 static char *typenames[]={"ascii pbm", "ascii pgm", "ascii ppm", "binary pbm", "binary pgm", "binary ppm"};
 
 /*
- * Type to encapsulate the local buffer
- * management skipping over in a file 
- */
-
-typedef struct {
-  io_glue *ig;
-  int len;
-  int cp;
-  char buf[BSIZ];
-} mbuf;
-
-
-static
-void init_buf(mbuf *mb, io_glue *ig) {
-  mb->len = 0;
-  mb->cp  = 0;
-  mb->ig  = ig;
-}
-
-
-
-/*
-=item gnext(mbuf *mb)
-
-Fetches a character and advances in stream by one character.  
-Returns a pointer to the byte or NULL on failure (internal).
-
-   mb - buffer object
-
-=cut
-*/
-
-#define gnext(mb) (((mb)->cp == (mb)->len) ? gnextf(mb) : (mb)->buf + (mb)->cp++)
-
-static
-char *
-gnextf(mbuf *mb) {
-  io_glue *ig = mb->ig;
-  if (mb->cp == mb->len) {
-    mb->cp = 0;
-    mb->len = ig->readcb(ig, mb->buf, BSIZ);
-    if (mb->len == -1) {
-      i_push_error(errno, "file read error");
-      mm_log((1, "i_readpnm: read error\n"));
-      return NULL;
-    }
-    if (mb->len == 0) {
-      mm_log((1, "i_readpnm: end of file\n"));
-      return NULL;
-    }
-  }
-  return &mb->buf[mb->cp++];
-}
-
-
-/*
-=item gpeek(mbuf *mb)
-
-Fetches a character but does NOT advance.  Returns a pointer to
-the byte or NULL on failure (internal).
-
-   mb - buffer object
-
-=cut
-*/
-
-#define gpeek(mb) ((mb)->cp == (mb)->len ? gpeekf(mb) : (mb)->buf + (mb)->cp)
-
-static
-char *
-gpeekf(mbuf *mb) {
-  io_glue *ig = mb->ig;
-  if (mb->cp == mb->len) {
-    mb->cp = 0;
-    mb->len = ig->readcb(ig, mb->buf, BSIZ);
-    if (mb->len == -1) {
-      i_push_error(errno, "read error");
-      mm_log((1, "i_readpnm: read error\n"));
-      return NULL;
-    }
-    if (mb->len == 0) {
-      mm_log((1, "i_readpnm: end of file\n"));
-      return NULL;
-    }
-  }
-  return &mb->buf[mb->cp];
-}
-
-int
-gread(mbuf *mb, unsigned char *buf, size_t read_size) {
-  int total_read = 0;
-  if (mb->cp != mb->len) {
-    int avail_size = mb->len - mb->cp;
-    int use_size = read_size > avail_size ? avail_size : read_size;
-    memcpy(buf, mb->buf+mb->cp, use_size);
-    mb->cp += use_size;
-    total_read += use_size;
-    read_size -= use_size;
-    buf += use_size;
-  }
-  if (read_size) {
-    io_glue *ig = mb->ig;
-    int read_res = i_io_read(ig, buf, read_size);
-    if (read_res >= 0) {
-      total_read += read_res;
-    }
-  }
-  return total_read;
-}
-
-
-/*
-=item skip_spaces(mb)
+=item skip_spaces(ig)
 
 Advances in stream until it is positioned at a
 non white space character. (internal)
 
-   mb - buffer object
+   ig - io_glue
 
 =cut
 */
 
 static
 int
-skip_spaces(mbuf *mb) {
-  char *cp;
-  while( (cp = gpeek(mb)) && misspace(*cp) ) if ( !gnext(mb) ) break;
-  if (!cp) return 0;
+skip_spaces(io_glue *ig) {
+  int c;
+  while( (c = i_io_peekc(ig)) != EOF && misspace(c) ) {
+    if ( i_io_getc(ig) == EOF )
+      break;
+  }
+  if (c == EOF)
+    return 0;
+
   return 1;
 }
 
 
 /*
-=item skip_comment(mb)
+=item skip_comment(ig)
 
 Advances in stream over whitespace and a comment if one is found. (internal)
 
-   mb - buffer object
+   ig - io_glue object
 
 =cut
 */
 
 static
 int
-skip_comment(mbuf *mb) {
-  char *cp;
+skip_comment(io_glue *ig) {
+  int c;
 
-  if (!skip_spaces(mb)) return 0;
+  if (!skip_spaces(ig))
+    return 0;
 
-  if (!(cp = gpeek(mb))) return 0;
-  if (*cp == '#') {
-    while( (cp = gpeek(mb)) && (*cp != '\n' && *cp != '\r') ) {
-      if ( !gnext(mb) ) break;
+  if ((c = i_io_peekc(ig)) == EOF)
+    return 0;
+
+  if (c == '#') {
+    while( (c = i_io_peekc(ig)) != EOF && (c != '\n' && c != '\r') ) {
+      if ( i_io_getc(ig) == EOF )
+	break;
     }
   }
-  if (!cp) return 0;
+  if (c == EOF)
+    return 0;
   
   return 1;
 }
@@ -218,32 +115,33 @@ on success else false.
 
 static
 int
-gnum(mbuf *mb, int *i) {
-  char *cp;
+gnum(io_glue *ig, int *i) {
+  int c;
   *i = 0;
 
-  if (!skip_spaces(mb)) return 0; 
+  if (!skip_spaces(ig)) return 0; 
 
-  if (!(cp = gpeek(mb))) 
+  if ((c = i_io_peekc(ig)) == EOF) 
     return 0;
-  if (!misnumber(*cp))
+  if (!misnumber(c))
     return 0;
-  while( (cp = gpeek(mb)) && misnumber(*cp) ) {
-    int work = *i*10+(*cp-'0');
+  while( (c = i_io_peekc(ig)) != EOF && misnumber(c) ) {
+    int work = *i * 10 + (c - '0');
     if (work < *i) {
       /* overflow */
       i_push_error(0, "integer overflow");
       return 0;
     }
     *i = work;
-    cp = gnext(mb);
+    i_io_getc(ig);
   }
+
   return 1;
 }
 
 static
 i_img *
-read_pgm_ppm_bin8(mbuf *mb, i_img *im, int width, int height, 
+read_pgm_ppm_bin8(io_glue *ig, i_img *im, int width, int height, 
                   int channels, int maxval, int allow_incomplete) {
   i_color *line, *linep;
   int read_size;
@@ -257,7 +155,7 @@ read_pgm_ppm_bin8(mbuf *mb, i_img *im, int width, int height,
   for(y=0;y<height;y++) {
     linep = line;
     readp = read_buf;
-    if (gread(mb, read_buf, read_size) != read_size) {
+    if (i_io_read(ig, read_buf, read_size) != read_size) {
       myfree(line);
       myfree(read_buf);
       if (allow_incomplete) {
@@ -301,7 +199,7 @@ read_pgm_ppm_bin8(mbuf *mb, i_img *im, int width, int height,
 
 static
 i_img *
-read_pgm_ppm_bin16(mbuf *mb, i_img *im, int width, int height, 
+read_pgm_ppm_bin16(io_glue *ig, i_img *im, int width, int height, 
                   int channels, int maxval, int allow_incomplete) {
   i_fcolor *line, *linep;
   int read_size;
@@ -315,7 +213,7 @@ read_pgm_ppm_bin16(mbuf *mb, i_img *im, int width, int height,
   for(y=0;y<height;y++) {
     linep = line;
     readp = read_buf;
-    if (gread(mb, read_buf, read_size) != read_size) {
+    if (i_io_read(ig, read_buf, read_size) != read_size) {
       myfree(line);
       myfree(read_buf);
       if (allow_incomplete) {
@@ -349,7 +247,7 @@ read_pgm_ppm_bin16(mbuf *mb, i_img *im, int width, int height,
 
 static 
 i_img *
-read_pbm_bin(mbuf *mb, i_img *im, int width, int height, int allow_incomplete) {
+read_pbm_bin(io_glue *ig, i_img *im, int width, int height, int allow_incomplete) {
   i_palidx *line, *linep;
   int read_size;
   unsigned char *read_buf, *readp;
@@ -360,7 +258,7 @@ read_pbm_bin(mbuf *mb, i_img *im, int width, int height, int allow_incomplete) {
   read_size = (width + 7) / 8;
   read_buf = mymalloc(read_size);
   for(y = 0; y < height; y++) {
-    if (gread(mb, read_buf, read_size) != read_size) {
+    if (i_io_read(ig, read_buf, read_size) != read_size) {
       myfree(line);
       myfree(read_buf);
       if (allow_incomplete) {
@@ -399,7 +297,7 @@ read_pbm_bin(mbuf *mb, i_img *im, int width, int height, int allow_incomplete) {
 */
 static 
 i_img *
-read_pbm_ascii(mbuf *mb, i_img *im, int width, int height, int allow_incomplete) {
+read_pbm_ascii(io_glue *ig, i_img *im, int width, int height, int allow_incomplete) {
   i_palidx *line, *linep;
   int x, y;
 
@@ -407,9 +305,9 @@ read_pbm_ascii(mbuf *mb, i_img *im, int width, int height, int allow_incomplete)
   for(y = 0; y < height; y++) {
     linep = line;
     for(x = 0; x < width; ++x) {
-      char *cp;
-      skip_spaces(mb);
-      if (!(cp = gnext(mb)) || (*cp != '0' && *cp != '1')) {
+      int c;
+      skip_spaces(ig);
+      if ((c = i_io_getc(ig)) == EOF || (c != '0' && c != '1')) {
         myfree(line);
         if (allow_incomplete) {
           i_tags_setn(&im->tags, "i_incomplete", 1);
@@ -417,7 +315,7 @@ read_pbm_ascii(mbuf *mb, i_img *im, int width, int height, int allow_incomplete)
           return im;
         }
         else {
-          if (cp)
+          if (c != EOF)
             i_push_error(0, "invalid data for ascii pnm");
           else
             i_push_error(0, "short read - file truncated?");
@@ -425,7 +323,7 @@ read_pbm_ascii(mbuf *mb, i_img *im, int width, int height, int allow_incomplete)
           return NULL;
         }
       }
-      *linep++ = *cp == '0' ? 0 : 1;
+      *linep++ = c == '0' ? 0 : 1;
     }
     i_ppal(im, 0, width, y, line);
   }
@@ -436,7 +334,7 @@ read_pbm_ascii(mbuf *mb, i_img *im, int width, int height, int allow_incomplete)
 
 static
 i_img *
-read_pgm_ppm_ascii(mbuf *mb, i_img *im, int width, int height, int channels, 
+read_pgm_ppm_ascii(io_glue *ig, i_img *im, int width, int height, int channels, 
                    int maxval, int allow_incomplete) {
   i_color *line, *linep;
   int x, y, ch;
@@ -449,7 +347,7 @@ read_pgm_ppm_ascii(mbuf *mb, i_img *im, int width, int height, int channels,
       for(ch=0; ch<channels; ch++) {
         int sample;
         
-        if (!gnum(mb, &sample)) {
+        if (!gnum(ig, &sample)) {
           myfree(line);
           if (allow_incomplete) {
             i_tags_setn(&im->tags, "i_incomplete", 1);
@@ -457,7 +355,7 @@ read_pgm_ppm_ascii(mbuf *mb, i_img *im, int width, int height, int channels,
             return im;
           }
           else {
-            if (gpeek(mb))
+            if (i_io_peekc(ig) != EOF)
               i_push_error(0, "invalid data for ascii pnm");
             else
               i_push_error(0, "short read - file truncated?");
@@ -480,7 +378,7 @@ read_pgm_ppm_ascii(mbuf *mb, i_img *im, int width, int height, int channels,
 
 static
 i_img *
-read_pgm_ppm_ascii_16(mbuf *mb, i_img *im, int width, int height, 
+read_pgm_ppm_ascii_16(io_glue *ig, i_img *im, int width, int height, 
                       int channels, int maxval, int allow_incomplete) {
   i_fcolor *line, *linep;
   int x, y, ch;
@@ -493,7 +391,7 @@ read_pgm_ppm_ascii_16(mbuf *mb, i_img *im, int width, int height,
       for(ch=0; ch<channels; ch++) {
         int sample;
         
-        if (!gnum(mb, &sample)) {
+        if (!gnum(ig, &sample)) {
           myfree(line);
           if (allow_incomplete) {
 	    i_tags_setn(&im->tags, "i_incomplete", 1);
@@ -501,7 +399,7 @@ read_pgm_ppm_ascii_16(mbuf *mb, i_img *im, int width, int height,
 	    return im;
           }
           else {
-            if (gpeek(mb))
+            if (i_io_peekc(ig) != EOF)
               i_push_error(0, "invalid data for ascii pnm");
             else
               i_push_error(0, "short read - file truncated?");
@@ -532,42 +430,32 @@ Retrieve an image and stores in the iolayer object. Returns NULL on fatal error.
 
 =cut
 */
-static i_img *i_readpnm_wiol_low( mbuf*, int);
 
 i_img *
-i_readpnm_wiol(io_glue *ig, int allow_incomplete) {
-  mbuf buf;
-  io_glue_commit_types(ig);
-  init_buf(&buf, ig);
-
-  return i_readpnm_wiol_low( &buf, allow_incomplete );
-}
-
-static i_img *
-i_readpnm_wiol_low( mbuf *buf, int allow_incomplete) {
+i_readpnm_wiol( io_glue *ig, int allow_incomplete) {
   i_img* im;
   int type;
   int width, height, maxval, channels;
   int rounder;
-  char *cp;
+  int c;
 
   i_clear_error();
-  mm_log((1,"i_readpnm(ig %p, allow_incomplete %d)\n", buf->ig, allow_incomplete));
+  mm_log((1,"i_readpnm(ig %p, allow_incomplete %d)\n", ig, allow_incomplete));
 
-  cp = gnext(buf);
+  c = i_io_getc(ig);
 
-  if (!cp || *cp != 'P') {
+  if (c != 'P') {
     i_push_error(0, "bad header magic, not a PNM file");
     mm_log((1, "i_readpnm: Could not read header of file\n"));
     return NULL;
   }
 
-  if ( !(cp = gnext(buf)) ) {
+  if ((c = i_io_getc(ig)) == EOF ) {
     mm_log((1, "i_readpnm: Could not read header of file\n"));
     return NULL;
   }
   
-  type = *cp-'0';
+  type = c - '0';
 
   if (type < 1 || type > 6) {
     i_push_error(0, "unknown PNM file type, not a PNM file");
@@ -575,12 +463,12 @@ i_readpnm_wiol_low( mbuf *buf, int allow_incomplete) {
     return NULL;
   }
 
-  if ( !(cp = gnext(buf)) ) {
+  if ( (c = i_io_getc(ig)) == EOF ) {
     mm_log((1, "i_readpnm: Could not read header of file\n"));
     return NULL;
   }
   
-  if ( !misspace(*cp) ) {
+  if ( !misspace(c) ) {
     i_push_error(0, "unexpected character, not a PNM file");
     mm_log((1, "i_readpnm: Not a pnm file\n"));
     return NULL;
@@ -591,38 +479,38 @@ i_readpnm_wiol_low( mbuf *buf, int allow_incomplete) {
   
   /* Read sizes and such */
 
-  if (!skip_comment(buf)) {
+  if (!skip_comment(ig)) {
     i_push_error(0, "while skipping to width");
     mm_log((1, "i_readpnm: error reading before width\n"));
     return NULL;
   }
   
-  if (!gnum(buf, &width)) {
+  if (!gnum(ig, &width)) {
     i_push_error(0, "could not read image width");
     mm_log((1, "i_readpnm: error reading width\n"));
     return NULL;
   }
 
-  if (!skip_comment(buf)) {
+  if (!skip_comment(ig)) {
     i_push_error(0, "while skipping to height");
     mm_log((1, "i_readpnm: error reading before height\n"));
     return NULL;
   }
 
-  if (!gnum(buf, &height)) {
+  if (!gnum(ig, &height)) {
     i_push_error(0, "could not read image height");
     mm_log((1, "i_readpnm: error reading height\n"));
     return NULL;
   }
   
   if (!(type == 1 || type == 4)) {
-    if (!skip_comment(buf)) {
+    if (!skip_comment(ig)) {
       i_push_error(0, "while skipping to maxval");
       mm_log((1, "i_readpnm: error reading before maxval\n"));
       return NULL;
     }
 
-    if (!gnum(buf, &maxval)) {
+    if (!gnum(ig, &maxval)) {
       i_push_error(0, "could not read maxval");
       mm_log((1, "i_readpnm: error reading maxval\n"));
       return NULL;
@@ -642,7 +530,7 @@ i_readpnm_wiol_low( mbuf *buf, int allow_incomplete) {
   } else maxval=1;
   rounder = maxval / 2;
 
-  if (!(cp = gnext(buf)) || !misspace(*cp)) {
+  if ((c = i_io_getc(ig)) == EOF || !misspace(c)) {
     i_push_error(0, "garbage in header, invalid PNM file");
     mm_log((1, "i_readpnm: garbage in header\n"));
     return NULL;
@@ -674,27 +562,27 @@ i_readpnm_wiol_low( mbuf *buf, int allow_incomplete) {
 
   switch (type) {
   case 1: /* Ascii types */
-    im = read_pbm_ascii(buf, im, width, height, allow_incomplete);
+    im = read_pbm_ascii(ig, im, width, height, allow_incomplete);
     break;
 
   case 2:
   case 3:
     if (maxval > 255)
-      im = read_pgm_ppm_ascii_16(buf, im, width, height, channels, maxval, allow_incomplete);
+      im = read_pgm_ppm_ascii_16(ig, im, width, height, channels, maxval, allow_incomplete);
     else
-      im = read_pgm_ppm_ascii(buf, im, width, height, channels, maxval, allow_incomplete);
+      im = read_pgm_ppm_ascii(ig, im, width, height, channels, maxval, allow_incomplete);
     break;
     
   case 4: /* binary pbm */
-    im = read_pbm_bin(buf, im, width, height, allow_incomplete);
+    im = read_pbm_bin(ig, im, width, height, allow_incomplete);
     break;
 
   case 5: /* binary pgm */
   case 6: /* binary ppm */
     if (maxval > 255)
-      im = read_pgm_ppm_bin16(buf, im, width, height, channels, maxval, allow_incomplete);
+      im = read_pgm_ppm_bin16(ig, im, width, height, channels, maxval, allow_incomplete);
     else
-      im = read_pgm_ppm_bin8(buf, im, width, height, channels, maxval, allow_incomplete);
+      im = read_pgm_ppm_bin8(ig, im, width, height, channels, maxval, allow_incomplete);
     break;
 
   default:
@@ -725,17 +613,15 @@ static void free_images(i_img **imgs, int count) {
 i_img **i_readpnm_multi_wiol(io_glue *ig, int *count, int allow_incomplete) {
     i_img **results = NULL;
     i_img *img = NULL;
-    char *cp = NULL;
-    mbuf buf;
+    char c = EOF;
     int result_alloc = 0, 
         value = 0, 
         eof = 0;
     *count=0;
-    io_glue_commit_types(ig);
-    init_buf(&buf, ig);
+
     do {
         mm_log((1, "read image %i\n", 1+*count));
-        img = i_readpnm_wiol_low( &buf, allow_incomplete );
+        img = i_readpnm_wiol( ig, allow_incomplete );
         if( !img ) {
             free_images( results, *count );
             return NULL;
@@ -758,7 +644,7 @@ i_img **i_readpnm_multi_wiol(io_glue *ig, int *count, int allow_incomplete) {
         if( i_tags_get_int(&img->tags, "i_incomplete", 0, &value ) && value) {
             eof = 1;
         }
-        else if( skip_spaces( &buf ) && ( cp=gpeek( &buf ) ) && *cp == 'P' ) {
+        else if( skip_spaces( ig ) && ( c=i_io_peekc( ig ) ) != EOF && c == 'P' ) {
             eof = 0;
         }
         else {
@@ -893,10 +779,9 @@ i_writeppm_wiol(i_img *im, io_glue *ig) {
   /* Add code to get the filename info from the iolayer */
   /* Also add code to check for mmapped code */
 
-  io_glue_commit_types(ig);
-
   if (i_img_is_monochrome(im, &zero_is_white)) {
-    return write_pbm(im, ig, zero_is_white);
+    if (!write_pbm(im, ig, zero_is_white))
+      return 0;
   }
   else {
     int type;
@@ -928,7 +813,7 @@ i_writeppm_wiol(i_img *im, io_glue *ig) {
     sprintf(header,"P%d\n#CREATOR: Imager\n%" i_DF " %" i_DF"\n%d\n", 
             type, i_DFc(im->xsize), i_DFc(im->ysize), maxval);
 
-    if (ig->writecb(ig,header,strlen(header)) != strlen(header)) {
+    if (i_io_write(ig,header,strlen(header)) != strlen(header)) {
       i_push_error(errno, "could not write ppm header");
       mm_log((1,"i_writeppm: unable to write ppm header.\n"));
       return(0);
@@ -936,7 +821,7 @@ i_writeppm_wiol(i_img *im, io_glue *ig) {
 
     if (!im->virtual && im->bits == i_8_bits && im->type == i_direct_type
 	&& im->channels == want_channels) {
-      if (ig->writecb(ig,im->idata,im->bytes) != im->bytes) {
+      if (i_io_write(ig,im->idata,im->bytes) != im->bytes) {
         i_push_error(errno, "could not write ppm data");
         return 0;
       }
@@ -950,7 +835,10 @@ i_writeppm_wiol(i_img *im, io_glue *ig) {
         return 0;
     }
   }
-  ig->closecb(ig);
+  if (i_io_close(ig)) {
+    i_push_errorf(i_io_error(ig), "Error closing stream: %d", i_io_error(ig));
+    return 0;
+  }
 
   return(1);
 }

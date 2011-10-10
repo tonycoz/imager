@@ -189,8 +189,10 @@ sub make_func_list {
   my $in_struct;
   while (<FUNCS>) {
     /^typedef struct/ && ++$in_struct;
-    if ($in_struct && /\(\*f_(i_\w+)/) {
-      push @funcs, $1;
+    if ($in_struct && /\(\*f_(io?_\w+)/) {
+      my $name = $1;
+      $name =~ s/_imp$//;
+      push @funcs, $name;
     }
     if (/^\} im_ext_funcs;$/) {
       $in_struct

@@ -1,8 +1,8 @@
 #!perl -w
 use strict;
-use Test::More tests => 47;
+use Test::More tests => 53;
 use Imager qw(:all);
-use Imager::Test qw/is_color3 is_color4/;
+use Imager::Test qw/is_color3 is_color4 test_image test_image_mono/;
 
 -d "testout" or mkdir "testout";
 
@@ -166,7 +166,7 @@ SKIP:
   open RAW, "< testout/t103_empty.raw"
     or die "Cannot open testout/t103_empty.raw: $!";
   my $im = Imager->new(xsize => 50, ysize=>50);
-  ok(!$im->write(fh => \*RAW, type => 'raw'),
+  ok(!$im->write(fh => \*RAW, type => 'raw', buffered => 0),
      "write to open for read handle");
   cmp_ok($im->errstr, '=~', '^Could not write to file: write\(\) failure', 
 	 "check error message");
@@ -268,6 +268,24 @@ SKIP:
   is($im->getchannels, 4, "should have 4 channels");
   is_color4($im->getpixel(x => 2, y => 1), 0x12, 0x23, 0x34, 0x00,
 	    "check last channel zeroed");
+}
+
+{
+  my @ims = ( basic => test_image(), mono => test_image_mono() );
+  push @ims, masked => test_image()->masked();
+
+  my $fail_close = sub {
+    Imager::i_push_error(0, "synthetic close failure");
+    return 0;
+  };
+
+  while (my ($type, $im) = splice(@ims, 0, 2)) {
+    my $io = Imager::io_new_cb(sub { 1 }, undef, undef, $fail_close);
+    ok(!$im->write(io => $io, type => "raw"),
+       "write $type image with a failing close handler");
+    like($im->errstr, qr/synthetic close failure/,
+	 "check error message");
+  }
 }
 
 Imager->close_log;

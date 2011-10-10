@@ -852,7 +852,7 @@ static int
 io_glue_read_cb(GifFileType *gft, GifByteType *buf, int length) {
   io_glue *ig = (io_glue *)gft->UserData;
 
-  return ig->readcb(ig, buf, length);
+  return i_io_read(ig, buf, length);
 }
 
 i_img *
@@ -1772,7 +1772,7 @@ static int
 io_glue_write_cb(GifFileType *gft, const GifByteType *data, int length) {
   io_glue *ig = (io_glue *)gft->UserData;
 
-  return ig->writecb(ig, data, length);
+  return i_io_write(ig, data, length);
 }
 
 
@@ -1800,7 +1800,8 @@ i_writegif_wiol(io_glue *ig, i_quantize *quant, i_img **imgs,
   
   result = i_writegif_low(quant, GifFile, imgs, count);
   
-  ig->closecb(ig);
+  if (i_io_close(ig))
+    return 0;
   
   return result;
 }

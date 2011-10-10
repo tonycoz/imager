@@ -105,7 +105,7 @@ wiol_fill_input_buffer(j_decompress_ptr cinfo) {
   
   mm_log((1,"wiol_fill_input_buffer(cinfo %p)\n", cinfo));
   
-  nbytes = src->data->readcb(src->data, src->buffer, JPGS);
+  nbytes = i_io_read(src->data, src->buffer, JPGS);
   
   if (nbytes <= 0) { /* Insert a fake EOI marker */
     src->pub.next_input_byte = fake_eoi;
@@ -219,7 +219,7 @@ wiol_empty_output_buffer(j_compress_ptr cinfo) {
   */
 
   mm_log((1,"wiol_empty_output_buffer(cinfo %p)\n", cinfo));
-  rc = dest->data->writecb(dest->data, dest->buffer, JPGS);
+  rc = i_io_write(dest->data, dest->buffer, JPGS);
 
   if (rc != JPGS) { /* XXX: Should raise some jpeg error */
     myfree(dest->buffer);
@@ -238,11 +238,11 @@ wiol_term_destination (j_compress_ptr cinfo) {
   /* yes, this needs to flush the buffer */
   /* needs error handling */
 
-  if (dest->data->writecb(dest->data, dest->buffer, nbytes) != nbytes) {
+  if (i_io_write(dest->data, dest->buffer, nbytes) != nbytes) {
     myfree(dest->buffer);
     ERREXIT(cinfo, JERR_FILE_WRITE);
   }
-  
+
   if (dest != NULL) myfree(dest->buffer);
 }
 
@@ -721,7 +721,8 @@ i_writejpeg_wiol(i_img *im, io_glue *ig, int qfactor) {
 
   jpeg_destroy_compress(&cinfo);
 
-  ig->closecb(ig);
+  if (i_io_close(ig))
+    return 0;
 
   return(1);
 }

@@ -60,6 +60,13 @@ Imager::APIRef - Imager's C API - reference.
                           i_fr_triangle, 0, i_fts_grid, 9, 1, segs);
   i_fill_destroy(fill);
 
+  # I/O Layers
+  ssize_t count = i_io_peekn(ig, buffer, sizeof(buffer));
+  ssize_t result = i_io_write(io, buffer, size)
+  char buffer[BUFSIZ]
+  ssize_t len = i_io_gets(buffer, sizeof(buffer), '\n');
+  io_glue_destroy(ig);
+
   # Image
 
   # Image creation/destruction
@@ -1026,6 +1033,270 @@ Call to destroy any fill object.
 
 =for comment
 From: File fills.c
+
+
+=back
+
+=head2 I/O Layers
+
+=over
+
+=item io_new_bufchain()
+
+returns a new io_glue object that has the 'empty' source and but can
+be written to and read from later (like a pseudo file).
+
+
+=for comment
+From: File iolayer.c
+
+=item io_new_buffer(data, length)
+
+Returns a new io_glue object that has the source defined as reading
+from specified buffer.  Note that the buffer is not copied.
+
+   data - buffer to read from
+   length - length of buffer
+
+
+=for comment
+From: File iolayer.c
+
+=item io_new_cb(p, read_cb, write_cb, seek_cb, close_cb, destroy_cb)
+
+Create a new I/O layer object that calls your supplied callbacks.
+
+In general the callbacks should behave like the corresponding POSIX
+primitives.
+
+=over
+
+=item *
+
+C<read_cb>(p, buffer, length) should read up to C<length> bytes into
+C<buffer> and return the number of bytes read.  At end of file, return
+0.  On error, return -1.
+
+=item *
+
+C<write_cb>(p, buffer, length) should write up to C<length> bytes from
+C<buffer> and return the number of bytes written.  A return value <= 0
+will be treated as an error.
+
+=item *
+
+C<seekcb>(p, offset, whence) should seek and return the new offset.
+
+=item *
+
+C<close_cb>(p) should return 0 on success, -1 on failure.
+
+=item *
+
+C<destroy_cb>(p) should release any memory specific to your callback
+handlers.
+
+=back
+
+
+=for comment
+From: File iolayer.c
+
+=item io_new_fd(fd)
+
+returns a new io_glue object that has the source defined as reading
+from specified file descriptor.  Note that the the interface to receiving
+data from the io_glue callbacks hasn't been done yet.
+
+   fd - file descriptor to read/write from
+
+
+=for comment
+From: File iolayer.c
+
+=item i_io_close(io)
+
+Flush any pending output and perform the close action for the stream.
+
+Returns 0 on success.
+
+
+=for comment
+From: File iolayer.c
+
+=item i_io_flush(io)
+
+Flush any buffered output.
+
+Returns true on success,
+
+
+=for comment
+From: File iolayer.c
+
+=item i_io_getc(ig)
+
+A macro to read a single byte from a buffered I/O glue object.
+
+Returns EOF on failure, or a byte.
+
+
+=for comment
+From: File iolayer.c
+
+=item i_io_gets(ig, buffer, size, end_of_line)
+
+  char buffer[BUFSIZ]
+  ssize_t len = i_io_gets(buffer, sizeof(buffer), '\n');
+
+Read up to C<size>-1 bytes from the stream C<ig> into C<buffer>.
+
+If the byte C<end_of_line> is seen then no further bytes will be read.
+
+Returns the number of bytes read.
+
+Always C<NUL> terminates the buffer.
+
+
+=for comment
+From: File iolayer.c
+
+=item i_io_peekc(ig)
+
+Read the next character from the stream without advancing the stream.
+
+On error or end of file, return EOF.
+
+For unbuffered streams a single character buffer will be setup.
+
+
+=for comment
+From: File iolayer.c
+
+=item i_io_peekn(ig, buffer, size)
+
+  ssize_t count = i_io_peekn(ig, buffer, sizeof(buffer));
+
+Buffer at least C<size> (at most C<< ig->buf_size >> bytes of data
+from the stream and return C<size> bytes of it to the caller in
+C<buffer>.
+
+This ignores the buffered state of the stream, and will always setup
+buffering if needed.
+
+If no C<type> parameter is provided to Imager::read() or
+Imager::read_multi(), Imager will call C<i_io_peekn()> when probing
+for the file format.
+
+Returns -1 on error, 0 if there is no data before EOF, or the number
+of bytes read into C<buffer>.
+
+
+=for comment
+From: File iolayer.c
+
+=item i_io_putc(ig, c)
+
+Write a single character to the stream.
+
+On success return c, on error returns EOF
+
+
+=for comment
+From: File iolayer.c
+
+=item i_io_read(io, buffer, size)
+
+Read up to C<size> bytes from the stream C<io> into C<buffer>.
+
+Returns the number of bytes read.  Returns 0 on end of file.  Returns
+-1 on error.
+
+
+=for comment
+From: File iolayer.c
+
+=item i_io_seek(io, offset, whence)
+
+Seek within the stream.
+
+Acts like perl's seek.
+
+
+=for comment
+From: File iolayer.c
+
+=item i_io_set_buffered(io, buffered)
+
+Set the buffering mode of the stream.
+
+If you switch buffering off on a stream with buffering on:
+
+=over
+
+=item *
+
+any buffered output will be flushed.
+
+=item *
+
+any existing buffered input will be consumed before reads become
+unbuffered.
+
+=back
+
+Returns true on success.  This may fail if any buffered output cannot
+be flushed.
+
+
+=for comment
+From: File iolayer.c
+
+=item i_io_write(io, buffer, size)
+
+  ssize_t result = i_io_write(io, buffer, size)
+
+Write to the given I/O stream.
+
+Returns the number of bytes written.
+
+
+=for comment
+From: File iolayer.c
+
+=item io_slurp(ig, c)
+
+Takes the source that the io_glue is bound to and allocates space for
+a return buffer and returns the entire content in a single buffer.
+Note: This only works for io_glue objects created by
+io_new_bufchain().  It is useful for saving to scalars and such.
+
+   ig - io_glue object
+   c  - pointer to a pointer to where data should be copied to
+
+  char *data;
+  size_t size = io_slurp(ig, &data);
+  ... do something with the data ...
+  myfree(data);
+
+io_slurp() will abort the program if the supplied I/O layer is not
+from io_new_bufchain().
+
+
+=for comment
+From: File iolayer.c
+
+=item io_glue_destroy(ig)
+
+  io_glue_destroy(ig);
+
+Destroy an io_glue objects.  Should clean up all related buffers.
+
+   ig - io_glue object to destroy.
+
+
+=for comment
+From: File iolayer.c
 
 
 =back

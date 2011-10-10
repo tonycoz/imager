@@ -246,58 +246,6 @@ size_t i_tt_glyph_name(TT_Fonthandle *handle, unsigned long ch, char *name_buf,
 
 #endif  /* End of freetype headers */
 
-/* functions for reading and writing formats */
-
-/* general reader callback 
- userdata - data the user passed into the reader
- buffer - the buffer to fill with data
- need - the amount of data needed
- want - the amount of space we have to store data
- fill buffer and return the number of bytes read, 0 for eof, -1 for error
-*/
-
-typedef int (*i_read_callback_t)(char *userdata, char *buffer, int need, 
-				 int want);
-
-/* i_gen_reader() translates the low-level requests from whatever library
-   into buffered requests.
-   but the called function can always bypass buffering by only ever 
-   reading I<need> bytes.
-*/
-#define CBBUFSIZ 4096
-
-typedef struct {
-  i_read_callback_t cb;
-  char *userdata;
-  char buffer[CBBUFSIZ];
-  int length;
-  int cpos;
-} i_gen_read_data;
-
-extern int  i_gen_reader(i_gen_read_data *info, char *buffer, int need);
-extern      i_gen_read_data *i_gen_read_data_new(i_read_callback_t cb, char *userdata);
-extern void i_free_gen_read_data(i_gen_read_data *);
-
-/* general writer callback
-   userdata - the data the user passed into the writer
-   data - the data to write
-   data_size - the number of bytes to write
-   write the data, return non-zero on success, zero on failure.
-*/
-typedef int (*i_write_callback_t)(char *userdata, char const *data, int size);
-
-typedef struct {
-  i_write_callback_t cb;
-  char *userdata;
-  char buffer[CBBUFSIZ];
-  int maxlength;
-  int filledto;
-} i_gen_write_data;
-
-extern int i_gen_writer(i_gen_write_data *info, char const *data, int size);
-extern i_gen_write_data *i_gen_write_data_new(i_write_callback_t cb, char *userdata, int maxlength);
-extern int i_free_gen_write_data(i_gen_write_data *, int flush);
-
 extern void i_quant_makemap(i_quantize *quant, i_img **imgs, int count);
 extern i_palidx *i_quant_translate(i_quantize *quant, i_img *img);
 extern void i_quant_transparent(i_quantize *quant, i_palidx *indices, i_img *img, i_palidx trans_index);

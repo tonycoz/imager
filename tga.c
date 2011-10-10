@@ -433,7 +433,7 @@ int
 tga_source_read(tga_source *s, unsigned char *buf, size_t pixels) {
   int cp = 0, j, k;
   if (!s->compressed) {
-    if (s->ig->readcb(s->ig, buf, pixels*s->bytepp) != pixels*s->bytepp) return 0;
+    if (i_io_read(s->ig, buf, pixels*s->bytepp) != pixels*s->bytepp) return 0;
     return 1;
   }
   
@@ -442,7 +442,7 @@ tga_source_read(tga_source *s, unsigned char *buf, size_t pixels) {
     if (s->len == 0) s->state = NoInit;
     switch (s->state) {
     case NoInit:
-      if (s->ig->readcb(s->ig, &s->hdr, 1) != 1) return 0;
+      if (i_io_read(s->ig, &s->hdr, 1) != 1) return 0;
 
       s->len = (s->hdr &~(1<<7))+1;
       s->state = (s->hdr & (1<<7)) ? Rle : Raw;
@@ -452,7 +452,7 @@ tga_source_read(tga_source *s, unsigned char *buf, size_t pixels) {
 	printf("%04d %s: %d\n", cnt++, s->state==Rle?"RLE":"RAW", s->len);
  */
      }
-      if (s->state == Rle && s->ig->readcb(s->ig, s->cval, s->bytepp) != s->bytepp) return 0;
+      if (s->state == Rle && i_io_read(s->ig, s->cval, s->bytepp) != s->bytepp) return 0;
 
       break;
     case Rle:
@@ -464,7 +464,7 @@ tga_source_read(tga_source *s, unsigned char *buf, size_t pixels) {
       break;
     case Raw:
       ml = i_min(s->len, pixels-cp);
-      if (s->ig->readcb(s->ig, buf+cp*s->bytepp, ml*s->bytepp) != ml*s->bytepp) return 0;
+      if (i_io_read(s->ig, buf+cp*s->bytepp, ml*s->bytepp) != ml*s->bytepp) return 0;
       cp     += ml;
       s->len -= ml;
       break;
@@ -495,7 +495,7 @@ tga_dest_write(tga_dest *s, unsigned char *buf, size_t pixels) {
   int cp = 0;
 
   if (!s->compressed) {
-    if (s->ig->writecb(s->ig, buf, pixels*s->bytepp) != pixels*s->bytepp) return 0;
+    if (i_io_write(s->ig, buf, pixels*s->bytepp) != pixels*s->bytepp) return 0;
     return 1;
   }
   
@@ -506,9 +506,9 @@ tga_dest_write(tga_dest *s, unsigned char *buf, size_t pixels) {
     while(tlen) {
       unsigned char clen = (tlen>128) ? 128 : tlen;
       clen--;
-      if (s->ig->writecb(s->ig, &clen, 1) != 1) return 0;
+      if (i_io_write(s->ig, &clen, 1) != 1) return 0;
       clen++;
-      if (s->ig->writecb(s->ig, buf+cp*s->bytepp, clen*s->bytepp) != clen*s->bytepp) return 0;
+      if (i_io_write(s->ig, buf+cp*s->bytepp, clen*s->bytepp) != clen*s->bytepp) return 0;
       tlen -= clen;
       cp += clen;
     }
@@ -518,9 +518,9 @@ tga_dest_write(tga_dest *s, unsigned char *buf, size_t pixels) {
     while (tlen) {
       unsigned char clen = (tlen>128) ? 128 : tlen;
       clen = (clen - 1) | 0x80;
-      if (s->ig->writecb(s->ig, &clen, 1) != 1) return 0;
+      if (i_io_write(s->ig, &clen, 1) != 1) return 0;
       clen = (clen & ~0x80) + 1;
-      if (s->ig->writecb(s->ig, buf+cp*s->bytepp, s->bytepp) != s->bytepp) return 0;
+      if (i_io_write(s->ig, buf+cp*s->bytepp, s->bytepp) != s->bytepp) return 0;
       tlen -= clen;
       cp += clen;
     }
@@ -558,7 +558,7 @@ tga_palette_read(io_glue *ig, i_img *img, int bytepp, int colourmaplength) {
   palbsize = colourmaplength*bytepp;
   palbuf   = mymalloc(palbsize);
   
-  if (ig->readcb(ig, palbuf, palbsize) != palbsize) {
+  if (i_io_read(ig, palbuf, palbsize) != palbsize) {
     i_push_error(errno, "could not read targa colourmap");
     return 0;
   }
@@ -600,7 +600,7 @@ tga_palette_write(io_glue *ig, i_img *img, int bitspp, int colourmaplength) {
     color_pack(palbuf+i*bytepp, bitspp, &val);
   }
   
-  if (ig->writecb(ig, palbuf, palbsize) != palbsize) {
+  if (i_io_write(ig, palbuf, palbsize) != palbsize) {
     i_push_error(errno, "could not write targa colourmap");
     return 0;
   }
@@ -641,9 +641,7 @@ i_readtga_wiol(io_glue *ig, int length) {
 
   mm_log((1,"i_readtga(ig %p, length %d)\n", ig, length));
   
-  io_glue_commit_types(ig);
-
-  if (ig->readcb(ig, &headbuf, 18) != 18) {
+  if (i_io_read(ig, &headbuf, 18) != 18) {
     i_push_error(errno, "could not read targa header");
     return NULL;
   }
@@ -666,7 +664,7 @@ i_readtga_wiol(io_glue *ig, int length) {
   if (header.idlength) {
     /* max of 256, so this is safe */
     idstring = mymalloc(header.idlength+1);
-    if (ig->readcb(ig, idstring, header.idlength) != header.idlength) {
+    if (i_io_read(ig, idstring, header.idlength) != header.idlength) {
       i_push_error(errno, "short read on targa idstring");
       return NULL;
     }
@@ -898,13 +896,13 @@ i_writetga_wiol(i_img *img, io_glue *ig, int wierdpack, int compress, char *idst
 
   tga_header_pack(&header, headbuf);
 
-  if (ig->writecb(ig, &headbuf, sizeof(headbuf)) != sizeof(headbuf)) {
+  if (i_io_write(ig, &headbuf, sizeof(headbuf)) != sizeof(headbuf)) {
     i_push_error(errno, "could not write targa header");
     return 0;
   }
 
   if (idlen) {
-    if (ig->writecb(ig, idstring, idlen) != idlen) {
+    if (i_io_write(ig, idstring, idlen) != idlen) {
       i_push_error(errno, "could not write targa idstring");
       return 0;
     }
@@ -922,7 +920,7 @@ i_writetga_wiol(i_img *img, io_glue *ig, int wierdpack, int compress, char *idst
     if (!tga_palette_write(ig, img, bitspp, i_colorcount(img))) return 0;
     
     if (!img->virtual && !dest.compressed) {
-      if (ig->writecb(ig, img->idata, img->bytes) != img->bytes) {
+      if (i_io_write(ig, img->idata, img->bytes) != img->bytes) {
 	i_push_error(errno, "could not write targa image data");
 	return 0;
       }
@@ -951,7 +949,8 @@ i_writetga_wiol(i_img *img, io_glue *ig, int wierdpack, int compress, char *idst
     myfree(vals);
   }
 
-  ig->closecb(ig);
+  if (i_io_close(ig))
+    return 0;
 
   return 1;
 }

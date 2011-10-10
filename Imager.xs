@@ -143,73 +143,11 @@ struct cbdata {
   SV *readcb;
   SV *seekcb;
   SV *closecb;
-
-  /* we need to remember whether the buffer contains write data or 
-     read data
-   */
-  int reading;
-  int writing;
-
-  /* how far we've read into the buffer (not used for writing) */
-  int where;
-
-  /* the amount of space used/data available in the buffer */
-  int used;
-
-  /* the maximum amount to fill the buffer before flushing
-     If any write is larger than this then the buffer is flushed and 
-     the full write is performed.  The write is _not_ split into 
-     maxwrite sized calls
-   */
-  int maxlength;
-
-  char buffer[CBDATA_BUFSIZE];
 };
 
-/* 
-
-call_writer(cbd, buf, size)
-
-Low-level function to call the perl writer callback.
-
-*/
-
-static ssize_t call_writer(struct cbdata *cbd, void const *buf, size_t size) {
-  dTHX;
-  int count;
-  int success;
-  SV *sv;
-  dSP;
-
-  if (!SvOK(cbd->writecb))
-    return -1;
-
-  ENTER;
-  SAVETMPS;
-  EXTEND(SP, 1);
-  PUSHMARK(SP);
-  PUSHs(sv_2mortal(newSVpv((char *)buf, size)));
-  PUTBACK;
-
-  count = perl_call_sv(cbd->writecb, G_SCALAR);
-
-  SPAGAIN;
-  if (count != 1)
-    croak("Result of perl_call_sv(..., G_SCALAR) != 1");
-
-  sv = POPs;
-  success = SvTRUE(sv);
-
-
-  PUTBACK;
-  FREETMPS;
-  LEAVE;
-
-  return success ? size : -1;
-}
-
-static ssize_t call_reader(struct cbdata *cbd, void *buf, size_t size, 
-                           size_t maxread) {
+static ssize_t
+call_reader(struct cbdata *cbd, void *buf, size_t size, 
+            size_t maxread) {
   dTHX;
   int count;
   int result;
@@ -238,9 +176,10 @@ static ssize_t call_reader(struct cbdata *cbd, void *buf, size_t size,
 
   if (SvOK(data)) {
     STRLEN len;
-    char *ptr = SvPV(data, len);
+    char *ptr = SvPVbyte(data, len);
     if (len > maxread)
-      croak("Too much data returned in reader callback");
+      croak("Too much data returned in reader callback (wanted %d, got %d, expected %d)",
+      (int)size, (int)len, (int)maxread);
     
     memcpy(buf, ptr, len);
     result = len;
@@ -256,21 +195,8 @@ static ssize_t call_reader(struct cbdata *cbd, void *buf, size_t size,
   return result;
 }
 
-static ssize_t write_flush(struct cbdata *cbd) {
-  dTHX;
-  ssize_t result;
-
-  if (cbd->used) {
-    result = call_writer(cbd, cbd->buffer, cbd->used);
-    cbd->used = 0;
-    return result;
-  }
-  else {
-    return 1; /* success of some sort */
-  }
-}
-
-static off_t io_seeker(void *p, off_t offset, int whence) {
+static off_t
+io_seeker(void *p, off_t offset, int whence) {
   dTHX;
   struct cbdata *cbd = p;
   int count;
@@ -280,17 +206,6 @@ static off_t io_seeker(void *p, off_t offset, int whence) {
   if (!SvOK(cbd->seekcb))
     return -1;
 
-  if (cbd->writing) {
-    if (cbd->used && write_flush(cbd) <= 0)
-      return -1;
-    cbd->writing = 0;
-  }
-  if (whence == SEEK_CUR && cbd->reading && cbd->where != cbd->used) {
-    offset -= cbd->where - cbd->used;
-  }
-  cbd->reading = 0;
-  cbd->where = cbd->used = 0;
-  
   ENTER;
   SAVETMPS;
   EXTEND(SP, 2);
@@ -315,126 +230,77 @@ static off_t io_seeker(void *p, off_t offset, int whence) {
   return result;
 }
 
-static ssize_t io_writer(void *p, void const *data, size_t size) {
+static ssize_t
+io_writer(void *p, void const *data, size_t size) {
   dTHX;
   struct cbdata *cbd = p;
+  I32 count;
+  SV *sv;
+  dSP;
+  bool success;
 
-  /* printf("io_writer(%p, %p, %u)\n", p, data, size); */
-  if (!cbd->writing) {
-    if (cbd->reading && cbd->where < cbd->used) {
-      /* we read past the place where the caller expected us to be
-         so adjust our position a bit */
-      if (io_seeker(p, cbd->where - cbd->used, SEEK_CUR) < 0) {
-        return -1;
-      }
-      cbd->reading = 0;
-    }
-    cbd->where = cbd->used = 0;
-  }
-  cbd->writing = 1;
-  if (cbd->used && cbd->used + size > cbd->maxlength) {
-    int write_res = write_flush(cbd);
-    if (write_res <= 0) {
-      return write_res;
-    }
-    cbd->used = 0;
-  }
-  if (cbd->used+size <= cbd->maxlength) {
-    memcpy(cbd->buffer + cbd->used, data, size);
-    cbd->used += size;
-    return size;
-  }
-  /* it doesn't fit - just pass it up */
-  return call_writer(cbd, data, size);
+  if (!SvOK(cbd->writecb))
+    return -1;
+
+  ENTER;
+  SAVETMPS;
+  EXTEND(SP, 1);
+  PUSHMARK(SP);
+  PUSHs(sv_2mortal(newSVpv((char *)data, size)));
+  PUTBACK;
+
+  count = perl_call_sv(cbd->writecb, G_SCALAR);
+
+  SPAGAIN;
+  if (count != 1)
+    croak("Result of perl_call_sv(..., G_SCALAR) != 1");
+
+  sv = POPs;
+  success = SvTRUE(sv);
+
+
+  PUTBACK;
+  FREETMPS;
+  LEAVE;
+
+  return success ? size : -1;
 }
 
 static ssize_t 
 io_reader(void *p, void *data, size_t size) {
-  dTHX;
   struct cbdata *cbd = p;
-  ssize_t total;
-  char *out = data; /* so we can do pointer arithmetic */
 
-  /* printf("io_reader(%p, %p, %d)\n", p, data, size); */
-  if (cbd->writing) {
-    if (write_flush(cbd) <= 0)
-      return 0;
-    cbd->writing = 0;
-  }
-
-  cbd->reading = 1;
-  if (size <= cbd->used - cbd->where) {
-    /* simplest case */
-    memcpy(data, cbd->buffer+cbd->where, size);
-    cbd->where += size;
-    return size;
-  }
-  total = 0;
-  memcpy(out, cbd->buffer + cbd->where, cbd->used - cbd->where);
-  total += cbd->used - cbd->where;
-  size  -= cbd->used - cbd->where;
-  out   += cbd->used - cbd->where;
-  if (size < sizeof(cbd->buffer)) {
-    int did_read = 0;
-    int copy_size;
-    while (size
-	   && (did_read = call_reader(cbd, cbd->buffer, size, 
-				    sizeof(cbd->buffer))) > 0) {
-      cbd->where = 0;
-      cbd->used  = did_read;
-
-      copy_size = i_min(size, cbd->used);
-      memcpy(out, cbd->buffer, copy_size);
-      cbd->where += copy_size;
-      out   += copy_size;
-      total += copy_size;
-      size  -= copy_size;
-    }
-    if (did_read < 0)
-      return -1;
-  }
-  else {
-    /* just read the rest - too big for our buffer*/
-    int did_read;
-    while ((did_read = call_reader(cbd, out, size, size)) > 0) {
-      size  -= did_read;
-      total += did_read;
-      out   += did_read;
-    }
-    if (did_read < 0)
-      return -1;
-  }
-
-  return total;
+  return call_reader(cbd, data, size, size);
 }
 
 static int io_closer(void *p) {
   dTHX;
   struct cbdata *cbd = p;
-
-  if (cbd->writing && cbd->used > 0) {
-    if (write_flush(cbd) < 0)
-      return -1;
-    cbd->writing = 0;
-  }
+  int success = 1;
 
   if (SvOK(cbd->closecb)) {
     dSP;
+    I32 count;
+    SV *sv;
 
     ENTER;
     SAVETMPS;
     PUSHMARK(SP);
     PUTBACK;
 
-    perl_call_sv(cbd->closecb, G_VOID);
+    count = perl_call_sv(cbd->closecb, G_SCALAR);
 
     SPAGAIN;
+    
+    sv = POPs;
+    success = SvTRUE(sv);
+
     PUTBACK;
     FREETMPS;
     LEAVE;
   }
 
-  return 0;
+  return success ? 0 : -1;
 }
 
 static void io_destroyer(void *p) {
@@ -446,6 +312,30 @@ static void io_destroyer(void *p) {
   SvREFCNT_dec(cbd->seekcb);
   SvREFCNT_dec(cbd->closecb);
   myfree(cbd);
+}
+
+static i_io_glue_t *
+do_io_new_buffer(pTHX_ SV *data_sv) {
+  const char *data;
+  STRLEN length;
+
+  data = SvPVbyte(data_sv, length);
+  SvREFCNT_inc(data_sv);
+  return io_new_buffer(data, length, my_SvREFCNT_dec, data_sv);
+}
+
+static i_io_glue_t *
+do_io_new_cb(pTHX_ SV *writecb, SV *readcb, SV *seekcb, SV *closecb) {
+  struct cbdata *cbd;
+
+  cbd = mymalloc(sizeof(struct cbdata));
+  cbd->writecb = newSVsv(writecb);
+  cbd->readcb = newSVsv(readcb);
+  cbd->seekcb = newSVsv(seekcb);
+  cbd->closecb = newSVsv(closecb);
+
+  return io_new_cb(cbd, io_reader, io_writer, io_seeker, io_closer, 
+		   io_destroyer);
 }
 
 struct value_name {
@@ -897,6 +787,9 @@ static im_pl_ext_funcs im_perl_funcs =
 
 #define i_img_epsilonf() (DBL_EPSILON * 4)
 
+/* avoid some xsubpp strangeness */
+#define NEWLINE '\n'
+
 MODULE = Imager		PACKAGE = Imager::Color	PREFIX = ICL_
 
 Imager::Color
@@ -1048,14 +941,10 @@ io_new_bufchain()
 
 
 Imager::IO
-io_new_buffer(data)
-	  char   *data
-	PREINIT:
-	  size_t length;
+io_new_buffer(data_sv)
+	  SV   *data_sv
 	CODE:
-	  SvPV(ST(0), length);
-          SvREFCNT_inc(ST(0));
-	  RETVAL = io_new_buffer(data, length, my_SvREFCNT_dec, ST(0));
+	  RETVAL = do_io_new_buffer(aTHX_ data_sv);
         OUTPUT:
           RETVAL
 
@@ -1066,39 +955,24 @@ io_new_cb(writecb, readcb, seekcb, closecb, maxwrite = CBDATA_BUFSIZE)
         SV *seekcb;
         SV *closecb;
         int maxwrite;
-      PREINIT:
-        struct cbdata *cbd;
       CODE:
-        cbd = mymalloc(sizeof(struct cbdata));
-        SvREFCNT_inc(writecb);
-        cbd->writecb = writecb;
-        SvREFCNT_inc(readcb);
-        cbd->readcb = readcb;
-        SvREFCNT_inc(seekcb);
-        cbd->seekcb = seekcb;
-        SvREFCNT_inc(closecb);
-        cbd->closecb = closecb;
-        cbd->reading = cbd->writing = cbd->where = cbd->used = 0;
-        if (maxwrite > CBDATA_BUFSIZE)
-          maxwrite = CBDATA_BUFSIZE;
-        cbd->maxlength = maxwrite;
-        RETVAL = io_new_cb(cbd, io_reader, io_writer, io_seeker, io_closer, 
-                           io_destroyer);
+        RETVAL = do_io_new_cb(aTHX_ writecb, readcb, seekcb, closecb);
       OUTPUT:
         RETVAL
 
-void
+SV *
 io_slurp(ig)
         Imager::IO     ig
 	     PREINIT:
 	      unsigned char*    data;
 	      size_t    tlength;
-	     PPCODE:
+	     CODE:
  	      data    = NULL;
               tlength = io_slurp(ig, &data);
-              EXTEND(SP,1);
-              PUSHs(sv_2mortal(newSVpv((char *)data,tlength)));
+              RETVAL = newSVpv((char *)data,tlength);
               myfree(data);
+	     OUTPUT:
+	      RETVAL
 
 
 undef_int
@@ -1120,10 +994,60 @@ i_get_image_file_limits()
           PUSHs(sv_2mortal(newSVuv(bytes)));
         }
 
+MODULE = Imager		PACKAGE = Imager::IO	PREFIX = io_
+
+Imager::IO
+io_new_fd(class, fd)
+	int fd
+    CODE:
+	RETVAL = io_new_fd(fd);
+    OUTPUT:
+	RETVAL
+
+Imager::IO
+io_new_buffer(class, data_sv)
+	SV *data_sv
+    CODE:
+        RETVAL = do_io_new_buffer(aTHX_ data_sv);
+    OUTPUT:
+        RETVAL
+
+Imager::IO
+io_new_cb(class, writecb, readcb, seekcb, closecb)
+        SV *writecb;
+        SV *readcb;
+        SV *seekcb;
+        SV *closecb;
+    CODE:
+        RETVAL = do_io_new_cb(aTHX_ writecb, readcb, seekcb, closecb);
+    OUTPUT:
+        RETVAL
+
+Imager::IO
+io_new_bufchain(class)
+    CODE:
+	RETVAL = io_new_bufchain();
+    OUTPUT:
+        RETVAL
+
+SV *
+io_slurp(class, ig)
+        Imager::IO     ig
+    PREINIT:
+	unsigned char*    data;
+	size_t    tlength;
+    CODE:
+	data    = NULL;
+	tlength = io_slurp(ig, &data);
+	RETVAL = newSVpv((char *)data,tlength);
+	myfree(data);
+    OUTPUT:
+	RETVAL
+
 MODULE = Imager		PACKAGE = Imager::IO	PREFIX = i_io_
 
-int
-i_io_write(ig, data_sv)
+IV
+i_io_raw_write(ig, data_sv)
 	Imager::IO ig
 	SV *data_sv
       PREINIT:
@@ -1138,9 +1062,140 @@ i_io_write(ig, data_sv)
 	}
 #endif        
 	data = SvPV(data_sv, size);
-        RETVAL = i_io_write(ig, data, size);
+        RETVAL = i_io_raw_write(ig, data, size);
       OUTPUT:
 	RETVAL
+
+void
+i_io_raw_read(ig, buffer_sv, size)
+	Imager::IO ig
+	SV *buffer_sv
+	IV size
+      PREINIT:
+        void *buffer;
+	ssize_t result;
+      PPCODE:
+        if (size <= 0)
+	  croak("size negative in call to i_io_raw_read()");
+        /* prevent an undefined value warning if they supplied an 
+	   undef buffer.
+           Orginally conditional on !SvOK(), but this will prevent the
+	   downgrade from croaking */
+	sv_setpvn(buffer_sv, "", 0);
+#ifdef SvUTF8
+	if (SvUTF8(buffer_sv))
+          sv_utf8_downgrade(buffer_sv, FALSE);
+#endif
+	buffer = SvGROW(buffer_sv, size+1);
+        result = i_io_raw_read(ig, buffer, size);
+        if (result >= 0) {
+	  SvCUR_set(buffer_sv, result);
+	  *SvEND(buffer_sv) = '\0';
+	  SvPOK_only(buffer_sv);
+	  EXTEND(SP, 1);
+	  PUSHs(sv_2mortal(newSViv(result)));
+	}
+	ST(1) = buffer_sv;
+	SvSETMAGIC(ST(1));
+
+void
+i_io_raw_read2(ig, size)
+	Imager::IO ig
+	IV size
+      PREINIT:
+	SV *buffer_sv;
+        void *buffer;
+	ssize_t result;
+      PPCODE:
+        if (size <= 0)
+	  croak("size negative in call to i_io_read2()");
+	buffer_sv = newSV(size);
+	buffer = SvGROW(buffer_sv, size+1);
+        result = i_io_raw_read(ig, buffer, size);
+        if (result >= 0) {
+	  SvCUR_set(buffer_sv, result);
+	  *SvEND(buffer_sv) = '\0';
+	  SvPOK_only(buffer_sv);
+	  EXTEND(SP, 1);
+	  PUSHs(sv_2mortal(buffer_sv));
+	}
+	else {
+          /* discard it */
+	  SvREFCNT_dec(buffer_sv);
+        }
+
+off_t
+i_io_raw_seek(ig, position, whence)
+	Imager::IO ig
+	off_t position
+	int whence
+
+int
+i_io_raw_close(ig)
+	Imager::IO ig
+
+void
+i_io_DESTROY(ig)
+        Imager::IO     ig
+
+int
+i_io_CLONE_SKIP(...)
+    CODE:
+        (void)items; /* avoid unused warning for XS variable */
+	RETVAL = 1;
+    OUTPUT:
+	RETVAL
+
+int
+i_io_getc(ig)
+	Imager::IO ig
+
+int
+i_io_putc(ig, c)
+	Imager::IO ig
+        int c
+
+int
+i_io_close(ig)
+	Imager::IO ig
+
+int
+i_io_flush(ig)
+	Imager::IO ig
+
+int
+i_io_peekc(ig)
+	Imager::IO ig
+
+int
+i_io_seek(ig, off, whence)
+	Imager::IO ig
+	off_t off
+        int whence
+
+void
+i_io_peekn(ig, size)
+	Imager::IO ig
+	STRLEN size
+      PREINIT:
+	SV *buffer_sv;
+        void *buffer;
+	ssize_t result;
+      PPCODE:
+	buffer_sv = newSV(size+1);
+	buffer = SvGROW(buffer_sv, size+1);
+        result = i_io_peekn(ig, buffer, size);
+        if (result >= 0) {
+	  SvCUR_set(buffer_sv, result);
+	  *SvEND(buffer_sv) = '\0';
+	  SvPOK_only(buffer_sv);
+	  EXTEND(SP, 1);
+	  PUSHs(sv_2mortal(buffer_sv));
+	}
+	else {
+          /* discard it */
+	  SvREFCNT_dec(buffer_sv);
+        }
 
 void
 i_io_read(ig, buffer_sv, size)
@@ -1177,18 +1232,18 @@ i_io_read(ig, buffer_sv, size)
 void
 i_io_read2(ig, size)
 	Imager::IO ig
-	IV size
+	STRLEN size
       PREINIT:
 	SV *buffer_sv;
         void *buffer;
 	ssize_t result;
       PPCODE:
-        if (size <= 0)
-	  croak("size negative in call to i_io_read2()");
+        if (size == 0)
+	  croak("size zero in call to read2()");
 	buffer_sv = newSV(size);
 	buffer = SvGROW(buffer_sv, size+1);
         result = i_io_read(ig, buffer, size);
-        if (result >= 0) {
+        if (result > 0) {
 	  SvCUR_set(buffer_sv, result);
 	  *SvEND(buffer_sv) = '\0';
 	  SvPOK_only(buffer_sv);
@@ -1200,27 +1255,70 @@ i_io_read2(ig, size)
 	  SvREFCNT_dec(buffer_sv);
         }
 
-off_t
-i_io_seek(ig, position, whence)
+void
+i_io_gets(ig, size = 8192, eol = NEWLINE)
 	Imager::IO ig
-	off_t position
-	int whence
+	STRLEN size
+	int eol
+      PREINIT:
+	SV *buffer_sv;
+        void *buffer;
+	ssize_t result;
+      PPCODE:
+        if (size < 2)
+	  croak("size too small in call to gets()");
+	buffer_sv = sv_2mortal(newSV(size+1));
+	buffer = SvPVX(buffer_sv);
+        result = i_io_gets(ig, buffer, size+1, eol);
+        if (result > 0) {
+	  SvCUR_set(buffer_sv, result);
+	  *SvEND(buffer_sv) = '\0';
+	  SvPOK_only(buffer_sv);
+	  EXTEND(SP, 1);
+	  PUSHs(buffer_sv);
+	}
 
-int
-i_io_close(ig)
+IV
+i_io_write(ig, data_sv)
 	Imager::IO ig
+	SV *data_sv
+      PREINIT:
+        void *data;
+	STRLEN size;
+      CODE:
+#ifdef SvUTF8
+        if (SvUTF8(data_sv)) {
+	  data_sv = sv_2mortal(newSVsv(data_sv));
+          /* yes, we want this to croak() if the SV can't be downgraded */
+	  sv_utf8_downgrade(data_sv, FALSE);
+	}
+#endif        
+	data = SvPV(data_sv, size);
+        RETVAL = i_io_write(ig, data, size);
+      OUTPUT:
+	RETVAL
 
 void
-i_io_DESTROY(ig)
-        Imager::IO     ig
+i_io_dump(ig, flags = I_IO_DUMP_DEFAULT)
+	Imager::IO ig
+	int flags
 
-int
-i_io_CLONE_SKIP(...)
-    CODE:
-        (void)items; /* avoid unused warning for XS variable */
-	RETVAL = 1;
-    OUTPUT:
-	RETVAL
+bool
+i_io_set_buffered(ig, flag = 1)
+	Imager::IO ig
+	int flag
+
+bool
+i_io_is_buffered(ig)
+	Imager::IO ig
+
+bool
+i_io_eof(ig)
+	Imager::IO ig
+
+bool
+i_io_error(ig)
+	Imager::IO ig
 
 MODULE = Imager		PACKAGE = Imager
 

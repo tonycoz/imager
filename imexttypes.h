@@ -14,8 +14,13 @@
  Version 2 changed the types of some parameters and pointers.  A
  simple recompile should be enough in most cases.
 
+ Version 3 changed the behaviour of some of the I/O layer functions,
+ and in some cases the initial seek position when calling file
+ readers.  Switching away from calling readcb etc to i_io_read() etc
+ should fix your code.
+
 */
-#define IMAGER_API_VERSION 2
+#define IMAGER_API_VERSION 3
 
 /*
  IMAGER_API_LEVEL is the level of the structure.  New function pointers
@@ -23,7 +28,7 @@
  will result in an increment of IMAGER_API_LEVEL.
 */
 
-#define IMAGER_API_LEVEL 6
+#define IMAGER_API_LEVEL 7
 
 typedef struct {
   int version;
@@ -185,7 +190,29 @@ typedef struct {
 			  i_img_dim width, const double *src,
 			  i_fcolor *line, i_fill_combinef_f combine);
 
-  /* IMAGER_API_LEVEL 6 functions will be added here */
+  /* Level 6 lost to mis-numbering */
+  /* IMAGER_API_LEVEL 7 */
+  int (*f_i_io_getc_imp)(io_glue *ig);
+  int (*f_i_io_peekc_imp)(io_glue *ig);
+  ssize_t (*f_i_io_peekn)(io_glue *ig, void *buf, size_t size);
+  int (*f_i_io_putc_imp)(io_glue *ig, int c);
+  ssize_t (*f_i_io_read)(io_glue *, void *buf, size_t size);
+  ssize_t (*f_i_io_write)(io_glue *, const void *buf, size_t size);
+  off_t (*f_i_io_seek)(io_glue *, off_t offset, int whence);
+  int (*f_i_io_flush)(io_glue *ig);
+  int (*f_i_io_close)(io_glue *ig);
+  int (*f_i_io_set_buffered)(io_glue *ig, int buffered);
+  ssize_t (*f_i_io_gets)(io_glue *ig, char *, size_t, int);
+
+  i_io_glue_t *(*f_io_new_fd)(int fd);
+  i_io_glue_t *(*f_io_new_bufchain)(void);
+  i_io_glue_t *(*f_io_new_buffer)(const char *data, size_t len, i_io_closebufp_t closecb, void *closedata);
+  i_io_glue_t *(*f_io_new_cb)(void *p, i_io_readl_t readcb, i_io_writel_t writecb, i_io_seekl_t seekcb, i_io_closel_t closecb, i_io_destroyl_t destroycb);
+  size_t (*f_io_slurp)(i_io_glue_t *ig, unsigned char **c);
+  void (*f_io_glue_destroy)(i_io_glue_t *ig);
+
+  /* IMAGER_API_LEVEL 8 functions will be added here */
+  
 } im_ext_funcs;
 
 #define PERL_FUNCTION_TABLE_NAME "Imager::__ext_func_table"

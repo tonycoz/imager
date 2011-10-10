@@ -25,6 +25,7 @@ IMAGER
 Imager
 Imager's
 JPEG
+POSIX
 PNG
 PNM
 RGB

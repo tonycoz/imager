@@ -1,8 +1,10 @@
 #!perl -w
 use Imager ':all';
-use Test::More tests => 195;
+use Test::More tests => 205;
 use strict;
-use Imager::Test qw(test_image_raw test_image_16 is_color3 is_color1 is_image);
+use Imager::Test qw(test_image_raw test_image_16 is_color3 is_color1 is_image test_image_named);
+
+$| = 1;
 
 -d "testout" or mkdir "testout";
 
@@ -65,7 +67,8 @@ is(i_img_diff($gimg, $gcmpimg), 0,
    "compare written and read greyscale images");
 
 my $ooim = Imager->new;
-ok($ooim->read(file=>"testimg/simple.pbm"), "read simple pbm, via OO");
+ok($ooim->read(file=>"testimg/simple.pbm"), "read simple pbm, via OO")
+  or print "# ", $ooim->errstr, "\n";
 
 check_gray(Imager::i_get_pixel($ooim->{IMG}, 0, 0), 0);
 check_gray(Imager::i_get_pixel($ooim->{IMG}, 0, 1), 255);
@@ -233,7 +236,8 @@ is($ooim->tags(name=>'pnm_type'), 1, "check pnm_type tag");
   ok($im->write(file=>"testout/t104_alpha.ppm", type=>'pnm'),
      "should succeed writing 4 channel image");
   my $imread = Imager->new;
-  ok($imread->read(file => 'testout/t104_alpha.ppm'), "read it back");
+  ok($imread->read(file => 'testout/t104_alpha.ppm'), "read it back")
+    or print "# ", $imread->errstr, "\n";
   is_color3($imread->getpixel('x' => 0, 'y' => 0), 0, 0, 0, 
 	    "check transparent became black");
   is_color3($imread->getpixel('x' => 8, 'y' => 0), 255, 224, 192,
@@ -594,8 +598,6 @@ print "# check error handling\n";
   }
 }
 
-Imager->close_log;
-
 { # image too large handling
   {
     ok(!Imager->new(file => "testimg/toowide.ppm", filetype => "pnm"),
@@ -610,6 +612,24 @@ Imager->close_log;
        "check error message");
   }
 }
+
+{ # make sure close is checked for each image type
+  my $fail_close = sub {
+    Imager::i_push_error(0, "synthetic close failure");
+    return 0;
+  };
+
+  for my $type (qw(basic basic16 gray gray16 mono)) {
+    my $im = test_image_named($type);
+    my $io = Imager::io_new_cb(sub { 1 }, undef, undef, $fail_close);
+    ok(!$im->write(io => $io, type => "pnm"),
+       "write $type image with a failing close handler");
+    like($im->errstr, qr/synthetic close failure/,
+	 "check error message");
+  }
+}
+
+Imager->close_log;
 
 unless ($ENV{IMAGER_KEEP_FILES}) {
   unlink "testout/t104ppm.log";
