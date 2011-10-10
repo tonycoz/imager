@@ -1,6 +1,6 @@
 #!perl -w
 use strict;
-use Test::More tests => 156;
+use Test::More tests => 157;
 
 use Imager ':handy';
 use Imager::Fill;
@@ -636,6 +636,34 @@ SKIP:
     my $im = Imager->new(xsize => 100, ysize => 100);
     ok($im->box(fill => $op_fill), "draw with it");
   }
+}
+
+{ # RT 71309
+  my $fount = Imager::Fountain->simple(colors => [ '#804041', '#804041' ],
+				       positions => [ 0, 1 ]);
+  my $im = Imager->new(xsize => 40, ysize => 40);
+  $im->box(filled => 1, color => '#804040');
+  my $fill = Imager::Fill->new
+    (
+     combine => 0,
+     fountain => "linear",
+     segments => $fount,
+     xa => 0, ya => 0,
+     xb => 40, yb => 40,
+    );
+  $im->polygon(fill => $fill,
+	       points => 
+	       [
+		[ 0, 0 ],
+		[ 40, 20 ],
+		[ 20, 40 ],
+	       ]
+	      );
+  # the bug magnified the differences between the source and destination
+  # color, blending between the background and fill colors here only allows
+  # for those 2 colors in the result.
+  # with the bug extra colors appeared along the edge of the polygon.
+  is($im->getcolorcount, 2, "only original and fill color");
 }
 
 sub color_close {

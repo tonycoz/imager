@@ -333,8 +333,8 @@ i_render_fill(i_render *r, i_img_dim x, i_img_dim y, i_img_dim width,
 	}
 	else if (*src) {
 	  for (ch = 0; ch < im->channels; ++ch) {
-	    IM_WORK_T work = (destc->channel[ch] * (IM_SAMPLE_MAX - *src)
-			      + srcc->channel[ch] * *src) / IM_SAMPLE_MAX;
+	    IM_WORK_T work = (destc->channel[ch] * (255 - *src)
+			      + srcc->channel[ch] * *src) / 255.0;
 	    destc->channel[ch] = IM_LIMIT(work);
 	  }
 	}
