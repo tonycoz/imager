@@ -1,7 +1,8 @@
 #!/usr/bin/perl -w
 use strict;
 use Imager;
-use Test::More tests => 9;
+use Imager::Test qw(isnt_image);
+use Test::More tests => 13;
 
 # extracted from t/t36oofont.t
 
@@ -59,6 +60,25 @@ SKIP:
 ok($img->write(file=>"testout/t36oofont1.ppm", type=>'pnm'),
    "write t36oofont1.ppm")
   or print "# ",$img->errstr,"\n";
+
+{ # RT 71469
+  my $font1 = Imager::Font->new(file => $fontname_pfb, type => "t1");
+  my $font2 = Imager::Font::T1->new(file => $fontname_pfb);
+
+  for my $font ($font1, $font2) {
+    print "# ", join(",", $font->{color}->rgba), "\n";
+
+    my $im = Imager->new(xsize => 20, ysize => 20, channels => 4);
+
+    ok($im->string(text => "T", font => $font, y => 15),
+       "draw with default color")
+      or print "# ", $im->errstr, "\n";
+    my $work = Imager->new(xsize => 20, ysize => 20);
+    my $cmp = $work->copy;
+    $work->rubthrough(src => $im);
+    isnt_image($work, $cmp, "make sure something was drawn");
+  }
+}
 
 unless ($ENV{IMAGER_KEEP_FILES}) {
   unlink "testout/t36oofont1.ppm";

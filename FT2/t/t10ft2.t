@@ -1,11 +1,11 @@
 #!perl -w
 use strict;
-use Test::More tests => 189;
+use Test::More tests => 193;
 use Cwd qw(getcwd abs_path);
 
 use Imager qw(:all);
 
-use Imager::Test qw(diff_text_with_nul is_color3);
+use Imager::Test qw(diff_text_with_nul is_color3 is_color4 isnt_image);
 
 -d "testout" or mkdir "testout";
 
@@ -21,7 +21,7 @@ SKIP:
 
   my $fontname=$ENV{'TTFONTTEST'} || $deffont;
 
-  -f $fontname or skip("cannot find fontfile $fontname", 188);
+  -f $fontname or skip("cannot find fontfile $fontname", 189);
 
 
   my $bgcolor=i_color_new(255,0,0,0);
@@ -515,7 +515,24 @@ SKIP:
     ok($font, "found font by drive relative path")
       or print "# path $drive_path\n";
   }
+  { # RT 71469
+    my $font1 = Imager::Font->new(file => $deffont, type => "ft2", index => 0);
+    my $font2 = Imager::Font::FT2->new(file => $deffont, index => 0);
 
+    for my $font ($font1, $font2) {
+      print "# ", join(",", $font->{color}->rgba), "\n";
+
+      my $im = Imager->new(xsize => 20, ysize => 20, channels => 4);
+
+      ok($im->string(text => "T", font => $font, y => 15),
+	 "draw with default color")
+	or print "# ", $im->errstr, "\n";
+      my $work = Imager->new(xsize => 20, ysize => 20);
+      my $cmp = $work->copy;
+      $work->rubthrough(src => $im);
+      isnt_image($work, $cmp, "make sure something was drawn");
+    }
+  }
 }
 
 sub align_test {

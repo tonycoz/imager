@@ -10,9 +10,14 @@ use strict;
 
 # Change 1..1 below to 1..last_test_to_print .
 # (It may become useful if the test is moved to ./t subdirectory.)
-use Test::More tests => 12;
+use Test::More tests => 16;
 
 BEGIN { use_ok('Imager') };
+
+BEGIN {
+  require Imager::Test;
+  Imager::Test->import(qw(isnt_image));
+}
 
 -d "testout" or mkdir "testout";
 
@@ -28,7 +33,7 @@ die $Imager::ERRSTR unless $red;
 SKIP:
 {
   $Imager::formats{"tt"} && -f $fontname_tt
-    or skip("FT1.x missing or disabled", 10);
+    or skip("FT1.x missing or disabled", 14);
 
   my $img=Imager->new(xsize=>300, ysize=>100) or die "$Imager::ERRSTR\n";
 
@@ -73,6 +78,25 @@ SKIP:
   my @has_chars = $font->has_chars(string=>"\x01A");
   ok(!$has_chars[0], "has_chars list 0");
   ok($has_chars[1], "has_chars list 1");
+
+  { # RT 71469
+    my $font1 = Imager::Font->new(file => $fontname_tt, type => "tt");
+    my $font2 = Imager::Font::Truetype->new(file => $fontname_tt);
+
+    for my $font ($font1, $font2) {
+      print "# ", join(",", $font->{color}->rgba), "\n";
+
+      my $im = Imager->new(xsize => 20, ysize => 20, channels => 4);
+
+      ok($im->string(text => "T", font => $font, y => 15),
+	 "draw with default color")
+	or print "# ", $im->errstr, "\n";
+      my $work = Imager->new(xsize => 20, ysize => 20);
+      my $cmp = $work->copy;
+      $work->rubthrough(src => $im);
+      isnt_image($work, $cmp, "make sure something was drawn");
+    }
+  }
 }
 
 ok(1, "end");

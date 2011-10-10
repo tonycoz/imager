@@ -51,7 +51,7 @@ sub new {
   my $class = shift;
   my $self = {};
   my ($file, $type, $id);
-  my %hsh=(color => Imager::Color->new(255,0,0,0),
+  my %hsh=(color => Imager::Color->new(255,0,0,255),
 	   size => 15,
 	   @_);
 

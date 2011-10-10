@@ -9,7 +9,7 @@ $VERSION = "1.011";
 
 sub new {
   my $class = shift;
-  my %hsh=(color=>Imager::Color->new(255,0,0,0),
+  my %hsh=(color=>Imager::Color->new(255,0,0,255),
 	   size=>15,
 	   @_);
 

@@ -22,7 +22,13 @@ BEGIN {
 # since Win32's HFONTs include the size information this
 # is just a stub
 sub new {
-  my ($class, %opts) = @_;
+  my $class = shift;
+  my %opts =
+      (
+       color => Imager::Color->new(255, 0, 0),
+       size => 15,
+       @_,
+      );
 
   return bless \%opts, $class;
 }

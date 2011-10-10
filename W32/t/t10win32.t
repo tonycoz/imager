@@ -1,8 +1,8 @@
 #!perl -w
 use strict;
-use Test::More tests => 55;
+use Test::More tests => 59;
 use Imager qw(:all);
-use Imager::Test qw(diff_text_with_nul);
+use Imager::Test qw(diff_text_with_nul isnt_image);
 ++$|;
 
 ok(-d "testout" or mkdir("testout"), "testout directory");
@@ -206,5 +206,24 @@ SKIP:
 		       font => $font, color => '#FFFFFF', utf8 => 1);
     diff_text_with_nul("utf8 dash\0dash vs dash - channel", "$dash\0$dash", $dash,
 		       font => $font, channel => 1, utf8 => 1);
+  }
+
+  { # RT 71469
+    my $font1 = Imager::Font->new(face => $fontname, type => "w32");
+    my $font2 = Imager::Font::W32->new(face => $fontname );
+
+    for my $font ($font1, $font2) {
+      print "# ", join(",", $font->{color}->rgba), "\n";
+
+      my $im = Imager->new(xsize => 20, ysize => 20, channels => 4);
+
+      ok($im->string(text => "T", font => $font, y => 15),
+	 "draw with default color")
+	or print "# ", $im->errstr, "\n";
+      my $work = Imager->new(xsize => 20, ysize => 20);
+      my $cmp = $work->copy;
+      $work->rubthrough(src => $im);
+      isnt_image($work, $cmp, "make sure something was drawn");
+    }
   }
 }
