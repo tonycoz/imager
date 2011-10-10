@@ -318,7 +318,7 @@ i_img_info(i_img *im, i_img_dim *info) {
 /*
 =item i_img_setmask(C<im>, C<ch_mask>)
 =category Image Information
-=synopsis // only channel 0 writeable 
+=synopsis // only channel 0 writable 
 =synopsis i_img_setmask(img, 0x01);
 
 Set the image channel mask for C<im> to C<ch_mask>.

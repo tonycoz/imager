@@ -81,7 +81,7 @@ Imager::APIRef - Imager's C API - reference.
   # Image Implementation
 
   # Image Information
-  // only channel 0 writeable 
+  // only channel 0 writable 
   i_img_setmask(img, 0x01);
   int mask = i_img_getmask(img);
   int channels = i_img_getchannels(img);
@@ -1615,7 +1615,7 @@ From: File image.c
 
 =item i_img_setmask(C<im>, C<ch_mask>)
 
-  // only channel 0 writeable 
+  // only channel 0 writable 
   i_img_setmask(img, 0x01);
 
 Set the image channel mask for C<im> to C<ch_mask>.

@@ -138,7 +138,7 @@ This has the advantage that you aren't handling a second potentially
 expensive CGI request to generate the image, but it means you need
 some mechanism to manage the files (for example, a cron job to delete
 old files), and you need to make some directory under the document
-root writeable by the user that your web server runs CGI programs as,
+root writable by the user that your web server runs CGI programs as,
 which may be a security concern.
 
 Also, if you're generating large numbers of large images, you may end
