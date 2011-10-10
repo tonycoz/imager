@@ -608,10 +608,6 @@ typedef enum i_ord_dith_tag
   od_custom /* custom 8x8 map */
 } i_ord_dith;
 
-typedef struct i_gif_pos_tag {
-  int x, y;
-} i_gif_pos;
-
 /* passed into i_writegif_gen() to control quantization */
 typedef struct i_quantize_tag {
   int version;
@@ -653,45 +649,6 @@ typedef struct i_quantize_tag {
   int perturb;
   /* version 2 members after here */
 } i_quantize;
-
-typedef struct i_gif_opts {
-  /* each image has a local color map */
-  int each_palette;
-
-  /* images are interlaced */
-  int interlace;
-
-  /* time for which image is displayed 
-   (in 1/100 seconds)
-   default: 0
-  */
-  int delay_count;
-  int *delays;
-
-  /* user input flags 
-     default: 0
-   */
-  int user_input_count;
-  char *user_input_flags;
-
-  /* disposal
-     default: 0 */
-  int disposal_count;
-  char *disposal;
-
-  /* this is added to the color table when we make an image transparent */
-  i_color tran_color;
-
-  /* image positions */
-  int position_count;
-  i_gif_pos *positions;
-
-  /* Netscape loop extension - number of loops */
-  int loop_count;
-
-  /* should be eliminate unused colors? */
-  int eliminate_unused;
-} i_gif_opts;
 
 /* distance measures used by some filters */
 enum {
