@@ -1,5 +1,10 @@
 Imager release history.  Older releases can be found in Changes.old
 
+Imager 0.85_01 - unreleased
+==============
+
+ - add simple tests for the Imager::Test test_image generators
+
  - io_glue I/O buffering re-work:
 
    - reorganize io_glue to do it's own buffering by default
@@ -56,11 +61,6 @@ Imager release history.  Older releases can be found in Changes.old
 
  - removed the long unused i_gen_reader() and i_gen_writer() utility
    functions.
-
-Imager 0.86
-===========
-
- - add simple tests for the Imager::Test test_image generators
 
 Imager 0.85 - 29 Aug 2011
 ===========
