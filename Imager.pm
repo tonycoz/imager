@@ -4788,12 +4788,28 @@ Tracker.
 
 =head2 Patches
 
-I accept patches, preferably against the main branch in subversion.
-You should include an explanation of the reason for why the patch is
-needed or useful.
+I accept patches, preferably against the master branch in git.  Please
+include an explanation of the reason for why the patch is needed or
+useful.
 
 Your patch should include regression tests where possible, otherwise
 it will be delayed until I get a chance to write them.
+
+To browse Imager's git repository:
+
+  http://git.imager.perl.org/imager.git
+
+or:
+
+  https://github.com/tonycoz/imager
+
+To clone:
+
+  git clone git://git.imager.perl.org/imager.git
+
+or:
+
+  git clone git://github.com/tonycoz/imager.git
 
 =head1 AUTHOR
 
