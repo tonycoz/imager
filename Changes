@@ -17,6 +17,10 @@ Bug fixes:
  - apply the last of the Debian unforwarded spelling fixes
    https://rt.cpan.org/Ticket/Display.html?id=70656
 
+ - the log() method used its message parameter as a C level format
+   string.
+   https://rt.cpan.org/Ticket/Display.html?id=71653
+
 Imager 0.85_01 - 10 Oct 2011
 ==============
 

@@ -131,7 +131,7 @@ void my_SvREFCNT_dec(void *p) {
 
 static void
 i_log_entry(char *string, int level) {
-  mm_log((level, string));
+  mm_log((level, "%s", string));
 }
 
 
