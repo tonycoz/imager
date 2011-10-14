@@ -24,6 +24,8 @@ Bug fixes:
  - provide our own STRLEN typemap entry for older perls.
    https://rt.cpan.org/Ticket/Display.html?id=71641
 
+ - add extra ppport.h configuration to support older perls.
+
 Imager 0.85_01 - 10 Oct 2011
 ==============
 
