@@ -26,6 +26,9 @@ Bug fixes:
 
  - add extra ppport.h configuration to support older perls.
 
+ - depend on Scalar::Util, since we use it and older perls don't have
+   it.
+
 Imager 0.85_01 - 10 Oct 2011
 ==============
 

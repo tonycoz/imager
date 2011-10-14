@@ -167,17 +167,22 @@ my @objs = qw(Imager.o draw.o polygon.o image.o io.o iolayer.o
               bmp.o tga.o color.o fills.o imgdouble.o limits.o hlines.o
               imext.o scale.o rubthru.o render.o paste.o compose.o flip.o);
 
-my %opts=(
-          'NAME'         => 'Imager',
-          'VERSION_FROM' => 'Imager.pm',
-          'LIBS'         => "$LFLAGS -lm $lib_lflags $OSLIBS $F_LIBS",
-          'DEFINE'       => "$OSDEF $CFLAGS",
-          'INC'          => "$lib_cflags $DFLAGS $F_INC",
-          'OBJECT'       => join(' ', @objs, $F_OBJECT),
-          clean          => { FILES=>'testout rubthru.c scale.c conv.c  filters.c gaussian.c render.c rubthru.c' },
-          PM             => gen_PM(),
-	  PREREQ_PM      => { 'Test::More' => 0.47 },
-         );
+my %opts=
+  (
+   'NAME'         => 'Imager',
+   'VERSION_FROM' => 'Imager.pm',
+   'LIBS'         => "$LFLAGS -lm $lib_lflags $OSLIBS $F_LIBS",
+   'DEFINE'       => "$OSDEF $CFLAGS",
+   'INC'          => "$lib_cflags $DFLAGS $F_INC",
+   'OBJECT'       => join(' ', @objs, $F_OBJECT),
+   clean          => { FILES=>'testout rubthru.c scale.c conv.c  filters.c gaussian.c render.c rubthru.c' },
+   PM             => gen_PM(),
+   PREREQ_PM      =>
+   { 
+    'Test::More' => 0.47,
+    'Scalar::Util' => 1.00,
+   },
+  );
 
 if ($coverage) {
     if ($Config{gccversion}) {
