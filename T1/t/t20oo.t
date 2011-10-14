@@ -2,7 +2,7 @@
 use strict;
 use Imager;
 use Imager::Test qw(isnt_image);
-use Test::More tests => 13;
+use Test::More tests => 14;
 
 # extracted from t/t36oofont.t
 
@@ -78,6 +78,14 @@ ok($img->write(file=>"testout/t36oofont1.ppm", type=>'pnm'),
     $work->rubthrough(src => $im);
     isnt_image($work, $cmp, "make sure something was drawn");
   }
+}
+
+{ # open a non-font as a font (test open failure)
+  local $ENV{LANG} = "C";
+  local $ENV{LC_ALL} = "C";
+  my $font = Imager::Font->new(file => "t/t20oo.t", type => "t1");
+  ok(!$font, "should fail to open test script as a font");
+  print "# ", Imager->errstr, "\n";
 }
 
 unless ($ENV{IMAGER_KEEP_FILES}) {

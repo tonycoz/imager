@@ -1,3 +1,15 @@
+Imager::Font::T1 1.015
+======================
+
+ - use T1_StrError() for error messages on modern libt1
+   https://rt.cpan.org/Ticket/Display.html?id=69879
+
+ - actually load the font rather than just adding it to the catalog on
+   creation.
+
+ - Imager::Font->new now produces better error messages for the T1
+   engine.
+
 Imager::Font::T1 1.014
 ======================
 

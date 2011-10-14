@@ -74,7 +74,7 @@ sub new {
 
   my $id = i_t1_new($hsh{file},$hsh{afm});
   unless ($id >= 0) { # the low-level code may miss some error handling
-    $Imager::ERRSTR = "Could not load font ($id)";
+    Imager->_set_error(Imager->_error_as_msg);
     return;
   }
   return bless {

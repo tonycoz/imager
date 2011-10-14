@@ -93,6 +93,7 @@ i_t1_new(char *pfb,char *afm) {
   font_id = T1_AddFont(pfb);
   if (font_id<0) {
     mm_log((1,"i_t1_new: Failed to load pfb file '%s' - return code %d.\n",pfb,font_id));
+    t1_push_error();
     return font_id;
   }
   
@@ -101,7 +102,17 @@ i_t1_new(char *pfb,char *afm) {
     if (T1_SetAfmFileName(font_id,afm)<0) mm_log((1,"i_t1_new: afm loading of '%s' failed.\n",afm));
   }
 
+  if (T1_LoadFont(font_id)) {
+    mm_log((1, "i_t1_new() -> -1 - T1_LoadFont failed (%d)\n", T1_errno));
+    t1_push_error();
+    i_push_error(0, "loading font");
+    T1_DeleteFont(font_id);
+    return -1;
+  }
+
   ++t1_active_fonts;
+
+  mm_log((1, "i_t1_new() -> %d\n", font_id));
 
   return font_id;
 }
@@ -572,6 +583,10 @@ i_t1_glyph_name(int font_num, unsigned long ch, char *name_buf,
 
 static void
 t1_push_error(void) {
+#if T1LIB_VERSION > 5 || T1LIB_VERSION == 5 && T1LIB_VERSION >= 1
+  /* I don't know when T1_StrError() was introduced, be conservative */
+  i_push_error(T1_errno, T1_StrError(T1_errno));
+#else
   switch (T1_errno) {
   case 0: 
     i_push_error(0, "No error"); 
@@ -682,5 +697,6 @@ t1_push_error(void) {
   default:
     i_push_errorf(T1_errno, "unknown error %d", (int)T1_errno);
   }
+#endif
 }
 
