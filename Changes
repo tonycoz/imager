@@ -29,6 +29,9 @@ Bug fixes:
  - depend on Scalar::Util, since we use it and older perls don't have
    it.
 
+ - add overloaded eq to Imager::Matrix2d, since older perls don't seem
+   to synthesize it from overloaded "".
+
 Imager 0.85_01 - 10 Oct 2011
 ==============
 

@@ -4,7 +4,7 @@ use vars qw($VERSION);
 use Scalar::Util qw(reftype looks_like_number);
 use Carp qw(croak);
 
-$VERSION = "1.009";
+$VERSION = "1.0010";
 
 =head1 NAME
 
@@ -61,7 +61,8 @@ require 'Exporter.pm';
 use overload 
   '*' => \&_mult,
   '+' => \&_add,
-  '""'=>\&_string;
+  '""'=>\&_string,
+  "eq" => \&_eq;
 
 =item identity()
 
@@ -372,6 +373,21 @@ sub _string {
     $out .= $right[$i];
   }
   $out;
+}
+
+=item _eq
+
+Implement the overloaded equality operator.
+
+Provided for older perls that don't handle magic auto generation of eq
+from "".
+
+=cut
+
+sub _eq {
+  my ($left, $right) = @_;
+
+  return $left . "" eq $right . "";
 }
 
 =back
