@@ -21,6 +21,9 @@ Bug fixes:
    string.
    https://rt.cpan.org/Ticket/Display.html?id=71653
 
+ - provide our own STRLEN typemap entry for older perls.
+   https://rt.cpan.org/Ticket/Display.html?id=71641
+
 Imager 0.85_01 - 10 Oct 2011
 ==============
 

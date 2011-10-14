@@ -27,6 +27,9 @@ Imager                  T_IMAGER_FULL_IMAGE
 
 off_t			T_OFF_T
 
+# STRLEN isn't in the default typemap in older perls
+STRLEN	       	      	T_UV
+
 #############################################################################
 INPUT
 T_PTR_NULL
