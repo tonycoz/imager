@@ -14,6 +14,9 @@ Imager::Font::T1 1.015
    context rather than integers, which should be more efficient.
    https://rt.cpan.org/Ticket/Display.html?id=69158
 
+ - the default text color is no longer transparent.
+   https://rt.cpan.org/Ticket/Display.html?id=71469
+
 Imager::Font::T1 1.014
 ======================
 

@@ -1,3 +1,9 @@
+Imager-Font-W32 0.82
+====================
+
+ - the default text color is no longer transparent.
+   https://rt.cpan.org/Ticket/Display.html?id=71469
+
 Imager-Font-W32 0.81
 ====================
 
