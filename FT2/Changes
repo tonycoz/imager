@@ -1,3 +1,10 @@
+Imager-Font-FT2 0.83
+====================
+
+ - has_chars() now returns perl's true and false values in list
+   context rather than integers, which should be more efficient.
+   https://rt.cpan.org/Ticket/Display.html?id=69158
+
 Imager-Font-FT2 0.82
 ====================
 

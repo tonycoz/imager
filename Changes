@@ -41,6 +41,11 @@ Bug fixes:
  - Imager::Font->new now produces better error messages for the T1
    engine.
 
+ - the font has_chars() method now returns perl's true and false
+   values in list context rather than integers, which should be more
+   efficient.
+   https://rt.cpan.org/Ticket/Display.html?id=69158
+
 Imager 0.85_01 - 10 Oct 2011
 ==============
 

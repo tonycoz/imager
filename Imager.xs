@@ -2209,7 +2209,7 @@ i_tt_has_chars(handle, text_sv, utf8)
         if (GIMME_V == G_ARRAY) {
           EXTEND(SP, count);
           for (i = 0; i < count; ++i) {
-            PUSHs(sv_2mortal(newSViv(work[i])));
+            PUSHs(boolSV(work[i]));
           }
         }
         else {
