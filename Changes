@@ -50,6 +50,9 @@ Bug fixes:
    initialized more efficiently.
    https://rt.cpan.org/Ticket/Display.html?id=68994
 
+ - updated the Thanks list in README
+   https://rt.cpan.org/Ticket/Display.html?id=71607
+
 Imager 0.85_01 - 10 Oct 2011
 ==============
 
