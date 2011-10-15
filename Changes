@@ -56,6 +56,10 @@ Bug fixes:
  - check there's at least one coefficient for the convolution filter
    https://rt.cpan.org/Ticket/Display.html?id=68993
 
+ - make the APIRef synopsis ordering consistent, older versions of
+   perl could order it differently.
+   https://rt.cpan.org/Ticket/Display.html?id=71675
+
 Imager 0.85_01 - 10 Oct 2011
 ==============
 

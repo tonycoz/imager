@@ -10,7 +10,7 @@ my %funcs = map { $_ => 1 } @funcs;
 # look for files to parse
 
 my $mani = maniread;
-my @files = grep /\.(c|im|h)$/, keys %$mani;
+my @files = sort grep /\.(c|im|h)$/, keys %$mani;
 
 # scan each file for =item <func>\b
 my $func;
@@ -107,7 +107,11 @@ EOS
 
 for my $cat (sort { lc $a cmp lc $b } keys %cats) {
   print OUT "\n  # $cat\n";
-  for my $func (grep $funcsyns{$_}, sort { $order{$a} <=> $order{$b} } @{$cats{$cat}}) {
+  my @funcs = @{$cats{$cat}};
+  my %orig;
+  @orig{@funcs} = 0 .. $#funcs;
+  @funcs = sort { $order{$a} <=> $order{$b} || $orig{$a} <=> $orig{$b} } @funcs;
+  for my $func (grep $funcsyns{$_}, @funcs) {
     my $syn = $funcsyns{$func};
     $syn =~ s/^/  /gm;
     print OUT $syn;

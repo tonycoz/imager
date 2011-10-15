@@ -70,12 +70,12 @@ Imager::APIRef - Imager's C API - reference.
   # Image
 
   # Image creation/destruction
-  i_img *img = i_img_8_new(width, height, channels);
   i_img *img = i_sametype(src, width, height);
   i_img *img = i_sametype_chans(src, width, height, channels);
-  i_img *img = i_img_pal_new(width, height, channels, max_palette_size)
-  i_img *img = i_img_double_new(width, height, channels);
   i_img *img = i_img_16_new(width, height, channels);
+  i_img *img = i_img_8_new(width, height, channels);
+  i_img *img = i_img_double_new(width, height, channels);
+  i_img *img = i_img_pal_new(width, height, channels, max_palette_size)
   i_img_destroy(img)
 
   # Image Implementation
