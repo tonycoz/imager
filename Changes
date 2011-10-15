@@ -46,6 +46,10 @@ Bug fixes:
    efficient.
    https://rt.cpan.org/Ticket/Display.html?id=69158
 
+ - the btm data structure used by the flood_fill code is now
+   initialized more efficiently.
+   https://rt.cpan.org/Ticket/Display.html?id=68994
+
 Imager 0.85_01 - 10 Oct 2011
 ==============
 

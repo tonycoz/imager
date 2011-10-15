@@ -22,7 +22,7 @@ btm_new(i_img_dim xsize,i_img_dim ysize) {
   btm->data=(char*)mymalloc(bytes); /* checked 4jul05 tonyc */
   btm->xsize=xsize;
   btm->ysize=ysize;
-  for(i=0;i<(xsize*ysize+8)/8;i++) btm->data[i]=0; /* Is this always needed */
+  memset(btm->data, 0, bytes);
   return btm;
 }
 
