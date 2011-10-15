@@ -22,6 +22,11 @@ i_conv(i_img *im, const double *coeff,int len) {
 
   mm_log((1,"i_conv(im %p, coeff %p, len %d)\n",im,coeff,len));
   i_clear_error();
+
+  if (len < 1) {
+    i_push_error(0, "there must be at least one coefficient");
+    return 0;
+  }
  
   center=(len-1)/2;
 

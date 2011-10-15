@@ -1,7 +1,7 @@
 #!perl -w
 use strict;
 use Imager qw(:handy);
-use Test::More tests => 113;
+use Test::More tests => 116;
 
 -d "testout" or mkdir "testout";
 
@@ -22,6 +22,15 @@ test($imbase, {type=>'contrast', intensity=>0.5},
 # this one's kind of cool
 test($imbase, {type=>'conv', coef=>[ 0.3, 1, 0.3, ], },
      'testout/t61_conv_blur.ppm');
+
+{
+  my $work = $imbase->copy;
+  ok(!Imager::i_conv($work->{IMG}, []), "conv should fail with empty array");
+  ok(!$work->filter(type => 'conv', coef => []),
+     "check the conv OO intergave too");
+  is($work->errstr, "there must be at least one coefficient",
+     "check conv error message");
+}
 
 {
   my $work8 = $imbase->copy;
