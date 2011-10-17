@@ -2411,7 +2411,7 @@ i_get_anonymous_color_histo(im, maxc = 0x40000000)
         XSRETURN(col_cnt);
 
 
-Imager::ImgRaw
+void
 i_transform(im,opx,opy,parm)
     Imager::ImgRaw     im
              PREINIT:
@@ -2424,7 +2424,8 @@ i_transform(im,opx,opy,parm)
              AV* av;
              SV* sv1;
              int i;
-             CODE:
+	     i_img *result;
+             PPCODE:
              if (!SvROK(ST(1))) croak("Imager: Parameter 1 must be a reference to an array\n");
              if (!SvROK(ST(2))) croak("Imager: Parameter 2 must be a reference to an array\n");
              if (!SvROK(ST(3))) croak("Imager: Parameter 3 must be a reference to an array\n");
@@ -2452,17 +2453,18 @@ i_transform(im,opx,opy,parm)
                sv1=(*(av_fetch(av,i,0)));
                parm[i]=(double)SvNV(sv1);
              }
-             RETVAL=i_transform(im,opx,opxl,opy,opyl,parm,parmlen);
+             result=i_transform(im,opx,opxl,opy,opyl,parm,parmlen);
              myfree(parm);
              myfree(opy);
              myfree(opx);
-             ST(0) = sv_newmortal();
-             if (RETVAL == 0) ST(0)=&PL_sv_undef;
-             else sv_setref_pv(ST(0), "Imager::ImgRaw", (void*)RETVAL);
-	  OUTPUT:
-	     RETVAL
+ 	     if (result) {
+	       SV *result_sv = sv_newmortal();
+	       EXTEND(SP, 1);
+	       sv_setref_pv(result_sv, "Imager::ImgRaw", (void*)result);
+	       PUSHs(result_sv);
+	     }
 
-Imager::ImgRaw
+void
 i_transform2(sv_width,sv_height,channels,sv_ops,av_n_regs,av_c_regs,av_in_imgs)
 	SV *sv_width
 	SV *sv_height
@@ -2486,7 +2488,8 @@ i_transform2(sv_width,sv_height,channels,sv_ops,av_n_regs,av_c_regs,av_in_imgs)
              SV *sv1;
              IV tmp;
 	     int i;
-             CODE:
+	     i_img *result;
+             PPCODE:
 
              in_imgs_count = av_len(av_in_imgs)+1;
 	     for (i = 0; i < in_imgs_count; ++i) {
@@ -2541,18 +2544,19 @@ i_transform2(sv_width,sv_height,channels,sv_ops,av_n_regs,av_c_regs,av_in_imgs)
              c_regs = mymalloc(c_regs_count * sizeof(i_color));
              /* I don't bother initializing the colou?r registers */
 
-	     RETVAL=i_transform2(width, height, channels, ops, ops_count, 
+	     result=i_transform2(width, height, channels, ops, ops_count, 
 				 n_regs, n_regs_count, 
 				 c_regs, c_regs_count, in_imgs, in_imgs_count);
 	     if (in_imgs)
 	         myfree(in_imgs);
              myfree(n_regs);
 	     myfree(c_regs);
-             ST(0) = sv_newmortal();
-             if (RETVAL == 0) ST(0)=&PL_sv_undef;
-             else sv_setref_pv(ST(0), "Imager::ImgRaw", (void*)RETVAL);
-	  OUTPUT:
-	     RETVAL
+ 	     if (result) {
+	       SV *result_sv = sv_newmortal();
+	       EXTEND(SP, 1);
+	       sv_setref_pv(result_sv, "Imager::ImgRaw", (void*)result);
+	       PUSHs(result_sv);
+	     }
 
 
 void
