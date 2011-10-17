@@ -586,12 +586,12 @@ i_io_putc_imp(io_glue *ig, int c) {
   if (!ig->buffered) {
     char buf = c;
     ssize_t write_result;
+    int result = c;
 
     if (ig->error)
       return EOF;
 
     write_result = i_io_raw_write(ig, &buf, 1);
-    int result = c;
     if (write_result != 1) {
       ig->error = 1;
       result = EOF;
