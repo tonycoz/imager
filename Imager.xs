@@ -2459,6 +2459,8 @@ i_transform(im,opx,opy,parm)
              ST(0) = sv_newmortal();
              if (RETVAL == 0) ST(0)=&PL_sv_undef;
              else sv_setref_pv(ST(0), "Imager::ImgRaw", (void*)RETVAL);
+	  OUTPUT:
+	     RETVAL
 
 Imager::ImgRaw
 i_transform2(sv_width,sv_height,channels,sv_ops,av_n_regs,av_c_regs,av_in_imgs)
@@ -2549,6 +2551,8 @@ i_transform2(sv_width,sv_height,channels,sv_ops,av_n_regs,av_c_regs,av_in_imgs)
              ST(0) = sv_newmortal();
              if (RETVAL == 0) ST(0)=&PL_sv_undef;
              else sv_setref_pv(ST(0), "Imager::ImgRaw", (void*)RETVAL);
+	  OUTPUT:
+	     RETVAL
 
 
 void
