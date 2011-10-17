@@ -1,4 +1,10 @@
 *.o
+*.obj
+*.pdb
+*.manifest
+*.ilk
+*.lib
+MYMETA.yml
 Makefile
 Makefile.old
 MANIFEST.bak
