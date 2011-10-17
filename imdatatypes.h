@@ -669,6 +669,15 @@ typedef struct i_render_tag i_render;
 #define I_FORMAT_ATTR(format_index, va_index)
 #endif
 
+#ifdef _MSC_VER
+#  ifndef vsnprintf
+#  define vsnprintf _vsnprintf
+#  endif
+#  ifndef snprintf
+#  define snprintf _snprintf
+#  endif
+#endif
+
 /*
 =item i_DF
 =category Data Types

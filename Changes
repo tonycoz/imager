@@ -60,6 +60,12 @@ Bug fixes:
    perl could order it differently.
    https://rt.cpan.org/Ticket/Display.html?id=71675
 
+ - we rely on Config.pm's d_vsnprintf as to whether we use
+   vsnprintf/snprintf, which is defined in the Win32 Config.pm even
+   though it only has _ prefixed versions of these.  Define our own
+   prefixed names on Win32.
+   https://rt.cpan.org/Ticket/Display.html?id=71642
+
 Imager 0.85_01 - 10 Oct 2011
 ==============
 
