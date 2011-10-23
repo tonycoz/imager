@@ -130,6 +130,38 @@ sub _probe_pkg {
   return;
 }
 
+sub _is_msvc {
+  return $Config{cc} eq "cl";
+}
+
+sub _lib_basename {
+  my ($base) = @_;
+
+  if (_is_msvc()) {
+    return $base;
+  }
+  else {
+    return "lib$base";
+  }
+}
+
+sub _lib_option {
+  my ($base) = @_;
+
+  if (_is_msvc()) {
+    return $base . $Config{_a};
+  }
+  else {
+    return "-l$base";
+  }
+}
+
+sub _quotearg {
+  my ($opt) = @_;
+
+  return $opt =~ /\s/ ? qq("$opt") : $opt;
+}
+
 sub _probe_check {
   my ($req) = @_;
 
@@ -139,9 +171,10 @@ sub _probe_check {
     # synthesize a libcheck
     my $lext=$Config{'so'};   # Get extensions of libraries
     my $aext=$Config{'_a'};
+    my $basename = _lib_basename($libbase);
     $libcheck = sub {
-      -e File::Spec->catfile($_[0], "lib$libbase$aext")
-	|| -e File::Spec->catfile($_[0], "lib$libbase.$lext")
+      -e File::Spec->catfile($_[0], "$basename$aext")
+	|| -e File::Spec->catfile($_[0], "$basename.$lext")
       };
   }
 
@@ -187,7 +220,7 @@ sub _probe_check {
     push @libs, $req->{libopts};
   }
   elsif ($libbase) {
-    push @libs, "-l$libbase";
+    push @libs, _lib_option($libbase);
   }
   else {
     die "$req->{altname}: inccheck but no libbase or libopts";
@@ -195,8 +228,8 @@ sub _probe_check {
 
   return
     {
-     INC => "-I$found_incpath",
-     LIBS => "@libs",
+     INC => _quotearg("-I$found_incpath"),
+     LIBS => join(" ", map _quotearg($_), @libs),
      DEFINE => "",
     };
 }

@@ -66,6 +66,8 @@ Bug fixes:
    prefixed names on Win32.
    https://rt.cpan.org/Ticket/Display.html?id=71642
 
+ - fix library detection with MSVC
+
 Imager 0.85_01 - 10 Oct 2011
 ==============
 

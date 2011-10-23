@@ -245,13 +245,13 @@ sub assert_lib {
 	}
     }
     if(defined($args{INC})) {
-        foreach my $arg (split(' ', $args{INC})) {
+        foreach my $arg (_shellwords($args{INC})) {
             die("INC argument badly-formed: $arg\n") unless($arg =~ /^-I/);
             push @incpaths, substr($arg, 2);
         }
     }
 
-    my @cc = _findcc();
+    my ($cc, $ld) = _findcc();
     my @missing;
     my @wrongresult;
     my @use_headers;
@@ -271,21 +271,25 @@ sub assert_lib {
         if ( $Config{cc} eq 'cl' ) {                 # Microsoft compiler
             require Win32;
             @sys_cmd = (
-                @cc,
+                @$cc,
                 $cfile,
                 "/Fe$exefile",
-                (map { '/I'.Win32::GetShortPathName($_) } @incpaths)
+                (map { '/I'.Win32::GetShortPathName($_) } @incpaths),
+                "/link",
+                @$ld
             );
         } elsif($Config{cc} =~ /bcc32(\.exe)?/) {    # Borland
             @sys_cmd = (
-                @cc,
+                @$cc,
                 (map { "-I$_" } @incpaths),
                 "-o$exefile",
-                $cfile
+                $cfile,
+                @$ld
             );
         } else { # Unix-ish: gcc, Sun, AIX (gcc, cc), ...
             @sys_cmd = (
-                @cc,
+                @$cc,
+                @$ld,
                 $cfile,
                 (map { "-I$_" } @incpaths),
                 "-o", "$exefile"
@@ -317,18 +321,20 @@ sub assert_lib {
             } @libpaths; 
             # this is horribly sensitive to the order of arguments
             @sys_cmd = (
-                @cc,
+                @$cc,
                 $cfile,
                 ( map { "$_.lib" } @$libs ),
                 "/Fe$exefile", 
                 (map { '/I'.Win32::GetShortPathName($_) } @incpaths),
                 "/link",
+		@$ld,
                 (map {'/libpath:'.Win32::GetShortPathName($_)} @$paths),
             );
         } elsif($Config{cc} eq 'CC/DECC') {          # VMS
         } elsif($Config{cc} =~ /bcc32(\.exe)?/) {    # Borland
             @sys_cmd = (
-                @cc,
+                @$cc,
+		@$ld,
                 "-o$exefile",
                 (map { "-l$_" } @$libs ),
                 (map { "-I$_" } @incpaths),
@@ -337,7 +343,8 @@ sub assert_lib {
         } else {                                     # Unix-ish
                                                      # gcc, Sun, AIX (gcc, cc)
             @sys_cmd = (
-                @cc,
+                @$cc,
+		@$ld,
                 $cfile,
                 "-o", "$exefile",
                 (map { "-l$_" } @$libs ),
@@ -368,21 +375,53 @@ sub _cleanup_exe {
     unlink $exefile if -f $exefile;
     unlink $ofile if -f $ofile;
     unlink "$exefile\.manifest" if -f "$exefile\.manifest";
+    if ( $Config{cc} eq 'cl' ) {
+	# MSVC also creates foo.ilk and foo.pdb
+	my $ilkfile = $exefile;
+	$ilkfile =~ s/$Config{_exe}$/.ilk/;
+	my $pdbfile = $exefile;
+	$pdbfile =~ s/$Config{_exe}$/.pdb/;
+	unlink $ilkfile if -f $ilkfile;
+	unlink $pdbfile if -f $pdbfile;
+    }
     return
 }
-    
+
+# return ($cc, $ld)
+# where $cc is an array ref of compiler name, compiler flags
+# where $ld is an array ref of linker flags
 sub _findcc {
     # Need to use $keep=1 to work with MSWin32 backslashes and quotes
-    my @Config_ccflags_ldflags =  @Config{qw(ccflags ldflags)};  # use copy so ASPerl will compile
-    my @flags = grep { length } map { quotewords('\s+', 1, $_ || ()) } @Config_ccflags_ldflags;
+    my $Config_ccflags =  $Config{ccflags};  # use copy so ASPerl will compile
+    my @Config_ldflags =  @Config{qw(ldflags perllibs)};
+    my @ccflags = grep { length } quotewords('\s+', 1, $Config_ccflags);
+    my @ldflags = grep { length } quotewords('\s+', 1, @Config_ldflags);
     my @paths = split(/$Config{path_sep}/, $ENV{PATH});
     my @cc = split(/\s+/, $Config{cc});
-    return (@cc, @flags) if -x $cc[0];
+    return ( [ @cc, @ccflags ], \@ldflags ) if -x $cc[0];
     foreach my $path (@paths) {
         my $compiler = File::Spec->catfile($path, $cc[0]) . $Config{_exe};
-        return ($compiler, @cc[1 .. $#cc], @flags) if -x $compiler;
+        return ([ $compiler, @cc[1 .. $#cc], @ccflags ], \@ldflags)
+            if -x $compiler;
     }
     die("Couldn't find your C compiler\n");
+}
+
+sub _shellwords {
+    my $line = shift;
+
+    if ($^O eq "MSWin32") {
+	my @elements;
+	$line =~ s/^\s+//;
+	while ($line =~ s/^"([^"]*)"// || $line =~ s/^(\S+)//) {
+	  push @elements, $1;
+	  $line =~ s/^\s+//;
+	}
+	return @elements;
+    }
+    else {
+	return quotewords('\s+', 0, shift);
+    } 
 }
 
 # code substantially borrowed from IPC::Run3
