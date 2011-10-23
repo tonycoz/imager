@@ -420,7 +420,7 @@ sub _shellwords {
 	return @elements;
     }
     else {
-	return quotewords('\s+', 0, shift);
+	return grep defined && /\S/, quotewords('\s+', 0, $line);
     } 
 }
 
