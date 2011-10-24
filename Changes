@@ -68,6 +68,10 @@ Bug fixes:
 
  - fix library detection with MSVC
 
+ - search a few more library directories, so EU::MM doesn't discard
+   them.  Hopefully fixes:
+   https://rt.cpan.org/Ticket/Display.html?id=71643
+
 Imager 0.85_01 - 10 Oct 2011
 ==============
 
