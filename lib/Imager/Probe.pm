@@ -2,6 +2,7 @@ package Imager::Probe;
 use strict;
 use File::Spec;
 use Config;
+use Cwd ();
 
 my @alt_transfer = qw/altname incsuffix libbase/;
 
@@ -323,7 +324,26 @@ sub _lib_paths {
      $^O eq "cygwin" ? "/usr/lib/w32api" : "",
      "/usr/lib",
      "/usr/local/lib",
+     _gcc_lib_paths(),
     );
+}
+
+sub _gcc_lib_paths {
+  $Config{gccversion}
+    or return;
+
+  my ($base_version) = $Config{gccversion} =~ /^([0-9]+)/
+    or return;
+
+  $base_version >= 4
+    or return;
+
+  my ($lib_line) = grep /^libraries:/, `$Config{cc} -print-search-dirs`
+    or return;
+  $lib_line =~ s/^libraries: =//;
+  chomp $lib_line;
+
+  return grep !/gcc/ && -d, split /:/, $lib_line;
 }
 
 sub _inc_paths {
@@ -365,6 +385,11 @@ sub _paths {
 
     push @out, grep -d $_, split /\Q$Config{path_sep}/, $path;
   }
+
+  @out = map Cwd::realpath($_), @out;
+
+  my %seen;
+  @out = grep !$seen{$_}++, @out;
 
   return @out;
 }
