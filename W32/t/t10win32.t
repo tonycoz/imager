@@ -29,11 +29,15 @@ SKIP:
      "i_wf_cp smoke test");
   i_line($overlay,0,50,100,50,$bgcolor, 1);
   
-  open(FH,">testout/t10font.ppm") || die "cannot open testout/t10font.ppm\n";
-  binmode(FH);
-  my $io = Imager::io_new_fd(fileno(FH));
-  i_writeppm_wiol($overlay,$io);
-  close(FH);
+  if (open(FH,">testout/t10font.ppm")) {
+    binmode(FH);
+    my $io = Imager::io_new_fd(fileno(FH));
+    i_writeppm_wiol($overlay,$io);
+    close(FH);
+  }
+  else {
+    diag "cannot open testout/t10font.ppm: $!";
+  }
   
   $bgcolor=i_color_set($bgcolor,200,200,200,0);
   my $backgr=Imager::ImgRaw::new(500,300,3);
@@ -42,19 +46,24 @@ SKIP:
      "i_wf_text smoke test");
   i_line($backgr,0, 100, 499, 100, NC(0, 0, 255), 1);
   
-  open(FH,">testout/t10font2.ppm") || die "cannot open testout/t10font2.ppm\n";
-  binmode(FH);
-  $io = Imager::io_new_fd(fileno(FH));
-  i_writeppm_wiol($backgr,$io);
-  close(FH);
-  
+  if (open(FH,">testout/t10font2.ppm")) {
+    binmode(FH);
+    my $io = Imager::io_new_fd(fileno(FH));
+    i_writeppm_wiol($backgr,$io);
+    close(FH);
+  }
+  else {
+    diag "cannot open testout/t10font2.ppm: $!";
+  }
+
   my $img = Imager->new(xsize=>200, ysize=>200);
   my $font = Imager::Font->new(face=>$fontname, size=>20);
   ok($img->string('x'=>30, 'y'=>30, string=>"Imager", color=>NC(255, 0, 0), 
 	       font=>$font),
      "string with win32 smoke test")
-    or print "# ",$img->errstr,"\n";
-  $img->write(file=>'testout/t10_oo.ppm') or print "not ";
+    or diag "simple string output: ",$img->errstr;
+  $img->write(file=>'testout/t10_oo.ppm')
+    or diag "Cannot save t10_oo.ppm: ", $img->errstr;
   my @bbox2 = $font->bounding_box(string=>'Imager');
   is(@bbox2, 8, "got 8 values from bounding_box");
 
@@ -70,8 +79,11 @@ SKIP:
  SKIP:
   {
     $^O eq 'cygwin' and skip("Too hard to get correct directory for test font on cygwin", 13);
-    ok(Imager::Font::W32::i_wf_addfont("fontfiles/ExistenceTest.ttf"), "add test font")
-      or print "# ",Imager::_error_as_msg(),"\n";
+    my $extra_font = "fontfiles/ExistenceTest.ttf";
+    unless (ok(Imager::Font::W32::i_wf_addfont($extra_font), "add test font")) {
+      diag "adding font resource: ",Imager::_error_as_msg();
+      skip("Could not add font resource", 12);
+    }
     
     my $namefont = Imager::Font->new(face=>"ExistenceTest");
     ok($namefont, "create font based on added font");
@@ -82,7 +94,7 @@ SKIP:
     is(@bbox, 8, "should be 8 entries");
     isnt($bbox[6], $bbox[2], "different advance width");
     $bbox = $namefont->bounding_box(string=>"/", size=>100);
-    ok($bbox->pos_width != $bbox->advance_width, "OO check");
+    isnt($bbox->pos_width, $bbox->advance_width, "OO check");
     
     cmp_ok($bbox->right_bearing, '<', 0, "check right bearing");
   
@@ -100,7 +112,7 @@ SKIP:
     $im->line(color=>'blue', x1=>0, y1 => 100, x2=>199, y2 => 100);
     ok($im->string(font=>$namefont, text=>"/", x=>20, y=>100, color=>'white', size=>100),
        "draw / from ExistenceText")
-	or print "# ", $im->errstr, "\n";
+	or diag "draw / from ExistenceTest:", $im->errstr;
     $im->setpixel(x => 20+$bbox->neg_width, y => 100-$bbox->ascent, color => 'red');
     $im->setpixel(x => 20+$bbox->advance_width - $bbox->right_bearing, y => 100-$bbox->descent, color => 'red');
     $im->write(file=>'testout/t10_slash.ppm');
@@ -127,7 +139,7 @@ SKIP:
     $im->line(color=>'blue', x1=>0, y1 => 100, x2=>199, y2 => 100);
     ok($im->string(font=>$namefont, text=>"!", x=>20, y=>100, color=>'white', size=>100),
        "draw / from ExistenceText")
-	or print "# ", $im->errstr, "\n";
+	or diag "draw / from ExistenceTest: ", $im->errstr;
     $im->setpixel(x => 20+$bbox->neg_width, y => 100-$bbox->ascent, color => 'red');
     $im->setpixel(x => 20+$bbox->advance_width - $bbox->right_bearing, y => 100-$bbox->descent, color => 'red');
     $im->write(file=>'testout/t10_bang.ppm');
@@ -167,8 +179,9 @@ SKIP:
     ok($im->string(string => "\xE2\x98\xBA", size => 80, aa => 1, utf8 => 1, 
 		   color => "white", font => $font, x => 5, y => 80),
        "draw in utf8 (hand encoded)")
-	or print "# ", $im->errstr, "\n";
-    ok($im->write(file=>'testout/t10utf8.ppm'), "save utf8 image");
+	or diag "draw utf8 hand-encoded ", $im->errstr;
+    ok($im->write(file=>'testout/t10utf8.ppm'), "save utf8 image")
+      or diag "save t10utf8.ppm: ", $im->errstr;
 
     # native perl utf8
     # Win32 only supported on 5.6+
@@ -180,7 +193,7 @@ SKIP:
     ok($im2->string(string => $text, size => 80, aa => 1,
 		    color => 'white', font => $font, x => 5, y => 80),
        "draw in utf8 (perl utf8)")
-	or print "# ", $im->errstr, "\n";
+	or diag "draw in utf8: ", $im->errstr;
     ok($im2->write(file=>'testout/t10utf8b.ppm'), "save utf8 image");
     is(Imager::i_img_diff($im->{IMG}, $im2->{IMG}), 0,
        "check result is the same");
@@ -219,7 +232,7 @@ SKIP:
 
       ok($im->string(text => "T", font => $font, y => 15),
 	 "draw with default color")
-	or print "# ", $im->errstr, "\n";
+	or diag "draw with default color: ", $im->errstr;
       my $work = Imager->new(xsize => 20, ysize => 20);
       my $cmp = $work->copy;
       $work->rubthrough(src => $im);

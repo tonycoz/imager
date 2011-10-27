@@ -322,25 +322,33 @@ int
 i_wf_addfont(char const *filename) {
   i_clear_error();
 
+  mm_log((1, "i_wf_addfont(%s)\n", filename));
   if (!gdi_dll) {
     gdi_dll = GetModuleHandle("GDI32");
     if (gdi_dll) {
       AddFontResourceExAp = (AddFontResourceExA_t)GetProcAddress(gdi_dll, "AddFontResourceExA");
       RemoveFontResourceExAp = (RemoveFontResourceExA_t)GetProcAddress(gdi_dll, "RemoveFontResourceExA");
+      mm_log((1, "i_wf_addfont: AddFontResourceExA %p RemoveFontResourceExA %p\n",
+	      AddFontResourceExAp, RemoveFontResourceExAp));
     }
   }
 
-  if (AddFontResourceExAp && RemoveFontResourceExAp
-      && AddFontResourceExAp(filename, FR_PRIVATE, 0)) {
-    return 1;
-  }
-  else if (AddFontResource(filename)) {
-    return 1;
+  if (AddFontResourceExAp && RemoveFontResourceExAp) {
+    mm_log((1, "i_wf_addfont: adding via AddFontResourceEx()\n"));
+    if (AddFontResourceExAp(filename, FR_PRIVATE, 0)) {
+      return 1;
+    }
   }
   else {
-    i_push_errorf(0, "Could not add resource: %ld", GetLastError());
-    return 0;
+    mm_log((1, "i_wf_addfont: adding via AddFontResource()\n"));
+    if (AddFontResource(filename)) {
+      return 1;
+    }
   }
+
+  mm_log((1, "i_wf_addfont failed: %ld\n", GetLastError()));
+  i_push_errorf(0, "Could not add resource: %ld", GetLastError());
+  return 0;
 }
 
 /*
@@ -354,17 +362,22 @@ int
 i_wf_delfont(char const *filename) {
   i_clear_error();
 
-  if (AddFontResourceExAp && RemoveFontResourceExAp
-      && RemoveFontResourceExAp(filename, FR_PRIVATE, 0)) {
-    return 1;
-  }
-  else if (RemoveFontResource(filename)) {
-    return 1;
+  mm_log((1, "i_wf_delfont(%s)\n", filename));
+
+  if (AddFontResourceExAp && RemoveFontResourceExAp) {
+    mm_log((1, "i_wf_delfont: removing via RemoveFontResourceEx()\n"));
+    if (RemoveFontResourceExAp(filename, FR_PRIVATE, 0))
+      return 1;
   }
   else {
-    i_push_errorf(0, "Could not remove resource: %ld", GetLastError());
-    return 0;
+    mm_log((1, "i_wf_delfont: adding via RemoveFontResourceEx()\n"));
+    if (RemoveFontResource(filename))
+      return 1;
   }
+
+  mm_log((1, "i_wf_delfont failed: %ld\n", GetLastError()));
+  i_push_errorf(0, "Could not remove resource: %ld", GetLastError());
+  return 0;
 }
 
 /*
