@@ -4,7 +4,7 @@ use Imager;
 use vars qw($VERSION @ISA);
 
 BEGIN {
-  $VERSION = "0.81";
+  $VERSION = "0.82";
 
   eval {
     require XSLoader;
@@ -20,7 +20,7 @@ BEGIN {
 Imager->register_reader
   (
    type=>'jpeg',
-   single => 
+   single =>
    sub { 
      my ($im, $io, %hsh) = @_;
 

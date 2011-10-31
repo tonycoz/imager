@@ -1,3 +1,12 @@
+Imager-File-TIFF 0.82
+=====================
+
+ - modify to use the new buffered I/O functions instead of calling
+   I/O layer callbacks directly.
+   https://rt.cpan.org/Ticket/Display.html?id=69912
+
+ - handle I/O close errors properly
+
 Imager-File-TIFF 0.81
 =====================
 

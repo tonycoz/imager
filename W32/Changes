@@ -4,6 +4,13 @@ Imager-Font-W32 0.82
  - the default text color is no longer transparent.
    https://rt.cpan.org/Ticket/Display.html?id=71469
 
+ - fix library detection under MSVC
+   https://rt.cpan.org/Ticket/Display.html?id=71735
+
+ - added better tracing of the font resource helpers
+
+ - improve error reporting for test failures
+
 Imager-Font-W32 0.81
 ====================
 

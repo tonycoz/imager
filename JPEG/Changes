@@ -1,3 +1,11 @@
+Imager-File-JPEG 0.82
+=====================
+
+ - modify to use the new buffered I/O functions instead of calling
+   I/O layer callbacks directly.
+
+ - handle I/O close errors properly
+
 Imager-File-JPEG 0.81
 =====================
 
