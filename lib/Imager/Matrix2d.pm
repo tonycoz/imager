@@ -4,7 +4,7 @@ use vars qw($VERSION);
 use Scalar::Util qw(reftype looks_like_number);
 use Carp qw(croak);
 
-$VERSION = "1.0010";
+$VERSION = "1.010";
 
 =head1 NAME
 

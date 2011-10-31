@@ -1,5 +1,7 @@
 Imager release history.  Older releases can be found in Changes.old
 
+ - properly increment the Imager::Matrix2d $VERSION.
+
 Imager 0.86 - 31 Oct 2011
 ===========
 
