@@ -13,7 +13,7 @@ init_log("testout/t102png.log",1);
 $Imager::formats{"png"}
   or plan skip_all => "No png support";
 
-plan tests => 63;
+plan tests => 73;
 
 diag("Library version " . Imager::File::PNG::i_png_lib_version());
 
@@ -230,6 +230,7 @@ SKIP:
      "read grayscale");
   is($im->getchannels, 1, "check channel count");
   is($im->type, "direct", "check type");
+  is($im->bits, 8, "check bits");
 }
 
 { # test grayscale + alpha read as greyscale + alpha
@@ -238,6 +239,7 @@ SKIP:
      "read grayscale + alpha");
   is($im->getchannels, 2, "check channel count");
   is($im->type, "direct", "check type");
+  is($im->bits, 8, "check bits");
 }
 
 { # test paletted + alpha read as paletted
@@ -252,10 +254,30 @@ SKIP:
 { # test paletted read as paletted
   my $im = Imager->new;
   ok($im->read(file => "testimg/pal.png", type => "png"),
-     "read paletted with alpha");
+     "read paletted");
   is($im->getchannels, 3, "check channel count");
   local $TODO = "Not yet implemented";
   is($im->type, "paletted", "check type");
+}
+
+{ # test 16-bit rgb read as 16 bit
+  my $im = Imager->new;
+  ok($im->read(file => "testimg/rgb16.png", type => "png"),
+     "read 16-bit rgb");
+  is($im->getchannels, 3, "check channel count");
+  is($im->type, "direct", "check type");
+  local $TODO = "Not yet implemented";
+  is($im->bits, 16, "check bits");
+}
+
+{ # test 1-bit grey read as mono
+  my $im = Imager->new;
+  ok($im->read(file => "testimg/bilevel.png", type => "png"),
+     "read bilevel png");
+  is($im->getchannels, 1, "check channel count");
+  local $TODO = "Not yet implemented";
+  is($im->type, "paletted", "check type");
+  ok($im->is_bilevel, "should be bilevel");
 }
 
 sub limited_write {
