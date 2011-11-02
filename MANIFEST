@@ -289,6 +289,7 @@ t/t020masked.t
 t/t021sixteen.t
 t/t022double.t			Test double/sample images
 t/t023palette.t			Test paletted images
+t/t03test.t			Test Imager::Test
 t/t05error.t
 t/t07iolayer.t
 t/t1000files.t			Format independent file tests
