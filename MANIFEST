@@ -226,8 +226,14 @@ PNG/README
 PNG/t/00load.t
 PNG/t/10png.t			Test png support
 PNG/testimg/badcrc.png
+PNG/testimg/bilevel.png
+PNG/testimg/gray.png
+PNG/testimg/graya.png
+PNG/testimg/pal.png
 PNG/testimg/palette.png
 PNG/testimg/palette_out.png
+PNG/testimg/paltrans.png
+PNG/testimg/rgb16.png
 pnm.c
 polygon.c
 ppport.h
