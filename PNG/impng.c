@@ -371,6 +371,20 @@ get_png_tags(i_img *im, png_structp png_ptr, png_infop info_ptr) {
       i_tags_setn(&im->tags, "i_aspect_only", 1);
     }
   }
+  switch (png_get_interlace_type(png_ptr, info_ptr)) {
+  case PNG_INTERLACE_NONE:
+    i_tags_setn(&im->tags, "png_interlace", 0);
+    break;
+  case PNG_INTERLACE_ADAM7:
+    i_tags_set(&im->tags, "png_interlace", "adam7", -1);
+    break;
+
+  default:
+    i_tags_set(&im->tags, "png_interlace", "unknown", -1);
+    break;
+  }
+
+  i_tags_setn(&im->tags, "png_bits", png_get_bit_depth(png_ptr, info_ptr));
 }
 
 static void
