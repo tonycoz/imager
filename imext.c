@@ -353,6 +353,42 @@ i_img_dim
 }
 
 /*
+=item i_gsamp_bits(im, left, right, y, samples, channels, channel_count, bits)
+=category Drawing
+
+Reads integer samples scaled to C<bits> bits of precision into the
+C<unsigned int> array C<samples>.
+
+Expect this to be slow unless C<< bits == im->bits >>.
+
+Returns the number of samples copied, or -1 on error.
+
+Not all image types implement this method.
+
+Pushes errors, but does not call C<i_clear_error()>.
+
+=cut
+*/
+
+/*
+=item i_psamp_bits(im, left, right, y, samples, channels, channel_count, bits)
+=category Drawing
+
+Writes integer samples scaled to C<bits> bits of precision from the
+C<unsigned int> array C<samples>.
+
+Expect this to be slow unless C<< bits == im->bits >>.
+
+Returns the number of samples copied, or -1 on error.
+
+Not all image types implement this method.
+
+Pushes errors, but does not call C<i_clear_error()>.
+
+=cut
+*/
+
+/*
 =item i_gpal(im, left, right, y, indexes)
 
 =category Drawing
