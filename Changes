@@ -1,5 +1,8 @@
 Imager release history.  Older releases can be found in Changes.old
 
+ - document the return value of the filter() method.
+   https://rt.cpan.org/Ticket/Display.html?id=72369
+
  - properly increment the Imager::Matrix2d $VERSION.
 
  - actually include the Imager::Test tests in the dist

@@ -42,6 +42,7 @@ eg
 gaussian
 ie
 infix
+invocant
 metadata
 paletted
 postfix

@@ -46,6 +46,13 @@ many other possible parameters, see L</Types of Filters> below.
 
 =back
 
+Returns the invocant (C<$self>) on success, returns a false value on
+failure.  You can call C<< $self->errstr >> to determine the cause of
+the failure.
+
+  $self->filter(type => $type, ...)
+    or die $self->errstr;
+
 =back
 
 =head2 Types of Filters
@@ -607,6 +614,18 @@ The special parameters C<image> and C<imager> are supplied as the low
 level image object from $self and $self itself respectively.
 
 The function you supply must modify the image in place.
+
+To indicate an error, die with an error message followed by a
+newline. C<filter()> will store the error message as the C<errstr()>
+for the invocant and return false to indicate failure.
+
+  sub my_filter {
+    my %opts = @_;
+    _is_valid($opts{myparam})
+      or die "myparam invalid!\n";
+
+    # actually do the filtering...
+  }
 
 =back
 
