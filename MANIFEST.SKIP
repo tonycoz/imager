@@ -53,6 +53,7 @@ Makefile\.old$
 \bpm_to_blib$
 \.o$
 ^MANIFEST\.bak$
+\bMYMETA\.yml$
 
 ^testout/
 ^FT2/testout/
