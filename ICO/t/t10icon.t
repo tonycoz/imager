@@ -1,6 +1,6 @@
 #!perl -w
 use strict;
-use Test::More tests => 102;
+use Test::More tests => 106;
 use Imager::Test qw(is_image test_image);
 
 BEGIN { use_ok('Imager::File::ICO'); }
@@ -385,3 +385,33 @@ EOS
     like($im->errstr, qr/synthetic close failure/,
 	 "check error message");
 }
+
+{ # RT #69599
+  {
+    my $ico = Imager->new(file => "testimg/pal256.ico", filetype => "ico");
+    ok($ico, "read a 256x256 pixel wide/high icon")
+      or diag "Could not read 256x256 pixel icon: ",Imager->errstr;
+  }
+  SKIP:
+  {
+    my $im = test_image();
+    my $sc = $im->scale(xpixels => 256, ypixels => 256, type => "nonprop")
+      or diag("Cannot scale: " . $im->errstr);
+    $sc
+      or skip("Cannot produce scaled image", 3);
+    my $alpha = $sc->convert(preset => "addalpha")
+      or diag "Cannot add alpha channel: " . $sc->errstr ;
+    
+    my $data;
+    ok($alpha->write(data => \$data, type => "ico"),
+       "save 256x256 image")
+      or diag("Cannot save 256x256 icon:" . $alpha->errstr);
+    my $read = Imager->new(data => $data, filetype => "ico");
+    ok($read, "read 256x256 pixel image back in")
+      or diag(Imager->errstr);
+    $read
+      or skip("Couldn't read to compare", 1);
+    is_image($read, $alpha, "check we read what we wrote");
+  }
+}
+

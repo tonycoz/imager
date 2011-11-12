@@ -182,8 +182,9 @@ ico_reader_open(i_io_glue_t *ig, int *error) {
       image->hotspot_y = hotspot_y;
     }
 
-    image->width = width;
-    image->height = height;
+    /* a width or height of zero here indicates a width/height of 256 */
+    image->width = width ? width : 256;
+    image->height = height ? height : 256;
     image->offset = image_offset;
     image->size = bytes_in_res;
   }
@@ -482,9 +483,11 @@ ico_write(i_io_glue_t *ig, ico_image_t const *images, int image_count,
     ico_image_t const *image = images + i;
     int bits, colors;
     int size = ico_image_size(image, &bits, &colors);
+    int width_byte = image->width == 256 ? 0 : image->width;
+    int height_byte = image->height == 256 ? 0 : image->height;
 
     if (type == ICON_ICON) {
-      if (!write_packed(ig, "bbbbwwdd", image->width, image->height,
+      if (!write_packed(ig, "bbbbwwdd", width_byte, height_byte,
 			colors, 0, 1, bits, (unsigned long)size, 
 			(unsigned long)current_offset)) {
 	*error = ICOERR_Write_Failure;
@@ -504,7 +507,7 @@ ico_write(i_io_glue_t *ig, ico_image_t const *images, int image_count,
       else if (hotspot_y >= image->height)
 	hotspot_y = image->height - 1;
 
-      if (!write_packed(ig, "bbbbwwdd", image->width, image->height,
+      if (!write_packed(ig, "bbbbwwdd", width_byte, height_byte,
 			colors, 0, hotspot_x, hotspot_y, (unsigned long)size, 
 			(unsigned long)current_offset)) {
 	*error = ICOERR_Write_Failure;
@@ -1044,11 +1047,11 @@ ico_write_validate(ico_image_t const *images, int image_count, int *error) {
   for (i = 0; i < image_count; ++i) {
     ico_image_t const *image = images + i;
 
-    if (image->width < 1 || image->width > 255) {
+    if (image->width < 1 || image->width > 256) {
       *error = ICOERR_Invalid_Width;
       return 0;
     }
-    if (image->height < 1 || image->height > 255) {
+    if (image->height < 1 || image->height > 256) {
       *error = ICOERR_Invalid_Height;
       return 0;
     }

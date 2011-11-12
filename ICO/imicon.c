@@ -256,7 +256,7 @@ i_readico_multi(io_glue *ig, int *count, int masked) {
 
 static int
 validate_image(i_img *im) {
-  if (im->xsize > 255 || im->ysize > 255) {
+  if (im->xsize > 256 || im->ysize > 256) {
     i_push_error(0, "image too large for ico file");
     return 0;
   }

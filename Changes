@@ -10,6 +10,9 @@ Imager release history.  Older releases can be found in Changes.old
 
  - actually include the Imager::Test tests in the dist
 
+ - correctly read and write 256x256 pixel ICO files
+   https://rt.cpan.org/Ticket/Display.html?id=69599
+
 Imager 0.86 - 31 Oct 2011
 ===========
 
