@@ -74,7 +74,7 @@ for my $file (@pod) {
   my @out = `aspell list <$check_filename`;
   unless (ok(@out == 0, "spell check $file")) {
     chomp @out;
-    print "# $_\n" for @out;
+    diag $_ for @out;
     print "#----\n";
     open my $fh, "<", $check_filename;
     while (<$fh>) {
