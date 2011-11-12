@@ -2,7 +2,7 @@
 use strict;
 use Imager qw(:all);
 use Test::More;
-use Imager::Test qw(test_image_raw test_image);
+use Imager::Test qw(test_image_raw test_image is_image);
 
 my $debug_writes = 1;
 
@@ -13,7 +13,7 @@ init_log("testout/t102png.log",1);
 $Imager::formats{"png"}
   or plan skip_all => "No png support";
 
-plan tests => 73;
+plan tests => 92;
 
 diag("Library version " . Imager::File::PNG::i_png_lib_version());
 
@@ -231,6 +231,8 @@ SKIP:
   is($im->getchannels, 1, "check channel count");
   is($im->type, "direct", "check type");
   is($im->bits, 8, "check bits");
+  local $TODO = "Not yet implemented";
+  is($im->tags(name => "png_bits"), 8, "check png_bits tag");
 }
 
 { # test grayscale + alpha read as greyscale + alpha
@@ -240,6 +242,9 @@ SKIP:
   is($im->getchannels, 2, "check channel count");
   is($im->type, "direct", "check type");
   is($im->bits, 8, "check bits");
+  local $TODO = "Not yet implemented";
+  is($im->tags(name => "png_bits"), 8, "check png_bits tag");
+  is($im->tags(name => "png_interlace"), 0, "check png_bits tag");
 }
 
 { # test paletted + alpha read as paletted
@@ -249,6 +254,8 @@ SKIP:
   is($im->getchannels, 4, "check channel count");
   local $TODO = "Not yet implemented";
   is($im->type, "paletted", "check type");
+  is($im->tags(name => "png_bits"), 8, "check png_bits tag");
+  is($im->tags(name => "png_interlace"), 0, "check png_bits tag");
 }
 
 { # test paletted read as paletted
@@ -258,6 +265,8 @@ SKIP:
   is($im->getchannels, 3, "check channel count");
   local $TODO = "Not yet implemented";
   is($im->type, "paletted", "check type");
+  is($im->tags(name => "png_bits"), 8, "check png_bits tag");
+  is($im->tags(name => "png_interlace"), 0, "check png_bits tag");
 }
 
 { # test 16-bit rgb read as 16 bit
@@ -268,6 +277,8 @@ SKIP:
   is($im->type, "direct", "check type");
   local $TODO = "Not yet implemented";
   is($im->bits, 16, "check bits");
+  is($im->tags(name => "png_bits"), 16, "check png_bits tag");
+  is($im->tags(name => "png_interlace"), 0, "check png_bits tag");
 }
 
 { # test 1-bit grey read as mono
@@ -278,6 +289,25 @@ SKIP:
   local $TODO = "Not yet implemented";
   is($im->type, "paletted", "check type");
   ok($im->is_bilevel, "should be bilevel");
+  is($im->tags(name => "png_bits"), 1, "check png_bits tag");
+  is($im->tags(name => "png_interlace"), 0, "check png_bits tag");
+}
+
+SKIP:
+{ # test interlaced read as interlaced and matches original
+  my $im_i = Imager->new(file => "testimg/rgb8i.png", filetype => "png");
+  ok($im_i, "read interlaced")
+    or skip("Could not read rgb8i.png: " . Imager->errstr, 7);
+  is($im_i->getchannels, 3, "check channel count");
+  is($im_i->type, "direct", "check type");
+  is($im_i->tags(name => "png_bits"), 8, "check png_bits");
+  is($im_i->tags(name => "png_interlace"), "adam7", "check png_interlace");
+
+  my $im = Imager->new(file => "testimg/rgb8.png", filetype => "png");
+  ok($im, "read non-interlaced")
+    or skip("Could not read testimg/rgb8.png: " . Imager->errstr, 2);
+  is($im->tags(name => "png_interlace"), "0", "check png_interlace");
+  is_image($im_i, $im, "compare interlaced and non-interlaced");
 }
 
 sub limited_write {

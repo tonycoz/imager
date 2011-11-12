@@ -2,6 +2,7 @@ Imager release history.  Older releases can be found in Changes.old
 
  - PNG rework
    - improve error reporting
+   - add png_interlace, png_bits tags
 
 Imager 0.90 - unreleased
 ===========

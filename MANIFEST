@@ -234,6 +234,8 @@ PNG/testimg/palette.png
 PNG/testimg/palette_out.png
 PNG/testimg/paltrans.png
 PNG/testimg/rgb16.png
+PNG/testimg/rgb8.png
+PNG/testimg/rgb8i.png
 pnm.c
 polygon.c
 ppport.h

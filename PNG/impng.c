@@ -28,7 +28,10 @@
 static int CC2C[PNG_COLOR_MASK_PALETTE|PNG_COLOR_MASK_COLOR|PNG_COLOR_MASK_ALPHA];
 
 #define PNG_BYTES_TO_CHECK 4
- 
+
+static i_img *
+read_direct8(png_structp png_ptr, png_infop info_ptr, int channels, i_img_dim width, i_img_dim height);
+
 unsigned
 i_png_lib_version(void) {
   return png_access_version_number();
@@ -313,43 +316,72 @@ i_readpng_wiol(io_glue *ig) {
     return NULL;
   }
 
+  im = read_direct8(png_ptr, info_ptr, channels, width, height);
+
+  if (im)
+    get_png_tags(im, png_ptr, info_ptr);
+
+  png_destroy_read_struct(&png_ptr, &info_ptr, (png_infopp)NULL);
+
+  if (im) {
+    if (rs.warnings) {
+      i_tags_set(&im->tags, "png_warnings", rs.warnings, -1);
+    }
+  }
+  cleanup_read_state(&rs);
+  
+  mm_log((1,"(%p) <- i_readpng_wiol\n", im));  
+  
+  return im;
+}
+
+static i_img *
+read_direct8(png_structp png_ptr, png_infop info_ptr, int channels,
+	     i_img_dim width, i_img_dim height) {
+  i_img * volatile vim = NULL;
+  int color_type = png_get_color_type(png_ptr, info_ptr);
+  int bit_depth = png_get_bit_depth(png_ptr, info_ptr);
+  i_img_dim y;
+  int number_passes, pass;
+  i_img *im;
+
+  if (setjmp(png_jmpbuf(png_ptr))) {
+    if (vim) i_img_destroy(vim);
+
+    return NULL;
+  }
+
+  number_passes = png_set_interlace_handling(png_ptr);
+  mm_log((1,"number of passes=%d\n",number_passes));
+
   png_set_strip_16(png_ptr);
   png_set_packing(png_ptr);
-  if (color_type == PNG_COLOR_TYPE_PALETTE) png_set_expand(png_ptr);
-  if (color_type == PNG_COLOR_TYPE_GRAY && bit_depth < 8) png_set_expand(png_ptr);
 
+  if (color_type == PNG_COLOR_TYPE_GRAY && bit_depth < 8)
+    png_set_expand(png_ptr);
+    
   if (png_get_valid(png_ptr, info_ptr, PNG_INFO_tRNS)) {
     channels++;
     mm_log((1, "image has transparency, adding alpha: channels = %d\n", channels));
     png_set_expand(png_ptr);
   }
   
-  number_passes = png_set_interlace_handling(png_ptr);
-  mm_log((1,"number of passes=%d\n",number_passes));
   png_read_update_info(png_ptr, info_ptr);
   
-  im = i_img_8_new(width,height,channels);
+  im = vim = i_img_8_new(width,height,channels);
   if (!im) {
     png_destroy_read_struct(&png_ptr, &info_ptr, (png_infopp)NULL);
     return NULL;
   }
-
-  for (pass = 0; pass < number_passes; pass++)
-    for (y = 0; y < height; y++) { png_read_row(png_ptr,(png_bytep) &(im->idata[channels*width*y]), NULL); }
+  
+  for (pass = 0; pass < number_passes; pass++) {
+    for (y = 0; y < height; y++) {
+      png_read_row(png_ptr,(png_bytep) &(im->idata[channels*width*y]), NULL);
+    }
+  }
   
   png_read_end(png_ptr, info_ptr); 
-  
-  get_png_tags(im, png_ptr, info_ptr);
 
-  png_destroy_read_struct(&png_ptr, &info_ptr, (png_infopp)NULL);
-
-  if (rs.warnings) {
-    i_tags_set(&im->tags, "png_warnings", rs.warnings, -1);
-  }
-  cleanup_read_state(&rs);
-  
-  mm_log((1,"(0x%08X) <- i_readpng_scalar\n", im));  
-  
   return im;
 }
 
