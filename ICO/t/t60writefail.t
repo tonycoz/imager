@@ -10,7 +10,7 @@ use Imager ':handy';
 
 # image too big for format tests, for each entry point
 {
-  my $im = Imager->new(xsize => 256, ysize => 255);
+  my $im = Imager->new(xsize => 257, ysize => 256);
   my $data;
   ok(!$im->write(data => \$data, type=>'ico'),
      "image too large");
@@ -18,7 +18,7 @@ use Imager ':handy';
 }
 
 {
-  my $im = Imager->new(xsize => 256, ysize => 255);
+  my $im = Imager->new(xsize => 257, ysize => 256);
   my $data;
   ok(!Imager->write_multi({ data => \$data, type=>'ico' }, $im, $im),
      "image too large");
@@ -27,7 +27,7 @@ use Imager ':handy';
 }
 
 {
-  my $im = Imager->new(xsize => 256, ysize => 255);
+  my $im = Imager->new(xsize => 257, ysize => 256);
   my $data;
   ok(!$im->write(data => \$data, type=>'cur'),
      "image too large");
@@ -35,7 +35,7 @@ use Imager ':handy';
 }
 
 {
-  my $im = Imager->new(xsize => 256, ysize => 255);
+  my $im = Imager->new(xsize => 257, ysize => 256);
   my $data;
   ok(!Imager->write_multi({ data => \$data, type=>'cur' }, $im),
      "image too large");
