@@ -13,6 +13,8 @@ Imager->open_log(log => "testout/t1000files.log");
 
 SKIP:
 {
+  # Test that i_test_format_probe() doesn't pollute stdout
+
   # Initally I tried to write this test using open to redirect files,
   # but there was a buffering problem that made it so the data wasn't
   # being written to the output file.  This external perl call avoids
