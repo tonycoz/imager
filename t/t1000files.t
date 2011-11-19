@@ -4,7 +4,7 @@
 # the file format
 
 use strict;
-use Test::More tests => 43;
+use Test::More tests => 67;
 use Imager;
 
 -d "testout" or mkdir "testout";
@@ -223,6 +223,63 @@ probe_ok(<<JPEG2K, "jp2", "JPEG 2000");
 00 0F 63 6F 6C 72 01 00 00 00 00 00 10 00 00 00
 00 6A 70 32 63 FF 4F FF 51 00 2F 00 00 00 00 01
 JPEG2K
+
+{ # RT 72475
+  # check error messages from read/read_multi
+  my $data = "nothing useful";
+  my @mult_data = Imager->read_multi(data => $data);
+  is(@mult_data, 0, "read_multi with non-image input data should fail");
+  is(Imager->errstr,
+     "type parameter missing and it couldn't be determined from the file contents",
+     "check the error message");
+
+  my @mult_file = Imager->read_multi(file => "t/t1000files.t");
+  is(@mult_file, 0, "read_multi with non-image filename should fail");
+  is(Imager->errstr,
+     "type parameter missing and it couldn't be determined from the file contents or file name",
+     "check the error message");
+
+  my $im = Imager->new;
+  ok(!$im->read(data => $data), "read from non-image data should fail");
+  is($im->errstr,
+     "type parameter missing and it couldn't be determined from the file contents",
+     "check the error message");
+
+  ok(!$im->read(file => "t/t1000files.t"),
+     "read from non-image file should fail");
+  is($im->errstr,
+     "type parameter missing and it couldn't be determined from the file contents or file name",
+     "check the error message");
+}
+
+{
+  # test def_guess_type
+  my @tests =
+    (
+     pnm => "pnm",
+     GIF => "gif",
+     tif => "tiff",
+     TIFF => "tiff",
+     JPG => "jpeg",
+     rle => "utah",
+     bmp => "bmp",
+     dib => "bmp",
+     rgb => "sgi",
+     BW => "sgi",
+     TGA => "tga",
+     CUR => "cur",
+     ico => "ico",
+     ILBM => "ilbm",
+     pcx => "pcx",
+     psd => "psd",
+    );
+
+  while (my ($ext, $expect) = splice(@tests, 0, 2)) {
+    my $filename = "foo.$ext";
+    is(Imager::def_guess_type($filename), $expect,
+       "type for $filename should be $expect");
+  }
+}
 
 Imager->close_log;
 

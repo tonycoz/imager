@@ -13,6 +13,16 @@ Imager release history.  Older releases can be found in Changes.old
  - correctly read and write 256x256 pixel ICO files
    https://rt.cpan.org/Ticket/Display.html?id=69599
 
+ - make the error message from read() or read_multi() when they can't
+   identify the file type match reality.
+   https://rt.cpan.org/Ticket/Display.html?id=72475
+
+ - read() now uses $FORMATGUESS if it can't determine the file type
+   based on the file header, to match read_multi().
+
+ - re-work and add tests for def_guess_type().  def_guess_type() no
+   longer returns any random file extension as the file type.
+
 Imager 0.86 - 31 Oct 2011
 ===========
 

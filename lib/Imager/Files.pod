@@ -363,7 +363,9 @@ X<FORMATGUESS>
 When writing to a file, if you don't supply a C<type> parameter Imager
 will attempt to guess it from the file name.  This is done by calling
 the code reference stored in C<$Imager::FORMATGUESS>.  This is only
-done when write() or write_multi() is called with a C<file> parameter.
+done when write() or write_multi() is called with a C<file> parameter,
+or if read() or read_multi() can't determine the type from the file's
+header.
 
 The default function value of C<$Imager::FORMATGUESS> is
 C<\&Imager::def_guess_type>.
