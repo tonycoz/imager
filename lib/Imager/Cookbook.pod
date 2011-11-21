@@ -66,19 +66,13 @@ transparency and the output file format doesn't support that.  This
 can be a problem when converting from GIF files to JPEG files for
 example.
 
-To work around that you can compose the source image onto a background
-color:
+By default, if the output format doesn't support transparency, Imager
+will compose the image onto a black background.  You can override that
+by supplying an C<i_background> option to C<write()> or
+C<write_multi()>:
 
-  if ($image->getchannels == 4 or $image->getchannels == 2) {
-    my $back = Imager->new(xsize => $image->getwidth, 
-                           ysize => $image->getheight);
-    # grey background for grayscale images, red for color
-    my $back_color = $image->getchannels == 2 ? [ 128 ] : 'red';
-    $back->box(filled => 1, color => $back_color);
-    $back->rubthrough(src => $image);
-    $image = $back;
-  }
-  # now we can write safely to jpeg or pnm
+  $image->write(file => "foo.jpg", i_background => "#808080")
+    or die $image->errstr;
 
 Some formats support multiple files, so if you want to convert from
 say TIFF to JPEG, you'll need multiple output files:
