@@ -86,12 +86,12 @@ plan tests => 20;
   }
 
   unless (is(keys %methods, 0, "all methods in method index")) {
-    print "# the following methods are documented but not in the index:\n";
-    print "#  $_\n" for sort keys %methods;
+    diag "the following methods are documented but not in the index:";
+    diag $_ for sort keys %methods;
   }
   unless (is(@unknown_indexed, 0, "only methods in method index")) {
-    print "# the following names are in the method index but not documented\n";
-    print "#  $_\n" for sort @unknown_indexed;
+    diag "the following names are in the method index but not documented";
+    diag $_ for sort @unknown_indexed;
   }
 
   sub dict_cmp_func;
