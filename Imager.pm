@@ -987,6 +987,25 @@ sub to_paletted {
   return $result;
 }
 
+sub make_palette {
+  my ($class, $quant, @images) = @_;
+
+  unless (@images) {
+    Imager->_set_error("make_palette: supply at least one image");
+    return;
+  }
+  my $index = 1;
+  for my $img (@images) {
+    unless ($img->{IMG}) {
+      Imager->_set_error("make_palette: image $index is empty");
+      return;
+    }
+    ++$index;
+  }
+
+  return i_img_make_palette($quant, map $_->{IMG}, @images);
+}
+
 # convert a paletted (or any image) to an 8-bit/channel RGB image
 sub to_rgb8 {
   my $self = shift;
@@ -4022,7 +4041,7 @@ sub Imager::ImgRaw::CLONE_SKIP { 1 }
 
 sub preload {
   # this serves two purposes:
-  # - a class method to load the file support modules included with Image
+  # - a class method to load the file support modules included with Imager
   #   (or were included, once the library dependent modules are split out)
   # - something for Module::ScanDeps to analyze
   # https://rt.cpan.org/Ticket/Display.html?id=6566
@@ -4457,6 +4476,9 @@ load_plugin() - L<Imager::Filters/load_plugin()>
 
 log() - L<Imager::ImageTypes/log()> - send a message to the debugging
 log.
+
+make_palette() - L<Imager::ImageTypes/make_palette()> - produce a
+color palette from one or more input images.
 
 map() - L<Imager::Transformations/"Color Mappings"> - remap color
 channel values

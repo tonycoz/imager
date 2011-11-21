@@ -23,6 +23,12 @@ Imager release history.  Older releases can be found in Changes.old
  - re-work and add tests for def_guess_type().  def_guess_type() no
    longer returns any random file extension as the file type.
 
+ - add gray4, gray16 and gray as presets for make_colors.
+   https://rt.cpan.org/Ticket/Display.html?id=67911
+
+ - add make_palette() method that produces a palette from one or more
+   images.
+
 Imager 0.86 - 31 Oct 2011
 ===========
 

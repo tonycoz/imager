@@ -1,10 +1,10 @@
 #!perl -w
 # some of this is tested in t01introvert.t too
 use strict;
-use Test::More tests => 132;
+use Test::More tests => 154;
 BEGIN { use_ok("Imager"); }
 
-use Imager::Test qw(image_bounds_checks test_image is_color3 isnt_image);
+use Imager::Test qw(image_bounds_checks test_image is_color3 isnt_image is_color4);
 
 Imager->open_log(log => "testout/t023palette.log");
 
@@ -384,6 +384,57 @@ cmp_ok(Imager->errstr, '=~', qr/Channels must be positive and <= 4/,
       1;
     };
     ok(!$no_croak, "invalid values do croak (packed)");
+  }
+}
+
+{
+  my $im = Imager->new(xsize => 1, ysize => 1);
+  my $im_bad = Imager->new;
+  {
+    my @map = Imager->make_palette({});
+    ok(!@map, "make_palette should fail with no images");
+    is(Imager->errstr, "make_palette: supply at least one image",
+       "check error message");
+  }
+  {
+    my @map = Imager->make_palette({}, $im, $im_bad, $im);
+    ok(!@map, "make_palette should fail with an empty image");
+    is(Imager->errstr, "make_palette: image 2 is empty",
+       "check error message");
+  }
+  {
+    my @map = Imager->make_palette({ make_colors => "mono" }, $im);
+    is(@map, 2, "mono should make 2 color palette")
+      or skip("unexpected color count", 2);
+    is_color4($map[0], 0, 0, 0, 255, "check map[0]");
+    is_color4($map[1], 255, 255, 255, 255, "check map[1]");
+  }
+  {
+    my @map = Imager->make_palette({ make_colors => "gray4" }, $im);
+    is(@map, 4, "gray4 should make 4 color palette")
+      or skip("unexpected color count", 4);
+    is_color4($map[0], 0, 0, 0, 255, "check map[0]");
+    is_color4($map[1], 85, 85, 85, 255, "check map[1]");
+    is_color4($map[2], 170, 170, 170, 255, "check map[2]");
+    is_color4($map[3], 255, 255, 255, 255, "check map[3]");
+  }
+  {
+    my @map = Imager->make_palette({ make_colors => "gray16" }, $im);
+    is(@map, 16, "gray16 should make 16 color palette")
+      or skip("unexpected color count", 4);
+    is_color4($map[0], 0, 0, 0, 255, "check map[0]");
+    is_color4($map[1], 17, 17, 17, 255, "check map[1]");
+    is_color4($map[2], 34, 34, 34, 255, "check map[2]");
+    is_color4($map[15], 255, 255, 255, 255, "check map[15]");
+  }
+  {
+    my @map = Imager->make_palette({ make_colors => "gray" }, $im);
+    is(@map, 256, "gray16 should make 256 color palette")
+      or skip("unexpected color count", 4);
+    is_color4($map[0], 0, 0, 0, 255, "check map[0]");
+    is_color4($map[1], 1, 1, 1, 255, "check map[1]");
+    is_color4($map[33], 33, 33, 33, 255, "check map[2]");
+    is_color4($map[255], 255, 255, 255, 255, "check map[15]");
   }
 }
 

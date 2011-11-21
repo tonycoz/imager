@@ -569,6 +569,9 @@ typedef enum i_make_colors_tag {
   mc_addi, /* Addi's algorithm */
   mc_median_cut, /* median cut - similar to giflib, hopefully */
   mc_mono, /* fixed mono color map */
+  mc_gray, /* 256 gray map */
+  mc_gray4, /* four step gray map */
+  mc_gray16, /* sixteen step gray map */
   mc_mask = 0xFF /* (mask for generator) */
 } i_make_colors;
 

@@ -729,6 +729,18 @@ the region without specifying a mask.  For example:
   my $maskedimg = $img->masked(left => 100, top=>100,
                                right=>200, bottom=>200);
 
+=item make_palette()
+
+This doesn't perform an image conversion, but it can be used to
+construct a common palette for use in several images:
+
+  my @colors = Imager->make_palette(\%opts, @images);
+
+You must supply at least one image, even if the C<make_colors>
+parameter produces a fixed palette.
+
+On failure returns no colors and you can check C<< Imager->errstr >>.
+
 =back
 
 =head2 Tags
@@ -1019,6 +1031,11 @@ as good a result.
 
 C<mono>, C<monochrome> - a fixed black and white palette, suitable for
 producing bi-level images (eg. facsimile)
+
+=item *
+
+C<gray>, C<gray4>, C<gray16> - make fixed gray palette with 256, 4 or
+16 entries respectively.
 
 =back
 

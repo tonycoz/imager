@@ -135,6 +135,16 @@ i_log_entry(char *string, int level) {
   mm_log((level, "%s", string));
 }
 
+static SV *
+make_i_color_sv(pTHX_ const i_color *c) {
+  SV *sv;
+  i_color *col = mymalloc(sizeof(i_color));
+  *col = *c;
+  sv = sv_newmortal();
+  sv_setref_pv(sv, "Imager::Color", (void *)col);
+
+  return sv;
+}
 
 #define CBDATA_BUFSIZE 8192
 
@@ -368,6 +378,9 @@ static struct value_name make_color_names[] =
   { "mediancut", mc_median_cut, },
   { "mono", mc_mono, },
   { "monochrome", mc_mono, },
+  { "gray", mc_gray, },
+  { "gray4", mc_gray4, },
+  { "gray16", mc_gray16, },
 };
 
 static struct value_name translate_names[] =
@@ -2965,6 +2978,40 @@ i_img_to_rgb(src)
         Imager::ImgRaw src
 
 void
+i_img_make_palette(HV *quant_hv, ...)
+      PREINIT:
+        size_t count = items - 1;
+	i_quantize quant;
+	i_img **imgs = NULL;
+	ssize_t i;
+      PPCODE:
+        if (count <= 0)
+	  croak("Please supply at least one image (%d)", (int)count);
+        imgs = mymalloc(sizeof(i_img *) * count);
+	for (i = 0; i < count; ++i) {
+	  SV *img_sv = ST(i + 1);
+	  if (SvROK(img_sv) && sv_derived_from(img_sv, "Imager::ImgRaw")) {
+	    imgs[i] = INT2PTR(i_img *, SvIV((SV*)SvRV(img_sv)));
+	  }
+	  else {
+	    myfree(imgs);
+	    croak("Image %d is not an image object", i+1);
+          }
+	}
+        memset(&quant, 0, sizeof(quant));
+	quant.version = 1;
+	quant.mc_size = 256;
+        ip_handle_quant_opts(aTHX_ &quant, quant_hv);
+	i_quant_makemap(&quant, imgs, count);
+	EXTEND(SP, quant.mc_count);
+	for (i = 0; i < quant.mc_count; ++i) {
+	  SV *sv_c = make_i_color_sv(aTHX_ quant.mc_colors + i);
+	  PUSHs(sv_c);
+	}
+ 	ip_cleanup_quant_opts(aTHX_ &quant);
+	
+
+void
 i_gpal(im, l, r, y)
         Imager::ImgRaw  im
         i_img_dim     l
@@ -3122,11 +3169,7 @@ i_getcolors(im, index, ...)
         colors = mymalloc(sizeof(i_color) * count);
         if (i_getcolors(im, index, colors, count)) {
           for (i = 0; i < count; ++i) {
-            i_color *pv;
-            SV *sv = sv_newmortal();
-            pv = mymalloc(sizeof(i_color));
-            *pv = colors[i];
-            sv_setref_pv(sv, "Imager::Color", (void *)pv);
+            SV *sv = make_i_color_sv(aTHX_ colors+i);
             PUSHs(sv);
           }
         }
@@ -3508,11 +3551,7 @@ i_glin(im, l, r, y)
 	  if (GIMME_V == G_ARRAY) {
             EXTEND(SP, count);
             for (i = 0; i < count; ++i) {
-              SV *sv;
-              i_color *col = mymalloc(sizeof(i_color));
-              *col = vals[i];
-              sv = sv_newmortal();
-              sv_setref_pv(sv, "Imager::Color", (void *)col);
+              SV *sv = make_i_color_sv(aTHX_ vals+i);
               PUSHs(sv);
             }
           }

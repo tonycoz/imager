@@ -9,6 +9,7 @@ static void makemap_webmap(i_quantize *);
 static void makemap_addi(i_quantize *, i_img **imgs, int count);
 static void makemap_mediancut(i_quantize *, i_img **imgs, int count);
 static void makemap_mono(i_quantize *);
+static void makemap_gray(i_quantize *, int step);
 
 static int makemap_palette(i_quantize *, i_img **imgs, int count);
 
@@ -70,6 +71,18 @@ i_quant_makemap(i_quantize *quant, i_img **imgs, int count) {
 
   case mc_mono:
     makemap_mono(quant);
+    break;
+
+  case mc_gray:
+    makemap_gray(quant, 1);
+    break;
+
+  case mc_gray4:
+    makemap_gray(quant, 85);
+    break;
+
+  case mc_gray16:
+    makemap_gray(quant, 17);
     break;
 
   case mc_addi:
@@ -724,6 +737,19 @@ makemap_mono(i_quantize *quant) {
   quant->mc_colors[1].rgba.b = 255;
   quant->mc_colors[1].rgba.a = 255;
   quant->mc_count = 2;
+}
+
+static void
+makemap_gray(i_quantize *quant, int step) {
+  int gray = 0;
+  int i = 0;
+
+  while (gray < 256) {
+    setcol(quant->mc_colors+i, gray, gray, gray, 255);
+    ++i;
+    gray += step;
+  }
+  quant->mc_count = i;
 }
 
 static void
