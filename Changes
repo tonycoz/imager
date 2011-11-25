@@ -29,6 +29,10 @@ Imager release history.  Older releases can be found in Changes.old
  - add make_palette() method that produces a palette from one or more
    images.
 
+ - fix the Imager dependency for the separately distributed font
+   drivers.
+   https://rt.cpan.org/Ticket/Display.html?id=72643
+
 Imager 0.86 - 31 Oct 2011
 ===========
 

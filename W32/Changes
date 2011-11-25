@@ -1,3 +1,9 @@
+Imager-Font-W32 0.83
+====================
+
+ - update dependency to Imager 0.86
+   https://rt.cpan.org/Ticket/Display.html?id=72643
+
 Imager-Font-W32 0.82
 ====================
 

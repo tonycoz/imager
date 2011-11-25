@@ -1,3 +1,9 @@
+Imager::Font::T1 1.016
+======================
+
+ - update dependency to Imager 0.86
+   https://rt.cpan.org/Ticket/Display.html?id=72643
+
 Imager::Font::T1 1.015
 ======================
 

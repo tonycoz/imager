@@ -1,3 +1,9 @@
+Imager-Font-FT2 0.84
+====================
+
+ - update dependency to Imager 0.86
+   https://rt.cpan.org/Ticket/Display.html?id=72643
+
 Imager-Font-FT2 0.83
 ====================
 
