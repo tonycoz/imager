@@ -1,11 +1,11 @@
 #!perl -w
 use strict;
-use Test::More tests => 92;
+use Test::More tests => 97;
 
 $|=1;
 
 BEGIN { use_ok(Imager => ':all') }
-use Imager::Test qw(diff_text_with_nul is_color3);
+use Imager::Test qw(diff_text_with_nul is_color3 is_image);
 
 -d "testout" or mkdir "testout";
 
@@ -13,7 +13,7 @@ init_log("testout/t35ttfont.log",2);
 
 SKIP:
 {
-  skip("freetype 1.x unavailable or disabled", 91) 
+  skip("freetype 1.x unavailable or disabled", 96) 
     unless $Imager::formats{"tt"};
   print "# has tt\n";
   
@@ -302,6 +302,32 @@ SKIP:
     @colors = sort { ($a->rgba)[0] <=> ($b->rgba)[0] } @colors;
     is_color3($colors[0], 0, 0, 0, "check we got black");
     is_color3($colors[1], 255, 0, 0, "and red");
+  }
+
+ SKIP:
+  { # RT 71564
+    my $noalpha = Imager::Color->new(255, 255, 255, 0);
+    my $font = Imager::Font->new(file=>'fontfiles/ImUgly.ttf', type=>'tt',
+				 color => $noalpha);
+    ok($font, "loaded fontfiles/ImUgly.ttf")
+      or skip("Could not load test font: ".Imager->errstr, 4);
+    {
+      my $im = Imager->new(xsize => 40, ysize => 20);
+      my $copy = $im->copy;
+      ok($im->string(string => "AB", size => 20, aa => 1,
+		     x => 0, y => 15, font => $font),
+	 "draw with transparent color, aa");
+      is_image($im, $copy, "should draw nothing");
+    }
+    {
+      my $im = Imager->new(xsize => 40, ysize => 20);
+      my $copy = $im->copy;
+      ok($im->string(string => "AB", size => 20, aa => 0,
+		     x => 0, y => 15, font => $font),
+	 "draw with transparent color, non-aa");
+      local $TODO = "RT 73359 - non-AA text isn't normal mode rendered";
+      is_image($im, $copy, "should draw nothing");
+    }
   }
 
   ok(1, "end of code");

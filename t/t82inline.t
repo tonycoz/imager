@@ -3,6 +3,7 @@
 # this tests both the Inline interface and the API
 use strict;
 use Test::More;
+use Imager::Test qw(is_color3 is_color4);
 eval "require Inline::C;";
 plan skip_all => "Inline required for testing API" if $@;
 
@@ -18,7 +19,7 @@ plan skip_all => "perl 5.005_04, 5.005_05 too buggy"
 
 -d "testout" or mkdir "testout";
 
-plan tests => 16;
+plan tests => 82;
 require Inline;
 Inline->import(with => 'Imager');
 Inline->import("FORCE"); # force rebuild
@@ -363,6 +364,36 @@ io_peekc_test(SV *in) {
   return result;
 }
 
+
+
+int
+test_render_color(Imager work_8) {
+  i_render *r8;
+  i_color c;
+  unsigned char render_coverage[3];
+
+  render_coverage[0] = 0;
+  render_coverage[1] = 128;
+  render_coverage[2] = 255;
+
+  r8 = i_render_new(work_8, 10);
+  c.channel[0] = 128;
+  c.channel[1] = 255;
+  c.channel[2] = 0;
+  c.channel[3] = 255;
+  i_render_color(r8, 0, 0, sizeof(render_coverage), render_coverage, &c);
+
+  c.channel[3] = 128;
+  i_render_color(r8, 0, 1, sizeof(render_coverage), render_coverage, &c);
+
+  c.channel[3] = 0;
+  i_render_color(r8, 0, 2, sizeof(render_coverage), render_coverage, &c);
+
+  i_render_delete(r8);
+
+  return 1;
+}
+
 EOS
 
 my $im = Imager->new(xsize=>50, ysize=>50);
@@ -427,3 +458,89 @@ is(io_gets_test("test"), "tes", "check i_io_gets()");
 is(io_getc_test("ABC"), ord "A", "check i_io_getc(_imp)?");
 
 is(io_getc_test("XYZ"), ord "X", "check i_io_peekc(_imp)?");
+
+for my $bits (8, 16) {
+  print "# bits: $bits\n";
+
+  # the floating point processing is a little more accurate
+  my $bump = $bits == 16 ? 1 : 0;
+  {
+    my $im = Imager->new(xsize => 10, ysize => 10, channels => 3, bits => $bits);
+    ok($im->box(filled => 1, color => '#808080'), "fill work image with gray");
+    ok(test_render_color($im),
+       "call render_color on 3 channel image");
+    is_color3($im->getpixel(x => 0, y => 0), 128, 128, 128,
+	      "check zero coverage, alpha 255 color, bits $bits");
+    is_color3($im->getpixel(x => 1, y => 0), 128, 191+$bump, 63+$bump,
+	      "check 128 coverage, alpha 255 color, bits $bits");
+    is_color3($im->getpixel(x => 2, y => 0), 128, 255, 0,
+	      "check 255 coverage, alpha 255 color, bits $bits");
+
+    is_color3($im->getpixel(x => 0, y => 1), 128, 128, 128,
+	      "check zero coverage, alpha 128 color, bits $bits");
+    is_color3($im->getpixel(x => 1, y => 1), 128, 159+$bump, 95+$bump,
+	      "check 128 coverage, alpha 128 color, bits $bits");
+    is_color3($im->getpixel(x => 2, y => 1), 128, 191+$bump, 63+$bump,
+	      "check 255 coverage, alpha 128 color, bits $bits");
+
+    is_color3($im->getpixel(x => 0, y => 2), 128, 128, 128,
+	      "check zero coverage, alpha 0 color, bits $bits");
+    is_color3($im->getpixel(x => 1, y => 2), 128, 128, 128,
+	      "check 128 coverage, alpha 0 color, bits $bits");
+    is_color3($im->getpixel(x => 2, y => 2), 128, 128, 128,
+	      "check 255 coverage, alpha 0 color, bits $bits");
+  }
+  {
+    my $im = Imager->new(xsize => 10, ysize => 10, channels => 4, bits => $bits);
+    ok($im->box(filled => 1, color => '#808080'), "fill work image with opaque gray");
+    ok(test_render_color($im),
+       "call render_color on 4 channel image");
+    is_color4($im->getpixel(x => 0, y => 0), 128, 128, 128, 255,
+	      "check zero coverage, alpha 255 color, bits $bits");
+    is_color4($im->getpixel(x => 1, y => 0), 128, 191+$bump, 63+$bump, 255,
+	      "check 128 coverage, alpha 255 color, bits $bits");
+    is_color4($im->getpixel(x => 2, y => 0), 128, 255, 0, 255,
+	      "check 255 coverage, alpha 255 color, bits $bits");
+
+    is_color4($im->getpixel(x => 0, y => 1), 128, 128, 128, 255,
+	      "check zero coverage, alpha 128 color, bits $bits");
+    is_color4($im->getpixel(x => 1, y => 1), 128, 159+$bump, 95+$bump, 255,
+	      "check 128 coverage, alpha 128 color, bits $bits");
+    is_color4($im->getpixel(x => 2, y => 1), 128, 191+$bump, 63+$bump, 255,
+	      "check 255 coverage, alpha 128 color, bits $bits");
+
+    is_color4($im->getpixel(x => 0, y => 2), 128, 128, 128, 255,
+	      "check zero coverage, alpha 0 color, bits $bits");
+    is_color4($im->getpixel(x => 1, y => 2), 128, 128, 128, 255,
+	      "check 128 coverage, alpha 0 color, bits $bits");
+    is_color4($im->getpixel(x => 2, y => 2), 128, 128, 128, 255,
+	      "check 255 coverage, alpha 0 color, bits $bits");
+  }
+
+  {
+    my $im = Imager->new(xsize => 10, ysize => 10, channels => 4, bits => $bits);
+    ok($im->box(filled => 1, color => Imager::Color->new(128, 128, 128, 64)), "fill work image with translucent gray");
+    ok(test_render_color($im),
+       "call render_color on 4 channel image");
+    is_color4($im->getpixel(x => 0, y => 0), 128, 128, 128, 64,
+	      "check zero coverage, alpha 255 color, bits $bits");
+    is_color4($im->getpixel(x => 1, y => 0), 128, 230, 25+$bump, 159+$bump,
+	      "check 128 coverage, alpha 255 color, bits $bits");
+    is_color4($im->getpixel(x => 2, y => 0), 128, 255, 0, 255,
+	      "check 255 coverage, alpha 255 color, bits $bits");
+
+    is_color4($im->getpixel(x => 0, y => 1), 128, 128, 128, 64,
+	      "check zero coverage, alpha 128 color, bits $bits");
+    is_color4($im->getpixel(x => 1, y => 1), 129-$bump, 202-$bump, 55, 111+$bump,
+	      "check 128 coverage, alpha 128 color, bits $bits");
+    is_color4($im->getpixel(x => 2, y => 1), 128, 230, 25+$bump, 159+$bump,
+	      "check 255 coverage, alpha 128 color, bits $bits");
+
+    is_color4($im->getpixel(x => 0, y => 2), 128, 128, 128, 64,
+	      "check zero coverage, alpha 0 color, bits $bits");
+    is_color4($im->getpixel(x => 1, y => 2), 128, 128, 128, 64,
+	      "check 128 coverage, alpha 0 color, bits $bits");
+    is_color4($im->getpixel(x => 2, y => 2), 128, 128, 128, 64,
+	      "check 255 coverage, alpha 0 color, bits $bits");
+  }
+}

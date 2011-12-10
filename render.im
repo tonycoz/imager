@@ -485,6 +485,7 @@ IM_SUFFIX(render_color_13)(i_render *r, i_img_dim x, i_img_dim y,
   IM_COLOR *linep = r->IM_SUFFIX(line);
   int ch, channels = im->channels;
   i_img_dim fetch_offset;
+  int color_alpha = color->channel[im->channels];
 #undef STORE_COLOR
 #ifdef IM_EIGHT_BIT
 #define STORE_COLOR (*color)
@@ -498,17 +499,19 @@ IM_SUFFIX(render_color_13)(i_render *r, i_img_dim x, i_img_dim y,
 #endif
  
   fetch_offset = 0;
-  while (fetch_offset < width && *src == 0xFF) {
-    *linep++ = STORE_COLOR;
-    ++src;
-    ++fetch_offset;
+  if (color_alpha == 0xFF) {
+    while (fetch_offset < width && *src == 0xFF) {
+      *linep++ = STORE_COLOR;
+      ++src;
+      ++fetch_offset;
+    }
   }
   IM_GLIN(im, x+fetch_offset, x+width, y, linep);
   while (fetch_offset < width) {
 #ifdef IM_EIGHT_BIT
-    IM_WORK_T alpha = *src++;
+    IM_WORK_T alpha = *src++ * color_alpha / 255;
 #else
-    IM_WORK_T alpha = *src++ / 255.0;
+    IM_WORK_T alpha = *src++ * color_alpha / (255.0 * 255.0);
 #endif
     if (alpha == IM_SAMPLE_MAX)
       *linep = STORE_COLOR;
@@ -533,6 +536,7 @@ IM_SUFFIX(render_color_alpha)(i_render *r, i_img_dim x, i_img_dim y,
   int ch;
   int alpha_channel = r->im->channels - 1;
   i_img_dim fetch_offset;
+  int color_alpha = color->channel[alpha_channel];
 #undef STORE_COLOR
 #ifdef IM_EIGHT_BIT
 #define STORE_COLOR (*color)
@@ -546,17 +550,19 @@ IM_SUFFIX(render_color_alpha)(i_render *r, i_img_dim x, i_img_dim y,
 #endif
 
   fetch_offset = 0;
-  while (fetch_offset < width && *src == 0xFF) {
-    *linep++ = STORE_COLOR;
-    ++src;
-    ++fetch_offset;
+  if (color->channel[alpha_channel] == 0xFF) {
+    while (fetch_offset < width && *src == 0xFF) {
+      *linep++ = STORE_COLOR;
+      ++src;
+      ++fetch_offset;
+    }
   }
   IM_GLIN(r->im, x+fetch_offset, x+width, y, linep);
   while (fetch_offset < width) {
 #ifdef IM_EIGHT_BIT
-    IM_WORK_T src_alpha = *src++;
+    IM_WORK_T src_alpha = *src++ * color_alpha / 255;
 #else
-    IM_WORK_T src_alpha = *src++ / 255.0;
+    IM_WORK_T src_alpha = *src++ * color_alpha / (255.0 * 255.0);
 #endif
     if (src_alpha == IM_SAMPLE_MAX)
       *linep = STORE_COLOR;
