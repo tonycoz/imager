@@ -1,5 +1,8 @@
 Imager release history.  Older releases can be found in Changes.old
 
+Imager 0.87 - 03/01/12
+===========
+
  - document the return value of the filter() method.
    https://rt.cpan.org/Ticket/Display.html?id=72369
 
