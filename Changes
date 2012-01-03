@@ -33,6 +33,11 @@ Imager release history.  Older releases can be found in Changes.old
    drivers.
    https://rt.cpan.org/Ticket/Display.html?id=72643
 
+ - fix i_render_color() to properly draw in "normal" mode - ie. when
+   writing to a 1 or 3 channel image the second or fourth channel of
+   the source color was being ignored, it is now significant.
+   https://rt.cpan.org/Ticket/Display.html?id=71564
+
 Imager 0.86 - 31 Oct 2011
 ===========
 
