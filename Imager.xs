@@ -2995,7 +2995,7 @@ i_img_make_palette(HV *quant_hv, ...)
 	  }
 	  else {
 	    myfree(imgs);
-	    croak("Image %d is not an image object", i+1);
+	    croak("Image %d is not an image object", (int)i+1);
           }
 	}
         memset(&quant, 0, sizeof(quant));
