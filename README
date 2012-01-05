@@ -402,6 +402,26 @@ c) if you want to build GCC 4.0 from scratch and use that you will
    For example:
 
      perl Makefile.PL LDDLFLAGS="`perl -MConfig -e 'print "-g $Config{lddlflags}"'`"
+
+d) The default perl build in Snow Leopard and Lion is a fat binary,
+   and default builds of giflib, libpng and libjpeg (and maybe other
+   libraries) will produce link failures.
+
+   To avoid this you need to supply a CFLAGS parameter to the
+   library's configure script, but since the -arch flag conflicts with
+   the options used to build the dependency files, you need to supply
+   another flag to disable dependency tracking.
+
+   Snow Leopard fat binaries include i386, x86_64 and PPC objects,
+   hence you would run configure like:
+
+    ./configure --disable-dependency-tracking CFLAGS='-arch x86_64 -arch i386 -arch ppc'
+
+   Lion doesn't support PPC, so there you run configure like:
+
+   ./configure --disable-dependency-tracking CFLAGS='-arch x86_64 -arch i386'
+
+   For libgif you might also want to supply the --without-x option.
    
 =======================
 7. General information
