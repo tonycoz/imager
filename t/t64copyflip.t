@@ -1,6 +1,6 @@
 #!perl -w
 use strict;
-use Test::More tests => 77;
+use Test::More tests => 83;
 use Imager;
 use Imager::Test qw(is_color3 is_image is_imaged test_image_double test_image isnt_image);
 
@@ -105,6 +105,31 @@ if (!$rimg->write(file=>"testout/t64_rot10_back.ppm")) {
   $rimg = $img->rotate(degrees => 45, back => "some really unknown color");
   ok(!$rimg, "should fail due to bad back color");
   cmp_ok($img->errstr, '=~', "^No color named ", "check error message");
+}
+SKIP:
+{ # rotate in double mode
+  my $dimg = $img->to_rgb16;
+  my $rimg = $dimg->rotate(degrees => 10);
+  ok($rimg, "rotate 16-bit image gave us an image")
+    or skip("could not rotate", 3);
+  ok($rimg->write(file => "testout/t64_rotf10.ppm", pnm_write_wide_data => 1),
+     "save wide data rotated")
+    or diag($rimg->errstr);
+
+  # with a background color
+  my $rimgb = $dimg->rotate(degrees => 10, back => "#FF8000");
+  ok($rimgb, "rotate 16-bit image with back gave us an image")
+    or skip("could not rotate", 1);
+  ok($rimgb->write(file => "testout/t64_rotfb10.ppm", pnm_write_wide_data => 1),
+     "save wide data rotated")
+    or diag($rimgb->errstr);
+}
+{ # rotate in paletted mode
+  my $rimg = $pimg->rotate(degrees => 10);
+  ok($rimg, "rotated paletted image 10 degrees");
+  ok($rimg->write(file => "testout/t64_rotp10.ppm"),
+     "save paletted rotated")
+    or diag($rimg->errstr);
 }
 
 my $trimg = $img->matrix_transform(matrix=>[ 1.2, 0, 0,

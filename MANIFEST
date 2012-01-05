@@ -238,7 +238,7 @@ regmach.h
 regops.perl
 render.im
 rendert.h			Buffer rendering engine types
-rotate.c
+rotate.im
 rubthru.im
 samples/align-string.pl		Demonstrate align_string method.
 samples/anaglyph.pl

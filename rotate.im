@@ -1,7 +1,7 @@
 /*
 =head1 NAME
 
-  rotate.c - implements image rotations
+  rotate.im - implements image rotations
 
 =head1 SYNOPSIS
 
@@ -31,34 +31,20 @@ i_img *i_rotate90(i_img *src, int degrees) {
        done in place */
     targ = i_sametype(src, src->xsize, src->ysize);
     if (src->type == i_direct_type) {
-      if (src->bits == i_8_bits) {
-        i_color *vals = mymalloc(src->xsize * sizeof(i_color));
-        for (y = 0; y < src->ysize; ++y) {
-          i_color tmp;
-          i_glin(src, 0, src->xsize, y, vals);
-          for (x = 0; x < src->xsize/2; ++x) {
-            tmp = vals[x];
-            vals[x] = vals[src->xsize - x - 1];
-            vals[src->xsize - x - 1] = tmp;
-          }
-          i_plin(targ, 0, src->xsize, src->ysize - y - 1, vals);
-        }
-        myfree(vals);
+#code src->bits <= 8
+      IM_COLOR *vals = mymalloc(src->xsize * sizeof(IM_COLOR));
+      for (y = 0; y < src->ysize; ++y) {
+	IM_COLOR tmp;
+	IM_GLIN(src, 0, src->xsize, y, vals);
+	for (x = 0; x < src->xsize/2; ++x) {
+	  tmp = vals[x];
+	  vals[x] = vals[src->xsize - x - 1];
+	  vals[src->xsize - x - 1] = tmp;
+	}
+	IM_PLIN(targ, 0, src->xsize, src->ysize - y - 1, vals);
       }
-      else {
-        i_fcolor *vals = mymalloc(src->xsize * sizeof(i_fcolor));
-        for (y = 0; y < src->ysize; ++y) {
-          i_fcolor tmp;
-          i_glinf(src, 0, src->xsize, y, vals);
-          for (x = 0; x < src->xsize/2; ++x) {
-            tmp = vals[x];
-            vals[x] = vals[src->xsize - x - 1];
-            vals[src->xsize - x - 1] = tmp;
-          }
-          i_plinf(targ, 0, src->xsize, src->ysize - y - 1, vals);
-        }
-        myfree(vals);
-      }
+      myfree(vals);
+#/code
     }
     else {
       i_palidx *vals = mymalloc(src->xsize * sizeof(i_palidx));
@@ -97,36 +83,21 @@ i_img *i_rotate90(i_img *src, int degrees) {
     }
     targ = i_sametype(src, src->ysize, src->xsize);
     if (src->type == i_direct_type) {
-      if (src->bits == i_8_bits) {
-        i_color *vals = mymalloc(src->xsize * sizeof(i_color));
+#code src->bits <= 8
+      IM_COLOR *vals = mymalloc(src->xsize * sizeof(IM_COLOR));
 
-        tx = txstart;
-        for (y = 0; y < src->ysize; ++y) {
-          i_glin(src, 0, src->xsize, y, vals);
-          ty = tystart;
-          for (x = 0; x < src->xsize; ++x) {
-            i_ppix(targ, tx, ty, vals+x);
-            ty += tyinc;
-          }
-          tx += txinc;
-        }
-        myfree(vals);
+      tx = txstart;
+      for (y = 0; y < src->ysize; ++y) {
+	IM_GLIN(src, 0, src->xsize, y, vals);
+	ty = tystart;
+	for (x = 0; x < src->xsize; ++x) {
+	  IM_PPIX(targ, tx, ty, vals+x);
+	  ty += tyinc;
+	}
+	tx += txinc;
       }
-      else {
-        i_fcolor *vals = mymalloc(src->xsize * sizeof(i_fcolor));
-
-        tx = txstart;
-        for (y = 0; y < src->ysize; ++y) {
-          i_glinf(src, 0, src->xsize, y, vals);
-          ty = tystart;
-          for (x = 0; x < src->xsize; ++x) {
-            i_ppixf(targ, tx, ty, vals+x);
-            ty += tyinc;
-          }
-          tx += txinc;
-        }
-        myfree(vals);
-      }
+      myfree(vals);
+#/code
     }
     else {
       i_palidx *vals = mymalloc(src->xsize * sizeof(i_palidx));
@@ -231,165 +202,99 @@ i_img *i_matrix_transform_bg(i_img *src, i_img_dim xsize, i_img_dim ysize, const
   double sx, sy, sz;
 
   if (src->type == i_direct_type) {
-    if (src->bits == i_8_bits) {
-      i_color *vals = mymalloc(xsize * sizeof(i_color));
-      i_color back;
-      i_fsample_t fsamp;
+#code src->bits <= 8
+    IM_COLOR *vals = mymalloc(xsize * sizeof(IM_COLOR));
+    IM_COLOR back;
+    i_fsample_t fsamp;
 
-      if (backp) {
-	back = *backp;
+#ifdef IM_EIGHT_BIT
+    if (backp) {
+      back = *backp;
+    }
+    else if (fbackp) {
+      for (ch = 0; ch < src->channels; ++ch) {
+	fsamp = fbackp->channel[ch];
+	back.channel[ch] = fsamp < 0 ? 0 : fsamp > 1 ? 255 : fsamp * 255;
       }
-      else if (fbackp) {
-	for (ch = 0; ch < src->channels; ++ch) {
-	  fsamp = fbackp->channel[ch];
-	  back.channel[ch] = fsamp < 0 ? 0 : fsamp > 1 ? 255 : fsamp * 255;
+    }
+#else
+#define interp_i_color interp_i_fcolor
+    if (fbackp) {
+      back = *fbackp;
+    }
+    else if (backp) {
+      for (ch = 0; ch < src->channels; ++ch)
+	back.channel[ch] = backp->channel[ch] / 255.0;
+    }
+#endif
+    else {
+      for (ch = 0; ch < src->channels; ++ch)
+	back.channel[ch] = 0;
+    }
+
+    for (y = 0; y < ysize; ++y) {
+      for (x = 0; x < xsize; ++x) {
+	/* dividing by sz gives us the ability to do perspective 
+	   transforms */
+	sz = x * matrix[6] + y * matrix[7] + matrix[8];
+	if (fabs(sz) > 0.0000001) {
+	  sx = (x * matrix[0] + y * matrix[1] + matrix[2]) / sz;
+	  sy = (x * matrix[3] + y * matrix[4] + matrix[5]) / sz;
+	}
+	else {
+	  sx = sy = 0;
+	}
+	
+	/* anything outside these ranges is either a broken co-ordinate
+	   or outside the source */
+	if (fabs(sz) > 0.0000001 
+	    && sx >= -1 && sx < src->xsize
+	    && sy >= -1 && sy < src->ysize) {
+	  
+	  if (sx != (i_img_dim)sx) {
+	    if (sy != (i_img_dim)sy) {
+	      IM_COLOR c[2][2]; 
+	      IM_COLOR ci2[2];
+	      for (i = 0; i < 2; ++i)
+		for (j = 0; j < 2; ++j)
+		  if (IM_GPIX(src, floor(sx)+i, floor(sy)+j, &c[j][i]))
+		    c[j][i] = back;
+	      for (j = 0; j < 2; ++j)
+		ci2[j] = interp_i_color(c[j][0], c[j][1], sx, src->channels);
+	      vals[x] = interp_i_color(ci2[0], ci2[1], sy, src->channels);
+	    }
+	    else {
+	      IM_COLOR ci2[2];
+	      for (i = 0; i < 2; ++i)
+		if (IM_GPIX(src, floor(sx)+i, sy, ci2+i))
+		  ci2[i] = back;
+	      vals[x] = interp_i_color(ci2[0], ci2[1], sx, src->channels);
+	    }
+	  }
+	  else {
+	    if (sy != (i_img_dim)sy) {
+	      IM_COLOR ci2[2];
+	      for (i = 0; i < 2; ++i)
+		if (IM_GPIX(src, sx, floor(sy)+i, ci2+i))
+		  ci2[i] = back;
+	      vals[x] = interp_i_color(ci2[0], ci2[1], sy, src->channels);
+	    }
+	    else {
+	      /* all the world's an integer */
+	      if (IM_GPIX(src, sx, sy, vals+x))
+		vals[x] = back;
+	    }
+	  }
+	}
+	else {
+	  vals[x] = back;
 	}
       }
-      else {
-	for (ch = 0; ch < src->channels; ++ch)
-	  back.channel[ch] = 0;
-      }
-
-      for (y = 0; y < ysize; ++y) {
-        for (x = 0; x < xsize; ++x) {
-          /* dividing by sz gives us the ability to do perspective 
-             transforms */
-          sz = x * matrix[6] + y * matrix[7] + matrix[8];
-          if (fabs(sz) > 0.0000001) {
-            sx = (x * matrix[0] + y * matrix[1] + matrix[2]) / sz;
-            sy = (x * matrix[3] + y * matrix[4] + matrix[5]) / sz;
-          }
-	  else {
-	    sx = sy = 0;
-	  }
-
-          /* anything outside these ranges is either a broken co-ordinate
-             or outside the source */
-          if (fabs(sz) > 0.0000001 
-              && sx >= -1 && sx < src->xsize
-              && sy >= -1 && sy < src->ysize) {
-
-            if (sx != (i_img_dim)sx) {
-              if (sy != (i_img_dim)sy) {
-                i_color c[2][2]; 
-                i_color ci2[2];
-                for (i = 0; i < 2; ++i)
-                  for (j = 0; j < 2; ++j)
-                    if (i_gpix(src, floor(sx)+i, floor(sy)+j, &c[j][i]))
-                      c[j][i] = back;
-                for (j = 0; j < 2; ++j)
-                  ci2[j] = interp_i_color(c[j][0], c[j][1], sx, src->channels);
-                vals[x] = interp_i_color(ci2[0], ci2[1], sy, src->channels);
-              }
-              else {
-                i_color ci2[2];
-                for (i = 0; i < 2; ++i)
-                  if (i_gpix(src, floor(sx)+i, sy, ci2+i))
-                    ci2[i] = back;
-                vals[x] = interp_i_color(ci2[0], ci2[1], sx, src->channels);
-              }
-            }
-            else {
-              if (sy != (i_img_dim)sy) {
-                i_color ci2[2];
-                for (i = 0; i < 2; ++i)
-                  if (i_gpix(src, sx, floor(sy)+i, ci2+i))
-                    ci2[i] = back;
-                vals[x] = interp_i_color(ci2[0], ci2[1], sy, src->channels);
-              }
-              else {
-                /* all the world's an integer */
-                if (i_gpix(src, sx, sy, vals+x))
-		  vals[x] = back;
-              }
-            }
-          }
-          else {
-            vals[x] = back;
-          }
-        }
-        i_plin(result, 0, xsize, y, vals);
-      }
-      myfree(vals);
+      IM_PLIN(result, 0, xsize, y, vals);
     }
-    else {
-      i_fcolor *vals = mymalloc(xsize * sizeof(i_fcolor));
-      i_fcolor back;
-
-      if (fbackp) {
-	back = *fbackp;
-      }
-      else if (backp) {
-	for (ch = 0; ch < src->channels; ++ch)
-	  back.channel[ch] = backp->channel[ch] / 255.0;
-      }
-      else {
-	for (ch = 0; ch < src->channels; ++ch)
-	  back.channel[ch] = 0;
-      }
-
-      for (y = 0; y < ysize; ++y) {
-        for (x = 0; x < xsize; ++x) {
-          /* dividing by sz gives us the ability to do perspective 
-             transforms */
-          sz = x * matrix[6] + y * matrix[7] + matrix[8];
-          if (fabs(sz) > 0.0000001) {
-            sx = (x * matrix[0] + y * matrix[1] + matrix[2]) / sz;
-            sy = (x * matrix[3] + y * matrix[4] + matrix[5]) / sz;
-          }
-          else {
-            sx = sy = 0;
-          }
-
-          /* anything outside these ranges is either a broken co-ordinate
-             or outside the source */
-          if (fabs(sz) > 0.0000001 
-              && sx >= -1 && sx < src->xsize
-              && sy >= -1 && sy < src->ysize) {
-
-            if (sx != (i_img_dim)sx) {
-              if (sy != (i_img_dim)sy) {
-                i_fcolor c[2][2]; 
-                i_fcolor ci2[2];
-                for (i = 0; i < 2; ++i)
-                  for (j = 0; j < 2; ++j)
-                    if (i_gpixf(src, floor(sx)+i, floor(sy)+j, &c[j][i]))
-                      c[j][i] = back;
-                for (j = 0; j < 2; ++j)
-                  ci2[j] = interp_i_fcolor(c[j][0], c[j][1], sx, src->channels);
-                vals[x] = interp_i_fcolor(ci2[0], ci2[1], sy, src->channels);
-              }
-              else {
-                i_fcolor ci2[2];
-                for (i = 0; i < 2; ++i)
-                  if (i_gpixf(src, floor(sx)+i, sy, ci2+i))
-                    ci2[i] = back;
-                vals[x] = interp_i_fcolor(ci2[0], ci2[1], sx, src->channels);
-              }
-            }
-            else {
-              if (sy != (i_img_dim)sy) {
-                i_fcolor ci2[2];
-                for (i = 0; i < 2; ++i)
-                  if (i_gpixf(src, sx, floor(sy)+i, ci2+i))
-                    ci2[i] = back;
-                vals[x] = interp_i_fcolor(ci2[0], ci2[1], sy, src->channels);
-              }
-              else {
-                /* all the world's an integer */
-                if (i_gpixf(src, sx, sy, vals+x)) 
-		  vals[x] = back;
-              }
-            }
-          }
-          else {
-            vals[x] = back;
-          }
-        }
-        i_plinf(result, 0, xsize, y, vals);
-      }
-      myfree(vals);
-    }
+    myfree(vals);
+#undef interp_i_color
+#/code
   }
   else {
     /* don't interpolate for a palette based image */

@@ -24,6 +24,7 @@ imconfig.h
 paste.c
 render.c
 paste.c
+rotate.c
 rubthru.c
 scale.c
 
