@@ -8,7 +8,7 @@ Imager release history.  Older releases can be found in Changes.old
  - update the change notes for 0.77_01 to indicate that libungif
    support was removed.
 
-Imager 0.87 - 03/01/12
+Imager 0.87 - 03 Jan 2012
 ===========
 
  - document the return value of the filter() method.
