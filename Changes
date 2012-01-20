@@ -8,6 +8,15 @@ Imager release history.  Older releases can be found in Changes.old
  - update the change notes for 0.77_01 to indicate that libungif
    support was removed.
 
+Bug fixes:
+
+ - correctly calculate the size of a rotated image
+   https://rt.cpan.org/Ticket/Display.html?id=69261
+
+ - fix incorrect rounding of color values for matrix_transform() and
+   rotate().
+   https://rt.cpan.org/Ticket/Display.html?id=69261
+
 Imager 0.87 - 03 Jan 2012
 ===========
 

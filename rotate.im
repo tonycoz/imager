@@ -145,7 +145,7 @@ static i_color interp_i_color(i_color before, i_color after, double pos,
 
       for (ch = 0; ch < channels-1; ++ch) {
 	int out_level = ((1-pos) * before.channel[ch] * before_alpha + 
-			 pos * after.channel[ch] * after_alpha + 0.5) / total_alpha;
+			 pos * after.channel[ch] * after_alpha) / total_alpha + 0.5;
 
 	out.channel[ch] = I_LIMIT_8(out_level);
       }
@@ -419,10 +419,10 @@ i_img *i_rotate_exact_bg(i_img *src, double amount,
   rotate[7] = 0;
   rotate[8] = 1;
 
-  x1 = ceil(i_abs(src->xsize * rotate[0] + src->ysize * rotate[1]));
-  x2 = ceil(i_abs(src->xsize * rotate[0] - src->ysize * rotate[1]));
-  y1 = ceil(i_abs(src->xsize * rotate[3] + src->ysize * rotate[4]));
-  y2 = ceil(i_abs(src->xsize * rotate[3] - src->ysize * rotate[4]));
+  x1 = ceil(fabs(src->xsize * rotate[0] + src->ysize * rotate[1]));
+  x2 = ceil(fabs(src->xsize * rotate[0] - src->ysize * rotate[1]));
+  y1 = ceil(fabs(src->xsize * rotate[3] + src->ysize * rotate[4]));
+  y2 = ceil(fabs(src->xsize * rotate[3] - src->ysize * rotate[4]));
   newxsize = x1 > x2 ? x1 : x2;
   newysize = y1 > y2 ? y1 : y2;
   /* translate the centre back to the center of the image */
