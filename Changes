@@ -8,6 +8,9 @@ Imager release history.  Older releases can be found in Changes.old
  - update the change notes for 0.77_01 to indicate that libungif
    support was removed.
 
+ - add some other imaging modules to SEE ALSO
+   https://rt.cpan.org/Ticket/Display.html?id=73906
+
 Bug fixes:
 
  - correctly calculate the size of a rotated image
