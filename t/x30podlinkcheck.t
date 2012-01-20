@@ -7,7 +7,7 @@ use File::Spec::Functions qw(rel2abs abs2rel splitdir);
 
 # external stuff we refer to
 my @known =
-  qw(perl Affix::Infix2Postfix Parse::RecDescent GD Image::Magick Graphics::Magick CGI Image::ExifTool XSLoader DynaLoader);
+  qw(perl Affix::Infix2Postfix Parse::RecDescent GD Image::Magick Graphics::Magick CGI Image::ExifTool XSLoader DynaLoader Prima::Image IPA PDL);
 
 my @pod; # files with pod
 
@@ -55,7 +55,7 @@ for my $file (@pod) {
   $parser->parse_from_file($file);
 
   unless (ok(!@errors, "check links in $relfile")) {
-    print "# $_\n" for @errors;
+    print STDERR "# $_\n" for @errors;
   }
 }
 
