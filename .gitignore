@@ -4,6 +4,7 @@
 *.manifest
 *.ilk
 *.lib
+MYMETA.json
 MYMETA.yml
 Makefile
 Makefile.old
