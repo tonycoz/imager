@@ -23,6 +23,10 @@ Bug fixes:
    rotate().
    https://rt.cpan.org/Ticket/Display.html?id=69261
 
+ - Win32 text output is now done in normal combine mode, the alpha
+   component of the color is now significant.
+   https://rt.cpan.org/Ticket/Display.html?id=70014
+
 Imager 0.87 - 03 Jan 2012
 ===========
 

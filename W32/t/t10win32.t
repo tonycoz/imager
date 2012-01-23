@@ -39,7 +39,7 @@ SKIP:
     diag "cannot open testout/t10font.ppm: $!";
   }
   
-  $bgcolor=i_color_set($bgcolor,200,200,200,0);
+  $bgcolor=i_color_set($bgcolor,200,200,200,255);
   my $backgr=Imager::ImgRaw::new(500,300,3);
   
   ok(Imager::Font::W32::i_wf_text($fontname,$backgr,100,100,$bgcolor,100,'MAW.',1, 1),
@@ -166,6 +166,7 @@ SKIP:
                   [ x=>40,  text=>"y", color=>"white" ],
                   [ x=>75,  text=>"A", channel=>1 ],
                   [ x=>110, text=>"y", channel=>1 ]) {
+      print "# ", join(",", @$args), "\n";
       ok($im->string(%common, @$args, 'y'=>40), "A no alignment");
       ok($im->string(%common, @$args, 'y'=>90, align=>1), "A align=1");
       ok($im->string(%common, @$args, 'y'=>110, align=>0), "A align=0");

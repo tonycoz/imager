@@ -31,9 +31,10 @@ An Imager interface to font output using the Win32 GDI.
 
 static void set_logfont(const char *face, int size, LOGFONT *lf);
 
-static LPVOID render_text(const char *face, int size, const char *text, int length, int aa,
-                          HBITMAP *pbm, SIZE *psz, TEXTMETRIC *tm, i_img_dim *bbox, int utf8);
+static unsigned char *render_text(const char *face, int size, const char *text, size_t length, int aa,
+				  SIZE *psz, TEXTMETRIC *tm, size_t *bytes_per_line, i_img_dim *bbox, int utf8);
 static LPWSTR utf8_to_wide_string(char const *text, int text_len, int *wide_chars);
+static LPWSTR latin1_to_wide_string(char const *text, int text_len, int *wide_chars);
 
 /*
 =item i_wf_bbox(face, size, text, length, bbox, utf8)
@@ -195,14 +196,15 @@ int
 i_wf_text(const char *face, i_img *im, i_img_dim tx, i_img_dim ty, const i_color *cl, i_img_dim size, 
 	  const char *text, size_t len, int align, int aa, int utf8) {
   unsigned char *bits;
-  HBITMAP bm;
   SIZE sz;
-  i_img_dim line_width;
+  size_t line_width;
   i_img_dim x, y;
   int ch;
   TEXTMETRIC tm;
   int top;
   i_img_dim bbox[BOUNDING_BOX_COUNT];
+  i_render *r;
+  unsigned char *outp;
 
   i_clear_error();
 
@@ -211,13 +213,11 @@ i_wf_text(const char *face, i_img *im, i_img_dim tx, i_img_dim ty, const i_color
   if (!i_wf_bbox(face, size, text, len, bbox, utf8))
     return 0;
 
-  bits = render_text(face, size, text, len, aa, &bm, &sz, &tm, bbox, utf8);
+  bits = render_text(face, size, text, len, aa, &sz, &tm, &line_width, bbox, utf8);
   if (!bits)
     return 0;
-  
+
   tx += bbox[BBOX_NEG_WIDTH];
-  line_width = sz.cx * 3;
-  line_width = (line_width + 3) / 4 * 4;
   top = ty;
   if (align) {
     top -= tm.tmAscent;
@@ -226,20 +226,14 @@ i_wf_text(const char *face, i_img *im, i_img_dim tx, i_img_dim ty, const i_color
     top -= tm.tmAscent - bbox[BBOX_ASCENT];
   }
 
+  r = i_render_new(im, sz.cx);
+  outp = bits;
   for (y = 0; y < sz.cy; ++y) {
-    for (x = 0; x < sz.cx; ++x) {
-      i_color pel;
-      int scale = bits[3 * x];
-      i_gpix(im, tx+x, top+sz.cy-y-1, &pel);
-      for (ch = 0; ch < im->channels; ++ch) {
-	pel.channel[ch] = 
-	  ((255-scale) * pel.channel[ch] + scale*cl->channel[ch]) / 255;
-      }
-      i_ppix(im, tx+x, top+sz.cy-y-1, &pel);
-    }
-    bits += line_width;
+    i_render_color(r, tx, top + sz.cy - y - 1, sz.cx, outp, cl);
+    outp += line_width;
   }
-  DeleteObject(bm);
+  i_render_delete(r);
+  myfree(bits);
 
   return 1;
 }
@@ -256,13 +250,13 @@ int
 i_wf_cp(const char *face, i_img *im, i_img_dim tx, i_img_dim ty, int channel, i_img_dim size, 
 	  const char *text, size_t len, int align, int aa, int utf8) {
   unsigned char *bits;
-  HBITMAP bm;
   SIZE sz;
-  int line_width;
+  size_t line_width;
   i_img_dim x, y;
   TEXTMETRIC tm;
   i_img_dim top;
   i_img_dim bbox[BOUNDING_BOX_COUNT];
+  unsigned char *outp;
 
   i_clear_error();
 
@@ -271,12 +265,10 @@ i_wf_cp(const char *face, i_img *im, i_img_dim tx, i_img_dim ty, int channel, i_
   if (!i_wf_bbox(face, size, text, len, bbox, utf8))
     return 0;
 
-  bits = render_text(face, size, text, len, aa, &bm, &sz, &tm, bbox, utf8);
+  bits = render_text(face, size, text, len, aa, &sz, &tm, &line_width, bbox, utf8);
   if (!bits)
     return 0;
   
-  line_width = sz.cx * 3;
-  line_width = (line_width + 3) / 4 * 4;
   top = ty;
   if (align) {
     top -= tm.tmAscent;
@@ -285,17 +277,18 @@ i_wf_cp(const char *face, i_img *im, i_img_dim tx, i_img_dim ty, int channel, i_
     top -= tm.tmAscent - bbox[BBOX_ASCENT];
   }
 
+  outp = bits;
   for (y = 0; y < sz.cy; ++y) {
     for (x = 0; x < sz.cx; ++x) {
       i_color pel;
-      int scale = bits[3 * x];
+      int scale = outp[x];
       i_gpix(im, tx+x, top+sz.cy-y-1, &pel);
       pel.channel[channel] = scale;
       i_ppix(im, tx+x, top+sz.cy-y-1, &pel);
     }
-    bits += line_width;
+    outp += line_width;
   }
-  DeleteObject(bm);
+  myfree(bits);
 
   return 1;
 }
@@ -416,8 +409,9 @@ native greyscale bitmaps.
 
 =cut
 */
-static LPVOID render_text(const char *face, int size, const char *text, int length, int aa,
-		   HBITMAP *pbm, SIZE *psz, TEXTMETRIC *tm, i_img_dim *bbox, int utf8) {
+static unsigned char *
+render_text(const char *face, int size, const char *text, size_t length, int aa,
+	    SIZE *psz, TEXTMETRIC *tm, size_t *bytes_per_line, i_img_dim *bbox, int utf8) {
   BITMAPINFO bmi;
   BITMAPINFOHEADER *bmih = &bmi.bmiHeader;
   HDC dc, bmpDc;
@@ -428,6 +422,7 @@ static LPVOID render_text(const char *face, int size, const char *text, int leng
   LPVOID bits;
   int wide_count;
   LPWSTR wide_text;
+  unsigned char *result;
 
   dc = GetDC(NULL);
   set_logfont(face, size, &lf);
@@ -443,7 +438,7 @@ static LPVOID render_text(const char *face, int size, const char *text, int leng
     wide_text = utf8_to_wide_string(text, length, &wide_count);
   }
   else {
-    wide_text = NULL;
+    wide_text = latin1_to_wide_string(text, length, &wide_count);
   }
 
   bmpDc = CreateCompatibleDC(dc);
@@ -475,12 +470,7 @@ static LPVOID render_text(const char *face, int size, const char *text, int leng
 	oldBm = SelectObject(bmpDc, bm);
 	SetTextColor(bmpDc, RGB(255, 255, 255));
 	SetBkColor(bmpDc, RGB(0, 0, 0));
-	if (utf8) {
-	  TextOutW(bmpDc, -bbox[BBOX_NEG_WIDTH], 0, wide_text, wide_count);
-	}
-	else {
-	  TextOut(bmpDc, -bbox[BBOX_NEG_WIDTH], 0, text, length);
-	}
+	TextOutW(bmpDc, -bbox[BBOX_NEG_WIDTH], 0, wide_text, wide_count);
 	SelectObject(bmpDc, oldBm);
       }
       else {
@@ -490,16 +480,14 @@ static LPVOID render_text(const char *face, int size, const char *text, int leng
 	DeleteObject(font);
 	DeleteDC(bmpDc);
 	ReleaseDC(NULL, dc);
-	if (wide_text)
-	  myfree(wide_text);
+	myfree(wide_text);
 	return NULL;
       }
       SelectObject(bmpDc, oldFont);
       DeleteObject(font);
     }
     else {
-      if (wide_text)
-	myfree(wide_text);
+      myfree(wide_text);
       i_push_errorf(0, "Could not create logical font: %ld",
 		    GetLastError());
       DeleteDC(bmpDc);
@@ -509,22 +497,41 @@ static LPVOID render_text(const char *face, int size, const char *text, int leng
     DeleteDC(bmpDc);
   }
   else {
-    if (wide_text)
-      myfree(wide_text);
+    myfree(wide_text);
     i_push_errorf(0, "Could not create rendering DC: %ld", GetLastError());
     ReleaseDC(NULL, dc);
     return NULL;
   }
 
-  if (wide_text)
-    myfree(wide_text);
+  myfree(wide_text);
 
   ReleaseDC(NULL, dc);
 
-  *pbm = bm;
   *psz = sz;
 
-  return bits;
+  /* convert into a map we can just pass to i_render_color() */
+  {
+    i_img_dim x, y;
+    unsigned char *outp, *ucbits;
+    size_t bits_line_width;
+
+    *bytes_per_line = sz.cx;
+    result = mymalloc(sz.cx * sz.cy);
+    outp = result;
+    ucbits = bits;
+    bits_line_width = sz.cx * 3;
+    bits_line_width = (bits_line_width + 3) / 4 * 4;
+
+    for (y = 0; y < sz.cy; ++y) {
+      for (x = 0; x < sz.cx; ++x) {
+	*outp++ = ucbits[3 * x];
+      }
+      ucbits += bits_line_width;
+    }
+  }
+  DeleteObject(bm);
+
+  return result;
 }
 
 /*
@@ -556,6 +563,19 @@ utf8_to_wide_string(char const *text, int text_len, int *wide_chars) {
   return result;
 }
 
+static LPWSTR
+latin1_to_wide_string(char const *text, int text_len, int *wide_chars) {
+  LPWSTR result = mymalloc(sizeof(WCHAR) * (text_len + 1));
+  size_t i;
+
+  for (i = 0; i < text_len; ++i) {
+    result[i] = (unsigned char)text[i];
+  }
+  result[i] = 0;
+  *wide_chars = text_len;
+
+  return result;
+}
 
 /*
 =back
