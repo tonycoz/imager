@@ -1479,41 +1479,6 @@ sub read {
     $self->{DEBUG} && print "loading a bmp file\n";
   }
 
-  if ( $type eq 'gif' ) {
-    if ($input{colors} && !ref($input{colors})) {
-      # must be a reference to a scalar that accepts the colour map
-      $self->{ERRSTR} = "option 'colors' must be a scalar reference";
-      return undef;
-    }
-    if ($input{'gif_consolidate'}) {
-      if ($input{colors}) {
-	my $colors;
-	($self->{IMG}, $colors) =i_readgif_wiol( $IO );
-	if ($colors) {
-	  ${ $input{colors} } = [ map { NC(@$_) } @$colors ];
-	}
-      }
-      else {
-	$self->{IMG} =i_readgif_wiol( $IO );
-      }
-    }
-    else {
-      my $page = $input{'page'};
-      defined $page or $page = 0;
-      $self->{IMG} = i_readgif_single_wiol( $IO, $page );
-      if ($self->{IMG} && $input{colors}) {
-	${ $input{colors} } =
-	  [ i_getcolors($self->{IMG}, 0, i_colorcount($self->{IMG})) ];
-      }
-    }
-
-    if ( !defined($self->{IMG}) ) {
-      $self->{ERRSTR}=$self->_error_as_msg();
-      return undef;
-    }
-    $self->{DEBUG} && print "loading a gif file\n";
-  }
-
   if ( $type eq 'tga' ) {
     $self->{IMG}=i_readtga_wiol( $IO, -1 ); # Fixme, check if that length parameter is ever needed
     if ( !defined($self->{IMG}) ) {

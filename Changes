@@ -27,6 +27,9 @@ Bug fixes:
    component of the color is now significant.
    https://rt.cpan.org/Ticket/Display.html?id=70014
 
+ - remove long unused gif case from read()
+   https://rt.cpan.org/Ticket/Display.html?id=69244 (partial)
+
 Imager 0.87 - 03 Jan 2012
 ===========
 
