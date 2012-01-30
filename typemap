@@ -30,6 +30,8 @@ off_t			T_OFF_T
 # STRLEN isn't in the default typemap in older perls
 STRLEN	       	      	T_UV
 
+i_channel_list	 	T_IM_CHANNEL_LIST
+
 #############################################################################
 INPUT
 T_PTR_NULL
@@ -91,6 +93,32 @@ T_PTROBJ_INV
 
 T_OFF_T
   $var = i_sv_off_t(aTHX_ $arg);
+
+T_IM_CHANNEL_LIST
+        SvGETMAGIC($arg);
+	if (SvOK($arg)) {
+	  AV *channels_av;
+	  int i;
+	  if (!SvROK($arg) || SvTYPE(SvRV($arg)) != SVt_PVAV) {
+	    croak(\"$var is not an array ref\");
+	  }
+	  channels_av = (AV *)SvRV($arg);
+ 	  $var.count = av_len(channels_av) + 1;
+	  if ($var.count < 1) {
+	    croak(\"$pname: no channels provided\");
+	  }
+	  $var.channels = malloc_temp(aTHX_ sizeof(int) * $var.count);
+ 	  for (i = 0; i < $var.count; ++i) {
+	    SV **entry = av_fetch(channels_av, i, 0);
+	    $var.channels[i] = entry ? SvIV(*entry) : 0;
+	  }
+        }
+	else {
+	  /* assumes we have an image */
+	  $var.count = im->channels;
+	  $var.channels = NULL;
+	}
+
 
 #############################################################################
 OUTPUT

@@ -29,6 +29,12 @@ extern "C" {
 
 #include "imperl.h"
 
+/* used to represent channel lists parameters */
+typedef struct i_channel_list_tag {
+  int *channels;
+  int count;
+} i_channel_list;
+
 /*
 
 Allocate memory that will be discarded when mortals are discarded.
@@ -3213,27 +3219,19 @@ i_img_virtual(im)
         Imager::ImgRaw  im
 
 void
-i_gsamp(im, l, r, y, ...)
+i_gsamp(im, l, r, y, channels)
         Imager::ImgRaw im
         i_img_dim l
         i_img_dim r
         i_img_dim y
+        i_channel_list channels
       PREINIT:
-        int *chans;
-        int chan_count;
         i_sample_t *data;
         i_img_dim count, i;
       PPCODE:
-        if (items < 5)
-          croak("No channel numbers supplied to g_samp()");
         if (l < r) {
-          chan_count = items - 4;
-          chans = mymalloc(sizeof(int) * chan_count);
-          for (i = 0; i < chan_count; ++i)
-            chans[i] = SvIV(ST(i+4));
-          data = mymalloc(sizeof(i_sample_t) * (r-l) * chan_count); /* XXX: memleak? */
-          count = i_gsamp(im, l, r, y, data, chans, chan_count);
-	  myfree(chans);
+          data = mymalloc(sizeof(i_sample_t) * (r-l) * channels.count); /* XXX: memleak? */
+          count = i_gsamp(im, l, r, y, data, channels.channels, channels.count);
           if (GIMME_V == G_ARRAY) {
             EXTEND(SP, count);
             for (i = 0; i < count; ++i)
@@ -3253,7 +3251,7 @@ i_gsamp(im, l, r, y, ...)
         }
 
 undef_neg_int
-i_gsamp_bits(im, l, r, y, bits, target, offset, ...)
+i_gsamp_bits(im, l, r, y, bits, target, offset, channels)
         Imager::ImgRaw im
         i_img_dim l
         i_img_dim r
@@ -3261,9 +3259,8 @@ i_gsamp_bits(im, l, r, y, bits, target, offset, ...)
 	int bits
 	AV *target
 	STRLEN offset
+        i_channel_list channels
       PREINIT:
-        int *chans;
-        int chan_count;
         unsigned *data;
         i_img_dim count, i;
       CODE:
@@ -3271,13 +3268,8 @@ i_gsamp_bits(im, l, r, y, bits, target, offset, ...)
         if (items < 8)
           croak("No channel numbers supplied to g_samp()");
         if (l < r) {
-          chan_count = items - 7;
-          chans = mymalloc(sizeof(int) * chan_count);
-          for (i = 0; i < chan_count; ++i)
-            chans[i] = SvIV(ST(i+7));
-          data = mymalloc(sizeof(unsigned) * (r-l) * chan_count);
-          count = i_gsamp_bits(im, l, r, y, data, chans, chan_count, bits);
-	  myfree(chans);
+          data = mymalloc(sizeof(unsigned) * (r-l) * channels.count);
+          count = i_gsamp_bits(im, l, r, y, data, channels.channels, channels.count, bits);
 	  for (i = 0; i < count; ++i) {
 	    av_store(target, i+offset, newSVuv(data[i]));
 	  }
@@ -3291,42 +3283,22 @@ i_gsamp_bits(im, l, r, y, bits, target, offset, ...)
 	RETVAL
 
 undef_neg_int
-i_psamp_bits(im, l, y, bits, channels_sv, data_av, data_offset = 0, pixel_count = -1)
+i_psamp_bits(im, l, y, bits, channels, data_av, data_offset = 0, pixel_count = -1)
         Imager::ImgRaw im
         i_img_dim l
         i_img_dim y
 	int bits
-	SV *channels_sv
+	i_channel_list channels
 	AV *data_av
         int data_offset
         int pixel_count
       PREINIT:
-	int chan_count;
-	int *channels;
 	STRLEN data_count;
 	size_t data_used;
 	unsigned *data;
 	ptrdiff_t i;
       CODE:
 	i_clear_error();
-	if (SvOK(channels_sv)) {
-	  AV *channels_av;
-	  if (!SvROK(channels_sv) || SvTYPE(SvRV(channels_sv)) != SVt_PVAV) {
-	    croak("channels is not an array ref");
-	  }
-	  channels_av = (AV *)SvRV(channels_sv);
- 	  chan_count = av_len(channels_av) + 1;
-	  if (chan_count < 1) {
-	    croak("i_psamp_bits: no channels provided");
-	  }
-	  channels = mymalloc(sizeof(int) * chan_count);
- 	  for (i = 0; i < chan_count; ++i)
-	    channels[i] = SvIV(*av_fetch(channels_av, i, 0));
-        }
-	else {
-	  chan_count = im->channels;
-	  channels = NULL;
-	}
 
 	data_count = av_len(data_av) + 1;
 	if (data_offset < 0) {
@@ -3336,22 +3308,20 @@ i_psamp_bits(im, l, y, bits, channels_sv, data_av, data_offset = 0, pixel_count 
 	  croak("data_offset greater than number of samples supplied");
         }
 	if (pixel_count == -1 || 
-	    data_offset + pixel_count * chan_count > data_count) {
-	  pixel_count = (data_count - data_offset) / chan_count;
+	    data_offset + pixel_count * channels.count > data_count) {
+	  pixel_count = (data_count - data_offset) / channels.count;
 	}
 
-	data_used = pixel_count * chan_count;
+	data_used = pixel_count * channels.count;
 	data = mymalloc(sizeof(unsigned) * data_count);
 	for (i = 0; i < data_used; ++i)
 	  data[i] = SvUV(*av_fetch(data_av, data_offset + i, 0));
 
-	RETVAL = i_psamp_bits(im, l, l + pixel_count, y, data, channels, 
-	                      chan_count, bits);
+	RETVAL = i_psamp_bits(im, l, l + pixel_count, y, data, channels.channels, 
+	                      channels.count, bits);
 
 	if (data)
 	  myfree(data);
-	if (channels)
-	  myfree(channels);
       OUTPUT:
 	RETVAL
 
@@ -3430,27 +3400,19 @@ i_ppixf(im, x, y, cl)
         Imager::Color::Float cl
 
 void
-i_gsampf(im, l, r, y, ...)
+i_gsampf(im, l, r, y, channels)
         Imager::ImgRaw im
         i_img_dim l
         i_img_dim r
         i_img_dim y
+	i_channel_list channels
       PREINIT:
-        int *chans;
-        int chan_count;
         i_fsample_t *data;
         i_img_dim count, i;
       PPCODE:
-        if (items < 5)
-          croak("No channel numbers supplied to g_sampf()");
         if (l < r) {
-          chan_count = items - 4;
-          chans = mymalloc(sizeof(int) * chan_count);
-          for (i = 0; i < chan_count; ++i)
-            chans[i] = SvIV(ST(i+4));
-          data = mymalloc(sizeof(i_fsample_t) * (r-l) * chan_count);
-          count = i_gsampf(im, l, r, y, data, chans, chan_count);
-          myfree(chans);
+          data = mymalloc(sizeof(i_fsample_t) * (r-l) * channels.count);
+          count = i_gsampf(im, l, r, y, data, channels.channels, channels.count);
           if (GIMME_V == G_ARRAY) {
             EXTEND(SP, count);
             for (i = 0; i < count; ++i)

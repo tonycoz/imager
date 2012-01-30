@@ -56,25 +56,25 @@ test_colorf_glin($im_rgb, 0, 1,
 		"added some green in the middle");
 {
   my @samples;
-  is(Imager::i_gsamp_bits($im_rgb, 18, 22, 1, 16, \@samples, 0, 0 .. 2), 12, 
+  is(Imager::i_gsamp_bits($im_rgb, 18, 22, 1, 16, \@samples, 0, [ 0 .. 2 ]), 12, 
      "i_gsamp_bits all channels - count")
     or print "# ", Imager->_error_as_msg(), "\n";
   is_deeply(\@samples, [ 65535, 0, 0,   65535, 0, 0,
 			 0, 65535, 0,   0, 65535, 0 ],
 	    "check samples retrieved");
   @samples = ();
-  is(Imager::i_gsamp_bits($im_rgb, 18, 22, 1, 16, \@samples, 0, 0, 2), 8, 
+  is(Imager::i_gsamp_bits($im_rgb, 18, 22, 1, 16, \@samples, 0, [ 0, 2 ]), 8, 
      "i_gsamp_bits some channels - count")
     or print "# ", Imager->_error_as_msg(), "\n";
   is_deeply(\@samples, [ 65535, 0,   65535, 0,
 			 0, 0,       0, 0     ],
 	    "check samples retrieved");
   # fail gsamp
-  is(Imager::i_gsamp_bits($im_rgb, 18, 22, 1, 16, \@samples, 0, 0, 3), undef,
+  is(Imager::i_gsamp_bits($im_rgb, 18, 22, 1, 16, \@samples, 0, [ 0, 3 ]), undef,
      "i_gsamp_bits fail bad channel");
   is(Imager->_error_as_msg(), 'No channel 3 in this image', 'check message');
 
-  is(Imager::i_gsamp_bits($im_rgb, 18, 22, 1, 17, \@samples, 0, 0, 2), 8, 
+  is(Imager::i_gsamp_bits($im_rgb, 18, 22, 1, 17, \@samples, 0, [ 0, 2 ]), 8, 
      "i_gsamp_bits succeed high bits");
   is($samples[0], 131071, "check correct with high bits");
 
@@ -90,7 +90,7 @@ test_colorf_glin($im_rgb, 0, 1,
      12, "write 16-bit samples")
     or print "# ", Imager->_error_as_msg(), "\n";
   @samples = ();
-  is(Imager::i_gsamp_bits($im_rgb, 18, 22, 2, 16, \@samples, 0, 0 .. 2), 12, 
+  is(Imager::i_gsamp_bits($im_rgb, 18, 22, 2, 16, \@samples, 0, [ 0 .. 2 ]), 12, 
      "read them back")
     or print "# ", Imager->_error_as_msg(), "\n";
   is_deeply(\@samples, \@wr_samples, "check they match");

@@ -73,11 +73,11 @@ ok(!grep($_ != $red_idx, @pals[0..49]), "check for red");
 ok(!grep($_ != $blue_idx, @pals[50..99]), "check for blue");
 is(Imager::i_gpal($im_pal, 0, 100, 0), "\0" x 50 . "\2" x 50, 
    "gpal in scalar context");
-my @samp = Imager::i_gsamp($im_pal, 0, 100, 0, 0, 1, 2);
+my @samp = Imager::i_gsamp($im_pal, 0, 100, 0, [ 0, 1, 2 ]);
 is(@samp, 300, "gsamp count in list context");
 my @samp_exp = ((255, 0, 0) x 50, (0, 0, 255) x 50);
 is_deeply(\@samp, \@samp_exp, "gsamp list deep compare");
-my $samp = Imager::i_gsamp($im_pal, 0, 100, 0, 0, 1, 2);
+my $samp = Imager::i_gsamp($im_pal, 0, 100, 0, [ 0, 1, 2 ]);
 is(length($samp), 300, "gsamp scalar length");
 is($samp, "\xFF\0\0" x 50 . "\0\0\xFF" x 50, "gsamp scalar bytes");
 
@@ -125,7 +125,7 @@ is(Imager::i_img_type($im_pal), 0, "pal img shouldn't be paletted now");
   is_color3($colors[1], 0, 255, 0, "still green");
   is_color3($colors[2], 0, 0, 255, "still blue");
   is_color3($colors[3], 0, 0, 0, "still black");
-  is(Imager::i_gsamp($im_pal2, 0, 100, 0, 0, 1, 2),
+  is(Imager::i_gsamp($im_pal2, 0, 100, 0, [ 0, 1, 2 ]),
      "\0\xFF\0\0\0\0"."\xFF\0\0" x 48 . "\0\0\xFF" x 50,
      "colors are still correct");
 }
@@ -403,16 +403,16 @@ cmp_ok(Imager->errstr, '=~', qr/channels must be between 1 and 4/,
 	    [ map $_->rgba, Imager::i_glinf($im, 2, 9, 4) ],
 	    "check colors were written");
 
-  is_deeply([ Imager::i_gsamp($im, 0, 10, 0, (0, 3)) ],
+  is_deeply([ Imager::i_gsamp($im, 0, 10, 0, [ 0, 3 ]) ],
 	    [ (0, 0) x 5, (255, 255), (0, 0) x 4 ],
 	    "i_gsamp list context");
   is("0000" x 5 . "FFFF" . "0000" x 4,
-     uc unpack("H*", Imager::i_gsamp($im, 0, 10, 0, (0, 3))),
+     uc unpack("H*", Imager::i_gsamp($im, 0, 10, 0, [ 0, 3 ])),
      "i_gsamp scalar context");
-  is_deeply([ Imager::i_gsampf($im, 2, 9, 4, 0, 2, 3) ],
+  is_deeply([ Imager::i_gsampf($im, 2, 9, 4, [ 0, 2, 3 ]) ],
 	    [ (1.0, 0, 1.0) x 3, (0, 1.0, 1.0) x 2, (0, 0, 0),
 	      (1.0, 1.0, 1.0) ], "i_gsampf - list context");
-  is_deeply([ unpack("d*", Imager::i_gsampf($im, 2, 9, 4, 0, 2, 3)) ],
+  is_deeply([ unpack("d*", Imager::i_gsampf($im, 2, 9, 4, [ 0, 2, 3 ])) ],
 	    [ (1.0, 0, 1.0) x 3, (0, 1.0, 1.0) x 2, (0, 0, 0),
               (1.0, 1.0, 1.0) ], "i_gsampf - scalar context");
   print "# end low-level scan-line function tests\n";
