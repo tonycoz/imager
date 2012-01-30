@@ -30,7 +30,10 @@ off_t			T_OFF_T
 # STRLEN isn't in the default typemap in older perls
 STRLEN	       	      	T_UV
 
+# internal types used in Imager.xs
 i_channel_list	 	T_IM_CHANNEL_LIST
+i_sample_list		T_IM_SAMPLE_LIST
+i_fsample_list		T_IM_FSAMPLE_LIST
 
 #############################################################################
 INPUT
@@ -119,6 +122,64 @@ T_IM_CHANNEL_LIST
 	  $var.channels = NULL;
 	}
 
+T_IM_SAMPLE_LIST
+	SvGETMAGIC($arg);
+	if (!SvOK($arg))
+	  croak(\"$var must be a scalar or an arrayref\");
+	if (SvROK($arg)) {
+	  i_img_dim i;
+	  AV *av;
+	  i_sample_t *s;
+	  if (SvTYPE(SvRV($arg)) != SVt_PVAV)
+	    croak(\"$var must be a scalar or an arrayref\");
+	  av = (AV *)SvRV($arg);
+          $var.count = av_len(av) + 1;
+          if ($var.count < 1)
+	    croak(\"$pname: no samples provided in $var\");
+	  s = malloc_temp(aTHX_ sizeof(i_sample_t) * $var.count);
+ 	  for (i = 0; i < $var.count; ++i) {
+	    SV **entry = av_fetch(av, i, 0);
+ 	    s[i] = entry ? SvIV(*entry) : 0;
+	  }
+          $var.samples = s;
+	}
+	else {
+	  /* non-magic would be preferable here */
+	  $var.samples = (const i_sample_t *)SvPVbyte($arg, $var.count);
+	  if ($var.count == 0)
+	    croak(\"$pname: no samples provided in $var\");
+	}
+
+T_IM_FSAMPLE_LIST
+	SvGETMAGIC($arg);
+	if (!SvOK($arg))
+	  croak(\"$var must be a scalar or an arrayref\");
+	if (SvROK($arg)) {
+	  i_img_dim i;
+	  AV *av;
+	  i_fsample_t *s;
+	  if (SvTYPE(SvRV($arg)) != SVt_PVAV)
+	    croak(\"$var must be a scalar or an arrayref\");
+	  av = (AV *)SvRV($arg);
+          $var.count = av_len(av) + 1;
+          if ($var.count < 1)
+	    croak(\"$pname: no samples provided in $var\");
+	  s = malloc_temp(aTHX_ sizeof(i_fsample_t) * $var.count);
+ 	  for (i = 0; i < $var.count; ++i) {
+	    SV **entry = av_fetch(av, i, 0);
+ 	    s[i] = entry ? SvNV(*entry) : 0;
+	  }
+          $var.samples = s;
+	}
+	else {
+	  /* non-magic would be preferable here */
+	  $var.samples = (const i_fsample_t *)SvPVbyte($arg, $var.count);
+	  if ($var.count % sizeof(double))
+	    croak(\"$pname: $var doesn't not contain a integer number of samples\");
+          $var.count /= sizeof(double);
+	  if ($var.count == 0)
+	    croak(\"$pname: no samples provided in $var\");
+	}
 
 #############################################################################
 OUTPUT

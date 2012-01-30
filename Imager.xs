@@ -35,6 +35,16 @@ typedef struct i_channel_list_tag {
   int count;
 } i_channel_list;
 
+typedef struct {
+  size_t count;
+  const i_sample_t *samples;
+} i_sample_list;
+
+typedef struct {
+  size_t count;
+  const i_fsample_t *samples;
+} i_fsample_list;
+
 /*
 
 Allocate memory that will be discarded when mortals are discarded.
@@ -3323,6 +3333,44 @@ i_psamp_bits(im, l, y, bits, channels, data_av, data_offset = 0, pixel_count = -
 	if (data)
 	  myfree(data);
       OUTPUT:
+	RETVAL
+
+undef_neg_int
+i_psamp(im, x, y, channels, data)
+	Imager::ImgRaw im
+	i_img_dim x
+	i_img_dim y
+	i_channel_list channels
+        i_sample_list data
+    PREINIT:
+	i_img_dim r;
+    CODE:
+	if (data.count % channels.count) {
+	  croak("channel count and data sample counts don't match");
+	}
+	r = x + data.count / channels.count;
+	i_clear_error();
+	RETVAL = i_psamp(im, x, r, y, data.samples, channels.channels, channels.count);
+    OUTPUT:
+	RETVAL
+
+undef_neg_int
+i_psampf(im, x, y, channels, data)
+	Imager::ImgRaw im
+	i_img_dim x
+	i_img_dim y
+	i_channel_list channels
+        i_fsample_list data
+    PREINIT:
+	i_img_dim r;
+    CODE:
+	if (data.count % channels.count) {
+	  croak("channel count and data sample counts don't match");
+	}
+	r = x + data.count / channels.count;
+	i_clear_error();
+	RETVAL = i_psampf(im, x, r, y, data.samples, channels.channels, channels.count);
+    OUTPUT:
 	RETVAL
 
 Imager::ImgRaw
