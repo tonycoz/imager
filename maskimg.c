@@ -48,6 +48,12 @@ static i_img_dim i_gsampf_masked(i_img *im, i_img_dim l, i_img_dim r, i_img_dim 
                            int const *chans, int chan_count);
 static i_img_dim i_gpal_masked(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, i_palidx *vals);
 static i_img_dim i_ppal_masked(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, const i_palidx *vals);
+static i_img_dim
+psamp_masked(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y,
+	       const i_sample_t *samples, const int *chans, int chan_count);
+static i_img_dim
+psampf_masked(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y,
+	       const i_fsample_t *samples, const int *chans, int chan_count);
 
 /*
 =item IIM_base_masked
@@ -89,6 +95,12 @@ static i_img IIM_base_masked =
   i_setcolors_forward, /* i_f_setcolors */
 
   i_destroy_masked, /* i_f_destroy */
+
+  NULL, /* i_f_gsamp_bits */
+  NULL, /* i_f_psamp_bits */
+
+  psamp_masked, /* i_f_psamp */
+  psampf_masked /* i_f_psampf */
 };
 
 /*
@@ -509,6 +521,139 @@ static i_img_dim i_ppal_masked(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y,
   }
   else {
     return 0;
+  }
+}
+
+/*
+=item psamp_masked()
+
+i_psamp() implementation for masked images.
+
+=cut
+*/
+
+static i_img_dim
+psamp_masked(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y,
+	     const i_sample_t *samples, const int *chans, int chan_count) {
+  i_img_mask_ext *ext = MASKEXT(im);
+
+  if (y >= 0 && y < im->ysize && l < im->xsize && l >= 0) {
+    unsigned old_ch_mask = ext->targ->ch_mask;
+    i_img_dim result = 0;
+    ext->targ->ch_mask = im->ch_mask;
+    if (r > im->xsize)
+      r = im->xsize;
+    if (ext->mask) {
+      i_img_dim w = r - l;
+      i_img_dim i = 0;
+      i_img_dim x = ext->xbase + l;
+      i_img_dim work_y = y + ext->ybase;
+      i_sample_t *mask_samps = ext->samps;
+	
+      i_gsamp(ext->mask, l, r, y, mask_samps, NULL, 1);
+      /* not optimizing this yet */
+      while (i < w) {
+	if (mask_samps[i]) {
+	  /* found a set mask value, try to do a run */
+	  i_img_dim run_left = x;
+	  const i_sample_t *run_samps = samples;
+	  ++i;
+	  ++x;
+	  samples += chan_count;
+	  
+	  while (i < w && mask_samps[i]) {
+	    ++i;
+	    ++x;
+	    samples += chan_count;
+	  }
+	  result += i_psamp(ext->targ, run_left, x, work_y, run_samps, chans, chan_count);
+	}
+	else {
+	  ++i;
+	  ++x;
+	  samples += chan_count;
+	  result += chan_count; /* pretend we wrote masked off pixels */
+	}
+      }
+    }
+    else {
+      result = i_psamp(ext->targ, l + ext->xbase, r + ext->xbase, 
+		       y + ext->ybase, samples, chans, chan_count);
+      im->type = ext->targ->type;
+    }
+    ext->targ->ch_mask = old_ch_mask;
+    return result;
+  }
+  else {
+    i_push_error(0, "Image position outside of image");
+    return -1;
+  }
+}
+
+/*
+=item psampf_masked()
+
+i_psampf() implementation for masked images.
+
+=cut
+*/
+
+static i_img_dim
+psampf_masked(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y,
+	     const i_fsample_t *samples, const int *chans, int chan_count) {
+  i_img_mask_ext *ext = MASKEXT(im);
+
+  if (y >= 0 && y < im->ysize && l < im->xsize && l >= 0) {
+    i_img_dim result = 0;
+    unsigned old_ch_mask = ext->targ->ch_mask;
+    ext->targ->ch_mask = im->ch_mask;
+    if (r > im->xsize)
+      r = im->xsize;
+    if (ext->mask) {
+      i_img_dim w = r - l;
+      i_img_dim i = 0;
+      i_img_dim x = ext->xbase + l;
+      i_img_dim work_y = y + ext->ybase;
+      i_sample_t *mask_samps = ext->samps;
+	
+      i_gsamp(ext->mask, l, r, y, mask_samps, NULL, 1);
+      /* not optimizing this yet */
+      while (i < w) {
+	if (mask_samps[i]) {
+	  /* found a set mask value, try to do a run */
+	  i_img_dim run_left = x;
+	  const i_fsample_t *run_samps = samples;
+	  ++i;
+	  ++x;
+	  samples += chan_count;
+	  
+	  while (i < w && mask_samps[i]) {
+	    ++i;
+	    ++x;
+	    samples += chan_count;
+	  }
+	  result += i_psampf(ext->targ, run_left, x, work_y, run_samps, chans, chan_count);
+	}
+	else {
+	  ++i;
+	  ++x;
+	  samples += chan_count;
+	  result += chan_count; /* pretend we wrote masked off pixels */
+	}
+      }
+    }
+    else {
+      result = i_psampf(ext->targ, l + ext->xbase, r + ext->xbase, 
+			y + ext->ybase, samples,
+				 chans, chan_count);
+      im->type = ext->targ->type;
+    }
+    ext->targ->ch_mask = old_ch_mask;
+    return result;
+  }
+  else {
+    i_push_error(0, "Image position outside of image");
+    return -1;
   }
 }
 
