@@ -19,7 +19,7 @@ plan skip_all => "perl 5.005_04, 5.005_05 too buggy"
 
 -d "testout" or mkdir "testout";
 
-plan tests => 106;
+plan tests => 115;
 require Inline;
 Inline->import(with => 'Imager');
 Inline->import("FORCE"); # force rebuild
