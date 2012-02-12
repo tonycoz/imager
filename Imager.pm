@@ -3319,10 +3319,6 @@ sub getsamples {
     return;
   }
   
-  unless ($opts{channels}) {
-    $opts{channels} = [ 0 .. $self->getchannels()-1 ];
-  }
-
   if ($opts{target}) {
     my $target = $opts{target};
     my $offset = $opts{offset};
@@ -3395,10 +3391,6 @@ sub setsamples {
   unless(defined $opts{data} && ref $opts{data}) {
     $self->_set_error('setsamples: data parameter missing or invalid');
     return;
-  }
-
-  unless ($opts{channels}) {
-    $opts{channels} = [ 0 .. $self->getchannels()-1 ];
   }
 
   unless ($opts{type} && $opts{type} =~ /^(\d+)bit$/) {
