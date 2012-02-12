@@ -30,6 +30,10 @@ Bug fixes:
  - remove long unused gif case from read()
    https://rt.cpan.org/Ticket/Display.html?id=69244 (partial)
 
+ - the getsamples() target parameter was being treated as a hashref
+   when it's meant to be an array reference.
+   https://rt.cpan.org/Ticket/Display.html?id=74882
+
 Imager 0.87 - 03 Jan 2012
 ===========
 
