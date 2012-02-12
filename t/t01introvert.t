@@ -3,7 +3,7 @@
 # to make sure we get expected values
 
 use strict;
-use Test::More tests => 233;
+use Test::More tests => 239;
 
 BEGIN { use_ok(Imager => qw(:handy :all)) }
 
@@ -509,6 +509,37 @@ cmp_ok(Imager->errstr, '=~', qr/channels must be between 1 and 4/,
 	    "get channels 3..0 as scalar, float samples");
   
   print "# end OO level scanline function tests\n";
+}
+
+{ # RT 74882
+  # for the non-gsamp_bits case with a target parameter it was
+  # treating the target parameter as a hashref
+  {
+    my $im = Imager->new(xsize => 10, ysize => 10);
+    my $c1 = NC(0, 63, 255);
+    my $c2 = NC(255, 128, 255);
+    is($im->setscanline(y => 1, pixels => [ ( $c1, $c2 ) x 5 ]),
+       10, "set some test data")
+      or diag "setscanline: ", $im->errstr;
+    my @target;
+    is($im->getsamples(y => 1, x => 1, target => \@target, width => 3),
+       9, "getsamples to target");
+    is_deeply(\@target, [ 255, 128, 255, 0, 63, 255, 255, 128, 255 ],
+	      "check result");
+  }
+  {
+    my $im = Imager->new(xsize => 10, ysize => 10, bits => "double");
+    my $c1 = NCF(0, 0.25, 1.0);
+    my $c2 = NCF(1.0, 0.5, 1.0);
+    is($im->setscanline(y => 1, pixels => [ ( $c1, $c2 ) x 5 ]),
+       10, "set some test data")
+      or diag "setscanline: ", $im->errstr;
+    my @target;
+    is($im->getsamples(y => 1, x => 1, target => \@target, width => 3, type => "float"),
+       9, "getsamples to target");
+    is_deeply(\@target, [ 1.0, 0.5, 1.0, 0, 0.25, 1.0, 1.0, 0.5, 1.0 ],
+	      "check result");
+  }
 }
 
 { # to avoid confusion, i_glin/i_glinf modified to return 0 in unused

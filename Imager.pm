@@ -3330,13 +3330,13 @@ sub getsamples {
       my @samples = i_gsamp($self->{IMG}, $opts{x}, $opts{x}+$opts{width},
 			    $opts{y}, @{$opts{channels}})
 	or return;
-      @{$target}{$offset .. $offset + @samples - 1} = @samples;
+      @{$target}[$offset .. $offset + @samples - 1] = @samples;
       return scalar(@samples);
     }
     elsif ($opts{type} eq 'float') {
       my @samples = i_gsampf($self->{IMG}, $opts{x}, $opts{x}+$opts{width},
 			     $opts{y}, @{$opts{channels}});
-      @{$target}{$offset .. $offset + @samples - 1} = @samples;
+      @{$target}[$offset .. $offset + @samples - 1] = @samples;
       return scalar(@samples);
     }
     elsif ($opts{type} =~ /^(\d+)bit$/) {
