@@ -3,7 +3,7 @@
 # to make sure we get expected values
 
 use strict;
-use Test::More tests => 307;
+use Test::More tests => 329;
 
 BEGIN { use_ok(Imager => qw(:handy :all)) }
 
@@ -418,6 +418,7 @@ cmp_ok(Imager->errstr, '=~', qr/channels must be between 1 and 4/,
   print "# end low-level scan-line function tests\n";
 }
 
+my $psamp_outside_error = "Image position outside of image";
 { # psamp
   print "# psamp\n";
   my $imraw = Imager::ImgRaw::new(10, 10, 3);
@@ -752,6 +753,63 @@ cmp_ok(Imager->errstr, '=~', qr/channels must be between 1 and 4/,
   my $im = Imager->new(xsize => 10, ysize => 10);
 
   image_bounds_checks($im);
+}
+
+{ # setsamples() interface to psamp()
+  my $im = Imager->new(xsize => 10, ysize => 10);
+  is($im->setsamples(y => 1, x => 2, data => [ 1 .. 6 ]), 6,
+     "simple put (array), default channels");
+  is_deeply([ $im->getsamples(y => 1, x => 0) ],
+	    [ (0) x 6, 1 .. 6, (0) x 18 ], "check they were stored");
+  is($im->setsamples(y => 3, x => 3, data => pack("C*", 2 .. 10 )), 9,
+     "simple put (scalar), default channels")
+    or diag $im->errstr;
+  is_deeply([ $im->getsamples(y => 3, x => 0) ],
+	    [ (0) x 9, 2 .. 10, (0) x 12 ], "check they were stored");
+  is($im->setsamples(y => 4, x => 4, data => [ map $_ / 254.5, 1 .. 6 ], type => 'float'),
+     6, "simple put (float array), default channels");
+  is_deeply([ $im->getsamples(y => 4, x => 0) ],
+	    [ (0) x 12, 1 .. 6, (0) x 12 ], "check they were stored");
+
+  is($im->setsamples(y => 5, x => 3, data => pack("d*", map $_ / 254.5, 1 .. 6), type => 'float'),
+     6, "simple put (float scalar), default channels");
+  is_deeply([ $im->getsamples(y => 5, x => 0) ],
+	    [ (0) x 9, 1 .. 6, (0) x 15 ], "check they were stored");
+
+  is_deeply([ $im->setsamples(y => 6, x => 10, data => [ (0) x 3 ]) ],
+	    [], "check out of range result (8bit)");
+  is($im->errstr, $psamp_outside_error, "check error message");
+
+  is_deeply([ $im->setsamples(y => 6, x => 10, data => [ (0) x 3 ], type => "float") ],
+	    [], "check out of range result (float)");
+  is($im->errstr, $psamp_outside_error, "check error message");
+
+  is_deeply([ $im->setsamples(y => 6, x => 2, channels => [0, 1, 3 ],
+			      data => [ (0) x 3 ]) ],
+	    [], "check bad channels (8bit)");
+  is($im->errstr, "No channel 3 in this image",
+     "check error message");
+  
+  is_deeply([ $im->setsamples(y => 6, x => 2, channels => [0, 1, 3 ], 
+			      data => [ (0) x 3 ], type => "float") ],
+	    [], "check bad channels (float)");
+  is($im->errstr, "No channel 3 in this image",
+     "check error message");
+
+  is($im->setsamples(y => 5, data => [ (0) x 3 ], type => "bad"),
+     undef, "setsamples with bad type");
+  is($im->errstr, "setsamples: type parameter invalid",
+     "check error message");
+  is($im->setsamples(y => 5),
+     undef, "setsamples with no data");
+  is($im->errstr, "setsamples: data parameter missing",
+     "check error message");
+
+  my $imempty = Imager->new;
+  is($imempty->setsamples(y => 0, data => [ (0) x 3 ]), undef,
+     "setsamples to empty image");
+  is($imempty->errstr, "setsamples: empty input image",
+     "check error message");
 }
 
 Imager->close_log();
