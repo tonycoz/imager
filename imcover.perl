@@ -24,7 +24,7 @@ run("$make 'OTHERLDFLAGS=-ftest-coverage -fprofile-arcs'")
   and die;
 
 {
-  local $ENV{DEVEL_COVER_OPTIONS} = "-db," . getcwd() . "/cover_db";
+  local $ENV{DEVEL_COVER_OPTIONS} = "-db," . getcwd() . "/cover_db,-coverage,statement,branch,condition,subroutine";
   my $makecmd = "$make test TEST_VERBOSE=1 HARNESS_PERL_SWITCHES=-MDevel::Cover";
   if (@tests) {
     $makecmd .= " TEST_FILES='@tests'";
