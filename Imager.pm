@@ -3403,11 +3403,11 @@ sub setsamples {
   my $count;
   if ($type eq '8bit') {
     $count = i_psamp($self->{IMG}, $opts{x}, $opts{y}, $opts{channels},
-		     $data);
+		     $data, $opts{offset}, $width);
   }
   elsif ($type eq 'float') {
     $count = i_psampf($self->{IMG}, $opts{x}, $opts{y}, $opts{channels},
-		      $opts{data});
+		      $data, $opts{offset}, $width);
   }
   elsif ($type =~ /^([0-9]+)bit$/) {
     my $bits = $1;
@@ -3418,7 +3418,7 @@ sub setsamples {
     }
 
     $count = i_psamp_bits($self->{IMG}, $opts{x}, $opts{y}, $bits,
-			  $opts{channels}, $opts{data}, $opts{offset}, 
+			  $opts{channels}, $data, $opts{offset}, 
 			  $width);
   }
   else {

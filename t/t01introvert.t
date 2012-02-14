@@ -3,7 +3,7 @@
 # to make sure we get expected values
 
 use strict;
-use Test::More tests => 329;
+use Test::More tests => 345;
 
 BEGIN { use_ok(Imager => qw(:handy :all)) }
 
@@ -421,7 +421,7 @@ cmp_ok(Imager->errstr, '=~', qr/channels must be between 1 and 4/,
 my $psamp_outside_error = "Image position outside of image";
 { # psamp
   print "# psamp\n";
-  my $imraw = Imager::ImgRaw::new(10, 10, 3);
+  my $imraw = Imager::ImgRaw::new(10, 20, 3);
   {
     is(Imager::i_psamp($imraw, 0, 2, undef, [ 255, 128, 64 ]), 3,
        "i_psamp def channels, 3 samples");
@@ -451,6 +451,16 @@ my $psamp_outside_error = "Image position outside of image";
     is(Imager::i_psamp($imraw, 8, 8, [ 0, 1, 2 ],
 		       [ 255, 128, 32, 64, 32, 16, 32, 16, 8 ]),
        6, "i_psamp channels [0, 1, 2], 9 samples, but room for 6");
+    is(Imager::i_psamp($imraw, 4, 6, undef, [ 0 .. 18 ], 1), 18,
+       "psamp with offset");
+    is_deeply([ Imager::i_gsamp($imraw, 0, 10, 6, undef) ],
+	      [ (0) x 12, 1 .. 18 ],
+	      "check result");
+    is(Imager::i_psamp($imraw, 4, 11, undef, [ 0 .. 18 ], 1, 3), 9,
+       "psamp with offset and width");
+    is_deeply([ Imager::i_gsamp($imraw, 0, 10, 11, undef) ],
+	      [ (0) x 12, 1 .. 9, (0) x 9 ],
+	      "check result");
   }
   { # errors we catch
     is(Imager::i_psamp($imraw, 6, 8, [ 0, 1, 3 ], [ 255, 128, 32 ]),
@@ -465,7 +475,7 @@ my $psamp_outside_error = "Image position outside of image";
        "negative y");
     is(_get_error(), $psamp_outside_error,
        "check error message");
-    is(Imager::i_psamp($imraw, 0, 10, undef, [ 0, 0, 0 ]), undef,
+    is(Imager::i_psamp($imraw, 0, 20, undef, [ 0, 0, 0 ]), undef,
        "y overflow");
     is(_get_error(), $psamp_outside_error,
        "check error message");
@@ -497,17 +507,22 @@ my $psamp_outside_error = "Image position outside of image";
 	 "check message");
 
     # not the typemap
-    ok(!eval { Imager::i_psamp($imraw, 9, 9, undef, [ 1 ]); 1 },
-       "sample count mod channel count non-zero");
-    like($@, qr/channel count and data sample counts don't match/,
-	 "check message");
+    is(Imager::i_psamp($imraw, 0, 8, undef, [ (0) x 3 ], -1), undef,
+       "negative offset");
+    is(_get_error(), "offset must be non-negative",
+       "check message");
+
+    is(Imager::i_psamp($imraw, 0, 8, undef, [ (0) x 3 ], 4), undef,
+       "too high offset");
+    is(_get_error(), "offset greater than number of samples supplied",
+       "check message");
   }
   print "# end psamp tests\n";
 }
 
 { # psampf
   print "# psampf\n";
-  my $imraw = Imager::ImgRaw::new(10, 10, 3);
+  my $imraw = Imager::ImgRaw::new(10, 20, 3);
   {
     is(Imager::i_psampf($imraw, 0, 2, undef, [ 1, 0.5, 0.25 ]), 3,
        "i_psampf def channels, 3 samples");
@@ -537,6 +552,16 @@ my $psamp_outside_error = "Image position outside of image";
     is(Imager::i_psampf($imraw, 8, 8, [ 0, 1, 2 ],
 			[ 1.0, 0.5, 0.125, 0.25, 0.125, 0.0625, 0.125, 0, 1 ]),
        6, "i_psampf channels [0, 1, 2], 9 samples, but room for 6");
+    is(Imager::i_psampf($imraw, 4, 6, undef, [ map $_/254.9, 0 .. 18 ], 1), 18,
+       "psampf with offset");
+    is_deeply([ Imager::i_gsamp($imraw, 0, 10, 6, undef) ],
+	      [ (0) x 12, 1 .. 18 ],
+	      "check result");
+    is(Imager::i_psampf($imraw, 4, 11, undef, [ map $_/254.9, 0 .. 18 ], 1, 3), 9,
+       "psampf with offset and width");
+    is_deeply([ Imager::i_gsamp($imraw, 0, 10, 11, undef) ],
+	      [ (0) x 12, 1 .. 9, (0) x 9 ],
+	      "check result");
   }
   { # errors we catch
     is(Imager::i_psampf($imraw, 6, 8, [ 0, 1, 3 ], [ 1, 0.5, 0.125 ]),
@@ -551,7 +576,7 @@ my $psamp_outside_error = "Image position outside of image";
        "negative y");
     is(_get_error(), $psamp_outside_error,
        "check error message");
-    is(Imager::i_psampf($imraw, 0, 10, undef, [ 0, 0, 0 ]), undef,
+    is(Imager::i_psampf($imraw, 0, 20, undef, [ 0, 0, 0 ]), undef,
        "y overflow");
     is(_get_error(), $psamp_outside_error,
        "check error message");
@@ -583,10 +608,15 @@ my $psamp_outside_error = "Image position outside of image";
 	 "check message");
 
     # not the typemap
-    ok(!eval { Imager::i_psampf($imraw, 9, 9, undef, [ 1 ]); 1 },
-       "sample count mod channel count non-zero");
-    like($@, qr/channel count and data sample counts don't match/,
-	 "check message");
+    is(Imager::i_psampf($imraw, 0, 8, undef, [ (0) x 3 ], -1), undef,
+       "negative offset");
+    is(_get_error(), "offset must be non-negative",
+       "check message");
+
+    is(Imager::i_psampf($imraw, 0, 8, undef, [ (0) x 3 ], 4), undef,
+       "too high offset");
+    is(_get_error(), "offset greater than number of samples supplied",
+       "check message");
   }
   print "# end psampf tests\n";
 }
@@ -775,6 +805,19 @@ my $psamp_outside_error = "Image position outside of image";
      6, "simple put (float scalar), default channels");
   is_deeply([ $im->getsamples(y => 5, x => 0) ],
 	    [ (0) x 9, 1 .. 6, (0) x 15 ], "check they were stored");
+
+  is($im->setsamples(y => 7, x => 3, data => [ 0 .. 18 ], offset => 1), 18,
+     "setsamples offset");
+  is_deeply([ $im->getsamples(y => 7) ],
+	    [ (0) x 9, 1 .. 18, (0) x 3 ],
+	    "check result");
+
+  is($im->setsamples(y => 8, x => 3, data => [ map $_ / 254.9, 0 .. 18 ],
+		     offset => 1, type => 'float'),
+     18, "setsamples offset (float)");
+  is_deeply([ $im->getsamples(y => 8) ],
+	    [ (0) x 9, 1 .. 18, (0) x 3 ],
+	    "check result");
 
   is_deeply([ $im->setsamples(y => 6, x => 10, data => [ (0) x 3 ]) ],
 	    [], "check out of range result (8bit)");

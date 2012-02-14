@@ -3300,8 +3300,8 @@ i_psamp_bits(im, l, y, bits, channels, data_av, data_offset = 0, pixel_count = -
 	int bits
 	i_channel_list channels
 	AV *data_av
-        int data_offset
-        int pixel_count
+        i_img_dim data_offset
+        i_img_dim pixel_count
       PREINIT:
 	STRLEN data_count;
 	size_t data_used;
@@ -3312,7 +3312,7 @@ i_psamp_bits(im, l, y, bits, channels, data_av, data_offset = 0, pixel_count = -
 
 	data_count = av_len(data_av) + 1;
 	if (data_offset < 0) {
-	  croak("data_offset must by non-negative");
+	  croak("data_offset must be non-negative");
 	}
 	if (data_offset > data_count) {
 	  croak("data_offset greater than number of samples supplied");
@@ -3336,39 +3336,69 @@ i_psamp_bits(im, l, y, bits, channels, data_av, data_offset = 0, pixel_count = -
 	RETVAL
 
 undef_neg_int
-i_psamp(im, x, y, channels, data)
+i_psamp(im, x, y, channels, data, offset = 0, width = -1)
 	Imager::ImgRaw im
 	i_img_dim x
 	i_img_dim y
 	i_channel_list channels
         i_sample_list data
+	i_img_dim offset
+	i_img_dim width
     PREINIT:
 	i_img_dim r;
     CODE:
-	if (data.count % channels.count) {
-	  croak("channel count and data sample counts don't match");
-	}
-	r = x + data.count / channels.count;
 	i_clear_error();
+	if (offset < 0) {
+	  i_push_error(0, "offset must be non-negative");
+	  XSRETURN_UNDEF;
+	}
+	if (offset > 0) {
+	  if (offset > data.count) {
+	    i_push_error(0, "offset greater than number of samples supplied");
+	    XSRETURN_UNDEF;
+	  }
+	  data.samples += offset;
+	  data.count -= offset;
+	}
+	if (width == -1 ||
+	    width * channels.count > data.count) {
+	  width = data.count / channels.count;
+        }
+	r = x + width;
 	RETVAL = i_psamp(im, x, r, y, data.samples, channels.channels, channels.count);
     OUTPUT:
 	RETVAL
 
 undef_neg_int
-i_psampf(im, x, y, channels, data)
+i_psampf(im, x, y, channels, data, offset = 0, width = -1)
 	Imager::ImgRaw im
 	i_img_dim x
 	i_img_dim y
 	i_channel_list channels
         i_fsample_list data
+	i_img_dim offset
+	i_img_dim width
     PREINIT:
 	i_img_dim r;
     CODE:
-	if (data.count % channels.count) {
-	  croak("channel count and data sample counts don't match");
-	}
-	r = x + data.count / channels.count;
 	i_clear_error();
+	if (offset < 0) {
+	  i_push_error(0, "offset must be non-negative");
+	  XSRETURN_UNDEF;
+	}
+	if (offset > 0) {
+	  if (offset > data.count) {
+	    i_push_error(0, "offset greater than number of samples supplied");
+	    XSRETURN_UNDEF;
+	  }
+	  data.samples += offset;
+	  data.count -= offset;
+	}
+	if (width == -1 ||
+	    width * channels.count > data.count) {
+	  width = data.count / channels.count;
+        }
+	r = x + width;
 	RETVAL = i_psampf(im, x, r, y, data.samples, channels.channels, channels.count);
     OUTPUT:
 	RETVAL
