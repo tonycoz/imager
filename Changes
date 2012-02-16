@@ -14,6 +14,15 @@ Imager release history.  Older releases can be found in Changes.old
  - note that the generator of the apparently non-DFSG-free postscript
    in MMOne.pfb is a Debian package.
 
+ - setsamples() is now a true complement to getsamples() - it can
+   write 8-bit or floating point samples from a scalar or array
+   reference.  This adds i_psamp() and i_psampf() to the C level API.
+
+ - the XS interfaces to i_gsamp(), i_gsampf() and i_gsamp_bits() have
+   changed to make better use of the typemap, but these aren't part of
+   the perl level API anyway.  There were no changes to the C level
+   interfaces to these functions.
+
 Bug fixes:
 
  - correctly calculate the size of a rotated image
