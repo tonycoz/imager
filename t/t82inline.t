@@ -19,7 +19,7 @@ plan skip_all => "perl 5.005_04, 5.005_05 too buggy"
 
 -d "testout" or mkdir "testout";
 
-plan tests => 82;
+plan tests => 115;
 require Inline;
 Inline->import(with => 'Imager');
 Inline->import("FORCE"); # force rebuild
@@ -394,6 +394,22 @@ test_render_color(Imager work_8) {
   return 1;
 }
 
+int
+raw_psamp(Imager im, int chan_count) {
+  static i_sample_t samps[] = { 0, 127, 255 };
+
+  i_clear_error();
+  return i_psamp(im, 0, 1, 0, samps, NULL, chan_count);
+}
+
+int
+raw_psampf(Imager im, int chan_count) {
+  static i_fsample_t samps[] = { 0, 0.5, 1.0 };
+
+  i_clear_error();
+  return i_psampf(im, 0, 1, 0, samps, NULL, chan_count);
+}
+
 EOS
 
 my $im = Imager->new(xsize=>50, ysize=>50);
@@ -543,4 +559,74 @@ for my $bits (8, 16) {
     is_color4($im->getpixel(x => 2, y => 2), 128, 128, 128, 64,
 	      "check 255 coverage, alpha 0 color, bits $bits");
   }
+}
+
+{
+  my $im = Imager->new(xsize => 10, ysize => 10);
+  is(raw_psamp($im, 4), -1, "bad channel list (4) for psamp should fail");
+  is(_get_error(), "chan_count 4 out of range, must be >0, <= channels",
+     "check message");
+  is(raw_psamp($im, 0), -1, "bad channel list (0) for psamp should fail");
+  is(_get_error(), "chan_count 0 out of range, must be >0, <= channels",
+     "check message");
+  is(raw_psampf($im, 4), -1, "bad channel list (4) for psampf should fail");
+  is(_get_error(), "chan_count 4 out of range, must be >0, <= channels",
+     "check message");
+  is(raw_psampf($im, 0), -1, "bad channel list (0) for psampf should fail");
+  is(_get_error(), "chan_count 0 out of range, must be >0, <= channels",
+     "check message");
+}
+
+{
+  my $im = Imager->new(xsize => 10, ysize => 10, bits => 16);
+  is(raw_psamp($im, 4), -1, "bad channel list (4) for psamp should fail (16-bit)");
+  is(_get_error(), "chan_count 4 out of range, must be >0, <= channels",
+     "check message");
+  is(raw_psamp($im, 0), -1, "bad channel list (0) for psamp should fail (16-bit)");
+  is(_get_error(), "chan_count 0 out of range, must be >0, <= channels",
+     "check message");
+  is(raw_psampf($im, 4), -1, "bad channel list (4) for psampf should fail (16-bit)");
+  is(_get_error(), "chan_count 4 out of range, must be >0, <= channels",
+     "check message");
+  is(raw_psampf($im, 0), -1, "bad channel list (0) for psampf should fail (16-bit)");
+  is(_get_error(), "chan_count 0 out of range, must be >0, <= channels",
+     "check message");
+}
+
+{
+  my $im = Imager->new(xsize => 10, ysize => 10, bits => 'double');
+  is(raw_psamp($im, 4), -1, "bad channel list (4) for psamp should fail (double)");
+  is(_get_error(), "chan_count 4 out of range, must be >0, <= channels",
+     "check message");
+  is(raw_psamp($im, 0), -1,, "bad channel list (0) for psamp should fail (double)");
+  is(_get_error(), "chan_count 0 out of range, must be >0, <= channels",
+     "check message");
+  is(raw_psampf($im, 4), -1, "bad channel list (4) for psampf should fail (double)");
+  is(_get_error(), "chan_count 4 out of range, must be >0, <= channels",
+     "check message");
+  is(raw_psampf($im, 0), -1, "bad channel list (0) for psampf should fail (double)");
+  is(_get_error(), "chan_count 0 out of range, must be >0, <= channels",
+     "check message");
+}
+
+{
+  my $im = Imager->new(xsize => 10, ysize => 10, type => "paletted");
+  is(raw_psamp($im, 4), -1, "bad channel list (4) for psamp should fail (paletted)");
+  is(_get_error(), "chan_count 4 out of range, must be >0, <= channels",
+     "check message");
+  is(raw_psamp($im, 0), -1, "bad channel list (0) for psamp should fail (paletted)");
+  is(_get_error(), "chan_count 0 out of range, must be >0, <= channels",
+     "check message");
+  is(raw_psampf($im, 4), -1, "bad channel list (4) for psampf should fail (paletted)");
+  is(_get_error(), "chan_count 4 out of range, must be >0, <= channels",
+     "check message");
+  is(raw_psampf($im, 0), -1, "bad channel list (0) for psampf should fail (paletted)");
+  is(_get_error(), "chan_count 0 out of range, must be >0, <= channels",
+     "check message");
+  is($im->type, "paletted", "make sure we kept the image type");
+}
+
+sub _get_error {
+  my @errors = Imager::i_errors();
+  return join(": ", map $_->[0], @errors);
 }

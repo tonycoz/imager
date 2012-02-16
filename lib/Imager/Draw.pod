@@ -1042,7 +1042,7 @@ samples provided will be written.
 
 C<type> - the type of sample data to write.  This parameter is required.
 
-As of Imager 0.61 this can only be C<16bit> only for 16 bit images.
+This can be C<8bit>, C<float> or for 16-bit images only, C<16bit>.
 
 =item *
 
@@ -1051,23 +1051,62 @@ the first channel.  Default: C<< [ 0 .. $self->getchannels()-1 ] >>
 
 =item *
 
-C<data> - a reference to an array of samples to write.  Required.
+C<data> - for a type of C<8bit> or C<float> this can be a reference to
+an array of samples or a scalar containing packed samples.  If C<data>
+is a scalar it may only contain characters from \x00 to \xFF.
+
+For a type of C<16bit> this can only be a reference to an array of
+samples to write.
+
+Required.
 
 =item *
 
-C<offset> - the starting offset within the array referenced by I<data>
+C<offset> - the starting offset within the array referenced by
+I<data>.  If C<data> is a scalar containing packed samples this offset
+is in samples.
 
 =back
 
 Returns the number of samples written.
 
+  $targ->setsamples(y => $y, data => \@data);
+
+  $targ->setsamples(y => $y, data => \@data, offset => $src->getchannels);
+
+Copy from one image to another:
+
+  my $targ = Imager->new(xsize => $src->getwidth,
+        ysize => $src->getheight, channels => $src->getchannels);
+  for my $y (0 .. $targ->getheight()-1) {
+    my $row = $src->getsamples(y => $y)
+      or die $src->errstr;
+    $targ->setsamples(y => $y, data => $row)
+      or die $targ->errstr;;
+  }
+
+Compose an image from separate source channels:
+
+  my @src = ...; # images to work from, up to 4
+  my $targ = Imager->new(xsize => $src[0]->getwidth,
+     ysize => $src[0]->getheight, channels => scalar(@src));
+  for my $y (0 .. $targ->getheight()-1) {
+    for my $ch (0 .. $#src) {
+      my $row = $src[$ch]->getsamples(y => $y, channels => [ 0 ]);
+      $targ->setsamples(y => $y, data => $row, channels => [ $ch ] );
+    }
+  }
+
 =back
 
 =head1 Packed Color Data
 
-The getscanline() and setscanline() functions can work with pixels
+The getscanline() and setscanline() methods can work with pixels
 packed into scalars.  This is useful to remove the cost of creating
 color objects, but should only be used when performance is an issue.
+
+The getsamples() and setsamples() methods can work with samples packed
+into scalars.
 
 Packed data can either be 1 byte per sample or 1 double per sample.
 

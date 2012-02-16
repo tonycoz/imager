@@ -1,9 +1,9 @@
 #!perl -w
 use strict;
-use Test::More tests => 88;
+use Test::More tests => 136;
 BEGIN { use_ok(Imager => qw(:all :handy)) }
 
-use Imager::Test qw(test_image is_image);
+use Imager::Test qw(test_image is_image is_color3);
 
 -d "testout" or mkdir "testout";
 
@@ -169,8 +169,130 @@ cmp_ok(Imager->errstr, '=~', qr/channels must be between 1 and 4/,
   is($im->errstr, "empty input image", "check message");
 }
 
+my $psamp_outside_error = "Image position outside of image";
+{ # psamp
+  print "# psamp\n";
+  my $imraw = Imager::i_img_double_new(10, 10, 3);
+  {
+    is(Imager::i_psamp($imraw, 0, 2, undef, [ 255, 128, 64 ]), 3,
+       "i_psamp def channels, 3 samples");
+    is_color3(Imager::i_get_pixel($imraw, 0, 2), 255, 128, 64,
+	      "check color written");
+    Imager::i_img_setmask($imraw, 5);
+    is(Imager::i_psamp($imraw, 1, 3, undef, [ 64, 128, 192 ]), 3,
+       "i_psamp def channels, 3 samples, masked");
+    is_color3(Imager::i_get_pixel($imraw, 1, 3), 64, 0, 192,
+	      "check color written");
+    is(Imager::i_psamp($imraw, 1, 7, [ 0, 1, 2 ], [ 64, 128, 192 ]), 3,
+       "i_psamp channels listed, 3 samples, masked");
+    is_color3(Imager::i_get_pixel($imraw, 1, 7), 64, 0, 192,
+	      "check color written");
+    Imager::i_img_setmask($imraw, ~0);
+    is(Imager::i_psamp($imraw, 2, 4, [ 0, 1 ], [ 255, 128, 64, 32 ]), 4,
+       "i_psamp channels [0, 1], 4 samples");
+    is_color3(Imager::i_get_pixel($imraw, 2, 4), 255, 128, 0,
+	      "check first color written");
+    is_color3(Imager::i_get_pixel($imraw, 3, 4), 64, 32, 0,
+	      "check second color written");
+    is(Imager::i_psamp($imraw, 0, 5, [ 0, 1, 2 ], [ (128, 63, 32) x 10 ]), 30,
+       "write a full row");
+    is_deeply([ Imager::i_gsamp($imraw, 0, 10, 5, [ 0, 1, 2 ]) ],
+	      [ (128, 63, 32) x 10 ],
+	      "check full row");
+    is(Imager::i_psamp($imraw, 8, 8, [ 0, 1, 2 ],
+		       [ 255, 128, 32, 64, 32, 16, 32, 16, 8 ]),
+       6, "i_psamp channels [0, 1, 2], 9 samples, but room for 6");
+  }
+  { # errors we catch
+    is(Imager::i_psamp($imraw, 6, 8, [ 0, 1, 3 ], [ 255, 128, 32 ]),
+       undef, "i_psamp channels [0, 1, 3], 3 samples (invalid channel number)");
+    is(_get_error(), "No channel 3 in this image",
+       "check error message");
+    is(Imager::i_psamp($imraw, 6, 8, [ 0, 1, -1 ], [ 255, 128, 32 ]),
+       undef, "i_psamp channels [0, 1, -1], 3 samples (invalid channel number)");
+    is(_get_error(), "No channel -1 in this image",
+       "check error message");
+    is(Imager::i_psamp($imraw, 0, -1, undef, [ 0, 0, 0 ]), undef,
+       "negative y");
+    is(_get_error(), $psamp_outside_error, "check error message");
+    is(Imager::i_psamp($imraw, 0, 10, undef, [ 0, 0, 0 ]), undef,
+       "y overflow");
+    is(_get_error(), $psamp_outside_error, "check error message");
+    is(Imager::i_psamp($imraw, -1, 0, undef, [ 0, 0, 0 ]), undef,
+       "negative x");
+    is(_get_error(), $psamp_outside_error, "check error message");
+    is(Imager::i_psamp($imraw, 10, 0, undef, [ 0, 0, 0 ]), undef,
+       "x overflow");
+    is(_get_error(), $psamp_outside_error, "check error message");
+  }
+  print "# end psamp tests\n";
+}
+
+{ # psampf
+  print "# psampf\n";
+  my $imraw = Imager::i_img_double_new(10, 10, 3);
+  {
+    is(Imager::i_psampf($imraw, 0, 2, undef, [ 1, 0.5, 0.25 ]), 3,
+       "i_psampf def channels, 3 samples");
+    is_color3(Imager::i_get_pixel($imraw, 0, 2), 255, 127, 63,
+	      "check color written");
+    Imager::i_img_setmask($imraw, 5);
+    is(Imager::i_psampf($imraw, 1, 3, undef, [ 0.25, 0.5, 0.75 ]), 3,
+       "i_psampf def channels, 3 samples, masked");
+    is_color3(Imager::i_get_pixel($imraw, 1, 3), 63, 0, 191,
+	      "check color written");
+    is(Imager::i_psampf($imraw, 1, 7, [ 0, 1, 2 ], [ 0.25, 0.5, 0.75 ]), 3,
+       "i_psampf channels listed, 3 samples, masked");
+    is_color3(Imager::i_get_pixel($imraw, 1, 7), 63, 0, 191,
+	      "check color written");
+    Imager::i_img_setmask($imraw, ~0);
+    is(Imager::i_psampf($imraw, 2, 4, [ 0, 1 ], [ 1, 0.5, 0.25, 0.125 ]), 4,
+       "i_psampf channels [0, 1], 4 samples");
+    is_color3(Imager::i_get_pixel($imraw, 2, 4), 255, 127, 0,
+	      "check first color written");
+    is_color3(Imager::i_get_pixel($imraw, 3, 4), 63, 31, 0,
+	      "check second color written");
+    is(Imager::i_psampf($imraw, 0, 5, [ 0, 1, 2 ], [ (0.5, 0.25, 0.125) x 10 ]), 30,
+       "write a full row");
+    is_deeply([ Imager::i_gsamp($imraw, 0, 10, 5, [ 0, 1, 2 ]) ],
+	      [ (127, 63, 31) x 10 ],
+	      "check full row");
+    is(Imager::i_psampf($imraw, 8, 8, [ 0, 1, 2 ],
+			[ 1.0, 0.5, 0.125, 0.25, 0.125, 0.0625, 0.125, 0, 1 ]),
+       6, "i_psampf channels [0, 1, 2], 9 samples, but room for 6");
+  }
+  { # errors we catch
+    is(Imager::i_psampf($imraw, 6, 8, [ 0, 1, 3 ], [ 1, 0.5, 0.125 ]),
+       undef, "i_psampf channels [0, 1, 3], 3 samples (invalid channel number)");
+    is(_get_error(), "No channel 3 in this image",
+       "check error message");
+    is(Imager::i_psampf($imraw, 6, 8, [ 0, 1, -1 ], [ 1, 0.5, 0.125 ]),
+       undef, "i_psampf channels [0, 1, -1], 3 samples (invalid channel number)");
+    is(_get_error(), "No channel -1 in this image",
+       "check error message");
+    is(Imager::i_psampf($imraw, 0, -1, undef, [ 0, 0, 0 ]), undef,
+       "negative y");
+    is(_get_error(), $psamp_outside_error, "check error message");
+    is(Imager::i_psampf($imraw, 0, 10, undef, [ 0, 0, 0 ]), undef,
+       "y overflow");
+    is(_get_error(), $psamp_outside_error, "check error message");
+    is(Imager::i_psampf($imraw, -1, 0, undef, [ 0, 0, 0 ]), undef,
+       "negative x");
+    is(_get_error(), $psamp_outside_error, "check error message");
+    is(Imager::i_psampf($imraw, 10, 0, undef, [ 0, 0, 0 ]), undef,
+       "x overflow");
+    is(_get_error(), $psamp_outside_error, "check error message");
+  }
+  print "# end psampf tests\n";
+}
+
 Imager->close_log;
 
 unless ($ENV{IMAGER_KEEP_FILES}) {
   unlink "testout/t022double.log";
+}
+
+sub _get_error {
+  my @errors = Imager::i_errors();
+  return join(": ", map $_->[0], @errors);
 }

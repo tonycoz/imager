@@ -37,6 +37,10 @@ static int i_findcolor_p(i_img *im, const i_color *color, i_palidx *entry);
 static int i_setcolors_p(i_img *im, int index, const i_color *color, int count);
 
 static void i_destroy_p(i_img *im);
+static i_img_dim 
+i_psamp_p(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, const i_sample_t *samps, const int *chans, int chan_count);
+static i_img_dim 
+i_psampf_p(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, const i_fsample_t *samps, const int *chans, int chan_count);
 
 static i_img IIM_base_8bit_pal =
 {
@@ -74,6 +78,9 @@ static i_img IIM_base_8bit_pal =
 
   i_gsamp_bits_fb,
   NULL, /* i_f_psamp_bits */
+  
+  i_psamp_p,
+  i_psampf_p
 };
 
 /*
@@ -274,14 +281,33 @@ present in the image.
 */
 static int 
 i_ppix_p(i_img *im, i_img_dim x, i_img_dim y, const i_color *val) {
+  const i_color *work_val = val;
+  i_color workc;
   i_palidx which;
+  const unsigned all_mask = ( 1 << im->channels ) - 1;
+
   if (x < 0 || x >= im->xsize || y < 0 || y >= im->ysize)
     return -1;
-  if (i_findcolor(im, val, &which)) {
+
+  if ((im->ch_mask & all_mask) != all_mask) {
+    unsigned mask = 1;
+    int ch;
+    i_gpix(im, x, y, &workc);
+    for (ch = 0; ch < im->channels; ++ch) {
+      if (im->ch_mask & mask)
+	workc.channel[ch] = val->channel[ch];
+      mask <<= 1;
+    }
+    work_val = &workc;
+  }
+
+  if (i_findcolor(im, work_val, &which)) {
     ((i_palidx *)im->idata)[x + y * im->xsize] = which;
     return 0;
   }
   else {
+    mm_log((1, "i_ppix: color(%d,%d,%d) not found, converting to rgb\n",
+	    val->channel[0], val->channel[1], val->channel[2]));
     if (i_img_to_rgb_inplace(im)) {
       return i_ppix(im, x, y, val);
     }
@@ -588,6 +614,148 @@ static int i_findcolor_p(i_img *im, const i_color *color, i_palidx *entry) {
     }
   }
   return 0;
+}
+
+/*
+=item i_psamp_p(im, l, r, y, samps, chans, chan_count)
+
+Implement psamp() for paletted images.
+
+Since writing samples doesn't really work as a concept for paletted
+images, this is slow.
+
+Also, writing samples may convert the image to a direct image in the
+process, so use i_ppix/i_gpix instead of directly calling the paletted
+handlers.
+
+=cut
+*/
+
+static i_img_dim 
+i_psamp_p(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y,
+	  const i_sample_t *samps, const int *chans, int chan_count) {
+  if (y >=0 && y < im->ysize && l < im->xsize && l >= 0) {
+    i_img_dim count = 0;
+    int ch;
+
+    if (r > im->xsize)
+      r = im->xsize;
+      
+    if (chans) {
+      /* make sure we have good channel numbers */
+      for (ch = 0; ch < chan_count; ++ch) {
+        if (chans[ch] < 0 || chans[ch] >= im->channels) {
+          i_push_errorf(0, "No channel %d in this image", chans[ch]);
+          return -1;
+        }
+      }
+      while (l < r) {
+	i_color c;
+	
+	i_gpix(im, l, y, &c);
+	for (ch = 0; ch < chan_count; ++ch)
+	  c.channel[chans[ch]] = *samps++;
+	i_ppix(im, l, y, &c);
+	count += chan_count;
+	++l;
+      }
+    }
+    else {
+      if (chan_count <= 0 || chan_count > im->channels) {
+	i_push_errorf(0, "chan_count %d out of range, must be >0, <= channels", 
+		      chan_count);
+	return -1;
+      }
+
+      while (l < r) {
+	i_color c;
+	
+	i_gpix(im, l, y, &c);
+	for (ch = 0; ch < chan_count; ++ch)
+	  c.channel[ch] = *samps++;
+	i_ppix(im, l, y, &c);
+	count += chan_count;
+	++l;
+      }
+    }
+
+    return count;
+  }
+  else {
+    i_push_error(0, "Image position outside of image");
+    return -1;
+  }
+}
+
+/*
+=item i_psampf_p(im, l, r, y, samps, chans, chan_count)
+
+Implement psampf() for paletted images.
+
+Since writing samples doesn't really work as a concept for paletted
+images, this is slow.
+
+Also, writing samples may convert the image to a direct image in the
+process, so use i_ppixf/i_gpixf instead of directly calling the paletted
+handlers.
+
+=cut
+*/
+
+static i_img_dim 
+i_psampf_p(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y,
+	  const i_fsample_t *samps, const int *chans, int chan_count) {
+  if (y >=0 && y < im->ysize && l < im->xsize && l >= 0) {
+    i_img_dim count = 0;
+    int ch;
+
+    if (r > im->xsize)
+      r = im->xsize;
+      
+    if (chans) {
+      /* make sure we have good channel numbers */
+      for (ch = 0; ch < chan_count; ++ch) {
+        if (chans[ch] < 0 || chans[ch] >= im->channels) {
+          i_push_errorf(0, "No channel %d in this image", chans[ch]);
+          return -1;
+        }
+      }
+      while (l < r) {
+	i_fcolor c;
+	
+	i_gpixf(im, l, y, &c);
+	for (ch = 0; ch < chan_count; ++ch)
+	  c.channel[chans[ch]] = *samps++;
+	i_ppixf(im, l, y, &c);
+	count += chan_count;
+	++l;
+      }
+    }
+    else {
+      if (chan_count <= 0 || chan_count > im->channels) {
+	i_push_errorf(0, "chan_count %d out of range, must be >0, <= channels", 
+		      chan_count);
+	return -1;
+      }
+
+      while (l < r) {
+	i_fcolor c;
+	
+	i_gpixf(im, l, y, &c);
+	for (ch = 0; ch < chan_count; ++ch)
+	  c.channel[ch] = *samps++;
+	i_ppixf(im, l, y, &c);
+	count += chan_count;
+	++l;
+      }
+    }
+
+    return count;
+  }
+  else {
+    i_push_error(0, "Image position outside of image");
+    return -1;
+  }
 }
 
 /*

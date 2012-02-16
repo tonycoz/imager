@@ -175,6 +175,12 @@ typedef i_img_dim (*i_f_gsamp_bits_t)(i_img *im, i_img_dim x, i_img_dim r, i_img
                            const int *chans, int chan_count, int bits);
 typedef i_img_dim (*i_f_psamp_bits_t)(i_img *im, i_img_dim x, i_img_dim r, i_img_dim y, unsigned const *samp,
 				 const int *chans, int chan_count, int bits);
+typedef i_img_dim
+(*i_f_psamp_t)(i_img *im, i_img_dim x, i_img_dim r, i_img_dim y, 
+		const i_sample_t *samp, const int *chan, int chan_count);
+typedef i_img_dim
+(*i_f_psampf_t)(i_img *im, i_img_dim x, i_img_dim r, i_img_dim y,
+		const i_fsample_t *samp, const int *chan, int chan_count);
 
 /*
 =item i_img
@@ -269,6 +275,14 @@ i_f_gsamp_bits - implements i_gsamp_bits() for this image.
 
 i_f_psamp_bits - implements i_psamp_bits() for this image.
 
+=item *
+
+i_f_psamp - implements psamp() for this image.
+
+=item *
+
+i_f_psampf - implements psamp() for this image.
+
 =back
 
 =cut
@@ -315,6 +329,10 @@ struct i_img_ {
   /* as of 0.61 */
   i_f_gsamp_bits_t i_f_gsamp_bits;
   i_f_psamp_bits_t i_f_psamp_bits;
+
+  /* as of 0.88 */
+  i_f_psamp_t i_f_psamp;
+  i_f_psampf_t i_f_psampf;
 
   void *im_data;
 };

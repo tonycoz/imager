@@ -3319,23 +3319,19 @@ sub getsamples {
     return;
   }
   
-  unless ($opts{channels}) {
-    $opts{channels} = [ 0 .. $self->getchannels()-1 ];
-  }
-
   if ($opts{target}) {
     my $target = $opts{target};
     my $offset = $opts{offset};
     if ($opts{type} eq '8bit') {
       my @samples = i_gsamp($self->{IMG}, $opts{x}, $opts{x}+$opts{width},
-			    $opts{y}, @{$opts{channels}})
+			    $opts{y}, $opts{channels})
 	or return;
       @{$target}[$offset .. $offset + @samples - 1] = @samples;
       return scalar(@samples);
     }
     elsif ($opts{type} eq 'float') {
       my @samples = i_gsampf($self->{IMG}, $opts{x}, $opts{x}+$opts{width},
-			     $opts{y}, @{$opts{channels}});
+			     $opts{y}, $opts{channels});
       @{$target}[$offset .. $offset + @samples - 1] = @samples;
       return scalar(@samples);
     }
@@ -3345,7 +3341,7 @@ sub getsamples {
       my @data;
       my $count = i_gsamp_bits($self->{IMG}, $opts{x}, $opts{x}+$opts{width}, 
 			       $opts{y}, $bits, $target, 
-			       $offset, @{$opts{channels}});
+			       $offset, $opts{channels});
       unless (defined $count) {
 	$self->_set_error(Imager->_error_as_msg);
 	return;
@@ -3361,18 +3357,18 @@ sub getsamples {
   else {
     if ($opts{type} eq '8bit') {
       return i_gsamp($self->{IMG}, $opts{x}, $opts{x}+$opts{width},
-		     $opts{y}, @{$opts{channels}});
+		     $opts{y}, $opts{channels});
     }
     elsif ($opts{type} eq 'float') {
       return i_gsampf($self->{IMG}, $opts{x}, $opts{x}+$opts{width},
-		      $opts{y}, @{$opts{channels}});
+		      $opts{y}, $opts{channels});
     }
     elsif ($opts{type} =~ /^(\d+)bit$/) {
       my $bits = $1;
 
       my @data;
       i_gsamp_bits($self->{IMG}, $opts{x}, $opts{x}+$opts{width}, 
-		   $opts{y}, $bits, \@data, 0, @{$opts{channels}})
+		   $opts{y}, $bits, \@data, 0, $opts{channels})
 	or return;
       return @data;
     }
@@ -3392,28 +3388,44 @@ sub setsamples {
     return;
   }
 
-  unless(defined $opts{data} && ref $opts{data}) {
-    $self->_set_error('setsamples: data parameter missing or invalid');
+  my $data = $opts{data};
+  unless(defined $data) {
+    $self->_set_error('setsamples: data parameter missing');
     return;
   }
 
-  unless ($opts{channels}) {
-    $opts{channels} = [ 0 .. $self->getchannels()-1 ];
-  }
+  my $type = $opts{type};
+  defined $type or $type = '8bit';
 
-  unless ($opts{type} && $opts{type} =~ /^(\d+)bit$/) {
-    $self->_set_error('setsamples: type parameter missing or invalid');
+  my $width = defined $opts{width} ? $opts{width}
+    : $self->getwidth() - $opts{x};
+
+  my $count;
+  if ($type eq '8bit') {
+    $count = i_psamp($self->{IMG}, $opts{x}, $opts{y}, $opts{channels},
+		     $data, $opts{offset}, $width);
+  }
+  elsif ($type eq 'float') {
+    $count = i_psampf($self->{IMG}, $opts{x}, $opts{y}, $opts{channels},
+		      $data, $opts{offset}, $width);
+  }
+  elsif ($type =~ /^([0-9]+)bit$/) {
+    my $bits = $1;
+
+    unless (ref $data) {
+      $self->_set_error("setsamples: data must be an array ref for type not 8bit or float");
+      return;
+    }
+
+    $count = i_psamp_bits($self->{IMG}, $opts{x}, $opts{y}, $bits,
+			  $opts{channels}, $data, $opts{offset}, 
+			  $width);
+  }
+  else {
+    $self->_set_error('setsamples: type parameter invalid');
     return;
   }
-  my $bits = $1;
 
-  unless (defined $opts{width}) {
-    $opts{width} = $self->getwidth() - $opts{x};
-  }
-
-  my $count = i_psamp_bits($self->{IMG}, $opts{x}, $opts{y}, $bits,
-			   $opts{channels}, $opts{data}, $opts{offset}, 
-			   $opts{width});
   unless (defined $count) {
     $self->_set_error(Imager->_error_as_msg);
     return;

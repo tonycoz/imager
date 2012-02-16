@@ -257,6 +257,14 @@ i_f_gsamp_bits - implements i_gsamp_bits() for this image.
 
 i_f_psamp_bits - implements i_psamp_bits() for this image.
 
+=item *
+
+i_f_psamp - implements psamp() for this image.
+
+=item *
+
+i_f_psampf - implements psamp() for this image.
+
 =back
 
 
@@ -773,6 +781,24 @@ color to the image.
 =for comment
 From: File imext.c
 
+=item i_psamp(im, left, right, y, samples, channels, channel_count)
+
+Writes sample values from C<samples> to C<im> for the horizontal line
+(left, y) to (right-1, y) inclusive for the channels specified by
+C<channels>, an array of C<int> with C<channel_count> elements.
+
+If C<channels> is C<NULL> then the first C<channels_count> channels
+are written to for each pixel.
+
+Returns the number of samples written, which should be (right - left)
+* channel_count.  If a channel not in the image is in channels, left
+is negative, left is outside the image or y is outside the image,
+returns -1 and pushes an error.
+
+
+=for comment
+From: File immacros.h
+
 =item i_psamp_bits(im, left, right, y, samples, channels, channel_count, bits)
 
 Writes integer samples scaled to C<bits> bits of precision from the
@@ -789,6 +815,25 @@ Pushes errors, but does not call C<i_clear_error()>.
 
 =for comment
 From: File imext.c
+
+=item i_psampf(im, left, right, y, samples, channels, channel_count)
+
+Writes floating point sample values from C<samples> to C<im> for the
+horizontal line (left, y) to (right-1, y) inclusive for the channels
+specified by C<channels>, an array of C<int> with C<channel_count>
+elements.
+
+If C<channels> is C<NULL> then the first C<channels_count> channels
+are written to for each pixel.
+
+Returns the number of samples written, which should be (right - left)
+* channel_count.  If a channel not in the image is in channels, left
+is negative, left is outside the image or y is outside the image,
+returns -1 and pushes an error.
+
+
+=for comment
+From: File immacros.h
 
 
 =back

@@ -35,6 +35,10 @@ static i_img_dim i_gsamp_ddoub(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y,
                        int const *chans, int chan_count);
 static i_img_dim i_gsampf_ddoub(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, i_fsample_t *samps, 
                         int const *chans, int chan_count);
+static i_img_dim 
+i_psamp_ddoub(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, const i_sample_t *samps, const int *chans, int chan_count);
+static i_img_dim 
+i_psampf_ddoub(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, const i_fsample_t *samps, const int *chans, int chan_count);
 
 /*
 =item IIM_base_16bit_direct
@@ -81,6 +85,9 @@ static i_img IIM_base_double_direct =
 
   i_gsamp_bits_fb,
   NULL, /* i_f_psamp_bits */
+
+  i_psamp_ddoub, /* i_f_psamp */
+  i_psampf_ddoub /* i_f_psampf */
 };
 
 /*
@@ -407,6 +414,190 @@ static i_img_dim i_gsampf_ddoub(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y
   }
   else {
     return 0;
+  }
+}
+
+/*
+=item i_psamp_ddoub(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, const i_sample_t *samps, int *chans, int chan_count)
+
+Writes sample values to im for the horizontal line (l, y) to (r-1,y)
+for the channels specified by chans, an array of int with chan_count
+elements.
+
+Returns the number of samples written (which should be (r-l) *
+bits_set(chan_mask)
+
+=cut
+*/
+
+static
+i_img_dim
+i_psamp_ddoub(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, 
+	  const i_sample_t *samps, const int *chans, int chan_count) {
+  int ch;
+  i_img_dim count, i, w;
+
+  if (y >=0 && y < im->ysize && l < im->xsize && l >= 0) {
+    int all_unmasked;
+    i_img_dim offset;
+    if (r > im->xsize)
+      r = im->xsize;
+    offset = (l+y*im->xsize) * im->channels;
+    w = r - l;
+    count = 0;
+
+    if (chans) {
+      /* make sure we have good channel numbers */
+      /* and test if all channels specified are in the mask */
+      int all_in_mask = 1;
+      for (ch = 0; ch < chan_count; ++ch) {
+        if (chans[ch] < 0 || chans[ch] >= im->channels) {
+          i_push_errorf(0, "No channel %d in this image", chans[ch]);
+          return -1;
+        }
+	if (!((1 << chans[ch]) & im->ch_mask))
+	  all_in_mask = 0;
+      }
+      if (all_in_mask) {
+	for (i = 0; i < w; ++i) {
+	  for (ch = 0; ch < chan_count; ++ch) {
+	    ((double*)im->idata)[offset + chans[ch]] = Sample8ToF(*samps);
+	    ++samps;
+	    ++count;
+	  }
+	  offset += im->channels;
+	}
+      }
+      else {
+	for (i = 0; i < w; ++i) {
+	  for (ch = 0; ch < chan_count; ++ch) {
+	    if (im->ch_mask & (1 << (chans[ch])))
+	      ((double*)im->idata)[offset + chans[ch]] = Sample8ToF(*samps);
+	    
+	    ++samps;
+	    ++count;
+	  }
+	  offset += im->channels;
+	}
+      }
+    }
+    else {
+      if (chan_count <= 0 || chan_count > im->channels) {
+	i_push_errorf(0, "chan_count %d out of range, must be >0, <= channels", 
+		      chan_count);
+	return -1;
+      }
+      for (i = 0; i < w; ++i) {
+	unsigned mask = 1;
+        for (ch = 0; ch < chan_count; ++ch) {
+	  if (im->ch_mask & mask)
+	    ((double*)im->idata)[offset + ch] = Sample8ToF(*samps);
+
+	  ++samps;
+          ++count;
+	  mask <<= 1;
+        }
+        offset += im->channels;
+      }
+    }
+
+    return count;
+  }
+  else {
+    i_push_error(0, "Image position outside of image");
+    return -1;
+  }
+}
+
+/*
+=item i_psampf_ddoub(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, const i_fsample_t *samps, int *chans, int chan_count)
+
+Writes sample values to im for the horizontal line (l, y) to (r-1,y)
+for the channels specified by chans, an array of int with chan_count
+elements.
+
+Returns the number of samples written (which should be (r-l) *
+bits_set(chan_mask)
+
+=cut
+*/
+
+static
+i_img_dim
+i_psampf_ddoub(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, 
+	       const i_fsample_t *samps, const int *chans, int chan_count) {
+  int ch;
+  i_img_dim count, i, w;
+
+  if (y >=0 && y < im->ysize && l < im->xsize && l >= 0) {
+    int all_unmasked;
+    i_img_dim offset;
+    if (r > im->xsize)
+      r = im->xsize;
+    offset = (l+y*im->xsize) * im->channels;
+    w = r - l;
+    count = 0;
+
+    if (chans) {
+      /* make sure we have good channel numbers */
+      /* and test if all channels specified are in the mask */
+      int all_in_mask = 1;
+      for (ch = 0; ch < chan_count; ++ch) {
+        if (chans[ch] < 0 || chans[ch] >= im->channels) {
+          i_push_errorf(0, "No channel %d in this image", chans[ch]);
+          return -1;
+        }
+	if (!((1 << chans[ch]) & im->ch_mask))
+	  all_in_mask = 0;
+      }
+      if (all_in_mask) {
+	for (i = 0; i < w; ++i) {
+	  for (ch = 0; ch < chan_count; ++ch) {
+	    ((double*)im->idata)[offset + chans[ch]] = *samps;
+	    ++samps;
+	    ++count;
+	  }
+	  offset += im->channels;
+	}
+      }
+      else {
+	for (i = 0; i < w; ++i) {
+	  for (ch = 0; ch < chan_count; ++ch) {
+	    if (im->ch_mask & (1 << (chans[ch])))
+	      ((double*)im->idata)[offset + chans[ch]] = *samps;
+	    
+	    ++samps;
+	    ++count;
+	  }
+	  offset += im->channels;
+	}
+      }
+    }
+    else {
+      if (chan_count <= 0 || chan_count > im->channels) {
+	i_push_errorf(0, "chan_count %d out of range, must be >0, <= channels", 
+		      chan_count);
+	return -1;
+      }
+      for (i = 0; i < w; ++i) {
+	unsigned mask = 1;
+        for (ch = 0; ch < chan_count; ++ch) {
+	  if (im->ch_mask & mask)
+	    ((double*)im->idata)[offset + ch] = *samps;
+
+	  ++samps;
+          ++count;
+	  mask <<= 1;
+        }
+        offset += im->channels;
+      }
+    }
+
+    return count;
+  }
+  else {
+    i_push_error(0, "Image position outside of image");
+    return -1;
   }
 }
 

@@ -19,8 +19,11 @@
  readers.  Switching away from calling readcb etc to i_io_read() etc
  should fix your code.
 
+ Version 4 added i_psamp() and i_psampf() pointers to the i_img
+ structure.
+
 */
-#define IMAGER_API_VERSION 3
+#define IMAGER_API_VERSION 4
 
 /*
  IMAGER_API_LEVEL is the level of the structure.  New function pointers
