@@ -167,6 +167,11 @@ my @objs = qw(Imager.o draw.o polygon.o image.o io.o iolayer.o
               bmp.o tga.o color.o fills.o imgdouble.o limits.o hlines.o
               imext.o scale.o rubthru.o render.o paste.o compose.o flip.o);
 
+my @typemaps = qw(typemap.local typemap);
+if ($] < 5.008) {
+    unshift @typemaps, "typemap.oldperl";
+}
+
 my %opts=
   (
    'NAME'         => 'Imager',
@@ -182,6 +187,7 @@ my %opts=
     'Test::More' => 0.47,
     'Scalar::Util' => 1.00,
    },
+   TYPEMAPS       => \@typemaps,
   );
 
 if ($coverage) {

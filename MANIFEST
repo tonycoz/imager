@@ -469,6 +469,8 @@ TIFF/TIFF.xs
 trans2.c
 transform.perl			Shell interface to Imager::Transform
 typemap
+typemap.local			typemap for Imager.xs specific definitions
+typemap.oldperl			typemap for older versions of perl
 W32/fontfiles/ExistenceTest.ttf
 W32/imw32.h
 W32/lib/Imager/Font/Win32.pm
