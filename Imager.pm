@@ -629,11 +629,13 @@ sub _combine {
 }
 
 sub _valid_image {
-  my ($self) = @_;
+  my ($self, $method) = @_;
 
   $self->{IMG} and return 1;
 
-  $self->_set_error('empty input image');
+  my $msg = 'empty input image';
+  $msg = "$method: $msg" if $method;
+  $self->_set_error($msg);
 
   return;
 }
@@ -3117,6 +3119,9 @@ sub flood_fill {
 sub setpixel {
   my ($self, %opts) = @_;
 
+  $self->_valid_image("setpixel")
+    or return;
+
   my $color = $opts{color};
   unless (defined $color) {
     $color = $self->{fg};
@@ -3124,36 +3129,53 @@ sub setpixel {
   }
 
   unless (ref $color && UNIVERSAL::isa($color, "Imager::Color")) {
-    $color = _color($color)
-      or return undef;
+    unless ($color = _color($color, 'setpixel')) {
+      $self->_set_error("setpixel: " . Imager->errstr);
+      return;
+    }
   }
 
   unless (exists $opts{'x'} && exists $opts{'y'}) {
-    $self->{ERRSTR} = 'missing x and y parameters';
-    return undef;
+    $self->_set_error('setpixel: missing x or y parameter');
+    return;
   }
 
   my $x = $opts{'x'};
   my $y = $opts{'y'};
-  if (ref $x && ref $y) {
-    unless (@$x == @$y) {
-      $self->{ERRSTR} = 'length of x and y mismatch';
+  if (ref $x || ref $y) {
+    $x = ref $x ? $x : [ $x ];
+    $y = ref $y ? $y : [ $y ];
+    unless (@$x) {
+      $self->_set_error("setpixel: x is a reference to an empty array");
       return;
     }
+    unless (@$y) {
+      $self->_set_error("setpixel: y is a reference to an empty array");
+      return;
+    }
+
+    # make both the same length, replicating the last element
+    if (@$x < @$y) {
+      $x = [ @$x, ($x->[-1]) x (@$y - @$x) ];
+    }
+    elsif (@$y < @$x) {
+      $y = [ @$y, ($y->[-1]) x (@$x - @$y) ];
+    }
+
     my $set = 0;
     if ($color->isa('Imager::Color')) {
-      for my $i (0..$#{$opts{'x'}}) {
+      for my $i (0..$#$x) {
         i_ppix($self->{IMG}, $x->[$i], $y->[$i], $color)
 	  or ++$set;
       }
     }
     else {
-      for my $i (0..$#{$opts{'x'}}) {
+      for my $i (0..$#$x) {
         i_ppixf($self->{IMG}, $x->[$i], $y->[$i], $color)
 	  or ++$set;
       }
     }
-    $set or return;
+
     return $set;
   }
   else {
@@ -3167,7 +3189,7 @@ sub setpixel {
     }
   }
 
-  $self;
+  return $self;
 }
 
 sub getpixel {
@@ -3175,41 +3197,66 @@ sub getpixel {
 
   my %opts = ( "type"=>'8bit', @_);
 
+  $self->_valid_image("getpixel")
+    or return;
+
   unless (exists $opts{'x'} && exists $opts{'y'}) {
-    $self->{ERRSTR} = 'missing x and y parameters';
-    return undef;
+    $self->_set_error('getpixel: missing x or y parameter');
+    return;
   }
 
   my $x = $opts{'x'};
   my $y = $opts{'y'};
-  if (ref $x && ref $y) {
-    unless (@$x == @$y) {
-      $self->{ERRSTR} = 'length of x and y mismatch';
-      return undef;
+  my $type = $opts{'type'};
+  if (ref $x || ref $y) {
+    $x = ref $x ? $x : [ $x ];
+    $y = ref $y ? $y : [ $y ];
+    unless (@$x) {
+      $self->_set_error("getpixel: x is a reference to an empty array");
+      return;
     }
+    unless (@$y) {
+      $self->_set_error("getpixel: y is a reference to an empty array");
+      return;
+    }
+
+    # make both the same length, replicating the last element
+    if (@$x < @$y) {
+      $x = [ @$x, ($x->[-1]) x (@$y - @$x) ];
+    }
+    elsif (@$y < @$x) {
+      $y = [ @$y, ($y->[-1]) x (@$x - @$y) ];
+    }
+
     my @result;
-    if ($opts{"type"} eq '8bit') {
-      for my $i (0..$#{$opts{'x'}}) {
+    if ($type eq '8bit') {
+      for my $i (0..$#$x) {
         push(@result, i_get_pixel($self->{IMG}, $x->[$i], $y->[$i]));
       }
     }
-    else {
-      for my $i (0..$#{$opts{'x'}}) {
+    elsif ($type eq 'float' || $type eq 'double') {
+      for my $i (0..$#$x) {
         push(@result, i_gpixf($self->{IMG}, $x->[$i], $y->[$i]));
       }
+    }
+    else {
+      $self->_set_error("getpixel: type must be '8bit' or 'float'");
+      return;
     }
     return wantarray ? @result : \@result;
   }
   else {
-    if ($opts{"type"} eq '8bit') {
+    if ($type eq '8bit') {
       return i_get_pixel($self->{IMG}, $x, $y);
     }
-    else {
+    elsif ($type eq 'float' || $type eq 'double') {
       return i_gpixf($self->{IMG}, $x, $y);
     }
+    else {
+      $self->_set_error("getpixel: type must be '8bit' or 'float'");
+      return;
+    }
   }
-
-  $self;
 }
 
 sub getscanline {

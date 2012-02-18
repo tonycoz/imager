@@ -23,6 +23,11 @@ Imager release history.  Older releases can be found in Changes.old
    the perl level API anyway.  There were no changes to the C level
    interfaces to these functions.
 
+ - getpixel() and setpixel() now accept a mix of scalar and array
+   references for the x and y parameters, and unequal array lengths is
+   no longer an error.
+   https://rt.cpan.org/Ticket/Display.html?id=73697
+
 Bug fixes:
 
  - correctly calculate the size of a rotated image
@@ -42,6 +47,11 @@ Bug fixes:
  - the getsamples() target parameter was being treated as a hashref
    when it's meant to be an array reference.
    https://rt.cpan.org/Ticket/Display.html?id=74882
+
+ - getpixel() and setpixel() now returns an empty list when invalid
+   parameters are supplied.
+   Invalid values for type now result in an error for getpixel().
+   https://rt.cpan.org/Ticket/Display.html?id=73697
 
 Imager 0.87 - 03 Jan 2012
 ===========

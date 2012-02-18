@@ -487,6 +487,30 @@ supplied as a L</"Color Parameters">.
 
 setpixel() is used to set one or more individual pixels.
 
+You can supply a single set of co-ordinates as scalar C<x> and C<y>
+parameters, or set either to an arrayref of ordinates.
+
+If one array is shorter than another the final value in the shorter
+will be duplicated until they match in length.
+
+If only one of C<x> or C<y> is an array reference then setpixel() will
+behave as if the non-reference value were an array reference
+containing only that value.
+
+eg.
+
+  my $count = $img->setpixel(x => 1, y => [ 0 .. 3 ], color => $color);
+
+behaves like:
+
+  my $count = $img->setpixel(x => [ 1 ], y => [ 0 .. 3 ], color => $color);
+
+and since the final element in the shorter array is duplicated, this
+behaves like:
+
+  my $count = $img->setpixel(x => [ 1, 1, 1, 1 ], y => [ 0 .. 3 ],
+                             color => $color);
+
 Parameters:
 
 =over
@@ -503,25 +527,60 @@ Default: white.
 
 =back
 
-When called with array parameters, returns the number of pixels
-successfully set, or false if none.
+When called with an array reference in either C<x> or C<y>, returns
+the number of pixels successfully set, or false if none.
 
 When called with scalars for x and y, return $img on success, false on
 failure.
 
+Possible errors conditions include:
+
+=over
+
+=item * the image supplied is empty
+
+=item * a reference to an empty array was supplied for C<x> or C<y>
+
+=item * C<x> or C<y> wasn't supplied
+
+=item * C<color> isn't a valid color, and can't be converted to a
+color.
+
+=back
+
+On any of these errors, setpixel() returns an empty list and sets
+errstr().
+
 =item getpixel()
 
-  my $color = $img->getpixel(x=>50, y=>70);
-  my @colors = $img->getpixel(x=>[ 50, 60, 70 ], y=>[20, 30, 40]);
-  my $colors_ref = $img->getpixel(x=>[ 50, 60, 70 ], y=>[20, 30, 40]);
+  my $color = $img->getpixel(x=>50, y=>70); my @colors =
+  $img->getpixel(x=>[ 50, 60, 70 ], y=>[20, 30, 40]); my $colors_ref =
+  $img->getpixel(x=>[ 50, 60, 70 ], y=>[20, 30, 40]);
 
 getpixel() is used to retrieve one or more individual pixels.
 
-For either method you can supply a single set of co-ordinates as
-scalar x and y parameters, or set each to an arrayref of ordinates.
+You can supply a single set of co-ordinates as scalar C<x> and C<y>
+parameters, or set each to an arrayref of ordinates.
 
-When called with arrays, getpixel() will return a list of colors in
-list context, and an arrayref in scalar context.
+If one array is shorter than another the final value in the shorter
+will be duplicated until they match in length.
+
+If only one of C<x> or C<y> is an array reference then getpixel() will
+behave as if the non-reference value were an array reference
+containing only that value.
+
+eg.
+
+  my @colors = $img->getpixel(x => 0, y => [ 0 .. 3 ]);
+
+behaves like:
+
+  my @colors = $img->getpixel(x => [ 0 ], y => [ 0 .. 3 ]);
+
+and since the final element in the shorter array is duplicated, this
+behaves like:
+
+  my @colors = $img->getpixel(x => [ 0, 0, 0, 0 ], y => [ 0 .. 3 ]);
 
 To receive floating point colors from getpixel(), set the C<type>
 parameter to 'float'.
@@ -542,6 +601,29 @@ Imager::Color objects or C<'float'> for Imager::Color::Float objects.
 Default: C<'8bit'>.
 
 =back
+
+When called with an array reference for either or C<x> or C<y>,
+getpixel() will return a list of colors in list context, and an
+arrayref in scalar context.
+
+If a supplied co-ordinate is outside the image then C<undef> is
+returned for the pixel.
+
+Possible errors conditions include:
+
+=over
+
+=item * the image supplied is empty
+
+=item * a reference to an empty array was supplied for C<x> or C<y>
+
+=item * C<x> or C<y> wasn't supplied
+
+=item * C<type> isn't a valid value.
+
+=back
+
+For any of these errors getpixel() returns an empty list.
 
 =item string()
 

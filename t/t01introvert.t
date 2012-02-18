@@ -3,11 +3,11 @@
 # to make sure we get expected values
 
 use strict;
-use Test::More tests => 345;
+use Test::More tests => 431;
 
 BEGIN { use_ok(Imager => qw(:handy :all)) }
 
-use Imager::Test qw(image_bounds_checks is_color3 is_color4 is_fcolor4 color_cmp mask_tests);
+use Imager::Test qw(image_bounds_checks is_color3 is_color4 is_fcolor4 color_cmp mask_tests is_fcolor3);
 
 -d "testout" or mkdir "testout";
 
@@ -853,6 +853,210 @@ my $psamp_outside_error = "Image position outside of image";
      "setsamples to empty image");
   is($imempty->errstr, "setsamples: empty input image",
      "check error message");
+}
+
+{ # getpixel parameters
+  my $im = Imager->new(xsize => 10, ysize => 10);
+  $im->box(filled => 1, xmax => 4, color => NC(255, 0, 0));
+  $im->box(filled => 1, xmin => 5, ymax => 4, color => NC(0, 255, 255));
+  $im->box(filled => 1, xmin => 5, ymin => 5, color => NC(255, 0, 255));
+  { # error handling
+    my $empty = Imager->new;
+    ok(!$empty->getpixel(x => 0, y => 0), "getpixel empty image");
+    is($empty->errstr, "getpixel: empty input image", "check message");
+
+    ok(!$im->getpixel(y => 0), "missing x");
+    is($im->errstr, "getpixel: missing x or y parameter", "check message");
+
+    $im->_set_error("something different");
+    ok(!$im->getpixel(x => 0), "missing y");
+    is($im->errstr, "getpixel: missing x or y parameter", "check message");
+
+    ok(!$im->getpixel(x => [], y => 0), "empty x array ref");
+    is($im->errstr, "getpixel: x is a reference to an empty array",
+       "check message");
+
+    ok(!$im->getpixel(x => 0, y => []), "empty y array ref");
+    is($im->errstr, "getpixel: y is a reference to an empty array",
+       "check message");
+
+    ok(!$im->getpixel(x => 0, y => 0, type => "bad"), "bad type (scalar path)");
+    is($im->errstr, "getpixel: type must be '8bit' or 'float'",
+      "check message");
+
+    $im->_set_error("something different");
+    ok(!$im->getpixel(x => [ 0 ], y => [ 0 ], type => "bad"),
+       "bad type (array path)");
+    is($im->errstr, "getpixel: type must be '8bit' or 'float'",
+      "check message");
+  }
+
+  # simple calls
+  is_color3($im->getpixel(x => 1, y => 0), 255, 0, 0,
+	    "getpixel(1, 0)");
+  is_color3($im->getpixel(x => 8, y => 1), 0, 255, 255,
+	    "getpixel(8, 1)");
+  is_color3($im->getpixel(x => 8, y => 7), 255, 0, 255,
+	    "getpixel(8, 7)");
+
+  {
+    # simple arrayrefs
+    my @colors = $im->getpixel(x => [ 0, 8, 7 ], y => [ 0, 7, 3 ]);
+    is(@colors, 3, "getpixel 2 3 element array refs");
+    is_color3($colors[0], 255, 0, 0, "check first color");
+    is_color3($colors[1], 255, 0, 255, "check second color");
+    is_color3($colors[2], 0, 255, 255, "check third color");
+  }
+  
+  # array and scalar
+  {
+    my @colors = $im->getpixel(x => 5, y => [ 4, 5, 9 ]);
+    is(@colors, 3, "getpixel x scalar, y arrayref of 3");
+    is_color3($colors[0], 0, 255, 255, "check first color");
+    is_color3($colors[1], 255, 0, 255, "check second color");
+    is_color3($colors[2], 255, 0, 255, "check third color");
+  }
+
+  {
+    my @colors = $im->getpixel(x => [ 0, 4, 5 ], y => 2);
+    is(@colors, 3, "getpixel y scalar, x arrayref of 3");
+    is_color3($colors[0], 255, 0, 0, "check first color");
+    is_color3($colors[1], 255, 0, 0, "check second color");
+    is_color3($colors[2], 0, 255, 255, "check third color");
+  }
+
+  { # float
+    is_fcolor3($im->getpixel(x => 1, y => 0, type => 'float'),
+	       1.0, 0, 0, "getpixel(1,0) float");
+    is_fcolor3($im->getpixel(x => 8, y => 1, type => 'float'),
+	       0, 1.0, 1.0, "getpixel(8,1) float");
+    is_fcolor3($im->getpixel(x => 8, y => 7, type => 'float'),
+	       1.0, 0, 1.0, "getpixel(8,7) float");
+
+    my @colors = $im->getpixel(x => [ 0, 8, 7 ], y => [ 0, 7, 3 ], type => 'float');
+    is(@colors, 3, "getpixel 2 3 element array refs (float)");
+    is_fcolor3($colors[0], 1, 0, 0, "check first color");
+    is_fcolor3($colors[1], 1, 0, 1, "check second color");
+    is_fcolor3($colors[2], 0, 1, 1, "check third color");
+  }
+
+  { # out of bounds
+    my @colors = $im->getpixel(x => [ 0, -1, 5, 10 ], y => 0);
+    is(@colors, 4, "should be 4 entries")
+      or diag $im->errstr;
+    is_color3($colors[0], 255, 0, 0, "first red");
+    is($colors[1], undef, "second undef");
+    is_color3($colors[2], 0, 255, 255, "third cyan");
+    is($colors[3], undef, "fourth undef");
+  }
+
+  { # out of bounds
+    my @colors = $im->getpixel(x => [ 0, -1, 5, 10 ], y => 0, type => "float");
+    is(@colors, 4, "should be 4 entries")
+      or diag $im->errstr;
+    is_fcolor3($colors[0], 1.0, 0, 0, "first red");
+    is($colors[1], undef, "second undef");
+    is_fcolor3($colors[2], 0, 1.0, 1.0, "third cyan");
+    is($colors[3], undef, "fourth undef");
+  }
+}
+
+{ # setpixel
+  my $im = Imager->new(xsize => 10, ysize => 10);
+  { # errors
+    my $empty = Imager->new;
+    ok(!$empty->setpixel(x => 0, y => 0, color => $red),
+       "setpixel on empty image");
+    is($empty->errstr, "setpixel: empty input image", "check message");
+
+    ok(!$im->setpixel(y => 0, color => $red), "missing x");
+    is($im->errstr, "setpixel: missing x or y parameter", "check message");
+
+    $im->_set_error("something different");
+    ok(!$im->setpixel(x => 0, color => $red), "missing y");
+    is($im->errstr, "setpixel: missing x or y parameter", "check message");
+
+    ok(!$im->setpixel(x => [], y => 0, color => $red), "empty x array ref");
+    is($im->errstr, "setpixel: x is a reference to an empty array",
+       "check message");
+
+    ok(!$im->setpixel(x => 0, y => [], color => $red), "empty y array ref");
+    is($im->errstr, "setpixel: y is a reference to an empty array",
+       "check message");
+
+    ok(!$im->setpixel(x => 0, y => 0, color => "not really a color"),
+       "color not a color");
+    is($im->errstr, "setpixel: No color named not really a color found",
+       "check message");
+  }
+
+  # simple set
+  is($im->setpixel(x => 0, y => 0, color => $red), $im,
+     "simple setpixel")
+    or diag "simple set float: ", $im->errstr;
+  is_color3($im->getpixel(x => 0, y => 0), 255, 0, 0, "check stored pixel");
+
+  is($im->setpixel(x => 1, y => 2, color => $f_red), $im,
+     "simple setpixel (float)")
+    or diag "simple set float: ", $im->errstr;
+  is_color3($im->getpixel(x => 1, y => 2), 255, 0, 0, "check stored pixel");
+
+  is($im->setpixel(x => -1, y => 0, color => $red), undef,
+     "simple setpixel outside of image");
+  is($im->setpixel(x => 0, y => -1, color => $f_red), undef,
+     "simple setpixel (float) outside of image");
+
+  # simple arrayrefs
+  is($im->setpixel( x => [ 0, 8, 7 ], y => [ 0, 7, 3 ], color => $blue),
+     3, "setpixel with 3 element array refs");
+  my @colors = $im->getpixel(x => [ 8, 7, 0 ], y => [ 7, 3, 0 ]);
+  is_color3($colors[0], 0, 0, 255, "check first color");
+  is_color3($colors[1], 0, 0, 255, "check second color");
+  is_color3($colors[2], 0, 0, 255, "check third color");
+
+  # array and scalar
+  {
+    is($im->setpixel(x => 5, y => [ 4, 5, 9 ], color => $green), 3,
+       "setpixel with x scalar, y arrayref of 3");
+    my @colors = $im->getpixel(x => [ 5, 5, 5 ], y => [ 4, 5, 9 ]);
+    is_color3($colors[0], 0, 255, 0, "check first color");
+    is_color3($colors[1], 0, 255, 0, "check second color");
+    is_color3($colors[2], 0, 255, 0, "check third color");
+  }
+
+  {
+    is($im->setpixel(x => [ 0, 4, 5 ], y => 2, color => $blue), 3,
+       "setpixel with y scalar, x arrayref of 3");
+    my @colors = $im->getpixel(x => [ 0, 4, 5 ], y => [ 2, 2, 2 ]);
+    is_color3($colors[0], 0, 0, 255, "check first color");
+    is_color3($colors[1], 0, 0, 255, "check second color");
+    is_color3($colors[2], 0, 0, 255, "check third color");
+  }
+
+  {
+    is($im->setpixel(x => [ 0, -1, 10, 5, 0 ], y => [ 0, 1, 2, 3, 1 ], color => $blue), 3,
+       "set array with two bad locations")
+      or diag "set array bad locations: ", $im->errstr;
+    my @colors = $im->getpixel(x => [ 0, 5, 0 ], y => [ 0, 3, 1 ]);
+    is_color3($colors[0], 0, 0, 255, "check first color");
+    is_color3($colors[1], 0, 0, 255, "check second color");
+    is_color3($colors[2], 0, 0, 255, "check third color");
+  }
+  {
+    is($im->setpixel(x => [ 0, -1, 10, 5, 0 ], y => [ 0, 1, 2, 3, 1 ], color => $f_green), 3,
+       "set array with two bad locations (float)")
+      or diag "set array bad locations (float): ", $im->errstr;
+    my @colors = $im->getpixel(x => [ 0, 5, 0 ], y => [ 0, 3, 1 ]);
+    is_color3($colors[0], 0, 255, 0, "check first color");
+    is_color3($colors[1], 0, 255, 0, "check second color");
+    is_color3($colors[2], 0, 255, 0, "check third color");
+  }
+  { # default color
+    is($im->setpixel(x => 0, y => 9), $im, "setpixel() default color")
+      or diag "setpixel default color: ", $im->errstr;
+    is_color3($im->getpixel(x => 0, y => 9), 255, 255, 255,
+	      "check color set");
+  }
 }
 
 Imager->close_log();
