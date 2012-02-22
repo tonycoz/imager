@@ -1,5 +1,8 @@
 Imager release history.  Older releases can be found in Changes.old
 
+Imager 0.88 - 22 Feb 2012
+===========
+
  - describe how to build libgif etc on OS X in such a way as to be
    compatible with a fat binary perl (such as the system perl), in
    README.
