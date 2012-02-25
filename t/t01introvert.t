@@ -125,8 +125,8 @@ is(Imager::i_img_type($im_pal), 0, "pal img shouldn't be paletted now");
   is_color3($colors[1], 0, 255, 0, "still green");
   is_color3($colors[2], 0, 0, 255, "still blue");
   is_color3($colors[3], 0, 0, 0, "still black");
-  is(Imager::i_gsamp($im_pal2, 0, 100, 0, [ 0, 1, 2 ]),
-     "\0\xFF\0\0\0\0"."\xFF\0\0" x 48 . "\0\0\xFF" x 50,
+  is(unpack("C", Imager::i_gsamp($im_pal2, 0, 100, 0, [ 0, 1, 2 ])),
+     unpack("C", "\0\xFF\0\0\0\0"."\xFF\0\0" x 48 . "\0\0\xFF" x 50),
      "colors are still correct");
 }
 
