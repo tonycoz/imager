@@ -1236,7 +1236,7 @@ int i_gpixf_fp(i_img *im, i_img_dim x, i_img_dim y, i_fcolor *pix) {
   i_color temp;
   int ch;
 
-  if (i_gpix(im, x, y, &temp)) {
+  if (i_gpix(im, x, y, &temp) == 0) {
     for (ch = 0; ch < im->channels; ++ch)
       pix->channel[ch] = Sample8ToF(temp.channel[ch]);
     return 0;

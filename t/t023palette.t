@@ -1,10 +1,10 @@
 #!perl -w
 # some of this is tested in t01introvert.t too
 use strict;
-use Test::More tests => 206;
+use Test::More tests => 211;
 BEGIN { use_ok("Imager", ':handy'); }
 
-use Imager::Test qw(image_bounds_checks test_image is_color3 isnt_image is_color4);
+use Imager::Test qw(image_bounds_checks test_image is_color3 isnt_image is_color4 is_fcolor3);
 
 Imager->open_log(log => "testout/t023palette.log");
 
@@ -571,6 +571,23 @@ my $psamp_outside_error = "Image position outside of image";
   }
   ok(Imager::i_img_type($imraw), "still paletted");
   print "# end psampf tests\n";
+}
+
+{ # 75258 - gpixf() broken for paletted images
+  my $im = Imager->new(xsize => 10, ysize => 10, type => "paletted");
+  ok($im, "make a test image");
+  my @colors = ( $black, $red, $green, $blue );
+  is($im->addcolors(colors => \@colors), "0 but true",
+     "add some colors");
+  $im->setpixel(x => 0, y => 0, color => $red);
+  $im->setpixel(x => 1, y => 0, color => $green);
+  $im->setpixel(x => 2, y => 0, color => $blue);
+  is_fcolor3($im->getpixel(x => 0, y => 0, type => "float"),
+	     1.0, 0, 0, "get a pixel in float form, make sure it's red");
+  is_fcolor3($im->getpixel(x => 1, y => 0, type => "float"),
+	     0, 1.0, 0, "get a pixel in float form, make sure it's green");
+  is_fcolor3($im->getpixel(x => 2, y => 0, type => "float"),
+	     0, 0, 1.0, "get a pixel in float form, make sure it's blue");
 }
 
 Imager->close_log;
