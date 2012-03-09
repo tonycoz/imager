@@ -149,15 +149,8 @@ BEGIN {
     @ISA = qw(Exporter);
   }
   $VERSION = '0.88';
-  eval {
-    require XSLoader;
-    XSLoader::load(Imager => $VERSION);
-    1;
-  } or do {
-    require DynaLoader;
-    push @ISA, 'DynaLoader';
-    bootstrap Imager $VERSION;
-  }
+  require XSLoader;
+  XSLoader::load(Imager => $VERSION);
 }
 
 my %formats_low;

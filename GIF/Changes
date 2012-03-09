@@ -1,3 +1,9 @@
+Imager-File-GIF 0.83
+====================
+
+ - no longer fallback to using DynaLoader to load the XS code
+   https://rt.cpan.org/Ticket/Display.html?id=75560
+
 Imager-File-GIF 0.82
 ====================
 

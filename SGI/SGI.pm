@@ -4,17 +4,10 @@ use Imager;
 use vars qw($VERSION @ISA);
 
 BEGIN {
-  $VERSION = "0.02";
+  $VERSION = "0.03";
   
-  eval {
-    require XSLoader;
-    XSLoader::load('Imager::File::SGI', $VERSION);
-    1;
-  } or do {
-    require DynaLoader;
-    push @ISA, 'DynaLoader';
-    bootstrap Imager::File::SGI $VERSION;
-  };
+  require XSLoader;
+  XSLoader::load('Imager::File::SGI', $VERSION);
 }
 
 Imager->register_reader

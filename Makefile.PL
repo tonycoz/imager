@@ -186,6 +186,7 @@ my %opts=
    { 
     'Test::More' => 0.47,
     'Scalar::Util' => 1.00,
+    'XSLoader'    => 0,
    },
    TYPEMAPS       => \@typemaps,
   );

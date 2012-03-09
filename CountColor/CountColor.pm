@@ -6,18 +6,11 @@ require Exporter;
 @EXPORT_OK = 'count_color';
 
 BEGIN {
-  $VERSION = "0.01";
+  $VERSION = "0.02";
   @ISA = qw(Exporter);
   
-  eval {
-    require XSLoader;
-    XSLoader::load('Imager::CountColor', $VERSION);
-    1;
-  } or do {
-    require DynaLoader;
-    push @ISA, 'DynaLoader';
-    bootstrap Imager::CountColor $VERSION;
-  };
+  require XSLoader;
+  XSLoader::load('Imager::CountColor', $VERSION);
 }
 
 1;

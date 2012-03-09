@@ -5,17 +5,10 @@ use vars qw($VERSION @ISA);
 @ISA = qw(Imager::Font);
 
 BEGIN {
-  $VERSION = "0.84";
+  $VERSION = "0.85";
 
-  eval {
-    require XSLoader;
-    XSLoader::load('Imager::Font::FT2', $VERSION);
-    1;
-  } or do {
-    require DynaLoader;
-    push @ISA, 'DynaLoader';
-    bootstrap Imager::Font::FT2 $VERSION;
-  };
+  require XSLoader;
+  XSLoader::load('Imager::Font::FT2', $VERSION);
 }
 
 *_first = \&Imager::Font::_first;

@@ -4,17 +4,10 @@ use Imager;
 use vars qw($VERSION @ISA);
 
 BEGIN {
-  $VERSION = "0.02";
+  $VERSION = "0.03";
   
-  eval {
-    require XSLoader;
-    XSLoader::load('Imager::Filter::Mandelbrot', $VERSION);
-    1;
-  } or do {
-    require DynaLoader;
-    push @ISA, 'DynaLoader';
-    bootstrap Imager::Filter::Mandelbrot $VERSION;
-  };
+  require XSLoader;
+  XSLoader::load('Imager::Filter::Mandelbrot', $VERSION);
 }
 
 sub _mandelbrot {

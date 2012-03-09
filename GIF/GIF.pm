@@ -4,18 +4,10 @@ use Imager;
 use vars qw($VERSION @ISA);
 
 BEGIN {
-  $VERSION = "0.82";
+  $VERSION = "0.83";
 
-  eval {
-    require XSLoader;
-    XSLoader::load('Imager::File::GIF', $VERSION);
-    1;
-  } or do {
-print STDERR "Falling back to DynaLoader ($@)\n";
-    require DynaLoader;
-    push @ISA, 'DynaLoader';
-    bootstrap Imager::File::GIF $VERSION;
-  };
+  require XSLoader;
+  XSLoader::load('Imager::File::GIF', $VERSION);
 }
 
 Imager->register_reader

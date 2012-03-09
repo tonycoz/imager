@@ -61,6 +61,7 @@ else {
     $opts{PREREQ_PM} =
       {
        @Imager_req,
+       XSLoader => 0,
       };
   }
 }

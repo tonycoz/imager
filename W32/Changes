@@ -1,3 +1,9 @@
+Imager-Font-W32 0.84
+====================
+
+ - no longer fallback to using DynaLoader to load the XS code
+   https://rt.cpan.org/Ticket/Display.html?id=75560
+
 Imager-Font-W32 0.83
 ====================
 
