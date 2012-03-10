@@ -25,7 +25,8 @@ static int malloc_need_init = 1;
 typedef struct {
   void* ptr;
   size_t size;
-  char comm[MAXDESC];
+  const char *file;
+  int line;
 } malloc_entry;
 
 malloc_entry malloc_pointers[MAXMAL];
@@ -69,12 +70,8 @@ set_entry(int i, char *buf, size_t size, char *file, int line) {
   buf += UNDRRNVAL;
   malloc_pointers[i].ptr  = buf;
   malloc_pointers[i].size = size;
-#ifdef IMAGER_SNPRINTF
-  snprintf(malloc_pointers[i].comm, sizeof(malloc_pointers[i].comm), 
-	   "%s (%d)", file, line);
-#else
-  sprintf(malloc_pointers[i].comm,"%s (%d)", file, line);
-#endif
+  malloc_pointers[i].file = file;
+  malloc_pointers[i].line = line;
   return buf;
 }
 
@@ -87,7 +84,7 @@ malloc_state(void) {
   mm_log((0,"malloc_state()\n"));
   bndcheck_all();
   for(i=0; i<MAXMAL; i++) if (malloc_pointers[i].ptr != NULL) {
-      mm_log((0,"%d: %lu (%p) : %s\n", i, (unsigned long)malloc_pointers[i].size, malloc_pointers[i].ptr, malloc_pointers[i].comm));
+      mm_log((0,"%d: %lu (%p) : %s (%d)\n", i, (unsigned long)malloc_pointers[i].size, malloc_pointers[i].ptr, malloc_pointers[i].file, malloc_pointers[i].line));
     total += malloc_pointers[i].size;
   }
   if (total == 0) mm_log((0,"No memory currently used!\n"))
@@ -205,7 +202,7 @@ myfree_file_line(void *p, char *file, int line) {
     return;
   
   for(i=0; i<MAXMAL; i++) if (malloc_pointers[i].ptr == p) {
-    mm_log((1,"myfree_file_line: pointer %i (%s) freed at %s (%i)\n", i, malloc_pointers[i].comm, file, line));
+      mm_log((1,"myfree_file_line: pointer %i (%s (%d)) freed at %s (%i)\n", i, malloc_pointers[i].file, malloc_pointers[i].line, file, line));
     bndcheck(i);
     malloc_pointers[i].ptr = NULL;
     match++;

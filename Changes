@@ -13,6 +13,11 @@ Imager release history.  Older releases can be found in Changes.old
    For the bundled modules this could hide useful error messages.
    https://rt.cpan.org/Ticket/Display.html?id=75560
 
+ - IM_DEBUG_MALLOC mymalloc() no longer sn?printfs() a string to a
+   buffer in the array of allocations, but just stores the filename
+   pointer and line number.
+   https://rt.cpan.org/Ticket/Display.html?id=70388
+
 Imager 0.88 - 22 Feb 2012
 ===========
 
