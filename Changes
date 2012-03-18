@@ -1,8 +1,15 @@
 Imager release history.  Older releases can be found in Changes.old
 
+Imager 0.89 - 18 Mar 2012
+===========
+
+Bug fixes:
+
  - getpixel(..., type => "float") and the API i_gpixf() have been
    broken on paletted images since they were implemented.
    https://rt.cpan.org/Ticket/Display.html?id=75258
+
+Other changes:
 
  - links in the METHOD INDEX now point at the method documentation
    rather than the heading you can find them under.
