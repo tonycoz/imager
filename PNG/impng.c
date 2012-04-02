@@ -100,6 +100,8 @@ i_writepng_wiol(i_img *im, io_glue *ig) {
   volatile int cspace,channels;
   double xres, yres;
   int aspect_only, have_res;
+  unsigned char *data;
+  unsigned char * volatile vdata = NULL;
 
   mm_log((1,"i_writepng(im %p ,ig %p)\n", im, ig));
 
@@ -122,7 +124,7 @@ i_writepng_wiol(i_img *im, io_glue *ig) {
    *
    * https://sourceforge.net/tracker/?func=detail&atid=105624&aid=3314943&group_id=5624
    * fixed in libpng 1.5.3
-  */
+   */
   if (width > PNG_DIM_MAX || height > PNG_DIM_MAX) {
     i_push_error(0, "Image too large for PNG");
     return 0;
@@ -164,6 +166,8 @@ i_writepng_wiol(i_img *im, io_glue *ig) {
    */
   if (setjmp(png_jmpbuf(png_ptr))) {
     png_destroy_write_struct(&png_ptr, &info_ptr);
+    if (vdata)
+      myfree(vdata);
     return(0);
   }
   
@@ -211,18 +215,12 @@ i_writepng_wiol(i_img *im, io_glue *ig) {
 
   png_write_info(png_ptr, info_ptr);
 
-  if (!im->virtual && im->type == i_direct_type && im->bits == i_8_bits) {
-    for (y = 0; y < height; y++) 
-      png_write_row(png_ptr, (png_bytep) &(im->idata[channels*width*y]));
+  vdata = data = mymalloc(im->xsize * im->channels);
+  for (y = 0; y < height; y++) {
+    i_gsamp(im, 0, im->xsize, y, data, NULL, im->channels);
+    png_write_row(png_ptr, (png_bytep)data);
   }
-  else {
-    unsigned char *data = mymalloc(im->xsize * im->channels);
-    for (y = 0; y < height; y++) {
-      i_gsamp(im, 0, im->xsize, y, data, NULL, im->channels);
-      png_write_row(png_ptr, (png_bytep)data);
-    }
-    myfree(data);
-  }
+  myfree(data);
 
   png_write_end(png_ptr, info_ptr);
 
@@ -344,9 +342,12 @@ read_direct8(png_structp png_ptr, png_infop info_ptr, int channels,
   i_img_dim y;
   int number_passes, pass;
   i_img *im;
+  unsigned char *line;
+  unsigned char * volatile vline = NULL;
 
   if (setjmp(png_jmpbuf(png_ptr))) {
     if (vim) i_img_destroy(vim);
+    if (vline) myfree(vline);
 
     return NULL;
   }
@@ -374,11 +375,17 @@ read_direct8(png_structp png_ptr, png_infop info_ptr, int channels,
     return NULL;
   }
   
+  line = vline = mymalloc(channels * width);
   for (pass = 0; pass < number_passes; pass++) {
     for (y = 0; y < height; y++) {
-      png_read_row(png_ptr,(png_bytep) &(im->idata[channels*width*y]), NULL);
+      if (pass > 0)
+	i_gsamp(im, 0, width, y, line, NULL, channels);
+      png_read_row(png_ptr,(png_bytep)line, NULL);
+      i_psamp(im, 0, width, y, line, NULL, channels);
     }
   }
+  myfree(line);
+  vline = NULL;
   
   png_read_end(png_ptr, info_ptr); 
 
