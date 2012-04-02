@@ -1,27 +1,6 @@
 #include "impng.h"
 #include "png.h"
 
-/* Check to see if a file is a PNG file using png_sig_cmp().  png_sig_cmp()
- * returns zero if the image is a PNG and nonzero if it isn't a PNG.
- *
- * The function check_if_png() shown here, but not used, returns nonzero (true)
- * if the file can be opened and is a PNG, 0 (false) otherwise.
- *
- * If this call is successful, and you are going to keep the file open,
- * you should call png_set_sig_bytes(png_ptr, PNG_BYTES_TO_CHECK); once
- * you have created the png_ptr, so that libpng knows your application
- * has read that many bytes from the start of the file.  Make sure you
- * don't call png_set_sig_bytes() with more than 8 bytes read or give it
- * an incorrect number of bytes read, or you will either have read too
- * many bytes (your fault), or you are telling libpng to read the wrong
- * number of magic bytes (also your fault).
- *
- * Many applications already read the first 2 or 4 bytes from the start
- * of the image to determine the file type, so it would be easiest just
- * to pass the bytes to png_sig_cmp() or even skip that if you know
- * you have a PNG file, and call png_set_sig_bytes().
- */
-
 /* this is a way to get number of channels from color space 
  * Color code to channel number */
 
@@ -56,18 +35,6 @@ static void
 wiol_flush_data(png_structp png_ptr) {
   /* XXX : This needs to be added to the io layer */
 }
-
-
-/* Check function demo 
-
-int
-check_if_png(char *file_name, FILE **fp) {
-  char buf[PNG_BYTES_TO_CHECK];
-  if ((*fp = fopen(file_name, "rb")) != NULL) return 0;
-  if (fread(buf, 1, PNG_BYTES_TO_CHECK, *fp) != PNG_BYTES_TO_CHECK) return 0;
-  return(!png_sig_cmp((png_bytep)buf, (png_size_t)0, PNG_BYTES_TO_CHECK));
-}
-*/
 
 static void
 error_handler(png_structp png_ptr, png_const_charp msg) {
