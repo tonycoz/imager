@@ -12,6 +12,9 @@ static i_img *
 read_direct8(png_structp png_ptr, png_infop info_ptr, int channels, i_img_dim width, i_img_dim height);
 
 static i_img *
+read_direct16(png_structp png_ptr, png_infop info_ptr, int channels, i_img_dim width, i_img_dim height);
+
+static i_img *
 read_paletted(png_structp png_ptr, png_infop info_ptr, int channels, i_img_dim width, i_img_dim height);
 
 static i_img *
@@ -295,6 +298,9 @@ i_readpng_wiol(io_glue *ig) {
 	   && !png_get_valid(png_ptr, info_ptr, PNG_INFO_tRNS)) {
     im = read_bilevel(png_ptr, info_ptr, width, height);
   }
+  else if (bit_depth == 16) {
+    im = read_direct16(png_ptr, info_ptr, channels, width, height);
+  }
   else {
     im = read_direct8(png_ptr, info_ptr, channels, width, height);
   }
@@ -369,6 +375,74 @@ read_direct8(png_structp png_ptr, png_infop info_ptr, int channels,
   }
   myfree(line);
   vline = NULL;
+  
+  png_read_end(png_ptr, info_ptr); 
+
+  return im;
+}
+
+static i_img *
+read_direct16(png_structp png_ptr, png_infop info_ptr, int channels,
+	     i_img_dim width, i_img_dim height) {
+  i_img * volatile vim = NULL;
+  int color_type = png_get_color_type(png_ptr, info_ptr);
+  i_img_dim x, y;
+  int number_passes, pass;
+  i_img *im;
+  unsigned char *line;
+  unsigned char * volatile vline = NULL;
+  unsigned *bits_line;
+  unsigned * volatile vbits_line = NULL;
+  size_t row_bytes;
+
+  if (setjmp(png_jmpbuf(png_ptr))) {
+    if (vim) i_img_destroy(vim);
+    if (vline) myfree(vline);
+    if (vbits_line) myfree(vbits_line);
+
+    return NULL;
+  }
+
+  number_passes = png_set_interlace_handling(png_ptr);
+  mm_log((1,"number of passes=%d\n",number_passes));
+
+  if (png_get_valid(png_ptr, info_ptr, PNG_INFO_tRNS)) {
+    channels++;
+    mm_log((1, "image has transparency, adding alpha: channels = %d\n", channels));
+    png_set_expand(png_ptr);
+  }
+  
+  png_read_update_info(png_ptr, info_ptr);
+  
+  im = vim = i_img_16_new(width,height,channels);
+  if (!im) {
+    png_destroy_read_struct(&png_ptr, &info_ptr, (png_infopp)NULL);
+    return NULL;
+  }
+  
+  row_bytes = png_get_rowbytes(png_ptr, info_ptr);
+  line = vline = mymalloc(row_bytes);
+  memset(line, 0, row_bytes);
+  bits_line = vbits_line = mymalloc(sizeof(unsigned) * width * channels);
+  for (pass = 0; pass < number_passes; pass++) {
+    for (y = 0; y < height; y++) {
+      if (pass > 0) {
+	i_gsamp_bits(im, 0, width, y, bits_line, NULL, channels, 16);
+	for (x = 0; x < width * channels; ++x) {
+	  line[x*2] = bits_line[x] >> 8;
+	  line[x*2+1] = bits_line[x] & 0xff;
+	}
+      }
+      png_read_row(png_ptr,(png_bytep)line, NULL);
+      for (x = 0; x < width * channels; ++x)
+	bits_line[x] = (line[x*2] << 8) + line[x*2+1];
+      i_psamp_bits(im, 0, width, y, bits_line, NULL, channels, 16);
+    }
+  }
+  myfree(line);
+  myfree(bits_line);
+  vline = NULL;
+  vbits_line = NULL;
   
   png_read_end(png_ptr, info_ptr); 
 

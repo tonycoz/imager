@@ -273,9 +273,7 @@ SKIP:
   is($im->getchannels, 3, "check channel count");
   is($im->type, "direct", "check type");
   is($im->tags(name => "png_interlace"), 0, "check png_interlace tag");
-  local $TODO = "Not yet implemented";
   is($im->bits, 16, "check bits");
-  undef $TODO;
   is($im->tags(name => "png_bits"), 16, "check png_bits tag");
 }
 
