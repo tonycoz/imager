@@ -11,6 +11,9 @@ static int CC2C[PNG_COLOR_MASK_PALETTE|PNG_COLOR_MASK_COLOR|PNG_COLOR_MASK_ALPHA
 static i_img *
 read_direct8(png_structp png_ptr, png_infop info_ptr, int channels, i_img_dim width, i_img_dim height);
 
+static i_img *
+read_paletted(png_structp png_ptr, png_infop info_ptr, int channels, i_img_dim width, i_img_dim height);
+
 unsigned
 i_png_lib_version(void) {
   return png_access_version_number();
@@ -46,8 +49,8 @@ error_handler(png_structp png_ptr, png_const_charp msg) {
 
 /*
 
-For writing a warning might have information about an error, so send
-it to the error stack.
+  For writing a warning might have information about an error, so send
+  it to the error stack.
 
 */
 static void
@@ -281,7 +284,12 @@ i_readpng_wiol(io_glue *ig) {
     return NULL;
   }
 
-  im = read_direct8(png_ptr, info_ptr, channels, width, height);
+  if (color_type == PNG_COLOR_TYPE_PALETTE) {
+    im = read_paletted(png_ptr, info_ptr, channels, width, height);
+  }
+  else {
+    im = read_direct8(png_ptr, info_ptr, channels, width, height);
+  }
 
   if (im)
     get_png_tags(im, png_ptr, info_ptr);
@@ -349,6 +357,90 @@ read_direct8(png_structp png_ptr, png_infop info_ptr, int channels,
 	i_gsamp(im, 0, width, y, line, NULL, channels);
       png_read_row(png_ptr,(png_bytep)line, NULL);
       i_psamp(im, 0, width, y, line, NULL, channels);
+    }
+  }
+  myfree(line);
+  vline = NULL;
+  
+  png_read_end(png_ptr, info_ptr); 
+
+  return im;
+}
+
+static i_img *
+read_paletted(png_structp png_ptr, png_infop info_ptr, int channels,
+	      i_img_dim width, i_img_dim height) {
+  i_img * volatile vim = NULL;
+  int color_type = png_get_color_type(png_ptr, info_ptr);
+  int bit_depth = png_get_bit_depth(png_ptr, info_ptr);
+  i_img_dim y;
+  int number_passes, pass;
+  i_img *im;
+  unsigned char *line;
+  unsigned char * volatile vline = NULL;
+  int num_palette, i;
+  png_colorp png_palette;
+  png_bytep png_pal_trans;
+  png_color_16p png_color_trans;
+  int num_pal_trans;
+
+  if (setjmp(png_jmpbuf(png_ptr))) {
+    if (vim) i_img_destroy(vim);
+    if (vline) myfree(vline);
+
+    return NULL;
+  }
+
+  number_passes = png_set_interlace_handling(png_ptr);
+  mm_log((1,"number of passes=%d\n",number_passes));
+
+  png_set_strip_16(png_ptr);
+  png_set_packing(png_ptr);
+
+  if (color_type == PNG_COLOR_TYPE_GRAY && bit_depth < 8)
+    png_set_expand(png_ptr);
+    
+  if (!png_get_PLTE(png_ptr, info_ptr, &png_palette, &num_palette)) {
+    i_push_error(0, "Paletted image with no PLTE chunk");
+    return NULL;
+  }
+
+  if (png_get_tRNS(png_ptr, info_ptr, &png_pal_trans, &num_pal_trans,
+		   &png_color_trans)) {
+    channels++;
+  }
+  else {
+    num_pal_trans = 0;
+  }
+  
+  png_read_update_info(png_ptr, info_ptr);
+  
+  im = vim = i_img_pal_new(width, height, channels, 256);
+  if (!im) {
+    png_destroy_read_struct(&png_ptr, &info_ptr, (png_infopp)NULL);
+    return NULL;
+  }
+
+  for (i = 0; i < num_palette; ++i) {
+    i_color c;
+
+    c.rgba.r = png_palette[i].red;
+    c.rgba.g = png_palette[i].green;
+    c.rgba.b = png_palette[i].blue;
+    if (i < num_pal_trans)
+      c.rgba.a = png_pal_trans[i];
+    else
+      c.rgba.a = 255;
+    i_addcolors(im, &c, 1);
+  }
+
+  line = vline = mymalloc(width);
+  for (pass = 0; pass < number_passes; pass++) {
+    for (y = 0; y < height; y++) {
+      if (pass > 0)
+	i_gpal(im, 0, width, y, line);
+      png_read_row(png_ptr,(png_bytep)line, NULL);
+      i_ppal(im, 0, width, y, line);
     }
   }
   myfree(line);
