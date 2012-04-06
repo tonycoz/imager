@@ -14,6 +14,9 @@ read_direct8(png_structp png_ptr, png_infop info_ptr, int channels, i_img_dim wi
 static i_img *
 read_paletted(png_structp png_ptr, png_infop info_ptr, int channels, i_img_dim width, i_img_dim height);
 
+static i_img *
+read_bilevel(png_structp png_ptr, png_infop info_ptr, i_img_dim width, i_img_dim height);
+
 unsigned
 i_png_lib_version(void) {
   return png_access_version_number();
@@ -203,7 +206,7 @@ i_writepng_wiol(i_img *im, io_glue *ig) {
 }
 
 static void 
-get_png_tags(i_img *im, png_structp png_ptr, png_infop info_ptr);
+get_png_tags(i_img *im, png_structp png_ptr, png_infop info_ptr, int bit_depth);
 
 typedef struct {
   char *warnings;
@@ -287,12 +290,17 @@ i_readpng_wiol(io_glue *ig) {
   if (color_type == PNG_COLOR_TYPE_PALETTE) {
     im = read_paletted(png_ptr, info_ptr, channels, width, height);
   }
+  else if (color_type == PNG_COLOR_TYPE_GRAY
+	   && bit_depth == 1
+	   && !png_get_valid(png_ptr, info_ptr, PNG_INFO_tRNS)) {
+    im = read_bilevel(png_ptr, info_ptr, width, height);
+  }
   else {
     im = read_direct8(png_ptr, info_ptr, channels, width, height);
   }
 
   if (im)
-    get_png_tags(im, png_ptr, info_ptr);
+    get_png_tags(im, png_ptr, info_ptr, bit_depth);
 
   png_destroy_read_struct(&png_ptr, &info_ptr, (png_infopp)NULL);
 
@@ -367,6 +375,73 @@ read_direct8(png_structp png_ptr, png_infop info_ptr, int channels,
   return im;
 }
 
+static i_img *
+read_bilevel(png_structp png_ptr, png_infop info_ptr,
+	     i_img_dim width, i_img_dim height) {
+  i_img * volatile vim = NULL;
+  i_img_dim x, y;
+  int number_passes, pass;
+  i_img *im;
+  unsigned char *line;
+  unsigned char * volatile vline = NULL;
+  i_color palette[2];
+
+  if (setjmp(png_jmpbuf(png_ptr))) {
+    if (vim) i_img_destroy(vim);
+    if (vline) myfree(vline);
+
+    return NULL;
+  }
+
+  number_passes = png_set_interlace_handling(png_ptr);
+  mm_log((1,"number of passes=%d\n",number_passes));
+
+  png_set_packing(png_ptr);
+
+  png_set_expand(png_ptr);  
+  
+  png_read_update_info(png_ptr, info_ptr);
+  
+  im = vim = i_img_pal_new(width, height, 1, 256);
+  if (!im) {
+    png_destroy_read_struct(&png_ptr, &info_ptr, (png_infopp)NULL);
+    return NULL;
+  }
+
+  palette[0].channel[0] = palette[0].channel[1] = palette[0].channel[2] = 
+    palette[0].channel[3] = 0;
+  palette[1].channel[0] = palette[1].channel[1] = palette[1].channel[2] = 
+    palette[1].channel[3] = 255;
+  i_addcolors(im, palette, 2);
+  
+  line = vline = mymalloc(width);
+  memset(line, 0, width);
+  for (pass = 0; pass < number_passes; pass++) {
+    for (y = 0; y < height; y++) {
+      if (pass > 0) {
+	i_gpal(im, 0, width, y, line);
+	/* expand indexes back to 0/255 */
+	for (x = 0; x < width; ++x)
+	  line[x] = line[x] ? 255 : 0;
+      }
+      png_read_row(png_ptr,(png_bytep)line, NULL);
+
+      /* back to palette indexes */
+      for (x = 0; x < width; ++x)
+	line[x] = line[x] ? 1 : 0;
+      i_ppal(im, 0, width, y, line);
+    }
+  }
+  myfree(line);
+  vline = NULL;
+  
+  png_read_end(png_ptr, info_ptr); 
+
+  return im;
+}
+
+/* FIXME: do we need to unscale palette color values from the 
+   supplied alphas? */
 static i_img *
 read_paletted(png_structp png_ptr, png_infop info_ptr, int channels,
 	      i_img_dim width, i_img_dim height) {
@@ -452,7 +527,7 @@ read_paletted(png_structp png_ptr, png_infop info_ptr, int channels,
 }
 
 static void
-get_png_tags(i_img *im, png_structp png_ptr, png_infop info_ptr) {
+get_png_tags(i_img *im, png_structp png_ptr, png_infop info_ptr, int bit_depth) {
   png_uint_32 xres, yres;
   int unit_type;
 
@@ -482,7 +557,9 @@ get_png_tags(i_img *im, png_structp png_ptr, png_infop info_ptr) {
     break;
   }
 
-  i_tags_setn(&im->tags, "png_bits", png_get_bit_depth(png_ptr, info_ptr));
+  /* the various readers can call png_set_expand(), libpng will make
+     it's internal record of bit_depth at least 8 in that case */
+  i_tags_setn(&im->tags, "png_bits", bit_depth);
 }
 
 static void

@@ -4,11 +4,15 @@ Imager release history.  Older releases can be found in Changes.old
    - improve error reporting
    - add png_interlace, png_bits tags
    - read paletted images as paletted images, including transparency
+   - read 1 bit greyscale images as a type suitable for other file
+     handlers to write as bilevel
 
   TODO:
     - flush output
     - documentation in C code
     - documentation of new tags, behaviour
+    - FIXME for read_paletted: do we need to scale the palette colours 
+      based on the alpha?
 
 Imager 0.90 - unreleased
 ===========
