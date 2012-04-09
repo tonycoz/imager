@@ -10,10 +10,10 @@ my $debug_writes = 1;
 
 init_log("testout/t102png.log",1);
 
-$Imager::formats{"png"}
-  or plan skip_all => "No png support";
+plan tests => 151;
 
-plan tests => 93;
+# this loads Imager::File::PNG too
+ok($Imager::formats{"png"}, "must have png format");
 
 diag("Library version " . Imager::File::PNG::i_png_lib_version());
 
@@ -296,13 +296,131 @@ SKIP:
   is($im_i->getchannels, 3, "check channel count");
   is($im_i->type, "direct", "check type");
   is($im_i->tags(name => "png_bits"), 8, "check png_bits");
-  is($im_i->tags(name => "png_interlace"), "adam7", "check png_interlace");
+  is($im_i->tags(name => "png_interlace"), 1, "check png_interlace");
 
   my $im = Imager->new(file => "testimg/rgb8.png", filetype => "png");
   ok($im, "read non-interlaced")
     or skip("Could not read testimg/rgb8.png: " . Imager->errstr, 2);
-  is($im->tags(name => "png_interlace"), "0", "check png_interlace");
+  is($im->tags(name => "png_interlace"), 0, "check png_interlace");
   is_image($im_i, $im, "compare interlaced and non-interlaced");
+}
+
+{
+  my @match =
+    (
+     [ "cover.png", "coveri.png" ],
+     [ "cover16.png", "cover16i.png" ],
+     [ "coverpal.png", "coverpali.png" ],
+    );
+  for my $match (@match) {
+    my ($normal, $interlace) = @$match;
+
+    my $n_im = Imager->new(file => "testimg/$normal");
+    ok($n_im, "read $normal")
+      or diag "reading $normal: ", Imager->errstr;
+    my $i_im = Imager->new(file => "testimg/$interlace");
+    ok($i_im, "read $interlace")
+      or diag "reading $interlace: ", Imager->errstr;
+  SKIP:
+    {
+      $n_im && $i_im
+	or skip("Couldn't read a file", 1);
+      is_image($i_im, $n_im, "check normal and interlace files read the same");
+    }
+  }
+}
+
+{
+  my $interlace = 0;
+  for my $name ("cover.png", "coveri.png") {
+  SKIP: {
+      my $im = Imager->new(file => "testimg/$name");
+      ok($im, "read $name")
+	or diag "Failed to read $name: ", Imager->errstr;
+      $im
+	or skip("Couldn't load $name", 5);
+      is($im->tags(name => "i_format"), "png", "$name: i_format");
+      is($im->tags(name => "png_bits"), 8, "$name: png_bits");
+      is($im->tags(name => "png_interlace"), $interlace,
+	 "$name: png_interlace");
+      is($im->getchannels, 4, "$name: four channels");
+      is($im->type, "direct", "$name: direct type");
+
+      is_deeply([ $im->getsamples(y => 0, width => 5) ],
+		[ ( 255, 255, 0, 255 ), ( 255, 255, 0, 191 ),
+		  ( 255, 255, 0, 127 ), ( 255, 255, 0, 63 ),
+		  ( 0, 0, 0, 0) ],
+		"$name: check expected samples row 0");
+      is_deeply([ $im->getsamples(y => 1, width => 5) ],
+		[ ( 255, 0, 0, 255 ), ( 255, 0, 0, 191 ),
+		  ( 255, 0, 0, 127 ), ( 255, 0, 0, 63 ),
+		  ( 0, 0, 0, 0) ],
+		"$name: check expected samples row 1");
+    }
+    $interlace = 1;
+  }
+}
+
+{
+  my $interlace = 0;
+  for my $name ("coverpal.png", "coverpali.png") {
+  SKIP: {
+      my $im = Imager->new(file => "testimg/$name");
+      ok($im, "read $name")
+	or diag "Failed to read $name: ", Imager->errstr;
+      $im
+	or skip("Couldn't load $name", 5);
+      is($im->tags(name => "i_format"), "png", "$name: i_format");
+      is($im->tags(name => "png_bits"), 4, "$name: png_bits");
+      is($im->tags(name => "png_interlace"), $interlace,
+	 "$name: png_interlace");
+      is($im->getchannels, 4, "$name: four channels");
+      is($im->type, "paletted", "$name: paletted type");
+
+      is_deeply([ $im->getsamples(y => 0, width => 5) ],
+		[ ( 255, 255, 0, 255 ), ( 255, 255, 0, 191 ),
+		  ( 255, 255, 0, 127 ), ( 255, 255, 0, 63 ),
+		  ( 0, 0, 0, 0) ],
+		"$name: check expected samples row 0");
+      is_deeply([ $im->getsamples(y => 1, width => 5) ],
+		[ ( 255, 0, 0, 255 ), ( 255, 0, 0, 191 ),
+		  ( 255, 0, 0, 127 ), ( 255, 0, 0, 63 ),
+		  ( 0, 0, 0, 0) ],
+		"$name: check expected samples row 1");
+    }
+    $interlace = 1;
+  }
+}
+
+{
+  my $interlace = 0;
+  for my $name ("cover16.png", "cover16i.png") {
+  SKIP: {
+      my $im = Imager->new(file => "testimg/$name");
+      ok($im, "read $name")
+	or diag "Failed to read $name: ", Imager->errstr;
+      $im
+	or skip("Couldn't load $name", 5);
+      is($im->tags(name => "i_format"), "png", "$name: i_format");
+      is($im->tags(name => "png_bits"), 16, "$name: png_bits");
+      is($im->tags(name => "png_interlace"), $interlace,
+	 "$name: png_interlace");
+      is($im->getchannels, 4, "$name: four channels");
+      is($im->type, "direct", "$name: direct type");
+
+      is_deeply([ $im->getsamples(y => 0, width => 5, type => "16bit") ],
+		[ ( 65535, 65535, 0, 65535 ), ( 65535, 65535, 0, 49087 ),
+		  ( 65535, 65535, 0, 32639 ), ( 65535, 65535, 0, 16191 ),
+		  ( 65535, 65535, 65535, 0) ],
+		"$name: check expected samples row 0");
+      is_deeply([ $im->getsamples(y => 1, width => 5, type => "16bit") ],
+		[ ( 65535, 0, 0, 65535 ), ( 65535, 0, 0, 49087 ),
+		  ( 65535, 0, 0, 32639 ), ( 65535, 0, 0, 16191 ),
+		  ( 65535, 65535, 65535, 0) ],
+		"$name: check expected samples row 1");
+    }
+    $interlace = 1;
+  }
 }
 
 sub limited_write {

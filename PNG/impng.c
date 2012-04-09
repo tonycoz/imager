@@ -618,17 +618,23 @@ get_png_tags(i_img *im, png_structp png_ptr, png_infop info_ptr, int bit_depth) 
       i_tags_setn(&im->tags, "i_aspect_only", 1);
     }
   }
-  switch (png_get_interlace_type(png_ptr, info_ptr)) {
-  case PNG_INTERLACE_NONE:
-    i_tags_setn(&im->tags, "png_interlace", 0);
-    break;
-  case PNG_INTERLACE_ADAM7:
-    i_tags_set(&im->tags, "png_interlace", "adam7", -1);
-    break;
+  {
+    int interlace = png_get_interlace_type(png_ptr, info_ptr);
 
-  default:
-    i_tags_set(&im->tags, "png_interlace", "unknown", -1);
-    break;
+    i_tags_setn(&im->tags, "png_interlace", interlace != PNG_INTERLACE_NONE);
+    switch (interlace) {
+    case PNG_INTERLACE_NONE:
+      i_tags_set(&im->tags, "png_interlace_name", "none", -1);
+      break;
+      
+    case PNG_INTERLACE_ADAM7:
+      i_tags_set(&im->tags, "png_interlace_name", "adam7", -1);
+      break;
+      
+    default:
+      i_tags_set(&im->tags, "png_interlace_name", "unknown", -1);
+      break;
+    }
   }
 
   /* the various readers can call png_set_expand(), libpng will make

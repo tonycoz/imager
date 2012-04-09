@@ -229,7 +229,10 @@ PNG/testimg/badcrc.png
 PNG/testimg/bilevel.png
 PNG/testimg/cover.png
 PNG/testimg/cover16.png
+PNG/testimg/cover16i.png
+PNG/testimg/coveri.png
 PNG/testimg/coverpal.png
+PNG/testimg/coverpali.png
 PNG/testimg/gray.png
 PNG/testimg/graya.png
 PNG/testimg/pal.png
