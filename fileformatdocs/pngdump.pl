@@ -1,5 +1,10 @@
 #!perl
 use strict;
+use IO::Uncompress::Inflate qw(inflate);
+use Getopt::Long;
+
+my $dumpall = 0;
+GetOptions(dumpall => \$dumpall);
 
 my $file = shift
   or die "Usage: $0 filename\n";
@@ -25,10 +30,13 @@ my $colour_type;
 while (my ($dlen, $data, $len, $type, $payload, $crc) = read_chunk($fh)) {
   dump_data($offset, $data);
   $offset += $dlen;
+  my $calc_crc = crc($type . $payload);
+  my $src_crc = unpack("N", $crc);
 
   $type =~ s/([^ -\x7f])/sprintf("\\x%02x", ord $1)/ge;
   print "  Type: $type\n";
   print "  Length: $len\n";
+  printf "  CRC: %x (calculated: %x)\n", $src_crc, $calc_crc;
   if ($type eq 'IHDR') {
     my ($w, $h, $d, $ct, $comp, $filter, $inter) =
       unpack("NNCCCCC", $payload);
@@ -38,7 +46,7 @@ while (my ($dlen, $data, $len, $type, $payload, $crc) = read_chunk($fh)) {
   Depth: $d
   Colour type: $ct
   Filter: $filter
-  Interpolation: $inter
+  Interlace: $inter
 EOS
     $colour_type = $ct;
   }
@@ -82,9 +90,37 @@ EOS
   Unit: $unit ($unitname)
 EOS
   }
+  elsif ($type eq 'tEXt') {
+    my ($key, $value) = split /\0/, $payload, 2;
+    print <<EOS;
+  Keyword: $key
+  Value: $value
+EOS
+    do_more_text($key, $value);
+  }
+  elsif ($type eq 'zTXt') {
+    my ($key, $rest) = split /\0/, $payload, 2;
+    my $ctype = ord $rest;
+    my $ztxt = substr($rest, 1);
+    my $value = do_inflate($ztxt);
+    print <<EOS;
+  Keyword: $key
+  Value: $value
+EOS
+    do_more_text($key, $value);
+  }
 
   $type eq "IEND"
     and last;
+}
+
+sub do_more_text {
+  my ($key, $text) = @_;
+
+  if ($key eq 'Raw profile type xmp'
+     && $text =~ s/^\s*xmp\s+\d+\s+//) {
+    print "  XMP: ", pack("H*", join('', split ' ', $text)), "\n";
+  }
 }
 
 sub read_chunk {
@@ -112,11 +148,105 @@ sub read_chunk {
 sub dump_data {
   my ($offset, $data) = @_;
 
-  printf("%08x: ", $offset);
-  if (length $data > 20) {
-    print unpack("H*", substr($data, 0, 18)), "...\n";
+  if (length $data > 28) {
+    if ($dumpall) {
+      for my $i (0 .. int((15 + length $data) / 16) - 1) {
+	my $row = substr($data, $i * 16, 16);
+	(my $clean = $row) =~ tr/ -~/./c;
+	printf("%08x: %-32s %s\n", $offset, unpack("H*", $row), $clean);
+      }
+    }
+    else {
+      printf "%08x: %s...\n", $offset, unpack("H*", substr($data, 0, 26));
+    }
   }
   else {
-    print unpack("H*", $data), "\n";
+    printf "%08x: %s\n", $offset, unpack("H*", $data), "\n";
   }
+}
+
+#unsigned long crc_table[256];
+my @crc_table;
+
+#/* Flag: has the table been computed? Initially false. */
+#   int crc_table_computed = 0;
+
+#   /* Make the table for a fast CRC. */
+#   void make_crc_table(void)
+#   {
+sub make_crc_table {
+#     unsigned long c;
+#     int n, k;
+#
+#     for (n = 0; n < 256; n++) {
+  for my $n (0 .. 255) {
+#       c = (unsigned long) n;
+    my $c = $n;
+#       for (k = 0; k < 8; k++) {
+    for my $k (0 .. 7) {
+#         if (c & 1)
+#           c = 0xedb88320L ^ (c >> 1);
+#         else
+#           c = c >> 1;
+      if ($c & 1) {
+	$c = 0xedb88320 ^ ($c >> 1);
+      }
+      else {
+	$c = $c >> 1;
+      }
+#   }
+    }
+#       crc_table[n] = c;
+    $crc_table[$n] = $c;
+#     }
+  }
+#     crc_table_computed = 1;
+#   }
+}
+
+# /* Update a running CRC with the bytes buf[0..len-1]--the CRC
+#    should be initialized to all 1's, and the transmitted value
+#    is the 1's complement of the final running CRC (see the
+#    crc() routine below). */
+
+# unsigned long update_crc(unsigned long crc, unsigned char *buf,
+#                          int len)
+#   {
+sub update_crc {
+  my ($crc, $data) = @_;
+#     unsigned long c = crc;
+#     int n;
+   
+#     if (!crc_table_computed)
+#       make_crc_table();
+  @crc_table or make_crc_table();
+#     for (n = 0; n < len; n++) {
+#       c = crc_table[(c ^ buf[n]) & 0xff] ^ (c >> 8);
+#     }
+  for my $code (unpack("C*", $data)) {
+    $crc = $crc_table[($crc ^ $code) & 0xFF] ^ ($crc >> 8);
+  }
+#     return c;
+#   }
+  return $crc;
+}
+   
+#   /* Return the CRC of the bytes buf[0..len-1]. */
+#   unsigned long crc(unsigned char *buf, int len)
+#   {
+#     return update_crc(0xffffffffL, buf, len) ^ 0xffffffffL;
+#   }
+
+sub crc {
+  my $data = shift;
+
+  return update_crc(0xFFFFFFFF, $data) ^ 0xFFFFFFFF;
+}
+
+sub do_inflate {
+  my $z = shift;
+  my $out = '';
+  inflate(\$z, \$out);
+
+  return $out;
 }
