@@ -228,12 +228,9 @@ i_readpng_wiol(io_glue *ig) {
   png_infop info_ptr;
   png_uint_32 width, height;
   int bit_depth, color_type, interlace_type;
-  int number_passes,y;
-  int channels,pass;
+  int channels;
   unsigned int sig_read;
   i_png_read_state rs;
-  i_img_dim wmax, hmax;
-  size_t bytes;
 
   rs.warnings = NULL;
   sig_read  = 0;
@@ -385,7 +382,6 @@ static i_img *
 read_direct16(png_structp png_ptr, png_infop info_ptr, int channels,
 	     i_img_dim width, i_img_dim height) {
   i_img * volatile vim = NULL;
-  int color_type = png_get_color_type(png_ptr, info_ptr);
   i_img_dim x, y;
   int number_passes, pass;
   i_img *im;
