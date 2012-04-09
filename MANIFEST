@@ -227,6 +227,9 @@ PNG/t/00load.t
 PNG/t/10png.t			Test png support
 PNG/testimg/badcrc.png
 PNG/testimg/bilevel.png
+PNG/testimg/cover.png
+PNG/testimg/cover16.png
+PNG/testimg/coverpal.png
 PNG/testimg/gray.png
 PNG/testimg/graya.png
 PNG/testimg/pal.png
