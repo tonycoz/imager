@@ -596,6 +596,27 @@ read_paletted(png_structp png_ptr, png_infop info_ptr, int channels,
   return im;
 }
 
+struct png_text_name {
+  const char *keyword;
+  const char *tagname;
+};
+
+static const struct png_text_name
+text_tags[] = {
+  { "Author", "png_author" },
+  { "Comment", "i_comment" },
+  { "Copyright", "png_copyright" },
+  { "Creation Time", "png_creation_time" },
+  { "Description", "png_description" },
+  { "Disclaimer", "png_disclaimer" },
+  { "Software", "png_software" },
+  { "Source", "png_source" },
+  { "Title", "png_title" },
+  { "Warning", "png_warning" }
+};
+
+static const int text_tags_count = sizeof(text_tags) / sizeof(*text_tags);
+
 static void
 get_png_tags(i_img *im, png_structp png_ptr, png_infop info_ptr, int bit_depth) {
   png_uint_32 xres, yres;
@@ -636,6 +657,67 @@ get_png_tags(i_img *im, png_structp png_ptr, png_infop info_ptr, int bit_depth) 
   /* the various readers can call png_set_expand(), libpng will make
      it's internal record of bit_depth at least 8 in that case */
   i_tags_setn(&im->tags, "png_bits", bit_depth);
+
+  
+  {
+    int intent;
+    if (png_get_sRGB(png_ptr, info_ptr, &intent)) {
+      i_tags_setn(&im->tags, "png_srgb_intent", intent);
+    }
+  }
+  {
+    double gamma;
+    if (png_get_gAMA(png_ptr, info_ptr, &gamma)) {
+      i_tags_set_float2(&im->tags, "png_gamma", 0, gamma, 4);
+    }
+  }
+  {
+    double white_x, white_y;
+    double red_x, red_y;
+    double green_x, green_y;
+    double blue_x, blue_y;
+    if (png_get_cHRM(png_ptr, info_ptr, &white_x, &white_y,
+		     &red_x, &red_y, &green_x, &green_y,
+		     &blue_x, &blue_y)) {
+      i_tags_set_float2(&im->tags, "png_chroma_white_x", 0, white_x, 4);
+      i_tags_set_float2(&im->tags, "png_chroma_white_y", 0, white_y, 4);
+      i_tags_set_float2(&im->tags, "png_chroma_red_x", 0, red_x, 4);
+      i_tags_set_float2(&im->tags, "png_chroma_red_y", 0, red_y, 4);
+      i_tags_set_float2(&im->tags, "png_chroma_green_x", 0, green_x, 4);
+      i_tags_set_float2(&im->tags, "png_chroma_green_y", 0, green_y, 4);
+      i_tags_set_float2(&im->tags, "png_chroma_blue_x", 0, blue_x, 4);
+      i_tags_set_float2(&im->tags, "png_chroma_blue_y", 0, blue_y, 4);
+    }
+  }
+
+  {
+    int num_text;
+    png_text *text;
+
+    if (png_get_text(png_ptr, info_ptr, &text, &num_text)) {
+      int i;
+      for (i = 0; i < num_text; ++i) {
+	int j;
+	char tag_name[50];
+	sprintf(tag_name, "png_text%d_key", i);
+	i_tags_set(&im->tags, tag_name, text[i].key, -1);
+	sprintf(tag_name, "png_text%d_text", i);
+	i_tags_set(&im->tags, tag_name, text[i].text, -1);
+	sprintf(tag_name, "png_text%d_type", i);
+	i_tags_set(&im->tags, tag_name, 
+		   (text[i].compression == PNG_TEXT_COMPRESSION_NONE
+		    || text[i].compression == PNG_TEXT_COMPRESSION_zTXt) ?
+		   "text" : "itxt", -1);
+
+	for (j = 0; j < text_tags_count; ++j) {
+	  if (strcmp(text_tags[j].keyword, text[i].key) == 0) {
+	    i_tags_set(&im->tags, text_tags[j].tagname, text[i].text, -1);
+	    break;
+	  }
+	}
+      }
+    }
+  }
 }
 
 static void
