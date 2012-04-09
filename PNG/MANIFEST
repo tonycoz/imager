@@ -14,7 +14,10 @@ testimg/badcrc.png
 testimg/bilevel.png
 testimg/cover.png
 testimg/cover16.png
+testimg/cover16i.png
+testimg/coveri.png
 testimg/coverpal.png
+testimg/coverpali.png
 testimg/gray.png
 testimg/graya.png
 testimg/pal.png
