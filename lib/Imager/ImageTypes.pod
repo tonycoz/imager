@@ -886,6 +886,12 @@ specification like "#FF0000" into a color object for you, but if you
 set this as a tag you will need to format it like
 C<color(>I<red>C<,>I<green>C<,>I<blue>C<)>, eg color(255,0,0).
 
+=item *
+
+X<i_comment>C<i_comment> - used when reading or writing several image
+formats.  If the format has only one text field it will be read into
+the C<i_comment> tag or written to the file.
+
 =back
 
 =head2 Quantization options
