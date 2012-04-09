@@ -6,6 +6,7 @@ Imager release history.  Older releases can be found in Changes.old
    - read paletted images as paletted images, including transparency
    - read 1 bit greyscale images as a type suitable for other file
      handlers to write as bilevel
+   - read 16 bit/sample PNG as 16-bit/sample Imager images
 
   TODO:
     - flush output
@@ -13,6 +14,8 @@ Imager release history.  Older releases can be found in Changes.old
     - documentation of new tags, behaviour
     - FIXME for read_paletted: do we need to scale the palette colours 
       based on the alpha?
+    - checks to validate pixels read
+    - checks to validate partial coverage pixels read
 
 Imager 0.90 - unreleased
 ===========
