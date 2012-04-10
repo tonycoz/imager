@@ -20,6 +20,9 @@ read_paletted(png_structp png_ptr, png_infop info_ptr, int channels, i_img_dim w
 static i_img *
 read_bilevel(png_structp png_ptr, png_infop info_ptr, i_img_dim width, i_img_dim height);
 
+static int
+write_direct8(png_structp png_ptr, png_infop info_ptr, i_img *im);
+
 unsigned
 i_png_lib_version(void) {
   return png_access_version_number();
@@ -191,12 +194,10 @@ i_writepng_wiol(i_img *im, io_glue *ig) {
 
   png_write_info(png_ptr, info_ptr);
 
-  vdata = data = mymalloc(im->xsize * im->channels);
-  for (y = 0; y < height; y++) {
-    i_gsamp(im, 0, im->xsize, y, data, NULL, im->channels);
-    png_write_row(png_ptr, (png_bytep)data);
+  if (!write_direct8(png_ptr, info_ptr, im)) {
+    png_destroy_write_struct(&png_ptr, &info_ptr);
+    return 0;
   }
-  myfree(data);
 
   png_write_end(png_ptr, info_ptr);
 
@@ -718,6 +719,28 @@ get_png_tags(i_img *im, png_structp png_ptr, png_infop info_ptr, int bit_depth) 
       }
     }
   }
+}
+
+static int
+write_direct8(png_structp png_ptr, png_infop info_ptr, i_img *im) {
+  unsigned char *data, *volatile vdata = NULL;
+  i_img_dim y;
+
+  if (setjmp(png_jmpbuf(png_ptr))) {
+    if (vdata)
+      myfree(vdata);
+
+    return 0;
+  }
+
+  vdata = data = mymalloc(im->xsize * im->channels);
+  for (y = 0; y < im->ysize; y++) {
+    i_gsamp(im, 0, im->xsize, y, data, NULL, im->channels);
+    png_write_row(png_ptr, (png_bytep)data);
+  }
+  myfree(data);
+
+  return 1;
 }
 
 static void
