@@ -1,5 +1,6 @@
 #include "impng.h"
 #include "png.h"
+#include <stdlib.h>
 
 /* this is a way to get number of channels from color space 
  * Color code to channel number */
@@ -22,6 +23,13 @@ read_bilevel(png_structp png_ptr, png_infop info_ptr, i_img_dim width, i_img_dim
 
 static int
 write_direct8(png_structp png_ptr, png_infop info_ptr, i_img *im);
+
+static int
+write_paletted(png_structp png_ptr, png_infop info_ptr, i_img *im, int bits);
+
+static void
+pack_to_bits(unsigned char *dest, const unsigned char *src, size_t count,
+	     int bits);
 
 unsigned
 i_png_lib_version(void) {
@@ -81,6 +89,7 @@ i_writepng_wiol(i_img *im, io_glue *ig) {
   int aspect_only, have_res;
   unsigned char *data;
   unsigned char * volatile vdata = NULL;
+  int bits;
 
   mm_log((1,"i_writepng(im %p ,ig %p)\n", im, ig));
 
@@ -111,13 +120,39 @@ i_writepng_wiol(i_img *im, io_glue *ig) {
 
   channels=im->channels;
 
-  if (channels > 2) { cspace = PNG_COLOR_TYPE_RGB; channels-=3; }
-  else { cspace=PNG_COLOR_TYPE_GRAY; channels--; }
-  
-  if (channels) cspace|=PNG_COLOR_MASK_ALPHA;
-  mm_log((1,"cspace=%d\n",cspace));
+  if (im->type == i_palette_type) {
+    int colors = i_colorcount(im);
 
-  channels = im->channels;
+    cspace = PNG_COLOR_TYPE_PALETTE;
+    bits = 1;
+    while ((1 << bits) < colors) {
+      bits += bits;
+    }
+    mm_log((1, "paletted output\n"));
+  }
+  else {
+    switch (channels) {
+    case 1:
+      cspace = PNG_COLOR_TYPE_GRAY;
+      break;
+    case 2:
+      cspace = PNG_COLOR_TYPE_GRAY_ALPHA;
+      break;
+    case 3:
+      cspace = PNG_COLOR_TYPE_RGB;
+      break;
+    case 4:
+      cspace = PNG_COLOR_TYPE_RGB_ALPHA;
+      break;
+    default:
+      fprintf(stderr, "Internal error, channels = %d\n", channels);
+      abort();
+    }
+    bits = 8;
+    mm_log((1, "direct output\n"));
+  }
+
+  mm_log((1,"cspace=%d, bits=%d\n",cspace, bits));
 
   /* Create and initialize the png_struct with the desired error handler
    * functions.  If you want to use the default stderr and longjump method,
@@ -167,8 +202,10 @@ i_writepng_wiol(i_img *im, io_glue *ig) {
    */
   png_set_user_limits(png_ptr, width, height);
 
-  png_set_IHDR(png_ptr, info_ptr, width, height, 8, cspace,
+  mm_log((1, ">png_set_IHDR\n"));
+  png_set_IHDR(png_ptr, info_ptr, width, height, bits, cspace,
 	       PNG_INTERLACE_NONE, PNG_COMPRESSION_TYPE_BASE, PNG_FILTER_TYPE_BASE);
+  mm_log((1, "<png_set_IHDR\n"));
 
   have_res = 1;
   if (i_tags_get_float(&im->tags, "i_xres", 0, &xres)) {
@@ -192,11 +229,17 @@ i_writepng_wiol(i_img *im, io_glue *ig) {
                  aspect_only ? PNG_RESOLUTION_UNKNOWN : PNG_RESOLUTION_METER);
   }
 
-  png_write_info(png_ptr, info_ptr);
-
-  if (!write_direct8(png_ptr, info_ptr, im)) {
-    png_destroy_write_struct(&png_ptr, &info_ptr);
-    return 0;
+  if (im->type == i_palette_type) {
+    if (!write_paletted(png_ptr, info_ptr, im, bits)) {
+      png_destroy_write_struct(&png_ptr, &info_ptr);
+      return 0;
+    }
+  }
+  else  {
+    if (!write_direct8(png_ptr, info_ptr, im)) {
+      png_destroy_write_struct(&png_ptr, &info_ptr);
+      return 0;
+    }
   }
 
   png_write_end(png_ptr, info_ptr);
@@ -733,6 +776,8 @@ write_direct8(png_structp png_ptr, png_infop info_ptr, i_img *im) {
     return 0;
   }
 
+  png_write_info(png_ptr, info_ptr);
+
   vdata = data = mymalloc(im->xsize * im->channels);
   for (y = 0; y < im->ysize; y++) {
     i_gsamp(im, 0, im->xsize, y, data, NULL, im->channels);
@@ -742,6 +787,147 @@ write_direct8(png_structp png_ptr, png_infop info_ptr, i_img *im) {
 
   return 1;
 }
+
+static int
+write_paletted(png_structp png_ptr, png_infop info_ptr, i_img *im, int bits) {
+  unsigned char *data, *volatile vdata = NULL;
+  i_img_dim y;
+  unsigned char pal_map[256];
+  png_color pcolors[256];
+  i_color colors[256];
+  int count = i_colorcount(im);
+  int i;
+
+  if (setjmp(png_jmpbuf(png_ptr))) {
+    if (vdata)
+      myfree(vdata);
+
+    return 0;
+  }
+
+  i_getcolors(im, 0, colors, count);
+  if (im->channels < 3) {
+    /* convert the greyscale palette to color */
+    int i;
+    for (i = 0; i < count; ++i) {
+      i_color *c = colors + i;
+      c->channel[3] = c->channel[1];
+      c->channel[2] = c->channel[1] = c->channel[0];
+    }
+  }
+
+  if (i_img_has_alpha(im)) {
+    int i;
+    int bottom_index = 0, top_index = count-1;
+
+    /* fill out the palette map */
+    for (i = 0; i < count; ++i)
+      pal_map[i] = i;
+
+    /* the PNG spec suggests sorting the palette by alpha, but that's
+       unnecessary - all we want to do is move the opaque entries to
+       the end */
+    while (bottom_index < top_index) {
+      if (colors[bottom_index].rgba.a == 255) {
+	pal_map[bottom_index] = top_index;
+	pal_map[top_index--] = bottom_index;
+      }
+      ++bottom_index;
+    }
+  }
+
+  for (i = 0; i < count; ++i) {
+    int srci = i_img_has_alpha(im) ? pal_map[i] : i;
+
+    pcolors[i].red = colors[srci].rgb.r;
+    pcolors[i].green = colors[srci].rgb.g;
+    pcolors[i].blue = colors[srci].rgb.b;
+  }
+
+  png_set_PLTE(png_ptr, info_ptr, pcolors, count);
+
+  if (i_img_has_alpha(im)) {
+    unsigned char trans[256];
+    int i;
+
+    for (i = 0; i < count && colors[pal_map[i]].rgba.a != 255; ++i) {
+      trans[i] = colors[pal_map[i]].rgba.a;
+    }
+    png_set_tRNS(png_ptr, info_ptr, trans, i, NULL);
+  }
+
+  png_write_info(png_ptr, info_ptr);
+
+  png_set_packing(png_ptr);
+
+  vdata = data = mymalloc(im->xsize);
+  for (y = 0; y < im->ysize; y++) {
+    i_gpal(im, 0, im->xsize, y, data);
+    if (i_img_has_alpha(im)) {
+      i_img_dim x;
+      for (x = 0; x < im->xsize; ++x)
+	data[x] = pal_map[data[x]];
+    }
+    png_write_row(png_ptr, (png_bytep)data);
+  }
+  myfree(data);
+
+  return 1;
+}
+
+#if 0
+/* the source size is required to be rounded up to a number of samples
+   per byte bounday */
+static void
+pack_to_bits(unsigned char *dest, const unsigned char *src, size_t count,
+	     int bits) {
+  ptr_diff_t out_count;
+  switch (bits) {
+  case 1:
+    out_count = (count + 7) / 8;
+    while (out_count > 0) {
+      unsigned mask = 0x80;
+      unsigned out = 0;
+      while (mask) {
+	if (*src++)
+	  out |= mask;
+	mask >>= 1;
+      }
+      *dest++ = out;
+      --out_count;
+    }
+    break;
+
+  case 2:
+    out_count = (count + 3) / 4;
+    while (out_count > 0) {
+      int shift = 6;
+      unsigned out = 0;
+      while (shift >= 0) {
+	out |= *src << shift;
+	++src;
+	shift -= 2;
+      }
+      *dest++ = out;
+      --out_count;
+    }
+    break;
+
+  case 4:
+    out_count = (count + 1) / 2;
+    while (out_count > 0) {
+      *dest++ = (src[0] << 4) | src[1];
+      src += 2;
+      --out_count;
+    }
+    break
+
+  case 8:
+    break;
+  }
+}
+
+#endif
 
 static void
 read_warn_handler(png_structp png_ptr, png_const_charp msg) {
