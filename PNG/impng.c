@@ -27,9 +27,8 @@ write_direct8(png_structp png_ptr, png_infop info_ptr, i_img *im);
 static int
 write_paletted(png_structp png_ptr, png_infop info_ptr, i_img *im, int bits);
 
-static void
-pack_to_bits(unsigned char *dest, const unsigned char *src, size_t count,
-	     int bits);
+static int
+write_bilevel(png_structp png_ptr, png_infop info_ptr, i_img *im);
 
 unsigned
 i_png_lib_version(void) {
@@ -90,6 +89,7 @@ i_writepng_wiol(i_img *im, io_glue *ig) {
   unsigned char *data;
   unsigned char * volatile vdata = NULL;
   int bits;
+  int is_bilevel = 0, zero_is_white;
 
   mm_log((1,"i_writepng(im %p ,ig %p)\n", im, ig));
 
@@ -120,7 +120,13 @@ i_writepng_wiol(i_img *im, io_glue *ig) {
 
   channels=im->channels;
 
-  if (im->type == i_palette_type) {
+  if (i_img_is_monochrome(im, &zero_is_white)) {
+    is_bilevel = 1;
+    bits = 1;
+    cspace = PNG_COLOR_TYPE_GRAY;
+    mm_log((1, "i_writepng: bilevel output\n"));
+  }
+  else if (im->type == i_palette_type) {
     int colors = i_colorcount(im);
 
     cspace = PNG_COLOR_TYPE_PALETTE;
@@ -128,7 +134,7 @@ i_writepng_wiol(i_img *im, io_glue *ig) {
     while ((1 << bits) < colors) {
       bits += bits;
     }
-    mm_log((1, "paletted output\n"));
+    mm_log((1, "i_writepng: paletted output\n"));
   }
   else {
     switch (channels) {
@@ -149,10 +155,10 @@ i_writepng_wiol(i_img *im, io_glue *ig) {
       abort();
     }
     bits = 8;
-    mm_log((1, "direct output\n"));
+    mm_log((1, "i_writepng: direct output\n"));
   }
 
-  mm_log((1,"cspace=%d, bits=%d\n",cspace, bits));
+  mm_log((1,"i_writepng: cspace=%d, bits=%d\n",cspace, bits));
 
   /* Create and initialize the png_struct with the desired error handler
    * functions.  If you want to use the default stderr and longjump method,
@@ -229,7 +235,13 @@ i_writepng_wiol(i_img *im, io_glue *ig) {
                  aspect_only ? PNG_RESOLUTION_UNKNOWN : PNG_RESOLUTION_METER);
   }
 
-  if (im->type == i_palette_type) {
+  if (is_bilevel) {
+    if (!write_bilevel(png_ptr, info_ptr, im)) {
+      png_destroy_write_struct(&png_ptr, &info_ptr);
+      return 0;
+    }
+  }
+  else if (im->type == i_palette_type) {
     if (!write_paletted(png_ptr, info_ptr, im, bits)) {
       png_destroy_write_struct(&png_ptr, &info_ptr);
       return 0;
@@ -875,59 +887,31 @@ write_paletted(png_structp png_ptr, png_infop info_ptr, i_img *im, int bits) {
   return 1;
 }
 
-#if 0
-/* the source size is required to be rounded up to a number of samples
-   per byte bounday */
-static void
-pack_to_bits(unsigned char *dest, const unsigned char *src, size_t count,
-	     int bits) {
-  ptr_diff_t out_count;
-  switch (bits) {
-  case 1:
-    out_count = (count + 7) / 8;
-    while (out_count > 0) {
-      unsigned mask = 0x80;
-      unsigned out = 0;
-      while (mask) {
-	if (*src++)
-	  out |= mask;
-	mask >>= 1;
-      }
-      *dest++ = out;
-      --out_count;
-    }
-    break;
+static int
+write_bilevel(png_structp png_ptr, png_infop info_ptr, i_img *im) {
+  unsigned char *data, *volatile vdata = NULL;
+  i_img_dim y;
 
-  case 2:
-    out_count = (count + 3) / 4;
-    while (out_count > 0) {
-      int shift = 6;
-      unsigned out = 0;
-      while (shift >= 0) {
-	out |= *src << shift;
-	++src;
-	shift -= 2;
-      }
-      *dest++ = out;
-      --out_count;
-    }
-    break;
+  if (setjmp(png_jmpbuf(png_ptr))) {
+    if (vdata)
+      myfree(vdata);
 
-  case 4:
-    out_count = (count + 1) / 2;
-    while (out_count > 0) {
-      *dest++ = (src[0] << 4) | src[1];
-      src += 2;
-      --out_count;
-    }
-    break
-
-  case 8:
-    break;
+    return 0;
   }
-}
 
-#endif
+  png_write_info(png_ptr, info_ptr);
+
+  png_set_packing(png_ptr);
+
+  vdata = data = mymalloc(im->xsize);
+  for (y = 0; y < im->ysize; y++) {
+    i_gsamp(im, 0, im->xsize, y, data, NULL, 1);
+    png_write_row(png_ptr, (png_bytep)data);
+  }
+  myfree(data);
+
+  return 1;
+}
 
 static void
 read_warn_handler(png_structp png_ptr, png_const_charp msg) {
