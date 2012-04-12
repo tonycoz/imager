@@ -10,7 +10,7 @@ my $debug_writes = 1;
 
 init_log("testout/t102png.log",1);
 
-plan tests => 187;
+plan tests => 192;
 
 # this loads Imager::File::PNG too
 ok($Imager::formats{"png"}, "must have png format");
@@ -511,13 +511,28 @@ SKIP:
     or diag("Cannot save testout/pal2.png: ".$pim->errstr);
   my $in = Imager->new(file => "testout/pal2.png");
   ok($in, "read it back in")
-    or diag("Cann't read pal1.png back: " . Imager->errstr);
+    or diag("Can't read pal1.png back: " . Imager->errstr);
   # PNG doesn't have a paletted greyscale type, so it's written as
   # paletted color, convert our source image for the comparison
   my $cmpim = $pim->convert(preset => "rgb");
   is_image($in, $cmpim, "check it matches");
   is($in->type, "paletted", "make sure the result is paletted");
   is($in->tags(name => "png_bits"), 2, "2 bit representation");
+}
+
+{
+  my $imbase = test_image();
+  my $mono = $imbase->convert(preset => "gray")
+    ->to_paletted(make_colors => "mono", translate => "errdiff");
+
+  ok($mono->write(file => "testout/bilevel.png"),
+     "write bilevel.png");
+  my $in = Imager->new(file => "testout/bilevel.png");
+  ok($in, "read it back in")
+    or diag("Can't read bilevel.png: " . Imager->errstr);
+  is_image($in, $mono, "check it matches");
+  is($in->type, "paletted", "make sure the result is paletted");
+  is($in->tags(name => "png_bits"), 1, "1 bit representation");
 }
 
 sub limited_write {
