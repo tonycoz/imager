@@ -10,7 +10,7 @@ my $debug_writes = 1;
 
 init_log("testout/t102png.log",1);
 
-plan tests => 151;
+plan tests => 187;
 
 # this loads Imager::File::PNG too
 ok($Imager::formats{"png"}, "must have png format");
@@ -35,7 +35,8 @@ Imager::i_tags_add($img, "i_yres", 0, undef, 200);
 open(FH,">testout/t102.png") || die "cannot open testout/t102.png for writing\n";
 binmode(FH);
 my $IO = Imager::io_new_fd(fileno(FH));
-ok(Imager::File::PNG::i_writepng_wiol($img, $IO), "write");
+ok(Imager::File::PNG::i_writepng_wiol($img, $IO), "write")
+  or diag(Imager->_error_as_msg());
 close(FH);
 
 open(FH,"testout/t102.png") || die "cannot open testout/t102.png\n";
@@ -423,6 +424,102 @@ SKIP:
   }
 }
 
+{
+  my $pim = Imager->new(xsize => 5, ysize => 2, channels => 3, type => "paletted");
+  ok($pim, "make a 3 channel paletted image");
+  ok($pim->addcolors(colors => [ qw(#000 #FFF #F00 #0F0 #00f) ]),
+     "add some colors");
+  is($pim->setscanline(y => 0, type => "index",
+		       pixels => [ 0, 1, 2, 4, 3 ]), 5, "set some pixels");
+  is($pim->setscanline(y => 1, type => "index",
+		       pixels => [ 4, 1, 0, 4, 2 ]), 5, "set some more pixels");
+  ok($pim->write(file => "testout/pal3.png"),
+     "write to testout/pal3.png")
+    or diag("Cannot save testout/pal3.png: ".$pim->errstr);
+  my $in = Imager->new(file => "testout/pal3.png");
+  ok($in, "read it back in")
+    or diag("Cann't read pal3.png back: " . Imager->errstr);
+  is_image($pim, $in, "check it matches");
+  is($in->type, "paletted", "make sure the result is paletted");
+  is($in->tags(name => "png_bits"), 4, "4 bit representation");
+}
+
+{
+  # make sure the code that pushes maxed alpha to the end doesn't break
+  my $pim = Imager->new(xsize => 8, ysize => 2, channels => 4, type => "paletted");
+  ok($pim, "make a 4 channel paletted image");
+  ok($pim->addcolors
+     (colors => [ NC(255, 255, 0, 128), qw(#000 #FFF #F00 #0F0 #00f),
+		  NC(0, 0, 0, 0), NC(255, 0, 128, 64) ]),
+     "add some colors");
+  is($pim->setscanline(y => 0, type => "index",
+		       pixels => [ 5, 0, 1, 7, 2, 4, 6, 3 ]), 8,
+     "set some pixels");
+  is($pim->setscanline(y => 1, type => "index",
+		       pixels => [ 7, 4, 6, 1, 0, 4, 2, 5 ]), 8,
+     "set some more pixels");
+  ok($pim->write(file => "testout/pal4.png"),
+     "write to testout/pal4.png")
+    or diag("Cannot save testout/pal4.png: ".$pim->errstr);
+  my $in = Imager->new(file => "testout/pal4.png");
+  ok($in, "read it back in")
+    or diag("Cann't read pal4.png back: " . Imager->errstr);
+  is_image($pim, $in, "check it matches");
+  is($in->type, "paletted", "make sure the result is paletted");
+  is($in->tags(name => "png_bits"), 4, "4 bit representation");
+}
+
+{
+  my $pim = Imager->new(xsize => 8, ysize => 2, channels => 1, type => "paletted");
+  ok($pim, "make a 1 channel paletted image");
+  ok($pim->addcolors(colors => [ map NC($_, 0, 0), 0, 7, 127, 255 ]),
+     "add some colors^Wgreys");
+  is($pim->setscanline(y => 0, type => "index",
+		       pixels => [ 0, 2, 1, 3, 2, 1, 0, 3 ]), 8,
+     "set some pixels");
+  is($pim->setscanline(y => 1, type => "index",
+		       pixels => [ 3, 0, 2, 1, 0, 0, 2, 3 ]), 8,
+     "set some more pixels");
+  ok($pim->write(file => "testout/pal1.png"),
+     "write to testout/pal1.png")
+    or diag("Cannot save testout/pal1.png: ".$pim->errstr);
+  my $in = Imager->new(file => "testout/pal1.png");
+  ok($in, "read it back in")
+    or diag("Cann't read pal1.png back: " . Imager->errstr);
+  # PNG doesn't have a paletted greyscale type, so it's written as
+  # paletted color, convert our source image for the comparison
+  my $cmpim = $pim->convert(preset => "rgb");
+  is_image($in, $cmpim, "check it matches");
+  is($in->type, "paletted", "make sure the result is paletted");
+  is($in->tags(name => "png_bits"), 2, "2 bit representation");
+}
+
+{
+  my $pim = Imager->new(xsize => 8, ysize => 2, channels => 2, type => "paletted");
+  ok($pim, "make a 2 channel paletted image");
+  ok($pim->addcolors(colors => [ NC(0, 255, 0), NC(128, 255, 0), NC(255, 255, 0), NC(128, 128, 0) ]),
+     "add some colors^Wgreys")
+    or diag("adding colors: " . $pim->errstr);
+  is($pim->setscanline(y => 0, type => "index",
+		       pixels => [ 0, 2, 1, 3, 2, 1, 0, 3 ]), 8,
+     "set some pixels");
+  is($pim->setscanline(y => 1, type => "index",
+		       pixels => [ 3, 0, 2, 1, 0, 0, 2, 3 ]), 8,
+     "set some more pixels");
+  ok($pim->write(file => "testout/pal2.png"),
+     "write to testout/pal2.png")
+    or diag("Cannot save testout/pal2.png: ".$pim->errstr);
+  my $in = Imager->new(file => "testout/pal2.png");
+  ok($in, "read it back in")
+    or diag("Cann't read pal1.png back: " . Imager->errstr);
+  # PNG doesn't have a paletted greyscale type, so it's written as
+  # paletted color, convert our source image for the comparison
+  my $cmpim = $pim->convert(preset => "rgb");
+  is_image($in, $cmpim, "check it matches");
+  is($in->type, "paletted", "make sure the result is paletted");
+  is($in->tags(name => "png_bits"), 2, "2 bit representation");
+}
+
 sub limited_write {
   my ($limit) = @_;
 
@@ -441,3 +538,4 @@ sub limited_write {
        }
      };
 }
+
