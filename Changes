@@ -9,6 +9,14 @@ Bug fixes:
    parameter but the prototype didn't allow for the extra parameter.
    Corrected the prototype.
 
+ - when downconverting samples (eg. from floating point to 8 bit)
+   Imager now rounds the sample value rather than attempting to
+   allocate input values over output values equally.  The old
+   behaviour had the probably surprising effect of converting a
+   floating point 2.1/255.0 into an 8-bit 3 rather than the expected
+   2.
+   This may result in slightly different 8 or 16-bit output images.
+
 Imager 0.89 - 18 Mar 2012
 ===========
 

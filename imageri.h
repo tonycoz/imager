@@ -34,14 +34,14 @@ extern int i_setcolors_forward(i_img *im, int index, const i_color *colors,
 extern i_img_dim i_gsamp_bits_fb(i_img *im, i_img_dim x, i_img_dim r, i_img_dim y, unsigned *samp, 
 			   const int *chans, int chan_count, int bits);
 
-#define SampleFTo16(num) ((int)((num) * 65535.0 + 0.01))
+#define SampleFTo16(num) ((int)((num) * 65535.0 + 0.5))
 /* we add that little bit to avoid rounding issues */
 #define Sample16ToF(num) ((num) / 65535.0)
 
-#define SampleFTo8(num) ((int)((num) * 255.0 + 0.01))
+#define SampleFTo8(num) ((int)((num) * 255.0 + 0.5))
 #define Sample8ToF(num) ((num) / 255.0)
 
-#define Sample16To8(num) ((num) / 257)
+#define Sample16To8(num) (((num)+128) / 257)
 #define Sample8To16(num) ((num) * 257)
 
 extern void i_get_combine(int combine, i_fill_combine_f *, i_fill_combinef_f *);
