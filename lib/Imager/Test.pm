@@ -499,7 +499,7 @@ sub is_image($$$) {
   return is_image_similar($left, $right, 0, $comment);
 }
 
-sub is_imaged($$$) {
+sub is_imaged($$$;$) {
   my $epsilon = Imager::i_img_epsilonf();
   if (@_ > 3) {
     ($epsilon) = splice @_, 2, 1;
