@@ -2,7 +2,7 @@
 use strict;
 use Imager qw(:all);
 use Test::More;
-use Imager::Test qw(test_image_raw test_image is_image);
+use Imager::Test qw(test_image_raw test_image is_image is_imaged test_image_16 test_image_double);
 
 my $debug_writes = 1;
 
@@ -10,7 +10,7 @@ my $debug_writes = 1;
 
 init_log("testout/t102png.log",1);
 
-plan tests => 192;
+plan tests => 204;
 
 # this loads Imager::File::PNG too
 ok($Imager::formats{"png"}, "must have png format");
@@ -533,6 +533,39 @@ SKIP:
   is_image($in, $mono, "check it matches");
   is($in->type, "paletted", "make sure the result is paletted");
   is($in->tags(name => "png_bits"), 1, "1 bit representation");
+}
+
+SKIP:
+{
+  my $im = test_image_16();
+  ok($im->write(file => "testout/rgb16.png", type => "png"),
+     "write 16-bit/sample image")
+    or diag("Could not write rgb16.png: ".$im->errstr);
+  my $in = Imager->new(file => "testout/rgb16.png")
+    or diag("Could not read rgb16.png: ".Imager->errstr);
+  ok($in, "read rgb16.png back in")
+    or skip("Could not load image to check", 4);
+  is_imaged($in, $im, 0, "check image matches");
+  is($in->bits, 16, "check we got a 16-bit image");
+  is($in->type, "direct", "check it's direct");
+  is($in->tags(name => "png_bits"), 16, "check png_bits");
+}
+
+SKIP:
+{
+  my $im = test_image_double();
+  my $cmp = $im->to_rgb16;
+  ok($im->write(file => "testout/rgbdbl.png", type => "png"),
+     "write double/sample image - should write as 16-bit/sample")
+    or diag("Could not write rgbdbl.png: ".$im->errstr);
+  my $in = Imager->new(file => "testout/rgbdbl.png")
+    or diag("Could not read rgbdbl.png: ".Imager->errstr);
+  ok($in, "read pngdbl.png back in")
+    or skip("Could not load image to check", 4);
+  is_imaged($in, $cmp, 0, "check image matches");
+  is($in->bits, 16, "check we got a 16-bit image");
+  is($in->type, "direct", "check it's direct");
+  is($in->tags(name => "png_bits"), 16, "check png_bits");
 }
 
 sub limited_write {
