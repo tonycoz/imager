@@ -25,6 +25,9 @@ static int
 write_direct8(png_structp png_ptr, png_infop info_ptr, i_img *im);
 
 static int
+write_direct16(png_structp png_ptr, png_infop info_ptr, i_img *im);
+
+static int
 write_paletted(png_structp png_ptr, png_infop info_ptr, i_img *im, int bits);
 
 static int
@@ -154,7 +157,7 @@ i_writepng_wiol(i_img *im, io_glue *ig) {
       fprintf(stderr, "Internal error, channels = %d\n", channels);
       abort();
     }
-    bits = 8;
+    bits = im->bits > 8 ? 16 : 8;
     mm_log((1, "i_writepng: direct output\n"));
   }
 
@@ -247,7 +250,13 @@ i_writepng_wiol(i_img *im, io_glue *ig) {
       return 0;
     }
   }
-  else  {
+  else if (bits == 16) {
+    if (!write_direct16(png_ptr, info_ptr, im)) {
+      png_destroy_write_struct(&png_ptr, &info_ptr);
+      return 0;
+    }
+  }
+  else {
     if (!write_direct8(png_ptr, info_ptr, im)) {
       png_destroy_write_struct(&png_ptr, &info_ptr);
       return 0;
@@ -795,6 +804,44 @@ write_direct8(png_structp png_ptr, png_infop info_ptr, i_img *im) {
     i_gsamp(im, 0, im->xsize, y, data, NULL, im->channels);
     png_write_row(png_ptr, (png_bytep)data);
   }
+  myfree(data);
+
+  return 1;
+}
+
+static int
+write_direct16(png_structp png_ptr, png_infop info_ptr, i_img *im) {
+  unsigned *data, *volatile vdata = NULL;
+  unsigned char *tran_data, * volatile vtran_data = NULL;
+  i_img_dim samples_per_row = im->xsize * im->channels;
+  
+  i_img_dim y;
+
+  if (setjmp(png_jmpbuf(png_ptr))) {
+    if (vdata)
+      myfree(vdata);
+    if (vtran_data)
+      myfree(vtran_data);
+
+    return 0;
+  }
+
+  png_write_info(png_ptr, info_ptr);
+
+  vdata = data = mymalloc(samples_per_row * sizeof(unsigned));
+  vtran_data = tran_data = mymalloc(samples_per_row * 2);
+  for (y = 0; y < im->ysize; y++) {
+    i_img_dim i;
+    unsigned char *p = tran_data;
+    i_gsamp_bits(im, 0, im->xsize, y, data, NULL, im->channels, 16);
+    for (i = 0; i < samples_per_row; ++i) {
+      p[0] = data[i] >> 8;
+      p[1] = data[i] & 0xff;
+      p += 2;
+    }
+    png_write_row(png_ptr, (png_bytep)tran_data);
+  }
+  myfree(tran_data);
   myfree(data);
 
   return 1;
