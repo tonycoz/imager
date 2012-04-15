@@ -10,7 +10,7 @@ my $debug_writes = 1;
 
 init_log("testout/t102png.log",1);
 
-plan tests => 204;
+plan tests => 210;
 
 # this loads Imager::File::PNG too
 ok($Imager::formats{"png"}, "must have png format");
@@ -566,6 +566,21 @@ SKIP:
   is($in->bits, 16, "check we got a 16-bit image");
   is($in->type, "direct", "check it's direct");
   is($in->tags(name => "png_bits"), 16, "check png_bits");
+}
+
+SKIP:
+{
+  my $im = Imager->new(file => "testimg/comment.png");
+  ok($im, "read file with comment")
+    or diag("Cannot read comment.png: ".Imager->errstr);
+  $im
+    or skip("Cannot test tags file I can't read", 5);
+  is($im->tags(name => "i_comment"), "Test comment", "check i_comment");
+  is($im->tags(name => "png_interlace"), "0", "no interlace");
+  is($im->tags(name => "png_interlace_name"), "none", "no interlace (text)");
+  is($im->tags(name => "png_srgb_intent"), "0", "srgb perceptual");
+  is($im->tags(name => "png_time"), "2012-04-15T03:36:50",
+     "modification time");
 }
 
 sub limited_write {
