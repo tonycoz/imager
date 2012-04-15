@@ -4,7 +4,9 @@ use IO::Uncompress::Inflate qw(inflate);
 use Getopt::Long;
 
 my $dumpall = 0;
-GetOptions(dumpall => \$dumpall);
+my $image = 0;
+GetOptions(dumpall => \$dumpall,
+	   image => \$image);
 
 my $file = shift
   or die "Usage: $0 filename\n";
@@ -27,6 +29,9 @@ unless ($head eq "\x89PNG\x0d\x0A\cZ\x0A") {
 }
 
 my $colour_type;
+my $sline_len;
+my $sline_left = 0;
+my $row = 0;
 while (my ($dlen, $data, $len, $type, $payload, $crc) = read_chunk($fh)) {
   dump_data($offset, $data);
   $offset += $dlen;
@@ -49,6 +54,10 @@ while (my ($dlen, $data, $len, $type, $payload, $crc) = read_chunk($fh)) {
   Interlace: $inter
 EOS
     $colour_type = $ct;
+    my $channels = $ct == 2 ? 3 : $ct == 4 ? 2 : $ct == 6 ? 4 : 0;
+    my $bitspp = $channels * $d;
+    $sline_len = int((($w * $bitspp) + 7) / 8);
+    ++$sline_len; # filter byte
   }
   elsif ($type eq 'sRGB') {
     print "  Rendering intent: ", ord($payload), "\n";
@@ -108,6 +117,34 @@ EOS
   Value: $value
 EOS
     do_more_text($key, $value);
+  }
+  elsif ($type eq 'tIME') {
+    my @when = unpack("nCCCCC", $payload);
+    printf "  Date: %d-%02d-%02d %02d:%02d:%02d\n", @when;
+  }
+  elsif ($type eq "IDAT" && $image) {
+    $sline_len
+      or die "IDAT before IHDR!?";
+    my $raw = do_inflate($payload);
+    if ($sline_left) {
+      print "  Continuing $row:\n";
+      print "  ", unpack("H*", substr($raw, 0, $sline_left, "")), "\n";
+      $sline_left = 0;
+      ++$row;
+    }
+    while (length $raw >= $sline_len) {
+      my $row_data = substr($raw, 0, $sline_len, "");
+      my ($filter, $data) = unpack("CH*", $row_data);
+      print "  Row $row, filter $filter\n";
+      print "    $data\n";
+      ++$row;
+    }
+    if (length $raw) {
+      $sline_left = $sline_len - length $raw;
+      my ($filter, $data) = unpack("CH*", $raw);
+      print "  Row $row, filter $filter (partial)\n";
+      print "    $data\n" if length $data;
+    }
   }
 
   $type eq "IEND"
@@ -250,3 +287,38 @@ sub do_inflate {
 
   return $out;
 }
+
+=head HEAD
+
+pngdump.pl - dump the structure of a PNG image file.
+
+=head1 SYNOPSIS
+
+  perl [-dumpall] [-image] pngdump.pl filename
+
+=head1 DESCRIPTION
+
+Dumps the structure of a PNG image file, listing chunk types, length,
+CRC and optionally the entire content of each chunk.
+
+Options:
+
+=over
+
+=item *
+
+C<-dumpall> - dump the entire contents of each chunk rather than just
+the leading bytes.
+
+=item *
+
+C<-image> - decompress the image data (IDAT chunk) and break the
+result into rows, listing the filter and filtered (raw) data for each
+row.
+
+=back
+
+Several chunk types are extracted and displayed in a more readable
+form.
+
+=cut
