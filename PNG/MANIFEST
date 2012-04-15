@@ -12,6 +12,7 @@ t/00load.t
 t/10png.t
 testimg/badcrc.png
 testimg/bilevel.png
+testimg/comment.png
 testimg/cover.png
 testimg/cover16.png
 testimg/cover16i.png

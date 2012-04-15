@@ -724,25 +724,28 @@ get_png_tags(i_img *im, png_structp png_ptr, png_infop info_ptr, int bit_depth) 
   /* the various readers can call png_set_expand(), libpng will make
      it's internal record of bit_depth at least 8 in that case */
   i_tags_setn(&im->tags, "png_bits", bit_depth);
-
   
-  {
+  if (png_get_valid(png_ptr, info_ptr, PNG_INFO_sRGB)) {
     int intent;
     if (png_get_sRGB(png_ptr, info_ptr, &intent)) {
       i_tags_setn(&im->tags, "png_srgb_intent", intent);
     }
   }
-  {
+  else {
+    /* Ignore these if there's an sRGB chunk, libpng simulates
+       their existence if there's an sRGB chunk, and the PNG spec says
+       that these are ignored if the sRGB is present, so ignore them.
+    */
     double gamma;
-    if (png_get_gAMA(png_ptr, info_ptr, &gamma)) {
-      i_tags_set_float2(&im->tags, "png_gamma", 0, gamma, 4);
-    }
-  }
-  {
     double white_x, white_y;
     double red_x, red_y;
     double green_x, green_y;
     double blue_x, blue_y;
+
+    if (png_get_gAMA(png_ptr, info_ptr, &gamma)) {
+      i_tags_set_float2(&im->tags, "png_gamma", 0, gamma, 4);
+    }
+
     if (png_get_cHRM(png_ptr, info_ptr, &white_x, &white_y,
 		     &red_x, &red_y, &green_x, &green_y,
 		     &blue_x, &blue_y)) {
@@ -765,24 +768,42 @@ get_png_tags(i_img *im, png_structp png_ptr, png_infop info_ptr, int bit_depth) 
       int i;
       for (i = 0; i < num_text; ++i) {
 	int j;
-	char tag_name[50];
-	sprintf(tag_name, "png_text%d_key", i);
-	i_tags_set(&im->tags, tag_name, text[i].key, -1);
-	sprintf(tag_name, "png_text%d_text", i);
-	i_tags_set(&im->tags, tag_name, text[i].text, -1);
-	sprintf(tag_name, "png_text%d_type", i);
-	i_tags_set(&im->tags, tag_name, 
-		   (text[i].compression == PNG_TEXT_COMPRESSION_NONE
-		    || text[i].compression == PNG_TEXT_COMPRESSION_zTXt) ?
-		   "text" : "itxt", -1);
+	int found = 0;
 
 	for (j = 0; j < text_tags_count; ++j) {
 	  if (strcmp(text_tags[j].keyword, text[i].key) == 0) {
 	    i_tags_set(&im->tags, text_tags[j].tagname, text[i].text, -1);
+	    found = 1;
 	    break;
 	  }
 	}
+
+	if (!found) {
+	  char tag_name[50];
+	  sprintf(tag_name, "png_text%d_key", i);
+	  i_tags_set(&im->tags, tag_name, text[i].key, -1);
+	  sprintf(tag_name, "png_text%d_text", i);
+	  i_tags_set(&im->tags, tag_name, text[i].text, -1);
+	  sprintf(tag_name, "png_text%d_type", i);
+	  i_tags_set(&im->tags, tag_name, 
+		     (text[i].compression == PNG_TEXT_COMPRESSION_NONE
+		      || text[i].compression == PNG_TEXT_COMPRESSION_zTXt) ?
+		     "text" : "itxt", -1);
+	}
       }
+    }
+  }
+
+  {
+    png_time *mod_time;
+
+    if (png_get_tIME(png_ptr, info_ptr, &mod_time)) {
+      char time_formatted[80];
+
+      sprintf(time_formatted, "%d-%02d-%02dT%02d:%02d:%02d",
+	      mod_time->year, mod_time->month, mod_time->day,
+	      mod_time->hour, mod_time->minute, mod_time->second);
+      i_tags_set(&im->tags, "png_time", time_formatted, -1);
     }
   }
 }
