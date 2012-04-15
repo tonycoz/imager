@@ -427,7 +427,7 @@ SKIP:
 {
   my $pim = Imager->new(xsize => 5, ysize => 2, channels => 3, type => "paletted");
   ok($pim, "make a 3 channel paletted image");
-  ok($pim->addcolors(colors => [ qw(#000 #FFF #F00 #0F0 #00f) ]),
+  ok($pim->addcolors(colors => [ qw(000000 FFFFFF FF0000 00FF00 0000FF) ]),
      "add some colors");
   is($pim->setscanline(y => 0, type => "index",
 		       pixels => [ 0, 1, 2, 4, 3 ]), 5, "set some pixels");
@@ -449,7 +449,7 @@ SKIP:
   my $pim = Imager->new(xsize => 8, ysize => 2, channels => 4, type => "paletted");
   ok($pim, "make a 4 channel paletted image");
   ok($pim->addcolors
-     (colors => [ NC(255, 255, 0, 128), qw(#000 #FFF #F00 #0F0 #00f),
+     (colors => [ NC(255, 255, 0, 128), qw(000000 FFFFFF FF0000 00FF00 0000FF),
 		  NC(0, 0, 0, 0), NC(255, 0, 128, 64) ]),
      "add some colors");
   is($pim->setscanline(y => 0, type => "index",
