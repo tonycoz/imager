@@ -55,7 +55,9 @@ wiol_write_data(png_structp png_ptr, png_bytep data, png_size_t length) {
 
 static void
 wiol_flush_data(png_structp png_ptr) {
-  /* XXX : This needs to be added to the io layer */
+  io_glue *ig = png_get_io_ptr(png_ptr);
+  if (!i_io_flush(ig))
+    png_error(png_ptr, "Error flushing output");
 }
 
 static void
