@@ -5,10 +5,15 @@
 ^blib/
 ^pm_to_blib$
 ^Makefile$
+^Makefile\.old$
 ^MANIFEST\.bak$
 
 # test products
 ^testout
+\.gcov$
+\.gcda$
+\.gcno$
+
 
 # system
 ^\.svn/
