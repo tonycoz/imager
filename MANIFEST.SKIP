@@ -106,6 +106,7 @@ Makefile\.old$
 ^gaussian\.c$
 ^paste\.c$
 ^render\.c$
+^rotate\.c$
 ^rubthru\.c$
 ^scale\.c$
 
