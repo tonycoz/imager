@@ -20,6 +20,9 @@ Imager release history.  Older releases can be found in Changes.old
 Imager 0.90 - unreleased
 ===========
 
+ - the i_get_file_background() and i_get_file_backgroundf() APIs now
+   return int to indicate whether the i_background tag was found.
+
 Bug fixes:
 
  - Imager::Test::is_imaged() attempted to process an "epsilon"

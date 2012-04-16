@@ -22,8 +22,11 @@
  Version 4 added i_psamp() and i_psampf() pointers to the i_img
  structure.
 
+ Version 5 changed the return types of i_get_file_background() and
+ i_get_file_backgroundf() from void to int.
+
 */
-#define IMAGER_API_VERSION 4
+#define IMAGER_API_VERSION 5
 
 /*
  IMAGER_API_LEVEL is the level of the structure.  New function pointers
@@ -175,8 +178,8 @@ typedef struct {
 		      int out_channels, i_color const * bg);
   int (*f_i_gsampf_bg)(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, i_fsample_t *samples,
 		      int out_channels, i_fcolor const * bg);
-  void (*f_i_get_file_background)(i_img *im, i_color *bg);
-  void (*f_i_get_file_backgroundf)(i_img *im, i_fcolor *bg);
+  int (*f_i_get_file_background)(i_img *im, i_color *bg);
+  int (*f_i_get_file_backgroundf)(i_img *im, i_fcolor *bg);
   unsigned long (*f_i_utf8_advance)(char const **p, size_t *len);
   i_render *(*f_i_render_new)(i_img *im, i_img_dim width);
   void (*f_i_render_delete)(i_render *r);
@@ -215,7 +218,7 @@ typedef struct {
   void (*f_io_glue_destroy)(i_io_glue_t *ig);
 
   /* IMAGER_API_LEVEL 8 functions will be added here */
-  
+
 } im_ext_funcs;
 
 #define PERL_FUNCTION_TABLE_NAME "Imager::__ext_func_table"
