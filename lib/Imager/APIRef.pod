@@ -905,7 +905,9 @@ From: File error.c
 
 Retrieve the file write background color tag from the image.
 
-If not present, returns black.
+If not present, C<bg> is set to black.
+
+Returns 1 if the C<i_background> tag was found and valid.
 
 
 =for comment
@@ -919,7 +921,9 @@ floating point color.
 
 Implemented in terms of i_get_file_background().
 
-If not present, returns black.
+If not present, C<bg> is set to black.
+
+Returns 1 if the C<i_background> tag was found and valid.
 
 
 =for comment

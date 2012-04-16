@@ -1728,19 +1728,24 @@ i_img_is_monochrome(i_img *im, int *zero_is_white) {
 
 Retrieve the file write background color tag from the image.
 
-If not present, returns black.
+If not present, C<bg> is set to black.
+
+Returns 1 if the C<i_background> tag was found and valid.
 
 =cut
 */
 
-void
+int
 i_get_file_background(i_img *im, i_color *bg) {
-  if (!i_tags_get_color(&im->tags, "i_background", 0, bg)) {
+  int result = i_tags_get_color(&im->tags, "i_background", 0, bg);
+  if (!result) {
     /* black default */
     bg->channel[0] = bg->channel[1] = bg->channel[2] = 0;
   }
   /* always full alpha */
   bg->channel[3] = 255;
+
+  return result;
 }
 
 /*
@@ -1753,20 +1758,23 @@ floating point color.
 
 Implemented in terms of i_get_file_background().
 
-If not present, returns black.
+If not present, C<bg> is set to black.
+
+Returns 1 if the C<i_background> tag was found and valid.
 
 =cut
 */
 
-void
+int
 i_get_file_backgroundf(i_img *im, i_fcolor *fbg) {
   i_color bg;
-
-  i_get_file_background(im, &bg);
+  int result = i_get_file_background(im, &bg);
   fbg->rgba.r = Sample8ToF(bg.rgba.r);
   fbg->rgba.g = Sample8ToF(bg.rgba.g);
   fbg->rgba.b = Sample8ToF(bg.rgba.b);
   fbg->rgba.a = 1.0;
+
+  return result;
 }
 
 /*

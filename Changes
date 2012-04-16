@@ -66,6 +66,9 @@ Other changes:
 
  - a little more documentation for Imager::Probe.
 
+ - the i_get_file_background() and i_get_file_backgroundf() APIs now
+   return int to indicate whether the i_background tag was found.
+
 Imager 0.89 - 18 Mar 2012
 ===========
 
