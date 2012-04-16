@@ -10,7 +10,7 @@ my $debug_writes = 1;
 
 init_log("testout/t102png.log",1);
 
-plan tests => 210;
+plan tests => 211;
 
 # this loads Imager::File::PNG too
 ok($Imager::formats{"png"}, "must have png format");
@@ -579,8 +579,10 @@ SKIP:
   is($im->tags(name => "png_interlace"), "0", "no interlace");
   is($im->tags(name => "png_interlace_name"), "none", "no interlace (text)");
   is($im->tags(name => "png_srgb_intent"), "0", "srgb perceptual");
-  is($im->tags(name => "png_time"), "2012-04-15T03:36:50",
+  is($im->tags(name => "png_time"), "2012-04-16T07:37:36",
      "modification time");
+  is($im->tags(name => "i_background"), "color(255,255,255,255)",
+     "background color");
 }
 
 sub limited_write {

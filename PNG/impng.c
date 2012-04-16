@@ -276,7 +276,7 @@ i_writepng_wiol(i_img *im, io_glue *ig) {
 }
 
 static void 
-get_png_tags(i_img *im, png_structp png_ptr, png_infop info_ptr, int bit_depth);
+get_png_tags(i_img *im, png_structp png_ptr, png_infop info_ptr, int bit_depth, int color_type);
 
 typedef struct {
   char *warnings;
@@ -370,7 +370,7 @@ i_readpng_wiol(io_glue *ig) {
   }
 
   if (im)
-    get_png_tags(im, png_ptr, info_ptr, bit_depth);
+    get_png_tags(im, png_ptr, info_ptr, bit_depth, color_type);
 
   png_destroy_read_struct(&png_ptr, &info_ptr, (png_infopp)NULL);
 
@@ -685,7 +685,8 @@ text_tags[] = {
 static const int text_tags_count = sizeof(text_tags) / sizeof(*text_tags);
 
 static void
-get_png_tags(i_img *im, png_structp png_ptr, png_infop info_ptr, int bit_depth) {
+get_png_tags(i_img *im, png_structp png_ptr, png_infop info_ptr,
+	     int bit_depth, int color_type) {
   png_uint_32 xres, yres;
   int unit_type;
 
@@ -804,6 +805,63 @@ get_png_tags(i_img *im, png_structp png_ptr, png_infop info_ptr, int bit_depth) 
 	      mod_time->year, mod_time->month, mod_time->day,
 	      mod_time->hour, mod_time->minute, mod_time->second);
       i_tags_set(&im->tags, "png_time", time_formatted, -1);
+    }
+  }
+
+  {
+    png_color_16 *back;
+    i_color c;
+
+    if (png_get_bKGD(png_ptr, info_ptr, &back)) {
+      switch (color_type) {
+      case PNG_COLOR_TYPE_GRAY:
+      case PNG_COLOR_TYPE_GRAY_ALPHA:
+	{
+	  /* lib png stores the raw gray value rather than scaling it
+	     to 16-bit (or 8), we use 8-bit color for i_background */
+
+	  int gray;
+	  switch (bit_depth) {
+	  case 16:
+	    gray = back->gray >> 8;
+	    break;
+	  case 8:
+	    gray = back->gray;
+	    break;
+	  case 4:
+	    gray = 0x11 * back->gray;
+	    break;
+	  case 2:
+	    gray = 0x55 * back->gray;
+	    break;
+	  case 1:
+	    gray = back->gray ? 0xFF : 0;
+	    break;
+	  default:
+	    gray = 0;
+	  }
+	  c.rgb.r = c.rgb.g = c.rgb.b = gray;
+	  break;
+	}
+
+      case PNG_COLOR_TYPE_RGB:
+      case PNG_COLOR_TYPE_RGB_ALPHA:
+	{
+	  c.rgb.r = bit_depth == 16 ? (back->red   >> 8) : back->red;
+	  c.rgb.g = bit_depth == 16 ? (back->green >> 8) : back->green;
+	  c.rgb.b = bit_depth == 16 ? (back->blue  >> 8) : back->blue;
+	  break;
+	}
+
+      case PNG_COLOR_TYPE_PALETTE:
+	c.rgb.r = back->red;
+	c.rgb.g = back->green;
+	c.rgb.b = back->blue;
+	break;
+      }
+
+      c.rgba.a = 255;
+      i_tags_set_color(&im->tags, "i_background", 0, &c);
     }
   }
 }

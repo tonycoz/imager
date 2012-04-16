@@ -29,6 +29,7 @@ unless ($head eq "\x89PNG\x0d\x0A\cZ\x0A") {
 }
 
 my $colour_type;
+my $bits;
 my $sline_len;
 my $sline_left = 0;
 my $row = 0;
@@ -54,6 +55,7 @@ while (my ($dlen, $data, $len, $type, $payload, $crc) = read_chunk($fh)) {
   Interlace: $inter
 EOS
     $colour_type = $ct;
+    $bits = $d;
     my $channels = $ct == 2 ? 3 : $ct == 4 ? 2 : $ct == 6 ? 4 : 0;
     my $bitspp = $channels * $d;
     $sline_len = int((($w * $bitspp) + 7) / 8);
@@ -121,6 +123,20 @@ EOS
   elsif ($type eq 'tIME') {
     my @when = unpack("nCCCCC", $payload);
     printf "  Date: %d-%02d-%02d %02d:%02d:%02d\n", @when;
+  }
+  elsif ($type eq 'bKGD') {
+    if ($colour_type == 2 || $colour_type == 6) {
+      my @rgb = unpack("nnn", $payload);
+      printf "  Background: rgb$bits(%d,%d,%d)\n", @rgb;
+    }
+    elsif ($colour_type == 0 || $colour_type == 4) {
+      my $g = unpack("n", $payload);
+      printf "  Background: grey$bits(%d)\n", $g;
+    }
+    if ($colour_type == 3) {
+      my $index = unpack("C", $payload);
+      printf "  Background: index(%d)\n", $index;
+    }
   }
   elsif ($type eq "IDAT" && $image) {
     $sline_len
