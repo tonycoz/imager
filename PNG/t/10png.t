@@ -10,7 +10,7 @@ my $debug_writes = 1;
 
 init_log("testout/t102png.log",1);
 
-plan tests => 211;
+plan tests => 248;
 
 # this loads Imager::File::PNG too
 ok($Imager::formats{"png"}, "must have png format");
@@ -583,6 +583,189 @@ SKIP:
      "modification time");
   is($im->tags(name => "i_background"), "color(255,255,255,255)",
      "background color");
+}
+
+SKIP:
+{ # test tag writing
+  my $im = Imager->new(xsize => 1, ysize => 1);
+  ok($im->write(file => "testout/tags.png",
+		i_comment => "A Comment",
+		png_author => "An Author",
+		png_author_compressed => 1,
+		png_copyright => "A Copyright",
+		png_creation_time => "16 April 2012 22:56:30+1000",
+		png_description => "A Description",
+		png_disclaimer => "A Disclaimer",
+		png_software => "Some Software",
+		png_source => "A Source",
+		png_title => "A Title",
+		png_warning => "A Warning",
+		png_text0_key => "Custom Key",
+		png_text0_text => "Custom Value",
+		png_text0_compressed => 1,
+		png_text1_key => "Custom Key2",
+		png_text1_text => "Another Custom Value",
+		png_time => "2012-04-20T00:15:10",
+	       ),
+     "write with many tags")
+    or diag("Cannot write with many tags: ", $im->errstr);
+
+  my $imr = Imager->new(file => "testout/tags.png");
+  ok($imr, "read it back in")
+    or skip("Couldn't read it back: ". Imager->errstr, 1);
+
+  is_deeply({ map @$_, $imr->tags },
+	    {
+	     i_format => "png",
+	     i_comment => "A Comment",
+	     png_author => "An Author",
+	     png_author_compressed => 1,
+	     png_copyright => "A Copyright",
+	     png_creation_time => "16 April 2012 22:56:30+1000",
+	     png_description => "A Description",
+	     png_disclaimer => "A Disclaimer",
+	     png_software => "Some Software",
+	     png_source => "A Source",
+	     png_title => "A Title",
+	     png_warning => "A Warning",
+	     png_text0_key => "Custom Key",
+	     png_text0_text => "Custom Value",
+	     png_text0_compressed => 1,
+	     png_text0_type => "text",
+	     png_text1_key => "Custom Key2",
+	     png_text1_text => "Another Custom Value",
+	     png_text1_type => "text",
+	     png_time => "2012-04-20T00:15:10",
+	     png_interlace => 0,
+	     png_interlace_name => "none",
+	     png_bits => 8,
+	    }, "check tags are what we expected");
+}
+
+SKIP:
+{ # cHRM test
+  my $im = Imager->new(xsize => 1, ysize => 1);
+  ok($im->write(file => "testout/tagschrm.png", type => "png",
+		png_chroma_white_x => 0.3,
+		png_chroma_white_y => 0.32,
+		png_chroma_red_x => 0.7,
+		png_chroma_red_y => 0.28,
+		png_chroma_green_x => 0.8,
+		png_chroma_green_y => 0.075,
+		png_chroma_blue_x => 0.175,
+		png_chroma_blue_y => 0.05),
+     "write cHRM chunk");
+  my $imr = Imager->new(file => "testout/tagschrm.png", ftype => "png");
+  ok($imr, "read tagschrm.png")
+    or diag("reading tagschrm.png: ".Imager->errstr);
+  $imr
+    or skip("read of tagschrm.png failed", 1);
+  is_deeply({ map @$_, $imr->tags },
+	    {
+	     i_format => "png",
+	     png_interlace => 0,
+	     png_interlace_name => "none",
+	     png_bits => 8,
+	     png_chroma_white_x => 0.3,
+	     png_chroma_white_y => 0.32,
+	     png_chroma_red_x => 0.7,
+	     png_chroma_red_y => 0.28,
+	     png_chroma_green_x => 0.8,
+	     png_chroma_green_y => 0.075,
+	     png_chroma_blue_x => 0.175,
+	     png_chroma_blue_y => 0.05,
+	    }, "check chroma tags written");
+}
+
+{ # gAMA
+  my $im = Imager->new(xsize => 1, ysize => 1);
+  ok($im->write(file => "testout/tagsgama.png", type => "png",
+	       png_gamma => 2.22),
+     "write with png_gammma tag");
+  my $imr = Imager->new(file => "testout/tagsgama.png", ftype => "png");
+  ok($imr, "read tagsgama.png")
+    or diag("reading tagsgama.png: ".Imager->errstr);
+  $imr
+    or skip("read of tagsgama.png failed", 1);
+  is_deeply({ map @$_, $imr->tags },
+	    {
+	     i_format => "png",
+	     png_interlace => 0,
+	     png_interlace_name => "none",
+	     png_bits => 8,
+	     png_gamma => "2.22",
+	    }, "check gamma tag written");
+}
+
+{ # various bad tag failures
+  my @tests =
+    (
+     [
+      [ png_chroma_white_x => 0.5 ],
+      "all png_chroma_* tags must be supplied or none"
+     ],
+     [
+      [ png_srgb_intent => 4 ],
+      "tag png_srgb_intent out of range"
+     ],
+     [
+      [ i_comment => "test\0with nul" ],
+      "tag i_comment may not contain NUL characters"
+     ],
+     [
+      [ png_text0_key => "" ],
+      "tag png_text0_key must be between 1 and 79 characters in length"
+     ],
+     [
+      [ png_text0_key => ("x" x 80) ],
+      "tag png_text0_key must be between 1 and 79 characters in length"
+     ],
+     [
+      [ png_text0_key => " x" ],
+      "tag png_text0_key may not contain leading or trailing spaces"
+     ],
+     [
+      [ png_text0_key => "x " ],
+      "tag png_text0_key may not contain leading or trailing spaces"
+     ],
+     [
+      [ png_text0_key => "x  y" ],
+      "tag png_text0_key may not contain consecutive spaces"
+     ],
+     [
+      [ png_text0_key => "\x7F" ],
+      "tag png_text0_key may only contain Latin1 characters 32-126, 161-255"
+     ],
+     [
+      [ png_text0_key => "x", png_text0_text => "a\0b" ],
+      "tag png_text0_text may not contain NUL characters"
+     ],
+     [
+      [ png_text0_key => "test" ],
+      "tag png_text0_key found but not png_text0_text"
+     ],
+     [
+      [ png_text0_text => "test" ],
+      "tag png_text0_text found but not png_text0_key"
+     ],
+     [
+      [ png_time => "bad format" ],
+      "png_time must be formatted 'y-m-dTh:m:s'"
+     ],
+     [
+      [ png_time => "2012-13-01T00:00:00" ],
+      "invalid date/time for png_time"
+     ],
+    ); 
+  my $im = Imager->new(xsize => 1, ysize => 1);
+  for my $test (@tests) {
+    my ($tags, $error) = @$test;
+    my $im2 = $im->copy;
+    my $data;
+    ok(!$im2->write(data => \$data, type => "png", @$tags),
+       "expect $error");
+    is($im2->errstr, $error, "check error message");
+  }
 }
 
 sub limited_write {

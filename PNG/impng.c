@@ -33,6 +33,15 @@ write_paletted(png_structp png_ptr, png_infop info_ptr, i_img *im, int bits);
 static int
 write_bilevel(png_structp png_ptr, png_infop info_ptr, i_img *im);
 
+static void 
+get_png_tags(i_img *im, png_structp png_ptr, png_infop info_ptr, int bit_depth, int color_type);
+
+static int
+set_png_tags(i_img *im, png_structp png_ptr, png_infop info_ptr);
+
+static const char *
+get_string2(i_img_tags *tags, const char *name, char *buf, size_t *size);
+
 unsigned
 i_png_lib_version(void) {
   return png_access_version_number();
@@ -89,8 +98,6 @@ i_writepng_wiol(i_img *im, io_glue *ig) {
   png_infop info_ptr = NULL;
   i_img_dim width,height,y;
   volatile int cspace,channels;
-  double xres, yres;
-  int aspect_only, have_res;
   unsigned char *data;
   unsigned char * volatile vdata = NULL;
   int bits;
@@ -213,31 +220,12 @@ i_writepng_wiol(i_img *im, io_glue *ig) {
    */
   png_set_user_limits(png_ptr, width, height);
 
-  mm_log((1, ">png_set_IHDR\n"));
   png_set_IHDR(png_ptr, info_ptr, width, height, bits, cspace,
 	       PNG_INTERLACE_NONE, PNG_COMPRESSION_TYPE_BASE, PNG_FILTER_TYPE_BASE);
-  mm_log((1, "<png_set_IHDR\n"));
 
-  have_res = 1;
-  if (i_tags_get_float(&im->tags, "i_xres", 0, &xres)) {
-    if (i_tags_get_float(&im->tags, "i_yres", 0, &yres))
-      ; /* nothing to do */
-    else
-      yres = xres;
-  }
-  else {
-    if (i_tags_get_float(&im->tags, "i_yres", 0, &yres))
-      xres = yres;
-    else
-      have_res = 0;
-  }
-  if (have_res) {
-    aspect_only = 0;
-    i_tags_get_int(&im->tags, "i_aspect_only", 0, &aspect_only);
-    xres /= 0.0254;
-    yres /= 0.0254;
-    png_set_pHYs(png_ptr, info_ptr, xres + 0.5, yres + 0.5, 
-                 aspect_only ? PNG_RESOLUTION_UNKNOWN : PNG_RESOLUTION_METER);
+  if (!set_png_tags(im, png_ptr, info_ptr)) {
+    png_destroy_write_struct(&png_ptr, &info_ptr);
+    return 0;
   }
 
   if (is_bilevel) {
@@ -274,9 +262,6 @@ i_writepng_wiol(i_img *im, io_glue *ig) {
 
   return(1);
 }
-
-static void 
-get_png_tags(i_img *im, png_structp png_ptr, png_infop info_ptr, int bit_depth, int color_type);
 
 typedef struct {
   char *warnings;
@@ -684,6 +669,20 @@ text_tags[] = {
 
 static const int text_tags_count = sizeof(text_tags) / sizeof(*text_tags);
 
+static const char * const
+chroma_tags[] = {
+  "png_chroma_white_x",
+  "png_chroma_white_y",
+  "png_chroma_red_x",
+  "png_chroma_red_y",
+  "png_chroma_green_x",
+  "png_chroma_green_y",
+  "png_chroma_blue_x",
+  "png_chroma_blue_y"
+};
+
+static const int chroma_tag_count = sizeof(chroma_tags) / sizeof(*chroma_tags);
+
 static void
 get_png_tags(i_img *im, png_structp png_ptr, png_infop info_ptr,
 	     int bit_depth, int color_type) {
@@ -738,26 +737,19 @@ get_png_tags(i_img *im, png_structp png_ptr, png_infop info_ptr,
        that these are ignored if the sRGB is present, so ignore them.
     */
     double gamma;
-    double white_x, white_y;
-    double red_x, red_y;
-    double green_x, green_y;
-    double blue_x, blue_y;
+    double chroma[8];
 
     if (png_get_gAMA(png_ptr, info_ptr, &gamma)) {
       i_tags_set_float2(&im->tags, "png_gamma", 0, gamma, 4);
     }
 
-    if (png_get_cHRM(png_ptr, info_ptr, &white_x, &white_y,
-		     &red_x, &red_y, &green_x, &green_y,
-		     &blue_x, &blue_y)) {
-      i_tags_set_float2(&im->tags, "png_chroma_white_x", 0, white_x, 4);
-      i_tags_set_float2(&im->tags, "png_chroma_white_y", 0, white_y, 4);
-      i_tags_set_float2(&im->tags, "png_chroma_red_x", 0, red_x, 4);
-      i_tags_set_float2(&im->tags, "png_chroma_red_y", 0, red_y, 4);
-      i_tags_set_float2(&im->tags, "png_chroma_green_x", 0, green_x, 4);
-      i_tags_set_float2(&im->tags, "png_chroma_green_y", 0, green_y, 4);
-      i_tags_set_float2(&im->tags, "png_chroma_blue_x", 0, blue_x, 4);
-      i_tags_set_float2(&im->tags, "png_chroma_blue_y", 0, blue_y, 4);
+    if (png_get_cHRM(png_ptr, info_ptr, chroma+0, chroma+1,
+		     chroma+2, chroma+3, chroma+4, chroma+5,
+		     chroma+6, chroma+7)) {
+      int i;
+
+      for (i = 0; i < chroma_tag_count; ++i)
+	i_tags_set_float2(&im->tags, chroma_tags[i], 0, chroma[i], 4);
     }
   }
 
@@ -767,13 +759,21 @@ get_png_tags(i_img *im, png_structp png_ptr, png_infop info_ptr,
 
     if (png_get_text(png_ptr, info_ptr, &text, &num_text)) {
       int i;
+      int custom_index = 0;
       for (i = 0; i < num_text; ++i) {
 	int j;
 	int found = 0;
+	int compressed = text[i].compression == PNG_ITXT_COMPRESSION_zTXt
+	  || text[i].compression == PNG_TEXT_COMPRESSION_zTXt;
 
 	for (j = 0; j < text_tags_count; ++j) {
 	  if (strcmp(text_tags[j].keyword, text[i].key) == 0) {
+	    char tag_name[50];
 	    i_tags_set(&im->tags, text_tags[j].tagname, text[i].text, -1);
+	    if (compressed) {
+	      sprintf(tag_name, "%s_compressed", text_tags[j].tagname);
+	      i_tags_setn(&im->tags, tag_name, 1);
+	    }
 	    found = 1;
 	    break;
 	  }
@@ -781,15 +781,20 @@ get_png_tags(i_img *im, png_structp png_ptr, png_infop info_ptr,
 
 	if (!found) {
 	  char tag_name[50];
-	  sprintf(tag_name, "png_text%d_key", i);
+	  sprintf(tag_name, "png_text%d_key", custom_index);
 	  i_tags_set(&im->tags, tag_name, text[i].key, -1);
-	  sprintf(tag_name, "png_text%d_text", i);
+	  sprintf(tag_name, "png_text%d_text", custom_index);
 	  i_tags_set(&im->tags, tag_name, text[i].text, -1);
-	  sprintf(tag_name, "png_text%d_type", i);
+	  sprintf(tag_name, "png_text%d_type", custom_index);
 	  i_tags_set(&im->tags, tag_name, 
 		     (text[i].compression == PNG_TEXT_COMPRESSION_NONE
 		      || text[i].compression == PNG_TEXT_COMPRESSION_zTXt) ?
 		     "text" : "itxt", -1);
+	  if (compressed) {
+	    sprintf(tag_name, "png_text%d_compressed", custom_index);
+	    i_tags_setn(&im->tags, tag_name, 1);
+	  }
+	  ++custom_index;
 	}
       }
     }
@@ -864,6 +869,261 @@ get_png_tags(i_img *im, png_structp png_ptr, png_infop info_ptr,
       i_tags_set_color(&im->tags, "i_background", 0, &c);
     }
   }
+}
+
+#define GET_STR_BUF_SIZE 40
+
+static int
+set_png_tags(i_img *im, png_structp png_ptr, png_infop info_ptr) {
+  double xres, yres;
+  int aspect_only, have_res = 1;
+
+  if (i_tags_get_float(&im->tags, "i_xres", 0, &xres)) {
+    if (i_tags_get_float(&im->tags, "i_yres", 0, &yres))
+      ; /* nothing to do */
+    else
+      yres = xres;
+  }
+  else {
+    if (i_tags_get_float(&im->tags, "i_yres", 0, &yres))
+      xres = yres;
+    else
+      have_res = 0;
+  }
+  if (have_res) {
+    aspect_only = 0;
+    i_tags_get_int(&im->tags, "i_aspect_only", 0, &aspect_only);
+    xres /= 0.0254;
+    yres /= 0.0254;
+    png_set_pHYs(png_ptr, info_ptr, xres + 0.5, yres + 0.5, 
+                 aspect_only ? PNG_RESOLUTION_UNKNOWN : PNG_RESOLUTION_METER);
+  }
+
+  {
+    int intent;
+    if (i_tags_get_int(&im->tags, "png_srgb_intent", 0, &intent)) {
+      if (intent < 0 || intent >= PNG_sRGB_INTENT_LAST) {
+	i_push_error(0, "tag png_srgb_intent out of range");
+	return 0;
+      }
+      png_set_sRGB(png_ptr, info_ptr, intent);
+    }
+    else {
+      double chroma[8], gamma;
+      int i;
+      int found_chroma_count = 0;
+
+      for (i = 0; i < chroma_tag_count; ++i) {
+	if (i_tags_get_float(&im->tags, chroma_tags[i], 0, chroma+i))
+	  ++found_chroma_count;
+      }
+
+      if (found_chroma_count) {
+	if (found_chroma_count != chroma_tag_count) {
+	  i_push_error(0, "all png_chroma_* tags must be supplied or none");
+	  return 0;
+	}
+
+	png_set_cHRM(png_ptr, info_ptr, chroma[0], chroma[1], chroma[2],
+		     chroma[3], chroma[4], chroma[5], chroma[6], chroma[7]);
+      }
+
+      if (i_tags_get_float(&im->tags, "png_gamma", 0, &gamma)) {
+	png_set_gAMA(png_ptr, info_ptr, gamma);
+      }
+    }
+  }
+
+  {
+    /* png_set_text() is sparsely documented, it isn't indicated whether
+       multiple calls add to or replace the lists of texts, and
+       whether the text/keyword data is copied or not.
+
+       Examining the linpng code reveals that png_set_text() adds to
+       the list and that the text is copied.
+    */
+    int i;
+
+    /* do our standard tags */
+    for (i = 0; i < text_tags_count; ++i) {
+      char buf[GET_STR_BUF_SIZE];
+      size_t size;
+      const char *data;
+      
+      data = get_string2(&im->tags, text_tags[i].tagname, buf, &size);
+      if (data) {
+	png_text text;
+	int compression = size > 1000;
+	char compress_tag[40];
+
+	if (memchr(data, '\0',  size)) {
+	  i_push_errorf(0, "tag %s may not contain NUL characters", text_tags[i].tagname);
+	  return 0;
+	}
+      
+	sprintf(compress_tag, "%s_compressed", text_tags[i].tagname);
+	i_tags_get_int(&im->tags, compress_tag, 0, &compression);
+	
+	text.compression = compression ? PNG_TEXT_COMPRESSION_zTXt
+	  : PNG_TEXT_COMPRESSION_NONE;
+	text.key = (char *)text_tags[i].keyword;
+	text.text_length = size;
+	text.text = (char *)data;
+#ifdef PNG_iTXt_SUPPORTED
+	text.itxt_length = 0;
+	text.lang = NULL;
+	text.translated_keyword = NULL;
+#endif
+
+	png_set_text(png_ptr, info_ptr, &text, 1);
+      }
+    }
+
+    /* for non-standard tags ensure keywords are limited to 1 to 79
+       characters */
+    i = 0;
+    while (1) {
+      char tag_name[50];
+      char key_buf[GET_STR_BUF_SIZE], value_buf[GET_STR_BUF_SIZE];
+      const char *key, *value;
+      size_t key_size, value_size;
+
+      sprintf(tag_name, "png_text%d_key", i);
+      key = get_string2(&im->tags, tag_name, key_buf, &key_size);
+      
+      if (key) {
+	size_t k;
+	if (key_size < 1 || key_size > 79) {
+	  i_push_errorf(0, "tag %s must be between 1 and 79 characters in length", tag_name);
+	  return 0;
+	}
+
+	if (key[0] == ' ' || key[key_size-1] == ' ') {
+	  i_push_errorf(0, "tag %s may not contain leading or trailing spaces", tag_name);
+	  return 0;
+	}
+
+	if (strstr(key, "  ")) {
+	  i_push_errorf(0, "tag %s may not contain consecutive spaces", tag_name);
+	  return 0;
+	}
+
+	for (k = 0; k < key_size; ++k) {
+	  if (key[k] < 32 || key[k] > 126 && key[k] < 161) {
+	    i_push_errorf(0, "tag %s may only contain Latin1 characters 32-126, 161-255", tag_name);
+	    return 0;
+	  }
+	}
+      }
+
+      sprintf(tag_name, "png_text%d_text", i);
+      value = get_string2(&im->tags, tag_name, value_buf, &value_size);
+
+      if (value) {
+	if (memchr(value, '\0', value_size)) {
+	  i_push_errorf(0, "tag %s may not contain NUL characters", tag_name);
+	  return 0;
+	}
+      }
+
+      if (key && value) {
+	png_text text;
+	int compression = value_size > 1000;
+
+	sprintf(tag_name, "png_text%d_compressed", i);
+	i_tags_get_int(&im->tags, tag_name, 0, &compression);
+
+	text.compression = compression ? PNG_TEXT_COMPRESSION_zTXt
+	  : PNG_TEXT_COMPRESSION_NONE;
+	text.key = (char *)key;
+	text.text_length = value_size;
+	text.text = (char *)value;
+#ifdef PNG_iTXt_SUPPORTED
+	text.itxt_length = 0;
+	text.lang = NULL;
+	text.translated_keyword = NULL;
+#endif
+
+	png_set_text(png_ptr, info_ptr, &text, 1);
+      }
+      else if (key) {
+	i_push_errorf(0, "tag png_text%d_key found but not png_text%d_text", i, i);
+	return 0;
+      }
+      else if (value) {
+	i_push_errorf(0, "tag png_text%d_text found but not png_text%d_key", i, i);
+	return 0;
+      }
+      else {
+	break;
+      }
+      ++i;
+    }
+  }
+
+  {
+    char buf[GET_STR_BUF_SIZE];
+    size_t time_size;
+    const char *timestr = get_string2(&im->tags, "png_time", buf, &time_size);
+
+    if (timestr) {
+      int year, month, day, hour, minute, second;
+      png_time mod_time;
+
+      if (sscanf(timestr, "%d-%d-%dT%d:%d:%d", &year, &month, &day, &hour, &minute, &second) == 6) {
+	/* rough validation */
+	if (month < 1 || month > 12
+	    || day < 1 || day > 31
+	    || hour < 0 || hour > 23
+	    || minute < 0 || minute > 59
+	    || second < 0 || second > 60) {
+	  i_push_error(0, "invalid date/time for png_time");
+	  return 0;
+	}
+	mod_time.year = year;
+	mod_time.month = month;
+	mod_time.day = day;
+	mod_time.hour = hour;
+	mod_time.minute = minute;
+	mod_time.second = second;
+
+	png_set_tIME(png_ptr, info_ptr, &mod_time);
+      }
+      else {
+	i_push_error(0, "png_time must be formatted 'y-m-dTh:m:s'");
+	return 0;
+      }
+    }
+  }
+
+  {
+    /* no bKGD support yet, maybe later
+       it may be simpler to do it in the individual writers
+     */
+  }
+
+  return 1;
+}
+
+static const char *
+get_string2(i_img_tags *tags, const char *name, char *buf, size_t *size) {
+  int index;
+
+  if (i_tags_find(tags, name, 0, &index)) {
+    const i_img_tag *entry = tags->tags + index;
+    
+    if (entry->data) {
+      *size = entry->size;
+
+      return entry->data;
+    }
+    else {
+      *size = sprintf(buf, "%d", entry->idata);
+
+      return buf;
+    }
+  }
+  return NULL;
 }
 
 static int
