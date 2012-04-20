@@ -56,10 +56,11 @@ while (my ($dlen, $data, $len, $type, $payload, $crc) = read_chunk($fh)) {
 EOS
     $colour_type = $ct;
     $bits = $d;
-    my $channels = $ct == 2 ? 3 : $ct == 4 ? 2 : $ct == 6 ? 4 : 0;
+    my $channels = $ct == 2 ? 3 : $ct == 4 ? 2 : $ct == 6 ? 4 : 1;
     my $bitspp = $channels * $d;
     $sline_len = int((($w * $bitspp) + 7) / 8);
     ++$sline_len; # filter byte
+    print "  Line length: $sline_len\n";
   }
   elsif ($type eq 'sRGB') {
     print "  Rendering intent: ", ord($payload), "\n";
