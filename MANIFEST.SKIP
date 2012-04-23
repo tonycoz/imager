@@ -7,6 +7,9 @@
 ^testimg/os2rle8\.bmp$
 ^testimg/base\.tga$
 
+# unshipped test images
+^xtestimg/
+
 # base for some other images
 ^testimg/pbm_base\.pgm$
 
