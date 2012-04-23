@@ -1256,21 +1256,40 @@ read_8bit_bmp(io_glue *ig, int xsize, int ysize, int clr_used,
 struct bm_masks {
   unsigned masks[3];
   int shifts[3];
+  int bits[3];
 };
 static struct bm_masks std_masks[] =
 {
   { /* 16-bit */
-    { 0770000, 00007700, 00000077, },
-    { 10, 4, -2, },
+    { 0076000, 00001740, 00000037, },
+    { 10, 5, 0, },
+    { 5, 5, 5, }
   },
   { /* 24-bit */
     { 0xFF0000, 0x00FF00, 0x0000FF, },
     {       16,        8,        0, },
+    {        8,        8,        8, },
   },
   { /* 32-bit */
     { 0xFF0000, 0x00FF00, 0x0000FF, },
     {       16,        8,        0, },
+    {        8,        8,        8, },
   },
+};
+
+/* multiplier and shift for converting from N bits to 8 bits */
+struct bm_sampconverts {
+  int mult;
+  int shift;
+};
+static struct bm_sampconverts samp_converts[] = {
+  { 0xff, 0 }, /* 1 bit samples */
+  { 0x55, 0 },
+  { 0111, 1 },
+  { 0x11, 0 },
+  { 0x21, 2 },
+  { 0x41, 4 },
+  { 0x81, 6 }  /* 7 bit samples */
 };
 
 /*
@@ -1334,7 +1353,8 @@ read_direct_bmp(io_glue *ig, int xsize, int ysize, int bit_count,
     }
   }
   else if (compression == BI_BITFIELDS) {
-    int pos, bit;
+    int pos;
+    unsigned bits;
     compression_name = "BI_BITFIELDS";
 
     for (i = 0; i < 3; ++i) {
@@ -1343,17 +1363,29 @@ read_direct_bmp(io_glue *ig, int xsize, int ysize, int bit_count,
         i_push_error(0, "reading pixel masks");
         return 0;
       }
+      if (rmask == 0) {
+	i_push_errorf(0, "Zero mask for channel %d", i);
+	return NULL;
+      }
       masks.masks[i] = rmask;
       /* work out a shift for the mask */
       pos = 0;
-      bit = masks.masks[i] & -masks.masks[i];
-      while (bit) {
+      bits = masks.masks[i];
+      while (!(bits & 1)) {
         ++pos;
-        bit >>= 1;
+        bits >>= 1;
       }
-      masks.shifts[i] = pos - 8;
+      masks.shifts[i] = pos;
+      pos = 0;
+      while (bits & 1) {
+	++pos;
+	bits >>= 1;
+      }
+      masks.bits[i] = pos;
+      /*fprintf(stderr, "%d: mask %08x shift %d bits %d\n", i, masks.masks[i], masks.shifts[i], masks.bits[i]);*/
     }
-    base_offset += 4 * 4;
+    /* account for the masks */
+    base_offset += 3 * 4;
   }
   else {
     i_push_errorf(0, "unknown 24-bit BMP compression (%d)", compression);
@@ -1411,10 +1443,15 @@ read_direct_bmp(io_glue *ig, int xsize, int ysize, int bit_count,
         }
       }
       for (i = 0; i < 3; ++i) {
-        if (masks.shifts[i] > 0)
-          p->channel[i] = (pixel & masks.masks[i]) >> masks.shifts[i];
-        else 
-          p->channel[i] = (pixel & masks.masks[i]) << -masks.shifts[i];
+	int sample = (pixel & masks.masks[i]) >> masks.shifts[i];
+	int bits = masks.bits[i];
+	if (bits < 8) {
+	  sample = (sample * samp_converts[bits-1].mult) >> samp_converts[bits-1].shift;
+	}
+	else if (bits) {
+	  sample >>= bits - 8;
+	}
+	p->channel[i] = sample;
       }
       ++p;
     }
