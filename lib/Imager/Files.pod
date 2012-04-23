@@ -1269,7 +1269,75 @@ C<datachannels>.
 
 =head2 PNG
 
-There are no PNG specific tags.
+PNG files can be read and written in the following modes:
+
+=over
+
+=item *
+
+bi-level - written as a 1-bit per sample grayscale image
+
+=item *
+
+paletted - Imager grayscale paletted images are written as RGB
+paletted images.  
+
+=item *
+
+8 and 16-bit per sample grayscale, optionally with an alpha channel.
+
+=item *
+
+8 and 16-bit per sample RGB, optionally with an alpha channel.
+
+=cut
+
+Unlike GIF, there is no automatic conversion to a paletted image,
+since PNG supports direct color.
+
+Text tags are retrieved from and written to PNG C<tEXT> or C<zTXT>
+chunks.  The following standard tags from the PNG specification are
+directly supported:
+
+=over
+
+=item *
+
+C<i_comment>X<tags,i_comment> - keyword of "Comment".
+
+=item *
+
+C<png_author>X<tags,PNG,png_author> - keyword "Author".
+
+=item *
+
+C<png_copyright>X<tags,PNG,png_copyright> - keyword "Copyright".
+
+=item *
+
+C<png_creation_time>X<tags,PNG,png_creation_time> - keyword "Creation Time".
+
+=item *
+
+C<png_description>X<tags,PNG,png_description> - keyword "Description".
+
+=item *
+
+C<png_disclaimer>X<tags,PNG,png_disclaimer> - keyword "Disclaimer".
+
+=item *
+
+C<png_software>X<tags,PNG,png_software> - keyword "Software".
+
+=item *
+
+C<png_title>X<tags,PNG,png_title> - keyword "Title".
+
+=item *
+
+C<png_warning>X<tags,PNG,png_warning> - keyword "Warning".
+
+=back
 
 =head2 ICO (Microsoft Windows Icon) and CUR (Microsoft Windows Cursor)
 
