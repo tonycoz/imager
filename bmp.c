@@ -960,21 +960,24 @@ read_4bit_bmp(io_glue *ig, int xsize, int ysize, int clr_used,
         }
       }
       else if (packed[0]) {
-	if (x + packed[0] > xsize) {
+	int count = packed[0];
+	if (x + count > xsize) {
 	  /* this file is corrupt */
 	  myfree(packed);
 	  myfree(line);
 	  i_push_error(0, "invalid data during decompression");
+	  mm_log((1, "read 4-bit: scanline overflow x %d + count %d vs xsize %d (y %d)\n",
+		  (int)x, count, (int)xsize, (int)y));
 	  i_img_destroy(im);
 	  return NULL;
 	}
         line[0] = packed[1] >> 4;
         line[1] = packed[1] & 0x0F;
-        for (i = 0; i < packed[0]; i += 2) {
-          if (i < packed[0]-1) 
+        for (i = 0; i < count; i += 2) {
+          if (i < count-1) 
             i_ppal(im, x, x+2, y, line);
           else
-            i_ppal(im, x, x+(packed[0]-i), y, line);
+            i_ppal(im, x, x+(count-i), y, line);
           x += 2;
         }
       } else {
