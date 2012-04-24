@@ -940,6 +940,7 @@ read_4bit_bmp(io_glue *ig, int xsize, int ysize, int clr_used,
   else if (compression == BI_RLE4) {
     int read_size;
     int count;
+    i_img_dim xlimit = (xsize + 1) / 2 * 2; /* rounded up */
 
     i_tags_add(&im->tags, "bmp_compression_name", 0, "BI_RLE4", -1, 0);
     x = 0;
@@ -961,7 +962,7 @@ read_4bit_bmp(io_glue *ig, int xsize, int ysize, int clr_used,
       }
       else if (packed[0]) {
 	int count = packed[0];
-	if (x + count > xsize) {
+	if (x + count > xlimit) {
 	  /* this file is corrupt */
 	  myfree(packed);
 	  myfree(line);
@@ -1013,7 +1014,7 @@ read_4bit_bmp(io_glue *ig, int xsize, int ysize, int clr_used,
 
         default:
           count = packed[1];
-	  if (x + count > xsize) {
+	  if (x + count > xlimit) {
 	    /* this file is corrupt */
 	    myfree(packed);
 	    myfree(line);
