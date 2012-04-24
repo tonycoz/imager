@@ -17,6 +17,17 @@ Bug fixes:
    2.
    This may result in slightly different 8 or 16-bit output images.
 
+ - BI_BITFIELD BMP images were handled incorrectly, both in
+   incorrectly calculating the space required for the masks and in
+   processing the image data itself.
+   https://rt.cpan.org/Ticket/Display.html?id=76736
+
+ - some odd width BMP BI_RLE4 images use run lengths that run one off
+   the edge of the image.  Imager now allows this, discarding the
+   extra column.
+
+ - odd length RLE4 runs in BMP images were decoded incorrectly.
+
 Imager 0.89 - 18 Mar 2012
 ===========
 
