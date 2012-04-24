@@ -967,20 +967,18 @@ read_4bit_bmp(io_glue *ig, int xsize, int ysize, int clr_used,
 	  myfree(packed);
 	  myfree(line);
 	  i_push_error(0, "invalid data during decompression");
-	  mm_log((1, "read 4-bit: scanline overflow x %d + count %d vs xsize %d (y %d)\n",
-		  (int)x, count, (int)xsize, (int)y));
+	  mm_log((1, "read 4-bit: scanline overflow x %d + count %d vs xlimit %d (y %d)\n",
+		  (int)x, count, (int)xlimit, (int)y));
 	  i_img_destroy(im);
 	  return NULL;
 	}
-        line[0] = packed[1] >> 4;
-        line[1] = packed[1] & 0x0F;
-        for (i = 0; i < count; i += 2) {
-          if (i < count-1) 
-            i_ppal(im, x, x+2, y, line);
-          else
-            i_ppal(im, x, x+(count-i), y, line);
-          x += 2;
-        }
+	/* fill in the line */
+	for (i = 0; i < count; i += 2)
+	  line[i] = packed[1] >> 4;
+	for (i = 1; i < count; i += 2)
+	  line[i] = packed[1] & 0x0F;
+	i_ppal(im, x, x+count, y, line);
+	x += count;
       } else {
         switch (packed[1]) {
         case BMPRLE_ENDOFLINE:
@@ -1019,6 +1017,8 @@ read_4bit_bmp(io_glue *ig, int xsize, int ysize, int clr_used,
 	    myfree(packed);
 	    myfree(line);
 	    i_push_error(0, "invalid data during decompression");
+	    mm_log((1, "read 4-bit: scanline overflow (unpacked) x %d + count %d vs xlimit %d (y %d)\n",
+		  (int)x, count, (int)xlimit, (int)y));
 	    i_img_destroy(im);
 	    return NULL;
 	  }
