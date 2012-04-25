@@ -1,6 +1,6 @@
 #!perl -w
 use strict;
-use Test::More tests => 246;
+use Test::More tests => 252;
 # for SEEK_SET etc, Fcntl doesn't provide these in 5.005_03
 use IO::Seekable;
 
@@ -805,6 +805,32 @@ SKIP:
     is($io->gets(6, ord("2")), "\ntest2", "gets(6) (line terminator 2)");
     is($io->gets(6, ord("3")), "\ntest3", "gets(6) (line terminator 3)");
     is($io->getc, -1, "should be eof");
+  }
+}
+
+{ # based on discussion on IRC, user was attempting to write a TIFF
+  # image file with only a write callback, but TIFF requires seek and
+  # read callbacks when writing.
+  # https://rt.cpan.org/Ticket/Display.html?id=76782
+  my $cb = Imager::io_new_cb(undef, undef, undef, undef);
+  {
+    Imager::i_clear_error();
+    my $data;
+    is($cb->read($data, 10), undef, "default read callback should fail");
+    is(Imager->_error_as_msg(), "read callback called but no readcb supplied",
+       "check error message");
+  }
+  {
+    Imager::i_clear_error();
+    is($cb->raw_write("abc"), -1, "default write callback should fail");
+    is(Imager->_error_as_msg(), "write callback called but no writecb supplied",
+       "check error message");
+  }
+  {
+    Imager::i_clear_error();
+    is($cb->seek(0, 0), -1, "default seek callback should fail");
+    is(Imager->_error_as_msg(), "seek callback called but no seekcb supplied",
+       "check error message");
   }
 }
 

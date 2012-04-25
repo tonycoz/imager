@@ -28,6 +28,18 @@ Bug fixes:
 
  - odd length RLE4 runs in BMP images were decoded incorrectly.
 
+Other changes:
+
+ - when reading or writing images via callbacks, the default callbacks
+   now push an error message indicating that a required callback was
+   called but not supplied.
+   https://rt.cpan.org/Ticket/Display.html?id=76782
+
+ - clarify which callbacks are required for reading and writing TIFF
+   images.
+
+ - improve logging for creation of callback I/O layers.
+
 Imager 0.89 - 18 Mar 2012
 ===========
 

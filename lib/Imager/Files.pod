@@ -273,12 +273,31 @@ When reading from a file you can use either C<callback> or C<readcb>
 to supply the read callback, and when writing C<callback> or
 C<writecb> to supply the write callback.
 
-Some file formats, currently only C<TIFF>, also require a C<seekcb>
-parameter to change position in the file.  If no C<seekcb> parameter
-is provided a default will be provided that fails.
+Whether reading or writing a C<TIFF> image, C<seekcb> and C<readcb>
+are required.
+
+If a file handler attempts to use C<readcb>, C<writecb> or C<seekcb>
+and you haven't supplied one, the call will fail, failing the image
+read or write, returning an error message indicating that the callback
+is missing:
+
+  # attempting to read a TIFF image without a seekcb
+  open my $fh, "<", $filename or die;
+  my $rcb = sub {
+    my $val;
+    read($fh, $val, $_[0]) or return "";
+    return $val;
+  };
+  my $im = Imager->new(callback => $rcb)
+    or die Imager->errstr
+  # dies with (wrapped here):
+  # Error opening file: (Iolayer): Failed to read directory at offset 0:
+  # (Iolayer): Seek error accessing TIFF directory: seek callback called
+  # but no seekcb supplied
 
 You can also provide a C<closecb> parameter called when writing the
-file is complete. 
+file is complete.  If no C<closecb> is supplied the default will
+succeed silently.
 
   # contrived
   my $data;
@@ -1067,6 +1086,15 @@ some page other than the first.  The page is 0 based:
 
 If you read an image with multiple alpha channels, then only the first
 alpha channel will be read.
+
+When reading a C<TIFF> image with callbacks, the C<seekcb> callback
+parameter is also required.
+
+When writing a C<TIFF> image with callbacks, the C<seekcb> and
+C<readcb> parameters are also required.
+
+C<TIFF> is a random access file format, it cannot be read from or
+written to unseekable streams such as pipes or sockets.
 
 =head2 BMP (Windows Bitmap)
 

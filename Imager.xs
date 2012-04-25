@@ -181,8 +181,11 @@ call_reader(struct cbdata *cbd, void *buf, size_t size,
   SV *data;
   dSP;
 
-  if (!SvOK(cbd->readcb))
+  if (!SvOK(cbd->readcb)) {
+    mm_log((1, "read callback called but no readcb supplied\n"));
+    i_push_error(0, "read callback called but no readcb supplied");
     return -1;
+  }
 
   ENTER;
   SAVETMPS;
@@ -230,8 +233,11 @@ io_seeker(void *p, off_t offset, int whence) {
   off_t result;
   dSP;
 
-  if (!SvOK(cbd->seekcb))
+  if (!SvOK(cbd->seekcb)) {
+    mm_log((1, "seek callback called but no seekcb supplied\n"));
+    i_push_error(0, "seek callback called but no seekcb supplied");
     return -1;
+  }
 
   ENTER;
   SAVETMPS;
@@ -266,8 +272,11 @@ io_writer(void *p, void const *data, size_t size) {
   dSP;
   bool success;
 
-  if (!SvOK(cbd->writecb))
+  if (!SvOK(cbd->writecb)) {
+    mm_log((1, "write callback called but no writecb supplied\n"));
+    i_push_error(0, "write callback called but no writecb supplied");
     return -1;
+  }
 
   ENTER;
   SAVETMPS;
@@ -351,6 +360,27 @@ do_io_new_buffer(pTHX_ SV *data_sv) {
   return io_new_buffer(data, length, my_SvREFCNT_dec, data_sv);
 }
 
+static const char *
+describe_sv(SV *sv) {
+  if (SvOK(sv)) {
+    if (SvROK(sv)) {
+      svtype type = SvTYPE(SvRV(sv));
+      switch (type) {
+      case SVt_PVCV: return "CV";
+      case SVt_PVGV: return "GV";
+      case SVt_PVLV: return "LV";
+      default: return "some reference";
+      }
+    }
+    else {
+      return "non-reference scalar";
+    }
+  }
+  else {
+    return "undef";
+  }
+}
+
 static i_io_glue_t *
 do_io_new_cb(pTHX_ SV *writecb, SV *readcb, SV *seekcb, SV *closecb) {
   struct cbdata *cbd;
@@ -360,6 +390,8 @@ do_io_new_cb(pTHX_ SV *writecb, SV *readcb, SV *seekcb, SV *closecb) {
   cbd->readcb = newSVsv(readcb);
   cbd->seekcb = newSVsv(seekcb);
   cbd->closecb = newSVsv(closecb);
+
+  mm_log((1, "do_io_new_cb(writecb %p (%s), readcb %p (%s), seekcb %p (%s), closecb %p (%s))\n", writecb, describe_sv(writecb), readcb, describe_sv(readcb), seekcb, describe_sv(seekcb), closecb, describe_sv(closecb)));
 
   return io_new_cb(cbd, io_reader, io_writer, io_seeker, io_closer, 
 		   io_destroyer);

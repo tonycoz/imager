@@ -52,6 +52,7 @@ preloads
 renderer
 tuple
 unary
+unseekable
 varargs
 /;
 
