@@ -117,6 +117,11 @@ sub _probe_pkg {
       chomp $cflags;
       chomp $lflags;
       print "$req->{name}: Found via pkg-config $pkg\n";
+      print <<EOS if $req->{verbose};
+  cflags: $cflags
+  defines: $defines
+  lflags: $lflags
+EOS
       return
 	{
 	 INC => $cflags,
@@ -271,6 +276,7 @@ sub _probe_test {
 
   require Devel::CheckLib;
   # setup LD_RUN_PATH to match link time
+  print "Asking liblist for LD_RUN_PATH:\n" if $req->{verbose};
   my ($extra, $bs_load, $ld_load, $ld_run_path) =
     ExtUtils::Liblist->ext($result->{LIBS}, $req->{verbose});
   local $ENV{LD_RUN_PATH};
