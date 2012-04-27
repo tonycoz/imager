@@ -28,6 +28,13 @@ Bug fixes:
 
  - odd length RLE4 runs in BMP images were decoded incorrectly.
 
+ - pkg-config could sometimes return a library that was in a directory
+   EU::MM / $Config{libpth} doesn't know about, but the compiler did.
+   If no -L is included in the pkg-config library information check if
+   EU::MM can find the library, and if not, search our configured
+   directories and insert that into the library flags.
+   https://rt.cpan.org/Ticket/Display.html?id=75869
+
 Other changes:
 
  - when reading or writing images via callbacks, the default callbacks
