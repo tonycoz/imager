@@ -122,6 +122,21 @@ sub _probe_pkg {
   defines: $defines
   lflags: $lflags
 EOS
+      # rt 75869
+      # if Win32 doesn't provide this information, too bad
+      if (!grep(/^-L/, split " ", $lflags)
+	  && $^O ne 'MSWin32') {
+	# pkg-config told us about the library, make sure it's
+	# somewhere EU::MM can find it
+	print "Checking if EU::MM can find $lflags\n" if $req->{verbose};
+	my ($extra, $bs_load, $ld_load, $ld_run_path) =
+	  ExtUtils::Liblist->ext($lflags, $req->{verbose});
+	unless ($ld_run_path) {
+	  # search our standard places
+	  $lflags = _resolve_libs($req, $lflags);
+	}
+      }
+
       return
 	{
 	 INC => $cflags,
@@ -312,6 +327,27 @@ sub _probe_test {
 
   print "$req->{name}: Passed code check\n";
   return $result;
+}
+
+sub _resolve_libs {
+  my ($req, $lflags) = @_;
+
+  my @libs = grep /^-l/, split ' ', $lflags;
+  my %paths;
+  my @paths = _lib_paths($req);
+  my $so = $Config{so};
+  my $libext = $Config{_a};
+  for my $lib (@libs) {
+    $lib =~ s/^-l/lib/;
+
+    for my $path (@paths) {
+      if (-e "$path/$lib.$so" || -e "$path/$lib$libext") {
+	$paths{$path} = 1;
+      }
+    }
+  }
+
+  return join(" ", ( map "-L$_", keys %paths ), $lflags );
 }
 
 sub _lib_paths {
