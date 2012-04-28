@@ -612,7 +612,7 @@ directories to check, or a reference to an array of such.
 =item *
 
 C<alternatives> - an optional array reference of alternate
-configurations (as hash referencesd) to test if the primary
+configurations (as hash references) to test if the primary
 configuration isn't successful.  Each alternative should include an
 C<altname> key describing the alternative.  Any key not mentioned in
 an alternative defaults to the value from the main configuration.
