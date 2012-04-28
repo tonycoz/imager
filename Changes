@@ -35,6 +35,23 @@ Bug fixes:
    directories and insert that into the library flags.
    https://rt.cpan.org/Ticket/Display.html?id=75869
 
+ - Imager::Probe can now probe for libraries with dependent libraries,
+   common for static linking, eg. libpng requires libz.
+   https://rt.cpan.org/Ticket/Display.html?id=74043
+
+ - libpng 1.5 specific probes were looking for libpng 1.4 filenames.
+
+ - added alternative probe configurations that try to link libz, to
+   handle a statically linked libpng.
+   https://rt.cpan.org/Ticket/Display.html?id=74043
+
+ - if a probe includes testcode, Imager::Probe now checks that code as
+   part of the process of checking each configuration rather than as a
+   post test of the found configuration.  This allows alternate
+   configurations to be checked if a matching but non-working
+   configuration is found.
+   https://rt.cpan.org/Ticket/Display.html?id=74043
+
 Other changes:
 
  - when reading or writing images via callbacks, the default callbacks
@@ -46,6 +63,8 @@ Other changes:
    images.
 
  - improve logging for creation of callback I/O layers.
+
+ - a little more documentation for Imager::Probe.
 
 Imager 0.89 - 18 Mar 2012
 ===========

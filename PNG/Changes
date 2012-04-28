@@ -1,3 +1,12 @@
+Imager-File-PNG 0.84
+====================
+
+ - libpng 1.5 specific probes were looking for libpng 1.4 filenames.
+
+ - added alternative probe configurations that try to link libz, to
+   handle a statically linked libpng.
+   https://rt.cpan.org/Ticket/Display.html?id=74043
+
 Imager-File-PNG 0.83
 ====================
 

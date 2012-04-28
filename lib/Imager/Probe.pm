@@ -23,6 +23,11 @@ sub probe {
     $req->{altname} ||= "main";
     $result = _probe_check($req);
   }
+
+  if ($result && $req->{testcode}) {
+    $result = _probe_test($req, $result);
+  }
+
   if (!$result && $req->{alternatives}) {
   ALTCHECK:
     my $index = 1;
@@ -34,18 +39,24 @@ sub probe {
       for my $key (@alt_transfer) {
 	exists $alt->{$key} and $work{$key} = $alt->{$key};
       }
-      $result = _probe_check(\%work)
+      $result = _probe_check(\%work);
+
+      if ($result && $req->{testcode}) {
+	$result = _probe_test(\%work, $result);
+      }
+
+      $result
 	and last;
+
       ++$index;
     }
   }
 
   if (!$result && $req->{testcode}) {
     $result = _probe_fake($req);
-  }
-  $result or return;
 
-  if ($req->{testcode}) {
+    $result or return;
+
     $result = _probe_test($req, $result);
   }
 
@@ -186,29 +197,48 @@ sub _quotearg {
 sub _probe_check {
   my ($req) = @_;
 
-  my $libcheck = $req->{libcheck};
-  my $libbase = $req->{libbase};
-  if (!$libcheck && $req->{libbase}) {
-    # synthesize a libcheck
+  my @libcheck;
+  my @libbase;
+  if ($req->{libcheck}) {
+    if (ref $req->{libcheck} eq "ARRAY") {
+      push @libcheck, @{$req->{libcheck}};
+    }
+    else {
+      push @libcheck, $req->{libcheck};
+    }
+  }
+  elsif ($req->{libbase}) {
+    @libbase = ref $req->{libbase} ? @{$req->{libbase}} : $req->{libbase};
+
     my $lext=$Config{'so'};   # Get extensions of libraries
     my $aext=$Config{'_a'};
-    my $basename = _lib_basename($libbase);
-    $libcheck = sub {
-      -e File::Spec->catfile($_[0], "$basename$aext")
-	|| -e File::Spec->catfile($_[0], "$basename.$lext")
-      };
+
+    for my $libbase (@libbase) {
+      my $basename = _lib_basename($libbase);
+      push @libcheck, sub {
+	-e File::Spec->catfile($_[0], "$basename$aext")
+	  || -e File::Spec->catfile($_[0], "$basename.$lext")
+	};
+    }
+  }
+  else {
+    print "$req->{name}: No libcheck or libbase, nothing to search for\n"
+      if $req->{verbose};
+    return;
   }
 
-  my $found_libpath;
+  my @found_libpath;
   my @lib_search = _lib_paths($req);
   print "$req->{name}: Searching directories for libraries:\n"
     if $req->{verbose};
-  for my $path (@lib_search) {
-    print "$req->{name}:   $path\n" if $req->{verbose};
-    if ($libcheck->($path)) {
-      print "$req->{name}: Found!\n" if $req->{verbose};
-      $found_libpath = $path;
-      last;
+  for my $libcheck (@libcheck) {
+    for my $path (@lib_search) {
+      print "$req->{name}:   $path\n" if $req->{verbose};
+      if ($libcheck->($path)) {
+	print "$req->{name}: Found!\n" if $req->{verbose};
+        push @found_libpath, $path;
+	last;
+      }
     }
   }
 
@@ -231,17 +261,17 @@ sub _probe_check {
     $alt = " $req->{altname}:";
   }
   print "$req->{name}:$alt includes ", $found_incpath ? "" : "not ",
-    "found - libraries ", $found_libpath ? "" : "not ", "found\n";
+    "found - libraries ", @found_libpath == @libcheck ? "" : "not ", "found\n";
 
-  $found_libpath && $found_incpath
+  @found_libpath == @libcheck && $found_incpath
     or return;
 
-  my @libs = "-L$found_libpath";
+  my @libs = map "-L$_", @found_libpath;
   if ($req->{libopts}) {
     push @libs, $req->{libopts};
   }
-  elsif ($libbase) {
-    push @libs, _lib_option($libbase);
+  elsif (@libbase) {
+    push @libs, map _lib_option($_), @libbase;
   }
   else {
     die "$req->{altname}: inccheck but no libbase or libopts";
@@ -535,14 +565,19 @@ directory contains the required header files.
 C<libcheck> - a code reference that checks if the supplied library
 directory contains the required library files.  Note: the
 F<Makefile.PL> version of this was supplied all of the library file
-names instead.
+names instead.  C<libcheck> can also be an arrayref of library check
+code references, all of which must find a match for the library to be
+considered "found".
 
 =item *
 
 C<libbase> - if C<inccheck> is supplied, but C<libcheck> isn't, then a
 C<libcheck> that checks for C<lib>I<libbase>I<$Config{_a}> and
 C<lib>I<libbase>.I<$Config{so}> is created.  If C<libopts> isn't
-supplied then that can be synthesized as C<-l>C<<I<libbase>>>.
+supplied then that can be synthesized as C<< -lI<libbase>
+>>. C<libbase> can also be an arrayref of library base names to search
+for, in which case all of the libraries mentioned must be found for
+the probe to succeed.
 
 =item *
 
@@ -573,6 +608,14 @@ directories to check, or a reference to an array of such.
 
 C<libpath> - C<$Config{path_sep}> separated list of library file
 directories to check, or a reference to an array of such.
+
+=item *
+
+C<alternatives> - an optional array reference of alternate
+configurations (as hash referencesd) to test if the primary
+configuration isn't successful.  Each alternative should include an
+C<altname> key describing the alternative.  Any key not mentioned in
+an alternative defaults to the value from the main configuration.
 
 =back
 
