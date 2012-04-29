@@ -1269,31 +1269,36 @@ C<datachannels>.
 
 =head2 PNG
 
+=head3 PNG Image modes
+
 PNG files can be read and written in the following modes:
 
 =over
 
 =item *
 
-bi-level - written as a 1-bit per sample grayscale image
+bi-level - written as a 1-bit per sample gray scale image
 
 =item *
 
-paletted - Imager grayscale paletted images are written as RGB
-paletted images.  
+paletted - Imager gray scale paletted images are written as RGB
+paletted images.  PNG palettes can include alpha values for each entry
+and this is honored as an Imager four channel paletted image.
 
 =item *
 
-8 and 16-bit per sample grayscale, optionally with an alpha channel.
+8 and 16-bit per sample gray scale, optionally with an alpha channel.
 
 =item *
 
 8 and 16-bit per sample RGB, optionally with an alpha channel.
 
-=cut
+=back
 
 Unlike GIF, there is no automatic conversion to a paletted image,
 since PNG supports direct color.
+
+=head3 PNG Text tags
 
 Text tags are retrieved from and written to PNG C<tEXT> or C<zTXT>
 chunks.  The following standard tags from the PNG specification are
@@ -1336,6 +1341,101 @@ C<png_title>X<tags,PNG,png_title> - keyword "Title".
 =item *
 
 C<png_warning>X<tags,PNG,png_warning> - keyword "Warning".
+
+=back
+
+Each of these tags has a corresponding C< I<base-tag-name>_compressed
+>> tag, eg. C<png_comment_compressed>.  When reading, if the PNG chunk
+is compressed this tag will be set to 1, but is otherwise unset.  When
+writing, Imager will honor the compression tag if set and non-zero,
+otherwise the chunk text will be compressed if the value is longer
+than 1000 characters, as recommended by the C<libpng> documentation.
+
+PNG C<tEXT> or C<zTXT> chunks outside of those above are read into or
+written from Imager tags named like:
+
+=over
+
+=item *
+
+C<< png_textI<N>_key >> - the key for the text chunk.  This can be 1
+to 79 characters, may not contain any leading, trailing or consecutive
+spaces, and may contain only Latin-1 characters from 32-126, 161-255.
+
+=item *
+
+C<< png_textI<N>_text >> - the text for the text chunk.  This may not
+contain any C<NUL> characters.
+
+=item *
+
+C<< png_textI<N>_compressed >> - whether or not the text chunk is
+compressed.  This behaves similarly to the C<<
+I<base-tag-name>_compressed >> tags described above.
+
+=back
+
+Where I<N> starts from 0.  When writing both the C<..._key> and
+C<..._text> tags must be present or the write will fail.  If the key
+or text do not satisfy the requirements above the write will fail.
+
+=head3 Other PNG metadata tags
+
+=over
+
+=item *
+
+X<tags, png_interlace>C<png_interlace>, C<png_interlace_name> - only
+set when reading, C<png_interlace> is set to the type of interlacing
+used by the file, 0 for one, 1 for Adam7.  C<png_interlace_name> is
+set to a keyword describing the interlacing, either C<none> or
+C<adam7>.
+
+=item *
+
+X<tags, png_srgb_intent>C<png_srgb_intent> - the sRGB rendering intent
+for the image. an integer from 0 to 3, per the PNG specification.  If
+this chunk is found in the PNG file the C<gAMA> and C<cHRM> are
+ignored and the C<png_gamme> and C<png_chroma_...> tags are not set.
+Similarly when writing if C<png_srgb_intent> is set the C<gAMA> and
+C<cHRM> chunks are not written.
+
+=item *
+
+C<tags, png_gamma>C<png_gamma> - the gamma of the image. This value is
+not currently used by Imager when processing the image, but this may
+change in the future.
+
+=item *
+
+X<tags, png_chroma_...>C<png_chroma_white_x>, C<png_chroma_white_y>,
+C<png_chroma_red_x>, C<png_chroma_red_y>, C<png_chroma_green_x>,
+C<png_chroma_green_y>, C<png_chroma_blue_x>, C<png_chroma_blue_y> -
+the primary chromaticities of the image, defining the color model.
+This is currently not used by Imager when processing the image, but
+this may change in the future.
+
+=item *
+
+C<i_xres>, C<i_yres>, C<i_aspect_only> - processed per
+I<Imager::ImageTypes/CommonTags>.
+
+=item *
+
+X<tags, png_bits>C<png_bits> - the number of bits per sample in the
+representation.  Ignored when writing.
+
+=item *
+
+X<tags, png_time>X<png_time> - the creation time of the file formatted
+as C<< I<year>-I<month>-I<day>TI<hour>:I<minute>:I<second> >>.  This
+is stored as time data structure in the file, not a string.  If you
+set C<png_time> and it cannot be parsed as above, writing the PNG file
+will fail.
+
+=item *
+
+C<i_background> - set from the C<sBKG> when reading an image file.
 
 =back
 
