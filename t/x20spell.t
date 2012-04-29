@@ -14,6 +14,7 @@ Arnar
 BMP
 Blit
 CGI
+chromaticities
 CMYK
 CPAN
 FreeType
@@ -31,6 +32,7 @@ PNM
 RGB
 RGBA
 SGI
+sRGB
 TGA
 TIFF
 UTF-8

@@ -69,6 +69,20 @@ Other changes:
  - the i_get_file_background() and i_get_file_backgroundf() APIs now
    return int to indicate whether the i_background tag was found.
 
+ - PNG rework
+   - improve error reporting
+   - add png_interlace, png_bits tags
+   - read paletted images as paletted images, including transparency
+   - read 1 bit greyscale images as a type suitable for other file
+     handlers to write as bilevel
+   - read 16 bit/sample PNG as 16-bit/sample Imager images
+   - write "bilevel" paletted images as 1 bit grayscale images
+   - write paletted images as paletted images
+   - write 16-bit (or higher)/sample images as 16-bit/sample PNG
+     images
+   - improved metadata support
+   https://rt.cpan.org/Ticket/Display.html?id=29268
+
 Imager 0.89 - 18 Mar 2012
 ===========
 

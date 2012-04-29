@@ -96,6 +96,9 @@ Makefile\.old$
 /meta\.tmp$
 ^imconfig\.h$
 
+# generated if we build them in their own directory
+^(PNG|TIFF|FT2|W32|GIF)/blib/
+
 # generated from .im files
 ^combine\.c$
 ^compose\.c$
