@@ -452,6 +452,10 @@ extern int
 i_gsampf_bg(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, i_fsample_t *samples, 
 	   int out_channels, i_fcolor const *bg);
 
+extern im_context_t (*im_get_context)(void);
+
+#define aIMCTX (im_get_context())
+
 #include "imio.h"
 
 #endif

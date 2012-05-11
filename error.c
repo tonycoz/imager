@@ -61,25 +61,15 @@ C).  The Perl level won't use all of this.
 =cut
 */
 
-#include "imager.h"
+#include "imageri.h"
 #include <stdio.h>
 #include <stdlib.h>
 
-/* we never actually use the last item - it's the NULL terminator */
-#define ERRSTK 20
-static i_errmsg error_stack[ERRSTK];
-static int error_sp = ERRSTK - 1;
-/* we track the amount of space used each string, so we don't reallocate 
-   space unless we need to.
-   This also means that a memory tracking library may see the memory 
-   allocated for this as a leak. */
-static int error_space[ERRSTK];
-
+#if 0
 static i_error_cb error_cb;
 static i_failed_cb failed_cb;
 static int failures_fatal;
 static char *argv0;
-
 /*
 =item i_set_argv0(char const *program)
 
@@ -157,6 +147,8 @@ i_failed_cb i_set_failed_cb(i_failed_cb cb) {
   return old;
 }
 
+#endif
+
 /*
 =item i_errors()
 
@@ -165,8 +157,12 @@ terminated by a NULL pointer.  The highest level message is first.
 
 =cut
 */
-i_errmsg *i_errors() {
-  return error_stack + error_sp;
+i_errmsg *im_errors(im_context_t ctx) {
+  return ctx->error_stack + ctx->error_sp;
+}
+
+i_errmsg *i_errors(void) {
+  return im_errors(im_get_context());
 }
 
 /*
@@ -192,19 +188,26 @@ Called by any Imager function before doing any other processing.
 
 =cut
 */
-void i_clear_error() {
+
+void
+im_clear_error(im_context_t ctx) {
 #ifdef IMAGER_DEBUG_MALLOC
   int i;
 
-  for (i = 0; i < ERRSTK; ++i) {
-    if (error_space[i]) {
-      myfree(error_stack[i].msg);
-      error_stack[i].msg = NULL;
-      error_space[i] = 0;
+  for (i = 0; i < IM_ERROR_COUNT; ++i) {
+    if (ctx->error_space[i]) {
+      myfree(ctx->error_stack[i].msg);
+      ctx->error_stack[i].msg = NULL;
+      ctx->error_space[i] = 0;
     }
   }
 #endif
-  error_sp = ERRSTK-1;
+  ctx->error_sp = IM_ERROR_COUNT-1;
+}
+
+void
+i_clear_error(void) {
+  im_clear_error(im_get_context());
 }
 
 /*
@@ -221,29 +224,32 @@ error handling is calling function that does.).
 
 =cut
 */
-void i_push_error(int code, char const *msg) {
+void
+im_push_error(im_context_t ctx, int code, char const *msg) {
   size_t size = strlen(msg)+1;
 
-  if (error_sp <= 0)
+  if (ctx->error_sp <= 0)
     /* bad, bad programmer */
     return;
 
-  --error_sp;
-  if (error_space[error_sp] < size) {
-    if (error_stack[error_sp].msg)
-      myfree(error_stack[error_sp].msg);
+  --ctx->error_sp;
+  if (ctx->error_alloc[ctx->error_sp] < size) {
+    if (ctx->error_stack[ctx->error_sp].msg)
+      myfree(ctx->error_stack[ctx->error_sp].msg);
     /* memory allocated on the following line is only ever released when 
        we need a bigger string */
     /* size is size (len+1) of an existing string, overflow would mean
        the system is broken anyway */
-    error_stack[error_sp].msg = mymalloc(size); /* checked 17jul05 tonyc */
-    error_space[error_sp] = size;
+    ctx->error_stack[ctx->error_sp].msg = mymalloc(size); /* checked 17jul05 tonyc */
+    ctx->error_alloc[ctx->error_sp] = size;
   }
-  strcpy(error_stack[error_sp].msg, msg);
-  error_stack[error_sp].code = code;
+  strcpy(ctx->error_stack[ctx->error_sp].msg, msg);
+  ctx->error_stack[ctx->error_sp].code = code;
+}
 
-  if (error_cb)
-    error_cb(code, msg);
+void
+i_push_error(int code, char const *msg) {
+  im_push_error(im_get_context(), code, msg);
 }
 
 /*
@@ -258,7 +264,8 @@ Does not support perl specific format codes.
 
 =cut
 */
-void i_push_errorvf(int code, char const *fmt, va_list ap) {
+void 
+im_push_errorvf(im_context_t ctx, int code, char const *fmt, va_list ap) {
   char buf[1024];
 #if defined(IMAGER_VSNPRINTF)
   vsnprintf(buf, sizeof(buf), fmt, ap);
@@ -271,7 +278,12 @@ void i_push_errorvf(int code, char const *fmt, va_list ap) {
    */
   vsprintf(buf, fmt, ap);
 #endif
-  i_push_error(code, buf);
+  im_push_error(ctx, code, buf);
+}
+
+void
+i_push_errorvf(int code, char const *fmt, va_list ap) {
+  im_push_errorvf(im_get_context(), code, fmt, ap);
 }
 
 /*
@@ -285,10 +297,19 @@ Does not support perl specific format codes.
 
 =cut
 */
-void i_push_errorf(int code, char const *fmt, ...) {
+void
+i_push_errorf(int code, char const *fmt, ...) {
   va_list ap;
   va_start(ap, fmt);
   i_push_errorvf(code, fmt, ap);
+  va_end(ap);
+}
+
+void
+im_push_errorf(im_context_t ctx, int code, char const *fmt, ...) {
+  va_list ap;
+  va_start(ap, fmt);
+  im_push_errorvf(ctx, code, fmt, ap);
   va_end(ap);
 }
 
@@ -369,7 +390,7 @@ void
 im_assert_fail(char const *file, int line, char const *message) {
   fprintf(stderr, "Assertion failed line %d file %s: %s\n", 
 	  line, file, message);
-  exit(EXIT_FAILURE);
+  abort();
 }
 
 /*
