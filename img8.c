@@ -80,8 +80,6 @@ static i_img IIM_base_8bit_direct =
   }*/
 
 /*
-=item IIM_new(x, y, ch)
-
 =item i_img_8_new(x, y, ch)
 
 =category Image creation/destruction
@@ -96,7 +94,7 @@ I<ch> channels.
 
 
 i_img *
-IIM_new(i_img_dim x,i_img_dim y,int ch) {
+i_img_8_new(i_img_dim x,i_img_dim y,int ch) {
   i_img *im;
 
   mm_log((1,"IIM_new(x %" i_DF ", y %" i_DF ", ch %d)\n",
@@ -106,14 +104,6 @@ IIM_new(i_img_dim x,i_img_dim y,int ch) {
   
   mm_log((1,"(%p) <- IIM_new\n",im));
   return im;
-}
-
-
-void
-IIM_DESTROY(i_img *im) {
-  mm_log((1,"IIM_DESTROY(im* %p)\n",im));
-  i_img_destroy(im);
-  /*   myfree(cl); */
 }
 
 /* 

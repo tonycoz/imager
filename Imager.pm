@@ -913,8 +913,8 @@ sub img_set {
     $self->{IMG} = i_img_16_new($hsh{xsize}, $hsh{ysize}, $hsh{channels});
   }
   else {
-    $self->{IMG}=Imager::ImgRaw::new($hsh{'xsize'}, $hsh{'ysize'},
-                                     $hsh{'channels'});
+    $self->{IMG}= i_img_8_new($hsh{'xsize'}, $hsh{'ysize'},
+			      $hsh{'channels'});
   }
 
   unless ($self->{IMG}) {

@@ -48,9 +48,7 @@ extern void i_hsv_to_rgbf(i_fcolor *color);
 extern void i_rgb_to_hsv(i_color *color);
 extern void i_hsv_to_rgb(i_color *color);
 
-i_img *IIM_new(i_img_dim x,i_img_dim y,int ch);
-#define i_img_8_new IIM_new
-void   IIM_DESTROY(i_img *im);
+i_img *i_img_8_new(i_img_dim x,i_img_dim y,int ch);
 i_img *i_img_new( void );
 i_img *i_img_empty(i_img *im,i_img_dim x,i_img_dim y);
 i_img *i_img_empty_ch(i_img *im,i_img_dim x,i_img_dim y,int ch);
