@@ -6,6 +6,8 @@
 
 #define MAXCHANNELS 4
 
+typedef struct im_context_tag *im_context_t;
+
 /* used for palette indices in some internal code (which might be 
    exposed at some point
 */

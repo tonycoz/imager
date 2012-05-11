@@ -111,4 +111,15 @@ i_img_dim i_abs(i_img_dim x);
 
 #define color_to_grey(col) ((col)->rgb.r * 0.222  + (col)->rgb.g * 0.707 + (col)->rgb.b * 0.071)
 
+#define IM_ERROR_COUNT 20
+typedef struct im_context_tag {
+  int error_sp;
+  size_t error_alloc[IM_ERROR_COUNT];
+  i_errmsg error_stack[IM_ERROR_COUNT];
+#ifdef IMAGER_LOG
+  int log_level;
+  FILE *lg_file;
+#endif
+} im_context_struct;
+
 #endif
