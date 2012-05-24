@@ -25,8 +25,10 @@
  Version 5 changed the return types of i_get_file_background() and
  i_get_file_backgroundf() from void to int.
 
+ Version 6 added 
+
 */
-#define IMAGER_API_VERSION 5
+#define IMAGER_API_VERSION 6
 
 /*
  IMAGER_API_LEVEL is the level of the structure.  New function pointers

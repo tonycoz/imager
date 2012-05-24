@@ -119,6 +119,8 @@ typedef struct im_context_tag {
 #ifdef IMAGER_LOG
   int log_level;
   FILE *lg_file;
+  const char *filename;
+  int line;
 #endif
 } im_context_struct;
 

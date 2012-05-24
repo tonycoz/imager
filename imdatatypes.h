@@ -285,6 +285,14 @@ i_f_psamp - implements psamp() for this image.
 
 i_f_psampf - implements psamp() for this image.
 
+=item *
+
+C<im_data> - image specific data internal to Imager.
+
+=item *
+
+C<context> - the Imager API context this image belongs to.
+
 =back
 
 =cut
@@ -337,6 +345,9 @@ struct i_img_ {
   i_f_psampf_t i_f_psampf;
 
   void *im_data;
+
+  /* 0.91 */
+  im_context_t context;
 };
 
 /* ext_data for paletted images

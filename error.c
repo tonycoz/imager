@@ -205,11 +205,6 @@ im_clear_error(im_context_t ctx) {
   ctx->error_sp = IM_ERROR_COUNT-1;
 }
 
-void
-i_clear_error(void) {
-  im_clear_error(im_get_context());
-}
-
 /*
 =item i_push_error(int code, char const *msg)
 =synopsis i_push_error(0, "Yep, it's broken");
@@ -247,10 +242,14 @@ im_push_error(im_context_t ctx, int code, char const *msg) {
   ctx->error_stack[ctx->error_sp].code = code;
 }
 
+#if 0
+
 void
 i_push_error(int code, char const *msg) {
   im_push_error(im_get_context(), code, msg);
 }
+
+#endif
 
 /*
 =item i_push_errorvf(int C<code>, char const *C<fmt>, va_list C<ap>)

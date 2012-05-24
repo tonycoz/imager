@@ -20,6 +20,8 @@ sample image type to work with.
 =cut
 */
 
+#define IMAGER_NO_CONTEXT
+
 #include "imager.h"
 #include "imageri.h"
 
@@ -160,7 +162,8 @@ Returns the image on success, or NULL on failure.
 =cut
 */
 
-i_img *i_img_16_new(i_img_dim x, i_img_dim y, int ch) {
+i_img *
+im_img_16_new(pIMCTX, i_img_dim x, i_img_dim y, int ch) {
   i_img *im;
   size_t bytes, line_bytes;
 
@@ -168,16 +171,16 @@ i_img *i_img_16_new(i_img_dim x, i_img_dim y, int ch) {
 	  i_DFc(x), i_DFc(y), ch));
 
   if (x < 1 || y < 1) {
-    i_push_error(0, "Image sizes must be positive");
+    im_push_error(aIMCTX, 0, "Image sizes must be positive");
     return NULL;
   }
   if (ch < 1 || ch > MAXCHANNELS) {
-    i_push_errorf(0, "channels must be between 1 and %d", MAXCHANNELS);
+    im_push_errorf(aIMCTX, 0, "channels must be between 1 and %d", MAXCHANNELS);
     return NULL;
   }
   bytes =  x * y * ch * 2;
   if (bytes / y / ch / 2 != x) {
-    i_push_errorf(0, "integer overflow calculating image allocation");
+    im_push_errorf(aIMCTX, 0, "integer overflow calculating image allocation");
     return NULL;
   }
   
@@ -186,11 +189,11 @@ i_img *i_img_16_new(i_img_dim x, i_img_dim y, int ch) {
      working with the image */
   line_bytes = sizeof(i_fcolor) * x;
   if (line_bytes / x != sizeof(i_fcolor)) {
-    i_push_error(0, "integer overflow calculating scanline allocation");
+    im_push_error(aIMCTX, 0, "integer overflow calculating scanline allocation");
     return NULL;
   }
 
-  im = i_img_alloc();
+  im = im_img_alloc(aIMCTX);
   *im = IIM_base_16bit_direct;
   i_tags_new(&im->tags);
   im->xsize = x;
@@ -201,7 +204,7 @@ i_img *i_img_16_new(i_img_dim x, i_img_dim y, int ch) {
   im->idata = mymalloc(im->bytes);
   memset(im->idata, 0, im->bytes);
 
-  i_img_init(im);
+  im_img_init(aIMCTX, im);
 
   return im;
 }
@@ -223,8 +226,9 @@ i_img_to_rgb16(i_img *im) {
   i_img *targ;
   i_fcolor *line;
   i_img_dim y;
+  dIMCTXim(im);
 
-  targ = i_img_16_new(im->xsize, im->ysize, im->channels);
+  targ = im_img_16_new(aIMCTX, im->xsize, im->ysize, im->channels);
   if (!targ)
     return NULL;
   line = mymalloc(sizeof(i_fcolor) * im->xsize);
@@ -556,6 +560,7 @@ i_gsamp_bits_d16(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, unsigned *sam
     }
     else {
       if (chan_count <= 0 || chan_count > im->channels) {
+	dIMCTXim(im);
 	i_push_error(0, "Invalid channel count");
 	return -1;
       }
@@ -571,6 +576,7 @@ i_gsamp_bits_d16(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, unsigned *sam
     return count;
   }
   else {
+    dIMCTXim(im);
     i_push_error(0, "Image position outside of image");
     return -1;
   }
@@ -584,6 +590,7 @@ i_psamp_bits_d16(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, unsigned cons
   i_img_dim off;
 
   if (bits != 16) {
+    dIMCTXim(im);
     i_push_error(0, "Invalid bits for 16-bit image");
     return -1;
   }
@@ -615,6 +622,7 @@ i_psamp_bits_d16(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, unsigned cons
     }
     else {
       if (chan_count <= 0 || chan_count > im->channels) {
+	dIMCTXim(im);
 	i_push_error(0, "Invalid channel count");
 	return -1;
       }
@@ -632,6 +640,7 @@ i_psamp_bits_d16(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, unsigned cons
     return count;
   }
   else {
+    dIMCTXim(im);
     i_push_error(0, "Image position outside of image");
     return -1;
   }
@@ -721,6 +730,7 @@ i_psamp_d16(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y,
     return count;
   }
   else {
+    dIMCTXim(im);
     i_push_error(0, "Image position outside of image");
     return -1;
   }
@@ -815,6 +825,7 @@ i_psampf_d16(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y,
     return count;
   }
   else {
+    dIMCTXim(im);
     i_push_error(0, "Image position outside of image");
     return -1;
   }
