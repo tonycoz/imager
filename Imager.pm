@@ -1605,10 +1605,11 @@ sub _load_file {
       return 1;
     }
     else {
-      my $work = $@ || "Unknown error loading $file";
+      my $work = $@ || "Unknown error";
       chomp $work;
       $work =~ s/\n?Compilation failed in require at .*Imager\.pm line .*\z//m;
       $work =~ s/\n/\\n/g;
+      $work =~ s/\s*\.?\z/ loading $file/;
       $file_load_errors{$file} = $work;
       $$error = $work;
       return 0;

@@ -14,7 +14,10 @@ Imager::API - Imager's C API - introduction.
   ...
 
   BOOT:
+    /* any release with the API */
     PERL_INITIALIZE_IMAGER_CALLBACKS;
+    /* preferred from Imager 0.91 */
+    PERL_INITIALIZE_IMAGER_CALLBACKS_NAME("My::Module");
   
 
 =head1 DESCRIPTION
@@ -188,6 +191,12 @@ initialize the callback table in your C<BOOT> code:
 
   BOOT:
     PERL_INITIALIZE_IMAGER_CALLBACKS;
+
+From Imager 0.91 you can supply your module name to improve error
+reporting:
+
+  BOOT:
+    PERL_INITIALIZE_IMAGER_CALLBACKS_NAME("My::Module");
 
 =back
 

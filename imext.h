@@ -12,18 +12,20 @@ extern im_ext_funcs *imager_function_ext_table;
 #define IMAGER_MIN_API_LEVEL IMAGER_API_LEVEL
 #endif
 
-#define PERL_INITIALIZE_IMAGER_CALLBACKS \
+#define PERL_INITIALIZE_IMAGER_CALLBACKS_NAME(name)	\
   do {  \
     imager_function_ext_table = INT2PTR(im_ext_funcs *, SvIV(get_sv(PERL_FUNCTION_TABLE_NAME, 1))); \
     if (!imager_function_ext_table) \
       croak("Imager API function table not found!"); \
     if (imager_function_ext_table->version != IMAGER_API_VERSION) {  \
-      croak("Imager API version incorrect loaded %d vs expected %d", \
-	    imager_function_ext_table->version, IMAGER_API_VERSION); \
+      croak("Imager API version incorrect loaded %d vs expected %d in %s", \
+	    imager_function_ext_table->version, IMAGER_API_VERSION, (name)); \
     } \
     if (imager_function_ext_table->level < IMAGER_MIN_API_LEVEL) \
-      croak("API level %d below minimum of %d", imager_function_ext_table->level, IMAGER_MIN_API_LEVEL); \
+      croak("API level %d below minimum of %d in %s", imager_function_ext_table->level, IMAGER_MIN_API_LEVEL, (name)); \
   } while (0)
+
+#define PERL_INITIALIZE_IMAGER_CALLBACKS PERL_INITIALIZE_IMAGER_CALLBACKS_NAME(__FILE__)
 
 /* just for use here */
 #define im_extt imager_function_ext_table
