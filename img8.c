@@ -1,3 +1,5 @@
+#define IMAGER_NO_CONTEXT
+
 #include "imager.h"
 #include "imageri.h"
 
@@ -94,18 +96,19 @@ I<ch> channels.
 
 
 i_img *
-i_img_8_new(i_img_dim x,i_img_dim y,int ch) {
+im_img_8_new(pIMCTX, i_img_dim x,i_img_dim y,int ch) {
   i_img *im;
 
   mm_log((1,"IIM_new(x %" i_DF ", y %" i_DF ", ch %d)\n",
 	  i_DFc(x), i_DFc(y), ch));
 
-  im=i_img_empty_ch(NULL,x,y,ch);
+  im = im_img_empty_ch(aIMCTX, NULL,x,y,ch);
   
   mm_log((1,"(%p) <- IIM_new\n",im));
   return im;
 }
 
+#if 0
 /* 
 =item i_img_new()
 
@@ -138,6 +141,8 @@ i_img_new() {
   return im;
 }
 
+#endif
+
 /* 
 =item i_img_empty(im, x, y)
 
@@ -155,10 +160,10 @@ Should this just call i_img_empty_ch()?
 */
 
 i_img *
-i_img_empty(i_img *im,i_img_dim x,i_img_dim y) {
+im_img_empty(pIMCTX, i_img *im,i_img_dim x,i_img_dim y) {
   mm_log((1,"i_img_empty(*im %p, x %" i_DF ", y %" i_DF ")\n",
 	  im, i_DFc(x), i_DFc(y)));
-  return i_img_empty_ch(im, x, y, 3);
+  return im_img_empty_ch(aIMCTX, im, x, y, 3);
 }
 
 /* 
@@ -175,29 +180,29 @@ Re-new image reference
 */
 
 i_img *
-i_img_empty_ch(i_img *im,i_img_dim x,i_img_dim y,int ch) {
+im_img_empty_ch(pIMCTX, i_img *im,i_img_dim x,i_img_dim y,int ch) {
   size_t bytes;
 
   mm_log((1,"i_img_empty_ch(*im %p, x %" i_DF ", y %" i_DF ", ch %d)\n",
 	  im, i_DFc(x), i_DFc(y), ch));
 
   if (x < 1 || y < 1) {
-    i_push_error(0, "Image sizes must be positive");
+    im_push_error(aIMCTX, 0, "Image sizes must be positive");
     return NULL;
   }
   if (ch < 1 || ch > MAXCHANNELS) {
-    i_push_errorf(0, "channels must be between 1 and %d", MAXCHANNELS);
+    im_push_errorf(aIMCTX, 0, "channels must be between 1 and %d", MAXCHANNELS);
     return NULL;
   }
   /* check this multiplication doesn't overflow */
   bytes = x*y*ch;
   if (bytes / y / ch != x) {
-    i_push_errorf(0, "integer overflow calculating image allocation");
+    im_push_errorf(aIMCTX, 0, "integer overflow calculating image allocation");
     return NULL;
   }
 
   if (im == NULL)
-    im = i_img_alloc();
+    im = im_img_alloc(aIMCTX);
 
   memcpy(im, &IIM_base_8bit_direct, sizeof(i_img));
   i_tags_new(&im->tags);
@@ -212,7 +217,7 @@ i_img_empty_ch(i_img *im,i_img_dim x,i_img_dim y,int ch) {
   
   im->ext_data = NULL;
 
-  i_img_init(im);
+  im_img_init(aIMCTX, im);
   
   mm_log((1,"(%p) <- i_img_empty_ch\n",im));
   return im;
@@ -687,6 +692,7 @@ i_psamp_d(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y,
     return count;
   }
   else {
+    dIMCTXim(im);
     i_push_error(0, "Image position outside of image");
     return -1;
   }
@@ -776,6 +782,7 @@ i_psampf_d(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y,
     return count;
   }
   else {
+    dIMCTXim(im);
     i_push_error(0, "Image position outside of image");
     return -1;
   }

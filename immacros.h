@@ -78,9 +78,12 @@ returns -1 and pushes an error.
 #ifdef IMAGER_NO_CONTEXT
 #define dIMCTX im_context_t my_im_ctx = im_get_context()
 #define dIMCTXa(a) im_context_t my_im_ctx = im_get_context()
+#define dIMCTXim(im) im_context_t my_im_ctx = (im)->context
 #define aIMCTX my_im_ctx
 #else
 #define aIMCTX im_get_context()
 #endif
+
+#define pIMCTX im_context_t my_im_ctx
 
 #endif

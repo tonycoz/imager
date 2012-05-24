@@ -11,10 +11,13 @@
    global: creates a global variable FILE* lg_file
 */
 
-int i_init_log( const char *name, int onoff );
+int im_init_log(pIMCTX, const char *name, int onoff );
+#define i_init_log(name, onoff) im_init_log(aIMCTX, name, onoff)
 void i_fatal ( int exitcode,const char *fmt, ... );
+void im_lhead ( pIMCTX, const char *file, int line  );
 void i_lhead ( const char *file, int line  );
 void i_loog(int level,const char *msg, ... ) I_FORMAT_ATTR(2,3);
+void im_loog(pIMCTX, int level,const char *msg, ... ) I_FORMAT_ATTR(3,4);
 
 /*
 =item mm_log((level, format, ...))
@@ -31,8 +34,10 @@ log file if logging is enabled.
 
 #ifdef IMAGER_LOG
 #define mm_log(x) { i_lhead(__FILE__,__LINE__); i_loog x; } 
+#define im_log(x) { im_lhead(aIMCTX, __FILE__,__LINE__); im_loog x; } 
 #else
 #define mm_log(x)
+#define im_log(x)
 #endif
 
 

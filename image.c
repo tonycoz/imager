@@ -1,3 +1,5 @@
+#define IMAGER_NO_CONTEXT
+
 #include "imager.h"
 #include "imageri.h"
 
@@ -70,7 +72,7 @@ object.
 */
 
 i_img *
-i_img_alloc(void) {
+im_img_alloc(pIMCTX) {
   return mymalloc(sizeof(i_img));
 }
 
@@ -87,8 +89,9 @@ support threads, or color profiles.
 */
 
 void
-i_img_init(i_img *img) {
+im_img_init(pIMCTX, i_img *img) {
   img->im_data = NULL;
+  img->context = aIMCTX;
 }
 
 /* 
@@ -533,6 +536,7 @@ i_scaleaxis(i_img *im, double Value, int Axis) {
   i_img *new_img;
   int has_alpha = i_img_has_alpha(im);
   int color_chans = i_img_color_channels(im);
+  dIMCTXim(im);
 
   i_clear_error();
   mm_log((1,"i_scaleaxis(im %p,Value %.2f,Axis %d)\n",im,Value,Axis));
@@ -733,6 +737,7 @@ i_scale_nn(i_img *im, double scx, double scy) {
   i_img_dim nxsize,nysize,nx,ny;
   i_img *new_img;
   i_color val;
+  dIMCTXim(im);
 
   mm_log((1,"i_scale_nn(im %p,scx %.2f,scy %.2f)\n",im,scx,scy));
 
@@ -773,7 +778,10 @@ For paletted images the palette is copied from the source.
 =cut
 */
 
-i_img *i_sametype(i_img *src, i_img_dim xsize, i_img_dim ysize) {
+i_img *
+i_sametype(i_img *src, i_img_dim xsize, i_img_dim ysize) {
+  dIMCTXim(src);
+
   if (src->type == i_direct_type) {
     if (src->bits == 8) {
       return i_img_empty_ch(NULL, xsize, ysize, src->channels);
@@ -816,7 +824,10 @@ For paletted images the equivalent direct type is returned.
 =cut
 */
 
-i_img *i_sametype_chans(i_img *src, i_img_dim xsize, i_img_dim ysize, int channels) {
+i_img *
+i_sametype_chans(i_img *src, i_img_dim xsize, i_img_dim ysize, int channels) {
+  dIMCTXim(src);
+
   if (src->bits == 8) {
     return i_img_empty_ch(NULL, xsize, ysize, channels);
   }
@@ -857,6 +868,7 @@ i_transform(i_img *im, int *opx,int opxl,int *opy,int opyl,double parm[],int par
   i_img_dim nxsize,nysize,nx,ny;
   i_img *new_img;
   i_color val;
+  dIMCTXim(im);
   
   mm_log((1,"i_transform(im %p, opx %p, opxl %d, opy %p, opyl %d, parm %p, parmlen %d)\n",im,opx,opxl,opy,opyl,parm,parmlen));
 
@@ -903,6 +915,7 @@ i_img_diff(i_img *im1,i_img *im2) {
   int ch, chb;
   float tdiff;
   i_color val1,val2;
+  dIMCTXim(im1);
 
   mm_log((1,"i_img_diff(im1 %p,im2 %p)\n",im1,im2));
 
@@ -1018,6 +1031,7 @@ i_haar(i_img *im) {
   int ch,c;
   i_img *new_img,*new_img2;
   i_color val1,val2,dval1,dval2;
+  dIMCTXim(im);
   
   mx=im->xsize;
   my=im->ysize;
@@ -1429,6 +1443,8 @@ int i_findcolor_forward(i_img *im, const i_color *color, i_palidx *entry) {
 i_img_dim
 i_gsamp_bits_fb(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, unsigned *samps, 
 		const int *chans, int chan_count, int bits) {
+  dIMCTXim(im);
+
   if (bits < 1 || bits > 32) {
     i_push_error(0, "Invalid bits, must be 1..32");
     return -1;
