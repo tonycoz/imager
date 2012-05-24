@@ -2,11 +2,10 @@
 #define _IMAGE_H_
 
 #include "imconfig.h"
+#include "immacros.h"
 #include "imio.h"
 #include "iolayer.h"
-#include "log.h"
 #include "stackmach.h"
-
 
 #ifndef _MSC_VER
 #include <unistd.h>
@@ -48,21 +47,22 @@ extern void i_hsv_to_rgbf(i_fcolor *color);
 extern void i_rgb_to_hsv(i_color *color);
 extern void i_hsv_to_rgb(i_color *color);
 
-i_img *i_img_8_new(i_img_dim x,i_img_dim y,int ch);
-i_img *i_img_new( void );
+i_img *im_img_8_new(pIMCTX, i_img_dim x,i_img_dim y,int ch);
+#define i_img_8_new(x,y,ch) im_img_8_new(aIMCTX, x,y,ch)
 i_img *i_img_empty(i_img *im,i_img_dim x,i_img_dim y);
-i_img *i_img_empty_ch(i_img *im,i_img_dim x,i_img_dim y,int ch);
+i_img *im_img_empty_ch(pIMCTX, i_img *im,i_img_dim x,i_img_dim y,int ch);
+#define i_img_empty_ch(im, x, y, ch) im_img_empty_ch(aIMCTX, im, x, y, ch)
 void   i_img_exorcise(i_img *im);
 void   i_img_destroy(i_img *im);
-i_img *i_img_alloc(void);
-void i_img_init(i_img *im);
+i_img *im_img_alloc(pIMCTX);
+#define i_img_alloc() im_img_alloc(aIMCTX)
+void im_img_init(pIMCTX, i_img *im);
+#define i_img_init(im) im_img_init(aIMCTX, im)
 
 void   i_img_info(i_img *im,i_img_dim *info);
 
 extern i_img *i_sametype(i_img *im, i_img_dim xsize, i_img_dim ysize);
 extern i_img *i_sametype_chans(i_img *im, i_img_dim xsize, i_img_dim ysize, int channels);
-
-i_img *i_img_pal_new(i_img_dim x, i_img_dim y, int ch, int maxpal);
 
 /* Image feature settings */
 
@@ -247,14 +247,18 @@ extern void i_quant_makemap(i_quantize *quant, i_img **imgs, int count);
 extern i_palidx *i_quant_translate(i_quantize *quant, i_img *img);
 extern void i_quant_transparent(i_quantize *quant, i_palidx *indices, i_img *img, i_palidx trans_index);
 
-extern i_img *i_img_pal_new(i_img_dim x, i_img_dim y, int channels, int maxpal);
+i_img *im_img_pal_new(pIMCTX, i_img_dim x, i_img_dim y, int ch, int maxpal);
+#define i_img_pal_new(x, y, ch, maxpal) im_img_pal_new(aIMCTX, x, y, ch, maxpal)
+
 extern i_img *i_img_to_pal(i_img *src, i_quantize *quant);
 extern i_img *i_img_to_rgb(i_img *src);
 extern i_img *i_img_masked_new(i_img *targ, i_img *mask, i_img_dim x, i_img_dim y, 
                                i_img_dim w, i_img_dim h);
-extern i_img *i_img_16_new(i_img_dim x, i_img_dim y, int ch);
+extern i_img *im_img_16_new(pIMCTX, i_img_dim x, i_img_dim y, int ch);
+#define i_img_16_new(x, y, ch) im_img_16_new(aIMCTX, x, y, ch)
 extern i_img *i_img_to_rgb16(i_img *im);
-extern i_img *i_img_double_new(i_img_dim x, i_img_dim y, int ch);
+extern i_img *im_img_double_new(pIMCTX, i_img_dim x, i_img_dim y, int ch);
+#define i_img_double_new(x, y, ch) im_img_double_new(aIMCTX, x, y, ch)
 extern i_img *i_img_to_drgb(i_img *im);
 
 extern int i_img_is_monochrome(i_img *im, int *zero_is_white);
@@ -331,36 +335,6 @@ i_new_fill_fount(double xa, double ya, double xb, double yb,
 
 void malloc_state( void );
 
-/* this is sort of obsolete now */
-
-typedef struct {
-  undef_int (*i_has_format)(char *frmt);
-  i_color*(*ICL_set)(i_color *cl,unsigned char r,unsigned char g,unsigned char b,unsigned char a);
-  void (*ICL_info)(const i_color *cl);
-
-  i_img*(*i_img_new)( void );
-  i_img*(*i_img_empty)(i_img *im,i_img_dim x,i_img_dim y);
-  i_img*(*i_img_empty_ch)(i_img *im,i_img_dim x,i_img_dim y,int ch);
-  void(*i_img_exorcise)(i_img *im);
-
-  void(*i_img_info)(i_img *im,i_img_dim *info);
-  
-  void(*i_img_setmask)(i_img *im,int ch_mask);
-  int (*i_img_getmask)(i_img *im);
-  
-  /*
-  int (*i_ppix)(i_img *im,i_img_dim x,i_img_dim y,i_color *val);
-  int (*i_gpix)(i_img *im,i_img_dim x,i_img_dim y,i_color *val);
-  */
-  void(*i_box)(i_img *im,i_img_dim x1,i_img_dim y1,i_img_dim x2,i_img_dim y2,const i_color *val);
-  void(*i_line)(i_img *im,i_img_dim x1,i_img_dim y1,i_img_dim x2,i_img_dim y2,const i_color *val,int endp);
-  void(*i_arc)(i_img *im,i_img_dim x,i_img_dim y,double rad,double d1,double d2,const i_color *val);
-  void(*i_copyto)(i_img *im,i_img *src,i_img_dim x1,i_img_dim y1,i_img_dim x2,i_img_dim y2,i_img_dim tx,i_img_dim ty);
-  void(*i_copyto_trans)(i_img *im,i_img *src,i_img_dim x1,i_img_dim y1,i_img_dim x2,i_img_dim y2,i_img_dim tx,i_img_dim ty,const i_color *trans);
-  int(*i_rubthru)(i_img *im,i_img *src,i_img_dim tx,i_img_dim ty, i_img_dim src_minx, i_img_dim src_miny, i_img_dim src_maxx, i_img_dim src_maxy);
-
-} symbol_table_t;
-
 #include "imerror.h"
 
 /* image tag processing */
@@ -428,7 +402,6 @@ void  malloc_state(void);
 #endif /* IMAGER_MALLOC_DEBUG */
 
 #include "imrender.h"
-#include "immacros.h"
 
 extern void
 i_adapt_colors(int dest_channels, int src_channels, i_color *colors, 
@@ -453,8 +426,6 @@ i_gsampf_bg(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, i_fsample_t *sampl
 	   int out_channels, i_fcolor const *bg);
 
 extern im_context_t (*im_get_context)(void);
-
-#define aIMCTX (im_get_context())
 
 #include "imio.h"
 

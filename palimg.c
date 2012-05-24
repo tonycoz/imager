@@ -18,6 +18,8 @@ Basic 8-bit/sample paletted image
 =cut
 */
 
+#define IMAGER_NO_CONTEXT
+
 #include "imager.h"
 #include "imageri.h"
 
@@ -98,7 +100,7 @@ Returns a new image or NULL on failure.
 =cut
 */
 i_img *
-i_img_pal_new(i_img_dim x, i_img_dim y, int channels, int maxpal) {
+im_img_pal_new(pIMCTX, i_img_dim x, i_img_dim y, int channels, int maxpal) {
   i_img *im;
   i_img_pal_ext *palext;
   size_t bytes, line_bytes;
@@ -185,8 +187,10 @@ The conversion cannot be done for virtual images.
 
 =cut
 */
-int i_img_to_rgb_inplace(i_img *im) {
+int
+i_img_to_rgb_inplace(i_img *im) {
   i_img temp;
+  dIMCTXim(im);
 
   if (im->virtual)
     return 0;
@@ -215,6 +219,7 @@ Converts an RGB image to a paletted image
 i_img *i_img_to_pal(i_img *src, i_quantize *quant) {
   i_palidx *result;
   i_img *im;
+  dIMCTXim(src);
 
   i_clear_error();
   
@@ -244,7 +249,9 @@ i_img *i_img_to_pal(i_img *src, i_quantize *quant) {
 
 =cut
 */
-i_img *i_img_to_rgb(i_img *src) {
+i_img *
+i_img_to_rgb(i_img *src) {
+  dIMCTXim(src);
   i_img *im = i_img_empty_ch(NULL, src->xsize, src->ysize, src->channels);
   i_img_rgb_convert(im, src);
 
@@ -682,6 +689,7 @@ i_psamp_p(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y,
     return count;
   }
   else {
+    dIMCTXim(im);
     i_push_error(0, "Image position outside of image");
     return -1;
   }
@@ -753,6 +761,7 @@ i_psampf_p(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y,
     return count;
   }
   else {
+    dIMCTXim(im);
     i_push_error(0, "Image position outside of image");
     return -1;
   }
