@@ -10,6 +10,16 @@ Imager release history.  Older releases can be found in Changes.old
    load.
    https://rt.cpan.org/Ticket/Display.html?id=77173
 
+ - The size of rotated images is no longer rounded up so aggressively.
+   Added rounding to the linear interpolation done for rotate() and
+   matrix_transform() for 1 and 3 channel 8-bit images.
+   Adjusted the two tranlate matrices used to build the final rotation
+   matrix to use the distance between the outlier pixels rather than
+   the pixel dimensions (ie. dimension-1).
+   With all of this the output of rotate(degrees => 270) on an 8-bit
+   image exactly matches the output of rotate(right => 270).
+   https://rt.cpan.org/Ticket/Display.html?id=77063
+
 Imager 0.90 - 30 Apr 2012
 ===========
 

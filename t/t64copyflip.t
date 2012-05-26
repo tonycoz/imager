@@ -1,8 +1,8 @@
 #!perl -w
 use strict;
-use Test::More tests => 83;
+use Test::More tests => 87;
 use Imager;
-use Imager::Test qw(is_color3 is_image is_imaged test_image_double test_image isnt_image);
+use Imager::Test qw(is_color3 is_image is_imaged test_image_double test_image isnt_image is_image_similar);
 
 #$Imager::DEBUG=1;
 
@@ -233,4 +233,24 @@ sub rot_test {
   @colors = sort { ($a->rgba)[0] <=> ($b->rgba)[0] } @colors;
   is_color3($colors[0], 0, 0, 0, "check we got black");
   is_color3($colors[1], 255, 0, 0, "and red");
+}
+
+{ # RT #77063 rotate with degrees => 270 gives a black border
+  # so be a little less strict about rounding up
+  # I've also:
+  #  - improved calculation of the rotation matrix
+  #  - added rounding to interpolation for 1/3 channel images
+  my $im = test_image;
+  $im->box(color => "#00F");
+  my $right = $im->rotate(right => 270);
+  my $deg = $im->rotate(degrees => 270, back => "#FFF");
+  is($deg->getwidth, 150, "check degrees => 270 width");
+  is($deg->getheight, 150, "check degrees => 270 height");
+  ok($deg->write(file => "testout/t64rotdeg270.ppm"), "save it");
+  # deg->write(file => "testout/t64rotright270.ppm");
+  is_image($deg, $right, "check right and degrees result the same");
+  #$deg = $deg->convert(preset => "addalpha");
+  # $right = $right->convert(preset => "addalpha");
+  # my $diff = $right->difference(other => $deg, mindist => 1);
+  # $diff->write(file => "testout/t64rotdiff.png");
 }

@@ -2632,7 +2632,7 @@ sub rotate {
     }
   }
   elsif (defined $opts{radians} || defined $opts{degrees}) {
-    my $amount = $opts{radians} || $opts{degrees} * 3.1415926535 / 180;
+    my $amount = $opts{radians} || $opts{degrees} * 3.14159265358979 / 180;
 
     my $back = $opts{back};
     my $result = Imager->new;

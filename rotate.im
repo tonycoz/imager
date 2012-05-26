@@ -20,6 +20,8 @@ Other rotations will be added as tuits become available.
 #include "imageri.h"
 #include <math.h> /* for floor() */
 
+#define ROT_DEBUG(x)
+
 i_img *i_rotate90(i_img *src, int degrees) {
   i_img *targ;
   i_img_dim x, y;
@@ -131,7 +133,7 @@ static i_color interp_i_color(i_color before, i_color after, double pos,
   pos -= floor(pos);
   if (channels == 1 || channels == 3) {
     for (ch = 0; ch < channels; ++ch)
-      out.channel[ch] = (1-pos) * before.channel[ch] + pos * after.channel[ch];
+      out.channel[ch] = ((1-pos) * before.channel[ch] + pos * after.channel[ch]) + 0.5;
   }
   else {
     int total_cover = (1-pos) * before.channel[channels-1]
@@ -250,11 +252,13 @@ i_img *i_matrix_transform_bg(i_img *src, i_img_dim xsize, i_img_dim ysize, const
 	if (fabs(sz) > 0.0000001 
 	    && sx >= -1 && sx < src->xsize
 	    && sy >= -1 && sy < src->ysize) {
-	  
+
+	  ROT_DEBUG(fprintf(stderr, "map " i_DFp " to %g,%g\n", i_DFcp(x, y), sx, sy));
 	  if (sx != (i_img_dim)sx) {
 	    if (sy != (i_img_dim)sy) {
 	      IM_COLOR c[2][2]; 
 	      IM_COLOR ci2[2];
+	      ROT_DEBUG(fprintf(stderr, " both non-int\n"));
 	      for (i = 0; i < 2; ++i)
 		for (j = 0; j < 2; ++j)
 		  if (IM_GPIX(src, floor(sx)+i, floor(sy)+j, &c[j][i]))
@@ -265,6 +269,7 @@ i_img *i_matrix_transform_bg(i_img *src, i_img_dim xsize, i_img_dim ysize, const
 	    }
 	    else {
 	      IM_COLOR ci2[2];
+	      ROT_DEBUG(fprintf(stderr, " y int, x non-int\n"));
 	      for (i = 0; i < 2; ++i)
 		if (IM_GPIX(src, floor(sx)+i, sy, ci2+i))
 		  ci2[i] = back;
@@ -274,12 +279,14 @@ i_img *i_matrix_transform_bg(i_img *src, i_img_dim xsize, i_img_dim ysize, const
 	  else {
 	    if (sy != (i_img_dim)sy) {
 	      IM_COLOR ci2[2];
+	      ROT_DEBUG(fprintf(stderr, " x int, y non-int\n"));
 	      for (i = 0; i < 2; ++i)
 		if (IM_GPIX(src, sx, floor(sy)+i, ci2+i))
 		  ci2[i] = back;
 	      vals[x] = interp_i_color(ci2[0], ci2[1], sy, src->channels);
 	    }
 	    else {
+	      ROT_DEBUG(fprintf(stderr, " both int\n"));
 	      /* all the world's an integer */
 	      if (IM_GPIX(src, sx, sy, vals+x))
 		vals[x] = back;
@@ -393,6 +400,15 @@ i_matrix_mult(double *dest, const double *left, const double *right) {
   }
 }
 
+#define numfmt "%23g"
+
+ROT_DEBUG(static dump_mat(const char *name, double *f) {
+  fprintf(stderr, "%s:\n  " numfmt " " numfmt " " numfmt "\n"
+	  "  " numfmt " " numfmt " " numfmt "\n"
+	  "  " numfmt " " numfmt " " numfmt "\n",
+	  name, f[0], f[1], f[2], f[3], f[4], f[5], f[6], f[7], f[8]);
+  })
+
 i_img *i_rotate_exact_bg(i_img *src, double amount, 
 			 const i_color *backp, const i_fcolor *fbackp) {
   double xlate1[9] = { 0 };
@@ -403,10 +419,12 @@ i_img *i_rotate_exact_bg(i_img *src, double amount,
 
   /* first translate the centre of the image to (0,0) */
   xlate1[0] = 1;
-  xlate1[2] = src->xsize/2.0;
+  xlate1[2] = (src->xsize-1)/2.0;
   xlate1[4] = 1;
-  xlate1[5] = src->ysize/2.0;
+  xlate1[5] = (src->ysize-1)/2.0;
   xlate1[8] = 1;
+
+  ROT_DEBUG(dump_mat("xlate1", xlate1));
 
   /* rotate around (0.0) */
   rotate[0] = cos(amount);
@@ -419,20 +437,30 @@ i_img *i_rotate_exact_bg(i_img *src, double amount,
   rotate[7] = 0;
   rotate[8] = 1;
 
-  x1 = ceil(fabs(src->xsize * rotate[0] + src->ysize * rotate[1]));
-  x2 = ceil(fabs(src->xsize * rotate[0] - src->ysize * rotate[1]));
-  y1 = ceil(fabs(src->xsize * rotate[3] + src->ysize * rotate[4]));
-  y2 = ceil(fabs(src->xsize * rotate[3] - src->ysize * rotate[4]));
+  ROT_DEBUG(dump_mat("rotate", rotate));
+
+  ROT_DEBUG(fprintf(stderr, "cos %g sin %g\n", rotate[0], rotate[1]));
+
+  x1 = ceil(fabs(src->xsize * rotate[0] + src->ysize * rotate[1]) - 0.0001);
+  x2 = ceil(fabs(src->xsize * rotate[0] - src->ysize * rotate[1]) - 0.0001);
+  y1 = ceil(fabs(src->xsize * rotate[3] + src->ysize * rotate[4]) - 0.0001);
+  y2 = ceil(fabs(src->xsize * rotate[3] - src->ysize * rotate[4]) - 0.0001);
+  ROT_DEBUG(fprintf(stderr, "x1 y1 " i_DFp " x2 y2 " i_DFp "\n", i_DFcp(x1, y1), i_DFcp(x2, y2)));
   newxsize = x1 > x2 ? x1 : x2;
   newysize = y1 > y2 ? y1 : y2;
   /* translate the centre back to the center of the image */
   xlate2[0] = 1;
-  xlate2[2] = -newxsize/2.0;
+  xlate2[2] = -(newxsize-1)/2.0;
   xlate2[4] = 1;
-  xlate2[5] = -newysize/2.0;
+  xlate2[5] = -(newysize-1)/2.0;
   xlate2[8] = 1;
+
+  ROT_DEBUG(dump_mat("xlate2", xlate2));
+
   i_matrix_mult(temp, xlate1, rotate);
   i_matrix_mult(matrix, temp, xlate2);
+
+  ROT_DEBUG(dump_mat("matrxi", matrix));
 
   return i_matrix_transform_bg(src, newxsize, newysize, matrix, backp, fbackp);
 }
