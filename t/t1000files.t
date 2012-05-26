@@ -92,7 +92,7 @@ is_deeply([ Imager->get_file_limits() ], [ 0, 0, 0 ],
     my $data = "abc";
     ok(!Imager->new(data => $data, filetype => "bad"),
        "try to read an bad (other load failure) file type");
-   like(Imager->errstr, qr(^format 'bad' not supported - formats .* available for reading - This module fails to load$),
+   like(Imager->errstr, qr(^format 'bad' not supported - formats .* available for reading - This module fails to load loading Imager/File/BAD.pm$),
 	"check error message");
   }
   {
@@ -100,7 +100,7 @@ is_deeply([ Imager->get_file_limits() ], [ 0, 0, 0 ],
     my $im = Imager->new(xsize => 10, ysize => 10);
     ok(!$im->write(data => \$data, type => "bad"),
        "try to write an bad file type");
-   like($im->errstr, qr(^format 'bad' not supported - formats .* available for writing - This module fails to load$),
+   like($im->errstr, qr(^format 'bad' not supported - formats .* available for writing - This module fails to load loading Imager/File/BAD.pm$),
 	"check error message");
   }
 }
