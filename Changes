@@ -1,14 +1,6 @@
 Imager release history.  Older releases can be found in Changes.old
 
- - eliminate the old IIM_new(), IIM_DESTROY() names from Imager's
-   internals, those names only matter for the XS interface.
-
- - improve error reporting when PERL_INITIALIZE_IMAGER_CALLBACKS finds
-   the API level compiled into a loadable module such as
-   Imager::File::GIF doesn't match that of Imager.  Previously it
-   could be difficult to determine exactly which module was failing to
-   load.
-   https://rt.cpan.org/Ticket/Display.html?id=77173
+Bug fixes:
 
  - The size of rotated images is no longer rounded up so aggressively.
    Added rounding to the linear interpolation done for rotate() and
@@ -19,6 +11,27 @@ Imager release history.  Older releases can be found in Changes.old
    With all of this the output of rotate(degrees => 270) on an 8-bit
    image exactly matches the output of rotate(right => 270).
    https://rt.cpan.org/Ticket/Display.html?id=77063
+
+Other changes:
+
+ - eliminate the old IIM_new(), IIM_DESTROY() names from Imager's
+   internals, those names only matter for the XS interface.
+
+ - improve error reporting when PERL_INITIALIZE_IMAGER_CALLBACKS finds
+   the API level compiled into a loadable module such as
+   Imager::File::GIF doesn't match that of Imager.  Previously it
+   could be difficult to determine exactly which module was failing to
+   load.
+   https://rt.cpan.org/Ticket/Display.html?id=77173
+
+ - added Imager->check_file_limits() as an interface to the
+   i_int_check_image_file_limits() API.
+
+ - Imager->set_file_limits(reset => 1) now resets the limits to the
+   defaults rather than setting them all to unlimited.
+
+ - wrote a brief security note as Imager::Security
+   https://rt.cpan.org/Ticket/Display.html?id=68910
 
 Imager 0.90 - 30 Apr 2012
 ===========
