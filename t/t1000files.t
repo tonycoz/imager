@@ -4,7 +4,7 @@
 # the file format
 
 use strict;
-use Test::More tests => 67;
+use Test::More tests => 85;
 use Imager;
 
 -d "testout" or mkdir "testout";
@@ -60,6 +60,37 @@ ok(Imager->set_file_limits(height=>150, bytes=>10000),
    "set height and bytes");
 is_deeply([ Imager->get_file_limits() ], [ 100, 150, 10000 ],
 	  "check all values now set");
+ok(Imager->check_file_limits(width => 100, height => 30),
+   "check 100 x 30 (def channels, sample_size) ok")
+  or diag(Imager->errstr);
+ok(Imager->check_file_limits(width => 100, height => 100, channels => 1),
+   "check 100 x 100 x 1 (def sample_size) ok")
+  or diag(Imager->errstr);
+ok(Imager->check_file_limits(width => 100, height => 100, channels => 1),
+   "check 100 x 100 x 1 (def sample_size) ok")
+  or diag(Imager->errstr);
+ok(!Imager->check_file_limits(width => 100, height => 100, channels => 1, sample_size => "float"),
+   "check 100 x 100 x 1 x float should fail");
+ok(!Imager->check_file_limits(width => 100, height => 100, channels => 0),
+   "0 channels should fail");
+is(Imager->errstr, "file size limit - channels 0 out of range",
+   "check error message");
+ok(!Imager->check_file_limits(width => 0, height => 100),
+   "0 width should fail");
+is(Imager->errstr, "file size limit - image width of 0 is not positive",
+   "check error message");
+ok(!Imager->check_file_limits(width => 100, height => 0),
+   "0 height should fail");
+is(Imager->errstr, "file size limit - image height of 0 is not positive",
+   "check error message");
+ok(!Imager->check_file_limits(width => 10, height => 10, sample_size => 0),
+   "0 sample_size should fail");
+is(Imager->errstr, "file size limit - sample_size 0 out of range",
+   "check error message");
+ok(!Imager->check_file_limits(width => 10, height => 10, sample_size => 1000),
+   "1000 sample_size should fail");
+is(Imager->errstr, "file size limit - sample_size 1000 out of range",
+   "check error message");
 ok(Imager->set_file_limits(reset=>1, height => 99),
    "set height and reset");
 is_deeply([ Imager->get_file_limits() ], [ 0, 99, 0x40000000 ],
@@ -68,6 +99,16 @@ ok(Imager->set_file_limits(reset=>1),
    "just reset");
 is_deeply([ Imager->get_file_limits() ], [ 0, 0, 0x40000000 ],
 	  "check all are reset");
+
+# bad parameters
+is_deeply([ Imager->check_file_limits() ], [],
+	  "missing size paramaters");
+is(Imager->errstr, "check_file_limits: width must be defined",
+   "check message");
+is_deeply([ Imager->check_file_limits(width => 100.5) ], [],
+	  "non-integer parameter");
+is(Imager->errstr, "check_file_limits: width must be a positive integer",
+   "check message");
 
 # test error handling for loading file handers
 {

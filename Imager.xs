@@ -1059,6 +1059,14 @@ i_get_image_file_limits()
           PUSHs(sv_2mortal(newSVuv(bytes)));
         }
 
+bool
+i_int_check_image_file_limits(width, height, channels, sample_size)
+	i_img_dim width
+	i_img_dim height
+	int channels
+	size_t sample_size
+  PROTOTYPE: DISABLE
+
 MODULE = Imager		PACKAGE = Imager::IO	PREFIX = io_
 
 Imager::IO

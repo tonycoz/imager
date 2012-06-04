@@ -488,6 +488,37 @@ You can get the current limits with the get_file_limits() method:
   my ($max_width, $max_height, $max_bytes) =
      Imager->get_file_limits();
 
+=item check_file_limits()
+X<class methods, check_file_limits()>X<check_file_limits()>
+
+Intended for use by file handlers to check that the size of a file is
+within the limits set by C<set_file_limits()>.
+
+Parameters:
+
+=over
+
+=item *
+
+C<width>, C<height> - the width and height of the image in pixels.
+Must be a positive integer. Required.
+
+=item *
+
+C<channels> - the number of channels in the image, including the alpha
+channel if any.  Must be a positive integer between 1 and 4
+inclusive.  Default: 3.
+
+=item *
+
+C<sample_size> - the number of bytes stored per sample.  Must be a
+positive integer or C<"float">.  Note that this should be the sample
+size of the Imager image you will be creating, not the sample size in
+the source, eg. if the source has 32-bit samples this should be
+C<"float"> since Imager doesn't have 32-bit/sample images.
+
+=back
+
 =back
 
 =head1 TYPE SPECIFIC INFORMATION

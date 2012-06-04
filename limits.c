@@ -157,7 +157,7 @@ i_int_check_image_file_limits(i_img_dim width, i_img_dim height, int channels, s
   }
 
   if (height <= 0) {
-    i_push_errorf(0, "file size limit - image height %" i_DF " is not positive",
+    i_push_errorf(0, "file size limit - image height of %" i_DF " is not positive",
 		  i_DFc(height));
     return 0;
   }

@@ -3900,6 +3900,41 @@ sub get_file_limits {
   i_get_image_file_limits();
 }
 
+my @check_args = qw(width height channels sample_size);
+
+sub check_file_limits {
+  my $class = shift;
+
+  my %opts =
+    (
+     channels => 3,
+     sample_size => 1,
+     @_,
+    );
+
+  if ($opts{sample_size} && $opts{sample_size} eq 'float') {
+    $opts{sample_size} = length(pack("d", 0));
+  }
+
+  for my $name (@check_args) {
+    unless (defined $opts{$name}) {
+      $class->_set_error("check_file_limits: $name must be defined");
+      return;
+    }
+    unless ($opts{$name} == int($opts{$name})) {
+      $class->_set_error("check_file_limits: $name must be a positive integer");
+      return;
+    }
+  }
+
+  my $result = i_int_check_image_file_limits(@opts{@check_args});
+  unless ($result) {
+    $class->_set_error($class->_error_as_msg());
+  }
+
+  return $result;
+}
+
 # Shortcuts that can be exported
 
 sub newcolor { Imager::Color->new(@_); }
@@ -4397,6 +4432,8 @@ bits() - L<Imager::ImageTypes/bits()> - number of bits per sample for the
 image
 
 box() - L<Imager::Draw/box()> - draw a filled or outline box.
+
+check_file_limits() - L<Imager::Files/check_file_limits()>
 
 circle() - L<Imager::Draw/circle()> - draw a filled circle
 
