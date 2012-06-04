@@ -992,7 +992,8 @@ i_img_dim width, height - maximum width and height.
 
 =item *
 
-size_t bytes - maximum size in memory in bytes
+size_t bytes - maximum size in memory in bytes.  A value of zero sets
+this limit to one gigabyte.
 
 =back
 

@@ -62,11 +62,11 @@ is_deeply([ Imager->get_file_limits() ], [ 100, 150, 10000 ],
 	  "check all values now set");
 ok(Imager->set_file_limits(reset=>1, height => 99),
    "set height and reset");
-is_deeply([ Imager->get_file_limits() ], [ 0, 99, 0 ],
+is_deeply([ Imager->get_file_limits() ], [ 0, 99, 0x40000000 ],
 	  "check only height is set");
 ok(Imager->set_file_limits(reset=>1),
    "just reset");
-is_deeply([ Imager->get_file_limits() ], [ 0, 0, 0 ],
+is_deeply([ Imager->get_file_limits() ], [ 0, 0, 0x40000000 ],
 	  "check all are reset");
 
 # test error handling for loading file handers

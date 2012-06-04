@@ -459,12 +459,15 @@ To set the limits, call the class method set_file_limits:
 You can pass any or all of the limits above, any limits you do not
 pass are left as they were.
 
-Any limit of zero is treated as unlimited.
+Any limit of zero for width or height is treated as unlimited.
+
+A limit of zero for bytes is treated as one gigabyte, but higher bytes
+limits can be set explicitly.
 
 By default, the width and height limits are zero, or unlimited.  The
 default memory size limit is one gigabyte.
 
-You can reset all limits to unlimited with the reset parameter:
+You can reset all limits to their defaults with the reset parameter:
 
   # no limits
   Imager->set_file_limits(reset=>1);

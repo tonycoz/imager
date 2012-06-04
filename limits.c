@@ -26,8 +26,10 @@ Setting a value of zero means that limit will be ignored.
 
 #include "imageri.h"
 
+#define DEF_BYTES_LIMIT 0x40000000
+
 static i_img_dim max_width, max_height;
-static size_t max_bytes = 0x40000000;
+static size_t max_bytes = DEF_BYTES_LIMIT;
 
 /*
 =item i_set_image_file_limits(width, height, bytes)
@@ -51,7 +53,8 @@ i_img_dim width, height - maximum width and height.
 
 =item *
 
-size_t bytes - maximum size in memory in bytes
+size_t bytes - maximum size in memory in bytes.  A value of zero sets
+this limit to one gigabyte.
 
 =back
 
@@ -79,7 +82,7 @@ i_set_image_file_limits(i_img_dim width, i_img_dim height, size_t bytes) {
 
   max_width = width;
   max_height = height;
-  max_bytes = bytes;
+  max_bytes = bytes ? bytes : DEF_BYTES_LIMIT;
 
   return 1;
 }
