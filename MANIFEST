@@ -197,6 +197,7 @@ lib/Imager/Preprocess.pm
 lib/Imager/Probe.pm		Library probes
 lib/Imager/regmach.pod
 lib/Imager/Regops.pm
+lib/Imager/Security.pod
 lib/Imager/Test.pm
 lib/Imager/Transform.pm
 lib/Imager/Transformations.pod

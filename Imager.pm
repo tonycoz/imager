@@ -4364,6 +4364,10 @@ L<Imager::Inline> - using Imager's C API from Inline::C
 
 L<Imager::ExtUtils> - tools to get access to Imager's C API.
 
+=item *
+
+L<Imager::Security> - brief security notes.
+
 =back
 
 =head2 Basic Overview
@@ -4784,6 +4788,8 @@ RGB (SGI) files - L<Imager::Files/"SGI (RGB, BW)">
 saving an image - L<Imager::Files>
 
 scaling - L<Imager::Transformations/scale()>
+
+security - L<Imager::Security>
 
 SGI files - L<Imager::Files/"SGI (RGB, BW)">
 
