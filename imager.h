@@ -71,74 +71,36 @@ i_img_dim i_img_get_height(i_img *im);
 
 /* Base functions */
 
-extern int i_ppix(i_img *im,i_img_dim x,i_img_dim y, const i_color *val);
-extern int i_gpix(i_img *im,i_img_dim x,i_img_dim y,i_color *val);
-extern int i_ppixf(i_img *im,i_img_dim x,i_img_dim y, const i_fcolor *val);
-extern int i_gpixf(i_img *im,i_img_dim x,i_img_dim y,i_fcolor *val);
+extern int (i_ppix)(i_img *im,i_img_dim x,i_img_dim y, const i_color *val);
+extern int (i_gpix)(i_img *im,i_img_dim x,i_img_dim y,i_color *val);
+extern int (i_ppixf)(i_img *im,i_img_dim x,i_img_dim y, const i_fcolor *val);
+extern int (i_gpixf)(i_img *im,i_img_dim x,i_img_dim y,i_fcolor *val);
 
-#define i_ppix(im, x, y, val) (((im)->i_f_ppix)((im), (x), (y), (val)))
-#define i_gpix(im, x, y, val) (((im)->i_f_gpix)((im), (x), (y), (val)))
-#define i_ppixf(im, x, y, val) (((im)->i_f_ppixf)((im), (x), (y), (val)))
-#define i_gpixf(im, x, y, val) (((im)->i_f_gpixf)((im), (x), (y), (val)))
-
-extern i_img_dim i_plin(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, const i_color *vals);
-extern i_img_dim i_glin(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, i_color *vals);
-extern i_img_dim i_plinf(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, const i_fcolor *vals);
-extern i_img_dim i_glinf(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, i_fcolor *vals);
-extern i_img_dim i_gsamp(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, i_sample_t *samp, 
-                   const int *chans, int chan_count);
-extern i_img_dim i_gsampf(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, i_fsample_t *samp, 
-                   const int *chans, int chan_count);
-extern i_img_dim i_gpal(i_img *im, i_img_dim x, i_img_dim r, i_img_dim y, i_palidx *vals);
-extern i_img_dim i_ppal(i_img *im, i_img_dim x, i_img_dim r, i_img_dim y, const i_palidx *vals);
-extern int i_addcolors(i_img *im, const i_color *colors, int count);
-extern int i_getcolors(i_img *im, int i, i_color *, int count);
-extern int i_colorcount(i_img *im);
-extern int i_maxcolors(i_img *im);
-extern int i_findcolor(i_img *im, const i_color *color, i_palidx *entry);
-extern int i_setcolors(i_img *im, int index, const i_color *colors, 
+extern i_img_dim (i_plin)(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y,
+			  const i_color *vals);
+extern i_img_dim (i_glin)(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y,
+			  i_color *vals);
+extern i_img_dim (i_plinf)(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y,
+			   const i_fcolor *vals);
+extern i_img_dim (i_glinf)(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, 
+			   i_fcolor *vals);
+extern i_img_dim (i_gsamp)(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y,
+			   i_sample_t *samp, const int *chans, int chan_count);
+extern i_img_dim
+(i_gsampf)(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, i_fsample_t *samp,
+	   const int *chans, int chan_count);
+extern i_img_dim
+(i_gpal)(i_img *im, i_img_dim x, i_img_dim r, i_img_dim y, i_palidx *vals);
+extern i_img_dim
+(i_ppal)(i_img *im, i_img_dim x, i_img_dim r, i_img_dim y, const i_palidx *vals);
+extern int (i_addcolors)(i_img *im, const i_color *colors, int count);
+extern int (i_getcolors)(i_img *im, int i, i_color *, int count);
+extern int (i_colorcount)(i_img *im);
+extern int (i_maxcolors)(i_img *im);
+extern int (i_findcolor)(i_img *im, const i_color *color, i_palidx *entry);
+extern int (i_setcolors)(i_img *im, int index, const i_color *colors, 
                        int count);
 
-#define i_plin(im, l, r, y, val) (((im)->i_f_plin)(im, l, r, y, val))
-#define i_glin(im, l, r, y, val) (((im)->i_f_glin)(im, l, r, y, val))
-#define i_plinf(im, l, r, y, val) (((im)->i_f_plinf)(im, l, r, y, val))
-#define i_glinf(im, l, r, y, val) (((im)->i_f_glinf)(im, l, r, y, val))
-
-#define i_gsamp(im, l, r, y, samps, chans, count) \
-  (((im)->i_f_gsamp)((im), (l), (r), (y), (samps), (chans), (count)))
-#define i_gsampf(im, l, r, y, samps, chans, count) \
-  (((im)->i_f_gsampf)((im), (l), (r), (y), (samps), (chans), (count)))
-
-#define i_gsamp_bits(im, l, r, y, samps, chans, count, bits) \
-  (((im)->i_f_gsamp_bits) ? ((im)->i_f_gsamp_bits)((im), (l), (r), (y), (samps), (chans), (count), (bits)) : -1)
-#define i_psamp_bits(im, l, r, y, samps, chans, count, bits) \
-  (((im)->i_f_psamp_bits) ? ((im)->i_f_psamp_bits)((im), (l), (r), (y), (samps), (chans), (count), (bits)) : -1)
-
-#define i_findcolor(im, color, entry) \
-  (((im)->i_f_findcolor) ? ((im)->i_f_findcolor)((im), (color), (entry)) : 0)
-
-#define i_gpal(im, l, r, y, vals) \
-  (((im)->i_f_gpal) ? ((im)->i_f_gpal)((im), (l), (r), (y), (vals)) : 0)
-#define i_ppal(im, l, r, y, vals) \
-  (((im)->i_f_ppal) ? ((im)->i_f_ppal)((im), (l), (r), (y), (vals)) : 0)
-#define i_addcolors(im, colors, count) \
-  (((im)->i_f_addcolors) ? ((im)->i_f_addcolors)((im), (colors), (count)) : -1)
-#define i_getcolors(im, index, color, count) \
-  (((im)->i_f_getcolors) ? \
-   ((im)->i_f_getcolors)((im), (index), (color), (count)) : 0)
-#define i_setcolors(im, index, color, count) \
-  (((im)->i_f_setcolors) ? \
-   ((im)->i_f_setcolors)((im), (index), (color), (count)) : 0)
-#define i_colorcount(im) \
-  (((im)->i_f_colorcount) ? ((im)->i_f_colorcount)(im) : -1)
-#define i_maxcolors(im) \
-  (((im)->i_f_maxcolors) ? ((im)->i_f_maxcolors)(im) : -1)
-#define i_findcolor(im, color, entry) \
-  (((im)->i_f_findcolor) ? ((im)->i_f_findcolor)((im), (color), (entry)) : 0)
-
-#define i_img_virtual(im) ((im)->virtual)
-#define i_img_type(im) ((im)->type)
-#define i_img_bits(im) ((im)->bits)
 
 extern i_fill_t *i_new_fill_solidf(const i_fcolor *c, int combine);
 extern i_fill_t *i_new_fill_solid(const i_color *c, int combine);
@@ -418,6 +380,11 @@ i_gsamp_bg(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, i_sample_t *samples
 extern int
 i_gsampf_bg(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, i_fsample_t *samples, 
 	   int out_channels, i_fcolor const *bg);
+
+/* context object management */
+extern im_context_t im_context_new(void);
+extern void im_context_delete(im_context_t ctx);
+extern im_context_t im_context_clone(im_context_t ctx);
 
 extern im_context_t (*im_get_context)(void);
 
