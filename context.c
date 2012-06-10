@@ -10,9 +10,12 @@ Create a new Imager context object.
 
 im_context_t
 im_context_new(void) {
-  im_context_t ctx = mymalloc(sizeof(im_context_struct));
+  im_context_t ctx = malloc(sizeof(im_context_struct));
   int i;
 
+  if (!ctx)
+    return NULL;
+  
   ctx->error_sp = IM_ERROR_COUNT-1;
   for (i = 0; i < IM_ERROR_COUNT; ++i) {
     ctx->error_alloc[i] = 0;
@@ -25,7 +28,7 @@ im_context_new(void) {
 #endif
   ctx->max_width = 0;
   ctx->max_height = 0;
-  ctx->max_bytes = 0;
+  ctx->max_bytes = DEF_BYTES_LIMIT;
 
   return ctx;
 }
@@ -50,6 +53,8 @@ im_context_delete(im_context_t ctx) {
   if (ctx->lg_file)
     fclose(ctx->lg_file);
 #endif
+
+  free(ctx);
 }
 
 /*
@@ -62,8 +67,11 @@ Clone an Imager context object, returning the result.
 
 im_context_t
 im_context_clone(im_context_t ctx) {
-  im_context_t nctx = mymalloc(sizeof(im_context_struct));
+  im_context_t nctx = malloc(sizeof(im_context_struct));
   int i;
+
+  if (!nctx)
+    return NULL;
 
   nctx->error_sp = ctx->error_sp;
   for (i = 0; i < IM_ERROR_COUNT; ++i) {

@@ -29,6 +29,13 @@ extern "C" {
 
 #include "imperl.h"
 
+static im_context_t work_context;
+
+static im_context_t
+perl_get_context(void) {
+  return work_context;
+}
+
 /* used to represent channel lists parameters */
 typedef struct i_channel_list_tag {
   int *channels;
@@ -3996,3 +4003,5 @@ i_int_hlines_CLONE_SKIP(cls)
 BOOT:
         PERL_SET_GLOBAL_CALLBACKS;
 	PERL_PL_SET_GLOBAL_CALLBACKS;
+	work_context = im_context_new();
+	im_get_context = perl_get_context;
