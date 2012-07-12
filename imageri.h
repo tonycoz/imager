@@ -6,6 +6,7 @@
 #define IMAGEI_H_
 
 #include "imager.h"
+#include <stddef.h>
 
 /* wrapper functions that implement the floating point sample version of a 
    function in terms of the 8-bit sample version
@@ -126,6 +127,8 @@ typedef struct im_context_tag {
   /* file size limits */
   i_img_dim max_width, max_height;
   size_t max_bytes;
+
+  ptrdiff_t refcount;
 } im_context_struct;
 
 #define DEF_BYTES_LIMIT 0x40000000
