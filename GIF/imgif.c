@@ -91,6 +91,8 @@ i_colortable_copy(int **colour_table, int *colours, ColorMapObject *colourmap) {
   }
 }
 
+#ifdef GIF_LIB_VERSION
+
 static const
 char gif_version_str[] = GIF_LIB_VERSION;
 
@@ -106,6 +108,15 @@ i_giflib_version(void) {
 
   return strtod(p, NULL);
 }
+
+#else
+
+double
+i_giflib_version(void) {
+  return GIFLIB_MAJOR + GIFLIB_MINOR * 0.1;
+}
+
+#endif
 
 /*
 =item i_readgif_low(GifFileType *GifFile, int **colour_table, int *colours)

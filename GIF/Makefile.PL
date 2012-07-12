@@ -111,10 +111,15 @@ sub _gif_test_code {
   return <<'CODE';
 /* TODO: test DGifOpen() and processing with callbacks */
 GifFileType *gf;
+#ifdef GIF_LIB_VERSION
 const char vers[] = GIF_LIB_VERSION;
 const char *versp = vers;
 int ver_maj;
 int ver_min;
+#else
+int ver_maj = GIFLIB_MAJOR;
+int ver_min = GIFLIB_MINOR;
+#endif
 gf=DGifOpenFileName("testimg/expected.gif");
 if (!gf) {
   fprintf(stderr, "GIF: Cannot open testimg/expected.gif\n");
@@ -128,6 +133,7 @@ if (gf->SWidth != 16 || gf->SHeight != 16) {
 EGifSetGifVersion("89a");
 EGifSetGifVersion("87a");
 
+#ifdef GIF_LIB_VERSION
 /* skip the " Version " */
 while (*versp && (*versp < '0' || *versp > '9'))
   ++versp;
@@ -150,6 +156,7 @@ while (*versp && *versp >= '0' && *versp <= '9') {
   ver_min *= 10;
   ver_min += *versp++ - '0';
 }
+#endif
 if (ver_maj < 4) {
   fprintf(stderr, "GIF: gif lib version 3 is no longer supported\n");
   return 1;
