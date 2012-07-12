@@ -383,8 +383,9 @@ i_gsampf_bg(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, i_fsample_t *sampl
 
 /* context object management */
 extern im_context_t im_context_new(void);
-extern void im_context_delete(im_context_t ctx);
-extern im_context_t im_context_clone(im_context_t ctx);
+extern void im_context_refinc(im_context_t ctx, const char *where);
+extern void im_context_refdec(im_context_t ctx, const char *where);
+extern im_context_t im_context_clone(im_context_t ctx, const char *where);
 
 extern im_context_t (*im_get_context)(void);
 
