@@ -1,4 +1,5 @@
 #include "imageri.h"
+#include <stdio.h>
 
 /*
 =item im_context_new()
@@ -30,11 +31,35 @@ im_context_new(void) {
   ctx->max_height = 0;
   ctx->max_bytes = DEF_BYTES_LIMIT;
 
+  ctx->refcount = 1;
+
+#ifdef IMAGER_TRACE_CONTEXT
+  fprintf(stderr, "im_context: created %p\n", ctx);
+#endif
+
   return ctx;
 }
 
 /*
-=item im_context_delete(ctx)
+=item im_context_refinc(ctx, where)
+
+Add a new reference to the context.
+
+=cut
+*/
+
+void
+im_context_refinc(im_context_t ctx, const char *where) {
+  ++ctx->refcount;
+
+#ifdef IMAGER_TRACE_CONTEXT
+  fprintf(stderr, "im_context:%s: refinc %p (count now %lu)\n", where,
+	  ctx, (unsigned long)ctx->refcount);
+#endif
+}
+
+/*
+=item im_context_refdec(ctx)
 
 Release memory used by an Imager context object.
 
@@ -42,8 +67,20 @@ Release memory used by an Imager context object.
 */
 
 void
-im_context_delete(im_context_t ctx) {
+im_context_refdec(im_context_t ctx, const char *where) {
   int i;
+
+  im_assert(ctx->refcount > 0);
+
+  --ctx->refcount;
+
+#ifdef IMAGER_TRACE_CONTEXT
+  fprintf(stderr, "im_context:%s: delete %p (count now %lu)\n", where,
+	  ctx, (unsigned long)ctx->refcount);
+#endif
+
+  if (ctx->refcount != 0)
+    return;
 
   for (i = 0; i < IM_ERROR_COUNT; ++i) {
     if (ctx->error_stack[i].msg)
@@ -66,7 +103,7 @@ Clone an Imager context object, returning the result.
 */
 
 im_context_t
-im_context_clone(im_context_t ctx) {
+im_context_clone(im_context_t ctx, const char *where) {
   im_context_t nctx = malloc(sizeof(im_context_struct));
   int i;
 
@@ -105,6 +142,11 @@ im_context_clone(im_context_t ctx) {
   nctx->max_width = ctx->max_width;
   nctx->max_height = ctx->max_height;
   nctx->max_bytes = ctx->max_bytes;
+  nctx->refcount = 1;
 
-  return ctx;
+#ifdef IMAGER_TRACE_CONTEXT
+  fprintf(stderr, "im_context:%s: cloned %p to %p\n", where, ctx, nctx);
+#endif
+
+  return nctx;
 }

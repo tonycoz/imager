@@ -94,6 +94,7 @@ void
 im_img_init(pIMCTX, i_img *img) {
   img->im_data = NULL;
   img->context = aIMCTX;
+  im_context_refinc(aIMCTX, "img_init");
 }
 
 /* 
@@ -274,9 +275,11 @@ Destroy an image object
 
 void
 i_img_destroy(i_img *im) {
+  dIMCTXim(im);
   mm_log((1,"i_img_destroy(im %p)\n",im));
   i_img_exorcise(im);
   if (im) { myfree(im); }
+  im_context_refdec(aIMCTX, "img_destroy");
 }
 
 /* 

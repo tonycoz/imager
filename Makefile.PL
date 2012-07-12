@@ -48,6 +48,7 @@ my @incpaths; # places to look for headers
 my @libpaths; # places to look for libraries
 my $coverage; # build for coverage testing
 my $assert; # build with assertions
+my $trace_context; # trace context management to stderr
 GetOptions("help" => \$help,
            "enable=s" => \@enable,
            "disable=s" => \@disable,
@@ -56,7 +57,8 @@ GetOptions("help" => \$help,
            "verbose|v" => \$VERBOSE,
            "nolog" => \$NOLOG,
 	   'coverage' => \$coverage,
-	   "assert|a" => \$assert);
+	   "assert|a" => \$assert,
+	   "tracecontext" => \$trace_context);
 
 setenv();
 
@@ -170,6 +172,10 @@ my @objs = qw(Imager.o context.o draw.o polygon.o image.o io.o iolayer.o
 my @typemaps = qw(typemap.local typemap);
 if ($] < 5.008) {
     unshift @typemaps, "typemap.oldperl";
+}
+
+if ($trace_context) {
+  $CFLAGS .= " -DIMAGER_TRACE_CONTEXT";
 }
 
 my %opts=
