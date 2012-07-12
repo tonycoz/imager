@@ -1,5 +1,9 @@
 Imager release history.  Older releases can be found in Changes.old
 
+ - giflib 4.2 eliminates the GIF_LIB_VERSION macro, handle that
+   correctly for both probing and runtime.
+   https://rt.cpan.org/Ticket/Display.html?id=77672
+
 Imager 0.91 - 4 Jun 2012
 ===========
 
