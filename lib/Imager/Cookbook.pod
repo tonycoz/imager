@@ -432,6 +432,23 @@ in pixels per centimeter, you would do:
 
 Keywords: DPI
 
+=head1 IMAGE MANIPULATION
+
+=head2 Replacing a color with transparency
+X<replacing colors>
+
+To replace a color with transparency you can use the
+L<Imager::Filters/difference()> method.
+
+  # make a work image the same size as our input
+  my $work = Imager->new(xsize => $in->getwidth, ysize => $in->getheight,
+                         channels => $in->getchannels);
+  # and fill it with the colour we want transparent
+  $work->box(filled => 1, color => $color);
+
+  # get an image with that colour replaced with transparent black
+  my $out = $work->difference(other => $in);
+
 =head1 AUTHOR
 
 Tony Cook <tony@develop-help.com>
