@@ -1,3 +1,8 @@
+Imager-File-JPEG 0.84
+=====================
+
+ - allow compiling imexif.c with C89 compilers.
+
 Imager-File-JPEG 0.83
 =====================
 

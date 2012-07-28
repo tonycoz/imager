@@ -1298,8 +1298,8 @@ copy_num_array_tags(i_img *im, imtiff *tiff, tag_map *map, int map_count) {
 	if (entry->type == ift_rational || entry->type == ift_srational) {
 	  double value;
 	  char workstr[MAX_ARRAY_STRING];
-	  *workstr = '\0';
 	  size_t len = 0, item_len;
+	  *workstr = '\0';
 	  for (j = 0; j < entry->count; ++j) {
 	    if (!tiff_get_tag_double_array(tiff, tag_index, &value, j)) {
 	      mm_log((3, "unexpected failure from tiff_get_tag_double_array(..., %d, ..., %d)\n", tag_index, j));

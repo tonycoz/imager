@@ -4,6 +4,8 @@ Imager release history.  Older releases can be found in Changes.old
    correctly for both probing and runtime.
    https://rt.cpan.org/Ticket/Display.html?id=77672
 
+ - allow building JPEG/imexif.c on C89 compilers.
+
 Imager 0.91 - 4 Jun 2012
 ===========
 
