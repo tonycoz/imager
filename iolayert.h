@@ -70,6 +70,8 @@ struct i_io_glue_t {
 
   /* if non-zero we do write buffering (enabled by default) */
   int buffered;
+
+  im_context_t context;
 };
 
 #define I_IO_DUMP_CALLBACKS 1
