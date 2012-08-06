@@ -1,5 +1,5 @@
 #include "pluginst.h"
-
+#include <stdlib.h>
 
 char evalstr[]="Mandlebrot renderer";
 
