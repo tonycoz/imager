@@ -1,3 +1,4 @@
+#define IMAGER_NO_CONTEXT
 #include "imager.h"
 
 static void flip_h(i_img *im);
@@ -22,9 +23,10 @@ Returns 0 if parameters are invalid.
 
 undef_int
 i_flipxy(i_img *im, int direction) {
+  dIMCTXim(im);
   i_clear_error();
 
-  mm_log((1, "i_flipxy(im %p, direction %d)\n", im, direction ));
+  im_log((aIMCTX, 1, "i_flipxy(im %p, direction %d)\n", im, direction ));
 
   if (!im)
     return 0;
@@ -43,10 +45,9 @@ i_flipxy(i_img *im, int direction) {
     break;
 
   default:
-    mm_log((1, "i_flipxy: direction is invalid\n" ));
-    i_push_errorf(0, "direction %d invalid", direction);
+    im_log((aIMCTX, 1, "i_flipxy: direction is invalid\n" ));
+    im_push_errorf(aIMCTX, 0, "direction %d invalid", direction);
     return 0;
-
   }
   return 1;
 }
