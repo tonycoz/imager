@@ -34,7 +34,9 @@ log file if logging is enabled.
 */
 
 #ifdef IMAGER_LOG
+#ifndef IMAGER_NO_CONTEXT
 #define mm_log(x) { i_lhead(__FILE__,__LINE__); i_loog x; } 
+#endif
 #define im_log(x) { im_lhead(aIMCTX, __FILE__,__LINE__); im_loog x; } 
 #else
 #define mm_log(x)
