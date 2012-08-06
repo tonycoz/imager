@@ -128,16 +128,16 @@ returns -1 and pushes an error.
 #define i_img_type(im) ((im)->type)
 #define i_img_bits(im) ((im)->bits)
 
+#define pIMCTX im_context_t my_im_ctx
+
 #ifdef IMAGER_NO_CONTEXT
-#define dIMCTX im_context_t my_im_ctx = im_get_context()
-#define dIMCTXa(a) im_context_t my_im_ctx = im_get_context()
-#define dIMCTXim(im) im_context_t my_im_ctx = (im)->context
+#define dIMCTXctx(ctx) pIMCTX = (ctx)
+#define dIMCTX dIMCTXctx(im_get_context())
+#define dIMCTXim(im) dIMCTXctx((im)->context)
 #define aIMCTX my_im_ctx
 #else
 #define aIMCTX im_get_context()
 #endif
-
-#define pIMCTX im_context_t my_im_ctx
 
 #define i_img_8_new(xsize, ysize, channels) im_img_8_new(aIMCTX, (xsize), (ysize), (channels))
 #define i_img_16_new(xsize, ysize, channels) im_img_16_new(aIMCTX, (xsize), (ysize), (channels))
