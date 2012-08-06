@@ -1,3 +1,4 @@
+#define IMAGER_NO_CONTEXT
 #include "imager.h"
 #include "iolayer.h"
 #include "imerror.h"
@@ -10,6 +11,8 @@
 #include <string.h>
 #include <errno.h>
 #include "imageri.h"
+
+#define dIMCTXio(io) dIMCTXctx((io)->context)
 
 #define IOL_DEB(x)
 #define IOL_DEBs stderr
@@ -113,8 +116,8 @@ Some of these functions are internal.
 */
 
 static void
-i_io_init(io_glue *ig, int type, i_io_readp_t readcb, i_io_writep_t writecb,
-	  i_io_seekp_t seekcb);
+i_io_init(pIMCTX, io_glue *ig, int type, i_io_readp_t readcb,
+	  i_io_writep_t writecb, i_io_seekp_t seekcb);
 
 static ssize_t fd_read(io_glue *ig, void *buf, size_t count);
 static ssize_t fd_write(io_glue *ig, const void *buf, size_t count);
@@ -153,7 +156,7 @@ static void bufchain_destroy(io_glue *ig);
  */
 
 /*
-=item io_new_bufchain()
+=item io_new_bufchain(ctx)
 =order 10
 =category I/O Layers
 
@@ -164,15 +167,15 @@ be written to and read from later (like a pseudo file).
 */
 
 io_glue *
-io_new_bufchain() {
+im_io_new_bufchain(pIMCTX) {
   io_glue *ig;
   io_ex_bchain *ieb = mymalloc(sizeof(io_ex_bchain));
 
-  mm_log((1, "io_new_bufchain()\n"));
+  im_log((aIMCTX, 1, "io_new_bufchain()\n"));
 
   ig = mymalloc(sizeof(io_glue));
   memset(ig, 0, sizeof(*ig));
-  i_io_init(ig, BUFCHAIN, bufchain_read, bufchain_write, bufchain_seek);
+  i_io_init(aIMCTX, ig, BUFCHAIN, bufchain_read, bufchain_write, bufchain_seek);
 
   ieb->offset = 0;
   ieb->length = 0;
@@ -187,6 +190,8 @@ io_new_bufchain() {
   ig->exdata    = ieb;
   ig->closecb   = bufchain_close;
   ig->destroycb = bufchain_destroy;
+
+  im_context_refinc(aIMCTX, "im_io_new_bufchain");
 
   return ig;
 }
@@ -206,14 +211,14 @@ from specified buffer.  Note that the buffer is not copied.
 */
 
 io_glue *
-io_new_buffer(const char *data, size_t len, i_io_closebufp_t closecb, void *closedata) {
+im_io_new_buffer(pIMCTX, const char *data, size_t len, i_io_closebufp_t closecb, void *closedata) {
   io_buffer *ig;
   
-  mm_log((1, "io_new_buffer(data %p, len %ld, closecb %p, closedata %p)\n", data, (long)len, closecb, closedata));
+  im_log((aIMCTX, 1, "io_new_buffer(data %p, len %ld, closecb %p, closedata %p)\n", data, (long)len, closecb, closedata));
 
   ig = mymalloc(sizeof(io_buffer));
   memset(ig, 0, sizeof(*ig));
-  i_io_init(&ig->base, BUFFER, buffer_read, buffer_write, buffer_seek);
+  i_io_init(aIMCTX, &ig->base, BUFFER, buffer_read, buffer_write, buffer_seek);
   ig->data      = data;
   ig->len       = len;
   ig->closecb   = closecb;
@@ -223,6 +228,8 @@ io_new_buffer(const char *data, size_t len, i_io_closebufp_t closecb, void *clos
   
   ig->base.closecb   = buffer_close;
   ig->base.destroycb = buffer_destroy;
+
+  im_context_refinc(aIMCTX, "im_io_new_bufchain");
 
   return (io_glue *)ig;
 }
@@ -243,21 +250,22 @@ data from the io_glue callbacks hasn't been done yet.
 */
 
 io_glue *
-io_new_fd(int fd) {
+im_io_new_fd(pIMCTX, int fd) {
   io_fdseek *ig;
 
-  mm_log((1, "io_new_fd(fd %d)\n", fd));
+  im_log((aIMCTX, 1, "io_new_fd(fd %d)\n", fd));
 
   ig = mymalloc(sizeof(io_fdseek));
   memset(ig, 0, sizeof(*ig));
-  i_io_init(&ig->base, FDSEEK, fd_read, fd_write, fd_seek);
+  i_io_init(aIMCTX, &ig->base, FDSEEK, fd_read, fd_write, fd_seek);
   ig->fd = fd;
 
   ig->base.closecb   = fd_close;
   ig->base.sizecb    = fd_size;
   ig->base.destroycb = NULL;
+  im_context_refinc(aIMCTX, "im_io_new_bufchain");
 
-  mm_log((1, "(%p) <- io_new_fd\n", ig));
+  im_log((aIMCTX, 1, "(%p) <- io_new_fd\n", ig));
   return (io_glue *)ig;
 }
 
@@ -304,17 +312,17 @@ handlers.
 */
 
 io_glue *
-io_new_cb(void *p, i_io_readl_t readcb, i_io_writel_t writecb, 
+im_io_new_cb(pIMCTX, void *p, i_io_readl_t readcb, i_io_writel_t writecb, 
 	  i_io_seekl_t seekcb, i_io_closel_t closecb, 
 	  i_io_destroyl_t destroycb) {
   io_cb *ig;
 
-  mm_log((1, "io_new_cb(p %p, readcb %p, writecb %p, seekcb %p, closecb %p, "
+  im_log((aIMCTX, 1, "io_new_cb(p %p, readcb %p, writecb %p, seekcb %p, closecb %p, "
           "destroycb %p)\n", p, readcb, writecb, seekcb, closecb, destroycb));
   ig = mymalloc(sizeof(io_cb));
   memset(ig, 0, sizeof(*ig));
-  i_io_init(&ig->base, CBSEEK, realseek_read, realseek_write, realseek_seek);
-  mm_log((1, "(%p) <- io_new_cb\n", ig));
+  i_io_init(aIMCTX, &ig->base, CBSEEK, realseek_read, realseek_write, realseek_seek);
+  im_log((aIMCTX, 1, "(%p) <- io_new_cb\n", ig));
 
   ig->base.closecb   = realseek_close;
   ig->base.destroycb = realseek_destroy;
@@ -325,6 +333,8 @@ io_new_cb(void *p, i_io_readl_t readcb, i_io_writel_t writecb,
   ig->seekcb    = seekcb;
   ig->closecb   = closecb;
   ig->destroycb = destroycb;
+  
+  im_context_refinc(aIMCTX, "im_io_new_bufchain");
 
   return (io_glue *)ig;
 }
@@ -394,7 +404,8 @@ Destroy an io_glue objects.  Should clean up all related buffers.
 
 void
 io_glue_destroy(io_glue *ig) {
-  mm_log((1, "io_glue_DESTROY(ig %p)\n", ig));
+  dIMCTXio(ig);
+  im_log((aIMCTX, 1, "io_glue_DESTROY(ig %p)\n", ig));
 
   if (ig->destroycb)
     ig->destroycb(ig);
@@ -403,6 +414,8 @@ io_glue_destroy(io_glue *ig) {
     myfree(ig->buffer);
   
   myfree(ig);
+
+  im_context_refdec(aIMCTX, "io_glue_destroy");
 }
 
 /*
@@ -527,6 +540,7 @@ i_io_peekn(io_glue *ig, void *buf, size_t size) {
   IOL_DEB(fprintf(IOL_DEBs, "i_io_peekn(%p, %p, %d)\n", ig, buf, (int)size));
 
   if (size == 0) {
+    dIMCTXio(ig);
     i_push_error(0, "peekn size must be positive");
     IOL_DEB(fprintf(IOL_DEBs, "i_io_peekn() => -1 (zero size)\n"));
     return -1;
@@ -974,7 +988,7 @@ Do common initialization for io_glue objects.
 */
 
 static void
-i_io_init(io_glue *ig, int type, i_io_readp_t readcb, i_io_writep_t writecb,
+i_io_init(pIMCTX, io_glue *ig, int type, i_io_readp_t readcb, i_io_writep_t writecb,
 	  i_io_seekp_t seekcb) {
   ig->type = type;
   ig->exdata = NULL;
@@ -984,6 +998,7 @@ i_io_init(io_glue *ig, int type, i_io_readp_t readcb, i_io_writep_t writecb,
   ig->closecb = NULL;
   ig->sizecb = NULL;
   ig->destroycb = NULL;
+  ig->context = aIMCTX;
 
   ig->buffer = NULL;
   ig->read_ptr = NULL;
@@ -1328,9 +1343,10 @@ static
 int
 realseek_close(io_glue *igo) {
   io_cb *ig = (io_cb *)igo;
+  dIMCTXio(igo);
 
   IOL_DEB(fprintf(IOL_DEBs, "realseek_close(%p)\n", ig));
-  mm_log((1, "realseek_close(ig %p)\n", ig));
+  im_log((aIMCTX,1, "realseek_close(ig %p)\n", ig));
   if (ig->closecb)
     return ig->closecb(ig->p);
   else
@@ -1397,7 +1413,8 @@ buffer_read(io_glue *igo, void *buf, size_t count) {
   IOL_DEB( fprintf(IOL_DEBs, "buffer_read: ig->cpos = %ld, buf = %p, count = %u\n", (long) ig->cpos, buf, (unsigned)count) );
 
   if ( ig->cpos+count > ig->len ) {
-    mm_log((1,"buffer_read: short read: cpos=%ld, len=%ld, count=%ld\n", (long)ig->cpos, (long)ig->len, (long)count));
+    dIMCTXio(igo);
+    im_log((aIMCTX, 1,"buffer_read: short read: cpos=%ld, len=%ld, count=%ld\n", (long)ig->cpos, (long)ig->len, (long)count));
     count = ig->len - ig->cpos;
   }
   
@@ -1423,7 +1440,8 @@ Does nothing, returns -1
 static
 ssize_t 
 buffer_write(io_glue *ig, const void *buf, size_t count) {
-  mm_log((1, "buffer_write called, this method should never be called.\n"));
+  dIMCTXio(ig);
+  im_log((aIMCTX, 1, "buffer_write called, this method should never be called.\n"));
   return -1;
 }
 
@@ -1442,7 +1460,8 @@ or not.  Does nothing for now.  Should be fixed.
 static
 int
 buffer_close(io_glue *ig) {
-  mm_log((1, "buffer_close(ig %p)\n", ig));
+  dIMCTXio(ig);
+  im_log((aIMCTX, 1, "buffer_close(ig %p)\n", ig));
 
   return 0;
 }
@@ -1467,10 +1486,12 @@ buffer_seek(io_glue *igo, off_t offset, int whence) {
     calc_seek_offset(ig->cpos, ig->len, offset, whence);
   
   if (reqpos > ig->len) {
-    mm_log((1, "seeking out of readable range\n"));
+    dIMCTXio(igo);
+    im_log((aIMCTX, 1, "seeking out of readable range\n"));
     return (off_t)-1;
   }
   if (reqpos < 0) {
+    dIMCTXio(igo);
     i_push_error(0, "seek before beginning of file");
     return (off_t)-1;
   }
@@ -1488,7 +1509,8 @@ buffer_destroy(io_glue *igo) {
   io_buffer *ig = (io_buffer *)igo;
 
   if (ig->closecb) {
-    mm_log((1,"calling close callback %p for io_buffer\n", 
+    dIMCTXio(igo);
+    im_log((aIMCTX, 1,"calling close callback %p for io_buffer\n", 
 	    ig->closecb));
     ig->closecb(ig->closedata);
   }
@@ -1509,7 +1531,9 @@ io_blink*
 io_blink_new(void) {
   io_blink *ib;
 
-  mm_log((1, "io_blink_new()\n"));
+#if 0
+  im_log((aIMCTX, 1, "io_blink_new()\n"));
+#endif
 
   ib = mymalloc(sizeof(io_blink));
 
@@ -1561,7 +1585,9 @@ frees all resources used by a buffer chain.
 static void
 io_destroy_bufchain(io_ex_bchain *ieb) {
   io_blink *cp;
+#if 0
   mm_log((1, "io_destroy_bufchain(ieb %p)\n", ieb));
+#endif
   cp = ieb->head;
   
   while(cp) {
@@ -1692,8 +1718,9 @@ bufchain_read(io_glue *ig, void *buf, size_t count) {
   size_t     scount = count;
   char        *cbuf = buf;
   size_t         sk;
+  dIMCTXio(ig);
 
-  mm_log((1, "bufchain_read(ig %p, buf %p, count %ld)\n", ig, buf, (long)count));
+  im_log((aIMCTX, 1, "bufchain_read(ig %p, buf %p, count %ld)\n", ig, buf, (long)count));
 
   while( scount ) {
     int clen = (ieb->cp == ieb->tail) ? ieb->tfill : ieb->cp->len;
@@ -1713,7 +1740,7 @@ bufchain_read(io_glue *ig, void *buf, size_t count) {
     ieb->gpos += sk;
   }
 
-  mm_log((1, "bufchain_read: returning %ld\n", (long)(count-scount)));
+  im_log((aIMCTX, 1, "bufchain_read: returning %ld\n", (long)(count-scount)));
   return count-scount;
 }
 
@@ -1740,15 +1767,16 @@ bufchain_write(io_glue *ig, const void *buf, size_t count) {
   io_ex_bchain *ieb = ig->exdata;
   size_t         ocount = count;
   size_t         sk;
+  dIMCTXio(ig);
 
-  mm_log((1, "bufchain_write: ig = %p, buf = %p, count = %ld\n", ig, buf, (long)count));
+  im_log((aIMCTX, 1, "bufchain_write: ig = %p, buf = %p, count = %ld\n", ig, buf, (long)count));
 
   IOL_DEB( fprintf(IOL_DEBs, "bufchain_write: ig = %p, ieb->cpos = %ld, buf = %p, count = %ld\n", ig, (long) ieb->cpos, buf, (long)count) );
   
   while(count) {
-    mm_log((2, "bufchain_write: - looping - count = %ld\n", (long)count));
+    im_log((aIMCTX, 2, "bufchain_write: - looping - count = %ld\n", (long)count));
     if (ieb->cp->len == ieb->cpos) {
-      mm_log((1, "bufchain_write: cp->len == ieb->cpos = %ld - advancing chain\n", (long) ieb->cpos));
+      im_log((aIMCTX, 1, "bufchain_write: cp->len == ieb->cpos = %ld - advancing chain\n", (long) ieb->cpos));
       io_bchain_advance(ieb);
     }
 
@@ -1758,7 +1786,7 @@ bufchain_write(io_glue *ig, const void *buf, size_t count) {
 
     if (ieb->cp == ieb->tail) {
       int extend = ieb->cpos + sk - ieb->tfill;
-      mm_log((2, "bufchain_write: extending tail by %d\n", extend));
+      im_log((aIMCTX, 2, "bufchain_write: extending tail by %d\n", extend));
       if (extend > 0) {
 	ieb->length += extend;
 	ieb->tfill  += extend;
@@ -1786,7 +1814,8 @@ or not.  Does nothing for now.  Should be fixed.
 static
 int
 bufchain_close(io_glue *ig) {
-  mm_log((1, "bufchain_close(ig %p)\n",ig));
+  dIMCTXio(ig);
+  im_log((aIMCTX, 1, "bufchain_close(ig %p)\n",ig));
   IOL_DEB( fprintf(IOL_DEBs, "bufchain_close(ig %p)\n", ig) );
 
   return 0;  
@@ -1813,8 +1842,9 @@ bufchain_seek(io_glue *ig, off_t offset, int whence) {
 
   off_t scount = calc_seek_offset(ieb->gpos, ieb->length, offset, whence);
   off_t sk;
+  dIMCTXio(ig);
 
-  mm_log((1, "bufchain_seek(ig %p, offset %ld, whence %d)\n", ig, (long)offset, whence));
+  im_log((aIMCTX, 1, "bufchain_seek(ig %p, offset %ld, whence %d)\n", ig, (long)offset, whence));
 
   if (scount < 0) {
     i_push_error(0, "invalid whence supplied or seek before start of file");
@@ -1856,14 +1886,14 @@ bufchain_seek(io_glue *ig, off_t offset, int whence) {
     
     while(wrlen > 0) {
       ssize_t rc, wl = i_min(wrlen, BBSIZ);
-      mm_log((1, "bufchain_seek: wrlen = %d, wl = %ld\n", wrlen, (long)wl));
+      im_log((aIMCTX, 1, "bufchain_seek: wrlen = %d, wl = %ld\n", wrlen, (long)wl));
       rc = bufchain_write( ig, TB, wl );
       if (rc != wl) i_fatal(0, "bufchain_seek: Unable to extend file\n");
       wrlen -= rc;
     }
   }
 
-  mm_log((2, "bufchain_seek: returning ieb->gpos = %ld\n", (long)ieb->gpos));
+  im_log((aIMCTX, 2, "bufchain_seek: returning ieb->gpos = %ld\n", (long)ieb->gpos));
   return ieb->gpos;
 }
 
@@ -1898,7 +1928,8 @@ static ssize_t fd_read(io_glue *igo, void *buf, size_t count) {
 
   /* 0 is valid - means EOF */
   if (result < 0) {
-    i_push_errorf(0, "read() failure: %s (%d)", my_strerror(errno), errno);
+    dIMCTXio(igo);
+    im_push_errorf(aIMCTX, 0, "read() failure: %s (%d)", my_strerror(errno), errno);
   }
 
   return result;
@@ -1917,7 +1948,8 @@ static ssize_t fd_write(io_glue *igo, const void *buf, size_t count) {
 		  (unsigned)count, (int)result));
 
   if (result <= 0) {
-    i_push_errorf(errno, "write() failure: %s (%d)", my_strerror(errno), errno);
+    dIMCTXio(igo);
+    im_push_errorf(aIMCTX, errno, "write() failure: %s (%d)", my_strerror(errno), errno);
   }
 
   return result;
@@ -1933,7 +1965,8 @@ static off_t fd_seek(io_glue *igo, off_t offset, int whence) {
 #endif
 
   if (result == (off_t)-1) {
-    i_push_errorf(errno, "lseek() failure: %s (%d)", my_strerror(errno), errno);
+    dIMCTXio(igo);
+    im_push_errorf(aIMCTX, errno, "lseek() failure: %s (%d)", my_strerror(errno), errno);
   }
 
   return result;
@@ -1945,7 +1978,8 @@ static int fd_close(io_glue *ig) {
 }
 
 static ssize_t fd_size(io_glue *ig) {
-  mm_log((1, "fd_size(ig %p) unimplemented\n", ig));
+  dIMCTXio(ig);
+  im_log((aIMCTX, 1, "fd_size(ig %p) unimplemented\n", ig));
   
   return -1;
 }

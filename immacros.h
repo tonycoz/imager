@@ -155,4 +155,10 @@ returns -1 and pushes an error.
 #define i_push_errorvf(code, fmt, args) im_push_errorvf(aIMCTX, code, fmt, args)
 #define i_push_error(code, msg) im_push_error(aIMCTX, code, msg)
 
+#define io_new_fd(fd) im_io_new_fd(aIMCTX, (fd))
+#define io_new_bufchain() im_io_new_bufchain(aIMCTX)
+#define io_new_buffer(data, len, closecb, closectx) im_io_new_buffer(aIMCTX, (data), (len), (closecb), (closectx))
+#define io_new_cb(p, readcb, writecb, seekcb, closecb, destroycb) \
+  im_io_new_cb(aIMCTX, (p), (readcb), (writecb), (seekcb), (closecb), (destroycb))
+
 #endif
