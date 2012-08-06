@@ -14,6 +14,7 @@
 int im_init_log(pIMCTX, const char *name, int onoff );
 #define i_init_log(name, onoff) im_init_log(aIMCTX, name, onoff)
 void i_fatal ( int exitcode,const char *fmt, ... );
+void im_fatal (pIMCTX, int exitcode,const char *fmt, ... );
 void im_lhead ( pIMCTX, const char *file, int line  );
 void i_lhead ( const char *file, int line  );
 void i_loog(int level,const char *msg, ... ) I_FORMAT_ATTR(2,3);

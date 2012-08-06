@@ -32,6 +32,8 @@ Some of these functions are internal.
 =cut
 */
 
+im_context_t (*im_get_context)(void) = NULL;
+
 #define XAXIS 0
 #define YAXIS 1
 #define XYAXIS 2

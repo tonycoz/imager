@@ -19,6 +19,9 @@ static char  data_buffer[DATABUFF];
 
 #define LOG_DATE_FORMAT "%Y/%m/%d %H:%M:%S"
 
+static void
+im_vloog(pIMCTX, int level, const char *fmt, va_list ap);
+
 /*
  * Logging is active
  */
@@ -47,26 +50,34 @@ im_init_log(pIMCTX, const char* name,int level) {
   return aIMCTX->lg_file != NULL;
 }
 
-#if 0
 void
 i_fatal(int exitcode,const char *fmt, ... ) {
   va_list ap;
   time_t timi;
   struct tm *str_tm;
-  
-  if (lg_file != NULL) {
-    timi = time(NULL);
-    str_tm = localtime(&timi);
-    if ( strftime(date_buffer, DTBUFF, date_format, str_tm) )
-      fprintf(lg_file,"[%s] ",date_buffer);
+  pIMCTX = im_get_context();
+
+  if (aIMCTX->lg_file != NULL) {
     va_start(ap,fmt);
-    vfprintf(lg_file,fmt,ap);
+    im_vloog(aIMCTX, 0, fmt, ap);
     va_end(ap);
   }
   exit(exitcode);
 }
 
-#endif
+void
+im_fatal(pIMCTX, int exitcode,const char *fmt, ... ) {
+  va_list ap;
+  time_t timi;
+  struct tm *str_tm;
+  
+  if (aIMCTX->lg_file != NULL) {
+    va_start(ap,fmt);
+    im_vloog(aIMCTX, 0, fmt, ap);
+    va_end(ap);
+  }
+  exit(exitcode);
+}
 
 /*
 =item i_loog(level, format, ...)
@@ -156,6 +167,7 @@ int i_init_log(const char* name,int onoff) {
 }
 
 void i_fatal(int exitcode,const char *fmt, ... ) { exit(exitcode); }
+void im_fatal(pIMCTX, int exitcode,const char *fmt, ... ) { exit(exitcode); }
 
 void
 i_loog(int level,const char *fmt, ... ) {

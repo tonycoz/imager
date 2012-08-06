@@ -50,10 +50,10 @@ typedef struct {
   void  (*f_myfree_file_line)(void *p, char*file, int line);
   void* (*f_myrealloc_file_line)(void *p, size_t newsize, char* file,int line);
 
-  i_img *(*f_i_img_8_new)(i_img_dim xsize, i_img_dim ysize, int channels);
-  i_img *(*f_i_img_16_new)(i_img_dim xsize, i_img_dim ysize, int channels);
-  i_img *(*f_i_img_double_new)(i_img_dim xsize, i_img_dim ysize, int channels);
-  i_img *(*f_i_img_pal_new)(i_img_dim xsize, i_img_dim ysize, int channels, int maxpal);
+  i_img *(*f_im_img_8_new)(im_context_t ctx, i_img_dim xsize, i_img_dim ysize, int channels);
+  i_img *(*f_im_img_16_new)(im_context_t ctx, i_img_dim xsize, i_img_dim ysize, int channels);
+  i_img *(*f_im_img_double_new)(im_context_t ctx, i_img_dim xsize, i_img_dim ysize, int channels);
+  i_img *(*f_im_img_pal_new)(im_context_t ctx, i_img_dim xsize, i_img_dim ysize, int channels, int maxpal);
   void (*f_i_img_destroy)(i_img *im);
   i_img *(*f_i_sametype)(i_img *im, i_img_dim xsize, i_img_dim ysize);
   i_img *(*f_i_sametype_chans)(i_img *im, i_img_dim xsize, i_img_dim ysize, int channels);
@@ -104,10 +104,10 @@ typedef struct {
   void (*f_i_quant_transparent)(i_quantize *quant, i_palidx *indices, 
                                 i_img *img, i_palidx trans_index);
 
-  void (*f_i_clear_error)(void);
-  void (*f_i_push_error)(int code, char const *msg);
+  void (*f_im_clear_error)(im_context_t ctx);
+  void (*f_im_push_error)(im_context_t ctx, int code, char const *msg);
   void (*f_i_push_errorf)(int code, char const *fmt, ...);
-  void (*f_i_push_errorvf)(int code, char const *fmt, va_list);
+  void (*f_im_push_errorvf)(im_context_t ctx, int code, char const *fmt, va_list);
   
   void (*f_i_tags_new)(i_img_tags *tags);
   int (*f_i_tags_set)(i_img_tags *tags, char const *name, char const *data, 
@@ -154,9 +154,9 @@ typedef struct {
   int (*f_i_rubthru)(i_img *im, i_img *src, i_img_dim tx, i_img_dim ty, i_img_dim src_minx, i_img_dim src_miny, i_img_dim src_maxx, i_img_dim src_maxy);
 
   /* IMAGER_API_LEVEL 2 functions */
-  int (*f_i_set_image_file_limits)(i_img_dim width, i_img_dim height, size_t bytes);
-  int (*f_i_get_image_file_limits)(i_img_dim *width, i_img_dim *height, size_t *bytes);
-  int (*f_i_int_check_image_file_limits)(i_img_dim width, i_img_dim height, int channels, size_t sample_size);
+  int (*f_im_set_image_file_limits)(im_context_t ctx, i_img_dim width, i_img_dim height, size_t bytes);
+  int (*f_im_get_image_file_limits)(im_context_t ctx, i_img_dim *width, i_img_dim *height, size_t *bytes);
+  int (*f_im_int_check_image_file_limits)(im_context_t ctx, i_img_dim width, i_img_dim height, int channels, size_t sample_size);
   int (*f_i_flood_fill_border)(i_img *im, i_img_dim seedx, i_img_dim seedy, const i_color *dcol, const i_color *border);
   int (*f_i_flood_cfill_border)(i_img *im, i_img_dim seedx, i_img_dim seedy, i_fill_t *fill, const i_color *border);
 
@@ -170,8 +170,8 @@ typedef struct {
   void (*f_i_loog)(int level, const char *msg, ...);
 
   /* IMAGER_API_LEVEL 4 functions will be added here */
-  i_img *(*f_i_img_alloc)(void);
-  void (*f_i_img_init)(i_img *);
+  i_img *(*f_im_img_alloc)(im_context_t ctx);
+  void (*f_im_img_init)(im_context_t ctx, i_img *);
 
   /* IMAGER_API_LEVEL 5 functions will be added here */
   /* added i_psampf?_bits macros */
@@ -220,7 +220,7 @@ typedef struct {
   void (*f_io_glue_destroy)(i_io_glue_t *ig);
 
   /* IMAGER_API_LEVEL 8 functions will be added here */
-
+  im_context_t (*f_im_get_context)(void);
 } im_ext_funcs;
 
 #define PERL_FUNCTION_TABLE_NAME "Imager::__ext_func_table"

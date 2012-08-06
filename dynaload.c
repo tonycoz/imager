@@ -35,7 +35,6 @@ static symbol_table_t symbol_table=
     ICL_set_internal,
     ICL_info,
     do_get_context,
-    i_img_empty,
     im_img_empty_ch,
     i_img_exorcise,
     i_img_info,

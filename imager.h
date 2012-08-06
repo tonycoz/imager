@@ -48,16 +48,13 @@ extern void i_rgb_to_hsv(i_color *color);
 extern void i_hsv_to_rgb(i_color *color);
 
 i_img *im_img_8_new(pIMCTX, i_img_dim x,i_img_dim y,int ch);
-#define i_img_8_new(x,y,ch) im_img_8_new(aIMCTX, x,y,ch)
-i_img *i_img_empty(i_img *im,i_img_dim x,i_img_dim y);
+#define i_img_empty(im, x, y) i_img_empty_ch((im), (x), (y), 3)
 i_img *im_img_empty_ch(pIMCTX, i_img *im,i_img_dim x,i_img_dim y,int ch);
-#define i_img_empty_ch(im, x, y, ch) im_img_empty_ch(aIMCTX, im, x, y, ch)
+#define i_img_empty_ch(im, x, y, ch) im_img_empty_ch(aIMCTX, (im), (x), (y), (ch))
 void   i_img_exorcise(i_img *im);
 void   i_img_destroy(i_img *im);
 i_img *im_img_alloc(pIMCTX);
-#define i_img_alloc() im_img_alloc(aIMCTX)
 void im_img_init(pIMCTX, i_img *im);
-#define i_img_init(im) im_img_init(aIMCTX, im)
 
 void   i_img_info(i_img *im,i_img_dim *info);
 
@@ -248,17 +245,14 @@ extern i_palidx *i_quant_translate(i_quantize *quant, i_img *img);
 extern void i_quant_transparent(i_quantize *quant, i_palidx *indices, i_img *img, i_palidx trans_index);
 
 i_img *im_img_pal_new(pIMCTX, i_img_dim x, i_img_dim y, int ch, int maxpal);
-#define i_img_pal_new(x, y, ch, maxpal) im_img_pal_new(aIMCTX, x, y, ch, maxpal)
 
 extern i_img *i_img_to_pal(i_img *src, i_quantize *quant);
 extern i_img *i_img_to_rgb(i_img *src);
 extern i_img *i_img_masked_new(i_img *targ, i_img *mask, i_img_dim x, i_img_dim y, 
                                i_img_dim w, i_img_dim h);
 extern i_img *im_img_16_new(pIMCTX, i_img_dim x, i_img_dim y, int ch);
-#define i_img_16_new(x, y, ch) im_img_16_new(aIMCTX, x, y, ch)
 extern i_img *i_img_to_rgb16(i_img *im);
 extern i_img *im_img_double_new(pIMCTX, i_img_dim x, i_img_dim y, int ch);
-#define i_img_double_new(x, y, ch) im_img_double_new(aIMCTX, x, y, ch)
 extern i_img *i_img_to_drgb(i_img *im);
 
 extern int i_img_is_monochrome(i_img *im, int *zero_is_white);
@@ -372,11 +366,11 @@ extern void i_tags_print(i_img_tags *tags);
 
 /* image file limits */
 extern int
-i_set_image_file_limits(i_img_dim width, i_img_dim height, size_t bytes);
+im_set_image_file_limits(im_context_t ctx, i_img_dim width, i_img_dim height, size_t bytes);
 extern int
-i_get_image_file_limits(i_img_dim *width, i_img_dim *height, size_t *bytes);
+im_get_image_file_limits(im_context_t ctx, i_img_dim *width, i_img_dim *height, size_t *bytes);
 extern int
-i_int_check_image_file_limits(i_img_dim width, i_img_dim height, int channels, size_t sample_size);
+im_int_check_image_file_limits(im_context_t ctx, i_img_dim width, i_img_dim height, int channels, size_t sample_size);
 
 /* memory allocation */
 void* mymalloc(size_t size);

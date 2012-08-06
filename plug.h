@@ -16,13 +16,12 @@
 #define i_color_info(cl) (symbol_table->i_color_info(cl))
 
 #define im_get_context() (symbol_table->im_get_context_f())
-#define i_img_empty(im,x,y) ((symbol_table->im_img_empty_f(im,x,y))
 #define i_img_empty_ch(im,x,y,ch) ((symbol_table->i_img_empty_ch_f(im_get_context(), im,x,y,ch))
-#define i_img_exorcise(im) (symbol_table->i_img_exorcise(im))
-#define i_img_info(im,info) (symbol_table->i_img_info(im,info))
+#define i_img_exorcise(im) (symbol_table->i_img_exorcise_f(im))
+#define i_img_info(im,info) (symbol_table->i_img_info_f(im,info))
 
-#define i_img_setmask(im,ch_mask) (symbol_table->i_img_setmask(im,ch_mask))
-#define i_img_getmask(im) (symbol_table->i_img_getmask(im))
+#define i_img_setmask(im,ch_mask) (symbol_table->i_img_setmask_f(im,ch_mask))
+#define i_img_getmask(im) (symbol_table->i_img_getmask_f(im))
 
 /*
 Not needed?  The i_gpix() macro in image.h will call the right function
