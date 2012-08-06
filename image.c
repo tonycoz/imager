@@ -14,7 +14,7 @@ image.c - implements most of the basic functions of Imager and much of the rest
   i_color *c;
   c = i_color_new(red, green, blue, alpha);
   ICL_DESTROY(c);
-  i = i_img_new();
+  i = i_img_8_new();
   i_img_destroy(i);
   // and much more
 
