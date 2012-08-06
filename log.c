@@ -1,3 +1,4 @@
+#define IMAGER_NO_CONTEXT
 #include "imageri.h"
 #include "imconfig.h"
 #include "log.h"
@@ -37,14 +38,14 @@ im_init_log(pIMCTX, const char* name,int level) {
       aIMCTX->lg_file = stderr;
     } else {
       if (NULL == (aIMCTX->lg_file = fopen(name, "w+")) ) { 
-	i_push_errorf(errno, "Cannot open file '%s': (%d)", name, errno);
+	im_push_errorf(aIMCTX, errno, "Cannot open file '%s': (%d)", name, errno);
 	return 0;
       }
     }
   }
   if (aIMCTX->lg_file) {
     setvbuf(aIMCTX->lg_file, NULL, _IONBF, BUFSIZ);
-    mm_log((0,"Imager - log started (level = %d)\n", level));
+    im_log((aIMCTX, 0,"Imager - log started (level = %d)\n", level));
   }
 
   return aIMCTX->lg_file != NULL;
@@ -53,9 +54,7 @@ im_init_log(pIMCTX, const char* name,int level) {
 void
 i_fatal(int exitcode,const char *fmt, ... ) {
   va_list ap;
-  time_t timi;
-  struct tm *str_tm;
-  pIMCTX = im_get_context();
+  dIMCTX;
 
   if (aIMCTX->lg_file != NULL) {
     va_start(ap,fmt);
@@ -68,8 +67,6 @@ i_fatal(int exitcode,const char *fmt, ... ) {
 void
 im_fatal(pIMCTX, int exitcode,const char *fmt, ... ) {
   va_list ap;
-  time_t timi;
-  struct tm *str_tm;
   
   if (aIMCTX->lg_file != NULL) {
     va_start(ap,fmt);
@@ -108,7 +105,7 @@ im_vloog(pIMCTX, int level, const char *fmt, va_list ap) {
 
 void
 i_loog(int level,const char *fmt, ... ) {
-  pIMCTX = im_get_context();
+  dIMCTX;
   va_list ap;
 
   if (!aIMCTX->lg_file || level > aIMCTX->log_level)
@@ -149,7 +146,7 @@ im_lhead(pIMCTX, const char *file, int line) {
 }
 
 void i_lhead(const char *file, int line) {
-  pIMCTX = im_get_context();
+  dIMCTX;
 
   im_lhead(aIMCTX, file, line);
 }
