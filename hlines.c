@@ -1,3 +1,4 @@
+#define IMAGER_NO_CONTEXT
 #include "imageri.h"
 #include <stdlib.h>
 
