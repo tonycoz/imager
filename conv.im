@@ -1,3 +1,4 @@
+#define IMAGER_NO_CONTEXT
 #include "imager.h"
 #include "imageri.h"
 
@@ -19,12 +20,13 @@ i_conv(i_img *im, const double *coeff,int len) {
   double pc;
   double res[MAXCHANNELS];
   i_img *timg;
+  dIMCTXim(im);
 
-  mm_log((1,"i_conv(im %p, coeff %p, len %d)\n",im,coeff,len));
-  i_clear_error();
+  im_log((aIMCTX,1,"i_conv(im %p, coeff %p, len %d)\n",im,coeff,len));
+  im_clear_error(aIMCTX);
 
   if (len < 1) {
-    i_push_error(0, "there must be at least one coefficient");
+    im_push_error(aIMCTX, 0, "there must be at least one coefficient");
     return 0;
   }
  
