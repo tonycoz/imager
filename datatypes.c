@@ -1,6 +1,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#define IMAGER_NO_CONTEXT
 #include "imager.h"
 
 /*
