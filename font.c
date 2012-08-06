@@ -163,7 +163,7 @@ Initializes the freetype font rendering engine
 =cut
 */
 
-undef_int
+static undef_int
 i_init_tt(void) {
   TT_Error  error;
   TT_Byte palette[] = { 0, 64, 127, 191, 255 };

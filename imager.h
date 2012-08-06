@@ -229,7 +229,6 @@ undef_int i_init_fonts( int t1log );
 
 #ifdef HAVE_LIBTT
 
-undef_int i_init_tt( void );
 TT_Fonthandle* i_tt_new(const char *fontname);
 void i_tt_destroy( TT_Fonthandle *handle );
 undef_int i_tt_cp( TT_Fonthandle *handle,i_img *im,i_img_dim xb,i_img_dim yb,int channel,double points,char const* txt,size_t len,int smooth, int utf8, int align);
