@@ -19,7 +19,9 @@ extern int i_set_errors_fatal(int new_fatal);
 extern i_errmsg *i_errors(void);
 
 extern void im_push_error(pIMCTX, int code, char const *msg);
+#ifndef IMAGER_NO_CONTEXT
 extern void i_push_errorf(int code, char const *fmt, ...) I_FORMAT_ATTR(2, 3);
+#endif
 extern void im_push_errorf(pIMCTX, int code, char const *fmt, ...) I_FORMAT_ATTR(3, 4);
 extern void im_push_errorvf(im_context_t ctx, int code, char const *fmt, va_list);
 extern void im_clear_error(pIMCTX);
