@@ -24,11 +24,6 @@ use Imager::Font;
 		i_color_set
 		i_color_info
 
-		i_img_empty
-		i_img_empty_ch
-		i_img_exorcise
-		i_img_destroy
-
 		i_img_info
 
 		i_img_setmask

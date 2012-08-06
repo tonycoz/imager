@@ -1410,22 +1410,6 @@ i_list_formats()
 	       }
 
 Imager::ImgRaw
-i_img_new()
-
-Imager::ImgRaw
-i_img_empty(im,x,y)
-    Imager::ImgRaw     im
-               i_img_dim     x
-	       i_img_dim     y
-
-Imager::ImgRaw
-i_img_empty_ch(im,x,y,ch)
-    Imager::ImgRaw     im
-               i_img_dim     x
-	       i_img_dim     y
-	       int     ch
-
-Imager::ImgRaw
 i_sametype(im, x, y)
     Imager::ImgRaw im
                i_img_dim x
@@ -1456,14 +1440,6 @@ i_log_entry(string,level)
 
 int
 i_log_enabled()
-
-void
-i_img_exorcise(im)
-    Imager::ImgRaw     im
-
-void
-i_img_destroy(im)
-    Imager::ImgRaw     im
 
 void
 i_img_info(im)
