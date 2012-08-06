@@ -105,7 +105,7 @@ im_img_double_new(pIMCTX, i_img_dim x, i_img_dim y, int ch) {
   size_t bytes;
   i_img *im;
 
-  mm_log((1,"i_img_double_new(x %" i_DF ", y %" i_DF ", ch %d)\n",
+  im_log((aIMCTX, 1,"i_img_double_new(x %" i_DF ", y %" i_DF ", ch %d)\n",
 	  i_DFc(x), i_DFc(y), ch));
 
   if (x < 1 || y < 1) {
@@ -458,7 +458,7 @@ i_psamp_ddoub(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y,
       for (ch = 0; ch < chan_count; ++ch) {
         if (chans[ch] < 0 || chans[ch] >= im->channels) {
 	  dIMCTXim(im);
-          i_push_errorf(0, "No channel %d in this image", chans[ch]);
+          im_push_errorf(aIMCTX, 0, "No channel %d in this image", chans[ch]);
           return -1;
         }
 	if (!((1 << chans[ch]) & im->ch_mask))
