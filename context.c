@@ -23,6 +23,9 @@ im_context_new(void) {
   ctx->log_level = 0;
   ctx->lg_file = NULL;
 #endif
+  ctx->max_width = 0;
+  ctx->max_height = 0;
+  ctx->max_bytes = 0;
 
   return ctx;
 }
@@ -88,9 +91,12 @@ im_context_clone(im_context_t ctx) {
       setvbuf(nctx->lg_file, NULL, _IONBF, 0);
   }
   else {
-    ctx->lg_file = NULL;
+    nctx->lg_file = NULL;
   }
 #endif
+  nctx->max_width = ctx->max_width;
+  nctx->max_height = ctx->max_height;
+  nctx->max_bytes = ctx->max_bytes;
 
   return ctx;
 }

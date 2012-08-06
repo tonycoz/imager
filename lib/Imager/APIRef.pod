@@ -40,15 +40,9 @@ Imager::APIRef - Imager's C API - reference.
   i_flood_cfill_border(im, 50, 50, fill, border);
 
   # Error handling
-  i_clear_error();
-  i_push_error(0, "Yep, it's broken");
-  i_push_error(errno, "Error writing");
   i_push_errorf(errno, "Cannot open file %s: %d", filename, errno);
 
   # Files
-  i_set_image_file_limits(500, 500, 1000000);
-  i_get_image_file_limits(&width, &height, &bytes)
-  i_i_int_check_image_file_limits(width, height, channels, sizeof(i_sample_t))
 
   # Fills
   i_fill_t *fill = i_new_fill_solidf(&fcolor, combine);
@@ -72,13 +66,7 @@ Imager::APIRef - Imager's C API - reference.
   # Image creation/destruction
   i_img *img = i_sametype(src, width, height);
   i_img *img = i_sametype_chans(src, width, height, channels);
-  i_img *img = i_img_16_new(width, height, channels);
-  i_img *img = i_img_8_new(width, height, channels);
-  i_img *img = i_img_double_new(width, height, channels);
-  i_img *img = i_img_pal_new(width, height, channels, max_palette_size)
   i_img_destroy(img)
-
-  # Image Implementation
 
   # Image Information
   // only channel 0 writable 
@@ -850,50 +838,11 @@ From: File immacros.h
 
 =over
 
-=item i_clear_error()
-
-  i_clear_error();
-
-Clears the error stack.
-
-Called by any Imager function before doing any other processing.
-
-
-=for comment
-From: File error.c
-
-=item i_push_error(int code, char const *msg)
-
-  i_push_error(0, "Yep, it's broken");
-  i_push_error(errno, "Error writing");
-
-Called by an Imager function to push an error message onto the stack.
-
-No message is pushed if the stack is full (since this means someone
-forgot to call i_clear_error(), or that a function that doesn't do
-error handling is calling function that does.).
-
-
-=for comment
-From: File error.c
-
 =item i_push_errorf(int code, char const *fmt, ...)
 
   i_push_errorf(errno, "Cannot open file %s: %d", filename, errno);
 
 A version of i_push_error() that does printf() like formatting.
-
-Does not support perl specific format codes.
-
-
-=for comment
-From: File error.c
-
-=item i_push_errorvf(int C<code>, char const *C<fmt>, va_list C<ap>)
-
-
-Intended for use by higher level functions, takes a varargs pointer
-and a format to produce the finally pushed error message.
 
 Does not support perl specific format codes.
 
@@ -936,80 +885,6 @@ Returns 1 if the C<i_background> tag was found and valid.
 
 =for comment
 From: File image.c
-
-=item i_get_image_file_limits(&width, &height, &bytes)
-
-
-  i_get_image_file_limits(&width, &height, &bytes)
-
-Retrieves the file limits set by i_set_image_file_limits().
-
-=over
-
-=item *
-
-i_img_dim *width, *height - the maximum width and height of the image.
-
-=item *
-
-size_t *bytes - size in memory of the image in bytes.
-
-=back
-
-
-=for comment
-From: File limits.c
-
-=item i_int_check_image_file_limits(width, height, channels, sample_size)
-
-
-  i_i_int_check_image_file_limits(width, height, channels, sizeof(i_sample_t))
-
-Checks the size of a file in memory against the configured image file
-limits.
-
-This also range checks the values to those permitted by Imager and
-checks for overflows in calculating the size.
-
-Returns non-zero if the file is within limits.
-
-This function is intended to be called by image file read functions.
-
-
-=for comment
-From: File limits.c
-
-=item i_set_image_file_limits(width, height, bytes)
-
-
-  i_set_image_file_limits(500, 500, 1000000);
-
-Set limits on the sizes of images read by Imager.
-
-Setting a limit to 0 means that limit is ignored.
-
-Negative limits result in failure.
-
-Parameters:
-
-=over
-
-=item *
-
-i_img_dim width, height - maximum width and height.
-
-=item *
-
-size_t bytes - maximum size in memory in bytes.  A value of zero sets
-this limit to one gigabyte.
-
-=back
-
-Returns non-zero on success.
-
-
-=for comment
-From: File limits.c
 
 
 =back
@@ -1476,57 +1351,6 @@ From: File rubthru.im
 
 =over
 
-=item i_img_16_new(x, y, ch)
-
-
-  i_img *img = i_img_16_new(width, height, channels);
-
-Create a new 16-bit/sample image.
-
-Returns the image on success, or NULL on failure.
-
-
-=for comment
-From: File img16.c
-
-=item i_img_8_new(x, y, ch)
-
-
-
-  i_img *img = i_img_8_new(width, height, channels);
-
-Creates a new image object I<x> pixels wide, and I<y> pixels high with
-I<ch> channels.
-
-
-=for comment
-From: File img8.c
-
-=item i_img_double_new(i_img_dim x, i_img_dim y, int ch)
-
-  i_img *img = i_img_double_new(width, height, channels);
-
-Creates a new double per sample image.
-
-
-=for comment
-From: File imgdouble.c
-
-=item i_img_pal_new(C<x>, C<y>, C<channels>, C<maxpal>)
-
-
-  i_img *img = i_img_pal_new(width, height, channels, max_palette_size)
-
-Creates a new paletted image of the supplied dimensions.
-
-C<maxpal> is the maximum palette size and should normally be 256.
-
-Returns a new image or NULL on failure.
-
-
-=for comment
-From: File palimg.c
-
 =item i_sametype(C<im>, C<xsize>, C<ysize>)
 
 
@@ -1558,53 +1382,6 @@ From: File image.c
   i_img_destroy(img)
 
 Destroy an image object
-
-
-=for comment
-From: File image.c
-
-
-=back
-
-=head2 Image Implementation
-
-=over
-
-=item i_img_alloc()
-
-Allocates a new i_img structure.
-
-When implementing a new image type perform the following steps in your
-image object creation function:
-
-=over
-
-=item 1.
-
-allocate the image with i_img_alloc().
-
-=item 2.
-
-initialize any function pointers or other data as needed, you can
-overwrite the whole block if you need to.
-
-=item 3.
-
-initialize Imager's internal data by calling i_img_init() on the image
-object.
-
-=back
-
-
-=for comment
-From: File image.c
-
-=item i_img_init(C<img>)
-
-Imager internal initialization of images.
-
-Currently this does very little, in the future it may be used to
-support threads, or color profiles.
 
 
 =for comment

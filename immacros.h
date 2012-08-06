@@ -86,4 +86,20 @@ returns -1 and pushes an error.
 
 #define pIMCTX im_context_t my_im_ctx
 
+#define i_img_8_new(xsize, ysize, channels) im_img_8_new(aIMCTX, (xsize), (ysize), (channels))
+#define i_img_16_new(xsize, ysize, channels) im_img_16_new(aIMCTX, (xsize), (ysize), (channels))
+#define i_img_double_new(xsize, ysize, channels) im_img_double_new(aIMCTX, (xsize), (ysize), (channels))
+#define i_img_pal_new(xsize, ysize, channels, maxpal) im_img_pal_new(aIMCTX, (xsize), (ysize), (channels), (maxpal))
+
+#define i_img_alloc() im_img_alloc(aIMCTX)
+#define i_img_init(im) im_img_init(aIMCTX, im)
+
+#define i_set_image_file_limits(width, height, bytes) im_set_image_file_limits(aIMCTX, width, height, bytes)
+#define i_get_image_file_limits(width, height, bytes) im_get_image_file_limits(aIMCTX, width, height, bytes)
+#define i_int_check_image_file_limits(width, height, channels, sample_size) im_int_check_image_file_limits(aIMCTX, width, height, channels, sample_size)
+
+#define i_clear_error() im_clear_error(aIMCTX)
+#define i_push_errorvf(code, fmt, args) im_push_errorvf(aIMCTX, code, fmt, args)
+#define i_push_error(code, msg) im_push_error(aIMCTX, code, msg)
+
 #endif

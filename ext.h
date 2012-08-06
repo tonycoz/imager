@@ -26,14 +26,13 @@ typedef struct {
   void (*ICL_info)(const i_color *cl);
 
   im_context_t (*im_get_context_f)(void);
-  i_img*(*i_img_empty_f)(i_img *im,i_img_dim x,i_img_dim y);
   i_img*(*im_img_empty_ch_f)(im_context_t, i_img *im,i_img_dim x,i_img_dim y,int ch);
   void(*i_img_exorcise_f)(i_img *im);
 
   void(*i_img_info_f)(i_img *im,i_img_dim *info);
   
-  void(*i_img_setmask)(i_img *im,int ch_mask);
-  int (*i_img_getmask)(i_img *im);
+  void(*i_img_setmask_f)(i_img *im,int ch_mask);
+  int (*i_img_getmask_f)(i_img *im);
   
   /*
   int (*i_ppix)(i_img *im,i_img_dim x,i_img_dim y,i_color *val);

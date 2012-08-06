@@ -19,12 +19,10 @@ extern int i_set_errors_fatal(int new_fatal);
 extern i_errmsg *i_errors(void);
 
 extern void im_push_error(pIMCTX, int code, char const *msg);
-#define i_push_error(code, msg) im_push_error(aIMCTX, code, msg)
 extern void i_push_errorf(int code, char const *fmt, ...) I_FORMAT_ATTR(2, 3);
 extern void im_push_errorf(pIMCTX, int code, char const *fmt, ...) I_FORMAT_ATTR(3, 4);
-extern void i_push_errorvf(int code, char const *fmt, va_list);
+extern void im_push_errorvf(im_context_t ctx, int code, char const *fmt, va_list);
 extern void im_clear_error(pIMCTX);
-#define i_clear_error() im_clear_error(aIMCTX);
 extern int i_failed(int code, char const *msg);
 
 #endif

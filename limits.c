@@ -26,11 +26,6 @@ Setting a value of zero means that limit will be ignored.
 
 #include "imageri.h"
 
-#define DEF_BYTES_LIMIT 0x40000000
-
-static i_img_dim max_width, max_height;
-static size_t max_bytes = DEF_BYTES_LIMIT;
-
 /*
 =item i_set_image_file_limits(width, height, bytes)
 
@@ -64,7 +59,7 @@ Returns non-zero on success.
 */
 
 int
-i_set_image_file_limits(i_img_dim width, i_img_dim height, size_t bytes) {
+im_set_image_file_limits(im_context_t ctx, i_img_dim width, i_img_dim height, size_t bytes) {
   i_clear_error();
 
   if (width < 0) {
@@ -80,9 +75,9 @@ i_set_image_file_limits(i_img_dim width, i_img_dim height, size_t bytes) {
     return 0;
   }
 
-  max_width = width;
-  max_height = height;
-  max_bytes = bytes ? bytes : DEF_BYTES_LIMIT;
+  ctx->max_width = width;
+  ctx->max_height = height;
+  ctx->max_bytes = bytes ? bytes : DEF_BYTES_LIMIT;
 
   return 1;
 }
@@ -111,12 +106,12 @@ size_t *bytes - size in memory of the image in bytes.
 */
 
 int
-i_get_image_file_limits(i_img_dim *width, i_img_dim *height, size_t *bytes) {
-  i_clear_error();
+im_get_image_file_limits(im_context_t ctx, i_img_dim *width, i_img_dim *height, size_t *bytes) {
+  im_clear_error(ctx);
 
-  *width = max_width;
-  *height = max_height;
-  *bytes = max_bytes;
+  *width = ctx->max_width;
+  *height = ctx->max_height;
+  *bytes = ctx->max_bytes;
 
   return 1;
 }
@@ -141,41 +136,41 @@ This function is intended to be called by image file read functions.
 */
 
 int
-i_int_check_image_file_limits(i_img_dim width, i_img_dim height, int channels, size_t sample_size) {
+im_int_check_image_file_limits(im_context_t ctx, i_img_dim width, i_img_dim height, int channels, size_t sample_size) {
   size_t bytes;
-  i_clear_error();
+  im_clear_error(ctx);
   
   if (width <= 0) {
-    i_push_errorf(0, "file size limit - image width of %" i_DF " is not positive",
+    im_push_errorf(ctx, 0, "file size limit - image width of %" i_DF " is not positive",
 		  i_DFc(width));
     return 0;
   }
-  if (max_width && width > max_width) {
-    i_push_errorf(0, "file size limit - image width of %" i_DF " exceeds limit of %" i_DF,
-		  i_DFc(width), i_DFc(max_width));
+  if (ctx->max_width && width > ctx->max_width) {
+    im_push_errorf(ctx, 0, "file size limit - image width of %" i_DF " exceeds limit of %" i_DF,
+		  i_DFc(width), i_DFc(ctx->max_width));
     return 0;
   }
 
   if (height <= 0) {
-    i_push_errorf(0, "file size limit - image height of %" i_DF " is not positive",
+    im_push_errorf(ctx, 0, "file size limit - image height of %" i_DF " is not positive",
 		  i_DFc(height));
     return 0;
   }
 
-  if (max_height && height > max_height) {
-    i_push_errorf(0, "file size limit - image height of %" i_DF
-		  " exceeds limit of %" i_DF, i_DFc(height), i_DFc(max_height));
+  if (ctx->max_height && height > ctx->max_height) {
+    im_push_errorf(ctx, 0, "file size limit - image height of %" i_DF
+		  " exceeds limit of %" i_DF, i_DFc(height), i_DFc(ctx->max_height));
     return 0;
   }
 
   if (channels < 1 || channels > MAXCHANNELS) {
-    i_push_errorf(0, "file size limit - channels %d out of range",
+    im_push_errorf(ctx, 0, "file size limit - channels %d out of range",
 		  channels);
     return 0;
   }
   
   if (sample_size < 1 || sample_size > sizeof(long double)) {
-    i_push_errorf(0, "file size limit - sample_size %ld out of range",
+    im_push_errorf(ctx, 0, "file size limit - sample_size %ld out of range",
 		  (long)sample_size);
     return 0;
   }
@@ -190,11 +185,11 @@ i_int_check_image_file_limits(i_img_dim width, i_img_dim height, int channels, s
     i_push_error(0, "file size limit - integer overflow calculating storage");
     return 0;
   }
-  if (max_bytes) {
-    if (bytes > max_bytes) {
-      i_push_errorf(0, "file size limit - storage size of %lu "
+  if (ctx->max_bytes) {
+    if (bytes > ctx->max_bytes) {
+      im_push_errorf(ctx, 0, "file size limit - storage size of %lu "
 		    "exceeds limit of %lu", (unsigned long)bytes,
-		    (unsigned long)max_bytes);
+		    (unsigned long)ctx->max_bytes);
       return 0;
     }
   }
