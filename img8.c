@@ -108,41 +108,6 @@ im_img_8_new(pIMCTX, i_img_dim x,i_img_dim y,int ch) {
   return im;
 }
 
-#if 0
-/* 
-=item i_img_new()
-
-Create new image reference - notice that this isn't an object yet and
-this should be fixed asap.
-
-=cut
-*/
-
-
-i_img *
-i_img_new() {
-  i_img *im;
-  
-  mm_log((1,"i_img_struct()\n"));
-
-  im = i_img_alloc();
-  
-  *im = IIM_base_8bit_direct;
-  im->xsize=0;
-  im->ysize=0;
-  im->channels=3;
-  im->ch_mask=MAXINT;
-  im->bytes=0;
-  im->idata=NULL;
-
-  i_img_init(im);
-  
-  mm_log((1,"(%p) <- i_img_struct\n",im));
-  return im;
-}
-
-#endif
-
 /* 
 =item i_img_empty(im, x, y)
 
