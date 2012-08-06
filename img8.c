@@ -99,12 +99,12 @@ i_img *
 im_img_8_new(pIMCTX, i_img_dim x,i_img_dim y,int ch) {
   i_img *im;
 
-  mm_log((1,"IIM_new(x %" i_DF ", y %" i_DF ", ch %d)\n",
+  im_log((aIMCTX, 1,"im_img_8_new(x %" i_DF ", y %" i_DF ", ch %d)\n",
 	  i_DFc(x), i_DFc(y), ch));
 
   im = im_img_empty_ch(aIMCTX, NULL,x,y,ch);
   
-  mm_log((1,"(%p) <- IIM_new\n",im));
+  im_log((aIMCTX, 1,"(%p) <- IIM_new\n",im));
   return im;
 }
 
@@ -161,7 +161,7 @@ Should this just call i_img_empty_ch()?
 
 i_img *
 im_img_empty(pIMCTX, i_img *im,i_img_dim x,i_img_dim y) {
-  mm_log((1,"i_img_empty(*im %p, x %" i_DF ", y %" i_DF ")\n",
+  im_log((aIMCTX, 1,"i_img_empty(*im %p, x %" i_DF ", y %" i_DF ")\n",
 	  im, i_DFc(x), i_DFc(y)));
   return im_img_empty_ch(aIMCTX, im, x, y, 3);
 }
@@ -183,7 +183,7 @@ i_img *
 im_img_empty_ch(pIMCTX, i_img *im,i_img_dim x,i_img_dim y,int ch) {
   size_t bytes;
 
-  mm_log((1,"i_img_empty_ch(*im %p, x %" i_DF ", y %" i_DF ", ch %d)\n",
+  im_log((aIMCTX, 1,"i_img_empty_ch(*im %p, x %" i_DF ", y %" i_DF ", ch %d)\n",
 	  im, i_DFc(x), i_DFc(y), ch));
 
   if (x < 1 || y < 1) {
@@ -219,7 +219,7 @@ im_img_empty_ch(pIMCTX, i_img *im,i_img_dim x,i_img_dim y,int ch) {
 
   im_img_init(aIMCTX, im);
   
-  mm_log((1,"(%p) <- i_img_empty_ch\n",im));
+  im_log((aIMCTX, 1,"(%p) <- i_img_empty_ch\n",im));
   return im;
 }
 
@@ -508,7 +508,8 @@ i_gsamp_d(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, i_sample_t *samps,
       /* make sure we have good channel numbers */
       for (ch = 0; ch < chan_count; ++ch) {
         if (chans[ch] < 0 || chans[ch] >= im->channels) {
-          i_push_errorf(0, "No channel %d in this image", chans[ch]);
+	  dIMCTXim(im);
+          im_push_errorf(aIMCTX, 0, "No channel %d in this image", chans[ch]);
           return 0;
         }
       }
@@ -522,7 +523,8 @@ i_gsamp_d(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, i_sample_t *samps,
     }
     else {
       if (chan_count <= 0 || chan_count > im->channels) {
-	i_push_errorf(0, "chan_count %d out of range, must be >0, <= channels", 
+	dIMCTXim(im);
+	im_push_errorf(aIMCTX, 0, "chan_count %d out of range, must be >0, <= channels", 
 		      chan_count);
 	return 0;
       }
@@ -562,7 +564,8 @@ i_gsampf_d(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, i_fsample_t *samps,
   unsigned char *data;
   for (ch = 0; ch < chan_count; ++ch) {
     if (chans[ch] < 0 || chans[ch] >= im->channels) {
-      i_push_errorf(0, "No channel %d in this image", chans[ch]);
+      dIMCTXim(im);
+      im_push_errorf(aIMCTX, 0, "No channel %d in this image", chans[ch]);
     }
   }
   if (y >=0 && y < im->ysize && l < im->xsize && l >= 0) {
@@ -576,7 +579,8 @@ i_gsampf_d(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, i_fsample_t *samps,
       /* make sure we have good channel numbers */
       for (ch = 0; ch < chan_count; ++ch) {
         if (chans[ch] < 0 || chans[ch] >= im->channels) {
-          i_push_errorf(0, "No channel %d in this image", chans[ch]);
+	  dIMCTXim(im);
+          im_push_errorf(aIMCTX, 0, "No channel %d in this image", chans[ch]);
           return 0;
         }
       }
@@ -590,7 +594,8 @@ i_gsampf_d(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, i_fsample_t *samps,
     }
     else {
       if (chan_count <= 0 || chan_count > im->channels) {
-	i_push_errorf(0, "chan_count %d out of range, must be >0, <= channels", 
+	dIMCTXim(im);
+	im_push_errorf(aIMCTX, 0, "chan_count %d out of range, must be >0, <= channels", 
 		      chan_count);
 	return 0;
       }
@@ -643,7 +648,8 @@ i_psamp_d(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y,
       int all_in_mask = 1;
       for (ch = 0; ch < chan_count; ++ch) {
         if (chans[ch] < 0 || chans[ch] >= im->channels) {
-          i_push_errorf(0, "No channel %d in this image", chans[ch]);
+	  dIMCTXim(im);
+          im_push_errorf(aIMCTX, 0, "No channel %d in this image", chans[ch]);
           return -1;
         }
 	if (!((1 << chans[ch]) & im->ch_mask))
@@ -672,7 +678,8 @@ i_psamp_d(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y,
     }
     else {
       if (chan_count <= 0 || chan_count > im->channels) {
-	i_push_errorf(0, "chan_count %d out of range, must be >0, <= channels", 
+	dIMCTXim(im);
+	im_push_errorf(aIMCTX, 0, "chan_count %d out of range, must be >0, <= channels", 
 		      chan_count);
 	return -1;
       }
@@ -732,7 +739,8 @@ i_psampf_d(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y,
       int all_in_mask = 1;
       for (ch = 0; ch < chan_count; ++ch) {
         if (chans[ch] < 0 || chans[ch] >= im->channels) {
-          i_push_errorf(0, "No channel %d in this image", chans[ch]);
+	  dIMCTXim(im);
+          im_push_errorf(aIMCTX, 0, "No channel %d in this image", chans[ch]);
           return -1;
         }
 	if (!((1 << chans[ch]) & im->ch_mask))
@@ -762,7 +770,8 @@ i_psampf_d(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y,
     }
     else {
       if (chan_count <= 0 || chan_count > im->channels) {
-	i_push_errorf(0, "chan_count %d out of range, must be >0, <= channels", 
+	dIMCTXim(im);
+	im_push_errorf(aIMCTX, 0, "chan_count %d out of range, must be >0, <= channels", 
 		      chan_count);
 	return -1;
       }
