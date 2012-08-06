@@ -122,6 +122,12 @@ typedef struct im_context_tag {
   const char *filename;
   int line;
 #endif
+
+  /* file size limits */
+  i_img_dim max_width, max_height;
+  size_t max_bytes;
 } im_context_struct;
+
+#define DEF_BYTES_LIMIT 0x40000000
 
 #endif

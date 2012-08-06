@@ -281,7 +281,7 @@ im_push_errorvf(im_context_t ctx, int code, char const *fmt, va_list ap) {
 }
 
 void
-i_push_errorvf(int code, char const *fmt, va_list ap) {
+(i_push_errorvf)(int code, char const *fmt, va_list ap) {
   im_push_errorvf(im_get_context(), code, fmt, ap);
 }
 
