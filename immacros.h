@@ -134,6 +134,7 @@ returns -1 and pushes an error.
 #define dIMCTXctx(ctx) pIMCTX = (ctx)
 #define dIMCTX dIMCTXctx(im_get_context())
 #define dIMCTXim(im) dIMCTXctx((im)->context)
+#define dIMCTXio(io) dIMCTXctx((io)->context)
 #define aIMCTX my_im_ctx
 #else
 #define aIMCTX im_get_context()
