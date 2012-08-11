@@ -221,6 +221,12 @@ typedef struct {
 
   /* IMAGER_API_LEVEL 8 functions will be added here */
   im_context_t (*f_im_get_context)(void);
+
+  void (*f_im_push_errorf)(im_context_t , int code, char const *fmt, ...);
+  void (*f_im_lhead)( im_context_t, const char *file, int line  );
+  void (*f_im_loog)(im_context_t, int level,const char *msg, ... ) I_FORMAT_ATTR(3,4);
+  void (*f_im_context_refinc)(im_context_t, const char *where);
+  void (*f_im_context_refdec)(im_context_t, const char *where);
 } im_ext_funcs;
 
 #define PERL_FUNCTION_TABLE_NAME "Imager::__ext_func_table"
