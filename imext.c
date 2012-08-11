@@ -154,7 +154,13 @@ im_ext_funcs imager_function_table =
     io_slurp,
     io_glue_destroy,
 
-    get_context
+    /* level 8 */
+    get_context,
+    im_push_errorf,
+    im_lhead,
+    im_loog,
+    im_context_refinc,
+    im_context_refdec
   };
 
 /* in general these functions aren't called by Imager internally, but
