@@ -31,6 +31,8 @@ extern im_ext_funcs *imager_function_ext_table;
 #define im_extt imager_function_ext_table
 
 #define im_get_context() ((im_extt->f_im_get_context)())
+#define im_context_refinc(ctx, where) ((im_extt->f_im_context_refinc)((ctx), (where)))
+#define im_context_refdec(ctx, where) ((im_extt->f_im_context_refdec)((ctx), (where)))
 
 #ifdef IMAGER_DEBUG_MALLOC
 
@@ -175,6 +177,8 @@ extern im_ext_funcs *imager_function_ext_table;
 #define i_img_get_height(img) ((im_extt->f_i_img_get_height)(img))
 #define i_lhead(file, line) ((im_extt->f_i_lhead)((file), (line)))
 #define i_loog (im_extt->f_i_loog)
+#define im_lhead(ctx, file, line) ((im_extt->f_im_lhead)((ctx), (file), (line)))
+#define im_loog (im_extt->f_im_loog)
 
 #define im_img_alloc(ctx) ((im_extt->f_im_img_alloc)(ctx))
 #define im_img_init(ctx, img) ((im_extt->fm_i_img_init)((ctx), (img)))
@@ -223,8 +227,13 @@ extern im_ext_funcs *imager_function_ext_table;
 #define io_slurp(ig, datap) ((im_extt->f_io_slurp)((ig), (datap)))
 #define io_glue_destroy(ig) ((im_extt->f_io_glue_destroy)(ig))
 
+#define im_push_errorf (im_extt->f_im_push_errorf)
+
 #ifdef IMAGER_LOG
+#ifndef IMAGER_NO_CONTEXT
 #define mm_log(x) { i_lhead(__FILE__,__LINE__); i_loog x; } 
+#endif
+#define im_log(x) { im_lhead(aIMCTX, __FILE__,__LINE__); im_loog x; } 
 #else
 #define mm_log(x)
 #endif
