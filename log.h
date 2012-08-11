@@ -13,7 +13,9 @@
 
 int im_init_log(pIMCTX, const char *name, int onoff );
 #define i_init_log(name, onoff) im_init_log(aIMCTX, name, onoff)
+#ifndef IMAGER_NO_CONTEXT
 void i_fatal ( int exitcode,const char *fmt, ... );
+#endif
 void im_fatal (pIMCTX, int exitcode,const char *fmt, ... );
 void im_lhead ( pIMCTX, const char *file, int line  );
 void i_lhead ( const char *file, int line  );
