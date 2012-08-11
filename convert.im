@@ -276,7 +276,7 @@ Perform a convert that only requires channel copies.
 =cut
 */
 
-i_img *
+static i_img *
 convert_via_copy(i_img *im, i_img *src, struct chan_copy *info) {
 #code src->bits <= i_8_bits
   IM_COLOR *in_line = mymalloc(sizeof(IM_COLOR) * src->xsize);
