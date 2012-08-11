@@ -12,8 +12,6 @@
 #include <errno.h>
 #include "imageri.h"
 
-#define dIMCTXio(io) dIMCTXctx((io)->context)
-
 #define IOL_DEB(x)
 #define IOL_DEBs stderr
 
