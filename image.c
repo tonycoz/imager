@@ -117,7 +117,7 @@ ICL_new_internal(unsigned char r,unsigned char g,unsigned char b,unsigned char a
 
   im_log((aIMCTX,1,"ICL_new_internal(r %d,g %d,b %d,a %d)\n", r, g, b, a));
 
-  if ( (cl=mymalloc(sizeof(i_color))) == NULL) i_fatal(2,"malloc() error\n");
+  if ( (cl=mymalloc(sizeof(i_color))) == NULL) im_fatal(aIMCTX, 2,"malloc() error\n");
   cl->rgba.r = r;
   cl->rgba.g = g;
   cl->rgba.b = b;
@@ -147,7 +147,7 @@ ICL_set_internal(i_color *cl,unsigned char r,unsigned char g,unsigned char b,uns
   im_log((aIMCTX,1,"ICL_set_internal(cl* %p,r %d,g %d,b %d,a %d)\n",cl,r,g,b,a));
   if (cl == NULL)
     if ( (cl=mymalloc(sizeof(i_color))) == NULL)
-      i_fatal(2,"malloc() error\n");
+      im_fatal(aIMCTX, 2,"malloc() error\n");
   cl->rgba.r=r;
   cl->rgba.g=g;
   cl->rgba.b=b;
@@ -223,7 +223,7 @@ i_fcolor *i_fcolor_new(double r, double g, double b, double a) {
 
   im_log((aIMCTX, 1,"i_fcolor_new(r %g,g %g,b %g,a %g)\n", r, g, b, a));
 
-  if ( (cl=mymalloc(sizeof(i_fcolor))) == NULL) i_fatal(2,"malloc() error\n");
+  if ( (cl=mymalloc(sizeof(i_fcolor))) == NULL) im_fatal(aIMCTX, 2,"malloc() error\n");
   cl->rgba.r = r;
   cl->rgba.g = g;
   cl->rgba.b = b;
