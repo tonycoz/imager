@@ -28,9 +28,10 @@ Setting a value of zero means that limit will be ignored.
 #include "imageri.h"
 
 /*
-=item i_set_image_file_limits(width, height, bytes)
-
+=item im_set_image_file_limits(ctx, width, height, bytes)
+X<im_set_image_file_limits API>X<i_set_image_file_limits API>
 =category Files
+=synopsis im_set_image_file_limits(aIMCTX, 500, 500, 1000000);
 =synopsis i_set_image_file_limits(500, 500, 1000000);
 
 Set limits on the sizes of images read by Imager.
@@ -55,6 +56,8 @@ this limit to one gigabyte.
 =back
 
 Returns non-zero on success.
+
+Also callable as C<i_set_image_file_limits(width, height, bytes)>.
 
 =cut
 */
@@ -84,9 +87,10 @@ im_set_image_file_limits(pIMCTX, i_img_dim width, i_img_dim height, size_t bytes
 }
 
 /*
-=item i_get_image_file_limits(&width, &height, &bytes)
-
+=item im_get_image_file_limits(ctx, &width, &height, &bytes)
+X<im_get_image_file_limits API>X<i_get_image_file_limits>
 =category Files
+=synopsis im_get_image_file_limits(aIMCTX, &width, &height, &bytes)
 =synopsis i_get_image_file_limits(&width, &height, &bytes)
 
 Retrieves the file limits set by i_set_image_file_limits().
@@ -103,6 +107,8 @@ size_t *bytes - size in memory of the image in bytes.
 
 =back
 
+Also callable as C<i_get_image_file_limits(&width, &height, &bytes)>.
+
 =cut
 */
 
@@ -118,10 +124,11 @@ im_get_image_file_limits(pIMCTX, i_img_dim *width, i_img_dim *height, size_t *by
 }
 
 /*
-=item i_int_check_image_file_limits(width, height, channels, sample_size)
-
+=item im_int_check_image_file_limits(width, height, channels, sample_size)
+X<im_int_check_image_file_limits API>X<i_int_check_image_file_limits>
 =category Files
-=synopsis i_i_int_check_image_file_limits(width, height, channels, sizeof(i_sample_t))
+=synopsis im_int_check_image_file_limits(aIMCTX, width, height, channels, sizeof(i_sample_t))
+=synopsis i_int_check_image_file_limits(width, height, channels, sizeof(i_sample_t))
 
 Checks the size of a file in memory against the configured image file
 limits.
@@ -132,6 +139,8 @@ checks for overflows in calculating the size.
 Returns non-zero if the file is within limits.
 
 This function is intended to be called by image file read functions.
+
+Also callable as C<i_int_check_image_file_limits(width, height, channels, sizeof(i_sample_t)>.
 
 =cut
 */

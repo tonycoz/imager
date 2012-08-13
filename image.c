@@ -44,8 +44,11 @@ im_context_t (*im_get_context)(void) = NULL;
 void i_linker_bug_fake(void) { ceil(1); }
 
 /*
-=item i_img_alloc()
+=item im_img_alloc(aIMCTX)
+X<im_img_alloc API>X<i_img_alloc API>
 =category Image Implementation
+=synopsis i_img *im = im_img_alloc(aIMCTX);
+=synopsis i_img *im = i_img_alloc();
 
 Allocates a new i_img structure.
 
@@ -79,13 +82,15 @@ im_img_alloc(pIMCTX) {
 }
 
 /*
-=item i_img_init(C<img>)
+=item im_img_init(aIMCTX, image)
+X<im_img_init API>X<i_img_init API>
 =category Image Implementation
+=synopsis im_img_init(aIMCTX, im);
+=synopsis i_img_init(im);
 
 Imager internal initialization of images.
 
-Currently this does very little, in the future it may be used to
-support threads, or color profiles.
+See L</im_img_alloc(aIMCTX)> for more information.
 
 =cut
 */

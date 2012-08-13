@@ -1,5 +1,9 @@
 Imager release history.  Older releases can be found in Changes.old
 
+Threads work
+TODO: fill objects should refer to the contexts
+TODO: finish up doc changes
+
  - clarify the return value of getpixel();
    https://rt.cpan.org/Ticket/Display.html?id=81198
 

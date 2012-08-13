@@ -567,7 +567,7 @@ int
 Retrieve the context object for the current thread.
 
 Inside Imager itself this is just a function pointer, which the
-Imager.xs BOOT handler initializes for use within perl.  If you're
+F<Imager.xs> BOOT handler initializes for use within perl.  If you're
 taking the Imager code and embedding it elsewhere you need to
 initialize the C<im_get_context> pointer at some point.
 

@@ -40,9 +40,24 @@ Imager::APIRef - Imager's C API - reference.
   i_flood_cfill_border(im, 50, 50, fill, border);
 
   # Error handling
+  im_clear_error(aIMCTX);
+  i_clear_error();
+  i_push_error(0, "Yep, it's broken");
+  i_push_error(errno, "Error writing");
+  im_push_error(aIMCTX, 0, "Something is wrong");
+  va_args args;
+  va_start(args, lastarg);
+  im_push_errorvf(ctx, code, format, args);
   i_push_errorf(errno, "Cannot open file %s: %d", filename, errno);
+  im_push_errorf(aIMCTX, errno, "Cannot open file %s: %d", filename, errno);
 
   # Files
+  im_set_image_file_limits(aIMCTX, 500, 500, 1000000);
+  i_set_image_file_limits(500, 500, 1000000);
+  im_get_image_file_limits(aIMCTX, &width, &height, &bytes)
+  i_get_image_file_limits(&width, &height, &bytes)
+  im_int_check_image_file_limits(aIMCTX, width, height, channels, sizeof(i_sample_t))
+  i_int_check_image_file_limits(width, height, channels, sizeof(i_sample_t))
 
   # Fills
   i_fill_t *fill = i_new_fill_solidf(&fcolor, combine);
@@ -66,7 +81,21 @@ Imager::APIRef - Imager's C API - reference.
   # Image creation/destruction
   i_img *img = i_sametype(src, width, height);
   i_img *img = i_sametype_chans(src, width, height, channels);
+  i_img *img = im_img_16_new(aIMCTX, width, height, channels);
+  i_img *img = i_img_16_new(width, height, channels);
+  i_img *img = im_img_8_new(aIMCTX, width, height, channels);
+  i_img *img = i_img_8_new(width, height, channels);
+  i_img *img = im_img_double_new(aIMCTX, width, height, channels);
+  i_img *img = i_img_double_new(width, height, channels);
+  i_img *img = im_img_pal_new(aIMCTX, width, height, channels, max_palette_size)
+  i_img *img = i_img_pal_new(width, height, channels, max_palette_size)
   i_img_destroy(img)
+
+  # Image Implementation
+  i_img *im = im_img_alloc(aIMCTX);
+  i_img *im = i_img_alloc();
+  im_img_init(aIMCTX, im);
+  i_img_init(im);
 
   # Image Information
   // only channel 0 writable 
@@ -850,6 +879,69 @@ Does not support perl specific format codes.
 =for comment
 From: File error.c
 
+=item im_clear_error(ctx)
+X<im_clear_error API>X<i_clear_error API>
+
+  im_clear_error(aIMCTX);
+  i_clear_error();
+
+Clears the error stack.
+
+Called by any Imager function before doing any other processing.
+
+Also callable as C<i_clear_error()>.
+
+
+=for comment
+From: File error.c
+
+=item im_push_error(ctx, code, message)
+X<im_push_error API>X<i_push_error API>
+
+  i_push_error(0, "Yep, it's broken");
+  i_push_error(errno, "Error writing");
+  im_push_error(aIMCTX, 0, "Something is wrong");
+
+Called by an Imager function to push an error message onto the stack.
+
+No message is pushed if the stack is full (since this means someone
+forgot to call i_clear_error(), or that a function that doesn't do
+error handling is calling function that does.).
+
+
+=for comment
+From: File error.c
+
+=item im_push_errorf(ctx, code, char const *fmt, ...)
+
+  im_push_errorf(aIMCTX, errno, "Cannot open file %s: %d", filename, errno);
+
+A version of im_push_error() that does printf() like formatting.
+
+Does not support perl specific format codes.
+
+
+=for comment
+From: File error.c
+
+=item im_push_errorvf(ctx, code, format, args)
+X<im_push_error_vf API>X<i_push_errorvf API>
+
+  va_args args;
+  va_start(args, lastarg);
+  im_push_errorvf(ctx, code, format, args);
+
+Intended for use by higher level functions, takes a varargs pointer
+and a format to produce the finally pushed error message.
+
+Does not support perl specific format codes.
+
+Also callable as C<i_push_errorvf(code, format, args)>
+
+
+=for comment
+From: File error.c
+
 
 =back
 
@@ -885,6 +977,89 @@ Returns 1 if the C<i_background> tag was found and valid.
 
 =for comment
 From: File image.c
+
+=item im_get_image_file_limits(ctx, &width, &height, &bytes)
+X<im_get_image_file_limits API>X<i_get_image_file_limits>
+
+  im_get_image_file_limits(aIMCTX, &width, &height, &bytes)
+  i_get_image_file_limits(&width, &height, &bytes)
+
+Retrieves the file limits set by i_set_image_file_limits().
+
+=over
+
+=item *
+
+i_img_dim *width, *height - the maximum width and height of the image.
+
+=item *
+
+size_t *bytes - size in memory of the image in bytes.
+
+=back
+
+Also callable as C<i_get_image_file_limits(&width, &height, &bytes)>.
+
+
+=for comment
+From: File limits.c
+
+=item im_int_check_image_file_limits(width, height, channels, sample_size)
+X<im_int_check_image_file_limits API>X<i_int_check_image_file_limits>
+
+  im_int_check_image_file_limits(aIMCTX, width, height, channels, sizeof(i_sample_t))
+  i_int_check_image_file_limits(width, height, channels, sizeof(i_sample_t))
+
+Checks the size of a file in memory against the configured image file
+limits.
+
+This also range checks the values to those permitted by Imager and
+checks for overflows in calculating the size.
+
+Returns non-zero if the file is within limits.
+
+This function is intended to be called by image file read functions.
+
+Also callable as C<i_int_check_image_file_limits(width, height, channels, sizeof(i_sample_t)>.
+
+
+=for comment
+From: File limits.c
+
+=item im_set_image_file_limits(ctx, width, height, bytes)
+X<im_set_image_file_limits API>X<i_set_image_file_limits API>
+
+  im_set_image_file_limits(aIMCTX, 500, 500, 1000000);
+  i_set_image_file_limits(500, 500, 1000000);
+
+Set limits on the sizes of images read by Imager.
+
+Setting a limit to 0 means that limit is ignored.
+
+Negative limits result in failure.
+
+Parameters:
+
+=over
+
+=item *
+
+i_img_dim width, height - maximum width and height.
+
+=item *
+
+size_t bytes - maximum size in memory in bytes.  A value of zero sets
+this limit to one gigabyte.
+
+=back
+
+Returns non-zero on success.
+
+Also callable as C<i_set_image_file_limits(width, height, bytes)>.
+
+
+=for comment
+From: File limits.c
 
 
 =back
@@ -1007,6 +1182,94 @@ From: File fills.c
 =head2 I/O Layers
 
 =over
+
+=item im_io_new_bufchain(ctx)
+X<im_io_new_bufchain API>X<i_io_new_bufchain API>
+
+Returns a new io_glue object that has the 'empty' source and but can
+be written to and read from later (like a pseudo file).
+
+Also callable as C<io_new_bufchain()>.
+
+
+=for comment
+From: File iolayer.c
+
+=item im_io_new_buffer(ctx, data, length)
+X<im_io_new_buffer API>X<io_new_buffer API>
+
+Returns a new io_glue object that has the source defined as reading
+from specified buffer.  Note that the buffer is not copied.
+
+   ctx - an Imager context object
+   data - buffer to read from
+   length - length of buffer
+
+Also callable as C<io_new_buffer(data, length>.
+
+
+=for comment
+From: File iolayer.c
+
+=item im_io_new_cb(ctx, p, read_cb, write_cb, seek_cb, close_cb, destroy_cb)
+X<im_io_new_cb API>X<io_new_cb API>
+
+Create a new I/O layer object that calls your supplied callbacks.
+
+In general the callbacks should behave like the corresponding POSIX
+primitives.
+
+=over
+
+=item *
+
+C<read_cb>(p, buffer, length) should read up to C<length> bytes into
+C<buffer> and return the number of bytes read.  At end of file, return
+0.  On error, return -1.
+
+=item *
+
+C<write_cb>(p, buffer, length) should write up to C<length> bytes from
+C<buffer> and return the number of bytes written.  A return value <= 0
+will be treated as an error.
+
+=item *
+
+C<seekcb>(p, offset, whence) should seek and return the new offset.
+
+=item *
+
+C<close_cb>(p) should return 0 on success, -1 on failure.
+
+=item *
+
+C<destroy_cb>(p) should release any memory specific to your callback
+handlers.
+
+=back
+
+Also callable as C<io_new_cb(p, readcb, writecb, seekcb, closecb,
+destroycb)>.
+
+
+=for comment
+From: File iolayer.c
+
+=item im_io_new_fd(ctx, file)
+X<io_new_fd API>X<im_io_new_fd API>
+
+Returns a new io_glue object that has the source defined as reading
+from specified file descriptor.  Note that the the interface to receiving
+data from the io_glue callbacks hasn't been done yet.
+
+  ctx - and Imager context object
+  file - file descriptor to read/write from
+
+Also callable as C<io_new_fd(file)>.
+
+
+=for comment
+From: File iolayer.c
 
 =item i_io_close(io)
 
@@ -1159,6 +1422,7 @@ Returns the number of bytes written.
 From: File iolayer.c
 
 =item io_slurp(ig, c)
+X<io_slurp API>
 
 Takes the source that the io_glue is bound to and allocates space for
 a return buffer and returns the entire content in a single buffer.
@@ -1181,6 +1445,7 @@ from io_new_bufchain().
 From: File iolayer.c
 
 =item io_glue_destroy(ig)
+X<io_glue_destroy API>
 
   io_glue_destroy(ig);
 
@@ -1304,11 +1569,126 @@ For paletted images the equivalent direct type is returned.
 =for comment
 From: File image.c
 
+=item im_img_16_new(ctx, x, y, ch)
+X<im_img_16_new API>X<i_img_16_new API>
+
+  i_img *img = im_img_16_new(aIMCTX, width, height, channels);
+  i_img *img = i_img_16_new(width, height, channels);
+
+Create a new 16-bit/sample image.
+
+Returns the image on success, or NULL on failure.
+
+Also callable as C<i_img_16_new(x, y, ch)>
+
+
+=for comment
+From: File img16.c
+
+=item im_img_8_new(ctx, x, y, ch)
+X<im_img_8_new API>X<i_img_8_new API>
+
+  i_img *img = im_img_8_new(aIMCTX, width, height, channels);
+  i_img *img = i_img_8_new(width, height, channels);
+
+Creates a new image object I<x> pixels wide, and I<y> pixels high with
+I<ch> channels.
+
+
+=for comment
+From: File img8.c
+
+=item im_img_double_new(ctx, x, y, ch)
+X<im_img_double_new API>X<i_img_double_new API>
+
+  i_img *img = im_img_double_new(aIMCTX, width, height, channels);
+  i_img *img = i_img_double_new(width, height, channels);
+
+Creates a new double per sample image.
+
+Also callable as C<i_img_double_new(width, height, channels)>.
+
+
+=for comment
+From: File imgdouble.c
+
+=item im_img_pal_new(ctx, C<x>, C<y>, C<channels>, C<maxpal>)
+X<im_img_pal_new API>X<i_img_pal_new API>
+
+  i_img *img = im_img_pal_new(aIMCTX, width, height, channels, max_palette_size)
+  i_img *img = i_img_pal_new(width, height, channels, max_palette_size)
+
+Creates a new paletted image of the supplied dimensions.
+
+C<maxpal> is the maximum palette size and should normally be 256.
+
+Returns a new image or NULL on failure.
+
+Also callable as C<i_img_pal_new(width, height, channels, max_palette_size)>.
+
+
+=for comment
+From: File palimg.c
+
 =item i_img_destroy(C<img>)
 
   i_img_destroy(img)
 
 Destroy an image object
+
+
+=for comment
+From: File image.c
+
+
+=back
+
+=head2 Image Implementation
+
+=over
+
+=item im_img_alloc(aIMCTX)
+X<im_img_alloc API>X<i_img_alloc API>
+
+  i_img *im = im_img_alloc(aIMCTX);
+  i_img *im = i_img_alloc();
+
+Allocates a new i_img structure.
+
+When implementing a new image type perform the following steps in your
+image object creation function:
+
+=over
+
+=item 1.
+
+allocate the image with i_img_alloc().
+
+=item 2.
+
+initialize any function pointers or other data as needed, you can
+overwrite the whole block if you need to.
+
+=item 3.
+
+initialize Imager's internal data by calling i_img_init() on the image
+object.
+
+=back
+
+
+=for comment
+From: File image.c
+
+=item im_img_init(aIMCTX, image)
+X<im_img_init API>X<i_img_init API>
+
+  im_img_init(aIMCTX, im);
+  i_img_init(im);
+
+Imager internal initialization of images.
+
+See L</im_img_alloc(aIMCTX)> for more information.
 
 
 =for comment
@@ -1494,18 +1874,6 @@ This is an internal function called by the mm_log() macro.
 
 =for comment
 From: File log.c
-
-=item mm_log((level, format, ...))
-
-This is the main entry point to logging. Note that the extra set of
-parentheses are required due to limitations in C89 macros.
-
-This will format a string with the current file and line number to the
-log file if logging is enabled.
-
-
-=for comment
-From: File log.h
 
 
 =back
@@ -1842,6 +2210,65 @@ Returns ~0UL on failure.
 =for comment
 From: File io.c
 
+=item im_errors(ctx)
+
+  i_errmsg *errors = im_errors(aIMCTX);
+  i_errmsg *errors = i_errors();
+
+Returns a pointer to the first element of an array of error messages,
+terminated by a NULL pointer.  The highest level message is first.
+
+Also callable as C<i_errors()>.
+
+
+=for comment
+From: File error.c
+
+=item im_get_context()
+
+Retrieve the context object for the current thread.
+
+Inside Imager itself this is just a function pointer, which the
+F<Imager.xs> BOOT handler initializes for use within perl.  If you're
+taking the Imager code and embedding it elsewhere you need to
+initialize the C<im_get_context> pointer at some point.
+
+
+=for comment
+From: File imext.c
+
+
+
+=back
+
+
+=head1 UNDOCUMENTED
+
+The following API functions are undocumented so far, hopefully this
+will change:
+
+=over
+
+=item *
+
+B<im_context_refdec>
+
+=item *
+
+B<im_context_refinc>
+
+=item *
+
+B<im_lhead>
+
+=item *
+
+B<im_loog>
+
+=item *
+
+B<mm_log>
+
 
 
 =back
@@ -1853,6 +2280,6 @@ Tony Cook <tonyc@cpan.org>
 
 =head1 SEE ALSO
 
-Imager, Imager::ExtUtils, Imager::Inline
+Imager, Imager::API, Imager::ExtUtils, Imager::Inline
 
 =cut
