@@ -92,11 +92,15 @@ static i_img IIM_base_double_direct =
 };
 
 /*
-=item i_img_double_new(i_img_dim x, i_img_dim y, int ch)
+=item im_img_double_new(ctx, x, y, ch)
+X<im_img_double_new API>X<i_img_double_new API>
 =category Image creation/destruction
+=synopsis i_img *img = im_img_double_new(aIMCTX, width, height, channels);
 =synopsis i_img *img = i_img_double_new(width, height, channels);
 
 Creates a new double per sample image.
+
+Also callable as C<i_img_double_new(width, height, channels)>.
 
 =cut
 */

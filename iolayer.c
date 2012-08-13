@@ -154,12 +154,15 @@ static void bufchain_destroy(io_glue *ig);
  */
 
 /*
-=item io_new_bufchain(ctx)
+=item im_io_new_bufchain(ctx)
+X<im_io_new_bufchain API>X<i_io_new_bufchain API>
 =order 10
 =category I/O Layers
 
-returns a new io_glue object that has the 'empty' source and but can
+Returns a new io_glue object that has the 'empty' source and but can
 be written to and read from later (like a pseudo file).
+
+Also callable as C<io_new_bufchain()>.
 
 =cut
 */
@@ -195,15 +198,19 @@ im_io_new_bufchain(pIMCTX) {
 }
 
 /*
-=item io_new_buffer(data, length)
+=item im_io_new_buffer(ctx, data, length)
+X<im_io_new_buffer API>X<io_new_buffer API>
 =order 10
 =category I/O Layers
 
 Returns a new io_glue object that has the source defined as reading
 from specified buffer.  Note that the buffer is not copied.
 
+   ctx - an Imager context object
    data - buffer to read from
    length - length of buffer
+
+Also callable as C<io_new_buffer(data, length>.
 
 =cut
 */
@@ -234,15 +241,19 @@ im_io_new_buffer(pIMCTX, const char *data, size_t len, i_io_closebufp_t closecb,
 
 
 /*
-=item io_new_fd(fd)
+=item im_io_new_fd(ctx, file)
+X<io_new_fd API>X<im_io_new_fd API>
 =order 10
 =category I/O Layers
 
-returns a new io_glue object that has the source defined as reading
+Returns a new io_glue object that has the source defined as reading
 from specified file descriptor.  Note that the the interface to receiving
 data from the io_glue callbacks hasn't been done yet.
 
-   fd - file descriptor to read/write from
+  ctx - and Imager context object
+  file - file descriptor to read/write from
+
+Also callable as C<io_new_fd(file)>.
 
 =cut
 */
@@ -268,7 +279,8 @@ im_io_new_fd(pIMCTX, int fd) {
 }
 
 /*
-=item io_new_cb(p, read_cb, write_cb, seek_cb, close_cb, destroy_cb)
+=item im_io_new_cb(ctx, p, read_cb, write_cb, seek_cb, close_cb, destroy_cb)
+X<im_io_new_cb API>X<io_new_cb API>
 =category I/O Layers
 =order 10
 
@@ -306,6 +318,9 @@ handlers.
 
 =back
 
+Also callable as C<io_new_cb(p, readcb, writecb, seekcb, closecb,
+destroycb)>.
+
 =cut
 */
 
@@ -339,6 +354,7 @@ im_io_new_cb(pIMCTX, void *p, i_io_readl_t readcb, i_io_writel_t writecb,
 
 /*
 =item io_slurp(ig, c)
+X<io_slurp API>
 =category I/O Layers
 
 Takes the source that the io_glue is bound to and allocates space for
@@ -392,6 +408,7 @@ io_slurp(io_glue *ig, unsigned char **c) {
 
 /*
 =item io_glue_destroy(ig)
+X<io_glue_destroy API>
 =category I/O Layers
 =order 90
 =synopsis io_glue_destroy(ig);

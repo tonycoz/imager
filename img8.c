@@ -82,10 +82,10 @@ static i_img IIM_base_8bit_direct =
   }*/
 
 /*
-=item i_img_8_new(x, y, ch)
-
+=item im_img_8_new(ctx, x, y, ch)
+X<im_img_8_new API>X<i_img_8_new API>
 =category Image creation/destruction
-
+=synopsis i_img *img = im_img_8_new(aIMCTX, width, height, channels);
 =synopsis i_img *img = i_img_8_new(width, height, channels);
 
 Creates a new image object I<x> pixels wide, and I<y> pixels high with
@@ -93,7 +93,6 @@ I<ch> channels.
 
 =cut
 */
-
 
 i_img *
 im_img_8_new(pIMCTX, i_img_dim x,i_img_dim y,int ch) {
