@@ -155,6 +155,7 @@ returns -1 and pushes an error.
 #define i_clear_error() im_clear_error(aIMCTX)
 #define i_push_errorvf(code, fmt, args) im_push_errorvf(aIMCTX, code, fmt, args)
 #define i_push_error(code, msg) im_push_error(aIMCTX, code, msg)
+#define i_errors() im_errors(aIMCTX)
 
 #define io_new_fd(fd) im_io_new_fd(aIMCTX, (fd))
 #define io_new_bufchain() im_io_new_bufchain(aIMCTX)

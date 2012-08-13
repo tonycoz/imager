@@ -694,6 +694,13 @@ enum {
 
 #include "iolayert.h"
 
+/* error message information returned by im_errors() */
+
+typedef struct {
+  char *msg;
+  int code;
+} i_errmsg;
+
 typedef struct i_render_tag i_render;
 
 #ifdef IMAGER_FORMAT_ATTR
