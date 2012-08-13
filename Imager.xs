@@ -4062,6 +4062,7 @@ im_context_DESTROY(ctx)
 void
 im_context_CLONE(...)
     CODE:
+      (void)items;
       MY_CXT_CLONE;
       /* the following sv_setref_pv() will free this inc */
       im_context_refinc(MY_CXT.ctx, "CLONE");
@@ -4073,6 +4074,9 @@ im_context_CLONE(...)
 BOOT:
         PERL_SET_GLOBAL_CALLBACKS;
 	PERL_PL_SET_GLOBAL_CALLBACKS;
-        MY_CXT_INIT;
+	{
+          MY_CXT_INIT;
+	  (void)MY_CXT;
+	}
 	start_context(aTHX);
 	im_get_context = perl_get_context;
