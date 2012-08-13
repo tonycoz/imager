@@ -972,7 +972,7 @@ i_gradgen(i_img *im, int num, i_img_dim *xo, i_img_dim *yo, i_color *ival, int d
 	fdist[p]  = i_max(xd*xd, yd*yd); /* manhattan distance */
 	break;
       default:
-	i_fatal(3,"i_gradgen: Unknown distance measure\n");
+	im_fatal(aIMCTX, 3,"i_gradgen: Unknown distance measure\n");
       }
       cs += fdist[p];
     }
@@ -1027,7 +1027,7 @@ i_nearest_color_foo(i_img *im, int num, i_img_dim *xo, i_img_dim *yo, i_color *i
       mindist = i_max(xd*xd, yd*yd); /* manhattan distance */
       break;
     default:
-      i_fatal(3,"i_nearest_color: Unknown distance measure\n");
+      im_fatal(aIMCTX, 3,"i_nearest_color: Unknown distance measure\n");
     }
 
     for(p = 1; p<num; p++) {
@@ -1044,7 +1044,7 @@ i_nearest_color_foo(i_img *im, int num, i_img_dim *xo, i_img_dim *yo, i_color *i
 	curdist = i_max(xd*xd, yd*yd); /* manhattan distance */
 	break;
       default:
-	i_fatal(3,"i_nearest_color: Unknown distance measure\n");
+	im_fatal(aIMCTX, 3,"i_nearest_color: Unknown distance measure\n");
       }
       if (curdist < mindist) {
 	mindist = curdist;
@@ -1189,7 +1189,7 @@ i_nearest_color(i_img *im, int num, i_img_dim *xo, i_img_dim *yo, i_color *oval,
       mindist = i_max(xd*xd, yd*yd); /* manhattan distance */
       break;
     default:
-      i_fatal(3,"i_nearest_color: Unknown distance measure\n");
+      im_fatal(aIMCTX, 3,"i_nearest_color: Unknown distance measure\n");
     }
     
     for(p = 1; p<num; p++) {
@@ -1206,7 +1206,7 @@ i_nearest_color(i_img *im, int num, i_img_dim *xo, i_img_dim *yo, i_color *oval,
 	curdist = i_max(xd*xd, yd*yd); /* manhattan distance */
 	break;
       default:
-	i_fatal(3,"i_nearest_color: Unknown distance measure\n");
+	im_fatal(aIMCTX, 3,"i_nearest_color: Unknown distance measure\n");
       }
       if (curdist < mindist) {
 	mindist = curdist;

@@ -177,7 +177,7 @@ im_img_empty_ch(pIMCTX, i_img *im,i_img_dim x,i_img_dim y,int ch) {
   im->ch_mask  = MAXINT;
   im->bytes=bytes;
   if ( (im->idata=mymalloc(im->bytes)) == NULL) 
-    i_fatal(2,"malloc() error\n"); 
+    im_fatal(aIMCTX, 2,"malloc() error\n"); 
   memset(im->idata,0,(size_t)im->bytes);
   
   im->ext_data = NULL;
