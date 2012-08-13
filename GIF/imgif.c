@@ -923,14 +923,13 @@ Returns NULL if the page isn't found.
 
 i_img *
 i_readgif_single_wiol(io_glue *ig, int page) {
-  i_clear_error();
+  GifFileType *GifFile;
 
+  i_clear_error();
   if (page < 0) {
     i_push_error(0, "page must be non-negative");
     return NULL;
   }
-
-  GifFileType *GifFile;
 
   if ((GifFile = DGifOpen((void *)ig, io_glue_read_cb )) == NULL) {
     gif_push_error();
