@@ -150,19 +150,19 @@ i_failed_cb i_set_failed_cb(i_failed_cb cb) {
 #endif
 
 /*
-=item i_errors()
+=item im_errors(ctx)
+=synopsis i_errmsg *errors = im_errors(aIMCTX);
+=synopsis i_errmsg *errors = i_errors();
 
 Returns a pointer to the first element of an array of error messages,
 terminated by a NULL pointer.  The highest level message is first.
+
+Also callable as C<i_errors()>.
 
 =cut
 */
 i_errmsg *im_errors(im_context_t ctx) {
   return ctx->error_stack + ctx->error_sp;
-}
-
-i_errmsg *i_errors(void) {
-  return im_errors(im_get_context());
 }
 
 /*

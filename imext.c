@@ -160,7 +160,8 @@ im_ext_funcs imager_function_table =
     im_lhead,
     im_loog,
     im_context_refinc,
-    im_context_refdec
+    im_context_refdec,
+    im_errors
   };
 
 /* in general these functions aren't called by Imager internally, but
