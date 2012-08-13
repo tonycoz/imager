@@ -207,7 +207,6 @@ i_img *i_matrix_transform_bg(i_img *src, i_img_dim xsize, i_img_dim ysize, const
 #code src->bits <= 8
     IM_COLOR *vals = mymalloc(xsize * sizeof(IM_COLOR));
     IM_COLOR back;
-    i_fsample_t fsamp;
 
 #ifdef IM_EIGHT_BIT
     if (backp) {
@@ -215,6 +214,7 @@ i_img *i_matrix_transform_bg(i_img *src, i_img_dim xsize, i_img_dim ysize, const
     }
     else if (fbackp) {
       for (ch = 0; ch < src->channels; ++ch) {
+	i_fsample_t fsamp;
 	fsamp = fbackp->channel[ch];
 	back.channel[ch] = fsamp < 0 ? 0 : fsamp > 1 ? 255 : fsamp * 255;
       }

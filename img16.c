@@ -658,7 +658,6 @@ i_psamp_d16(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y,
   i_img_dim count, i, w;
 
   if (y >=0 && y < im->ysize && l < im->xsize && l >= 0) {
-    int all_unmasked;
     i_img_dim offset;
     if (r > im->xsize)
       r = im->xsize;
@@ -748,7 +747,6 @@ i_psampf_d16(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y,
   i_img_dim count, i, w;
 
   if (y >=0 && y < im->ysize && l < im->xsize && l >= 0) {
-    int all_unmasked;
     i_img_dim offset;
     if (r > im->xsize)
       r = im->xsize;

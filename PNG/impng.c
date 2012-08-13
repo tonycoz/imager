@@ -96,9 +96,8 @@ undef_int
 i_writepng_wiol(i_img *im, io_glue *ig) {
   png_structp png_ptr;
   png_infop info_ptr = NULL;
-  i_img_dim width,height,y;
+  i_img_dim width,height;
   volatile int cspace,channels;
-  unsigned char *data;
   unsigned char * volatile vdata = NULL;
   int bits;
   int is_bilevel = 0, zero_is_white;
@@ -1009,7 +1008,7 @@ set_png_tags(i_img *im, png_structp png_ptr, png_infop info_ptr) {
 	}
 
 	for (k = 0; k < key_size; ++k) {
-	  if (key[k] < 32 || key[k] > 126 && key[k] < 161) {
+	  if (key[k] < 32 || (key[k] > 126 && key[k] < 161)) {
 	    i_push_errorf(0, "tag %s may only contain Latin1 characters 32-126, 161-255", tag_name);
 	    return 0;
 	  }

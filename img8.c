@@ -626,7 +626,6 @@ i_psamp_d(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y,
   unsigned char *data;
 
   if (y >=0 && y < im->ysize && l < im->xsize && l >= 0) {
-    int all_unmasked;
     if (r > im->xsize)
       r = im->xsize;
     data = im->idata + (l+y*im->xsize) * im->channels;
@@ -715,7 +714,6 @@ i_psampf_d(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y,
   unsigned char *data;
 
   if (y >=0 && y < im->ysize && l < im->xsize && l >= 0) {
-    int all_unmasked;
     if (r > im->xsize)
       r = im->xsize;
     data = im->idata + (l+y*im->xsize) * im->channels;

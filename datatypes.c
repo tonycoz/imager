@@ -9,7 +9,6 @@
 
 struct i_bitmap*
 btm_new(i_img_dim xsize,i_img_dim ysize) {
-  i_img_dim i;
   size_t bytes;
   struct i_bitmap *btm;
   btm=(struct i_bitmap*)mymalloc(sizeof(struct i_bitmap)); /* checked 4jul05 tonyc */
