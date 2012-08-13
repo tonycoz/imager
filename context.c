@@ -42,6 +42,9 @@ im_context_new(void) {
 
 /*
 =item im_context_refinc(ctx, where)
+X<im_context_refinc API>
+=section Context objects
+=synopsis im_context_refinc(aIMCTX, "a description");
 
 Add a new reference to the context.
 
@@ -59,9 +62,13 @@ im_context_refinc(im_context_t ctx, const char *where) {
 }
 
 /*
-=item im_context_refdec(ctx)
+=item im_context_refdec(ctx, where)
+X<im_context_refdec API>
+=section Context objects
+=synopsis im_context_refdec(aIMCTX, "a description");
 
-Release memory used by an Imager context object.
+Remove a reference to the context, releasing it if all references have
+been removed.
 
 =cut
 */

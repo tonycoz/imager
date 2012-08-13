@@ -150,14 +150,17 @@ typedef unsigned short i_sample16_t;
      ((((i_sample16_t *)(bytes))[offset]+127) / 257)
 
 /*
-=item i_img_16_new(x, y, ch)
-
+=item im_img_16_new(ctx, x, y, ch)
+X<im_img_16_new API>X<i_img_16_new API>
 =category Image creation/destruction
+=synopsis i_img *img = im_img_16_new(aIMCTX, width, height, channels);
 =synopsis i_img *img = i_img_16_new(width, height, channels);
 
 Create a new 16-bit/sample image.
 
 Returns the image on success, or NULL on failure.
+
+Also callable as C<i_img_16_new(x, y, ch)>
 
 =cut
 */

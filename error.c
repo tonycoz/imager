@@ -178,13 +178,17 @@ the mark.
 
 =over
 
-=item i_clear_error()
+=item im_clear_error(ctx)
+X<im_clear_error API>X<i_clear_error API>
+=synopsis im_clear_error(aIMCTX);
 =synopsis i_clear_error();
 =category Error handling
 
 Clears the error stack.
 
 Called by any Imager function before doing any other processing.
+
+Also callable as C<i_clear_error()>.
 
 =cut
 */
@@ -206,9 +210,11 @@ im_clear_error(im_context_t ctx) {
 }
 
 /*
-=item i_push_error(int code, char const *msg)
+=item im_push_error(ctx, code, message)
+X<im_push_error API>X<i_push_error API>
 =synopsis i_push_error(0, "Yep, it's broken");
 =synopsis i_push_error(errno, "Error writing");
+=synopsis im_push_error(aIMCTX, 0, "Something is wrong");
 =category Error handling
 
 Called by an Imager function to push an error message onto the stack.
@@ -252,14 +258,19 @@ i_push_error(int code, char const *msg) {
 #endif
 
 /*
-=item i_push_errorvf(int C<code>, char const *C<fmt>, va_list C<ap>)
-
+=item im_push_errorvf(ctx, code, format, args)
+X<im_push_error_vf API>X<i_push_errorvf API>
+=synopsis va_args args;
+=synopsis va_start(args, lastarg);
+=synopsis im_push_errorvf(ctx, code, format, args);
 =category Error handling
 
 Intended for use by higher level functions, takes a varargs pointer
 and a format to produce the finally pushed error message.
 
 Does not support perl specific format codes.
+
+Also callable as C<i_push_errorvf(code, format, args)>
 
 =cut
 */
@@ -278,11 +289,6 @@ im_push_errorvf(im_context_t ctx, int code, char const *fmt, va_list ap) {
   vsprintf(buf, fmt, ap);
 #endif
   im_push_error(ctx, code, buf);
-}
-
-void
-(i_push_errorvf)(int code, char const *fmt, va_list ap) {
-  im_push_errorvf(im_get_context(), code, fmt, ap);
 }
 
 /*
@@ -304,6 +310,17 @@ i_push_errorf(int code, char const *fmt, ...) {
   va_end(ap);
 }
 
+/*
+=item im_push_errorf(ctx, code, char const *fmt, ...)
+=synopsis im_push_errorf(aIMCTX, errno, "Cannot open file %s: %d", filename, errno);
+=category Error handling
+
+A version of im_push_error() that does printf() like formatting.
+
+Does not support perl specific format codes.
+
+=cut
+*/
 void
 im_push_errorf(im_context_t ctx, int code, char const *fmt, ...) {
   va_list ap;

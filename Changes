@@ -1,5 +1,9 @@
 Imager release history.  Older releases can be found in Changes.old
 
+Threads work
+TODO: fill objects should refer to the contexts
+TODO: finish up doc changes
+
 Imager 0.92 - 14 Aug 2012
 ===========
 
