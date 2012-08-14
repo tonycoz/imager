@@ -98,7 +98,6 @@ i_writepng_wiol(i_img *im, io_glue *ig) {
   png_infop info_ptr = NULL;
   i_img_dim width,height;
   volatile int cspace,channels;
-  unsigned char * volatile vdata = NULL;
   int bits;
   int is_bilevel = 0, zero_is_white;
 
@@ -197,8 +196,6 @@ i_writepng_wiol(i_img *im, io_glue *ig) {
    */
   if (setjmp(png_jmpbuf(png_ptr))) {
     png_destroy_write_struct(&png_ptr, &info_ptr);
-    if (vdata)
-      myfree(vdata);
     return(0);
   }
   
