@@ -65,90 +65,6 @@ C).  The Perl level won't use all of this.
 #include <stdio.h>
 #include <stdlib.h>
 
-#if 0
-static i_error_cb error_cb;
-static i_failed_cb failed_cb;
-static int failures_fatal;
-static char *argv0;
-/*
-=item i_set_argv0(char const *program)
-
-Sets the name of the program to be displayed in fatal error messages.
-
-The simplest way to use this is just:
-
-  i_set_argv0(argv[0]);
-
-when your program starts.
-*/
-void i_set_argv0(char const *name) {
-  char *dupl;
-  if (!name)
-    return;
-  /* if the user has an existing string of MAXINT length then
-     the system is broken anyway */
-  dupl = mymalloc(strlen(name)+1); /* check 17jul05 tonyc */
-  strcpy(dupl, name);
-  if (argv0)
-    myfree(argv0);
-  argv0 = dupl;
-}
-
-/*
-=item i_set_failure_fatal(int failure_fatal)
-
-If failure_fatal is non-zero then any future failures will result in
-Imager exiting your program with a message describing the failure.
-
-Returns the previous setting.
-
-=cut
-*/
-int i_set_failures_fatal(int fatal) {
-  int old = failures_fatal;
-  failures_fatal = fatal;
-
-  return old;
-}
-
-/*
-=item i_set_error_cb(i_error_cb)
-
-Sets a callback function that is called each time an error is pushed
-onto the error stack.
-
-Returns the previous callback.
-
-i_set_failed_cb() is probably more useful.
-
-=cut
-*/
-i_error_cb i_set_error_cb(i_error_cb cb) {
-  i_error_cb old = error_cb;
-  error_cb = cb;
-
-  return old;
-}
-
-/*
-=item i_set_failed_cb(i_failed_cb cb)
-
-Sets a callback function that is called each time an Imager function
-fails.
-
-Returns the previous callback.
-
-=cut
-*/
-i_failed_cb i_set_failed_cb(i_failed_cb cb) {
-  i_failed_cb old = failed_cb;
-  failed_cb = cb;
-
-  return old;
-}
-
-#endif
-
 /*
 =item im_errors(ctx)
 =synopsis i_errmsg *errors = im_errors(aIMCTX);
@@ -241,15 +157,6 @@ im_push_error(im_context_t ctx, int code, char const *msg) {
   strcpy(ctx->error_stack[ctx->error_sp].msg, msg);
   ctx->error_stack[ctx->error_sp].code = code;
 }
-
-#if 0
-
-void
-i_push_error(int code, char const *msg) {
-  im_push_error(im_get_context(), code, msg);
-}
-
-#endif
 
 /*
 =item i_push_errorvf(int C<code>, char const *C<fmt>, va_list C<ap>)
