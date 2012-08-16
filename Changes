@@ -1,8 +1,15 @@
 Imager release history.  Older releases can be found in Changes.old
 
 Threads work
-TODO: fill objects should refer to the contexts
-TODO: finish up doc changes
+ - mutex for gif
+ - mutex for tiff
+
+ - improved thread safety
+   - the internal error stack and log file handle are now in a per-thread
+     context object
+   - JPEG now captures IPTC information in a thread-safe way
+   - avoid globals where possible for warning capture in libtiff
+
 
 Imager 0.92 - 14 Aug 2012
 ===========
