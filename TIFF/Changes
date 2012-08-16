@@ -1,3 +1,9 @@
+Imager-File-TIFF 0.85
+=====================
+
+ - for libtiff versions that support extended warning handlers (3.8.0
+   or later), use them to avoid some global variables.
+
 Imager-File-TIFF 0.83
 =====================
 
