@@ -69,6 +69,12 @@ static int
   InterlacedJumps[] = { 8, 8, 4, 2 };    /* be read - offsets and jumps... */
 
 
+static i_mutex_t mutex;
+
+void
+i_init_gif(void) {
+  mutex = i_mutex_create();
+}
 
 static
 void
@@ -846,17 +852,25 @@ static int io_glue_read_cb(GifFileType *gft, GifByteType *buf, int length);
 i_img **
 i_readgif_multi_wiol(io_glue *ig, int *count) {
   GifFileType *GifFile;
-  
+  i_img **result;
+
+  i_mutex_lock(mutex);
+
   i_clear_error();
   
   if ((GifFile = DGifOpen((void *)ig, io_glue_read_cb )) == NULL) {
     gif_push_error();
     i_push_error(0, "Cannot create giflib callback object");
     mm_log((1,"i_readgif_multi_wiol: Unable to open callback datasource.\n"));
+    i_mutex_unlock(mutex);
     return NULL;
   }
     
-  return i_readgif_multi_low(GifFile, count, -1);
+  result = i_readgif_multi_low(GifFile, count, -1);
+
+  i_mutex_unlock(mutex);
+
+  return result;
 }
 
 static int
@@ -869,6 +883,9 @@ io_glue_read_cb(GifFileType *gft, GifByteType *buf, int length) {
 i_img *
 i_readgif_wiol(io_glue *ig, int **color_table, int *colors) {
   GifFileType *GifFile;
+  i_img *result;
+
+  i_mutex_lock(mutex);
 
   i_clear_error();
 
@@ -876,10 +893,15 @@ i_readgif_wiol(io_glue *ig, int **color_table, int *colors) {
     gif_push_error();
     i_push_error(0, "Cannot create giflib callback object");
     mm_log((1,"i_readgif_wiol: Unable to open callback datasource.\n"));
+    i_mutex_unlock(mutex);
     return NULL;
   }
     
-  return i_readgif_low(GifFile, color_table, colors);
+  result = i_readgif_low(GifFile, color_table, colors);
+
+  i_mutex_unlock(mutex);
+
+  return result;
 }
 
 /*
@@ -924,12 +946,15 @@ Returns NULL if the page isn't found.
 i_img *
 i_readgif_single_wiol(io_glue *ig, int page) {
   GifFileType *GifFile;
+  i_img *result;
 
   i_clear_error();
   if (page < 0) {
     i_push_error(0, "page must be non-negative");
     return NULL;
   }
+
+  i_mutex_lock(mutex);
 
   if ((GifFile = DGifOpen((void *)ig, io_glue_read_cb )) == NULL) {
     gif_push_error();
@@ -938,7 +963,11 @@ i_readgif_single_wiol(io_glue *ig, int page) {
     return NULL;
   }
     
-  return i_readgif_single_low(GifFile, page);
+  result = i_readgif_single_low(GifFile, page);
+
+  i_mutex_unlock(mutex);
+
+  return result;
 }
 
 /*
@@ -1797,6 +1826,8 @@ i_writegif_wiol(io_glue *ig, i_quantize *quant, i_img **imgs,
   GifFileType *GifFile;
   int result;
 
+  i_mutex_lock(mutex);
+
   i_clear_error();
 
   gif_set_version(quant, imgs, count);
@@ -1805,11 +1836,14 @@ i_writegif_wiol(io_glue *ig, i_quantize *quant, i_img **imgs,
     gif_push_error();
     i_push_error(0, "Cannot create giflib callback object");
     mm_log((1,"i_writegif_wiol: Unable to open callback datasource.\n"));
+    i_mutex_unlock(mutex);
     return 0;
   }
   
   result = i_writegif_low(quant, GifFile, imgs, count);
   
+  i_mutex_unlock(mutex);
+
   if (i_io_close(ig))
     return 0;
   
@@ -1944,6 +1978,8 @@ EGifSetGifVersion().  See L<gif_set_version> for an explanation.
 =head1 AUTHOR
 
 Arnar M. Hrafnkelsson, addi@umich.edu
+
+Tony Cook <tonyc@cpan.org>
 
 =head1 SEE ALSO
 
