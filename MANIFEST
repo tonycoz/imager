@@ -7,6 +7,7 @@ Changes.old			Old changes
 color.c				Color translation and handling
 combine.im			Channel combine
 compose.im
+context.c
 conv.im
 convert.im
 CountColor/CountColor.pm	sample XS access to API
@@ -349,6 +350,7 @@ t/t80texttools.t		Test text wrapping
 t/t81hlines.t			Test hlines.c
 t/t82inline.t			Test Inline::C integration
 t/t83extutil.t			Test Imager::ExtUtils
+t/t84inlinectx.t
 t/t90cc.t
 t/t91pod.t			Test POD with Test::Pod
 t/t92samples.t
