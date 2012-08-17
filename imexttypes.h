@@ -235,7 +235,6 @@ typedef struct {
   im_slot_t (*f_im_context_slot_new)(im_slot_destroy_t);
   int (*f_im_context_slot_set)(im_context_t, im_slot_t, void *);
   void *(*f_im_context_slot_get)(im_context_t, im_slot_t);
-
 } im_ext_funcs;
 
 #define PERL_FUNCTION_TABLE_NAME "Imager::__ext_func_table"

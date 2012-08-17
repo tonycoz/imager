@@ -419,7 +419,7 @@ simple mutex functions.
 
 To create a mutex:
 
-  i_mutex_t m = i_mutex_create();
+  i_mutex_t m = i_mutex_new();
 
 To control or lock the mutex:
 
