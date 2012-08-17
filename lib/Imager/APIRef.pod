@@ -109,6 +109,12 @@ Imager::APIRef - Imager's C API - reference.
 
   # Logging
 
+  # Mutex functions
+  i_mutex_t m = i_mutex_create();
+  i_mutex_destroy(m);
+  i_mutex_lock(m);
+  i_mutex_unlock(m);
+
   # Paletted images
 
   # Tags
@@ -2262,6 +2268,31 @@ Returns ~0UL on failure.
 =for comment
 From: File io.c
 
+=item im_context_refdec(ctx, where)
+X<im_context_refdec API>
+=section Context objects
+
+  im_context_refdec(aIMCTX, "a description");
+
+Remove a reference to the context, releasing it if all references have
+been removed.
+
+
+=for comment
+From: File context.c
+
+=item im_context_refinc(ctx, where)
+X<im_context_refinc API>
+=section Context objects
+
+  im_context_refinc(aIMCTX, "a description");
+
+Add a new reference to the context.
+
+
+=for comment
+From: File context.c
+
 =item im_errors(ctx)
 
   i_errmsg *errors = im_errors(aIMCTX);
@@ -2300,14 +2331,6 @@ The following API functions are undocumented so far, hopefully this
 will change:
 
 =over
-
-=item *
-
-B<im_context_refdec>
-
-=item *
-
-B<im_context_refinc>
 
 =item *
 
