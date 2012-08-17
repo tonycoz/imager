@@ -227,6 +227,11 @@ extern im_ext_funcs *imager_function_ext_table;
 #define io_slurp(ig, datap) ((im_extt->f_io_slurp)((ig), (datap)))
 #define io_glue_destroy(ig) ((im_extt->f_io_glue_destroy)(ig))
 
+#define i_mutex_create() ((im_extt->f_i_mutex_create)())
+#define i_mutex_destroy(m) ((im_extt->f_i_mutex_destroy)(m))
+#define i_mutex_lock(m) ((im_extt->f_i_mutex_lock)(m))
+#define i_mutex_unlock(m) ((im_extt->f_i_mutex_unlock)(m))
+
 #define im_push_errorf (im_extt->f_im_push_errorf)
 
 #ifdef IMAGER_LOG

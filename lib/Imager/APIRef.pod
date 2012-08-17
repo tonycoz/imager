@@ -1878,6 +1878,58 @@ From: File log.c
 
 =back
 
+=head2 Mutex functions
+
+=over
+
+=item i_mutex_create()
+
+  i_mutex_t m = i_mutex_create();
+
+Create a mutex.
+
+If a critical section cannot be created for whatever reason, Imager
+will abort.
+
+
+=for comment
+From: File mutexwin.c
+
+=item i_mutex_destroy(m)
+
+  i_mutex_destroy(m);
+
+Destroy a mutex.
+
+
+=for comment
+From: File mutexwin.c
+
+=item i_mutex_lock(m)
+
+  i_mutex_lock(m);
+
+Lock the mutex, waiting if another thread has the mutex locked.
+
+
+=for comment
+From: File mutexwin.c
+
+=item i_mutex_unlock(m)
+
+  i_mutex_unlock(m);
+
+Release the mutex.
+
+The behavior of releasing a mutex you don't hold is unspecified.
+
+
+=for comment
+From: File mutexwin.c
+
+
+=back
+
 =head2 Paletted images
 
 =over

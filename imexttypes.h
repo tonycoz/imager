@@ -228,6 +228,11 @@ typedef struct {
   void (*f_im_context_refinc)(im_context_t, const char *where);
   void (*f_im_context_refdec)(im_context_t, const char *where);
   i_errmsg *(*f_im_errors)(im_context_t);
+  i_mutex_t (*f_i_mutex_create)(void);
+  void (*f_i_mutex_destroy)(i_mutex_t m);
+  void (*f_i_mutex_lock)(i_mutex_t m);
+  void (*f_i_mutex_unlock)(i_mutex_t m);
+
 } im_ext_funcs;
 
 #define PERL_FUNCTION_TABLE_NAME "Imager::__ext_func_table"

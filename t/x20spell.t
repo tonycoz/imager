@@ -47,6 +47,7 @@ infix
 invocant
 metadata
 multi-threaded
+mutex
 paletted
 postfix
 preload

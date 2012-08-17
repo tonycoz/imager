@@ -169,6 +169,25 @@ my @objs = qw(Imager.o context.o draw.o polygon.o image.o io.o iolayer.o
               bmp.o tga.o color.o fills.o imgdouble.o limits.o hlines.o
               imext.o scale.o rubthru.o render.o paste.o compose.o flip.o);
 
+if ($Config{useithreads}) {
+  if ($Config{i_pthread}) {
+    print "POSIX threads\n";
+    push @objs, "mutexpthr.o";
+  }
+  elsif ($^O eq 'MSWin32') {
+    print "Win32 threads\n";
+    push @objs, "mutexwin.o";
+  }
+  else {
+    print "Unsupported threading model\n";
+    push @objs, "mutexnull.o";
+  }
+}
+else {
+  print "No threads\n";
+  push @objs, "mutexnull.o";
+}
+
 my @typemaps = qw(typemap.local typemap);
 if ($] < 5.008) {
     unshift @typemaps, "typemap.oldperl";

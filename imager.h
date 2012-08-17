@@ -389,6 +389,12 @@ extern im_context_t im_context_clone(im_context_t ctx, const char *where);
 
 extern im_context_t (*im_get_context)(void);
 
+/* muext API */
+extern i_mutex_t i_mutex_create(void);
+extern void i_mutex_destroy(i_mutex_t m);
+extern void i_mutex_lock(i_mutex_t m);
+extern void i_mutex_unlock(i_mutex_t m);
+
 #include "imio.h"
 
 #endif
