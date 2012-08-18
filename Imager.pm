@@ -4363,6 +4363,10 @@ L<Imager::ExtUtils> - tools to get access to Imager's C API.
 
 L<Imager::Security> - brief security notes.
 
+=item *
+
+L<Imager::Threads> - brief information on working with threads.
+
 =back
 
 =head2 Basic Overview
@@ -4804,6 +4808,8 @@ text, wrapping text in an area - L<Imager::Font::Wrap>
 
 text, measuring - L<Imager::Font/bounding_box()>, L<Imager::Font::BBox>
 
+threads - L<Imager::Threads>
+
 tiles, color - L<Imager::Filters/mosaic>
 
 transparent images - L<Imager::ImageTypes>,
@@ -4816,15 +4822,6 @@ unsharp mask - L<Imager::Filters/unsharpmask>
 watermark - L<Imager::Filters/watermark>
 
 writing an image to a file - L<Imager::Files>
-
-=head1 THREADS
-
-Imager doesn't support perl threads.
-
-Imager has limited code to prevent double frees if you create images,
-colors etc, and then create a thread, but has no code to prevent two
-threads entering Imager's error handling code, and none is likely to
-be added.
 
 =head1 SUPPORT
 
