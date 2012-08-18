@@ -1,15 +1,20 @@
 Imager release history.  Older releases can be found in Changes.old
 
-Threads work
- - mutex for gif
- - mutex for tiff
+Imager 0.92_01 - 18 Aug 2012
+==============
+
+Development release, let's see what broke.
+
+This release is not Imager API binary compatible with older releases,
+if you have a module that uses Imager's API it will need to be
+reinstalled.
 
  - improved thread safety
    - the internal error stack and log file handle are now in a per-thread
      context object
    - JPEG now captures IPTC information in a thread-safe way
    - avoid globals where possible for warning capture in libtiff
-
+   - avoid re-entering libtiff or giflib since they aren't thread safe
 
 Imager 0.92 - 14 Aug 2012
 ===========
