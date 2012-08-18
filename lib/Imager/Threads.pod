@@ -1,0 +1,64 @@
+=head1 NAME
+
+Imager::Threads - Imager and threads
+
+=head1 SYNOPSIS
+
+  use Imager;
+  use threads;
+  Imager->preload;
+
+  threads->create(...);
+
+=head1 DESCRIPTION
+
+Starting from version 0.93 Imager attempts to work safely with perl's
+C<ithreads>.
+
+Previous versions stored some state in global variables, in particular
+the internal error stack.
+
+However there are some limitations:
+
+=over
+
+=item *
+
+Imager's debug malloc isn't thread safe and will never be.  Imager's
+debug malloc is disabled by default.
+
+=item *
+
+C<libtiff>, which Imager uses for TIFF file support is not thread
+safe, C<Imager::File::TIFF> works around this by single-threading its
+access to C<libtiff>.
+
+=item *
+
+C<giflib>, which Imager uses for GIF support is not thread safe before
+version 5.  C<Imager::File::GIF> works around this by single threading
+its access to C<giflib>.
+
+=item *
+
+killing a thread reading or writing TIFF or GIF files may deadlock
+other threads when they attempt to read or write TIFF or GIF files.
+
+=back
+
+Note that if you have another module using C<libtiff> or C<giflib> it
+may interact with Imager's use of those libraries in a threaded
+environment, since there's no way to co-ordinate access to the global
+information C<libtiff> and C<giflib> maintain.
+
+Imager currently doesn't use threads itself.
+
+=head1 SEE ALSO
+
+Imager, C<threads>
+
+=head1 AUTHOR
+
+Tony Cook <tony@cpan.org>
+
+=cut

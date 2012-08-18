@@ -200,6 +200,7 @@ lib/Imager/regmach.pod
 lib/Imager/Regops.pm
 lib/Imager/Security.pod
 lib/Imager/Test.pm
+lib/Imager/Threads.pod
 lib/Imager/Transform.pm
 lib/Imager/Transformations.pod
 lib/Imager/Tutorial.pod
