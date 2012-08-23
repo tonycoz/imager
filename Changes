@@ -15,6 +15,9 @@ Imager release history.  Older releases can be found in Changes.old
    - improve error reporting
    - provide better control of the level of anti-aliasing
 
+ - support for giflib 5.0.
+   https://rt.cpan.org/Ticket/Display.html?id=79029
+
 Imager 0.92 - 14 Aug 2012
 ===========
 
