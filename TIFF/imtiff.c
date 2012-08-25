@@ -266,6 +266,13 @@ static void warn_handler(char const *module, char const *fmt, va_list ap) {
 
 #endif
 
+static i_mutex_t mutex;
+
+void
+i_tiff_init(void) {
+  mutex = i_mutex_new();
+}
+
 static int save_tiff_tags(TIFF *tif, i_img *im);
 
 static void 
@@ -621,6 +628,8 @@ i_readtiff_wiol(io_glue *ig, int allow_incomplete, int page) {
   int current_page;
   tiffio_context_t ctx;
 
+  i_mutex_lock(mutex);
+
   i_clear_error();
   old_handler = TIFFSetErrorHandler(error_handler);
 #ifdef USE_EXT_WARN_HANDLER
@@ -658,6 +667,7 @@ i_readtiff_wiol(io_glue *ig, int allow_incomplete, int page) {
     TIFFSetWarningHandlerExt(old_ext_warn_handler);
 #endif
     tiffio_context_final(&ctx);
+    i_mutex_unlock(mutex);
     return NULL;
   }
 
@@ -672,6 +682,7 @@ i_readtiff_wiol(io_glue *ig, int allow_incomplete, int page) {
 #endif
       TIFFClose(tif);
       tiffio_context_final(&ctx);
+      i_mutex_unlock(mutex);
       return NULL;
     }
   }
@@ -686,6 +697,7 @@ i_readtiff_wiol(io_glue *ig, int allow_incomplete, int page) {
 #endif
   TIFFClose(tif);
   tiffio_context_final(&ctx);
+    i_mutex_unlock(mutex);
 
   return im;
 }
@@ -708,6 +720,8 @@ i_readtiff_multi_wiol(io_glue *ig, int *count) {
   i_img **results = NULL;
   int result_alloc = 0;
   tiffio_context_t ctx;
+
+  i_mutex_lock(mutex);
 
   i_clear_error();
   old_handler = TIFFSetErrorHandler(error_handler);
@@ -747,6 +761,7 @@ i_readtiff_multi_wiol(io_glue *ig, int *count) {
     TIFFSetWarningHandlerExt(old_ext_warn_handler);
 #endif
     tiffio_context_final(&ctx);
+    i_mutex_unlock(mutex);
     return NULL;
   }
 
@@ -781,6 +796,7 @@ i_readtiff_multi_wiol(io_glue *ig, int *count) {
 #endif
   TIFFClose(tif);
   tiffio_context_final(&ctx);
+  i_mutex_unlock(mutex);
 
   return results;
 }
@@ -1446,6 +1462,8 @@ i_writetiff_multi_wiol(io_glue *ig, i_img **imgs, int count) {
   int i;
   tiffio_context_t ctx;
 
+  i_mutex_lock(mutex);
+
   old_handler = TIFFSetErrorHandler(error_handler);
 
   i_clear_error();
@@ -1472,6 +1490,7 @@ i_writetiff_multi_wiol(io_glue *ig, i_img **imgs, int count) {
     i_push_error(0, "Could not create TIFF object");
     TIFFSetErrorHandler(old_handler);
     tiffio_context_final(&ctx);
+    i_mutex_unlock(mutex);
     return 0;
   }
 
@@ -1480,6 +1499,7 @@ i_writetiff_multi_wiol(io_glue *ig, i_img **imgs, int count) {
       TIFFClose(tif);
       TIFFSetErrorHandler(old_handler);
       tiffio_context_final(&ctx);
+      i_mutex_unlock(mutex);
       return 0;
     }
 
@@ -1488,6 +1508,7 @@ i_writetiff_multi_wiol(io_glue *ig, i_img **imgs, int count) {
       TIFFClose(tif);
       TIFFSetErrorHandler(old_handler);
       tiffio_context_final(&ctx);
+      i_mutex_unlock(mutex);
       return 0;
     }
   }
@@ -1495,6 +1516,8 @@ i_writetiff_multi_wiol(io_glue *ig, i_img **imgs, int count) {
   TIFFSetErrorHandler(old_handler);
   (void) TIFFClose(tif);
   tiffio_context_final(&ctx);
+
+  i_mutex_unlock(mutex);
 
   if (i_io_close(ig))
     return 0;
@@ -1522,6 +1545,8 @@ i_writetiff_multi_wiol_faxable(io_glue *ig, i_img **imgs, int count, int fine) {
   TIFFErrorHandler old_handler;
   tiffio_context_t ctx;
 
+  i_mutex_lock(mutex);
+
   old_handler = TIFFSetErrorHandler(error_handler);
 
   i_clear_error();
@@ -1548,6 +1573,7 @@ i_writetiff_multi_wiol_faxable(io_glue *ig, i_img **imgs, int count, int fine) {
     i_push_error(0, "Could not create TIFF object");
     TIFFSetErrorHandler(old_handler);
     tiffio_context_final(&ctx);
+    i_mutex_unlock(mutex);
     return 0;
   }
 
@@ -1556,6 +1582,7 @@ i_writetiff_multi_wiol_faxable(io_glue *ig, i_img **imgs, int count, int fine) {
       TIFFClose(tif);
       TIFFSetErrorHandler(old_handler);
       tiffio_context_final(&ctx);
+      i_mutex_unlock(mutex);
       return 0;
     }
 
@@ -1564,6 +1591,7 @@ i_writetiff_multi_wiol_faxable(io_glue *ig, i_img **imgs, int count, int fine) {
       TIFFClose(tif);
       TIFFSetErrorHandler(old_handler);
       tiffio_context_final(&ctx);
+      i_mutex_unlock(mutex);
       return 0;
     }
   }
@@ -1571,6 +1599,8 @@ i_writetiff_multi_wiol_faxable(io_glue *ig, i_img **imgs, int count, int fine) {
   (void) TIFFClose(tif);
   TIFFSetErrorHandler(old_handler);
   tiffio_context_final(&ctx);
+
+  i_mutex_unlock(mutex);
 
   if (i_io_close(ig))
     return 0;
@@ -1593,6 +1623,8 @@ i_writetiff_wiol(i_img *img, io_glue *ig) {
   TIFF* tif;
   TIFFErrorHandler old_handler;
   tiffio_context_t ctx;
+
+  i_mutex_lock(mutex);
 
   old_handler = TIFFSetErrorHandler(error_handler);
 
@@ -1619,6 +1651,7 @@ i_writetiff_wiol(i_img *img, io_glue *ig) {
     i_push_error(0, "Could not create TIFF object");
     tiffio_context_final(&ctx);
     TIFFSetErrorHandler(old_handler);
+    i_mutex_unlock(mutex);
     return 0;
   }
 
@@ -1626,12 +1659,14 @@ i_writetiff_wiol(i_img *img, io_glue *ig) {
     TIFFClose(tif);
     tiffio_context_final(&ctx);
     TIFFSetErrorHandler(old_handler);
+    i_mutex_unlock(mutex);
     return 0;
   }
 
   (void) TIFFClose(tif);
   TIFFSetErrorHandler(old_handler);
-    tiffio_context_final(&ctx);
+  tiffio_context_final(&ctx);
+  i_mutex_unlock(mutex);
 
   if (i_io_close(ig))
     return 0;
@@ -1662,6 +1697,8 @@ i_writetiff_wiol_faxable(i_img *im, io_glue *ig, int fine) {
   TIFFErrorHandler old_handler;
   tiffio_context_t ctx;
 
+  i_mutex_lock(mutex);
+
   old_handler = TIFFSetErrorHandler(error_handler);
 
   i_clear_error();
@@ -1687,6 +1724,7 @@ i_writetiff_wiol_faxable(i_img *im, io_glue *ig, int fine) {
     i_push_error(0, "Could not create TIFF object");
     TIFFSetErrorHandler(old_handler);
     tiffio_context_final(&ctx);
+    i_mutex_unlock(mutex);
     return 0;
   }
 
@@ -1694,12 +1732,14 @@ i_writetiff_wiol_faxable(i_img *im, io_glue *ig, int fine) {
     TIFFClose(tif);
     TIFFSetErrorHandler(old_handler);
     tiffio_context_final(&ctx);
+    i_mutex_unlock(mutex);
     return 0;
   }
 
   (void) TIFFClose(tif);
   TIFFSetErrorHandler(old_handler);
   tiffio_context_final(&ctx);
+  i_mutex_unlock(mutex);
 
   if (i_io_close(ig))
     return 0;
