@@ -216,6 +216,9 @@ MANIFEST
 MANIFEST.SKIP
 map.c
 maskimg.c
+mutexnull.c
+mutexpthr.c
+mutexwin.c
 palimg.c
 paste.im
 plug.h

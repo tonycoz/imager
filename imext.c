@@ -161,7 +161,11 @@ im_ext_funcs imager_function_table =
     im_loog,
     im_context_refinc,
     im_context_refdec,
-    im_errors
+    im_errors,
+    i_mutex_new,
+    i_mutex_destroy,
+    i_mutex_lock,
+    i_mutex_unlock
   };
 
 /* in general these functions aren't called by Imager internally, but
