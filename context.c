@@ -1,6 +1,10 @@
 #include "imageri.h"
 #include <stdio.h>
 
+static im_slot_t slot_count;
+static im_slot_destroy_t *slot_destructors;
+static i_mutex_t slot_mutex;
+
 /*
 =item im_context_new()
 
@@ -13,6 +17,9 @@ im_context_t
 im_context_new(void) {
   im_context_t ctx = malloc(sizeof(im_context_struct));
   int i;
+
+  if (!slot_mutex)
+    slot_mutex = i_mutex_new();
 
   if (!ctx)
     return NULL;
@@ -31,11 +38,18 @@ im_context_new(void) {
   ctx->max_height = 0;
   ctx->max_bytes = DEF_BYTES_LIMIT;
 
+  ctx->slots = calloc(sizeof(void *), slot_count);
+  if (!ctx->slots) {
+    free(ctx);
+    return NULL;
+  }
+
   ctx->refcount = 1;
 
 #ifdef IMAGER_TRACE_CONTEXT
   fprintf(stderr, "im_context: created %p\n", ctx);
 #endif
+
 
   return ctx;
 }
@@ -76,6 +90,7 @@ been removed.
 void
 im_context_refdec(im_context_t ctx, const char *where) {
   int i;
+  im_slot_t slot;
 
   im_assert(ctx->refcount > 0);
 
@@ -88,6 +103,13 @@ im_context_refdec(im_context_t ctx, const char *where) {
 
   if (ctx->refcount != 0)
     return;
+
+  for (slot = 0; slot < ctx->slot_alloc; ++slot) {
+    if (ctx->slots[slot] && slot_destructors[slot])
+      slot_destructors[slot](ctx->slots[slot]);
+  }
+
+  free(ctx->slots);
 
   for (i = 0; i < IM_ERROR_COUNT; ++i) {
     if (ctx->error_stack[i].msg)
@@ -116,6 +138,13 @@ im_context_clone(im_context_t ctx, const char *where) {
 
   if (!nctx)
     return NULL;
+
+  nctx->slots = calloc(sizeof(void *), slot_count);
+  if (!nctx->slots) {
+    free(nctx);
+    return NULL;
+  }
+  nctx->slot_alloc = slot_count;
 
   nctx->error_sp = ctx->error_sp;
   for (i = 0; i < IM_ERROR_COUNT; ++i) {
@@ -149,6 +178,7 @@ im_context_clone(im_context_t ctx, const char *where) {
   nctx->max_width = ctx->max_width;
   nctx->max_height = ctx->max_height;
   nctx->max_bytes = ctx->max_bytes;
+
   nctx->refcount = 1;
 
 #ifdef IMAGER_TRACE_CONTEXT
@@ -156,4 +186,99 @@ im_context_clone(im_context_t ctx, const char *where) {
 #endif
 
   return nctx;
+}
+
+/*
+=item im_context_slot_new(destructor)
+
+Allocate a new context-local-storage slot.
+
+=cut
+*/
+
+im_slot_t
+im_context_slot_new(im_slot_destroy_t destructor) {
+  im_slot_t new_slot;
+  im_slot_destroy_t *new_destructors;
+  if (!slot_mutex)
+    slot_mutex = i_mutex_new();
+
+  i_mutex_lock(slot_mutex);
+
+  new_slot = slot_count++;
+  new_destructors = realloc(slot_destructors, sizeof(void *) * slot_count);
+  if (!new_destructors)
+    i_fatal(1, "Cannot allocate memory for slot destructors");
+  slot_destructors = new_destructors;
+
+  slot_destructors[new_slot] = destructor;
+
+  i_mutex_unlock(slot_mutex);
+
+  return new_slot;
+}
+
+/*
+=item im_context_slot_set(slot, value)
+
+Set the value of a slot.
+
+Returns true on success.
+
+Aborts if the slot supplied is invalid.
+
+If reallocation of slot storage fails, returns false.
+
+=cut
+*/
+
+int
+im_context_slot_set(im_context_t ctx, im_slot_t slot, void *value) {
+  if (slot < 0 || slot >= slot_count) {
+    fprintf(stderr, "Invalid slot %d (valid 0 - %d)\n",
+	    (int)slot, (int)slot_count-1);
+    abort();
+  }
+
+  if (slot >= ctx->slot_alloc) {
+    ssize_t i;
+    size_t new_alloc = slot_count;
+    void **new_slots = realloc(ctx->slots, sizeof(void *) * new_alloc);
+
+    if (!new_slots)
+      return 0;
+
+    for (i = ctx->slot_alloc; i < new_alloc; ++i)
+      new_slots[i] = NULL;
+
+    ctx->slots = new_slots;
+    ctx->slot_alloc = new_alloc;
+  }
+
+  ctx->slots[slot] = value;
+
+  return 1;
+}
+
+/*
+=item im_context_slot_get(ctx, slot)
+
+Retrieve the value previously stored in the given slot of the context
+object.
+
+=cut
+*/
+
+void *
+im_context_slot_get(im_context_t ctx, im_slot_t slot) {
+  if (slot < 0 || slot >= slot_count) {
+    fprintf(stderr, "Invalid slot %d (valid 0 - %d)\n",
+	    (int)slot, (int)slot_count-1);
+    abort();
+  }
+
+  if (slot >= ctx->slot_alloc)
+    return NULL;
+
+  return ctx->slots[slot];
 }

@@ -128,6 +128,10 @@ typedef struct im_context_tag {
   i_img_dim max_width, max_height;
   size_t max_bytes;
 
+  /* per context storage */
+  size_t slot_alloc;
+  void **slots;
+
   ptrdiff_t refcount;
 } im_context_struct;
 
