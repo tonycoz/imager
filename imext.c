@@ -165,7 +165,10 @@ im_ext_funcs imager_function_table =
     i_mutex_new,
     i_mutex_destroy,
     i_mutex_lock,
-    i_mutex_unlock
+    i_mutex_unlock,
+    im_context_slot_new,
+    im_context_slot_set,
+    im_context_slot_get
   };
 
 /* in general these functions aren't called by Imager internally, but

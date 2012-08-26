@@ -2293,6 +2293,37 @@ Add a new reference to the context.
 =for comment
 From: File context.c
 
+=item im_context_slot_get(ctx, slot)
+
+Retrieve the value previously stored in the given slot of the context
+object.
+
+
+=for comment
+From: File context.c
+
+=item im_context_slot_new(destructor)
+
+Allocate a new context-local-storage slot.
+
+
+=for comment
+From: File context.c
+
+=item im_context_slot_set(slot, value)
+
+Set the value of a slot.
+
+Returns true on success.
+
+Aborts if the slot supplied is invalid.
+
+If reallocation of slot storage fails, returns false.
+
+
+=for comment
+From: File context.c
+
 =item im_errors(ctx)
 
   i_errmsg *errors = im_errors(aIMCTX);
