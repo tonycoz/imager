@@ -437,6 +437,34 @@ I most cases where you'd use these functions, your code would create
 the mutex in your BOOT section, then lock and unlock the mutex as
 needed to control access to the library.
 
+=head1 Context slots
+
+=for stopwords
+TLS APIs
+
+To avoid abstracting the platform TLS and thread clean up handling,
+Imager provides simple APIs for storing per-context information.
+
+To allocate a slot:
+
+  im_slot_t slot = im_context_slot_new(callback)
+
+where callback is a (possibly NULL) function pointer called when the
+context object is destroyed.
+
+By default, the stored value for a slot is NULL, whether for a new
+context or for a cloned context.
+
+To store a value:
+
+  im_context_slot_set(aIMCTX, slot, somevalue);
+
+where C<somevalue> can be represented as a C<void *>.
+
+To retrieve the value:
+
+  value = im_context_slot_get(aIMCTX, slot);
+
 =head1 AUTHOR
 
 Tony Cook <tonyc@cpan.org>

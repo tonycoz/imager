@@ -8,6 +8,9 @@
 
 typedef struct im_context_tag *im_context_t;
 
+typedef ptrdiff_t im_slot_t;
+typedef void (*im_slot_destroy_t)(void *);
+
 /* used for palette indices in some internal code (which might be 
    exposed at some point
 */

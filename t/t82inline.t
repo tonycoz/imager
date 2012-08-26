@@ -19,7 +19,7 @@ plan skip_all => "perl 5.005_04, 5.005_05 too buggy"
 
 -d "testout" or mkdir "testout";
 
-plan tests => 116;
+plan tests => 117;
 require Inline;
 Inline->import(with => 'Imager');
 Inline->import("FORCE"); # force rebuild
@@ -420,6 +420,27 @@ test_mutex() {
   i_mutex_destroy(m);
 }
 
+int
+test_slots() {
+  im_slot_t slot = im_context_slot_new(NULL);
+
+  if (im_context_slot_get(aIMCTX, slot)) {
+    fprintf(stderr, "slots should default to NULL\n");
+    return 0;
+  }
+  if (!im_context_slot_set(aIMCTX, slot, &slot)) {
+    fprintf(stderr, "set slot failed\n");
+    return 0;
+  }
+
+  if (im_context_slot_get(aIMCTX, slot) != &slot) {
+    fprintf(stderr, "get slot didn't match\n");
+    return 0;
+  }
+
+  return 1;
+}
+
 EOS
 
 my $im = Imager->new(xsize=>50, ysize=>50);
@@ -637,6 +658,8 @@ for my $bits (8, 16) {
 }
 
 ok(test_mutex(), "call mutex APIs");
+
+ok(test_slots(), "call slot APIs");
 
 sub _get_error {
   my @errors = Imager::i_errors();
