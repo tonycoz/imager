@@ -1,7 +1,6 @@
 Imager release history.  Older releases can be found in Changes.old
 
 Threads work
-  - thread safe ft2
   - thread safe ft1
 
  - improved thread safety
@@ -12,6 +11,7 @@ Threads work
    - use a mutex to avoid re-entering thread-unsafe giflib
    - use a mutex to avoid re-entering thread-unsafe tifflib
    - use a mutex to avoid re-entering thread-unsafe T1Lib
+   - use a library handle per thread for freetype 2.
 
  - T1:
    - improve error reporting
