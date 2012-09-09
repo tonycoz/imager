@@ -69,6 +69,7 @@ FT2/imft2.h
 FT2/Makefile.PL
 FT2/README
 FT2/t/t10ft2.t
+FT2/t/t20thread.t
 FT2/typemap
 gaussian.im
 GIF/GIF.pm

@@ -49,40 +49,84 @@ Truetype, Type1 and Windows FNT.
 
 static void ft2_push_message(int code);
 
-static int ft2_initialized = 0;
-static FT_Library library;
+static void ft2_final(void *);
+
+static im_slot_t slot = -1;
+
+typedef struct {
+  int initialized;
+  FT_Library library;
+  im_context_t ctx;
+} ft2_state;
 
 static i_img_dim i_min(i_img_dim a, i_img_dim b);
 static i_img_dim i_max(i_img_dim a, i_img_dim b);
+
+void
+i_ft2_start(void) {
+  if (slot == -1)
+    slot = im_context_slot_new(ft2_final);
+}
 
 /*
 =item i_ft2_init(void)
 
 Initializes the Freetype 2 library.
 
-Returns true on success, false on failure.
+Returns ft2_state * on success or NULL on failure.
 
 =cut
 */
-int
+
+static ft2_state *
 i_ft2_init(void) {
   FT_Error error;
+  im_context_t ctx = im_get_context();
+  ft2_state *ft2 = im_context_slot_get(ctx, slot);
 
-  i_clear_error();
-  error = FT_Init_FreeType(&library);
-  if (error) {
-    ft2_push_message(error);
-    i_push_error(0, "Initializing Freetype2");
-    return 0;
+  if (ft2 == NULL) {
+    ft2 = mymalloc(sizeof(ft2_state));
+    ft2->initialized = 0;
+    ft2->library = NULL;
+    ft2->ctx = ctx;
+    im_context_slot_set(ctx, slot, ft2);
+    mm_log((1, "created FT2 state %p for context %p\n", ft2, ctx));
   }
 
-  ft2_initialized = 1;
+  i_clear_error();
+  if (!ft2->initialized) {
+    error = FT_Init_FreeType(&ft2->library);
+    if (error) {
+      ft2_push_message(error);
+      i_push_error(0, "Initializing Freetype2");
+      return NULL;
+    }
+    mm_log((1, "initialized FT2 state %p\n", ft2));
 
-  return 1;
+    ft2->initialized = 1;
+  }
+
+  return ft2;
+}
+
+static void
+ft2_final(void *state) {
+  ft2_state *ft2 = state;
+
+  if (ft2->initialized) {
+    mm_log((1, "finalizing FT2 state %p\n", state));
+    FT_Done_FreeType(ft2->library);
+    ft2->library = NULL;
+    ft2->initialized = 0;
+  }
+
+  mm_log((1, "freeing FT2 state %p\n", state));
+  myfree(state);
 }
 
 struct FT2_Fonthandle {
   FT_Face face;
+  ft2_state *state;
   int xdpi, ydpi;
   int hint;
   FT_Encoding encoding;
@@ -138,14 +182,15 @@ i_ft2_new(const char *name, int index) {
   int i, j;
   FT_Encoding encoding;
   int score;
+  ft2_state *ft2;
 
   mm_log((1, "i_ft2_new(name %p, index %d)\n", name, index));
 
-  if (!ft2_initialized && !i_ft2_init())
+  if ((ft2 = i_ft2_init()) == NULL)
     return NULL;
 
   i_clear_error();
-  error = FT_New_Face(library, name, index, &face);
+  error = FT_New_Face(ft2->library, name, index, &face);
   if (error) {
     ft2_push_message(error);
     i_push_error(error, "Opening face");
@@ -173,6 +218,7 @@ i_ft2_new(const char *name, int index) {
 
   result = mymalloc(sizeof(FT2_Fonthandle));
   result->face = face;
+  result->state = ft2;
   result->xdpi = result->ydpi = 72;
   result->encoding = encoding;
 
@@ -244,7 +290,7 @@ i_ft2_setdpi(FT2_Fonthandle *handle, int xdpi, int ydpi) {
   if (xdpi > 0 && ydpi > 0) {
     handle->xdpi = xdpi;
     handle->ydpi = ydpi;
-    return 0;
+    return 1;
   }
   else {
     i_push_error(0, "resolutions must be positive");
