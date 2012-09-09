@@ -56,7 +56,8 @@ i_init_t1(int t1log) {
 static undef_int
 i_init_t1_low(int t1log) {
   int init_flags = IGNORE_CONFIGFILE|IGNORE_FONTDATABASE;
-  mm_log((1,"init_t1()\n"));
+
+  mm_log((1,"init_t1(%d)\n", t1log));
 
   i_clear_error();
 
@@ -79,7 +80,6 @@ i_init_t1_low(int t1log) {
     return(1);
   }
   T1_SetLogLevel(T1LOG_DEBUG);
-  i_t1_set_aa(1); /* Default Antialias value */
 
   ++t1_initialized;
 
@@ -155,12 +155,12 @@ i_t1_new(char *pfb,char *afm) {
 
   ++t1_active_fonts;
 
-  mm_log((1, "i_t1_new() -> %d\n", font_id));
-
   i_mutex_unlock(mutex);
 
   font = mymalloc(sizeof(*font));
   font->font_id = font_id;
+
+  mm_log((1, "i_t1_new() -> %p (%d)\n", font, font_id));
 
   return font;
 }
@@ -181,7 +181,7 @@ i_t1_destroy(i_t1_font_t font) {
 
   i_mutex_lock(mutex);
 
-  mm_log((1,"i_t1_destroy(font_id %d)\n",font->font_id));
+  mm_log((1,"i_t1_destroy(font %p (%d))\n", font, font->font_id));
 
   --t1_active_fonts;
 
@@ -253,7 +253,7 @@ Interface to text rendering into a single channel in an image
    str     - string to render
    len     - string length
    align   - (0 - top of font glyph | 1 - baseline )
-   aa      - anti-aliasing
+   aa      - anti-aliasing level
 
 =cut
 */
@@ -268,7 +268,16 @@ i_t1_cp(i_t1_font_t font, i_img *im,i_img_dim xb,i_img_dim yb,int channel,double
 
   unsigned int ch_mask_store;
   
-  if (im == NULL) { mm_log((1,"i_t1_cp: Null image in input\n")); return(0); }
+  i_clear_error();
+
+  mm_log((1, "i_t1_cp(font %p (%d), im %p, (xb,yb)=" i_DFp ", channel %d, points %g, str %p, len %u, align %d, utf8 %d, flags '%s', aa %d)\n",
+	  font, fontnum, im, i_DFcp(xb, yb), channel, points, str, (unsigned)len, align, utf8, flags, aa));
+
+  if (im == NULL) {
+    mm_log((1,"i_t1_cp: Null image in input\n"));
+    i_push_error(0, "null image");
+    return(0);
+  }
 
   i_mutex_lock(mutex);
 
@@ -284,6 +293,8 @@ i_t1_cp(i_t1_font_t font, i_img *im,i_img_dim xb,i_img_dim yb,int channel,double
     glyph=T1_AASetString( fontnum, str, len, 0, mod_flags, points, NULL);
   }
   if (glyph == NULL) {
+    t1_push_error();
+    i_push_error(0, "i_t1_cp: T1_AASetString failed");
     i_mutex_unlock(mutex);
     return 0;
   }
@@ -355,7 +366,7 @@ i_t1_bbox(i_t1_font_t font, double points,const char *str,size_t len, i_img_dim 
 
   space_position = T1_GetEncodingIndex(fontnum, "space");
   
-  mm_log((1,"i_t1_bbox(fontnum %d,points %.2f,str '%.*s', len %d)\n",fontnum,points,len,str,len));
+  mm_log((1,"i_t1_bbox(font %p (%d),points %.2f,str '%.*s', len %d)\n",font, fontnum,points,len,str,len));
   T1_LoadFont(fontnum);  /* FIXME: Here a return code is ignored - haw haw haw */ 
 
   if (len == 0) {
@@ -436,7 +447,16 @@ i_t1_text(i_t1_font_t font, i_img *im, i_img_dim xb, i_img_dim yb,const i_color 
   i_render *r;
   int fontnum = font->font_id;
 
-  if (im == NULL) { mm_log((1,"i_t1_cp: Null image in input\n")); return(0); }
+  mm_log((1, "i_t1_text(font %p (%d), im %p, (xb,yb)=" i_DFp ", cl (%d,%d,%d,%d), points %g, str %p, len %u, align %d, utf8 %d, flags '%s', aa %d)\n",
+	  font, fontnum, im, i_DFcp(xb, yb), cl->rgba.r, cl->rgba.g, cl->rgba.b, cl->rgba.a, points, str, (unsigned)len, align, utf8, flags, aa));
+
+  i_clear_error();
+
+  if (im == NULL) {
+    i_push_error(0, "null image");
+    mm_log((1,"i_t1_text: Null image in input\n"));
+    return(0);
+  }
 
   i_mutex_lock(mutex);
 
@@ -453,6 +473,9 @@ i_t1_text(i_t1_font_t font, i_img *im, i_img_dim xb, i_img_dim yb,const i_color 
     glyph=T1_AASetString( fontnum, (char *)str, len, 0, mod_flags, points, NULL);
   }
   if (glyph == NULL) {
+    mm_log((1, "T1_AASetString failed\n"));
+    t1_push_error();
+    i_push_error(0, "i_t1_text(): T1_AASetString failed");
     i_mutex_unlock(mutex);
     return 0;
   }

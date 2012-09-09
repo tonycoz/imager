@@ -15,10 +15,7 @@ BEGIN {
 
 *_first = \&Imager::Font::_first;
 
-my $t1aa;
-
-# $T1AA is in there because for some reason (probably cache related) antialiasing
-# is a system wide setting in t1 lib.
+my $t1aa = 2;
 
 sub new {
   my $class = shift;
@@ -71,6 +68,7 @@ sub new {
 		type  => 't1',
 		size  => $hsh{size},
 		color => $hsh{color},
+		t1aa  => $t1aa,
 	       }, $class;
 }
 
@@ -85,16 +83,19 @@ sub _draw {
   $flags .= 'u' if $input{underline};
   $flags .= 's' if $input{strikethrough};
   $flags .= 'o' if $input{overline};
+  my $aa = $input{aa} ? $self->{t1aa} : 0;
   if (exists $input{channel}) {
     $self->{t1font}->cp($input{image}{IMG}, $input{'x'}, $input{'y'},
 		    $input{channel}, $input{size},
 		    $input{string}, length($input{string}), $input{align},
-                    $input{utf8}, $flags, $input{aa});
+                    $input{utf8}, $flags, $aa)
+      or return;
   } else {
     $self->{t1font}->text($input{image}{IMG}, $input{'x'}, $input{'y'}, 
 		      $input{color}, $input{size}, 
 		      $input{string}, length($input{string}), 
-		      $input{align}, $input{utf8}, $flags, $input{aa});
+		      $input{align}, $input{utf8}, $flags, $aa)
+      or return;
   }
 
   return $self;
@@ -157,6 +158,27 @@ sub glyph_names {
   return $self->{t1font}->glyph_name($string, $utf8);
 }
 
+sub set_aa_level {
+  my ($self, $new_t1aa) = @_;
+
+  if (!defined $new_t1aa ||
+      ($new_t1aa != 1 && $new_t1aa != 2)) {
+    Imager->_set_error("set_aa_level: parameter must be 1 or 2");
+    return;
+  }
+
+  if (ref $self) {
+    $self->_valid
+      or return;
+
+    $self->{t1aa} = $new_t1aa;
+  }
+  else {
+    $t1aa = $new_t1aa;
+  }
+
+  return 1;
+}
 
 sub _valid {
   my $self = shift;
@@ -217,6 +239,32 @@ C<strikethrough> - Draw the text with a strikethrough.
 
 Obviously, if you're calculating the bounding box the size of the line
 is included in the box, and the line isn't drawn :)
+
+=head2 Anti-aliasing
+
+T1Lib supports multiple levels of anti-aliasing, by default, if you
+request anti-aliased output, Imager::Font::T1 will use the maximum
+level.
+
+You can override this with the set_t1_aa() method:
+
+=over
+
+=item set_aa_level()
+
+Usage:
+
+  $font->set_aa_level(1);
+  Imager::Font::T1->set_aa_level(2);
+
+Sets the T1Lib anti-aliasing level either for the specified font, or
+for new font objects.
+
+The only parameter must be 1 or 2.
+
+Returns true on success.
+
+=back
 
 =head1 AUTHOR
 
