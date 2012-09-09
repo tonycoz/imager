@@ -594,103 +594,109 @@ t1_push_error(void) {
 
 #ifdef T1ERR_SCAN_FONT_FORMAT
   case T1ERR_SCAN_FONT_FORMAT:
-    i_push_error(T1ERR_SCAN_FONT_FORMAT, "SCAN_FONT_FORMAT"); 
+    i_push_error(T1ERR_SCAN_FONT_FORMAT, "Attempt to Load Multiple Master Font"); 
     break;
 #endif
 
 #ifdef T1ERR_SCAN_FILE_OPEN_ERR
   case T1ERR_SCAN_FILE_OPEN_ERR:
-    i_push_error(T1ERR_SCAN_FILE_OPEN_ERR, "SCAN_FILE_OPEN_ERR"); 
+    i_push_error(T1ERR_SCAN_FILE_OPEN_ERR, "Type 1 Font File Open Error"); 
     break;
 #endif
 
 #ifdef T1ERR_SCAN_OUT_OF_MEMORY
   case T1ERR_SCAN_OUT_OF_MEMORY:
-    i_push_error(T1ERR_SCAN_OUT_OF_MEMORY, "SCAN_OUT_OF_MEMORY"); 
+    i_push_error(T1ERR_SCAN_OUT_OF_MEMORY, "Virtual Memory Exceeded"); 
     break;
 #endif
 
 #ifdef T1ERR_SCAN_ERROR
   case T1ERR_SCAN_ERROR:
-    i_push_error(T1ERR_SCAN_ERROR, "SCAN_ERROR"); 
+    i_push_error(T1ERR_SCAN_ERROR, "Syntactical Error Scanning Font File"); 
     break;
 #endif
 
 #ifdef T1ERR_SCAN_FILE_EOF
   case T1ERR_SCAN_FILE_EOF:
-    i_push_error(T1ERR_SCAN_FILE_EOF, "SCAN_FILE_EOF"); 
+    i_push_error(T1ERR_SCAN_FILE_EOF, "Premature End of Font File Encountered"); 
     break;
 #endif
 
 #ifdef T1ERR_PATH_ERROR
   case T1ERR_PATH_ERROR:
-    i_push_error(T1ERR_PATH_ERROR, "PATH_ERROR"); 
+    i_push_error(T1ERR_PATH_ERROR, "Path Construction Error"); 
     break;
 #endif
 
 #ifdef T1ERR_PARSE_ERROR
   case T1ERR_PARSE_ERROR:
-    i_push_error(T1ERR_PARSE_ERROR, "PARSE_ERROR"); 
+    i_push_error(T1ERR_PARSE_ERROR, "Font is Corrupt"); 
     break;
 #endif
 
 #ifdef T1ERR_TYPE1_ABORT
   case T1ERR_TYPE1_ABORT:
-    i_push_error(T1ERR_TYPE1_ABORT, "TYPE1_ABORT"); 
+    i_push_error(T1ERR_TYPE1_ABORT, "Rasterization Aborted"); 
     break;
 #endif
 
 #ifdef T1ERR_INVALID_FONTID
   case T1ERR_INVALID_FONTID:
-    i_push_error(T1ERR_INVALID_FONTID, "INVALID_FONTID"); 
+    i_push_error(T1ERR_INVALID_FONTID, "Font ID Invalid in this Context"); 
     break;
 #endif
 
 #ifdef T1ERR_INVALID_PARAMETER
   case T1ERR_INVALID_PARAMETER:
-    i_push_error(T1ERR_INVALID_PARAMETER, "INVALID_PARAMETER"); 
+    i_push_error(T1ERR_INVALID_PARAMETER, "Invalid Argument in Function Call"); 
     break;
 #endif
 
 #ifdef T1ERR_OP_NOT_PERMITTED
   case T1ERR_OP_NOT_PERMITTED:
-    i_push_error(T1ERR_OP_NOT_PERMITTED, "OP_NOT_PERMITTED"); 
+    i_push_error(T1ERR_OP_NOT_PERMITTED, "Operation not Permitted"); 
     break;
 #endif
 
 #ifdef T1ERR_ALLOC_MEM
   case T1ERR_ALLOC_MEM:
-    i_push_error(T1ERR_ALLOC_MEM, "ALLOC_MEM"); 
+    i_push_error(T1ERR_ALLOC_MEM, "Memory Allocation Error"); 
     break;
 #endif
 
 #ifdef T1ERR_FILE_OPEN_ERR
   case T1ERR_FILE_OPEN_ERR:
-    i_push_error(T1ERR_FILE_OPEN_ERR, "FILE_OPEN_ERR"); 
+    i_push_error(T1ERR_FILE_OPEN_ERR, "Error Opening File"); 
     break;
 #endif
 
 #ifdef T1ERR_UNSPECIFIED
   case T1ERR_UNSPECIFIED:
-    i_push_error(T1ERR_UNSPECIFIED, "UNSPECIFIED"); 
+    i_push_error(T1ERR_UNSPECIFIED, "Unspecified T1Lib Error"); 
     break;
 #endif
 
 #ifdef T1ERR_NO_AFM_DATA
   case T1ERR_NO_AFM_DATA:
-    i_push_error(T1ERR_NO_AFM_DATA, "NO_AFM_DATA"); 
+    i_push_error(T1ERR_NO_AFM_DATA, "Missing AFM Data"); 
     break;
 #endif
 
 #ifdef T1ERR_X11
   case T1ERR_X11:
-    i_push_error(T1ERR_X11, "X11"); 
+    i_push_error(T1ERR_X11, "X11 Interface Error"); 
     break;
 #endif
 
 #ifdef T1ERR_COMPOSITE_CHAR
   case T1ERR_COMPOSITE_CHAR:
-    i_push_error(T1ERR_COMPOSITE_CHAR, "COMPOSITE_CHAR"); 
+    i_push_error(T1ERR_COMPOSITE_CHAR, "Missing Component of Composite Character"); 
+    break;
+#endif
+
+#ifdef T1ERR_SCAN_ENCODING
+  case T1ERR_SCAN_ENCODING:
+    i_push_error(T1ERR_SCAN_ENCODING, "Error Scanning Encoding File"); 
     break;
 #endif
 
