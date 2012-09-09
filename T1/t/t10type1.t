@@ -2,13 +2,13 @@
 use strict;
 use Test::More;
 use Imager ':all';
-use Imager::Test qw(diff_text_with_nul is_color3);
+use Imager::Test qw(diff_text_with_nul is_color3 is_image isnt_image);
 use Imager::Font::T1;
 use Cwd qw(getcwd abs_path);
 
 #$Imager::DEBUG=1;
 
-plan tests => 96;
+plan tests => 108;
 
 ok($Imager::formats{t1}, "must have t1");
 
@@ -360,6 +360,40 @@ SKIP:
     $font = Imager::Font->new(file => $drive_path, type => $type);
     ok($font, "found font by drive relative path")
       or print "# path $drive_path\n";
+  }
+
+  {
+    Imager->log("Testing aa levels", 1);
+    my $f1 = Imager::Font->new(file => $deffont, type => "t1");
+    is($f1->{t1aa}, 2, "should have default aa level");
+    my $imbase = Imager->new(xsize => 100, ysize => 20);
+    ok($imbase->string(text => "test", size => 18, x => 5, y => 18,
+		       color => "#FFF", font => $f1, aa => 1),
+       "draw text with def aa level");
+    ok(Imager::Font::T1->set_aa_level(1), "set aa level to 1");
+    my $f2 = Imager::Font->new(file => $deffont, type => "t1");
+    is($f2->{t1aa}, 1, "new font has new aa level");
+    my $imaa1 = Imager->new(xsize => 100, ysize => 20);
+    ok($imaa1->string(text => "test", size => 18, x => 5, y => 18,
+		       color => "#FFF", font => $f2, aa => 1),
+       "draw text with non-def aa level");
+    isnt_image($imbase, $imaa1, "images should differ");
+    ok($f2->set_aa_level(2), "set aa level of font");
+    is($f2->{t1aa}, 2, "check new aa level");
+    my $imaa2 = Imager->new(xsize => 100, ysize => 20);
+    ok($imaa2->string(text => "test", size => 18, x => 5, y => 18,
+		       color => "#FFF", font => $f2, aa => 1),
+       "draw text with non-def but 2 aa level");
+    is_image($imbase, $imaa2, "check images match");
+  }
+
+  { # error handling check
+    my $im = Imager->new(xsize => 100, ysize => 20);
+    my $fnum = Imager::Font->new(file => $deffont, type => "t1");
+    ok(!$im->string(font => $fnum, string => "text", size => -10),
+       "set invalid size");
+    is($im->errstr, "i_t1_text(): T1_AASetString failed: Invalid Argument in Function Call",
+       "check error message");
   }
 }
 
