@@ -1,3 +1,12 @@
+Imager::Font::T1 1.018
+======================
+
+ - use mutexes to avoid re-entrancy into the thread-unsafe T1Lib
+
+ - improve error handling and reporting
+
+ - provide better control of the level of anti-aliasing
+
 Imager::Font::T1 1.017
 ======================
 
