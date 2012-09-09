@@ -3,38 +3,40 @@
 
 #include "imdatatypes.h"
 
+typedef struct i_t1_font_tag *i_t1_font_t;
+
+extern void
+i_t1_start(void);
+
 extern undef_int
 i_init_t1(int t1log);
 
 extern void
 i_close_t1(void);
 
-extern int
+extern i_t1_font_t
 i_t1_new(char *pfb,char *afm);
 
 extern int
-i_t1_destroy(int font_id);
-
-extern void
-i_t1_set_aa(int st);
+i_t1_destroy(i_t1_font_t font);
 
 extern undef_int
-i_t1_cp(i_img *im,i_img_dim xb,i_img_dim yb,int channel,int fontnum,double points,char* str,size_t len,int align, int utf8, char const *flags);
+i_t1_cp(i_t1_font_t font, i_img *im,i_img_dim xb,i_img_dim yb,int channel,double points,char* str,size_t len,int align, int utf8, char const *flags, int aa);
 
 extern int
-i_t1_bbox(int fontnum,double points,const char *str,size_t len,i_img_dim *cords, int utf8,char const *flags);
+i_t1_bbox(i_t1_font_t font,double points,const char *str,size_t len,i_img_dim *cords, int utf8,char const *flags);
 
 extern undef_int
-i_t1_text(i_img *im,i_img_dim xb,i_img_dim yb,const i_color *cl,int fontnum,double points,const char* str,size_t len,int align, int utf8, char const *flags);
+i_t1_text(i_t1_font_t font, i_img *im,i_img_dim xb,i_img_dim yb,const i_color *cl,double points,const char* str,size_t len,int align, int utf8, char const *flags, int aa);
 
 extern int
-i_t1_has_chars(int font_num, const char *text, size_t len, int utf8,
+i_t1_has_chars(i_t1_font_t font, const char *text, size_t len, int utf8,
                char *out);
 
 extern int
-i_t1_face_name(int font_num, char *name_buf, size_t name_buf_size);
+i_t1_face_name(i_t1_font_t font, char *name_buf, size_t name_buf_size);
 
 extern int
-i_t1_glyph_name(int font_num, unsigned long ch, char *name_buf, 
+i_t1_glyph_name(i_t1_font_t font, unsigned long ch, char *name_buf, 
 		size_t name_buf_size);
 #endif
