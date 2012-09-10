@@ -4086,3 +4086,6 @@ BOOT:
 #endif
 	start_context(aTHX);
 	im_get_context = perl_get_context;
+#ifdef HAVE_LIBTT
+        i_tt_start();
+#endif
