@@ -8,26 +8,14 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#ifdef HAVE_LIBT1
-#endif
-
 
 /*
 =head1 NAME
 
-font.c - implements font handling functions for t1 and truetype fonts
+fontft1.c - Freetype 1.x font driver for Imager
 
 =head1 SYNOPSIS
 
-  i_init_fonts();
-
-  #ifdef HAVE_LIBT1
-  fontnum = i_t1_new(path_to_pfb, path_to_afm);
-  i_t1_bbox(fontnum, points, "foo", 3, i_img_dim cords[BOUNDING_BOX_COUNT]);
-  rc = i_t1_destroy(fontnum);
-  #endif
-
-  #ifdef HAVE_LIBTT
   handle = i_tt_new(path_to_ttf);
   rc = i_tt_bbox(handle, points, "foo", 3, int cords[6], utf8);
   i_tt_destroy(handle);
@@ -36,8 +24,10 @@ font.c - implements font handling functions for t1 and truetype fonts
 
 =head1 DESCRIPTION
 
-font.c implements font creation, rendering, bounding box functions and
-more for Imager.
+fontft1.c implements font creation, rendering, bounding box functions and
+more for Imager using Freetype 1.x.
+
+In general this driver should be ignored in favour of the FT2 driver.
 
 =head1 FUNCTION REFERENCE
 
@@ -51,8 +41,6 @@ Some of these functions are internal.
 
 
 /* Truetype font support */
-#ifdef HAVE_LIBTT
-
 /* These are enabled by default when configuring Freetype 1.x
    I haven't a clue how to reliably detect it at compile time.
 
@@ -1359,8 +1347,6 @@ i_tt_push_error(TT_Error rc) {
   i_push_errorf(rc, "Error code 0x%04x", (unsigned)rc);
 #endif
 }
-
-#endif /* HAVE_LIBTT */
 
 
 /*
