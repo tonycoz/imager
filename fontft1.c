@@ -66,8 +66,15 @@ Some of these functions are internal.
 #define TT_MS_LANGID_ENGLISH_GENERAL 0x0409
 #endif
 
+static im_slot_t slot = -1;
+
 /* convert a code point into an index in the glyph cache */
 #define TT_HASH(x) ((x) & 0xFF)
+
+typedef struct {
+  int initialized;
+  TT_Engine engine;
+} i_tt_engine;
 
 typedef struct i_glyph_entry_ {
   TT_Glyph glyph;
@@ -105,6 +112,7 @@ struct TT_Fonthandle_ {
 #define TT_VALID( handle )  ( ( handle ).z != NULL )
 
 static void i_tt_push_error(TT_Error rc);
+static void i_tt_uninit(void *);
 
 /* Prototypes */
 
@@ -132,8 +140,6 @@ static undef_int i_tt_bbox_inst( TT_Fonthandle *handle, int inst ,const char *tx
 
 /* static globals needed */
 
-static int TT_initialized = 0;
-static TT_Engine    engine;
 static int  LTT_dpi    = 72; /* FIXME: this ought to be a part of the call interface */
 static int  LTT_hinted = 1;  /* FIXME: this too */
 
@@ -142,58 +148,91 @@ static int  LTT_hinted = 1;  /* FIXME: this too */
  * FreeType interface
  */
 
+void
+i_tt_start(void) {
+  im_context_t ctx = im_get_context();
+  if (slot == -1)
+    slot = im_context_slot_new(i_tt_uninit);
+}
+
 
 /*
 =item init_tt()
 
-Initializes the freetype font rendering engine
+Initializes the freetype font rendering engine (if needed)
 
 =cut
 */
 
-static undef_int
+static i_tt_engine *
 i_init_tt(void) {
   TT_Error  error;
+  im_context_t ctx = im_get_context();
   TT_Byte palette[] = { 0, 64, 127, 191, 255 };
+  i_tt_engine *result = im_context_slot_get(ctx, slot);
 
   i_clear_error();
 
+  if (result == NULL) {
+    result = mymalloc(sizeof(i_tt_engine));
+    memset(result, 0, sizeof(*result));
+    im_context_slot_set(ctx, slot, result);
+    mm_log((1, "allocated FT1 state %p\n", result));
+  }
+
   mm_log((1,"init_tt()\n"));
-  error = TT_Init_FreeType( &engine );
+
+  if (result->initialized)
+    return result;
+
+  error = TT_Init_FreeType( &result->engine );
   if ( error ){
     mm_log((1,"Initialization of freetype failed, code = 0x%x\n",
 	    (unsigned)error));
     i_tt_push_error(error);
     i_push_error(0, "Could not initialize freetype 1.x");
-    return(1);
+    return NULL;
   }
 
 #ifdef FTXPOST
-  error = TT_Init_Post_Extension( engine );
+  error = TT_Init_Post_Extension( result->engine );
   if (error) {
     mm_log((1, "Initialization of Post extension failed = 0x%x\n",
 	    (unsigned)error));
     
     i_tt_push_error(error);
     i_push_error(0, "Could not initialize FT 1.x POST extension");
-    return 1;
+    return NULL;
   }
 #endif
 
-  error = TT_Set_Raster_Gray_Palette(engine, palette);
+  error = TT_Set_Raster_Gray_Palette(result->engine, palette);
   if (error) {
     mm_log((1, "Initialization of gray levels failed = 0x%x\n",
 	    (unsigned)error));
     i_tt_push_error(error);
     i_push_error(0, "Could not initialize FT 1.x POST extension");
-    return 1;
+    return NULL;
   }
 
-  TT_initialized = 1;
+  mm_log((1, "initialized FT1 state %p\n", result));
 
-  return(0);
+  result->initialized = 1;
+
+  return result;
 }
 
+static void
+i_tt_uninit(void *p) {
+  i_tt_engine *tteng = p;
+
+  if (tteng->initialized) {
+    mm_log((1, "finalizing FT1 state %p\n", tteng));
+    TT_Done_FreeType(tteng->engine);
+  }
+  mm_log((1, "freeing FT1 state %p\n", tteng));
+  myfree(tteng);
+}
 
 /* 
 =item i_tt_get_instance(handle, points, smooth)
@@ -315,8 +354,9 @@ i_tt_new(const char *fontname) {
   TT_Fonthandle *handle;
   unsigned short i,n;
   unsigned short platform,encoding;
+  i_tt_engine *tteng;
 
-  if (!TT_initialized && i_init_tt()) {
+  if ((tteng = i_init_tt()) == NULL) {
     i_push_error(0, "Could not initialize FT1 engine");
     return NULL;
   }
@@ -330,7 +370,7 @@ i_tt_new(const char *fontname) {
   handle = mymalloc( sizeof(TT_Fonthandle) ); /* checked 5Nov05 tonyc */
 
   /* load the typeface */
-  error = TT_Open_Face( engine, fontname, &handle->face );
+  error = TT_Open_Face( tteng->engine, fontname, &handle->face );
   if ( error ) {
     if ( error == TT_Err_Could_Not_Open_File ) {
       mm_log((1, "Could not find/open %s.\n", fontname ));
