@@ -184,9 +184,9 @@ int i_img_samef(i_img *im1,i_img *im2, double epsilon, const char *what);
 
 /* font routines */
 
-undef_int i_init_fonts( int t1log );
-
 #ifdef HAVE_LIBTT
+
+extern void i_tt_start(void);
 
 TT_Fonthandle* i_tt_new(const char *fontname);
 void i_tt_destroy( TT_Fonthandle *handle );
