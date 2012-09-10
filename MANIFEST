@@ -50,7 +50,7 @@ Flines/Flines.xs
 Flines/Makefile.PL
 Flines/t/t00flines.t
 flip.im
-font.c
+fontft1.c
 fontfiles/dodge.ttf
 fontfiles/ExistenceTest.ttf	generated using pfaedit
 fontfiles/ImUgly.ttf
