@@ -1,8 +1,5 @@
 Imager release history.  Older releases can be found in Changes.old
 
-Threads work
-  - thread safe ft1
-
  - improved thread safety
    - the internal error stack and log file handle are now in a per-thread
      context object
@@ -12,6 +9,7 @@ Threads work
    - use a mutex to avoid re-entering thread-unsafe tifflib
    - use a mutex to avoid re-entering thread-unsafe T1Lib
    - use a library handle per thread for freetype 2.
+   - use an engine handle per thread for freetype 1.x.
 
  - T1:
    - improve error reporting
