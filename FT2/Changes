@@ -1,6 +1,11 @@
 Imager-Font-FT2 0.85
 ====================
 
+ - improve thread safety
+
+Imager-Font-FT2 0.85
+====================
+
  - no longer fallback to using DynaLoader to load the XS code
    https://rt.cpan.org/Ticket/Display.html?id=75560
 

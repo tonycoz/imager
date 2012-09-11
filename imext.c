@@ -2,6 +2,8 @@
 #include "imager.h"
 #include "imio.h"
 
+static im_context_t get_context(void);
+
 /*
  DON'T ADD CASTS TO THESE
 */
@@ -18,10 +20,10 @@ im_ext_funcs imager_function_table =
     myfree_file_line,
     myrealloc_file_line,
 
-    i_img_8_new,
-    i_img_16_new,
-    i_img_double_new,
-    i_img_pal_new,
+    im_img_8_new,
+    im_img_16_new,
+    im_img_double_new,
+    im_img_pal_new,
     i_img_destroy,
     i_sametype,
     i_sametype_chans,
@@ -58,10 +60,10 @@ im_ext_funcs imager_function_table =
     i_quant_translate,
     i_quant_transparent,
 
-    i_clear_error,
-    i_push_error,
+    im_clear_error,
+    im_push_error,
     i_push_errorf,
-    i_push_errorvf,
+    im_push_errorvf,
 
     i_tags_new,
     i_tags_set,
@@ -99,9 +101,9 @@ im_ext_funcs imager_function_table =
     i_rubthru,
 
     /* IMAGER_API_LEVEL 2 functions */
-    i_set_image_file_limits,
-    i_get_image_file_limits,
-    i_int_check_image_file_limits,
+    im_set_image_file_limits,
+    im_get_image_file_limits,
+    im_int_check_image_file_limits,
 
     i_flood_fill_border,
     i_flood_cfill_border,
@@ -116,8 +118,8 @@ im_ext_funcs imager_function_table =
     i_loog,
 
     /* IMAGER_API_LEVEL 4 functions */
-    i_img_alloc,
-    i_img_init,
+    im_img_alloc,
+    im_img_init,
 
     /* IMAGER_API_LEVEL 5 functions */
     i_img_is_monochrome,
@@ -145,12 +147,28 @@ im_ext_funcs imager_function_table =
     i_io_close,
     i_io_set_buffered,
     i_io_gets,
-    io_new_fd,
-    io_new_bufchain,
-    io_new_buffer,
-    io_new_cb,
+    im_io_new_fd,
+    im_io_new_bufchain,
+    im_io_new_buffer,
+    im_io_new_cb,
     io_slurp,
-    io_glue_destroy
+    io_glue_destroy,
+
+    /* level 8 */
+    get_context,
+    im_push_errorf,
+    im_lhead,
+    im_loog,
+    im_context_refinc,
+    im_context_refdec,
+    im_errors,
+    i_mutex_new,
+    i_mutex_destroy,
+    i_mutex_lock,
+    i_mutex_unlock,
+    im_context_slot_new,
+    im_context_slot_set,
+    im_context_slot_get
   };
 
 /* in general these functions aren't called by Imager internally, but
@@ -550,3 +568,20 @@ int
   return i_setcolors(im, index, colors, count);
 }
 
+/*
+=item im_get_context()
+
+Retrieve the context object for the current thread.
+
+Inside Imager itself this is just a function pointer, which the
+F<Imager.xs> BOOT handler initializes for use within perl.  If you're
+taking the Imager code and embedding it elsewhere you need to
+initialize the C<im_get_context> pointer at some point.
+
+=cut
+*/
+
+static im_context_t
+get_context(void) {
+  return im_get_context();
+}

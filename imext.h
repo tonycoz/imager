@@ -30,6 +30,10 @@ extern im_ext_funcs *imager_function_ext_table;
 /* just for use here */
 #define im_extt imager_function_ext_table
 
+#define im_get_context() ((im_extt->f_im_get_context)())
+#define im_context_refinc(ctx, where) ((im_extt->f_im_context_refinc)((ctx), (where)))
+#define im_context_refdec(ctx, where) ((im_extt->f_im_context_refdec)((ctx), (where)))
+
 #ifdef IMAGER_DEBUG_MALLOC
 
 #define mymalloc(size) ((im_extt->f_mymalloc_file_line)((size), __FILE__, __LINE__))
@@ -44,10 +48,10 @@ extern im_ext_funcs *imager_function_ext_table;
 
 #endif
 
-#define i_img_8_new(xsize, ysize, channels) ((im_extt->f_i_img_8_new)((xsize), (ysize), (channels)))
-#define i_img_16_new(xsize, ysize, channels) ((im_extt->f_i_img_16_new)((xsize), (ysize), (channels)))
-#define i_img_double_new(xsize, ysize, channels) ((im_extt->f_i_img_double_new)((xsize), (ysize), (channels)))
-#define i_img_pal_new(xsize, ysize, channels, maxpal) ((im_extt->f_i_img_pal_new)((xsize), (ysize), (channels), (maxpal)))
+#define im_img_8_new(ctx, xsize, ysize, channels) ((im_extt->f_im_img_8_new)((ctx), (xsize), (ysize), (channels)))
+#define im_img_16_new(ctx, xsize, ysize, channels) ((im_extt->f_im_img_16_new)((ctx), (xsize), (ysize), (channels)))
+#define im_img_double_new(ctx, xsize, ysize, channels) ((im_extt->f_im_img_double_new)((ctx), (xsize), (ysize), (channels)))
+#define im_img_pal_new(ctx, xsize, ysize, channels, maxpal) ((im_extt->f_im_img_pal_new)((ctx), (xsize), (ysize), (channels), (maxpal)))
 
 #define i_img_destroy(im) ((im_extt->f_i_img_destroy)(im))
 #define i_sametype(im, xsize, ysize) ((im_extt->f_i_sametype)((im), (xsize), (ysize)))
@@ -58,43 +62,8 @@ extern im_ext_funcs *imager_function_ext_table;
 #define IMAGER_DIRECT_IMAGE_CALLS 1
 #endif
 
-#if IMAGER_DIRECT_IMAGE_CALLS
-#define i_ppix(im, x, y, val) (((im)->i_f_ppix)((im), (x), (y), (val)))
-#define i_gpix(im, x, y, val) (((im)->i_f_gpix)((im), (x), (y), (val)))
-#define i_ppixf(im, x, y, val) (((im)->i_f_ppixf)((im), (x), (y), (val)))
-#define i_gpixf(im, x, y, val) (((im)->i_f_gpixf)((im), (x), (y), (val)))
-#define i_plin(im, l, r, y, val) (((im)->i_f_plin)(im, l, r, y, val))
-#define i_glin(im, l, r, y, val) (((im)->i_f_glin)(im, l, r, y, val))
-#define i_plinf(im, l, r, y, val) (((im)->i_f_plinf)(im, l, r, y, val))
-#define i_glinf(im, l, r, y, val) (((im)->i_f_glinf)(im, l, r, y, val))
+#if !IMAGER_DIRECT_IMAGE_CALLS
 
-#define i_gsamp(im, l, r, y, samps, chans, count) \
-  (((im)->i_f_gsamp)((im), (l), (r), (y), (samps), (chans), (count)))
-#define i_gsampf(im, l, r, y, samps, chans, count) \
-  (((im)->i_f_gsampf)((im), (l), (r), (y), (samps), (chans), (count)))
-
-#define i_findcolor(im, color, entry) \
-  (((im)->i_f_findcolor) ? ((im)->i_f_findcolor)((im), (color), (entry)) : 0)
-
-#define i_gpal(im, l, r, y, vals) \
-  (((im)->i_f_gpal) ? ((im)->i_f_gpal)((im), (l), (r), (y), (vals)) : 0)
-#define i_ppal(im, l, r, y, vals) \
-  (((im)->i_f_ppal) ? ((im)->i_f_ppal)((im), (l), (r), (y), (vals)) : 0)
-#define i_addcolors(im, colors, count) \
-  (((im)->i_f_addcolors) ? ((im)->i_f_addcolors)((im), (colors), (count)) : -1)
-#define i_getcolors(im, index, color, count) \
-  (((im)->i_f_getcolors) ? \
-   ((im)->i_f_getcolors)((im), (index), (color), (count)) : 0)
-#define i_setcolors(im, index, color, count) \
-  (((im)->i_f_setcolors) ? \
-   ((im)->i_f_setcolors)((im), (index), (color), (count)) : 0)
-#define i_colorcount(im) \
-  (((im)->i_f_colorcount) ? ((im)->i_f_colorcount)(im) : -1)
-#define i_maxcolors(im) \
-  (((im)->i_f_maxcolors) ? ((im)->i_f_maxcolors)(im) : -1)
-#define i_findcolor(im, color, entry) \
-  (((im)->i_f_findcolor) ? ((im)->i_f_findcolor)((im), (color), (entry)) : 0)
-#else
 #define i_ppix(im, x, y, val) ((im_extt->f_i_ppix)((im), (x), (y), (val)))
 #define i_gpix(im, x, y, val) ((im_extt->f_i_gpix)((im), (x), (y), (val)))
 #define i_ppixf(im, x, y, val) ((im_extt->f_i_ppixf)((im), (x), (y), (val)))
@@ -134,11 +103,11 @@ extern im_ext_funcs *imager_function_ext_table;
 #define i_quant_transparent(quant, indices, img, trans_index) \
   ((im_extt->f_i_quant_transparent)((quant), (indices), (img), (trans_index)))
 
-#define i_clear_error() ((im_extt->f_i_clear_error)())
-#define i_push_error(code, msg) ((im_extt->f_i_push_error)((code), (msg)))
+#define im_clear_error(ctx) ((im_extt->f_im_clear_error)(ctx))
+#define im_push_error(ctx, code, msg) ((im_extt->f_im_push_error)((ctx), (code), (msg)))
 #define i_push_errorf (im_extt->f_i_push_errorf)
-#define i_push_errorvf(code, fmt, list) \
-  ((im_extt->f_i_push_errorvf)((code), (fmt), (list)))
+#define im_push_errorvf(ctx, code, fmt, list)		\
+  ((im_extt->f_im_push_errorvf)((ctx), (code), (fmt), (list)))
 
 #define i_tags_new(tags) ((im_extt->f_i_tags_new)(tags))
 #define i_tags_set(tags, name, data, size) \
@@ -194,12 +163,12 @@ extern im_ext_funcs *imager_function_ext_table;
 #define i_rubthru(im, src, tx, ty, src_minx, src_miny, src_maxx, src_maxy) \
   ((im_extt->f_i_rubthru)((im), (src), (tx), (ty), (src_minx), (src_miny), (src_maxx), (src_maxy)))
 
-#define i_set_image_file_limits(max_width, max_height, max_bytes) \
-  ((im_extt->f_i_set_image_file_limits)((max_width), (max_height), (max_bytes)))
-#define i_get_image_file_limits(pmax_width, pmax_height, pmax_bytes) \
-  ((im_extt->f_i_get_image_file_limits)((pmax_width), (pmax_height), (pmax_bytes)))
-#define i_int_check_image_file_limits(width, height, channels, sample_size) \
-  ((im_extt->f_i_int_check_image_file_limits)((width), (height), (channels), (sample_size)))
+#define im_set_image_file_limits(ctx, max_width, max_height, max_bytes)	\
+  ((im_extt->f_im_set_image_file_limits)((max_width), (max_height), (max_bytes)))
+#define im_get_image_file_limits(ctx, pmax_width, pmax_height, pmax_bytes) \
+  ((im_extt->f_im_get_image_file_limits)((ctx), (pmax_width), (pmax_height), (pmax_bytes)))
+#define im_int_check_image_file_limits(ctx, width, height, channels, sample_size) \
+  ((im_extt->f_im_int_check_image_file_limits)((ctx), (width), (height), (channels), (sample_size)))
 
 #define i_img_setmask(img, mask) ((im_extt->f_i_img_setmask)((img), (mask)))
 #define i_img_getmask(img) ((im_extt->f_i_img_getmask)(img))
@@ -208,9 +177,11 @@ extern im_ext_funcs *imager_function_ext_table;
 #define i_img_get_height(img) ((im_extt->f_i_img_get_height)(img))
 #define i_lhead(file, line) ((im_extt->f_i_lhead)((file), (line)))
 #define i_loog (im_extt->f_i_loog)
+#define im_lhead(ctx, file, line) ((im_extt->f_im_lhead)((ctx), (file), (line)))
+#define im_loog (im_extt->f_im_loog)
 
-#define i_img_alloc() ((im_extt->f_i_img_alloc)())
-#define i_img_init(img) ((im_extt->f_i_img_init)(img))
+#define im_img_alloc(ctx) ((im_extt->f_im_img_alloc)(ctx))
+#define im_img_init(ctx, img) ((im_extt->fm_i_img_init)((ctx), (img)))
 
 #define i_img_is_monochrome(img, zero_is_white) ((im_extt->f_i_img_is_monochrome)((img), (zero_is_white)))
 
@@ -247,20 +218,33 @@ extern im_ext_funcs *imager_function_ext_table;
 #define i_io_close (im_extt->f_i_io_close)
 #define i_io_set_buffered (im_extt->f_i_io_set_buffered)
 #define i_io_gets (im_extt->f_i_io_gets)
-#define io_new_fd(fd) ((im_extt->f_io_new_fd)(fd))
-#define io_new_bufchain() ((im_extt->f_io_new_bufchain)())
-#define io_new_buffer(data, len, closecb, closedata) \
-  ((im_extt->f_io_new_buffer)((data), (len), (closecb), (closedata)))
-#define io_new_cb(p, readcb, writecb, seekcb, closecb, destroycb) \
-  ((im_extt->f_io_new_cb)((p), (readcb), (writecb), (seekcb), (closecb), (destroycb)))
+#define im_io_new_fd(ctx, fd) ((im_extt->f_im_io_new_fd)(ctx, fd))
+#define im_io_new_bufchain(ctx) ((im_extt->f_im_io_new_bufchain)(ctx))
+#define im_io_new_buffer(ctx, data, len, closecb, closedata)		\
+  ((im_extt->f_im_io_new_buffer)((ctx), (data), (len), (closecb), (closedata)))
+#define im_io_new_cb(ctx, p, readcb, writecb, seekcb, closecb, destroycb) \
+  ((im_extt->f_im_io_new_cb)((ctx), (p), (readcb), (writecb), (seekcb), (closecb), (destroycb)))
 #define io_slurp(ig, datap) ((im_extt->f_io_slurp)((ig), (datap)))
 #define io_glue_destroy(ig) ((im_extt->f_io_glue_destroy)(ig))
 
+#define i_mutex_new() ((im_extt->f_i_mutex_new)())
+#define i_mutex_destroy(m) ((im_extt->f_i_mutex_destroy)(m))
+#define i_mutex_lock(m) ((im_extt->f_i_mutex_lock)(m))
+#define i_mutex_unlock(m) ((im_extt->f_i_mutex_unlock)(m))
+
+#define im_context_slot_new(destructor) ((im_extt->f_im_context_slot_new)(destructor))
+#define im_context_slot_get(ctx, slot) ((im_extt->f_im_context_slot_get)((ctx), (slot)))
+#define im_context_slot_set(ctx, slot, value) ((im_extt->f_im_context_slot_set)((ctx), (slot), (value)))
+
+#define im_push_errorf (im_extt->f_im_push_errorf)
+
 #ifdef IMAGER_LOG
+#ifndef IMAGER_NO_CONTEXT
 #define mm_log(x) { i_lhead(__FILE__,__LINE__); i_loog x; } 
+#endif
+#define im_log(x) { im_lhead(aIMCTX, __FILE__,__LINE__); im_loog x; } 
 #else
 #define mm_log(x)
 #endif
-
 
 #endif

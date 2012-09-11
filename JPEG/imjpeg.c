@@ -28,12 +28,12 @@ Reads and writes JPEG images
 #include <unistd.h>
 #endif
 #include <setjmp.h>
+#include <string.h>
 
 #include "jpeglib.h"
 #include "jerror.h"
 #include <errno.h>
 #include <stdlib.h>
-#include <stdio.h>
 #include "imexif.h"
 
 #define JPEG_APP13       0xED    /* APP13 marker code */
@@ -44,14 +44,7 @@ Reads and writes JPEG images
 
 static unsigned char fake_eoi[]={(JOCTET) 0xFF,(JOCTET) JPEG_EOI};
 
-/* Bad design right here */
-
-static int tlength=0;
-static char **iptc_text=NULL;
-
-
 /* Source and Destination managers */
-
 
 typedef struct {
   struct jpeg_source_mgr pub;	/* public fields */
@@ -70,7 +63,6 @@ typedef struct {
 
 typedef wiol_source_mgr *wiol_src_ptr;
 typedef wiol_destination_mgr *wiol_dest_ptr;
-
 
 /*
  * Methods for io manager objects 
@@ -271,38 +263,6 @@ jpeg_wiol_dest(j_compress_ptr cinfo, io_glue *ig) {
   dest->pub.next_output_byte    = dest->buffer;
 }
 
-LOCAL(unsigned int)
-jpeg_getc (j_decompress_ptr cinfo)
-/* Read next byte */
-{
-  struct jpeg_source_mgr * datasrc = cinfo->src;
-
-  if (datasrc->bytes_in_buffer == 0) {
-    if (! (*datasrc->fill_input_buffer) (cinfo))
-      { fprintf(stderr,"Jpeglib: cant suspend.\n"); exit(3); }
-      /*      ERREXIT(cinfo, JERR_CANT_SUSPEND);*/
-  }
-  datasrc->bytes_in_buffer--;
-  return GETJOCTET(*datasrc->next_input_byte++);
-}
-
-METHODDEF(boolean)
-APP13_handler (j_decompress_ptr cinfo) {
-  INT32 length;
-  unsigned int cnt=0;
-  
-  length = jpeg_getc(cinfo) << 8;
-  length += jpeg_getc(cinfo);
-  length -= 2;	/* discount the length word itself */
-  
-  tlength=length;
-
-  if ( ((*iptc_text)=mymalloc(length)) == NULL ) return FALSE;
-  while (--length >= 0) (*iptc_text)[cnt++] = jpeg_getc(cinfo); 
- 
-  return TRUE;
-}
-
 METHODDEF(void)
 my_output_message (j_common_ptr cinfo) {
   char buffer[JMSG_LENGTH_MAX];
@@ -400,7 +360,9 @@ i_readjpeg_wiol(io_glue *data, int length, char** iptc_itext, int *itlength) {
 
   i_clear_error();
 
-  iptc_text = iptc_itext;
+  *iptc_itext = NULL;
+  *itlength = 0;
+
   cinfo.err = jpeg_std_error(&jerr.pub);
   jerr.pub.error_exit     = my_error_exit;
   jerr.pub.output_message = my_output_message;
@@ -410,8 +372,6 @@ i_readjpeg_wiol(io_glue *data, int length, char** iptc_itext, int *itlength) {
     if (src_set)
       wiol_term_source(&cinfo);
     jpeg_destroy_decompress(&cinfo); 
-    *iptc_itext=NULL;
-    *itlength=0;
     if (line_buffer)
       myfree(line_buffer);
     if (im)
@@ -420,7 +380,7 @@ i_readjpeg_wiol(io_glue *data, int length, char** iptc_itext, int *itlength) {
   }
   
   jpeg_create_decompress(&cinfo);
-  jpeg_set_marker_processor(&cinfo, JPEG_APP13, APP13_handler);
+  jpeg_save_markers(&cinfo, JPEG_APP13, 0xFFFF);
   jpeg_save_markers(&cinfo, JPEG_APP1, 0xFFFF);
   jpeg_save_markers(&cinfo, JPEG_COM, 0xFFFF);
   jpeg_wiol_src(&cinfo, data, length);
@@ -515,6 +475,11 @@ i_readjpeg_wiol(io_glue *data, int length, char** iptc_itext, int *itlength) {
     else if (markerp->marker == JPEG_APP1 && !seen_exif) {
       seen_exif = i_int_decode_exif(im, markerp->data, markerp->data_length);
     }
+    else if (markerp->marker == JPEG_APP13) {
+      *iptc_itext = mymalloc(markerp->data_length);
+      memcpy(*iptc_itext, markerp->data, markerp->data_length);
+      *itlength = markerp->data_length;
+    }
 
     markerp = markerp->next;
   }
@@ -557,7 +522,6 @@ i_readjpeg_wiol(io_glue *data, int length, char** iptc_itext, int *itlength) {
 
   (void) jpeg_finish_decompress(&cinfo);
   jpeg_destroy_decompress(&cinfo);
-  *itlength=tlength;
 
   i_tags_set(&im->tags, "i_format", "jpeg", 4);
 

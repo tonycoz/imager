@@ -25,8 +25,10 @@
  Version 5 changed the return types of i_get_file_background() and
  i_get_file_backgroundf() from void to int.
 
+ Version 6 added 
+
 */
-#define IMAGER_API_VERSION 5
+#define IMAGER_API_VERSION 6
 
 /*
  IMAGER_API_LEVEL is the level of the structure.  New function pointers
@@ -48,10 +50,10 @@ typedef struct {
   void  (*f_myfree_file_line)(void *p, char*file, int line);
   void* (*f_myrealloc_file_line)(void *p, size_t newsize, char* file,int line);
 
-  i_img *(*f_i_img_8_new)(i_img_dim xsize, i_img_dim ysize, int channels);
-  i_img *(*f_i_img_16_new)(i_img_dim xsize, i_img_dim ysize, int channels);
-  i_img *(*f_i_img_double_new)(i_img_dim xsize, i_img_dim ysize, int channels);
-  i_img *(*f_i_img_pal_new)(i_img_dim xsize, i_img_dim ysize, int channels, int maxpal);
+  i_img *(*f_im_img_8_new)(im_context_t ctx, i_img_dim xsize, i_img_dim ysize, int channels);
+  i_img *(*f_im_img_16_new)(im_context_t ctx, i_img_dim xsize, i_img_dim ysize, int channels);
+  i_img *(*f_im_img_double_new)(im_context_t ctx, i_img_dim xsize, i_img_dim ysize, int channels);
+  i_img *(*f_im_img_pal_new)(im_context_t ctx, i_img_dim xsize, i_img_dim ysize, int channels, int maxpal);
   void (*f_i_img_destroy)(i_img *im);
   i_img *(*f_i_sametype)(i_img *im, i_img_dim xsize, i_img_dim ysize);
   i_img *(*f_i_sametype_chans)(i_img *im, i_img_dim xsize, i_img_dim ysize, int channels);
@@ -102,10 +104,10 @@ typedef struct {
   void (*f_i_quant_transparent)(i_quantize *quant, i_palidx *indices, 
                                 i_img *img, i_palidx trans_index);
 
-  void (*f_i_clear_error)(void);
-  void (*f_i_push_error)(int code, char const *msg);
+  void (*f_im_clear_error)(im_context_t ctx);
+  void (*f_im_push_error)(im_context_t ctx, int code, char const *msg);
   void (*f_i_push_errorf)(int code, char const *fmt, ...);
-  void (*f_i_push_errorvf)(int code, char const *fmt, va_list);
+  void (*f_im_push_errorvf)(im_context_t ctx, int code, char const *fmt, va_list);
   
   void (*f_i_tags_new)(i_img_tags *tags);
   int (*f_i_tags_set)(i_img_tags *tags, char const *name, char const *data, 
@@ -152,9 +154,9 @@ typedef struct {
   int (*f_i_rubthru)(i_img *im, i_img *src, i_img_dim tx, i_img_dim ty, i_img_dim src_minx, i_img_dim src_miny, i_img_dim src_maxx, i_img_dim src_maxy);
 
   /* IMAGER_API_LEVEL 2 functions */
-  int (*f_i_set_image_file_limits)(i_img_dim width, i_img_dim height, size_t bytes);
-  int (*f_i_get_image_file_limits)(i_img_dim *width, i_img_dim *height, size_t *bytes);
-  int (*f_i_int_check_image_file_limits)(i_img_dim width, i_img_dim height, int channels, size_t sample_size);
+  int (*f_im_set_image_file_limits)(im_context_t ctx, i_img_dim width, i_img_dim height, size_t bytes);
+  int (*f_im_get_image_file_limits)(im_context_t ctx, i_img_dim *width, i_img_dim *height, size_t *bytes);
+  int (*f_im_int_check_image_file_limits)(im_context_t ctx, i_img_dim width, i_img_dim height, int channels, size_t sample_size);
   int (*f_i_flood_fill_border)(i_img *im, i_img_dim seedx, i_img_dim seedy, const i_color *dcol, const i_color *border);
   int (*f_i_flood_cfill_border)(i_img *im, i_img_dim seedx, i_img_dim seedy, i_fill_t *fill, const i_color *border);
 
@@ -168,8 +170,8 @@ typedef struct {
   void (*f_i_loog)(int level, const char *msg, ...);
 
   /* IMAGER_API_LEVEL 4 functions will be added here */
-  i_img *(*f_i_img_alloc)(void);
-  void (*f_i_img_init)(i_img *);
+  i_img *(*f_im_img_alloc)(im_context_t ctx);
+  void (*f_im_img_init)(im_context_t ctx, i_img *);
 
   /* IMAGER_API_LEVEL 5 functions will be added here */
   /* added i_psampf?_bits macros */
@@ -210,15 +212,29 @@ typedef struct {
   int (*f_i_io_set_buffered)(io_glue *ig, int buffered);
   ssize_t (*f_i_io_gets)(io_glue *ig, char *, size_t, int);
 
-  i_io_glue_t *(*f_io_new_fd)(int fd);
-  i_io_glue_t *(*f_io_new_bufchain)(void);
-  i_io_glue_t *(*f_io_new_buffer)(const char *data, size_t len, i_io_closebufp_t closecb, void *closedata);
-  i_io_glue_t *(*f_io_new_cb)(void *p, i_io_readl_t readcb, i_io_writel_t writecb, i_io_seekl_t seekcb, i_io_closel_t closecb, i_io_destroyl_t destroycb);
+  i_io_glue_t *(*f_im_io_new_fd)(im_context_t ctx, int fd);
+  i_io_glue_t *(*f_im_io_new_bufchain)(im_context_t ctx);
+  i_io_glue_t *(*f_im_io_new_buffer)(im_context_t ctx, const char *data, size_t len, i_io_closebufp_t closecb, void *closedata);
+  i_io_glue_t *(*f_im_io_new_cb)(im_context_t ctx, void *p, i_io_readl_t readcb, i_io_writel_t writecb, i_io_seekl_t seekcb, i_io_closel_t closecb, i_io_destroyl_t destroycb);
   size_t (*f_io_slurp)(i_io_glue_t *ig, unsigned char **c);
   void (*f_io_glue_destroy)(i_io_glue_t *ig);
 
   /* IMAGER_API_LEVEL 8 functions will be added here */
+  im_context_t (*f_im_get_context)(void);
 
+  void (*f_im_push_errorf)(im_context_t , int code, char const *fmt, ...);
+  void (*f_im_lhead)( im_context_t, const char *file, int line  );
+  void (*f_im_loog)(im_context_t, int level,const char *msg, ... ) I_FORMAT_ATTR(3,4);
+  void (*f_im_context_refinc)(im_context_t, const char *where);
+  void (*f_im_context_refdec)(im_context_t, const char *where);
+  i_errmsg *(*f_im_errors)(im_context_t);
+  i_mutex_t (*f_i_mutex_new)(void);
+  void (*f_i_mutex_destroy)(i_mutex_t m);
+  void (*f_i_mutex_lock)(i_mutex_t m);
+  void (*f_i_mutex_unlock)(i_mutex_t m);
+  im_slot_t (*f_im_context_slot_new)(im_slot_destroy_t);
+  int (*f_im_context_slot_set)(im_context_t, im_slot_t, void *);
+  void *(*f_im_context_slot_get)(im_context_t, im_slot_t);
 } im_ext_funcs;
 
 #define PERL_FUNCTION_TABLE_NAME "Imager::__ext_func_table"

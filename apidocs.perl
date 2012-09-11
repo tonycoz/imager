@@ -178,7 +178,7 @@ Tony Cook <tonyc@cpan.org>
 
 =head1 SEE ALSO
 
-Imager, Imager::ExtUtils, Imager::Inline
+Imager, Imager::API, Imager::ExtUtils, Imager::Inline
 
 =cut
 EOS
@@ -187,13 +187,13 @@ close OUT;
 
 
 sub make_func_list {
-  my @funcs = qw(i_img i_color i_fcolor i_fill_t mm_log i_img_color_channels i_img_has_alpha i_img_dim i_DF i_DFc i_DFp i_DFcp i_psamp_bits i_gsamp_bits i_psamp i_psampf);
+  my @funcs = qw(i_img i_color i_fcolor i_fill_t mm_log mm_log i_img_color_channels i_img_has_alpha i_img_dim i_DF i_DFc i_DFp i_DFcp i_psamp_bits i_gsamp_bits i_psamp i_psampf);
   open FUNCS, "< imexttypes.h"
     or die "Cannot open imexttypes.h: $!\n";
   my $in_struct;
   while (<FUNCS>) {
     /^typedef struct/ && ++$in_struct;
-    if ($in_struct && /\(\*f_(io?_\w+)/) {
+    if ($in_struct && /\(\*f_(i[om]?_\w+)/) {
       my $name = $1;
       $name =~ s/_imp$//;
       push @funcs, $name;

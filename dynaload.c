@@ -11,7 +11,7 @@ typedef HMODULE minthandle_t;
 typedef void *minthandle_t; 
 #endif 
 
-#include "plug.h"
+#include "ext.h"
 
 struct DSO_handle_tag {
   minthandle_t handle;
@@ -24,14 +24,18 @@ struct DSO_handle_tag {
 /* #include "XSUB.h"  so we can compile on threaded perls */
 #include "imageri.h"
 
+static im_context_t
+do_get_context(void) {
+  return im_get_context();
+}
+
 static symbol_table_t symbol_table=
   {
     i_has_format,
     ICL_set_internal,
     ICL_info,
-    i_img_new,
-    i_img_empty,
-    i_img_empty_ch,
+    do_get_context,
+    im_img_empty_ch,
     i_img_exorcise,
     i_img_info,
     i_img_setmask,

@@ -61,6 +61,7 @@ else {
     $opts{PREREQ_PM} =
       {
        @Imager_req,
+       'Scalar::Util' => 1.00,
        XSLoader => 0,
       };
   }

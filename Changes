@@ -1,5 +1,20 @@
 Imager release history.  Older releases can be found in Changes.old
 
+ - improved thread safety
+   - the internal error stack and log file handle are now in a per-thread
+     context object
+   - JPEG now captures IPTC information in a thread-safe way
+   - avoid globals where possible for warning capture in libtiff
+   - use a mutex to avoid re-entering thread-unsafe giflib
+   - use a mutex to avoid re-entering thread-unsafe tifflib
+   - use a mutex to avoid re-entering thread-unsafe T1Lib
+   - use a library handle per thread for freetype 2.
+   - use an engine handle per thread for freetype 1.x.
+
+ - T1:
+   - improve error reporting
+   - provide better control of the level of anti-aliasing
+
 Imager 0.92 - 14 Aug 2012
 ===========
 

@@ -1,3 +1,5 @@
+#define IMAGER_NO_CONTEXT
+
 #include "imager.h"
 #include "imageri.h"
 
@@ -80,10 +82,10 @@ static i_img IIM_base_8bit_direct =
   }*/
 
 /*
-=item i_img_8_new(x, y, ch)
-
+=item im_img_8_new(ctx, x, y, ch)
+X<im_img_8_new API>X<i_img_8_new API>
 =category Image creation/destruction
-
+=synopsis i_img *img = im_img_8_new(aIMCTX, width, height, channels);
 =synopsis i_img *img = i_img_8_new(width, height, channels);
 
 Creates a new image object I<x> pixels wide, and I<y> pixels high with
@@ -92,49 +94,16 @@ I<ch> channels.
 =cut
 */
 
-
 i_img *
-i_img_8_new(i_img_dim x,i_img_dim y,int ch) {
+im_img_8_new(pIMCTX, i_img_dim x,i_img_dim y,int ch) {
   i_img *im;
 
-  mm_log((1,"IIM_new(x %" i_DF ", y %" i_DF ", ch %d)\n",
+  im_log((aIMCTX, 1,"im_img_8_new(x %" i_DF ", y %" i_DF ", ch %d)\n",
 	  i_DFc(x), i_DFc(y), ch));
 
-  im=i_img_empty_ch(NULL,x,y,ch);
+  im = im_img_empty_ch(aIMCTX, NULL,x,y,ch);
   
-  mm_log((1,"(%p) <- IIM_new\n",im));
-  return im;
-}
-
-/* 
-=item i_img_new()
-
-Create new image reference - notice that this isn't an object yet and
-this should be fixed asap.
-
-=cut
-*/
-
-
-i_img *
-i_img_new() {
-  i_img *im;
-  
-  mm_log((1,"i_img_struct()\n"));
-
-  im = i_img_alloc();
-  
-  *im = IIM_base_8bit_direct;
-  im->xsize=0;
-  im->ysize=0;
-  im->channels=3;
-  im->ch_mask=MAXINT;
-  im->bytes=0;
-  im->idata=NULL;
-
-  i_img_init(im);
-  
-  mm_log((1,"(%p) <- i_img_struct\n",im));
+  im_log((aIMCTX, 1,"(%p) <- IIM_new\n",im));
   return im;
 }
 
@@ -155,10 +124,10 @@ Should this just call i_img_empty_ch()?
 */
 
 i_img *
-i_img_empty(i_img *im,i_img_dim x,i_img_dim y) {
-  mm_log((1,"i_img_empty(*im %p, x %" i_DF ", y %" i_DF ")\n",
+im_img_empty(pIMCTX, i_img *im,i_img_dim x,i_img_dim y) {
+  im_log((aIMCTX, 1,"i_img_empty(*im %p, x %" i_DF ", y %" i_DF ")\n",
 	  im, i_DFc(x), i_DFc(y)));
-  return i_img_empty_ch(im, x, y, 3);
+  return im_img_empty_ch(aIMCTX, im, x, y, 3);
 }
 
 /* 
@@ -175,29 +144,29 @@ Re-new image reference
 */
 
 i_img *
-i_img_empty_ch(i_img *im,i_img_dim x,i_img_dim y,int ch) {
+im_img_empty_ch(pIMCTX, i_img *im,i_img_dim x,i_img_dim y,int ch) {
   size_t bytes;
 
-  mm_log((1,"i_img_empty_ch(*im %p, x %" i_DF ", y %" i_DF ", ch %d)\n",
+  im_log((aIMCTX, 1,"i_img_empty_ch(*im %p, x %" i_DF ", y %" i_DF ", ch %d)\n",
 	  im, i_DFc(x), i_DFc(y), ch));
 
   if (x < 1 || y < 1) {
-    i_push_error(0, "Image sizes must be positive");
+    im_push_error(aIMCTX, 0, "Image sizes must be positive");
     return NULL;
   }
   if (ch < 1 || ch > MAXCHANNELS) {
-    i_push_errorf(0, "channels must be between 1 and %d", MAXCHANNELS);
+    im_push_errorf(aIMCTX, 0, "channels must be between 1 and %d", MAXCHANNELS);
     return NULL;
   }
   /* check this multiplication doesn't overflow */
   bytes = x*y*ch;
   if (bytes / y / ch != x) {
-    i_push_errorf(0, "integer overflow calculating image allocation");
+    im_push_errorf(aIMCTX, 0, "integer overflow calculating image allocation");
     return NULL;
   }
 
   if (im == NULL)
-    im = i_img_alloc();
+    im = im_img_alloc(aIMCTX);
 
   memcpy(im, &IIM_base_8bit_direct, sizeof(i_img));
   i_tags_new(&im->tags);
@@ -207,14 +176,14 @@ i_img_empty_ch(i_img *im,i_img_dim x,i_img_dim y,int ch) {
   im->ch_mask  = MAXINT;
   im->bytes=bytes;
   if ( (im->idata=mymalloc(im->bytes)) == NULL) 
-    i_fatal(2,"malloc() error\n"); 
+    im_fatal(aIMCTX, 2,"malloc() error\n"); 
   memset(im->idata,0,(size_t)im->bytes);
   
   im->ext_data = NULL;
 
-  i_img_init(im);
+  im_img_init(aIMCTX, im);
   
-  mm_log((1,"(%p) <- i_img_empty_ch\n",im));
+  im_log((aIMCTX, 1,"(%p) <- i_img_empty_ch\n",im));
   return im;
 }
 
@@ -503,7 +472,8 @@ i_gsamp_d(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, i_sample_t *samps,
       /* make sure we have good channel numbers */
       for (ch = 0; ch < chan_count; ++ch) {
         if (chans[ch] < 0 || chans[ch] >= im->channels) {
-          i_push_errorf(0, "No channel %d in this image", chans[ch]);
+	  dIMCTXim(im);
+          im_push_errorf(aIMCTX, 0, "No channel %d in this image", chans[ch]);
           return 0;
         }
       }
@@ -517,7 +487,8 @@ i_gsamp_d(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, i_sample_t *samps,
     }
     else {
       if (chan_count <= 0 || chan_count > im->channels) {
-	i_push_errorf(0, "chan_count %d out of range, must be >0, <= channels", 
+	dIMCTXim(im);
+	im_push_errorf(aIMCTX, 0, "chan_count %d out of range, must be >0, <= channels", 
 		      chan_count);
 	return 0;
       }
@@ -557,7 +528,8 @@ i_gsampf_d(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, i_fsample_t *samps,
   unsigned char *data;
   for (ch = 0; ch < chan_count; ++ch) {
     if (chans[ch] < 0 || chans[ch] >= im->channels) {
-      i_push_errorf(0, "No channel %d in this image", chans[ch]);
+      dIMCTXim(im);
+      im_push_errorf(aIMCTX, 0, "No channel %d in this image", chans[ch]);
     }
   }
   if (y >=0 && y < im->ysize && l < im->xsize && l >= 0) {
@@ -571,7 +543,8 @@ i_gsampf_d(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, i_fsample_t *samps,
       /* make sure we have good channel numbers */
       for (ch = 0; ch < chan_count; ++ch) {
         if (chans[ch] < 0 || chans[ch] >= im->channels) {
-          i_push_errorf(0, "No channel %d in this image", chans[ch]);
+	  dIMCTXim(im);
+          im_push_errorf(aIMCTX, 0, "No channel %d in this image", chans[ch]);
           return 0;
         }
       }
@@ -585,7 +558,8 @@ i_gsampf_d(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, i_fsample_t *samps,
     }
     else {
       if (chan_count <= 0 || chan_count > im->channels) {
-	i_push_errorf(0, "chan_count %d out of range, must be >0, <= channels", 
+	dIMCTXim(im);
+	im_push_errorf(aIMCTX, 0, "chan_count %d out of range, must be >0, <= channels", 
 		      chan_count);
 	return 0;
       }
@@ -638,7 +612,8 @@ i_psamp_d(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y,
       int all_in_mask = 1;
       for (ch = 0; ch < chan_count; ++ch) {
         if (chans[ch] < 0 || chans[ch] >= im->channels) {
-          i_push_errorf(0, "No channel %d in this image", chans[ch]);
+	  dIMCTXim(im);
+          im_push_errorf(aIMCTX, 0, "No channel %d in this image", chans[ch]);
           return -1;
         }
 	if (!((1 << chans[ch]) & im->ch_mask))
@@ -667,7 +642,8 @@ i_psamp_d(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y,
     }
     else {
       if (chan_count <= 0 || chan_count > im->channels) {
-	i_push_errorf(0, "chan_count %d out of range, must be >0, <= channels", 
+	dIMCTXim(im);
+	im_push_errorf(aIMCTX, 0, "chan_count %d out of range, must be >0, <= channels", 
 		      chan_count);
 	return -1;
       }
@@ -687,6 +663,7 @@ i_psamp_d(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y,
     return count;
   }
   else {
+    dIMCTXim(im);
     i_push_error(0, "Image position outside of image");
     return -1;
   }
@@ -726,7 +703,8 @@ i_psampf_d(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y,
       int all_in_mask = 1;
       for (ch = 0; ch < chan_count; ++ch) {
         if (chans[ch] < 0 || chans[ch] >= im->channels) {
-          i_push_errorf(0, "No channel %d in this image", chans[ch]);
+	  dIMCTXim(im);
+          im_push_errorf(aIMCTX, 0, "No channel %d in this image", chans[ch]);
           return -1;
         }
 	if (!((1 << chans[ch]) & im->ch_mask))
@@ -756,7 +734,8 @@ i_psampf_d(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y,
     }
     else {
       if (chan_count <= 0 || chan_count > im->channels) {
-	i_push_errorf(0, "chan_count %d out of range, must be >0, <= channels", 
+	dIMCTXim(im);
+	im_push_errorf(aIMCTX, 0, "chan_count %d out of range, must be >0, <= channels", 
 		      chan_count);
 	return -1;
       }
@@ -776,6 +755,7 @@ i_psampf_d(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y,
     return count;
   }
   else {
+    dIMCTXim(im);
     i_push_error(0, "Image position outside of image");
     return -1;
   }
