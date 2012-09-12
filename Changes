@@ -18,6 +18,8 @@ Imager release history.  Older releases can be found in Changes.old
  - support for giflib 5.0.
    https://rt.cpan.org/Ticket/Display.html?id=79029
 
+ - allow freetype-config to be found on cygwin
+
 Imager 0.92_01 - 18 Aug 2012
 ==============
 

@@ -3,6 +3,8 @@ Imager-Font-FT2 0.85
 
  - improve thread safety
 
+ - allow freetype-config to be found on cygwin
+
 Imager-Font-FT2 0.85
 ====================
 
