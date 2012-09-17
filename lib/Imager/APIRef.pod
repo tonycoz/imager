@@ -2302,7 +2302,7 @@ object.
 =for comment
 From: File context.c
 
-=item im_context_slot_new(destructor)
+=item im_context_slot_new(destructor, where)
 
 Allocate a new context-local-storage slot.
 

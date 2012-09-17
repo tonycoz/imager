@@ -232,7 +232,7 @@ extern im_ext_funcs *imager_function_ext_table;
 #define i_mutex_lock(m) ((im_extt->f_i_mutex_lock)(m))
 #define i_mutex_unlock(m) ((im_extt->f_i_mutex_unlock)(m))
 
-#define im_context_slot_new(destructor) ((im_extt->f_im_context_slot_new)(destructor))
+#define im_context_slot_new(destructor, where) ((im_extt->f_im_context_slot_new)((destructor), (where)))
 #define im_context_slot_get(ctx, slot) ((im_extt->f_im_context_slot_get)((ctx), (slot)))
 #define im_context_slot_set(ctx, slot, value) ((im_extt->f_im_context_slot_set)((ctx), (slot), (value)))
 

@@ -65,7 +65,7 @@ static i_img_dim i_max(i_img_dim a, i_img_dim b);
 void
 i_ft2_start(void) {
   if (slot == -1)
-    slot = im_context_slot_new(ft2_final);
+    slot = im_context_slot_new(ft2_final, "FT2");
 }
 
 /*

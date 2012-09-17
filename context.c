@@ -189,7 +189,7 @@ im_context_clone(im_context_t ctx, const char *where) {
 }
 
 /*
-=item im_context_slot_new(destructor)
+=item im_context_slot_new(destructor, where)
 
 Allocate a new context-local-storage slot.
 
@@ -197,7 +197,7 @@ Allocate a new context-local-storage slot.
 */
 
 im_slot_t
-im_context_slot_new(im_slot_destroy_t destructor) {
+im_context_slot_new(im_slot_destroy_t destructor, const char *where) {
   im_slot_t new_slot;
   im_slot_destroy_t *new_destructors;
   if (!slot_mutex)
@@ -212,6 +212,11 @@ im_context_slot_new(im_slot_destroy_t destructor) {
   slot_destructors = new_destructors;
 
   slot_destructors[new_slot] = destructor;
+
+#ifdef IMAGER_TRACE_CONTEXT
+  fprintf(stderr, "im_context: slot %d allocated for %s\n",
+	  (int)new_slot, where);
+#endif
 
   i_mutex_unlock(slot_mutex);
 
@@ -257,6 +262,11 @@ im_context_slot_set(im_context_t ctx, im_slot_t slot, void *value) {
 
   ctx->slots[slot] = value;
 
+#ifdef IMAGER_TRACE_CONTEXT
+  fprintf(stderr, "im_context: ctx %p slot %d set to %p\n",
+	  ctx, (int)slot, value);
+#endif
+
   return 1;
 }
 
@@ -279,6 +289,11 @@ im_context_slot_get(im_context_t ctx, im_slot_t slot) {
 
   if (slot >= ctx->slot_alloc)
     return NULL;
+
+#ifdef IMAGER_TRACE_CONTEXT
+  fprintf(stderr, "im_context: ctx %p slot %d retrieved as %p\n",
+	  ctx, (int)slot, ctx->slots[slot]);
+#endif
 
   return ctx->slots[slot];
 }

@@ -422,7 +422,7 @@ test_mutex() {
 
 int
 test_slots() {
-  im_slot_t slot = im_context_slot_new(NULL);
+  im_slot_t slot = im_context_slot_new(NULL, "t82inline");
 
   if (im_context_slot_get(aIMCTX, slot)) {
     fprintf(stderr, "slots should default to NULL\n");

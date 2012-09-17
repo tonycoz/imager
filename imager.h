@@ -386,7 +386,7 @@ extern im_context_t im_context_new(void);
 extern void im_context_refinc(im_context_t ctx, const char *where);
 extern void im_context_refdec(im_context_t ctx, const char *where);
 extern im_context_t im_context_clone(im_context_t ctx, const char *where);
-extern im_slot_t im_context_slot_new(im_slot_destroy_t);
+extern im_slot_t im_context_slot_new(im_slot_destroy_t, const char *);
 extern void *im_context_slot_get(im_context_t ctx, im_slot_t slot);
 extern int im_context_slot_set(im_context_t ctx, im_slot_t slot, void *);
 

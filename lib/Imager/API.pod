@@ -447,10 +447,11 @@ Imager provides simple APIs for storing per-context information.
 
 To allocate a slot:
 
-  im_slot_t slot = im_context_slot_new(callback)
+  im_slot_t slot = im_context_slot_new(callback, where)
 
-where callback is a (possibly NULL) function pointer called when the
-context object is destroyed.
+where I<callback> is a (possibly NULL) function pointer called when
+the context object is destroyed, and I<where> is a brief description
+of what the slot is used for.
 
 By default, the stored value for a slot is NULL, whether for a new
 context or for a cloned context.
