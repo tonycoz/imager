@@ -38,7 +38,8 @@ im_context_new(void) {
   ctx->max_height = 0;
   ctx->max_bytes = DEF_BYTES_LIMIT;
 
-  ctx->slots = calloc(sizeof(void *), slot_count);
+  ctx->slot_alloc = slot_count;
+  ctx->slots = calloc(sizeof(void *), ctx->slot_alloc);
   if (!ctx->slots) {
     free(ctx);
     return NULL;
@@ -139,12 +140,12 @@ im_context_clone(im_context_t ctx, const char *where) {
   if (!nctx)
     return NULL;
 
-  nctx->slots = calloc(sizeof(void *), slot_count);
+  nctx->slot_alloc = slot_count;
+  nctx->slots = calloc(sizeof(void *), ctx->slot_alloc);
   if (!nctx->slots) {
     free(nctx);
     return NULL;
   }
-  nctx->slot_alloc = slot_count;
 
   nctx->error_sp = ctx->error_sp;
   for (i = 0; i < IM_ERROR_COUNT; ++i) {
