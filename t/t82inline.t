@@ -418,6 +418,8 @@ test_mutex() {
   i_mutex_lock(m);
   i_mutex_unlock(m);
   i_mutex_destroy(m);
+
+  return 1;
 }
 
 int
