@@ -17,7 +17,6 @@ converting from RGBA to greyscale and back.
 =cut
 */
 
-#define IMAGER_NO_CONTEXT
 #include "imager.h"
 
 struct chan_copy {
@@ -70,18 +69,17 @@ i_convert(i_img *src, const double *coeff, int outchan, int inchan) {
   int i, j;
   int ilimit;
   i_img *im = NULL;
-  dIMCTXim(src);
 
-  im_log((aIMCTX,1,"i_convert(im %p, src %p, coeff %p,outchan %d, inchan %d)\n",
+  mm_log((1,"i_convert(im %p, src %p, coeff %p,outchan %d, inchan %d)\n",
 	  im, src, coeff, outchan, inchan));
  
-  im_clear_error(aIMCTX);
+  i_clear_error();
 
   ilimit = inchan;
   if (ilimit > src->channels)
     ilimit = src->channels;
   if (outchan > MAXCHANNELS) {
-    im_push_error(aIMCTX, 0, "cannot have outchan > MAXCHANNELS");
+    i_push_error(0, "cannot have outchan > MAXCHANNELS");
     return 0;
   }
 
@@ -132,8 +130,8 @@ i_convert(i_img *src, const double *coeff, int outchan, int inchan) {
     i_color *colors;
     i_palidx *vals;
 
-    im = im_img_pal_new(aIMCTX, src->xsize, src->ysize, outchan, 
-			i_maxcolors(src));
+    im = i_img_pal_new(src->xsize, src->ysize, outchan, 
+		       i_maxcolors(src));
 
     /* just translate the color table */
     count = i_colorcount(src);

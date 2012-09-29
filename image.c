@@ -1,5 +1,3 @@
-#define IMAGER_NO_CONTEXT
-
 #include "imager.h"
 #include "imageri.h"
 
@@ -14,7 +12,7 @@ image.c - implements most of the basic functions of Imager and much of the rest
   i_color *c;
   c = i_color_new(red, green, blue, alpha);
   ICL_DESTROY(c);
-  i = i_img_8_new();
+  i = i_img_new();
   i_img_destroy(i);
   // and much more
 
@@ -32,8 +30,6 @@ Some of these functions are internal.
 =cut
 */
 
-im_context_t (*im_get_context)(void) = NULL;
-
 #define XAXIS 0
 #define YAXIS 1
 #define XYAXIS 2
@@ -44,11 +40,8 @@ im_context_t (*im_get_context)(void) = NULL;
 void i_linker_bug_fake(void) { ceil(1); }
 
 /*
-=item im_img_alloc(aIMCTX)
-X<im_img_alloc API>X<i_img_alloc API>
+=item i_img_alloc()
 =category Image Implementation
-=synopsis i_img *im = im_img_alloc(aIMCTX);
-=synopsis i_img *im = i_img_alloc();
 
 Allocates a new i_img structure.
 
@@ -77,29 +70,25 @@ object.
 */
 
 i_img *
-im_img_alloc(pIMCTX) {
+i_img_alloc(void) {
   return mymalloc(sizeof(i_img));
 }
 
 /*
-=item im_img_init(aIMCTX, image)
-X<im_img_init API>X<i_img_init API>
+=item i_img_init(C<img>)
 =category Image Implementation
-=synopsis im_img_init(aIMCTX, im);
-=synopsis i_img_init(im);
 
 Imager internal initialization of images.
 
-See L</im_img_alloc(aIMCTX)> for more information.
+Currently this does very little, in the future it may be used to
+support threads, or color profiles.
 
 =cut
 */
 
 void
-im_img_init(pIMCTX, i_img *img) {
+i_img_init(i_img *img) {
   img->im_data = NULL;
-  img->context = aIMCTX;
-  im_context_refinc(aIMCTX, "img_init");
 }
 
 /* 
@@ -118,16 +107,15 @@ Return a new color object with values passed to it.
 i_color *
 ICL_new_internal(unsigned char r,unsigned char g,unsigned char b,unsigned char a) {
   i_color *cl = NULL;
-  dIMCTX;
 
-  im_log((aIMCTX,1,"ICL_new_internal(r %d,g %d,b %d,a %d)\n", r, g, b, a));
+  mm_log((1,"ICL_new_internal(r %d,g %d,b %d,a %d)\n", r, g, b, a));
 
-  if ( (cl=mymalloc(sizeof(i_color))) == NULL) im_fatal(aIMCTX, 2,"malloc() error\n");
+  if ( (cl=mymalloc(sizeof(i_color))) == NULL) i_fatal(2,"malloc() error\n");
   cl->rgba.r = r;
   cl->rgba.g = g;
   cl->rgba.b = b;
   cl->rgba.a = a;
-  im_log((aIMCTX,1,"(%p) <- ICL_new_internal\n",cl));
+  mm_log((1,"(%p) <- ICL_new_internal\n",cl));
   return cl;
 }
 
@@ -148,16 +136,15 @@ ICL_new_internal(unsigned char r,unsigned char g,unsigned char b,unsigned char a
 
 i_color *
 ICL_set_internal(i_color *cl,unsigned char r,unsigned char g,unsigned char b,unsigned char a) {
-  dIMCTX;
-  im_log((aIMCTX,1,"ICL_set_internal(cl* %p,r %d,g %d,b %d,a %d)\n",cl,r,g,b,a));
+  mm_log((1,"ICL_set_internal(cl* %p,r %d,g %d,b %d,a %d)\n",cl,r,g,b,a));
   if (cl == NULL)
     if ( (cl=mymalloc(sizeof(i_color))) == NULL)
-      im_fatal(aIMCTX, 2,"malloc() error\n");
+      i_fatal(2,"malloc() error\n");
   cl->rgba.r=r;
   cl->rgba.g=g;
   cl->rgba.b=b;
   cl->rgba.a=a;
-  im_log((aIMCTX,1,"(%p) <- ICL_set_internal\n",cl));
+  mm_log((1,"(%p) <- ICL_set_internal\n",cl));
   return cl;
 }
 
@@ -195,9 +182,8 @@ Dump color information to log - strictly for debugging.
 
 void
 ICL_info(i_color const *cl) {
-  dIMCTX;
-  im_log((aIMCTX, 1,"i_color_info(cl* %p)\n",cl));
-  im_log((aIMCTX, 1,"i_color_info: (%d,%d,%d,%d)\n",cl->rgba.r,cl->rgba.g,cl->rgba.b,cl->rgba.a));
+  mm_log((1,"i_color_info(cl* %p)\n",cl));
+  mm_log((1,"i_color_info: (%d,%d,%d,%d)\n",cl->rgba.r,cl->rgba.g,cl->rgba.b,cl->rgba.a));
 }
 
 /* 
@@ -212,8 +198,7 @@ Destroy ancillary data for Color object.
 
 void
 ICL_DESTROY(i_color *cl) {
-  dIMCTX;
-  im_log((aIMCTX, 1,"ICL_DESTROY(cl* %p)\n",cl));
+  mm_log((1,"ICL_DESTROY(cl* %p)\n",cl));
   myfree(cl);
 }
 
@@ -224,16 +209,15 @@ ICL_DESTROY(i_color *cl) {
 */
 i_fcolor *i_fcolor_new(double r, double g, double b, double a) {
   i_fcolor *cl = NULL;
-  dIMCTX;
 
-  im_log((aIMCTX, 1,"i_fcolor_new(r %g,g %g,b %g,a %g)\n", r, g, b, a));
+  mm_log((1,"i_fcolor_new(r %g,g %g,b %g,a %g)\n", r, g, b, a));
 
-  if ( (cl=mymalloc(sizeof(i_fcolor))) == NULL) im_fatal(aIMCTX, 2,"malloc() error\n");
+  if ( (cl=mymalloc(sizeof(i_fcolor))) == NULL) i_fatal(2,"malloc() error\n");
   cl->rgba.r = r;
   cl->rgba.g = g;
   cl->rgba.b = b;
   cl->rgba.a = a;
-  im_log((aIMCTX, 1,"(%p) <- i_fcolor_new\n",cl));
+  mm_log((1,"(%p) <- i_fcolor_new\n",cl));
 
   return cl;
 }
@@ -259,8 +243,7 @@ Free image data.
 
 void
 i_img_exorcise(i_img *im) {
-  dIMCTXim(im);
-  im_log((aIMCTX,1,"i_img_exorcise(im* %p)\n",im));
+  mm_log((1,"i_img_exorcise(im* %p)\n",im));
   i_tags_destroy(&im->tags);
   if (im->i_f_destroy)
     (im->i_f_destroy)(im);
@@ -286,11 +269,9 @@ Destroy an image object
 
 void
 i_img_destroy(i_img *im) {
-  dIMCTXim(im);
-  im_log((aIMCTX, 1,"i_img_destroy(im %p)\n",im));
+  mm_log((1,"i_img_destroy(im %p)\n",im));
   i_img_exorcise(im);
   if (im) { myfree(im); }
-  im_context_refdec(aIMCTX, "img_destroy");
 }
 
 /* 
@@ -316,13 +297,12 @@ info is an array of 4 integers with the following values:
 
 void
 i_img_info(i_img *im, i_img_dim *info) {
-  dIMCTXim(im);
-  im_log((aIMCTX,1,"i_img_info(im %p)\n",im));
+  mm_log((1,"i_img_info(im %p)\n",im));
   if (im != NULL) {
-    im_log((aIMCTX,1,"i_img_info: xsize=%" i_DF " ysize=%" i_DF " channels=%d "
+    mm_log((1,"i_img_info: xsize=%" i_DF " ysize=%" i_DF " channels=%d "
 	    "mask=%ud\n",
 	    i_DFc(im->xsize), i_DFc(im->ysize), im->channels,im->ch_mask));
-    im_log((aIMCTX,1,"i_img_info: idata=%p\n",im->idata));
+    mm_log((1,"i_img_info: idata=%p\n",im->idata));
     info[0] = im->xsize;
     info[1] = im->ysize;
     info[2] = im->channels;
@@ -421,9 +401,8 @@ i_copyto_trans(i_img *im,i_img *src,i_img_dim x1,i_img_dim y1,i_img_dim x2,i_img
   i_color pv;
   i_img_dim x,y,t,ttx,tty,tt;
   int ch;
-  dIMCTXim(im);
 
-  im_log((aIMCTX, 1,"i_copyto_trans(im* %p,src %p, p1(" i_DFp "), p2(" i_DFp "), "
+  mm_log((1,"i_copyto_trans(im* %p,src %p, p1(" i_DFp "), p2(" i_DFp "), "
 	  "to(" i_DFp "), trans* %p)\n",
 	  im, src, i_DFcp(x1, y1), i_DFcp(x2, y2), i_DFcp(tx, ty), trans));
   
@@ -466,10 +445,9 @@ Returns: i_img *
 i_img *
 i_copy(i_img *src) {
   i_img_dim y, y1, x1;
-  dIMCTXim(src);
   i_img *im = i_sametype(src, src->xsize, src->ysize);
 
-  im_log((aIMCTX,1,"i_copy(src %p)\n", src));
+  mm_log((1,"i_copy(src %p)\n", src));
 
   if (!im)
     return NULL;
@@ -555,10 +533,9 @@ i_scaleaxis(i_img *im, double Value, int Axis) {
   i_img *new_img;
   int has_alpha = i_img_has_alpha(im);
   int color_chans = i_img_color_channels(im);
-  dIMCTXim(im);
 
   i_clear_error();
-  im_log((aIMCTX, 1,"i_scaleaxis(im %p,Value %.2f,Axis %d)\n",im,Value,Axis));
+  mm_log((1,"i_scaleaxis(im %p,Value %.2f,Axis %d)\n",im,Value,Axis));
 
   if (Axis == XAXIS) {
     hsize = (i_img_dim)(0.5 + im->xsize * Value);
@@ -583,7 +560,7 @@ i_scaleaxis(i_img *im, double Value, int Axis) {
     iEnd = hsize;
   }
   
-  new_img = i_img_8_new(hsize, vsize, im->channels);
+  new_img = i_img_empty_ch(NULL, hsize, vsize, im->channels);
   if (!new_img) {
     i_push_error(0, "cannot create output image");
     return NULL;
@@ -733,7 +710,7 @@ i_scaleaxis(i_img *im, double Value, int Axis) {
   myfree(l0);
   myfree(l1);
 
-  im_log((aIMCTX, 1,"(%p) <- i_scaleaxis\n", new_img));
+  mm_log((1,"(%p) <- i_scaleaxis\n", new_img));
 
   return new_img;
 }
@@ -756,9 +733,8 @@ i_scale_nn(i_img *im, double scx, double scy) {
   i_img_dim nxsize,nysize,nx,ny;
   i_img *new_img;
   i_color val;
-  dIMCTXim(im);
 
-  im_log((aIMCTX, 1,"i_scale_nn(im %p,scx %.2f,scy %.2f)\n",im,scx,scy));
+  mm_log((1,"i_scale_nn(im %p,scx %.2f,scy %.2f)\n",im,scx,scy));
 
   nxsize = (i_img_dim) ((double) im->xsize * scx);
   if (nxsize < 1) {
@@ -779,7 +755,7 @@ i_scale_nn(i_img *im, double scx, double scy) {
     i_ppix(new_img,nx,ny,&val);
   }
 
-  im_log((aIMCTX, 1,"(%p) <- i_scale_nn\n",new_img));
+  mm_log((1,"(%p) <- i_scale_nn\n",new_img));
 
   return new_img;
 }
@@ -797,10 +773,7 @@ For paletted images the palette is copied from the source.
 =cut
 */
 
-i_img *
-i_sametype(i_img *src, i_img_dim xsize, i_img_dim ysize) {
-  dIMCTXim(src);
-
+i_img *i_sametype(i_img *src, i_img_dim xsize, i_img_dim ysize) {
   if (src->type == i_direct_type) {
     if (src->bits == 8) {
       return i_img_empty_ch(NULL, xsize, ysize, src->channels);
@@ -843,10 +816,7 @@ For paletted images the equivalent direct type is returned.
 =cut
 */
 
-i_img *
-i_sametype_chans(i_img *src, i_img_dim xsize, i_img_dim ysize, int channels) {
-  dIMCTXim(src);
-
+i_img *i_sametype_chans(i_img *src, i_img_dim xsize, i_img_dim ysize, int channels) {
   if (src->bits == 8) {
     return i_img_empty_ch(NULL, xsize, ysize, channels);
   }
@@ -887,9 +857,8 @@ i_transform(i_img *im, int *opx,int opxl,int *opy,int opyl,double parm[],int par
   i_img_dim nxsize,nysize,nx,ny;
   i_img *new_img;
   i_color val;
-  dIMCTXim(im);
   
-  im_log((aIMCTX, 1,"i_transform(im %p, opx %p, opxl %d, opy %p, opyl %d, parm %p, parmlen %d)\n",im,opx,opxl,opy,opyl,parm,parmlen));
+  mm_log((1,"i_transform(im %p, opx %p, opxl %d, opy %p, opyl %d, parm %p, parmlen %d)\n",im,opx,opxl,opy,opyl,parm,parmlen));
 
   nxsize = im->xsize;
   nysize = im->ysize ;
@@ -911,7 +880,7 @@ i_transform(i_img *im, int *opx,int opxl,int *opy,int opyl,double parm[],int par
     i_ppix(new_img,nx,ny,&val);
   }
 
-  im_log((aIMCTX, 1,"(%p) <- i_transform\n",new_img));
+  mm_log((1,"(%p) <- i_transform\n",new_img));
   return new_img;
 }
 
@@ -934,15 +903,14 @@ i_img_diff(i_img *im1,i_img *im2) {
   int ch, chb;
   float tdiff;
   i_color val1,val2;
-  dIMCTXim(im1);
 
-  im_log((aIMCTX, 1,"i_img_diff(im1 %p,im2 %p)\n",im1,im2));
+  mm_log((1,"i_img_diff(im1 %p,im2 %p)\n",im1,im2));
 
   xb=(im1->xsize<im2->xsize)?im1->xsize:im2->xsize;
   yb=(im1->ysize<im2->ysize)?im1->ysize:im2->ysize;
   chb=(im1->channels<im2->channels)?im1->channels:im2->channels;
 
-  im_log((aIMCTX, 1,"i_img_diff: b=(" i_DFp ") chb=%d\n",
+  mm_log((1,"i_img_diff: b=(" i_DFp ") chb=%d\n",
 	  i_DFcp(xb,yb), chb));
 
   tdiff=0;
@@ -952,7 +920,7 @@ i_img_diff(i_img *im1,i_img *im2) {
 
     for(ch=0;ch<chb;ch++) tdiff+=(val1.channel[ch]-val2.channel[ch])*(val1.channel[ch]-val2.channel[ch]);
   }
-  im_log((aIMCTX, 1,"i_img_diff <- (%.2f)\n",tdiff));
+  mm_log((1,"i_img_diff <- (%.2f)\n",tdiff));
   return tdiff;
 }
 
@@ -977,15 +945,14 @@ i_img_diffd(i_img *im1,i_img *im2) {
   int ch, chb;
   double tdiff;
   i_fcolor val1,val2;
-  dIMCTXim(im1);
 
-  im_log((aIMCTX, 1,"i_img_diffd(im1 %p,im2 %p)\n",im1,im2));
+  mm_log((1,"i_img_diffd(im1 %p,im2 %p)\n",im1,im2));
 
   xb=(im1->xsize<im2->xsize)?im1->xsize:im2->xsize;
   yb=(im1->ysize<im2->ysize)?im1->ysize:im2->ysize;
   chb=(im1->channels<im2->channels)?im1->channels:im2->channels;
 
-  im_log((aIMCTX, 1,"i_img_diffd: b(" i_DFp ") chb=%d\n",
+  mm_log((1,"i_img_diffd: b(" i_DFp ") chb=%d\n",
 	  i_DFcp(xb, yb), chb));
 
   tdiff=0;
@@ -998,7 +965,7 @@ i_img_diffd(i_img *im1,i_img *im2) {
       tdiff += sdiff * sdiff;
     }
   }
-  im_log((aIMCTX, 1,"i_img_diffd <- (%.2f)\n",tdiff));
+  mm_log((1,"i_img_diffd <- (%.2f)\n",tdiff));
 
   return tdiff;
 }
@@ -1008,18 +975,17 @@ i_img_samef(i_img *im1,i_img *im2, double epsilon, char const *what) {
   i_img_dim x,y,xb,yb;
   int ch, chb;
   i_fcolor val1,val2;
-  dIMCTXim(im1);
 
   if (what == NULL)
     what = "(null)";
 
-  im_log((aIMCTX,1,"i_img_samef(im1 %p,im2 %p, epsilon %g, what '%s')\n", im1, im2, epsilon, what));
+  mm_log((1,"i_img_samef(im1 %p,im2 %p, epsilon %g, what '%s')\n", im1, im2, epsilon, what));
 
   xb=(im1->xsize<im2->xsize)?im1->xsize:im2->xsize;
   yb=(im1->ysize<im2->ysize)?im1->ysize:im2->ysize;
   chb=(im1->channels<im2->channels)?im1->channels:im2->channels;
 
-  im_log((aIMCTX, 1,"i_img_samef: b(" i_DFp ") chb=%d\n",
+  mm_log((1,"i_img_samef: b(" i_DFp ") chb=%d\n",
 	  i_DFcp(xb, yb), chb));
 
   for(y = 0; y < yb; y++) {
@@ -1030,14 +996,14 @@ i_img_samef(i_img *im1,i_img *im2, double epsilon, char const *what) {
       for(ch = 0; ch < chb; ch++) {
 	double sdiff = val1.channel[ch] - val2.channel[ch];
 	if (fabs(sdiff) > epsilon) {
-	  im_log((aIMCTX, 1,"i_img_samef <- different %g @(" i_DFp ")\n",
+	  mm_log((1,"i_img_samef <- different %g @(" i_DFp ")\n",
 		  sdiff, i_DFcp(x, y)));
 	  return 0;
 	}
       }
     }
   }
-  im_log((aIMCTX, 1,"i_img_samef <- same\n"));
+  mm_log((1,"i_img_samef <- same\n"));
 
   return 1;
 }
@@ -1052,7 +1018,6 @@ i_haar(i_img *im) {
   int ch,c;
   i_img *new_img,*new_img2;
   i_color val1,val2,dval1,dval2;
-  dIMCTXim(im);
   
   mx=im->xsize;
   my=im->ysize;
@@ -1464,8 +1429,6 @@ int i_findcolor_forward(i_img *im, const i_color *color, i_palidx *entry) {
 i_img_dim
 i_gsamp_bits_fb(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, unsigned *samps, 
 		const int *chans, int chan_count, int bits) {
-  dIMCTXim(im);
-
   if (bits < 1 || bits > 32) {
     i_push_error(0, "Invalid bits, must be 1..32");
     return -1;
@@ -1490,7 +1453,7 @@ i_gsamp_bits_fb(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, unsigned *samp
       /* make sure we have good channel numbers */
       for (ch = 0; ch < chan_count; ++ch) {
         if (chans[ch] < 0 || chans[ch] >= im->channels) {
-          im_push_errorf(aIMCTX, 0, "No channel %d in this image", chans[ch]);
+          i_push_errorf(0, "No channel %d in this image", chans[ch]);
           return -1;
         }
       }

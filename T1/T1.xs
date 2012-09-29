@@ -11,43 +11,38 @@ extern "C" {
 
 DEFINE_IMAGER_CALLBACKS;
 
-typedef i_t1_font_t Imager__Font__T1xs;
-
-#define i_t1_DESTROY(font) i_t1_destroy(font)
-
 MODULE = Imager::Font::T1  PACKAGE = Imager::Font::T1
 
 undef_int
 i_init_t1(t1log)
 	int t1log
 
-MODULE = Imager::Font::T1  PACKAGE = Imager::Font::T1xs PREFIX = i_t1_
+void
+i_t1_set_aa(st)
+      	       int     st
 
-Imager::Font::T1xs
-i_t1_new(class,pfb,afm)
+int
+i_t1_new(pfb,afm)
        	      char*    pfb
        	      char*    afm
-  C_ARGS:
-    pfb, afm
 
-void
-i_t1_DESTROY(font)
- Imager::Font::T1xs font	
+int
+i_t1_destroy(font_id)
+       	       int     font_id
 
 
 undef_int
-i_t1_cp(font,im,xb,yb,channel,points,str_sv, length(str),align,utf8=0,flags="",aa=1)
- Imager::Font::T1xs     font
+i_t1_cp(im,xb,yb,channel,fontnum,points,str_sv,len_ignored,align,utf8=0,flags="")
     Imager::ImgRaw     im
 	 i_img_dim     xb
 	 i_img_dim     yb
 	       int     channel
+	       int     fontnum
             double     points
 	        SV*    str_sv
 	       int     align
                int     utf8
               char*    flags
-	       int     aa
              PREINIT:
                char *str;
                STRLEN len;
@@ -57,15 +52,15 @@ i_t1_cp(font,im,xb,yb,channel,points,str_sv, length(str),align,utf8=0,flags="",a
                  utf8 = 1;
 #endif
                str = SvPV(str_sv, len);
-               RETVAL = i_t1_cp(font, im, xb,yb,channel,points,str,len,align,
-                                  utf8,flags,aa);
+               RETVAL = i_t1_cp(im, xb,yb,channel,fontnum,points,str,len,align,
+                                  utf8,flags);
            OUTPUT:
              RETVAL
 
 
 void
 i_t1_bbox(fontnum,point,str_sv,len_ignored,utf8=0,flags="")
- Imager::Font::T1xs     fontnum
+               int     fontnum
 	    double     point
 	        SV*    str_sv
                int     utf8
@@ -92,18 +87,17 @@ i_t1_bbox(fontnum,point,str_sv,len_ignored,utf8=0,flags="")
 
 
 undef_int
-i_t1_text(font,im,xb,yb,cl,points,str_sv,length(str),align,utf8=0,flags="",aa=1)
- Imager::Font::T1xs font
+i_t1_text(im,xb,yb,cl,fontnum,points,str_sv,len_ignored,align,utf8=0,flags="")
     Imager::ImgRaw     im
 	 i_img_dim     xb
 	 i_img_dim     yb
      Imager::Color    cl
+	       int     fontnum
             double     points
 	        SV*    str_sv
 	       int     align
                int     utf8
-        const char*    flags
-	       int     aa
+              char*    flags
              PREINIT:
                char *str;
                STRLEN len;
@@ -113,14 +107,14 @@ i_t1_text(font,im,xb,yb,cl,points,str_sv,length(str),align,utf8=0,flags="",aa=1)
                  utf8 = 1;
 #endif
                str = SvPV(str_sv, len);
-               RETVAL = i_t1_text(font,im, xb,yb,cl,points,str,len,align,
-                                  utf8,flags,aa);
+               RETVAL = i_t1_text(im, xb,yb,cl,fontnum,points,str,len,align,
+                                  utf8,flags);
            OUTPUT:
              RETVAL
 
 void
-i_t1_has_chars(font, text_sv, utf8 = 0)
- Imager::Font::T1xs font
+i_t1_has_chars(handle, text_sv, utf8 = 0)
+        int handle
         SV  *text_sv
         int utf8
       PREINIT:
@@ -136,10 +130,9 @@ i_t1_has_chars(font, text_sv, utf8 = 0)
 #endif
         text = SvPV(text_sv, len);
         work = mymalloc(len);
-        count = i_t1_has_chars(font, text, len, utf8, work);
+        count = i_t1_has_chars(handle, text, len, utf8, work);
         if (GIMME_V == G_ARRAY) {
           EXTEND(SP, count);
-
           for (i = 0; i < count; ++i) {
             PUSHs(boolSV(work[i]));
           }
@@ -151,21 +144,21 @@ i_t1_has_chars(font, text_sv, utf8 = 0)
         myfree(work);
 
 void
-i_t1_face_name(font)
- Imager::Font::T1xs font
+i_t1_face_name(handle)
+        int handle
       PREINIT:
         char name[255];
         int len;
       PPCODE:
-        len = i_t1_face_name(font, name, sizeof(name));
+        len = i_t1_face_name(handle, name, sizeof(name));
         if (len) {
           EXTEND(SP, 1);
           PUSHs(sv_2mortal(newSVpv(name, strlen(name))));
         }
 
 void
-i_t1_glyph_name(font, text_sv, utf8 = 0)
- Imager::Font::T1xs font
+i_t1_glyph_name(handle, text_sv, utf8 = 0)
+        int handle
         SV *text_sv
         int utf8
       PREINIT:
@@ -194,7 +187,7 @@ i_t1_glyph_name(font, text_sv, utf8 = 0)
             --len;
           }
           EXTEND(SP, 1);
-          if (i_t1_glyph_name(font, ch, name, sizeof(name))) {
+          if (i_t1_glyph_name(handle, ch, name, sizeof(name))) {
             PUSHs(sv_2mortal(newSVpv(name, 0)));
           }
           else {
@@ -204,4 +197,3 @@ i_t1_glyph_name(font, text_sv, utf8 = 0)
 
 BOOT:
 	PERL_INITIALIZE_IMAGER_CALLBACKS;
-	i_t1_start();

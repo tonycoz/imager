@@ -1,4 +1,3 @@
-#define IMAGER_NO_CONTEXT
 #include "imageri.h"
 #include <stdlib.h>
 
@@ -69,8 +68,7 @@ i_int_init_hlines(
   size_t bytes = count_y * sizeof(i_int_hline_entry *);
 
   if (bytes / count_y != sizeof(i_int_hline_entry *)) {
-    dIMCTX;
-    im_fatal(aIMCTX, 3, "integer overflow calculating memory allocation\n");
+    i_fatal(3, "integer overflow calculating memory allocation\n");
   }
 
   hlines->start_y = start_y;
@@ -113,8 +111,7 @@ i_int_hlines_add(i_int_hlines *hlines, i_img_dim y, i_img_dim x, i_img_dim width
   i_img_dim x_limit = x + width;
 
   if (width < 0) {
-    dIMCTX;
-    im_fatal(aIMCTX, 3, "negative width %d passed to i_int_hlines_add\n", width);
+    i_fatal(3, "negative width %d passed to i_int_hlines_add\n", width);
   }
 
   /* just return if out of range */

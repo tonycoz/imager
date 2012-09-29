@@ -404,8 +404,7 @@ read_failure('testimg/nocmap.gif');
      ($io, { make_colors=>'addi',
 	     translate=>'closest',
 	     transp=>'ordered',
-	   }, @imgs), "write from paletted")
-    or diag(Imager->_error_as_msg());
+	   }, @imgs), "write from paletted");
   close FH;
   
   # make sure nothing bad happened

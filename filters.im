@@ -1,4 +1,3 @@
-#define IMAGER_NO_CONTEXT
 #include "imager.h"
 #include "imageri.h"
 #include <stdlib.h>
@@ -74,9 +73,8 @@ i_contrast(i_img *im, float intensity) {
   unsigned char ch;
   unsigned int new_color;
   i_color rcolor;
-  dIMCTXim(im);
   
-  im_log((aIMCTX, 1,"i_contrast(im %p, intensity %f)\n", im, intensity));
+  mm_log((1,"i_contrast(im %p, intensity %f)\n", im, intensity));
   
   if(intensity < 0) return;
   
@@ -102,9 +100,8 @@ s_hardinvert_low(i_img *im, int all) {
   i_img_dim x, y;
   int ch;
   int invert_channels = all ? im->channels : i_img_color_channels(im);
-  dIMCTXim(im);
 
-  im_log((aIMCTX,1,"i_hardinvert)low(im %p, all %d)\n", im, all));
+  mm_log((1,"i_hardinvert(im %p)\n", im));
   
 #code im->bits <= 8  
   IM_COLOR *row, *entry;
@@ -187,9 +184,8 @@ i_noise(i_img *im, float amount, unsigned char type) {
   float damount = amount * 2;
   i_color rcolor;
   int color_inc = 0;
-  dIMCTXim(im);
   
-  im_log((aIMCTX, 1,"i_noise(im %p, intensity %.2f\n", im, amount));
+  mm_log((1,"i_noise(im %p, intensity %.2f\n", im, amount));
   
   if(amount < 0) return;
   
@@ -249,15 +245,15 @@ i_bumpmap(i_img *im, i_img *bump, int channel, i_img_dim light_x, i_img_dim ligh
   double aX, aY, aL;
   double fZ;
   unsigned char px1, px2, py1, py2;
-  dIMCTXim(im);
+  
   i_img new_im;
 
-  im_log((aIMCTX, 1, "i_bumpmap(im %p, add_im %p, channel %d, light(" i_DFp "), st %" i_DF ")\n",
+  mm_log((1, "i_bumpmap(im %p, add_im %p, channel %d, light(" i_DFp "), st %" i_DF ")\n",
 	  im, bump, channel, i_DFcp(light_x, light_y), i_DFc(st)));
 
 
   if(channel >= bump->channels) {
-    im_log((aIMCTX, 1, "i_bumpmap: channel = %d while bump image only has %d channels\n", channel, bump->channels));
+    mm_log((1, "i_bumpmap: channel = %d while bump image only has %d channels\n", channel, bump->channels));
     return;
   }
 
@@ -431,14 +427,12 @@ i_bumpmap_complex(i_img *im,
   fvec R;         /* Reflection vector    */
   fvec V;         /* Vision vector        */
 
-  dIMCTXim(im);
-
-  im_log((aIMCTX, 1, "i_bumpmap_complex(im %p, bump %p, channel %d, t(" i_DFp 
+  mm_log((1, "i_bumpmap_complex(im %p, bump %p, channel %d, t(" i_DFp 
 	  "), Lx %.2f, Ly %.2f, Lz %.2f, cd %.2f, cs %.2f, n %.2f, Ia %p, Il %p, Is %p)\n",
 	  im, bump, channel, i_DFcp(tx, ty), Lx, Ly, Lz, cd, cs, n, Ia, Il, Is));
   
   if (channel >= bump->channels) {
-    im_log((aIMCTX, 1, "i_bumpmap_complex: channel = %d while bump image only has %d channels\n", channel, bump->channels));
+    mm_log((1, "i_bumpmap_complex: channel = %d while bump image only has %d channels\n", channel, bump->channels));
     return;
   }
 
@@ -674,9 +668,8 @@ i_autolevels(i_img *im, float lsat, float usat, float skew) {
   i_img_dim gsum, gmin, gmax;
   i_img_dim bsum, bmin, bmax;
   i_img_dim rcl, rcu, gcl, gcu, bcl, bcu;
-  dIMCTXim(im);
 
-  im_log((aIMCTX, 1,"i_autolevels(im %p, lsat %f,usat %f,skew %f)\n", im, lsat,usat,skew));
+  mm_log((1,"i_autolevels(im %p, lsat %f,usat %f,skew %f)\n", im, lsat,usat,skew));
 
   rsum=gsum=bsum=0;
   for(i=0;i<256;i++) rhist[i]=ghist[i]=bhist[i] = 0;
@@ -931,12 +924,11 @@ i_gradgen(i_img *im, int num, i_img_dim *xo, i_img_dim *yo, i_color *ival, int d
   size_t bytes;
 
   double *fdist;
-  dIMCTXim(im);
 
-  im_log((aIMCTX, 1,"i_gradgen(im %p, num %d, xo %p, yo %p, ival %p, dmeasure %d)\n", im, num, xo, yo, ival, dmeasure));
+  mm_log((1,"i_gradgen(im %p, num %d, xo %p, yo %p, ival %p, dmeasure %d)\n", im, num, xo, yo, ival, dmeasure));
   
   for(p = 0; p<num; p++) {
-    im_log((aIMCTX,1,"i_gradgen: p%d(" i_DFp ")\n", p, i_DFcp(xo[p], yo[p])));
+    mm_log((1,"i_gradgen: p%d(" i_DFp ")\n", p, i_DFcp(xo[p], yo[p])));
     ICL_info(&ival[p]);
   }
 
@@ -972,7 +964,7 @@ i_gradgen(i_img *im, int num, i_img_dim *xo, i_img_dim *yo, i_color *ival, int d
 	fdist[p]  = i_max(xd*xd, yd*yd); /* manhattan distance */
 	break;
       default:
-	im_fatal(aIMCTX, 3,"i_gradgen: Unknown distance measure\n");
+	i_fatal(3,"i_gradgen: Unknown distance measure\n");
       }
       cs += fdist[p];
     }
@@ -999,12 +991,11 @@ i_nearest_color_foo(i_img *im, int num, i_img_dim *xo, i_img_dim *yo, i_color *i
   i_img_dim x, y;
   i_img_dim xsize    = im->xsize;
   i_img_dim ysize    = im->ysize;
-  dIMCTXim(im);
 
-  im_log((aIMCTX,1,"i_gradgen(im %p, num %d, xo %p, yo %p, ival %p, dmeasure %d)\n", im, num, xo, yo, ival, dmeasure));
+  mm_log((1,"i_gradgen(im %p, num %d, xo %p, yo %p, ival %p, dmeasure %d)\n", im, num, xo, yo, ival, dmeasure));
   
   for(p = 0; p<num; p++) {
-    im_log((aIMCTX, 1,"i_gradgen: p%d(" i_DFp ")\n", p, i_DFcp(xo[p], yo[p])));
+    mm_log((1,"i_gradgen: p%d(" i_DFp ")\n", p, i_DFcp(xo[p], yo[p])));
     ICL_info(&ival[p]);
   }
 
@@ -1027,7 +1018,7 @@ i_nearest_color_foo(i_img *im, int num, i_img_dim *xo, i_img_dim *yo, i_color *i
       mindist = i_max(xd*xd, yd*yd); /* manhattan distance */
       break;
     default:
-      im_fatal(aIMCTX, 3,"i_nearest_color: Unknown distance measure\n");
+      i_fatal(3,"i_nearest_color: Unknown distance measure\n");
     }
 
     for(p = 1; p<num; p++) {
@@ -1044,7 +1035,7 @@ i_nearest_color_foo(i_img *im, int num, i_img_dim *xo, i_img_dim *yo, i_color *i
 	curdist = i_max(xd*xd, yd*yd); /* manhattan distance */
 	break;
       default:
-	im_fatal(aIMCTX, 3,"i_nearest_color: Unknown distance measure\n");
+	i_fatal(3,"i_nearest_color: Unknown distance measure\n");
       }
       if (curdist < mindist) {
 	mindist = curdist;
@@ -1134,9 +1125,8 @@ i_nearest_color(i_img *im, int num, i_img_dim *xo, i_img_dim *yo, i_color *oval,
   i_img_dim ysize    = im->ysize;
   int *cmatch;
   size_t ival_bytes, tval_bytes;
-  dIMCTXim(im);
 
-  im_log((aIMCTX, 1,"i_nearest_color(im %p, num %d, xo %p, yo %p, oval %p, dmeasure %d)\n", im, num, xo, yo, oval, dmeasure));
+  mm_log((1,"i_nearest_color(im %p, num %d, xo %p, yo %p, oval %p, dmeasure %d)\n", im, num, xo, yo, oval, dmeasure));
 
   i_clear_error();
 
@@ -1189,7 +1179,7 @@ i_nearest_color(i_img *im, int num, i_img_dim *xo, i_img_dim *yo, i_color *oval,
       mindist = i_max(xd*xd, yd*yd); /* manhattan distance */
       break;
     default:
-      im_fatal(aIMCTX, 3,"i_nearest_color: Unknown distance measure\n");
+      i_fatal(3,"i_nearest_color: Unknown distance measure\n");
     }
     
     for(p = 1; p<num; p++) {
@@ -1206,7 +1196,7 @@ i_nearest_color(i_img *im, int num, i_img_dim *xo, i_img_dim *yo, i_color *oval,
 	curdist = i_max(xd*xd, yd*yd); /* manhattan distance */
 	break;
       default:
-	im_fatal(aIMCTX, 3,"i_nearest_color: Unknown distance measure\n");
+	i_fatal(3,"i_nearest_color: Unknown distance measure\n");
       }
       if (curdist < mindist) {
 	mindist = curdist;
@@ -1330,7 +1320,6 @@ i_diff_image(i_img *im1, i_img *im2, double mindist) {
   i_img *out;
   int outchans, diffchans;
   i_img_dim xsize, ysize;
-  dIMCTXim(im1);
 
   i_clear_error();
   if (im1->channels != im2->channels) {
@@ -1653,7 +1642,6 @@ i_fountain(i_img *im, double xa, double ya, double xb, double yb,
   i_fountain_seg *my_segs;
   i_fill_combine_f combine_func = NULL;
   i_fill_combinef_f combinef_func = NULL;
-  dIMCTXim(im);
 
   i_clear_error();
 

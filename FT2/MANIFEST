@@ -16,5 +16,4 @@ MANIFEST			This list of files
 MANIFEST.SKIP
 README
 t/t10ft2.t
-t/t20thread.t
 typemap

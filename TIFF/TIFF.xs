@@ -143,4 +143,3 @@ i_tiff_has_compression(name)
 
 BOOT:
 	PERL_INITIALIZE_IMAGER_CALLBACKS;
-	i_tiff_init();

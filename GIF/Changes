@@ -1,10 +1,4 @@
-Imager-File-GIF 0.85
-====================
-
- - add giflib 5.0 support.
-   https://rt.cpan.org/Ticket/Display.html?id=79029
-
-Imager-File-GIF 0.84 - released with Imager 0.92_01
+Imager-File-GIF 0.84
 ====================
 
  - giflib 4.2 eliminates the GIF_LIB_VERSION macro, handle that

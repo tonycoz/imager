@@ -8,14 +8,26 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#ifdef HAVE_LIBT1
+#endif
+
 
 /*
 =head1 NAME
 
-fontft1.c - Freetype 1.x font driver for Imager
+font.c - implements font handling functions for t1 and truetype fonts
 
 =head1 SYNOPSIS
 
+  i_init_fonts();
+
+  #ifdef HAVE_LIBT1
+  fontnum = i_t1_new(path_to_pfb, path_to_afm);
+  i_t1_bbox(fontnum, points, "foo", 3, i_img_dim cords[BOUNDING_BOX_COUNT]);
+  rc = i_t1_destroy(fontnum);
+  #endif
+
+  #ifdef HAVE_LIBTT
   handle = i_tt_new(path_to_ttf);
   rc = i_tt_bbox(handle, points, "foo", 3, int cords[6], utf8);
   i_tt_destroy(handle);
@@ -24,10 +36,8 @@ fontft1.c - Freetype 1.x font driver for Imager
 
 =head1 DESCRIPTION
 
-fontft1.c implements font creation, rendering, bounding box functions and
-more for Imager using Freetype 1.x.
-
-In general this driver should be ignored in favour of the FT2 driver.
+font.c implements font creation, rendering, bounding box functions and
+more for Imager.
 
 =head1 FUNCTION REFERENCE
 
@@ -41,6 +51,8 @@ Some of these functions are internal.
 
 
 /* Truetype font support */
+#ifdef HAVE_LIBTT
+
 /* These are enabled by default when configuring Freetype 1.x
    I haven't a clue how to reliably detect it at compile time.
 
@@ -66,15 +78,8 @@ Some of these functions are internal.
 #define TT_MS_LANGID_ENGLISH_GENERAL 0x0409
 #endif
 
-static im_slot_t slot = -1;
-
 /* convert a code point into an index in the glyph cache */
 #define TT_HASH(x) ((x) & 0xFF)
-
-typedef struct {
-  int initialized;
-  TT_Engine engine;
-} i_tt_engine;
 
 typedef struct i_glyph_entry_ {
   TT_Glyph glyph;
@@ -112,7 +117,6 @@ struct TT_Fonthandle_ {
 #define TT_VALID( handle )  ( ( handle ).z != NULL )
 
 static void i_tt_push_error(TT_Error rc);
-static void i_tt_uninit(void *);
 
 /* Prototypes */
 
@@ -140,6 +144,8 @@ static undef_int i_tt_bbox_inst( TT_Fonthandle *handle, int inst ,const char *tx
 
 /* static globals needed */
 
+static int TT_initialized = 0;
+static TT_Engine    engine;
 static int  LTT_dpi    = 72; /* FIXME: this ought to be a part of the call interface */
 static int  LTT_hinted = 1;  /* FIXME: this too */
 
@@ -148,90 +154,58 @@ static int  LTT_hinted = 1;  /* FIXME: this too */
  * FreeType interface
  */
 
-void
-i_tt_start(void) {
-  if (slot == -1)
-    slot = im_context_slot_new(i_tt_uninit, "TT");
-}
-
 
 /*
 =item init_tt()
 
-Initializes the freetype font rendering engine (if needed)
+Initializes the freetype font rendering engine
 
 =cut
 */
 
-static i_tt_engine *
+static undef_int
 i_init_tt(void) {
   TT_Error  error;
-  im_context_t ctx = im_get_context();
   TT_Byte palette[] = { 0, 64, 127, 191, 255 };
-  i_tt_engine *result = im_context_slot_get(ctx, slot);
 
   i_clear_error();
 
-  if (result == NULL) {
-    result = mymalloc(sizeof(i_tt_engine));
-    memset(result, 0, sizeof(*result));
-    im_context_slot_set(ctx, slot, result);
-    mm_log((1, "allocated FT1 state %p\n", result));
-  }
-
   mm_log((1,"init_tt()\n"));
-
-  if (result->initialized)
-    return result;
-
-  error = TT_Init_FreeType( &result->engine );
+  error = TT_Init_FreeType( &engine );
   if ( error ){
     mm_log((1,"Initialization of freetype failed, code = 0x%x\n",
 	    (unsigned)error));
     i_tt_push_error(error);
     i_push_error(0, "Could not initialize freetype 1.x");
-    return NULL;
+    return(1);
   }
 
 #ifdef FTXPOST
-  error = TT_Init_Post_Extension( result->engine );
+  error = TT_Init_Post_Extension( engine );
   if (error) {
     mm_log((1, "Initialization of Post extension failed = 0x%x\n",
 	    (unsigned)error));
     
     i_tt_push_error(error);
     i_push_error(0, "Could not initialize FT 1.x POST extension");
-    return NULL;
+    return 1;
   }
 #endif
 
-  error = TT_Set_Raster_Gray_Palette(result->engine, palette);
+  error = TT_Set_Raster_Gray_Palette(engine, palette);
   if (error) {
     mm_log((1, "Initialization of gray levels failed = 0x%x\n",
 	    (unsigned)error));
     i_tt_push_error(error);
     i_push_error(0, "Could not initialize FT 1.x POST extension");
-    return NULL;
+    return 1;
   }
 
-  mm_log((1, "initialized FT1 state %p\n", result));
+  TT_initialized = 1;
 
-  result->initialized = 1;
-
-  return result;
+  return(0);
 }
 
-static void
-i_tt_uninit(void *p) {
-  i_tt_engine *tteng = p;
-
-  if (tteng->initialized) {
-    mm_log((1, "finalizing FT1 state %p\n", tteng));
-    TT_Done_FreeType(tteng->engine);
-  }
-  mm_log((1, "freeing FT1 state %p\n", tteng));
-  myfree(tteng);
-}
 
 /* 
 =item i_tt_get_instance(handle, points, smooth)
@@ -353,9 +327,8 @@ i_tt_new(const char *fontname) {
   TT_Fonthandle *handle;
   unsigned short i,n;
   unsigned short platform,encoding;
-  i_tt_engine *tteng;
 
-  if ((tteng = i_init_tt()) == NULL) {
+  if (!TT_initialized && i_init_tt()) {
     i_push_error(0, "Could not initialize FT1 engine");
     return NULL;
   }
@@ -369,7 +342,7 @@ i_tt_new(const char *fontname) {
   handle = mymalloc( sizeof(TT_Fonthandle) ); /* checked 5Nov05 tonyc */
 
   /* load the typeface */
-  error = TT_Open_Face( tteng->engine, fontname, &handle->face );
+  error = TT_Open_Face( engine, fontname, &handle->face );
   if ( error ) {
     if ( error == TT_Err_Could_Not_Open_File ) {
       mm_log((1, "Could not find/open %s.\n", fontname ));
@@ -1386,6 +1359,8 @@ i_tt_push_error(TT_Error rc) {
   i_push_errorf(rc, "Error code 0x%04x", (unsigned)rc);
 #endif
 }
+
+#endif /* HAVE_LIBTT */
 
 
 /*

@@ -1,4 +1,3 @@
-#define IMAGER_NO_CONTEXT
 #include "imager.h"
 #include <math.h>
 
@@ -26,9 +25,8 @@ i_gaussian(i_img *im, double stddev) {
   double res[MAXCHANNELS];
   i_img *timg;
   int radius, diameter;
-  dIMCTXim(im);
 
-  im_log((aIMCTX, 1,"i_gaussian(im %p, stdev %.2f)\n",im,stddev));
+  mm_log((1,"i_gaussian(im %p, stdev %.2f)\n",im,stddev));
   i_clear_error();
 
   if (stddev <= 0) {

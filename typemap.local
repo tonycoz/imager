@@ -10,8 +10,6 @@ off_t			T_OFF_T
 
 Imager::Internal::Hlines T_PTROBJ
 
-Imager::Context		 T_PTROBJ
-
 #############################################################################
 INPUT
 

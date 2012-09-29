@@ -5,7 +5,7 @@ use vars qw(@ISA $VERSION);
 @ISA = qw(Imager::Font);
 
 BEGIN {
-  $VERSION = "1.018";
+  $VERSION = "1.017";
 
   require XSLoader;
   XSLoader::load('Imager::Font::T1', $VERSION);
@@ -14,7 +14,17 @@ BEGIN {
 
 *_first = \&Imager::Font::_first;
 
-my $t1aa = 2;
+my $t1aa;
+
+# $T1AA is in there because for some reason (probably cache related) antialiasing
+# is a system wide setting in t1 lib.
+
+sub t1_set_aa_level {
+  if (!defined $t1aa or $_[0] != $t1aa) {
+    i_t1_set_aa($_[0]);
+    $t1aa=$_[0];
+  }
+}
 
 sub new {
   my $class = shift;
@@ -55,42 +65,39 @@ sub new {
 	  $hsh{afm} = 0;
   }
 
-  my $font = Imager::Font::T1xs->new($hsh{file},$hsh{afm});
-  unless ($font) { # the low-level code may miss some error handling
+  my $id = i_t1_new($hsh{file},$hsh{afm});
+  unless ($id >= 0) { # the low-level code may miss some error handling
     Imager->_set_error(Imager->_error_as_msg);
     return;
   }
   return bless {
-		t1font    => $font,
+		id    => $id,
 		aa    => $hsh{aa} || 0,
 		file  => $hsh{file},
 		type  => 't1',
 		size  => $hsh{size},
 		color => $hsh{color},
-		t1aa  => $t1aa,
 	       }, $class;
 }
 
 sub _draw {
   my $self = shift;
   my %input = @_;
+  t1_set_aa_level($input{aa});
   my $flags = '';
   $flags .= 'u' if $input{underline};
   $flags .= 's' if $input{strikethrough};
   $flags .= 'o' if $input{overline};
-  my $aa = $input{aa} ? $self->{t1aa} : 0;
   if (exists $input{channel}) {
-    $self->{t1font}->cp($input{image}{IMG}, $input{'x'}, $input{'y'},
-		    $input{channel}, $input{size},
+    i_t1_cp($input{image}{IMG}, $input{'x'}, $input{'y'},
+		    $input{channel}, $self->{id}, $input{size},
 		    $input{string}, length($input{string}), $input{align},
-                    $input{utf8}, $flags, $aa)
-      or return;
+                    $input{utf8}, $flags);
   } else {
-    $self->{t1font}->text($input{image}{IMG}, $input{'x'}, $input{'y'}, 
-		      $input{color}, $input{size}, 
+    i_t1_text($input{image}{IMG}, $input{'x'}, $input{'y'}, 
+		      $input{color}, $self->{id}, $input{size}, 
 		      $input{string}, length($input{string}), 
-		      $input{align}, $input{utf8}, $flags, $aa)
-      or return;
+		      $input{align}, $input{utf8}, $flags);
   }
 
   return $self;
@@ -103,7 +110,7 @@ sub _bounding_box {
   $flags .= 'u' if $input{underline};
   $flags .= 's' if $input{strikethrough};
   $flags .= 'o' if $input{overline};
-  return $self->{t1font}->bbox($input{size}, $input{string},
+  return i_t1_bbox($self->{id}, $input{size}, $input{string},
 			   length($input{string}), $input{utf8}, $flags);
 }
 
@@ -115,8 +122,8 @@ sub has_chars {
     $Imager::ERRSTR = "No string supplied to \$font->has_chars()";
     return;
   }
-  return $self->{t1font}->has_chars($hsh{string}, 
-				    _first($hsh{'utf8'}, $self->{utf8}, 0));
+  return i_t1_has_chars($self->{id}, $hsh{string}, 
+				_first($hsh{'utf8'}, $self->{utf8}, 0));
 }
 
 sub utf8 {
@@ -126,7 +133,7 @@ sub utf8 {
 sub face_name {
   my ($self) = @_;
 
-  return $self->{t1font}->face_name();
+  i_t1_face_name($self->{id});
 }
 
 sub glyph_names {
@@ -137,27 +144,9 @@ sub glyph_names {
     or return Imager->_set_error("no string parameter passed to glyph_names");
   my $utf8 = _first($input{utf8} || 0);
 
-  return $self->{t1font}->glyph_name($string, $utf8);
+  i_t1_glyph_name($self->{id}, $string, $utf8);
 }
 
-sub set_aa_level {
-  my ($self, $new_t1aa) = @_;
-
-  if (!defined $new_t1aa ||
-      ($new_t1aa != 1 && $new_t1aa != 2)) {
-    Imager->_set_error("set_aa_level: parameter must be 1 or 2");
-    return;
-  }
-
-  if (ref $self) {
-    $self->{t1aa} = $new_t1aa;
-  }
-  else {
-    $t1aa = $new_t1aa;
-  }
-
-  return 1;
-}
 
 1;
 
@@ -207,32 +196,6 @@ C<strikethrough> - Draw the text with a strikethrough.
 
 Obviously, if you're calculating the bounding box the size of the line
 is included in the box, and the line isn't drawn :)
-
-=head2 Anti-aliasing
-
-T1Lib supports multiple levels of anti-aliasing, by default, if you
-request anti-aliased output, Imager::Font::T1 will use the maximum
-level.
-
-You can override this with the set_t1_aa() method:
-
-=over
-
-=item set_aa_level()
-
-Usage:
-
-  $font->set_aa_level(1);
-  Imager::Font::T1->set_aa_level(2);
-
-Sets the T1Lib anti-aliasing level either for the specified font, or
-for new font objects.
-
-The only parameter must be 1 or 2.
-
-Returns true on success.
-
-=back
 
 =head1 AUTHOR
 

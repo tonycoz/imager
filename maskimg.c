@@ -11,8 +11,6 @@ maskimg.c - implements masked images/image subsets
 =cut
 */
 
-#define IMAGER_NO_CONTEXT
-
 #include "imager.h"
 #include "imageri.h"
 
@@ -126,15 +124,13 @@ sample is treated as boolean.
 =cut
 */
 
-i_img *
-i_img_masked_new(i_img *targ, i_img *mask, i_img_dim x, i_img_dim y, i_img_dim w, i_img_dim h) {
+i_img *i_img_masked_new(i_img *targ, i_img *mask, i_img_dim x, i_img_dim y, i_img_dim w, i_img_dim h) {
   i_img *im;
   i_img_mask_ext *ext;
-  dIMCTXim(targ);
 
-  im_clear_error(aIMCTX);
+  i_clear_error();
   if (x >= targ->xsize || y >= targ->ysize) {
-    im_push_error(aIMCTX, 0, "subset outside of target image");
+    i_push_error(0, "subset outside of target image");
     return NULL;
   }
   if (mask) {
@@ -148,10 +144,8 @@ i_img_masked_new(i_img *targ, i_img *mask, i_img_dim x, i_img_dim y, i_img_dim w
   if (y+h > targ->ysize)
     h = targ->ysize - y;
 
-  im = im_img_alloc(aIMCTX);
-
+  im = mymalloc(sizeof(i_img));
   memcpy(im, &IIM_base_masked, sizeof(i_img));
-  i_tags_new(&im->tags);
   im->xsize = w;
   im->ysize = h;
   im->channels = targ->channels;
@@ -164,8 +158,6 @@ i_img_masked_new(i_img *targ, i_img *mask, i_img_dim x, i_img_dim y, i_img_dim w
   ext->ybase = y;
   ext->samps = mymalloc(sizeof(i_sample_t) * im->xsize);
   im->ext_data = ext;
-
-  im_img_init(aIMCTX, im);
 
   return im;
 }
@@ -593,7 +585,6 @@ psamp_masked(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y,
     return result;
   }
   else {
-    dIMCTXim(im);
     i_push_error(0, "Image position outside of image");
     return -1;
   }
@@ -661,7 +652,6 @@ psampf_masked(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y,
     return result;
   }
   else {
-    dIMCTXim(im);
     i_push_error(0, "Image position outside of image");
     return -1;
   }

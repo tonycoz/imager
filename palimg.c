@@ -18,8 +18,6 @@ Basic 8-bit/sample paletted image
 =cut
 */
 
-#define IMAGER_NO_CONTEXT
-
 #include "imager.h"
 #include "imageri.h"
 
@@ -86,10 +84,9 @@ static i_img IIM_base_8bit_pal =
 };
 
 /*
-=item im_img_pal_new(ctx, C<x>, C<y>, C<channels>, C<maxpal>)
-X<im_img_pal_new API>X<i_img_pal_new API>
+=item i_img_pal_new(C<x>, C<y>, C<channels>, C<maxpal>)
+
 =category Image creation/destruction
-=synopsis i_img *img = im_img_pal_new(aIMCTX, width, height, channels, max_palette_size)
 =synopsis i_img *img = i_img_pal_new(width, height, channels, max_palette_size)
 
 Creates a new paletted image of the supplied dimensions.
@@ -98,12 +95,10 @@ C<maxpal> is the maximum palette size and should normally be 256.
 
 Returns a new image or NULL on failure.
 
-Also callable as C<i_img_pal_new(width, height, channels, max_palette_size)>.
-
 =cut
 */
 i_img *
-im_img_pal_new(pIMCTX, i_img_dim x, i_img_dim y, int channels, int maxpal) {
+i_img_pal_new(i_img_dim x, i_img_dim y, int channels, int maxpal) {
   i_img *im;
   i_img_pal_ext *palext;
   size_t bytes, line_bytes;
@@ -118,7 +113,7 @@ im_img_pal_new(pIMCTX, i_img_dim x, i_img_dim y, int channels, int maxpal) {
     return NULL;
   }
   if (channels < 1 || channels > MAXCHANNELS) {
-    im_push_errorf(aIMCTX, 0, "Channels must be positive and <= %d", MAXCHANNELS);
+    i_push_errorf(0, "Channels must be positive and <= %d", MAXCHANNELS);
     return NULL;
   }
   bytes = sizeof(i_palidx) * x * y;
@@ -190,10 +185,8 @@ The conversion cannot be done for virtual images.
 
 =cut
 */
-int
-i_img_to_rgb_inplace(i_img *im) {
+int i_img_to_rgb_inplace(i_img *im) {
   i_img temp;
-  dIMCTXim(im);
 
   if (im->virtual)
     return 0;
@@ -222,7 +215,6 @@ Converts an RGB image to a paletted image
 i_img *i_img_to_pal(i_img *src, i_quantize *quant) {
   i_palidx *result;
   i_img *im;
-  dIMCTXim(src);
 
   i_clear_error();
   
@@ -252,9 +244,7 @@ i_img *i_img_to_pal(i_img *src, i_quantize *quant) {
 
 =cut
 */
-i_img *
-i_img_to_rgb(i_img *src) {
-  dIMCTXim(src);
+i_img *i_img_to_rgb(i_img *src) {
   i_img *im = i_img_empty_ch(NULL, src->xsize, src->ysize, src->channels);
   i_img_rgb_convert(im, src);
 
@@ -316,8 +306,7 @@ i_ppix_p(i_img *im, i_img_dim x, i_img_dim y, const i_color *val) {
     return 0;
   }
   else {
-    dIMCTXim(im);
-    im_log((aIMCTX, 1, "i_ppix: color(%d,%d,%d) not found, converting to rgb\n",
+    mm_log((1, "i_ppix: color(%d,%d,%d) not found, converting to rgb\n",
 	    val->channel[0], val->channel[1], val->channel[2]));
     if (i_img_to_rgb_inplace(im)) {
       return i_ppix(im, x, y, val);
@@ -434,8 +423,7 @@ static i_img_dim i_gsamp_p(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, i_s
     if (chans) {
       for (ch = 0; ch < chan_count; ++ch) {
         if (chans[ch] < 0 || chans[ch] >= im->channels) {
-	  dIMCTXim(im);
-          im_push_errorf(aIMCTX, 0, "No channel %d in this image", chans[ch]);
+          i_push_errorf(0, "No channel %d in this image", chans[ch]);
         }
       }
 
@@ -451,8 +439,7 @@ static i_img_dim i_gsamp_p(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, i_s
     }
     else {
       if (chan_count <= 0 || chan_count > im->channels) {
-	dIMCTXim(im);
-	im_push_errorf(aIMCTX, 0, "chan_count %d out of range, must be >0, <= channels", 
+	i_push_errorf(0, "chan_count %d out of range, must be >0, <= channels", 
 		      chan_count);
 	return 0;
       }
@@ -658,8 +645,7 @@ i_psamp_p(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y,
       /* make sure we have good channel numbers */
       for (ch = 0; ch < chan_count; ++ch) {
         if (chans[ch] < 0 || chans[ch] >= im->channels) {
-	  dIMCTXim(im);
-          im_push_errorf(aIMCTX, 0, "No channel %d in this image", chans[ch]);
+          i_push_errorf(0, "No channel %d in this image", chans[ch]);
           return -1;
         }
       }
@@ -676,8 +662,7 @@ i_psamp_p(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y,
     }
     else {
       if (chan_count <= 0 || chan_count > im->channels) {
-	dIMCTXim(im);
-	im_push_errorf(aIMCTX, 0, "chan_count %d out of range, must be >0, <= channels", 
+	i_push_errorf(0, "chan_count %d out of range, must be >0, <= channels", 
 		      chan_count);
 	return -1;
       }
@@ -697,7 +682,6 @@ i_psamp_p(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y,
     return count;
   }
   else {
-    dIMCTXim(im);
     i_push_error(0, "Image position outside of image");
     return -1;
   }
@@ -732,8 +716,7 @@ i_psampf_p(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y,
       /* make sure we have good channel numbers */
       for (ch = 0; ch < chan_count; ++ch) {
         if (chans[ch] < 0 || chans[ch] >= im->channels) {
-	  dIMCTXim(im);
-          im_push_errorf(aIMCTX, 0, "No channel %d in this image", chans[ch]);
+          i_push_errorf(0, "No channel %d in this image", chans[ch]);
           return -1;
         }
       }
@@ -750,8 +733,7 @@ i_psampf_p(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y,
     }
     else {
       if (chan_count <= 0 || chan_count > im->channels) {
-	dIMCTXim(im);
-	im_push_errorf(aIMCTX, 0, "chan_count %d out of range, must be >0, <= channels", 
+	i_push_errorf(0, "chan_count %d out of range, must be >0, <= channels", 
 		      chan_count);
 	return -1;
       }
@@ -771,7 +753,6 @@ i_psampf_p(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y,
     return count;
   }
   else {
-    dIMCTXim(im);
     i_push_error(0, "Image position outside of image");
     return -1;
   }

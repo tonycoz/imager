@@ -61,24 +61,112 @@ C).  The Perl level won't use all of this.
 =cut
 */
 
-#include "imageri.h"
+#include "imager.h"
 #include <stdio.h>
 #include <stdlib.h>
 
+/* we never actually use the last item - it's the NULL terminator */
+#define ERRSTK 20
+static i_errmsg error_stack[ERRSTK];
+static int error_sp = ERRSTK - 1;
+/* we track the amount of space used each string, so we don't reallocate 
+   space unless we need to.
+   This also means that a memory tracking library may see the memory 
+   allocated for this as a leak. */
+static int error_space[ERRSTK];
+
+static i_error_cb error_cb;
+static i_failed_cb failed_cb;
+static int failures_fatal;
+static char *argv0;
+
 /*
-=item im_errors(ctx)
-=synopsis i_errmsg *errors = im_errors(aIMCTX);
-=synopsis i_errmsg *errors = i_errors();
+=item i_set_argv0(char const *program)
+
+Sets the name of the program to be displayed in fatal error messages.
+
+The simplest way to use this is just:
+
+  i_set_argv0(argv[0]);
+
+when your program starts.
+*/
+void i_set_argv0(char const *name) {
+  char *dupl;
+  if (!name)
+    return;
+  /* if the user has an existing string of MAXINT length then
+     the system is broken anyway */
+  dupl = mymalloc(strlen(name)+1); /* check 17jul05 tonyc */
+  strcpy(dupl, name);
+  if (argv0)
+    myfree(argv0);
+  argv0 = dupl;
+}
+
+/*
+=item i_set_failure_fatal(int failure_fatal)
+
+If failure_fatal is non-zero then any future failures will result in
+Imager exiting your program with a message describing the failure.
+
+Returns the previous setting.
+
+=cut
+*/
+int i_set_failures_fatal(int fatal) {
+  int old = failures_fatal;
+  failures_fatal = fatal;
+
+  return old;
+}
+
+/*
+=item i_set_error_cb(i_error_cb)
+
+Sets a callback function that is called each time an error is pushed
+onto the error stack.
+
+Returns the previous callback.
+
+i_set_failed_cb() is probably more useful.
+
+=cut
+*/
+i_error_cb i_set_error_cb(i_error_cb cb) {
+  i_error_cb old = error_cb;
+  error_cb = cb;
+
+  return old;
+}
+
+/*
+=item i_set_failed_cb(i_failed_cb cb)
+
+Sets a callback function that is called each time an Imager function
+fails.
+
+Returns the previous callback.
+
+=cut
+*/
+i_failed_cb i_set_failed_cb(i_failed_cb cb) {
+  i_failed_cb old = failed_cb;
+  failed_cb = cb;
+
+  return old;
+}
+
+/*
+=item i_errors()
 
 Returns a pointer to the first element of an array of error messages,
 terminated by a NULL pointer.  The highest level message is first.
 
-Also callable as C<i_errors()>.
-
 =cut
 */
-i_errmsg *im_errors(im_context_t ctx) {
-  return ctx->error_stack + ctx->error_sp;
+i_errmsg *i_errors() {
+  return error_stack + error_sp;
 }
 
 /*
@@ -94,9 +182,7 @@ the mark.
 
 =over
 
-=item im_clear_error(ctx)
-X<im_clear_error API>X<i_clear_error API>
-=synopsis im_clear_error(aIMCTX);
+=item i_clear_error()
 =synopsis i_clear_error();
 =category Error handling
 
@@ -104,33 +190,27 @@ Clears the error stack.
 
 Called by any Imager function before doing any other processing.
 
-Also callable as C<i_clear_error()>.
-
 =cut
 */
-
-void
-im_clear_error(im_context_t ctx) {
+void i_clear_error() {
 #ifdef IMAGER_DEBUG_MALLOC
   int i;
 
-  for (i = 0; i < IM_ERROR_COUNT; ++i) {
-    if (ctx->error_space[i]) {
-      myfree(ctx->error_stack[i].msg);
-      ctx->error_stack[i].msg = NULL;
-      ctx->error_space[i] = 0;
+  for (i = 0; i < ERRSTK; ++i) {
+    if (error_space[i]) {
+      myfree(error_stack[i].msg);
+      error_stack[i].msg = NULL;
+      error_space[i] = 0;
     }
   }
 #endif
-  ctx->error_sp = IM_ERROR_COUNT-1;
+  error_sp = ERRSTK-1;
 }
 
 /*
-=item im_push_error(ctx, code, message)
-X<im_push_error API>X<i_push_error API>
+=item i_push_error(int code, char const *msg)
 =synopsis i_push_error(0, "Yep, it's broken");
 =synopsis i_push_error(errno, "Error writing");
-=synopsis im_push_error(aIMCTX, 0, "Something is wrong");
 =category Error handling
 
 Called by an Imager function to push an error message onto the stack.
@@ -141,35 +221,34 @@ error handling is calling function that does.).
 
 =cut
 */
-void
-im_push_error(im_context_t ctx, int code, char const *msg) {
+void i_push_error(int code, char const *msg) {
   size_t size = strlen(msg)+1;
 
-  if (ctx->error_sp <= 0)
+  if (error_sp <= 0)
     /* bad, bad programmer */
     return;
 
-  --ctx->error_sp;
-  if (ctx->error_alloc[ctx->error_sp] < size) {
-    if (ctx->error_stack[ctx->error_sp].msg)
-      myfree(ctx->error_stack[ctx->error_sp].msg);
+  --error_sp;
+  if (error_space[error_sp] < size) {
+    if (error_stack[error_sp].msg)
+      myfree(error_stack[error_sp].msg);
     /* memory allocated on the following line is only ever released when 
        we need a bigger string */
     /* size is size (len+1) of an existing string, overflow would mean
        the system is broken anyway */
-    ctx->error_stack[ctx->error_sp].msg = mymalloc(size); /* checked 17jul05 tonyc */
-    ctx->error_alloc[ctx->error_sp] = size;
+    error_stack[error_sp].msg = mymalloc(size); /* checked 17jul05 tonyc */
+    error_space[error_sp] = size;
   }
-  strcpy(ctx->error_stack[ctx->error_sp].msg, msg);
-  ctx->error_stack[ctx->error_sp].code = code;
+  strcpy(error_stack[error_sp].msg, msg);
+  error_stack[error_sp].code = code;
+
+  if (error_cb)
+    error_cb(code, msg);
 }
 
 /*
-=item im_push_errorvf(ctx, code, format, args)
-X<im_push_error_vf API>X<i_push_errorvf API>
-=synopsis va_args args;
-=synopsis va_start(args, lastarg);
-=synopsis im_push_errorvf(ctx, code, format, args);
+=item i_push_errorvf(int C<code>, char const *C<fmt>, va_list C<ap>)
+
 =category Error handling
 
 Intended for use by higher level functions, takes a varargs pointer
@@ -177,12 +256,9 @@ and a format to produce the finally pushed error message.
 
 Does not support perl specific format codes.
 
-Also callable as C<i_push_errorvf(code, format, args)>
-
 =cut
 */
-void 
-im_push_errorvf(im_context_t ctx, int code, char const *fmt, va_list ap) {
+void i_push_errorvf(int code, char const *fmt, va_list ap) {
   char buf[1024];
 #if defined(IMAGER_VSNPRINTF)
   vsnprintf(buf, sizeof(buf), fmt, ap);
@@ -195,7 +271,7 @@ im_push_errorvf(im_context_t ctx, int code, char const *fmt, va_list ap) {
    */
   vsprintf(buf, fmt, ap);
 #endif
-  im_push_error(ctx, code, buf);
+  i_push_error(code, buf);
 }
 
 /*
@@ -209,30 +285,10 @@ Does not support perl specific format codes.
 
 =cut
 */
-void
-i_push_errorf(int code, char const *fmt, ...) {
+void i_push_errorf(int code, char const *fmt, ...) {
   va_list ap;
   va_start(ap, fmt);
   i_push_errorvf(code, fmt, ap);
-  va_end(ap);
-}
-
-/*
-=item im_push_errorf(ctx, code, char const *fmt, ...)
-=synopsis im_push_errorf(aIMCTX, errno, "Cannot open file %s: %d", filename, errno);
-=category Error handling
-
-A version of im_push_error() that does printf() like formatting.
-
-Does not support perl specific format codes.
-
-=cut
-*/
-void
-im_push_errorf(im_context_t ctx, int code, char const *fmt, ...) {
-  va_list ap;
-  va_start(ap, fmt);
-  im_push_errorvf(ctx, code, fmt, ap);
   va_end(ap);
 }
 
@@ -313,7 +369,7 @@ void
 im_assert_fail(char const *file, int line, char const *message) {
   fprintf(stderr, "Assertion failed line %d file %s: %s\n", 
 	  line, file, message);
-  abort();
+  exit(EXIT_FAILURE);
 }
 
 /*

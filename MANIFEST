@@ -7,7 +7,6 @@ Changes.old			Old changes
 color.c				Color translation and handling
 combine.im			Channel combine
 compose.im
-context.c
 conv.im
 convert.im
 CountColor/CountColor.pm	sample XS access to API
@@ -50,7 +49,7 @@ Flines/Flines.xs
 Flines/Makefile.PL
 Flines/t/t00flines.t
 flip.im
-fontft1.c
+font.c
 fontfiles/dodge.ttf
 fontfiles/ExistenceTest.ttf	generated using pfaedit
 fontfiles/ImUgly.ttf
@@ -69,7 +68,6 @@ FT2/imft2.h
 FT2/Makefile.PL
 FT2/README
 FT2/t/t10ft2.t
-FT2/t/t20thread.t
 FT2/typemap
 gaussian.im
 GIF/GIF.pm
@@ -201,7 +199,6 @@ lib/Imager/regmach.pod
 lib/Imager/Regops.pm
 lib/Imager/Security.pod
 lib/Imager/Test.pm
-lib/Imager/Threads.pod
 lib/Imager/Transform.pm
 lib/Imager/Transformations.pod
 lib/Imager/Tutorial.pod
@@ -218,9 +215,6 @@ MANIFEST
 MANIFEST.SKIP
 map.c
 maskimg.c
-mutexnull.c
-mutexpthr.c
-mutexwin.c
 palimg.c
 paste.im
 plug.h
@@ -355,7 +349,6 @@ t/t80texttools.t		Test text wrapping
 t/t81hlines.t			Test hlines.c
 t/t82inline.t			Test Inline::C integration
 t/t83extutil.t			Test Imager::ExtUtils
-t/t84inlinectx.t
 t/t90cc.t
 t/t91pod.t			Test POD with Test::Pod
 t/t92samples.t
@@ -380,7 +373,6 @@ T1/t/t10type1.t
 T1/t/t20oo.t
 T1/T1.pm
 T1/T1.xs
-T1/typemap
 tags.c
 testimg/alpha16.tga		16-bit/pixel TGA with alpha "channel" RT 32926
 testimg/bad1oflow.bmp		1-bit/pixel, overflow integer on 32-bit machines

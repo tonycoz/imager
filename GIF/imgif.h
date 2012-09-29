@@ -3,7 +3,6 @@
 
 #include "imext.h"
 
-void i_init_gif(void);
 double i_giflib_version(void);
 i_img *i_readgif_wiol(io_glue *ig, int **colour_table, int *colours);
 i_img *i_readgif_single_wiol(io_glue *ig, int page);

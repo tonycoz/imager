@@ -16,4 +16,3 @@ t/t10type1.t
 t/t20oo.t
 T1.pm
 T1.xs
-typemap

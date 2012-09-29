@@ -5,33 +5,11 @@
 
 static int t1_get_flags(char const *flags);
 static char *t1_from_utf8(char const *in, size_t len, int *outlen);
-static undef_int i_init_t1_low(int t1log);
+
 static void t1_push_error(void);
-static void i_t1_set_aa(int st);
 
 static int t1_active_fonts = 0;
 static int t1_initialized = 0;
-static int t1_aa = 0;
-
-struct i_t1_font_tag {
-  int font_id;
-};
-
-static i_mutex_t mutex;
-
-/*
-=item i_t1_start()
-
-Initialize the font driver.  This does not actually initialize T1Lib,
-it just allocates the mutex we use to gate access to it.
-
-=cut
-*/
-
-void
-i_t1_start(void) {
-  mutex = i_mutex_new();
-}
 
 /* 
 =item i_init_t1(t1log)
@@ -43,21 +21,8 @@ Initializes the t1lib font rendering engine.
 
 undef_int
 i_init_t1(int t1log) {
-  undef_int result;
-  i_mutex_lock(mutex);
-
-  result = i_init_t1_low(t1log);
-
-  i_mutex_unlock(mutex);
-
-  return result;
-}
-
-static undef_int
-i_init_t1_low(int t1log) {
   int init_flags = IGNORE_CONFIGFILE|IGNORE_FONTDATABASE;
-
-  mm_log((1,"init_t1(%d)\n", t1log));
+  mm_log((1,"init_t1()\n"));
 
   i_clear_error();
 
@@ -80,6 +45,7 @@ i_init_t1_low(int t1log) {
     return(1);
   }
   T1_SetLogLevel(T1LOG_DEBUG);
+  i_t1_set_aa(1); /* Default Antialias value */
 
   ++t1_initialized;
 
@@ -98,10 +64,8 @@ Shuts the t1lib font rendering engine down.
 
 void
 i_close_t1(void) {
-  i_mutex_lock(mutex);
   T1_CloseLib();
   t1_initialized = 0;
-  i_mutex_unlock(mutex);
 }
 
 
@@ -116,27 +80,21 @@ Loads the fonts with the given filenames, returns its font id
 =cut
 */
 
-i_t1_font_t
+int
 i_t1_new(char *pfb,char *afm) {
   int font_id;
-  i_t1_font_t font;
-
-  i_mutex_lock(mutex);
 
   i_clear_error();
 
-  if (!t1_initialized && i_init_t1_low(0)) {
-    i_mutex_unlock(mutex);
-    return NULL;
-  }
+  if (!t1_initialized && i_init_t1(0))
+    return -1;
 
   mm_log((1,"i_t1_new(pfb %s,afm %s)\n",pfb,(afm?afm:"NULL")));
   font_id = T1_AddFont(pfb);
   if (font_id<0) {
     mm_log((1,"i_t1_new: Failed to load pfb file '%s' - return code %d.\n",pfb,font_id));
     t1_push_error();
-    i_mutex_unlock(mutex);
-    return NULL;
+    return font_id;
   }
   
   if (afm != NULL) {
@@ -149,48 +107,33 @@ i_t1_new(char *pfb,char *afm) {
     t1_push_error();
     i_push_error(0, "loading font");
     T1_DeleteFont(font_id);
-    i_mutex_unlock(mutex);
-    return NULL;
+    return -1;
   }
 
   ++t1_active_fonts;
 
-  i_mutex_unlock(mutex);
+  mm_log((1, "i_t1_new() -> %d\n", font_id));
 
-  font = mymalloc(sizeof(*font));
-  font->font_id = font_id;
-
-  mm_log((1, "i_t1_new() -> %p (%d)\n", font, font_id));
-
-  return font;
+  return font_id;
 }
 
 /*
-=item i_t1_destroy(font)
+=item i_t1_destroy(font_id)
 
 Frees resources for a t1 font with given font id.
 
-   font - font to free
+   font_id - number of the font to free
 
 =cut
 */
 
 int
-i_t1_destroy(i_t1_font_t font) {
-  int result;
-
-  i_mutex_lock(mutex);
-
-  mm_log((1,"i_t1_destroy(font %p (%d))\n", font, font->font_id));
+i_t1_destroy(int font_id) {
+  mm_log((1,"i_t1_destroy(font_id %d)\n",font_id));
 
   --t1_active_fonts;
 
-  result = T1_DeleteFont(font->font_id);
-  myfree(font);
-
-  i_mutex_unlock(mutex);
-
-  return result;
+  return T1_DeleteFont(font_id);
 }
 
 
@@ -201,19 +144,13 @@ Sets the antialiasing level of the t1 library.
 
    st - 0 =  NONE, 1 = LOW, 2 =  HIGH.
 
-Must be called with the mutex locked.
-
 =cut
 */
 
-static void
+void
 i_t1_set_aa(int st) {
   int i;
   unsigned long cst[17];
-
-  if (t1_aa == st)
-    return;
-
   switch(st) {
   case 0:
     T1_AASetBitsPerPixel( 8 );
@@ -234,13 +171,11 @@ i_t1_set_aa(int st) {
     T1_AAHSetGrayValues( cst );
     mm_log((1,"setting T1 antialias to high\n"));
   }
-  
-  t1_aa = st;
 }
 
 
 /* 
-=item i_t1_cp(im, xb, yb, channel, fontnum, points, str, len, align,aa)
+=item i_t1_cp(im, xb, yb, channel, fontnum, points, str, len, align)
 
 Interface to text rendering into a single channel in an image
 
@@ -253,35 +188,20 @@ Interface to text rendering into a single channel in an image
    str     - string to render
    len     - string length
    align   - (0 - top of font glyph | 1 - baseline )
-   aa      - anti-aliasing level
 
 =cut
 */
 
 undef_int
-i_t1_cp(i_t1_font_t font, i_img *im,i_img_dim xb,i_img_dim yb,int channel,double points,char* str,size_t len,int align, int utf8, char const *flags, int aa) {
+i_t1_cp(i_img *im,i_img_dim xb,i_img_dim yb,int channel,int fontnum,double points,char* str,size_t len,int align, int utf8, char const *flags) {
   GLYPH *glyph;
   int xsize,ysize,x,y;
   i_color val;
   int mod_flags = t1_get_flags(flags);
-  int fontnum = font->font_id;
 
   unsigned int ch_mask_store;
   
-  i_clear_error();
-
-  mm_log((1, "i_t1_cp(font %p (%d), im %p, (xb,yb)=" i_DFp ", channel %d, points %g, str %p, len %u, align %d, utf8 %d, flags '%s', aa %d)\n",
-	  font, fontnum, im, i_DFcp(xb, yb), channel, points, str, (unsigned)len, align, utf8, flags, aa));
-
-  if (im == NULL) {
-    mm_log((1,"i_t1_cp: Null image in input\n"));
-    i_push_error(0, "null image");
-    return(0);
-  }
-
-  i_mutex_lock(mutex);
-
-  i_t1_set_aa(aa);
+  if (im == NULL) { mm_log((1,"i_t1_cp: Null image in input\n")); return(0); }
 
   if (utf8) {
     int worklen;
@@ -292,12 +212,8 @@ i_t1_cp(i_t1_font_t font, i_img *im,i_img_dim xb,i_img_dim yb,int channel,double
   else {
     glyph=T1_AASetString( fontnum, str, len, 0, mod_flags, points, NULL);
   }
-  if (glyph == NULL) {
-    t1_push_error();
-    i_push_error(0, "i_t1_cp: T1_AASetString failed");
-    i_mutex_unlock(mutex);
+  if (glyph == NULL)
     return 0;
-  }
 
   mm_log((1,"metrics: ascent: %d descent: %d\n",glyph->metrics.ascent,glyph->metrics.descent));
   mm_log((1," leftSideBearing: %d rightSideBearing: %d\n",glyph->metrics.leftSideBearing,glyph->metrics.rightSideBearing));
@@ -320,9 +236,6 @@ i_t1_cp(i_t1_font_t font, i_img *im,i_img_dim xb,i_img_dim yb,int channel,double
   }
   
   im->ch_mask=ch_mask_store;
-
-  i_mutex_unlock(mutex);
-
   return 1;
 }
 
@@ -354,19 +267,14 @@ function to get a strings bounding box given the font id and sizes
 */
 
 int
-i_t1_bbox(i_t1_font_t font, double points,const char *str,size_t len, i_img_dim cords[6], int utf8,char const *flags) {
+i_t1_bbox(int fontnum, double points,const char *str,size_t len, i_img_dim cords[6], int utf8,char const *flags) {
   BBox bbox;
   BBox gbbox;
   int mod_flags = t1_get_flags(flags);
   i_img_dim advance;
-  int fontnum = font->font_id;
-  int space_position;
-
-  i_mutex_lock(mutex);
-
-  space_position = T1_GetEncodingIndex(fontnum, "space");
+  int space_position = T1_GetEncodingIndex(fontnum, "space");
   
-  mm_log((1,"i_t1_bbox(font %p (%d),points %.2f,str '%.*s', len %d)\n",font, fontnum,points,len,str,len));
+  mm_log((1,"i_t1_bbox(fontnum %d,points %.2f,str '%.*s', len %d)\n",fontnum,points,len,str,len));
   T1_LoadFont(fontnum);  /* FIXME: Here a return code is ignored - haw haw haw */ 
 
   if (len == 0) {
@@ -414,14 +322,12 @@ i_t1_bbox(i_t1_font_t font, double points,const char *str,size_t len, i_img_dim 
   cords[BBOX_RIGHT_BEARING] = 
     cords[BBOX_ADVANCE_WIDTH] - cords[BBOX_POS_WIDTH];
 
-  i_mutex_unlock(mutex);
-
   return BBOX_RIGHT_BEARING+1;
 }
 
 
 /*
-=item i_t1_text(im, xb, yb, cl, fontnum, points, str, len, align, aa)
+=item i_t1_text(im, xb, yb, cl, fontnum, points, str, len, align)
 
 Interface to text rendering in a single color onto an image
 
@@ -434,33 +340,18 @@ Interface to text rendering in a single color onto an image
    str     - char pointer to string to render
    len     - string length
    align   - (0 - top of font glyph | 1 - baseline )
-   aa      - anti-aliasing level
 
 =cut
 */
 
 undef_int
-i_t1_text(i_t1_font_t font, i_img *im, i_img_dim xb, i_img_dim yb,const i_color *cl, double points,const char* str,size_t len,int align, int utf8, char const *flags, int aa) {
+i_t1_text(i_img *im, i_img_dim xb, i_img_dim yb,const i_color *cl,int fontnum, double points,const char* str,size_t len,int align, int utf8, char const *flags) {
   GLYPH *glyph;
   int xsize,ysize,y;
   int mod_flags = t1_get_flags(flags);
   i_render *r;
-  int fontnum = font->font_id;
 
-  mm_log((1, "i_t1_text(font %p (%d), im %p, (xb,yb)=" i_DFp ", cl (%d,%d,%d,%d), points %g, str %p, len %u, align %d, utf8 %d, flags '%s', aa %d)\n",
-	  font, fontnum, im, i_DFcp(xb, yb), cl->rgba.r, cl->rgba.g, cl->rgba.b, cl->rgba.a, points, str, (unsigned)len, align, utf8, flags, aa));
-
-  i_clear_error();
-
-  if (im == NULL) {
-    i_push_error(0, "null image");
-    mm_log((1,"i_t1_text: Null image in input\n"));
-    return(0);
-  }
-
-  i_mutex_lock(mutex);
-
-  i_t1_set_aa(aa);
+  if (im == NULL) { mm_log((1,"i_t1_cp: Null image in input\n")); return(0); }
 
   if (utf8) {
     int worklen;
@@ -472,13 +363,8 @@ i_t1_text(i_t1_font_t font, i_img *im, i_img_dim xb, i_img_dim yb,const i_color 
     /* T1_AASetString() accepts a char * not a const char */
     glyph=T1_AASetString( fontnum, (char *)str, len, 0, mod_flags, points, NULL);
   }
-  if (glyph == NULL) {
-    mm_log((1, "T1_AASetString failed\n"));
-    t1_push_error();
-    i_push_error(0, "i_t1_text(): T1_AASetString failed");
-    i_mutex_unlock(mutex);
+  if (glyph == NULL)
     return 0;
-  }
 
   mm_log((1,"metrics:  ascent: %d descent: %d\n",glyph->metrics.ascent,glyph->metrics.descent));
   mm_log((1," leftSideBearing: %d rightSideBearing: %d\n",glyph->metrics.leftSideBearing,glyph->metrics.rightSideBearing));
@@ -497,8 +383,6 @@ i_t1_text(i_t1_font_t font, i_img *im, i_img_dim xb, i_img_dim yb,const i_color 
     i_render_color(r, xb, yb+y, xsize, (unsigned char *)glyph->bits+y*xsize, cl);
   }
   i_render_delete(r);
-
-  i_mutex_unlock(mutex);
     
   return 1;
 }
@@ -583,20 +467,16 @@ Returns the number of characters that were checked.
 */
 
 int
-i_t1_has_chars(i_t1_font_t font, const char *text, size_t len, int utf8,
+i_t1_has_chars(int font_num, const char *text, size_t len, int utf8,
                char *out) {
   int count = 0;
-  int font_num = font->font_id;
   
-  i_mutex_lock(mutex);
-
   mm_log((1, "i_t1_has_chars(font_num %d, text %p, len %d, utf8 %d)\n", 
           font_num, text, len, utf8));
 
   i_clear_error();
   if (T1_LoadFont(font_num)) {
     t1_push_error();
-    i_mutex_unlock(mutex);
     return 0;
   }
 
@@ -606,7 +486,6 @@ i_t1_has_chars(i_t1_font_t font, const char *text, size_t len, int utf8,
       c = i_utf8_advance(&text, &len);
       if (c == ~0UL) {
         i_push_error(0, "invalid UTF8 character");
-	i_mutex_unlock(mutex);
         return 0;
       }
     }
@@ -633,13 +512,11 @@ i_t1_has_chars(i_t1_font_t font, const char *text, size_t len, int utf8,
     ++count;
   }
 
-  i_mutex_unlock(mutex);
-
   return count;
 }
 
 /*
-=item i_t1_face_name(font, name_buf, name_buf_size)
+=item i_t1_face_name(font_num, name_buf, name_buf_size)
 
 Copies the face name of the given C<font_num> to C<name_buf>.  Returns
 the number of characters required to store the name (which can be
@@ -653,68 +530,53 @@ will be truncated.  name_buf will always be NUL termintaed.
 */
 
 int
-i_t1_face_name(i_t1_font_t font, char *name_buf, size_t name_buf_size) {
+i_t1_face_name(int font_num, char *name_buf, size_t name_buf_size) {
   char *name;
-  int font_num = font->font_id;
-
-  i_mutex_lock(mutex);
 
   T1_errno = 0;
   if (T1_LoadFont(font_num)) {
     t1_push_error();
-    i_mutex_unlock(mutex);
     return 0;
   }
   name = T1_GetFontName(font_num);
 
   if (name) {
-    size_t len = strlen(name);
     strncpy(name_buf, name, name_buf_size);
     name_buf[name_buf_size-1] = '\0';
-    i_mutex_unlock(mutex);
-    return len + 1;
+    return strlen(name) + 1;
   }
   else {
     t1_push_error();
-    i_mutex_unlock(mutex);
     return 0;
   }
 }
 
 int
-i_t1_glyph_name(i_t1_font_t font, unsigned long ch, char *name_buf, 
+i_t1_glyph_name(int font_num, unsigned long ch, char *name_buf, 
                  size_t name_buf_size) {
   char *name;
-  int font_num = font->font_id;
 
-  i_mutex_lock(mutex);
   i_clear_error();
   if (ch > 0xFF) {
-    i_mutex_unlock(mutex);
     return 0;
   }
   if (T1_LoadFont(font_num)) {
     t1_push_error();
-    i_mutex_unlock(mutex);
     return 0;
   }
   name = T1_GetCharName(font_num, (unsigned char)ch);
   if (name) {
     if (strcmp(name, ".notdef")) {
-      size_t len = strlen(name);
       strncpy(name_buf, name, name_buf_size);
       name_buf[name_buf_size-1] = '\0';
-      i_mutex_unlock(mutex);
-      return len + 1;
+      return strlen(name) + 1;
     }
     else {
-      i_mutex_unlock(mutex);
       return 0;
     }
   }
   else {
     t1_push_error();
-    i_mutex_unlock(mutex);
     return 0;
   }
 }
@@ -732,109 +594,103 @@ t1_push_error(void) {
 
 #ifdef T1ERR_SCAN_FONT_FORMAT
   case T1ERR_SCAN_FONT_FORMAT:
-    i_push_error(T1ERR_SCAN_FONT_FORMAT, "Attempt to Load Multiple Master Font"); 
+    i_push_error(T1ERR_SCAN_FONT_FORMAT, "SCAN_FONT_FORMAT"); 
     break;
 #endif
 
 #ifdef T1ERR_SCAN_FILE_OPEN_ERR
   case T1ERR_SCAN_FILE_OPEN_ERR:
-    i_push_error(T1ERR_SCAN_FILE_OPEN_ERR, "Type 1 Font File Open Error"); 
+    i_push_error(T1ERR_SCAN_FILE_OPEN_ERR, "SCAN_FILE_OPEN_ERR"); 
     break;
 #endif
 
 #ifdef T1ERR_SCAN_OUT_OF_MEMORY
   case T1ERR_SCAN_OUT_OF_MEMORY:
-    i_push_error(T1ERR_SCAN_OUT_OF_MEMORY, "Virtual Memory Exceeded"); 
+    i_push_error(T1ERR_SCAN_OUT_OF_MEMORY, "SCAN_OUT_OF_MEMORY"); 
     break;
 #endif
 
 #ifdef T1ERR_SCAN_ERROR
   case T1ERR_SCAN_ERROR:
-    i_push_error(T1ERR_SCAN_ERROR, "Syntactical Error Scanning Font File"); 
+    i_push_error(T1ERR_SCAN_ERROR, "SCAN_ERROR"); 
     break;
 #endif
 
 #ifdef T1ERR_SCAN_FILE_EOF
   case T1ERR_SCAN_FILE_EOF:
-    i_push_error(T1ERR_SCAN_FILE_EOF, "Premature End of Font File Encountered"); 
+    i_push_error(T1ERR_SCAN_FILE_EOF, "SCAN_FILE_EOF"); 
     break;
 #endif
 
 #ifdef T1ERR_PATH_ERROR
   case T1ERR_PATH_ERROR:
-    i_push_error(T1ERR_PATH_ERROR, "Path Construction Error"); 
+    i_push_error(T1ERR_PATH_ERROR, "PATH_ERROR"); 
     break;
 #endif
 
 #ifdef T1ERR_PARSE_ERROR
   case T1ERR_PARSE_ERROR:
-    i_push_error(T1ERR_PARSE_ERROR, "Font is Corrupt"); 
+    i_push_error(T1ERR_PARSE_ERROR, "PARSE_ERROR"); 
     break;
 #endif
 
 #ifdef T1ERR_TYPE1_ABORT
   case T1ERR_TYPE1_ABORT:
-    i_push_error(T1ERR_TYPE1_ABORT, "Rasterization Aborted"); 
+    i_push_error(T1ERR_TYPE1_ABORT, "TYPE1_ABORT"); 
     break;
 #endif
 
 #ifdef T1ERR_INVALID_FONTID
   case T1ERR_INVALID_FONTID:
-    i_push_error(T1ERR_INVALID_FONTID, "Font ID Invalid in this Context"); 
+    i_push_error(T1ERR_INVALID_FONTID, "INVALID_FONTID"); 
     break;
 #endif
 
 #ifdef T1ERR_INVALID_PARAMETER
   case T1ERR_INVALID_PARAMETER:
-    i_push_error(T1ERR_INVALID_PARAMETER, "Invalid Argument in Function Call"); 
+    i_push_error(T1ERR_INVALID_PARAMETER, "INVALID_PARAMETER"); 
     break;
 #endif
 
 #ifdef T1ERR_OP_NOT_PERMITTED
   case T1ERR_OP_NOT_PERMITTED:
-    i_push_error(T1ERR_OP_NOT_PERMITTED, "Operation not Permitted"); 
+    i_push_error(T1ERR_OP_NOT_PERMITTED, "OP_NOT_PERMITTED"); 
     break;
 #endif
 
 #ifdef T1ERR_ALLOC_MEM
   case T1ERR_ALLOC_MEM:
-    i_push_error(T1ERR_ALLOC_MEM, "Memory Allocation Error"); 
+    i_push_error(T1ERR_ALLOC_MEM, "ALLOC_MEM"); 
     break;
 #endif
 
 #ifdef T1ERR_FILE_OPEN_ERR
   case T1ERR_FILE_OPEN_ERR:
-    i_push_error(T1ERR_FILE_OPEN_ERR, "Error Opening File"); 
+    i_push_error(T1ERR_FILE_OPEN_ERR, "FILE_OPEN_ERR"); 
     break;
 #endif
 
 #ifdef T1ERR_UNSPECIFIED
   case T1ERR_UNSPECIFIED:
-    i_push_error(T1ERR_UNSPECIFIED, "Unspecified T1Lib Error"); 
+    i_push_error(T1ERR_UNSPECIFIED, "UNSPECIFIED"); 
     break;
 #endif
 
 #ifdef T1ERR_NO_AFM_DATA
   case T1ERR_NO_AFM_DATA:
-    i_push_error(T1ERR_NO_AFM_DATA, "Missing AFM Data"); 
+    i_push_error(T1ERR_NO_AFM_DATA, "NO_AFM_DATA"); 
     break;
 #endif
 
 #ifdef T1ERR_X11
   case T1ERR_X11:
-    i_push_error(T1ERR_X11, "X11 Interface Error"); 
+    i_push_error(T1ERR_X11, "X11"); 
     break;
 #endif
 
 #ifdef T1ERR_COMPOSITE_CHAR
   case T1ERR_COMPOSITE_CHAR:
-    i_push_error(T1ERR_COMPOSITE_CHAR, "Missing Component of Composite Character"); 
-    break;
-#endif
-
-#ifdef T1ERR_SCAN_ENCODING
-  case T1ERR_SCAN_ENCODING:
-    i_push_error(T1ERR_SCAN_ENCODING, "Error Scanning Encoding File"); 
+    i_push_error(T1ERR_COMPOSITE_CHAR, "COMPOSITE_CHAR"); 
     break;
 #endif
 
