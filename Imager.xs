@@ -2035,6 +2035,10 @@ i_convert(src, avmain)
 	      if (len > inchan)
 		inchan = len;
 	    }
+	    else {
+	      i_push_errorf(0, "invalid matrix: element %d is not an array ref", j);
+	      XSRETURN(0);
+	    }
           }
           coeff = mymalloc(sizeof(double) * outchan * inchan);
 	  for (j = 0; j < outchan; ++j) {

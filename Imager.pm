@@ -3581,6 +3581,7 @@ sub convert {
   $new->{IMG} = i_convert($self->{IMG}, $matrix);
   unless ($new->{IMG}) {
     # most likely a bad matrix
+    i_push_error(0, "convert");
     $self->{ERRSTR} = _error_as_msg();
     return undef;
   }

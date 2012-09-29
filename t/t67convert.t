@@ -1,7 +1,7 @@
 #!perl -w
 use strict;
 use Imager qw(:all :handy);
-use Test::More tests => 27;
+use Test::More tests => 29;
 use Imager::Test qw(test_colorf_gpix is_fcolor1 is_fcolor3);
 
 -d "testout" or mkdir "testout";
@@ -139,4 +139,13 @@ SKIP:
   is($im->bits, 'double', 'check source bits');
   my $conv = $im->convert(preset => 'grey');
   is($conv->bits, 'double', 'make sure result has extra bits');
+}
+
+{ # http://rt.cpan.org/NoAuth/Bug.html?id=79922
+  # Segfault in convert with bad params
+  my $im = Imager->new(xsize => 10, ysize => 10);
+  ok(!$im->convert(matrix => [ 10, 10, 10 ]),
+     "this would crash");
+  is($im->errstr, "convert: invalid matrix: element 0 is not an array ref",
+     "check the error message");
 }
