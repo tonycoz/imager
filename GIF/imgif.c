@@ -59,16 +59,42 @@ functionality with giflib3.
 =cut
 */
 
+#if defined(GIFLIB_MAJOR) && GIFLIB_MAJOR >= 5
+#define myDGifOpen(userPtr, readFunc, Error) DGifOpen((userPtr), (readFunc), (Error))
+#define myEGifOpen(userPtr, readFunc, Error) EGifOpen((userPtr), (readFunc), (Error))
+#define myGifError(gif) ((gif)->Error)
+#define MakeMapObject GifMakeMapObject
+#define FreeMapObject GifFreeMapObject
+
+#else
+static GifFileType *
+myDGifOpen(void *userPtr, InputFunc readFunc, int *error) {
+  GifFileType *result = DGifOpen(userPtr, readFunc);
+  if (!result)
+    *error = GifLastError();
+
+  return result;
+}
+static GifFileType *
+myEGifOpen(void *userPtr, OutputFunc outputFunc, int *error) {
+  GifFileType *result = EGifOpen(userPtr, outputFunc);
+  if (!result)
+    *error = GifLastError();
+
+  return result;
+}
+#define myGifError(gif) GifLastError()
+
+#endif
+
 static char const *gif_error_msg(int code);
-static void gif_push_error(void);
+static void gif_push_error(int code);
 
 /* Make some variables global, so we could access them faster: */
 
-static int
+static const int
   InterlacedOffset[] = { 0, 4, 2, 1 }, /* The way Interlaced image should. */
   InterlacedJumps[] = { 8, 8, 4, 2 };    /* be read - offsets and jumps... */
-
-
 
 static
 void
@@ -138,7 +164,7 @@ i_readgif_low(GifFileType *GifFile, int **colour_table, int *colours) {
   GifByteType *Extension;
   
   GifRowType GifRow;
-  static GifColorType *ColorMapEntry;
+  GifColorType *ColorMapEntry;
   i_color col;
 
   mm_log((1,"i_readgif_low(GifFile %p, colour_table %p, colours %p)\n", GifFile, colour_table, colours));
@@ -187,7 +213,7 @@ i_readgif_low(GifFileType *GifFile, int **colour_table, int *colours) {
   /* Scan the content of the GIF file and load the image(s) in: */
   do {
     if (DGifGetRecordType(GifFile, &RecordType) == GIF_ERROR) {
-      gif_push_error();
+      gif_push_error(myGifError(GifFile));
       i_push_error(0, "Unable to get record type");
       if (colour_table && *colour_table) {
 	myfree(*colour_table);
@@ -202,7 +228,7 @@ i_readgif_low(GifFileType *GifFile, int **colour_table, int *colours) {
     switch (RecordType) {
     case IMAGE_DESC_RECORD_TYPE:
       if (DGifGetImageDesc(GifFile) == GIF_ERROR) {
-	gif_push_error();
+	gif_push_error(myGifError(GifFile));
 	i_push_error(0, "Unable to get image descriptor");
 	if (colour_table && *colour_table) {
 	  myfree(*colour_table);
@@ -256,7 +282,7 @@ i_readgif_low(GifFileType *GifFile, int **colour_table, int *colours) {
 	for (Count = i = 0; i < 4; i++) for (j = Row + InterlacedOffset[i]; j < Row + Height; j += InterlacedJumps[i]) {
 	  Count++;
 	  if (DGifGetLine(GifFile, GifRow, Width) == GIF_ERROR) {
-	    gif_push_error();
+	    gif_push_error(myGifError(GifFile));
 	    i_push_error(0, "Reading GIF line");
 	    if (colour_table && *colour_table) {
 	      myfree(*colour_table);
@@ -281,7 +307,7 @@ i_readgif_low(GifFileType *GifFile, int **colour_table, int *colours) {
       else {
 	for (i = 0; i < Height; i++) {
 	  if (DGifGetLine(GifFile, GifRow, Width) == GIF_ERROR) {
-	    gif_push_error();
+	    gif_push_error(myGifError(GifFile));
 	    i_push_error(0, "Reading GIF line");
 	    if (colour_table && *colour_table) {
 	      myfree(*colour_table);
@@ -307,7 +333,7 @@ i_readgif_low(GifFileType *GifFile, int **colour_table, int *colours) {
     case EXTENSION_RECORD_TYPE:
       /* Skip any extension blocks in file: */
       if (DGifGetExtension(GifFile, &ExtCode, &Extension) == GIF_ERROR) {
-	gif_push_error();
+	gif_push_error(myGifError(GifFile));
 	i_push_error(0, "Reading extension record");
 	if (colour_table && *colour_table) {
 	  myfree(*colour_table);
@@ -320,7 +346,7 @@ i_readgif_low(GifFileType *GifFile, int **colour_table, int *colours) {
       }
       while (Extension != NULL) {
 	if (DGifGetExtensionNext(GifFile, &Extension) == GIF_ERROR) {
-	  gif_push_error();
+	  gif_push_error(myGifError(GifFile));
 	  i_push_error(0, "reading next block of extension");
 	  if (colour_table && *colour_table) {
 	    myfree(*colour_table);
@@ -343,7 +369,7 @@ i_readgif_low(GifFileType *GifFile, int **colour_table, int *colours) {
   myfree(GifRow);
   
   if (DGifCloseFile(GifFile) == GIF_ERROR) {
-    gif_push_error();
+    gif_push_error(myGifError(GifFile));
     i_push_error(0, "Closing GIF file object");
     if (colour_table && *colour_table) {
       myfree(*colour_table);
@@ -363,7 +389,8 @@ i_readgif_low(GifFileType *GifFile, int **colour_table, int *colours) {
 Internal function called by i_readgif_multi_low() in error handling
 
 */
-static void free_images(i_img **imgs, int count) {
+static void
+free_images(i_img **imgs, int count) {
   int i;
   
   if (count) {
@@ -457,7 +484,8 @@ standard.
 =cut
 */
 
-i_img **i_readgif_multi_low(GifFileType *GifFile, int *count, int page) {
+i_img **
+i_readgif_multi_low(GifFileType *GifFile, int *count, int page) {
   i_img *img;
   int i, j, Size, Width, Height, ExtCode, Count;
   int ImageNum = 0, BackGround = 0, ColorMapSize = 0;
@@ -497,7 +525,7 @@ i_img **i_readgif_multi_low(GifFileType *GifFile, int *count, int page) {
   /* Scan the content of the GIF file and load the image(s) in: */
   do {
     if (DGifGetRecordType(GifFile, &RecordType) == GIF_ERROR) {
-      gif_push_error();
+      gif_push_error(myGifError(GifFile));
       i_push_error(0, "Unable to get record type");
       free_images(results, *count);
       DGifCloseFile(GifFile);
@@ -510,7 +538,7 @@ i_img **i_readgif_multi_low(GifFileType *GifFile, int *count, int page) {
     switch (RecordType) {
     case IMAGE_DESC_RECORD_TYPE:
       if (DGifGetImageDesc(GifFile) == GIF_ERROR) {
-	gif_push_error();
+	gif_push_error(myGifError(GifFile));
 	i_push_error(0, "Unable to get image descriptor");
         free_images(results, *count);
 	DGifCloseFile(GifFile);
@@ -643,7 +671,7 @@ i_img **i_readgif_multi_low(GifFileType *GifFile, int *count, int page) {
 		 j += InterlacedJumps[i]) {
 	      Count++;
 	      if (DGifGetLine(GifFile, GifRow, Width) == GIF_ERROR) {
-		gif_push_error();
+		gif_push_error(myGifError(GifFile));
 		i_push_error(0, "Reading GIF line");
 		free_images(results, *count);
 		DGifCloseFile(GifFile);
@@ -672,7 +700,7 @@ i_img **i_readgif_multi_low(GifFileType *GifFile, int *count, int page) {
 	else {
 	  for (i = 0; i < Height; i++) {
 	    if (DGifGetLine(GifFile, GifRow, Width) == GIF_ERROR) {
-	      gif_push_error();
+	      gif_push_error(myGifError(GifFile));
 	      i_push_error(0, "Reading GIF line");
 	      free_images(results, *count);
 	      DGifCloseFile(GifFile);
@@ -713,7 +741,7 @@ i_img **i_readgif_multi_low(GifFileType *GifFile, int *count, int page) {
 	/* giflib does't have an interface to skip the image data */
 	for (i = 0; i < Height; i++) {
 	  if (DGifGetLine(GifFile, GifRow, Width) == GIF_ERROR) {
-	    gif_push_error();
+	    gif_push_error(myGifError(GifFile));
 	    i_push_error(0, "Reading GIF line");
 	    free_images(results, *count);
 	    myfree(GifRow);
@@ -735,7 +763,7 @@ i_img **i_readgif_multi_low(GifFileType *GifFile, int *count, int page) {
     case EXTENSION_RECORD_TYPE:
       /* Skip any extension blocks in file: */
       if (DGifGetExtension(GifFile, &ExtCode, &Extension) == GIF_ERROR) {
-	gif_push_error();
+	gif_push_error(myGifError(GifFile));
 	i_push_error(0, "Reading extension record");
         free_images(results, *count);
 	myfree(GifRow);
@@ -760,7 +788,7 @@ i_img **i_readgif_multi_low(GifFileType *GifFile, int *count, int page) {
       if (ExtCode == 0xFF && *Extension == 11) {
         if (memcmp(Extension+1, "NETSCAPE2.0", 11) == 0) {
           if (DGifGetExtensionNext(GifFile, &Extension) == GIF_ERROR) {
-            gif_push_error();
+            gif_push_error(myGifError(GifFile));
             i_push_error(0, "reading loop extension");
             free_images(results, *count);
 	    myfree(GifRow);
@@ -790,7 +818,7 @@ i_img **i_readgif_multi_low(GifFileType *GifFile, int *count, int page) {
       }
       while (Extension != NULL) {
 	if (DGifGetExtensionNext(GifFile, &Extension) == GIF_ERROR) {
-	  gif_push_error();
+	  gif_push_error(myGifError(GifFile));
 	  i_push_error(0, "reading next block of extension");
           free_images(results, *count);
 	  myfree(GifRow);
@@ -819,7 +847,7 @@ i_img **i_readgif_multi_low(GifFileType *GifFile, int *count, int page) {
   myfree(GifRow);
   
   if (DGifCloseFile(GifFile) == GIF_ERROR) {
-    gif_push_error();
+    gif_push_error(myGifError(GifFile));
     i_push_error(0, "Closing GIF file object");
     free_images(results, *count);
     return NULL;
@@ -846,11 +874,12 @@ static int io_glue_read_cb(GifFileType *gft, GifByteType *buf, int length);
 i_img **
 i_readgif_multi_wiol(io_glue *ig, int *count) {
   GifFileType *GifFile;
-  
+  int gif_error;
+
   i_clear_error();
   
-  if ((GifFile = DGifOpen((void *)ig, io_glue_read_cb )) == NULL) {
-    gif_push_error();
+  if ((GifFile = myDGifOpen((void *)ig, io_glue_read_cb, &gif_error )) == NULL) {
+    gif_push_error(gif_error);
     i_push_error(0, "Cannot create giflib callback object");
     mm_log((1,"i_readgif_multi_wiol: Unable to open callback datasource.\n"));
     return NULL;
@@ -869,11 +898,12 @@ io_glue_read_cb(GifFileType *gft, GifByteType *buf, int length) {
 i_img *
 i_readgif_wiol(io_glue *ig, int **color_table, int *colors) {
   GifFileType *GifFile;
+  int gif_error;
 
   i_clear_error();
 
-  if ((GifFile = DGifOpen((void *)ig, io_glue_read_cb )) == NULL) {
-    gif_push_error();
+  if ((GifFile = myDGifOpen((void *)ig, io_glue_read_cb, &gif_error )) == NULL) {
+    gif_push_error(gif_error);
     i_push_error(0, "Cannot create giflib callback object");
     mm_log((1,"i_readgif_wiol: Unable to open callback datasource.\n"));
     return NULL;
@@ -924,6 +954,7 @@ Returns NULL if the page isn't found.
 i_img *
 i_readgif_single_wiol(io_glue *ig, int page) {
   GifFileType *GifFile;
+  int gif_error;
 
   i_clear_error();
   if (page < 0) {
@@ -931,8 +962,9 @@ i_readgif_single_wiol(io_glue *ig, int page) {
     return NULL;
   }
 
-  if ((GifFile = DGifOpen((void *)ig, io_glue_read_cb )) == NULL) {
-    gif_push_error();
+
+  if ((GifFile = myDGifOpen((void *)ig, io_glue_read_cb, &gif_error )) == NULL) {
+    gif_push_error(gif_error);
     i_push_error(0, "Cannot create giflib callback object");
     mm_log((1,"i_readgif_wiol: Unable to open callback datasource.\n"));
     return NULL;
@@ -958,7 +990,7 @@ do_write(GifFileType *gf, int interlace, i_img *img, i_palidx *data) {
     for (i = 0; i < 4; ++i) {
       for (j = InterlacedOffset[i]; j < img->ysize; j += InterlacedJumps[i]) {
 	if (EGifPutLine(gf, data+j*img->xsize, img->xsize) == GIF_ERROR) {
-	  gif_push_error();
+	  gif_push_error(myGifError(gf));
 	  i_push_error(0, "Could not save image data:");
 	  mm_log((1, "Error in EGifPutLine\n"));
 	  EGifCloseFile(gf);
@@ -971,7 +1003,7 @@ do_write(GifFileType *gf, int interlace, i_img *img, i_palidx *data) {
     int y;
     for (y = 0; y < img->ysize; ++y) {
       if (EGifPutLine(gf, data, img->xsize) == GIF_ERROR) {
-	gif_push_error();
+	gif_push_error(myGifError(gf));
 	i_push_error(0, "Could not save image data:");
 	mm_log((1, "Error in EGifPutLine\n"));
 	EGifCloseFile(gf);
@@ -993,7 +1025,9 @@ Returns non-zero on success.
 
 =cut
 */
-static int do_gce(GifFileType *gf, i_img *img, int want_trans, int trans_index)
+
+static int
+do_gce(GifFileType *gf, i_img *img, int want_trans, int trans_index)
 {
   unsigned char gce[4] = {0};
   int want_gce = 0;
@@ -1022,7 +1056,7 @@ static int do_gce(GifFileType *gf, i_img *img, int want_trans, int trans_index)
   }
   if (want_gce) {
     if (EGifPutExtension(gf, 0xF9, sizeof(gce), gce) == GIF_ERROR) {
-      gif_push_error();
+      gif_push_error(myGifError(gf));
       i_push_error(0, "Could not save GCE");
     }
   }
@@ -1036,7 +1070,9 @@ Write any comments in the image.
 
 =cut
 */
-static int do_comments(GifFileType *gf, i_img *img) {
+
+static int
+do_comments(GifFileType *gf, i_img *img) {
   int pos = -1;
 
   while (i_tags_find(&img->tags, "gif_comment", pos+1, &pos)) {
@@ -1074,7 +1110,9 @@ writing extension blocks so that they could only be written to files.
 
 =cut
 */
-static int do_ns_loop(GifFileType *gf, i_img *img)
+
+static int
+do_ns_loop(GifFileType *gf, i_img *img)
 {
   /* EGifPutExtension() doesn't appear to handle application 
      extension blocks in any way
@@ -1091,19 +1129,33 @@ static int do_ns_loop(GifFileType *gf, i_img *img)
   if (i_tags_get_int(&img->tags, "gif_loop", 0, &loop_count)) {
     unsigned char nsle[12] = "NETSCAPE2.0";
     unsigned char subblock[3];
-    if (EGifPutExtensionFirst(gf, APPLICATION_EXT_FUNC_CODE, 11, nsle) == GIF_ERROR) {
-      gif_push_error();
-      i_push_error(0, "writing loop extension");
-      return 0;
-    }
+
     subblock[0] = 1;
     subblock[1] = loop_count % 256;
     subblock[2] = loop_count / 256;
+
+#if defined(GIFLIB_MAJOR) && GIFLIB_MAJOR >= 5
+    if (EGifPutExtensionLeader(gf, APPLICATION_EXT_FUNC_CODE) == GIF_ERROR
+	|| EGifPutExtensionBlock(gf, 11, nsle) == GIF_ERROR
+	|| EGifPutExtensionBlock(gf, 3, subblock) == GIF_ERROR
+	|| EGifPutExtensionTrailer(gf) == GIF_ERROR) {
+      gif_push_error(myGifError(gf));
+      i_push_error(0, "writing loop extension");
+      return 0;
+    }
+	
+#else
+    if (EGifPutExtensionFirst(gf, APPLICATION_EXT_FUNC_CODE, 11, nsle) == GIF_ERROR) {
+      gif_push_error(myGifError(gf));
+      i_push_error(0, "writing loop extension");
+      return 0;
+    }
     if (EGifPutExtensionLast(gf, APPLICATION_EXT_FUNC_CODE, 3, subblock) == GIF_ERROR) {
-      gif_push_error();
+      gif_push_error(myGifError(gf));
       i_push_error(0, "writing loop extension sub-block");
       return 0;
     }
+#endif
   }
 
   return 1;
@@ -1117,8 +1169,8 @@ Create a giflib color map object from an Imager color map.
 =cut
 */
 
-static ColorMapObject *make_gif_map(i_quantize *quant, i_img *img, 
-                                    int want_trans) {
+static ColorMapObject *
+make_gif_map(i_quantize *quant, i_img *img, int want_trans) {
   GifColorType colors[256];
   int i;
   int size = quant->mc_count;
@@ -1153,7 +1205,6 @@ static ColorMapObject *make_gif_map(i_quantize *quant, i_img *img,
   map = MakeMapObject(map_size, colors);
   mm_log((1, "XXX map is at %p and colors at %p\n", map, map->Colors));
   if (!map) {
-    gif_push_error();
     i_push_error(0, "Could not create color map object");
     return NULL;
   }
@@ -1190,10 +1241,14 @@ If t/t105gif.t crashes here then run Makefile.PL with
 
 or install a less buggy giflib.
 
+This code is completely unnecessary in giflib 5
+
 =cut
 */
 
-static void gif_set_version(i_quantize *quant, i_img **imgs, int count) {
+static void
+gif_set_version(i_quantize *quant, i_img **imgs, int count) {
+#if !defined(GIFLIB_MAJOR) || GIFLIB_MAJOR < 5
   int need_89a = 0;
   int temp;
   int i;
@@ -1224,6 +1279,7 @@ static void gif_set_version(i_quantize *quant, i_img **imgs, int count) {
      EGifSetGifVersion("89a");
   else
      EGifSetGifVersion("87a");
+#endif
 }
 
 static int 
@@ -1506,7 +1562,7 @@ i_writegif_low(i_quantize *quant, GifFileType *gf, i_img **imgs, int count) {
     myfree(localmaps);
     myfree(glob_imgs);
     quant->mc_colors = orig_colors;
-    gif_push_error();
+    gif_push_error(myGifError(gf));
     i_push_error(0, "Could not save screen descriptor");
     FreeMapObject(map);
     myfree(result);
@@ -1614,7 +1670,7 @@ i_writegif_low(i_quantize *quant, GifFileType *gf, i_img **imgs, int count) {
     myfree(localmaps);
     myfree(glob_imgs);
     quant->mc_colors = orig_colors;
-    gif_push_error();
+    gif_push_error(myGifError(gf));
     i_push_error(0, "Could not save image descriptor");
     EGifCloseFile(gf);
     mm_log((1, "Error in EGifPutImageDesc."));
@@ -1731,7 +1787,7 @@ i_writegif_low(i_quantize *quant, GifFileType *gf, i_img **imgs, int count) {
       myfree(localmaps);
       myfree(glob_imgs);
       quant->mc_colors = orig_colors;
-      gif_push_error();
+      gif_push_error(myGifError(gf));
       i_push_error(0, "Could not save image descriptor");
       myfree(result);
       if (map)
@@ -1759,7 +1815,7 @@ i_writegif_low(i_quantize *quant, GifFileType *gf, i_img **imgs, int count) {
     myfree(glob_colors);
     myfree(localmaps);
     myfree(glob_imgs);
-    gif_push_error();
+    gif_push_error(myGifError(gf));
     i_push_error(0, "Could not close GIF file");
     mm_log((1, "Error in EGifCloseFile\n"));
     return 0;
@@ -1795,14 +1851,15 @@ undef_int
 i_writegif_wiol(io_glue *ig, i_quantize *quant, i_img **imgs,
                 int count) {
   GifFileType *GifFile;
+  int gif_error;
   int result;
 
   i_clear_error();
 
   gif_set_version(quant, imgs, count);
   
-  if ((GifFile = EGifOpen((void *)ig, io_glue_write_cb )) == NULL) {
-    gif_push_error();
+  if ((GifFile = myEGifOpen((void *)ig, io_glue_write_cb, &gif_error )) == NULL) {
+    gif_push_error(gif_error);
     i_push_error(0, "Cannot create giflib callback object");
     mm_log((1,"i_writegif_wiol: Unable to open callback datasource.\n"));
     return 0;
@@ -1822,15 +1879,16 @@ i_writegif_wiol(io_glue *ig, i_quantize *quant, i_img **imgs,
 Grabs the most recent giflib error code from GifLastError() and 
 returns a string that describes that error.
 
-The returned pointer points to a static buffer, either from a literal
-C string or a static buffer.
+Returns NULL for unknown error codes.
 
 =cut
 */
 
-static char const *gif_error_msg(int code) {
-  static char msg[80];
-
+static char const *
+gif_error_msg(int code) {
+#if defined(GIFLIB_MAJOR) && GIFLIB_MAJOR >= 5
+  return GifErrorString(code);
+#else
   switch (code) {
   case E_GIF_ERR_OPEN_FAILED: /* should not see this */
     return "Failed to open given file";
@@ -1902,17 +1960,13 @@ static char const *gif_error_msg(int code) {
     return "Unexpected EOF - invalid file";
 
   default:
-#ifdef IMAGER_SNPRINTF
-    snprintf(msg, sizeof(msg), "Unknown giflib error code %d", code);
-#else
-    sprintf(msg, "Unknown giflib error code %d", code);
-#endif
-    return msg;
+    return NULL;
   }
+#endif
 }
 
 /*
-=item gif_push_error()
+=item gif_push_error(code)
 
 Utility function that takes the current GIF error code, converts it to
 an error message and pushes it on the error stack.
@@ -1920,27 +1974,16 @@ an error message and pushes it on the error stack.
 =cut
 */
 
-static void gif_push_error(void) {
-  int code = GifLastError(); /* clears saved error */
-
-  i_push_error(code, gif_error_msg(code));
+static void
+gif_push_error(int code) {
+  const char *msg = gif_error_msg(code);
+  if (msg)
+    i_push_error(code, msg);
+  else
+    i_push_errorf(code, "Unknown GIF error %d", code);
 }
 
 /*
-=head1 BUGS
-
-The Netscape loop extension isn't implemented.  Giflib's extension
-writing code doesn't seem to support writing named extensions in this 
-form.
-
-A bug in giflib is tickled by the i_writegif_callback().  This isn't a
-problem on ungiflib, but causes a SEGV on giflib.  A patch is provided
-in t/t10formats.t
-
-The GIF file tag (GIF87a vs GIF89a) currently isn't set.  Using the
-supplied interface in giflib 4.1.0 causes a SEGV in
-EGifSetGifVersion().  See L<gif_set_version> for an explanation.
-
 =head1 AUTHOR
 
 Arnar M. Hrafnkelsson, addi@umich.edu

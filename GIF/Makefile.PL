@@ -74,7 +74,7 @@ my %probe =
    inccheck => sub { -e File::Spec->catfile($_[0], "gif_lib.h") },
    libbase => "gif",
    testcode => _gif_test_code(),
-   testcodeheaders => [ "gif_lib.h", "stdio.h" ],
+   testcodeheaders => [ "stddef.h", "gif_lib.h", "stdio.h" ],
    incpath => \@incpaths,
    libpath => \@libpaths,
   );
@@ -119,8 +119,13 @@ int ver_min;
 #else
 int ver_maj = GIFLIB_MAJOR;
 int ver_min = GIFLIB_MINOR;
+int error;
 #endif
+#if defined(GIFLIB_MAJOR) && GIFLIB_MAJOR >= 5
+gf=DGifOpenFileName("testimg/expected.gif", &error);
+#else
 gf=DGifOpenFileName("testimg/expected.gif");
+#endif
 if (!gf) {
   fprintf(stderr, "GIF: Cannot open testimg/expected.gif\n");
   return 1;
@@ -129,9 +134,11 @@ if (gf->SWidth != 16 || gf->SHeight != 16) {
   fprintf(stderr, "GIF: bad screen description (%d x %d)\n", gf->SWidth, gf->SHeight);
   return 1;
 }
-/* crashes in older versions of giflib */
+#if !defined(GIFLIB_MAJOR) || GIFLIB_MAJOR < 5
+/* crashes in older versions of giflib, not used in giflib 5 */
 EGifSetGifVersion("89a");
 EGifSetGifVersion("87a");
+#endif
 
 #ifdef GIF_LIB_VERSION
 /* skip the " Version " */
