@@ -1,3 +1,6 @@
+
+ - previously the probe step for freetype-config would fail on cygwin
+
 Imager-Font-FT2 0.85
 ====================
 

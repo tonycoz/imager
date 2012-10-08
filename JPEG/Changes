@@ -1,3 +1,5 @@
+ - avoid static variables when capturing IPTC data
+
 Imager-File-JPEG 0.84
 =====================
 

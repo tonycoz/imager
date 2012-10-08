@@ -1,3 +1,6 @@
+ - match Imager::Font;:T1's error message translations to those from
+   later versions of T1Lib.
+
 Imager::Font::T1 1.017
 ======================
 

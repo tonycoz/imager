@@ -3,6 +3,23 @@ Imager release history.  Older releases can be found in Changes.old
  - support for giflib 5.0.
    https://rt.cpan.org/Ticket/Display.html?id=79029
 
+ - previously the probe step for freetype-config would fail on cygwin
+
+ - avoid static variables when capturing IPTC data from JPEG files
+
+ - match Imager::Font;:T1's error message translations to those from
+   later versions of T1Lib.
+
+ - for libtiff versions that support extended warning handlers (3.8.0
+   or later), use them to avoid some global variables.
+
+ - catch an invalid matrix parameter to convert() instead of crashing
+   https://rt.cpan.org/Ticket/Display.html?id=79922
+
+ - remove the 16-bit/sample limitation from the documentation for
+   setsamples(), it hasn't applied for many releases.
+   https://rt.cpan.org/Ticket/Display.html?id=79989
+
 Imager 0.92 - 14 Aug 2012
 ===========
 

@@ -4,6 +4,9 @@ Imager-File-GIF 0.85
  - add giflib 5.0 support.
    https://rt.cpan.org/Ticket/Display.html?id=79029
 
+ - previously a transparency enabled write (the default) would always
+   use a GIF89a header even if none of the images were transparent.
+
 Imager-File-GIF 0.84 - released with Imager 0.92_01
 ====================
 
