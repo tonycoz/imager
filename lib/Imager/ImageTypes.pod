@@ -757,6 +757,9 @@ You can retrieve tags from an image using the tags() method, you can
 get all of the tags in an image, as a list of array references, with
 the code or name of the tag followed by the value of the tag.
 
+Imager's support for fairly limited, for access to pretty much all
+image metadata you may want to try L<Image::ExifTool>.
+
 =over
 
 =item tags()

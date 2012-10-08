@@ -4751,7 +4751,7 @@ matrix - L<Imager::Matrix2d>,
 L<Imager::Engines/"Matrix Transformations">,
 L<Imager::Font/transform()>
 
-metadata, image - L<Imager::ImageTypes/"Tags">
+metadata, image - L<Imager::ImageTypes/"Tags">, L<Image::ExifTool>
 
 mosaic - L<Imager::Filters/mosaic>
 
@@ -4954,6 +4954,8 @@ Other perl imaging modules include:
 
 L<GD>(3), L<Image::Magick>(3), L<Graphics::Magick>(3),
 L<Prima::Image>, L<IPA>.
+
+For manipulating image metadata see L<Image::ExifTool>.
 
 If you're trying to use Imager for array processing, you should
 probably using L<PDL>.
