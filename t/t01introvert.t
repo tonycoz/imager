@@ -3,7 +3,7 @@
 # to make sure we get expected values
 
 use strict;
-use Test::More tests => 431;
+use Test::More tests => 433;
 
 BEGIN { use_ok(Imager => qw(:handy :all)) }
 
@@ -846,6 +846,11 @@ my $psamp_outside_error = "Image position outside of image";
   is($im->setsamples(y => 5),
      undef, "setsamples with no data");
   is($im->errstr, "setsamples: data parameter missing",
+     "check error message");
+
+  is($im->setsamples(y => 5, data => undef),
+     undef, "setsamples with undef data");
+  is($im->errstr, "setsamples: data parameter not defined",
      "check error message");
 
   my $imempty = Imager->new;

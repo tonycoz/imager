@@ -3417,16 +3417,33 @@ sub getsamples {
 
 sub setsamples {
   my $self = shift;
-  my %opts = ( x => 0, offset => 0, @_ );
 
   unless ($self->{IMG}) {
     $self->_set_error('setsamples: empty input image');
     return;
   }
 
-  my $data = $opts{data};
-  unless(defined $data) {
+  my %opts = ( x => 0, offset => 0 );
+  my $data_index;
+  # avoid duplicating the data parameter, it may be a large scalar
+  my $i = 0;
+  while ($i < @_ -1) {
+    if ($_[$i] eq 'data') {
+      $data_index = $i+1;
+    }
+    else {
+      $opts{$_[$i]} = $_[$i+1];
+    }
+
+    $i += 2;
+  }
+
+  unless(defined $data_index) {
     $self->_set_error('setsamples: data parameter missing');
+    return;
+  }
+  unless (defined $_[$data_index]) {
+    $self->_set_error('setsamples: data parameter not defined');
     return;
   }
 
@@ -3439,22 +3456,22 @@ sub setsamples {
   my $count;
   if ($type eq '8bit') {
     $count = i_psamp($self->{IMG}, $opts{x}, $opts{y}, $opts{channels},
-		     $data, $opts{offset}, $width);
+		     $_[$data_index], $opts{offset}, $width);
   }
   elsif ($type eq 'float') {
     $count = i_psampf($self->{IMG}, $opts{x}, $opts{y}, $opts{channels},
-		      $data, $opts{offset}, $width);
+		      $_[$data_index], $opts{offset}, $width);
   }
   elsif ($type =~ /^([0-9]+)bit$/) {
     my $bits = $1;
 
-    unless (ref $data) {
+    unless (ref $_[$data_index]) {
       $self->_set_error("setsamples: data must be an array ref for type not 8bit or float");
       return;
     }
 
     $count = i_psamp_bits($self->{IMG}, $opts{x}, $opts{y}, $bits,
-			  $opts{channels}, $data, $opts{offset}, 
+			  $opts{channels}, $_[$data_index], $opts{offset}, 
 			  $width);
   }
   else {
