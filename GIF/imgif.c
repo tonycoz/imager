@@ -1253,26 +1253,27 @@ gif_set_version(i_quantize *quant, i_img **imgs, int count) {
   int temp;
   int i;
 
-  if (quant->transp != tr_none)
-    need_89a = 1;
-  else {
-    for (i = 0; i < count; ++i) {
-      if (i_tags_get_int(&imgs[i]->tags, "gif_delay", 0, &temp)) { 
-        need_89a = 1; 
-        break;
-      }
-      if (i_tags_get_int(&imgs[i]->tags, "gif_user_input", 0, &temp) && temp) {
-        need_89a = 1; 
-        break;
-      }
-      if (i_tags_get_int(&imgs[i]->tags, "gif_disposal", 0, &temp)) {
-        need_89a = 1;
-        break;
-      }
-      if (i_tags_get_int(&imgs[i]->tags, "gif_loop", 0, &temp)) {
-        need_89a = 1;
-        break;
-      }
+  for (i = 0; i < count; ++i) {
+    if (quant->transp != tr_none &&
+	(imgs[i]->channels == 2 || imgs[i]->channels == 4)) {
+      need_89a = 1;
+      break;
+    }
+    if (i_tags_get_int(&imgs[i]->tags, "gif_delay", 0, &temp)) {
+      need_89a = 1;
+      break;
+    }
+    if (i_tags_get_int(&imgs[i]->tags, "gif_user_input", 0, &temp) && temp) {
+      need_89a = 1; 
+      break;
+    }
+    if (i_tags_get_int(&imgs[i]->tags, "gif_disposal", 0, &temp)) {
+      need_89a = 1;
+      break;
+    }
+    if (i_tags_get_int(&imgs[i]->tags, "gif_loop", 0, &temp)) {
+      need_89a = 1;
+      break;
     }
   }
   if (need_89a)
