@@ -23,6 +23,9 @@ Imager release history.  Older releases can be found in Changes.old
  - note Image::ExifTool for better metadata support.
    https://rt.cpan.org/Ticket/Display.html?id=79251
 
+ - don't copy setsamples() data parameter, it may be a large scalar
+   https://rt.cpan.org/Ticket/Display.html?id=79990
+
 Imager 0.92 - 14 Aug 2012
 ===========
 
