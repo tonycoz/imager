@@ -60,6 +60,7 @@ functionality with giflib3.
 */
 
 #if defined(GIFLIB_MAJOR) && GIFLIB_MAJOR >= 5
+#define POST_SET_VERSION
 #define myDGifOpen(userPtr, readFunc, Error) DGifOpen((userPtr), (readFunc), (Error))
 #define myEGifOpen(userPtr, readFunc, Error) EGifOpen((userPtr), (readFunc), (Error))
 #define myGifError(gif) ((gif)->Error)
@@ -67,6 +68,7 @@ functionality with giflib3.
 #define FreeMapObject GifFreeMapObject
 
 #else
+#define PRE_SET_VERSION
 static GifFileType *
 myDGifOpen(void *userPtr, InputFunc readFunc, int *error) {
   GifFileType *result = DGifOpen(userPtr, readFunc);
@@ -1212,43 +1214,16 @@ make_gif_map(i_quantize *quant, i_img *img, int want_trans) {
 }
 
 /*
-=item gif_set_version(i_quantize *quant, i_img *imgs, int count)
+=item need_version_89a(i_quantize *quant, i_img *imgs, int count)
 
-We need to call EGifSetGifVersion() before opening the file - put that
-common code here.
-
-Unfortunately giflib 4.1.0 crashes when we use this.  Internally
-giflib 4.1.0 has code:
-
-  static char *GifVersionPrefix = GIF87_STAMP;
-
-and the code that sets the version internally does:
-
-  strncpy(&GifVersionPrefix[3], Version, 3);
-
-which is very broken.
-
-Failing to set the correct GIF version doesn't seem to cause a problem
-with readers.
-
-Modern versions (4.1.4 anyway) of giflib/libungif handle
-EGifSetGifVersion correctly.
-
-If t/t105gif.t crashes here then run Makefile.PL with
---nogifsetversion, eg.:
-
-  perl Makefile.PL --nogifsetversion
-
-or install a less buggy giflib.
-
-This code is completely unnecessary in giflib 5
+Return true if the file we're creating on these images needs a GIF89a
+header.
 
 =cut
 */
 
-static void
-gif_set_version(i_quantize *quant, i_img **imgs, int count) {
-#if !defined(GIFLIB_MAJOR) || GIFLIB_MAJOR < 5
+static int
+need_version_89a(i_quantize *quant, i_img **imgs, int count) {
   int need_89a = 0;
   int temp;
   int i;
@@ -1276,11 +1251,8 @@ gif_set_version(i_quantize *quant, i_img **imgs, int count) {
       break;
     }
   }
-  if (need_89a)
-     EGifSetGifVersion("89a");
-  else
-     EGifSetGifVersion("87a");
-#endif
+
+  return need_89a;
 }
 
 static int 
@@ -1857,7 +1829,9 @@ i_writegif_wiol(io_glue *ig, i_quantize *quant, i_img **imgs,
 
   i_clear_error();
 
-  gif_set_version(quant, imgs, count);
+#ifdef PRE_SET_VERSION
+  EGifSetGifVersion(need_version_89a(quant, imgs, count) ? "89a" : "87a");
+#endif
   
   if ((GifFile = myEGifOpen((void *)ig, io_glue_write_cb, &gif_error )) == NULL) {
     gif_push_error(gif_error);
@@ -1866,6 +1840,10 @@ i_writegif_wiol(io_glue *ig, i_quantize *quant, i_img **imgs,
     return 0;
   }
   
+#ifdef POST_SET_VERSION
+  EGifSetGifVersion(GifFile, need_version_89a(quant, imgs, count));
+#endif
+
   result = i_writegif_low(quant, GifFile, imgs, count);
   
   if (i_io_close(ig))

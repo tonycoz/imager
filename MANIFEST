@@ -80,6 +80,7 @@ GIF/t/t10gif.t
 GIF/t/t20new.t
 GIF/t/t30fixed.t
 GIF/t/t40limit.t
+GIF/t/t50header.t
 GIF/testimg/badindex.gif	GIF with a bad color index
 GIF/testimg/bandw.gif
 GIF/testimg/expected.gif

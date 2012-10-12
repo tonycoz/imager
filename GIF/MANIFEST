@@ -11,6 +11,8 @@ README
 t/t10gif.t
 t/t20new.t
 t/t30fixed.t
+t/t40limit.t
+t/t50header.t
 testimg/badindex.gif
 testimg/bandw.gif
 testimg/expected.gif
