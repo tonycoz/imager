@@ -3,6 +3,8 @@ Imager-File-GIF 0.85
 
  - add giflib 5.0 support.
    https://rt.cpan.org/Ticket/Display.html?id=79029
+   The giflib API Imager uses doesn't have a mechanism to set the
+   header version in 5.0.0.
 
  - previously a transparency enabled write (the default) would always
    use a GIF89a header even if none of the images were transparent.

@@ -1,7 +1,13 @@
 Imager release history.  Older releases can be found in Changes.old
 
- - support for giflib 5.0.
+ - support for giflib 5.0. (5.0.1 and later)
    https://rt.cpan.org/Ticket/Display.html?id=79029
+   The giflib API Imager uses doesn't have a mechanism to set the
+   header version in 5.0.0.
+
+ - previously a transparency enabled GIF write (the default) would
+   always use a GIF89a header even if none of the images were
+   transparent.
 
  - previously the probe step for freetype-config would fail on cygwin
 
