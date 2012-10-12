@@ -74,7 +74,7 @@ my %probe =
    inccheck => sub { -e File::Spec->catfile($_[0], "gif_lib.h") },
    libbase => "gif",
    testcode => _gif_test_code(),
-   testcodeheaders => [ "stddef.h", "gif_lib.h", "stdio.h" ],
+   testcodeheaders => [ "stddef.h", "gif_lib.h", "stdio.h", "errno.h", "string.h" ],
    incpath => \@incpaths,
    libpath => \@libpaths,
   );
@@ -121,6 +121,11 @@ int ver_maj = GIFLIB_MAJOR;
 int ver_min = GIFLIB_MINOR;
 int error;
 #endif
+GifColorType colors[2];
+ColorMapObject *map;
+FILE *fh;
+char buf[6];
+int mode;
 #if defined(GIFLIB_MAJOR) && GIFLIB_MAJOR >= 5
 gf=DGifOpenFileName("testimg/expected.gif", &error);
 #else
@@ -172,6 +177,52 @@ if (ver_maj == 4 && ver_min < 1) {
   fprintf(stderr, "GIF: you need at least giflib 4.1\n");
   return 1;
 }
+
+/* test we write both GIF87a and GIF89a files */
+for (mode = 0; mode < 2; ++mode) {
+#if defined(GIFLIB_MAJOR) && GIFLIB_MAJOR >= 5
+  gf=EGifOpenFileName("probe.gif", 0, &error);
+  EGifSetGifVersion(gf, mode);
+
+#else
+  gf=EGifOpenFileName("probe.gif", 0);
+  EGifSetGifVersion(mode ? "89a" : "87a");
+#endif
+  if (!gf) {
+    fprintf(stderr, "GIF: cannot create probe.gif for testing\n");
+    return 1;
+  }
+  colors[0].Red = colors[0].Green = colors[0].Blue = 0;
+  colors[1].Red = colors[1].Green = colors[1].Blue = 0;
+#if defined(GIFLIB_MAJOR) && GIFLIB_MAJOR >= 5
+  map = GifMakeMapObject(2, colors);
+#else
+  map = MakeMapObject(2, colors);
+#endif
+  EGifPutScreenDesc(gf, 1, 1, 1, 0, map);
+  EGifPutImageDesc(gf, 0, 0, 1, 1, 0, NULL);
+  EGifPutPixel(gf, 0);
+  EGifCloseFile(gf);
+
+  fh = fopen("probe.gif", "r");
+  if (!fh) {
+    fprintf(stderr, "GIF: cannot open probe.gif for reading\n");
+    return 1;
+  }
+  errno = 0;
+  memset(buf, 0, sizeof(buf));
+  if (fread(buf, 1, 6, fh) != 6) {
+    fprintf(stderr, "GIF: cannot read probe.gif header (%d)\n", errno);
+    return 1;
+  }
+  fclose(fh);
+  if (memcmp(buf, mode ? "GIF89a" : "GIF87a", 6)) {
+    fprintf(stderr, "GIF: incorrect header on test - 4.2.0 bug? (mode %d, buf %-6s)\n", mode, buf);
+    return 1;
+  }
+  remove("probe.gif");
+}
+
 fprintf(stderr, "GIF: Major %d, Minor %d\n", ver_maj, ver_min);
 return 0;
 CODE

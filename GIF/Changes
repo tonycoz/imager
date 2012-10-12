@@ -9,6 +9,12 @@ Imager-File-GIF 0.85
  - previously a transparency enabled write (the default) would always
    use a GIF89a header even if none of the images were transparent.
 
+ - update the GIF library probe code to check for the new giflib 5.0.1
+   EGifSetGifVersion() function, and to check for the giflib 4.2.0
+   uninitialized gif89 bug.
+   https://rt.cpan.org/Ticket/Display.html?id=79679
+   http://sourceforge.net/tracker/?func=detail&aid=3574283&group_id=102202&atid=631304
+
 Imager-File-GIF 0.84 - released with Imager 0.92_01
 ====================
 
