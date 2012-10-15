@@ -1,8 +1,14 @@
+Imager-Font-FT2 0.86
+====================
 
  - previously the probe step for freetype-config would fail on cygwin
 
  - clean up .dSYM directories generated performing probes on OS X
    Mountain Lion.
+
+ - pass the --verbose command-line option through to Imager::Probe in
+   Makefile.PL
+   https://rt.cpan.org/Ticket/Display.html?id=75878
 
 Imager-Font-FT2 0.85
 ====================

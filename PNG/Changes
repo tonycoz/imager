@@ -4,6 +4,10 @@ Imager-File-PNG 0.86
  - clean up .dSYM directories generated performing probes on OS X
    Mountain Lion.
 
+ - pass the --verbose command-line option through to Imager::Probe in
+   Makefile.PL
+   https://rt.cpan.org/Ticket/Display.html?id=75878
+
 Imager-File-PNG 0.85
 ====================
 

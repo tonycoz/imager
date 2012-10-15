@@ -1,8 +1,15 @@
+Imager::Font::T1 1.018
+======================
+
  - match Imager::Font;:T1's error message translations to those from
    later versions of T1Lib.
 
  - clean up .dSYM directories generated performing probes on OS X
    Mountain Lion.
+
+ - pass the --verbose command-line option through to Imager::Probe in
+   Makefile.PL
+   https://rt.cpan.org/Ticket/Display.html?id=75878
 
 Imager::Font::T1 1.017
 ======================
