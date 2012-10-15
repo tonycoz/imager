@@ -66,7 +66,8 @@ functionality with giflib3.
 #define myGifError(gif) ((gif)->Error)
 #define MakeMapObject GifMakeMapObject
 #define FreeMapObject GifFreeMapObject
-
+#define gif_mutex_lock(mutex)
+#define gif_mutex_unlock(mutex)
 #else
 #define PRE_SET_VERSION
 static GifFileType *
@@ -86,6 +87,8 @@ myEGifOpen(void *userPtr, OutputFunc outputFunc, int *error) {
   return result;
 }
 #define myGifError(gif) GifLastError()
+#define gif_mutex_lock(mutex) i_mutex_lock(mutex)
+#define gif_mutex_unlock(mutex) i_mutex_unlock(mutex)
 
 #endif
 
@@ -97,6 +100,17 @@ static void gif_push_error(int code);
 static const int
   InterlacedOffset[] = { 0, 4, 2, 1 }, /* The way Interlaced image should. */
   InterlacedJumps[] = { 8, 8, 4, 2 };    /* be read - offsets and jumps... */
+
+#if !defined(GIFLIB_MAJOR) || GIFLIB_MAJOR < 5
+static i_mutex_t mutex;
+#endif
+
+void
+i_init_gif(void) {
+#if !defined(GIFLIB_MAJOR) || GIFLIB_MAJOR < 5
+  mutex = i_mutex_new();
+#endif
+}
 
 static
 void
@@ -877,6 +891,9 @@ i_img **
 i_readgif_multi_wiol(io_glue *ig, int *count) {
   GifFileType *GifFile;
   int gif_error;
+  i_img **result;
+
+  gif_mutex_lock(mutex);
 
   i_clear_error();
   
@@ -884,10 +901,15 @@ i_readgif_multi_wiol(io_glue *ig, int *count) {
     gif_push_error(gif_error);
     i_push_error(0, "Cannot create giflib callback object");
     mm_log((1,"i_readgif_multi_wiol: Unable to open callback datasource.\n"));
+    gif_mutex_unlock(mutex);
     return NULL;
   }
     
-  return i_readgif_multi_low(GifFile, count, -1);
+  result = i_readgif_multi_low(GifFile, count, -1);
+
+  gif_mutex_unlock(mutex);
+
+  return result;
 }
 
 static int
@@ -901,6 +923,9 @@ i_img *
 i_readgif_wiol(io_glue *ig, int **color_table, int *colors) {
   GifFileType *GifFile;
   int gif_error;
+  i_img *result;
+
+  gif_mutex_lock(mutex);
 
   i_clear_error();
 
@@ -908,10 +933,15 @@ i_readgif_wiol(io_glue *ig, int **color_table, int *colors) {
     gif_push_error(gif_error);
     i_push_error(0, "Cannot create giflib callback object");
     mm_log((1,"i_readgif_wiol: Unable to open callback datasource.\n"));
+    gif_mutex_unlock(mutex);
     return NULL;
   }
     
-  return i_readgif_low(GifFile, color_table, colors);
+  result = i_readgif_low(GifFile, color_table, colors);
+
+  gif_mutex_unlock(mutex);
+
+  return result;
 }
 
 /*
@@ -957,6 +987,7 @@ i_img *
 i_readgif_single_wiol(io_glue *ig, int page) {
   GifFileType *GifFile;
   int gif_error;
+  i_img *result;
 
   i_clear_error();
   if (page < 0) {
@@ -964,15 +995,21 @@ i_readgif_single_wiol(io_glue *ig, int page) {
     return NULL;
   }
 
+  gif_mutex_lock(mutex);
 
   if ((GifFile = myDGifOpen((void *)ig, io_glue_read_cb, &gif_error )) == NULL) {
     gif_push_error(gif_error);
     i_push_error(0, "Cannot create giflib callback object");
     mm_log((1,"i_readgif_wiol: Unable to open callback datasource.\n"));
+    gif_mutex_unlock(mutex);
     return NULL;
   }
     
-  return i_readgif_single_low(GifFile, page);
+  result = i_readgif_single_low(GifFile, page);
+
+  gif_mutex_unlock(mutex);
+
+  return result;
 }
 
 /*
@@ -1830,6 +1867,8 @@ i_writegif_wiol(io_glue *ig, i_quantize *quant, i_img **imgs,
   int gif_error;
   int result;
 
+  gif_mutex_lock(mutex);
+
   i_clear_error();
 
 #ifdef PRE_SET_VERSION
@@ -1840,6 +1879,7 @@ i_writegif_wiol(io_glue *ig, i_quantize *quant, i_img **imgs,
     gif_push_error(gif_error);
     i_push_error(0, "Cannot create giflib callback object");
     mm_log((1,"i_writegif_wiol: Unable to open callback datasource.\n"));
+    gif_mutex_unlock(mutex);
     return 0;
   }
   
@@ -1849,6 +1889,8 @@ i_writegif_wiol(io_glue *ig, i_quantize *quant, i_img **imgs,
 
   result = i_writegif_low(quant, GifFile, imgs, count);
   
+  gif_mutex_unlock(mutex);
+
   if (i_io_close(ig))
     return 0;
   
@@ -1969,6 +2011,8 @@ gif_push_error(int code) {
 =head1 AUTHOR
 
 Arnar M. Hrafnkelsson, addi@umich.edu
+
+Tony Cook <tonyc@cpan.org>
 
 =head1 SEE ALSO
 
