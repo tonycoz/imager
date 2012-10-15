@@ -14,6 +14,7 @@ use Text::ParseWords 'quotewords';
 
 use File::Spec;
 use File::Temp;
+use File::Path qw(rmtree);
 
 require Exporter;
 @ISA = qw(Exporter);
@@ -384,6 +385,11 @@ sub _cleanup_exe {
 	unlink $ilkfile if -f $ilkfile;
 	unlink $pdbfile if -f $pdbfile;
     }
+    # created by clang on darwin
+    my $dsym_dir = $exefile;
+    $dsym_dir =~ s/\Q$Config{_exe}\E$/.dSYM/;
+    rmtree $dsym_dir if -d $dsym_dir;
+    
     return
 }
 
