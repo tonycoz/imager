@@ -356,3 +356,4 @@ i_ft2_set_mm_coords(handle, ...)
 
 BOOT:
 	PERL_INITIALIZE_IMAGER_CALLBACKS;
+	i_ft2_start();

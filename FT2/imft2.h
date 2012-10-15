@@ -7,7 +7,7 @@ typedef struct FT2_Fonthandle FT2_Fonthandle;
 
 typedef FT2_Fonthandle* Imager__Font__FT2x;
 
-extern int i_ft2_init(void);
+extern void i_ft2_start(void);
 extern FT2_Fonthandle * i_ft2_new(const char *name, int index);
 extern void i_ft2_destroy(FT2_Fonthandle *handle);
 extern int i_ft2_setdpi(FT2_Fonthandle *handle, int xdpi, int ydpi);
