@@ -1210,6 +1210,9 @@ make_gif_map(i_quantize *quant, i_img *img, int want_trans) {
     i_push_error(0, "Could not create color map object");
     return NULL;
   }
+#if defined GIFLIB_MAJOR && GIFLIB_MAJOR >= 5
+  map->SortFlag = 0;
+#endif
   return map;
 }
 
