@@ -41,17 +41,30 @@ its access to C<giflib>.
 
 =item *
 
-killing a thread reading or writing TIFF or GIF files may deadlock
-other threads when they attempt to read or write TIFF or GIF files.
+C<T1Lib>, used by one of Imager's font drivers, is not thread safe.
+C<Imager::Font::T1> works around this by single threading access.
+
+=item *
+
+killing a thread reading or writing TIFF or GIF files, or using T1
+fonts through C<Imager::Font::T1> may deadlock other threads when they
+attempt to read or write TIFF or GIF files, or work with Type 1 fonts.
+
+=item *
+
+Fill, font, color or I/O layer objects created in one thread are not
+valid for use in child threads.  If you manage to duplicate such an
+object in another thread, you get to keep both pieces when it breaks.
 
 =back
 
-Note that if you have another module using C<libtiff> or C<giflib> it
-may interact with Imager's use of those libraries in a threaded
-environment, since there's no way to co-ordinate access to the global
-information C<libtiff> and C<giflib> maintain.
+Note that if you have another module using C<libtiff>, C<giflib> or
+C<t1lib> it may interact with Imager's use of those libraries in a
+threaded environment, since there's no way to co-ordinate access to
+the global information C<libtiff>, C<giflib> and C<t1lib> maintain.
 
-Imager currently doesn't use threads itself.
+Imager currently doesn't use threads itself, except for testing its
+threads support.
 
 =head1 SEE ALSO
 
