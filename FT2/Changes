@@ -1,6 +1,9 @@
 
  - previously the probe step for freetype-config would fail on cygwin
 
+ - clean up .dSYM directories generated performing probes on OS X
+   Mountain Lion.
+
 Imager-Font-FT2 0.85
 ====================
 

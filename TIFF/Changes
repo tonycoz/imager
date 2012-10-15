@@ -4,6 +4,9 @@ Imager-File-TIFF 0.85
  - for libtiff versions that support extended warning handlers (3.8.0
    or later), use them to avoid some global variables.
 
+ - clean up .dSYM directories generated performing probes on OS X
+   Mountain Lion.
+
 Imager-File-TIFF 0.83
 =====================
 

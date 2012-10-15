@@ -1,5 +1,8 @@
  - avoid static variables when capturing IPTC data
 
+ - clean up .dSYM directories generated performing probes on OS X
+   Mountain Lion.
+
 Imager-File-JPEG 0.84
 =====================
 

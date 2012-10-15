@@ -1,6 +1,9 @@
  - match Imager::Font;:T1's error message translations to those from
    later versions of T1Lib.
 
+ - clean up .dSYM directories generated performing probes on OS X
+   Mountain Lion.
+
 Imager::Font::T1 1.017
 ======================
 
