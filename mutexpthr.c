@@ -17,7 +17,9 @@ i_mutex_t
 i_mutex_new(void) {
   i_mutex_t m;
 
-  m = mymalloc(sizeof(*m));
+  m = malloc(sizeof(*m));
+  if (!m)
+    i_fatal(3, "Cannot allocate mutex object");
   if (pthread_mutex_init(&m->mutex, NULL) != 0) {
     i_fatal(3, "Error initializing mutex %d", errno);
   }
@@ -28,7 +30,7 @@ i_mutex_new(void) {
 void
 i_mutex_destroy(i_mutex_t m) {
   pthread_mutex_destroy(&(m->mutex));
-  myfree(m);
+  free(m);
 }
 
 void

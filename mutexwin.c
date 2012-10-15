@@ -36,7 +36,9 @@ i_mutex_t
 i_mutex_new(void) {
   i_mutex_t m;
 
-  m = mymalloc(sizeof(*m));
+  m = malloc(sizeof(*m));
+  if (!m)
+    i_fatal(3, "Cannot allocate mutex object");
   InitializeCriticalSection(&(m->section));
 
   return m;
@@ -55,7 +57,7 @@ Destroy a mutex.
 void
 i_mutex_destroy(i_mutex_t m) {
   DeleteCriticalSection(&(m->section));
-  myfree(m);
+  free(m);
 }
 
 /*
