@@ -1,29 +1,15 @@
 Imager release history.  Older releases can be found in Changes.old
 
- - support for giflib 5.0. (5.0.1 and later)
-   https://rt.cpan.org/Ticket/Display.html?id=79029
-   The giflib API Imager uses doesn't have a mechanism to set the
-   header version in 5.0.0.
+Imager 0.93 - 15 Oct 2012
+===========
+
+Bug fixes:
 
  - previously a transparency enabled GIF write (the default) would
    always use a GIF89a header even if none of the images were
    transparent.
 
- - update the GIF library probe code to check for the new giflib 5.0.1
-   EGifSetGifVersion() function, and to check for the giflib 4.2.0
-   uninitialized gif89 bug.
-   https://rt.cpan.org/Ticket/Display.html?id=79679
-   http://sourceforge.net/tracker/?func=detail&aid=3574283&group_id=102202&atid=631304
-
  - previously the probe step for freetype-config would fail on cygwin
-
- - avoid static variables when capturing IPTC data from JPEG files
-
- - match Imager::Font;:T1's error message translations to those from
-   later versions of T1Lib.
-
- - for libtiff versions that support extended warning handlers (3.8.0
-   or later), use them to avoid some global variables.
 
  - catch an invalid matrix parameter to convert() instead of crashing
    https://rt.cpan.org/Ticket/Display.html?id=79922
@@ -31,9 +17,6 @@ Imager release history.  Older releases can be found in Changes.old
  - remove the 16-bit/sample limitation from the documentation for
    setsamples(), it hasn't applied for many releases.
    https://rt.cpan.org/Ticket/Display.html?id=79989
-
- - note Image::ExifTool for better metadata support.
-   https://rt.cpan.org/Ticket/Display.html?id=79251
 
  - don't copy setsamples() data parameter, it may be a large scalar
    https://rt.cpan.org/Ticket/Display.html?id=79990
@@ -44,6 +27,30 @@ Imager release history.  Older releases can be found in Changes.old
  - pass the --verbose command-line option through to Imager::Probe in
    sub-module's Makefile.PLs
    https://rt.cpan.org/Ticket/Display.html?id=75878
+
+Enhancements:
+
+ - support for giflib 5.0. (5.0.1 and later)
+   https://rt.cpan.org/Ticket/Display.html?id=79029
+   The giflib API Imager uses doesn't have a mechanism to set the
+   header version in 5.0.0.
+
+ - update the GIF library probe code to check for the new giflib 5.0.1
+   EGifSetGifVersion() function, and to check for the giflib 4.2.0
+   uninitialized gif89 bug.
+   https://rt.cpan.org/Ticket/Display.html?id=79679
+   http://sourceforge.net/tracker/?func=detail&aid=3574283&group_id=102202&atid=631304
+
+ - avoid static variables when capturing IPTC data from JPEG files
+
+ - match Imager::Font;:T1's error message translations to those from
+   later versions of T1Lib.
+
+ - for libtiff versions that support extended warning handlers (3.8.0
+   or later), use them to avoid some global variables.
+
+ - note Image::ExifTool for better metadata support.
+   https://rt.cpan.org/Ticket/Display.html?id=79251
 
 Imager 0.92 - 14 Aug 2012
 ===========
