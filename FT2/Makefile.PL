@@ -89,6 +89,7 @@ my %probe =
      incsuffix => "freetype",
     },
    ],
+   verbose => $verbose,
   );
 
 my $probe_res = Imager::Probe->probe(\%probe);

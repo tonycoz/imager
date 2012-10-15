@@ -103,6 +103,7 @@ my %probe =
    testcodeheaders => [ "png.h", "stdio.h" ],
    incpath => \@incpaths,
    libpath => \@libpaths,
+   verbose => $verbose,
    alternatives =>
    [
     @alts,

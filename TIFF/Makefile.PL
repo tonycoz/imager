@@ -77,6 +77,7 @@ my %probe =
    testcodeheaders => [ "tiffio.h", "stdio.h", "string.h" ],
    incpath => \@incpaths,
    libpath => \@libpaths,
+   verbose => $verbose,
   );
 
 my $probe_res = Imager::Probe->probe(\%probe);
