@@ -1,3 +1,6 @@
+Imager-Font-W32 0.85
+====================
+
  - clean up .dSYM directories generated performing probes on OS X
    Mountain Lion.
 
