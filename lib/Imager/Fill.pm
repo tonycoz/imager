@@ -223,6 +223,14 @@ hatch
 
 fountain (similar to gradients in paint software)
 
+=item *
+
+image - fill with an image, possibly transformed
+
+=item *
+
+opacity - a lower opacity version of some other fill
+
 =back
 
 =head1 Common options
@@ -236,14 +244,14 @@ See L<Imager::Draw/"Combine Types">.
 
 =back
 
-In general colors can be specified as Imager::Color or
-Imager::Color::Float objects.  The fill object will typically store
+In general colors can be specified as L<Imager::Color> or
+L<Imager::Color::Float> objects.  The fill object will typically store
 both types and convert from one to the other.  If a fill takes 2 color
 objects they should have the same type.
 
 =head2 Solid fills
 
-  my $fill = Imager::Fill->new(solid=>$color, $combine =>$combine)
+  my $fill = Imager::Fill->new(solid=>$color, combine =>$combine)
 
 Creates a solid fill, the only required parameter is C<solid> which
 should be the color to fill with.
@@ -358,7 +366,7 @@ and is required.
 =head2 Image Fills
 
   my $fill = Imager::Fill->new(image=>$src, xoff=>$xoff, yoff=>$yoff,
-                               matrix=>$matrix, $combine);
+                               matrix=>$matrix, combine => $combine);
 
 Fills the given image with a tiled version of the given image.  The
 first non-zero value of C<xoff> or C<yoff> will provide an offset
