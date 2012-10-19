@@ -1,6 +1,6 @@
 #!perl -w
 use strict;
-use Test::More tests => 157;
+use Test::More tests => 165;
 
 use Imager ':handy';
 use Imager::Fill;
@@ -664,6 +664,35 @@ SKIP:
   # for those 2 colors in the result.
   # with the bug extra colors appeared along the edge of the polygon.
   is($im->getcolorcount, 2, "only original and fill color");
+}
+
+SKIP:
+{
+  # the wrong image dimension was used for adjusting vs yoff,
+  # producing uncovered parts of the output image
+  my $tx = Imager->new(xsize => 30, ysize => 20);
+  ok($tx, "create texture image")
+    or diag "create texture image", Imager->errstr;
+  $tx or skip "no texture image", 7;
+  ok($tx->box(filled => 1, color => "ff0000"), "fill texture image")
+    or diag "fill texture image", $tx->errstr;
+  my $cmp = Imager->new(xsize => 100, ysize => 100);
+  ok($cmp, "create comparison image")
+    or diag "create comparison image: ", Imager->errstr;
+  $cmp or skip "no comparison image", 5;
+  ok($cmp->box(filled => 1, color => "FF0000"), "fill compare image")
+    or diag "fill compare image: ", $cmp->errstr;
+  my $im = Imager->new(xsize => 100, ysize => 100);
+  ok($im, "make test image")
+    or diag "make test image: ", Imager->errstr;
+  $im or skip "no test image", 3;
+  my $fill = Imager::Fill->new(image => $tx, yoff => 10);
+  ok($fill, "make xoff=10 image fill")
+    or diag "make fill: ", Imager->errstr;
+  $fill or skip "no fill", 2;
+  ok($im->box(fill => $fill), "fill test image")
+    or diag "fill test image: ", $im->errstr;
+  is_image($im, $cmp, "check test image");
 }
 
 sub color_close {
