@@ -2,7 +2,6 @@ Imager release history.  Older releases can be found in Changes.old
 
 Threads work
   - thread safe t1lib
-  - thread safe ft2
   - thread safe ft1
 
  - improved thread safety
@@ -10,7 +9,10 @@ Threads work
      context object
    - JPEG now captures IPTC information in a thread-safe way
    - avoid globals where possible for warning capture in libtiff
-
+   - use a mutex to avoid re-entering thread-unsafe giflib
+   - use a mutex to avoid re-entering thread-unsafe tifflib
+   - use a mutex to avoid re-entering thread-unsafe T1Lib
+   - use a library handle per thread for freetype 2.
 
 Imager 0.93 - 15 Oct 2012
 ===========
