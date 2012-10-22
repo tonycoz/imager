@@ -118,8 +118,14 @@ typedef struct im_context_tag {
   size_t error_alloc[IM_ERROR_COUNT];
   i_errmsg error_stack[IM_ERROR_COUNT];
 #ifdef IMAGER_LOG
-  int log_level;
+  /* the log file and level for this context */
   FILE *lg_file;
+  int log_level;
+
+  /* whether we own the lg_file, false for stderr and for cloned contexts */
+  int own_log;
+
+  /* values supplied by lhead */
   const char *filename;
   int line;
 #endif

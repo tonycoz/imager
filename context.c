@@ -116,7 +116,7 @@ im_context_refdec(im_context_t ctx, const char *where) {
       myfree(ctx->error_stack[i].msg);
   }
 #ifdef IMAGER_LOG
-  if (ctx->lg_file)
+  if (ctx->lg_file && ctx->own_log)
     fclose(ctx->lg_file);
 #endif
 
@@ -163,13 +163,18 @@ im_context_clone(im_context_t ctx, const char *where) {
 #ifdef IMAGER_LOG
   nctx->log_level = ctx->log_level;
   if (ctx->lg_file) {
-    /* disable buffering, this isn't perfect */
-    setvbuf(ctx->lg_file, NULL, _IONBF, 0);
-
-    /* clone that and disable buffering some more */
-    nctx->lg_file = fdopen(fileno(ctx->lg_file), "a");
-    if (nctx->lg_file)
-      setvbuf(nctx->lg_file, NULL, _IONBF, 0);
+    if (ctx->own_log) {
+      int newfd = dup(fileno(ctx->lg_file));
+      nctx->own_log = 1;
+      nctx->lg_file = fdopen(newfd, "w");
+      if (nctx->lg_file)
+	setvbuf(nctx->lg_file, NULL, _IONBF, BUFSIZ);
+    }
+    else {
+      /* stderr */
+      nctx->lg_file = ctx->lg_file;
+      nctx->own_log = 0;
+    }
   }
   else {
     nctx->lg_file = NULL;
