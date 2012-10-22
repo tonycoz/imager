@@ -554,6 +554,18 @@ typedef enum {
 } i_combine_t;
 
 /*
+=item i_mutex_t
+X<i_mutex>
+=category mutex
+=synopsis i_mutex_t mutex;
+
+Opaque type for Imager's mutex API.
+
+=cut
+ */
+typedef struct i_mutex_tag *i_mutex_t;
+
+/*
    describes an axis of a MM font.
    Modelled on FT2's FT_MM_Axis.
    It would be nice to have a default entry too, but FT2 
