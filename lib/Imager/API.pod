@@ -412,6 +412,31 @@ This can be used to define your own local context macro:
     ...
   }
 
+=head1 Mutex Functions
+
+Since some libraries are not thread safe, Imager's API includes some
+simple mutex functions.
+
+To create a mutex:
+
+  i_mutex_t m = i_mutex_new();
+
+To control or lock the mutex:
+
+  i_mutex_lock(m);
+
+To release or unlock the mutex:
+
+  i_mutex_unlock(m);
+
+To free any resources used by the mutex:
+
+  i_mutex_destroy(m);
+
+I most cases where you'd use these functions, your code would create
+the mutex in your BOOT section, then lock and unlock the mutex as
+needed to control access to the library.
+
 =head1 AUTHOR
 
 Tony Cook <tonyc@cpan.org>
