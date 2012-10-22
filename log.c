@@ -30,21 +30,30 @@ im_vloog(pIMCTX, int level, const char *fmt, va_list ap);
 int
 im_init_log(pIMCTX, const char* name,int level) {
   i_clear_error();
+
+  if (aIMCTX->lg_file) {
+    if (aIMCTX->own_log)
+      fclose(aIMCTX->lg_file);
+    aIMCTX->lg_file = NULL;
+  }
+  
   aIMCTX->log_level = level;
   if (level < 0) {
     aIMCTX->lg_file = NULL;
   } else {
     if (name == NULL) {
       aIMCTX->lg_file = stderr;
+      aIMCTX->own_log = 0;
     } else {
       if (NULL == (aIMCTX->lg_file = fopen(name, "w+")) ) { 
 	im_push_errorf(aIMCTX, errno, "Cannot open file '%s': (%d)", name, errno);
 	return 0;
       }
+      aIMCTX->own_log = 1;
+      setvbuf(aIMCTX->lg_file, NULL, _IONBF, BUFSIZ);
     }
   }
   if (aIMCTX->lg_file) {
-    setvbuf(aIMCTX->lg_file, NULL, _IONBF, BUFSIZ);
     im_log((aIMCTX, 0,"Imager - log started (level = %d)\n", level));
   }
 
