@@ -181,6 +181,9 @@ if ($Config{useithreads}) {
   else {
     print "Unsupported threading model\n";
     push @objs, "mutexnull.o";
+    if ($ENV{AUTOMATED_TESTING}) {
+      die "OS unsupported: no threading support code for this platform\n";
+    }
   }
 }
 else {
