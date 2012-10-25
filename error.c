@@ -301,10 +301,14 @@ int i_failed(int code, char const *msg) {
 
 #endif
 
+#ifdef IM_ASSERT
+
 /*
 =item im_assert_fail(file, line, message)
 
 Called when an im_assert() assertion fails.
+
+Only available when Imager is built with assertions.
 
 =cut
 */
@@ -315,6 +319,8 @@ im_assert_fail(char const *file, int line, char const *message) {
 	  line, file, message);
   abort();
 }
+
+#endif
 
 /*
 =back
