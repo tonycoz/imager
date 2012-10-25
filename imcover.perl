@@ -20,7 +20,7 @@ if (-f 'Makefile') {
   run("$make clean");
 }
 run("cover -delete");
-run("perl Makefile.PL --coverage")
+run("perl Makefile.PL --coverage @ARGV")
   and die;
 run("$make 'OTHERLDFLAGS=-ftest-coverage -fprofile-arcs'")
   and die;
