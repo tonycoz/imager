@@ -7,7 +7,9 @@ use Getopt::Long;
 
 my @tests;
 my $verbose;
+my $nodc;
 GetOptions("t|test=s" => \@tests,
+	   "n" => \$nodc,
 	   "v" => \$verbose)
   or die;
 
@@ -25,7 +27,8 @@ run("$make 'OTHERLDFLAGS=-ftest-coverage -fprofile-arcs'")
 
 {
   local $ENV{DEVEL_COVER_OPTIONS} = "-db," . getcwd() . "/cover_db,-coverage,statement,branch,condition,subroutine";
-  my $makecmd = "$make test TEST_VERBOSE=1 HARNESS_PERL_SWITCHES=-MDevel::Cover";
+  my $makecmd = "$make test TEST_VERBOSE=1";
+  $makecmd .= " HARNESS_PERL_SWITCHES=-MDevel::Cover" unless $nodc;
   if (@tests) {
     $makecmd .= " TEST_FILES='@tests'";
   }
