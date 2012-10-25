@@ -50,11 +50,11 @@ Flines/Flines.xs
 Flines/Makefile.PL
 Flines/t/t00flines.t
 flip.im
-fontft1.c
 fontfiles/dodge.ttf
 fontfiles/ExistenceTest.ttf	generated using pfaedit
 fontfiles/ImUgly.ttf
 fontfiles/NameTest.ttf		test glyph_names() - see FT2/t/t10ft2.t
+fontft1.c
 FT2/fontfiles/dodge.ttf
 FT2/fontfiles/ExistenceTest.afm
 FT2/fontfiles/ExistenceTest.pfb
@@ -317,6 +317,7 @@ t/t023palette.t			Test paletted images
 t/t03test.t			Test Imager::Test
 t/t05error.t
 t/t07iolayer.t
+t/t080log.t
 t/t1000files.t			Format independent file tests
 t/t1000lib/Imager/File/BAD.pm	Test failing to load a file handler
 t/t101nojpeg.t			Test handling when jpeg not available
