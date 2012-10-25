@@ -41,6 +41,8 @@ my $mani = maniread();
 my %paths;
 for my $filename (keys %$mani) {
   next unless $filename =~ /\.(xs|c|im)$/;
+  (my $gcda = $filename) =~ s/\.\w+$/.gcda/;
+  next unless -f $gcda;
   if ($filename =~ m!^(\w+)/(\w+\.\w+)$!) {
     push @{$paths{$1}}, $2;
   }
