@@ -11,13 +11,6 @@
 #define DTBUFF 50
 #define DATABUFF DTBUFF+3+10+1+5+1+1
 
-#if 0
-static int   log_level   = 0;
-static FILE *lg_file     = NULL;
-static char  date_buffer[DTBUFF];
-static char  data_buffer[DATABUFF];
-#endif
-
 #define LOG_DATE_FORMAT "%Y/%m/%d %H:%M:%S"
 
 static void
