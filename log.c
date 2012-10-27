@@ -13,6 +13,8 @@
 
 #define LOG_DATE_FORMAT "%Y/%m/%d %H:%M:%S"
 
+static i_mutex_t log_mutex;
+
 static void
 im_vloog(pIMCTX, int level, const char *fmt, va_list ap);
 
@@ -23,6 +25,10 @@ im_vloog(pIMCTX, int level, const char *fmt, va_list ap);
 int
 im_init_log(pIMCTX, const char* name,int level) {
   i_clear_error();
+
+  if (!log_mutex) {
+    log_mutex = i_mutex_new();
+  }
 
   if (aIMCTX->lg_file) {
     if (aIMCTX->own_log)
@@ -95,6 +101,8 @@ im_vloog(pIMCTX, int level, const char *fmt, va_list ap) {
 
   if (!aIMCTX->lg_file || level > aIMCTX->log_level)
     return;
+
+  i_mutex_lock(log_mutex);
   
   timi = time(NULL);
   str_tm = localtime(&timi);
@@ -103,6 +111,8 @@ im_vloog(pIMCTX, int level, const char *fmt, va_list ap) {
 	  aIMCTX->filename, aIMCTX->line, level);
   vfprintf(aIMCTX->lg_file, fmt, ap);
   fflush(aIMCTX->lg_file);
+
+  i_mutex_unlock(log_mutex);
 }
 
 void
