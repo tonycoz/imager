@@ -128,6 +128,8 @@ im_context_refdec(im_context_t ctx, const char *where) {
 
 Clone an Imager context object, returning the result.
 
+The error stack is not copied from the original context.
+
 =cut
 */
 
@@ -146,19 +148,10 @@ im_context_clone(im_context_t ctx, const char *where) {
   }
   nctx->slot_alloc = slot_count;
 
-  nctx->error_sp = ctx->error_sp;
+  nctx->error_sp = IM_ERROR_COUNT-1;
   for (i = 0; i < IM_ERROR_COUNT; ++i) {
-    if (ctx->error_stack[i].msg) {
-      size_t sz = ctx->error_alloc[i];
-      nctx->error_alloc[i] = sz;
-      nctx->error_stack[i].msg = mymalloc(sz);
-      memcpy(nctx->error_stack[i].msg, ctx->error_stack[i].msg, sz);
-    }
-    else {
-      nctx->error_alloc[i] = 0;
-      nctx->error_stack[i].msg = NULL;
-    }
-    nctx->error_stack[i].code = ctx->error_stack[i].code;
+    nctx->error_alloc[i] = 0;
+    nctx->error_stack[i].msg = NULL;
   }
 #ifdef IMAGER_LOG
   nctx->log_level = ctx->log_level;
