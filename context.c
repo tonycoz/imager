@@ -1,9 +1,9 @@
 #include "imageri.h"
 #include <stdio.h>
 
-static im_slot_t slot_count;
-static im_slot_destroy_t *slot_destructors;
-static i_mutex_t slot_mutex;
+static volatile im_slot_t slot_count = 1;
+static im_slot_destroy_t *volatile slot_destructors;
+static volatile i_mutex_t slot_mutex;
 
 /*
 =item im_context_new()
@@ -105,10 +105,13 @@ im_context_refdec(im_context_t ctx, const char *where) {
   if (ctx->refcount != 0)
     return;
 
+  /* lock here to avoid slot_destructors from being moved under us */
+  i_mutex_lock(slot_mutex);
   for (slot = 0; slot < ctx->slot_alloc; ++slot) {
     if (ctx->slots[slot] && slot_destructors[slot])
       slot_destructors[slot](ctx->slots[slot]);
   }
+  i_mutex_unlock(slot_mutex);
 
   free(ctx->slots);
 
@@ -142,12 +145,12 @@ im_context_clone(im_context_t ctx, const char *where) {
   if (!nctx)
     return NULL;
 
-  nctx->slots = calloc(sizeof(void *), slot_count);
+  nctx->slot_alloc = slot_count;
+  nctx->slots = calloc(sizeof(void *), nctx->slot_alloc);
   if (!nctx->slots) {
     free(nctx);
     return NULL;
   }
-  nctx->slot_alloc = slot_count;
 
   nctx->error_sp = IM_ERROR_COUNT-1;
   for (i = 0; i < IM_ERROR_COUNT; ++i) {
