@@ -195,6 +195,9 @@ im_context_clone(im_context_t ctx, const char *where) {
 
 Allocate a new context-local-storage slot.
 
+C<desctructor> will be called when the context is destroyed if the
+corresponding slot is non-NULL.
+
 =cut
 */
 
