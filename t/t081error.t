@@ -28,7 +28,6 @@ $INC{"Devel/Cover.pm"}
   and plan skip_all => "threads and Devel::Cover don't get along";
 
 use Imager;
-use Time::HiRes qw(time);
 
 # test that the error contexts are separate under threads
 
