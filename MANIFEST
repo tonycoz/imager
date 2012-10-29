@@ -319,6 +319,7 @@ t/t05error.t
 t/t07iolayer.t
 t/t080log.t
 t/t081error.t
+t/t082limit.t
 t/t1000files.t			Format independent file tests
 t/t1000lib/Imager/File/BAD.pm	Test failing to load a file handler
 t/t101nojpeg.t			Test handling when jpeg not available
