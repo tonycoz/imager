@@ -2306,6 +2306,9 @@ From: File context.c
 
 Allocate a new context-local-storage slot.
 
+C<desctructor> will be called when the context is destroyed if the
+corresponding slot is non-NULL.
+
 
 =for comment
 From: File context.c
