@@ -38,7 +38,8 @@ im_context_new(void) {
   ctx->max_height = 0;
   ctx->max_bytes = DEF_BYTES_LIMIT;
 
-  ctx->slots = calloc(sizeof(void *), slot_count);
+  ctx->slot_alloc = slot_count;
+  ctx->slots = calloc(sizeof(void *), ctx->slot_alloc);
   if (!ctx->slots) {
     free(ctx);
     return NULL;
