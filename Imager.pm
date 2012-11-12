@@ -619,9 +619,9 @@ sub _combine {
 sub _valid_image {
   my ($self, $method) = @_;
 
-  $self->{IMG} and return 1;
+  $self->{IMG} && Scalar::Util::blessed($self->{IMG}) and return 1;
 
-  my $msg = 'empty input image';
+  my $msg = $self->{IMG} ? "images do not cross threads" : "empty input image";
   $msg = "$method: $msg" if $method;
   $self->_set_error($msg);
 
