@@ -1,5 +1,11 @@
 Imager release history.  Older releases can be found in Changes.old
 
+Imager 0.93_01 - 12 Nov 2012
+==============
+
+This is a development release to test the new threading support code
+on a variety of platforms.
+
  - improved thread safety
    - the internal error stack and log file handle are now in a per-thread
      context object
