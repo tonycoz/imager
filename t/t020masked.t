@@ -1,6 +1,6 @@
 #!perl -w
 use strict;
-use Test::More tests => 242;
+use Test::More tests => 244;
 use Imager qw(:all :handy);
 use Imager::Test qw(is_color3 is_fcolor3);
 
@@ -685,6 +685,13 @@ for my $masked (0, 1) { # psampf
 	      ( 0, 128, 255 ) x 3, # masked area
 	      ( 0, 0, 0 ) x 7 ], # right of mask
 	    "check values written");
+}
+
+{
+  my $empty = Imager->new;
+  ok(!$empty->masked, "fail to make a masked image from an empty");
+  is($empty->errstr, "masked: empty input image",
+    "check error message");
 }
 
 Imager->close_log();

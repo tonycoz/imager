@@ -1,6 +1,6 @@
 #!perl -w
 use strict;
-use Test::More tests => 38;
+use Test::More tests => 40;
 BEGIN { use_ok('Imager'); }
 use Imager::Test qw(is_color3);
 
@@ -142,6 +142,16 @@ EOS
 op_test('FF80C0', <<'EOS', 127, 0, 0, 'sat');
 0 0 getp1 sat 255 * 0.01 + 0 0 rgb
 EOS
+
+
+{
+  my $empty = Imager->new;
+  my $good = Imager->new(xsize => 1, ysize => 1);
+  ok(!Imager::transform2({ rpnexpr => "x y getp1" }, $good, $empty),
+     "can't transform an empty image");
+  is(Imager->errstr, "transform2: empty input image (input image 2)",
+     "check error message");
+}
 
 use Imager::Transform;
 

@@ -1,7 +1,7 @@
 #!perl -w
 use strict;
 use Imager qw(:all :handy);
-use Test::More tests => 29;
+use Test::More tests => 31;
 use Imager::Test qw(test_colorf_gpix is_fcolor1 is_fcolor3);
 
 -d "testout" or mkdir "testout";
@@ -148,4 +148,10 @@ SKIP:
      "this would crash");
   is($im->errstr, "convert: invalid matrix: element 0 is not an array ref",
      "check the error message");
+}
+
+{
+  my $empty = Imager->new;
+  ok(!$empty->convert(preset => "addalpha"), "can't convert an empty image");
+  is($empty->errstr, "convert: empty input image", "check error message");
 }

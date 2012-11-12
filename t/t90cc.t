@@ -1,6 +1,6 @@
 #!perl -w
 use strict;
-use Test::More tests => 16;
+use Test::More tests => 22;
 
 use Imager;
 
@@ -68,4 +68,17 @@ Imager::init('log'=>'testout/t90cc.log');
   is_deeply({ "\x00" => 625, "\x12" => 625, "\x38" => 1250 },
 	    $im_g->getcolorusagehash,
 	    'color usage hash (grey)');
+}
+
+{
+  my $empty = Imager->new;
+  is($empty->getcolorcount, undef, "can't getcolorcount an empty image");
+  is($empty->errstr, "getcolorcount: empty input image",
+     "check error message");
+  is($empty->getcolorusagehash, undef, "can't getcolorusagehash an empty image");
+  is($empty->errstr, "getcolorusagehash: empty input image",
+     "check error message");
+  is($empty->getcolorusage, undef, "can't getcolorusage an empty image");
+  is($empty->errstr, "getcolorusage: empty input image",
+     "check error message");
 }

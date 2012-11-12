@@ -1,7 +1,7 @@
 #!perl -w
 use strict;
 use Imager qw(:handy);
-use Test::More tests => 114;
+use Test::More tests => 120;
 use Imager::Test qw(is_image is_imaged);
 
 -d "testout" or mkdir "testout";
@@ -237,6 +237,21 @@ for my $type_id (sort keys %types) {
 	      xmin => 28, ymin => 9, xmax => 42, ymax => 23);
     $is_image->($work, $cmp, "check match");
   }
+}
+
+{
+  my $empty = Imager->new;
+  my $good = Imager->new(xsize => 1, ysize => 1);
+  ok(!$empty->compose(src => $good), "can't compose to empty image");
+  is($empty->errstr, "compose: empty input image",
+     "check error message");
+  ok(!$good->compose(src => $empty), "can't compose from empty image");
+  is($good->errstr, "compose: empty input image (for src)",
+     "check error message");
+  ok(!$good->compose(src => $good, mask => $empty),
+     "can't compose with empty mask");
+  is($good->errstr, "compose: empty input image (for mask)",
+     "check error message");
 }
 
 unless ($ENV{IMAGER_KEEP_FILES}) {

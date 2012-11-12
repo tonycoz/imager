@@ -1,6 +1,6 @@
 #!perl -w
 use strict;
-use Test::More tests => 6;
+use Test::More tests => 8;
 
 -d "testout" or mkdir "testout";
 
@@ -38,4 +38,11 @@ SKIP: {
       "test OO interface (maps by color)");
   ok( $im->map(maps=>[\@map1, [], \@map2]),
       "test OO interface (maps by maps)");
+}
+
+{
+  my $empty = Imager->new;
+  ok(!$empty->map(maps => [ \@map1, \@map2, \@map3 ]),
+     "can't map an empty image");
+  is($empty->errstr, "map: empty input image", "check error message");
 }

@@ -210,7 +210,7 @@ cmp_ok(Imager->errstr, '=~', qr/channels must be between 1 and 4/,
   my $im = Imager->new;
   ok($im, "make empty image");
   ok(!$im->to_rgb16, "convert empty image to 16-bit");
-  is($im->errstr, "empty input image", "check message");
+  is($im->errstr, "to_rgb16: empty input image", "check message");
 }
 
 { # bounds checks
