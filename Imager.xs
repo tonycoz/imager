@@ -2122,7 +2122,7 @@ i_convert(src, avmain)
 	  RETVAL
 
 
-void
+undef_int
 i_map(im, pmaps)
     Imager::ImgRaw     im
 	PREINIT:
@@ -2160,6 +2160,9 @@ i_map(im, pmaps)
           }
           i_map(im, maps, mask);
 	  myfree(maps);
+	  RETVAL = 1;
+    OUTPUT:
+	RETVAL
 
 
 

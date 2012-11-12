@@ -75,9 +75,9 @@ my $oogtarg = Imager->new(xsize=>100, ysize=>100, channels=>1);
 { # check empty image errors
   my $empty = Imager->new;
   ok(!$empty->rubthrough(src => $oosrc), "check empty target");
-  is($empty->errstr, 'empty input image', "check error message");
+  is($empty->errstr, 'rubthrough: empty input image', "check error message");
   ok(!$oogtarg->rubthrough(src=>$empty), "check empty source");
-  is($oogtarg->errstr, 'empty input image for src',
+  is($oogtarg->errstr, 'rubthrough: empty input image (for src)',
      "check error message");
 }
 

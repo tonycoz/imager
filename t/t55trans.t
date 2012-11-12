@@ -6,7 +6,7 @@ use Imager;
 eval "use Affix::Infix2Postfix; 1;"
   or plan skip_all => "No Affix::Infix2Postfix";
 
-plan tests => 6;
+plan tests => 8;
 
 #$Imager::DEBUG=1;
 
@@ -47,4 +47,10 @@ SKIP:
   }
 }
 
-
+{
+  my $empty = Imager->new;
+  ok(!$empty->transform(xexpr => "x", yexpr => "y"),
+     "fail to transform an empty image");
+  is($empty->errstr, "transform: empty input image",
+     "check error message");
+}

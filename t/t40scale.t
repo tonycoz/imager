@@ -103,13 +103,13 @@ ok($scaleimg->write(file=>'testout/t40scale3.ppm', type=>'pnm'),
 { # error handling - NULL image
   my $im = Imager->new;
   ok(!$im->scale(scalefactor => 0.5), "try to scale empty image");
-  is($im->errstr, "empty input image", "check error message");
+  is($im->errstr, "scale: empty input image", "check error message");
 
   # scaleX/scaleY
   ok(!$im->scaleX(scalefactor => 0.5), "try to scaleX empty image");
-  is($im->errstr, "empty input image", "check error message");
+  is($im->errstr, "scaleX: empty input image", "check error message");
   ok(!$im->scaleY(scalefactor => 0.5), "try to scaleY empty image");
-  is($im->errstr, "empty input image", "check error message");
+  is($im->errstr, "scaleY: empty input image", "check error message");
 }
 
 { # invalid qtype value

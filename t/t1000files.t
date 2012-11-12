@@ -4,7 +4,7 @@
 # the file format
 
 use strict;
-use Test::More tests => 85;
+use Test::More tests => 89;
 use Imager;
 
 -d "testout" or mkdir "testout";
@@ -144,6 +144,18 @@ is(Imager->errstr, "check_file_limits: width must be a positive integer",
    like($im->errstr, qr(^format 'bad' not supported - formats .* available for writing - This module fails to load loading Imager/File/BAD.pm$),
 	"check error message");
   }
+}
+
+{ # test empty image handling for write()/write_multi()
+  my $empty = Imager->new;
+  my $data;
+  ok(!$empty->write(data => \$data, type => "pnm"),
+     "fail to write an empty image");
+  is($empty->errstr, "write: empty input image", "check error message");
+  my $good = Imager->new(xsize => 1, ysize => 1);
+  ok(!Imager->write_multi({ data => \$data, type => "pnm" }, $good, $empty),
+     "fail to write_multi an empty image");
+  is(Imager->errstr, "write_multi: empty input image (image 2)");
 }
 
 # check file type probe
