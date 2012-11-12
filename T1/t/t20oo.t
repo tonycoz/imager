@@ -13,7 +13,8 @@ die $Imager::ERRSTR unless $green;
 my $red=Imager::Color->new(205, 92, 92, 255);
 die $Imager::ERRSTR unless $red;
 
-ok((-d "testout" or mkdir "testout"), "make output directory");
+-d "testout" or mkdir "testout";
+ok(-d "testout", "make output directory");
 
 Imager::init_log("testout/t20oo.log", 1);
 
