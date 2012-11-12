@@ -185,6 +185,7 @@ lib/Imager/Font.pm
 lib/Imager/Font/BBox.pm
 lib/Imager/Font/FreeType2.pm
 lib/Imager/Font/Image.pm
+lib/Imager/Font/Test.pm		Font for testing (outputs boxes only)
 lib/Imager/Font/Truetype.pm
 lib/Imager/Font/Type1.pm	Compatibility wrapper for Imager::Font::T1
 lib/Imager/Font/Wrap.pm

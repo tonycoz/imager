@@ -1,6 +1,6 @@
 #!perl -w
 use strict;
-use Test::More tests => 64;
+use Test::More tests => 66;
 use Imager;
 use Imager::Test qw(test_image);
 
@@ -181,4 +181,10 @@ SKIP:
     ok(!$src->crop( top=>100, bottom=>1500, left=>1000, right=>1500 ),
                 "outside of image" );
     cmp_ok($src->errstr, '=~', qr/outside of the image/, "and message");
+}
+
+{
+  my $empty = Imager->new;
+  ok(!$empty->crop(left => 10), "can't crop an empty image");
+  is($empty->errstr, "crop: empty input image", "check message");
 }

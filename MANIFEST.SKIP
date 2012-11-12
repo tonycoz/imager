@@ -134,3 +134,4 @@ Makefile\.old$
 
 # sub-module build junk
 \.bak$
+MYMETA.json

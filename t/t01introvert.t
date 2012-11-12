@@ -3,7 +3,7 @@
 # to make sure we get expected values
 
 use strict;
-use Test::More tests => 433;
+use Test::More tests => 465;
 
 BEGIN { use_ok(Imager => qw(:handy :all)) }
 
@@ -185,11 +185,36 @@ is($impal2->getheight, 201, "check height");
   is($impal3->type, 'paletted', "and is paletted");
 }
 
-{ # to_rgb on incomplete image
+{
   my $im = Imager->new;
   ok($im, "make empty image");
   ok(!$im->to_rgb8, "convert to rgb8");
-  is($im->errstr, "empty input image", "check message");
+  is($im->errstr, "to_rgb8: empty input image", "check message");
+  is($im->bits, undef, "can't call bits on an empty image");
+  is($im->errstr, "bits: empty input image", "check message");
+  is($im->type, undef, "can't call type on an empty image");
+  is($im->errstr, "type: empty input image", "check message");
+  is($im->virtual, undef, "can't call virtual on an empty image");
+  is($im->errstr, "virtual: empty input image", "check message");
+  is($im->is_bilevel, undef, "can't call virtual on an empty image");
+  is($im->errstr, "is_bilevel: empty input image", "check message");
+  ok(!$im->getscanline(y => 0), "can't call getscanline on an empty image");
+  is($im->errstr, "getscanline: empty input image", "check message");
+  ok(!$im->setscanline(y => 0, pixels => [ $red, $blue ]),
+     "can't call setscanline on an empty image");
+  is($im->errstr, "setscanline: empty input image", "check message");
+  ok(!$im->getsamples(y => 0), "can't call getsamples on an empty image");
+  is($im->errstr, "getsamples: empty input image", "check message");
+  is($im->getwidth, undef, "can't get width of empty image");
+  is($im->errstr, "getwidth: empty input image", "check message");
+  is($im->getheight, undef, "can't get height of empty image");
+  is($im->errstr, "getheight: empty input image", "check message");
+  is($im->getchannels, undef, "can't get channels of empty image");
+  is($im->errstr, "getchannels: empty input image", "check message");
+  is($im->getmask, undef, "can't get mask of empty image");
+  is($im->errstr, "getmask: empty input image", "check message");
+  is($im->setmask, undef, "can't set mask of empty image");
+  is($im->errstr, "setmask: empty input image", "check message");
 }
 
 { # basic checks, 8-bit direct images
@@ -1062,6 +1087,24 @@ my $psamp_outside_error = "Image position outside of image";
     is_color3($im->getpixel(x => 0, y => 9), 255, 255, 255,
 	      "check color set");
   }
+}
+
+{
+  my $empty = Imager->new;
+  ok(!$empty->addtag(name => "foo", value => 1),
+     "can't addtag on an empty image");
+  is($empty->errstr, "addtag: empty input image",
+    "check error message");
+  ok(!$empty->settag(name => "foo", value => 1),
+     "can't settag on an empty image");
+  is($empty->errstr, "settag: empty input image",
+    "check error message");
+  ok(!$empty->deltag(name => "foo"), "can't deltag on an empty image");
+  is($empty->errstr, "deltag: empty input image",
+     "check error message");
+  ok(!$empty->tags(name => "foo"), "can't tags on an empty image");
+  is($empty->errstr, "tags: empty input image",
+     "check error message");
 }
 
 Imager->close_log();

@@ -32,15 +32,16 @@ $INC{"Devel/Cover.pm"}
 $Test::More::VERSION =~ /^2\.00_/
   and plan skip_all => "threads are hosed in 2.00_06 and presumably all 2.00_*";
 
-plan tests => 11;
+plan tests => 13;
 
 my $thread = threads->create(sub { 1; });
 ok($thread->join, "join first thread");
 
-# these are all, or contain, XS allocated objects, if we don't
-# probably handle CLONE requests, or provide a CLONE_SKIP, we'll
-# probably see a double-free, one from the thread, and the other from
-# the main line of control.
+# these are all, or contain, XS allocated objects, if we don't handle
+# CLONE requests, or provide a CLONE_SKIP, we'll probably see a
+# double-free, one from the thread, and the other from the main line
+# of control.
+#
 # So make one of each
 
 my $im = Imager->new(xsize => 10, ysize => 10);
@@ -81,7 +82,10 @@ my $t2 = threads->create
   (
    sub {
      ok(!UNIVERSAL::isa($im->{IMG}, "Imager::ImgRaw"),
-	"the low level image object should be undef");
+	"the low level image object should become unblessed");
+     ok(!$im->_valid_image, "image no longer considered valid");
+     is($im->errstr, "images do not cross threads",
+	"check error message");
      1;
    }
   );

@@ -1,7 +1,7 @@
 #!perl -w
 use strict;
 use Imager qw(:handy);
-use Test::More tests => 116;
+use Test::More tests => 122;
 
 -d "testout" or mkdir "testout";
 
@@ -422,6 +422,20 @@ is($name, "test gradient", "check the name matches");
   my $cmp2 = Imager->new(xsize => 3, ysize => 2, channels => 4);
   $cmp2->setpixel(x => 2, 'y' => 0, color => '#FF02FF');
   is_image($diff2, $cmp2, "difference() - check image with mindist 1.1 - large samples");
+}
+
+{
+  my $empty = Imager->new;
+  ok(!$empty->filter(type => "hardinvert"), "can't filter an empty image");
+  is($empty->errstr, "filter: empty input image",
+     "check error message");
+  ok(!$empty->difference(other => $imbase), "can't difference empty image");
+  is($empty->errstr, "difference: empty input image",
+     "check error message");
+  ok(!$imbase->difference(other => $empty),
+     "can't difference against empty image");
+  is($imbase->errstr, "difference: empty input image (other image)",
+     "check error message");
 }
 
 sub test {

@@ -1,6 +1,6 @@
 #!perl -w
 use strict;
-use Test::More tests => 244;
+use Test::More tests => 256;
 use Imager ':all';
 use Imager::Test qw(is_color3 is_image);
 use constant PI => 3.14159265358979;
@@ -295,6 +295,25 @@ my $white = '#FFFFFF';
     is_color3($im->getpixel(x => 5, y => 5), 255, 255, 255,
 	      "check fill default color MM");
   }
+}
+
+{
+  my $empty = Imager->new;
+  ok(!$empty->box(), "can't draw box to empty image");
+  is($empty->errstr, "box: empty input image", "check error message");
+  ok(!$empty->arc(), "can't draw arc to empty image");
+  is($empty->errstr, "arc: empty input image", "check error message");
+  ok(!$empty->line(x1 => 0, y1 => 0, x2 => 10, y2 => 0),
+     "can't draw line to empty image");
+  is($empty->errstr, "line: empty input image", "check error message");
+  ok(!$empty->polyline(points => [ [ 0, 0 ], [ 10, 0 ] ]),
+     "can't draw polyline to empty image");
+  is($empty->errstr, "polyline: empty input image", "check error message");
+  ok(!$empty->polygon(points => [ [ 0, 0 ], [ 10, 0 ], [ 0, 10 ] ]),
+     "can't draw polygon to empty image");
+  is($empty->errstr, "polygon: empty input image", "check error message");
+  ok(!$empty->flood_fill(x => 0, y => 0), "can't flood fill to empty image");
+  is($empty->errstr, "flood_fill: empty input image", "check error message");
 }
 
 

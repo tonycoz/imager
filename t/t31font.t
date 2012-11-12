@@ -1,7 +1,7 @@
 #!perl -w
 use strict;
 use Imager;
-use Test::More tests => 10;
+use Test::More tests => 14;
 
 unshift @INC, "t";
 
@@ -39,4 +39,21 @@ SKIP:
   }, "load good font avoiding RT 62855")
     or skip("Failed to load", 1);
   ok($good->isa("GoodTestFont"), "and it's the right type");
+}
+
+
+use Imager::Font::Test;
+
+# check string() and align_string() handle an empty image
+{
+  my $font = Imager::Font::Test->new;
+  my $empty = Imager->new;
+  ok(!$empty->string(text => "foo", x => 0, y => 10, size => 10, font => $font),
+     "can't draw text on an empty image");
+  is($empty->errstr, "string: empty input image",
+     "check error message");
+  ok(!$empty->align_string(text => "foo", x => 0, y => 10, size => 10, font => $font),
+     "can't draw text on an empty image");
+  is($empty->errstr, "align_string: empty input image",
+     "check error message");
 }
