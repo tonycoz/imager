@@ -3,6 +3,26 @@
 #include "imio.h"
 
 static im_context_t get_context(void);
+static i_img *mathom_i_img_8_new(i_img_dim, i_img_dim, int);
+static i_img *mathom_i_img_16_new(i_img_dim, i_img_dim, int);
+static i_img *mathom_i_img_double_new(i_img_dim, i_img_dim, int);
+static i_img *mathom_i_img_pal_new(i_img_dim, i_img_dim, int, int);
+static void mathom_i_clear_error(void);
+static void mathom_i_push_error(int, const char *);
+static void mathom_i_push_errorvf(int, const char *, va_list);
+static int mathom_i_set_image_file_limits(i_img_dim, i_img_dim, size_t);
+static int mathom_i_get_image_file_limits(i_img_dim*, i_img_dim*, size_t*);
+static int
+mathom_i_int_check_image_file_limits(i_img_dim, i_img_dim, int, size_t);
+static i_img *mathom_i_img_alloc(void);
+static void mathom_i_img_init(i_img *);
+static i_io_glue_t *mathom_io_new_fd(int);
+static i_io_glue_t *mathom_io_new_bufchain(void);
+static i_io_glue_t *
+mathom_io_new_buffer(const char *data, size_t, i_io_closebufp_t, void *);
+static i_io_glue_t *
+mathom_io_new_cb(void *, i_io_readl_t, i_io_writel_t, i_io_seekl_t,
+		 i_io_closel_t, i_io_destroyl_t);
 
 /*
  DON'T ADD CASTS TO THESE
@@ -20,10 +40,10 @@ im_ext_funcs imager_function_table =
     myfree_file_line,
     myrealloc_file_line,
 
-    im_img_8_new,
-    im_img_16_new,
-    im_img_double_new,
-    im_img_pal_new,
+    mathom_i_img_8_new,
+    mathom_i_img_16_new,
+    mathom_i_img_double_new,
+    mathom_i_img_pal_new,
     i_img_destroy,
     i_sametype,
     i_sametype_chans,
@@ -60,10 +80,10 @@ im_ext_funcs imager_function_table =
     i_quant_translate,
     i_quant_transparent,
 
-    im_clear_error,
-    im_push_error,
+    mathom_i_clear_error,
+    mathom_i_push_error,
     i_push_errorf,
-    im_push_errorvf,
+    mathom_i_push_errorvf,
 
     i_tags_new,
     i_tags_set,
@@ -101,9 +121,9 @@ im_ext_funcs imager_function_table =
     i_rubthru,
 
     /* IMAGER_API_LEVEL 2 functions */
-    im_set_image_file_limits,
-    im_get_image_file_limits,
-    im_int_check_image_file_limits,
+    mathom_i_set_image_file_limits,
+    mathom_i_get_image_file_limits,
+    mathom_i_int_check_image_file_limits,
 
     i_flood_fill_border,
     i_flood_cfill_border,
@@ -118,8 +138,8 @@ im_ext_funcs imager_function_table =
     i_loog,
 
     /* IMAGER_API_LEVEL 4 functions */
-    im_img_alloc,
-    im_img_init,
+    mathom_i_img_alloc,
+    mathom_i_img_init,
 
     /* IMAGER_API_LEVEL 5 functions */
     i_img_is_monochrome,
@@ -147,16 +167,32 @@ im_ext_funcs imager_function_table =
     i_io_close,
     i_io_set_buffered,
     i_io_gets,
-    im_io_new_fd,
-    im_io_new_bufchain,
-    im_io_new_buffer,
-    im_io_new_cb,
+    mathom_io_new_fd,
+    mathom_io_new_bufchain,
+    mathom_io_new_buffer,
+    mathom_io_new_cb,
     io_slurp,
     io_glue_destroy,
 
     /* level 8 */
-    get_context,
+    im_img_8_new,
+    im_img_16_new,
+    im_img_double_new,
+    im_img_pal_new,
+    im_clear_error,
+    im_push_error,
+    im_push_errorvf,
     im_push_errorf,
+    im_set_image_file_limits,
+    im_get_image_file_limits,
+    im_int_check_image_file_limits,
+    im_img_alloc,
+    im_img_init,
+    im_io_new_fd,
+    im_io_new_bufchain,
+    im_io_new_buffer,
+    im_io_new_cb,
+    get_context,
     im_lhead,
     im_loog,
     im_context_refinc,
@@ -584,4 +620,90 @@ initialize the C<im_get_context> pointer at some point.
 static im_context_t
 get_context(void) {
   return im_get_context();
+}
+
+static i_img *
+mathom_i_img_8_new(i_img_dim xsize, i_img_dim ysize, int channels) {
+  return i_img_8_new(xsize, ysize, channels);
+}
+
+static i_img *
+mathom_i_img_16_new(i_img_dim xsize, i_img_dim ysize, int channels) {
+  return i_img_16_new(xsize, ysize, channels);
+}
+
+static i_img *
+mathom_i_img_double_new(i_img_dim xsize, i_img_dim ysize, int channels) {
+  return i_img_double_new(xsize, ysize, channels);
+}
+
+static i_img *
+mathom_i_img_pal_new(i_img_dim xsize, i_img_dim ysize, int channels,
+		     int maxpal) {
+  return i_img_pal_new(xsize, ysize, channels, maxpal);
+}
+
+static void
+mathom_i_clear_error(void) {
+  i_clear_error();
+}
+
+static void
+mathom_i_push_error(int code, const char *msg) {
+  i_push_error(code, msg);
+}
+
+static void
+mathom_i_push_errorvf(int code, const char *fmt, va_list args) {
+  i_push_errorvf(code, fmt, args);
+}
+
+static int
+mathom_i_set_image_file_limits(i_img_dim max_width, i_img_dim max_height,
+			       size_t max_bytes) {
+  return i_set_image_file_limits(max_width, max_height, max_bytes);
+}
+
+static int
+mathom_i_get_image_file_limits(i_img_dim *pmax_width, i_img_dim *pmax_height,
+			       size_t *pmax_bytes) {
+  return i_get_image_file_limits(pmax_width, pmax_height, pmax_bytes);
+}
+
+static int
+mathom_i_int_check_image_file_limits(i_img_dim width, i_img_dim height,
+				     int channels, size_t sample_size) {
+  return i_int_check_image_file_limits(width, height, channels, sample_size);
+}
+
+static i_img *
+mathom_i_img_alloc(void) {
+  return i_img_alloc();
+}
+
+static void
+mathom_i_img_init(i_img *im) {
+  i_img_init(im);
+}
+
+static i_io_glue_t *
+mathom_io_new_fd(int fd) {
+  return io_new_fd(fd);
+}
+static i_io_glue_t *
+mathom_io_new_bufchain(void) {
+  return io_new_bufchain();
+}
+
+static i_io_glue_t *
+mathom_io_new_buffer(const char *data, size_t size, i_io_closebufp_t closefp,
+		     void *close_data) {
+  return io_new_buffer(data, size, closefp, close_data);
+}
+
+static i_io_glue_t *
+mathom_io_new_cb(void *p, i_io_readl_t readcb, i_io_writel_t writecb,
+		 i_io_seekl_t seekcb, i_io_closel_t closecb,
+		 i_io_destroyl_t destroycb) {
+  return io_new_cb(p, readcb, writecb, seekcb, closecb, destroycb);
 }
