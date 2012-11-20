@@ -591,14 +591,14 @@ Parameters:
 
 =item *
 
-x, y - either integers giving the co-ordinates of the pixel to set or
+C<x>, C<y> - either integers giving the co-ordinates of the pixel to set or
 array references containing a set of pixels to be set.
 
 =item *
 
-type - the type of color object to return, either C<'8bit'> for
-Imager::Color objects or C<'float'> for Imager::Color::Float objects.
-Default: C<'8bit'>.
+C<type> - the type of color object to return, either C<'8bit'> for
+L<Imager::Color> objects or C<'float'> for L<Imager::Color::Float>
+objects.  Default: C<'8bit'>.
 
 =back
 
@@ -608,6 +608,9 @@ arrayref in scalar context.
 
 If a supplied co-ordinate is outside the image then C<undef> is
 returned for the pixel.
+
+Each color is returned as an L<Imager::Color> object or as an
+L<Imager::Color::Float> object if C<type> is set to C<"float">.
 
 Possible errors conditions include:
 
