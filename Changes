@@ -10,6 +10,8 @@ Imager release history.  Older releases can be found in Changes.old
    - use a mutex to avoid re-entering thread-unsafe T1Lib
    - use a library handle per thread for freetype 2.
    - use an engine handle per thread for freetype 1.x.
+   - originally these changes broke ABI compatibility, this has been
+     restored.
 
  - clarify the return value of getpixel();
    https://rt.cpan.org/Ticket/Display.html?id=81198
