@@ -1,5 +1,14 @@
 Imager release history.  Older releases can be found in Changes.old
 
+ - clarify the return value of getpixel();
+   https://rt.cpan.org/Ticket/Display.html?id=81198
+
+ - fixed a race condition in parallel testing for T1
+
+ - fixed a bug in handling yoff for untransformed image-based fills
+
+ - documentation improvements for Imager::Fill
+
 Imager 0.93 - 15 Oct 2012
 ===========
 
