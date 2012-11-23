@@ -34,6 +34,19 @@ i_ft2_new(name, index)
         char *name
         int index
 
+const char *
+i_ft2_version(runtime)
+	int runtime
+    PREINIT:
+	char buf[100];
+    CODE:
+	if (!i_ft2_version(runtime, buf, sizeof(buf))) {
+	  XSRETURN_EMPTY;
+	}
+	RETVAL = buf;
+    OUTPUT:
+	RETVAL
+
 undef_int
 i_ft2_setdpi(font, xdpi, ydpi)
         Imager::Font::FT2x font

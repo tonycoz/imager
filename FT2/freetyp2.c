@@ -38,6 +38,7 @@ Truetype, Type1 and Windows FNT.
 #include "imft2.h"
 #include <stdio.h>
 #include <math.h>
+#include <string.h>
 #include <ft2build.h>
 #include FT_FREETYPE_H
 #ifdef FT_MULTIPLE_MASTERS_H
@@ -54,6 +55,36 @@ static FT_Library library;
 
 static i_img_dim i_min(i_img_dim a, i_img_dim b);
 static i_img_dim i_max(i_img_dim a, i_img_dim b);
+
+int
+i_ft2_version(int runtime, char *buf, size_t buf_size) {
+  char work[100];
+  i_clear_error();
+
+  if (!ft2_initialized && !i_ft2_init())
+    return NULL;
+
+  if (buf_size == 0) {
+    i_push_error(0, "zero size buffer supplied");
+    return 0;
+  }
+  if (runtime) {
+    /* initialized to work around a bug in FT2
+       http://lists.nongnu.org/archive/html/freetype-devel/2002-09/msg00058.html
+       Though I don't know why I still see this in 2.4.2
+     */
+    FT_Int major = 1, minor = 1, patch = 1;
+    FT_Library_Version(library, &major, &minor, &patch);
+    sprintf(work, "%d.%d.%d", (int)major, (int)minor, (int)patch);
+  }
+  else {
+    sprintf(work, "%d.%d.%d", FREETYPE_MAJOR, FREETYPE_MINOR, FREETYPE_PATCH);
+  }
+  strncpy(buf, work, buf_size);
+  buf[buf_size-1] = '\0';
+
+  return 1;
+}
 
 /*
 =item i_ft2_init(void)

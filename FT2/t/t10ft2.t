@@ -23,6 +23,8 @@ SKIP:
 
   -f $fontname or skip("cannot find fontfile $fontname", 189);
 
+  print STDERR "FreeType2 runtime ", Imager::Font::FT2::i_ft2_version(1), 
+    " compile-time ", Imager::Font::FT2::i_ft2_version(0), "\n";
 
   my $bgcolor=i_color_new(255,0,0,0);
   my $overlay=Imager::ImgRaw::new(200,70,3);
