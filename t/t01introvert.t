@@ -3,7 +3,7 @@
 # to make sure we get expected values
 
 use strict;
-use Test::More tests => 433;
+use Test::More tests => 434;
 
 BEGIN { use_ok(Imager => qw(:handy :all)) }
 
@@ -125,9 +125,21 @@ is(Imager::i_img_type($im_pal), 0, "pal img shouldn't be paletted now");
   is_color3($colors[1], 0, 255, 0, "still green");
   is_color3($colors[2], 0, 0, 255, "still blue");
   is_color3($colors[3], 0, 0, 0, "still black");
-  is_deeply([ unpack("C", Imager::i_gsamp($im_pal2, 0, 100, 0, [ 0, 1, 2 ])) ],
-	    [ unpack("C", "\0\xFF\0\0\0\0"."\xFF\0\0" x 48 . "\0\0\xFF" x 50) ],
-	    "colors are still correct");
+  my @samples = Imager::i_gsamp($im_pal2, 0, 100, 0, [ 0, 1, 2 ]);
+  my @expect = unpack("C*", "\0\xFF\0\0\0\0"."\xFF\0\0" x 48 . "\0\0\xFF" x 50);
+  my $match_list = is_deeply(\@samples, \@expect, "colors are still correct");
+  my $samples = Imager::i_gsamp($im_pal2, 0, 100, 0, [ 0, 1, 2 ]);
+  my $match_scalar = is_deeply([ unpack("C*", $samples) ],
+			       \@expect, "colors are still correct (scalar)");
+  unless ($match_list && $match_scalar) {
+    # this has been failing on a particular smoker, provide more
+    # diagnostic information
+    print STDERR "Pallete:\n";
+    print STDERR "  $_: ", join(",", $colors[$_]->rgba), "\n" for 0..$#colors;
+    print STDERR "Samples (list): ", join(",", @samples), "\n";
+    print STDERR "Samples (scalar): ", join(",", unpack("C*", $samples)), "\n";
+    print STDERR "Indexes: ", join(",", Imager::i_gpal($im_pal2, 0, 100, 0)), "\n";
+  }
 }
 
 # test the OO interfaces
