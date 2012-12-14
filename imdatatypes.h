@@ -6,6 +6,11 @@
 
 #define MAXCHANNELS 4
 
+typedef struct im_context_tag *im_context_t;
+
+typedef ptrdiff_t im_slot_t;
+typedef void (*im_slot_destroy_t)(void *);
+
 /* used for palette indices in some internal code (which might be 
    exposed at some point
 */
@@ -283,6 +288,14 @@ i_f_psamp - implements psamp() for this image.
 
 i_f_psampf - implements psamp() for this image.
 
+=item *
+
+C<im_data> - image specific data internal to Imager.
+
+=item *
+
+C<context> - the Imager API context this image belongs to.
+
 =back
 
 =cut
@@ -335,6 +348,9 @@ struct i_img_ {
   i_f_psampf_t i_f_psampf;
 
   void *im_data;
+
+  /* 0.91 */
+  im_context_t context;
 };
 
 /* ext_data for paletted images
@@ -541,6 +557,18 @@ typedef enum {
 } i_combine_t;
 
 /*
+=item i_mutex_t
+X<i_mutex>
+=category mutex
+=synopsis i_mutex_t mutex;
+
+Opaque type for Imager's mutex API.
+
+=cut
+ */
+typedef struct i_mutex_tag *i_mutex_t;
+
+/*
    describes an axis of a MM font.
    Modelled on FT2's FT_MM_Axis.
    It would be nice to have a default entry too, but FT2 
@@ -680,6 +708,13 @@ enum {
 };
 
 #include "iolayert.h"
+
+/* error message information returned by im_errors() */
+
+typedef struct {
+  char *msg;
+  int code;
+} i_errmsg;
 
 typedef struct i_render_tag i_render;
 

@@ -3,6 +3,7 @@
 
 #include "imdatatypes.h"
 
+void i_tiff_init(void);
 i_img   * i_readtiff_wiol(io_glue *ig, int allow_incomplete, int page);
 i_img  ** i_readtiff_multi_wiol(io_glue *ig, int *count);
 undef_int i_writetiff_wiol(i_img *im, io_glue *ig);

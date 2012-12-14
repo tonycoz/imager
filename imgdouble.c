@@ -20,6 +20,7 @@ sample image type to work with.
 =cut
 */
 
+#define IMAGER_NO_CONTEXT
 #include "imager.h"
 #include "imageri.h"
 
@@ -91,36 +92,41 @@ static i_img IIM_base_double_direct =
 };
 
 /*
-=item i_img_double_new(i_img_dim x, i_img_dim y, int ch)
+=item im_img_double_new(ctx, x, y, ch)
+X<im_img_double_new API>X<i_img_double_new API>
 =category Image creation/destruction
+=synopsis i_img *img = im_img_double_new(aIMCTX, width, height, channels);
 =synopsis i_img *img = i_img_double_new(width, height, channels);
 
 Creates a new double per sample image.
 
+Also callable as C<i_img_double_new(width, height, channels)>.
+
 =cut
 */
-i_img *i_img_double_new(i_img_dim x, i_img_dim y, int ch) {
+i_img *
+im_img_double_new(pIMCTX, i_img_dim x, i_img_dim y, int ch) {
   size_t bytes;
   i_img *im;
 
-  mm_log((1,"i_img_double_new(x %" i_DF ", y %" i_DF ", ch %d)\n",
+  im_log((aIMCTX, 1,"i_img_double_new(x %" i_DF ", y %" i_DF ", ch %d)\n",
 	  i_DFc(x), i_DFc(y), ch));
 
   if (x < 1 || y < 1) {
-    i_push_error(0, "Image sizes must be positive");
+    im_push_error(aIMCTX, 0, "Image sizes must be positive");
     return NULL;
   }
   if (ch < 1 || ch > MAXCHANNELS) {
-    i_push_errorf(0, "channels must be between 1 and %d", MAXCHANNELS);
+    im_push_errorf(aIMCTX, 0, "channels must be between 1 and %d", MAXCHANNELS);
     return NULL;
   }
   bytes = x * y * ch * sizeof(double);
   if (bytes / y / ch / sizeof(double) != x) {
-    i_push_errorf(0, "integer overflow calculating image allocation");
+    im_push_errorf(aIMCTX, 0, "integer overflow calculating image allocation");
     return NULL;
   }
   
-  im = i_img_alloc();
+  im = im_img_alloc(aIMCTX);
   *im = IIM_base_double_direct;
   i_tags_new(&im->tags);
   im->xsize = x;
@@ -130,7 +136,7 @@ i_img *i_img_double_new(i_img_dim x, i_img_dim y, int ch) {
   im->ext_data = NULL;
   im->idata = mymalloc(im->bytes);
   memset(im->idata, 0, im->bytes);
-  i_img_init(im);
+  im_img_init(aIMCTX, im);
   
   return im;
 }
@@ -332,7 +338,8 @@ static i_img_dim i_gsamp_ddoub(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y,
       /* make sure we have good channel numbers */
       for (ch = 0; ch < chan_count; ++ch) {
         if (chans[ch] < 0 || chans[ch] >= im->channels) {
-          i_push_errorf(0, "No channel %d in this image", chans[ch]);
+	  dIMCTXim(im);
+          im_push_errorf(aIMCTX, 0, "No channel %d in this image", chans[ch]);
           return 0;
         }
       }
@@ -346,7 +353,8 @@ static i_img_dim i_gsamp_ddoub(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y,
     }
     else {
       if (chan_count <= 0 || chan_count > im->channels) {
-	i_push_errorf(0, "chan_count %d out of range, must be >0, <= channels", 
+	dIMCTXim(im);
+	im_push_errorf(aIMCTX, 0, "chan_count %d out of range, must be >0, <= channels", 
 		      chan_count);
 	return 0;
       }
@@ -383,7 +391,8 @@ static i_img_dim i_gsampf_ddoub(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y
       /* make sure we have good channel numbers */
       for (ch = 0; ch < chan_count; ++ch) {
         if (chans[ch] < 0 || chans[ch] >= im->channels) {
-          i_push_errorf(0, "No channel %d in this image", chans[ch]);
+	  dIMCTXim(im);
+          im_push_errorf(aIMCTX, 0, "No channel %d in this image", chans[ch]);
           return 0;
         }
       }
@@ -397,7 +406,8 @@ static i_img_dim i_gsampf_ddoub(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y
     }
     else {
       if (chan_count <= 0 || chan_count > im->channels) {
-	i_push_errorf(0, "chan_count %d out of range, must be >0, <= channels", 
+	dIMCTXim(im);
+	im_push_errorf(aIMCTX, 0, "chan_count %d out of range, must be >0, <= channels", 
 		      chan_count);
 	return 0;
       }
@@ -451,7 +461,8 @@ i_psamp_ddoub(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y,
       int all_in_mask = 1;
       for (ch = 0; ch < chan_count; ++ch) {
         if (chans[ch] < 0 || chans[ch] >= im->channels) {
-          i_push_errorf(0, "No channel %d in this image", chans[ch]);
+	  dIMCTXim(im);
+          im_push_errorf(aIMCTX, 0, "No channel %d in this image", chans[ch]);
           return -1;
         }
 	if (!((1 << chans[ch]) & im->ch_mask))
@@ -482,7 +493,8 @@ i_psamp_ddoub(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y,
     }
     else {
       if (chan_count <= 0 || chan_count > im->channels) {
-	i_push_errorf(0, "chan_count %d out of range, must be >0, <= channels", 
+	dIMCTXim(im);
+	im_push_errorf(aIMCTX, 0, "chan_count %d out of range, must be >0, <= channels", 
 		      chan_count);
 	return -1;
       }
@@ -503,6 +515,7 @@ i_psamp_ddoub(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y,
     return count;
   }
   else {
+    dIMCTXim(im);
     i_push_error(0, "Image position outside of image");
     return -1;
   }
@@ -542,7 +555,8 @@ i_psampf_ddoub(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y,
       int all_in_mask = 1;
       for (ch = 0; ch < chan_count; ++ch) {
         if (chans[ch] < 0 || chans[ch] >= im->channels) {
-          i_push_errorf(0, "No channel %d in this image", chans[ch]);
+	  dIMCTXim(im);
+          im_push_errorf(aIMCTX, 0, "No channel %d in this image", chans[ch]);
           return -1;
         }
 	if (!((1 << chans[ch]) & im->ch_mask))
@@ -573,7 +587,8 @@ i_psampf_ddoub(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y,
     }
     else {
       if (chan_count <= 0 || chan_count > im->channels) {
-	i_push_errorf(0, "chan_count %d out of range, must be >0, <= channels", 
+	dIMCTXim(im);
+	im_push_errorf(aIMCTX, 0, "chan_count %d out of range, must be >0, <= channels", 
 		      chan_count);
 	return -1;
       }
@@ -594,6 +609,7 @@ i_psampf_ddoub(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y,
     return count;
   }
   else {
+    dIMCTXim(im);
     i_push_error(0, "Image position outside of image");
     return -1;
   }
@@ -616,8 +632,9 @@ i_img_to_drgb(i_img *im) {
   i_img *targ;
   i_fcolor *line;
   i_img_dim y;
+  dIMCTXim(im);
 
-  targ = i_img_double_new(im->xsize, im->ysize, im->channels);
+  targ = im_img_double_new(aIMCTX, im->xsize, im->ysize, im->channels);
   if (!targ)
     return NULL;
   line = mymalloc(sizeof(i_fcolor) * im->xsize);

@@ -34,7 +34,8 @@ my $test_im_dbl = test_image_double;
   # bad image error
   my $im = Imager->new;
   ok(!Imager->combine(src => [ $im ]), "empty image");
-  is(Imager->errstr, "empty input image", "check message");
+  is(Imager->errstr, "combine: empty input image (src->[0])",
+     "check message");
 }
 
 {

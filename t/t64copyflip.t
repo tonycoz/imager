@@ -1,6 +1,6 @@
 #!perl -w
 use strict;
-use Test::More tests => 87;
+use Test::More tests => 95;
 use Imager;
 use Imager::Test qw(is_color3 is_image is_imaged test_image_double test_image isnt_image is_image_similar);
 
@@ -21,6 +21,12 @@ ok($nimg, "copy returned something");
 my $diff = Imager::i_img_diff($img->{IMG}, $nimg->{IMG});
 is_image($img, $nimg, "copy matches source");
 
+{
+  my $empty = Imager->new;
+  ok(!$empty->copy, "fail to copy an empty image");
+  is($empty->errstr, "copy: empty input image", "check error message");
+}
+
 # test if ->flip(dir=>'h')->flip(dir=>'h') doesn't alter the image
 $nimg->flip(dir=>"h")->flip(dir=>"h");
 is_image($nimg, $img, "double horiz flipped matches original");
@@ -33,6 +39,12 @@ is_image($nimg, $img, "double vertically flipped image matches original");
 # test if ->flip(dir=>'h')->flip(dir=>'v') is same as ->flip(dir=>'hv')
 $nimg->flip(dir=>"v")->flip(dir=>"h")->flip(dir=>"hv");;
 is_image($img, $nimg, "check flip with hv matches flip v then flip h");
+
+{
+  my $empty = Imager->new;
+  ok(!$empty->flip(dir => "v"), "fail to flip an empty image");
+  is($empty->errstr, "flip: empty input image", "check error message");
+}
 
 {
   my $imsrc = test_image_double;
@@ -148,6 +160,16 @@ ok($trimg, "matrix_transform() with back returned an image");
 $trimg->write(file=>"testout/t64_trans_back.ppm")
   or print "# Cannot save: ",$trimg->errstr,"\n";
 
+{
+  my $empty = Imager->new;
+  ok(!$empty->matrix_transform(matrix => [ 1, 0, 0,
+					   0, 1, 0,
+					   0, 0, 1 ]),
+     "can't transform an empty image");
+  is($empty->errstr, "matrix_transform: empty input image",
+     "check error message");
+}
+
 sub rot_test {
   my ($src, $degrees, $count) = @_;
 
@@ -253,4 +275,11 @@ sub rot_test {
   # $right = $right->convert(preset => "addalpha");
   # my $diff = $right->difference(other => $deg, mindist => 1);
   # $diff->write(file => "testout/t64rotdiff.png");
+}
+
+{
+  my $empty = Imager->new;
+  ok(!$empty->rotate(degrees => 90), "can't rotate an empty image");
+  is($empty->errstr, "rotate: empty input image",
+     "check error message");
 }

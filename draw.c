@@ -1,3 +1,4 @@
+#define IMAGER_NO_CONTEXT
 #include "imager.h"
 #include "draw.h"
 #include "log.h"
@@ -236,6 +237,10 @@ of angles in degrees from d1 to d2, with the color.
 void
 i_arc(i_img *im, i_img_dim x, i_img_dim y,double rad,double d1,double d2,const i_color *val) {
   i_int_hlines hlines;
+  dIMCTXim(im);
+
+  im_log((aIMCTX,1,"i_arc(im %p,(x,y)=(" i_DFp "), rad %f, d1 %f, d2 %f, col %p)",
+	  im, i_DFcp(x, y), rad, d1, d2, val));
 
   i_int_init_hlines_img(&hlines, im);
 
@@ -264,6 +269,10 @@ of angles in degrees from d1 to d2, with the fill object.
 void
 i_arc_cfill(i_img *im, i_img_dim x, i_img_dim y,double rad,double d1,double d2,i_fill_t *fill) {
   i_int_hlines hlines;
+  dIMCTXim(im);
+
+  im_log((aIMCTX,1,"i_arc_cfill(im %p,(x,y)=(" i_DFp "), rad %f, d1 %f, d2 %f, fill %p)",
+	  im, i_DFcp(x, y), rad, d1, d2, fill));
 
   i_int_init_hlines_img(&hlines, im);
 
@@ -363,6 +372,10 @@ i_arc_aa(i_img *im, double x, double y, double rad, double d1, double d2,
 	 const i_color *val) {
   double *xvals, *yvals;
   int count;
+  dIMCTXim(im);
+
+  im_log((aIMCTX,1,"i_arc_aa(im %p,(x,y)=(%f,%f), rad %f, d1 %f, d2 %f, col %p)",
+	  im, x, y, rad, d1, d2, val));
 
   arc_poly(&count, &xvals, &yvals, x, y, rad, d1, d2);
 
@@ -389,6 +402,10 @@ i_arc_aa_cfill(i_img *im, double x, double y, double rad, double d1, double d2,
 	       i_fill_t *fill) {
   double *xvals, *yvals;
   int count;
+  dIMCTXim(im);
+
+  im_log((aIMCTX,1,"i_arc_aa_cfill(im %p,(x,y)=(%f,%f), rad %f, d1 %f, d2 %f, fill %p)",
+	  im, x, y, rad, d1, d2, fill));
 
   arc_poly(&count, &xvals, &yvals, x, y, rad, d1, d2);
 
@@ -413,12 +430,12 @@ polar_to_plane(double cx, double cy, float angle, double radius, frac *x, frac *
 
 static
 void
-make_minmax_list(i_mmarray *dot, double x, double y, double radius) {
+make_minmax_list(pIMCTX, i_mmarray *dot, double x, double y, double radius) {
   float angle = 0.0;
   float astep = radius>0.1 ? .5/radius : 10;
   frac cx, cy, lx, ly, sx, sy;
 
-  mm_log((1, "make_minmax_list(dot %p, x %.2f, y %.2f, radius %.2f)\n", dot, x, y, radius));
+  im_log((aIMCTX, 1, "make_minmax_list(dot %p, x %.2f, y %.2f, radius %.2f)\n", dot, x, y, radius));
 
   polar_to_plane(x, y, angle, radius, &sx, &sy);
   
@@ -494,12 +511,13 @@ i_circle_aa(i_img *im, double x, double y, double rad, const i_color *val) {
   i_mmarray dot;
   i_color temp;
   i_img_dim ly;
+  dIMCTXim(im);
 
-  mm_log((1, "i_circle_aa(im %p, centre(" i_DFp "), rad %.2f, val %p)\n",
+  im_log((aIMCTX, 1, "i_circle_aa(im %p, centre(" i_DFp "), rad %.2f, val %p)\n",
 	  im, i_DFcp(x, y), rad, val));
 
   i_mmarray_cr(&dot,16*im->ysize);
-  make_minmax_list(&dot, x, y, rad);
+  make_minmax_list(aIMCTX, &dot, x, y, rad);
 
   for(ly = 0; ly<im->ysize; ly++) {
     int ix, cy, minx = INT_MAX, maxx = INT_MIN;
@@ -569,11 +587,15 @@ i_circle_out(i_img *im, i_img_dim xc, i_img_dim yc, i_img_dim r,
   i_img_dim x, y;
   i_img_dim dx, dy;
   int error;
+  dIMCTXim(im);
 
-  i_clear_error();
+  im_log((aIMCTX, 1, "i_circle_out(im %p, centre(" i_DFp "), rad %" i_DF ", col %p)\n",
+	  im, i_DFcp(xc, yc), i_DFc(r), col));
+
+  im_clear_error(aIMCTX);
 
   if (r < 0) {
-    i_push_error(0, "circle: radius must be non-negative");
+    im_push_error(aIMCTX, 0, "circle: radius must be non-negative");
     return 0;
   }
 
@@ -684,11 +706,15 @@ i_arc_out(i_img *im, i_img_dim xc, i_img_dim yc, i_img_dim r,
   i_img_dim seg2 = scale * 4;
   i_img_dim seg3 = scale * 6;
   i_img_dim seg4 = scale * 8;
+  dIMCTXim(im);
 
-  i_clear_error();
+  im_log((aIMCTX,1,"i_arc_out(im %p,centre(" i_DFp "), rad %" i_DF ", d1 %f, d2 %f, col %p)",
+	  im, i_DFcp(xc, yc), i_DFc(r), d1, d2, col));
+
+  im_clear_error(aIMCTX);
 
   if (r <= 0) {
-    i_push_error(0, "arc: radius must be non-negative");
+    im_push_error(aIMCTX, 0, "arc: radius must be non-negative");
     return 0;
   }
   if (d1 + 360 <= d2)
@@ -820,10 +846,14 @@ i_circle_out_aa(i_img *im, i_img_dim xc, i_img_dim yc, i_img_dim r, const i_colo
   double t;
   i_color workc = *col;
   int orig_alpha = col->channel[3];
+  dIMCTXim(im);
 
-  i_clear_error();
+  im_log((aIMCTX,1,"i_circle_out_aa(im %p,centre(" i_DFp "), rad %" i_DF ", col %p)",
+	  im, i_DFcp(xc, yc), i_DFc(r), col));
+
+  im_clear_error(aIMCTX);
   if (r <= 0) {
-    i_push_error(0, "arc: radius must be non-negative");
+    im_push_error(aIMCTX, 0, "arc: radius must be non-negative");
     return 0;
   }
   i = r;
@@ -930,10 +960,14 @@ i_arc_out_aa(i_img *im, i_img_dim xc, i_img_dim yc, i_img_dim r, double d1, doub
   i_img_dim seg2 = scale * 4;
   i_img_dim seg3 = scale * 6;
   i_img_dim seg4 = scale * 8;
+  dIMCTXim(im);
 
-  i_clear_error();
+  im_log((aIMCTX,1,"i_arc_out_aa(im %p,centre(" i_DFp "), rad %" i_DF ", d1 %f, d2 %f, col %p)",
+	  im, i_DFcp(xc, yc), i_DFc(r), d1, d2, col));
+
+  im_clear_error(aIMCTX);
   if (r <= 0) {
-    i_push_error(0, "arc: radius must be non-negative");
+    im_push_error(aIMCTX, 0, "arc: radius must be non-negative");
     return 0;
   }
   if (d1 + 360 <= d2)
@@ -1053,7 +1087,9 @@ Outlines the box from (x1,y1) to (x2,y2) inclusive with I<color>.
 void
 i_box(i_img *im,i_img_dim x1,i_img_dim y1,i_img_dim x2,i_img_dim y2,const i_color *val) {
   i_img_dim x,y;
-  mm_log((1,"i_box(im* %p, p1(" i_DFp "), p2(" i_DFp "),val %p)\n",
+  dIMCTXim(im);
+
+  im_log((aIMCTX, 1,"i_box(im* %p, p1(" i_DFp "), p2(" i_DFp "),val %p)\n",
 	  im, i_DFcp(x1,y1), i_DFcp(x2,y2), val));
   for(x=x1;x<x2+1;x++) {
     i_ppix(im,x,y1,val);
@@ -1080,8 +1116,9 @@ void
 i_box_filled(i_img *im,i_img_dim x1,i_img_dim y1,i_img_dim x2,i_img_dim y2, const i_color *val) {
   i_img_dim x, y, width;
   i_palidx index;
+  dIMCTXim(im);
 
-  mm_log((1,"i_box_filled(im* %p, p1(" i_DFp "), p2(" i_DFp "),val %p)\n",
+  im_log((aIMCTX,1,"i_box_filled(im* %p, p1(" i_DFp "), p2(" i_DFp "),val %p)\n",
 	  im, i_DFcp(x1, y1), i_DFcp(x2,y2) ,val));
 
   if (x1 > x2 || y1 > y2
@@ -1140,8 +1177,9 @@ color.
 int
 i_box_filledf(i_img *im,i_img_dim x1,i_img_dim y1,i_img_dim x2,i_img_dim y2, const i_fcolor *val) {
   i_img_dim x, y, width;
+  dIMCTXim(im);
 
-  mm_log((1,"i_box_filledf(im* %p, p1(" i_DFp "), p2(" i_DFp "),val %p)\n",
+  im_log((aIMCTX, 1,"i_box_filledf(im* %p, p1(" i_DFp "), p2(" i_DFp "),val %p)\n",
 	  im, i_DFcp(x1, y1), i_DFcp(x2, y2), val));
 
   if (x1 > x2 || y1 > y2
@@ -1198,8 +1236,9 @@ Fills the box from (x1,y1) to (x2,y2) inclusive with fill.
 void
 i_box_cfill(i_img *im,i_img_dim x1,i_img_dim y1,i_img_dim x2,i_img_dim y2,i_fill_t *fill) {
   i_render r;
+  dIMCTXim(im);
 
-  mm_log((1,"i_box_cfill(im* %p, p1(" i_DFp "), p2(" i_DFp "), fill %p)\n",
+  im_log((aIMCTX,1,"i_box_cfill(im* %p, p1(" i_DFp "), p2(" i_DFp "), fill %p)\n",
 	  im, i_DFcp(x1, y1), i_DFcp(x2,y2), fill));
 
   ++x2;
@@ -1816,11 +1855,15 @@ i_flood_fill(i_img *im, i_img_dim seedx, i_img_dim seedy, const i_color *dcol) {
   struct i_bitmap *btm;
   i_img_dim x, y;
   i_color val;
+  dIMCTXim(im);
 
-  i_clear_error();
+  im_log((aIMCTX, 1, "i_flood_fill(im %p, seed(" i_DFp "), col %p)",
+          im, i_DFcp(seedx, seedy), dcol));
+
+  im_clear_error(aIMCTX);
   if (seedx < 0 || seedx >= im->xsize ||
       seedy < 0 || seedy >= im->ysize) {
-    i_push_error(0, "i_flood_cfill: Seed pixel outside of image");
+    im_push_error(aIMCTX, 0, "i_flood_cfill: Seed pixel outside of image");
     return 0;
   }
 
@@ -1857,12 +1900,16 @@ i_flood_cfill(i_img *im, i_img_dim seedx, i_img_dim seedy, i_fill_t *fill) {
   i_img_dim bxmin, bxmax, bymin, bymax;
   struct i_bitmap *btm;
   i_color val;
+  dIMCTXim(im);
 
-  i_clear_error();
+  im_log((aIMCTX, 1, "i_flood_cfill(im %p, seed(" i_DFp "), fill %p)",
+          im, i_DFcp(seedx, seedy), fill));
+
+  im_clear_error(aIMCTX);
   
   if (seedx < 0 || seedx >= im->xsize ||
       seedy < 0 || seedy >= im->ysize) {
-    i_push_error(0, "i_flood_cfill: Seed pixel outside of image");
+    im_push_error(aIMCTX, 0, "i_flood_cfill: Seed pixel outside of image");
     return 0;
   }
 
@@ -1899,11 +1946,15 @@ i_flood_fill_border(i_img *im, i_img_dim seedx, i_img_dim seedy, const i_color *
   i_img_dim bxmin, bxmax, bymin, bymax;
   struct i_bitmap *btm;
   i_img_dim x, y;
+  dIMCTXim(im);
 
-  i_clear_error();
+  im_log((aIMCTX, 1, "i_flood_cfill(im %p, seed(" i_DFp "), dcol %p, border %p)",
+          im, i_DFcp(seedx, seedy), dcol, border));
+
+  im_clear_error(aIMCTX);
   if (seedx < 0 || seedx >= im->xsize ||
       seedy < 0 || seedy >= im->ysize) {
-    i_push_error(0, "i_flood_cfill: Seed pixel outside of image");
+    im_push_error(aIMCTX, 0, "i_flood_cfill: Seed pixel outside of image");
     return 0;
   }
 
@@ -1938,12 +1989,16 @@ i_flood_cfill_border(i_img *im, i_img_dim seedx, i_img_dim seedy, i_fill_t *fill
 		     const i_color *border) {
   i_img_dim bxmin, bxmax, bymin, bymax;
   struct i_bitmap *btm;
+  dIMCTXim(im);
 
-  i_clear_error();
+  im_log((aIMCTX, 1, "i_flood_cfill_border(im %p, seed(" i_DFp "), fill %p, border %p)",
+          im, i_DFcp(seedx, seedy), fill, border));
+
+  im_clear_error(aIMCTX);
   
   if (seedx < 0 || seedx >= im->xsize ||
       seedy < 0 || seedy >= im->ysize) {
-    i_push_error(0, "i_flood_cfill_border: Seed pixel outside of image");
+    im_push_error(aIMCTX, 0, "i_flood_cfill_border: Seed pixel outside of image");
     return 0;
   }
 

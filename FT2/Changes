@@ -1,5 +1,7 @@
  - report the library version during testing
 
+ - improve thread safety
+
 Imager-Font-FT2 0.86
 ====================
 

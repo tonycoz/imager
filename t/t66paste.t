@@ -1,6 +1,6 @@
 #!perl -w
 use strict;
-use Test::More tests => 54;
+use Test::More tests => 60;
 
 use Imager;
 use Imager::Test qw(is_image);
@@ -24,6 +24,20 @@ ok($img->paste(img=>$nimg, top=>30, left=>30), "paste it")
 
 ok($img->write(type=>'pnm',file=>'testout/t66.ppm'), "save it")
   or print "# ", $img->errstr, "\n";
+
+{
+  my $empty = Imager->new;
+  ok(!$empty->paste(src => $nimg), "paste into empty image");
+  is($empty->errstr, "paste: empty input image",
+     "check error message");
+
+  ok(!$img->paste(src => $empty), "paste from empty image");
+  is($img->errstr, "paste: empty input image (for src)",
+     "check error message");
+
+  ok(!$img->paste(), "no source image");
+  is($img->errstr, "no source image");
+}
 
 # more stringent tests
 {

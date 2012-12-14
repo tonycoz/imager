@@ -4,6 +4,7 @@ use Test::Builder;
 require Exporter;
 use vars qw(@ISA @EXPORT_OK $VERSION);
 use Carp qw(croak);
+use Config;
 
 $VERSION = "1.000";
 
@@ -35,7 +36,9 @@ $VERSION = "1.000";
      mask_tests
      test_colorf_gpix
      test_color_gpix
-     test_colorf_glin);
+     test_colorf_glin
+     can_test_threads
+     );
 
 sub diff_text_with_nul {
   my ($desc, $text1, $text2, @params) = @_;

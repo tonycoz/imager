@@ -19,7 +19,7 @@ plan skip_all => "perl 5.005_04, 5.005_05 too buggy"
 
 -d "testout" or mkdir "testout";
 
-plan tests => 115;
+plan tests => 117;
 require Inline;
 Inline->import(with => 'Imager');
 Inline->import("FORCE"); # force rebuild
@@ -410,6 +410,39 @@ raw_psampf(Imager im, int chan_count) {
   return i_psampf(im, 0, 1, 0, samps, NULL, chan_count);
 }
 
+int
+test_mutex() {
+  i_mutex_t m;
+
+  m = i_mutex_new();
+  i_mutex_lock(m);
+  i_mutex_unlock(m);
+  i_mutex_destroy(m);
+
+  return 1;
+}
+
+int
+test_slots() {
+  im_slot_t slot = im_context_slot_new(NULL);
+
+  if (im_context_slot_get(aIMCTX, slot)) {
+    fprintf(stderr, "slots should default to NULL\n");
+    return 0;
+  }
+  if (!im_context_slot_set(aIMCTX, slot, &slot)) {
+    fprintf(stderr, "set slot failed\n");
+    return 0;
+  }
+
+  if (im_context_slot_get(aIMCTX, slot) != &slot) {
+    fprintf(stderr, "get slot didn't match\n");
+    return 0;
+  }
+
+  return 1;
+}
+
 EOS
 
 my $im = Imager->new(xsize=>50, ysize=>50);
@@ -625,6 +658,10 @@ for my $bits (8, 16) {
      "check message");
   is($im->type, "paletted", "make sure we kept the image type");
 }
+
+ok(test_mutex(), "call mutex APIs");
+
+ok(test_slots(), "call slot APIs");
 
 sub _get_error {
   my @errors = Imager::i_errors();

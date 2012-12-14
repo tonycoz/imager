@@ -48,6 +48,7 @@ my @incpaths; # places to look for headers
 my @libpaths; # places to look for libraries
 my $coverage; # build for coverage testing
 my $assert; # build with assertions
+my $trace_context; # trace context management to stderr
 GetOptions("help" => \$help,
            "enable=s" => \@enable,
            "disable=s" => \@disable,
@@ -56,7 +57,8 @@ GetOptions("help" => \$help,
            "verbose|v" => \$VERBOSE,
            "nolog" => \$NOLOG,
 	   'coverage' => \$coverage,
-	   "assert|a" => \$assert);
+	   "assert|a" => \$assert,
+	   "tracecontext" => \$trace_context);
 
 setenv();
 
@@ -159,17 +161,43 @@ my $OSDEF  = "-DOS_$^O";
 if ($^O eq 'hpux')                { $OSLIBS .= ' -ldld'; }
 if (defined $Config{'d_dlsymun'}) { $OSDEF  .= ' -DDLSYMUN'; }
 
-my @objs = qw(Imager.o draw.o polygon.o image.o io.o iolayer.o
-              log.o gaussian.o conv.o pnm.o raw.o feat.o font.o combine.o
+my @objs = qw(Imager.o context.o draw.o polygon.o image.o io.o iolayer.o
+              log.o gaussian.o conv.o pnm.o raw.o feat.o combine.o
               filters.o dynaload.o stackmach.o datatypes.o
               regmach.o trans2.o quant.o error.o convert.o
               map.o tags.o palimg.o maskimg.o img8.o img16.o rotate.o
               bmp.o tga.o color.o fills.o imgdouble.o limits.o hlines.o
               imext.o scale.o rubthru.o render.o paste.o compose.o flip.o);
 
+if ($Config{useithreads}) {
+  if ($Config{i_pthread}) {
+    print "POSIX threads\n";
+    push @objs, "mutexpthr.o";
+  }
+  elsif ($^O eq 'MSWin32') {
+    print "Win32 threads\n";
+    push @objs, "mutexwin.o";
+  }
+  else {
+    print "Unsupported threading model\n";
+    push @objs, "mutexnull.o";
+    if ($ENV{AUTOMATED_TESTING}) {
+      die "OS unsupported: no threading support code for this platform\n";
+    }
+  }
+}
+else {
+  print "No threads\n";
+  push @objs, "mutexnull.o";
+}
+
 my @typemaps = qw(typemap.local typemap);
 if ($] < 5.008) {
     unshift @typemaps, "typemap.oldperl";
+}
+
+if ($trace_context) {
+  $CFLAGS .= " -DIMAGER_TRACE_CONTEXT";
 }
 
 my %opts=
@@ -521,7 +549,7 @@ sub init {
                        && !-e catfile($_[0], 'fterrors.h') },
      libcheck=>sub { $_[0] eq "libttf$aext" or $_[0] eq "libttf.$lext" },
      libfiles=>'-lttf',
-     objfiles=>'',
+     objfiles=>'fontft1.o',
      code => \&freetype1_probe,
      docs=>q{
 Truetype fonts are scalable fonts. They can include 

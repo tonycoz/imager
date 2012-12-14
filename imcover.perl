@@ -7,7 +7,11 @@ use Getopt::Long;
 
 my @tests;
 my $verbose;
+my $nodc;
+my $make_opts = "";
 GetOptions("t|test=s" => \@tests,
+	   "m=s" => \$make_opts,
+	   "n" => \$nodc,
 	   "v" => \$verbose)
   or die;
 
@@ -18,18 +22,20 @@ if (-f 'Makefile') {
   run("$make clean");
 }
 run("cover -delete");
-run("perl Makefile.PL --coverage")
-  and die;
-run("$make 'OTHERLDFLAGS=-ftest-coverage -fprofile-arcs'")
-  and die;
+run("perl Makefile.PL --coverage @ARGV")
+  and die "Makefile.PL failed\n";
+run("$make $make_opts 'OTHERLDFLAGS=-ftest-coverage -fprofile-arcs'")
+  and die "build failed\n";
 
 {
   local $ENV{DEVEL_COVER_OPTIONS} = "-db," . getcwd() . "/cover_db,-coverage,statement,branch,condition,subroutine";
-  my $makecmd = "$make test TEST_VERBOSE=1 HARNESS_PERL_SWITCHES=-MDevel::Cover";
+  my $makecmd = "$make test TEST_VERBOSE=1";
+  $makecmd .= " HARNESS_PERL_SWITCHES=-MDevel::Cover" unless $nodc;
   if (@tests) {
     $makecmd .= " TEST_FILES='@tests'";
   }
-  run($makecmd);
+  run($makecmd)
+    and die "Test failed\n";
 }
 
 # build gcov files
@@ -38,6 +44,8 @@ my $mani = maniread();
 my %paths;
 for my $filename (keys %$mani) {
   next unless $filename =~ /\.(xs|c|im)$/;
+  (my $gcda = $filename) =~ s/\.\w+$/.gcda/;
+  next unless -f $gcda;
   if ($filename =~ m!^(\w+)/(\w+\.\w+)$!) {
     push @{$paths{$1}}, $2;
   }

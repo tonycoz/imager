@@ -29,6 +29,69 @@ extern "C" {
 
 #include "imperl.h"
 
+/*
+
+Context object management
+
+*/
+
+typedef im_context_t Imager__Context;
+
+#define im_context_DESTROY(ctx) im_context_refdec((ctx), "DESTROY")
+
+#ifdef PERL_IMPLICIT_CONTEXT
+
+#define MY_CXT_KEY "Imager::_context" XS_VERSION
+
+typedef struct {
+  im_context_t ctx;
+} my_cxt_t;
+
+START_MY_CXT
+
+im_context_t fallback_context;
+
+static void
+start_context(pTHX) {
+  dMY_CXT;
+  MY_CXT.ctx = im_context_new();
+  sv_setref_pv(get_sv("Imager::_context", GV_ADD), "Imager::Context", MY_CXT.ctx);
+
+  /* Ideally we'd free this reference, but the error message memory
+     was never released on exit, so the associated memory here is reasonable
+     to keep.
+     With logging enabled we always need at least one context, since
+     objects may be released fairly late and attempt to get the log file.
+  */
+  im_context_refinc(MY_CXT.ctx, "start_context");
+  fallback_context = MY_CXT.ctx;
+}
+
+static im_context_t
+perl_get_context(void) {
+  dTHX;
+  dMY_CXT;
+  
+  return MY_CXT.ctx ? MY_CXT.ctx : fallback_context;
+}
+
+#else
+
+static im_context_t perl_context;
+
+static void
+start_context(pTHX) {
+  perl_context = im_context_new();
+  im_context_refinc(perl_context, "start_context");
+}
+
+static im_context_t
+perl_get_context(void) {
+  return perl_context;
+}
+
+#endif
+
 /* used to represent channel lists parameters */
 typedef struct i_channel_list_tag {
   int *channels;
@@ -726,7 +789,6 @@ validate_i_ppal(i_img *im, i_palidx const *indexes, int count) {
     }
   }
 }
-
 
 /* I don't think ICLF_* names belong at the C interface
    this makes the XS code think we have them, to let us avoid 
@@ -2060,7 +2122,7 @@ i_convert(src, avmain)
 	  RETVAL
 
 
-void
+undef_int
 i_map(im, pmaps)
     Imager::ImgRaw     im
 	PREINIT:
@@ -2098,6 +2160,9 @@ i_map(im, pmaps)
           }
           i_map(im, maps, mask);
 	  myfree(maps);
+	  RETVAL = 1;
+    OUTPUT:
+	RETVAL
 
 
 
@@ -3993,6 +4058,37 @@ i_int_hlines_CLONE_SKIP(cls)
 
 #endif
 
+MODULE = Imager  PACKAGE = Imager::Context PREFIX=im_context_
+
+void
+im_context_DESTROY(ctx)
+   Imager::Context ctx
+
+#ifdef PERL_IMPLICIT_CONTEXT
+
+void
+im_context_CLONE(...)
+    CODE:
+      MY_CXT_CLONE;
+      (void)items;
+      /* the following sv_setref_pv() will free this inc */
+      im_context_refinc(MY_CXT.ctx, "CLONE");
+      MY_CXT.ctx = im_context_clone(MY_CXT.ctx, "CLONE");
+      sv_setref_pv(get_sv("Imager::_context", GV_ADD), "Imager::Context", MY_CXT.ctx);
+
+#endif
+
 BOOT:
         PERL_SET_GLOBAL_CALLBACKS;
 	PERL_PL_SET_GLOBAL_CALLBACKS;
+#ifdef PERL_IMPLICIT_CONTEXT
+	{
+          MY_CXT_INIT;
+	  (void)MY_CXT;
+	}
+#endif
+	start_context(aTHX);
+	im_get_context = perl_get_context;
+#ifdef HAVE_LIBTT
+        i_tt_start();
+#endif

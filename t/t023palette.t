@@ -1,7 +1,7 @@
 #!perl -w
 # some of this is tested in t01introvert.t too
 use strict;
-use Test::More tests => 211;
+use Test::More tests => 226;
 BEGIN { use_ok("Imager", ':handy'); }
 
 use Imager::Test qw(image_bounds_checks test_image is_color3 isnt_image is_color4 is_fcolor3);
@@ -29,7 +29,9 @@ my $blacki = $img->addcolors(colors=>[ $black, $red, $green, $blue ]);
 print "# blacki $blacki\n";
 ok(defined $blacki && $blacki == 0, "we got the first color");
 
-ok($img->colorcount() == 4, "should have 4 colors");
+is($img->colorcount(), 4, "should have 4 colors");
+is($img->maxcolors, 256, "maxcolors always 256");
+
 my ($redi, $greeni, $bluei) = 1..3;
 
 my @all = $img->getcolors;
@@ -588,6 +590,41 @@ my $psamp_outside_error = "Image position outside of image";
 	     0, 1.0, 0, "get a pixel in float form, make sure it's green");
   is_fcolor3($im->getpixel(x => 2, y => 0, type => "float"),
 	     0, 0, 1.0, "get a pixel in float form, make sure it's blue");
+}
+
+{
+  my $empty = Imager->new;
+  ok(!$empty->to_paletted, "can't convert an empty image");
+  is($empty->errstr, "to_paletted: empty input image",
+    "check error message");
+
+  is($empty->addcolors(colors => [ $black ]), -1,
+     "can't addcolors() to an empty image");
+  is($empty->errstr, "addcolors: empty input image",
+     "check error message");
+
+  ok(!$empty->setcolors(colors => [ $black ]),
+     "can't setcolors() to an empty image");
+  is($empty->errstr, "setcolors: empty input image",
+     "check error message");
+
+  ok(!$empty->getcolors(),
+     "can't getcolors() from an empty image");
+  is($empty->errstr, "getcolors: empty input image",
+     "check error message");
+
+  is($empty->colorcount, -1, "can't colorcount() an empty image");
+  is($empty->errstr, "colorcount: empty input image",
+     "check error message");
+
+  is($empty->maxcolors, -1, "can't maxcolors() an empty image");
+  is($empty->errstr, "maxcolors: empty input image",
+     "check error message");
+
+  is($empty->findcolor(color => $blue), undef,
+     "can't findcolor an empty image");
+  is($empty->errstr, "findcolor: empty input image",
+     "check error message");
 }
 
 Imager->close_log;

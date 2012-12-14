@@ -1,3 +1,4 @@
+#define IMAGER_NO_CONTEXT
 #include <stdarg.h>
 #include "imageri.h"
 
@@ -76,6 +77,7 @@ Never compresses the image.
 */
 int
 i_writebmp_wiol(i_img *im, io_glue *ig) {
+  dIMCTXim(im);
   i_clear_error();
 
   /* pick a format */
@@ -116,8 +118,9 @@ i_readbmp_wiol(io_glue *ig, int allow_incomplete) {
   i_packed_t xsize, ysize, planes, bit_count, compression, size_image, xres, yres;
   i_packed_t clr_used, clr_important, offbits;
   i_img *im;
+  dIMCTXio(ig);
 
-  mm_log((1, "i_readbmp_wiol(ig %p)\n", ig));
+  im_log((aIMCTX, 1, "i_readbmp_wiol(ig %p)\n", ig));
   
   i_clear_error();
 
@@ -135,7 +138,7 @@ i_readbmp_wiol(io_glue *ig, int allow_incomplete) {
     return 0;
   }
 
-  mm_log((1, " bmp header: filesize %d offbits %d xsize %d ysize %d planes %d "
+  im_log((aIMCTX, 1, " bmp header: filesize %d offbits %d xsize %d ysize %d planes %d "
           "bit_count %d compression %d size %d xres %d yres %d clr_used %d "
           "clr_important %d\n", (int)filesize, (int)offbits, (int)xsize,
 	  (int)ysize, (int)planes, (int)bit_count, (int)compression, 
@@ -143,7 +146,7 @@ i_readbmp_wiol(io_glue *ig, int allow_incomplete) {
           (int)clr_important));
 
   if (!i_int_check_image_file_limits(xsize, abs(ysize), 3, sizeof(i_sample_t))) {
-    mm_log((1, "i_readbmp_wiol: image size exceeds limits\n"));
+    im_log((aIMCTX, 1, "i_readbmp_wiol: image size exceeds limits\n"));
     return NULL;
   }
   
@@ -171,7 +174,7 @@ i_readbmp_wiol(io_glue *ig, int allow_incomplete) {
     break;
 
   default:
-    i_push_errorf(0, "unknown bit count for BMP file (%d)", (int)bit_count);
+    im_push_errorf(aIMCTX, 0, "unknown bit count for BMP file (%d)", (int)bit_count);
     return NULL;
   }
 
@@ -273,7 +276,10 @@ read_packed(io_glue *ig, char *format, ...) {
       break;
       
     default:
-      i_fatal(1, "Unknown read_packed format code 0x%02x", code);
+      {
+	dIMCTXio(ig);
+	im_fatal(aIMCTX, 1, "Unknown read_packed format code 0x%02x", code);
+      }
     }
   }
   return 1;
@@ -325,7 +331,10 @@ write_packed(io_glue *ig, char *format, ...) {
       break;
 
     default:
-      i_fatal(1, "Unknown write_packed format code 0x%02x", *format);
+      {
+	dIMCTXio(ig);
+	im_fatal(aIMCTX, 1, "Unknown write_packed format code 0x%02x", *format);
+      }
     }
     ++format;
   }
@@ -350,6 +359,7 @@ int write_bmphead(io_glue *ig, i_img *im, int bit_count, int data_size) {
   int got_xres, got_yres, aspect_only;
   int colors_used = 0;
   int offset = FILEHEAD_SIZE + INFOHEAD_SIZE;
+  dIMCTXim(im);
 
   if (im->xsize > SIGNMAX32 || im->ysize > SIGNMAX32) {
     i_push_error(0, "image too large to write to BMP");
@@ -451,6 +461,7 @@ write_1bit_data(io_glue *ig, i_img *im) {
   int line_size = (im->xsize+7) / 8;
   int x, y;
   int unpacked_size;
+  dIMCTXim(im);
 
   /* round up to nearest multiple of four */
   line_size = (line_size + 3) / 4 * 4;
@@ -522,6 +533,7 @@ write_4bit_data(io_glue *ig, i_img *im) {
   int line_size = (im->xsize+1) / 2;
   int x, y;
   int unpacked_size;
+  dIMCTXim(im);
 
   /* round up to nearest multiple of four */
   line_size = (line_size + 3) / 4 * 4;
@@ -580,6 +592,7 @@ write_8bit_data(io_glue *ig, i_img *im) {
   int line_size = im->xsize;
   int y;
   int unpacked_size;
+  dIMCTXim(im);
 
   /* round up to nearest multiple of four */
   line_size = (line_size + 3) / 4 * 4;
@@ -627,6 +640,7 @@ write_24bit_data(io_glue *ig, i_img *im) {
   int y;
   int line_size = 3 * im->xsize;
   i_color bg;
+  dIMCTXim(im);
 
   i_get_file_background(im, &bg);
 
@@ -681,6 +695,7 @@ read_bmp_pal(io_glue *ig, i_img *im, int count) {
   int i;
   i_packed_t r, g, b, x;
   i_color c;
+  dIMCTXio(ig);
   
   for (i = 0; i < count; ++i) {
     if (!read_packed(ig, "CCCC", &b, &g, &r, &x)) {
@@ -719,9 +734,10 @@ read_1bit_bmp(io_glue *ig, int xsize, int ysize, int clr_used,
   int bit;
   unsigned char *in;
   long base_offset;
+  dIMCTXio(ig);
 
   if (compression != BI_RGB) {
-    i_push_errorf(0, "unknown 1-bit BMP compression (%d)", compression);
+    im_push_errorf(aIMCTX, 0, "unknown 1-bit BMP compression (%d)", compression);
     return NULL;
   }
 
@@ -752,13 +768,13 @@ read_1bit_bmp(io_glue *ig, int xsize, int ysize, int clr_used,
   if (!clr_used)
     clr_used = 2;
   if (clr_used < 0 || clr_used > 2) {
-    i_push_errorf(0, "out of range colors used (%d)", clr_used);
+    im_push_errorf(aIMCTX, 0, "out of range colors used (%d)", clr_used);
     return NULL;
   }
 
   base_offset = FILEHEAD_SIZE + INFOHEAD_SIZE + clr_used * 4;
   if (offbits < base_offset) {
-    i_push_errorf(0, "image data offset too small (%ld)", offbits);
+    im_push_errorf(aIMCTX, 0, "image data offset too small (%ld)", offbits);
     return NULL;
   }
 
@@ -847,6 +863,7 @@ read_4bit_bmp(io_glue *ig, int xsize, int ysize, int clr_used,
   int size, i;
   long base_offset;
   int starty;
+  dIMCTXio(ig);
 
   /* line_size is going to be smaller than xsize in most cases (and
      when it's not, xsize is itself small), and hence not overflow */
@@ -869,13 +886,13 @@ read_4bit_bmp(io_glue *ig, int xsize, int ysize, int clr_used,
     clr_used = 16;
 
   if (clr_used > 16 || clr_used < 0) {
-    i_push_errorf(0, "out of range colors used (%d)", clr_used);
+    im_push_errorf(aIMCTX, 0, "out of range colors used (%d)", clr_used);
     return NULL;
   }
 
   base_offset = FILEHEAD_SIZE + INFOHEAD_SIZE + clr_used * 4;
   if (offbits < base_offset) {
-    i_push_errorf(0, "image data offset too small (%ld)", offbits);
+    im_push_errorf(aIMCTX, 0, "image data offset too small (%ld)", offbits);
     return NULL;
   }
 
@@ -967,7 +984,7 @@ read_4bit_bmp(io_glue *ig, int xsize, int ysize, int clr_used,
 	  myfree(packed);
 	  myfree(line);
 	  i_push_error(0, "invalid data during decompression");
-	  mm_log((1, "read 4-bit: scanline overflow x %d + count %d vs xlimit %d (y %d)\n",
+	  im_log((aIMCTX, 1, "read 4-bit: scanline overflow x %d + count %d vs xlimit %d (y %d)\n",
 		  (int)x, count, (int)xlimit, (int)y));
 	  i_img_destroy(im);
 	  return NULL;
@@ -1017,7 +1034,7 @@ read_4bit_bmp(io_glue *ig, int xsize, int ysize, int clr_used,
 	    myfree(packed);
 	    myfree(line);
 	    i_push_error(0, "invalid data during decompression");
-	    mm_log((1, "read 4-bit: scanline overflow (unpacked) x %d + count %d vs xlimit %d (y %d)\n",
+	    im_log((aIMCTX, 1, "read 4-bit: scanline overflow (unpacked) x %d + count %d vs xlimit %d (y %d)\n",
 		  (int)x, count, (int)xlimit, (int)y));
 	    i_img_destroy(im);
 	    return NULL;
@@ -1052,7 +1069,7 @@ read_4bit_bmp(io_glue *ig, int xsize, int ysize, int clr_used,
   else { /*if (compression == BI_RLE4) {*/
     myfree(packed);
     myfree(line);
-    i_push_errorf(0, "unknown 4-bit BMP compression (%d)", compression);
+    im_push_errorf(aIMCTX, 0, "unknown 4-bit BMP compression (%d)", compression);
     i_img_destroy(im);
     return NULL;
   }
@@ -1077,6 +1094,7 @@ read_8bit_bmp(io_glue *ig, int xsize, int ysize, int clr_used,
   i_palidx *line;
   int line_size = xsize;
   long base_offset;
+  dIMCTXio(ig);
 
   line_size = (line_size+3) / 4 * 4;
   if (line_size < xsize) { /* if it overflowed (unlikely, but check) */
@@ -1100,13 +1118,13 @@ read_8bit_bmp(io_glue *ig, int xsize, int ysize, int clr_used,
   if (!clr_used)
     clr_used = 256;
   if (clr_used > 256 || clr_used < 0) {
-    i_push_errorf(0, "out of range colors used (%d)", clr_used);
+    im_push_errorf(aIMCTX, 0, "out of range colors used (%d)", clr_used);
     return NULL;
   }
 
   base_offset = FILEHEAD_SIZE + INFOHEAD_SIZE + clr_used * 4;
   if (offbits < base_offset) {
-    i_push_errorf(0, "image data offset too small (%ld)", offbits);
+    im_push_errorf(aIMCTX, 0, "image data offset too small (%ld)", offbits);
     return NULL;
   }
 
@@ -1249,7 +1267,7 @@ read_8bit_bmp(io_glue *ig, int xsize, int ysize, int clr_used,
   }
   else { 
     myfree(line);
-    i_push_errorf(0, "unknown 8-bit BMP compression (%d)", compression);
+    im_push_errorf(aIMCTX, 0, "unknown 8-bit BMP compression (%d)", compression);
     i_img_destroy(im);
     return NULL;
   }
@@ -1322,6 +1340,7 @@ read_direct_bmp(io_glue *ig, int xsize, int ysize, int bit_count,
   const char *compression_name;
   int bytes;
   long base_offset = FILEHEAD_SIZE + INFOHEAD_SIZE;
+  dIMCTXio(ig);
   
   unpack_code[0] = *("v3V"+pix_size-2);
   unpack_code[1] = '\0';
@@ -1368,7 +1387,7 @@ read_direct_bmp(io_glue *ig, int xsize, int ysize, int bit_count,
         return 0;
       }
       if (rmask == 0) {
-	i_push_errorf(0, "Zero mask for channel %d", i);
+	im_push_errorf(aIMCTX, 0, "Zero mask for channel %d", i);
 	return NULL;
       }
       masks.masks[i] = rmask;
@@ -1392,12 +1411,12 @@ read_direct_bmp(io_glue *ig, int xsize, int ysize, int bit_count,
     base_offset += 3 * 4;
   }
   else {
-    i_push_errorf(0, "unknown 24-bit BMP compression (%d)", compression);
+    im_push_errorf(aIMCTX, 0, "unknown 24-bit BMP compression (%d)", compression);
     return NULL;
   }
 
   if (offbits < base_offset) {
-    i_push_errorf(0, "image data offset too small (%ld)", offbits);
+    im_push_errorf(aIMCTX, 0, "image data offset too small (%ld)", offbits);
     return NULL;
   }
 
