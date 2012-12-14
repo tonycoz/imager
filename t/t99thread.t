@@ -18,9 +18,9 @@ BEGIN {
 use Test::More;
 
 $Config{useithreads}
-  or plan skip_all => "can't test Imager's lack of threads support with no threads";
+  or plan skip_all => "can't test Imager's threads support with no threads";
 $] > 5.008007
-  or plan skip_all => "require a perl with CLONE_SKIP to test Imager's lack of threads support";
+  or plan skip_all => "require a perl with CLONE_SKIP to test Imager's threads support";
 $loaded_threads
   or plan skip_all => "couldn't load threads";
 
