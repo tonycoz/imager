@@ -1,5 +1,11 @@
 Imager release history.  Older releases can be found in Changes.old
 
+Imager 0.94 - 15 Dec 2012
+=========================
+
+Variations on some of these changes were included in development
+releases.
+
  - improved thread safety
    - the internal error stack and log file handle are now in a per-thread
      context object
