@@ -12,7 +12,7 @@ Imager::Threads - Imager and threads
 
 =head1 DESCRIPTION
 
-Starting from version 0.93 Imager attempts to work safely with perl's
+Starting from version 0.94 Imager attempts to work safely with perl's
 C<ithreads>.
 
 Previous versions stored some state in global variables, in particular
