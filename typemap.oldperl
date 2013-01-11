@@ -1,6 +1,7 @@
 # typemaps for perl before 5.8
 # STRLEN isn't in the default typemap in older perls
 STRLEN	       	      	T_UV
+PerlIO *		T_INOUT
 
 #############################################################################
 INPUT
