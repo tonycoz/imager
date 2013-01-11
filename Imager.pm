@@ -6,6 +6,7 @@ use IO::File;
 use Scalar::Util;
 use Imager::Color;
 use Imager::Font;
+use Config;
 
 @EXPORT_OK = qw(
 		init
@@ -1350,12 +1351,11 @@ sub _get_reader_io {
     return io_new_fd($input->{fd});
   }
   elsif ($input->{fh}) {
-    my $fd = fileno($input->{fh});
-    unless (defined $fd) {
+    unless (Scalar::Util::openhandle($input->{fh})) {
       $self->_set_error("Handle in fh option not opened");
       return;
     }
-    return io_new_fd($fd);
+    return Imager::IO->new_fh($input->{fh});
   }
   elsif ($input->{file}) {
     my $file = IO::File->new($input->{file}, "r");
@@ -1405,17 +1405,11 @@ sub _get_writer_io {
     $io = io_new_fd($input->{fd});
   }
   elsif ($input->{fh}) {
-    my $fd = fileno($input->{fh});
-    unless (defined $fd) {
+    unless (Scalar::Util::openhandle($input->{fh})) {
       $self->_set_error("Handle in fh option not opened");
       return;
     }
-    # flush it
-    my $oldfh = select($input->{fh});
-    # flush anything that's buffered, and make sure anything else is flushed
-    $| = 1;
-    select($oldfh);
-    $io = io_new_fd($fd);
+    $io = Imager::IO->new_fh($input->{fh});
   }
   elsif ($input->{file}) {
     my $fh = new IO::File($input->{file},"w+");
@@ -4213,6 +4207,14 @@ sub preload {
   eval { require Imager::Font::W32 };
   eval { require Imager::Font::FT2 };
   eval { require Imager::Font::T1 };
+}
+
+package Imager::IO;
+
+sub new_fh {
+  my ($class, $fh) = @_;
+
+  return $class->_new_perlio($fh);
 }
 
 # backward compatibility for %formats

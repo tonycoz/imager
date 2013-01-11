@@ -146,6 +146,7 @@ imgdouble.c			Implements double/sample images
 imio.h
 immacros.h
 imperl.h
+imperlio.h
 imrender.h			Buffer rending engine function declarations
 inc/Devel/CheckLib.pm		David Cantrell's Devel::CheckLib
 io.c
@@ -225,6 +226,7 @@ mutexpthr.c
 mutexwin.c
 palimg.c
 paste.im
+perlio.c
 plug.h
 PNG/impng.c
 PNG/impng.h

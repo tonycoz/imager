@@ -1,8 +1,9 @@
 #!perl -w
 use strict;
-use Test::More tests => 252;
+use Test::More tests => 261;
 # for SEEK_SET etc, Fcntl doesn't provide these in 5.005_03
 use IO::Seekable;
+use Config;
 
 BEGIN { use_ok(Imager => ':all') };
 
@@ -832,6 +833,26 @@ SKIP:
     is(Imager->_error_as_msg(), "seek callback called but no seekcb supplied",
        "check error message");
   }
+}
+
+SKIP:
+{
+  $Config{useperlio}
+    or skip "PerlIO::scalar requires perlio", 9;
+
+  my $foo;
+  open my $fh, "+<", \$foo;
+  my $io = Imager::IO->_new_perlio($fh);
+  ok($io, "perlio: make a I/O object for a perl scalar fh");
+  is($io->write("test"), 4, "perlio: check we can write");
+  is($io->seek(2, SEEK_SET), 2, "perlio: check we can seek");
+  is($io->write("more"), 4, "perlio: write some more");
+  is($io->seek(0, SEEK_SET), 0, "perlio: seek back to start");
+  my $data;
+  is($io->read($data, 10), 6, "perlio: read everything back");
+  is($data, "temore", "perlio: check we read back what we wrote");
+  is($io->close, 0, "perlio: close it");
+  is($foo, "temore", "perlio: check it got to the scalar properly");
 }
 
 Imager->close_log;
