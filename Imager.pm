@@ -4210,11 +4210,43 @@ sub preload {
 }
 
 package Imager::IO;
+use IO::Seekable;
 
 sub new_fh {
   my ($class, $fh) = @_;
 
-  return $class->_new_perlio($fh);
+  if (tied(*$fh)) {
+    return $class->new_cb
+      (
+       sub {
+	 local $\;
+
+	 return print $fh $_[0];
+       },
+       sub {
+	 my $tmp;
+	 my $count = CORE::read $fh, $tmp, $_[1];
+	 defined $count
+	   or return undef;
+	 $count
+	   or return "";
+	 return $tmp;
+       },
+       sub {
+	 if ($_[1] != SEEK_CUR || $_[0] != 0) {
+	   unless (CORE::seek $fh, $_[0], $_[1]) {
+	     return -1;
+	   }
+	 }
+
+	 return tell $fh;
+       },
+       undef,
+      );
+  }
+  else {
+    return $class->_new_perlio($fh);
+  }
 }
 
 # backward compatibility for %formats
