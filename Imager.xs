@@ -21,6 +21,7 @@ extern "C" {
 #include "regmach.h"
 #include "imextdef.h"
 #include "imextpltypes.h"
+#include "imperlio.h"
 #include <float.h>
 
 #if i_int_hlines_testing()
@@ -1164,6 +1165,14 @@ io_new_bufchain(class)
 	RETVAL = io_new_bufchain();
     OUTPUT:
         RETVAL
+
+Imager::IO
+io__new_perlio(class, io)
+	PerlIO *io
+  CODE:
+        RETVAL = im_io_new_perlio(aTHX_ io);
+  OUTPUT:
+	RETVAL
 
 SV *
 io_slurp(class, ig)

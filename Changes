@@ -1,5 +1,16 @@
 Imager release history.  Older releases can be found in Changes.old
 
+ - NOTE: possibly backward incompatible
+   support reading from/writing to perl filehandes that aren't raw
+   files.
+
+   This allows Imager's I/O to honour handles with layers such as
+   gzip, scalar file handles or tied file handles.
+
+   This is backward in-compatible in that previous Imager would simply
+   use fileno() to retrieve the fd for the file and call write(2) etc
+   on it directly.
+
 Imager 0.94 - 15 Dec 2012
 =========================
 

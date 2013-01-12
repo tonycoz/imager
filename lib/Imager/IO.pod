@@ -50,6 +50,10 @@ Create a new I/O layer based on callbacks.  See
 L<Imager::Files/"I/O Callbacks"> for details on the behavior of 
 the callbacks.
 
+=item new_fh($fh)
+
+Create a new I/O layer based on a perl file handle.
+
 =item new_bufchain()
 
 Create a new C<bufchain> based I/O layer.  This accumulates the file
