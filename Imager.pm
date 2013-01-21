@@ -5092,7 +5092,8 @@ L<Affix::Infix2Postfix>(3), L<Parse::RecDescent>(3)
 
 Other perl imaging modules include:
 
-L<GD>(3), L<Image::Magick>(3), L<Graphics::Magick>(3),
+L<GD>(3), L<Image::Magick>(3),
+L<Graphics::Magick|http://www.graphicsmagick.org/perl.html>(3),
 L<Prima::Image>, L<IPA>.
 
 For manipulating image metadata see L<Image::ExifTool>.
