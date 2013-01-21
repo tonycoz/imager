@@ -1,6 +1,7 @@
 #!perl -w
 use strict;
-use Test::More tests => 270;
+use Test::More tests => 274;
+use Imager::Test qw(is_image);
 # for SEEK_SET etc, Fcntl doesn't provide these in 5.005_03
 use IO::Seekable;
 use Config;
@@ -838,7 +839,7 @@ SKIP:
 SKIP:
 {
   $Config{useperlio}
-    or skip "PerlIO::scalar requires perlio", 9;
+    or skip "PerlIO::scalar requires perlio", 13;
 
   my $foo;
   open my $fh, "+<", \$foo;
@@ -853,6 +854,22 @@ SKIP:
   is($data, "temore", "perlio: check we read back what we wrote");
   is($io->close, 0, "perlio: close it");
   is($foo, "temore", "perlio: check it got to the scalar properly");
+
+  my $io2 = Imager::IO->new_fh($fh);
+  ok($io2, "new_fh() can make an I/O layer object from a scalar fh");
+  close $fh;
+
+  my $im = Imager->new(xsize => 10, ysize => 10);
+  $foo = "";
+  open my $fh2, ">", \$foo;
+  ok($im->write(fh => $fh2, type => "pnm"), "can write image to scalar fh")
+    or print "# ", $im->errstr, "\n";
+
+  close $fh2;
+  open my $fh3, "<", \$foo;
+  my $im2 = Imager->new(fh => $fh3);
+  ok($im2, "read image from a scalar fh");
+  is_image($im, $im2, "check they match");
 }
 
 {
