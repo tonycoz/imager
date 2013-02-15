@@ -1,13 +1,17 @@
 #!perl -w
 use strict;
 use Test::More;
-use Pod::Parser;
+use Pod::Parser 1.50;
 use File::Find;
 use File::Spec::Functions qw(rel2abs abs2rel splitdir);
 
 # external stuff we refer to
 my @known =
   qw(perl Affix::Infix2Postfix Parse::RecDescent GD Image::Magick Graphics::Magick CGI Image::ExifTool XSLoader DynaLoader Prima::Image IPA PDL);
+
+# also known since we supply them, but we don't always install them
+push @known, qw(Imager::Font::FT2 Imager::Font::W32 Imager::Font::T1
+   Imager::File::JPEG Imager::File::GIF Imager::File::PNG Imager::File::TIFF);
 
 my @pod; # files with pod
 
@@ -104,9 +108,9 @@ sub sequence {
   if ($seq->cmd_name eq "L") {
     my $raw = $seq->raw_text;
     my $base_link = $seq->parse_tree->raw_text;
-    $base_link =~ /^(https?|ftp|mailto):/
+    (my $link = $base_link) =~ s/.*\|//s;
+    $link =~ /^(https?|ftp|mailto):/
       and return '';
-    (my $link = $base_link) =~ s/.*\|//;
     my ($pod, $part) = split m(/), $link, 2;
     $pod ||= $self->{link};
     if ($part) {

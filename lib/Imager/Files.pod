@@ -1378,7 +1378,7 @@ C<png_warning>X<tags,PNG,png_warning> - keyword "Warning".
 
 =back
 
-Each of these tags has a corresponding C< I<base-tag-name>_compressed
+Each of these tags has a corresponding C<< I<base-tag-name>_compressed
 >> tag, eg. C<png_comment_compressed>.  When reading, if the PNG chunk
 is compressed this tag will be set to 1, but is otherwise unset.  When
 writing, Imager will honor the compression tag if set and non-zero,
@@ -1436,7 +1436,7 @@ C<cHRM> chunks are not written.
 
 =item *
 
-C<tags, png_gamma>C<png_gamma> - the gamma of the image. This value is
+X<tags, png_gamma>C<png_gamma> - the gamma of the image. This value is
 not currently used by Imager when processing the image, but this may
 change in the future.
 
@@ -1461,7 +1461,7 @@ representation.  Ignored when writing.
 
 =item *
 
-X<tags, png_time>X<png_time> - the creation time of the file formatted
+X<tags, png_time>C<png_time> - the creation time of the file formatted
 as C<< I<year>-I<month>-I<day>TI<hour>:I<minute>:I<second> >>.  This
 is stored as time data structure in the file, not a string.  If you
 set C<png_time> and it cannot be parsed as above, writing the PNG file

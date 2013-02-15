@@ -4423,6 +4423,10 @@ Overview.
 
 =item *
 
+L<Imager::Install> - installation notes for Imager.
+
+=item *
+
 L<Imager::Tutorial> - a brief introduction to Imager.
 
 =item *
@@ -4486,6 +4490,10 @@ L<Imager::Matrix2d> - Helper class for affine transformations.
 =item *
 
 L<Imager::Fountain> - Helper for making gradient profiles.
+
+=item *
+
+L<Imager::IO> - Imager I/O abstraction.
 
 =item *
 
