@@ -10,6 +10,11 @@ Imager release history.  Older releases can be found in Changes.old
    This is backward in-compatible in that previous Imager would simply
    use fileno() to retrieve the fd for the file and call write(2) etc
    on it directly.
+   https://rt.cpan.org/Ticket/Display.html?id=78843
+
+ - moved most of README to lib/Imager/Install.pod which should make it
+   more accessible to the "web" generation, also significantly updated
+   and re-worked it.
 
 Imager 0.94 - 15 Dec 2012
 =========================
