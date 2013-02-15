@@ -41,7 +41,7 @@ open STDERR, '>&STDOUT' or die $!;
 rcomm('rm testout/*');
 rcomm(@precommands);
 my $make = $Config{make};
-rcomm("$^X Makefile.PL") || rcomm("$make") || rcomm("$make test TEST_VERBOSE=1");
+rcomm("$^X Makefile.PL --verbose") || rcomm("$make") || rcomm("$make test TEST_VERBOSE=1");
 head("Logfiles from run");
 dumplogs();
 
