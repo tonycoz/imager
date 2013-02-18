@@ -1,3 +1,20 @@
+Imager::Font::T1 1.020
+======================
+
+ - add the 1.019 changes list
+
+ - update README
+
+Imager::Font::T1 1.019
+======================
+
+ - slightly improve control over anti-aliasing, this is now recorded
+   per thread
+
+ - use a mutex to avoid re-entering t1lib, which isn't thread safe.
+
+ - avoid a paralled testing race condition.
+
 Imager::Font::T1 1.018
 ======================
 
