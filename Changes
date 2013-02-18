@@ -18,6 +18,9 @@ Imager release history.  Older releases can be found in Changes.old
 
  - the JPEG test code now reports the compile-time library version
 
+ - avoid a possible compiler optimization issue on CentOS 5.9 i386 by
+   rearranging (and mildly optimizing) some code.
+
 Imager 0.94 - 15 Dec 2012
 =========================
 
