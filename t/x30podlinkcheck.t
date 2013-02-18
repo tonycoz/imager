@@ -1,7 +1,10 @@
 #!perl -w
 use strict;
 use Test::More;
-use Pod::Parser 1.50;
+BEGIN {
+  eval 'use Pod::Parser 1.50;';
+  plan skip_all => "Pod::Parser 1.50 required for podlinkcheck" if $@;
+}
 use File::Find;
 use File::Spec::Functions qw(rel2abs abs2rel splitdir);
 
