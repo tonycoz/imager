@@ -269,7 +269,7 @@ sub rot_test {
   is($deg->getwidth, 150, "check degrees => 270 width");
   is($deg->getheight, 150, "check degrees => 270 height");
   ok($deg->write(file => "testout/t64rotdeg270.ppm"), "save it");
-  # deg->write(file => "testout/t64rotright270.ppm");
+  $right->write(file => "testout/t64rotright270.ppm");
   is_image($deg, $right, "check right and degrees result the same");
   #$deg = $deg->convert(preset => "addalpha");
   # $right = $right->convert(preset => "addalpha");

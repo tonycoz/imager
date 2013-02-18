@@ -252,16 +252,18 @@ i_img *i_matrix_transform_bg(i_img *src, i_img_dim xsize, i_img_dim ysize, const
 	if (fabs(sz) > 0.0000001 
 	    && sx >= -1 && sx < src->xsize
 	    && sy >= -1 && sy < src->ysize) {
+	  i_img_dim bx = floor(sx);
+	  i_img_dim by = floor(sy);
 
 	  ROT_DEBUG(fprintf(stderr, "map " i_DFp " to %g,%g\n", i_DFcp(x, y), sx, sy));
-	  if (sx != (i_img_dim)sx) {
-	    if (sy != (i_img_dim)sy) {
+	  if (sx != bx) {
+	    if (sy != by) {
 	      IM_COLOR c[2][2]; 
 	      IM_COLOR ci2[2];
 	      ROT_DEBUG(fprintf(stderr, " both non-int\n"));
 	      for (i = 0; i < 2; ++i)
 		for (j = 0; j < 2; ++j)
-		  if (IM_GPIX(src, floor(sx)+i, floor(sy)+j, &c[j][i]))
+		  if (IM_GPIX(src, bx+i, by+j, &c[j][i]))
 		    c[j][i] = back;
 	      for (j = 0; j < 2; ++j)
 		ci2[j] = interp_i_color(c[j][0], c[j][1], sx, src->channels);
@@ -271,7 +273,7 @@ i_img *i_matrix_transform_bg(i_img *src, i_img_dim xsize, i_img_dim ysize, const
 	      IM_COLOR ci2[2];
 	      ROT_DEBUG(fprintf(stderr, " y int, x non-int\n"));
 	      for (i = 0; i < 2; ++i)
-		if (IM_GPIX(src, floor(sx)+i, sy, ci2+i))
+		if (IM_GPIX(src, bx+i, sy, ci2+i))
 		  ci2[i] = back;
 	      vals[x] = interp_i_color(ci2[0], ci2[1], sx, src->channels);
 	    }
@@ -281,7 +283,7 @@ i_img *i_matrix_transform_bg(i_img *src, i_img_dim xsize, i_img_dim ysize, const
 	      IM_COLOR ci2[2];
 	      ROT_DEBUG(fprintf(stderr, " x int, y non-int\n"));
 	      for (i = 0; i < 2; ++i)
-		if (IM_GPIX(src, sx, floor(sy)+i, ci2+i))
+		if (IM_GPIX(src, bx, by+i, ci2+i))
 		  ci2[i] = back;
 	      vals[x] = interp_i_color(ci2[0], ci2[1], sy, src->channels);
 	    }
@@ -402,7 +404,7 @@ i_matrix_mult(double *dest, const double *left, const double *right) {
 
 #define numfmt "%23g"
 
-ROT_DEBUG(static dump_mat(const char *name, double *f) {
+ROT_DEBUG(static void dump_mat(const char *name, double *f) {
   fprintf(stderr, "%s:\n  " numfmt " " numfmt " " numfmt "\n"
 	  "  " numfmt " " numfmt " " numfmt "\n"
 	  "  " numfmt " " numfmt " " numfmt "\n",
@@ -416,6 +418,8 @@ i_img *i_rotate_exact_bg(i_img *src, double amount,
   double xlate2[9] = { 0 };
   double temp[9], matrix[9];
   i_img_dim x1, x2, y1, y2, newxsize, newysize;
+
+  ROT_DEBUG(fprintf(stderr, "rotate angle %.20g\n", amount));
 
   /* first translate the centre of the image to (0,0) */
   xlate1[0] = 1;
