@@ -13,6 +13,8 @@ $Imager::formats{"jpeg"}
 
 plan tests => 103;
 
+print STDERR "libjpeg version: ", Imager::File::JPEG::i_libjpeg_version(), "\n";
+
 my $green=i_color_new(0,255,0,255);
 my $blue=i_color_new(0,0,255,255);
 my $red=i_color_new(255,0,0,255);

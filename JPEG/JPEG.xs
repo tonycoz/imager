@@ -13,6 +13,9 @@ DEFINE_IMAGER_CALLBACKS;
 
 MODULE = Imager::File::JPEG  PACKAGE = Imager::File::JPEG
 
+const char *
+i_libjpeg_version()
+
 undef_int
 i_writejpeg_wiol(im, ig, qfactor)
     Imager::ImgRaw     im

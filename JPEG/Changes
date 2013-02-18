@@ -1,4 +1,11 @@
-Imager-File-JPEG 0.84
+Imager-File-JPEG 0.86
+=====================
+
+ - correct 0.85 header below
+
+ - test code now reports the (compile-time) library version
+
+Imager-File-JPEG 0.85
 =====================
 
  - avoid static variables when capturing IPTC data
