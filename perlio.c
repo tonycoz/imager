@@ -18,12 +18,16 @@ static int
 perlio_closer(void *handle);
 static void
 perlio_destroy(void *handle);
-static const char *my_strerror(int err);
+static const char *my_strerror(pTHX_ int err);
+
+#ifndef tTHX
+#define tTHX PerlInterpreter *
+#endif
 
 typedef struct {
   PerlIO *handle;
   pIMCTX;
-#ifdef USE_PERLIO
+#ifdef MULTIPLICITY
   tTHX my_perl;
 #endif
 } im_perlio;
@@ -47,7 +51,7 @@ im_io_new_perlio(pTHX_ PerlIO *handle) {
   dIMCTX;
 
   state->handle = handle;
-#ifdef USE_PERLIO
+#ifdef MULTIPLICITY
   state->aTHX = aTHX;
 #endif
   state->aIMCTX = aIMCTX;
@@ -64,7 +68,7 @@ perlio_reader(void *ctx, void *buf, size_t count) {
 
   ssize_t result = PerlIO_read(state->handle, buf, count);
   if (result == 0 && PerlIO_error(state->handle)) {
-    im_push_errorf(aIMCTX, errno, "read() failure (%s)", my_strerror(errno));
+    im_push_errorf(aIMCTX, errno, "read() failure (%s)", my_strerror(aTHX_ errno));
     return -1;
   }
 
@@ -81,7 +85,7 @@ perlio_writer(void *ctx, const void *buf, size_t count) {
   result = PerlIO_write(state->handle, buf, count);
 
   if (result == 0) {
-    im_push_errorf(aIMCTX, errno, "write() failure (%s)", my_strerror(errno));
+    im_push_errorf(aIMCTX, errno, "write() failure (%s)", my_strerror(aTHX_ errno));
   }
 
   return result;
@@ -95,7 +99,7 @@ perlio_seeker(void *ctx, off_t offset, int whence) {
 
   if (whence != SEEK_CUR || offset != 0) {
     if (PerlIO_seek(state->handle, offset, whence) < 0) {
-      im_push_errorf(aIMCTX, errno, "seek() failure (%s)", my_strerror(errno));
+      im_push_errorf(aIMCTX, errno, "seek() failure (%s)", my_strerror(aTHX_ errno));
       return -1;
     }
   }
@@ -110,7 +114,7 @@ perlio_closer(void *ctx) {
   dIMCTXperlio(state);
 
   if (PerlIO_flush(state->handle) < 0) {
-    im_push_errorf(aIMCTX, errno, "flush() failure (%s)", my_strerror(errno));
+    im_push_errorf(aIMCTX, errno, "flush() failure (%s)", my_strerror(aTHX_ errno));
     return -1;
   }
   return 0;
@@ -122,7 +126,7 @@ perlio_destroy(void *ctx) {
 }
 
 static
-const char *my_strerror(int err) {
+const char *my_strerror(pTHX_ int err) {
   const char *result = strerror(err);
   
   if (!result)
