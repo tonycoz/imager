@@ -1187,6 +1187,9 @@ i_io_read_fill(io_glue *ig, ssize_t needed) {
     work = ig->buffer;
   }
 
+  /* there should always be buffer space the first time around, but
+     avoid a compiler warning here */
+  rc = -1;
   while (work < buf_end && (rc = i_io_raw_read(ig, work, buf_end - work)) > 0) {
     work += rc;
     good = 1;
