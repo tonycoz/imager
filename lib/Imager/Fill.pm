@@ -269,11 +269,12 @@ Creates a hatched fill.  You can specify the following keywords:
 
 =over
 
-=item hatch
+=item *
 
-The type of hatch to perform, this can either be the numeric index of
-the hatch (not recommended), the symbolic name of the hatch, or an
-array of 8 integers which specify the pattern of the hatch.
+C<hatch> - The type of hatch to perform, this can either be the
+numeric index of the hatch (not recommended), the symbolic name of the
+hatch, or an array of 8 integers which specify the pattern of the
+hatch.
 
 Hatches are represented as cells 8x8 arrays of bits, which limits their
 complexity.
