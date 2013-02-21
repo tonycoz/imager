@@ -302,7 +302,7 @@ i_t1_cp(i_t1_font_t font, i_img *im,i_img_dim xb,i_img_dim yb,int channel,double
   mm_log((1,"metrics: ascent: %d descent: %d\n",glyph->metrics.ascent,glyph->metrics.descent));
   mm_log((1," leftSideBearing: %d rightSideBearing: %d\n",glyph->metrics.leftSideBearing,glyph->metrics.rightSideBearing));
   mm_log((1," advanceX: %d  advanceY: %d\n",glyph->metrics.advanceX,glyph->metrics.advanceY));
-  mm_log((1,"bpp: %d\n",glyph->bpp));
+  mm_log((1,"bpp: %lu\n", (unsigned long)glyph->bpp));
   
   xsize=glyph->metrics.rightSideBearing-glyph->metrics.leftSideBearing;
   ysize=glyph->metrics.ascent-glyph->metrics.descent;
@@ -366,7 +366,8 @@ i_t1_bbox(i_t1_font_t font, double points,const char *str,size_t len, i_img_dim 
 
   space_position = T1_GetEncodingIndex(fontnum, "space");
   
-  mm_log((1,"i_t1_bbox(font %p (%d),points %.2f,str '%.*s', len %d)\n",font, fontnum,points,len,str,len));
+  mm_log((1,"i_t1_bbox(font %p (%d),points %.2f,str '%.*s', len %u)\n",
+	  font, fontnum,points,(int)len,str,(unsigned)len));
   T1_LoadFont(fontnum);  /* FIXME: Here a return code is ignored - haw haw haw */ 
 
   if (len == 0) {
@@ -392,7 +393,7 @@ i_t1_bbox(i_t1_font_t font, double points,const char *str,size_t len, i_img_dim 
   }
   gbbox = T1_GetFontBBox(fontnum);
   
-  mm_log((1,"bbox: (%d,%d,%d,%d)\n",
+  mm_log((1,"bbox: (%d, %d, %d, %d, %d, %d)\n",
 	  (int)(bbox.llx*points/1000),
 	  (int)(gbbox.lly*points/1000),
 	  (int)(bbox.urx*points/1000),
@@ -483,7 +484,7 @@ i_t1_text(i_t1_font_t font, i_img *im, i_img_dim xb, i_img_dim yb,const i_color 
   mm_log((1,"metrics:  ascent: %d descent: %d\n",glyph->metrics.ascent,glyph->metrics.descent));
   mm_log((1," leftSideBearing: %d rightSideBearing: %d\n",glyph->metrics.leftSideBearing,glyph->metrics.rightSideBearing));
   mm_log((1," advanceX: %d advanceY: %d\n",glyph->metrics.advanceX,glyph->metrics.advanceY));
-  mm_log((1,"bpp: %d\n",glyph->bpp));
+  mm_log((1,"bpp: %lu\n",(unsigned long)glyph->bpp));
   
   xsize=glyph->metrics.rightSideBearing-glyph->metrics.leftSideBearing;
   ysize=glyph->metrics.ascent-glyph->metrics.descent;
@@ -590,8 +591,8 @@ i_t1_has_chars(i_t1_font_t font, const char *text, size_t len, int utf8,
   
   i_mutex_lock(mutex);
 
-  mm_log((1, "i_t1_has_chars(font_num %d, text %p, len %d, utf8 %d)\n", 
-          font_num, text, len, utf8));
+  mm_log((1, "i_t1_has_chars(font_num %d, text %p, len %u, utf8 %d)\n", 
+          font_num, text, (unsigned)len, utf8));
 
   i_clear_error();
   if (T1_LoadFont(font_num)) {

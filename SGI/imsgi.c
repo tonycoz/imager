@@ -461,7 +461,7 @@ read_rle_tables(io_glue *ig, i_img *img,
 
   mm_log((3, "Offset/length table:\n"));
   for(i=0; i < height * channels; i++)
-    mm_log((3, "%d: %d/%d\n", i, start_tab[i], length_tab[i]));
+    mm_log((3, "%d: %lu/%lu\n", i, start_tab[i], length_tab[i]));
 
   *pstart_tab = start_tab;
   *plength_tab = length_tab;
@@ -500,7 +500,7 @@ read_rgb_8_rle(i_img *img, io_glue *ig, rgb_header const *header) {
     return NULL;
   }
 
-  mm_log((1, "maxlen for an rle buffer: %d\n", max_length));
+  mm_log((1, "maxlen for an rle buffer: %lu\n", max_length));
 
   if (max_length > (img->xsize + 1) * 2) {
     i_push_errorf(0, "SGI image: ridiculous RLE line length %lu", max_length);
@@ -576,7 +576,7 @@ read_rgb_8_rle(i_img *img, io_glue *ig, rgb_header const *header) {
 	  /* RLE run */
 	  if (count > pixels_left) {
 	    i_push_error(0, "SGI image: RLE run overflows scanline");
-	    mm_log((2, "RLE run overflows scanline (y %d chan %d offset %ld len %ld)\n", y, c, start_tab[ci], length_tab[ci]));
+	    mm_log((2, "RLE run overflows scanline (y %" i_DF " chan %d offset %lu len %lu)\n", i_DFc(y), c, start_tab[ci], length_tab[ci]));
 	    goto ErrorReturn;
 	  }
 	  if (data_left < 1) {

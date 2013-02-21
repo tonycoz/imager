@@ -316,9 +316,8 @@ i_readpng_wiol(io_glue *ig) {
   png_read_info(png_ptr, info_ptr);
   png_get_IHDR(png_ptr, info_ptr, &width, &height, &bit_depth, &color_type, &interlace_type, NULL, NULL);
   
-  mm_log((1,
-	  "png_get_IHDR results: width %d, height %d, bit_depth %d, color_type %d, interlace_type %d\n",
-	  width,height,bit_depth,color_type,interlace_type));
+  mm_log((1, "png_get_IHDR results: width %u, height %u, bit_depth %d, color_type %d, interlace_type %d\n",
+	  (unsigned)width, (unsigned)height, bit_depth,color_type,interlace_type));
   
   CC2C[PNG_COLOR_TYPE_GRAY]=1;
   CC2C[PNG_COLOR_TYPE_PALETTE]=3;
@@ -687,7 +686,7 @@ get_png_tags(i_img *im, png_structp png_ptr, png_infop info_ptr,
 
   i_tags_set(&im->tags, "i_format", "png", -1);
   if (png_get_pHYs(png_ptr, info_ptr, &xres, &yres, &unit_type)) {
-    mm_log((1,"pHYs (%d, %d) %d\n", xres, yres, unit_type));
+    mm_log((1,"pHYs (%u, %u) %d\n", (unsigned)xres, (unsigned)yres, unit_type));
     if (unit_type == PNG_RESOLUTION_METER) {
       i_tags_set_float2(&im->tags, "i_xres", 0, xres * 0.0254, 5);
       i_tags_set_float2(&im->tags, "i_yres", 0, yres * 0.0254, 5);

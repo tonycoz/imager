@@ -218,7 +218,7 @@ wiol_empty_output_buffer(j_compress_ptr cinfo) {
 
   if (rc != JPGS) { /* XXX: Should raise some jpeg error */
     myfree(dest->buffer);
-    mm_log((1, "wiol_empty_output_buffer: Error: nbytes = %d != rc = %d\n", JPGS, rc));
+    mm_log((1, "wiol_empty_output_buffer: Error: nbytes = %d != rc = %d\n", JPGS, (int)rc));
     ERREXIT(cinfo, JERR_FILE_WRITE);
   }
   dest->pub.free_in_buffer = JPGS;
@@ -547,7 +547,7 @@ i_readjpeg_wiol(io_glue *data, int length, char** iptc_itext, int *itlength) {
 
   i_tags_set(&im->tags, "i_format", "jpeg", 4);
 
-  mm_log((1,"i_readjpeg_wiol -> (0x%x)\n",im));
+  mm_log((1,"i_readjpeg_wiol -> (%p)\n",im));
   return im;
 }
 

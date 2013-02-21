@@ -739,7 +739,7 @@ i_readtiff_multi_wiol(io_glue *ig, int *count) {
   /* Add code to get the filename info from the iolayer */
   /* Also add code to check for mmapped code */
 
-  mm_log((1, "i_readtiff_wiol(ig %p, length %d)\n", ig));
+  mm_log((1, "i_readtiff_wiol(ig %p)\n", ig));
   
   tif = TIFFClientOpen("(Iolayer)", 
 		       "rm", 
@@ -2725,7 +2725,8 @@ putter_cmyk16(read_state_t *state, i_img_dim x, i_img_dim y, i_img_dim width, i_
   uint16 *p = state->raster;
   int out_chan = state->img->channels;
 
-  mm_log((4, "putter_cmyk16(%p, %d, %d, %d, %d, %d)\n", x, y, width, height, row_extras));
+  mm_log((4, "putter_cmyk16(%p, %" i_DF ", %" i_DF ", %" i_DF
+	  ", %" i_DF ", %d)\n", state, x, y, width, height, row_extras));
 
   state->pixels_read += width * height;
   while (height > 0) {

@@ -920,7 +920,7 @@ tiff_load_ifd(imtiff *tiff, unsigned long offset) {
 
   /* rough check count + 1 entry + next offset */
   if (offset + (2+12+4) > tiff->size) {
-    mm_log((2, "offset %uld beyond end off Exif block"));
+    mm_log((2, "offset %lu beyond end off Exif block", offset));
     return 0;
   }
 
@@ -929,7 +929,7 @@ tiff_load_ifd(imtiff *tiff, unsigned long offset) {
   /* check we can fit the whole thing */
   ifd_size = 2 + count * 12 + 4; /* count + count entries + next offset */
   if (offset + ifd_size > tiff->size) {
-    mm_log((2, "offset %uld beyond end off Exif block"));
+    mm_log((2, "offset %lu beyond end off Exif block", offset));
     return 0;
   }
 
@@ -1420,7 +1420,8 @@ Retrieve a 16 bit unsigned integer from offset.
 static unsigned
 tiff_get16(imtiff *tiff, unsigned long offset) {
   if (offset + 2 > tiff->size) {
-    mm_log((3, "attempt to get16 at %uld in %uld image", offset, tiff->size));
+    mm_log((3, "attempt to get16 at %lu in %lu image", offset,
+	    (unsigned long)tiff->size));
     return 0;
   }
 
@@ -1441,7 +1442,8 @@ Retrieve a 32-bit unsigned integer from offset.
 static unsigned
 tiff_get32(imtiff *tiff, unsigned long offset) {
   if (offset + 4 > tiff->size) {
-    mm_log((3, "attempt to get16 at %uld in %uld image", offset, tiff->size));
+    mm_log((3, "attempt to get16 at %lu in %lu image", offset,
+	    (unsigned long)tiff->size));
     return 0;
   }
 
@@ -1492,7 +1494,7 @@ tiff_get16s(imtiff *tiff, unsigned long offset) {
   int result;
 
   if (offset + 2 > tiff->size) {
-    mm_log((3, "attempt to get16 at %uld in %uld image", offset, tiff->size));
+    mm_log((3, "attempt to get16 at %lu in %lu image", offset, tiff->size));
     return 0;
   }
 
@@ -1520,7 +1522,7 @@ tiff_get32s(imtiff *tiff, unsigned long offset) {
   unsigned work;
 
   if (offset + 4 > tiff->size) {
-    mm_log((3, "attempt to get16 at %uld in %uld image", offset, tiff->size));
+    mm_log((3, "attempt to get16 at %lu in %lu image", offset, tiff->size));
     return 0;
   }
 
