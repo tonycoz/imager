@@ -150,7 +150,6 @@ static int  LTT_hinted = 1;  /* FIXME: this too */
 
 void
 i_tt_start(void) {
-  im_context_t ctx = im_get_context();
   if (slot == -1)
     slot = im_context_slot_new(i_tt_uninit);
 }
