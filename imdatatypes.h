@@ -41,6 +41,7 @@ May be larger than int on some platforms.
 */
 
 typedef ptrdiff_t i_img_dim;
+typedef size_t i_img_dim_u;
 
 /*
 =item i_color

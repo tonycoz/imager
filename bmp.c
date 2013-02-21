@@ -741,7 +741,7 @@ read_1bit_bmp(io_glue *ig, int xsize, int ysize, int clr_used,
     return NULL;
   }
 
-  if (xsize + 8 < xsize) { /* if there was overflow */
+  if ((i_img_dim)((i_img_dim_u)xsize + 8) < xsize) { /* if there was overflow */
     /* we check with 8 because we allocate that much for the decoded 
        line buffer */
     i_push_error(0, "integer overflow during memory allocation");
