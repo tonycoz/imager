@@ -591,7 +591,7 @@ i_ft2_bbox_r(FT2_Fonthandle *handle, double cheight, double cwidth,
   int glyph_ascent, glyph_descent;
   FT_Glyph_Metrics *gm;
   i_img_dim work[4];
-  i_img_dim bounds[4];
+  i_img_dim bounds[4] = { 0 };
   double x = 0, y = 0;
   int i;
   FT_GlyphSlot slot;
@@ -742,7 +742,7 @@ i_ft2_text(FT2_Fonthandle *handle, i_img *im, i_img_dim tx, i_img_dim ty, const 
   char last_mode = ft_pixel_mode_none; 
   int last_grays = -1;
   int loadFlags = FT_LOAD_DEFAULT;
-  i_render *render;
+  i_render *render = NULL;
 
   mm_log((1, "i_ft2_text(handle %p, im %p, (tx,ty) (" i_DFp "), cl %p, cheight %f, cwidth %f, text %p, len %u, align %d, aa %d, vlayout %d, utf8 %d)\n",
 	  handle, im, i_DFcp(tx, ty), cl, cheight, cwidth, text, (unsigned)len, align, aa, vlayout, utf8));
@@ -789,7 +789,7 @@ i_ft2_text(FT2_Fonthandle *handle, i_img *im, i_img_dim tx, i_img_dim ty, const 
       ft2_push_message(error);
       i_push_errorf(0, "loading glyph for character \\x%02lx (glyph 0x%04X)",
                     c, index);
-      if (aa)
+      if (render)
         i_render_delete(render);
       return 0;
     }
@@ -801,7 +801,7 @@ i_ft2_text(FT2_Fonthandle *handle, i_img *im, i_img_dim tx, i_img_dim ty, const 
       if (error) {
 	ft2_push_message(error);
 	i_push_errorf(0, "rendering glyph 0x%04lX (character \\x%02X)", c, index);
-      if (aa)
+      if (render)
         i_render_delete(render);
 	return 0;
       }
@@ -852,7 +852,7 @@ i_ft2_text(FT2_Fonthandle *handle, i_img *im, i_img_dim tx, i_img_dim ty, const 
     ty -= slot->advance.y / 64;
   }
 
-  if (aa)
+  if (render)
     i_render_delete(render);
 
   return 1;
