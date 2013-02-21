@@ -123,22 +123,25 @@ i_ft2_bbox(font, cheight, cwidth, text_sv, utf8)
         }
 
 void
-i_ft2_bbox_r(font, cheight, cwidth, text, vlayout, utf8)
+i_ft2_bbox_r(font, cheight, cwidth, text_sv, vlayout, utf8)
         Imager::Font::FT2x font
         double cheight
         double cwidth
-        char *text
+	SV *text_sv
         int vlayout
         int utf8
       PREINIT:
         i_img_dim bbox[8];
         int i;
+        const char *text;
+	STRLEN len;
       PPCODE:
+        text = SvPV(text_sv, len);
 #ifdef SvUTF8
-        if (SvUTF8(ST(3)))
+        if (SvUTF8(text_sv))
           utf8 = 1;
 #endif
-        if (i_ft2_bbox_r(font, cheight, cwidth, text, strlen(text), vlayout,
+        if (i_ft2_bbox_r(font, cheight, cwidth, text, len, vlayout,
                          utf8, bbox)) {
           EXTEND(SP, 8);
           for (i = 0; i < 8; ++i)
@@ -146,7 +149,7 @@ i_ft2_bbox_r(font, cheight, cwidth, text, vlayout, utf8)
         }
 
 undef_int
-i_ft2_text(font, im, tx, ty, cl, cheight, cwidth, text, align, aa, vlayout, utf8)
+i_ft2_text(font, im, tx, ty, cl, cheight, cwidth, text_sv, align, aa, vlayout, utf8)
         Imager::Font::FT2x font
         Imager::ImgRaw im
         i_img_dim tx
@@ -154,20 +157,21 @@ i_ft2_text(font, im, tx, ty, cl, cheight, cwidth, text, align, aa, vlayout, utf8
         Imager::Color cl
         double cheight
         double cwidth
+	SV *text_sv
         int align
         int aa
         int vlayout
         int utf8
       PREINIT:
-        char *text;
+        const char *text;
         STRLEN len;
       CODE:
+        text = SvPV(text_sv, len);
 #ifdef SvUTF8
-        if (SvUTF8(ST(7))) {
+        if (SvUTF8(text_sv)) {
           utf8 = 1;
         }
 #endif
-        text = SvPV(ST(7), len);
         RETVAL = i_ft2_text(font, im, tx, ty, cl, cheight, cwidth, text,
                             len, align, aa, vlayout, utf8);
       OUTPUT:
@@ -191,13 +195,13 @@ i_ft2_cp(font, im, tx, ty, channel, cheight, cwidth, text_sv, align, aa, vlayout
 	char const *text;
 	STRLEN len;
       CODE:
+	text = SvPV(text_sv, len);
 #ifdef SvUTF8
-        if (SvUTF8(ST(7)))
+        if (SvUTF8(text_sv))
           utf8 = 1;
 #endif
-	text = SvPV(text_sv, len);
         RETVAL = i_ft2_cp(font, im, tx, ty, channel, cheight, cwidth, text,
-                          len, align, aa, vlayout, 1);
+                          len, align, aa, vlayout, utf8);
       OUTPUT:
         RETVAL
 
@@ -231,11 +235,11 @@ i_ft2_has_chars(handle, text_sv, utf8)
         size_t count;
         size_t i;
       PPCODE:
+        text = SvPV(text_sv, len);
 #ifdef SvUTF8
         if (SvUTF8(text_sv))
           utf8 = 1;
 #endif
-        text = SvPV(text_sv, len);
         work = mymalloc(len);
         count = i_ft2_has_chars(handle, text, len, utf8, work);
         if (GIMME_V == G_ARRAY) {
@@ -278,12 +282,12 @@ i_ft2_glyph_name(handle, text_sv, utf8 = 0, reliable_only = 1)
         size_t len;
         char name[255];
       PPCODE:
+        text = SvPV(text_sv, work_len);
+        len = work_len;
 #ifdef SvUTF8
         if (SvUTF8(text_sv))
           utf8 = 1;
 #endif
-        text = SvPV(text_sv, work_len);
-        len = work_len;
         while (len) {
           unsigned long ch;
           if (utf8) {

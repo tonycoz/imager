@@ -1,11 +1,11 @@
 #!perl -w
 use strict;
-use Test::More tests => 193;
+use Test::More tests => 204;
 use Cwd qw(getcwd abs_path);
 
 use Imager qw(:all);
 
-use Imager::Test qw(diff_text_with_nul is_color3 is_color4 isnt_image);
+use Imager::Test qw(diff_text_with_nul is_color3 is_color4 isnt_image is_image);
 
 -d "testout" or mkdir "testout";
 
@@ -137,6 +137,7 @@ SKIP:
                            aa=>1), "drawn UTF natively")) {
       print "# ",$im->errstr,"\n";
     }
+
   }
 
   # an attempt using emulation of UTF8
@@ -535,6 +536,92 @@ SKIP:
       isnt_image($work, $cmp, "make sure something was drawn");
     }
   }
+
+ SKIP:
+  { # check magic is handled correctly
+    # https://rt.cpan.org/Ticket/Display.html?id=83438
+    skip("no native UTF8 support in this version of perl", 11)
+      unless $] >= 5.006;
+    Imager->log("utf8 magic tests\n");
+    my $over = bless {}, "OverUtf8";
+    my $text = chr(0x2010);
+    my $white = Imager::Color->new("#FFF");
+    my $base_draw = Imager->new(xsize => 80, ysize => 20);
+    ok($base_draw->string(font => $oof,
+			  text => $text,
+			  x => 2,
+			  y => 18,
+			  size => 15,
+			  color => $white,
+			  aa => 1),
+       "magic: make a base image");
+    my $test_draw = Imager->new(xsize => 80, ysize => 20);
+    ok($test_draw->string(font => $oof,
+			  text => $over,
+			  x => 2,
+			  y => 18,
+			  size => 15,
+			  color => $white,
+			  aa => 1),
+       "magic: draw with overload");
+    is_image($base_draw, $test_draw, "check they match");
+    $test_draw->write(file => "testout/utf8tdr.ppm");
+    $base_draw->write(file => "testout/utf8bdr.ppm");
+
+    my $base_cp = Imager->new(xsize => 80, ysize => 20);
+    $base_cp->box(filled => 1, color => "#808080");
+    my $test_cp = $base_cp->copy;
+    ok($base_cp->string(font => $oof,
+			text => $text,
+			y => 2,
+			y => 18,
+			size => 16,
+			channel => 2,
+			aa => 1),
+       "magic: make a base image (channel)");
+    Imager->log("magic: draw to channel with overload\n");
+    ok($test_cp->string(font => $oof,
+			text => $over,
+			y => 2,
+			y => 18,
+			size => 16,
+			channel => 2,
+			aa => 1),
+       "magic: draw with overload (channel)");
+    is_image($test_cp, $base_cp, "check they match");
+    #$test_cp->write(file => "testout/utf8tcp.ppm");
+    #$base_cp->write(file => "testout/utf8bcp.ppm");
+
+    Imager->log("magic: has_chars");
+    is_deeply([ $oof->has_chars(string => $text) ], [ 1 ],
+	      "magic: has_chars with normal utf8 text");
+    is_deeply([ $oof->has_chars(string => $over) ], [ 1 ],
+	      "magic: has_chars with magic utf8 text");
+
+    Imager->log("magic: bounding_box\n");
+    my @base_bb = $oof->bounding_box(string => $text, size => 30);
+    is_deeply([ $oof->bounding_box(string => $over, size => 30) ],
+	      \@base_bb,
+	      "check bounding box magic");
+
+  SKIP:
+    {
+      my $nf = Imager::Font->new(file => "fontfiles/NameTest.ttf",
+				 type => "ft2")
+	or diag "Loading fontfiles/NameTest.ttf: ", Imager->errstr;
+      $nf
+	or skip("Cannot load NameTest.ttf", 2);
+      $nf->can_glyph_names()
+	or skip("Your FT2 lib can't glyph_names", 2);
+      Imager->log("magic: glyph_names\n");
+      is_deeply([ $nf->glyph_names(string => $text, reliable_only => 0) ],
+		[ "hyphentwo" ],
+		"magic: glyph_names with normal utf8 text");
+      is_deeply([ $nf->glyph_names(string => $over, reliable_only => 0) ],
+		[ "hyphentwo" ],
+		"magic: glyph_names with magic utf8 text");
+    }
+  }
 }
 
 sub align_test {
@@ -604,3 +691,7 @@ sub cross {
                  color => $color);
   
 }
+
+package OverUtf8;
+use overload '""' => sub { chr 0x2010 };
+
