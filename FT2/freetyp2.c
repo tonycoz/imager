@@ -17,7 +17,7 @@ freetyp2.c - font support via the FreeType library version 2.
   i_img *im = ...;
   i_color cl;
   if (!i_ft2_text(font, im, tx, ty, cl, cheight, cwidth, text, length, align,
-                  aa)) { error }
+                  aa, vlayout, utf8)) { error }
   if (!i_ft2_cp(font, im, tx, ty, channel, cheight, cwidth, text, length,
                 align, aa)) { error }
   i_ft2_destroy(font);
