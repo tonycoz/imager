@@ -87,14 +87,13 @@ sub _draw {
   if (exists $input{channel}) {
     $self->{t1font}->cp($input{image}{IMG}, $input{'x'}, $input{'y'},
 		    $input{channel}, $input{size},
-		    $input{string}, length($input{string}), $input{align},
+		    $input{string}, $input{align},
                     $input{utf8}, $flags, $aa)
       or return;
   } else {
     $self->{t1font}->text($input{image}{IMG}, $input{'x'}, $input{'y'}, 
 		      $input{color}, $input{size}, 
-		      $input{string}, length($input{string}), 
-		      $input{align}, $input{utf8}, $flags, $aa)
+		      $input{string}, $input{align}, $input{utf8}, $flags, $aa)
       or return;
   }
 
@@ -113,7 +112,7 @@ sub _bounding_box {
   $flags .= 's' if $input{strikethrough};
   $flags .= 'o' if $input{overline};
   return $self->{t1font}->bbox($input{size}, $input{string},
-			   length($input{string}), $input{utf8}, $flags);
+			       $input{utf8}, $flags);
 }
 
 # check if the font has the characters in the given string
@@ -123,7 +122,7 @@ sub has_chars {
   $self->_valid
     or return;
 
-  unless (defined $hsh{string} && length $hsh{string}) {
+  unless (defined $hsh{string}) {
     $Imager::ERRSTR = "No string supplied to \$font->has_chars()";
     return;
   }
@@ -155,7 +154,7 @@ sub glyph_names {
     or return Imager->_set_error("no string parameter passed to glyph_names");
   my $utf8 = _first($input{utf8} || 0);
 
-  return $self->{t1font}->glyph_name($string, $utf8);
+  return $self->{t1font}->glyph_names($string, $utf8);
 }
 
 sub set_aa_level {

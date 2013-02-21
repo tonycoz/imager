@@ -36,7 +36,7 @@ i_t1_DESTROY(font)
 
 
 undef_int
-i_t1_cp(font,im,xb,yb,channel,points,str_sv, length(str),align,utf8=0,flags="",aa=1)
+i_t1_cp(font,im,xb,yb,channel,points,str_sv,align,utf8=0,flags="",aa=1)
  Imager::Font::T1xs     font
     Imager::ImgRaw     im
 	 i_img_dim     xb
@@ -52,11 +52,11 @@ i_t1_cp(font,im,xb,yb,channel,points,str_sv, length(str),align,utf8=0,flags="",a
                char *str;
                STRLEN len;
              CODE:
+               str = SvPV(str_sv, len);
 #ifdef SvUTF8
                if (SvUTF8(str_sv))
                  utf8 = 1;
 #endif
-               str = SvPV(str_sv, len);
                RETVAL = i_t1_cp(font, im, xb,yb,channel,points,str,len,align,
                                   utf8,flags,aa);
            OUTPUT:
@@ -64,24 +64,24 @@ i_t1_cp(font,im,xb,yb,channel,points,str_sv, length(str),align,utf8=0,flags="",a
 
 
 void
-i_t1_bbox(fontnum,point,str_sv,len_ignored,utf8=0,flags="")
+i_t1_bbox(fontnum,point,str_sv,utf8=0,flags="")
  Imager::Font::T1xs     fontnum
 	    double     point
 	        SV*    str_sv
                int     utf8
               char*    flags
 	     PREINIT:
-               char *str;
+               const char *str;
                STRLEN len;
 	       i_img_dim     cords[BOUNDING_BOX_COUNT];
                int i;
                int rc;
 	     PPCODE:
+               str = SvPV(str_sv, len);
 #ifdef SvUTF8
                if (SvUTF8(str_sv))
                  utf8 = 1;
 #endif
-               str = SvPV(str_sv, len);
                rc = i_t1_bbox(fontnum,point,str,len,cords,utf8,flags);
                if (rc > 0) {
                  EXTEND(SP, rc);
@@ -92,7 +92,7 @@ i_t1_bbox(fontnum,point,str_sv,len_ignored,utf8=0,flags="")
 
 
 undef_int
-i_t1_text(font,im,xb,yb,cl,points,str_sv,length(str),align,utf8=0,flags="",aa=1)
+i_t1_text(font,im,xb,yb,cl,points,str_sv,align,utf8=0,flags="",aa=1)
  Imager::Font::T1xs font
     Imager::ImgRaw     im
 	 i_img_dim     xb
@@ -108,11 +108,11 @@ i_t1_text(font,im,xb,yb,cl,points,str_sv,length(str),align,utf8=0,flags="",aa=1)
                char *str;
                STRLEN len;
              CODE:
+               str = SvPV(str_sv, len);
 #ifdef SvUTF8
                if (SvUTF8(str_sv))
                  utf8 = 1;
 #endif
-               str = SvPV(str_sv, len);
                RETVAL = i_t1_text(font,im, xb,yb,cl,points,str,len,align,
                                   utf8,flags,aa);
            OUTPUT:
@@ -130,11 +130,11 @@ i_t1_has_chars(font, text_sv, utf8 = 0)
         int count;
         int i;
       PPCODE:
+        text = SvPV(text_sv, len);
 #ifdef SvUTF8
         if (SvUTF8(text_sv))
           utf8 = 1;
 #endif
-        text = SvPV(text_sv, len);
         work = mymalloc(len);
         count = i_t1_has_chars(font, text, len, utf8, work);
         if (GIMME_V == G_ARRAY) {
@@ -164,7 +164,7 @@ i_t1_face_name(font)
         }
 
 void
-i_t1_glyph_name(font, text_sv, utf8 = 0)
+i_t1_glyph_names(font, text_sv, utf8 = 0)
  Imager::Font::T1xs font
         SV *text_sv
         int utf8
@@ -174,11 +174,11 @@ i_t1_glyph_name(font, text_sv, utf8 = 0)
         size_t len;
         char name[255];
       PPCODE:
+        text = SvPV(text_sv, work_len);
 #ifdef SvUTF8
         if (SvUTF8(text_sv))
           utf8 = 1;
 #endif
-        text = SvPV(text_sv, work_len);
         len = work_len;
         while (len) {
           unsigned long ch;

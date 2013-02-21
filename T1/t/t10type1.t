@@ -8,7 +8,7 @@ use Cwd qw(getcwd abs_path);
 
 #$Imager::DEBUG=1;
 
-plan tests => 108;
+plan tests => 120;
 
 ok($Imager::formats{t1}, "must have t1");
 
@@ -49,11 +49,11 @@ SKIP:
   my $bgcolor=Imager::Color->new(255,0,0,0);
   my $overlay=Imager::ImgRaw::new(200,70,3);
   
-  ok($fnum->cp($overlay,5,50,1,50.0,'XMCLH',5,1), "i_t1_cp");
+  ok($fnum->cp($overlay,5,50,1,50.0,'XMCLH',1), "i_t1_cp");
 
   i_line($overlay,0,50,100,50,$bgcolor,1);
 
-  my @bbox=$fnum->bbox(50.0,'XMCLH',5);
+  my @bbox=$fnum->bbox(50.0,'XMCLH');
   is(@bbox, 8, "i_t1_bbox");
   print "# bbox: ($bbox[0], $bbox[1]) - ($bbox[2], $bbox[3])\n";
 
@@ -66,7 +66,7 @@ SKIP:
   $bgcolor=Imager::Color::set($bgcolor,200,200,200,0);
   my $backgr=Imager::ImgRaw::new(280,300,3);
 
-  ok($fnum->text($backgr,10,100,$bgcolor,150.0,'test',4,1,2), "i_t1_text");
+  ok($fnum->text($backgr,10,100,$bgcolor,150.0,'test',1,2), "i_t1_text");
 
   # "UTF8" tests
   # for perl < 5.6 we can hand-encode text
@@ -77,9 +77,9 @@ SKIP:
   my $text = pack("C*", 0x41, 0xC2, 0xA1, 0xE2, 0x80, 0x90, 0x41);
   my $alttext = "A\xA1A";
   
-  my @utf8box = $fnum->bbox(50.0, $text, length($text), 1);
+  my @utf8box = $fnum->bbox(50.0, $text, 1);
   is(@utf8box, 8, "utf8 bbox element count");
-  my @base = $fnum->bbox(50.0, $alttext, length($alttext), 0);
+  my @base = $fnum->bbox(50.0, $alttext, 0);
   is(@base, 8, "alt bbox element count");
   my $maxdiff = $fontname_pfb eq $deffont ? 0 : $base[2] / 3;
   print "# (@utf8box vs @base)\n";
@@ -87,9 +87,9 @@ SKIP:
       "compare box sizes $utf8box[2] vs $base[2] (maxerror $maxdiff)");
 
   # hand-encoded UTF8 drawing
-  ok($fnum->text($backgr, 10, 140, $bgcolor, 32, $text, length($text), 1,1), "draw hand-encoded UTF8");
+  ok($fnum->text($backgr, 10, 140, $bgcolor, 32, $text, 1,1), "draw hand-encoded UTF8");
 
-  ok($fnum->cp($backgr, 80, 140, 1, 32, $text, length($text), 1, 1), 
+  ok($fnum->cp($backgr, 80, 140, 1, 32, $text, 1, 1), 
       "cp hand-encoded UTF8");
 
   # ok, try native perl UTF8 if available
@@ -101,11 +101,11 @@ SKIP:
     # versions
     eval q{$text = "A\xA1\x{2010}A"}; # A, a with ogonek, HYPHEN, A in our test font
     #$text = "A".chr(0xA1).chr(0x2010)."A"; # this one works too
-    ok($fnum->text($backgr, 10, 180, $bgcolor, 32, $text, length($text), 1),
+    ok($fnum->text($backgr, 10, 180, $bgcolor, 32, $text, 1),
         "draw UTF8");
-    ok($fnum->cp($backgr, 80, 180, 1, 32, $text, length($text), 1),
+    ok($fnum->cp($backgr, 80, 180, 1, 32, $text, 1),
         "cp UTF8");
-    @utf8box = $fnum->bbox(50.0, $text, length($text), 0);
+    @utf8box = $fnum->bbox(50.0, $text, 0);
     is(@utf8box, 8, "native utf8 bbox element count");
     ok(abs($utf8box[2] - $base[2]) <= $maxdiff, 
       "compare box sizes native $utf8box[2] vs $base[2] (maxerror $maxdiff)");
@@ -395,6 +395,92 @@ SKIP:
     is($im->errstr, "i_t1_text(): T1_AASetString failed: Invalid Argument in Function Call",
        "check error message");
   }
+
+ SKIP:
+  { # check magic is handled correctly
+    # https://rt.cpan.org/Ticket/Display.html?id=83438
+    skip("no native UTF8 support in this version of perl", 10) 
+      unless $] >= 5.006;
+    my $font = Imager::Font->new(file=>$deffont, type=>'t1');
+    ok($font, "loaded deffont OO")
+      or skip("could not load font:".Imager->errstr, 4);
+    Imager->log("utf8 magic tests\n");
+    my $over = bless {}, "OverUtf8";
+    my $text = chr(0x2010)."A";
+    my $white = Imager::Color->new("#FFF");
+    my $base_draw = Imager->new(xsize => 80, ysize => 20);
+    ok($base_draw->string(font => $font,
+			  text => $text,
+			  x => 2,
+			  y => 18,
+			  size => 15,
+			  color => $white,
+			  aa => 1),
+       "magic: make a base image");
+    my $test_draw = Imager->new(xsize => 80, ysize => 20);
+    ok($test_draw->string(font => $font,
+			  text => $over,
+			  x => 2,
+			  y => 18,
+			  size => 15,
+			  color => $white,
+			  aa => 1),
+       "magic: draw with overload");
+    is_image($base_draw, $test_draw, "check they match");
+    $test_draw->write(file => "testout/utf8tdr.ppm");
+    $base_draw->write(file => "testout/utf8bdr.ppm");
+
+    my $base_cp = Imager->new(xsize => 80, ysize => 20);
+    $base_cp->box(filled => 1, color => "#808080");
+    my $test_cp = $base_cp->copy;
+    ok($base_cp->string(font => $font,
+			text => $text,
+			y => 2,
+			y => 18,
+			size => 16,
+			channel => 2,
+			aa => 1),
+       "magic: make a base image (channel)");
+    Imager->log("magic: draw to channel with overload\n");
+    ok($test_cp->string(font => $font,
+			text => $over,
+			y => 2,
+			y => 18,
+			size => 16,
+			channel => 2,
+			aa => 1),
+       "magic: draw with overload (channel)");
+    is_image($test_cp, $base_cp, "check they match");
+    #$test_cp->write(file => "testout/utf8tcp.ppm");
+    #$base_cp->write(file => "testout/utf8bcp.ppm");
+
+    Imager->log("magic: has_chars");
+    is_deeply([ $font->has_chars(string => $text) ], [ '', 1 ],
+	      "magic: has_chars with normal utf8 text");
+    is_deeply([ $font->has_chars(string => $over) ], [ '', 1 ],
+	      "magic: has_chars with magic utf8 text");
+
+    Imager->log("magic: bounding_box\n");
+    my @base_bb = $font->bounding_box(string => $text, size => 30);
+    is_deeply([ $font->bounding_box(string => $over, size => 30) ],
+	      \@base_bb,
+	      "check bounding box magic");
+
+  SKIP:
+    {
+      Imager->log("magic: glyph_names\n");
+      is_deeply([ $font->glyph_names(string => $text, reliable_only => 0) ],
+		[ undef, "A" ],
+		"magic: glyph_names with normal utf8 text");
+      is_deeply([ $font->glyph_names(string => $over, reliable_only => 0) ],
+		[ undef, "A" ],
+		"magic: glyph_names with magic utf8 text");
+    }
+  }
 }
 
+
 #malloc_state();
+
+package OverUtf8;
+use overload '""' => sub { chr(0x2010)."A" };
