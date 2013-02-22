@@ -173,12 +173,14 @@ i_t1_glyph_names(font, text_sv, utf8 = 0)
         STRLEN work_len;
         size_t len;
         char name[255];
+	SSize_t count = 0;
       PPCODE:
         text = SvPV(text_sv, work_len);
 #ifdef SvUTF8
         if (SvUTF8(text_sv))
           utf8 = 1;
 #endif
+	i_clear_error();
         len = work_len;
         while (len) {
           unsigned long ch;
@@ -186,7 +188,7 @@ i_t1_glyph_names(font, text_sv, utf8 = 0)
             ch = i_utf8_advance(&text, &len);
             if (ch == ~0UL) {
               i_push_error(0, "invalid UTF8 character");
-              break;
+	      XSRETURN(0);
             }
           }
           else {
@@ -195,12 +197,14 @@ i_t1_glyph_names(font, text_sv, utf8 = 0)
           }
           EXTEND(SP, 1);
           if (i_t1_glyph_name(font, ch, name, sizeof(name))) {
-            PUSHs(sv_2mortal(newSVpv(name, 0)));
+            ST(count) = sv_2mortal(newSVpv(name, 0));
           }
           else {
-            PUSHs(&PL_sv_undef);
-          } 
+            ST(count) = &PL_sv_undef;
+          }
+	  ++count;
         }
+	XSRETURN(count);
 
 int
 i_t1_CLONE_SKIP(...)

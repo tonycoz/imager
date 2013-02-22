@@ -8,7 +8,7 @@ use Cwd qw(getcwd abs_path);
 
 #$Imager::DEBUG=1;
 
-plan tests => 120;
+plan tests => 132;
 
 ok($Imager::formats{t1}, "must have t1");
 
@@ -91,6 +91,14 @@ SKIP:
 
   ok($fnum->cp($backgr, 80, 140, 1, 32, $text, 1, 1), 
       "cp hand-encoded UTF8");
+
+  { # invalid utf8
+    my $text = pack("C", 0xC0);
+    ok(!$fnum->text($backgr, 10, 140, $bgcolor, 32, $text, 1, 1),
+       "attempt to draw invalid utf8");
+    is(Imager->_error_as_msg, "invalid UTF8 character",
+       "check message");
+  }
 
   # ok, try native perl UTF8 if available
  SKIP:
@@ -216,6 +224,35 @@ SKIP:
     cmp_ok($bbox->right_bearing, '>', 0, "right bearing positive");
     cmp_ok($bbox->display_width, '<', $bbox->advance_width,
            "display smaller than advance");
+  }
+
+  { # invalid UTF8 handling at the OO level
+    my $im = Imager->new(xsize => 80, ysize => 20);
+    my $bad_utf8 = pack("C", 0xC0);
+    Imager->_set_error("");
+    ok(!$im->string(font => $font, size => 1, text => $bad_utf8, utf8 => 1,
+		    y => 18, x => 2),
+       "drawing invalid utf8 should fail");
+    is($im->errstr, "invalid UTF8 character", "check error message");
+    Imager->_set_error("");
+    ok(!$im->string(font => $font, size => 1, text => $bad_utf8, utf8 => 1,
+		    y => 18, x => 2, channel => 1),
+       "drawing invalid utf8 should fail (channel)");
+    is($im->errstr, "invalid UTF8 character", "check error message");
+    Imager->_set_error("");
+    ok(!$font->bounding_box(string => $bad_utf8, size => 30, utf8 => 1),
+       "bounding_box() bad utf8 should fail");
+    is(Imager->errstr, "invalid UTF8 character", "check error message");
+    Imager->_set_error("");
+    is_deeply([ $font->glyph_names(string => $bad_utf8, utf8 => 1) ],
+	      [ ],
+	      "glyph_names returns empty list for bad string");
+    is(Imager->errstr, "invalid UTF8 character", "check error message");
+    Imager->_set_error("");
+    is_deeply([ $font->has_chars(string => $bad_utf8, utf8 => 1) ],
+	      [ ],
+	      "has_chars returns empty list for bad string");
+    is(Imager->errstr, "invalid UTF8 character", "check error message");
   }
 
  SKIP:

@@ -857,6 +857,11 @@ say how those name tables are unreliable, or how FT2 handles them.
 Both FreeType 1.x and 2.x allow support for glyph names to not be
 included.
 
+If the supplied C<string> is marked as UTF-8 or the C<utf8> parameter
+is true and the supplied string does not contain valid UTF-8, returns
+an empty string and set an error message readable from C<<
+Imager->errstr >>,
+
 =item draw
 
 This is used by Imager's string() method to implement drawing text.

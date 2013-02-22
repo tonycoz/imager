@@ -111,8 +111,14 @@ sub _bounding_box {
   $flags .= 'u' if $input{underline};
   $flags .= 's' if $input{strikethrough};
   $flags .= 'o' if $input{overline};
-  return $self->{t1font}->bbox($input{size}, $input{string},
-			       $input{utf8}, $flags);
+  my @bbox =  $self->{t1font}->bbox($input{size}, $input{string},
+				    $input{utf8}, $flags);
+  unless (@bbox) {
+    Imager->_set_error(Imager->_error_as_msg);
+    return;
+  }
+
+  return @bbox;
 }
 
 # check if the font has the characters in the given string
@@ -126,8 +132,25 @@ sub has_chars {
     $Imager::ERRSTR = "No string supplied to \$font->has_chars()";
     return;
   }
-  return $self->{t1font}->has_chars($hsh{string}, 
-				    _first($hsh{'utf8'}, $self->{utf8}, 0));
+  if (wantarray) {
+    my @result = $self->{t1font}
+      ->has_chars($hsh{string}, _first($hsh{'utf8'}, $self->{utf8}, 0));
+    unless (@result) {
+      Imager->_set_error(Imager->_error_as_msg);
+      return;
+    }
+
+    return @result;
+  }
+  else {
+    my $result = $self->{t1font}
+      ->has_chars($hsh{string}, _first($hsh{'utf8'}, $self->{utf8}, 0));
+    unless (defined $result) {
+      Imager->_set_error(Imager->_error_as_msg);
+      return;
+    }
+    return $result;
+  }
 }
 
 sub utf8 {
@@ -154,7 +177,13 @@ sub glyph_names {
     or return Imager->_set_error("no string parameter passed to glyph_names");
   my $utf8 = _first($input{utf8} || 0);
 
-  return $self->{t1font}->glyph_names($string, $utf8);
+  my @result = $self->{t1font}->glyph_names($string, $utf8);
+  unless (@result) {
+    Imager->_set_error(Imager->_error_as_msg);
+    return;
+  }
+
+  return @result;
 }
 
 sub set_aa_level {

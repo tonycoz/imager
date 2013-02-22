@@ -286,6 +286,10 @@ i_t1_cp(i_t1_font_t font, i_img *im,i_img_dim xb,i_img_dim yb,int channel,double
   if (utf8) {
     int worklen;
     char *work = t1_from_utf8(str, len, &worklen);
+    if (work == NULL) {
+      i_mutex_unlock(mutex);
+      return 0;
+    }
     glyph=T1_AASetString( fontnum, work, worklen, 0, mod_flags, points, NULL);
     myfree(work);
   }
@@ -362,13 +366,19 @@ i_t1_bbox(i_t1_font_t font, double points,const char *str,size_t len, i_img_dim 
   int fontnum = font->font_id;
   int space_position;
 
+  i_clear_error();
+
   i_mutex_lock(mutex);
 
   space_position = T1_GetEncodingIndex(fontnum, "space");
   
   mm_log((1,"i_t1_bbox(font %p (%d),points %.2f,str '%.*s', len %u)\n",
 	  font, fontnum,points,(int)len,str,(unsigned)len));
-  T1_LoadFont(fontnum);  /* FIXME: Here a return code is ignored - haw haw haw */ 
+  if (T1_LoadFont(fontnum) == -1) {
+    t1_push_error();
+    i_mutex_unlock(mutex);
+    return 0;
+  }
 
   if (len == 0) {
     /* len == 0 has special meaning to T1lib, but it means there's
@@ -380,6 +390,10 @@ i_t1_bbox(i_t1_font_t font, double points,const char *str,size_t len, i_img_dim 
     if (utf8) {
       int worklen;
       char *work = t1_from_utf8(str, len, &worklen);
+      if (!work) {
+	i_mutex_unlock(mutex);
+	return 0;
+      }
       advance = T1_GetStringWidth(fontnum, work, worklen, 0, mod_flags);
       bbox = T1_GetStringBBox(fontnum,work,worklen,0,mod_flags);
       t1_fix_bbox(&bbox, work, worklen, advance, space_position);
@@ -422,7 +436,7 @@ i_t1_bbox(i_t1_font_t font, double points,const char *str,size_t len, i_img_dim 
 
 
 /*
-=item i_t1_text(im, xb, yb, cl, fontnum, points, str, len, align, aa)
+=item i_t1_text(im, xb, yb, cl, fontnum, points, str, len, align, utf8, flags, aa)
 
 Interface to text rendering in a single color onto an image
 
@@ -435,6 +449,8 @@ Interface to text rendering in a single color onto an image
    str     - char pointer to string to render
    len     - string length
    align   - (0 - top of font glyph | 1 - baseline )
+   utf8    - str is utf8
+   flags   - formatting flags
    aa      - anti-aliasing level
 
 =cut
@@ -466,6 +482,10 @@ i_t1_text(i_t1_font_t font, i_img *im, i_img_dim xb, i_img_dim yb,const i_color 
   if (utf8) {
     int worklen;
     char *work = t1_from_utf8(str, len, &worklen);
+    if (!work) {
+      i_mutex_unlock(mutex);
+      return 0;
+    }
     glyph=T1_AASetString( fontnum, work, worklen, 0, mod_flags, points, NULL);
     myfree(work);
   }
@@ -688,12 +708,13 @@ i_t1_glyph_name(i_t1_font_t font, unsigned long ch, char *name_buf,
   char *name;
   int font_num = font->font_id;
 
-  i_mutex_lock(mutex);
   i_clear_error();
   if (ch > 0xFF) {
-    i_mutex_unlock(mutex);
     return 0;
   }
+
+  i_mutex_lock(mutex);
+
   if (T1_LoadFont(font_num)) {
     t1_push_error();
     i_mutex_unlock(mutex);
