@@ -4,7 +4,7 @@ use Imager::Color;
 use strict;
 use vars qw($VERSION);
 
-$VERSION = "1.035";
+$VERSION = "1.036";
 
 # the aim here is that we can:
 #  - add file based types in one place: here
@@ -249,7 +249,8 @@ sub bounding_box {
   $input{sizew} = _first($input{sizew}, $self->{sizew}, 0);
   $input{utf8} = _first($input{utf8}, $self->{utf8}, 0);
 
-  my @box = $self->_bounding_box(%input);
+  my @box = $self->_bounding_box(%input)
+    or return;
 
   if (wantarray) {
     if(@box && exists $input{'x'} and exists $input{'y'}) {
