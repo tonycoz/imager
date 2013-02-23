@@ -424,6 +424,8 @@ i_ft2_bbox(FT2_Fonthandle *handle, double cheight, double cwidth,
   int loadFlags = FT_LOAD_DEFAULT;
   int rightb = 0;
 
+  i_clear_error();
+
   mm_log((1, "i_ft2_bbox(handle %p, cheight %f, cwidth %f, text %p, len %u, bbox %p)\n",
 	  handle, cheight, cwidth, text, (unsigned)len, bbox));
 
@@ -747,6 +749,8 @@ i_ft2_text(FT2_Fonthandle *handle, i_img *im, i_img_dim tx, i_img_dim ty, const 
   mm_log((1, "i_ft2_text(handle %p, im %p, (tx,ty) (" i_DFp "), cl %p, cheight %f, cwidth %f, text %p, len %u, align %d, aa %d, vlayout %d, utf8 %d)\n",
 	  handle, im, i_DFcp(tx, ty), cl, cheight, cwidth, text, (unsigned)len, align, aa, vlayout, utf8));
 
+  i_clear_error();
+
   if (vlayout) {
     if (!FT_HAS_VERTICAL(handle->face)) {
       i_push_error(0, "face has no vertical metrics");
@@ -890,6 +894,8 @@ i_ft2_cp(FT2_Fonthandle *handle, i_img *im, i_img_dim tx, i_img_dim ty, int chan
   mm_log((1, "i_ft2_cp(handle %p, im %p, (tx, ty) (" i_DFp "), channel %d, cheight %f, cwidth %f, text %p, len %u, align %d, aa %d, vlayout %d, utf8 %d)\n", 
 	  handle, im, i_DFcp(tx, ty), channel, cheight, cwidth, text, (unsigned)len, align, aa, vlayout, utf8));
 
+  i_clear_error();
+
   if (vlayout && !FT_HAS_VERTICAL(handle->face)) {
     i_push_error(0, "face has no vertical metrics");
     return 0;
@@ -939,6 +945,8 @@ i_ft2_has_chars(FT2_Fonthandle *handle, char const *text, size_t len,
   int count = 0;
   mm_log((1, "i_ft2_has_chars(handle %p, text %p, len %u, utf8 %d)\n", 
 	  handle, text, (unsigned)len, utf8));
+
+  i_clear_error();
 
   while (len) {
     unsigned long c;
@@ -1131,6 +1139,10 @@ i_ft2_glyph_name(FT2_Fonthandle *handle, unsigned long ch, char *name_buf,
       *name_buf = '\0';
       return 0;
     }
+    if (strcmp(name_buf, ".notdef") == 0) {
+      *name_buf = 0;
+      return 0;
+    }
     if (*name_buf) {
       return strlen(name_buf) + 1;
     }
@@ -1139,7 +1151,6 @@ i_ft2_glyph_name(FT2_Fonthandle *handle, unsigned long ch, char *name_buf,
     }
   }
   else {
-    i_push_error(0, "no glyph for that character");
     *name_buf = 0;
     return 0;
   }
@@ -1160,7 +1171,8 @@ i_ft2_face_has_glyph_names(FT2_Fonthandle *handle) {
 #ifdef FT_CONFIG_OPTION_NO_GLYPH_NAMES
   return 0;
 #else
-  return FT_Has_PS_Glyph_Names(handle->face);
+  return FT_HAS_GLYPH_NAMES(handle->face);
+  /* return FT_Has_PS_Glyph_Names(handle->face);*/
 #endif
 }
 

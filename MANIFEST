@@ -70,6 +70,7 @@ FT2/Makefile.PL
 FT2/README
 FT2/t/t10ft2.t
 FT2/t/t20thread.t
+FT2/t/t90std.t			Standard font tests for FT2
 FT2/typemap
 gaussian.im
 GIF/GIF.pm

@@ -281,7 +281,9 @@ i_ft2_glyph_name(handle, text_sv, utf8 = 0, reliable_only = 1)
         STRLEN work_len;
         size_t len;
         char name[255];
+	SSize_t count;
       PPCODE:
+        i_clear_error();
         text = SvPV(text_sv, work_len);
         len = work_len;
 #ifdef SvUTF8
@@ -294,22 +296,24 @@ i_ft2_glyph_name(handle, text_sv, utf8 = 0, reliable_only = 1)
             ch = i_utf8_advance(&text, &len);
             if (ch == ~0UL) {
               i_push_error(0, "invalid UTF8 character");
-              break;
+              XSRETURN_EMPTY;
             }
           }
           else {
             ch = *text++;
             --len;
           }
-          EXTEND(SP, 1);
+          EXTEND(SP, count);
           if (i_ft2_glyph_name(handle, ch, name, sizeof(name), 
                                          reliable_only)) {
-            PUSHs(sv_2mortal(newSVpv(name, 0)));
+            ST(count) = sv_2mortal(newSVpv(name, 0));
           }
           else {
-            PUSHs(&PL_sv_undef);
-          } 
+            ST(count) = &PL_sv_undef;
+          }
+	  ++count;
         }
+	XSRETURN(count);
 
 int
 i_ft2_can_do_glyph_names()

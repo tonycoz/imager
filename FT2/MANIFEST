@@ -17,4 +17,5 @@ MANIFEST.SKIP
 README
 t/t10ft2.t
 t/t20thread.t
+t/t90std.t
 typemap

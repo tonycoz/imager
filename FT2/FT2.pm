@@ -77,8 +77,14 @@ sub _bounding_box {
   $self->_valid
     or return;
 
-  return i_ft2_bbox($self->{id}, $input{size}, $input{sizew}, $input{string}, 
-		    $input{utf8});
+  my @result =  i_ft2_bbox($self->{id}, $input{size}, $input{sizew},
+			   $input{string}, $input{utf8});
+  unless (@result) {
+    Imager->_set_error(Imager->_error_as_msg);
+    return;
+  }
+
+  return @result;
 }
 
 sub dpi {
@@ -142,8 +148,25 @@ sub has_chars {
     $Imager::ERRSTR = "No string supplied to \$font->has_chars()";
     return;
   }
-  return i_ft2_has_chars($self->{id}, $hsh{string}, 
-			 _first($hsh{'utf8'}, $self->{utf8}, 0));
+  if (wantarray) {
+    my @result =  i_ft2_has_chars($self->{id}, $hsh{string}, 
+				  _first($hsh{'utf8'}, $self->{utf8}, 0));
+    unless (@result) {
+      Imager->_set_error(Imager->_error_as_msg);
+      return;
+    }
+
+    return @result;
+  }
+  else {
+    my $result =  i_ft2_has_chars($self->{id}, $hsh{string}, 
+				  _first($hsh{'utf8'}, $self->{utf8}, 0));
+    unless (defined $result) {
+      Imager->_set_error(Imager->_error_as_msg);
+      return;
+    }
+    return $result;
+  }
 }
 
 sub face_name {
@@ -156,7 +179,20 @@ sub face_name {
 }
 
 sub can_glyph_names {
-  i_ft2_can_do_glyph_names();
+  my ($self) = @_;
+
+  i_ft2_can_do_glyph_names()
+    or return;
+
+  if (ref $self) {
+    $self->_valid
+      or return;
+
+    i_ft2_face_has_glyph_names($self->{id})
+      or return;
+  }
+
+  return 1;
 }
 
 sub glyph_names {
