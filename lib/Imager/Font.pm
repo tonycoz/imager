@@ -862,6 +862,14 @@ is true and the supplied string does not contain valid UTF-8, returns
 an empty string and set an error message readable from C<<
 Imager->errstr >>,
 
+=item can_glyph_names()
+
+As a class method, returns true if the underlying library supports
+returning glyph names.
+
+As an object method, returns true if the supplied font supports
+returning glyph names.
+
 =item draw
 
 This is used by Imager's string() method to implement drawing text.
