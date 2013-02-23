@@ -46,7 +46,7 @@ SKIP:
     skip("without the font I can't do a thing", 90);
   }
 
-  my $bgcolor=Imager::Color->new(255,0,0,0);
+  my $bgcolor=Imager::Color->new(255,0,0,255);
   my $overlay=Imager::ImgRaw::new(200,70,3);
   
   ok($fnum->cp($overlay,5,50,1,50.0,'XMCLH',1), "i_t1_cp");
@@ -63,7 +63,7 @@ SKIP:
   i_writeppm_wiol($overlay,$IO);
   close(FH);
 
-  $bgcolor=Imager::Color::set($bgcolor,200,200,200,0);
+  $bgcolor=Imager::Color::set($bgcolor,200,200,200,255);
   my $backgr=Imager::ImgRaw::new(280,300,3);
 
   ok($fnum->text($backgr,10,100,$bgcolor,150.0,'test',1,2), "i_t1_text");
@@ -109,6 +109,7 @@ SKIP:
     # versions
     eval q{$text = "A\xA1\x{2010}A"}; # A, a with ogonek, HYPHEN, A in our test font
     #$text = "A".chr(0xA1).chr(0x2010)."A"; # this one works too
+    Imager->log("draw UTF8\n");
     ok($fnum->text($backgr, 10, 180, $bgcolor, 32, $text, 1),
         "draw UTF8");
     ok($fnum->cp($backgr, 80, 180, 1, 32, $text, 1),
