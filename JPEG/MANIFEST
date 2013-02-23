@@ -12,6 +12,7 @@ MANIFEST.SKIP
 README
 t/t00load.t
 t/t10jpeg.t
+t/t20limit.t
 testimg/209_yonge.jpg		Regression test: #17981
 testimg/exiftest.jpg		Test image for EXIF parsing
 testimg/scmyk.jpg		Simple CMYK JPEG image
