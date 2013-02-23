@@ -2289,7 +2289,7 @@ i_tt_cp(handle,im,xb,yb,channel,points,str_sv,len_ignored,smooth,utf8,align=1)
 
 
 void
-i_tt_bbox(handle,point,str_sv,len_ignored, utf8)
+i_tt_bbox(handle,point,str_sv,utf8)
   Imager::Font::TT     handle
 	     double     point
 	       SV*    str_sv
@@ -2301,11 +2301,11 @@ i_tt_bbox(handle,point,str_sv,len_ignored, utf8)
                STRLEN len;
                int i;
 	     PPCODE:
+               str = SvPV(str_sv, len);
 #ifdef SvUTF8
                if (SvUTF8(ST(2)))
                  utf8 = 1;
 #endif
-               str = SvPV(str_sv, len);
   	       if ((rc=i_tt_bbox(handle,point,str,len,cords, utf8))) {
                  EXTEND(SP, rc);
                  for (i = 0; i < rc; ++i) {
@@ -2325,11 +2325,12 @@ i_tt_has_chars(handle, text_sv, utf8)
         size_t count;
         size_t i;
       PPCODE:
+        i_clear_error();
+        text = SvPV(text_sv, len);
 #ifdef SvUTF8
         if (SvUTF8(text_sv))
           utf8 = 1;
 #endif
-        text = SvPV(text_sv, len);
         work = mymalloc(len);
         count = i_tt_has_chars(handle, text, len, utf8, work);
         if (GIMME_V == G_ARRAY) {
@@ -2372,12 +2373,14 @@ i_tt_glyph_name(handle, text_sv, utf8 = 0)
         size_t len;
         size_t outsize;
         char name[255];
+	SSize_t count = 0;
       PPCODE:
+        i_clear_error();
+        text = SvPV(text_sv, work_len);
 #ifdef SvUTF8
         if (SvUTF8(text_sv))
           utf8 = 1;
 #endif
-        text = SvPV(text_sv, work_len);
         len = work_len;
         while (len) {
           unsigned long ch;
@@ -2385,21 +2388,23 @@ i_tt_glyph_name(handle, text_sv, utf8 = 0)
             ch = i_utf8_advance(&text, &len);
             if (ch == ~0UL) {
               i_push_error(0, "invalid UTF8 character");
-              break;
+              XSRETURN_EMPTY;
             }
           }
           else {
             ch = *text++;
             --len;
           }
-          EXTEND(SP, 1);
+          EXTEND(SP, count);
           if ((outsize = i_tt_glyph_name(handle, ch, name, sizeof(name))) != 0) {
-            PUSHs(sv_2mortal(newSVpv(name, 0)));
+	    ST(count) = sv_2mortal(newSVpv(name, 0));
           }
           else {
-            PUSHs(&PL_sv_undef);
-          } 
+	    ST(count) = &PL_sv_undef;
+          }
+          ++count;
         }
+	XSRETURN(count);
 
 #endif 
 

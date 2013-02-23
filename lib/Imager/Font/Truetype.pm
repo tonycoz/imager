@@ -66,9 +66,14 @@ sub _draw {
 sub _bounding_box {
   my $self = shift;
   my %input = @_;
-  return Imager::i_tt_bbox($self->{id}, $input{size},
-			   $input{string}, length($input{string}),
-                           $input{utf8});
+  my @result =
+    Imager::i_tt_bbox($self->{id}, $input{size}, $input{string}, $input{utf8});
+  unless (@result) {
+    Imager->_set_error(Imager->_error_as_msg);
+    return;
+  }
+
+  return @result;
 }
 
 sub utf8 { 1 }
@@ -77,18 +82,39 @@ sub utf8 { 1 }
 sub has_chars {
   my ($self, %hsh) = @_;
 
-  unless (defined $hsh{string} && length $hsh{string}) {
+  unless (defined $hsh{string}) {
     $Imager::ERRSTR = "No string supplied to \$font->has_chars()";
     return;
   }
-  return Imager::i_tt_has_chars($self->{id}, $hsh{string}, 
-				_first($hsh{'utf8'}, $self->{utf8}, 0));
+  if (wantarray) {
+    my @result = Imager::i_tt_has_chars($self->{id}, $hsh{string}, 
+					_first($hsh{'utf8'}, $self->{utf8}, 0));
+    unless (@result) {
+      Imager->_set_error(Imager->_error_as_msg);
+      return;
+    }
+    return @result;
+  }
+  else {
+    my $result = Imager::i_tt_has_chars($self->{id}, $hsh{string}, 
+					_first($hsh{'utf8'}, $self->{utf8}, 0));
+    unless (defined $result) {
+      Imager->_set_error(Imager->_error_as_msg);
+      return;
+    }
+
+    return $result;
+  }
 }
 
 sub face_name {
   my ($self) = @_;
 
   Imager::i_tt_face_name($self->{id});
+}
+
+sub can_glyph_names {
+  1;
 }
 
 sub glyph_names {
@@ -99,7 +125,13 @@ sub glyph_names {
     or return Imager->_set_error("no string parameter passed to glyph_names");
   my $utf8 = _first($input{utf8} || 0);
 
-  Imager::i_tt_glyph_name($self->{id}, $string, $utf8);
+  my @names = Imager::i_tt_glyph_name($self->{id}, $string, $utf8);
+  unless (@names) {
+    Imager->_set_error(Imager->_error_as_msg);
+    return;
+  }
+
+  return @names;
 }
 
 1;

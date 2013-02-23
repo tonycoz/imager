@@ -35,7 +35,7 @@ SKIP:
   my $ttraw = Imager::i_tt_new($fontname);
   ok($ttraw, "create font");
 
-  my @bbox = i_tt_bbox($ttraw,50.0,'XMCLH',6,0);
+  my @bbox = i_tt_bbox($ttraw,50.0,'XMCLH',0);
   is(@bbox, 8, "bounding box");
   print "#bbox: ($bbox[0], $bbox[1]) - ($bbox[2], $bbox[3])\n";
 
@@ -77,9 +77,9 @@ SKIP:
   my $text = pack("C*", 0x41, 0xE2, 0x80, 0x90, 0x41);
   my $alttext = "A-A";
   
-  my @utf8box = i_tt_bbox($ttraw, 50.0, $text, length($text), 1);
+  my @utf8box = i_tt_bbox($ttraw, 50.0, $text, 1);
   is(@utf8box, 8, "utf8 bbox element count");
-  my @base = i_tt_bbox($ttraw, 50.0, $alttext, length($alttext), 0);
+  my @base = i_tt_bbox($ttraw, 50.0, $alttext, 0);
   is(@base, 8, "alt bbox element count");
   my $maxdiff = $fontname eq $deffont ? 0 : $base[2] / 3;
   print "# (@utf8box vs @base)\n";
@@ -106,7 +106,7 @@ SKIP:
        "draw UTF8");
     ok(i_tt_cp($ttraw, $backgr, 350, 80, 0, 14, $text, 0, 1, 0),
        "cp UTF8");
-    @utf8box = i_tt_bbox($ttraw, 50.0, $text, length($text), 0);
+    @utf8box = i_tt_bbox($ttraw, 50.0, $text, 0);
     is(@utf8box, 8, "native utf8 bbox element count");
     ok(abs($utf8box[2] - $base[2]) <= $maxdiff, 
        "compare box sizes native $utf8box[2] vs $base[2] (maxerror $maxdiff)");

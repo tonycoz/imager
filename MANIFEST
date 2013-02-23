@@ -343,6 +343,7 @@ t/t22flood.t			Flood fill tests
 t/t31font.t			General font interface tests
 t/t35ttfont.t
 t/t36oofont.t
+t/t37std.t			Standard font tests for TT
 t/t40scale.t
 t/t50basicoo.t
 t/t55trans.t
