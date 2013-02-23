@@ -195,7 +195,7 @@ i_t1_glyph_names(font, text_sv, utf8 = 0)
             ch = *text++;
             --len;
           }
-          EXTEND(SP, 1);
+          EXTEND(SP, count);
           if (i_t1_glyph_name(font, ch, name, sizeof(name))) {
             ST(count) = sv_2mortal(newSVpv(name, 0));
           }

@@ -157,6 +157,10 @@ sub utf8 {
   1;
 }
 
+sub can_glyph_names {
+  1;
+}
+
 sub face_name {
   my ($self) = @_;
 
