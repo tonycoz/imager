@@ -3,6 +3,10 @@ Imager-Font-FT2 0.89
 
  - update README
 
+ - drawing text to a channel drew with random coverage, since the
+   alpha channel used for the internal call to draw text wasn't
+   initialized.
+
 Imager-Font-FT2 0.88
 ====================
 

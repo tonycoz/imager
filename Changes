@@ -32,6 +32,14 @@ Imager release history.  Older releases can be found in Changes.old
  - fix a broken link to Graphics::Magick
    https://rt.cpan.org/Ticket/Display.html?id=82743
 
+ - drawing text to a channel with FT2 would draw with random coverage
+   due to an uninitialized alpha channel.
+
+ - marked the function pointer underlying the mm_log() API with the
+   correct gcc magic and fixed the resulting warnings.
+
+ - fixed some other compiler warnings
+
 Imager 0.94 - 15 Dec 2012
 =========================
 
