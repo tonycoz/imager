@@ -18,8 +18,8 @@ void null_plug(void *ptr) { }
 */
 
 
-unsigned char
 static
+unsigned char
 saturate(int in) {
   if (in>255) { return 255; }
   else if (in>0) return in;
