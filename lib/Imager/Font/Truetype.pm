@@ -3,7 +3,7 @@ use strict;
 use vars qw(@ISA $VERSION);
 @ISA = qw(Imager::Font);
 
-$VERSION = "1.011";
+$VERSION = "1.012";
 
 *_first = \&Imager::Font::_first;
 
@@ -44,21 +44,16 @@ sub _draw {
   my $self = shift;
   my %input = @_;
 
-  # note that the string length parameter is ignored and calculated in
-  # XS with SvPV(), since we want the number of bytes rather than the
-  # number of characters, which is what we'd get in perl for a UTF8
-  # encoded string in 5.6 and later
-
   if ( exists $input{channel} ) {
     Imager::i_tt_cp($self->{id},$input{image}{IMG},
 		    $input{'x'}, $input{'y'}, $input{channel}, $input{size},
-		    $input{string}, length($input{string}),$input{aa},
+		    $input{string}, $input{aa},
                     $input{utf8}, $input{align}); 
   } else {
     Imager::i_tt_text($self->{id}, $input{image}{IMG}, 
 		      $input{'x'}, $input{'y'}, $input{color},
 		      $input{size}, $input{string}, 
-		      length($input{string}), $input{aa}, $input{utf8},
+		      $input{aa}, $input{utf8},
                       $input{align}); 
   }
 }

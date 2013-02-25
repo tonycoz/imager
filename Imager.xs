@@ -2235,7 +2235,7 @@ MODULE = Imager         PACKAGE = Imager
 
 
 undef_int
-i_tt_text(handle,im,xb,yb,cl,points,str_sv,len_ignored,smooth,utf8,align=1)
+i_tt_text(handle,im,xb,yb,cl,points,str_sv,smooth,utf8,align=1)
   Imager::Font::TT     handle
     Imager::ImgRaw     im
 	       i_img_dim     xb
@@ -2250,11 +2250,11 @@ i_tt_text(handle,im,xb,yb,cl,points,str_sv,len_ignored,smooth,utf8,align=1)
                char *str;
                STRLEN len;
              CODE:
+               str = SvPV(str_sv, len);
 #ifdef SvUTF8
                if (SvUTF8(str_sv))
                  utf8 = 1;
 #endif
-               str = SvPV(str_sv, len);
                RETVAL = i_tt_text(handle, im, xb, yb, cl, points, str, 
                                   len, smooth, utf8, align);
              OUTPUT:
@@ -2262,7 +2262,7 @@ i_tt_text(handle,im,xb,yb,cl,points,str_sv,len_ignored,smooth,utf8,align=1)
 
 
 undef_int
-i_tt_cp(handle,im,xb,yb,channel,points,str_sv,len_ignored,smooth,utf8,align=1)
+i_tt_cp(handle,im,xb,yb,channel,points,str_sv,smooth,utf8,align=1)
   Imager::Font::TT     handle
     Imager::ImgRaw     im
 	       i_img_dim     xb
@@ -2277,11 +2277,11 @@ i_tt_cp(handle,im,xb,yb,channel,points,str_sv,len_ignored,smooth,utf8,align=1)
                char *str;
                STRLEN len;
              CODE:
+               str = SvPV(str_sv, len);
 #ifdef SvUTF8
                if (SvUTF8(str_sv))
                  utf8 = 1;
 #endif
-               str = SvPV(str_sv, len);
                RETVAL = i_tt_cp(handle, im, xb, yb, channel, points, str, len,
                                 smooth, utf8, align);
              OUTPUT:
