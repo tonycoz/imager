@@ -8,6 +8,7 @@ MANIFEST			This list of files
 MANIFEST.SKIP
 README
 t/t10win32.t
+t/t90std.t			Standard font tests for W32
 W32.pm
 W32.xs
 win32.c

@@ -543,7 +543,7 @@ render_text(const char *face, int size, const char *text, size_t length, int aa,
 static
 LPWSTR
 utf8_to_wide_string(char const *text, int text_len, int *wide_chars) {
-  int wide_count = MultiByteToWideChar(CP_UTF8, 0, text, text_len, NULL, 0);
+  int wide_count = MultiByteToWideChar(CP_UTF8, MB_ERR_INVALID_CHARS, text, text_len, NULL, 0);
   LPWSTR result;
 
   if (wide_count < 0) {
@@ -552,7 +552,7 @@ utf8_to_wide_string(char const *text, int text_len, int *wide_chars) {
   }
   ++wide_count;
   result = mymalloc(sizeof(WCHAR) * wide_count);
-  if (MultiByteToWideChar(CP_UTF8, 0, text, text_len, result, wide_count) < 0) {
+  if (MultiByteToWideChar(CP_UTF8, MB_ERR_INVALID_CHARS, text, text_len, result, wide_count) < 0) {
     i_push_errorf(0, "Could not convert utf8: %ld", GetLastError());
     return NULL;
   }

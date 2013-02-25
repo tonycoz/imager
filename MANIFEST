@@ -514,6 +514,7 @@ W32/lib/Imager/Font/Win32.pm
 W32/Makefile.PL
 W32/README
 W32/t/t10win32.t		Tests Win32 GDI font support
+W32/t/t90std.t 			Standard font tests for W32
 W32/W32.pm
 W32/W32.xs
 W32/win32.c			Implements font support through Win32 GDI

@@ -809,11 +809,16 @@ sub std_font_tests {
       $base_cp->write(file => "testout/utf8bcp.ppm");
     }
 
-    Imager->log("magic: has_chars");
-    is_deeply([ $font->has_chars(string => $text) ], $has_chars,
-	      "magic: has_chars with normal utf8 text");
-    is_deeply([ $font->has_chars(string => $over) ], $has_chars,
-	      "magic: has_chars with magic utf8 text");
+  SKIP:
+    {
+      Imager->log("magic: has_chars\n");
+      $font->can("has_chars")
+	or skip "No has_chars aupport", 2;
+      is_deeply([ $font->has_chars(string => $text) ], $has_chars,
+		"magic: has_chars with normal utf8 text");
+      is_deeply([ $font->has_chars(string => $over) ], $has_chars,
+		"magic: has_chars with magic utf8 text");
+    }
 
     Imager->log("magic: bounding_box\n");
     my @base_bb = $font->bounding_box(string => $text, size => 30);
@@ -852,16 +857,26 @@ sub std_font_tests {
     ok(!$font->bounding_box(string => $bad_utf8, size => 30, utf8 => 1),
        "bounding_box() bad utf8 should fail");
     is(Imager->errstr, "invalid UTF8 character", "check error message");
-    Imager->_set_error("");
-    is_deeply([ $font->glyph_names(string => $bad_utf8, utf8 => 1) ],
-	      [ ],
-	      "glyph_names returns empty list for bad string");
-    is(Imager->errstr, "invalid UTF8 character", "check error message");
-    Imager->_set_error("");
-    is_deeply([ $font->has_chars(string => $bad_utf8, utf8 => 1) ],
-	      [ ],
-	      "has_chars returns empty list for bad string");
-    is(Imager->errstr, "invalid UTF8 character", "check error message");
+  SKIP:
+    {
+      $font->can_glyph_names
+	or skip "No glyph_names support", 2;
+      Imager->_set_error("");
+      is_deeply([ $font->glyph_names(string => $bad_utf8, utf8 => 1) ],
+		[ ],
+		"glyph_names returns empty list for bad string");
+      is(Imager->errstr, "invalid UTF8 character", "check error message");
+    }
+  SKIP:
+    {
+      $font->can("has_chars")
+	or skip "No has_chars support", 2;
+      Imager->_set_error("");
+      is_deeply([ $font->has_chars(string => $bad_utf8, utf8 => 1) ],
+		[ ],
+		"has_chars returns empty list for bad string");
+      is(Imager->errstr, "invalid UTF8 character", "check error message");
+    }
   }
 }
 
