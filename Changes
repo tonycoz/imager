@@ -1,13 +1,13 @@
 Imager release history.  Older releases can be found in Changes.old
 
- - NOTE: possibly backward incompatible
+ - NOTE: possibly backward incompatible:
    support reading from/writing to perl filehandes that aren't raw
    files.
 
    This allows Imager's I/O to honour handles with layers such as
    gzip, scalar file handles or tied file handles.
 
-   This is backward in-compatible in that previous Imager would simply
+   This is backward incompatible in that previous Imager would simply
    use fileno() to retrieve the fd for the file and call write(2) etc
    on it directly.
    https://rt.cpan.org/Ticket/Display.html?id=78843
@@ -39,6 +39,14 @@ Imager release history.  Older releases can be found in Changes.old
    correct gcc magic and fixed the resulting warnings.
 
  - fixed some other compiler warnings
+
+ - Imager::Font::W32 now properly reports text drawing errors
+   https://rt.cpan.org/Ticket/Display.html?id=70098
+
+ - handle the Svf_UTF8 flag correctly on magic (eg. overloaded)
+   strings passed as text to draw(), bounding_box(), has_chars(),
+   glyph_names() (where supported) in each of the font drivers.
+   https://rt.cpan.org/Ticket/Display.html?id=83438 (partial)
 
 Imager 0.94 - 15 Dec 2012
 =========================
