@@ -2395,7 +2395,7 @@ i_tt_glyph_name(handle, text_sv, utf8 = 0)
             ch = *text++;
             --len;
           }
-          EXTEND(SP, count);
+          EXTEND(SP, count+1);
           if ((outsize = i_tt_glyph_name(handle, ch, name, sizeof(name))) != 0) {
 	    ST(count) = sv_2mortal(newSVpv(name, 0));
           }

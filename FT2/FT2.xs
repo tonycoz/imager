@@ -303,7 +303,7 @@ i_ft2_glyph_name(handle, text_sv, utf8 = 0, reliable_only = 1)
             ch = *text++;
             --len;
           }
-          EXTEND(SP, count);
+          EXTEND(SP, count+1);
           if (i_ft2_glyph_name(handle, ch, name, sizeof(name), 
                                          reliable_only)) {
             ST(count) = sv_2mortal(newSVpv(name, 0));
