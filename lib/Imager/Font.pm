@@ -545,6 +545,9 @@ the FreeType 2.x driver by setting C<type> to C<'ft2'>:
 
 =back
 
+Returns the new font object on success. Returns C<undef> on failure
+and sets an error message readable with C<< Imager->errstr >>.
+
 =item bounding_box()
 
 Returns the bounding box for the specified string.  Example:
@@ -667,6 +670,10 @@ and height of the text instead.
 
 =back
 
+On success returns either the list of bounds, or a bounding box object
+object in scalar context.  Returns an empty list or C<undef> on
+failure and sets an error message readable with C<< Imager->errstr >>.
+
 =item string()
 
 The $img->string(...) method is now documented in
@@ -748,7 +755,10 @@ still calculate the bounding box.
 
 =back
 
-Returns a list specifying the bounds of the drawn text.
+Returns a list specifying the bounds of the drawn text on success.
+Returns an empty list on failure, if an C<image> parameter was
+supplied the error message can be read with C<< $image->errstr >>,
+otherwise it's available as C<< Imager->errstr >>.
 
 =item dpi()
 
@@ -776,7 +786,9 @@ C<dpi> - set both horizontal and vertical resolution to this value.
 
 =back
 
-Returns a list containing the previous C<xdpi>, C<ydpi> values.
+Returns a list containing the previous C<xdpi>, C<ydpi> values on
+success.  Returns an empty list on failure, with an error message
+returned in C<< Imager->errstr >>.
 
 =item transform()
 
@@ -803,6 +815,9 @@ Note that the transformation is done in font co-ordinates where y
 increases as you move up, not image co-ordinates where y decreases as
 you move up.
 
+Returns true on success.  Returns false on failure with the cause
+readable from C<< Imager->errstr >>.
+
 =item has_chars(string=>$text)
 
 Checks if the characters in $text are defined by the font.
@@ -814,6 +829,9 @@ characters.  Supports UTF-8 where the font driver supports UTF-8.
 
 Not all fonts support this method (use $font->can("has_chars") to
 check.)
+
+On error, returns an empty list or undef in scalar context, and sets
+an error message readable with C<< Imager->errstr >>.
 
 =over
 
@@ -835,7 +853,8 @@ the C<utf8> value passed to Imager::Font->new(...) or 0.
 =item face_name()
 
 Returns the internal name of the face.  Not all font types support
-this method yet.
+this method yet, so you should check with C<< $font->can("face_name")
+>> before calling C<face_name>.
 
 =item glyph_names(string=>$string [, utf8=>$utf8 ][, reliable_only=>0 ] );
 
@@ -981,7 +1000,7 @@ For example:
  # at this point $x is has the UTF-8 flag set, but has 5 characters,
  # none, of which is the constructed UTF-8 character
 
-The test script t/t38ft2font.t has a small example of this after the 
+The test script t/t38ft2font.t has a small example of this after the
 comment:
 
   # an attempt using emulation of UTF-8
