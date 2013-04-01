@@ -2726,7 +2726,8 @@ putter_cmyk16(read_state_t *state, i_img_dim x, i_img_dim y, i_img_dim width, i_
   int out_chan = state->img->channels;
 
   mm_log((4, "putter_cmyk16(%p, %" i_DF ", %" i_DF ", %" i_DF
-	  ", %" i_DF ", %d)\n", state, x, y, width, height, row_extras));
+	  ", %" i_DF ", %d)\n", state, i_DFcp(x, y), i_DFcp(width, height),
+	  row_extras));
 
   state->pixels_read += width * height;
   while (height > 0) {
