@@ -1494,7 +1494,8 @@ tiff_get16s(imtiff *tiff, unsigned long offset) {
   int result;
 
   if (offset + 2 > tiff->size) {
-    mm_log((3, "attempt to get16 at %lu in %lu image", offset, tiff->size));
+    mm_log((3, "attempt to get16 at %lu in %lu image", offset,
+	    (unsigned long)tiff->size));
     return 0;
   }
 
@@ -1522,7 +1523,8 @@ tiff_get32s(imtiff *tiff, unsigned long offset) {
   unsigned work;
 
   if (offset + 4 > tiff->size) {
-    mm_log((3, "attempt to get16 at %lu in %lu image", offset, tiff->size));
+    mm_log((3, "attempt to get16 at %lu in %lu image", offset,
+	    (unsigned long)tiff->size));
     return 0;
   }
 
@@ -1552,7 +1554,8 @@ static double
 tiff_get_rat(imtiff *tiff, unsigned long offset) {
   unsigned long numer, denom;
   if (offset + 8 > tiff->size) {
-    mm_log((3, "attempt to get_rat at %lu in %lu image", offset, tiff->size));
+    mm_log((3, "attempt to get_rat at %lu in %lu image", offset,
+	    (unsigned long)tiff->size));
     return 0;
   }
 
@@ -1578,7 +1581,8 @@ static double
 tiff_get_rats(imtiff *tiff, unsigned long offset) {
   long numer, denom;
   if (offset + 8 > tiff->size) {
-    mm_log((3, "attempt to get_rat at %lu in %lu image", offset, tiff->size));
+    mm_log((3, "attempt to get_rat at %lu in %lu image", offset,
+	    (unsigned long)tiff->size));
     return 0;
   }
 

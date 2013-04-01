@@ -4,7 +4,7 @@ use Imager;
 use vars qw($VERSION @ISA);
 
 BEGIN {
-  $VERSION = "0.86";
+  $VERSION = "0.87";
 
   require XSLoader;
   XSLoader::load('Imager::File::JPEG', $VERSION);
