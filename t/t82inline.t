@@ -19,6 +19,8 @@ plan skip_all => "perl 5.005_04, 5.005_05 too buggy"
 
 -d "testout" or mkdir "testout";
 
+print STDERR "Inline version $Inline::VERSION\n";
+
 plan tests => 117;
 require Inline;
 Inline->import(with => 'Imager');
