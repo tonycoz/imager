@@ -176,12 +176,17 @@ SKIP:
   ok(!$im->read(file => 'testout/t103_empty.raw', xsize => 50, ysize=>50, type=>'raw', interleave => 1),
      'read an empty file');
   is($im->errstr, 'premature end of file', "check message");
-  open RAW, "> testout/t103_empty.raw"
-    or die "Cannot create testout/t103_empty.raw: $!";
-  ok(!$im->read(fh => \*RAW, , xsize => 50, ysize=>50, type=>'raw', interleave => 1),
-     'read a file open for write');
-  cmp_ok($im->errstr, '=~', '^error reading file: read\(\) failure', "check message");
-  
+ SKIP:
+  {
+    # see 862083f7e40bc2a9e3b94aedce56c1336e7bdb25 in perl5 git
+    $] >= 5.010
+      or skip "5.8.x and earlier don't treat a read on a WRONLY file as an error", 2;
+    open RAW, "> testout/t103_empty.raw"
+      or die "Cannot create testout/t103_empty.raw: $!";
+    ok(!$im->read(fh => \*RAW, , xsize => 50, ysize=>50, type=>'raw', interleave => 1),
+       'read a file open for write');
+    cmp_ok($im->errstr, '=~', '^error reading file: read\(\) failure', "check message");
+  }
 }
 
 
