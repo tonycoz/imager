@@ -504,8 +504,8 @@ i_ft2_bbox(FT2_Fonthandle *handle, double cheight, double cwidth,
   mm_log((1, " bbox=> negw=%" i_DF " glob_desc=%" i_DF " pos_wid=%" i_DF
 	  " glob_asc=%" i_DF " desc=%" i_DF " asc=%" i_DF " adv_width=%" i_DF
 	  " rightb=%" i_DF "\n",
-	  bbox[0], bbox[1], bbox[2], bbox[3], bbox[4], bbox[5], bbox[6],
-	  bbox[7]));
+	  i_DFc(bbox[0]), i_DFc(bbox[1]), i_DFc(bbox[2]), i_DFc(bbox[3]),
+	  i_DFc(bbox[4]), i_DFc(bbox[5]), i_DFc(bbox[6]), i_DFc(bbox[7])));
 
   return BBOX_RIGHT_BEARING + 1;
 }
