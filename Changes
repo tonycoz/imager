@@ -1,5 +1,16 @@
 Imager release history.  Older releases can be found in Changes.old
 
+ - enable debug logging for the standard font tests
+
+ - skip the overloaded UTF-8 text output checks on 5.6.x and earlier,
+   due to a bug in that version of perl.
+
+ - don't test for read() failing on a write-only handle in 5.8.x and
+   earlier, this was fixed in change 862083f7e4 in perl.
+
+ - report the version of Inline found during testing (an attempt to
+   diagnose some intermittent failures.)
+
 Imager 0.94_01 - 2 Mar 2013
 ==============
 
