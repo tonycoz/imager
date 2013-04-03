@@ -3,6 +3,8 @@ Imager-Font-FT2 0.90
 
  - fix some mismatched format strings/types
 
+ - enable the debug log for t/t90std.t
+
 Imager-Font-FT2 0.89
 ====================
 

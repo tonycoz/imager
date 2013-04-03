@@ -1,6 +1,11 @@
 Imager::Font::T1 1.020
 ======================
 
+ - enable the debug log for t/t90std.t
+
+Imager::Font::T1 1.020
+======================
+
  - add the 1.019 changes list
 
  - update README

@@ -7,6 +7,8 @@ use Test::More;
 $Imager::formats{tt}
 	or plan skip_all => "No tt available";
 
+Imager->open_log(log => "testout/t37std.log");
+
 plan tests => std_font_test_count();
 
 my $font = Imager::Font->new(file => "fontfiles/dodge.ttf",
@@ -27,3 +29,5 @@ SKIP:
       glyph_names => [ qw(A uni2010 A) ],
      });
 }
+
+Imager->close_log;

@@ -4,6 +4,8 @@ use Imager::Test qw(std_font_tests std_font_test_count);
 use Imager::Font;
 use Test::More tests => std_font_test_count();
 
+Imager->open_log(log => "testout/t90std.log");
+
 my $font = Imager::Font->new(file => "fontfiles/dodge.ttf",
 			     type => "ft2");
 my $name_font =
@@ -23,3 +25,5 @@ SKIP:
       glyph_names => [ "A", "uni2010", "A" ],
      });
 }
+
+Imager->close_log;
