@@ -753,8 +753,10 @@ sub std_font_tests {
  SKIP:
   { # check magic is handled correctly
     # https://rt.cpan.org/Ticket/Display.html?id=83438
-    skip("no native UTF8 support in this version of perl", 10) 
+    skip("no native UTF8 support in this version of perl", 11) 
       unless $] >= 5.006;
+    skip("overloading handling of magic is broken in this version of perl", 11)
+      unless $] >= 5.008;
     Imager->log("utf8 magic tests\n");
     my $over = bless {}, "Imager::Test::OverUtf8";
     my $text = "A".chr(0x2010)."A";
