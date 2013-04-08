@@ -1,5 +1,15 @@
 Imager release history.  Older releases can be found in Changes.old
 
+ - handle the SVf_UTF8 flag correctly on magic strings passed to
+   Imager::IO's write() and raw_write() methods.
+   This may misbehave in perl 5.6.x since the UTF8 flag may not be
+   visible in the main SV after SvGETMAGIC().
+   https://rt.cpan.org/Ticket/Display.html?id=83438
+
+ - document that bounding_box() ignores the transformation matrix
+   supplied to tranform() for fonts.
+   https://rt.cpan.org/Ticket/Display.html?id=84106
+
 Imager 0.94_02 - 5 Apr 2013
 ==============
 
@@ -60,9 +70,11 @@ Imager 0.94_01 - 2 Mar 2013
  - Imager::Font::W32 now properly reports text drawing errors
    https://rt.cpan.org/Ticket/Display.html?id=70098
 
- - handle the Svf_UTF8 flag correctly on magic (eg. overloaded)
+ - handle the SVf_UTF8 flag correctly on magic (eg. overloaded)
    strings passed as text to draw(), bounding_box(), has_chars(),
    glyph_names() (where supported) in each of the font drivers.
+   This may misbehave in perl 5.6.x since the UTF8 flag may not be
+   visible in the main SV after SvGETMAGIC().
    https://rt.cpan.org/Ticket/Display.html?id=83438 (partial)
 
 Imager 0.94 - 15 Dec 2012
