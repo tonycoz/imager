@@ -229,8 +229,9 @@ SKIP:
   my $result = 
     eval {
       $io->raw_write($data);
+      1;
     };
-  ok($@, "should have croaked")
+  ok(!$result, "should have croaked")
     and print "# $@\n";
 }
 

@@ -1198,14 +1198,7 @@ i_io_raw_write(ig, data_sv)
         void *data;
 	STRLEN size;
       CODE:
-#ifdef SvUTF8
-        if (SvUTF8(data_sv)) {
-	  data_sv = sv_2mortal(newSVsv(data_sv));
-          /* yes, we want this to croak() if the SV can't be downgraded */
-	  sv_utf8_downgrade(data_sv, FALSE);
-	}
-#endif        
-	data = SvPV(data_sv, size);
+	data = SvPVbyte(data_sv, size);
         RETVAL = i_io_raw_write(ig, data, size);
       OUTPUT:
 	RETVAL
@@ -1430,14 +1423,7 @@ i_io_write(ig, data_sv)
         void *data;
 	STRLEN size;
       CODE:
-#ifdef SvUTF8
-        if (SvUTF8(data_sv)) {
-	  data_sv = sv_2mortal(newSVsv(data_sv));
-          /* yes, we want this to croak() if the SV can't be downgraded */
-	  sv_utf8_downgrade(data_sv, FALSE);
-	}
-#endif        
-	data = SvPV(data_sv, size);
+	data = SvPVbyte(data_sv, size);
         RETVAL = i_io_write(ig, data, size);
       OUTPUT:
 	RETVAL
