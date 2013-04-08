@@ -4,7 +4,7 @@ use Imager::Color;
 use strict;
 use vars qw($VERSION);
 
-$VERSION = "1.036";
+$VERSION = "1.037";
 
 # the aim here is that we can:
 #  - add file based types in one place: here
@@ -674,6 +674,10 @@ On success returns either the list of bounds, or a bounding box object
 object in scalar context.  Returns an empty list or C<undef> on
 failure and sets an error message readable with C<< Imager->errstr >>.
 
+The transformation matrix set by L</transform()> has no effect on the
+result of this method - the bounds of the untransformed text is
+returned.
+
 =item string()
 
 The $img->string(...) method is now documented in
@@ -814,6 +818,8 @@ See samples/slant_text.pl for a sample using this function.
 Note that the transformation is done in font co-ordinates where y
 increases as you move up, not image co-ordinates where y decreases as
 you move up.
+
+C<transform()> has no effect on the results of L</bounding_box()>.
 
 Returns true on success.  Returns false on failure with the cause
 readable from C<< Imager->errstr >>.
