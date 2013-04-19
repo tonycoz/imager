@@ -1,5 +1,8 @@
 Imager release history.  Older releases can be found in Changes.old
 
+Imager 0.95 - 19 Apr 2013
+===========
+
  - handle the SVf_UTF8 flag correctly on magic strings passed to
    Imager::IO's write() and raw_write() methods.
    This may misbehave in perl 5.6.x since the UTF8 flag may not be
