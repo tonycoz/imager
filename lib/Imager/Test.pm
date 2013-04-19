@@ -7,7 +7,7 @@ use vars qw(@ISA @EXPORT_OK $VERSION);
 use Carp qw(croak carp);
 use Config;
 
-$VERSION = "1.001";
+$VERSION = "1.002";
 
 @ISA = qw(Exporter);
 @EXPORT_OK = 
