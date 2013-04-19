@@ -1,5 +1,12 @@
+Imager::Font::T1 1.022
+======================
+
+ - depend on Imager 0.95.
+
 Imager::Font::T1 1.021
 ======================
+
+Released as part of Imager 0.94_02.
 
  - enable the debug log for t/t90std.t
 

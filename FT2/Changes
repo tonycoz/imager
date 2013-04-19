@@ -1,5 +1,12 @@
+Imager-Font-FT2 0.91
+====================
+
+ - depend on Imager 0.95.
+
 Imager-Font-FT2 0.90
 ====================
+
+Released as part of Imager 0.94_02.
 
  - fix some mismatched format strings/types
 
