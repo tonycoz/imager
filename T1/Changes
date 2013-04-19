@@ -1,7 +1,9 @@
-Imager::Font::T1 1.020
+Imager::Font::T1 1.021
 ======================
 
  - enable the debug log for t/t90std.t
+
+ - add typemap to the manifest, this caused build failures in 1.020.
 
 Imager::Font::T1 1.020
 ======================
