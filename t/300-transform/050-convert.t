@@ -129,7 +129,7 @@ SKIP:
   my $img = Imager->new(xsize=>10, ysize=>10);
   $img->convert(preset=>"grey");
   cmp_ok($warning, '=~', 'void', "correct warning");
-  cmp_ok($warning, '=~', 't67convert\\.t', "correct file");
+  cmp_ok($warning, '=~', 'convert\\.t', "correct file");
 }
 
 { # http://rt.cpan.org/NoAuth/Bug.html?id=28492

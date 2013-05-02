@@ -176,9 +176,9 @@ SKIP:
 }
 {
   # not a gradient
-  my $f = Imager::Fountain->read(gimp => "t/t61filters.t");
+  my $f = Imager::Fountain->read(gimp => "t/400-filter/010-filters.t");
   ok(!$f, "fail to read non-gradient");
-  is(Imager->errstr, "t/t61filters.t is not a GIMP gradient file",
+  is(Imager->errstr, "t/400-filter/010-filters.t is not a GIMP gradient file",
      "check error message");
 }
 { # an invalid gradient file

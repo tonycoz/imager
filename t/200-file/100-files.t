@@ -40,7 +40,7 @@ PERL
   $perl = qq/"$perl"/ if $perl =~ / /;
   
   print "# script: $test_script\n";
-  my $cmd = "$perl -Mblib $test_script t/t1000files.t";
+  my $cmd = "$perl -Mblib $test_script t/200-file/100-files.t";
   print "# command: $cmd\n";
 
   my $out = `$cmd`;
@@ -286,7 +286,7 @@ JPEG2K
      "type parameter missing and it couldn't be determined from the file contents",
      "check the error message");
 
-  my @mult_file = Imager->read_multi(file => "t/t1000files.t");
+  my @mult_file = Imager->read_multi(file => "t/200-file/100-files.t");
   is(@mult_file, 0, "read_multi with non-image filename should fail");
   is(Imager->errstr,
      "type parameter missing and it couldn't be determined from the file contents or file name",
@@ -298,7 +298,7 @@ JPEG2K
      "type parameter missing and it couldn't be determined from the file contents",
      "check the error message");
 
-  ok(!$im->read(file => "t/t1000files.t"),
+  ok(!$im->read(file => "t/200-file/100-files.t"),
      "read from non-image file should fail");
   is($im->errstr,
      "type parameter missing and it couldn't be determined from the file contents or file name",

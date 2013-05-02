@@ -204,7 +204,7 @@ cmp_ok(Imager->errstr, '=~', qr/Channels must be positive and <= 4/,
   my $img = Imager->new(xsize=>10, ysize=>10);
   $img->to_paletted();
   cmp_ok($warning, '=~', 'void', "correct warning");
-  cmp_ok($warning, '=~', 't023palette\\.t', "correct file");
+  cmp_ok($warning, '=~', 'palette\\.t', "correct file");
 }
 
 { # http://rt.cpan.org/NoAuth/Bug.html?id=12676

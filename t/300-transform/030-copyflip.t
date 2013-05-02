@@ -208,15 +208,15 @@ sub rot_test {
   my $img = Imager->new(xsize=>10, ysize=>10);
   $img->copy();
   cmp_ok($warning, '=~', 'void', "correct warning");
-  cmp_ok($warning, '=~', 't64copyflip\\.t', "correct file");
+  cmp_ok($warning, '=~', 'copyflip\\.t', "correct file");
   $warning = '';
   $img->rotate(degrees=>5);
   cmp_ok($warning, '=~', 'void', "correct warning");
-  cmp_ok($warning, '=~', 't64copyflip\\.t', "correct file");
+  cmp_ok($warning, '=~', 'copyflip\\.t', "correct file");
   $warning = '';
   $img->matrix_transform(matrix=>[1, 1, 1]);
   cmp_ok($warning, '=~', 'void', "correct warning");
-  cmp_ok($warning, '=~', 't64copyflip\\.t', "correct file");
+  cmp_ok($warning, '=~', 'copyflip\\.t', "correct file");
 }
 
 {

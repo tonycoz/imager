@@ -319,7 +319,7 @@ cmp_ok(Imager->errstr, '=~', qr/channels must be between 1 and 4/,
   my $img = Imager->new(xsize=>10, ysize=>10);
   $img->to_rgb8(); # doesn't really matter what the source is
   cmp_ok($warning, '=~', 'void', "correct warning");
-  cmp_ok($warning, '=~', 't01introvert\\.t', "correct file");
+  cmp_ok($warning, '=~', 'introvert\\.t', "correct file");
 }
 
 { # http://rt.cpan.org/NoAuth/Bug.html?id=11860

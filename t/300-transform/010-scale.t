@@ -73,15 +73,15 @@ ok($scaleimg->write(file=>'testout/t40scale3.ppm', type=>'pnm'),
     };
   $img->scale(scalefactor=>0.25);
   cmp_ok($warning, '=~', qr/void/, "check warning");
-  cmp_ok($warning, '=~', qr/t40scale\.t/, "check filename");
+  cmp_ok($warning, '=~', qr/scale\.t/, "check filename");
   $warning = '';
   $img->scaleX(scalefactor=>0.25);
   cmp_ok($warning, '=~', qr/void/, "check warning");
-  cmp_ok($warning, '=~', qr/t40scale\.t/, "check filename");
+  cmp_ok($warning, '=~', qr/scale\.t/, "check filename");
   $warning = '';
   $img->scaleY(scalefactor=>0.25);
   cmp_ok($warning, '=~', qr/void/, "check warning");
-  cmp_ok($warning, '=~', qr/t40scale\.t/, "check filename");
+  cmp_ok($warning, '=~', qr/scale\.t/, "check filename");
 }
 { # https://rt.cpan.org/Ticket/Display.html?id=7467
   # segfault in Imager 0.43

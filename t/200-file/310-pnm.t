@@ -219,7 +219,7 @@ is($ooim->tags(name=>'pnm_type'), 1, "check pnm_type tag");
 
 { # check error messages set correctly
   my $im = Imager->new;
-  ok(!$im->read(file=>'t/t104ppm.t', type=>'pnm'),
+  ok(!$im->read(file=>'t/200-file/310-pnm.t', type=>'pnm'),
      'should fail to read script as an image file');
   is($im->errstr, 'unable to read pnm image: bad header magic, not a PNM file',
      "check error message");

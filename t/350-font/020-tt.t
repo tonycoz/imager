@@ -233,7 +233,7 @@ SKIP:
     use POSIX qw(setlocale LC_ALL);
     setlocale(LC_ALL, "C");
 
-    my $font = Imager::Font->new(file=>'t/t35ttfont.t', type=>'tt');
+    my $font = Imager::Font->new(file=>'t/350-font/020-tt.t', type=>'tt');
     ok(!$font, "font creation should have failed for invalid file");
     cmp_ok(Imager->errstr, 'eq', 'Invalid file format.',
 	  "test error message");

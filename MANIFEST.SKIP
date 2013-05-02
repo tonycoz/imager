@@ -10,6 +10,9 @@
 # unshipped test images
 ^xtestimg/
 
+# unshipped tests
+^xt/
+
 # base for some other images
 ^testimg/pbm_base\.pgm$
 
@@ -37,7 +40,6 @@
 ^fileformatdocs/
 ^extraimages/
 ^fontfiles/.*\.sfd$
-^t/x.*\.t$
 ^imcover.perl$
 
 # might distribute one day
@@ -99,6 +101,9 @@ Makefile\.old$
 # generated if we build them in their own directory
 ^(PNG|TIFF|FT2|W32|GIF)/blib/
 
+# not shipped with Imager itself
+^(PNG|TIFF|FT2|W32|GIF)/MANIFEST
+
 # generated from .im files
 ^combine\.c$
 ^compose\.c$
@@ -135,3 +140,6 @@ Makefile\.old$
 # sub-module build junk
 \.bak$
 MYMETA.json
+
+# dist dir
+^Imager-[01]\.[0-9]+/

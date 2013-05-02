@@ -170,7 +170,7 @@ SKIP:
   my $img = Imager->new(xsize=>10, ysize=>10);
   $img->crop(left=>5);
   cmp_ok($warning, '=~', 'void', "correct warning");
-  cmp_ok($warning, '=~', 't65crop\\.t', "correct file");
+  cmp_ok($warning, '=~', 'crop\\.t', "correct file");
 }
 
 {

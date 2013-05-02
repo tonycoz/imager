@@ -311,71 +311,71 @@ SGI/testimg/verb6.rgb
 spot.perl			For making an ordered dither matrix from a spot function
 stackmach.c
 stackmach.h
+t/000-load.t			Test Imager modules can be loaded
+t/100-base/010-introvert.t	Test image inspection
+t/100-base/020-color.t		Test Imager::Color
+t/100-base/030-countc.t		Test getcolorcount() etc
+t/100-base/800-tr18561.t	Regression test for RT #18561
+t/100-base/801-tr18561b.t	Regression test for RT #18561
+t/150-type/020-sixteen.t	Test 16-bit/sample images
+t/150-type/030-double.t		Test double/sample images
+t/150-type/040-palette.t	Test paletted images
+t/150-type/100-masked.t		Test masked images
+t/200-file/010-iolayer.t	Test Imager I/O layer objects
+t/200-file/100-files.t		Format independent file tests
+t/200-file/200-nojpeg.t		Test handling when jpeg not available
+t/200-file/210-nopng.t		Test handling when png not available
+t/200-file/220-nogif.t		Test handling when gif not available
+t/200-file/230-notiff.t		Test handling when tiff not available
+t/200-file/300-raw.t		Test raw file handling
+t/200-file/310-pnm.t		Test PNM file handling
+t/200-file/320-bmp.t		Test BMP file handling
+t/200-file/330-tga.t		Test TGA file handling
+t/200-file/400-basic.t		Test basic operations across file formats
+t/250-draw/010-draw.t		Basic drawing tests
+t/250-draw/020-flood.t		Flood fill tests
+t/250-draw/030-paste.t		Test the paste() method
+t/250-draw/040-rubthru.t	Test the rubthrough() method
+t/250-draw/050-polyaa.t		polygon()
+t/250-draw/100-fill.t		fills
+t/250-draw/200-compose.t	compose()
+t/300-transform/010-scale.t	scale(), scaleX() and scaleY()
+t/300-transform/020-combine.t	Test combine() method
+t/300-transform/030-copyflip.t	Test copy, flip, rotate, matrix_transform
+t/300-transform/040-crop.t
+t/300-transform/050-convert.t
+t/300-transform/060-map.t
+t/300-transform/500-trans.t	transform()
+t/300-transform/600-trans2.t	transform2() using RPN
+t/300-transform/610-postfix.t	more transform2() using RPN
+t/300-transform/620-infix.t	transform2() using infix
+t/300-transform/630-assem.t	transform2() using assembler
+t/350-font/010-font.t		General font interface tests
+t/350-font/020-tt.t		low level FT1 tests
+t/350-font/030-ttoo.t		OO level FT1 tests
+t/350-font/040-ttstd.t		Standard font tests for TT
+t/350-font/100-texttools.t	Test text wrapping
+t/400-filter/010-filters.t	Consolidated filter tests (needs to split)
+t/450-api/100-inline.t		Inline::C integration and API
+t/450-api/110-inlinectx.t	context APIs
+t/850-thread/010-base.t		Test wrt to perl threads
+t/850-thread/100-error.t	error stack handling with threads
+t/850-thread/110-log.t		log handling with threads
+t/900-util/010-test.t		Test Imager::Test
+t/900-util/020-error.t		Error stack
+t/900-util/030-log.t		log
+t/900-util/040-limit.t		file size limits
+t/900-util/050-matrix.t		Imager::Matrix2d
+t/900-util/060-extutil.t	Imager::ExtUtils
+t/900-util/060-hlines.t		hlines.c internal API
+t/950-kwalitee/010-pod.t	Test POD with Test::Pod
+t/950-kwalitee/020-samples.t	Check samples are in samples/README
+t/950-kwalitee/030-podcover.t	POD Coverage tests
+t/950-kwalitee/040-strict.t	Check use strict is usede
+t/950-kwalitee/050-meta.t	Check META.yml is valid
 t/GoodTestFont.pm		A dummy (hardly implemented) font driver.
 t/Pod/Coverage/Imager.pm
-t/t00basic.t
-t/t01introvert.t
-t/t020masked.t
-t/t021sixteen.t
-t/t022double.t			Test double/sample images
-t/t023palette.t			Test paletted images
-t/t03test.t			Test Imager::Test
-t/t05error.t
-t/t07iolayer.t
-t/t080log.t
-t/t081error.t
-t/t082limit.t
-t/t1000files.t			Format independent file tests
 t/t1000lib/Imager/File/BAD.pm	Test failing to load a file handler
-t/t101nojpeg.t			Test handling when jpeg not available
-t/t102nopng.t			Test handling when png not available
-t/t103raw.t
-t/t104ppm.t
-t/t105nogif.t			Test handling when gif not available
-t/t106notiff.t			Test handling when tiff not available
-t/t107bmp.t
-t/t108tga.t
-t/t15color.t
-t/t16matrix.t			Tests Imager::Matrix2d
-t/t20fill.t			Tests fills
-t/t21draw.t			Basic drawing tests
-t/t22flood.t			Flood fill tests
-t/t31font.t			General font interface tests
-t/t35ttfont.t
-t/t36oofont.t
-t/t37std.t			Standard font tests for TT
-t/t40scale.t
-t/t50basicoo.t
-t/t55trans.t
-t/t56postfix.t
-t/t57infix.t
-t/t58trans2.t
-t/t59assem.t
-t/t61filters.t
-t/t62compose.t
-t/t63combine.t			Test combine() method
-t/t64copyflip.t			Test copy, flip, rotate, matrix_transform
-t/t65crop.t
-t/t66paste.t
-t/t67convert.t
-t/t68map.t
-t/t69rubthru.t
-t/t75polyaa.t
-t/t80texttools.t		Test text wrapping
-t/t81hlines.t			Test hlines.c
-t/t82inline.t			Test Inline::C integration
-t/t83extutil.t			Test Imager::ExtUtils
-t/t84inlinectx.t
-t/t90cc.t
-t/t91pod.t			Test POD with Test::Pod
-t/t92samples.t
-t/t93podcover.t			POD Coverage tests
-t/t94kwalitee.t			Various "kwalitee" tests
-t/t95log.t
-t/t98meta.t
-t/t99thread.t			Test wrt to perl threads
-t/tr18561.t			Regression tests
-t/tr18561b.t
 T1/fontfiles/dcr10.afm
 T1/fontfiles/dcr10.pfb
 T1/fontfiles/ExistenceTest.afm	please edit ExistenceTest.sfd in CVS
@@ -514,7 +514,7 @@ W32/lib/Imager/Font/Win32.pm
 W32/Makefile.PL
 W32/README
 W32/t/t10win32.t		Tests Win32 GDI font support
-W32/t/t90std.t 			Standard font tests for W32
+W32/t/t90std.t			Standard font tests for W32
 W32/W32.pm
 W32/W32.xs
 W32/win32.c			Implements font support through Win32 GDI

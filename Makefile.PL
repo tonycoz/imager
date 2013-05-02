@@ -201,6 +201,11 @@ if ($trace_context) {
   $CFLAGS .= " -DIMAGER_TRACE_CONTEXT";
 }
 
+my $tests = 't/*.t t/*/*.t';
+if (-d "xt" && scalar(() = glob("xt/*.t"))) {
+  $tests .= " xt/*.t";
+}
+
 my %opts=
   (
    'NAME'         => 'Imager',
@@ -218,6 +223,7 @@ my %opts=
     'XSLoader'    => 0,
    },
    TYPEMAPS       => \@typemaps,
+   test =>        { TESTS => $tests },
   );
 
 if ($coverage) {
