@@ -4,6 +4,8 @@ use File::Spec;
 use Config;
 use Cwd ();
 
+our $VERSION = "1.001";
+
 my @alt_transfer = qw/altname incsuffix libbase/;
 
 sub probe {
@@ -410,6 +412,8 @@ sub _gcc_lib_paths {
   $base_version >= 4
     or return;
 
+  local $ENV{LANG} = "C";
+  local $ENV{LC_ALL} = "C";
   my ($lib_line) = grep /^libraries:/, `$Config{cc} -print-search-dirs`
     or return;
   $lib_line =~ s/^libraries: =//;
