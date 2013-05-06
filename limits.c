@@ -21,7 +21,10 @@ limits.c - manages data/functions for limiting the sizes of images read from fil
 Manage limits for image files read by Imager.
 
 Setting a value of zero means that limit will be ignored.
-  
+
+=over
+
+=cut
  */
 
 #define IMAGER_NO_CONTEXT

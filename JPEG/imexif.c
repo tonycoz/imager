@@ -282,6 +282,7 @@ invalid data.
 
 Returns true if an Exif header was seen.
 
+=cut
 */
 
 int

@@ -640,7 +640,7 @@ i_circle_out(i_img *im, i_img_dim xc, i_img_dim yc, i_img_dim r,
 Convert an angle in degrees into an angle measure we can generate
 simply from the numbers we have when drawing the circle.
 
-=back
+=cut
 */
 
 static i_img_dim
@@ -2039,3 +2039,9 @@ cfill_from_btm(i_img *im, i_fill_t *fill, struct i_bitmap *btm,
   }
   i_render_done(&r);
 }
+
+/*
+=back
+
+=cut
+*/

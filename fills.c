@@ -720,7 +720,7 @@ fill_hatch(i_fill_t *fill, i_img_dim x, i_img_dim y, i_img_dim width,
 
 The floating sample fill function for hatched fills.
 
-=back
+=cut
 */
 static void
 fill_hatchf(i_fill_t *fill, i_img_dim x, i_img_dim y, i_img_dim width,

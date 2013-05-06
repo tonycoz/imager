@@ -263,6 +263,7 @@ i_int_hlines_fill_color(i_img *im, i_int_hlines *hlines, const i_color *col) {
 
 i_int_hlines_fill_fill(im, hlines, fill)
 
+=cut
 */
 void
 i_int_hlines_fill_fill(i_img *im, i_int_hlines *hlines, i_fill_t *fill) {

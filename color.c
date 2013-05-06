@@ -16,6 +16,9 @@ color.c - color manipulation functions
 
 A collection of utility functions for converting between color spaces.
 
+=over
+
+=cut
 */
 
 #define EPSILON (1e-8)

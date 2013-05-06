@@ -1375,7 +1375,8 @@ realseek_close(io_glue *igo) {
 }
 
 
-/* realseek_seek(ig, offset, whence)
+/*
+=item realseek_seek(ig, offset, whence)
 
 Implements seeking for a source that is seekable, the purpose of having this is to be able to
 have an offset into a file that is different from what the underlying library thinks.
@@ -1488,7 +1489,8 @@ buffer_close(io_glue *ig) {
 }
 
 
-/* buffer_seek(ig, offset, whence)
+/*
+=item buffer_seek(ig, offset, whence)
 
 Implements seeking for a buffer source.
 
@@ -1843,7 +1845,8 @@ bufchain_close(io_glue *ig) {
 }
 
 
-/* bufchain_seek(ig, offset, whence)
+/*
+=item bufchain_seek(ig, offset, whence)
 
 Implements seeking for a source that is seekable, the purpose of having this is to be able to
 have an offset into a file that is different from what the underlying library thinks.
