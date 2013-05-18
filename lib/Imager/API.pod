@@ -386,7 +386,7 @@ stored in an L<image object|/i_img>, eg:
 =head2 C<dIMCTXio>
 
 Defines a local context variable and initializes it from the context
-stored in an L<I/O object|/i_io_glue_t> object.
+stored in an L<< IE<47>O object|/i_io_glue_t >> object.
 
   void f(i_io_glue_t *io) {
     dIMCTXio(io);
