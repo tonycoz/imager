@@ -4,7 +4,7 @@ use vars qw($VERSION);
 use Scalar::Util qw(reftype looks_like_number);
 use Carp qw(croak);
 
-$VERSION = "1.010";
+$VERSION = "1.011";
 
 =head1 NAME
 
@@ -31,7 +31,7 @@ $VERSION = "1.010";
 =head1 DESCRIPTION
 
 This class provides a simple wrapper around a reference to an array of
-9 co-efficients, treated as a matrix:
+9 coefficients, treated as a matrix:
 
  [ 0, 1, 2,
    3, 4, 5,
@@ -243,7 +243,7 @@ sub scale {
 
 =item matrix($v11, $v12, $v13, $v21, $v22, $v23, $v31, $v32, $v33)
 
-Create a matrix with custom co-efficients.
+Create a matrix with custom coefficients.
 
 =cut
 
@@ -254,7 +254,7 @@ sub matrix {
     return bless \@self, $class;
   }
   else {
-    $Imager::ERRSTR = "9 co-efficients required";
+    $Imager::ERRSTR = "9 coefficients required";
     return;
   }
 }

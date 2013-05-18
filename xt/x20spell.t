@@ -10,11 +10,12 @@ my @pod = sort grep !/^inc/ && /\.(pm|pl|pod|PL)$/, keys %$manifest;
 plan tests => scalar(@pod);
 my @stopwords = qw/
 API
+Addi
+Addi's
 Arnar
 BMP
 Blit
 CGI
-chromaticities
 CMYK
 CPAN
 FreeType
@@ -26,21 +27,25 @@ IMAGER
 Imager
 Imager's
 JPEG
-POSIX
 PNG
 PNM
+POSIX
 RGB
 RGBA
 SGI
-sRGB
 TGA
 TIFF
 UTF-8
 Uncategorized
+affine
+allocator
 bilevel
+chromaticities
 const
+convolve
 dpi
 eg
+equalities
 gaussian
 ie
 infix
@@ -49,14 +54,25 @@ metadata
 multi-threaded
 mutex
 paletted
+parsers
 postfix
 preload
 preloading
 preloads
+quantization
+quantize
+quantized
+radians
 renderer
+resizing
+sRGB
+specular
+stereoscopy
 tuple
 unary
+unassociated
 unseekable
+untransformed
 varargs
 /;
 

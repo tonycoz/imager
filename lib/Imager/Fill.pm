@@ -2,7 +2,7 @@ package Imager::Fill;
 use strict;
 use vars qw($VERSION);
 
-$VERSION = "1.011";
+$VERSION = "1.012";
 
 # this needs to be kept in sync with the array of hatches in fills.c
 my @hatch_types =
@@ -354,7 +354,7 @@ C<dx>, C<dy> - An offset into the hatch cell.  Both default to zero.
 
 =back
 
-A blue and white 4-pixel check patten:
+A blue and white 4-pixel check pattern:
 
   my $fill = Imager::Fill->new(hatch => "check2x2", fg => "blue");
 

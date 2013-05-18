@@ -52,7 +52,7 @@ $rotate = Imager::Matrix2d::Test->rotate(degrees=>90, 'y'=>50);
 ok($trans_called, "translate called on rotate with just y");
 
 ok(!Imager::Matrix2d->matrix(), "bad custom matrix");
-is(Imager->errstr, "9 co-efficients required", "check error");
+is(Imager->errstr, "9 coefficients required", "check error");
 
 {
   my @half = ( 0.5, 0, 0,
