@@ -1,5 +1,32 @@
 Imager release history.  Older releases can be found in Changes.old
 
+ - rearrange Imager's test files.
+   https://rt.cpan.org/Ticket/Display.html?id=84596
+
+ - Imager::Probe::_gcc_lib_paths now forces C locale.
+   A sufficiently recent gcc prints localized keys for the search
+   paths, which avoids that localization.
+   https://rt.cpan.org/Ticket/Display.html?id=84963
+
+ - fix a pod error detected by Pod::Simple 3.27 and laterm and skip
+   pod tests unless AUTOMATED_TESTING or IMAGER_AUTHOR_TESTING is set
+   and true.
+   https://rt.cpan.org/Ticket/Display.html?id=85262
+   reported by Andreas König
+
+ - add a test for unclosed POD in C source, and fix the errors it
+   found.
+   https://rt.cpan.org/Ticket/Display.html?id=74875
+
+ - fix some spelling errors detected by the newer aspell in Debian
+   Wheezy.
+
+ - remove a trailing ' from lib/Imager/Font/Test.pm's POD
+   thanks to gregor herrmann <gregoa@debian.org>
+   https://rt.cpan.org/Ticket/Display.html?id=85413
+
+ - add a test for standard =head1 commands and fix the errors found
+
 Imager 0.95 - 19 Apr 2013
 ===========
 
