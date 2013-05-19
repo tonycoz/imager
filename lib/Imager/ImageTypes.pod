@@ -1248,13 +1248,9 @@ Returns a true value if logging is enabled.
 
 =back
 
-=head1 REVISION
+=head1 AUTHOR
 
-$Revision$
-
-=head1 AUTHORS
-
-Tony Cook, Arnar M. Hrafnkelsson
+Tony Cook <tonyc@cpan.org>, Arnar M. Hrafnkelsson
 
 =head1 SEE ALSO
 

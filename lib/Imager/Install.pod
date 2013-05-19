@@ -11,7 +11,7 @@ Imager::Install - installation notes for Imager
   make test
   make install
 
-=head1 CONFIGURATION
+=head1 DESCRIPTION
 
 Assuming you have all of your required libraries in the places Imager
 looks, you should be able to use the standard mantra:
@@ -403,5 +403,9 @@ To see which directories should be in the include path, try:
 Ideally, C<freetype-config> should be in the PATH when building Imager
 with freetype 2.x support, in which case L<Imager::Font::FT2> can
 configure itself.
+
+=head1 AUTHOR
+
+Tony Cook <tonyc@cpan.org>, Arnar M. Hrafnkelsson
 
 =cut

@@ -4,7 +4,7 @@ use File::Spec;
 use Config;
 use Cwd ();
 
-our $VERSION = "1.001";
+our $VERSION = "1.002";
 
 my @alt_transfer = qw/altname incsuffix libbase/;
 
@@ -622,5 +622,9 @@ C<altname> key describing the alternative.  Any key not mentioned in
 an alternative defaults to the value from the main configuration.
 
 =back
+
+=head1 AUTHOR
+
+Tony Cook <tonyc@cpan.org>, Arnar M. Hrafnkelsson
 
 =cut

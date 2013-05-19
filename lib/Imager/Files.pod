@@ -1968,4 +1968,8 @@ only 2 colors used - it will have a 128 color table anyway.
 
 Imager(3)
 
+=head1 AUTHOR
+
+Tony Cook <tonyc@cpan.org>, Arnar M. Hrafnkelsson
+
 =cut

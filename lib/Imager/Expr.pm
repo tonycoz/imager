@@ -4,7 +4,7 @@ use Imager::Regops;
 use strict;
 use vars qw($VERSION);
 
-$VERSION = "1.005";
+$VERSION = "1.006";
 
 my %expr_types;
 
@@ -695,5 +695,9 @@ Try to avoid doing your own optimization beyond literal folding - if
 we add some sort of jump, the existing optimizer will need to be
 rewritten, and any optimization you perform may well be broken too
 (well, your code generation will probably be broken anyway <sigh>).
+
+=head1 AUTHOR
+
+Tony Cook <tonyc@cpan.org>, Arnar M. Hrafnkelsson
 
 =cut
