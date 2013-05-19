@@ -1,6 +1,8 @@
 package Imager::Font::Test;
 use strict;
 
+our $VERSION = "1.0001";
+
 use base 'Imager::Font';
 
 sub new {
@@ -66,7 +68,7 @@ sub glyph_names {
 
 1;
 
-=head1 NAME'
+=head1 NAME
 
 Imager::Font::Test - font driver producing consistent output for tests.
 
