@@ -1,5 +1,8 @@
 Imager release history.  Older releases can be found in Changes.old
 
+Imager 0.96 - 19 May 2013
+===========
+
  - rearrange Imager's test files.
    https://rt.cpan.org/Ticket/Display.html?id=84596
 
