@@ -1,3 +1,20 @@
+Imager-File-TIFF 0.88
+=====================
+
+ - handle SampleFormat = 2 by translating the signed integer values to
+   unsigned by flipping their sign bits.
+
+   Handle SampleFormat = 3 where possible.
+
+   SampleFormat is ignored for paletted images.
+
+   Mixed SampleFormat are be handled incorrectly, since libtiff
+   returns only the first SampleFormat value, and an image with both
+   an alpha channel and SampleFormat = 2 for color channels probably
+   has a different SampleFormat for the alpha channel.
+
+   https://rt.cpan.org/Ticket/Display.html?id=74540
+
 Imager-File-TIFF 0.87
 =====================
 

@@ -16,6 +16,7 @@ testimg/comp8.bmp		Compressed 8-bit/pixel BMP
 testimg/comp8.tif		8-bit/pixel paletted TIFF
 testimg/gralpha.tif		Grey alpha test image
 testimg/grey16.tif		16-bit/sample greyscale TIFF
+testimg/grey16sg.tif		signed 16-bit/sample greyscale TIFF
 testimg/grey32.tif		32-bit/sample greyscale+alpha TIFF
 testimg/imager.pbm		Test bi-level
 testimg/imager.tif		Test bi-level
@@ -33,6 +34,7 @@ testimg/srgb.tif		Simple RGB image
 testimg/srgba.tif		RGB with one alpha
 testimg/srgba16.tif
 testimg/srgba32.tif
+testimg/srgba32f.tif		floating point sample RGBA
 testimg/srgbaa.tif		RGB with 2 alpha
 testimg/tiffwarn.tif		Generates a warning while being read
 TIFF.pm

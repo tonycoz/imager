@@ -87,6 +87,18 @@ compress_values[] =
 static const int compress_value_count = 
   sizeof(compress_values) / sizeof(*compress_values);
 
+static struct tag_name
+sample_format_values[] =
+  {
+    "uint",      SAMPLEFORMAT_UINT,
+    "int",       SAMPLEFORMAT_INT,
+    "ieeefp",    SAMPLEFORMAT_IEEEFP,
+    "undefined", SAMPLEFORMAT_VOID,
+  };
+
+static const int sample_format_value_count = 
+  sizeof(sample_format_values) / sizeof(*sample_format_values);
+
 static int 
 myTIFFIsCODECConfigured(uint16 scheme);
 
@@ -130,6 +142,14 @@ struct read_state_tag {
      we use is EXTRASAMPLE_ASSOCALPHA then the color data will need to
      be scaled to match Imager's conventions */
   int scale_alpha;
+
+  /* number of color samples (not including alpha) */
+  int color_channels;
+
+  /* SampleFormat is 2 */
+  int sample_signed;
+
+  int sample_format;
 };
 
 static int tile_contig_getter(read_state_t *state, read_putter_t putter);
@@ -362,6 +382,7 @@ static i_img *read_one_tiff(TIFF *tif, int allow_incomplete) {
   uint16 planar_config;
   uint16 inkset;
   uint16 compress;
+  uint16 sample_format;
   int i;
   read_state_t state;
   read_setup_t setupf = NULL;
@@ -370,6 +391,7 @@ static i_img *read_one_tiff(TIFF *tif, int allow_incomplete) {
   int channels = MAXCHANNELS;
   size_t sample_size = ~0; /* force failure if some code doesn't set it */
   i_img_dim total_pixels;
+  int samples_integral;
 
   error = 0;
 
@@ -381,6 +403,13 @@ static i_img *read_one_tiff(TIFF *tif, int allow_incomplete) {
   TIFFGetFieldDefaulted(tif, TIFFTAG_BITSPERSAMPLE, &bits_per_sample);
   TIFFGetFieldDefaulted(tif, TIFFTAG_PLANARCONFIG, &planar_config);
   TIFFGetFieldDefaulted(tif, TIFFTAG_INKSET, &inkset);
+
+  if (samples_per_pixel == 0) {
+    i_push_error(0, "invalid image: SamplesPerPixel is 0");
+    return NULL;
+  }
+
+  TIFFGetFieldDefaulted(tif, TIFFTAG_SAMPLEFORMAT, &sample_format);
 
   mm_log((1, "i_readtiff_wiol: width=%d, height=%d, channels=%d\n", width, height, samples_per_pixel));
   mm_log((1, "i_readtiff_wiol: %stiled\n", tiled?"":"not "));
@@ -395,9 +424,16 @@ static i_img *read_one_tiff(TIFF *tif, int allow_incomplete) {
   state.bits_per_sample = bits_per_sample;
   state.samples_per_pixel = samples_per_pixel;
   state.photometric = photometric;
+  state.sample_signed = sample_format == SAMPLEFORMAT_INT;
+  state.sample_format = sample_format;
+
+  samples_integral = sample_format == SAMPLEFORMAT_UINT
+    || sample_format == SAMPLEFORMAT_INT 
+    || sample_format == SAMPLEFORMAT_VOID;  /* sample as UINT */
 
   /* yes, this if() is horrible */
-  if (photometric == PHOTOMETRIC_PALETTE && bits_per_sample <= 8) {
+  if (photometric == PHOTOMETRIC_PALETTE && bits_per_sample <= 8
+      && samples_integral) {
     setupf = setup_paletted;
     if (bits_per_sample == 8)
       putterf = paletted_putter8;
@@ -411,28 +447,32 @@ static i_img *read_one_tiff(TIFF *tif, int allow_incomplete) {
   }
   else if (bits_per_sample == 16 
 	   && photometric == PHOTOMETRIC_RGB
-	   && samples_per_pixel >= 3) {
+	   && samples_per_pixel >= 3
+	   && samples_integral) {
     setupf = setup_16_rgb;
     putterf = putter_16;
     sample_size = 2;
     rgb_channels(&state, &channels);
   }
   else if (bits_per_sample == 16
-	   && photometric == PHOTOMETRIC_MINISBLACK) {
+	   && photometric == PHOTOMETRIC_MINISBLACK
+	   && samples_integral) {
     setupf = setup_16_grey;
     putterf = putter_16;
     sample_size = 2;
     grey_channels(&state, &channels);
   }
   else if (bits_per_sample == 8
-	   && photometric == PHOTOMETRIC_MINISBLACK) {
+	   && photometric == PHOTOMETRIC_MINISBLACK
+	   && samples_integral) {
     setupf = setup_8_grey;
     putterf = putter_8;
     sample_size = 1;
     grey_channels(&state, &channels);
   }
   else if (bits_per_sample == 8
-	   && photometric == PHOTOMETRIC_RGB) {
+	   && photometric == PHOTOMETRIC_RGB
+	   && samples_integral) {
     setupf = setup_8_rgb;
     putterf = putter_8;
     sample_size = 1;
@@ -465,7 +505,8 @@ static i_img *read_one_tiff(TIFF *tif, int allow_incomplete) {
   else if (bits_per_sample == 8
 	   && photometric == PHOTOMETRIC_SEPARATED
 	   && inkset == INKSET_CMYK
-	   && samples_per_pixel >= 4) {
+	   && samples_per_pixel >= 4
+	   && samples_integral) {
     setupf = setup_cmyk8;
     putterf = putter_cmyk8;
     sample_size = 1;
@@ -474,7 +515,8 @@ static i_img *read_one_tiff(TIFF *tif, int allow_incomplete) {
   else if (bits_per_sample == 16
 	   && photometric == PHOTOMETRIC_SEPARATED
 	   && inkset == INKSET_CMYK
-	   && samples_per_pixel >= 4) {
+	   && samples_per_pixel >= 4
+	   && samples_integral) {
     setupf = setup_cmyk16;
     putterf = putter_cmyk16;
     sample_size = 2;
@@ -607,12 +649,25 @@ static i_img *read_one_tiff(TIFF *tif, int allow_incomplete) {
       break;
     }
   }
-  
+
+  if (TIFFGetField(tif, TIFFTAG_SAMPLEFORMAT, &sample_format)) {
+    /* only set the tag if the the TIFF tag is present */
+    i_tags_setn(&im->tags, "tiff_sample_format", sample_format);
+
+    for (i = 0; i < sample_format_value_count; ++i) {
+      if (sample_format_values[i].tag == sample_format) {
+	i_tags_set(&im->tags, "tiff_sample_format_name",
+		   sample_format_values[i].name, -1);
+	break;
+      }
+    }
+  }
+
   return im;
 }
 
 /*
-=item i_readtiff_wiol(im, ig)
+=item i_readtiff_wiol(ig, allow_incomplete, page)
 
 =cut
 */
@@ -2278,6 +2333,7 @@ rgb_channels(read_state_t *state, int *out_channels) {
   *out_channels = 3;
   state->alpha_chan = 0;
   state->scale_alpha = 0;
+  state->color_channels = 3;
 
   /* plain RGB */
   if (state->samples_per_pixel == 3)
@@ -2323,6 +2379,7 @@ grey_channels(read_state_t *state, int *out_channels) {
   *out_channels = 1;
   state->alpha_chan = 0;
   state->scale_alpha = 0;
+  state->color_channels = 1;
 
   /* plain grey */
   if (state->samples_per_pixel == 1)
@@ -2402,6 +2459,10 @@ putter_16(read_state_t *state, i_img_dim x, i_img_dim y, i_img_dim width, i_img_
       for (ch = 0; ch < out_chan; ++ch) {
 	outp[ch] = p[ch];
       }
+      if (state->sample_signed) {
+	for (ch = 0; ch < state->color_channels; ++ch)
+	  outp[ch] ^= 0x8000;
+      }
       if (state->alpha_chan && state->scale_alpha && outp[state->alpha_chan]) {
 	for (ch = 0; ch < state->alpha_chan; ++ch) {
 	  int result = 0.5 + (outp[ch] * 65535.0 / outp[state->alpha_chan]);
@@ -2466,6 +2527,10 @@ putter_8(read_state_t *state, i_img_dim x, i_img_dim y, i_img_dim width, i_img_d
       for (ch = 0; ch < out_chan; ++ch) {
 	outp->channel[ch] = p[ch];
       }
+      if (state->sample_signed) {
+	for (ch = 0; ch < state->color_channels; ++ch)
+	  outp->channel[ch] ^= 0x80;
+      }
       if (state->alpha_chan && state->scale_alpha 
 	  && outp->channel[state->alpha_chan]) {
 	for (ch = 0; ch < state->alpha_chan; ++ch) {
@@ -2529,9 +2594,25 @@ putter_32(read_state_t *state, i_img_dim x, i_img_dim y, i_img_dim width, i_img_
     i_fcolor *outp = state->line_buf;
 
     for (i = 0; i < width; ++i) {
-      for (ch = 0; ch < out_chan; ++ch) {
-	outp->channel[ch] = p[ch] / 4294967295.0;
+#ifdef IEEEFP_TYPES
+      if (state->sample_format == SAMPLEFORMAT_IEEEFP) {
+	const float *pv = (const float *)p;
+	for (ch = 0; ch < out_chan; ++ch) {
+	  outp->channel[ch] = pv[ch];
+	}
       }
+      else {
+#endif
+	for (ch = 0; ch < out_chan; ++ch) {
+	  if (state->sample_signed && ch < state->color_channels)
+	    outp->channel[ch] = (p[ch] ^ 0x80000000UL) / 4294967295.0;
+	  else
+	    outp->channel[ch] = p[ch] / 4294967295.0;
+	}
+#ifdef IEEEFP_TYPES
+      }
+#endif
+
       if (state->alpha_chan && state->scale_alpha && outp->channel[state->alpha_chan]) {
 	for (ch = 0; ch < state->alpha_chan; ++ch)
 	  outp->channel[ch] /= outp->channel[state->alpha_chan];
@@ -2616,6 +2697,7 @@ cmyk_channels(read_state_t *state, int *out_channels) {
   *out_channels = 3;
   state->alpha_chan = 0;
   state->scale_alpha = 0;
+  state->color_channels = 3;
 
   /* plain CMYK */
   if (state->samples_per_pixel == 4)
@@ -2680,6 +2762,12 @@ putter_cmyk8(read_state_t *state, i_img_dim x, i_img_dim y, i_img_dim width, i_i
       m = p[1];
       y = p[2];
       k = 255 - p[3];
+      if (state->sample_signed) {
+	c ^= 0x80;
+	m ^= 0x80;
+	y ^= 0x80;
+	k ^= 0x80;
+      }
       outp->rgba.r = (k * (255 - c)) / 255;
       outp->rgba.g = (k * (255 - m)) / 255;
       outp->rgba.b = (k * (255 - y)) / 255;
@@ -2741,6 +2829,12 @@ putter_cmyk16(read_state_t *state, i_img_dim x, i_img_dim y, i_img_dim width, i_
       m = p[1];
       y = p[2];
       k = 65535 - p[3];
+      if (state->sample_signed) {
+	c ^= 0x8000;
+	m ^= 0x8000;
+	y ^= 0x8000;
+	k ^= 0x8000;
+      }
       outp[0] = (k * (65535U - c)) / 65535U;
       outp[1] = (k * (65535U - m)) / 65535U;
       outp[2] = (k * (65535U - y)) / 65535U;

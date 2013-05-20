@@ -483,6 +483,7 @@ TIFF/testimg/comp8.bmp		Compressed 8-bit/pixel BMP
 TIFF/testimg/comp8.tif		8-bit/pixel paletted TIFF
 TIFF/testimg/gralpha.tif	Grey alpha test image
 TIFF/testimg/grey16.tif		16-bit/sample greyscale TIFF
+TIFF/testimg/grey16sg.tif	signed 16-bit/sample greyscale TIFF
 TIFF/testimg/grey32.tif		32-bit/sample greyscale+alpha TIFF
 TIFF/testimg/imager.pbm		Test bi-level
 TIFF/testimg/imager.tif		Test bi-level
@@ -500,6 +501,7 @@ TIFF/testimg/srgb.tif		Simple RGB image
 TIFF/testimg/srgba.tif		RGB with one alpha
 TIFF/testimg/srgba16.tif
 TIFF/testimg/srgba32.tif
+TIFF/testimg/srgba32f.tif	floating point sample RGBA
 TIFF/testimg/srgbaa.tif		RGB with 2 alpha
 TIFF/testimg/tiffwarn.tif	Generates a warning while being read
 TIFF/TIFF.pm

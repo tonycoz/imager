@@ -1,6 +1,6 @@
 #!perl -w
 use strict;
-use Test::More tests => 239;
+use Test::More tests => 247;
 use Imager qw(:all);
 use Imager::Test qw(is_image is_image_similar test_image test_image_16 test_image_double test_image_raw);
 
@@ -845,4 +845,38 @@ HEX
   print "# ", $im->errstr, "\n";
   my @im = Imager->read_multi(type => "tiff", data => $ifdloop);
   is(@im, 2, "should be only 2 images");
+}
+
+SKIP:
+{ # sample format
+  Imager::File::TIFF::i_tiff_has_compression("lzw")
+      or skip "No LZW support", 8;
+  Imager::File::TIFF::i_tiff_ieeefp()
+      or skip "No IEEE FP type", 8;
+
+ SKIP:
+  { # signed
+    my $cmp = Imager->new(file => "testimg/grey16.tif", filetype => "tiff")
+      or skip "Cannot read grey16.tif: ". Imager->errstr, 4;
+    my $im = Imager->new(file => "testimg/grey16sg.tif", filetype => "tiff");
+    ok($im, "read image with SampleFormat = signed int")
+      or skip "Couldn't read the file", 3;
+    is_image($im, $cmp, "check the images match");
+    my %tags = map @$_, $im->tags;
+    is($tags{tiff_sample_format}, 2, "check sample format");
+    is($tags{tiff_sample_format_name}, "int", "check sample format name");
+  }
+
+ SKIP:
+  { # float
+    my $cmp = Imager->new(file => "testimg/srgba32.tif", filetype => "tiff")
+      or skip "Cannot read srgaba32f.tif: ". Imager->errstr, 4;
+    my $im = Imager->new(file => "testimg/srgba32f.tif", filetype => "tiff");
+    ok($im, "read image with SampleFormat = float")
+      or skip "Couldn't read the file", 3;
+    is_image($im, $cmp, "check the images match");
+    my %tags = map @$_, $im->tags;
+    is($tags{tiff_sample_format}, 3, "check sample format");
+    is($tags{tiff_sample_format_name}, "ieeefp", "check sample format name");
+  }
 }

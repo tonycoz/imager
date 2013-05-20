@@ -17,11 +17,18 @@ our %IMAGER_LIBS;
 
 my $MM_ver = eval $ExtUtils::MakeMaker::VERSION;
 
+my $define = "";
+my $fp_rep = unpack("H*", pack("f<", 1.25));
+if ($fp_rep eq "0000a03f") {
+  $define = "-DIEEEFP_TYPES";
+}
+
 my %opts = 
   (
    NAME => 'Imager::File::TIFF',
    VERSION_FROM => 'TIFF.pm',
    OBJECT => 'TIFF.o imtiff.o',
+   DEFINE => $define,
    clean => { FILES => 'testout' },
   );
 
@@ -86,7 +93,7 @@ if ($probe_res) {
 
   push @inc, $probe_res->{INC};
   $opts{LIBS} = $probe_res->{LIBS};
-  $opts{DEFINE} = $probe_res->{DEFINE};
+  $opts{DEFINE} .= " $probe_res->{DEFINE}";
   $opts{INC} = "@inc";
 
   if ($MM_ver > 6.06) {

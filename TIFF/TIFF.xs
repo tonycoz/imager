@@ -11,6 +11,12 @@ extern "C" {
 
 DEFINE_IMAGER_CALLBACKS;
 
+#ifdef IEEEFP_TYPES
+#define i_tiff_ieeefp() &PL_sv_yes
+#else
+#define i_tiff_ieeefp() &PL_sv_no
+#endif
+
 MODULE = Imager::File::TIFF  PACKAGE = Imager::File::TIFF
 
 Imager::ImgRaw
@@ -140,6 +146,8 @@ bool
 i_tiff_has_compression(name)
 	const char *name
 
+SV *
+i_tiff_ieeefp()
 
 BOOT:
 	PERL_INITIALIZE_IMAGER_CALLBACKS;

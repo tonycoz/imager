@@ -27,6 +27,7 @@
 # editor trash
 ~$
 (^|/)\#.*\#$
+(^|/)\.\#
 
 # stuff we don't distribute
 ^TODO$
