@@ -373,6 +373,7 @@ t/950-kwalitee/020-samples.t	Check samples are in samples/README
 t/950-kwalitee/030-podcover.t	POD Coverage tests
 t/950-kwalitee/040-strict.t	Check use strict is usede
 t/950-kwalitee/050-meta.t	Check META.yml is valid
+t/950-kwalitee/060-podstruct.t
 t/GoodTestFont.pm		A dummy (hardly implemented) font driver.
 t/Pod/Coverage/Imager.pm
 t/t1000lib/Imager/File/BAD.pm	Test failing to load a file handler
