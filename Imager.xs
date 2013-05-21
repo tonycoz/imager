@@ -1983,42 +1983,42 @@ i_rotate_exact(im, amount, ...)
 Imager::ImgRaw
 i_matrix_transform(im, xsize, ysize, matrix_av, ...)
     Imager::ImgRaw      im
-               i_img_dim      xsize
-               i_img_dim      ysize
+    i_img_dim      xsize
+    i_img_dim      ysize
     AV *matrix_av
-      PREINIT:
-        double matrix[9];
-        STRLEN len;
-        SV *sv1;
-        int i;
-	i_color *backp = NULL;
-	i_fcolor *fbackp = NULL;
-      CODE:
-	len=av_len(matrix_av)+1;
-        if (len > 9)
-          len = 9;
-        for (i = 0; i < len; ++i) {
-	  sv1=(*(av_fetch(matrix_av,i,0)));
-	  matrix[i] = SvNV(sv1);
-        }
-        for (; i < 9; ++i)
-          matrix[i] = 0;
-	/* extract the bg colors if any */
-	/* yes, this is kind of strange */
-	for (i = 4; i < items; ++i) {
-          sv1 = ST(i);
-          if (sv_derived_from(sv1, "Imager::Color")) {
-	    IV tmp = SvIV((SV*)SvRV(sv1));
-	    backp = INT2PTR(i_color *, tmp);
-	  }
-	  else if (sv_derived_from(sv1, "Imager::Color::Float")) {
-	    IV tmp = SvIV((SV*)SvRV(sv1));
-	    fbackp = INT2PTR(i_fcolor *, tmp);
-	  }
-	}
-        RETVAL = i_matrix_transform_bg(im, xsize, ysize, matrix, backp, fbackp);
-      OUTPUT:
-        RETVAL
+  PREINIT:
+    double matrix[9];
+    STRLEN len;
+    SV *sv1;
+    int i;
+    i_color *backp = NULL;
+    i_fcolor *fbackp = NULL;
+  CODE:
+    len=av_len(matrix_av)+1;
+    if (len > 9)
+      len = 9;
+    for (i = 0; i < len; ++i) {
+      sv1=(*(av_fetch(matrix_av,i,0)));
+      matrix[i] = SvNV(sv1);
+    }
+    for (; i < 9; ++i)
+      matrix[i] = 0;
+    /* extract the bg colors if any */
+    /* yes, this is kind of strange */
+    for (i = 4; i < items; ++i) {
+      sv1 = ST(i);
+      if (sv_derived_from(sv1, "Imager::Color")) {
+        IV tmp = SvIV((SV*)SvRV(sv1));
+	backp = INT2PTR(i_color *, tmp);
+      }
+      else if (sv_derived_from(sv1, "Imager::Color::Float")) {
+        IV tmp = SvIV((SV*)SvRV(sv1));
+        fbackp = INT2PTR(i_fcolor *, tmp);
+      }
+    }
+    RETVAL = i_matrix_transform_bg(im, xsize, ysize, matrix, backp, fbackp);
+  OUTPUT:
+    RETVAL
 
 undef_int
 i_gaussian(im,stdev)
