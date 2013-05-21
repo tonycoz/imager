@@ -1,6 +1,7 @@
 #!perl -w
 use strict;
-use Test::More tests => 8;
+use Test::More tests => 10;
+use Imager::Test qw(is_image);
 
 -d "testout" or mkdir "testout";
 
@@ -45,4 +46,18 @@ SKIP: {
   ok(!$empty->map(maps => [ \@map1, \@map2, \@map3 ]),
      "can't map an empty image");
   is($empty->errstr, "map: empty input image", "check error message");
+}
+
+{ # a real map test
+  my $im = Imager->new(xsize => 10, ysize => 10);
+  $im->box(filled => 1, color => [ 255, 128, 128 ], xmax => 4, ymax => 4);
+  $im->box(filled => 1, color => [ 0, 255, 0 ], xmin => 5);
+
+  my $cmp = Imager->new(xsize => 10, ysize => 10);
+  $cmp->box(filled => 1, color => [ 127, 64, 64 ], xmax => 4, ymax => 4);
+  $cmp->box(filled => 1, color => [ 0, 127, 0 ], xmin => 5);
+  my @map = ( map int $_/2, 0 .. 255 );
+  my $out = $im->map(maps => [ \@map, \@map, \@map ]);
+  ok($out, "map()");
+  is_image($out, $cmp, "test map output");
 }

@@ -2102,8 +2102,9 @@ i_convert(src, avmain)
 
 
 undef_int
-i_map(im, pmaps)
+i_map(im, pmaps_av)
     Imager::ImgRaw     im
+    AV *pmaps_av
 	PREINIT:
 	  unsigned int mask = 0;
 	  AV *avmain;
@@ -2113,16 +2114,13 @@ i_map(im, pmaps)
 	  int i, j;
 	  unsigned char (*maps)[256];
         CODE:
-	  if (!SvROK(ST(1)) || SvTYPE(SvRV(ST(1))) != SVt_PVAV)
-	    croak("i_map: parameter 2 must be an arrayref\n");
-          avmain = (AV*)SvRV(ST(1));
-	  len = av_len(avmain)+1;
+	  len = av_len(pmaps_av)+1;
 	  if (im->channels < len) len = im->channels;
 
 	  maps = mymalloc( len * sizeof(unsigned char [256]) );
 
 	  for (j=0; j<len ; j++) {
-	    temp = av_fetch(avmain, j, 0);
+	    temp = av_fetch(pmaps_av, j, 0);
 	    if (temp && SvROK(*temp) && (SvTYPE(SvRV(*temp)) == SVt_PVAV) ) {
 	      avsub = (AV*)SvRV(*temp);
 	      if(av_len(avsub) != 255) continue;
