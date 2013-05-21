@@ -16,6 +16,8 @@ i_img_dim		T_IV
 
 double *		T_AVARRAY
 int *  			T_AVARRAY
+i_img_dim *		T_AVARRAY
+i_color *		T_AVARRAY
 
 # these types are for use by Inline, which can't handle types containing ::
 Imager__Color           T_PTROBJ_INV
@@ -91,10 +93,8 @@ T_AVARRAY
 		    for (xsub_index = 0; xsub_index < size_$var; ++xsub_index) {
 		        SV **sv = av_fetch(xsub_tmp_av, xsub_index, 0);
 			if (sv) {
-			  ${var}[xsub_index] = Sv${(my $ntt = $ntype) =~ s/Ptr$//; \(ucfirst $ntt)}(*sv);
+			  ${var}[xsub_index] = Sv${(my $ntt = $ntype) =~ s/Ptr$//; \(ucfirst $ntt)}(*sv, \"$pname\");
                         }
-			else
-			  ${var}[xsub_index] = 0;
 		    }
 		}
 		else{

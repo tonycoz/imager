@@ -122,12 +122,35 @@ malloc_temp(pTHX_ size_t size) {
   return SvPVX(sv);
 }
 
-/* for use with the T_AVARRAY typemap */
-#define doublePtr(size) ((double *)malloc_temp(aTHX_ sizeof(double) * (size)))
-#define SvDouble(sv) (SvNV(sv))
+static void *
+calloc_temp(pTHX_ size_t size) {
+  void *result = malloc_temp(aTHX_ size);
+  memset(result, 0, size);
 
-#define intPtr(size) ((int *)malloc_temp(aTHX_ sizeof(int) * (size)))
-#define SvInt(sv) (SvIV(sv))
+  return result;
+}
+
+/* for use with the T_AVARRAY typemap */
+#define doublePtr(size) ((double *)calloc_temp(aTHX_ sizeof(double) * (size)))
+#define SvDouble(sv, pname) (SvNV(sv))
+
+#define intPtr(size) ((int *)calloc_temp(aTHX_ sizeof(int) * (size)))
+#define SvInt(sv, pname) (SvIV(sv))
+
+#define i_img_dimPtr(size) ((i_img_dim *)calloc_temp(aTHX_ sizeof(i_img_dim) * (size)))
+#define SvI_img_dim(sv, pname) (SvIV(sv))
+
+#define i_colorPtr(size) ((i_color *)calloc_temp(aTHX_ sizeof(i_color *) * (size)))
+
+#define SvI_color(sv, pname) S_sv_to_i_color(aTHX_ sv, pname)
+
+static i_color
+S_sv_to_i_color(pTHX_ SV *sv, const char *pname) {
+  if (!sv_derived_from(sv, "Imager::Color")) {
+    croak("%s: not a color object");
+  }
+  return *INT2PTR(i_color *, SvIV((SV *)SvRV(sv)));
+}
 
 /* These functions are all shared - then comes platform dependant code */
 static int getstr(void *hv_t,char *key,char **store) {
@@ -2691,54 +2714,22 @@ i_turbnoise(im, xo, yo, scale)
 
 
 void
-i_gradgen(im, ...)
+i_gradgen(im, xo, yo, ac, dmeasure)
     Imager::ImgRaw     im
+    i_img_dim *xo
+    i_img_dim *yo
+    i_color *ac
+    int dmeasure
       PREINIT:
-	int num;
-	i_img_dim *xo;
-	i_img_dim *yo;
-        i_color *ival;
-	int dmeasure;
-	int i;
-	SV *sv;
-	AV *axx;
-	AV *ayy;
-	AV *ac;
+	STRLEN size_xo;
+	STRLEN size_yo;
+        STRLEN size_ac;
       CODE:
-	if (items != 5)
-	    croak("Usage: i_gradgen(im, xo, yo, ival, dmeasure)");
-	if (!SvROK(ST(1)) || ! SvTYPE(SvRV(ST(1))))
-	    croak("i_gradgen: Second argument must be an array ref");
-	if (!SvROK(ST(2)) || ! SvTYPE(SvRV(ST(2))))
-	    croak("i_gradgen: Third argument must be an array ref");
-	if (!SvROK(ST(3)) || ! SvTYPE(SvRV(ST(3))))
-	    croak("i_gradgen: Fourth argument must be an array ref");
-	axx = (AV *)SvRV(ST(1));
-	ayy = (AV *)SvRV(ST(2));
-	ac  = (AV *)SvRV(ST(3));
-	dmeasure = (int)SvIV(ST(4));
-	
-        num = av_len(axx) < av_len(ayy) ? av_len(axx) : av_len(ayy);
-	num = num <= av_len(ac) ? num : av_len(ac);
-	num++; 
-	if (num < 2) croak("Usage: i_gradgen array refs must have more than 1 entry each");
-	xo = mymalloc( sizeof(i_img_dim) * num );
-	yo = mymalloc( sizeof(i_img_dim) * num );
-	ival = mymalloc( sizeof(i_color) * num );
-	for(i = 0; i<num; i++) {
-	  xo[i]   = (i_img_dim)SvIV(* av_fetch(axx, i, 0));
-	  yo[i]   = (i_img_dim)SvIV(* av_fetch(ayy, i, 0));
-          sv = *av_fetch(ac, i, 0);
-	  if ( !sv_derived_from(sv, "Imager::Color") ) {
-	    free(axx); free(ayy); free(ac);
-            croak("i_gradgen: Element of fourth argument is not derived from Imager::Color");
-	  }
-	  ival[i] = *INT2PTR(i_color *, SvIV((SV *)SvRV(sv)));
-	}
-        i_gradgen(im, num, xo, yo, ival, dmeasure);
-        myfree(xo);
-        myfree(yo);
-        myfree(ival);
+        if (size_xo != size_yo || size_xo != size_ac)
+	  croak("i_gradgen: x, y and color arrays must be the same size");
+	if (size_xo < 2)
+          croak("Usage: i_gradgen array refs must have more than 1 entry each");
+        i_gradgen(im, size_xo, xo, yo, ac, dmeasure);
 
 Imager::ImgRaw
 i_diff_image(im, im2, mindist=0)
