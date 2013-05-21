@@ -2509,8 +2509,11 @@ i_get_anonymous_color_histo(im, maxc = 0x40000000)
 
 
 void
-i_transform(im,opx,opy,parm)
+i_transform(im,opx_av,opy_av,parm_av)
     Imager::ImgRaw     im
+    AV *opx_av
+    AV *opy_av
+    AV *parm_av
              PREINIT:
              double* parm;
              int *opx;
@@ -2523,31 +2526,22 @@ i_transform(im,opx,opy,parm)
              int i;
 	     i_img *result;
              PPCODE:
-             if (!SvROK(ST(1))) croak("Imager: Parameter 1 must be a reference to an array\n");
-             if (!SvROK(ST(2))) croak("Imager: Parameter 2 must be a reference to an array\n");
-             if (!SvROK(ST(3))) croak("Imager: Parameter 3 must be a reference to an array\n");
-             if (SvTYPE(SvRV(ST(1))) != SVt_PVAV) croak("Imager: Parameter 1 must be a reference to an array\n");
-             if (SvTYPE(SvRV(ST(2))) != SVt_PVAV) croak("Imager: Parameter 2 must be a reference to an array\n");
-             if (SvTYPE(SvRV(ST(3))) != SVt_PVAV) croak("Imager: Parameter 3 must be a reference to an array\n");
-             av=(AV*)SvRV(ST(1));
-             opxl=av_len(av)+1;
+             opxl=av_len(opx_av)+1;
              opx=mymalloc( opxl*sizeof(int) );
              for(i=0;i<opxl;i++) {
-               sv1=(*(av_fetch(av,i,0)));
+               sv1=(*(av_fetch(opx_av,i,0)));
                opx[i]=(int)SvIV(sv1);
              }
-             av=(AV*)SvRV(ST(2));
-             opyl=av_len(av)+1;
+             opyl=av_len(opy_av)+1;
              opy=mymalloc( opyl*sizeof(int) );
              for(i=0;i<opyl;i++) {
-               sv1=(*(av_fetch(av,i,0)));
+               sv1=(*(av_fetch(opy_av,i,0)));
                opy[i]=(int)SvIV(sv1);
              }
-             av=(AV*)SvRV(ST(3));
-             parmlen=av_len(av)+1;
+             parmlen=av_len(parm_av)+1;
              parm=mymalloc( parmlen*sizeof(double) );
-             for(i=0;i<parmlen;i++) { /* FIXME: Bug? */
-               sv1=(*(av_fetch(av,i,0)));
+             for(i=0;i<parmlen;i++) {
+               sv1=(*(av_fetch(parm_av,i,0)));
                parm[i]=(double)SvNV(sv1);
              }
              result=i_transform(im,opx,opxl,opy,opyl,parm,parmlen);
