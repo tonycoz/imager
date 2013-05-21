@@ -954,10 +954,10 @@ ICL_rgba(cl)
 	      Imager::Color	cl
 	    PPCODE:
 		EXTEND(SP, 4);
-		PUSHs(sv_2mortal(newSVnv(cl->rgba.r)));
-		PUSHs(sv_2mortal(newSVnv(cl->rgba.g)));
-		PUSHs(sv_2mortal(newSVnv(cl->rgba.b)));
-		PUSHs(sv_2mortal(newSVnv(cl->rgba.a)));
+		PUSHs(sv_2mortal(newSViv(cl->rgba.r)));
+		PUSHs(sv_2mortal(newSViv(cl->rgba.g)));
+		PUSHs(sv_2mortal(newSViv(cl->rgba.b)));
+		PUSHs(sv_2mortal(newSViv(cl->rgba.a)));
 
 Imager::Color
 i_hsv_to_rgb(c)
