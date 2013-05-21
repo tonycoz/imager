@@ -122,6 +122,13 @@ malloc_temp(pTHX_ size_t size) {
   return SvPVX(sv);
 }
 
+/* for use with the T_AVARRAY typemap */
+#define doublePtr(size) ((double *)malloc_temp(aTHX_ sizeof(double) * (size)))
+#define SvDouble(sv) (SvNV(sv))
+
+#define intPtr(size) ((int *)malloc_temp(aTHX_ sizeof(int) * (size)))
+#define SvInt(sv) (SvIV(sv))
+
 /* These functions are all shared - then comes platform dependant code */
 static int getstr(void *hv_t,char *key,char **store) {
   dTHX;
@@ -1743,62 +1750,34 @@ i_bezier_multi(im,xc,yc,val)
 
 
 int
-i_poly_aa(im,x_av,y_av,val)
+i_poly_aa(im,x,y,val)
     Imager::ImgRaw     im
-    AV *x_av
-    AV *y_av
+    double *x
+    double *y
     Imager::Color  val
   PREINIT:
-    double   *x,*y;
-    int       len;
-    SV       *x_sv;
-    SV       *y_sv;
-    SSize_t   i;
+    STRLEN   size_x;
+    STRLEN   size_y;
   CODE:
-    if (av_len(x_av) != av_len(y_av))
+    if (size_x != size_y)
       croak("Imager: x and y arrays to i_poly_aa must be equal length\n");
-    len=av_len(x_av)+1;
-    x=mymalloc( len*sizeof(double) );
-    y=mymalloc( len*sizeof(double) );
-    for(i=0;i<len;i++) {
-      x_sv=(*(av_fetch(x_av,i,0)));
-      y_sv=(*(av_fetch(y_av,i,0)));
-      x[i]=(double)SvNV(x_sv);
-      y[i]=(double)SvNV(y_sv);
-    }
-    RETVAL = i_poly_aa(im,len,x,y,val);
-    myfree(x);
-    myfree(y);
+    RETVAL = i_poly_aa(im, size_x, x, y, val);
   OUTPUT:
     RETVAL
 
 int
-i_poly_aa_cfill(im,x_av,y_av,fill)
+i_poly_aa_cfill(im, x, y, fill)
     Imager::ImgRaw     im
-    AV *x_av
-    AV *y_av
+    double *x
+    double *y
     Imager::FillHandle     fill
   PREINIT:
-    double   *x,*y;
-    STRLEN   len;
-    SV       *x_sv;
-    SV       *y_sv;
-    int i;
+    STRLEN size_x;
+    STRLEN size_y;
   CODE:
-    if (av_len(x_av) != av_len(y_av))
+    if (size_x != size_y)
       croak("Imager: x and y arrays to i_poly_aa_cfill must be equal length\n");
-    len=av_len(x_av)+1;
-    x=mymalloc( len*sizeof(double) );
-    y=mymalloc( len*sizeof(double) );
-    for(i=0;i<len;i++) {
-      x_sv=(*(av_fetch(x_av,i,0)));
-      y_sv=(*(av_fetch(y_av,i,0)));
-      x[i]=(double)SvNV(x_sv);
-      y[i]=(double)SvNV(y_sv);
-    }
-    RETVAL = i_poly_aa_cfill(im,len,x,y,fill);
-    myfree(x);
-    myfree(y);
+    RETVAL = i_poly_aa_cfill(im, size_x, x, y, fill);
   OUTPUT:
     RETVAL
 
@@ -2509,45 +2488,16 @@ i_get_anonymous_color_histo(im, maxc = 0x40000000)
 
 
 void
-i_transform(im,opx_av,opy_av,parm_av)
+i_transform(im, opx, opy, parm)
     Imager::ImgRaw     im
-    AV *opx_av
-    AV *opy_av
-    AV *parm_av
+    int *opx
+    int *opy
+    double *parm
              PREINIT:
-             double* parm;
-             int *opx;
-             int *opy;
-             int     opxl;
-             int     opyl;
-             int     parmlen;
-             AV* av;
-             SV* sv1;
-             int i;
+	     STRLEN size_opx, size_opy, size_parm;
 	     i_img *result;
              PPCODE:
-             opxl=av_len(opx_av)+1;
-             opx=mymalloc( opxl*sizeof(int) );
-             for(i=0;i<opxl;i++) {
-               sv1=(*(av_fetch(opx_av,i,0)));
-               opx[i]=(int)SvIV(sv1);
-             }
-             opyl=av_len(opy_av)+1;
-             opy=mymalloc( opyl*sizeof(int) );
-             for(i=0;i<opyl;i++) {
-               sv1=(*(av_fetch(opy_av,i,0)));
-               opy[i]=(int)SvIV(sv1);
-             }
-             parmlen=av_len(parm_av)+1;
-             parm=mymalloc( parmlen*sizeof(double) );
-             for(i=0;i<parmlen;i++) {
-               sv1=(*(av_fetch(parm_av,i,0)));
-               parm[i]=(double)SvNV(sv1);
-             }
-             result=i_transform(im,opx,opxl,opy,opyl,parm,parmlen);
-             myfree(parm);
-             myfree(opy);
-             myfree(opx);
+             result=i_transform(im,opx,size_opx,opy,size_opy,parm,size_parm);
  	     if (result) {
 	       SV *result_sv = sv_newmortal();
 	       EXTEND(SP, 1);
