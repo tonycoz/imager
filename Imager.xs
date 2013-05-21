@@ -1743,77 +1743,64 @@ i_bezier_multi(im,xc,yc,val)
 
 
 int
-i_poly_aa(im,xc,yc,val)
+i_poly_aa(im,x_av,y_av,val)
     Imager::ImgRaw     im
-             Imager::Color  val
-	     PREINIT:
-	     double   *x,*y;
-	     int       len;
-	     AV       *av1;
-	     AV       *av2;
-	     SV       *sv1;
-	     SV       *sv2;
-	     int i;
-	     CODE:
-	     ICL_info(val);
-	     if (!SvROK(ST(1))) croak("Imager: Parameter 1 to i_poly_aa must be a reference to an array\n");
-	     if (SvTYPE(SvRV(ST(1))) != SVt_PVAV) croak("Imager: Parameter 1 to i_poly_aa must be a reference to an array\n");
-	     if (!SvROK(ST(2))) croak("Imager: Parameter 1 to i_poly_aa must be a reference to an array\n");
-	     if (SvTYPE(SvRV(ST(2))) != SVt_PVAV) croak("Imager: Parameter 1 to i_poly_aa must be a reference to an array\n");
-	     av1=(AV*)SvRV(ST(1));
-	     av2=(AV*)SvRV(ST(2));
-	     if (av_len(av1) != av_len(av2)) croak("Imager: x and y arrays to i_poly_aa must be equal length\n");
-	     len=av_len(av1)+1;
-	     x=mymalloc( len*sizeof(double) );
-	     y=mymalloc( len*sizeof(double) );
-	     for(i=0;i<len;i++) {
-	       sv1=(*(av_fetch(av1,i,0)));
-	       sv2=(*(av_fetch(av2,i,0)));
-	       x[i]=(double)SvNV(sv1);
-	       y[i]=(double)SvNV(sv2);
-	     }
-             RETVAL = i_poly_aa(im,len,x,y,val);
-             myfree(x);
-             myfree(y);
-	     OUTPUT:
-	       RETVAL
+    AV *x_av
+    AV *y_av
+    Imager::Color  val
+  PREINIT:
+    double   *x,*y;
+    int       len;
+    SV       *x_sv;
+    SV       *y_sv;
+    SSize_t   i;
+  CODE:
+    if (av_len(x_av) != av_len(y_av))
+      croak("Imager: x and y arrays to i_poly_aa must be equal length\n");
+    len=av_len(x_av)+1;
+    x=mymalloc( len*sizeof(double) );
+    y=mymalloc( len*sizeof(double) );
+    for(i=0;i<len;i++) {
+      x_sv=(*(av_fetch(x_av,i,0)));
+      y_sv=(*(av_fetch(y_av,i,0)));
+      x[i]=(double)SvNV(x_sv);
+      y[i]=(double)SvNV(y_sv);
+    }
+    RETVAL = i_poly_aa(im,len,x,y,val);
+    myfree(x);
+    myfree(y);
+  OUTPUT:
+    RETVAL
 
 int
-i_poly_aa_cfill(im,xc,yc,fill)
+i_poly_aa_cfill(im,x_av,y_av,fill)
     Imager::ImgRaw     im
-     Imager::FillHandle     fill
-	     PREINIT:
-	     double   *x,*y;
-	     int       len;
-	     AV       *av1;
-	     AV       *av2;
-	     SV       *sv1;
-	     SV       *sv2;
-	     int i;
-	     CODE:
-	     if (!SvROK(ST(1))) croak("Imager: Parameter 1 to i_poly_aa_cfill must be a reference to an array\n");
-	     if (SvTYPE(SvRV(ST(1))) != SVt_PVAV) croak("Imager: Parameter 1 to i_poly_aa_cfill must be a reference to an array\n");
-	     if (!SvROK(ST(2))) croak("Imager: Parameter 1 to i_poly_aa_cfill must be a reference to an array\n");
-	     if (SvTYPE(SvRV(ST(2))) != SVt_PVAV) croak("Imager: Parameter 1 to i_poly_aa_cfill must be a reference to an array\n");
-	     av1=(AV*)SvRV(ST(1));
-	     av2=(AV*)SvRV(ST(2));
-	     if (av_len(av1) != av_len(av2)) croak("Imager: x and y arrays to i_poly_aa_cfill must be equal length\n");
-	     len=av_len(av1)+1;
-	     x=mymalloc( len*sizeof(double) );
-	     y=mymalloc( len*sizeof(double) );
-	     for(i=0;i<len;i++) {
-	       sv1=(*(av_fetch(av1,i,0)));
-	       sv2=(*(av_fetch(av2,i,0)));
-	       x[i]=(double)SvNV(sv1);
-	       y[i]=(double)SvNV(sv2);
-	     }
-             RETVAL = i_poly_aa_cfill(im,len,x,y,fill);
-             myfree(x);
-             myfree(y);
-	     OUTPUT:
-	       RETVAL
-
-
+    AV *x_av
+    AV *y_av
+    Imager::FillHandle     fill
+  PREINIT:
+    double   *x,*y;
+    STRLEN   len;
+    SV       *x_sv;
+    SV       *y_sv;
+    int i;
+  CODE:
+    if (av_len(x_av) != av_len(y_av))
+      croak("Imager: x and y arrays to i_poly_aa_cfill must be equal length\n");
+    len=av_len(x_av)+1;
+    x=mymalloc( len*sizeof(double) );
+    y=mymalloc( len*sizeof(double) );
+    for(i=0;i<len;i++) {
+      x_sv=(*(av_fetch(x_av,i,0)));
+      y_sv=(*(av_fetch(y_av,i,0)));
+      x[i]=(double)SvNV(x_sv);
+      y[i]=(double)SvNV(y_sv);
+    }
+    RETVAL = i_poly_aa_cfill(im,len,x,y,fill);
+    myfree(x);
+    myfree(y);
+  OUTPUT:
+    RETVAL
 
 undef_int
 i_flood_fill(im,seedx,seedy,dcol)
