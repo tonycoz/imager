@@ -2105,43 +2105,41 @@ undef_int
 i_map(im, pmaps_av)
     Imager::ImgRaw     im
     AV *pmaps_av
-	PREINIT:
-	  unsigned int mask = 0;
-	  AV *avmain;
-	  AV *avsub;
-          SV **temp;
-	  int len;
-	  int i, j;
-	  unsigned char (*maps)[256];
-        CODE:
-	  len = av_len(pmaps_av)+1;
-	  if (im->channels < len) len = im->channels;
-
-	  maps = mymalloc( len * sizeof(unsigned char [256]) );
-
-	  for (j=0; j<len ; j++) {
-	    temp = av_fetch(pmaps_av, j, 0);
-	    if (temp && SvROK(*temp) && (SvTYPE(SvRV(*temp)) == SVt_PVAV) ) {
-	      avsub = (AV*)SvRV(*temp);
-	      if(av_len(avsub) != 255) continue;
-	      mask |= 1<<j;
-              for (i=0; i<256 ; i++) {
-		int val;
-		temp = av_fetch(avsub, i, 0);
-		val = temp ? SvIV(*temp) : 0;
-		if (val<0) val = 0;
-		if (val>255) val = 255;
-		maps[j][i] = val;
-	      }
-            }
-          }
-          i_map(im, maps, mask);
-	  myfree(maps);
-	  RETVAL = 1;
-    OUTPUT:
-	RETVAL
-
-
+  PREINIT:
+    unsigned int mask = 0;
+    AV *avmain;
+    AV *avsub;
+    SV **temp;
+    int len;
+    int i, j;
+    unsigned char (*maps)[256];
+  CODE:
+    len = av_len(pmaps_av)+1;
+    if (im->channels < len)
+      len = im->channels;
+    maps = mymalloc( len * sizeof(unsigned char [256]) );
+    for (j=0; j<len ; j++) {
+      temp = av_fetch(pmaps_av, j, 0);
+      if (temp && SvROK(*temp) && (SvTYPE(SvRV(*temp)) == SVt_PVAV) ) {
+        avsub = (AV*)SvRV(*temp);
+        if(av_len(avsub) != 255)
+          continue;
+        mask |= 1<<j;
+        for (i=0; i<256 ; i++) {
+          int val;
+          temp = av_fetch(avsub, i, 0);
+          val = temp ? SvIV(*temp) : 0;
+          if (val<0) val = 0;
+          if (val>255) val = 255;
+          maps[j][i] = val;
+        }
+      }
+    }
+    i_map(im, maps, mask);
+    myfree(maps);
+    RETVAL = 1;
+  OUTPUT:
+    RETVAL
 
 float
 i_img_diff(im1,im2)
