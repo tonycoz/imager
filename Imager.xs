@@ -1981,27 +1981,24 @@ i_rotate_exact(im, amount, ...)
 	RETVAL
 
 Imager::ImgRaw
-i_matrix_transform(im, xsize, ysize, matrix, ...)
+i_matrix_transform(im, xsize, ysize, matrix_av, ...)
     Imager::ImgRaw      im
                i_img_dim      xsize
                i_img_dim      ysize
+    AV *matrix_av
       PREINIT:
         double matrix[9];
-        AV *av;
-        IV len;
+        STRLEN len;
         SV *sv1;
         int i;
 	i_color *backp = NULL;
 	i_fcolor *fbackp = NULL;
       CODE:
-        if (!SvROK(ST(3)) || SvTYPE(SvRV(ST(3))) != SVt_PVAV)
-          croak("i_matrix_transform: parameter 4 must be an array ref\n");
-	av=(AV*)SvRV(ST(3));
-	len=av_len(av)+1;
+	len=av_len(matrix_av)+1;
         if (len > 9)
           len = 9;
         for (i = 0; i < len; ++i) {
-	  sv1=(*(av_fetch(av,i,0)));
+	  sv1=(*(av_fetch(matrix_av,i,0)));
 	  matrix[i] = SvNV(sv1);
         }
         for (; i < 9; ++i)
