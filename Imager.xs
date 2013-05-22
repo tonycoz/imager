@@ -3151,29 +3151,24 @@ i_setcolors(im, index, ...)
 	RETVAL
 
 void
-i_getcolors(im, index, ...)
+i_getcolors(im, index, count=1)
         Imager::ImgRaw im
         int index
+	int count
       PREINIT:
         i_color *colors;
-        int count = 1;
         int i;
       PPCODE:
-        if (items > 3)
-          croak("i_getcolors: too many arguments");
-        if (items == 3)
-          count = SvIV(ST(2));
         if (count < 1)
           croak("i_getcolors: count must be positive");
-        colors = mymalloc(sizeof(i_color) * count);
+        colors = malloc_temp(aTHX_ sizeof(i_color) * count);
         if (i_getcolors(im, index, colors, count)) {
+	  EXTEND(SP, count);
           for (i = 0; i < count; ++i) {
             SV *sv = make_i_color_sv(aTHX_ colors+i);
             PUSHs(sv);
           }
         }
-        myfree(colors);
-
 
 undef_neg_int
 i_colorcount(im)
