@@ -2927,12 +2927,8 @@ void
 DSO_call(handle,func_index,hv)
 	       void*  handle
 	       int    func_index
-	     PREINIT:
-	       HV* hv;
+	       HV *hv
 	     PPCODE:
-	       if (!SvROK(ST(2))) croak("Imager: Parameter 2 must be a reference to a hash\n");	       
-	       hv=(HV*)SvRV(ST(2));
-	       if (SvTYPE(hv)!=SVt_PVHV) croak("Imager: Parameter 2 must be a reference to a hash\n");
 	       DSO_call( (DSO_handle *)handle,func_index,hv);
 
 SV *
