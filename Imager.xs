@@ -2932,22 +2932,16 @@ DSO_call(handle,func_index,hv)
 	     PPCODE:
 	       DSO_call( (DSO_handle *)handle,func_index,hv);
 
-SV *
+Imager::Color
 i_get_pixel(im, x, y)
 	Imager::ImgRaw im
 	i_img_dim x
 	i_img_dim y;
-      PREINIT:
-        i_color *color;
       CODE:
-	color = (i_color *)mymalloc(sizeof(i_color));
-	if (i_gpix(im, x, y, color) == 0) {
-          RETVAL = NEWSV(0, 0);
-          sv_setref_pv(RETVAL, "Imager::Color", (void *)color);
-        }
-        else {
-          myfree(color);
-          RETVAL = &PL_sv_undef;
+	RETVAL = (i_color *)mymalloc(sizeof(i_color));
+	if (i_gpix(im, x, y, RETVAL) != 0) {
+          myfree(RETVAL);
+	  XSRETURN_UNDEF;
         }
       OUTPUT:
         RETVAL
