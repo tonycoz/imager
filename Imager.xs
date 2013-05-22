@@ -930,6 +930,7 @@ static im_pl_ext_funcs im_perl_funcs =
 
 #define IIM_new i_img_8_new
 #define IIM_DESTROY i_img_destroy
+typedef int SysRet;
 
 #ifdef IMEXIF_ENABLE
 #define i_exif_enabled() 1
@@ -3103,11 +3104,10 @@ i_ppal_p(im, l, y, data)
       OUTPUT:
         RETVAL
 
-SV *
+SysRet
 i_addcolors(im, ...)
         Imager::ImgRaw  im
       PREINIT:
-        int index;
         i_color *colors;
         int i;
       CODE:
@@ -3125,17 +3125,7 @@ i_addcolors(im, ...)
             croak("i_addcolor: pixels must be Imager::Color objects");
           }
         }
-        index = i_addcolors(im, colors, items-1);
-        myfree(colors);
-        if (index == 0) {
-          RETVAL = newSVpv("0 but true", 0);
-        }
-        else if (index == -1) {
-          RETVAL = &PL_sv_undef;
-        }
-        else {
-          RETVAL = newSViv(index);
-        }
+        RETVAL = i_addcolors(im, colors, items-1);
       OUTPUT:
         RETVAL
 
