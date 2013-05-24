@@ -1739,39 +1739,18 @@ i_arc_out_aa(im,x,y,rad,d1,d2,val)
 
 
 void
-i_bezier_multi(im,xc,yc,val)
+i_bezier_multi(im,x,y,val)
     Imager::ImgRaw     im
-             Imager::Color  val
-	     PREINIT:
-	     double   *x,*y;
-	     int       len;
-	     AV       *av1;
-	     AV       *av2;
-	     SV       *sv1;
-	     SV       *sv2;
-	     int i;
-	     PPCODE:
-	     ICL_info(val);
-	     if (!SvROK(ST(1))) croak("Imager: Parameter 1 to i_bezier_multi must be a reference to an array\n");
-	     if (SvTYPE(SvRV(ST(1))) != SVt_PVAV) croak("Imager: Parameter 1 to i_bezier_multi must be a reference to an array\n");
-	     if (!SvROK(ST(2))) croak("Imager: Parameter 2 to i_bezier_multi must be a reference to an array\n");
-	     if (SvTYPE(SvRV(ST(2))) != SVt_PVAV) croak("Imager: Parameter 2 to i_bezier_multi must be a reference to an array\n");
-	     av1=(AV*)SvRV(ST(1));
-	     av2=(AV*)SvRV(ST(2));
-	     if (av_len(av1) != av_len(av2)) croak("Imager: x and y arrays to i_bezier_multi must be equal length\n");
-	     len=av_len(av1)+1;
-	     x=mymalloc( len*sizeof(double) );
-	     y=mymalloc( len*sizeof(double) );
-	     for(i=0;i<len;i++) {
-	       sv1=(*(av_fetch(av1,i,0)));
-	       sv2=(*(av_fetch(av2,i,0)));
-	       x[i]=(double)SvNV(sv1);
-	       y[i]=(double)SvNV(sv2);
-	     }
-             i_bezier_multi(im,len,x,y,val);
-             myfree(x);
-             myfree(y);
-
+    double *x
+    double *y
+    Imager::Color  val
+  PREINIT:
+    STRLEN size_x;
+    STRLEN size_y;
+  PPCODE:
+    if (size_x != size_y)
+      croak("Imager: x and y arrays to i_bezier_multi must be equal length\n");
+    i_bezier_multi(im,size_x,x,y,val);
 
 int
 i_poly_aa(im,x,y,val)
