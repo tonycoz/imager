@@ -3864,8 +3864,9 @@ i_new_fill_hatchf(fg, bg, combine, hatch, cust_hatch_sv, dx, dy)
         RETVAL
 
 Imager::FillHandle
-i_new_fill_image(src, matrix, xoff, yoff, combine)
+i_new_fill_image(src, matrix_sv, xoff, yoff, combine)
         Imager::ImgRaw src
+	SV *matrix_sv
         i_img_dim xoff
         i_img_dim yoff
         int combine
@@ -3877,13 +3878,14 @@ i_new_fill_image(src, matrix, xoff, yoff, combine)
         SV *sv1;
         int i;
       CODE:
-        if (!SvOK(ST(1))) {
+        SvGETMAGIC(matrix_sv);
+        if (!SvOK(matrix_sv)) {
           matrixp = NULL;
         }
         else {
-          if (!SvROK(ST(1)) || SvTYPE(SvRV(ST(1))) != SVt_PVAV)
-            croak("i_new_fill_image: parameter must be an arrayref");
-	  av=(AV*)SvRV(ST(1));
+          if (!SvROK(matrix_sv) || SvTYPE(SvRV(matrix_sv)) != SVt_PVAV)
+            croak("i_new_fill_image: matrix parameter must be an arrayref or undef");
+	  av=(AV*)SvRV(matrix_sv);
 	  len=av_len(av)+1;
           if (len > 9)
             len = 9;
