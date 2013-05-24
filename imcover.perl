@@ -52,6 +52,14 @@ for my $filename (keys %$mani) {
   else {
     push @{$paths{''}}, $filename;
   }
+  if ($filename =~ s/\.(xs|im)$/.c/) {
+    if ($filename =~ m!^(\w+)/(\w+\.\w+)$!) {
+      push @{$paths{$1}}, $2;
+    }
+    else {
+      push @{$paths{''}}, $filename;
+    }
+  }
 }
 
 for my $path (keys %paths) {
