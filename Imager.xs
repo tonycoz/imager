@@ -3525,22 +3525,16 @@ i_plinf(im, l, y, ...)
       OUTPUT:
         RETVAL
 
-SV *
+Imager::Color::Float
 i_gpixf(im, x, y)
 	Imager::ImgRaw im
 	i_img_dim x
 	i_img_dim y;
-      PREINIT:
-        i_fcolor *color;
       CODE:
-	color = (i_fcolor *)mymalloc(sizeof(i_fcolor));
-	if (i_gpixf(im, x, y, color) == 0) {
-          RETVAL = NEWSV(0,0);
-          sv_setref_pv(RETVAL, "Imager::Color::Float", (void *)color);
-        }
-        else {
-          myfree(color);
-          RETVAL = &PL_sv_undef;
+	RETVAL = (i_fcolor *)mymalloc(sizeof(i_fcolor));
+	if (i_gpixf(im, x, y, RETVAL) != 0) {
+          myfree(RETVAL);
+          XSRETURN_UNDEF;
         }
       OUTPUT:
         RETVAL
