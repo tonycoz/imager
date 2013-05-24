@@ -3476,8 +3476,7 @@ i_gsampf(im, l, r, y, channels)
         }
         else {
           if (GIMME_V != G_ARRAY) {
-            EXTEND(SP, 1);
-            PUSHs(&PL_sv_undef);
+	    XSRETURN_UNDEF;
           }
         }
 
