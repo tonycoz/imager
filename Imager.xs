@@ -3676,7 +3676,7 @@ i_tags_add(im, name_sv, code, data_sv, idata)
       OUTPUT:
         RETVAL
 
-SV *
+SysRet
 i_tags_find(im, name, start)
         Imager::ImgRaw  im
         char *name
@@ -3685,17 +3685,14 @@ i_tags_find(im, name, start)
         int entry;
       CODE:
         if (i_tags_find(&im->tags, name, start, &entry)) {
-          if (entry == 0)
-            RETVAL = newSVpv("0 but true", 0);
-          else
-            RETVAL = newSViv(entry);
+	  RETVAL = entry;
         } else {
-          RETVAL = &PL_sv_undef;
+          XSRETURN_UNDEF;
         }
       OUTPUT:
         RETVAL
 
-SV *
+SysRet
 i_tags_findn(im, code, start)
         Imager::ImgRaw  im
         int             code
@@ -3704,13 +3701,10 @@ i_tags_findn(im, code, start)
         int entry;
       CODE:
         if (i_tags_findn(&im->tags, code, start, &entry)) {
-          if (entry == 0)
-            RETVAL = newSVpv("0 but true", 0);
-          else
-            RETVAL = newSViv(entry);
+          RETVAL = entry;
         }
         else {
-          RETVAL = &PL_sv_undef;
+          XSRETURN_UNDEF;
         }
       OUTPUT:
         RETVAL
