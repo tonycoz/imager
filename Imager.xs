@@ -3630,16 +3630,18 @@ i_img_to_drgb(im)
        Imager::ImgRaw im
 
 undef_int
-i_tags_addn(im, name, code, idata)
+i_tags_addn(im, name_sv, code, idata)
         Imager::ImgRaw im
+	SV *name_sv
         int     code
         int     idata
       PREINIT:
         char *name;
         STRLEN len;
       CODE:
-        if (SvOK(ST(1)))
-          name = SvPV(ST(1), len);
+        SvGETMAGIC(name_sv);
+        if (SvOK(name_sv))
+          name = SvPV_nomg(name_sv, len);
         else
           name = NULL;
         RETVAL = i_tags_addn(&im->tags, name, code, idata);
