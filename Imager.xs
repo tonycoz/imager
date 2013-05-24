@@ -3213,7 +3213,7 @@ i_gsamp(im, l, r, y, channels)
         i_img_dim count, i;
       PPCODE:
         if (l < r) {
-          data = mymalloc(sizeof(i_sample_t) * (r-l) * channels.count); /* XXX: memleak? */
+          data = mymalloc(sizeof(i_sample_t) * (r-l) * channels.count);
           count = i_gsamp(im, l, r, y, data, channels.channels, channels.count);
           if (GIMME_V == G_ARRAY) {
             EXTEND(SP, count);
@@ -3228,8 +3228,7 @@ i_gsamp(im, l, r, y, channels)
         }
         else {
           if (GIMME_V != G_ARRAY) {
-            EXTEND(SP, 1);
-            PUSHs(&PL_sv_undef);
+	    XSRETURN_UNDEF;
           }
         }
 
