@@ -3178,18 +3178,13 @@ undef_neg_int
 i_maxcolors(im)
         Imager::ImgRaw im
 
-SV *
+i_palidx
 i_findcolor(im, color)
         Imager::ImgRaw im
         Imager::Color color
-      PREINIT:
-        i_palidx index;
       CODE:
-        if (i_findcolor(im, color, &index)) {
-          RETVAL = newSViv(index);
-        }
-        else {
-          RETVAL = &PL_sv_undef;
+        if (!i_findcolor(im, color, &RETVAL)) {
+	  XSRETURN_UNDEF;
         }
       OUTPUT:
         RETVAL
