@@ -3818,19 +3818,21 @@ i_new_fill_solidf(cl, combine)
         int combine
 
 Imager::FillHandle
-i_new_fill_hatch(fg, bg, combine, hatch, cust_hatch, dx, dy)
+i_new_fill_hatch(fg, bg, combine, hatch, cust_hatch_sv, dx, dy)
         Imager::Color fg
         Imager::Color bg
         int combine
         int hatch
+	SV *cust_hatch_sv
         i_img_dim dx
         i_img_dim dy
       PREINIT:
         unsigned char *cust_hatch;
         STRLEN len;
       CODE:
-        if (SvOK(ST(4))) {
-          cust_hatch = (unsigned char *)SvPV(ST(4), len);
+        SvGETMAGIC(cust_hatch_sv);
+        if (SvOK(cust_hatch_sv)) {
+          cust_hatch = (unsigned char *)SvPV_nomg(cust_hatch_sv, len);
         }
         else
           cust_hatch = NULL;
@@ -3839,19 +3841,21 @@ i_new_fill_hatch(fg, bg, combine, hatch, cust_hatch, dx, dy)
         RETVAL
 
 Imager::FillHandle
-i_new_fill_hatchf(fg, bg, combine, hatch, cust_hatch, dx, dy)
+i_new_fill_hatchf(fg, bg, combine, hatch, cust_hatch_sv, dx, dy)
         Imager::Color::Float fg
         Imager::Color::Float bg
         int combine
         int hatch
+        SV *cust_hatch_sv
         i_img_dim dx
         i_img_dim dy
       PREINIT:
         unsigned char *cust_hatch;
         STRLEN len;
       CODE:
-        if (SvOK(ST(4))) {
-          cust_hatch = (unsigned char *)SvPV(ST(4), len);
+        SvGETMAGIC(cust_hatch_sv);
+        if (SvOK(cust_hatch_sv)) {
+          cust_hatch = (unsigned char *)SvPV(cust_hatch_sv, len);
         }
         else
           cust_hatch = NULL;
