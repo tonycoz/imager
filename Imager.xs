@@ -3649,21 +3649,25 @@ i_tags_addn(im, name_sv, code, idata)
         RETVAL
 
 undef_int
-i_tags_add(im, name, code, data, idata)
+i_tags_add(im, name_sv, code, data_sv, idata)
         Imager::ImgRaw  im
+	SV *name_sv
         int code
+	SV *data_sv
         int idata
       PREINIT:
         char *name;
         char *data;
         STRLEN len;
       CODE:
-        if (SvOK(ST(1)))
-          name = SvPV(ST(1), len);
+        SvGETMAGIC(name_sv);
+        if (SvOK(name_sv))
+          name = SvPV_nomg(name_sv, len);
         else
           name = NULL;
-        if (SvOK(ST(3)))
-          data = SvPV(ST(3), len);
+	SvGETMAGIC(data_sv);
+        if (SvOK(data_sv))
+          data = SvPV(data_sv, len);
         else {
           data = NULL;
           len = 0;
