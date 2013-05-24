@@ -12,6 +12,13 @@ Imager::Internal::Hlines T_PTROBJ
 
 Imager::Context		 T_PTROBJ
 
+i_palidx		T_IV
+double *		T_AVARRAY
+int *  			T_AVARRAY
+i_img_dim *		T_AVARRAY
+i_color *		T_AVARRAY
+
+
 #############################################################################
 INPUT
 
@@ -101,6 +108,29 @@ T_IM_FSAMPLE_LIST
 	  if ($var.count == 0)
 	    croak(\"$pname: no samples provided in $var\");
 	}
+
+T_AVARRAY
+	STMT_START {
+		SV* const xsub_tmp_sv = $arg;
+		SvGETMAGIC(xsub_tmp_sv);
+		if (SvROK(xsub_tmp_sv) && SvTYPE(SvRV(xsub_tmp_sv)) == SVt_PVAV){
+		    AV *xsub_tmp_av = (AV*)SvRV(xsub_tmp_sv);
+		    STRLEN xsub_index;
+		    size_$var = av_len(xsub_tmp_av) + 1;
+		    $var = $ntype(size_$var);
+		    for (xsub_index = 0; xsub_index < size_$var; ++xsub_index) {
+		        SV **sv = av_fetch(xsub_tmp_av, xsub_index, 0);
+			if (sv) {
+			  ${var}[xsub_index] = Sv${(my $ntt = $ntype) =~ s/Ptr$//; \(ucfirst $ntt)}(*sv, \"$pname\");
+                        }
+		    }
+		}
+		else{
+		    Perl_croak(aTHX_ \"%s: %s is not an ARRAY reference\",
+				${$ALIAS?\q[GvNAME(CvGV(cv))]:\qq[\"$pname\"]},
+				\"$var\");
+		}
+	} STMT_END
 
 #############################################################################
 OUTPUT
