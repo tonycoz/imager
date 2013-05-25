@@ -76,6 +76,7 @@ T_PTROBJ_INV
         else
             croak(\"$var is not of type ${(my $ntt=$ntype)=~s/__/::/g;\$ntt}\");
 
+
 #############################################################################
 OUTPUT
 T_IV_U

@@ -122,6 +122,36 @@ malloc_temp(pTHX_ size_t size) {
   return SvPVX(sv);
 }
 
+static void *
+calloc_temp(pTHX_ size_t size) {
+  void *result = malloc_temp(aTHX_ size);
+  memset(result, 0, size);
+
+  return result;
+}
+
+/* for use with the T_AVARRAY typemap */
+#define doublePtr(size) ((double *)calloc_temp(aTHX_ sizeof(double) * (size)))
+#define SvDouble(sv, pname) (SvNV(sv))
+
+#define intPtr(size) ((int *)calloc_temp(aTHX_ sizeof(int) * (size)))
+#define SvInt(sv, pname) (SvIV(sv))
+
+#define i_img_dimPtr(size) ((i_img_dim *)calloc_temp(aTHX_ sizeof(i_img_dim) * (size)))
+#define SvI_img_dim(sv, pname) (SvIV(sv))
+
+#define i_colorPtr(size) ((i_color *)calloc_temp(aTHX_ sizeof(i_color *) * (size)))
+
+#define SvI_color(sv, pname) S_sv_to_i_color(aTHX_ sv, pname)
+
+static i_color
+S_sv_to_i_color(pTHX_ SV *sv, const char *pname) {
+  if (!sv_derived_from(sv, "Imager::Color")) {
+    croak("%s: not a color object");
+  }
+  return *INT2PTR(i_color *, SvIV((SV *)SvRV(sv)));
+}
+
 /* These functions are all shared - then comes platform dependant code */
 static int getstr(void *hv_t,char *key,char **store) {
   dTHX;
@@ -900,6 +930,7 @@ static im_pl_ext_funcs im_perl_funcs =
 
 #define IIM_new i_img_8_new
 #define IIM_DESTROY i_img_destroy
+typedef int SysRet;
 
 #ifdef IMEXIF_ENABLE
 #define i_exif_enabled() 1
@@ -954,10 +985,10 @@ ICL_rgba(cl)
 	      Imager::Color	cl
 	    PPCODE:
 		EXTEND(SP, 4);
-		PUSHs(sv_2mortal(newSVnv(cl->rgba.r)));
-		PUSHs(sv_2mortal(newSVnv(cl->rgba.g)));
-		PUSHs(sv_2mortal(newSVnv(cl->rgba.b)));
-		PUSHs(sv_2mortal(newSVnv(cl->rgba.a)));
+		PUSHs(sv_2mortal(newSViv(cl->rgba.r)));
+		PUSHs(sv_2mortal(newSViv(cl->rgba.g)));
+		PUSHs(sv_2mortal(newSViv(cl->rgba.b)));
+		PUSHs(sv_2mortal(newSViv(cl->rgba.a)));
 
 Imager::Color
 i_hsv_to_rgb(c)
@@ -1708,112 +1739,50 @@ i_arc_out_aa(im,x,y,rad,d1,d2,val)
 
 
 void
-i_bezier_multi(im,xc,yc,val)
+i_bezier_multi(im,x,y,val)
     Imager::ImgRaw     im
-             Imager::Color  val
-	     PREINIT:
-	     double   *x,*y;
-	     int       len;
-	     AV       *av1;
-	     AV       *av2;
-	     SV       *sv1;
-	     SV       *sv2;
-	     int i;
-	     PPCODE:
-	     ICL_info(val);
-	     if (!SvROK(ST(1))) croak("Imager: Parameter 1 to i_bezier_multi must be a reference to an array\n");
-	     if (SvTYPE(SvRV(ST(1))) != SVt_PVAV) croak("Imager: Parameter 1 to i_bezier_multi must be a reference to an array\n");
-	     if (!SvROK(ST(2))) croak("Imager: Parameter 2 to i_bezier_multi must be a reference to an array\n");
-	     if (SvTYPE(SvRV(ST(2))) != SVt_PVAV) croak("Imager: Parameter 2 to i_bezier_multi must be a reference to an array\n");
-	     av1=(AV*)SvRV(ST(1));
-	     av2=(AV*)SvRV(ST(2));
-	     if (av_len(av1) != av_len(av2)) croak("Imager: x and y arrays to i_bezier_multi must be equal length\n");
-	     len=av_len(av1)+1;
-	     x=mymalloc( len*sizeof(double) );
-	     y=mymalloc( len*sizeof(double) );
-	     for(i=0;i<len;i++) {
-	       sv1=(*(av_fetch(av1,i,0)));
-	       sv2=(*(av_fetch(av2,i,0)));
-	       x[i]=(double)SvNV(sv1);
-	       y[i]=(double)SvNV(sv2);
-	     }
-             i_bezier_multi(im,len,x,y,val);
-             myfree(x);
-             myfree(y);
-
+    double *x
+    double *y
+    Imager::Color  val
+  PREINIT:
+    STRLEN size_x;
+    STRLEN size_y;
+  PPCODE:
+    if (size_x != size_y)
+      croak("Imager: x and y arrays to i_bezier_multi must be equal length\n");
+    i_bezier_multi(im,size_x,x,y,val);
 
 int
-i_poly_aa(im,xc,yc,val)
+i_poly_aa(im,x,y,val)
     Imager::ImgRaw     im
-             Imager::Color  val
-	     PREINIT:
-	     double   *x,*y;
-	     int       len;
-	     AV       *av1;
-	     AV       *av2;
-	     SV       *sv1;
-	     SV       *sv2;
-	     int i;
-	     CODE:
-	     ICL_info(val);
-	     if (!SvROK(ST(1))) croak("Imager: Parameter 1 to i_poly_aa must be a reference to an array\n");
-	     if (SvTYPE(SvRV(ST(1))) != SVt_PVAV) croak("Imager: Parameter 1 to i_poly_aa must be a reference to an array\n");
-	     if (!SvROK(ST(2))) croak("Imager: Parameter 1 to i_poly_aa must be a reference to an array\n");
-	     if (SvTYPE(SvRV(ST(2))) != SVt_PVAV) croak("Imager: Parameter 1 to i_poly_aa must be a reference to an array\n");
-	     av1=(AV*)SvRV(ST(1));
-	     av2=(AV*)SvRV(ST(2));
-	     if (av_len(av1) != av_len(av2)) croak("Imager: x and y arrays to i_poly_aa must be equal length\n");
-	     len=av_len(av1)+1;
-	     x=mymalloc( len*sizeof(double) );
-	     y=mymalloc( len*sizeof(double) );
-	     for(i=0;i<len;i++) {
-	       sv1=(*(av_fetch(av1,i,0)));
-	       sv2=(*(av_fetch(av2,i,0)));
-	       x[i]=(double)SvNV(sv1);
-	       y[i]=(double)SvNV(sv2);
-	     }
-             RETVAL = i_poly_aa(im,len,x,y,val);
-             myfree(x);
-             myfree(y);
-	     OUTPUT:
-	       RETVAL
+    double *x
+    double *y
+    Imager::Color  val
+  PREINIT:
+    STRLEN   size_x;
+    STRLEN   size_y;
+  CODE:
+    if (size_x != size_y)
+      croak("Imager: x and y arrays to i_poly_aa must be equal length\n");
+    RETVAL = i_poly_aa(im, size_x, x, y, val);
+  OUTPUT:
+    RETVAL
 
 int
-i_poly_aa_cfill(im,xc,yc,fill)
+i_poly_aa_cfill(im, x, y, fill)
     Imager::ImgRaw     im
-     Imager::FillHandle     fill
-	     PREINIT:
-	     double   *x,*y;
-	     int       len;
-	     AV       *av1;
-	     AV       *av2;
-	     SV       *sv1;
-	     SV       *sv2;
-	     int i;
-	     CODE:
-	     if (!SvROK(ST(1))) croak("Imager: Parameter 1 to i_poly_aa_cfill must be a reference to an array\n");
-	     if (SvTYPE(SvRV(ST(1))) != SVt_PVAV) croak("Imager: Parameter 1 to i_poly_aa_cfill must be a reference to an array\n");
-	     if (!SvROK(ST(2))) croak("Imager: Parameter 1 to i_poly_aa_cfill must be a reference to an array\n");
-	     if (SvTYPE(SvRV(ST(2))) != SVt_PVAV) croak("Imager: Parameter 1 to i_poly_aa_cfill must be a reference to an array\n");
-	     av1=(AV*)SvRV(ST(1));
-	     av2=(AV*)SvRV(ST(2));
-	     if (av_len(av1) != av_len(av2)) croak("Imager: x and y arrays to i_poly_aa_cfill must be equal length\n");
-	     len=av_len(av1)+1;
-	     x=mymalloc( len*sizeof(double) );
-	     y=mymalloc( len*sizeof(double) );
-	     for(i=0;i<len;i++) {
-	       sv1=(*(av_fetch(av1,i,0)));
-	       sv2=(*(av_fetch(av2,i,0)));
-	       x[i]=(double)SvNV(sv1);
-	       y[i]=(double)SvNV(sv2);
-	     }
-             RETVAL = i_poly_aa_cfill(im,len,x,y,fill);
-             myfree(x);
-             myfree(y);
-	     OUTPUT:
-	       RETVAL
-
-
+    double *x
+    double *y
+    Imager::FillHandle     fill
+  PREINIT:
+    STRLEN size_x;
+    STRLEN size_y;
+  CODE:
+    if (size_x != size_y)
+      croak("Imager: x and y arrays to i_poly_aa_cfill must be equal length\n");
+    RETVAL = i_poly_aa_cfill(im, size_x, x, y, fill);
+  OUTPUT:
+    RETVAL
 
 undef_int
 i_flood_fill(im,seedx,seedy,dcol)
@@ -1994,47 +1963,44 @@ i_rotate_exact(im, amount, ...)
 	RETVAL
 
 Imager::ImgRaw
-i_matrix_transform(im, xsize, ysize, matrix, ...)
+i_matrix_transform(im, xsize, ysize, matrix_av, ...)
     Imager::ImgRaw      im
-               i_img_dim      xsize
-               i_img_dim      ysize
-      PREINIT:
-        double matrix[9];
-        AV *av;
-        IV len;
-        SV *sv1;
-        int i;
-	i_color *backp = NULL;
-	i_fcolor *fbackp = NULL;
-      CODE:
-        if (!SvROK(ST(3)) || SvTYPE(SvRV(ST(3))) != SVt_PVAV)
-          croak("i_matrix_transform: parameter 4 must be an array ref\n");
-	av=(AV*)SvRV(ST(3));
-	len=av_len(av)+1;
-        if (len > 9)
-          len = 9;
-        for (i = 0; i < len; ++i) {
-	  sv1=(*(av_fetch(av,i,0)));
-	  matrix[i] = SvNV(sv1);
-        }
-        for (; i < 9; ++i)
-          matrix[i] = 0;
-	/* extract the bg colors if any */
-	/* yes, this is kind of strange */
-	for (i = 4; i < items; ++i) {
-          sv1 = ST(i);
-          if (sv_derived_from(sv1, "Imager::Color")) {
-	    IV tmp = SvIV((SV*)SvRV(sv1));
-	    backp = INT2PTR(i_color *, tmp);
-	  }
-	  else if (sv_derived_from(sv1, "Imager::Color::Float")) {
-	    IV tmp = SvIV((SV*)SvRV(sv1));
-	    fbackp = INT2PTR(i_fcolor *, tmp);
-	  }
-	}
-        RETVAL = i_matrix_transform_bg(im, xsize, ysize, matrix, backp, fbackp);
-      OUTPUT:
-        RETVAL
+    i_img_dim      xsize
+    i_img_dim      ysize
+    AV *matrix_av
+  PREINIT:
+    double matrix[9];
+    STRLEN len;
+    SV *sv1;
+    int i;
+    i_color *backp = NULL;
+    i_fcolor *fbackp = NULL;
+  CODE:
+    len=av_len(matrix_av)+1;
+    if (len > 9)
+      len = 9;
+    for (i = 0; i < len; ++i) {
+      sv1=(*(av_fetch(matrix_av,i,0)));
+      matrix[i] = SvNV(sv1);
+    }
+    for (; i < 9; ++i)
+      matrix[i] = 0;
+    /* extract the bg colors if any */
+    /* yes, this is kind of strange */
+    for (i = 4; i < items; ++i) {
+      sv1 = ST(i);
+      if (sv_derived_from(sv1, "Imager::Color")) {
+        IV tmp = SvIV((SV*)SvRV(sv1));
+	backp = INT2PTR(i_color *, tmp);
+      }
+      else if (sv_derived_from(sv1, "Imager::Color::Float")) {
+        IV tmp = SvIV((SV*)SvRV(sv1));
+        fbackp = INT2PTR(i_fcolor *, tmp);
+      }
+    }
+    RETVAL = i_matrix_transform_bg(im, xsize, ysize, matrix, backp, fbackp);
+  OUTPUT:
+    RETVAL
 
 undef_int
 i_gaussian(im,stdev)
@@ -2118,48 +2084,44 @@ i_convert(src, avmain)
 
 
 undef_int
-i_map(im, pmaps)
+i_map(im, pmaps_av)
     Imager::ImgRaw     im
-	PREINIT:
-	  unsigned int mask = 0;
-	  AV *avmain;
-	  AV *avsub;
-          SV **temp;
-	  int len;
-	  int i, j;
-	  unsigned char (*maps)[256];
-        CODE:
-	  if (!SvROK(ST(1)) || SvTYPE(SvRV(ST(1))) != SVt_PVAV)
-	    croak("i_map: parameter 2 must be an arrayref\n");
-          avmain = (AV*)SvRV(ST(1));
-	  len = av_len(avmain)+1;
-	  if (im->channels < len) len = im->channels;
-
-	  maps = mymalloc( len * sizeof(unsigned char [256]) );
-
-	  for (j=0; j<len ; j++) {
-	    temp = av_fetch(avmain, j, 0);
-	    if (temp && SvROK(*temp) && (SvTYPE(SvRV(*temp)) == SVt_PVAV) ) {
-	      avsub = (AV*)SvRV(*temp);
-	      if(av_len(avsub) != 255) continue;
-	      mask |= 1<<j;
-              for (i=0; i<256 ; i++) {
-		int val;
-		temp = av_fetch(avsub, i, 0);
-		val = temp ? SvIV(*temp) : 0;
-		if (val<0) val = 0;
-		if (val>255) val = 255;
-		maps[j][i] = val;
-	      }
-            }
-          }
-          i_map(im, maps, mask);
-	  myfree(maps);
-	  RETVAL = 1;
-    OUTPUT:
-	RETVAL
-
-
+    AV *pmaps_av
+  PREINIT:
+    unsigned int mask = 0;
+    AV *avmain;
+    AV *avsub;
+    SV **temp;
+    int len;
+    int i, j;
+    unsigned char (*maps)[256];
+  CODE:
+    len = av_len(pmaps_av)+1;
+    if (im->channels < len)
+      len = im->channels;
+    maps = mymalloc( len * sizeof(unsigned char [256]) );
+    for (j=0; j<len ; j++) {
+      temp = av_fetch(pmaps_av, j, 0);
+      if (temp && SvROK(*temp) && (SvTYPE(SvRV(*temp)) == SVt_PVAV) ) {
+        avsub = (AV*)SvRV(*temp);
+        if(av_len(avsub) != 255)
+          continue;
+        mask |= 1<<j;
+        for (i=0; i<256 ; i++) {
+          int val;
+          temp = av_fetch(avsub, i, 0);
+          val = temp ? SvIV(*temp) : 0;
+          if (val<0) val = 0;
+          if (val>255) val = 255;
+          maps[j][i] = val;
+        }
+      }
+    }
+    i_map(im, maps, mask);
+    myfree(maps);
+    RETVAL = 1;
+  OUTPUT:
+    RETVAL
 
 float
 i_img_diff(im1,im2)
@@ -2529,51 +2491,16 @@ i_get_anonymous_color_histo(im, maxc = 0x40000000)
 
 
 void
-i_transform(im,opx,opy,parm)
+i_transform(im, opx, opy, parm)
     Imager::ImgRaw     im
+    int *opx
+    int *opy
+    double *parm
              PREINIT:
-             double* parm;
-             int *opx;
-             int *opy;
-             int     opxl;
-             int     opyl;
-             int     parmlen;
-             AV* av;
-             SV* sv1;
-             int i;
+	     STRLEN size_opx, size_opy, size_parm;
 	     i_img *result;
              PPCODE:
-             if (!SvROK(ST(1))) croak("Imager: Parameter 1 must be a reference to an array\n");
-             if (!SvROK(ST(2))) croak("Imager: Parameter 2 must be a reference to an array\n");
-             if (!SvROK(ST(3))) croak("Imager: Parameter 3 must be a reference to an array\n");
-             if (SvTYPE(SvRV(ST(1))) != SVt_PVAV) croak("Imager: Parameter 1 must be a reference to an array\n");
-             if (SvTYPE(SvRV(ST(2))) != SVt_PVAV) croak("Imager: Parameter 2 must be a reference to an array\n");
-             if (SvTYPE(SvRV(ST(3))) != SVt_PVAV) croak("Imager: Parameter 3 must be a reference to an array\n");
-             av=(AV*)SvRV(ST(1));
-             opxl=av_len(av)+1;
-             opx=mymalloc( opxl*sizeof(int) );
-             for(i=0;i<opxl;i++) {
-               sv1=(*(av_fetch(av,i,0)));
-               opx[i]=(int)SvIV(sv1);
-             }
-             av=(AV*)SvRV(ST(2));
-             opyl=av_len(av)+1;
-             opy=mymalloc( opyl*sizeof(int) );
-             for(i=0;i<opyl;i++) {
-               sv1=(*(av_fetch(av,i,0)));
-               opy[i]=(int)SvIV(sv1);
-             }
-             av=(AV*)SvRV(ST(3));
-             parmlen=av_len(av)+1;
-             parm=mymalloc( parmlen*sizeof(double) );
-             for(i=0;i<parmlen;i++) { /* FIXME: Bug? */
-               sv1=(*(av_fetch(av,i,0)));
-               parm[i]=(double)SvNV(sv1);
-             }
-             result=i_transform(im,opx,opxl,opy,opyl,parm,parmlen);
-             myfree(parm);
-             myfree(opy);
-             myfree(opx);
+             result=i_transform(im,opx,size_opx,opy,size_opy,parm,size_parm);
  	     if (result) {
 	       SV *result_sv = sv_newmortal();
 	       EXTEND(SP, 1);
@@ -2767,54 +2694,22 @@ i_turbnoise(im, xo, yo, scale)
 
 
 void
-i_gradgen(im, ...)
+i_gradgen(im, xo, yo, ac, dmeasure)
     Imager::ImgRaw     im
+    i_img_dim *xo
+    i_img_dim *yo
+    i_color *ac
+    int dmeasure
       PREINIT:
-	int num;
-	i_img_dim *xo;
-	i_img_dim *yo;
-        i_color *ival;
-	int dmeasure;
-	int i;
-	SV *sv;
-	AV *axx;
-	AV *ayy;
-	AV *ac;
+	STRLEN size_xo;
+	STRLEN size_yo;
+        STRLEN size_ac;
       CODE:
-	if (items != 5)
-	    croak("Usage: i_gradgen(im, xo, yo, ival, dmeasure)");
-	if (!SvROK(ST(1)) || ! SvTYPE(SvRV(ST(1))))
-	    croak("i_gradgen: Second argument must be an array ref");
-	if (!SvROK(ST(2)) || ! SvTYPE(SvRV(ST(2))))
-	    croak("i_gradgen: Third argument must be an array ref");
-	if (!SvROK(ST(3)) || ! SvTYPE(SvRV(ST(3))))
-	    croak("i_gradgen: Fourth argument must be an array ref");
-	axx = (AV *)SvRV(ST(1));
-	ayy = (AV *)SvRV(ST(2));
-	ac  = (AV *)SvRV(ST(3));
-	dmeasure = (int)SvIV(ST(4));
-	
-        num = av_len(axx) < av_len(ayy) ? av_len(axx) : av_len(ayy);
-	num = num <= av_len(ac) ? num : av_len(ac);
-	num++; 
-	if (num < 2) croak("Usage: i_gradgen array refs must have more than 1 entry each");
-	xo = mymalloc( sizeof(i_img_dim) * num );
-	yo = mymalloc( sizeof(i_img_dim) * num );
-	ival = mymalloc( sizeof(i_color) * num );
-	for(i = 0; i<num; i++) {
-	  xo[i]   = (i_img_dim)SvIV(* av_fetch(axx, i, 0));
-	  yo[i]   = (i_img_dim)SvIV(* av_fetch(ayy, i, 0));
-          sv = *av_fetch(ac, i, 0);
-	  if ( !sv_derived_from(sv, "Imager::Color") ) {
-	    free(axx); free(ayy); free(ac);
-            croak("i_gradgen: Element of fourth argument is not derived from Imager::Color");
-	  }
-	  ival[i] = *INT2PTR(i_color *, SvIV((SV *)SvRV(sv)));
-	}
-        i_gradgen(im, num, xo, yo, ival, dmeasure);
-        myfree(xo);
-        myfree(yo);
-        myfree(ival);
+        if (size_xo != size_yo || size_xo != size_ac)
+	  croak("i_gradgen: x, y and color arrays must be the same size");
+	if (size_xo < 2)
+          croak("Usage: i_gradgen array refs must have more than 1 entry each");
+        i_gradgen(im, size_xo, xo, yo, ac, dmeasure);
 
 Imager::ImgRaw
 i_diff_image(im, im2, mindist=0)
@@ -3012,30 +2907,20 @@ void
 DSO_call(handle,func_index,hv)
 	       void*  handle
 	       int    func_index
-	     PREINIT:
-	       HV* hv;
+	       HV *hv
 	     PPCODE:
-	       if (!SvROK(ST(2))) croak("Imager: Parameter 2 must be a reference to a hash\n");	       
-	       hv=(HV*)SvRV(ST(2));
-	       if (SvTYPE(hv)!=SVt_PVHV) croak("Imager: Parameter 2 must be a reference to a hash\n");
 	       DSO_call( (DSO_handle *)handle,func_index,hv);
 
-SV *
+Imager::Color
 i_get_pixel(im, x, y)
 	Imager::ImgRaw im
 	i_img_dim x
 	i_img_dim y;
-      PREINIT:
-        i_color *color;
       CODE:
-	color = (i_color *)mymalloc(sizeof(i_color));
-	if (i_gpix(im, x, y, color) == 0) {
-          RETVAL = NEWSV(0, 0);
-          sv_setref_pv(RETVAL, "Imager::Color", (void *)color);
-        }
-        else {
-          myfree(color);
-          RETVAL = &PL_sv_undef;
+	RETVAL = (i_color *)mymalloc(sizeof(i_color));
+	if (i_gpix(im, x, y, RETVAL) != 0) {
+          myfree(RETVAL);
+	  XSRETURN_UNDEF;
         }
       OUTPUT:
         RETVAL
@@ -3192,11 +3077,10 @@ i_ppal_p(im, l, y, data)
       OUTPUT:
         RETVAL
 
-SV *
+SysRet
 i_addcolors(im, ...)
         Imager::ImgRaw  im
       PREINIT:
-        int index;
         i_color *colors;
         int i;
       CODE:
@@ -3214,17 +3098,7 @@ i_addcolors(im, ...)
             croak("i_addcolor: pixels must be Imager::Color objects");
           }
         }
-        index = i_addcolors(im, colors, items-1);
-        myfree(colors);
-        if (index == 0) {
-          RETVAL = newSVpv("0 but true", 0);
-        }
-        else if (index == -1) {
-          RETVAL = &PL_sv_undef;
-        }
-        else {
-          RETVAL = newSViv(index);
-        }
+        RETVAL = i_addcolors(im, colors, items-1);
       OUTPUT:
         RETVAL
 
@@ -3256,29 +3130,24 @@ i_setcolors(im, index, ...)
 	RETVAL
 
 void
-i_getcolors(im, index, ...)
+i_getcolors(im, index, count=1)
         Imager::ImgRaw im
         int index
+	int count
       PREINIT:
         i_color *colors;
-        int count = 1;
         int i;
       PPCODE:
-        if (items > 3)
-          croak("i_getcolors: too many arguments");
-        if (items == 3)
-          count = SvIV(ST(2));
         if (count < 1)
           croak("i_getcolors: count must be positive");
-        colors = mymalloc(sizeof(i_color) * count);
+        colors = malloc_temp(aTHX_ sizeof(i_color) * count);
         if (i_getcolors(im, index, colors, count)) {
+	  EXTEND(SP, count);
           for (i = 0; i < count; ++i) {
             SV *sv = make_i_color_sv(aTHX_ colors+i);
             PUSHs(sv);
           }
         }
-        myfree(colors);
-
 
 undef_neg_int
 i_colorcount(im)
@@ -3288,18 +3157,13 @@ undef_neg_int
 i_maxcolors(im)
         Imager::ImgRaw im
 
-SV *
+i_palidx
 i_findcolor(im, color)
         Imager::ImgRaw im
         Imager::Color color
-      PREINIT:
-        i_palidx index;
       CODE:
-        if (i_findcolor(im, color, &index)) {
-          RETVAL = newSViv(index);
-        }
-        else {
-          RETVAL = &PL_sv_undef;
+        if (!i_findcolor(im, color, &RETVAL)) {
+	  XSRETURN_UNDEF;
         }
       OUTPUT:
         RETVAL
@@ -3328,7 +3192,7 @@ i_gsamp(im, l, r, y, channels)
         i_img_dim count, i;
       PPCODE:
         if (l < r) {
-          data = mymalloc(sizeof(i_sample_t) * (r-l) * channels.count); /* XXX: memleak? */
+          data = mymalloc(sizeof(i_sample_t) * (r-l) * channels.count);
           count = i_gsamp(im, l, r, y, data, channels.channels, channels.count);
           if (GIMME_V == G_ARRAY) {
             EXTEND(SP, count);
@@ -3343,8 +3207,7 @@ i_gsamp(im, l, r, y, channels)
         }
         else {
           if (GIMME_V != G_ARRAY) {
-            EXTEND(SP, 1);
-            PUSHs(&PL_sv_undef);
+	    XSRETURN_UNDEF;
           }
         }
 
@@ -3592,8 +3455,7 @@ i_gsampf(im, l, r, y, channels)
         }
         else {
           if (GIMME_V != G_ARRAY) {
-            EXTEND(SP, 1);
-            PUSHs(&PL_sv_undef);
+	    XSRETURN_UNDEF;
           }
         }
 
@@ -3642,22 +3504,16 @@ i_plinf(im, l, y, ...)
       OUTPUT:
         RETVAL
 
-SV *
+Imager::Color::Float
 i_gpixf(im, x, y)
 	Imager::ImgRaw im
 	i_img_dim x
 	i_img_dim y;
-      PREINIT:
-        i_fcolor *color;
       CODE:
-	color = (i_fcolor *)mymalloc(sizeof(i_fcolor));
-	if (i_gpixf(im, x, y, color) == 0) {
-          RETVAL = NEWSV(0,0);
-          sv_setref_pv(RETVAL, "Imager::Color::Float", (void *)color);
-        }
-        else {
-          myfree(color);
-          RETVAL = &PL_sv_undef;
+	RETVAL = (i_fcolor *)mymalloc(sizeof(i_fcolor));
+	if (i_gpixf(im, x, y, RETVAL) != 0) {
+          myfree(RETVAL);
+          XSRETURN_UNDEF;
         }
       OUTPUT:
         RETVAL
@@ -3753,16 +3609,18 @@ i_img_to_drgb(im)
        Imager::ImgRaw im
 
 undef_int
-i_tags_addn(im, name, code, idata)
+i_tags_addn(im, name_sv, code, idata)
         Imager::ImgRaw im
+	SV *name_sv
         int     code
         int     idata
       PREINIT:
         char *name;
         STRLEN len;
       CODE:
-        if (SvOK(ST(1)))
-          name = SvPV(ST(1), len);
+        SvGETMAGIC(name_sv);
+        if (SvOK(name_sv))
+          name = SvPV_nomg(name_sv, len);
         else
           name = NULL;
         RETVAL = i_tags_addn(&im->tags, name, code, idata);
@@ -3770,21 +3628,25 @@ i_tags_addn(im, name, code, idata)
         RETVAL
 
 undef_int
-i_tags_add(im, name, code, data, idata)
+i_tags_add(im, name_sv, code, data_sv, idata)
         Imager::ImgRaw  im
+	SV *name_sv
         int code
+	SV *data_sv
         int idata
       PREINIT:
         char *name;
         char *data;
         STRLEN len;
       CODE:
-        if (SvOK(ST(1)))
-          name = SvPV(ST(1), len);
+        SvGETMAGIC(name_sv);
+        if (SvOK(name_sv))
+          name = SvPV_nomg(name_sv, len);
         else
           name = NULL;
-        if (SvOK(ST(3)))
-          data = SvPV(ST(3), len);
+	SvGETMAGIC(data_sv);
+        if (SvOK(data_sv))
+          data = SvPV(data_sv, len);
         else {
           data = NULL;
           len = 0;
@@ -3793,7 +3655,7 @@ i_tags_add(im, name, code, data, idata)
       OUTPUT:
         RETVAL
 
-SV *
+SysRet
 i_tags_find(im, name, start)
         Imager::ImgRaw  im
         char *name
@@ -3802,17 +3664,14 @@ i_tags_find(im, name, start)
         int entry;
       CODE:
         if (i_tags_find(&im->tags, name, start, &entry)) {
-          if (entry == 0)
-            RETVAL = newSVpv("0 but true", 0);
-          else
-            RETVAL = newSViv(entry);
+	  RETVAL = entry;
         } else {
-          RETVAL = &PL_sv_undef;
+          XSRETURN_UNDEF;
         }
       OUTPUT:
         RETVAL
 
-SV *
+SysRet
 i_tags_findn(im, code, start)
         Imager::ImgRaw  im
         int             code
@@ -3821,13 +3680,10 @@ i_tags_findn(im, code, start)
         int entry;
       CODE:
         if (i_tags_findn(&im->tags, code, start, &entry)) {
-          if (entry == 0)
-            RETVAL = newSVpv("0 but true", 0);
-          else
-            RETVAL = newSViv(entry);
+          RETVAL = entry;
         }
         else {
-          RETVAL = &PL_sv_undef;
+          XSRETURN_UNDEF;
         }
       OUTPUT:
         RETVAL
@@ -3941,19 +3797,21 @@ i_new_fill_solidf(cl, combine)
         int combine
 
 Imager::FillHandle
-i_new_fill_hatch(fg, bg, combine, hatch, cust_hatch, dx, dy)
+i_new_fill_hatch(fg, bg, combine, hatch, cust_hatch_sv, dx, dy)
         Imager::Color fg
         Imager::Color bg
         int combine
         int hatch
+	SV *cust_hatch_sv
         i_img_dim dx
         i_img_dim dy
       PREINIT:
         unsigned char *cust_hatch;
         STRLEN len;
       CODE:
-        if (SvOK(ST(4))) {
-          cust_hatch = (unsigned char *)SvPV(ST(4), len);
+        SvGETMAGIC(cust_hatch_sv);
+        if (SvOK(cust_hatch_sv)) {
+          cust_hatch = (unsigned char *)SvPV_nomg(cust_hatch_sv, len);
         }
         else
           cust_hatch = NULL;
@@ -3962,19 +3820,21 @@ i_new_fill_hatch(fg, bg, combine, hatch, cust_hatch, dx, dy)
         RETVAL
 
 Imager::FillHandle
-i_new_fill_hatchf(fg, bg, combine, hatch, cust_hatch, dx, dy)
+i_new_fill_hatchf(fg, bg, combine, hatch, cust_hatch_sv, dx, dy)
         Imager::Color::Float fg
         Imager::Color::Float bg
         int combine
         int hatch
+        SV *cust_hatch_sv
         i_img_dim dx
         i_img_dim dy
       PREINIT:
         unsigned char *cust_hatch;
         STRLEN len;
       CODE:
-        if (SvOK(ST(4))) {
-          cust_hatch = (unsigned char *)SvPV(ST(4), len);
+        SvGETMAGIC(cust_hatch_sv);
+        if (SvOK(cust_hatch_sv)) {
+          cust_hatch = (unsigned char *)SvPV(cust_hatch_sv, len);
         }
         else
           cust_hatch = NULL;
@@ -3983,8 +3843,9 @@ i_new_fill_hatchf(fg, bg, combine, hatch, cust_hatch, dx, dy)
         RETVAL
 
 Imager::FillHandle
-i_new_fill_image(src, matrix, xoff, yoff, combine)
+i_new_fill_image(src, matrix_sv, xoff, yoff, combine)
         Imager::ImgRaw src
+	SV *matrix_sv
         i_img_dim xoff
         i_img_dim yoff
         int combine
@@ -3996,13 +3857,14 @@ i_new_fill_image(src, matrix, xoff, yoff, combine)
         SV *sv1;
         int i;
       CODE:
-        if (!SvOK(ST(1))) {
+        SvGETMAGIC(matrix_sv);
+        if (!SvOK(matrix_sv)) {
           matrixp = NULL;
         }
         else {
-          if (!SvROK(ST(1)) || SvTYPE(SvRV(ST(1))) != SVt_PVAV)
-            croak("i_new_fill_image: parameter must be an arrayref");
-	  av=(AV*)SvRV(ST(1));
+          if (!SvROK(matrix_sv) || SvTYPE(SvRV(matrix_sv)) != SVt_PVAV)
+            croak("i_new_fill_image: matrix parameter must be an arrayref or undef");
+	  av=(AV*)SvRV(matrix_sv);
 	  len=av_len(av)+1;
           if (len > 9)
             len = 9;

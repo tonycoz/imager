@@ -14,6 +14,27 @@ Imager release history.  Older releases can be found in Changes.old
 
    https://rt.cpan.org/Ticket/Display.html?id=74540
 
+ - XS clean up:
+     https://rt.cpan.org/Ticket/Display.html?id=69243 (partial)
+
+   - Imager::Color's rgba() method now returns it's values as integers
+     instead of floating point. (IV instead of NV).
+
+   - The XS for i_map() and i_matrix_transform() now use the AV *
+     typemap instead of rolling their own.
+
+   - The XS for DSO_call() now uses the HV * typemap instead of
+     rolling it's own.
+
+   - The XS for i_poly_aa(), i_poly_aa_cfill(), i_transform() and
+     i_gradgen() now use a new T_AVARRAY typemap that greatly
+     simplifies the XS code.
+
+   - many other minor XS changes
+
+   - some XS code formatting
+
+
 Imager 0.96 - 19 May 2013
 ===========
 
