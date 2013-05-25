@@ -11,7 +11,7 @@ unless (Imager::Internal::Hlines::testing()) {
   plan skip_all => 'Imager not built to run this test';
 }
 
-plan tests => 15;
+plan tests => 17;
 
 my $hline = Imager::Internal::Hlines::new(0, 100, 0, 100);
 my $base_text = 'start_y: 0 limit_y: 100 start_x: 0 limit_x: 100';
@@ -101,3 +101,11 @@ $base_text
 EOS
 
 undef $hline;
+
+{ # test the image constructor
+  my $im = Imager->new(xsize => 50, ysize => 60);
+  my $hl = Imager::Internal::Hlines::new_img($im->{IMG});
+  ok($hl, "make hlines object from image");
+  is($hl->dump, "start_y: 0 limit_y: 60 start_x: 0 limit_x: 50\n",
+     "check initialized properly");
+}
