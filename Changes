@@ -15,7 +15,7 @@ Imager release history.  Older releases can be found in Changes.old
    https://rt.cpan.org/Ticket/Display.html?id=74540
 
  - XS clean up:
-     https://rt.cpan.org/Ticket/Display.html?id=69243 (partial)
+     https://rt.cpan.org/Ticket/Display.html?id=69243
 
    - Imager::Color's rgba() method now returns it's values as integers
      instead of floating point. (IV instead of NV).
