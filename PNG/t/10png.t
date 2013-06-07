@@ -10,7 +10,7 @@ my $debug_writes = 1;
 
 init_log("testout/t102png.log",1);
 
-plan tests => 248;
+plan tests => 249;
 
 # this loads Imager::File::PNG too
 ok($Imager::formats{"png"}, "must have png format");
@@ -176,6 +176,16 @@ EOS
   ok(!$im->read(file => "testimg/badcrc.png", type => "png"),
      "read png with bad CRC chunk should fail");
   is($im->errstr, "IHDR: CRC error", "check error message");
+}
+
+SKIP:
+{ # ignoring "benign" errors
+  Imager::File::PNG::i_png_lib_version() > 10400
+      or skip "Cannot skip benign errors in libpng this old", 1;
+  my $im = Imager->new;
+  ok($im->read(file => "testimg/badcrc.png", type => "png",
+	       png_ignore_benign_errors => 1),
+     "read bad crc with png_ignore_benign_errors");
 }
 
 { # write error reporting

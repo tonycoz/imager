@@ -1,6 +1,7 @@
 #include "impng.h"
 #include "png.h"
 #include <stdlib.h>
+#include <string.h>
 
 /* this is a way to get number of channels from color space 
  * Color code to channel number */
@@ -270,7 +271,7 @@ static void
 cleanup_read_state(i_png_read_statep);
 
 i_img*
-i_readpng_wiol(io_glue *ig) {
+i_readpng_wiol(io_glue *ig, int flags) {
   i_img *im = NULL;
   png_structp png_ptr;
   png_infop info_ptr;
@@ -293,7 +294,17 @@ i_readpng_wiol(io_glue *ig) {
     return NULL;
   }
   png_set_read_fn(png_ptr, (png_voidp) (ig), wiol_read_data);
-  
+
+#if PNG_LIBPNG_VER >= 10400
+  png_set_benign_errors(png_ptr, (flags & IMPNG_READ_IGNORE_BENIGN_ERRORS) ? 1 : 0);
+#else
+  if (flags & IMPNG_READ_IGNORE_BENIGN_ERRORS) {
+    i_push_error(0, "libpng too old to ignore benign errors");
+    png_destroy_read_struct(&png_ptr, (png_infopp)NULL, (png_infopp)NULL);
+    return NULL;
+  }
+#endif
+
   info_ptr = png_create_info_struct(png_ptr);
   if (info_ptr == NULL) {
     png_destroy_read_struct(&png_ptr, (png_infopp)NULL, (png_infopp)NULL);
@@ -308,7 +319,7 @@ i_readpng_wiol(io_glue *ig) {
     cleanup_read_state(&rs);
     return NULL;
   }
-  
+
   /* we do our own limit checks */
   png_set_user_limits(png_ptr, PNG_DIM_MAX, PNG_DIM_MAX);
 

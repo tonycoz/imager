@@ -1473,6 +1473,18 @@ C<i_background> - set from the C<sBKG> when reading an image file.
 
 =back
 
+=for stopwords
+CRC
+
+X<png_ignore_benign_errors>If you're using F<libpng> 1.4 or later, you
+can choose to ignore file format errors the authors of F<libpng>
+consider I<benign>, this includes at least CRC errors and palette
+index overflows.  Do this by supplying a true value for the
+C<png_ignore_benign_errors> parameter to the read() method:
+
+  $im->read(file => "foo.png", png_ignore_benign_errors => 1)
+    or die $im->errstr;
+
 =head2 ICO (Microsoft Windows Icon) and CUR (Microsoft Windows Cursor)
 
 Icon and Cursor files are very similar, the only differences being a

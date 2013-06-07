@@ -68,8 +68,14 @@ else {
 
 require Imager::Probe;
 
+# these are mostly needed when pkg-config isn't available
 my @alts =
   (
+   {
+    altname => "v1.6",
+    incsuffix => "libpng16",
+    libbase => "png16",
+   },
    {
     altname => "v1.5",
     incsuffix => "libpng15",
@@ -96,7 +102,7 @@ my %probe =
   (
    name => "PNG",
    altname => "Generic",
-   pkg => [ qw/libpng15 libpng14 libpng12 libpng10 libpng/ ],
+   pkg => [ qw/libpng libpng16 libpng15 libpng14 libpng12 libpng10/ ],
    inccheck => sub { -e File::Spec->catfile($_[0], "png.h") },
    libbase => "png",
    testcode => _png_test_code(),

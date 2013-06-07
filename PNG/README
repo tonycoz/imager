@@ -2,6 +2,9 @@ Imager::File::PNG provides PNG file format support for Imager.
 
 It requires libpng, including development files, to be installed.
 
+libpng 1.2 or later is supported, with minor extra features with
+libpng 1.4 and libpng 1.5.3.
+
 For Linux distributions this typically requires installation of the
 associated -dev or -devel package.
 
