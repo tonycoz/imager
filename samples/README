@@ -122,3 +122,7 @@ wiggle.pl
   Produce an animated GIF that blends back and forth between the two
   supplied images.  If the input images form a stereo pair the GIF can
   be used for wiggle stereoscopy.
+
+drop_shadow.pl
+
+  Produce a drop shadow based on the source image alpha channel.
