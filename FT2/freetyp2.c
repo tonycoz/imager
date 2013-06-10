@@ -906,6 +906,7 @@ i_ft2_cp(FT2_Fonthandle *handle, i_img *im, i_img_dim tx, i_img_dim ty, int chan
   i_img *work;
   i_color cl, cl2;
   int x, y;
+  unsigned char *bmp;
 
   mm_log((1, "i_ft2_cp(handle %p, im %p, (tx, ty) (" i_DFp "), channel %d, cheight %f, cwidth %f, text %p, len %u, align %d, aa %d, vlayout %d, utf8 %d)\n", 
 	  handle, im, i_DFcp(tx, ty), channel, cheight, cwidth, text, (unsigned)len, align, aa, vlayout, utf8));
@@ -934,14 +935,13 @@ i_ft2_cp(FT2_Fonthandle *handle, i_img *im, i_img_dim tx, i_img_dim ty, int chan
   
   /* render to the specified channel */
   /* this will be sped up ... */
+  bmp = mymalloc(work->xsize);
   for (y = 0; y < work->ysize; ++y) {
-    for (x = 0; x < work->xsize; ++x) {
-      i_gpix(work, x, y, &cl);
-      i_gpix(im, tx + x + bbox[0], ty + y + bbox[1], &cl2);
-      cl2.channel[channel] = cl.channel[0];
-      i_ppix(im, tx + x + bbox[0], ty + y + bbox[1], &cl2);
-    }
+    i_gsamp(work, 0, work->xsize, y, bmp, NULL, 1);
+    i_psamp(im, tx + bbox[0], tx + bbox[0] + work->xsize,
+	    ty + y + bbox[1], bmp, &channel, 1);
   }
+  myfree(bmp);
   i_img_destroy(work);
   return 1;
 }
