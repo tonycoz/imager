@@ -44,6 +44,10 @@ Imager release history.  Older releases can be found in Changes.old
    reporting some types of error.
    https://rt.cpan.org/Ticket/Display.html?id=85746
 
+ - FT2: use gsamp/psamp() to transfer pixels from the work image to
+   the output image instead of gpix/ppix.
+   https://rt.cpan.org/Ticket/Display.html?id=83478
+
 Imager 0.96 - 19 May 2013
 ===========
 
