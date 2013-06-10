@@ -1,6 +1,6 @@
 #!perl -w
 use strict;
-use Test::More tests => 193;
+use Test::More tests => 204;
 use Cwd qw(getcwd abs_path);
 
 use Imager qw(:all);
@@ -9,7 +9,11 @@ use Imager::Test qw(diff_text_with_nul is_color3 is_color4 isnt_image is_image);
 
 -d "testout" or mkdir "testout";
 
-init_log("testout/t38ft2font.log",2);
+my @test_output;
+
+push @test_output, "t38ft2font.log";
+
+Imager->open_log(log => "testout/t38ft2font.log");
 
 my $deffont = "fontfiles/dodge.ttf";
 
@@ -42,6 +46,7 @@ SKIP:
   ok(Imager::Font::FT2::i_ft2_cp($ttraw,$overlay,5,50,1,50.0,50, 'XMCLH',1,1, 0, 0), "drawn to channel");
   i_line($overlay,0,50,100,50,$bgcolor,1);
 
+  push @test_output, "t38ft2font.ppm";
   open(FH,">testout/t38ft2font.ppm") || die "cannot open testout/t38ft2font.ppm\n";
   binmode(FH);
   my $IO = Imager::io_new_fd(fileno(FH));
@@ -57,6 +62,7 @@ SKIP:
   ok(Imager::Font::FT2::i_ft2_text($ttraw,$backgr,100,150,NC(0, 128, 0),200.0,50, 'MAW',0,1, 0, 0), "drew rotated MAW");
   i_line($backgr, 0,150, 499, 150, NC(0, 0, 255),1);
 
+  push @test_output, "t38ft2font2.ppm";
   open(FH,">testout/t38ft2font2.ppm") || die "cannot open testout/t38ft2font.ppm\n";
   binmode(FH);
   $IO = Imager::io_new_fd(fileno(FH));
@@ -174,6 +180,7 @@ SKIP:
                 align=>0, );
   }
 
+  push @test_output, "t38_oo.ppm";
   $im->write(file=>'testout/t38_oo.ppm')
     or print "# could not save OO output: ",$im->errstr,"\n";
   
@@ -216,6 +223,7 @@ SKIP:
   align_test('center', 'bottom', 150, 220, $oof, $alimg);
   align_test('center', 'baseline', 150, 250, $oof, $alimg);
   
+  push @test_output, "t38aligned.ppm";
   ok($alimg->write(file=>'testout/t38aligned.ppm'), 
      "saving aligned output image");
   
@@ -374,6 +382,7 @@ SKIP:
     }
   }
 
+  push @test_output, "t38mm.ppm";
   ok($mmim->write(file=>"testout/t38mm.ppm"), "save MM output");
 
  SKIP:
@@ -399,6 +408,7 @@ SKIP:
       ok($im->string(%common, @$args, 'y'=>90, align=>1), "A align=1");
       ok($im->string(%common, @$args, 'y'=>110, align=>0), "A align=0");
     }
+    push @test_output, "t38align.ppm";
     ok($im->write(file=>'testout/t38align.ppm'), "save align image");
   }
 
@@ -535,6 +545,59 @@ SKIP:
       $work->rubthrough(src => $im);
       isnt_image($work, $cmp, "make sure something was drawn");
     }
+  }
+
+  { # RT 73359
+    # non-AA font drawing isn't normal mode
+
+    Imager->log("testing no-aa normal output\n");
+
+    my $font = Imager::Font->new(file => "fontfiles/ImUgly.ttf", type => "ft2");
+
+    ok($font, "make a work font");
+
+    my %common =
+      (
+       x => 10,
+       font => $font,
+       size => 25,
+       aa => 0,
+       align => 0,
+      );
+
+    # build our comparison image
+    my $cmp = Imager->new(xsize => 120, ysize => 100);
+    my $layer = Imager->new(xsize => 120, ysize => 100, channels => 4);
+    ok($layer->string(%common, y => 10, text => "full", color => "#8080FF"),
+       "draw non-aa text at full coverage to layer image");
+    ok($layer->string(%common, y => 40, text => "half", color => "#FF808080"),
+       "draw non-aa text at half coverage to layer image");
+    ok($layer->string(%common, y => 70, text => "quarter", color => "#80FF8040"),
+       "draw non-aa text at zero coverage to layer image");
+    ok($cmp->rubthrough(src => $layer), "rub layer onto comparison image");
+
+    my $im = Imager->new(xsize => 120, ysize => 100);
+    ok($im->string(%common, y => 10, text => "full", color => "#8080FF"),
+       "draw non-aa text at full coverage");
+    ok($im->string(%common, y => 40, text => "half", color => "#FF808080"),
+       "draw non-aa text at half coverage");
+    ok($im->string(%common, y => 70, text => "quarter", color => "#80FF8040"),
+       "draw non-aa text at zero coverage");
+    is_image($im, $cmp, "check the result");
+
+    push @test_output, "noaanorm.ppm", "noaacmp.ppm";
+    ok($cmp->write(file => "testout/noaacmp.ppm"), "save cmp image")
+      or diag "Saving cmp image: ", $cmp->errstr;
+    ok($im->write(file => "testout/noaanorm.ppm"), "save test image")
+      or diag "Saving result image: ", $im->errstr;
+  }
+}
+
+Imager->close_log();
+
+END {
+  unless ($ENV{IMAGER_KEEP_FILES}) {
+    unlink map "testout/$_", @test_output;
   }
 }
 

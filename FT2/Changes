@@ -1,3 +1,9 @@
+Imager-Font-FT2 0.92
+====================
+
+ - drawing non-AA text is now done in alpha-combining mode
+   https://rt.cpan.org/Ticket/Display.html?id=73359
+
 Imager-Font-FT2 0.91
 ====================
 
