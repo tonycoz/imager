@@ -871,22 +871,30 @@ i_tt_dump_raster_map2( i_img* im, TT_Raster_Map* bit, i_img_dim xb, i_img_dim yb
     }
     i_render_done(&r);
   } else {
+    unsigned char *bmp = mymalloc(bit->width);
+    i_render r;
+
+    i_render_init(&r, im, bit->width);
+
     for(y=0;y<bit->rows;y++) {
       unsigned mask = 0x80;
       unsigned char *p = bmap + y * bit->cols;
+      unsigned char *pout = bmp;
 
       for(x = 0; x < bit->width; x++) {
-	if (*p & mask) {
-	  i_ppix(im, x+xb, y+yb, cl);
-	}
+	*pout++ = (*p & mask) ? 0xFF : 0;
 	mask >>= 1;
 	if (!mask) {
 	  mask = 0x80;
 	  ++p;
 	}
       }
+
+      i_render_color(&r, xb, yb+y, bit->cols, bmp, cl);
     }
 
+    i_render_done(&r);
+    myfree(bmp);
   }
 }
 

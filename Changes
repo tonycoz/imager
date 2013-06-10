@@ -34,6 +34,9 @@ Imager release history.  Older releases can be found in Changes.old
 
    - some XS code formatting
 
+ - TT (Freetype 1.x) and FT2 (Freetype 2.x) non-antialiased rendering
+   now renders in alpha-combining mode, to match antialiased output.
+   https://rt.cpan.org/Ticket/Display.html?id=73359
 
 Imager 0.96 - 19 May 2013
 ===========

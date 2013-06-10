@@ -10,18 +10,17 @@ use strict;
 
 # Change 1..1 below to 1..last_test_to_print .
 # (It may become useful if the test is moved to ./t subdirectory.)
-use Test::More tests => 16;
+use Test::More tests => 26;
 
-BEGIN { use_ok('Imager') };
+use Imager;
 
-BEGIN {
-  require Imager::Test;
-  Imager::Test->import(qw(isnt_image));
-}
+use Imager::Test qw(isnt_image is_image);
 
 -d "testout" or mkdir "testout";
 
 Imager->open_log(log => "testout/t36oofont.log");
+
+my @test_output;
 
 my $fontname_tt=$ENV{'TTFONTTEST'}||'./fontfiles/dodge.ttf';
 
@@ -33,7 +32,7 @@ die $Imager::ERRSTR unless $red;
 SKIP:
 {
   $Imager::formats{"tt"} && -f $fontname_tt
-    or skip("FT1.x missing or disabled", 14);
+    or skip("FT1.x missing or disabled", 24);
 
   my $img=Imager->new(xsize=>300, ysize=>100) or die "$Imager::ERRSTR\n";
 
@@ -96,6 +95,59 @@ SKIP:
       $work->rubthrough(src => $im);
       isnt_image($work, $cmp, "make sure something was drawn");
     }
+  }
+
+  { # RT 73359
+    # non-AA font drawing isn't normal mode
+
+    Imager->log("testing no-aa normal output\n");
+
+    my $font = Imager::Font->new(file => "fontfiles/ImUgly.ttf", type => "tt");
+
+    ok($font, "make a work font");
+
+    my %common =
+      (
+       x => 10,
+       font => $font,
+       size => 25,
+       aa => 0,
+       align => 0,
+      );
+
+    # build our comparison image
+    my $cmp = Imager->new(xsize => 120, ysize => 100);
+    my $layer = Imager->new(xsize => 120, ysize => 100, channels => 4);
+    ok($layer->string(%common, y => 10, text => "full", color => "#8080FF"),
+       "draw non-aa text at full coverage to layer image");
+    ok($layer->string(%common, y => 40, text => "half", color => "#FF808080"),
+       "draw non-aa text at half coverage to layer image");
+    ok($layer->string(%common, y => 70, text => "quarter", color => "#80FF8040"),
+       "draw non-aa text at zero coverage to layer image");
+    ok($cmp->rubthrough(src => $layer), "rub layer onto comparison image");
+
+    my $im = Imager->new(xsize => 120, ysize => 100);
+    ok($im->string(%common, y => 10, text => "full", color => "#8080FF"),
+       "draw non-aa text at full coverage");
+    ok($im->string(%common, y => 40, text => "half", color => "#FF808080"),
+       "draw non-aa text at half coverage");
+    ok($im->string(%common, y => 70, text => "quarter", color => "#80FF8040"),
+       "draw non-aa text at zero coverage");
+    is_image($im, $cmp, "check the result");
+
+    push @test_output, "ttaanorm.ppm", "ttaacmp.ppm";
+    ok($cmp->write(file => "testout/ttaacmp.ppm"), "save cmp image")
+      or diag "Saving cmp image: ", $cmp->errstr;
+    ok($im->write(file => "testout/ttaanorm.ppm"), "save test image")
+      or diag "Saving result image: ", $im->errstr;
+  }
+}
+
+Imager->close_log;
+
+END {
+  unless ($ENV{IMAGER_KEEP_FILES}) {
+    unlink map "testout/$_", @test_output;
   }
 }
 
