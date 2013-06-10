@@ -38,6 +38,12 @@ Imager release history.  Older releases can be found in Changes.old
    now renders in alpha-combining mode, to match antialiased output.
    https://rt.cpan.org/Ticket/Display.html?id=73359
 
+ - add sample code and cookbook notes for drawing a blurred drop-shadow.
+
+ - add support for libpng 1.6, which changed the defaults for
+   reporting some types of error.
+   https://rt.cpan.org/Ticket/Display.html?id=85746
+
 Imager 0.96 - 19 May 2013
 ===========
 

@@ -1,3 +1,9 @@
+Imager-File-PNG 0.88
+====================
+
+ - support libpng 1.6
+   https://rt.cpan.org/Ticket/Display.html?id=85746
+
 Imager-File-PNG 0.87
 ====================
 
