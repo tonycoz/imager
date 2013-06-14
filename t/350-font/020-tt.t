@@ -325,7 +325,6 @@ SKIP:
       ok($im->string(string => "AB", size => 20, aa => 0,
 		     x => 0, y => 15, font => $font),
 	 "draw with transparent color, non-aa");
-      local $TODO = "RT 73359 - non-AA text isn't normal mode rendered";
       is_image($im, $copy, "should draw nothing");
     }
   }
