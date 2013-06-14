@@ -176,14 +176,13 @@ i_mmarray_info(i_mmarray *ar) {
 static void
 i_arc_minmax(i_int_hlines *hlines,i_img_dim x,i_img_dim y, double rad,float d1,float d2) {
   i_mmarray dot;
-  double f,fx,fy;
+  double f;
   i_img_dim x1,y1;
 
   i_mmarray_cr(&dot, hlines->limit_y);
 
   x1=(i_img_dim)(x+0.5+rad*cos(d1*PI/180.0));
   y1=(i_img_dim)(y+0.5+rad*sin(d1*PI/180.0));
-  fx=(float)x1; fy=(float)y1;
 
   /*  printf("x1: %d.\ny1: %d.\n",x1,y1); */
   i_arcdraw(x, y, x1, y1, &dot);

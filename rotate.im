@@ -309,7 +309,6 @@ i_img *i_matrix_transform_bg(i_img *src, i_img_dim xsize, i_img_dim ysize, const
     /* don't interpolate for a palette based image */
     i_palidx *vals = mymalloc(xsize * sizeof(i_palidx));
     i_palidx back = 0;
-    i_color min;
     int minval = 256 * 4;
     i_img_dim ix, iy;
     i_color want_back;
@@ -340,7 +339,6 @@ i_img *i_matrix_transform_bg(i_img *src, i_img_dim xsize, i_img_dim ysize, const
       }
       if (tempval < minval) {
         back = i;
-        min = temp;
         minval = tempval;
       }
     }

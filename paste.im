@@ -18,7 +18,7 @@ are swapped.
 
 void
 i_copyto(i_img *im, i_img *src, i_img_dim x1, i_img_dim y1, i_img_dim x2, i_img_dim y2, i_img_dim tx, i_img_dim ty) {
-  i_img_dim y, t, ttx, tty;
+  i_img_dim y, t, tty;
   
   if (x2<x1) { t=x1; x1=x2; x2=t; }
   if (y2<y1) { t=y1; y1=y2; y2=t; }
@@ -50,7 +50,6 @@ i_copyto(i_img *im, i_img *src, i_img_dim x1, i_img_dim y1, i_img_dim x2, i_img_
   IM_COLOR *row = mymalloc(sizeof(IM_COLOR) * (x2-x1));
   tty = ty;
   for(y=y1; y<y2; y++) {
-    ttx = tx;
     IM_GLIN(src, x1, x2, y, row);
     if (src->channels != im->channels)
       IM_ADAPT_COLORS(im->channels, src->channels, row, x2-x1);

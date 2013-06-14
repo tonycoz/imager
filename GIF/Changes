@@ -1,3 +1,8 @@
+Imager-File-GIF 0.88
+====================
+
+ - eliminate various set but otherwise unused variables caught by GCC.
+
 Imager-File-GIF 0.87
 ====================
 

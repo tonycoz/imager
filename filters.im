@@ -414,7 +414,6 @@ i_bumpmap_complex(i_img *im,
 		  i_color *Is) {
   i_img new_im;
   
-  int inflight;
   i_img_dim x, y;
   int ch;
   i_img_dim mx, Mx, my, My;
@@ -462,7 +461,6 @@ i_bumpmap_complex(i_img *im,
     L.z = -Lz;
     normalize(&L);
   } else {      /* Light is the position of the light source */
-    inflight = 0;
     L.x = -0.2;
     L.y = -0.4;
     L.z =  1;
@@ -1650,7 +1648,6 @@ i_fountain(i_img *im, double xa, double ya, double xb, double yb,
   i_fcolor *line = NULL;
   i_fcolor *work = NULL;
   size_t line_bytes;
-  i_fountain_seg *my_segs;
   i_fill_combine_f combine_func = NULL;
   i_fill_combinef_f combinef_func = NULL;
   dIMCTXim(im);
@@ -1673,7 +1670,6 @@ i_fountain(i_img *im, double xa, double ya, double xb, double yb,
 
   fount_init_state(&state, xa, ya, xb, yb, type, repeat, combine, 
                    super_sample, ssample_param, count, segs);
-  my_segs = state.segs;
 
   for (y = 0; y < im->ysize; ++y) {
     i_glinf(im, 0, im->xsize, y, line);
@@ -2358,8 +2354,9 @@ fill_fountf(i_fill_t *fill, i_img_dim x, i_img_dim y, i_img_dim width,
       got_one = f->state.ssfunc(&c, x, y, &f->state);
     else
       got_one = fount_getat(&c, x, y, &f->state);
-    
-    *data++ = c;
+
+    if (got_one)
+      *data++ = c;
     
     ++x;
   }

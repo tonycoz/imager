@@ -1049,7 +1049,7 @@ i_haar(i_img *im) {
   i_img_dim mx,my;
   i_img_dim fx,fy;
   i_img_dim x,y;
-  int ch,c;
+  int ch;
   i_img *new_img,*new_img2;
   i_color val1,val2,dval1,dval2;
   dIMCTXim(im);
@@ -1065,7 +1065,6 @@ i_haar(i_img *im) {
   new_img=i_img_empty_ch(NULL,fx*2,fy*2,im->channels);
   new_img2=i_img_empty_ch(NULL,fx*2,fy*2,im->channels);
 
-  c=0; 
   for(y=0;y<my;y++) for(x=0;x<fx;x++) {
     i_gpix(im,x*2,y,&val1);
     i_gpix(im,x*2+1,y,&val2);

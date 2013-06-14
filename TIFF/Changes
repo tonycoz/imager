@@ -15,6 +15,14 @@ Imager-File-TIFF 0.88
 
    https://rt.cpan.org/Ticket/Display.html?id=74540
 
+ - eliminate some warnings produced by GCC 4.7.2:
+
+    - a set but otherwise unused variable,
+
+    - an incompletely bracketed array of structures initialization, and
+
+    - a format string error (with no security implications)
+
 Imager-File-TIFF 0.87
 =====================
 

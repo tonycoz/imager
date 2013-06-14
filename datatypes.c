@@ -232,9 +232,6 @@ llink_destroy(struct llink* l) {
 
 static int
 llist_llink_push(struct llist *lst, struct llink *lnk, const void *data) {
-  int multip;
-  multip = lst->multip;
-
   /*   fprintf(stderr,"llist_llink_push: data=0x%08X -> 0x%08X\n",data,*(int*)data);
        fprintf(stderr,"ssize = %d, multip = %d, fill = %d\n",lst->ssize,lst->multip,lnk->fill); */
   if (lnk->fill == lst->multip) return 1;

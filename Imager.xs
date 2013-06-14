@@ -411,7 +411,6 @@ static int io_closer(void *p) {
   if (SvOK(cbd->closecb)) {
     dSP;
     I32 count;
-    SV *sv;
 
     ENTER;
     SAVETMPS;
@@ -422,8 +421,12 @@ static int io_closer(void *p) {
 
     SPAGAIN;
     
-    sv = POPs;
-    success = SvTRUE(sv);
+    if (count) {
+      SV *sv = POPs;
+      success = SvTRUE(sv);
+    }
+    else
+      success = 0;
 
     PUTBACK;
     FREETMPS;
@@ -1113,7 +1116,6 @@ io_new_cb(writecb, readcb, seekcb, closecb, maxwrite = CBDATA_BUFSIZE)
         SV *readcb;
         SV *seekcb;
         SV *closecb;
-        int maxwrite;
       CODE:
         RETVAL = do_io_new_cb(aTHX_ writecb, readcb, seekcb, closecb);
       OUTPUT:
@@ -2089,7 +2091,6 @@ i_map(im, pmaps_av)
     AV *pmaps_av
   PREINIT:
     unsigned int mask = 0;
-    AV *avmain;
     AV *avsub;
     SV **temp;
     int len;

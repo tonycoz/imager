@@ -5,7 +5,7 @@ rubthru_targ_noalpha(i_img *im, i_img *src,
                      i_img_dim tx, i_img_dim ty, 
                      i_img_dim src_minx, i_img_dim src_miny,
                      i_img_dim src_maxx, i_img_dim src_maxy) {
-  i_img_dim x, y, ttx, tty;
+  i_img_dim x, y, tty;
   int alphachan;
   int ch;
   i_img_dim width = src_maxx - src_minx;
@@ -37,7 +37,6 @@ rubthru_targ_noalpha(i_img *im, i_img *src,
   for(y = src_miny; y < src_maxy; y++) {
     IM_COLOR *srcp = src_line;
     IM_COLOR *destp = dest_line;
-    ttx = tx;
     IM_GLIN(src, src_minx, src_maxx, y, src_line);
     IM_GLIN(im, tx, tx + width, tty, dest_line);
     if (src->channels != want_channels)

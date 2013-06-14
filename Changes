@@ -48,6 +48,9 @@ Imager release history.  Older releases can be found in Changes.old
    the output image instead of gpix/ppix.
    https://rt.cpan.org/Ticket/Display.html?id=83478
 
+ - eliminate various GCC warnings, mostly initialized but otherwise
+   unused variables.
+
 Imager 0.96 - 19 May 2013
 ===========
 

@@ -8,6 +8,9 @@ Imager-Font-FT2 0.92
    output image instead of gpix/ppix.
    https://rt.cpan.org/Ticket/Display.html?id=83478
 
+ - eliminate some initialized but otherwise unused variables detected
+   by GCC.
+
 Imager-Font-FT2 0.91
 ====================
 

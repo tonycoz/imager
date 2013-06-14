@@ -379,7 +379,6 @@ from io_new_bufchain().
 size_t
 io_slurp(io_glue *ig, unsigned char **c) {
   ssize_t rc;
-  off_t orgoff;
   io_ex_bchain *ieb;
   unsigned char *cc;
   io_type inn = ig->type;
@@ -391,8 +390,6 @@ io_slurp(io_glue *ig, unsigned char **c) {
 
   ieb = ig->exdata;
   cc = *c = mymalloc( ieb->length );
-  
-  orgoff = ieb->gpos;
   
   bufchain_seek(ig, 0, SEEK_SET);
   

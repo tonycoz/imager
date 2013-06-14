@@ -173,7 +173,7 @@ i_img *
 i_readgif_low(GifFileType *GifFile, int **colour_table, int *colours) {
   i_img *im;
   int i, j, Size, Row, Col, Width, Height, ExtCode, Count, x;
-  int cmapcnt = 0, ImageNum = 0, BackGround = 0, ColorMapSize = 0;
+  int cmapcnt = 0, ImageNum = 0;
   ColorMapObject *ColorMap;
  
   GifRecordType RecordType;
@@ -191,11 +191,9 @@ i_readgif_low(GifFileType *GifFile, int **colour_table, int *colours) {
   */
   if (colour_table) *colour_table = NULL;
 
-  BackGround = GifFile->SBackGroundColor;
   ColorMap = (GifFile->Image.ColorMap ? GifFile->Image.ColorMap : GifFile->SColorMap);
 
   if (ColorMap) {
-    ColorMapSize = ColorMap->ColorCount;
     i_colortable_copy(colour_table, colours, ColorMap);
     cmapcnt++;
   }
@@ -258,7 +256,6 @@ i_readgif_low(GifFileType *GifFile, int **colour_table, int *colours) {
 
       if (( ColorMap = (GifFile->Image.ColorMap ? GifFile->Image.ColorMap : GifFile->SColorMap) )) {
 	mm_log((1, "Adding local colormap\n"));
-	ColorMapSize = ColorMap->ColorCount;
 	if ( cmapcnt == 0) {
 	  i_colortable_copy(colour_table, colours, ColorMap);
 	  cmapcnt++;
@@ -504,7 +501,7 @@ i_img **
 i_readgif_multi_low(GifFileType *GifFile, int *count, int page) {
   i_img *img;
   int i, j, Size, Width, Height, ExtCode, Count;
-  int ImageNum = 0, BackGround = 0, ColorMapSize = 0;
+  int ImageNum = 0, ColorMapSize = 0;
   ColorMapObject *ColorMap;
  
   GifRecordType RecordType;
@@ -531,8 +528,6 @@ i_readgif_multi_low(GifFileType *GifFile, int *count, int page) {
   *count = 0;
 
   mm_log((1,"i_readgif_multi_low(GifFile %p, , count %p)\n", GifFile, count));
-
-  BackGround = GifFile->SBackGroundColor;
 
   Size = GifFile->SWidth * sizeof(GifPixelType);
   

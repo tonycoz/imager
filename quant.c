@@ -1574,7 +1574,7 @@ static
 void
 cr_hashindex(cvec clr[256],int cnum,hashbox hb[512]) {
   
-  int bx,mind,cd,cumcnt,bst_idx,i;
+  int bx,mind,cd,cumcnt,i;
 /*  printf("indexing... \n");*/
   
   cumcnt=0;
@@ -1582,7 +1582,7 @@ cr_hashindex(cvec clr[256],int cnum,hashbox hb[512]) {
     mind=196608;
     for(i=0; i<cnum; i++) { 
       cd = maxdist(bx,&clr[i]);
-      if (cd < mind) { mind=cd; bst_idx=i; } 
+      if (cd < mind) { mind=cd; } 
     }
     
     hb[bx].cnt=0;

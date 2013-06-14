@@ -586,7 +586,6 @@ int
 i_ft2_bbox_r(FT2_Fonthandle *handle, double cheight, double cwidth, 
            char const *text, size_t len, int vlayout, int utf8, i_img_dim *bbox) {
   FT_Error error;
-  i_img_dim width;
   int index;
   int first;
   i_img_dim ascent = 0, descent = 0;
@@ -612,7 +611,6 @@ i_ft2_bbox_r(FT2_Fonthandle *handle, double cheight, double cwidth,
   }
 
   first = 1;
-  width = 0;
   while (len) {
     unsigned long c;
     if (utf8) {
@@ -904,8 +902,8 @@ i_ft2_cp(FT2_Fonthandle *handle, i_img *im, i_img_dim tx, i_img_dim ty, int chan
          int aa, int vlayout, int utf8) {
   i_img_dim bbox[8];
   i_img *work;
-  i_color cl, cl2;
-  int x, y;
+  i_color cl;
+  int y;
   unsigned char *bmp;
 
   mm_log((1, "i_ft2_cp(handle %p, im %p, (tx, ty) (" i_DFp "), channel %d, cheight %f, cwidth %f, text %p, len %u, align %d, aa %d, vlayout %d, utf8 %d)\n", 

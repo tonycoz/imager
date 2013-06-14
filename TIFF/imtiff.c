@@ -90,10 +90,10 @@ static const int compress_value_count =
 static struct tag_name
 sample_format_values[] =
   {
-    "uint",      SAMPLEFORMAT_UINT,
-    "int",       SAMPLEFORMAT_INT,
-    "ieeefp",    SAMPLEFORMAT_IEEEFP,
-    "undefined", SAMPLEFORMAT_VOID,
+    { "uint",      SAMPLEFORMAT_UINT },
+    { "int",       SAMPLEFORMAT_INT },
+    { "ieeefp",    SAMPLEFORMAT_IEEEFP },
+    { "undefined", SAMPLEFORMAT_VOID },
   };
 
 static const int sample_format_value_count = 
@@ -373,7 +373,7 @@ static i_img *read_one_tiff(TIFF *tif, int allow_incomplete) {
   i_img *im;
   uint32 width, height;
   uint16 samples_per_pixel;
-  int tiled, error;
+  int tiled;
   float xres, yres;
   uint16 resunit;
   int gotXres, gotYres;
@@ -392,8 +392,6 @@ static i_img *read_one_tiff(TIFF *tif, int allow_incomplete) {
   size_t sample_size = ~0; /* force failure if some code doesn't set it */
   i_img_dim total_pixels;
   int samples_integral;
-
-  error = 0;
 
   TIFFGetField(tif, TIFFTAG_IMAGEWIDTH, &width);
   TIFFGetField(tif, TIFFTAG_IMAGELENGTH, &height);
@@ -922,7 +920,8 @@ i_writetiff_low_faxable(TIFF *tif, i_img *im, int fine) {
   TIFFGetField(tif, TIFFTAG_ROWSPERSTRIP, &rc);
 
   mm_log((1, "i_writetiff_wiol_faxable: TIFFGetField rowsperstrip=%d\n", rowsperstrip));
-  mm_log((1, "i_writetiff_wiol_faxable: TIFFGetField scanlinesize=%d\n", TIFFScanlineSize(tif) ));
+  mm_log((1, "i_writetiff_wiol_faxable: TIFFGetField scanlinesize=%lu\n",
+	  (unsigned long)TIFFScanlineSize(tif) ));
   mm_log((1, "i_writetiff_wiol_faxable: TIFFGetField planarconfig=%d == %d\n", rc, PLANARCONFIG_CONTIG));
 
   if (!TIFFSetField(tif, TIFFTAG_XRESOLUTION, (float)204))

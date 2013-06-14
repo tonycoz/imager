@@ -325,7 +325,6 @@ render_slice_scanline(ss_scanline *ss, int y, p_line *l, p_line *r, pcord miny, 
   pcord lminx, lmaxx;	/* left line min/max within y bounds in fine coords */
   pcord rminx, rmaxx;	/* right line min/max within y bounds in fine coords */
   i_img_dim cpix;	/* x-coordinate of current pixel */
-  int thin;		/* boolean for thin/thick segment */
   i_img_dim startpix;	/* temporary variable for "start of this interval" */
   i_img_dim stoppix;	/* temporary variable for "end of this interval" */
 
@@ -349,8 +348,6 @@ render_slice_scanline(ss_scanline *ss, int y, p_line *l, p_line *r, pcord miny, 
 
   rminx = i_min( p_eval_aty(r, maxy), p_eval_aty(r, miny) );
   rmaxx = i_max( p_eval_aty(r, maxy), p_eval_aty(r, miny) );
-
-  thin = coarse(lmaxx) >= coarse(rminx);
 
   startpix = i_max( coarse(lminx), 0 );
   stoppix  = i_min( coarse(rmaxx-1), ss->linelen-1 );

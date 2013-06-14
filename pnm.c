@@ -436,7 +436,6 @@ i_readpnm_wiol( io_glue *ig, int allow_incomplete) {
   i_img* im;
   int type;
   int width, height, maxval, channels;
-  int rounder;
   int c;
 
   i_clear_error();
@@ -528,7 +527,6 @@ i_readpnm_wiol( io_glue *ig, int allow_incomplete) {
       return NULL;
     }
   } else maxval=1;
-  rounder = maxval / 2;
 
   if ((c = i_io_getc(ig)) == EOF || !misspace(c)) {
     i_push_error(0, "garbage in header, invalid PNM file");
