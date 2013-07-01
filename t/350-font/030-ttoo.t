@@ -10,7 +10,7 @@ use strict;
 
 # Change 1..1 below to 1..last_test_to_print .
 # (It may become useful if the test is moved to ./t subdirectory.)
-use Test::More tests => 26;
+use Test::More tests => 25;
 
 use Imager;
 
@@ -32,7 +32,7 @@ die $Imager::ERRSTR unless $red;
 SKIP:
 {
   $Imager::formats{"tt"} && -f $fontname_tt
-    or skip("FT1.x missing or disabled", 24);
+    or skip("FT1.x missing or disabled", 25);
 
   my $img=Imager->new(xsize=>300, ysize=>100) or die "$Imager::ERRSTR\n";
 
@@ -150,5 +150,3 @@ END {
     unlink map "testout/$_", @test_output;
   }
 }
-
-ok(1, "end");
