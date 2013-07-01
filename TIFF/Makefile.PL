@@ -18,8 +18,8 @@ our %IMAGER_LIBS;
 my $MM_ver = eval $ExtUtils::MakeMaker::VERSION;
 
 my $define = "";
-my $fp_rep = unpack("H*", pack("f<", 1.25));
-if ($fp_rep eq "0000a03f") {
+my $fp_rep = unpack("H*", pack("f", 1.25));
+if ($fp_rep eq "0000a03f" || $fp_rep eq "3fa00000") {
   $define = "-DIEEEFP_TYPES";
 }
 
