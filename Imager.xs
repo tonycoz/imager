@@ -147,7 +147,7 @@ calloc_temp(pTHX_ size_t size) {
 static i_color
 S_sv_to_i_color(pTHX_ SV *sv, const char *pname) {
   if (!sv_derived_from(sv, "Imager::Color")) {
-    croak("%s: not a color object");
+    croak("%s: not a color object", pname);
   }
   return *INT2PTR(i_color *, SvIV((SV *)SvRV(sv)));
 }
