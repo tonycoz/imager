@@ -361,6 +361,7 @@ ok($oocopy->errstr =~ /Unknown hatch type/,
 SKIP:
 {
   skip("can't test without alarm()", 1) unless $Config{d_alarm};
+  skip("Your signals are misconfigured", 1) unless exists $SIG{ALRM};
   local $SIG{ALRM} = sub { die; };
 
   eval {
