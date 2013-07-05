@@ -159,6 +159,11 @@ sub _png_test_code {
   return <<'CODE';
 
 fprintf(stderr, "PNG: library version %ld, header version %ld\n", (long)png_access_version_number(),  (long)PNG_LIBPNG_VER);
+
+  if (png_access_version_number() != PNG_LIBPNG_VER) {
+     fprintf(stderr, "PNG: Your header version number doesn't match the library version number\n");
+     return 1;
+  }
 return 0;
 CODE
 }

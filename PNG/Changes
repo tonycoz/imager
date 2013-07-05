@@ -1,5 +1,14 @@
+Imager-File-PNG 0.89
+====================
+
+ - treat a version mismatch between library and headers as a probe
+   failure.
+   https://rt.cpan.org/Ticket/Display.html?id=86659
+
 Imager-File-PNG 0.88
 ====================
+
+Distributed with Imager 0.96_01.
 
  - support libpng 1.6
    https://rt.cpan.org/Ticket/Display.html?id=85746
