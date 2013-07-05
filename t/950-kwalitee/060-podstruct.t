@@ -7,21 +7,19 @@ BEGIN {
   eval 'use Pod::Parser 1.50;';
   plan skip_all => "Pod::Parser 1.50 required for podlinkcheck" if $@;
 }
-use File::Find;
 use File::Spec::Functions qw(rel2abs abs2rel splitdir);
+use ExtUtils::Manifest qw(maniread);
 
 # this test is intended to catch errors like in
 # https://rt.cpan.org/Ticket/Display.html?id=85413
 
 my @pod; # files with pod
 
-my $base = rel2abs("blib/lib");
+my $base = rel2abs(".");
 
-my @files;
-find(sub {
-       -f && /\.(pod|pm)$/
-	 and push @files, $File::Find::name;
-     }, $base);
+my $manifest = maniread();
+
+my @files = sort grep /\.(pod|pm)$/ && !/^inc/, keys %$manifest;
 
 my %item_in;
 
