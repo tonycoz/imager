@@ -1,3 +1,9 @@
+Imager-Font-W32 0.88
+====================
+
+ - add a missing head1 AUTHORS to the old Win32.pm
+   https://rt.cpan.org/Ticket/Display.html?id=86658
+
 Imager-Font-W32 0.87
 ====================
 
