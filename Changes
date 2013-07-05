@@ -10,17 +10,17 @@ Imager 0.96_01 - 1 Jun 2013
 
    SampleFormat is ignored for paletted images.
 
-   Mixed SampleFormat are be handled incorrectly, since libtiff
-   returns only the first SampleFormat value, and an image with both
-   an alpha channel and SampleFormat = 2 for color channels probably
-   has a different SampleFormat for the alpha channel.
+   Mixed SampleFormat are handled incorrectly, since libtiff returns
+   only the first SampleFormat value, and an image with both an alpha
+   channel and SampleFormat = 2 for color channels probably has a
+   different SampleFormat for the alpha channel.
 
    https://rt.cpan.org/Ticket/Display.html?id=74540
 
  - XS clean up:
      https://rt.cpan.org/Ticket/Display.html?id=69243
 
-   - Imager::Color's rgba() method now returns it's values as integers
+   - Imager::Color's rgba() method now returns its values as integers
      instead of floating point. (IV instead of NV).
 
    - The XS for i_map() and i_matrix_transform() now use the AV *
