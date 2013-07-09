@@ -5,6 +5,12 @@ Imager-File-PNG 0.89
    failure.
    https://rt.cpan.org/Ticket/Display.html?id=86659
 
+ - the check for benign error support is more complex than a simple
+   library version check, check for the appropriate macro.
+   Thanks for Slaven Rezic for following up on my CPAN Testers result
+   queries.
+   https://rt.cpan.org/Ticket/Display.html?id=86659
+
 Imager-File-PNG 0.88
 ====================
 

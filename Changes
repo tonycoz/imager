@@ -4,6 +4,12 @@ Imager release history.  Older releases can be found in Changes.old
    probe failure.
    https://rt.cpan.org/Ticket/Display.html?id=86659
 
+ - PNG: the check for benign error support is more complex than a
+   simple library version check, check for the appropriate macro.
+   Thanks for Slaven Rezic for following up on my CPAN Testers result
+   queries.
+   https://rt.cpan.org/Ticket/Display.html?id=86659
+
  - W32: add a missing head1 AUTHORS to the old Win32.pm
    https://rt.cpan.org/Ticket/Display.html?id=86658
 
