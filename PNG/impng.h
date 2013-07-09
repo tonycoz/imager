@@ -10,4 +10,7 @@ i_img    *i_readpng_wiol(io_glue *ig, int flags);
 undef_int i_writepng_wiol(i_img *im, io_glue *ig);
 unsigned i_png_lib_version(void);
 
+extern const char * const *
+i_png_features(void);
+
 #endif

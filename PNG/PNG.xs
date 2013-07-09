@@ -26,6 +26,20 @@ i_writepng_wiol(im, ig)
 unsigned
 i_png_lib_version()
 
+MODULE = Imager::File::PNG  PACKAGE = Imager::File::PNG PREFIX=i_png_
+
+void
+i_png_features(...)
+  PREINIT:
+    const char * const *p;
+  PPCODE:
+    p = i_png_features();
+    while (*p) {
+      EXTEND(SP, 1);
+      PUSHs(sv_2mortal(newSVpv(*p, 0)));
+      ++p;
+    }
+
 int
 IMPNG_READ_IGNORE_BENIGN_ERRORS()
   CODE:

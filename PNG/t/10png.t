@@ -17,6 +17,8 @@ ok($Imager::formats{"png"}, "must have png format");
 
 diag("Library version " . Imager::File::PNG::i_png_lib_version());
 
+my %png_feat = map { $_ => 1 } Imager::File::PNG->features;
+
 my $green  = i_color_new(0,   255, 0,   255);
 my $blue   = i_color_new(0,   0,   255, 255);
 my $red    = i_color_new(255, 0,   0,   255);
@@ -180,8 +182,8 @@ EOS
 
 SKIP:
 { # ignoring "benign" errors
-  Imager::File::PNG::i_png_lib_version() > 10400
-      or skip "Cannot skip benign errors in libpng this old", 1;
+  $png_feat{"benign-errors"}
+      or skip "libpng not configured for benign error support", 1;
   my $im = Imager->new;
   ok($im->read(file => "testimg/badcrc.png", type => "png",
 	       png_ignore_benign_errors => 1),

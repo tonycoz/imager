@@ -1476,7 +1476,8 @@ C<i_background> - set from the C<sBKG> when reading an image file.
 =for stopwords
 CRC
 
-X<png_ignore_benign_errors>If you're using F<libpng> 1.4 or later, you
+X<png_ignore_benign_errors>If you're using F<libpng> 1.6 or later, or
+an earlier release configured with C<PNG_BENIGN_ERRORS_SUPPORTED>, you
 can choose to ignore file format errors the authors of F<libpng>
 consider I<benign>, this includes at least CRC errors and palette
 index overflows.  Do this by supplying a true value for the

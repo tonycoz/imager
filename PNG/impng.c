@@ -48,6 +48,35 @@ i_png_lib_version(void) {
   return png_access_version_number();
 }
 
+static char const * const
+features[] =
+  {
+#ifdef PNG_BENIGN_ERRORS_SUPPORTED
+    "benign-errors",
+#endif
+#ifdef PNG_READ_SUPPORTED
+    "read",
+#endif
+#ifdef PNG_WRITE_SUPPORTED
+    "write",
+#endif
+#ifdef PNG_MNG_FEATURES_SUPPORTED
+    "mng-features",
+#endif
+#ifdef PNG_CHECK_cHRM_SUPPORTED
+    "check-cHRM",
+#endif
+#ifdef PNG_SET_USER_LIMITS_SUPPORTED
+    "user-limits",
+#endif
+    NULL
+  };
+
+const char * const *
+i_png_features(void) {
+  return features;
+}
+
 static void
 wiol_read_data(png_structp png_ptr, png_bytep data, png_size_t length) {
   io_glue *ig = png_get_io_ptr(png_ptr);
@@ -295,8 +324,14 @@ i_readpng_wiol(io_glue *ig, int flags) {
   }
   png_set_read_fn(png_ptr, (png_voidp) (ig), wiol_read_data);
 
-#if PNG_LIBPNG_VER >= 10400
+#if defined(PNG_BENIGN_ERRORS_SUPPORTED)
   png_set_benign_errors(png_ptr, (flags & IMPNG_READ_IGNORE_BENIGN_ERRORS) ? 1 : 0);
+#elif PNG_LIBPNG_VER >= 10400
+  if (flags & IMPNG_READ_IGNORE_BENIGN_ERRORS) {
+    i_push_error(0, "libpng not configured to ignore benign errors");
+    png_destroy_read_struct(&png_ptr, (png_infopp)NULL, (png_infopp)NULL);
+    return NULL;
+  }
 #else
   if (flags & IMPNG_READ_IGNORE_BENIGN_ERRORS) {
     i_push_error(0, "libpng too old to ignore benign errors");
