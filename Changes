@@ -1,5 +1,8 @@
 Imager release history.  Older releases can be found in Changes.old
 
+Imager 0.96_02 - 8 Jul 2013
+==============
+
  - PNG: treat a version mismatch between headers and library as a
    probe failure.
    https://rt.cpan.org/Ticket/Display.html?id=86659
@@ -13,7 +16,7 @@ Imager release history.  Older releases can be found in Changes.old
  - W32: add a missing head1 AUTHORS to the old Win32.pm
    https://rt.cpan.org/Ticket/Display.html?id=86658
 
-Imager 0.96_01 - 1 Jun 2013
+Imager 0.96_01 - 1 Jul 2013
 ==============
 
  - TIFF: handle SampleFormat = 2 by translating the signed integer
