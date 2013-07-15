@@ -39,7 +39,7 @@ Create a new I/O layer based on a file descriptor.
 
 Create a new I/O layer based on a memory buffer.
 
-The supplied variable must not be changed on the the life of the I/O
+The supplied variable must not be changed during the life of the I/O
 object.
 
 Buffer I/O layers are read only.

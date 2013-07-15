@@ -177,7 +177,7 @@ For example, if you allow the caller to set the size of an output
 image you should limit the size to prevent the client from specifying
 an image size that will consume all available memory.
 
-This is beside any any other controls you need over access to data.
+This is beside any other controls you need over access to data.
 
 See L<CGI> for a module useful for processing CGI submitted data.
 

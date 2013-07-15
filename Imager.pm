@@ -424,7 +424,7 @@ BEGIN {
 # Non methods
 #
 
-# initlize Imager
+# initialize Imager
 # NOTE: this might be moved to an import override later on
 
 sub import {
