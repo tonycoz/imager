@@ -1,5 +1,12 @@
 Imager release history.  Older releases can be found in Changes.old
 
+ - when drawing on an image with an alpha channel where the source
+   minimum is greater than zero, Imager would read from beyond the end
+   of a malloc() allocated buffer.  In rare circumstances this could
+   lead to some of the source image not being written to the target
+   image, or possibly to a segmentation fault.
+   I don't believe this has any security concerns beyond that.
+
 Imager 0.97 - 15 Jul 2013
 ===========
 

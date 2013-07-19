@@ -110,7 +110,7 @@ rubthru_targ_alpha(i_img *im, i_img *src, i_img_dim tx, i_img_dim ty,
       ++min_x;
       ++srcp;
     }
-    while (max_x > min_x && src_line[max_x-1].channel[alphachan] == 0) {
+    while (max_x > min_x && src_line[max_x-1 - src_minx].channel[alphachan] == 0) {
       --max_x;
     }
 
