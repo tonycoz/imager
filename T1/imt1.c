@@ -11,7 +11,7 @@ static void i_t1_set_aa(int st);
 
 static int t1_active_fonts = 0;
 static int t1_initialized = 0;
-static int t1_aa = 0;
+static int t1_aa = -1;
 
 struct i_t1_font_tag {
   int font_id;
@@ -210,6 +210,8 @@ static void
 i_t1_set_aa(int st) {
   int i;
   unsigned long cst[17];
+
+  mm_log((1, "i_t1_set_aa(%d)\n", st));
 
   if (t1_aa == st)
     return;

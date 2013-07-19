@@ -1,3 +1,10 @@
+Imager::Font::T1 1.023
+======================
+
+ - if the first text drawn with Imager::Font::T1 is not anti-aliased,
+   text drawn would be nonsense.  This would also read beyond the end
+   of a malloced buffer.
+
 Imager::Font::T1 1.022
 ======================
 

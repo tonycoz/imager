@@ -7,6 +7,10 @@ Imager release history.  Older releases can be found in Changes.old
    image, or possibly to a segmentation fault.
    I don't believe this has any security concerns beyond that.
 
+ - if the first text drawn with Imager::Font::T1 is not anti-aliased,
+   text drawn would be nonsense.  This would also read beyond the end
+   of a malloced buffer.
+
 Imager 0.97 - 15 Jul 2013
 ===========
 
