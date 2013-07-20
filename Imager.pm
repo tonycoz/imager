@@ -5053,17 +5053,9 @@ To browse Imager's git repository:
 
   http://git.imager.perl.org/imager.git
 
-or:
-
-  https://github.com/tonycoz/imager
-
 To clone:
 
   git clone git://git.imager.perl.org/imager.git
-
-or:
-
-  git clone git://github.com/tonycoz/imager.git
 
 =head1 AUTHOR
 
