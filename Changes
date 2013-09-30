@@ -15,6 +15,9 @@ Imager release history.  Older releases can be found in Changes.old
    truncated early.
    https://rt.cpan.org/Ticket/Display.html?id=88993
 
+ - Imager::Font::Wrap no longer requires the image parameter.
+   https://rt.cpan.org/Ticket/Display.html?id=87338
+
 Imager 0.97 - 15 Jul 2013
 ===========
 

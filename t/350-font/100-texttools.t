@@ -1,6 +1,6 @@
 #!perl -w
 use strict;
-use Test::More tests => 13;
+use Test::More tests => 14;
 
 BEGIN { use_ok('Imager') }
 
@@ -39,7 +39,7 @@ my $font = Imager::Font->new(file=>$fontfile);
 SKIP:
 {
   $Imager::formats{'tt'} || $Imager::formats{'ft2'}
-      or skip("Need Freetype 1.x or 2.x to test", 11);
+      or skip("Need Freetype 1.x or 2.x to test", 12);
 
   ok($font, "loading font")
     or skip("Could not load test font", 8);
@@ -64,6 +64,14 @@ SKIP:
                                 justify=>'left',
                                 color=>'FFFFFF'),
       "no image test");
+  ok(scalar Imager::Font::Wrap->wrap_text(string => $text,
+                                font=>$font,
+                                size=>13,
+                                width => 380,
+                                x=>10, 'y'=>10,
+                                justify=>'left',
+                                color=>'FFFFFF'),
+      "no image parameter test");
   my $bbox = $font->bounding_box(string=>"Xx", size=>13);
   ok($bbox, "get height for check");
 
