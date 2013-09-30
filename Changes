@@ -11,6 +11,10 @@ Imager release history.  Older releases can be found in Changes.old
    text drawn would be nonsense.  This would also read beyond the end
    of a malloced buffer.
 
+ - non-AA text drawn with an Imager::Font::TT (Truetype 1) font would be
+   truncated early.
+   https://rt.cpan.org/Ticket/Display.html?id=88993
+
 Imager 0.97 - 15 Jul 2013
 ===========
 
