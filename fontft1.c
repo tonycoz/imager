@@ -888,7 +888,7 @@ i_tt_dump_raster_map2( i_img* im, TT_Raster_Map* bit, i_img_dim xb, i_img_dim yb
 	}
       }
 
-      i_render_color(&r, xb, yb+y, bit->cols, bmp, cl);
+      i_render_color(&r, xb, yb+y, bit->width, bmp, cl);
     }
 
     i_render_done(&r);
