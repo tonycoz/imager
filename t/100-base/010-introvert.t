@@ -1007,45 +1007,47 @@ my $psamp_outside_error = "Image position outside of image";
   my $im = Imager->new(xsize => 10, ysize => 10);
   { # errors
     my $empty = Imager->new;
-    ok(!$empty->setpixel(x => 0, y => 0, color => $red),
+    is_deeply([ $empty->setpixel(x => 0, y => 0, color => $red) ], [],
        "setpixel on empty image");
     is($empty->errstr, "setpixel: empty input image", "check message");
 
-    ok(!$im->setpixel(y => 0, color => $red), "missing x");
+    is_deeply([ $im->setpixel(y => 0, color => $red) ], [], "missing x");
     is($im->errstr, "setpixel: missing x or y parameter", "check message");
 
     $im->_set_error("something different");
-    ok(!$im->setpixel(x => 0, color => $red), "missing y");
+    is_deeply([$im->setpixel(x => 0, color => $red)], [], "missing y");
     is($im->errstr, "setpixel: missing x or y parameter", "check message");
 
-    ok(!$im->setpixel(x => [], y => 0, color => $red), "empty x array ref");
+    is_deeply([ $im->setpixel(x => [], y => 0, color => $red) ], [],
+	      "empty x array ref");
     is($im->errstr, "setpixel: x is a reference to an empty array",
        "check message");
 
-    ok(!$im->setpixel(x => 0, y => [], color => $red), "empty y array ref");
+    is_deeply([$im->setpixel(x => 0, y => [], color => $red)], [],
+	      "empty y array ref");
     is($im->errstr, "setpixel: y is a reference to an empty array",
        "check message");
 
-    ok(!$im->setpixel(x => 0, y => 0, color => "not really a color"),
+    is_deeply([ $im->setpixel(x => 0, y => 0, color => "not really a color") ], [],
        "color not a color");
     is($im->errstr, "setpixel: No color named not really a color found",
        "check message");
   }
 
   # simple set
-  is($im->setpixel(x => 0, y => 0, color => $red), $im,
+  is($im->setpixel(x => 0, y => 0, color => $red), 1,
      "simple setpixel")
     or diag "simple set float: ", $im->errstr;
   is_color3($im->getpixel(x => 0, y => 0), 255, 0, 0, "check stored pixel");
 
-  is($im->setpixel(x => 1, y => 2, color => $f_red), $im,
+  is($im->setpixel(x => 1, y => 2, color => $f_red), 1,
      "simple setpixel (float)")
     or diag "simple set float: ", $im->errstr;
   is_color3($im->getpixel(x => 1, y => 2), 255, 0, 0, "check stored pixel");
 
-  is($im->setpixel(x => -1, y => 0, color => $red), undef,
+  is($im->setpixel(x => -1, y => 0, color => $red), "0 but true",
      "simple setpixel outside of image");
-  is($im->setpixel(x => 0, y => -1, color => $f_red), undef,
+  is($im->setpixel(x => 0, y => -1, color => $f_red), "0 but true",
      "simple setpixel (float) outside of image");
 
   # simple arrayrefs
@@ -1094,7 +1096,7 @@ my $psamp_outside_error = "Image position outside of image";
     is_color3($colors[2], 0, 255, 0, "check third color");
   }
   { # default color
-    is($im->setpixel(x => 0, y => 9), $im, "setpixel() default color")
+    is($im->setpixel(x => 0, y => 9), 1, "setpixel() default color")
       or diag "setpixel default color: ", $im->errstr;
     is_color3($im->getpixel(x => 0, y => 9), 255, 255, 255,
 	      "check color set");

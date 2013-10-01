@@ -527,11 +527,10 @@ Default: white.
 
 =back
 
-When called with an array reference in either C<x> or C<y>, returns
-the number of pixels successfully set, or false if none.
+Returns the number of pixels drawn, if no pixels were drawn, but none
+of the errors below occur, returns C<"0 but true">.
 
-When called with scalars for x and y, return $img on success, false on
-failure.
+For other errors, setpixel() returns an empty list and sets errstr().
 
 Possible errors conditions include:
 
@@ -547,9 +546,6 @@ Possible errors conditions include:
 color.
 
 =back
-
-On any of these errors, setpixel() returns an empty list and sets
-errstr().
 
 =item getpixel()
 

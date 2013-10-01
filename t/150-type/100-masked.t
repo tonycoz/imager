@@ -204,9 +204,9 @@ $mask->box(fill => { hatch => "check1x1" }, ymin => 40, xmax => 39);
     }
     {
       # write out of range should fail
-      ok(!$masked->setpixel(x => 80, y => 0, color => $green),
+      is($masked->setpixel(x => 80, y => 0, color => $green), "0 but true",
 	 "write 8-bit color out of range");
-      ok(!$masked->setpixel(x => 0, y => 80, color => $greenf),
+      is($masked->setpixel(x => 0, y => 80, color => $greenf), "0 but true",
 	 "write float color out of range");
     }
   }

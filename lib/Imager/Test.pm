@@ -7,7 +7,7 @@ use vars qw(@ISA @EXPORT_OK $VERSION);
 use Carp qw(croak carp);
 use Config;
 
-$VERSION = "1.002";
+$VERSION = "1.003";
 
 @ISA = qw(Exporter);
 @EXPORT_OK = 
@@ -572,14 +572,22 @@ sub image_bounds_checks {
   my $black = Imager::Color->new(0, 0, 0);
   require Imager::Color::Float;
   my $blackf = Imager::Color::Float->new(0, 0, 0);
-  $builder->ok(!$im->setpixel(x => -1, y => 0, color => $black), 'bounds check set (-1, 0)');
-  $builder->ok(!$im->setpixel(x => 10, y => 0, color => $black), 'bounds check set (10, 0)');
-  $builder->ok(!$im->setpixel(x => 0, y => -1, color => $black), 'bounds check set (0, -1)');
-  $builder->ok(!$im->setpixel(x => 0, y => 10, color => $black), 'bounds check set (0, 10)');
-  $builder->ok(!$im->setpixel(x => -1, y => 0, color => $blackf), 'bounds check set (-1, 0) float');
-  $builder->ok(!$im->setpixel(x => 10, y => 0, color => $blackf), 'bounds check set (10, 0) float');
-  $builder->ok(!$im->setpixel(x => 0, y => -1, color => $blackf), 'bounds check set (0, -1) float');
-  $builder->ok(!$im->setpixel(x => 0, y => 10, color => $blackf), 'bounds check set (0, 10) float');
+  $builder->ok($im->setpixel(x => -1, y => 0, color => $black) == 0,
+	       'bounds check set (-1, 0)');
+  $builder->ok($im->setpixel(x => 10, y => 0, color => $black) == 0,
+	       'bounds check set (10, 0)');
+  $builder->ok($im->setpixel(x => 0, y => -1, color => $black) == 0,
+	       'bounds check set (0, -1)');
+  $builder->ok($im->setpixel(x => 0, y => 10, color => $black) == 0,
+	       'bounds check set (0, 10)');
+  $builder->ok($im->setpixel(x => -1, y => 0, color => $blackf) == 0,
+	       'bounds check set (-1, 0) float');
+  $builder->ok($im->setpixel(x => 10, y => 0, color => $blackf) == 0,
+	       'bounds check set (10, 0) float');
+  $builder->ok($im->setpixel(x => 0, y => -1, color => $blackf) == 0,
+	       'bounds check set (0, -1) float');
+  $builder->ok($im->setpixel(x => 0, y => 10, color => $blackf) == 0,
+	       'bounds check set (0, 10) float');
 }
 
 sub test_colorf_gpix {

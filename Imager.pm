@@ -3242,15 +3242,15 @@ sub setpixel {
   else {
     if ($color->isa('Imager::Color')) {
       i_ppix($self->{IMG}, $x, $y, $color)
-	and return;
+	and return "0 but true";
     }
     else {
       i_ppixf($self->{IMG}, $x, $y, $color)
-	and return;
+	and return "0 but true";
     }
-  }
 
-  return $self;
+    return 1;
+  }
 }
 
 sub getpixel {
