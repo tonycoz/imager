@@ -1,5 +1,27 @@
 Imager release history.  Older releases can be found in Changes.old
 
+Incompatible changes:
+
+ - the return value of setpixel() has changed.
+
+   Previously the return values for undrawable pixels vs caller errors
+   changed depending on whether you used the multiple pixel calling
+   mechanism, or the single pixel mechanism.
+
+   Now:
+
+    - for an invalid parameter, such as an unknown colour, or missing
+      parameter, an empty list (or undef in scalar context) is
+      returned, and errstr() is set,
+
+    - otherwise the number of pixels drawn is returned.  If none of
+      the pixels could be drawn (they were all outside the image), "0
+      but true" is returned.
+
+   https://rt.cpan.org/Ticket/Display.html?id=87650
+
+Other changes:
+
  - when drawing on an image with an alpha channel where the source
    minimum is greater than zero, Imager would read from beyond the end
    of a malloc() allocated buffer.  In rare circumstances this could
@@ -17,6 +39,10 @@ Imager release history.  Older releases can be found in Changes.old
 
  - Imager::Font::Wrap no longer requires the image parameter.
    https://rt.cpan.org/Ticket/Display.html?id=87338
+
+ - a documentation typo fix in Imager::Transformations
+   Thanks to Adrian Yee.
+   https://rt.cpan.org/Ticket/Display.html?id=88598
 
 Imager 0.97 - 15 Jul 2013
 ===========
