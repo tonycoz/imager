@@ -166,7 +166,7 @@ scale() will fail if C<type> is set to some other value.
 For example, if the original image is 400 pixels wide by 200 pixels
 high and C<xpixels> is set to 300, and C<ypixels> is set to 160.  When
 C<type> is C<'min'> the resulting image is 300 x 150, when C<type> is
-C<'max'> the resulting image is 320 x 150.
+C<'max'> the resulting image is 320 x 160.
 
 C<type> is only used if both C<xpixels> and C<ypixels> are supplied.
 
