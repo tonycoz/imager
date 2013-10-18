@@ -4,7 +4,7 @@ use File::Spec;
 use Config;
 use Cwd ();
 
-our $VERSION = "1.002";
+our $VERSION = "1.003";
 
 my @alt_transfer = qw/altname incsuffix libbase/;
 
@@ -399,6 +399,7 @@ sub _lib_paths {
      "/usr/lib",
      "/usr/local/lib",
      _gcc_lib_paths(),
+     _dyn_lib_paths(),
     );
 }
 
@@ -422,6 +423,12 @@ sub _gcc_lib_paths {
   return grep !/gcc/ && -d, split /:/, $lib_line;
 }
 
+sub _dyn_lib_paths {
+  return map { defined() ? split /\Q$Config{path_sep}/ : () }
+    map $ENV{$_},
+      qw(LD_RUN_PATH LD_LIBRARY_PATH DYLD_LIBRARY_PATH LIBRARY_PATH);
+}
+
 sub _inc_paths {
   my ($req) = @_;
 
@@ -438,6 +445,7 @@ sub _inc_paths {
      ),
      "/usr/include",
      "/usr/local/include",
+     _dyn_inc_paths(),
     );
 
   if ($req->{incsuffix}) {
@@ -445,6 +453,13 @@ sub _inc_paths {
   }
 
   return @paths;
+}
+
+sub _dyn_inc_paths {
+  return map {
+    my $tmp = $_;
+    $tmp =~ s/\blib$/include/ ? $tmp : ()
+  } _dyn_lib_paths();
 }
 
 sub _paths {
