@@ -5057,6 +5057,16 @@ To clone:
 
   git clone git://git.imager.perl.org/imager.git
 
+My preference is that patches are provided in the format produced by
+C<git format-patch>, for example, if you made your changes in a branch
+from master you might do:
+
+  git format-patch -k --stdout master >my-patch.txt
+
+and then attach that to your bug report, either by adding it as an
+attachment in your email client, or by using the Request Tracker
+attachment mechanism.
+
 =head1 AUTHOR
 
 Tony Cook <tonyc@cpan.org> is the current maintainer for Imager.
