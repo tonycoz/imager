@@ -44,6 +44,13 @@ Other changes:
    Thanks to Adrian Yee.
    https://rt.cpan.org/Ticket/Display.html?id=88598
 
+ - Image::Probe, Imager's internal module for probing library
+   locations now searches the directories specified by LD_RUN_PATH,
+   LD_LIBRARY_PATH, DYLD_LIBRARY_PATH and LIBRARY_PATH for libraries,
+   and the corresponing s/\blib$/include/ directories for header
+   files.
+   https://rt.cpan.org/Ticket/Display.html?id=86428
+
 Imager 0.97 - 15 Jul 2013
 ===========
 
