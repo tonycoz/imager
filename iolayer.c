@@ -247,7 +247,7 @@ X<io_new_fd API>X<im_io_new_fd API>
 =category I/O Layers
 
 Returns a new io_glue object that has the source defined as reading
-from specified file descriptor.  Note that the the interface to receiving
+from specified file descriptor.  Note that the interface to receiving
 data from the io_glue callbacks hasn't been done yet.
 
   ctx - and Imager context object

@@ -4,7 +4,7 @@ use Imager::Color;
 use strict;
 use vars qw($VERSION);
 
-$VERSION = "1.037";
+$VERSION = "1.038";
 
 # the aim here is that we can:
 #  - add file based types in one place: here
@@ -260,7 +260,7 @@ sub bounding_box {
       $box[0]+=$input{'x'};
       $box[2]+=$input{'x'};
     } elsif (@box && $input{'canon'}) {
-      $box[3]-=$box[1];    # make it cannoical (ie (0,0) - (width, height))
+      $box[3]-=$box[1];    # make it canonical (ie (0,0) - (width, height))
       $box[2]-=$box[0];
     }
     return @box;
@@ -671,8 +671,8 @@ and height of the text instead.
 =back
 
 On success returns either the list of bounds, or a bounding box object
-object in scalar context.  Returns an empty list or C<undef> on
-failure and sets an error message readable with C<< Imager->errstr >>.
+in scalar context.  Returns an empty list or C<undef> on failure and
+sets an error message readable with C<< Imager->errstr >>.
 
 The transformation matrix set by L</transform()> has no effect on the
 result of this method - the bounds of the untransformed text is
@@ -996,7 +996,7 @@ For example:
 
  $x = pack("C*", 0xE2, 0x80, 0x90); # character code 0x2010 HYPHEN
 
-You need to be be careful with versions of perl that have UTF-8
+You need to be careful with versions of perl that have UTF-8
 support, since your string may end up doubly UTF-8 encoded.
 
 For example:

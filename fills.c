@@ -429,7 +429,7 @@ If C<cust_hatch> is NULL then one of the standard hatches is used.
 
 (C<dx>, C<dy>) are an offset into the hatch which can be used to hatch
 adjoining areas out of alignment, or to align the origin of a hatch
-with the the side of a filled area.
+with the side of a filled area.
 
 =cut
 */
@@ -457,7 +457,7 @@ If C<cust_hatch> is NULL then one of the standard hatches is used.
 
 (C<dx>, C<dy>) are an offset into the hatch which can be used to hatch
 adjoining areas out of alignment, or to align the origin of a hatch
-with the the side of a filled area.
+with the side of a filled area.
 
 =cut
 */

@@ -1103,7 +1103,7 @@ If C<cust_hatch> is NULL then one of the standard hatches is used.
 
 (C<dx>, C<dy>) are an offset into the hatch which can be used to hatch
 adjoining areas out of alignment, or to align the origin of a hatch
-with the the side of a filled area.
+with the side of a filled area.
 
 
 =for comment
@@ -1125,7 +1125,7 @@ If C<cust_hatch> is NULL then one of the standard hatches is used.
 
 (C<dx>, C<dy>) are an offset into the hatch which can be used to hatch
 adjoining areas out of alignment, or to align the origin of a hatch
-with the the side of a filled area.
+with the side of a filled area.
 
 
 =for comment
@@ -1265,7 +1265,7 @@ From: File iolayer.c
 X<io_new_fd API>X<im_io_new_fd API>
 
 Returns a new io_glue object that has the source defined as reading
-from specified file descriptor.  Note that the the interface to receiving
+from specified file descriptor.  Note that the interface to receiving
 data from the io_glue callbacks hasn't been done yet.
 
   ctx - and Imager context object
