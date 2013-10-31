@@ -1233,15 +1233,19 @@ image in the C<xsize> and C<ysize> options:
     or die "Cannot read raw image\n";
 
 If your input file has more channels than you want, or (as is common),
-junk in the fourth channel, you can use the C<datachannels> and
-C<storechannels> options to control the number of channels in your input
+junk in the fourth channel, you can use the C<raw_datachannels> and
+C<raw_storechannels> options to control the number of channels in your input
 file and the resulting channels in your image.  For example, if your
 input image uses 32-bits per pixel with red, green, blue and junk
 values for each pixel you could do:
 
-  $img->read(file=>'foo.raw', xsize=>100, ysize=>100, datachannels=>4,
-	     storechannels=>3)
+  $img->read(file=>'foo.raw', xsize => 100, ysize => 100,
+             raw_datachannels => 4, raw_storechannels => 3,
+	     raw_interleave => 0)
     or die "Cannot read raw image\n";
+
+In general, if you supply C<raw_storechannels> you should also supply
+C<raw_datachannels>
 
 Read parameters:
 
@@ -1249,7 +1253,7 @@ Read parameters:
 
 =item *
 
-raw_interleave - controls the ordering of samples within the image.
+C<raw_interleave> - controls the ordering of samples within the image.
 Default: 1.  Alternatively and historically spelled C<interleave>.
 Possible values:
 
@@ -1286,13 +1290,13 @@ C<raw_interleave> parameter.
 
 =item *
 
-raw_storechannels - the number of channels to store in the image.
+C<raw_storechannels> - the number of channels to store in the image.
 Range: 1 to 4.  Default: 3.  Alternatively and historically spelled
 C<storechannels>.
 
 =item *
 
-raw_datachannels - the number of channels to read from the file.
+C<raw_datachannels> - the number of channels to read from the file.
 Range: 1 or more.  Default: 3.  Alternatively and historically spelled
 C<datachannels>.
 
