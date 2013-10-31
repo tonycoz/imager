@@ -32,7 +32,7 @@ for my $file (@files) {
   }
 }
 
-plan tests =>  2 * scalar(@pod);
+plan tests =>  3 * scalar(@pod);
 
 my @req_head1s = qw(NAME DESCRIPTION AUTHOR);
 
@@ -40,6 +40,7 @@ for my $file (@pod) {
   my $parser = PodStructCheck->new;
   my $relfile = abs2rel($file, $base);
   $parser->{bad_quotes} = [];
+  $parser->{dup_words} = [];
   $parser->parse_from_file($file);
 
   my @missing;
@@ -53,6 +54,10 @@ for my $file (@pod) {
   unless (ok(!@{$parser->{bad_quotes}}, "$relfile: check for bad quotes")) {
     diag "$relfile:$_->[1]: bad quote in: $_->[0]"
       for @{$parser->{bad_quotes}};
+  }
+  unless (ok(!@{$parser->{dup_words}}, "$relfile: check for duplicate words")) {
+    diag "$relfile:$_->[1]: dup word '$_->[0]' in: $_->[2]"
+      for @{$parser->{dup_words}};
   }
 }
 
@@ -91,6 +96,14 @@ sub command {
 sub verbatim {}
 
 sub textblock {
+  my ($self, $text, $line_num) = @_;
+
+  if (my ($sample, $word) = $text =~ /(.{0,10}\b(\w+)\s+\2\b.{0,10})/s) {
+    # avoid catching "C C<something to do with C>"
+    if ($word ne "C") {
+      push @{$self->{dup_words}}, [ $word, $line_num, $sample ];
+    }
+  }
 }
 
 sub sequence {
