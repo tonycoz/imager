@@ -4,7 +4,7 @@ use Imager::Color;
 use strict;
 use vars qw($VERSION);
 
-$VERSION = "1.037";
+$VERSION = "1.038";
 
 # the aim here is that we can:
 #  - add file based types in one place: here
@@ -671,8 +671,8 @@ and height of the text instead.
 =back
 
 On success returns either the list of bounds, or a bounding box object
-object in scalar context.  Returns an empty list or C<undef> on
-failure and sets an error message readable with C<< Imager->errstr >>.
+in scalar context.  Returns an empty list or C<undef> on failure and
+sets an error message readable with C<< Imager->errstr >>.
 
 The transformation matrix set by L</transform()> has no effect on the
 result of this method - the bounds of the untransformed text is
