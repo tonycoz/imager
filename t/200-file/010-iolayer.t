@@ -56,14 +56,16 @@ is(i_img_diff($im, $im2), 0, "compare images");
 undef($im2);
 
 my $IO5 = Imager::io_new_bufchain();
-Imager::i_writeppm_wiol($im, $IO5);
+Imager::i_writeppm_wiol($im, $IO5)
+  or diag("failed to write to bufchain: " . Imager->_error_as_msg);
 my $data2 = Imager::io_slurp($IO5);
 undef($IO5);
 
 ok($data2, "check we got data from bufchain");
 
 my $IO6 = Imager::io_new_buffer($data2);
-my $im3 = Imager::i_readpnm_wiol($IO6, -1);
+my $im3 = Imager::i_readpnm_wiol($IO6, -1)
+  or diag("failed to read from buffer: " . Imager->_error_as_msg);
 
 is(Imager::i_img_diff($im, $im3), 0, "read from buffer");
 
