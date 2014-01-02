@@ -1,5 +1,8 @@
 Imager release history.  Older releases can be found in Changes.old
 
+Imager 0.98 - 3 Jan 2014
+===========
+
 Incompatible changes:
 
  - the return value of setpixel() has changed.
