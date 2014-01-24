@@ -20,12 +20,12 @@
 typedef i_img_dim pcord;
 
 typedef struct {
-  int n;
+  size_t n;
   pcord x,y;
 } p_point;
 
 typedef struct {
-  int n;
+  size_t n;
   pcord x1,y1;
   pcord x2,y2;
   pcord miny,maxy;
@@ -34,7 +34,7 @@ typedef struct {
 } p_line;
 
 typedef struct {
-  int n;
+  size_t n;
   double x;
 } p_slice;
 
@@ -81,34 +81,63 @@ p_eval_atx(p_line *l, pcord x) {
 
 static
 p_line *
-line_set_new(const double *x, const double *y, int l) {
-  int i;
-  p_line *lset = mymalloc(sizeof(p_line) * l);
+line_set_new(const i_polygon_t *polys, size_t count, size_t *line_count) {
+  size_t i, j, n;
+  p_line *lset, *line;
+  size_t lines = 0;
+  
+  for (i = 0; i < count; ++i)
+    lines += polys[i].count;
 
-  for(i=0; i<l; i++) {
-    lset[i].n=i;
-    lset[i].x1 = IMTRUNC(x[i]);
-    lset[i].y1 = IMTRUNC(y[i]);
-    lset[i].x2 = IMTRUNC(x[(i+1)%l]);
-    lset[i].y2 = IMTRUNC(y[(i+1)%l]);
-    lset[i].miny=i_min(lset[i].y1,lset[i].y2);
-    lset[i].maxy=i_max(lset[i].y1,lset[i].y2);
-    lset[i].minx=i_min(lset[i].x1,lset[i].x2);
-    lset[i].maxx=i_max(lset[i].x1,lset[i].x2);
+  *line_count = lines;
+
+  line = lset = mymalloc(sizeof(p_line) * lines);
+
+  n = 0;
+  for (i = 0; i < count; ++i) {
+    const i_polygon_t *p = polys + i;
+
+    for(j = 0; j < p->count; j++) {
+      line->n = n++;
+      line->x1 = IMTRUNC(p->x[j]);
+      line->y1 = IMTRUNC(p->y[j]);
+      line->x2 = IMTRUNC(p->x[(j + 1) % p->count]);
+      line->y2 = IMTRUNC(p->y[(j + 1) % p->count]);
+      line->miny = i_min(line->y1, line->y2);
+      line->maxy = i_max(line->y1, line->y2);
+      line->minx = i_min(line->x1, line->x2);
+      line->maxx = i_max(line->x1, line->x2);
+      ++line;
+    }
   }
+
   return lset;
 }
 
 static
 p_point *
-point_set_new(const double *x, const double *y, int l) {
-  int i;
-  p_point *pset = mymalloc(sizeof(p_point) * l);
+point_set_new(const i_polygon_t *polys, size_t count, size_t *point_count) {
+  size_t i, j, n;
+  p_point *pset, *pt;
+  size_t points = 0;
   
-  for(i=0; i<l; i++) {
-    pset[i].n=i;
-    pset[i].x=IMTRUNC(x[i]);
-    pset[i].y=IMTRUNC(y[i]);
+  for (i = 0; i < count; ++i)
+    points += polys[i].count;
+
+  *point_count = points;
+
+  pt = pset = mymalloc(sizeof(p_point) * points);
+
+  n = 0;
+  for (i = 0; i < count; ++i) {
+    const i_polygon_t *p = polys + i;
+
+    for(j = 0; j < p->count; j++) {
+      pt->n = n++;
+      pt->x = IMTRUNC(p->x[j]);
+      pt->y = IMTRUNC(p->y[j]);
+      ++pt;
+    }
   }
   return pset;
 }
@@ -208,8 +237,6 @@ mark_updown_slices(p_line *lset, p_slice *tllist, int count) {
 	      );
   }
 }
-
-
 
 static
 unsigned char
@@ -404,8 +431,9 @@ render_slice_scanline(ss_scanline *ss, int y, p_line *l, p_line *r, pcord miny, 
  */
 
 
-static void
-i_poly_aa_low(i_img *im, int l, const double *x, const double *y, void *ctx, scanline_flusher flusher) {
+static int
+i_poly_poly_aa_low(i_img *im, int count, const i_polygon_t *polys,
+		   void *ctx, scanline_flusher flusher) {
   int i ,k;			/* Index variables */
   i_img_dim clc;		/* Lines inside current interval */
   /* initialize to avoid compiler warnings */
@@ -416,11 +444,16 @@ i_poly_aa_low(i_img *im, int l, const double *x, const double *y, void *ctx, sca
   p_point *pset;		/* List of points in polygon */
   p_line  *lset;		/* List of lines in polygon */
   p_slice *tllist;		/* List of slices */
+  size_t pcount, lcount;
 
-  mm_log((1, "i_poly_aa(im %p, l %d, x %p, y %p, ctx %p, flusher %p)\n", im, l, x, y, ctx, flusher));
+  mm_log((1, "i_poly_poly_aa_low(im %p, count %d, polys %p, ctx %p, flusher %p)\n", im, count, polys, ctx, flusher));
 
-  for(i=0; i<l; i++) {
-    mm_log((2, "(%.2f, %.2f)\n", x[i], y[i]));
+  for (k = 0; k < count; ++k) {
+    const i_polygon_t *p = polys + k;
+    mm_log((2, "poly %d\n", k));
+    for(i = 0; i < p->count; i++) {
+      mm_log((2, " (%.2f, %.2f)\n", p->x[i], p->y[i]));
+    }
   }
 
 
@@ -429,18 +462,17 @@ i_poly_aa_low(i_img *im, int l, const double *x, const double *y, void *ctx, sca
 	   setbuf(stdout, NULL);
 	   );
 
-  tllist   = mymalloc(sizeof(p_slice)*l);
+  pset     = point_set_new(polys, count, &pcount);
+  lset     = line_set_new(polys, count, &lcount);
+
+  ss_scanline_init(&templine, im->xsize, lcount);
+
+  tllist   = mymalloc(sizeof(p_slice) * lcount);
   
-  ss_scanline_init(&templine, im->xsize, l);
-
-  pset     = point_set_new(x, y, l);
-  lset     = line_set_new(x, y, l);
-
-
-  qsort(pset, l, sizeof(p_point), (int(*)(const void *,const void *))p_compy);
+  qsort(pset, pcount, sizeof(p_point), (int(*)(const void *,const void *))p_compy);
   
   POLY_DEB(
-	   for(i=0;i<l;i++) {
+	   for(i=0;i<lcount;i++) {
 	     printf("%d [ %d ] (%d , %d) -> (%d , %d) yspan ( %d , %d )\n",
 		    i, lset[i].n, lset[i].x1, lset[i].y1, lset[i].x2, lset[i].y2, lset[i].miny, lset[i].maxy);
 	   }
@@ -449,7 +481,7 @@ i_poly_aa_low(i_img *im, int l, const double *x, const double *y, void *ctx, sca
   
 
   /* loop on intervals */
-  for(i=0; i<l-1; i++) {
+  for(i=0; i<pcount-1; i++) {
     i_img_dim startscan = i_max( coarse(pset[i].y), 0);
     i_img_dim stopscan = i_min( coarse(pset[i+1].y+15), im->ysize);
     pcord miny, maxy;	/* y bounds in fine coordinates */
@@ -466,7 +498,7 @@ i_poly_aa_low(i_img *im, int l, const double *x, const double *y, void *ctx, sca
       continue;
     }
 
-    clc = lines_in_interval(lset, l, tllist, pset[i].y, pset[i+1].y);
+    clc = lines_in_interval(lset, lcount, tllist, pset[i].y, pset[i+1].y);
     qsort(tllist, clc, sizeof(p_slice), (int(*)(const void *,const void *))p_compx);
 
     mark_updown_slices(lset, tllist, clc);
@@ -530,14 +562,25 @@ i_poly_aa_low(i_img *im, int l, const double *x, const double *y, void *ctx, sca
   myfree(pset);
   myfree(lset);
   myfree(tllist);
-  
-} /* Function */
+
+  return 1;
+}
+
+int
+i_poly_poly_aa(i_img *im, int count, const i_polygon_t *polys,
+	       const i_color *val) {
+  i_color c = *val;
+  return i_poly_poly_aa_low(im, count, polys, &c, scanline_flush);
+}
 
 int
 i_poly_aa(i_img *im, int l, const double *x, const double *y, const i_color *val) {
-  i_color c = *val;
-  i_poly_aa_low(im, l, x, y, &c, scanline_flush);
-  return 1;
+  i_polygon_t poly;
+
+  poly.count = l;
+  poly.x = x;
+  poly.y = y;
+  return i_poly_poly_aa(im, 1, &poly, val);
 }
 
 struct poly_render_state {
@@ -572,15 +615,31 @@ scanline_flush_render(i_img *im, ss_scanline *ss, int y, void *ctx) {
 }
 
 int
-i_poly_aa_cfill(i_img *im, int l, const double *x, const double *y, 
-		i_fill_t *fill) {
+i_poly_poly_aa_cfill(i_img *im, int count, const i_polygon_t *polys,
+		     i_fill_t *fill) {
   struct poly_render_state ctx;
+  int result;
 
   i_render_init(&ctx.render, im, im->xsize);
   ctx.fill = fill;
   ctx.cover = mymalloc(im->xsize);
-  i_poly_aa_low(im, l, x, y, &ctx, scanline_flush_render);
+
+  result = i_poly_poly_aa_low(im, count, polys, &ctx, scanline_flush_render);
+
   myfree(ctx.cover);
   i_render_done(&ctx.render);
-  return 1;
+
+  return result;
+}
+
+int
+i_poly_aa_cfill(i_img *im, int l, const double *x, const double *y, 
+		i_fill_t *fill) {
+  i_polygon_t poly;
+
+  poly.count = l;
+  poly.x = x;
+  poly.y = y;
+
+  return i_poly_poly_aa_cfill(im, 1, &poly, fill);
 }
