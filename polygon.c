@@ -89,8 +89,6 @@ line_set_new(const i_polygon_t *polys, size_t count, size_t *line_count) {
   for (i = 0; i < count; ++i)
     lines += polys[i].count;
 
-  *line_count = lines;
-
   line = lset = mymalloc(sizeof(p_line) * lines);
 
   n = 0;
@@ -98,18 +96,25 @@ line_set_new(const i_polygon_t *polys, size_t count, size_t *line_count) {
     const i_polygon_t *p = polys + i;
 
     for(j = 0; j < p->count; j++) {
-      line->n = n++;
       line->x1 = IMTRUNC(p->x[j]);
       line->y1 = IMTRUNC(p->y[j]);
       line->x2 = IMTRUNC(p->x[(j + 1) % p->count]);
       line->y2 = IMTRUNC(p->y[(j + 1) % p->count]);
+
+      /* don't include purely horizontal lines, we don't usefully
+	 intersect with them. */
+      if (line->y1 == line->y2)
+	continue;
+
       line->miny = i_min(line->y1, line->y2);
       line->maxy = i_max(line->y1, line->y2);
       line->minx = i_min(line->x1, line->x2);
       line->maxx = i_max(line->x1, line->x2);
+      line->n = n++;
       ++line;
     }
   }
+  *line_count = n;
 
   return lset;
 }
