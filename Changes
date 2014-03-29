@@ -1,5 +1,13 @@
 Imager release history.  Older releases can be found in Changes.old
 
+ - Imager::IO->new_buffer() (and hence Imager->read()'s data
+   parameter) now accepts a reference to a scalar as well as just a
+   plain scalar.
+
+ - Imager::IO->new_buffer() now always makes a copy of the passed in
+   buffer to avoid problems with temporary objects used for the return
+   value of SvPVbyte().
+
 Imager 0.98 - 3 Jan 2014
 ===========
 
