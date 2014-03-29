@@ -234,9 +234,9 @@ static int getobj(void *hv_t,char *key,char *type,void **store) {
 
 UTIL_table_t i_UTIL_table={getstr,getint,getdouble,getvoid,getobj};
 
-void my_SvREFCNT_dec(void *p) {
-  dTHX;
-  SvREFCNT_dec((SV*)p);
+static void
+free_buffer(void *p) {
+  myfree(p);
 }
 
 
@@ -447,14 +447,41 @@ static void io_destroyer(void *p) {
   myfree(cbd);
 }
 
+static bool
+im_SvREFSCALAR(SV *sv) {
+  svtype type = SvTYPE(sv);
+  return type == SVt_PV || type == SVt_PVIV || type == SVt_PVNV
+      || type == SVt_PVMG || type == SVt_IV || type == SVt_NV
+      || type == SVt_PVLV || type == SVt_REGEXP;
+}
+
 static i_io_glue_t *
 do_io_new_buffer(pTHX_ SV *data_sv) {
   const char *data;
+  char *data_copy;
   STRLEN length;
+  SV *sv;
 
-  data = SvPVbyte(data_sv, length);
-  SvREFCNT_inc(data_sv);
-  return io_new_buffer(data, length, my_SvREFCNT_dec, data_sv);
+  SvGETMAGIC(data_sv);
+  if (SvROK(data_sv)) {
+    if (im_SvREFSCALAR(data_sv)) {
+      sv = SvRV(data_sv);
+    }
+    else {
+      i_push_error(0, "data is not a scalar or a reference to scalar");
+      return NULL;
+    }
+  }
+  else {
+    sv = data_sv;
+  }
+
+  /* previously this would keep the SV around, but this is unsafe in
+     many ways, so always copy the bytes */
+  data = SvPVbyte(sv, length);
+  data_copy = mymalloc(length);
+  memcpy(data_copy, data, length);
+  return io_new_buffer(data_copy, length, free_buffer, data_copy);
 }
 
 static const char *
@@ -1106,7 +1133,10 @@ Imager::IO
 io_new_buffer(data_sv)
 	  SV   *data_sv
 	CODE:
+	  i_clear_error();
 	  RETVAL = do_io_new_buffer(aTHX_ data_sv);
+	  if (!RETVAL)
+	    XSRETURN(0);
         OUTPUT:
           RETVAL
 
@@ -1177,7 +1207,10 @@ Imager::IO
 io_new_buffer(class, data_sv)
 	SV *data_sv
     CODE:
+        i_clear_error();
         RETVAL = do_io_new_buffer(aTHX_ data_sv);
+	if (!RETVAL)
+	  XSRETURN(0);
     OUTPUT:
         RETVAL
 

@@ -1,6 +1,6 @@
 #!perl -w
 use strict;
-use Test::More tests => 274;
+use Test::More tests => 275;
 use Imager::Test qw(is_image);
 # for SEEK_SET etc, Fcntl doesn't provide these in 5.005_03
 use IO::Seekable;
@@ -888,6 +888,15 @@ SKIP:
   is($data, "temore", "tied: check we read back what we wrote");
   is($io->close, 0, "tied: close it");
   is(tied(*FOO)->[0], "temore", "tied: check it got to the output properly");
+}
+
+{ # pass buffer by reference
+  my $data = "This is a test";
+  my $data2 = $data;
+  my $io = Imager::IO->new_buffer(\$data2);
+  undef $data2;
+  my $tmp = $io->read2(1000);
+  is($tmp, $data, "buffer io created by reference");
 }
 
 Imager->close_log;
