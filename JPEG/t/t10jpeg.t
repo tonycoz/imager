@@ -11,7 +11,7 @@ init_log("testout/t101jpeg.log",1);
 $Imager::formats{"jpeg"}
   or plan skip_all => "no jpeg support";
 
-plan tests => 103;
+plan tests => 109;
 
 print STDERR "libjpeg version: ", Imager::File::JPEG::i_libjpeg_version(), "\n";
 
@@ -436,6 +436,25 @@ SKIP:
   is($nonprog[0], 0, "check progressive flag 0 for non prog file");
 
   is_image($rdprog, $norm, "prog vs norm should be the same image");
+}
+
+SKIP:
+{ # optimize coding
+  my $im = test_image();
+  my $base;
+  ok($im->write(data => \$base, type => "jpeg"), "save without optimize");
+  my $opt;
+  ok($im->write(data => \$opt, type => "jpeg", jpeg_optimize => 1),
+     "save with optimize");
+  cmp_ok(length $opt, '<', length $base, "check optimized is smaller");
+  my $im_base = Imager->new(data => $base, filetype => "jpeg");
+  ok($im_base, "read unoptimized back");
+  my $im_opt = Imager->new(data => $opt, filetype => "jpeg");
+  ok($im_opt, "read optimized back");
+  $im_base && $im_opt
+    or skip "couldn't read one back", 1;
+  is_image($im_opt, $im_base,
+	   "optimization should only change huffman compression, not quality");
 }
 
 { # check close failures are handled correctly

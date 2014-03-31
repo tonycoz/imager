@@ -566,6 +566,7 @@ i_writejpeg_wiol(i_img *im, io_glue *ig, int qfactor) {
   int comment_entry;
   int want_channels = im->channels;
   int progressive = 0;
+  int optimize = 0;
 
   struct jpeg_compress_struct cinfo;
   struct my_error_mgr jerr;
@@ -627,6 +628,9 @@ i_writejpeg_wiol(i_img *im, io_glue *ig, int qfactor) {
   if (progressive) {
     jpeg_simple_progression(&cinfo);
   }
+  if (!i_tags_get_int(&im->tags, "jpeg_optimize", 0, &optimize))
+    optimize = 0;
+  cinfo.optimize_coding = optimize;
 
   got_xres = i_tags_get_float(&im->tags, "i_xres", 0, &xres);
   got_yres = i_tags_get_float(&im->tags, "i_yres", 0, &yres);

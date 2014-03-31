@@ -647,6 +647,18 @@ file. (Imager 0.84)
 JPEG supports the spatial resolution tags C<i_xres>, C<i_yres> and
 C<i_aspect_only>.
 
+You can also set the following tags when writing to an image, they are
+not set in the image when reading:
+
+=over
+
+C<jpeg_optimize> - set to a non-zero integer to compute optimal
+Huffman coding tables for the image.  This will increase memory usage
+and processing time (about 12% in my simple tests) but can
+significantly reduce file size without a loss of quality.
+
+=back
+
 =for stopwords EXIF
 
 If an C<APP1> block containing EXIF information is found, then any of the
