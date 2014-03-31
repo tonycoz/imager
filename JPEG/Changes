@@ -1,3 +1,8 @@
+
+ - added the jpeg_optimize parameter for writing JPEG files.  This can
+   significantly reduce file sizes, but uses more memory and time.
+   https://rt.cpan.org/Ticket/Display.html?id=94292
+
 Imager-File-JPEG 0.88
 =====================
 

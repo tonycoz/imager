@@ -3,10 +3,12 @@ Imager release history.  Older releases can be found in Changes.old
  - Imager::IO->new_buffer() (and hence Imager->read()'s data
    parameter) now accepts a reference to a scalar as well as just a
    plain scalar.
+   https://rt.cpan.org/Ticket/Display.html?id=92785
 
  - Imager::IO->new_buffer() now always makes a copy of the passed in
    buffer to avoid problems with temporary objects used for the return
    value of SvPVbyte().
+   https://rt.cpan.org/Ticket/Display.html?id=92785
 
  - improved the XS for i_io_read() and i_io_raw_read()
    https://rt.cpan.org/Ticket/Display.html?id=92738
@@ -14,6 +16,10 @@ Imager release history.  Older releases can be found in Changes.old
  - load plugins from absolute paths on Android
    Thanks to Brian Fraser.
    https://rt.cpan.org/Ticket/Display.html?id=93272
+
+ - added the jpeg_optimize parameter for writing JPEG files.  This can
+   significantly reduce file sizes, but uses more memory and time.
+   https://rt.cpan.org/Ticket/Display.html?id=94292
 
 Imager 0.98 - 3 Jan 2014
 ===========
