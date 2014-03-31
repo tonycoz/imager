@@ -8,6 +8,13 @@ Imager release history.  Older releases can be found in Changes.old
    buffer to avoid problems with temporary objects used for the return
    value of SvPVbyte().
 
+ - improved the XS for i_io_read() and i_io_raw_read()
+   https://rt.cpan.org/Ticket/Display.html?id=92738
+
+ - load plugins from absolute paths on Android
+   Thanks to Brian Fraser.
+   https://rt.cpan.org/Ticket/Display.html?id=93272
+
 Imager 0.98 - 3 Jan 2014
 ===========
 
