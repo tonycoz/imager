@@ -271,6 +271,7 @@ void i_postlevels(i_img *im,int levels);
 void i_mosaic(i_img *im,i_img_dim size);
 void i_watermark(i_img *im,i_img *wmark,i_img_dim tx,i_img_dim ty,int pixdiff);
 void i_autolevels(i_img *im,float lsat,float usat,float skew);
+void i_autolevels_mono(i_img *im,float lsat,float usat);
 void i_radnoise(i_img *im,i_img_dim xo,i_img_dim yo,double rscale,double ascale);
 void i_turbnoise(i_img *im,double xo,double yo,double scale);
 void i_gradgen(i_img *im, int num, i_img_dim *xo, i_img_dim *yo, i_color *ival, int dmeasure);

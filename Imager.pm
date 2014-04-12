@@ -204,10 +204,16 @@ BEGIN {
      callsub => sub { my %hsh=@_; i_hardinvertall($hsh{image}); }
     };
 
-  $filters{autolevels} ={
+  $filters{autolevels_skew} ={
 			 callseq => ['image','lsat','usat','skew'],
 			 defaults => { lsat=>0.1,usat=>0.1,skew=>0.0 },
 			 callsub => sub { my %hsh=@_; i_autolevels($hsh{image},$hsh{lsat},$hsh{usat},$hsh{skew}); }
+			};
+
+  $filters{autolevels} ={
+			 callseq => ['image','lsat','usat'],
+			 defaults => { lsat=>0.1,usat=>0.1 },
+			 callsub => sub { my %hsh=@_; i_autolevels_mono($hsh{image},$hsh{lsat},$hsh{usat}); }
 			};
 
   $filters{turbnoise} ={

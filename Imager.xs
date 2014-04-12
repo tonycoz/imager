@@ -2704,6 +2704,12 @@ i_autolevels(im,lsat,usat,skew)
              float     skew
 
 void
+i_autolevels_mono(im,lsat,usat)
+    Imager::ImgRaw     im
+             float     lsat
+             float     usat
+
+void
 i_radnoise(im,xo,yo,rscale,ascale)
     Imager::ImgRaw     im
              float     xo

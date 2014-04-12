@@ -1,7 +1,7 @@
 #!perl -w
 use strict;
 use Imager qw(:handy);
-use Test::More tests => 122;
+use Test::More tests => 124;
 
 -d "testout" or mkdir "testout";
 
@@ -15,6 +15,8 @@ my $im_other = Imager->new(xsize=>150, ysize=>150);
 $im_other->box(xmin=>30, ymin=>60, xmax=>120, ymax=>90, filled=>1);
 
 test($imbase, {type=>'autolevels'}, 'testout/t61_autolev.ppm');
+
+test($imbase, {type=>'autolevels_skew'}, 'testout/t61_autoskew.ppm');
 
 test($imbase, {type=>'contrast', intensity=>0.5}, 
      'testout/t61_contrast.ppm');
