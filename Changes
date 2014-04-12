@@ -21,6 +21,11 @@ Imager release history.  Older releases can be found in Changes.old
    significantly reduce file sizes, but uses more memory and time.
    https://rt.cpan.org/Ticket/Display.html?id=94292
 
+ - the autolevels filter now works on the luminosity of the image
+   rather then working per channel.  The old autolevels filter is
+   still available as "autolevels_skew".
+   https://rt.cpan.org/Ticket/Display.html?id=94413
+
 Imager 0.98 - 3 Jan 2014
 ===========
 
