@@ -339,6 +339,7 @@ t/250-draw/020-flood.t		Flood fill tests
 t/250-draw/030-paste.t		Test the paste() method
 t/250-draw/040-rubthru.t	Test the rubthrough() method
 t/250-draw/050-polyaa.t		polygon()
+t/250-draw/060-polypoly.t	polypolygon()
 t/250-draw/100-fill.t		fills
 t/250-draw/200-compose.t	compose()
 t/300-transform/010-scale.t	scale(), scaleX() and scaleY()

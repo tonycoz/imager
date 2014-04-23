@@ -2368,6 +2368,22 @@ will change:
 
 =item *
 
+B<i_poly_aa_cfill_m>
+
+=item *
+
+B<i_poly_aa_m>
+
+=item *
+
+B<i_poly_poly_aa>
+
+=item *
+
+B<i_poly_poly_aa_cfill>
+
+=item *
+
 B<im_lhead>
 
 =item *

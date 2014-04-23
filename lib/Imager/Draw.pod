@@ -480,6 +480,10 @@ supplied as a L</"Color Parameters">.
 
 =back
 
+=item polypolygon()
+
+C<FIXME>
+
 =item setpixel()
 
   $img->setpixel(x=>50, y=>70, color=>$color);

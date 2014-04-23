@@ -1,7 +1,7 @@
 #!perl -w
 
 use strict;
-use Test::More tests => 18;
+use Test::More tests => 24;
 
 use Imager qw/NC/;
 use Imager::Test qw(is_image is_color3);
@@ -10,12 +10,23 @@ sub PI () { 3.14159265358979323846 }
 
 -d "testout" or mkdir "testout";
 
-Imager::init_log("testout/t75aapolyaa.log",1);
+my @out_files;
+
+END {
+  unless ($ENV{IMAGER_KEEP_FILES}) {
+    unlink @out_files;
+    rmdir "testout";
+  }
+}
+
+Imager->open_log(log => "testout/250-polyaa.log");
+push @out_files, "testout/250-polyaa.log";
 
 my $red   = Imager::Color->new(255,0,0);
 my $green = Imager::Color->new(0,255,0);
 my $blue  = Imager::Color->new(0,0,255);
 my $white = Imager::Color->new(255,255,255);
+my $black = Imager::Color->new(0, 0, 0);
 
 { # artifacts with multiple vertical lobes
   # https://rt.cpan.org/Ticket/Display.html?id=43518
@@ -38,7 +49,8 @@ my $white = Imager::Color->new(255,255,255);
   ok($im->polygon(points => \@pts,
 		  color => $white),
      "draw with inside point");
-  ok($im->write(file => "testout/t75inside.ppm"), "save to file");
+  ok($im->write(file => "testout/250-poly-inside.ppm"), "save to file");
+  push @out_files, "testout/250-poly-inside.ppm";
   # both scanlines should be the same
   my $line0 = $im->crop(top => 0, height => 1);
   my $line1 = $im->crop(top => 1, height => 1);
@@ -90,14 +102,16 @@ my $white = Imager::Color->new(255,255,255);
   
   
   my ($x, $y) = array_to_refpair(@data);
-  ok(Imager::i_poly_aa($img->{IMG}, $x, $y, $white), "primitive poly");
+  ok(Imager::i_poly_aa_m($img->{IMG}, $x, $y, 0, $white), "primitive poly");
 
-  ok($img->write(file=>"testout/t75.ppm"), "write to file")
+  ok($img->write(file=>"testout/250-poly.ppm"), "write to file")
     or diag $img->errstr;
+  push @out_files, "testout/250-poly.ppm";
 
   my $zoom = make_zoom($img, 8, \@data, $red);
   ok($zoom, "make zoom of primitive");
-  $zoom->write(file=>"testout/t75zoom.ppm") or die $zoom->errstr;
+  $zoom->write(file=>"testout/250-poly-zoom.ppm") or die $zoom->errstr;
+  push @out_files, "testout/250-poly-zoom.ppm";
 }
 
 {
@@ -113,13 +127,14 @@ my $white = Imager::Color->new(255,255,255);
 			       )
 			);
     my ($x, $y) = array_to_refpair(@data);
-    Imager::i_poly_aa($img->{IMG}, $x, $y, NC(rand(255), rand(255), rand(255)))
+    Imager::i_poly_aa_m($img->{IMG}, $x, $y, 0, NC(rand(255), rand(255), rand(255)))
 	or $good = 0;
   }
   
-  $img->write(file=>"testout/t75big.ppm") or die $img->errstr;
+  $img->write(file=>"testout/250-poly-big.ppm") or die $img->errstr;
 
   ok($good, "primitive squares");
+  push @out_files, "testout/250-poly-big.ppm";
 }
 
 {
@@ -134,7 +149,8 @@ my $white = Imager::Color->new(255,255,255);
 		 ), "method call")
     or diag $img->errstr();
 
-  $img->write(file=>"testout/t75wave.ppm") or die $img->errstr;
+  $img->write(file=>"testout/250-poly-wave.ppm") or die $img->errstr;
+  push @out_files, "testout/250-poly-wave.ppm";
 }
 
 {
@@ -152,8 +168,9 @@ my $white = Imager::Color->new(255,255,255);
 		 ), "bug check")
     or diag $img->errstr();
 
-  make_zoom($img,20,\@data, $blue)->write(file=>"testout/t75wavebug.ppm") or die $img->errstr;
+  make_zoom($img,20,\@data, $blue)->write(file=>"testout/250-poly-wavebug.ppm") or die $img->errstr;
 
+  push @out_files, "testout/250-poly-wavebug.ppm";
 }
 
 {
@@ -166,7 +183,8 @@ my $white = Imager::Color->new(255,255,255);
                         ],
              ), "poly filled with hatch")
     or diag $img->errstr();
-  $img->write(file=>"testout/t75wave_fill.ppm") or die $img->errstr;
+  $img->write(file=>"testout/250-poly-wave_fill.ppm") or die $img->errstr;
+  push @out_files, "testout/250-poly-wave_fill.ppm";
 }
 
 {
@@ -179,11 +197,61 @@ my $white = Imager::Color->new(255,255,255);
                         ],
              ), "hatched to 16-bit image")
     or diag $img->errstr();
-  $img->write(file=>"testout/t75wave_fill16.ppm") or die $img->errstr;
+  $img->write(file=>"testout/250-poly-wave_fill16.ppm") or die $img->errstr;
+  push @out_files, "testout/250-poly-wave_fill16.ppm";
 }
 
-Imager::malloc_state();
+{
+  my $img = Imager->new(xsize => 100, ysize => 100);
+  my $poly =
+    [
+     [
+      [ 10, 90, 90, 10 ],
+      [ 10, 10, 90, 90 ],
+     ],
+     [
+      [ 20, 45, 45, 20 ],
+      [ 20, 20, 80, 80 ],
+     ],
+     [
+      [ 55, 55, 80, 80 ],
+      [ 20, 80, 80, 20 ],
+     ],
+    ];
+  ok($img->polypolygon
+     (
+      points => $poly,
+      filled => 1,
+      color => $white,
+     ), "default polypolygon");
+  push @out_files, "testout/250-poly-ppeo.ppm";
+  ok($img->write(file => "testout/250-poly-ppeo.ppm"),
+     "save to file");
+  my $cmp_eo = Imager->new(xsize => 100, ysize => 100);
+  $cmp_eo->box(filled => 1, color => $white, box => [ 10, 10, 89, 89 ]);
+  $cmp_eo->box(filled => 1, color => $black, box => [ 20, 20, 44, 79 ]);
+  $cmp_eo->box(filled => 1, color => $black, box => [ 55, 20, 79, 79 ]);
+  is_image($img, $cmp_eo, "check even/odd matches");
+  $img = Imager->new(xsize => 100, ysize => 100);
+  ok($img->polypolygon
+     (
+      points => $poly,
+      filled => 1,
+      color => $white,
+      mode => "nonzero",
+     ), "default polypolygon");
+  my $cmp_nz = Imager->new(xsize => 100, ysize => 100);
+  $cmp_nz->box(filled => 1, color => $white, box => [ 10, 10, 89, 89 ]);
+  $cmp_nz->box(filled => 1, color => $black, box => [ 55, 20, 79, 79 ]);
+  is_image($img, $cmp_nz, "check non-zero matches");
+  push @out_files, "testout/250-poly-ppnz.ppm";
+  ok($img->write(file => "testout/250-poly-ppnz.ppm"),
+     "save to file");
+}
 
+Imager->close_log;
+
+Imager::malloc_state();
 
 #initialized in a BEGIN, later
 my %primitives;

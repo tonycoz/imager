@@ -31,6 +31,7 @@ typedef struct {
   pcord miny,maxy;
   pcord minx,maxx;
   int updown; /* -1 means down, 0 vertical, 1 up */
+  int dir; /* 1 for down, -1 for up */
 } p_line;
 
 typedef struct {
@@ -213,6 +214,7 @@ mark_updown_slices(p_line *lset, p_slice *tllist, int count) {
       (l->y1 > l->y2) ? -1 : 1
       : 
       (l->y1 > l->y2) ? 1 : -1;
+    l->dir = l->y1 < l->y2 ? 1 : -1;
 
     POLY_DEB( printf("marking left line %d as %s(%d)\n", l->n,
 		     l->updown ?  l->updown == 1 ? "up" : "down" : "vert", l->updown, l->updown)
@@ -236,6 +238,7 @@ mark_updown_slices(p_line *lset, p_slice *tllist, int count) {
       (r->y1 > r->y2) ? -1 : 1
       : 
       (r->y1 > r->y2) ? 1 : -1;
+    r->dir = r->y1 < r->y2 ? 1 : -1;
     
     POLY_DEB( printf("marking right line %d as %s(%d)\n", r->n,
 		     r->updown ?  r->updown == 1 ? "up" : "down" : "vert", r->updown, r->updown)
@@ -438,7 +441,8 @@ render_slice_scanline(ss_scanline *ss, int y, p_line *l, p_line *r, pcord miny, 
 
 static int
 i_poly_poly_aa_low(i_img *im, int count, const i_polygon_t *polys,
-		   void *ctx, scanline_flusher flusher) {
+		   i_poly_fill_mode_t mode, void *ctx,
+		   scanline_flusher flusher) {
   int i ,k;			/* Index variables */
   i_img_dim clc;		/* Lines inside current interval */
   /* initialize to avoid compiler warnings */
@@ -542,9 +546,28 @@ i_poly_poly_aa_low(i_img *im, int count, const i_polygon_t *polys,
       
       tempy = i_min(cscl*16+16, pset[i+1].y);
       POLY_DEB( printf("evaluating scan line %d \n", cscl) );
-      for(k=0; k<clc-1; k+=2) {
-	POLY_DEB( printf("evaluating slice %d\n", k) );
-	render_slice_scanline(&templine, cscl, lset+tllist[k].n, lset+tllist[k+1].n, scan_miny, scan_maxy);
+      if (mode == i_pfm_evenodd) {
+	for(k=0; k<clc-1; k+=2) {
+	  POLY_DEB( printf("evaluating slice %d\n", k) );
+	  render_slice_scanline(&templine, cscl, lset+tllist[k].n, lset+tllist[k+1].n, scan_miny, scan_maxy);
+	}
+      }
+      else {
+	k = 0;
+	while (k < clc) {
+	  p_line *left = lset + tllist[k++].n;
+	  p_line *current;
+	  int acc = left->dir;
+
+	  while (k < clc && acc) {
+	    current = lset + tllist[k++].n;
+	    acc += current->dir;
+	  }
+	  if (acc == 0) {
+	    render_slice_scanline(&templine, cscl, left, current,
+				  scan_miny, scan_maxy);
+	  }
+	}
       }
       if (16*coarse(tempy) == tempy) {
 	POLY_DEB( printf("flushing scan line %d\n", cscl) );
@@ -573,9 +596,20 @@ i_poly_poly_aa_low(i_img *im, int count, const i_polygon_t *polys,
 
 int
 i_poly_poly_aa(i_img *im, int count, const i_polygon_t *polys,
-	       const i_color *val) {
+	       i_poly_fill_mode_t mode, const i_color *val) {
   i_color c = *val;
-  return i_poly_poly_aa_low(im, count, polys, &c, scanline_flush);
+  return i_poly_poly_aa_low(im, count, polys, mode, &c, scanline_flush);
+}
+
+int
+i_poly_aa_m(i_img *im, int l, const double *x, const double *y,
+	    i_poly_fill_mode_t mode, const i_color *val) {
+  i_polygon_t poly;
+
+  poly.count = l;
+  poly.x = x;
+  poly.y = y;
+  return i_poly_poly_aa(im, 1, &poly, mode, val);
 }
 
 int
@@ -585,7 +619,7 @@ i_poly_aa(i_img *im, int l, const double *x, const double *y, const i_color *val
   poly.count = l;
   poly.x = x;
   poly.y = y;
-  return i_poly_poly_aa(im, 1, &poly, val);
+  return i_poly_poly_aa(im, 1, &poly, i_pfm_evenodd, val);
 }
 
 struct poly_render_state {
@@ -621,7 +655,7 @@ scanline_flush_render(i_img *im, ss_scanline *ss, int y, void *ctx) {
 
 int
 i_poly_poly_aa_cfill(i_img *im, int count, const i_polygon_t *polys,
-		     i_fill_t *fill) {
+		     i_poly_fill_mode_t mode, i_fill_t *fill) {
   struct poly_render_state ctx;
   int result;
 
@@ -629,12 +663,25 @@ i_poly_poly_aa_cfill(i_img *im, int count, const i_polygon_t *polys,
   ctx.fill = fill;
   ctx.cover = mymalloc(im->xsize);
 
-  result = i_poly_poly_aa_low(im, count, polys, &ctx, scanline_flush_render);
+  result = i_poly_poly_aa_low(im, count, polys, mode, &ctx,
+			      scanline_flush_render);
 
   myfree(ctx.cover);
   i_render_done(&ctx.render);
 
   return result;
+}
+
+int
+i_poly_aa_cfill_m(i_img *im, int l, const double *x, const double *y, 
+		i_poly_fill_mode_t mode, i_fill_t *fill) {
+  i_polygon_t poly;
+
+  poly.count = l;
+  poly.x = x;
+  poly.y = y;
+
+  return i_poly_poly_aa_cfill(im, 1, &poly, mode, fill);
 }
 
 int
@@ -646,5 +693,5 @@ i_poly_aa_cfill(i_img *im, int l, const double *x, const double *y,
   poly.x = x;
   poly.y = y;
 
-  return i_poly_poly_aa_cfill(im, 1, &poly, fill);
+  return i_poly_poly_aa_cfill(im, 1, &poly, i_pfm_evenodd, fill);
 }

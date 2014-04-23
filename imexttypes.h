@@ -217,7 +217,7 @@ typedef struct {
   size_t (*f_io_slurp)(i_io_glue_t *ig, unsigned char **c);
   void (*f_io_glue_destroy)(i_io_glue_t *ig);
 
-  /* IMAGER_API_LEVEL 8 functions will be added here */
+  /* IMAGER_API_LEVEL 8 */
   i_img *(*f_im_img_8_new)(im_context_t ctx, i_img_dim xsize, i_img_dim ysize, int channels);
   i_img *(*f_im_img_16_new)(im_context_t ctx, i_img_dim xsize, i_img_dim ysize, int channels);
   i_img *(*f_im_img_double_new)(im_context_t ctx, i_img_dim xsize, i_img_dim ysize, int channels);
@@ -254,6 +254,21 @@ typedef struct {
   im_slot_t (*f_im_context_slot_new)(im_slot_destroy_t);
   int (*f_im_context_slot_set)(im_context_t, im_slot_t, void *);
   void *(*f_im_context_slot_get)(im_context_t, im_slot_t);
+
+  /* IMAGER_API_LEVEL 9 */
+  int (*f_i_poly_poly_aa)(i_img *im, int count, const i_polygon_t *polys,
+			  i_poly_fill_mode_t mode, const i_color *val);
+  int (*f_i_poly_poly_aa_cfill)(i_img *im, int count, const i_polygon_t *polys,
+				i_poly_fill_mode_t mode, i_fill_t *fill);
+  int (*f_i_poly_aa_m)(i_img *im, int l, const double *x, const double *y,
+		       i_poly_fill_mode_t mode, const i_color *val);
+  int (*f_i_poly_aa_cfill_m)(i_img *im, int l, const double *x, 
+			     const double *y, i_poly_fill_mode_t mode,
+			     i_fill_t *fill);
+
+  /* IMAGER_API_LEVEL 10 functions will be added here */
+
+
 } im_ext_funcs;
 
 #define PERL_FUNCTION_TABLE_NAME "Imager::__ext_func_table"
