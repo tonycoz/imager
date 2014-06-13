@@ -1,3 +1,13 @@
+Imager-File-PNG 0.90
+====================
+
+ - support libpng 1.6.10.
+   1.6.10 changed CRC errors from benign errors to normal errors,
+   which broke the test which used CRC errors to check for benign
+   error support.  Switched to using a 1-bit grey-scale image with a
+   palette to test for benign errors.
+   https://rt.cpan.org/Ticket/Display.html?id=94717
+
 Imager-File-PNG 0.89
 ====================
 

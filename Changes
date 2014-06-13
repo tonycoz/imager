@@ -26,6 +26,13 @@ Imager release history.  Older releases can be found in Changes.old
    still available as "autolevels_skew".
    https://rt.cpan.org/Ticket/Display.html?id=94413
 
+ - Imager::File::PNG now supports libpng 1.6.10.
+   1.6.10 changed CRC errors from benign errors to normal errors,
+   which broke the test which used CRC errors to check for benign
+   error support.  Switched to using a 1-bit grey-scale image with a
+   palette to test for benign errors.
+   https://rt.cpan.org/Ticket/Display.html?id=94717
+
 Imager 0.98 - 3 Jan 2014
 ===========
 
