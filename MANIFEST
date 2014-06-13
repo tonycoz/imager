@@ -240,6 +240,7 @@ PNG/t/00load.t
 PNG/t/10png.t			Test png support
 PNG/testimg/badcrc.png
 PNG/testimg/bilevel.png
+PNG/testimg/bipalette.png	bi-level but with a palette
 PNG/testimg/comment.png
 PNG/testimg/cover.png
 PNG/testimg/cover16.png

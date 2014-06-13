@@ -10,7 +10,7 @@ my $debug_writes = 1;
 
 init_log("testout/t102png.log",1);
 
-plan tests => 249;
+plan tests => 251;
 
 # this loads Imager::File::PNG too
 ok($Imager::formats{"png"}, "must have png format");
@@ -183,11 +183,25 @@ EOS
 SKIP:
 { # ignoring "benign" errors
   $png_feat{"benign-errors"}
-      or skip "libpng not configured for benign error support", 1;
+      or skip "libpng not configured for benign error support", 3;
+
+ SKIP:
+  {
+    Imager::File::PNG::i_png_lib_version() < 10610
+	or skip "1.6.10 and later treat CRC errors as non-benign", 1;
+    my $im = Imager->new;
+    ok($im->read(file => "testimg/badcrc.png", type => "png",
+		 png_ignore_benign_errors => 1),
+       "read bad crc with png_ignore_benign_errors");
+  }
+
   my $im = Imager->new;
-  ok($im->read(file => "testimg/badcrc.png", type => "png",
+  ok($im->read(file => "testimg/bipalette.png", type => "png",
 	       png_ignore_benign_errors => 1),
-     "read bad crc with png_ignore_benign_errors");
+       "read grey image with palette with png_ignore_benign_errors");
+  ok(!$im->read(file => "testimg/bipalette.png", type => "png",
+	       png_ignore_benign_errors => 0),
+       "read grey image with palette without png_ignore_benign_errors should fail");
 }
 
 { # write error reporting
