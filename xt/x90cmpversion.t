@@ -32,8 +32,8 @@ plan tests => scalar(@subdirs) + scalar(@pm_files)
   unless $report;
 
 for my $dir (@subdirs) {
-  my @changes = `git log --abbrev --oneline $last_tag..HEAD $dir`;
-  my @more_changes = `git status --porcelain $dir`;
+  my @changes = `git log --abbrev --oneline $last_tag..HEAD -- $dir`;
+  my @more_changes = `git status --porcelain -- $dir`;
   if ($report) {
     print "$dir updated\n" if @changes || @more_changes;
   }
