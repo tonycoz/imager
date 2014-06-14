@@ -31,7 +31,7 @@ extern "C" {
 #include "imperl.h"
 
 #ifndef SV_COW_DROP_PV
-#define SV_COW_DROP_PV
+#define SV_COW_DROP_PV 0
 #endif
 
 /*
