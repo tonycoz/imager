@@ -42,8 +42,8 @@ Create a new I/O layer based on a memory buffer.
 Buffer I/O layers are read only.
 
 C<$data> can either a simple octet string, or a reference to an octet
-string.  If C<$data> contains characters with a code point above 0xFF
-an exception will be thrown.
+string.  If C<$data> contains characters with a code point above
+C<0xFF> an exception will be thrown.
 
 =item new_cb($writecb, $readcb, $seekcb, $closecb)
 
