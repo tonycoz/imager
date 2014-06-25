@@ -237,10 +237,8 @@ the image.
 =item *
 
 C<data> - When reading data, C<data> is a scalar containing the image
-file data, when writing, C<data> is a reference to the scalar to save
-the image file data too.  For GIF images you will need C<giflib> 4 or
-higher, and you may need to patch C<giflib> to use this option for
-writing.
+file data, or a reference to such a scalar.  When writing, C<data> is
+a reference to the scalar to save the image file data to.
 
   my $data;
   $image->write(data => \$data, type => 'tiff')
@@ -248,6 +246,10 @@ writing.
 
   my $data = $row->{someblob}; # eg. from a database
   my @images = Imager->read_multi(data => $data)
+    or die Imager->errstr;
+
+  # from Imager 0.99
+  my @images = Imager->read_multi(data => \$data)
     or die Imager->errstr;
 
 =item *

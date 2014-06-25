@@ -39,10 +39,11 @@ Create a new I/O layer based on a file descriptor.
 
 Create a new I/O layer based on a memory buffer.
 
-The supplied variable must not be changed during the life of the I/O
-object.
-
 Buffer I/O layers are read only.
+
+C<$data> can either a simple octet string, or a reference to an octet
+string.  If C<$data> contains characters with a code point above 0xFF
+an exception will be thrown.
 
 =item new_cb($writecb, $readcb, $seekcb, $closecb)
 
