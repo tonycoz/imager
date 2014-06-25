@@ -1,5 +1,8 @@
 Imager release history.  Older releases can be found in Changes.old
 
+Imager 0.99 - 25 Jun 2014
+===========
+
  - Imager::IO->new_buffer() (and hence Imager->read()'s data
    parameter) now accepts a reference to a scalar as well as just a
    plain scalar.
