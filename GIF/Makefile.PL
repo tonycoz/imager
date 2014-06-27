@@ -120,13 +120,13 @@ int ver_min;
 #else
 int ver_maj = GIFLIB_MAJOR;
 int ver_min = GIFLIB_MINOR;
-int error;
 #endif
 GifColorType colors[2];
 ColorMapObject *map;
 FILE *fh;
 char buf[6];
 int mode;
+int error;
 #if defined(GIFLIB_MAJOR) && GIFLIB_MAJOR >= 5
 gf=DGifOpenFileName("testimg/expected.gif", &error);
 #else
@@ -203,7 +203,11 @@ for (mode = 0; mode < 2; ++mode) {
   EGifPutScreenDesc(gf, 1, 1, 1, 0, map);
   EGifPutImageDesc(gf, 0, 0, 1, 1, 0, NULL);
   EGifPutPixel(gf, 0);
+#if defined(GIFLIB_MAJOR) && ((GIFLIB_MAJOR >= 5 && GIFLIB_MINOR >= 1) || GIFLIB_MAJOR >= 6)
+  EGifCloseFile(gf, &error);
+#else
   EGifCloseFile(gf);
+#endif
 
   fh = fopen("probe.gif", "r");
   if (!fh) {

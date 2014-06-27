@@ -59,7 +59,15 @@ functionality with giflib3.
 =cut
 */
 
-#if defined(GIFLIB_MAJOR) && GIFLIB_MAJOR >= 5
+#ifdef GIFLIB_MAJOR
+#define IMGIFLIB_API_VERSION (GIFLIB_MAJOR * 100 + GIFLIB_MINOR)
+#else
+/* only matters for pre-5.0 which we either reject, or which contains
+   no significant API changes */
+#define IMGIFLIB_API_VERSION 0
+#endif
+
+#if IMGIFLIB_API_VERSION >= 500
 #define POST_SET_VERSION
 #define myDGifOpen(userPtr, readFunc, Error) DGifOpen((userPtr), (readFunc), (Error))
 #define myEGifOpen(userPtr, readFunc, Error) EGifOpen((userPtr), (readFunc), (Error))
@@ -92,6 +100,37 @@ myEGifOpen(void *userPtr, OutputFunc outputFunc, int *error) {
 
 #endif
 
+#if IMGIFLIB_API_VERSION >= 501
+#define myDGifCloseFile(gif, perror) (DGifCloseFile((gif), (perror)))
+#define myEGifCloseFile(gif, perror) (EGifCloseFile((gif), (perror)))
+#else
+static int
+myDGifCloseFile(GifFileType *GifFile, int *ErrorCode) {
+  int result = DGifCloseFile(GifFile);
+  if (result == GIF_ERROR) {
+    if (ErrorCode)
+      *ErrorCode = myGifError(GifFile);
+    free(GifFile->Private);
+    free(GifFile);
+  }
+
+  return result;
+}
+
+static int
+myEGifCloseFile(GifFileType *GifFile, int *ErrorCode) {
+  int result = EGifCloseFile(GifFile);
+  if (result == GIF_ERROR) {
+    if (ErrorCode)
+      *ErrorCode = myGifError(GifFile);
+    free(GifFile->Private);
+    free(GifFile);
+  }
+
+  return result;
+}
+#endif
+
 static char const *gif_error_msg(int code);
 static void gif_push_error(int code);
 
@@ -101,13 +140,13 @@ static const int
   InterlacedOffset[] = { 0, 4, 2, 1 }, /* The way Interlaced image should. */
   InterlacedJumps[] = { 8, 8, 4, 2 };    /* be read - offsets and jumps... */
 
-#if !defined(GIFLIB_MAJOR) || GIFLIB_MAJOR < 5
+#if IMGIFLIB_API_VERSION < 500
 static i_mutex_t mutex;
 #endif
 
 void
 i_init_gif(void) {
-#if !defined(GIFLIB_MAJOR) || GIFLIB_MAJOR < 5
+#if IMGIFLIB_API_VERSION < 500
   mutex = i_mutex_new();
 #endif
 }
@@ -182,6 +221,7 @@ i_readgif_low(GifFileType *GifFile, int **colour_table, int *colours) {
   GifRowType GifRow;
   GifColorType *ColorMapEntry;
   i_color col;
+  int error;
 
   mm_log((1,"i_readgif_low(GifFile %p, colour_table %p, colours %p)\n", GifFile, colour_table, colours));
 
@@ -203,7 +243,7 @@ i_readgif_low(GifFileType *GifFile, int **colour_table, int *colours) {
       myfree(*colour_table);
       *colour_table = NULL;
     }
-    DGifCloseFile(GifFile);
+    (void)myDGifCloseFile(GifFile, NULL);
     mm_log((1, "i_readgif: image size exceeds limits\n"));
     return NULL;
   }
@@ -214,7 +254,7 @@ i_readgif_low(GifFileType *GifFile, int **colour_table, int *colours) {
       myfree(*colour_table);
       *colour_table = NULL;
     }
-    DGifCloseFile(GifFile);
+    (void)myDGifCloseFile(GifFile, NULL);
     return NULL;
   }
 
@@ -235,7 +275,7 @@ i_readgif_low(GifFileType *GifFile, int **colour_table, int *colours) {
       }
       myfree(GifRow);
       i_img_destroy(im);
-      DGifCloseFile(GifFile);
+      (void)myDGifCloseFile(GifFile, NULL);
       return NULL;
     }
     
@@ -250,7 +290,7 @@ i_readgif_low(GifFileType *GifFile, int **colour_table, int *colours) {
 	}
 	myfree(GifRow);
 	i_img_destroy(im);
-	DGifCloseFile(GifFile);
+	(void)myDGifCloseFile(GifFile, NULL);
 	return NULL;
       }
 
@@ -267,7 +307,7 @@ i_readgif_low(GifFileType *GifFile, int **colour_table, int *colours) {
 	/* we can't have allocated a colour table here */
 	myfree(GifRow);
 	i_img_destroy(im);
-	DGifCloseFile(GifFile);
+	(void)myDGifCloseFile(GifFile, NULL);
 	return NULL;
       }
       
@@ -287,7 +327,7 @@ i_readgif_low(GifFileType *GifFile, int **colour_table, int *colours) {
 	}
 	myfree(GifRow);
 	i_img_destroy(im);
-	DGifCloseFile(GifFile);
+	(void)myDGifCloseFile(GifFile, NULL);
 	return NULL;
       }
       if (GifFile->Image.Interlace) {
@@ -303,7 +343,7 @@ i_readgif_low(GifFileType *GifFile, int **colour_table, int *colours) {
 	    }
 	    myfree(GifRow);
 	    i_img_destroy(im);
-	    DGifCloseFile(GifFile);
+	    (void)myDGifCloseFile(GifFile, NULL);
 	    return NULL;
 	  }
 	  
@@ -328,7 +368,7 @@ i_readgif_low(GifFileType *GifFile, int **colour_table, int *colours) {
 	    }
 	    myfree(GifRow);
 	    i_img_destroy(im);
-	    DGifCloseFile(GifFile);
+	    (void)myDGifCloseFile(GifFile, NULL);
 	    return NULL;
 	  }
 
@@ -354,7 +394,7 @@ i_readgif_low(GifFileType *GifFile, int **colour_table, int *colours) {
 	}
 	myfree(GifRow);
 	i_img_destroy(im);
-	DGifCloseFile(GifFile);
+	(void)myDGifCloseFile(GifFile, NULL);
 	return NULL;
       }
       while (Extension != NULL) {
@@ -367,7 +407,7 @@ i_readgif_low(GifFileType *GifFile, int **colour_table, int *colours) {
 	  }
 	  myfree(GifRow);
 	  i_img_destroy(im);
-	  DGifCloseFile(GifFile);
+	  (void)myDGifCloseFile(GifFile, NULL);
 	  return NULL;
 	}
       }
@@ -381,8 +421,8 @@ i_readgif_low(GifFileType *GifFile, int **colour_table, int *colours) {
   
   myfree(GifRow);
   
-  if (DGifCloseFile(GifFile) == GIF_ERROR) {
-    gif_push_error(myGifError(GifFile));
+  if (myDGifCloseFile(GifFile, &error) == GIF_ERROR) {
+    gif_push_error(error);
     i_push_error(0, "Closing GIF file object");
     if (colour_table && *colour_table) {
       myfree(*colour_table);
@@ -521,6 +561,7 @@ i_readgif_multi_low(GifFileType *GifFile, int *count, int page) {
   int channels;
   int image_colors = 0;
   i_color black; /* used to expand the palette if needed */
+  int error;
 
   for (i = 0; i < MAXCHANNELS; ++i)
     black.channel[i] = 0;
@@ -539,7 +580,7 @@ i_readgif_multi_low(GifFileType *GifFile, int *count, int page) {
       gif_push_error(myGifError(GifFile));
       i_push_error(0, "Unable to get record type");
       free_images(results, *count);
-      DGifCloseFile(GifFile);
+      (void)myDGifCloseFile(GifFile, NULL);
       myfree(GifRow);
       if (comment)
 	myfree(comment);
@@ -552,7 +593,7 @@ i_readgif_multi_low(GifFileType *GifFile, int *count, int page) {
 	gif_push_error(myGifError(GifFile));
 	i_push_error(0, "Unable to get image descriptor");
         free_images(results, *count);
-	DGifCloseFile(GifFile);
+	(void)myDGifCloseFile(GifFile, NULL);
 	myfree(GifRow);
 	if (comment)
 	  myfree(comment);
@@ -571,7 +612,7 @@ i_readgif_multi_low(GifFileType *GifFile, int *count, int page) {
 	  mm_log((1, "Going in with no colormap\n"));
 	  i_push_error(0, "Image does not have a local or a global color map");
 	  free_images(results, *count);
-	  DGifCloseFile(GifFile);
+	  (void)myDGifCloseFile(GifFile, NULL);
 	  myfree(GifRow);
 	  if (comment)
 	    myfree(comment);
@@ -584,7 +625,7 @@ i_readgif_multi_low(GifFileType *GifFile, int *count, int page) {
 	if (!i_int_check_image_file_limits(Width, Height, channels, sizeof(i_sample_t))) {
 	  free_images(results, *count);
 	  mm_log((1, "i_readgif: image size exceeds limits\n"));
-	  DGifCloseFile(GifFile);
+	  (void)myDGifCloseFile(GifFile, NULL);
 	  myfree(GifRow);
 	  if (comment)
 	    myfree(comment);
@@ -593,7 +634,7 @@ i_readgif_multi_low(GifFileType *GifFile, int *count, int page) {
 	img = i_img_pal_new(Width, Height, channels, 256);
 	if (!img) {
 	  free_images(results, *count);
-	  DGifCloseFile(GifFile);
+	  (void)myDGifCloseFile(GifFile, NULL);
 	  if (comment)
 	    myfree(comment);
 	  myfree(GifRow);
@@ -669,7 +710,7 @@ i_readgif_multi_low(GifFileType *GifFile, int *count, int page) {
 	    GifFile->Image.Top + GifFile->Image.Height > GifFile->SHeight) {
 	  i_push_errorf(0, "Image %d is not confined to screen dimension, aborted.\n",ImageNum);
 	  free_images(results, *count);        
-	  DGifCloseFile(GifFile);
+	  (void)myDGifCloseFile(GifFile, NULL);
 	  myfree(GifRow);
 	  if (comment)
 	    myfree(comment);
@@ -685,7 +726,7 @@ i_readgif_multi_low(GifFileType *GifFile, int *count, int page) {
 		gif_push_error(myGifError(GifFile));
 		i_push_error(0, "Reading GIF line");
 		free_images(results, *count);
-		DGifCloseFile(GifFile);
+		(void)myDGifCloseFile(GifFile, NULL);
 		myfree(GifRow);
 		if (comment)
 		  myfree(comment);
@@ -714,7 +755,7 @@ i_readgif_multi_low(GifFileType *GifFile, int *count, int page) {
 	      gif_push_error(myGifError(GifFile));
 	      i_push_error(0, "Reading GIF line");
 	      free_images(results, *count);
-	      DGifCloseFile(GifFile);
+	      (void)myDGifCloseFile(GifFile, NULL);
 	      myfree(GifRow);
 	      if (comment)
 		myfree(comment);
@@ -740,7 +781,7 @@ i_readgif_multi_low(GifFileType *GifFile, int *count, int page) {
 	/* must be only one image wanted and that was it */
 	if (page != -1) {
 	  myfree(GifRow);
-	  DGifCloseFile(GifFile);
+	  (void)myDGifCloseFile(GifFile, NULL);
 	  if (comment)
 	    myfree(comment);
 	  return results;
@@ -756,7 +797,7 @@ i_readgif_multi_low(GifFileType *GifFile, int *count, int page) {
 	    i_push_error(0, "Reading GIF line");
 	    free_images(results, *count);
 	    myfree(GifRow);
-	    DGifCloseFile(GifFile);
+	    (void)myDGifCloseFile(GifFile, NULL);
 	    if (comment) 
 	      myfree(comment);
 	    return NULL;
@@ -778,7 +819,7 @@ i_readgif_multi_low(GifFileType *GifFile, int *count, int page) {
 	i_push_error(0, "Reading extension record");
         free_images(results, *count);
 	myfree(GifRow);
-	DGifCloseFile(GifFile);
+	(void)myDGifCloseFile(GifFile, NULL);
 	if (comment)
 	  myfree(comment);
 	return NULL;
@@ -803,7 +844,7 @@ i_readgif_multi_low(GifFileType *GifFile, int *count, int page) {
             i_push_error(0, "reading loop extension");
             free_images(results, *count);
 	    myfree(GifRow);
-	    DGifCloseFile(GifFile);
+	    (void)myDGifCloseFile(GifFile, NULL);
 	    if (comment)
 	      myfree(comment);
             return NULL;
@@ -833,7 +874,7 @@ i_readgif_multi_low(GifFileType *GifFile, int *count, int page) {
 	  i_push_error(0, "reading next block of extension");
           free_images(results, *count);
 	  myfree(GifRow);
-	  DGifCloseFile(GifFile);
+	  (void)myDGifCloseFile(GifFile, NULL);
 	  if (comment)
 	    myfree(comment);
 	  return NULL;
@@ -857,8 +898,8 @@ i_readgif_multi_low(GifFileType *GifFile, int *count, int page) {
   
   myfree(GifRow);
   
-  if (DGifCloseFile(GifFile) == GIF_ERROR) {
-    gif_push_error(myGifError(GifFile));
+  if (myDGifCloseFile(GifFile, &error) == GIF_ERROR) {
+    gif_push_error(error);
     i_push_error(0, "Closing GIF file object");
     free_images(results, *count);
     return NULL;
@@ -1027,7 +1068,6 @@ do_write(GifFileType *gf, int interlace, i_img *img, i_palidx *data) {
 	  gif_push_error(myGifError(gf));
 	  i_push_error(0, "Could not save image data:");
 	  mm_log((1, "Error in EGifPutLine\n"));
-	  EGifCloseFile(gf);
 	  return 0;
 	}
       }
@@ -1040,7 +1080,6 @@ do_write(GifFileType *gf, int interlace, i_img *img, i_palidx *data) {
 	gif_push_error(myGifError(gf));
 	i_push_error(0, "Could not save image data:");
 	mm_log((1, "Error in EGifPutLine\n"));
-	EGifCloseFile(gf);
 	return 0;
       }
       data += img->xsize;
@@ -1168,7 +1207,7 @@ do_ns_loop(GifFileType *gf, i_img *img)
     subblock[1] = loop_count % 256;
     subblock[2] = loop_count / 256;
 
-#if defined(GIFLIB_MAJOR) && GIFLIB_MAJOR >= 5
+#if IMGIFLIB_API_VERSION >= 500
     if (EGifPutExtensionLeader(gf, APPLICATION_EXT_FUNC_CODE) == GIF_ERROR
 	|| EGifPutExtensionBlock(gf, 11, nsle) == GIF_ERROR
 	|| EGifPutExtensionBlock(gf, 3, subblock) == GIF_ERROR
@@ -1242,7 +1281,7 @@ make_gif_map(i_quantize *quant, i_img *img, int want_trans) {
     i_push_error(0, "Could not create color map object");
     return NULL;
   }
-#if defined GIFLIB_MAJOR && GIFLIB_MAJOR >= 5
+#if IMGIFLIB_API_VERSION >= 500
   map->SortFlag = 0;
 #endif
   return map;
@@ -1435,6 +1474,7 @@ i_writegif_low(i_quantize *quant, GifFileType *gf, i_img **imgs, int count) {
   int want_trans = 0;
   int interlace;
   int gif_background;
+  int error;
 
   mm_log((1, "i_writegif_low(quant %p, gf  %p, imgs %p, count %d)\n", 
 	  quant, gf, imgs, count));
@@ -1545,7 +1585,7 @@ i_writegif_low(i_quantize *quant, GifFileType *gf, i_img **imgs, int count) {
     myfree(localmaps);
     myfree(glob_imgs);
     quant->mc_colors = orig_colors;
-    EGifCloseFile(gf);
+    (void)myEGifCloseFile(gf, NULL);
     mm_log((1, "Error in MakeMapObject"));
     return 0;
   }
@@ -1574,7 +1614,7 @@ i_writegif_low(i_quantize *quant, GifFileType *gf, i_img **imgs, int count) {
     i_push_error(0, "Could not save screen descriptor");
     FreeMapObject(map);
     myfree(result);
-    EGifCloseFile(gf);
+    (void)myEGifCloseFile(gf, NULL);
     mm_log((1, "Error in EGifPutScreenDesc."));
     return 0;
   }
@@ -1612,7 +1652,7 @@ i_writegif_low(i_quantize *quant, GifFileType *gf, i_img **imgs, int count) {
 	myfree(glob_colors);
 	myfree(localmaps);
 	myfree(glob_imgs);
-        EGifCloseFile(gf);
+        (void)myEGifCloseFile(gf, NULL);
         quant->mc_colors = orig_colors;
         mm_log((1, "Error in MakeMapObject"));
         return 0;
@@ -1634,7 +1674,7 @@ i_writegif_low(i_quantize *quant, GifFileType *gf, i_img **imgs, int count) {
     myfree(localmaps);
     myfree(glob_imgs);
     quant->mc_colors = orig_colors;
-    EGifCloseFile(gf);
+    (void)myEGifCloseFile(gf, NULL);
     return 0;
   }
   if (want_trans) {
@@ -1656,7 +1696,7 @@ i_writegif_low(i_quantize *quant, GifFileType *gf, i_img **imgs, int count) {
     myfree(glob_imgs);
     quant->mc_colors = orig_colors;
     myfree(result);
-    EGifCloseFile(gf);
+    (void)myEGifCloseFile(gf, NULL);
     return 0;
   }
 
@@ -1666,7 +1706,7 @@ i_writegif_low(i_quantize *quant, GifFileType *gf, i_img **imgs, int count) {
     myfree(glob_imgs);
     quant->mc_colors = orig_colors;
     myfree(result);
-    EGifCloseFile(gf);
+    (void)myEGifCloseFile(gf, NULL);
     return 0;
   }
 
@@ -1680,7 +1720,7 @@ i_writegif_low(i_quantize *quant, GifFileType *gf, i_img **imgs, int count) {
     quant->mc_colors = orig_colors;
     gif_push_error(myGifError(gf));
     i_push_error(0, "Could not save image descriptor");
-    EGifCloseFile(gf);
+    (void)myEGifCloseFile(gf, NULL);
     mm_log((1, "Error in EGifPutImageDesc."));
     return 0;
   }
@@ -1692,7 +1732,7 @@ i_writegif_low(i_quantize *quant, GifFileType *gf, i_img **imgs, int count) {
     myfree(localmaps);
     myfree(glob_imgs);
     quant->mc_colors = orig_colors;
-    EGifCloseFile(gf);
+    (void)myEGifCloseFile(gf, NULL);
     myfree(result);
     return 0;
   }
@@ -1727,7 +1767,7 @@ i_writegif_low(i_quantize *quant, GifFileType *gf, i_img **imgs, int count) {
 	myfree(localmaps);
 	myfree(glob_imgs);
         quant->mc_colors = orig_colors;
-        EGifCloseFile(gf);
+        (void)myEGifCloseFile(gf, NULL);
         mm_log((1, "error in i_quant_translate()"));
         return 0;
       }
@@ -1742,7 +1782,7 @@ i_writegif_low(i_quantize *quant, GifFileType *gf, i_img **imgs, int count) {
 	myfree(glob_imgs);
         quant->mc_colors = orig_colors;
         myfree(result);
-        EGifCloseFile(gf);
+        (void)myEGifCloseFile(gf, NULL);
         mm_log((1, "Error in MakeMapObject."));
         return 0;
       }
@@ -1768,7 +1808,7 @@ i_writegif_low(i_quantize *quant, GifFileType *gf, i_img **imgs, int count) {
       myfree(glob_imgs);
       quant->mc_colors = orig_colors;
       myfree(result);
-      EGifCloseFile(gf);
+      (void)myEGifCloseFile(gf, NULL);
       return 0;
     }
 
@@ -1778,7 +1818,7 @@ i_writegif_low(i_quantize *quant, GifFileType *gf, i_img **imgs, int count) {
       myfree(glob_imgs);
       quant->mc_colors = orig_colors;
       myfree(result);
-      EGifCloseFile(gf);
+      (void)myEGifCloseFile(gf, NULL);
       return 0;
     }
 
@@ -1800,7 +1840,7 @@ i_writegif_low(i_quantize *quant, GifFileType *gf, i_img **imgs, int count) {
       myfree(result);
       if (map)
         FreeMapObject(map);
-      EGifCloseFile(gf);
+      (void)myEGifCloseFile(gf, NULL);
       mm_log((1, "Error in EGifPutImageDesc."));
       return 0;
     }
@@ -1812,18 +1852,18 @@ i_writegif_low(i_quantize *quant, GifFileType *gf, i_img **imgs, int count) {
       myfree(localmaps);
       myfree(glob_imgs);
       quant->mc_colors = orig_colors;
-      EGifCloseFile(gf);
+      (void)myEGifCloseFile(gf, NULL);
       myfree(result);
       return 0;
     }
     myfree(result);
   }
 
-  if (EGifCloseFile(gf) == GIF_ERROR) {
+  if (myEGifCloseFile(gf, &error) == GIF_ERROR) {
     myfree(glob_colors);
     myfree(localmaps);
     myfree(glob_imgs);
-    gif_push_error(myGifError(gf));
+    gif_push_error(error);
     i_push_error(0, "Could not close GIF file");
     mm_log((1, "Error in EGifCloseFile\n"));
     return 0;
@@ -1905,7 +1945,7 @@ Returns NULL for unknown error codes.
 
 static char const *
 gif_error_msg(int code) {
-#if defined(GIFLIB_MAJOR) && GIFLIB_MAJOR >= 5
+#if IMGIFLIB_API_VERSION >= 500
   return GifErrorString(code);
 #else
   switch (code) {

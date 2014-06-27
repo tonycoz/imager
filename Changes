@@ -1,5 +1,11 @@
 Imager release history.  Older releases can be found in Changes.old
 
+ - GIF: add support for giflib 5.1.0, which added error code pointer
+   parameters to EGifCloseFile() and DGifCloseFile().
+   https://rt.cpan.org/Ticket/Display.html?id=96756
+
+ - GIF: avoid a double-free when do_write() fails.
+
 Imager 0.99 - 25 Jun 2014
 ===========
 
