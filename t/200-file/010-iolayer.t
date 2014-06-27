@@ -1,6 +1,6 @@
 #!perl -w
 use strict;
-use Test::More tests => 275;
+use Test::More tests => 287;
 use Imager::Test qw(is_image);
 # for SEEK_SET etc, Fcntl doesn't provide these in 5.005_03
 use IO::Seekable;
@@ -893,10 +893,47 @@ SKIP:
 { # pass buffer by reference
   my $data = "This is a test";
   my $data2 = $data;
-  my $io = Imager::IO->new_buffer(\$data2);
+  my $io = Imager::IO->new_buffer(\$data2)
+    or diag "Can't create from SV REF:", Imager->_error_as_msg;
   undef $data2;
   my $tmp = $io->read2(1000);
   is($tmp, $data, "buffer io created by reference");
+}
+
+{
+  my @buffer_tests =
+    (
+     [ 1000, "IV" ],
+     [ 1000.1, "NV" ],
+     [ qr/abcd/, "regexp",
+       $> >= 5.012 && "Can't use regexps as a buffer before 5.14" ],
+    );
+  for my $test (@buffer_tests) {
+    my ($val, $note, $skip) = @$test;
+  SKIP:
+    {
+      $skip and skip $skip, 4;
+    SKIP:
+      {
+	my $temp = $val;
+	my $io = Imager::IO->new_buffer(\$temp);
+	ok($io, "$note/ref: open_buffer")
+	  or skip "couldn't open", 1;
+	my $read = $io->read2(1000);
+	is($read, "$val", "$note/ref: read result");
+      }
+
+    SKIP:
+      {
+	my $temp = $val;
+	my $io = Imager::IO->new_buffer($temp);
+	ok($io, "$note: open_buffer")
+	  or skip "couldn't open", 1;
+	my $read = $io->read2(1000);
+	is($read, "$val", "$note: read result");
+      }
+    }
+  }
 }
 
 Imager->close_log;

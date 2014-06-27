@@ -454,38 +454,23 @@ static void io_destroyer(void *p) {
 static bool
 im_SvREFSCALAR(SV *sv) {
   svtype type = SvTYPE(sv);
-  return type == SVt_PV || type == SVt_PVIV || type == SVt_PVNV
-      || type == SVt_PVMG || type == SVt_IV || type == SVt_NV
-      || type == SVt_PVLV || type == SVt_REGEXP;
-}
 
-static i_io_glue_t *
-do_io_new_buffer(pTHX_ SV *data_sv) {
-  const char *data;
-  char *data_copy;
-  STRLEN length;
-  SV *sv;
+  switch (type) {
+  case SVt_PV:
+  case SVt_PVIV:
+  case SVt_PVNV:
+  case SVt_PVMG:
+  case SVt_IV:
+  case SVt_NV:
+  case SVt_PVLV:
+#if PERL_VERSION > 10
+  case SVt_REGEXP:
+#endif
+    return 1;
 
-  SvGETMAGIC(data_sv);
-  if (SvROK(data_sv)) {
-    if (im_SvREFSCALAR(data_sv)) {
-      sv = SvRV(data_sv);
-    }
-    else {
-      i_push_error(0, "data is not a scalar or a reference to scalar");
-      return NULL;
-    }
+  default:
+    return 0;
   }
-  else {
-    sv = data_sv;
-  }
-
-  /* previously this would keep the SV around, but this is unsafe in
-     many ways, so always copy the bytes */
-  data = SvPVbyte(sv, length);
-  data_copy = mymalloc(length);
-  memcpy(data_copy, data, length);
-  return io_new_buffer(data_copy, length, free_buffer, data_copy);
 }
 
 static const char *
@@ -507,6 +492,35 @@ describe_sv(SV *sv) {
   else {
     return "undef";
   }
+}
+
+static i_io_glue_t *
+do_io_new_buffer(pTHX_ SV *data_sv) {
+  const char *data;
+  char *data_copy;
+  STRLEN length;
+  SV *sv;
+
+  SvGETMAGIC(data_sv);
+  if (SvROK(data_sv)) {
+    if (im_SvREFSCALAR(SvRV(data_sv))) {
+      sv = SvRV(data_sv);
+    }
+    else {
+      i_push_errorf(0, "data is not a scalar or a reference to scalar");
+      return NULL;
+    }
+  }
+  else {
+    sv = data_sv;
+  }
+
+  /* previously this would keep the SV around, but this is unsafe in
+     many ways, so always copy the bytes */
+  data = SvPVbyte(sv, length);
+  data_copy = mymalloc(length);
+  memcpy(data_copy, data, length);
+  return io_new_buffer(data_copy, length, free_buffer, data_copy);
 }
 
 static i_io_glue_t *
