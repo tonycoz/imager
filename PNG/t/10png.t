@@ -195,13 +195,18 @@ SKIP:
        "read bad crc with png_ignore_benign_errors");
   }
 
-  my $im = Imager->new;
-  ok($im->read(file => "testimg/bipalette.png", type => "png",
-	       png_ignore_benign_errors => 1),
+ SKIP:
+  {
+    Imager::File::PNG::i_png_lib_version() >= 10600
+	or skip "unused palette not benign errored before 1.6.0", 2;
+    my $im = Imager->new;
+    ok($im->read(file => "testimg/bipalette.png", type => "png",
+		 png_ignore_benign_errors => 1),
        "read grey image with palette with png_ignore_benign_errors");
-  ok(!$im->read(file => "testimg/bipalette.png", type => "png",
-	       png_ignore_benign_errors => 0),
+    ok(!$im->read(file => "testimg/bipalette.png", type => "png",
+		  png_ignore_benign_errors => 0),
        "read grey image with palette without png_ignore_benign_errors should fail");
+  }
 }
 
 { # write error reporting

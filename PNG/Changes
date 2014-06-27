@@ -1,3 +1,9 @@
+Imager-File-PNG 0.91
+====================
+
+ - skip the benign tests before libpng 1.6.0 since older versions do
+   not treat an extranrous palette as any sort of error.
+
 Imager-File-PNG 0.90
 ====================
 

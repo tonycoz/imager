@@ -9,6 +9,10 @@ Imager release history.  Older releases can be found in Changes.old
  - fix SV type probing to work on perl before 5.12.
    https://rt.cpan.org/Ticket/Display.html?id=96761
 
+ - PNG: skip the benign error test before libpng 1.6.0, since the
+   error we're testing didn't exist before 1.6.0.
+   https://rt.cpan.org/Ticket/Display.html?id=94717 (continued)
+
 Imager 0.99 - 25 Jun 2014
 ===========
 
