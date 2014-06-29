@@ -6,7 +6,7 @@ Imager release history.  Older releases can be found in Changes.old
 
  - GIF: avoid a double-free when do_write() fails.
 
- - fix SV type probing to work on perl before 5.12.
+ - fix SV type probing to work on perl before 5.12.  Broken in 0.99.
    https://rt.cpan.org/Ticket/Display.html?id=96761
 
  - PNG: skip the benign error test before libpng 1.6.0, since the
