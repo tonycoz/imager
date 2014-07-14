@@ -30,10 +30,6 @@ extern "C" {
 
 #include "imperl.h"
 
-#ifndef SV_COW_DROP_PV
-#define SV_COW_DROP_PV 0
-#endif
-
 /*
 
 Context object management
@@ -1298,9 +1294,15 @@ i_io_raw_read(ig, buffer_sv, size)
       PPCODE:
         if (size <= 0)
 	  croak("size negative in call to i_io_raw_read()");
-	if (SvTHINKFIRST(buffer_sv))
-	  sv_force_normal_flags(buffer_sv, SV_COW_DROP_PV);
-	SvUPGRADE(buffer_sv, SVt_PV);
+        /* prevent an undefined value warning if they supplied an 
+          undef buffer.
+           Orginally conditional on !SvOK(), but this will prevent the
+          downgrade from croaking */
+       sv_setpvn(buffer_sv, "", 0);
+#ifdef SvUTF8
+       if (SvUTF8(buffer_sv))
+          sv_utf8_downgrade(buffer_sv, FALSE);
+#endif
 	buffer = SvGROW(buffer_sv, size+1);
         result = i_io_raw_read(ig, buffer, size);
         if (result >= 0) {
@@ -1423,9 +1425,15 @@ i_io_read(ig, buffer_sv, size)
       PPCODE:
         if (size <= 0)
 	  croak("size negative in call to i_io_read()");
-	if (SvTHINKFIRST(buffer_sv))
-	  sv_force_normal_flags(buffer_sv, SV_COW_DROP_PV);
-	SvUPGRADE(buffer_sv, SVt_PV);
+        /* prevent an undefined value warning if they supplied an 
+          undef buffer.
+           Orginally conditional on !SvOK(), but this will prevent the
+          downgrade from croaking */
+       sv_setpvn(buffer_sv, "", 0);
+#ifdef SvUTF8
+       if (SvUTF8(buffer_sv))
+          sv_utf8_downgrade(buffer_sv, FALSE);
+#endif
 	buffer = SvGROW(buffer_sv, size+1);
         result = i_io_read(ig, buffer, size);
         if (result >= 0) {
