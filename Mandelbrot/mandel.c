@@ -44,14 +44,14 @@ mandelbrot(i_img *im, double minx, double miny, double maxx, double maxy, int ma
   i_color icl[256];
   srand(12235);
   for(i=1;i<256; i++) {
-    icl[i].rgb.r = 100+(int) (155.0*rand()/(RAND_MAX+1.0));
-    icl[i].rgb.g = 100+(int) (155.0*rand()/(RAND_MAX+1.0));
-    icl[i].rgb.g = 100+(int) (155.0*rand()/(RAND_MAX+1.0));
+    icl[i].rgb.r = 100+(int) (156.0*rand()/(RAND_MAX+1.0));
+    icl[i].rgb.g = 100+(int) (156.0*rand()/(RAND_MAX+1.0));
+    icl[i].rgb.b = 100+(int) (156.0*rand()/(RAND_MAX+1.0));
   }
 
   icl[0].rgb.r = 0;
   icl[0].rgb.g = 0;
-  icl[0].rgb.g = 0;
+  icl[0].rgb.b = 0;
     
   if (maxx <= minx)
     maxx = minx + 1.0;
