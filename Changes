@@ -1,5 +1,15 @@
 Imager release history.  Older releases can be found in Changes.old
 
+ - Imager::Filter::Mandelbrot (and dynfilt/mandelbrot.c) - initialize
+   the blue channel in the generated palette, and allow each color
+   component to be in the range 100..255 instead of just 100..254.
+   Thanks to Ralf Neubauer.
+   https://rt.cpan.org/Ticket/Display.html?id=97086
+
+ - revert "improved the XS for i_io_read() and i_io_raw_read()"
+   This caused problems with older perls and didn't provide much of a
+   performance improvement.
+
 Imager 0.99_01 - 29 Jun 2014
 ==============
 
