@@ -10,6 +10,10 @@ Imager release history.  Older releases can be found in Changes.old
    This caused problems with older perls and didn't provide much of a
    performance improvement.
 
+ - support Inline 0.57 and later.
+   Inline 0.57 changed the with interface.
+   https://rt.cpan.org/Ticket/Display.html?id=97108
+
 Imager 0.99_01 - 29 Jun 2014
 ==============
 
