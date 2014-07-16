@@ -4196,7 +4196,8 @@ sub parseiptc {
 }
 
 sub Inline {
-  my ($lang) = @_;
+  # Inline added a new argument at the beginning
+  my $lang = $_[-1];
 
   $lang eq 'C'
     or die "Only C language supported";
