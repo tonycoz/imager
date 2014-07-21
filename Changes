@@ -11,8 +11,12 @@ Imager release history.  Older releases can be found in Changes.old
    performance improvement.
 
  - support Inline 0.57 and later.
-   Inline 0.57 changed the with interface.
+   Inline 0.57 changed the "with" interface.
    https://rt.cpan.org/Ticket/Display.html?id=97108
+
+ - don't define our own MAXINT macro, it conflicts with windows header
+   files and in a few places it was the wrong value to use anyway.
+   https://rt.cpan.org/Ticket/Display.html?id=96425
 
 Imager 0.99_01 - 29 Jun 2014
 ==============
