@@ -1,5 +1,8 @@
 Imager release history.  Older releases can be found in Changes.old
 
+Imager 0.99_02 - 21 Jul 2014
+==============
+
  - Imager::Filter::Mandelbrot (and dynfilt/mandelbrot.c) - initialize
    the blue channel in the generated palette, and allow each color
    component to be in the range 100..255 instead of just 100..254.
