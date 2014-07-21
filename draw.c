@@ -93,7 +93,10 @@ i_mmarray_cr(i_mmarray *ar,i_img_dim l) {
     exit(3);
   }
   ar->data=mymalloc(alloc_size); /* checked 5jul05 tonyc */
-  for(i=0;i<l;i++) { ar->data[i].max=-1; ar->data[i].min=MAXINT; }
+  for(i=0;i<l;i++) {
+    ar->data[i].max = -1;
+    ar->data[i].min = i_img_dim_MAX;
+  }
 }
 
 void
@@ -111,16 +114,18 @@ i_mmarray_add(i_mmarray *ar,i_img_dim x,i_img_dim y) {
     }
 }
 
-int
+i_img_dim
 i_mmarray_gmin(i_mmarray *ar,i_img_dim y) {
   if (y>-1 && y<ar->lines) return ar->data[y].min;
   else return -1;
 }
 
-int
+i_img_dim
 i_mmarray_getm(i_mmarray *ar,i_img_dim y) {
-  if (y>-1 && y<ar->lines) return ar->data[y].max;
-  else return MAXINT;
+  if (y>-1 && y<ar->lines)
+    return ar->data[y].max;
+  else
+    return i_img_dim_MAX;
 }
 
 #if 0

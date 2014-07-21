@@ -23,10 +23,6 @@
 #define PI 3.14159265358979323846
 #endif
 
-#ifndef MAXINT
-#define MAXINT 2147483647
-#endif
-
 #include "imdatatypes.h"
 
 undef_int i_has_format(char *frmt);

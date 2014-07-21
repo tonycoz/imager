@@ -173,7 +173,7 @@ im_img_empty_ch(pIMCTX, i_img *im,i_img_dim x,i_img_dim y,int ch) {
   im->xsize    = x;
   im->ysize    = y;
   im->channels = ch;
-  im->ch_mask  = MAXINT;
+  im->ch_mask  = ~0U;
   im->bytes=bytes;
   if ( (im->idata=mymalloc(im->bytes)) == NULL) 
     im_fatal(aIMCTX, 2,"malloc() error\n"); 

@@ -43,6 +43,8 @@ May be larger than int on some platforms.
 typedef ptrdiff_t i_img_dim;
 typedef size_t i_img_dim_u;
 
+#define i_img_dim_MAX ((i_img_dim)(~(i_img_dim_u)0 >> 1))
+
 /*
 =item i_color
 =category Data Types
