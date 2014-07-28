@@ -906,7 +906,7 @@ SKIP:
      [ 1000, "IV" ],
      [ 1000.1, "NV" ],
      [ qr/abcd/, "regexp",
-       $> >= 5.012 && "Can't use regexps as a buffer before 5.14" ],
+       $] < 5.014 && "Can't use regexps as a buffer before 5.14" ],
     );
   for my $test (@buffer_tests) {
     my ($val, $note, $skip) = @$test;
