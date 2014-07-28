@@ -1,5 +1,10 @@
 Imager release history.  Older releases can be found in Changes.old
 
+ - fix the skip check for the iolayer qr// buffer test
+
+ - improve error reporting for the iolayer test failing on a small
+   number of Win32 CPAN testers
+
 Imager 0.99_02 - 21 Jul 2014
 ==============
 
