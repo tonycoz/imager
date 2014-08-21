@@ -18,6 +18,8 @@ static int
 perlio_closer(void *handle);
 static void
 perlio_destroy(void *handle);
+/* my_strerror is defined since perl 5.21.x */
+#undef my_strerror
 static const char *my_strerror(pTHX_ int err);
 
 #ifndef tTHX
