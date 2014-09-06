@@ -34,7 +34,7 @@
  will result in an increment of IMAGER_API_LEVEL.
 */
 
-#define IMAGER_API_LEVEL 8
+#define IMAGER_API_LEVEL 9
 
 typedef struct {
   int version;
