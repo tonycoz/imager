@@ -19,6 +19,7 @@ CGI
 CMYK
 CPAN
 FreeType
+GDI
 GIF
 HSV
 Hrafnkelsson

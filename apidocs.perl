@@ -102,6 +102,12 @@ Imager::APIRef - Imager's C API - reference.
 
   i_color color;
   color.rgba.r = 255; color.rgba.g = 0; color.rgba.b = 255;
+  double x[] = { ... };
+  double y[] = { ... };
+  i_polygon_t poly;
+  poly.count = sizeof(x) / sizeof(*x);
+  poly.x = x;
+  poly.y = y;
 
 EOS
 

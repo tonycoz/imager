@@ -1,3 +1,4 @@
+#define IMAGER_NO_CONTEXT
 #include "imager.h"
 #include "draw.h"
 #include "log.h"
@@ -196,14 +197,14 @@ lines_in_interval(p_line *lset, int l, p_slice *tllist, pcord minc, pcord maxc) 
 
 static
 void
-mark_updown_slices(p_line *lset, p_slice *tllist, int count) {
+mark_updown_slices(pIMCTX, p_line *lset, p_slice *tllist, int count) {
   p_line *l, *r;
   int k;
   for(k=0; k<count; k+=2) {
     l = lset + tllist[k].n;
 
     if (l->y1 == l->y2) {
-      mm_log((1, "mark_updown_slices: horizontal line being marked: internal error!\n"));
+      im_log((aIMCTX,1, "mark_updown_slices: horizontal line being marked: internal error!\n"));
       exit(3);
     }
 
@@ -221,13 +222,13 @@ mark_updown_slices(p_line *lset, p_slice *tllist, int count) {
 	      );
 
     if (k+1 >= count) {
-      mm_log((1, "Invalid polygon spec, odd number of line crossings.\n"));
+      im_log((aIMCTX, 1, "Invalid polygon spec, odd number of line crossings.\n"));
       return;
     }
 
     r = lset + tllist[k+1].n;
     if (r->y1 == r->y2) {
-      mm_log((1, "mark_updown_slices: horizontal line being marked: internal error!\n"));
+      im_log((aIMCTX, 1, "mark_updown_slices: horizontal line being marked: internal error!\n"));
       exit(3);
     }
 
@@ -454,14 +455,29 @@ i_poly_poly_aa_low(i_img *im, int count, const i_polygon_t *polys,
   p_line  *lset;		/* List of lines in polygon */
   p_slice *tllist;		/* List of slices */
   size_t pcount, lcount;
+  dIMCTX;
 
-  mm_log((1, "i_poly_poly_aa_low(im %p, count %d, polys %p, ctx %p, flusher %p)\n", im, count, polys, ctx, flusher));
+  im_log((aIMCTX, 1, "i_poly_poly_aa_low(im %p, count %d, polys %p, ctx %p, flusher %p)\n", im, count, polys, ctx, flusher));
+
+  i_clear_error();
+
+  if (count < 1) {
+    i_push_error(0, "no polygons to draw");
+    return 0;
+  }
+
+  for (k = 0; k < count; ++k) {
+    if (polys[k].count < 3) {
+      i_push_errorf(0, "polygons must have at least 3 points");
+      return 0;
+    }
+  }
 
   for (k = 0; k < count; ++k) {
     const i_polygon_t *p = polys + k;
-    mm_log((2, "poly %d\n", k));
+    im_log((aIMCTX, 2, "poly %d\n", k));
     for(i = 0; i < p->count; i++) {
-      mm_log((2, " (%.2f, %.2f)\n", p->x[i], p->y[i]));
+      im_log((aIMCTX, 2, " (%.2f, %.2f)\n", p->x[i], p->y[i]));
     }
   }
 
@@ -510,7 +526,7 @@ i_poly_poly_aa_low(i_img *im, int count, const i_polygon_t *polys,
     clc = lines_in_interval(lset, lcount, tllist, pset[i].y, pset[i+1].y);
     qsort(tllist, clc, sizeof(p_slice), (int(*)(const void *,const void *))p_compx);
 
-    mark_updown_slices(lset, tllist, clc);
+    mark_updown_slices(aIMCTX, lset, tllist, clc);
 
     POLY_DEB
       (
@@ -594,12 +610,38 @@ i_poly_poly_aa_low(i_img *im, int count, const i_polygon_t *polys,
   return 1;
 }
 
+/*
+=item i_poly_poly_aa(im, count, polys, mode, color)
+=synopsis i_poly_poly_aa(im, 1, &poly, mode, color);
+=category Drawing
+
+Fill the C<count> polygons defined by C<polys> the color specified by
+C<color>.
+
+At least one polygon must be supplied.
+
+All polygons must have at least 3 points.
+
+=cut
+*/
+
 int
 i_poly_poly_aa(i_img *im, int count, const i_polygon_t *polys,
 	       i_poly_fill_mode_t mode, const i_color *val) {
   i_color c = *val;
   return i_poly_poly_aa_low(im, count, polys, mode, &c, scanline_flush);
 }
+
+/*
+=item i_poly_aa_m(im, count, x, y, mode, color)
+=synopsis i_poly_aa_m(im, count, x, y, mode, color);
+=category Drawing
+
+Fill a polygon defined by the points specified by the x and y arrays with
+the color specified by C<color>.
+
+=cut
+*/
 
 int
 i_poly_aa_m(i_img *im, int l, const double *x, const double *y,
@@ -653,6 +695,21 @@ scanline_flush_render(i_img *im, ss_scanline *ss, int y, void *ctx) {
   }
 }
 
+/*
+=item i_poly_poly_aa_cfill(im, count, polys, mode, fill)
+=synopsis i_poly_poly_aa_cfill(im, 1, &poly, mode, fill);
+=category Drawing
+
+Fill the C<count> polygons defined by C<polys> the fill specified by
+C<fill>.
+
+At least one polygon must be supplied.
+
+All polygons must have at least 3 points.
+
+=cut
+*/
+
 int
 i_poly_poly_aa_cfill(i_img *im, int count, const i_polygon_t *polys,
 		     i_poly_fill_mode_t mode, i_fill_t *fill) {
@@ -671,6 +728,17 @@ i_poly_poly_aa_cfill(i_img *im, int count, const i_polygon_t *polys,
 
   return result;
 }
+
+/*
+=item i_poly_aa_cfill_m(im, count, x, y, mode, fill)
+=synopsis i_poly_aa_cfill(im, count, x, y, mode, fill);
+=category Drawing
+
+Fill a polygon defined by the points specified by the x and y arrays with
+the fill specified by C<fill>.
+
+=cut
+*/
 
 int
 i_poly_aa_cfill_m(i_img *im, int l, const double *x, const double *y, 
