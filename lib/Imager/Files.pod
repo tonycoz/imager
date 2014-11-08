@@ -1613,9 +1613,10 @@ control reading of ICO/CUR files:
 
 =item *
 
-ico_masked - if true, the default, then the icon/cursors mask is
-applied as an alpha channel to the image.  This may result in a
-paletted image being returned as a direct color image.  Default: 1
+C<ico_masked> - if true, the default, then the icon/cursors mask is
+applied as an alpha channel to the image, unless that image already
+has an alpha channel.  This may result in a paletted image being
+returned as a direct color image.  Default: 1
 
   # retrieve the image as stored, without using the mask as an alpha
   # channel
@@ -1624,6 +1625,15 @@ paletted image being returned as a direct color image.  Default: 1
 
 This was introduced in Imager 0.60.  Previously reading ICO images
 acted as if C<ico_masked =E<gt> 0>.
+
+=item *
+
+C<ico_alpha_masked> - if true, then the icon/cursor mask is applied as
+an alpha channel to images that already have an alpha mask.  Note that
+this will only make pixels transparent, not opaque.  Default: 0.
+
+Note: If you get different results between C<ico_alpha_masked> being
+set to 0 and 1, your mask may broke when used with the Win32 API.
 
 =back
 

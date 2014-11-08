@@ -1,7 +1,7 @@
 #!perl -w
 use strict;
-use Test::More tests => 106;
-use Imager::Test qw(is_image test_image);
+use Test::More tests => 111;
+use Imager::Test qw(is_image isnt_image test_image);
 
 BEGIN { use_ok('Imager::File::ICO'); }
 
@@ -415,3 +415,26 @@ EOS
   }
 }
 
+{ # RT #99507
+  # we now ignore the mask by default when reading a 32-bit image
+  my $im = Imager->new(xsize => 2, ysize => 2, channels => 4);
+  $im->setpixel(x => 0, y => 0, color => "#FF0000");
+  $im->setpixel(x => 1, y => 1, color => "#00FF00");
+  my $mask = <<EOS;
+01
+00
+11
+EOS
+  my $data;
+  ok($im->write(data => \$data,
+		type => "ico",
+		ico_mask => $mask), "write with dodgy mask");
+  my $im2 = Imager->new(data => \$data, filetype => "ico");
+  ok($im2, "read it back");
+  is_image($im2, $im, "should match original, despite bad mask");
+  my $im3 = Imager->new(data => \$data, filetype => "ico", ico_alpha_masked => 1);
+  ok($im3, "read it back with ico_alpha_masked => 1");
+  my $cmp = $im->copy;
+  $cmp->setpixel(x => 0, y => 0, color => [ 255, 0, 0, 0 ]);
+  isnt_image($im3, $cmp, "bad mask makes some pixels transparent");
+}

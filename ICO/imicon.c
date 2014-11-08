@@ -13,7 +13,7 @@ ico_push_error(int error) {
 
 static
 i_img *
-read_one_icon(ico_reader_t *file, int index, int masked) {
+read_one_icon(ico_reader_t *file, int index, int masked, int alpha_masked) {
   ico_image_t *image;
   int error;
   i_img *result;
@@ -25,7 +25,7 @@ read_one_icon(ico_reader_t *file, int index, int masked) {
     return NULL;
   }
 
-  if (masked) {
+  if (masked && (image->bit_count != 32 || alpha_masked)) {
     /* check to make sure we should do the masking, if the mask has
        nothing set we don't mask */
     int pos;
@@ -195,7 +195,7 @@ read_one_icon(ico_reader_t *file, int index, int masked) {
 }
 
 i_img *
-i_readico_single(io_glue *ig, int index, int masked) {
+i_readico_single(io_glue *ig, int index, int masked, int alpha_masked) {
   ico_reader_t *file;
   i_img *result;
   int error;
@@ -211,14 +211,14 @@ i_readico_single(io_glue *ig, int index, int masked) {
 
   /* the index is range checked by msicon.c - don't duplicate it here */
 
-  result = read_one_icon(file, index, masked);
+  result = read_one_icon(file, index, masked, alpha_masked);
   ico_reader_close(file);
 
   return result;
 }
 
 i_img **
-i_readico_multi(io_glue *ig, int *count, int masked) {
+i_readico_multi(io_glue *ig, int *count, int masked, int alpha_masked) {
   ico_reader_t *file;
   int index;
   int error;
@@ -237,7 +237,7 @@ i_readico_multi(io_glue *ig, int *count, int masked) {
 
   *count = 0;
   for (index = 0; index < ico_image_count(file); ++index) {
-    i_img *im = read_one_icon(file, index, masked);
+    i_img *im = read_one_icon(file, index, masked, alpha_masked);
     if (!im)
       break;
 

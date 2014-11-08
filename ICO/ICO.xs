@@ -14,21 +14,23 @@ MODULE = Imager::File::ICO  PACKAGE = Imager::File::ICO
 PROTOTYPES: DISABLE
 
 Imager::ImgRaw
-i_readico_single(ig, index, masked = 0)
+i_readico_single(ig, index, masked = 0, alpha_masked = 0)
 	Imager::IO ig
 	int index
 	bool masked
+	bool alpha_masked
 
 void
-i_readico_multi(ig, masked = 0)
+i_readico_multi(ig, masked = 0, alpha_masked = 0)
 	Imager::IO ig
 	bool masked
+	bool alpha_masked
       PREINIT:
         i_img **imgs;
         int count;
         int i;
       PPCODE:
-        imgs = i_readico_multi(ig, &count, masked);
+        imgs = i_readico_multi(ig, &count, masked, alpha_masked);
         if (imgs) {
           EXTEND(SP, count);
           for (i = 0; i < count; ++i) {
