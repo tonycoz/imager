@@ -1,7 +1,8 @@
 #!perl -w
 use strict;
-use Test::More tests => 23;
+use Test::More tests => 25;
 use Imager;
+use constant EPSILON => 0.000001;
 
 BEGIN { use_ok('Imager::Matrix2d', ':handy') }
 
@@ -105,9 +106,17 @@ is(Imager->errstr, "9 coefficients required", "check error");
     ok($died, "mult by bad scalar died");
     like($@, qr/multiply by array ref or number/, "check message");
   }
-  
 }
 
+{ # rt #99959 Imager::Matrix2d->rotate about (x, y) bug
+  my $rm = Imager::Matrix2d->rotate(degrees => 180, x => 10, y => 5);
+  my ($rx, $ry) = $rm->transform(0, 0);
+  ok(abs($rx - 20) < EPSILON, "x from rotate (0,0) around (10, 5)")
+    or print "# x = $rx\n";
+  ok(abs($ry - 10) < EPSILON, "y from rotate (0,0) around (10, 5)")
+    or print "# y = $ry\n";
+  
+}
 
 sub almost_equal {
   my ($m1, $m2) = @_;
