@@ -221,11 +221,11 @@ for (mode = 0; mode < 2; ++mode) {
     return 1;
   }
   fclose(fh);
+  remove("probe.gif");
   if (memcmp(buf, mode ? "GIF89a" : "GIF87a", 6)) {
     fprintf(stderr, "GIF: incorrect header on test - 4.2.0 bug? (mode %d, buf %-6s)\n", mode, buf);
     return 1;
   }
-  remove("probe.gif");
 }
 
 fprintf(stderr, "GIF: Major %d, Minor %d\n", ver_maj, ver_min);

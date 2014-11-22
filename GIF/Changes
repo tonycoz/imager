@@ -1,6 +1,12 @@
 Imager-File-GIF 0.89
 ====================
 
+ - don't leave a test file behind when probing for the 4.2.0 file
+   version bug fails.
+
+Imager-File-GIF 0.89
+====================
+
  - add support for giflib 5.1.0, which added error code pointer
    parameters to EGifCloseFile() and DGifCloseFile().
    https://rt.cpan.org/Ticket/Display.html?id=96756
