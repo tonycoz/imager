@@ -14,6 +14,8 @@ Imager release history.  Older releases can be found in Changes.old
    default
    https://rt.cpan.org/Public/Bug/Display.html?id=99507
 
+ - make verbose probing output more verbose
+
 Imager 1.000 - 28 Jul 2014
 ============
 
