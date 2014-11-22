@@ -4,7 +4,7 @@ use File::Spec;
 use Config;
 use Cwd ();
 
-our $VERSION = "1.003";
+our $VERSION = "1.004";
 
 my @alt_transfer = qw/altname incsuffix libbase/;
 
@@ -385,6 +385,14 @@ sub _resolve_libs {
 sub _lib_paths {
   my ($req) = @_;
 
+  print "$req->{name} IM_LIBPATH: $ENV{IM_LIBPATH}\n"
+    if $req->{verbose} && defined $ENV{IM_LIBPATH};
+  print "$req->{name} LIB: $ENV{IM_LIBPATH}\n"
+    if $req->{verbose} && defined $ENV{LIB} && $^O eq "MSWin32";
+  my $lp = $req->{libpath};
+  print "$req->{name} libpath: ", ref $lp ? join($Config{path_sep}, @$lp) : $lp, "\n"
+    if $req->{verbose} && defined $lp;
+
   return _paths
     (
      $ENV{IM_LIBPATH},
@@ -431,6 +439,14 @@ sub _dyn_lib_paths {
 
 sub _inc_paths {
   my ($req) = @_;
+
+  print "$req->{name} IM_INCPATH: $ENV{IM_INCPATH}\n"
+    if $req->{verbose} && defined $ENV{IM_INCPATH};
+  print "$req->{name} INCLUDE: $ENV{INCLUDE}\n"
+    if $req->{verbose} && defined $ENV{INCLUDE} && $^O eq "MSWin32";
+  my $ip = $req->{incpath};
+  print "$req->{name} incpath: ", ref $ip ? join($Config{path_sep}, @$ip) : $ip, "\n"
+    if $req->{verbose} && defined $req->{incpath};
 
   my @paths = _paths
     (

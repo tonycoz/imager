@@ -36,6 +36,11 @@ our %IMAGER_LIBS;
 
 my $KEEP_FILES = $ENV{IMAGER_KEEP_FILES};
 
+# make sure --verbose will dump environment settings
+if (grep $_ =~ /^--?v(?:erbose)?$/, @ARGV) {
+  $VERBOSE = 1;
+}
+
 getenv();     # get environment variables
 
 my $lext=$Config{'so'};   # Get extensions of libraries
@@ -563,7 +568,9 @@ Truetype fonts are scalable fonts. They can include
 kerning and hinting information and generally yield good
 visual quality esp on low resultions. The freetype library is
 used to rasterize for us. The only drawback is that there
-are alot of badly designed fonts out there.}
+are alot of badly designed fonts out there.
+
+This driver uses Freetype 1.x which is obsolete}
 		       };
   # Make fix indent
   for (keys %formats) { $formats{$_}->{docs} =~ s/^\s+/  /mg; }
@@ -573,6 +580,8 @@ are alot of badly designed fonts out there.}
 
 sub gen {
   my $V = $ENV{$_[0]};
+  print "  $_[0]: '$V'\n"
+      if $VERBOSE && defined $V;
   defined($V) ? $V : "";
 }
 
@@ -581,16 +590,18 @@ sub gen {
 
 sub getenv {
 
-  ($VERBOSE,
-   $INCPATH,
+  $VERBOSE ||= gen("IM_VERBOSE");
+
+  print "Environment config:\n" if $VERBOSE;
+
+  ($INCPATH,
    $LIBPATH,
    $NOLOG,
    $DEBUG_MALLOC,
    $MANUAL,
    $CFLAGS,
    $LFLAGS,
-   $DFLAGS) = map { gen $_ } qw(IM_VERBOSE
-				IM_INCPATH
+   $DFLAGS) = map { gen $_ } qw(IM_INCPATH
 				IM_LIBPATH
 				IM_NOLOG
 				IM_DEBUG_MALLOC
@@ -598,7 +609,6 @@ sub getenv {
 				IM_CFLAGS
 				IM_LFLAGS
 				IM_DFLAGS);
-
 }
 
 # populate the environment so that sub-modules get the same info
@@ -685,10 +695,15 @@ sub freetype1_probe {
  INCS:
   for my $inc (@incs) {
     for my $subdir (qw/freetype freetype1/) {
+      print "TT: include check ", File::Spec->catdir($inc, $subdir), "\n"
+	if $VERBOSE;
       my $path = File::Spec->catfile($inc, $subdir, 'freetype.h');
       -e $path or next;
       $path = File::Spec->catfile($inc, $subdir, 'fterrors.h');
       -e $path and next;
+
+      print "TT: Found!\n"
+	if $VERBOSE;
 
       $found_inc = File::Spec->catdir($inc, $subdir);
       last INCS;
@@ -700,8 +715,12 @@ sub freetype1_probe {
   for my $lib (@libs) {
     my $a_path = File::Spec->catfile($lib, "libttf$aext");
     my $l_path = File::Spec->catfile($lib, "libttf.$lext");
+    print "TT: lib check $lib\n"
+      if $VERBOSE;
     if (-e $a_path || -e $l_path) {
       $found_lib = $lib;
+      print "TT: Found!\n"
+	if $VERBOSE;
       last LIBS;
     }
   }
