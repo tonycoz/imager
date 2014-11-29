@@ -41,6 +41,16 @@ if (grep $_ =~ /^--?v(?:erbose)?$/, @ARGV) {
   $VERBOSE = 1;
 }
 
+# modules/featires bundled with Imager that can be enabled/disabled
+# withs --enable/--disable
+my @bundled = qw(FT1 FT2 GIF JPEG PNG T1 TIFF W32);
+
+# extra modules bundled with Imager not available on CPAN
+my @extras = qw(CountColor DynTest ICO SGI);
+
+# alternate names for modules
+my %bundled_names = qw(win32 w32 tt ft1);
+
 getenv();     # get environment variables
 
 my $lext=$Config{'so'};   # Get extensions of libraries
@@ -110,20 +120,20 @@ my @libs; # all the places to look for libraries
 init();       # initialize global data
 pathcheck();  # Check if directories exist
 
+my @enabled_bundled;
 if (exists $ENV{IM_ENABLE}) {
-  my %en = map { $_, 1 } split ' ', $ENV{IM_ENABLE};
-  for my $key (keys %formats) {
-    delete $formats{$key} unless $en{$key};
-  }
+  push @enable, split ' ', $ENV{IM_ENABLE};
 }
 if (@enable) {
-  my %en = map { $_ => 1 } map { split /,/ } @enable;
-  for my $key (keys %formats) {
-    delete $formats{$key} unless $en{$key};
-  }
+  my %en = map { lc $_ => 1 } map_bundled(@enable);
+  @enabled_bundled = grep $en{lc $_}, @bundled;
 }
 elsif (@disable) {
-  delete @formats{map { split /,/ } @disable};
+  my %dis = map { lc $_ => 1 } map_bundled(@disable);
+  @enabled_bundled = grep !$dis{lc $_}, @bundled;
+}
+else {
+  @enabled_bundled = @bundled;
 }
 
 # Pick what libraries are used
@@ -200,12 +210,13 @@ if (-d "xt" && scalar(() = glob("xt/*.t"))) {
 
 my %opts=
   (
-   'NAME'         => 'Imager',
-   'VERSION_FROM' => 'Imager.pm',
-   'LIBS'         => "$LFLAGS -lm $lib_libs $OSLIBS",
-   'DEFINE'       => "$OSDEF $lib_define $CFLAGS",
-   'INC'          => "$lib_inc $DFLAGS",
-   'OBJECT'       => join(' ', @objs),
+   NAME         => 'Imager',
+   VERSION_FROM => 'Imager.pm',
+   LIBS         => "$LFLAGS -lm $lib_libs $OSLIBS",
+   DEFINE       => "$OSDEF $lib_define $CFLAGS",
+   INC          => "$lib_inc $DFLAGS",
+   OBJECT       => join(' ', @objs),
+   DIR          => [ sort grep -d, @enabled_bundled, @extras ],
    clean          => { FILES=>'testout rubthru.c scale.c conv.c  filters.c gaussian.c render.c rubthru.c' },
    PM             => gen_PM(),
    PREREQ_PM      =>
@@ -371,29 +382,31 @@ EOF
 sub automatic {
   print "Automatic probing:\n" if $VERBOSE;
 
-  my %probe =
-    (
-      name => "FT1",
-      inccheck => sub { -e File::Spec->catfile($_[0], "ftnameid.h") },
-      libbase => "ttf",
-      testcode => _ft1_test_code(),
-      testcodeheaders => [ "freetype.h", "stdio.h" ],
-      incpaths => \@incpaths,
-      libpaths => \@libpaths,
-      alternatives =>
-      [
-       {
-	incsuffix => "freetype",
-       }
-      ],
-      verbose => $VERBOSE,
-    );
-  my $probe_res = Imager::Probe->probe(\%probe);
-  $IMAGER_LIBS{FT1} = defined $probe_res;
-  if ($probe_res) {
-    $formats{FT1}{enabled} = 1;
-    @{$formats{FT1}}{qw/DEFINE INC LIBS/} =
-      @$probe_res{qw/DEFINE INC LIBS/};
+  if (grep $_ eq "FT1", @enabled_bundled) {
+    my %probe =
+      (
+       name => "FT1",
+       inccheck => sub { -e File::Spec->catfile($_[0], "ftnameid.h") },
+       libbase => "ttf",
+       testcode => _ft1_test_code(),
+       testcodeheaders => [ "freetype.h", "stdio.h" ],
+       incpaths => \@incpaths,
+       libpaths => \@libpaths,
+       alternatives =>
+       [
+	{
+	 incsuffix => "freetype",
+	}
+       ],
+       verbose => $VERBOSE,
+      );
+    my $probe_res = Imager::Probe->probe(\%probe);
+    $IMAGER_LIBS{FT1} = defined $probe_res;
+    if ($probe_res) {
+      $formats{FT1}{enabled} = 1;
+      @{$formats{FT1}}{qw/DEFINE INC LIBS/} =
+	@$probe_res{qw/DEFINE INC LIBS/};
+    }
   }
 }
 
@@ -697,6 +710,21 @@ if (error) {
 
 return 0;
 CODE
+}
+
+sub map_bundled {
+  my (@names) = @_;
+
+  @names = map { split /,/ } @names;
+
+  my @outnames;
+  for my $name (@names) {
+    push @outnames, $name;
+    push @outnames, $bundled_names{$name}
+      if $bundled_names{$name};
+  }
+
+  @outnames;
 }
 
 1;
