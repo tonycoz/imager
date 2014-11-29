@@ -8,8 +8,8 @@ use Getopt::Long;
 use ExtUtils::Manifest qw(maniread);
 use ExtUtils::Liblist;
 use vars qw(%formats $VERBOSE $INCPATH $LIBPATH $NOLOG $DEBUG_MALLOC $MANUAL $CFLAGS $LFLAGS $DFLAGS);
-use lib 'inc';
-use Devel::CheckLib;
+use lib 'inc', 'lib';
+use Imager::Probe;
 
 # EU::MM runs Makefile.PL all in the same process, so sub-modules will
 # see this
@@ -133,39 +133,6 @@ if ($MANUAL) {
   automatic();
 }
 
-my $lib_cflags = '';
-my $lib_lflags = '';
-my $F_LIBS = '';
-my $F_OBJECT = '';
-for my $frmkey (sort { $formats{$a}{order} <=> $formats{$b}{order} } keys %formats) {
-  my $frm = $formats{$frmkey};
-  push @defines, [ $frm->{def}, 1, "$frmkey available" ];
-  $F_OBJECT .= ' '  .$frm->{objfiles};
-  if ($frm->{cflags}) {
-    $lib_cflags   .= ' '  .$frm->{cflags};
-    ++$definc{$_} for map { /^-I(.*)$/ ? ($1) : () }
-      grep /^-I./, split ' ', $frm->{cflags};
-  }
-  if ($frm->{lflags}) {
-    $lib_lflags .= ' ' . $frm->{lflags};
-  }
-  else {
-    $F_LIBS   .= ' '  .$frm->{libfiles};
-  }
-
-}
-
-my $F_INC  = join ' ', map "-I$_", map / / ? qq{"$_"} : $_, 
-  grep !$definc{$_}, @incs;
-$F_LIBS = join(' ',map "-L$_", map / / ? qq{"$_"} : $_, 
-	       grep !$deflib{$_}++, @libs) . $F_LIBS;
-
-my $OSLIBS = '';
-my $OSDEF  = "-DOS_$^O";
-
-if ($^O eq 'hpux')                { $OSLIBS .= ' -ldld'; }
-if (defined $Config{'d_dlsymun'}) { $OSDEF  .= ' -DDLSYMUN'; }
-
 my @objs = qw(Imager.o context.o draw.o polygon.o image.o io.o iolayer.o
               log.o gaussian.o conv.o pnm.o raw.o feat.o combine.o
               filters.o dynaload.o stackmach.o datatypes.o
@@ -174,6 +141,26 @@ my @objs = qw(Imager.o context.o draw.o polygon.o image.o io.o iolayer.o
               bmp.o tga.o color.o fills.o imgdouble.o limits.o hlines.o
               imext.o scale.o rubthru.o render.o paste.o compose.o flip.o
 	      perlio.o);
+
+my $lib_define = '';
+my $lib_inc = '';
+my $lib_libs = '';
+for my $frmkey (sort { $formats{$a}{order} <=> $formats{$b}{order} } keys %formats) {
+  my $frm = $formats{$frmkey};
+  if ($frm->{enabled}) {
+    push @defines, [ $frm->{def}, 1, "$frmkey available" ];
+    push @objs, $frm->{objfiles};
+    $lib_define .= " $frm->{DEFINE}" if $frm->{DEFINE};
+    $lib_inc    .= " $frm->{INC}"    if $frm->{INC};
+    $lib_libs   .= " $frm->{LIBS}"   if $frm->{LIBS};
+  }
+}
+
+my $OSLIBS = '';
+my $OSDEF  = "-DOS_$^O";
+
+if ($^O eq 'hpux')                { $OSLIBS .= ' -ldld'; }
+if (defined $Config{'d_dlsymun'}) { $OSDEF  .= ' -DDLSYMUN'; }
 
 if ($Config{useithreads}) {
   if ($Config{i_pthread}) {
@@ -215,10 +202,10 @@ my %opts=
   (
    'NAME'         => 'Imager',
    'VERSION_FROM' => 'Imager.pm',
-   'LIBS'         => "$LFLAGS -lm $lib_lflags $OSLIBS $F_LIBS",
-   'DEFINE'       => "$OSDEF $CFLAGS",
-   'INC'          => "$lib_cflags $DFLAGS $F_INC",
-   'OBJECT'       => join(' ', @objs, $F_OBJECT),
+   'LIBS'         => "$LFLAGS -lm $lib_libs $OSLIBS",
+   'DEFINE'       => "$OSDEF $lib_define $CFLAGS",
+   'INC'          => "$lib_inc $DFLAGS",
+   'OBJECT'       => join(' ', @objs),
    clean          => { FILES=>'testout rubthru.c scale.c conv.c  filters.c gaussian.c render.c rubthru.c' },
    PM             => gen_PM(),
    PREREQ_PM      =>
@@ -354,6 +341,10 @@ sub manual {
       Please answer the following questions about
       which formats are avaliable on your computer
 
+      Warning: if you use manual configuration you are responsible for
+      configuring extra include/library directories as necessary using
+      INC and LIBS command-line assignments.
+
 press <return> to continue
 EOF
 
@@ -366,9 +357,9 @@ EOF
     my $gz = <STDIN>;
     chomp($gz);
     if ($gz =~ m/^(y|yes|n|no)/i) {
-      $gz=substr(lc($gz),0,1);
-      if ($gz eq 'n') {
-	delete $formats{$frm};
+      if ($gz =~ /y/i) {
+	$formats{$frm}{enabled} = 1;
+	$IMAGER_LIBS{$frm} = 1;
       }
     } else { goto SWX; }
   }
@@ -379,92 +370,32 @@ EOF
 
 sub automatic {
   print "Automatic probing:\n" if $VERBOSE;
-  for my $frm (sort { $formats{$a}{order} <=> $formats{$b}{order} } keys %formats) {
-    delete $formats{$frm} if !checkformat($frm);	
+
+  my %probe =
+    (
+      name => "FT1",
+      inccheck => sub { -e File::Spec->catfile($_[0], "ftnameid.h") },
+      libbase => "ttf",
+      testcode => _ft1_test_code(),
+      testcodeheaders => [ "freetype.h", "stdio.h" ],
+      incpaths => \@incpaths,
+      libpaths => \@libpaths,
+      alternatives =>
+      [
+       {
+	incsuffix => "freetype",
+       }
+      ],
+      verbose => $VERBOSE,
+    );
+  my $probe_res = Imager::Probe->probe(\%probe);
+  $IMAGER_LIBS{FT1} = defined $probe_res;
+  if ($probe_res) {
+    $formats{FT1}{enabled} = 1;
+    @{$formats{FT1}}{qw/DEFINE INC LIBS/} =
+      @$probe_res{qw/DEFINE INC LIBS/};
   }
 }
-
-sub grep_directory {
-  my($path, $chk)=@_;
-
-#    print "checking path $path\n";
-  if ( !opendir(DH,$path) ) {
-    warn "Cannot open dir $path: $!\n";
-    return;
-  }
-  my @l=grep { $chk->($_) } readdir(DH);
-  #    print @l;
-  close(DH);
-  return map $path, @l;
-}
-
-sub _probe_default {
-  my ($format, $frm) = @_;
-
-  my $lib_check=$formats{$frm}{'libcheck'};
-  my $inc_check=$formats{$frm}{'inccheck'};
-
-  if ($lib_check) {
-    my @l;
-    for my $lp (@libs) {
-      push(@l, grep_directory($lp,$lib_check));
-    }
-    
-    my @i;
-    for my $ip (@incs) {
-      push(@i, $ip) if $inc_check->($ip,$frm);
-    }
-    
-    printf("%10s: includes %s - libraries %s\n",$frm,(@i?'found':'not found'),(@l?'found':'not found'));
-    $formats{$frm}{incdir} = \@i;
-    $formats{$frm}{libdir} = \@l;
-    return 1 if scalar(@i && @l);
-  }
-  else {
-    printf("%10s: not available\n", $frm);
-  }
-
-  return 0;
-}
-
-sub checkformat {
-  my $frm=shift;
-
-  print "  checkformat($frm)\n" if $VERBOSE;
-  
-  my $format = $formats{$frm};
-
-  my @probes;
-  if (my $code = $format->{'code'}) {
-    if (ref $code eq 'ARRAY') {
-      push @probes, @$code;
-    }
-    else {
-      push @probes, $code;
-    }
-  }
-  push @probes, \&_probe_default;
-
-  print "    Calling probe function\n" if $VERBOSE;
-  my $found;
-  for my $func (@probes) {
-    if ($func->($format, $frm)) {
-      ++$found;
-      last;
-    }
-  }
-
-  $found or return;
-
-  if ($format->{postcheck}) {
-    print "    Calling postcheck function\n" if $VERBOSE;
-    $format->{postcheck}->($format, $frm)
-      or return;
-  }
-
-  return 1;
-}
-
 
 sub pathcheck {
   if ($VERBOSE) {
@@ -553,24 +484,17 @@ sub init {
   }
   push @libs, grep -d, qw(/usr/local/lib);
 
-  $formats{'TT-fonts'}=
+  $formats{FT1}=
     {
      order=>'31',
      def=>'HAVE_LIBTT',
-     inccheck=>sub { -e catfile($_[0], 'freetype.h')
-                       && !-e catfile($_[0], 'fterrors.h') },
-     libcheck=>sub { $_[0] eq "libttf$aext" or $_[0] eq "libttf.$lext" },
-     libfiles=>'-lttf',
      objfiles=>'fontft1.o',
-     code => \&freetype1_probe,
+     LIBS => "-lttf",
      docs=>q{
-Truetype fonts are scalable fonts. They can include 
-kerning and hinting information and generally yield good
-visual quality esp on low resultions. The freetype library is
-used to rasterize for us. The only drawback is that there
-are alot of badly designed fonts out there.
+Freetype 1.x supports Truetype fonts and is obsoleted by Freetype 2.x.
 
-This driver uses Freetype 1.x which is obsolete}
+It's probably insecure.
+}
 		       };
   # Make fix indent
   for (keys %formats) { $formats{$_}->{docs} =~ s/^\s+/  /mg; }
@@ -679,67 +603,6 @@ EOS
   close CONFIG;
 }
 
-# probes for freetype1 by scanning @incs for the includes and 
-# @libs for the libs.  This is done separately because freetype's headers
-# are stored in a freetype or freetype1 directory under PREFIX/include.
-#
-# we could find the files with the existing mechanism, but it won't set
-# -I flags correctly.
-#
-# This could be extended to freetype2 too, but freetype-config catches
-# that
-sub freetype1_probe {
-  my ($frm, $frmkey) = @_;
-
-  my $found_inc;
- INCS:
-  for my $inc (@incs) {
-    for my $subdir (qw/freetype freetype1/) {
-      print "TT: include check ", File::Spec->catdir($inc, $subdir), "\n"
-	if $VERBOSE;
-      my $path = File::Spec->catfile($inc, $subdir, 'freetype.h');
-      -e $path or next;
-      $path = File::Spec->catfile($inc, $subdir, 'fterrors.h');
-      -e $path and next;
-
-      print "TT: Found!\n"
-	if $VERBOSE;
-
-      $found_inc = File::Spec->catdir($inc, $subdir);
-      last INCS;
-    }
-  }
-
-  my $found_lib;
- LIBS:
-  for my $lib (@libs) {
-    my $a_path = File::Spec->catfile($lib, "libttf$aext");
-    my $l_path = File::Spec->catfile($lib, "libttf.$lext");
-    print "TT: lib check $lib\n"
-      if $VERBOSE;
-    if (-e $a_path || -e $l_path) {
-      $found_lib = $lib;
-      print "TT: Found!\n"
-	if $VERBOSE;
-      last LIBS;
-    }
-  }
-
-  return unless $found_inc && $found_lib;
-  printf("%10s: includes %s - libraries %s\n", $frmkey,
-	 ($found_inc ? 'found' : 'not found'), 
-	 ($found_lib ? 'found' : 'not found'));
-
-  $frm->{cflags} = "-I$found_inc";
-  $frm->{libfiles} = "-lttf";
-
-  return 1;
-}
-
-sub catfile {
-  return File::Spec->catfile(@_);
-}
-
 sub usage {
   print STDERR <<EOS;
 Usage: $0 [--enable feature1,feature2,...] [other options]
@@ -819,6 +682,21 @@ sub _tilde_expand {
   }
 
   $path;
+}
+
+sub _ft1_test_code {
+  return <<'CODE';
+TT_Engine engine;
+TT_Error error;
+
+error = TT_Init_FreeType(&engine);
+if (error) {
+   printf("FT1: Could not initialize engine\n");
+   exit(1);
+}
+
+return 0;
+CODE
 }
 
 1;
