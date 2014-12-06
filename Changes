@@ -16,6 +16,12 @@ Imager release history.  Older releases can be found in Changes.old
 
  - make verbose probing output more verbose
 
+ - use Imager::Probe to probe for freetype 1.x
+   https://rt.cpan.org/Ticket/Display.html?id=100502
+
+ - The --enable and --disable parameters to the top-level Makefile.PL
+   work again.
+
 Imager 1.000 - 28 Jul 2014
 ============
 
