@@ -1,6 +1,12 @@
 Imager-File-PNG 0.91
 ====================
 
+ - update the bundled/modified Devel::CheckLib to handle the gcc-4
+   symlink on Cygwin
+
+Imager-File-PNG 0.91
+====================
+
  - skip the benign tests before libpng 1.6.0 since older versions do
    not treat an extranrous palette as any sort of error.
 

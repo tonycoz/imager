@@ -1,3 +1,9 @@
+Imager::Font::T1 1.024
+======================
+
+ - update the bundled/modified Devel::CheckLib to handle the gcc-4
+   symlink on Cygwin
+
 Imager::Font::T1 1.023
 ======================
 

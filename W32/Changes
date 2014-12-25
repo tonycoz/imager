@@ -1,3 +1,9 @@
+Imager-Font-W32 0.89
+====================
+
+ - update the bundled/modified Devel::CheckLib to handle the gcc-4
+   symlink on Cygwin
+
 Imager-Font-W32 0.88
 ====================
 

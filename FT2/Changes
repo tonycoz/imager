@@ -1,3 +1,9 @@
+Imager-Font-FT2 0.93
+====================
+
+ - update the bundled/modified Devel::CheckLib to handle the gcc-4
+   symlink on Cygwin
+
 Imager-Font-FT2 0.92
 ====================
 

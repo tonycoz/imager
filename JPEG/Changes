@@ -1,3 +1,11 @@
+Imager-File-JPEG 0.90
+=====================
+
+ - update the bundled/modified Devel::CheckLib to handle the gcc-4
+   symlink on Cygwin
+
+Imager-File-JPEG 0.89
+=====================
 
  - added the jpeg_optimize parameter for writing JPEG files.  This can
    significantly reduce file sizes, but uses more memory and time.

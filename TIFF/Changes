@@ -1,3 +1,9 @@
+Imager-File-TIFF 0.89
+=====================
+
+ - update the bundled/modified Devel::CheckLib to handle the gcc-4
+   symlink on Cygwin
+
 Imager-File-TIFF 0.88
 =====================
 

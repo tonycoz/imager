@@ -1,6 +1,6 @@
 # $Id: CheckLib.pm,v 1.25 2008/10/27 12:16:23 drhyde Exp $
 # This is a modified version of Devel::CheckLib 0.93 including the patches from
-# RT issues 60176 and 61645
+# RT issues 60176 and 61645 and other changes I need to backport
 
 package #
 Devel::CheckLib;
@@ -8,7 +8,7 @@ Devel::CheckLib;
 use 5.00405; #postfix foreach
 use strict;
 use vars qw($VERSION @ISA @EXPORT);
-$VERSION = '0.93_001';
+$VERSION = '0.93_002';
 use Config qw(%Config);
 use Text::ParseWords 'quotewords';
 
@@ -406,7 +406,11 @@ sub _findcc {
     my @cc = split(/\s+/, $Config{cc});
     return ( [ @cc, @ccflags ], \@ldflags ) if -x $cc[0];
     foreach my $path (@paths) {
-        my $compiler = File::Spec->catfile($path, $cc[0]) . $Config{_exe};
+        my $compiler = File::Spec->catfile($path, $cc[0]) . ($^O eq 'cygwin' ? '' : $Config{_exe});
+        return ([ $compiler, @cc[1 .. $#cc], @ccflags ], \@ldflags)
+            if -x $compiler;
+        next if ! length $Config{_exe};
+        $compiler = File::Spec->catfile($path, $cc[0]);
         return ([ $compiler, @cc[1 .. $#cc], @ccflags ], \@ldflags)
             if -x $compiler;
     }

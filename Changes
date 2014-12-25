@@ -22,6 +22,9 @@ Imager release history.  Older releases can be found in Changes.old
  - The --enable and --disable parameters to the top-level Makefile.PL
    work again.
 
+ - update the bundled/modified Devel::CheckLib to handle the gcc-4
+   symlink on Cygwin
+
 Imager 1.000 - 28 Jul 2014
 ============
 

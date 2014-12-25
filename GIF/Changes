@@ -4,6 +4,9 @@ Imager-File-GIF 0.89
  - don't leave a test file behind when probing for the 4.2.0 file
    version bug fails.
 
+ - update the bundled/modified Devel::CheckLib to handle the gcc-4
+   symlink on Cygwin
+
 Imager-File-GIF 0.89
 ====================
 
