@@ -41,12 +41,12 @@ if (grep $_ =~ /^--?v(?:erbose)?$/, @ARGV) {
   $VERBOSE = 1;
 }
 
-# modules/featires bundled with Imager that can be enabled/disabled
+# modules/features bundled with Imager that can be enabled/disabled
 # withs --enable/--disable
 my @bundled = qw(FT1 FT2 GIF JPEG PNG T1 TIFF W32);
 
 # extra modules bundled with Imager not available on CPAN
-my @extras = qw(CountColor DynTest ICO SGI);
+my @extras = qw(CountColor DynTest ICO SGI Mandelbrot Flines);
 
 # alternate names for modules
 my %bundled_names = qw(win32 w32 tt ft1);
