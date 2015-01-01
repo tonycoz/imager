@@ -1,5 +1,8 @@
 Imager release history.  Older releases can be found in Changes.old
 
+Imager 1.001 - 2 Jan 2015
+============
+
  - both Imager and perl 5.21.3 define my_strerror(), prevent a conflict
    Thanks to Slaven Rezic for the report and the patch.
    https://rt.cpan.org/Public/Bug/Display.html?id=98234
