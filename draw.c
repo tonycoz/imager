@@ -5,6 +5,8 @@
 #include "imageri.h"
 #include "imrender.h"
 #include <limits.h>
+#define NDEBUG
+#include <assert.h>
 
 int
 i_ppix_norm(i_img *im, i_img_dim x, i_img_dim y, i_color const *col) {
@@ -419,85 +421,8 @@ i_arc_aa_cfill(i_img *im, double x, double y, double rad, double d1, double d2,
   myfree(yvals);
 }
 
-/* Temporary AA HACK */
-
-
 typedef i_img_dim frac;
 static  frac float_to_frac(double x) { return (frac)(0.5+x*16.0); }
-
-static 
-void
-polar_to_plane(double cx, double cy, float angle, double radius, frac *x, frac *y) {
-  *x = float_to_frac(cx+radius*cos(angle));
-  *y = float_to_frac(cy+radius*sin(angle));
-}
-
-static
-void
-make_minmax_list(pIMCTX, i_mmarray *dot, double x, double y, double radius) {
-  float angle = 0.0;
-  float astep = radius>0.1 ? .5/radius : 10;
-  frac cx, cy, lx, ly, sx, sy;
-
-  im_log((aIMCTX, 1, "make_minmax_list(dot %p, x %.2f, y %.2f, radius %.2f)\n", dot, x, y, radius));
-
-  polar_to_plane(x, y, angle, radius, &sx, &sy);
-  
-  for(angle = 0.0; angle<361; angle +=astep) {
-    lx = sx; ly = sy;
-    polar_to_plane(x, y, angle, radius, &cx, &cy);
-    sx = cx; sy = cy;
-
-    if (fabs(cx-lx) > fabs(cy-ly)) {
-      int ccx, ccy;
-      if (lx>cx) { 
-	ccx = lx; lx = cx; cx = ccx; 
-	ccy = ly; ly = cy; cy = ccy; 
-      }
-
-      for(ccx=lx; ccx<=cx; ccx++) {
-	ccy = ly + ((cy-ly)*(ccx-lx))/(cx-lx);
-	i_mmarray_add(dot, ccx, ccy);
-      }
-    } else {
-      int ccx, ccy;
-
-      if (ly>cy) { 
-	ccy = ly; ly = cy; cy = ccy; 
-	ccx = lx; lx = cx; cx = ccx; 
-      }
-      
-      for(ccy=ly; ccy<=cy; ccy++) {
-	if (cy-ly) ccx = lx + ((cx-lx)*(ccy-ly))/(cy-ly); else ccx = lx;
-	i_mmarray_add(dot, ccx, ccy);
-      }
-    }
-  }
-}
-
-/* Get the number of subpixels covered */
-
-static
-int
-i_pixel_coverage(i_mmarray *dot, i_img_dim x, i_img_dim y) {
-  frac minx = x*16;
-  frac maxx = minx+15;
-  frac cy;
-  int cnt = 0;
-  
-  for(cy=y*16; cy<(y+1)*16; cy++) {
-    frac tmin = dot->data[cy].min;
-    frac tmax = dot->data[cy].max;
-
-    if (tmax == -1 || tmin > maxx || tmax < minx) continue;
-    
-    if (tmin < minx) tmin = minx;
-    if (tmax > maxx) tmax = maxx;
-    
-    cnt+=1+tmax-tmin;
-  }
-  return cnt;
-}
 
 /*
 =item i_circle_aa(im, x, y, rad, color)
@@ -512,47 +437,120 @@ color.
 */
 void
 i_circle_aa(i_img *im, double x, double y, double rad, const i_color *val) {
-  i_mmarray dot;
   i_color temp;
   i_img_dim ly;
   dIMCTXim(im);
+  i_img_dim first_row = floor(y) - ceil(rad);
+  i_img_dim last_row = ceil(y) + ceil(rad);
+  double r_sqr = rad * rad;
+  /*i_img_dim max_width = 2 * ceil(rad);
+  i_sample_t *coverage = NULL;
+  size_t coverage_size;*/
+  int sub;
 
   im_log((aIMCTX, 1, "i_circle_aa(im %p, centre(" i_DFp "), rad %.2f, val %p)\n",
 	  im, i_DFcp(x, y), rad, val));
 
-  i_mmarray_cr(&dot,16*im->ysize);
-  make_minmax_list(aIMCTX, &dot, x, y, rad);
+  if (first_row < 0)
+    first_row = 0;
+  if (last_row > im->ysize-1)
+    last_row = im->ysize - 1;
 
-  for(ly = 0; ly<im->ysize; ly++) {
-    int ix, cy, minx = INT_MAX, maxx = INT_MIN;
+  if (rad <= 0 || last_row < first_row) {
+    /* outside the image */
+    return;
+  }
 
-    /* Find the left/rightmost set subpixels */
-    for(cy = 0; cy<16; cy++) {
-      frac tmin = dot.data[ly*16+cy].min;
-      frac tmax = dot.data[ly*16+cy].max;
-      if (tmax == -1) continue;
+  /*  coverage_size = sizeof(i_sample_t) * max_width;
+      coverage = mymalloc(coverage_size);*/
+ 
 
-      if (minx > tmin) minx = tmin;
-      if (maxx < tmax) maxx = tmax;
+  for(ly = first_row; ly < last_row; ly++) {
+    frac min_frac_x[16];
+    frac max_frac_x[16];
+    i_img_dim min_frac_left_x = im->xsize * 16;
+    i_img_dim max_frac_left_x = -1;
+    i_img_dim min_frac_right_x = im->xsize * 16;
+    i_img_dim max_frac_right_x = -1;
+    /* reset work_y each row so the error doesn't build up */
+    double work_y = ly;
+    double dy, dy_sqr;
+      
+    for (sub = 0; sub < 16; ++sub) {
+      work_y += 1.0 / 16.0;
+      dy = work_y - y;
+      dy_sqr = dy * dy;
+
+      if (dy_sqr < r_sqr) {
+	double dx = sqrt(r_sqr - dy_sqr);
+	double left_x = x - dx;
+	double right_x = x + dx;
+	frac frac_left_x = float_to_frac(left_x);
+	frac frac_right_x = float_to_frac(right_x);
+
+	if (frac_left_x < min_frac_left_x)
+	  min_frac_left_x = frac_left_x;
+	if (frac_left_x > max_frac_left_x)
+	  max_frac_left_x = frac_left_x;
+	if (frac_right_x < min_frac_right_x)
+	  min_frac_right_x = frac_right_x;
+	if (frac_right_x > max_frac_right_x)
+	  max_frac_right_x = frac_right_x;
+	min_frac_x[sub] = frac_left_x;
+	max_frac_x[sub] = frac_right_x;
+      }
+      else {
+	min_frac_x[sub] = max_frac_x[sub] = 0;
+	max_frac_left_x = im->xsize * 16;
+	min_frac_right_x = -1;
+      }
     }
 
-    if (maxx == INT_MIN) continue; /* no work to be done for this row of pixels */
+    if (min_frac_left_x != -1) {
+      /* something to draw on this line */
+      i_img_dim min_x = (min_frac_left_x / 16);
+      i_img_dim max_x = (max_frac_right_x + 15) / 16;
+      i_img_dim left_solid = (max_frac_left_x + 15) / 16;
+      i_img_dim right_solid = min_frac_right_x / 16;
+      i_img_dim work_x;
+      i_img_dim frac_work_x;
 
-    minx /= 16;
-    maxx /= 16;
-    for(ix=minx; ix<=maxx; ix++) {
-      int cnt = i_pixel_coverage(&dot, ix, ly);
-      if (cnt>255) cnt = 255;
-      if (cnt) { /* should never be true */
-	int ch;
-	float ratio = (float)cnt/255.0;
-	i_gpix(im, ix, ly, &temp);
-	for(ch=0;ch<im->channels; ch++) temp.channel[ch] = (unsigned char)((float)val->channel[ch]*ratio + (float)temp.channel[ch]*(1.0-ratio));
-	i_ppix(im, ix, ly, &temp);
+      for (work_x = min_x, frac_work_x = min_x * 16;
+	   work_x <= max_x;
+	   ++work_x, frac_work_x += 16) {
+	if (work_x <= left_solid || work_x >= right_solid) {
+	  int coverage = 0;
+	  int ch;
+	  double ratio;
+	  i_img_dim frac_work_right = frac_work_x + 16;
+	  for (sub = 0; sub < 16; ++sub) {
+	    frac pix_left = min_frac_x[sub];
+	    frac pix_right = max_frac_x[sub];
+	    if (pix_left < pix_right
+		&& pix_left < frac_work_right
+		&& pix_right >= frac_work_x) {
+	      if (pix_left < frac_work_x)
+		pix_left = frac_work_x;
+	      if (pix_right > frac_work_right)
+		pix_right = frac_work_right;
+	      coverage += pix_right - pix_left;
+	    }
+	  }
+
+	  assert(coverage <= 256);
+	  ratio = coverage / 256.0;
+	  i_gpix(im, work_x, ly, &temp);
+	  for(ch=0;ch<im->channels; ch++)
+	    temp.channel[ch] = (unsigned char)((float)val->channel[ch]*ratio + (float)temp.channel[ch]*(1.0-ratio));
+	  i_ppix(im, work_x, ly, &temp);
+	}
+	else {
+	  /* full coverage */
+	  i_ppix(im, work_x, ly, val);
+	}
       }
     }
   }
-  i_mmarray_dst(&dot);
 }
 
 /*
