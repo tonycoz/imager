@@ -1750,6 +1750,14 @@ i_circle_aa(im,x,y,rad,val)
              double     rad
 	   Imager::Color    val
 
+void
+i_circle_aa_fill(im,x,y,rad,fill)
+    Imager::ImgRaw     im
+	     double     x
+	     double     y
+             double     rad
+	   Imager::FillHandle    fill
+
 int
 i_circle_out(im,x,y,rad,val)
     Imager::ImgRaw     im

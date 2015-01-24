@@ -90,3 +90,15 @@ small_c_aa: 166.8 /s (0.005993 / iter)
 small_fill_aa: 9.9 /s (0.101373 / iter)
 tiny_c_aa: 252.1 /s (0.003967 / iter)
 tiny_fill_aa: 25.7 /s (0.038897 / iter)
+
+add i_circle_aa_fill() and use it:
+
+large_c_aa: 1.1 /s (0.948333 / iter)
+large_fill_aa: 0.7 /s (1.500000 / iter)
+medium_c_aa: 31.0 /s (0.032303 / iter)
+medium_fill_aa: 22.1 /s (0.045175 / iter)
+small_c_aa: 223.1 /s (0.004482 / iter)
+small_fill_aa: 218.1 /s (0.004585 / iter)
+tiny_c_aa: 394.4 /s (0.002536 / iter)
+tiny_fill_aa: 437.8 /s (0.002284 / iter)
+

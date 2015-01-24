@@ -424,6 +424,28 @@ i_arc_aa_cfill(i_img *im, double x, double y, double rad, double d1, double d2,
 typedef i_img_dim frac;
 static  frac float_to_frac(double x) { return (frac)(0.5+x*16.0); }
 
+typedef void
+(*flush_render_t)(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, const i_sample_t *cover, void *ctx);
+
+static void
+i_circle_aa_low(i_img *im, double x, double y, double rad, flush_render_t r, void *ctx);
+
+static void
+scanline_flush_color(i_img *im, i_img_dim l, i_img_dim y, i_img_dim width, const i_sample_t *cover, void *ctx);
+
+static void
+scanline_flush_fill(i_img *im, i_img_dim l, i_img_dim y, i_img_dim width, const i_sample_t *cover, void *ctx);
+
+typedef struct {
+  i_render r;
+  i_color c;
+} flush_color_t;
+
+typedef struct {
+  i_render r;
+  i_fill_t *fill;
+} flush_fill_t;
+
 /*
 =item i_circle_aa(im, x, y, rad, color)
 
@@ -435,21 +457,59 @@ color.
 
 =cut
 */
+
 void
 i_circle_aa(i_img *im, double x, double y, double rad, const i_color *val) {
+  flush_color_t fc;
+
+  fc.c = *val;
+  i_render_init(&fc.r, im, rad * 2 + 1);
+
+  i_circle_aa_low(im, x, y, rad, scanline_flush_color, &fc);
+
+  i_render_done(&fc.r);
+}
+
+/*
+=item i_circle_aa_fill(im, x, y, rad, fill)
+
+=category Drawing
+=synopsis i_circle_aa_fill(im, 50, 50, 45, fill);
+
+Anti-alias fills a circle centered at (x,y) for radius I<rad> with
+fill.
+
+=cut
+*/
+
+void
+i_circle_aa_fill(i_img *im, double x, double y, double rad, i_fill_t *fill) {
+  flush_fill_t ff;
+
+  ff.fill = fill;
+  i_render_init(&ff.r, im, rad * 2 + 1);
+
+  i_circle_aa_low(im, x, y, rad, scanline_flush_fill, &ff);
+
+  i_render_done(&ff.r);
+}
+
+static void
+i_circle_aa_low(i_img *im, double x, double y, double rad, flush_render_t r,
+		void *ctx) {
   i_color temp;
   i_img_dim ly;
   dIMCTXim(im);
   i_img_dim first_row = floor(y) - ceil(rad);
   i_img_dim last_row = ceil(y) + ceil(rad);
   double r_sqr = rad * rad;
-  /*i_img_dim max_width = 2 * ceil(rad);
-  i_sample_t *coverage = NULL;
-  size_t coverage_size;*/
+  i_img_dim max_width = 2 * ceil(rad) + 1;
+  unsigned char *coverage = NULL;
+  size_t coverage_size;
   int sub;
 
-  im_log((aIMCTX, 1, "i_circle_aa(im %p, centre(" i_DFp "), rad %.2f, val %p)\n",
-	  im, i_DFcp(x, y), rad, val));
+  im_log((aIMCTX, 1, "i_circle_aa_low(im %p, centre(" i_DFp "), rad %.2f, r %p, ctx %p)\n",
+	  im, i_DFcp(x, y), rad, r, ctx));
 
   if (first_row < 0)
     first_row = 0;
@@ -461,9 +521,8 @@ i_circle_aa(i_img *im, double x, double y, double rad, const i_color *val) {
     return;
   }
 
-  /*  coverage_size = sizeof(i_sample_t) * max_width;
-      coverage = mymalloc(coverage_size);*/
- 
+  coverage_size = max_width;
+  coverage = mymalloc(coverage_size);
 
   for(ly = first_row; ly < last_row; ly++) {
     frac min_frac_x[16];
@@ -514,12 +573,13 @@ i_circle_aa(i_img *im, double x, double y, double rad, const i_color *val) {
       i_img_dim right_solid = min_frac_right_x / 16;
       i_img_dim work_x;
       i_img_dim frac_work_x;
+      i_sample_t *cout = coverage;
 
       for (work_x = min_x, frac_work_x = min_x * 16;
 	   work_x <= max_x;
 	   ++work_x, frac_work_x += 16) {
 	if (work_x <= left_solid || work_x >= right_solid) {
-	  int coverage = 0;
+	  int pix_coverage = 0;
 	  int ch;
 	  double ratio;
 	  i_img_dim frac_work_right = frac_work_x + 16;
@@ -533,25 +593,39 @@ i_circle_aa(i_img *im, double x, double y, double rad, const i_color *val) {
 		pix_left = frac_work_x;
 	      if (pix_right > frac_work_right)
 		pix_right = frac_work_right;
-	      coverage += pix_right - pix_left;
+	      pix_coverage += pix_right - pix_left;
 	    }
 	  }
 
-	  assert(coverage <= 256);
-	  ratio = coverage / 256.0;
-	  i_gpix(im, work_x, ly, &temp);
-	  for(ch=0;ch<im->channels; ch++)
-	    temp.channel[ch] = (unsigned char)((float)val->channel[ch]*ratio + (float)temp.channel[ch]*(1.0-ratio));
-	  i_ppix(im, work_x, ly, &temp);
+	  assert(pix_coverage <= 256);
+	  *cout++ = pix_coverage * 255 / 256;
 	}
 	else {
 	  /* full coverage */
-	  i_ppix(im, work_x, ly, val);
+	  *cout++ = 255;
 	}
       }
+      r(im, min_x, ly, max_x - min_x + 1, coverage, ctx);
     }
   }
+
+  myfree(coverage);
 }
+
+static void
+scanline_flush_color(i_img *im, i_img_dim x, i_img_dim y, i_img_dim width, const unsigned char *cover, void *ctx) {
+  flush_color_t *fc = ctx;
+
+  i_render_color(&fc->r, x, y, width, cover, &fc->c);
+}
+
+static void
+scanline_flush_fill(i_img *im, i_img_dim x, i_img_dim y, i_img_dim width, const unsigned char *cover, void *ctx) {
+  flush_fill_t *ff = ctx;
+
+  i_render_fill(&ff->r, x, y, width, cover, ff->fill);
+}
+
 
 /*
 =item i_circle_out(im, x, y, r, col)

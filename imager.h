@@ -128,6 +128,7 @@ void i_arc_aa         (i_img *im, double x, double y, double rad, double d1, dou
 void i_arc_cfill(i_img *im,i_img_dim x,i_img_dim y,double rad,double d1,double d2,i_fill_t *fill);
 void i_arc_aa_cfill(i_img *im,double x,double y,double rad,double d1,double d2,i_fill_t *fill);
 void i_circle_aa   (i_img *im,double x, double y,double rad,const i_color *val);
+void i_circle_aa_fill(i_img *im,double x, double y,double rad,i_fill_t *fill);
 int i_circle_out   (i_img *im,i_img_dim x, i_img_dim y, i_img_dim rad,const i_color *val);
 int i_circle_out_aa   (i_img *im,i_img_dim x, i_img_dim y, i_img_dim rad,const i_color *val);
 void i_copyto      (i_img *im,i_img *src,i_img_dim x1,i_img_dim y1,i_img_dim x2,i_img_dim y2,i_img_dim tx,i_img_dim ty);

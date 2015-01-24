@@ -2894,8 +2894,14 @@ sub arc {
 	  return;
 	}
       }
-      i_arc_aa_cfill($self->{IMG},$opts{'x'},$opts{'y'},$opts{'r'},$opts{'d1'},
-		     $opts{'d2'}, $opts{fill}{fill});
+      if ($opts{d1} == 0 && $opts{d2} == 361) {
+	i_circle_aa_fill($self->{IMG}, $opts{'x'}, $opts{'y'}, $opts{'r'},
+			 $opts{fill}{fill});
+      }
+      else {
+	i_arc_aa_cfill($self->{IMG},$opts{'x'},$opts{'y'},$opts{'r'},$opts{'d1'},
+		       $opts{'d2'}, $opts{fill}{fill});
+      }
     }
     elsif ($opts{filled}) {
       my $color = _color($opts{'color'});
