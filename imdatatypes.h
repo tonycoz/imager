@@ -442,6 +442,17 @@ enum bounding_box_index_t {
   BOUNDING_BOX_COUNT
 };
 
+typedef struct i_polygon_tag {
+  const double *x;
+  const double *y;
+  size_t count;
+} i_polygon_t;
+
+typedef enum i_poly_fill_mode_tag {
+  i_pfm_evenodd,
+  i_pfm_nonzero
+} i_poly_fill_mode_t;
+
 /* Generic fills */
 struct i_fill_tag;
 

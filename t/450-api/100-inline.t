@@ -158,6 +158,28 @@ Imager do_lots(Imager src) {
   i_box_filled(im, 11, 25, 19, 29, &blue);
   i_flood_cfill_border(im, 15, 25, hatch, &black);
 
+  {
+     double x[3];
+     double y[3];
+     i_polygon_t poly;
+     x[0] = 55;
+     y[0] = 25;
+     x[1] = 55;
+     y[1] = 50;
+     x[2] = 70;
+     y[2] = 50;
+     i_poly_aa_m(im, 3, x, y, i_pfm_evenodd, &red);
+     x[2] = 40;
+     i_poly_aa_cfill_m(im, 3, x, y, i_pfm_evenodd, hatch);
+     y[0] = 65;
+     poly.x = x;
+     poly.y = y;
+     poly.count = 3;
+     i_poly_poly_aa(im, 1, &poly, i_pfm_nonzero, &green);
+     x[2] = 70;
+     i_poly_poly_aa_cfill(im, 1, &poly, i_pfm_nonzero, hatch);
+  }
+
   i_fill_destroy(fount_fill);
   i_fill_destroy(fhatch_fill);
   i_fill_destroy(solid_fill);
@@ -233,7 +255,7 @@ Imager do_lots(Imager src) {
     i_img_destroy(im);
     return NULL;
   }
-    
+
   return im;
 }
 

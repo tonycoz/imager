@@ -158,6 +158,14 @@ extern i_img *i_matrix_transform_bg(i_img *im, i_img_dim xsize, i_img_dim ysize,
 void i_bezier_multi(i_img *im,int l,const double *x,const double *y,const i_color *val);
 int i_poly_aa     (i_img *im,int l,const double *x,const double *y,const i_color *val);
 int i_poly_aa_cfill(i_img *im,int l,const double *x,const double *y,i_fill_t *fill);
+int i_poly_aa_m     (i_img *im,int l,const double *x,const double *y, i_poly_fill_mode_t mode, const i_color *val);
+int i_poly_aa_cfill_m(i_img *im,int l,const double *x,const double *y, i_poly_fill_mode_t mode, i_fill_t *fill);
+extern int
+i_poly_poly_aa(i_img *im, int count, const i_polygon_t *polys,
+	       i_poly_fill_mode_t mode, const i_color *val);
+extern int
+i_poly_poly_aa_cfill(i_img *im, int count, const i_polygon_t *polys,
+		     i_poly_fill_mode_t mode, i_fill_t *fill);
 
 undef_int i_flood_fill  (i_img *im,i_img_dim seedx,i_img_dim seedy, const i_color *dcol);
 undef_int i_flood_cfill(i_img *im, i_img_dim seedx, i_img_dim seedy, i_fill_t *fill);

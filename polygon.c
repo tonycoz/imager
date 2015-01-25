@@ -1,3 +1,4 @@
+#define IMAGER_NO_CONTEXT
 #include "imager.h"
 #include "draw.h"
 #include "log.h"
@@ -20,21 +21,22 @@
 typedef i_img_dim pcord;
 
 typedef struct {
-  int n;
+  size_t n;
   pcord x,y;
 } p_point;
 
 typedef struct {
-  int n;
+  size_t n;
   pcord x1,y1;
   pcord x2,y2;
   pcord miny,maxy;
   pcord minx,maxx;
   int updown; /* -1 means down, 0 vertical, 1 up */
+  int dir; /* 1 for down, -1 for up */
 } p_line;
 
 typedef struct {
-  int n;
+  size_t n;
   double x;
 } p_slice;
 
@@ -81,34 +83,68 @@ p_eval_atx(p_line *l, pcord x) {
 
 static
 p_line *
-line_set_new(const double *x, const double *y, int l) {
-  int i;
-  p_line *lset = mymalloc(sizeof(p_line) * l);
+line_set_new(const i_polygon_t *polys, size_t count, size_t *line_count) {
+  size_t i, j, n;
+  p_line *lset, *line;
+  size_t lines = 0;
+  
+  for (i = 0; i < count; ++i)
+    lines += polys[i].count;
 
-  for(i=0; i<l; i++) {
-    lset[i].n=i;
-    lset[i].x1 = IMTRUNC(x[i]);
-    lset[i].y1 = IMTRUNC(y[i]);
-    lset[i].x2 = IMTRUNC(x[(i+1)%l]);
-    lset[i].y2 = IMTRUNC(y[(i+1)%l]);
-    lset[i].miny=i_min(lset[i].y1,lset[i].y2);
-    lset[i].maxy=i_max(lset[i].y1,lset[i].y2);
-    lset[i].minx=i_min(lset[i].x1,lset[i].x2);
-    lset[i].maxx=i_max(lset[i].x1,lset[i].x2);
+  line = lset = mymalloc(sizeof(p_line) * lines);
+
+  n = 0;
+  for (i = 0; i < count; ++i) {
+    const i_polygon_t *p = polys + i;
+
+    for(j = 0; j < p->count; j++) {
+      line->x1 = IMTRUNC(p->x[j]);
+      line->y1 = IMTRUNC(p->y[j]);
+      line->x2 = IMTRUNC(p->x[(j + 1) % p->count]);
+      line->y2 = IMTRUNC(p->y[(j + 1) % p->count]);
+
+      /* don't include purely horizontal lines, we don't usefully
+	 intersect with them. */
+      if (line->y1 == line->y2)
+	continue;
+
+      line->miny = i_min(line->y1, line->y2);
+      line->maxy = i_max(line->y1, line->y2);
+      line->minx = i_min(line->x1, line->x2);
+      line->maxx = i_max(line->x1, line->x2);
+      line->n = n++;
+      ++line;
+    }
   }
+  *line_count = n;
+
   return lset;
 }
 
 static
 p_point *
-point_set_new(const double *x, const double *y, int l) {
-  int i;
-  p_point *pset = mymalloc(sizeof(p_point) * l);
+point_set_new(const i_polygon_t *polys, size_t count, size_t *point_count) {
+  size_t i, j, n;
+  p_point *pset, *pt;
+  size_t points = 0;
   
-  for(i=0; i<l; i++) {
-    pset[i].n=i;
-    pset[i].x=IMTRUNC(x[i]);
-    pset[i].y=IMTRUNC(y[i]);
+  for (i = 0; i < count; ++i)
+    points += polys[i].count;
+
+  *point_count = points;
+
+  pt = pset = mymalloc(sizeof(p_point) * points);
+
+  n = 0;
+  for (i = 0; i < count; ++i) {
+    const i_polygon_t *p = polys + i;
+
+    for(j = 0; j < p->count; j++) {
+      pt->n = n++;
+      pt->x = IMTRUNC(p->x[j]);
+      pt->y = IMTRUNC(p->y[j]);
+      ++pt;
+    }
   }
   return pset;
 }
@@ -161,14 +197,14 @@ lines_in_interval(p_line *lset, int l, p_slice *tllist, pcord minc, pcord maxc) 
 
 static
 void
-mark_updown_slices(p_line *lset, p_slice *tllist, int count) {
+mark_updown_slices(pIMCTX, p_line *lset, p_slice *tllist, int count) {
   p_line *l, *r;
   int k;
   for(k=0; k<count; k+=2) {
     l = lset + tllist[k].n;
 
     if (l->y1 == l->y2) {
-      mm_log((1, "mark_updown_slices: horizontal line being marked: internal error!\n"));
+      im_log((aIMCTX,1, "mark_updown_slices: horizontal line being marked: internal error!\n"));
       exit(3);
     }
 
@@ -179,19 +215,20 @@ mark_updown_slices(p_line *lset, p_slice *tllist, int count) {
       (l->y1 > l->y2) ? -1 : 1
       : 
       (l->y1 > l->y2) ? 1 : -1;
+    l->dir = l->y1 < l->y2 ? 1 : -1;
 
     POLY_DEB( printf("marking left line %d as %s(%d)\n", l->n,
 		     l->updown ?  l->updown == 1 ? "up" : "down" : "vert", l->updown, l->updown)
 	      );
 
     if (k+1 >= count) {
-      mm_log((1, "Invalid polygon spec, odd number of line crossings.\n"));
+      im_log((aIMCTX, 1, "Invalid polygon spec, odd number of line crossings.\n"));
       return;
     }
 
     r = lset + tllist[k+1].n;
     if (r->y1 == r->y2) {
-      mm_log((1, "mark_updown_slices: horizontal line being marked: internal error!\n"));
+      im_log((aIMCTX, 1, "mark_updown_slices: horizontal line being marked: internal error!\n"));
       exit(3);
     }
 
@@ -202,14 +239,13 @@ mark_updown_slices(p_line *lset, p_slice *tllist, int count) {
       (r->y1 > r->y2) ? -1 : 1
       : 
       (r->y1 > r->y2) ? 1 : -1;
+    r->dir = r->y1 < r->y2 ? 1 : -1;
     
     POLY_DEB( printf("marking right line %d as %s(%d)\n", r->n,
 		     r->updown ?  r->updown == 1 ? "up" : "down" : "vert", r->updown, r->updown)
 	      );
   }
 }
-
-
 
 static
 unsigned char
@@ -404,8 +440,10 @@ render_slice_scanline(ss_scanline *ss, int y, p_line *l, p_line *r, pcord miny, 
  */
 
 
-static void
-i_poly_aa_low(i_img *im, int l, const double *x, const double *y, void *ctx, scanline_flusher flusher) {
+static int
+i_poly_poly_aa_low(i_img *im, int count, const i_polygon_t *polys,
+		   i_poly_fill_mode_t mode, void *ctx,
+		   scanline_flusher flusher) {
   int i ,k;			/* Index variables */
   i_img_dim clc;		/* Lines inside current interval */
   /* initialize to avoid compiler warnings */
@@ -416,11 +454,31 @@ i_poly_aa_low(i_img *im, int l, const double *x, const double *y, void *ctx, sca
   p_point *pset;		/* List of points in polygon */
   p_line  *lset;		/* List of lines in polygon */
   p_slice *tllist;		/* List of slices */
+  size_t pcount, lcount;
+  dIMCTX;
 
-  mm_log((1, "i_poly_aa(im %p, l %d, x %p, y %p, ctx %p, flusher %p)\n", im, l, x, y, ctx, flusher));
+  im_log((aIMCTX, 1, "i_poly_poly_aa_low(im %p, count %d, polys %p, ctx %p, flusher %p)\n", im, count, polys, ctx, flusher));
 
-  for(i=0; i<l; i++) {
-    mm_log((2, "(%.2f, %.2f)\n", x[i], y[i]));
+  i_clear_error();
+
+  if (count < 1) {
+    i_push_error(0, "no polygons to draw");
+    return 0;
+  }
+
+  for (k = 0; k < count; ++k) {
+    if (polys[k].count < 3) {
+      i_push_errorf(0, "polygons must have at least 3 points");
+      return 0;
+    }
+  }
+
+  for (k = 0; k < count; ++k) {
+    const i_polygon_t *p = polys + k;
+    im_log((aIMCTX, 2, "poly %d\n", k));
+    for(i = 0; i < p->count; i++) {
+      im_log((aIMCTX, 2, " (%.2f, %.2f)\n", p->x[i], p->y[i]));
+    }
   }
 
 
@@ -429,18 +487,17 @@ i_poly_aa_low(i_img *im, int l, const double *x, const double *y, void *ctx, sca
 	   setbuf(stdout, NULL);
 	   );
 
-  tllist   = mymalloc(sizeof(p_slice)*l);
+  pset     = point_set_new(polys, count, &pcount);
+  lset     = line_set_new(polys, count, &lcount);
+
+  ss_scanline_init(&templine, im->xsize, lcount);
+
+  tllist   = mymalloc(sizeof(p_slice) * lcount);
   
-  ss_scanline_init(&templine, im->xsize, l);
-
-  pset     = point_set_new(x, y, l);
-  lset     = line_set_new(x, y, l);
-
-
-  qsort(pset, l, sizeof(p_point), (int(*)(const void *,const void *))p_compy);
+  qsort(pset, pcount, sizeof(p_point), (int(*)(const void *,const void *))p_compy);
   
   POLY_DEB(
-	   for(i=0;i<l;i++) {
+	   for(i=0;i<lcount;i++) {
 	     printf("%d [ %d ] (%d , %d) -> (%d , %d) yspan ( %d , %d )\n",
 		    i, lset[i].n, lset[i].x1, lset[i].y1, lset[i].x2, lset[i].y2, lset[i].miny, lset[i].maxy);
 	   }
@@ -449,7 +506,7 @@ i_poly_aa_low(i_img *im, int l, const double *x, const double *y, void *ctx, sca
   
 
   /* loop on intervals */
-  for(i=0; i<l-1; i++) {
+  for(i=0; i<pcount-1; i++) {
     i_img_dim startscan = i_max( coarse(pset[i].y), 0);
     i_img_dim stopscan = i_min( coarse(pset[i+1].y+15), im->ysize);
     pcord miny, maxy;	/* y bounds in fine coordinates */
@@ -466,10 +523,10 @@ i_poly_aa_low(i_img *im, int l, const double *x, const double *y, void *ctx, sca
       continue;
     }
 
-    clc = lines_in_interval(lset, l, tllist, pset[i].y, pset[i+1].y);
+    clc = lines_in_interval(lset, lcount, tllist, pset[i].y, pset[i+1].y);
     qsort(tllist, clc, sizeof(p_slice), (int(*)(const void *,const void *))p_compx);
 
-    mark_updown_slices(lset, tllist, clc);
+    mark_updown_slices(aIMCTX, lset, tllist, clc);
 
     POLY_DEB
       (
@@ -505,9 +562,28 @@ i_poly_aa_low(i_img *im, int l, const double *x, const double *y, void *ctx, sca
       
       tempy = i_min(cscl*16+16, pset[i+1].y);
       POLY_DEB( printf("evaluating scan line %d \n", cscl) );
-      for(k=0; k<clc-1; k+=2) {
-	POLY_DEB( printf("evaluating slice %d\n", k) );
-	render_slice_scanline(&templine, cscl, lset+tllist[k].n, lset+tllist[k+1].n, scan_miny, scan_maxy);
+      if (mode == i_pfm_evenodd) {
+	for(k=0; k<clc-1; k+=2) {
+	  POLY_DEB( printf("evaluating slice %d\n", k) );
+	  render_slice_scanline(&templine, cscl, lset+tllist[k].n, lset+tllist[k+1].n, scan_miny, scan_maxy);
+	}
+      }
+      else {
+	k = 0;
+	while (k < clc) {
+	  p_line *left = lset + tllist[k++].n;
+	  p_line *current;
+	  int acc = left->dir;
+
+	  while (k < clc && acc) {
+	    current = lset + tllist[k++].n;
+	    acc += current->dir;
+	  }
+	  if (acc == 0) {
+	    render_slice_scanline(&templine, cscl, left, current,
+				  scan_miny, scan_maxy);
+	  }
+	}
       }
       if (16*coarse(tempy) == tempy) {
 	POLY_DEB( printf("flushing scan line %d\n", cscl) );
@@ -530,14 +606,62 @@ i_poly_aa_low(i_img *im, int l, const double *x, const double *y, void *ctx, sca
   myfree(pset);
   myfree(lset);
   myfree(tllist);
-  
-} /* Function */
+
+  return 1;
+}
+
+/*
+=item i_poly_poly_aa(im, count, polys, mode, color)
+=synopsis i_poly_poly_aa(im, 1, &poly, mode, color);
+=category Drawing
+
+Fill the C<count> polygons defined by C<polys> the color specified by
+C<color>.
+
+At least one polygon must be supplied.
+
+All polygons must have at least 3 points.
+
+=cut
+*/
+
+int
+i_poly_poly_aa(i_img *im, int count, const i_polygon_t *polys,
+	       i_poly_fill_mode_t mode, const i_color *val) {
+  i_color c = *val;
+  return i_poly_poly_aa_low(im, count, polys, mode, &c, scanline_flush);
+}
+
+/*
+=item i_poly_aa_m(im, count, x, y, mode, color)
+=synopsis i_poly_aa_m(im, count, x, y, mode, color);
+=category Drawing
+
+Fill a polygon defined by the points specified by the x and y arrays with
+the color specified by C<color>.
+
+=cut
+*/
+
+int
+i_poly_aa_m(i_img *im, int l, const double *x, const double *y,
+	    i_poly_fill_mode_t mode, const i_color *val) {
+  i_polygon_t poly;
+
+  poly.count = l;
+  poly.x = x;
+  poly.y = y;
+  return i_poly_poly_aa(im, 1, &poly, mode, val);
+}
 
 int
 i_poly_aa(i_img *im, int l, const double *x, const double *y, const i_color *val) {
-  i_color c = *val;
-  i_poly_aa_low(im, l, x, y, &c, scanline_flush);
-  return 1;
+  i_polygon_t poly;
+
+  poly.count = l;
+  poly.x = x;
+  poly.y = y;
+  return i_poly_poly_aa(im, 1, &poly, i_pfm_evenodd, val);
 }
 
 struct poly_render_state {
@@ -571,16 +695,71 @@ scanline_flush_render(i_img *im, ss_scanline *ss, int y, void *ctx) {
   }
 }
 
+/*
+=item i_poly_poly_aa_cfill(im, count, polys, mode, fill)
+=synopsis i_poly_poly_aa_cfill(im, 1, &poly, mode, fill);
+=category Drawing
+
+Fill the C<count> polygons defined by C<polys> the fill specified by
+C<fill>.
+
+At least one polygon must be supplied.
+
+All polygons must have at least 3 points.
+
+=cut
+*/
+
 int
-i_poly_aa_cfill(i_img *im, int l, const double *x, const double *y, 
-		i_fill_t *fill) {
+i_poly_poly_aa_cfill(i_img *im, int count, const i_polygon_t *polys,
+		     i_poly_fill_mode_t mode, i_fill_t *fill) {
   struct poly_render_state ctx;
+  int result;
 
   i_render_init(&ctx.render, im, im->xsize);
   ctx.fill = fill;
   ctx.cover = mymalloc(im->xsize);
-  i_poly_aa_low(im, l, x, y, &ctx, scanline_flush_render);
+
+  result = i_poly_poly_aa_low(im, count, polys, mode, &ctx,
+			      scanline_flush_render);
+
   myfree(ctx.cover);
   i_render_done(&ctx.render);
-  return 1;
+
+  return result;
+}
+
+/*
+=item i_poly_aa_cfill_m(im, count, x, y, mode, fill)
+=synopsis i_poly_aa_cfill(im, count, x, y, mode, fill);
+=category Drawing
+
+Fill a polygon defined by the points specified by the x and y arrays with
+the fill specified by C<fill>.
+
+=cut
+*/
+
+int
+i_poly_aa_cfill_m(i_img *im, int l, const double *x, const double *y, 
+		i_poly_fill_mode_t mode, i_fill_t *fill) {
+  i_polygon_t poly;
+
+  poly.count = l;
+  poly.x = x;
+  poly.y = y;
+
+  return i_poly_poly_aa_cfill(im, 1, &poly, mode, fill);
+}
+
+int
+i_poly_aa_cfill(i_img *im, int l, const double *x, const double *y, 
+		i_fill_t *fill) {
+  i_polygon_t poly;
+
+  poly.count = l;
+  poly.x = x;
+  poly.y = y;
+
+  return i_poly_poly_aa_cfill(im, 1, &poly, i_pfm_evenodd, fill);
 }

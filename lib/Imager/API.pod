@@ -181,6 +181,45 @@ type back to perl.
 
 See L</Context objects> for more information.
 
+=head2 i_polygon_t
+
+Represents a single polygon supplied to i_poly_poly_aa() and
+i_poly_poly_aa_cfill().
+
+This is a structure with 3 members:
+
+=over
+
+=item *
+
+C<x>, C<y> - pointers to the first elements of arrays of doubles that define
+the vertices of the polygon.
+
+=item *
+
+C<count> - the number of values in each of the C<x> and C<y> arrays.
+
+=back
+
+=head2 i_poly_fill_mode_t
+
+An enumerated type of the possible fill modes for polygons:
+
+=over
+
+=item *
+
+C<i_pfm_evenodd> - if areas overlap an odd number of times, they
+are filled, and are otherwise unfilled.
+
+=item *
+
+C<i_pfm_nonzero> - areas that have an unbalanced clockwise and
+anti-clockwise boundary are filled.  This is the same as
+C<WindingRule> for X and C<WINDING> for Win32 GDI.
+
+=back
+
 =head1 Create an XS module using the Imager API
 
 =head2 Foo.pm

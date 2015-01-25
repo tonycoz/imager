@@ -204,7 +204,13 @@ im_ext_funcs imager_function_table =
     i_mutex_unlock,
     im_context_slot_new,
     im_context_slot_set,
-    im_context_slot_get
+    im_context_slot_get,
+
+    /* level 9 */
+    i_poly_poly_aa,
+    i_poly_poly_aa_cfill,
+    i_poly_aa_m,
+    i_poly_aa_cfill_m
   };
 
 /* in general these functions aren't called by Imager internally, but

@@ -30,6 +30,8 @@ extern "C" {
 
 #include "imperl.h"
 
+#define ARRAY_COUNT(array) (sizeof(array)/sizeof(*array))
+
 /*
 
 Context object management
@@ -108,6 +110,11 @@ typedef struct {
   size_t count;
   const i_fsample_t *samples;
 } i_fsample_list;
+
+typedef struct {
+  size_t count;
+  const i_polygon_t *polygons;
+} i_polygon_list;
 
 /*
 
@@ -539,7 +546,7 @@ struct value_name {
   char *name;
   int value;
 };
-static int lookup_name(struct value_name *names, int count, char *name, int def_value)
+static int lookup_name(const struct value_name *names, int count, char *name, int def_value)
 {
   int i;
   for (i = 0; i < count; ++i)
@@ -765,6 +772,95 @@ ip_copy_colors_back(pTHX_ HV *hv, i_quantize *quant) {
     SvREFCNT_inc(work);
     av_push(av, work);
   }
+}
+
+static struct value_name
+poly_fill_mode_names[] =
+{
+  { "evenodd", i_pfm_evenodd },
+  { "nonzero", i_pfm_nonzero }
+};
+
+static i_poly_fill_mode_t
+S_get_poly_fill_mode(pTHX_ SV *sv) {	
+  if (looks_like_number(sv)) {
+    IV work = SvIV(sv);
+    if (work < (IV)i_pfm_evenodd || work > (IV)i_pfm_nonzero)
+      work = (IV)i_pfm_evenodd;
+    return (i_poly_fill_mode_t)work;
+  }
+  else {
+    return (i_poly_fill_mode_t)lookup_name
+    (poly_fill_mode_names, ARRAY_COUNT(poly_fill_mode_names),
+     SvPV_nolen(sv), i_pfm_evenodd);
+  }
+}
+
+static void
+S_get_polygon_list(pTHX_ i_polygon_list *polys, SV *sv) {
+  AV *av;
+  int i;
+  i_polygon_t *s;
+
+  SvGETMAGIC(sv);
+  if (!SvOK(sv) || !SvROK(sv) || SvTYPE(SvRV(sv)) != SVt_PVAV) 
+    croak("polys must be an arrayref");
+
+  av = (AV*)SvRV(sv);
+  polys->count = av_len(av) + 1;
+  if (polys->count < 1)
+    croak("polypolygon: no polygons provided");
+  s = malloc_temp(aTHX_ sizeof(i_polygon_t) * polys->count);
+  for (i = 0; i < polys->count; ++i) {
+    SV **poly_sv = av_fetch(av, i, 0);
+    AV *poly_av;
+    SV **x_sv, **y_sv;
+    AV *x_av, *y_av;
+    double *x_data, *y_data;
+    ssize_t j;
+    ssize_t point_count;
+
+    if (!poly_sv)
+      croak("poly_polygon: nothing found for polygon %d", i);
+    /* needs to be another av */
+    SvGETMAGIC(*poly_sv);
+    if (!SvOK(*poly_sv) || !SvROK(*poly_sv) || SvTYPE(SvRV(*poly_sv)) != SVt_PVAV)
+      croak("poly_polygon: polygon %d isn't an arrayref", i);
+    poly_av = (AV*)SvRV(*poly_sv);
+    /* with two elements */
+    if (av_len(poly_av) != 1)
+      croak("poly_polygon: polygon %d should contain two arrays", i);
+    x_sv = av_fetch(poly_av, 0, 0);
+    y_sv = av_fetch(poly_av, 1, 0);
+    if (!x_sv)
+      croak("poly_polygon: polygon %d has no x elements", i);
+    if (!y_sv)
+      croak("poly_polygon: polygon %d has no y elements", i);
+    SvGETMAGIC(*x_sv);
+    SvGETMAGIC(*y_sv);
+    if (!SvOK(*x_sv) || !SvROK(*x_sv) || SvTYPE(SvRV(*x_sv)) != SVt_PVAV)
+      croak("poly_polygon: polygon %d x elements isn't an array", i);
+    if (!SvOK(*y_sv) || !SvROK(*y_sv) || SvTYPE(SvRV(*y_sv)) != SVt_PVAV)
+      croak("poly_polygon: polygon %d y elements isn't an array", i);
+    x_av = (AV*)SvRV(*x_sv);
+    y_av = (AV*)SvRV(*y_sv);
+    if (av_len(x_av) != av_len(y_av))
+      croak("poly_polygon: polygon %d x and y arrays different lengths", i+1);
+    point_count = av_len(x_av)+1;
+    x_data = malloc_temp(aTHX_ sizeof(double) * point_count * 2);
+    y_data = x_data + point_count;
+
+    for (j = 0; j < point_count; ++j) {
+      SV **x_item_sv = av_fetch(x_av, j, 0);
+      SV **y_item_sv = av_fetch(y_av, j, 0);
+      x_data[j] = x_item_sv ? SvNV(*x_item_sv) : 0;
+      y_data[j] = y_item_sv ? SvNV(*y_item_sv) : 0;
+    }
+    s[i].x = x_data;
+    s[i].y = y_data;
+    s[i].count = point_count;
+  }
+  polys->polygons = s;
 }
 
 /* loads the segments of a fountain fill into an array */
@@ -1810,10 +1906,11 @@ i_bezier_multi(im,x,y,val)
     i_bezier_multi(im,size_x,x,y,val);
 
 int
-i_poly_aa(im,x,y,val)
+i_poly_aa_m(im,x,y,mode,val)
     Imager::ImgRaw     im
     double *x
     double *y
+    i_poly_fill_mode_t mode
     Imager::Color  val
   PREINIT:
     STRLEN   size_x;
@@ -1821,15 +1918,16 @@ i_poly_aa(im,x,y,val)
   CODE:
     if (size_x != size_y)
       croak("Imager: x and y arrays to i_poly_aa must be equal length\n");
-    RETVAL = i_poly_aa(im, size_x, x, y, val);
+    RETVAL = i_poly_aa_m(im, size_x, x, y, mode, val);
   OUTPUT:
     RETVAL
 
 int
-i_poly_aa_cfill(im, x, y, fill)
+i_poly_aa_cfill_m(im, x, y, mode, fill)
     Imager::ImgRaw     im
     double *x
     double *y
+    i_poly_fill_mode_t mode
     Imager::FillHandle     fill
   PREINIT:
     STRLEN size_x;
@@ -1837,9 +1935,31 @@ i_poly_aa_cfill(im, x, y, fill)
   CODE:
     if (size_x != size_y)
       croak("Imager: x and y arrays to i_poly_aa_cfill must be equal length\n");
-    RETVAL = i_poly_aa_cfill(im, size_x, x, y, fill);
+    RETVAL = i_poly_aa_cfill_m(im, size_x, x, y, mode, fill);
   OUTPUT:
     RETVAL
+
+int
+i_poly_poly_aa(im, polys, mode, color)
+    Imager::ImgRaw     im
+         i_polygon_list polys
+	 i_poly_fill_mode_t mode
+	 Imager::Color color
+    CODE:
+        RETVAL = i_poly_poly_aa(im, polys.count, polys.polygons, mode, color);
+    OUTPUT:
+        RETVAL
+
+int
+i_poly_poly_aa_cfill(im, polys, mode, fill)
+    Imager::ImgRaw     im
+         i_polygon_list polys
+	 i_poly_fill_mode_t mode
+	 Imager::FillHandle fill
+    CODE:
+        RETVAL = i_poly_poly_aa_cfill(im, polys.count, polys.polygons, mode, fill);
+    OUTPUT:
+        RETVAL
 
 undef_int
 i_flood_fill(im,seedx,seedy,dcol)

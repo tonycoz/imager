@@ -5,6 +5,7 @@
 i_channel_list	 	T_IM_CHANNEL_LIST
 i_sample_list		T_IM_SAMPLE_LIST
 i_fsample_list		T_IM_FSAMPLE_LIST
+i_polygon_list		T_IM_POLYGON_LIST
 
 off_t			T_OFF_T
 
@@ -18,6 +19,7 @@ int *  			T_AVARRAY
 i_img_dim *		T_AVARRAY
 i_color *		T_AVARRAY
 
+i_poly_fill_mode_t	T_I_POLY_FILL_MODE_T
 
 #############################################################################
 INPUT
@@ -109,6 +111,9 @@ T_IM_FSAMPLE_LIST
 	    croak(\"$pname: no samples provided in $var\");
 	}
 
+T_IM_POLYGON_LIST
+        S_get_polygon_list(aTHX_ &$var, $arg);
+
 T_AVARRAY
 	STMT_START {
 		SV* const xsub_tmp_sv = $arg;
@@ -131,6 +136,11 @@ T_AVARRAY
 				\"$var\");
 		}
 	} STMT_END
+
+T_I_POLY_FILL_MODE_T
+	$var = S_get_poly_fill_mode(aTHX_ $arg);
+
+
 
 #############################################################################
 OUTPUT

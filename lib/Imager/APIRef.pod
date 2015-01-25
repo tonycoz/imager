@@ -12,6 +12,12 @@ Imager::APIRef - Imager's C API - reference.
 
   i_color color;
   color.rgba.r = 255; color.rgba.g = 0; color.rgba.b = 255;
+  double x[] = { ... };
+  double y[] = { ... };
+  i_polygon_t poly;
+  poly.count = sizeof(x) / sizeof(*x);
+  poly.x = x;
+  poly.y = y;
 
 
   # Blit tools
@@ -38,6 +44,10 @@ Imager::APIRef - Imager's C API - reference.
   i_flood_cfill(im, 50, 50, fill);
   i_flood_fill_border(im, 50, 50, &color, &border);
   i_flood_cfill_border(im, 50, 50, fill, border);
+  i_poly_poly_aa(im, 1, &poly, mode, color);
+  i_poly_aa_m(im, count, x, y, mode, color);
+  i_poly_poly_aa_cfill(im, 1, &poly, mode, fill);
+  i_poly_aa_cfill(im, count, x, y, mode, fill);
 
   # Error handling
   im_clear_error(aIMCTX);
@@ -769,6 +779,58 @@ Returns the number of pixels set.
 
 =for comment
 From: File imext.c
+
+=item i_poly_aa_cfill_m(im, count, x, y, mode, fill)
+
+  i_poly_aa_cfill(im, count, x, y, mode, fill);
+
+Fill a polygon defined by the points specified by the x and y arrays with
+the fill specified by C<fill>.
+
+
+=for comment
+From: File polygon.c
+
+=item i_poly_aa_m(im, count, x, y, mode, color)
+
+  i_poly_aa_m(im, count, x, y, mode, color);
+
+Fill a polygon defined by the points specified by the x and y arrays with
+the color specified by C<color>.
+
+
+=for comment
+From: File polygon.c
+
+=item i_poly_poly_aa(im, count, polys, mode, color)
+
+  i_poly_poly_aa(im, 1, &poly, mode, color);
+
+Fill the C<count> polygons defined by C<polys> the color specified by
+C<color>.
+
+At least one polygon must be supplied.
+
+All polygons must have at least 3 points.
+
+
+=for comment
+From: File polygon.c
+
+=item i_poly_poly_aa_cfill(im, count, polys, mode, fill)
+
+  i_poly_poly_aa_cfill(im, 1, &poly, mode, fill);
+
+Fill the C<count> polygons defined by C<polys> the fill specified by
+C<fill>.
+
+At least one polygon must be supplied.
+
+All polygons must have at least 3 points.
+
+
+=for comment
+From: File polygon.c
 
 =item i_ppal(im, left, right, y, indexes)
 
