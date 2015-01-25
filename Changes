@@ -1,5 +1,18 @@
 Imager release history.  Older releases can be found in Changes.old
 
+ - drawing anti-aliased filled circles is now 10 to 50 times faster
+   depending on the size of the circle.
+   https://rt.cpan.org/Ticket/Display.html?id=101682
+
+ - enhancements to polygon filling:
+
+   - added a mode parameter to control how overlapping regions behave
+
+   - added a polypolygon() method to fill more than one polygon at a
+     time
+
+   - polygon filling is now exposed through the API.
+
 Imager 1.001 - 2 Jan 2015
 ============
 
