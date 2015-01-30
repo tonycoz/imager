@@ -3100,6 +3100,7 @@ i_get_pixel(im, x, y)
 	i_img_dim y;
       CODE:
 	RETVAL = (i_color *)mymalloc(sizeof(i_color));
+	memset(RETVAL, 0, sizeof(*RETVAL));
 	if (i_gpix(im, x, y, RETVAL) != 0) {
           myfree(RETVAL);
 	  XSRETURN_UNDEF;
@@ -3693,6 +3694,7 @@ i_gpixf(im, x, y)
 	i_img_dim y;
       CODE:
 	RETVAL = (i_fcolor *)mymalloc(sizeof(i_fcolor));
+	memset(RETVAL, 0, sizeof(*RETVAL));
 	if (i_gpixf(im, x, y, RETVAL) != 0) {
           myfree(RETVAL);
           XSRETURN_UNDEF;

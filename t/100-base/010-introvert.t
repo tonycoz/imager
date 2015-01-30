@@ -934,11 +934,11 @@ my $psamp_outside_error = "Image position outside of image";
   }
 
   # simple calls
-  is_color3($im->getpixel(x => 1, y => 0), 255, 0, 0,
+  is_color4($im->getpixel(x => 1, y => 0), 255, 0, 0, 0,
 	    "getpixel(1, 0)");
-  is_color3($im->getpixel(x => 8, y => 1), 0, 255, 255,
+  is_color4($im->getpixel(x => 8, y => 1), 0, 255, 255, 0,
 	    "getpixel(8, 1)");
-  is_color3($im->getpixel(x => 8, y => 7), 255, 0, 255,
+  is_color4($im->getpixel(x => 8, y => 7), 255, 0, 255, 0,
 	    "getpixel(8, 7)");
 
   {
@@ -970,10 +970,10 @@ my $psamp_outside_error = "Image position outside of image";
   { # float
     is_fcolor3($im->getpixel(x => 1, y => 0, type => 'float'),
 	       1.0, 0, 0, "getpixel(1,0) float");
-    is_fcolor3($im->getpixel(x => 8, y => 1, type => 'float'),
-	       0, 1.0, 1.0, "getpixel(8,1) float");
-    is_fcolor3($im->getpixel(x => 8, y => 7, type => 'float'),
-	       1.0, 0, 1.0, "getpixel(8,7) float");
+    is_fcolor4($im->getpixel(x => 8, y => 1, type => 'float'),
+	       0, 1.0, 1.0, 0, "getpixel(8,1) float");
+    is_fcolor4($im->getpixel(x => 8, y => 7, type => 'float'),
+	       1.0, 0, 1.0, 0, "getpixel(8,7) float");
 
     my @colors = $im->getpixel(x => [ 0, 8, 7 ], y => [ 0, 7, 3 ], type => 'float');
     is(@colors, 3, "getpixel 2 3 element array refs (float)");
