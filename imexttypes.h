@@ -34,7 +34,7 @@
  will result in an increment of IMAGER_API_LEVEL.
 */
 
-#define IMAGER_API_LEVEL 10
+#define IMAGER_API_LEVEL 9
 
 typedef struct {
   int version;
@@ -266,12 +266,11 @@ typedef struct {
 			     const double *y, i_poly_fill_mode_t mode,
 			     i_fill_t *fill);
 
-  /* IMAGER_API_LEVEL 10 */
   int (*f_i_img_alpha_channel)(i_img *im, int *channel);
   i_color_model_t (*f_i_img_color_model)(i_img *im);
   int (*f_i_img_color_channels)(i_img *im);
 
-  /* IMAGER_API_LEVEL 11 functions will be added here */
+  /* IMAGER_API_LEVEL 10 functions will be added here */
 } im_ext_funcs;
 
 #define PERL_FUNCTION_TABLE_NAME "Imager::__ext_func_table"
