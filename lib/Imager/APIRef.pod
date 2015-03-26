@@ -28,6 +28,7 @@ Imager::APIRef - Imager's C API - reference.
   black.rgba.r = black.rgba.g = black.rgba.b = black.rgba.a = 0;
   i_fill_t *fill;
   i_img_dim x, y;
+  i_img_dim_u limit;
   printf("left %" i_DF "\n", i_DFc(x));
   printf("point (" i_DFp ")\n", i_DFcp(x, y));
 
@@ -385,6 +386,62 @@ as an opaque type.
 =for comment
 From: File imdatatypes.h
 
+=item i_poly_fill_mode_t
+
+Control how polygons are filled.  Has the following values:
+
+=over
+
+=item *
+
+C<i_pfm_evenodd> - simple even-odd fills.
+
+=item *
+
+C<i_pfm_nonzero> - non-zero winding rule fills.
+
+=back
+
+
+=for comment
+From: File imdatatypes.h
+
+=item i_polygon_t
+
+Represents a polygon.  Has the following members:
+
+=over
+
+=item *
+
+C<x>, C<y> - arrays of x and y locations of vertices.
+
+=item *
+
+C<count> - the number of entries in the C<x> and C<y> arrays.
+
+=back
+
+
+=for comment
+From: File imdatatypes.h
+
+=item im_context_t
+
+Imager's per-thread context.
+
+
+=for comment
+From: File imdatatypes.h
+
+=item im_slot_t
+
+Represents a slot in the context object.
+
+
+=for comment
+From: File imdatatypes.h
+
 =item i_img_dim
 
   i_img_dim x, y;
@@ -392,6 +449,16 @@ From: File imdatatypes.h
 A signed integer type that represents an image dimension or ordinate.
 
 May be larger than int on some platforms.
+
+
+=for comment
+From: File imdatatypes.h
+
+=item i_img_dim_u
+
+  i_img_dim_u limit;
+
+An unsigned variant of L</i_img_dim>.
 
 
 =for comment
@@ -2528,31 +2595,11 @@ will change:
 
 =item *
 
-B<i_img_dim_u>
-
-=item *
-
-B<i_poly_fill_mode_t>
-
-=item *
-
-B<i_polygon_t>
-
-=item *
-
-B<im_context_t>
-
-=item *
-
 B<im_lhead>
 
 =item *
 
 B<im_loog>
-
-=item *
-
-B<im_slot_t>
 
 =item *
 
