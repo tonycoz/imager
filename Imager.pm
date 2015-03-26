@@ -696,6 +696,10 @@ sub new {
       return;
     }
   }
+  elsif (%hsh) {
+    Imager->_set_error("new: supply xsize and ysize or a file access parameter or no parameters");
+    return;
+  }
 
   return $self;
 }
@@ -911,16 +915,29 @@ sub _sametype {
 # Sets an image to a certain size and channel number
 # if there was previously data in the image it is discarded
 
+my %model_channels =
+  (
+   gray => 1,
+   graya => 2,
+   rgb => 3,
+   rgba => 4,
+  );
+
 sub img_set {
   my $self=shift;
 
   my %hsh=(xsize=>100, ysize=>100, channels=>3, bits=>8, type=>'direct', @_);
 
-  if (defined($self->{IMG})) {
-    # let IIM_DESTROY destroy it, it's possible this image is
-    # referenced from a virtual image (like masked)
-    #i_img_destroy($self->{IMG});
-    undef($self->{IMG});
+  undef($self->{IMG});
+
+  if ($hsh{model}) {
+    if (my $channels = $model_channels{$hsh{model}}) {
+      $hsh{channels} = $channels;
+    }
+    else {
+      $self->_set_error("new: unknown value for model '$hsh{model}'");
+      return;
+    }
   }
 
   if ($hsh{type} eq 'paletted' || $hsh{type} eq 'pseudo') {
@@ -939,7 +956,7 @@ sub img_set {
   }
 
   unless ($self->{IMG}) {
-    $self->{ERRSTR} = Imager->_error_as_msg();
+    $self->_set_error(Imager->_error_as_msg());
     return;
   }
 
@@ -3901,6 +3918,37 @@ sub getchannels {
   return i_img_getchannels($self->{IMG});
 }
 
+my @model_names = qw(unknown gray graya rgb rgba);
+
+sub colormodel {
+  my ($self, %opts) = @_;
+
+  $self->_valid_image("colormodel")
+    or return;
+
+  my $model = i_img_color_model($self->{IMG});
+
+  return $opts{numeric} ? $model : $model_names[$model];
+}
+
+sub colorchannels {
+  my ($self) = @_;
+
+  $self->_valid_image("colorchannels")
+    or return;
+
+  return i_img_color_channels($self->{IMG});
+}
+
+sub alphachannel {
+  my ($self) = @_;
+
+  $self->_valid_image("alphachannel")
+    or return;
+
+  return scalar(i_img_alpha_channel($self->{IMG}));
+}
+
 # Get channel mask
 
 sub getmask {
@@ -4668,6 +4716,9 @@ addtag() -  L<Imager::ImageTypes/addtag()> - add image tags
 align_string() - L<Imager::Draw/align_string()> - draw text aligned on a
 point
 
+alphachannel() - L<Imager::ImageTypes/alphachannel()> - return the
+channel index of the alpha channel (if any).
+
 arc() - L<Imager::Draw/arc()> - draw a filled arc
 
 bits() - L<Imager::ImageTypes/bits()> - number of bits per sample for the
@@ -4682,8 +4733,14 @@ circle() - L<Imager::Draw/circle()> - draw a filled circle
 close_log() - L<Imager::ImageTypes/close_log()> - close the Imager
 debugging log.
 
+colorchannels() - L<Imager::ImageTypes/colorchannels()> - the number
+of channels used for color.
+
 colorcount() - L<Imager::ImageTypes/colorcount()> - the number of
 colors in an image's palette (paletted images only)
+
+colormodel() - L<Imager::ImageTypes/colorcount()> - how color is
+represented.
 
 combine() - L<Imager::Transformations/combine()> - combine channels
 from one or more images.

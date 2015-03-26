@@ -16,19 +16,7 @@ Return true if the image has an alpha channel.
 =cut
 */
 
-#define i_img_has_alpha(im) ((im)->channels == 2 || (im)->channels == 4)
-
-/*
-=item i_img_color_channels(C<im>)
-
-=category Image Information
-
-The number of channels holding color information.
-
-=cut
-*/
-
-#define i_img_color_channels(im) (i_img_has_alpha(im) ? (im)->channels - 1 : (im)->channels)
+#define i_img_has_alpha(im) (i_img_alpha_channel((im), NULL))
 
 /*
 =item i_psamp(im, left, right, y, samples, channels, channel_count)

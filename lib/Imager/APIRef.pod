@@ -114,10 +114,17 @@ Imager::APIRef - Imager's C API - reference.
   int channels = i_img_getchannels(img);
   i_img_dim width = i_img_get_width(im);
   i_img_dim height = i_img_get_height(im);
+  i_color_model_t cm = i_img_color_model(im);
+  int alpha_channel;
+  int has_alpha = i_img_alpha_channel(im, &alpha_channel);
+  int color_channels = i_img_color_channels(im);
 
   # Image quantization
 
   # Logging
+
+  # mutex
+  i_mutex_t mutex;
 
   # Mutex functions
   i_mutex_t m = i_mutex_new();
@@ -385,6 +392,44 @@ From: File imdatatypes.h
 A signed integer type that represents an image dimension or ordinate.
 
 May be larger than int on some platforms.
+
+
+=for comment
+From: File imdatatypes.h
+
+=item i_color_model_t
+
+Returned by L</i_img_color_model(im)> to indicate the color model of
+the image.
+
+An enumerated type with the following possible values:
+
+=over
+
+=item *
+
+C<icm_unknown> - the image has no usable color data.  In future
+versions of Imager this will be returned in a few limited cases,
+eg. when the source image is CMYK and the user has requested no color
+translation is done.
+
+=item *
+
+C<icm_gray> - gray scale with no alpha channel.
+
+=item *
+
+C<icm_gray_alpha> - gray scale with an alpha channel.
+
+=item *
+
+C<icm_rgb> - RGB
+
+=item *
+
+C<icm_rgb_alpha> - RGB with an alpha channel.
+
+=back
 
 
 =for comment
@@ -1769,14 +1814,49 @@ From: File image.c
 
 =over
 
-=item i_img_color_channels(C<im>)
+=item i_img_alpha_channel(im, &channel)
 
+  int alpha_channel;
+  int has_alpha = i_img_alpha_channel(im, &alpha_channel);
 
-The number of channels holding color information.
+Work out the alpha channel for an image.
+
+If the image has an alpha channel, sets C<*channel> to the alpha
+channel index and returns non-zero.
+
+If the image has no alpha channel, returns zero and C<*channel> is not
+modified.
+
+C<channel> may be C<NULL>.
 
 
 =for comment
-From: File immacros.h
+From: File image.c
+
+=item i_img_color_channels(im)
+
+  int color_channels = i_img_color_channels(im);
+
+Returns the number of color channels in the image.  For now this is
+always 1 (for grayscale) or 3 (for RGB) but may be 0 in some special
+cases in a future release of Imager.
+
+
+=for comment
+From: File image.c
+
+=item i_img_color_model(im)
+
+  i_color_model_t cm = i_img_color_model(im);
+
+Returns the color model for the image.
+
+A future version of Imager will allow for images with extra channels
+beyond gray/rgb and alpha.
+
+
+=for comment
+From: File image.c
 
 =item i_img_get_height(C<im>)
 
@@ -1942,6 +2022,24 @@ This is an internal function called by the mm_log() macro.
 
 =for comment
 From: File log.c
+
+
+=back
+
+=head2 mutex
+
+=over
+
+=item i_mutex_t
+X<i_mutex>
+
+  i_mutex_t mutex;
+
+Opaque type for Imager's mutex API.
+
+
+=for comment
+From: File imdatatypes.h
 
 
 =back
@@ -2430,11 +2528,31 @@ will change:
 
 =item *
 
+B<i_img_dim_u>
+
+=item *
+
+B<i_poly_fill_mode_t>
+
+=item *
+
+B<i_polygon_t>
+
+=item *
+
+B<im_context_t>
+
+=item *
+
 B<im_lhead>
 
 =item *
 
 B<im_loog>
+
+=item *
+
+B<im_slot_t>
 
 =item *
 

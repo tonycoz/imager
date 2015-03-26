@@ -21,7 +21,7 @@ plan skip_all => "perl 5.005_04, 5.005_05 too buggy"
 
 print STDERR "Inline version $Inline::VERSION\n";
 
-plan tests => 117;
+plan tests => 120;
 require Inline;
 Inline->import(with => 'Imager');
 Inline->import("FORCE"); # force rebuild
@@ -467,6 +467,25 @@ test_slots() {
   return 1;
 }
 
+int
+color_channels(Imager im) {
+  return i_img_color_channels(im);
+}
+
+int
+color_model(Imager im) {
+  return (int)i_img_color_model(im);
+}
+
+int
+alpha_channel(Imager im) {
+  int channel;
+  if (!i_img_alpha_channel(im, &channel))
+    channel = -1;
+
+  return channel;
+}
+
 EOS
 
 my $im = Imager->new(xsize=>50, ysize=>50);
@@ -681,6 +700,13 @@ for my $bits (8, 16) {
   is(_get_error(), "chan_count 0 out of range, must be >0, <= channels",
      "check message");
   is($im->type, "paletted", "make sure we kept the image type");
+}
+
+{
+  my $rgb = Imager->new(xsize => 10, ysize => 10);
+  is(color_model($rgb), 3, "check i_img_color_model() api");
+  is(color_channels($rgb), 3, "check i_img_color_channels() api");
+  is(alpha_channel($rgb), -1, "check i_img_alpha_channel() api");
 }
 
 ok(test_mutex(), "call mutex APIs");

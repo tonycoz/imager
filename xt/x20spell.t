@@ -48,6 +48,7 @@ dpi
 eg
 equalities
 gaussian
+grayscale
 ie
 infix
 invocant

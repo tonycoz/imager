@@ -3,7 +3,7 @@
 # to make sure we get expected values
 
 use strict;
-use Test::More tests => 466;
+use Test::More tests => 492;
 
 BEGIN { use_ok(Imager => qw(:handy :all)) }
 
@@ -151,6 +151,10 @@ is($impal2->bits, 8, "check bits");
 is($impal2->type, 'paletted', "check type");
 is($impal2->getwidth, 200, "check width");
 is($impal2->getheight, 201, "check height");
+is($impal2->colormodel, "rgb", "check color model (string)");
+is($impal2->colormodel(numeric => 1), 3, "check color model (numeric)");
+is($impal2->alphachannel, undef, "check alpha channel (has none)");
+is($impal2->colorchannels, 3, "check colorchannels");
 
 {
   my $red_idx = $impal2->addcolors(colors=>[$red]);
@@ -227,6 +231,12 @@ is($impal2->getheight, 201, "check height");
   is($im->errstr, "getmask: empty input image", "check message");
   is($im->setmask, undef, "can't set mask of empty image");
   is($im->errstr, "setmask: empty input image", "check message");
+  is($im->colorchannels, undef, "can't get colorchannels of empty image");
+  is($im->errstr, "colorchannels: empty input image", "check message");
+  is($im->alphachannel, undef, "can't get alphachannel of empty image");
+  is($im->errstr, "alphachannel: empty input image", "check message");
+  is($im->colormodel, undef, "can't get colormodel of empty image");
+  is($im->errstr, "colormodel: empty input image", "check message");
 }
 
 { # basic checks, 8-bit direct images
@@ -1119,6 +1129,25 @@ my $psamp_outside_error = "Image position outside of image";
   ok(!$empty->tags(name => "foo"), "can't tags on an empty image");
   is($empty->errstr, "tags: empty input image",
      "check error message");
+}
+
+{
+  my @tests =
+    (
+     [ "gray",  1, undef ],
+     [ "graya", 1, 1     ],
+     [ "rgb",   3, undef ],
+     [ "rgba",  3, 3     ],
+    );
+  for my $test (@tests) {
+    my ($model, $color_channels, $alpha) = @$test;
+    my $im = Imager->new(model => $model, xsize => 10, ysize => 10)
+      or die "Cannot create $model image:", Imager->errstr;
+    ok($im, "make a $model image via model");
+    is($im->colormodel, $model, "check colormodel is $model");
+    is($im->alphachannel, $alpha, "check alphachannel");
+    is($im->colorchannels, $color_channels, "check colorchannels");
+  }
 }
 
 Imager->close_log();

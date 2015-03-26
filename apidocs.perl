@@ -193,7 +193,12 @@ close OUT;
 
 
 sub make_func_list {
-  my @funcs = qw(i_img i_color i_fcolor i_fill_t mm_log mm_log i_img_color_channels i_img_has_alpha i_img_dim i_DF i_DFc i_DFp i_DFcp i_psamp_bits i_gsamp_bits i_psamp i_psampf);
+  my @funcs =
+    qw(i_img i_color i_fcolor i_fill_t mm_log mm_log i_color_model_t
+       im_context_t i_img_dim i_img_dim_u im_slot_t
+       i_polygon_t i_poly_fill_mode_t i_mutex_t
+       i_img_has_alpha i_DF i_DFc i_DFp i_DFcp i_psamp_bits i_gsamp_bits
+       i_psamp i_psampf);
   open FUNCS, "< imexttypes.h"
     or die "Cannot open imexttypes.h: $!\n";
   my $in_struct;

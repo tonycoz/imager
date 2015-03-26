@@ -243,6 +243,10 @@ extern im_ext_funcs *imager_function_ext_table;
 
 #define im_push_errorf (im_extt->f_im_push_errorf)
 
+#define i_img_alpha_channel(im, channel) ((im_extt->f_i_img_alpha_channel)((im), (channel)))
+#define i_img_color_model(im) ((im_extt->f_i_img_color_model)((im)))
+#define i_img_color_channels(im) ((im_extt->f_i_img_color_channels)((im)))
+
 #ifdef IMAGER_LOG
 #ifndef IMAGER_NO_CONTEXT
 #define mm_log(x) { i_lhead(__FILE__,__LINE__); i_loog x; } 

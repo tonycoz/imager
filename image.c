@@ -405,6 +405,85 @@ i_img_get_height(i_img *im) {
 }
 
 /*
+=item i_img_color_model(im)
+=category Image Information
+=synopsis i_color_model_t cm = i_img_color_model(im);
+
+Returns the color model for the image.
+
+A future version of Imager will allow for images with extra channels
+beyond gray/rgb and alpha.
+
+=cut
+*/
+i_color_model_t
+i_img_color_model(i_img *im) {
+  return (i_color_model_t)im->channels;
+}
+
+/*
+=item i_img_alpha_channel(im, &channel)
+=category Image Information
+=synopsis int alpha_channel;
+=synopsis int has_alpha = i_img_alpha_channel(im, &alpha_channel);
+
+Work out the alpha channel for an image.
+
+If the image has an alpha channel, sets C<*channel> to the alpha
+channel index and returns non-zero.
+
+If the image has no alpha channel, returns zero and C<*channel> is not
+modified.
+
+C<channel> may be C<NULL>.
+
+=cut
+*/
+
+int
+i_img_alpha_channel(i_img *im, int *channel) {
+  i_color_model_t model = i_img_color_model(im);
+  switch (model) {
+  case icm_gray_alpha:
+  case icm_rgb_alpha:
+    if (channel) *channel = (int)model - 1;
+    return 1;
+
+  default:
+    return 0;
+  }
+}
+
+/*
+=item i_img_color_channels(im)
+=category Image Information
+=synopsis int color_channels = i_img_color_channels(im);
+
+Returns the number of color channels in the image.  For now this is
+always 1 (for grayscale) or 3 (for RGB) but may be 0 in some special
+cases in a future release of Imager.
+
+=cut
+*/
+
+int
+i_img_color_channels(i_img *im) {
+  i_color_model_t model = i_img_color_model(im);
+  switch (model) {
+  case icm_gray_alpha:
+  case icm_rgb_alpha:
+    return (int)model - 1;
+
+  case icm_gray:
+  case icm_rgb:
+    return (int)model;
+
+  default:
+    return 0;
+  }
+}
+
+/*
 =item i_copyto_trans(C<im>, C<src>, C<x1>, C<y1>, C<x2>, C<y2>, C<tx>, C<ty>, C<trans>)
 
 =category Image

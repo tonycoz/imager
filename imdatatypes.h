@@ -732,6 +732,54 @@ typedef struct {
 
 typedef struct i_render_tag i_render;
 
+/*
+=item i_color_model_t
+=category Data Types
+=order 95
+
+Returned by L<i_img_color_model(im)> to indicate the color model of
+the image.
+
+An enumerated type with the following possible values:
+
+=over
+
+=item *
+
+C<icm_unknown> - the image has no usable color data.  In future
+versions of Imager this will be returned in a few limited cases,
+eg. when the source image is CMYK and the user has requested no color
+translation is done.
+
+=item *
+
+C<icm_gray> - gray scale with no alpha channel.
+
+=item *
+
+C<icm_gray_alpha> - gray scale with an alpha channel.
+
+=item *
+
+C<icm_rgb> - RGB
+
+=item *
+
+C<icm_rgb_alpha> - RGB with an alpha channel.
+
+=back
+
+=cut
+*/
+
+typedef enum {
+  icm_unknown,
+  icm_gray,
+  icm_gray_alpha,
+  icm_rgb,
+  icm_rgb_alpha
+} i_color_model_t;
+
 #ifdef IMAGER_FORMAT_ATTR
 #define I_FORMAT_ATTR(format_index, va_index) \
   __attribute ((format (printf, format_index, va_index)))

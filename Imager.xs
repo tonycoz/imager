@@ -1720,6 +1720,22 @@ IV
 i_img_get_height(im)
     Imager::ImgRaw	im
 
+int
+i_img_color_model(im)
+    Imager::ImgRaw	im
+
+int
+i_img_color_channels(im)
+    Imager::ImgRaw	im
+
+int
+i_img_alpha_channel(im)
+    Imager::ImgRaw	im
+  CODE:
+    if (!i_img_alpha_channel(im, &RETVAL))
+      XSRETURN(0);
+  OUTPUT:
+    RETVAL
 
 void
 i_img_is_monochrome(im)
