@@ -13,6 +13,26 @@ Imager release history.  Older releases can be found in Changes.old
 
    - polygon filling is now exposed through the API.
 
+ - added colormodel(), alphachannel() and colorchannels() methods.
+   These were added for two reasons:
+
+    - a future version of Imager may allow the number of channels in
+      an image to not directly represent the color model of an image.
+      eg. a greyscale TIFF image with multiple alpha channels.
+
+    - a future version of Imager may allow an image to be read without
+      translation, for example a TIFF file that contains measurements
+      from an instrument.  Currently Image transforms the samples into
+      the range 0.0 ... 1.0 which may means the user has to translates
+      the value back.
+
+      An untranslated image would be unusable as image data, so
+      colormodel() would return "unknown" in this case.
+
+      Similarly a CMYK image might be returned as an "unknown" color
+      model image, if the caller chooses to disable translation to
+      RGB.
+
 Imager 1.001 - 2 Jan 2015
 ============
 
