@@ -1,5 +1,8 @@
 Imager release history.  Older releases can be found in Changes.old
 
+Imager 1.002 - 3 Apr 2015
+============
+
  - drawing anti-aliased filled circles is now 10 to 50 times faster
    depending on the size of the circle.
    https://rt.cpan.org/Ticket/Display.html?id=101682
