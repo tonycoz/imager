@@ -1,6 +1,6 @@
 #!perl -w
 use strict;
-use Test::More tests => 15;
+use Test::More tests => 17;
 use Imager;
 use Imager::Test qw(is_image);
 
@@ -50,6 +50,19 @@ SKIP:
   ok($im->flood_fill(x => 4, y=> 8, color => "FF0000"),
      "fill at bottom of vertical well");
   is_image($im, $cmp, "check the result");
+}
+
+{
+  # 103786 - when filling up would cross a 4-connected border to the left
+  # incorrectly
+  my $im = Imager->new(xsize => 20, ysize => 20);
+  $im->box(filled => 1, box => [ 0, 10, 9, 19 ], color => "FFFFFF");
+  $im->box(filled => 1, box => [ 10, 0, 19, 9 ], color => "FFFFFF");
+  my $cmp = $im->copy;
+  $cmp->box(filled => 1, box => [ 10, 10, 19, 19 ], color => "0000FF");
+  ok($im->flood_fill(x => 19, y => 19, color => "0000FF"),
+     "flood_fill() to big checks");
+  is_image($im, $cmp, "check result correct");
 }
 
 unless ($ENV{IMAGER_KEEP_FILES}) {

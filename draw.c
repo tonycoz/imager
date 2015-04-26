@@ -1760,10 +1760,36 @@ i_rspan(i_img *im, i_img_dim seedx, i_img_dim seedy, i_color const *val, ff_cmpf
   return seedx;
 }
 
+#ifdef DEBUG_FLOOD_FILL
+
+#define ST_PUSH_NOTE(left, right, dadl, dadr, y, dir) \
+  fprintf(stderr, "push(left %" i_DF ", right %" i_DF ", dadleft %" i_DF  ", dadright %" i_DF ", y %" i_DF ", dir %d, line %d)\n", \
+	  i_DFc(left), i_DFc(right), i_DFc(dadl), i_DFc(dadr), i_DFc(y), (dir), __LINE__)
+
+#define ST_POP_NOTE(left, right, dadl, dadr, y, dir) \
+  fprintf(stderr, "popped(left %" i_DF ", right %" i_DF ", dadleft %" i_DF  ", dadright %" i_DF ", y %" i_DF ", dir %d, line %d)\n", \
+	  i_DFc(left), i_DFc(right), i_DFc(dadl), i_DFc(dadr), i_DFc(y), (dir), __LINE__)
+
+#define ST_STACK_NOTE(dadl, dadr, left, right, y, dir)			\
+  fprintf(stderr, "stack(left %" i_DF ", right %" i_DF ", dadleft %" i_DF  ", dadright %" i_DF ", y %" i_DF ", dir %d, line %d)\n", \
+	  i_DFc(left), i_DFc(right), i_DFc(dadl), i_DFc(dadr), i_DFc(y), (dir), __LINE__)
+
+#else
+
+#define ST_PUSH_NOTE(left, right, dadl, dadr, y, dir)
+
+#define ST_POP_NOTE(left, right, dadl, dadr, y, dir)
+
+#define ST_STACK_NOTE(dadl, dadr, left, right, y, dir)
+
+#endif
+
+
 /* Macro to create a link and push on to the list */
 
 #define ST_PUSH(left,right,dadl,dadr,y,dir) do {                 \
   struct stack_element *s = crdata(left,right,dadl,dadr,y,dir);  \
+  ST_PUSH_NOTE(left, right, dadl, dadr, y, dir);		 \
   llist_push(st,&s);                                             \
 } while (0)
 
@@ -1779,24 +1805,28 @@ i_rspan(i_img *im, i_img_dim seedx, i_img_dim seedy, i_color const *val, ff_cmpf
   dadRx     = s->dadRx;       \
   y         = s->myY;         \
   direction = s->myDirection; \
+  ST_POP_NOTE(lx, rx, dadLx, dadRx, y, direction);	\
   myfree(s);                  \
 } while (0)
 
 #define ST_STACK(dir,dadLx,dadRx,lx,rx,y) do {                    \
   i_img_dim pushrx = rx+1;                                              \
   i_img_dim pushlx = lx-1;                                              \
+  ST_STACK_NOTE(lx, rx, dadLx, dadRx, y, dir);		 \
   ST_PUSH(lx,rx,pushlx,pushrx,y+dir,dir);                         \
   if (rx > dadRx)                                                 \
     ST_PUSH(dadRx+1,rx,pushlx,pushrx,y-dir,-dir);                 \
-  if (lx < dadLx) ST_PUSH(lx,dadLx-1,pushlx,pushrx,y-dir,-dir);   \
+  if (lx < dadLx)						\
+    ST_PUSH(lx,dadLx-1,pushlx,pushrx,y-dir,-dir);   \
 } while (0)
 
 #define SET(x,y) btm_set(btm,x,y)
 
 /* INSIDE returns true if pixel is correct color and we haven't set it before. */
-#define INSIDE(x,y, seed) ((!btm_test(btm,x,y) && ( i_gpix(im,x,y,&cval),cmpfunc(seed,&cval,channels)  ) ))
-
-
+#define INSIDE(x,y, seed) \
+  (assert((x) >= 0 && (x) < (im)->xsize && (y) >= 0 && (y) < (im)->ysize), \
+   (!btm_test(btm,x,y) && \
+     ( i_gpix(im,x,y,&cval),cmpfunc(seed,&cval,channels)  ) ))
 
 /* The function that does all the real work */
 
@@ -1817,7 +1847,7 @@ i_flood_fill_low(i_img *im,i_img_dim seedx,i_img_dim seedy,
 
   int channels;
   i_img_dim xsize,ysize;
-  i_color cval;
+  i_color cval; /* used by the INSIDE() macro */
 
   channels = im->channels;
   xsize    = im->xsize;
@@ -1862,6 +1892,8 @@ i_flood_fill_low(i_img *im,i_img_dim seedx,i_img_dim seedy,
 	SET(lx,y);
 	lx--;
       }
+      /* lx should point at the left-most INSIDE() pixel */
+      ++lx;
     }
 
     if (bxmin > lx) bxmin = lx;
