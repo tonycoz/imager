@@ -1,6 +1,6 @@
 #!perl -w
 use strict;
-use Test::More tests => 17;
+use Test::More tests => 113;
 use Imager;
 use Imager::Test qw(is_image);
 
@@ -63,6 +63,89 @@ SKIP:
   ok($im->flood_fill(x => 19, y => 19, color => "0000FF"),
      "flood_fill() to big checks");
   is_image($im, $cmp, "check result correct");
+}
+
+{
+  # keys for tests are:
+  #  name - base name of the test, the fill position is added
+  #  boxes - arrayref of boxes to draw
+  #  fillats - positions to start filling from
+  # all of the tests must fill all of the image except that covered by
+  # boxes
+  my @tests =
+    (
+     {
+      name => "1-pixel border",
+      boxes => [ [ 1, 1, 18, 18 ] ],
+      fillats =>
+      [
+       [ 0, 0 ],
+       [ 19, 0 ],
+       [ 0, 19 ],
+       [ 19, 19 ],
+       [ 10, 0 ],
+       [ 10, 19 ],
+       [ 0, 10 ],
+       [ 19, 10 ],
+      ]
+     },
+     {
+      name => "vertical connect check",
+      boxes =>
+      [
+       [ 0, 0, 8, 11 ],
+       [ 10, 8, 19, 19 ],
+      ],
+      fillats =>
+      [
+       [ 19, 0 ],
+       [ 0, 19 ],
+      ],
+     },
+     {
+      name => "horizontal connect check",
+      boxes =>
+      [
+       [ 0, 0, 11, 8 ],
+       [ 10, 10, 19, 19 ],
+      ],
+      fillats =>
+      [
+       [ 19, 0 ],
+       [ 0, 19 ],
+      ],
+     },
+    );
+
+  my $box_color = Imager::Color->new("FF0000");
+  my $fill_color = Imager::Color->new("00FF00");
+  for my $test (@tests) {
+    my $base_name = $test->{name};
+    my $boxes = $test->{boxes};
+    my $fillats = $test->{fillats};
+    for my $pos (@$fillats) {
+      for my $flip ("none", "h", "v", "vh") {
+	my ($fillx, $filly) = @$pos;
+
+	my $im = Imager->new(xsize => 20, ysize => 20);
+	my $cmp = Imager->new(xsize => 20, ysize => 20);
+	$cmp->box(filled => 1, color => $fill_color);
+	for my $image ($im, $cmp) {
+	  for my $box (@$boxes) {
+	    $image->box(filled => 1, color => $box_color, box => $box );
+	  }
+	}
+	if ($flip ne "none") {
+	  $_->flip(dir => $flip) for $im, $cmp;
+	  $flip =~ /h/ and $fillx = 19 - $fillx;
+	  $flip =~ /v/ and $filly = 19 - $filly;
+	}
+	ok($im->flood_fill(x => $fillx, y => $filly, color => $fill_color),
+	   "$base_name - \@($fillx,$filly) - flip $flip - fill");
+	is_image($im, $cmp, "$base_name - \@($fillx,$filly) - flip $flip - compare");
+      }
+    }
+  }
 }
 
 unless ($ENV{IMAGER_KEEP_FILES}) {
