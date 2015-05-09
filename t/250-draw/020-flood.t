@@ -1,6 +1,6 @@
 #!perl -w
 use strict;
-use Test::More tests => 113;
+use Test::More tests => 177;
 use Imager;
 use Imager::Test qw(is_image);
 
@@ -69,9 +69,11 @@ SKIP:
   # keys for tests are:
   #  name - base name of the test, the fill position is added
   #  boxes - arrayref of boxes to draw
+  #  floods - arrayref of boxes representing the area to be flood filled,
+  #    defaults to the whole image
   #  fillats - positions to start filling from
-  # all of the tests must fill all of the image except that covered by
-  # boxes
+  # Note that floods are drawn before the boxes, so the boxes obscure the
+  # filled area
   my @tests =
     (
      {
@@ -115,6 +117,39 @@ SKIP:
        [ 0, 19 ],
       ],
      },
+     {
+      name => "fill from inner line to 1-pixel border",
+      boxes =>
+      [
+       [ 1, 1, 18, 9 ],
+       [ 1, 10, 9, 10 ],
+       [ 1, 11, 18, 19 ],
+      ],
+      fillats => [ [ 10, 10 ], [ 0, 0 ] ],
+     },
+
+     {
+      name => "4-connected",
+      boxes =>
+      [
+       [ 11, 0, 19, 6 ],
+       [ 0, 7, 10, 15 ],
+       [ 11, 16, 19, 19 ],
+      ],
+      floods =>
+      [
+       [ 11, 7, 19, 15 ],
+      ],
+      fillats =>
+      [
+       [ 19, 10 ],
+       [ 19, 7 ],
+       [ 19, 15 ],
+       [ 11, 10 ],
+       [ 11, 7 ],
+       [ 11, 15 ],
+      ]
+     },
     );
 
   my $box_color = Imager::Color->new("FF0000");
@@ -122,6 +157,7 @@ SKIP:
   for my $test (@tests) {
     my $base_name = $test->{name};
     my $boxes = $test->{boxes};
+    my $floods = $test->{floods} || [ [ 0, 0, 19, 19 ] ];
     my $fillats = $test->{fillats};
     for my $pos (@$fillats) {
       for my $flip ("none", "h", "v", "vh") {
@@ -129,7 +165,9 @@ SKIP:
 
 	my $im = Imager->new(xsize => 20, ysize => 20);
 	my $cmp = Imager->new(xsize => 20, ysize => 20);
-	$cmp->box(filled => 1, color => $fill_color);
+	for my $flood (@$floods) {
+	  $cmp->box(box => $flood, filled => 1, color => $fill_color);
+	}
 	for my $image ($im, $cmp) {
 	  for my $box (@$boxes) {
 	    $image->box(filled => 1, color => $box_color, box => $box );
