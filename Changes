@@ -1,10 +1,21 @@
 Imager release history.  Older releases can be found in Changes.old
 
+ - update 1.002 release notes to include the center change for filled
+   circle drawing.
+
+ - flood_fill() would escape beyond a 4-connected space under some
+   circumstances.
+   Added many more flood_fill() tests.
+   https://rt.cpan.org/Ticket/Display.html?id=103786
+
 Imager 1.002 - 3 Apr 2015
 ============
 
  - drawing anti-aliased filled circles is now 10 to 50 times faster
    depending on the size of the circle.
+   This also changed the center from being the center of the pixel to
+   being the top left of the pixel to match the filled arcs drawn by
+   arc().
    https://rt.cpan.org/Ticket/Display.html?id=101682
 
  - enhancements to polygon filling:
@@ -25,7 +36,7 @@ Imager 1.002 - 3 Apr 2015
 
     - a future version of Imager may allow an image to be read without
       translation, for example a TIFF file that contains measurements
-      from an instrument.  Currently Image transforms the samples into
+      from an instrument.  Currently Imager transforms the samples into
       the range 0.0 ... 1.0 which may means the user has to translates
       the value back.
 
