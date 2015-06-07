@@ -118,6 +118,11 @@ typedef struct {
 
 typedef struct {
   size_t count;
+  const i_sample16_t *samples;
+} i_sample16_list;
+
+typedef struct {
+  size_t count;
   const i_polygon_t *polygons;
 } i_polygon_list;
 
@@ -4260,6 +4265,154 @@ i_glinf(im, l, r, y)
           }
           myfree(vals);
         }
+
+void
+i_gslin(im, l, r, y, channels)
+	Imager::ImgRaw im
+        i_img_dim l
+        i_img_dim r
+        i_img_dim y
+        i_channel_list channels
+      PREINIT:
+        char *sdata;
+	i_sample16_t *data;
+	i_img_dim count, i;
+      PPCODE:	
+        if (l < r) {
+          Newx(sdata, sizeof(i_sample16_t) * (r-l) * channels.count + 2, char);
+	  data = (i_sample16_t *)sdata;
+          count = i_gslin(im, l, r, y, data, channels.channels, channels.count);
+          if (GIMME_V == G_ARRAY) {
+            EXTEND(SP, count);
+            for (i = 0; i < count; ++i)
+              PUSHs(sv_2mortal(newSVuv(data[i])));
+	    Safefree(data);
+          }
+          else {
+	    size_t size = count * sizeof(i_sample16_t);
+	    SV *sv = sv_newmortal();
+
+	    sdata[size] = '\0';
+	    sv_usepvn_flags(sv, sdata, size, SV_HAS_TRAILING_NUL);
+
+            EXTEND(SP, 1);
+            PUSHs(sv);
+          }
+        }
+        else {
+	  Safefree(data);
+          if (GIMME_V != G_ARRAY) {
+	    XSRETURN_UNDEF;
+          }
+        }
+
+void
+i_gslinf(im, l, r, y, channels)
+	Imager::ImgRaw im
+        i_img_dim l
+        i_img_dim r
+        i_img_dim y
+        i_channel_list channels
+      PREINIT:
+        char *sdata;
+	i_fsample_t *data;
+	i_img_dim count, i;
+      PPCODE:	
+        if (l < r) {
+          Newx(sdata, sizeof(i_fsample_t) * (r-l) * channels.count + 2, char);
+	  data = (i_fsample_t *)sdata;
+          count = i_gslinf(im, l, r, y, data, channels.channels, channels.count);
+          if (GIMME_V == G_ARRAY) {
+            EXTEND(SP, count);
+            for (i = 0; i < count; ++i)
+              PUSHs(sv_2mortal(newSVnv(data[i])));
+	    Safefree(data);
+          }
+          else {
+	    size_t size = count * sizeof(i_fsample_t);
+	    SV *sv = sv_newmortal();
+
+	    sdata[size] = '\0';
+	    sv_usepvn_flags(sv, sdata, size, SV_HAS_TRAILING_NUL);
+
+            EXTEND(SP, 1);
+            PUSHs(sv);
+          }
+        }
+        else {
+	  Safefree(data);
+          if (GIMME_V != G_ARRAY) {
+	    XSRETURN_UNDEF;
+          }
+        }
+
+undef_neg_int
+i_pslin(im, x, y, channels, data, offset = 0, width = -1)
+	Imager::ImgRaw im
+	i_img_dim x
+	i_img_dim y
+	i_channel_list channels
+        i_sample16_list data
+	i_img_dim offset
+	i_img_dim width
+    PREINIT:
+	i_img_dim r;
+    CODE:
+	i_clear_error();
+	if (offset < 0) {
+	  i_push_error(0, "offset must be non-negative");
+	  XSRETURN_UNDEF;
+	}
+	if (offset > 0) {
+	  if (offset > data.count) {
+	    i_push_error(0, "offset greater than number of samples supplied");
+	    XSRETURN_UNDEF;
+	  }
+	  data.samples += offset;
+	  data.count -= offset;
+	}
+	if (width == -1 ||
+	    width * channels.count > data.count) {
+	  width = data.count / channels.count;
+        }
+	r = x + width;
+	RETVAL = i_pslin(im, x, r, y, data.samples, channels.channels, channels.count);
+    OUTPUT:
+	RETVAL
+
+undef_neg_int
+i_pslinf(im, x, y, channels, data, offset = 0, width = -1)
+	Imager::ImgRaw im
+	i_img_dim x
+	i_img_dim y
+	i_channel_list channels
+        i_fsample_list data
+	i_img_dim offset
+	i_img_dim width
+    PREINIT:
+	i_img_dim r;
+    CODE:
+	i_clear_error();
+	if (offset < 0) {
+	  i_push_error(0, "offset must be non-negative");
+	  XSRETURN_UNDEF;
+	}
+	if (offset > 0) {
+	  if (offset > data.count) {
+	    i_push_error(0, "offset greater than number of samples supplied");
+	    XSRETURN_UNDEF;
+	  }
+	  data.samples += offset;
+	  data.count -= offset;
+	}
+	if (width == -1 ||
+	    width * channels.count > data.count) {
+	  width = data.count / channels.count;
+        }
+	r = x + width;
+	RETVAL = i_pslinf(im, x, r, y, data.samples, channels.channels, channels.count);
+    OUTPUT:
+	RETVAL
 
 Imager::ImgRaw
 i_img_8_new(xsize, ysize, channels)

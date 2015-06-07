@@ -5,6 +5,7 @@
 i_channel_list	 	T_IM_CHANNEL_LIST
 i_sample_list		T_IM_SAMPLE_LIST
 i_fsample_list		T_IM_FSAMPLE_LIST
+i_sample16_list		T_IM_SAMPLE16_LIST
 i_polygon_list		T_IM_POLYGON_LIST
 i_trim_color_list	I_IM_TRIM_COLOR_LIST
 
@@ -39,20 +40,30 @@ T_OFF_T
 T_IM_CHANNEL_LIST
         SvGETMAGIC($arg);
 	if (SvOK($arg)) {
-	  AV *channels_av;
-	  int i;
-	  if (!SvROK($arg) || SvTYPE(SvRV($arg)) != SVt_PVAV) {
-	    croak(\"$var is not an array ref\");
+	  if (!SvROK($arg)) {
+	    $var.count = SvIV($arg);
+	    $var.channels = NULL;
+	    if ($var.count <= 0) {
+	      croak(\"$var must be positive if an integer\");
+	    }
 	  }
-	  channels_av = (AV *)SvRV($arg);
- 	  $var.count = av_len(channels_av) + 1;
-	  if ($var.count < 1) {
-	    croak(\"$pname: no channels provided\");
+	  else if (SvTYPE(SvRV($arg)) == SVt_PVAV) {
+	    AV *channels_av;
+	    int i;
+
+	    channels_av = (AV *)SvRV($arg);
+ 	    $var.count = av_len(channels_av) + 1;
+	    if ($var.count < 1) {
+	      croak(\"$pname: no channels provided\");
+	    }
+	    $var.channels = malloc_temp(aTHX_ sizeof(int) * $var.count);
+ 	    for (i = 0; i < $var.count; ++i) {
+	      SV **entry = av_fetch(channels_av, i, 0);
+	      $var.channels[i] = entry ? SvIV(*entry) : 0;
+	    }
 	  }
-	  $var.channels = malloc_temp(aTHX_ sizeof(int) * $var.count);
- 	  for (i = 0; i < $var.count; ++i) {
-	    SV **entry = av_fetch(channels_av, i, 0);
-	    $var.channels[i] = entry ? SvIV(*entry) : 0;
+	  else {
+	    croak(\"$var is not an integer or an array ref\");
 	  }
         }
 	else {
@@ -116,6 +127,37 @@ T_IM_FSAMPLE_LIST
 	  if ($var.count % sizeof(double))
 	    croak(\"$pname: $var doesn't not contain a integer number of samples\");
           $var.count /= sizeof(double);
+	  if ($var.count == 0)
+	    croak(\"$pname: no samples provided in $var\");
+	}
+
+T_IM_SAMPLE16_LIST
+	SvGETMAGIC($arg);
+	if (!SvOK($arg))
+	  croak(\"$var must be a scalar or an arrayref\");
+	if (SvROK($arg)) {
+	  i_img_dim i;
+	  AV *av;
+	  i_sample16_t *s;
+	  if (SvTYPE(SvRV($arg)) != SVt_PVAV)
+	    croak(\"$var must be a scalar or an arrayref\");
+	  av = (AV *)SvRV($arg);
+          $var.count = av_len(av) + 1;
+          if ($var.count < 1)
+	    croak(\"$pname: no samples provided in $var\");
+	  s = malloc_temp(aTHX_ sizeof(i_sample16_t) * $var.count);
+ 	  for (i = 0; i < $var.count; ++i) {
+	    SV **entry = av_fetch(av, i, 0);
+ 	    s[i] = entry ? SvIV(*entry) : 0;
+	  }
+          $var.samples = s;
+	}
+	else {
+	  /* non-magic would be preferable here */
+	  $var.samples = (const i_sample16_t *)SvPVbyte($arg, $var.count);
+	  if ($var.count % sizeof(i_sample16_t))
+	    croak(\"$pname: $var doesn't not contain an integer number of samples\");
+	  $var.count /= sizeof(i_sample16_t);
 	  if ($var.count == 0)
 	    croak(\"$pname: no samples provided in $var\");
 	}

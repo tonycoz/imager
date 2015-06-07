@@ -3746,75 +3746,123 @@ sub setscanline {
 
 sub getsamples {
   my $self = shift;
-  my %opts = ( type => '8bit', x=>0, offset => 0, @_);
+  my %opts = @_;
 
   $self->_valid_image("getsamples")
     or return;
 
-  defined $opts{width} or $opts{width} = $self->getwidth - $opts{x};
+  my $x = $opts{x} || 0;
+  my $y = $opts{y};
 
-  unless (defined $opts{'y'}) {
+  unless (defined $y) {
     $self->_set_error("missing y parameter");
     return;
   }
-  
-  if ($opts{target}) {
-    my $target = $opts{target};
-    my $offset = $opts{offset};
-    if ($opts{type} eq '8bit') {
-      my @samples = i_gsamp($self->{IMG}, $opts{x}, $opts{x}+$opts{width},
-			    $opts{y}, $opts{channels})
-	or return;
-      @{$target}[$offset .. $offset + @samples - 1] = @samples;
-      return scalar(@samples);
-    }
-    elsif ($opts{type} eq 'float') {
-      my @samples = i_gsampf($self->{IMG}, $opts{x}, $opts{x}+$opts{width},
-			     $opts{y}, $opts{channels});
-      @{$target}[$offset .. $offset + @samples - 1] = @samples;
-      return scalar(@samples);
-    }
-    elsif ($opts{type} =~ /^(\d+)bit$/) {
-      my $bits = $1;
 
-      my @data;
-      my $count = i_gsamp_bits($self->{IMG}, $opts{x}, $opts{x}+$opts{width}, 
-			       $opts{y}, $bits, $target, 
+  my $width = $opts{width};
+  defined $width or $width = $self->getwidth - $x;
+
+  my $scale = $opts{scale} || "gamma";
+
+  if ($scale eq "gamma") {
+    my $type = $opts{type} || "8bit";
+    if (my $target = $opts{target}) {
+      my $offset = $opts{offset} || 0;
+      if ($type eq '8bit') {
+	my @samples = i_gsamp($self->{IMG}, $x, $x + $width,
+			      $y, $opts{channels})
+	  or return;
+	@{$target}[$offset .. $offset + @samples - 1] = @samples;
+	return scalar(@samples);
+      }
+      elsif ($type eq 'float') {
+	my @samples = i_gsampf($self->{IMG}, $x, $x + $width,
+			       $y, $opts{channels});
+	@{$target}[$offset .. $offset + @samples - 1] = @samples;
+	return scalar(@samples);
+      }
+      elsif ($type =~ /^([0-9]+)bit$/) {
+	my $bits = $1;
+
+	my @data;
+	my $count = i_gsamp_bits($self->{IMG}, $x, $x + $width, 
+			       $y, $bits, $target,
 			       $offset, $opts{channels});
-      unless (defined $count) {
-	$self->_set_error(Imager->_error_as_msg);
+	unless (defined $count) {
+	  $self->_set_error(Imager->_error_as_msg);
+	  return;
+	}
+
+	return $count;
+      }
+      else {
+	$self->_set_error("invalid type parameter - must be '8bit' or 'float'");
 	return;
       }
-
-      return $count;
     }
     else {
-      $self->_set_error("invalid type parameter - must be '8bit' or 'float'");
-      return;
+      if ($type eq '8bit') {
+	return i_gsamp($self->{IMG}, $x, $x + $width, $y,
+		       $opts{channels});
+      }
+      elsif ($type eq 'float') {
+	return i_gsampf($self->{IMG}, $x, $x + $width, $y,
+			$opts{channels});
+      }
+      elsif ($type =~ /^([0-9]+)bit$/) {
+	my $bits = $1;
+
+	my @data;
+	i_gsamp_bits($self->{IMG}, $x, $x + $width,
+		     $y, $bits, \@data, 0, $opts{channels})
+	  or return;
+	return @data;
+      }
+      else {
+	$self->_set_error("invalid type parameter");
+	return;
+      }
+    }
+  }
+  elsif ($scale eq 'linear') {
+    my $type = $opts{type} || '16bit';
+    if (my $target = $opts{target}) {
+      my $offset = $opts{offset} || 0;
+      if ($type eq '16bit') {
+	my @samples = i_gslin($self->{IMG}, $x, $x + $width,
+			      $y, $opts{channels})
+	  or return;
+	@{$target}[$offset .. $offset + @samples - 1] = @samples;
+      }
+      elsif ($type eq 'float') {
+	my @samples = i_gslinf($self->{IMG}, $x, $x + $width,
+			       $y, $opts{channels})
+	  or return;
+	@{$target}[$offset .. $offset + @samples - 1] = @samples;
+      }
+      else {
+	$self->_set_error("invalid type for linear scale");
+	return;
+      }
+    }
+    else {
+      if ($type eq '16bit') {
+	return i_gslin($self->{IMG}, $x, $x+$width, $y,
+		       $opts{channels});
+      }
+      elsif ($type eq 'float') {
+	return i_gslinf($self->{IMG}, $x, $x+$width, $y,
+		       $opts{channels});
+      }
+      else {
+	$self->_set_error("invalid type for linear scale");
+	return;
+      }
     }
   }
   else {
-    if ($opts{type} eq '8bit') {
-      return i_gsamp($self->{IMG}, $opts{x}, $opts{x}+$opts{width},
-		     $opts{y}, $opts{channels});
-    }
-    elsif ($opts{type} eq 'float') {
-      return i_gsampf($self->{IMG}, $opts{x}, $opts{x}+$opts{width},
-		      $opts{y}, $opts{channels});
-    }
-    elsif ($opts{type} =~ /^(\d+)bit$/) {
-      my $bits = $1;
-
-      my @data;
-      i_gsamp_bits($self->{IMG}, $opts{x}, $opts{x}+$opts{width}, 
-		   $opts{y}, $bits, \@data, 0, $opts{channels})
-	or return;
-      return @data;
-    }
-    else {
-      $self->_set_error("invalid type parameter - must be '8bit' or 'float'");
-      return;
-    }
+    $self->_set_error("invalid scale parameter - must be gamma or linear");
+    return;
   }
 }
 
@@ -3824,10 +3872,10 @@ sub setsamples {
   $self->_valid_image("setsamples")
     or return;
 
-  my %opts = ( x => 0, offset => 0 );
   my $data_index;
   # avoid duplicating the data parameter, it may be a large scalar
   my $i = 0;
+  my %opts;
   while ($i < @_ -1) {
     if ($_[$i] eq 'data') {
       $data_index = $i+1;
@@ -3848,36 +3896,58 @@ sub setsamples {
     return;
   }
 
-  my $type = $opts{type};
-  defined $type or $type = '8bit';
+  my ($type, $x, $y, $width, $scale, $offset, $channels) =
+    @opts{qw/type x y width scale offset channels/};
 
-  my $width = defined $opts{width} ? $opts{width}
-    : $self->getwidth() - $opts{x};
+  defined $x or $x = 0;
+  defined $y or $y = 0;
+  defined $width or $width = $self->getwidth() - $x;
+  defined $scale or $scale = 'gamma';
+  defined $offset or $offset = 0;
+  defined $channels or $channels = $self->getchannels;
 
   my $count;
-  if ($type eq '8bit') {
-    $count = i_psamp($self->{IMG}, $opts{x}, $opts{y}, $opts{channels},
-		     $_[$data_index], $opts{offset}, $width);
-  }
-  elsif ($type eq 'float') {
-    $count = i_psampf($self->{IMG}, $opts{x}, $opts{y}, $opts{channels},
-		      $_[$data_index], $opts{offset}, $width);
-  }
-  elsif ($type =~ /^([0-9]+)bit$/) {
-    my $bits = $1;
+  if ($scale eq "gamma" ) {
+    defined $type or $type = "8bit";
+    if ($type eq '8bit') {
+      $count = i_psamp($self->{IMG}, $x, $y, $channels,
+		     $_[$data_index], $offset, $width);
+    }
+    elsif ($type eq 'float') {
+      $count = i_psampf($self->{IMG}, $x, $y, $channels,
+			$_[$data_index], $offset, $width);
+    }
+    elsif ($type =~ /^([0-9]+)bit$/) {
+      my $bits = $1;
 
-    unless (ref $_[$data_index]) {
-      $self->_set_error("setsamples: data must be an array ref for type not 8bit or float");
+      unless (ref $_[$data_index]) {
+	$self->_set_error("setsamples: data must be an array ref for type not 8bit or float");
+	return;
+      }
+
+      $count = i_psamp_bits($self->{IMG}, $x, $y, $bits,
+			    $channels, $_[$data_index], $offset,
+			    $width);
+    }
+    else {
+      $self->_set_error('setsamples: type parameter invalid');
       return;
     }
-
-    $count = i_psamp_bits($self->{IMG}, $opts{x}, $opts{y}, $bits,
-			  $opts{channels}, $_[$data_index], $opts{offset}, 
-			  $width);
   }
-  else {
-    $self->_set_error('setsamples: type parameter invalid');
-    return;
+  elsif ($scale eq "linear") {
+    defined $type or $type = "16bit";
+    if ($type eq "16bit") {
+      $count = i_pslin($self->{IMG}, $x, $y, $channels,
+		       $_[$data_index], $offset, $width);
+    }
+    elsif ($type eq "float") {
+      $count = i_pslinf($self->{IMG}, $x, $y, $channels,
+			$_[$data_index], $offset, $width);
+    }
+    else {
+      $self->_set_error('setsamples: type parameter invalid');
+      return;
+    }
   }
 
   unless (defined $count) {
