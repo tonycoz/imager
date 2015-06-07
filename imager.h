@@ -462,4 +462,6 @@ extern void i_mutex_unlock(i_mutex_t m);
 
 #include "imio.h"
 
+#include "imcms.h"
+
 #endif

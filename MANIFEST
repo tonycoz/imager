@@ -135,6 +135,9 @@ Imager.pm
 Imager.xs
 imageri.h
 imapiver.h			API/bincompat version numbers
+imcms.c
+imcms.h
+imcmst.h
 imdatatypes.h
 imerror.h			Error handling functions
 imexif.c			EXIF decoding

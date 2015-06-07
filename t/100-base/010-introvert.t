@@ -1219,7 +1219,6 @@ SKIP:
   }
 }
 
-
 {
   my $im = Imager->new(xsize => 10, ysize => 10);
 
@@ -1249,12 +1248,54 @@ std_image_tests({ bits => 8 });
        "check bits error message");
 }
 
+{
+  is(to_linear_srgb(0), 0, "check to_linear(0)");
+  is(to_linear_srgb(255), 0xFFFF, "check to_linear(255)");
+  my $im = Imager->new(xsize => 10, ysize => 10);
+  ok($im->setpixel(x => 0, y => 0, color => [ 255, 128, 0 ]),
+     "set a normal spread of values at (0,0)");
+  ok($im->setpixel(x => 1, y => 0, color => [ 192, 128, 64 ]),
+     "set a normal spread of values at (1,0)");
+  my $sl = $im->getsamples(y => 0, width => 2, scale => "linear", channels => [0, 1, 2 ]);
+  my @cmp_sl = ( map to_linear_srgb($_), 255, 128, 0, 192, 128, 64 );
+  is_deeply([ unpack("S*", $sl) ], \@cmp_sl,
+            "check linear result (scalar)");
+  my @test_sl = $im->getsamples(y => 0, width => 2, scale => "linear", channels => [0, 1, 2 ]);
+  is_deeply(\@test_sl, \@cmp_sl,
+            "check linear result (list)");
+  ok($im->setsamples(y => 1, data => $sl, channels => 3, scale => "linear"),
+    "set the packed linear samples on a new line");
+  is_deeply([ $im->getsamples(y => 1, width => 2) ],
+            [ 255, 128, 0, 192, 128, 64 ],
+            "check we got back our original gamma values");
+  ok($im->setsamples(y => 2, data => \@test_sl, channels => 3, scale => "linear"),
+    "set the unpacked linear samples on a new line");
+  is_deeply([ $im->getsamples(y => 2, width => 2) ],
+            [ 255, 128, 0, 192, 128, 64 ],
+            "check we got back our original gamma values");
+}
+
 done_testing();
 
 Imager->close_log();
 
 unless ($ENV{IMAGER_KEEP_FILES}) {
   unlink "testout/t01introvert.log";
+}
+
+sub to_linear_srgb {
+  my ($val) = @_;
+
+  $val /= 255.0;
+  my $out;
+  if ($val <= 0.04045) {
+    $out = $val / 12.92;
+  }
+  else {
+    $out = (($val + 0.055) / (1+0.055)) ** 2.4;
+  }
+
+  return 0+sprintf("%.0f", $out * 65535);
 }
 
 sub check_add {
