@@ -153,7 +153,7 @@ my @objs = qw(Imager.o context.o draw.o polygon.o image.o io.o iolayer.o
               map.o tags.o palimg.o maskimg.o img8.o img16.o rotate.o
               bmp.o tga.o color.o fills.o imgdouble.o limits.o hlines.o
               imext.o scale.o rubthru.o render.o paste.o compose.o flip.o
-	      perlio.o imexif.o trim.o data.o);
+	      perlio.o imexif.o trim.o data.o imcms.o);
 
 my $lib_define = '';
 my $lib_inc = '';
@@ -450,6 +450,31 @@ sub automatic {
 	@$probe_res{qw/DEFINE INC LIBS/};
     }
   }
+  {
+    my %probe =
+      (
+       name => "LCMS2",
+       inccheck => sub { -e File::Spec->catfile($_[0], "lcms2.h") },
+       libbase => "lcms2",
+       incpaths => \@incpaths,
+       libpaths => \@libpaths,
+       verbose => $VERBOSE,
+       testcodeheaders => [ "stdio.h", "lcms2.h" ],
+       testcode => <<'CODE'
+  if (LCMS_VERSION < 2060) {
+    fprintf(stderr, "LCMS: LCMS 2.6 or later required\n");
+    return 1;
+  }
+  return 0;
+CODE
+      );
+    my $probe_res = Imager::Probe->probe(\%probe);
+    $probe_res
+      or die "OS unsupported: LCMS2 2.6 required";
+    $formats{LCMS2}{enabled} = 1;
+    @{$formats{LCMS2}}{qw/DEFINE INC LIBS/} =
+      @$probe_res{qw/DEFINE INC LIBS/};
+  }
 }
 
 sub pathcheck {
@@ -551,6 +576,13 @@ Freetype 1.x supports Truetype fonts and is obsoleted by Freetype 2.x.
 It's probably insecure.
 }
 		       };
+  $formats{LCMS2} =
+    {
+     order => 32,
+     def => "HAVE_LCMS2",
+     objfiles => '',
+     docs => "LCMS2.6 or higher",
+    };
   # Make fix indent
   for (keys %formats) { $formats{$_}->{docs} =~ s/^\s+/  /mg; }
 }
@@ -657,6 +689,9 @@ EOS
 */
 typedef $Config{ivtype} i_dim_format_t;
 #define i_DF $Config{ivdformat}
+
+/* type for 16-bit samples */
+typedef $Config{u16type} i_sample16_t;
 EOS
 
   if ($Config{d_static_inline}) {

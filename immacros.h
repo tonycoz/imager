@@ -241,6 +241,15 @@ Return the reference count for the image.
 =cut
 */
 
+#define i_gslin(im, x, r, y, samp, chan, chan_count) \
+  (((im)->vtable->i_f_gslin)((im), (x), (r), (y), (samp), (chan), (chan_count)))
+#define i_gslinf(im, x, r, y, samp, chan, chan_count) \
+  (((im)->vtable->i_f_gslinf)((im), (x), (r), (y), (samp), (chan), (chan_count)))
+#define i_pslin(im, x, r, y, samp, chan, chan_count) \
+  (((im)->vtable->i_f_pslin)((im), (x), (r), (y), (samp), (chan), (chan_count)))
+#define i_pslinf(im, x, r, y, samp, chan, chan_count) \
+  (((im)->vtable->i_f_pslinf)((im), (x), (r), (y), (samp), (chan), (chan_count)))
+
 #define i_img_virtual(im) ((im)->isvirtual)
 #define i_img_type(im) ((im)->type)
 #define i_img_bits(im) ((im)->bits)

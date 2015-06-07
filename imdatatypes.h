@@ -357,6 +357,22 @@ typedef i_image_data_alloc_t *
 typedef int
 (*i_f_imageop_t)(i_img *im, const char *opname, void *params);
 
+typedef i_img_dim
+(*i_f_gslin_t)(i_img *im, i_img_dim x, i_img_dim r, i_img_dim y,
+	       i_sample16_t *samp, const int *chan, int chan_count);
+
+typedef i_img_dim
+(*i_f_gslinf_t)(i_img *im, i_img_dim x, i_img_dim r, i_img_dim y,
+		i_fsample_t *samp, const int *chan, int chan_count);
+
+typedef i_img_dim
+(*i_f_pslin_t)(i_img *im, i_img_dim x, i_img_dim r, i_img_dim y,
+	       const i_sample16_t *samp, const int *chan, int chan_count);
+
+typedef i_img_dim
+(*i_f_pslinf_t)(i_img *im, i_img_dim x, i_img_dim r, i_img_dim y,
+		const i_fsample_t *samp, const int *chan, int chan_count);
+
 /*
 =item i_img_vtable
 =category Data Types
@@ -431,6 +447,11 @@ typedef struct i_img_vtable_struct {
   /* as of 0.61 */
   i_f_gsamp_bits_t i_f_gsamp_bits;
   i_f_psamp_bits_t i_f_psamp_bits;
+
+  i_f_gslin_t i_f_gslin;
+  i_f_gslinf_t i_f_gslinf;
+  i_f_pslin_t i_f_pslin;
+  i_f_pslinf_t i_f_pslinf;
 
   i_f_data_t i_f_data;
 
@@ -557,6 +578,8 @@ struct i_img_ {
 
   /* 0.91 */
   im_context_t context;
+
+  const i_img_vtable *vtable;
 };
 
 /* ext_data for paletted images
@@ -1303,6 +1326,8 @@ typedef enum {
   icm_rgb,
   icm_rgb_alpha
 } i_color_model_t;
+
+#include "imcmst.h"
 
 #ifdef IMAGER_FORMAT_ATTR
 #define I_FORMAT_ATTR(format_index, va_index) \

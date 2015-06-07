@@ -2,8 +2,8 @@
    aren't meant to be available externally
 */
 
-#ifndef IMAGEI_H_
-#define IMAGEI_H_
+#ifndef IMAGERI_H_
+#define IMAGERI_H_
 
 #include "imager.h"
 #include "imapiver.h"
@@ -142,6 +142,12 @@ typedef struct im_context_tag {
 
   /* maximum size of i_io_mmap() */
   size_t max_mmap_size;
+
+  /* color management */
+  imcms_profile_t rgb_profile;
+  imcms_profile_t gray_profile;
+  imcms_curve_t rgb_curves[3];
+  imcms_curve_t gray_curve;
 
   ptrdiff_t refcount;
 } im_context_struct;
