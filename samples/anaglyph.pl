@@ -104,7 +104,6 @@ EXPR
   return Imager::transform2({ rpnexpr=>$expr }, $left, $right);
 }
 
-
 =head1 NAME
 
 =for stopwords anaglyph anaglyph.pl
@@ -132,7 +131,7 @@ anaglyph.pl - create a anaglyph from the source images
 =head1 DESCRIPTION
 
 
-See http://www.3dexpo.com/anaglyph.htm for an example where this might
+See L<http://www.3dexpo.com/anaglyph.htm> for an example where this might
 be useful.
 
 Implementation based on the description at
