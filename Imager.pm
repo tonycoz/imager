@@ -4343,6 +4343,8 @@ sub preload {
   eval { require Imager::Font::FT2 };
   eval { require Imager::Font::T1 };
   eval { require Imager::Color::Table };
+
+  1;
 }
 
 package Imager::IO;

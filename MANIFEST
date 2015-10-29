@@ -334,6 +334,7 @@ t/200-file/310-pnm.t		Test PNM file handling
 t/200-file/320-bmp.t		Test BMP file handling
 t/200-file/330-tga.t		Test TGA file handling
 t/200-file/400-basic.t		Test basic operations across file formats
+t/200-file/450-preload.t	Test the preload class method
 t/250-draw/010-draw.t		Basic drawing tests
 t/250-draw/020-flood.t		Flood fill tests
 t/250-draw/030-paste.t		Test the paste() method
