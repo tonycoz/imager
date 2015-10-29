@@ -186,6 +186,7 @@ SKIP:
     ok(!$im->read(fh => \*RAW, , xsize => 50, ysize=>50, type=>'raw', interleave => 1),
        'read a file open for write');
     cmp_ok($im->errstr, '=~', '^error reading file: read\(\) failure', "check message");
+    close RAW; # avoid a message on 5.22+
   }
 }
 
