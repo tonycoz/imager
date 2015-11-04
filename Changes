@@ -1,5 +1,11 @@
 Imager release history.  Older releases can be found in Changes.old
 
+ - Imager::Color::Table is now pre-loaded by the preload() method.
+   https://rt.cpan.org/Ticket/Display.html?id=104896
+
+ - fix an assertion triggered under perl 5.23.4.
+   Thanks to A. Sinan Unur for the report and the patch.
+
 Imager 1.003 - 12 May 2015
 ============
 
