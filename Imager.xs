@@ -2674,17 +2674,17 @@ i_get_anonymous_color_histo(im, maxc = 0x40000000)
         int col_cnt;
     PPCODE:
 	col_cnt = i_get_anonymous_color_histo(im, &col_usage, maxc);
-    if (col_cnt > 0) {
-        EXTEND(SP, col_cnt);
-        for (i = 0; i < col_cnt; i++)  {
-            PUSHs(sv_2mortal(newSViv( col_usage[i])));
+        if (col_cnt > 0) {
+            EXTEND(SP, col_cnt);
+            for (i = 0; i < col_cnt; i++)  {
+                PUSHs(sv_2mortal(newSViv( col_usage[i])));
+            }
+            myfree(col_usage);
+            XSRETURN(col_cnt);
         }
-        myfree(col_usage);
-        XSRETURN(col_cnt);
-    }
-    else {
-        XSRETURN_EMPTY;
-    }
+        else {
+            XSRETURN_EMPTY;
+        }
 
 
 void
