@@ -1,8 +1,8 @@
 #!perl -w
 use strict;
-use Test::More tests => 53;
+use Test::More tests => 56;
 use Imager qw(:all);
-use Imager::Test qw/is_color3 is_color4 test_image test_image_mono/;
+use Imager::Test qw/is_color3 is_color4 test_image test_image_mono is_image/;
 
 -d "testout" or mkdir "testout";
 
@@ -292,6 +292,25 @@ SKIP:
     like($im->errstr, qr/synthetic close failure/,
 	 "check error message");
   }
+}
+
+{ # https://rt.cpan.org/Ticket/Display.html?id=106836
+  my $im = test_image;
+  my $data;
+  ok($im->write(data => \$data, type => "raw", raw_interleave => 0), "save some raw image")
+    or diag $im->errstr;
+  my $im2 = Imager->new
+    (
+     data => \$data,
+     filetype => "raw",
+     xsize => $im->getwidth,
+     ysize => $im->getheight,
+     raw_datachannels => $im->getchannels,
+     raw_storechannels => $im->getchannels,
+     raw_interleave => 0,
+    );
+  ok($im2, "read raw image using new() method");
+  is_image($im, $im2, "check they match");
 }
 
 Imager->close_log;

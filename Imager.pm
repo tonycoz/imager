@@ -671,18 +671,13 @@ sub new {
   $self->{ERRSTR}=undef; #
   $self->{DEBUG}=$DEBUG;
   $self->{DEBUG} and print "Initialized Imager\n";
-  if (defined $hsh{xsize} || defined $hsh{ysize}) { 
-    unless ($self->img_set(%hsh)) {
-      $Imager::ERRSTR = $self->{ERRSTR};
-      return;
-    }
-  }
-  elsif (defined $hsh{file} || 
-	 defined $hsh{fh} ||
-	 defined $hsh{fd} ||
-	 defined $hsh{callback} ||
-	 defined $hsh{readcb} ||
-	 defined $hsh{data}) {
+  if (defined $hsh{file} ||
+      defined $hsh{fh} ||
+      defined $hsh{fd} ||
+      defined $hsh{callback} ||
+      defined $hsh{readcb} ||
+      defined $hsh{data} ||
+      defined $hsh{io}) {
     # allow $img = Imager->new(file => $filename)
     my %extras;
     
@@ -692,6 +687,12 @@ sub new {
       $extras{type} = $hsh{filetype};
     }
     unless ($self->read(%hsh, %extras)) {
+      $Imager::ERRSTR = $self->{ERRSTR};
+      return;
+    }
+  }
+  elsif (defined $hsh{xsize} || defined $hsh{ysize}) {
+    unless ($self->img_set(%hsh)) {
       $Imager::ERRSTR = $self->{ERRSTR};
       return;
     }
