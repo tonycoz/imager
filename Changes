@@ -6,6 +6,12 @@ Imager release history.  Older releases can be found in Changes.old
  - fix an assertion triggered under perl 5.23.4.
    Thanks to A. Sinan Unur for the report and the patch.
 
+ - Imager->new can now be used to read raw image files.
+   https://rt.cpan.org/Ticket/Display.html?id=106836
+
+ - deal with output changes from Pod::Spell
+   https://github.com/perl-pod/Pod-Spell/issues/21
+
 Imager 1.003 - 12 May 2015
 ============
 
