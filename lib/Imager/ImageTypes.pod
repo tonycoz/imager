@@ -138,6 +138,7 @@ that not all code follows this (recent) rule, but will over time.
 =over
 
 =item new()
+X<new(), Imager methods>
 
   $img = Imager->new();
   $img->read(file=>"alligator.ppm") or die $img->errstr;
@@ -224,9 +225,9 @@ Default: 256.  This must be in the range 1 through 256.
 
 =item *
 
-C<file>, C<fh>, C<fd>, C<callback>, C<readcb> - specify a file name,
-filehandle, file descriptor or callback to read image data from.  See
-L<Imager::Files> for details.  The typical use is:
+C<file>, C<fh>, C<fd>, C<callback>, C<readcb>, or C<io> - specify a
+file name, filehandle, file descriptor or callback to read image data
+from.  See L<Imager::Files> for details.  The typical use is:
 
   my $im = Imager->new(file => $filename);
 
@@ -292,11 +293,12 @@ parameter:
     or die Imager->errstr;
 
 If none of C<xsize>, C<ysize>, C<file>, C<fh>, C<fd>, C<callback>,
-C<readcb> or C<data> is supplied, and other parameters I<are> supplied
+C<readcb>, C<data>, C<io> is supplied, and other parameters I<are> supplied
 C<< Imager->new >> will return failure rather than returning an empty
 image object.
 
 =item img_set()
+X<img_set>
 
 img_set destroys the image data in the object and creates a new one
 with the given dimensions and channels.  For a way to convert image
@@ -304,7 +306,8 @@ data between formats see the C<convert()> method.
 
   $img->img_set(xsize=>500, ysize=>500, channels=>4);
 
-This takes exactly the same parameters as the new() method.
+This takes exactly the same parameters as the new() method, excluding
+those for reading from files.
 
 =back
 
