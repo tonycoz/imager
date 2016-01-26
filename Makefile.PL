@@ -221,7 +221,7 @@ my %opts=
    PM             => gen_PM(),
    PREREQ_PM      =>
    { 
-    'Test::More' => 0.47,
+    'Test::More' => 0.99,
     'Scalar::Util' => 1.00,
     'XSLoader'    => 0,
    },
