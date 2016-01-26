@@ -11,8 +11,6 @@ use Imager::Test qw(is_image);
 sub diag_skip_image($$);
 sub diag_skip_errno($);
 
-my $buggy_giflib_file = "buggy_giflib.txt";
-
 my @cleanup = "t50basicoo.log";
 
 -d "testout" or mkdir "testout";
