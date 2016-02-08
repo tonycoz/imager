@@ -717,7 +717,7 @@ i_autolevels_mono(i_img *im, float lsat, float usat) {
 #else
   IM_WORK_T low = min_lum / 255.0 * IM_SAMPLE_MAX;
 #endif
-  IM_WORK_T scale = 255.0 / (max_lum - min_lum);
+  double scale = 255.0 / (max_lum - min_lum);
 
   for(y = 0; y < im->ysize; y++) {
     IM_GSAMP(im, 0, im->xsize, y, srow, NULL, color_channels);
