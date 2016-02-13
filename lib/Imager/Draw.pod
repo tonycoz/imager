@@ -1147,11 +1147,13 @@ C<offset> - the offset within the array referenced by I<target>
 
 In list context this will return a list of integers between 0 and 255
 inclusive when I<type> is C<8bit>, or a list of floating point numbers
-between 0.0 and 1.0 inclusive when I<type> is C<float>.
+between 0.0 and 1.0 inclusive when I<type> is C<float>.  Returns an
+empty list on failure.
 
 In scalar context this will return a string of packed bytes, as with
 C< pack("C*", ...) > when I<type> is C<8bit> or a string of packed
 doubles as with C< pack("d*", ...) > when I<type> is C<float>.
+Returns undef string on failure.
 
 If the I<target> option is supplied then only a count of samples is
 returned.
