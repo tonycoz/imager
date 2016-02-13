@@ -48,6 +48,10 @@ our @EXPORT_OK =
      std_font_test_count
      extrachannel_tests
      check_vtable
+     std_image_tests
+     std_image_tests_count
+     to_linear_srgb
+     to_linear_srgbf
      );
 
 sub diff_text_with_nul {
@@ -1046,6 +1050,388 @@ sub check_vtable {
   $ok;
 }
 
+sub is_arrayf($$$;$) {
+  my ($left, $right, $note, $tolerance) = @_;
+
+  defined $tolerance or $tolerance = 0.00001;
+
+  my $builder = Test::Builder->new;
+
+  unless (@$left == @$right) {
+    $builder->ok(0, $note);
+    $builder->diag("left of \@\$left and \@\$right do not match");
+    return;
+  }
+
+  my $good = 1;
+  my @errors;
+  for my $i (0.. $#$left) {
+    if (defined $left->[$i]) {
+      if (defined $right->[$i]) {
+	my $diff = abs($left->[$i] - $right->[$i]);
+	unless ($diff <= $tolerance) {
+	  push @errors, "mismatch index $i: $left->[$i] vs $right->[$i] -> $diff";
+	  $good = 0;
+	}
+      }
+      else {
+	push @errors, "mismatch index $i: $left->[$i] vs undef";
+	$good = 0;
+      }
+    }
+    elsif (defined $right->[$i]) {
+      push @errors, "mismatch index $i: undef vs $right->[$i] undef";
+      $good = 0;
+    }
+  }
+  $builder->ok($good, $note);
+  $builder->diag($_) for @errors;
+
+  return $good;
+}
+
+sub std_image_tests_count {
+  my ($opts) = @_;
+
+  my $channels = $opts->{models} || [ qw(gray graya rgb rgba) ];
+
+  return 2 + ( 74 * @$channels );
+}
+
+sub std_image_tests {
+  my ($opts) = @_;
+
+  my $bits = $opts->{bits}
+    or croak "Missing bits parameter";
+
+  my $models = $opts->{models} || [ qw(gray graya rgb rgba) ];
+
+  my @ten_zeros = (0) x 10;
+
+  is(to_linear_srgb(0), 0, "check to_linear(0)");
+  is(to_linear_srgb(255), 0xFFFF, "check to_linear(255)");
+
+  my @test_colors =
+    (
+     [ 255, 128, 0,  255 ],
+     [ 192, 128, 64, 128 ],
+    );
+
+  for my $model (@$models) {
+    print "# model $model\n";
+    my $im = Imager->new(xsize => 10, ysize => 10, model => $model);
+    my $alpha_ch = $im->alphachannel;
+    my $col_channels = $im->colorchannels;
+    my $channel_count = $col_channels;
+    ++$channel_count if $alpha_ch;
+    my @colors;
+    my @samples;
+    my @samples_alpha;
+    my @alphas;
+    for my $color (@test_colors) {
+      my @ch = @{$color}[0 .. $col_channels-1 ];
+      push @samples, @ch;
+      push @samples_alpha, @ch;
+      if ($alpha_ch) {
+	my $alpha = $color->[3];
+	push @ch, $alpha;
+	push @alphas, $alpha;
+	push @samples_alpha, $alpha;
+      }
+      push @colors, \@ch;
+    }
+    my @channels = ( 0 .. $channel_count-1 );
+    ok($im->setpixel(x => 0, y => 0, color => { channels => $colors[0] }),
+       "set a normal spread of values at (0,0)")
+      or diag "$model: set first pixel to (" . join(", ", @{$colors[0]}) . "): ".$im->errstr;
+    ok($im->setpixel(x => 1, y => 0, color => { channels => $colors[1] }),
+       "set a normal spread of values at (1,0)");
+    my $sl = $im->getsamples(y => 0, width => 2, scale => "linear",
+			     channels => \@channels)
+      or diag "getsamples: ", Imager->_error_as_msg;
+    my @cmp_sl = ( map to_linear_srgb($_), @samples );
+    if ($alpha_ch) {
+      splice(@cmp_sl, $col_channels, 0, 65535);
+      push @cmp_sl, 128 * 0x101;
+    }
+    is_deeply([ unpack("S*", $sl) ], \@cmp_sl,
+	      "check linear result (scalar)");
+    my @test_sl = $im->getsamples(y => 0, width => 2, scale => "linear",
+				  channels => $channel_count);
+    is_deeply(\@test_sl, \@cmp_sl,
+	      "check linear result (list)");
+    is($im->setsamples(y => 1, data => $sl, channels => $channel_count,
+		       scale => "linear"), $channel_count * 2,
+       "set the packed linear samples on a new line");
+    my @cmp_samps_gamma = @samples_alpha;
+    is_deeply([ $im->getsamples(y => 1, width => 2) ], \@cmp_samps_gamma,
+	      "check we got back our original gamma values");
+    ok($im->setsamples(y => 2, data => \@test_sl, channels => $channel_count,
+		       scale => "linear"),
+       "set the unpacked linear samples on a new line");
+    is_deeply([ $im->getsamples(y => 2, width => 2) ], \@cmp_samps_gamma,
+	      "check we got back our original gamma values");
+
+    my @fsamps = $im->getsamples(y => 0, width => 2,
+				 scale => "linear", type => "float");
+    my @fcmp_sl = map $_ / 65535.0, @cmp_sl;
+    is_arrayf(\@fsamps, \@fcmp_sl,
+	      "check linear float samples");
+    is($im->setsamples(y => 3, data => \@fcmp_sl,
+		       channels => $channel_count, scale => "linear", type => "float"),
+       scalar @fsamps, "set linear float samples");
+    my @gsamps = $im->getsamples(y => 3, scale => "linear", type => "float",
+				 width => 2);
+    is_arrayf(\@gsamps, \@fcmp_sl, "check samples were set");
+    my @gsamp_gamma = $im->getsamples(y => 3, width => 2);
+    is_deeply(\@gsamp_gamma, \@cmp_samps_gamma,
+	      "make sure the stored samples are what we expect");
+
+    # explicit channel lists
+    is($im->setsamples(y => 4, data => \@cmp_sl, width => 2,
+		       channels => \@channels, scale => "linear"),
+       $channel_count * 2,
+       "set linear samples (explicit channels)");
+    @gsamps = $im->getsamples(y => 4, scale => "linear",
+			      width => 2, channels => \@channels);
+    is_deeply(\@gsamps, \@cmp_sl, "check samples were set (explicit channels)");
+
+    is($im->setsamples(y => 5, data => \@fcmp_sl, width => 2,
+		       channels => \@channels, scale => "linear",
+		       type => "float"), $channel_count * 2,
+       "set linear samples (float, explicit channels)");
+    @gsamps = $im->getsamples(y => 5, scale => "linear", type => "float",
+			      width => 2, channels => \@channels);
+    is_arrayf(\@gsamps, \@fcmp_sl, "check samples were set (float, explicit channels)");
+
+    # masks
+    my $oldmask = $im->getmask;
+    ok($im->setmask(mask => 13), "set the mask to not cover all channels");
+    my @cmp_sl_masked = ( map $_ % $channel_count == 1 ? 0 : $cmp_sl[$_], 0 .. $#cmp_sl );
+    is($im->setsamples(y => 6, data => \@cmp_sl, width => 2,
+		       channels => \@channels, scale => "linear"),
+       $channel_count * 2,
+       "set linear samples (explicit channels, masked)");
+    @gsamps = $im->getsamples(y => 6, width => 2,
+			      channels => \@channels, scale => "linear");
+    is_deeply(\@gsamps, \@cmp_sl_masked,
+	      "check linear samples (explicit channels, masked)");
+
+    my @fcmp_sl_masked = ( map $_ % $channel_count == 1 ? 0 : $fcmp_sl[$_], 0 .. $#fcmp_sl );
+    is($im->setsamples(y => 7, data => \@fcmp_sl, width => 2, type => "float",
+		       channels => \@channels, scale => "linear"),
+       $channel_count * 2,
+       "set linear float samples (explicit channels, masked)");
+    @gsamps = $im->getsamples(y => 7, width => 2, type => "float",
+			      channels => \@channels, scale => "linear");
+    is_arrayf(\@gsamps, \@fcmp_sl_masked,
+	      "check linear float samples (explicit channels, masked)");
+    $im->setmask(mask => $oldmask);
+
+    # fetch to target
+    my @target;
+    is($im->getsamples(y => 0, width => 2, scale => "linear", target => \@target),
+       $channel_count * 2,
+       "fetch linear samples to target");
+    is_deeply(\@target, \@cmp_sl, "check correct samples in target");
+    @target = ();
+    is($im->getsamples(y => 0, width => 2, scale => "linear",
+		       target => \@target, offset => 2),
+       $channel_count * 2,
+       "fetch linear to target with offset");
+    is_deeply(\@target, [ (undef) x 2, @cmp_sl ],
+	      "check offset honored");
+    @target = ();
+
+    is($im->getsamples(y => 0, width => 2, scale => "linear",
+		       target => \@target, type => "float"),
+       $channel_count * 2,
+       "fetch linear samples to target");
+    is_arrayf(\@target, \@fcmp_sl, "check correct samples in target");
+    @target = ();
+    is($im->getsamples(y => 0, width => 2, scale => "linear",
+		       target => \@target, offset => 2, type => "float"),
+       $channel_count * 2,
+       "fetch linear to target with offset");
+    is_arrayf(\@target, [ (undef) x 2, @fcmp_sl ],
+	      "check offset honored");
+
+    # range checks (16-bit)
+    # set
+    is($im->setsamples(y => -1, data => \@gsamps, scale => "linear"),
+       undef,
+       "set linear samples to y = -1");
+    is($im->errstr, "Image position outside of image",
+       "check error message (y = -1)");
+    is($im->setsamples(y => 10, data => \@gsamps, scale => "linear"),
+       undef,
+       "set linear samples to y = 10");
+    is($im->errstr, "Image position outside of image",
+       "check error message (y = 10)");
+    is($im->setsamples(y => 9, x => -1, data => \@gsamps, scale => "linear"),
+       undef,
+       "set linear samples to x = -1");
+    is($im->errstr, "Image position outside of image",
+       "check error message (x = -1)");
+    is($im->setsamples(y => 9, x => 10, data => \@gsamps, scale => "linear"),
+       undef,
+       "set linear samples to x = 10");
+    is($im->errstr, "Image position outside of image",
+       "check error message (x = 10)");
+
+    is($im->setsamples(y => 9, data => \@gsamps, channels => [-1],
+		       scale => "linear"), undef,
+       "set negative channel");
+    is($im->errstr, "No channel -1 in this image",
+       "check error message (negative channel)");
+    is($im->setsamples(y => 9, data => \@gsamps, channels => [$channel_count],
+		       scale => "linear"), undef,
+       "set too high channel");
+    is($im->errstr, "No channel $channel_count in this image",
+       "check error message (too high channel)");
+
+    is($im->setsamples(y => 9, x => 1, data => \@ten_zeros, channels => [0],
+		       scale => "linear", width => 10),
+       9,
+       "set check right-side limit");
+
+    is($im->setsamples(y => 9, data => \@gsamps, channels => -1,
+		       scale => "linear"), undef,
+       "set negative channel count");
+    is($im->setsamples(y => 9, data => \@gsamps, channels => 5,
+		       scale => "linear"), undef,
+       "set too high channel count");
+
+    # get
+    is($im->getsamples(y => -1, data => \@gsamps, scale => "linear"),
+       undef,
+       "get linear samples from y = -1");
+    {
+      local $TODO = "getsamples() doesn't do error reporting";
+      is($im->errstr, "Image position outside of image",
+	 "check error message (y = -1)");
+    }
+    is($im->getsamples(y => 10, data => \@gsamps, scale => "linear"),
+       undef,
+       "get linear samples from y = 10");
+    {
+      local $TODO = "getsamples() doesn't do error reporting";
+      is($im->errstr, "Image position outside of image",
+	 "check error message (y = 10)");
+    }
+    is($im->getsamples(y => 9, x => -1, data => \@gsamps, scale => "linear"),
+       undef,
+       "get linear samples to x = -1");
+    {
+      local $TODO = "getsamples() doesn't do error reporting";
+      is($im->errstr, "Image position outside of image",
+	 "check error message (x = -1)");
+    }
+    is($im->getsamples(y => 9, x => 10, data => \@gsamps, scale => "linear"),
+       undef,
+       "get linear samples to x = 10");
+    {
+      local $TODO = "getsamples() doesn't do error reporting";
+      is($im->errstr, "Image position outside of image",
+	 "check error message (x = 10)");
+    }
+
+    is($im->getsamples(y => 9, data => \@gsamps, channels => [-1],
+		       scale => "linear"), undef,
+       "get negative channel");
+    {
+      local $TODO = "getsamples() doesn't do error reporting";
+      is($im->errstr, "No channel -1 in this image",
+	 "check error message (negative channel)");
+    }
+    is($im->getsamples(y => 9, data => \@gsamps, channels => [$channel_count],
+		       scale => "linear"), undef,
+       "get too high channel");
+    {
+      local $TODO = "getsamples() doesn't do error reporting";
+      is($im->errstr, "No channel $channel_count in this image",
+	 "check error message (too high channel)");
+    }
+
+    is_deeply([ $im->getsamples(y => 9, x => 1, channels => [0],
+				scale => "linear", width => 10) ],
+	      [ (0) x 9 ],
+	      "get check right-side limit");
+
+    is($im->getsamples(y => 9, data => \@gsamps, channels => -1,
+		       scale => "linear"), undef,
+       "get negative channel count");
+    is($im->getsamples(y => 9, data => \@gsamps, channels => 5,
+		       scale => "linear"), undef,
+       "get too high channel count");
+
+    # range checks (float)
+    is($im->setsamples(y => -1, data => \@fcmp_sl, scale => "linear", type => "float"),
+       undef,
+       "set linear samples to y = -1 (float)");
+    is($im->errstr, "Image position outside of image",
+       "check error message (y = -1) (float)");
+    is($im->setsamples(y => 10, data => \@fcmp_sl, scale => "linear", type => "float"),
+       undef,
+       "set linear samples to y = 10 (float)");
+    is($im->errstr, "Image position outside of image",
+       "check error message (y = 10) (float)");
+    is($im->setsamples(y => 9, x => -1, data => \@fcmp_sl, scale => "linear", type => "float"),
+       undef,
+       "set linear samples to x = -1 (float)");
+    is($im->errstr, "Image position outside of image",
+       "check error message (x = -1) (float)");
+    is($im->setsamples(y => 9, x => 10, data => \@fcmp_sl, scale => "linear", type => "float"),
+       undef,
+       "set linear samples to x = 10 (float)");
+    is($im->errstr, "Image position outside of image",
+       "check error message (x = 10) (float)");
+
+    is($im->setsamples(y => 9, data => \@gsamps, channels => [-1],
+		       scale => "linear", type => "float"), undef,
+       "set negative channel (float)");
+    is($im->errstr, "No channel -1 in this image",
+       "check error message (negative channel)(float)");
+    is($im->setsamples(y => 9, data => \@gsamps, channels => [$channel_count],
+		       scale => "linear", type => "float"), undef,
+       "set too high channel (float)");
+    is($im->errstr, "No channel $channel_count in this image",
+       "check error message (too high channel)(float)");
+
+    is($im->setsamples(y => 9, x => 1, data => \@ten_zeros, channels => [0],
+		       scale => "linear", width => 10, type => "float"),
+       9,
+       "set check right-side limit (float)");
+
+    is($im->setsamples(y => 9, data => \@gsamps, channels => -1,
+		       scale => "linear", type => "float"), undef,
+       "negative channel count");
+    is($im->setsamples(y => 9, data => \@gsamps, channels => 5,
+		       scale => "linear", type => "float"), undef,
+       "set too high channel count");
+  }
+}
+
+sub to_linear_srgb {
+  my ($val) = @_;
+
+  return 0+sprintf("%.0f", to_linear_srgbf($val/255.0) * 65535);
+}
+
+sub to_linear_srgbf {
+  my ($val) = @_;
+
+  my $out;
+  if ($val <= 0.04045) {
+    $out = $val / 12.92;
+  }
+  else {
+    $out = (($val + 0.055) / (1+0.055)) ** 2.4;
+  }
+
+  return $out;
+}
+
 package Imager::Test::OverUtf8;
 use overload '""' => sub { "A".chr(0x2010)."A" };
 
@@ -1164,15 +1550,17 @@ low level image $im and compares them against @$pels.
 Tests if $color's first three channels are within $tolerance of ($red,
 $green, $blue).
 
-=item is_arrayf()
+=item is_arrayf($left, $right, $note)
 
-  is_arrayf(\@got, \@expected, $name);
-  is_arrayf(\@got, \@expected, $name, $epsilon);
+=item is_arrayf($left, $right, $note, $tolerance)
 
-numerically compares two arrays supplied by reference, ensuring they
-are within C<$epsilon> of each other.
+Compares the length of C<@$left> and C<@$right>, then compares
+corresponding array elements for rough equality, controlled by
+C<$tolerance>.
 
-C<$epsilon> defaults to C<1e-6>.
+Reports a successful test if all matches, fails otherwise.
+
+Reports any mismatches via diag().
 
 =back
 
@@ -1227,6 +1615,51 @@ are covered by the total channels, not just the color channels.
 
 Given an OO image, extract the low level image and check its vtable is
 populated with the required entries.
+
+=item std_image_tests(\%options)
+
+Perform standard tests of images.  This is currently slanted towards
+the getsamples() and setsamples() methods, but that will change over
+time.
+
+C<%options> can contain the following keys:
+
+=over
+
+=item *
+
+C<bits> - the number of bits to use when creating the images.
+Required.
+
+=item *
+
+C<models> - the image color models to check.  Defaults to testing all
+of C<gray>, C<graya>, C<rgb> and C<rgba>.
+
+=back
+
+  plan tests => $local_tests + std_image_tests_count({ bits => $bits });
+  ...
+  std_image_tests({ bits => $bits });
+
+=item std_image_tests_count(\%options)
+
+The number of tests performed by std_image_tests().  Must be supplied
+the same options as std_image_tests().
+
+=item to_linear_srgb
+
+=item to_linear_srgbf
+
+Convert a sRGB tone curve sample into a linear sample.
+
+to_linear_srgb() converts an 8-bit sample into a 16-bit sample.
+
+to_linear_srgbf() converts a floating point sample into a floating
+point sample.
+
+  my $lin = to_linear_srgb($gam);
+  my $linf = to_linear_srgbf($gamf);
 
 =back
 
