@@ -44,7 +44,8 @@ Imager::init('log'=>'testout/t90cc.log');
   is ($count, 3, "getcolorcount is 3");
   @colour_usage = $im->getcolorusage();
   is_deeply(\@colour_usage, [625, 625, 1250] , 
-	    "625, 625, 1250: Black blue and red");
+	    "625, 625, 1250: Black blue and red")
+    or do { require Data::Dumper; diag Data::Dumper::Dumper(\@colour_usage) };
   @colour_usage = $im->getcolorusage(maxcolors => 2);
   is(@colour_usage, 0, 'test overflow check');
   
@@ -54,7 +55,8 @@ Imager::init('log'=>'testout/t90cc.log');
   my $black_pack = pack("CCC", 0, 0, 0);
   is_deeply( $colour_usage, 
 	     { $black_pack => 625, $blue_pack => 625, $red_pack => 1250 },
-	     "625, 625, 1250: Black blue and red (hash)");
+	     "625, 625, 1250: Black blue and red (hash)")
+    or do { require Data::Dumper; diag Data::Dumper::Dumper($colour_usage) };
   is($im->getcolorusagehash(maxcolors => 2), undef,
      'test overflow check');
 
@@ -65,9 +67,10 @@ Imager::init('log'=>'testout/t90cc.log');
   is($im_g->getcolorcount, 3, '3 colors (grey)');
   is_deeply([ $im_g->getcolorusage ], [ 625, 625, 1250 ], 
 	    'color counts (grey)');
-  is_deeply({ "\x00" => 625, "\x12" => 625, "\x38" => 1250 },
-	    $im_g->getcolorusagehash,
-	    'color usage hash (grey)');
+  my $h = $im_g->getcolorusagehash;
+  is_deeply({ "\x00" => 625, "\x12" => 625, "\x38" => 1250 }, $h,
+	    'color usage hash (grey)')
+    or do { require Data::Dumper; diag Data::Dumper::Dumper($h) };
 }
 
 {
