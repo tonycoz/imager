@@ -7,7 +7,7 @@
 # Change 1..1 below to 1..last_test_to_print .
 # (It may become useful if the test is moved to ./t subdirectory.)
 
-use Test::More tests => 70;
+use Test::More tests => 73;
 
 use Imager;
 use Imager::Test qw(is_fcolor4);
@@ -62,8 +62,16 @@ color_ok('channel0-3', 129, 130, 131, 134,
                             channel3=>134));
 color_ok('c0-3', 129, 130, 131, 134, 
          Imager::Color->new(c0=>129, c1=>130, c2=>131, c3=>134));
-color_ok('channels arrayref', 200, 201, 203, 204, 
+
+color_ok('channels arrayref (1)', 200, 0, 0, 0,
+         Imager::Color->new(channels=>[ 200, ]));
+color_ok('channels arrayref (2)', 200, 201, 0, 0,
+         Imager::Color->new(channels=>[ 200, 201 ]));
+color_ok('channels arrayref (3)', 200, 201, 203, 0,
+         Imager::Color->new(channels=>[ 200, 201, 203 ]));
+color_ok('channels arrayref (4)', 200, 201, 203, 204,
          Imager::Color->new(channels=>[ 200, 201, 203, 204 ]));
+
 color_ok('name', 255, 250, 250, 255, 
          Imager::Color->new(name=>'snow', palette=>'testimg/test_gimp_pal'));
 
