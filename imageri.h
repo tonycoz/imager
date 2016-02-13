@@ -82,9 +82,13 @@ extern void i_int_hlines_fill_fill(i_img *im, i_int_hlines *hlines, i_fill_t *fi
 #ifdef IM_ASSERT
 extern void im_assert_fail(char const *, int, char const *);
 #define im_assert(x) ((x) ? (void)(0) : im_assert_fail(__FILE__, __LINE__, IM_STRING(x)))
+#define IM_NOT_REACHED (im_assert_fail(__FILE__, __LINE__, "Not reachable"))
 #else
 #define im_assert(x) (void)(0)
-#endif 
+#define IM_NOT_REACHED
+#endif
+
+#define im_assume(x) typedef struct { char x[x ? 1 : -1]; int y; } im_assume_ ## __LINE__
 
 i_img_dim i_minx(i_img_dim a, i_img_dim b);
 i_img_dim i_maxx(i_img_dim x, i_img_dim y);
