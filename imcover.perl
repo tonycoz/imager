@@ -26,7 +26,7 @@ if ($do_build) {
     run("$make clean");
   }
   run("cover -delete");
-  run("perl Makefile.PL --coverage @ARGV")
+  run("$^X Makefile.PL --coverage @ARGV")
     and die "Makefile.PL failed\n";
   run("$make $make_opts 'OTHERLDFLAGS=-ftest-coverage -fprofile-arcs'")
     and die "build failed\n";
@@ -68,6 +68,8 @@ for my $filename (keys %$mani) {
   }
 }
 
+my $gcov2perl = $Config{sitebin} . "/gcov2perl";
+
 for my $path (keys %paths) {
   if ($path) {
     run("cd $path ; gcov -abc @{$paths{$path}} ; cd ..");
@@ -77,7 +79,7 @@ for my $path (keys %paths) {
   }
   my $dir = $path ? $path : '.';
   for my $file (@{$paths{$path}}) {
-    run("gcov2perl $dir/$file.gcov");
+    run("$gcov2perl $dir/$file.gcov");
   }
 }
 
