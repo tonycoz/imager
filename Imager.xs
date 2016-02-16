@@ -3303,6 +3303,7 @@ i_addcolors(im, ...)
           }
         }
         RETVAL = i_addcolors(im, colors, items-1);
+        myfree(colors);
       OUTPUT:
         RETVAL
 
