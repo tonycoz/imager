@@ -3205,6 +3205,7 @@ i_img_make_palette(HV *quant_hv, ...)
 	  PUSHs(sv_c);
 	}
  	ip_cleanup_quant_opts(aTHX_ &quant);
+        myfree(imgs);
 	
 
 void
