@@ -1210,7 +1210,8 @@ i_count_colors(i_img *im,int maxc) {
       for(x = 0; x < samp_cnt; ) {
           colorcnt += octt_add(ct, samp[x], samp[x+1], samp[x+2]);
           x += 3;
-          if (colorcnt > maxc) { 
+          if (colorcnt > maxc) {
+	      myfree(samp);
               octt_delete(ct); 
               return -1; 
           }
