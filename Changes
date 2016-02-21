@@ -11,6 +11,7 @@ Imager 1.004 - 8 Nov 2015
 
  - Imager->new can now be used to read raw image files.
    https://rt.cpan.org/Ticket/Display.html?id=106836
+   Thanks to Richard Kelsch for reporting this.
 
  - deal with output changes from Pod::Spell
    https://github.com/perl-pod/Pod-Spell/issues/21
