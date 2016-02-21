@@ -1,5 +1,30 @@
 Imager release history.  Older releases can be found in Changes.old
 
+ - re-work the t/200-file/400-basic.t to correctly handle failures
+   It's custom ok() function didn't have a prototype and didn't use scalar().
+   This caused ok() to use the note instead of the value being tested when
+   the method called returned an empty list.  For an example of the problem
+   caused, see: https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=812093
+
+ - remove some noise from when Imager tried to work with buggy
+   versions of giflib.
+
+ - the new autolevels filter (0.99) used an integer for the sample
+   scaling factor which caused the top output level to be too low
+   (depending on the scaling required.)  It now uses a double.
+   https://rt.cpan.org/Ticket/Display.html?id=111871
+
+ - the new autolevels filter had off-by-one errors calculation the
+   minimum and maximum luminance from the histogram.  This slightly
+   reduced the contrast of the output image.
+   https://rt.cpan.org/Ticket/Display.html?id=111871
+
+ - the new autolevels filter now uses a lookup table for 8-bit images
+   to avoid a floating point multiply for each sample.
+   https://rt.cpan.org/Ticket/Display.html?id=111871
+
+ - the addcolors() method leaked memory.
+
 Imager 1.004 - 8 Nov 2015
 ============
 
