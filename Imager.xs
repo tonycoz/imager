@@ -124,15 +124,18 @@ Allocate memory that will be discarded when mortals are discarded.
 
 static void *
 malloc_temp(pTHX_ size_t size) {
-  SV *sv = sv_2mortal(newSV(size));
+  void *result;
+  Newx(result, size, char);
+  SAVEFREEPV(result);
 
-  return SvPVX(sv);
+  return result;
 }
 
 static void *
 calloc_temp(pTHX_ size_t size) {
-  void *result = malloc_temp(aTHX_ size);
-  memset(result, 0, size);
+  void *result;
+  Newxz(result, size, char);
+  SAVEFREEPV(result);
 
   return result;
 }
