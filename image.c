@@ -1302,7 +1302,8 @@ i_get_anonymous_color_histo(i_img *im, unsigned int **col_usage, int maxc) {
       colorcnt += octt_add(ct, samp[x], samp[x+1], samp[x+2]);
       x += 3;
       if (colorcnt > maxc) { 
-	octt_delete(ct); 
+	octt_delete(ct);
+	myfree(samp);
 	return -1; 
       }
     }
