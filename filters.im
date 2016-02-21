@@ -696,34 +696,47 @@ i_autolevels_mono(i_img *im, float lsat, float usat) {
   }
   
   min_lum = 0;
-  max_lum = 255;
-
-  lower_accum = upper_accum = 0;
-  
-  for(i=0; i<256; i++) { 
-    lower_accum += hist[i];
+  lower_accum = 0;
+  for (i = 0; i < 256; ++i) {
     if (lower_accum < sum_lum * lsat)
       min_lum = i;
+    lower_accum += hist[i];
+  }
 
-    upper_accum  += hist[255-i];
+  max_lum = 255;
+  upper_accum = 0;
+  for(i = 255; i >= 0; i--) {
     if (upper_accum < sum_lum * usat)
-      max_lum = 255-i;
+      max_lum = i;
+    upper_accum  += hist[i];
   }
 
 #code im->bits <= 8
   IM_SAMPLE_T *srow = mymalloc(color_samples * sizeof(IM_SAMPLE_T));
 #ifdef IM_EIGHT_BIT
   IM_WORK_T low = min_lum;
+  i_sample_t lookup[256];
 #else
   IM_WORK_T low = min_lum / 255.0 * IM_SAMPLE_MAX;
 #endif
   double scale = 255.0 / (max_lum - min_lum);
 
+#ifdef IM_EIGHT_BIT
+  for (i = 0; i < 256; ++i) {
+    IM_WORK_T tmp = (i - low) * scale;
+    lookup[i] = IM_LIMIT(tmp);
+  }
+#endif
+
   for(y = 0; y < im->ysize; y++) {
     IM_GSAMP(im, 0, im->xsize, y, srow, NULL, color_channels);
     for(i = 0; i < color_samples; ++i) {
+#ifdef IM_EIGHT_BIT
+      srow[i] = lookup[srow[i]];
+#else
       IM_WORK_T tmp = (srow[i] - low) * scale;
       srow[i] = IM_LIMIT(tmp);
+#endif
     }
     IM_PSAMP(im, 0, im->xsize, y, srow, NULL, color_channels);
   }

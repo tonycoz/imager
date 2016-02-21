@@ -360,6 +360,7 @@ t/350-font/030-ttoo.t		OO level FT1 tests
 t/350-font/040-ttstd.t		Standard font tests for TT
 t/350-font/100-texttools.t	Test text wrapping
 t/400-filter/010-filters.t	Consolidated filter tests (needs to split)
+t/400-filter/020-autolevels.t	Test the autolevels filter
 t/450-api/100-inline.t		Inline::C integration and API
 t/450-api/110-inlinectx.t	context APIs
 t/850-thread/010-base.t		Test wrt to perl threads
