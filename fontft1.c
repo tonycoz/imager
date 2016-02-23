@@ -371,6 +371,7 @@ i_tt_new(const char *fontname) {
   /* load the typeface */
   error = TT_Open_Face( tteng->engine, fontname, &handle->face );
   if ( error ) {
+    myfree(handle);
     if ( error == TT_Err_Could_Not_Open_File ) {
       mm_log((1, "Could not find/open %s.\n", fontname ));
     }
