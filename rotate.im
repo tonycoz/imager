@@ -152,6 +152,10 @@ static i_color interp_i_color(i_color before, i_color after, double pos,
 	out.channel[ch] = I_LIMIT_8(out_level);
       }
     }
+    else {
+      for (ch = 0; ch < channels-1; ++ch)
+	out.channel[ch] = 0;
+    }
 
     out.channel[channels-1] = total_cover;
   }
@@ -187,6 +191,10 @@ static i_fcolor interp_i_fcolor(i_fcolor before, i_fcolor after, double pos,
 
 	out.channel[ch] = I_LIMIT_DOUBLE(out_level);
       }
+    }
+    else {
+      for (ch = 0; ch < channels-1; ++ch)
+	out.channel[ch] = 0;
     }
 
     out.channel[channels-1] = total_cover;
