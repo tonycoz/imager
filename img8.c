@@ -227,7 +227,7 @@ Internal function.
 This is the function kept in the i_f_gpix member of an i_img object.
 It does normal retrieval of a pixel from the image with range checking.
 
-Returns 0 if the pixel could be set, -1 otherwise.
+Returns 0 if the pixel could be retrieved, -1 otherwise.
 
 =cut
 */
