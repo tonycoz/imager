@@ -75,6 +75,8 @@ i_combine(i_img **imgs, const int *channels, int in_count) {
     }
     IM_PLIN(out, 0, width, y, out_row);
   }
+  myfree(out_row);
+  myfree(in_row);
 #/code
 
   return out;
