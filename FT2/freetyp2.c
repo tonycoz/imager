@@ -922,6 +922,8 @@ i_ft2_cp(FT2_Fonthandle *handle, i_img *im, i_img_dim tx, i_img_dim ty, int chan
   work = i_img_8_new(bbox[2]-bbox[0]+1, bbox[3]-bbox[1]+1, 1);
   cl.channel[0] = 255;
   cl.channel[1] = 255;
+  cl.channel[2] = 255;
+  cl.channel[3] = 255;
   if (!i_ft2_text(handle, work, -bbox[0], -bbox[1], &cl, cheight, cwidth, 
                   text, len, 1, aa, vlayout, utf8))
     return 0;
