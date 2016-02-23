@@ -1333,6 +1333,10 @@ i_nearest_color(i_img *im, int num, i_img_dim *xo, i_img_dim *yo, i_color *oval,
 
   i_nearest_color_foo(im, num, xo, yo, ival, dmeasure);
 
+  myfree(cmatch);
+  myfree(ival);
+  myfree(tval);
+
   return 1;
 }
 
