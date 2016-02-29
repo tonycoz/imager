@@ -4,17 +4,17 @@ Imager release history.  Older releases can be found in Changes.old
    It's custom ok() function didn't have a prototype and didn't use scalar().
    This caused ok() to use the note instead of the value being tested when
    the method called returned an empty list.  For an example of the problem
-   caused, see: https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=812093
+   caused see: https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=812093
 
  - remove some noise from when Imager tried to work with buggy
    versions of giflib.
 
- - the new autolevels filter (0.99) used an integer for the sample
-   scaling factor which caused the top output level to be too low
-   (depending on the scaling required.)  It now uses a double.
+ - the new autolevels filter (Imager 0.99) used an integer for the
+   sample scaling factor which caused the top output level to be too
+   low (depending on the scaling required.)  It now uses a double.
    https://rt.cpan.org/Ticket/Display.html?id=111871
 
- - the new autolevels filter had off-by-one errors calculation the
+ - the new autolevels filter had off-by-one errors calculating the
    minimum and maximum luminance from the histogram.  This slightly
    reduced the contrast of the output image.
    https://rt.cpan.org/Ticket/Display.html?id=111871
@@ -23,7 +23,34 @@ Imager release history.  Older releases can be found in Changes.old
    to avoid a floating point multiply for each sample.
    https://rt.cpan.org/Ticket/Display.html?id=111871
 
- - the addcolors() method leaked memory.
+ - fixed several memory leaks detected by valgrind:
+
+   - addcolors() leaked the temporary array of colors supplied to the
+     internal API
+
+   - make_palette() leaked the temporary image array (not the images
+     themselves) passed to the internal API.
+
+   - combine()/i_combine() leaked its working row buffers
+
+   - getcolorusage()/i_get_anonymous_color_histo() leaked the sample
+     buffer if there were too many colors
+
+   - getcolorcount()/i_count_colors() leaked the sample buffer if
+     there were too many colors.
+
+   - the nearest_color filter (undocumented until I find a use for it)
+     leaked both temporaries passed to the API and internal buffers
+
+ - fixed some uninitialized memory usage detected by valgrind:
+
+   - rotate()/i_rotate_exact()/i_rotate_exact_bg()/i_matrix_transform()/
+     i_matrix_transform_bg() didn't initialize a working color value
+     if there was zero pixel coverage.
+
+   - i_ft2_cp() didn't initialize the complete color when producing an
+     intermediate image.  This caused uninitialized value usage when
+     logging the color.
 
 Imager 1.004 - 8 Nov 2015
 ============

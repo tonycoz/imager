@@ -1,3 +1,9 @@
+Imager-Font-FT2 0.94
+====================
+
+ - fixed an uninitialized value usage caused when i_ft2_text() logged
+   the partially initialized color supplied by i_ft2_cp().
+
 Imager-Font-FT2 0.93
 ====================
 
