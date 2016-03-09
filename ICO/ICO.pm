@@ -4,7 +4,7 @@ use Imager;
 use vars qw($VERSION @ISA);
 
 BEGIN {
-  $VERSION = "0.04";
+  $VERSION = "0.05";
   
   require XSLoader;
   XSLoader::load('Imager::File::ICO', $VERSION);

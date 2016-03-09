@@ -1425,7 +1425,7 @@ Write 1 bit image data.
 static int
 write_1_bit(i_io_glue_t *ig, ico_image_t const *image, int *error) {
   int line_size = (image->width + 31) / 32 * 4;
-  unsigned char *writebuf = malloc(line_size);
+  unsigned char *writebuf;
   unsigned char *outp;
   unsigned char const *data, *pixelp;
   int x,y;
@@ -1438,6 +1438,7 @@ write_1_bit(i_io_glue_t *ig, ico_image_t const *image, int *error) {
   if (!write_palette(ig, image, error))
     return 0;
 
+  writebuf = malloc(line_size);
   if (!writebuf) {
     *error = ICOERR_Out_Of_Memory;
     return 0;
