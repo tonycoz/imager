@@ -65,10 +65,9 @@ i_writegif_wiol(ig, opts,...)
 	    ip_copy_colors_back(aTHX_ hv, &quant);
           }
 	}
-	ST(0) = sv_newmortal();
-	if (RETVAL == 0) ST(0)=&PL_sv_undef;
-	else sv_setiv(ST(0), (IV)RETVAL);
 	ip_cleanup_quant_opts(aTHX_ &quant);
+    OUTPUT:
+  	RETVAL
 
 
 void

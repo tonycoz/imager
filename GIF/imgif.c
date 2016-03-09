@@ -1461,9 +1461,9 @@ i_writegif_low(i_quantize *quant, GifFileType *gf, i_img **imgs, int count) {
   int imgn, orig_count, orig_size;
   int posx, posy;
   int trans_index = -1;
-  int *localmaps;
+  int *localmaps = NULL;
   int anylocal;
-  i_img **glob_imgs; /* images that will use the global color map */
+  i_img **glob_imgs = NULL; /* images that will use the global color map */
   int glob_img_count;
   i_color *orig_colors = quant->mc_colors;
   i_color *glob_colors = NULL;
@@ -1483,7 +1483,7 @@ i_writegif_low(i_quantize *quant, GifFileType *gf, i_img **imgs, int count) {
   
   if (count <= 0) {
     i_push_error(0, "No images provided to write");
-    return 0; /* what are you smoking? */
+    goto fail_cleanup;
   }
 
   /* sanity is nice */
@@ -1506,7 +1506,7 @@ i_writegif_low(i_quantize *quant, GifFileType *gf, i_img **imgs, int count) {
     i_img *im = imgs[imgn];
     if (im->xsize > 0xFFFF || im->ysize > 0xFFFF) {
       i_push_error(0, "image too large for GIF");
-      return 0;
+      goto fail_cleanup;
     }
     
     posx = posy = 0;
@@ -1533,7 +1533,7 @@ i_writegif_low(i_quantize *quant, GifFileType *gf, i_img **imgs, int count) {
 
   if (scrw > 0xFFFF || scrh > 0xFFFF) {
     i_push_error(0, "screen size too large for GIF");
-    return 0;
+    goto fail_cleanup;
   }
 
   orig_count = quant->mc_count;
@@ -1581,13 +1581,8 @@ i_writegif_low(i_quantize *quant, GifFileType *gf, i_img **imgs, int count) {
   }
 
   if ((map = make_gif_map(quant, imgs[0], want_trans)) == NULL) {
-    myfree(glob_colors);
-    myfree(localmaps);
-    myfree(glob_imgs);
-    quant->mc_colors = orig_colors;
-    (void)myEGifCloseFile(gf, NULL);
     mm_log((1, "Error in MakeMapObject"));
-    return 0;
+    goto fail_cleanup;
   }
   color_bits = 1;
   if (anylocal) {
@@ -1606,17 +1601,11 @@ i_writegif_low(i_quantize *quant, GifFileType *gf, i_img **imgs, int count) {
   
   if (EGifPutScreenDesc(gf, scrw, scrh, color_bits, 
                         gif_background, map) == GIF_ERROR) {
-    myfree(glob_colors);
-    myfree(localmaps);
-    myfree(glob_imgs);
-    quant->mc_colors = orig_colors;
     gif_push_error(myGifError(gf));
     i_push_error(0, "Could not save screen descriptor");
     FreeMapObject(map);
-    myfree(result);
-    (void)myEGifCloseFile(gf, NULL);
     mm_log((1, "Error in EGifPutScreenDesc."));
-    return 0;
+    goto fail_cleanup;
   }
   FreeMapObject(map);
 
@@ -1649,13 +1638,8 @@ i_writegif_low(i_quantize *quant, GifFileType *gf, i_img **imgs, int count) {
       i_quant_makemap(quant, imgs, 1);
       colors_paletted = has_common_palette(imgs, 1, quant);
       if ((map = make_gif_map(quant, imgs[0], want_trans)) == NULL) {
-	myfree(glob_colors);
-	myfree(localmaps);
-	myfree(glob_imgs);
-        (void)myEGifCloseFile(gf, NULL);
-        quant->mc_colors = orig_colors;
         mm_log((1, "Error in MakeMapObject"));
-        return 0;
+        goto fail_cleanup;
       }
     }
     else {
@@ -1670,12 +1654,7 @@ i_writegif_low(i_quantize *quant, GifFileType *gf, i_img **imgs, int count) {
   else
     result = i_quant_translate(quant, imgs[0]);
   if (!result) {
-    myfree(glob_colors);
-    myfree(localmaps);
-    myfree(glob_imgs);
-    quant->mc_colors = orig_colors;
-    (void)myEGifCloseFile(gf, NULL);
-    return 0;
+    goto fail_cleanup;
   }
   if (want_trans) {
     i_quant_transparent(quant, result, imgs[0], quant->mc_count);
@@ -1683,60 +1662,36 @@ i_writegif_low(i_quantize *quant, GifFileType *gf, i_img **imgs, int count) {
   }
 
   if (!do_ns_loop(gf, imgs[0])) {
-    myfree(glob_colors);
-    myfree(localmaps);
-    myfree(glob_imgs);
-    quant->mc_colors = orig_colors;
-    return 0;
+    goto fail_cleanup;
   }
 
   if (!do_gce(gf, imgs[0], want_trans, trans_index)) {
-    myfree(glob_colors);
-    myfree(localmaps);
-    myfree(glob_imgs);
-    quant->mc_colors = orig_colors;
-    myfree(result);
-    (void)myEGifCloseFile(gf, NULL);
-    return 0;
+    goto fail_cleanup;
   }
 
   if (!do_comments(gf, imgs[0])) {
-    myfree(glob_colors);
-    myfree(localmaps);
-    myfree(glob_imgs);
-    quant->mc_colors = orig_colors;
-    myfree(result);
-    (void)myEGifCloseFile(gf, NULL);
-    return 0;
+    goto fail_cleanup;
   }
 
   if (!i_tags_get_int(&imgs[0]->tags, "gif_interlace", 0, &interlace))
     interlace = 0;
   if (EGifPutImageDesc(gf, posx, posy, imgs[0]->xsize, imgs[0]->ysize, 
                        interlace, map) == GIF_ERROR) {
-    myfree(glob_colors);
-    myfree(localmaps);
-    myfree(glob_imgs);
-    quant->mc_colors = orig_colors;
+    if (map)
+      FreeMapObject(map);
     gif_push_error(myGifError(gf));
     i_push_error(0, "Could not save image descriptor");
-    (void)myEGifCloseFile(gf, NULL);
     mm_log((1, "Error in EGifPutImageDesc."));
-    return 0;
+    goto fail_cleanup;
   }
   if (map)
     FreeMapObject(map);
 
   if (!do_write(gf, interlace, imgs[0], result)) {
-    myfree(glob_colors);
-    myfree(localmaps);
-    myfree(glob_imgs);
-    quant->mc_colors = orig_colors;
-    (void)myEGifCloseFile(gf, NULL);
-    myfree(result);
-    return 0;
+    goto fail_cleanup;
   }
   myfree(result);
+  result = NULL;
 
   /* that first awful image is out of the way, do the rest */
   for (imgn = 1; imgn < count; ++imgn) {
@@ -1763,13 +1718,8 @@ i_writegif_low(i_quantize *quant, GifFileType *gf, i_img **imgs, int count) {
         result = i_quant_translate(quant, imgs[imgn]);
       }
       if (!result) {
-	myfree(glob_colors);
-	myfree(localmaps);
-	myfree(glob_imgs);
-        quant->mc_colors = orig_colors;
-        (void)myEGifCloseFile(gf, NULL);
         mm_log((1, "error in i_quant_translate()"));
-        return 0;
+        goto fail_cleanup;
       }
       if (want_trans) {
         i_quant_transparent(quant, result, imgs[imgn], quant->mc_count);
@@ -1777,14 +1727,8 @@ i_writegif_low(i_quantize *quant, GifFileType *gf, i_img **imgs, int count) {
       }
 
       if ((map = make_gif_map(quant, imgs[imgn], want_trans)) == NULL) {
-	myfree(glob_colors);
-	myfree(localmaps);
-	myfree(glob_imgs);
-        quant->mc_colors = orig_colors;
-        myfree(result);
-        (void)myEGifCloseFile(gf, NULL);
         mm_log((1, "Error in MakeMapObject."));
-        return 0;
+        goto fail_cleanup;
       }
     }
     else {
@@ -1803,23 +1747,11 @@ i_writegif_low(i_quantize *quant, GifFileType *gf, i_img **imgs, int count) {
     }
 
     if (!do_gce(gf, imgs[imgn], want_trans, trans_index)) {
-      myfree(glob_colors);
-      myfree(localmaps);
-      myfree(glob_imgs);
-      quant->mc_colors = orig_colors;
-      myfree(result);
-      (void)myEGifCloseFile(gf, NULL);
-      return 0;
+      goto fail_cleanup;
     }
 
     if (!do_comments(gf, imgs[imgn])) {
-      myfree(glob_colors);
-      myfree(localmaps);
-      myfree(glob_imgs);
-      quant->mc_colors = orig_colors;
-      myfree(result);
-      (void)myEGifCloseFile(gf, NULL);
-      return 0;
+      goto fail_cleanup;
     }
 
     if (!i_tags_get_int(&imgs[imgn]->tags, "gif_left", 0, &posx))
@@ -1831,42 +1763,27 @@ i_writegif_low(i_quantize *quant, GifFileType *gf, i_img **imgs, int count) {
       interlace = 0;
     if (EGifPutImageDesc(gf, posx, posy, imgs[imgn]->xsize, 
                          imgs[imgn]->ysize, interlace, map) == GIF_ERROR) {
-      myfree(glob_colors);
-      myfree(localmaps);
-      myfree(glob_imgs);
-      quant->mc_colors = orig_colors;
       gif_push_error(myGifError(gf));
       i_push_error(0, "Could not save image descriptor");
-      myfree(result);
       if (map)
         FreeMapObject(map);
-      (void)myEGifCloseFile(gf, NULL);
       mm_log((1, "Error in EGifPutImageDesc."));
-      return 0;
+      goto fail_cleanup;
     }
     if (map)
       FreeMapObject(map);
     
     if (!do_write(gf, interlace, imgs[imgn], result)) {
-      myfree(glob_colors);
-      myfree(localmaps);
-      myfree(glob_imgs);
-      quant->mc_colors = orig_colors;
-      (void)myEGifCloseFile(gf, NULL);
-      myfree(result);
-      return 0;
+      goto fail_cleanup;
     }
     myfree(result);
+    result = NULL;
   }
 
   if (myEGifCloseFile(gf, &error) == GIF_ERROR) {
-    myfree(glob_colors);
-    myfree(localmaps);
-    myfree(glob_imgs);
     gif_push_error(error);
     i_push_error(0, "Could not close GIF file");
-    mm_log((1, "Error in EGifCloseFile\n"));
-    return 0;
+    goto fail_cleanup;
   }
   if (glob_colors) {
     int i;
@@ -1880,6 +1797,15 @@ i_writegif_low(i_quantize *quant, GifFileType *gf, i_img **imgs, int count) {
   quant->mc_colors = orig_colors;
 
   return 1;
+
+ fail_cleanup:
+  quant->mc_colors = orig_colors;
+  myfree(result);
+  myfree(glob_colors);
+  myfree(localmaps);
+  myfree(glob_imgs);
+  (void)myEGifCloseFile(gf, &error);
+  return 0;
 }
 
 static int
