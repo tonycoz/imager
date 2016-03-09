@@ -99,7 +99,7 @@ im_vloog(pIMCTX, int level, const char *fmt, va_list ap) {
   struct tm *str_tm;
   char date_buffer[DTBUFF];
 
-  if (!aIMCTX->lg_file || level > aIMCTX->log_level)
+  if (!aIMCTX || !aIMCTX->lg_file || level > aIMCTX->log_level)
     return;
 
   i_mutex_lock(log_mutex);
@@ -120,7 +120,7 @@ i_loog(int level,const char *fmt, ... ) {
   dIMCTX;
   va_list ap;
 
-  if (!aIMCTX->lg_file || level > aIMCTX->log_level)
+  if (!aIMCTX || !aIMCTX->lg_file || level > aIMCTX->log_level)
     return;
 
   va_start(ap,fmt);
@@ -132,7 +132,7 @@ void
 im_loog(pIMCTX, int level,const char *fmt, ... ) {
   va_list ap;
 
-  if (!aIMCTX->lg_file || level > aIMCTX->log_level)
+  if (!aIMCTX || !aIMCTX->lg_file || level > aIMCTX->log_level)
     return;
 
   va_start(ap,fmt);
@@ -151,7 +151,7 @@ This is an internal function called by the mm_log() macro.
 
 void
 im_lhead(pIMCTX, const char *file, int line) {
-  if (aIMCTX->lg_file != NULL) {
+  if (aIMCTX && aIMCTX->lg_file != NULL) {
     aIMCTX->filename = file;
     aIMCTX->line = line;
   }

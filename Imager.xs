@@ -52,22 +52,11 @@ typedef struct {
 
 START_MY_CXT
 
-im_context_t fallback_context;
-
 static void
 start_context(pTHX) {
   dMY_CXT;
   MY_CXT.ctx = im_context_new();
   sv_setref_pv(get_sv("Imager::_context", GV_ADD), "Imager::Context", MY_CXT.ctx);
-
-  /* Ideally we'd free this reference, but the error message memory
-     was never released on exit, so the associated memory here is reasonable
-     to keep.
-     With logging enabled we always need at least one context, since
-     objects may be released fairly late and attempt to get the log file.
-  */
-  im_context_refinc(MY_CXT.ctx, "start_context");
-  fallback_context = MY_CXT.ctx;
 }
 
 static im_context_t
@@ -75,7 +64,7 @@ perl_get_context(void) {
   dTHX;
   dMY_CXT;
   
-  return MY_CXT.ctx ? MY_CXT.ctx : fallback_context;
+  return MY_CXT.ctx;
 }
 
 #else
@@ -85,7 +74,9 @@ static im_context_t perl_context;
 static void
 start_context(pTHX) {
   perl_context = im_context_new();
-  im_context_refinc(perl_context, "start_context");
+
+  /* just so it gets destroyed */
+  sv_setref_pv(get_sv("Imager::_context", GV_ADD), "Imager::Context", perl_context);
 }
 
 static im_context_t
