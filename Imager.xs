@@ -3047,9 +3047,9 @@ i_nearest_color(im, ...)
 	num = num <= av_len(ac) ? num : av_len(ac);
 	num++; 
 	if (num < 2) croak("Usage: i_nearest_color array refs must have more than 1 entry each");
-	xo = malloc_temp( sizeof(i_img_dim) * num );
-	yo = malloc_temp( sizeof(i_img_dim) * num );
-	ival = malloc_temp( sizeof(i_color) * num );
+	xo = malloc_temp(aTHX_ sizeof(i_img_dim) * num );
+	yo = malloc_temp(aTHX_ sizeof(i_img_dim) * num );
+	ival = malloc_temp(aTHX_ sizeof(i_color) * num );
 	for(i = 0; i<num; i++) {
 	  xo[i]   = (i_img_dim)SvIV(* av_fetch(axx, i, 0));
 	  yo[i]   = (i_img_dim)SvIV(* av_fetch(ayy, i, 0));
