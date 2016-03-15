@@ -4,7 +4,7 @@ use File::Spec;
 use Config;
 use Cwd ();
 
-our $VERSION = "1.004";
+our $VERSION = "1.005";
 
 my @alt_transfer = qw/altname incsuffix libbase/;
 
@@ -461,6 +461,7 @@ sub _inc_paths {
      ),
      "/usr/include",
      "/usr/local/include",
+     _gcc_inc_paths(),
      _dyn_inc_paths(),
     );
 
@@ -469,6 +470,49 @@ sub _inc_paths {
   }
 
   return @paths;
+}
+
+sub _gcc_inc_paths {
+  $Config{gccversion}
+    or return;
+
+  my ($base_version) = $Config{gccversion} =~ /^([0-9]+)/
+    or return;
+
+  $base_version >= 4
+    or return;
+
+  local $ENV{LANG} = "C";
+  local $ENV{LC_ALL} = "C";
+  my $devnull = File::Spec->devnull;
+  my @spam = `$Config{cc} -E -v - <$devnull 2>&1`;
+  # output includes lines like:
+  # ...
+  # ignoring nonexistent directory "/usr/lib/gcc/x86_64-linux-gnu/4.9/../../../../x86_64-linux-gnu/include"
+  # #include "..." search starts here:
+  # #include <...> search starts here:
+  #  /usr/lib/gcc/x86_64-linux-gnu/4.9/include
+  #  /usr/local/include
+  #  /usr/lib/gcc/x86_64-linux-gnu/4.9/include-fixed
+  #  /usr/include/x86_64-linux-gnu
+  #  /usr/include
+  # End of search list.
+  # # 1 "<stdin>"
+  # # 1 "<built-in>"
+  # ...
+
+  while (@spam && $spam[0] !~ /^#include /) {
+    shift @spam;
+  }
+  my @inc;
+  while (@spam && $spam[0] !~ /^End of search/) {
+    my $line = shift @spam;
+    chomp $line;
+    next if $line =~ /^#include /;
+    next unless $line =~ s/^\s+//;
+    push @inc, $line;
+  }
+  return @inc;
 }
 
 sub _dyn_inc_paths {
