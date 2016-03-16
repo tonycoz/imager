@@ -1,4 +1,9 @@
-Imager-File-GIF 0.89
+Imager-File-GIF 0.91
+====================
+
+ - a write failure when writing to a GIF file could leak memory.
+
+Imager-File-GIF 0.90
 ====================
 
  - don't leave a test file behind when probing for the 4.2.0 file

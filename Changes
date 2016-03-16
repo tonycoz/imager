@@ -6,8 +6,8 @@ Imager release history.  Older releases can be found in Changes.old
    the method called returned an empty list.  For an example of the problem
    caused see: https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=812093
 
- - remove some noise from when Imager tried to work with buggy
-   versions of giflib.
+ - remove some noise from when Imager tried to work with bugs in old
+   versions of giflib.  I can't do much about the new bugs.
 
  - the new autolevels filter (Imager 0.99) used an integer for the
    sample scaling factor which caused the top output level to be too
@@ -41,6 +41,18 @@ Imager release history.  Older releases can be found in Changes.old
 
    - the nearest_color filter (undocumented until I find a use for it)
      leaked both temporaries passed to the API and internal buffers
+
+   - the internal process of upgrading a paletted image to a direct
+     color image would leak a context object reference count.
+
+   - a write failure when writing to a GIF file could leak memory.
+
+   - failing to write to a 1-bit/pixel ICO image could leak memory.
+
+ - Imager no longer deliberately leaks the context object from the
+   initial thread.  This was done to ensure there was always a context
+   object available, but the code that needed that now handles the
+   lack correctly,
 
  - fixed some uninitialized memory usage detected by valgrind:
 
