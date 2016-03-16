@@ -1,5 +1,8 @@
 Imager release history.  Older releases can be found in Changes.old
 
+Imager 1.004_001 - 16 Mar 2016 (Birthday release - but not my birthday)
+================
+
  - re-work the t/200-file/400-basic.t to correctly handle failures
    It's custom ok() function didn't have a prototype and didn't use scalar().
    This caused ok() to use the note instead of the value being tested when
