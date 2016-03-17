@@ -72,7 +72,7 @@ for my $type (@types) {
       my $fhimg = Imager->new;
       ok($fhimg->read(fh=>$fh, %mopts), "$type: read from fh")
 	or diag_skip_image($fhimg, "$type: couldn't read from fh");
-      ok($fh->seek(0, SEEK_SET), "$type: seek after read")
+      ok(seek($fh, 0, SEEK_SET), "$type: seek after read")
 	or diag_skip_errno("$type: couldn't seek back to start");
     SKIP:
       {
@@ -81,7 +81,7 @@ for my $type (@types) {
 	is_image($img, $fhimg,
 	   "$type: image comparison after fh read after seek");
       }
-      ok($fh->seek(0, SEEK_SET), "$type: seek after read prep to read from fd")
+      ok(seek($fh, 0, SEEK_SET), "$type: seek after read prep to read from fd")
 	or diag_skip_errno("$type: couldn't seek");
 
     SKIP:
@@ -197,7 +197,7 @@ for my $type (@types) {
       ok($wimg->write(fh=>$fh, %extraopts, type=>$type),
 	 "$type: writing to a FH")
 	or diag_skip_image($wimg, "$type: write to fh");
-      ok($fh->seek(0, SEEK_END),
+      ok(seek($fh, 0, SEEK_END),
 	 "$type: seek after writing to a FH")
 	or diag_skip_errno("$type: seek to end failed");
       ok(print($fh "SUFFIX\n"), "write to FH after writing $type");
