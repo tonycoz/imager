@@ -187,7 +187,8 @@ my $white = '#FFFFFF';
   is_color3($im->getpixel(x => 198, y => 202), 0, 0, 0,
 	    "check center not filled");
   ok($im->write(file => "testout/t21arcout.ppm"),
-     "save arc outline");
+     "save arc outline")
+    or diag "failed writing testout/t21arcout.ppm: ".$im->errstr;
 }
 
 {
@@ -239,7 +240,8 @@ my $white = '#FFFFFF';
   is_color3($im->getpixel(x => 198, y => 202), 0, 0, 0,
 	    "check center not filled");
   ok($im->write(file => "testout/t21aaarcout.ppm"),
-     "save arc outline");
+     "save arc outline")
+    or diag "Failed writing testout/t21aaarcout.ppm: " . $im->errstr;
 }
 
 {
@@ -261,7 +263,8 @@ my $white = '#FFFFFF';
     $an += $step;
   }
   ok($im->write(file => "testout/t21aaarcs.ppm"),
-     "save arc outline");
+     "save arc outline")
+    or diag "failed writing testout/t21aaarcs.ppm: ".$im->errstr;
 }
 
 {
@@ -273,7 +276,8 @@ my $white = '#FFFFFF';
   ok($im->arc(x => 100, y => 100, aa => 1, filled => 0, color => '#fff',
 	      d1 => 270, d2 => 90, r => 80), "draw aa arc through 0");
   ok($im->write(file => "testout/t21arc0.ppm"),
-     "save arc through 0");
+     "save arc through 0")
+    or diag "Failed writing testout/t21arc0.ppm: ".$im->errstr;
 }
 
 {
