@@ -1,5 +1,8 @@
 Imager release history.  Older releases can be found in Changes.old
 
+Imager 1.004_002 - 20 Mar 2016
+================
+
  - don't use the seek() method on opened() handles in
    t/200-file/400-basic.t.  In older versions of perl such handles are
    only IO::Handle objects, not IO::File, and don't have a seek()
