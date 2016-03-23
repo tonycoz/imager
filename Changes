@@ -1,5 +1,8 @@
 Imager release history.  Older releases can be found in Changes.old
 
+Imager 1.004_003 - 23 Mar 2016
+================
+
  - add some extra error reporting to the I/O layers tests, this might
    help catch a failure seen on Win32.
    http://cpantesters.org/cpan/report/99781689-6bf5-1014-897a-75cb4eee1325
