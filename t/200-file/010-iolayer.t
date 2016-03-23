@@ -1,6 +1,6 @@
 #!perl -w
 use strict;
-use Test::More tests => 288;
+use Test::More tests => 291;
 use Imager::Test qw(is_image);
 # for SEEK_SET etc, Fcntl doesn't provide these in 5.005_03
 use IO::Seekable;
@@ -852,7 +852,7 @@ SKIP:
 SKIP:
 {
   $Config{useperlio}
-    or skip "PerlIO::scalar requires perlio", 13;
+    or skip "PerlIO::scalar requires perlio", 16;
 
   my $foo;
   open my $fh, "+<", \$foo;
@@ -879,10 +879,32 @@ SKIP:
     or print "# ", $im->errstr, "\n";
 
   close $fh2;
+  my $tmp = $foo;
   open my $fh3, "<", \$foo;
   my $im2 = Imager->new(fh => $fh3);
-  ok($im2, "read image from a scalar fh");
-  is_image($im, $im2, "check they match");
+ SKIP:
+  {
+    unless (ok($im2, "read image from a scalar fh")) {
+      diag "read image from a scalar fh :".Imager->errstr;
+      diag "layer: $_" for PerlIO::get_layers($fh3);
+      skip "Couldn't read the image", 1;
+    }
+    is_image($im, $im2, "check they match");
+  }
+  close $fh3;
+  open my $fh4, "<", \$foo;
+  my $im3 = Imager->new;
+ SKIP:
+  {
+    unless (ok($im3->read(fh => $fh4),
+	       "read image from a scalar fh (second try)")) {
+      diag "read image from a scalar fh :".$im3->errstr;
+      diag "layer: $_" for PerlIO::get_layers($fh4);
+      skip "Couldn't read the image", 1;
+    }
+    is_image($im, $im3, "check they match");
+  }
+  is($foo, $tmp, "check \$foo not modified");
 }
 
 {
