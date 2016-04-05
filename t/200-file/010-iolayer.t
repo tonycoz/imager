@@ -70,7 +70,7 @@ my $im3 = Imager::i_readpnm_wiol($IO6, -1)
 
 unless ($im3) {
   # getting a strange failure on some CPAN testers
-  print STDERR join(" ", map sprintf("%02x", ord), split //, substr($data2, 0, 30)), "\n";
+  print STDERR join(" ", map sprintf("%02x", ord), split //, substr($data2, 0, 40)), "\n";
 }
 
 SKIP: {
