@@ -1,5 +1,8 @@
 Imager release history.  Older releases can be found in Changes.old
 
+Imager 1.004_004 - 15 Apr 2016
+================
+
  - test that the ivdformat from Config is correct and look for a valid
    one if it isn't.
    For the strange Win32 failures.
