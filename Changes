@@ -1,5 +1,8 @@
 Imager release history.  Older releases can be found in Changes.old
 
+ - revert the ivdformat probes, they don't work as is and trying to
+   fix them is too much work for now.
+
 Imager 1.004_004 - 15 Apr 2016
 ================
 
