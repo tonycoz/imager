@@ -277,9 +277,7 @@ if ($MM_ver >= 6.46) {
     };
 }
 
-my $ivdformat = probe_ivdformat();
-
-make_imconfig(\@defines, $ivdformat);
+make_imconfig(\@defines);
 
 if ($VERBOSE) { print Dumper(\%opts); }
 mkdir('testout',0777); # since we cannot include it in the archive.
@@ -558,7 +556,7 @@ sub setenv {
 }
 
 sub make_imconfig {
-  my ($defines, $ivdformat) = @_;
+  my ($defines) = @_;
 
   open CONFIG, "> imconfig.h"
     or die "Cannot create imconfig.h: $!\n";
@@ -611,7 +609,7 @@ EOS
  This is intended for formatting i_img_dim values.
 */
 typedef $Config{ivtype} i_dim_format_t;
-#define i_DF $ivdformat
+#define i_DF $Config{ivdformat}
 EOS
 
   print CONFIG "\n#endif\n";
@@ -641,49 +639,6 @@ Other options:
 EOS
   exit 1;
 
-}
-
-# at least one CPAN tester has an incorrect ivdformat, make sure it's
-# valid.
-# Or at least it isn't valid with the built-in sprintf()
-sub probe_ivdformat {
-  if (_test_ivdformat($Config{ivdformat})) {
-    return $Config{ivdformat};
-  }
-  my @test_fmt = grep $_ ne $Config{ivdformat}, qw(ld d lld zd I64d);
-  for my $fmt (@test_fmt) {
-    if (_test_ivdformat($fmt)) {
-      print "ivdformat: Found a valid ivdformat\n";
-      return $fmt;
-    }
-  }
-  die "OS unsupported: Invalid ivdformat ($Config{ivdformat}) in this perl\n";
-}
-
-sub _test_ivdformat {
-  my ($fmt) = @_;
-  require Devel::CheckLib;
-  my @headers = ( "stdio.h", "string.h" );
-  if ($Config{i_inttypes}) {
-    push @headers, "inttypes.h";
-  }
-  my $good =
-    Devel::CheckLib::check_lib
-      (
-       debug => $VERBOSE,
-       LIBS => [],
-       INC => "",
-       header => \@headers,
-       function => <<CODE,
-char buf[80];
-$Config{ivtype} x = 10;
-sprintf(buf, "%" $fmt " %" $fmt, x, x);
-if (strcmp(buf, "10 10")) {
-    printf("ivformat: " $fmt " is invalid\n");
-    return 1;
-}
-CODE
-      );
 }
 
 # generate the PM MM argument
@@ -750,7 +705,7 @@ TT_Error error;
 error = TT_Init_FreeType(&engine);
 if (error) {
    printf("FT1: Could not initialize engine\n");
-   return 1;
+   exit(1);
 }
 
 return 0;
