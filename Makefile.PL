@@ -644,10 +644,18 @@ EOS
 }
 
 # at least one CPAN tester has an incorrect ivdformat, make sure it's
-# valid
+# valid.
+# Or at least it isn't valid with the built-in sprintf()
 sub probe_ivdformat {
   if (_test_ivdformat($Config{ivdformat})) {
     return $Config{ivdformat};
+  }
+  my @test_fmt = grep $_ ne $Config{ivdformat}, qw(ld d lld zd I64d);
+  for my $fmt (@test_fmt) {
+    if (_test_ivdformat($fmt)) {
+      print "ivdformat: Found a valid ivdformat\n";
+      return $fmt;
+    }
   }
   die "OS unsupported: Invalid ivdformat ($Config{ivdformat}) in this perl\n";
 }
@@ -655,13 +663,17 @@ sub probe_ivdformat {
 sub _test_ivdformat {
   my ($fmt) = @_;
   require Devel::CheckLib;
+  my @headers = ( "stdio.h", "string.h" );
+  if ($Config{i_inttypes}) {
+    push @headers, "inttypes.h";
+  }
   my $good =
     Devel::CheckLib::check_lib
       (
        debug => $VERBOSE,
        LIBS => [],
        INC => "",
-       header => [ "stdio.h", "string.h" ],
+       header => \@headers,
        function => <<CODE,
 char buf[80];
 $Config{ivtype} x = 10;
