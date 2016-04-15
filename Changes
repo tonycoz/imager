@@ -1,5 +1,11 @@
 Imager release history.  Older releases can be found in Changes.old
 
+ - test that the ivdformat from Config is correct and look for a valid
+   one if it isn't.
+   For the strange Win32 failures.
+
+ - fix a copy and paste error in pod in samples/samp-form.cgi
+
 Imager 1.004_003 - 23 Mar 2016
 ================
 
