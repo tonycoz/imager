@@ -277,7 +277,9 @@ if ($MM_ver >= 6.46) {
     };
 }
 
-make_imconfig(\@defines);
+my $ivdformat = probe_ivdformat();
+
+make_imconfig(\@defines, $ivdformat);
 
 if ($VERBOSE) { print Dumper(\%opts); }
 mkdir('testout',0777); # since we cannot include it in the archive.
@@ -556,7 +558,7 @@ sub setenv {
 }
 
 sub make_imconfig {
-  my ($defines) = @_;
+  my ($defines, $ivdformat) = @_;
 
   open CONFIG, "> imconfig.h"
     or die "Cannot create imconfig.h: $!\n";
@@ -609,7 +611,7 @@ EOS
  This is intended for formatting i_img_dim values.
 */
 typedef $Config{ivtype} i_dim_format_t;
-#define i_DF $Config{ivdformat}
+#define i_DF $ivdformat
 EOS
 
   print CONFIG "\n#endif\n";
@@ -639,6 +641,37 @@ Other options:
 EOS
   exit 1;
 
+}
+
+# at least one CPAN tester has an incorrect ivdformat, make sure it's
+# valid
+sub probe_ivdformat {
+  if (_test_ivdformat($Config{ivdformat})) {
+    return $Config{ivdformat};
+  }
+  die "OS unsupported: Invalid ivdformat ($Config{ivdformat}) in this perl\n";
+}
+
+sub _test_ivdformat {
+  my ($fmt) = @_;
+  require Devel::CheckLib;
+  my $good =
+    Devel::CheckLib::check_lib
+      (
+       debug => $VERBOSE,
+       LIBS => [],
+       INC => "",
+       header => [ "stdio.h", "string.h" ],
+       function => <<CODE,
+char buf[80];
+$Config{ivtype} x = 10;
+sprintf(buf, "%" $fmt " %" $fmt, x, x);
+if (strcmp(buf, "10 10")) {
+    printf("ivformat: " $fmt " is invalid\n");
+    return 1;
+}
+CODE
+      );
 }
 
 # generate the PM MM argument
@@ -705,7 +738,7 @@ TT_Error error;
 error = TT_Init_FreeType(&engine);
 if (error) {
    printf("FT1: Could not initialize engine\n");
-   exit(1);
+   return 1;
 }
 
 return 0;
