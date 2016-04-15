@@ -175,7 +175,7 @@ So limit the values and validate them:
 
   <select name="font">
     <option value="arial">Arial</option>
-    <option value="arialb.ttf">Arial Bold</option>
+    <option value="arialb">Arial Bold</option>
     ...
   </select>
 
