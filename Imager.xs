@@ -4289,8 +4289,12 @@ i_gslin(im, l, r, y, channels)
           else {
 	    size_t size;
 	    SV *sv;
-	    if (count <= 0)
+	    
+	    if (count <= 0) {
+	      Safefree(sdata);
 	      XSRETURN_UNDEF;
+	    }
+	    
 	    size = count * sizeof(i_sample16_t);
 	    sv = sv_newmortal();
 	    sdata[size] = '\0';
@@ -4328,9 +4332,16 @@ i_gslinf(im, l, r, y, channels)
 	    Safefree(data);
           }
           else {
-	    size_t size = count * sizeof(i_fsample_t);
-	    SV *sv = sv_newmortal();
+	    size_t size;
+	    SV *sv;
 
+	    if (count <= 0) {
+	      Safefree(sdata);
+	      XSRETURN_UNDEF;
+	    }
+
+	    size = count * sizeof(i_fsample_t);
+	    sv = sv_newmortal();
 	    sdata[size] = '\0';
 	    sv_usepvn_flags(sv, sdata, size, SV_HAS_TRAILING_NUL);
 
