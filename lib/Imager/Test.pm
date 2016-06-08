@@ -1241,7 +1241,7 @@ sub std_image_tests {
 		       channels => $channel_count, scale => "linear"),
        $channel_count * 2,
        "set linear samples (channel count, masked)");
-    @gsamps = $im->getsamples(y => 7, width => 2, type => "float"
+    @gsamps = $im->getsamples(y => 7, width => 2, type => "float",
 			      channels => $channel_count, scale => "linear");
     is_deeply(\@gsamps, \@fcmp_sl_masked,
 	      "check linear samples (channel count, masked)");
