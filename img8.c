@@ -548,7 +548,8 @@ i_gslin_d(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y,
   i_img_dim count, i, w;
   const unsigned char *data;
   int color_chans;
-  imcms_curve_t *curves = model_curves(im, &color_chans);
+  dIMCTXim(im);
+  const imcms_curve_t *curves = im_model_curves(aIMCTX, i_img_color_model(im), &color_chans);
 
   if (y >= 0 && y < im->ysize && l < im->xsize && l >= 0) {
     if (r > im->xsize)
@@ -615,7 +616,8 @@ i_gslinf_d(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y,
   i_img_dim count, i, w;
   unsigned char *data;
   int color_chans;
-  imcms_curve_t *curves = model_curves(im, &color_chans);
+  dIMCTXim(im);
+  const imcms_curve_t *curves = im_model_curves(aIMCTX, i_img_color_model(im), &color_chans);
 
   if (y >=0 && y < im->ysize && l < im->xsize && l >= 0) {
     if (r > im->xsize)
@@ -683,7 +685,8 @@ i_pslin_d(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y,
   i_img_dim count, i, w;
   unsigned char *data;
   int color_chans;
-  imcms_curve_t *curves = model_curves(im, &color_chans);
+  dIMCTXim(im);
+  const imcms_curve_t *curves = im_model_curves(aIMCTX, i_img_color_model(im), &color_chans);
 
   if (y >=0 && y < im->ysize && l < im->xsize && l >= 0) {
     if (r > im->xsize)
@@ -781,7 +784,8 @@ i_pslinf_d(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y,
   i_img_dim count, i, w;
   unsigned char *data;
   int color_chans;
-  imcms_curve_t *curves = model_curves(im, &color_chans);
+  dIMCTXim(im);
+  const imcms_curve_t *curves = im_model_curves(aIMCTX, i_img_color_model(im), &color_chans);
 
   if (y >=0 && y < im->ysize && l < im->xsize && l >= 0) {
     if (r > im->xsize)
