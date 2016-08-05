@@ -105,6 +105,8 @@ i_color_model_t i_img_color_model(i_img *im);
 int i_img_alpha_channel(i_img *im, int *channel);
 int i_img_color_channels(i_img *im);
 
+extern const imcms_curve_t *im_model_curves(pIMCTX, i_color_model_t model, int *color_chans);
+
 /* Base functions */
 
 extern int (i_ppix)(i_img *im,i_img_dim x,i_img_dim y, const i_color *val);

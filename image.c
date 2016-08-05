@@ -2467,6 +2467,37 @@ i_get_file_backgroundf(i_img *im, i_fcolor *fbg) {
 }
 
 /*
+=item i_model_curves(model, &count)
+
+Return a pointer to an array of curves for the given color model.
+
+Returns the number of color channels in the image in count.
+
+Returns NULL and a count of zero for the icm_unknown model.
+
+=cut
+*/
+
+const imcms_curve_t *
+im_model_curves(pIMCTX, i_color_model_t model, int *color_chan) {
+  switch (model) {
+  case icm_unknown:
+    *color_chan = 0;
+    return NULL;
+  case icm_gray:
+  case icm_gray_alpha:
+    *color_chan = 1;
+    return &aIMCTX->gray_curve;
+
+  case icm_rgb:
+  case icm_rgb_alpha:
+    *color_chan = 3;
+    return aIMCTX->rgb_curves;
+  }
+}
+
+
+/*
 =back
 
 =head1 AUTHOR
