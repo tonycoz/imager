@@ -4,7 +4,7 @@ use Imager::Regops;
 use strict;
 use vars qw($VERSION);
 
-$VERSION = "1.006";
+$VERSION = "1.007";
 
 my %expr_types;
 
@@ -323,9 +323,12 @@ use vars qw(@ISA);
 @ISA = qw(Imager::Expr);
 use Imager::Regops qw(%Attr $MaxOperands);
 
-
-eval "use Parse::RecDescent;";
-__PACKAGE__->register_type('expr') if !$@;
+{
+  local @INC = @INC;
+  pop @INC if $INC[-1] eq '.';
+  eval "use Parse::RecDescent;";
+  __PACKAGE__->register_type('expr') if !$@;
+}
 
 # I really prefer bottom-up parsers
 my $grammar = <<'GRAMMAR';

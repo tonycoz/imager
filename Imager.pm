@@ -1668,6 +1668,8 @@ sub _load_file {
   else {
     local $SIG{__DIE__};
     my $loaded = eval {
+      local @INC = @INC;
+      pop @INC if $INC[-1] eq '.';
       ++$attempted_to_load{$file};
       require $file;
       return 1;
@@ -2398,8 +2400,12 @@ sub transform {
 
   if ( $opts{'xexpr'} and $opts{'yexpr'} ) {
     if (!$I2P) {
-      eval ("use Affix::Infix2Postfix;");
-      print $@;
+      {
+	local @INC = @INC;
+	pop @INC if $INC[-1] eq '.';
+	eval ("use Affix::Infix2Postfix;");
+      }
+
       if ( $@ ) {
 	$self->{ERRSTR}='transform: expr given and Affix::Infix2Postfix is not avaliable.'; 
 	return undef;
@@ -4334,6 +4340,8 @@ sub preload {
   # - something for Module::ScanDeps to analyze
   # https://rt.cpan.org/Ticket/Display.html?id=6566
   local $@;
+  local @INC = @INC;
+  pop @INC if $INC[-1] eq '.';
   eval { require Imager::File::GIF };
   eval { require Imager::File::JPEG };
   eval { require Imager::File::PNG };
