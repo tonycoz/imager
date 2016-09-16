@@ -1119,7 +1119,7 @@ sub std_image_tests {
 
   for my $model (@$models) {
     print "# model $model\n";
-    my $im = Imager->new(xsize => 10, ysize => 10, model => $model);
+    my $im = Imager->new(xsize => 10, ysize => 10, model => $model, bits => $bits);
     my $alpha_ch = $im->alphachannel;
     my $col_channels = $im->colorchannels;
     my $channel_count = $col_channels;
@@ -1243,7 +1243,7 @@ sub std_image_tests {
        "set linear samples (channel count, masked)");
     @gsamps = $im->getsamples(y => 7, width => 2, type => "float",
 			      channels => $channel_count, scale => "linear");
-    is_deeply(\@gsamps, \@fcmp_sl_masked,
+    is_arrayf(\@gsamps, \@fcmp_sl_masked,
 	      "check linear samples (channel count, masked)");
 
     $im->setmask(mask => $oldmask);

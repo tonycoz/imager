@@ -337,6 +337,8 @@ Intended for use in macros to warn that the given macro is deprecated.
 
 #endif
 
+#define i_model_curves(im, pcolor_chans) im_model_curves(aIMCTX, (im), (pcolor_chans))
+
 #ifdef __cplusplus
 }
 #endif
