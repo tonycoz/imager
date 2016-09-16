@@ -3,14 +3,12 @@ use strict;
 use Test::More;
 BEGIN { use_ok(Imager => qw(:all :handy)) }
 
-use Imager::Test qw(test_image is_image is_color3);
-
 -d "testout" or mkdir "testout";
 
 Imager->open_log(log => "testout/t022double.log");
 
-use Imager::Test qw(image_bounds_checks test_colorf_gpix test_colorf_glin
-                    mask_tests check_vtable);
+use Imager::Test qw(image_bounds_checks test_colorf_gpix test_colorf_glin mask_tests
+		  check_vtable std_image_tests std_image_tests_count);
 
 use Imager::Color::Float;
 
@@ -287,6 +285,8 @@ my $psamp_outside_error = "Image position outside of image";
   }
   print "# end psampf tests\n";
 }
+
+std_image_tests({ bits => "double" });
 
 Imager->close_log;
 
