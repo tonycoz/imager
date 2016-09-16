@@ -10,7 +10,8 @@ Imager->open_log(log => "testout/t021sixteen.log");
 
 use Imager::Color::Float;
 use Imager::Test qw(test_image is_image image_bounds_checks test_colorf_gpix
-                    test_colorf_glin mask_tests is_color3 check_vtable);
+                    test_colorf_glin mask_tests is_color3 check_vtable
+                    std_image_tests std_image_tests_count);
 
 my $im_g = Imager::i_img_16_new(100, 101, 1);
 
@@ -367,6 +368,8 @@ my $psamp_outside_error = "Image position outside of image";
   }
   print "# end psampf tests\n";
 }
+
+std_image_tests({ bits => 16 });
 
 Imager->close_log;
 
