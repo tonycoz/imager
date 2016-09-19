@@ -4,7 +4,7 @@
 # the file format
 
 use strict;
-use Test::More tests => 89;
+use Test::More tests => 93;
 use Imager;
 
 -d "testout" or mkdir "testout";
@@ -156,6 +156,16 @@ is(Imager->errstr, "check_file_limits: width must be a positive integer",
   ok(!Imager->write_multi({ data => \$data, type => "pnm" }, $good, $empty),
      "fail to write_multi an empty image");
   is(Imager->errstr, "write_multi: empty input image (image 2)");
+  Imager->_set_error("");
+  my $not_imager = bless {}, "Foo";
+  ok(!Imager->write_multi({ data => \$data, type => "pnm" }, $not_imager),
+     "fail to write_multi() a non-Imager object");
+  is(Imager->errstr, "write_multi: image 1 is not an Imager image object",
+     "check message");
+  ok(!Imager->write_multi({ data => \$data, type => "pnm" }, "Imager"),
+     "fail to write_multi() 'Imager' string");
+  is(Imager->errstr, "write_multi: image 1 is not an Imager image object",
+     "check message");
 }
 
 # check file type probe

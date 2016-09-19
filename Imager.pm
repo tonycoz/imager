@@ -637,6 +637,9 @@ sub _combine {
 sub _valid_image {
   my ($self, $method) = @_;
 
+  ref $self
+    or return Imager->_set_error("$method needs an image object");
+
   $self->{IMG} && Scalar::Util::blessed($self->{IMG}) and return 1;
 
   my $msg = $self->{IMG} ? "images do not cross threads" : "empty input image";
@@ -1949,6 +1952,10 @@ sub write_multi {
   # translate to ImgRaw
   my $index = 1;
   for my $img (@images) {
+    unless (ref $img && Scalar::Util::blessed($img) && $img->isa("Imager")) {
+      $class->_set_error("write_multi: image $index is not an Imager image object");
+      return;
+    }
     unless ($img->_valid_image("write_multi")) {
       $class->_set_error($img->errstr . " (image $index)");
       return;
