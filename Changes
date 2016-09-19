@@ -1,5 +1,17 @@
 Imager release history.  Older releases can be found in Changes.old
 
+ - write_multi() now returns an error result (a false value) if called
+   with a non-(Imager image object).  Previously it would typically
+   crash.
+   https://rt.cpan.org/Ticket/Display.html?id=117878
+
+ - improve the documentation of the jpegquality parameter when
+   writing JPEG files.
+
+ - add code to mitigate CVE-2016-1238, Imager will no longer search the
+   default current directory entry in @INC when searching for file
+   format support modules.
+
 Imager 1.005 - 16 Apr 2016
 ============
 
