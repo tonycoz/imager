@@ -10,18 +10,18 @@
 use Test::More tests => 73;
 
 use Imager;
-use Imager::Test qw(is_fcolor4);
+use Imager::Test qw(is_fcolor3 is_fcolor4 is_color4);
 
 -d "testout" or mkdir "testout";
 
 Imager->open_log(log => "testout/t15color.log");
 
 my $c1 = Imager::Color->new(100, 150, 200, 250);
-ok(test_col($c1, 100, 150, 200, 250), 'simple 4-arg');
+is_color4($c1, 100, 150, 200, 250, 'simple 4-arg');
 my $c2 = Imager::Color->new(100, 150, 200);
-ok(test_col($c2, 100, 150, 200, 255), 'simple 3-arg');
+is_color4($c2, 100, 150, 200, 255, 'simple 3-arg');
 my $c3 = Imager::Color->new("#6496C8");
-ok(test_col($c3, 100, 150, 200, 255), 'web color');
+is_color4($c3, 100, 150, 200, 255, 'web color');
 # crashes in Imager-0.38pre8 and earlier
 my @foo;
 for (1..1000) {
@@ -36,44 +36,116 @@ for (@foo) {
 ok(!$fail, 'consitency check');
 
 # test the new OO methods
-color_ok('r g b',, 100, 150, 200, 255, Imager::Color->new(r=>100, g=>150, b=>200));
-color_ok('red green blue', 101, 151, 201, 255, 
-         Imager::Color->new(red=>101, green=>151, blue=>201));
-color_ok('grey', 102, 255, 255, 255, Imager::Color->new(grey=>102));
-color_ok('gray', 103, 255, 255, 255, Imager::Color->new(gray=>103));
 SKIP:
 {
   skip "no X rgb.txt found", 1 
     unless grep -r, Imager::Color::_test_x_palettes();
-  color_ok('xname', 0, 0, 255, 255, Imager::Color->new(xname=>'blue'));
+  is_color4(Imager::Color->new(xname=>'blue'), 0, 0, 255, 255, 'xname');
 }
-color_ok('gimp', 255, 250, 250, 255, 
-         Imager::Color->new(gimp=>'snow', palette=>'testimg/test_gimp_pal'));
-color_ok('h s v', 255, 255, 255, 255, Imager::Color->new(h=>0, 's'=>0, 'v'=>1.0));
-color_ok('h s v again', 255, 0, 0, 255, Imager::Color->new(h=>0, 's'=>1, v=>1));
-color_ok('web 6 digit', 128, 129, 130, 255, Imager::Color->new(web=>'#808182'));
-color_ok('web 3 digit', 0x11, 0x22, 0x33, 255, Imager::Color->new(web=>'#123'));
-color_ok('rgb arrayref', 255, 150, 121, 255, Imager::Color->new(rgb=>[ 255, 150, 121 ]));
-color_ok('rgba arrayref', 255, 150, 121, 128, 
-         Imager::Color->new(rgba=>[ 255, 150, 121, 128 ]));
-color_ok('hsv arrayref', 255, 0, 0, 255, Imager::Color->new(hsv=>[ 0, 1, 1 ]));
-color_ok('channel0-3', 129, 130, 131, 134, 
-         Imager::Color->new(channel0=>129, channel1=>130, channel2=>131,
-                            channel3=>134));
-color_ok('c0-3', 129, 130, 131, 134, 
-         Imager::Color->new(c0=>129, c1=>130, c2=>131, c3=>134));
 
-color_ok('channels arrayref (1)', 200, 0, 0, 0,
-         Imager::Color->new(channels=>[ 200, ]));
-color_ok('channels arrayref (2)', 200, 201, 0, 0,
-         Imager::Color->new(channels=>[ 200, 201 ]));
-color_ok('channels arrayref (3)', 200, 201, 203, 0,
-         Imager::Color->new(channels=>[ 200, 201, 203 ]));
-color_ok('channels arrayref (4)', 200, 201, 203, 204,
-         Imager::Color->new(channels=>[ 200, 201, 203, 204 ]));
+my @oo_tests =
+  (
+   [
+    [ r=>100, g=>150, b=>200 ],
+    100, 150, 200, 255,
+    'r g b'
+   ],
+   [
+    [ red=>101, green=>151, blue=>201 ],
+    101, 151, 201, 255,
+    'red green blue'
+   ],
+   [
+    [ grey=>102 ],
+    102, 255, 255, 255,
+    'grey'
+   ],
+   [
+    [ gray=>103 ],
+    103, 255, 255, 255,
+    'gray'
+   ],
+   [
+    [ gimp=>'snow' , palette=>'testimg/test_gimp_pal' ],
+    255, 250, 250, 255,
+    'gimp'
+   ],
+   [
+    [ h=>0, 's'=>0, 'v'=>1.0 ],
+    255, 255, 255, 255,
+    'h s v'
+   ],
+   [
+    [ h=>0, 's'=>1, v=>1 ],
+    255, 0, 0, 255,
+    'h s v again'
+   ],
+   [
+    [ web=>'#808182' ],
+    128, 129, 130, 255,
+    'web 6 digit'
+   ],
+   [
+    [ web=>'#123' ],
+    0x11, 0x22, 0x33, 255,
+    'web 3 digit'
+   ],
+   [
+    [ rgb=>[ 255, 150, 121 ] ],
+    255, 150, 121, 255,
+    'rgb arrayref'
+   ],
+   [
+    [ rgba=>[ 255, 150, 121, 128 ] ],
+    255, 150, 121, 128,
+    'rgba arrayref'
+   ],
+   [
+    [ hsv=>[ 0, 1, 1 ] ],
+    255, 0, 0, 255,
+    'hsv arrayref'
+   ],
+   [
+    [ channel0=>129, channel1=>130, channel2=>131, channel3=>134 ],
+    129, 130, 131, 134,
+    'channel0-3'
+   ],
+   [
+    [ c0=>129, c1=>130, c2=>131, c3=>134 ],
+    129, 130, 131, 134,
+    'c0-3',
+   ],
+   [
+    [ channels=>[ 200, ] ],
+    200, 0, 0, 0,
+    'channels arrayref (1)'
+   ],
+   [
+    [ channels=>[ 200, 201 ] ],
+    200, 201, 0, 0,
+    'channels arrayref (2)'
+   ],
+   [
+    [ channels=>[ 200, 201, 203 ] ],
+    200, 201, 203, 0,
+    'channels arrayref (3)'
+   ],
+   [
+    [ channels=>[ 200, 201, 203, 204 ] ],
+    200, 201, 203, 204,
+    'channels arrayref (4)'
+   ],
+   [
+    [ name=>'snow', palette=>'testimg/test_gimp_pal' ],
+    255, 250, 250, 255,
+    'name'
+   ],
+  );
 
-color_ok('name', 255, 250, 250, 255, 
-         Imager::Color->new(name=>'snow', palette=>'testimg/test_gimp_pal'));
+for my $test (@oo_tests) {
+  my ($parms, $r, $g, $b, $a, $name) = @$test;
+  is_color4(Imager::Color->new(@$parms), $r, $g, $b, $a, $name);
+}
 
 # test the internal HSV <=> RGB conversions
 # these values were generated using the GIMP
@@ -97,11 +169,10 @@ for my $entry (@hsv_vs_rgb) {
   my $rgb = $entry->{rgb};
   my $fhsvo = Imager::Color::Float->new($hsv->[0]/360.0, $hsv->[1], $hsv->[2]);
   my $fc = Imager::Color::Float::i_hsv_to_rgb($fhsvo);
-  fcolor_close_enough("i_hsv_to_rgbf $index", $rgb->[0]/255, $rgb->[1]/255, 
-                      $rgb->[2]/255, $fc);
+  is_fcolor3($fc, $rgb->[0]/255, $rgb->[1]/255, $rgb->[2]/255, 0.01,
+	     "i_hsv_to_rgbf $index");
   my $fc2 = Imager::Color::Float::i_rgb_to_hsv($fc);
-  fcolor_close_enough("i_rgbf_to_hsv $index", $hsv->[0]/360.0, $hsv->[1], $hsv->[2], 
-                      $fc2);
+  is_fcolor3($fc2, $hsv->[0]/360.0, $hsv->[1], $hsv->[2], "i_rgbf_to_hsv $index");
 
   my $hsvo = Imager::Color->new($hsv->[0]*255/360.0, $hsv->[1] * 255, 
                                 $hsv->[2] * 255);
@@ -114,8 +185,7 @@ for my $entry (@hsv_vs_rgb) {
 }
 
 # check the built-ins table
-color_ok('builtin black', 0, 0, 0, 255, 
-	Imager::Color->new(builtin=>'black'));
+is_color4(Imager::Color->new(builtin=>'black'), 0, 0, 0, 255, 'builtin black');
 
 {
   my $c1 = Imager::Color->new(255, 255, 255, 0);
@@ -229,21 +299,5 @@ sub color_close_enough_hsv {
   }
   ok(abs($ch-$h) <= 5 && abs($cs-$s) <= 5 && abs($cv-$v) <= 5,
     "$name - ($ch, $cs, $cv) <=> ($h, $s, $v)");
-}
-
-sub fcolor_close_enough {
-  my ($name, $r, $g, $b, $c) = @_;
-
-  my ($cr, $cg, $cb) = $c->rgba;
-  ok(abs($cr-$r) <= 0.01 && abs($cg-$g) <= 0.01 && abs($cb-$b) <= 0.01,
-    "$name - ($cr, $cg, $cb) <=> ($r, $g, $b)");
-}
-
-sub color_ok {
-  my ($name, $r, $g, $b, $a, $c) = @_;
-
-  unless (ok(test_col($c, $r, $g, $b, $a), $name)) {
-    print "# ($r,$g,$b,$a) != (".join(",", $c ? $c->rgba: ()).")\n";
-  }
 }
 
