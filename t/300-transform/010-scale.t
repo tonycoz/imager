@@ -26,10 +26,16 @@ ok($scaleimg, "scale it (preview)") or print "# ",$img->errstr,"\n";
 ok($scaleimg->write(file=>'testout/t40scale2.ppm',type=>'pnm'),
    "write preview scaled image")  or print "# ",$img->errstr,"\n";
 
-$scaleimg = $img->scale(scalefactor => 0.25, qtype => 'mixing');
+$scaleimg = $img->scale(scalefactor => 0.25, qtype => 'mixing')
+  or diag "scale(mixing): ", $img->errstr;
 ok($scaleimg, "scale it (mixing)") or print "# ", $img->errstr, "\n";
-ok($scaleimg->write(file=>'testout/t40scale3.ppm', type=>'pnm'),
-   "write mixing scaled image") or print "# ", $img->errstr, "\n";
+SKIP:
+{
+  $scaleimg
+    or skip "No image to write", 1;
+  ok($scaleimg->write(file=>'testout/t40scale3.ppm', type=>'pnm'),
+     "write mixing scaled image") or print "# ", $img->errstr, "\n";
+}
 
 { # double image scaling with mixing, since it has code to handle it
   my $dimg = Imager->new(xsize => $img->getwidth, ysize => $img->getheight,
@@ -37,11 +43,17 @@ ok($scaleimg->write(file=>'testout/t40scale3.ppm', type=>'pnm'),
                          bits => 'double');
   ok($dimg, "create double/sample image");
   $dimg->paste(src => $img);
-  $scaleimg = $dimg->scale(scalefactor => 0.25, qtype => 'mixing');
+  $scaleimg = $dimg->scale(scalefactor => 0.25, qtype => 'mixing')
+    or diag "scale(mixing): ", $img->errstr;
   ok($scaleimg, "scale it (mixing, double)");
-  ok($scaleimg->write(file => 'testout/t40mixdbl.ppm', type => 'pnm'),
-     "write double/mixing scaled image");
-  is($scaleimg->bits, 'double', "got the right image type as output");
+ SKIP:
+  {
+    $scaleimg
+      or skip "No scaleimage", 2;
+    ok($scaleimg->write(file => 'testout/t40mixdbl.ppm', type => 'pnm'),
+       "write double/mixing scaled image");
+    is($scaleimg->bits, 'double', "got the right image type as output");
+  }
 
   # hscale only, mixing
   $scaleimg = $dimg->scale(xscalefactor => 0.33, yscalefactor => 1.0,
