@@ -28,10 +28,10 @@ zero_row(double *row, i_img_dim width, int channels);
 
 #code
 static void
-IM_SUFFIX(accum_output_row)(double *accum, double fraction, IM_SAMPLE_T const *in,
+IM_SUFFIX(accum_output_row)(double *accum, double fraction, IM_LIN_SAMPLE_T const *in,
 			    i_img_dim width, int channels, int has_alpha);
 static void
-IM_SUFFIX(horizontal_scale)(IM_SAMPLE_T *out, i_img_dim out_width, 
+IM_SUFFIX(horizontal_scale)(IM_LIN_SAMPLE_T *out, i_img_dim out_width,
                             double const *in, i_img_dim in_width,
                             int channels, int has_alpha);
 #/code
@@ -97,19 +97,19 @@ i_scale_mixing(i_img *src, i_img_dim x_out, i_img_dim y_out) {
   accum_row  = mymalloc(accum_row_bytes);
 
 #code src->bits <= 8
-  IM_SAMPLE_T *in_row = NULL;
-  IM_SAMPLE_T *xscale_row = NULL;
+  IM_LIN_SAMPLE_T *in_row = NULL;
+  IM_LIN_SAMPLE_T *xscale_row = NULL;
   size_t in_row_bytes, out_row_bytes;
 
-  in_row_bytes = sizeof(IM_SAMPLE_T) * src->channels * src->xsize;
-  if (in_row_bytes / sizeof(IM_SAMPLE_T) / src->channels != src->xsize) {
+  in_row_bytes = sizeof(IM_LIN_SAMPLE_T) * src->channels * src->xsize;
+  if (in_row_bytes / sizeof(IM_LIN_SAMPLE_T) / src->channels != src->xsize) {
     myfree(accum_row);
     i_img_destroy(result);
     i_push_error(0, "integer overflow allocating input row buffer");
     return NULL;
   }
-  out_row_bytes = sizeof(IM_SAMPLE_T) * src->channels * x_out;
-  if (out_row_bytes / sizeof(IM_SAMPLE_T) / src->channels != x_out) {
+  out_row_bytes = sizeof(IM_LIN_SAMPLE_T) * src->channels * x_out;
+  if (out_row_bytes / sizeof(IM_LIN_SAMPLE_T) / src->channels != x_out) {
     myfree(accum_row);
     i_img_destroy(result);
     i_push_error(0, "integer overflow allocating output row buffer");
@@ -124,7 +124,7 @@ i_scale_mixing(i_img *src, i_img_dim x_out, i_img_dim y_out) {
   for (y = 0; y < y_out; ++y) {
     if (y_out == src->ysize) {
       /* no vertical scaling, just load it */
-      i_gsampf(src, 0, src->xsize, y, accum_row, NULL, src->channels);
+      i_gslinf(src, 0, src->xsize, y, accum_row, NULL, src->channels);
 
       /* alpha adjust if needed */
       if (has_alpha) {
@@ -144,7 +144,7 @@ i_scale_mixing(i_img *src, i_img_dim x_out, i_img_dim y_out) {
       while (fracrowtofill > 0) {
 	if (rowsleft <= 0) {
 	  if (rowsread < src->ysize) {
-	    IM_GSAMP(src, 0, src->xsize, rowsread, in_row, NULL, src->channels);
+	    IM_GSLIN(src, 0, src->xsize, rowsread, in_row, NULL, src->channels);
 	    ++rowsread;
 	  }
 	  /* else just use the last row read */
@@ -167,21 +167,21 @@ i_scale_mixing(i_img *src, i_img_dim x_out, i_img_dim y_out) {
     }
     /* we've accumulated a vertically scaled row */
     if (x_out == src->xsize) {
-#if IM_EIGHT_BIT
+#ifdef IM_EIGHT_BIT
       i_img_dim x;
       int ch;
       /* no need to scale, but we need to convert it */
       if (has_alpha) {
 	double *inp = accum_row;
-	IM_SAMPLE_T *outp = xscale_row;
+	IM_LIN_SAMPLE_T *outp = xscale_row;
 	for (x = 0; x < x_out; ++x) {
 	  double alpha = inp[alpha_chan] / IM_SAMPLE_MAX;
 	  if (alpha) {
 	    for (ch = 0; ch < color_channels; ++ch) {
 	      int val = inp[ch] / alpha + 0.5;
-	      outp[ch] = IM_LIMIT(val);
+	      outp[ch] = IM_LIN_LIMIT(val);
 	    }
-	    outp[alpha_chan] = IM_LIMIT(*inp+0.5);
+	    outp[alpha_chan] = IM_LIN_LIMIT(*inp+0.5);
 	  }
 	  else {
 	    /* rather than leaving any color data as whatever was
@@ -200,21 +200,21 @@ i_scale_mixing(i_img *src, i_img_dim x_out, i_img_dim y_out) {
       }
       else {
 	double *inp = accum_row;
-	IM_SAMPLE_T *outp = xscale_row;
+	IM_LIN_SAMPLE_T *outp = xscale_row;
 	for (x = 0; x < x_out; ++x) {
 	  for (ch = 0; ch < color_channels; ++ch)
-	    *outp++ = IM_LIMIT(0.5 + *inp++);
+	    *outp++ = IM_LIN_LIMIT(0.5 + *inp++);
 	}
       }
-      IM_PSAMP(result, 0, x_out, y, xscale_row, NULL, src->channels);
+      IM_PSLIN(result, 0, x_out, y, xscale_row, NULL, src->channels);
 #else
-      IM_PSAMP(result, 0, x_out, y, accum_row, NULL, src->channels);
+      IM_PSLIN(result, 0, x_out, y, accum_row, NULL, src->channels);
 #endif
     }
     else {
       IM_SUFFIX(horizontal_scale)(xscale_row, x_out, accum_row, 
                                   src->xsize, src->channels, has_alpha);
-      IM_PSAMP(result, 0, x_out, y, xscale_row, NULL, src->channels);
+      IM_PSLIN(result, 0, x_out, y, xscale_row, NULL, src->channels);
     }
   }
   myfree(in_row);
@@ -242,12 +242,12 @@ zero_row(double *row, i_img_dim width, int channels) {
 #code
 
 static void
-IM_SUFFIX(accum_output_row)(double *accum, double fraction, IM_SAMPLE_T const *in,
+IM_SUFFIX(accum_output_row)(double *accum, double fraction, IM_LIN_SAMPLE_T const *in,
 			    i_img_dim width, int channels, int has_alpha) {
   i_img_dim x;
   int ch;
   double *paccum = accum;
-  IM_SAMPLE_T const *pin = in;
+  IM_LIN_SAMPLE_T const *pin = in;
 
   /* it's tempting to change this into a pointer iteration loop but
      modern CPUs do the indexing as part of the instruction */
@@ -274,7 +274,7 @@ IM_SUFFIX(accum_output_row)(double *accum, double fraction, IM_SAMPLE_T const *i
 }
 
 static void
-IM_SUFFIX(horizontal_scale)(IM_SAMPLE_T *out, i_img_dim out_width, 
+IM_SUFFIX(horizontal_scale)(IM_LIN_SAMPLE_T *out, i_img_dim out_width,
 			    double const *in, i_img_dim in_width,
 			    int channels, int has_alpha) {
   double frac_col_to_fill, frac_col_left;
@@ -284,7 +284,7 @@ IM_SUFFIX(horizontal_scale)(IM_SAMPLE_T *out, i_img_dim out_width,
   int ch;
   double accum[MAXCHANNELS] = { 0 };
   double const *pin = in;
-  IM_SAMPLE_T *pout = out;
+  IM_LIN_SAMPLE_T *pout = out;
   
   frac_col_to_fill = 1.0;
   out_x = 0;
@@ -300,7 +300,7 @@ IM_SUFFIX(horizontal_scale)(IM_SAMPLE_T *out, i_img_dim out_width,
 	if (alpha) {
 	  for (ch = 0; ch < alpha_chan; ++ch) {
 	    IM_WORK_T val = IM_ROUND(accum[ch] / alpha);
-	    pout[ch] = IM_LIMIT(val);
+	    pout[ch] = IM_LIN_LIMIT(val);
 	  }
 	}
 	else {
@@ -309,12 +309,12 @@ IM_SUFFIX(horizontal_scale)(IM_SAMPLE_T *out, i_img_dim out_width,
 	    pout[ch] = 0;
 	  }
 	}
-	pout[alpha_chan] = IM_LIMIT(IM_ROUND(accum[alpha_chan]));
+	pout[alpha_chan] = IM_LIN_LIMIT(IM_ROUND(accum[alpha_chan]));
       }
       else {
 	for (ch = 0; ch < channels; ++ch) {
 	  IM_WORK_T val = IM_ROUND(accum[ch]);
-	  pout[ch] = IM_LIMIT(val);
+	  pout[ch] = IM_LIN_LIMIT(val);
 	}
       }
       for (ch = 0; ch < channels; ++ch)
@@ -347,10 +347,11 @@ IM_SUFFIX(horizontal_scale)(IM_SAMPLE_T *out, i_img_dim out_width,
     if (has_alpha) {
       int alpha_chan = channels - 1;
       double alpha = accum[alpha_chan] / IM_SAMPLE_MAX;
+      IM_WORK_T pre_limit;
       if (alpha) {
 	for (ch = 0; ch < alpha_chan; ++ch) {
 	  IM_WORK_T val = IM_ROUND(accum[ch] / alpha);
-	  pout[ch] = IM_LIMIT(val);
+	  pout[ch] = IM_LIN_LIMIT(val);
 	}
       }
       else {
@@ -359,12 +360,13 @@ IM_SUFFIX(horizontal_scale)(IM_SAMPLE_T *out, i_img_dim out_width,
 	  pout[ch] = 0;
 	}
       }
-      pout[alpha_chan] = IM_LIMIT(IM_ROUND(accum[alpha_chan]));
+      pre_limit = IM_ROUND(accum[alpha_chan]);
+      pout[alpha_chan] = IM_LIN_LIMIT(pre_limit);
     }
     else {
       for (ch = 0; ch < channels; ++ch) {
 	IM_WORK_T val = IM_ROUND(accum[ch]);
-	pout[ch] = IM_LIMIT(val);
+	pout[ch] = IM_LIN_LIMIT(val);
       }
     }
   }
