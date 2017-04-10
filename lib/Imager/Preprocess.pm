@@ -38,7 +38,8 @@ sub preprocess {
     "#define IM_ROUND_8(x) ((int)((x)+0.5))\n",
     "#define IM_ROUND_double(x) (x)\n",
     "#define IM_LIMIT_8(x) ((x) < 0 ? 0 : (x) > 255 ? 255 : (x))\n",
-    "#define IM_LIMIT_double(x) ((x) < 0.0 ? 0.0 : (x) > 1.0 ? 1.0 : (x))\n";
+    "#define IM_LIMIT_double(x) ((x) < 0.0 ? 0.0 : (x) > 1.0 ? 1.0 : (x))\n",
+    "#define IM_LIMIT_16(x) ((x) < 0 ? 0 : (x) > 65535 ? 65535 : (x))\n";
   push @out, "#line 1 \"$src\"\n" if $keep_lines;
   while (defined(my $line = <SRC>)) {
     if ($line =~ /^\#code\s+(\S.+)$/) {
@@ -140,11 +141,16 @@ sub byte_samples {
     s/\bIM_GLIN\b/i_glin/g;
     s/\bIM_PPIX\b/i_ppix/g;
     s/\bIM_PLIN\b/i_plin/g;
+    s/\bIM_GSLIN\b/i_gslin/g;
+    s/\bIM_PSLIN\b/i_pslin/g;
     s/\bIM_GSAMP\b/i_gsamp/g;
     s/\bIM_PSAMP\b/i_psamp/g;
+    s/\bIM_GSLIN\b/i_gslin/g;
+    s/\bIM_PSLIN\b/i_pslin/g;
     s/\bIM_SAMPLE_MAX\b/255/g;
     s/\bIM_SAMPLE_MAX2\b/65025/g;
     s/\bIM_SAMPLE_T/i_sample_t/g;
+    s/\bIM_LIN_SAMPLE_T\b/i_sample16_t/g;
     s/\bIM_COLOR\b/i_color/g;
     s/\bIM_WORK_T\b/int/g;
     s/\bIM_Sf\b/"%d"/g;
@@ -153,6 +159,7 @@ sub byte_samples {
     s/\bIM_ROUND\(/IM_ROUND_8(/g;
     s/\bIM_ADAPT_COLORS\(/i_adapt_colors(/g;
     s/\bIM_LIMIT\(/IM_LIMIT_8(/g;
+    s/\bIM_LIN_LIMIT\(/IM_LIMIT_16(/g;
     s/\bIM_RENDER_LINE\(/i_render_line(/g;
     s/\bIM_FILL_COMBINE_F\b/i_fill_combine_f/g;
     s/\bIM_ABS\b/abs/g;
@@ -170,11 +177,16 @@ sub double_samples {
     s/\bIM_GLIN\b/i_glinf/g;
     s/\bIM_PPIX\b/i_ppixf/g;
     s/\bIM_PLIN\b/i_plinf/g;
+    s/\bIM_GSLIN\b/i_gslinf/g;
+    s/\bIM_PSLIN\b/i_pslinf/g;
     s/\bIM_GSAMP\b/i_gsampf/g;
     s/\bIM_PSAMP\b/i_psampf/g;
+    s/\bIM_GSLIN\b/i_gslinf/g;
+    s/\bIM_PSLIN\b/i_pslinf/g;
     s/\bIM_SAMPLE_MAX\b/1.0/g;
     s/\bIM_SAMPLE_MAX2\b/1.0/g;
     s/\bIM_SAMPLE_T/i_fsample_t/g;
+    s/\bIM_LIN_SAMPLE_T\b/i_fsample_t/g;
     s/\bIM_COLOR\b/i_fcolor/g;
     s/\bIM_WORK_T\b/double/g;
     s/\bIM_Sf\b/"%f"/g;
@@ -183,6 +195,7 @@ sub double_samples {
     s/\bIM_ROUND\(/IM_ROUND_double(/g;
     s/\bIM_ADAPT_COLORS\(/i_adapt_fcolors(/g;
     s/\bIM_LIMIT\(/IM_LIMIT_double(/g;
+    s/\bIM_LIN_LIMIT\(/IM_LIMIT_double(/g;
     s/\bIM_RENDER_LINE\(/i_render_linef(/g;
     s/\bIM_FILL_COMBINE_F\b/i_fill_combinef_f/g;
     s/\bIM_ABS\b/fabs/g;
