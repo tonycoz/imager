@@ -52,6 +52,8 @@ our @EXPORT_OK =
      std_image_tests_count
      to_linear_srgb
      to_linear_srgbf
+     to_gamma_srgb
+     to_gamma_srgbf
      );
 
 sub diff_text_with_nul {
@@ -1519,6 +1521,23 @@ sub to_linear_srgbf {
   return $out;
 }
 
+sub to_gamma_srgb {
+  my ($val) = @_;
+
+  return 0+sprintf("%.0f", to_gamma_srgbf($val/65535.0) * 255.8);
+}
+
+sub to_gamma_srgbf {
+  my ($val) = @_;
+
+  if ($val <= 0.0031308) {
+    return 12.92 * $val;
+  }
+  else {
+    return (1+0.055) * $val ** (1/2.4) - 0.055;
+  }
+}
+
 package Imager::Test::OverUtf8;
 use overload '""' => sub { "A".chr(0x2010)."A" };
 
@@ -1734,6 +1753,12 @@ of C<gray>, C<graya>, C<rgb> and C<rgba>.
 The number of tests performed by std_image_tests().  Must be supplied
 the same options as std_image_tests().
 
+=back
+
+=head2 Tone curve functions
+
+=over
+
 =item to_linear_srgb
 
 =item to_linear_srgbf
@@ -1747,6 +1772,20 @@ point sample.
 
   my $lin = to_linear_srgb($gam);
   my $linf = to_linear_srgbf($gamf);
+
+=item to_gamma_srgb
+
+=item to_gamma_srgbf
+
+Convert a linear sample into a sRGB tone curve sample.
+
+to_gamma_srgb() converts a 16-bit sample into an 8-bit sample.
+
+to_gamma_srgbf() converts a floating point sample into a floating
+point sample.
+
+  my $gam = to_gamma_srgb($lin);
+  my $gam = to_gamma_srgbf($lin);
 
 =back
 
