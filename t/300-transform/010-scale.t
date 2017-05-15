@@ -1,13 +1,18 @@
 #!perl -w
 use strict;
-use Test::More tests => 232;
+use Test::More;
 
 BEGIN { use_ok(Imager=>':all') }
-use Imager::Test qw(is_image is_color4 is_image_similar);
+use Imager::Test qw(is_image is_color4 is_image_similar to_gamma_srgb);
+use Imager::Fill;
+
+my @cleanup;
 
 -d "testout" or mkdir "testout";
 
-Imager::init('log'=>'testout/t40scale.log');
+Imager->open_log(log => 'testout/t40scale.log');
+push @cleanup, "t40scale.log";
+
 my $img=Imager->new();
 
 ok($img->open(file=>'testimg/scale.ppm',type=>'pnm'),
@@ -19,12 +24,14 @@ ok($scaleimg, "scale it (good mode)");
 
 ok($scaleimg->write(file=>'testout/t40scale1.ppm',type=>'pnm'),
    "save scaled image") or print "# ",$img->errstr,"\n";
+push @cleanup, "t40scale1.ppm";
 
 $scaleimg=$img->scale(scalefactor=>0.25,qtype=>'preview');
 ok($scaleimg, "scale it (preview)") or print "# ",$img->errstr,"\n";
 
 ok($scaleimg->write(file=>'testout/t40scale2.ppm',type=>'pnm'),
    "write preview scaled image")  or print "# ",$img->errstr,"\n";
+push @cleanup, "t40scale2.ppm";
 
 $scaleimg = $img->scale(scalefactor => 0.25, qtype => 'mixing')
   or diag "scale(mixing): ", $img->errstr;
@@ -35,6 +42,7 @@ SKIP:
     or skip "No image to write", 1;
   ok($scaleimg->write(file=>'testout/t40scale3.ppm', type=>'pnm'),
      "write mixing scaled image") or print "# ", $img->errstr, "\n";
+  push @cleanup, "t40scale3.ppm";
 }
 
 { # double image scaling with mixing, since it has code to handle it
@@ -52,6 +60,7 @@ SKIP:
       or skip "No scaleimage", 2;
     ok($scaleimg->write(file => 'testout/t40mixdbl.ppm', type => 'pnm'),
        "write double/mixing scaled image");
+    push @cleanup, "t40mixdbl.ppm";
     is($scaleimg->bits, 'double', "got the right image type as output");
   }
 
@@ -62,6 +71,7 @@ SKIP:
   is($scaleimg->getheight, $dimg->getheight, "same height");
   ok($scaleimg->write(file => 'testout/t40hscdmix.ppm', type => 'pnm'),
      "save it");
+  push @cleanup, "t40hscdmix.ppm";
 
   # vscale only, mixing
   $scaleimg = $dimg->scale(xscalefactor => 1.0, yscalefactor => 0.33,
@@ -70,6 +80,7 @@ SKIP:
   is($scaleimg->getwidth, $dimg->getwidth, "same width");
   ok($scaleimg->write(file => 'testout/t40vscdmix.ppm', type => 'pnm'),
      "save it");
+  push @cleanup, "t40vscdmix.ppm";
 }
 
 {
@@ -248,6 +259,17 @@ SKIP:
   ok(!$im->scale(xpixels => {}), "can't use a reference as a size");
   cmp_ok($im->errstr, '=~', "xpixels parameter cannot be a reference",
 	 "check error message");
+}
+
+done_testing();
+
+Imager->close_log;
+
+END {
+  unless ($ENV{IMAGER_KEEP_FILES}) {
+    unlink map "testout/$_", @cleanup;
+    rmdir"testout";
+  }
 }
 
 sub scale_test {
