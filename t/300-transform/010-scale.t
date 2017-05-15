@@ -83,6 +83,31 @@ SKIP:
   push @cleanup, "t40vscdmix.ppm";
 }
 
+
+for my $bits (qw(double 8 16)) {
+ SKIP: {
+    my $im = Imager->new(bits => $bits, xsize => 64, ysize => 64);
+    ok($im, "$bits: make an image")
+      or skip "Couldn't make image: ".Imager->errstr, 1;
+    is($im->bits, $bits, "$bits: check we got the right bits");
+    ok($im->box(fill => { hatch => "check1x1" }), "$bits: fill with 8x8 hatch")
+      or skip "Couldn't fill: ". $im->errstr, 1;
+    my $out = $im->scale(qtype => "mixing", scalefactor => 0.5);
+    ok($out, "$bits: scale to 50%")
+      or skip "Couldn't scale: " . $im->errstr, 1;
+    $out->write(file => "testout/scale-$bits.ppm");
+    push @cleanup, "scale-$bits.ppm";
+    my $cmp = Imager->new(bits => $bits, xsize => 32, ysize => 32);
+    ok($cmp, "$bits: make cmp image")
+      or skip "Couldn't make cmp image: " . Imager->errstr, 1;
+    my $half_gamma = to_gamma_srgb(65535/2);
+    my $half_col = Imager::Color->new(($half_gamma) x 3);
+    ok($cmp->box(filled => 1, color => $half_col), "$bits: fill cmp image");
+    #$cmp->write(file => "testout/scalecmp-$bits.ppm");
+    is_image($out, $cmp, "$bits: check scaled image matches check image");
+  }
+}
+
 {
   # check for a warning when scale() is called in void context
   my $warning;
