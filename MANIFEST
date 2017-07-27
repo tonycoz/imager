@@ -153,6 +153,7 @@ img8.c				Implements 8-bit/sample images
 imgdouble.c			Implements double/sample images
 imio.h
 immacros.h
+imnocms.c
 imperl.h
 imperlio.h
 imrender.h			Buffer rending engine function declarations
