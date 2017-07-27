@@ -64,6 +64,7 @@ my @libpaths; # places to look for libraries
 my $coverage; # build for coverage testing
 my $assert; # build with assertions
 my $trace_context; # trace context management to stderr
+my $uselcms; # use lcms instead of the built-in tone curve only CMS.
 GetOptions("help" => \$help,
            "enable=s" => \@enable,
            "disable=s" => \@disable,
@@ -73,7 +74,9 @@ GetOptions("help" => \$help,
            "nolog" => \$NOLOG,
 	   'coverage' => \$coverage,
 	   "assert|a" => \$assert,
-	   "tracecontext" => \$trace_context);
+	   "tracecontext" => \$trace_context,
+	   "uselcms" => \$uselcms,
+	  );
 
 setenv();
 
@@ -153,7 +156,9 @@ my @objs = qw(Imager.o context.o draw.o polygon.o image.o io.o iolayer.o
               map.o tags.o palimg.o maskimg.o img8.o img16.o rotate.o
               bmp.o tga.o color.o fills.o imgdouble.o limits.o hlines.o
               imext.o scale.o rubthru.o render.o paste.o compose.o flip.o
-	      perlio.o imexif.o trim.o data.o imcms.o);
+	      perlio.o imexif.o trim.o data.o);
+
+push @objs, $uselcms ? "imcms.o" : "imnocms.o";
 
 my $lib_define = '';
 my $lib_inc = '';
@@ -450,7 +455,7 @@ sub automatic {
 	@$probe_res{qw/DEFINE INC LIBS/};
     }
   }
-  {
+  if ($uselcms) {
     my %probe =
       (
        name => "LCMS2",
