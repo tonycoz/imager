@@ -1,9 +1,12 @@
 #ifndef IMAGER_IMCMST_H
 #define IMAGER_IMCMST_H
 
+#define IM_TO_LINEAR_COUNT 256
+#define IM_FROM_LINEAR_COUNT 65536
+
 struct imcms_curve_base_struct {
-  i_sample16_t *to_linear;
-  unsigned char *from_linear;
+  i_sample16_t to_linear[IM_TO_LINEAR_COUNT];
+  unsigned char from_linear[IM_FROM_LINEAR_COUNT];
 };
 
 typedef struct imcms_curve_base_struct *imcms_curve_t;
