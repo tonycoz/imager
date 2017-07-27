@@ -56,22 +56,13 @@ build_curve(cmsToneCurve *curve) {
     return NULL;
   }
 
-  result->base.to_linear = malloc(sizeof(i_sample16_t) * 256);
-  result->base.from_linear = malloc(65536);
-  if (!result->base.to_linear || !result->base.from_linear) {
-    free(result->base.to_linear);
-    free(result->base.from_linear);
-    free(result);
-    cmsFreeToneCurve(curve);
-    return NULL;
-  }
   result->curve = curve;
   result->reverse = cmsReverseToneCurveEx(TONE_CURVE_SAMPLES, curve);
 
-  for (i = 0; i < 256; ++i)
+  for (i = 0; i < IM_TO_LINEAR_COUNT; ++i)
     result->base.to_linear[i] = cmsEvalToneCurve16(curve, Sample8To16(i));
 
-  for (i = 0; i < 65536; ++i)
+  for (i = 0; i < IM_FROM_LINEAR_COUNT; ++i)
     result->base.from_linear[i] =
       Sample16To8(cmsEvalToneCurve16(result->reverse, i));
 
@@ -109,8 +100,6 @@ void
 imcms_free_curve(imcms_curve_t curve) {
   imcms_curve_lcms2 *rcurve = (imcms_curve_lcms2 *)curve;
 
-  free(rcurve->base.to_linear);
-  free(rcurve->base.from_linear);
   cmsFreeToneCurve(rcurve->curve);
   cmsFreeToneCurve(rcurve->reverse);
   free(curve);
