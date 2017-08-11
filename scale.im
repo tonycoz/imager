@@ -1,5 +1,8 @@
+#define IMAGER_NO_CONTEXT
+
 #include "imager.h"
 #include "imageri.h"
+#include "immacros.h"
 
 /*
  * i_scale_mixing() is based on code contained in pnmscale.c, part of
@@ -21,7 +24,6 @@
 ** implied warranty.
 **
 */
-
 
 static void
 zero_row(double *row, i_img_dim width, int channels);
@@ -50,6 +52,7 @@ Adapted from pnmscale.
 */
 i_img *
 i_scale_mixing(i_img *src, i_img_dim x_out, i_img_dim y_out) {
+  dIMCTXim(src);
   i_img *result = NULL;
   double *accum_row = NULL;
   i_img_dim x, y;
@@ -62,7 +65,7 @@ i_scale_mixing(i_img *src, i_img_dim x_out, i_img_dim y_out) {
   int has_alpha = i_img_alpha_channel(src, &alpha_chan);
   int color_channels = i_img_color_channels(src);
 
-  mm_log((1, "i_scale_mixing(src %p, out(" i_DFp "))\n", 
+  im_log((aIMCTX, 1, "i_scale_mixing(src %p, out(" i_DFp "))\n", 
 	  src, i_DFcp(x_out, y_out)));
 
   i_clear_error();
@@ -83,7 +86,7 @@ i_scale_mixing(i_img *src, i_img_dim x_out, i_img_dim y_out) {
   y_scale = y_out / (double)src->ysize;
 
   accum_row_bytes = sizeof(double) * src->channels * src->xsize;
-  mm_log((1, " row bytes %zu dblsize %zu channels %d xsize %zd div %zd\n", accum_row_bytes,
+  im_log((aIMCTX, 1, " row bytes %zu dblsize %zu channels %d xsize %zd div %zd\n", accum_row_bytes,
 	  sizeof(double), src->channels, src->xsize, accum_row_bytes / sizeof(double) / src->channels));
   if (accum_row_bytes / sizeof(double) / src->channels != src->xsize) {
     i_push_error(0, "integer overflow allocating accumulator row buffer");
@@ -373,3 +376,282 @@ IM_SUFFIX(horizontal_scale)(IM_LIN_SAMPLE_T *out, i_img_dim out_width,
 }
 
 #/code
+
+/*
+
+http://en.wikipedia.org/wiki/Lanczos_resampling
+
+*/
+
+#define XAXIS 0
+#define YAXIS 1
+#define XYAXIS 2
+
+#define minmax(a,b,i) ( ((a>=i)?a: ( (b<=i)?b:i   )) )
+
+static
+float
+Lanczos(float x) {
+  float PIx, PIx2;
+  
+  PIx = PI * x;
+  PIx2 = PIx / 2.0;
+  
+  if ((x >= 2.0) || (x <= -2.0)) return (0.0);
+  else if (x == 0.0) return (1.0);
+  else return(sin(PIx) / PIx * sin(PIx2) / PIx2);
+}
+
+
+/*
+=item i_scaleaxis(im, value, axis)
+
+Returns a new image object which is I<im> scaled by I<value> along
+wither the x-axis (I<axis> == 0) or the y-axis (I<axis> == 1).
+
+=cut
+*/
+
+i_img*
+i_scaleaxis(i_img *im, double Value, int Axis) {
+  i_img_dim hsize, vsize, i, j, k, l, lMax, iEnd, jEnd;
+  i_img_dim LanczosWidthFactor;
+  float *l0, *l1;
+  double OldLocation;
+  i_img_dim T; 
+  double t;
+  float F, PictureValue[MAXCHANNELS];
+  short psave;
+  i_color val,val1,val2;
+  i_img *new_img;
+  int has_alpha = i_img_has_alpha(im);
+  int color_chans = i_img_color_channels(im);
+  dIMCTXim(im);
+
+  i_clear_error();
+  im_log((aIMCTX, 1,"i_scaleaxis(im %p,Value %.2f,Axis %d)\n",im,Value,Axis));
+
+  if (Axis == XAXIS) {
+    hsize = (i_img_dim)(0.5 + im->xsize * Value);
+    if (hsize < 1) {
+      hsize = 1;
+      Value = 1.0 / im->xsize;
+    }
+    vsize = im->ysize;
+    
+    jEnd = hsize;
+    iEnd = vsize;
+  } else {
+    hsize = im->xsize;
+    vsize = (i_img_dim)(0.5 + im->ysize * Value);
+
+    if (vsize < 1) {
+      vsize = 1;
+      Value = 1.0 / im->ysize;
+    }
+
+    jEnd = vsize;
+    iEnd = hsize;
+  }
+  
+  new_img = i_img_8_new(hsize, vsize, im->channels);
+  if (!new_img) {
+    i_push_error(0, "cannot create output image");
+    return NULL;
+  }
+  
+  /* 1.4 is a magic number, setting it to 2 will cause rather blurred images */
+  LanczosWidthFactor = (Value >= 1) ? 1 : (i_img_dim) (1.4/Value); 
+  lMax = LanczosWidthFactor << 1;
+  
+  l0 = mymalloc(lMax * sizeof(float));
+  l1 = mymalloc(lMax * sizeof(float));
+  
+  for (j=0; j<jEnd; j++) {
+    OldLocation = ((double) j) / Value;
+    T = (i_img_dim) (OldLocation);
+    F = OldLocation - T;
+    
+    for (l = 0; l<lMax; l++) {
+      l0[lMax-l-1] = Lanczos(((float) (lMax-l-1) + F) / (float) LanczosWidthFactor);
+      l1[l]        = Lanczos(((float) (l+1)      - F) / (float) LanczosWidthFactor);
+    }
+    
+    /* Make sure filter is normalized */
+    t = 0.0;
+    for(l=0; l<lMax; l++) {
+      t+=l0[l];
+      t+=l1[l];
+    }
+    t /= (double)LanczosWidthFactor;
+    
+    for(l=0; l<lMax; l++) {
+      l0[l] /= t;
+      l1[l] /= t;
+    }
+
+    if (Axis == XAXIS) {
+      
+      for (i=0; i<iEnd; i++) {
+	for (k=0; k<im->channels; k++) PictureValue[k] = 0.0;
+	for (l=0; l<lMax; l++) {
+	  i_img_dim mx = T-lMax+l+1;
+	  i_img_dim Mx = T+l+1;
+	  mx = (mx < 0) ? 0 : mx;
+	  Mx = (Mx >= im->xsize) ? im->xsize-1 : Mx;
+	  
+	  i_gpix(im, Mx, i, &val1);
+	  i_gpix(im, mx, i, &val2);
+
+	  if (has_alpha) {
+	    i_sample_t alpha1 = val1.channel[color_chans];
+	    i_sample_t alpha2 = val2.channel[color_chans];
+	    for (k=0; k < color_chans; k++) {
+	      PictureValue[k] += l1[l]        * val1.channel[k] * alpha1 / 255;
+	      PictureValue[k] += l0[lMax-l-1] * val2.channel[k] * alpha2 / 255;
+	    }
+	    PictureValue[color_chans] += l1[l] * val1.channel[color_chans];
+	    PictureValue[color_chans] += l0[lMax-l-1] * val2.channel[color_chans];
+	  }
+	  else {
+	    for (k=0; k<im->channels; k++) {
+	      PictureValue[k] += l1[l]        * val1.channel[k];
+	      PictureValue[k] += l0[lMax-l-1] * val2.channel[k];
+	    }
+	  }
+	}
+
+	if (has_alpha) {
+	  float fa = PictureValue[color_chans] / LanczosWidthFactor;
+	  int alpha = minmax(0, 255, fa+0.5);
+	  if (alpha) {
+	    for (k = 0; k < color_chans; ++k) {
+	      psave = (short)(0.5+(PictureValue[k] / LanczosWidthFactor * 255 / fa));
+	      val.channel[k]=minmax(0,255,psave);
+	    }
+	    val.channel[color_chans] = alpha;
+	  }
+	  else {
+	    /* zero alpha, so the pixel has no color */
+	    for (k = 0; k < im->channels; ++k)
+	      val.channel[k] = 0;
+	  }
+	}
+	else {
+	  for(k=0;k<im->channels;k++) {
+	    psave = (short)(0.5+(PictureValue[k] / LanczosWidthFactor));
+	    val.channel[k]=minmax(0,255,psave);
+	  }
+	}
+	i_ppix(new_img, j, i, &val);
+      }
+      
+    } else {
+      
+      for (i=0; i<iEnd; i++) {
+	for (k=0; k<im->channels; k++) PictureValue[k] = 0.0;
+	for (l=0; l < lMax; l++) {
+	  i_img_dim mx = T-lMax+l+1;
+	  i_img_dim Mx = T+l+1;
+	  mx = (mx < 0) ? 0 : mx;
+	  Mx = (Mx >= im->ysize) ? im->ysize-1 : Mx;
+
+	  i_gpix(im, i, Mx, &val1);
+	  i_gpix(im, i, mx, &val2);
+	  if (has_alpha) {
+	    i_sample_t alpha1 = val1.channel[color_chans];
+	    i_sample_t alpha2 = val2.channel[color_chans];
+	    for (k=0; k < color_chans; k++) {
+	      PictureValue[k] += l1[l]        * val1.channel[k] * alpha1 / 255;
+	      PictureValue[k] += l0[lMax-l-1] * val2.channel[k] * alpha2 / 255;
+	    }
+	    PictureValue[color_chans] += l1[l] * val1.channel[color_chans];
+	    PictureValue[color_chans] += l0[lMax-l-1] * val2.channel[color_chans];
+	  }
+	  else {
+	    for (k=0; k<im->channels; k++) {
+	      PictureValue[k] += l1[l]        * val1.channel[k];
+	      PictureValue[k] += l0[lMax-l-1] * val2.channel[k];
+	    }
+	  }
+	}
+	if (has_alpha) {
+	  float fa = PictureValue[color_chans] / LanczosWidthFactor;
+	  int alpha = minmax(0, 255, fa+0.5);
+	  if (alpha) {
+	    for (k = 0; k < color_chans; ++k) {
+	      psave = (short)(0.5+(PictureValue[k] / LanczosWidthFactor * 255 / fa));
+	      val.channel[k]=minmax(0,255,psave);
+	    }
+	    val.channel[color_chans] = alpha;
+	  }
+	  else {
+	    for (k = 0; k < im->channels; ++k)
+	      val.channel[k] = 0;
+	  }
+	}
+	else {
+	  for(k=0;k<im->channels;k++) {
+	    psave = (short)(0.5+(PictureValue[k] / LanczosWidthFactor));
+	    val.channel[k]=minmax(0,255,psave);
+	  }
+	}
+	i_ppix(new_img, i, j, &val);
+      }
+      
+    }
+  }
+  myfree(l0);
+  myfree(l1);
+
+  im_log((aIMCTX, 1,"(%p) <- i_scaleaxis\n", new_img));
+
+  return new_img;
+}
+
+
+/* 
+=item i_scale_nn(im, scx, scy)
+
+Scale by using nearest neighbor 
+Both axes scaled at the same time since 
+nothing is gained by doing it in two steps 
+
+=cut
+*/
+
+
+i_img*
+i_scale_nn(i_img *im, double scx, double scy) {
+
+  i_img_dim nxsize,nysize,nx,ny;
+  i_img *new_img;
+  i_color val;
+  dIMCTXim(im);
+
+  im_log((aIMCTX, 1,"i_scale_nn(im %p,scx %.2f,scy %.2f)\n",im,scx,scy));
+
+  nxsize = (i_img_dim) ((double) im->xsize * scx);
+  if (nxsize < 1) {
+    nxsize = 1;
+    scx = 1.0 / im->xsize;
+  }
+  nysize = (i_img_dim) ((double) im->ysize * scy);
+  if (nysize < 1) {
+    nysize = 1;
+    scy = 1.0 / im->ysize;
+  }
+  im_assert(scx != 0 && scy != 0);
+    
+  new_img=i_img_empty_ch(NULL,nxsize,nysize,im->channels);
+  
+  for(ny=0;ny<nysize;ny++) for(nx=0;nx<nxsize;nx++) {
+    i_gpix(im,((double)nx)/scx,((double)ny)/scy,&val);
+    i_ppix(new_img,nx,ny,&val);
+  }
+
+  im_log((aIMCTX, 1,"(%p) <- i_scale_nn\n",new_img));
+
+  return new_img;
+}
+
