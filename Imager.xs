@@ -2994,7 +2994,7 @@ i_errors()
 	  if (!av_store(av, 1, sv)) {
 	    SvREFCNT_dec(sv);
 	  }
-	  PUSHs(sv_2mortal(newRV_noinc((SV*)av)));
+	  XPUSHs(sv_2mortal(newRV_noinc((SV*)av)));
 	  ++i;
 	}
 
