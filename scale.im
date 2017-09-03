@@ -468,7 +468,7 @@ i_scaleaxis(i_img *im, double Value, int Axis) {
   l1 = mymalloc(lMax * sizeof(float));
   
   for (j=0; j<jEnd; j++) {
-    OldLocation = ((double) j) / Value;
+    OldLocation = ((double) j+0.5) / Value;
     T = (i_img_dim) (OldLocation);
     F = OldLocation - T;
     
