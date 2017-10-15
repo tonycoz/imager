@@ -425,6 +425,7 @@ i_scaleaxis(i_img *im, double Value, int Axis) {
   i_img_dim hsize, vsize, i, j, k, l, iEnd, jEnd;
   i_img_dim sample_count;
   i_img_dim sample_off;
+  i_img_dim lMin, lMax;
   i_img_dim LanczosWidthFactor;
   float *sampler;
   double OldLocation;
@@ -436,6 +437,7 @@ i_scaleaxis(i_img *im, double Value, int Axis) {
   int has_alpha = i_img_has_alpha(im);
   int color_chans = i_img_color_channels(im);
   int work_channels = color_chans + !!has_alpha;
+  i_img_dim in_jEnd;
   dIMCTXim(im);
 
   i_clear_error();
@@ -450,6 +452,7 @@ i_scaleaxis(i_img *im, double Value, int Axis) {
     vsize = im->ysize;
     
     jEnd = hsize;
+    in_jEnd = im->xsize;
     iEnd = vsize;
   } else {
     hsize = im->xsize;
@@ -461,6 +464,7 @@ i_scaleaxis(i_img *im, double Value, int Axis) {
     }
 
     jEnd = vsize;
+    in_jEnd = im->ysize;
     iEnd = hsize;
   }
   
@@ -485,7 +489,15 @@ i_scaleaxis(i_img *im, double Value, int Axis) {
     IFDEBUG_SCALEAXIS (
       fprintf(stderr, "j %zd value %g old %g F %g\n", j, Value, OldLocation, F);
     );
-    for (l = 0; l < sample_count; l++) {
+    lMin = 0;
+    if (T < sample_off) {
+      lMin = sample_off - T;
+    }
+    lMax = sample_count;
+    if (T > in_jEnd - sample_off) {
+      lMax = sample_off + (in_jEnd - T);
+    }
+    for (l = lMin; l < lMax; l++) {
       sampler[l] = Lanczos(((float) (l-sample_off) + F) / (double) LanczosWidthFactor);
       IFDEBUG_SCALEAXIS (
         fprintf(stderr, "  sampler[%zd]/%zd %g\n",
@@ -495,12 +507,12 @@ i_scaleaxis(i_img *im, double Value, int Axis) {
     
     /* Make sure filter is normalized */
     t = 0.0;
-    for(l=0; l < sample_count; l++) {
+    for(l = lMin; l < lMax; l++) {
       t += sampler[l];
     }
     t /= (double)LanczosWidthFactor;
     
-    for(l=0; l < sample_count; l++) {
+    for(l = lMin; l < lMax; l++) {
       sampler[l] /= t;
     }
 
@@ -512,7 +524,7 @@ i_scaleaxis(i_img *im, double Value, int Axis) {
 	for (k=0; k < im->channels; k++)
 	  PictureValue[k] = 0.0;
 	
-	for (l=0; l < sample_count; l++) {
+	for (l = lMin; l < lMax; l++) {
 	  i_sample16_t val1[MAXCHANNELS];
 	  i_img_dim mx = T - sample_off + l ;
 	  
@@ -552,9 +564,9 @@ i_scaleaxis(i_img *im, double Value, int Axis) {
 	  }
 	}
 	else {
-	  for(k=0;k<im->channels;k++) {
+	  for(k = 0;k < im->channels; k++) {
 	    psave = (int)(0.5+(PictureValue[k] / LanczosWidthFactor));
-	    val[k]=minmax(0,65535,psave);
+	    val[k] = minmax(0,65535,psave);
 	  }
 	}
 	i_pslin(new_img, j, j+1, i, val, NULL, work_channels);
@@ -562,13 +574,13 @@ i_scaleaxis(i_img *im, double Value, int Axis) {
       
     } else {
       
-      for (i=0; i<iEnd; i++) {
+      for (i = 0; i < iEnd; i++) {
 	i_sample16_t val[MAXCHANNELS];
 	
-	for (k=0; k<im->channels; k++)
+	for (k = 0; k < im->channels; k++)
 	  PictureValue[k] = 0.0;
 	
-	for (l=0; l < sample_count; l++) {
+	for (l = lMin; l < lMax; l++) {
 	  i_img_dim my = T - sample_off + l;
 	  i_sample16_t val1[MAXCHANNELS];
 	  
