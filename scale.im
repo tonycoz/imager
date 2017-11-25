@@ -510,7 +510,6 @@ i_scaleaxis(i_img *im, double Value, int Axis) {
     for(l = lMin; l < lMax; l++) {
       t += sampler[l];
     }
-    t /= (double)LanczosWidthFactor;
     
     for(l = lMin; l < lMax; l++) {
       sampler[l] /= t;
@@ -547,12 +546,12 @@ i_scaleaxis(i_img *im, double Value, int Axis) {
 	}
 
 	if (has_alpha) {
-	  float fa = PictureValue[color_chans] / LanczosWidthFactor;
+	  float fa = PictureValue[color_chans];
 	  i_sample16_t alpha = minmax(0, 65535, fa+0.5);
 	  
 	  if (alpha) {
 	    for (k = 0; k < color_chans; ++k) {
-	      psave = (int)(0.5+(PictureValue[k] / LanczosWidthFactor * 65535 / fa));
+	      psave = (int)(0.5+(PictureValue[k] * 65535 / fa));
 	      val[k]=minmax(0,65535,psave);
 	    }
 	    val[color_chans] = alpha;
@@ -565,7 +564,7 @@ i_scaleaxis(i_img *im, double Value, int Axis) {
 	}
 	else {
 	  for(k = 0;k < im->channels; k++) {
-	    psave = (int)(0.5+(PictureValue[k] / LanczosWidthFactor));
+	    psave = (int)(0.5+(PictureValue[k]));
 	    val[k] = minmax(0,65535,psave);
 	  }
 	}
@@ -601,11 +600,11 @@ i_scaleaxis(i_img *im, double Value, int Axis) {
 	  }
 	}
 	if (has_alpha) {
-	  float fa = PictureValue[color_chans] / LanczosWidthFactor;
+	  float fa = PictureValue[color_chans];
 	  i_sample16_t alpha = minmax(0, 65535, fa+0.5);
 	  if (alpha) {
 	    for (k = 0; k < color_chans; ++k) {
-	      psave = (int)(0.5+(PictureValue[k] / LanczosWidthFactor * 65535 / fa));
+	      psave = (int)(0.5+(PictureValue[k] * 65535 / fa));
 	      val[k]=minmax(0,65535,psave);
 	    }
 	    val[color_chans] = alpha;
@@ -617,7 +616,7 @@ i_scaleaxis(i_img *im, double Value, int Axis) {
 	}
 	else {
 	  for(k=0;k<im->channels;k++) {
-	    psave = (int)(0.5+(PictureValue[k] / LanczosWidthFactor));
+	    psave = (int)(0.5+(PictureValue[k]));
 	    val[k]=minmax(0,65535,psave);
 	  }
 	}
