@@ -130,7 +130,6 @@ static i_color interp_i_color(i_color before, i_color after, double pos,
   i_color out;
   int ch;
 
-  pos -= floor(pos);
   if (channels == 1 || channels == 3) {
     for (ch = 0; ch < channels; ++ch)
       out.channel[ch] = ((1-pos) * before.channel[ch] + pos * after.channel[ch]) + 0.5;
@@ -170,7 +169,6 @@ static i_fcolor interp_i_fcolor(i_fcolor before, i_fcolor after, double pos,
   i_fcolor out;
   int ch;
 
-  pos -= floor(pos);
   if (channels == 1 || channels == 3) {
     for (ch = 0; ch < channels; ++ch)
       out.channel[ch] = (1-pos) * before.channel[ch] + pos * after.channel[ch];
@@ -260,22 +258,26 @@ i_img *i_matrix_transform_bg(i_img *src, i_img_dim xsize, i_img_dim ysize, const
 	if (fabs(sz) > 0.0000001 
 	    && sx >= -1 && sx < src->xsize
 	    && sy >= -1 && sy < src->ysize) {
-	  i_img_dim bx = floor(sx);
-	  i_img_dim by = floor(sy);
+	  double fsx = floor(sx);
+	  double fsy = floor(sy);
+	  i_img_dim bx = fsx;
+	  i_img_dim by = fsy;
 
 	  ROT_DEBUG(fprintf(stderr, "map " i_DFp " to %g,%g\n", i_DFcp(x, y), sx, sy));
-	  if (sx != bx) {
-	    if (sy != by) {
+	  if (sx != fsx) {
+	    double dx = sx - fsx;
+	    if (sy != fsy) {
 	      IM_COLOR c[2][2]; 
 	      IM_COLOR ci2[2];
+	      double dy = sy - fsy;
 	      ROT_DEBUG(fprintf(stderr, " both non-int\n"));
 	      for (i = 0; i < 2; ++i)
 		for (j = 0; j < 2; ++j)
 		  if (IM_GPIX(src, bx+i, by+j, &c[j][i]))
 		    c[j][i] = back;
 	      for (j = 0; j < 2; ++j)
-		ci2[j] = interp_i_color(c[j][0], c[j][1], sx, src->channels);
-	      vals[x] = interp_i_color(ci2[0], ci2[1], sy, src->channels);
+		ci2[j] = interp_i_color(c[j][0], c[j][1], dx, src->channels);
+	      vals[x] = interp_i_color(ci2[0], ci2[1], dy, src->channels);
 	    }
 	    else {
 	      IM_COLOR ci2[2];
@@ -283,22 +285,23 @@ i_img *i_matrix_transform_bg(i_img *src, i_img_dim xsize, i_img_dim ysize, const
 	      for (i = 0; i < 2; ++i)
 		if (IM_GPIX(src, bx+i, sy, ci2+i))
 		  ci2[i] = back;
-	      vals[x] = interp_i_color(ci2[0], ci2[1], sx, src->channels);
+	      vals[x] = interp_i_color(ci2[0], ci2[1], dx, src->channels);
 	    }
 	  }
 	  else {
-	    if (sy != (i_img_dim)sy) {
+	    if (sy != fsy) {
 	      IM_COLOR ci2[2];
+	      double dy = sy - fsy;
 	      ROT_DEBUG(fprintf(stderr, " x int, y non-int\n"));
 	      for (i = 0; i < 2; ++i)
 		if (IM_GPIX(src, bx, by+i, ci2+i))
 		  ci2[i] = back;
-	      vals[x] = interp_i_color(ci2[0], ci2[1], sy, src->channels);
+	      vals[x] = interp_i_color(ci2[0], ci2[1], dy, src->channels);
 	    }
 	    else {
 	      ROT_DEBUG(fprintf(stderr, " both int\n"));
 	      /* all the world's an integer */
-	      if (IM_GPIX(src, sx, sy, vals+x))
+	      if (IM_GPIX(src, bx, by, vals+x))
 		vals[x] = back;
 	    }
 	  }
