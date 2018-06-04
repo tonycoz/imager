@@ -1449,7 +1449,7 @@ C<adam7>.
 X<tags, png_srgb_intent>C<png_srgb_intent> - the sRGB rendering intent
 for the image. an integer from 0 to 3, per the PNG specification.  If
 this chunk is found in the PNG file the C<gAMA> and C<cHRM> are
-ignored and the C<png_gamme> and C<png_chroma_...> tags are not set.
+ignored and the C<png_gamma> and C<png_chroma_...> tags are not set.
 Similarly when writing if C<png_srgb_intent> is set the C<gAMA> and
 C<cHRM> chunks are not written.
 
@@ -1491,6 +1491,11 @@ will fail.
 C<i_background> - set from the C<sBKG> when reading an image file.
 
 =back
+
+X<compression>X<png_compression_level>You can control the level of
+F<zlib> compression used when writing with the
+C<png_compression_level> parameter.  This can be an integer between 0
+(uncompressed) and 9 (best compression).
 
 =for stopwords
 CRC

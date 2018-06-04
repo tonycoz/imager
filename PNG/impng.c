@@ -2,6 +2,7 @@
 #include "png.h"
 #include <stdlib.h>
 #include <string.h>
+#include <zlib.h>
 
 /* this is a way to get number of channels from color space 
  * Color code to channel number */
@@ -1132,6 +1133,19 @@ set_png_tags(i_img *im, png_structp png_ptr, png_infop info_ptr) {
       }
       else {
 	i_push_error(0, "png_time must be formatted 'y-m-dTh:m:s'");
+	return 0;
+      }
+    }
+  }
+
+  {
+    int level;
+    if (i_tags_get_int(&im->tags, "png_compression_level", 0, &level)) {
+      if (level >= Z_NO_COMPRESSION && level <= Z_BEST_COMPRESSION) 
+	png_set_compression_level(png_ptr, level);
+      else {
+	i_push_errorf(0, "png_compression_level must be between %d and %d",
+		      Z_NO_COMPRESSION, Z_BEST_COMPRESSION);
 	return 0;
       }
     }

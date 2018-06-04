@@ -10,7 +10,7 @@ my $debug_writes = 1;
 
 init_log("testout/t102png.log",1);
 
-plan tests => 251;
+plan tests => 256;
 
 # this loads Imager::File::PNG too
 ok($Imager::formats{"png"}, "must have png format");
@@ -797,6 +797,23 @@ SKIP:
        "expect $error");
     is($im2->errstr, $error, "check error message");
   }
+}
+
+{
+  # png_compression_level
+  my $im = test_image();
+  my $out1;
+  ok($im->write(data => \$out1, type => "png"), "write default compression");
+  my $out2;
+  ok($im->write(data => \$out2, type => "png", png_compression_level => 9),
+     "write best compression");
+  cmp_ok(length($out1), '>', length($out2), "best compression smaller than default");
+  note "went from ", length($out1), " to ", length($out2);
+  # error handling
+  ok(!$im->write(data => \$out1, type => "png", png_compression_level => -1),
+     "fail with compression level -1");
+  ok(!$im->write(data => \$out1, type => "png", png_compression_level => 10),
+     "fail with compression level 10");
 }
 
 sub limited_write {
