@@ -1639,7 +1639,7 @@ an alpha channel to images that already have an alpha mask.  Note that
 this will only make pixels transparent, not opaque.  Default: 0.
 
 Note: If you get different results between C<ico_alpha_masked> being
-set to 0 and 1, your mask may broke when used with the Win32 API.
+set to 0 and 1, your mask may break when used with the Win32 API.
 
 =back
 
