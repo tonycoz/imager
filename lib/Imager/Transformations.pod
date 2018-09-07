@@ -782,7 +782,8 @@ This weights the RGB channels at 22.2%, 70.7% and 7.1% respectively.
 =item *
 
 C<noalpha> - removes the alpha channel from a 2 or 4 channel image.
-An identity for other images.
+An identity for other images.  Warning: this removes the alpha channel
+without applying it.
 
 =item *
 
