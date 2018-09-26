@@ -239,22 +239,31 @@ if ($coverage) {
     }
 }
 
-# eval to prevent warnings about versions with _ in them
-my $MM_ver = eval $ExtUtils::MakeMaker::VERSION;
-if ($MM_ver > 6.06) {
+if (eval { ExtUtils::MakeMaker->VERSION('6.06'); 1 }) {
   $opts{AUTHOR} = 'Tony Cook <tonyc@cpan.org>, Arnar M. Hrafnkelsson';
   $opts{ABSTRACT} = 'Perl extension for Generating 24 bit Images';
 }
 
-if ($MM_ver >= 6.46) {
+if (eval { ExtUtils::MakeMaker->VERSION('6.46'); 1 }) {
+  $opts{LICENSE} = "perl_5";
   $opts{META_MERGE} =
     {
-     recommends =>
+     'meta-spec' =>
      {
-      "Parse::RecDescent" => 0
+      version => "2",
+      url => "https://metacpan.org/pod/CPAN::Meta::Spec",
      },
-     license => "perl",
-     dynamic_config => 1,
+     prereqs =>
+     {
+      runtime =>
+      {
+       recommends =>
+       {
+        "Parse::RecDescent" => 0
+       },
+      },
+     },
+     dynamic_config => 0,
      no_index =>
      {
       directory =>
@@ -271,8 +280,16 @@ if ($MM_ver >= 6.46) {
      resources =>
      {
       homepage => "http://imager.perl.org/",
-      repository => "git://git.imager.perl.org/imager.git",
-      bugtracker => "http://rt.cpan.org/NoAuth/Bugs.html?Dist=Imager",
+      repository =>
+      {
+       url => "git://git.imager.perl.org/imager.git",
+       web => "http://git.imager.perl.org/imager.git",
+       type => "git",
+      },
+      bugtracker =>
+      {
+       web => "https://rt.cpan.org/Dist/Display.html?Name=Imager",
+      },
      },
     };
 }
