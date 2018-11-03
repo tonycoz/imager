@@ -1,5 +1,8 @@
 Imager release history.  Older releases can be found in Changes.old
 
+Imager 1.006 - 26 Aug 2017
+============
+
  - the internal i_errors() function now correctly allocates the stack
    space needed for its result.
    https://rt.perl.org/rt3/Ticket/Display.html?id=131938
