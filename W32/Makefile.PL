@@ -15,8 +15,6 @@ GetOptions("incpath=s", \@incpaths,
 our $BUILDING_IMAGER;
 our %IMAGER_LIBS;
 
-my $MM_ver = eval $ExtUtils::MakeMaker::VERSION;
-
 my %opts = 
   (
    NAME => 'Imager::Font::W32',
@@ -24,6 +22,35 @@ my %opts =
    OBJECT => 'W32.o win32.o',
    clean => { FILES => 'testout' },
   );
+
+if (eval { ExtUtils::MakeMaker->VERSION('6.46'); 1 }) {
+  $opts{LICENSE} = "perl_5";
+  $opts{AUTHOR} = 'Tony Cook <tonyc@cpan.org>';
+  $opts{ABSTRACT} = 'Win32 font driver for Imager';
+  $opts{META_MERGE} =
+    {
+     'meta-spec' =>
+     {
+      version => "2",
+      url => "https://metacpan.org/pod/CPAN::Meta::Spec",
+     },
+     resources =>
+     {
+      homepage => "http://imager.perl.org/",
+      repository =>
+      {
+       type => "git",
+       url => "git://git.imager.perl.org/imager.git",
+       web => "http://git.imager.perl.org/imager.git",
+      },
+      bugtracker =>
+      {
+       web => "http://rt.cpan.org/NoAuth/Bugs.html?Dist=Imager",
+       mailto => 'bug-Imager@rt.cpan.org',
+      },
+     },
+    };
+}
 
 my @inc;
 if ($BUILDING_IMAGER) {
@@ -39,23 +66,37 @@ else {
 
   # Imager required configure through use
   my @Imager_req = ( Imager => "0.95" );
-  if ($MM_ver >= 6.46) {
-    $opts{META_MERGE} =
+  if (eval { ExtUtils::MakeMaker->VERSION('6.46'); 1 }) {
+    $opts{META_MERGE}{prereqs} =
       {
-       configure_requires => 
+       configure =>
        {
-	@Imager_req,
+	requires =>
+	{
+	 @Imager_req,
+	},
        },
-       build_requires => 
+       build =>
        {
-	@Imager_req,
-	"Test::More" => "0.47",
+	requires =>
+	{
+	 @Imager_req,
+	 "Test::More" => "0.47",
+	}
        },
-       resources =>
+       runtime =>
        {
-	homepage => "http://imager.perl.org/",
-	repository => "git://git.imager.perl.org/imager.git",
-	bugtracker => "http://rt.cpan.org/NoAuth/Bugs.html?Dist=Imager",
+	requires =>
+	{
+	 @Imager_req,
+	}
+       },
+       test =>
+       {
+	requires =>
+	{
+	 "Test::More" => "0.47",
+	}
        },
       };
     $opts{PREREQ_PM} =
@@ -89,11 +130,6 @@ if ($probe_res) {
   $opts{DEFINE} = $probe_res->{DEFINE};
   $opts{INC} = "@inc";
 
-  if ($MM_ver > 6.06) {
-    $opts{AUTHOR} = 'Tony Cook <tonyc@cpan.org>';
-    $opts{ABSTRACT} = 'Win32 font file support for Imager';
-  }
-  
   WriteMakefile(%opts);
 }
 else {

@@ -261,6 +261,25 @@ if (eval { ExtUtils::MakeMaker->VERSION('6.46'); 1 }) {
        {
         "Parse::RecDescent" => 0
        },
+       requires =>
+       {
+	'Scalar::Util' => "1.00",
+	XSLoader => 0,
+       },
+      },
+      build =>
+      {
+       requires =>
+       {
+	XSLoader => 0,
+       },
+      },
+      test =>
+      {
+       requires =>
+       {
+	'Test::More' => "0.99",
+       },
       },
      },
      dynamic_config => 0,
@@ -289,6 +308,7 @@ if (eval { ExtUtils::MakeMaker->VERSION('6.46'); 1 }) {
       bugtracker =>
       {
        web => "https://rt.cpan.org/Dist/Display.html?Name=Imager",
+       mailto => 'bug-Imager@rt.cpan.org',
       },
      },
     };
