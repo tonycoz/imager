@@ -1,5 +1,10 @@
 Imager release history.  Older releases can be found in Changes.old
 
+ - add png_compression_level tag for writing PNG files.
+
+ - avoid flooring a second time in matrix transform interpolation.
+   https://rt.cpan.org/Ticket/Display.html?id=124001
+
 Imager 1.006 - 26 Aug 2017
 ============
 
