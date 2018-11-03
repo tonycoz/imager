@@ -468,7 +468,7 @@ i_poly_poly_aa_low(i_img *im, int count, const i_polygon_t *polys,
 
   for (k = 0; k < count; ++k) {
     if (polys[k].count < 3) {
-      i_push_errorf(0, "polygons must have at least 3 points");
+      i_push_error(0, "polygons must have at least 3 points");
       return 0;
     }
   }
