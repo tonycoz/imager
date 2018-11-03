@@ -179,7 +179,7 @@ Imager 1.002 - 3 Apr 2015
     - a future version of Imager may allow an image to be read without
       translation, for example a TIFF file that contains measurements
       from an instrument.  Currently Imager transforms the samples into
-      the range 0.0 ... 1.0 which may means the user has to translates
+      the range 0.0 ... 1.0 which may means the user has to translate
       the value back.
 
       An untranslated image would be unusable as image data, so
@@ -612,7 +612,7 @@ Enhancements:
 
  - avoid static variables when capturing IPTC data from JPEG files
 
- - match Imager::Font;:T1's error message translations to those from
+ - match Imager::Font::T1's error message translations to those from
    later versions of T1Lib.
 
  - for libtiff versions that support extended warning handlers (3.8.0
