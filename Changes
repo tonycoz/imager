@@ -5,6 +5,10 @@ Imager release history.  Older releases can be found in Changes.old
  - avoid flooring a second time in matrix transform interpolation.
    https://rt.cpan.org/Ticket/Display.html?id=124001
 
+ - produce v2 metadata.
+   Includes change from the ticket and updates to sub-modules.
+   https://rt.cpan.org/Ticket/Display.html?id=127216
+
 Imager 1.006 - 26 Aug 2017
 ============
 
