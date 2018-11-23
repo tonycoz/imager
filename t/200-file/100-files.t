@@ -4,7 +4,7 @@
 # the file format
 
 use strict;
-use Test::More tests => 93;
+use Test::More tests => 94;
 use Imager;
 
 -d "testout" or mkdir "testout";
@@ -286,6 +286,13 @@ probe_ok(<<JPEG2K, "jp2", "JPEG 2000");
 00 0F 63 6F 6C 72 01 00 00 00 00 00 10 00 00 00
 00 6A 70 32 63 FF 4F FF 51 00 2F 00 00 00 00 01
 JPEG2K
+
+probe_ok(<<FLIF, "flif", "FLIF");
+46 4C 49 46 44 31 83 7F 83 7F 00 A0 03 AF B0 B1
+E8 03 37 FF F7 D5 C2 D8 B7 D5 58 59 6E D9 71 8C
+0F A9 88 B4 1C B1 7F C0 2E FB 8C 7D 90 B6 04 DF
+CF 3A FF 56 5D FF 67 87 CE 9C 0E D6 69 CD 1F EF
+FLIF
 
 { # RT 72475
   # check error messages from read/read_multi
