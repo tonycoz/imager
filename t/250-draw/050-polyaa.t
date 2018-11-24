@@ -1,7 +1,7 @@
 #!perl -w
 
 use strict;
-use Test::More tests => 24;
+use Test::More tests => 28;
 
 use Imager qw/NC/;
 use Imager::Test qw(is_image is_color3);
@@ -247,6 +247,20 @@ my $black = Imager::Color->new(0, 0, 0);
   push @out_files, "testout/250-poly-ppnz.ppm";
   ok($img->write(file => "testout/250-poly-ppnz.ppm"),
      "save to file");
+}
+
+{
+  # fail 2 point polygon
+  my $im = Imager->new(xsize => 10, ysize => 10);
+  ok(!$im->polygon(x => [ 0, 5 ], y => [ 0, 5 ]),
+     "fail to draw poly with only two points");
+  like($im->errstr, qr/polygons must have at least 3 points/,
+       "check error message");
+  my $im2 = Imager->new(xsize => 10, ysize => 10);
+  ok(!$im2->polygon(x => [ 0, 5 ], y => [ 0, 5 ], fill => { solid => "#FFFFFF" }),
+     "fail to draw poly with only two points (fill)");
+  like($im2->errstr, qr/polygons must have at least 3 points/,
+       "check error message");
 }
 
 Imager->close_log;

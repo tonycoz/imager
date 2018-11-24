@@ -3106,16 +3106,20 @@ sub polygon {
         return undef;
       }
     }
-    i_poly_aa_cfill_m($self->{IMG}, $opts{'x'}, $opts{'y'}, 
-                    $mode, $opts{'fill'}{'fill'});
+    unless (i_poly_aa_cfill_m($self->{IMG}, $opts{'x'}, $opts{'y'},
+			      $mode, $opts{'fill'}{'fill'})) {
+      return $self->_set_error($self->_error_as_msg);
+    }
   }
   else {
     my $color = _color($opts{'color'});
     unless ($color) { 
       $self->{ERRSTR} = $Imager::ERRSTR; 
-      return; 
+      return;
     }
-    i_poly_aa_m($self->{IMG}, $opts{'x'}, $opts{'y'}, $mode, $color);
+    unless (i_poly_aa_m($self->{IMG}, $opts{'x'}, $opts{'y'}, $mode, $color)) {
+      return $self->_set_error($self->_error_as_msg);
+    }
   }
 
   return $self;
