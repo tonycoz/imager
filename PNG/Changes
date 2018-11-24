@@ -1,4 +1,15 @@
-Imager-File-PNG 0.91
+Imager-File-PNG 0.94
+====================
+
+ - Makefile.PL / metadata improvements
+
+Imager-File-PNG 0.93
+====================
+
+ - add support for setting the level of zlib compression used with the
+   png_compression_level tag.
+
+Imager-File-PNG 0.92
 ====================
 
  - update the bundled/modified Devel::CheckLib to handle the gcc-4
