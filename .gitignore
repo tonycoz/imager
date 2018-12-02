@@ -60,3 +60,6 @@ dll.exp
 Imager.def
 Imager_def.old
 dynfilt/*.dll
+
+# dists
+*.tar.gz
