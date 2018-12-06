@@ -1,6 +1,6 @@
 #!perl -w
 use strict;
-use Test::More tests => 15;
+use Test::More;
 
 use_ok('Imager');
 use_ok('Imager::Font');
@@ -17,3 +17,6 @@ use_ok('Imager::Fountain');
 use_ok('Imager::Regops');
 use_ok('Imager::Test');
 use_ok('Imager::Transform');
+use_ok('Imager::Probe');
+
+done_testing();

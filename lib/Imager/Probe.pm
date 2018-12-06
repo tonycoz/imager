@@ -301,7 +301,7 @@ sub _probe_fake {
     # might not need extra libraries, eg. Win32 perl already links
     # everything
     my @libs = $req->{libbase}
-      ? ( ref $req->{libbase} ? @{$ref->{libbase}} : $ref->{libbase} )
+      ? ( ref $req->{libbase} ? @{$req->{libbase}} : $req->{libbase} )
       : ();
     $lopts = join " ", map _lib_option($_), @libs;
   }
