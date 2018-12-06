@@ -1853,6 +1853,15 @@ all the parameters supplied to the read_multi() method.
 
 =back
 
+=item add_type_extensions($type, $ext, ...)
+
+This class method can be used to add extensions to the map used by
+C<def_guess_type> when working out the file type a filename extension.
+
+  Imager->add_type_extension(mytype => "mytype", "mytypish");
+  ...
+  $im->write(file => "foo.mytypish") # use the mytype handler
+
 =back
 
 If you name the reader module C<Imager::File::>I<your-format-name>

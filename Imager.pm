@@ -4222,7 +4222,7 @@ sub _set_error {
 
 # Default guess for the type of an image from extension
 
-my @simple_types = qw(png tga gif raw ico cur xpm mng jng ilbm pcx psd eps);
+my @simple_types = qw(png tga gif raw ico cur xpm mng jng ilbm pcx psd eps webp xwd xpm dng ras);
 
 my %ext_types =
   (
@@ -4255,6 +4255,15 @@ sub def_guess_type {
     or return;
 
   return $type;
+}
+
+sub add_type_extensions {
+  my ($class, $type, @exts) = @_;
+
+  for my $ext (@exts) {
+    exists $ext_types{lc $ext} or $ext_types{lc $ext} = lc $type;
+  }
+  1;
 }
 
 sub combines {
@@ -4735,6 +4744,10 @@ addcolors() - L<Imager::ImageTypes/addcolors()> - add colors to a
 paletted image
 
 addtag() -  L<Imager::ImageTypes/addtag()> - add image tags
+
+add_type_extensions() -
+L<Imager::Files/add_type_extensions($type, $ext, ...)> - add extensions for
+new image file types.
 
 align_string() - L<Imager::Draw/align_string()> - draw text aligned on a
 point

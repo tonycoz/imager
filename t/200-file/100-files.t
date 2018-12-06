@@ -4,7 +4,7 @@
 # the file format
 
 use strict;
-use Test::More tests => 94;
+use Test::More;
 use Imager;
 
 -d "testout" or mkdir "testout";
@@ -342,6 +342,7 @@ FLIF
      ILBM => "ilbm",
      pcx => "pcx",
      psd => "psd",
+     webp => "webp",
     );
 
   while (my ($ext, $expect) = splice(@tests, 0, 2)) {
@@ -349,9 +350,14 @@ FLIF
     is(Imager::def_guess_type($filename), $expect,
        "type for $filename should be $expect");
   }
+  Imager->add_type_extensions("x123", "x321");
+  is(Imager::def_guess_type("foo.x321"), "x123",
+     "test adding a file type works");
 }
 
 Imager->close_log;
+
+done_testing();
 
 unless ($ENV{IMAGER_KEEP_FILES}) {
   unlink "testout/t1000files.log";
