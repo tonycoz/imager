@@ -4,7 +4,7 @@ use File::Spec;
 use Config;
 use Cwd ();
 
-our $VERSION = "1.005";
+our $VERSION = "1.006";
 
 my @alt_transfer = qw/altname incsuffix libbase/;
 
@@ -300,7 +300,10 @@ sub _probe_fake {
   elsif (defined $req->{libbase}) {
     # might not need extra libraries, eg. Win32 perl already links
     # everything
-    $lopts = $req->{libbase} ? "-l$req->{libbase}" : "";
+    my @libs = $req->{libbase}
+      ? ( ref $req->{libbase} ? @{$ref->{libbase}} : $ref->{libbase} )
+      : ();
+    $lopts = join " ", map _lib_option($_), @libs;
   }
   if (defined $lopts) {
     print "$req->{name}: Checking if the compiler can find them on its own\n";
