@@ -247,6 +247,8 @@ extern im_ext_funcs *imager_function_ext_table;
 #define i_img_color_model(im) ((im_extt->f_i_img_color_model)((im)))
 #define i_img_color_channels(im) ((im_extt->f_i_img_color_channels)((im)))
 
+#define im_decode_exif(im, data, len) ((im_extt->f_im_decode_exif)((im), (data), (len)))
+
 #ifdef IMAGER_LOG
 #ifndef IMAGER_NO_CONTEXT
 #define mm_log(x) { i_lhead(__FILE__,__LINE__); i_loog x; } 

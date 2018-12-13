@@ -1,6 +1,4 @@
 Changes
-imexif.c
-imexif.h
 imjpeg.c
 imjpeg.h
 inc/Devel/CheckLib.pm

@@ -19,7 +19,7 @@ my %opts =
   (
    NAME => 'Imager::File::JPEG',
    VERSION_FROM => 'JPEG.pm',
-   OBJECT => 'JPEG.o imjpeg.o imexif.o',
+   OBJECT => 'JPEG.o imjpeg.o',
    clean => { FILES => 'testout' },
   );
 
@@ -65,7 +65,7 @@ else {
   $opts{TYPEMAPS} = [ Imager::ExtUtils->typemap ];
 
   # Imager required configure through use
-  my @Imager_req = ( Imager => "0.86" );
+  my @Imager_req = ( Imager => "1.008" );
   if (eval { ExtUtils::MakeMaker->VERSION('6.46'); 1 }) {
     $opts{META_MERGE}{prereqs} =
       {

@@ -1,4 +1,4 @@
-#include "imext.h"
+#include "imager.h"
 #include "imexif.h"
 #include <stdlib.h>
 #include <float.h>
@@ -12,7 +12,7 @@ imexif.c - EXIF support for Imager
 
 =head1 SYNOPSIS
 
-  if (i_int_decode_exif(im, app1data, app1datasize)) {
+  if (im_decode_exif(im, app1data, app1datasize)) {
     // exif block seen
   }
 
@@ -267,12 +267,12 @@ intended to be called from outside of Imager.
 
 =over
 
-=item i_int_decode_exit
+=item im_decode_exif
 
-i_int_decode_exif(im, data_base, data_size);
+im_decode_exif(im, data_base, data_size);
 
-The data from data_base for data_size bytes will be scanned for EXIF
-data.
+The data from C<data_base> for C<data_size> bytes will be scanned for
+EXIF data.
 
 Any data found will be used to set tags in the supplied image.
 
@@ -280,24 +280,16 @@ The intent is that invalid EXIF data will simply fail to set tags, and
 write to the log.  In no case should this code exit when supplied
 invalid data.
 
-Returns true if an Exif header was seen.
+Returns true if an EXIF header was seen.
 
 =cut
 */
 
 int
-i_int_decode_exif(i_img *im, unsigned char *data, size_t length) {
+im_decode_exif(i_img *im, unsigned char *data, size_t length) {
   imtiff tiff;
   unsigned long exif_ifd_offset = 0;
   unsigned long gps_ifd_offset = 0;
-  /* basic checks - must start with "Exif\0\0" */
-
-  if (length < 6 || memcmp(data, "Exif\0\0", 6) != 0) {
-    return 0;
-  }
-
-  data += 6;
-  length -= 6;
 
   if (!tiff_init(&tiff, data, length)) {
     mm_log((2, "Exif header found, but no valid TIFF header\n"));

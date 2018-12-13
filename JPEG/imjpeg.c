@@ -34,7 +34,6 @@ Reads and writes JPEG images
 #include "jerror.h"
 #include <errno.h>
 #include <stdlib.h>
-#include "imexif.h"
 
 #define JPEG_APP13       0xED    /* APP13 marker code */
 #define JPEG_APP1 (JPEG_APP0 + 1)
@@ -495,7 +494,11 @@ i_readjpeg_wiol(io_glue *data, int length, char** iptc_itext, int *itlength) {
 		 markerp->data_length);
     }
     else if (markerp->marker == JPEG_APP1 && !seen_exif) {
-      seen_exif = i_int_decode_exif(im, markerp->data, markerp->data_length);
+      unsigned char *data = markerp->data;
+      size_t len = markerp->data_length;
+      if (len >= 6 && memcmp(data, "Exif\0\0", 6) == 0) {
+	seen_exif = im_decode_exif(im, data+6, len-6);
+      }
     }
     else if (markerp->marker == JPEG_APP13) {
       *iptc_itext = mymalloc(markerp->data_length);

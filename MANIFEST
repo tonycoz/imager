@@ -135,6 +135,8 @@ Imager.xs
 imageri.h
 imdatatypes.h
 imerror.h			Error handling functions
+imexif.c			EXIF decoding
+imexif.h
 imext.c				Defines the function table
 imext.h				Included by external modules for API access
 imextdef.h
@@ -154,8 +156,6 @@ io.c
 iolayer.c
 iolayer.h
 iolayert.h			IO layer types
-JPEG/imexif.c			Experimental JPEG EXIF decoding
-JPEG/imexif.h
 JPEG/imjpeg.c
 JPEG/imjpeg.h
 JPEG/JPEG.pm

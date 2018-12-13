@@ -21,6 +21,7 @@ Blit
 CGI
 CMYK
 CPAN
+EXIF
 FreeType
 GDI
 GIF

@@ -2554,6 +2554,25 @@ If reallocation of slot storage fails, returns false.
 =for comment
 From: File context.c
 
+=item im_decode_exif
+
+im_decode_exif(im, data_base, data_size);
+
+The data from C<data_base> for C<data_size> bytes will be scanned for
+EXIF data.
+
+Any data found will be used to set tags in the supplied image.
+
+The intent is that invalid EXIF data will simply fail to set tags, and
+write to the log.  In no case should this code exit when supplied
+invalid data.
+
+Returns true if an EXIF header was seen.
+
+
+=for comment
+From: File imexif.c
+
 =item im_errors(ctx)
 
   i_errmsg *errors = im_errors(aIMCTX);

@@ -1,6 +1,7 @@
 #include "imexttypes.h"
 #include "imager.h"
 #include "imio.h"
+#include "imexif.h"
 
 static im_context_t get_context(void);
 static i_img *mathom_i_img_8_new(i_img_dim, i_img_dim, int);
@@ -212,10 +213,14 @@ im_ext_funcs imager_function_table =
     i_poly_aa_m,
     i_poly_aa_cfill_m,
 
-    /* level 10 */
     i_img_alpha_channel,
     i_img_color_model,
-    i_img_color_channels
+    i_img_color_channels,
+
+    /* level 10 */
+    im_decode_exif
+
+    /* level 11 */
   };
 
 /* in general these functions aren't called by Imager internally, but
