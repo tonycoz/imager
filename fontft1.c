@@ -1108,7 +1108,7 @@ Function to get texts bounding boxes given the instance of the font (internal)
 
 static
 undef_int
-i_tt_bbox_inst( TT_Fonthandle *handle, int inst ,const char *txt, size_t len, i_img_dim cords[BOUNDING_BOX_COUNT], int utf8 ) {
+i_tt_bbox_inst( TT_Fonthandle *handle, int inst ,const char *txt, size_t len, i_img_dim *cords, int utf8 ) {
   int upm, casc, cdesc, first;
   
   int start    = 0;
@@ -1207,7 +1207,7 @@ Interface to get a strings bounding box
 */
 
 undef_int
-i_tt_bbox( TT_Fonthandle *handle, double points,const char *txt,size_t len,i_img_dim cords[6], int utf8) {
+i_tt_bbox( TT_Fonthandle *handle, double points,const char *txt,size_t len,i_img_dim *cords, int utf8) {
   int inst;
 
   i_clear_error();
