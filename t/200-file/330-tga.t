@@ -1,7 +1,7 @@
 #!perl -w
 use Imager qw(:all);
 use strict;
-use Test::More tests=>68;
+use Test::More;
 use Imager::Test qw(is_color4 is_image test_image);
 
 -d "testout" or mkdir "testout";
@@ -232,6 +232,21 @@ is($compressed, 1, "check compressed tag");
   }
 }
 
+{
+  # coverity issue - double free of idstring
+  my $im = test_image()->to_paletted({ make_colors => "webmap" });
+  my $data;
+  ok($im->write(data => \$data, type => "tga", idstring => "test"),
+     "save good tga image");
+  substr($data, 30) = '';
+  my $im2 = Imager->new;
+  ok(!$im2->read(data => \$data, type => "tga"),
+     "fail to read bad tga");
+  like($im2->errstr, qr/could not read targa colormap/,
+       "check error message");
+  # shouldn't get a double free from valgrind
+}
+
 { # check close failures are handled correctly
   my $im = test_image();
   my $fail_close = sub {
@@ -244,6 +259,8 @@ is($compressed, 1, "check compressed tag");
     like($im->errstr, qr/synthetic close failure/,
 	 "check error message");
 }
+
+done_testing();
 
 sub write_test {
   my ($im, $filename, $wierdpack, $compress, $idstring) = @_;

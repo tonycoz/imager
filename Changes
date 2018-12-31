@@ -1,5 +1,10 @@
 Imager release history.  Older releases can be found in Changes.old
 
+Coverity finally finished a build, fix a few problems:
+
+ - reading a color-mapped TGA file with an id string would cause a
+   double-free if the palette was truncated.
+
 Imager 1.008 - 31 Dec 2018
 ============
 

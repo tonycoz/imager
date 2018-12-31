@@ -559,7 +559,7 @@ tga_palette_read(io_glue *ig, i_img *img, int bytepp, int colourmaplength) {
   palbuf   = mymalloc(palbsize);
   
   if (i_io_read(ig, palbuf, palbsize) != palbsize) {
-    i_push_error(errno, "could not read targa colourmap");
+    i_push_error(errno, "could not read targa colormap");
     return 0;
   }
   
@@ -601,7 +601,7 @@ tga_palette_write(io_glue *ig, i_img *img, int bitspp, int colourmaplength) {
   }
   
   if (i_io_write(ig, palbuf, palbsize) != palbsize) {
-    i_push_error(errno, "could not write targa colourmap");
+    i_push_error(errno, "could not write targa colormap");
     return 0;
   }
   myfree(palbuf);
@@ -773,8 +773,7 @@ i_readtga_wiol(io_glue *ig, int length) {
 			bpp_to_bytes(header.colourmapdepth),
 			header.colourmaplength)
       ) {
-    i_push_error(0, "Targa Image has none of 15/16/24/32 pixel layout");
-    if (idstring) myfree(idstring);
+    /* tga_palette_read() sets a message */
     if (img) i_img_destroy(img);
     return NULL;
   }
