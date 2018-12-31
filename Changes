@@ -10,6 +10,12 @@ Coverity finally finished a build, fix a few problems:
    space could result in memory leaks.  This can probably only be
    reproduced on very wide floating-point sample images.
 
+ - convert an array style function parameter pointer to pointer style
+   to prevent confusing Coverity in the T1 bounding box implementation
+
+ - initialize a pointer to prevent Coverity complaining in polygon
+   drawing (it should always end up being set.)
+
 Imager 1.008 - 31 Dec 2018
 ============
 

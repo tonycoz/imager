@@ -572,7 +572,7 @@ i_poly_poly_aa_low(i_img *im, int count, const i_polygon_t *polys,
 	k = 0;
 	while (k < clc) {
 	  p_line *left = lset + tllist[k++].n;
-	  p_line *current;
+	  p_line *current = NULL;
 	  int acc = left->dir;
 
 	  while (k < clc && acc) {
