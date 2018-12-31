@@ -360,7 +360,7 @@ function to get a strings bounding box given the font id and sizes
 */
 
 int
-i_t1_bbox(i_t1_font_t font, double points,const char *str,size_t len, i_img_dim cords[6], int utf8,char const *flags) {
+i_t1_bbox(i_t1_font_t font, double points,const char *str,size_t len, i_img_dim *cords, int utf8,char const *flags) {
   BBox bbox;
   BBox gbbox;
   int mod_flags = t1_get_flags(flags);

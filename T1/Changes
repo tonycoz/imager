@@ -1,3 +1,11 @@
+Imager::Font::T1 1.026
+======================
+
+Coverity detected issue:
+
+ - adjust a pointer parameter from an array-style declaration with 6
+   elements to pointer style (since it hasn't been 6 for years.)
+
 Imager::Font::T1 1.024
 ======================
 
