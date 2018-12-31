@@ -1514,7 +1514,7 @@ static void reorder(pbox prescan[512]) {
   c.cand++;
   c.pdc=c.pixcnt/(c.cand*c.cand); 
   /*  c.pdc=c.pixcnt/c.cand; */
-  while(c.pdc < prescan[nidx+1].pdc && nidx < 511) {
+  while(nidx < 511 && c.pdc < prescan[nidx+1].pdc) {
     prescan[nidx]=prescan[nidx+1];
     nidx++;
   }

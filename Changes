@@ -18,6 +18,9 @@ Coverity finally finished a build, fix a few problems:
  - initialize a pointer to prevent Coverity complaining in polygon
    drawing (it should always end up being set.)
 
+ - addi style makemap could potentially read one past the end of an
+   array.
+
 Imager 1.008 - 31 Dec 2018
 ============
 
