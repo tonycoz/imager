@@ -7,7 +7,7 @@
 # Change 1..1 below to 1..last_test_to_print .
 # (It may become useful if the test is moved to ./t subdirectory.)
 
-use Test::More tests => 73;
+use Test::More;
 
 use Imager;
 use Imager::Test qw(is_fcolor3 is_fcolor4 is_color4);
@@ -30,8 +30,8 @@ for (1..1000) {
 my $fail;
 for (@foo) {
   Imager::Color::set_internal($_, 128, 128, 128, 128) == $_ or ++$fail;
-  Imager::Color::set_internal($_, 128, 128, 128, 128) == $_ or ++$fail;
-  test_col($_, 128, 128, 128, 128) or ++$fail;
+  Imager::Color::set_internal($_, 128, 129, 130, 131) == $_ or ++$fail;
+  test_col($_, 128, 129, 130, 131) or ++$fail;
 }
 ok(!$fail, 'consitency check');
 
@@ -268,6 +268,8 @@ is_color4(Imager::Color->new(builtin=>'black'), 0, 0, 0, 255, 'builtin black');
   is($s,0,'black saturation');
   is($v,0,'black value');
 }
+
+done_testing();
 
 sub test_col {
   my ($c, $r, $g, $b, $a) = @_;

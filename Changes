@@ -26,6 +26,11 @@ Coverity finally finished a build, fix a few problems:
    Negative values (which Coverity didn't complain about) could also
    cause problems.
 
+ - the Imager::Color set_internal() interal method no longer
+   calls the over-complicated ICL_set_internal() (which is retained
+   only for the old API.)  Coverity complained that this leaked, but
+   this could only occur with an invalid (NULL pointer) color object.
+
 Imager 1.008 - 31 Dec 2018
 ============
 
