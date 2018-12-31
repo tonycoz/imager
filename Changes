@@ -1,12 +1,17 @@
 Imager release history.  Older releases can be found in Changes.old
 
- - moved EXIF handling from Imager::File::JPEG to core Imager
+Imager 1.008 - 31 Dec 2018
+============
 
- - added some more file extension to image file type mappings
+ - moved EXIF handling from Imager::File::JPEG to core Imager
+   This allows file formats that store EXIF data as blobs similarly
+   to JPEG to re-use this code. (such as Imager::File::WEBP)
+
+ - added some more file extensions to image file type mappings
 
  - added add_type_extensions() class method
 
-Imager 1.007
+Imager 1.007 - 24 Nov 2018
 ============
 
  - add png_compression_level tag for writing PNG files.
