@@ -672,8 +672,10 @@ i_new_hatch_low(const i_color *fg, const i_color *bg,
     memcpy(fill->hatch, cust_hatch, 8);
   }
   else {
-    if (hatch > sizeof(builtin_hatches)/sizeof(*builtin_hatches)) 
+    if (hatch >= sizeof(builtin_hatches)/sizeof(*builtin_hatches)
+	|| hatch < 0) {
       hatch = 0;
+    }
     memcpy(fill->hatch, builtin_hatches[hatch], 8);
   }
   fill->dx = dx & 7;

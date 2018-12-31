@@ -21,6 +21,11 @@ Coverity finally finished a build, fix a few problems:
  - addi style makemap could potentially read one past the end of an
    array.
 
+ - supplying a numeric hatch of 32 to Imager::Fill->new(hatch => ...)
+   would result in read beyond the end of the built-in hatch array.
+   Negative values (which Coverity didn't complain about) could also
+   cause problems.
+
 Imager 1.008 - 31 Dec 2018
 ============
 
