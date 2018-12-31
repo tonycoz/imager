@@ -50,7 +50,7 @@ Adapted from pnmscale.
 */
 i_img *
 i_scale_mixing(i_img *src, i_img_dim x_out, i_img_dim y_out) {
-  i_img *result;
+  i_img *result = NULL;
   i_fcolor *accum_row = NULL;
   i_img_dim x, y;
   int ch;
@@ -79,15 +79,15 @@ i_scale_mixing(i_img *src, i_img_dim x_out, i_img_dim y_out) {
 
   y_scale = y_out / (double)src->ysize;
 
-  result = i_sametype_chans(src, x_out, y_out, src->channels);
-  if (!result)
-    return NULL;
-
   accum_row_bytes = sizeof(i_fcolor) * src->xsize;
   if (accum_row_bytes / sizeof(i_fcolor) != src->xsize) {
     i_push_error(0, "integer overflow allocating accumulator row buffer");
     return NULL;
   }
+
+  result = i_sametype_chans(src, x_out, y_out, src->channels);
+  if (!result)
+    return NULL;
 
   accum_row  = mymalloc(accum_row_bytes);
 
@@ -98,11 +98,15 @@ i_scale_mixing(i_img *src, i_img_dim x_out, i_img_dim y_out) {
 
   in_row_bytes = sizeof(IM_COLOR) * src->xsize;
   if (in_row_bytes / sizeof(IM_COLOR) != src->xsize) {
+    myfree(accum_row);
+    i_img_destroy(result);
     i_push_error(0, "integer overflow allocating input row buffer");
     return NULL;
   }
   out_row_bytes = sizeof(IM_COLOR) * x_out;
   if (out_row_bytes / sizeof(IM_COLOR) != x_out) {
+    myfree(accum_row);
+    i_img_destroy(result);
     i_push_error(0, "integer overflow allocating output row buffer");
     return NULL;
   }

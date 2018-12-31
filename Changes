@@ -5,6 +5,11 @@ Coverity finally finished a build, fix a few problems:
  - reading a color-mapped TGA file with an id string would cause a
    double-free if the palette was truncated.
 
+ - mixing scaling to sizes where the accumulator row, the working
+   output row or the working input row didn't fit into the address
+   space could result in memory leaks.  This can probably only be
+   reproduced on very wide floating-point sample images.
+
 Imager 1.008 - 31 Dec 2018
 ============
 
