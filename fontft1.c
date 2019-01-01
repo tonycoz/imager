@@ -972,7 +972,7 @@ interface for generating single channel raster of text (internal)
 
 static
 int
-i_tt_rasterize( TT_Fonthandle *handle, TT_Raster_Map *bit, i_img_dim cords[6], double points, char const* txt, size_t len, int smooth, int utf8 ) {
+i_tt_rasterize( TT_Fonthandle *handle, TT_Raster_Map *bit, i_img_dim *cords, double points, char const* txt, size_t len, int smooth, int utf8 ) {
   int inst;
   i_img_dim width, height;
   TT_Raster_Map small_bit;

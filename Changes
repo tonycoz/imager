@@ -15,6 +15,9 @@ Coverity finally finished a build, fix a few problems:
 
  - Similarly in the FT1 bounding box implementation.
 
+ - Similarly for the i_tt_rasterize() function in the FT1
+   implementation.
+
  - initialize a pointer to prevent Coverity complaining in polygon
    drawing (it should always end up being set.)
 
