@@ -748,7 +748,7 @@ static const IM_FILL_COMBINE_F IM_SUFFIX(combines)[] =
 
 void i_get_combine(int combine, i_fill_combine_f *color_func, 
                    i_fill_combinef_f *fcolor_func) {
-  if (combine < 0 || combine > sizeof(combines_8) / sizeof(*combines_8))
+  if (combine < 0 || combine >= sizeof(combines_8) / sizeof(*combines_8))
     combine = 0;
 
   *color_func = combines_8[combine];

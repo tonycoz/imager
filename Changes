@@ -44,6 +44,11 @@ Coverity finally finished a build, fix a few problems:
    implementation of the is_bilevel() method could leave the fetched
    colors uninitialized.  Added a return value check.
 
+ - a numeric combining mode of 13 (eg. as a parameter to
+   Imager::Fill->new())could cause an invalid array read in
+   i_get_combine() due to a fencepost error in validating the combine
+   number.
+
 Imager 1.008 - 31 Dec 2018
 ============
 
