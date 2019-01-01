@@ -37,6 +37,10 @@ Coverity finally finished a build, fix a few problems:
    that function with inconsistent parameters, but a
    belt-and-suspenders check was added.
 
+ - Coverity complained a call to i_getcolors(), used by the
+   implementation of the is_bilevel() method could leave the fetched
+   colors uninitialized.  Added a return value check.
+
 Imager 1.008 - 31 Dec 2018
 ============
 

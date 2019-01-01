@@ -1802,7 +1802,8 @@ i_img_is_monochrome(i_img *im, int *zero_is_white) {
   if (im->type == i_palette_type
       && i_colorcount(im) == 2) {
     i_color colors[2];
-    i_getcolors(im, 0, colors, 2);
+    if (!i_getcolors(im, 0, colors, 2))
+      return 0;
     if (im->channels == 3) {
       if (colors[0].rgb.r == 255 && 
           colors[0].rgb.g == 255 &&
