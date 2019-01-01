@@ -1,7 +1,7 @@
 #!perl -w
 use strict;
-use Test::More tests => 10;
-use Imager::Test qw(is_image);
+use Test::More;
+use Imager::Test qw(is_image test_image);
 
 -d "testout" or mkdir "testout";
 
@@ -61,3 +61,16 @@ SKIP: {
   ok($out, "map()");
   is_image($out, $cmp, "test map output");
 }
+
+{
+  # test with zero mask: coverity detected a bad channel index problem
+  # that only applies in this case
+  my $im = test_image();
+  $im->setmask(mask => 0x80);
+  is($im->getmask, 0x80, "check we set mask");
+  my @map = ( map int $_ / 2, 0 .. 255 );
+  my $out = $im->map(maps => [ (undef) x 3 ]);
+  ok($out, "map done");
+}
+
+done_testing();

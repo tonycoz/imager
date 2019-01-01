@@ -31,6 +31,12 @@ Coverity finally finished a build, fix a few problems:
    only for the old API.)  Coverity complained that this leaked, but
    this could only occur with an invalid (NULL pointer) color object.
 
+ - the underlying implementation of the map() method could read before
+   the beginning on an allocated array if supplied with inconsistent
+   parameters, which Coverity complained about.  No Imager code calls
+   that function with inconsistent parameters, but a
+   belt-and-suspenders check was added.
+
 Imager 1.008 - 31 Dec 2018
 ============
 
