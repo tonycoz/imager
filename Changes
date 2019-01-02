@@ -72,6 +72,9 @@ High severity:
  - avoid dead code in i_ft2_glyph_name(), which is the implementation
    of glyph_names() for FT2.  CID 185342.
 
+ - avoid dead code in i_t1_glyph_names(), which is the implementation
+   of glyph_names() for T1.  CID 185322.
+
  - avoid an unneeded EXTEND() call when the FT2 has_chars()
    implementation returns 0. CID 185292.
 

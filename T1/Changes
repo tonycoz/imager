@@ -6,6 +6,9 @@ Coverity detected issue:
  - adjust a pointer parameter from an array-style declaration with 6
    elements to pointer style (since it hasn't been 6 for years.)
 
+ - avoid dead code in i_t1_glyph_names(), which is the implementation
+   of glyph_names() for T1.  CID 185322.
+
 Imager::Font::T1 1.024
 ======================
 

@@ -8,8 +8,6 @@ use Cwd qw(getcwd abs_path);
 
 #$Imager::DEBUG=1;
 
-plan tests => 110;
-
 ok($Imager::formats{t1}, "must have t1");
 
 -d "testout" or mkdir "testout";
@@ -193,6 +191,9 @@ SKIP:
     my $text = pack("C*", 0xE2, 0x80, 0xA1); # "\x{2021}" as utf-8
     @glyph_names = $font->glyph_names(string=>$text, utf8=>1);
     is($glyph_names[0], undef, "expect no glyph_name for \\x{20A1}");
+
+    my @bad = $font->glyph_names(string => "ab\xC0", utf8 => 1);
+    is(@bad, 0, "should be no results for bad utf8");
 
     # make sure a missing string parameter is handled correctly
     eval {
@@ -406,6 +407,7 @@ SKIP:
   }
 }
 
+done_testing();
 
 #malloc_state();
 

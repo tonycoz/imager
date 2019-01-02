@@ -195,16 +195,14 @@ i_t1_glyph_names(font, text_sv, utf8 = 0)
             ch = *text++;
             --len;
           }
-          EXTEND(SP, count+1);
+          EXTEND(SP, 1);
           if (i_t1_glyph_name(font, ch, name, sizeof(name))) {
-            ST(count) = sv_2mortal(newSVpv(name, 0));
+            PUSHs(sv_2mortal(newSVpv(name, 0)));
           }
           else {
-            ST(count) = &PL_sv_undef;
+            PUSHs(&PL_sv_undef);
           }
-	  ++count;
         }
-	XSRETURN(count);
 
 int
 i_t1_CLONE_SKIP(...)
