@@ -2471,10 +2471,12 @@ i_tt_has_chars(handle, text_sv, utf8)
         work = mymalloc(len);
         count = i_tt_has_chars(handle, text, len, utf8, work);
         if (GIMME_V == G_ARRAY) {
-          EXTEND(SP, count);
-          for (i = 0; i < count; ++i) {
-            PUSHs(boolSV(work[i]));
-          }
+	  if (count) {
+            EXTEND(SP, count);
+            for (i = 0; i < count; ++i) {
+              PUSHs(boolSV(work[i]));
+            }
+	  }
         }
         else {
           EXTEND(SP, 1);
