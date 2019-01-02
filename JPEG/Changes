@@ -1,3 +1,13 @@
+Imager-File-JPEG 0.92
+=====================
+
+ - move common EXIF parsing into core Imager.
+
+Imager-File-JPEG 0.91
+=====================
+
+ - Makefile.PL improvements
+
 Imager-File-JPEG 0.90
 =====================
 
