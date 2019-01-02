@@ -1,6 +1,6 @@
 #!perl -w
 use strict;
-use Test::More tests => 204;
+use Test::More;
 use Cwd qw(getcwd abs_path);
 
 use Imager qw(:all);
@@ -332,6 +332,10 @@ SKIP:
       my @names = $exfont->glyph_names(string=>$text,
                                        utf8=>1, reliable_only=>0);
       is($names[0], "hyphentwo", "check utf8 glyph name");
+
+      # make sure we get an empty list with bad utf8
+      my @bad = $exfont->glyph_names(string => "ab\xC0", utf8 => 1);
+      is(@bad, 0, "properly got empty result with bad utf8");
     }
   }
 
@@ -594,6 +598,8 @@ SKIP:
 }
 
 Imager->close_log();
+
+done_testing();
 
 END {
   unless ($ENV{IMAGER_KEEP_FILES}) {

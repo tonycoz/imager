@@ -1,3 +1,9 @@
+Imager-Font-FT2 0.95
+====================
+
+ - avoid dead code in i_ft2_glyph_name(), which is the implementation
+   of glyph_names().  CID 185342.
+
 Imager-Font-FT2 0.94
 ====================
 

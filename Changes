@@ -69,6 +69,9 @@ High severity:
  - avoid dead code in i_get_anonymous_color_histo(), which is the
    implementation of getcolorusage().  CID 185327.
 
+ - avoid dead code in i_ft2_glyph_name(), which is the implementation
+   of glyph_names() for FT2.  CID 185342.
+
 Imager 1.008 - 31 Dec 2018
 ============
 
