@@ -1276,11 +1276,11 @@ make_gif_map(i_quantize *quant, i_img *img, int want_trans) {
   }
   
   map = MakeMapObject(map_size, colors);
-  mm_log((1, "XXX map is at %p and colors at %p\n", map, map->Colors));
   if (!map) {
     i_push_error(0, "Could not create color map object");
     return NULL;
   }
+  mm_log((1, "XXX map is at %p and colors at %p\n", map, map->Colors));
 #if IMGIFLIB_API_VERSION >= 500
   map->SortFlag = 0;
 #endif
