@@ -2,52 +2,56 @@ Imager release history.  Older releases can be found in Changes.old
 
 Coverity finally finished a build, fix a few problems:
 
+High severity:
+
  - reading a color-mapped TGA file with an id string would cause a
-   double-free if the palette was truncated.
+   double-free if the palette was truncated. CID 185317.
 
  - mixing scaling to sizes where the accumulator row, the working
    output row or the working input row didn't fit into the address
    space could result in memory leaks.  This can probably only be
-   reproduced on very wide floating-point sample images.
+   reproduced on very wide floating-point sample images. CID 185318.
 
  - convert an array style function parameter pointer to pointer style
    to prevent confusing Coverity in the T1 bounding box implementation.
+   CID 185343.
 
- - Similarly in the FT1 bounding box implementation.
+ - Similarly in the FT1 bounding box implementation. CID 185338.
 
  - Similarly for the i_tt_rasterize() function in the FT1
-   implementation.
+   implementation.  CID 185303.
 
  - initialize a pointer to prevent Coverity complaining in polygon
-   drawing (it should always end up being set.)
+   drawing (it should always end up being set.) CID 185341.
 
  - addi style makemap could potentially read one past the end of an
-   array.
+   array. CID 185337.
 
  - supplying a numeric hatch of 32 to Imager::Fill->new(hatch => ...)
    would result in read beyond the end of the built-in hatch array.
    Negative values (which Coverity didn't complain about) could also
-   cause problems.
+   cause problems.  CID 185331.
 
  - the Imager::Color set_internal() interal method no longer
    calls the over-complicated ICL_set_internal() (which is retained
    only for the old API.)  Coverity complained that this leaked, but
    this could only occur with an invalid (NULL pointer) color object.
+   CID 185323.
 
  - the underlying implementation of the map() method could read before
    the beginning on an allocated array if supplied with inconsistent
    parameters, which Coverity complained about.  No Imager code calls
    that function with inconsistent parameters, but a
-   belt-and-suspenders check was added.
+   belt-and-suspenders check was added. CID 185315.
 
  - Coverity complained a call to i_getcolors(), used by the
    implementation of the is_bilevel() method could leave the fetched
-   colors uninitialized.  Added a return value check.
+   colors uninitialized.  Added a return value check. CID 185308.
 
  - a numeric combining mode of 13 (eg. as a parameter to
    Imager::Fill->new())could cause an invalid array read in
    i_get_combine() due to a fencepost error in validating the combine
-   number.
+   number.  CID 185299.
 
 Imager 1.008 - 31 Dec 2018
 ============
