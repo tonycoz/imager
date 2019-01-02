@@ -696,7 +696,7 @@ int read_packed(io_glue *ig, const char *format, ...) {
 
     case 'd':
       p = va_arg(ap, long *);
-      *p = bufp[0] + (bufp[1] << 8) + (bufp[2] << 16) + (bufp[3] << 24);
+      *p = bufp[0] + (bufp[1] << 8) + (bufp[2] << 16) + ((unsigned long)bufp[3] << 24);
       bufp += 4;
       break;
 
