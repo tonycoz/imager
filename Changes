@@ -79,6 +79,9 @@ High severity:
    unsigned values to 64-bit signed.  I believe this is harmless. CID
    185319.
 
+ - remove an unneeded check when terminating the stream for JPEG
+   writing.  CID 185347.
+
 Imager 1.008 - 31 Dec 2018
 ============
 

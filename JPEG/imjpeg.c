@@ -237,7 +237,7 @@ wiol_term_destination (j_compress_ptr cinfo) {
     ERREXIT(cinfo, JERR_FILE_WRITE);
   }
 
-  if (dest != NULL) myfree(dest->buffer);
+  myfree(dest->buffer);
 }
 
 
