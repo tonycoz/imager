@@ -1,6 +1,6 @@
 #!perl -w
 use strict;
-use Test::More tests => 97;
+use Test::More;
 
 $|=1;
 
@@ -151,6 +151,10 @@ SKIP:
     is($glyph_names[0], 'exclam', "check exclam name OO");
     ok(!defined($glyph_names[1]), "check for no J name OO");
     is($glyph_names[2], 'slash', "check slash name OO");
+
+    # check invalid utf8
+    my @bad = $hcfont->glyph_names(string => "!/\xC0", utf8 => 1);
+    is(@bad, 0, "should return nothing for invalid UTF-8");
     
     print "# ** name table of the test font **\n";
     Imager::i_tt_dump_names($hcfont->{id});
@@ -331,3 +335,5 @@ SKIP:
 
   ok(1, "end of code");
 }
+
+done_testing();

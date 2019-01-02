@@ -64,6 +64,8 @@ High severity:
  - gradgen() allocated the wrong amount of space (always too much) for
    the color array.  CID 185291.
 
+ - avoid dead code in i_tt_glyph_names(). CID 185321.
+
 Imager 1.008 - 31 Dec 2018
 ============
 

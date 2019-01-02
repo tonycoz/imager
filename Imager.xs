@@ -2512,7 +2512,6 @@ i_tt_glyph_name(handle, text_sv, utf8 = 0)
         size_t len;
         size_t outsize;
         char name[255];
-	SSize_t count = 0;
       PPCODE:
         i_clear_error();
         text = SvPV(text_sv, work_len);
@@ -2534,16 +2533,14 @@ i_tt_glyph_name(handle, text_sv, utf8 = 0)
             ch = *text++;
             --len;
           }
-          EXTEND(SP, count+1);
+          EXTEND(SP, 1);
           if ((outsize = i_tt_glyph_name(handle, ch, name, sizeof(name))) != 0) {
-	    ST(count) = sv_2mortal(newSVpv(name, 0));
+	    PUSHs(sv_2mortal(newSVpv(name, 0)));
           }
           else {
-	    ST(count) = &PL_sv_undef;
+	    PUSHs(&PL_sv_undef);
           }
-          ++count;
         }
-	XSRETURN(count);
 
 #endif 
 
