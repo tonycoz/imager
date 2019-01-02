@@ -141,7 +141,7 @@ calloc_temp(pTHX_ size_t size) {
 #define i_img_dimPtr(size) ((i_img_dim *)calloc_temp(aTHX_ sizeof(i_img_dim) * (size)))
 #define SvI_img_dim(sv, pname) (SvIV(sv))
 
-#define i_colorPtr(size) ((i_color *)calloc_temp(aTHX_ sizeof(i_color *) * (size)))
+#define i_colorPtr(size) ((i_color *)calloc_temp(aTHX_ sizeof(i_color) * (size)))
 
 #define SvI_color(sv, pname) S_sv_to_i_color(aTHX_ sv, pname)
 

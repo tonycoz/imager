@@ -61,6 +61,9 @@ High severity:
  - avoid accessing a possibly NULL map from MakeMapObject() in a
    logging call. (GIF) CID 185296.
 
+ - gradgen() allocated the wrong amount of space (always too much) for
+   the color array.  CID 185291.
+
 Imager 1.008 - 31 Dec 2018
 ============
 
