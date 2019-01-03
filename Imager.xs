@@ -3138,22 +3138,20 @@ i_img_pal_new(x, y, channels, maxpal)
 	int	maxpal
 
 Imager::ImgRaw
-i_img_to_pal(src, quant)
+i_img_to_pal(src, quant_hv)
         Imager::ImgRaw src
+	HV *quant_hv
       PREINIT:
         HV *hv;
         i_quantize quant;
       CODE:
-        if (!SvROK(ST(1)) || ! SvTYPE(SvRV(ST(1))))
-          croak("i_img_to_pal: second argument must be a hash ref");
-        hv = (HV *)SvRV(ST(1));
         memset(&quant, 0, sizeof(quant));
 	quant.version = 1;
         quant.mc_size = 256;
-	ip_handle_quant_opts(aTHX_ &quant, hv);
+	ip_handle_quant_opts(aTHX_ &quant, quant_hv);
         RETVAL = i_img_to_pal(src, &quant);
         if (RETVAL) {
-          ip_copy_colors_back(aTHX_ hv, &quant);
+          ip_copy_colors_back(aTHX_ quant_hv, &quant);
         }
 	ip_cleanup_quant_opts(aTHX_ &quant);
       OUTPUT:
