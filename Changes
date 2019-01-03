@@ -85,6 +85,12 @@ High severity:
  - remove an unneeded check when terminating the stream for JPEG
    writing.  CID 185347.
 
+ - skip an unneeded check when freeing the combine temp buffer in the
+   fountain filter.  CID 185286.
+
+ - check the combine function pointer consistently rather than the
+   combine code in one place in the fountain filter.
+
 Imager 1.008 - 31 Dec 2018
 ============
 

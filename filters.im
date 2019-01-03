@@ -1768,8 +1768,9 @@ i_fountain(i_img *im, double xa, double ya, double xb, double yb,
   line = mymalloc(line_bytes); /* checked 17feb2005 tonyc */
 
   i_get_combine(combine, &combine_func, &combinef_func);
-  if (combinef_func)
+  if (combinef_func) {
     work = mymalloc(line_bytes); /* checked 17feb2005 tonyc */
+  }
 
   fount_init_state(&state, xa, ya, xb, yb, type, repeat, combine, 
                    super_sample, ssample_param, count, segs);
@@ -1784,18 +1785,18 @@ i_fountain(i_img *im, double xa, double ya, double xb, double yb,
       else
         got_one = state.ssfunc(&c, x, y, &state);
       if (got_one) {
-        if (combine)
+        if (combinef_func)
           work[x] = c;
         else 
           line[x] = c;
       }
     }
-    if (combine)
+    if (combinef_func)
       combinef_func(line, work, im->channels, im->xsize);
     i_plinf(im, 0, im->xsize, y, line);
   }
   fount_finish_state(&state);
-  if (work) myfree(work);
+  myfree(work);
   myfree(line);
 
   return 1;
