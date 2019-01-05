@@ -537,18 +537,29 @@ do_io_new_cb(pTHX_ SV *writecb, SV *readcb, SV *seekcb, SV *closecb) {
 }
 
 struct value_name {
-  char *name;
+  const char *name;
   int value;
 };
-static int lookup_name(const struct value_name *names, int count, char *name, int def_value)
+static int
+lookup_name(const struct value_name *names, int count, char *name, int def_value, int push_errors, const char *id, int *failed)
 {
   int i;
+
+  if (push_errors)
+    *failed = 0;
+
   for (i = 0; i < count; ++i)
     if (strEQ(names[i].name, name))
       return names[i].value;
 
+  if (push_errors) {
+    i_push_errorf(0, "unknown value '%s' for %s", name, id);
+    *failed = 1;
+  }
+
   return def_value;
 }
+
 static struct value_name transp_names[] =
 {
   { "none", tr_none },
@@ -602,14 +613,14 @@ static struct value_name orddith_names[] =
 };
 
 /* look through the hash for quantization options */
-static void
-ip_handle_quant_opts(pTHX_ i_quantize *quant, HV *hv)
+static int
+ip_handle_quant_opts_low(pTHX_ i_quantize *quant, HV *hv, int push_errors)
 {
-  /*** POSSIBLY BROKEN: do I need to unref the SV from hv_fetch ***/
   SV **sv;
   int i;
   STRLEN len;
   char *str;
+  int failed = 0;
 
   quant->mc_colors = mymalloc(quant->mc_size * sizeof(i_color));
 
@@ -617,7 +628,9 @@ ip_handle_quant_opts(pTHX_ i_quantize *quant, HV *hv)
   if (sv && *sv && (str = SvPV(*sv, len))) {
     quant->transp = 
       lookup_name(transp_names, sizeof(transp_names)/sizeof(*transp_names), 
-		  str, tr_none);
+		  str, tr_none, push_errors, "transp", &failed);
+    if (failed)
+       return 0;
     if (quant->transp != tr_none) {
       quant->tr_threshold = 127;
       sv = hv_fetch(hv, "tr_threshold", 12, 0);
@@ -627,13 +640,18 @@ ip_handle_quant_opts(pTHX_ i_quantize *quant, HV *hv)
     if (quant->transp == tr_errdiff) {
       sv = hv_fetch(hv, "tr_errdiff", 10, 0);
       if (sv && *sv && (str = SvPV(*sv, len)))
-	quant->tr_errdiff = lookup_name(errdiff_names, sizeof(errdiff_names)/sizeof(*errdiff_names), str, ed_floyd);
+	quant->tr_errdiff = lookup_name(errdiff_names, sizeof(errdiff_names)/sizeof(*errdiff_names), str, ed_floyd, push_errors, "tr_errdiff", &failed);
+	if (failed)
+	  return 0;
     }
     if (quant->transp == tr_ordered) {
       quant->tr_orddith = od_tiny;
       sv = hv_fetch(hv, "tr_orddith", 10, 0);
-      if (sv && *sv && (str = SvPV(*sv, len)))
-	quant->tr_orddith = lookup_name(orddith_names, sizeof(orddith_names)/sizeof(*orddith_names), str, od_random);
+      if (sv && *sv && (str = SvPV(*sv, len))) {
+	quant->tr_orddith = lookup_name(orddith_names, sizeof(orddith_names)/sizeof(*orddith_names), str, od_random, push_errors, "tr_orddith", &failed);
+	if (failed)
+	   return 0;
+      }
 
       if (quant->tr_orddith == od_custom) {
 	sv = hv_fetch(hv, "tr_map", 6, 0);
@@ -658,7 +676,9 @@ ip_handle_quant_opts(pTHX_ i_quantize *quant, HV *hv)
   sv = hv_fetch(hv, "make_colors", 11, 0);
   if (sv && *sv && (str = SvPV(*sv, len))) {
     quant->make_colors = 
-      lookup_name(make_color_names, sizeof(make_color_names)/sizeof(*make_color_names), str, mc_median_cut);
+      lookup_name(make_color_names, sizeof(make_color_names)/sizeof(*make_color_names), str, mc_median_cut, push_errors, "make_colors", &failed);
+    if (failed)
+      return 0;
   }
   sv = hv_fetch(hv, "colors", 6, 0);
   if (sv && *sv && SvROK(*sv) && SvTYPE(SvRV(*sv)) == SVt_PVAV) {
@@ -675,6 +695,10 @@ ip_handle_quant_opts(pTHX_ i_quantize *quant, HV *hv)
 	i_color *col = INT2PTR(i_color *, SvIV((SV*)SvRV(*sv1)));
 	quant->mc_colors[i] = *col;
       }
+      else if (push_errors) {
+        i_push_errorf(0, "colors[%d] isn't an Imager::Color object", i);
+	return 0;
+      }
     }
   }
   sv = hv_fetch(hv, "max_colors", 10, 0);
@@ -687,11 +711,15 @@ ip_handle_quant_opts(pTHX_ i_quantize *quant, HV *hv)
   quant->translate = pt_closest;
   sv = hv_fetch(hv, "translate", 9, 0);
   if (sv && *sv && (str = SvPV(*sv, len))) {
-    quant->translate = lookup_name(translate_names, sizeof(translate_names)/sizeof(*translate_names), str, pt_closest);
+    quant->translate = lookup_name(translate_names, sizeof(translate_names)/sizeof(*translate_names), str, pt_closest, push_errors, "translate", &failed);
+    if (failed)
+      return 0;
   }
   sv = hv_fetch(hv, "errdiff", 7, 0);
   if (sv && *sv && (str = SvPV(*sv, len))) {
-    quant->errdiff = lookup_name(errdiff_names, sizeof(errdiff_names)/sizeof(*errdiff_names), str, ed_floyd);
+    quant->errdiff = lookup_name(errdiff_names, sizeof(errdiff_names)/sizeof(*errdiff_names), str, ed_floyd, push_errors, "errdiff", &failed);
+    if (failed)
+      return 0;
   }
   if (quant->translate == pt_errdiff && quant->errdiff == ed_custom) {
     /* get the error diffusion map */
@@ -716,7 +744,12 @@ ip_handle_quant_opts(pTHX_ i_quantize *quant, HV *hv)
 	for (i = 0; i < len; ++i) {
 	  SV **sv2 = av_fetch(av, i, 0);
 	  if (sv2 && *sv2) {
-	    quant->ed_map[i] = SvIV(*sv2);
+	    IV iv = SvIV(*sv2);
+	    if (push_errors && iv < 0) {
+	      i_push_errorf(0, "errdiff_map values must be non-negative, errdiff[%d] is negative", i);
+	      return 0;
+	    }
+	    quant->ed_map[i] = iv;
 	    sum += quant->ed_map[i];
 	  }
 	}
@@ -726,12 +759,18 @@ ip_handle_quant_opts(pTHX_ i_quantize *quant, HV *hv)
 	myfree(quant->ed_map);
 	quant->ed_map = 0;
 	quant->errdiff = ed_floyd;
+	if (push_errors) {
+	  i_push_error(0, "error diffusion map must contain some non-zero values");
+	  return 0;
+	}
       }
     }
   }
   sv = hv_fetch(hv, "perturb", 7, 0);
   if (sv && *sv)
     quant->perturb = SvIV(*sv);
+
+  return 1;
 }
 
 static void
@@ -739,6 +778,20 @@ ip_cleanup_quant_opts(pTHX_ i_quantize *quant) {
   myfree(quant->mc_colors);
   if (quant->ed_map)
     myfree(quant->ed_map);
+}
+
+static int
+ip_handle_quant_opts2(pTHX_ i_quantize *quant, HV *hv) {
+  int result = ip_handle_quant_opts_low(aTHX_ quant, hv, 1);
+  if (!result) {
+     ip_cleanup_quant_opts(aTHX_ quant);
+  }
+  return result;
+}
+
+static void
+ip_handle_quant_opts(pTHX_ i_quantize *quant, HV *hv) {
+  (void)ip_handle_quant_opts_low(aTHX_ quant, hv, 0);
 }
 
 /* copies the color map from the hv into the colors member of the HV */
@@ -786,7 +839,7 @@ S_get_poly_fill_mode(pTHX_ SV *sv) {
   else {
     return (i_poly_fill_mode_t)lookup_name
     (poly_fill_mode_names, ARRAY_COUNT(poly_fill_mode_names),
-     SvPV_nolen(sv), i_pfm_evenodd);
+     SvPV_nolen(sv), i_pfm_evenodd, 0, NULL, NULL);
   }
 }
 
@@ -1056,7 +1109,8 @@ static im_pl_ext_funcs im_perl_funcs =
   IMAGER_PL_API_LEVEL,
   ip_handle_quant_opts,
   ip_cleanup_quant_opts,
-  ip_copy_colors_back
+  ip_copy_colors_back,
+  ip_handle_quant_opts2
 };
 
 #define PERL_PL_SET_GLOBAL_CALLBACKS \
@@ -3148,7 +3202,10 @@ i_img_to_pal(src, quant_hv)
         memset(&quant, 0, sizeof(quant));
 	quant.version = 1;
         quant.mc_size = 256;
-	ip_handle_quant_opts(aTHX_ &quant, quant_hv);
+	i_clear_error();
+	if (!ip_handle_quant_opts2(aTHX_ &quant, quant_hv)) {
+	   XSRETURN_EMPTY;
+	}
         RETVAL = i_img_to_pal(src, &quant);
         if (RETVAL) {
           ip_copy_colors_back(aTHX_ quant_hv, &quant);
@@ -3185,7 +3242,9 @@ i_img_make_palette(HV *quant_hv, ...)
         memset(&quant, 0, sizeof(quant));
 	quant.version = 1;
 	quant.mc_size = 256;
-        ip_handle_quant_opts(aTHX_ &quant, quant_hv);
+        if (!ip_handle_quant_opts2(aTHX_ &quant, quant_hv)) {
+	  XSRETURN_EMPTY;
+	}
 	i_quant_makemap(&quant, imgs, count);
 	EXTEND(SP, quant.mc_count);
 	for (i = 0; i < quant.mc_count; ++i) {

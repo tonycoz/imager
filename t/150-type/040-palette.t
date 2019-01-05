@@ -1,7 +1,7 @@
 #!perl -w
 # some of this is tested in t01introvert.t too
 use strict;
-use Test::More tests => 226;
+use Test::More;
 BEGIN { use_ok("Imager", ':handy'); }
 
 use Imager::Test qw(image_bounds_checks test_image is_color3 isnt_image is_color4 is_fcolor3);
@@ -438,6 +438,11 @@ cmp_ok(Imager->errstr, '=~', qr/Channels must be positive and <= 4/,
     is_color4($map[33], 33, 33, 33, 255, "check map[2]");
     is_color4($map[255], 255, 255, 255, 255, "check map[15]");
   }
+  {
+    my @map = Imager->make_palette({ make_colors => "xxx" }, $im);
+    is(@map, 0, "fail with bad make_colors");
+    is(Imager->errstr, "unknown value 'xxx' for make_colors");
+  }
 }
 
 my $psamp_outside_error = "Image position outside of image";
@@ -627,7 +632,26 @@ my $psamp_outside_error = "Image position outside of image";
      "check error message");
 }
 
+{
+  # check error handling with zero error diffusion matrix
+  my $im = test_image;
+  my $new = $im->to_paletted
+    (
+     make_colors => "webmap",
+     translate => "errdiff",
+     errdiff => "custom",
+     errdiff_width => 2,
+     errdiff_height => 2,
+     errdiff_map => [ 0, 0, 0, 0 ],
+    );
+  ok(!$new, "can't errdiff with an all zero map");
+  is($im->errstr, "error diffusion map must contain some non-zero values",
+     "check error message");
+}
+
 Imager->close_log;
+
+done_testing();
 
 unless ($ENV{IMAGER_KEEP_FILES}) {
   unlink "testout/t023palette.log"

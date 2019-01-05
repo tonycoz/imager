@@ -113,7 +113,8 @@ is(Imager::i_img_type($im_pal), 0, "pal img shouldn't be paletted now");
      make_colors => 'none',
     );
   my $im_pal2 = Imager::i_img_to_pal($im_pal, \%quant);
-  ok($im_pal2, "got an image from quantizing");
+  ok($im_pal2, "got an image from quantizing")
+    or diag _get_error();
   is(@{$quant{colors}}, 4, "quant has the right number of colours");
   is(Imager::i_colorcount($im_pal2), 4, "and so does the image");
   my @colors = Imager::i_getcolors($im_pal2, 0, 4);

@@ -93,7 +93,7 @@ i_quant_makemap(i_quantize *quant, i_img **imgs, int count) {
 }
 
 static void translate_closest(i_quantize *, i_img *, i_palidx *);
-static void translate_errdiff(i_quantize *, i_img *, i_palidx *);
+static int translate_errdiff(i_quantize *, i_img *, i_palidx *);
 static void translate_addi(i_quantize *, i_img *, i_palidx *);
 
 /*
@@ -143,7 +143,10 @@ i_quant_translate(i_quantize *quant, i_img *img) {
     break;
     
   case pt_errdiff:
-    translate_errdiff(quant, img, result);
+    if (!translate_errdiff(quant, img, result)) {
+      myfree(result);
+      return NULL;
+    }
     break;
     
   case pt_perturb:
@@ -1354,8 +1357,7 @@ typedef struct errdiff_tag {
 } errdiff_t;
 
 /* perform an error diffusion dither */
-static
-void
+static int
 translate_errdiff(i_quantize *quant, i_img *img, i_palidx *out) {
   int *map;
   int mapw, maph, mapo;
@@ -1383,14 +1385,25 @@ translate_errdiff(i_quantize *quant, i_img *img, i_palidx *out) {
     mapo = maps[index].orig;
   }
   
+  difftotal = 0;
+  for (i = 0; i < maph * mapw; ++i) {
+    if (map[i] < 0) {
+      i_push_errorf(0, "errdiff_map values must be non-negative, errdiff[%d] is negative", i);
+      return 0;
+    }
+    difftotal += map[i];
+  }
+
+  if (!difftotal) {
+    i_push_error(0, "error diffusion map must contain some non-zero values");
+    return 0;
+  }
+
   errw = img->xsize+mapw;
   err = mymalloc(sizeof(*err) * maph * errw);
   /*errp = err+mapo;*/
   memset(err, 0, sizeof(*err) * maph * errw);
   
-  difftotal = 0;
-  for (i = 0; i < maph * mapw; ++i)
-    difftotal += map[i];
   /*printf("map:\n");
  for (dy = 0; dy < maph; ++dy) {
    for (dx = 0; dx < mapw; ++dx) {
@@ -1444,6 +1457,8 @@ translate_errdiff(i_quantize *quant, i_img *img, i_palidx *out) {
   }
   CF_CLEANUP;
   myfree(err);
+
+  return 1;
 }
 /* Prescan finds the boxes in the image that have the highest number of colors 
    and that result is used as the initial value for the vectores */

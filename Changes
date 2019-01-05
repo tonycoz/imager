@@ -1,6 +1,11 @@
 Imager release history.  Older releases can be found in Changes.old
 
-Coverity finally finished a build, fix a few problems:
+General changes:
+
+ - to_paletted() and make_palette() now fail (with an error in
+   errstr()) if invalid quantization parameters are supplied.
+
+Coverity finally finished a build[1], fix a few problems:
 
 High severity:
 
@@ -90,6 +95,13 @@ High severity:
 
  - check the combine function pointer consistently rather than the
    combine code in one place in the fountain filter.
+
+ - error diffusion now validates a custom error diffusion map and reports
+   an error if it's bad.  CID 185288.
+
+[1] The first two build submissions ended up at the end of a ~400
+build queue, and seemed to have been cancelled by Coverity.  A build
+submitted on NYE went through in minutes.
 
 Imager 1.008 - 31 Dec 2018
 ============
