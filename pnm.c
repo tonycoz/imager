@@ -133,7 +133,7 @@ gnum(io_glue *ig, int *i) {
       return 0;
     }
     *i = work;
-    i_io_getc(ig);
+    i_io_nextc(ig);
   }
 
   return 1;

@@ -149,6 +149,12 @@ Returns the ordinal of the byte or -1 on error or end of file.
     print chr($c);
   }
 
+=item nextc()
+
+Discard the next byte from the stream.
+
+Returns nothing.
+
 =item gets()
 
 =item gets($max_size)

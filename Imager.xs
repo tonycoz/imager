@@ -1514,6 +1514,10 @@ int
 i_io_getc(ig)
 	Imager::IO ig
 
+void
+i_io_nextc(ig)
+	Imager::IO ig
+
 int
 i_io_putc(ig, c)
 	Imager::IO ig

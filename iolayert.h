@@ -90,6 +90,10 @@ struct i_io_glue_t {
   ((ig)->read_ptr < (ig)->read_end ? \
      *((ig)->read_ptr++) : \
      i_io_getc_imp(ig))
+#define i_io_nextc(ig) \
+  ((void)((ig)->read_ptr < (ig)->read_end ?	\
+	  ((ig)->read_ptr++, 0) :		\
+	  i_io_getc_imp(ig)))
 #define i_io_peekc(ig) \
   ((ig)->read_ptr < (ig)->read_end ? \
    *((ig)->read_ptr) :		     \
