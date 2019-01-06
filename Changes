@@ -102,6 +102,9 @@ High severity:
  - avoid discarding the value of i_io_getc() when scanning numbers in
    pnm.c.  CID 185293.
 
+ - handle failure to clone the log filehandle when cloning the Imager
+   context object on thread creation.  CID 185294.
+
 [1] The first two build submissions ended up at the end of a ~400
 build queue, and seemed to have been cancelled by Coverity.  A build
 submitted on NYE went through in minutes.

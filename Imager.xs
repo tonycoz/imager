@@ -4197,6 +4197,9 @@ im_context_CLONE(...)
       /* the following sv_setref_pv() will free this inc */
       im_context_refinc(MY_CXT.ctx, "CLONE");
       MY_CXT.ctx = im_context_clone(MY_CXT.ctx, "CLONE");
+      if (MY_CXT.ctx == NULL) {
+        croak("Failed to clone Imager context");
+      }
       sv_setref_pv(get_sv("Imager::_context", GV_ADD), "Imager::Context", MY_CXT.ctx);
 
 #endif

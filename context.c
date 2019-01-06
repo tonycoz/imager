@@ -162,10 +162,20 @@ im_context_clone(im_context_t ctx, const char *where) {
   if (ctx->lg_file) {
     if (ctx->own_log) {
       int newfd = dup(fileno(ctx->lg_file));
-      nctx->own_log = 1;
-      nctx->lg_file = fdopen(newfd, "w");
-      if (nctx->lg_file)
-	setvbuf(nctx->lg_file, NULL, _IONBF, BUFSIZ);
+      if (newfd >= 0) {
+        nctx->own_log = 1;
+        nctx->lg_file = fdopen(newfd, "w");
+        if (nctx->lg_file)
+	  setvbuf(nctx->lg_file, NULL, _IONBF, BUFSIZ);
+      }
+      else {
+#ifdef IMAGER_TRACE_CONTEXT
+	perror("im_context:failed to clone log");
+#endif
+	free(nctx->slots);
+	free(nctx);
+	return NULL;
+      }
     }
     else {
       /* stderr */
