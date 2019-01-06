@@ -613,7 +613,7 @@ i_tt_get_glyph( TT_Fonthandle *handle, int inst, unsigned long j) {
   if ( LTT_hinted ) load_flags |= TTLOAD_HINT_GLYPH;
   
   if ( !TT_VALID(handle->char_map) ) {
-    code = (j - ' ' + 1) < 0 ? 0 : (j - ' ' + 1);
+    code = (j < ' ' - 1)  ? 0 : (j - (' ' - 1));
     if ( code >= handle->properties.num_Glyphs ) code = 0;
   } else code = TT_Char_Index( handle->char_map, j );
   

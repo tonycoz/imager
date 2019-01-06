@@ -105,6 +105,10 @@ High severity:
  - handle failure to clone the log filehandle when cloning the Imager
    context object on thread creation.  CID 185294.
 
+ - fix an unsigned comparison when converting character code to a
+   glyph index with a NULL character map.  This should be rare.  CID
+   185297.
+
 [1] The first two build submissions ended up at the end of a ~400
 build queue, and seemed to have been cancelled by Coverity.  A build
 submitted on NYE went through in minutes.
