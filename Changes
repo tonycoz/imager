@@ -109,6 +109,9 @@ High severity:
    glyph index with a NULL character map.  This should be rare.  CID
    185297.
 
+ - i_img_info() (C API) no longer tries to handle a NULL image object
+   pointer.  CID 185298.
+
 [1] The first two build submissions ended up at the end of a ~400
 build queue, and seemed to have been cancelled by Coverity.  A build
 submitted on NYE went through in minutes.

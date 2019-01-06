@@ -318,21 +318,15 @@ void
 i_img_info(i_img *im, i_img_dim *info) {
   dIMCTXim(im);
   im_log((aIMCTX,1,"i_img_info(im %p)\n",im));
-  if (im != NULL) {
-    im_log((aIMCTX,1,"i_img_info: xsize=%" i_DF " ysize=%" i_DF " channels=%d "
-	    "mask=%ud\n",
-	    i_DFc(im->xsize), i_DFc(im->ysize), im->channels,im->ch_mask));
-    im_log((aIMCTX,1,"i_img_info: idata=%p\n",im->idata));
-    info[0] = im->xsize;
-    info[1] = im->ysize;
-    info[2] = im->channels;
-    info[3] = im->ch_mask;
-  } else {
-    info[0] = 0;
-    info[1] = 0;
-    info[2] = 0;
-    info[3] = 0;
-  }
+
+  im_log((aIMCTX,1,"i_img_info: xsize=%" i_DF " ysize=%" i_DF " channels=%d "
+	  "mask=%ud\n",
+	  i_DFc(im->xsize), i_DFc(im->ysize), im->channels,im->ch_mask));
+  im_log((aIMCTX,1,"i_img_info: idata=%p\n",im->idata));
+  info[0] = im->xsize;
+  info[1] = im->ysize;
+  info[2] = im->channels;
+  info[3] = im->ch_mask;
 }
 
 /*
