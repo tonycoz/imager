@@ -61,7 +61,7 @@ High severity:
    i_get_combine() due to a fencepost error in validating the combine
    number.  CID 185299.
 
-
+Lower severity (according to Coverity):
 
  - avoid an unneeded EXTEND() call when the FT1 has_chars()
    implementation returns 0. CID 185350.
@@ -109,8 +109,11 @@ High severity:
    context object on thread creation.  CID 185294.
 
  - fix an unsigned comparison when converting character code to a
-   glyph index with a NULL character map.  This should be rare.  CID
-   185297.
+   glyph index with a NULL character map when calculating the glyph
+   for display for FT1.  This should be rare.  CID 185297.
+
+ - fix a similar bug when calculating whether a glyph is present for
+   has_chars() for FT1.  CID 185302.
 
  - i_img_info() (C API) no longer tries to handle a NULL image object
    pointer.  CID 185298.

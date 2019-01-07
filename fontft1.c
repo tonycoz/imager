@@ -687,7 +687,7 @@ i_tt_has_chars(TT_Fonthandle *handle, char const *text, size_t len, int utf8,
       index = TT_Char_Index(handle->char_map, c);
     }
     else {
-      index = (c - ' ' + 1) < 0 ? 0 : (c - ' ' + 1);
+      index = (c < ' ' - 1) ? 0 : (c - (' ' - 1));
       if (index >= handle->properties.num_Glyphs)
         index = 0;
     }
