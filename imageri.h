@@ -143,4 +143,6 @@ typedef struct im_context_tag {
 
 #define DEF_BYTES_LIMIT 0x40000000
 
+#define im_size_t_max (~(size_t)0)
+
 #endif

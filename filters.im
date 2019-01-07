@@ -1972,11 +1972,13 @@ fount_init_state(struct fount_state *state, double xa, double ya,
   case i_fts_random:
   case i_fts_circle:
     ssample_param = floor(0.5+ssample_param);
-    bytes = sizeof(i_fcolor) * ssample_param;
-    if (bytes / sizeof(i_fcolor) == ssample_param) {
-      state->ssample_data = mymalloc(sizeof(i_fcolor) * ssample_param);
+    if (im_size_t_max / sizeof(i_fcolor) > ssample_param) {
+      bytes = sizeof(i_fcolor) * ssample_param;
+      state->ssample_data = mymalloc(bytes);
     }
     else {
+      dIMCTX;
+      im_log((aIMCTX, 1,"size_t overflow calculating super-sample array size for random or circl"));
       super_sample = i_fts_none;
     }
     break;
