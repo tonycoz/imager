@@ -58,8 +58,9 @@ Imager::Files - working with image files
 =head1 DESCRIPTION
 
 You can read and write a variety of images formats, assuming you have
-the appropriate libraries, and images can be read or written to/from
-files, file handles, file descriptors, scalars, or through callbacks.
+the L<appropriate libraries|Imager::Install/EXTERNAL LIBRARIES>, and
+images can be read or written to/from files, file handles, file
+descriptors, scalars, or through callbacks.
 
 To see which image formats Imager is compiled to support the following
 code snippet is sufficient:
