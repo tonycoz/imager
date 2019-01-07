@@ -129,6 +129,9 @@ Lower severity (according to Coverity):
    when calculating a palette with median cut for extraordinarily
    large images.  CID 185306.
 
+ - don't check if the unsigned size supplied to
+   im_set_image_file_limits() is negative.  CID 185307.
+
 [1] The first two build submissions ended up at the end of a ~400
 build queue, and seemed to have been cancelled by Coverity.  A build
 submitted on NYE went through in minutes.

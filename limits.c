@@ -77,10 +77,6 @@ im_set_image_file_limits(pIMCTX, i_img_dim width, i_img_dim height, size_t bytes
     i_push_error(0, "height must be non-negative");
     return 0;
   }
-  if (bytes < 0) {
-    i_push_error(0, "bytes must be non-negative");
-    return 0;
-  }
 
   aIMCTX->max_width = width;
   aIMCTX->max_height = height;
