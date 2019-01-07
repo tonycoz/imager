@@ -235,11 +235,6 @@ void*
 mymalloc(size_t size) {
   void *buf;
 
-  if (size < 0) {
-    fprintf(stderr, "Attempt to allocate size %ld\n", (long)size);
-    exit(3);
-  }
-
   if ( (buf = malloc(size)) == NULL ) {
     mm_log((1, "mymalloc: unable to malloc %ld\n", (long)size));
     fprintf(stderr,"Unable to malloc %ld.\n", (long)size); exit(3);

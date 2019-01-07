@@ -121,6 +121,10 @@ Lower severity (according to Coverity):
  - re-work testing for size_t overflow for circle/random
    super-sampling for fountain fills.  CID 185304.
 
+ - don't check if the unsigned size passed to Imager's malloc wrapper
+   (mymalloc) is negative.  Left from when that parameter was signed.
+   CID 185305.
+
 [1] The first two build submissions ended up at the end of a ~400
 build queue, and seemed to have been cancelled by Coverity.  A build
 submitted on NYE went through in minutes.
