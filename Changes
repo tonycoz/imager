@@ -125,6 +125,10 @@ Lower severity (according to Coverity):
    (mymalloc) is negative.  Left from when that parameter was signed.
    CID 185305.
 
+ - make some types larger and add a cast to prevent integer overflows
+   when calculating a palette with median cut for extraordinarily
+   large images.  CID 185306.
+
 [1] The first two build submissions ended up at the end of a ~400
 build queue, and seemed to have been cancelled by Coverity.  A build
 submitted on NYE went through in minutes.

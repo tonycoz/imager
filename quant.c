@@ -467,7 +467,7 @@ makemap_addi(i_quantize *quant, i_img **imgs, int count) {
 
 typedef struct {
   i_sample_t rgb[3];
-  int count;
+  i_img_dim count;
 } quant_color_entry;
 
 #define MEDIAN_CUT_COLORS 32768
@@ -650,8 +650,8 @@ makemap_mediancut(i_quantize *quant, i_img **imgs, int count) {
       int max_index = 0, max_ch = 0; /* index/channel with biggest spread */
       int max_size;
       medcut_partition *workpart;
-      int cum_total;
-      int half;
+      i_img_dim cum_total;
+      i_img_dim half;
       
       /* find the partition with the most biggest span with more than 
          one color */
@@ -705,7 +705,7 @@ makemap_mediancut(i_quantize *quant, i_img **imgs, int count) {
     /* fill in the color table - since we could still have partitions
        that have more than one color, we need to average the colors */
     for (part_num = 0; part_num < color_count; ++part_num) {
-      long sums[3];
+      double sums[3];
       medcut_partition *workpart;
       
       workpart = parts+part_num;
@@ -714,7 +714,7 @@ makemap_mediancut(i_quantize *quant, i_img **imgs, int count) {
       
       for (i = workpart->start; i < workpart->start + workpart->size; ++i) {
         for (ch = 0; ch < 3; ++ch) {
-          sums[ch] += colors[i].rgb[ch] * colors[i].count;
+          sums[ch] += (int)(colors[i].rgb[ch]) * colors[i].count;
         }
       }
       for (ch = 0; ch < 3; ++ch) {
