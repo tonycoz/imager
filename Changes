@@ -5,6 +5,9 @@ General changes:
  - to_paletted() and make_palette() now fail (with an error in
    errstr()) if invalid quantization parameters are supplied.
 
+ - map() would corrupt a channel if there was a gap in the arrayref of
+   channels.  Detected by Coverity.  CID 185300.
+
 Coverity finally finished a build[1], fix a few problems:
 
 High severity:

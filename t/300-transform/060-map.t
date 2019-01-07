@@ -73,4 +73,14 @@ SKIP: {
   ok($out, "map done");
 }
 
+{ # CID 185300
+  # the check for whether a map() channel was used was incorrect
+  my @map1 = ( 0 .. 255 );
+  my $im = test_image;
+  my $cmp = test_image->copy;
+  ok($im->map(maps => [ \@map1, undef, \@map1 ]),
+     "map with gap in maps");
+  is_image($im, $cmp, "should be no changes");
+}
+
 done_testing();

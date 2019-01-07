@@ -63,7 +63,8 @@ i_map(i_img *im, unsigned char (*maps)[256], unsigned int mask) {
     i_glin(im, 0, im->xsize, y, vals);
     for (x = 0; x < im->xsize; ++x) {
       for(ch = minset; ch<=maxset; ch++) {
-	if (!maps[ch]) continue;
+	if (!(mask & (1 << ch)))
+	  continue;
 	vals[x].channel[ch] = maps[ch][vals[x].channel[ch]];
       }
     }
