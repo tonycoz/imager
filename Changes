@@ -8,7 +8,8 @@ General changes:
  - map() would corrupt a channel if there was a gap in the arrayref of
    channels.  Detected by Coverity.  CID 185300.
 
-Coverity finally finished a build[1], fix a few problems:
+Coverity finally finished a build[1], fixed several of the problems
+found.  Coverity went down before I could finish working through them.
 
 High severity:
 
