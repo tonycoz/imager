@@ -1,6 +1,6 @@
 #!perl -w
 use strict;
-use Test::More tests => 256;
+use Test::More;
 use Imager ':all';
 use Imager::Test qw(is_color3 is_image);
 use constant PI => 3.14159265358979;
@@ -135,6 +135,13 @@ my $white = '#FFFFFF';
 
   ok($img->write(file=>'testout/t21draw.ppm'),
      "saving output");
+}
+
+{
+  # RT #128208
+  my $im = Imager->new(xsize => 200, ysize => 200);
+  ok($im->circle(aa => 1, color => "#FFF", r => 400, x => 1_000_000, y => 100, filled => 1),
+     "draw a very large circle");
 }
 
 {
@@ -320,6 +327,7 @@ my $white = '#FFFFFF';
   is($empty->errstr, "flood_fill: empty input image", "check error message");
 }
 
+done_testing();
 
 malloc_state();
 

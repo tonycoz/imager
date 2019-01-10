@@ -1,5 +1,11 @@
 Imager release history.  Older releases can be found in Changes.old
 
+Critical issue:
+
+ - drawing a filled, anti-aliased circle to the left or right of the
+   image (not within the image at all) would cause a buffer overflow.
+   https://rt.cpan.org/Ticket/Display.html?id=128208
+
 General changes:
 
  - to_paletted() and make_palette() now fail (with an error in

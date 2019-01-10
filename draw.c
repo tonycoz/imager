@@ -500,8 +500,11 @@ i_circle_aa_low(i_img *im, double x, double y, double rad, flush_render_t r,
   i_color temp;
   i_img_dim ly;
   dIMCTXim(im);
-  i_img_dim first_row = floor(y) - ceil(rad);
-  i_img_dim last_row = ceil(y) + ceil(rad);
+  double ceil_rad = ceil(rad);
+  i_img_dim first_row = floor(y) - ceil_rad;
+  i_img_dim last_row = ceil(y) + ceil_rad;
+  i_img_dim first_col = floor(x) - ceil_rad;
+  i_img_dim last_col = ceil(x) + ceil_rad;
   double r_sqr = rad * rad;
   i_img_dim max_width = 2 * ceil(rad) + 1;
   unsigned char *coverage = NULL;
@@ -515,8 +518,12 @@ i_circle_aa_low(i_img *im, double x, double y, double rad, flush_render_t r,
     first_row = 0;
   if (last_row > im->ysize-1)
     last_row = im->ysize - 1;
+  if (first_col < 0)
+    first_col = 0;
+  if (last_col > im->xsize-1)
+    last_col = im->xsize - 1;
 
-  if (rad <= 0 || last_row < first_row) {
+  if (rad <= 0 || last_row < first_row || last_col < first_col) {
     /* outside the image */
     return;
   }
@@ -527,9 +534,9 @@ i_circle_aa_low(i_img *im, double x, double y, double rad, flush_render_t r,
   for(ly = first_row; ly < last_row; ly++) {
     frac min_frac_x[16];
     frac max_frac_x[16];
-    i_img_dim min_frac_left_x = im->xsize * 16;
+    i_img_dim min_frac_left_x = 16 *(ceil(x) + ceil(rad));
     i_img_dim max_frac_left_x = -1;
-    i_img_dim min_frac_right_x = im->xsize * 16;
+    i_img_dim min_frac_right_x = 16 * (floor(x) - ceil(rad));
     i_img_dim max_frac_right_x = -1;
     /* reset work_y each row so the error doesn't build up */
     double work_y = ly;
