@@ -1,5 +1,8 @@
 Imager release history.  Older releases can be found in Changes.old
 
+Imager 1.009 - 11 Jan 2009
+============
+
 Critical issue:
 
  - drawing a filled, anti-aliased circle to the left or right of the
@@ -143,7 +146,7 @@ Lower severity (according to Coverity):
  - don't check if the unsigned size supplied to
    im_set_image_file_limits() is negative.  CID 185307.
 
-[1] The first two build submissions ended up at the end of a ~400
+[1] The first two build submissions ended up at the end of a ~400 item
 build queue, and seemed to have been cancelled by Coverity.  A build
 submitted on NYE went through in minutes.
 
