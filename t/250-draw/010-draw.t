@@ -145,6 +145,22 @@ my $white = '#FFFFFF';
 }
 
 {
+  my $im = Imager->new(xsize => 200, ysize => 200);
+  my $tmp;
+  ok(!eval { $im->circle(aa => 1, color => "#FFF", r => 400, x => \$tmp, y => 100, filled => 1); 1 },
+     "croak on x being a reference");
+  like($@, qr/reference/, "check message");
+}
+
+{
+  use bignum;
+  my $im = Imager->new(xsize => 200, ysize => 200);
+  ok(eval { $im->circle(aa => 1, color => "#FFF", r => 50, x => 100, y => 100, filled => 1); 1 },
+     "don't croak on x being an overloaded reference")
+    or diag "Died $@";
+}
+
+{
   my $im = Imager->new(xsize => 400, ysize => 400);
   ok($im->arc(x => 200, y => 202, r => 10, filled => 0),
      "draw circle outline");

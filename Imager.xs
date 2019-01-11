@@ -1207,10 +1207,10 @@ MODULE = Imager        PACKAGE = Imager::Color::Float  PREFIX=ICLF_
 
 Imager::Color::Float
 ICLF_new_internal(r, g, b, a)
-        double r
-        double g
-        double b
-        double a
+        im_double r
+        im_double g
+        im_double b
+        im_double a
 
 void
 ICLF_DESTROY(cl)
@@ -1231,10 +1231,10 @@ ICLF_rgba(cl)
 void
 ICLF_set_internal(cl,r,g,b,a)
         Imager::Color::Float    cl
-        double     r
-        double     g
-        double     b
-        double     a
+        im_double     r
+        im_double     g
+        im_double     b
+        im_double     a
       PPCODE:
         cl->rgba.r = r;
         cl->rgba.g = g;
@@ -1266,9 +1266,9 @@ i_rgb_to_hsv(c)
 MODULE = Imager		PACKAGE = Imager::ImgRaw	PREFIX = IIM_
 
 Imager::ImgRaw
-IIM_new(x,y,ch)
-               i_img_dim     x
-	       i_img_dim     y
+IIM_new(xsize,ysize,ch)
+               i_img_dim     xsize
+	       i_img_dim     ysize
 	       int     ch
 
 void
@@ -1873,19 +1873,19 @@ i_arc(im,x,y,rad,d1,d2,val)
     Imager::ImgRaw     im
 	       i_img_dim     x
 	       i_img_dim     y
-             double     rad
-             double     d1
-             double     d2
+             im_double     rad
+             im_double     d1
+             im_double     d2
 	   Imager::Color    val
 
 void
 i_arc_aa(im,x,y,rad,d1,d2,val)
     Imager::ImgRaw     im
-	    double     x
-	    double     y
-            double     rad
-            double     d1
-            double     d2
+	    im_double     x
+	    im_double     y
+            im_double     rad
+            im_double     d1
+            im_double     d2
 	   Imager::Color    val
 
 void
@@ -1893,36 +1893,36 @@ i_arc_cfill(im,x,y,rad,d1,d2,fill)
     Imager::ImgRaw     im
 	       i_img_dim     x
 	       i_img_dim     y
-             double     rad
-             double     d1
-             double     d2
+             im_double     rad
+             im_double     d1
+             im_double     d2
 	   Imager::FillHandle    fill
 
 void
 i_arc_aa_cfill(im,x,y,rad,d1,d2,fill)
     Imager::ImgRaw     im
-	    double     x
-	    double     y
-            double     rad
-            double     d1
-            double     d2
+	    im_double     x
+	    im_double     y
+            im_double     rad
+            im_double     d1
+            im_double     d2
 	   Imager::FillHandle	fill
 
 
 void
 i_circle_aa(im,x,y,rad,val)
     Imager::ImgRaw     im
-	     double     x
-	     double     y
-             double     rad
+	     im_double     x
+	     im_double     y
+             im_double     rad
 	   Imager::Color    val
 
 void
 i_circle_aa_fill(im,x,y,rad,fill)
     Imager::ImgRaw     im
-	     double     x
-	     double     y
-             double     rad
+	     im_double     x
+	     im_double     y
+             im_double     rad
 	   Imager::FillHandle    fill
 
 int
@@ -1947,8 +1947,8 @@ i_arc_out(im,x,y,rad,d1,d2,val)
 	     i_img_dim     x
 	     i_img_dim     y
              i_img_dim     rad
-	     double d1
-	     double d2
+	     im_double d1
+	     im_double d2
 	   Imager::Color    val
 
 int
@@ -1957,8 +1957,8 @@ i_arc_out_aa(im,x,y,rad,d1,d2,val)
 	     i_img_dim     x
 	     i_img_dim     y
              i_img_dim     rad
-	     double d1
-	     double d2
+	     im_double d1
+	     im_double d2
 	   Imager::Color    val
 
 
@@ -2114,7 +2114,7 @@ i_compose(out, src, out_left, out_top, src_left, src_top, width, height, combine
 	i_img_dim width
 	i_img_dim height
 	int combine
-	double opacity
+	im_double opacity
 
 undef_int
 i_compose_mask(out, src, mask, out_left, out_top, src_left, src_top, mask_left, mask_top, width, height, combine = ic_normal, opacity = 0.0)
@@ -2130,7 +2130,7 @@ i_compose_mask(out, src, mask, out_left, out_top, src_left, src_top, mask_left, 
 	i_img_dim width
 	i_img_dim height
 	int combine
-	double opacity
+	im_double opacity
 
 Imager::ImgRaw
 i_combine(src_av, channels_av = NULL)
@@ -2186,7 +2186,7 @@ i_rotate90(im, degrees)
 Imager::ImgRaw
 i_rotate_exact(im, amount, ...)
     Imager::ImgRaw      im
-            double      amount
+            im_double      amount
       PREINIT:
 	i_color *backp = NULL;
 	i_fcolor *fbackp = NULL;
@@ -2253,13 +2253,13 @@ i_matrix_transform(im, xsize, ysize, matrix_av, ...)
 undef_int
 i_gaussian(im,stdev)
     Imager::ImgRaw     im
-	    double     stdev
+	    im_double     stdev
 
 void
 i_unsharp_mask(im,stdev,scale)
     Imager::ImgRaw     im
-	     double    stdev
-             double    scale
+	     im_double    stdev
+             im_double    scale
 
 int
 i_conv(im,coef)
@@ -2384,7 +2384,7 @@ int
 i_img_samef(im1, im2, epsilon = i_img_epsilonf(), what=NULL)
     Imager::ImgRaw    im1
     Imager::ImgRaw    im2
-    double epsilon
+    im_double epsilon
     const char *what
 
 double
@@ -2436,7 +2436,7 @@ i_tt_text(handle,im,xb,yb,cl,points,str_sv,smooth,utf8,align=1)
 	       i_img_dim     xb
 	       i_img_dim     yb
      Imager::Color     cl
-             double     points
+             im_double     points
 	      SV *     str_sv
 	       int     smooth
                int     utf8
@@ -2463,7 +2463,7 @@ i_tt_cp(handle,im,xb,yb,channel,points,str_sv,smooth,utf8,align=1)
 	       i_img_dim     xb
 	       i_img_dim     yb
 	       int     channel
-             double     points
+             im_double     points
 	      SV *     str_sv
 	       int     smooth
                int     utf8
@@ -2486,7 +2486,7 @@ i_tt_cp(handle,im,xb,yb,channel,points,str_sv,smooth,utf8,align=1)
 void
 i_tt_bbox(handle,point,str_sv,utf8)
   Imager::Font::TT     handle
-	     double     point
+	     im_double     point
 	       SV*    str_sv
                int     utf8
 	     PREINIT:
@@ -2694,14 +2694,14 @@ i_readtga_wiol(ig, length)
 Imager::ImgRaw
 i_scaleaxis(im,Value,Axis)
     Imager::ImgRaw     im
-             double     Value
+             im_double     Value
 	       int     Axis
 
 Imager::ImgRaw
 i_scale_nn(im,scx,scy)
     Imager::ImgRaw     im
-             double    scx
-             double    scy
+             im_double    scx
+             im_double    scy
 
 Imager::ImgRaw
 i_scale_mixing(im, width, height)
@@ -2854,7 +2854,7 @@ i_transform2(sv_width,sv_height,channels,sv_ops,av_n_regs,av_c_regs,av_in_imgs)
 void
 i_contrast(im,intensity)
     Imager::ImgRaw     im
-             float     intensity
+             im_float     intensity
 
 void
 i_hardinvert(im)
@@ -2867,7 +2867,7 @@ i_hardinvertall(im)
 void
 i_noise(im,amount,type)
     Imager::ImgRaw     im
-             float     amount
+             im_float     amount
      unsigned char     type
 
 void
@@ -2887,12 +2887,12 @@ i_bumpmap_complex(im,bump,channel,tx,ty,Lx,Ly,Lz,cd,cs,n,Ia,Il,Is)
                int     channel
                i_img_dim     tx
                i_img_dim     ty
-             double     Lx
-             double     Ly
-             double     Lz
-             float     cd
-             float     cs
-             float     n
+             im_double     Lx
+             im_double     Ly
+             im_double     Lz
+             im_float     cd
+             im_float     cs
+             im_float     n
      Imager::Color     Ia
      Imager::Color     Il
      Imager::Color     Is
@@ -2921,30 +2921,30 @@ i_watermark(im,wmark,tx,ty,pixdiff)
 void
 i_autolevels(im,lsat,usat,skew)
     Imager::ImgRaw     im
-             float     lsat
-             float     usat
-             float     skew
+             im_float     lsat
+             im_float     usat
+             im_float     skew
 
 void
 i_autolevels_mono(im,lsat,usat)
     Imager::ImgRaw     im
-             float     lsat
-             float     usat
+             im_float     lsat
+             im_float     usat
 
 void
 i_radnoise(im,xo,yo,rscale,ascale)
     Imager::ImgRaw     im
-             float     xo
-             float     yo
-             float     rscale
-             float     ascale
+             im_float     xo
+             im_float     yo
+             im_float     rscale
+             im_float     ascale
 
 void
 i_turbnoise(im, xo, yo, scale)
     Imager::ImgRaw     im
-             float     xo
-             float     yo
-             float     scale
+             im_float     xo
+             im_float     yo
+             im_float     scale
 
 
 void
@@ -2969,20 +2969,20 @@ Imager::ImgRaw
 i_diff_image(im, im2, mindist=0)
     Imager::ImgRaw     im
     Imager::ImgRaw     im2
-            double     mindist
+            im_double     mindist
 
 undef_int
 i_fountain(im, xa, ya, xb, yb, type, repeat, combine, super_sample, ssample_param, segs)
     Imager::ImgRaw     im
-            double     xa
-            double     ya
-            double     xb
-            double     yb
+            im_double     xa
+            im_double     ya
+            im_double     xb
+            im_double     yb
                int     type
                int     repeat
                int     combine
                int     super_sample
-            double     ssample_param
+            im_double     ssample_param
       PREINIT:
         AV *asegs;
         int count;
@@ -3001,15 +3001,15 @@ i_fountain(im, xa, ya, xb, yb, type, repeat, combine, super_sample, ssample_para
 
 Imager::FillHandle
 i_new_fill_fount(xa, ya, xb, yb, type, repeat, combine, super_sample, ssample_param, segs)
-            double     xa
-            double     ya
-            double     xb
-            double     yb
+            im_double     xa
+            im_double     ya
+            im_double     xb
+            im_double     yb
                int     type
                int     repeat
                int     combine
                int     super_sample
-            double     ssample_param
+            im_double     ssample_param
       PREINIT:
         AV *asegs;
         int count;
@@ -3029,7 +3029,7 @@ i_new_fill_fount(xa, ya, xb, yb, type, repeat, combine, super_sample, ssample_pa
 Imager::FillHandle
 i_new_fill_opacity(other_fill, alpha_mult)
     Imager::FillHandle other_fill
-    double alpha_mult
+    im_double alpha_mult
 
 void
 i_errors()
@@ -3844,26 +3844,26 @@ i_glinf(im, l, r, y)
         }
 
 Imager::ImgRaw
-i_img_8_new(x, y, ch)
-        i_img_dim x
-        i_img_dim y
-        int ch
+i_img_8_new(xsize, ysize, channels)
+        i_img_dim xsize
+        i_img_dim ysize
+        int channels
 
 Imager::ImgRaw
-i_img_16_new(x, y, ch)
-        i_img_dim x
-        i_img_dim y
-        int ch
+i_img_16_new(xsize, ysize, channels)
+        i_img_dim xsize
+        i_img_dim ysize
+        int channels
 
 Imager::ImgRaw
 i_img_to_rgb16(im)
        Imager::ImgRaw im
 
 Imager::ImgRaw
-i_img_double_new(x, y, ch)
-        i_img_dim x
-        i_img_dim y
-        int ch
+i_img_double_new(xsize, ysize, channels)
+        i_img_dim xsize
+        i_img_dim ysize
+        int channels
 
 Imager::ImgRaw
 i_img_to_drgb(im)

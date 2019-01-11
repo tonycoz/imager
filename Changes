@@ -14,6 +14,10 @@ General changes:
  - map() would corrupt a channel if there was a gap in the arrayref of
    channels.  Detected by Coverity.  CID 185300.
 
+ - most numeric parameters to the XS implementation now throw an
+   exception if supplied an unoverloaded reference.
+   https://rt.cpan.org/Ticket/Display.html?id=128208
+
 Coverity finally finished a build[1], fixed several of the problems
 found.  Coverity went down before I could finish working through them.
 

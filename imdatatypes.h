@@ -29,6 +29,10 @@ Represents a slot in the context object.
 typedef ptrdiff_t im_slot_t;
 typedef void (*im_slot_destroy_t)(void *);
 
+/* just so we can use our own input typemap */
+typedef double im_double;
+typedef float im_float;
+
 /* used for palette indices in some internal code (which might be 
    exposed at some point
 */
