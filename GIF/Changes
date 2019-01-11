@@ -1,3 +1,13 @@
+Imager-File-GIF 0.93
+====================
+
+ - log the map object only after we check it was successfully created.
+
+Imager-File-GIF 0.92
+====================
+
+ - improve Makefile.PL metadata
+
 Imager-File-GIF 0.91
 ====================
 
