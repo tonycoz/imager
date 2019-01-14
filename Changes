@@ -161,6 +161,10 @@ Imager 1.008 - 31 Dec 2018
 
  - added add_type_extensions() class method
 
+ - Imager::Files now links to Imager::Install when discussing
+   appropriate libraries.
+   https://rt.cpan.org/Ticket/Display.html?id=127575
+
 Imager 1.007 - 24 Nov 2018
 ============
 
