@@ -187,16 +187,16 @@ static struct enc_score {
   /* the selections here are fairly arbitrary
      ideally we need to give the user a list of encodings available
      and a mechanism to choose one */
-  { ft_encoding_unicode,        10 },
-  { ft_encoding_sjis,            8 },
-  { ft_encoding_gb2312,          8 },
-  { ft_encoding_big5,            8 },
-  { ft_encoding_wansung,         8 },
-  { ft_encoding_johab,           8 },  
-  { ft_encoding_latin_2,         6 },
-  { ft_encoding_apple_roman,     6 },
-  { ft_encoding_adobe_standard,  6 },
-  { ft_encoding_adobe_expert,    6 },
+  { FT_ENCODING_UNICODE,        10 },
+  { FT_ENCODING_MS_SJIS,         8 },
+  { FT_ENCODING_MS_GB2312,       8 },
+  { FT_ENCODING_MS_BIG5,         8 },
+  { FT_ENCODING_MS_WANSUNG,      8 },
+  { FT_ENCODING_MS_JOHAB,        8 },
+  { FT_ENCODING_OLD_LATIN_2,     6 },
+  { FT_ENCODING_APPLE_ROMAN,     6 },
+  { FT_ENCODING_ADOBE_STANDARD,  6 },
+  { FT_ENCODING_ADOBE_EXPERT,    6 },
 };
 
 /*

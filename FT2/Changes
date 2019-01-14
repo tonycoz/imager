@@ -1,3 +1,9 @@
+Imager-Font-FT2 0.97
+====================
+
+ - use undeprecated encoding symbols.  This may fix the build on the
+   badly patched CentOS 7 Freetype 2.
+
 Imager-Font-FT2 0.96
 ====================
 
