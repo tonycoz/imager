@@ -338,6 +338,7 @@ pixel_coverage(p_line *line, pcord minx, pcord maxx, pcord  miny, pcord maxy) {
     return r;
   }
 
+  /* NOTREACHED */
   return 0; /* silence compiler warning */
 }
 
