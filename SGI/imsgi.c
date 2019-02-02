@@ -442,7 +442,7 @@ read_rle_tables(io_glue *ig, i_img *img,
   }
 
   for(i = 0; i < height * channels; i++) 
-    start_tab[i] = (databuf[i*4] << 24) | (databuf[i*4+1] << 16) | 
+    start_tab[i] = ((unsigned long)databuf[i*4] << 24) | (databuf[i*4+1] << 16) |
       (databuf[i*4+2] << 8) | (databuf[i*4+3]);
 
 
@@ -453,8 +453,8 @@ read_rle_tables(io_glue *ig, i_img *img,
   }
 
   for(i=0; i < height * channels; i++) {
-    length_tab[i] = (databuf[i*4] << 24) + (databuf[i*4+1] << 16)+
-      (databuf[i*4+2] << 8) + (databuf[i*4+3]);
+    length_tab[i] = ((unsigned long)databuf[i*4] << 24) | (databuf[i*4+1] << 16) |
+      (databuf[i*4+2] << 8) | (databuf[i*4+3]);
     if (length_tab[i] > max_length)
       max_length = length_tab[i];
   }
