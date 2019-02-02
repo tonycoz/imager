@@ -239,7 +239,7 @@ read_packed(io_glue *ig, char *format, ...) {
     switch (code) {
     case 'v':
       if (i_io_read(ig, buf, 2) != 2)
-	return 0;
+	goto fail;
       work = buf[0] + ((i_packed_t)buf[1] << 8);
       if (shrieking)
 	*p = (work ^ SIGNBIT16) - SIGNBIT16;
@@ -249,7 +249,7 @@ read_packed(io_glue *ig, char *format, ...) {
 
     case 'V':
       if (i_io_read(ig, buf, 4) != 4)
-	return 0;
+	goto fail;
       work = buf[0] + (buf[1] << 8) + ((i_packed_t)buf[2] << 16) + ((i_packed_t)buf[3] << 24);
       if (shrieking)
 	*p = (work ^ SIGNBIT32) - SIGNBIT32;
@@ -259,19 +259,19 @@ read_packed(io_glue *ig, char *format, ...) {
 
     case 'C':
       if (i_io_read(ig, buf, 1) != 1)
-	return 0;
+	goto fail;
       *p = buf[0];
       break;
 
     case 'c':
       if (i_io_read(ig, buf, 1) != 1)
-	return 0;
+	goto fail;
       *p = (char)buf[0];
       break;
       
     case '3': /* extension - 24-bit number */
       if (i_io_read(ig, buf, 3) != 3)
-        return 0;
+        goto fail;
       *p = buf[0] + (buf[1] << 8) + ((i_packed_t)buf[2] << 16);
       break;
       
@@ -282,7 +282,12 @@ read_packed(io_glue *ig, char *format, ...) {
       }
     }
   }
+  va_end(ap);
   return 1;
+
+ fail:
+  va_end(ap);
+  return 0;
 }
 
 /*
