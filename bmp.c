@@ -311,7 +311,7 @@ write_packed(io_glue *ig, char *format, ...) {
       buf[0] = i & 255;
       buf[1] = i / 256;
       if (i_io_write(ig, buf, 2) == -1)
-	return 0;
+	goto fail;
       break;
 
     case 'V':
@@ -320,14 +320,14 @@ write_packed(io_glue *ig, char *format, ...) {
       buf[2] = (i >> 16) & 0xFF;
       buf[3] = (i >> 24) & 0xFF;
       if (i_io_write(ig, buf, 4) == -1)
-	return 0;
+	goto fail;
       break;
 
     case 'C':
     case 'c':
       buf[0] = i & 0xFF;
       if (i_io_write(ig, buf, 1) == -1)
-	return 0;
+	goto fail;
       break;
 
     default:
@@ -341,6 +341,10 @@ write_packed(io_glue *ig, char *format, ...) {
   va_end(ap);
 
   return 1;
+
+ fail:
+  va_end(ap);
+  return 0;
 }
 
 /*
