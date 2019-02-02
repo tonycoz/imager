@@ -723,8 +723,8 @@ i_readtga_wiol(io_glue *ig, int length) {
   
   mapped = 1;
   switch (header.datatypecode) {
-  case 2:  /* Uncompressed, rgb images          */
-  case 10: /* Compressed,   rgb images          */
+  case 2:  /* Uncompressed, rgb images          */ /* FALLTHROUGH */
+  case 10: /* Compressed,   rgb images          */ /* FALLTHROUGH */
     mapped = 0;
   case 1:  /* Uncompressed, color-mapped images */
   case 9:  /* Compressed,   color-mapped images */
@@ -736,7 +736,7 @@ i_readtga_wiol(io_glue *ig, int length) {
     if (idstring) myfree(idstring);
     return NULL;
     break;
-  case 3:  /* Uncompressed, grayscale images    */
+  case 3:  /* Uncompressed, grayscale images    */ /* FALLTHROUGH */
   case 11: /* Compressed,   grayscale images    */
     mapped = 0;
     channels = 1;
