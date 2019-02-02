@@ -1,6 +1,7 @@
 #define IMAGER_NO_CONTEXT
 #include "imager.h"
 #include "imageri.h"
+#include <assert.h>
 
 /*
 =head1 NAME
@@ -436,6 +437,8 @@ with the side of a filled area.
 i_fill_t *
 i_new_fill_hatch(const i_color *fg, const i_color *bg, int combine, int hatch, 
             const unsigned char *cust_hatch, i_img_dim dx, i_img_dim dy) {
+  assert(fg);
+  assert(bg);
   return i_new_hatch_low(fg, bg, NULL, NULL, combine, hatch, cust_hatch, 
                          dx, dy);
 }
@@ -464,6 +467,8 @@ with the side of a filled area.
 i_fill_t *
 i_new_fill_hatchf(const i_fcolor *fg, const i_fcolor *bg, int combine, int hatch, 
 		  const unsigned char *cust_hatch, i_img_dim dx, i_img_dim dy) {
+  assert(fg);
+  assert(bg);
   return i_new_hatch_low(NULL, NULL, fg, bg, combine, hatch, cust_hatch, 
                          dx, dy);
 }
