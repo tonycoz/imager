@@ -289,7 +289,7 @@ i_img_destroy(i_img *im) {
   dIMCTXim(im);
   im_log((aIMCTX, 1,"i_img_destroy(im %p)\n",im));
   i_img_exorcise(im);
-  if (im) { myfree(im); }
+  myfree(im);
   im_context_refdec(aIMCTX, "img_destroy");
 }
 
