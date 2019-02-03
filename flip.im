@@ -28,9 +28,6 @@ i_flipxy(i_img *im, int direction) {
 
   im_log((aIMCTX, 1, "i_flipxy(im %p, direction %d)\n", im, direction ));
 
-  if (!im)
-    return 0;
-
   switch (direction) {
   case XAXIS: /* Horizontal flip */
     flip_h(im);
