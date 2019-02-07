@@ -2607,6 +2607,40 @@ i_test_format_probe(ig, length)
         Imager::IO     ig
 	       int     length
 
+int
+i_add_file_magic(name, bits_sv, mask_sv)
+        const char *name
+        SV *bits_sv
+        SV *mask_sv
+      PREINIT:
+        const unsigned char *bits;
+        const unsigned char *mask;
+	size_t bits_size;
+	size_t mask_size;
+      CODE:
+	i_clear_error();
+	bits = SvPV(bits_sv, bits_size);
+        mask = SvPV(mask_sv, mask_size);
+        if (bits_size == 0) {
+	    i_push_error(0, "bits must be non-empty");
+	    XSRETURN_EMPTY;
+	}
+	if (mask_size == 0) {
+	    i_push_error(0, "mask must be non-empty");
+	    XSRETURN_EMPTY;
+	}
+	if (bits_size != mask_size) {
+	    i_push_error(0, "bits and mask must be the same length");
+	    XSRETURN_EMPTY;
+	}
+	if (!*name) {
+	    i_push_error(0, "name must be non-empty");
+	    XSRETURN_EMPTY;
+	}
+	RETVAL = i_add_file_magic(name, bits, mask, bits_size);
+      OUTPUT:
+	RETVAL
+
 Imager::ImgRaw
 i_readpnm_wiol(ig, allow_incomplete)
         Imager::IO     ig

@@ -294,6 +294,18 @@ E8 03 37 FF F7 D5 C2 D8 B7 D5 58 59 6E D9 71 8C
 CF 3A FF 56 5D FF 67 87 CE 9C 0E D6 69 CD 1F EF
 FLIF
 
+ok(Imager->add_file_magic(name => 'testtype',
+			  bits => "    testtype",
+			  mask => "    xxxxxxxx"),
+   "add magic");
+
+probe_ok(<<TESTTYPE, "testtype", "Test adding a format with magic");
+46 4C 49 46 74 65 73 74 74 79 70 65 03 AF B0 B1
+E8 03 37 FF F7 D5 C2 D8 B7 D5 58 59 6E D9 71 8C
+0F A9 88 B4 1C B1 7F C0 2E FB 8C 7D 90 B6 04 DF
+CF 3A FF 56 5D FF 67 87 CE 9C 0E D6 69 CD 1F EF
+TESTTYPE
+
 { # RT 72475
   # check error messages from read/read_multi
   my $data = "nothing useful";
@@ -371,7 +383,7 @@ sub probe_ok {
   my $data = pack("H*", $packed);
 
   my $io = Imager::io_new_buffer($data);
-  my $result = Imager::i_test_format_probe($io, -1);
+  my $result = Imager::_test_format($io);
 
   return $builder->is_eq($result, $exp_type, $name)
 }

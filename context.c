@@ -45,6 +45,8 @@ im_context_new(void) {
     return NULL;
   }
 
+  ctx->file_magic = NULL;
+
   ctx->refcount = 1;
 
 #ifdef IMAGER_TRACE_CONTEXT
@@ -119,6 +121,18 @@ im_context_refdec(im_context_t ctx, const char *where) {
     if (ctx->error_stack[i].msg)
       myfree(ctx->error_stack[i].msg);
   }
+
+  {
+    im_file_magic *p = ctx->file_magic;
+    while (p != NULL) {
+      im_file_magic *n = p->next;
+      free(p->m.name);
+      free(p->m.magic);
+      free(p->m.mask);
+      free(p);
+      p = n;
+    }
+  }
 #ifdef IMAGER_LOG
   if (ctx->lg_file && ctx->own_log)
     fclose(ctx->lg_file);
@@ -192,6 +206,38 @@ im_context_clone(im_context_t ctx, const char *where) {
   nctx->max_bytes = ctx->max_bytes;
 
   nctx->refcount = 1;
+
+  {
+    im_file_magic *inp = ctx->file_magic;
+    im_file_magic **outpp = &nctx->file_magic;
+    *outpp = NULL;
+    while (inp) {
+      im_file_magic *m = malloc(sizeof(im_file_magic));
+      if (!m) {
+	/* should free any parts of the list already allocated */
+	im_context_refdec(nctx, "failed cloning");
+	return NULL;
+      }
+      m->next = NULL;
+      m->m.name = strdup(inp->m.name);
+      m->m.magic_size = inp->m.magic_size;
+      m->m.magic = malloc(inp->m.magic_size);
+      m->m.mask = malloc(inp->m.magic_size);
+      if (m->m.name == NULL || m->m.magic == NULL || m->m.mask == NULL) {
+	free(m->m.name);
+	free(m->m.magic);
+	free(m->m.mask);
+	free(m);
+	im_context_refdec(nctx, "failed cloning");
+	return NULL;
+      }
+      memcpy(m->m.magic, inp->m.magic, m->m.magic_size);
+      memcpy(m->m.mask, inp->m.mask, m->m.magic_size);
+      *outpp = m;
+      outpp = &m->next;
+      inp = inp->next;
+    }
+  }
 
 #ifdef IMAGER_TRACE_CONTEXT
   fprintf(stderr, "im_context:%s: cloned %p to %p\n", where, ctx, nctx);
@@ -296,4 +342,44 @@ im_context_slot_get(im_context_t ctx, im_slot_t slot) {
     return NULL;
 
   return ctx->slots[slot];
+}
+
+/*
+=item im_add_file_magic(ctx, name, bits, mask, length)
+
+Add file type magic to the given context.
+
+=cut
+*/
+
+int
+im_add_file_magic(im_context_t ctx, const char *name,
+		  const unsigned char *bits, const unsigned char *mask,
+		  size_t length) {
+  im_file_magic *m = malloc(sizeof(im_file_magic));
+
+  if (m == NULL)
+    return 0;
+
+  if (length > 512)
+    length = 512;
+
+  m->m.name = strdup(name);
+  m->m.magic = malloc(length);
+  m->m.mask = malloc(length);
+  m->m.magic_size = length;
+
+  if (name == NULL || bits == NULL || mask == NULL) {
+    free(m->m.name);
+    free(m->m.magic);
+    free(m->m.mask);
+    free(m);
+    return 0;
+  }
+  memcpy(m->m.magic, bits, length);
+  memcpy(m->m.mask, mask, length);
+  m->next = ctx->file_magic;
+  ctx->file_magic = m;
+
+  return 1;
 }

@@ -1487,6 +1487,27 @@ sub _get_writer_io {
   return ($io, @extras);
 }
 
+sub _test_format {
+  my ($io) = @_;
+
+  return i_test_format_probe($io, -1);
+}
+
+sub add_file_magic {
+  my ($class, %opts) = @_;
+
+  my $name = delete $opts{name};
+  my $bits = delete $opts{bits};
+  my $mask = delete $opts{mask};
+
+  unless (i_add_file_magic($name, $bits, $mask)) {
+    Imager->_set_error(Imager->_error_as_msg);
+    return;
+  }
+
+  1;
+}
+
 # Read an image from file
 
 sub read {
@@ -1504,7 +1525,7 @@ sub read {
 
   my $type = $input{'type'};
   unless ($type) {
-    $type = i_test_format_probe($IO, -1);
+    $type = _test_format($IO);
   }
 
   if ($input{file} && !$type) {
@@ -2026,7 +2047,7 @@ sub read_multi {
 
   my $type = $opts{'type'};
   unless ($type) {
-    $type = i_test_format_probe($IO, -1);
+    $type = _test_format($IO);
   }
 
   if ($opts{file} && !$type) {
@@ -4748,9 +4769,13 @@ Where to find information on methods for Imager class objects.
 addcolors() - L<Imager::ImageTypes/addcolors()> - add colors to a
 paletted image
 
+add_file_magic() - 
+
 addtag() -  L<Imager::ImageTypes/addtag()> - add image tags
 
-add_type_extensions() -
+add_type_extensions() - L<Imager::Files/add_file_magic()> - add magic
+for new image file types.
+
 L<Imager::Files/add_type_extensions($type, $ext, ...)> - add extensions for
 new image file types.
 

@@ -112,6 +112,22 @@ i_img_dim i_abs(i_img_dim x);
 
 #define color_to_grey(col) ((col)->rgb.r * 0.222  + (col)->rgb.g * 0.707 + (col)->rgb.b * 0.071)
 
+struct file_magic_entry {
+  unsigned char *magic;
+  size_t magic_size;
+  char *name;
+  unsigned char *mask;  
+};
+
+
+typedef struct im_file_magic im_file_magic;
+struct im_file_magic {
+  struct file_magic_entry m;
+
+  /* more magic to check */
+  im_file_magic *next;
+};
+
 #define IM_ERROR_COUNT 20
 typedef struct im_context_tag {
   int error_sp;
@@ -137,6 +153,9 @@ typedef struct im_context_tag {
   /* per context storage */
   size_t slot_alloc;
   void **slots;
+
+  /* registered file type magic */
+  im_file_magic *file_magic;
 
   ptrdiff_t refcount;
 } im_context_struct;

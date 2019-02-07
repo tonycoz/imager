@@ -55,6 +55,8 @@ Imager::Files - working with image files
   my $img = Imager->new(file => $filename)
     or die Imager->errstr;
 
+  Imager->add_file_magic(name => $name, bits => $bits, mask => $mask);
+
 =head1 DESCRIPTION
 
 You can read and write a variety of images formats, assuming you have
@@ -422,6 +424,48 @@ detect the following image types beyond those supported by Imager:
 
 C<xpm>, C<mng>, C<jng>, C<ilbm>, C<pcx>, C<fits>, C<psd> (Photoshop), C<eps>, Utah
 C<RLE>.
+
+=back
+
+You can now add to the magic database Imager uses for detecting file
+types:
+
+=over
+
+=item add_file_magic()
+
+  Imager->add_file_magic(name => $name, bits => $bits, mask => $mask)
+
+Adds to list of magic, the parameters are all required.  The
+parameters are:
+
+=over
+
+=item *
+
+C<name> - the file type name to return on match.
+
+=item *
+
+C<bits> - a binary string to match.
+
+=item *
+
+C<mask> - a mask controlling which parts of I<bits> are significant.
+
+=back
+
+While I<mask> is mostly a bit mask, some byte values are translated,
+the space character is treated as all zeros (C<"\x00">), and the C<x> character as
+all ones (C<"\xFF">).
+
+New magic entries take priority over old entries.
+
+You can add more than one magic entry for a given I<name>.
+
+  Imager->add_file_magic(name => "heif",
+                         bits => "    ftypheif"
+                         mask => "    xxxxxxxx");
 
 =back
 

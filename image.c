@@ -1600,15 +1600,8 @@ i_gsamp_bits_fb(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, unsigned *samp
   }
 }
 
-struct magic_entry {
-  unsigned char *magic;
-  size_t magic_size;
-  char *name;
-  unsigned char *mask;  
-};
-
 static int
-test_magic(unsigned char *buffer, size_t length, struct magic_entry const *magic) {
+test_magic(unsigned char *buffer, size_t length, struct file_magic_entry const *magic) {
   if (length < magic->magic_size)
     return 0;
   if (magic->mask) {
@@ -1646,8 +1639,8 @@ Check the beginning of the supplied file for a 'magic number'
   { (unsigned char *)(magic ""), sizeof(magic)-1, type, (unsigned char *)(mask) }
 
 const char *
-i_test_format_probe(io_glue *data, int length) {
-  static const struct magic_entry formats[] = {
+im_test_format_probe(im_context_t ctx, io_glue *data, int length) {
+  static const struct file_magic_entry formats[] = {
     FORMAT_ENTRY("\xFF\xD8", "jpeg"),
     FORMAT_ENTRY("GIF87a", "gif"),
     FORMAT_ENTRY("GIF89a", "gif"),
@@ -1714,7 +1707,7 @@ i_test_format_probe(io_glue *data, int length) {
     /* FLIF - Free Lossless Image Format - https://flif.info/spec.html */
     FORMAT_ENTRY("FLIF", "flif")
   };
-  static const struct magic_entry more_formats[] = {
+  static const struct file_magic_entry more_formats[] = {
     /* these were originally both listed as ico, but cur files can
        include hotspot information */
     FORMAT_ENTRY("\x00\x00\x01\x00", "ico"), /* Windows icon */
@@ -1739,8 +1732,18 @@ i_test_format_probe(io_glue *data, int length) {
   }
 #endif
 
+  {
+    im_file_magic *p = ctx->file_magic;
+    while (p) {
+      if (test_magic(head, rc, &p->m)) {
+	return p->m.name;
+      }
+      p = p->next;
+    }
+  }
+
   for(i=0; i<sizeof(formats)/sizeof(formats[0]); i++) { 
-    struct magic_entry const *entry = formats + i;
+    struct file_magic_entry const *entry = formats + i;
 
     if (test_magic(head, rc, entry)) 
       return entry->name;
@@ -1751,7 +1754,7 @@ i_test_format_probe(io_glue *data, int length) {
     return "tga";
 
   for(i=0; i<sizeof(more_formats)/sizeof(more_formats[0]); i++) { 
-    struct magic_entry const *entry = more_formats + i;
+    struct file_magic_entry const *entry = more_formats + i;
 
     if (test_magic(head, rc, entry)) 
       return entry->name;

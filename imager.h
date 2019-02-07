@@ -229,8 +229,15 @@ extern int i_img_is_monochrome(i_img *im, int *zero_is_white);
 extern int i_get_file_background(i_img *im, i_color *bg);
 extern int i_get_file_backgroundf(i_img *im, i_fcolor *bg);
 
-const char * i_test_format_probe(io_glue *data, int length);
+const char * im_test_format_probe(im_context_t ctx, io_glue *data, int length);
+#define i_test_format_probe(io, length) im_test_format_probe(aIMCTX, (io), (length))
 
+/* file type magic to extend file detection */
+extern int im_add_file_magic(im_context_t ctx, const char *name,
+			     const unsigned char *bits, const unsigned char *mask,
+			     size_t length);
+#define i_add_file_magic(name, bits, mask, length) \
+  im_add_file_magic(aIMCTX, (name), (bits), (mask), (length))
 
 i_img   * i_readraw_wiol(io_glue *ig, i_img_dim x, i_img_dim y, int datachannels, int storechannels, int intrl);
 undef_int i_writeraw_wiol(i_img* im, io_glue *ig);
