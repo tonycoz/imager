@@ -7,7 +7,7 @@ use vars qw(@ISA @EXPORT_OK $VERSION);
 use Carp qw(croak carp);
 use Config;
 
-$VERSION = "1.003";
+$VERSION = "1.004";
 
 @ISA = qw(Exporter);
 @EXPORT_OK = 
@@ -976,7 +976,7 @@ four.
 =item is_image_similar($im1, $im2, $maxdiff, $comment)
 
 Tests if the 2 images have similar content.  Both images must be
-defined, have the same width, height and channels.  The cum of the
+defined, have the same width, height and channels.  The sum of the
 squares of the differences of each sample are calculated and must be
 less than or equal to I<$maxdiff> for the test to pass.  The color
 comparison is done at 8-bits per pixel.  The color representation such
