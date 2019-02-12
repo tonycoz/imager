@@ -905,6 +905,12 @@ i_readgif_multi_low(GifFileType *GifFile, int *count, int page) {
     return NULL;
   }
 
+  if (!ImageNum) {
+    /* there were no images */
+    i_push_error(0, "no images found in file");
+    return NULL;
+  }
+
   if (ImageNum && page != -1) {
     /* there were images, but the page selected wasn't found */
     i_push_errorf(0, "page %d not found (%d total)", page, ImageNum);

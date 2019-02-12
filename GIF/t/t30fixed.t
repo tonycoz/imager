@@ -1,6 +1,6 @@
 #!perl -w
 use strict;
-use Test::More tests => 9;
+use Test::More;
 use Imager;
 use Imager::Test qw(test_image);
 
@@ -44,4 +44,14 @@ Imager->open_log(log => "testout/t30fixed.log");
   is($rd->colorcount, 2, "should only have 2 colors");
 }
 
+{
+  my $im = Imager->new;
+  ok(!$im->read(data => "GIF89a;;;;;;;;", type => "gif" ),
+     "fail to read a file with no images");
+  like($im->errstr, qr/no images found in file/,
+       "check the error message");
+}
+
 Imager->close_log;
+
+done_testing();
