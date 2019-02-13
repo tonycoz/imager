@@ -4769,7 +4769,8 @@ Where to find information on methods for Imager class objects.
 addcolors() - L<Imager::ImageTypes/addcolors()> - add colors to a
 paletted image
 
-add_file_magic() - 
+add_file_magic() - L<Imager::Files/add_file_magic()> - add magic to
+Imager's file type detector.
 
 addtag() -  L<Imager::ImageTypes/addtag()> - add image tags
 
