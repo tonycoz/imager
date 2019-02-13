@@ -14,6 +14,11 @@ General changes:
    message.  Thanks to Peter Sergeant for reporting this.
    https://rt.cpan.org/Ticket/Display.html?id=128481
 
+ - use undeprecated encoding symbols for FT2.  This should fix the
+   build on the badly patched CentOS 7 Freetype 2.  Thanks to Slaven
+   Rezic for the report.
+   https://rt.cpan.org/Ticket/Display.html?id=128142
+
 Coverity has come back up read-only, a few more changes:
 
  - add missing va_end() for bmp.c's write_packed().  CID 185320.
