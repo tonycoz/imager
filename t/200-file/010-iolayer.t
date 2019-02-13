@@ -1,6 +1,6 @@
 #!perl -w
 use strict;
-use Test::More tests => 291;
+use Test::More;
 use Imager::Test qw(is_image);
 # for SEEK_SET etc, Fcntl doesn't provide these in 5.005_03
 use IO::Seekable;
@@ -875,12 +875,16 @@ SKIP:
   my $im = Imager->new(xsize => 10, ysize => 10);
   $foo = "";
   open my $fh2, ">", \$foo;
+  binmode $fh2;
   ok($im->write(fh => $fh2, type => "pnm"), "can write image to scalar fh")
     or print "# ", $im->errstr, "\n";
 
   close $fh2;
+  is(unpack("H*", $foo), "50360a2343524541544f523a20496d616765720a31302031300a3235350a".("00" x 300),
+     "check we got the right 'file' context");
   my $tmp = $foo;
   open my $fh3, "<", \$foo;
+  binmode $fh3;
   my $im2 = Imager->new(fh => $fh3);
  SKIP:
   {
@@ -893,6 +897,7 @@ SKIP:
   }
   close $fh3;
   open my $fh4, "<", \$foo;
+  binmode $fh3;
   my $im3 = Imager->new;
  SKIP:
   {
@@ -973,6 +978,8 @@ Imager->close_log;
 unless ($ENV{IMAGER_KEEP_FILES}) {
   unlink "testout/t07.ppm", "testout/t07iolayer.log";
 }
+
+done_testing();
 
 sub eof_read {
   my ($max_len) = @_;
