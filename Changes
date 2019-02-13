@@ -1,5 +1,41 @@
 Imager release history.  Older releases can be found in Changes.old
 
+Imager 1.010 - ???
+============
+
+General changes:
+
+ - added the add_file_magic() class method for adding magic for new
+   file types to Imager's fairly primitive file magic detection.
+
+ - fixed an embarassing documentation typo in Imager::Test.
+
+ - trying to read from a GIF file with no images now sets an error
+   message.  Thanks to Peter Sergeant for reporting this.
+   https://rt.cpan.org/Ticket/Display.html?id=128481
+
+Coverity has come back up read-only, a few more changes:
+
+ - add missing va_end() for bmp.c's write_packed().  CID 185320.
+
+ - similarly for read_packed().  CID 185329.
+
+ - add a NOTREACHED lint comment for pixel_coverage().  Compilers
+   complained about a missing return, Coverity complains about the
+   return.  CID 185325.
+
+ - avoid a possible sign extension in imsgi.c. CID 185326.
+
+ - add some FALLTHROUGH lint comments to i_readtga_wiol() where we
+   deliberately fall through switch cases.  CID 185328.
+
+ - add assertions in callers to i_new_hatch_low() since Coverity
+   complained about some possible inconsistent NULL checks.  CID
+   185339.  I ended up rearranging this function later.
+
+ - remove pointless NULL checks from i_flipxy() and i_img_destroy().
+ 
+
 Imager 1.009 - 11 Jan 2019
 ============
 
