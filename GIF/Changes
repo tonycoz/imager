@@ -1,3 +1,10 @@
+Imager-File-GIF 0.95
+====================
+
+ - trying to read from a GIF file with no images now sets an error
+   string (it always failed)
+   https://rt.cpan.org/Ticket/Display.html?id=128481
+
 Imager-File-GIF 0.94
 ====================
 
