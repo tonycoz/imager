@@ -897,7 +897,7 @@ SKIP:
   }
   close $fh3;
   open my $fh4, "<", \$foo;
-  binmode $fh3;
+  binmode $fh4;
   my $im3 = Imager->new;
  SKIP:
   {
