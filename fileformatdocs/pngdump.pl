@@ -311,7 +311,7 @@ pngdump.pl - dump the structure of a PNG image file.
 
 =head1 SYNOPSIS
 
-  perl [-dumpall] [-image] pngdump.pl filename
+  perl pngdump.pl [-dumpall] [-image] filename
 
 =head1 DESCRIPTION
 
