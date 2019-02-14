@@ -213,7 +213,7 @@ typedef struct {
 /* in memory tiff structure */
 typedef struct {
   /* the data we use as a tiff */
-  unsigned char *base;
+  const unsigned char *base;
   size_t size;
 
   /* intel or motorola byte order */
@@ -228,7 +228,7 @@ typedef struct {
   unsigned long next_ifd;
 } imtiff;
 
-static int tiff_init(imtiff *tiff, unsigned char *base, size_t length);
+static int tiff_init(imtiff *tiff, const unsigned char *base, size_t length);
 static int tiff_load_ifd(imtiff *tiff, unsigned long offset);
 static void tiff_final(imtiff *tiff);
 static void tiff_clear_ifd(imtiff *tiff);
@@ -286,7 +286,7 @@ Returns true if an EXIF header was seen.
 */
 
 int
-im_decode_exif(i_img *im, unsigned char *data, size_t length) {
+im_decode_exif(i_img *im, const unsigned char *data, size_t length) {
   imtiff tiff;
   unsigned long exif_ifd_offset = 0;
   unsigned long gps_ifd_offset = 0;
@@ -840,7 +840,7 @@ the first IFD (IFD0 in EXIF) in first_ifd_offset.
 */
 
 static int
-tiff_init(imtiff *tiff, unsigned char *data, size_t length) {
+tiff_init(imtiff *tiff, const unsigned char *data, size_t length) {
   int version;
 
   tiff->base = data;

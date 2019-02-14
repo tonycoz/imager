@@ -271,7 +271,7 @@ typedef struct {
   int (*f_i_img_color_channels)(i_img *im);
 
   /* IMAGER_API_LEVEL 10 functions will be added here */
-  int (*f_im_decode_exif)(i_img *im, unsigned char *data, size_t length);
+  int (*f_im_decode_exif)(i_img *im, const unsigned char *data, size_t length);
 
   /* IMAGER_API_LEVEL 11 functions will be added here */
 } im_ext_funcs;

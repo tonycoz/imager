@@ -5,6 +5,6 @@
 #include <stddef.h>
 #include "imdatatypes.h"
 
-extern int im_decode_exif(i_img *im, unsigned char *data, size_t length);
+extern int im_decode_exif(i_img *im, const unsigned char *data, size_t length);
 
 #endif /* ifndef IMAGER_IMEXIF_H */
