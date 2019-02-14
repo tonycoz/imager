@@ -51,7 +51,7 @@
 ^_Inline/
 
 # distributions built
-^Imager-\d\.\d\d(_\d\d)?\.tar\.gz$
+^Imager-\d\.\d+(_\d+)?\.tar\.gz$
 
 # build trash
 Makefile$
@@ -144,3 +144,9 @@ MYMETA.json
 
 # dist dir
 ^Imager-[01]\.[0-9]+/
+
+# sub-module dists
+^.*\.tar\.gz$
+
+# commonly test scripts
+^\w+\.pl$
