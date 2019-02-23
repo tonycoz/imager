@@ -1389,14 +1389,14 @@ translate_errdiff(i_quantize *quant, i_img *img, i_palidx *out) {
   for (i = 0; i < maph * mapw; ++i) {
     if (map[i] < 0) {
       i_push_errorf(0, "errdiff_map values must be non-negative, errdiff[%d] is negative", i);
-      return 0;
+      goto fail;
     }
     difftotal += map[i];
   }
 
   if (!difftotal) {
     i_push_error(0, "error diffusion map must contain some non-zero values");
-    return 0;
+    goto fail;
   }
 
   errw = img->xsize+mapw;
@@ -1459,6 +1459,11 @@ translate_errdiff(i_quantize *quant, i_img *img, i_palidx *out) {
   myfree(err);
 
   return 1;
+
+ fail:
+  CF_CLEANUP;
+
+  return 0;
 }
 /* Prescan finds the boxes in the image that have the highest number of colors 
    and that result is used as the initial value for the vectores */
