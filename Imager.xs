@@ -3266,14 +3266,13 @@ i_img_make_palette(HV *quant_hv, ...)
       PPCODE:
         if (count <= 0)
 	  croak("Please supply at least one image (%d)", (int)count);
-        imgs = mymalloc(sizeof(i_img *) * count);
+	imgs = malloc_temp(aTHX_ count * sizeof(i_img *));
 	for (i = 0; i < count; ++i) {
 	  SV *img_sv = ST(i + 1);
 	  if (SvROK(img_sv) && sv_derived_from(img_sv, "Imager::ImgRaw")) {
 	    imgs[i] = INT2PTR(i_img *, SvIV((SV*)SvRV(img_sv)));
 	  }
 	  else {
-	    myfree(imgs);
 	    croak("Image %d is not an image object", (int)i+1);
           }
 	}
@@ -3290,7 +3289,6 @@ i_img_make_palette(HV *quant_hv, ...)
 	  PUSHs(sv_c);
 	}
  	ip_cleanup_quant_opts(aTHX_ &quant);
-        myfree(imgs);
 	
 
 void
