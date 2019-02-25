@@ -244,6 +244,7 @@ DSO_open(char* file,char** evalstring) {
   mm_log( (1,"DSO_open: going to dlsym '%s'\n", I_INSTALL_TABLES ));
   if ( (f = (void(*)(void *s,void *u))dlsym(d_handle, I_INSTALL_TABLES)) == NULL) {
     mm_log( (1,"DSO_open: dlsym didn't find '%s': %s.\n",I_INSTALL_TABLES,dlerror()) );
+    dlclose(d_handle);
     return NULL;
   }
 
@@ -257,16 +258,21 @@ DSO_open(char* file,char** evalstring) {
   mm_log( (1,"DSO_open: going to dlsym '%s'\n", I_FUNCTION_LIST ));
   if ( (function_list=(func_ptr *)dlsym(d_handle, I_FUNCTION_LIST)) == NULL) {
     mm_log( (1,"DSO_open: dlsym didn't find '%s': %s.\n",I_FUNCTION_LIST,dlerror()) );
+    dlclose(d_handle);
     return NULL;
   }
-  
-  if ( (dso_handle=(DSO_handle*)malloc(sizeof(DSO_handle))) == NULL) /* checked 17jul05 tonyc */
+
+  /* checked 17jul05 tonyc */
+  if ( (dso_handle=(DSO_handle*)malloc(sizeof(DSO_handle))) == NULL) {
+    dlclose(d_handle);
     return NULL;
+  }
   
   dso_handle->handle=d_handle; /* needed to close again */
   dso_handle->function_list=function_list;
   if ( (dso_handle->filename=(char*)malloc(strlen(file)+1)) == NULL) { /* checked 17jul05 tonyc */
     free(dso_handle); 
+    dlclose(d_handle);
     return NULL;
   }
   strcpy(dso_handle->filename,file);
@@ -278,9 +284,13 @@ DSO_open(char* file,char** evalstring) {
 undef_int
 DSO_close(void *ptr) {
   DSO_handle *handle;
+  undef_int result;
   mm_log((1,"DSO_close(ptr %p)\n",ptr));
   handle=(DSO_handle*) ptr;
-  return !dlclose(handle->handle);
+  result = !dlclose(handle->handle);
+  free(handle->filename);
+  free(handle);
+  return result;
 }
 
 #endif
