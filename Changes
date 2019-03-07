@@ -8,6 +8,24 @@ General changes:
 
  - add missing change entry for RT #128142
 
+ - binmode the correct handle in t/200-file/010-iolayer.t, this may fix some test
+   failures on one CPAN smoker.
+
+ - add the mymeta check (AUTHOR testing only) to MANIFEST
+
+More Coverity fixes:
+
+ - translate_errdiff() could leak memory on failure (introduced in
+   1.009) CID 185565.
+
+ - i_img_make_palette() could leak memory on failure (introduced in
+   1.009) CID 185566.
+
+ - DSO_open(), from the original dynamic loading API, could leak
+   dlopen() handles on failure.  CID 185309.  DSO_close() now releases
+   the memory associated with the internal DSO handle, rather than
+   only releasing the dlopen() handle.
+
 Imager 1.010 - 13 Feb 2019
 ============
 
