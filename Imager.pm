@@ -5033,7 +5033,7 @@ L<Imager::ImageTypes/"Common Tags">.
 blend - alpha blending one image onto another
 L<Imager::Transformations/rubthrough()>
 
-blur - L<Imager::Filters/gaussian>, L<Imager::Filters/conv>
+blur - L<< Imager::Filters/C<gaussian> >>, L<< Imager::Filters/C<conv> >>
 
 boxes, drawing - L<Imager::Draw/box()>
 
@@ -5049,9 +5049,9 @@ combine modes - L<Imager::Draw/"Combine Types">
 
 compare images - L<Imager::Filters/"Image Difference">
 
-contrast - L<Imager::Filters/contrast>, L<Imager::Filters/autolevels>
+contrast - L<< Imager::Filters/C<contrast> >>, L<< Imager::Filters/C<autolevels> >>
 
-convolution - L<Imager::Filters/conv>
+convolution - L<< Imager::Filters/C<conv> >>
 
 cropping - L<Imager::Transformations/crop()>
 
@@ -5092,27 +5092,27 @@ fonts, metrics - L<Imager::Font/bounding_box()>, L<Imager::Font::BBox>
 fonts, multiple master - L<Imager::Font/"MULTIPLE MASTER FONTS">
 
 fountain fill - L<Imager::Fill/"Fountain fills">,
-L<Imager::Filters/fountain>, L<Imager::Fountain>,
-L<Imager::Filters/gradgen>
+L<< Imager::Filters/C<fountain> >>, L<Imager::Fountain>,
+L<< Imager::Filters/C<gradgen> >>
 
 GIF files - L<Imager::Files/"GIF">
 
 GIF files, animated - L<Imager::Files/"Writing an animated GIF">
 
 gradient fill - L<Imager::Fill/"Fountain fills">,
-L<Imager::Filters/fountain>, L<Imager::Fountain>,
-L<Imager::Filters/gradgen>
+L<< Imager::Filters/C<fountain> >>, L<Imager::Fountain>,
+L<< Imager::Filters/C<gradgen> >>
 
 gray scale, convert image to - L<Imager::Transformations/convert()>
 
-gaussian blur - L<Imager::Filters/gaussian>
+gaussian blur - L<< Imager::Filters/C<gaussian> >>, L<< Imager::Filters/C<gaussian2> >>
 
 hatch fills - L<Imager::Fill/"Hatched fills">
 
 ICO files - L<Imager::Files/"ICO (Microsoft Windows Icon) and CUR (Microsoft Windows Cursor)">
 
-invert image - L<Imager::Filters/hardinvert>,
-L<Imager::Filters/hardinvertall>
+invert image - L<< Imager::Filters/C<hardinvert> >>,
+L<< Imager::Filters/C<hardinvertall> >>
 
 JPEG - L<Imager::Files/"JPEG">
 
@@ -5126,12 +5126,12 @@ L<Imager::Font/transform()>
 
 metadata, image - L<Imager::ImageTypes/"Tags">, L<Image::ExifTool>
 
-mosaic - L<Imager::Filters/mosaic>
+mosaic - L<< Imager::Filters/C<mosaic> >>
 
-noise, filter - L<Imager::Filters/noise>
+noise, filter - L<< Imager::Filters/C<noise> >>
 
-noise, rendered - L<Imager::Filters/turbnoise>,
-L<Imager::Filters/radnoise>
+noise, rendered - L<< Imager::Filters/C<turbnoise> >>,
+L<< Imager::Filters/C<radnoise> >>
 
 paste - L<Imager::Transformations/paste()>,
 L<Imager::Transformations/rubthrough()>
@@ -5141,7 +5141,7 @@ L<Imager::ImageTypes/new()>
 
 =for stopwords posterize
 
-posterize - L<Imager::Filters/postlevels>
+posterize - L<< Imager::Filters/C<postlevels> >>
 
 PNG files - L<Imager::Files>, L<Imager::Files/"PNG">
 
@@ -5162,7 +5162,7 @@ security - L<Imager::Security>
 
 SGI files - L<Imager::Files/"SGI (RGB, BW)">
 
-sharpen - L<Imager::Filters/unsharpmask>, L<Imager::Filters/conv>
+sharpen - L<< Imager::Filters/C<unsharpmask> >>, L<< Imager::Filters/C<conv> >>
 
 size, image - L<Imager::ImageTypes/getwidth()>,
 L<Imager::ImageTypes/getheight()>
@@ -5180,16 +5180,16 @@ text, measuring - L<Imager::Font/bounding_box()>, L<Imager::Font::BBox>
 
 threads - L<Imager::Threads>
 
-tiles, color - L<Imager::Filters/mosaic>
+tiles, color - L<< Imager::Filters/C<mosaic> >>
 
 transparent images - L<Imager::ImageTypes>,
 L<Imager::Cookbook/"Transparent PNG">
 
 =for stopwords unsharp
 
-unsharp mask - L<Imager::Filters/unsharpmask>
+unsharp mask - L<< Imager::Filters/C<unsharpmask> >>
 
-watermark - L<Imager::Filters/watermark>
+watermark - L<< Imager::Filters/C<watermark> >>
 
 writing an image to a file - L<Imager::Files>
 
