@@ -2251,9 +2251,15 @@ i_matrix_transform(im, xsize, ysize, matrix_av, ...)
     RETVAL
 
 undef_int
-i_gaussian(im,stdev)
+i_gaussian(im,stddev)
     Imager::ImgRaw     im
-	    im_double     stdev
+	    im_double     stddev
+
+undef_int
+i_gaussian2(im,stddevX,stddevY)
+    Imager::ImgRaw     im
+	    im_double     stddevX
+	    im_double     stddevY
 
 void
 i_unsharp_mask(im,stdev,scale)

@@ -1,7 +1,7 @@
 #!perl -w
 use strict;
 use Imager qw(:handy);
-use Test::More tests => 124;
+use Test::More tests => 136;
 
 -d "testout" or mkdir "testout";
 
@@ -64,6 +64,34 @@ test($imbase, {type=>'conv', coef=>[ 0.3, 1, 0.3, ], },
   my $imbase16 = $imbase->to_rgb16;
   my $gauss16 = test($imbase16,  {type=>'gaussian', stddev=>5 },
 		     'testout/t61_gaussian16.ppm');
+  is_image_similar($gauss, $gauss16, 250000, "8 and 16 gaussian match");
+}
+
+{
+  my $imbase = Imager->new( xsize=>150, ysize=>150 );
+  $imbase->box( filled=>1, color=>'white', box=>[ 70, 24, 80, 124 ] );
+  $imbase->box( filled=>1, color=>'red', box=>[ 70, 24, 124, 30 ] );
+  $imbase->write( file=>"testout/t61_gaussian2-base.ppm" );
+
+  my $gauss = test($imbase, {type=>'gaussian2', stddevY=>5, stddevX=>0 },
+		   'testout/t61_gaussianY.ppm');
+
+  my $imbase16 = $imbase->to_rgb16;
+  my $gauss16 = test($imbase16,  {type=>'gaussian2', stddevY=>5, stddevX=>0.1 },
+		     'testout/t61_gaussianY-16.ppm');
+  is_image_similar($gauss, $gauss16, 250000, "8 and 16 gaussian match");
+
+
+  test($imbase, {type=>'gaussian2', stddevX=>5, stddevY=>5 },
+		   'testout/t61_gaussian_both.ppm');
+
+
+  $gauss = test($imbase, {type=>'gaussian2', stddevX=>5, stddevY=>0 },
+		   'testout/t61_gaussianX.ppm');
+
+  $imbase16 = $imbase->to_rgb16;
+  $gauss16 = test($imbase16,  {type=>'gaussian2', stddevX=>5, stddevY=>0.1 },
+		     'testout/t61_gaussianX-16.ppm');
   is_image_similar($gauss, $gauss16, 250000, "8 and 16 gaussian match");
 }
 

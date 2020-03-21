@@ -101,6 +101,9 @@ that comes with the module source.
 
   gaussian        stddev
 
+  gaussian2       stddevX
+                  stddevY
+
   gradgen         xo yo colors 
                   dist         0
 
@@ -436,7 +439,7 @@ Really.  It even loads GIMP gradient files.
     or die $radial->errstr;
 
 =for stopwords Gaussian
-                           
+
 =item gaussian
 
 performs a Gaussian blur of the image, using C<stddev> as the standard
@@ -454,6 +457,26 @@ values around 5 provide a very strong blur.
 
   # more strongly blurred
   $img->filter(type=>"gaussian", stddev=>5)
+    or die $img->errstr;
+
+=item gaussian2
+
+performs a Gaussian blur of the image, using C<stddevX>, C<stddevY> as the
+standard deviation of the curve used to combine pixels on the X and Y axis,
+respectively. Larger values give bigger blurs.  For a definition of Gaussian
+Blur, see:
+
+  http://www.maths.abdn.ac.uk/~igc/tch/mx4002/notes/node99.html
+
+Values of C<stddevX> or C<stddevY> around 0.5 provide a barely noticeable blur,
+values around 5 provide a very strong blur.
+
+  # only slightly blurred
+  $img->filter(type=>"gaussian2", stddevX=>0.5, stddevY=>0.5)
+    or die $img->errstr;
+
+  # blur an image in the Y axis
+  $img->filter(type=>"gaussian", stddevX=>0, stddevY=>5 )
     or die $img->errstr;
 
 =item gradgen

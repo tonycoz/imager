@@ -279,6 +279,11 @@ BEGIN {
                         defaults => { },
                         callsub => sub { my %hsh = @_; i_gaussian($hsh{image}, $hsh{stddev}); },
                        };
+  $filters{gaussian2} = {
+                        callseq => [ 'image', 'stddevX', 'stddevY' ],
+                        defaults => { },
+                        callsub => sub { my %hsh = @_; i_gaussian2($hsh{image}, $hsh{stddevX}, $hsh{stddevY}); },
+                       };
   $filters{mosaic} =
     {
      callseq => [ qw(image size) ],

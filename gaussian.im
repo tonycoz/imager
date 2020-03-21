@@ -19,28 +19,22 @@ gauss(int x, double std) {
 
 int
 i_gaussian(i_img *im, double stddev) {
-  int i, c, ch;
-  i_img_dim x, y;
-  double pc;
-  double *coeff;
-  double res[MAXCHANNELS];
-  i_img *timg;
-  int radius, diameter;
-  dIMCTXim(im);
+  return i_gaussian2( im, stddev, stddev );
+}
 
-  im_log((aIMCTX, 1,"i_gaussian(im %p, stdev %.2f)\n",im,stddev));
-  i_clear_error();
+typedef struct s_gauss_coeff {
+    int diameter;
+    int radius;
+    double *coeff;
+} t_gauss_coeff;
 
-  if (stddev <= 0) {
-    i_push_error(0, "stddev must be positive");
-    return 0;
-  }
-  /* totally silly cutoff */
-  if (stddev > 1000) {
-    stddev = 1000;
-  }
  
-  timg = i_sametype(im, im->xsize, im->ysize);
+static t_gauss_coeff *build_coeff( i_img *im, double stddev ) {
+  double *coeff = NULL;
+  double pc;
+  int radius, diameter, i;
+  t_gauss_coeff *ret = mymalloc(sizeof(struct s_gauss_coeff));
+  ret->coeff = NULL;
 
   if (im->bits <= 8)
     radius = ceil(2 * stddev);
@@ -53,25 +47,98 @@ i_gaussian(i_img *im, double stddev) {
 
   for(i=0;i <= radius;i++) 
     coeff[radius + i]=coeff[radius - i]=gauss(i, stddev);
-  pc=0;
+  pc=0.0;
   for(i=0; i < diameter; i++)
     pc+=coeff[i];
-  for(i=0;i < diameter;i++)
+  for(i=0;i < diameter;i++) {
     coeff[i] /= pc;
+    // im_log((aIMCTX, 1, "i_gaussian2 Y i=%i coeff=%.2f\n", i, coeff[i] ));
+  }
 
+  ret->diameter = diameter;
+  ret->radius = radius;
+  ret->coeff = coeff;
+  return ret;
+}
+
+static void free_coeff(t_gauss_coeff *co ) {
+
+   if( co->coeff != NULL )
+     myfree( co->coeff );
+   myfree( co );
+}
+
+#define img_copy(dest, src) i_copyto( (dest), (src), 0,0, (src)->xsize,(src)->ysize, 0,0);
+
+
+
+int
+i_gaussian2(i_img *im, double stddevX, double stddevY) {
+  int c, ch;
+  i_img_dim x, y;
+  double pc;
+  t_gauss_coeff *co = NULL;
+  double res[MAXCHANNELS];
+  i_img *timg;
+  dIMCTXim(im);
+
+  im_log((aIMCTX, 1,"i_gaussian2(im %p, stddev %.2f,%.2f)\n",im,stddevX,stddevY));
+  i_clear_error();
+
+  if (stddevX < 0) {
+    i_push_error(0, "stddevX must be positive");
+    return 0;
+  }
+  if (stddevY < 0) {
+    i_push_error(0, "stddevY must be positive");
+    return 0;
+  }
+
+  if( stddevX == stddevY && stddevY == 0 ) {
+    i_push_error(0, "stddevX or stddevY must be positive");
+    return 0;
+  }
+
+
+  /* totally silly cutoff */
+  if (stddevX > 1000) {
+    stddevX = 1000;
+  }
+  if (stddevY > 1000) {
+    stddevY = 1000;
+  }
+
+  timg = i_sametype(im, im->xsize, im->ysize);
+
+  if( stddevX > 0 ) {
+    /* Build Y coefficient matrix */
+    co = build_coeff( im, stddevX );
+    im_log((aIMCTX, 1, "i_gaussian2 X coeff radius=%i diamter=%i coeff=%p\n", co->radius, co->diameter, co->coeff));
+  }
+  else {
+    im_log((aIMCTX, 1, "i_gaussian2 X coeff is unity\n"));
+  }
 
 #code im->bits <= 8
   IM_COLOR rcolor;
+  i_img *yin;
+  i_img *yout;
+
+  if( stddevX > 0 ) {
+    /******************/
+    /* Process X blur */
+    im_log((aIMCTX, 1, "i_gaussian2 X blur from im=%p to timg=%p\n", im, timg));
+
   for(y = 0; y < im->ysize; y++) {
     for(x = 0; x < im->xsize; x++) {
       pc=0.0;
       for(ch=0;ch<im->channels;ch++) 
 	res[ch]=0; 
-      for(c = 0;c < diameter; c++)
-	if (IM_GPIX(im,x+c-radius,y,&rcolor)!=-1) {
-	  for(ch=0;ch<im->channels;ch++) 
-	    res[ch]+= rcolor.channel[ch] * coeff[c];
-	  pc+=coeff[c];
+        for(c = 0;c < co->diameter; c++)
+          if (IM_GPIX(im,x+c-co->radius,y,&rcolor)!=-1) {
+	  for(ch=0;ch<im->channels;ch++)
+              res[ch]+= rcolor.channel[ch] * co->coeff[c];
+            pc+=co->coeff[c];
 	}
       for(ch=0;ch<im->channels;ch++) {
 	double value = res[ch] / pc;
@@ -80,27 +147,73 @@ i_gaussian(i_img *im, double stddev) {
       IM_PPIX(timg, x, y, &rcolor);
     }
   }
+    /* processing is im -> timg=yin -> im=yout */
+    yin = timg;
+    yout = im;
+  }
+  else {
+    /* processing is im=yin -> timg=yout -> im */
+    yin = im;
+    yout = timg;
+  }
   
+  if( stddevY > 0 ) {
+    if( stddevX != stddevY ) {
+      if( co != NULL ) {
+        free_coeff(co);
+        co = NULL;
+      }
+
+      /* Build Y coefficient matrix */
+      co = build_coeff( im, stddevY );
+      im_log((aIMCTX, 1, "i_gaussian2 Y coeff radius=%i diamter=%i coeff=%p\n", co->radius, co->diameter, co->coeff));
+    }
+
+    /******************/
+    /* Process Y blur */
+    im_log((aIMCTX, 1, "i_gaussian2 Y blur from yin=%p to yout=%p\n", yin, yout));
   for(x = 0;x < im->xsize; x++) {
     for(y = 0; y < im->ysize; y++) {
       pc=0.0;
       for(ch=0; ch<im->channels; ch++)
 	res[ch]=0; 
-      for(c=0; c < diameter; c++)
-	if (IM_GPIX(timg, x, y+c-radius, &rcolor)!=-1) {
-	  for(ch=0;ch<im->channels;ch++) 
-	    res[ch]+= rcolor.channel[ch] * coeff[c];
-	  pc+=coeff[c];
+        for(c=0; c < co->diameter; c++)
+          if (IM_GPIX(yin, x, y+c-co->radius, &rcolor)!=-1) {
+            for(ch=0;ch<yin->channels;ch++) 
+              res[ch]+= rcolor.channel[ch] * co->coeff[c];
+            pc+=co->coeff[c];
 	}
-      for(ch=0;ch<im->channels;ch++) {
+        for(ch=0;ch<yin->channels;ch++) {
 	double value = res[ch]/pc;
 	rcolor.channel[ch] = value > IM_SAMPLE_MAX ? IM_SAMPLE_MAX : IM_ROUND(value);
       }
-      IM_PPIX(im, x, y, &rcolor);
+        IM_PPIX(yout, x, y, &rcolor);
+      }
+    }
+    if( im != yout ) {
+      im_log((aIMCTX, 1, "i_gaussian2 copying yout=%p to im=%p\n", yout, im));
+      img_copy( im, yout );
+  }
+  }
+  else {
+    im_log((aIMCTX, 1, "i_gaussian2 Y coeff is unity\n"));
+    if( yin==timg ) {
+      im_log((aIMCTX, 1, "i_gaussian2 copying timg=%p to im=%p\n", timg, im));
+      img_copy( im, timg );
     }
   }
+
+  im_log((aIMCTX, 1, "i_gaussian2 im=%p\n", im));
+  im_log((aIMCTX, 1, "i_gaussian2 timg=%p\n", timg));
+  im_log((aIMCTX, 1, "i_gaussian2 yin=%p\n", yin));
+  im_log((aIMCTX, 1, "i_gaussian2 yout=%p\n", yout));
+
+
+
 #/code
-  myfree(coeff);
+  if( co != NULL )
+    free_coeff(co);
+
   i_img_destroy(timg);
   
   return 1;

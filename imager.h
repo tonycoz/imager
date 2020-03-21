@@ -178,7 +178,8 @@ undef_int i_flood_cfill_border(i_img *im, i_img_dim seedx, i_img_dim seedy, i_fi
 
 /* image processing functions */
 
-int i_gaussian    (i_img *im, double stdev);
+int i_gaussian    (i_img *im, double stddev);
+int i_gaussian2    (i_img *im, double stddevX, double stddevY);
 int i_conv        (i_img *im,const double *coeff,int len);
 void i_unsharp_mask(i_img *im, double stddev, double scale);
 
