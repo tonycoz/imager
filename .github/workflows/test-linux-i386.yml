@@ -1,4 +1,4 @@
-name: test-linux
+name: test-linux-i386
 
 on:
   push:
@@ -8,18 +8,21 @@ on:
       - '*'
   pull_request:
 
-
 jobs:
   imager:
     runs-on: ubuntu-latest
     timeout-minutes: 10
+    container:
+        image: i386/ubuntu:latest
+        env:
+            WORKSPACE: ${{ github.workspace }}
     steps:
       - name: install dependencies
         run: |
-            sudo apt-get update ||:
-            sudo apt-get -y install build-essential libtiff-dev libpng-dev libgif-dev libfreetype6-dev libjpeg-dev
+            apt-get update ||:
+            apt-get -y install build-essential libtiff-dev libpng-dev libgif-dev libfreetype6-dev libjpeg-dev git-core
       - name: checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v1
       - name: configure
         run: |
           perl Makefile.PL
