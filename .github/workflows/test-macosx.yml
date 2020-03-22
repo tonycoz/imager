@@ -1,0 +1,30 @@
+name: test-macosx
+
+on:
+  push:
+    branches:
+      - '**'
+    tags-ignore:
+      - '*'
+  pull_request:
+
+jobs:
+  perl:
+    runs-on: macos-latest
+    timeout-minutes: 15
+    steps:
+      - name: checkout
+        uses: actions/checkout@v2
+      - name: install dependencies
+        run: |
+            brew update ||:
+            brew install perl giflib libjpeg libtiff freetype libpng
+      - name: configure
+        run: |
+            perl Makefile.PL
+      - name: build
+        run: |
+            make -j2
+      - name: test
+        run: |
+            HARNESS_OPTIONS=j2 make test
