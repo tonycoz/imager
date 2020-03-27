@@ -125,6 +125,7 @@ my %probe =
    testcodeprologue => _ft2_test_code_prologue(),
    incpath => \@incpaths,
    libpath => \@libpaths,
+   pkg => [ "freetype2" ],
    alternatives =>
    [
     {
