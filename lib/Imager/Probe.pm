@@ -89,6 +89,9 @@ sub is_exe {
   if ($^O eq 'MSWin32') {
     push @exe_suffix, qw/.bat .cmd/;
   }
+  elsif ($^O eq 'cygwin') {
+    push @exe_suffix, "";
+  }
 
   for my $dir (File::Spec->path) {
     for my $suffix (@exe_suffix) {
