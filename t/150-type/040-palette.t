@@ -649,6 +649,16 @@ my $psamp_outside_error = "Image position outside of image";
      "check error message");
 }
 
+{
+  # https://rt.cpan.org/Ticket/Display.html?id=132237
+  # a 4 channel opaque image with a default to_paletted would
+  # return palette values with non-max alpha values
+  my $im = test_image()->convert(preset => 'addalpha')->to_paletted;
+  my @col = $im->getcolors;
+  is($im->getchannels, 4, "still 4 channels");
+  is($col[0]->alpha, 255, "should have a 255 alpha");
+}
+
 Imager->close_log;
 
 done_testing();

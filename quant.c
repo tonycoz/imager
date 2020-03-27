@@ -633,6 +633,7 @@ makemap_mediancut(i_quantize *quant, i_img **imgs, int count) {
       for (ch = 0; ch < 3; ++ch) {
         quant->mc_colors[i].channel[ch] = colors[i].rgb[ch];
       }
+      quant->mc_colors[i].rgba.a = 255;
     }
     quant->mc_count = out;
   }
@@ -720,6 +721,7 @@ makemap_mediancut(i_quantize *quant, i_img **imgs, int count) {
       for (ch = 0; ch < 3; ++ch) {
         quant->mc_colors[part_num].channel[ch] = sums[ch] / workpart->pixels;
       }
+      quant->mc_colors[part_num].rgba.a = 255;
     }
     quant->mc_count = color_count;
   }
