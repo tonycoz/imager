@@ -4,7 +4,7 @@ use File::Spec;
 use Config;
 use Cwd ();
 
-our $VERSION = "1.006";
+our $VERSION = "1.007";
 
 my @alt_transfer = qw/altname incsuffix libbase/;
 
