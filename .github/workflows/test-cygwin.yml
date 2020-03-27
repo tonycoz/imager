@@ -1,0 +1,46 @@
+name: test-cygwin
+
+on:
+  push:
+    branches:
+      - '**'
+    tags-ignore:
+      - '*'
+  pull_request:
+
+
+jobs:
+  imager:
+    runs-on: windows-latest
+    timeout-minutes: 10
+    steps:
+      - run: git config --global core.autocrlf false
+      - name: Set up Cygwin and install dependencies
+        shell: cmd
+        run: |
+          choco install cygwin --params="/InstallDir:%GITHUB_WORKSPACE%\cygwin" -r
+          choco install cyg-get
+          cyg-get cygwin-devel gcc-core gcc gcc-g++ make w32api-headers w32api-runtime binutils libtool git ccache perl libcrypt-devel libpng-devel libfreetype-devel libgif-devel libtiff-devel libjpeg-devel pkg-config libnsl-devel
+      - name: Check out using Cygwin git, to ensure correct file permissions
+        env:
+            GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        shell: cmd
+        run: |
+            path %GITHUB_WORKSPACE%\cygwin\bin;%GITHUB_WORKSPACE%\cygwin\usr\bin
+            sh -c "mkdir -p ~; cd ~; echo \"$GITHUB_REPOSITORY\"; git clone -qn \"https://$GITHUB_ACTOR:$GITHUB_TOKEN@github.com/$GITHUB_REPOSITORY\" work ; cd work ; if [ \"$GITHUB_EVENT_NAME\" = pull_request ] ; then git fetch origin \"$GITHUB_REF\" ; fi ; git checkout \"$GITHUB_SHA\""
+      - name: configure
+        shell: cmd
+        run: |
+            path %GITHUB_WORKSPACE%\cygwin\bin;%GITHUB_WORKSPACE%\cygwin\usr\bin
+            sh -c "cd ~/work; perl Makefile.PL --verbose"
+      - name: build
+        shell: cmd
+        run: |
+            path %GITHUB_WORKSPACE%\cygwin\bin;%GITHUB_WORKSPACE%\cygwin\usr\bin
+            sh -c "cd ~/work; make -j2"
+      - name: test
+        shell: cmd
+        run: |
+            path %GITHUB_WORKSPACE%\cygwin\bin;%GITHUB_WORKSPACE%\cygwin\usr\bin
+            sh -c "cd ~/work; HARNESS_OPTIONS=j2 make test"
+
