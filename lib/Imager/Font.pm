@@ -4,7 +4,7 @@ use Imager::Color;
 use strict;
 use vars qw($VERSION);
 
-$VERSION = "1.038";
+$VERSION = "1.039";
 
 # the aim here is that we can:
 #  - add file based types in one place: here
@@ -45,7 +45,7 @@ my %drivers =
   );
 
 # this currently should only contain file based types, don't add w32
-my @priority = qw(t1 tt ft2 ifs);
+my @priority = qw(tt ft2 ifs);
 
 sub new {
   my $class = shift;

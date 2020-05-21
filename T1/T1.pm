@@ -233,6 +233,12 @@ __END__
 
 =head1 DESCRIPTION
 
+Imager::Font::T1 is deprecated.
+
+F<T1Lib> is unmaintained and has serious bugs when built on 64-bit
+systems.  Freetype 2 has Type 1 font support and is supported by
+Imager via Imager::Font::FT2.
+
 Imager::Font creates a Imager::Font::Type1 object when asked to create
 a font object based on a C<.pfb> file.
 

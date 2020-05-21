@@ -244,6 +244,9 @@ C<w32api-runtime> packages.
 L<Imager::Font::T1> uses L<< C<t1lib> |http://www.t1lib.org/ >> for
 font support, supporting Postscript Type 1 fonts only.
 
+=for stopwords
+abandonware
+
 T1Lib is abandonware, the latest released version has several bugs
 that reliably crash on 64-bit systems.
 
