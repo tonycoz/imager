@@ -4,7 +4,7 @@ use Imager;
 use vars qw($VERSION @ISA);
 
 BEGIN {
-  $VERSION = "0.95";
+  $VERSION = "0.96";
 
   require XSLoader;
   XSLoader::load('Imager::File::GIF', $VERSION);

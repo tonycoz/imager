@@ -5211,7 +5211,15 @@ L<http://www.molar.is/en/lists/imager-devel/>
 
 where you can also find the mailing list archive.
 
-You can report bugs by pointing your browser at:
+You can report bugs either via github at:
+
+=over
+
+L<https://github.com/tonycoz/imager/issues>
+
+=back
+
+or at:
 
 =over
 
@@ -5231,29 +5239,13 @@ Please remember to include the versions of Imager, perl, supporting
 libraries, and any relevant code.  If you have specific images that
 cause the problems, please include those too.
 
-If you don't want to publish your email address on a mailing list you
-can use CPAN::Forum:
-
-  http://www.cpanforum.com/dist/Imager
-
-You will need to register to post.
-
 =head1 CONTRIBUTING TO IMAGER
 
 =head2 Feedback
 
 I like feedback.
 
-If you like or dislike Imager, you can add a public review of Imager
-at CPAN Ratings:
-
-  http://cpanratings.perl.org/dist/Imager
-
-=for stopwords Bitcard
-
-This requires a Bitcard account (http://www.bitcard.org).
-
-You can also send email to the maintainer below.
+You can send email to the maintainer below.
 
 If you send me a bug report via email, it will be copied to Request
 Tracker.
@@ -5269,13 +5261,16 @@ it will be delayed until I get a chance to write them.
 
 To browse Imager's git repository:
 
-  http://git.imager.perl.org/imager.git
+  https://github.com/tonycoz/imager.git
 
 To clone:
 
-  git clone git://git.imager.perl.org/imager.git
+  git clone git://github.com/tonycoz/imager.git
 
-My preference is that patches are provided in the format produced by
+Or you can create a fork as usual on github and submit a github pull
+request.
+
+Patches can either be submitted as a github pull request or by using
 C<git format-patch>, for example, if you made your changes in a branch
 from master you might do:
 

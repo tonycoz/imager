@@ -42,8 +42,8 @@ if (eval { ExtUtils::MakeMaker->VERSION('6.46'); 1 }) {
       repository =>
       {
        type => "git",
-       url => "git://git.imager.perl.org/imager.git",
-       web => "http://git.imager.perl.org/imager.git",
+       url => "git://github.com/tonycoz/imager.git",
+       web => "https://github.com/tonycoz/imager.git",
       },
       bugtracker =>
       {
