@@ -1,4 +1,5 @@
 package Imager::Probe;
+use 5.006;
 use strict;
 use File::Spec;
 use Config;

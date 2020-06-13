@@ -1,10 +1,10 @@
 package Imager::File::TIFF;
+use 5.006;
 use strict;
 use Imager;
-use vars qw($VERSION @ISA);
 
 BEGIN {
-  $VERSION = "0.92";
+  our $VERSION = "0.92";
 
   require XSLoader;
   XSLoader::load('Imager::File::TIFF', $VERSION);

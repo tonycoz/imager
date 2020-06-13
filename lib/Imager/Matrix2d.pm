@@ -1,10 +1,10 @@
 package Imager::Matrix2d;
+use 5.006;
 use strict;
-use vars qw($VERSION);
 use Scalar::Util qw(reftype looks_like_number);
 use Carp qw(croak);
 
-$VERSION = "1.012";
+our $VERSION = "1.013";
 
 =head1 NAME
 
@@ -47,12 +47,11 @@ bottom, rotation angles are clockwise, rather than counter-clockwise.
 
 =cut
 
-use vars qw(@EXPORT_OK %EXPORT_TAGS @ISA);
-@ISA = 'Exporter';
-require 'Exporter.pm';
-@EXPORT_OK = qw(m2d_rotate m2d_identity m2d_translate m2d_shear 
+our @ISA = 'Exporter';
+require Exporter;
+our @EXPORT_OK = qw(m2d_rotate m2d_identity m2d_translate m2d_shear 
                 m2d_reflect m2d_scale);
-%EXPORT_TAGS =
+our %EXPORT_TAGS =
   (
    handy=> [ qw(m2d_rotate m2d_identity m2d_translate m2d_shear 
                 m2d_reflect m2d_scale) ],

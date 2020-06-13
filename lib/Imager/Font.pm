@@ -1,10 +1,9 @@
 package Imager::Font;
-
+use 5.006;
 use Imager::Color;
 use strict;
-use vars qw($VERSION);
 
-$VERSION = "1.039";
+our $VERSION = "1.039";
 
 # the aim here is that we can:
 #  - add file based types in one place: here

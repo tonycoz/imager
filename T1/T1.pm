@@ -1,12 +1,12 @@
 package Imager::Font::T1;
+use 5.006;
 use strict;
 use Imager::Color;
-use vars qw(@ISA $VERSION);
-@ISA = qw(Imager::Font);
+our @ISA = qw(Imager::Font);
 use Scalar::Util ();
 
 BEGIN {
-  $VERSION = "1.027";
+  our $VERSION = "1.027";
 
   require XSLoader;
   XSLoader::load('Imager::Font::T1', $VERSION);

@@ -1,8 +1,8 @@
 package Imager::Fill;
+use 5.006;
 use strict;
-use vars qw($VERSION);
 
-$VERSION = "1.012";
+our $VERSION = "1.013";
 
 # this needs to be kept in sync with the array of hatches in fills.c
 my @hatch_types =

@@ -1,9 +1,11 @@
 package Imager::Font::FT2;
+use 5.006;
 use strict;
 use Imager;
 use Scalar::Util ();
-use vars qw($VERSION @ISA);
-@ISA = qw(Imager::Font);
+our @ISA = qw(Imager::Font);
+
+our $VERSION;
 
 BEGIN {
   $VERSION = "0.98";

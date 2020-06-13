@@ -1,10 +1,10 @@
 package Imager::Transform;
+use 5.006;
 use strict;
 use Imager;
 use Imager::Expr::Assem;
-use vars qw($VERSION);
 
-$VERSION = "1.006";
+our $VERSION = "1.007";
 
 my %funcs =
   (

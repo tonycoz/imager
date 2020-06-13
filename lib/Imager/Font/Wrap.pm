@@ -1,10 +1,10 @@
 package Imager::Font::Wrap;
+use 5.006;
 use strict;
 use Imager;
 use Imager::Font;
-use vars qw($VERSION);
 
-$VERSION = "1.004";
+our $VERSION = "1.005";
 
 *_first = \&Imager::Font::_first;
 

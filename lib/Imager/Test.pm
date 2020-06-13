@@ -1,16 +1,16 @@
 package Imager::Test;
+use 5.006;
 use strict;
 use Test::More;
 use Test::Builder;
 require Exporter;
-use vars qw(@ISA @EXPORT_OK $VERSION);
 use Carp qw(croak carp);
 use Config;
 
-$VERSION = "1.004";
+our $VERSION = "1.005";
 
-@ISA = qw(Exporter);
-@EXPORT_OK = 
+our @ISA = qw(Exporter);
+our @EXPORT_OK = 
   qw(
      diff_text_with_nul 
      test_image_raw

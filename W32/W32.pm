@@ -1,11 +1,11 @@
 package Imager::Font::W32;
+use 5.006;
 use strict;
 use Imager;
-use vars qw($VERSION @ISA);
-@ISA = qw(Imager::Font);
+our @ISA = qw(Imager::Font);
 
 BEGIN {
-  $VERSION = "0.91";
+  our $VERSION = "0.91";
 
   require XSLoader;
   XSLoader::load('Imager::Font::W32', $VERSION);

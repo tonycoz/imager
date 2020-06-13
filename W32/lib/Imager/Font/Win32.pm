@@ -1,7 +1,9 @@
 package Imager::Font::Win32;
+use 5.006;
 use strict;
-use vars qw(@ISA);
-@ISA = qw(Imager::Font::W32);
+our @ISA = qw(Imager::Font::W32);
+
+our $VERSION = "1.000";
 
 require Imager::Font::W32;
 

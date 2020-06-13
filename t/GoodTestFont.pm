@@ -1,6 +1,8 @@
 package GoodTestFont;
+use 5.006;
 use strict;
-use vars '@ISA';
+
+our $VERSION = "1.000";
 
 # this doesn't do enough to be a font
 

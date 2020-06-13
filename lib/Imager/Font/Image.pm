@@ -1,11 +1,12 @@
 package Imager::Font::Image;
+use 5.006;
 use strict;
 use Imager::Color;
 use File::Basename;
 use File::Spec;
 
-use vars qw(@ISA %REQUIRED_FIELDS);
-@ISA = qw(Imager::Font);
+our @ISA = qw(Imager::Font);
+our $VERSION = "1.000";
 
 sub NWIDTH   () { 0 }
 sub PWIDTH   () { 2 }
@@ -15,7 +16,7 @@ sub DESCENT  () { 4 }
 sub ASCENT   () { 5 }
 
 
-%REQUIRED_FIELDS = (
+our %REQUIRED_FIELDS = (
 	Image_spec     => 1,
 	Font_size      => 1,
 	Global_ascent  => 1,

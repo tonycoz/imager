@@ -1,14 +1,14 @@
 package Imager::Preprocess;
+use 5.006;
 use strict;
 require Exporter;
-use vars qw(@ISA @EXPORT $VERSION);
 use Getopt::Long;
 use Text::ParseWords;
 
-@EXPORT = qw(preprocess);
-@ISA = qw(Exporter);
+our @EXPORT = qw(preprocess);
+our @ISA = qw(Exporter);
 
-$VERSION = "1.001";
+our $VERSION = "1.002";
 
 sub preprocess {
   unshift @ARGV, grep /^-/, shellwords($ENV{IMAGER_PREPROCESS_OPTS})

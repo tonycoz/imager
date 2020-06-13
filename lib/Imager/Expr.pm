@@ -1,10 +1,9 @@
 package Imager::Expr;
-
+use 5.006;
 use Imager::Regops;
 use strict;
-use vars qw($VERSION);
 
-$VERSION = "1.007";
+our $VERSION = "1.008";
 
 my %expr_types;
 
@@ -296,8 +295,7 @@ sub dumpcode {
 }
 
 package Imager::Expr::Postfix;
-use vars qw(@ISA);
-@ISA = qw(Imager::Expr);
+our @ISA = qw(Imager::Expr);
 
 Imager::Expr::Postfix->register_type('rpnexpr');
 
@@ -319,8 +317,7 @@ sub compile {
 
 package Imager::Expr::Infix;
 
-use vars qw(@ISA);
-@ISA = qw(Imager::Expr);
+our @ISA = qw(Imager::Expr);
 use Imager::Regops qw(%Attr $MaxOperands);
 
 {

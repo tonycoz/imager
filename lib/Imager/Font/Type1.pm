@@ -1,10 +1,11 @@
 package Imager::Font::Type1;
+use 5.006;
 use strict;
 use Imager::Font::T1;
-use vars qw(@ISA $VERSION);
-@ISA = qw(Imager::Font::FT2);
 
-$VERSION = "1.012";
+our @ISA = qw(Imager::Font::T1);
+
+our $VERSION = "1.013";
 
 1;
 

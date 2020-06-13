@@ -1,7 +1,8 @@
 package Imager::Font::Test;
+use 5.006;
 use strict;
 
-our $VERSION = "1.0001";
+our $VERSION = "1.002";
 
 use base 'Imager::Font';
 

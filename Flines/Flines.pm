@@ -1,10 +1,10 @@
 package Imager::Filter::Flines;
+use 5.006;
 use strict;
 use Imager;
-use vars qw($VERSION @ISA);
 
 BEGIN {
-  $VERSION = "0.03";
+  our $VERSION = "0.04";
   
   require XSLoader;
   XSLoader::load('Imager::Filter::Flines', $VERSION);

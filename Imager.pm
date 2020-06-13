@@ -1,14 +1,16 @@
 package Imager;
+use 5.006;
 
 use strict;
-use vars qw($VERSION @ISA @EXPORT @EXPORT_OK %EXPORT_TAGS %formats $DEBUG %filters %DSOs $ERRSTR %OPCODES $I2P $FORMATGUESS $warn_obsolete);
 use IO::File;
 use Scalar::Util;
 use Imager::Color;
 use Imager::Font;
 use Config;
 
-@EXPORT_OK = qw(
+our $ERRSTR;
+
+our @EXPORT_OK = qw(
 		init
 		init_log
 		DSO_open
@@ -89,10 +91,10 @@ use Config;
                 NCF
 );
 
-@EXPORT=qw(
+our @EXPORT=qw(
 	  );
 
-%EXPORT_TAGS=
+our %EXPORT_TAGS=
   (handy => [qw(
 		newfont
 		newcolor
@@ -138,11 +140,13 @@ $combine_types{sat}  = $combine_types{saturation};
 # this will be used to store global defaults at some point
 my %defaults;
 
+our $VERSION;
+
 BEGIN {
   require Exporter;
   my $ex_version = eval $Exporter::VERSION;
   if ($ex_version < 5.57) {
-    @ISA = qw(Exporter);
+    our @ISA = qw(Exporter);
   }
   $VERSION = '1.011';
   require XSLoader;
@@ -161,7 +165,16 @@ my %format_classes =
    t1 => "Imager::Font::T1",
   );
 
+our %formats;
+
 tie %formats, "Imager::FORMATS", \%formats_low, \%format_classes;
+
+our %filters;
+
+our $DEBUG;
+our %OPCODES;
+our $FORMATGUESS;
+our $warn_obsolete;
 
 BEGIN {
   for(i_list_formats()) { $formats_low{$_}++; }
@@ -526,7 +539,9 @@ END {
   }
 }
 
-# Load a filter plugin 
+# Load a filter plugin
+
+our %DSOs;
 
 sub load_plugin {
   my ($filename)=@_;
@@ -2424,6 +2439,8 @@ sub scaleY {
 # this moves pixels to a new location in the returned image.
 # NOTE - should make a utility function to check transforms for
 # stack overruns
+
+our $I2P;
 
 sub transform {
   my $self=shift;

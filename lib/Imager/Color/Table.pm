@@ -1,8 +1,8 @@
 package Imager::Color::Table;
 use strict;
-use vars qw($VERSION);
+use 5.006;
 
-$VERSION = "1.003";
+our $VERSION = "1.004";
 
     my %colors;
 

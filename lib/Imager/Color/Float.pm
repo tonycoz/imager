@@ -1,10 +1,9 @@
 package Imager::Color::Float;
-
+use 5.006;
 use Imager;
 use strict;
-use vars qw($VERSION);
 
-$VERSION = "1.006";
+our $VERSION = "1.006";
 
 # It's just a front end to the XS creation functions.
 

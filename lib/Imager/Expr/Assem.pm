@@ -1,13 +1,12 @@
 package Imager::Expr::Assem;
+use 5.006;
 use strict;
 use Imager::Expr;
 use Imager::Regops;
-use vars qw($VERSION);
 
-$VERSION = "1.003";
+our $VERSION = "1.004";
 
-use vars qw(@ISA);
-@ISA = qw(Imager::Expr);
+our @ISA = qw(Imager::Expr);
 
 __PACKAGE__->register_type('assem');
 

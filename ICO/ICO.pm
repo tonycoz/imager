@@ -1,10 +1,10 @@
 package Imager::File::ICO;
+use 5.006;
 use strict;
 use Imager;
-use vars qw($VERSION @ISA);
 
 BEGIN {
-  $VERSION = "0.06";
+  our $VERSION = "0.07";
   
   require XSLoader;
   XSLoader::load('Imager::File::ICO', $VERSION);

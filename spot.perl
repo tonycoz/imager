@@ -5,9 +5,8 @@ my $func = shift or die "Usage: $0 function [width height expandx expandy]\n";
 my $width = shift || 8;
 my $height = shift || 8;
 my @spot;
-use vars qw($x $y);
-for $y (0..$height-1) {
-  for $x (0..$width-1) {
+for my $y (0..$height-1) {
+  for my $x (0..$width-1) {
     my $res = eval $func;
     $spot[$x+$y*$width] = $res * $res;
   }

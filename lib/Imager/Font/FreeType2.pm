@@ -1,10 +1,11 @@
 package Imager::Font::FreeType2;
+use 5.006;
 use strict;
 use Imager::Font::FT2;
-use vars qw(@ISA $VERSION);
-@ISA = qw(Imager::Font::FT2);
 
-$VERSION = "1.020";
+our @ISA = qw(Imager::Font::FT2);
+
+our $VERSION = "1.021";
 
 
 1;

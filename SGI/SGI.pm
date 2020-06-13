@@ -1,10 +1,10 @@
 package Imager::File::SGI;
+use 5.006;
 use strict;
 use Imager;
-use vars qw($VERSION @ISA);
 
 BEGIN {
-  $VERSION = "0.04";
+  our $VERSION = "0.05";
   
   require XSLoader;
   XSLoader::load('Imager::File::SGI', $VERSION);

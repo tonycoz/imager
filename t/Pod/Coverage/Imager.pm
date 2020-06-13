@@ -1,6 +1,9 @@
 package Pod::Coverage::Imager;
+use 5.006;
 use strict;
 use base 'Pod::Coverage';
+
+our $VERSION = "1.000";
 
 sub _get_pods {
   my $self = shift;
