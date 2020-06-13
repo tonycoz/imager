@@ -233,13 +233,15 @@ __END__
 
 =head1 DESCRIPTION
 
+=for stopwords Freetype
+
 Imager::Font::T1 is deprecated.
 
 F<T1Lib> is unmaintained and has serious bugs when built on 64-bit
 systems.  Freetype 2 has Type 1 font support and is supported by
-Imager via Imager::Font::FT2.
+Imager via L<Imager::Font::FT2>.
 
-Imager::Font creates a Imager::Font::Type1 object when asked to create
+L<Imager::Font> creates a C<Imager::Font::Type1 object> when asked to create
 a font object based on a C<.pfb> file.
 
 See Imager::Font to see how to use this type.

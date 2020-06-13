@@ -45,7 +45,7 @@ my %drivers =
   );
 
 # this currently should only contain file based types, don't add w32
-my @priority = qw(tt ft2 ifs);
+my @priority = qw(ft2 ifs);
 
 sub new {
   my $class = shift;
@@ -405,18 +405,8 @@ Imager::Font - Font handling for Imager.
 
 =for stopwords TrueType FreeType
 
-This module handles creating Font objects used by Imager.  The module
-also handles querying fonts for sizes and such.  If both T1lib and
-FreeType were available at the time of compilation then Imager should
-be able to work with both TrueType fonts and t1 Postscript fonts.  To
-check if Imager is t1 or TrueType capable you can use something like
-this:
-
-  use Imager;
-  print "Has truetype"      if $Imager::formats{tt};
-  print "Has t1 postscript" if $Imager::formats{t1};
-  print "Has Win32 fonts"   if $Imager::formats{w32};
-  print "Has Freetype2"     if $Imager::formats{ft2};
+This module manages, the font object returned by Imager::Font->new
+will typically be of a class derived from Imager::Font.
 
 =over 4
 
@@ -1036,10 +1026,9 @@ You can set new priorities and save the old priorities with:
 If you supply driver names that are not currently supported, they will
 be ignored.
 
-Imager supports both T1Lib and FreeType 2 for working with Type 1
-fonts, but currently only T1Lib does any caching, so by default T1Lib
-is given a higher priority.  Since Imager's FreeType 2 support can also
-do font transformations, you may want to give that a higher priority:
+Note that by default the priority list no longer includes C<tt> and
+C<t1>, so typically you will need to have L<Imager::Font::FT2>
+installed to create fonts with Imager.
 
   my @old = Imager::Font->priorities(qw(tt ft2 t1));
 
