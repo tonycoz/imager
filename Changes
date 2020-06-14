@@ -1,6 +1,9 @@
 Imager release history.  Older releases can be found in Changes.old
 
- - Imager is moving to github.
+Imager 1.012 - 14 Jun 2020
+============
+
+ - Imager has moved to github.
 
  - T1lib support is deprecated
 
