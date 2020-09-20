@@ -4,9 +4,6 @@
 
 ######################### We start with some black magic to print on failure.
 
-# Change 1..1 below to 1..last_test_to_print .
-# (It may become useful if the test is moved to ./t subdirectory.)
-
 use Test::More;
 
 use Imager;
@@ -267,6 +264,29 @@ is_color4(Imager::Color->new(builtin=>'black'), 0, 0, 0, 255, 'builtin black');
   is($h,0,'black hue');
   is($s,0,'black saturation');
   is($v,0,'black value');
+}
+
+# test conversion to float color
+{
+  my $c = Imager::Color->new(255, 128, 64);
+  my $cf = $c->as_float;
+  is_fcolor4($cf, 1.0, 128/255, 64/255, 1.0, "check color converted to float");
+}
+
+# test conversion to 8bit color
+{
+  # more cases than above
+  my @tests =
+    (
+      [ "simple black", [ 0, 0, 0 ], [ 0, 0, 0, 255 ] ],
+      [ "range clip", [ -0.01, 0, 1.01 ], [ 0, 0, 255, 255 ] ],
+     );
+  for my $test (@tests) {
+    my ($name, $float, $expect) = @$test;
+    my $f = Imager::Color::Float->new(@$float);
+    my $as8 = $f->as_8bit;
+    is_deeply([ $as8->rgba ], $expect, $name);
+  }
 }
 
 done_testing();

@@ -3,7 +3,7 @@ use 5.006;
 use Imager;
 use strict;
 
-our $VERSION = "1.006";
+our $VERSION = "1.007";
 
 # It's just a front end to the XS creation functions.
 
@@ -37,6 +37,21 @@ sub set {
 
 sub CLONE_SKIP { 1 }
 
+sub as_8bit {
+  my ($self) = @_;
+
+  my @out;
+  for my $s ($self->rgba) {
+    my $result = 0+sprintf("%.f", $s * 255);
+    $result = $result < 0 ? 0 :
+      $result > 255 ? 255 :
+      $result;
+    push @out, $result;
+  }
+
+  return Imager::Color->new(@out);
+}
+
 1;
 
 __END__
@@ -57,6 +72,7 @@ Imager::Color::Float - Rough floating point sample color handling
 
   ($red, $green, $blue, $alpha) = $color->rgba();
   @hsv = $color->hsv(); # not implemented but proposed
+  my $c8 = $color->as_8bit;
 
   $color->info();
 
@@ -120,6 +136,11 @@ Calling info merely dumps the relevant color to the log.
 
 Returns the respective component as a floating point value typically
 from 0 to 1.0.
+
+=item as_8bit
+
+Returns the color as the roughly equivalent 8-bit Imager::Color
+object.  Samples below zero or above 1.0 are clipped.
 
 =back
 

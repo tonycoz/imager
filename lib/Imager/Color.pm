@@ -3,7 +3,7 @@ use 5.006;
 use Imager;
 use strict;
 
-our $VERSION = "1.013";
+our $VERSION = "1.014";
 
 # It's just a front end to the XS creation functions.
 
@@ -443,7 +443,12 @@ sub hsv {
     }
 
     return int($h), $s, $v, $alpha;
+}
 
+sub as_float {
+  my ($self) = @_;
+
+  return Imager::Color::Float->new(map { $_ / 255 } $self->rgba);
 }
 
 1;
@@ -692,6 +697,10 @@ Returns the color as a Hue/Saturation/Value/Alpha tuple.
 =item alpha
 
 Returns the respective component as an integer from 0 to 255.
+
+=item as_float
+
+Returns the color as a L<Imager::Color::Float> object.
 
 =back
 
