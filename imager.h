@@ -158,6 +158,8 @@ extern i_img *i_rotate_exact_bg(i_img *im, double amount, const i_color *backp, 
 extern i_img *i_matrix_transform(i_img *im, i_img_dim xsize, i_img_dim ysize, const double *matrix);
 extern i_img *i_matrix_transform_bg(i_img *im, i_img_dim xsize, i_img_dim ysize, const double *matrix,  const i_color *backp, const i_fcolor *fbackp);
 
+extern int i_trim_rect(i_img *im, double transp_threshold, int color_count, const i_trim_colors_t *colors,
+		       i_img_dim *left, i_img_dim *top, i_img_dim *right, i_img_dim *bottom);
 void i_bezier_multi(i_img *im,int l,const double *x,const double *y,const i_color *val);
 int i_poly_aa     (i_img *im,int l,const double *x,const double *y,const i_color *val);
 int i_poly_aa_cfill(i_img *im,int l,const double *x,const double *y,i_fill_t *fill);

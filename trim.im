@@ -1,0 +1,210 @@
+#define IMAGER_NO_CONTEXT
+#include "imager.h"
+#include "imageri.h"
+
+IMAGER_STATIC_INLINE int
+match_one_color(const i_sample_t *testme, const i_trim_colors_t *test) {
+  if (test->c1.channel[0] > testme[0] || test->c2.channel[0] < testme[0])
+    return 0;
+  if (test->c1.channel[1] > testme[1] || test->c2.channel[1] < testme[1])
+    return 0;
+  if (test->c1.channel[2] > testme[2] || test->c2.channel[2] < testme[2])
+    return 0;
+  return 1;
+}
+
+IMAGER_STATIC_INLINE int
+match_one_fcolor(const i_fsample_t *testme, const i_trim_colors_t *test) {
+  if (test->cf1.channel[0] > testme[0] || test->cf2.channel[0] < testme[0])
+    return 0;
+  if (test->cf1.channel[1] > testme[1] || test->cf2.channel[1] < testme[1])
+    return 0;
+  if (test->cf1.channel[2] > testme[2] || test->cf2.channel[2] < testme[2])
+    return 0;
+  return 1;
+}
+
+IMAGER_STATIC_INLINE int
+match_any_color(const i_sample_t *testme, const i_trim_colors_t *tests, int count) {
+  int i;
+  for (i = 0; i < count; ++i) {
+    if (match_one_color(testme, tests+i))
+      return 1;
+  }
+  return 0;
+}
+
+IMAGER_STATIC_INLINE int
+match_any_fcolor(const i_fsample_t *testme, const i_trim_colors_t *tests, int count) {
+  int i;
+  for (i = 0; i < count; ++i) {
+    if (match_one_fcolor(testme, tests+i))
+      return 1;
+  }
+  return 0;
+}
+
+#!define MATCH_ANY_COLOR match_any_color match_any_fcolor
+
+static const int gray_chans[4] = { 0, 0, 0, 1 };
+
+#define TEST_COLOR(s) 					    \
+  (color_count && MATCH_ANY_COLOR((s), colors, color_count) ||	\
+   check_alpha && (s)[3] <= work_threshold)
+
+static int
+trim_rect_simple(i_img *im, double transp_threshold, int color_count,
+		 const i_trim_colors_t *colors, i_img_dim *left, i_img_dim *top,
+		 i_img_dim *right, i_img_dim *bottom) {
+  const int color_chans = i_img_color_channels(im);
+  const int *chans = color_chans == 1 ? gray_chans : NULL;
+  const int has_alpha = i_img_has_alpha(im);
+  const int check_alpha = has_alpha && transp_threshold < 1.0;
+  const int chan_count = check_alpha ? 4 : 3;
+  i_img_dim x, y;
+#code im->bits <= 8
+  IM_SAMPLE_T *samps = mymalloc(sizeof(IM_SAMPLE_T) * im->ysize * chan_count);
+#if IM_EIGHT_BIT
+  const IM_WORK_T work_threshold = floor(IM_SAMPLE_MAX * transp_threshold);
+#else
+  const IM_WORK_T work_threshold = transp_threshold;
+#endif
+
+  /* scan down from top */
+  for (y = 0; y < im->ysize; ++y) {
+    IM_SAMPLE_T *s;
+    IM_GSAMP(im, 0, im->xsize, y, samps, chans, chan_count);
+    for (x = 0, s = samps; x < im->xsize; ++x, s += chan_count) {
+      if (!TEST_COLOR(s))
+	break;
+    }
+    if (x < im->xsize)
+      break;
+  }
+  *top = y;
+  if (y < im->ysize) {
+    /* scan from the bottom */
+    for (y = im->ysize-1; y >= 0; --y) {
+      IM_SAMPLE_T *s;
+      IM_GSAMP(im, 0, im->xsize, y, samps, chans, chan_count);
+      for (x = 0, s = samps; x < im->xsize; ++x, s += chan_count) {
+	if (!TEST_COLOR(s))
+	  break;
+      }
+      if (x < im->xsize)
+	break;
+    }
+    *bottom = im->ysize - y - 1;
+    
+    /* we've trimmed top and bottom, now the sides */
+    *left = *right = im->xsize;
+    for (y = *top; y < im->ysize - *bottom && (*left || *right); ++y) {
+      IM_SAMPLE_T *s;
+      IM_GSAMP(im, 0, im->xsize, y, samps, chans, chan_count);
+      for (x = 0, s = samps; x < *left; ++x, s += chan_count) {
+	if (!TEST_COLOR(s)) {
+	  *left = x;
+	  break;
+	}
+      }
+      for (x = im->xsize - 1, s = samps + chan_count * im->xsize;
+	   x >= im->xsize - *right; --x, s -= chan_count) {
+	if (!TEST_COLOR(s-chan_count)) {
+	  *right = im->xsize - x - 1;
+	  break;
+	}
+      }
+    }
+  }
+  else {
+    /* whole image can be trimmed */
+    *left = im->xsize;
+    *right = *bottom = 0;
+  }
+  myfree(samps);
+#/code
+
+  return 1;
+}
+
+int
+i_trim_rect(i_img *im, double transp_threshold, int color_count, const i_trim_colors_t *colors,
+	    i_img_dim *left, i_img_dim *top, i_img_dim *right, i_img_dim *bottom) {
+  dIMCTXim(im);
+  i_trim_colors_t *tcolors = NULL;
+  i_trim_colors_t *tcolorp;
+  const i_trim_colors_t *colorp;
+  int tcolor_count = 0;
+  int result;
+
+  if (color_count) {
+    tcolors = mymalloc(sizeof(i_trim_colors_t) * color_count);
+    tcolorp = tcolors;
+    /* convert 8-bit to float colors, or float colors to 8-bit depending on the
+       image type.
+    */
+    if (im->bits <= 8) {
+      int i, ch;
+      for (i = 0, colorp = colors; i < color_count; ++i, ++colorp) {
+	if (colorp->is_float) {
+	  for (ch = 0; ch < 3; ++ch) {
+	    tcolorp->c1.channel[ch] = ceil(colorp->cf1.channel[ch] * 255);
+	    tcolorp->c2.channel[ch] = floor(colorp->cf2.channel[ch] * 255);
+	  }
+	}
+	else {
+	  *tcolorp = *colorp;
+	}
+	for (ch = 0; ch < 3; ++ch) {
+	  if (tcolorp->c1.channel[ch] > tcolorp->c2.channel[ch])
+	    break;
+	}
+	if (ch == 3) {
+	  ++tcolorp, ++tcolor_count;
+	}
+      }
+      /* TODO optimize where the image is greyscale to remove color ranges that don't
+	 overlap the greyscale line
+      */
+    }
+    else {
+      int i, ch;
+      for (i = 0, colorp = colors; i < color_count; ++i, ++colorp) {
+	if (!colorp->is_float) {
+	  for (ch = 0; ch < 3; ++ch) {
+	    tcolorp->cf1.channel[ch] = colorp->c1.channel[ch] / 255.0;
+	    tcolorp->cf2.channel[ch] = colorp->c2.channel[ch] / 255.0;
+	  }
+	}
+	else {
+	  *tcolorp = *colors;
+	}
+	for (ch = 0; ch < 3; ++ch) {
+	  if (tcolorp->cf1.channel[ch] > tcolorp->cf2.channel[ch])
+	    break;
+	}
+	if (ch == 3) {
+	  ++tcolorp, ++tcolor_count;
+	}
+      }
+      /* TODO optimize where the image is greyscale to remove color ranges that don't
+	 overlap the greyscale line
+      */
+    }
+  }
+  
+  i_clear_error();
+
+  if (transp_threshold > 1.0 && tcolor_count == 0) {
+    /* nothing to do */
+    *left = *top = *right = *bottom = 0;
+    result = 1;
+  }
+  else {
+    result = trim_rect_simple(im, transp_threshold, tcolor_count, tcolors, left, top,
+				right, bottom);
+  }
+
+  myfree(tcolors);
+  return result;
+}

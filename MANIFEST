@@ -214,6 +214,7 @@ lib/Imager/Test.pm
 lib/Imager/Threads.pod
 lib/Imager/Transform.pm
 lib/Imager/Transformations.pod
+lib/Imager/TrimColorList.pm
 lib/Imager/Tutorial.pod
 limits.c
 log.c
@@ -354,6 +355,7 @@ t/300-transform/030-copyflip.t	Test copy, flip, rotate, matrix_transform
 t/300-transform/040-crop.t
 t/300-transform/050-convert.t
 t/300-transform/060-map.t
+t/300-transform/200-trimcolorlist.t	Test Imager::TrimColorList
 t/300-transform/500-trans.t	transform()
 t/300-transform/600-trans2.t	transform2() using RPN
 t/300-transform/610-postfix.t	more transform2() using RPN
@@ -520,6 +522,7 @@ TIFF/TIFF.pm
 TIFF/TIFF.xs
 trans2.c
 transform.perl			Shell interface to Imager::Transform
+trim.im
 typemap
 typemap.local			typemap for Imager.xs specific definitions
 typemap.oldperl			typemap for older versions of perl

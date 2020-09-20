@@ -28,6 +28,7 @@ paste.c
 rotate.c
 rubthru.c
 scale.c
+trim.c
 
 # build generated files
 *.bs

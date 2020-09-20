@@ -107,6 +107,13 @@ typedef struct {
   const i_polygon_t *polygons;
 } i_polygon_list;
 
+typedef struct {
+  SV *sv;
+  SV *rsv;
+  size_t count;
+  i_trim_colors_t *colors;
+} i_trim_color_list;
+
 /*
 
 Allocate memory that will be discarded when mortals are discarded.
@@ -251,10 +258,31 @@ make_i_color_sv(pTHX_ const i_color *c) {
   SV *sv;
   i_color *col = mymalloc(sizeof(i_color));
   *col = *c;
-  sv = sv_newmortal();
+  sv = newSV(0);
   sv_setref_pv(sv, "Imager::Color", (void *)col);
 
   return sv;
+}
+
+static SV *
+make_i_color_sv_mortal(pTHX_ const i_color *c) {
+  return sv_2mortal(make_i_color_sv(aTHX_ c));
+}
+
+static SV *
+make_i_fcolor_sv(pTHX_ const i_fcolor *c) {
+  SV *sv;
+  i_fcolor *col = mymalloc(sizeof(i_fcolor));
+  *col = *c;
+  sv = newSV(0);
+  sv_setref_pv(sv, "Imager::Color::Float", (void *)col);
+
+  return sv;
+}
+
+static SV *
+make_i_fcolor_sv_mortal(pTHX_ const i_fcolor *c) {
+  return sv_2mortal(make_i_fcolor_sv(aTHX_ c));
 }
 
 #define CBDATA_BUFSIZE 8192
@@ -1113,6 +1141,122 @@ static im_pl_ext_funcs im_perl_funcs =
   ip_handle_quant_opts2
 };
 
+#define trim_color_list__new(cls) S_trim_color_list__new(aTHX_ (cls))
+static i_trim_color_list
+S_trim_color_list__new(pTHX_ const char *cls) {
+  i_trim_color_list r;
+
+  r.count = 0;
+  r.colors = (i_trim_colors_t *)SvPVX(r.sv);
+  r.rsv = newSV(0);
+  sv_setref_pvn(r.rsv, "Imager::TrimColorList", "", 0);
+  r.sv = SvRV(r.rsv);
+
+  return r;
+}
+
+static int
+trim_color_list_grow(pTHX_ i_trim_color_list *t) {
+  STRLEN old_cur = SvCUR(t->sv);
+  char *p;
+  SvGROW(t->sv, SvCUR(t->sv)+sizeof(i_trim_colors_t));
+  p = SvPVX(t->sv);
+  memset(p+old_cur, 0, sizeof(i_trim_colors_t));
+  t->colors = (i_trim_colors_t *)p;
+
+  return 1;
+}
+
+#define trim_color_list_add_color(t, c1, c2) S_trim_color_list_add_color(aTHX_ (t), (c1), (c2))
+static int
+S_trim_color_list_add_color(pTHX_ i_trim_color_list t, const i_color *c1, const i_color *c2) {
+  i_trim_colors_t *e;
+  if (!trim_color_list_grow(aTHX_ &t))
+    return 0;
+
+  e = t.colors + t.count;
+
+  e->is_float = 0;
+  e->c1 = *c1;
+  e->c2 = *c2;
+
+  ++t.count;
+  SvCUR_set(t.sv, t.count * sizeof(i_trim_colors_t));
+  *SvEND(t.sv) = '\0';
+
+  return 1;
+}
+
+#define trim_color_list_add_fcolor(t, c1, c2) S_trim_color_list_add_fcolor(aTHX_ (t), (c1), (c2))
+static int
+S_trim_color_list_add_fcolor(pTHX_ i_trim_color_list t, const i_fcolor *c1, const i_fcolor *c2) {
+  i_trim_colors_t *e;
+  if (!trim_color_list_grow(aTHX_ &t))
+    return 0;
+
+  e = t.colors + t.count;
+
+  e->is_float = 1;
+  e->cf1 = *c1;
+  e->cf2 = *c2;
+
+  ++t.count;
+  SvCUR_set(t.sv, t.count * sizeof(i_trim_colors_t));
+  *SvEND(t.sv) = '\0';
+
+  return 1;
+}
+
+#define trim_color_list_get(t, i) S_trim_color_list_get(aTHX_ (t), (i))
+static SV *
+S_trim_color_list_get(pTHX_ i_trim_color_list t, IV i) {
+  SV *r;
+  AV *av;
+  const i_trim_colors_t *e;
+
+  if (i < 0 || i >= t.count) {
+    return &PL_sv_undef;
+  }
+
+  av = newAV();
+  r = newRV_noinc((SV*)av);
+  e = t.colors+i;
+
+  if (e->is_float) {
+    av_push(av, make_i_fcolor_sv(aTHX_ &e->cf1));
+    av_push(av, make_i_fcolor_sv(aTHX_ &e->cf2));
+  }
+  else {
+    av_push(av, make_i_color_sv(aTHX_ &e->c1));
+    av_push(av, make_i_color_sv(aTHX_ &e->c2));
+  }
+
+  return r;
+}
+
+/* given a ref to an Imager::TrimColorList fill in an i_trim_color_list structure */
+static bool
+S_get_trim_color_list(pTHX_ SV *sv, i_trim_color_list *t) {
+  STRLEN len;
+  t->rsv = sv;
+  SvGETMAGIC(sv);
+  if (!SvROK(sv))
+    return FALSE;
+  t->sv = SvRV(sv);
+  if (!SvPOK(t->sv) || SvMAGIC(t->sv))
+    return FALSE;
+  len = SvCUR(t->sv);
+  if (len % sizeof(i_trim_colors_t) != 0)
+    return FALSE;
+  t->colors = (i_trim_colors_t *)SvPVX(t->sv);
+  t->count = len / sizeof(i_trim_colors_t);
+
+  return TRUE;
+}
+
+typedef i_trim_color_list Imager__TrimColorList;
+#define trim_color_list_count(t) ((t).count)
+
 #define PERL_PL_SET_GLOBAL_CALLBACKS \
   sv_setiv(get_sv(PERL_PL_FUNCTION_TABLE_NAME, 1), PTR2IV(&im_perl_funcs));
 
@@ -1393,6 +1537,19 @@ i_int_check_image_file_limits(width, height, channels, sample_size)
 	int channels
 	size_t sample_size
   PROTOTYPE: DISABLE
+
+void
+i_trim_rect(Imager::ImgRaw im, double transp_threshold, Imager::TrimColorList cls)
+  PREINIT:
+    i_img_dim left, top, right, bottom;
+  PPCODE:
+    if (!i_trim_rect(im, transp_threshold, cls.count, cls.colors, &left, &top, &right, &bottom))
+      XSRETURN(0);
+      EXTEND(SP, 4);
+      PUSHs(newSViv(left));
+      PUSHs(newSViv(top));
+      PUSHs(newSViv(right));
+      PUSHs(newSViv(bottom));
 
 MODULE = Imager		PACKAGE = Imager::IO	PREFIX = io_
 
@@ -3336,7 +3493,7 @@ i_img_make_palette(HV *quant_hv, ...)
 	i_quant_makemap(&quant, imgs, count);
 	EXTEND(SP, quant.mc_count);
 	for (i = 0; i < quant.mc_count; ++i) {
-	  SV *sv_c = make_i_color_sv(aTHX_ quant.mc_colors + i);
+	  SV *sv_c = make_i_color_sv_mortal(aTHX_ quant.mc_colors + i);
 	  PUSHs(sv_c);
 	}
  	ip_cleanup_quant_opts(aTHX_ &quant);
@@ -3487,7 +3644,7 @@ i_getcolors(im, index, count=1)
         if (i_getcolors(im, index, colors, count)) {
 	  EXTEND(SP, count);
           for (i = 0; i < count; ++i) {
-            SV *sv = make_i_color_sv(aTHX_ colors+i);
+            SV *sv = make_i_color_sv_mortal(aTHX_ colors+i);
             PUSHs(sv);
           }
         }
@@ -3879,7 +4036,7 @@ i_glin(im, l, r, y)
 	  if (GIMME_V == G_ARRAY) {
             EXTEND(SP, count);
             for (i = 0; i < count; ++i) {
-              SV *sv = make_i_color_sv(aTHX_ vals+i);
+              SV *sv = make_i_color_sv_mortal(aTHX_ vals+i);
               PUSHs(sv);
             }
           }
@@ -3911,11 +4068,7 @@ i_glinf(im, l, r, y)
           if (GIMME_V == G_ARRAY) {
             EXTEND(SP, count);
             for (i = 0; i < count; ++i) {
-              SV *sv;
-              i_fcolor *col = mymalloc(sizeof(i_fcolor));
-              *col = vals[i];
-              sv = sv_newmortal();
-              sv_setref_pv(sv, "Imager::Color::Float", (void *)col);
+              SV *sv = make_i_fcolor_sv(aTHX_ vals+i);
               PUSHs(sv);
             }
           }
@@ -4264,6 +4417,23 @@ i_int_hlines_CLONE_SKIP(cls)
 
 #endif
 
+MODULE = Imager  PACKAGE = Imager::TrimColorList PREFIX=trim_color_list_
+
+Imager::TrimColorList
+trim_color_list__new(const char *cls)
+
+int
+trim_color_list_add_color(Imager::TrimColorList t, Imager::Color c1, Imager::Color c2)
+
+int
+trim_color_list_add_fcolor(Imager::TrimColorList t, Imager::Color::Float c1, Imager::Color::Float c2)
+
+SV *
+trim_color_list_get(Imager::TrimColorList t, IV i)
+
+IV
+trim_color_list_count(Imager::TrimColorList t)
+
 MODULE = Imager  PACKAGE = Imager::Context PREFIX=im_context_
 
 void
@@ -4301,3 +4471,4 @@ BOOT:
 #ifdef HAVE_LIBTT
         i_tt_start();
 #endif
+

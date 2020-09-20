@@ -6,12 +6,15 @@ i_channel_list	 	T_IM_CHANNEL_LIST
 i_sample_list		T_IM_SAMPLE_LIST
 i_fsample_list		T_IM_FSAMPLE_LIST
 i_polygon_list		T_IM_POLYGON_LIST
+i_trim_color_list	I_IM_TRIM_COLOR_LIST
 
 off_t			T_OFF_T
 
 Imager::Internal::Hlines T_PTROBJ
 
 Imager::Context		 T_PTROBJ
+
+Imager::TrimColorList	 T_IM_TRIM_COLOR_LIST
 
 i_palidx		T_IV
 double *		T_AVARRAY
@@ -140,10 +143,17 @@ T_AVARRAY
 T_I_POLY_FILL_MODE_T
 	$var = S_get_poly_fill_mode(aTHX_ $arg);
 
-
+T_IM_TRIM_COLOR_LIST
+        if (!S_get_trim_color_list(aTHX_ $arg, &$var)) {
+	    Perl_croak(aTHX_ \"%s: \" \"$var\" \" is not a valid Imager::TrimColorList\",
+	               ${$ALIAS?\q[GvNAME(CvGV(cv))]:\qq[\"$pname\"]});
+	}
 
 #############################################################################
 OUTPUT
 
 T_OFF_T
 	$arg = i_new_sv_off_t(aTHX_ $var);
+
+T_IM_TRIM_COLOR_LIST
+	$arg = $var.rsv;

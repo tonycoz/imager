@@ -517,6 +517,99 @@ Default: transparent black.
   # set pixels not sourced from the original to red
   my $rotated = $img->rotate(degrees => -10, back => 'red');
 
+=item trim()
+
+Returns a cropped version of the original image cropped of border
+pixels based on either transparent pixels, or pixels that match any of
+a set of provided colors.
+
+If you just want the number of pixels to be cropped on each side you
+can use the L</trim_rect()> method.
+
+If the supplied parameters would result in the entire image is
+cropped, then a single pixel image is returned from the top left of
+the source image.
+
+To trim just on fully transparent pixels:
+
+   my $trimmed = $img->trim();
+
+To trim pixels with less than 1% coverage:
+
+   my $trimmed = $img->trim(alpha => 0.01);
+
+To trim based on automatically determined colors and fully transparent
+pixels:
+
+   my $trimmed = $img->trim(auto => 1);
+
+To trim a black border:
+
+  my $trimmed = $img->trim(colors => [ "#000" ]);
+
+Parameters:
+
+=over
+
+=item *
+
+C<alpha> - any pixels with less than or equal coverage to this value
+will be treated as part of the border to be cropped.  This is always
+expressed as a fraction, so C<alpha => 1.0> will treat all pixels as
+part of the border.  Default: 0 (fully transparent pixels are part of
+the border).
+
+=item *
+
+C<auto> - automatically select colors to crop on.  Possible values:
+
+=over
+
+=item *
+
+C<1> - a "best" mechanism is selected, this is currently the C<center>
+method, but it subject to change.
+
+=item *
+
+C<center>, C<centre> - the pixels at the center of each side of the
+image are used.
+
+=back
+
+=item *
+
+C<tolerance> - used by the C<auto> mechanism to control the range of
+pixel colors to be accepted as part of the border.  Default: 0.01.
+
+=item *
+
+C<colors> - either a L<Imager::TrimColorList> object or a reference to
+an array of color entries to be considered part of the border.  Code like:
+
+    my $trimmed = $img->trim(colors => [ LIST ]);
+
+results in a temporary Imager::TrimColorList being produced like:
+
+    my $trimmed = $img->trim(colors => Imager::TrimColorList->new( LIST ));
+
+=back
+
+C<colors> and C<auto> exclude each other, only one or the other can be
+supplied.
+
+=item trim_rect()
+
+Returns a list of the number of columns and rows of that would be
+removed from each side if trim() was called.
+
+   my ($left, $top, $right, $bottom) = $img->trim_rect();
+
+If the entire image matches the trim parameters then C<$left> will be
+the width of the image and C<$top> will be the height of the image.
+
+Accepts the same parameters as L</trim()>.
+
 =back
 
 =head2 Image pasting/flipping

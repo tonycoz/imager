@@ -1079,6 +1079,14 @@ typedef struct {
 
 typedef struct i_render_tag i_render;
 
+/* trim colors for im_trim()/im_trim_dim() */
+
+typedef struct {
+  int is_float;
+  i_color c1, c2;
+  i_fcolor cf1, cf2;
+} i_trim_colors_t;
+
 /*
 =item i_color_model_t
 =category Data Types

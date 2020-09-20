@@ -32,7 +32,7 @@ $INC{"Devel/Cover.pm"}
 $Test::More::VERSION =~ /^2\.00_/
   and plan skip_all => "threads are hosed in 2.00_06 and presumably all 2.00_*";
 
-plan tests => 13;
+plan tests => 14;
 
 my $thread = threads->create(sub { 1; });
 ok($thread->join, "join first thread");
@@ -59,6 +59,8 @@ SKIP:
 }
 my $io = Imager::io_new_bufchain();
 ok($io, "made the io");
+my $tcl = Imager::TrimColorList->new();
+ok($tcl, "made the trim color list");
 my $tt;
 SKIP:
 {
