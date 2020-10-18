@@ -554,7 +554,7 @@ Imager 0.99 - 25 Jun 2014
    significantly reduce file sizes, but uses more memory and time.
    https://rt.cpan.org/Ticket/Display.html?id=94292
 
- - the autolevels filter now works on the luminosity of the image
+ - the autolevels filter now works on the luminance of the image
    rather then working per channel.  The old autolevels filter is
    still available as "autolevels_skew".
    https://rt.cpan.org/Ticket/Display.html?id=94413
