@@ -808,6 +808,35 @@ For large sample images this is scaled down to the range 0 .. 1.
 
 =back
 
+=item rgb_difference()
+
+You can create a new image that is the difference between 2 other images.
+
+  my $diff = $img->rgb_difference(other=>$other_img);
+
+For each pixel in $img that is different to the pixel in $other_img,
+the arithmetic difference for the value of the pixel in $img from
+$other_img per color is given. Transparency is ignored.
+
+This can be used for measuring image differences ("How much are they
+different?").
+
+Note that $img and $other_img must have the same number of channels.
+The width and height of $diff will be the minimum of each of the width
+and height of $img and $other_img.
+
+Parameters:
+
+=over
+
+=item *
+
+C<other> - the other image object to compare against
+
+=back
+
+=back
+
 =head1 AUTHOR
 
 Arnar M. Hrafnkelsson, Tony Cook <tonyc@cpan.org>.

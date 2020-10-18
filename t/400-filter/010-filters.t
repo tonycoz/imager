@@ -1,7 +1,7 @@
 #!perl -w
 use strict;
 use Imager qw(:handy);
-use Test::More tests => 136;
+use Test::More tests => 137;
 
 -d "testout" or mkdir "testout";
 
@@ -430,6 +430,19 @@ is($name, "test gradient", "check the name matches");
   my $cmp2 = Imager->new(xsize => 3, ysize => 2, channels => 4);
   $cmp2->setpixel(x => 2, 'y' => 0, color => '#FF02FF');
   is_image($diff2, $cmp2, "difference() - check image with mindist 1");
+
+  $im1 = Imager->new(xsize => 3, ysize => 2, channels => 4);
+  $im2 = $im1->copy;
+  $im1->setpixel(x => 1, 'y' => 0, color => 'FF00FF80');
+  $im2->setpixel(x => 1, 'y' => 0, color => 'FF01FF84');
+  $im1->setpixel(x => 2, 'y' => 0, color => 'FF00FF80');
+  $im2->setpixel(x => 2, 'y' => 0, color => 'FF02FF84');
+  my $diff3 = $im1->rgb_difference(other => $im2);
+  my $cmp3 = Imager->new(xsize => 3, ysize => 2, channels => 3);
+  $cmp3->box(filled => 1, color => '#000000');
+  $cmp3->setpixel(x => 1, 'y' => 0, color => '#000100');
+  $cmp3->setpixel(x => 2, 'y' => 0, color => '#000200');
+  is_image($diff3, $cmp3, "rgb_difference() - check image");
 }
 
 {

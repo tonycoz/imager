@@ -1447,7 +1447,7 @@ i_diff_image(i_img *im1, i_img *im2, double mindist) {
   ysize = i_min(im1->ysize, im2->ysize);
 
   out = i_sametype_chans(im1, xsize, ysize, outchans);
-  
+
   if (im1->bits == i_8_bits && im2->bits == i_8_bits) {
     i_color *line1 = mymalloc(xsize * sizeof(*line1)); /* checked 17feb2005 tonyc */
     i_color *line2 = mymalloc(xsize * sizeof(*line1)); /* checked 17feb2005 tonyc */
@@ -1520,6 +1520,61 @@ i_diff_image(i_img *im1, i_img *im2, double mindist) {
     myfree(line1);
     myfree(line2);
   }
+
+  return out;
+}
+
+/*
+=item i_rgbdiff_image(im1, im2)
+
+Creates a new image that is black, except where the pixel in im2 is
+different from im1, where it is the arithmetical difference to im2 per
+color.
+
+=cut
+*/
+
+i_img *
+i_rgbdiff_image(i_img *im1, i_img *im2) {
+  i_img *out;
+  int outchans, diffchans;
+  i_img_dim xsize, ysize;
+  dIMCTXim(im1);
+
+  i_clear_error();
+  if (im1->channels != im2->channels) {
+    i_push_error(0, "different number of channels");
+    return NULL;
+  }
+
+  outchans = diffchans = im1->channels;
+  if (outchans == 2 || outchans == 4)
+    --outchans;
+
+  xsize = i_min(im1->xsize, im2->xsize);
+  ysize = i_min(im1->ysize, im2->ysize);
+
+  out = i_sametype_chans(im1, xsize, ysize, outchans);
+
+#code im1->bits == i_8_bits && im2->bits == i_8_bits
+    IM_COLOR *line1 = mymalloc(xsize * sizeof(*line1));
+    IM_COLOR *line2 = mymalloc(xsize * sizeof(*line1));
+    i_img_dim x, y;
+    int ch;
+
+    for (y = 0; y < ysize; ++y) {
+      IM_GLIN(im1, 0, xsize, y, line1);
+      IM_GLIN(im2, 0, xsize, y, line2);
+      for (x = 0; x < xsize; ++x) {
+        for (ch = 0; ch < outchans; ++ch) {
+          line2[x].channel[ch] = IM_ABS(line1[x].channel[ch] - line2[x].channel[ch]);
+        }
+      }
+      IM_PLIN(out, 0, xsize, y, line2);
+    }
+    myfree(line1);
+    myfree(line2);
+#/code
 
   return out;
 }
