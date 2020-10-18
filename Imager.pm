@@ -3942,6 +3942,26 @@ sub difference {
   return $result;
 }
 
+sub rgb_difference {
+  my ($self, %opts) = @_;
+
+  $self->_valid_image("rgb_difference")
+    or return;
+
+  defined $opts{other}
+    or return $self->_set_error("No 'other' parameter supplied");
+  unless ($opts{other}->_valid_image("rgb_difference")) {
+    $self->_set_error($opts{other}->errstr . " (other image)");
+    return;
+  }
+
+  my $result = Imager->new;
+  $result->{IMG} = i_rgbdiff_image($self->{IMG}, $opts{other}{IMG})
+    or return $self->_set_error($self->_error_as_msg());
+
+  return $result;
+}
+
 # destructive border - image is shrunk by one pixel all around
 
 sub border {
@@ -4979,6 +4999,9 @@ register_filter() - L<Imager::Filters/register_filter()>
 register_reader() - L<Imager::Files/register_reader()>
 
 register_writer() - L<Imager::Files/register_writer()>
+
+rgb_difference() - L<Imager::Filters/rgb_difference()> - produce a difference
+images from two input images.
 
 rotate() - L<Imager::Transformations/rotate()>
 

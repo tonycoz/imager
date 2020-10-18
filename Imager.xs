@@ -3051,6 +3051,11 @@ i_diff_image(im, im2, mindist=0)
     Imager::ImgRaw     im2
             im_double     mindist
 
+Imager::ImgRaw
+i_rgbdiff_image(im, im2)
+    Imager::ImgRaw     im
+    Imager::ImgRaw     im2
+
 undef_int
 i_fountain(im, xa, ya, xb, yb, type, repeat, combine, super_sample, ssample_param, segs)
     Imager::ImgRaw     im
