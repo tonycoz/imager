@@ -1559,12 +1559,8 @@ i_rgbdiff_image(i_img *im1, i_img *im2) {
   if (im1->bits == i_8_bits && im2->bits == i_8_bits) {
     i_color *line1 = mymalloc(xsize * sizeof(*line1));
     i_color *line2 = mymalloc(xsize * sizeof(*line1));
-    i_color empty;
     i_img_dim x, y;
     int ch;
-
-    for (ch = 0; ch < MAXCHANNELS; ++ch)
-      empty.channel[ch] = 0;
 
     for (y = 0; y < ysize; ++y) {
       i_glin(im1, 0, xsize, y, line1);
@@ -1588,12 +1584,8 @@ i_rgbdiff_image(i_img *im1, i_img *im2) {
   else {
     i_fcolor *line1 = mymalloc(xsize * sizeof(*line1));
     i_fcolor *line2 = mymalloc(xsize * sizeof(*line2));
-    i_fcolor empty;
     i_img_dim x, y;
     int ch;
-
-    for (ch = 0; ch < MAXCHANNELS; ++ch)
-      empty.channel[ch] = 0;
 
     for (y = 0; y < ysize; ++y) {
       i_glinf(im1, 0, xsize, y, line1);
