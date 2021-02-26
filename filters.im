@@ -1571,9 +1571,12 @@ i_rgbdiff_image(i_img *im1, i_img *im2) {
           line2[x].channel[diffchans] = 255;
       }
       for (x = 0; x < xsize; ++x) {
-        int diff = 0;
         for (ch = 0; ch < diffchans; ++ch) {
-          line2[x].channel[ch] = i_abs(line1[x].channel[ch] - line2[x].channel[ch]);
+          if (ch == outchans-1) {
+            line2[x].channel[ch] = 255; /* ignore alpha channel */
+          } else {
+            line2[x].channel[ch] = i_abs(line1[x].channel[ch] - line2[x].channel[ch]);
+          }
         }
       }
       i_plin(out, 0, xsize, y, line2);
@@ -1596,10 +1599,13 @@ i_rgbdiff_image(i_img *im1, i_img *im2) {
           line2[x].channel[diffchans] = 1.0;
       }
       for (x = 0; x < xsize; ++x) {
-        int diff = 0;
         for (ch = 0; ch < diffchans; ++ch) {
-          if (line1[x].channel[ch] != line2[x].channel[ch]) {
-            line2[x].channel[ch] = i_abs(line1[x].channel[ch] - line2[x].channel[ch]);
+          if (ch == outchans-1) {
+            line2[x].channel[ch] = 1.0; /* ignore alpha channel */
+          } else {
+            if (line1[x].channel[ch] != line2[x].channel[ch]) {
+              line2[x].channel[ch] = i_abs(line1[x].channel[ch] - line2[x].channel[ch]);
+            }
           }
         }
       }
