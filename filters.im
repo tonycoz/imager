@@ -1548,8 +1548,8 @@ i_rgbdiff_image(i_img *im1, i_img *im2) {
   }
 
   outchans = diffchans = im1->channels;
-  if (outchans == 1 || outchans == 3)
-    ++outchans;
+  if (outchans == 2 || outchans == 4)
+    --outchans;
 
   xsize = i_min(im1->xsize, im2->xsize);
   ysize = i_min(im1->ysize, im2->ysize);
@@ -1561,35 +1561,13 @@ i_rgbdiff_image(i_img *im1, i_img *im2) {
     IM_COLOR *line2 = mymalloc(xsize * sizeof(*line1));
     i_img_dim x, y;
     int ch;
-    IM_WORK_T opaque;
-#ifdef IM_EIGHT_BIT
-    opaque = 255;
-#else
-    opaque = 1.0;
-#endif
 
     for (y = 0; y < ysize; ++y) {
       IM_GLIN(im1, 0, xsize, y, line1);
       IM_GLIN(im2, 0, xsize, y, line2);
-      if (outchans != diffchans) {
-        /* give the output an alpha channel since it doesn't have one */
-        for (x = 0; x < xsize; ++x) {
-          line2[x].channel[diffchans] = opaque;
-        }
-      }
       for (x = 0; x < xsize; ++x) {
-        for (ch = 0; ch < diffchans; ++ch) {
-          if (ch == outchans-1) {
-            line2[x].channel[ch] = opaque;
-          } else {
-#ifdef IM_EIGHT_BIT
-            line2[x].channel[ch] = i_abs(line1[x].channel[ch] - line2[x].channel[ch]);
-#else
-            if (line1[x].channel[ch] != line2[x].channel[ch]) {
-              line2[x].channel[ch] = i_abs(line1[x].channel[ch] - line2[x].channel[ch]);
-            }
-#endif
-          }
+        for (ch = 0; ch < outchans; ++ch) {
+          line2[x].channel[ch] = IM_ABS(line1[x].channel[ch] - line2[x].channel[ch]);
         }
       }
       IM_PLIN(out, 0, xsize, y, line2);
