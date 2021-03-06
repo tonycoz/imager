@@ -139,6 +139,7 @@ sub byte_samples {
     s/\bIM_LIMIT\(/IM_LIMIT_8(/g;
     s/\bIM_RENDER_LINE\(/i_render_line(/g;
     s/\bIM_FILL_COMBINE_F\b/i_fill_combine_f/g;
+    s/\bIM_ABS\b/abs/g;
   }
   
   @lines;
@@ -168,6 +169,7 @@ sub double_samples {
     s/\bIM_LIMIT\(/IM_LIMIT_double(/g;
     s/\bIM_RENDER_LINE\(/i_render_linef(/g;
     s/\bIM_FILL_COMBINE_F\b/i_fill_combinef_f/g;
+    s/\bIM_ABS\b/fabs/g;
   }
 
   @lines;
@@ -278,6 +280,10 @@ object.
 
 IM_FILL_FILLER(C<fill>) - retrieve the fill_with_* function from a fill
 object.
+
+=item *
+
+IM_ABS(sample) - calculate the absolute value of an IM_WORK_T value.
 
 =item *
 
