@@ -1,5 +1,9 @@
 Imager release history.  Older releases can be found in Changes.old
 
+ - added rgb_difference() method
+   Thanks to Andreas König
+   https://github.com/tonycoz/imager/pull/462
+
 Imager 1.012 - 14 Jun 2020
 ============
 
