@@ -307,8 +307,7 @@ if (eval { ExtUtils::MakeMaker->VERSION('6.46'); 1 }) {
       },
       bugtracker =>
       {
-       web => "https://rt.cpan.org/Dist/Display.html?Name=Imager",
-       mailto => 'bug-Imager@rt.cpan.org',
+       web => "https://github.com/tonycoz/imager/issues",
       },
      },
     };
