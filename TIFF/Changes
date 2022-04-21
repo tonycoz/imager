@@ -1,3 +1,14 @@
+Imager-File-TIFF 0.93
+=====================
+
+ - update the bug tracking URL to point at github
+   https://github.com/tonycoz/imager/pull/466
+
+Imager-File-TIFF 0.92
+=====================
+
+ - eliminate use vars.
+
 Imager-File-TIFF 0.91
 =====================
 

@@ -4,7 +4,7 @@ use strict;
 use Imager;
 
 BEGIN {
-  our $VERSION = "0.94";
+  our $VERSION = "0.95";
 
   require XSLoader;
   XSLoader::load('Imager::File::JPEG', $VERSION);
