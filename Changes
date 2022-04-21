@@ -4,6 +4,11 @@ Imager release history.  Older releases can be found in Changes.old
    Thanks to Andreas König
    https://github.com/tonycoz/imager/pull/462
 
+ - update ppport.h to prevent a redefinition diagnostic
+
+ - update bug tracker URLs to point at github
+   https://github.com/tonycoz/imager/pull/466
+
 Imager 1.012 - 14 Jun 2020
 ============
 
