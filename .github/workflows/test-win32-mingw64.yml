@@ -14,17 +14,14 @@ jobs:
     steps:
       - run: git config --global core.autocrlf false
       - uses: actions/checkout@v2
-      - name: set up perl
-        run: |
-            choco install strawberryperl
-            echo "##[add-path]C:\strawberry\c\bin;C:\strawberry\perl\site\bin;C:\strawberry\perl\bin"
       - name: configure
         run: |
+           $env:path = "c:\strawberry\c\bin;"+$env:path
            perl Makefile.PL
       - name: build
         run: |
-            gmake -j2
+           $env:path = "c:\strawberry\c\bin;"+$env:path
+           gmake -j3
       - name: test
         run: |
-            set HARNESS_OPTIONS=j2
-            gmake test
+           gmake test HARNESS_OPTIONS=j2
