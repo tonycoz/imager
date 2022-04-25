@@ -4930,7 +4930,7 @@ is_bilevel() - L<Imager::ImageTypes/is_bilevel()> - returns whether
 image write functions should write the image in their bilevel (blank
 and white, no gray levels) format
 
-is_logging() L<Imager::ImageTypes/is_logging()> - test if the debug
+is_logging() - L<Imager::ImageTypes/is_logging()> - test if the debug
 log is active.
 
 line() - L<Imager::Draw/line()> - draw an interval

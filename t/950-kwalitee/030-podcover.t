@@ -77,7 +77,7 @@ plan tests => 20;
   while (<IMAGER>) {
     last if /^=\w/ && !/^=for\b/;
 
-    if (/^(\w+)\(/) {
+    if (/^(\w+)\(.*?\) -/) {
       push @indexed, $1;
       unless (delete $methods{$1}) {
 	push @unknown_indexed, $1;
