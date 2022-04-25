@@ -806,8 +806,6 @@ For large sample images this is scaled down to the range 0 .. 1.
 
 =back
 
-=back
-
 =item rgb_difference()
 
 You can create a new image that is the difference between 2 other images.
