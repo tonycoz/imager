@@ -113,7 +113,7 @@ for my $file (@pod) {
   close $work_fh;
   close $check_fh;
   
-  my @out = `aspell list <$check_filename`;
+  my @out = `aspell -d american list <$check_filename`;
   unless (ok(@out == 0, "spell check $file")) {
     chomp @out;
     diag $_ for @out;
