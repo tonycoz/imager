@@ -17,7 +17,7 @@ jobs:
       - name: install dependencies
         run: |
             sudo apt-get update ||:
-            sudo apt-get -y install build-essential libtiff-dev libpng-dev libgif-dev libfreetype6-dev libjpeg-dev
+            sudo apt-get -y install build-essential libtiff-dev libpng-dev libgif-dev libfreetype6-dev libjpeg-dev libtest-pod-coverage-perl libtest-pod-perl libpod-parser-perl libpod-spell-perl aspell
       - name: checkout
         uses: actions/checkout@v2
       - name: configure
@@ -28,4 +28,4 @@ jobs:
             make -j2
       - name: test
         run: |
-            HARNESS_OPTIONS=j2 make test
+            HARNESS_OPTIONS=j2 IMAGER_AUTHOR_TESTING=1 make test
