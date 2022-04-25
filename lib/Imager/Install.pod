@@ -56,9 +56,9 @@ If you can't resolve this, then run
 
   perl errep.perl
 
-and include the (large) generated F<report.txt> in your email to:
+and include the (large) generated F<report.txt> in your report at:
 
-  bug-Imager@rt.cpan.org
+  https://github.com/tonycoz/imager/issues
 
 There are other options used to configure how Imager is built:
 
