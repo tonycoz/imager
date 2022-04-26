@@ -1147,10 +1147,10 @@ S_trim_color_list__new(pTHX_ const char *cls) {
   i_trim_color_list r;
 
   r.count = 0;
-  r.colors = (i_trim_colors_t *)SvPVX(r.sv);
   r.rsv = newSV(0);
   sv_setref_pvn(r.rsv, "Imager::TrimColorList", "", 0);
   r.sv = SvRV(r.rsv);
+  r.colors = (i_trim_colors_t *)SvPVX(r.sv);
 
   return r;
 }
