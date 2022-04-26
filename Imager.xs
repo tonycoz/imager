@@ -38,10 +38,6 @@ Context object management
 
 */
 
-typedef im_context_t Imager__Context;
-
-#define im_context_DESTROY(ctx) im_context_refdec((ctx), "DESTROY")
-
 #ifdef PERL_IMPLICIT_CONTEXT
 
 #define MY_CXT_KEY "Imager::_context" XS_VERSION
@@ -85,6 +81,18 @@ perl_get_context(void) {
 }
 
 #endif
+
+typedef im_context_t Imager__Context;
+
+static void
+S_im_context_DESTROY(pTHX_ im_context_t ctx) {
+  dMY_CXT;
+
+  if (ctx == MY_CXT.ctx)
+    MY_CXT.ctx = NULL;
+  im_context_refdec(ctx, "DESTROY");
+}
+#define im_context_DESTROY(ctx) S_im_context_DESTROY(aTHX_ (ctx))
 
 /* used to represent channel lists parameters */
 typedef struct i_channel_list_tag {
