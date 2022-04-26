@@ -1705,7 +1705,25 @@ im_test_format_probe(im_context_t ctx, io_glue *data, int length) {
     FORMAT_ENTRY("\x00\x00\x00\x0CjP  \x0D\x0A\x87\x0A", "jp2"),
 
     /* FLIF - Free Lossless Image Format - https://flif.info/spec.html */
-    FORMAT_ENTRY("FLIF", "flif")
+    FORMAT_ENTRY("FLIF", "flif"),
+
+    /* JPEG XL */
+    FORMAT_ENTRY("\xFF\x0A", "jxl"), /* simple */
+    FORMAT_ENTRY("\x00\x00\x00\x0C\x4A\x58\x4C\x20\x0D\x0A\x87\x0A", "jxl"), /* complex */
+
+    /* Quite OK Image Format */
+    FORMAT_ENTRY("qoif", "qoi"),
+
+    /* HEIF/HEIC see https://github.com/strukturag/libheif/issues/83 */
+    FORMAT_ENTRY2("\x00\x00\x00\x00" "ftypheic", "heif", "    xxxxxxxx"),
+    FORMAT_ENTRY2("\x00\x00\x00\x00" "ftypheix", "heif", "    xxxxxxxx"),
+    FORMAT_ENTRY2("\x00\x00\x00\x00" "ftyphevc", "heif", "    xxxxxxxx"),
+    FORMAT_ENTRY2("\x00\x00\x00\x00" "ftypheim", "heif", "    xxxxxxxx"),
+    FORMAT_ENTRY2("\x00\x00\x00\x00" "ftypheis", "heif", "    xxxxxxxx"),
+    FORMAT_ENTRY2("\x00\x00\x00\x00" "ftyphevm", "heif", "    xxxxxxxx"),
+    FORMAT_ENTRY2("\x00\x00\x00\x00" "ftyphevs", "heif", "    xxxxxxxx"),
+    FORMAT_ENTRY2("\x00\x00\x00\x00" "ftypmif1", "heif", "    xxxxxxxx"),
+    FORMAT_ENTRY2("\x00\x00\x00\x00" "ftypmsf1", "heif", "    xxxxxxxx")
   };
   static const struct file_magic_entry more_formats[] = {
     /* these were originally both listed as ico, but cur files can
