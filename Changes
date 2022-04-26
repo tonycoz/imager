@@ -9,6 +9,16 @@ Imager release history.  Older releases can be found in Changes.old
  - update bug tracker URLs to point at github
    https://github.com/tonycoz/imager/pull/466
 
+ - update some other bug tracker URLs too.
+
+ - add the trim() and trim_rect() methods, to trim borders off an
+   image.
+
+ - add the as_float() method to Imager::Color and the as_8bit() method
+   to Imager::Color::Float to convert between the two types.
+
+ - update ppport.h to avoid a diagnostic in more modern perls.
+
 Imager 1.012 - 14 Jun 2020
 ============
 
