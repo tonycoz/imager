@@ -1308,7 +1308,9 @@ write_paletted(png_structp png_ptr, png_infop info_ptr, i_img *im, int bits) {
     for (i = 0; i < count && colors[pal_map[i]].rgba.a != 255; ++i) {
       trans[i] = colors[pal_map[i]].rgba.a;
     }
-    png_set_tRNS(png_ptr, info_ptr, trans, i, NULL);
+    if (i) {
+      png_set_tRNS(png_ptr, info_ptr, trans, i, NULL);
+    }
   }
 
   png_write_info(png_ptr, info_ptr);

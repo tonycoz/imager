@@ -1,5 +1,12 @@
 Imager release history.  Older releases can be found in Changes.old
 
+
+ - when writing a paletteed image with an alpha channel to PNG only
+   set the tRNS chunk if the image has transparent colours.  With
+   older libpng this could add an erroneous tRNS chunk (or possibly
+   undefined behaviour if I understand the libpng code).
+   https://github.com/tonycoz/imager/issues/459
+
 Imager 1.013 - 27 Apr 2022
 ============
 

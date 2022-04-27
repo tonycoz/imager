@@ -1,3 +1,12 @@
+Imager-File-PNG 0.97
+====================
+
+ - when writing a paletteed image with an alpha channel only
+   set the tRNS chunk if the image has transparent colours.  With
+   older libpng this could add an erroneous tRNS chunk (or possibly
+   undefined behaviour if I understand the libpng code).
+   https://github.com/tonycoz/imager/issues/459
+
 Imager-File-PNG 0.96
 ====================
 
