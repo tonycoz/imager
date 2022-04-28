@@ -86,12 +86,18 @@ typedef im_context_t Imager__Context;
 
 static void
 S_im_context_DESTROY(pTHX_ im_context_t ctx) {
+#ifdef PERL_IMPLICIT_CONTEXT
   dMY_CXT;
 
   if (ctx == MY_CXT.ctx)
     MY_CXT.ctx = NULL;
+#else
+  perl_context = NULL;
+#endif
+
   im_context_refdec(ctx, "DESTROY");
 }
+
 #define im_context_DESTROY(ctx) S_im_context_DESTROY(aTHX_ (ctx))
 
 /* used to represent channel lists parameters */
