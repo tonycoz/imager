@@ -1,13 +1,20 @@
 Imager release history.  Older releases can be found in Changes.old
 
+Imager 1.014 - 28 Apr 2022
+============
+
+Bug fixes:
+
  - fix failed to build on non-threaded perls.
    https://github.com/tonycoz/imager/issues/472
 
- - when writing a paletteed image with an alpha channel to PNG only
+ - when writing a paletted image with an alpha channel to PNG only
    set the tRNS chunk if the image has transparent colours.  With
    older libpng this could add an erroneous tRNS chunk (or possibly
    undefined behaviour if I understand the libpng code).
    https://github.com/tonycoz/imager/issues/459
+
+Features:
 
  - Imager::Color and Imager::Color::Float objects can now be created
    from CSS style rgb(...) strings.
