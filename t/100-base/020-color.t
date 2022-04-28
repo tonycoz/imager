@@ -244,7 +244,23 @@ my @oo_tests =
 
 for my $test (@oo_tests) {
   my ($parms, $r, $g, $b, $a, $name) = @$test;
-  is_color4(Imager::Color->new(@$parms), $r, $g, $b, $a, $name);
+  my $c = Imager::Color->new(@$parms);
+  is_color4($c, $r, $g, $b, $a, $name);
+
+  my $rgb = $c->as_css_rgb;
+  is_color4(Imager::Color->new($rgb), $r, $g, $b, $a, "$name via rgb $rgb");
+}
+
+{
+  # test our promises for as_css_rgb
+  is(Imager::Color->new(255, 128, 64)->as_css_rgb, "rgb(255, 128, 64)",
+     "as_css_rgb: simple rgb");
+  is(Imager::Color->new(255, 128, 64, 128)->as_css_rgb, "rgba(255, 128, 64, 0.5)",
+     "as_css_rgb: simple rgb with 1 decimal alpha");
+  is(Imager::Color->new(255, 128, 64, 64)->as_css_rgb, "rgba(255, 128, 64, 25%)",
+     "as_css_rgb: simple rgb with 2 decimal alpha");
+  is(Imager::Color->new(255, 128, 64, 24)->as_css_rgb, "rgba(255, 128, 64, 9.4%)",
+     "as_css_rgb: simple rgb with alpha we don't simplify");
 }
 
 # test the internal HSV <=> RGB conversions

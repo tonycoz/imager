@@ -499,6 +499,30 @@ sub as_float {
   return Imager::Color::Float->new(map { $_ / 255 } $self->rgba);
 }
 
+sub as_css_rgb {
+  my ($self) = @_;
+
+  my ($r, $g, $b, $alpha) = $self->rgba;
+
+  if ($alpha == 255) {
+    return "rgb($r, $g, $b)";
+  }
+  else {
+    my $ac = POSIX::floor($alpha * 1000 / 255) / 10;
+    if (POSIX::ceil(POSIX::floor($ac/10) * 10 * 255 / 100) == $alpha) {
+      # simple one decimal fraction
+      $ac = POSIX::floor($ac/10)/10;
+    }
+    elsif (POSIX::ceil(POSIX::floor($ac) * 255 / 100) == $alpha) {
+      $ac = POSIX::floor($ac) . "%";
+    }
+    else {
+      $ac = "$ac%";
+    }
+    return "rgba($r, $g, $b, $ac)";
+  }
+}
+
 1;
 
 __END__
@@ -772,6 +796,16 @@ Returns the respective component as an integer from 0 to 255.
 =item as_float
 
 Returns the color as a L<Imager::Color::Float> object.
+
+=item as_css_rgb
+
+Returns the color as a CSS rgb() format color.  This is always
+returned in the byte form, eg. rgb(255 128 64).
+
+If the alpha is not full coverage (255) it will be rounded if the
+result of converting the color back to an 8 bit color would return the
+same alpha, eg. if the color alpha is 128, it will be formatted as
+0.5, not as the more precise 50.2%.
 
 =back
 
