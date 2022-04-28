@@ -94,6 +94,43 @@ sub as_8bit {
   return Imager::Color->new(@out);
 }
 
+sub as_css_rgb {
+  my ($self) = @_;
+
+  my (@rgb) = $self->rgba;
+  my $alpha = pop @rgb;
+  # check if they're all representable as byte type samples
+  my $can_byte = 1;
+  for my $s (@rgb) {
+    if (abs(sprintf("%.0f", $s * 255) - $s*255) > 0.0001) {
+      $can_byte = 0;
+      last;
+    }
+  }
+
+  if ($alpha == 1.0) {
+    if ($can_byte) {
+      return sprintf("rgb(%.0f, %.0f, %.0f)", map { 255 * $_ } @rgb);
+    }
+    else {
+      # avoid outputting 2 decimals unless the precision is needed
+      my ($rpc, $gpc, $bpc) = map { 0 + sprintf("%.2f", 100 * $_) } @rgb;
+      return "rgb($rpc% $gpc% $bpc%)";
+    }
+  }
+  else {
+    my $apf = 0+sprintf("%.4f", $alpha);
+    if ($can_byte) {
+      return sprintf("rgba(%.0f, %.0f, %.0f, %s)", ( map { 255 * $_ } @rgb ), $apf);
+    }
+    else {
+      # avoid outputting 2 decimals unless the precision is needed
+      my ($rpc, $gpc, $bpc) = map { 0 + sprintf("%.2f", 100 * $_) } @rgb;
+      return "rgba($rpc% $gpc% $bpc% / $apf)";
+    }
+  }
+}
+
 1;
 
 __END__
@@ -183,6 +220,13 @@ from 0 to 1.0.
 
 Returns the color as the roughly equivalent 8-bit Imager::Color
 object.  Samples below zero or above 1.0 are clipped.
+
+=item as_css_rgb
+
+Formats the color as a CSS rgb() style color.  If the color is closely
+representable as byte style syntax, eg rgb(255, 128, 128), it will be
+returned in that form, otherwise the samples are formatted as
+percentages with up to 2 decimal places.
 
 =back
 

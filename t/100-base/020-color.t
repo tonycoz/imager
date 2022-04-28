@@ -534,8 +534,26 @@ is_color4(Imager::Color->new(builtin=>'black'), 0, 0, 0, 255, 'builtin black');
      );
   for my $test (@tests) {
     my ($parms, $r, $g, $b, $a, $name) = @$test;
-    is_fcolor4(Imager::Color::Float->new(@$parms), $r, $g, $b, $a, "float: $name");
+    my $f = Imager::Color::Float->new(@$parms);
+    is_fcolor4($f, $r, $g, $b, $a, "float: $name");
+
+    my $css = $f->as_css_rgb;
+    my $f2 = Imager::Color::Float->new($css);
+    is_fcolor4($f2, $r, $g, $b, $a, "via css: $name ($css)");
   }
+}
+
+{
+  # we make promises for as_css_rgb(), test those
+  # if represntable as bytes, we return that
+  is(Imager::Color->new(255, 127, 20)->as_float->as_css_rgb,
+     "rgb(255, 127, 20)", "float as_css_rgb: representable as bytes");
+  is(Imager::Color::Float->new(1.0, 0.7654, 1/3)->as_css_rgb,
+     "rgb(100% 76.54% 33.33%)", "float as_css_rgb: not representable as bytes");
+  is(Imager::Color->new(255, 127, 20, 128)->as_float->as_css_rgb,
+     "rgba(255, 127, 20, 0.502)", "float as_css_rgb: representable as bytes with alpha");
+  is(Imager::Color::Float->new(1.0, 0.7654, 1/3, 0.5)->as_css_rgb,
+     "rgba(100% 76.54% 33.33% / 0.5)", "float as_css_rgb: not representable as bytes with alpha");
 }
 
 done_testing();
