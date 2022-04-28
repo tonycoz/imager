@@ -425,6 +425,119 @@ is_color4(Imager::Color->new(builtin=>'black'), 0, 0, 0, 255, 'builtin black');
   }
 }
 
+{
+  # CSS rgb() support for float colors
+  my @tests =
+    (
+      # rgb() without alpha
+      [
+        [ "rgb(255 128 128)" ],
+        1.0, 128/255, 128/255, 1.0,
+        "rgb non-percent, spaces"
+       ],
+      [
+        [ "rgb(255, 128, 128)" ],
+        1.0, 128/255, 128/255, 1.0,
+        "rgb non-percent, commas simple"
+       ],
+      [
+        [ "rgb(255 ,128   ,128)" ],
+        1.0, 128/255, 128/255, 1.0,
+        "rgb non-percent, commas less simple"
+       ],
+      [
+        [ "rgb(254.5 127.5 127.5)" ],
+        254.5/255, 127.5/255, 127.5/255, 1.0,
+        "rgb non-percent with decimals, spaces"
+       ],
+      [
+        [ "rgb(254.5,127.5,126.2)" ],
+        254.5/255, 127.5/255, 126.2/255, 1.0,
+        "rgb non-percent decimals, commas"
+       ],
+      [
+        [ "rgb(254.5  , 127.5 ,  126.2)" ],
+        254.5/255, 127.5/255, 126.2/255, 1.0,
+        "rgb non-percent decimals, commas more spaces"
+       ],
+      [
+        [ "rgb(100% 50% 50%)" ],
+        1.0, 0.5, 0.5, 1.0,
+        "rgb percent, spaces"
+       ],
+      [
+        [ "rgb(100%, 50%, 50%)" ],
+        1.0, 0.5, 0.5, 1.0,
+        "rgb percent, commas"
+       ],
+      [
+        [ "rgb(99.99% 49.99% 74.98%)" ],
+        0.9999, 0.4999, 0.7498, 1.0,
+        "rgb percent decimals, spaces"
+       ],
+      [
+        [ "rgb(99.99%, 49.99%, 49.98%)" ],
+        0.9999, 0.4999, 0.4998, 1.0,
+        "rgb percent decimals, commas"
+       ],
+      # rgb() with alpha
+      [
+        [ "rgb(255 128 128 / 0.5)" ],
+        1.0, 128/255, 128/255, 0.5,
+        "rgba non-percent, spaces"
+       ],
+      [
+        [ "rgb(255, 128, 128, 0.25)" ],
+        1.0, 128/255, 128/255, 0.25,
+        "rgba non-percent, commas simple"
+       ],
+      [
+        [ "rgb(255 ,128   ,128 , 0.75)" ],
+        1.0, 128/255, 128/255, 0.75,
+        "rgba non-percent, commas less simple"
+       ],
+      [
+        [ "rgba(254.5 127.5 127.5 / 0.1)" ],
+        254.5/255, 127.5/255, 127.5/255, 0.1,
+        "rgba non-percent with decimals, spaces"
+       ],
+      [
+        [ "rgb(254.5,127.5,126.2,1.0)" ],
+        254.5/255, 127.5/255, 126.2/255, 1.0,
+        "rgba non-percent decimals, commas"
+       ],
+      [
+        [ "rgb(254.5  , 127.5 ,  126.2, 0.9)" ],
+        254.5/255, 127.5/255, 126.2/255, 0.9,
+        "rgba non-percent decimals, commas more spaces"
+       ],
+      [
+        [ "rgb(100% 50% 50% / 0.2)" ],
+        1.0, 0.5, 0.5, 0.2,
+        "rgba percent, spaces"
+       ],
+      [
+        [ "rgb(100%, 50%, 50%, 30%)" ],
+        1.0, 0.5, 0.5, 0.3,
+        "rgba percent, commas"
+       ],
+      [
+        [ "rgb(99.99% 49.99% 74.98% / 49.9%)" ],
+        0.9999, 0.4999, 0.7498, 0.499,
+        "rgba percent decimals, spaces"
+       ],
+      [
+        [ "rgb(99.99%, 49.99%, 49.98%, 50.0%)" ],
+        0.9999, 0.4999, 0.4998, 0.5,
+        "rgba percent decimals, commas"
+       ],
+     );
+  for my $test (@tests) {
+    my ($parms, $r, $g, $b, $a, $name) = @$test;
+    is_fcolor4(Imager::Color::Float->new(@$parms), $r, $g, $b, $a, "float: $name");
+  }
+}
+
 done_testing();
 
 sub test_col {

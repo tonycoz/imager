@@ -8,6 +8,24 @@ our $VERSION = "1.008";
 
 # It's just a front end to the XS creation functions.
 
+sub _rgb_alpha {
+  my ($alpha) = @_;
+  if ($alpha =~ /^(.*)%\z/) {
+    return $1 / 100;
+  }
+  else {
+    return $alpha;
+  }
+}
+
+my $rgb_key = qr/rgba?/;
+my $rgb_samp = qr/(\d+(?:\.\d*)?)/;
+my $rgb_pc = qr/(\d+(?:\.\d*)?)%/;
+my $rgb_sep = qr/ *[, ] */;
+my $rgb_rgb = qr/$rgb_samp $rgb_sep $rgb_samp $rgb_sep $rgb_samp/x;
+my $rgb_rgb_pc = qr/$rgb_pc $rgb_sep $rgb_pc $rgb_sep $rgb_pc/x;
+my $rgb_alpha_sep = qr/ *[\/,] */;
+my $rgb_alpha = qr/((?:\.\d+|\d+(?:\.\d*)?)%?)/;
 
 # Parse color spec into an a set of 4 colors
 
@@ -28,6 +46,22 @@ sub _pspec {
   if ($_[0] =~ /^\#?([\da-f][\da-f])([\da-f][\da-f])([\da-f][\da-f])/i) {
     return (hex($1)/255,hex($2)/255,hex($3)/255,1);
   }
+  if (@_ == 1) {
+    # CSS Color 4 says that color values are rounded to +Inf
+    if ($_[0] =~ /\A$rgb_key\( *$rgb_rgb *\)\z/) {
+      return ( $1 / 255, $2 / 255, $3 / 255, 1.0 );
+    }
+    elsif ($_[0] =~ /\A$rgb_key\( *$rgb_rgb_pc *\)\z/) {
+      return ( $1 / 100, $2 / 100, $3 / 100, 1.0 );
+    }
+    elsif ($_[0] =~ /\A$rgb_key\( *$rgb_rgb$rgb_alpha_sep$rgb_alpha *\)\z/) {
+      return ( $1 / 255, $2 / 255, $3 / 255, _rgb_alpha($4) );
+    }
+    elsif ($_[0] =~ /\A$rgb_key\( *$rgb_rgb_pc$rgb_alpha_sep$rgb_alpha *\)\z/) {
+      return ( $1 / 100, $2 / 100, $3 / 100, _rgb_alpha($4) );
+    }
+  }
+
   return ();
 }
 
@@ -181,6 +215,19 @@ an 8 character hex color, optionally preceded by C<#>.
 =item *
 
 a 6 character hex color, optionally preceded by C<#>.
+
+=item *
+
+a CSS rgb() color, based on CSS Color 4.  The C<none> keyword is not
+supported and numbers must be simple decimals without exponents. eg.
+
+  rgb(50% 50% 100%)
+  rgb(0, 0, 255)
+  rgb(0.5 0.5 1.0 / 0.8)
+  rgb(50%, 50%, 100%, 80%)
+
+This accepts some colors not accepted by the CSS rgb() specification,
+this may change.
 
 =back
 
