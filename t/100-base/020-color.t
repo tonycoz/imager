@@ -180,8 +180,8 @@ my @oo_tests =
      "rgb percent, commas"
     ],
    [
-     [ "rgb(99.99% 49.99% 49.98%)" ],
-     255, 128, 128, 255,
+     [ "rgb(99.99% 49.99% 74.98%)" ],
+     255, 128, 192, 255,
      "rgb percent decimals, spaces"
     ],
    [
@@ -231,8 +231,8 @@ my @oo_tests =
      "rgba percent, commas"
     ],
    [
-     [ "rgb(99.99% 49.99% 49.98% / 49.9%)" ],
-     255, 128, 128, 128,
+     [ "rgb(99.99% 49.99% 74.98% / 49.9%)" ],
+     255, 128, 192, 128,
      "rgba percent decimals, spaces"
     ],
    [

@@ -289,13 +289,13 @@ sub _pspec {
       return ( POSIX::ceil($1), POSIX::ceil($2), POSIX::ceil($3), 255 );
     }
     elsif ($_[0] =~ /\A$rgb_key\( *$rgb_rgb_pc *\)\z/) {
-      return ( _pc_to_byte($1), _pc_to_byte($3), _pc_to_byte($3), 255 );
+      return ( _pc_to_byte($1), _pc_to_byte($2), _pc_to_byte($3), 255 );
     }
     elsif ($_[0] =~ /\A$rgb_key\( *$rgb_rgb$rgb_alpha_sep$rgb_alpha *\)\z/) {
       return ( POSIX::ceil($1), POSIX::ceil($2), POSIX::ceil($3), _rgb_alpha($4) );
     }
     elsif ($_[0] =~ /\A$rgb_key\( *$rgb_rgb_pc$rgb_alpha_sep$rgb_alpha *\)\z/) {
-      return ( _pc_to_byte($1), _pc_to_byte($3), _pc_to_byte($3), _rgb_alpha($4) );
+      return ( _pc_to_byte($1), _pc_to_byte($2), _pc_to_byte($3), _rgb_alpha($4) );
     }
   }
 
