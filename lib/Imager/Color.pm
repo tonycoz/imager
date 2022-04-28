@@ -3,6 +3,7 @@ use 5.006;
 use Imager;
 use strict;
 use Scalar::Util ();
+use POSIX ();
 
 our $VERSION = "1.015";
 
@@ -249,6 +250,29 @@ sub _get_x_color {
   return @{$x_cache{$filename}{colors}{lc $args{name}}};
 }
 
+sub _pc_to_byte {
+  POSIX::ceil($_[0] * 255 / 100);
+}
+
+sub _rgb_alpha {
+  my ($alpha) = @_;
+  if ($alpha =~ /^(.*)%\z/) {
+    return POSIX::ceil($1 * 255 / 100);
+  }
+  else {
+    return POSIX::ceil($alpha * 255);
+  }
+}
+
+my $rgb_key = qr/rgba?/;
+my $rgb_samp = qr/(\d+(?:\.\d*)?)/;
+my $rgb_pc = qr/(\d+(?:\.\d*)?)%/;
+my $rgb_sep = qr/ *[, ] */;
+my $rgb_rgb = qr/$rgb_samp $rgb_sep $rgb_samp $rgb_sep $rgb_samp/x;
+my $rgb_rgb_pc = qr/$rgb_pc $rgb_sep $rgb_pc $rgb_sep $rgb_pc/x;
+my $rgb_alpha_sep = qr/ *[\/,] */;
+my $rgb_alpha = qr/((?:\.\d+|\d+(?:\.\d*)?)%?)/;
+
 # Parse color spec into an a set of 4 colors
 
 sub _pspec {
@@ -257,6 +281,21 @@ sub _pspec {
       return $_[0]->rgba;
     } elsif ($_[0]->isa("Imager::Color::Float")) {
       return $_[0]->as_8bit->rgba;
+    }
+  }
+  if (@_ == 1) {
+    # CSS Color 4 says that color values are rounded to +Inf
+    if ($_[0] =~ /\A$rgb_key\( *$rgb_rgb *\)\z/) {
+      return ( POSIX::ceil($1), POSIX::ceil($2), POSIX::ceil($3), 255 );
+    }
+    elsif ($_[0] =~ /\A$rgb_key\( *$rgb_rgb_pc *\)\z/) {
+      return ( _pc_to_byte($1), _pc_to_byte($3), _pc_to_byte($3), 255 );
+    }
+    elsif ($_[0] =~ /\A$rgb_key\( *$rgb_rgb$rgb_alpha_sep$rgb_alpha *\)\z/) {
+      return ( POSIX::ceil($1), POSIX::ceil($2), POSIX::ceil($3), _rgb_alpha($4) );
+    }
+    elsif ($_[0] =~ /\A$rgb_key\( *$rgb_rgb_pc$rgb_alpha_sep$rgb_alpha *\)\z/) {
+      return ( _pc_to_byte($1), _pc_to_byte($3), _pc_to_byte($3), _rgb_alpha($4) );
     }
   }
 
@@ -575,6 +614,21 @@ a six hex digit web color, either C<RRGGBB> or C<#RRGGBB>
 =item *
 
 an eight hex digit web color, either C<RRGGBBAA> or C<#RRGGBBAA>.
+
+=item *
+
+a CSS rgb() color, based on CSS Color 4.  The C<none> keyword is not
+supported and numbers must be simple decimals without exponents. eg.
+
+  rgb(50% 50% 100%)
+  rgb(0, 0, 255)
+  rgb(0.5 0.5 1.0 / 0.8)
+  rgb(50%, 50%, 100%, 80%)
+
+Samples from percentages or decimals are rounded up per CSS Color 3 and 4.
+
+This accepts some colors not accepted by the CSS rgb() specification,
+this may change.
 
 =item *
 

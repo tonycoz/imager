@@ -137,6 +137,109 @@ my @oo_tests =
     255, 250, 250, 255,
     'name'
    ],
+
+   # rgb() without alpha
+   [
+     [ "rgb(255 128 128)" ],
+     255, 128, 128, 255,
+     "rgb non-percent, spaces"
+    ],
+   [
+     [ "rgb(255, 128, 128)" ],
+     255, 128, 128, 255,
+     "rgb non-percent, commas simple"
+    ],
+   [
+     [ "rgb(255 ,128   ,128)" ],
+     255, 128, 128, 255,
+     "rgb non-percent, commas less simple"
+    ],
+   [
+     [ "rgb(254.5 127.5 127.5)" ],
+     255, 128, 128, 255,
+     "rgb non-percent with decimals, spaces"
+    ],
+   [
+     [ "rgb(254.5,127.5,126.2)" ],
+     255, 128, 127, 255,
+     "rgb non-percent decimals, commas"
+    ],
+   [
+     [ "rgb(254.5  , 127.5 ,  126.2)" ],
+     255, 128, 127, 255,
+     "rgb non-percent decimals, commas more spaces"
+    ],
+   [
+     [ "rgb(100% 50% 50%)" ],
+     255, 128, 128, 255,
+     "rgb percent, spaces"
+    ],
+   [
+     [ "rgb(100%, 50%, 50%)" ],
+     255, 128, 128, 255,
+     "rgb percent, commas"
+    ],
+   [
+     [ "rgb(99.99% 49.99% 49.98%)" ],
+     255, 128, 128, 255,
+     "rgb percent decimals, spaces"
+    ],
+   [
+     [ "rgb(99.99%, 49.99%, 49.98%)" ],
+     255, 128, 128, 255,
+     "rgb percent decimals, commas"
+    ],
+   # rgb() with alpha
+   [
+     [ "rgb(255 128 128 / 0.5)" ],
+     255, 128, 128, 128,
+     "rgba non-percent, spaces"
+    ],
+   [
+     [ "rgb(255, 128, 128, 0.25)" ],
+     255, 128, 128, 64,
+     "rgba non-percent, commas simple"
+    ],
+   [
+     [ "rgb(255 ,128   ,128 , 0.75)" ],
+     255, 128, 128, 192,
+     "rgba non-percent, commas less simple"
+    ],
+   [
+     [ "rgba(254.5 127.5 127.5 / 0.1)" ],
+     255, 128, 128, 26,
+     "rgba non-percent with decimals, spaces"
+    ],
+   [
+     [ "rgb(254.5,127.5,126.2,1.0)" ],
+     255, 128, 127, 255,
+     "rgba non-percent decimals, commas"
+    ],
+   [
+     [ "rgb(254.5  , 127.5 ,  126.2, 0.9)" ],
+     255, 128, 127, 230,
+     "rgba non-percent decimals, commas more spaces"
+    ],
+   [
+     [ "rgb(100% 50% 50% / 0.2)" ],
+     255, 128, 128, 51,
+     "rgba percent, spaces"
+    ],
+   [
+     [ "rgb(100%, 50%, 50%, 30%)" ],
+     255, 128, 128, 77,
+     "rgba percent, commas"
+    ],
+   [
+     [ "rgb(99.99% 49.99% 49.98% / 49.9%)" ],
+     255, 128, 128, 128,
+     "rgba percent decimals, spaces"
+    ],
+   [
+     [ "rgb(99.99%, 49.99%, 49.98%, 50.0%)" ],
+     255, 128, 128, 128,
+     "rgba percent decimals, commas"
+    ],
   );
 
 for my $test (@oo_tests) {
