@@ -1,0 +1,35 @@
+name: test-linux-nothr
+
+on:
+  push:
+    branches:
+      - '**'
+    tags-ignore:
+      - '*'
+  pull_request:
+
+
+jobs:
+  imager:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: install dependencies
+        run: |
+            sudo apt-get update ||:
+            sudo apt-get -y install build-essential libtiff-dev libpng-dev libgif-dev libfreetype6-dev libjpeg-dev
+      - name: checkout
+        uses: actions/checkout@v2
+      - name: setup non-threaded perl
+        uses: shogo82148/actions-setup-perl@v1
+        with:
+          multi-thread: false
+      - name: configure
+        run: |
+          perl Makefile.PL
+      - name: build
+        run: |
+            make -j2
+      - name: test
+        run: |
+            HARNESS_OPTIONS=j2 IMAGER_AUTHOR_TESTING=1 make test
