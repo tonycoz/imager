@@ -2,8 +2,9 @@ package Imager::Color;
 use 5.006;
 use Imager;
 use strict;
+use Scalar::Util ();
 
-our $VERSION = "1.014";
+our $VERSION = "1.015";
 
 # It's just a front end to the XS creation functions.
 
@@ -251,6 +252,14 @@ sub _get_x_color {
 # Parse color spec into an a set of 4 colors
 
 sub _pspec {
+  if (@_ == 1 && Scalar::Util::blessed($_[0])) {
+    if ($_[0]->isa("Imager::Color")) {
+      return $_[0]->rgba;
+    } elsif ($_[0]->isa("Imager::Color::Float")) {
+      return $_[0]->as_8bit->rgba;
+    }
+  }
+
   return (@_,255) if @_ == 3 && !grep /[^\d.+eE-]/, @_;
   return (@_    ) if @_ == 4 && !grep /[^\d.+eE-]/, @_;
   if ($_[0] =~
@@ -546,6 +555,14 @@ You can specify colors in several different ways, you can just supply
 simple values:
 
 =over
+
+=item *
+
+an Imager::Color object
+
+=item *
+
+an Imager::Color::Float object (the ranges of samples are translated from 0.0...1.0 to 0...255.)
 
 =item *
 

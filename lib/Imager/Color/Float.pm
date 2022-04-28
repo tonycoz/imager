@@ -2,8 +2,9 @@ package Imager::Color::Float;
 use 5.006;
 use Imager;
 use strict;
+use Scalar::Util ();
 
-our $VERSION = "1.007";
+our $VERSION = "1.008";
 
 # It's just a front end to the XS creation functions.
 
@@ -11,6 +12,13 @@ our $VERSION = "1.007";
 # Parse color spec into an a set of 4 colors
 
 sub _pspec {
+  if (@_ == 1 && Scalar::Util::blessed($_[0])) {
+    if ($_[0]->isa("Imager::Color::Float")) {
+      return $_[0]->rgba;
+    } elsif ($_[0]->isa("Imager::Color")) {
+      return $_[0]->as_float->rgba;
+    }
+  }
   return (@_,1) if @_ == 3;
   return (@_    ) if @_ == 4;
   if ($_[0] =~ 
@@ -141,6 +149,38 @@ from 0 to 1.0.
 
 Returns the color as the roughly equivalent 8-bit Imager::Color
 object.  Samples below zero or above 1.0 are clipped.
+
+=back
+
+=head2 Setting colors
+
+The new() and set() methods can accept the following parameters:
+
+=over
+
+=item *
+
+an Imager::Color::Float object
+
+=item *
+
+an Imager::Color object, the ranges of samples are translated from 0...255 to 0.0...1.0.
+
+=item *
+
+3 values, treated as red, green, blue
+
+=item *
+
+4 values, treated as red, green, blue, alpha
+
+=item *
+
+an 8 character hex color, optionally preceded by C<#>.
+
+=item *
+
+a 6 character hex color, optionally preceded by C<#>.
 
 =back
 

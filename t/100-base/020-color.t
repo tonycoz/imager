@@ -284,8 +284,41 @@ is_color4(Imager::Color->new(builtin=>'black'), 0, 0, 0, 255, 'builtin black');
   for my $test (@tests) {
     my ($name, $float, $expect) = @$test;
     my $f = Imager::Color::Float->new(@$float);
-    my $as8 = $f->as_8bit;
-    is_deeply([ $as8->rgba ], $expect, $name);
+    {
+      # test as_8bit
+      my $as8 = $f->as_8bit;
+      is_deeply([ $as8->rgba ], $expect, $name);
+    }
+    {
+      # test construction
+      my $as8 = Imager::Color->new($f);
+      is_deeply([ $as8->rgba ], $expect, "constructed: $name");
+    }
+  }
+}
+
+# test conversion from 8bit to float color
+{
+  my @tests =
+    (
+      [ "black", [ 0,0,0 ], [ 0,0,0, 1.0 ] ],
+      [ "white", [ 255, 255, 255 ], [ 1.0, 1.0, 1.0, 1.0 ] ],
+      [ "dark red", [ 128, 0, 0 ], [ 128/255, 0, 0, 1.0 ] ],
+      [ "green", [ 255, 128, 128, 64 ], [ 1.0, 128/255, 128/255, 64/255 ] ],
+     );
+  for my $test (@tests) {
+    my ($name, $as8, $float) = @$test;
+    my $c = Imager::Color->new(@$as8);
+    {
+      # test as_float
+      my $f = $c->as_float;
+      is_fcolor4($f, $float->[0], $float->[1], $float->[2], $float->[3], "as_float: $name");
+    }
+    {
+      # test construction
+      my $f = Imager::Color::Float->new($c);
+      is_fcolor4($f, $float->[0], $float->[1], $float->[2], $float->[3], "construction: $name");
+    }
   }
 }
 
