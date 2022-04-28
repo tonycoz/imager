@@ -562,7 +562,7 @@ an Imager::Color object
 
 =item *
 
-an Imager::Color::Float object (the ranges of samples are translated from 0.0...1.0 to 0...255.)
+an Imager::Color::Float object, the ranges of samples are translated from 0.0...1.0 to 0...255.
 
 =item *
 
