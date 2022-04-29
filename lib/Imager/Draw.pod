@@ -594,6 +594,9 @@ behaves like:
   my $count = $img->setpixel(x => [ 1, 1, 1, 1 ], y => [ 0 .. 3 ],
                              color => $color);
 
+To set an entire or partial row of pixels in one call, consider the
+L<Imager::Draw/setscanline()> or L<Imager::Draw/setsamples()> methods.
+
 Parameters:
 
 =over
@@ -663,6 +666,10 @@ behaves like:
 
 To receive floating point colors from getpixel(), set the C<type>
 parameter to 'float'.
+
+To retrieve an entire or partial row of pixels, or pixel data, in one
+call, consider the L<Imager::Draw/getscanline()> or
+L<Imager::Draw/getsamples()> methods.
 
 Parameters:
 

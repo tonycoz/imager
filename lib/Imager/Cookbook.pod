@@ -168,6 +168,51 @@ You can also fill the image with a fill object:
 
 See L<Imager::Fill> for information on Imager's fill objects.
 
+=head2 Create an image from raw RGB data
+
+If your data matches the layout supported by Imager's
+L<Imager::Files/RAW> file support closely enough, you can simply read
+the data as if it was a raw file:
+
+  my $img = Imager->new(
+    (
+     filetype => "raw",
+     xsize => $width,
+     ysize => $height,
+     # stored as RGBXRGBX where X is dropped
+     raw_interleave => 0,
+     raw_datachannels => 4,
+     raw_storechannels => 3,
+    );
+
+If the channel order doesn't match you can further use the
+L<Imager::Transformations/combine()> method to extract the channels in
+the correct order, eg. if the source data above was in C<BGRX> format
+instead of C<RGBX>:
+
+  my $img2 = $im->combine(src      => [ $img, $img, $img ],
+                          channels => [ 2,    1,    0    ]);
+
+Adapted from L<perl monks|https://perlmonks.org/?node_id=11139983>.
+
+For more control you can use the setsamples() method to set pixels
+directly to the image:
+
+  # for AGBR data in $data
+  my $img = Imager->new(xsize => $width, ysize => $height, channels => 4);
+  my $rowbytes = $width * 4;
+  my @chans = [ 3, 1, 2, 0 ];
+  for my $row (0 .. $height) {
+    $img->setsamples
+      (
+      y => $row,
+      data => $data,
+      offset => $rowbytes * $row,
+      channels => \@chans,
+      type => '8bit',
+      );
+  }
+
 =head1 WORLD WIDE WEB
 
 As with any CGI script it's up to you to validate data and set limits
