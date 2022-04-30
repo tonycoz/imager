@@ -177,6 +177,13 @@ and can be any of the following:
   tga   TARGA
   tiff  Tagged Image File Format (TIFF)
 
+Support for other formats can be found on CPAN, including:
+X<heif>X<QOI>X<webp>
+
+  heif/heic   Imager::File::HEIF
+  qoi         Imager::File::QOI
+  webp        Imager::File::WEBP
+
 When you read an image, Imager may set some tags, possibly including
 information about the spatial resolution, textual information, and
 animation information.  See L<Imager::ImageTypes/Tags> for specifics.
