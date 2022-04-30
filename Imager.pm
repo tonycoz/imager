@@ -4373,7 +4373,7 @@ sub _set_error {
 
 # Default guess for the type of an image from extension
 
-my @simple_types = qw(png tga gif raw ico cur xpm mng jng ilbm pcx psd eps webp xwd xpm dng ras);
+my @simple_types = qw(png tga gif raw ico cur xpm mng jng ilbm pcx psd eps webp xwd xpm dng ras qoi jxl);
 
 my %ext_types =
   (
