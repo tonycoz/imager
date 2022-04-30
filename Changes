@@ -51,6 +51,8 @@ Imager 1.013 - 27 Apr 2022
 
  - update ppport.h to avoid a diagnostic in more modern perls.
 
+ - add detection for HEIF, JPEG XL and QOI image formats
+
 Imager 1.012 - 14 Jun 2020
 ============
 
