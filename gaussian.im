@@ -80,6 +80,8 @@ i_gaussian2(i_img *im, double stddevX, double stddevY) {
   t_gauss_coeff *co = NULL;
   double res[MAXCHANNELS];
   i_img *timg;
+  i_img *yin;
+  i_img *yout;
   dIMCTXim(im);
 
   im_log((aIMCTX, 1,"i_gaussian2(im %p, stddev %.2f,%.2f)\n",im,stddevX,stddevY));
@@ -114,44 +116,40 @@ i_gaussian2(i_img *im, double stddevX, double stddevY) {
     /* Build Y coefficient matrix */
     co = build_coeff( im, stddevX );
     im_log((aIMCTX, 1, "i_gaussian2 X coeff radius=%i diamter=%i coeff=%p\n", co->radius, co->diameter, co->coeff));
-  }
-  else {
-    im_log((aIMCTX, 1, "i_gaussian2 X coeff is unity\n"));
-  }
 
-#code im->bits <= 8
-  IM_COLOR rcolor;
-  i_img *yin;
-  i_img *yout;
-
-  if( stddevX > 0 ) {
     /******************/
     /* Process X blur */
     im_log((aIMCTX, 1, "i_gaussian2 X blur from im=%p to timg=%p\n", im, timg));
 
-  for(y = 0; y < im->ysize; y++) {
-    for(x = 0; x < im->xsize; x++) {
-      pc=0.0;
-      for(ch=0;ch<im->channels;ch++) 
-	res[ch]=0; 
+#code im->bits <= 8
+    IM_COLOR rcolor;
+
+    for(y = 0; y < im->ysize; y++) {
+      for(x = 0; x < im->xsize; x++) {
+        pc=0.0;
+        for(ch=0;ch<im->channels;ch++)
+          res[ch]=0;
         for(c = 0;c < co->diameter; c++)
           if (IM_GPIX(im,x+c-co->radius,y,&rcolor)!=-1) {
-	  for(ch=0;ch<im->channels;ch++)
+            for(ch=0;ch<im->channels;ch++)
               res[ch]+= rcolor.channel[ch] * co->coeff[c];
             pc+=co->coeff[c];
-	}
-      for(ch=0;ch<im->channels;ch++) {
-	double value = res[ch] / pc;
-	rcolor.channel[ch] = value > IM_SAMPLE_MAX ? IM_SAMPLE_MAX : IM_ROUND(value);
+          }
+        for(ch=0;ch<im->channels;ch++) {
+          double value = res[ch] / pc;
+          rcolor.channel[ch] = value > IM_SAMPLE_MAX ? IM_SAMPLE_MAX : IM_ROUND(value);
+        }
+        IM_PPIX(timg, x, y, &rcolor);
       }
-      IM_PPIX(timg, x, y, &rcolor);
     }
-  }
+#/code
     /* processing is im -> timg=yin -> im=yout */
     yin = timg;
     yout = im;
   }
   else {
+    im_log((aIMCTX, 1, "i_gaussian2 X coeff is unity\n"));
+
     /* processing is im=yin -> timg=yout -> im */
     yin = im;
     yout = timg;
@@ -172,32 +170,35 @@ i_gaussian2(i_img *im, double stddevX, double stddevY) {
     /******************/
     /* Process Y blur */
     im_log((aIMCTX, 1, "i_gaussian2 Y blur from yin=%p to yout=%p\n", yin, yout));
-  for(x = 0;x < im->xsize; x++) {
-    for(y = 0; y < im->ysize; y++) {
-      pc=0.0;
-      for(ch=0; ch<im->channels; ch++)
-	res[ch]=0; 
+#code im->bits <= 8
+    IM_COLOR rcolor;
+    for(x = 0;x < im->xsize; x++) {
+      for(y = 0; y < im->ysize; y++) {
+        pc=0.0;
+        for(ch=0; ch<im->channels; ch++)
+          res[ch]=0;
         for(c=0; c < co->diameter; c++)
           if (IM_GPIX(yin, x, y+c-co->radius, &rcolor)!=-1) {
             for(ch=0;ch<yin->channels;ch++) 
               res[ch]+= rcolor.channel[ch] * co->coeff[c];
             pc+=co->coeff[c];
-	}
+          }
         for(ch=0;ch<yin->channels;ch++) {
-	double value = res[ch]/pc;
-	rcolor.channel[ch] = value > IM_SAMPLE_MAX ? IM_SAMPLE_MAX : IM_ROUND(value);
-      }
+          double value = res[ch]/pc;
+          rcolor.channel[ch] = value > IM_SAMPLE_MAX ? IM_SAMPLE_MAX : IM_ROUND(value);
+        }
         IM_PPIX(yout, x, y, &rcolor);
       }
     }
+#/code
     if( im != yout ) {
       im_log((aIMCTX, 1, "i_gaussian2 copying yout=%p to im=%p\n", yout, im));
       img_copy( im, yout );
-  }
+    }
   }
   else {
     im_log((aIMCTX, 1, "i_gaussian2 Y coeff is unity\n"));
-    if( yin==timg ) {
+    if( yin == timg ) {
       im_log((aIMCTX, 1, "i_gaussian2 copying timg=%p to im=%p\n", timg, im));
       img_copy( im, timg );
     }
@@ -208,9 +209,6 @@ i_gaussian2(i_img *im, double stddevX, double stddevY) {
   im_log((aIMCTX, 1, "i_gaussian2 yin=%p\n", yin));
   im_log((aIMCTX, 1, "i_gaussian2 yout=%p\n", yout));
 
-
-
-#/code
   if( co != NULL )
     free_coeff(co);
 
