@@ -217,7 +217,7 @@ my %opts=
    INC          => "$lib_inc $DFLAGS",
    OBJECT       => join(' ', @objs),
    DIR          => [ sort grep -d, @enabled_bundled, @extras ],
-   clean          => { FILES=>'testout rubthru.c scale.c conv.c  filters.c gaussian.c render.c rubthru.c' },
+   clean          => { FILES=>'testout rubthru.c scale.c conv.c  filters.c gaussian.c render.c rubthru.c cov-int' },
    PM             => gen_PM(),
    PREREQ_PM      =>
    { 

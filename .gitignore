@@ -38,6 +38,7 @@ Imager-[0-9]*
 # test generated files
 _Inline/
 testout/
+cov-int/
 
 # editor droppings
 *~
