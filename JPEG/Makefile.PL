@@ -111,6 +111,7 @@ require Imager::Probe;
 my %probe =
   (
    name => "JPEG",
+   pkg => [ "libjpeg" ],
    inccheck => sub { -e File::Spec->catfile($_[0], "jpeglib.h") },
    libbase => "jpeg",
    testcode => _jpeg_test_code(),
