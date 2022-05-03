@@ -1,5 +1,12 @@
 Imager release history.  Older releases can be found in Changes.old
 
+ - rename the "virtual" member of i_img to "isvirtual" to allow the
+   API to be used from C++, this may break source compatibility, using
+   the i_img_virtual() accessor is backward compatible.
+
+ - add cookbook entry to populating an image from raw RGB samples
+   https://github.com/tonycoz/imager/issues/471
+
 Imager 1.014 - 28 Apr 2022
 ============
 
