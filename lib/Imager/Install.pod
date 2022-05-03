@@ -196,8 +196,16 @@ Cygwin: C<libgif-devel>
 L<Imager::File::JPEG> uses L<< C<libjpeg> |http://www.ijg.org/ >> for JPEG
 image file support.
 
-You may also use
-L<< C<libjpeg-turbo> |http://sourceforge.net/projects/libjpeg-turbo/ >>.
+You may also use L<< C<libjpeg-turbo>
+|http://sourceforge.net/projects/libjpeg-turbo/ >> or L<< C<mozjpeg>
+|https://github.com/mozilla/mozjpeg >> by setting the installed
+library's F<pkgconfig/> directory in `PKG_CONFIG_PATH`, eg:
+
+  PKG_CONFIG_PATH=/home/tony/local/mozjpeg-3.0git/lib/pkgconfig/ perl Makefile.PL
+  PKG_CONFIG_PATH=/home/tony/local/jpeg-turbo-2.0.4git/lib/pkgconfig/ perl Makefile.PL
+
+C<mozjpeg> sets some optimizations on by default that currently cause two
+C<Imager::File::JPEG> tests to fail.
 
 To install older releases of C<libjpeg> from source, you'll need to
 run:
