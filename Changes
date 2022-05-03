@@ -7,6 +7,25 @@ Imager release history.  Older releases can be found in Changes.old
  - add cookbook entry to populating an image from raw RGB samples
    https://github.com/tonycoz/imager/issues/471
 
+ - Imager::Probe now puts the existing value of PKG_CONFIG_PATH at the
+   front of the PKG_CONFIG_PATH used when it calls pkg-config.
+
+JPEG updates:
+
+ - detect libjpeg (of whichever variety) via pkg-config if possible
+
+ - add specific support for mozjpeg (turn its optimization off by
+   default so tests pass.)
+
+ - add libjpeg_version(), is_mozjpeg() and is_turbojpeg() methods
+
+ - add jpeg_compress_profile output tag, which only matters for
+   mozjpeg
+
+ - the libjpeg_version() method replaces the old
+   Imager::File::JPEG::i_libjpeg_version() function, and the format
+   has changed.
+
 Imager 1.014 - 28 Apr 2022
 ============
 

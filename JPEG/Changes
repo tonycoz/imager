@@ -3,6 +3,20 @@ Imager-File-JPEG 0.96
 
  - adapt to rename of i_img virtual member.
 
+ - detect libjpeg (of whichever variety) via pkg-config if possible
+
+ - add specific support for mozjpeg (turn its optimization off by
+   default so tests pass.)
+
+ - add libjpeg_version(), is_mozjpeg() and is_turbojpeg() methods
+
+ - add jpeg_compress_profile output tag, which only matters for
+   mozjpeg
+
+ - the libjpeg_version() method replaces the old
+   Imager::File::JPEG::i_libjpeg_version() function, and the format
+   has changed.
+
 Imager-File-JPEG 0.95
 =====================
 

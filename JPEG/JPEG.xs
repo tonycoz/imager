@@ -11,10 +11,15 @@ extern "C" {
 
 DEFINE_IMAGER_CALLBACKS;
 
-MODULE = Imager::File::JPEG  PACKAGE = Imager::File::JPEG
+MODULE = Imager::File::JPEG  PACKAGE = Imager::File::JPEG PREFIX = i_
+
+PROTOTYPES: DISABLE
 
 const char *
-i_libjpeg_version()
+i_libjpeg_version(cls)
+  C_ARGS:
+
+MODULE = Imager::File::JPEG  PACKAGE = Imager::File::JPEG
 
 undef_int
 i_writejpeg_wiol(im, ig, qfactor)
@@ -47,6 +52,15 @@ i_readjpeg_wiol(ig)
 		    PUSHs(sv_2mortal(newSVpv(iptc_itext,tlength)));
                     myfree(iptc_itext);
 	      }
+
+bool
+is_turbojpeg(cls)
+  C_ARGS:
+
+bool
+is_mozjpeg(cls)
+  C_ARGS:
+
 
 BOOT:
 	PERL_INITIALIZE_IMAGER_CALLBACKS;

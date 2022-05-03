@@ -340,10 +340,12 @@ transfer_gray(i_color *out, JSAMPARRAY in, int width) {
 typedef void (*transfer_function_t)(i_color *out, JSAMPARRAY in, int width);
 
 static const char version_string[] =
-#ifdef LIBJPEG_TURBO_VERSION
-  "libjpeg-turbo " STRINGIFY(LIBJPEG_TURBO_VERSION) " api " STRINGIFY(JPEG_LIB_VERSION)
+#if defined(JPEG_C_PARAM_SUPPORTED)
+  "mozjpeg version " STRINGIFY(LIBJPEG_TURBO_VERSION) " api " STRINGIFY(JPEG_LIB_VERSION)
+#elif defined(LIBJPEG_TURBO_VERSION)
+  "libjpeg-turbo version " STRINGIFY(LIBJPEG_TURBO_VERSION) " api " STRINGIFY(JPEG_LIB_VERSION)
 #else
-  "libjpeg " STRINGIFY(JPEG_LIB_VERSION)
+  "libjpeg version " STRINGIFY(JPEG_LIB_VERSION) " api " STRINGIFY(JPEG_LIB_VERSION)
 #endif
   ;
 
@@ -356,6 +358,24 @@ static const char version_string[] =
 const char *
 i_libjpeg_version(void) {
   return version_string;
+}
+
+int
+is_turbojpeg(void) {
+#if defined(LIBJPEG_TURBO_VERSION)
+  return 1;
+#else
+  return 0;
+#endif
+}
+
+int
+is_mozjpeg(void) {
+#if defined(JPEG_C_PARAM_SUPPORTED)
+  return 1;
+#else
+  return 0;
+#endif
 }
 
 /*
@@ -570,6 +590,8 @@ i_writejpeg_wiol(i_img *im, io_glue *ig, int qfactor) {
   int want_channels = im->channels;
   int progressive = 0;
   int optimize = 0;
+  int arithmetic = 0;
+  char profile_name[20] = "";
 
   struct jpeg_compress_struct cinfo;
   struct my_error_mgr jerr;
@@ -600,6 +622,7 @@ i_writejpeg_wiol(i_img *im, io_glue *ig, int qfactor) {
   jpeg_create_compress(&cinfo);
 
   if (setjmp(jerr.setjmp_buffer)) {
+  fail:
     jpeg_destroy_compress(&cinfo);
     if (data)
       myfree(data);
@@ -622,6 +645,33 @@ i_writejpeg_wiol(i_img *im, io_glue *ig, int qfactor) {
     cinfo.input_components = 1;		/* # of color components per pixel */
     cinfo.in_color_space = JCS_GRAYSCALE; 	/* colorspace of input image */
   }
+
+  if (i_tags_get_string(&im->tags, "jpeg_compress_profile", 0,
+                        profile_name, sizeof(profile_name))) {
+    if (strcmp(profile_name, "fastest") == 0) {
+#ifdef JPEG_C_PARAM_SUPPORTED
+      jpeg_c_set_int_param(&cinfo, JINT_COMPRESS_PROFILE, JCP_FASTEST);
+#endif
+      /* else default */
+    }
+    else if (strcmp(profile_name, "max") == 0) {
+#if defined(JPEG_C_PARAM_SUPPORTED)
+      jpeg_c_set_int_param(&cinfo, JINT_COMPRESS_PROFILE, JCP_MAX_COMPRESSION);
+#else
+      i_push_error(0, "jpeg_compress_profile=max requires mozjpeg");
+      goto fail;
+#endif
+    }
+    else {
+      i_push_errorf(0, "jpeg_compress_profile=%s unknown", profile_name);
+      goto fail;
+    }
+  }
+#ifdef JPEG_C_PARAM_SUPPORTED
+  else {
+    jpeg_c_set_int_param(&cinfo, JINT_COMPRESS_PROFILE, JCP_FASTEST);
+  }
+#endif
 
   jpeg_set_defaults(&cinfo);
   jpeg_set_quality(&cinfo, quality, TRUE);  /* limit to baseline-JPEG values */

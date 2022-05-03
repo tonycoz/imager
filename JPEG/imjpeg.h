@@ -12,4 +12,11 @@ i_writejpeg_wiol(i_img *im, io_glue *ig, int qfactor);
 extern const char *
 i_libjpeg_version(void);
 
+extern int
+is_turbojpeg(void);
+
+extern int
+is_mozjpeg(void);
+
+
 #endif

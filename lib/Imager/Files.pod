@@ -707,10 +707,24 @@ not set in the image when reading:
 
 =over
 
+=item *
+
 C<jpeg_optimize> - set to a non-zero integer to compute optimal
 Huffman coding tables for the image.  This will increase memory usage
 and processing time (about 12% in my simple tests) but can
 significantly reduce file size without a loss of quality.
+
+=item *
+
+C<jpeg_compress_profile> - set to either C<fastest>, the default, or
+only with C<MozJPEG>, to C<max>.  Setting this to any other value will
+cause an error, failing the write() call.  Setting this to C<max>
+without C<MozJPEG> will cause an error.
+
+  use Imager::File::JPEG;
+  my $prof = Imager::File::JPEG->is_mozjpeg ? "max" : "fastest";
+  $im->write(file => "foo.jpeg", jpeg_compress_profile => $prof)
+     or die $im->errstr;
 
 =back
 

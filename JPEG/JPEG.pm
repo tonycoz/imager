@@ -67,9 +67,63 @@ Imager::File::JPEG - read and write JPEG files
   $img->write(file => "foo.jpg")
     or die $img->errstr;
 
+  my $version = Imager::File::JPEG->libjpeg_version();
+  if (Imager::File::JPEG->is_turbojpeg) { ... }
+  if (Imager::File::JPEG->is_mozjpeg) { ... }
+
 =head1 DESCRIPTION
 
 Imager's JPEG support is documented in L<Imager::Files>.
+
+Besides providing JPEG support, Imager::File::JPEG has the following
+methods:
+
+=over
+
+=item libjpeg_version()
+
+  Imager::File::JPEG->libjpeg_version();
+
+Returns version information about the variety of C<libjpeg>
+Imager::File::JPEG was compiled with.  This is determined at build
+time.  This includes:
+
+=over
+
+=item *
+
+The library type, one of C<libjpeg>, C<libjpeg-turbo> or C<mozjpeg>.
+
+=item *
+
+C<version> followed by the library version number.
+
+=item *
+
+C<api> followed by the C<libjpeg> API version.
+
+=back
+
+For C<libjpeg> the API and library versions are always equal.
+
+=item is_turbojpeg()
+
+  Imager::File::JPEG->is_turbojpeg();
+
+Returns true if Imager::File::JPEG was built with C<libjpeg-turbo>.
+Note that C<mozjpeg> is built on top of C<libjpeg-turbo> so this will
+return true for C<mozjpeg>.
+
+=item is_mozjpeg()
+
+  Imager::File::JPEG->is_mozjpeg();
+
+Returns true if Imager::File::JPEG was built with C<mozjpeg>.  Note
+that C<mozjpeg> doesn't define its own version numbering, so
+C<mozjpeg> is detected by defines that only C<mozjpeg> currently
+defines.
+
+=back
 
 =head1 AUTHOR
 

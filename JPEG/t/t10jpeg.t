@@ -11,9 +11,7 @@ init_log("testout/t101jpeg.log",1);
 $Imager::formats{"jpeg"}
   or plan skip_all => "no jpeg support";
 
-plan tests => 109;
-
-print STDERR "libjpeg version: ", Imager::File::JPEG::i_libjpeg_version(), "\n";
+diag "libjpeg version: ", Imager::File::JPEG->libjpeg_version(), "\n";
 
 my $green=i_color_new(0,255,0,255);
 my $blue=i_color_new(0,0,255,255);
@@ -457,6 +455,41 @@ SKIP:
 	   "optimization should only change huffman compression, not quality");
 }
 
+SKIP:
+{
+  my $im = test_image();
+  # unknown jpeg_compress_profile always fails, doesn't matter whether we have mozjpeg
+  my $data;
+  ok(!$im->write(data => \$data, type => "jpeg", jpeg_compress_profile => "invalid"),
+     "fail to write with unknown compression profile");
+  like($im->errstr, qr/jpeg_compress_profile=invalid unknown/,
+       "check the error message");
+
+  ok($im->write(data => \$data, type => "jpeg", jpeg_compress_profile => "fastest"),
+     "jpeg_compress_profile=fastest is always available");
+  Imager::File::JPEG->is_mozjpeg
+      and skip "this is mozjpeg", 1;
+  ok(!$im->write(data => \$data, type => "jpeg", jpeg_compress_profile => "max"),
+     "fail to write with max compression profile without mozjpeg");
+  like($im->errstr, qr/jpeg_compress_profile=max requires mozjpeg/,
+       "check the error message");
+}
+
+SKIP:
+{
+  Imager::File::JPEG->is_mozjpeg
+      or skip "this isn't mozjpeg", 1;
+  my $im = test_image();
+  my $base_data;
+  ok($im->write(data => \$base_data, type => "jpeg", jpeg_compress_profile => "fastest"),
+     "write using defaults");
+  my $opt_data;
+  ok($im->write(data => \$opt_data,  type => "jpeg", jpeg_compress_profile => "max"),
+     "write using max compression profile");
+  cmp_ok(length($opt_data), '<', length($base_data),
+         "max compression should be smaller");
+}
+
 { # check close failures are handled correctly
   my $im = test_image();
   my $fail_close = sub {
@@ -469,3 +502,5 @@ SKIP:
     like($im->errstr, qr/synthetic close failure/,
 	 "check error message");
 }
+
+done_testing();
