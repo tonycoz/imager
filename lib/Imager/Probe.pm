@@ -5,7 +5,7 @@ use File::Spec;
 use Config;
 use Cwd ();
 
-our $VERSION = "1.007";
+our $VERSION = "1.008";
 
 my @alt_transfer = qw/altname incsuffix libbase/;
 
@@ -110,9 +110,10 @@ sub _probe_pkg {
   # Setup pkg-config's environment variable to search non-standard paths
   # which may be provided by --libdirs.
   my @pkgcfg_paths = map { "$_/pkgconfig" } _lib_paths( $req );
-  push @pkgcfg_paths, $ENV{ 'PKG_CONFIG_PATH' } if $ENV{ 'PKG_CONFIG_PATH' };
+  unshift @pkgcfg_paths, $ENV{ 'PKG_CONFIG_PATH' } if $ENV{ 'PKG_CONFIG_PATH' };
 
   local $ENV{ 'PKG_CONFIG_PATH' } = join $Config{path_sep}, @pkgcfg_paths;
+  print "PKG_CONFIG_PATH=$ENV{PKG_CONFIG_PATH}\n" if $req->{verbose};
 
   is_exe('pkg-config') or return;
   my $redir = $^O eq 'MSWin32' ? '' : '2>/dev/null';
