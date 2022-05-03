@@ -17,7 +17,10 @@ jobs:
       - name: install dependencies
         run: |
             sudo apt-get update ||:
-            sudo apt-get -y install build-essential libtiff-dev libpng-dev libgif-dev libfreetype6-dev libjpeg-dev libtest-pod-coverage-perl libtest-pod-perl libpod-parser-perl libpod-spell-perl aspell libinline-c-perl
+            sudo apt-get -y install build-essential libtiff-dev libpng-dev libgif-dev libfreetype6-dev libjpeg-dev libtest-pod-coverage-perl libtest-pod-perl libpod-parser-perl libpod-spell-perl aspell libinline-c-perl libparse-recdescent-perl cpanminus
+            # prerequisites for Inline::CPP
+            sudo apt-get -y install libcapture-tiny-perl libmodule-build-perl
+            sudo cpanm Inline::CPP
       - name: checkout
         uses: actions/checkout@v2
       - name: configure
