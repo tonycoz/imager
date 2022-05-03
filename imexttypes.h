@@ -6,6 +6,10 @@
 #include "imdatatypes.h"
 #include <stdarg.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /*
  IMAGER_API_VERSION is similar to the version number in the third and
  fourth bytes of TIFF files - if it ever changes then the API has changed
@@ -277,5 +281,9 @@ typedef struct {
 } im_ext_funcs;
 
 #define PERL_FUNCTION_TABLE_NAME "Imager::__ext_func_table"
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

@@ -370,6 +370,7 @@ t/400-filter/010-filters.t	Consolidated filter tests (needs to split)
 t/400-filter/020-autolevels.t	Test the autolevels filter
 t/450-api/100-inline.t		Inline::C integration and API
 t/450-api/110-inlinectx.t	context APIs
+t/450-api/130-cpp.t		Inline::CPP integration and API
 t/850-thread/010-base.t		Test wrt to perl threads
 t/850-thread/100-error.t	error stack handling with threads
 t/850-thread/110-log.t		log handling with threads

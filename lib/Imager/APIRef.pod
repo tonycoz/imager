@@ -248,7 +248,7 @@ for paletted images.
 
 =item *
 
-C<virtual> - if zero then this image is-self contained.  If non-zero
+C<isvirtual> - if zero then this image is-self contained.  If non-zero
 then this image could be an interface to some other implementation.
 
 =item *

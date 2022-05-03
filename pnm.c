@@ -817,7 +817,7 @@ i_writeppm_wiol(i_img *im, io_glue *ig) {
       return(0);
     }
 
-    if (!im->virtual && im->bits == i_8_bits && im->type == i_direct_type
+    if (!i_img_virtual(im) && im->bits == i_8_bits && im->type == i_direct_type
 	&& im->channels == want_channels) {
       if (i_io_write(ig,im->idata,im->bytes) != im->bytes) {
         i_push_error(errno, "could not write ppm data");

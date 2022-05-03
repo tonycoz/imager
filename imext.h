@@ -4,6 +4,10 @@
 #include "imexttypes.h"
 #include "immacros.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 extern im_ext_funcs *imager_function_ext_table;
 
 #define DEFINE_IMAGER_CALLBACKS im_ext_funcs *imager_function_ext_table
@@ -256,6 +260,10 @@ extern im_ext_funcs *imager_function_ext_table;
 #define im_log(x) { im_lhead(aIMCTX, __FILE__,__LINE__); im_loog x; } 
 #else
 #define mm_log(x)
+#endif
+
+#ifdef __cplusplus
+}
 #endif
 
 #endif

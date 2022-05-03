@@ -195,7 +195,7 @@ i_img_to_rgb_inplace(i_img *im) {
   i_img temp;
   dIMCTXim(im);
 
-  if (im->virtual)
+  if (i_img_virtual(im))
     return 0;
 
   if (im->type == i_direct_type)

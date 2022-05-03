@@ -6,6 +6,10 @@
 #ifndef IMAGER_IMMACROS_H_
 #define IMAGER_IMMACROS_H_
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /*
 =item i_img_has_alpha(C<im>)
 
@@ -112,7 +116,7 @@ returns -1 and pushes an error.
 #define i_findcolor(im, color, entry) \
   (((im)->i_f_findcolor) ? ((im)->i_f_findcolor)((im), (color), (entry)) : 0)
 
-#define i_img_virtual(im) ((im)->virtual)
+#define i_img_virtual(im) ((im)->isvirtual)
 #define i_img_type(im) ((im)->type)
 #define i_img_bits(im) ((im)->bits)
 
@@ -150,5 +154,9 @@ returns -1 and pushes an error.
 #define io_new_buffer(data, len, closecb, closectx) im_io_new_buffer(aIMCTX, (data), (len), (closecb), (closectx))
 #define io_new_cb(p, readcb, writecb, seekcb, closecb, destroycb) \
   im_io_new_cb(aIMCTX, (p), (readcb), (writecb), (seekcb), (closecb), (destroycb))
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

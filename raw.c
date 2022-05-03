@@ -139,7 +139,7 @@ i_writeraw_wiol(i_img* im, io_glue *ig) {
   mm_log((1,"writeraw(im %p,ig %p)\n", im, ig));
   
   if (im == NULL) { mm_log((1,"Image is empty\n")); return(0); }
-  if (!im->virtual) {
+  if (!i_img_virtual(im)) {
     rc = i_io_write(ig,im->idata,im->bytes);
     if (rc != im->bytes) { 
       i_push_error(errno, "Could not write to file");

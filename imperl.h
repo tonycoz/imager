@@ -9,6 +9,10 @@
 
 #include "imdatatypes.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 typedef i_color* Imager__Color;
 typedef i_fcolor* Imager__Color__Float;
 typedef i_img*   Imager__ImgRaw;
@@ -27,5 +31,9 @@ typedef TT_Fonthandle* Imager__Font__TT;
 typedef i_fill_t* Imager__FillHandle;
 
 typedef io_glue *Imager__IO;
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

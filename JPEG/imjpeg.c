@@ -670,7 +670,7 @@ i_writejpeg_wiol(i_img *im, io_glue *ig, int qfactor) {
 
   row_stride = im->xsize * im->channels;	/* JSAMPLEs per row in image_buffer */
 
-  if (!im->virtual && im->type == i_direct_type && im->bits == i_8_bits
+  if (!i_img_virtual(im) && im->type == i_direct_type && im->bits == i_8_bits
       && im->channels == want_channels) {
     image_buffer=im->idata;
 

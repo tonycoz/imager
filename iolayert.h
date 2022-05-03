@@ -8,6 +8,10 @@
 #include <stddef.h>
 #include <stdio.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 typedef enum { FDSEEK, FDNOSEEK, BUFFER, CBSEEK, CBNOSEEK, BUFCHAIN } io_type;
 
 #ifdef _MSC_VER
@@ -106,5 +110,9 @@ struct i_io_glue_t {
   ((ig)->read_ptr == (ig)->read_end && (ig)->buf_eof)
 #define i_io_error(ig) \
   ((ig)->read_ptr == (ig)->read_end && (ig)->error)
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

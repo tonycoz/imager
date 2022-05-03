@@ -605,6 +605,11 @@ sub make_imconfig {
 
 #ifndef IMAGER_IMCONFIG_H
 #define IMAGER_IMCONFIG_H
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 EOS
   for my $define (@$defines) {
     if ($define->[2]) {
@@ -657,7 +662,14 @@ EOS
   else {
     print $config "#define IMAGER_STATIC_INLINE static\n";
   }
-  print $config "\n#endif\n";
+  print $config <<'EOS';
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif
+EOS
   close $config;
 }
 
