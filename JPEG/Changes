@@ -8,7 +8,8 @@ Imager-File-JPEG 0.96
  - add specific support for mozjpeg (turn its optimization off by
    default so tests pass.)
 
- - add libjpeg_version(), is_mozjpeg() and is_turbojpeg() methods
+ - add libjpeg_version(), is_mozjpeg(), is_turbojpeg() and
+   has_arith_coding() methods
 
  - add jpeg_compress_profile output tag, which only matters for
    mozjpeg
@@ -16,6 +17,10 @@ Imager-File-JPEG 0.96
  - the libjpeg_version() method replaces the old
    Imager::File::JPEG::i_libjpeg_version() function, and the format
    has changed.
+
+ - add support for JPEG arithmetic coding when the supplied libjpeg
+   supports it.  Note that not all JPEG decoders can handle arithmetic
+   coded JPEGs.
 
 Imager-File-JPEG 0.95
 =====================
