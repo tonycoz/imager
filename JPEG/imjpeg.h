@@ -18,5 +18,11 @@ is_turbojpeg(void);
 extern int
 is_mozjpeg(void);
 
+/* whether arithmetic coding is available for encode/decode */
+extern int
+has_decode_arith_coding(void);
+extern int
+has_encode_arith_coding(void);
+
 
 #endif

@@ -50,6 +50,13 @@ Imager->register_writer
    },
   );
 
+
+sub has_arith_coding {
+  my $cls = shift;
+
+  return $cls->has_encode_arith_coding && $cls->has_decode_arith_coding;
+}
+
 __END__
 
 =head1 NAME
@@ -70,6 +77,8 @@ Imager::File::JPEG - read and write JPEG files
   my $version = Imager::File::JPEG->libjpeg_version();
   if (Imager::File::JPEG->is_turbojpeg) { ... }
   if (Imager::File::JPEG->is_mozjpeg) { ... }
+
+  if (Imager::File::JPEG->has_arith_coding) { ... }
 
 =head1 DESCRIPTION
 
@@ -122,6 +131,21 @@ Returns true if Imager::File::JPEG was built with C<mozjpeg>.  Note
 that C<mozjpeg> doesn't define its own version numbering, so
 C<mozjpeg> is detected by defines that only C<mozjpeg> currently
 defines.
+
+=item has_arith_coding()
+
+Returns true if the C<libjpeg> variant C<Imager::File::JPEG> was built
+with has both encoding and decoding support for arithmetic coding.
+
+=item has_encode_arith_coding()
+
+Returns true if the C<libjpeg> variant C<Imager::File::JPEG> was built
+with has encoding support for arithmetic coding.
+
+=item has_decode_arith_coding()
+
+Returns true if the C<libjpeg> variant C<Imager::File::JPEG> was built
+with has decoding support for arithmetic coding.
 
 =back
 

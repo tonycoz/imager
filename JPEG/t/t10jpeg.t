@@ -490,6 +490,19 @@ SKIP:
          "max compression should be smaller");
 }
 
+{
+  Imager::File::JPEG->has_arith_coding
+      or skip "arithmetic coding not available", 1;
+  my $im = test_image;
+  my $data;
+  ok($im->write(data => \$data, type => "jpeg", jpeg_arithmetic => 1),
+     "write with arithmetic coding");
+  my $im2 = Imager->new(data => $data);
+  ok($im2, "read back arithmetic coded");
+  ok($im2->tags(name => "jpeg_read_arithmetic"),
+     "and read tag set");
+}
+
 { # check close failures are handled correctly
   my $im = test_image();
   my $fail_close = sub {

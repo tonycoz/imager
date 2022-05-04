@@ -378,6 +378,24 @@ is_mozjpeg(void) {
 #endif
 }
 
+int
+has_encode_arith_coding(void) {
+#ifdef C_ARITH_CODING_SUPPORTED
+  return 1;
+#else
+  return 0;
+#endif
+}
+
+int
+has_decode_arith_coding(void) {
+#ifdef D_ARITH_CODING_SUPPORTED
+  return 1;
+#else
+  return 0;
+#endif
+}
+
 /*
 =item i_readjpeg_wiol(data, length, iptc_itext, itlength)
 
@@ -531,6 +549,7 @@ i_readjpeg_wiol(io_glue *data, int length, char** iptc_itext, int *itlength) {
 
   i_tags_setn(&im->tags, "jpeg_out_color_space", cinfo.out_color_space);
   i_tags_setn(&im->tags, "jpeg_color_space", cinfo.jpeg_color_space);
+  i_tags_setn(&im->tags, "jpeg_read_arithmetic", cinfo.arith_code);
 
   if (cinfo.saw_JFIF_marker) {
     double xres = cinfo.X_density;
@@ -684,6 +703,9 @@ i_writejpeg_wiol(i_img *im, io_glue *ig, int qfactor) {
   if (!i_tags_get_int(&im->tags, "jpeg_optimize", 0, &optimize))
     optimize = 0;
   cinfo.optimize_coding = optimize;
+  if (i_tags_get_int(&im->tags, "jpeg_arithmetic", 0, &arithmetic)) {
+    cinfo.arith_code = arithmetic != 0;
+  }
 
   got_xres = i_tags_get_float(&im->tags, "i_xres", 0, &xres);
   got_yres = i_tags_get_float(&im->tags, "i_yres", 0, &yres);

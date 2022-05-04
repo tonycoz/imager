@@ -726,6 +726,27 @@ without C<MozJPEG> will cause an error.
   $im->write(file => "foo.jpeg", jpeg_compress_profile => $prof)
      or die $im->errstr;
 
+=item *
+
+C<jpeg_arithmetic> - if set to non-zero, use arithmetic coding when
+writing the image.  This requires that the C<libjpeg> variant that
+L<Imager::File::JPEG> was built with had encode support for arithmetic
+coding enabled when it was built.
+
+=back
+
+When reading a JPEG image, the following tag will be set, and ignored
+on writing:
+
+=over
+
+=item *
+
+C<jpeg_read_arithmetic> - the image had been written with arithmetic
+coding.  This uses a separate name from writing to avoid arithmetic
+coding from being accidentally propagated to a file that might need
+to be read by an implementation without arithmetic coding support.
+
 =back
 
 =for stopwords EXIF

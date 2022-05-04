@@ -61,6 +61,14 @@ bool
 is_mozjpeg(cls)
   C_ARGS:
 
+bool
+has_encode_arith_coding(cls)
+  C_ARGS:
+
+bool
+has_decode_arith_coding(cls)
+  C_ARGS:
+
 
 BOOT:
 	PERL_INITIALIZE_IMAGER_CALLBACKS;
