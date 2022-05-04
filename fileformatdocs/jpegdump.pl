@@ -25,6 +25,38 @@ while (!eof($fh)) {
   if ($chead eq "\xFF\xD8") {
     print "Start of image\n";
   }
+  elsif ($chead eq "\xFF\xDB") {
+    # DQT
+    my $clen;
+    unless (read($fh, $clen, 2) == 2) {
+      die "Couldn't read length for DQT\n";
+    }
+    my $len = unpack("S>", $clen);
+    my $dqt;
+    unless (read($fh, $dqt, $len-2) == $len-2) {
+      print "length ", length $dqt, " expected $len\n";
+      die "Couldn't contents for DQT\n";
+    }
+    print "DQT\n";
+    my $pq = ord($dqt) >> 4;
+    my $tq = ord($dqt) & 0xF;
+    print "  Pq $pq\n";
+    print "  Tq $tq\n";
+  }
+  elsif ($chead eq "\xFF\xC9") {
+    # SOI 9
+    my $clen;
+    unless (read($fh, $clen, 2) == 2) {
+      die "Couldn't read length for SOI9\n";
+    }
+    my $len = unpack("S>", $clen);
+    my $soi9;
+    unless (read($fh, $soi9, $len-2) == $len-2) {
+      print "length ", length $soi9, " expected $len\n";
+      die "Couldn't contents for SOI9\n";
+    }
+    print "SOI9 (arithmetic encoding)\n";
+  }
   elsif ($chead =~ /^\xFF[\xE0-\xEF]$/) {
     # APP0-APP15
     my $clen;
@@ -69,7 +101,18 @@ while (!eof($fh)) {
     }
   }
   else {
-    die "I don't know how to handle ", unpack("H*", $chead), "\n";
+    # not processed
+    my $clen;
+    unless (read($fh, $clen, 2) == 2) {
+      die "Couldn't read length for unknown (", unpack("H*", $chead), ")\n";
+    }
+    my $len = unpack("S>", $clen);
+    my $unknown;
+    unless (read($fh, $unknown, $len-2) == $len-2) {
+      print "length ", length $unknown, " expected $len\ (", unpack("H*", $chead), ")\n";
+      die "Couldn't read contents for unknown\n";
+    }
+    print "Unknown ", unpack("H*", $chead), "\n";
   }
 }
 
