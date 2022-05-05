@@ -524,7 +524,7 @@ SKIP:
   $im->box(filled => 1, color => "#F00", box => [ 15, 15, 84, 84 ]);
   $im->box(filled => 1, color => "#0F0", box => [ 30, 30, 69, 69 ]);
   # guesstimate
-  my $smoothed = $im->copy->filter(type => 'gaussian', stddev => 2);
+  my $smoothed = $im->copy->filter(type => 'gaussian', stddev => 1);
   my $data_base;
   ok($im->write(data => \$data_base, type => "jpeg"), "write base image (control)");
   my $data_smoothed;
