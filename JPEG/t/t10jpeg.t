@@ -530,8 +530,6 @@ SKIP:
   my $data_smoothed;
   ok($im->write(data => \$data_smoothed, type => "jpeg", jpeg_smooth => 50),
      "write smoothed image");
-  $smoothed->write(file => "smooth.jpg");
-  $im->write(file => "foo.jpg");
   my $smim = Imager->new;
   ok($smim->read(data => $data_smoothed), "read smoothed back");
   my $diffWvsS = Imager::i_img_diff($smim->{IMG}, $smoothed->{IMG});
