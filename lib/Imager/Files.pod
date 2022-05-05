@@ -733,6 +733,19 @@ writing the image.  This requires that the C<libjpeg> variant that
 L<Imager::File::JPEG> was built with had encode support for arithmetic
 coding enabled when it was built.
 
+=item *
+
+=for stopwords JFIF
+
+C<jpeg_jfif> - if set to zero, disable writing the JFIF header even if
+one is technically required, which it is for the color spaces Imager
+works with.  This saves 18 bytes in the output file and most
+applications including web browsers will successfully read the file,
+but your experience may differ.
+
+This will prevent the C<i_xres>, C<i_yres> and C<jpeg_density_units>
+tags from having an effect.
+
 =back
 
 When reading a JPEG image, the following tag will be set, and ignored

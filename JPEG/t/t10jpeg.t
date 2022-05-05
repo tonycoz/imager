@@ -503,6 +503,21 @@ SKIP:
      "and read tag set");
 }
 
+{
+  # default RGB (YCbCr) image has JFIF header
+  my $im = test_image;
+  my $data;
+  ok($im->write(data => \$data, type => "jpeg"),
+     "write default RGB");
+  my $im2 = Imager->new;
+  ok($im2->read(data => $data), "read it back");
+  is($im2->tags(name => "jpeg_read_jfif"), 1, "JFIF detected");
+  ok($im->write(data => \$data, type => "jpeg", jpeg_jfif => 0),
+     "disable the JFIF header");
+  ok($im2->read(data => $data), "read back file without JFIF");
+  is($im2->tags(name => "jpeg_read_jfif"), 0, "no JFIF detected");
+}
+
 { # check close failures are handled correctly
   my $im = test_image();
   my $fail_close = sub {

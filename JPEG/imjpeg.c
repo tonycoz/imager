@@ -414,6 +414,7 @@ i_readjpeg_wiol(io_glue *data, int length, char** iptc_itext, int *itlength) {
   transfer_function_t transfer_f;
   int channels;
   volatile int src_set = 0;
+  int jfif;
 
   mm_log((1,"i_readjpeg_wiol(data %p, length %d,iptc_itext %p)\n", data, length, iptc_itext));
 
@@ -551,6 +552,7 @@ i_readjpeg_wiol(io_glue *data, int length, char** iptc_itext, int *itlength) {
   i_tags_setn(&im->tags, "jpeg_color_space", cinfo.jpeg_color_space);
   i_tags_setn(&im->tags, "jpeg_read_arithmetic", cinfo.arith_code);
 
+  i_tags_setn(&im->tags, "jpeg_read_jfif", !!cinfo.saw_JFIF_marker);
   if (cinfo.saw_JFIF_marker) {
     double xres = cinfo.X_density;
     double yres = cinfo.Y_density;
@@ -611,6 +613,7 @@ i_writejpeg_wiol(i_img *im, io_glue *ig, int qfactor) {
   int optimize = 0;
   int arithmetic = 0;
   char profile_name[20] = "";
+  int jfif;
 
   struct jpeg_compress_struct cinfo;
   struct my_error_mgr jerr;
@@ -694,6 +697,10 @@ i_writejpeg_wiol(i_img *im, io_glue *ig, int qfactor) {
 
   jpeg_set_defaults(&cinfo);
   jpeg_set_quality(&cinfo, quality, TRUE);  /* limit to baseline-JPEG values */
+
+  if (i_tags_get_int(&im->tags, "jpeg_jfif", 0, &jfif) && !jfif) {
+    cinfo.write_JFIF_header = 0;
+  }
 
   if (!i_tags_get_int(&im->tags, "jpeg_progressive", 0, &progressive))
     progressive = 0;
