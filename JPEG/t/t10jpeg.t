@@ -518,6 +518,32 @@ SKIP:
   is($im2->tags(name => "jpeg_read_jfif"), 0, "no JFIF detected");
 }
 
+{
+  my $im = Imager->new(xsize => 150, ysize => 150);
+  $im->box(filled => 1, color => "#F00", box => [ 15, 15, 84, 84 ]);
+  $im->box(filled => 1, color => "#0F0", box => [ 30, 30, 69, 69 ]);
+  # guesstimate
+  my $smoothed = $im->copy->filter(type => 'gaussian', stddev => 2);
+  my $data_base;
+  ok($im->write(data => \$data_base, type => "jpeg"), "write base image (control)");
+  my $data_smoothed;
+  ok($im->write(data => \$data_smoothed, type => "jpeg", jpeg_smooth => 50),
+     "write smoothed image");
+  $smoothed->write(file => "smooth.jpg");
+  $im->write(file => "foo.jpg");
+  my $smim = Imager->new;
+  ok($smim->read(data => $data_smoothed), "read smoothed back");
+  my $diffWvsS = Imager::i_img_diff($smim->{IMG}, $smoothed->{IMG});
+  my $diffWvsB = Imager::i_img_diff($smim->{IMG}, $im->{IMG});
+  cmp_ok($diffWvsS, '<', $diffWvsB,
+	 "written image should be closer to blurred image than base image");
+
+  my $data;
+  ok(!$im->write(data => \$data, type => "jpeg", jpeg_smooth => 101),
+     "invalid smoothing value");
+  like($im->errstr, qr/jpeg_smooth must be an integer from 0 to 100/, "check error message");
+}
+
 { # check close failures are handled correctly
   my $im = test_image();
   my $fail_close = sub {

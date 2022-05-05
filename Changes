@@ -34,6 +34,9 @@ JPEG updates:
  - add support for disabling the JFIF header for JPEG files using the
    jpeg_jfif tag.
 
+ - add support for smoothing to eliminate dithering noise (like cjpeg
+   -smooth) using the jpeg_smooth tag.
+
 Imager 1.014 - 28 Apr 2022
 ============
 

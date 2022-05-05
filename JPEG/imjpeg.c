@@ -739,6 +739,17 @@ i_writejpeg_wiol(i_img *im, io_glue *ig, int qfactor) {
     cinfo.Y_density = (int)(yres + 0.5);
   }
 
+  {
+    int smooth;
+    if (i_tags_get_int(&im->tags, "jpeg_smooth", 0, &smooth)) {
+      if (smooth < 0 || smooth > 100) {
+        i_push_error(0, "jpeg_smooth must be an integer from 0 to 100");
+        goto fail;
+      }
+      cinfo.smoothing_factor = smooth;
+    }
+  }
+
   jpeg_start_compress(&cinfo, TRUE);
 
   if (i_tags_find(&im->tags, "jpeg_comment", 0, &comment_entry)) {
