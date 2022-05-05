@@ -490,6 +490,7 @@ SKIP:
          "max compression should be smaller");
 }
 
+SKIP:
 {
   Imager::File::JPEG->has_arith_coding
       or skip "arithmetic coding not available", 1;
