@@ -752,6 +752,21 @@ C<jpeg_smooth> - if set to a value from 1 to 100 apply smoothing to
 the image to eliminate dithering noise (without modifying the Imager
 image).  Default: 0 (no smoothing).
 
+=item *
+
+=for stopwords MCUs
+
+C<jpeg_restart> - if set to a plain integer C<N>, generate a JPEG
+restart marker every C<N> rows, if set to an integer followed by C<B>,
+generate a JPEG restart marker every C<N> MCUs, the 8x8 pixel blocks
+that make up a JPEG image.  Note that if this is specified in rows it
+will be translated to MCUs by C<libjpeg>.
+
+This allows a decoder to recover from corruption, but it makes the
+file slightly larger.
+
+Default: 0, no restart markers are produced.
+
 =back
 
 When reading a JPEG image, the following tag will be set, and ignored

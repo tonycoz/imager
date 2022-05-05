@@ -750,6 +750,28 @@ i_writejpeg_wiol(i_img *im, io_glue *ig, int qfactor) {
     }
   }
 
+  {
+    char restart_str[20];
+    if (i_tags_get_string(&im->tags, "jpeg_restart", 0, restart_str, sizeof(restart_str))) {
+      long restart_count;
+      char block_flag = '\0';
+      if (sscanf(restart_str, "%ld%c", &restart_count, &block_flag)
+          && restart_count >= 0 && restart_count <= 65535
+          && (block_flag == '\0' || block_flag == 'b' || block_flag == 'B')) {
+        if (block_flag) {
+          cinfo.restart_interval = (unsigned)restart_count;
+        }
+        else {
+          cinfo.restart_in_rows = (int)restart_count;
+        }
+      }
+      else {
+        i_push_error(0, "jpeg_restart must be an integer from 0 to 65535 followed by an optional b");
+        goto fail;
+      }
+    }
+  }
+
   jpeg_start_compress(&cinfo, TRUE);
 
   if (i_tags_find(&im->tags, "jpeg_comment", 0, &comment_entry)) {

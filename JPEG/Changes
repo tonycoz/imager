@@ -28,6 +28,9 @@ Imager-File-JPEG 0.96
  - add support for smoothing to eliminate dithering noise (like cjpeg
    -smooth) using the jpeg_smooth tag.
 
+ - add support for producing JPEG restart markers (like cjpeg -restart
+   N), using the jpeg_restart tag.
+
 Imager-File-JPEG 0.95
 =====================
 

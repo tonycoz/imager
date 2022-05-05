@@ -543,6 +543,34 @@ SKIP:
   like($im->errstr, qr/jpeg_smooth must be an integer from 0 to 100/, "check error message");
 }
 
+{
+  # jpeg_restart
+  my $im = test_image;
+  my $data;
+  ok($im->write(data => \$data,        type => "jpeg"),
+     "write with default restarts");
+  my $data_8_rows;
+  ok($im->write(data => \$data_8_rows, type => "jpeg", jpeg_restart => 8),
+     "write with restart every 8 rows");
+  my $data_8_mcus;
+  ok($im->write(data => \$data_8_mcus, type => "jpeg", jpeg_restart => "8b"),
+     "write with restart every 8 mcus");
+  cmp_ok(length($data), '<', length($data_8_rows),
+         "no restarts smaller than restart every 8 rows");
+  cmp_ok(length($data_8_rows), '<', length($data_8_mcus),
+         "restarts every 8 rows smaller than restart every 8 mcus");
+
+  # error handling
+  ok(!$im->write(data => \$data, type => "jpeg", jpeg_restart => "8c"),
+     "bad units value");
+  like($im->errstr, qr/jpeg_restart must be an integer from 0 to 65535 followed by an optional b/,
+       "check error message");
+  ok(!$im->write(data => \$data, type => "jpeg", jpeg_restart => "65536"),
+     "out of range value");
+  like($im->errstr, qr/jpeg_restart must be an integer from 0 to 65535 followed by an optional b/,
+       "check error message");
+}
+
 { # check close failures are handled correctly
   my $im = test_image();
   my $fail_close = sub {
