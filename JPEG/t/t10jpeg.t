@@ -565,10 +565,66 @@ SKIP:
      "bad units value");
   like($im->errstr, qr/jpeg_restart must be an integer from 0 to 65535 followed by an optional b/,
        "check error message");
+  $im->_set_error("");
   ok(!$im->write(data => \$data, type => "jpeg", jpeg_restart => "65536"),
      "out of range value");
   like($im->errstr, qr/jpeg_restart must be an integer from 0 to 65535 followed by an optional b/,
        "check error message");
+}
+
+SKIP:
+{
+  # jpeg_sample
+  my $im = test_image;
+  my $data_base;
+  ok($im->write(data => \$data_base, type => "jpeg"),
+     "write default");
+  my $data_1x1;
+  ok($im->write(data => \$data_1x1,  type => "jpeg", jpeg_sample => "1x1"),
+     "write with 1x1")
+    or diag $im->errstr;
+  cmp_ok(length($data_base), '<', length($data_1x1),
+         "1x1 sampled file is larger");
+  my $baseim = Imager->new(data => $data_base)
+    or skip "couldn't read back base image", 1;
+  my $im1x1 = Imager->new(data => $data_1x1)
+    or skip "couldn't read back 1x1 image", 1;
+  my $diff_base = Imager::i_img_diff($im->{IMG}, $baseim->{IMG});
+  my $diff_1x1 = Imager::i_img_diff($im->{IMG}, $im1x1->{IMG});
+  cmp_ok($diff_1x1, '<', $diff_base,
+         "1x1 sampled image should be closer to source image");
+
+  # varieties
+  my $data_deftag;
+  ok($im->write(data => \$data_deftag, type => "jpeg", jpeg_sample => "2x2,1x1,1x1"),
+     "specify default by tag");
+  is(length($data_base), length($data_deftag),
+     "default set by tag matches default");
+
+  my $data;
+  my $errq = quotemeta "jpeg_sample: must match /^[1-4]x[1-4](,[1-4]x[1-4]){0,9}\$/aai";
+  my $errqr = qr/$errq/;
+  # failures
+  ok(!$im->write(data => \$data, type => "jpeg", jpeg_sample => "5x1"),
+     "H out of range");
+  like($im->errstr, $errqr, "check error message");
+  $im->_set_error("");
+  ok(!$im->write(data => \$data, type => "jpeg", jpeg_sample => "1x5"),
+     "V out of range");
+  like($im->errstr, $errqr, "check error message");
+  $im->_set_error("");
+  ok(!$im->write(data => \$data, type => "jpeg", jpeg_sample => "1x5."),
+     "non-comma/eof after V");
+  like($im->errstr, $errqr, "check error message");
+  $im->_set_error("");
+  ok(!$im->write(data => \$data, type => "jpeg", jpeg_sample => "1y1"),
+     "non X between H and V");
+  like($im->errstr, $errqr, "check error message");
+  $im->_set_error("");
+  ok(!$im->write(data => \$data, type => "jpeg", jpeg_sample => "1x1,"),
+     "orphan comma at end");
+  like($im->errstr, $errqr, "check error message");
+  $im->_set_error("");
 }
 
 { # check close failures are handled correctly

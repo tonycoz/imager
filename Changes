@@ -40,6 +40,9 @@ JPEG updates:
  - add support for producing JPEG restart markers (like cjpeg -restart
    N), using the jpeg_restart tag.
 
+ - add control over subsample for JPEG (like the cjpeg -sample
+   parameter) using the jpeg_sample tag
+
 Imager 1.014 - 28 Apr 2022
 ============
 

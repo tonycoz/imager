@@ -772,6 +772,46 @@ i_writejpeg_wiol(i_img *im, io_glue *ig, int qfactor) {
     }
   }
 
+  {
+    char sample_str[80];
+
+    if (i_tags_get_string(&im->tags, "jpeg_sample", 0, sample_str, sizeof(sample_str))) {
+      int x, y, n;
+      char sep;
+      char *p = sample_str;
+      int index = 0;
+      while (*p) {
+        if (sscanf(p, "%d%c%d%n", &x, &sep, &y, &n) == 3 &&
+            x >= 1 && x <= 4 && y >= 1 && y <= 4 &&
+            (sep == 'x' || sep == 'X') &&
+            index < MAX_COMPONENTS) {
+          cinfo.comp_info[index].h_samp_factor = x;
+          cinfo.comp_info[index].v_samp_factor = y;
+          ++index;
+        }
+        else {
+        failsample:
+          i_push_error(0, "jpeg_sample: must match /^[1-4]x[1-4](,[1-4]x[1-4]){0,9}$/aai");
+          goto fail;
+        }
+        p += n;
+        if (p[0] == ',') {
+          if (!p[1])
+            goto failsample;
+          ++p;
+        }
+        else if (p[0]) {
+          goto failsample;
+        }
+      }
+      /* fill the rest with 1x1 like cjpeg does */
+      for ( ; index < MAX_COMPONENTS; ++index) {
+        cinfo.comp_info[index].h_samp_factor = x;
+        cinfo.comp_info[index].v_samp_factor = y;
+      }
+    }
+  }
+
   jpeg_start_compress(&cinfo, TRUE);
 
   if (i_tags_find(&im->tags, "jpeg_comment", 0, &comment_entry)) {

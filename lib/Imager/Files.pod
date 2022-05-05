@@ -767,6 +767,15 @@ file slightly larger.
 
 Default: 0, no restart markers are produced.
 
+=item *
+
+=for stopwords subsampling YCbCr
+
+C<jpeg_sample> - control subsampling of the YCbCr components,
+equivalent to the C<-sample> parameter for C<cjpeg>.
+
+Default: "2x2,1x1,1x1", default 4:2:0 JPEG subsampling.
+
 =back
 
 When reading a JPEG image, the following tag will be set, and ignored
