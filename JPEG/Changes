@@ -22,6 +22,9 @@ Imager-File-JPEG 0.96
    supports it.  Note that not all JPEG decoders can handle arithmetic
    coded JPEGs.
 
+ - add support for disabling the JFIF header for JPEG files using the
+   jpeg_jfif tag.
+
 Imager-File-JPEG 0.95
 =====================
 

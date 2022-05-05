@@ -31,6 +31,9 @@ JPEG updates:
    supports it.  Note that not all JPEG decoders can handle arithmetic
    coded JPEGs.
 
+ - add support for disabling the JFIF header for JPEG files using the
+   jpeg_jfif tag.
+
 Imager 1.014 - 28 Apr 2022
 ============
 
