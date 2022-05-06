@@ -46,6 +46,10 @@ Reads and writes JPEG images
 
 static unsigned char fake_eoi[]={(JOCTET) 0xFF,(JOCTET) JPEG_EOI};
 
+#ifdef JPEG_C_PARAM_SUPPORTED
+#define IS_MOZJPEG
+#endif
+
 /* Source and Destination managers */
 
 typedef struct {
@@ -340,7 +344,7 @@ transfer_gray(i_color *out, JSAMPARRAY in, int width) {
 typedef void (*transfer_function_t)(i_color *out, JSAMPARRAY in, int width);
 
 static const char version_string[] =
-#if defined(JPEG_C_PARAM_SUPPORTED)
+#if defined(IS_MOZJPEG)
   "mozjpeg version " STRINGIFY(LIBJPEG_TURBO_VERSION) " api " STRINGIFY(JPEG_LIB_VERSION)
 #elif defined(LIBJPEG_TURBO_VERSION)
   "libjpeg-turbo version " STRINGIFY(LIBJPEG_TURBO_VERSION) " api " STRINGIFY(JPEG_LIB_VERSION)
@@ -371,7 +375,7 @@ is_turbojpeg(void) {
 
 int
 is_mozjpeg(void) {
-#if defined(JPEG_C_PARAM_SUPPORTED)
+#ifdef IS_MOZJPEG
   return 1;
 #else
   return 0;
@@ -595,6 +599,7 @@ i_readjpeg_wiol(io_glue *data, int length, char** iptc_itext, int *itlength) {
   return im;
 }
 
+
 /*
 =item i_writejpeg_wiol(im, ig, qfactor)
 
@@ -671,13 +676,13 @@ i_writejpeg_wiol(i_img *im, io_glue *ig, int qfactor) {
   if (i_tags_get_string(&im->tags, "jpeg_compress_profile", 0,
                         profile_name, sizeof(profile_name))) {
     if (strcmp(profile_name, "fastest") == 0) {
-#ifdef JPEG_C_PARAM_SUPPORTED
+#ifdef IS_MOZJPEG
       jpeg_c_set_int_param(&cinfo, JINT_COMPRESS_PROFILE, JCP_FASTEST);
 #endif
       /* else default */
     }
     else if (strcmp(profile_name, "max") == 0) {
-#if defined(JPEG_C_PARAM_SUPPORTED)
+#ifdef IS_MOZJPEG
       jpeg_c_set_int_param(&cinfo, JINT_COMPRESS_PROFILE, JCP_MAX_COMPRESSION);
 #else
       i_push_error(0, "jpeg_compress_profile=max requires mozjpeg");
@@ -689,7 +694,7 @@ i_writejpeg_wiol(i_img *im, io_glue *ig, int qfactor) {
       goto fail;
     }
   }
-#ifdef JPEG_C_PARAM_SUPPORTED
+#ifdef IS_MOZJPEG
   else {
     jpeg_c_set_int_param(&cinfo, JINT_COMPRESS_PROFILE, JCP_FASTEST);
   }
