@@ -726,6 +726,8 @@ without C<MozJPEG> will cause an error.
   $im->write(file => "foo.jpeg", jpeg_compress_profile => $prof)
      or die $im->errstr;
 
+Note that unlike C<MozJPEG>, Imager always defaults to C<fastest>.
+
 =item *
 
 C<jpeg_arithmetic> - if set to non-zero, use arithmetic coding when
