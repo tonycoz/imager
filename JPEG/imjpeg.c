@@ -599,6 +599,41 @@ i_readjpeg_wiol(io_glue *data, int length, char** iptc_itext, int *itlength) {
   return im;
 }
 
+struct moz_option {
+  const char *name;
+#ifdef IS_MOZJPEG
+  unsigned tag;
+#endif
+};
+
+#ifdef IS_MOZJPEG
+#define MOZ_OPTION_ENTRY(name, tag) { name, tag }
+#else
+#define MOZ_OPTION_ENTRY(name, tag) { name }
+#endif
+
+static struct moz_option boolean_options[] = {
+  MOZ_OPTION_ENTRY("jpeg_optimize_scans",        JBOOLEAN_OPTIMIZE_SCANS),
+  MOZ_OPTION_ENTRY("jpeg_trellis_quant",         JBOOLEAN_TRELLIS_QUANT),
+  MOZ_OPTION_ENTRY("jpeg_trellis_quant_dc",      JBOOLEAN_TRELLIS_QUANT_DC),
+  MOZ_OPTION_ENTRY("jpeg_tresllis_eob_opt",      JBOOLEAN_TRELLIS_EOB_OPT),
+  MOZ_OPTION_ENTRY("jpeg_use_lambda_weight_tbl", JBOOLEAN_USE_LAMBDA_WEIGHT_TBL),
+  MOZ_OPTION_ENTRY("jpeg_use_scans_in_trellis",  JBOOLEAN_USE_SCANS_IN_TRELLIS),
+  MOZ_OPTION_ENTRY("jpeg_overshoot_deringing",   JBOOLEAN_OVERSHOOT_DERINGING)
+};
+
+static struct moz_option float_options[] = {
+  MOZ_OPTION_ENTRY("jpeg_lambda_log_scale1",       JFLOAT_LAMBDA_LOG_SCALE1),
+  MOZ_OPTION_ENTRY("jpeg_lambda_log_scale2",       JFLOAT_LAMBDA_LOG_SCALE2),
+  MOZ_OPTION_ENTRY("jpeg_trellis_delta_dc_weight", JFLOAT_TRELLIS_DELTA_DC_WEIGHT)
+};
+
+static struct moz_option int_options[] = {
+  MOZ_OPTION_ENTRY("jpeg_trellis_freq_split", JINT_TRELLIS_FREQ_SPLIT),
+  MOZ_OPTION_ENTRY("jpeg_trellis_num_loops",  JINT_TRELLIS_NUM_LOOPS),
+  MOZ_OPTION_ENTRY("jpeg_base_quant_tbl_idx", JINT_BASE_QUANT_TBL_IDX),
+  MOZ_OPTION_ENTRY("jpeg_dc_scan_opt_mode",   JINT_DC_SCAN_OPT_MODE)
+};
 
 /*
 =item i_writejpeg_wiol(im, ig, qfactor)
@@ -705,6 +740,66 @@ i_writejpeg_wiol(i_img *im, io_glue *ig, int qfactor) {
 
   if (i_tags_get_int(&im->tags, "jpeg_jfif", 0, &jfif) && !jfif) {
     cinfo.write_JFIF_header = 0;
+  }
+
+  {
+    int i;
+    for (i = 0; i < sizeof(boolean_options) / sizeof(boolean_options[0]); ++i) {
+      int val;
+      const struct moz_option *opt = boolean_options + i;
+      if (i_tags_get_int(&im->tags, opt->name, 0, &val)) {
+#ifdef IS_MOZJPEG
+	jpeg_c_set_bool_param(&cinfo, opt->tag, !!val);
+#else
+	i_push_errorf(0, "option %s requires Imager::File::JPEG be built with mozjpeg",
+		      opt->name);
+	goto fail;
+#endif
+      }
+    }
+  }
+
+  {
+    int i;
+    for (i = 0; i < sizeof(float_options) / sizeof(float_options[0]); ++i) {
+      double val;
+      const struct moz_option *opt = float_options + i;
+      if (i_tags_get_float(&im->tags, opt->name, 0, &val)) {
+#ifdef IS_MOZJPEG
+	float f = val;
+	float g;
+	jpeg_c_set_float_param(&cinfo, opt->tag, f);
+	g = jpeg_c_get_float_param(&cinfo, opt->tag);
+	if (fabs(g-f) > 0.0001) {
+	  i_push_errorf(0, "invalid value %g for tag %s", val, opt->name);
+	}
+#else
+	i_push_errorf(0, "option %s requires Imager::File::JPEG be built with mozjpeg",
+		      opt->name);
+	goto fail;
+#endif
+      }
+    }
+  }
+
+    {
+    int i;
+    for (i = 0; i < sizeof(int_options) / sizeof(int_options[0]); ++i) {
+      int val;
+      const struct moz_option *opt = int_options + i;
+      if (i_tags_get_int(&im->tags, opt->name, 0, &val)) {
+#ifdef IS_MOZJPEG
+	jpeg_c_set_int_param(&cinfo, opt->tag, val);
+	if (jpeg_c_get_int_param(&cinfo, opt->tag) != val) {
+	  i_push_errorf(0, "invalid value %d for tag %s", val, opt->name);
+	}
+#else
+	i_push_errorf(0, "option %s requires Imager::File::JPEG be built with mozjpeg",
+		      opt->name);
+	goto fail;
+#endif
+      }
+    }
   }
 
   if (!i_tags_get_int(&im->tags, "jpeg_progressive", 0, &progressive))

@@ -627,6 +627,74 @@ SKIP:
   $im->_set_error("");
 }
 
+my @bool_tags =
+  qw(jpeg_optimize_scans jpeg_trellis_quant jpeg_trellis_quant_dc
+     jpeg_tresllis_eob_opt jpeg_use_lambda_weight_tbl jpeg_use_scans_in_trellis
+     jpeg_overshoot_deringing);
+
+my @float_tags =
+  qw(jpeg_lambda_log_scale1 jpeg_lambda_log_scale2 jpeg_trellis_delta_dc_weight);
+
+my @int_tags =
+  qw(jpeg_trellis_freq_split jpeg_trellis_num_loops jpeg_base_quant_tbl_idx
+     jpeg_dc_scan_opt_mode);
+SKIP:
+{
+  Imager::File::JPEG->is_mozjpeg
+      or skip "These tags are mozjpeg only", 1;
+
+  # boolean tags
+  for my $tag (@bool_tags) {
+    my $im = test_image();
+    my $data;
+    ok($im->write(data => \$data, type => "jpeg", $tag => 0),
+       "write with boolean tag $tag");
+  }
+  # float tags
+  for my $tag (@float_tags) {
+    my $im = test_image();
+    my $data;
+    ok($im->write(data => \$data, type => "jpeg", $tag => 8.1),
+       "write with float tag $tag");
+  }
+  # int tags
+  for my $tag (@int_tags) {
+    my $im = test_image();
+    my $data;
+    ok($im->write(data => \$data, type => "jpeg", $tag => 2),
+       "write with int tag $tag");
+  }
+}
+
+SKIP:
+{
+  Imager::File::JPEG->is_mozjpeg
+      and skip "Testing absence of mozjpeg", 1;
+
+  # none of these tags should be settable
+  # boolean tags
+  for my $tag (@bool_tags) {
+    my $im = test_image();
+    my $data;
+    ok(!$im->write(data => \$data, type => "jpeg", $tag => 0),
+       "fail write with boolean tag $tag");
+  }
+  # float tags
+  for my $tag (@float_tags) {
+    my $im = test_image();
+    my $data;
+    ok(!$im->write(data => \$data, type => "jpeg", $tag => 8.1),
+       "fail write with float tag $tag");
+  }
+  # int tags
+  for my $tag (@int_tags) {
+    my $im = test_image();
+    my $data;
+    ok(!$im->write(data => \$data, type => "jpeg", $tag => 2),
+       "fail write with int tag $tag");
+  }
+}
+
 { # check close failures are handled correctly
   my $im = test_image();
   my $fail_close = sub {

@@ -780,6 +780,30 @@ Default: "2x2,1x1,1x1", default 4:2:0 JPEG subsampling.
 
 =back
 
+The following options can be set on writing with C<mozjpeg> and
+correspond directly to the API options described in the C<mozjpeg>
+F<README-mozilla.txt>.  Attempting to set them when Imager::File::JPEG
+has been built with another C<libjpeg> will result in an error.
+
+=over
+
+=item *
+
+C<jpeg_optimize_scans>, C<jpeg_trellis_quant>,
+C<jpeg_trellis_quant_dc>, C<jpeg_tresllis_eob_opt>,
+C<jpeg_use_lambda_weight_tbl>, C<jpeg_use_scans_in_trellis>,
+C<jpeg_overshoot_deringing> - boolean options, set to 0 or 1.
+
+C<jpeg_lambda_log_scale1>, C<jpeg_lambda_log_scale2>,
+C<jpeg_trellis_delta_dc_weight> - integer options.
+
+
+C<jpeg_trellis_freq_split>, C<jpeg_trellis_num_loops>,
+C<jpeg_base_quant_tbl_idx>, C<jpeg_dc_scan_opt_mode> - floating point
+options.
+
+=back
+
 When reading a JPEG image, the following tag will be set, and ignored
 on writing:
 

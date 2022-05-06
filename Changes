@@ -43,6 +43,8 @@ JPEG updates:
  - add control over subsample for JPEG (like the cjpeg -sample
    parameter) using the jpeg_sample tag
 
+ - added tags for the rest of the MozJPEG API parameters.
+
 Imager 1.014 - 28 Apr 2022
 ============
 

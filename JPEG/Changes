@@ -34,6 +34,8 @@ Imager-File-JPEG 0.96
  - add control over subsample for JPEG (like the cjpeg -sample
    parameter) using the jpeg_sample tag
 
+ - added tags for the rest of the MozJPEG API parameters.
+
 Imager-File-JPEG 0.95
 =====================
 
