@@ -34,6 +34,7 @@ Reads and writes JPEG images
 #include "jerror.h"
 #include <errno.h>
 #include <stdlib.h>
+#include <math.h>
 
 #define JPEG_APP13       0xED    /* APP13 marker code */
 #define JPEG_APP1 (JPEG_APP0 + 1)
@@ -734,6 +735,53 @@ i_writejpeg_wiol(i_img *im, io_glue *ig, int qfactor) {
 #endif
 
   jpeg_set_defaults(&cinfo);
+
+  {
+    char tune_str[20];
+    if (i_tags_get_string(&im->tags, "jpeg_tune", 0, tune_str, sizeof(tune_str))) {
+      if (strcmp(tune_str, "psnr") == 0) {
+#ifdef IS_MOZJPEG
+        jpeg_c_set_int_param(&cinfo, JINT_BASE_QUANT_TBL_IDX, 1);
+        jpeg_c_set_float_param(&cinfo, JFLOAT_LAMBDA_LOG_SCALE1, 9.0);
+        jpeg_c_set_float_param(&cinfo, JFLOAT_LAMBDA_LOG_SCALE2, 0.0);
+        jpeg_c_set_bool_param(&cinfo, JBOOLEAN_USE_LAMBDA_WEIGHT_TBL, FALSE);
+#endif
+      }
+      else if (strcmp(tune_str, "ssim") == 0) {
+#ifdef IS_MOZJPEG
+        jpeg_c_set_int_param(&cinfo, JINT_BASE_QUANT_TBL_IDX, 1);
+        jpeg_c_set_float_param(&cinfo, JFLOAT_LAMBDA_LOG_SCALE1, 11.5);
+        jpeg_c_set_float_param(&cinfo, JFLOAT_LAMBDA_LOG_SCALE2, 12.75);
+        jpeg_c_set_bool_param(&cinfo, JBOOLEAN_USE_LAMBDA_WEIGHT_TBL, FALSE);
+#endif
+      }
+      else if (strcmp(tune_str, "ms-ssim") == 0) {
+#ifdef IS_MOZJPEG
+        jpeg_c_set_int_param(&cinfo, JINT_BASE_QUANT_TBL_IDX, 3);
+        jpeg_c_set_float_param(&cinfo, JFLOAT_LAMBDA_LOG_SCALE1, 12.0);
+        jpeg_c_set_float_param(&cinfo, JFLOAT_LAMBDA_LOG_SCALE2, 13.0);
+        jpeg_c_set_bool_param(&cinfo, JBOOLEAN_USE_LAMBDA_WEIGHT_TBL, TRUE);
+#endif
+      }
+      else if (strcmp(tune_str, "hvs-psnr") == 0) {
+#ifdef IS_MOZJPEG
+        jpeg_c_set_int_param(&cinfo, JINT_BASE_QUANT_TBL_IDX, 3);
+        jpeg_c_set_float_param(&cinfo, JFLOAT_LAMBDA_LOG_SCALE1, 14.75);
+        jpeg_c_set_float_param(&cinfo, JFLOAT_LAMBDA_LOG_SCALE2, 16.5);
+        jpeg_c_set_bool_param(&cinfo, JBOOLEAN_USE_LAMBDA_WEIGHT_TBL, TRUE);
+#endif
+      }
+      else {
+        i_push_errorf(0, "unknown value '%s' for jpeg_tune", tune_str);
+        goto fail;
+      }
+#ifndef IS_MOZJPEG
+      i_push_error(0, "jpeg_tune requires Imager::File::JPEG be built with mozjpeg");
+      goto fail;
+#endif
+    }
+  }
+
   jpeg_set_quality(&cinfo, qfactor, TRUE);  /* limit to baseline-JPEG values */
 
   if (i_tags_get_int(&im->tags, "jpeg_jfif", 0, &jfif) && !jfif) {

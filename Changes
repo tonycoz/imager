@@ -45,6 +45,9 @@ JPEG updates:
 
  - added tags for the rest of the MozJPEG API parameters.
 
+ - add jpeg_tune tag, corresponding to the MozJPEG cjpeg -tune-*
+   options.
+
 Imager 1.014 - 28 Apr 2022
 ============
 

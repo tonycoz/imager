@@ -36,6 +36,9 @@ Imager-File-JPEG 0.96
 
  - added tags for the rest of the MozJPEG API parameters.
 
+ - add jpeg_tune tag, corresponding to the MozJPEG cjpeg -tune-*
+   options.
+
 Imager-File-JPEG 0.95
 =====================
 

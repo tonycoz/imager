@@ -695,6 +695,38 @@ SKIP:
   }
 }
 
+SKIP:
+{
+  Imager::File::JPEG->is_mozjpeg
+      or skip "jpeg_tune needs mozjpeg", 1;
+  for my $tune (qw(psnr ssim ms-ssim hvs-psnr)) {
+    my $data;
+    my $im = test_image;
+    ok($im->write(data => \$data, type => "jpeg", jpeg_tune => $tune),
+       "jpeg_tune=$tune");
+    note "size ".length $data;
+  }
+  {
+    my $data;
+    my $im = test_image;
+    ok(!$im->write(data => \$data, type => "jpeg", jpeg_tune => "rubbish"),
+       "fail jpeg_tune=rubbish");
+  }
+}
+
+SKIP:
+{
+  Imager::File::JPEG->is_mozjpeg
+      and skip "testing absence of mozjpeg", 1;
+  for my $tune (qw(psnr ssim ms-ssim hvs-psnr)) {
+    my $data;
+    my $im = test_image;
+    ok(!$im->write(data => \$data, type => "jpeg", jpeg_tune => $tune),
+       "fail jpeg_tune=$tune");
+    note "size ".length $data;
+  }
+}
+
 { # check close failures are handled correctly
   my $im = test_image();
   my $fail_close = sub {
