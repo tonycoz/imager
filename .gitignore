@@ -38,7 +38,6 @@ Imager-[0-9]*
 # test generated files
 _Inline/
 testout/
-cov-int/
 
 # editor droppings
 *~
@@ -65,3 +64,8 @@ dynfilt/*.dll
 
 # dists
 *.tar.gz
+
+# coverity files
+cov-int/
+config-built.txt
+imager-cov.txt
