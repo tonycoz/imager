@@ -644,7 +644,6 @@ static struct moz_option int_options[] = {
 undef_int
 i_writejpeg_wiol(i_img *im, io_glue *ig, int qfactor) {
   JSAMPLE *image_buffer;
-  int quality;
   int got_xres, got_yres, aspect_only, resunit;
   double xres, yres;
   int comment_entry;
@@ -675,7 +674,6 @@ i_writejpeg_wiol(i_img *im, io_glue *ig, int qfactor) {
   if (!(im->channels==1 || im->channels==3)) { 
     want_channels = im->channels - 1;
   }
-  quality = qfactor;
 
   cinfo.err = jpeg_std_error(&jerr.pub);
   jerr.pub.error_exit = my_error_exit;
@@ -736,7 +734,7 @@ i_writejpeg_wiol(i_img *im, io_glue *ig, int qfactor) {
 #endif
 
   jpeg_set_defaults(&cinfo);
-  jpeg_set_quality(&cinfo, quality, TRUE);  /* limit to baseline-JPEG values */
+  jpeg_set_quality(&cinfo, qfactor, TRUE);  /* limit to baseline-JPEG values */
 
   if (i_tags_get_int(&im->tags, "jpeg_jfif", 0, &jfif) && !jfif) {
     cinfo.write_JFIF_header = 0;
