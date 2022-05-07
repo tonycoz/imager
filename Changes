@@ -27,26 +27,28 @@ JPEG updates:
    Imager::File::JPEG::i_libjpeg_version() function, and the format
    has changed.
 
- - add support for JPEG arithmetic coding when the supplied libjpeg
-   supports it.  Note that not all JPEG decoders can handle arithmetic
-   coded JPEGs.
+ - various obscure jpeg output controls:
 
- - add support for disabling the JFIF header for JPEG files using the
-   jpeg_jfif tag.
+   - add support for JPEG arithmetic coding when the supplied libjpeg
+     supports it.  Note that not all JPEG decoders can handle arithmetic
+     coded JPEGs.
 
- - add support for smoothing to eliminate dithering noise (like cjpeg
-   -smooth) using the jpeg_smooth tag.
+   - add support for disabling the JFIF header for JPEG files using the
+     jpeg_jfif tag.
 
- - add support for producing JPEG restart markers (like cjpeg -restart
-   N), using the jpeg_restart tag.
+   - add support for smoothing to eliminate dithering noise (like cjpeg
+     -smooth) using the jpeg_smooth tag.
 
- - add control over subsample for JPEG (like the cjpeg -sample
-   parameter) using the jpeg_sample tag
+   - add support for producing JPEG restart markers (like cjpeg -restart
+     N), using the jpeg_restart tag.
 
- - added tags for the rest of the MozJPEG API parameters.
+   - add control over subsample for JPEG (like the cjpeg -sample
+     parameter) using the jpeg_sample tag
 
- - add jpeg_tune tag, corresponding to the MozJPEG cjpeg -tune-*
-   options.
+   - added tags for the rest of the MozJPEG API parameters.
+
+   - add jpeg_tune tag, corresponding to the MozJPEG cjpeg -tune-*
+     options.
 
 Imager 1.014 - 28 Apr 2022
 ============
