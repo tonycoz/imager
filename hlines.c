@@ -114,7 +114,7 @@ i_int_hlines_add(i_int_hlines *hlines, i_img_dim y, i_img_dim x, i_img_dim width
 
   if (width < 0) {
     dIMCTX;
-    im_fatal(aIMCTX, 3, "negative width %d passed to i_int_hlines_add\n", width);
+    im_fatal(aIMCTX, 3, "negative width %" i_DF " passed to i_int_hlines_add\n", i_DFc(width));
   }
 
   /* just return if out of range */

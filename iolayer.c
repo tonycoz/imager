@@ -397,7 +397,8 @@ io_slurp(io_glue *ig, unsigned char **c) {
 
   if (rc != ieb->length) {
     dIMCTXio(ig);
-    im_fatal(aIMCTX,1, "io_slurp: bufchain_read returned an incomplete read: rc = %d, request was %d\n", rc, ieb->length);
+    im_fatal(aIMCTX,1, "io_slurp: bufchain_read returned an incomplete read: rc = %ld, request was %ld\n",
+             (long)rc, (long)ieb->length);
   }
 
   return rc;

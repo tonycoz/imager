@@ -555,7 +555,7 @@ tga_palette_read(io_glue *ig, i_img *img, int bytepp, int colourmaplength) {
   unsigned char *palbuf;
   i_color val;
 
-  palbsize = colourmaplength*bytepp;
+  palbsize = (size_t)colourmaplength * bytepp;
   palbuf   = mymalloc(palbsize);
   
   if (i_io_read(ig, palbuf, palbsize) != palbsize) {

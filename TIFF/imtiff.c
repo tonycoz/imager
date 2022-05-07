@@ -413,7 +413,7 @@ static i_img *read_one_tiff(TIFF *tif, int allow_incomplete) {
   mm_log((1, "i_readtiff_wiol: %stiled\n", tiled?"":"not "));
   mm_log((1, "i_readtiff_wiol: %sbyte swapped\n", TIFFIsByteSwapped(tif)?"":"not "));
 
-  total_pixels = width * height;
+  total_pixels = (i_img_dim)width * height;
   memset(&state, 0, sizeof(state));
   state.tif = tif;
   state.allow_incomplete = allow_incomplete;
@@ -2097,7 +2097,7 @@ read_one_rgb_tiled(TIFF *tif, i_img_dim width, i_img_dim height, int allow_incom
   TIFFGetField(tif, TIFFTAG_TILELENGTH, &tile_height);
   mm_log((1, "i_readtiff_wiol: tile_width=%d, tile_height=%d\n", tile_width, tile_height));
   
-  raster = (uint32*)_TIFFmalloc(tile_width * tile_height * sizeof (uint32));
+  raster = (uint32*)_TIFFmalloc(sizeof(uint32) * tile_width * tile_height);
   if (!raster) {
     i_img_destroy(im);
     i_push_error(0, "No space for raster buffer");
@@ -2142,7 +2142,7 @@ read_one_rgb_tiled(TIFF *tif, i_img_dim width, i_img_dim height, int allow_incom
 	  }
 	  i_plin(im, col, col+newcols, row+i_row, line);
 	}
-	pixels += newrows * newcols;
+	pixels += (unsigned long)newrows * newcols;
       }
       else {
 	if (allow_incomplete) {

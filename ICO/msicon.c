@@ -284,7 +284,7 @@ ico_image_read(ico_reader_t *file, int index, int *error) {
   if (bit_count == 32) {
     result->palette_size = 0;
 
-    result->image_data = malloc(result->width * result->height * sizeof(ico_color_t));
+    result->image_data = malloc(sizeof(ico_color_t) * result->width * result->height);
     if (!result->image_data) {
       free(result);
       *error = ICOERR_Out_Of_Memory;
@@ -299,7 +299,7 @@ ico_image_read(ico_reader_t *file, int index, int *error) {
   else if (bit_count == 24) {
     result->palette_size = 0;
 
-    result->image_data = malloc(result->width * result->height * sizeof(ico_color_t));
+    result->image_data = malloc(sizeof(ico_color_t) * result->width * result->height);
     if (!result->image_data) {
       free(result);
       *error = ICOERR_Out_Of_Memory;
@@ -322,7 +322,7 @@ ico_image_read(ico_reader_t *file, int index, int *error) {
       return NULL;
     }
 
-    result->image_data = malloc(result->width * result->height);
+    result->image_data = malloc((size_t)result->width * result->height);
     if (!result->image_data) {
       *error = ICOERR_Out_Of_Memory;
       free(result->palette);
@@ -364,7 +364,7 @@ ico_image_read(ico_reader_t *file, int index, int *error) {
     }
   }
 
-  result->mask_data = malloc(result->width * result->height);
+  result->mask_data = malloc((size_t)result->width * result->height);
   if (!result->mask_data) {
     *error = ICOERR_Out_Of_Memory;
     free(result->palette);

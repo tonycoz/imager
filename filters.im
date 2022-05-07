@@ -71,7 +71,7 @@ Scales the pixel values by the amount specified.
 void
 i_contrast(i_img *im, float intensity) {
   i_img_dim x, y;
-  unsigned char ch;
+  int ch;
   unsigned int new_color;
   i_color rcolor;
   dIMCTXim(im);
@@ -182,7 +182,7 @@ amount amount, if non-zero adjust each sample independently.
 void
 i_noise(i_img *im, float amount, unsigned char type) {
   i_img_dim x, y;
-  unsigned char ch;
+  int ch;
   int new_color;
   float damount = amount * 2;
   i_color rcolor;
@@ -915,14 +915,15 @@ Utility function used to generate perlin noise. (internal)
 static
 float
 PerlinNoise_2D(float x, float y) {
-  int i,frequency;
+  int i;
+  double frequency;
   double amplitude;
   double total = 0;
   int Number_Of_Octaves=6;
   int n = Number_Of_Octaves - 1;
 
   for(i=0;i<n;i++) {
-    frequency = 2*i;
+    frequency = 2.0 * i;
     amplitude = PI;
     total = total + InterpolatedNoise(x * frequency, y * frequency) * amplitude;
   }

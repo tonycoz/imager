@@ -776,25 +776,27 @@ ip_handle_quant_opts_low(pTHX_ i_quantize *quant, HV *hv, int push_errors)
       quant->ed_orig = SvIV(*sv);
     if (quant->ed_width > 0 && quant->ed_height > 0) {
       int sum = 0;
-      quant->ed_map = mymalloc(sizeof(int)*quant->ed_width*quant->ed_height);
+      quant->ed_map = mymalloc(sizeof(int) * quant->ed_width * quant->ed_height);
       sv = hv_fetch(hv, "errdiff_map", 11, 0);
       if (sv && *sv && SvROK(*sv) && SvTYPE(SvRV(*sv)) == SVt_PVAV) {
 	AV *av = (AV*)SvRV(*sv);
-	len = av_len(av) + 1;
-	if (len > quant->ed_width * quant->ed_height)
-	  len = quant->ed_width * quant->ed_height;
-	for (i = 0; i < len; ++i) {
-	  SV **sv2 = av_fetch(av, i, 0);
-	  if (sv2 && *sv2) {
-	    IV iv = SvIV(*sv2);
-	    if (push_errors && iv < 0) {
-	      i_push_errorf(0, "errdiff_map values must be non-negative, errdiff[%d] is negative", i);
-	      return 0;
-	    }
-	    quant->ed_map[i] = iv;
-	    sum += quant->ed_map[i];
-	  }
-	}
+        size_t avi;
+        len = av_len(av) + 1;
+        if (len > (size_t)quant->ed_width * quant->ed_height)
+          len = (size_t)quant->ed_width * quant->ed_height;
+        for (avi = 0; avi < len; ++avi) {
+          SV **sv2 = av_fetch(av, avi, 0);
+          if (sv2 && *sv2) {
+            IV iv = SvIV(*sv2);
+            if (push_errors && iv < 0) {
+              i_push_errorf(0, "errdiff_map values must be non-negative, errdiff[%lu] is negative",
+                            (unsigned long)avi);
+              return 0;
+            }
+            quant->ed_map[avi] = iv;
+            sum += quant->ed_map[avi];
+          }
+        }
       }
       if (!sum) {
 	/* broken map */
