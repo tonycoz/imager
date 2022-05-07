@@ -10,6 +10,8 @@ Imager release history.  Older releases can be found in Changes.old
  - Imager::Probe now puts the existing value of PKG_CONFIG_PATH at the
    front of the PKG_CONFIG_PATH used when it calls pkg-config.
 
+ - setup CodeQL workflow and fix detected warnings
+
 JPEG updates:
 
  - detect libjpeg (of whichever variety) via pkg-config if possible
