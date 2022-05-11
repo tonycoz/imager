@@ -229,6 +229,94 @@ typedef i_img_dim
 		const i_fsample_t *samp, const int *chan, int chan_count);
 
 /*
+=item i_img_vtable
+=category Data Types
+
+New image entry-points go in here rather than making i_img larger.
+
+Note that access to entries in here is controlled by IMAGER_API_LEVEL.
+
+Elements:
+
+=over
+
+=item *
+
+i_f_ppix, i_f_ppixf, i_f_plin, i_f_plinf, i_f_gpix, i_f_gpixf,
+i_f_glin, i_f_glinf, i_f_gsamp, i_f_gampf - implementations for each
+of the required image functions.  An image implementation should
+initialize these between calling i_img_alloc() and i_img_init().
+
+=item *
+
+i_f_gpal, i_f_ppal, i_f_addcolors, i_f_getcolors, i_f_colorcount,
+i_f_maxcolors, i_f_findcolor, i_f_setcolors - implementations for each
+paletted image function.
+
+=item *
+
+i_f_destroy - custom image destruction function.  This should be used
+to release memory if necessary.
+
+=item *
+
+i_f_gsamp_bits - implements i_gsamp_bits() for this image.
+
+=item *
+
+i_f_psamp_bits - implements i_psamp_bits() for this image.
+
+=item *
+
+i_f_psamp - implements psamp() for this image.
+
+=item *
+
+i_f_psampf - implements psamp() for this image.
+
+=back
+
+=cut
+*/
+
+typedef struct i_img_vtable_struct {
+  int api_level;
+
+  /* interface functions */
+  i_f_ppix_t i_f_ppix;
+  i_f_ppixf_t i_f_ppixf;
+  i_f_plin_t i_f_plin;
+  i_f_plinf_t i_f_plinf;
+  i_f_gpix_t i_f_gpix;
+  i_f_gpixf_t i_f_gpixf;
+  i_f_glin_t i_f_glin;
+  i_f_glinf_t i_f_glinf;
+  i_f_gsamp_t i_f_gsamp;
+  i_f_gsampf_t i_f_gsampf;
+  
+  /* only valid for type == i_palette_type */
+  i_f_gpal_t i_f_gpal;
+  i_f_ppal_t i_f_ppal;
+  i_f_addcolors_t i_f_addcolors;
+  i_f_getcolors_t i_f_getcolors;
+  i_f_colorcount_t i_f_colorcount;
+  i_f_maxcolors_t i_f_maxcolors;
+  i_f_findcolor_t i_f_findcolor;
+  i_f_setcolors_t i_f_setcolors;
+
+  i_f_destroy_t i_f_destroy;
+
+  /* as of 0.61 */
+  i_f_gsamp_bits_t i_f_gsamp_bits;
+  i_f_psamp_bits_t i_f_psamp_bits;
+
+  /* as of 0.88 */
+  i_f_psamp_t i_f_psamp;
+  i_f_psampf_t i_f_psampf;
+
+} i_img_vtable;
+
+/*
 =item i_img
 =category Data Types
 =synopsis i_img *img;
@@ -297,40 +385,6 @@ i_img_init().
 
 =item *
 
-i_f_ppix, i_f_ppixf, i_f_plin, i_f_plinf, i_f_gpix, i_f_gpixf,
-i_f_glin, i_f_glinf, i_f_gsamp, i_f_gampf - implementations for each
-of the required image functions.  An image implementation should
-initialize these between calling i_img_alloc() and i_img_init().
-
-=item *
-
-i_f_gpal, i_f_ppal, i_f_addcolors, i_f_getcolors, i_f_colorcount,
-i_f_maxcolors, i_f_findcolor, i_f_setcolors - implementations for each
-paletted image function.
-
-=item *
-
-i_f_destroy - custom image destruction function.  This should be used
-to release memory if necessary.
-
-=item *
-
-i_f_gsamp_bits - implements i_gsamp_bits() for this image.
-
-=item *
-
-i_f_psamp_bits - implements i_psamp_bits() for this image.
-
-=item *
-
-i_f_psamp - implements psamp() for this image.
-
-=item *
-
-i_f_psampf - implements psamp() for this image.
-
-=item *
-
 C<im_data> - image specific data internal to Imager.
 
 =item *
@@ -343,6 +397,7 @@ C<context> - the Imager API context this image belongs to.
 */
 
 struct i_img_ {
+  const i_img_vtable *vtbl;
   int channels;
   i_img_dim xsize,ysize;
   size_t bytes;
@@ -355,38 +410,6 @@ struct i_img_ {
   i_img_tags tags;
 
   void *ext_data;
-
-  /* interface functions */
-  i_f_ppix_t i_f_ppix;
-  i_f_ppixf_t i_f_ppixf;
-  i_f_plin_t i_f_plin;
-  i_f_plinf_t i_f_plinf;
-  i_f_gpix_t i_f_gpix;
-  i_f_gpixf_t i_f_gpixf;
-  i_f_glin_t i_f_glin;
-  i_f_glinf_t i_f_glinf;
-  i_f_gsamp_t i_f_gsamp;
-  i_f_gsampf_t i_f_gsampf;
-  
-  /* only valid for type == i_palette_type */
-  i_f_gpal_t i_f_gpal;
-  i_f_ppal_t i_f_ppal;
-  i_f_addcolors_t i_f_addcolors;
-  i_f_getcolors_t i_f_getcolors;
-  i_f_colorcount_t i_f_colorcount;
-  i_f_maxcolors_t i_f_maxcolors;
-  i_f_findcolor_t i_f_findcolor;
-  i_f_setcolors_t i_f_setcolors;
-
-  i_f_destroy_t i_f_destroy;
-
-  /* as of 0.61 */
-  i_f_gsamp_bits_t i_f_gsamp_bits;
-  i_f_psamp_bits_t i_f_psamp_bits;
-
-  /* as of 0.88 */
-  i_f_psamp_t i_f_psamp;
-  i_f_psampf_t i_f_psampf;
 
   void *im_data;
 

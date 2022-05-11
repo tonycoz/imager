@@ -2,6 +2,7 @@
 
 #include "imager.h"
 #include "imageri.h"
+#include "imapiver.h"
 
 static int i_ppix_d(i_img *im, i_img_dim x, i_img_dim y, const i_color *val);
 static int i_gpix_d(i_img *im, i_img_dim x, i_img_dim y, i_color *val);
@@ -16,25 +17,10 @@ static i_img_dim i_gsampf_d(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, i_
 static i_img_dim i_psamp_d(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, const i_sample_t *samps, const int *chans, int chan_count);
 static i_img_dim i_psampf_d(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, const i_fsample_t *samps, const int *chans, int chan_count);
 
-/*
-=item IIM_base_8bit_direct (static)
-
-A static i_img object used to initialize direct 8-bit per sample images.
-
-=cut
-*/
-static i_img IIM_base_8bit_direct =
-{
-  0, /* channels set */
-  0, 0, 0, /* xsize, ysize, bytes */
-  ~0U, /* ch_mask */
-  i_8_bits, /* bits */
-  i_direct_type, /* type */
-  0, /* virtual */
-  NULL, /* idata */
-  { 0, 0, NULL }, /* tags */
-  NULL, /* ext_data */
-
+static const i_img_vtable
+vtable_8bit = {
+  IMAGER_API_LEVEL,
+  
   i_ppix_d, /* i_f_ppix */
   i_ppixf_d, /* i_f_ppixf */
   i_plin_d, /* i_f_plin */
@@ -63,23 +49,6 @@ static i_img IIM_base_8bit_direct =
   i_psamp_d,
   i_psampf_d
 };
-
-/*static void set_8bit_direct(i_img *im) {
-  im->i_f_ppix = i_ppix_d;
-  im->i_f_ppixf = i_ppixf_d;
-  im->i_f_plin = i_plin_d;
-  im->i_f_plinf = i_plinf_d;
-  im->i_f_gpix = i_gpix_d;
-  im->i_f_gpixf = i_gpixf_d;
-  im->i_f_glin = i_glin_d;
-  im->i_f_glinf = i_glinf_d;
-  im->i_f_gpal = NULL;
-  im->i_f_ppal = NULL;
-  im->i_f_addcolor = NULL;
-  im->i_f_getcolor = NULL;
-  im->i_f_colorcount = NULL;
-  im->i_f_findcolor = NULL;
-  }*/
 
 /*
 =item im_img_8_new(ctx, x, y, ch)
@@ -168,16 +137,19 @@ im_img_empty_ch(pIMCTX, i_img *im,i_img_dim x,i_img_dim y,int ch) {
   if (im == NULL)
     im = im_img_alloc(aIMCTX);
 
-  memcpy(im, &IIM_base_8bit_direct, sizeof(i_img));
+  im->vtbl = &vtable_8bit,
   i_tags_new(&im->tags);
   im->xsize    = x;
   im->ysize    = y;
   im->channels = ch;
+  im->bits     = i_8_bits;
+  im->type     = i_direct_type;
   im->ch_mask  = ~0U;
-  im->bytes=bytes;
+  im->bytes = bytes;
+  im->isvirtual = 0;
   if ( (im->idata=mymalloc(im->bytes)) == NULL) 
     im_fatal(aIMCTX, 2,"malloc() error\n"); 
-  memset(im->idata,0,(size_t)im->bytes);
+  memset(im->idata, 0, im->bytes);
   
   im->ext_data = NULL;
 

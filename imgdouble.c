@@ -23,6 +23,7 @@ sample image type to work with.
 #define IMAGER_NO_CONTEXT
 #include "imager.h"
 #include "imageri.h"
+#include "imapiver.h"
 
 static int i_ppix_ddoub(i_img *im, i_img_dim x, i_img_dim y, const i_color *val);
 static int i_gpix_ddoub(i_img *im, i_img_dim x, i_img_dim y, i_color *val);
@@ -42,25 +43,17 @@ static i_img_dim
 i_psampf_ddoub(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, const i_fsample_t *samps, const int *chans, int chan_count);
 
 /*
-=item IIM_base_16bit_direct
+=item vtable_double
 
-Base structure used to initialize a 16-bit/sample image.
+Virtual table for double images.
 
 Internal.
 
 =cut
 */
-static i_img IIM_base_double_direct =
-{
-  0, /* channels set */
-  0, 0, 0, /* xsize, ysize, bytes */
-  ~0U, /* ch_mask */
-  i_double_bits, /* bits */
-  i_direct_type, /* type */
-  0, /* virtual */
-  NULL, /* idata */
-  { 0, 0, NULL }, /* tags */
-  NULL, /* ext_data */
+static const i_img_vtable
+vtable_double = {
+  IMAGER_API_LEVEL,
 
   i_ppix_ddoub, /* i_f_ppix */
   i_ppixf_ddoub, /* i_f_ppixf */
@@ -127,13 +120,17 @@ im_img_double_new(pIMCTX, i_img_dim x, i_img_dim y, int ch) {
   }
   
   im = im_img_alloc(aIMCTX);
-  *im = IIM_base_double_direct;
+  im->vtbl = &vtable_double;
   i_tags_new(&im->tags);
   im->xsize = x;
   im->ysize = y;
   im->channels = ch;
   im->bytes = bytes;
+  im->ch_mask = ~0U;
+  im->bits = i_double_bits;
+  im->type = i_direct_type;
   im->ext_data = NULL;
+  im->isvirtual = 0;
   im->idata = mymalloc(im->bytes);
   memset(im->idata, 0, im->bytes);
   im_img_init(aIMCTX, im);
