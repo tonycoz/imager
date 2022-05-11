@@ -22,6 +22,7 @@ Basic 8-bit/sample paletted image
 
 #include "imager.h"
 #include "imageri.h"
+#include "imapiver.h"
 
 #define PALEXT(im) ((i_img_pal_ext*)((im)->ext_data))
 static int i_ppix_p(i_img *im, i_img_dim x, i_img_dim y, const i_color *val);
@@ -44,18 +45,10 @@ i_psamp_p(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, const i_sample_t *sa
 static i_img_dim 
 i_psampf_p(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, const i_fsample_t *samps, const int *chans, int chan_count);
 
-static i_img IIM_base_8bit_pal =
-{
-  0, /* channels set */
-  0, 0, 0, /* xsize, ysize, bytes */
-  ~0U, /* ch_mask */
-  i_8_bits, /* bits */
-  i_palette_type, /* type */
-  0, /* virtual */
-  NULL, /* idata */
-  { 0, 0, NULL }, /* tags */
-  NULL, /* ext_data */
-
+static const i_img_vtable
+vtable_pal = {
+  IMAGER_API_LEVEL,
+  
   i_ppix_p, /* i_f_ppix */
   i_ppixf_fp, /* i_f_ppixf */
   i_plin_p, /* i_f_plin */
@@ -137,7 +130,7 @@ im_img_pal_new(pIMCTX, i_img_dim x, i_img_dim y, int channels, int maxpal) {
   }
 
   im = i_img_alloc();
-  memcpy(im, &IIM_base_8bit_pal, sizeof(i_img));
+  im->vtbl = &vtable_pal;
   palext = mymalloc(sizeof(i_img_pal_ext));
   palext->pal = mymalloc(sizeof(i_color) * maxpal);
   palext->count = 0;
@@ -148,9 +141,13 @@ im_img_pal_new(pIMCTX, i_img_dim x, i_img_dim y, int channels, int maxpal) {
   im->bytes = bytes;
   im->idata = mymalloc(im->bytes);
   im->channels = channels;
+  im->type = i_palette_type;
+  im->bits = i_8_bits;
+  im->isvirtual = 0;
   memset(im->idata, 0, im->bytes);
   im->xsize = x;
   im->ysize = y;
+  im->ch_mask = ~0U;
 
   i_img_init(im);
   

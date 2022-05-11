@@ -84,9 +84,9 @@ extern im_ext_funcs *imager_function_ext_table;
 #endif
 
 #define i_gsamp_bits(im, l, r, y, samps, chans, count, bits) \
-  (((im)->i_f_gsamp_bits) ? ((im)->i_f_gsamp_bits)((im), (l), (r), (y), (samps), (chans), (count), (bits)) : -1)
+  (((im)->vtbl->i_f_gsamp_bits) ? ((im)->vtbl->i_f_gsamp_bits)((im), (l), (r), (y), (samps), (chans), (count), (bits)) : -1)
 #define i_psamp_bits(im, l, r, y, samps, chans, count, bits) \
-  (((im)->i_f_psamp_bits) ? ((im)->i_f_psamp_bits)((im), (l), (r), (y), (samps), (chans), (count), (bits)) : -1)
+  (((im)->vtbl->i_f_psamp_bits) ? ((im)->vtbl->i_f_psamp_bits)((im), (l), (r), (y), (samps), (chans), (count), (bits)) : -1)
 
 #define i_new_fill_solid(c, combine) ((im_extt->f_i_new_fill_solid)((c), (combine)))
 #define i_new_fill_solidf(c, combine) ((im_extt->f_i_new_fill_solidf)((c), (combine)))
