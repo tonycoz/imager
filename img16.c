@@ -24,6 +24,7 @@ sample image type to work with.
 
 #include "imager.h"
 #include "imageri.h"
+#include "imapiver.h"
 
 static int i_ppix_d16(i_img *im, i_img_dim x, i_img_dim y, const i_color *val);
 static int i_gpix_d16(i_img *im, i_img_dim x, i_img_dim y, i_color *val);
@@ -45,26 +46,18 @@ static i_img_dim i_psamp_d16(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, c
 static i_img_dim i_psampf_d16(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, const i_fsample_t *samps, const int *chans, int chan_count);
 
 /*
-=item IIM_base_16bit_direct
+=item vtable_16bit
 
-Base structure used to initialize a 16-bit/sample image.
+Vtable for 16-bit direct images.
 
 Internal.
 
 =cut
 */
-static i_img IIM_base_16bit_direct =
-{
-  0, /* channels set */
-  0, 0, 0, /* xsize, ysize, bytes */
-  ~0U, /* ch_mask */
-  i_16_bits, /* bits */
-  i_direct_type, /* type */
-  0, /* virtual */
-  NULL, /* idata */
-  { 0, 0, NULL }, /* tags */
-  NULL, /* ext_data */
-
+static const i_img_vtable
+vtable_16bit = {
+  IMAGER_API_LEVEL,
+  
   i_ppix_d16, /* i_f_ppix */
   i_ppixf_d16, /* i_f_ppixf */
   i_plin_d16, /* i_f_plin */
@@ -181,7 +174,7 @@ im_img_16_new(pIMCTX, i_img_dim x, i_img_dim y, int ch) {
     im_push_errorf(aIMCTX, 0, "channels must be between 1 and %d", MAXCHANNELS);
     return NULL;
   }
-  bytes =  x * y * ch * 2;
+  bytes =  (i_img_dim_u)x * (i_img_dim_u)y * (unsigned)ch * 2U;
   if (bytes / y / ch / 2 != x) {
     im_push_errorf(aIMCTX, 0, "integer overflow calculating image allocation");
     return NULL;
@@ -190,19 +183,23 @@ im_img_16_new(pIMCTX, i_img_dim x, i_img_dim y, int ch) {
   /* basic assumption: we can always allocate a buffer representing a
      line from the image, otherwise we're going to have trouble
      working with the image */
-  line_bytes = sizeof(i_fcolor) * x;
+  line_bytes = sizeof(i_fcolor) * (i_img_dim_u)x;
   if (line_bytes / x != sizeof(i_fcolor)) {
     im_push_error(aIMCTX, 0, "integer overflow calculating scanline allocation");
     return NULL;
   }
 
   im = im_img_alloc(aIMCTX);
-  *im = IIM_base_16bit_direct;
+  im->vtbl = &vtable_16bit;
   i_tags_new(&im->tags);
   im->xsize = x;
   im->ysize = y;
   im->channels = ch;
+  im->ch_mask = ~0U;
+  im->bits = i_16_bits;
+  im->type = i_direct_type;
   im->bytes = bytes;
+  im->isvirtual = 0;
   im->ext_data = NULL;
   im->idata = mymalloc(im->bytes);
   memset(im->idata, 0, im->bytes);

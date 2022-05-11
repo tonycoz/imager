@@ -42,7 +42,7 @@ returns -1 and pushes an error.
 */
 
 #define i_psamp(im, l, r, y, samps, chans, count) \
-  (((im)->i_f_psamp)((im), (l), (r), (y), (samps), (chans), (count)))
+  (((im)->vtbl->i_f_psamp)((im), (l), (r), (y), (samps), (chans), (count)))
 
 /*
 =item i_psampf(im, left, right, y, samples, channels, channel_count)
@@ -65,7 +65,7 @@ returns -1 and pushes an error.
 */
 
 #define i_psampf(im, l, r, y, samps, chans, count) \
-  (((im)->i_f_psampf)((im), (l), (r), (y), (samps), (chans), (count)))
+  (((im)->vtbl->i_f_psampf)((im), (l), (r), (y), (samps), (chans), (count)))
 
 #ifndef IMAGER_DIRECT_IMAGE_CALLS
 #define IMAGER_DIRECT_IMAGE_CALLS 1
@@ -73,48 +73,48 @@ returns -1 and pushes an error.
 
 #if IMAGER_DIRECT_IMAGE_CALLS
 
-#define i_ppix(im, x, y, val) (((im)->i_f_ppix)((im), (x), (y), (val)))
-#define i_gpix(im, x, y, val) (((im)->i_f_gpix)((im), (x), (y), (val)))
-#define i_ppixf(im, x, y, val) (((im)->i_f_ppixf)((im), (x), (y), (val)))
-#define i_gpixf(im, x, y, val) (((im)->i_f_gpixf)((im), (x), (y), (val)))
-#define i_plin(im, l, r, y, val) (((im)->i_f_plin)(im, l, r, y, val))
-#define i_glin(im, l, r, y, val) (((im)->i_f_glin)(im, l, r, y, val))
-#define i_plinf(im, l, r, y, val) (((im)->i_f_plinf)(im, l, r, y, val))
-#define i_glinf(im, l, r, y, val) (((im)->i_f_glinf)(im, l, r, y, val))
+#define i_ppix(im, x, y, val) (((im)->vtbl->i_f_ppix)((im), (x), (y), (val)))
+#define i_gpix(im, x, y, val) (((im)->vtbl->i_f_gpix)((im), (x), (y), (val)))
+#define i_ppixf(im, x, y, val) (((im)->vtbl->i_f_ppixf)((im), (x), (y), (val)))
+#define i_gpixf(im, x, y, val) (((im)->vtbl->i_f_gpixf)((im), (x), (y), (val)))
+#define i_plin(im, l, r, y, val) (((im)->vtbl->i_f_plin)(im, l, r, y, val))
+#define i_glin(im, l, r, y, val) (((im)->vtbl->i_f_glin)(im, l, r, y, val))
+#define i_plinf(im, l, r, y, val) (((im)->vtbl->i_f_plinf)(im, l, r, y, val))
+#define i_glinf(im, l, r, y, val) (((im)->vtbl->i_f_glinf)(im, l, r, y, val))
 
 #define i_gsamp(im, l, r, y, samps, chans, count) \
-  (((im)->i_f_gsamp)((im), (l), (r), (y), (samps), (chans), (count)))
+  (((im)->vtbl->i_f_gsamp)((im), (l), (r), (y), (samps), (chans), (count)))
 #define i_gsampf(im, l, r, y, samps, chans, count) \
-  (((im)->i_f_gsampf)((im), (l), (r), (y), (samps), (chans), (count)))
+  (((im)->vtbl->i_f_gsampf)((im), (l), (r), (y), (samps), (chans), (count)))
 
 #endif
 
 #define i_gsamp_bits(im, l, r, y, samps, chans, count, bits) \
-       (((im)->i_f_gsamp_bits) ? ((im)->i_f_gsamp_bits)((im), (l), (r), (y), (samps), (chans), (count), (bits)) : -1)
+       (((im)->vtbl->i_f_gsamp_bits) ? ((im)->vtbl->i_f_gsamp_bits)((im), (l), (r), (y), (samps), (chans), (count), (bits)) : -1)
 #define i_psamp_bits(im, l, r, y, samps, chans, count, bits) \
-       (((im)->i_f_psamp_bits) ? ((im)->i_f_psamp_bits)((im), (l), (r), (y), (samps), (chans), (count), (bits)) : -1)
+       (((im)->vtbl->i_f_psamp_bits) ? ((im)->vtbl->i_f_psamp_bits)((im), (l), (r), (y), (samps), (chans), (count), (bits)) : -1)
 
 #define i_findcolor(im, color, entry) \
-  (((im)->i_f_findcolor) ? ((im)->i_f_findcolor)((im), (color), (entry)) : 0)
+  (((im)->vtbl->i_f_findcolor) ? ((im)->vtbl->i_f_findcolor)((im), (color), (entry)) : 0)
 
 #define i_gpal(im, l, r, y, vals) \
-  (((im)->i_f_gpal) ? ((im)->i_f_gpal)((im), (l), (r), (y), (vals)) : 0)
+  (((im)->vtbl->i_f_gpal) ? ((im)->vtbl->i_f_gpal)((im), (l), (r), (y), (vals)) : 0)
 #define i_ppal(im, l, r, y, vals) \
-  (((im)->i_f_ppal) ? ((im)->i_f_ppal)((im), (l), (r), (y), (vals)) : 0)
+  (((im)->vtbl->i_f_ppal) ? ((im)->vtbl->i_f_ppal)((im), (l), (r), (y), (vals)) : 0)
 #define i_addcolors(im, colors, count) \
-  (((im)->i_f_addcolors) ? ((im)->i_f_addcolors)((im), (colors), (count)) : -1)
+  (((im)->vtbl->i_f_addcolors) ? ((im)->vtbl->i_f_addcolors)((im), (colors), (count)) : -1)
 #define i_getcolors(im, index, color, count) \
-  (((im)->i_f_getcolors) ? \
-   ((im)->i_f_getcolors)((im), (index), (color), (count)) : 0)
+  (((im)->vtbl->i_f_getcolors) ? \
+   ((im)->vtbl->i_f_getcolors)((im), (index), (color), (count)) : 0)
 #define i_setcolors(im, index, color, count) \
-  (((im)->i_f_setcolors) ? \
-   ((im)->i_f_setcolors)((im), (index), (color), (count)) : 0)
+  (((im)->vtbl->i_f_setcolors) ? \
+   ((im)->vtbl->i_f_setcolors)((im), (index), (color), (count)) : 0)
 #define i_colorcount(im) \
-  (((im)->i_f_colorcount) ? ((im)->i_f_colorcount)(im) : -1)
+  (((im)->vtbl->i_f_colorcount) ? ((im)->vtbl->i_f_colorcount)(im) : -1)
 #define i_maxcolors(im) \
-  (((im)->i_f_maxcolors) ? ((im)->i_f_maxcolors)(im) : -1)
+  (((im)->vtbl->i_f_maxcolors) ? ((im)->vtbl->i_f_maxcolors)(im) : -1)
 #define i_findcolor(im, color, entry) \
-  (((im)->i_f_findcolor) ? ((im)->i_f_findcolor)((im), (color), (entry)) : 0)
+  (((im)->vtbl->i_f_findcolor) ? ((im)->vtbl->i_f_findcolor)((im), (color), (entry)) : 0)
 
 #define i_img_virtual(im) ((im)->isvirtual)
 #define i_img_type(im) ((im)->type)

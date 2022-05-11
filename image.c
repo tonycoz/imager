@@ -75,7 +75,9 @@ object.
 
 i_img *
 im_img_alloc(pIMCTX) {
-  return mymalloc(sizeof(i_img));
+  i_img *p = mymalloc(sizeof(i_img));
+  memset(p, 0, sizeof(i_img));
+  return p;
 }
 
 /*
@@ -259,8 +261,8 @@ i_img_exorcise(i_img *im) {
   dIMCTXim(im);
   im_log((aIMCTX,1,"i_img_exorcise(im* %p)\n",im));
   i_tags_destroy(&im->tags);
-  if (im->i_f_destroy)
-    (im->i_f_destroy)(im);
+  if (im->vtbl->i_f_destroy)
+    (im->vtbl->i_f_destroy)(im);
   if (im->idata != NULL) { myfree(im->idata); }
   im->idata    = NULL;
   im->xsize    = 0;

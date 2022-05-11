@@ -6,6 +6,7 @@
 #define IMAGEI_H_
 
 #include "imager.h"
+#include "imapiver.h"
 #include <stddef.h>
 
 /* wrapper functions that implement the floating point sample version of a 

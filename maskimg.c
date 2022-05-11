@@ -15,6 +15,7 @@ maskimg.c - implements masked images/image subsets
 
 #include "imager.h"
 #include "imageri.h"
+#include "imapiver.h"
 
 #include <stdio.h>
 /*
@@ -64,18 +65,10 @@ The basic data we copy into a masked image.
 
 =cut
 */
-static i_img IIM_base_masked =
-{
-  0, /* channels set */
-  0, 0, 0, /* xsize, ysize, bytes */
-  ~0U, /* ch_mask */
-  i_8_bits, /* bits */
-  i_palette_type, /* type */
-  1, /* virtual */
-  NULL, /* idata */
-  { 0, 0, NULL }, /* tags */
-  NULL, /* ext_data */
-
+static const i_img_vtable
+vtable_mask = {
+  IMAGER_API_LEVEL,
+  
   i_ppix_masked, /* i_f_ppix */
   i_ppixf_masked, /* i_f_ppixf */
   i_plin_masked, /* i_f_plin */
@@ -155,13 +148,17 @@ i_img_masked_new(i_img *targ, i_img *mask, i_img_dim x, i_img_dim y, i_img_dim w
 
   im = im_img_alloc(aIMCTX);
 
-  memcpy(im, &IIM_base_masked, sizeof(i_img));
+  im->vtbl = &vtable_mask;
   i_tags_new(&im->tags);
   im->xsize = w;
   im->ysize = h;
   im->channels = targ->channels;
+  im->ch_mask = ~0U;
   im->bits = targ->bits;
   im->type = targ->type;
+  im->isvirtual = 1;
+  im->bytes = 0;
+  im->idata = NULL;
   ext = mymalloc(sizeof(*ext));
   ext->targ = targ;
   ext->mask = mask;

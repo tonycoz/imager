@@ -274,40 +274,6 @@ i_img_init().
 
 =item *
 
-i_f_ppix, i_f_ppixf, i_f_plin, i_f_plinf, i_f_gpix, i_f_gpixf,
-i_f_glin, i_f_glinf, i_f_gsamp, i_f_gampf - implementations for each
-of the required image functions.  An image implementation should
-initialize these between calling i_img_alloc() and i_img_init().
-
-=item *
-
-i_f_gpal, i_f_ppal, i_f_addcolors, i_f_getcolors, i_f_colorcount,
-i_f_maxcolors, i_f_findcolor, i_f_setcolors - implementations for each
-paletted image function.
-
-=item *
-
-i_f_destroy - custom image destruction function.  This should be used
-to release memory if necessary.
-
-=item *
-
-i_f_gsamp_bits - implements i_gsamp_bits() for this image.
-
-=item *
-
-i_f_psamp_bits - implements i_psamp_bits() for this image.
-
-=item *
-
-i_f_psamp - implements psamp() for this image.
-
-=item *
-
-i_f_psampf - implements psamp() for this image.
-
-=item *
-
 C<im_data> - image specific data internal to Imager.
 
 =item *
