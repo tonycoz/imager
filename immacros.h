@@ -67,6 +67,123 @@ returns -1 and pushes an error.
 #define i_psampf(im, l, r, y, samps, chans, count) \
   (((im)->vtbl->i_f_psampf)((im), (l), (r), (y), (samps), (chans), (count)))
 
+/*
+=item i_img_data()
+
+  i_img_data(im, layout, bits, flags, &ptr, &size, &extrachannels)
+
+Returns raw bytes representing the image.
+
+Typical use is something like:
+
+  // image data I can write to a file
+  void *data;
+  size_t size;
+  i_image_alloc_t *alloc = i_img_data(img, idf_rgb, i_8_bits, idf_synthesize, &data, &size, NULL);
+  if (alloc) {
+    // write to some file
+    ...
+    i_img_data_release(alloc);
+  }
+
+  // image data I can modify to modify the image
+  void *data;
+  size_t size;
+  i_image_alloc_t *alloc = i_img_data(img, idf_rgb, i_8_bits, idf_writable, &data, &size, NULL);
+  if (alloc) {
+    // modify the image data
+    ...
+    i_img_data_release(alloc);
+  }
+
+Note that even without C<idf_synthesize> the data pointer should be
+treated as pointing at read only data, unless C<idf_writable> is set
+in C<flags>.
+
+Parameters:
+
+=over
+
+=item * C<img> - the image to return image data for
+
+=item *
+
+C<layout> - the desired image layout.  Note that the typical Imager
+layouts are C<idf_palette> through C<idf_rgb_alpha>.  The numeric
+values of C<idf_gray> through C<idf_rgb_alpha> correspond to the
+Imager channel counts, but it's possible for third-party images (of
+which none exist at this point) may have another layout.
+
+=item *
+
+C<bits> - the sample size for the images.  This can be any of
+C<i_8_bits>, C<i_16_bits> or C<i_double_bits>.  Other sample sizes may
+be added.
+
+=item *
+
+C<flags> - a bit combination of the following:
+
+=over
+
+=item *
+
+C<idf_writable> - modifying samples pointed at will modify the image.
+Without this flag the data should be treated as read only (and this
+may be enforced.)
+
+=item *
+
+C<idf_synthesize> - if the native image data doesn't match the
+requested format, Imager will allocate memory and synthesize the
+layout requested.  Some layouts are not supported for synthesis
+including C<idf_palette> in any case and C<idf_gray> or
+C<idf_gray_alpha> from any RGB layout.
+
+=item *
+
+C<idf_extras> - allows for the original image data to be returned,
+ie. for non-synthesizes or writable data even if the image has extra
+channels stored for pixel.
+
+=back
+
+=item *
+
+C<&data> - a pointer to C<void *> which is filled with a pointer to
+the image data.
+
+=item *
+
+C<&size> - a pointer to C<size_t> which is filled with the size of the
+image data in bytes.  This is intended for validating the result.
+
+=item *
+
+C<&extrachannels> - a pointer to C<int> which will be filled with the
+number of extra channels in the image.  This pointer may be C<NULL> if
+the C<idf_extras> flag isn't set.  Extra channels are currently not
+implemented and this will always be set to zero.
+
+=back
+
+=cut
+*/
+
+#define i_img_data(im, layout, bits, flags, pptr, psize, pextra) \
+  (((im)->vtbl->i_f_data)((im), (layout), (bits), (flags), (pptr), (psize), (pextra)))
+
+/*
+=item i_img_data_release()
+
+Releases the allocation structure and any associated resources
+returned from i_img_data().
+
+=cut
+*/
+
+#define i_img_data_release(alloc) (((alloc)->f_release)(alloc))
+
 #ifndef IMAGER_DIRECT_IMAGE_CALLS
 #define IMAGER_DIRECT_IMAGE_CALLS 1
 #endif

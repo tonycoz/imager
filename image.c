@@ -1948,6 +1948,49 @@ i_get_file_backgroundf(i_img *im, i_fcolor *fbg) {
 }
 
 /*
+=item i_img_data_fallback()
+
+Fallback for i_img_data().  This is used by image implementations of
+i_img_data()/C<i_f_data> to produce synthesized data.
+
+  i_img_data_fallback(im, layout, bits, flags, pptr, psize, pextrachannels)
+
+The intent this is used something like:
+
+ i_image_alloc *my_img_data(...) {
+   if (layout, bits, extrachannels matches image layout) {
+     ... populate *pptr, *size, *extrachannels
+     ... increment image refcount
+     ... return new i_image_alloc_t.
+   }
+   else  {
+     return i_img_data_fallback(im, layout, bits, flags, pptr, psize, pextrachannels);
+   }
+ }
+
+=cut
+*/
+
+i_image_alloc_t *
+i_img_data_fallback(i_img *im, i_data_layout_t layout, i_img_bits_t bits, unsigned flags,
+                    void **p, size_t *size, int *extra) {
+  dIMCTX;
+  
+  if (!(flags & idf_synthesize)) {
+    return NULL;
+  }
+
+  switch (bits) {
+  case i_8_bits:
+  case i_16_bits:
+  case i_double_bits:
+    return NULL;
+  default:
+    im_fatal(aIMCTX, 3, "i_img_data_fallback: Unknown bits %d\n", (int)bits);
+  }
+}
+
+/*
 =back
 
 =head1 AUTHOR
