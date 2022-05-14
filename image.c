@@ -851,7 +851,7 @@ i_scale_nn(i_img *im, double scx, double scy) {
   }
   im_assert(scx != 0 && scy != 0);
     
-  new_img=i_img_empty_ch(NULL,nxsize,nysize,im->channels);
+  new_img = i_img_8_new(nxsize, nysize, im->channels);
   if (!new_img)
     return NULL;
   
@@ -884,7 +884,7 @@ i_sametype(i_img *src, i_img_dim xsize, i_img_dim ysize) {
 
   if (src->type == i_direct_type) {
     if (src->bits == 8) {
-      return i_img_empty_ch(NULL, xsize, ysize, src->channels);
+      return i_img_8_new(xsize, ysize, src->channels);
     }
     else if (src->bits == i_16_bits) {
       return i_img_16_new(xsize, ysize, src->channels);
@@ -931,7 +931,7 @@ i_sametype_chans(i_img *src, i_img_dim xsize, i_img_dim ysize, int channels) {
   dIMCTXim(src);
 
   if (src->bits == 8) {
-    return i_img_empty_ch(NULL, xsize, ysize, channels);
+    return i_img_8_new(xsize, ysize, channels);
   }
   else if (src->bits == i_16_bits) {
     return i_img_16_new(xsize, ysize, channels);
@@ -977,9 +977,10 @@ i_transform(i_img *im, int *opx,int opxl,int *opy,int opyl,double parm[],int par
   nxsize = im->xsize;
   nysize = im->ysize ;
   
-  new_img=i_img_empty_ch(NULL,nxsize,nysize,im->channels);
+  new_img=i_img_8_new(nxsize, nysize, im->channels);
   if (new_img == NULL)
     return NULL;
+
   /*   fprintf(stderr,"parm[2]=%f\n",parm[2]);   */
   for(ny=0;ny<nysize;ny++) for(nx=0;nx<nxsize;nx++) {
     /*     parm[parmlen-2]=(double)nx;
@@ -1147,10 +1148,10 @@ i_haar(i_img *im) {
 
   /* horizontal pass */
   
-  new_img=i_img_empty_ch(NULL,fx*2,fy*2,im->channels);
+  new_img  = i_img_8_new(fx*2, fy*2, im->channels);
   if (!new_img)
     return NULL;
-  new_img2=i_img_empty_ch(NULL,fx*2,fy*2,im->channels);
+  new_img2 = i_img_8_new(fx*2, fy*2, im->channels);
   if (!new_img2) {
     i_img_destroy(new_img);
     return NULL;

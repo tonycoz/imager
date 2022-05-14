@@ -68,7 +68,7 @@ i_img* i_transform2(i_img_dim width, i_img_dim height, int channels,
      the supplied registers and a return op
   */
 
-  new_img = i_img_empty_ch(NULL, width, height, channels);
+  new_img = i_img_8_new(width, height, channels);
   for (x = 0; x < width; ++x) {
     for (y = 0; y < height; ++y) {
       n_regs[0] = x;

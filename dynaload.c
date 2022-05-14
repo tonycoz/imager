@@ -1,3 +1,4 @@
+#define IMAGER_NO_CONTEXT
 #if defined(OS_hpux)
 #include <dl.h>
 typedef shl_t minthandle_t;
@@ -29,13 +30,21 @@ do_get_context(void) {
   return im_get_context();
 }
 
+static i_img *
+my_img_empty_ch(pIMCTX, i_img *im, i_img_dim x, i_img_dim y, int ch) {
+  if (im != NULL)
+    return NULL;
+
+  return im_img_8_new(aIMCTX, x, y, ch);
+}
+
 static symbol_table_t symbol_table=
   {
     i_has_format,
     ICL_set_internal,
     ICL_info,
     do_get_context,
-    im_img_empty_ch,
+    my_img_empty_ch,
     i_img_exorcise,
     i_img_info,
     i_img_setmask,
@@ -59,7 +68,8 @@ static symbol_table_t symbol_table=
 
 void
 DSO_call(DSO_handle *handle,int func_index,HV* hv) {
-  mm_log((1,"DSO_call(handle %p, func_index %d, hv %p)\n",
+  dIMCTX;
+  im_log((aIMCTX, 1,"DSO_call(handle %p, func_index %d, hv %p)\n",
 	  handle, func_index, hv));
   (handle->function_list[func_index].iptr)((void*)hv);
 }
@@ -81,10 +91,11 @@ DSO_open(char* file,char** evalstring) {
   DSO_handle *dso_handle;
   void (*f)(void *s,void *u); /* these will just have to be void for now */
   int i;
+  dIMCTX;
 
   *evalstring=NULL;
 
-  mm_log( (1,"DSO_open(file '%s' (0x%08X), evalstring 0x%08X)\n",file,file,evalstring) );
+  im_log( (aIMCTX, 1,"DSO_open(file '%s' (0x%08X), evalstring 0x%08X)\n",file,file,evalstring) );
 
   if ( (tt_handle = shl_load(file, BIND_DEFERRED,0L)) == NULL) return NULL; 
   if ( (shl_findsym(&tt_handle, I_EVALSTR,TYPE_UNDEFINED,(void*)evalstring))) return NULL;
@@ -98,9 +109,9 @@ DSO_open(char* file,char** evalstring) {
 
   if ( (shl_findsym(&tt_handle, I_INSTALL_TABLES ,TYPE_UNDEFINED, &f ))) return NULL; 
  
-  mm_log( (1,"Calling install_tables\n") );
+  im_log( (aIMCTX, 1,"Calling install_tables\n") );
   f(&symbol_table,&i_UTIL_table);
-  mm_log( (1,"Call ok.\n") ); 
+  im_log( (aIMCTX, 1,"Call ok.\n") ); 
  
   if ( (shl_findsym(&tt_handle, I_FUNCTION_LIST ,TYPE_UNDEFINED,(func_ptr*)&function_list))) return NULL; 
   if ( (dso_handle=(DSO_handle*)malloc(sizeof(DSO_handle))) == NULL) /* checked 17jul05 tonyc */
@@ -113,14 +124,15 @@ DSO_open(char* file,char** evalstring) {
   }
   strcpy(dso_handle->filename,file);
 
-  mm_log((1,"DSO_open <- (0x%X)\n",dso_handle));
+  im_log((aIMCTX, 1,"DSO_open <- (0x%X)\n",dso_handle));
   return (void*)dso_handle;
 }
 
 undef_int
 DSO_close(void *ptr) {
   DSO_handle *handle=(DSO_handle*) ptr;
-  mm_log((1,"DSO_close(ptr 0x%X)\n",ptr));
+  dIMCTX;
+  im_log((1,"DSO_close(ptr 0x%X)\n",ptr));
   return !shl_unload((handle->handle));
 }
 
@@ -131,37 +143,38 @@ DSO_open(char *file, char **evalstring) {
   HMODULE d_handle;
   func_ptr *function_list;
   DSO_handle *dso_handle;
+  dIMCTX;
   
   void (*f)(void *s,void *u); /* these will just have to be void for now */
 
-  mm_log( (1,"DSO_open(file '%s' (%p), evalstring %p)\n",file,file,evalstring) );
+  im_log( (aIMCTX, 1,"DSO_open(file '%s' (%p), evalstring %p)\n",file,file,evalstring) );
 
   *evalstring = NULL;
   if ((d_handle = LoadLibrary(file)) == NULL) {
-    mm_log((1, "DSO_open: LoadLibrary(%s) failed: %lu\n", file, GetLastError()));
+    im_log((aIMCTX, 1, "DSO_open: LoadLibrary(%s) failed: %lu\n", file, GetLastError()));
     return NULL;
   }
   if ( (*evalstring = (char *)GetProcAddress(d_handle, I_EVALSTR)) == NULL) {
-    mm_log((1,"DSO_open: GetProcAddress didn't fine '%s': %lu\n", I_EVALSTR, GetLastError()));
+    im_log((aIMCTX, 1,"DSO_open: GetProcAddress didn't fine '%s': %lu\n", I_EVALSTR, GetLastError()));
     FreeLibrary(d_handle);
     return NULL;
   }
   if ((f = (void (*)(void *, void*))(void (*)(void))GetProcAddress(d_handle, I_INSTALL_TABLES)) == NULL) {
-    mm_log((1, "DSO_open: GetProcAddress didn't find '%s': %lu\n", I_INSTALL_TABLES, GetLastError()));
+    im_log((aIMCTX, 1, "DSO_open: GetProcAddress didn't find '%s': %lu\n", I_INSTALL_TABLES, GetLastError()));
     FreeLibrary(d_handle);
     return NULL;
   }
-  mm_log((1, "Calling install tables\n"));
+  im_log((aIMCTX, 1, "Calling install tables\n"));
   f(&symbol_table, &i_UTIL_table);
-  mm_log((1, "Call ok\n"));
+  im_log((aIMCTX, 1, "Call ok\n"));
   
   if ( (function_list = (func_ptr *)GetProcAddress(d_handle, I_FUNCTION_LIST)) == NULL) {
-    mm_log((1, "DSO_open: GetProcAddress didn't find '%s': %lu\n", I_FUNCTION_LIST, GetLastError()));
+    im_log((aIMCTX, 1, "DSO_open: GetProcAddress didn't find '%s': %lu\n", I_FUNCTION_LIST, GetLastError()));
     FreeLibrary(d_handle);
     return NULL;
   }
   if ( (dso_handle = (DSO_handle*)malloc(sizeof(DSO_handle))) == NULL) { /* checked 17jul05 tonyc */
-    mm_log( (1, "DSO_Open: out of memory\n") );
+    im_log( (aIMCTX, 1, "DSO_Open: out of memory\n") );
     FreeLibrary(d_handle);
     return NULL;
   }
@@ -174,7 +187,7 @@ DSO_open(char *file, char **evalstring) {
   }
   strcpy(dso_handle->filename,file);
 
-  mm_log( (1,"DSO_open <- %p\n",dso_handle) );
+  im_log( (aIMCTX, 1,"DSO_open <- %p\n",dso_handle) );
   return (void*)dso_handle;
 
 }
@@ -204,21 +217,22 @@ DSO_open(char* file,char** evalstring) {
   void *d_handle;
   func_ptr *function_list;
   DSO_handle *dso_handle;
+  dIMCTX;
 
   void (*f)(void *s,void *u); /* these will just have to be void for now */
   
   *evalstring=NULL;
 
-  mm_log( (1,"DSO_open(file '%s' (%p), evalstring %p)\n",
+  im_log( (aIMCTX, 1,"DSO_open(file '%s' (%p), evalstring %p)\n",
 	   file, file, evalstring) );
 
   if ( (d_handle = dlopen(file, RTLD_LAZY)) == NULL) {
-    mm_log( (1,"DSO_open: dlopen failed: %s.\n",dlerror()) );
+    im_log( (aIMCTX, 1,"DSO_open: dlopen failed: %s.\n",dlerror()) );
     return NULL;
   }
 
   if ( (*evalstring = (char *)dlsym(d_handle, I_EVALSTR)) == NULL) {
-    mm_log( (1,"DSO_open: dlsym didn't find '%s': %s.\n",I_EVALSTR,dlerror()) );
+    im_log( (aIMCTX, 1,"DSO_open: dlsym didn't find '%s': %s.\n",I_EVALSTR,dlerror()) );
     return NULL;
   }
 
@@ -241,23 +255,23 @@ DSO_open(char* file,char** evalstring) {
   */
 
   f = (void(*)(void *s,void *u))dlsym(d_handle, I_INSTALL_TABLES);
-  mm_log( (1,"DSO_open: going to dlsym '%s'\n", I_INSTALL_TABLES ));
+  im_log( (aIMCTX, 1,"DSO_open: going to dlsym '%s'\n", I_INSTALL_TABLES ));
   if ( (f = (void(*)(void *s,void *u))dlsym(d_handle, I_INSTALL_TABLES)) == NULL) {
-    mm_log( (1,"DSO_open: dlsym didn't find '%s': %s.\n",I_INSTALL_TABLES,dlerror()) );
+    im_log( (aIMCTX, 1,"DSO_open: dlsym didn't find '%s': %s.\n",I_INSTALL_TABLES,dlerror()) );
     dlclose(d_handle);
     return NULL;
   }
 
-  mm_log( (1,"Calling install_tables\n") );
+  im_log( (aIMCTX, 1,"Calling install_tables\n") );
   f(&symbol_table,&i_UTIL_table);
-  mm_log( (1,"Call ok.\n") );
+  im_log( (aIMCTX, 1,"Call ok.\n") );
 
   /* (*plugin_symtab)=&symbol_table;
      (*plugin_utiltab)=&i_UTIL_table; */
   
-  mm_log( (1,"DSO_open: going to dlsym '%s'\n", I_FUNCTION_LIST ));
+  im_log( (aIMCTX, 1,"DSO_open: going to dlsym '%s'\n", I_FUNCTION_LIST ));
   if ( (function_list=(func_ptr *)dlsym(d_handle, I_FUNCTION_LIST)) == NULL) {
-    mm_log( (1,"DSO_open: dlsym didn't find '%s': %s.\n",I_FUNCTION_LIST,dlerror()) );
+    im_log( (aIMCTX, 1,"DSO_open: dlsym didn't find '%s': %s.\n",I_FUNCTION_LIST,dlerror()) );
     dlclose(d_handle);
     return NULL;
   }
@@ -277,7 +291,7 @@ DSO_open(char* file,char** evalstring) {
   }
   strcpy(dso_handle->filename,file);
 
-  mm_log( (1,"DSO_open <- %p\n",dso_handle) );
+  im_log( (aIMCTX, 1,"DSO_open <- %p\n",dso_handle) );
   return (void*)dso_handle;
 }
 
@@ -285,7 +299,9 @@ undef_int
 DSO_close(void *ptr) {
   DSO_handle *handle;
   undef_int result;
-  mm_log((1,"DSO_close(ptr %p)\n",ptr));
+  dIMCTX;
+
+  im_log((aIMCTX, 1,"DSO_close(ptr %p)\n",ptr));
   handle=(DSO_handle*) ptr;
   result = !dlclose(handle->handle);
   free(handle->filename);
