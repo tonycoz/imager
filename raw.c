@@ -82,7 +82,7 @@ i_readraw_wiol(io_glue *ig, i_img_dim x, i_img_dim y, int datachannels, int stor
     return NULL;
   }
   
-  im = i_img_empty_ch(NULL,x,y,storechannels);
+  im = i_img_8_new(x, y, storechannels);
   if (!im)
     return NULL;
   

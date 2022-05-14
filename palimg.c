@@ -189,8 +189,9 @@ The conversion cannot be done for virtual images.
 */
 int
 i_img_to_rgb_inplace(i_img *im) {
-  i_img temp;
+  i_img *temp;
   dIMCTXim(im);
+  i_img sw;
 
   if (i_img_virtual(im))
     return 0;
@@ -198,15 +199,14 @@ i_img_to_rgb_inplace(i_img *im) {
   if (im->type == i_direct_type)
     return 1; /* trivial success */
 
-  i_img_empty_ch(&temp, im->xsize, im->ysize, im->channels);
-  i_img_rgb_convert(&temp, im);
+  temp = i_img_8_new(im->xsize, im->ysize, im->channels);
+  i_img_rgb_convert(temp, im);
 
   /* nasty hack */
-  i_img_exorcise(im);
-  *im = temp;
-
-  /* i_img_empty_ch() calls i_img_init() which takes a ref */
-  im_context_refdec(aIMCTX, "img_destroy");
+  sw = *im;
+  *im = *temp;
+  *temp = sw;
+  i_img_destroy(temp);
 
   return 1;
 }
@@ -254,7 +254,8 @@ i_img *i_img_to_pal(i_img *src, i_quantize *quant) {
 i_img *
 i_img_to_rgb(i_img *src) {
   dIMCTXim(src);
-  i_img *im = i_img_empty_ch(NULL, src->xsize, src->ysize, src->channels);
+  i_img *im = i_img_8_new(src->xsize, src->ysize, src->channels);
+
   i_img_rgb_convert(im, src);
 
   return im;
