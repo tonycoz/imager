@@ -755,7 +755,7 @@ i_readtga_wiol(io_glue *ig, int length) {
   
   img = mapped ? 
     i_img_pal_new(width, height, channels, 256) :
-    i_img_empty_ch(NULL, width, height, channels);
+    i_img_8_new(width, height, channels);
 
   if (!img) {
     if (idstring) 

@@ -250,7 +250,7 @@ i_bumpmap(i_img *im, i_img *bump, int channel, i_img_dim light_x, i_img_dim ligh
   double fZ;
   unsigned char px1, px2, py1, py2;
   dIMCTXim(im);
-  i_img new_im;
+  i_img *new_im;
 
   im_log((aIMCTX, 1, "i_bumpmap(im %p, add_im %p, channel %d, light(" i_DFp "), st %" i_DF ")\n",
 	  im, bump, channel, i_DFcp(light_x, light_y), i_DFc(st)));
@@ -264,7 +264,7 @@ i_bumpmap(i_img *im, i_img *bump, int channel, i_img_dim light_x, i_img_dim ligh
   mx = (bump->xsize <= im->xsize) ? bump->xsize : im->xsize;
   my = (bump->ysize <= im->ysize) ? bump->ysize : im->ysize;
 
-  i_img_empty_ch(&new_im, im->xsize, im->ysize, im->channels);
+  new_im = i_img_8_new(im->xsize, im->ysize, im->channels);
   
   aX = (light_x > (mx >> 1)) ? light_x : mx - light_x;
   aY = (light_y > (my >> 1)) ? light_y : my - light_y;
@@ -304,13 +304,13 @@ i_bumpmap(i_img *im, i_img *bump, int channel, i_img_dim light_x, i_img_dim ligh
       for(ch = 0; ch < im->channels; ch++)
 	dst_color.channel[ch] = (unsigned char) (float)(dst_color.channel[ch] * tZ);
       
-      i_ppix(&new_im, x, y, &dst_color);
+      i_ppix(new_im, x, y, &dst_color);
     }
   }
 
-  i_copyto(im, &new_im, 0, 0, im->xsize, im->ysize, 0, 0);
+  i_copyto(im, new_im, 0, 0, im->xsize, im->ysize, 0, 0);
   
-  i_img_exorcise(&new_im);
+  i_img_destroy(new_im);
 }
 
 
@@ -412,7 +412,7 @@ i_bumpmap_complex(i_img *im,
 		  i_color *Ia,
 		  i_color *Il,
 		  i_color *Is) {
-  i_img new_im;
+  i_img *new_im;
   
   i_img_dim x, y;
   int ch;
@@ -467,7 +467,7 @@ i_bumpmap_complex(i_img *im,
     normalize(&L);
   }
 
-  i_img_empty_ch(&new_im, im->xsize, im->ysize, im->channels);
+  new_im = i_img_8_new(im->xsize, im->ysize, im->channels);
 
   for(y = 0; y < im->ysize; y++) {		
     for(x = 0; x < im->xsize; x++) {
@@ -515,12 +515,12 @@ i_bumpmap_complex(i_img *im,
 	Scol.channel[ch] = 
 	  saturate( Ia->channel[ch] + cdc[ch]*Scol.channel[ch]*dp1 + csc[ch]*dp2 );
       
-      i_ppix(&new_im, x, y, &Scol);
+      i_ppix(new_im, x, y, &Scol);
     }
   }
   
-  i_copyto(im, &new_im, 0, 0, im->xsize, im->ysize, 0, 0);
-  i_img_exorcise(&new_im);
+  i_copyto(im, new_im, 0, 0, im->xsize, im->ysize, 0, 0);
+  i_img_destroy(new_im);
 }
 
 
