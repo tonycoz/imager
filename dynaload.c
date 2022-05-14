@@ -29,13 +29,21 @@ do_get_context(void) {
   return im_get_context();
 }
 
+static i_img *
+my_img_empty_ch(pIMCTX, i_img *im, i_img_dim x, i_img_dim y, int ch) {
+  if (im != NULL)
+    return NULL;
+
+  return im_img_8_new(aIMCTX, x, y, ch);
+}
+
 static symbol_table_t symbol_table=
   {
     i_has_format,
     ICL_set_internal,
     ICL_info,
     do_get_context,
-    im_img_empty_ch,
+    my_img_empty_ch,
     i_img_exorcise,
     i_img_info,
     i_img_setmask,

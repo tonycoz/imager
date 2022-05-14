@@ -66,58 +66,10 @@ I<ch> channels.
 i_img *
 im_img_8_new(pIMCTX, i_img_dim x,i_img_dim y,int ch) {
   i_img *im;
+  size_t bytes;
 
   im_log((aIMCTX, 1,"im_img_8_new(x %" i_DF ", y %" i_DF ", ch %d)\n",
 	  i_DFc(x), i_DFc(y), ch));
-
-  im = im_img_empty_ch(aIMCTX, NULL,x,y,ch);
-  
-  im_log((aIMCTX, 1,"(%p) <- IIM_new\n",im));
-  return im;
-}
-
-/* 
-=item i_img_empty(im, x, y)
-
-Re-new image reference (assumes 3 channels)
-
-   im - Image pointer
-   x - xsize of destination image
-   y - ysize of destination image
-
-**FIXME** what happens if a live image is passed in here?
-
-Should this just call i_img_empty_ch()?
-
-=cut
-*/
-
-i_img *
-im_img_empty(pIMCTX, i_img *im,i_img_dim x,i_img_dim y) {
-  im_log((aIMCTX, 1,"i_img_empty(*im %p, x %" i_DF ", y %" i_DF ")\n",
-	  im, i_DFc(x), i_DFc(y)));
-  return im_img_empty_ch(aIMCTX, im, x, y, 3);
-}
-
-/* 
-=item i_img_empty_ch(im, x, y, ch)
-
-Re-new image reference 
-
-   im - Image pointer
-   x  - xsize of destination image
-   y  - ysize of destination image
-   ch - number of channels
-
-=cut
-*/
-
-i_img *
-im_img_empty_ch(pIMCTX, i_img *im,i_img_dim x,i_img_dim y,int ch) {
-  size_t bytes;
-
-  im_log((aIMCTX, 1,"i_img_empty_ch(*im %p, x %" i_DF ", y %" i_DF ", ch %d)\n",
-	  im, i_DFc(x), i_DFc(y), ch));
 
   if (x < 1 || y < 1) {
     im_push_error(aIMCTX, 0, "Image sizes must be positive");
@@ -134,8 +86,7 @@ im_img_empty_ch(pIMCTX, i_img *im,i_img_dim x,i_img_dim y,int ch) {
     return NULL;
   }
 
-  if (im == NULL)
-    im = im_img_alloc(aIMCTX);
+  im = im_img_alloc(aIMCTX);
 
   im->vtbl = &vtable_8bit,
   i_tags_new(&im->tags);
@@ -155,7 +106,7 @@ im_img_empty_ch(pIMCTX, i_img *im,i_img_dim x,i_img_dim y,int ch) {
 
   im_img_init(aIMCTX, im);
   
-  im_log((aIMCTX, 1,"(%p) <- i_img_empty_ch\n",im));
+  im_log((aIMCTX, 1,"(%p) <- i_img_8_new\n",im));
   return im;
 }
 

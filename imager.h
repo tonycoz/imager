@@ -44,9 +44,6 @@ extern void i_rgb_to_hsv(i_color *color);
 extern void i_hsv_to_rgb(i_color *color);
 
 i_img *im_img_8_new(pIMCTX, i_img_dim x,i_img_dim y,int ch);
-#define i_img_empty(im, x, y) i_img_empty_ch((im), (x), (y), 3)
-i_img *im_img_empty_ch(pIMCTX, i_img *im,i_img_dim x,i_img_dim y,int ch);
-#define i_img_empty_ch(im, x, y, ch) im_img_empty_ch(aIMCTX, (im), (x), (y), (ch))
 void   i_img_exorcise(i_img *im);
 void   i_img_destroy(i_img *im);
 i_img *im_img_alloc(pIMCTX);

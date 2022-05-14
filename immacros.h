@@ -155,6 +155,37 @@ returns -1 and pushes an error.
 #define io_new_cb(p, readcb, writecb, seekcb, closecb, destroycb) \
   im_io_new_cb(aIMCTX, (p), (readcb), (writecb), (seekcb), (closecb), (destroycb))
 
+/*
+=item IM_DEPRECATED(name)
+
+Expands to an attribute on supported compilers that causes the
+compiler to produce a deprecation warning when the given function is
+called.
+
+  int foo(void) IM_DEPRECATED(foo);
+
+=item IM_DEPRECATED_MACRO(name)
+
+Intended for use in macros to warn that the given macro is deprecated.
+
+  #define foo() (IM_DEPRECATED_MACRO(foo), code for foo)
+
+=cut
+*/
+
+#if defined(__GNUC__) || defined(__clang__)
+
+#define IM_DEPRECATED(name) __attribute__((deprecated))
+#define IM_DO_PRAGMA(x)     (_Pragma #x)
+#define IM_DEPRECATED_MACRO(name)    IM_DO_PRAGMA(GCC warning (#name " is deprecated"))
+
+#else
+
+#define IM_DEPRECATED(name)
+#define IM_DEPRECATED_MACRO(name)    ((void)0)
+
+#endif
+
 #ifdef __cplusplus
 }
 #endif

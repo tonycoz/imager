@@ -1442,7 +1442,7 @@ read_direct_bmp(io_glue *ig, int xsize, int ysize, int bit_count,
     }
   }
   
-  im = i_img_empty(NULL, xsize, ysize);
+  im = i_img_8_new(xsize, ysize, 3);
   if (!im)
     return NULL;
 
