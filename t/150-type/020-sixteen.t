@@ -1,6 +1,6 @@
 #!perl -w
 use strict;
-use Test::More tests => 155;
+use Test::More;
 
 BEGIN { use_ok(Imager=>qw(:all :handy)) }
 
@@ -15,6 +15,7 @@ use Imager::Test qw(test_image is_image image_bounds_checks test_colorf_gpix
 my $im_g = Imager::i_img_16_new(100, 101, 1);
 
 is(Imager::i_img_getchannels($im_g), 1, "1 channel image channel count");
+is(Imager::i_img_extrachannels($im_g), 0, "no extra channels");
 ok(Imager::i_img_getmask($im_g) & 1, "1 channel image mask");
 ok(!Imager::i_img_virtual($im_g), "shouldn't be marked virtual");
 is(Imager::i_img_bits($im_g), 16, "1 channel image has bits == 16");
@@ -29,6 +30,7 @@ undef $im_g;
 my $im_rgb = Imager::i_img_16_new(100, 101, 3);
 
 is(Imager::i_img_getchannels($im_rgb), 3, "3 channel image channel count");
+is(Imager::i_img_extrachannels($im_rgb), 0, "no extra channels");
 ok((Imager::i_img_getmask($im_rgb) & 7) == 7, "3 channel image mask");
 is(Imager::i_img_bits($im_rgb), 16, "3 channel image bits");
 is(Imager::i_img_type($im_rgb), 0, "3 channel image type");
@@ -131,11 +133,11 @@ cmp_ok(Imager->errstr, '=~', qr/Image sizes must be positive/,
 
 ok(!Imager->new(xsize=>1, ysize=>1, bits=>16, channels=>0),
     "fail to create a zero channel image");
-cmp_ok(Imager->errstr, '=~', qr/channels must be between 1 and 4/,
+cmp_ok(Imager->errstr, '=~', qr/there must be extra channels if channels is zero/,
        "and correct error message");
 ok(!Imager->new(xsize=>1, ysize=>1, bits=>16, channels=>5),
     "fail to create a five channel image");
-cmp_ok(Imager->errstr, '=~', qr/channels must be between 1 and 4/,
+cmp_ok(Imager->errstr, '=~', qr/channels must be between 0 and 4/,
        "and correct error message");
 
 {
@@ -216,6 +218,15 @@ cmp_ok(Imager->errstr, '=~', qr/channels must be between 1 and 4/,
 { # bounds checks
   my $im = Imager->new(xsize => 10, ysize => 10, bits => 16);
   image_bounds_checks($im);
+}
+
+{
+  # extra channels
+  my $im = Imager->new(xsize => 10, ysize => 11, channels => 3, extrachannels => 5);
+  ok($im, "make image with extra channels");
+  is($im->channels, 3, "has 3 channels");
+  is($im->extrachannels, 5, "has 5 extra channels");
+  is($im->totalchannels, 8, "has 8 total channels");
 }
 
 {
@@ -361,6 +372,8 @@ Imager->close_log;
 unless ($ENV{IMAGER_KEEP_FILES}) {
   unlink "testout/t021sixteen.log";
 }
+
+done_testing();
 
 sub _get_error {
   my @errors = Imager::i_errors();
