@@ -8,7 +8,35 @@
 extern "C" {
 #endif
 
+/*
+=item MAXCHANNELS
+
+Maximum number of total color/alpha channels.
+
+=cut
+*/
+
 #define MAXCHANNELS 4
+
+/*
+=item MAXEXTRACHANNELS
+
+Maximum number of extra channels.
+
+=cut
+*/
+
+#define MAXEXTRACHANNELS 10
+
+/*
+=item MAXTOTALCHANNELS
+
+Maximum of total channels, including color, alpha and extra channels.
+
+=cut
+*/
+
+#define MAXTOTALCHANNELS 14
 
 /*
 =item im_context_t
@@ -180,7 +208,7 @@ typedef struct {
   char *name; /* name of a given tag */
   int code; /* number of a given tag, deprecated */
   char *data; /* value of a given tag if it's not an int, may be NULL */
-  int size; /* size of the data */
+  size_t size; /* size of the data */
   int idata; /* value of a given tag if data is NULL */
 } i_img_tag;
 
@@ -399,6 +427,7 @@ C<context> - the Imager API context this image belongs to.
 struct i_img_ {
   const i_img_vtable *vtbl;
   int channels;
+  int extrachannels;
   i_img_dim xsize,ysize;
   size_t bytes;
   unsigned int ch_mask;

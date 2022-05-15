@@ -56,7 +56,8 @@ extern void i_get_combine(int combine, i_fill_combine_f *, i_fill_combinef_f *);
 extern UTIL_table_t i_UTIL_table;
 
 /* test if all channels are writable */
-#define I_ALL_CHANNELS_WRITABLE(im) (((im)->ch_mask & 0xF) == 0xf)
+#define I_ALL_CHANNEL_MASK(im) ((1U << ((im)->channels + (im)->extrachannels))-1U)
+#define I_ALL_CHANNELS_WRITABLE(im) (((im)->ch_mask & I_ALL_CHANNEL_MASK(im)) == I_ALL_CHANNEL_MASK(im))
 
 typedef struct i_int_hline_seg_tag {
   i_img_dim minx, x_limit;

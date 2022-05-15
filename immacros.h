@@ -119,6 +119,8 @@ returns -1 and pushes an error.
 #define i_img_virtual(im) ((im)->isvirtual)
 #define i_img_type(im) ((im)->type)
 #define i_img_bits(im) ((im)->bits)
+#define i_img_extrachannels(im) ((im)->extrachannels)
+#define i_img_totalchannels(im) ((im)->channels + (im)->extrachannels)
 
 #define pIMCTX im_context_t my_im_ctx
 
@@ -135,7 +137,16 @@ returns -1 and pushes an error.
 #define i_img_8_new(xsize, ysize, channels) im_img_8_new(aIMCTX, (xsize), (ysize), (channels))
 #define i_img_16_new(xsize, ysize, channels) im_img_16_new(aIMCTX, (xsize), (ysize), (channels))
 #define i_img_double_new(xsize, ysize, channels) im_img_double_new(aIMCTX, (xsize), (ysize), (channels))
-#define i_img_pal_new(xsize, ysize, channels, maxpal) im_img_pal_new(aIMCTX, (xsize), (ysize), (channels), (maxpal))
+
+#define i_img_8_new_extra(xsize, ysize, channels, extra)                      \
+  im_img_8_new_extra(aIMCTX, (xsize), (ysize), (channels), (extra))
+#define i_img_16_new_extra(xsize, ysize, channels, extra)                     \
+  im_img_16_new_extra(aIMCTX, (xsize), (ysize), (channels), (extra))
+#define i_img_double_new_extra(xsize, ysize, channels, extra)                 \
+  im_img_double_new_extra(aIMCTX, (xsize), (ysize), (channels), (extra))
+
+#define i_img_pal_new(xsize, ysize, channels, maxpal) \
+  im_img_pal_new(aIMCTX, (xsize), (ysize), (channels), (maxpal))
 
 #define i_img_alloc() im_img_alloc(aIMCTX)
 #define i_img_init(im) im_img_init(aIMCTX, im)

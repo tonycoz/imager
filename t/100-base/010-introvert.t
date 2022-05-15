@@ -27,6 +27,8 @@ my $f_green = Imager::Color::Float->new(0, 1.0, 0);
 my $f_blue = Imager::Color::Float->new(0, 0, 1.0);
 
 is(Imager::i_img_getchannels($im_g), 1, "1 channel image channel count");
+is(Imager::i_img_extrachannels($im_g), 0, "0 extra channels");
+
 ok(Imager::i_img_getmask($im_g) & 1, "1 channel image mask");
 ok(!Imager::i_img_virtual($im_g), "1 channel image not virtual");
 is(Imager::i_img_bits($im_g), 8, "1 channel image has 8 bits/sample");
@@ -48,6 +50,15 @@ is(Imager::i_img_bits($im_rgb), 8, "3 channel image has 8 bits/sample");
 is(Imager::i_img_type($im_rgb), 0, "3 channel image is direct");
 
 undef $im_rgb;
+
+{
+  my $im_extra = Imager::i_img_8_new_extra(100, 101, 3, 5);
+  ok($im_extra, "make an image with extra channels");
+  is(Imager::i_img_getchannels($im_extra), 3, "still has 3 normal channels");
+  is(Imager::i_img_extrachannels($im_extra), 5, "has 5 extra channels");
+  is(Imager::i_img_totalchannels($im_extra), 8, "has 8 total channels");
+  ok(!Imager::i_img_virtual($im_extra), "it isn't virtual");
+}
 
 my $im_pal = Imager::i_img_pal_new(100, 101, 3, 256);
 
@@ -271,11 +282,11 @@ cmp_ok(Imager->errstr, '=~', qr/Image sizes must be positive/,
 
 ok(!Imager->new(xsize=>1, ysize=>1, channels=>0),
    "fail to create a zero channel image");
-cmp_ok(Imager->errstr, '=~', qr/channels must be between 1 and 4/,
+cmp_ok(Imager->errstr, '=~', qr/there must be extra channels if channels is zero/,
        "out of range channel message check");
 ok(!Imager->new(xsize=>1, ysize=>1, channels=>5),
    "fail to create a five channel image");
-cmp_ok(Imager->errstr, '=~', qr/channels must be between 1 and 4/,
+cmp_ok(Imager->errstr, '=~', qr/0 and 4/,
        "out of range channel message check");
 
 {
@@ -1189,14 +1200,19 @@ SKIP:
      [ "rgb",   3, undef ],
      [ "rgba",  3, 3     ],
     );
-  for my $test (@tests) {
-    my ($model, $color_channels, $alpha) = @$test;
-    my $im = Imager->new(model => $model, xsize => 10, ysize => 10)
-      or die "Cannot create $model image:", Imager->errstr;
-    ok($im, "make a $model image via model");
-    is($im->colormodel, $model, "check colormodel is $model");
-    is($im->alphachannel, $alpha, "check alphachannel");
-    is($im->colorchannels, $color_channels, "check colorchannels");
+  for my $extra (0, 5) {
+    for my $test (@tests) {
+      my ($model, $color_channels, $alpha) = @$test;
+      my $im = Imager->new(model => $model, xsize => 10, ysize => 10, extrachannels => $extra)
+        or die "Cannot create $model image:", Imager->errstr;
+      ok($im, "make a $model image via model");
+      is($im->colormodel, $model, "check colormodel is $model");
+      is($im->alphachannel, $alpha, "$model: check alphachannel");
+      is($im->colorchannels, $color_channels, "$model: check colorchannels");
+      is($im->channels, $color_channels + defined($alpha), "$model($extra): check channels");
+      is($im->extrachannels, $extra, "$model($extra): check extra channels");
+      is($im->totalchannels, $color_channels + defined($alpha) + $extra, "$model($extra): check totalchannels");
+    }
   }
 }
 

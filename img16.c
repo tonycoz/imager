@@ -160,22 +160,59 @@ Also callable as C<i_img_16_new(x, y, ch)>
 
 i_img *
 im_img_16_new(pIMCTX, i_img_dim x, i_img_dim y, int ch) {
+  return im_img_16_new_extra(aIMCTX, x, y, ch, 0);
+}
+
+/*
+=item im_img_16_new_extra(ctx, x, y, ch)
+X<im_img_16_new_extra API>X<i_img_16_new_extra API>
+=category Image creation/destruction
+=synopsis i_img *img = im_img_16_new_extra(aIMCTX, width, height, channels);
+=synopsis i_img *img = i_img_16_new_extra(width, height, channels);
+
+Create a new 16-bit/sample image.
+
+Returns the image on success, or NULL on failure.
+
+Also callable as C<i_img_16_new_extra(x, y, ch)>
+
+=cut
+*/
+
+i_img *
+im_img_16_new_extra(pIMCTX, i_img_dim x, i_img_dim y, int ch, int extra) {
   i_img *im;
   size_t bytes, line_bytes;
+  int totalch;
 
-  im_log((aIMCTX, 1,"i_img_16_new(x %" i_DF ", y %" i_DF ", ch %d)\n",
-	  i_DFc(x), i_DFc(y), ch));
+  im_log((aIMCTX, 1,"i_img_16_new_extra(x %" i_DF ", y %" i_DF ", ch %d)\n",
+	  i_DFc(x), i_DFc(y), ch, extra));
+
+  im_clear_error(aIMCTX);
 
   if (x < 1 || y < 1) {
     im_push_error(aIMCTX, 0, "Image sizes must be positive");
     return NULL;
   }
-  if (ch < 1 || ch > MAXCHANNELS) {
-    im_push_errorf(aIMCTX, 0, "channels must be between 1 and %d", MAXCHANNELS);
+  if (ch < 0 || ch > MAXCHANNELS) {
+    im_push_errorf(aIMCTX, 0, "channels must be between 0 and %d", MAXCHANNELS);
     return NULL;
   }
-  bytes =  (i_img_dim_u)x * (i_img_dim_u)y * (unsigned)ch * 2U;
-  if (bytes / y / ch / 2 != x) {
+  if (ch == 0 && extra == 0) {
+    im_push_error(aIMCTX, 0, "there must be extra channels if channels is zero");
+    return NULL;
+  }
+  if (extra < 0 || extra > MAXEXTRACHANNELS) {
+    im_push_errorf(aIMCTX, 0, "extrachannels must be between 0 and %d", MAXEXTRACHANNELS);
+    return NULL;
+  }
+  if (ch + extra > MAXTOTALCHANNELS) {
+    im_push_errorf(aIMCTX, 0, "channels + extra channels must be no more than %d", MAXTOTALCHANNELS);
+    return NULL;
+  }
+  totalch = ch + extra;
+  bytes =  (i_img_dim_u)x * (i_img_dim_u)y * (i_img_dim_u)ch * 2U;
+  if (bytes / (i_img_dim_u)y / (i_img_dim_u)ch / 2U != (i_img_dim_u)x) {
     im_push_errorf(aIMCTX, 0, "integer overflow calculating image allocation");
     return NULL;
   }
@@ -190,11 +227,14 @@ im_img_16_new(pIMCTX, i_img_dim x, i_img_dim y, int ch) {
   }
 
   im = im_img_alloc(aIMCTX);
+  if (im == NULL)
+    return NULL;
   im->vtbl = &vtable_16bit;
   i_tags_new(&im->tags);
   im->xsize = x;
   im->ysize = y;
   im->channels = ch;
+  im->extrachannels = extra;
   im->ch_mask = ~0U;
   im->bits = i_16_bits;
   im->type = i_direct_type;
@@ -245,11 +285,12 @@ i_img_to_rgb16(i_img *im) {
 static int i_ppix_d16(i_img *im, i_img_dim x, i_img_dim y, const i_color *val) {
   i_img_dim off;
   int ch;
+  unsigned totalch = im->channels + im->extrachannels;
 
   if (x < 0 || x >= im->xsize || y < 0 || y >= im->ysize) 
     return -1;
 
-  off = (x + y * im->xsize) * im->channels;
+  off = (x + y * im->xsize) * totalch;
   if (I_ALL_CHANNELS_WRITABLE(im)) {
     for (ch = 0; ch < im->channels; ++ch)
       STORE8as16(im->idata, off+ch, val->channel[ch]);
@@ -266,25 +307,28 @@ static int i_ppix_d16(i_img *im, i_img_dim x, i_img_dim y, const i_color *val) {
 static int i_gpix_d16(i_img *im, i_img_dim x, i_img_dim y, i_color *val) {
   i_img_dim off;
   int ch;
+  unsigned totalch = im->channels + im->extrachannels;
 
   if (x < 0 || x >= im->xsize || y < 0 || y >= im->ysize) 
     return -1;
 
-  off = (x + y * im->xsize) * im->channels;
+  off = (x + y * im->xsize) * totalch;
   for (ch = 0; ch < im->channels; ++ch)
     val->channel[ch] = GET16as8(im->idata, off+ch);
 
   return 0;
 }
 
-static int i_ppixf_d16(i_img *im, i_img_dim x, i_img_dim y, const i_fcolor *val) {
+static int
+i_ppixf_d16(i_img *im, i_img_dim x, i_img_dim y, const i_fcolor *val) {
   i_img_dim off;
   int ch;
+  unsigned totalch = im->channels + im->extrachannels;
 
   if (x < 0 || x >= im->xsize || y < 0 || y >= im->ysize) 
     return -1;
 
-  off = (x + y * im->xsize) * im->channels;
+  off = (x + y * im->xsize) * totalch;
   if (I_ALL_CHANNELS_WRITABLE(im)) {
     for (ch = 0; ch < im->channels; ++ch)
       STORE16(im->idata, off+ch, SampleFTo16(val->channel[ch]));
@@ -298,34 +342,39 @@ static int i_ppixf_d16(i_img *im, i_img_dim x, i_img_dim y, const i_fcolor *val)
   return 0;
 }
 
-static int i_gpixf_d16(i_img *im, i_img_dim x, i_img_dim y, i_fcolor *val) {
+static int
+i_gpixf_d16(i_img *im, i_img_dim x, i_img_dim y, i_fcolor *val) {
   i_img_dim off;
   int ch;
+  unsigned totalch = im->channels + im->extrachannels;
 
   if (x < 0 || x >= im->xsize || y < 0 || y >= im->ysize) 
     return -1;
 
-  off = (x + y * im->xsize) * im->channels;
+  off = (x + y * im->xsize) * totalch;
   for (ch = 0; ch < im->channels; ++ch)
     val->channel[ch] = Sample16ToF(GET16(im->idata, off+ch));
 
   return 0;
 }
 
-static i_img_dim i_glin_d16(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, i_color *vals) {
+static i_img_dim
+i_glin_d16(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, i_color *vals) {
   int ch;
   i_img_dim count, i;
   i_img_dim off;
+  unsigned totalch = im->channels + im->extrachannels;
+
   if (y >=0 && y < im->ysize && l < im->xsize && l >= 0) {
     if (r > im->xsize)
       r = im->xsize;
-    off = (l+y*im->xsize) * im->channels;
+    off = (l+y*im->xsize) * totalch;
     count = r - l;
     for (i = 0; i < count; ++i) {
       for (ch = 0; ch < im->channels; ++ch) {
-	vals[i].channel[ch] = GET16as8(im->idata, off);
-        ++off;
+	vals[i].channel[ch] = GET16as8(im->idata, off+ch);
       }
+      off += totalch;
     }
     return count;
   }
@@ -334,30 +383,33 @@ static i_img_dim i_glin_d16(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, i_
   }
 }
 
-static i_img_dim i_plin_d16(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, const i_color *vals) {
+static i_img_dim
+i_plin_d16(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, const i_color *vals) {
   int ch;
   i_img_dim count, i;
   i_img_dim off;
+  unsigned totalch = im->channels + im->extrachannels;
+
   if (y >=0 && y < im->ysize && l < im->xsize && l >= 0) {
     if (r > im->xsize)
       r = im->xsize;
-    off = (l+y*im->xsize) * im->channels;
+    off = (l+y*im->xsize) * totalch;
     count = r - l;
     if (I_ALL_CHANNELS_WRITABLE(im)) {
       for (i = 0; i < count; ++i) {
 	for (ch = 0; ch < im->channels; ++ch) {
-	  STORE8as16(im->idata, off, vals[i].channel[ch]);
-	  ++off;
+	  STORE8as16(im->idata, off+ch, vals[i].channel[ch]);
 	}
+        off += totalch;
       }
     }
     else {
       for (i = 0; i < count; ++i) {
 	for (ch = 0; ch < im->channels; ++ch) {
 	  if (im->ch_mask & (1 << ch))
-	    STORE8as16(im->idata, off, vals[i].channel[ch]);
-	  ++off;
+	    STORE8as16(im->idata, off+ch, vals[i].channel[ch]);
 	}
+        off += totalch;
       }
     }
     return count;
@@ -367,20 +419,23 @@ static i_img_dim i_plin_d16(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, co
   }
 }
 
-static i_img_dim i_glinf_d16(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, i_fcolor *vals) {
+static i_img_dim
+i_glinf_d16(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, i_fcolor *vals) {
   int ch;
   i_img_dim count, i;
   i_img_dim off;
+  unsigned totalch = im->channels + im->extrachannels;
+
   if (y >=0 && y < im->ysize && l < im->xsize && l >= 0) {
     if (r > im->xsize)
       r = im->xsize;
-    off = (l+y*im->xsize) * im->channels;
+    off = (l+y*im->xsize) * totalch;
     count = r - l;
     for (i = 0; i < count; ++i) {
       for (ch = 0; ch < im->channels; ++ch) {
-	vals[i].channel[ch] = Sample16ToF(GET16(im->idata, off));
-        ++off;
+	vals[i].channel[ch] = Sample16ToF(GET16(im->idata, off+ch));
       }
+      off += totalch;
     }
     return count;
   }
@@ -389,30 +444,33 @@ static i_img_dim i_glinf_d16(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, i
   }
 }
 
-static i_img_dim i_plinf_d16(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, const i_fcolor *vals) {
+static i_img_dim
+i_plinf_d16(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, const i_fcolor *vals) {
   int ch;
   i_img_dim count, i;
   i_img_dim off;
+  unsigned totalch = im->channels + im->extrachannels;
+
   if (y >=0 && y < im->ysize && l < im->xsize && l >= 0) {
     if (r > im->xsize)
       r = im->xsize;
-    off = (l+y*im->xsize) * im->channels;
+    off = (l+y*im->xsize) * totalch;
     count = r - l;
     if (I_ALL_CHANNELS_WRITABLE(im)) {
       for (i = 0; i < count; ++i) {
 	for (ch = 0; ch < im->channels; ++ch) {
-	  STORE16(im->idata, off, SampleFTo16(vals[i].channel[ch]));
-	  ++off;
+	  STORE16(im->idata, off+ch, SampleFTo16(vals[i].channel[ch]));
 	}
+        off += totalch;
       }
     }
     else {
       for (i = 0; i < count; ++i) {
 	for (ch = 0; ch < im->channels; ++ch) {
 	  if (im->ch_mask & (1 << ch))
-	    STORE16(im->idata, off, SampleFTo16(vals[i].channel[ch]));
-	  ++off;
+	    STORE16(im->idata, off+ch, SampleFTo16(vals[i].channel[ch]));
 	}
+        off += totalch;
       }
     }
     return count;
@@ -422,23 +480,25 @@ static i_img_dim i_plinf_d16(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, c
   }
 }
 
-static i_img_dim i_gsamp_d16(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, i_sample_t *samps, 
-                       int const *chans, int chan_count) {
+static i_img_dim
+i_gsamp_d16(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, i_sample_t *samps, 
+            int const *chans, int chan_count) {
   int ch;
   i_img_dim count, i, w;
   i_img_dim off;
+  unsigned totalch = im->channels + im->extrachannels;
 
   if (y >=0 && y < im->ysize && l < im->xsize && l >= 0) {
     if (r > im->xsize)
       r = im->xsize;
-    off = (l+y*im->xsize) * im->channels;
+    off = (l+y*im->xsize) * totalch;
     w = r - l;
     count = 0;
 
     if (chans) {
       /* make sure we have good channel numbers */
       for (ch = 0; ch < chan_count; ++ch) {
-        if (chans[ch] < 0 || chans[ch] >= im->channels) {
+        if (chans[ch] < 0 || chans[ch] >= totalch) {
 	  dIMCTXim(im);
           im_push_errorf(aIMCTX, 0, "No channel %d in this image", chans[ch]);
           return 0;
@@ -449,11 +509,11 @@ static i_img_dim i_gsamp_d16(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, i
           *samps++ = GET16as8(im->idata, off+chans[ch]);
           ++count;
         }
-        off += im->channels;
+        off += totalch;
       }
     }
     else {
-      if (chan_count <= 0 || chan_count > im->channels) {
+      if (chan_count <= 0 || chan_count > totalch) {
 	dIMCTXim(im);
 	im_push_errorf(aIMCTX, 0, "chan_count %d out of range, must be >0, <= channels", 
 		      chan_count);
@@ -464,7 +524,7 @@ static i_img_dim i_gsamp_d16(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, i
           *samps++ = GET16as8(im->idata, off+ch);
           ++count;
         }
-        off += im->channels;
+        off += totalch;
       }
     }
 
@@ -480,18 +540,19 @@ static i_img_dim i_gsampf_d16(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, 
   int ch;
   i_img_dim count, i, w;
   i_img_dim off;
+  int totalch = im->channels + im->extrachannels;
 
   if (y >=0 && y < im->ysize && l < im->xsize && l >= 0) {
     if (r > im->xsize)
       r = im->xsize;
-    off = (l+y*im->xsize) * im->channels;
+    off = (l+y*im->xsize) * totalch;
     w = r - l;
     count = 0;
 
     if (chans) {
       /* make sure we have good channel numbers */
       for (ch = 0; ch < chan_count; ++ch) {
-        if (chans[ch] < 0 || chans[ch] >= im->channels) {
+        if (chans[ch] < 0 || chans[ch] >= totalch) {
 	  dIMCTXim(im);
           im_push_errorf(aIMCTX, 0, "No channel %d in this image", chans[ch]);
           return 0;
@@ -502,11 +563,11 @@ static i_img_dim i_gsampf_d16(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, 
           *samps++ = Sample16ToF(GET16(im->idata, off+chans[ch]));
           ++count;
         }
-        off += im->channels;
+        off += totalch;
       }
     }
     else {
-      if (chan_count <= 0 || chan_count > im->channels) {
+      if (chan_count <= 0 || chan_count > totalch) {
 	dIMCTXim(im);
 	im_push_errorf(aIMCTX, 0, "chan_count %d out of range, must be >0, <= channels", 
 		      chan_count);
@@ -517,7 +578,7 @@ static i_img_dim i_gsampf_d16(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, 
           *samps++ = Sample16ToF(GET16(im->idata, off+ch));
           ++count;
         }
-        off += im->channels;
+        off += totalch;
       }
     }
 
@@ -540,16 +601,18 @@ i_gsamp_bits_d16(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, unsigned *sam
   }
 
   if (y >=0 && y < im->ysize && l < im->xsize && l >= 0) {
+    unsigned totalch = im->channels + im->extrachannels;
+
     if (r > im->xsize)
       r = im->xsize;
-    off = (l+y*im->xsize) * im->channels;
+    off = (l+y*im->xsize) * totalch;
     w = r - l;
     count = 0;
 
     if (chans) {
       /* make sure we have good channel numbers */
       for (ch = 0; ch < chan_count; ++ch) {
-        if (chans[ch] < 0 || chans[ch] >= im->channels) {
+        if (chans[ch] < 0 || chans[ch] >= totalch) {
 	  dIMCTXim(im);
           im_push_errorf(aIMCTX, 0, "No channel %d in this image", chans[ch]);
           return -1;
@@ -560,11 +623,11 @@ i_gsamp_bits_d16(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, unsigned *sam
           *samps++ = GET16(im->idata, off+chans[ch]);
           ++count;
         }
-        off += im->channels;
+        off += totalch;
       }
     }
     else {
-      if (chan_count <= 0 || chan_count > im->channels) {
+      if (chan_count <= 0 || chan_count > totalch) {
 	dIMCTXim(im);
 	i_push_error(0, "Invalid channel count");
 	return -1;
@@ -574,7 +637,7 @@ i_gsamp_bits_d16(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, unsigned *sam
           *samps++ = GET16(im->idata, off+ch);
           ++count;
         }
-        off += im->channels;
+        off += totalch;
       }
     }
 
@@ -601,16 +664,18 @@ i_psamp_bits_d16(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, unsigned cons
   }
 
   if (y >=0 && y < im->ysize && l < im->xsize && l >= 0) {
+    int totalch = im->channels + im->extrachannels;
+
     if (r > im->xsize)
       r = im->xsize;
-    off = (l+y*im->xsize) * im->channels;
+    off = (l+y*im->xsize) * totalch;
     w = r - l;
     count = 0;
 
     if (chans) {
       /* make sure we have good channel numbers */
       for (ch = 0; ch < chan_count; ++ch) {
-        if (chans[ch] < 0 || chans[ch] >= im->channels) {
+        if (chans[ch] < 0 || chans[ch] >= totalch) {
 	  dIMCTXim(im);
           im_push_errorf(aIMCTX, 0, "No channel %d in this image", chans[ch]);
           return -1;
@@ -623,11 +688,11 @@ i_psamp_bits_d16(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, unsigned cons
 	  ++samps;
 	  ++count;
         }
-        off += im->channels;
+        off += totalch;
       }
     }
     else {
-      if (chan_count <= 0 || chan_count > im->channels) {
+      if (chan_count <= 0 || chan_count > totalch) {
 	dIMCTXim(im);
 	i_push_error(0, "Invalid channel count");
 	return -1;
@@ -639,7 +704,7 @@ i_psamp_bits_d16(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, unsigned cons
 	  ++samps;
           ++count;
         }
-        off += im->channels;
+        off += totalch;
       }
     }
 
@@ -673,10 +738,12 @@ i_psamp_d16(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y,
   i_img_dim count, i, w;
 
   if (y >=0 && y < im->ysize && l < im->xsize && l >= 0) {
+    unsigned totalch = im->channels + im->extrachannels;
     i_img_dim offset;
+
     if (r > im->xsize)
       r = im->xsize;
-    offset = (l+y*im->xsize) * im->channels;
+    offset = (l+y*im->xsize) * totalch;
     w = r - l;
     count = 0;
 
@@ -685,7 +752,7 @@ i_psamp_d16(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y,
       /* and test if all channels specified are in the mask */
       int all_in_mask = 1;
       for (ch = 0; ch < chan_count; ++ch) {
-        if (chans[ch] < 0 || chans[ch] >= im->channels) {
+        if (chans[ch] < 0 || chans[ch] >= totalch) {
 	  dIMCTXim(im);
           im_push_errorf(aIMCTX, 0, "No channel %d in this image", chans[ch]);
           return -1;
@@ -700,7 +767,7 @@ i_psamp_d16(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y,
 	    ++samps;
 	    ++count;
 	  }
-	  offset += im->channels;
+	  offset += totalch;
 	}
       }
       else {
@@ -711,12 +778,12 @@ i_psamp_d16(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y,
 	    ++samps;
 	    ++count;
 	  }
-	  offset += im->channels;
+	  offset += totalch;
 	}
       }
     }
     else {
-      if (chan_count <= 0 || chan_count > im->channels) {
+      if (chan_count <= 0 || chan_count > totalch) {
 	dIMCTXim(im);
 	im_push_errorf(aIMCTX, 0, "chan_count %d out of range, must be >0, <= channels", 
 		      chan_count);
@@ -731,7 +798,7 @@ i_psamp_d16(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y,
           ++count;
 	  mask <<= 1;
         }
-        offset += im->channels;
+        offset += totalch;
       }
     }
 
@@ -766,9 +833,11 @@ i_psampf_d16(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y,
 
   if (y >=0 && y < im->ysize && l < im->xsize && l >= 0) {
     i_img_dim offset;
+    int totalch = im->channels + im->extrachannels;
+
     if (r > im->xsize)
       r = im->xsize;
-    offset = (l+y*im->xsize) * im->channels;
+    offset = (l + y * im->xsize) * totalch;
     w = r - l;
     count = 0;
 
@@ -777,7 +846,7 @@ i_psampf_d16(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y,
       /* and test if all channels specified are in the mask */
       int all_in_mask = 1;
       for (ch = 0; ch < chan_count; ++ch) {
-        if (chans[ch] < 0 || chans[ch] >= im->channels) {
+        if (chans[ch] < 0 || chans[ch] >= totalch) {
 	  dIMCTXim(im);
           im_push_errorf(aIMCTX, 0, "No channel %d in this image", chans[ch]);
           return -1;
@@ -793,7 +862,7 @@ i_psampf_d16(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y,
 	    ++samps;
 	    ++count;
 	  }
-	  offset += im->channels;
+	  offset += totalch;
 	}
       }
       else {
@@ -806,12 +875,12 @@ i_psampf_d16(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y,
 	    ++samps;
 	    ++count;
 	  }
-	  offset += im->channels;
+	  offset += totalch;
 	}
       }
     }
     else {
-      if (chan_count <= 0 || chan_count > im->channels) {
+      if (chan_count <= 0 || chan_count > totalch) {
 	dIMCTXim(im);
 	im_push_errorf(aIMCTX, 0, "chan_count %d out of range, must be >0, <= channels", 
 		      chan_count);
@@ -828,7 +897,7 @@ i_psampf_d16(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y,
           ++count;
 	  mask <<= 1;
         }
-        offset += im->channels;
+        offset += totalch;
       }
     }
 

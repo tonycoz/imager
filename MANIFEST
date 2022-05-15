@@ -319,12 +319,16 @@ t/000-load.t			Test Imager modules can be loaded
 t/100-base/010-introvert.t	Test image inspection
 t/100-base/020-color.t		Test Imager::Color
 t/100-base/030-countc.t		Test getcolorcount() etc
+t/100-base/040-extra8.t
 t/100-base/800-tr18561.t	Regression test for RT #18561
 t/100-base/801-tr18561b.t	Regression test for RT #18561
 t/150-type/020-sixteen.t	Test 16-bit/sample images
 t/150-type/030-double.t		Test double/sample images
 t/150-type/040-palette.t	Test paletted images
 t/150-type/100-masked.t		Test masked images
+t/150-type/300-extra16.t	Test extra samples for 16-bit images
+t/150-type/310-extradbl.t	Test extra samples for double images
+t/150-type/320-extramask.t	Test extra samples for masked images
 t/200-file/010-iolayer.t	Test Imager I/O layer objects
 t/200-file/100-files.t		Format independent file tests
 t/200-file/200-nojpeg.t		Test handling when jpeg not available

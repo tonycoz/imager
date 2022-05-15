@@ -29,6 +29,7 @@ our @EXPORT_OK =
      is_fcolor1
      is_fcolor3
      is_fcolor4
+     is_arrayf
      color_cmp
      is_image
      is_imaged
@@ -42,6 +43,7 @@ our @EXPORT_OK =
      can_test_threads
      std_font_tests
      std_font_test_count
+     extrachannel_tests
      );
 
 sub diff_text_with_nul {
@@ -298,6 +300,50 @@ END_DIAG
   }
 
   return 1;
+}
+
+sub is_arrayf {
+  my ($got, $expect, $name, $epsilon) = @_;
+  my $tb = Test::Builder->new;
+
+  $epsilon ||= 1e-6;
+  my $max = @$got > @$expect ? $#$got : $#$expect;
+  my $i = 0;
+  my $ok = 1;
+  my $diag;
+  while ($i < $max && $ok) {
+    if ($i < @$got && $i < @$expect) {
+      my $diff = $expect->[$i] - $got->[$i];
+      if (abs($diff) > $epsilon) {
+        $diag = <<EOS;
+      \$got[$i] = $got->[$i]
+ \$expected[$i] = $expect->[$i]
+    Difference: $diff
+EOS
+        $ok = 0;
+      }
+    }
+    elsif ($i < @$got) {
+      $diag = <<EOS;
+      \$got[$i] = $got->[$i]
+ \$expected[$i] = Does not exist
+EOS
+      $ok = 0;
+    }
+    else {
+      $diag = <<EOS;
+      \$got[$i] = Does not exist
+ \$expected[$i] = $expect->[$i]
+EOS
+      $ok = 0;
+    }
+    ++$i;
+  }
+
+  $ok = $tb->ok($ok, $name);
+  diag $diag if $diag;
+
+  return $ok;
 }
 
 sub test_image_raw {
@@ -892,6 +938,57 @@ sub std_font_tests {
   }
 }
 
+sub extrachannel_tests {
+  my ($im) = @_;
+
+  is($im->channels, 3, "3 channels");
+  is($im->extrachannels, 5, "5 extra channels");
+  is($im->totalchannels, 8, "8 total channels");
+  my $c1 = Imager::Color->new(128, 255, 64);
+  my @samps = ( 64, 68, 72, 128, 132, 136, 140, 144 );
+  is($im->setsamples(x => 3, y => 4, channels => [ 0 .. 7 ], data => \@samps),
+     8, "set all the samples");
+  is_deeply([ $im->getsamples(x => 3, y => 4, width => 1, channels => [ 0 .. 7 ]) ], \@samps,
+            "check they're set");
+  ok($im->setpixel(x => 3, y => 4, color => $c1),
+     "set a pixel");
+  is_color3($im->getpixel(x => 3, y => 4), 128, 255, 64,
+            "check pixel set");
+  is_deeply([ $im->getsamples(x => 3, y => 4, width => 1, channels => [ 0 .. 7 ]) ],
+            [ 128, 255, 64, @samps[3 .. 7] ],
+            "check color set and extras untouched");
+
+  my $c2 = Imager::Color->new(66, 130, 250);
+  is($im->setscanline(x => 2, y => 4, pixels => [ $c1, $c2 ]), 2,
+     "setscanline()");
+  is_deeply([ $im->getsamples(x => 3, y => 4, width => 1, channels => [ 0 .. 7 ]) ],
+            [ 66, 130, 250, @samps[3 .. 7] ],
+            "check color set by setscanline and extras untouched");
+  my @col = $im->getscanline(x => 2, y => 4, width => 2);
+  is(@col, 2, "getscanline()");
+  is_color3($col[0], 128, 255, 64, "check first set");
+  is_color3($col[1], 66, 130, 250,  "check second set");
+
+  my $cf1 = $c1->as_float;
+  my @fsamps = map $_ / 255, @samps;
+  is($im->setsamples(x => 5, y => 6, channels => [ 0 .. 7 ], data => \@fsamps, type => "float"),
+     8, "set all the samples (float)");
+  is_deeply([ $im->getsamples(x => 5, y => 6, width => 1, channels => [ 0 .. 7 ]) ], \@samps,
+            "check they're set via float, fetched as 8");
+  my @gf = $im->getsamples(x => 5, y => 6, width => 1, channels => [ 0 .. 7 ], type => "float");
+  is_arrayf(\@gf, \@fsamps, "check they're set via float, fetched as float");
+
+  my $cf2 = $c2->as_float;
+  is($im->setscanline(x => 4, y => 6, pixels => [ $cf1, $cf2 ]), 2,
+     "setscanline() float");
+  is_deeply([ $im->getsamples(x => 5, y => 6, width => 1, channels => [ 0 .. 7 ]) ],
+            [ 66, 130, 250, @samps[3 .. 7] ],
+            "check color set by setscanline float and extras untouched");
+  is_arrayf([ $im->getsamples(x => 5, y => 6, width => 1, channels => [ 0 .. 7 ], type => "float") ],
+            [ 66/255, 130/255, 250/255, @fsamps[3 .. 7] ],
+            "check color set by setscanline float and extras untouched (float)");
+}
+
 package Imager::Test::OverUtf8;
 use overload '""' => sub { "A".chr(0x2010)."A" };
 
@@ -1010,6 +1107,16 @@ low level image $im and compares them against @$pels.
 Tests if $color's first three channels are within $tolerance of ($red,
 $green, $blue).
 
+=item is_arrayf()
+
+  is_arrayf(\@got, \@expected, $name);
+  is_arrayf(\@got, \@expected, $name, $epsilon);
+
+numerically compares two arrays supplied by reference, ensuring they
+are within C<$epsilon> of each other.
+
+C<$epsilon> defaults to C<1e-6>.
+
 =back
 
 =head2 Test suite functions
@@ -1049,6 +1156,13 @@ Perform standard font interface tests.
 =item std_font_test_count()
 
 The number of tests performed by std_font_tests().
+
+=item extrachannel_tests($im)
+
+Perform tests for a 3 color channel with 5 extra channel image.  This
+is mostly intended to ensure that accessed are properly aligned
+between the various APIs.  Especially that pixel to pixel transitions
+are covered by the total channels, not just the color channels.
 
 =back
 

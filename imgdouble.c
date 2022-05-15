@@ -97,34 +97,74 @@ Also callable as C<i_img_double_new(width, height, channels)>.
 
 =cut
 */
+
 i_img *
 im_img_double_new(pIMCTX, i_img_dim x, i_img_dim y, int ch) {
+  return im_img_double_new_extra(aIMCTX, x, y, ch, 0);
+}
+
+/*
+=item im_img_double_new_extra(ctx, x, y, ch, extra)
+X<im_img_double_new_extra API>X<i_img_double_new_extra API>
+=category Image creation/destruction
+=synopsis i_img *img = im_img_double_new_extra(aIMCTX, width, height, channels, extra);
+=synopsis i_img *img = i_img_double_new_extra(width, height, channels, extra);
+
+Creates a new double per sample image, possibly with L<Imager::API/Extra channels>.
+
+Also callable as C<i_img_double_new_extra(width, height, channels, extra)>.
+
+=cut
+*/
+
+i_img *
+im_img_double_new_extra(pIMCTX, i_img_dim x, i_img_dim y, int ch, int extra) {
   size_t bytes;
   i_img *im;
+  int totalch;
 
-  im_log((aIMCTX, 1,"i_img_double_new(x %" i_DF ", y %" i_DF ", ch %d)\n",
-	  i_DFc(x), i_DFc(y), ch));
+  im_log((aIMCTX, 1,"i_img_double_new(x %" i_DF ", y %" i_DF ", ch %d, extra %d)\n",
+	  i_DFc(x), i_DFc(y), ch, extra));
+
+  im_clear_error(aIMCTX);
 
   if (x < 1 || y < 1) {
     im_push_error(aIMCTX, 0, "Image sizes must be positive");
     return NULL;
   }
-  if (ch < 1 || ch > MAXCHANNELS) {
-    im_push_errorf(aIMCTX, 0, "channels must be between 1 and %d", MAXCHANNELS);
+  if (ch < 0 || ch > MAXCHANNELS) {
+    im_push_errorf(aIMCTX, 0, "channels must be between 0 and %d", MAXCHANNELS);
     return NULL;
   }
-  bytes = x * y * ch * sizeof(double);
-  if (bytes / y / ch / sizeof(double) != x) {
+  if (ch == 0 && extra == 0) {
+    im_push_error(aIMCTX, 0, "there must be extra channels if channels is zero");
+    return NULL;
+  }
+  if (extra < 0 || extra > MAXEXTRACHANNELS) {
+    im_push_errorf(aIMCTX, 0, "extrachannels must be between 0 and %d", MAXEXTRACHANNELS);
+    return NULL;
+  }
+  if (ch + extra > MAXTOTALCHANNELS) {
+    im_push_errorf(aIMCTX, 0, "channels + extra channels must be no more than %d", MAXTOTALCHANNELS);
+    return NULL;
+  }
+  totalch = ch + extra;
+  bytes = (i_img_dim_u)x * (i_img_dim_u)y * (i_img_dim_u)totalch * sizeof(double);
+  if (bytes / y / totalch / sizeof(double) != x) {
     im_push_errorf(aIMCTX, 0, "integer overflow calculating image allocation");
     return NULL;
   }
   
   im = im_img_alloc(aIMCTX);
+  if (im == NULL)
+    return NULL;
+
   im->vtbl = &vtable_double;
   i_tags_new(&im->tags);
   im->xsize = x;
   im->ysize = y;
   im->channels = ch;
+  im->extrachannels = extra;
   im->bytes = bytes;
   im->ch_mask = ~0U;
   im->bits = i_double_bits;
@@ -138,14 +178,16 @@ im_img_double_new(pIMCTX, i_img_dim x, i_img_dim y, int ch) {
   return im;
 }
 
-static int i_ppix_ddoub(i_img *im, i_img_dim x, i_img_dim y, const i_color *val) {
+static int
+i_ppix_ddoub(i_img *im, i_img_dim x, i_img_dim y, const i_color *val) {
   i_img_dim off;
   int ch;
+  int totalch = im->channels + im->extrachannels;
 
   if (x < 0 || x >= im->xsize || y < 0 || y >= im->ysize) 
     return -1;
 
-  off = (x + y * im->xsize) * im->channels;
+  off = (x + y * im->xsize) * totalch;
   if (I_ALL_CHANNELS_WRITABLE(im)) {
     for (ch = 0; ch < im->channels; ++ch)
       ((double*)im->idata)[off+ch] = Sample8ToF(val->channel[ch]);
@@ -159,14 +201,16 @@ static int i_ppix_ddoub(i_img *im, i_img_dim x, i_img_dim y, const i_color *val)
   return 0;
 }
 
-static int i_gpix_ddoub(i_img *im, i_img_dim x, i_img_dim y, i_color *val) {
+static int
+i_gpix_ddoub(i_img *im, i_img_dim x, i_img_dim y, i_color *val) {
   i_img_dim off;
   int ch;
+  int totalch = im->channels + im->extrachannels;
 
   if (x < 0 || x >= im->xsize || y < 0 || y >= im->ysize) 
     return -1;
 
-  off = (x + y * im->xsize) * im->channels;
+  off = (x + y * im->xsize) * totalch;
   for (ch = 0; ch < im->channels; ++ch)
     val->channel[ch] = SampleFTo8(((double *)im->idata)[off+ch]);
 
@@ -176,11 +220,12 @@ static int i_gpix_ddoub(i_img *im, i_img_dim x, i_img_dim y, i_color *val) {
 static int i_ppixf_ddoub(i_img *im, i_img_dim x, i_img_dim y, const i_fcolor *val) {
   i_img_dim off;
   int ch;
+  int totalch = im->channels + im->extrachannels;
 
   if (x < 0 || x >= im->xsize || y < 0 || y >= im->ysize) 
     return -1;
 
-  off = (x + y * im->xsize) * im->channels;
+  off = (x + y * im->xsize) * totalch;
   if (I_ALL_CHANNELS_WRITABLE(im)) {
     for (ch = 0; ch < im->channels; ++ch)
       ((double *)im->idata)[off+ch] = val->channel[ch];
@@ -194,14 +239,16 @@ static int i_ppixf_ddoub(i_img *im, i_img_dim x, i_img_dim y, const i_fcolor *va
   return 0;
 }
 
-static int i_gpixf_ddoub(i_img *im, i_img_dim x, i_img_dim y, i_fcolor *val) {
+static int
+i_gpixf_ddoub(i_img *im, i_img_dim x, i_img_dim y, i_fcolor *val) {
   i_img_dim off;
   int ch;
+  int totalch = im->channels + im->extrachannels;
 
   if (x < 0 || x >= im->xsize || y < 0 || y >= im->ysize) 
     return -1;
 
-  off = (x + y * im->xsize) * im->channels;
+  off = (x + y * im->xsize) * totalch;
   for (ch = 0; ch < im->channels; ++ch)
     val->channel[ch] = ((double *)im->idata)[off+ch];
 
@@ -212,16 +259,19 @@ static i_img_dim i_glin_ddoub(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, 
   int ch;
   i_img_dim count, i;
   i_img_dim off;
+
   if (y >=0 && y < im->ysize && l < im->xsize && l >= 0) {
+    int totalch = im->channels + im->extrachannels;
+    
     if (r > im->xsize)
       r = im->xsize;
-    off = (l+y*im->xsize) * im->channels;
+    off = (l+y*im->xsize) * totalch;
     count = r - l;
     for (i = 0; i < count; ++i) {
       for (ch = 0; ch < im->channels; ++ch) {
-	vals[i].channel[ch] = SampleFTo8(((double *)im->idata)[off]);
-        ++off;
+	vals[i].channel[ch] = SampleFTo8(((double *)im->idata)[off+ch]);
       }
+      off += totalch;
     }
     return count;
   }
@@ -230,30 +280,34 @@ static i_img_dim i_glin_ddoub(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, 
   }
 }
 
-static i_img_dim i_plin_ddoub(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, const i_color *vals) {
+static i_img_dim
+i_plin_ddoub(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, const i_color *vals) {
   int ch;
   i_img_dim count, i;
   i_img_dim off;
+
   if (y >=0 && y < im->ysize && l < im->xsize && l >= 0) {
+    int totalch = im->channels + im->extrachannels;
+
     if (r > im->xsize)
       r = im->xsize;
-    off = (l+y*im->xsize) * im->channels;
+    off = (l+y*im->xsize) * totalch;
     count = r - l;
     if (I_ALL_CHANNELS_WRITABLE(im)) {
       for (i = 0; i < count; ++i) {
 	for (ch = 0; ch < im->channels; ++ch) {
-	  ((double *)im->idata)[off] = Sample8ToF(vals[i].channel[ch]);
-	  ++off;
+	  ((double *)im->idata)[off+ch] = Sample8ToF(vals[i].channel[ch]);
 	}
+        off += totalch;
       }
     }
     else {
       for (i = 0; i < count; ++i) {
 	for (ch = 0; ch < im->channels; ++ch) {
 	  if (im->ch_mask & (1 << ch))
-	    ((double *)im->idata)[off] = Sample8ToF(vals[i].channel[ch]);
-	  ++off;
+	    ((double *)im->idata)[off+ch] = Sample8ToF(vals[i].channel[ch]);
 	}
+        off += totalch;
       }
     }
     return count;
@@ -263,20 +317,24 @@ static i_img_dim i_plin_ddoub(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, 
   }
 }
 
-static i_img_dim i_glinf_ddoub(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, i_fcolor *vals) {
+static i_img_dim
+i_glinf_ddoub(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, i_fcolor *vals) {
   int ch;
   i_img_dim count, i;
   i_img_dim off;
+  
   if (y >=0 && y < im->ysize && l < im->xsize && l >= 0) {
+    int totalch = im->channels + im->extrachannels;
+
     if (r > im->xsize)
       r = im->xsize;
-    off = (l+y*im->xsize) * im->channels;
+    off = (l+y*im->xsize) * totalch;
     count = r - l;
     for (i = 0; i < count; ++i) {
       for (ch = 0; ch < im->channels; ++ch) {
-	vals[i].channel[ch] = ((double *)im->idata)[off];
-        ++off;
+	vals[i].channel[ch] = ((double *)im->idata)[off+ch];
       }
+      off += totalch;
     }
     return count;
   }
@@ -285,30 +343,34 @@ static i_img_dim i_glinf_ddoub(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y,
   }
 }
 
-static i_img_dim i_plinf_ddoub(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, const i_fcolor *vals) {
+static i_img_dim
+i_plinf_ddoub(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, const i_fcolor *vals) {
   int ch;
   i_img_dim count, i;
-  i_img_dim off;
+
   if (y >=0 && y < im->ysize && l < im->xsize && l >= 0) {
+    i_img_dim off;
+    int totalch = im->channels + im->extrachannels;
+
     if (r > im->xsize)
       r = im->xsize;
-    off = (l+y*im->xsize) * im->channels;
+    off = (l+y*im->xsize) * totalch;
     count = r - l;
     if (I_ALL_CHANNELS_WRITABLE(im)) {
       for (i = 0; i < count; ++i) {
 	for (ch = 0; ch < im->channels; ++ch) {
-	  ((double *)im->idata)[off] = vals[i].channel[ch];
-	  ++off;
+	  ((double *)im->idata)[off+ch] = vals[i].channel[ch];
 	}
+        off += totalch;
       }
     }
     else {
       for (i = 0; i < count; ++i) {
 	for (ch = 0; ch < im->channels; ++ch) {
 	  if (im->ch_mask & (1 << ch))
-	    ((double *)im->idata)[off] = vals[i].channel[ch];
-	  ++off;
+	    ((double *)im->idata)[off+ch] = vals[i].channel[ch];
 	}
+        off += totalch;
       }
     }
     return count;
@@ -318,23 +380,26 @@ static i_img_dim i_plinf_ddoub(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y,
   }
 }
 
-static i_img_dim i_gsamp_ddoub(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, i_sample_t *samps, 
+static i_img_dim
+i_gsamp_ddoub(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, i_sample_t *samps, 
                        int const *chans, int chan_count) {
   int ch;
   i_img_dim count, i, w;
-  i_img_dim off;
 
   if (y >=0 && y < im->ysize && l < im->xsize && l >= 0) {
+    i_img_dim off;
+    int totalch = im->channels + im->extrachannels;
+    
     if (r > im->xsize)
       r = im->xsize;
-    off = (l+y*im->xsize) * im->channels;
+    off = (l+y*im->xsize) * totalch;
     w = r - l;
     count = 0;
 
     if (chans) {
       /* make sure we have good channel numbers */
       for (ch = 0; ch < chan_count; ++ch) {
-        if (chans[ch] < 0 || chans[ch] >= im->channels) {
+        if (chans[ch] < 0 || chans[ch] >= totalch) {
 	  dIMCTXim(im);
           im_push_errorf(aIMCTX, 0, "No channel %d in this image", chans[ch]);
           return 0;
@@ -345,13 +410,13 @@ static i_img_dim i_gsamp_ddoub(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y,
           *samps++ = SampleFTo8(((double *)im->idata)[off+chans[ch]]);
           ++count;
         }
-        off += im->channels;
+        off += totalch;
       }
     }
     else {
-      if (chan_count <= 0 || chan_count > im->channels) {
+      if (chan_count <= 0 || chan_count > totalch) {
 	dIMCTXim(im);
-	im_push_errorf(aIMCTX, 0, "chan_count %d out of range, must be >0, <= channels", 
+	im_push_errorf(aIMCTX, 0, "chan_count %d out of range, must be >0, <= total channels", 
 		      chan_count);
 	return 0;
       }
@@ -360,7 +425,7 @@ static i_img_dim i_gsamp_ddoub(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y,
           *samps++ = SampleFTo8(((double *)im->idata)[off+ch]);
           ++count;
         }
-        off += im->channels;
+        off += totalch;
       }
     }
 
@@ -371,23 +436,25 @@ static i_img_dim i_gsamp_ddoub(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y,
   }
 }
 
-static i_img_dim i_gsampf_ddoub(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, i_fsample_t *samps, 
-                        int const *chans, int chan_count) {
-  int ch;
-  i_img_dim count, i, w;
-  i_img_dim off;
-
+static i_img_dim
+i_gsampf_ddoub(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, i_fsample_t *samps, 
+               int const *chans, int chan_count) {
   if (y >=0 && y < im->ysize && l < im->xsize && l >= 0) {
+    int ch;
+    i_img_dim count, i, w;
+    i_img_dim off;
+    int totalch = im->channels + im->extrachannels;
+
     if (r > im->xsize)
       r = im->xsize;
-    off = (l+y*im->xsize) * im->channels;
+    off = (l+y*im->xsize) * totalch;
     w = r - l;
     count = 0;
 
     if (chans) {
       /* make sure we have good channel numbers */
       for (ch = 0; ch < chan_count; ++ch) {
-        if (chans[ch] < 0 || chans[ch] >= im->channels) {
+        if (chans[ch] < 0 || chans[ch] >= totalch) {
 	  dIMCTXim(im);
           im_push_errorf(aIMCTX, 0, "No channel %d in this image", chans[ch]);
           return 0;
@@ -398,13 +465,13 @@ static i_img_dim i_gsampf_ddoub(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y
           *samps++ = ((double *)im->idata)[off+chans[ch]];
           ++count;
         }
-        off += im->channels;
+        off += totalch;
       }
     }
     else {
-      if (chan_count <= 0 || chan_count > im->channels) {
+      if (chan_count <= 0 || chan_count > totalch) {
 	dIMCTXim(im);
-	im_push_errorf(aIMCTX, 0, "chan_count %d out of range, must be >0, <= channels", 
+	im_push_errorf(aIMCTX, 0, "chan_count %d out of range, must be >0, <= total channels", 
 		      chan_count);
 	return 0;
       }
@@ -413,7 +480,7 @@ static i_img_dim i_gsampf_ddoub(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y
           *samps++ = ((double *)im->idata)[off+ch];
           ++count;
         }
-        off += im->channels;
+        off += totalch;
       }
     }
 
@@ -441,14 +508,16 @@ static
 i_img_dim
 i_psamp_ddoub(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, 
 	  const i_sample_t *samps, const int *chans, int chan_count) {
-  int ch;
-  i_img_dim count, i, w;
 
   if (y >=0 && y < im->ysize && l < im->xsize && l >= 0) {
+    int ch;
+    i_img_dim count, i, w;
     i_img_dim offset;
+    int totalch = im->channels + im->extrachannels;
+
     if (r > im->xsize)
       r = im->xsize;
-    offset = (l+y*im->xsize) * im->channels;
+    offset = (l+y*im->xsize) * totalch;
     w = r - l;
     count = 0;
 
@@ -457,7 +526,7 @@ i_psamp_ddoub(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y,
       /* and test if all channels specified are in the mask */
       int all_in_mask = 1;
       for (ch = 0; ch < chan_count; ++ch) {
-        if (chans[ch] < 0 || chans[ch] >= im->channels) {
+        if (chans[ch] < 0 || chans[ch] >= totalch) {
 	  dIMCTXim(im);
           im_push_errorf(aIMCTX, 0, "No channel %d in this image", chans[ch]);
           return -1;
@@ -472,7 +541,7 @@ i_psamp_ddoub(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y,
 	    ++samps;
 	    ++count;
 	  }
-	  offset += im->channels;
+	  offset += totalch;
 	}
       }
       else {
@@ -484,14 +553,14 @@ i_psamp_ddoub(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y,
 	    ++samps;
 	    ++count;
 	  }
-	  offset += im->channels;
+	  offset += totalch;
 	}
       }
     }
     else {
-      if (chan_count <= 0 || chan_count > im->channels) {
+      if (chan_count <= 0 || chan_count > totalch) {
 	dIMCTXim(im);
-	im_push_errorf(aIMCTX, 0, "chan_count %d out of range, must be >0, <= channels", 
+	im_push_errorf(aIMCTX, 0, "chan_count %d out of range, must be >0, <= total channels", 
 		      chan_count);
 	return -1;
       }
@@ -505,7 +574,7 @@ i_psamp_ddoub(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y,
           ++count;
 	  mask <<= 1;
         }
-        offset += im->channels;
+        offset += totalch;
       }
     }
 
@@ -535,14 +604,16 @@ static
 i_img_dim
 i_psampf_ddoub(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, 
 	       const i_fsample_t *samps, const int *chans, int chan_count) {
-  int ch;
-  i_img_dim count, i, w;
 
   if (y >=0 && y < im->ysize && l < im->xsize && l >= 0) {
+    int ch;
+    i_img_dim count, i, w;
     i_img_dim offset;
+    int totalch = im->channels + im->extrachannels;
+
     if (r > im->xsize)
       r = im->xsize;
-    offset = (l+y*im->xsize) * im->channels;
+    offset = (l+y*im->xsize) * totalch;
     w = r - l;
     count = 0;
 
@@ -551,7 +622,7 @@ i_psampf_ddoub(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y,
       /* and test if all channels specified are in the mask */
       int all_in_mask = 1;
       for (ch = 0; ch < chan_count; ++ch) {
-        if (chans[ch] < 0 || chans[ch] >= im->channels) {
+        if (chans[ch] < 0 || chans[ch] >= totalch) {
 	  dIMCTXim(im);
           im_push_errorf(aIMCTX, 0, "No channel %d in this image", chans[ch]);
           return -1;
@@ -566,7 +637,7 @@ i_psampf_ddoub(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y,
 	    ++samps;
 	    ++count;
 	  }
-	  offset += im->channels;
+	  offset += totalch;
 	}
       }
       else {
@@ -578,14 +649,14 @@ i_psampf_ddoub(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y,
 	    ++samps;
 	    ++count;
 	  }
-	  offset += im->channels;
+	  offset += totalch;
 	}
       }
     }
     else {
-      if (chan_count <= 0 || chan_count > im->channels) {
+      if (chan_count <= 0 || chan_count > totalch) {
 	dIMCTXim(im);
-	im_push_errorf(aIMCTX, 0, "chan_count %d out of range, must be >0, <= channels", 
+	im_push_errorf(aIMCTX, 0, "chan_count %d out of range, must be >0, <= total channels", 
 		      chan_count);
 	return -1;
       }
@@ -599,7 +670,7 @@ i_psampf_ddoub(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y,
           ++count;
 	  mask <<= 1;
         }
-        offset += im->channels;
+        offset += totalch;
       }
     }
 
