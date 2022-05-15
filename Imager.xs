@@ -3696,6 +3696,14 @@ int
 i_img_virtual(im)
         Imager::ImgRaw  im
 
+int
+i_img_extrachannels(im)
+        Imager::ImgRaw  im
+
+int
+i_img_totalchannels(im)
+        Imager::ImgRaw  im
+
 void
 i_gsamp(im, l, r, y, channels)
         Imager::ImgRaw im
@@ -4102,10 +4110,16 @@ i_img_8_new(xsize, ysize, channels)
         int channels
 
 Imager::ImgRaw
+i_img_8_new_extra(i_img_dim xsize, i_img_dim ysize, int channels, int extra)
+
+Imager::ImgRaw
 i_img_16_new(xsize, ysize, channels)
         i_img_dim xsize
         i_img_dim ysize
         int channels
+
+Imager::ImgRaw
+i_img_16_new_extra(i_img_dim xsize, i_img_dim ysize, int channels, int extra)
 
 Imager::ImgRaw
 i_img_to_rgb16(im)
@@ -4116,6 +4130,9 @@ i_img_double_new(xsize, ysize, channels)
         i_img_dim xsize
         i_img_dim ysize
         int channels
+
+Imager::ImgRaw
+i_img_double_new_extra(i_img_dim xsize, i_img_dim ysize, int channels, int extra)
 
 Imager::ImgRaw
 i_img_to_drgb(im)

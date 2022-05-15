@@ -668,7 +668,7 @@ void i_tags_print(i_img_tags *tags) {
     printf(" Code : %d\n", tag->code);
     if (tag->data) {
       int pos;
-      printf(" Data : %d (%p) => '", tag->size, tag->data);
+      printf(" Data : %lu (%p) => '", (unsigned long)tag->size, tag->data);
       for (pos = 0; pos < tag->size; ++pos) {
 	if (tag->data[pos] == '\\' || tag->data[pos] == '\'') {
 	  putchar('\\');

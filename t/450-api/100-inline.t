@@ -645,10 +645,10 @@ for my $bits (8, 16) {
   is(_get_error(), "chan_count 0 out of range, must be >0, <= channels",
      "check message");
   is(raw_psampf($im, 4), -1, "bad channel list (4) for psampf should fail");
-  is(_get_error(), "chan_count 4 out of range, must be >0, <= channels",
+  is(_get_error(), "chan_count 4 out of range, must be >0, <= total channels",
      "check message");
   is(raw_psampf($im, 0), -1, "bad channel list (0) for psampf should fail");
-  is(_get_error(), "chan_count 0 out of range, must be >0, <= channels",
+  is(_get_error(), "chan_count 0 out of range, must be >0, <= total channels",
      "check message");
 }
 
@@ -671,16 +671,16 @@ for my $bits (8, 16) {
 {
   my $im = Imager->new(xsize => 10, ysize => 10, bits => 'double');
   is(raw_psamp($im, 4), -1, "bad channel list (4) for psamp should fail (double)");
-  is(_get_error(), "chan_count 4 out of range, must be >0, <= channels",
+  is(_get_error(), "chan_count 4 out of range, must be >0, <= total channels",
      "check message");
   is(raw_psamp($im, 0), -1,, "bad channel list (0) for psamp should fail (double)");
-  is(_get_error(), "chan_count 0 out of range, must be >0, <= channels",
+  is(_get_error(), "chan_count 0 out of range, must be >0, <= total channels",
      "check message");
   is(raw_psampf($im, 4), -1, "bad channel list (4) for psampf should fail (double)");
-  is(_get_error(), "chan_count 4 out of range, must be >0, <= channels",
+  is(_get_error(), "chan_count 4 out of range, must be >0, <= total channels",
      "check message");
   is(raw_psampf($im, 0), -1, "bad channel list (0) for psampf should fail (double)");
-  is(_get_error(), "chan_count 0 out of range, must be >0, <= channels",
+  is(_get_error(), "chan_count 0 out of range, must be >0, <= total channels",
      "check message");
 }
 

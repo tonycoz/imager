@@ -14,7 +14,7 @@ for my $file (grep m(^[^/]+\.c$), keys %$mani) {
   while (<$src>) {
     if ($catching) {
       push @{$catches{$catching}}, $_;
-      /^ *return/ and undef $catching;
+      /^\}/ and undef $catching;
     }
     elsif (/^\s*(\w+)\s*=\s*i_img_alloc\(\)/ ||
            /^\s*(\w+)\s*=\s*im_img_alloc\(aIMCTX\)/) {
@@ -24,7 +24,7 @@ for my $file (grep m(^[^/]+\.c$), keys %$mani) {
   }
 }
 
-my @members = qw(vtbl xsize ysize channels ch_mask isvirtual idata bytes bits type ext_data);
+my @members = qw(vtbl xsize ysize channels extrachannels ch_mask isvirtual idata bytes bits type ext_data);
 my $member_qr = join '|', @members;
 $member_qr = qr/$member_qr/;
 

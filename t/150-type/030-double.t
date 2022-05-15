@@ -91,11 +91,11 @@ cmp_ok(Imager->errstr, '=~', qr/Image sizes must be positive/,
        "and correct message");
 ok(!Imager->new(xsize=>1, ysize=>1, bits=>'double', channels=>0),
     "fail making 0 channel image");
-cmp_ok(Imager->errstr, '=~', qr/channels must be between 1 and 4/,
+cmp_ok(Imager->errstr, '=~', qr/there must be extra channels if channels is zero/,
        "and correct message");
 ok(!Imager->new(xsize=>1, ysize=>1, bits=>'double', channels=>5),
     "fail making 5 channel image");
-cmp_ok(Imager->errstr, '=~', qr/channels must be between 1 and 4/,
+cmp_ok(Imager->errstr, '=~', qr/channels must be between 0 and 4/,
        "and correct message");
 
 {

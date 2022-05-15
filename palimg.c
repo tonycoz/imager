@@ -141,6 +141,7 @@ im_img_pal_new(pIMCTX, i_img_dim x, i_img_dim y, int channels, int maxpal) {
   im->bytes = bytes;
   im->idata = mymalloc(im->bytes);
   im->channels = channels;
+  im->extrachannels = 0;
   im->type = i_palette_type;
   im->bits = i_8_bits;
   im->isvirtual = 0;
@@ -224,6 +225,11 @@ i_img *i_img_to_pal(i_img *src, i_quantize *quant) {
   dIMCTXim(src);
 
   i_clear_error();
+
+  if (src->channels == 0) {
+    i_push_error(0, "no color channels found to build a palette");
+    return NULL;
+  }
   
   i_quant_makemap(quant, &src, 1);
   result = i_quant_translate(quant, src);
