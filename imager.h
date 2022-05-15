@@ -44,6 +44,7 @@ extern void i_rgb_to_hsv(i_color *color);
 extern void i_hsv_to_rgb(i_color *color);
 
 i_img *im_img_8_new(pIMCTX, i_img_dim x,i_img_dim y,int ch);
+i_img *im_img_8_new_extra(pIMCTX, i_img_dim x,i_img_dim y,int ch, int extrach);
 void   i_img_exorcise(i_img *im);
 void   i_img_destroy(i_img *im);
 i_img *im_img_alloc(pIMCTX);
@@ -221,8 +222,10 @@ extern i_img *i_img_to_rgb(i_img *src);
 extern i_img *i_img_masked_new(i_img *targ, i_img *mask, i_img_dim x, i_img_dim y, 
                                i_img_dim w, i_img_dim h);
 extern i_img *im_img_16_new(pIMCTX, i_img_dim x, i_img_dim y, int ch);
+extern i_img *im_img_16_new_extra(pIMCTX, i_img_dim x, i_img_dim y, int ch, int extra);
 extern i_img *i_img_to_rgb16(i_img *im);
 extern i_img *im_img_double_new(pIMCTX, i_img_dim x, i_img_dim y, int ch);
+extern i_img *im_img_double_new_extra(pIMCTX, i_img_dim x, i_img_dim y, int ch, int extra);
 extern i_img *i_img_to_drgb(i_img *im);
 
 extern int i_img_is_monochrome(i_img *im, int *zero_is_white);

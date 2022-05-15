@@ -83,18 +83,25 @@ Imager supports two basic models of image:
 =item *
 
 direct color - all samples are stored for every pixel.  eg. for an
-8-bit/sample RGB image, 24 bits are stored for each pixel.
+8-bit/sample RGB image, 24 bits are stored for each pixel.  A direct
+color image can have 0 to 4 color channels and up to 10 extra
+channels.
 
 =item *
 
 paletted - an index into a table of colors is stored for each pixel.
+A paletted image has 1 to 4 channels.
 
 =back
 
-Direct color or paletted images can have 1 to 4 samples per color
-stored.  Imager treats these as follows:
+Imager treats these as follows:
 
 =over
+
+=item *
+
+0 samples per color - the image has a color model not supported by
+Imager.  The image must have extra channels.
 
 =item *
 
@@ -132,6 +139,19 @@ corner, see L<Imager::Draw> for details.
 The alpha channel when one is present is considered unassociated -
 ie the color data has not been scaled by the alpha channel.  Note
 that not all code follows this (recent) rule, but will over time.
+
+=for stopwords YCbCr
+
+Direct color images can also include "extra channels" which either
+represent data associated with each pixel such as with TIFF extra
+samples, or if the number of color channels is zero, may represent a
+color model not supported by Imager, such as CMYK or YCbCr.
+
+Extra channels are generally not preserved across transformations such
+as scaling.
+
+Support for extra channels is experimental, ongoing and subject to
+change.
 
 =head2 Creating Imager Objects
 
@@ -336,13 +356,39 @@ Same details apply as for L</getwidth()>.
 =item getchannels()
 X<getchannels() method>X<methods, getchannels()>
 
+=item channels()
+X<channels() method>X<methods, channels()>
+
   print "Image has ",$img->getchannels(), " channels\n";
+  print "Image has ",$img->channels(), " channels\n";
 
 Returns the number of channels in an image.
 
 Note: previously the number of channels in an image mapped directly to
 the color model of the image, ie a 4 channel image was always RGBA.
 This may change in a future release of Imager.
+
+channels() is an alias for getchannels().
+
+Returns an empty list if the image object is not initialized.
+
+=item extrachannels()
+X<extrachannels() method>X<methods, extrachannels()>
+
+  print "Image has ", $img->extrachannels, " extra channels\n";
+
+Returns the number of "extra" non-color channels defined for the
+image.
+
+Returns an empty list if the image object is not initialized.
+
+=item totalchannels()
+X<totalchannels() method>X<methods, totalchannels()>
+
+  print "Image has ", $img->totalchannels, " total channels\n";
+
+Returns the total number of channels defined for the
+image, including both color and extra channels.
 
 Returns an empty list if the image object is not initialized.
 

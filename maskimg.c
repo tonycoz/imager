@@ -131,6 +131,10 @@ i_img_masked_new(i_img *targ, i_img *mask, i_img_dim x, i_img_dim y, i_img_dim w
     return NULL;
   }
   if (mask) {
+    if (mask->channels == 0) {
+      im_push_error(aIMCTX, 0, "mask has no color channels");
+      return NULL;
+    }
     if (w > mask->xsize)
       w = mask->xsize;
     if (h > mask->ysize)
@@ -153,6 +157,7 @@ i_img_masked_new(i_img *targ, i_img *mask, i_img_dim x, i_img_dim y, i_img_dim w
   im->xsize = w;
   im->ysize = h;
   im->channels = targ->channels;
+  im->extrachannels = targ->extrachannels;
   im->ch_mask = ~0U;
   im->bits = targ->bits;
   im->type = targ->type;

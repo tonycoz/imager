@@ -1032,7 +1032,7 @@ my %model_channels =
 sub img_set {
   my $self=shift;
 
-  my %hsh=(xsize=>100, ysize=>100, channels=>3, bits=>8, type=>'direct', @_);
+  my %hsh=(xsize=>100, ysize=>100, channels=>3, extrachannels => 0, bits=>8, type=>'direct', @_);
 
   undef($self->{IMG});
 
@@ -1047,18 +1047,22 @@ sub img_set {
   }
 
   if ($hsh{type} eq 'paletted' || $hsh{type} eq 'pseudo') {
+    if ($hsh{extrachannels} != 0) {
+      $self->_set_error("new: extrachannels must be 0 for paletted images");
+      return;
+    }
     $self->{IMG} = i_img_pal_new($hsh{xsize}, $hsh{ysize}, $hsh{channels},
                                  $hsh{maxcolors} || 256);
   }
   elsif ($hsh{bits} eq 'double') {
-    $self->{IMG} = i_img_double_new($hsh{xsize}, $hsh{ysize}, $hsh{channels});
+    $self->{IMG} = i_img_double_new_extra($hsh{xsize}, $hsh{ysize}, $hsh{channels}, $hsh{extrachannels});
   }
   elsif ($hsh{bits} == 16) {
-    $self->{IMG} = i_img_16_new($hsh{xsize}, $hsh{ysize}, $hsh{channels});
+    $self->{IMG} = i_img_16_new_extra($hsh{xsize}, $hsh{ysize}, $hsh{channels}, $hsh{extrachannels});
   }
   else {
-    $self->{IMG}= i_img_8_new($hsh{'xsize'}, $hsh{'ysize'},
-			      $hsh{'channels'});
+    $self->{IMG}= i_img_8_new_extra($hsh{'xsize'}, $hsh{'ysize'},
+				    $hsh{'channels'}, $hsh{extrachannels});
   }
 
   unless ($self->{IMG}) {
@@ -1359,6 +1363,24 @@ sub virtual {
     or return;
 
   return i_img_virtual($self->{IMG});
+}
+
+sub extrachannels {
+  my $self = shift;
+
+  $self->_valid_image("extrachannels")
+    or return;
+
+  return i_img_extrachannels($self->{IMG});
+}
+
+sub totalchannels {
+  my $self = shift;
+
+  $self->_valid_image("totalchannels")
+    or return;
+
+  return i_img_totalchannels($self->{IMG});
 }
 
 sub is_bilevel {
@@ -4120,6 +4142,8 @@ sub getchannels {
   return i_img_getchannels($self->{IMG});
 }
 
+*channels = \&getchannels;
+
 my @model_names = qw(unknown gray graya rgb rgba);
 
 sub colormodel {
@@ -4963,6 +4987,9 @@ image
 
 box() - L<Imager::Draw/box()> - draw a filled or outline box.
 
+channels() - L<Imager::ImageTypes/channels()> - number of color
+and alpha channels in the image.
+
 check_file_limits() - L<Imager::Files/check_file_limits()>
 
 circle() - L<Imager::Draw/circle()> - draw a filled circle
@@ -5005,6 +5032,8 @@ difference() - L<Imager::Filters/difference()> - produce a difference
 images from two input images.
 
 errstr() - L</errstr()> - the error from the last failed operation.
+
+extrachannels() - L<Imager::ImageTypes/extrachannels()>
 
 filter() - L<Imager::Filters/filter()> - image filtering
 
@@ -5171,6 +5200,8 @@ to_rgb8() - L<Imager::ImageTypes/to_rgb8()>
 
 to_rgb_double() - L<Imager::ImageTypes/to_rgb_double()> - convert to
 double per sample image.
+
+totalchannels() - L<Imager::ImageTypes/totalchannels()>
 
 transform() - L<Imager::Engines/"transform()">
 
