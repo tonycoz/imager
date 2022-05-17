@@ -129,26 +129,22 @@ im_img_pal_new(pIMCTX, i_img_dim x, i_img_dim y, int channels, int maxpal) {
     return NULL;
   }
 
-  im = i_img_alloc();
-  im->vtbl = &vtable_pal;
+  im = im_img_new(aIMCTX, &vtable_pal, x, y, channels, 0, i_8_bits);
+  if (im == NULL)
+    return NULL;
+
+  im->type = i_palette_type;
+
   palext = mymalloc(sizeof(i_img_pal_ext));
   palext->pal = mymalloc(sizeof(i_color) * maxpal);
   palext->count = 0;
   palext->alloc = maxpal;
   palext->last_found = -1;
   im->ext_data = palext;
-  i_tags_new(&im->tags);
+
   im->bytes = bytes;
   im->idata = mymalloc(im->bytes);
-  im->channels = channels;
-  im->extrachannels = 0;
-  im->type = i_palette_type;
-  im->bits = i_8_bits;
-  im->isvirtual = 0;
   memset(im->idata, 0, im->bytes);
-  im->xsize = x;
-  im->ysize = y;
-  im->ch_mask = ~0U;
 
   i_img_init(im);
   

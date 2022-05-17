@@ -150,20 +150,15 @@ i_img_masked_new(i_img *targ, i_img *mask, i_img_dim x, i_img_dim y, i_img_dim w
     return NULL;
   }
 
-  im = im_img_alloc(aIMCTX);
+  im = im_img_new(aIMCTX, &vtable_mask, w, h, targ->channels,
+                  targ->extrachannels, targ->bits);
+  if (im == NULL) {
+    return NULL;
+  }
 
-  im->vtbl = &vtable_mask;
-  i_tags_new(&im->tags);
-  im->xsize = w;
-  im->ysize = h;
-  im->channels = targ->channels;
-  im->extrachannels = targ->extrachannels;
-  im->ch_mask = ~0U;
-  im->bits = targ->bits;
   im->type = targ->type;
   im->isvirtual = 1;
-  im->bytes = 0;
-  im->idata = NULL;
+
   ext = mymalloc(sizeof(*ext));
   ext->targ = targ;
   ext->mask = mask;
