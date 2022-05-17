@@ -81,6 +81,37 @@ im_img_alloc(pIMCTX) {
 }
 
 /*
+=item im_img_new()
+
+Allocate a new image object, as with im_img_alloc(), and populate
+common fields from the supplied parameters.
+
+=cut
+ */
+
+i_img *
+im_img_new(pIMCTX, const i_img_vtable *vtbl, i_img_dim xsize, i_img_dim ysize,
+           int channels, int extra, i_img_bits_t bits) {
+  i_img *im = im_img_alloc(aIMCTX);
+
+  im->vtbl          = vtbl;
+  im->xsize         = xsize;
+  im->ysize         = ysize;
+  im->channels      = channels;
+  im->extrachannels = extra;
+  im->bits          = bits;
+  im->type          = i_direct_type;
+  im->ch_mask       = ~0U;
+  im->isvirtual     = 0;
+  im->bytes         = 0;
+  im->idata         = 0;
+  im->ext_data      = 0;
+  i_tags_new(&im->tags);
+
+  return im;
+}
+
+/*
 =item im_img_init(aIMCTX, image)
 X<im_img_init API>X<i_img_init API>
 =category Image Implementation
