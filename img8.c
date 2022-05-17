@@ -120,28 +120,16 @@ im_img_8_new_extra(pIMCTX, i_img_dim x, i_img_dim y, int ch, int extra) {
     return NULL;
   }
 
-  im = im_img_alloc(aIMCTX);
+  im = im_img_new(aIMCTX, &vtable_8bit, x, y, ch, extra, i_8_bits);
   if (im == NULL) {
     return NULL;
   }
 
-  im->vtbl = &vtable_8bit,
-  i_tags_new(&im->tags);
-  im->xsize    = x;
-  im->ysize    = y;
-  im->channels = ch;
-  im->extrachannels = extra;
-  im->bits     = i_8_bits;
-  im->type     = i_direct_type;
-  im->ch_mask  = ~0U;
   im->bytes = bytes;
-  im->isvirtual = 0;
   if ( (im->idata=mymalloc(im->bytes)) == NULL) 
     im_fatal(aIMCTX, 2,"malloc() error\n"); 
   memset(im->idata, 0, im->bytes);
   
-  im->ext_data = NULL;
-
   im_img_init(aIMCTX, im);
   
   im_log((aIMCTX, 1,"(%p) <- i_img_8_new\n",im));

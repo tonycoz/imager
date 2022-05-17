@@ -48,6 +48,8 @@ i_img *im_img_8_new_extra(pIMCTX, i_img_dim x,i_img_dim y,int ch, int extrach);
 void   i_img_exorcise(i_img *im);
 void   i_img_destroy(i_img *im);
 i_img *im_img_alloc(pIMCTX);
+i_img *im_img_new(pIMCTX, const i_img_vtable *vtbl, i_img_dim xsize, i_img_dim ysize,
+                  int channels, int extra, i_img_bits_t bits);
 void im_img_init(pIMCTX, i_img *im);
 
 void   i_img_info(i_img *im,i_img_dim *info);

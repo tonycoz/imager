@@ -226,21 +226,11 @@ im_img_16_new_extra(pIMCTX, i_img_dim x, i_img_dim y, int ch, int extra) {
     return NULL;
   }
 
-  im = im_img_alloc(aIMCTX);
+  im = im_img_new(aIMCTX, &vtable_16bit, x, y, ch, extra, i_16_bits);
   if (im == NULL)
     return NULL;
-  im->vtbl = &vtable_16bit;
-  i_tags_new(&im->tags);
-  im->xsize = x;
-  im->ysize = y;
-  im->channels = ch;
-  im->extrachannels = extra;
-  im->ch_mask = ~0U;
-  im->bits = i_16_bits;
-  im->type = i_direct_type;
+
   im->bytes = bytes;
-  im->isvirtual = 0;
-  im->ext_data = NULL;
   im->idata = mymalloc(im->bytes);
   memset(im->idata, 0, im->bytes);
 
