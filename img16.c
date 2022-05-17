@@ -211,8 +211,8 @@ im_img_16_new_extra(pIMCTX, i_img_dim x, i_img_dim y, int ch, int extra) {
     return NULL;
   }
   totalch = ch + extra;
-  bytes =  (i_img_dim_u)x * (i_img_dim_u)y * (i_img_dim_u)ch * 2U;
-  if (bytes / (i_img_dim_u)y / (i_img_dim_u)ch / 2U != (i_img_dim_u)x) {
+  bytes =  (i_img_dim_u)x * (i_img_dim_u)y * (i_img_dim_u)totalch * 2U;
+  if (bytes / (i_img_dim_u)y / (i_img_dim_u)totalch / 2U != (i_img_dim_u)x) {
     im_push_errorf(aIMCTX, 0, "integer overflow calculating image allocation");
     return NULL;
   }
