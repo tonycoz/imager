@@ -29,7 +29,12 @@ for my $dir (".", @sub_dirs) {
   my @have = sort keys %$have;
   my $skipchk = maniskip();
   my @expect = grep !$skipchk->($_), sort keys %{+manifind()};
-  is_deeply(\@have, \@expect, "$dir: check manifind vs MANIFEST");
+  unless (is_deeply(\@have, \@expect, "$dir: check manifind vs MANIFEST")) {
+    diag "Have:";
+    diag "  $_" for @have;
+    diag "Expect:";
+    diag "  $_" for @expect;
+  }
   # my ($missing, $extra) = fullcheck;
   # is_deeply($missing, [], "dir $dir: check no missing files");
   # is_deeply($extra, [], "dir $dir: check no extra files");
