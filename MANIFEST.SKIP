@@ -60,6 +60,7 @@ Makefile\.old$
 \.o$
 ^MANIFEST\.bak$
 \bMYMETA\.yml$
+\bMYMETA\.json$
 
 ^testout/
 ^FT2/testout/
