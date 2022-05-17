@@ -26,3 +26,7 @@
 
 # sometimes these get left by probes
 \.exe$
+
+# dist stuff
+^Imager-File-W32
+^MYMETA\.
