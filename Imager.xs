@@ -1307,6 +1307,92 @@ typedef int SysRet;
 #define ICLF_blue(c) ((c)->rgba.b)
 #define ICLF_alpha(c) ((c)->rgba.a)
 
+typedef unsigned i_data_flags_collection;
+
+static unsigned
+parse_data_flags(pTHX_ SV *sv) {
+  unsigned flags = 0;
+  char *p;
+  char *pend;
+  STRLEN len;
+
+  SvGETMAGIC(sv);
+  if (!SvOK(sv)) {
+    return 0;
+  }
+  p = SvPV(sv, len);
+  pend = p + len;
+  while (p < pend) {
+    STRLEN keylen;
+    char *pcomma = memchr(p, ',', pend - p);
+    keylen = pcomma ? pcomma - p : pend - p;
+
+    if (memEQs(p, keylen, "synth")
+        || memEQs(p, keylen, "synthesize")) {
+      flags |= idf_synthesize;
+    }
+    else if (memEQs(p, keylen, "extras")) {
+      flags |= idf_extras;
+    }
+    else if (memEQs(p, keylen, "writable")) {
+      Perl_croak(aTHX_ "writable is meaningless for the Imager data method");
+    }
+    else {
+      Perl_croak(aTHX_ "Unknown data flag %.*s", (int)keylen, p);
+    }
+
+    if (pcomma) {
+      p = pcomma + 1;
+    }
+    else {
+      p = pend;
+    }
+  }
+
+  return flags;
+}
+
+static i_data_layout_t
+parse_data_layout(pTHX_ SV *sv) {
+  char *p;
+  STRLEN len;
+
+  p = SvPV(sv, len);
+  if (memEQs(p, len, "palette")) {
+    return idl_palette;
+  }
+  else if (memEQs(p, len, "gray")
+           || memEQs(p, len, "grey")) {
+    return idl_gray;
+  }
+  else if (memEQs(p, len, "gray_alpha")
+           || memEQs(p, len, "grey_alpha")) {
+    return idl_gray_alpha;
+  }
+  else if (memEQs(p, len, "rgb")) {
+    return idl_rgb;
+  }
+  else if (memEQs(p, len, "rgb_alpha")
+           || memEQs(p, len, "rgba")) {
+    return idl_rgb_alpha;
+  }
+  else if (memEQs(p, len, "rgbx")) {
+    return idl_rgbx;
+  }
+  else if (memEQs(p, len, "bgr")) {
+    return idl_bgr;
+  }
+  else if (memEQs(p, len, "abgr")) {
+    return idl_abgr;
+  }
+  else if (len == 1 && *p >= '1' && *p <= '4') {
+    return (i_data_layout_t)(*p - '0');
+  }
+  else {
+    Perl_croak(aTHX_ "Unknown image data layout '%s'", p);
+  }
+}
+
 MODULE = Imager		PACKAGE = Imager::Color	PREFIX = ICL_
 
 Imager::Color
@@ -3703,6 +3789,28 @@ i_img_extrachannels(im)
 int
 i_img_totalchannels(im)
         Imager::ImgRaw  im
+
+SV *
+i_img_data(im, layout, bits, flags, extra)
+        Imager::ImgRaw  im
+        i_data_layout_t layout
+        int bits
+        i_data_flags_collection flags
+        int extra
+    PREINIT:
+      void *data;
+      size_t size;
+      i_image_alloc_t *alloc;
+    CODE:
+      alloc = i_img_data(im, layout, bits, flags, &data, &size, &extra);
+      if (!alloc)
+        XSRETURN_EMPTY;
+      RETVAL = newSVpvn(data, size);
+      i_img_data_release(alloc);
+    OUTPUT:
+      RETVAL
+      extra
+
 
 void
 i_gsamp(im, l, r, y, channels)

@@ -1383,6 +1383,23 @@ sub totalchannels {
   return i_img_totalchannels($self->{IMG});
 }
 
+sub data {
+  my $self = shift;
+  my $extra;
+  my %hsh = ( bits => 8, layout => $self->channels, flags => undef, extra => \$extra, @_, );
+
+  $self->_valid_image("data")
+    or return;
+
+  my $data = i_img_data($self->{IMG}, $hsh{layout}, $hsh{bits}, $hsh{flags}, ${$hsh{extra}});
+  unless (defined $data) {
+    $self->_set_error(_error_as_msg);
+    return;
+  }
+
+  return $data;
+}
+
 sub is_bilevel {
   my ($self) = @_;
 

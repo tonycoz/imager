@@ -17,9 +17,11 @@ our @EXPORT_OK =
      test_image_raw
      test_image_16
      test_image
+     test_image_rgba
      test_image_double 
      test_image_mono
      test_image_gray
+     test_image_gray_a
      test_image_gray_16
      test_image_named
      is_color1
@@ -374,6 +376,19 @@ sub test_image {
   $img;
 }
 
+sub test_image_rgba {
+  my $green = Imager::Color->new(0, 255, 0, 255);
+  my $blue  = Imager::Color->new(0, 0, 255, 255);
+  my $red   = Imager::Color->new(255, 0, 0, 255);
+  my $img = Imager->new(xsize => 150, ysize => 150, channels => 4);
+  $img->box(filled => 1, color => $green, box => [ 70, 24, 130, 124 ]);
+  $img->box(filled => 1, color => $blue,  box => [ 20, 26, 80, 126 ]);
+  $img->arc(x => 75, y => 75, r => 30, color => $red);
+  $img->filter(type => 'conv', coef => [ 0.1, 0.2, 0.4, 0.2, 0.1 ]);
+
+  $img;
+}
+
 sub test_image_16 {
   my $green = Imager::Color->new(0, 255, 0, 255);
   my $blue  = Imager::Color->new(0, 0, 255, 255);
@@ -413,6 +428,19 @@ sub test_image_gray {
   return $img;
 }
 
+sub test_image_gray_a {
+  my $g50 = Imager::Color->new(128, 128, 128);
+  my $g30  = Imager::Color->new(76, 76, 76);
+  my $g70   = Imager::Color->new(178, 178, 178);
+  my $img = Imager->new(xsize => 150, ysize => 150, channels => 2);
+  $img->box(filled => 1, color => $g50, box => [ 70, 24, 130, 124 ]);
+  $img->box(filled => 1, color => $g30,  box => [ 20, 26, 80, 126 ]);
+  $img->arc(x => 75, y => 75, r => 30, color => $g70);
+  $img->filter(type => 'conv', coef => [ 0.1, 0.2, 0.4, 0.2, 0.1 ]);
+
+  return $img;
+}
+
 sub test_image_gray_16 {
   my $g50 = Imager::Color->new(128, 128, 128);
   my $g30  = Imager::Color->new(76, 76, 76);
@@ -443,9 +471,11 @@ sub test_image_mono {
 my %name_to_sub =
   (
    basic => \&test_image,
+   rgba => \&test_image_rgba,
    basic16 => \&test_image_16,
    basic_double => \&test_image_double,
    gray => \&test_image_gray,
+   gray_a => \&test_image_gray_a,
    gray16 => \&test_image_gray_16,
    mono => \&test_image_mono,
   );

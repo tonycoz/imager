@@ -24,6 +24,10 @@ i_color *		T_AVARRAY
 
 i_poly_fill_mode_t	T_I_POLY_FILL_MODE_T
 
+i_data_flags_collection	I_DATA_FLAGS_COLLECTION
+
+i_data_layout_t		I_DATA_LAYOUT_T
+
 #############################################################################
 INPUT
 
@@ -148,6 +152,12 @@ T_IM_TRIM_COLOR_LIST
 	    Perl_croak(aTHX_ \"%s: \" \"$var\" \" is not a valid Imager::TrimColorList\",
 	               ${$ALIAS?\q[GvNAME(CvGV(cv))]:\qq[\"$pname\"]});
 	}
+
+I_DATA_FLAGS_COLLECTION
+	$var = parse_data_flags(aTHX_ $arg);
+
+I_DATA_LAYOUT_T
+	$var = parse_data_layout(aTHX_ $arg);
 
 #############################################################################
 OUTPUT
