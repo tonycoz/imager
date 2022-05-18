@@ -1,0 +1,272 @@
+#define IMAGER_NO_CONTEXT
+
+#include "imager.h"
+#include "imageri.h"
+
+/* used to output both gray and gray alpha from a gray alpha image */
+static const int
+gray_alpha_chans[] = { 0, 1 };
+
+/* used for gray and gray alpha from a gray only image */
+static const int
+gray_chans[] = { 0, 0 };
+
+static const int
+rgb_rgba_chans[] = { 0, 1, 2, 3 };
+
+static const int
+rgb_rgb_chans[] = { 0, 1, 2, 0 };
+
+static const int
+abgr_rgba_chans[] = { 3, 2, 1, 0 };
+
+static const int
+abgr_rgb_chans[] = { 0, 2, 1, 0 };
+
+static const int
+rgb_gray_alpha_chans[] = { 0, 0, 0, 1 };
+
+static const int
+rgb_gray_chans[] = { 0, 0, 0, 0 };
+
+static const int
+abgr_gray_alpha_chans[] = { 1, 0, 0, 0 };
+
+static const int
+abgr_gray_chans[] = { 0, 0, 0, 0 };
+
+static const int *
+layout_chans(i_img *im, i_data_layout_t layout, int *count, int *need_alpha, int *need_zero) {
+  dIMCTXim(im);
+
+  *need_alpha = -1;
+  *need_zero = -1;
+  switch (layout) {
+  case idl_palette:
+    /* only the paletted image handler needs to handle this */
+    return NULL;
+
+  case idl_gray:
+    if (im->channels > 2)
+      return NULL;
+    *count = 1;
+    return gray_chans;
+
+  case idl_gray_alpha:
+    if (im->channels > 2)
+      return NULL;
+    *count = 2;
+    if (im->channels == 1) {
+      *need_alpha = 1;
+      return gray_chans;
+    }
+    else {
+      return gray_alpha_chans;
+    }
+
+  case idl_rgb:
+    *count = 3;
+    if (im->channels > 2) {
+      return rgb_rgb_chans;
+    }
+    else {
+      return rgb_gray_chans;
+    }
+
+  case idl_rgb_alpha:
+    *count = 4;
+    if (im->channels == 1 || im->channels == 3)
+      *need_alpha = 3;
+    switch (im->channels) {
+    case 1:
+      return rgb_gray_chans;
+    case 2:
+      return rgb_gray_alpha_chans;
+    case 3:
+      return rgb_rgb_chans;
+    case 4:
+      return rgb_rgba_chans;
+    }
+    /* NOTREACHED */
+
+  case idl_rgbx:
+    *count = 4;
+    *need_zero = 3;
+    if (im->channels > 2) {
+      return rgb_rgb_chans;
+    }
+    else {
+      return rgb_gray_chans;
+    }
+
+  case idl_bgr:
+    *count = 3;
+    if (im->channels > 2) {
+      return abgr_rgb_chans + 1;
+    }
+    else {
+      return abgr_gray_chans + 1;
+    }
+
+  case idl_abgr:
+    *count = 4;
+    if (im->channels == 1 || im->channels == 3)
+      *need_alpha = 0;
+    switch(im->channels) {
+    case 1:
+      return abgr_gray_chans;
+    case 2:
+      return abgr_gray_alpha_chans;
+    case 3:
+      return abgr_rgb_chans;
+    case 4:
+      return abgr_rgba_chans;
+    }
+    /* NOTREACHED */
+
+  default:
+    im_fatal(aIMCTX, 3, "Unknown data layout %d", (int)layout);
+  }
+}
+
+
+static i_image_alloc_t *
+data_8(i_img *im, i_data_layout_t layout, void **pdata, size_t *psize) {
+  dIMCTXim(im);
+  const int *chans;
+  int count;
+  int need_alpha;
+  int need_zero;
+  size_t size;
+  i_sample_t *data;
+  i_sample_t *datap;
+  i_sample_t *pixelp;
+  i_img_dim x, y;
+  size_t row_size;
+
+  chans = layout_chans(im, layout, &count, &need_alpha, &need_zero);
+  size = (size_t)count * (size_t)im->xsize * (size_t)im->ysize;
+  if (size / (size_t)count / (size_t)im->xsize != (size_t)im->ysize) {
+    im_push_error(aIMCTX, 0, "integer overflow calculating image data size");
+    return NULL;
+  }
+
+  /* cannot fail */
+  data = mymalloc(size);
+  row_size = count * im->xsize;
+  for (y = 0, datap = data; y < im->ysize; ++y, datap += row_size) {
+    i_gsamp(im, 0, im->xsize, y, datap, chans, count);
+    if (need_alpha >= 0) {
+      for (x = 0, pixelp = datap; x < im->xsize; ++x, pixelp += count) {
+        pixelp[need_alpha] = 255;
+      }
+    }
+    if (need_zero >= 0) {
+      for (x = 0, pixelp = datap; x < im->xsize; ++x, pixelp += count) {
+        pixelp[need_zero] = 0;
+      }
+    }
+  }
+
+  *pdata = data;
+  *psize = size;
+
+  return i_new_image_alloc_free(im, data);
+}
+
+/*
+=item i_img_data_fallback()
+
+Fallback for i_img_data().  This is used by image implementations of
+i_img_data()/C<i_f_data> to produce synthesized data.
+
+  i_img_data_fallback(im, layout, bits, flags, pptr, psize, pextrachannels)
+
+The intent this is used something like:
+
+ i_image_alloc *my_img_data(...) {
+   if (layout, bits, extrachannels matches image layout) {
+     ... populate *pptr, *size, *extrachannels
+     ... increment image refcount
+     ... return new i_image_alloc_t.
+   }
+   else  {
+     return i_img_data_fallback(im, layout, bits, flags, pptr, psize, pextrachannels);
+   }
+ }
+
+and my_img_data goes into the image's virtual table.
+
+=cut
+*/
+
+i_image_alloc_t *
+i_img_data_fallback(i_img *im, i_data_layout_t layout, i_img_bits_t bits, unsigned flags,
+                    void **pdata, size_t *psize, int *extra) {
+  dIMCTXim(im);
+
+  im_clear_error(aIMCTX);
+
+  if (!(flags & idf_synthesize)) {
+    im_push_error(aIMCTX, 0, "image not in requested layout and synthesis not requested");
+    return NULL;
+  }
+
+  if (im->channels == 0) {
+    im_push_error(aIMCTX, 0, "cannot synthesize from 0 channel image");
+    return NULL;
+  }
+
+  /* we never synthesize extra channels */
+  *extra = 0;
+
+  switch (bits) {
+  case i_8_bits:
+    return data_8(im, layout, pdata, psize);
+
+  case i_16_bits:
+  case i_double_bits:
+    im_push_errorf(aIMCTX, 0, "image bits %d not implemented", (int)layout);
+    return NULL;
+  default:
+    im_fatal(aIMCTX, 3, "i_img_data_fallback: Unknown bits %d\n", (int)bits);
+  }
+}
+
+struct def_data_alloc {
+  i_image_alloc_t head;
+};
+
+static void
+release_def_alloc(i_image_alloc_t *alloc) {
+  myfree(alloc);
+}
+
+i_image_alloc_t *
+i_new_image_alloc_def(i_img *im) {
+  struct def_data_alloc *result = mymalloc(sizeof(struct def_data_alloc));
+  result->head.f_release = release_def_alloc;
+
+  return &result->head;
+}
+
+struct myfree_data_alloc {
+  i_image_alloc_t head;
+  void *releaseme;
+};
+
+static void
+release_myfree_alloc(i_image_alloc_t *alloc) {
+  struct myfree_data_alloc *work = (struct myfree_data_alloc *)alloc;
+  myfree(work->releaseme);
+  myfree(alloc);
+}
+
+i_image_alloc_t *
+i_new_image_alloc_free(i_img *im, void *releaseme) {
+  struct myfree_data_alloc *result = mymalloc(sizeof(struct myfree_data_alloc));
+  result->head.f_release = release_def_alloc;
+  result->releaseme = releaseme;
+
+  return &result->head;
+}
