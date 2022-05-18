@@ -16,6 +16,9 @@ static i_img_dim i_gsamp_d(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, i_s
 static i_img_dim i_gsampf_d(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, i_fsample_t *samps, const int *chans, int chan_count);
 static i_img_dim i_psamp_d(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, const i_sample_t *samps, const int *chans, int chan_count);
 static i_img_dim i_psampf_d(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, const i_fsample_t *samps, const int *chans, int chan_count);
+static i_image_alloc_t *
+i_data_8(i_img *im, i_data_layout_t layout, i_img_bits_t bits, unsigned flags,
+              void **p, size_t *size, int *extra);
 
 static const i_img_vtable
 vtable_8bit = {
@@ -47,7 +50,9 @@ vtable_8bit = {
   NULL, /* i_f_psamp_bits */
 
   i_psamp_d,
-  i_psampf_d
+  i_psampf_d,
+
+  i_data_8
 };
 
 /*
@@ -726,6 +731,22 @@ i_psampf_d(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y,
   }
 }
 
+static i_image_alloc_t *
+i_data_8(i_img *im, i_data_layout_t layout, i_img_bits_t bits, unsigned flags,
+         void **pdata, size_t *psize, int *pextra) {
+  if ((im->extrachannels && !(flags & idf_extras))
+      || bits != i_8_bits
+      || layout == idl_palette
+      || layout != im->channels) {
+    return i_img_data_fallback(im, layout, bits, flags, pdata, psize, pextra);
+  }
+
+  *pdata = im->idata;
+  *psize = im->bytes;
+  *pextra = im->extrachannels;
+
+  return i_new_image_alloc_def(im);
+}
 /*
 =back
 
