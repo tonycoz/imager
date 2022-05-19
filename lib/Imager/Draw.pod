@@ -1267,6 +1267,132 @@ Compose an image from separate source channels:
     }
   }
 
+=item data()
+
+Fetch raw bytes representing the image.
+
+  # fetch the 8-bit/sample representation of the image, if that
+  # is the native format
+  my $data = $img->data();
+
+  # fetch the 8-bit/sample representation of the image
+  my $data = $img->data(flags => "synth");
+
+  # fetch as 8 bit rgba, whatever the underlying layout
+  my $data = $img->data(flags => "synth", layout => "rgba", bits => 8);
+
+Parameters:
+
+=over
+
+=item *
+
+C<layout> - the layout of channels in the returned image, any of the
+following values:
+
+=over
+
+=item *
+
+C<palette> - bytes containing palette indexes for a paletted image.
+This requires C<bits> be C<8>.
+
+=item *
+
+C<grey>, C<gray>, C<1> - 1 samples per pixel containing the gray level
+for the pixel.  The image must be one or two channels for this to
+succeed, the gray data will not be synthesized.
+
+=item *
+
+C<gray_alpha>, C<grey_alpha>, C<2> - 2 samples per pixel containing
+the gray level for the pixel and the alpha level.  The image must be
+one or two channels for this to succeed, the gray data will not be
+synthesized.
+
+=item *
+
+C<rgb>, C<3> - 3 samples per pixel containing the red, green and blue
+values for each pixel.
+
+=item *
+
+C<rgb_alpha>, C<rgba>, C<4> - 4 samples per pixel containing the red,
+green, blue and alpha values for each pixel.
+
+=item *
+
+C<rgbx> - 4 samples per pixel containing the red, green and blue
+values for each pixel, with zero in the fourth sample.
+
+=item *
+
+C<bgr> - 3 samples per pixel containing the blue, green and red values
+for each pixel.
+
+=item *
+
+C<abgr> - 4 samples per pixel containing the alpha, blue, green and
+red values for each pixel.
+
+=back
+
+Default: number of channels in the image.
+
+Unknown values will result in an error being thrown.
+
+=item *
+
+C<bits> - the sample size of the data to be returned.  Currently
+implemented values are C<8> and C<double>.  Also parses C<float>,
+C<float16> and integers but these aren't implemented yet.
+
+=item *
+
+C<flags> - comma separated strings from the following:
+
+=over
+
+=item *
+
+C<synth>, C<synthesize> - if the image's native layout doesn't match
+the requested layout, synthesize the data to match.  Paletted and
+grayscale samples are never synthesized.  You almost always want this.
+
+=item *
+
+C<extras> - this is mostly intended for use from C.  Allows the image
+data returned to include extra channels beyond the color and alpha
+channels requested.  You probably never want this.
+
+=item *
+
+C<bigendian> - return multibyte samples in big endian byte order.
+
+=item *
+
+C<littleendian> - return multibyte samples in little endian byte order.
+
+=item *
+
+C<otherending> - return multibyte samples in the opposite order to the
+native order.
+
+=back
+
+=item *
+
+C<extra> - a reference to a scalar, if the C<extras> flag is supplied
+the referenced scalar will be filled with the number of extra
+channels.  This will always be zero for synthesized image data.
+
+=back
+
+May throw an exception for invalid parameters for C<flags> or
+C<layout>.
+
+Returns a scalar containing the raw bytes of the representation.
+
 =back
 
 =head1 Packed Color Data

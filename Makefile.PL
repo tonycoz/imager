@@ -662,6 +662,32 @@ EOS
   else {
     print $config "#define IMAGER_STATIC_INLINE static\n";
   }
+  
+  print $config <<'EOS';
+
+/*
+
+Define either IMAGER_LITTLE_ENDIAN or IMAGER_BIG_ENDIAN depending on
+the byte order of the platform.  Mixed endian is not supported.
+
+*/
+
+EOS
+  my $byteorder = $Config{byteorder};
+  if ($byteorder eq '1234' || $byteorder eq '12345678') {
+    print $config <<'EOS'
+#define IMAGER_LITTLE_ENDIAN
+EOS
+  }
+  elsif ($byteorder eq '4321' || $byteorder eq '87654321') {
+    print $config <<'EOS'
+#define IMAGER_BIG_ENDIAN
+EOS
+  }
+  else {
+    # no support for mixed byte order
+    die "Unknown byte order $byteorder";
+  }
   print $config <<'EOS';
 
 #ifdef __cplusplus
