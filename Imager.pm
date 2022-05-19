@@ -5040,6 +5040,9 @@ image
 
 crop() - L<Imager::Transformations/crop()> - extract part of an image
 
+data() - L<Imager::Draw/data()> - fetch raw bytes representing the
+image.
+
 def_guess_type() - L<Imager::Files/def_guess_type()> - default function
 used to guess the output file format based on the output file name
 

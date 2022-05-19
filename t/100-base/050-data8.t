@@ -15,83 +15,98 @@ my %layout_channels =
     abgr =>      [ reverse(0 .. 3) ],
    );
 
+my %samptypes =
+  (
+    '8' => '8bit',
+    'double' => 'float',
+   );
+
 {
   my @imnames = ( "gray", "gray_a", "basic", "rgba" );
 
-  # basic tests
-  for my $chans (1 .. 4) {
-    my $im = test_image_named($imnames[$chans-1]);
-    is($im->channels, $chans, "$chans: check channel count");
+  for my $bits (8, "double") {
+    my $gsamp_type = $samptypes{$bits} || die;
 
-    ok(!defined $im->data(layout => "palette"),
-       "$chans: can't get paletted data from direct colour image");
+    # basic tests
+    for my $chans (1 .. 4) {
+      my $im = test_image_named($imnames[$chans-1]);
+      is($im->channels, $chans, "$chans: check channel count");
 
-    # test data in base format for this channel count
-    my $expect = '';
-    for my $y (0 .. $im->getheight()-1) {
-      $expect .= $im->getsamples(y => $y);
-    }
+      ok(!defined $im->data(layout => "palette", bits => $bits),
+         "$chans/$bits: can't get paletted data from direct colour image");
 
-    {
-      my $data = $im->data;
-      ok($data, "$chans: got data")
-        or diag($im->errstr);
-
-      # is() would produce horrific output comparing this binary data
-      ok($data eq $expect, "$chans: data matches expected");
-    }
-    {
-      # make one with extra channels
-      my $im2 = Imager->new(xsize => $im->getwidth, ysize => $im->getheight,
-                            channels => $chans, extrachannels => 2);
-      ok($im2->paste(img => $im), "$chans: past original into extrachannel image");
-      ok(!$im2->data, "$chans: fail to get data from extrachannel image without synth or extras");
-      my $data = $im2->data(flags => 'synth');
-      ok($data, "$chans: got synthesized data");
-      ok($data eq $expect, "$chans: synthesized data matches from extra channel image");
-
-      my $extra;
-      $data = $im2->data(flags => 'extras', extra => \$extra);
-      ok($data, "$chans: got raw data from extra channels image");
-      is($extra, 2, "$chans: got expected extra channels");
-
-      # build comparison data
-      my $expextra = '';
-      for my $y (0 .. $im2->getheight()-1) {
-        $expextra .= $im2->getsamples(y => $y, channels => [ 0 .. $im2->totalchannels() -1 ]);
+      # test data in base format for this channel count
+      my $expect = '';
+      for my $y (0 .. $im->getheight()-1) {
+        $expect .= $im->getsamples(y => $y, type => $gsamp_type);
       }
-      ok($data eq $expextra, "$chans: extra channel data matches")
-        or do {
-          diag "data len: ".length $data;
-          diag "expect len: ".length $expextra;
-        };
-    }
 
-    for my $layout (qw(rgb rgba rgb_alpha rgbx bgr abgr)) {
-      my $data = $im->data(layout => $layout, flags => "synth");
+      if ($bits eq "8") {
+        my $data = $im->data;
+        ok($data, "$chans/$bits: got data")
+          or diag($im->errstr);
 
-      my $gchans = $layout_channels{$layout} or die "No channels found for $layout";
-      my $lexpect = '';
-      # make an rgba version of the image
-      my $tim = $im->convert(preset => "rgb")->convert(preset => "addalpha");
-      for my $y ( 0 .. $im->getheight()-1 ) {
-        $lexpect .= $tim->getsamples(y => $y, channels => $gchans);
+        # is() would produce horrific output comparing this binary data
+        ok($data eq $expect, "$chans/$bits: data matches expected");
       }
-      if ($layout eq "rgbx") {
-        # rgbx sets channel 3 to zero
-        my $i = 3;
-        while ($i < length $lexpect) {
-          substr($lexpect, $i, 1, "\0");
-          $i += 4;
+      {
+        # make one with extra channels
+        my $im2 = Imager->new(xsize => $im->getwidth, ysize => $im->getheight,
+                              channels => $chans, extrachannels => 2);
+        ok($im2->paste(img => $im), "$chans/$bits: paste original into extrachannel image");
+        ok(!$im2->data, "$chans/$bits: fail to get data from extrachannel image without synth or extras");
+        my $data = $im2->data(flags => 'synth', bits => $bits);
+        ok($data, "$chans/$bits: got synthesized data");
+        ok($data eq $expect, "$chans/$bits: synthesized data matches from extra channel image");
+
+        if ($bits eq "8") {
+          my $extra;
+          $data = $im2->data(flags => 'extras', extra => \$extra, bits => $bits);
+          ok($data, "$chans/$bits: got raw data from extra channels image");
+          is($extra, 2, "$chans/$bits: got expected extra channels");
+
+          # build comparison data
+          my $expextra = '';
+          for my $y (0 .. $im2->getheight()-1) {
+            $expextra .= $im2->getsamples(y => $y, channels => [ 0 .. $im2->totalchannels() -1 ],
+                                          type => $gsamp_type);
+          }
+          ok($data eq $expextra, "$chans/$bits: extra channel data matches")
+            or do {
+              diag "data len: ".length $data;
+              diag "expect len: ".length $expextra;
+            };
         }
       }
-      ok($data eq $lexpect, "$chans: non standard layout $layout works")
-        or do {
-          diag "Data len: ". length $data;
-          diag "Expect len: " . length $lexpect;
-          diag "  Data start: " . unpack("H*", substr($data, 0, 30));
-          diag "Expect start: " . unpack("H*", substr($lexpect, 0, 30));
-        };
+
+      for my $layout (qw(rgb rgba rgb_alpha rgbx bgr abgr)) {
+        my $data = $im->data(layout => $layout, flags => "synth", bits => $bits);
+
+        my $gchans = $layout_channels{$layout} or die "No channels found for $layout";
+        my $lexpect = '';
+        # make an rgba version of the image
+        my $tim = $im->convert(preset => "rgb")->convert(preset => "addalpha");
+        for my $y ( 0 .. $im->getheight()-1 ) {
+          $lexpect .= $tim->getsamples(y => $y, channels => $gchans, type => $gsamp_type);
+        }
+        if ($layout eq "rgbx") {
+          # rgbx sets channel 3 to zero
+          my $replace = $bits eq "8" ? "\0" : pack("d", 0.0);
+          my $size = length $replace;
+          my $i = 3;
+          while ($i * $size < length $lexpect) {
+            substr($lexpect, $i * $size, $size, $replace);
+            $i += 4;
+          }
+        }
+        ok($data eq $lexpect, "$chans/$bits: non standard layout $layout works")
+          or do {
+            diag "Data len: ". length $data;
+            diag "Expect len: " . length $lexpect;
+            diag "  Data start: " . unpack("H*", substr($data, 0, 30));
+            diag "Expect start: " . unpack("H*", substr($lexpect, 0, 30));
+          };
+      }
     }
   }
 }

@@ -1206,7 +1206,11 @@ Returns a 150x150x3 Imager::ImgRaw test image.
 
 =item test_image()
 
-Returns a 150x150x3 8-bit/sample OO test image. Name: C<basic>.
+Returns a 150x150x3 8-bit/sample, 3 channel OO test image. Name: C<basic>.
+
+=item test_image_rgba()
+
+Returns a 150x150x3 8-bit/sample, 4 channel OO test image. Name: C<rgba>.
 
 =item test_image_16()
 
@@ -1219,6 +1223,10 @@ Returns a 150x150x3 double/sample OO test image. Name: C<basic_double>.
 =item test_image_gray()
 
 Returns a 150x150 single channel OO test image. Name: C<gray>.
+
+=item test_image_gray_a()
+
+Returns a 150x150 2 channel OO test image. Name: C<gray_a>.
 
 =item test_image_gray_16()
 

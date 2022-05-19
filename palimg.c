@@ -45,6 +45,10 @@ i_psamp_p(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, const i_sample_t *sa
 static i_img_dim 
 i_psampf_p(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, const i_fsample_t *samps, const int *chans, int chan_count);
 
+static i_image_data_alloc_t *
+i_data_pal(i_img *im, i_data_layout_t layout, i_img_bits_t bits, unsigned flags,
+           void **pdata, size_t *psize, int *pextra);
+
 static const i_img_vtable
 vtable_pal = {
   IMAGER_API_LEVEL,
@@ -75,7 +79,9 @@ vtable_pal = {
   NULL, /* i_f_psamp_bits */
   
   i_psamp_p,
-  i_psampf_p
+  i_psampf_p,
+
+  i_data_pal
 };
 
 /*
@@ -777,6 +783,22 @@ i_psampf_p(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y,
     i_push_error(0, "Image position outside of image");
     return -1;
   }
+}
+
+static i_image_data_alloc_t *
+i_data_pal(i_img *im, i_data_layout_t layout, i_img_bits_t bits, unsigned flags,
+           void **pdata, size_t *psize, int *pextra) {
+  if (bits != i_8_bits
+      || layout != idl_palette
+      || layout != im->channels) {
+    return i_img_data_fallback(im, layout, bits, flags, pdata, psize, pextra);
+  }
+
+  *pdata = im->idata;
+  *psize = im->bytes;
+  *pextra = 0;
+
+  return i_new_image_data_alloc_def(im);
 }
 
 /*

@@ -41,7 +41,9 @@ static i_img_dim
 i_psamp_ddoub(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, const i_sample_t *samps, const int *chans, int chan_count);
 static i_img_dim 
 i_psampf_ddoub(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, const i_fsample_t *samps, const int *chans, int chan_count);
-
+static i_image_data_alloc_t *
+i_data_double(i_img *im, i_data_layout_t layout, i_img_bits_t bits, unsigned flags,
+              void **pdata, size_t *psize, int *pextra);
 /*
 =item vtable_double
 
@@ -81,7 +83,9 @@ vtable_double = {
   NULL, /* i_f_psamp_bits */
 
   i_psamp_ddoub, /* i_f_psamp */
-  i_psampf_ddoub /* i_f_psampf */
+  i_psampf_ddoub, /* i_f_psampf */
+
+  i_data_double
 };
 
 /*
@@ -670,6 +674,24 @@ i_psampf_ddoub(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y,
     i_push_error(0, "Image position outside of image");
     return -1;
   }
+}
+
+static i_image_data_alloc_t *
+i_data_double(i_img *im, i_data_layout_t layout, i_img_bits_t bits, unsigned flags,
+          void **pdata, size_t *psize, int *pextra) {
+  if ((im->extrachannels && !(flags & idf_extras))
+      || (flags & idf_otherendian)
+      || bits != i_double_bits
+      || layout == idl_palette
+      || layout != im->channels) {
+    return i_img_data_fallback(im, layout, bits, flags, pdata, psize, pextra);
+  }
+
+  *pdata = im->idata;
+  *psize = im->bytes;
+  *pextra = im->extrachannels;
+
+  return i_new_image_data_alloc_def(im);
 }
 
 /*

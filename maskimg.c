@@ -95,7 +95,9 @@ vtable_mask = {
   NULL, /* i_f_psamp_bits */
 
   psamp_masked, /* i_f_psamp */
-  psampf_masked /* i_f_psampf */
+  psampf_masked, /* i_f_psampf */
+
+  i_img_data_fallback
 };
 
 /*

@@ -28,6 +28,8 @@ i_data_flags_collection	I_DATA_FLAGS_COLLECTION
 
 i_data_layout_t		I_DATA_LAYOUT_T
 
+i_data_bits		I_DATA_BITS
+
 #############################################################################
 INPUT
 
@@ -158,6 +160,9 @@ I_DATA_FLAGS_COLLECTION
 
 I_DATA_LAYOUT_T
 	$var = parse_data_layout(aTHX_ $arg);
+
+I_DATA_BITS
+	$var = parse_data_bits(aTHX_ $arg);
 
 #############################################################################
 OUTPUT

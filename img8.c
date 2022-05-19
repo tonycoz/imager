@@ -16,9 +16,9 @@ static i_img_dim i_gsamp_d(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, i_s
 static i_img_dim i_gsampf_d(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, i_fsample_t *samps, const int *chans, int chan_count);
 static i_img_dim i_psamp_d(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, const i_sample_t *samps, const int *chans, int chan_count);
 static i_img_dim i_psampf_d(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, const i_fsample_t *samps, const int *chans, int chan_count);
-static i_image_alloc_t *
+static i_image_data_alloc_t *
 i_data_8(i_img *im, i_data_layout_t layout, i_img_bits_t bits, unsigned flags,
-              void **p, size_t *size, int *extra);
+         void **p, size_t *size, int *extra);
 
 static const i_img_vtable
 vtable_8bit = {
@@ -494,12 +494,7 @@ i_gsampf_d(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, i_fsample_t *samps,
   i_img_dim count, i, w;
   unsigned char *data;
   unsigned totalch = im->channels + im->extrachannels;  
-  for (ch = 0; ch < chan_count; ++ch) {
-    if (chans[ch] < 0 || chans[ch] >= totalch) {
-      dIMCTXim(im);
-      im_push_errorf(aIMCTX, 0, "No channel %d in this image", chans[ch]);
-    }
-  }
+
   if (y >=0 && y < im->ysize && l < im->xsize && l >= 0) {
     if (r > im->xsize)
       r = im->xsize;
@@ -731,10 +726,11 @@ i_psampf_d(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y,
   }
 }
 
-static i_image_alloc_t *
+static i_image_data_alloc_t *
 i_data_8(i_img *im, i_data_layout_t layout, i_img_bits_t bits, unsigned flags,
          void **pdata, size_t *psize, int *pextra) {
   if ((im->extrachannels && !(flags & idf_extras))
+      || (flags & idf_otherendian)
       || bits != i_8_bits
       || layout == idl_palette
       || layout != im->channels) {
@@ -745,7 +741,7 @@ i_data_8(i_img *im, i_data_layout_t layout, i_img_bits_t bits, unsigned flags,
   *psize = im->bytes;
   *pextra = im->extrachannels;
 
-  return i_new_image_alloc_def(im);
+  return i_new_image_data_alloc_def(im);
 }
 /*
 =back
