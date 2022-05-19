@@ -37,15 +37,10 @@ abgr_gray_chans[] = { 0, 0, 0, 0 };
 
 static const int *
 layout_chans(i_img *im, i_data_layout_t layout, int *count, int *need_alpha, int *need_zero) {
-  dIMCTXim(im);
-
   *need_alpha = -1;
   *need_zero = -1;
-  switch (layout) {
-  case idl_palette:
-    /* only the paletted image handler needs to handle this */
-    return NULL;
 
+  switch (layout) {
   case idl_gray:
     if (im->channels > 2)
       return NULL;
@@ -124,13 +119,18 @@ layout_chans(i_img *im, i_data_layout_t layout, int *count, int *need_alpha, int
     }
     /* NOTREACHED */
 
+  case idl_palette: /* only the paletted image handler needs to handle this */
   default:
-    im_fatal(aIMCTX, 3, "Unknown data layout %d", (int)layout);
+    {
+      dIMCTXim(im);
+      im_push_errorf(aIMCTX, 3, "Unknown data layout %d", (int)layout);
+      return NULL;
+    }
   }
 }
 
 
-static i_image_alloc_t *
+static i_image_data_alloc_t *
 data_8(i_img *im, i_data_layout_t layout, void **pdata, size_t *psize) {
   dIMCTXim(im);
   const int *chans;
@@ -145,6 +145,9 @@ data_8(i_img *im, i_data_layout_t layout, void **pdata, size_t *psize) {
   size_t row_size;
 
   chans = layout_chans(im, layout, &count, &need_alpha, &need_zero);
+  if (!chans) {
+    return NULL;
+  }
   size = (size_t)count * (size_t)im->xsize * (size_t)im->ysize;
   if (size / (size_t)count / (size_t)im->xsize != (size_t)im->ysize) {
     im_push_error(aIMCTX, 0, "integer overflow calculating image data size");
@@ -171,7 +174,75 @@ data_8(i_img *im, i_data_layout_t layout, void **pdata, size_t *psize) {
   *pdata = data;
   *psize = size;
 
-  return i_new_image_alloc_free(im, data);
+  return i_new_image_data_alloc_free(im, data);
+}
+
+static void
+swap_bytes(void *data, size_t size, size_t item_size) {
+  unsigned char *p = data;
+  unsigned char *end = p + size;
+  int iter_limit = item_size / 2;
+
+  while (p < end) {
+    int i, j;
+
+    for (i = 0, j = item_size-1; i < iter_limit; ++i) {
+      unsigned char temp = p[i];
+      p[i] = p[item_size-i];
+      p[item_size-i] = temp;
+    }
+
+    p += item_size;
+  }
+}
+
+static i_image_data_alloc_t *
+data_double(i_img *im, i_data_layout_t layout, unsigned flags,
+            void **pdata, size_t *psize) {
+  dIMCTXim(im);
+  const int *chans;
+  int count;
+  int need_alpha;
+  int need_zero;
+  size_t size;
+  i_fsample_t *data;
+  i_fsample_t *datap;
+  i_fsample_t *pixelp;
+  i_img_dim x, y;
+  size_t row_size;
+
+  chans = layout_chans(im, layout, &count, &need_alpha, &need_zero);
+  size = (size_t)count * (size_t)im->xsize * (size_t)im->ysize * sizeof(i_fsample_t);
+  if (size / (size_t)count / (size_t)im->xsize / sizeof(i_fsample_t) != (size_t)im->ysize) {
+    im_push_error(aIMCTX, 0, "integer overflow calculating image data size");
+    return NULL;
+  }
+
+  /* cannot fail */
+  data = mymalloc(size);
+  row_size = count * im->xsize;
+  for (y = 0, datap = data; y < im->ysize; ++y, datap += row_size) {
+    i_gsampf(im, 0, im->xsize, y, datap, chans, count);
+    if (need_alpha >= 0) {
+      for (x = 0, pixelp = datap; x < im->xsize; ++x, pixelp += count) {
+        pixelp[need_alpha] = 1.0;
+      }
+    }
+    if (need_zero >= 0) {
+      for (x = 0, pixelp = datap; x < im->xsize; ++x, pixelp += count) {
+        pixelp[need_zero] = 0.0;
+      }
+    }
+  }
+
+  if (flags & idf_otherendian) {
+    swap_bytes(data, size, sizeof(i_fsample_t));
+  }
+
+  *pdata = data;
+  *psize = size;
+
+  return i_new_image_data_alloc_free(im, data);
 }
 
 /*
@@ -184,7 +255,7 @@ i_img_data()/C<i_f_data> to produce synthesized data.
 
 The intent this is used something like:
 
- i_image_alloc *my_img_data(...) {
+ i_image_alloc_t *my_img_data(...) {
    if (layout, bits, extrachannels matches image layout) {
      ... populate *pptr, *size, *extrachannels
      ... increment image refcount
@@ -200,7 +271,7 @@ and my_img_data goes into the image's virtual table.
 =cut
 */
 
-i_image_alloc_t *
+i_image_data_alloc_t *
 i_img_data_fallback(i_img *im, i_data_layout_t layout, i_img_bits_t bits, unsigned flags,
                     void **pdata, size_t *psize, int *extra) {
   dIMCTXim(im);
@@ -224,26 +295,26 @@ i_img_data_fallback(i_img *im, i_data_layout_t layout, i_img_bits_t bits, unsign
   case i_8_bits:
     return data_8(im, layout, pdata, psize);
 
-  case i_16_bits:
   case i_double_bits:
-    im_push_errorf(aIMCTX, 0, "image bits %d not implemented", (int)layout);
-    return NULL;
+    return data_double(im, layout, flags, pdata, psize);
+
   default:
-    im_fatal(aIMCTX, 3, "i_img_data_fallback: Unknown bits %d\n", (int)bits);
+    im_push_errorf(aIMCTX, 0, "image bits %d not implemented", (int)bits);
+    return NULL;
   }
 }
 
 struct def_data_alloc {
-  i_image_alloc_t head;
+  i_image_data_alloc_t head;
 };
 
 static void
-release_def_alloc(i_image_alloc_t *alloc) {
+release_def_alloc(i_image_data_alloc_t *alloc) {
   myfree(alloc);
 }
 
-i_image_alloc_t *
-i_new_image_alloc_def(i_img *im) {
+i_image_data_alloc_t *
+i_new_image_data_alloc_def(i_img *im) {
   struct def_data_alloc *result = mymalloc(sizeof(struct def_data_alloc));
   result->head.f_release = release_def_alloc;
 
@@ -251,19 +322,28 @@ i_new_image_alloc_def(i_img *im) {
 }
 
 struct myfree_data_alloc {
-  i_image_alloc_t head;
+  i_image_data_alloc_t head;
   void *releaseme;
 };
 
 static void
-release_myfree_alloc(i_image_alloc_t *alloc) {
+release_myfree_alloc(i_image_data_alloc_t *alloc) {
   struct myfree_data_alloc *work = (struct myfree_data_alloc *)alloc;
   myfree(work->releaseme);
   myfree(alloc);
 }
 
-i_image_alloc_t *
-i_new_image_alloc_free(i_img *im, void *releaseme) {
+/*
+=item i_new_image_data_alloc_free()
+
+Create an image data allocation object that releases the memory block
+supplied using myfree().
+
+=cut
+*/
+
+i_image_data_alloc_t *
+i_new_image_data_alloc_free(i_img *im, void *releaseme) {
   struct myfree_data_alloc *result = mymalloc(sizeof(struct myfree_data_alloc));
   result->head.f_release = release_def_alloc;
   result->releaseme = releaseme;
