@@ -201,7 +201,12 @@ typedef enum {
   /* a paletted image might have one bit per sample */
   i_8_bits = 8,
   i_16_bits = 16,
-  i_double_bits = sizeof(double) * 8
+  i_double_bits = sizeof(double) * 8,
+
+  /* future use, defined so the underlying integral type doesn't change later */
+  i_32_bits = 32,
+  i_float16_bits = -16,
+  i_float_bits = -(int)(sizeof(float)*8)
 } i_img_bits_t;
 
 /*
@@ -248,7 +253,21 @@ image.  Implies C<idf_no_synthesize>.
 =item *
 
 C<idf_extras> - image data returned may include channels after the
-channels implied by the data layout.  This is for future use.
+channels implied by the data layout.
+
+=item *
+
+C<idf_bigendian> - return the data in big endian byte order.
+
+=item *
+
+C<idf_littleendian> - return the data in little endian byte order.
+
+=item *
+
+C<idf_otherendian> - return the data in the opposite to the native
+byte order.  Either C<idf_bigendia> or C<idf_littleendian> will equal
+this, while the other will be zero.
 
 =back
 
@@ -258,11 +277,24 @@ channels implied by the data layout.  This is for future use.
 typedef enum {
   idf_synthesize    = 0x1,
   idf_writable      = 0x2,
-  idf_extras        = 0x4
+  idf_extras        = 0x4,
+  idf_otherendian   = 0x8,
+#if defined IMAGER_LITTLE_ENDIAN
+  idf_littleendian  = 0,
+  idf_bigendian     = idf_otherendian,
+#elif defined IMAGER_BIG_ENDIAN
+  idf_littleendian  = idf_otherendian,
+  idf_bigendian     = 0,
+#else
+#  error No endianess defined
+#endif
+
+  /* so extra flags don't modify the size of the type */
+  idf_reserved      = 0x80000000
 } i_data_flags_t;
 
 /*
-=item i_image_alloc_t
+=item i_image_data_alloc_t
 
 i_img_data() returns a pointer to this mostly opaque type.
 
@@ -271,9 +303,9 @@ This must be released with i_img_data_release().
 =cut
 */
 
-typedef struct i_image_alloc_struct {
-  void (*f_release)(struct i_image_alloc_struct *p);
-} i_image_alloc_t;
+typedef struct i_image_data_alloc_struct {
+  void (*f_release)(struct i_image_data_alloc_struct *p);
+} i_image_data_alloc_t;
 
 typedef struct {
   char *name; /* name of a given tag */
@@ -327,7 +359,7 @@ typedef i_img_dim
 (*i_f_psampf_t)(i_img *im, i_img_dim x, i_img_dim r, i_img_dim y,
 		const i_fsample_t *samp, const int *chan, int chan_count);
 
-typedef i_image_alloc_t *
+typedef i_image_data_alloc_t *
 (*i_f_data_t)(i_img *im, i_data_layout_t layout, i_img_bits_t bits, unsigned flags,
               void **p, size_t *size, int *extra);
 /*

@@ -1321,6 +1321,9 @@ parse_data_flags(pTHX_ SV *sv) {
     return 0;
   }
   p = SvPV(sv, len);
+  if (len == 0) {
+    return 0;
+  }
   pend = p + len;
   while (p < pend) {
     STRLEN keylen;
@@ -1333,6 +1336,15 @@ parse_data_flags(pTHX_ SV *sv) {
     }
     else if (memEQs(p, keylen, "extras")) {
       flags |= idf_extras;
+    }
+    else if (memEQs(p, keylen, "bigendian")) {
+      flags |= idf_bigendian;
+    }
+    else if (memEQs(p, keylen, "littleendian")) {
+      flags |= idf_littleendian;
+    }
+    else if (memEQs(p, keylen, "otherendian")) {
+      flags |= idf_otherendian;
     }
     else if (memEQs(p, keylen, "writable")) {
       Perl_croak(aTHX_ "writable is meaningless for the Imager data method");
@@ -1390,6 +1402,28 @@ parse_data_layout(pTHX_ SV *sv) {
   }
   else {
     Perl_croak(aTHX_ "Unknown image data layout '%s'", p);
+  }
+}
+
+typedef int i_data_bits;
+
+static int
+parse_data_bits(pTHX_ SV *sv) {
+  char *p;
+  STRLEN len;
+
+  p = SvPV(sv, len);
+  if (memEQs(p, len, "double")) {
+    return i_double_bits;
+  }
+  else if (memEQs(p, len, "float")) {
+    return i_float_bits;
+  }
+  else if (memEQs(p, len, "float16")) {
+    return i_float16_bits;
+  }
+  else {
+    return SvIV_nomg(sv);
   }
 }
 
@@ -3794,13 +3828,13 @@ SV *
 i_img_data(im, layout, bits, flags, extra)
         Imager::ImgRaw  im
         i_data_layout_t layout
-        int bits
+        i_data_bits bits
         i_data_flags_collection flags
         int extra
     PREINIT:
       void *data;
       size_t size;
-      i_image_alloc_t *alloc;
+      i_image_data_alloc_t *alloc;
     CODE:
       alloc = i_img_data(im, layout, bits, flags, &data, &size, &extra);
       if (!alloc)
