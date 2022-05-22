@@ -4404,8 +4404,15 @@ sub def_guess_type {
   my ($ext) = $name =~ /\.([^.]+)$/
     or return;
 
-  my $type = $ext_types{$ext}
-    or return;
+  my $type = $ext_types{$ext};
+  unless ($type) {
+    $type = $ext_types{lc $ext};
+  }
+
+  if (!defined $type && $ext =~ /\A[a-zA-Z0-9_]{2,}\z/) {
+    # maybe a reasonable assumption
+    $type = lc $ext;
+  }
 
   return $type;
 }
