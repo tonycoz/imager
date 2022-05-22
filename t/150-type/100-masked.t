@@ -2,7 +2,7 @@
 use strict;
 use Test::More;
 use Imager qw(:all :handy);
-use Imager::Test qw(is_color3 is_fcolor3 test_image is_image);
+use Imager::Test qw(is_color3 is_fcolor3 test_image is_image test_image_pal);
 
 -d "testout" or mkdir "testout";
 
@@ -715,6 +715,21 @@ for my $masked (0, 1) { # psampf
   ok(!$empty->masked, "fail to make a masked image from an empty");
   is($empty->errstr, "masked: empty input image",
     "check error message");
+}
+
+{
+  my $palim = test_image_pal();
+
+  my $masked = $palim->masked(left => 5, top => 5);
+  ok(!$masked->data(layout => "palette"), "can't get data without synthesis");
+  my $paldata = $masked->data(layout => "palette", flags => "synth");
+  ok($paldata, "got palette data with synth");
+  my $cmp = '';
+  for my $y (0 .. $masked->getheight()-1) {
+    $cmp .= $masked->getscanline(y => $y, type => "index");
+  }
+  is(length($paldata), length($cmp), "data lengths match");
+  is(unpack("H*", $paldata), unpack("H*", $cmp), "check palette data matches expected");
 }
 
 Imager->close_log();
