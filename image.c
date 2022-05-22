@@ -1723,7 +1723,11 @@ im_test_format_probe(im_context_t ctx, io_glue *data, int length) {
     FORMAT_ENTRY2("\x00\x00\x00\x00" "ftyphevm", "heif", "    xxxxxxxx"),
     FORMAT_ENTRY2("\x00\x00\x00\x00" "ftyphevs", "heif", "    xxxxxxxx"),
     FORMAT_ENTRY2("\x00\x00\x00\x00" "ftypmif1", "heif", "    xxxxxxxx"),
-    FORMAT_ENTRY2("\x00\x00\x00\x00" "ftypmsf1", "heif", "    xxxxxxxx")
+    FORMAT_ENTRY2("\x00\x00\x00\x00" "ftypmsf1", "heif", "    xxxxxxxx"),
+
+    FORMAT_ENTRY2("\x00\x00\x00\x00" "ftypavif", "avif", "    xxxxxxxx"),
+    /* AV1 image sequence */
+    FORMAT_ENTRY2("\x00\x00\x00\x00" "ftypavis", "avif", "    xxxxxxxx")
   };
   static const struct file_magic_entry more_formats[] = {
     /* these were originally both listed as ico, but cur files can

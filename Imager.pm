@@ -4394,6 +4394,8 @@ my %ext_types =
    fit => "fits",
    fits => "fits",
    rle => "utah",
+   avifs => "avif", # AVIF image sequence
+   avif => "avif",
   );
 
 sub def_guess_type {
