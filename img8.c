@@ -743,6 +743,7 @@ i_data_8(i_img *im, i_data_layout_t layout, i_img_bits_t bits, unsigned flags,
 
   return i_new_image_data_alloc_def(im);
 }
+
 /*
 =back
 
