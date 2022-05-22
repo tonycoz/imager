@@ -245,6 +245,30 @@ data_double(i_img *im, i_data_layout_t layout, unsigned flags,
   return i_new_image_data_alloc_free(im, data);
 }
 
+static i_image_data_alloc_t *
+data_palette(i_img *im, void **pdata, size_t *psize) {
+  size_t size = (size_t)im->xsize * (size_t)im->ysize;
+  unsigned char *data;
+  unsigned char *datap;
+  i_img_dim y;
+    
+  if (size / (size_t)im->xsize != im->ysize) {
+    dIMCTXim(im);
+    im_push_error(aIMCTX, 0, "integer overflow calculating image data size");
+    return NULL;
+  }
+
+  data = mymalloc(size);
+  for (y = 0, datap = data; y < im->ysize; ++y, datap += im->xsize) {
+    i_gpal(im, 0, im->xsize, y, datap);
+  }
+
+  *pdata = data;
+  *psize = size;
+
+  return i_new_image_data_alloc_free(im, data);
+}
+
 /*
 =item i_img_data_fallback()
 
@@ -290,6 +314,16 @@ i_img_data_fallback(i_img *im, i_data_layout_t layout, i_img_bits_t bits, unsign
 
   /* we never synthesize extra channels */
   *extra = 0;
+
+  if (layout == idl_palette) {
+    if (im->type == i_palette_type && bits == i_8_bits) {
+      return data_palette(im, pdata, psize);
+    }
+    else {
+      im_push_error(aIMCTX, 0, "paletted layout only valid for paletted images");
+      return NULL;
+    }
+  }
 
   switch (bits) {
   case i_8_bits:
@@ -338,6 +372,9 @@ release_myfree_alloc(i_image_data_alloc_t *alloc) {
 
 Create an image data allocation object that releases the memory block
 supplied using myfree().
+
+This is used to generate the L<i_image_data_alloc_t> object returned
+by i_img_data() when data is synthesized.
 
 =cut
 */
