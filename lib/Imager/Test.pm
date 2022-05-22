@@ -23,6 +23,7 @@ our @EXPORT_OK =
      test_image_gray
      test_image_gray_a
      test_image_gray_16
+     test_image_pal
      test_image_named
      is_color1
      is_color3
@@ -468,6 +469,12 @@ sub test_image_mono {
   return $img;
 }
 
+my $palcache;
+sub test_image_pal {
+  $palcache ||= test_image()->to_paletted(make_colors => "webmap", translate => "errdiff");
+  return $palcache->copy;
+}
+
 my %name_to_sub =
   (
    basic => \&test_image,
@@ -478,6 +485,7 @@ my %name_to_sub =
    gray_a => \&test_image_gray_a,
    gray16 => \&test_image_gray_16,
    mono => \&test_image_mono,
+   pal => \&test_image_pal,
   );
 
 sub test_image_named {
@@ -1237,6 +1245,10 @@ C<gray16>.
 
 Returns a 150x150 bilevel image that passes the is_bilevel() test.
 Name: C<mono>.
+
+=item test_image_pal()
+
+Returns a 150x150 paletted OO test image.  Name: C<pal>.
 
 =item test_image_named($name)
 

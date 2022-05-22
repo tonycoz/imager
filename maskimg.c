@@ -57,7 +57,9 @@ psamp_masked(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y,
 static i_img_dim
 psampf_masked(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y,
 	       const i_fsample_t *samples, const int *chans, int chan_count);
-
+static i_image_data_alloc_t *
+data_masked(i_img *im, i_data_layout_t layout, i_img_bits_t bits, unsigned flags,
+	    void **pdata, size_t *psize, int *pextra);
 /*
 =item IIM_base_masked
 
@@ -97,7 +99,7 @@ vtable_mask = {
   psamp_masked, /* i_f_psamp */
   psampf_masked, /* i_f_psampf */
 
-  i_img_data_fallback
+  data_masked
 };
 
 /*
@@ -591,8 +593,8 @@ psamp_masked(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y,
     else {
       result = i_psamp(ext->targ, l + ext->xbase, r + ext->xbase, 
 		       y + ext->ybase, samples, chans, chan_count);
-      im->type = ext->targ->type;
     }
+    im->type = ext->targ->type;
     ext->targ->ch_mask = old_ch_mask;
     return result;
   }
@@ -659,8 +661,8 @@ psampf_masked(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y,
       result = i_psampf(ext->targ, l + ext->xbase, r + ext->xbase, 
 			y + ext->ybase, samples,
 				 chans, chan_count);
-      im->type = ext->targ->type;
     }
+    im->type = ext->targ->type;
     ext->targ->ch_mask = old_ch_mask;
     return result;
   }
@@ -671,6 +673,15 @@ psampf_masked(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y,
   }
 }
 
+static i_image_data_alloc_t *
+data_masked(i_img *im, i_data_layout_t layout, i_img_bits_t bits, unsigned flags,
+	    void **pdata, size_t *psize, int *pextra) {
+  i_img_mask_ext *ext = MASKEXT(im);
+
+  im->type = ext->targ->type;
+
+  return i_img_data_fallback(im, layout, bits, flags, pdata, psize, pextra);
+}
 
 /*
 =back
