@@ -1786,7 +1786,10 @@ From: File palimg.c
 
   i_img_destroy(img)
 
-Destroy an image object
+Reduce the reference count of an image object by 1, and if the
+reference count reaches zero, destroy the image object.
+
+This is unrelated to Perl C<SV> reference counts.
 
 
 =for comment

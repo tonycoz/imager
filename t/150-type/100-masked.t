@@ -730,6 +730,11 @@ for my $masked (0, 1) { # psampf
   }
   is(length($paldata), length($cmp), "data lengths match");
   is(unpack("H*", $paldata), unpack("H*", $cmp), "check palette data matches expected");
+
+  # refcnt test, destroy the original image
+  undef $palim;
+  # success is not crashing
+  my $data = $masked->data;
 }
 
 Imager->close_log();

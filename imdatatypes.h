@@ -551,6 +551,8 @@ struct i_img_ {
                         /* can be NULL if isvirtual is non-zero */
   i_img_tags tags;
 
+  unsigned ref_count;
+
   void *ext_data;
 
   void *im_data;
