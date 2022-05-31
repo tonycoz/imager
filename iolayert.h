@@ -29,7 +29,7 @@ typedef ssize_t(*i_io_readp_t) (io_glue *ig, void *buf, size_t count);
 typedef ssize_t(*i_io_writep_t)(io_glue *ig, const void *buf, size_t count);
 typedef off_t  (*i_io_seekp_t) (io_glue *ig, off_t offset, int whence);
 typedef int    (*i_io_closep_t)(io_glue *ig);
-typedef ssize_t(*i_io_sizep_t) (io_glue *ig);
+typedef off_t  (*i_io_sizep_t) (io_glue *ig);
 
 typedef void   (*i_io_closebufp_t)(void *p);
 typedef void (*i_io_destroyp_t)(i_io_glue_t *ig);
@@ -42,7 +42,7 @@ typedef ssize_t(*i_io_writel_t)(void *p, const void *buf, size_t count);
 typedef off_t  (*i_io_seekl_t) (void *p, off_t offset, int whence);
 typedef int    (*i_io_closel_t)(void *p);
 typedef void   (*i_io_destroyl_t)(void *p);
-typedef ssize_t(*i_io_sizel_t) (void *p);
+typedef off_t  (*i_io_sizel_t) (void *p);
 
 extern char *io_type_names[];
 
@@ -93,6 +93,7 @@ struct i_io_glue_t {
 #define i_io_raw_seek(ig, offset, whence) ((ig)->vtbl->seekcb((ig), (offset), (whence)))
 #define i_io_raw_close(ig) ((ig)->vtbl->closecb(ig))
 #define i_io_is_buffered(ig) ((int)((ig)->buffered))
+#define i_io_size(ig) ((ig)->vtbl->sizecb ? (ig)->vtbl->sizecb(ig) : (off_t)-1)
 
 #define i_io_getc(ig) \
   ((ig)->read_ptr < (ig)->read_end ? \

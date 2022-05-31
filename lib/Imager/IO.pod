@@ -11,6 +11,7 @@ Imager::IO - Imager's io_layer object.
   my $count = $IO->read($buffer, $max_count);
   my $position = $IO->seek($offset, $whence);
   my $status = $IO->close;
+  my $size = $IO->size;
 
 =head1 DESCRIPTION
 
@@ -219,6 +220,11 @@ a file this won't close the file handle, but buffers may be flushed
 (if any).
 
 Returns 0 on success, -1 on failure.
+
+=item size()
+
+Returns the size of the stream, if it's a file or memory buffer.
+Returns -1 on failure.
 
 =item eof()
 
