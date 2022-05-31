@@ -2,7 +2,7 @@ package Imager::Fill;
 use 5.006;
 use strict;
 
-our $VERSION = "1.013";
+our $VERSION = "1.014";
 
 # this needs to be kept in sync with the array of hatches in fills.c
 my @hatch_types =
@@ -123,7 +123,6 @@ sub new {
     $self->{fill} =
       Imager::i_new_fill_image($hsh{image}{IMG}, $hsh{matrix}, $hsh{xoff}, 
                                $hsh{yoff}, $hsh{combine});
-    $self->{DEPS} = [ $hsh{image}{IMG} ];
   }
   elsif (defined $hsh{type} && $hsh{type} eq "opacity") {
     my $other_fill = delete $hsh{other};

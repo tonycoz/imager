@@ -1,6 +1,6 @@
 #!perl -w
 use strict;
-use Test::More tests => 165;
+use Test::More;
 
 use Imager ':handy';
 use Imager::Fill;
@@ -337,6 +337,13 @@ ok($oocopy->arc(fill=>{image=>$fillim,
                        xoff=>5}, r=>40),
    "image based fill");
 $oocopy->write(file=>'testout/t20_image.ppm');
+{
+  my $fillimcopy = $fillim->copy;
+  my $imfill = Imager::Fill->new(image=>$fillimcopy, combine=>'normal', xoff=>5);
+  undef $fillimcopy;
+  # should crash if we didn't refcnt properly
+  ok($oocopy->box(fill => $imfill), "use image fill where fill image was released");
+}
 
 # a more complex version
 use Imager::Matrix2d ':handy';
@@ -695,6 +702,8 @@ SKIP:
     or diag "fill test image: ", $im->errstr;
   is_image($im, $cmp, "check test image");
 }
+
+done_testing();
 
 sub color_close {
   my ($c1, $c2) = @_;

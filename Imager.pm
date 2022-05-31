@@ -1108,10 +1108,6 @@ sub masked {
     return;
   }
 
-  # keep references to the mask and base images so they don't
-  # disappear on us
-  $result->{DEPENDS} = [ $self->{IMG}, $mask ];
-
   return $result;
 }
 
