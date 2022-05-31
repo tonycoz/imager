@@ -198,7 +198,7 @@ test($imbase, { type=>'fountain', xa=>75, ya=>75, xb=>90, yb=>15,
 }
 SKIP:
 {
-  my $fh = IO::File->new("testimg/gimpgrad", "r");
+  open my $fh, "<", "testimg/gimpgrad";
   ok($fh, "opened gradient")
     or skip "Couldn't open gradient: $!", 1;
   my $f = Imager::Fountain->read(gimp => $fh);

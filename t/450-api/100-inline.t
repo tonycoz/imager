@@ -522,16 +522,15 @@ ok($im3->write(file=>'testout/t82lots.ppm'), "write t82lots.ppm");
 
 SKIP:
 {
-  use IO::File;
   my $fd_filename = "testout/t82fd.txt";
   {
-    my $fh = IO::File->new($fd_filename, "w")
+    open my $fh, ">",$fd_filename
       or skip("Can't create file: $!", 1);
     io_fd(fileno($fh));
     $fh->close;
   }
   {
-    my $fh = IO::File->new($fd_filename, "r")
+    open my $fh, "<", $fd_filename
       or skip("Can't open file: $!", 1);
     my $data = <$fh>;
     is($data, "test", "make sure data written to fd");

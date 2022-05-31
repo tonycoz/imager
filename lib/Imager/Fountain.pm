@@ -3,7 +3,7 @@ use 5.006;
 use strict;
 use Imager::Color::Float;
 
-our $VERSION = "1.008";
+our $VERSION = "1.009";
 
 =head1 NAME
 
@@ -50,10 +50,14 @@ sub read {
 
   if ($opts{gimp}) {
     my $fh;
-    $fh = ref($opts{gimp}) ? $opts{gimp} : IO::File->new($opts{gimp});
-    unless ($fh) {
-      $Imager::ERRSTR = "Cannot open $opts{gimp}: $!";
-      return;
+    if (ref($opts{gimp})) {
+      $fh = $opts{gimp};
+    }
+    else {
+      unless (open $fh, "<", $opts{gimp}) {
+        $Imager::ERRSTR = "Cannot open $opts{gimp}: $!";
+        return;
+      }
     }
 
     my $trash_name;
@@ -88,10 +92,14 @@ sub write {
 
   if ($opts{gimp}) {
     my $fh;
-    $fh = ref($opts{gimp}) ? $opts{gimp} : IO::File->new("> ".$opts{gimp});
-    unless ($fh) {
-      $Imager::ERRSTR = "Cannot open $opts{gimp}: $!";
-      return;
+    if (ref($opts{gimp})) {
+      $fh = $opts{gimp};
+    }
+    else {
+      unless (open $fh, ">", $opts{gimp}) {
+        $Imager::ERRSTR = "Cannot open $opts{gimp}: $!";
+        return;
+      }
     }
 
     return $self->_save_gimp_gradient($fh, $opts{gimp}, $opts{name});

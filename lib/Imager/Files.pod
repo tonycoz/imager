@@ -37,7 +37,7 @@ Imager::Files - working with image files
   my $data;
   $img->write(data => \$data, type => $type) or die;
 
-  my $fh = ... ; # eg. IO::File
+  open my $fh, "+>:raw", ... ;
   $img->write(fh => $fh, type => $type) or die;
 
   $img->write(fd => fileno($fh), type => $type) or die;
@@ -216,9 +216,9 @@ file you do not need to supply a C<type>.
 
 =item *
 
-C<fh> - C<fh> is a file handle, typically either returned from
-C<<IO::File->new()>>, or a glob from an C<open> call.  You should call
-C<binmode> on the handle before passing it to Imager.
+C<fh> - C<fh> is a file handle, typically returned from an C<open>
+call.  You should call C<binmode> on the handle before passing it to
+Imager.
 
 Imager will set the handle to autoflush to make sure any buffered data
 is flushed , since Imager will write to the file descriptor (from
