@@ -2,13 +2,11 @@ package Imager;
 use 5.006;
 
 use strict;
-use IO::File;
 use Scalar::Util;
 use Imager::Color;
 use Imager::Color::Float;
 use Imager::Font;
 use Imager::TrimColorList;
-use Config;
 
 our $ERRSTR;
 
@@ -1504,8 +1502,8 @@ sub _get_reader_io {
     return Imager::IO->new_fh($input->{fh});
   }
   elsif ($input->{file}) {
-    my $file = IO::File->new($input->{file}, "r");
-    unless ($file) {
+    my $file;
+    unless (open $file, "<", $input->{file}) {
       $self->_set_error("Could not open $input->{file}: $!");
       return;
     }
@@ -1558,8 +1556,8 @@ sub _get_writer_io {
     $io = Imager::IO->new_fh($input->{fh});
   }
   elsif ($input->{file}) {
-    my $fh = new IO::File($input->{file},"w+");
-    unless ($fh) { 
+    my $fh;
+    unless (open $fh, "+>", $input->{file}) { 
       $self->_set_error("Could not open file $input->{file}: $!");
       return;
     }
