@@ -2014,6 +2014,10 @@ bool
 i_io_error(ig)
 	Imager::IO ig
 
+off_t
+i_io_size(ig)
+        Imager::IO ig
+
 MODULE = Imager		PACKAGE = Imager
 
 PROTOTYPES: ENABLE
