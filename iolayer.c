@@ -114,8 +114,7 @@ Some of these functions are internal.
 */
 
 static void
-i_io_init(pIMCTX, io_glue *ig, int type, i_io_readp_t readcb,
-	  i_io_writep_t writecb, i_io_seekp_t seekcb);
+i_io_init(pIMCTX, io_glue *ig, int type, const i_io_glue_vtable_t *vtbl);
 
 static ssize_t fd_read(io_glue *ig, void *buf, size_t count);
 static ssize_t fd_write(io_glue *ig, const void *buf, size_t count);
@@ -149,6 +148,50 @@ static int bufchain_close(io_glue *ig);
 static off_t bufchain_seek(io_glue *ig, off_t offset, int whence);
 static void bufchain_destroy(io_glue *ig);
 
+static const i_io_glue_vtable_t
+bufchain_vtable =
+  {
+    bufchain_read,
+    bufchain_write,
+    bufchain_seek,
+    bufchain_close,
+    NULL,
+    bufchain_destroy
+  };
+
+static const i_io_glue_vtable_t
+buffer_vtable =
+  {
+    buffer_read,
+    buffer_write,
+    buffer_seek,
+    buffer_close,
+    NULL,
+    buffer_destroy
+  };
+
+static const i_io_glue_vtable_t
+fd_vtable =
+  {
+    fd_read,
+    fd_write,
+    fd_seek,
+    fd_close,
+    fd_size,
+    NULL /* destroy */
+  };
+
+static const i_io_glue_vtable_t
+callback_vtable =
+  {
+    realseek_read,
+    realseek_write,
+    realseek_seek,
+    realseek_close,
+    NULL,
+    realseek_destroy
+  };
+
 /*
  * Methods for setting up data source
  */
@@ -176,7 +219,7 @@ im_io_new_bufchain(pIMCTX) {
 
   ig = mymalloc(sizeof(io_glue));
   memset(ig, 0, sizeof(*ig));
-  i_io_init(aIMCTX, ig, BUFCHAIN, bufchain_read, bufchain_write, bufchain_seek);
+  i_io_init(aIMCTX, ig, BUFCHAIN, &bufchain_vtable);
 
   ieb->offset = 0;
   ieb->length = 0;
@@ -189,8 +232,6 @@ im_io_new_bufchain(pIMCTX) {
   ieb->tail   = ieb->head;
   
   ig->exdata    = ieb;
-  ig->closecb   = bufchain_close;
-  ig->destroycb = bufchain_destroy;
 
   im_context_refinc(aIMCTX, "im_io_new_bufchain");
 
@@ -223,7 +264,7 @@ im_io_new_buffer(pIMCTX, const char *data, size_t len, i_io_closebufp_t closecb,
 
   ig = mymalloc(sizeof(io_buffer));
   memset(ig, 0, sizeof(*ig));
-  i_io_init(aIMCTX, &ig->base, BUFFER, buffer_read, buffer_write, buffer_seek);
+  i_io_init(aIMCTX, &ig->base, BUFFER, &buffer_vtable);
   ig->data      = data;
   ig->len       = len;
   ig->closecb   = closecb;
@@ -231,9 +272,6 @@ im_io_new_buffer(pIMCTX, const char *data, size_t len, i_io_closebufp_t closecb,
 
   ig->cpos   = 0;
   
-  ig->base.closecb   = buffer_close;
-  ig->base.destroycb = buffer_destroy;
-
   im_context_refinc(aIMCTX, "im_io_new_bufchain");
 
   return (io_glue *)ig;
@@ -266,12 +304,9 @@ im_io_new_fd(pIMCTX, int fd) {
 
   ig = mymalloc(sizeof(io_fdseek));
   memset(ig, 0, sizeof(*ig));
-  i_io_init(aIMCTX, &ig->base, FDSEEK, fd_read, fd_write, fd_seek);
+  i_io_init(aIMCTX, &ig->base, FDSEEK, &fd_vtable);
   ig->fd = fd;
 
-  ig->base.closecb   = fd_close;
-  ig->base.sizecb    = fd_size;
-  ig->base.destroycb = NULL;
   im_context_refinc(aIMCTX, "im_io_new_bufchain");
 
   im_log((aIMCTX, 1, "(%p) <- io_new_fd\n", ig));
@@ -334,11 +369,8 @@ im_io_new_cb(pIMCTX, void *p, i_io_readl_t readcb, i_io_writel_t writecb,
           "destroycb %p)\n", p, readcb, writecb, seekcb, closecb, destroycb));
   ig = mymalloc(sizeof(io_cb));
   memset(ig, 0, sizeof(*ig));
-  i_io_init(aIMCTX, &ig->base, CBSEEK, realseek_read, realseek_write, realseek_seek);
+  i_io_init(aIMCTX, &ig->base, CBSEEK, &callback_vtable);
   im_log((aIMCTX, 1, "(%p) <- io_new_cb\n", ig));
-
-  ig->base.closecb   = realseek_close;
-  ig->base.destroycb = realseek_destroy;
 
   ig->p         = p;
   ig->readcb    = readcb;
@@ -423,8 +455,8 @@ io_glue_destroy(io_glue *ig) {
   dIMCTXio(ig);
   im_log((aIMCTX, 1, "io_glue_DESTROY(ig %p)\n", ig));
 
-  if (ig->destroycb)
-    ig->destroycb(ig);
+  if (ig->vtbl->destroycb)
+    ig->vtbl->destroycb(ig);
 
   if (ig->buffer)
     myfree(ig->buffer);
@@ -998,7 +1030,7 @@ i_io_gets(io_glue *ig, char *buffer, size_t size, int eol) {
 }
 
 /*
-=item i_io_init(ig, readcb, writecb, seekcb)
+=item i_io_init(ig, type, vtbl)
 
 Do common initialization for io_glue objects.
 
@@ -1006,16 +1038,11 @@ Do common initialization for io_glue objects.
 */
 
 static void
-i_io_init(pIMCTX, io_glue *ig, int type, i_io_readp_t readcb, i_io_writep_t writecb,
-	  i_io_seekp_t seekcb) {
+i_io_init(pIMCTX, io_glue *ig, int type, const i_io_glue_vtable_t *vtbl) {
   ig->type = type;
   ig->exdata = NULL;
-  ig->readcb = readcb;
-  ig->writecb = writecb;
-  ig->seekcb = seekcb;
-  ig->closecb = NULL;
-  ig->sizecb = NULL;
-  ig->destroycb = NULL;
+
+  ig->vtbl = vtbl;
   ig->context = aIMCTX;
 
   ig->buffer = NULL;
@@ -1082,11 +1109,12 @@ i_io_dump(io_glue *ig, int flags) {
   fprintf(IOL_DEBs, "  type: %d\n", ig->type);  
   fprintf(IOL_DEBs, "  exdata: %p\n", ig->exdata);
   if (flags & I_IO_DUMP_CALLBACKS) {
-    fprintf(IOL_DEBs, "  readcb: %p\n", ig->readcb);
-    fprintf(IOL_DEBs, "  writecb: %p\n", ig->writecb);
-    fprintf(IOL_DEBs, "  seekcb: %p\n", ig->seekcb);
-    fprintf(IOL_DEBs, "  closecb: %p\n", ig->closecb);
-    fprintf(IOL_DEBs, "  sizecb: %p\n", ig->sizecb);
+    fprintf(IOL_DEBs, "  vtable: %p\n", ig->vtbl);
+    fprintf(IOL_DEBs, "  readcb: %p\n", ig->vtbl->readcb);
+    fprintf(IOL_DEBs, "  writecb: %p\n", ig->vtbl->writecb);
+    fprintf(IOL_DEBs, "  seekcb: %p\n", ig->vtbl->seekcb);
+    fprintf(IOL_DEBs, "  closecb: %p\n", ig->vtbl->closecb);
+    fprintf(IOL_DEBs, "  sizecb: %p\n", ig->vtbl->sizecb);
   }
   if (flags & I_IO_DUMP_BUFFER) {
     fprintf(IOL_DEBs, "  buffer: %p\n", ig->buffer);
