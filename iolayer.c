@@ -11,6 +11,7 @@
 #include <string.h>
 #include <errno.h>
 #include "imageri.h"
+#include <sys/stat.h>
 
 #define IOL_DEB(x)
 #define IOL_DEBs stderr
@@ -31,6 +32,8 @@ typedef struct io_blink {
 typedef struct {
   i_io_glue_t	base;
   int		fd;
+  off_t         size;
+  int size_set;
 } io_fdseek;
 
 typedef struct {
@@ -120,7 +123,7 @@ static ssize_t fd_read(io_glue *ig, void *buf, size_t count);
 static ssize_t fd_write(io_glue *ig, const void *buf, size_t count);
 static off_t fd_seek(io_glue *ig, off_t offset, int whence);
 static int fd_close(io_glue *ig);
-static ssize_t fd_size(io_glue *ig);
+static off_t fd_size(io_glue *ig);
 static const char *my_strerror(int err);
 static void i_io_setup_buffer(io_glue *ig);
 static void
@@ -138,6 +141,7 @@ static ssize_t buffer_read(io_glue *igo, void *buf, size_t count);
 static ssize_t buffer_write(io_glue *ig, const void *buf, size_t count);
 static int buffer_close(io_glue *ig);
 static off_t buffer_seek(io_glue *igo, off_t offset, int whence);
+static off_t buffer_size(io_glue *ig);
 static void buffer_destroy(io_glue *igo);
 static io_blink*io_blink_new(void);
 static void io_bchain_advance(io_ex_bchain *ieb);
@@ -166,7 +170,7 @@ buffer_vtable =
     buffer_write,
     buffer_seek,
     buffer_close,
-    NULL,
+    buffer_size,
     buffer_destroy
   };
 
@@ -1554,6 +1558,13 @@ buffer_seek(io_glue *igo, off_t offset, int whence) {
   /* FIXME: How about implementing this offset handling stuff? */
 }
 
+static off_t
+buffer_size(io_glue *igo) {
+  io_buffer *ig = (io_buffer *)igo;
+
+  return ig->len;
+}
+
 static
 void
 buffer_destroy(io_glue *igo) {
@@ -2029,11 +2040,23 @@ static int fd_close(io_glue *ig) {
   return 0;
 }
 
-static ssize_t fd_size(io_glue *ig) {
-  dIMCTXio(ig);
-  im_log((aIMCTX, 1, "fd_size(ig %p) unimplemented\n", ig));
+static off_t
+fd_size(io_glue *igo) {
+  dIMCTXio(igo);
+  io_fdseek *ig = (io_fdseek *)igo;
+
+  if (!ig->size_set) {
+    struct stat st;
+    if (fstat(ig->fd, &st) == 0) {
+      ig->size = st.st_size;
+    }
+    else {
+      ig->size = -1;
+    }
+    ig->size_set = 1;
+  }
   
-  return -1;
+  return ig->size;
 }
 
 
