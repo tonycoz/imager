@@ -179,10 +179,14 @@ implemented and this will always be set to zero.
 Releases the allocation structure and any associated resources
 returned from i_img_data().
 
+  i_img_data_release(allocation);
+
+This can safely accept a NULL pointer.
+
 =cut
 */
 
-#define i_img_data_release(alloc) (((alloc)->f_release)(alloc))
+#define i_img_data_release(alloc) ((alloc) ? (( ((i_image_data_alloc_t *)(alloc))->f_release)(alloc)) : (void)0)
 
 #ifndef IMAGER_DIRECT_IMAGE_CALLS
 #define IMAGER_DIRECT_IMAGE_CALLS 1
