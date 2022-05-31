@@ -231,8 +231,11 @@ is($impal2->colorchannels, 3, "check colorchannels");
   is($im->errstr, "getchannels: empty input image", "check message");
   is($im->getmask, undef, "can't get mask of empty image");
   is($im->errstr, "getmask: empty input image", "check message");
-  is($im->setmask, undef, "can't set mask of empty image");
-  is($im->errstr, "setmask: empty input image", "check message");
+  {
+    no warnings 'Imager::channelmask';
+    is($im->setmask, undef, "can't set mask of empty image");
+    is($im->errstr, "setmask: empty input image", "check message");
+  }
   is($im->colorchannels, undef, "can't get colorchannels of empty image");
   is($im->errstr, "colorchannels: empty input image", "check message");
   is($im->alphachannel, undef, "can't get alphachannel of empty image");
@@ -824,7 +827,6 @@ my $psamp_outside_error = "Image position outside of image";
 { # check the channel mask function
   
   my $im = Imager->new(xsize => 10, ysize=>10, bits=>8);
-
   mask_tests($im, 0.005);
 }
 
@@ -1161,7 +1163,19 @@ my $psamp_outside_error = "Image position outside of image";
     $im->addtag(code => 12, value => 12);
   }
   is(scalar @warn, 0, "addtag with code with warning disabled doesn't warn");
-  
+
+  # setmask
+  @warn = ();
+  $im->setmask(mask => 0xFF);
+  is(scalar @warn, 1, "warned on setmask");
+  like($warn[0], qr/setmask: image channel masks are deprecated/,
+       "check setmask warning message");
+  @warn = ();
+  {
+    no warnings 'Imager::channelmask';
+    $im->setmask(mask => 0xFF);
+  }
+  is(scalar @warn, 0, "setmask with warning disabled doesn't warn");
 }
 
 {

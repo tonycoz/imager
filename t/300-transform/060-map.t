@@ -65,6 +65,7 @@ SKIP: {
 {
   # test with zero mask: coverity detected a bad channel index problem
   # that only applies in this case
+  no warnings 'Imager::channelmask';
   my $im = test_image();
   $im->setmask(mask => 0x80);
   is($im->getmask, 0x80, "check we set mask");

@@ -6,6 +6,11 @@ Imager release history.  Older releases can be found in Changes.old
 
     no warnings 'Imager::tagcodes';
 
+ - deprecate image channel masks.  If this causes you a problem please
+   open an issue.  You can disable the warning produced with:
+
+    no warnings 'Imager::channelmask';
+
 Imager 1.015 - 7 May 2022
 ============
 

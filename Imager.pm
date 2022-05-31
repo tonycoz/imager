@@ -7,7 +7,7 @@ use Imager::Color;
 use Imager::Color::Float;
 use Imager::Font;
 use Imager::TrimColorList;
-use warnings::register qw(tagcodes);
+use warnings::register qw(tagcodes channelmask);
 
 our $ERRSTR;
 
@@ -4137,6 +4137,8 @@ sub getmask {
 sub setmask {
   my $self = shift;
   my %opts = @_;
+
+  warnings::warnif("Imager::channelmask", "setmask: image channel masks are deprecated");
 
   $self->_valid_image("setmask")
     or return;

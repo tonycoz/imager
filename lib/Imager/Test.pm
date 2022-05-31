@@ -1,13 +1,14 @@
 package Imager::Test;
 use 5.006;
 use strict;
+use Imager;
 use Test::More;
 use Test::Builder;
 require Exporter;
 use Carp qw(croak carp);
 use Config;
 
-our $VERSION = "1.005";
+our $VERSION = "1.006";
 
 our @ISA = qw(Exporter);
 our @EXPORT_OK = 
@@ -682,6 +683,7 @@ sub color_cmp {
 sub mask_tests {
   my ($im, $epsilon) = @_;
 
+  no warnings 'Imager::channelmask';
   my $builder = Test::Builder->new;
 
   defined $epsilon or $epsilon = 0;
