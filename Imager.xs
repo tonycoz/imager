@@ -3830,7 +3830,7 @@ i_img_data(im, layout, bits, flags, extra)
         i_data_layout_t layout
         i_data_bits bits
         i_data_flags_collection flags
-        int extra
+        int extra = NO_INIT
     PREINIT:
       void *data;
       size_t size;
