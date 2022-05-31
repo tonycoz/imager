@@ -1,3 +1,10 @@
+Imager-File-JPEG 0.97
+=====================
+
+ - MANIFEST.SKIP updates
+
+ - eliminate some undefined value warnings from t/t10jpeg.t
+
 Imager-File-JPEG 0.96
 =====================
 

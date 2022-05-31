@@ -723,7 +723,6 @@ SKIP:
     my $im = test_image;
     ok(!$im->write(data => \$data, type => "jpeg", jpeg_tune => $tune),
        "fail jpeg_tune=$tune");
-    note "size ".length $data;
   }
 }
 
