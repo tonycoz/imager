@@ -24,3 +24,12 @@
 ^dll\.(base|exp)$
 ^TIFF\.def$
 ^TIFF_def\.old$
+
+# trash from profiling
+\.gcno$
+\.gcda$
+\.gcov$
+
+# dist stuff
+^Imager-File-TIFF
+^MYMETA\.

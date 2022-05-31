@@ -6,7 +6,7 @@ our @ISA = qw(Imager::Font);
 use Scalar::Util ();
 
 BEGIN {
-  our $VERSION = "1.028";
+  our $VERSION = "1.029";
 
   require XSLoader;
   XSLoader::load('Imager::Font::T1', $VERSION);

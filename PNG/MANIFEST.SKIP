@@ -30,3 +30,12 @@
 ^dll\.(base|exp)$
 ^PNG\.def$
 ^PNG_def\.old$
+
+# trash from profiling
+\.gcno$
+\.gcda$
+\.gcov$
+
+# dist stuff
+^Imager-File-PNG
+^MYMETA\.

@@ -25,3 +25,12 @@
 ^dll\.(base|exp)$
 ^FT2\.def$
 ^FT2_def\.old$
+
+# trash from profiling
+\.gcno$
+\.gcda$
+\.gcov$
+
+# dist stuff
+^Imager-Font-FT2
+^MYMETA\.

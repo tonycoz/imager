@@ -1,8 +1,3 @@
-.github/workflows/test-cygwin.yml
-.github/workflows/test-linux-i386.yml
-.github/workflows/test-linux.yml
-.github/workflows/test-macosx.yml
-.github/workflows/test-win32-mingw64.yml
 adobe.txt			License for makeblended font
 apidocs.perl			Build lib/Imager/APIRef.pm
 bigtest.perl			Library selection tester
@@ -356,6 +351,7 @@ t/300-transform/040-crop.t
 t/300-transform/050-convert.t
 t/300-transform/060-map.t
 t/300-transform/200-trimcolorlist.t	Test Imager::TrimColorList
+t/300-transform/210-trim.t
 t/300-transform/500-trans.t	transform()
 t/300-transform/600-trans2.t	transform2() using RPN
 t/300-transform/610-postfix.t	more transform2() using RPN

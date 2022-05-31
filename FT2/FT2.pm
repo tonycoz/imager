@@ -8,7 +8,7 @@ our @ISA = qw(Imager::Font);
 our $VERSION;
 
 BEGIN {
-  $VERSION = "0.99";
+  $VERSION = "1.000";
 
   require XSLoader;
   XSLoader::load('Imager::Font::FT2', $VERSION);

@@ -21,7 +21,7 @@
 /\.svn\b
 
 # git work files
-^\.git/
+^\.git
 ^(?:.*/)?\.gitignore$
 
 # editor trash
@@ -118,6 +118,7 @@ Makefile\.old$
 ^rotate\.c$
 ^rubthru\.c$
 ^scale\.c$
+^trim\.c$
 
 # trash from profiling
 \.gcno$
@@ -150,3 +151,10 @@ MYMETA.json
 
 # commonly test scripts
 ^\w+\.pl$
+
+# coverity
+^config-build\.txt$
+^imager-cov\.tgz$
+
+# this hangs around
+^ImUgly\.sfd$

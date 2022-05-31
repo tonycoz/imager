@@ -19,3 +19,12 @@
 # editor
 ^#
 ~$
+
+# trash from profiling
+\.gcno$
+\.gcda$
+\.gcov$
+
+# dist stuff
+^Imager-File-JPEG
+^MYMETA\.
