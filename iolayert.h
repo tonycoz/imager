@@ -50,15 +50,19 @@ extern char *io_type_names[];
 
 /* Structures to describe data sources */
 
-struct i_io_glue_t {
-  io_type type;
-  void *exdata;
+typedef struct {
   i_io_readp_t	readcb;
   i_io_writep_t	writecb;
   i_io_seekp_t	seekcb;
   i_io_closep_t	closecb;
   i_io_sizep_t	sizecb;
   i_io_destroyp_t destroycb;
+} i_io_glue_vtable_t;
+
+struct i_io_glue_t {
+  const i_io_glue_vtable_t *vtbl;
+  io_type type;
+  void *exdata;
   unsigned char *buffer;
   unsigned char *read_ptr;
   unsigned char *read_end;
@@ -84,10 +88,10 @@ struct i_io_glue_t {
 #define I_IO_DUMP_DEFAULT (I_IO_DUMP_BUFFER | I_IO_DUMP_STATUS)
 
 #define i_io_type(ig) ((ig)->source.ig_type)
-#define i_io_raw_read(ig, buf, size) ((ig)->readcb((ig), (buf), (size)))
-#define i_io_raw_write(ig, data, size) ((ig)->writecb((ig), (data), (size)))
-#define i_io_raw_seek(ig, offset, whence) ((ig)->seekcb((ig), (offset), (whence)))
-#define i_io_raw_close(ig) ((ig)->closecb(ig))
+#define i_io_raw_read(ig, buf, size) ((ig)->vtbl->readcb((ig), (buf), (size)))
+#define i_io_raw_write(ig, data, size) ((ig)->vtbl->writecb((ig), (data), (size)))
+#define i_io_raw_seek(ig, offset, whence) ((ig)->vtbl->seekcb((ig), (offset), (whence)))
+#define i_io_raw_close(ig) ((ig)->vtbl->closecb(ig))
 #define i_io_is_buffered(ig) ((int)((ig)->buffered))
 
 #define i_io_getc(ig) \
