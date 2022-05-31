@@ -7,6 +7,7 @@ use Imager::Color;
 use Imager::Color::Float;
 use Imager::Font;
 use Imager::TrimColorList;
+use warnings::register qw(tagcodes);
 
 our $ERRSTR;
 
@@ -1420,6 +1421,7 @@ sub addtag {
     }
   }
   elsif ($opts{code}) {
+    warnings::warnif_at_level("Imager::tagcodes", 0, "addtag: code parameter is deprecated");
     if (defined $opts{value}) {
       if ($opts{value} =~ /^\d+$/) {
         # add as a number
@@ -1457,6 +1459,7 @@ sub deltag {
     return i_tags_delbyname($self->{IMG}, $opts{name});
   }
   elsif (defined $opts{code}) {
+    warnings::warnif_at_level("Imager::tagcodes", 0, "deltag: code parameter is deprecated");
     return i_tags_delbycode($self->{IMG}, $opts{code});
   }
   else {
@@ -1476,6 +1479,8 @@ sub settag {
     return $self->addtag(name=>$opts{name}, value=>$opts{value});
   }
   elsif (defined $opts{code}) {
+    warnings::warnif_at_level("Imager::tagcodes", 0, "settag: code parameter is deprecated");
+    no warnings 'Imager::tagcodes';
     $self->deltag(code=>$opts{code});
     return $self->addtag(code=>$opts{code}, value=>$opts{value});
   }

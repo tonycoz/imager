@@ -177,8 +177,8 @@ typedef enum {
 } i_img_bits_t;
 
 typedef struct {
-  char *name; /* name of a given tag, might be NULL */
-  int code; /* number of a given tag, -1 if it has no meaning */
+  char *name; /* name of a given tag */
+  int code; /* number of a given tag, deprecated */
   char *data; /* value of a given tag if it's not an int, may be NULL */
   int size; /* size of the data */
   int idata; /* value of a given tag if data is NULL */

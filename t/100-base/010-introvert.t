@@ -3,9 +3,10 @@
 # to make sure we get expected values
 
 use strict;
-use Test::More tests => 492;
+use Test::More;
 
 BEGIN { use_ok(Imager => qw(:handy :all)) }
+use warnings;
 
 use Imager::Test qw(image_bounds_checks is_color3 is_color4 is_fcolor4 color_cmp mask_tests is_fcolor3);
 
@@ -1133,6 +1134,37 @@ my $psamp_outside_error = "Image position outside of image";
 }
 
 {
+  # warnings should be enabled
+  my @warn;
+  local $SIG{__WARN__} = sub { push @warn, "@_"; };
+  my $im = Imager->new(xsize => 1, ysize => 1);
+  $im->settag(code => 10, value => 10);
+  is(scalar @warn, 1, "settag with code warns");
+  like($warn[0], qr/settag: code parameter is deprecated/,
+       "check message for settag");
+  @warn = ();
+  {
+    no warnings 'Imager::tagcodes';
+    $im->settag(code => 10, value => 10);
+  }
+  is(scalar @warn, 0, "settag with code with warning disabled doesn't warn");
+
+  @warn = ();
+  $im->addtag(code => 11, value => 11);
+  is(scalar @warn, 1, "addtag with code warns");
+  like($warn[0], qr/addtag: code parameter is deprecated/,
+       "check message for addtag");
+
+  @warn = ();
+  {
+    no warnings 'Imager::tagcodes';
+    $im->addtag(code => 12, value => 12);
+  }
+  is(scalar @warn, 0, "addtag with code with warning disabled doesn't warn");
+  
+}
+
+{
   my @tests =
     (
      [ "gray",  1, undef ],
@@ -1150,6 +1182,8 @@ my $psamp_outside_error = "Image position outside of image";
     is($im->colorchannels, $color_channels, "check colorchannels");
   }
 }
+
+done_testing();
 
 Imager->close_log();
 

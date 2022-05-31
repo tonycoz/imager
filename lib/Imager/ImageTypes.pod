@@ -870,6 +870,9 @@ or by code:
 
   my $index = $img->addtag(code=>$code, value=>$value);
 
+Setting tags by C<code> is deprecated.  If you have a use for this
+please open an issue.
+
 =item deltag()
 
 You can remove tags with the deltag() method, either by index:
@@ -885,6 +888,9 @@ or by code:
   $img->deltag(code=>$code);
 
 In each case deltag() returns the number of tags deleted.
+
+Setting or deleting tags by C<code> is deprecated.  If you have a use
+for this please open an issue.
 
 =item settag()
 
