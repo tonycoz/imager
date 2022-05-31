@@ -173,6 +173,10 @@ i_img_masked_new(i_img *targ, i_img *mask, i_img_dim x, i_img_dim y, i_img_dim w
 
   im_img_init(aIMCTX, im);
 
+  i_img_refcnt_inc(targ);
+  if (mask)
+    i_img_refcnt_inc(mask);
+
   return im;
 }
 
@@ -189,7 +193,11 @@ Internal function.
 */
 
 static void i_destroy_masked(i_img *im) {
-  myfree(MASKEXT(im)->samps);
+  i_img_mask_ext *ext = MASKEXT(im);
+  i_img_destroy(ext->targ);
+  if (ext->mask)
+    i_img_destroy(ext->mask);
+  myfree(ext->samps);
   myfree(im->ext_data);
 }
 

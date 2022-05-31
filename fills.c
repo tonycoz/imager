@@ -477,6 +477,7 @@ static void fill_image(i_fill_t *fill, i_img_dim x, i_img_dim y,
 		       i_img_dim width, int channels, i_color *data);
 static void fill_imagef(i_fill_t *fill, i_img_dim x, i_img_dim y,
 			i_img_dim width, int channels, i_fcolor *data);
+static void destroy_image(i_fill_t *fill);
 struct i_fill_image_t {
   i_fill_t base;
   i_img *src;
@@ -491,7 +492,7 @@ image_fill_proto =
     {
       fill_image,
       fill_imagef,
-      NULL
+      destroy_image
     }
   };
 
@@ -535,6 +536,7 @@ i_new_fill_image(i_img *im, const double *matrix, i_img_dim xoff, i_img_dim yoff
   }
   else
     fill->has_matrix = 0;
+  i_img_refcnt_inc(im);
 
   return &fill->base;
 }
@@ -956,6 +958,12 @@ fill_imagef(i_fill_t *fill, i_img_dim x, i_img_dim y, i_img_dim width,
   }
   if (f->src->channels != want_channels)
     i_adapt_fcolors(want_channels, f->src->channels, data, width);
+}
+
+static void
+destroy_image(i_fill_t *fill) {
+  struct i_fill_image_t *f = (struct i_fill_image_t *)fill;
+  i_img_destroy(f->src);
 }
 
 static void 

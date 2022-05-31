@@ -2,6 +2,8 @@
 
 #include "imager.h"
 #include "imageri.h"
+#include <limits.h>
+#include <assert.h>
 
 /*
 =head1 NAME
@@ -102,6 +104,7 @@ im_img_new(pIMCTX, const i_img_vtable *vtbl, i_img_dim xsize, i_img_dim ysize,
   im->bits          = bits;
   im->type          = i_direct_type;
   im->ch_mask       = ~0U;
+  im->ref_count     = 1U;
   im->isvirtual     = 0;
   im->bytes         = 0;
   im->idata         = 0;
@@ -299,6 +302,8 @@ i_img_exorcise(i_img *im) {
   im->xsize    = 0;
   im->ysize    = 0;
   im->channels = 0;
+  /* make most access crash */
+  im->vtbl     = NULL;
 
   im->ext_data=NULL;
 }
@@ -309,7 +314,10 @@ i_img_exorcise(i_img *im) {
 =category Image creation/destruction
 =synopsis i_img_destroy(img)
 
-Destroy an image object
+Reduce the reference count of an image object by 1, and if the
+reference count reaches zero, destroy the image object.
+
+This is unrelated to Perl C<SV> reference counts.
 
 =cut
 */
@@ -318,9 +326,37 @@ void
 i_img_destroy(i_img *im) {
   dIMCTXim(im);
   im_log((aIMCTX, 1,"i_img_destroy(im %p)\n",im));
+
+  if (im->ref_count > 1) {
+    --im->ref_count;
+    return;
+  }
+  assert(im->ref_count == 1);
+
   i_img_exorcise(im);
   myfree(im);
   im_context_refdec(aIMCTX, "img_destroy");
+}
+
+/*
+=item i_img_refcnt_inc()
+
+Increment the reference count of the image.
+
+Aborts the program if the reference count overflows.
+
+This is unrelated to Perl C<SV> reference counts.
+
+=cut
+*/
+
+void
+i_img_refcnt_inc(i_img *im) {
+  if (im->ref_count == UINT_MAX) {
+    dIMCTXim(im);
+    im_fatal(aIMCTX, 3, "Integer overflow on image reference count");
+  }
+  ++im->ref_count;
 }
 
 /* 
