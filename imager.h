@@ -51,7 +51,7 @@ i_img *im_img_alloc(pIMCTX);
 i_img *im_img_new(pIMCTX, const i_img_vtable *vtbl, i_img_dim xsize, i_img_dim ysize,
                   int channels, int extra, i_img_bits_t bits);
 void im_img_init(pIMCTX, i_img *im);
-
+void i_img_refcnt_inc(i_img *im);
 i_image_data_alloc_t *
 i_img_data_fallback(i_img *im, i_data_layout_t layout, i_img_bits_t bits, unsigned flags,
                     void **pdata, size_t *psize, int *extra);
