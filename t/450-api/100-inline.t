@@ -256,6 +256,9 @@ Imager do_lots(Imager src) {
     return NULL;
   }
 
+  /* ensure this accepts a NULL pointer */
+  i_img_data_release(NULL);
+
   return im;
 }
 
