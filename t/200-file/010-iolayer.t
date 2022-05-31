@@ -36,6 +36,7 @@ binmode(FH);
 $data = <FH>;
 close(FH);
 my $IO3 = Imager::IO->new_buffer($data);
+is($IO3->size, length $data, "test size on a buffer IO");
 #undef($data);
 $im = Imager::i_readpnm_wiol($IO3, -1);
 
@@ -46,6 +47,7 @@ open(FH, "<testimg/penguin-base.ppm") or die $!;
 binmode(FH);
 $fd = fileno(FH);
 my $IO4 = Imager::IO->new_fd( $fd );
+is($IO4->size, -s FH, "check size on a fd IO");
 my $im2 = Imager::i_readpnm_wiol($IO4, -1);
 close(FH);
 undef($IO4);
