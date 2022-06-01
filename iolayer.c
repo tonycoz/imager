@@ -102,7 +102,7 @@ iolayer.c implements the basic functions to create and destroy io_glue
 objects for Imager.  The typical usage pattern for data sources is:
 
    1. Create the source (io_new_fd)
-   2. Define how you want to get data from it (io_reqmeth)
+   2. Define how you want to get data from it
    3. read from it using the interface requested (ig->readdb, ig->mmapcb)
    4. Close the source, which 
       shouldn't really close the underlying source. (io_glue DESTROY)
@@ -142,6 +142,8 @@ static ssize_t buffer_write(io_glue *ig, const void *buf, size_t count);
 static int buffer_close(io_glue *ig);
 static off_t buffer_seek(io_glue *igo, off_t offset, int whence);
 static off_t buffer_size(io_glue *ig);
+static int buffer_mmap(io_glue *ig, const void **pdata, size_t *psize);
+static int buffer_munmap(io_glue *ig);
 static void buffer_destroy(io_glue *igo);
 static io_blink*io_blink_new(void);
 static void io_bchain_advance(io_ex_bchain *ieb);
@@ -171,7 +173,9 @@ buffer_vtable =
     buffer_seek,
     buffer_close,
     buffer_size,
-    buffer_destroy
+    buffer_destroy,
+    buffer_mmap,
+    buffer_munmap
   };
 
 static const i_io_glue_vtable_t
@@ -1563,6 +1567,23 @@ buffer_size(io_glue *igo) {
   io_buffer *ig = (io_buffer *)igo;
 
   return ig->len;
+}
+
+static int
+buffer_mmap(io_glue *igo, const void **pdata, size_t *psize) {
+  io_buffer *ig = (io_buffer *)igo;
+
+  /* already mapped */
+  *pdata = ig->data;
+  *psize = ig->len;
+
+  return 1;
+}
+
+static int
+buffer_munmap(io_glue *igo) {
+  /* nothing to do */
+  return 1;
 }
 
 static
