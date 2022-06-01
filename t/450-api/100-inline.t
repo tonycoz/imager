@@ -21,7 +21,6 @@ plan skip_all => "perl 5.005_04, 5.005_05 too buggy"
 
 print STDERR "Inline version $Inline::VERSION\n";
 
-plan tests => 120;
 require Inline;
 Inline->import(with => 'Imager');
 Inline->import("FORCE"); # force rebuild
@@ -489,6 +488,30 @@ alpha_channel(Imager im) {
   return channel;
 }
 
+int
+test_map_mem(Imager::IO io) {
+  const void *p;
+  size_t size;
+  int ok = 1;
+
+  if (i_io_mmap(io, &p, &size)) {
+    if (memcmp(p, "testdata", 8) != 0) {
+      fprintf(stderr, "mapped buffer doesn't match expected");
+      ok = 0;
+    }
+    if (!i_io_munmap(io)) {
+      fprintf(stderr, "Failed to munmap memory buffer");
+      ok = 0;
+    }
+  }
+  else {
+    fprintf(stderr, "Failed to mmap memory buffer");
+    ok = 0;
+  }
+
+  return ok;
+}
+
 EOS
 
 my $im = Imager->new(xsize=>50, ysize=>50);
@@ -714,6 +737,14 @@ for my $bits (8, 16) {
 ok(test_mutex(), "call mutex APIs");
 
 ok(test_slots(), "call slot APIs");
+
+{
+  my $s = "testdata";
+  my $io = Imager::IO->new_buffer($s);
+  ok(test_map_mem($io), "check we can map memory IO");
+}
+
+done_testing();
 
 sub _get_error {
   my @errors = Imager::i_errors();
