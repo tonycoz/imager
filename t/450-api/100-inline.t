@@ -4,6 +4,7 @@
 use strict;
 use Test::More;
 use Imager::Test qw(is_color3 is_color4);
+use Config;
 eval "require Inline::C;";
 plan skip_all => "Inline required for testing API" if $@;
 
@@ -512,6 +513,33 @@ test_map_mem(Imager::IO io) {
   return ok;
 }
 
+int
+test_map_fd(Imager::IO io, SV *sv) {
+  const void *p;
+  size_t size;
+  int ok = 1;
+  const char *check;
+  STRLEN len;
+
+  check = SvPV(sv, len);
+  if (i_io_mmap(io, &p, &size)) {
+    if (memcmp(p, check, len) != 0) {
+      fprintf(stderr, "mapped buffer doesn't match expected");
+      ok = 0;
+    }
+    if (!i_io_munmap(io)) {
+      fprintf(stderr, "Failed to munmap memory buffer");
+      ok = 0;
+    }
+  }
+  else {
+    fprintf(stderr, "Failed to mmap memory buffer");
+    ok = 0;
+  }
+
+  return ok;
+}
+
 EOS
 
 my $im = Imager->new(xsize=>50, ysize=>50);
@@ -742,6 +770,18 @@ ok(test_slots(), "call slot APIs");
   my $s = "testdata";
   my $io = Imager::IO->new_buffer($s);
   ok(test_map_mem($io), "check we can map memory IO");
+}
+
+SKIP:
+{
+  $Config{d_mmap} && $Config{d_munmap}
+    or skip "No mmap available", 1;
+  open my $fh, "<", $0 or skip "cannot open $0", 1;
+  binmode $fh;
+  my $buf;
+  read($fh, $buf, 8);
+  my $io = Imager::IO->new_fd(fileno($fh));
+  ok(test_map_fd($io, $buf), "test we can map fd io");
 }
 
 done_testing();
