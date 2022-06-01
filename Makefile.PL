@@ -688,6 +688,14 @@ EOS
     # no support for mixed byte order
     die "Unknown byte order $byteorder";
   }
+  if ($Config{d_mmap} && $Config{d_munmap}) {
+    print $config <<'EOS'
+/* we can use mmap()/munmap() */
+#define IMAGER_POSIX_MMAP
+
+EOS
+
+  }
   print $config <<'EOS';
 
 #ifdef __cplusplus
