@@ -13,6 +13,10 @@
 #include "imageri.h"
 #include <sys/stat.h>
 
+#ifdef IMAGER_POSIX_MMAP
+#include <sys/mman.h>
+#endif
+
 #define IOL_DEB(x)
 #define IOL_DEBs stderr
 
@@ -34,6 +38,9 @@ typedef struct {
   int		fd;
   off_t         size;
   int size_set;
+#if defined(IMAGER_POSIX_MMAP)
+  void *mapped;
+#endif
 } io_fdseek;
 
 typedef struct {
@@ -124,6 +131,9 @@ static ssize_t fd_write(io_glue *ig, const void *buf, size_t count);
 static off_t fd_seek(io_glue *ig, off_t offset, int whence);
 static int fd_close(io_glue *ig);
 static off_t fd_size(io_glue *ig);
+static int fd_mmap(io_glue *ig, const void **pdata, size_t *psize);
+static int fd_munmap(io_glue *ig);
+static void fd_destroy(io_glue *igo);
 static const char *my_strerror(int err);
 static void i_io_setup_buffer(io_glue *ig);
 static void
@@ -186,7 +196,9 @@ fd_vtable =
     fd_seek,
     fd_close,
     fd_size,
-    NULL /* destroy */
+    fd_destroy, /* destroy */
+    fd_mmap,
+    fd_munmap
   };
 
 static const i_io_glue_vtable_t
@@ -2080,6 +2092,58 @@ fd_size(io_glue *igo) {
   return ig->size;
 }
 
+static int
+fd_mmap(io_glue *igo, const void **pdata, size_t *psize) {
+#if defined(IMAGER_POSIX_MMAP)
+  io_fdseek *ig = (io_fdseek *)igo;
+  void *data;
+  if (!ig->size_set)
+    fd_size(igo);
+  if (ig->size <= 0)
+    return 0;
+  data = mmap(NULL, ig->size, PROT_READ, MAP_SHARED, ig->fd, 0);
+  if (!data) {
+    return 0;
+  }
+  
+  ig->mapped = data;
+  *pdata = data;
+  *psize = ig->size;
+
+  return 1;
+#else
+  return 0;
+#endif
+}
+
+static int
+fd_munmap(io_glue *igo) {
+#if defined(IMAGER_POSIX_MMAP)
+  io_fdseek *ig = (io_fdseek *)igo;
+
+  if (ig->mapped) {
+    munmap(ig->mapped, ig->size);
+    ig->mapped = NULL;
+    return 1;
+  }
+  return 0;
+#else
+  return 0;
+#endif
+}
+
+static void
+fd_destroy(io_glue *igo) {
+#if defined(IMAGER_POSIX_MMAP)
+  io_fdseek *ig = (io_fdseek *)igo;
+
+  if (ig->mapped) {
+    fd_munmap(igo);
+  }
+#endif
+  
+}
+
 
 /*
 =back
@@ -2093,4 +2157,116 @@ Arnar M. Hrafnkelsson <addi@umich.edu>
 Imager(3)
 
 =cut
+*/
+
+/*
+
+Document the I/O macros.
+
+=item i_io_type()
+=category I/O Layers
+
+Return the type of an I/O layer object.
+
+  int type = i_io_type(io);
+
+=cut
+=item i_io_raw_read()
+=category I/O Layers
+
+Raw read from an I/O layer object.  This does not mix well with the
+buffer I/O functions.
+
+  char buf[SIZE];
+  ssize_t rd_size = i_io_raw_read(io, buf, SIZE);
+
+=cut
+=item i_io_raw_write()
+=category I/O Layers
+
+Raw write to an I/O layer object.  This does not mix well with the
+buffer I/O functions.
+
+  char data[SIZE] = "...";
+  ssize_t wr_size = i_io_raw_write(io, buf, SIZE);
+
+=cut
+=item i_io_raw_seek()
+=category I/O Layers
+
+Raw seek in an I/O layer object.  This does not mix well with the
+buffer I/O functions.
+
+  off_t pos = i_io_raw_seek(io, offset, seek_type);
+
+=cut
+=item i_io_raw_close()
+=category I/O Layers
+
+Raw close an I/O layer object.  This will not flush any buffered data.
+
+  int result = i_io_raw_close(io)
+
+=cut
+=item i_io_is_buffered()
+=category I/O Layers
+
+Returns true if the I/O layer object is buffered.
+
+=cut
+=item i_io_mmap()
+=category I/O Layers
+
+If the I/O object allows it, return the address and size of the data.
+For C<fd> objects this will attempt to mmap() the file into memory.
+
+The memory may not be written to.
+
+  const void *p;
+  size_t size;
+  if (i_io_mmap(io, &p, &size)) {
+    i_io_munmap(p);
+  }
+
+=cut
+=item i_io_munmap()
+=category I/O Layers
+
+Remove the memory mapping created by i_io_mmap().
+
+  i_io_munmap(io);
+
+=cut
+=item i_io_getc(io)
+=category I/O Layers
+
+Fetch a single character from a buffered I/O stream.
+
+=cut
+=item i_io_nextc()
+=category I/O Layers
+
+Currently broken.
+
+=cut
+=item i_io_putc()
+=category I/O Layers
+
+Write a single character to a buffered I/O stream.
+
+=cut
+=item i_io_eof()
+=category I/O Layers
+
+Return true if the stream is at end of file.
+
+=cut
+=item i_io_error()
+=category I/O Layers
+
+Return true if the stream is in an error state.  i_io_seek() will
+clear the error state.
+
+=cut
+
 */
