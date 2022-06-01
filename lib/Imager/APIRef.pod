@@ -1443,11 +1443,17 @@ Returns true on success,
 =for comment
 From: File iolayer.c
 
-=item i_io_getc(ig)
+=item i_io_getc(io)
 
-A macro to read a single byte from a buffered I/O glue object.
+Fetch a single character from a buffered I/O stream.
 
-Returns EOF on failure, or a byte.
+
+=for comment
+From: File iolayer.c
+
+=item i_io_getc(io)
+
+Fetch a single character from a buffered I/O stream.
 
 
 =for comment
@@ -1504,11 +1510,17 @@ of bytes read into C<buffer>.
 =for comment
 From: File iolayer.c
 
-=item i_io_putc(ig, c)
+=item i_io_putc()
 
-Write a single character to the stream.
+Write a single character to a buffered I/O stream.
 
-On success return c, on error returns EOF
+
+=for comment
+From: File iolayer.c
+
+=item i_io_putc()
+
+Write a single character to a buffered I/O stream.
 
 
 =for comment
