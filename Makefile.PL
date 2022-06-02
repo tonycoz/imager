@@ -818,4 +818,62 @@ sub map_bundled {
   @outnames;
 }
 
+# adapted from Time::HiRes
+sub try_compile_and_link {
+  my ($c, %args) = @_;
+
+  my ($ok) = 0;
+  my ($tmp) = "tmp$$";
+
+  my $obj_ext = $Config{obj_ext} || ".o";
+  unlink("$tmp.c", "$tmp$obj_ext");
+
+  if (open(my $tmpc, '>', "$tmp.c")) {
+    print $tmpc $c;
+    close($tmpc);
+
+    # we don't need this for our probes
+    #my $COREincdir = File::Spec->catdir($Config{'archlibexp'}, 'CORE');
+
+    my $ccflags = $Config{'ccflags'};
+    $ccflags .= " $args{ccflags}" if $args{ccflags};
+    # we don't need this (yet)
+    #. ' ' . "-I$COREincdir" . ' -DPERL_NO_INLINE_FUNCTIONS';
+
+    my $errornull = $VERBOSE ? '' : "2>" . File::Spec->devnull;
+
+    my $libs = $args{libs} || '';
+    my $cccmd = "$Config{'cc'} -o $tmp $ccflags $tmp.c $libs $errornull";
+
+    my $tmp_exe = "$tmp$Config{_exe}";
+    printf "cccmd = $cccmd\n" if $VERBOSE;
+    my $res = system($cccmd);
+    $ok = defined($res) && $res == 0 && -s $tmp_exe && -x _;
+
+    if ( $ok && exists $args{run} && $args{run} ) {
+      my $tmp_exe =
+        File::Spec->catfile(File::Spec->curdir, $tmp_exe);
+      my @run = $tmp_exe;
+      unshift @run, $Config{run} if $Config{run} && -e $Config{run};
+      printf "Running $tmp_exe..." if $VERBOSE;
+      if (system(@run) == 0) {
+        $ok = 1;
+      } else {
+        $ok = 0;
+        my $errno = $? >> 8;
+        local $! = $errno;
+        printf <<EOF if $args{noisyrun};
+
+*** The test run of '$tmp_exe' failed: status $?
+*** (the status means: errno = $errno or '$!')
+*** DO NOT PANIC: this just means that *some* functionality will be missing.
+EOF
+      }
+    }
+    unlink("$tmp.c", $tmp_exe);
+  }
+
+  return $ok;
+}
+
 1;
