@@ -366,15 +366,18 @@ im_int_check_image_file_limits(im_context_t ctx, i_img_dim width, i_img_dim heig
 
 /* memory allocation */
 void* mymalloc(size_t size);
+void *myzmalloc(size_t size);
 void  myfree(void *p);
 void* myrealloc(void *p, size_t newsize);
 void* mymalloc_file_line (size_t size, char* file, int line);
+void* myzmalloc_file_line (size_t size, char* file, int line);
 void  myfree_file_line   (void *p, char*file, int line);
 void* myrealloc_file_line(void *p, size_t newsize, char* file,int line);
 
 #ifdef IMAGER_DEBUG_MALLOC
 
 #define mymalloc(x) (mymalloc_file_line((x), __FILE__, __LINE__))
+#define myzmalloc(x) (myzmalloc_file_line((x), __FILE__, __LINE__))
 #define myrealloc(x,y) (myrealloc_file_line((x),(y), __FILE__, __LINE__))
 #define myfree(x) (myfree_file_line((x), __FILE__, __LINE__))
 

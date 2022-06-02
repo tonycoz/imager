@@ -149,8 +149,7 @@ im_img_pal_new(pIMCTX, i_img_dim x, i_img_dim y, int channels, int maxpal) {
   im->ext_data = palext;
 
   im->bytes = bytes;
-  im->idata = mymalloc(im->bytes);
-  memset(im->idata, 0, im->bytes);
+  im->idata = myzmalloc(im->bytes);
 
   i_img_init(im);
   
