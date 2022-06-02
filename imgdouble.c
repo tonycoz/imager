@@ -164,8 +164,7 @@ im_img_double_new_extra(pIMCTX, i_img_dim x, i_img_dim y, int ch, int extra) {
     return NULL;
 
   im->bytes = bytes;
-  im->idata = mymalloc(im->bytes);
-  memset(im->idata, 0, im->bytes);
+  im->idata = myzmalloc(im->bytes);
   im_img_init(aIMCTX, im);
   
   return im;
