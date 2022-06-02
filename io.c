@@ -116,9 +116,37 @@ mymalloc_file_line(size_t size, char* file, int line) {
   return buf;
 }
 
+void*
+myzmalloc_file_line(size_t size, char* file, int line) {
+  char *buf;
+  int i;
+  if (malloc_need_init) malloc_init();
+
+  /* bndcheck_all(); Uncomment for LOTS OF THRASHING */
+
+  if ( (i = find_ptr(NULL)) < 0 ) {
+    mm_log((0,"more than %d segments allocated at %s (%d)\n", MAXMAL, file, line));
+    exit(3);
+  }
+
+  if ( (buf = calloc(size+UNDRRNVAL+OVERRNVAL, 1)) == NULL ) {
+    mm_log((1,"Unable to allocate %ld for %s (%i)\n", (long)size, file, line));
+    exit(3);
+  }
+
+  buf = set_entry(i, buf, size, file, line);
+  mm_log((1,"myzmalloc_file_line: slot <%d> %ld bytes allocated at %p for %s (%d)\n", i, (long)size, buf, file, line));
+  return buf;
+}
+
 void *
 (mymalloc)(size_t size) {
   return mymalloc_file_line(size, "unknown", 0);
+}
+
+void *
+(myzmalloc)(size_t size) {
+  return myzmalloc_file_line(size, "unknown", 0);
 }
 
 void*
@@ -240,6 +268,18 @@ mymalloc(size_t size) {
     fprintf(stderr,"Unable to malloc %ld.\n", (long)size); exit(3);
   }
   mm_log((1, "mymalloc(size %ld) -> %p\n", (long)size, buf));
+  return buf;
+}
+
+void *
+myzmalloc(size_t size) {
+  void *buf;
+
+  if ( (buf = calloc(size, 1)) == NULL ) {
+    mm_log((1, "myzmalloc: unable to calloc %ld\n", (long)size));
+    fprintf(stderr,"Unable to allocate %ld bytes.\n", (long)size); exit(3);
+  }
+  mm_log((1, "myzmalloc(size %ld) -> %p\n", (long)size, buf));
   return buf;
 }
 

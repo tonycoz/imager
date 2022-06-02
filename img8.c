@@ -131,9 +131,7 @@ im_img_8_new_extra(pIMCTX, i_img_dim x, i_img_dim y, int ch, int extra) {
   }
 
   im->bytes = bytes;
-  if ( (im->idata=mymalloc(im->bytes)) == NULL) 
-    im_fatal(aIMCTX, 2,"malloc() error\n"); 
-  memset(im->idata, 0, im->bytes);
+  im->idata = myzmalloc(im->bytes);
   
   im_img_init(aIMCTX, im);
   
