@@ -697,8 +697,33 @@ EOS
 #define IMAGER_POSIX_MMAP
 
 EOS
-
   }
+  my ($u16type, $inttypes) = probe_uint16();
+  if ($u16type) {
+    print $config <<EOS
+/* Used for 16-bit images, and the type of the data returned by
+  i_img_data() for i_16_bit.
+*/
+
+typedef $u16type i_sample16_t;
+#$inttypes IMAGER_USE_INTTYPES_H
+
+EOS
+  }
+  else {
+    die <<'EOS'
+No unsigned 16-bit integer type found.
+
+If your system defines an unsigned 16-bit type, please send me the
+config.sh generated for your system and the name of the type.
+
+
+
+EOS
+  }
+  print $config <<'EOS';
+#endif
+EOS
   print $config <<'EOS';
 
 #ifdef __cplusplus
@@ -708,6 +733,46 @@ EOS
 #endif
 EOS
   close $config;
+}
+
+sub probe_uint16 {
+  local $| = 1;
+  print "Looking for a 16-bit unsigned integer type ... ";
+  for my $case ([ "unsigned short", "undef" ], [ "uint16_t", "define" ]) {
+    my ($type, $inttypes) = @$case;
+    my $verb = $VERBOSE ? "define" : "undef";
+    my $code = <<EOS;
+#$inttypes I_INTTYPES
+#ifdef I_INTTYPES
+#include <inttypes.h>
+#endif
+#$verb VERBOSE
+#ifdef VERBOSE
+#include <stdio.h>
+#define DUMP(x) x
+#else
+#define DUMP(x) ((void)0)
+#endif
+
+int main(int argc, char **argv) {
+  $type i = 0xFFFF;
+  if (sizeof(i) != 2) {
+    DUMP( printf("sizeof($type) is not 2\\n") );
+    return 1;
+  }
+  if (($type)(i+1U) != 0) {
+    DUMP( printf("$type arithmetic test failed\\n") );
+    return 1;
+  }
+  return 0;
+}
+EOS
+    print $code if $VERBOSE;
+    if (try_compile_and_link($code, run => 1)) {
+      print "found $type\n";
+      return ( $type, $inttypes );
+    }
+  }
 }
 
 sub usage {
