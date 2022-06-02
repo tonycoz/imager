@@ -25,6 +25,9 @@ sample image type to work with.
 #include "imager.h"
 #include "imageri.h"
 #include "imapiver.h"
+#ifdef IMAGER_USE_INTTYPES_H
+#include <inttypes.h>
+#endif
 
 static int i_ppix_d16(i_img *im, i_img_dim x, i_img_dim y, const i_color *val);
 static int i_gpix_d16(i_img *im, i_img_dim x, i_img_dim y, i_color *val);
@@ -92,35 +95,6 @@ vtable_16bit = {
   i_data_16
 };
 
-/* it's possible some platforms won't have a 16-bit integer type,
-   so we check for one otherwise we work by bytes directly
-
-   We do assume 8-bit char
-
-   "Compaq C V6.4-009 on Compaq Tru64 UNIX V5.1A (Rev. 1885)" says it
-   supports C99, but doesn't supply stdint.h, which is required for
-   both hosted and freestanding implementations.  So guard against it.
-*/
-#if __STDC_VERSION__ >= 199901L && !defined(OS_dec_osf)
-/* C99 should define something useful */
-#include <stdint.h>
-#ifdef UINT16_MAX
-typedef uint16_t i_sample16_t;
-#define GOT16
-#endif
-#endif
-
-/* check out unsigned short */
-#ifndef GOT16
-#include <limits.h>
-#if USHRT_MAX == 65535
-typedef unsigned short i_sample16_t;
-#define GOT16
-#endif
-#endif
-
-#ifdef GOT16
-
 /* we have a real 16-bit unsigned integer */
 #define STORE16(bytes, offset, word) \
    (((i_sample16_t *)(bytes))[offset] = (word))
@@ -128,21 +102,6 @@ typedef unsigned short i_sample16_t;
    (((i_sample16_t *)(bytes))[offset] = (byte) * 256 + (byte))
 #define GET16(bytes, offset) \
      (((i_sample16_t *)(bytes))[offset])
-#else
-
-/* we have to do this the hard way */
-#define STORE16(bytes, offset, word) \
-   ((((unsigned char *)(bytes))[(offset)*2] = (word) >> 8), \
-    (((unsigned char *)(bytes))[(offset)*2+1] = (word) & 0xFF))
-#define STORE8as16(bytes, offset, byte) \
-   ((((unsigned char *)(bytes))[(offset)*2] = (byte)), \
-    (((unsigned char *)(bytes))[(offset)*2+1] = (byte)))
-   
-#define GET16(bytes, offset) \
-   (((unsigned char *)(bytes))[(offset)*2] * 256 \
-    + ((unsigned char *)(bytes))[(offset)*2+1])
-
-#endif
 
 #define GET16as8(bytes, offset) \
      ((((i_sample16_t *)(bytes))[offset]+127) / 257)
