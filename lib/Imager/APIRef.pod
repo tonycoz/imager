@@ -1433,6 +1433,23 @@ Returns 0 on success.
 =for comment
 From: File iolayer.c
 
+=item i_io_eof()
+
+Return true if the stream is at end of file.
+
+
+=for comment
+From: File iolayer.c
+
+=item i_io_error()
+
+Return true if the stream is in an error state.  i_io_seek() will
+clear the error state.
+
+
+=for comment
+From: File iolayer.c
+
 =item i_io_flush(io)
 
 Flush any buffered output.
@@ -1471,6 +1488,49 @@ If the byte C<end_of_line> is seen then no further bytes will be read.
 Returns the number of bytes read.
 
 Always C<NUL> terminates the buffer.
+
+
+=for comment
+From: File iolayer.c
+
+=item i_io_is_buffered()
+
+Returns true if the I/O layer object is buffered.
+
+
+=for comment
+From: File iolayer.c
+
+=item i_io_mmap()
+
+If the I/O object allows it, return the address and size of the data.
+For C<fd> objects this will attempt to mmap() the file into memory.
+
+The memory may not be written to.
+
+  const void *p;
+  size_t size;
+  if (i_io_mmap(io, &p, &size)) {
+    i_io_munmap(p);
+  }
+
+
+=for comment
+From: File iolayer.c
+
+=item i_io_munmap()
+
+Remove the memory mapping created by i_io_mmap().
+
+  i_io_munmap(io);
+
+
+=for comment
+From: File iolayer.c
+
+=item i_io_nextc()
+
+Currently broken.
 
 
 =for comment
@@ -1526,6 +1586,51 @@ Write a single character to a buffered I/O stream.
 =for comment
 From: File iolayer.c
 
+=item i_io_raw_close()
+
+Raw close an I/O layer object.  This will not flush any buffered data.
+
+  int result = i_io_raw_close(io)
+
+
+=for comment
+From: File iolayer.c
+
+=item i_io_raw_read()
+
+Raw read from an I/O layer object.  This does not mix well with the
+buffer I/O functions.
+
+  char buf[SIZE];
+  ssize_t rd_size = i_io_raw_read(io, buf, SIZE);
+
+
+=for comment
+From: File iolayer.c
+
+=item i_io_raw_seek()
+
+Raw seek in an I/O layer object.  This does not mix well with the
+buffer I/O functions.
+
+  off_t pos = i_io_raw_seek(io, offset, seek_type);
+
+
+=for comment
+From: File iolayer.c
+
+=item i_io_raw_write()
+
+Raw write to an I/O layer object.  This does not mix well with the
+buffer I/O functions.
+
+  char data[SIZE] = "...";
+  ssize_t wr_size = i_io_raw_write(io, buf, SIZE);
+
+
+=for comment
+From: File iolayer.c
+
 =item i_io_read(io, buffer, size)
 
 Read up to C<size> bytes from the stream C<io> into C<buffer>.
@@ -1568,6 +1673,16 @@ unbuffered.
 
 Returns true on success.  This may fail if any buffered output cannot
 be flushed.
+
+
+=for comment
+From: File iolayer.c
+
+=item i_io_type()
+
+Return the type of an I/O layer object.
+
+  int type = i_io_type(io);
 
 
 =for comment
@@ -2461,6 +2576,109 @@ From: File tags.c
 =head2 Uncategorized functions
 
 =over
+
+=item i_img_data()
+
+  i_img_data(im, layout, bits, flags, &ptr, &size, &extrachannels)
+
+Returns raw bytes representing the image.
+
+Typical use is something like:
+
+  // image data I can write to a file
+  void *data;
+  size_t size;
+  i_image_alloc_t *alloc = i_img_data(img, idf_rgb, i_8_bits, idf_synthesize, &data, &size, NULL);
+  if (alloc) {
+    // write to some file
+    ...
+    i_img_data_release(alloc);
+  }
+
+  // image data I can modify to modify the image
+  void *data;
+  size_t size;
+  i_image_alloc_t *alloc = i_img_data(img, idf_rgb, i_8_bits, idf_writable, &data, &size, NULL);
+  if (alloc) {
+    // modify the image data
+    ...
+    i_img_data_release(alloc);
+  }
+
+Note that even without C<idf_synthesize> the data pointer should be
+treated as pointing at read only data, unless C<idf_writable> is set
+in C<flags>.
+
+Parameters:
+
+=over
+
+=item * C<img> - the image to return image data for
+
+=item *
+
+C<layout> - the desired image layout.  Note that the typical Imager
+layouts are C<idf_palette> through C<idf_rgb_alpha>.  The numeric
+values of C<idf_gray> through C<idf_rgb_alpha> correspond to the
+Imager channel counts, but it's possible for third-party images (of
+which none exist at this point) may have another layout.
+
+=item *
+
+C<bits> - the sample size for the images.  This can be any of
+C<i_8_bits>, C<i_16_bits> or C<i_double_bits>.  Other sample sizes may
+be added.
+
+=item *
+
+C<flags> - a bit combination of the following:
+
+=over
+
+=item *
+
+C<idf_writable> - modifying samples pointed at will modify the image.
+Without this flag the data should be treated as read only (and this
+may be enforced.)
+
+=item *
+
+C<idf_synthesize> - if the native image data doesn't match the
+requested format, Imager will allocate memory and synthesize the
+layout requested.  Some layouts are not supported for synthesis
+including C<idf_palette> in any case and C<idf_gray> or
+C<idf_gray_alpha> from any RGB layout.
+
+=item *
+
+C<idf_extras> - allows for the original image data to be returned,
+ie. for non-synthesizes or writable data even if the image has extra
+channels stored for pixel.
+
+=back
+
+=item *
+
+C<&data> - a pointer to C<void *> which is filled with a pointer to
+the image data.
+
+=item *
+
+C<&size> - a pointer to C<size_t> which is filled with the size of the
+image data in bytes.  This is intended for validating the result.
+
+=item *
+
+C<&extrachannels> - a pointer to C<int> which will be filled with the
+number of extra channels in the image.  This pointer may be C<NULL> if
+the C<idf_extras> flag isn't set.  Extra channels are currently not
+implemented and this will always be set to zero.
+
+=back
+
+
+=for comment
+From: File immacros.h
 
 =item i_utf8_advance(char **p, size_t *len)
 
