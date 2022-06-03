@@ -1,5 +1,5 @@
 #define IMAGER_NO_CONTEXT
-
+#define IMAGER_WANT_FLOAT16
 #include "imager.h"
 #include "imageri.h"
 
