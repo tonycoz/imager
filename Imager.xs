@@ -2838,8 +2838,8 @@ i_add_file_magic(name, bits_sv, mask_sv)
 	size_t mask_size;
       CODE:
 	i_clear_error();
-	bits = SvPV(bits_sv, bits_size);
-        mask = SvPV(mask_sv, mask_size);
+        bits = (const unsigned char *)SvPV(bits_sv, bits_size);
+        mask = (const unsigned char *)SvPV(mask_sv, mask_size);
         if (bits_size == 0) {
 	    i_push_error(0, "bits must be non-empty");
 	    XSRETURN_EMPTY;
