@@ -714,8 +714,29 @@ No unsigned 16-bit integer type found.
 If your system defines an unsigned 16-bit type, please send me the
 config.sh generated for your system and the name of the type.
 
+EOS
+  }
+  my $f16type = probe_float16();
+  my $f16def = $f16type ? 'define' : 'undef';
+    print $config <<EOS;
+/*
+Do we have 16-bit floating point.
 
+If we do, add a i_fsample16_t typedef for it.
 
+To make the type and macro visible you need to define
+IMAGER_WANT_FLOAT16 before including imconfig.h.  This lets you build
+Imager with compiler options needed to enable 16-bit floating point
+without breaking modules that use Imager's API that don't need 16-bit
+floats, but are built with the standard perl C compiler flags.
+*/
+
+#ifdef IMAGER_WANT_FLOAT16
+#$f16def IMAGER_HAVE_FLOAT16
+EOS
+  if ($f16type) {
+    print $config <<EOS;
+typedef $f16type i_fsample16_t;
 EOS
   }
   print $config <<'EOS';
@@ -768,6 +789,29 @@ EOS
     if (try_compile_and_link($code, run => 1)) {
       print "found $type\n";
       return ( $type, $inttypes );
+    }
+  }
+}
+
+# try to find a float16 type
+# returns the type name
+sub probe_float16 {
+  # in order of preference
+  # we only use this type as a storage type
+  local $| = 1;
+  print "Looking for a 16-bit float type ... ";
+  for my $type (qw(_Float16 __fp16)) {
+    if (try_compile_and_link(<<EOS)) {
+#define __STDC_WANT_IEC_60559_TYPES_EXT__
+#include <float.h>
+int main(int argc, char **argv) {
+  float a = 1.0;
+  $type b = a;
+  return 0;
+}
+EOS
+      print "found $type\n";
+      return $type;
     }
   }
 }
