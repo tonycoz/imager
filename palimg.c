@@ -24,8 +24,10 @@ Basic 8-bit/sample paletted image
 #include "imageri.h"
 #include "imapiver.h"
 
-#define PALEXT(im) ((i_img_pal_ext*)((im)->ext_data))
+/* no longer in the vtable, but still used */
 static int i_ppix_p(i_img *im, i_img_dim x, i_img_dim y, const i_color *val);
+
+#define PALEXT(im) ((i_img_pal_ext*)((im)->ext_data))
 static int i_gpix_p(i_img *im, i_img_dim x, i_img_dim y, i_color *val);
 static i_img_dim i_glin_p(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, i_color *vals);
 static i_img_dim i_plin_p(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, const i_color *vals);
@@ -53,7 +55,6 @@ static const i_img_vtable
 vtable_pal = {
   IMAGER_API_LEVEL,
   
-  i_ppix_p, /* i_f_ppix */
   i_ppixf_fp, /* i_f_ppixf */
   i_plin_p, /* i_f_plin */
   i_plinf_fp, /* i_f_plinf */
@@ -670,13 +671,13 @@ i_psamp_p(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y,
           return -1;
         }
       }
-      while (l < r) {
+      while (l < r && im->type == i_palette_type) {
 	i_color c;
 	
 	i_gpix(im, l, y, &c);
 	for (ch = 0; ch < chan_count; ++ch)
 	  c.channel[chans[ch]] = *samps++;
-	i_ppix(im, l, y, &c);
+        i_ppix_p(im, l, y, &c);
 	count += chan_count;
 	++l;
       }
@@ -689,16 +690,20 @@ i_psamp_p(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y,
 	return -1;
       }
 
-      while (l < r) {
+      while (l < r && im->type == i_palette_type) {
 	i_color c;
 	
 	i_gpix(im, l, y, &c);
 	for (ch = 0; ch < chan_count; ++ch)
 	  c.channel[ch] = *samps++;
-	i_ppix(im, l, y, &c);
+        i_ppix_p(im, l, y, &c);
 	count += chan_count;
 	++l;
       }
+    }
+    if (l < r) {
+      /* at this point it's no longer a paletted image */
+      count += i_psamp(im, l, r, y, samps, chans, chan_count);
     }
 
     return count;
