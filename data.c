@@ -382,7 +382,7 @@ by i_img_data() when data is synthesized.
 i_image_data_alloc_t *
 i_new_image_data_alloc_free(i_img *im, void *releaseme) {
   struct myfree_data_alloc *result = mymalloc(sizeof(struct myfree_data_alloc));
-  result->head.f_release = release_def_alloc;
+  result->head.f_release = release_myfree_alloc;
   result->releaseme = releaseme;
 
   return &result->head;
