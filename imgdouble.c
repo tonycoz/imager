@@ -25,7 +25,6 @@ sample image type to work with.
 #include "imageri.h"
 #include "imapiver.h"
 
-static int i_ppix_ddoub(i_img *im, i_img_dim x, i_img_dim y, const i_color *val);
 static int i_gpix_ddoub(i_img *im, i_img_dim x, i_img_dim y, i_color *val);
 static i_img_dim i_glin_ddoub(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, i_color *vals);
 static i_img_dim i_plin_ddoub(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, const i_color *vals);
@@ -57,7 +56,6 @@ static const i_img_vtable
 vtable_double = {
   IMAGER_API_LEVEL,
 
-  i_ppix_ddoub, /* i_f_ppix */
   i_ppixf_ddoub, /* i_f_ppixf */
   i_plin_ddoub, /* i_f_plin */
   i_plinf_ddoub, /* i_f_plinf */
@@ -168,29 +166,6 @@ im_img_double_new_extra(pIMCTX, i_img_dim x, i_img_dim y, int ch, int extra) {
   im_img_init(aIMCTX, im);
   
   return im;
-}
-
-static int
-i_ppix_ddoub(i_img *im, i_img_dim x, i_img_dim y, const i_color *val) {
-  i_img_dim off;
-  int ch;
-  int totalch = im->channels + im->extrachannels;
-
-  if (x < 0 || x >= im->xsize || y < 0 || y >= im->ysize) 
-    return -1;
-
-  off = (x + y * im->xsize) * totalch;
-  if (I_ALL_CHANNELS_WRITABLE(im)) {
-    for (ch = 0; ch < im->channels; ++ch)
-      ((double*)im->idata)[off+ch] = Sample8ToF(val->channel[ch]);
-  }
-  else {
-    for (ch = 0; ch < im->channels; ++ch)
-      if (im->ch_mask & (1<<ch))
-	((double*)im->idata)[off+ch] = Sample8ToF(val->channel[ch]);
-  }
-
-  return 0;
 }
 
 static int
