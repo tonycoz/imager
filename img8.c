@@ -4,7 +4,6 @@
 #include "imageri.h"
 #include "imapiver.h"
 
-static int i_ppix_d(i_img *im, i_img_dim x, i_img_dim y, const i_color *val);
 static int i_gpix_d(i_img *im, i_img_dim x, i_img_dim y, i_color *val);
 static i_img_dim i_glin_d(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, i_color *vals);
 static i_img_dim i_plin_d(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, const i_color *vals);
@@ -24,7 +23,6 @@ static const i_img_vtable
 vtable_8bit = {
   IMAGER_API_LEVEL,
   
-  i_ppix_d, /* i_f_ppix */
   i_ppixf_d, /* i_f_ppixf */
   i_plin_d, /* i_f_plin */
   i_plinf_d, /* i_f_plinf */
@@ -146,33 +144,7 @@ These are the functions installed in an 8-bit per sample image.
 
 =over
 
-=item i_ppix_d(im, x, y, col)
 
-Internal function.
-
-This is the function kept in the i_f_ppix member of an i_img object.
-It does a normal store of a pixel into the image with range checking.
-
-Returns 0 if the pixel could be set, -1 otherwise.
-
-=cut
-*/
-static
-int
-i_ppix_d(i_img *im, i_img_dim x, i_img_dim y, const i_color *val) {
-  unsigned totalch = im->channels + im->extrachannels;
-  int ch;
-  
-  if ( x>-1 && x<im->xsize && y>-1 && y<im->ysize ) {
-    for(ch=0;ch<im->channels;ch++)
-      if (im->ch_mask&(1<<ch)) 
-	im->idata[(x + y * im->xsize) * totalch + ch] = val->channel[ch];
-    return 0;
-  }
-  return -1; /* error was clipped */
-}
-
-/*
 =item i_gpix_d(im, x, y, &col)
 
 Internal function.

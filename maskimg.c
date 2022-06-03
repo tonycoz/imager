@@ -37,7 +37,6 @@ typedef struct {
 #define MASKEXT(im) ((i_img_mask_ext *)((im)->ext_data))
 
 static void i_destroy_masked(i_img *im);
-static int i_ppix_masked(i_img *im, i_img_dim x, i_img_dim y, const i_color *pix);
 static int i_ppixf_masked(i_img *im, i_img_dim x, i_img_dim y, const i_fcolor *pix);
 static i_img_dim i_plin_masked(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, const i_color *vals);
 static i_img_dim i_plinf_masked(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, const i_fcolor *vals);
@@ -71,7 +70,6 @@ static const i_img_vtable
 vtable_mask = {
   IMAGER_API_LEVEL,
   
-  i_ppix_masked, /* i_f_ppix */
   i_ppixf_masked, /* i_f_ppixf */
   i_plin_masked, /* i_f_plin */
   i_plinf_masked, /* i_f_plinf */
@@ -199,32 +197,6 @@ static void i_destroy_masked(i_img *im) {
     i_img_destroy(ext->mask);
   myfree(ext->samps);
   myfree(im->ext_data);
-}
-
-/*
-=item i_ppix_masked(i_img *im, i_img_dim x, i_img_dim y, const i_color *pix)
-
-Write a pixel to a masked image.
-
-Internal function.
-
-=cut
-*/
-static int i_ppix_masked(i_img *im, i_img_dim x, i_img_dim y, const i_color *pix) {
-  i_img_mask_ext *ext = MASKEXT(im);
-  int result;
-
-  if (x < 0 || x >= im->xsize || y < 0 || y >= im->ysize)
-    return -1;
-  if (ext->mask) {
-    i_sample_t samp;
-    
-    if (i_gsamp(ext->mask, x, x+1, y, &samp, NULL, 1) && !samp)
-      return 0; /* pretend it was good */
-  }
-  result = i_ppix(ext->targ, x + ext->xbase, y + ext->ybase, pix);
-  im->type = ext->targ->type;
-  return result;
 }
 
 /*

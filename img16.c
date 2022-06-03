@@ -29,7 +29,6 @@ sample image type to work with.
 #include <inttypes.h>
 #endif
 
-static int i_ppix_d16(i_img *im, i_img_dim x, i_img_dim y, const i_color *val);
 static int i_gpix_d16(i_img *im, i_img_dim x, i_img_dim y, i_color *val);
 static i_img_dim i_glin_d16(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, i_color *vals);
 static i_img_dim i_plin_d16(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, const i_color *vals);
@@ -64,7 +63,6 @@ static const i_img_vtable
 vtable_16bit = {
   IMAGER_API_LEVEL,
   
-  i_ppix_d16, /* i_f_ppix */
   i_ppixf_d16, /* i_f_ppixf */
   i_plin_d16, /* i_f_plin */
   i_plinf_d16, /* i_f_plinf */
@@ -233,28 +231,6 @@ i_img_to_rgb16(i_img *im) {
   myfree(line);
 
   return targ;
-}
-
-static int i_ppix_d16(i_img *im, i_img_dim x, i_img_dim y, const i_color *val) {
-  i_img_dim off;
-  int ch;
-  unsigned totalch = im->channels + im->extrachannels;
-
-  if (x < 0 || x >= im->xsize || y < 0 || y >= im->ysize) 
-    return -1;
-
-  off = (x + y * im->xsize) * totalch;
-  if (I_ALL_CHANNELS_WRITABLE(im)) {
-    for (ch = 0; ch < im->channels; ++ch)
-      STORE8as16(im->idata, off+ch, val->channel[ch]);
-  }
-  else {
-    for (ch = 0; ch < im->channels; ++ch)
-      if (im->ch_mask & (1 << ch))
-	STORE8as16(im->idata, off+ch, val->channel[ch]);
-  }
-
-  return 0;
 }
 
 static int i_gpix_d16(i_img *im, i_img_dim x, i_img_dim y, i_color *val) {
