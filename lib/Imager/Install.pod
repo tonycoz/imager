@@ -146,6 +146,19 @@ X<< C<IM_DFLAGS> >>C<IM_DFLAGS> - extra preprocessor flags.
 
 =back
 
+=head1 OTHER PROBES
+
+=head2 16-bit floating point
+
+=for stopwords CPUs
+
+Used only when requesting the data for an image, this is best
+supported on ARM CPUs, but sufficiently recent x86_64 can also support
+it if enabled with a compiler option.
+
+I needed to add C<-march=skylake> to C<ccflags> to successfully probe
+for 16-bit floats on my Intel i7-10700F.
+
 =head1 EXTERNAL LIBRARIES
 
 Some of the file format and font modules included with Imager use
