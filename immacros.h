@@ -194,7 +194,8 @@ This can safely accept a NULL pointer.
 
 #if IMAGER_DIRECT_IMAGE_CALLS
 
-#define i_ppix(im, x, y, val) (((im)->vtbl->i_f_ppix)((im), (x), (y), (val)))
+#define i_ppix(im, x, y, val) \
+  ((i_psamp((im), (x), (x)+1, (y), (val)->channel, NULL, (im)->channels) > 0) ? 0 : -1)
 #define i_gpix(im, x, y, val) (((im)->vtbl->i_f_gpix)((im), (x), (y), (val)))
 #define i_ppixf(im, x, y, val) (((im)->vtbl->i_f_ppixf)((im), (x), (y), (val)))
 #define i_gpixf(im, x, y, val) (((im)->vtbl->i_f_gpixf)((im), (x), (y), (val)))
