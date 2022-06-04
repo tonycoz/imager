@@ -2016,27 +2016,20 @@ fount_init_state(struct fount_state *state, double xa, double ya,
   switch (super_sample) {
   case i_fts_grid:
     ssample_param = floor(0.5 + sqrt(ssample_param));
-    bytes = ssample_param * ssample_param * sizeof(i_fcolor);
-    if (bytes / sizeof(i_fcolor) == ssample_param * ssample_param) {
-      state->ssample_data = mymalloc(sizeof(i_fcolor) * ssample_param * ssample_param); /* checked 1jul06 tonyc */
+    if (ssample_param > 1000) {
+      ssample_param = 1000;
     }
-    else {
-      super_sample = i_fts_none;
-    }
+    state->ssample_data = mymalloc(sizeof(i_fcolor) * ssample_param * ssample_param); /* checked 1jul06 tonyc */
     break;
 
   case i_fts_random:
   case i_fts_circle:
     ssample_param = floor(0.5+ssample_param);
-    if (im_size_t_max / sizeof(i_fcolor) > ssample_param) {
-      bytes = sizeof(i_fcolor) * ssample_param;
-      state->ssample_data = mymalloc(bytes);
+    if (ssample_param > 1000) {
+      ssample_param = 1000;
     }
-    else {
-      dIMCTX;
-      im_log((aIMCTX, 1,"size_t overflow calculating super-sample array size for random or circl"));
-      super_sample = i_fts_none;
-    }
+    bytes = sizeof(i_fcolor) * ssample_param;
+    state->ssample_data = mymalloc(bytes);
     break;
   }
   state->parm = ssample_param;
