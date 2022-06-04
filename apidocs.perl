@@ -25,6 +25,7 @@ my $synopsis = '';
 my %funcsyns;
 my $order;
 my %order;
+my $errors = 0;
 for my $file (@files) {
   open my $src, "< $file"
     or die "Cannot open $file for documentation: $!\n";
@@ -33,11 +34,18 @@ for my $file (@files) {
       $func = $1;
       $start = $.;
       @funcdocs = $_;
+      if ($alldocs{$func}) {
+        print STDERR <<EOS;
+Duplicate documentation for $func at $file:$.
+Originally found at: $from{$func}
+EOS
+        ++$errors;
+      }
     }
     elsif ($func && /^=(cut|head)/) {
       if ($funcs{$func}) { # only save the API functions
         $alldocs{$func} = [ @funcdocs ];
-        $from{$func} = "File $file";
+        $from{$func} = "$file";
         if ($category) {
           $funccats{$func} = $category;
           push @{$cats{$category}}, $func;
@@ -79,6 +87,7 @@ for my $file (@files) {
 
   close $src;
 }
+exit(1) if $errors;
 
 open my $out, ">", $outname
   or die "Cannot open $outname: $!";
