@@ -197,14 +197,14 @@ i_noise(i_img *im, float amount, unsigned char type) {
     i_gpix(im, x, y, &rcolor);
     
     if(type == 0) {
-      color_inc = (amount - (damount * ((float)random() / RAND_MAX)));
+      color_inc = (amount - (damount * ((double)random() / RAND_MAX)));
     }
     
     for(ch = 0; ch < im->channels; ch++) {
       new_color = (int) rcolor.channel[ch];
       
       if(type != 0) {
-	new_color += (amount - (damount * ((float)random() / RAND_MAX)));
+	new_color += (amount - (damount * ((double)random() / RAND_MAX)));
       } else {
 	new_color += color_inc;
       }
