@@ -40,9 +40,6 @@ im_context_t (*im_get_context)(void) = NULL;
 
 #define minmax(a,b,i) ( ((a>=i)?a: ( (b<=i)?b:i   )) )
 
-/* Hack around an obscure linker bug on solaris - probably due to builtin gcc thingies */
-void i_linker_bug_fake(void) { ceil(1); }
-
 /*
 =item im_img_alloc(aIMCTX)
 X<im_img_alloc API>X<i_img_alloc API>
