@@ -23,6 +23,8 @@ jobs:
             apt-get -y install build-essential libtiff-dev libpng-dev libgif-dev libfreetype6-dev libjpeg-dev git-core
       - name: checkout
         uses: actions/checkout@v1
+      - name: workaround
+        run: "git config --global --add safe.directory /__w/imager/imager"
       - name: configure
         run: |
           perl Makefile.PL
