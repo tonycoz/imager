@@ -1421,7 +1421,7 @@ sub addtag {
     }
   }
   elsif ($opts{code}) {
-    warnings::warnif_at_level("Imager::tagcodes", 0, "addtag: code parameter is deprecated");
+    warnings::warnif("Imager::tagcodes", "addtag: code parameter is deprecated");
     if (defined $opts{value}) {
       if ($opts{value} =~ /^\d+$/) {
         # add as a number
@@ -1459,7 +1459,7 @@ sub deltag {
     return i_tags_delbyname($self->{IMG}, $opts{name});
   }
   elsif (defined $opts{code}) {
-    warnings::warnif_at_level("Imager::tagcodes", 0, "deltag: code parameter is deprecated");
+    warnings::warnif("Imager::tagcodes", "deltag: code parameter is deprecated");
     return i_tags_delbycode($self->{IMG}, $opts{code});
   }
   else {
@@ -1479,10 +1479,25 @@ sub settag {
     return $self->addtag(name=>$opts{name}, value=>$opts{value});
   }
   elsif (defined $opts{code}) {
-    warnings::warnif_at_level("Imager::tagcodes", 0, "settag: code parameter is deprecated");
-    no warnings 'Imager::tagcodes';
-    $self->deltag(code=>$opts{code});
-    return $self->addtag(code=>$opts{code}, value=>$opts{value});
+    warnings::warnif("Imager::tagcodes", "settag: code parameter is deprecated");
+    i_tags_delbycode($self->{IMG}, $opts{code});
+    if (defined $opts{value}) {
+      if ($opts{value} =~ /^\d+$/) {
+        # add as a number
+        return i_tags_addn($self->{IMG}, $opts{code}, 0, $opts{value});
+      }
+      else {
+        return i_tags_add($self->{IMG}, $opts{code}, 0, $opts{value}, 0);
+      }
+    }
+    elsif (defined $opts{data}) {
+      # force addition as a string
+      return i_tags_add($self->{IMG}, $opts{code}, 0, $opts{data}, 0);
+    }
+    else {
+      $self->{ERRSTR} = "No value supplied";
+      return undef;
+    }
   }
   else {
     return undef;
