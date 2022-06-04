@@ -30,7 +30,6 @@ static int i_ppix_p(i_img *im, i_img_dim x, i_img_dim y, const i_color *val);
 #define PALEXT(im) ((i_img_pal_ext*)((im)->ext_data))
 static int i_gpix_p(i_img *im, i_img_dim x, i_img_dim y, i_color *val);
 static i_img_dim i_glin_p(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, i_color *vals);
-static i_img_dim i_plin_p(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, const i_color *vals);
 static i_img_dim i_gsamp_p(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, i_sample_t *samps, int const *chans, int chan_count);
 static i_img_dim i_gpal_p(i_img *pm, i_img_dim l, i_img_dim r, i_img_dim y, i_palidx *vals);
 static i_img_dim i_ppal_p(i_img *pm, i_img_dim l, i_img_dim r, i_img_dim y, const i_palidx *vals);
@@ -55,7 +54,6 @@ static const i_img_vtable
 vtable_pal = {
   IMAGER_API_LEVEL,
   
-  i_plin_p, /* i_f_plin */
   i_plinf_fp, /* i_f_plinf */
   i_gpix_p, /* i_f_gpix */
   i_gpixf_fp, /* i_f_gpixf */
@@ -375,43 +373,6 @@ static i_img_dim i_glin_p(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, i_co
       i_palidx which = *data++;
       if (which < palsize)
         vals[i] = pal[which];
-    }
-    return count;
-  }
-  else {
-    return 0;
-  }
-}
-
-/*
-=item i_plin_p(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, const i_color *vals)
-
-Write a line of color data to the image.
-
-If any color value is not in the image when the image is converted to 
-RGB.
-
-=cut
-*/
-static i_img_dim 
-i_plin_p(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, const i_color *vals) {
-  i_img_dim count, i;
-  i_palidx *data;
-  i_palidx which;
-  if (y >=0 && y < im->ysize && l < im->xsize && l >= 0) {
-    if (r > im->xsize)
-      r = im->xsize;
-    data = ((i_palidx *)im->idata) + l + y * im->xsize;
-    count = r - l;
-    for (i = 0; i < count; ++i) {
-      if (i_findcolor(im, vals+i, &which)) {
-        ((i_palidx *)data)[i] = which;
-      }
-      else {
-        if (i_img_to_rgb_inplace(im)) {
-          return i+i_plin(im, l+i, r, y, vals+i);
-        }
-      }
     }
     return count;
   }

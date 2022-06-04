@@ -155,7 +155,7 @@ Renders in normal combine mode.
 
 
 =for comment
-From: render.im:197
+From: render.im
 
 =item i_render_delete(r)
 
@@ -163,7 +163,7 @@ Release an C<i_render> object.
 
 
 =for comment
-From: render.im:57
+From: render.im
 
 =item i_render_fill(r, x, y, width, source, fill)
 
@@ -172,7 +172,7 @@ C<source[width-1]>.
 
 
 =for comment
-From: render.im:247
+From: render.im
 
 =item i_render_line(r, x, y, width, source, fill)
 
@@ -181,7 +181,7 @@ C<source[width-1]>.
 
 
 =for comment
-From: render.im:375
+From: render.im
 
 =item i_render_linef(r, x, y, width, source, fill)
 
@@ -190,7 +190,7 @@ C<source[width-1]>.
 
 
 =for comment
-From: render.im:383
+From: render.im
 
 =item i_render_new(im, width)
 
@@ -198,7 +198,7 @@ Allocate a new C<i_render> object and initialize it.
 
 
 =for comment
-From: render.im:39
+From: render.im
 
 
 =back
@@ -290,7 +290,7 @@ C<context> - the Imager API context this image belongs to.
 
 
 =for comment
-From: imdatatypes.h:451
+From: imdatatypes.h
 
 =item i_color
 
@@ -333,7 +333,7 @@ channels - an array of four channels, eg C<c.channels[2]>.
 
 
 =for comment
-From: imdatatypes.h:115
+From: imdatatypes.h
 
 =item i_fcolor
 
@@ -343,7 +343,7 @@ Its layout exactly corresponds to i_color.
 
 
 =for comment
-From: imdatatypes.h:176
+From: imdatatypes.h
 
 =item i_fill_t
 
@@ -356,7 +356,7 @@ as an opaque type.
 
 
 =for comment
-From: imdatatypes.h:769
+From: imdatatypes.h
 
 =item i_poly_fill_mode_t
 
@@ -376,7 +376,7 @@ C<i_pfm_nonzero> - non-zero winding rule fills.
 
 
 =for comment
-From: imdatatypes.h:674
+From: imdatatypes.h
 
 =item i_polygon_t
 
@@ -396,7 +396,7 @@ C<count> - the number of entries in the C<x> and C<y> arrays.
 
 
 =for comment
-From: imdatatypes.h:647
+From: imdatatypes.h
 
 =item im_context_t
 
@@ -404,7 +404,7 @@ Imager's per-thread context.
 
 
 =for comment
-From: imdatatypes.h:42
+From: imdatatypes.h
 
 =item im_slot_t
 
@@ -412,7 +412,7 @@ Represents a slot in the context object.
 
 
 =for comment
-From: imdatatypes.h:53
+From: imdatatypes.h
 
 =item i_img_dim
 
@@ -424,7 +424,7 @@ May be larger than int on some platforms.
 
 
 =for comment
-From: imdatatypes.h:85
+From: imdatatypes.h
 
 =item i_img_dim_u
 
@@ -434,7 +434,7 @@ An unsigned variant of L</i_img_dim>.
 
 
 =for comment
-From: imdatatypes.h:100
+From: imdatatypes.h
 
 =item i_color_model_t
 
@@ -472,7 +472,7 @@ C<icm_rgb_alpha> - RGB with an alpha channel.
 
 
 =for comment
-From: imdatatypes.h:1258
+From: imdatatypes.h
 
 =item i_DF
 
@@ -485,7 +485,7 @@ Does not include the leading C<%>.
 
 
 =for comment
-From: imdatatypes.h:1322
+From: imdatatypes.h
 
 =item i_DFc
 
@@ -494,7 +494,7 @@ string.
 
 
 =for comment
-From: imdatatypes.h:1334
+From: imdatatypes.h
 
 =item i_DFcp
 
@@ -502,7 +502,7 @@ Casts two C<i_img_dim> values for use with the i_DF (or i_DFp) format.
 
 
 =for comment
-From: imdatatypes.h:1353
+From: imdatatypes.h
 
 =item i_DFp
 
@@ -513,7 +513,7 @@ include the leading C<%>.
 
 
 =for comment
-From: imdatatypes.h:1343
+From: imdatatypes.h
 
 
 =back
@@ -532,7 +532,7 @@ of angles in degrees from d1 to d2, with the color.
 
 
 =for comment
-From: draw.c:232
+From: draw.c
 
 =item i_arc_aa(im, x, y, rad, d1, d2, color)
 
@@ -544,7 +544,7 @@ the range of angles in degrees from d1 to d2, with the color.
 
 
 =for comment
-From: draw.c:365
+From: draw.c
 
 =item i_arc_aa_cfill(im, x, y, rad, d1, d2, fill)
 
@@ -556,7 +556,7 @@ the range of angles in degrees from d1 to d2, with the fill object.
 
 
 =for comment
-From: draw.c:395
+From: draw.c
 
 =item i_arc_cfill(im, x, y, rad, d1, d2, fill)
 
@@ -568,7 +568,7 @@ of angles in degrees from d1 to d2, with the fill object.
 
 
 =for comment
-From: draw.c:261
+From: draw.c
 
 =item i_box(im, x1, y1, x2, y2, color)
 
@@ -579,7 +579,7 @@ Outlines the box from (x1,y1) to (x2,y2) inclusive with I<color>.
 
 
 =for comment
-From: draw.c:1160
+From: draw.c
 
 =item i_box_cfill(im, x1, y1, x2, y2, fill)
 
@@ -590,7 +590,7 @@ Fills the box from (x1,y1) to (x2,y2) inclusive with fill.
 
 
 =for comment
-From: draw.c:1309
+From: draw.c
 
 =item i_box_filled(im, x1, y1, x2, y2, color)
 
@@ -601,7 +601,7 @@ Fills the box from (x1,y1) to (x2,y2) inclusive with color.
 
 
 =for comment
-From: draw.c:1188
+From: draw.c
 
 =item i_circle_aa(im, x, y, rad, color)
 
@@ -613,7 +613,7 @@ color.
 
 
 =for comment
-From: draw.c:450
+From: draw.c
 
 =item i_flood_cfill(C<im>, C<seedx>, C<seedy>, C<fill>)
 
@@ -627,7 +627,7 @@ Returns false if (C<seedx>, C<seedy>) are outside the image.
 
 
 =for comment
-From: draw.c:2000
+From: draw.c
 
 =item i_flood_cfill_border(C<im>, C<seedx>, C<seedy>, C<fill>, C<border>)
 
@@ -642,7 +642,7 @@ Returns false if (C<seedx>, C<seedy>) are outside the image.
 
 
 =for comment
-From: draw.c:2088
+From: draw.c
 
 =item i_flood_fill(C<im>, C<seedx>, C<seedy>, C<color>)
 
@@ -656,7 +656,7 @@ Returns false if (C<seedx>, C<seedy>) are outside the image.
 
 
 =for comment
-From: draw.c:1954
+From: draw.c
 
 =item i_flood_fill_border(C<im>, C<seedx>, C<seedy>, C<color>, C<border>)
 
@@ -671,7 +671,7 @@ Returns false if (C<seedx>, C<seedy>) are outside the image.
 
 
 =for comment
-From: draw.c:2044
+From: draw.c
 
 =item i_glin(im, l, r, y, colors)
 
@@ -682,7 +682,7 @@ Returns the number of pixels retrieved.
 
 
 =for comment
-From: imext.c:327
+From: imext.c
 
 =item i_glinf(im, l, r, y, colors)
 
@@ -694,7 +694,7 @@ Returns the number of pixels retrieved.
 
 
 =for comment
-From: imext.c:362
+From: imext.c
 
 =item i_gpal(im, left, right, y, indexes)
 
@@ -708,7 +708,7 @@ Always returns 0 for direct color images.
 
 
 =for comment
-From: imext.c:462
+From: imext.c
 
 =item i_gpix(im, C<x>, C<y>, C<color>)
 
@@ -719,7 +719,7 @@ Returns 0 if the pixel was retrieved, or -1 if not.
 
 
 =for comment
-From: imext.c:255
+From: imext.c
 
 =item i_gpixf(im, C<x>, C<y>, C<fcolor>)
 
@@ -731,7 +731,7 @@ Returns 0 if the pixel was retrieved, or -1 if not.
 
 
 =for comment
-From: imext.c:291
+From: imext.c
 
 =item i_gsamp(im, left, right, y, samples, channels, channel_count)
 
@@ -748,7 +748,7 @@ channel_count)
 
 
 =for comment
-From: imext.c:380
+From: imext.c
 
 =item i_gsamp_bg(im, l, r, y, samples, out_channels, background)
 
@@ -761,7 +761,7 @@ channels.
 
 
 =for comment
-From: paste.im:331
+From: paste.im
 
 =item i_gsamp_bits(im, left, right, y, samples, channels, channel_count, bits)
 
@@ -778,7 +778,7 @@ Pushes errors, but does not call C<i_clear_error()>.
 
 
 =for comment
-From: imext.c:426
+From: imext.c
 
 =item i_gsampf(im, left, right, y, samples, channels, channel_count)
 
@@ -795,7 +795,7 @@ Returns the number of samples read (which should be (C<right>-C<left>)
 
 
 =for comment
-From: imext.c:403
+From: imext.c
 
 =item i_gsampf_bg(im, l, r, y, samples, out_channels, background)
 
@@ -808,7 +808,7 @@ channels.
 
 
 =for comment
-From: paste.im:343
+From: paste.im
 
 =item i_line(C<im>, C<x1>, C<y1>, C<x2>, C<y2>, C<color>, C<endp>)
 
@@ -827,7 +827,7 @@ Draw a line to image using Bresenham's line drawing algorithm
 
 
 =for comment
-From: draw.c:1348
+From: draw.c
 
 =item i_line_aa(C<im>, C<x1>, C<x2>, C<y1>, C<y2>, C<color>, C<endp>)
 
@@ -838,10 +838,14 @@ The point (x2, y2) is drawn only if C<endp> is set.
 
 
 =for comment
-From: draw.c:1470
+From: draw.c
 
-=item i_plin(im, l, r, y, colors)
+=item i_plin()
 
+  i_img *im = ...;
+  i_img_dim l, r, y;
+  i_color vals[...] = { ... colors ... };
+  i_img_dim count = i_plin(im, l, r, y, vals);
 
 Sets (r-l) pixels starting from (l,y) using (r-l) values from
 I<colors>.
@@ -850,7 +854,7 @@ Returns the number of pixels set.
 
 
 =for comment
-From: imext.c:309
+From: image.c
 
 =item i_plinf(im, C<left>, C<right>, C<fcolors>)
 
@@ -862,7 +866,7 @@ Returns the number of pixels set.
 
 
 =for comment
-From: imext.c:344
+From: imext.c
 
 =item i_poly_aa_cfill_m(im, count, x, y, mode, fill)
 
@@ -873,7 +877,7 @@ the fill specified by C<fill>.
 
 
 =for comment
-From: polygon.c:734
+From: polygon.c
 
 =item i_poly_aa_m(im, count, x, y, mode, color)
 
@@ -884,7 +888,7 @@ the color specified by C<color>.
 
 
 =for comment
-From: polygon.c:637
+From: polygon.c
 
 =item i_poly_poly_aa(im, count, polys, mode, color)
 
@@ -899,7 +903,7 @@ All polygons must have at least 3 points.
 
 
 =for comment
-From: polygon.c:615
+From: polygon.c
 
 =item i_poly_poly_aa_cfill(im, count, polys, mode, fill)
 
@@ -914,7 +918,7 @@ All polygons must have at least 3 points.
 
 
 =for comment
-From: polygon.c:700
+From: polygon.c
 
 =item i_ppal(im, left, right, y, indexes)
 
@@ -928,7 +932,7 @@ Always returns 0 for direct color images.
 
 
 =for comment
-From: imext.c:481
+From: imext.c
 
 =item i_ppix(im, x, y, color)
 
@@ -942,7 +946,7 @@ color to the image.
 
 
 =for comment
-From: imext.c:235
+From: imext.c
 
 =item i_ppixf(im, C<x>, C<y>, C<fcolor>)
 
@@ -956,7 +960,7 @@ color to the image.
 
 
 =for comment
-From: imext.c:272
+From: imext.c
 
 =item i_psamp(im, left, right, y, samples, channels, channel_count)
 
@@ -974,7 +978,7 @@ returns -1 and pushes an error.
 
 
 =for comment
-From: immacros.h:26
+From: immacros.h
 
 =item i_psamp_bits(im, left, right, y, samples, channels, channel_count, bits)
 
@@ -991,7 +995,7 @@ Pushes errors, but does not call C<i_clear_error()>.
 
 
 =for comment
-From: imext.c:444
+From: imext.c
 
 =item i_psampf(im, left, right, y, samples, channels, channel_count)
 
@@ -1010,7 +1014,7 @@ returns -1 and pushes an error.
 
 
 =for comment
-From: immacros.h:48
+From: immacros.h
 
 
 =back
@@ -1029,7 +1033,7 @@ Does not support perl specific format codes.
 
 
 =for comment
-From: error.c:202
+From: error.c
 
 =item im_clear_error(ctx)
 X<im_clear_error API>X<i_clear_error API>
@@ -1045,7 +1049,7 @@ Also callable as C<i_clear_error()>.
 
 
 =for comment
-From: error.c:97
+From: error.c
 
 =item im_push_error(ctx, code, message)
 X<im_push_error API>X<i_push_error API>
@@ -1062,7 +1066,7 @@ error handling is calling function that does.).
 
 
 =for comment
-From: error.c:129
+From: error.c
 
 =item im_push_errorf(ctx, code, char const *fmt, ...)
 
@@ -1074,7 +1078,7 @@ Does not support perl specific format codes.
 
 
 =for comment
-From: error.c:221
+From: error.c
 
 =item im_push_errorvf(ctx, code, format, args)
 X<im_push_error_vf API>X<i_push_errorvf API>
@@ -1092,7 +1096,7 @@ Also callable as C<i_push_errorvf(code, format, args)>
 
 
 =for comment
-From: error.c:168
+From: error.c
 
 
 =back
@@ -1112,7 +1116,7 @@ Returns 1 if the C<i_background> tag was found and valid.
 
 
 =for comment
-From: image.c:1934
+From: image.c
 
 =item i_get_file_backgroundf(im, &bg)
 
@@ -1128,7 +1132,7 @@ Returns 1 if the C<i_background> tag was found and valid.
 
 
 =for comment
-From: image.c:1961
+From: image.c
 
 =item im_get_image_file_limits(ctx, &width, &height, &bytes)
 X<im_get_image_file_limits API>X<i_get_image_file_limits>
@@ -1154,7 +1158,7 @@ Also callable as C<i_get_image_file_limits(&width, &height, &bytes)>.
 
 
 =for comment
-From: limits.c:89
+From: limits.c
 
 =item im_int_check_image_file_limits(width, height, channels, sample_size)
 X<im_int_check_image_file_limits API>X<i_int_check_image_file_limits>
@@ -1176,7 +1180,7 @@ Also callable as C<i_int_check_image_file_limits(width, height, channels, sizeof
 
 
 =for comment
-From: limits.c:126
+From: limits.c
 
 =item im_set_image_file_limits(ctx, width, height, bytes)
 X<im_set_image_file_limits API>X<i_set_image_file_limits API>
@@ -1211,7 +1215,7 @@ Also callable as C<i_set_image_file_limits(width, height, bytes)>.
 
 
 =for comment
-From: limits.c:34
+From: limits.c
 
 
 =back
@@ -1231,7 +1235,7 @@ Creates a new general fill which fills with a fountain fill.
 
 
 =for comment
-From: filters.im:1884
+From: filters.im
 
 =item i_new_fill_hatch(C<fg>, C<bg>, C<combine>, C<hatch>, C<cust_hatch>, C<dx>, C<dy>)
 
@@ -1253,7 +1257,7 @@ with the side of a filled area.
 
 
 =for comment
-From: fills.c:417
+From: fills.c
 
 =item i_new_fill_hatchf(C<fg>, C<bg>, C<combine>, C<hatch>, C<cust_hatch>, C<dx>, C<dy>)
 
@@ -1275,7 +1279,7 @@ with the side of a filled area.
 
 
 =for comment
-From: fills.c:447
+From: fills.c
 
 =item i_new_fill_image(C<im>, C<matrix>, C<xoff>, C<yoff>, C<combine>)
 
@@ -1290,7 +1294,7 @@ C<xoff> and C<yoff> are the offset into the image to start filling from.
 
 
 =for comment
-From: fills.c:500
+From: fills.c
 
 =item i_new_fill_solid(color, combine)
 
@@ -1303,7 +1307,7 @@ If combine is non-zero then alpha values will be combined.
 
 
 =for comment
-From: fills.c:234
+From: fills.c
 
 =item i_new_fill_solidf(color, combine)
 
@@ -1316,7 +1320,7 @@ If combine is non-zero then alpha values will be combined.
 
 
 =for comment
-From: fills.c:203
+From: fills.c
 
 =item i_fill_destroy(fill)
 
@@ -1326,7 +1330,7 @@ Call to destroy any fill object.
 
 
 =for comment
-From: fills.c:185
+From: fills.c
 
 
 =back
@@ -1345,7 +1349,7 @@ Also callable as C<io_new_bufchain()>.
 
 
 =for comment
-From: iolayer.c:220
+From: iolayer.c
 
 =item im_io_new_buffer(ctx, data, length)
 X<im_io_new_buffer API>X<io_new_buffer API>
@@ -1361,7 +1365,7 @@ Also callable as C<io_new_buffer(data, length>.
 
 
 =for comment
-From: iolayer.c:262
+From: iolayer.c
 
 =item im_io_new_cb(ctx, p, read_cb, write_cb, seek_cb, close_cb, destroy_cb)
 X<im_io_new_cb API>X<io_new_cb API>
@@ -1405,7 +1409,7 @@ destroycb)>.
 
 
 =for comment
-From: iolayer.c:337
+From: iolayer.c
 
 =item im_io_new_fd(ctx, file)
 X<io_new_fd API>X<im_io_new_fd API>
@@ -1421,7 +1425,7 @@ Also callable as C<io_new_fd(file)>.
 
 
 =for comment
-From: iolayer.c:302
+From: iolayer.c
 
 =item i_io_close(io)
 
@@ -1431,7 +1435,7 @@ Returns 0 on success.
 
 
 =for comment
-From: iolayer.c:985
+From: iolayer.c
 
 =item i_io_eof()
 
@@ -1439,7 +1443,7 @@ Return true if the stream is at end of file.
 
 
 =for comment
-From: iolayer.c:2246
+From: iolayer.c
 
 =item i_io_error()
 
@@ -1448,7 +1452,7 @@ clear the error state.
 
 
 =for comment
-From: iolayer.c:2252
+From: iolayer.c
 
 =item i_io_flush(io)
 
@@ -1458,7 +1462,7 @@ Returns true on success,
 
 
 =for comment
-From: iolayer.c:940
+From: iolayer.c
 
 =item i_io_getc(ig)
 
@@ -1468,7 +1472,7 @@ Returns EOF on failure, or a byte.
 
 
 =for comment
-From: iolayer.c:490
+From: iolayer.c
 
 =item i_io_gets(ig, buffer, size, end_of_line)
 
@@ -1485,7 +1489,7 @@ Always C<NUL> terminates the buffer.
 
 
 =for comment
-From: iolayer.c:1015
+From: iolayer.c
 
 =item i_io_is_buffered()
 
@@ -1493,7 +1497,7 @@ Returns true if the I/O layer object is buffered.
 
 
 =for comment
-From: iolayer.c:2211
+From: iolayer.c
 
 =item i_io_mmap()
 
@@ -1510,7 +1514,7 @@ The memory may not be written to.
 
 
 =for comment
-From: iolayer.c:2217
+From: iolayer.c
 
 =item i_io_munmap()
 
@@ -1520,7 +1524,7 @@ Remove the memory mapping created by i_io_mmap().
 
 
 =for comment
-From: iolayer.c:2232
+From: iolayer.c
 
 =item i_io_nextc()
 
@@ -1528,7 +1532,7 @@ Currently broken.
 
 
 =for comment
-From: iolayer.c:2240
+From: iolayer.c
 
 =item i_io_peekc(ig)
 
@@ -1540,7 +1544,7 @@ For unbuffered streams a single character buffer will be setup.
 
 
 =for comment
-From: iolayer.c:536
+From: iolayer.c
 
 =item i_io_peekn(ig, buffer, size)
 
@@ -1562,7 +1566,7 @@ of bytes read into C<buffer>.
 
 
 =for comment
-From: iolayer.c:585
+From: iolayer.c
 
 =item i_io_putc(ig, c)
 
@@ -1572,7 +1576,7 @@ On success return c, on error returns EOF
 
 
 =for comment
-From: iolayer.c:656
+From: iolayer.c
 
 =item i_io_raw_close()
 
@@ -1582,7 +1586,7 @@ Raw close an I/O layer object.  This will not flush any buffered data.
 
 
 =for comment
-From: iolayer.c:2203
+From: iolayer.c
 
 =item i_io_raw_read()
 
@@ -1594,7 +1598,7 @@ buffer I/O functions.
 
 
 =for comment
-From: iolayer.c:2174
+From: iolayer.c
 
 =item i_io_raw_seek()
 
@@ -1605,7 +1609,7 @@ buffer I/O functions.
 
 
 =for comment
-From: iolayer.c:2194
+From: iolayer.c
 
 =item i_io_raw_write()
 
@@ -1617,7 +1621,7 @@ buffer I/O functions.
 
 
 =for comment
-From: iolayer.c:2184
+From: iolayer.c
 
 =item i_io_read(io, buffer, size)
 
@@ -1628,7 +1632,7 @@ Returns the number of bytes read.  Returns 0 on end of file.  Returns
 
 
 =for comment
-From: iolayer.c:711
+From: iolayer.c
 
 =item i_io_seek(io, offset, whence)
 
@@ -1638,7 +1642,7 @@ Acts like perl's seek.
 
 
 =for comment
-From: iolayer.c:901
+From: iolayer.c
 
 =item i_io_set_buffered(io, buffered)
 
@@ -1664,7 +1668,7 @@ be flushed.
 
 
 =for comment
-From: iolayer.c:1080
+From: iolayer.c
 
 =item i_io_type()
 
@@ -1674,7 +1678,7 @@ Return the type of an I/O layer object.
 
 
 =for comment
-From: iolayer.c:2166
+From: iolayer.c
 
 =item i_io_write(io, buffer, size)
 
@@ -1686,7 +1690,7 @@ Returns the number of bytes written.
 
 
 =for comment
-From: iolayer.c:800
+From: iolayer.c
 
 =item io_slurp(ig, c)
 X<io_slurp API>
@@ -1709,7 +1713,7 @@ from io_new_bufchain().
 
 
 =for comment
-From: iolayer.c:408
+From: iolayer.c
 
 =item io_glue_destroy(ig)
 X<io_glue_destroy API>
@@ -1722,7 +1726,7 @@ Destroy an io_glue objects.  Should clean up all related buffers.
 
 
 =for comment
-From: iolayer.c:460
+From: iolayer.c
 
 
 =back
@@ -1742,7 +1746,7 @@ Returns: i_img *
 
 
 =for comment
-From: image.c:595
+From: image.c
 
 =item i_copyto(C<dest>, C<src>, C<x1>, C<y1>, C<x2>, C<y2>, C<tx>, C<ty>)
 
@@ -1756,7 +1760,7 @@ are swapped.
 
 
 =for comment
-From: paste.im:5
+From: paste.im
 
 =item i_copyto_trans(C<im>, C<src>, C<x1>, C<y1>, C<x2>, C<y2>, C<tx>, C<ty>, C<trans>)
 
@@ -1767,7 +1771,7 @@ the target image.  pass NULL in C<trans> for non transparent i_colors.
 
 
 =for comment
-From: image.c:550
+From: image.c
 
 =item i_img_info(im, info)
 
@@ -1786,7 +1790,7 @@ info is an array of 4 integers with the following values:
 
 
 =for comment
-From: image.c:366
+From: image.c
 
 =item i_rubthru(C<im>, C<src>, C<tx>, C<ty>, C<src_minx>, C<src_miny>, C<src_maxx>, C<src_maxy>)
 
@@ -1801,7 +1805,7 @@ unmodified.
 
 
 =for comment
-From: rubthru.im:155
+From: rubthru.im
 
 
 =back
@@ -1821,7 +1825,7 @@ For paletted images the palette is copied from the source.
 
 
 =for comment
-From: image.c:930
+From: image.c
 
 =item i_sametype_chans(C<im>, C<xsize>, C<ysize>, C<channels>)
 
@@ -1834,7 +1838,7 @@ For paletted images the equivalent direct type is returned.
 
 
 =for comment
-From: image.c:976
+From: image.c
 
 =item im_img_16_new(ctx, x, y, ch)
 X<im_img_16_new API>X<i_img_16_new API>
@@ -1850,7 +1854,7 @@ Also callable as C<i_img_16_new(x, y, ch)>
 
 
 =for comment
-From: img16.c:106
+From: img16.c
 
 =item im_img_8_new(ctx, x, y, ch)
 X<im_img_8_new API>X<i_img_8_new API>
@@ -1863,7 +1867,7 @@ I<ch> channels.
 
 
 =for comment
-From: img8.c:55
+From: img8.c
 
 =item im_img_double_new(ctx, x, y, ch)
 X<im_img_double_new API>X<i_img_double_new API>
@@ -1877,7 +1881,7 @@ Also callable as C<i_img_double_new(width, height, channels)>.
 
 
 =for comment
-From: imgdouble.c:88
+From: imgdouble.c
 
 =item im_img_pal_new(ctx, C<x>, C<y>, C<channels>, C<maxpal>)
 X<im_img_pal_new API>X<i_img_pal_new API>
@@ -1895,7 +1899,7 @@ Also callable as C<i_img_pal_new(width, height, channels, max_palette_size)>.
 
 
 =for comment
-From: palimg.c:88
+From: palimg.c
 
 =item i_img_destroy(C<img>)
 
@@ -1908,7 +1912,7 @@ This is unrelated to Perl C<SV> reference counts.
 
 
 =for comment
-From: image.c:315
+From: image.c
 
 
 =back
@@ -1948,7 +1952,7 @@ object.
 
 
 =for comment
-From: image.c:49
+From: image.c
 
 =item im_img_init(aIMCTX, image)
 X<im_img_init API>X<i_img_init API>
@@ -1962,7 +1966,7 @@ See L</im_img_alloc(aIMCTX)> for more information.
 
 
 =for comment
-From: image.c:121
+From: image.c
 
 
 =back
@@ -1988,7 +1992,7 @@ C<channel> may be C<NULL>.
 
 
 =for comment
-From: image.c:488
+From: image.c
 
 =item i_img_color_channels(im)
 
@@ -2000,7 +2004,7 @@ cases in a future release of Imager.
 
 
 =for comment
-From: image.c:521
+From: image.c
 
 =item i_img_color_model(im)
 
@@ -2013,7 +2017,7 @@ beyond gray/rgb and alpha.
 
 
 =for comment
-From: image.c:471
+From: image.c
 
 =item i_img_get_height(C<im>)
 
@@ -2023,7 +2027,7 @@ Returns the height in pixels of the image.
 
 
 =for comment
-From: image.c:457
+From: image.c
 
 =item i_img_get_width(C<im>)
 
@@ -2033,7 +2037,7 @@ Returns the width in pixels of the image.
 
 
 =for comment
-From: image.c:443
+From: image.c
 
 =item i_img_getchannels(C<im>)
 
@@ -2043,7 +2047,7 @@ Get the number of channels in C<im>.
 
 
 =for comment
-From: image.c:431
+From: image.c
 
 =item i_img_getmask(C<im>)
 
@@ -2053,7 +2057,7 @@ Get the image channel mask for C<im>.
 
 
 =for comment
-From: image.c:419
+From: image.c
 
 =item i_img_has_alpha(C<im>)
 
@@ -2062,7 +2066,7 @@ Return true if the image has an alpha channel.
 
 
 =for comment
-From: immacros.h:14
+From: immacros.h
 
 =item i_img_is_monochrome(img, &zero_is_white)
 
@@ -2092,7 +2096,7 @@ C<zero_is_white> is set to non-zero if the first palette entry is white.
 
 
 =for comment
-From: image.c:1858
+From: image.c
 
 =item i_img_setmask(C<im>, C<ch_mask>)
 
@@ -2106,7 +2110,7 @@ written to in the image.
 
 
 =for comment
-From: image.c:402
+From: image.c
 
 
 =back
@@ -2124,7 +2128,7 @@ C<< quant->make_colors >>).
 
 
 =for comment
-From: quant.c:36
+From: quant.c
 
 =item i_quant_translate(C<quant>, C<img>)
 
@@ -2143,7 +2147,7 @@ This function will fail if the supplied palette contains no colors.
 
 
 =for comment
-From: quant.c:100
+From: quant.c
 
 =item i_quant_transparent(C<quant>, C<data>, C<img>, C<trans_index>)
 
@@ -2155,7 +2159,7 @@ The method used depends on the tr_* members of C<quant>.
 
 
 =for comment
-From: quant.c:1677
+From: quant.c
 
 
 =back
@@ -2170,7 +2174,7 @@ This is an internal function called by the mm_log() macro.
 
 
 =for comment
-From: log.c:144
+From: log.c
 
 =item i_loog(level, format, ...)
 
@@ -2178,7 +2182,7 @@ This is an internal function called by the mm_log() macro.
 
 
 =for comment
-From: log.c:88
+From: log.c
 
 
 =back
@@ -2196,7 +2200,7 @@ Opaque type for Imager's mutex API.
 
 
 =for comment
-From: imdatatypes.h:817
+From: imdatatypes.h
 
 
 =back
@@ -2216,7 +2220,7 @@ will abort.
 
 
 =for comment
-From: mutexwin.c:22
+From: mutexwin.c
 
 =item i_mutex_destroy(m)
 
@@ -2226,7 +2230,7 @@ Destroy a mutex.
 
 
 =for comment
-From: mutexwin.c:48
+From: mutexwin.c
 
 =item i_mutex_lock(m)
 
@@ -2236,7 +2240,7 @@ Lock the mutex, waiting if another thread has the mutex locked.
 
 
 =for comment
-From: mutexwin.c:64
+From: mutexwin.c
 
 =item i_mutex_unlock(m)
 
@@ -2248,7 +2252,7 @@ The behavior of releasing a mutex you don't hold is unspecified.
 
 
 =for comment
-From: mutexwin.c:79
+From: mutexwin.c
 
 
 =back
@@ -2270,7 +2274,7 @@ Always fails for direct color images.
 
 
 =for comment
-From: imext.c:500
+From: imext.c
 
 =item i_colorcount(im)
 
@@ -2281,7 +2285,7 @@ Returns -1 for direct images.
 
 
 =for comment
-From: imext.c:546
+From: imext.c
 
 =item i_findcolor(im, color, &entry)
 
@@ -2296,7 +2300,7 @@ Always fails on direct color images.
 
 
 =for comment
-From: imext.c:581
+From: imext.c
 
 =item i_getcolors(im, index, colors, count)
 
@@ -2315,7 +2319,7 @@ palette.
 
 
 =for comment
-From: imext.c:521
+From: imext.c
 
 =item i_maxcolors(im)
 
@@ -2327,7 +2331,7 @@ Returns -1 for direct color images.
 
 
 =for comment
-From: imext.c:563
+From: imext.c
 
 =item i_setcolors(im, index, colors, count)
 
@@ -2345,7 +2349,7 @@ Always fails on direct color images.
 
 
 =for comment
-From: imext.c:601
+From: imext.c
 
 
 =back
@@ -2363,7 +2367,7 @@ Returns the number of tags deleted.
 
 
 =for comment
-From: tags.c:294
+From: tags.c
 
 =item i_tags_delbyname(tags, name)
 
@@ -2374,7 +2378,7 @@ Returns the number of tags deleted.
 
 
 =for comment
-From: tags.c:264
+From: tags.c
 
 =item i_tags_delete(tags, index)
 
@@ -2385,7 +2389,7 @@ Returns true on success.
 
 
 =for comment
-From: tags.c:235
+From: tags.c
 
 =item i_tags_destroy(tags)
 
@@ -2394,7 +2398,7 @@ Destroys the given tags structure.  Called by i_img_destroy().
 
 
 =for comment
-From: tags.c:158
+From: tags.c
 
 =item i_tags_find(tags, name, start, &entry)
 
@@ -2407,7 +2411,7 @@ On failure returns false.
 
 
 =for comment
-From: tags.c:181
+From: tags.c
 
 =item i_tags_findn(tags, code, start, &entry)
 
@@ -2420,7 +2424,7 @@ On failure returns false.
 
 
 =for comment
-From: tags.c:208
+From: tags.c
 
 =item i_tags_get_color(tags, name, code, &value)
 
@@ -2433,7 +2437,7 @@ On failure returns false.
 
 
 =for comment
-From: tags.c:505
+From: tags.c
 
 =item i_tags_get_float(tags, name, code, value)
 
@@ -2449,7 +2453,7 @@ On failure returns false.
 
 
 =for comment
-From: tags.c:320
+From: tags.c
 
 =item i_tags_get_int(tags, name, code, &value)
 
@@ -2462,7 +2466,7 @@ On failure returns false.
 
 
 =for comment
-From: tags.c:406
+From: tags.c
 
 =item i_tags_get_string(tags, name, code, value, value_size)
 
@@ -2481,7 +2485,7 @@ The copied value is always C<NUL> terminated.
 
 
 =for comment
-From: tags.c:569
+From: tags.c
 
 =item i_tags_new(i_img_tags *tags)
 
@@ -2496,7 +2500,7 @@ To destroy the contents use i_tags_destroy()
 
 
 =for comment
-From: tags.c:61
+From: tags.c
 
 =item i_tags_set(tags, name, data, size)
 
@@ -2511,7 +2515,7 @@ removed.
 
 
 =for comment
-From: tags.c:617
+From: tags.c
 
 =item i_tags_set_color(tags, name, code, &value)
 
@@ -2520,7 +2524,7 @@ Stores the given color as a tag with the given name and code.
 
 
 =for comment
-From: tags.c:545
+From: tags.c
 
 =item i_tags_set_float(tags, name, code, value)
 
@@ -2529,7 +2533,7 @@ Equivalent to i_tags_set_float2(tags, name, code, value, 30).
 
 
 =for comment
-From: tags.c:359
+From: tags.c
 
 =item i_tags_set_float2(tags, name, code, value, places)
 
@@ -2542,7 +2546,7 @@ storage at the precision specified by C<places>.
 
 
 =for comment
-From: tags.c:374
+From: tags.c
 
 =item i_tags_setn(C<tags>, C<name>, C<idata>)
 
@@ -2556,7 +2560,7 @@ removed.
 
 
 =for comment
-From: tags.c:639
+From: tags.c
 
 
 =back
@@ -2666,7 +2670,7 @@ implemented and this will always be set to zero.
 
 
 =for comment
-From: immacros.h:71
+From: immacros.h
 
 =item i_utf8_advance(char **p, size_t *len)
 
@@ -2686,7 +2690,7 @@ Returns ~0UL on failure.
 
 
 =for comment
-From: io.c:388
+From: io.c
 
 =item im_context_refdec(ctx, where)
 X<im_context_refdec API>
@@ -2699,7 +2703,7 @@ been removed.
 
 
 =for comment
-From: context.c:82
+From: context.c
 
 =item im_context_refinc(ctx, where)
 X<im_context_refinc API>
@@ -2711,7 +2715,7 @@ Add a new reference to the context.
 
 
 =for comment
-From: context.c:61
+From: context.c
 
 =item im_context_slot_get(ctx, slot)
 
@@ -2720,7 +2724,7 @@ object.
 
 
 =for comment
-From: context.c:325
+From: context.c
 
 =item im_context_slot_new(destructor)
 
@@ -2731,7 +2735,7 @@ corresponding slot is non-NULL.
 
 
 =for comment
-From: context.c:250
+From: context.c
 
 =item im_context_slot_set(slot, value)
 
@@ -2745,7 +2749,7 @@ If reallocation of slot storage fails, returns false.
 
 
 =for comment
-From: context.c:283
+From: context.c
 
 =item im_decode_exif
 
@@ -2764,7 +2768,7 @@ Returns true if an EXIF header was seen.
 
 
 =for comment
-From: imexif.c:270
+From: imexif.c
 
 =item im_errors(ctx)
 
@@ -2778,7 +2782,7 @@ Also callable as C<i_errors()>.
 
 
 =for comment
-From: error.c:69
+From: error.c
 
 =item im_get_context()
 
@@ -2791,7 +2795,7 @@ initialize the C<im_get_context> pointer at some point.
 
 
 =for comment
-From: imext.c:624
+From: imext.c
 
 
 
