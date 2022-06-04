@@ -55,7 +55,6 @@ static const i_img_vtable
 vtable_pal = {
   IMAGER_API_LEVEL,
   
-  i_ppixf_fp, /* i_f_ppixf */
   i_plin_p, /* i_f_plin */
   i_plinf_fp, /* i_f_plinf */
   i_gpix_p, /* i_f_gpix */
@@ -755,7 +754,7 @@ i_psampf_p(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y,
 	i_gpixf(im, l, y, &c);
 	for (ch = 0; ch < chan_count; ++ch)
 	  c.channel[chans[ch]] = *samps++;
-	i_ppixf(im, l, y, &c);
+	i_ppixf_fp(im, l, y, &c);
 	count += chan_count;
 	++l;
       }
@@ -774,7 +773,7 @@ i_psampf_p(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y,
 	i_gpixf(im, l, y, &c);
 	for (ch = 0; ch < chan_count; ++ch)
 	  c.channel[ch] = *samps++;
-	i_ppixf(im, l, y, &c);
+	i_ppixf_fp(im, l, y, &c);
 	count += chan_count;
 	++l;
       }
