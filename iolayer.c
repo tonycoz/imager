@@ -2237,22 +2237,10 @@ Remove the memory mapping created by i_io_mmap().
   i_io_munmap(io);
 
 =cut
-=item i_io_getc(io)
-=category I/O Layers
-
-Fetch a single character from a buffered I/O stream.
-
-=cut
 =item i_io_nextc()
 =category I/O Layers
 
 Currently broken.
-
-=cut
-=item i_io_putc()
-=category I/O Layers
-
-Write a single character to a buffered I/O stream.
 
 =cut
 =item i_io_eof()
