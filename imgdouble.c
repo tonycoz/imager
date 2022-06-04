@@ -27,7 +27,6 @@ sample image type to work with.
 
 static int i_gpix_ddoub(i_img *im, i_img_dim x, i_img_dim y, i_color *val);
 static i_img_dim i_glin_ddoub(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, i_color *vals);
-static i_img_dim i_plin_ddoub(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, const i_color *vals);
 static int i_gpixf_ddoub(i_img *im, i_img_dim x, i_img_dim y, i_fcolor *val);
 static i_img_dim i_glinf_ddoub(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, i_fcolor *vals);
 static i_img_dim i_plinf_ddoub(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, const i_fcolor *vals);
@@ -55,7 +54,6 @@ static const i_img_vtable
 vtable_double = {
   IMAGER_API_LEVEL,
 
-  i_plin_ddoub, /* i_f_plin */
   i_plinf_ddoub, /* i_f_plinf */
   i_gpix_ddoub, /* i_f_gpix */
   i_gpixf_ddoub, /* i_f_gpixf */
@@ -215,43 +213,6 @@ static i_img_dim i_glin_ddoub(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, 
 	vals[i].channel[ch] = SampleFTo8(((double *)im->idata)[off+ch]);
       }
       off += totalch;
-    }
-    return count;
-  }
-  else {
-    return 0;
-  }
-}
-
-static i_img_dim
-i_plin_ddoub(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, const i_color *vals) {
-  int ch;
-  i_img_dim count, i;
-  i_img_dim off;
-
-  if (y >=0 && y < im->ysize && l < im->xsize && l >= 0) {
-    int totalch = im->channels + im->extrachannels;
-
-    if (r > im->xsize)
-      r = im->xsize;
-    off = (l+y*im->xsize) * totalch;
-    count = r - l;
-    if (I_ALL_CHANNELS_WRITABLE(im)) {
-      for (i = 0; i < count; ++i) {
-	for (ch = 0; ch < im->channels; ++ch) {
-	  ((double *)im->idata)[off+ch] = Sample8ToF(vals[i].channel[ch]);
-	}
-        off += totalch;
-      }
-    }
-    else {
-      for (i = 0; i < count; ++i) {
-	for (ch = 0; ch < im->channels; ++ch) {
-	  if (im->ch_mask & (1 << ch))
-	    ((double *)im->idata)[off+ch] = Sample8ToF(vals[i].channel[ch]);
-	}
-        off += totalch;
-      }
     }
     return count;
   }
