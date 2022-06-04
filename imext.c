@@ -306,24 +306,6 @@ int
 }
 
 /*
-=item i_plin(im, l, r, y, colors)
-
-=category Drawing
-
-Sets (r-l) pixels starting from (l,y) using (r-l) values from
-I<colors>.
-
-Returns the number of pixels set.
-
-=cut
-*/
-
-i_img_dim
-(i_plin)(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, const i_color *vals) {
-  return i_plin(im, l, r, y, vals);
-}
-
-/*
 =item i_glin(im, l, r, y, colors)
 
 =category Drawing
