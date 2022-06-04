@@ -142,12 +142,10 @@ wiol_skip_input_data (j_decompress_ptr cinfo, long num_bytes) {
 
 static void
 wiol_term_source (j_decompress_ptr cinfo) {
-  /* no work necessary here */ 
-  wiol_src_ptr src;
-  if (cinfo->src != NULL) {
-    src = (wiol_src_ptr) cinfo->src;
-    myfree(src->buffer);
-  }
+  /* no work necessary here */
+  /* we used to free memory for the I/O buffer,
+     but we let the library handle that now
+  */
 }
 
 
@@ -167,7 +165,7 @@ jpeg_wiol_src(j_decompress_ptr cinfo, io_glue *ig, int length) {
   
   src         = (wiol_src_ptr) cinfo->src;
   src->data   = ig;
-  src->buffer = mymalloc( JPGS );
+  src->buffer = (*cinfo->mem->alloc_small)((j_common_ptr) cinfo, JPOOL_PERMANENT, JPGS);
   src->length = length;
 
   src->pub.init_source       = wiol_init_source;
@@ -221,7 +219,6 @@ wiol_empty_output_buffer(j_compress_ptr cinfo) {
   rc = i_io_write(dest->data, dest->buffer, JPGS);
 
   if (rc != JPGS) { /* XXX: Should raise some jpeg error */
-    myfree(dest->buffer);
     mm_log((1, "wiol_empty_output_buffer: Error: nbytes = %d != rc = %d\n", JPGS, (int)rc));
     ERREXIT(cinfo, JERR_FILE_WRITE);
   }
@@ -238,11 +235,8 @@ wiol_term_destination (j_compress_ptr cinfo) {
   /* needs error handling */
 
   if (i_io_write(dest->data, dest->buffer, nbytes) != nbytes) {
-    myfree(dest->buffer);
     ERREXIT(cinfo, JERR_FILE_WRITE);
   }
-
-  myfree(dest->buffer);
 }
 
 
@@ -261,7 +255,8 @@ jpeg_wiol_dest(j_compress_ptr cinfo, io_glue *ig) {
   
   dest = (wiol_dest_ptr) cinfo->dest;
   dest->data                    = ig;
-  dest->buffer                  = mymalloc( JPGS );
+  dest->buffer                  =
+    (*cinfo->mem->alloc_small)((j_common_ptr) cinfo, JPOOL_PERMANENT, JPGS);
 
   dest->pub.init_destination    = wiol_init_destination;
   dest->pub.empty_output_buffer = wiol_empty_output_buffer;
