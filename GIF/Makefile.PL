@@ -156,6 +156,9 @@ int ver_min;
 int ver_maj = GIFLIB_MAJOR;
 int ver_min = GIFLIB_MINOR;
 #endif
+#if defined(GIFLIB_MAJOR) && GIFLIB_MAJOR >= 5
+int errorcode;
+#endif
 GifColorType colors[2];
 ColorMapObject *map;
 FILE *fh;
@@ -179,6 +182,11 @@ if (gf->SWidth != 16 || gf->SHeight != 16) {
 /* crashes in older versions of giflib, not used in giflib 5 */
 EGifSetGifVersion("89a");
 EGifSetGifVersion("87a");
+#endif
+#if defined(GIFLIB_MAJOR) && GIFLIB_MAJOR >= 5
+DGifCloseFile(gf, &errorcode);
+#else
+DGifCloseFile(gf);
 #endif
 
 #ifdef GIF_LIB_VERSION
@@ -238,6 +246,11 @@ for (mode = 0; mode < 2; ++mode) {
   EGifPutScreenDesc(gf, 1, 1, 1, 0, map);
   EGifPutImageDesc(gf, 0, 0, 1, 1, 0, NULL);
   EGifPutPixel(gf, 0);
+#if defined(GIFLIB_MAJOR) && GIFLIB_MAJOR >= 5
+  GifFreeMapObject(map);
+#else
+  FreeMapObject(map);
+#endif
 #if defined(GIFLIB_MAJOR) && ((GIFLIB_MAJOR >= 5 && GIFLIB_MINOR >= 1) || GIFLIB_MAJOR >= 6)
   EGifCloseFile(gf, &error);
 #else

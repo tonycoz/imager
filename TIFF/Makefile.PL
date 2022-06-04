@@ -171,7 +171,7 @@ else {
   ver_len = strlen(ver_start);
 }
 
-fprintf(stderr, "TIFF: library version %.*s, header version %ld\n", ver_len, ver_start, TIFFLIB_VERSION);
+fprintf(stderr, "TIFF: library version %.*s, header version %ld\n", ver_len, ver_start, (long)TIFFLIB_VERSION);
 if (TIFFLIB_VERSION == 20090820) {
   fprintf(stderr, "TIFF: this appears to be libtiff 3.9.0 which introduced a serious bug\n");
   fprintf(stderr, "TIFF: please install 3.9.1\n");

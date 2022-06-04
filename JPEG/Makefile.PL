@@ -152,6 +152,7 @@ struct jpeg_error_mgr jerr;
 cinfo.err = jpeg_std_error(&jerr);
 jpeg_create_decompress(&cinfo);
 
+jpeg_destroy_decompress(&cinfo);
 return 0;
 CODE
 }

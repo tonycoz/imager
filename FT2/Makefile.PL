@@ -177,6 +177,8 @@ if (error) {
   fprintf(stderr, "FreeType 2: cannot load font: %d\n", error);
   return 1;
 }
+FT_Done_Face(face);
+FT_Done_FreeType(library);
 return 0;
 CODE
 }
