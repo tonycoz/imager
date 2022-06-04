@@ -559,6 +559,7 @@ tga_palette_read(io_glue *ig, i_img *img, int bytepp, int colourmaplength) {
   palbuf   = mymalloc(palbsize);
   
   if (i_io_read(ig, palbuf, palbsize) != palbsize) {
+    myfree(palbuf);
     i_push_error(errno, "could not read targa colormap");
     return 0;
   }
