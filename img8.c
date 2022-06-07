@@ -19,6 +19,16 @@ vtable_8bit = {
   i_gsamp_d, /* i_f_gsamp */
   i_gsampf_d, /* i_f_gsampf */
 
+  i_psamp_d,
+  i_psampf_d,
+
+  NULL, /* i_f_destroy */
+
+  i_gsamp_bits_fb,
+  NULL, /* i_f_psamp_bits */
+
+  i_data_8,
+
   NULL, /* i_f_gpal */
   NULL, /* i_f_ppal */
   NULL, /* i_f_addcolors */
@@ -26,17 +36,7 @@ vtable_8bit = {
   NULL, /* i_f_colorcount */
   NULL, /* i_f_maxcolors */
   NULL, /* i_f_findcolor */
-  NULL, /* i_f_setcolors */
-
-  NULL, /* i_f_destroy */
-
-  i_gsamp_bits_fb,
-  NULL, /* i_f_psamp_bits */
-
-  i_psamp_d,
-  i_psampf_d,
-
-  i_data_8
+  NULL /* i_f_setcolors */
 };
 
 /*

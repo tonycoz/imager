@@ -52,6 +52,16 @@ vtable_double = {
   i_gsamp_ddoub, /* i_f_gsamp */
   i_gsampf_ddoub, /* i_f_gsampf */
 
+  i_psamp_ddoub, /* i_f_psamp */
+  i_psampf_ddoub, /* i_f_psampf */
+
+  NULL, /* i_f_destroy */
+
+  i_gsamp_bits_fb,
+  NULL, /* i_f_psamp_bits */
+
+  i_data_double,
+
   NULL, /* i_f_gpal */
   NULL, /* i_f_ppal */
   NULL, /* i_f_addcolors */
@@ -59,17 +69,7 @@ vtable_double = {
   NULL, /* i_f_colorcount */
   NULL, /* i_f_maxcolors */
   NULL, /* i_f_findcolor */
-  NULL, /* i_f_setcolors */
-
-  NULL, /* i_f_destroy */
-
-  i_gsamp_bits_fb,
-  NULL, /* i_f_psamp_bits */
-
-  i_psamp_ddoub, /* i_f_psamp */
-  i_psampf_ddoub, /* i_f_psampf */
-
-  i_data_double
+  NULL /* i_f_setcolors */
 };
 
 /*
