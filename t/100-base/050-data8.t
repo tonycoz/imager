@@ -20,12 +20,13 @@ my %samptypes =
     '8' => '8bit',
     'double' => 'float',
     '16' => '16bit',
+    'float' => 'float',
    );
 
 {
   my @imnames = ( "gray", "gray_a", "basic", "rgba" );
 
-  for my $bits (8, "double", 16) {
+  for my $bits (8, "double", 16, 'float') {
     my $gsamp_type = $samptypes{$bits} || die;
 
     # basic tests
@@ -36,11 +37,19 @@ my %samptypes =
       ok(!defined $im->data(layout => "palette", bits => $bits),
          "$chans/$bits: can't get paletted data from direct colour image");
 
+      ok(!defined $im->data(layout => "palette", bits => $bits, flags => 'synth'),
+         "$chans/$bits: can't get paletted data from direct colour image, even with synth");
+
       # test data in base format for this channel count
       my $expect = '';
       if ($bits eq "16") {
         for my $y (0 .. $im->getheight()-1) {
           $expect .= pack("S*", $im->getsamples(y => $y, type => $gsamp_type));
+        }
+      }
+      elsif ($bits eq "float") {
+        for my $y (0 .. $im->getheight()-1) {
+          $expect .= pack("f*", $im->getsamples(y => $y, type => 'float'));
         }
       }
       else {
@@ -99,6 +108,11 @@ my %samptypes =
             $lexpect .= pack "S*", $tim->getsamples(y => $y, channels => $gchans, type => $gsamp_type);
           }
         }
+        elsif ($bits eq "float") {
+          for my $y ( 0 .. $im->getheight()-1 ) {
+            $lexpect .= pack "f*", $tim->getsamples(y => $y, channels => $gchans, type => "float");
+          }
+        }
         else {
           for my $y ( 0 .. $im->getheight()-1 ) {
             $lexpect .= $tim->getsamples(y => $y, channels => $gchans, type => $gsamp_type);
@@ -106,7 +120,10 @@ my %samptypes =
         }
         if ($layout eq "rgbx") {
           # rgbx sets channel 3 to zero
-          my $replace = $bits eq "8" ? "\0" : $bits eq "16" ? "\0\0" : pack("d", 0.0);
+          my $replace =
+            $bits eq "8" ? "\0" :
+            $bits eq "16" ? "\0\0" :
+            $bits eq "float" ? pack("f", 0.0) : pack("d", 0.0);
           my $size = length $replace;
           my $i = 3;
           while ($i * $size < length $lexpect) {
