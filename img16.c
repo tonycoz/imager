@@ -59,6 +59,16 @@ vtable_16bit = {
   i_gsamp_d16, /* i_f_gsamp */
   i_gsampf_d16, /* i_f_gsampf */
 
+  i_psamp_d16,
+  i_psampf_d16,
+
+  NULL, /* i_f_destroy */
+
+  i_gsamp_bits_d16,
+  i_psamp_bits_d16,
+
+  i_data_16,
+
   NULL, /* i_f_gpal */
   NULL, /* i_f_ppal */
   NULL, /* i_f_addcolors */
@@ -66,17 +76,7 @@ vtable_16bit = {
   NULL, /* i_f_colorcount */
   NULL, /* i_f_maxcolors */
   NULL, /* i_f_findcolor */
-  NULL, /* i_f_setcolors */
-
-  NULL, /* i_f_destroy */
-
-  i_gsamp_bits_d16,
-  i_psamp_bits_d16,
-
-  i_psamp_d16,
-  i_psampf_d16,
-
-  i_data_16
+  NULL /* i_f_setcolors */
 };
 
 /* we have a real 16-bit unsigned integer */
