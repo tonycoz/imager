@@ -67,6 +67,16 @@ vtable_mask = {
   i_gsamp_masked, /* i_f_gsamp */
   i_gsampf_masked, /* i_f_gsampf */
 
+  psamp_masked, /* i_f_psamp */
+  psampf_masked, /* i_f_psampf */
+
+  i_destroy_masked, /* i_f_destroy */
+
+  NULL, /* i_f_gsamp_bits */
+  NULL, /* i_f_psamp_bits */
+
+  data_masked,
+
   i_gpal_masked, /* i_f_gpal */
   i_ppal_masked, /* i_f_ppal */
   i_addcolors_forward, /* i_f_addcolors */
@@ -74,17 +84,7 @@ vtable_mask = {
   i_colorcount_forward, /* i_f_colorcount */
   i_maxcolors_forward, /* i_f_maxcolors */
   i_findcolor_forward, /* i_f_findcolor */
-  i_setcolors_forward, /* i_f_setcolors */
-
-  i_destroy_masked, /* i_f_destroy */
-
-  NULL, /* i_f_gsamp_bits */
-  NULL, /* i_f_psamp_bits */
-
-  psamp_masked, /* i_f_psamp */
-  psampf_masked, /* i_f_psampf */
-
-  data_masked
+  i_setcolors_forward  /* i_f_setcolors */
 };
 
 /*

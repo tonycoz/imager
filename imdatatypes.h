@@ -410,6 +410,18 @@ typedef struct i_img_vtable_struct {
   i_f_gsamp_t i_f_gsamp;
   i_f_gsampf_t i_f_gsampf;
   
+  /* as of 0.88 */
+  i_f_psamp_t i_f_psamp;
+  i_f_psampf_t i_f_psampf;
+
+  i_f_destroy_t i_f_destroy;
+
+  /* as of 0.61 */
+  i_f_gsamp_bits_t i_f_gsamp_bits;
+  i_f_psamp_bits_t i_f_psamp_bits;
+
+  i_f_data_t i_f_data;
+
   /* only valid for type == i_palette_type */
   i_f_gpal_t i_f_gpal;
   i_f_ppal_t i_f_ppal;
@@ -419,18 +431,6 @@ typedef struct i_img_vtable_struct {
   i_f_maxcolors_t i_f_maxcolors;
   i_f_findcolor_t i_f_findcolor;
   i_f_setcolors_t i_f_setcolors;
-
-  i_f_destroy_t i_f_destroy;
-
-  /* as of 0.61 */
-  i_f_gsamp_bits_t i_f_gsamp_bits;
-  i_f_psamp_bits_t i_f_psamp_bits;
-
-  /* as of 0.88 */
-  i_f_psamp_t i_f_psamp;
-  i_f_psampf_t i_f_psampf;
-
-  i_f_data_t i_f_data;
 } i_img_vtable;
 
 /*

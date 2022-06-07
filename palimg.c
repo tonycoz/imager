@@ -55,6 +55,16 @@ vtable_pal = {
   i_gsamp_p, /* i_f_gsamp */
   i_gsampf_fp, /* i_f_gsampf */
 
+  i_psamp_p,
+  i_psampf_p,
+
+  i_destroy_p, /* i_f_destroy */
+
+  i_gsamp_bits_fb,
+  NULL, /* i_f_psamp_bits */
+  
+  i_data_pal,
+
   i_gpal_p, /* i_f_gpal */
   i_ppal_p, /* i_f_ppal */
   i_addcolors_p, /* i_f_addcolors */
@@ -62,17 +72,7 @@ vtable_pal = {
   i_colorcount_p, /* i_f_colorcount */
   i_maxcolors_p, /* i_f_maxcolors */
   i_findcolor_p, /* i_f_findcolor */
-  i_setcolors_p, /* i_f_setcolors */
-
-  i_destroy_p, /* i_f_destroy */
-
-  i_gsamp_bits_fb,
-  NULL, /* i_f_psamp_bits */
-  
-  i_psamp_p,
-  i_psampf_p,
-
-  i_data_pal
+  i_setcolors_p /* i_f_setcolors */
 };
 
 /*
