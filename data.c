@@ -246,6 +246,65 @@ data_double(i_img *im, i_data_layout_t layout, unsigned flags,
 }
 
 static i_image_data_alloc_t *
+data_16(i_img *im, i_data_layout_t layout, unsigned flags,
+        void **pdata, size_t *psize) {
+  dIMCTXim(im);
+  const int *chans;
+  int count;
+  int need_alpha;
+  int need_zero;
+  size_t size;
+  i_sample16_t *data;
+  i_sample16_t *datap;
+  i_sample16_t *pixelp;
+  i_fsample_t *frow, *frowp;
+  i_img_dim x, y;
+  size_t row_size_samps;
+  size_t frow_size_bytes;
+  i_img_dim i;
+
+  chans = layout_chans(im, layout, &count, &need_alpha, &need_zero);
+  size = (size_t)count * (size_t)im->xsize * (size_t)im->ysize * sizeof(i_sample16_t);
+  if (size / (size_t)count / (size_t)im->xsize / sizeof(i_sample16_t) != (size_t)im->ysize) {
+    im_push_error(aIMCTX, 0, "integer overflow calculating image data size");
+    return NULL;
+  }
+
+  /* cannot fail */
+  data = mymalloc(size); 
+  row_size_samps = count * im->xsize;
+  frow_size_bytes = row_size_samps * sizeof(i_fsample_t);
+  frow = mymalloc(frow_size_bytes);
+  for (y = 0, datap = data; y < im->ysize; ++y, datap += row_size_samps) {
+    i_gsampf(im, 0, im->xsize, y, frow, chans, count);
+    for (i = 0, frowp = frow, pixelp = datap; i < row_size_samps; ++i, ++pixelp, ++frowp) {
+      *pixelp = SampleFTo16(*frowp);
+    }
+    if (need_alpha >= 0) {
+      for (x = 0, pixelp = datap; x < im->xsize; ++x, pixelp += count) {
+        pixelp[need_alpha] = 0xFFFF;
+      }
+    }
+    if (need_zero >= 0) {
+      for (x = 0, pixelp = datap; x < im->xsize; ++x, pixelp += count) {
+        pixelp[need_zero] = 0x0;
+      }
+    }
+  }
+
+  myfree(frow);
+
+  if (flags & idf_otherendian) {
+    swap_bytes(data, size, sizeof(i_sample16_t));
+  }
+
+  *pdata = data;
+  *psize = size;
+
+  return i_new_image_data_alloc_free(im, data);
+}
+
+static i_image_data_alloc_t *
 data_palette(i_img *im, void **pdata, size_t *psize) {
   size_t size = (size_t)im->xsize * (size_t)im->ysize;
   unsigned char *data;
@@ -331,6 +390,9 @@ i_img_data_fallback(i_img *im, i_data_layout_t layout, i_img_bits_t bits, unsign
 
   case i_double_bits:
     return data_double(im, layout, flags, pdata, psize);
+
+  case i_16_bits:
+    return data_16(im, layout, flags, pdata, psize);
 
   default:
     im_push_errorf(aIMCTX, 0, "image bits %d not implemented", (int)bits);
