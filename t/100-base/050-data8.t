@@ -19,12 +19,13 @@ my %samptypes =
   (
     '8' => '8bit',
     'double' => 'float',
+    '16' => '16bit',
    );
 
 {
   my @imnames = ( "gray", "gray_a", "basic", "rgba" );
 
-  for my $bits (8, "double") {
+  for my $bits (8, "double", 16) {
     my $gsamp_type = $samptypes{$bits} || die;
 
     # basic tests
@@ -37,8 +38,15 @@ my %samptypes =
 
       # test data in base format for this channel count
       my $expect = '';
-      for my $y (0 .. $im->getheight()-1) {
-        $expect .= $im->getsamples(y => $y, type => $gsamp_type);
+      if ($bits eq "16") {
+        for my $y (0 .. $im->getheight()-1) {
+          $expect .= pack("S*", $im->getsamples(y => $y, type => $gsamp_type));
+        }
+      }
+      else {
+        for my $y (0 .. $im->getheight()-1) {
+          $expect .= $im->getsamples(y => $y, type => $gsamp_type);
+        }
       }
 
       if ($bits eq "8") {
@@ -86,12 +94,19 @@ my %samptypes =
         my $lexpect = '';
         # make an rgba version of the image
         my $tim = $im->convert(preset => "rgb")->convert(preset => "addalpha");
-        for my $y ( 0 .. $im->getheight()-1 ) {
-          $lexpect .= $tim->getsamples(y => $y, channels => $gchans, type => $gsamp_type);
+        if ($bits eq "16") {
+          for my $y ( 0 .. $im->getheight()-1 ) {
+            $lexpect .= pack "S*", $tim->getsamples(y => $y, channels => $gchans, type => $gsamp_type);
+          }
+        }
+        else {
+          for my $y ( 0 .. $im->getheight()-1 ) {
+            $lexpect .= $tim->getsamples(y => $y, channels => $gchans, type => $gsamp_type);
+          }
         }
         if ($layout eq "rgbx") {
           # rgbx sets channel 3 to zero
-          my $replace = $bits eq "8" ? "\0" : pack("d", 0.0);
+          my $replace = $bits eq "8" ? "\0" : $bits eq "16" ? "\0\0" : pack("d", 0.0);
           my $size = length $replace;
           my $i = 3;
           while ($i * $size < length $lexpect) {
