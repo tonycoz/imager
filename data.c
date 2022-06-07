@@ -340,10 +340,13 @@ i_img_data_fallback(i_img *im, i_data_layout_t layout, i_img_bits_t bits, unsign
 
 struct def_data_alloc {
   i_image_data_alloc_t head;
+  i_img *im;
 };
 
 static void
 release_def_alloc(i_image_data_alloc_t *alloc) {
+  struct def_data_alloc *work = (struct def_data_alloc *)alloc;
+  i_img_destroy(work->im);
   myfree(alloc);
 }
 
@@ -351,6 +354,8 @@ i_image_data_alloc_t *
 i_new_image_data_alloc_def(i_img *im) {
   struct def_data_alloc *result = mymalloc(sizeof(struct def_data_alloc));
   result->head.f_release = release_def_alloc;
+  result->im = im;
+  i_img_refcnt_inc(im);
 
   return &result->head;
 }
