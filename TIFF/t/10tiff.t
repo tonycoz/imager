@@ -722,7 +722,7 @@ SKIP:
   ok($orig->write(data => \$data, type => 'tiff', 
 		  tiff_compression => 'none'), 
      "write 32-bit/sample from double")
-    or print "# ", $orig->errstr, "\n";
+    or diag $orig->errstr;
   my $im = Imager->new;
   ok($im->read(data => $data), "read it back");
   is_image($im, $orig, "check read data matches");
