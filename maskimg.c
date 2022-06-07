@@ -72,7 +72,7 @@ vtable_mask = {
 
   i_destroy_masked, /* i_f_destroy */
 
-  NULL, /* i_f_gsamp_bits */
+  i_gsamp_bits_fb, /* i_f_gsamp_bits */
   NULL, /* i_f_psamp_bits */
 
   data_masked,

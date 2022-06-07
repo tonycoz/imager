@@ -1598,6 +1598,8 @@ int i_findcolor_forward(i_img *im, const i_color *color, i_palidx *entry) {
 
 =item i_gsamp_bits_fb
 
+Provides a fallback for the i_gsamp_bits() entry in the image virtual table.
+
 =cut
 */
 
