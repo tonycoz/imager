@@ -380,7 +380,7 @@ void *myzmalloc(size_t size);
 void  myfree(void *p);
 void* myrealloc(void *p, size_t newsize);
 void* mymalloc_file_line (size_t size, char* file, int line);
-void* myzmalloc_file_line (size_t size, char* file, int line);
+void* myzmalloc_file_line (size_t size, const char* file, int line);
 void  myfree_file_line   (void *p, char*file, int line);
 void* myrealloc_file_line(void *p, size_t newsize, char* file,int line);
 
