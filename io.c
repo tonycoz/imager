@@ -117,7 +117,7 @@ mymalloc_file_line(size_t size, char* file, int line) {
 }
 
 void*
-myzmalloc_file_line(size_t size, char* file, int line) {
+myzmalloc_file_line(size_t size, const char* file, int line) {
   char *buf;
   int i;
   if (malloc_need_init) malloc_init();
@@ -286,6 +286,11 @@ myzmalloc(size_t size) {
 void *
 mymalloc_file_line(size_t size, char *file, int line) {
   return mymalloc(size);
+}
+
+void *
+myzmalloc_file_line(size_t size, const char *file, int line) {
+  return myzmalloc(size);
 }
 
 void
