@@ -565,6 +565,9 @@ i_img_get_height(i_img *im) {
 
 Returns the color model for the image.
 
+A future version of Imager will allow for images with extra channels
+beyond gray/rgb and alpha.
+
 =cut
 */
 i_color_model_t
