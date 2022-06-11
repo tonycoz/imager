@@ -101,7 +101,7 @@ Imager treats these as follows:
 =item *
 
 0 samples per color - the image has a color model not supported by
-Imager.  The image must have extra channels.
+Imager.  The image must have L<extra channels|/Extra channels>.
 
 =item *
 
@@ -1381,6 +1381,34 @@ Send a message to the debug log.
 Returns a true value if logging is enabled.
 
 =back
+
+=head1 Extra channels
+
+Extra channels are a new feature intended for future use in:
+
+=over
+
+=item *
+
+supporting extra samples that an image format might support in
+addition to the color channels, such as extra samples in TIFF, and
+extra alpha planes in some other image formats.
+
+=item *
+
+support for non-color images, including planes of scientific data,
+where the image base channels would be zero.
+
+=item *
+
+support for raw non-RGB samples from a file.
+
+=back
+
+=for stopwords ABI
+
+The current limited implementation is just to avoid another ABI break,
+future releases of Imager should have better support.
 
 =head1 AUTHOR
 
