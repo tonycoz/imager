@@ -100,7 +100,8 @@ X<im_img_double_new_extra API>X<i_img_double_new_extra API>
 =synopsis i_img *img = im_img_double_new_extra(aIMCTX, width, height, channels, extra);
 =synopsis i_img *img = i_img_double_new_extra(width, height, channels, extra);
 
-Creates a new double per sample image, possibly with L<Imager::API/Extra channels>.
+Creates a new double per sample image, possibly with
+L<Imager::ImageTypes/Extra channels>.
 
 Also callable as C<i_img_double_new_extra(width, height, channels, extra)>.
 

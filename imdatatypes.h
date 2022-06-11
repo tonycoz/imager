@@ -467,7 +467,7 @@ channels associated with color and alpha channel.  See also C<extrachannels>.
 =item *
 
 C<extrachannels> - the number of extra channels associated with each
-pixel.  For now this is always zero.
+pixel.
 
 =item *
 
