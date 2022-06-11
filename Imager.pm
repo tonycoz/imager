@@ -5291,6 +5291,8 @@ drawing text - L<Imager::Draw/string()>, L<Imager::Draw/align_string()>
 
 error message - L</"ERROR HANDLING">
 
+extra channels - L<Imager::ImageTypes/Extra channels>
+
 files, font - L<Imager::Font>
 
 files, image - L<Imager::Files>

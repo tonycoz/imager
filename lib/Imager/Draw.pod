@@ -1362,8 +1362,9 @@ grayscale samples are never synthesized.  You almost always want this.
 =item *
 
 C<extras> - this is mostly intended for use from C.  Allows the image
-data returned to include extra channels beyond the color and alpha
-channels requested.  You probably never want this.
+data returned to include
+L<extra channels|Imager::ImageTypes/Extra channels> beyond the color
+and alpha channels requested.  You probably never want this.
 
 =item *
 
