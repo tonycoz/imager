@@ -2071,9 +2071,32 @@ to autoload it.
 
 =item preload()
 
-This preloads the file support modules included with or that have been
-included with Imager in the past.  This is intended for use in forking
-servers such as mod_perl.
+C<Imager->preload> preloads the file support modules included with or
+that have been included with Imager in the past.
+
+It isn't typically needed, but some cases where you might want to use
+it:
+
+=over
+
+=item *
+
+For use in forking servers such as mod_perl to allow as many pages as
+possible to be shared between parent and child processes.
+
+=item *
+
+to avoid runtime loading of a module from delaying output in an
+animation.
+
+=item *
+
+if you're loading modules from a relative C<$ENV{PERL5LIB}> and expect
+to change directories.
+
+=back
+
+You probably don't need it.
 
 If the module is not available no error occurs.
 
