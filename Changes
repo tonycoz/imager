@@ -1,5 +1,7 @@
 Imager release history.  Older releases can be found in Changes.old
 
+Upcoming backward incompatible changes:
+
  - deprecate setting/deleting tags by code.  If this causes you a
    problem please open an issue.  You can disable the warning produced
    with:
@@ -10,6 +12,55 @@ Imager release history.  Older releases can be found in Changes.old
    open an issue.  You can disable the warning produced with:
 
     no warnings 'Imager::channelmask';
+
+If you use either of these features please let me know.
+
+Minor features:
+
+ - add magic/extension support for AVIF files, see Imager::File::AVIF
+   on CPAN.
+
+ - treat an unknown extension of two or more characters as a potential
+   file type on write.
+
+Bug fixes:
+
+ - prevent a possible undefined value warning from t/t10jpeg.t
+
+ - update MANIFEST.SKIPs, update MANIFESTs and improve MANIFEST testing.
+
+ - TGA: failing to read in the palette of a paletted TGA file would
+   leak memory.
+
+ - JPEG: supplying invalid values for the new JPEG write tags could
+   leak memory.
+
+ - PNG: fix validation of Latin1 only tags when writing PNGs.
+   (detected by clang)
+
+ - matrix_transform: correctly use fabs() instead of abs() on floating
+   point values when deciding whether to divide for a perspective
+   transform. (detected by clang)
+
+ - fix the i_poly_aa_cfill_m() API macro
+
+Cage cleaning:
+
+ - eliminate IO::File usage from the Imager code base
+
+ - fix a type error harmlessly ignored by gcc but found by clang
+
+ - eliminate memory leaks in sub-module Makefile.PL probe test code to
+   allow the probes to succeed under LeakSanitizer.
+
+ - BMP: fix some otherwise harmless clang warnings
+
+ - remove some code meant to work around some unspecified old Solaris
+   linker bug.
+
+ - i_noise: prevent a harmless conversion warning from clang
+
+ - fountain fill/filter: limit ssample_param to 1000 to simplify code.
 
 Imager 1.015 - 7 May 2022
 ============
