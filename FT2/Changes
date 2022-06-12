@@ -1,3 +1,11 @@
+Imager-Font-FT2 1.000
+=====================
+
+ - remove memory leaks in probe test code to allow it to pass under
+   LeakSanitizer.
+
+ - updates to MANIFEST.SKIP
+
 Imager-Font-FT2 0.99
 ====================
 

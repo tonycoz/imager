@@ -1,3 +1,11 @@
+Imager-File-TIFF 0.95
+=====================
+
+ - remove memory leaks in probe test code to allow it to pass under
+   LeakSanitizer.
+
+ - updates to MANIFEST.SKIP
+
 Imager-File-TIFF 0.94
 =====================
 

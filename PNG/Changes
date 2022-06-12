@@ -1,3 +1,10 @@
+Imager-File-PNG 0.98
+====================
+
+ - MANIFEST.SKIP updates
+
+ - fix validation of values for Latin1 tags
+
 Imager-File-PNG 0.97
 ====================
 
