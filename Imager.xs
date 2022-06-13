@@ -1175,7 +1175,7 @@ static int
 trim_color_list_grow(pTHX_ i_trim_color_list *t) {
   STRLEN old_cur = SvCUR(t->sv);
   char *p;
-  SvGROW(t->sv, SvCUR(t->sv)+sizeof(i_trim_colors_t));
+  SvGROW(t->sv, SvCUR(t->sv)+sizeof(i_trim_colors_t)+1);
   p = SvPVX(t->sv);
   memset(p+old_cur, 0, sizeof(i_trim_colors_t));
   t->colors = (i_trim_colors_t *)p;
