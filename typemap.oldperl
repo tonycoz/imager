@@ -2,6 +2,7 @@
 # STRLEN isn't in the default typemap in older perls
 STRLEN	       	      	T_UV
 PerlIO *		T_INOUT
+float                   T_FLOAT
 
 #############################################################################
 INPUT
@@ -27,3 +28,7 @@ T_HVREF
             	Perl_croak(aTHX_ \"$var is not a hash reference\");
 	} STMT_END
 
+OUTPUT
+
+T_FLOAT
+	sv_setnv($arg, (double)$var);
