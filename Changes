@@ -1,5 +1,12 @@
 Imager release history.  Older releases can be found in Changes.old
 
+ - skip trying to produce deprecation warnings before perl 5.14, since
+   that doesn't support custom warning categories within a package.
+   This prevents pointless failures on these old versions of perl.
+
+Imager 1.017 - 14 Jun 2022
+============
+
 Bug fix:
 
  - fix a one bytes underallocation for Imager::TrimColorList.  On
