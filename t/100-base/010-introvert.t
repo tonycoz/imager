@@ -232,7 +232,7 @@ is($impal2->colorchannels, 3, "check colorchannels");
   is($im->getmask, undef, "can't get mask of empty image");
   is($im->errstr, "getmask: empty input image", "check message");
   {
-    no warnings 'Imager::channelmask';
+    no if $] >= 5.014, warnings => 'Imager::channelmask';
     is($im->setmask, undef, "can't set mask of empty image");
     is($im->errstr, "setmask: empty input image", "check message");
   }
@@ -1135,7 +1135,10 @@ my $psamp_outside_error = "Image position outside of image";
      "check error message");
 }
 
+SKIP:
 {
+  skip "No detailed warning registration before 5.014", 1
+    if $] < 5.014;
   # warnings should be enabled
   my @warn;
   local $SIG{__WARN__} = sub { push @warn, "@_"; };
@@ -1146,7 +1149,7 @@ my $psamp_outside_error = "Image position outside of image";
        "check message for settag");
   @warn = ();
   {
-    no warnings 'Imager::tagcodes';
+    no if $] >= 5.014, warnings => 'Imager::tagcodes';
     $im->settag(code => 10, value => 10);
   }
   is(scalar @warn, 0, "settag with code with warning disabled doesn't warn");
@@ -1159,7 +1162,7 @@ my $psamp_outside_error = "Image position outside of image";
 
   @warn = ();
   {
-    no warnings 'Imager::tagcodes';
+    no if $] >= 5.014, warnings => 'Imager::tagcodes';
     $im->addtag(code => 12, value => 12);
   }
   is(scalar @warn, 0, "addtag with code with warning disabled doesn't warn");
@@ -1172,7 +1175,7 @@ my $psamp_outside_error = "Image position outside of image";
        "check setmask warning message");
   @warn = ();
   {
-    no warnings 'Imager::channelmask';
+    no if $] >= 5.014, warnings => 'Imager::channelmask';
     $im->setmask(mask => 0xFF);
   }
   is(scalar @warn, 0, "setmask with warning disabled doesn't warn");

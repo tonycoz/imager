@@ -7,7 +7,7 @@ use Imager::Color;
 use Imager::Color::Float;
 use Imager::Font;
 use Imager::TrimColorList;
-use warnings::register qw(tagcodes channelmask);
+use if $] >= 5.014, "warnings::register" => qw(tagcodes channelmask);
 
 our $ERRSTR;
 
@@ -1421,7 +1421,8 @@ sub addtag {
     }
   }
   elsif ($opts{code}) {
-    warnings::warnif("Imager::tagcodes", "addtag: code parameter is deprecated");
+    warnings::warnif("Imager::tagcodes", "addtag: code parameter is deprecated")
+        if $] >= 5.014;
     if (defined $opts{value}) {
       if ($opts{value} =~ /^\d+$/) {
         # add as a number
@@ -1459,7 +1460,8 @@ sub deltag {
     return i_tags_delbyname($self->{IMG}, $opts{name});
   }
   elsif (defined $opts{code}) {
-    warnings::warnif("Imager::tagcodes", "deltag: code parameter is deprecated");
+    warnings::warnif("Imager::tagcodes", "deltag: code parameter is deprecated")
+        if $] >= 5.014;
     return i_tags_delbycode($self->{IMG}, $opts{code});
   }
   else {
@@ -1479,7 +1481,8 @@ sub settag {
     return $self->addtag(name=>$opts{name}, value=>$opts{value});
   }
   elsif (defined $opts{code}) {
-    warnings::warnif("Imager::tagcodes", "settag: code parameter is deprecated");
+    warnings::warnif("Imager::tagcodes", "settag: code parameter is deprecated")
+        if $] >= 5.014;
     i_tags_delbycode($self->{IMG}, $opts{code});
     if (defined $opts{value}) {
       if ($opts{value} =~ /^\d+$/) {
@@ -4153,7 +4156,8 @@ sub setmask {
   my $self = shift;
   my %opts = @_;
 
-  warnings::warnif("Imager::channelmask", "setmask: image channel masks are deprecated");
+  warnings::warnif("Imager::channelmask", "setmask: image channel masks are deprecated")
+      if $] >= 5.014;
 
   $self->_valid_image("setmask")
     or return;

@@ -8,7 +8,7 @@ require Exporter;
 use Carp qw(croak carp);
 use Config;
 
-our $VERSION = "1.006";
+our $VERSION = "1.007";
 
 our @ISA = qw(Exporter);
 our @EXPORT_OK = 
@@ -683,7 +683,7 @@ sub color_cmp {
 sub mask_tests {
   my ($im, $epsilon) = @_;
 
-  no warnings 'Imager::channelmask';
+  no if $] >= 5.014, warnings => 'Imager::channelmask';
   my $builder = Test::Builder->new;
 
   defined $epsilon or $epsilon = 0;
