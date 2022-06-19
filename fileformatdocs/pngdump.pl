@@ -28,11 +28,21 @@ unless ($head eq "\x89PNG\x0d\x0A\cZ\x0A") {
   die "Header isn't a PNG header\n";
 }
 
+my %colour_types =
+  (
+    0 => "Greyscale",
+    2 => "Truecolour",
+    3 => "Indexed-colour",
+    4 => "Greyscale with alpha",
+    6 => "Truecolor with alpha",
+    );
+
 my $colour_type;
 my $bits;
 my $sline_len;
 my $sline_left = 0;
 my $row = 0;
+my $bitspp;
 while (my ($dlen, $data, $len, $type, $payload, $crc) = read_chunk($fh)) {
   dump_data($offset, $data);
   $offset += $dlen;
@@ -46,18 +56,19 @@ while (my ($dlen, $data, $len, $type, $payload, $crc) = read_chunk($fh)) {
   if ($type eq 'IHDR') {
     my ($w, $h, $d, $ct, $comp, $filter, $inter) =
       unpack("NNCCCCC", $payload);
+    my $ct_name = $colour_types{$ct} || "(unknown)";
     print <<EOS;
   Width : $w
   Height: $h
   Depth: $d
-  Colour type: $ct
+  Colour type: $ct $ct_name
   Filter: $filter
   Interlace: $inter
 EOS
     $colour_type = $ct;
     $bits = $d;
     my $channels = $ct == 2 ? 3 : $ct == 4 ? 2 : $ct == 6 ? 4 : 1;
-    my $bitspp = $channels * $d;
+    $bitspp = $channels * $d;
     $sline_len = int((($w * $bitspp) + 7) / 8);
     ++$sline_len; # filter byte
     print "  Line length: $sline_len\n";
@@ -140,6 +151,7 @@ EOS
     }
   }
   elsif ($type eq "IDAT" && $image) {
+  dumpframe:
     $sline_len
       or die "IDAT before IHDR!?";
     my $raw = do_inflate($payload);
@@ -161,6 +173,45 @@ EOS
       my ($filter, $data) = unpack("CH*", $raw);
       print "  Row $row, filter $filter (partial)\n";
       print "    $data\n" if length $data;
+    }
+  }
+  elsif ($type eq "acTL") {
+    # APNG animation control
+    my ($num_frames, $num_plays) = unpack("NN", $payload);
+    print <<EOS;
+  Num Frames: $num_frames
+  Num Plays : $num_plays
+EOS
+  }
+  elsif ($type eq "fcTL") {
+    $row = 0;
+    $sline_left = 0;
+    # APNG frame control
+    my ($seq, $width, $height, $xoff, $yoff, $delay_num, $delay_den, $dispose_op, $blend_op)
+      = unpack("NNNNNnnCC", $payload);
+    my $fps = $delay_den ? sprintf("%.1f fps", $delay_den / $delay_num) : "invalid";
+    print <<EOS;
+  Sequence    : $seq
+  Frame Width : $width
+  Frame Height: $height
+  X Offset    : $xoff
+  Y Offset    : $yoff
+  Delay       : $delay_num / $delay_den $fps
+  Dispose Op  : $dispose_op
+  Blend Op    : $blend_op
+EOS
+    $sline_len = int((($width * $bitspp) + 7) / 8);
+    ++$sline_len; # filter byte
+    print "  Line length: $sline_len\n";
+  }
+  elsif ($type eq "fdAT") {
+    my ($seq) = unpack("N", $payload);
+    print <<EOS;
+  Sequence No: $seq
+EOS
+    if ($image) {
+      $payload = substr($payload, 4);
+      goto dumpframe;
     }
   }
 
