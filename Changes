@@ -1,5 +1,8 @@
 Imager release history.  Older releases can be found in Changes.old
 
+Imager 1.018 - 19 Jun 2022
+============
+
  - skip trying to produce deprecation warnings before perl 5.14, since
    that doesn't support custom warning categories within a package.
    This prevents pointless failures on these old versions of perl.
