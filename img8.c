@@ -16,12 +16,6 @@ static i_img_dim i_gslinf_d(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, i_
 static i_img_dim i_pslin_d(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, const i_sample16_t *samps, const int *chans, int chan_count);
 static i_img_dim i_pslinf_d(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, const i_fsample_t *samps, const int *chans, int chan_count);
 
-static const
-i_img_vtable iim_8bit_vtable =
-  {
-  };
->>>>>>> 3677f09d (start cms support: initial profile, linear <=> gamma conversion)
-
 static const i_img_vtable
 vtable_8bit = {
   IMAGER_API_LEVEL,
