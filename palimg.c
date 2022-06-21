@@ -62,6 +62,11 @@ vtable_pal = {
 
   i_gsamp_bits_fb,
   i_psamp_bits_fb, /* i_f_psamp_bits */
+
+  NULL,
+  NULL,
+  NULL,
+  NULL,
   
   i_data_pal,
 

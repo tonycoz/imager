@@ -75,6 +75,11 @@ vtable_mask = {
   i_gsamp_bits_fb, /* i_f_gsamp_bits */
   i_psamp_bits_fb, /* i_f_psamp_bits */
 
+  NULL,
+  NULL,
+  NULL,
+  NULL,
+
   data_masked,
 
   NULL, /* i_f_imageop */

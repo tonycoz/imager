@@ -774,6 +774,12 @@ make_vtbl(void) {
       NULL,
       i_gsamp_bits_fb,
       i_psamp_bits_fb,
+
+      NULL,
+      NULL,
+      NULL,
+      NULL,
+
       i_img_data_fallback,
       NULL, /* i_f_imageop */
 
