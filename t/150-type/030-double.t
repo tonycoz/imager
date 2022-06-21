@@ -8,7 +8,8 @@ BEGIN { use_ok(Imager => qw(:all :handy)) }
 Imager->open_log(log => "testout/t022double.log");
 
 use Imager::Test qw(image_bounds_checks test_colorf_gpix test_colorf_glin mask_tests
-		  check_vtable std_image_tests std_image_tests_count);
+                    check_vtable std_image_tests std_image_tests_count test_image
+                    is_image is_color3);
 
 use Imager::Color::Float;
 
