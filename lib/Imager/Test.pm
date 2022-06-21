@@ -312,50 +312,6 @@ END_DIAG
   return 1;
 }
 
-sub is_arrayf {
-  my ($got, $expect, $name, $epsilon) = @_;
-  my $tb = Test::Builder->new;
-
-  $epsilon ||= 1e-6;
-  my $max = @$got > @$expect ? $#$got : $#$expect;
-  my $i = 0;
-  my $ok = 1;
-  my $diag;
-  while ($i < $max && $ok) {
-    if ($i < @$got && $i < @$expect) {
-      my $diff = $expect->[$i] - $got->[$i];
-      if (abs($diff) > $epsilon) {
-        $diag = <<EOS;
-      \$got[$i] = $got->[$i]
- \$expected[$i] = $expect->[$i]
-    Difference: $diff
-EOS
-        $ok = 0;
-      }
-    }
-    elsif ($i < @$got) {
-      $diag = <<EOS;
-      \$got[$i] = $got->[$i]
- \$expected[$i] = Does not exist
-EOS
-      $ok = 0;
-    }
-    else {
-      $diag = <<EOS;
-      \$got[$i] = Does not exist
- \$expected[$i] = $expect->[$i]
-EOS
-      $ok = 0;
-    }
-    ++$i;
-  }
-
-  $ok = $tb->ok($ok, $name);
-  diag $diag if $diag;
-
-  return $ok;
-}
-
 sub test_image_raw {
   my $green=Imager::i_color_new(0,255,0,255);
   my $blue=Imager::i_color_new(0,0,255,255);
