@@ -1095,7 +1095,7 @@ sub std_image_tests_count {
 
   my $channels = $opts->{models} || [ qw(gray graya rgb rgba) ];
 
-  return 2 + ( 74 * @$channels );
+  return 2 + ( 93 * @$channels );
 }
 
 sub std_image_tests {
@@ -1217,6 +1217,16 @@ sub std_image_tests {
     is_deeply(\@gsamps, \@cmp_sl_masked,
 	      "check linear samples (explicit channels, masked)");
 
+    is($im->setsamples(y => 7, data => \@cmp_sl, width => 2,
+		       channels => $channel_count, scale => "linear"),
+       $channel_count * 2,
+       "set linear samples (channel count, masked)");
+    @gsamps = $im->getsamples(y => 7, width => 2,
+			      channels => \@channels, scale => "linear");
+    is_deeply(\@gsamps, \@cmp_sl_masked,
+	      "check linear samples (explicit channels, masked)");
+
+
     my @fcmp_sl_masked = ( map $_ % $channel_count == 1 ? 0 : $fcmp_sl[$_], 0 .. $#fcmp_sl );
     is($im->setsamples(y => 7, data => \@fcmp_sl, width => 2, type => "float",
 		       channels => \@channels, scale => "linear"),
@@ -1226,6 +1236,16 @@ sub std_image_tests {
 			      channels => \@channels, scale => "linear");
     is_arrayf(\@gsamps, \@fcmp_sl_masked,
 	      "check linear float samples (explicit channels, masked)");
+
+    is($im->setsamples(y => 7, data => \@fcmp_sl, width => 2, type => "float",
+		       channels => $channel_count, scale => "linear"),
+       $channel_count * 2,
+       "set linear samples (channel count, masked)");
+    @gsamps = $im->getsamples(y => 7, width => 2, type => "float"
+			      channels => $channel_count, scale => "linear");
+    is_deeply(\@gsamps, \@fcmp_sl_masked,
+	      "check linear samples (channel count, masked)");
+
     $im->setmask(mask => $oldmask);
 
     # fetch to target
@@ -1327,7 +1347,8 @@ sub std_image_tests {
       is($im->errstr, "Image position outside of image",
 	 "check error message (x = -1)");
     }
-    is($im->getsamples(y => 9, x => 10, data => \@gsamps, scale => "linear"),
+    is($im->getsamples(y => 9, x => 10, width => 1, data => \@gsamps,
+		       scale => "linear"),
        undef,
        "get linear samples to x = 10");
     {
@@ -1391,12 +1412,12 @@ sub std_image_tests {
 		       scale => "linear", type => "float"), undef,
        "set negative channel (float)");
     is($im->errstr, "No channel -1 in this image",
-       "check error message (negative channel)(float)");
+       "check error message (negative channel) (float)");
     is($im->setsamples(y => 9, data => \@gsamps, channels => [$channel_count],
 		       scale => "linear", type => "float"), undef,
        "set too high channel (float)");
     is($im->errstr, "No channel $channel_count in this image",
-       "check error message (too high channel)(float)");
+       "check error message (too high channel) (float)");
 
     is($im->setsamples(y => 9, x => 1, data => \@ten_zeros, channels => [0],
 		       scale => "linear", width => 10, type => "float"),
@@ -1405,10 +1426,76 @@ sub std_image_tests {
 
     is($im->setsamples(y => 9, data => \@gsamps, channels => -1,
 		       scale => "linear", type => "float"), undef,
-       "negative channel count");
+       "negative channel count (float)");
     is($im->setsamples(y => 9, data => \@gsamps, channels => 5,
 		       scale => "linear", type => "float"), undef,
-       "set too high channel count");
+       "set too high channel count (float)");
+
+    # get
+    is($im->getsamples(y => -1, data => \@gsamps, scale => "linear", type => "float"),
+       undef,
+       "get linear samples from y = -1 (float)");
+    {
+      local $TODO = "getsamples() doesn't do error reporting";
+      is($im->errstr, "Image position outside of image",
+	 "check error message (y = -1) (float)");
+    }
+    is($im->getsamples(y => 10, data => \@gsamps, scale => "linear", type => "float"),
+       undef,
+       "get linear samples from y = 10 (float)");
+    {
+      local $TODO = "getsamples() doesn't do error reporting";
+      is($im->errstr, "Image position outside of image",
+	 "check error message (y = 10) (float)");
+    }
+    is($im->getsamples(y => 9, x => -1, data => \@gsamps, scale => "linear", type => "float"),
+       undef,
+       "get linear samples to x = -1 (float)");
+    {
+      local $TODO = "getsamples() doesn't do error reporting";
+      is($im->errstr, "Image position outside of image",
+	 "check error message (x = -1) (float)");
+    }
+    is($im->getsamples(y => 9, x => 10, width => 1, data => \@gsamps,
+		       scale => "linear", type => "float"),
+       undef,
+       "get linear samples to x = 10 (float)");
+    {
+      local $TODO = "getsamples() doesn't do error reporting";
+      is($im->errstr, "Image position outside of image",
+	 "check error message (x = 10) (float)");
+    }
+
+    is($im->getsamples(y => 9, data => \@gsamps, channels => [-1],
+		       scale => "linear", type => "float"), undef,
+       "get negative channel (float)");
+    {
+      local $TODO = "getsamples() doesn't do error reporting";
+      is($im->errstr, "No channel -1 in this image",
+	 "check error message (negative channel) (float)");
+    }
+    is($im->getsamples(y => 9, data => \@gsamps, channels => [$channel_count],
+		       scale => "linear", type => "float"), undef,
+       "get too high channel (float)");
+    {
+      local $TODO = "getsamples() doesn't do error reporting";
+      is($im->errstr, "No channel $channel_count in this image",
+	 "check error message (too high channel) (float)");
+    }
+
+    is_deeply([ $im->getsamples(y => 9, x => 1, channels => [0],
+				scale => "linear", width => 10,
+				type => "float")
+	      ],
+	      [ (0) x 9 ],
+	      "get check right-side limit (float)");
+
+    is($im->getsamples(y => 9, data => \@gsamps, channels => -1,
+		       scale => "linear", type => "float"), undef,
+       "get negative channel count (float)");
+    is($im->getsamples(y => 9, data => \@gsamps, channels => 5,
+		       scale => "linear", type => "float"), undef,
+       "get too high channel count (float)");
   }
 }
 
