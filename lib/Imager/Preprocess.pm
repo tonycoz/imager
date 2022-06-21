@@ -8,7 +8,7 @@ use Text::ParseWords;
 
 our @EXPORT = qw(preprocess);
 
-our $VERSION = "1.003";
+our $VERSION = "1.004";
 
 sub preprocess {
   unshift @ARGV, grep /^-/, shellwords($ENV{IMAGER_PREPROCESS_OPTS})
