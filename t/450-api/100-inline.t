@@ -843,6 +843,32 @@ test_forwarders() {
   return ok;
 }
 
+int
+test_gslin_neg(Imager im) {
+  i_sample16_t buf[100];
+  return i_gslin(im, 0, 1, 0, buf, 0, -1) == 0;
+}
+
+int
+test_gslinf_neg(Imager im) {
+  i_fsample_t buf[100];
+  return i_gslinf(im, 0, 1, 0, buf, 0, -1) == 0;
+}
+
+int
+test_pslin_neg(Imager im) {
+  i_sample16_t buf[2];
+
+  return i_pslin(im, 0, 1, 0, buf, 0, -1) == -1;
+}
+
+int
+test_pslinf_neg(Imager im) {
+  i_fsample_t buf[2];
+
+  return i_pslinf(im, 0, 1, 0, buf, 0, -1) == -1;
+}
+
 EOS
 
 my $im = Imager->new(xsize=>50, ysize=>50);
@@ -1063,6 +1089,11 @@ for my $bits (8, 16) {
   is(color_model($rgb), 3, "check i_img_color_model() api");
   is(color_channels($rgb), 3, "check i_img_color_channels() api");
   is(alpha_channel($rgb), -1, "check i_img_alpha_channel() api");
+
+  ok(test_gslin_neg($rgb), "check negative channel count for i_gslin");
+  ok(test_gslinf_neg($rgb), "check negative channel count for i_gslinf");
+  ok(test_pslin_neg($rgb), "check negative channel count for i_pslin");
+  ok(test_pslinf_neg($rgb), "check negative channel count for i_pslin");
 }
 
 ok(test_mutex(), "call mutex APIs");
