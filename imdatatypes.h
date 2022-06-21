@@ -578,8 +578,6 @@ struct i_img_ {
 
   /* 0.91 */
   im_context_t context;
-
-  const i_img_vtable *vtable;
 };
 
 /* ext_data for paletted images
