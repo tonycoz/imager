@@ -8,7 +8,7 @@ require Exporter;
 use Carp qw(croak carp);
 use Config;
 
-our $VERSION = "1.007";
+our $VERSION = "1.008";
 
 our @ISA = qw(Exporter);
 our @EXPORT_OK = 
