@@ -828,10 +828,6 @@ SKIP:
   ok($imr->read(data => $data), "read it back")
     or diag($imr->errstr);
   is_image($imr, $im1, "check it matches");
-  open my $fh, ">", "foo.png" or die;
-  binmode $fh;
-  print $fh $data;
-  close $fh;
 }
 
 done_testing();
