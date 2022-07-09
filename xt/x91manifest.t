@@ -30,10 +30,18 @@ for my $dir (".", @sub_dirs) {
   my $skipchk = maniskip();
   my @expect = grep !$skipchk->($_), sort keys %{+manifind()};
   unless (is_deeply(\@have, \@expect, "$dir: check manifind vs MANIFEST")) {
-    diag "Have:";
-    diag "  $_" for @have;
-    diag "Expect:";
-    diag "  $_" for @expect;
+    my %have = map { $_ => 1 } @have;
+    my %expect = map { $_ => 1 } @expect;
+    my @extra = grep !$have{$_}, @expect;
+    my @missing = grep !$expect{$_}, @have;
+    if (@extra) {
+      diag "Extra:";
+      diag "  $_" for @extra;
+    }
+    if (@missing) {
+      diag "Missing:";
+      diag "  $_" for @missing;
+    }
   }
   # my ($missing, $extra) = fullcheck;
   # is_deeply($missing, [], "dir $dir: check no missing files");
