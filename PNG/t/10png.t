@@ -10,8 +10,6 @@ my $debug_writes = 1;
 
 init_log("testout/t102png.log",1);
 
-plan tests => 256;
-
 # this loads Imager::File::PNG too
 ok($Imager::formats{"png"}, "must have png format");
 
@@ -815,6 +813,28 @@ SKIP:
   ok(!$im->write(data => \$out1, type => "png", png_compression_level => 10),
      "fail with compression level 10");
 }
+
+{
+  # 499
+  my @pal = map { Imager::Color->new($_) } "#F00", "#00000000", "#00F";
+  my $im1 = Imager->new(xsize => 10, ysize => 10, channels => 4, type => "paletted");
+  $im1->addcolors(colors => \@pal) or die;
+  $im1->box(filled => 1, color => "#00000000");
+  $im1->box(filled => 1, color => "#F00", box => [ 0, 0, 4, 4 ]) or die;
+  my $data;
+  ok($im1->write(data => \$data, type => "png"), "write paletted")
+    or diag($im1->errstr);
+  my $imr = Imager->new;
+  ok($imr->read(data => $data), "read it back")
+    or diag($imr->errstr);
+  is_image($imr, $im1, "check it matches");
+  open my $fh, ">", "foo.png" or die;
+  binmode $fh;
+  print $fh $data;
+  close $fh;
+}
+
+done_testing();
 
 sub limited_write {
   my ($limit) = @_;

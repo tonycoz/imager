@@ -1273,30 +1273,29 @@ write_paletted(png_structp png_ptr, png_infop info_ptr, i_img *im, int bits) {
 
   if (i_img_has_alpha(im)) {
     int i;
-    int bottom_index = 0, top_index = count-1;
-
-    /* fill out the palette map */
-    for (i = 0; i < count; ++i)
-      pal_map[i] = i;
+    int pal_index = 0;
 
     /* the PNG spec suggests sorting the palette by alpha, but that's
        unnecessary - all we want to do is move the opaque entries to
        the end */
-    while (bottom_index < top_index) {
-      if (colors[bottom_index].rgba.a == 255) {
-	pal_map[bottom_index] = top_index;
-	pal_map[top_index--] = bottom_index;
+    for (i = 0; i < count; ++i) {
+      if (colors[i].rgba.a != 255) {
+        pal_map[i] = pal_index++;
       }
-      ++bottom_index;
+    }
+    for (i = 0; i < count; ++i) {
+      if (colors[i].rgba.a == 255) {
+        pal_map[i] = pal_index++;
+      }
     }
   }
 
   for (i = 0; i < count; ++i) {
-    int srci = i_img_has_alpha(im) ? pal_map[i] : i;
+    int desti = i_img_has_alpha(im) ? pal_map[i] : i;
 
-    pcolors[i].red = colors[srci].rgb.r;
-    pcolors[i].green = colors[srci].rgb.g;
-    pcolors[i].blue = colors[srci].rgb.b;
+    pcolors[desti].red   = colors[i].rgb.r;
+    pcolors[desti].green = colors[i].rgb.g;
+    pcolors[desti].blue  = colors[i].rgb.b;
   }
 
   png_set_PLTE(png_ptr, info_ptr, pcolors, count);
@@ -1304,12 +1303,19 @@ write_paletted(png_structp png_ptr, png_infop info_ptr, i_img *im, int bits) {
   if (i_img_has_alpha(im)) {
     unsigned char trans[256];
     int i;
+    int len = 0;
 
-    for (i = 0; i < count && colors[pal_map[i]].rgba.a != 255; ++i) {
-      trans[i] = colors[pal_map[i]].rgba.a;
+    for (i = 0; i < count; ++i) {
+      if (colors[i].rgba.a != 255) {
+        int pmi = pal_map[i];
+        if (len < pmi+1) {
+          len = pmi + 1;
+        }
+        trans[pmi] = colors[i].rgba.a;
+      }
     }
-    if (i) {
-      png_set_tRNS(png_ptr, info_ptr, trans, i, NULL);
+    if (len) {
+      png_set_tRNS(png_ptr, info_ptr, trans, len, NULL);
     }
   }
 
