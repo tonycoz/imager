@@ -1,3 +1,13 @@
+Imager-File-PNG 0.99
+====================
+
+ - fix palette/transparency table generation when writing paletted PNG
+   images with tranparency.  This happened to work for the test case,
+   but the mechanism used to generate the palette order preserved most
+   palette index positions, which hid the problem with actually
+   generating the PLTE and tRNS chunks.
+   https://github.com/tonycoz/imager/issues/499
+
 Imager-File-PNG 0.98
 ====================
 
