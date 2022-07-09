@@ -1,5 +1,8 @@
 Imager release history.  Older releases can be found in Changes.old
 
+Imager 1.019 - 9 Jul 2022
+============
+
  - fix palette/transparency table generation when writing paletted PNG
    images with tranparency.  This happened to work for the test case,
    but the mechanism used to generate the palette order preserved most
