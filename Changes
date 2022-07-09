@@ -7,6 +7,14 @@ Imager release history.  Older releases can be found in Changes.old
    generating the PLTE and tRNS chunks.
    https://github.com/tonycoz/imager/issues/499
 
+ - added lowish-level read() and write() class methods to
+   Imager::File::PNG, these are mostly intended for
+   Imager::File::APNG, but are documented and usable elsewhere.
+
+ - document in Imager::Install how to install Imager without any of
+   the bundled-but-also-on-CPAN modules being installed.
+   https://github.com/tonycoz/imager/issues/498
+
 Imager 1.018 - 19 Jun 2022
 ============
 

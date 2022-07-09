@@ -8,6 +8,10 @@ Imager-File-PNG 0.99
    generating the PLTE and tRNS chunks.
    https://github.com/tonycoz/imager/issues/499
 
+ - added lowish-level read() and write() class methods to
+   Imager::File::PNG, these are mostly intended for
+   Imager::File::APNG, but are documented and usable elsewhere.
+
 Imager-File-PNG 0.98
 ====================
 
