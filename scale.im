@@ -79,11 +79,11 @@ i_scale_mixing(i_img *src, i_img_dim x_out, i_img_dim y_out) {
   i_clear_error();
 
   if (x_out <= 0) {
-    i_push_errorf(0, "output width %" i_DF " invalid", i_DFc(x_out));
+    im_push_errorf(aIMCTX, 0, "output width %" i_DF " invalid", i_DFc(x_out));
     return NULL;
   }
   if (y_out <= 0) {
-    i_push_errorf(0, "output height %" i_DF " invalid", i_DFc(y_out));
+    im_push_errorf(aIMCTX, 0, "output height %" i_DF " invalid", i_DFc(y_out));
     return NULL;
   }
 
@@ -346,7 +346,8 @@ IM_SUFFIX(horizontal_scale)(IM_LIN_SAMPLE_T *out, i_img_dim out_width,
   }
 
   if (out_x < out_width-1 || out_x > out_width) {
-    i_fatal(3, "Internal error: out_x #" i_DF " out of range (width %" i_DF ")", i_DFc(out_x),
+    dIMCTX;
+    im_fatal(aIMCTX, 3, "Internal error: out_x #" i_DF " out of range (width %" i_DF ")", i_DFc(out_x),
             i_DFc(out_width));
   }
   
@@ -666,7 +667,7 @@ i_scale_nn(i_img *im, double scx, double scy) {
   }
   im_assert(scx != 0 && scy != 0);
     
-  new_img=i_img_empty_ch(NULL,nxsize,nysize,im->channels);
+  new_img = i_img_8_new(nxsize, nysize, im->channels);
   
   for(ny=0;ny<nysize;ny++) for(nx=0;nx<nxsize;nx++) {
     i_gpix(im,((double)nx)/scx,((double)ny)/scy,&val);
