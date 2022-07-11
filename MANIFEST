@@ -151,6 +151,7 @@ imexttypes.h			Define API function table type
 img16.c				Implements 16-bit/sample images
 img8.c				Implements 8-bit/sample images
 imgdouble.c			Implements double/sample images
+iminline.h
 imio.h
 immacros.h
 imnocms.c
