@@ -295,6 +295,8 @@ extern im_ext_funcs *imager_function_ext_table;
 #define mm_log(x)
 #endif
 
+#include "iminline.h"
+
 #ifdef __cplusplus
 }
 #endif

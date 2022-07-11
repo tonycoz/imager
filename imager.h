@@ -466,4 +466,6 @@ extern void i_mutex_unlock(i_mutex_t m);
 
 #include "imcms.h"
 
+#include "iminline.h"
+
 #endif
