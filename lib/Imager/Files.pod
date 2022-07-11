@@ -180,6 +180,8 @@ and can be any of the following:
 Support for other formats can be found on CPAN, including:
 X<heif>X<QOI>X<webp>
 
+  apng        Imager::File::APNG
+  avif        Imager::File::AVIF
   heif/heic   Imager::File::HEIF
   qoi         Imager::File::QOI
   webp        Imager::File::WEBP
