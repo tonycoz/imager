@@ -10,7 +10,8 @@ use File::Spec::Functions qw(rel2abs abs2rel splitdir);
 
 # external stuff we refer to
 my @known =
-  qw(perl Affix::Infix2Postfix Parse::RecDescent GD Image::Magick Graphics::Magick CGI Image::ExifTool XSLoader DynaLoader Prima::Image IPA PDL);
+  qw(perl Affix::Infix2Postfix Parse::RecDescent GD Image::Magick Graphics::Magick CGI Image::ExifTool
+     XSLoader DynaLoader Prima::Image IPA PDL Imager::File::APNG);
 
 # also known since we supply them, but we don't always install them
 push @known, qw(Imager::Font::FT2 Imager::Font::W32 Imager::Font::T1
