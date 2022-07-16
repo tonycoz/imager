@@ -148,6 +148,11 @@ i_img_masked_new(i_img *targ, i_img *mask, i_img_dim x, i_img_dim y, i_img_dim w
   if (y+h > targ->ysize)
     h = targ->ysize - y;
 
+  if (w < 1 || h < 1) {
+    im_push_error(aIMCTX, 0, "width and height must be greater than or equal to 1");
+    return NULL;
+  }
+
   im = im_img_alloc(aIMCTX);
 
   memcpy(im, &IIM_base_masked, sizeof(i_img));
