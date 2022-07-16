@@ -699,6 +699,11 @@ for my $masked (0, 1) { # psampf
   $m = $im->masked(top => 10, bottom => 9);
   ok(!$m, "cannot make masked image with neg height");
 
+  $m = $im->masked(left => -151);
+  ok(!$m, "disallow negative left (after scaling)");
+  $m = $im->masked(top => -151);
+  ok(!$m, "disallow negative top (after scaling)");
+
   $m = $im->masked(left => -20, top => -70, right => -10, bottom => -15);
   ok($m, "make masked image based on negative offsets");
   my $cmp = $im->crop(left => 130, top => 80, right => 140, bottom => 135);
