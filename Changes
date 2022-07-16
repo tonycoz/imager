@@ -1,5 +1,17 @@
 Imager release history.  Older releases can be found in Changes.old
 
+ - masked(): disallow negative width/height masked images
+
+ - masked(): adjust source corners as bottom right relative if they
+   are negative.
+
+ - masked(): reject image source corners where either co-ordinate is
+   negative after the above adjustment.
+
+ - Imager::Files: update external image file support modules list
+
+ - internal test: don't fail on Imager::File::APNG link
+
 Imager 1.019 - 9 Jul 2022
 ============
 
