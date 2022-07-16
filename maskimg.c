@@ -49,6 +49,17 @@ psamp_masked(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y,
 static i_img_dim
 psampf_masked(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y,
 	       const i_fsample_t *samples, const int *chans, int chan_count);
+
+static i_img_dim i_gslin_masked(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, i_sample16_t *samp,
+                          int const *chans, int chan_count);
+static i_img_dim i_gslinf_masked(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, i_fsample_t *samp,
+                          int const *chans, int chan_count);
+static i_img_dim
+pslin_masked(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y,
+             const i_sample16_t *samples, const int *chans, int chan_count);
+static i_img_dim
+pslinf_masked(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y,
+             const i_fsample_t *samples, const int *chans, int chan_count);
 static i_image_data_alloc_t *
 data_masked(i_img *im, i_data_layout_t layout, i_img_bits_t bits, unsigned flags,
 	    void **pdata, size_t *psize, int *pextra);
@@ -75,10 +86,10 @@ vtable_mask = {
   i_gsamp_bits_fb, /* i_f_gsamp_bits */
   i_psamp_bits_fb, /* i_f_psamp_bits */
 
-  NULL,
-  NULL,
-  NULL,
-  NULL,
+  i_gslin_masked,
+  i_gslinf_masked,
+  pslin_masked,
+  pslinf_masked,
 
   data_masked,
 
@@ -392,6 +403,170 @@ psampf_masked(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y,
       result = i_psampf(ext->targ, l + ext->xbase, r + ext->xbase, 
 			y + ext->ybase, samples,
 				 chans, chan_count);
+    }
+    im->type = ext->targ->type;
+    ext->targ->ch_mask = old_ch_mask;
+    return result;
+  }
+  else {
+    dIMCTXim(im);
+    i_push_error(0, "Image position outside of image");
+    return -1;
+  }
+}
+
+static i_img_dim
+i_gslin_masked(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, i_sample16_t *samp,
+               int const *chans, int chan_count) {
+  i_img_mask_ext *ext = MASKEXT(im);
+  if (y >= 0 && y < im->ysize && l < im->xsize && l >= 0) {
+    if (r > im->xsize)
+      r = im->xsize;
+    return i_gslin(ext->targ, l + ext->xbase, r + ext->xbase,
+                   y + ext->ybase, samp, chans, chan_count);
+  }
+  else {
+    return 0;
+  }
+}
+
+static i_img_dim
+i_gslinf_masked(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, i_fsample_t *samp,
+               int const *chans, int chan_count) {
+  i_img_mask_ext *ext = MASKEXT(im);
+  if (y >= 0 && y < im->ysize && l < im->xsize && l >= 0) {
+    if (r > im->xsize)
+      r = im->xsize;
+    return i_gslinf(ext->targ, l + ext->xbase, r + ext->xbase,
+                   y + ext->ybase, samp, chans, chan_count);
+  }
+  else {
+    return 0;
+  }
+}
+
+/*
+=item pslin_masked()
+
+i_pslin() implementation for masked images.
+
+=cut
+*/
+
+static i_img_dim
+pslin_masked(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y,
+             const i_sample16_t *samples, const int *chans, int chan_count) {
+  i_img_mask_ext *ext = MASKEXT(im);
+
+  if (y >= 0 && y < im->ysize && l < im->xsize && l >= 0) {
+    unsigned old_ch_mask = ext->targ->ch_mask;
+    i_img_dim result = 0;
+    ext->targ->ch_mask = im->ch_mask;
+    if (r > im->xsize)
+      r = im->xsize;
+    if (ext->mask) {
+      i_img_dim w = r - l;
+      i_img_dim i = 0;
+      i_img_dim x = ext->xbase + l;
+      i_img_dim work_y = y + ext->ybase;
+      i_sample_t *mask_samps = ext->samps;
+
+      i_gsamp(ext->mask, l, r, y, mask_samps, NULL, 1);
+      /* not optimizing this yet */
+      while (i < w) {
+        if (mask_samps[i]) {
+          /* found a set mask value, try to do a run */
+          i_img_dim run_left = x;
+          const i_sample16_t *run_samps = samples;
+          ++i;
+          ++x;
+          samples += chan_count;
+
+          while (i < w && mask_samps[i]) {
+            ++i;
+            ++x;
+            samples += chan_count;
+          }
+          result += i_pslin(ext->targ, run_left, x, work_y, run_samps, chans, chan_count);
+        }
+        else {
+          ++i;
+          ++x;
+          samples += chan_count;
+          result += chan_count; /* pretend we wrote masked off pixels */
+        }
+      }
+    }
+    else {
+      result = i_pslin(ext->targ, l + ext->xbase, r + ext->xbase,
+                       y + ext->ybase, samples, chans, chan_count);
+    }
+    im->type = ext->targ->type;
+    ext->targ->ch_mask = old_ch_mask;
+    return result;
+  }
+  else {
+    dIMCTXim(im);
+    i_push_error(0, "Image position outside of image");
+    return -1;
+  }
+}
+
+/*
+=item pslinf_masked()
+
+i_pslinf() implementation for masked images.
+
+=cut
+*/
+
+static i_img_dim
+pslinf_masked(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y,
+             const i_fsample_t *samples, const int *chans, int chan_count) {
+  i_img_mask_ext *ext = MASKEXT(im);
+
+  if (y >= 0 && y < im->ysize && l < im->xsize && l >= 0) {
+    unsigned old_ch_mask = ext->targ->ch_mask;
+    i_img_dim result = 0;
+    ext->targ->ch_mask = im->ch_mask;
+    if (r > im->xsize)
+      r = im->xsize;
+    if (ext->mask) {
+      i_img_dim w = r - l;
+      i_img_dim i = 0;
+      i_img_dim x = ext->xbase + l;
+      i_img_dim work_y = y + ext->ybase;
+      i_sample_t *mask_samps = ext->samps;
+
+      i_gsamp(ext->mask, l, r, y, mask_samps, NULL, 1);
+      /* not optimizing this yet */
+      while (i < w) {
+        if (mask_samps[i]) {
+          /* found a set mask value, try to do a run */
+          i_img_dim run_left = x;
+          const i_fsample_t *run_samps = samples;
+          ++i;
+          ++x;
+          samples += chan_count;
+
+          while (i < w && mask_samps[i]) {
+            ++i;
+            ++x;
+            samples += chan_count;
+          }
+          result += i_pslinf(ext->targ, run_left, x, work_y, run_samps, chans, chan_count);
+        }
+        else {
+          ++i;
+          ++x;
+          samples += chan_count;
+          result += chan_count; /* pretend we wrote masked off pixels */
+        }
+      }
+    }
+    else {
+      result = i_pslinf(ext->targ, l + ext->xbase, r + ext->xbase,
+                       y + ext->ybase, samples, chans, chan_count);
     }
     im->type = ext->targ->type;
     ext->targ->ch_mask = old_ch_mask;

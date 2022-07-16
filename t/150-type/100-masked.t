@@ -2,7 +2,7 @@
 use strict;
 use Test::More;
 use Imager qw(:all :handy);
-use Imager::Test qw(is_color3 is_fcolor3 test_image is_image test_image_pal check_vtable);
+use Imager::Test qw(is_color3 is_fcolor3 test_image is_image test_image_pal check_vtable test_image);
 
 -d "testout" or mkdir "testout";
 
@@ -737,6 +737,17 @@ for my $masked (0, 1) { # psampf
   undef $palim;
   # success is not crashing
   my $data = $masked->data;
+}
+
+{
+  my $im = test_image;
+  my $masked = $im->masked(left => 20, top => 10, bottom => 135, right => 140);
+  my @fm = $masked->getsamples(scale => "linear", y => 70);
+  my @om = $im->getsamples(scale => "linear", y => 80, x => 20, width => 120);
+  is_deeply(\@fm, \@om, "check masked data matches original linear data");
+  @fm = $masked->getsamples(scale => "linear", y => 70, type => "float");
+  @om = $im->getsamples(scale => "linear", y => 80, x => 20, width => 120, type => "float");
+  is_deeply(\@fm, \@om, "check masked float data matches original linear float data");
 }
 
 Imager->close_log();
