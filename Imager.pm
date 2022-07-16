@@ -1083,10 +1083,22 @@ sub masked {
               @_);
   my $mask = $opts{mask} ? $opts{mask}{IMG} : undef;
 
+  my ($left, $top, $right, $bottom) = @opts{qw(left top right bottom)};
+  for my $val ($left, $right) {
+    if ($val < 0) {
+      $val = $self->getwidth() + $val;
+    }
+  }
+  for my $val ($top, $bottom) {
+    if ($val < 0) {
+      $val = $self->getheight() + $val;
+    }
+  }
+
   my $result = Imager->new;
-  $result->{IMG} = i_img_masked_new($self->{IMG}, $mask, $opts{left}, 
-                                    $opts{top}, $opts{right} - $opts{left},
-                                    $opts{bottom} - $opts{top});
+  $result->{IMG} = i_img_masked_new($self->{IMG}, $mask, $left,
+                                    $top, $right - $left,
+                                    $bottom - $top);
   unless ($result->{IMG}) {
     $self->_set_error(Imager->_error_as_msg);
     return;

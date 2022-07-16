@@ -2,7 +2,7 @@
 use strict;
 use Test::More;
 use Imager qw(:all :handy);
-use Imager::Test qw(is_color3 is_fcolor3 test_image);
+use Imager::Test qw(is_color3 is_fcolor3 test_image is_image);
 
 -d "testout" or mkdir "testout";
 
@@ -698,6 +698,11 @@ for my $masked (0, 1) { # psampf
   ok(!$m, "cannot make masked image with neg width");
   $m = $im->masked(top => 10, bottom => 9);
   ok(!$m, "cannot make masked image with neg height");
+
+  $m = $im->masked(left => -20, top => -70, right => -10, bottom => -15);
+  ok($m, "make masked image based on negative offsets");
+  my $cmp = $im->crop(left => 130, top => 80, right => 140, bottom => 135);
+  is_image($m, $cmp, "check masked image matches expecteed cropped image");
 }
 
 {

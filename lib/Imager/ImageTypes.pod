@@ -752,6 +752,10 @@ writes to the masked image end up on this image.
 
 =back
 
+In terms of code:
+
+  $masked = $target->masked(mask => $mask);
+
 Parameters:
 
 =over
@@ -776,6 +780,12 @@ bottom, right - the bottom right of the area in the target available
 from the masked image.
 
 =back
+
+If C<left> or C<right> is negative, they are counted from the right of
+the target image.
+
+If C<top> or C<bottom> is negative, they are counted from the bottom
+of the target image.
 
 Masked images let you control which pixels are modified in an
 underlying image.  Where the first channel is completely black in the
