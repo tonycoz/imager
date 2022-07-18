@@ -271,24 +271,6 @@ int
 }
 
 /*
-=item i_gpixf(im, C<x>, C<y>, C<fcolor>)
-
-=category Drawing
-
-Retrieves the color of the pixel (x,y) as a floating point color into
-C<fcolor>.
-
-Returns 0 if the pixel was retrieved, or -1 if not.
-
-=cut
-*/
-
-int
-(i_gpixf)(i_img *im,i_img_dim x,i_img_dim y,i_fcolor *val) {
-  return i_gpixf(im, x, y, val);
-}
-
-/*
 =item i_glin(im, l, r, y, colors)
 
 =category Drawing

@@ -37,7 +37,6 @@ typedef struct {
 #define MASKEXT(im) ((i_img_mask_ext *)((im)->ext_data))
 
 static void i_destroy_masked(i_img *im);
-static int i_gpixf_masked(i_img *im, i_img_dim x, i_img_dim y, i_fcolor *pix);
 static i_img_dim i_glin_masked(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, i_color *vals);
 static i_img_dim i_glinf_masked(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, i_fcolor *vals);
 static i_img_dim i_gsamp_masked(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, i_sample_t *samp, 
@@ -67,7 +66,6 @@ static const i_img_vtable
 vtable_mask = {
   IMAGER_API_LEVEL,
   
-  i_gpixf_masked, /* i_f_gpixf */
   i_glin_masked, /* i_f_glin */
   i_glinf_masked, /* i_f_glinf */
   i_gsamp_masked, /* i_f_gsamp */
@@ -190,24 +188,6 @@ static void i_destroy_masked(i_img *im) {
     i_img_destroy(ext->mask);
   myfree(ext->samps);
   myfree(im->ext_data);
-}
-
-/*
-=item i_gpixf_masked(i_img *im, i_img_dim x, i_img_dim y, i_fcolor *pix)
-
-Read a pixel from a masked image.
-
-Internal.
-
-=cut
-*/
-static int i_gpixf_masked(i_img *im, i_img_dim x, i_img_dim y, i_fcolor *pix) {
-  i_img_mask_ext *ext = MASKEXT(im);
-
-  if (x < 0 || x >= im->xsize || y < 0 || y >= im->ysize)
-    return -1;
-
-  return i_gpixf(ext->targ, x + ext->xbase, y + ext->ybase, pix);
 }
 
 static i_img_dim i_glin_masked(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, i_color *vals) {
