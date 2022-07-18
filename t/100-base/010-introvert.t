@@ -8,7 +8,8 @@ use Test::More;
 BEGIN { use_ok(Imager => qw(:handy :all)) }
 use warnings;
 
-use Imager::Test qw(image_bounds_checks is_color3 is_color4 is_fcolor4 color_cmp mask_tests is_fcolor3);
+use Imager::Test qw(image_bounds_checks is_color3 is_color4 is_fcolor4 color_cmp mask_tests
+                    is_fcolor3 check_vtable);
 
 -d "testout" or mkdir "testout";
 
@@ -159,6 +160,7 @@ is(Imager::i_img_type($im_pal), 0, "pal img shouldn't be paletted now");
 my $impal2 = Imager->new(type=>'pseudo', xsize=>200, ysize=>201);
 ok($impal2, "make paletted via OO")
   or diag(Imager->errstr);
+check_vtable($impal2, "paletted");
 is($impal2->getchannels, 3, "check channels");
 is($impal2->bits, 8, "check bits");
 is($impal2->type, 'paletted', "check type");
@@ -262,6 +264,7 @@ is($impal2->colorchannels, 3, "check colorchannels");
   ok(!$im->virtual, 'not virtual');
   is($im->type, 'direct', 'direct image');
   ok(!$im->is_bilevel, 'not mono');
+  check_vtable($im, "8-bit direct");
 }
 
 ok(!Imager->new(xsize=>0, ysize=>1), "fail to create 0 height image");
