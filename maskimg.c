@@ -37,7 +37,6 @@ typedef struct {
 #define MASKEXT(im) ((i_img_mask_ext *)((im)->ext_data))
 
 static void i_destroy_masked(i_img *im);
-static int i_gpix_masked(i_img *im, i_img_dim x, i_img_dim y, i_color *pix);
 static int i_gpixf_masked(i_img *im, i_img_dim x, i_img_dim y, i_fcolor *pix);
 static i_img_dim i_glin_masked(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, i_color *vals);
 static i_img_dim i_glinf_masked(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, i_fcolor *vals);
@@ -57,17 +56,17 @@ static i_image_data_alloc_t *
 data_masked(i_img *im, i_data_layout_t layout, i_img_bits_t bits, unsigned flags,
 	    void **pdata, size_t *psize, int *pextra);
 /*
-=item IIM_base_masked
+=item vtable_masked
 
-The basic data we copy into a masked image.
+Virtual table for masked images.
 
 =cut
 */
+
 static const i_img_vtable
 vtable_mask = {
   IMAGER_API_LEVEL,
   
-  i_gpix_masked, /* i_f_gpix */
   i_gpixf_masked, /* i_f_gpixf */
   i_glin_masked, /* i_f_glin */
   i_glinf_masked, /* i_f_glinf */
@@ -191,24 +190,6 @@ static void i_destroy_masked(i_img *im) {
     i_img_destroy(ext->mask);
   myfree(ext->samps);
   myfree(im->ext_data);
-}
-
-/*
-=item i_gpix_masked(i_img *im, i_img_dim x, i_img_dim y, i_color *pix)
-
-Read a pixel from a masked image.
-
-Internal.
-
-=cut
-*/
-static int i_gpix_masked(i_img *im, i_img_dim x, i_img_dim y, i_color *pix) {
-  i_img_mask_ext *ext = MASKEXT(im);
-
-  if (x < 0 || x >= im->xsize || y < 0 || y >= im->ysize)
-    return -1;
-
-  return i_gpix(ext->targ, x + ext->xbase, y + ext->ybase, pix);
 }
 
 /*

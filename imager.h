@@ -79,7 +79,7 @@ int i_img_color_channels(i_img *im);
 /* Base functions */
 
 extern int (i_ppix)(i_img *im,i_img_dim x,i_img_dim y, const i_color *val);
-extern int (i_gpix)(i_img *im,i_img_dim x,i_img_dim y,i_color *val);
+extern int i_gpix(i_img *im,i_img_dim x,i_img_dim y,i_color *val);
 extern int (i_ppixf)(i_img *im,i_img_dim x,i_img_dim y, const i_fcolor *val);
 extern int (i_gpixf)(i_img *im,i_img_dim x,i_img_dim y,i_fcolor *val);
 

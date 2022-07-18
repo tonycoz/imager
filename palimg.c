@@ -28,7 +28,6 @@ Basic 8-bit/sample paletted image
 static int i_ppix_p(i_img *im, i_img_dim x, i_img_dim y, const i_color *val);
 
 #define PALEXT(im) ((i_img_pal_ext*)((im)->ext_data))
-static int i_gpix_p(i_img *im, i_img_dim x, i_img_dim y, i_color *val);
 static i_img_dim i_glin_p(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, i_color *vals);
 static i_img_dim i_gsamp_p(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, i_sample_t *samps, int const *chans, int chan_count);
 static i_img_dim i_gpal_p(i_img *pm, i_img_dim l, i_img_dim r, i_img_dim y, i_palidx *vals);
@@ -54,7 +53,6 @@ static const i_img_vtable
 vtable_pal = {
   IMAGER_API_LEVEL,
   
-  i_gpix_p, /* i_f_gpix */
   i_gpixf_fp, /* i_f_gpixf */
   i_glin_p, /* i_f_glin */
   i_glinf_fp, /* i_f_glinf */
@@ -329,26 +327,6 @@ i_ppix_p(i_img *im, i_img_dim x, i_img_dim y, const i_color *val) {
     else
       return -1;
   }
-}
-
-/*
-=item i_gpix_p(i_img *im, i_img_dim x, i_img_dim y, i_color *val)
-
-Retrieve a pixel, converting from a palette index to a color.
-
-=cut
-*/
-static int i_gpix_p(i_img *im, i_img_dim x, i_img_dim y, i_color *val) {
-  i_palidx which;
-  if (x < 0 || x >= im->xsize || y < 0 || y >= im->ysize) {
-    return -1;
-  }
-  which = ((i_palidx *)im->idata)[x + y * im->xsize];
-  if (which > PALEXT(im)->count)
-    return -1;
-  *val = PALEXT(im)->pal[which];
-
-  return 0;
 }
 
 /*

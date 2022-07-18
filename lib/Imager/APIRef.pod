@@ -719,7 +719,7 @@ Returns 0 if the pixel was retrieved, or -1 if not.
 
 
 =for comment
-From: imext.c
+From: image.c
 
 =item i_gpixf(im, C<x>, C<y>, C<fcolor>)
 

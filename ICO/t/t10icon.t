@@ -134,30 +134,30 @@ is($imgs[2]->colorcount, 16, "image 2 colorcount");
 
 is_deeply([ $imgs[0]->getpixel(x=>0, 'y'=>0)->rgba ], [ 231, 17, 67, 255 ],
 	  "check image data 0(0,0)");
-is_deeply([ $imgs[1]->getpixel(x=>0, 'y'=>0)->rgba ], [ 231, 17, 67, 255 ],
+is_deeply([ $imgs[1]->getpixel(x=>0, 'y'=>0)->rgba ], [ 231, 17, 67, 0 ],
 	  "check image data 1(0,0)");
-is_deeply([ $imgs[2]->getpixel(x=>0, 'y'=>0)->rgba ], [ 231, 17, 67, 255 ],
+is_deeply([ $imgs[2]->getpixel(x=>0, 'y'=>0)->rgba ], [ 231, 17, 67, 0 ],
 	  "check image data 2(0,0)");
 
 is_deeply([ $imgs[0]->getpixel(x=>47, 'y'=>0)->rgba ], [ 131, 231, 17, 255 ],
 	  "check image data 0(47,0)");
-is_deeply([ $imgs[1]->getpixel(x=>31, 'y'=>0)->rgba ], [ 131, 231, 17, 255 ],
+is_deeply([ $imgs[1]->getpixel(x=>31, 'y'=>0)->rgba ], [ 131, 231, 17, 0 ],
 	  "check image data 1(31,0)");
-is_deeply([ $imgs[2]->getpixel(x=>15, 'y'=>0)->rgba ], [ 131, 231, 17, 255 ],
+is_deeply([ $imgs[2]->getpixel(x=>15, 'y'=>0)->rgba ], [ 131, 231, 17, 0 ],
 	  "check image data 2(15,0)");
 
 is_deeply([ $imgs[0]->getpixel(x=>0, 'y'=>47)->rgba ], [ 17, 42, 231, 255 ],
 	  "check image data 0(0,47)");
-is_deeply([ $imgs[1]->getpixel(x=>0, 'y'=>31)->rgba ], [ 17, 42, 231, 255 ],
+is_deeply([ $imgs[1]->getpixel(x=>0, 'y'=>31)->rgba ], [ 17, 42, 231, 0 ],
 	  "check image data 1(0,31)");
-is_deeply([ $imgs[2]->getpixel(x=>0, 'y'=>15)->rgba ], [ 17, 42, 231, 255 ],
+is_deeply([ $imgs[2]->getpixel(x=>0, 'y'=>15)->rgba ], [ 17, 42, 231, 0 ],
 	  "check image data 2(0,15)");
 
 is_deeply([ $imgs[0]->getpixel(x=>47, 'y'=>47)->rgba ], [ 17, 231, 177, 255 ],
 	  "check image data 0(47,47)");
-is_deeply([ $imgs[1]->getpixel(x=>31, 'y'=>31)->rgba ], [ 17, 231, 177, 255 ],
+is_deeply([ $imgs[1]->getpixel(x=>31, 'y'=>31)->rgba ], [ 17, 231, 177, 0 ],
 	  "check image data 1(31,31)");
-is_deeply([ $imgs[2]->getpixel(x=>15, 'y'=>15)->rgba ], [ 17, 231, 177, 255 ],
+is_deeply([ $imgs[2]->getpixel(x=>15, 'y'=>15)->rgba ], [ 17, 231, 177, 0 ],
 	  "check image data 2(15,15)");
 
 $im = Imager->new(xsize=>32, ysize=>32);
