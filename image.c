@@ -1820,6 +1820,57 @@ i_gpixf(i_img *im, i_img_dim x, i_img_dim y, i_fcolor *val) {
   return count > 0 ? 0 : -1;
 }
 
+/*
+=item i_glin(im, l, r, y, colors)
+
+=category Drawing
+
+Retrieves (r-l) pixels starting from (l,y) into I<colors>.
+
+Returns the number of pixels retrieved.
+
+=cut
+*/
+
+i_img_dim
+i_glin(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, i_color *vals) {
+  i_img_dim count;
+  if (r - l < 10) {
+    count = 0;
+    while (l < r) {
+      if (i_gpix(im, l, y, vals) == 0) {
+        ++count;
+      }
+      ++l;
+      ++vals;
+    }
+    return count;
+  }
+  else if (im->channels != 4) {
+    i_sample_t *samps = mymalloc((r-l) * im->channels * sizeof(i_sample_t));
+    i_sample_t *psamps = samps;
+    i_img_dim i = l;
+    int ch;
+
+    count = i_gsamp(im, l, r, y, samps, NULL, im->channels);
+
+    while (i < r) {
+      for (ch = 0; ch < im->channels; ++ch) {
+        vals->channel[ch] = *psamps++;
+      }
+      ++vals;
+      ++i;
+    }
+
+    myfree(samps);
+  }
+  else {
+    count = i_gsamp(im, l, r, y, (i_sample_t *)vals, NULL, im->channels);
+  }
+
+  return count > 0 ? (count / im->channels) : count;
+}
+
 static int
 test_magic(unsigned char *buffer, size_t length, struct file_magic_entry const *magic) {
   if (length < magic->magic_size)

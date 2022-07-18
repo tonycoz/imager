@@ -4,7 +4,6 @@
 #include "imageri.h"
 #include "imapiver.h"
 
-static i_img_dim i_glin_d(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, i_color *vals);
 static i_img_dim i_glinf_d(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, i_fcolor *vals);
 static i_img_dim i_gsamp_d(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, i_sample_t *samps, const int *chans, int chan_count);
 static i_img_dim i_gsampf_d(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, i_fsample_t *samps, const int *chans, int chan_count);
@@ -18,7 +17,6 @@ static const i_img_vtable
 vtable_8bit = {
   IMAGER_API_LEVEL,
   
-  i_glin_d, /* i_f_glin */
   i_glinf_d, /* i_f_glinf */
   i_gsamp_d, /* i_f_gsamp */
   i_gsampf_d, /* i_f_gsampf */
@@ -134,46 +132,6 @@ These are the functions installed in an 8-bit per sample image.
 
 =over
 
-=item i_glin_d(im, l, r, y, vals)
-
-Reads a line of data from the image, storing the pixels at vals.
-
-The line runs from (l,y) inclusive to (r,y) non-inclusive
-
-vals should point at space for (r-l) pixels.
-
-l should never be less than zero (to avoid confusion about where to
-put the pixels in vals).
-
-Returns the number of pixels copied (eg. if r, l or y is out of range)
-
-=cut
-*/
-static
-i_img_dim
-i_glin_d(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, i_color *vals) {
-  int ch;
-  unsigned totalch = im->channels + im->extrachannels;
-  i_img_dim count, i;
-  unsigned char *data;
-  if (y >=0 && y < im->ysize && l < im->xsize && l >= 0) {
-    if (r > im->xsize)
-      r = im->xsize;
-    data = im->idata + (l+y*im->xsize) * totalch;
-    count = r - l;
-    for (i = 0; i < count; ++i) {
-      for (ch = 0; ch < im->channels; ++ch)
-	vals[i].channel[ch] = data[ch];
-      data += totalch;
-    }
-    return count;
-  }
-  else {
-    return 0;
-  }
-}
-
-/*
 =item i_glinf_d(im, l, r, y, vals)
 
 Reads a line of data from the image, storing the pixels at vals.
