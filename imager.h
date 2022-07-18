@@ -60,6 +60,14 @@ i_new_image_data_alloc_def(i_img *im);
 i_image_data_alloc_t *
 i_new_image_data_alloc_free(i_img *im, void *releaseme);
 
+/* fallback handlers for i_[gp]samp_bits */
+extern i_img_dim
+i_gsamp_bits_fb(i_img *im, i_img_dim x, i_img_dim r, i_img_dim y, unsigned *samp,
+                const int *chans, int chan_count, int bits);
+extern i_img_dim
+i_psamp_bits_fb(i_img *im, i_img_dim x, i_img_dim r, i_img_dim y, const unsigned *samp,
+                const int *chans, int chan_count, int bits);
+
 void   i_img_info(i_img *im,i_img_dim *info);
 
 extern i_img *i_sametype(i_img *im, i_img_dim xsize, i_img_dim ysize);

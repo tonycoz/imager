@@ -58,7 +58,7 @@ vtable_double = {
   NULL, /* i_f_destroy */
 
   i_gsamp_bits_fb,
-  NULL, /* i_f_psamp_bits */
+  i_psamp_bits_fb, /* i_f_psamp_bits */
 
   i_data_double,
 

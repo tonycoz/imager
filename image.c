@@ -1676,6 +1676,83 @@ i_gsamp_bits_fb(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, unsigned *samp
 }
 
 /*
+=item i_psamp_bits_fb
+
+Provides a fallback for the i_psamp_bits() entry in the image virtual table.
+
+=cut
+*/
+
+i_img_dim
+i_psamp_bits_fb(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, const unsigned *samps,
+                const int *chans, int chan_count, int bits) {
+  dIMCTXim(im);
+
+  if (bits < 1 || bits > 32) {
+    i_push_error(0, "Invalid bits, must be 1..32");
+    return -1;
+  }
+
+  if (y >=0 && y < im->ysize && l < im->xsize && l >= 0) {
+    double scale;
+    i_img_dim i;
+    i_img_dim count;
+    i_fsample_t *fsamps = NULL;
+    size_t total_samps;
+    size_t samps_size;
+    i_fsample_t *pfsamps;
+
+    if (r > im->xsize)
+      r = im->xsize;
+
+    if (l >= r)
+      return 0;
+
+    total_samps = (size_t)(r - l) * (size_t)chan_count;
+    samps_size = total_samps * sizeof(i_fsample_t);
+
+    if (samps_size / chan_count / sizeof(i_fsample_t) != (r - l)) {
+      i_push_error(0, "i_psamp_bits: integer overflow calculating working buffer size");
+      return -1;
+    }
+
+    if (bits == 32)
+      scale = 4294967295.0;
+    else
+      scale = (double)(1 << bits) - 1;
+
+    if (chans) {
+      int ch;
+      /* make sure we have good channel numbers */
+      for (ch = 0; ch < chan_count; ++ch) {
+        if (chans[ch] < 0 || chans[ch] >= im->channels) {
+          im_push_errorf(aIMCTX, 0, "No channel %d in this image", chans[ch]);
+          return -1;
+        }
+      }
+    }
+    else {
+      if (chan_count <= 0 || chan_count > im->channels) {
+        i_push_error(0, "Invalid channel count");
+        return -1;
+      }
+    }
+    fsamps = mymalloc(samps_size);
+    for (i = 0, pfsamps = fsamps; i < total_samps; ++i, ++samps, ++pfsamps) {
+      *pfsamps = *samps / scale;
+    }
+    count = i_psampf(im, l, r, y, fsamps, chans, chan_count);
+    myfree(fsamps);
+
+    return count;
+  }
+  else {
+    i_push_error(0, "Image position outside of image");
+    return -1;
+  }
+}
+
+/*
 =item i_plin()
 =category Drawing
 
