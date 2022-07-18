@@ -61,7 +61,7 @@ vtable_pal = {
   i_destroy_p, /* i_f_destroy */
 
   i_gsamp_bits_fb,
-  NULL, /* i_f_psamp_bits */
+  i_psamp_bits_fb, /* i_f_psamp_bits */
   
   i_data_pal,
 
