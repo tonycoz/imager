@@ -252,23 +252,6 @@ int
 }
 
 /*
-=item i_gpix(im, C<x>, C<y>, C<color>)
-
-=category Drawing
-
-Retrieves the C<color> of the pixel (x,y).
-
-Returns 0 if the pixel was retrieved, or -1 if not.
-
-=cut
-*/
-
-int
-(i_gpix)(i_img *im,i_img_dim x,i_img_dim y,i_color *val) {
-  return i_gpix(im, x, y, val);
-}
-
-/*
 =item i_ppixf(im, C<x>, C<y>, C<fcolor>)
 
 =category Drawing
