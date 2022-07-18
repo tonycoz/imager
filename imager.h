@@ -73,6 +73,8 @@ void   i_img_info(i_img *im,i_img_dim *info);
 extern i_img *i_sametype(i_img *im, i_img_dim xsize, i_img_dim ysize);
 extern i_img *i_sametype_chans(i_img *im, i_img_dim xsize, i_img_dim ysize, int channels);
 
+extern int i_img_check_entries(i_img *im);
+
 /* Image feature settings */
 
 void   i_img_setmask    (i_img *im,int ch_mask);

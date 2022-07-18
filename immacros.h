@@ -207,9 +207,9 @@ This can safely accept a NULL pointer.
 #endif
 
 #define i_gsamp_bits(im, l, r, y, samps, chans, count, bits) \
-       (((im)->vtbl->i_f_gsamp_bits) ? ((im)->vtbl->i_f_gsamp_bits)((im), (l), (r), (y), (samps), (chans), (count), (bits)) : -1)
+  (((im)->vtbl->i_f_gsamp_bits)((im), (l), (r), (y), (samps), (chans), (count), (bits)))
 #define i_psamp_bits(im, l, r, y, samps, chans, count, bits) \
-       (((im)->vtbl->i_f_psamp_bits) ? ((im)->vtbl->i_f_psamp_bits)((im), (l), (r), (y), (samps), (chans), (count), (bits)) : -1)
+       (((im)->vtbl->i_f_psamp_bits)((im), (l), (r), (y), (samps), (chans), (count), (bits)))
 
 #define i_findcolor(im, color, entry) \
   (((im)->vtbl->i_f_findcolor) ? ((im)->vtbl->i_f_findcolor)((im), (color), (entry)) : 0)

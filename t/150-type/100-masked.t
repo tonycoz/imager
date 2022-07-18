@@ -2,7 +2,7 @@
 use strict;
 use Test::More;
 use Imager qw(:all :handy);
-use Imager::Test qw(is_color3 is_fcolor3 test_image is_image test_image_pal);
+use Imager::Test qw(is_color3 is_fcolor3 test_image is_image test_image_pal check_vtable);
 
 -d "testout" or mkdir "testout";
 
@@ -119,6 +119,7 @@ for my $test (@color_tests) {
   $mask->box(color=>$white, filled=>1, xmin=>5, xmax=>75, ymin=>5, ymax=>75);
   my $m_img = $base->masked(mask=>$mask, left=>5, top=>5);
   ok($m_img, "make masked OO image");
+  check_vtable($m_img, "masked direct");
   is($m_img->getwidth, 80, "check width");
   $m_img->box(color=>$green, filled=>1);
   my $c = $m_img->getpixel(x=>0, y=>0);
@@ -468,6 +469,7 @@ $mask->box(fill => { hatch => "check1x1" }, ymin => 40, xmax => 39);
   is($masked->type, "paletted", "check masked is same type as base");
   is($limited->type, "paletted", "check limited is same type as base");
 
+  check_vtable($masked, "masked paletted");
   {
     # make sure addcolors forwarded
     is($masked->addcolors(colors => [ $grey ]), 4,

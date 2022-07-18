@@ -47,6 +47,7 @@ our @EXPORT_OK =
      std_font_tests
      std_font_test_count
      extrachannel_tests
+     check_vtable
      );
 
 sub diff_text_with_nul {
@@ -1027,6 +1028,24 @@ sub extrachannel_tests {
             "check color set by setscanline float and extras untouched (float)");
 }
 
+sub check_vtable {
+  my ($im, $name) = @_;
+  my $ok;
+
+ SKIP:
+  {
+    $ok = ok($im->{IMG}, "$name: image has low level image")
+      or skip "No image to check vtable", 1;
+    $ok = ok(Imager::i_img_check_entries($im->{IMG}),
+             "$name: check vtable entries");
+    unless ($ok) {
+      diag $_ for map $_->[0], Imager::i_errors();
+    }
+  }
+
+  $ok;
+}
+
 package Imager::Test::OverUtf8;
 use overload '""' => sub { "A".chr(0x2010)."A" };
 
@@ -1201,6 +1220,13 @@ Perform tests for a 3 color channel with 5 extra channel image.  This
 is mostly intended to ensure that accessed are properly aligned
 between the various APIs.  Especially that pixel to pixel transitions
 are covered by the total channels, not just the color channels.
+
+=item check_vtable(im)
+
+=for stopwords vtable
+
+Given an OO image, extract the low level image and check its vtable is
+populated with the required entries.
 
 =back
 

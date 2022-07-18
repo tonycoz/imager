@@ -135,6 +135,100 @@ im_img_init(pIMCTX, i_img *img) {
   im_context_refinc(aIMCTX, "img_init");
 }
 
+/*
+=item i_check_image_entries()
+
+Validates that an image has all the entries required for its type.
+
+  int ok = i_check_image_entries(img);
+
+Returns true on success.
+
+Pushes an error for each error found, if any.
+
+=cut
+*/
+
+int
+i_img_check_entries(i_img *im) {
+  dIMCTXim(im);
+  int ok = 1;
+  const i_img_vtable *vtbl = im->vtbl;
+
+  im_clear_error(aIMCTX);
+
+  if (!vtbl) {
+    im_push_error(aIMCTX, 0, "vtbl NULL");
+    return 0;
+  }
+  if (!vtbl->i_f_gsamp) {
+    im_push_error(aIMCTX, 0, "no i_f_gsamp");
+    ok = 0;
+  }
+  if (!vtbl->i_f_gsampf) {
+    im_push_error(aIMCTX, 0, "no i_f_gsampf");
+    ok = 0;
+  }
+  if (!vtbl->i_f_psamp) {
+    im_push_error(aIMCTX, 0, "no i_f_psamp");
+    ok = 0;
+  }
+  if (!vtbl->i_f_psampf) {
+    im_push_error(aIMCTX, 0, "no i_f_psampf");
+    ok = 0;
+  }
+  /* i_f_destroy isn't required */
+  if (!vtbl->i_f_gsamp_bits) {
+    im_push_error(aIMCTX, 0, "no i_f_gsamp_bits");
+    ok = 0;
+  }
+  if (!vtbl->i_f_psamp_bits) {
+    im_push_error(aIMCTX, 0, "no i_f_psamp_bits");
+    ok = 0;
+  }
+  if (!vtbl->i_f_data) {
+    im_push_error(aIMCTX, 0, "no i_f_data");
+    ok = 0;
+  }
+  /* i_f_imageop isn't required */
+  if (im->type == i_palette_type) {
+    if (!vtbl->i_f_gpal) {
+      im_push_error(aIMCTX, 0, "no i_f_gpal for type == i_palette_type");
+      ok = 0;
+    }
+    if (!vtbl->i_f_ppal) {
+      im_push_error(aIMCTX, 0, "no i_f_ppal for type == i_palette_type");
+      ok = 0;
+    }
+    if (!vtbl->i_f_addcolors) {
+      im_push_error(aIMCTX, 0, "no i_f_addcolors for type == i_palette_type");
+      ok = 0;
+    }
+    if (!vtbl->i_f_getcolors) {
+      im_push_error(aIMCTX, 0, "no i_f_getcolors for type == i_palette_type");
+      ok = 0;
+    }
+    if (!vtbl->i_f_colorcount) {
+      im_push_error(aIMCTX, 0, "no i_f_colorcount for type == i_palette_type");
+      ok = 0;
+    }
+    if (!vtbl->i_f_maxcolors) {
+      im_push_error(aIMCTX, 0, "no i_f_maxcolors for type == i_palette_type");
+      ok = 0;
+    }
+    if (!vtbl->i_f_findcolor) {
+      im_push_error(aIMCTX, 0, "no i_f_findcolor for type == i_palette_type");
+      ok = 0;
+    }
+    if (!vtbl->i_f_setcolors) {
+      im_push_error(aIMCTX, 0, "no i_f_setcolors for type == i_palette_type");
+      ok = 0;
+    }
+  }
+
+  return ok;
+}
+
 /* 
 =item ICL_new_internal(r, g, b, a)
 
