@@ -1385,6 +1385,340 @@ i_psampf_fp(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, const i_fsample_t 
 }
 
 /*
+=item i_gslin_fallback()
+
+Fallback implementation for i_gslin() that fetches samples with
+i_gsamp() and converts them to linear.
+
+=cut
+*/
+
+i_img_dim
+i_gslin_fallback(i_img *im, i_img_dim x, i_img_dim r, i_img_dim y,
+                 i_sample16_t *samp, const int *chans, int chan_count) {
+  dIMCTXim(im);
+
+  if (y >= 0 && y < im->ysize && x < im->xsize && x >= 0) {
+    i_sample_t *work;
+    i_img_dim result;
+    int color_chans;
+    const imcms_curve_t *curves = im_model_curves(aIMCTX, i_img_color_model(im), &color_chans);
+    i_sample16_t *pout = samp;
+
+    if (r > im->xsize)
+      r = im->xsize;
+    if (x >= r)
+      return 0;
+
+    work = mymalloc(sizeof(i_sample_t) * chan_count * (r - x));
+
+    result = i_gsamp(im, x, r, y, work, chans, chan_count);
+    if (result > 0) {
+      i_sample_t *pwork = work;
+      if (chans) {
+        while (x < r) {
+          int chi;
+          for (chi = 0; chi < chan_count; ++chi) {
+            int ch = chans[ch];
+            if (ch < color_chans) {
+              *pout++ = imcms_to_linear(curves[ch], *pwork++);
+            }
+            else {
+              *pout++ = Sample8To16(*pwork++);
+            }
+          }
+          ++x;
+        }
+      }
+      else {
+        while (x < r) {
+          int ch;
+          for (ch = 0; ch < chan_count; ++ch) {
+            if (ch < color_chans) {
+              *pout++ = imcms_to_linear(curves[ch], *pwork++);
+            }
+            else {
+              *pout++ = Sample8To16(*pwork++);
+            }
+          }
+          ++x;
+        }
+      }
+    }
+
+    myfree(work);
+
+    return result;
+  }
+  else {
+    i_push_error(0, "Image position outside of image");
+    return 0;
+  }
+}
+
+/*
+=item i_gslinf_fallback()
+
+Fallback implementation for i_gslinf() that fetches samples with
+i_gsampf() and converts them to linear.
+
+=cut
+*/
+
+i_img_dim
+i_gslinf_fallback(i_img *im, i_img_dim x, i_img_dim r, i_img_dim y,
+                  i_fsample_t *samp, const int *chans, int chan_count) {
+  dIMCTXim(im);
+
+  if (y >= 0 && y < im->ysize && x < im->xsize && x >= 0) {
+    i_fsample_t *work;
+    i_img_dim result;
+    int color_chans;
+    const imcms_curve_t *curves = im_model_curves(aIMCTX, i_img_color_model(im), &color_chans);
+    i_fsample_t *pout = samp;
+
+    if (r > im->xsize)
+      r = im->xsize;
+    if (x >= r)
+      return 0;
+
+    work = mymalloc(sizeof(i_fsample_t) * chan_count * (r - x));
+
+    result = i_gsampf(im, x, r, y, work, chans, chan_count);
+    if (result > 0) {
+      i_fsample_t *pwork = work;
+      if (chans) {
+        while (x < r) {
+          int chi;
+          for (chi = 0; chi < chan_count; ++chi) {
+            int ch = chans[ch];
+            if (ch < color_chans) {
+              *pout++ = imcms_to_linearf(curves[ch], *pwork++);
+            }
+            else {
+              *pout++ = *pwork++;
+            }
+          }
+          ++x;
+        }
+      }
+      else {
+        while (x < r) {
+          int ch;
+          for (ch = 0; ch < chan_count; ++ch) {
+            if (ch < color_chans) {
+              *pout++ = imcms_to_linearf(curves[ch], *pwork++);
+            }
+            else {
+              *pout++ = *pwork++;
+            }
+          }
+          ++x;
+        }
+      }
+    }
+
+    myfree(work);
+
+    return result;
+  }
+  else {
+    i_push_error(0, "Image position outside of image");
+    return 0;
+  }
+}
+
+/*
+=item i_pslin_fallback()
+
+Fallback implementation for i_pslin() that converts the supplied
+linear samples to gamma samples, and calls i_psamp().
+
+=cut
+*/
+
+i_img_dim
+i_pslin_fallback(i_img *im, i_img_dim x, i_img_dim r, i_img_dim y,
+                 const i_sample16_t *samps, const int *chans, int chan_count) {
+  dIMCTXim(im);
+
+  if (y >=0 && y < im->ysize && x < im->xsize && x >= 0) {
+    i_img_dim i;
+    int color_chans;
+    const imcms_curve_t *curves = im_model_curves(aIMCTX, i_img_color_model(im), &color_chans);
+    i_sample_t *work = NULL;
+    i_img_dim result;
+    int total_channels = i_img_totalchannels(im);
+
+    if (r > im->xsize)
+      r = im->xsize;
+    if (x >= r)
+      return 0;
+
+    if (chan_count > MAXTOTALCHANNELS) {
+      im_push_error(aIMCTX, 0, "Too many channels requested");
+      return 0;
+    }
+
+    if (chan_count <= 0) {
+      im_push_error(aIMCTX, 0, "pslin() must request at least one channel");
+      return -1;
+    }
+    if (chans) {
+      int chi;
+      for (chi = 0; chi < chan_count; ++chi) {
+        if (chans[chi] < 0 || chans[chi] >= total_channels) {
+          im_push_errorf(aIMCTX, 0, "Channel %d at %d out of range", chans[chi], chi);
+          return 0;
+        }
+      }
+    }
+    else {
+      if (chan_count > total_channels) {
+        im_push_error(aIMCTX, 0, "pslin(): chan_count greater than total channels");
+        return -1;
+      }
+    }
+
+    work = mymalloc(sizeof(i_sample_t) * chan_count * (r - x));
+    if (chans) {
+      const i_sample16_t *sampsp = samps;
+      i_sample_t *workp = work;
+
+      for (i = x; i < r; ++i) {
+        int chi;
+        for (chi = 0; chi < chan_count; ++chi) {
+          int ch = chans[chi];
+          if (ch < color_chans)
+            *workp++ = imcms_from_linear(curves[ch], *sampsp++);
+          else
+            *workp++ = Sample16To8(*sampsp++);
+        }
+      }
+    }
+    else {
+      const i_sample16_t *sampsp = samps;
+      i_sample_t *workp = work;
+
+      for (i = x; i < r; ++i) {
+        int ch;
+        for (ch = 0; ch < chan_count; ++ch) {
+          if (ch < color_chans)
+            *workp++ = imcms_from_linear(curves[ch], *sampsp++);
+          else
+            *workp++ = Sample16To8(*sampsp++);
+        }
+      }
+    }
+
+    result = i_psamp(im, x, r, y, work, chans, chan_count);
+
+    myfree(work);
+
+    return result;
+  }
+  else {
+    im_push_error(aIMCTX, 0, "Image position outside of image");
+    return -1;
+  }
+}
+
+/*
+=item i_pslinf_fallback()
+
+Fallback implementation for i_pslin() that converts the supplied
+linear samples to gamma samples, and calls i_psampf().
+
+=cut
+*/
+
+i_img_dim
+i_pslinf_fallback(i_img *im, i_img_dim x, i_img_dim r, i_img_dim y,
+                  const i_fsample_t *samps, const int *chans, int chan_count) {
+  dIMCTXim(im);
+
+  if (y >=0 && y < im->ysize && x < im->xsize && x >= 0) {
+    i_img_dim i;
+    int color_chans;
+    const imcms_curve_t *curves = im_model_curves(aIMCTX, i_img_color_model(im), &color_chans);
+    i_fsample_t *work = NULL;
+    i_img_dim result;
+    int total_channels = i_img_totalchannels(im);
+
+    if (r > im->xsize)
+      r = im->xsize;
+    if (x >= r)
+      return 0;
+
+    if (chan_count > MAXTOTALCHANNELS) {
+      im_push_error(aIMCTX, 0, "Too many channels requested");
+      return 0;
+    }
+
+    if (chan_count <= 0) {
+      im_push_error(aIMCTX, 0, "pslinf() must request at least one channel");
+      return -1;
+    }
+    if (chans) {
+      int chi;
+      for (chi = 0; chi < chan_count; ++chi) {
+        if (chans[chi] < 0 || chans[chi] >= total_channels) {
+          im_push_errorf(aIMCTX, 0, "Channel %d at %d out of range", chans[chi], chi);
+          return 0;
+        }
+      }
+    }
+    else {
+      if (chan_count > total_channels) {
+        im_push_error(aIMCTX, 0, "chan_count greater than total channels");
+        return -1;
+      }
+    }
+
+    work = mymalloc(sizeof(i_fsample_t) * chan_count * (r - x));
+    if (chans) {
+      const i_fsample_t *sampsp = samps;
+      i_fsample_t *workp = work;
+
+      for (i = x; i < r; ++i) {
+        int chi;
+        for (chi = 0; chi < chan_count; ++chi) {
+          int ch = chans[chi];
+          if (ch < color_chans)
+            *workp++ = imcms_from_linearf(curves[ch], *sampsp++);
+          else
+            *workp++ = *sampsp++;
+        }
+      }
+    }
+    else {
+      const i_fsample_t *sampsp = samps;
+      i_fsample_t *workp = work;
+
+      for (i = x; i < r; ++i) {
+        int ch;
+        for (ch = 0; ch < chan_count; ++ch) {
+          if (ch < color_chans)
+            *workp++ = imcms_from_linearf(curves[ch], *sampsp++);
+          else
+            *workp++ = *sampsp++;
+        }
+      }
+    }
+
+    result = i_psampf(im, x, r, y, work, chans, chan_count);
+
+    myfree(work);
+
+    return result;
+  }
+  else {
+    im_push_error(aIMCTX, 0, "Image position outside of image");
+    return -1;
+  }
+}
+
+/*
 =back
 
 =head2 Palette wrapper functions

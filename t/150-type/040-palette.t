@@ -4,7 +4,8 @@ use strict;
 use Test::More;
 BEGIN { use_ok("Imager", ':handy'); }
 
-use Imager::Test qw(image_bounds_checks test_image is_color3 isnt_image is_color4 is_fcolor3);
+use Imager::Test qw(image_bounds_checks test_image is_color3 isnt_image is_color4 is_fcolor3
+                    test_image_pal to_linear_srgb to_linear_srgbf is_arrayf);
 
 Imager->open_log(log => "testout/t023palette.log");
 
@@ -657,6 +658,28 @@ my $psamp_outside_error = "Image position outside of image";
   my @col = $im->getcolors;
   is($im->getchannels, 4, "still 4 channels");
   is($col[0]->alpha, 255, "should have a 255 alpha");
+}
+
+{
+  my $im = test_image_pal;
+
+  my @data = $im->getsamples(scale => "linear", y => 70);
+  my @cdata = map to_linear_srgb($_), $im->getsamples(y => 70);
+  is_deeply(\@data, \@cdata, "check linear data matches expected");
+  my @dataf = $im->getsamples(scale => "linear", y => 70, type => "float");
+  my @cdataf = map to_linear_srgbf($_), $im->getsamples(y => 70, type => "float");
+  is_arrayf(\@dataf, \@cdataf, "check linear float data matches expected");
+
+  my @osamples = $im->getsamples(y => 70);
+  ok($im->setsamples(scale => "linear", y => 1, data => \@data), "set linear samples");
+  is_deeply([ $im->getsamples(y => 1) ], \@osamples,
+    "check they were set (via gamma samples)");
+
+  my @osamplesf = $im->getsamples(y => 70, type => "float");
+  ok($im->setsamples(scale => "linear", y => 2, data => \@dataf, type => "float"),
+     "set linear float samples");
+  is_deeply([ $im->getsamples(y => 2, type => "float") ], \@osamplesf,
+    "check float were set (via gamma samples)");
 }
 
 Imager->close_log;
