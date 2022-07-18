@@ -63,10 +63,10 @@ vtable_pal = {
   i_gsamp_bits_fb,
   i_psamp_bits_fb, /* i_f_psamp_bits */
 
-  NULL,
-  NULL,
-  NULL,
-  NULL,
+  i_gslin_fallback,
+  i_gslinf_fallback,
+  i_pslin_fallback,
+  i_pslinf_fallback,
   
   i_data_pal,
 
