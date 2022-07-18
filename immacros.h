@@ -276,6 +276,8 @@ Return the reference count for the image.
 
 #define i_img_alloc() im_img_alloc(aIMCTX)
 #define i_img_init(im) im_img_init(aIMCTX, im)
+#define i_img_new(vtbl, xsize, ysize, channels, extra, bits) \
+  im_img_new(aIMCTX, (vtbl), (xsize), (ysize), (channels), (extra), (bits))
 
 #define i_set_image_file_limits(width, height, bytes) im_set_image_file_limits(aIMCTX, width, height, bytes)
 #define i_get_image_file_limits(width, height, bytes) im_get_image_file_limits(aIMCTX, width, height, bytes)

@@ -251,6 +251,17 @@ typedef struct {
   /* IMAGER_API_LEVEL 11 functions will be added here */
   int (*f_im_io_set_max_mmap_size)(im_context_t, size_t);
   size_t (*f_im_io_get_max_mmap_size)(im_context_t);
+  void (*f_i_img_refcnt_inc)(i_img *);
+  int (*f_i_img_check_entries)(i_img *im);
+  i_img * (*f_im_img_new)(im_context_t, const i_img_vtable *vtbl, i_img_dim xsize, i_img_dim ysize,
+                          int channels, int extra, i_img_bits_t bits);
+  i_img * (*f_im_img_8_new_extra)(im_context_t, i_img_dim x, i_img_dim y, int ch, int extra);
+  i_img * (*f_im_img_16_new_extra)(im_context_t, i_img_dim x, i_img_dim y, int ch, int extra);
+  i_img * (*f_im_img_double_new_extra)(im_context_t, i_img_dim x, i_img_dim y, int ch, int extra);
+  i_image_data_alloc_t * (*f_i_new_image_data_alloc_def)(i_img *im);
+  i_image_data_alloc_t * (*f_i_new_image_data_alloc_free)(i_img *im, void *releaseme);
+  void *(*f_myzmalloc)(size_t);
+  void *(*f_myzmalloc_file_line)(size_t, const char *, int);
 } im_ext_funcs;
 
 #define PERL_FUNCTION_TABLE_NAME "Imager::__ext_func_table"

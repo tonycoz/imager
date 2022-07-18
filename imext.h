@@ -186,7 +186,7 @@ extern im_ext_funcs *imager_function_ext_table;
 #define im_loog (im_extt->f_im_loog)
 
 #define im_img_alloc(ctx) ((im_extt->f_im_img_alloc)(ctx))
-#define im_img_init(ctx, img) ((im_extt->fm_i_img_init)((ctx), (img)))
+#define im_img_init(ctx, img) ((im_extt->f_im_img_init)((ctx), (img)))
 
 #define i_img_is_monochrome(img, zero_is_white) ((im_extt->f_i_img_is_monochrome)((img), (zero_is_white)))
 
@@ -252,6 +252,24 @@ extern im_ext_funcs *imager_function_ext_table;
 #define im_io_get_max_mmap_size(ctx) ((im_extt->f_im_io_get_max_mmap_size)(ctx))
 #define im_io_set_max_mmap_size(ctx, newsize) ((im_extt->f_im_io_set_max_mmap_size)((ctx), (newsize)))
 
+#define i_img_refcnt_inc(im) ((im_extt->f_i_img_refcnt_inc)(im))
+#define i_img_check_entries(im) ((im_extt->f_i_img_check_entries)(im))
+#define im_img_new(ctx, vtbl, xsize, ysize, channels, extra, bits) \
+  ((im_extt->f_im_img_new)((ctx), (vtbl), (xsize), (ysize), (channels), (extra), (bits)))
+#define im_img_8_new_extra(ctx, xsize, ysize, channels, extra) \
+  ((im_extt->f_im_img_8_new_extra)((ctx), (xsize), (ysize), (channels), (extra)))
+#define im_img_16_new_extra(ctx, xsize, ysize, channels, extra) \
+  ((im_extt->f_im_img_16_new_extra)((ctx), (xsize), (ysize), (channels), (extra)))
+#define im_img_double_new_extra(ctx, xsize, ysize, channels, extra) \
+  ((im_extt->f_im_img_double_new_extra)((ctx), (xsize), (ysize), (channels), (extra)))
+#define i_new_image_data_alloc_def(im) \
+  ((im_extt->f_i_new_image_data_alloc_def)(im))
+#define i_new_image_data_alloc_free(im, releaseme) \
+  ((im_extt->f_i_new_image_data_alloc_free)((im), (releaseme)))
+#define myzmalloc(size) ((im_extt->f_myzmalloc)(size))
+#define myzmalloc_file_line(size, file, lineno) \
+  ((im_extt->f_myzmalloc_file_line)((size), (file), (lineno)))
+  
 #ifdef IMAGER_LOG
 #ifndef IMAGER_NO_CONTEXT
 #define mm_log(x) { i_lhead(__FILE__,__LINE__); i_loog x; } 

@@ -222,7 +222,17 @@ im_ext_funcs imager_function_table =
 
     /* level 11 */
     im_io_set_max_mmap_size,
-    im_io_get_max_mmap_size
+    im_io_get_max_mmap_size,
+    i_img_refcnt_inc,
+    i_img_check_entries,
+    im_img_new,
+    im_img_8_new_extra,
+    im_img_16_new_extra,
+    im_img_double_new_extra,
+    i_new_image_data_alloc_def,
+    i_new_image_data_alloc_free,
+    myzmalloc,
+    myzmalloc_file_line
   };
 
 /* in general these functions aren't called by Imager internally, but

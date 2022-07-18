@@ -84,6 +84,7 @@ im_img_alloc(pIMCTX) {
 
 /*
 =item im_img_new()
+=synopsis i_img *im = im_img_new(aIMCTX, &myvtbl, xsize, ysize, chans, extrachans, i_8_bits);
 
 Allocate a new image object, as with im_img_alloc(), and populate
 common fields from the supplied parameters.
@@ -403,7 +404,7 @@ i_img_exorcise(i_img *im) {
 }
 
 /* 
-=item i_img_destroy(C<img>)
+=item i_img_destroy()
 =order 90
 =category Image creation/destruction
 =synopsis i_img_destroy(img)
@@ -564,9 +565,6 @@ i_img_get_height(i_img *im) {
 =synopsis i_color_model_t cm = i_img_color_model(im);
 
 Returns the color model for the image.
-
-A future version of Imager will allow for images with extra channels
-beyond gray/rgb and alpha.
 
 =cut
 */
