@@ -1583,7 +1583,12 @@ i_glinf_fp(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, i_fcolor *pix) {
 }
 
 /*
-=item i_gsampf_fp(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, i_fsample_t *samp, int *chans, int chan_count)
+=item i_gsampf_fp()
+
+  count = i_gsampf_fp(im, left, right, y, samps, chans, chan_count);
+
+Implements i_gsampf() for an image in terms of the image's
+implementation of i_gsamp().
 
 =cut
 */
@@ -1604,6 +1609,46 @@ i_gsampf_fp(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, i_fsample_t *samp,
       for (i = 0; i < ret; ++i) {
           samp[i] = Sample8ToF(work[i]);
       }
+      myfree(work);
+
+      return ret;
+    }
+    else {
+      return 0;
+    }
+  }
+  else {
+    return 0;
+  }
+}
+
+/*
+=item i_psampf_fp()
+
+  count = i_psampf_fp(im, left, right, y, samps, chans, chan_count);
+
+Implements i_psampf() for an image in terms of the image's
+implementation of i_psamp().
+
+=cut
+*/
+
+i_img_dim
+i_psampf_fp(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, const i_fsample_t *samp, 
+                int const *chans, int chan_count) {
+  i_sample_t *work;
+
+  if (y >= 0 && y < im->ysize && l < im->xsize && l >= 0) {
+    if (r > im->xsize)
+      r = im->xsize;
+    if (r > l) {
+      i_img_dim ret = (r - l) * chan_count;
+      i_img_dim i;
+      work = mymalloc(sizeof(i_sample_t) * (r-l));
+      for (i = 0; i < ret; ++i) {
+          work[i] = SampleFTo8(samp[i]);
+      }
+      ret = i_psamp(im, l, r, y, work, chans, chan_count);
       myfree(work);
 
       return ret;

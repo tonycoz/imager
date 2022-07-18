@@ -60,13 +60,32 @@ i_new_image_data_alloc_def(i_img *im);
 i_image_data_alloc_t *
 i_new_image_data_alloc_free(i_img *im, void *releaseme);
 
-/* fallback handlers for i_[gp]samp_bits */
+/* fallback handlers for i_[gp]samp_(bits)? */
+extern i_img_dim
+i_gsampf_fp(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, i_fsample_t *samp, 
+            int const *chans, int chan_count);
+extern i_img_dim
+i_psampf_fp(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, const i_fsample_t *samp, 
+            int const *chans, int chan_count);
 extern i_img_dim
 i_gsamp_bits_fb(i_img *im, i_img_dim x, i_img_dim r, i_img_dim y, unsigned *samp,
                 const int *chans, int chan_count, int bits);
 extern i_img_dim
 i_psamp_bits_fb(i_img *im, i_img_dim x, i_img_dim r, i_img_dim y, const unsigned *samp,
                 const int *chans, int chan_count, int bits);
+
+/* wrapper functions that forward palette calls to the underlying image,
+   assuming the underlying image is the first pointer in whatever
+   ext_data points at
+*/
+extern int i_addcolors_forward(i_img *im, const i_color *, int count);
+extern int i_getcolors_forward(i_img *im, int i, i_color *, int count);
+extern int i_colorcount_forward(i_img *im);
+extern int i_maxcolors_forward(i_img *im);
+extern int i_findcolor_forward(i_img *im, const i_color *color, 
+			       i_palidx *entry);
+extern int i_setcolors_forward(i_img *im, int index, const i_color *colors, 
+                               int count);
 
 void   i_img_info(i_img *im,i_img_dim *info);
 

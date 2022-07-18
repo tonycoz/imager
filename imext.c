@@ -232,7 +232,18 @@ im_ext_funcs imager_function_table =
     i_new_image_data_alloc_def,
     i_new_image_data_alloc_free,
     myzmalloc,
-    myzmalloc_file_line
+    myzmalloc_file_line,
+    i_gsampf_fp,
+    i_psampf_fp,
+    i_gsamp_bits_fb,
+    i_psamp_bits_fb,
+    i_img_data_fallback,
+    i_addcolors_forward,
+    i_getcolors_forward,
+    i_setcolors_forward,
+    i_colorcount_forward,
+    i_maxcolors_forward,
+    i_findcolor_forward
   };
 
 /* in general these functions aren't called by Imager internally, but
