@@ -271,24 +271,6 @@ int
 }
 
 /*
-=item i_glinf(im, l, r, y, colors)
-
-=category Drawing
-
-Retrieves (r-l) pixels starting from (l,y) into I<colors> as floating
-point colors.
-
-Returns the number of pixels retrieved.
-
-=cut
-*/
-
-i_img_dim
-(i_glinf)(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, i_fcolor *vals) {
-  return i_glinf(im, l, r, y, vals);
-}
-
-/*
 =item i_gsamp(im, left, right, y, samples, channels, channel_count)
 
 =category Drawing

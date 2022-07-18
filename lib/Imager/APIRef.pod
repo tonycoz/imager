@@ -673,10 +673,12 @@ Returns false if (C<seedx>, C<seedy>) are outside the image.
 =for comment
 From: draw.c
 
-=item i_glin(im, l, r, y, colors)
+=item i_glin()
 
 
-Retrieves (r-l) pixels starting from (l,y) into I<colors>.
+Retrieves (r-l) pixels starting from (l,y) into C<colors>.
+
+  count = i_glin(im, l, r, y, colors);
 
 Returns the number of pixels retrieved.
 
@@ -684,17 +686,18 @@ Returns the number of pixels retrieved.
 =for comment
 From: image.c
 
-=item i_glinf(im, l, r, y, colors)
+=item i_glinf()
 
 
-Retrieves (r-l) pixels starting from (l,y) into I<colors> as floating
-point colors.
+Retrieves (r-l) pixels starting from (l,y) into C<fcolors>.
+
+  count = i_glinf(im, l, r, y, fcolors);
 
 Returns the number of pixels retrieved.
 
 
 =for comment
-From: imext.c
+From: image.c
 
 =item i_gpal(im, left, right, y, indexes)
 

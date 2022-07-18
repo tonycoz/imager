@@ -70,7 +70,6 @@ extern im_ext_funcs *imager_function_ext_table;
 
 #define i_ppix(im, x, y, val) ((im_extt->f_i_ppix)((im), (x), (y), (val)))
 #define i_ppixf(im, x, y, val) ((im_extt->f_i_ppixf)((im), (x), (y), (val)))
-#define i_glinf(im, l, r, y, val) ((im_extt->f_i_glinf)((im), (l), (r), (y), (val)))
 #define i_gsamp(im, l, r, y, samps, chans, count) \
   ((im_extt->f_i_gsamp)((im), (l), (r), (y), (samps), (chans), (count)))
 #define i_gsampf(im, l, r, y, samps, chans, count) \
@@ -83,6 +82,7 @@ extern im_ext_funcs *imager_function_ext_table;
 #define i_gpix(im, x, y, val) ((im_extt->f_i_gpix)((im), (x), (y), (val)))
 #define i_gpixf(im, x, y, val) ((im_extt->f_i_gpixf)((im), (x), (y), (val)))
 #define i_glin(im, l, r, y, val) ((im_extt->f_i_glin)((im), (l), (r), (y), (val)))
+#define i_glinf(im, l, r, y, val) ((im_extt->f_i_glinf)((im), (l), (r), (y), (val)))
 
 #define i_gsamp_bits(im, l, r, y, samps, chans, count, bits) \
   (((im)->vtbl->i_f_gsamp_bits) ? ((im)->vtbl->i_f_gsamp_bits)((im), (l), (r), (y), (samps), (chans), (count), (bits)) : -1)

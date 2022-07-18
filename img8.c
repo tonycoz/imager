@@ -4,7 +4,6 @@
 #include "imageri.h"
 #include "imapiver.h"
 
-static i_img_dim i_glinf_d(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, i_fcolor *vals);
 static i_img_dim i_gsamp_d(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, i_sample_t *samps, const int *chans, int chan_count);
 static i_img_dim i_gsampf_d(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, i_fsample_t *samps, const int *chans, int chan_count);
 static i_img_dim i_psamp_d(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, const i_sample_t *samps, const int *chans, int chan_count);
@@ -17,7 +16,6 @@ static const i_img_vtable
 vtable_8bit = {
   IMAGER_API_LEVEL,
   
-  i_glinf_d, /* i_f_glinf */
   i_gsamp_d, /* i_f_gsamp */
   i_gsampf_d, /* i_f_gsampf */
 

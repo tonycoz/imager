@@ -89,7 +89,7 @@ extern i_img_dim i_glin(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y,
 			  i_color *vals);
 extern i_img_dim i_plinf(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y,
 			   const i_fcolor *vals);
-extern i_img_dim (i_glinf)(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, 
+extern i_img_dim i_glinf(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, 
 			   i_fcolor *vals);
 extern i_img_dim (i_gsamp)(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y,
 			   i_sample_t *samp, const int *chans, int chan_count);

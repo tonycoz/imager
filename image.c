@@ -1821,11 +1821,13 @@ i_gpixf(i_img *im, i_img_dim x, i_img_dim y, i_fcolor *val) {
 }
 
 /*
-=item i_glin(im, l, r, y, colors)
+=item i_glin()
 
 =category Drawing
 
-Retrieves (r-l) pixels starting from (l,y) into I<colors>.
+Retrieves (r-l) pixels starting from (l,y) into C<colors>.
+
+  count = i_glin(im, l, r, y, colors);
 
 Returns the number of pixels retrieved.
 
@@ -1866,6 +1868,59 @@ i_glin(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, i_color *vals) {
   }
   else {
     count = i_gsamp(im, l, r, y, (i_sample_t *)vals, NULL, im->channels);
+  }
+
+  return count > 0 ? (count / im->channels) : count;
+}
+
+/*
+=item i_glinf()
+
+=category Drawing
+
+Retrieves (r-l) pixels starting from (l,y) into C<fcolors>.
+
+  count = i_glinf(im, l, r, y, fcolors);
+
+Returns the number of pixels retrieved.
+
+=cut
+*/
+
+i_img_dim
+i_glinf(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, i_fcolor *vals) {
+  i_img_dim count;
+  if (r - l < 10) {
+    count = 0;
+    while (l < r) {
+      if (i_gpixf(im, l, y, vals) == 0) {
+        ++count;
+      }
+      ++l;
+      ++vals;
+    }
+    return count;
+  }
+  else if (im->channels != 4) {
+    i_fsample_t *samps = mymalloc((r-l) * im->channels * sizeof(i_fsample_t));
+    i_fsample_t *psamps = samps;
+    i_img_dim i = l;
+    int ch;
+
+    count = i_gsampf(im, l, r, y, samps, NULL, im->channels);
+
+    while (i < r) {
+      for (ch = 0; ch < im->channels; ++ch) {
+        vals->channel[ch] = *psamps++;
+      }
+      ++vals;
+      ++i;
+    }
+
+    myfree(samps);
+  }
+  else {
+    count = i_gsampf(im, l, r, y, (i_fsample_t *)vals, NULL, im->channels);
   }
 
   return count > 0 ? (count / im->channels) : count;

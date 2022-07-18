@@ -322,8 +322,6 @@ typedef struct {
 } i_img_tags;
 
 typedef struct i_img_ i_img;
-typedef i_img_dim (*i_f_glinf_t)(i_img *im, i_img_dim x, i_img_dim r, i_img_dim y, i_fcolor *vals);
-
 typedef i_img_dim (*i_f_gsamp_t)(i_img *im, i_img_dim x, i_img_dim r, i_img_dim y, i_sample_t *samp,
                            const int *chans, int chan_count);
 typedef i_img_dim (*i_f_gsampf_t)(i_img *im, i_img_dim x, i_img_dim r, i_img_dim y, i_fsample_t *samp,
@@ -369,7 +367,7 @@ Elements:
 
 =item *
 
-i_f_glinf, i_f_gsamp, i_f_gampf - implementations for each
+i_f_gsamp, i_f_gampf - implementations for each
 of the required image functions.  An image implementation should
 initialize these between calling i_img_alloc() and i_img_init().
 
@@ -409,7 +407,6 @@ typedef struct i_img_vtable_struct {
   int api_level;
 
   /* interface functions */
-  i_f_glinf_t i_f_glinf;
   i_f_gsamp_t i_f_gsamp;
   i_f_gsampf_t i_f_gsampf;
   
