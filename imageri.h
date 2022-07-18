@@ -155,6 +155,9 @@ typedef struct im_context_tag {
   /* registered file type magic */
   im_file_magic *file_magic;
 
+  /* maximum size of i_io_mmap() */
+  size_t max_mmap_size;
+
   ptrdiff_t refcount;
 } im_context_struct;
 
