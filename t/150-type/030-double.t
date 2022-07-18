@@ -1,6 +1,6 @@
 #!perl -w
 use strict;
-use Test::More tests => 136;
+use Test::More;
 BEGIN { use_ok(Imager => qw(:all :handy)) }
 
 use Imager::Test qw(test_image is_image is_color3);
@@ -9,7 +9,8 @@ use Imager::Test qw(test_image is_image is_color3);
 
 Imager->open_log(log => "testout/t022double.log");
 
-use Imager::Test qw(image_bounds_checks test_colorf_gpix test_colorf_glin mask_tests);
+use Imager::Test qw(image_bounds_checks test_colorf_gpix test_colorf_glin
+                    mask_tests check_vtable);
 
 use Imager::Color::Float;
 
@@ -66,6 +67,7 @@ test_colorf_glin($im_rgb, 0, 1,
 # basic OO tests
 my $ooimg = Imager->new(xsize=>200, ysize=>201, bits=>'double');
 ok($ooimg, "couldn't make double image");
+check_vtable($ooimg, "double vtable");
 is($ooimg->bits, 'double', "oo didn't give double image");
 ok(!$ooimg->is_bilevel, 'not monochrome');
 
@@ -291,6 +293,8 @@ Imager->close_log;
 unless ($ENV{IMAGER_KEEP_FILES}) {
   unlink "testout/t022double.log";
 }
+
+done_testing();
 
 sub _get_error {
   my @errors = Imager::i_errors();
