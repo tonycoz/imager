@@ -94,10 +94,16 @@ Imager::APIRef - Imager's C API - reference.
   i_img *img = i_sametype_chans(src, width, height, channels);
   i_img *img = im_img_16_new(aIMCTX, width, height, channels);
   i_img *img = i_img_16_new(width, height, channels);
+  i_img *img = im_img_16_new_extra(aIMCTX, width, height, channels);
+  i_img *img = i_img_16_new_extra(width, height, channels);
   i_img *img = im_img_8_new(aIMCTX, width, height, channels);
   i_img *img = i_img_8_new(width, height, channels);
+  i_img *img = im_img_8_new_extra(aIMCTX, width, height, channels, extra);
+  i_img *img = i_img_8_new_extra(width, height, channels, extra);
   i_img *img = im_img_double_new(aIMCTX, width, height, channels);
   i_img *img = i_img_double_new(width, height, channels);
+  i_img *img = im_img_double_new_extra(aIMCTX, width, height, channels, extra);
+  i_img *img = i_img_double_new_extra(width, height, channels, extra);
   i_img *img = im_img_pal_new(aIMCTX, width, height, channels, max_palette_size)
   i_img *img = i_img_pal_new(width, height, channels, max_palette_size)
   i_img_destroy(img)
@@ -225,7 +231,7 @@ channels associated with color and alpha channel.  See also C<extrachannels>.
 =item *
 
 C<extrachannels> - the number of extra channels associated with each
-pixel.  For now this is always zero.
+pixel.
 
 =item *
 
@@ -259,9 +265,11 @@ then this image could be an interface to some other implementation.
 
 =item *
 
-C<idata> - the image data.  This should not be directly accessed.  A new
-image implementation can use this to store its image data.
-i_img_destroy() will myfree() this pointer if it's non-null.
+C<idata> - the image data.  This should not be directly accessed.  A
+new image implementation can use this to store its image data.
+L</i_img_destroy()> will myfree() this pointer if it's non-null.
+Non-image implementors can use L</i_img_data()> to fetch or optionally
+synthesize raw image data.
 
 =item *
 
@@ -1862,6 +1870,22 @@ Also callable as C<i_img_16_new(x, y, ch)>
 =for comment
 From: img16.c
 
+=item im_img_16_new_extra(ctx, x, y, ch)
+X<im_img_16_new_extra API>X<i_img_16_new_extra API>
+
+  i_img *img = im_img_16_new_extra(aIMCTX, width, height, channels);
+  i_img *img = i_img_16_new_extra(width, height, channels);
+
+Create a new 16-bit/sample image.
+
+Returns the image on success, or NULL on failure.
+
+Also callable as C<i_img_16_new_extra(x, y, ch)>
+
+
+=for comment
+From: img16.c
+
 =item im_img_8_new(ctx, x, y, ch)
 X<im_img_8_new API>X<i_img_8_new API>
 
@@ -1870,6 +1894,19 @@ X<im_img_8_new API>X<i_img_8_new API>
 
 Creates a new image object I<x> pixels wide, and I<y> pixels high with
 I<ch> channels.
+
+
+=for comment
+From: img8.c
+
+=item im_img_8_new_extra(ctx, x, y, ch extra)
+X<im_img_8_new_extra API>X<i_img_8_new_extra API>
+
+  i_img *img = im_img_8_new_extra(aIMCTX, width, height, channels, extra);
+  i_img *img = i_img_8_new_extra(width, height, channels, extra);
+
+Creates a new image object I<x> pixels wide, and I<y> pixels high with
+I<ch> color/alpha channels and C<extra> extra channels.
 
 
 =for comment
@@ -1884,6 +1921,21 @@ X<im_img_double_new API>X<i_img_double_new API>
 Creates a new double per sample image.
 
 Also callable as C<i_img_double_new(width, height, channels)>.
+
+
+=for comment
+From: imgdouble.c
+
+=item im_img_double_new_extra(ctx, x, y, ch, extra)
+X<im_img_double_new_extra API>X<i_img_double_new_extra API>
+
+  i_img *img = im_img_double_new_extra(aIMCTX, width, height, channels, extra);
+  i_img *img = i_img_double_new_extra(width, height, channels, extra);
+
+Creates a new double per sample image, possibly with
+L<Imager::ImageTypes/Extra channels>.
+
+Also callable as C<i_img_double_new_extra(width, height, channels, extra)>.
 
 
 =for comment
@@ -1907,7 +1959,7 @@ Also callable as C<i_img_pal_new(width, height, channels, max_palette_size)>.
 =for comment
 From: palimg.c
 
-=item i_img_destroy(C<img>)
+=item i_img_destroy()
 
   i_img_destroy(img)
 
@@ -2017,9 +2069,6 @@ From: image.c
   i_color_model_t cm = i_img_color_model(im);
 
 Returns the color model for the image.
-
-A future version of Imager will allow for images with extra channels
-beyond gray/rgb and alpha.
 
 
 =for comment
@@ -2575,6 +2624,16 @@ From: tags.c
 
 =over
 
+=item i_image_data_alloc_t
+
+i_img_data() returns a pointer to this mostly opaque type.
+
+This must be released with i_img_data_release().
+
+
+=for comment
+From: imdatatypes.h
+
 =item i_img_data()
 
   i_img_data(im, layout, bits, flags, &ptr, &size, &extrachannels)
@@ -2677,6 +2736,30 @@ implemented and this will always be set to zero.
 
 =for comment
 From: immacros.h
+
+=item i_img_refcnt_inc()
+
+Increment the reference count of the image.
+
+Aborts the program if the reference count overflows.
+
+This is unrelated to Perl C<SV> reference counts.
+
+
+=for comment
+From: image.c
+
+=item i_new_image_data_alloc_free()
+
+Create an image data allocation object that releases the memory block
+supplied using myfree().
+
+This is used to generate the L</i_image_data_alloc_t> object returned
+by i_img_data() when data is synthesized.
+
+
+=for comment
+From: data.c
 
 =item i_utf8_advance(char **p, size_t *len)
 
@@ -2803,6 +2886,17 @@ initialize the C<im_get_context> pointer at some point.
 =for comment
 From: imext.c
 
+=item im_img_new()
+
+  i_img *im = im_img_new(aIMCTX, &myvtbl, xsize, ysize, chans, extrachans, i_8_bits);
+
+Allocate a new image object, as with im_img_alloc(), and populate
+common fields from the supplied parameters.
+
+
+=for comment
+From: image.c
+
 =item im_io_get_max_mmap_size()
 
   size_t size = im_io_get_max_mmap_size(aIMCTX);
@@ -2838,6 +2932,14 @@ The following API functions are undocumented so far, hopefully this
 will change:
 
 =over
+
+=item *
+
+B<i_img_check_entries>
+
+=item *
+
+B<i_new_image_data_alloc_def>
 
 =item *
 

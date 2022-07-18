@@ -312,6 +312,7 @@ im_slot_t
 i_polygon_t
 i_poly_fill_mode_t
 i_mutex_t
+i_image_data_alloc_t
 
 # misc
 i_DF
