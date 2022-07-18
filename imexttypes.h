@@ -284,6 +284,18 @@ typedef struct {
   int (*f_i_colorcount_forward)(i_img *im);
   int (*f_i_maxcolors_forward)(i_img *im);
   int (*f_i_findcolor_forward)(i_img *im, const i_color *color, i_palidx *entry);
+  i_img_dim
+  (*f_i_gslin_fallback)(i_img *im, i_img_dim x, i_img_dim r, i_img_dim y,
+                        i_sample16_t *samp, const int *chan, int chan_count);
+  i_img_dim
+  (*f_i_gslinf_fallback)(i_img *im, i_img_dim x, i_img_dim r, i_img_dim y,
+                         i_fsample_t *samp, const int *chan, int chan_count);
+  i_img_dim
+  (*f_i_pslin_fallback)(i_img *im, i_img_dim x, i_img_dim r, i_img_dim y,
+                        const i_sample16_t *samp, const int *chan, int chan_count);
+  i_img_dim
+  (*f_i_pslinf_fallback)(i_img *im, i_img_dim x, i_img_dim r, i_img_dim y,
+                         const i_fsample_t *samp, const int *chan, int chan_count);
 } im_ext_funcs;
 
 #define PERL_FUNCTION_TABLE_NAME "Imager::__ext_func_table"

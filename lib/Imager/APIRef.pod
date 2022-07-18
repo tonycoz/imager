@@ -2667,6 +2667,24 @@ implementation of i_gsamp().
 =for comment
 From: image.c
 
+=item i_gslin_fallback()
+
+Fallback implementation for i_gslin() that fetches samples with
+i_gsamp() and converts them to linear.
+
+
+=for comment
+From: image.c
+
+=item i_gslinf_fallback()
+
+Fallback implementation for i_gslinf() that fetches samples with
+i_gsampf() and converts them to linear.
+
+
+=for comment
+From: image.c
+
 =item i_image_data_alloc_t
 
 i_img_data() returns a pointer to this mostly opaque type.
@@ -2850,6 +2868,24 @@ From: image.c
 
 Implements i_psampf() for an image in terms of the image's
 implementation of i_psamp().
+
+
+=for comment
+From: image.c
+
+=item i_pslin_fallback()
+
+Fallback implementation for i_pslin() that converts the supplied
+linear samples to gamma samples, and calls i_psamp().
+
+
+=for comment
+From: image.c
+
+=item i_pslinf_fallback()
+
+Fallback implementation for i_pslin() that converts the supplied
+linear samples to gamma samples, and calls i_psampf().
 
 
 =for comment

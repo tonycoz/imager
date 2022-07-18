@@ -181,6 +181,22 @@ i_img_check_entries(i_img *im) {
     im_push_error(aIMCTX, 0, "no i_f_psamp_bits");
     ok = 0;
   }
+  if (!vtbl->i_f_gslin) {
+    im_push_error(aIMCTX, 0, "no i_f_gslin");
+    ok = 0;
+  }
+  if (!vtbl->i_f_gslinf) {
+    im_push_error(aIMCTX, 0, "no i_f_gslinf");
+    ok = 0;
+  }
+  if (!vtbl->i_f_pslin) {
+    im_push_error(aIMCTX, 0, "no i_f_pslin");
+    ok = 0;
+  }
+  if (!vtbl->i_f_pslinf) {
+    im_push_error(aIMCTX, 0, "no i_f_pslinf");
+    ok = 0;
+  }
   if (!vtbl->i_f_data) {
     im_push_error(aIMCTX, 0, "no i_f_data");
     ok = 0;
