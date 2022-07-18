@@ -26,7 +26,6 @@ sample image type to work with.
 #include "imapiver.h"
 
 static i_img_dim i_glin_ddoub(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, i_color *vals);
-static int i_gpixf_ddoub(i_img *im, i_img_dim x, i_img_dim y, i_fcolor *val);
 static i_img_dim i_glinf_ddoub(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, i_fcolor *vals);
 static i_img_dim i_gsamp_ddoub(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, i_sample_t *samps, 
                        int const *chans, int chan_count);
@@ -52,7 +51,6 @@ static const i_img_vtable
 vtable_double = {
   IMAGER_API_LEVEL,
 
-  i_gpixf_ddoub, /* i_f_gpixf */
   i_glin_ddoub, /* i_f_glin */
   i_glinf_ddoub, /* i_f_glinf */
   i_gsamp_ddoub, /* i_f_gsamp */
@@ -158,22 +156,6 @@ im_img_double_new_extra(pIMCTX, i_img_dim x, i_img_dim y, int ch, int extra) {
   im_img_init(aIMCTX, im);
   
   return im;
-}
-
-static int
-i_gpixf_ddoub(i_img *im, i_img_dim x, i_img_dim y, i_fcolor *val) {
-  i_img_dim off;
-  int ch;
-  int totalch = im->channels + im->extrachannels;
-
-  if (x < 0 || x >= im->xsize || y < 0 || y >= im->ysize) 
-    return -1;
-
-  off = (x + y * im->xsize) * totalch;
-  for (ch = 0; ch < im->channels; ++ch)
-    val->channel[ch] = ((double *)im->idata)[off+ch];
-
-  return 0;
 }
 
 static i_img_dim i_glin_ddoub(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, i_color *vals) {
