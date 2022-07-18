@@ -10,7 +10,7 @@ Imager->open_log(log => "testout/t021sixteen.log");
 
 use Imager::Color::Float;
 use Imager::Test qw(test_image is_image image_bounds_checks test_colorf_gpix
-                    test_colorf_glin mask_tests is_color3);
+                    test_colorf_glin mask_tests is_color3 check_vtable);
 
 my $im_g = Imager::i_img_16_new(100, 101, 1);
 
@@ -103,6 +103,7 @@ test_colorf_glin($im_rgb, 0, 1,
 # basic OO tests
 my $oo16img = Imager->new(xsize=>200, ysize=>201, bits=>16);
 ok($oo16img, "make a 16-bit oo image");
+check_vtable($oo16img, "16-bit vtable");
 is($oo16img->bits,  16, "test bits");
 isnt($oo16img->is_bilevel, "should not be considered mono");
 # make sure of error handling

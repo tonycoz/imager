@@ -3828,6 +3828,10 @@ int
 i_img_totalchannels(im)
         Imager::ImgRaw  im
 
+int
+i_img_check_entries(im)
+        Imager::ImgRaw  im
+
 SV *
 i_img_data(im, layout, bits, flags, extra)
         Imager::ImgRaw  im
