@@ -1615,33 +1615,38 @@ i_gsamp_bits_fb(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, unsigned *samp
 
   if (y >=0 && y < im->ysize && l < im->xsize && l >= 0) {
     double scale;
-    int ch;
-    i_img_dim count, i, w;
+    i_img_dim i;
+    i_fsample_t *fsamps = NULL;
+    size_t total_samps;
+    size_t samps_size;
+    i_fsample_t *pfsamps;
+
+    if (r > im->xsize)
+      r = im->xsize;
+
+    if (l >= r)
+      return 0;
+
+    total_samps = (size_t)(r - l) * (size_t)chan_count;
+    samps_size = total_samps * sizeof(i_fsample_t);
+
+    if (samps_size / chan_count / sizeof(i_fsample_t) != (r - l)) {
+      i_push_error(0, "i_gsamp_bits: integer overflow calculating working buffer size");
+      return -1;
+    }
     
     if (bits == 32)
       scale = 4294967295.0;
     else
       scale = (double)(1 << bits) - 1;
 
-    if (r > im->xsize)
-      r = im->xsize;
-    w = r - l;
-    count = 0;
-
     if (chans) {
+      int ch;
       /* make sure we have good channel numbers */
       for (ch = 0; ch < chan_count; ++ch) {
         if (chans[ch] < 0 || chans[ch] >= im->channels) {
           im_push_errorf(aIMCTX, 0, "No channel %d in this image", chans[ch]);
           return -1;
-        }
-      }
-      for (i = 0; i < w; ++i) {
-	i_fcolor c;
-	i_gpixf(im, l+i, y, &c);
-        for (ch = 0; ch < chan_count; ++ch) {
-          *samps++ = (unsigned)(c.channel[ch] * scale + 0.5);
-          ++count;
         }
       }
     }
@@ -1650,17 +1655,19 @@ i_gsamp_bits_fb(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, unsigned *samp
 	i_push_error(0, "Invalid channel count");
 	return -1;
       }
-      for (i = 0; i < w; ++i) {
-	i_fcolor c;
-	i_gpixf(im, l+i, y, &c);
-        for (ch = 0; ch < chan_count; ++ch) {
-          *samps++ = (unsigned)(c.channel[ch] * scale + 0.5);
-          ++count;
-        }
-      }
     }
+    fsamps = mymalloc(samps_size);
+    if (i_gsampf(im, l, r, y, fsamps, chans, chan_count) != total_samps) {
+      i_push_error(0, "didn't get expected number of samples from i_gsampf()");
+      myfree(fsamps);
+      return -1;
+    }
+    for (i = 0, pfsamps = fsamps; i < total_samps; ++i, ++samps, ++pfsamps) {
+      *samps = (unsigned)(*pfsamps * scale + 0.5);
+    }
+    myfree(fsamps);
 
-    return count;
+    return total_samps;
   }
   else {
     i_push_error(0, "Image position outside of image");
