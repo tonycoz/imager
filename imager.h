@@ -73,6 +73,18 @@ i_gsamp_bits_fb(i_img *im, i_img_dim x, i_img_dim r, i_img_dim y, unsigned *samp
 extern i_img_dim
 i_psamp_bits_fb(i_img *im, i_img_dim x, i_img_dim r, i_img_dim y, const unsigned *samp,
                 const int *chans, int chan_count, int bits);
+extern i_img_dim
+i_gslin_fallback(i_img *im, i_img_dim x, i_img_dim r, i_img_dim y,
+                 i_sample16_t *samp, const int *chans, int chan_count);
+extern i_img_dim
+i_gslinf_fallback(i_img *im, i_img_dim x, i_img_dim r, i_img_dim y,
+                  i_fsample_t *samp, const int *chans, int chan_count);
+extern i_img_dim
+i_pslin_fallback(i_img *im, i_img_dim x, i_img_dim r, i_img_dim y,
+                 const i_sample16_t *samps, const int *chans, int chan_count);
+extern i_img_dim
+i_pslinf_fallback(i_img *im, i_img_dim x, i_img_dim r, i_img_dim y,
+                  const i_fsample_t *samps, const int *chans, int chan_count);
 
 /* wrapper functions that forward palette calls to the underlying image,
    assuming the underlying image is the first pointer in whatever
