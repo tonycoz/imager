@@ -77,6 +77,8 @@ vtable_mask = {
 
   data_masked,
 
+  NULL, /* i_f_imageop */
+
   i_gpal_masked, /* i_f_gpal */
   i_ppal_masked, /* i_f_ppal */
   i_addcolors_forward, /* i_f_addcolors */
