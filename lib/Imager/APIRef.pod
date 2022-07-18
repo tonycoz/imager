@@ -682,7 +682,7 @@ Returns the number of pixels retrieved.
 
 
 =for comment
-From: imext.c
+From: image.c
 
 =item i_glinf(im, l, r, y, colors)
 
