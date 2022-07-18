@@ -721,17 +721,16 @@ Returns 0 if the pixel was retrieved, or -1 if not.
 =for comment
 From: image.c
 
-=item i_gpixf(im, C<x>, C<y>, C<fcolor>)
+=item i_gpixf(im, C<x>, C<y>, C<color>)
 
 
-Retrieves the color of the pixel (x,y) as a floating point color into
-C<fcolor>.
+Retrieves the floating point C<color> of the pixel (x,y).
 
 Returns 0 if the pixel was retrieved, or -1 if not.
 
 
 =for comment
-From: imext.c
+From: image.c
 
 =item i_gsamp(im, left, right, y, samples, channels, channel_count)
 

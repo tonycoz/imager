@@ -53,7 +53,6 @@ static const i_img_vtable
 vtable_pal = {
   IMAGER_API_LEVEL,
   
-  i_gpixf_fp, /* i_f_gpixf */
   i_glin_p, /* i_f_glin */
   i_glinf_fp, /* i_f_glinf */
   i_gsamp_p, /* i_f_gsamp */

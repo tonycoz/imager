@@ -5,7 +5,6 @@
 #include "imapiver.h"
 
 static i_img_dim i_glin_d(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, i_color *vals);
-static int i_gpixf_d(i_img *im, i_img_dim x, i_img_dim y, i_fcolor *val);
 static i_img_dim i_glinf_d(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, i_fcolor *vals);
 static i_img_dim i_gsamp_d(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, i_sample_t *samps, const int *chans, int chan_count);
 static i_img_dim i_gsampf_d(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, i_fsample_t *samps, const int *chans, int chan_count);
@@ -19,7 +18,6 @@ static const i_img_vtable
 vtable_8bit = {
   IMAGER_API_LEVEL,
   
-  i_gpixf_d, /* i_f_gpixf */
   i_glin_d, /* i_f_glin */
   i_glinf_d, /* i_f_glinf */
   i_gsamp_d, /* i_f_gsamp */
@@ -173,26 +171,6 @@ i_glin_d(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, i_color *vals) {
   else {
     return 0;
   }
-}
-
-/*
-=item i_gpixf_d(im, x, y, val)
-
-=cut
-*/
-static
-int
-i_gpixf_d(i_img *im, i_img_dim x, i_img_dim y, i_fcolor *val) {
-  int ch;
-  unsigned totalch = im->channels + im->extrachannels;
-  if (x>-1 && x<im->xsize && y>-1 && y<im->ysize) {
-    for(ch=0;ch<im->channels;ch++) {
-      val->channel[ch] = 
-        Sample8ToF(im->idata[(x+y*im->xsize) * totalch + ch]);
-    }
-    return 0;
-  }
-  return -1; /* error was cliped */
 }
 
 /*

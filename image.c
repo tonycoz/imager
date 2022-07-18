@@ -1797,6 +1797,29 @@ i_gpix(i_img *im, i_img_dim x, i_img_dim y, i_color *val) {
   return count > 0 ? 0 : -1;
 }
 
+/*
+=item i_gpixf(im, C<x>, C<y>, C<color>)
+
+=category Drawing
+
+Retrieves the floating point C<color> of the pixel (x,y).
+
+Returns 0 if the pixel was retrieved, or -1 if not.
+
+=cut
+*/
+
+int
+i_gpixf(i_img *im, i_img_dim x, i_img_dim y, i_fcolor *val) {
+  int count = i_gsampf(im, x, x+1, y, val->channel, NULL, (im)->channels);
+  int ch;
+  for (ch = im->channels; ch < MAXCHANNELS; ++ch) {
+    val->channel[ch] = 0;
+  }
+
+  return count > 0 ? 0 : -1;
+}
+
 static int
 test_magic(unsigned char *buffer, size_t length, struct file_magic_entry const *magic) {
   if (length < magic->magic_size)
