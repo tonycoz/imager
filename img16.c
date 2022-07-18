@@ -29,7 +29,6 @@ sample image type to work with.
 #include <inttypes.h>
 #endif
 
-static int i_gpix_d16(i_img *im, i_img_dim x, i_img_dim y, i_color *val);
 static i_img_dim i_glin_d16(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, i_color *vals);
 static int i_gpixf_d16(i_img *im, i_img_dim x, i_img_dim y, i_fcolor *val);
 static i_img_dim i_glinf_d16(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, i_fcolor *vals);
@@ -60,7 +59,6 @@ static const i_img_vtable
 vtable_16bit = {
   IMAGER_API_LEVEL,
   
-  i_gpix_d16, /* i_f_gpix */
   i_gpixf_d16, /* i_f_gpixf */
   i_glin_d16, /* i_f_glin */
   i_glinf_d16, /* i_f_glinf */
@@ -225,21 +223,6 @@ i_img_to_rgb16(i_img *im) {
   myfree(line);
 
   return targ;
-}
-
-static int i_gpix_d16(i_img *im, i_img_dim x, i_img_dim y, i_color *val) {
-  i_img_dim off;
-  int ch;
-  unsigned totalch = im->channels + im->extrachannels;
-
-  if (x < 0 || x >= im->xsize || y < 0 || y >= im->ysize) 
-    return -1;
-
-  off = (x + y * im->xsize) * totalch;
-  for (ch = 0; ch < im->channels; ++ch)
-    val->channel[ch] = GET16as8(im->idata, off+ch);
-
-  return 0;
 }
 
 static int

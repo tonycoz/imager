@@ -4,7 +4,6 @@
 #include "imageri.h"
 #include "imapiver.h"
 
-static int i_gpix_d(i_img *im, i_img_dim x, i_img_dim y, i_color *val);
 static i_img_dim i_glin_d(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, i_color *vals);
 static int i_gpixf_d(i_img *im, i_img_dim x, i_img_dim y, i_fcolor *val);
 static i_img_dim i_glinf_d(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, i_fcolor *vals);
@@ -20,7 +19,6 @@ static const i_img_vtable
 vtable_8bit = {
   IMAGER_API_LEVEL,
   
-  i_gpix_d, /* i_f_gpix */
   i_gpixf_d, /* i_f_gpixf */
   i_glin_d, /* i_f_glin */
   i_glinf_d, /* i_f_glinf */
@@ -138,33 +136,6 @@ These are the functions installed in an 8-bit per sample image.
 
 =over
 
-
-=item i_gpix_d(im, x, y, &col)
-
-Internal function.
-
-This is the function kept in the i_f_gpix member of an i_img object.
-It does normal retrieval of a pixel from the image with range checking.
-
-Returns 0 if the pixel could be retrieved, -1 otherwise.
-
-=cut
-*/
-static
-int 
-i_gpix_d(i_img *im, i_img_dim x, i_img_dim y, i_color *val) {
-  unsigned totalch = im->channels + im->extrachannels;
-  int ch;
-  if (x>-1 && x<im->xsize && y>-1 && y<im->ysize) {
-    for(ch=0;ch<im->channels;ch++) 
-      val->channel[ch]=im->idata[(x+y*im->xsize) * totalch + ch];
-    return 0;
-  }
-  for(ch=0;ch<im->channels;ch++) val->channel[ch] = 0;
-  return -1; /* error was cliped */
-}
-
-/*
 =item i_glin_d(im, l, r, y, vals)
 
 Reads a line of data from the image, storing the pixels at vals.
