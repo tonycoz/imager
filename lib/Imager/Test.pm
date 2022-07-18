@@ -1162,6 +1162,8 @@ sub std_image_tests {
 			      width => 2, channels => \@channels);
     is_arrayf(\@gsamps, \@fcmp_sl, "check samples were set (float, explicit channels)");
 
+    no if $] >= 5.014, warnings => 'Imager::channelmask';
+
     # masks
     my $oldmask = $im->getmask;
     ok($im->setmask(mask => 13), "set the mask to not cover all channels");
@@ -1204,6 +1206,7 @@ sub std_image_tests {
     is_arrayf(\@gsamps, \@fcmp_sl_masked,
 	      "check linear samples (channel count, masked)");
 
+    no if $] >= 5.014, warnings => 'Imager::channelmask';
     $im->setmask(mask => $oldmask);
 
     # fetch to target
