@@ -323,24 +323,6 @@ i_img_dim
 }
 
 /*
-=item i_plinf(im, C<left>, C<right>, C<fcolors>)
-
-=category Drawing
-
-Sets (right-left) pixels starting from (left,y) using (right-left)
-floating point colors from C<fcolors>.
-
-Returns the number of pixels set.
-
-=cut
-*/
-
-i_img_dim
-(i_plinf)(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, const i_fcolor *vals) {
-  return i_plinf(im, l, r, y, vals);
-}
-
-/*
 =item i_glinf(im, l, r, y, colors)
 
 =category Drawing
