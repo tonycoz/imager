@@ -353,6 +353,10 @@ typedef i_img_dim
 typedef i_image_data_alloc_t *
 (*i_f_data_t)(i_img *im, i_data_layout_t layout, i_img_bits_t bits, unsigned flags,
               void **p, size_t *size, int *extra);
+
+typedef int
+(*i_f_imageop_t)(i_img *im, const char *opname, void *params);
+
 /*
 =item i_img_vtable
 =category Data Types
@@ -373,9 +377,11 @@ initialize these between calling i_img_alloc() and i_img_init().
 
 =item *
 
-i_f_gpal, i_f_ppal, i_f_addcolors, i_f_getcolors, i_f_colorcount,
-i_f_maxcolors, i_f_findcolor, i_f_setcolors - implementations for each
-paletted image function.
+i_f_psamp - implements psamp() for this image.
+
+=item *
+
+i_f_psampf - implements psamp() for this image.
 
 =item *
 
@@ -392,11 +398,17 @@ i_f_psamp_bits - implements i_psamp_bits() for this image.
 
 =item *
 
-i_f_psamp - implements psamp() for this image.
+i_f_data - implements i_img_data() for this image.
 
 =item *
 
-i_f_psampf - implements psamp() for this image.
+i_f_imageop - future use, I hope.
+
+=item *
+
+i_f_gpal, i_f_ppal, i_f_addcolors, i_f_getcolors, i_f_colorcount,
+i_f_maxcolors, i_f_findcolor, i_f_setcolors - implementations for each
+paletted image function.
 
 =back
 
@@ -421,6 +433,8 @@ typedef struct i_img_vtable_struct {
   i_f_psamp_bits_t i_f_psamp_bits;
 
   i_f_data_t i_f_data;
+
+  i_f_imageop_t i_f_imageop;
 
   /* only valid for type == i_palette_type */
   i_f_gpal_t i_f_gpal;

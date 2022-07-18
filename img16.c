@@ -69,6 +69,8 @@ vtable_16bit = {
 
   i_data_16,
 
+  NULL, /* i_f_imageop */
+
   NULL, /* i_f_gpal */
   NULL, /* i_f_ppal */
   NULL, /* i_f_addcolors */
