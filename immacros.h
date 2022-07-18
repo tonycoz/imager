@@ -199,7 +199,6 @@ This can safely accept a NULL pointer.
 
 #define i_ppixf(im, x, y, val) \
   ((i_psampf((im), (x), (x)+1, (y), (val)->channel, NULL, (im)->channels) > 0) ? 0 : -1)
-#define i_glin(im, l, r, y, val) (((im)->vtbl->i_f_glin)(im, l, r, y, val))
 #define i_glinf(im, l, r, y, val) (((im)->vtbl->i_f_glinf)(im, l, r, y, val))
 
 #define i_gsamp(im, l, r, y, samps, chans, count) \

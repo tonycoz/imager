@@ -271,23 +271,6 @@ int
 }
 
 /*
-=item i_glin(im, l, r, y, colors)
-
-=category Drawing
-
-Retrieves (r-l) pixels starting from (l,y) into I<colors>.
-
-Returns the number of pixels retrieved.
-
-=cut
-*/
-
-i_img_dim
-(i_glin)(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, i_color *vals) {
-  return i_glin(im, l, r, y, vals);
-}
-
-/*
 =item i_glinf(im, l, r, y, colors)
 
 =category Drawing
