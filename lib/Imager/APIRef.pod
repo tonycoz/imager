@@ -2803,6 +2803,30 @@ initialize the C<im_get_context> pointer at some point.
 =for comment
 From: imext.c
 
+=item im_io_get_max_mmap_size()
+
+  size_t size = im_io_get_max_mmap_size(aIMCTX);
+  size_t size = i_io_get_max_mmap_size();
+
+Fetch the maximum address space than can be mapped by i_io_mmap() for
+files.
+
+
+=for comment
+From: iolayer.c
+
+=item im_io_set_max_mmap_size()
+
+  int ok size = im_io_set_max_mmap_size(aIMCTX, new_size);
+  int ok size = i_io_set_max_mmap_size(new_size);
+
+Set the maximum address space than can be mapped by i_io_mmap() for
+files.
+
+
+=for comment
+From: iolayer.c
+
 
 
 =back

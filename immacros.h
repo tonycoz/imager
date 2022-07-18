@@ -292,6 +292,9 @@ Return the reference count for the image.
 #define io_new_cb(p, readcb, writecb, seekcb, closecb, destroycb) \
   im_io_new_cb(aIMCTX, (p), (readcb), (writecb), (seekcb), (closecb), (destroycb))
 
+#define i_io_set_max_mmap_size(size) im_io_set_max_mmap_size(aIMCTX, (size))
+#define i_io_get_max_mmap_size()     im_io_get_max_mmap_size(aIMCTX)
+
 /*
 =item IM_DEPRECATED(name)
 

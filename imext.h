@@ -249,6 +249,9 @@ extern im_ext_funcs *imager_function_ext_table;
 
 #define im_decode_exif(im, data, len) ((im_extt->f_im_decode_exif)((im), (data), (len)))
 
+#define im_io_get_max_mmap_size(ctx) ((im_extt->f_im_io_get_max_mmap_size)(ctx))
+#define im_io_set_max_mmap_size(ctx, newsize) ((im_extt->f_im_io_set_max_mmap_size)((ctx), (newsize)))
+
 #ifdef IMAGER_LOG
 #ifndef IMAGER_NO_CONTEXT
 #define mm_log(x) { i_lhead(__FILE__,__LINE__); i_loog x; } 

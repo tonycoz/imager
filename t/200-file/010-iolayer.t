@@ -975,6 +975,16 @@ SKIP:
   }
 }
 
+{
+  my $size = Imager::IO->get_max_mmap_size;
+  ok($size, "got max_mmap_size");
+  ok(Imager::IO->set_max_mmap_size(100),
+     "set max mmap size");
+  is(Imager::IO->get_max_mmap_size(), 100,
+     "fetched size matches set size");
+  Imager::IO->set_max_mmap_size($size);
+}
+
 Imager->close_log;
 
 unless ($ENV{IMAGER_KEEP_FILES}) {

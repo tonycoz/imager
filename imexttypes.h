@@ -249,6 +249,8 @@ typedef struct {
   int (*f_im_decode_exif)(i_img *im, const unsigned char *data, size_t length);
 
   /* IMAGER_API_LEVEL 11 functions will be added here */
+  int (*f_im_io_set_max_mmap_size)(im_context_t, size_t);
+  size_t (*f_im_io_get_max_mmap_size)(im_context_t);
 } im_ext_funcs;
 
 #define PERL_FUNCTION_TABLE_NAME "Imager::__ext_func_table"

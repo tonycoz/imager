@@ -370,6 +370,26 @@ Dump the internal buffering state of the I/O object to C<stderr>.
 
 =back
 
+=head2 CLASS METHODS
+
+=over
+
+=item get_max_mmap_size()
+
+  my $size = Imager::IO->get_max_mmap_size();
+
+Fetch the maximum allowed address space than can be used to map a file
+into memory.
+
+=item set_max_mmap_size()
+
+  my $ok = Imager::IO->get_max_mmap_size($new_size);
+
+Set the maximum allowed address space than can be used to map a file
+into memory.
+
+=back
+
 =head1 AUTHOR
 
 Tony Cook <tonyc@cpan.org>
