@@ -44,4 +44,7 @@ extern int i_io_close(io_glue *ig);
 extern int i_io_set_buffered(io_glue *ig, int buffered);
 extern ssize_t i_io_gets(io_glue *ig, char *, size_t, int);
 
+int im_io_set_max_mmap_size(pIMCTX, size_t new_size);
+size_t im_io_get_max_mmap_size(pIMCTX);
+
 #endif /* _IOLAYER_H_ */

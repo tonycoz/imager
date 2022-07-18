@@ -218,9 +218,11 @@ im_ext_funcs imager_function_table =
     i_img_color_channels,
 
     /* level 10 */
-    im_decode_exif
+    im_decode_exif,
 
     /* level 11 */
+    im_io_set_max_mmap_size,
+    im_io_get_max_mmap_size
   };
 
 /* in general these functions aren't called by Imager internally, but

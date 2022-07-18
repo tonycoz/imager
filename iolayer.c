@@ -2095,12 +2095,17 @@ fd_size(io_glue *igo) {
 static int
 fd_mmap(io_glue *igo, const void **pdata, size_t *psize) {
 #if defined(IMAGER_POSIX_MMAP)
+  dIMCTXio(igo);
   io_fdseek *ig = (io_fdseek *)igo;
   void *data;
   if (!ig->size_set)
     fd_size(igo);
   if (ig->size <= 0)
     return 0;
+  if (ig->size > aIMCTX->max_mmap_size) {
+    im_push_error(aIMCTX, 0, "file larger than max mmap size");
+    return 0;
+  }
   data = mmap(NULL, ig->size, PROT_READ, MAP_SHARED, ig->fd, 0);
   if (!data) {
     return 0;
@@ -2142,6 +2147,48 @@ fd_destroy(io_glue *igo) {
   }
 #endif
   
+}
+
+/*
+=item im_io_get_max_mmap_size()
+
+  size_t size = im_io_get_max_mmap_size(aIMCTX);
+  size_t size = i_io_get_max_mmap_size();
+
+Fetch the maximum address space than can be mapped by i_io_mmap() for
+files.
+
+=cut
+*/
+
+size_t
+im_io_get_max_mmap_size(pIMCTX) {
+  return aIMCTX->max_mmap_size;
+}
+
+/*
+=item im_io_set_max_mmap_size()
+
+  int ok size = im_io_set_max_mmap_size(aIMCTX, new_size);
+  int ok size = i_io_set_max_mmap_size(new_size);
+
+Set the maximum address space than can be mapped by i_io_mmap() for
+files.
+
+=cut
+*/
+
+int
+im_io_set_max_mmap_size(pIMCTX, size_t new_size) {
+  im_clear_error(aIMCTX);
+
+  if (new_size > im_size_t_max / 2) {
+    im_push_error(aIMCTX, 0, "set_max_map_size: new size too large (> half address space)");
+    return 0;
+  }
+  aIMCTX->max_mmap_size = new_size;
+
+  return 1;
 }
 
 

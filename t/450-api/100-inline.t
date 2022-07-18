@@ -524,17 +524,30 @@ test_map_fd(Imager::IO io, SV *sv) {
   check = SvPV(sv, len);
   if (i_io_mmap(io, &p, &size)) {
     if (memcmp(p, check, len) != 0) {
-      fprintf(stderr, "mapped buffer doesn't match expected");
+      fprintf(stderr, "mapped buffer doesn't match expected\n");
       ok = 0;
     }
     if (!i_io_munmap(io)) {
-      fprintf(stderr, "Failed to munmap memory buffer");
+      fprintf(stderr, "Failed to munmap memory buffer\n");
       ok = 0;
     }
   }
   else {
-    fprintf(stderr, "Failed to mmap memory buffer");
+    fprintf(stderr, "Failed to mmap memory buffer\n");
     ok = 0;
+  }
+
+  if (ok) {
+    size_t maxmmap = i_io_get_max_mmap_size();
+    if (!(ok = i_io_set_max_mmap_size(10))) {
+      fprintf(stderr, "i_io_set_max_mmap_size(10) failed\n");
+    }
+    if (ok) {
+      if (!(ok = !i_io_mmap(io, &p, &len))) {
+        fprintf(stderr, "i_io_mmap() succeeded on too large a file\n");
+      }
+    }
+    i_io_set_max_mmap_size(maxmmap);
   }
 
   return ok;

@@ -2018,6 +2018,14 @@ off_t
 i_io_size(ig)
         Imager::IO ig
 
+size_t
+i_io_get_max_mmap_size(cls)
+    C_ARGS:
+
+size_t
+i_io_set_max_mmap_size(cls, size_t new_size)
+    C_ARGS: new_size
+
 MODULE = Imager		PACKAGE = Imager
 
 PROTOTYPES: ENABLE
