@@ -37,7 +37,6 @@ typedef struct {
 #define MASKEXT(im) ((i_img_mask_ext *)((im)->ext_data))
 
 static void i_destroy_masked(i_img *im);
-static i_img_dim i_glin_masked(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, i_color *vals);
 static i_img_dim i_glinf_masked(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, i_fcolor *vals);
 static i_img_dim i_gsamp_masked(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, i_sample_t *samp, 
                           int const *chans, int chan_count);
@@ -66,7 +65,6 @@ static const i_img_vtable
 vtable_mask = {
   IMAGER_API_LEVEL,
   
-  i_glin_masked, /* i_f_glin */
   i_glinf_masked, /* i_f_glinf */
   i_gsamp_masked, /* i_f_gsamp */
   i_gsampf_masked, /* i_f_gsampf */
@@ -188,19 +186,6 @@ static void i_destroy_masked(i_img *im) {
     i_img_destroy(ext->mask);
   myfree(ext->samps);
   myfree(im->ext_data);
-}
-
-static i_img_dim i_glin_masked(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, i_color *vals) {
-  i_img_mask_ext *ext = MASKEXT(im);
-  if (y >= 0 && y < im->ysize && l < im->xsize && l >= 0) {
-    if (r > im->xsize)
-      r = im->xsize;
-    return i_glin(ext->targ, l + ext->xbase, r + ext->xbase, 
-                  y + ext->ybase, vals);
-  }
-  else {
-    return 0;
-  }
 }
 
 static i_img_dim i_glinf_masked(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, i_fcolor *vals) {

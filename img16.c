@@ -29,7 +29,6 @@ sample image type to work with.
 #include <inttypes.h>
 #endif
 
-static i_img_dim i_glin_d16(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, i_color *vals);
 static i_img_dim i_glinf_d16(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, i_fcolor *vals);
 static i_img_dim i_gsamp_d16(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, i_sample_t *samps, 
                        int const *chans, int chan_count);
@@ -58,7 +57,6 @@ static const i_img_vtable
 vtable_16bit = {
   IMAGER_API_LEVEL,
   
-  i_glin_d16, /* i_f_glin */
   i_glinf_d16, /* i_f_glinf */
   i_gsamp_d16, /* i_f_gsamp */
   i_gsampf_d16, /* i_f_gsampf */
@@ -221,31 +219,6 @@ i_img_to_rgb16(i_img *im) {
   myfree(line);
 
   return targ;
-}
-
-static i_img_dim
-i_glin_d16(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, i_color *vals) {
-  int ch;
-  i_img_dim count, i;
-  i_img_dim off;
-  unsigned totalch = im->channels + im->extrachannels;
-
-  if (y >=0 && y < im->ysize && l < im->xsize && l >= 0) {
-    if (r > im->xsize)
-      r = im->xsize;
-    off = (l+y*im->xsize) * totalch;
-    count = r - l;
-    for (i = 0; i < count; ++i) {
-      for (ch = 0; ch < im->channels; ++ch) {
-	vals[i].channel[ch] = GET16as8(im->idata, off+ch);
-      }
-      off += totalch;
-    }
-    return count;
-  }
-  else {
-    return 0;
-  }
 }
 
 static i_img_dim

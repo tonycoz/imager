@@ -28,7 +28,6 @@ Basic 8-bit/sample paletted image
 static int i_ppix_p(i_img *im, i_img_dim x, i_img_dim y, const i_color *val);
 
 #define PALEXT(im) ((i_img_pal_ext*)((im)->ext_data))
-static i_img_dim i_glin_p(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, i_color *vals);
 static i_img_dim i_gsamp_p(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, i_sample_t *samps, int const *chans, int chan_count);
 static i_img_dim i_gpal_p(i_img *pm, i_img_dim l, i_img_dim r, i_img_dim y, i_palidx *vals);
 static i_img_dim i_ppal_p(i_img *pm, i_img_dim l, i_img_dim r, i_img_dim y, const i_palidx *vals);
@@ -53,7 +52,6 @@ static const i_img_vtable
 vtable_pal = {
   IMAGER_API_LEVEL,
   
-  i_glin_p, /* i_f_glin */
   i_glinf_fp, /* i_f_glinf */
   i_gsamp_p, /* i_f_gsamp */
   i_gsampf_fp, /* i_f_gsampf */
@@ -325,35 +323,6 @@ i_ppix_p(i_img *im, i_img_dim x, i_img_dim y, const i_color *val) {
     }
     else
       return -1;
-  }
-}
-
-/*
-=item i_glinp(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, i_color *vals)
-
-Retrieve a row of pixels.
-
-=cut
-*/
-static i_img_dim i_glin_p(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, i_color *vals) {
-  if (y >= 0 && y < im->ysize && l < im->xsize && l >= 0) {
-    int palsize = PALEXT(im)->count;
-    i_color *pal = PALEXT(im)->pal;
-    i_palidx *data;
-    i_img_dim count, i;
-    if (r > im->xsize)
-      r = im->xsize;
-    data = ((i_palidx *)im->idata) + l + y * im->xsize;
-    count = r - l;
-    for (i = 0; i < count; ++i) {
-      i_palidx which = *data++;
-      if (which < palsize)
-        vals[i] = pal[which];
-    }
-    return count;
-  }
-  else {
-    return 0;
   }
 }
 
