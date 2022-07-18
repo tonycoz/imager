@@ -502,7 +502,7 @@ release_myfree_alloc(i_image_data_alloc_t *alloc) {
 Create an image data allocation object that releases the memory block
 supplied using myfree().
 
-This is used to generate the L<i_image_data_alloc_t> object returned
+This is used to generate the L</i_image_data_alloc_t> object returned
 by i_img_data() when data is synthesized.
 
 =cut

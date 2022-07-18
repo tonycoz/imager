@@ -553,6 +553,82 @@ test_map_fd(Imager::IO io, SV *sv) {
   return ok;
 }
 
+int
+test_refcount(Imager im) {
+  i_img_refcnt_inc(im);
+  i_img_destroy(im);
+  return i_img_refcnt(im);
+}
+
+int
+check_image(Imager im) {
+  return i_img_check_entries(im);
+}
+
+/* source image just used to grab a vtable */
+int
+new_image(Imager im) {
+  i_img *im2 = i_img_new(im->vtbl, 10, 10, 3, 0, i_8_bits);
+  im2->bytes = 10 * 10 * 3;
+  im2->idata = mymalloc(im2->bytes);
+  i_img_init(im2);
+  i_img_destroy(im2);
+  return 1;
+}
+
+Imager
+new_8_extra(i_img_dim x, i_img_dim y, int channels, int extra) {
+  return i_img_8_new_extra(x, y, channels, extra);
+}
+
+Imager
+new_16_extra(i_img_dim x, i_img_dim y, int channels, int extra) {
+  return i_img_16_new_extra(x, y, channels, extra);
+}
+
+Imager
+new_double_extra(i_img_dim x, i_img_dim y, int channels, int extra) {
+  return i_img_double_new_extra(x, y, channels, extra);
+}
+
+int
+test_data_alloc(Imager im) {
+  i_image_data_alloc_t *alloc;
+  void *somedata = mymalloc(100);
+  int start_refcnt = i_img_refcnt(im);
+  alloc = i_new_image_data_alloc_free(im, somedata);
+  /* yes, failing the test leaks */
+  if (!alloc) {
+    fprintf(stderr, "no object from i_new_image_data_alloc_free\n");
+    return 0;
+  }
+  i_img_data_release(alloc);
+  alloc = i_new_image_data_alloc_def(im);
+  if (!alloc) {
+    fprintf(stderr, "no object from i_new_image_data_alloc_def\n");
+    return 0;
+  }
+  if (i_img_refcnt(im) == start_refcnt) {
+    fprintf(stderr, "no change in image refcnt from i_new_image_data_alloc_def\n");
+    return 0;
+  }
+  i_img_data_release(alloc);
+  if (i_img_refcnt(im) != start_refcnt) {
+    fprintf(stderr, "refcnt not restored after release\n");
+    return 0;
+  }
+  return 1;
+}
+
+int
+test_zmalloc() {
+  void *data = mymalloc(100);
+  myfree(data);
+  data = myzmalloc_file_line(100, __FILE__, __LINE__);
+  myfree(data);
+  return 1;
+}
+
 EOS
 
 my $im = Imager->new(xsize=>50, ysize=>50);
@@ -796,6 +872,63 @@ SKIP:
   my $io = Imager::IO->new_fd(fileno($fh));
   ok(test_map_fd($io, $buf), "test we can map fd io");
 }
+
+{
+  my $im = Imager->new(xsize => 10, ysize => 12);
+  is(test_refcount($im), 1, "check refcounts visible to API");
+}
+
+{
+  my $im = Imager->new(xsize => 10, ysize => 12);
+  ok(check_image($im), "check i_img_check_entries visible");
+}
+
+{
+  my $im = Imager->new(xsize => 10, ysize => 12);
+  ok(new_image($im), "check i_img_new() visible in API");
+}
+
+{
+  my $im = new_8_extra(10, 12, 3, 4);
+  ok($im, "make 8-bit extra channel image");
+  is($im->bits, 8, "got an 8 bit image");
+  is($im->extrachannels, 4, "got the extra channels");
+}
+{
+  my $im = new_16_extra(10, 12, 3, 4);
+  ok($im, "make 16-bit extra channel image");
+  is($im->bits, 16, "got an 16 bit image");
+  is($im->extrachannels, 4, "got the extra channels");
+}
+{
+  my $im = new_double_extra(10, 12, 3, 4);
+  ok($im, "make double extra channel image");
+  is($im->bits, "double", "got an double image");
+  is($im->extrachannels, 4, "got the extra channels");
+}
+
+{
+  my $im = Imager->new(xsize => 100, ysize => 100);
+  ok(test_data_alloc($im), "test data alloc apis visible");
+}
+
+ok(test_zmalloc(), "calls to myzmalloc");
+
+=item APIs to add TODO
+
+i_img_data_fallback(
+i_gsamp_bits_fb
+i_psamp_bits_fb
+i_gsampf_fp
+
+i_addcolors_forward
+i_getcolors_forward
+i_setcolors_forward
+i_colorcount_forward
+i_maxcolors_forward
+i_findcolor_forward
+
+=cut
 
 done_testing();
 

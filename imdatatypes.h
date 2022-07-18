@@ -501,9 +501,11 @@ then this image could be an interface to some other implementation.
 
 =item *
 
-C<idata> - the image data.  This should not be directly accessed.  A new
-image implementation can use this to store its image data.
-i_img_destroy() will myfree() this pointer if it's non-null.
+C<idata> - the image data.  This should not be directly accessed.  A
+new image implementation can use this to store its image data.
+L</i_img_destroy()> will myfree() this pointer if it's non-null.
+Non-image implementors can use L</i_img_data()> to fetch or optionally
+synthesize raw image data.
 
 =item *
 
