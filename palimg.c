@@ -65,6 +65,8 @@ vtable_pal = {
   
   i_data_pal,
 
+  NULL, /* i_f_imageop */
+
   i_gpal_p, /* i_f_gpal */
   i_ppal_p, /* i_f_ppal */
   i_addcolors_p, /* i_f_addcolors */
