@@ -742,8 +742,11 @@ EOS
 typedef $f16type i_fsample16_t;
 EOS
   }
-  print $config <<'EOS';
+  print $config <<"EOS";
 #endif
+
+/* size of pointers, for use in preprocessing */
+#define IMAGER_PTR_SIZE $Config{ptrsize}
 EOS
   print $config <<'EOS';
 

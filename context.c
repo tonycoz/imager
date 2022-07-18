@@ -47,6 +47,12 @@ im_context_new(void) {
 
   ctx->file_magic = NULL;
 
+#if IMAGER_PTR_SIZE > 4
+  ctx->max_mmap_size = 0x80000000UL; /* 2GB */
+#else
+  ctx->max_mmap_size = 0x01000000UL; /* 16MB */
+#endif
+
   ctx->refcount = 1;
 
 #ifdef IMAGER_TRACE_CONTEXT
@@ -204,6 +210,8 @@ im_context_clone(im_context_t ctx, const char *where) {
   nctx->max_width = ctx->max_width;
   nctx->max_height = ctx->max_height;
   nctx->max_bytes = ctx->max_bytes;
+
+  nctx->max_mmap_size = ctx->max_mmap_size;
 
   nctx->refcount = 1;
 
