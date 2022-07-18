@@ -2624,6 +2624,49 @@ From: tags.c
 
 =over
 
+=item i_addcolors_forward(i_img *im, const i_color *colors, int count)
+
+
+=for comment
+From: image.c
+
+=item i_colorcount_forward(i_img *im)
+
+
+=for comment
+From: image.c
+
+=item i_findcolor_forward(i_img *im, const i_color *color, i_palidx *entry)
+
+
+=for comment
+From: image.c
+
+=item i_getcolors_forward(i_img *im, int i, i_color *color, int count)
+
+
+=for comment
+From: image.c
+
+=item i_gsamp_bits_fb
+
+Provides a fallback for the i_gsamp_bits() entry in the image virtual table.
+
+
+=for comment
+From: image.c
+
+=item i_gsampf_fp()
+
+  count = i_gsampf_fp(im, left, right, y, samps, chans, chan_count);
+
+Implements i_gsampf() for an image in terms of the image's
+implementation of i_gsamp().
+
+
+=for comment
+From: image.c
+
 =item i_image_data_alloc_t
 
 i_img_data() returns a pointer to this mostly opaque type.
@@ -2737,6 +2780,32 @@ implemented and this will always be set to zero.
 =for comment
 From: immacros.h
 
+=item i_img_data_fallback()
+
+Fallback for i_img_data().  This is used by image implementations of
+i_img_data()/C<i_f_data> to produce synthesized data.
+
+  i_img_data_fallback(im, layout, bits, flags, pptr, psize, pextrachannels)
+
+The intent this is used something like:
+
+ i_image_alloc_t *my_img_data(...) {
+   if (layout, bits, extrachannels matches image layout) {
+     ... populate *pptr, *size, *extrachannels
+     ... increment image refcount
+     ... return new i_image_alloc_t.
+   }
+   else  {
+     return i_img_data_fallback(im, layout, bits, flags, pptr, psize, pextrachannels);
+   }
+ }
+
+and my_img_data goes into the image's virtual table.
+
+
+=for comment
+From: data.c
+
 =item i_img_refcnt_inc()
 
 Increment the reference count of the image.
@@ -2744,6 +2813,12 @@ Increment the reference count of the image.
 Aborts the program if the reference count overflows.
 
 This is unrelated to Perl C<SV> reference counts.
+
+
+=for comment
+From: image.c
+
+=item i_maxcolors_forward(i_img *im)
 
 
 =for comment
@@ -2760,6 +2835,31 @@ by i_img_data() when data is synthesized.
 
 =for comment
 From: data.c
+
+=item i_psamp_bits_fb
+
+Provides a fallback for the i_psamp_bits() entry in the image virtual table.
+
+
+=for comment
+From: image.c
+
+=item i_psampf_fp()
+
+  count = i_psampf_fp(im, left, right, y, samps, chans, chan_count);
+
+Implements i_psampf() for an image in terms of the image's
+implementation of i_psamp().
+
+
+=for comment
+From: image.c
+
+=item i_setcolors_forward(i_img *im, int i, const i_color *color, int count)
+
+
+=for comment
+From: image.c
 
 =item i_utf8_advance(char **p, size_t *len)
 

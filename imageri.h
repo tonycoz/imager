@@ -16,21 +16,6 @@ extern int i_ppixf_fp(i_img *im, i_img_dim x, i_img_dim y, const i_fcolor *pix);
 extern int i_gpixf_fp(i_img *im, i_img_dim x, i_img_dim y, i_fcolor *pix);
 extern i_img_dim i_plinf_fp(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, const i_fcolor *pix);
 extern i_img_dim i_glinf_fp(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, i_fcolor *pix);
-extern i_img_dim i_gsampf_fp(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, i_fsample_t *samp,
-                       int const *chans, int chan_count);
-
-/* wrapper functions that forward palette calls to the underlying image,
-   assuming the underlying image is the first pointer in whatever
-   ext_data points at
-*/
-extern int i_addcolors_forward(i_img *im, const i_color *, int count);
-extern int i_getcolors_forward(i_img *im, int i, i_color *, int count);
-extern int i_colorcount_forward(i_img *im);
-extern int i_maxcolors_forward(i_img *im);
-extern int i_findcolor_forward(i_img *im, const i_color *color, 
-			       i_palidx *entry);
-extern int i_setcolors_forward(i_img *im, int index, const i_color *colors, 
-                               int count);
 
 #define SampleFTo16(num) ((int)((num) * 65535.0 + 0.5))
 /* we add that little bit to avoid rounding issues */
