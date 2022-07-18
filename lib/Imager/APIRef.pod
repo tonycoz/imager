@@ -856,17 +856,21 @@ Returns the number of pixels set.
 =for comment
 From: image.c
 
-=item i_plinf(im, C<left>, C<right>, C<fcolors>)
+=item i_plinf()
 
+  i_img *im = ...;
+  i_img_dim l, r, y;
+  i_fcolor vals[...] = { ... colors ... };
+  i_img_dim count = i_plinf(im, l, r, y, vals);
 
-Sets (right-left) pixels starting from (left,y) using (right-left)
-floating point colors from C<fcolors>.
+Sets (r-l) pixels starting from (l,y) using (r-l) values from
+I<colors>.
 
 Returns the number of pixels set.
 
 
 =for comment
-From: imext.c
+From: image.c
 
 =item i_poly_aa_cfill_m(im, count, x, y, mode, fill)
 

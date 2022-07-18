@@ -8,7 +8,6 @@ static int i_gpix_d(i_img *im, i_img_dim x, i_img_dim y, i_color *val);
 static i_img_dim i_glin_d(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, i_color *vals);
 static int i_gpixf_d(i_img *im, i_img_dim x, i_img_dim y, i_fcolor *val);
 static i_img_dim i_glinf_d(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, i_fcolor *vals);
-static i_img_dim i_plinf_d(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, const i_fcolor *vals);
 static i_img_dim i_gsamp_d(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, i_sample_t *samps, const int *chans, int chan_count);
 static i_img_dim i_gsampf_d(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, i_fsample_t *samps, const int *chans, int chan_count);
 static i_img_dim i_psamp_d(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, const i_sample_t *samps, const int *chans, int chan_count);
@@ -21,7 +20,6 @@ static const i_img_vtable
 vtable_8bit = {
   IMAGER_API_LEVEL,
   
-  i_plinf_d, /* i_f_plinf */
   i_gpix_d, /* i_f_gpix */
   i_gpixf_d, /* i_f_gpixf */
   i_glin_d, /* i_f_glin */
@@ -257,49 +255,6 @@ i_glinf_d(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, i_fcolor *vals) {
     for (i = 0; i < count; ++i) {
       for (ch = 0; ch < im->channels; ++ch)
 	vals[i].channel[ch] = Sample8ToF(data[ch]);
-      data += totalch;
-    }
-    return count;
-  }
-  else {
-    return 0;
-  }
-}
-
-/*
-=item i_plinf_d(im, l, r, y, vals)
-
-Writes a line of data into the image, using the pixels at vals.
-
-The line runs from (l,y) inclusive to (r,y) non-inclusive
-
-vals should point at (r-l) pixels.
-
-l should never be less than zero (to avoid confusion about where to
-get the pixels in vals).
-
-Returns the number of pixels copied (eg. if r, l or y is out of range)
-
-=cut
-*/
-static
-i_img_dim
-i_plinf_d(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, const i_fcolor *vals) {
-  int ch;
-  i_img_dim count, i;
-  unsigned char *data;
-  unsigned totalch = im->channels + im->extrachannels;
-  
-  if (y >=0 && y < im->ysize && l < im->xsize && l >= 0) {
-    if (r > im->xsize)
-      r = im->xsize;
-    data = im->idata + (l+y*im->xsize) * totalch;
-    count = r - l;
-    for (i = 0; i < count; ++i) {
-      for (ch = 0; ch < im->channels; ++ch) {
-	if (im->ch_mask & (1 << ch)) 
-	  data[ch] = SampleFTo8(vals[i].channel[ch]);
-      }
       data += totalch;
     }
     return count;
