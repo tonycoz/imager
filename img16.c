@@ -397,9 +397,7 @@ i_psamp_bits_d16(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, unsigned cons
   i_img_dim off;
 
   if (bits != 16) {
-    dIMCTXim(im);
-    i_push_error(0, "Invalid bits for 16-bit image");
-    return -1;
+    return i_psamp_bits_fb(im, l, r, y, samps, chans, chan_count, bits);
   }
 
   if (y >=0 && y < im->ysize && l < im->xsize && l >= 0) {
