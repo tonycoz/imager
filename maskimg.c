@@ -37,7 +37,6 @@ typedef struct {
 #define MASKEXT(im) ((i_img_mask_ext *)((im)->ext_data))
 
 static void i_destroy_masked(i_img *im);
-static i_img_dim i_plinf_masked(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, const i_fcolor *vals);
 static int i_gpix_masked(i_img *im, i_img_dim x, i_img_dim y, i_color *pix);
 static int i_gpixf_masked(i_img *im, i_img_dim x, i_img_dim y, i_fcolor *pix);
 static i_img_dim i_glin_masked(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, i_color *vals);
@@ -68,7 +67,6 @@ static const i_img_vtable
 vtable_mask = {
   IMAGER_API_LEVEL,
   
-  i_plinf_masked, /* i_f_plinf */
   i_gpix_masked, /* i_f_gpix */
   i_gpixf_masked, /* i_f_gpixf */
   i_glin_masked, /* i_f_glin */
@@ -193,83 +191,6 @@ static void i_destroy_masked(i_img *im) {
     i_img_destroy(ext->mask);
   myfree(ext->samps);
   myfree(im->ext_data);
-}
-
-/*
-=item i_plinf_masked(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, const i_fcolor *vals)
-
-Write a row of data to a masked image.
-
-Internal function.
-
-=cut
-*/
-static i_img_dim i_plinf_masked(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, const i_fcolor *vals) {
-  i_img_mask_ext *ext = MASKEXT(im);
-  if (y >= 0 && y < im->ysize && l < im->xsize && l >= 0) {
-    if (r > im->xsize)
-      r = im->xsize;
-    if (ext->mask) {
-      i_img_dim i;
-      int simple = 0;
-      i_sample_t *samps = ext->samps;
-      i_img_dim w = r - l;
-
-      i_gsamp(ext->mask, l, r, y, samps, NULL, 1);
-      if (w < 10)
-        simple = 1;
-      else {
-        /* the idea is to make a fast scan to see how often the state
-           changes */
-        i_img_dim changes = 0;
-        for (i = 0; i < w-1; ++i)
-          if (!samps[i] != !samps[i+1])
-            ++changes;
-        if (changes > w/3) /* just rough */
-          simple = 1;
-      }
-      if (simple) {
-        /* we'd be calling a usually more complicated i_plin function
-           almost as often as the usually simple i_ppix(), so just
-           do a simple scan
-        */
-        for (i = 0; i < w; ++i) {
-          if (samps[i])
-            i_ppixf(ext->targ, l + i + ext->xbase, y + ext->ybase, vals+i);
-        }
-        im->type = ext->targ->type;
-        return r-l;
-      }
-      else {
-        /* the scan above indicates there should be some contiguous 
-           regions, look for them and render
-        */
-        i_img_dim start;
-        i = 0;
-        while (i < w) {
-          while (i < w && !samps[i])
-            ++i;
-          start = i;
-          while (i < w && samps[i])
-            ++i;
-          if (i != start)
-            i_plinf(ext->targ, l + start + ext->xbase, l + i + ext->xbase, 
-                    y + ext->ybase, vals + start);
-        }
-        im->type = ext->targ->type;
-        return w;
-      }
-    }
-    else {
-      i_img_dim result = i_plinf(ext->targ, l + ext->xbase, r + ext->xbase, 
-                           y + ext->ybase, vals);
-      im->type = ext->targ->type;
-      return result;
-    }
-  }
-  else {
-    return 0;
-  }
 }
 
 /*
