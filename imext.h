@@ -286,6 +286,11 @@ extern im_ext_funcs *imager_function_ext_table;
 #define i_maxcolors_forward (im_extt->f_i_maxcolors_forward)
 #define i_findcolor_forward (im_extt->f_i_findcolor_forward)
 
+#define i_gslin_fallback (im_extt->f_i_gslin_fallback)
+#define i_gslinf_fallback (im_extt->f_i_gslinf_fallback)
+#define i_pslin_fallback (im_extt->f_i_pslin_fallback)
+#define i_pslinf_fallback (im_extt->f_i_pslinf_fallback)
+
 #ifdef IMAGER_LOG
 #ifndef IMAGER_NO_CONTEXT
 #define mm_log(x) { i_lhead(__FILE__,__LINE__); i_loog x; } 

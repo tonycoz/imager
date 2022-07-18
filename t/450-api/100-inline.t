@@ -775,10 +775,10 @@ make_vtbl(void) {
       i_gsamp_bits_fb,
       i_psamp_bits_fb,
 
-      NULL,
-      NULL,
-      NULL,
-      NULL,
+      i_gslin_fallback,
+      i_gslinf_fallback,
+      i_pslin_fallback,
+      i_pslinf_fallback,
 
       i_img_data_fallback,
       NULL, /* i_f_imageop */
@@ -1180,6 +1180,7 @@ ok(test_zmalloc(), "calls to myzmalloc");
   is($im->setsamples(data => [ 0, 1023, 1023 ], x => 7, y => 4, type => "10bit"),
      3, "psamp_bits");
   ok($im->data(flags => "synth"), "check we can fetch data");
+  ok(check_image($im), "check vtable on custom image");
 }
 
 ok(test_forwarders(), "test paletted forwarders are set");

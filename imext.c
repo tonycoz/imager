@@ -243,7 +243,11 @@ im_ext_funcs imager_function_table =
     i_setcolors_forward,
     i_colorcount_forward,
     i_maxcolors_forward,
-    i_findcolor_forward
+    i_findcolor_forward,
+    i_gslin_fallback,
+    i_gslinf_fallback,
+    i_pslin_fallback,
+    i_pslinf_fallback
   };
 
 /* in general these functions aren't called by Imager internally, but
