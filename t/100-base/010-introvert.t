@@ -1216,6 +1216,23 @@ SKIP:
   }
 }
 
+
+{
+  my $im = Imager->new(xsize => 10, ysize => 10);
+
+  my @basesamps = map { (1 << $_) - 1 } 1 .. 12;
+
+  is($im->setsamples(y => 1, x => 2, data => \@basesamps, type => '12bit'), 12,
+     "set 12-bit samples");
+  my @samps = $im->getsamples(y => 1, x => 2, width => 4, type => '12bit');
+  is(@samps, 12, "got 12 samples back");
+  is($samps[11], 4095, "final sample should have scaled to max");
+  is($im->setsamples(y => 2, x => 3, data => \@samps, type => '12bit'), 12,
+     "set again");
+  is_deeply([ $im->getsamples(y => 2, x => 3, width => 4, type => '12bit') ], \@samps,
+            "check they match");
+}
+
 done_testing();
 
 Imager->close_log();
