@@ -269,7 +269,23 @@ extern im_ext_funcs *imager_function_ext_table;
 #define myzmalloc(size) ((im_extt->f_myzmalloc)(size))
 #define myzmalloc_file_line(size, file, lineno) \
   ((im_extt->f_myzmalloc_file_line)((size), (file), (lineno)))
-  
+
+/* these are a bit special, mostly the APIs won't be called directly,
+   but used to initialize a vtable.
+*/
+#define i_gsampf_fp (im_extt->f_i_gsampf_fp)
+#define i_psampf_fp (im_extt->f_i_psampf_fp)
+#define i_gsamp_bits_fb (im_extt->f_i_gsamp_bits_fb)
+#define i_psamp_bits_fb (im_extt->f_i_psamp_bits_fb)
+#define i_img_data_fallback (im_extt->f_i_img_data_fallback)
+
+#define i_addcolors_forward (im_extt->f_i_addcolors_forward)
+#define i_getcolors_forward (im_extt->f_i_getcolors_forward)
+#define i_setcolors_forward (im_extt->f_i_setcolors_forward)
+#define i_colorcount_forward (im_extt->f_i_colorcount_forward)
+#define i_maxcolors_forward (im_extt->f_i_maxcolors_forward)
+#define i_findcolor_forward (im_extt->f_i_findcolor_forward)
+
 #ifdef IMAGER_LOG
 #ifndef IMAGER_NO_CONTEXT
 #define mm_log(x) { i_lhead(__FILE__,__LINE__); i_loog x; } 

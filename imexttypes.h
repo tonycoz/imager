@@ -262,6 +262,28 @@ typedef struct {
   i_image_data_alloc_t * (*f_i_new_image_data_alloc_free)(i_img *im, void *releaseme);
   void *(*f_myzmalloc)(size_t);
   void *(*f_myzmalloc_file_line)(size_t, const char *, int);
+
+  /* fallback handlers for image vtables */
+  i_img_dim (*f_i_gsampf_fp)(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y,
+                             i_fsample_t *samp, int const *chans, int chan_count);
+  i_img_dim (*f_i_psampf_fp)(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y,
+                             const i_fsample_t *samp, int const *chans, int chan_count);
+
+  i_img_dim (*f_i_gsamp_bits_fb)(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y,
+                                 unsigned *samps, const int *chans, int chan_count,
+                                 int bits);
+  i_img_dim (*f_i_psamp_bits_fb)(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y,
+                                 const unsigned *samps, const int *chans,
+                                 int chan_count, int bits);
+  i_image_data_alloc_t *
+  (*f_i_img_data_fallback)(i_img *im, i_data_layout_t layout, i_img_bits_t bits,
+                           unsigned flags, void **pdata, size_t *psize, int *extra);
+  int (*f_i_addcolors_forward)(i_img *im, const i_color *colors, int count);
+  int (*f_i_getcolors_forward)(i_img *im, int i, i_color *color, int count);
+  int (*f_i_setcolors_forward)(i_img *im, int i, const i_color *color, int count);
+  int (*f_i_colorcount_forward)(i_img *im);
+  int (*f_i_maxcolors_forward)(i_img *im);
+  int (*f_i_findcolor_forward)(i_img *im, const i_color *color, i_palidx *entry);
 } im_ext_funcs;
 
 #define PERL_FUNCTION_TABLE_NAME "Imager::__ext_func_table"

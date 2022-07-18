@@ -25,7 +25,7 @@ print STDERR "Inline version $Inline::VERSION\n";
 require Inline;
 Inline->import(with => 'Imager');
 Inline->import("FORCE"); # force rebuild
-#Inline->import(C => Config => OPTIMIZE => "-g");
+Inline->import(C => Config => OPTIMIZE => "-g");
 
 Inline->bind(C => <<'EOS');
 #include <math.h>
@@ -629,6 +629,220 @@ test_zmalloc() {
   return 1;
 }
 
+static
+i_img_dim
+my_gsamp(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, i_sample_t *samps,
+              const int *chans, int chan_count) {
+  int ch;
+  i_img_dim count, i, w;
+  unsigned char *data;
+  unsigned totalch = im->channels + im->extrachannels;
+
+  if (y >=0 && y < im->ysize && l < im->xsize && l >= 0) {
+    if (r > im->xsize)
+      r = im->xsize;
+    data = im->idata + (l+y*im->xsize) * totalch;
+    w = r - l;
+    count = 0;
+
+    if (chans) {
+      /* make sure we have good channel numbers */
+      for (ch = 0; ch < chan_count; ++ch) {
+        if (chans[ch] < 0 || chans[ch] >= totalch) {
+          i_push_errorf(aIMCTX, 0, "No channel %d in this image", chans[ch]);
+          return 0;
+        }
+      }
+      for (i = 0; i < w; ++i) {
+        for (ch = 0; ch < chan_count; ++ch) {
+          *samps++ = data[chans[ch]];
+          ++count;
+        }
+        data += totalch;
+      }
+    }
+    else {
+      if (chan_count <= 0 || chan_count > totalch) {
+	i_push_errorf(0, "chan_count %d out of range, must be >0, <= total channels", 
+		      chan_count);
+	return 0;
+      }
+      for (i = 0; i < w; ++i) {
+        for (ch = 0; ch < chan_count; ++ch) {
+          *samps++ = data[ch];
+          ++count;
+        }
+        data += totalch;
+      }
+    }
+
+    return count;
+  }
+  else {
+    return 0;
+  }
+}
+
+static
+i_img_dim
+my_psamp(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, 
+	  const i_sample_t *samps, const int *chans, int chan_count) {
+  int ch;
+  i_img_dim count, i, w;
+  unsigned char *data;
+  unsigned totalch = im->channels + im->extrachannels;
+
+  if (y >=0 && y < im->ysize && l < im->xsize && l >= 0) {
+    if (r > im->xsize)
+      r = im->xsize;
+    data = im->idata + (l+y*im->xsize) * totalch;
+    w = r - l;
+    count = 0;
+
+    if (chans) {
+      /* make sure we have good channel numbers */
+      /* and test if all channels specified are in the mask */
+      int all_in_mask = 1;
+      for (ch = 0; ch < chan_count; ++ch) {
+        if (chans[ch] < 0 || chans[ch] >= totalch) {
+          i_push_errorf(aIMCTX, 0, "No channel %d in this image", chans[ch]);
+          return -1;
+        }
+	if (!((1 << chans[ch]) & im->ch_mask))
+	  all_in_mask = 0;
+      }
+      if (all_in_mask) {
+	for (i = 0; i < w; ++i) {
+	  for (ch = 0; ch < chan_count; ++ch) {
+	    data[chans[ch]] = *samps++;
+	    ++count;
+	  }
+	  data += totalch;
+	}
+      }
+      else {
+	for (i = 0; i < w; ++i) {
+	  for (ch = 0; ch < chan_count; ++ch) {
+	    if (im->ch_mask & (1 << (chans[ch])))
+	      data[chans[ch]] = *samps;
+	    ++samps;
+	    ++count;
+	  }
+	  data += totalch;
+	}
+      }
+    }
+    else {
+      if (chan_count <= 0 || chan_count > totalch) {
+	i_push_errorf(0, "chan_count %d out of range, must be >0, <= channels", 
+		      chan_count);
+	return -1;
+      }
+      for (i = 0; i < w; ++i) {
+	unsigned mask = 1;
+        for (ch = 0; ch < chan_count; ++ch) {
+	  if (im->ch_mask & mask)
+	    data[ch] = *samps;
+	  ++samps;
+          ++count;
+	  mask <<= 1;
+        }
+        data += totalch;
+      }
+    }
+
+    return count;
+  }
+  else {
+    i_push_error(0, "Image position outside of image");
+    return -1;
+  }
+}
+
+static const i_img_vtable *
+make_vtbl(void) {
+  static i_img_vtable my_vtbl;
+  static int made_vtbl;
+  if (!made_vtbl) {
+    i_img_vtable init =
+      {
+      IMAGER_API_LEVEL,
+      my_gsamp,
+      i_gsampf_fp,
+      my_psamp,
+      i_psampf_fp,
+      NULL,
+      i_gsamp_bits_fb,
+      i_psamp_bits_fb,
+      i_img_data_fallback,
+      NULL, /* i_f_imageop */
+
+      NULL, /* i_f_gpal */
+      NULL, /* i_f_ppal */
+      NULL, /* i_f_addcolors */
+      NULL, /* i_f_getcolors */
+      NULL, /* i_f_colorcount */
+      NULL, /* i_f_maxcolors */
+      NULL, /* i_f_findcolor */
+      NULL /* i_f_setcolors */
+    };
+    ++made_vtbl;
+    my_vtbl = init;
+  }
+  return &my_vtbl;
+}
+
+Imager
+make_my_image(i_img_dim xsize, i_img_dim ysize, int channels) {
+  size_t bytes;
+  i_img *im;
+  if (channels < 1 || channels > MAXCHANNELS) {
+    i_push_error(0, "Invalid channels");
+    return NULL;
+  }
+  if (xsize < 1 || ysize < 1) {
+    i_push_error(0, "Image must have pixels");
+    return NULL;
+  }
+  bytes = (size_t)xsize * (size_t)ysize * (size_t)channels;
+  if (bytes / (size_t)xsize / (size_t) channels != (size_t)ysize) {
+    i_push_error(0, "Integer overflow calculating image allocation");
+    return NULL;
+  }
+
+  im = i_img_new(make_vtbl(), xsize, ysize, channels, 0, i_8_bits);
+  if (im == NULL) {
+    return NULL;
+  }
+  im->bytes = bytes;
+  im->idata = myzmalloc(im->bytes);
+
+  i_img_init(im);
+  return im;
+}
+
+
+int
+test_forwarders() {
+  int ok = 1;
+
+#define STR(x) #x
+#define TEST_FORWARD(x) \
+  if (x == NULL) {        \
+    ok = 0;               \
+    fprintf(stderr, "forward pointer %s is NULL\n", STR(x));  \
+  }
+
+  TEST_FORWARD(i_addcolors_forward);
+  TEST_FORWARD(i_getcolors_forward);
+  TEST_FORWARD(i_setcolors_forward);
+  TEST_FORWARD(i_colorcount_forward);
+  TEST_FORWARD(i_maxcolors_forward);
+  TEST_FORWARD(i_findcolor_forward);
+
+  return ok;
+}
+
 EOS
 
 my $im = Imager->new(xsize=>50, ysize=>50);
@@ -914,9 +1128,28 @@ SKIP:
 
 ok(test_zmalloc(), "calls to myzmalloc");
 
+{
+  my $im = make_my_image(21, 31, 3);
+  ok($im, "make custom image");
+  is($im->bits, 8, "and it's 8 bits");
+  ok($im->setpixel(x => 0, y => 0, color => "#F00"),
+     "set a pixel");
+  my @fsamps = $im->getsamples(y => 0, type => "float", width => 1);
+  is_deeply(\@fsamps, [ 1, 0, 0 ], "try gsampf");
+  is($im->setsamples(data => [ 0, 1, 0 ], y => 5, x => 6, type => "float"), 3,
+     "try psampf");
+  is_deeply([ $im->getsamples(y => 5, x => 6, width => 1, type => "9bit") ],
+            [ 0, 511, 0 ], "gsamp_bits");
+  is($im->setsamples(data => [ 0, 1023, 1023 ], x => 7, y => 4, type => "10bit"),
+     3, "psamp_bits");
+  ok($im->data(flags => "synth"), "check we can fetch data");
+}
+
+ok(test_forwarders(), "test paletted forwarders are set");
+
 =item APIs to add TODO
 
-i_img_data_fallback(
+i_img_data_fallback<
 i_gsamp_bits_fb
 i_psamp_bits_fb
 i_gsampf_fp
