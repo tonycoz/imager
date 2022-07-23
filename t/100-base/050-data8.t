@@ -2,7 +2,7 @@
 use strict;
 use warnings;
 use Imager;
-use Imager::Test qw(test_image_named);
+use Imager::Test qw(test_image_named test_image to_linear_srgb to_linear_srgbf is_arrayf);
 use Test::More;
 
 my %layout_channels =
@@ -140,6 +140,27 @@ my %samptypes =
           };
       }
     }
+  }
+}
+
+{
+  # linear
+  my $im = test_image; {
+    my $lindata = $im->data(flags => "linear,synth", bits => 16);
+    my $rawdata = $im->data();
+    my @rawdata = unpack "C*", $rawdata;
+
+    my @expect = map { to_linear_srgb($_) } @rawdata;
+    my @lindata = unpack "S*", $lindata;
+    is_deeply(\@lindata, \@expect, "test linear data vs translated");
+  }
+  {
+    my $flindata = $im->data(flags => "linear,synth", bits => "double");
+    my @flindata = unpack "d*", $flindata;
+    my $frawdata = $im->data(flags => "synth", bits => "double");
+    my @frawdata = unpack "d*", $frawdata;
+    my @fexpect = map { to_linear_srgbf($_) } @frawdata;
+    is_arrayf(\@flindata, \@fexpect, "test linear double vs translated");
   }
 }
 

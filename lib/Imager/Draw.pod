@@ -1387,8 +1387,14 @@ C<littleendian> - return multibyte samples in little endian byte order.
 
 =item *
 
-C<otherending> - return multibyte samples in the opposite order to the
+C<otherencoding> - return multibyte samples in the opposite order to the
 native order.
+
+=item *
+
+C<linear>, C<linear_scale> - returns samples with a linear
+relationship to luminance rather than samples that are scaled to the
+tone curves of the current color profile, currently always sRGB.
 
 =back
 

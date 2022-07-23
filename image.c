@@ -98,6 +98,7 @@ im_img_new(pIMCTX, const i_img_vtable *vtbl, i_img_dim xsize, i_img_dim ysize,
   im->extrachannels = extra;
   im->bits          = bits;
   im->type          = i_direct_type;
+  im->islinear      = 0;
   im->ch_mask       = ~0U;
   im->ref_count     = 1U;
   im->isvirtual     = 0;
