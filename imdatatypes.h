@@ -269,6 +269,12 @@ C<idf_otherendian> - return the data in the opposite to the native
 byte order.  Either C<idf_bigendia> or C<idf_littleendian> will equal
 this, while the other will be zero.
 
+=item *
+
+C<idf_linear_curve> - return the data with samples that have a linear
+relationship to luminance, rather than following the tone curve of the
+current color profile.
+
 =back
 
 =cut
@@ -288,7 +294,7 @@ typedef enum {
 #else
 #  error No endianess defined
 #endif
-
+  idf_linear_curve  = 0x10,
   /* so extra flags don't modify the size of the type */
   idf_reserved      = 0x80000000
 } i_data_flags_t;
@@ -525,6 +531,13 @@ for paletted images.
 
 =item *
 
+=for stopwords natively
+
+C<islinear> - whether the image samples are natively linear or use a
+tone curve.  Accessor: i_img_linear().
+
+=item *
+
 C<isvirtual> - if zero then this image is-self contained.  If non-zero
 then this image could be an interface to some other implementation.
 
@@ -573,6 +586,7 @@ struct i_img_ {
   unsigned int ch_mask;
   i_img_bits_t bits;
   i_img_type_t type;
+  int islinear;
   int isvirtual; /* image might not keep any data, must use functions */
   unsigned char *idata; /* renamed to force inspection of existing code */
                         /* can be NULL if isvirtual is non-zero */

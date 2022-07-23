@@ -260,6 +260,13 @@ for paletted images.
 
 =item *
 
+=for stopwords natively
+
+C<islinear> - whether the image samples are natively linear or use a
+tone curve.  Accessor: i_img_linear().
+
+=item *
+
 C<isvirtual> - if zero then this image is-self contained.  If non-zero
 then this image could be an interface to some other implementation.
 

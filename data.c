@@ -129,7 +129,6 @@ layout_chans(i_img *im, i_data_layout_t layout, int *count, int *need_alpha, int
   }
 }
 
-
 static i_image_data_alloc_t *
 data_8(i_img *im, i_data_layout_t layout, void **pdata, size_t *psize) {
   dIMCTXim(im);
@@ -387,6 +386,107 @@ data_palette(i_img *im, void **pdata, size_t *psize) {
   return i_new_image_data_alloc_free(im, data);
 }
 
+static i_image_data_alloc_t *
+lin_data_16(i_img *im, i_data_layout_t layout, unsigned flags,
+            void **pdata, size_t *psize) {
+  dIMCTXim(im);
+  const int *chans;
+  int count;
+  int need_alpha;
+  int need_zero;
+  size_t size;
+  i_sample16_t *data;
+  i_sample16_t *datap;
+  i_sample16_t *pixelp;
+  i_img_dim x, y;
+  size_t row_size;
+
+  chans = layout_chans(im, layout, &count, &need_alpha, &need_zero);
+  if (!chans) {
+    return NULL;
+  }
+  size = (size_t)count * (size_t)im->xsize * (size_t)im->ysize * sizeof(i_sample16_t);
+  if (size / (size_t)count / (size_t)im->xsize / sizeof(i_sample16_t) != (size_t)im->ysize) {
+    im_push_error(aIMCTX, 0, "integer overflow calculating image data size");
+    return NULL;
+  }
+
+  /* cannot fail */
+  data = mymalloc(size);
+  row_size = count * im->xsize;
+  for (y = 0, datap = data; y < im->ysize; ++y, datap += row_size) {
+    i_gslin(im, 0, im->xsize, y, datap, chans, count);
+    if (need_alpha >= 0) {
+      for (x = 0, pixelp = datap; x < im->xsize; ++x, pixelp += count) {
+        pixelp[need_alpha] = 65535;
+      }
+    }
+    if (need_zero >= 0) {
+      for (x = 0, pixelp = datap; x < im->xsize; ++x, pixelp += count) {
+        pixelp[need_zero] = 0;
+      }
+    }
+  }
+
+  if (flags & idf_otherendian) {
+    swap_bytes(data, size, sizeof(i_sample16_t));
+  }
+
+  *pdata = data;
+  *psize = size;
+
+  return i_new_image_data_alloc_free(im, data);
+}
+
+static i_image_data_alloc_t *
+lin_data_double(i_img *im, i_data_layout_t layout, unsigned flags,
+                void **pdata, size_t *psize) {
+  dIMCTXim(im);
+  const int *chans;
+  int count;
+  int need_alpha;
+  int need_zero;
+  size_t size;
+  i_fsample_t *data;
+  i_fsample_t *datap;
+  i_fsample_t *pixelp;
+  i_img_dim x, y;
+  size_t row_size;
+
+  chans = layout_chans(im, layout, &count, &need_alpha, &need_zero);
+  size = (size_t)count * (size_t)im->xsize * (size_t)im->ysize * sizeof(i_fsample_t);
+  if (size / (size_t)count / (size_t)im->xsize / sizeof(i_fsample_t) != (size_t)im->ysize) {
+    im_push_error(aIMCTX, 0, "integer overflow calculating image data size");
+    return NULL;
+  }
+
+  /* cannot fail */
+  data = mymalloc(size);
+  row_size = count * im->xsize;
+  for (y = 0, datap = data; y < im->ysize; ++y, datap += row_size) {
+    i_gslinf(im, 0, im->xsize, y, datap, chans, count);
+    if (need_alpha >= 0) {
+      for (x = 0, pixelp = datap; x < im->xsize; ++x, pixelp += count) {
+        pixelp[need_alpha] = 1.0;
+      }
+    }
+    if (need_zero >= 0) {
+      for (x = 0, pixelp = datap; x < im->xsize; ++x, pixelp += count) {
+        pixelp[need_zero] = 0.0;
+      }
+    }
+  }
+
+  if (flags & idf_otherendian) {
+    swap_bytes(data, size, sizeof(i_fsample_t));
+  }
+
+  *pdata = data;
+  *psize = size;
+
+  return i_new_image_data_alloc_free(im, data);
+}
+
 /*
 =item i_img_data_fallback()
 
@@ -443,22 +543,37 @@ i_img_data_fallback(i_img *im, i_data_layout_t layout, i_img_bits_t bits, unsign
     }
   }
 
-  switch (bits) {
-  case i_8_bits:
-    return data_8(im, layout, pdata, psize);
+  if ((flags & idf_linear_curve) == 0) {
+    switch (bits) {
+    case i_8_bits:
+      return data_8(im, layout, pdata, psize);
 
-  case i_double_bits:
-    return data_double(im, layout, flags, pdata, psize);
+    case i_double_bits:
+      return data_double(im, layout, flags, pdata, psize);
 
-  case i_16_bits:
-    return data_16(im, layout, flags, pdata, psize);
+    case i_16_bits:
+      return data_16(im, layout, flags, pdata, psize);
 
-  case i_float_bits:
-    return data_float(im, layout, flags, pdata, psize);
+    case i_float_bits:
+      return data_float(im, layout, flags, pdata, psize);
 
-  default:
-    im_push_errorf(aIMCTX, 0, "image bits %d not implemented", (int)bits);
-    return NULL;
+    default:
+      im_push_errorf(aIMCTX, 0, "image bits %d not implemented", (int)bits);
+      return NULL;
+    }
+  }
+  else {
+    switch (bits) {
+    case i_16_bits:
+      return lin_data_16(im, layout, flags, pdata, psize);
+
+    case i_double_bits:
+      return lin_data_double(im, layout, flags, pdata, psize);
+
+    default:
+      im_push_errorf(aIMCTX, 0, "linear image bits %d not implemented", (int)bits);
+      return NULL;
+    }
   }
 }
 

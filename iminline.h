@@ -32,6 +32,20 @@ i_pslinf(i_img *im, i_img_dim x, i_img_dim r, i_img_dim y,
   return (im->vtbl->i_f_pslinf)(im, x, r, y, samp, chan, chan_count);
 }
 
+/*
+=item i_img_linear()
+
+Returns whether the samples of the image are natively linear scale or
+not.
+
+=cut
+*/
+
+IMAGER_STATIC_INLINE int
+i_img_linear(const i_img *im) {
+  return im->islinear;
+}
+
 #ifdef __cplusplus
 }
 #endif

@@ -474,6 +474,14 @@ pixels, for example masked images.
 This may also be used for non-native Imager images in the future, for
 example, for an Imager object that draws on an SDL surface.
 
+=item linear()
+
+Returns a true value if image samples are natively stored using a
+linear tone curve, or false if the samples use the tone curve from the
+current color profile, which is always sRGB at this point.  Note that
+these samples are converted to tone curve scaled samples in most
+cases.
+
 =item is_bilevel()
 
 Tests if the image will be written as a monochrome or bi-level image

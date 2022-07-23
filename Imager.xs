@@ -1351,6 +1351,10 @@ parse_data_flags(pTHX_ SV *sv) {
     else if (memEQs(p, keylen, "otherendian")) {
       flags |= idf_otherendian;
     }
+    else if (memEQs(p, keylen, "linear")
+             || memEQs(p, keylen, "linear_curve")) {
+      flags |= idf_linear_curve;
+    }
     else if (memEQs(p, keylen, "writable")) {
       Perl_croak(aTHX_ "writable is meaningless for the Imager data method");
     }
@@ -2161,6 +2165,10 @@ i_img_is_monochrome(im)
 	    PUSHs(&PL_sv_yes);
 	  }
 	}
+
+bool
+i_img_linear(im)
+    Imager::ImgRaw	im
 
 void
 i_line(im,x1,y1,x2,y2,val,endp)

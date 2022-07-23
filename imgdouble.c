@@ -474,7 +474,7 @@ static i_image_data_alloc_t *
 i_data_double(i_img *im, i_data_layout_t layout, i_img_bits_t bits, unsigned flags,
           void **pdata, size_t *psize, int *pextra) {
   if ((im->extrachannels && !(flags & idf_extras))
-      || (flags & idf_otherendian)
+      || (flags & (idf_otherendian|idf_linear_curve)) != 0
       || bits != i_double_bits
       || layout == idl_palette
       || layout != im->channels) {
