@@ -33,6 +33,7 @@ is(Imager::i_img_extrachannels($im_g), 0, "0 extra channels");
 
 ok(Imager::i_img_getmask($im_g) & 1, "1 channel image mask");
 ok(!Imager::i_img_virtual($im_g), "1 channel image not virtual");
+ok(!Imager::i_img_linear($im_g), "1 channel image not linear");
 is(Imager::i_img_bits($im_g), 8, "1 channel image has 8 bits/sample");
 is(Imager::i_img_type($im_g), 0, "1 channel image is direct");
 is(Imager::i_img_get_width($im_g), 100, "100 pixels wide");

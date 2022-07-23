@@ -1385,6 +1385,15 @@ sub totalchannels {
   return i_img_totalchannels($self->{IMG});
 }
 
+sub linear {
+  my $self = shift;
+
+  $self->_valid_image("linear")
+    or return;
+
+  return i_img_linear($self->{IMG});
+}
+
 sub data {
   my $self = shift;
   my $extra;
@@ -5195,6 +5204,9 @@ is_logging() - L<Imager::ImageTypes/is_logging()> - test if the debug
 log is active.
 
 line() - L<Imager::Draw/line()> - draw an interval
+
+linear() - L<Imager::ImageTypes/linear()> - test if image samples
+natively use a linear relationship to luminance.
 
 load_plugin() - L<Imager::Filters/load_plugin()>
 

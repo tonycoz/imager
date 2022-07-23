@@ -56,9 +56,11 @@ grayscale
 ie
 infix
 invocant
+luminance
 metadata
 multi-threaded
 mutex
+natively
 paletted
 parsers
 postfix
