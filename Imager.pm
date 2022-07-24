@@ -1046,6 +1046,8 @@ sub img_set {
     }
   }
 
+  my $bits = $hsh{bits};
+  my $numeric_bits;
   if ($hsh{type} eq 'paletted' || $hsh{type} eq 'pseudo') {
     if ($hsh{extrachannels} != 0) {
       $self->_set_error("new: extrachannels must be 0 for paletted images");
@@ -1054,15 +1056,19 @@ sub img_set {
     $self->{IMG} = i_img_pal_new($hsh{xsize}, $hsh{ysize}, $hsh{channels},
                                  $hsh{maxcolors} || 256);
   }
-  elsif ($hsh{bits} eq 'double') {
+  elsif ($bits eq 'double') {
     $self->{IMG} = i_img_double_new_extra($hsh{xsize}, $hsh{ysize}, $hsh{channels}, $hsh{extrachannels});
   }
-  elsif ($hsh{bits} == 16) {
+  elsif (($numeric_bits = $bits =~ /\A[0-9]+\z/) && $bits == 16) {
     $self->{IMG} = i_img_16_new_extra($hsh{xsize}, $hsh{ysize}, $hsh{channels}, $hsh{extrachannels});
   }
+  elsif ($numeric_bits && $bits == 8) {
+    $self->{IMG} = i_img_8_new_extra($hsh{'xsize'}, $hsh{'ysize'},
+                                     $hsh{'channels'}, $hsh{extrachannels});
+  }
   else {
-    $self->{IMG}= i_img_8_new_extra($hsh{'xsize'}, $hsh{'ysize'},
-				    $hsh{'channels'}, $hsh{extrachannels});
+    $self->_set_error("new: unknown value for bits '$bits'");
+    return;
   }
 
   unless ($self->{IMG}) {
