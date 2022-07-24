@@ -1236,6 +1236,15 @@ SKIP:
             "check they match");
 }
 
+std_image_tests({ bits => 8 });
+
+{
+  ok(!Imager->new(xsize => 10, ysize => 11, model => "invalid"),
+     "bad color model value");
+  like(Imager->errstr, qr/unknown value for model/,
+       "check error message");
+}
+
 done_testing();
 
 Imager->close_log();
