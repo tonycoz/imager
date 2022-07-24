@@ -1243,6 +1243,10 @@ std_image_tests({ bits => 8 });
      "bad color model value");
   like(Imager->errstr, qr/unknown value for model/,
        "check error message");
+  ok(!Imager->new(xsize => 10, ysize => 11, bits => "invalid"),
+     "bad bits value");
+  like(Imager->errstr, qr/unknown value for bits/,
+       "check bits error message");
 }
 
 done_testing();
