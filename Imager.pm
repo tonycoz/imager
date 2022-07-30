@@ -1059,6 +1059,9 @@ sub img_set {
   elsif ($bits eq 'double') {
     $self->{IMG} = i_img_double_new_extra($hsh{xsize}, $hsh{ysize}, $hsh{channels}, $hsh{extrachannels});
   }
+  elsif ($bits eq 'float') {
+    $self->{IMG} = i_img_float_new_extra($hsh{xsize}, $hsh{ysize}, $hsh{channels}, $hsh{extrachannels});
+  }
   elsif (($numeric_bits = $bits =~ /\A[0-9]+\z/) && $bits == 16) {
     $self->{IMG} = i_img_16_new_extra($hsh{xsize}, $hsh{ysize}, $hsh{channels}, $hsh{extrachannels});
   }
@@ -1220,7 +1223,7 @@ sub to_rgb_double {
 
   unless (defined wantarray) {
     my @caller = caller;
-    warn "to_rgb16() called in void context - to_rgb_double() returns the converted image at $caller[1] line $caller[2]\n";
+    warn "to_rgb_double() called in void context - to_rgb_double() returns the converted image at $caller[1] line $caller[2]\n";
     return;
   }
 
@@ -1229,6 +1232,28 @@ sub to_rgb_double {
 
   my $result = Imager->new;
   unless ($result->{IMG} = i_img_to_drgb($self->{IMG})) {
+    $self->_set_error(Imager->_error_as_msg());
+    return;
+  }
+
+  return $result;
+}
+
+# convert a paletted (or any image) to an float/channel RGB image
+sub to_rgb_float {
+  my $self = shift;
+
+  unless (defined wantarray) {
+    my @caller = caller;
+    warn "to_rgb_float() called in void context - to_rgb_float() returns the converted image at $caller[1] line $caller[2]\n";
+    return;
+  }
+
+  $self->_valid_image("to_rgb_float")
+    or return;
+
+  my $result = Imager->new;
+  unless ($result->{IMG} = i_img_to_float_rgb($self->{IMG})) {
     $self->_set_error(Imager->_error_as_msg());
     return;
   }
@@ -1343,8 +1368,11 @@ sub bits {
     or return;
 
   my $bits = i_img_bits($self->{IMG});
-  if ($bits && $bits == length(pack("d", 1)) * 8) {
+  if ($bits == length(pack("d", 1)) * 8) {
     $bits = 'double';
+  }
+  elsif ($bits == -length(pack "f", 0.0) * 8) {
+    $bits = 'float';
   }
   return $bits;
 }
@@ -5316,6 +5344,9 @@ to_rgb8() - L<Imager::ImageTypes/to_rgb8()>
 
 to_rgb_double() - L<Imager::ImageTypes/to_rgb_double()> - convert to
 double per sample image.
+
+to_rgb_float() - L<Imager::ImageTypes/to_rgb_float()> - convert to
+float per sample image.
 
 totalchannels() - L<Imager::ImageTypes/totalchannels()>
 

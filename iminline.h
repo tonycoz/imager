@@ -46,6 +46,25 @@ i_img_linear(const i_img *im) {
   return im->islinear;
 }
 
+/*
+=item im_img_float_new(ctx, x, y, ch)
+X<im_img_float_new API>X<i_img_float_new API>
+=category Image creation/destruction
+=synopsis i_img *img = im_img_float_new(aIMCTX, width, height, channels);
+=synopsis i_img *img = i_img_float_new(width, height, channels);
+
+Creates a new double per sample image.
+
+Also callable as C<i_img_float_new(width, height, channels)>.
+
+=cut
+*/
+
+IMAGER_STATIC_INLINE i_img *
+im_img_float_new(pIMCTX, i_img_dim x, i_img_dim y, int ch) {
+  return im_img_float_new_extra(aIMCTX, x, y, ch, 0);
+}
+
 #ifdef __cplusplus
 }
 #endif
