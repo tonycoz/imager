@@ -781,6 +781,9 @@ i_sametype(i_img *src, i_img_dim xsize, i_img_dim ysize) {
     else if (src->bits == i_double_bits) {
       return i_img_double_new(xsize, ysize, src->channels);
     }
+    else if (src->bits == i_float_bits) {
+      return i_img_float_new(xsize, ysize, src->channels);
+    }
     else {
       i_push_error(0, "Unknown image bits");
       return NULL;
@@ -825,6 +828,9 @@ i_sametype_chans(i_img *src, i_img_dim xsize, i_img_dim ysize, int channels) {
   }
   else if (src->bits == i_double_bits) {
     return i_img_double_new(xsize, ysize, channels);
+  }
+  else if (src->bits == i_float_bits) {
+    return i_img_float_new(xsize, ysize, channels);
   }
   else {
     i_push_error(0, "Unknown image bits");

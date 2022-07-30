@@ -591,6 +591,16 @@ new_double_extra(i_img_dim x, i_img_dim y, int channels, int extra) {
   return i_img_double_new_extra(x, y, channels, extra);
 }
 
+Imager
+new_float_extra(i_img_dim x, i_img_dim y, int channels, int extra) {
+  return i_img_float_new_extra(x, y, channels, extra);
+}
+
+Imager
+new_float(i_img_dim x, i_img_dim y, int channels) {
+  return i_img_float_new(x, y, channels);
+}
+
 int
 test_data_alloc(Imager im) {
   i_image_data_alloc_t *alloc;
@@ -1156,6 +1166,20 @@ SKIP:
   ok($im, "make double extra channel image");
   is($im->bits, "double", "got an double image");
   is($im->extrachannels, 4, "got the extra channels");
+}
+
+{
+  my $im = new_float_extra(10, 12, 3, 4);
+  ok($im, "make float extra channel image");
+  is($im->bits, "float", "got a float image");
+  is($im->extrachannels, 4, "got the extra channels");
+}
+
+{
+  my $im = new_float(10, 12, 3);
+  ok($im, "make float channel image");
+  is($im->bits, "float", "got a float image");
+  is($im->extrachannels, 0, "got the zero extra channels");
 }
 
 {

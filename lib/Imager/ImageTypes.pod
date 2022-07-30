@@ -214,6 +214,10 @@ C<16> - 16-bits per sample, 65536 discrete values.
 
 =item *
 
+C<float> - one C float per sample.
+
+=item *
+
 C<double> - one C double per sample.
 
 =back
@@ -438,8 +442,9 @@ Returns an empty list if the image object is not initialized.
 =item bits()
 
 The bits() method retrieves the number of bits used to represent each
-channel in a pixel, 8 for a normal image, 16 for 16-bit image and
-'double' for a double/channel image.
+channel in a pixel, 8 for a normal image, 16 for 16-bit/sample image,
+C<float> for float/sample images and C<double> for a double/sample
+image.
 
   if ($img->bits eq 8) {
     # fast but limited to 8-bits/sample
@@ -776,6 +781,15 @@ Convert a paletted image (or any image) to an double/channel direct
 color image.
 
   $rgbimg = $img->to_rgb_double;
+
+No parameters.
+
+=item to_rgb_float()
+
+Convert a paletted image (or any image) to an float/channel direct
+color image.
+
+  $rgbimg = $img->to_rgb_float;
 
 No parameters.
 
