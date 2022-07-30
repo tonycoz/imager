@@ -296,6 +296,9 @@ typedef struct {
   i_img_dim
   (*f_i_pslinf_fallback)(i_img *im, i_img_dim x, i_img_dim r, i_img_dim y,
                          const i_fsample_t *samp, const int *chan, int chan_count);
+
+  i_img *
+  (*f_im_img_float_new_extra)(im_context_t, i_img_dim x, i_img_dim y, int ch, int extra);
 } im_ext_funcs;
 
 #define PERL_FUNCTION_TABLE_NAME "Imager::__ext_func_table"

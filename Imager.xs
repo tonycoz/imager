@@ -4466,6 +4466,19 @@ Imager::ImgRaw
 i_img_to_drgb(im)
        Imager::ImgRaw im
 
+Imager::ImgRaw
+i_img_float_new(xsize, ysize, channels)
+        i_img_dim xsize
+        i_img_dim ysize
+        int channels
+
+Imager::ImgRaw
+i_img_float_new_extra(i_img_dim xsize, i_img_dim ysize, int channels, int extra)
+
+Imager::ImgRaw
+i_img_to_float_rgb(im)
+       Imager::ImgRaw im
+
 undef_int
 i_tags_addn(im, name_sv, code, idata)
         Imager::ImgRaw im

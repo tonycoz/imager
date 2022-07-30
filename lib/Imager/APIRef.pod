@@ -104,6 +104,8 @@ Imager::APIRef - Imager's C API - reference.
   i_img *img = i_img_double_new(width, height, channels);
   i_img *img = im_img_double_new_extra(aIMCTX, width, height, channels, extra);
   i_img *img = i_img_double_new_extra(width, height, channels, extra);
+  i_img *img = im_img_float_new_extra(aIMCTX, width, height, channels, extra);
+  i_img *img = i_img_float_new_extra(width, height, channels, extra);
   i_img *img = im_img_pal_new(aIMCTX, width, height, channels, max_palette_size)
   i_img *img = i_img_pal_new(width, height, channels, max_palette_size)
   i_img_destroy(img)
@@ -1947,6 +1949,21 @@ Also callable as C<i_img_double_new_extra(width, height, channels, extra)>.
 
 =for comment
 From: imgdouble.c
+
+=item im_img_float_new_extra(ctx, x, y, ch, extra)
+X<im_img_float_new_extra API>X<i_img_float_new_extra API>
+
+  i_img *img = im_img_float_new_extra(aIMCTX, width, height, channels, extra);
+  i_img *img = i_img_float_new_extra(width, height, channels, extra);
+
+Creates a new float per sample image, possibly with
+L<Imager::ImageTypes/Extra channels>.
+
+Also callable as C<i_img_float_new_extra(width, height, channels, extra)>.
+
+
+=for comment
+From: imgflt.c
 
 =item im_img_pal_new(ctx, C<x>, C<y>, C<channels>, C<maxpal>)
 X<im_img_pal_new API>X<i_img_pal_new API>
