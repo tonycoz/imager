@@ -414,6 +414,14 @@ i_f_psamp_bits - implements i_psamp_bits() for this image.
 
 =item *
 
+i_f_gslin, i_f_gslinf - implements i_gslin() and i_gslinf().
+
+=item *
+
+i_f_pslin, i_f_pslinf - implements i_pslin() and i_pslinf().
+
+=item *
+
 i_f_data - implements i_img_data() for this image.
 
 =item *
