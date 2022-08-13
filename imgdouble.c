@@ -533,16 +533,17 @@ i_gslindbl_d(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y,
   const imcms_curve_t *curves = i_model_curves(i_img_color_model(im), &color_chans);
 
   if (y >=0 && y < im->ysize && l < im->xsize && l >= 0) {
+    int totalch = i_img_totalchannels(im);
     if (r > im->xsize)
       r = im->xsize;
-    off = (l+y*im->xsize) * im->channels;
+    off = (l+y*im->xsize) * totalch;
     w = r - l;
     count = 0;
 
     if (chans) {
       /* make sure we have good channel numbers */
       for (ch = 0; ch < chan_count; ++ch) {
-        if (chans[ch] < 0 || chans[ch] >= im->channels) {
+        if (chans[ch] < 0 || chans[ch] >= totalch) {
           im_push_errorf(aIMCTX, 0, "No channel %d in this image", chans[ch]);
           return 0;
         }
@@ -557,11 +558,11 @@ i_gslindbl_d(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y,
 	    *samps++ = SampleFTo16(raw);
           ++count;
         }
-        off += im->channels;
+        off += totalch;
       }
     }
     else {
-      if (chan_count <= 0 || chan_count > im->channels) {
+      if (chan_count <= 0 || chan_count > totalch) {
 	im_push_errorf(aIMCTX, 0, "chan_count %d out of range, must be >0, <= channels", 
 		      chan_count);
 	return 0;
@@ -575,7 +576,7 @@ i_gslindbl_d(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y,
 	    *samps++ = SampleFTo16(raw);
           ++count;
         }
-        off += im->channels;
+        off += totalch;
       }
     }
 
@@ -597,17 +598,18 @@ i_gslindblf_d(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y,
   const imcms_curve_t *curves = i_model_curves(i_img_color_model(im), &color_chans);
 
   if (y >=0 && y < im->ysize && l < im->xsize && l >= 0) {
+    int totalch = i_img_totalchannels(im);
     i_img_dim off;
     if (r > im->xsize)
       r = im->xsize;
-    off = (l+y*im->xsize) * im->channels;
+    off = (l+y*im->xsize) * totalch;
     w = r - l;
     count = 0;
 
     if (chans) {
       /* make sure we have good channel numbers */
       for (ch = 0; ch < chan_count; ++ch) {
-        if (chans[ch] < 0 || chans[ch] >= im->channels) {
+        if (chans[ch] < 0 || chans[ch] >= totalch) {
           im_push_errorf(aIMCTX, 0, "No channel %d in this image", chans[ch]);
           return 0;
         }
@@ -622,11 +624,11 @@ i_gslindblf_d(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y,
 	    *samps++ = raw;
           ++count;
         }
-        off += im->channels;
+        off += totalch;
       }
     }
     else {
-      if (chan_count <= 0 || chan_count > im->channels) {
+      if (chan_count <= 0 || chan_count > totalch) {
 	im_push_errorf(aIMCTX, 0, "chan_count %d out of range, must be >0, <= channels", 
 		      chan_count);
 	return 0;
@@ -640,7 +642,7 @@ i_gslindblf_d(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y,
 	    *samps++ = raw;
           ++count;
         }
-        off += im->channels;
+        off += totalch;
       }
     }
 
@@ -661,10 +663,11 @@ i_pslindbl_d(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y,
   const imcms_curve_t *curves = i_model_curves(i_img_color_model(im), &color_chans);
 
   if (y >=0 && y < im->ysize && l < im->xsize && l >= 0) {
+    int totalch = i_img_totalchannels(im);
     i_img_dim off;
     if (r > im->xsize)
       r = im->xsize;
-    off = (l+y*im->xsize) * im->channels;
+    off = (l+y*im->xsize) * totalch;
     w = r - l;
     count = 0;
 
@@ -674,7 +677,7 @@ i_pslindbl_d(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y,
       int all_in_mask = 1;
       int ch;
       for (ch = 0; ch < chan_count; ++ch) {
-        if (chans[ch] < 0 || chans[ch] >= im->channels) {
+        if (chans[ch] < 0 || chans[ch] >= totalch) {
           im_push_errorf(aIMCTX, 0, "No channel %d in this image", chans[ch]);
           return -1;
         }
@@ -695,7 +698,7 @@ i_pslindbl_d(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y,
 	    ((double *)im->idata)[off+ch] = out;
 	    ++count;
 	  }
-	  off += im->channels;
+	  off += totalch;
 	}
       }
       else {
@@ -714,12 +717,12 @@ i_pslindbl_d(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y,
 	    ++samps;
 	    ++count;
 	  }
-	  off += im->channels;
+	  off += totalch;
 	}
       }
     }
     else {
-      if (chan_count <= 0 || chan_count > im->channels) {
+      if (chan_count <= 0 || chan_count > totalch) {
 	im_push_errorf(aIMCTX, 0, "chan_count %d out of range, must be >0, <= channels", 
 		      chan_count);
 	return -1;
@@ -740,7 +743,7 @@ i_pslindbl_d(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y,
           ++count;
 	  mask <<= 1;
         }
-        off += im->channels;
+        off += totalch;
       }
     }
 
@@ -762,10 +765,11 @@ i_pslindblf_d(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y,
   const imcms_curve_t *curves = i_model_curves(i_img_color_model(im), &color_chans);
 
   if (y >=0 && y < im->ysize && l < im->xsize && l >= 0) {
+    int totalch = i_img_totalchannels(im);
     i_img_dim off;
     if (r > im->xsize)
       r = im->xsize;
-    off = (l+y*im->xsize) * im->channels;
+    off = (l+y*im->xsize) * totalch;
     w = r - l;
     count = 0;
 
@@ -775,8 +779,7 @@ i_pslindblf_d(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y,
       int all_in_mask = 1;
       int ch;
       for (ch = 0; ch < chan_count; ++ch) {
-        if (chans[ch] < 0 || chans[ch] >= im->channels) {
-	  dIMCTXim(im);
+        if (chans[ch] < 0 || chans[ch] >= totalch) {
           im_push_errorf(aIMCTX, 0, "No channel %d in this image", chans[ch]);
           return -1;
         }
@@ -797,7 +800,7 @@ i_pslindblf_d(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y,
 	    ((double *)im->idata)[off+ch] = out;
 	    ++count;
 	  }
-	  off += im->channels;
+	  off += totalch;
 	}
       }
       else {
@@ -816,12 +819,12 @@ i_pslindblf_d(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y,
 	    ++samps;
 	    ++count;
 	  }
-	  off += im->channels;
+	  off += totalch;
 	}
       }
     }
     else {
-      if (chan_count <= 0 || chan_count > im->channels) {
+      if (chan_count <= 0 || chan_count > totalch) {
 	dIMCTXim(im);
 	im_push_errorf(aIMCTX, 0, "chan_count %d out of range, must be >0, <= channels", 
 		      chan_count);
@@ -843,7 +846,7 @@ i_pslindblf_d(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y,
           ++count;
 	  mask <<= 1;
         }
-        off += im->channels;
+        off += totalch;
       }
     }
 

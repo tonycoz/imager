@@ -988,6 +988,45 @@ sub extrachannel_tests {
   is_arrayf([ $im->getsamples(x => 5, y => 6, width => 1, channels => [ 0 .. 7 ], type => "float") ],
             [ 66/255, 130/255, 250/255, @fsamps[3 .. 7] ],
             "check color set by setscanline float and extras untouched (float)");
+
+  # linear samples
+  my @data = ( 0, 5, 64, 1, 2, 3, 4, 5,
+               255, 250, 192, 180, 170, 160, 155, 120 );
+  is($im->setsamples(x => 2, y => 7, channels => 8,
+                     data => \@data), 16,
+     "set known gamma samples") or diag($im->errstr);
+  my @lsamps = $im->getsamples(x => 2, y => 7, width => 2, channels => 8, scale => "linear");
+  is_deeply(\@lsamps,
+            [ (map { to_linear_srgb($_) } 0, 5, 64), # RGB
+              (map { $_ * 257 } 1, 2, 3, 4, 5 ), # extra
+              (map { to_linear_srgb($_) } 255, 250, 192), # RGB
+              (map { $_ * 257 } 180, 170, 160, 155, 120 ), # extra
+             ], "check they're set as linear");
+  # write them back
+  is($im->setsamples(x => 1, y => 8, channels => 8,
+                     data => \@lsamps, scale => "linear"),
+     16, "write linear samples");
+  is_deeply([ $im->getsamples(x => 1, y => 8, channels => 8, width => 2) ],
+            \@data, "check the result");
+
+  # floating linear
+  my @fdata = map { $_ / 255.0 } @data;
+  is($im->setsamples(x => 1, y => 0, type => "float", data => \@fdata, channels => 8), 16,
+     "set gamma float samples");
+  my @lfsamps = $im->getsamples(x => 1, y => 0, width => 2, channels => 8,
+                               scale => "linear", type => "float");
+  is_arrayf(\@lfsamps,
+            [ ( map { to_linear_srgbf($_) } @fdata[0 .. 2] ), # RGB
+              ( @fdata[3 .. 7] ), # extras
+              ( map { to_linear_srgbf($_) } @fdata[8 .. 10 ] ), # RGB
+              ( @fdata[11 .. 15 ] ) # more extras
+             ], "check fetching linear samples");
+  is($im->setsamples(x => 5, y => 0, channels => 8, scale => "linear",
+                     data => \@lfsamps, type => "float"), 16,
+     "set float linear samples");
+  is_arrayf([ $im->getsamples(x => 5, y => 0, channels => 8, type => "float",
+                              width => 2) ],
+            \@fdata, "check float linear samples fetch back properly");
 }
 
 sub check_vtable {

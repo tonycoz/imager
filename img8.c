@@ -546,9 +546,10 @@ i_gslin_d(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y,
   const imcms_curve_t *curves = im_model_curves(aIMCTX, i_img_color_model(im), &color_chans);
 
   if (y >= 0 && y < im->ysize && l < im->xsize && l >= 0) {
+    int totalch = i_img_totalchannels(im);
     if (r > im->xsize)
       r = im->xsize;
-    data = im->idata + (l+y*im->xsize) * im->channels;
+    data = im->idata + (l+y*im->xsize) * totalch;
     w = r - l;
     count = 0;
 
@@ -557,8 +558,7 @@ i_gslin_d(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y,
       /* make sure we have good channel numbers */
       for (chi = 0; chi < chan_count; ++chi) {
 	int ch = chans[chi];
-        if (ch < 0 || ch >= im->channels) {
-	  dIMCTXim(im);
+        if (ch < 0 || ch >= totalch) {
           im_push_errorf(aIMCTX, 0, "No channel %d in this image", ch);
           return 0;
         }
@@ -572,11 +572,11 @@ i_gslin_d(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y,
 	    *samps++ = Sample8To16(data[ch]);
           ++count;
         }
-        data += im->channels;
+        data += totalch;
       }
     }
     else {
-      if (chan_count <= 0 || chan_count > im->channels) {
+      if (chan_count <= 0 || chan_count > totalch) {
 	dIMCTXim(im);
 	im_push_errorf(aIMCTX, 0, "chan_count %d out of range, must be >0, <= channels", 
 		      chan_count);
@@ -591,7 +591,7 @@ i_gslin_d(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y,
 	    *samps++ = Sample8To16(data[ch]);
           ++count;
         }
-        data += im->channels;
+        data += totalch;
       }
     }
 
@@ -614,9 +614,10 @@ i_gslinf_d(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y,
   const imcms_curve_t *curves = im_model_curves(aIMCTX, i_img_color_model(im), &color_chans);
 
   if (y >=0 && y < im->ysize && l < im->xsize && l >= 0) {
+    int totalch = i_img_totalchannels(im);
     if (r > im->xsize)
       r = im->xsize;
-    data = im->idata + (l+y*im->xsize) * im->channels;
+    data = im->idata + (l+y*im->xsize) * totalch;
     w = r - l;
     count = 0;
 
@@ -625,7 +626,7 @@ i_gslinf_d(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y,
       /* make sure we have good channel numbers */
       for (chi = 0; chi < chan_count; ++chi) {
 	int ch = chans[chi];
-        if (ch < 0 || ch >= im->channels) {
+        if (ch < 0 || ch >= totalch) {
 	  dIMCTXim(im);
           im_push_errorf(aIMCTX, 0, "No channel %d in this image", ch);
           return 0;
@@ -640,11 +641,11 @@ i_gslinf_d(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y,
 	    *samps++ = Sample8ToF(data[ch]);
           ++count;
         }
-        data += im->channels;
+        data += totalch;
       }
     }
     else {
-      if (chan_count <= 0 || chan_count > im->channels) {
+      if (chan_count <= 0 || chan_count > totalch) {
 	dIMCTXim(im);
 	im_push_errorf(aIMCTX, 0, "chan_count %d out of range, must be >0, <= channels", 
 		      chan_count);
@@ -659,7 +660,7 @@ i_gslinf_d(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y,
 	    *samps++ = Sample8ToF(data[ch]);
           ++count;
         }
-        data += im->channels;
+        data += totalch;
       }
     }
 
@@ -683,9 +684,10 @@ i_pslin_d(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y,
   const imcms_curve_t *curves = im_model_curves(aIMCTX, i_img_color_model(im), &color_chans);
 
   if (y >=0 && y < im->ysize && l < im->xsize && l >= 0) {
+    int totalch = i_img_totalchannels(im);
     if (r > im->xsize)
       r = im->xsize;
-    data = im->idata + (l+y*im->xsize) * im->channels;
+    data = im->idata + (l+y*im->xsize) * totalch;
     w = r - l;
     count = 0;
 
@@ -696,8 +698,7 @@ i_pslin_d(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y,
       int chi;
       for (chi = 0; chi < chan_count; ++chi) {
 	int ch = chans[chi];
-        if (ch < 0 || ch >= im->channels) {
-	  dIMCTXim(im);
+        if (ch < 0 || ch >= totalch) {
           im_push_errorf(aIMCTX, 0, "No channel %d in this image", ch);
           return -1;
         }
@@ -716,7 +717,7 @@ i_pslin_d(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y,
 	      data[ch] = Sample16To8(samp);
 	    ++count;
 	  }
-	  data += im->channels;
+	  data += totalch;
 	}
       }
       else {
@@ -733,12 +734,12 @@ i_pslin_d(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y,
 	    ++samps;
 	    ++count;
 	  }
-	  data += im->channels;
+	  data += totalch;
 	}
       }
     }
     else {
-      if (chan_count <= 0 || chan_count > im->channels) {
+      if (chan_count <= 0 || chan_count > totalch) {
 	dIMCTXim(im);
 	im_push_errorf(aIMCTX, 0, "chan_count %d out of range, must be >0, <= channels", 
 		      chan_count);
@@ -758,7 +759,7 @@ i_pslin_d(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y,
           ++count;
 	  mask <<= 1;
         }
-        data += im->channels;
+        data += totalch;
       }
     }
 
@@ -782,9 +783,10 @@ i_pslinf_d(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y,
   const imcms_curve_t *curves = im_model_curves(aIMCTX, i_img_color_model(im), &color_chans);
 
   if (y >=0 && y < im->ysize && l < im->xsize && l >= 0) {
+    int totalch = i_img_totalchannels(im);
     if (r > im->xsize)
       r = im->xsize;
-    data = im->idata + (l+y*im->xsize) * im->channels;
+    data = im->idata + (l+y*im->xsize) * totalch;
     w = r - l;
     count = 0;
 
@@ -795,8 +797,7 @@ i_pslinf_d(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y,
       int chi;
       for (chi = 0; chi < chan_count; ++chi) {
 	int ch = chans[chi];
-        if (ch < 0 || ch >= im->channels) {
-	  dIMCTXim(im);
+        if (ch < 0 || ch >= totalch) {
           im_push_errorf(aIMCTX, 0, "No channel %d in this image", ch);
           return -1;
         }
@@ -815,7 +816,7 @@ i_pslinf_d(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y,
 	      data[ch] = SampleFTo8(samp);
 	    ++count;
 	  }
-	  data += im->channels;
+	  data += totalch;
 	}
       }
       else {
@@ -832,13 +833,12 @@ i_pslinf_d(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y,
 	    ++samps;
 	    ++count;
 	  }
-	  data += im->channels;
+	  data += totalch;
 	}
       }
     }
     else {
-      if (chan_count <= 0 || chan_count > im->channels) {
-	dIMCTXim(im);
+      if (chan_count <= 0 || chan_count > totalch) {
 	im_push_errorf(aIMCTX, 0, "chan_count %d out of range, must be >0, <= channels", 
 		      chan_count);
 	return -1;
@@ -857,15 +857,14 @@ i_pslinf_d(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y,
           ++count;
 	  mask <<= 1;
         }
-        data += im->channels;
+        data += totalch;
       }
     }
 
     return count;
   }
   else {
-    dIMCTXim(im);
-    i_push_error(0, "Image position outside of image");
+    im_push_error(aIMCTX, 0, "Image position outside of image");
     return -1;
   }
 }
