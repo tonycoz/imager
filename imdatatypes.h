@@ -243,12 +243,13 @@ Flags supplied to i_img_data() to control behavior:
 
 =item *
 
-C<idf_no_synthesize> - don't synthesize the image data.
+C<idf_synthesize> - synthesize the image data if needed.  Data cannot
+be synthesized if C<idf_writable> is also set.
 
 =item *
 
 C<idf_writable> - the returned pointer can be used to write to the
-image.  Implies C<idf_no_synthesize>.
+image.
 
 =item *
 
