@@ -1349,7 +1349,7 @@ i_gsampf_fp(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, i_fsample_t *samp,
     if (r > l) {
       i_img_dim ret;
       i_img_dim i;
-      work = mymalloc(sizeof(i_sample_t) * (r-l));
+      work = mymalloc(sizeof(i_sample_t) * (r-l) * chan_count);
       ret = i_gsamp(im, l, r, y, work, chans, chan_count);
       for (i = 0; i < ret; ++i) {
           samp[i] = Sample8ToF(work[i]);
@@ -1389,7 +1389,7 @@ i_psampf_fp(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, const i_fsample_t 
     if (r > l) {
       i_img_dim ret = (r - l) * chan_count;
       i_img_dim i;
-      work = mymalloc(sizeof(i_sample_t) * (r-l));
+      work = mymalloc(sizeof(i_sample_t) * (r-l) * chan_count);
       for (i = 0; i < ret; ++i) {
           work[i] = SampleFTo8(samp[i]);
       }
