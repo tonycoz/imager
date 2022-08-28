@@ -283,6 +283,10 @@ extern i_img *i_img_to_drgb(i_img *im);
 extern i_img *im_img_float_new_extra(pIMCTX, i_img_dim x, i_img_dim y, int ch, int extra);
 extern i_img *i_img_to_float_rgb(i_img *im);
 
+extern i_img *
+im_lin_img_16_new_extra(pIMCTX, i_img_dim x, i_img_dim y, int ch, int extra);
+extern i_img *i_img_to_linrgb16(i_img *im);
+
 extern int i_img_is_monochrome(i_img *im, int *zero_is_white);
 extern int i_get_file_background(i_img *im, i_color *bg);
 extern int i_get_file_backgroundf(i_img *im, i_fcolor *bg);

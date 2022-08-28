@@ -65,6 +65,28 @@ im_img_float_new(pIMCTX, i_img_dim x, i_img_dim y, int ch) {
   return im_img_float_new_extra(aIMCTX, x, y, ch, 0);
 }
 
+/*
+=item im_lin_img_16_new(ctx, x, y, ch)
+X<im_lin_img_16_new API>X<i_lin_img_16_new API>
+=category Image creation/destruction
+=synopsis i_img *img = im_lin_img_16_new(aIMCTX, width, height, channels);
+=synopsis i_img *img = i_lin_img_16_new(width, height, channels);
+
+Create a new 16-bit/sample image.
+
+Returns the image on success, or NULL on failure.
+
+Also callable as C<i_img_16_new(x, y, ch)>
+
+=cut
+*/
+
+IMAGER_STATIC_INLINE i_img *
+im_lin_img_16_new(pIMCTX, i_img_dim x, i_img_dim y, int ch) {
+  return im_lin_img_16_new_extra(aIMCTX, x, y, ch, 0);
+}
+
+
 #ifdef __cplusplus
 }
 #endif

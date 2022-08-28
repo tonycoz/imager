@@ -106,6 +106,8 @@ Imager::APIRef - Imager's C API - reference.
   i_img *img = i_img_double_new_extra(width, height, channels, extra);
   i_img *img = im_img_float_new_extra(aIMCTX, width, height, channels, extra);
   i_img *img = i_img_float_new_extra(width, height, channels, extra);
+  i_img *img = im_lin_img_16_new_extra(aIMCTX, width, height, channels);
+  i_img *img = i_lin_img_16_new_extra(width, height, channels);
   i_img *img = im_img_pal_new(aIMCTX, width, height, channels, max_palette_size)
   i_img *img = i_img_pal_new(width, height, channels, max_palette_size)
   i_img_destroy(img)
@@ -1982,6 +1984,22 @@ Also callable as C<i_img_pal_new(width, height, channels, max_palette_size)>.
 
 =for comment
 From: palimg.c
+
+=item im_lin_img_16_new_extra(ctx, x, y, ch)
+X<im_lin_img_16_new_extra API>X<i_img_16_new_extra API>
+
+  i_img *img = im_lin_img_16_new_extra(aIMCTX, width, height, channels);
+  i_img *img = i_lin_img_16_new_extra(width, height, channels);
+
+Create a new linear 16-bit/sample image.
+
+Returns the image on success, or NULL on failure.
+
+Also callable as C<i_lin_img_16_new_extra(x, y, ch)>
+
+
+=for comment
+From: linimg16.c
 
 =item i_img_destroy()
 

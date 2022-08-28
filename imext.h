@@ -264,6 +264,8 @@ extern im_ext_funcs *imager_function_ext_table;
   ((im_extt->f_im_img_double_new_extra)((ctx), (xsize), (ysize), (channels), (extra)))
 #define im_img_float_new_extra(ctx, xsize, ysize, channels, extra) \
   ((im_extt->f_im_img_float_new_extra)((ctx), (xsize), (ysize), (channels), (extra)))
+#define im_lin_img_16_new_extra(ctx, xsize, ysize, channels, extra) \
+  ((im_extt->f_im_lin_img_16_new_extra)((ctx), (xsize), (ysize), (channels), (extra)))
 #define i_new_image_data_alloc_def(im) \
   ((im_extt->f_i_new_image_data_alloc_def)(im))
 #define i_new_image_data_alloc_free(im, releaseme) \

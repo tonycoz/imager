@@ -1053,25 +1053,40 @@ sub img_set {
       $self->_set_error("new: extrachannels must be 0 for paletted images");
       return;
     }
+    if ($hsh{linear}) {
+      $self->_set_error("new: paletted images cannot be linear");
+      return;
+    }
     $self->{IMG} = i_img_pal_new($hsh{xsize}, $hsh{ysize}, $hsh{channels},
                                  $hsh{maxcolors} || 256);
   }
-  elsif ($bits eq 'double') {
-    $self->{IMG} = i_img_double_new_extra($hsh{xsize}, $hsh{ysize}, $hsh{channels}, $hsh{extrachannels});
-  }
-  elsif ($bits eq 'float') {
-    $self->{IMG} = i_img_float_new_extra($hsh{xsize}, $hsh{ysize}, $hsh{channels}, $hsh{extrachannels});
-  }
-  elsif (($numeric_bits = $bits =~ /\A[0-9]+\z/) && $bits == 16) {
-    $self->{IMG} = i_img_16_new_extra($hsh{xsize}, $hsh{ysize}, $hsh{channels}, $hsh{extrachannels});
-  }
-  elsif ($numeric_bits && $bits == 8) {
-    $self->{IMG} = i_img_8_new_extra($hsh{'xsize'}, $hsh{'ysize'},
-                                     $hsh{'channels'}, $hsh{extrachannels});
+  elsif ($hsh{linear}) {
+    if (($numeric_bits = $bits =~ /\A[0-9]+\z/) && $bits == 16) {
+      $self->{IMG} = i_lin_img_16_new_extra($hsh{xsize}, $hsh{ysize}, $hsh{channels}, $hsh{extrachannels});
+    }
+    else {
+      $self->_set_error("new: unknown value for bits '$bits' for linear sample image");
+      return;
+    }
   }
   else {
-    $self->_set_error("new: unknown value for bits '$bits'");
-    return;
+    if ($bits eq 'double') {
+      $self->{IMG} = i_img_double_new_extra($hsh{xsize}, $hsh{ysize}, $hsh{channels}, $hsh{extrachannels});
+    }
+    elsif ($bits eq 'float') {
+      $self->{IMG} = i_img_float_new_extra($hsh{xsize}, $hsh{ysize}, $hsh{channels}, $hsh{extrachannels});
+    }
+    elsif (($numeric_bits = $bits =~ /\A[0-9]+\z/) && $bits == 16) {
+      $self->{IMG} = i_img_16_new_extra($hsh{xsize}, $hsh{ysize}, $hsh{channels}, $hsh{extrachannels});
+    }
+    elsif ($numeric_bits && $bits == 8) {
+      $self->{IMG} = i_img_8_new_extra($hsh{'xsize'}, $hsh{'ysize'},
+                                       $hsh{'channels'}, $hsh{extrachannels});
+    }
+    else {
+      $self->_set_error("new: unknown value for bits '$bits'");
+      return;
+    }
   }
 
   unless ($self->{IMG}) {
@@ -1255,6 +1270,38 @@ sub to_rgb_float {
   my $result = Imager->new;
   unless ($result->{IMG} = i_img_to_float_rgb($self->{IMG})) {
     $self->_set_error(Imager->_error_as_msg());
+    return;
+  }
+
+  return $result;
+}
+
+sub to_linear {
+  my $self = shift;
+
+  $self->_valid_image("to_linear")
+    or return;
+
+  my %opts = @_;
+
+  my $bits = delete $opts{bits};
+  unless (defined $bits) {
+    $bits = $self->bits;
+    if (!$self->linear && $bits < 16) {
+      $bits = 16;
+    }
+  }
+
+  my $result = Imager->new;
+  # this will move down to C code eventually
+  if ($bits == 16) {
+    unless ($result->{IMG} = i_img_to_linrgb16($self->{IMG})) {
+      $self->_set_error(Imager->_error_as_msg);
+      return;
+    }
+  }
+  else {
+    $self->_set_error("Cannot create $bits bit linear sample image");
     return;
   }
 
@@ -5335,6 +5382,8 @@ settag() - L<Imager::ImageTypes/settag()>
 string() - L<Imager::Draw/string()> - draw text on an image
 
 tags() -  L<Imager::ImageTypes/tags()> - fetch image tags
+
+to_linear() - L<Imager::ImageTypes/to_linear()>
 
 to_paletted() -  L<Imager::ImageTypes/to_paletted()>
 
