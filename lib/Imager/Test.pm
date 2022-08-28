@@ -654,9 +654,11 @@ sub test_colorf_gpix {
 	     "$comment - got right color ($x, $y)")) {
     my @c = $c->rgba;
     my @exp = $expected->rgba;
+    my @diff = map { $c[$_] - $exp[$_] } 0 .. 2;
     $builder->diag(<<EOS);
 # got: ($c[0], $c[1], $c[2])
 # expected: ($exp[0], $exp[1], $exp[2])
+# diff: $diff[0], $diff[1], $diff[2]
 EOS
   }
   1;
