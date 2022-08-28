@@ -1103,6 +1103,8 @@ sub std_image_tests {
   my $bits = $opts->{bits}
     or croak "Missing bits parameter";
 
+  my $linear = $opts->{linear} || 0;
+
   my $models = $opts->{models} || [ qw(gray graya rgb rgba) ];
 
   my @ten_zeros = (0) x 10;
@@ -1118,7 +1120,7 @@ sub std_image_tests {
 
   for my $model (@$models) {
     print "# model $model\n";
-    my $im = Imager->new(xsize => 10, ysize => 10, model => $model, bits => $bits);
+    my $im = Imager->new(xsize => 10, ysize => 10, model => $model, bits => $bits, linear => $linear);
     my $alpha_ch = $im->alphachannel;
     my $col_channels = $im->colorchannels;
     my $channel_count = $col_channels;

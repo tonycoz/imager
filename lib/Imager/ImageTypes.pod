@@ -793,6 +793,24 @@ color image.
 
 No parameters.
 
+=item to_linear()
+
+Create a linear sample version of an image.
+
+Parameters:
+
+=over
+
+=item *
+
+C<bits> - the bits per sample to use for the linear-sample image.  If
+this source image has bits < 16 this defaults to 16 bits, otherwise it
+defaults to the number of bits in the source image.
+
+At this point only 16-bit/sample linear images exist.
+
+=back
+
 =item masked()
 
 Creates a masked image.  A masked image lets you create an image proxy
