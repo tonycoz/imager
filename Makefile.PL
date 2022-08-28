@@ -153,7 +153,7 @@ my @objs = qw(Imager.o context.o draw.o polygon.o image.o io.o iolayer.o
               map.o tags.o palimg.o maskimg.o img8.o img16.o rotate.o
               bmp.o tga.o color.o fills.o imgdouble.o limits.o hlines.o
               imext.o scale.o rubthru.o render.o paste.o compose.o flip.o
-	      perlio.o imexif.o trim.o data.o imgflt.o);
+	      perlio.o imexif.o trim.o data.o imgflt.o linimg16.o);
 
 push @objs, $uselcms ? "imcms.o" : "imnocms.o";
 
