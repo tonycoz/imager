@@ -224,7 +224,7 @@ cmp_ok(Imager->errstr, '=~', qr/channels must be between 0 and 4/,
 
 {
   # extra channels
-  my $im = Imager->new(xsize => 10, ysize => 11, channels => 3, extrachannels => 5);
+  my $im = Imager->new(xsize => 10, ysize => 11, channels => 3, extrachannels => 5, bits => 16);
   ok($im, "make image with extra channels");
   is($im->channels, 3, "has 3 channels");
   is($im->extrachannels, 5, "has 5 extra channels");
