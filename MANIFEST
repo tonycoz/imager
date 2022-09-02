@@ -154,6 +154,7 @@ imgdouble.c			Implements double/sample images
 imgflt.c
 iminline.h
 imio.h
+imlinimg.h
 immacros.h
 imnocms.c
 imperl.h

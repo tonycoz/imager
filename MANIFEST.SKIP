@@ -58,6 +58,7 @@ Makefile$
 Makefile\.old$
 \bpm_to_blib$
 \.o$
+\.i$
 ^MANIFEST\.bak$
 \bMYMETA\.yml$
 \bMYMETA\.json(\.lock)?$
