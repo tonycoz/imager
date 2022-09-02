@@ -235,7 +235,8 @@ my %opts=
     'Exporter'    => '5.57',
    },
    TYPEMAPS       => \@typemaps,
-   test =>        { TESTS => $tests },
+   test           => { TESTS => $tests },
+   depend         => make_depend(),
   );
 
 if ($coverage) {
@@ -376,6 +377,20 @@ lib/Imager/APIRef.pod : \$(C_FILES) \$(H_FILES) apidocs.perl
 
 !.join('', map _im_rule($perl, $_), @ims)
 
+}
+
+# we provide finer dependencies
+{
+  package MY;
+  sub MY::top_targets {
+    my $self = shift;
+
+    my @base = split /\n/, $self->SUPER::top_targets;
+
+    @base = grep !/^\$\(O_FILES\)\s+:/, @base;
+
+    return join "\n", @base;
+  }
 }
 
 sub _im_rule {
@@ -1029,6 +1044,46 @@ EOF
   }
 
   return $ok;
+}
+
+sub make_depend {
+  my $manifest = maniread();
+  # not checking sub-module files
+  my @check_files = sort grep /^\w+\.([ch]|xs)$/, keys %$manifest;
+  my %inc = map { $_ => 1 } grep /\.h$/, @check_files;
+
+  my %file_deps;
+  my %reverse_deps;
+  for my $name (@check_files) {
+    open my $fh, "<", $name
+      or die "Cannot open $name: $!\n";
+    while (<$fh>) {
+      if (/^\s*#\s*include\s+"(\w+\.h)"\s*$/ && $inc{$1}) {
+        $file_deps{$name}{$1} = 1;
+        push @{$reverse_deps{$1}}, $name;
+      }
+    }
+  }
+
+  my %final_deps;
+  for my $name (grep !/\.h$/, @check_files) {
+    my %deps;
+    my %checked;
+    @deps{keys %{$file_deps{$name}}} = ();
+    my %checkme = %deps;
+    while (my @check = grep !$checked{$_}, keys %checkme) {
+      for my $inc (@check) {
+        my @deps = keys %{$file_deps{$inc}};
+        @checkme{@deps} = ();
+        @deps{@deps} = ();
+        ++$checked{$inc};
+      }
+    }
+    (my $obj_name = $name) =~ s/\.(?:c|xs)$/\$(OBJ_EXT)/;
+    $final_deps{$obj_name} = join " ", sort keys %deps;
+  }
+
+  return \%final_deps;
 }
 
 1;
