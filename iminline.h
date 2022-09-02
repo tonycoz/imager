@@ -86,6 +86,56 @@ im_lin_img_16_new(pIMCTX, i_img_dim x, i_img_dim y, int ch) {
   return im_lin_img_16_new_extra(aIMCTX, x, y, ch, 0);
 }
 
+/*
+=item i_img_all_channel_mask()
+=category Image Information
+=synopsis if (i_img_all_channel_mask(im)) { ... }
+
+Returns true if the images channel mask covers all channels in the
+image, including any extra channels.
+
+=cut
+*/
+
+IMAGER_STATIC_INLINE int
+i_img_all_channel_mask(const i_img *img) {
+  const int totalch = i_img_totalchannels(img);
+  const unsigned mask = (1 << totalch) - 1;
+
+  return (img->ch_mask & mask) == mask;
+}
+
+/*
+=item i_img_valid_channel_indexes()
+=category Image Information
+=synopsis if (i_img_valid_channel_indexes(im, chans, chan_count)) { ... }
+
+Return true if all of the channels specified by C<chans>/C<chan_count>
+are present in the image.
+
+Used by image implementations to validate passed in channel lists.
+
+C<chans> must be non-NULL.
+
+=cut
+*/
+
+IMAGER_STATIC_INLINE int
+i_img_valid_channel_indexes(i_img *im, int const *chans, int chan_count) {
+  const int totalch = i_img_totalchannels(im);
+  int chi;
+  for (chi = 0; chi < chan_count; ++chi) {
+    int ch = chans[chi];
+    if (ch < 0 || ch >= totalch) {
+#ifdef IMAGER_NO_CONTEXT
+      dIMCTXim(im);
+#endif
+      im_push_errorf(aIMCTX, 0, "No channel %d in this image", ch);
+      return 0;
+    }
+  }
+  return 1;
+}
 
 #ifdef __cplusplus
 }

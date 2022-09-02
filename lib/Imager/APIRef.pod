@@ -1999,7 +1999,7 @@ Also callable as C<i_lin_img_16_new_extra(x, y, ch)>
 
 
 =for comment
-From: linimg16.c
+From: imlinimg.h
 
 =item i_img_destroy()
 
