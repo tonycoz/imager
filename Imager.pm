@@ -1061,7 +1061,10 @@ sub img_set {
                                  $hsh{maxcolors} || 256);
   }
   elsif ($hsh{linear}) {
-    if (($numeric_bits = $bits =~ /\A[0-9]+\z/) && $bits == 16) {
+    if ($bits eq 'double') {
+      $self->{IMG} = i_lin_img_double_new_extra($hsh{xsize}, $hsh{ysize}, $hsh{channels}, $hsh{extrachannels});
+    }
+    elsif (($numeric_bits = $bits =~ /\A[0-9]+\z/) && $bits == 16) {
       $self->{IMG} = i_lin_img_16_new_extra($hsh{xsize}, $hsh{ysize}, $hsh{channels}, $hsh{extrachannels});
     }
     else {
@@ -1287,21 +1290,26 @@ sub to_linear {
   my $bits = delete $opts{bits};
   unless (defined $bits) {
     $bits = $self->bits;
-    if (!$self->linear && $bits < 16) {
+    if (!$self->linear && $bits =~ /^[0-9]+$/ && $bits < 16) {
       $bits = 16;
     }
   }
 
   my $result = Imager->new;
   # this will move down to C code eventually
-  if ($bits == 16) {
-    unless ($result->{IMG} = i_img_to_linrgb16($self->{IMG})) {
-      $self->_set_error(Imager->_error_as_msg);
-      return;
-    }
+  if ($bits eq 'double') {
+    $result->{IMG} = i_img_to_linrgbdbl($self->{IMG});
+  }
+  elsif ($bits == 16) {
+    $result->{IMG} = i_img_to_linrgb16($self->{IMG});
   }
   else {
     $self->_set_error("Cannot create $bits bit linear sample image");
+    return;
+  }
+
+  unless ($result->{IMG}) {
+    $self->_set_error(Imager->_error_as_msg);
     return;
   }
 
