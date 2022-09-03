@@ -93,7 +93,7 @@ sub is_color3($$$$$) {
 
   my ($cr, $cg, $cb) = $color->rgba;
   unless ($builder->ok($cr == $red && $cg == $green && $cb == $blue, $comment)) {
-    print <<END_DIAG;
+    $builder->diag(<<END_DIAG);
 Color mismatch:
   Red: $red vs $cr
 Green: $green vs $cg
