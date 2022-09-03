@@ -4456,7 +4456,16 @@ Imager::ImgRaw
 i_lin_img_16_new_extra(i_img_dim xsize, i_img_dim ysize, int channels, int extra)
 
 Imager::ImgRaw
+i_lin_img_double_new(i_img_dim xsize, i_img_dim ysize, int channels)
+
+Imager::ImgRaw
+i_lin_img_double_new_extra(i_img_dim xsize, i_img_dim ysize, int channels, int extra)
+
+Imager::ImgRaw
 i_img_to_linrgb16(Imager::ImgRaw im)
+
+Imager::ImgRaw
+i_img_to_linrgbdbl(Imager::ImgRaw im)
 
 Imager::ImgRaw
 i_img_to_rgb16(im)

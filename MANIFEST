@@ -222,6 +222,7 @@ lib/Imager/TrimColorList.pm
 lib/Imager/Tutorial.pod
 limits.c
 linimg16.c
+linimgdbl.c
 log.c
 log.h
 Makefile.PL
@@ -337,6 +338,7 @@ t/150-type/030-double.t		Test double/sample images
 t/150-type/040-palette.t	Test paletted images
 t/150-type/050-float.t
 t/150-type/060-lin16.t
+t/150-type/070-lindbl.t
 t/150-type/100-masked.t		Test masked images
 t/150-type/300-extra16.t	Test extra samples for 16-bit images
 t/150-type/310-extradbl.t	Test extra samples for double images

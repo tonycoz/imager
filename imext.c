@@ -249,7 +249,8 @@ im_ext_funcs imager_function_table =
     i_pslin_fallback,
     i_pslinf_fallback,
     im_img_float_new_extra,
-    im_lin_img_16_new_extra
+    im_lin_img_16_new_extra,
+    im_lin_img_double_new_extra
   };
 
 /* in general these functions aren't called by Imager internally, but
