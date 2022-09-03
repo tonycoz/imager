@@ -266,6 +266,7 @@ Return the reference count for the image.
 #define i_img_float_new(xsize, ysize, channels) im_img_float_new(aIMCTX, (xsize), (ysize), (channels))
 
 #define i_lin_img_16_new(xsize, ysize, channels) im_lin_img_16_new(aIMCTX, (xsize), (ysize), (channels))
+#define i_lin_img_double_new(xsize, ysize, channels) im_lin_img_double_new(aIMCTX, (xsize), (ysize), (channels))
 
 #define i_img_8_new_extra(xsize, ysize, channels, extra)                      \
   im_img_8_new_extra(aIMCTX, (xsize), (ysize), (channels), (extra))
@@ -278,6 +279,8 @@ Return the reference count for the image.
 
 #define i_lin_img_16_new_extra(xsize, ysize, channels, extra)                     \
   im_lin_img_16_new_extra(aIMCTX, (xsize), (ysize), (channels), (extra))
+#define i_lin_img_double_new_extra(xsize, ysize, channels, extra)                     \
+  im_lin_img_double_new_extra(aIMCTX, (xsize), (ysize), (channels), (extra))
 
 #define i_img_pal_new(xsize, ysize, channels, maxpal) \
   im_img_pal_new(aIMCTX, (xsize), (ysize), (channels), (maxpal))
