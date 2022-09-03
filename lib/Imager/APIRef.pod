@@ -3125,6 +3125,10 @@ B<im_lhead>
 
 =item *
 
+B<im_lin_img_double_new_extra>
+
+=item *
+
 B<im_loog>
 
 =item *

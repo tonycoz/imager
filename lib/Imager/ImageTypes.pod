@@ -807,7 +807,8 @@ C<bits> - the bits per sample to use for the linear-sample image.  If
 this source image has bits < 16 this defaults to 16 bits, otherwise it
 defaults to the number of bits in the source image.
 
-At this point only 16-bit/sample linear images exist.
+At this point only 16-bit/sample and double/sample linear images
+exist.
 
 =back
 

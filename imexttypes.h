@@ -301,6 +301,8 @@ typedef struct {
   (*f_im_img_float_new_extra)(im_context_t, i_img_dim x, i_img_dim y, int ch, int extra);
   i_img *
   (*f_im_lin_img_16_new_extra)(im_context_t, i_img_dim x, i_img_dim y, int ch, int extra);
+  i_img *
+  (*f_im_lin_img_double_new_extra)(im_context_t, i_img_dim x, i_img_dim y, int ch, int extra);
 } im_ext_funcs;
 
 #define PERL_FUNCTION_TABLE_NAME "Imager::__ext_func_table"
