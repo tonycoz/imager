@@ -1081,6 +1081,8 @@ sub make_depend {
     }
     (my $obj_name = $name) =~ s/\.(?:c|xs)$/\$(OBJ_EXT)/;
     $final_deps{$obj_name} = join " ", sort keys %deps;
+    (my $asm_name = $name) =~ s/\.(?:c|xs)$/.s/;
+    $final_deps{$asm_name} = join " ", sort keys %deps;
   }
 
   return \%final_deps;
