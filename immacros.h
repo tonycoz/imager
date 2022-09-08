@@ -341,6 +341,12 @@ Intended for use in macros to warn that the given macro is deprecated.
 
 #define i_model_curves(im, pcolor_chans) im_model_curves(aIMCTX, (im), (pcolor_chans))
 
+#define IM_CAT_(x, y) x##y
+#define IM_CAT(x, y) IM_CAT_(x, y)
+
+#define IM_QUOTE_(x) #x
+#define IM_QUOTE(x) IM_QUOTE_(x)
+  
 #ifdef __cplusplus
 }
 #endif

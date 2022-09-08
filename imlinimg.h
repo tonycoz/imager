@@ -75,38 +75,33 @@
 #include <inttypes.h>
 #endif
 
-#define CAT_(x, y) x##y
-#define CAT(x, y) CAT_(x, y)
-#define QUOTE_(x) #x
-#define QUOTE(x) QUOTE_(x)
-
 static i_img_dim
-CAT(i_gsamp_, LINIMG_SUFFIX)(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, i_sample_t *samps, 
+IM_CAT(i_gsamp_, LINIMG_SUFFIX)(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, i_sample_t *samps, 
                              int const *chans, int chan_count);
 static i_img_dim
-CAT(i_gsampf_, LINIMG_SUFFIX)(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, i_fsample_t *samps, 
+IM_CAT(i_gsampf_, LINIMG_SUFFIX)(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, i_fsample_t *samps, 
                               int const *chans, int chan_count);
 static i_img_dim
-CAT(i_psamp_, LINIMG_SUFFIX)(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, const i_sample_t *samps,
+IM_CAT(i_psamp_, LINIMG_SUFFIX)(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, const i_sample_t *samps,
                               const int *chans, int chan_count);
 static i_img_dim
-CAT(i_psampf_, LINIMG_SUFFIX)(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, const i_fsample_t *samps,
+IM_CAT(i_psampf_, LINIMG_SUFFIX)(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, const i_fsample_t *samps,
                               const int *chans, int chan_count);
 static i_image_data_alloc_t *
-CAT(i_data_, LINIMG_SUFFIX)(i_img *im, i_data_layout_t layout, i_img_bits_t bits, unsigned flags,
+IM_CAT(i_data_, LINIMG_SUFFIX)(i_img *im, i_data_layout_t layout, i_img_bits_t bits, unsigned flags,
                           void **p, size_t *size, int *extra);
 
 static i_img_dim
-CAT(i_gslin_, LINIMG_SUFFIX)(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, i_sample16_t *samps,
+IM_CAT(i_gslin_, LINIMG_SUFFIX)(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, i_sample16_t *samps,
                              const int *chans, int chan_count);
 static i_img_dim
-CAT(i_gslinf_, LINIMG_SUFFIX)(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, i_fsample_t *samps,
+IM_CAT(i_gslinf_, LINIMG_SUFFIX)(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, i_fsample_t *samps,
                               const int *chans, int chan_count);
 static i_img_dim
-CAT(i_pslin_, LINIMG_SUFFIX)(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, const i_sample16_t *samps,
+IM_CAT(i_pslin_, LINIMG_SUFFIX)(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, const i_sample16_t *samps,
                              const int *chans, int chan_count);
 static i_img_dim
-CAT(i_pslinf_, LINIMG_SUFFIX)(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, const i_fsample_t *samps,
+IM_CAT(i_pslinf_, LINIMG_SUFFIX)(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, const i_fsample_t *samps,
                               const int *chans, int chan_count);
 
 
@@ -121,26 +116,26 @@ Internal.
 */
 
 static const i_img_vtable
-CAT(vtable_, LINIMG_SUFFIX) = {
+IM_CAT(vtable_, LINIMG_SUFFIX) = {
   IMAGER_API_LEVEL,
   
-  CAT(i_gsamp_, LINIMG_SUFFIX),
-  CAT(i_gsampf_, LINIMG_SUFFIX),
+  IM_CAT(i_gsamp_, LINIMG_SUFFIX),
+  IM_CAT(i_gsampf_, LINIMG_SUFFIX),
 
-  CAT(i_psamp_, LINIMG_SUFFIX),
-  CAT(i_psampf_, LINIMG_SUFFIX),
+  IM_CAT(i_psamp_, LINIMG_SUFFIX),
+  IM_CAT(i_psampf_, LINIMG_SUFFIX),
 
   NULL, /* i_f_destroy */
 
   i_gsamp_bits_fb,
   i_psamp_bits_fb,
 
-  CAT(i_gslin_, LINIMG_SUFFIX),
-  CAT(i_gslinf_, LINIMG_SUFFIX),
-  CAT(i_pslin_, LINIMG_SUFFIX),
-  CAT(i_pslinf_, LINIMG_SUFFIX),
+  IM_CAT(i_gslin_, LINIMG_SUFFIX),
+  IM_CAT(i_gslinf_, LINIMG_SUFFIX),
+  IM_CAT(i_pslin_, LINIMG_SUFFIX),
+  IM_CAT(i_pslinf_, LINIMG_SUFFIX),
   
-  CAT(i_data_, LINIMG_SUFFIX),
+  IM_CAT(i_data_, LINIMG_SUFFIX),
 
   NULL, /* i_f_imageop */
 
@@ -176,7 +171,7 @@ LINIMG_NEW_EXTRA_NAME(pIMCTX, i_img_dim x, i_img_dim y, int ch, int extra) {
   size_t bytes, line_bytes;
   int totalch;
 
-  im_log((aIMCTX, 1, QUOTE(LINIMG_NEW_EXTRA_NAME) "(x %" i_DF ", y %" i_DF ", ch %d)\n",
+  im_log((aIMCTX, 1, IM_QUOTE(LINIMG_NEW_EXTRA_NAME) "(x %" i_DF ", y %" i_DF ", ch %d)\n",
 	  i_DFc(x), i_DFc(y), ch, extra));
 
   im_clear_error(aIMCTX);
@@ -217,7 +212,7 @@ LINIMG_NEW_EXTRA_NAME(pIMCTX, i_img_dim x, i_img_dim y, int ch, int extra) {
     return NULL;
   }
 
-  im = im_img_new(aIMCTX, &CAT(vtable_, LINIMG_SUFFIX), x, y, ch, extra, LINIMG_BITS);
+  im = im_img_new(aIMCTX, &IM_CAT(vtable_, LINIMG_SUFFIX), x, y, ch, extra, LINIMG_BITS);
   if (im == NULL)
     return NULL;
 
@@ -231,7 +226,7 @@ LINIMG_NEW_EXTRA_NAME(pIMCTX, i_img_dim x, i_img_dim y, int ch, int extra) {
 }
 
 static i_img_dim
-CAT(i_gsamp_, LINIMG_SUFFIX)(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, i_sample_t *samps, 
+IM_CAT(i_gsamp_, LINIMG_SUFFIX)(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, i_sample_t *samps, 
                              int const *chans, int chan_count) {
   dIMCTXim(im); 
 
@@ -297,7 +292,7 @@ CAT(i_gsamp_, LINIMG_SUFFIX)(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, i
 }
 
 static i_img_dim
-CAT(i_gsampf_, LINIMG_SUFFIX)(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, i_fsample_t *samps, 
+IM_CAT(i_gsampf_, LINIMG_SUFFIX)(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, i_fsample_t *samps, 
              int const *chans, int chan_count) {
   dIMCTXim(im);
 
@@ -371,7 +366,7 @@ bits_set(chan_mask)
 */
 
 static i_img_dim
-CAT(i_psamp_, LINIMG_SUFFIX)(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, 
+IM_CAT(i_psamp_, LINIMG_SUFFIX)(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, 
                              const i_sample_t *samps, const int *chans, int chan_count) {
   dIMCTXim(im);
 
@@ -473,7 +468,7 @@ bits_set(chan_mask)
 */
 
 static i_img_dim
-CAT(i_psampf_, LINIMG_SUFFIX)(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, 
+IM_CAT(i_psampf_, LINIMG_SUFFIX)(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, 
                               const i_fsample_t *samps, const int *chans, int chan_count) {
   dIMCTXim(im);
 
@@ -561,7 +556,7 @@ CAT(i_psampf_, LINIMG_SUFFIX)(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y,
 }
 
 static i_image_data_alloc_t *
-CAT(i_data_, LINIMG_SUFFIX)(i_img *im, i_data_layout_t layout, i_img_bits_t bits, unsigned flags,
+IM_CAT(i_data_, LINIMG_SUFFIX)(i_img *im, i_data_layout_t layout, i_img_bits_t bits, unsigned flags,
                             void **pdata, size_t *psize, int *pextra) {
   if ((im->extrachannels && !(flags & idf_extras))
       || (flags & ~(idf_extras|idf_synthesize|idf_writable)) != idf_linear_curve
@@ -579,7 +574,7 @@ CAT(i_data_, LINIMG_SUFFIX)(i_img *im, i_data_layout_t layout, i_img_bits_t bits
 }
 
 static i_img_dim
-CAT(i_gslin_, LINIMG_SUFFIX)(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y,
+IM_CAT(i_gslin_, LINIMG_SUFFIX)(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y,
                              i_sample16_t *samps, const int *chans, int chan_count) {
   if (y >=0 && y < im->ysize && l < im->xsize && l >= 0) {
     const LINIMG_SAMPLE_TYPE * const data = (const LINIMG_SAMPLE_TYPE *)im->idata;
@@ -649,7 +644,7 @@ CAT(i_gslin_, LINIMG_SUFFIX)(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y,
 }
 
 static i_img_dim
-CAT(i_gslinf_, LINIMG_SUFFIX)(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y,
+IM_CAT(i_gslinf_, LINIMG_SUFFIX)(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y,
                               i_fsample_t *samps, const int *chans, int chan_count) {
   if (y >=0 && y < im->ysize && l < im->xsize && l >= 0) {
     const LINIMG_SAMPLE_TYPE * const data = (const LINIMG_SAMPLE_TYPE *)im->idata;
@@ -719,7 +714,7 @@ CAT(i_gslinf_, LINIMG_SUFFIX)(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y,
 }
 
 static i_img_dim
-CAT(i_pslin_, LINIMG_SUFFIX)(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, 
+IM_CAT(i_pslin_, LINIMG_SUFFIX)(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, 
                              const i_sample16_t *samps, const int *chans, int chan_count) {
   if (y >=0 && y < im->ysize && l < im->xsize && l >= 0) {
     LINIMG_SAMPLE_TYPE * const data = (LINIMG_SAMPLE_TYPE *)im->idata;    
@@ -795,7 +790,7 @@ CAT(i_pslin_, LINIMG_SUFFIX)(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y,
 }
 
 static i_img_dim
-CAT(i_pslinf_, LINIMG_SUFFIX)(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, 
+IM_CAT(i_pslinf_, LINIMG_SUFFIX)(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, 
                               const i_fsample_t *samps, const int *chans, int chan_count) {
 
   if (y >=0 && y < im->ysize && l < im->xsize && l >= 0) {
