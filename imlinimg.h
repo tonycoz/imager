@@ -595,14 +595,24 @@ CAT(i_gslin_, LINIMG_SUFFIX)(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y,
       /* make sure we have good channel numbers */
       if (!i_img_valid_channel_indexes(im, chans, chan_count))
         return 0;
-      for (x = l; x < r; ++x) {
-        int chi;
-        for (chi = 0; chi < chan_count; ++chi) {
-	  int ch = chans[chi];
-	  *samps++ = LINIMG_REP_TO_LIN_SAMPLE(data[off+ch]);
+      if (chan_count == 1) {
+        int ch = chans[0];
+        for (x = l; x < r; ++x) {
+          *samps++ = LINIMG_REP_TO_LIN_SAMPLE(data[off+ch]);
           ++count;
+          off += totalch;
         }
-        off += totalch;
+      }
+      else {
+        for (x = l; x < r; ++x) {
+          int chi;
+          for (chi = 0; chi < chan_count; ++chi) {
+            int ch = chans[chi];
+            *samps++ = LINIMG_REP_TO_LIN_SAMPLE(data[off+ch]);
+            ++count;
+          }
+          off += totalch;
+        }
       }
     }
     else {
@@ -612,13 +622,22 @@ CAT(i_gslin_, LINIMG_SUFFIX)(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y,
 		      chan_count);
 	return 0;
       }
-      for (x = l; x < r; ++x) {
-        int ch;
-        for (ch = 0; ch < chan_count; ++ch) {
-	  *samps++ = LINIMG_REP_TO_LIN_SAMPLE(data[off+ch]);
+      if (chan_count == 1) {
+        for (x = l; x < r; ++x) {
+          *samps++ = LINIMG_REP_TO_LIN_SAMPLE(data[off]); /* always channel 0 */
           ++count;
+          off += totalch;
         }
-        off += totalch;
+      }
+      else {
+        for (x = l; x < r; ++x) {
+          int ch;
+          for (ch = 0; ch < chan_count; ++ch) {
+            *samps++ = LINIMG_REP_TO_LIN_SAMPLE(data[off+ch]);
+            ++count;
+          }
+          off += totalch;
+        }
       }
     }
 
@@ -646,14 +665,24 @@ CAT(i_gslinf_, LINIMG_SUFFIX)(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y,
       /* make sure we have good channel numbers */
       if (!i_img_valid_channel_indexes(im, chans, chan_count))
         return 0;
-      for (x = l; x < r; ++x) {
-        int chi;
-        for (chi = 0; chi < chan_count; ++chi) {
-	  int ch = chans[chi];
+      if (chan_count == 1) {
+        int ch = chans[0];
+        for (x = l; x < r; ++x) {
           *samps++ = LINIMG_REP_TO_LIN_SAMPLEF(data[off+ch]);
           ++count;
+          off += totalch;
         }
-        off += totalch;
+      }
+      else {
+        for (x = l; x < r; ++x) {
+          int chi;
+          for (chi = 0; chi < chan_count; ++chi) {
+            int ch = chans[chi];
+            *samps++ = LINIMG_REP_TO_LIN_SAMPLEF(data[off+ch]);
+            ++count;
+          }
+          off += totalch;
+        }
       }
     }
     else {
@@ -663,13 +692,22 @@ CAT(i_gslinf_, LINIMG_SUFFIX)(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y,
 		      chan_count);
 	return 0;
       }
-      for (x = l; x < r; ++x) {
-        int ch;
-        for (ch = 0; ch < chan_count; ++ch) {
-          *samps++ = LINIMG_REP_TO_LIN_SAMPLEF(data[off+ch]);
+      if (chan_count == 1) {
+        for (x = l; x < r; ++x) {
+          *samps++ = LINIMG_REP_TO_LIN_SAMPLEF(data[off]); /* always channel 0 */
           ++count;
+          off += totalch;
         }
-        off += totalch;
+      }
+      else {
+        for (x = l; x < r; ++x) {
+          int ch;
+          for (ch = 0; ch < chan_count; ++ch) {
+            *samps++ = LINIMG_REP_TO_LIN_SAMPLEF(data[off+ch]);
+            ++count;
+          }
+          off += totalch;
+        }
       }
     }
 
