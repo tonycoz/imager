@@ -186,6 +186,7 @@ cmp_ok(Imager->errstr, '=~', qr/channels must be between 0 and 4/,
     # in the image itself is smaller than a line of i_fcolor
     # divide by 2 to get to int range, by 2 for 2 bytes/pixel, by 3 to 
     # fit the image allocation in, but for the floats to overflow
+    Imager->_set_error("");
     my $dim4 = $uint_range / 2 / 2 / 3;
     my $im_o = Imager->new(xsize=>$dim4, ysize=>1, channels=>1, bits=>16);
     is($im_o, undef, "integer overflow check - scanline");
