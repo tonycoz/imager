@@ -54,7 +54,6 @@ extern im_ext_funcs *imager_function_ext_table;
 
 #define im_img_8_new(ctx, xsize, ysize, channels) ((im_extt->f_im_img_8_new)((ctx), (xsize), (ysize), (channels)))
 #define im_img_16_new(ctx, xsize, ysize, channels) ((im_extt->f_im_img_16_new)((ctx), (xsize), (ysize), (channels)))
-#define im_img_double_new(ctx, xsize, ysize, channels) ((im_extt->f_im_img_double_new)((ctx), (xsize), (ysize), (channels)))
 #define im_img_pal_new(ctx, xsize, ysize, channels, maxpal) ((im_extt->f_im_img_pal_new)((ctx), (xsize), (ysize), (channels), (maxpal)))
 
 #define i_img_destroy(im) ((im_extt->f_i_img_destroy)(im))
