@@ -53,7 +53,7 @@ X<im_img_float_new API>X<i_img_float_new API>
 =synopsis i_img *img = im_img_float_new(aIMCTX, width, height, channels);
 =synopsis i_img *img = i_img_float_new(width, height, channels);
 
-Creates a new double per sample image.
+Creates a new float per sample image.
 
 Also callable as C<i_img_float_new(width, height, channels)>.
 
@@ -63,6 +63,25 @@ Also callable as C<i_img_float_new(width, height, channels)>.
 IMAGER_STATIC_INLINE i_img *
 im_img_float_new(pIMCTX, i_img_dim x, i_img_dim y, int ch) {
   return im_img_float_new_extra(aIMCTX, x, y, ch, 0);
+}
+
+/*
+=item im_img_double_new(ctx, x, y, ch)
+X<im_img_double_new API>X<i_img_double_new API>
+=category Image creation/destruction
+=synopsis i_img *img = im_img_double_new(aIMCTX, width, height, channels);
+=synopsis i_img *img = i_img_double_new(width, height, channels);
+
+Creates a new double per sample image.
+
+Also callable as C<i_img_double_new(width, height, channels)>.
+
+=cut
+*/
+
+IMAGER_STATIC_INLINE i_img *
+im_img_double_new(pIMCTX, i_img_dim x, i_img_dim y, int ch) {
+  return im_img_double_new_extra(aIMCTX, x, y, ch, 0);
 }
 
 /*

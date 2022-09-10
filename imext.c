@@ -6,7 +6,6 @@
 static im_context_t get_context(void);
 static i_img *mathom_i_img_8_new(i_img_dim, i_img_dim, int);
 static i_img *mathom_i_img_16_new(i_img_dim, i_img_dim, int);
-static i_img *mathom_i_img_double_new(i_img_dim, i_img_dim, int);
 static i_img *mathom_i_img_pal_new(i_img_dim, i_img_dim, int, int);
 static void mathom_i_clear_error(void);
 static void mathom_i_push_error(int, const char *);
@@ -43,7 +42,6 @@ im_ext_funcs imager_function_table =
 
     mathom_i_img_8_new,
     mathom_i_img_16_new,
-    mathom_i_img_double_new,
     mathom_i_img_pal_new,
     i_img_destroy,
     i_sametype,
@@ -178,7 +176,6 @@ im_ext_funcs imager_function_table =
     /* level 8 */
     im_img_8_new,
     im_img_16_new,
-    im_img_double_new,
     im_img_pal_new,
     im_clear_error,
     im_push_error,
