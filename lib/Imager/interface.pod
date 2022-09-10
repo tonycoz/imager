@@ -16,7 +16,7 @@ This is a C level interface rather than Perl.
 
 =head2 Existing Images
 
-As of this writing we have the following concrete image types:
+As of this writing we have the following concrete gamma image types:
 
 =over
 
@@ -30,6 +30,10 @@ As of this writing we have the following concrete image types:
 
 =item *
 
+float/sample direct images.
+
+=item *
+
 double/sample direct images
 
 =item *
@@ -37,6 +41,27 @@ double/sample direct images
 8-bit/sample 8-bit/index paletted images
 
 =back
+
+and the following linear sample image types:
+
+=over
+
+=item *
+
+16-bit/sample direct images
+
+=item *
+
+float/sample direct images.
+
+=item *
+
+double/sample direct images
+
+=back
+
+There will not be a 8-bit/linear sample image, since 8-bits won't
+represent low levels precisely enough.
 
 Currently there is only one virtual image type:
 
@@ -88,9 +113,19 @@ can be used to determine the structure of the image:
 
 =item *
 
-C<channels> - the number of samples kept for each pixel in the image.
-For paletted images the samples are kept for each entry in the
-palette.
+C<vtbl> - pointer to an C<i_img_vtable> struct which contains the
+callbacks listed below.
+
+=item *
+
+C<channels> - the number of color related samples kept for each pixel
+in the image.  For paletted images the samples are kept for each entry
+in the palette.
+
+=item *
+
+C<extrachannels> - the number of extra samples kept for each pixel in
+the image.  Imager's paletted image doesn't allow extra samples.
 
 =item *
 
@@ -120,7 +155,12 @@ i_palette_type images keep an index into a color table for each pixel.
 
 =item *
 
-C<virtual> - whether the image keeps any pixel data.  If this is
+C<islinear> - whether the image's native samples are linear or gamma
+scaled.
+
+=item *
+
+C<isvirtual> - whether the image keeps any pixel data.  If this is
 non-zero then C<idata> points to image data, otherwise it points to
 implementation defined data, though C<ext_data> is more likely to be
 used for that.
@@ -140,10 +180,18 @@ creating a new image type.
 
 =item *
 
+C<ref_count> - the number of references to this image.
+
+=item *
+
 C<ext_data> - for internal use of image types.  This is not released
 by the standard i_img_exorcise() function.  If you create a new image
 type and want to store a pointer to allocated memory here you should
 point i_f_destroy at a function that will release the data.
+
+=item *
+
+C<context> - the Imager API context this image was created in.
 
 =back
 
@@ -159,42 +207,6 @@ in the range 0 to 1 inclusive.
 
 =over
 
-=item i_f_ppix(im,x,y,color)
-
-=item i_f_ppixf(im,x,y,fcolor)
-
-stores the specified color at pixel (x,y) in the image.  If the pixel
-can be stored return 0, otherwise -1.  An image type may choose to
-return 0 under some circumstances, eg. writing to a masked area of an
-image.  The C<color> or C<fcolor> always contains the actual samples to be
-written, rather than a palette index.
-
-=item i_f_plin(im,l,r,y,colors)
-
-=item i_f_plinf(im,l,r,y,fcolors)
-
-stores (r-l) pixels at positions (l,y) ... (r-1, y) from the array
-specified by C<colors> (or C<fcolors>).  Returns the number of pixels
-written to.  If l is negative it will return 0.  If C<< r > im->xsize
->> then only C<< (im->xsize - l) >> will be written.
-
-=item i_f_gpix(im,x,y,color)
-
-=item i_f_gpixf(im,x,y,fcolor)
-
-retrieves a single pixel from position (x,y).  This returns the
-samples rather than the index for paletted images.
-
-=item i_f_glin(im,l,r,y,colors)
-
-=item i_f_glinf(im,l,r,y,fcolors)
-
-retrieves (r-l) pixels from positions (l, y) through (r-1, y) into the
-array specified by colors.  Returns the number of pixels retrieved.
-If l < 0 no pixels are retrieved.  If C<< r > im->xsize >> then pixels
-C<< (l, y) >> ... C<< (im->xsize-1, y) >> are retrieved.  Retrieves
-the samples rather than the color indexes for paletted images.
-
 =item i_f_gsamp(im,l,r,y,samples,chans,chan_count)
 
 =item i_f_gsampf(im,l,r,y,fsamples,chans,chan_count)
@@ -206,6 +218,67 @@ be retrieved.  Returns the number of sample retrieved (I<not> the
 number of channels).  If a channel in C<chans> is not present in the
 image or l < 0, returns 0.  If C<< r > im->xsize >>, then the samples
 from C<(l,y)> ... C<< (im->xsize-1, y) >> are returned.
+
+=item i_f_psamp(im,l,r,y,samples,chans,chan_count)
+
+=item i_f_psampf(im,l,r,y,fsamples,chans,chan_count)
+
+Writes samples to channels specified by C<chans> (for length
+C<chan_count>) from pixels at positions (l,y) ... (r-1, y).  If
+C<chans> is NULL then samples from channels 0 ... C<chan_count-1> will
+be retrieved.  Returns the number of samples set (I<not> the
+number of channels).  If a channel in C<chans> is not present in the
+image or l < 0, returns -1.  If C<< r > im->xsize >>, then the samples
+from C<(l,y)> ... C<< (im->xsize-1, y) >> are returned.
+
+=item i_f_data(im, layout, bits, flags, &data, *size, &extra)
+
+Retrieves image data for the whole image.  If the requested layout
+matches the image layout this will return the image's internal
+representation, otherwise if C<idf_synthesize> is set in C<flags> it
+will allocate a buffer and fill it with the requested layout (with
+some limitations).  An implementor can check for the image's layout,
+and fallback to L<Imager::APIRef/i_img_data_fallback()>.
+
+The return value is used to release the returned data, it can hold a
+reference count on the image, or a callback to release the data
+returned in C<data>.
+
+=item i_f_imageop(im, name, parameters)
+
+Perform a specified (generally) whole-image operation.  Future use.
+Values of C<opname> starting with C<i_> are reserved for definition by
+Imager itself.
+
+=item i_f_gsamp_bits(im,l,r,y,usamples,chans,chan_count,bits)
+
+Like i_f_gsamp except the samples buffer is C<unsigned> rather than
+C<i_sample_t>, and the samples are scaled by C<<< 1<<(bits-1) >>>.  An
+implementor can fallback to C<i_gsamp_bits_fb>.
+
+=item i_f_psamp_bits(im,l,r,y,usamples,chans,chan_count,bits)
+
+Like i_f_psamp except the samples buffer is C<unsigned> rather than
+C<i_sample_t>, and the samples are scaled by C<<< 1<<(bits-1) >>>.  An
+implementor can fallback to C<i_psamp_bits_fb>.
+
+=item i_f_gslin(im,l,r,y,samples,chans,chan_count)
+
+=item i_f_gslinf(im,l,r,y,fsamples,chans,chan_count)
+
+Like gsamp()/gsampf() except linear samples are returned.  An
+implementation can set this to C<i_gslin_fallback> or
+C<i_gslinf_fallback> to save effort at the cost of a little
+performance.
+
+=item i_f_pslin(im,l,r,y,samples,chans,chan_count)
+
+=item i_f_pslinf(im,l,r,y,fsamples,chans,chan_count)
+
+Like psamp()/psampf() except linear samples are returned.  An
+implementation can set this to C<i_pslin_fallback> or
+C<i_pslinf_fallback> to save effort at the cost of a little
+performance.
 
 =back
 
@@ -275,26 +348,36 @@ Several functions have been written to simplify creating new image types.
 
 These tools are available by including F<imagei.h>.
 
-=head2 Floating point wrappers
+=head2 Fallback functions
 
-These functions implement the floating point sample versions of each
-interface function in terms of the integer sample version.
+These functions implement most of the interface, allowing an image
+implementer to only implement the i_gsamp() and i_gsampf() interfaces.
 
 These are:
 
 =over
 
-=item i_ppixf_fp
-
-=item i_gpixf_fp
-
-=item i_plinf_fp
-
-=item i_glinf_fp
-
 =item i_gsampf_fp
 
+=item i_psampf_fp
+
+=item i_gsamp_bits_fb
+
+=item i_psamp_bits_fb
+
+=item i_gslin_fallback
+
+=item i_gslinf_fallback
+
+=item i_pslin_fallback
+
+=item i_pslinf_fallback
+
+=item i_img_data_fallback
+
 =back
+
+See L<Imager::APIRef/im_img_alloc()> for some details.
 
 
 =head2 Forwarding functions
