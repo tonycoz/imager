@@ -37,7 +37,7 @@ Some of these functions are internal.
 im_context_t (*im_get_context)(void) = NULL;
 
 /*
-=item im_img_alloc(aIMCTX)
+=item im_img_alloc()
 X<im_img_alloc API>X<i_img_alloc API>
 =category Image Implementation
 =synopsis i_img *im = im_img_alloc(aIMCTX);
@@ -52,12 +52,14 @@ image object creation function:
 
 =item 1.
 
-allocate the image with i_img_alloc().
+allocate the image with i_img_new(), supplying the virtual table
+pointer, width, height, number of channels, number of extra channels
+and bit depth.
 
 =item 2.
 
-initialize any function pointers or other data as needed, you can
-overwrite the whole block if you need to.
+make any other modifications needed, such as marking the image as
+linear or virtual, allocating image data for non-virtual images.
 
 =item 3.
 
@@ -119,7 +121,7 @@ X<im_img_init API>X<i_img_init API>
 
 Imager internal initialization of images.
 
-See L</im_img_alloc(aIMCTX)> for more information.
+See L</im_img_alloc()> for more information.
 
 =cut
 */
