@@ -274,7 +274,6 @@ extern i_img *i_img_to_pal(i_img *src, i_quantize *quant);
 extern i_img *i_img_to_rgb(i_img *src);
 extern i_img *i_img_masked_new(i_img *targ, i_img *mask, i_img_dim x, i_img_dim y, 
                                i_img_dim w, i_img_dim h);
-extern i_img *im_img_16_new(pIMCTX, i_img_dim x, i_img_dim y, int ch);
 extern i_img *im_img_16_new_extra(pIMCTX, i_img_dim x, i_img_dim y, int ch, int extra);
 extern i_img *i_img_to_rgb16(i_img *im);
 extern i_img *im_img_double_new_extra(pIMCTX, i_img_dim x, i_img_dim y, int ch, int extra);

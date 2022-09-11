@@ -92,8 +92,6 @@ Imager::APIRef - Imager's C API - reference.
   # Image creation/destruction
   i_img *img = i_sametype(src, width, height);
   i_img *img = i_sametype_chans(src, width, height, channels);
-  i_img *img = im_img_16_new(aIMCTX, width, height, channels);
-  i_img *img = i_img_16_new(width, height, channels);
   i_img *img = im_img_16_new_extra(aIMCTX, width, height, channels);
   i_img *img = i_img_16_new_extra(width, height, channels);
   i_img *img = im_img_8_new(aIMCTX, width, height, channels);
@@ -104,8 +102,12 @@ Imager::APIRef - Imager's C API - reference.
   i_img *img = i_img_double_new_extra(width, height, channels, extra);
   i_img *img = im_img_float_new_extra(aIMCTX, width, height, channels, extra);
   i_img *img = i_img_float_new_extra(width, height, channels, extra);
+  i_img *img = im_img_float_new(aIMCTX, width, height, channels);
+  i_img *img = i_img_float_new(width, height, channels);
   i_img *img = im_img_double_new(aIMCTX, width, height, channels);
   i_img *img = i_img_double_new(width, height, channels);
+  i_img *img = im_img_16_new(aIMCTX, width, height, channels);
+  i_img *img = i_img_16_new(width, height, channels);
   i_img *img = im_lin_img_16_new_extra(aIMCTX, width, height, channels);
   i_img *img = i_lin_img_16_new_extra(width, height, channels);
   i_img *img = im_img_pal_new(aIMCTX, width, height, channels, max_palette_size)
@@ -1871,15 +1873,13 @@ X<im_img_16_new API>X<i_img_16_new API>
   i_img *img = im_img_16_new(aIMCTX, width, height, channels);
   i_img *img = i_img_16_new(width, height, channels);
 
-Create a new 16-bit/sample image.
+Creates a new 16-bit per sample image.
 
-Returns the image on success, or NULL on failure.
-
-Also callable as C<i_img_16_new(x, y, ch)>
+Also callable as C<i_img_16_new(width, height, channels)>.
 
 
 =for comment
-From: img16.c
+From: iminline.h
 
 =item im_img_16_new_extra(ctx, x, y, ch)
 X<im_img_16_new_extra API>X<i_img_16_new_extra API>
@@ -1951,6 +1951,20 @@ Also callable as C<i_img_double_new_extra(width, height, channels, extra)>.
 
 =for comment
 From: imgdouble.c
+
+=item im_img_float_new(ctx, x, y, ch)
+X<im_img_float_new API>X<i_img_float_new API>
+
+  i_img *img = im_img_float_new(aIMCTX, width, height, channels);
+  i_img *img = i_img_float_new(width, height, channels);
+
+Creates a new float per sample image.
+
+Also callable as C<i_img_float_new(width, height, channels)>.
+
+
+=for comment
+From: iminline.h
 
 =item im_img_float_new_extra(ctx, x, y, ch, extra)
 X<im_img_float_new_extra API>X<i_img_float_new_extra API>
