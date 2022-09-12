@@ -627,6 +627,43 @@ i_psamp_p(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y,
 }
 
 /*
+=item i_ppixf_fp()
+
+=cut
+*/
+
+IMAGER_STATIC_INLINE int
+i_ppixf_fp(i_img *im, i_img_dim x, i_img_dim y, const i_fcolor *pix) {
+  i_color temp;
+  int ch;
+
+  for (ch = 0; ch < im->channels; ++ch)
+    temp.channel[ch] = SampleFTo8(pix->channel[ch]);
+  
+  return i_ppix(im, x, y, &temp);
+}
+
+/*
+=item i_gpixf_fp(i_img *im, i_img_dim x, i_img_dim y, i_fcolor *pix)
+
+=cut
+*/
+
+IMAGER_STATIC_INLINE int
+i_gpixf_fp(i_img *im, i_img_dim x, i_img_dim y, i_fcolor *pix) {
+  i_color temp;
+  int ch;
+
+  if (i_gpix(im, x, y, &temp) == 0) {
+    for (ch = 0; ch < im->channels; ++ch)
+      pix->channel[ch] = Sample8ToF(temp.channel[ch]);
+    return 0;
+  }
+  else 
+    return -1;
+}
+
+/*
 =item i_psampf_p(im, l, r, y, samps, chans, chan_count)
 
 Implement psampf() for paletted images.
