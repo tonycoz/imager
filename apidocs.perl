@@ -287,6 +287,7 @@ i_img_has_alpha
 im_img_double_new
 im_img_float_new
 im_img_16_new
+im_img_8_new
 
 i_io_type
 i_io_raw_read

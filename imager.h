@@ -43,7 +43,6 @@ extern void i_hsv_to_rgbf(i_fcolor *color);
 extern void i_rgb_to_hsv(i_color *color);
 extern void i_hsv_to_rgb(i_color *color);
 
-i_img *im_img_8_new(pIMCTX, i_img_dim x,i_img_dim y,int ch);
 i_img *im_img_8_new_extra(pIMCTX, i_img_dim x,i_img_dim y,int ch, int extrach);
 void   i_img_exorcise(i_img *im);
 void   i_img_destroy(i_img *im);

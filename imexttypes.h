@@ -23,7 +23,6 @@ typedef struct {
   void  (*f_myfree_file_line)(void *p, char*file, int line);
   void* (*f_myrealloc_file_line)(void *p, size_t newsize, char* file,int line);
 
-  i_img *(*f_i_img_8_new)(i_img_dim xsize, i_img_dim ysize, int channels); /* SKIP */
   i_img *(*f_i_img_pal_new)(i_img_dim xsize, i_img_dim ysize, int channels, int maxpal); /* SKIP */
   void (*f_i_img_destroy)(i_img *im);
   i_img *(*f_i_sametype)(i_img *im, i_img_dim xsize, i_img_dim ysize);
@@ -191,7 +190,6 @@ typedef struct {
   void (*f_io_glue_destroy)(i_io_glue_t *ig);
 
   /* IMAGER_API_LEVEL 8 */
-  i_img *(*f_im_img_8_new)(im_context_t ctx, i_img_dim xsize, i_img_dim ysize, int channels);
   i_img *(*f_im_img_pal_new)(im_context_t ctx, i_img_dim xsize, i_img_dim ysize, int channels, int maxpal);
 
   void (*f_im_clear_error)(im_context_t ctx);

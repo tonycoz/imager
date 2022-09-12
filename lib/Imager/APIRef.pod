@@ -94,8 +94,6 @@ Imager::APIRef - Imager's C API - reference.
   i_img *img = i_sametype_chans(src, width, height, channels);
   i_img *img = im_img_16_new_extra(aIMCTX, width, height, channels);
   i_img *img = i_img_16_new_extra(width, height, channels);
-  i_img *img = im_img_8_new(aIMCTX, width, height, channels);
-  i_img *img = i_img_8_new(width, height, channels);
   i_img *img = im_img_8_new_extra(aIMCTX, width, height, channels, extra);
   i_img *img = i_img_8_new_extra(width, height, channels, extra);
   i_img *img = im_img_double_new_extra(aIMCTX, width, height, channels, extra);
@@ -108,6 +106,8 @@ Imager::APIRef - Imager's C API - reference.
   i_img *img = i_img_double_new(width, height, channels);
   i_img *img = im_img_16_new(aIMCTX, width, height, channels);
   i_img *img = i_img_16_new(width, height, channels);
+  i_img *img = im_img_8_new(aIMCTX, width, height, channels);
+  i_img *img = i_img_8_new(width, height, channels);
   i_img *img = im_lin_img_16_new_extra(aIMCTX, width, height, channels);
   i_img *img = i_lin_img_16_new_extra(width, height, channels);
   i_img *img = im_img_pal_new(aIMCTX, width, height, channels, max_palette_size)
@@ -1903,12 +1903,13 @@ X<im_img_8_new API>X<i_img_8_new API>
   i_img *img = im_img_8_new(aIMCTX, width, height, channels);
   i_img *img = i_img_8_new(width, height, channels);
 
-Creates a new image object I<x> pixels wide, and I<y> pixels high with
-I<ch> channels.
+Creates a new 8-bit per sample image.
+
+Also callable as C<i_img_8_new(width, height, channels)>.
 
 
 =for comment
-From: img8.c
+From: iminline.h
 
 =item im_img_8_new_extra(ctx, x, y, ch extra)
 X<im_img_8_new_extra API>X<i_img_8_new_extra API>
