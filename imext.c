@@ -39,7 +39,6 @@ im_ext_funcs imager_function_table =
     myfree_file_line,
     myrealloc_file_line,
 
-    mathom_i_img_8_new,
     mathom_i_img_pal_new,
     i_img_destroy,
     i_sametype,
@@ -172,7 +171,6 @@ im_ext_funcs imager_function_table =
     io_glue_destroy,
 
     /* level 8 */
-    im_img_8_new,
     im_img_pal_new,
     im_clear_error,
     im_push_error,
