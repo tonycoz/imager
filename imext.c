@@ -123,9 +123,6 @@ im_ext_funcs imager_function_table =
     /* IMAGER_API_LEVEL 3 functions */
     i_img_setmask,
     i_img_getmask,
-    i_img_getchannels,
-    i_img_get_width,
-    i_img_get_height,
     i_lhead,
     i_loog,
 
@@ -200,10 +197,6 @@ im_ext_funcs imager_function_table =
     i_poly_poly_aa_cfill,
     i_poly_aa_m,
     i_poly_aa_cfill_m,
-
-    i_img_alpha_channel,
-    i_img_color_model,
-    i_img_color_channels,
 
     /* level 10 */
     im_decode_exif,

@@ -170,9 +170,6 @@ extern im_ext_funcs *imager_function_ext_table;
 
 #define i_img_setmask(img, mask) ((im_extt->f_i_img_setmask)((img), (mask)))
 #define i_img_getmask(img) ((im_extt->f_i_img_getmask)(img))
-#define i_img_getchannels(img) ((im_extt->f_i_img_getchannels)(img))
-#define i_img_get_width(img) ((im_extt->f_i_img_get_width)(img))
-#define i_img_get_height(img) ((im_extt->f_i_img_get_height)(img))
 #define i_lhead(file, line) ((im_extt->f_i_lhead)((file), (line)))
 #define i_loog (im_extt->f_i_loog)
 #define im_lhead(ctx, file, line) ((im_extt->f_im_lhead)((ctx), (file), (line)))
@@ -235,10 +232,6 @@ extern im_ext_funcs *imager_function_ext_table;
 #define im_context_slot_set(ctx, slot, value) ((im_extt->f_im_context_slot_set)((ctx), (slot), (value)))
 
 #define im_push_errorf (im_extt->f_im_push_errorf)
-
-#define i_img_alpha_channel(im, channel) ((im_extt->f_i_img_alpha_channel)((im), (channel)))
-#define i_img_color_model(im) ((im_extt->f_i_img_color_model)((im)))
-#define i_img_color_channels(im) ((im_extt->f_i_img_color_channels)((im)))
 
 #define im_decode_exif(im, data, len) ((im_extt->f_im_decode_exif)((im), (data), (len)))
 
