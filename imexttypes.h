@@ -129,9 +129,6 @@ typedef struct {
   /* IMAGER_API_LEVEL 3 functions */
   void (*f_i_img_setmask)(i_img *im, int ch_mask);
   int (*f_i_img_getmask)(i_img *im);
-  int (*f_i_img_getchannels)(i_img *im);
-  i_img_dim (*f_i_img_get_width)(i_img *im);
-  i_img_dim (*f_i_img_get_height)(i_img *im);
   void (*f_i_lhead)(const char *file, int line_number);
   void (*f_i_loog)(int level, const char *msg, ...) I_FORMAT_ATTR(2,3);
 
@@ -230,10 +227,6 @@ typedef struct {
   int (*f_i_poly_aa_cfill_m)(i_img *im, int l, const double *x, 
 			     const double *y, i_poly_fill_mode_t mode,
 			     i_fill_t *fill);
-
-  int (*f_i_img_alpha_channel)(i_img *im, int *channel);
-  i_color_model_t (*f_i_img_color_model)(i_img *im);
-  int (*f_i_img_color_channels)(i_img *im);
 
   /* IMAGER_API_LEVEL 10 functions will be added here */
   int (*f_im_decode_exif)(i_img *im, const unsigned char *data, size_t length);
