@@ -12,8 +12,6 @@
 /* wrapper functions that implement the floating point sample version of a 
    function in terms of the 8-bit sample version
 */
-extern int i_ppixf_fp(i_img *im, i_img_dim x, i_img_dim y, const i_fcolor *pix);
-extern int i_gpixf_fp(i_img *im, i_img_dim x, i_img_dim y, i_fcolor *pix);
 extern i_img_dim i_plinf_fp(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, const i_fcolor *pix);
 extern i_img_dim i_glinf_fp(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, i_fcolor *pix);
 
