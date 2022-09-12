@@ -9,12 +9,6 @@
 #include "imapiver.h"
 #include <stddef.h>
 
-/* wrapper functions that implement the floating point sample version of a 
-   function in terms of the 8-bit sample version
-*/
-extern i_img_dim i_plinf_fp(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, const i_fcolor *pix);
-extern i_img_dim i_glinf_fp(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, i_fcolor *pix);
-
 #define SampleFTo16(num) ((int)((num) * 65535.0 + 0.5))
 /* we add that little bit to avoid rounding issues */
 #define Sample16ToF(num) ((num) / 65535.0)
