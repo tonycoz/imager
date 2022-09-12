@@ -33,7 +33,90 @@ i_pslinf(i_img *im, i_img_dim x, i_img_dim r, i_img_dim y,
 }
 
 /*
+=item i_gpix(im, C<x>, C<y>, C<color>)
+=category Drawing
+
+Retrieves the C<color> of the pixel (x,y).
+
+Returns 0 if the pixel was retrieved, or -1 if not.
+
+=cut
+*/
+
+IMAGER_STATIC_INLINE int
+i_gpix(i_img *im, i_img_dim x, i_img_dim y, i_color *val) {
+  int count = i_gsamp(im, x, x+1, y, val->channel, NULL, (im)->channels);
+  int ch;
+  for (ch = im->channels; ch < MAXCHANNELS; ++ch) {
+    val->channel[ch] = 0;
+  }
+
+  return count > 0 ? 0 : -1;
+}
+
+/*
+=item i_gpixf(im, C<x>, C<y>, C<color>)
+=category Drawing
+
+Retrieves the floating point C<color> of the pixel (x,y).
+
+Returns 0 if the pixel was retrieved, or -1 if not.
+
+=cut
+*/
+
+IMAGER_STATIC_INLINE int
+i_gpixf(i_img *im, i_img_dim x, i_img_dim y, i_fcolor *val) {
+  int count = i_gsampf(im, x, x+1, y, val->channel, NULL, (im)->channels);
+  int ch;
+  for (ch = im->channels; ch < MAXCHANNELS; ++ch) {
+    val->channel[ch] = 0;
+  }
+
+  return count > 0 ? 0 : -1;
+}
+
+/*
+=item i_ppix(im, x, y, color)
+=category Drawing
+
+Sets the pixel at (x,y) to I<color>.
+
+Returns 0 if the pixel was drawn, or -1 if not.
+
+Does no alpha blending, just copies the channels from the supplied
+color to the image.
+
+=cut
+*/
+
+IMAGER_STATIC_INLINE int
+i_ppix(i_img *im, i_img_dim x, i_img_dim y, const i_color *val) {
+  return i_psamp(im, x, x+1, y, val->channel, NULL, im->channels) > 0 ? 0 : -1;
+}
+
+/*
+=item i_ppixf(im, C<x>, C<y>, C<fcolor>)
+=category Drawing
+
+Sets the pixel at (C<x>,C<y>) to the floating point color C<fcolor>.
+
+Returns 0 if the pixel was drawn, or -1 if not.
+
+Does no alpha blending, just copies the channels from the supplied
+color to the image.
+
+=cut
+*/
+IMAGER_STATIC_INLINE int
+i_ppixf(i_img *im, i_img_dim x, i_img_dim y, const i_fcolor *val) {
+  return i_psampf(im, x, x+1, y, val->channel, NULL, im->channels) > 0 ? 0 : -1;
+}
+
+/*
 =item i_img_linear()
+=category Image Information
+=synopsis if (i_img_linear(im)) { ... }
 
 Returns whether the samples of the image are natively linear scale or
 not.
