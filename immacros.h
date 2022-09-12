@@ -11,18 +11,6 @@ extern "C" {
 #endif
 
 /*
-=item i_img_has_alpha(C<im>)
-
-=category Image Information
-
-Return true if the image has an alpha channel.
-
-=cut
-*/
-
-#define i_img_has_alpha(im) (i_img_alpha_channel((im), NULL))
-
-/*
 =item i_psamp(im, left, right, y, samples, channels, channel_count)
 =category Drawing
 
@@ -227,21 +215,6 @@ This can safely accept a NULL pointer.
   (((im)->vtbl->i_f_maxcolors) ? ((im)->vtbl->i_f_maxcolors)(im) : -1)
 #define i_findcolor(im, color, entry) \
   (((im)->vtbl->i_f_findcolor) ? ((im)->vtbl->i_f_findcolor)((im), (color), (entry)) : 0)
-
-/*
-=item i_img_refcnt()
-
-Return the reference count for the image.
-
-=cut
-*/
-
-#define i_img_virtual(im) ((im)->isvirtual)
-#define i_img_type(im) ((im)->type)
-#define i_img_bits(im) ((im)->bits)
-#define i_img_extrachannels(im) ((im)->extrachannels)
-#define i_img_totalchannels(im) ((im)->channels + (im)->extrachannels)
-#define i_img_refcnt(im) (0+(im)->ref_count)
 
 #define pIMCTX im_context_t my_im_ctx
 
