@@ -108,6 +108,10 @@ Imager::APIRef - Imager's C API - reference.
   i_img *img = i_img_16_new(width, height, channels);
   i_img *img = im_img_8_new(aIMCTX, width, height, channels);
   i_img *img = i_img_8_new(width, height, channels);
+  i_img *img = im_lin_img_16_new(aIMCTX, width, height, channels);
+  i_img *img = i_lin_img_16_new(width, height, channels);
+  i_img *img = im_lin_img_double_new(aIMCTX, width, height, channels);
+  i_img *img = i_lin_img_double_new(width, height, channels);
   i_img *img = im_lin_img_16_new_extra(aIMCTX, width, height, channels);
   i_img *img = i_lin_img_16_new_extra(width, height, channels);
   i_img *img = im_img_pal_new(aIMCTX, width, height, channels, max_palette_size)
@@ -131,6 +135,9 @@ Imager::APIRef - Imager's C API - reference.
   int alpha_channel;
   int has_alpha = i_img_alpha_channel(im, &alpha_channel);
   int color_channels = i_img_color_channels(im);
+  if (i_img_linear(im)) { ... }
+  if (i_img_all_channel_mask(im)) { ... }
+  if (i_img_valid_channel_indexes(im, chans, chan_count)) { ... }
 
   # Image quantization
 
@@ -736,17 +743,15 @@ From: imext.c
 
 =item i_gpix(im, C<x>, C<y>, C<color>)
 
-
 Retrieves the C<color> of the pixel (x,y).
 
 Returns 0 if the pixel was retrieved, or -1 if not.
 
 
 =for comment
-From: image.c
+From: iminline.h
 
 =item i_gpixf(im, C<x>, C<y>, C<color>)
-
 
 Retrieves the floating point C<color> of the pixel (x,y).
 
@@ -754,7 +759,7 @@ Returns 0 if the pixel was retrieved, or -1 if not.
 
 
 =for comment
-From: image.c
+From: iminline.h
 
 =item i_gsamp(im, left, right, y, samples, channels, channel_count)
 
@@ -963,7 +968,6 @@ From: imext.c
 
 =item i_ppix(im, x, y, color)
 
-
 Sets the pixel at (x,y) to I<color>.
 
 Returns 0 if the pixel was drawn, or -1 if not.
@@ -973,10 +977,9 @@ color to the image.
 
 
 =for comment
-From: imext.c
+From: iminline.h
 
 =item i_ppixf(im, C<x>, C<y>, C<fcolor>)
-
 
 Sets the pixel at (C<x>,C<y>) to the floating point color C<fcolor>.
 
@@ -987,7 +990,7 @@ color to the image.
 
 
 =for comment
-From: imext.c
+From: iminline.h
 
 =item i_psamp(im, left, right, y, samples, channels, channel_count)
 
@@ -2000,6 +2003,22 @@ Also callable as C<i_img_pal_new(width, height, channels, max_palette_size)>.
 =for comment
 From: palimg.c
 
+=item im_lin_img_16_new(ctx, x, y, ch)
+X<im_lin_img_16_new API>X<i_lin_img_16_new API>
+
+  i_img *img = im_lin_img_16_new(aIMCTX, width, height, channels);
+  i_img *img = i_lin_img_16_new(width, height, channels);
+
+Create a new 16-bit/linear sample image.
+
+Returns the image on success, or NULL on failure.
+
+Also callable as C<i_img_16_new(x, y, ch)>
+
+
+=for comment
+From: iminline.h
+
 =item im_lin_img_16_new_extra(ctx, x, y, ch)
 X<im_lin_img_16_new_extra API>X<i_img_16_new_extra API>
 
@@ -2015,6 +2034,22 @@ Also callable as C<i_lin_img_16_new_extra(x, y, ch)>
 
 =for comment
 From: imlinimg.h
+
+=item im_lin_img_double_new(ctx, x, y, ch)
+X<im_lin_img_double_new API>X<i_lin_img_double_new API>
+
+  i_img *img = im_lin_img_double_new(aIMCTX, width, height, channels);
+  i_img *img = i_lin_img_double_new(width, height, channels);
+
+Create a new double/linear sample image.
+
+Returns the image on success, or NULL on failure.
+
+Also callable as C<i_img_double_new(x, y, ch)>
+
+
+=for comment
+From: iminline.h
 
 =item i_img_destroy()
 
@@ -2091,6 +2126,17 @@ From: image.c
 =head2 Image Information
 
 =over
+
+=item i_img_all_channel_mask()
+
+  if (i_img_all_channel_mask(im)) { ... }
+
+Returns true if the images channel mask covers all channels in the
+image, including any extra channels.
+
+
+=for comment
+From: iminline.h
 
 =item i_img_alpha_channel(im, &channel)
 
@@ -2212,6 +2258,17 @@ C<zero_is_white> is set to non-zero if the first palette entry is white.
 =for comment
 From: image.c
 
+=item i_img_linear()
+
+  if (i_img_linear(im)) { ... }
+
+Returns whether the samples of the image are natively linear scale or
+not.
+
+
+=for comment
+From: iminline.h
+
 =item i_img_setmask(C<im>, C<ch_mask>)
 
   // only channel 0 writable 
@@ -2225,6 +2282,21 @@ written to in the image.
 
 =for comment
 From: image.c
+
+=item i_img_valid_channel_indexes()
+
+  if (i_img_valid_channel_indexes(im, chans, chan_count)) { ... }
+
+Return true if all of the channels specified by C<chans>/C<chan_count>
+are present in the image.
+
+Used by image implementations to validate passed in channel lists.
+
+C<chans> must be non-NULL.
+
+
+=for comment
+From: iminline.h
 
 
 =back
