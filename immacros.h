@@ -194,11 +194,6 @@ This can safely accept a NULL pointer.
 
 #if IMAGER_DIRECT_IMAGE_CALLS
 
-#define i_ppix(im, x, y, val) \
-  ((i_psamp((im), (x), (x)+1, (y), (val)->channel, NULL, (im)->channels) > 0) ? 0 : -1)
-
-#define i_ppixf(im, x, y, val) \
-  ((i_psampf((im), (x), (x)+1, (y), (val)->channel, NULL, (im)->channels) > 0) ? 0 : -1)
 #define i_gsamp(im, l, r, y, samps, chans, count) \
   (((im)->vtbl->i_f_gsamp)((im), (l), (r), (y), (samps), (chans), (count)))
 #define i_gsampf(im, l, r, y, samps, chans, count) \

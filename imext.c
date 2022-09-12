@@ -45,10 +45,6 @@ im_ext_funcs imager_function_table =
     i_sametype_chans,
     i_img_info,
 
-    i_ppix,
-    i_gpix,
-    i_ppixf,
-    i_gpixf,
     i_plin,
     i_glin,
     i_plinf,
@@ -252,45 +248,6 @@ im_ext_funcs imager_function_table =
    () are used around the function names to prevent macro replacement
    on the function names.
 */
-
-/*
-=item i_ppix(im, x, y, color)
-
-=category Drawing
-
-Sets the pixel at (x,y) to I<color>.
-
-Returns 0 if the pixel was drawn, or -1 if not.
-
-Does no alpha blending, just copies the channels from the supplied
-color to the image.
-
-=cut
-*/
-
-int 
-(i_ppix)(i_img *im, i_img_dim x, i_img_dim y, const i_color *val) {
-  return i_ppix(im, x, y, val);
-}
-
-/*
-=item i_ppixf(im, C<x>, C<y>, C<fcolor>)
-
-=category Drawing
-
-Sets the pixel at (C<x>,C<y>) to the floating point color C<fcolor>.
-
-Returns 0 if the pixel was drawn, or -1 if not.
-
-Does no alpha blending, just copies the channels from the supplied
-color to the image.
-
-=cut
-*/
-int
-(i_ppixf)(i_img *im, i_img_dim x, i_img_dim y, const i_fcolor *val) {
-  return i_ppixf(im, x, y, val);
-}
 
 /*
 =item i_gsamp(im, left, right, y, samples, channels, channel_count)

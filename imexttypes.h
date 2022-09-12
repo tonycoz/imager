@@ -29,10 +29,6 @@ typedef struct {
   i_img *(*f_i_sametype_chans)(i_img *im, i_img_dim xsize, i_img_dim ysize, int channels);
   void (*f_i_img_info)(i_img *im, i_img_dim *info);
 
-  int (*f_i_ppix)(i_img *im, i_img_dim x, i_img_dim y, const i_color *val);
-  int (*f_i_gpix)(i_img *im, i_img_dim x, i_img_dim y, i_color *val);
-  int (*f_i_ppixf)(i_img *im, i_img_dim x, i_img_dim y, const i_fcolor *val);
-  int (*f_i_gpixf)(i_img *im, i_img_dim x, i_img_dim y, i_fcolor *val);
   i_img_dim (*f_i_plin)(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, const i_color *vals);
   i_img_dim (*f_i_glin)(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, i_color *vals);
   i_img_dim (*f_i_plinf)(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, const i_fcolor *vals);

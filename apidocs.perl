@@ -4,8 +4,9 @@ use ExtUtils::Manifest 'maniread';
 
 my $outname = shift || '-';
 
-my @funcs = make_func_list();
-my %funcs = map { $_ => 1 } @funcs;
+my @funcs = make_ext_func_list();
+my @inline = make_inline_func_list();
+my %funcs = map { $_ => 1 } @funcs, @inline;
 
 # look for files to parse
 
@@ -201,14 +202,14 @@ EOS
 close $out;
 
 
-sub make_func_list {
+sub make_ext_func_list {
   my @funcs;
   while (<DATA>) {
     next if /^#/ || !/\S/;
     chomp;
     push @funcs, $_;
   }
-  open my $funcs, "< imexttypes.h"
+  open my $funcs, "<", "imexttypes.h"
     or die "Cannot open imexttypes.h: $!\n";
   my $in_struct;
   while (<$funcs>) {
@@ -232,6 +233,32 @@ sub make_func_list {
   else {
     die "Found neither the start nor end of the functions structure\n";
   }
+}
+
+sub make_inline_func_list {
+  my @funcs;
+  open my $in, "<", "iminline.h"
+    or die "Cannot open iminline.h: $!";
+
+  my $depth = 0;
+  while (<$in>) {
+    if (/^=item (\w+)\(/ && $depth == 0) {
+      push @funcs, $1;
+    }
+    elsif (/^=over/) {
+      ++$depth;
+    }
+    elsif (/^=back/) {
+      if ($depth == 0) {
+        die "=back without =over iminline.h: $.\n";
+      }
+      --$depth;
+    }
+  }
+
+  close $in;
+
+  @funcs;
 }
 
 =head1 NAME
@@ -284,10 +311,6 @@ i_psamp
 i_psampf
 mm_log
 i_img_has_alpha
-im_img_double_new
-im_img_float_new
-im_img_16_new
-im_img_8_new
 
 i_io_type
 i_io_raw_read
