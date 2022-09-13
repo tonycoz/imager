@@ -23,6 +23,7 @@ Basic 8-bit/sample paletted image
 #include "imager.h"
 #include "imageri.h"
 #include "imapiver.h"
+#include <assert.h>
 
 /* no longer in the vtable, but still used */
 static int i_ppix_p(i_img *im, i_img_dim x, i_img_dim y, const i_color *val);
@@ -166,12 +167,20 @@ same width, height and channels.
 
 =cut
 */
-static void i_img_rgb_convert(i_img *targ, i_img *src) {
-  i_color *row = mymalloc(sizeof(i_color) * targ->xsize);
+
+static void
+i_img_rgb_convert(i_img *targ, i_img *src) {
+  int totalch = i_img_totalchannels(targ);
+  i_sample_t *row = mymalloc(sizeof(i_color) * targ->xsize);
   i_img_dim y;
+
+  assert(i_img_channels(targ) == i_img_channels(src));
+  assert(i_img_extrachannels(targ) == i_img_extrachannels(src));
+  assert(i_img_bits(targ) == i_8_bits);
+
   for (y = 0; y < targ->ysize; ++y) {
-    i_glin(src, 0, src->xsize, y, row);
-    i_plin(targ, 0, src->xsize, y, row);
+    i_gsamp(src, 0, src->xsize, y, row, NULL, totalch);
+    i_psamp(targ, 0, src->xsize, y, row, NULL, totalch);
   }
   myfree(row);
 }
@@ -254,12 +263,20 @@ i_img *i_img_to_pal(i_img *src, i_quantize *quant) {
 /*
 =item i_img_to_rgb(i_img *src)
 
+Create an 8-bit/sample version of the source image.
+
 =cut
 */
+
 i_img *
 i_img_to_rgb(i_img *src) {
   dIMCTXim(src);
-  i_img *im = i_img_8_new(src->xsize, src->ysize, src->channels);
+  i_img *im =
+    im_img_8_new_extra(aIMCTX, i_img_get_width(src), i_img_get_height(src), i_img_channels(src),
+                       i_img_extrachannels(src));
+
+  if (!im)
+    return NULL;
 
   i_img_rgb_convert(im, src);
 

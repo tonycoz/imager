@@ -10,7 +10,7 @@ use warnings;
 
 use Imager::Test qw(image_bounds_checks is_color3 is_color4 is_fcolor4 color_cmp mask_tests
                     is_fcolor3 check_vtable is_arrayf std_image_tests std_image_tests_count
-                    to_linear_srgb);
+                    to_linear_srgb is_image);
 
 -d "testout" or mkdir "testout";
 
@@ -204,7 +204,7 @@ is($impal2->colorchannels, 3, "check colorchannels");
   my $imrgb2 = $impal2->to_rgb8()
     or diag($impal2->errstr);
   is($imrgb2->type, 'direct', "converted is direct");
-
+  is_image($imrgb2, $impal2, "make sure to_rgb8 returns same rgb values");
   # and back again, specifying the palette
   my @colors = ( $red, $blue, $green );
   my $impal3 = $imrgb2->to_paletted(colors=>\@colors,
@@ -1321,6 +1321,9 @@ std_image_tests({ bits => 8 });
     is($im->setsamples(x => 0, y => 1, channels => 4, data => [ 0, 0, 0, 255 ], width => 1), 4,
        "set the extra samples on a pixel");
     isnt(i_img_diff($im->{IMG}, $im2->{IMG}), 0, "extras i_img_diff test for inequal images");
+
+    my $im3 = $im->to_rgb8;
+    is(i_img_diff($im3, $im), 0, "check extra are copied");
   }
 }
 
