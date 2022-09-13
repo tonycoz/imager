@@ -188,7 +188,8 @@ i_compose(i_img *out, i_img *src,
 	       i_img_dim width, i_img_dim height, int combine, double opacity);
 
 extern i_img *
-i_combine(i_img **src, const int *channels, int in_count);
+im_combine(pIMCTX, i_img **src, const int *channels, int in_count);
+#define i_combine(src, channels, count) im_combine(aIMCTX, (src), (channels), (count))
 
 undef_int i_flipxy (i_img *im, int direction);
 extern i_img *i_rotate90(i_img *im, int degrees);
