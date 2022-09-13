@@ -56,17 +56,21 @@ Returns the image on success, or NULL on failure.
 i_img *
 i_img_to_rgb16(i_img *im) {
   i_img *targ;
-  i_fcolor *line;
+  i_fsample_t *line;
   i_img_dim y;
   dIMCTXim(im);
+  size_t num_samps;
+  i_img_dim sampn;
+  int totalch = i_img_totalchannels(im);
 
-  targ = im_img_16_new(aIMCTX, im->xsize, im->ysize, im->channels);
+  targ = im_img_16_new_extra(aIMCTX, im->xsize, im->ysize, im->channels, im->extrachannels);
   if (!targ)
     return NULL;
-  line = mymalloc(sizeof(i_fcolor) * im->xsize);
+  num_samps = im->xsize * totalch;
+  line = mymalloc(sizeof(i_fsample_t) * num_samps);
   for (y = 0; y < im->ysize; ++y) {
-    i_glinf(im, 0, im->xsize, y, line);
-    i_plinf(targ, 0, im->xsize, y, line);
+    i_gsampf(im,   0, im->xsize, y, line, NULL, totalch);
+    i_psampf(targ, 0, im->xsize, y, line, NULL, totalch);
   }
 
   myfree(line);
