@@ -204,11 +204,25 @@ cmp_ok(Imager->errstr, '=~', qr/channels must be between 0 and 4/,
 }
 
 { # convert to rgb16
-  my $im = test_image();
-  my $im16 = $im->to_rgb16;
-  print "# check conversion to 16 bit\n";
-  is($im16->bits, 16, "check bits");
-  is_image($im, $im16, "check image data matches");
+  {
+    my $im = test_image();
+    my $im16 = $im->to_rgb16;
+    print "# check conversion to 16 bit\n";
+    is($im16->bits, 16, "check bits");
+    is_image($im, $im16, "check image data matches");
+  }
+  {
+    # extra channels
+    my $im = Imager->new(xsize => 10, ysize => 10, channels => 3, extrachannels => 2);
+    my @testsamps = ( 10, 20, 30, 250, 240 );
+    ok($im->setsamples(channels => 5, y => 1, x => 0, data => \@testsamps),
+       "write to the extra channel");
+    my $im2 = $im->to_rgb16;
+    is($im2->bits, 16, "check bits");
+    is($im2->extrachannels, 2, "check extra channels");
+    is_deeply([ $im2->getsamples(channels => 5, y => 1, x => 0, width => 1) ],
+              \@testsamps, "check extras were copied");
+  }
 }
 
 { # empty image handling
