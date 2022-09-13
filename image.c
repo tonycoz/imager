@@ -797,23 +797,38 @@ i_img_diff(i_img *im1,i_img *im2) {
   float tdiff;
   i_color val1,val2;
   dIMCTXim(im1);
+  int ch1 = i_img_totalchannels(im1);
+  int ch2 = i_img_totalchannels(im2);
+  i_sample_t *row1;
+  i_sample_t *row2;
+  i_img_dim sampn;
+  i_img_dim num_samps;
 
-  im_log((aIMCTX, 1,"i_img_diff(im1 %p,im2 %p)\n",im1,im2));
+  im_log((aIMCTX, 1,"i_img_diff(im1 %p,im2 %p)\n", im1, im2));
 
-  xb=(im1->xsize<im2->xsize)?im1->xsize:im2->xsize;
-  yb=(im1->ysize<im2->ysize)?im1->ysize:im2->ysize;
-  chb=(im1->channels<im2->channels)?im1->channels:im2->channels;
+  xb = ( im1->xsize < im2->xsize ) ? im1->xsize : im2->xsize;
+  yb = ( im1->ysize < im2->ysize ) ? im1->ysize : im2->ysize;
+  chb = ( ch1 < ch2 ) ? ch1 : ch2;
 
   im_log((aIMCTX, 1,"i_img_diff: b=(" i_DFp ") chb=%d\n",
 	  i_DFcp(xb,yb), chb));
 
+  num_samps = chb * xb;
+  row1 = mymalloc(sizeof(i_sample_t) * num_samps);
+  row2 = mymalloc(sizeof(i_sample_t) * num_samps);
   tdiff=0;
-  for(y=0;y<yb;y++) for(x=0;x<xb;x++) {
-    i_gpix(im1,x,y,&val1);
-    i_gpix(im2,x,y,&val2);
+  for(y = 0; y < yb; y++) {
+    i_gsamp(im1, 0, xb, y, row1, NULL, chb);
+    i_gsamp(im2, 0, xb, y, row2, NULL, chb);
 
-    for(ch=0;ch<chb;ch++) tdiff+=(val1.channel[ch]-val2.channel[ch])*(val1.channel[ch]-val2.channel[ch]);
+    for (sampn = 0; sampn < num_samps; ++sampn) {
+      int diff = row1[sampn] - row2[sampn];
+      tdiff += diff * diff;
+    }
   }
+  myfree(row1);
+  myfree(row2);
+
   im_log((aIMCTX, 1,"i_img_diff <- (%.2f)\n",tdiff));
   return tdiff;
 }

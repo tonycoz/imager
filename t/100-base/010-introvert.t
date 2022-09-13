@@ -1306,6 +1306,24 @@ std_image_tests({ bits => 8 });
 
 std_image_tests({ bits => 8 });
 
+{
+  {
+    my $im = Imager->new(xsize => 10, ysize => 10, channels => 3);
+    my $im2 = Imager->new(xsize => 10, ysize => 10, channels => 3);
+    is(i_img_diff($im->{IMG}, $im2->{IMG}), 0, "basic i_img_diff test for equal images");
+    ok($im->setpixel(x => 0, y => 1, color => $red), "modify first image");
+    isnt(i_img_diff($im->{IMG}, $im2->{IMG}), 0, "basic i_img_diff test for inequal images");
+  }
+  {
+    my $im = Imager->new(xsize => 10, ysize => 10, channels => 3, extrachannels => 1);
+    my $im2 = Imager->new(xsize => 10, ysize => 10, channels => 3, extrachannels => 1);
+    is(i_img_diff($im->{IMG}, $im2->{IMG}), 0, "extras i_img_diff test for equal images");
+    is($im->setsamples(x => 0, y => 1, channels => 4, data => [ 0, 0, 0, 255 ], width => 1), 4,
+       "set the extra samples on a pixel");
+    isnt(i_img_diff($im->{IMG}, $im2->{IMG}), 0, "extras i_img_diff test for inequal images");
+  }
+}
+
 done_testing();
 
 Imager->close_log();
