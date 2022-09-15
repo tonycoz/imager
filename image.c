@@ -605,23 +605,21 @@ i_copy(i_img *src) {
   x1 = src->xsize;
   y1 = src->ysize;
   if (src->type == i_direct_type) {
+    int totalch = i_img_totalchannels(im);
     if (src->bits == i_8_bits) {
-      i_color *pv;
-      pv = mymalloc(sizeof(i_color) * x1);
+      i_sample_t *pv = mymalloc(sizeof(i_sample_t) * x1 * totalch);
       
       for (y = 0; y < y1; ++y) {
-        i_glin(src, 0, x1, y, pv);
-        i_plin(im, 0, x1, y, pv);
+        i_gsamp(src, 0, x1, y, pv, NULL, totalch);
+        i_psamp(im,  0, x1, y, pv, NULL, totalch);
       }
       myfree(pv);
     }
     else {
-      i_fcolor *pv;
-
-      pv = mymalloc(sizeof(i_fcolor) * x1);
+      i_fsample_t *pv = mymalloc(sizeof(i_fsample_t) * x1 * totalch);
       for (y = 0; y < y1; ++y) {
-        i_glinf(src, 0, x1, y, pv);
-        i_plinf(im, 0, x1, y, pv);
+        i_gsampf(src, 0, x1, y, pv, NULL, totalch);
+        i_psampf(im,  0, x1, y, pv, NULL, totalch);
       }
       myfree(pv);
     }
