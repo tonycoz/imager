@@ -48,7 +48,7 @@
 
 
 # trash left by Inline::C
-^_Inline/
+\b_Inline/
 
 # distributions built
 ^Imager-\d\.\d+(_\d+)?\.tar\.gz$
