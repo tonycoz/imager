@@ -1233,13 +1233,20 @@ i_box_filled(i_img *im,i_img_dim x1,i_img_dim y1,i_img_dim x2,i_img_dim y2, cons
     myfree(line);
   }
   else {
-    i_color *line = mymalloc(sizeof(i_color) * width);
+    i_sample_t *line = mymalloc(sizeof(i_sample_t) * width * im->channels);
+    i_sample_t *linep = line;
+    int ch;
 
-    for (x = 0; x < width; ++x)
-      line[x] = *val;
+    for (x = 0; x != width; ++x) {
+      for (ch = 0; ch != im->channels; ++ch) {
+        *linep = val->channel[ch];
+        ++linep;
+      }
+    }
 
-    for (y = y1; y <= y2; ++y)
-      i_plin(im, x1, x2+1, y, line);
+    for (y = y1; y <= y2; ++y) {
+      i_psamp(im, x1, x2+1, y, line, NULL, im->channels);
+    }
 
     myfree(line);
   }
@@ -1291,13 +1298,19 @@ i_box_filledf(i_img *im,i_img_dim x1,i_img_dim y1,i_img_dim x2,i_img_dim y2, con
     i_box_filled(im, x1, y1, x2, y2, &c);
   }
   else {
-    i_fcolor *line = mymalloc(sizeof(i_fcolor) * width);
+    i_fsample_t *line = mymalloc(sizeof(i_fsample_t) * width * im->channels);
+    i_fsample_t *linep = line;
     
-    for (x = 0; x < width; ++x)
-      line[x] = *val;
+    for (x = 0; x != width; ++x) {
+      int ch;
+      for (ch = 0; ch != im->channels; ++ch) {
+        *linep = val->channel[ch];
+        ++linep;
+      }
+    }
     
     for (y = y1; y <= y2; ++y)
-      i_plinf(im, x1, x2+1, y, line);
+      i_psampf(im, x1, x2+1, y, line, NULL, im->channels);
     
     myfree(line);
   }
