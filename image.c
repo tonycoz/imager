@@ -1239,7 +1239,7 @@ i_gslin_fallback(i_img *im, i_img_dim x, i_img_dim r, i_img_dim y,
         while (x < r) {
           int chi;
           for (chi = 0; chi < chan_count; ++chi) {
-            int ch = chans[ch];
+            int ch = chans[chi];
             if (ch < color_chans) {
               *pout++ = imcms_to_linear(curves[ch], *pwork++);
             }
@@ -1311,7 +1311,7 @@ i_gslinf_fallback(i_img *im, i_img_dim x, i_img_dim r, i_img_dim y,
         while (x < r) {
           int chi;
           for (chi = 0; chi < chan_count; ++chi) {
-            int ch = chans[ch];
+            int ch = chans[chi];
             if (ch < color_chans) {
               *pout++ = imcms_to_linearf(curves[ch], *pwork++);
             }
