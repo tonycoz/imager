@@ -1526,7 +1526,7 @@ sub to_linear_srgbf {
 sub to_gamma_srgb {
   my ($val) = @_;
 
-  return 0+sprintf("%.0f", to_gamma_srgbf($val/65535.0) * 255.8);
+  return 0+sprintf("%.0f", to_gamma_srgbf($val/65535.0) * 255.0);
 }
 
 sub to_gamma_srgbf {
