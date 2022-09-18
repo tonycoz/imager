@@ -332,6 +332,7 @@ t/100-base/020-color.t		Test Imager::Color
 t/100-base/030-countc.t		Test getcolorcount() etc
 t/100-base/040-extra8.t
 t/100-base/050-data8.t
+t/100-base/100-linear.t
 t/100-base/800-tr18561.t	Regression test for RT #18561
 t/100-base/801-tr18561b.t	Regression test for RT #18561
 t/150-type/020-sixteen.t	Test 16-bit/sample images
