@@ -65,7 +65,12 @@ my $coverage; # build for coverage testing
 my $assert; # build with assertions
 my $trace_context; # trace context management to stderr
 my $uselcms; # use lcms instead of the built-in tone curve only CMS.
-GetOptions("help" => \$help,
+my @Accflags;
+my @Aldflags;
+my @Alddlflags;
+my @Aoptimize;
+
+GetOptions("help" => \&usage,
            "enable=s" => \@enable,
            "disable=s" => \@disable,
            "incpath=s", \@incpaths,
@@ -76,7 +81,49 @@ GetOptions("help" => \$help,
 	   "assert|a" => \$assert,
 	   "tracecontext" => \$trace_context,
 	   "uselcms" => \$uselcms,
-	  );
+           "Accflags=s" => \@Accflags,
+           "Aldflags=s" => \@Aldflags,
+           "Alddlflags=s" => \@Alddlflags,
+           "Aoptimize=s" => \@Aoptimize,
+	  )
+  or die "Error in command-line arguments, try $^X $0 --help\n";
+
+if ($coverage) {
+    if ($Config{gccversion}) {
+        push @Aoptimize, '-ftest-coverage -fprofile-arcs';
+        push @Alddlflags, '-ftest-coverage -fprofile-arcs';
+    }
+    else {
+	die "Don't know the coverage C flags for your compiler\n";
+    }
+}
+
+my %CmdConfig =
+  (
+    ccflags   => \@Accflags,
+    ldflags   => \@Aldflags,
+    lddlflags => \@Alddlflags,
+    optimize  => \@Aoptimize,
+   );
+my %MyConfig;
+for my $arg (@ARGV) {
+  if ($arg =~ /^(\w+)=(.*)$/) {
+    $MyConfig{lc $1} = $2;
+
+    if ($CmdConfig{$1} && @{$CmdConfig{$1}}) {
+      die "--A\L$1\E option overridden by $1=$2 on command-line\n";
+    }
+  }
+}
+
+for my $name (qw(ccflags ldflags lddlflags optimize cc)) {
+  unless (exists $MyConfig{$name}) {
+    $MyConfig{$name} = $Config{$name};
+    if ($CmdConfig{$name} && @{$CmdConfig{$name}}) {
+      $MyConfig{$name} .= " @{$CmdConfig{$name}}";
+    }
+  }
+}
 
 setenv();
 
@@ -88,10 +135,6 @@ if ($VERBOSE) {
   print "Verbose mode\n"; 
   require Data::Dumper; 
   import Data::Dumper qw(Dumper);
-}
-
-if ($help) {
-  usage();
 }
 
 my @defines;
@@ -237,17 +280,10 @@ my %opts=
    TYPEMAPS       => \@typemaps,
    test           => { TESTS => $tests },
    depend         => make_depend(),
+   CCFLAGS        => $MyConfig{ccflags},
+   LDDLFLAGS      => $MyConfig{lddlflags},
+   OPTIMIZE       => $MyConfig{optimize},
   );
-
-if ($coverage) {
-    if ($Config{gccversion}) {
-	push @ARGV, 'OPTIMIZE=-ftest-coverage -fprofile-arcs -g';
-	$opts{dynamic_lib} = { OTHERLDFLAGS => '-ftest-coverage -fprofile-arcs' };
-    }
-    else {
-	die "Don't know the coverage C flags for your compiler\n";
-    }
-}
 
 if (eval { ExtUtils::MakeMaker->VERSION('6.06'); 1 }) {
   $opts{AUTHOR} = 'Tony Cook <tonyc@cpan.org>, Arnar M. Hrafnkelsson';
@@ -875,6 +911,8 @@ EOS
       return $type;
     }
   }
+  print "no 16-bit float type found\n";
+  return;
 }
 
 sub usage {
@@ -883,7 +921,7 @@ Usage: $0 [--enable feature1,feature2,...] [other options]
        $0 [--disable feature1,feature2,...]  [other options]
        $0 --help
 Possible feature names are:
-  T1-fonts
+  FT1 FT2 GIF JPEG PNG T1 TIFF W32
 Other options:
   --verbose | -v
     Verbose library probing (or set IM_VERBOSE in the environment)
@@ -894,12 +932,30 @@ Other options:
   --libpath dir
     Add to the library search path
   --coverage
-    Build for coverage testing.
+    Build for coverage testing.  This is incompatible with setting
+    OPTIMIZE=... on the command-line.
   --assert
     Build with assertions active.
+  --enable=...
+  --disable=...
+    Enable or disable bundled libraries.
+    You can disable all of them with "--enable=none"
+    Only one of --enable or --disable can be used
+  --assert
+    Build with assertions enabled.
+  --tracecontext
+    Build with trace output for context handling (debugging tool)
+  --uselcms
+    Build with LittleCMS (requires LittleCMS 2.x installed)
+  --Accflags=...
+  --Aldflags=...
+  --Alddlflags=...
+  --Aoptimize=...
+    Easily add extra options to ccflags, ldflags, lddlflags or optimize
+    without having to extract the existing options.  Cannot be used with
+    setting these values with SOMENAME=...
 EOS
   exit 1;
-
 }
 
 # generate the PM MM argument
@@ -1005,15 +1061,17 @@ sub try_compile_and_link {
     # we don't need this for our probes
     #my $COREincdir = File::Spec->catdir($Config{'archlibexp'}, 'CORE');
 
-    my $ccflags = $Config{'ccflags'};
+    my $cc = $MyConfig{'cc'};
+    my $ccflags = $MyConfig{'ccflags'};
     $ccflags .= " $args{ccflags}" if $args{ccflags};
+    $ccflags .= " $MyConfig{'optimize'}";
     # we don't need this (yet)
     #. ' ' . "-I$COREincdir" . ' -DPERL_NO_INLINE_FUNCTIONS';
 
     my $errornull = $VERBOSE ? '' : "2>" . File::Spec->devnull;
 
     my $libs = $args{libs} || '';
-    my $cccmd = "$Config{'cc'} -o $tmp $ccflags $tmp.c $libs $errornull";
+    my $cccmd = "$cc -o $tmp $ccflags $tmp.c $libs $errornull";
 
     my $tmp_exe = "$tmp$Config{_exe}";
     printf "cccmd = $cccmd\n" if $VERBOSE;
