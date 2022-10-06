@@ -97,6 +97,19 @@ the bundled modules.
 
 You can use either of C<--enable> or C<--disable> but not both.
 
+=item C<--Accflags=>I<flags>
+=item C<--Aldflags=>I<flags>
+=item C<--Alddlflags=>I<flags>
+=item C<--Aoptimize=>I<flags>
+
+Provide extra compile and link-time flags without having to extract
+the originals from C<%Config>.  These are overridden by the flags
+parsed by L<ExtUtils::MakeMaker> from the command-line, eg.
+
+  perl Makefile.PL --Aoptimize=-march=native OPTIMIZE=-O2
+
+will be rejected by F<Makefile.PL>.
+
 =back
 
 =head2 Build time environment variables
@@ -463,6 +476,41 @@ To see which directories should be in the include path, try:
 Ideally, C<freetype-config> should be in the PATH when building Imager
 with freetype 2.x support, in which case L<Imager::Font::FT2> can
 configure itself.
+
+=head1 OPTIMIZED BUILDS
+
+Your typical system perl is built with fairly generic options to allow
+it to run on any supported system, if you don't want to build a new
+system perl, you can provide options to Imager's F<Makefile.PL> to
+provide a more optimized build of Imager.  This likely won't make much
+difference yet, but the optimization support options are there now.
+
+If you have fairly homogeneous hardware across the board, you can
+supply a higher tier C<-march> option to use the features of more
+modern processors:
+
+  perl Makefile.PL OPTIMIZE=-O2\ -g\ -march=skylake
+
+You can avoid supplying the original options using C<--Aoptimize>:
+
+  perl Makefile.PL --Aoptimize=-march=skylake
+
+If you have a more recent (or just better) compiler available you can
+specify that using the normal L<ExtUtils::MakeMaker> mechanism:
+
+  perl Makefile.PL CC=/opt/gcc-12.0.1/bin/gcc
+
+=for stopwords
+LTO
+
+With F<gcc> or F<clang> you can request link time optimization (LTO):
+
+  perl Makefile.PL --Aoptimize=-flto --Alddlflags=-flto
+
+Note that if you change compilers for LTO you will need to specify the
+equivalent linker:
+
+  perl Makefile.PL --Aoptimize=-flto --Alddlflags=-flto CC=clang-14 LD=clang-14
 
 =head1 AUTHOR
 
