@@ -32,6 +32,91 @@ i_pslinf(i_img *im, i_img_dim x, i_img_dim r, i_img_dim y,
   return (im->vtbl->i_f_pslinf)(im, x, r, y, samp, chan, chan_count);
 }
 
+IMAGER_STATIC_INLINE i_img_dim
+i_gsamp(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, i_sample_t *samps,
+        const int *chans, int count) {
+  return im->vtbl->i_f_gsamp(im, l, r, y, samps, chans, count);
+}
+
+IMAGER_STATIC_INLINE i_img_dim
+i_gsampf(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, i_fsample_t *samps,
+         const int *chans, int count) {
+  return im->vtbl->i_f_gsampf(im, l, r, y, samps, chans, count);
+}
+
+IMAGER_STATIC_INLINE void
+i_gsamp_assert(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, i_sample_t *samps,
+               const int *chans, int chan_count) {
+  if (i_gsamp(im, l, r, y, samps, chans, chan_count) != (r-l)*chan_count) {
+#ifdef IMAGER_NO_CONTEXT
+    dIMCTXim(im);
+#endif
+    im_fatal(aIMCTX, 3, "Unexpected i_gsamp() short result");
+  }
+}
+
+IMAGER_STATIC_INLINE void
+i_gsampf_assert(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, i_fsample_t *samps,
+                const int *chans, int chan_count) {
+  if (i_gsampf(im, l, r, y, samps, chans, chan_count) != (r-l)*chan_count) {
+#ifdef IMAGER_NO_CONTEXT
+    dIMCTXim(im);
+#endif
+    im_fatal(aIMCTX, 3, "Unexpected i_gsampf() short result");
+  }
+}
+
+/*
+=item i_psamp(im, left, right, y, samples, channels, channel_count)
+=category Drawing
+
+Writes sample values from C<samples> to C<im> for the horizontal line
+(left, y) to (right-1, y) inclusive for the channels specified by
+C<channels>, an array of C<int> with C<channel_count> elements.
+
+If C<channels> is C<NULL> then the first C<channels_count> channels
+are written to for each pixel.
+
+Returns the number of samples written, which should be (right - left)
+* channel_count.  If a channel not in the image is in channels, left
+is negative, left is outside the image or y is outside the image,
+returns -1 and pushes an error.
+
+=cut
+*/
+
+IMAGER_STATIC_INLINE i_img_dim
+i_psamp(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, const i_sample_t *samps,
+        const int *chans, int count) {
+  return im->vtbl->i_f_psamp(im, l, r, y, samps, chans, count);
+}
+
+/*
+=item i_psampf(im, left, right, y, samples, channels, channel_count)
+=category Drawing
+
+Writes floating point sample values from C<samples> to C<im> for the
+horizontal line (left, y) to (right-1, y) inclusive for the channels
+specified by C<channels>, an array of C<int> with C<channel_count>
+elements.
+
+If C<channels> is C<NULL> then the first C<channels_count> channels
+are written to for each pixel.
+
+Returns the number of samples written, which should be (right - left)
+* channel_count.  If a channel not in the image is in channels, left
+is negative, left is outside the image or y is outside the image,
+returns -1 and pushes an error.
+
+=cut
+*/
+
+IMAGER_STATIC_INLINE i_img_dim
+i_psampf(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, const i_fsample_t *samps,
+        const int *chans, int count) {
+  return im->vtbl->i_f_psampf(im, l, r, y, samps, chans, count);
+}
+
 /*
 =item i_gpix(im, C<x>, C<y>, C<color>)
 =category Drawing
@@ -535,6 +620,25 @@ i_img_valid_channel_indexes(i_img *im, int const *chans, int chan_count) {
     }
   }
   return 1;
+}
+
+/*
+=item i_sametype_chans(C<im>, C<xsize>, C<ysize>, C<channels>)
+
+=category Image creation/destruction
+=synopsis i_img *img = i_sametype_chans(src, width, height, channels);
+
+Returns an image of the same type (sample size) with the specified
+number of color channels.
+
+For paletted images the equivalent direct type is returned.
+
+=cut
+*/
+
+IMAGER_STATIC_INLINE i_img *
+i_sametype_chans(i_img *src, i_img_dim xsize, i_img_dim ysize, int channels) {
+  return i_sametype_chans_extra(src, xsize, ysize, channels, 0);
 }
 
 #ifdef __cplusplus

@@ -26,7 +26,7 @@ typedef struct {
   i_img *(*f_i_img_pal_new)(i_img_dim xsize, i_img_dim ysize, int channels, int maxpal); /* SKIP */
   void (*f_i_img_destroy)(i_img *im);
   i_img *(*f_i_sametype)(i_img *im, i_img_dim xsize, i_img_dim ysize);
-  i_img *(*f_i_sametype_chans)(i_img *im, i_img_dim xsize, i_img_dim ysize, int channels);
+  i_img *(*f_i_sametype_chans_extra)(i_img *im, i_img_dim xsize, i_img_dim ysize, int channels, int extra);
   void (*f_i_img_info)(i_img *im, i_img_dim *info);
 
   i_img_dim (*f_i_plin)(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, const i_color *vals);

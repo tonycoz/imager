@@ -144,6 +144,7 @@ sub byte_samples {
     s/\bIM_GSLIN\b/i_gslin/g;
     s/\bIM_PSLIN\b/i_pslin/g;
     s/\bIM_GSAMP\b/i_gsamp/g;
+    s/\bIM_GSAMP_ASSERT\b/i_gsamp_assert/g;
     s/\bIM_PSAMP\b/i_psamp/g;
     s/\bIM_GSLIN\b/i_gslin/g;
     s/\bIM_PSLIN\b/i_pslin/g;
@@ -180,6 +181,7 @@ sub double_samples {
     s/\bIM_GSLIN\b/i_gslinf/g;
     s/\bIM_PSLIN\b/i_pslinf/g;
     s/\bIM_GSAMP\b/i_gsampf/g;
+    s/\bIM_GSAMP_ASSERT\b/i_gsampf_assert/g;
     s/\bIM_PSAMP\b/i_psampf/g;
     s/\bIM_GSLIN\b/i_gslinf/g;
     s/\bIM_PSLIN\b/i_pslinf/g;

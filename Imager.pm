@@ -4172,8 +4172,10 @@ sub convert {
     $matrix = $opts{matrix};
   }
 
+  my $extra = $opts{extra} || [];
+
   my $new = Imager->new;
-  $new->{IMG} = i_convert($self->{IMG}, $matrix);
+  $new->{IMG} = i_convert($self->{IMG}, $matrix, $extra);
   unless ($new->{IMG}) {
     # most likely a bad matrix
     i_push_error(0, "convert");

@@ -1134,6 +1134,73 @@ i_int_hlines_dump(i_int_hlines *hlines) {
 
 #endif
 
+static const char *matrix_name[2] = {
+  "",
+  "extra "
+};
+
+static int
+extract_convert_matrix(pTHX_ AV *avmain, AV *avextra, double **pmatrix, int *pinchans,
+                       int *poutchans, int *pextrachans, size_t *pcoeff_total) {
+  *pmatrix = NULL;
+
+  AV *avs[2];
+  avs[0] = avmain;
+  avs[1] = avextra;
+
+  int outchans[2];
+  outchans[0] = av_len(avmain)+1;
+  outchans[1] = avextra ? av_len(avextra)+1 : 0;
+
+  /* find the biggest */
+  int inchans = 0;
+  for (int chi = 0; chi < 2; ++chi) {
+    for (int j = 0; j < outchans[chi]; ++j) {
+      SV **temp = av_fetch(avs[chi], j, 0);
+      if (temp && SvROK(*temp) && SvTYPE(SvRV(*temp)) == SVt_PVAV) {
+        AV *avsub = (AV*)SvRV(*temp);
+        int len = av_len(avsub)+1;
+        if (len > inchans)
+          inchans = len;
+      }
+      else {
+        i_push_errorf(0, "invalid %smatrix: element %d is not an array ref", matrix_name[chi], j);
+        return false;
+      }
+    }
+  }
+  int totalch = outchans[0] + outchans[1];
+  *pcoeff_total = totalch * inchans;
+  double *coeff;
+  Newx(coeff, *pcoeff_total, double);
+  SAVEFREEPV(coeff);
+  int outch = 0;
+  for (int chi = 0; chi < 2; ++chi) {
+    for (int j = 0; j < outchans[chi]; ++j) {
+      AV *avsub = (AV*)SvRV(*av_fetch(avs[chi], j, 0));
+      int len = av_len(avsub)+1;
+      int i;
+      for (i = 0; i < len; ++i) {
+        SV **temp = av_fetch(avsub, i, 0);
+        if (temp)
+          coeff[i+outch*inchans] = SvNV(*temp);
+        else
+          coeff[i+outch*inchans] = 0;
+      }
+      while (i < inchans)
+        coeff[i++ + outch * inchans] = 0;
+      ++outch;
+    }
+  }
+
+  *pmatrix = coeff;
+  *pinchans = inchans;
+  *poutchans = outchans[0];
+  *pextrachans = outchans[1];
+
+  return true;
+}
+
 static off_t
 i_sv_off_t(pTHX_ SV *sv) {
 #if LSEEKSIZE > IVSIZE
@@ -2647,53 +2714,26 @@ i_conv(im,coef)
 	RETVAL
 
 Imager::ImgRaw
-i_convert(src, avmain)
+i_convert(src, avmain, avextra = NULL)
     Imager::ImgRaw     src
     AV *avmain
-	PREINIT:
-    	  double *coeff;
-	  int outchan;
-	  int inchan;
-          SV **temp;
-          AV *avsub;
-	  int len;
-	  int i, j;
-        CODE:
-	  outchan = av_len(avmain)+1;
-          /* find the biggest */
-          inchan = 0;
-	  for (j=0; j < outchan; ++j) {
-	    temp = av_fetch(avmain, j, 0);
-	    if (temp && SvROK(*temp) && SvTYPE(SvRV(*temp)) == SVt_PVAV) {
-	      avsub = (AV*)SvRV(*temp);
-	      len = av_len(avsub)+1;
-	      if (len > inchan)
-		inchan = len;
-	    }
-	    else {
-	      i_push_errorf(0, "invalid matrix: element %d is not an array ref", j);
-	      XSRETURN(0);
-	    }
-          }
-          coeff = mymalloc(sizeof(double) * outchan * inchan);
-	  for (j = 0; j < outchan; ++j) {
-	    avsub = (AV*)SvRV(*av_fetch(avmain, j, 0));
-	    len = av_len(avsub)+1;
-	    for (i = 0; i < len; ++i) {
-	      temp = av_fetch(avsub, i, 0);
-	      if (temp)
-		coeff[i+j*inchan] = SvNV(*temp);
-	      else
-	 	coeff[i+j*inchan] = 0;
-	    }
-	    while (i < inchan)
-	      coeff[i++ + j*inchan] = 0;
-	  }
-	  RETVAL = i_convert(src, coeff, outchan, inchan);
-          myfree(coeff);
-	OUTPUT:
-	  RETVAL
-
+    AV *avextra
+  CODE:
+    double *coeff;
+    int inchans;
+    int outchans;
+    int extrachans;
+    size_t total_coeff;
+    i_clear_error();
+    if (extract_convert_matrix(aTHX_ avmain, avextra, &coeff, &inchans,
+                               &outchans, &extrachans, &total_coeff)) {
+      RETVAL = i_convert(src, coeff, outchans, extrachans, inchans);
+    }
+    else {
+      XSRETURN_EMPTY;
+    }
+  OUTPUT:
+    RETVAL
 
 undef_int
 i_map(im, pmaps_av)
@@ -4808,6 +4848,35 @@ int
 i_int_hlines_CLONE_SKIP(cls)
 
 #endif
+
+MODULE = Imager  PACKAGE = Imager::InternalTest
+
+void
+extract_convert_matrix(AV *avmain, AV *avextra = NULL)
+  PPCODE:
+    double *coeff;
+    int inchans;
+    int outchans;
+    int extrachans;
+    size_t total_coeff;
+    i_clear_error();
+    if (extract_convert_matrix(aTHX_ avmain, avextra, &coeff, &inchans, &outchans,
+                               &extrachans, &total_coeff)) {
+      EXTEND(SP, 4);
+      PUSHs(sv_2mortal(newSViv(inchans)));
+      PUSHs(sv_2mortal(newSViv(outchans)));
+      PUSHs(sv_2mortal(newSViv(extrachans)));
+      AV *coeff_av = newAV();
+      av_extend(coeff_av, total_coeff);
+      for (size_t i = 0; i < total_coeff; ++i) {
+        av_push(coeff_av, newSVnv(coeff[i]));
+      }
+      PUSHs(sv_2mortal(newRV_noinc((SV*)coeff_av)));
+      XSRETURN(4);
+    }
+    else {
+      XSRETURN(0);
+    }
 
 MODULE = Imager  PACKAGE = Imager::TrimColorList PREFIX=trim_color_list_
 

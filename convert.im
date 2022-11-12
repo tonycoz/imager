@@ -23,16 +23,16 @@ converting from RGBA to greyscale and back.
 struct chan_copy {
   /* channels to copy */
   int copy_count;
-  int from[MAXCHANNELS];
-  int to[MAXCHANNELS];
+  int from[MAXTOTALCHANNELS];
+  int to[MAXTOTALCHANNELS];
 
   /* channels to zero */
   int zero_count;
-  int zero[MAXCHANNELS];
+  int zero[MAXTOTALCHANNELS];
 
   /* channels to set to maxsample */
   int one_count;
-  int one[MAXCHANNELS];
+  int one[MAXTOTALCHANNELS];
 };
 
 static int 
@@ -43,8 +43,61 @@ is_channel_copy(i_img *im, const double *coeff,
 static i_img *
 convert_via_copy(i_img *im, i_img *src, struct chan_copy *info);
 
+/* the separate functions here get vectorized, even inlined, while they didn't
+   as part of the code
+*/
+
+IMAGER_STATIC_INLINE void
+vec_add_double(double * restrict out, const i_fsample_t * restrict in, size_t count) {
+  size_t i;
+  for (i = 0; i < count; ++i) {
+    out[i] += in[i];
+  }
+}
+
+IMAGER_STATIC_INLINE void
+vec_add_8(double * restrict out, const i_sample_t * restrict in, size_t count) {
+  size_t i;
+  for (i = 0; i < count; ++i) {
+    out[i] += in[i];
+  }
+}
+
+IMAGER_STATIC_INLINE void
+vec_muladd_double(double * restrict out, const i_fsample_t * restrict in, double coeff, size_t count) {
+  size_t i;
+  for (i = 0; i < count; ++i) {
+    out[i] += in[i] * coeff;
+  }
+}
+
+IMAGER_STATIC_INLINE void
+vec_muladd_8(double * restrict out, const i_sample_t * restrict in, double coeff, size_t count) {
+  size_t i;
+  for (i = 0; i < count; ++i) {
+    out[i] += in[i] * coeff;
+  }
+}
+
+IMAGER_STATIC_INLINE void
+vec_limit_8(i_sample_t * restrict out, const double * restrict in, size_t count) {
+  size_t i;
+  for (i = 0; i < count; ++i) {
+    double val = in[i];
+    out[i] = val < 0 ? 0 : val > 255 ? 255 : val;
+  }
+}
+
+IMAGER_STATIC_INLINE void
+vec_limit_double(i_fsample_t * restrict out, const double * restrict in, size_t count) {
+  size_t i;
+  for (i = 0; i < count; ++i) {
+    out[i] = in[i];
+  }
+}
+
 /*
-=item i_convert(src, coeff, outchan, inchan)
+=item i_convert(src, coeff, outchans, extraoutchans, inchans)
 
 Converts the image src into another image.
 
@@ -64,64 +117,102 @@ Now handles images with more than 8-bits/sample.
 */
 
 i_img *
-i_convert(i_img *src, const double *coeff, int outchan, int inchan) {
-  double work[MAXCHANNELS];
+i_convert(i_img *src, const double *coeffs, int outchans, int extraoutchans, int inchans) {
   i_img_dim x, y;
-  int i, j;
-  int ilimit;
+  int in_ch, out_ch;
   i_img *im = NULL;
+  int intotalch = i_img_totalchannels(src);
+  int ilimit = inchans > intotalch ? intotalch : inchans;
+  int outtotalch = outchans + extraoutchans;
+  i_img_dim xmax = src->xsize;
   dIMCTXim(src);
 
-  im_log((aIMCTX,1,"i_convert(im %p, src %p, coeff %p,outchan %d, inchan %d)\n",
-	  im, src, coeff, outchan, inchan));
+  im_log((aIMCTX,1,"i_convert(im %p, src %p, coeff %p, outchans %d, outextra %d, inchans %d)\n",
+	  im, src, coeffs, outchans, extraoutchans, inchans));
  
   im_clear_error(aIMCTX);
 
-  ilimit = inchan;
-  if (ilimit > src->channels)
-    ilimit = src->channels;
-  if (outchan > MAXCHANNELS) {
-    im_push_error(aIMCTX, 0, "cannot have outchan > MAXCHANNELS");
-    return 0;
+  if (outchans < 0 || extraoutchans < 0) {
+    im_push_errorf(aIMCTX, 0, "outchans (%d) and extraoutchans (%d) must be non-negative",
+                  outchans, extraoutchans);
+    return NULL;
+  }
+  if (outchans == 0 && extraoutchans == 0) {
+    im_push_errorf(aIMCTX, 0, "Either outchans (%d) or extraoutchans (%d) must be > 0",
+                  outchans, extraoutchans);
+    return NULL;
   }
 
-  if (src->type == i_direct_type) {
+  if (outtotalch > MAXCHANNELS) {
+    im_push_errorf(aIMCTX, 0, "cannot have outchans (%d) + extraoutchan s(%d) > MAXTOTALCHANNELS (%d)",
+                  outchans, extraoutchans, MAXTOTALCHANNELS);
+    return NULL;
+  }
+
+  if (src->type == i_direct_type || extraoutchans) {
     struct chan_copy info;
-    im = i_sametype_chans(src, src->xsize, src->ysize, outchan);
+    im = i_sametype_chans_extra(src, src->xsize, src->ysize, outchans, extraoutchans);
     
-    if (is_channel_copy(src, coeff, outchan, inchan, &info)) {
+    if (is_channel_copy(src, coeffs, outchans + extraoutchans, inchans, &info)) {
       return convert_via_copy(im, src, &info);
     }
     else {
 #code src->bits <= i_8_bits
-      IM_COLOR *vals;
-      
-      /* we can always allocate a single scanline of i_color */
-      vals = mymalloc(sizeof(IM_COLOR) * src->xsize); /* checked 04Jul05 tonyc */
-      for (y = 0; y < src->ysize; ++y) {
-	IM_GLIN(src, 0, src->xsize, y, vals);
-	for (x = 0; x < src->xsize; ++x) {
-	  for (j = 0; j < outchan; ++j) {
-	    work[j] = 0;
-	    for (i = 0; i < ilimit; ++i) {
-	      work[j] += coeff[i+inchan*j] * vals[x].channel[i];
-	    }
-	    if (i < inchan) {
-	      work[j] += coeff[i+inchan*j] * IM_SAMPLE_MAX;
-	    }
-	  }
-	  for (j = 0; j < outchan; ++j) {
-	    if (work[j] < 0)
-	      vals[x].channel[j] = 0;
-	    else if (work[j] >= IM_SAMPLE_MAX)
-	      vals[x].channel[j] = IM_SAMPLE_MAX;
-	    else
-	      vals[x].channel[j] = work[j];
-	  }
-	}
-	IM_PLIN(im, 0, src->xsize, y, vals);
+      /* allocating individual per channel buffers for input here to
+         increase the chance they're equally aligned, increasing the
+         chance that auto vectorization can happen.
+
+         Later the mymalloc() calls will be replaced with something
+         that returns memory aligned suitable for vectorization *and*
+         hopefully tells the compiler that memory is aligned that way.
+      */
+      IM_SAMPLE_T *inbufs[MAXTOTALCHANNELS];
+      IM_SAMPLE_T *outbuf = mymalloc(sizeof(IM_SAMPLE_T) * im->xsize);
+      double *workbuf = mymalloc(sizeof(double) * im->xsize);
+
+      for (in_ch = 0; in_ch < ilimit; ++in_ch) {
+        inbufs[in_ch] = mymalloc(sizeof(IM_SAMPLE_T) * im->xsize);
       }
-      myfree(vals);
+      
+      for (y = 0; y < src->ysize; ++y) {
+        for (in_ch = 0; in_ch < ilimit; ++in_ch) {
+          IM_GSAMP_ASSERT(src, 0, xmax, y, inbufs[in_ch], &in_ch, 1);
+        }
+        for (out_ch = 0; out_ch < outtotalch; ++out_ch) {
+          for (x = 0; x < xmax; ++x) {
+            workbuf[x] = 0;
+          }
+          for (in_ch = 0; in_ch < ilimit; ++in_ch) {
+            double coeff = coeffs[in_ch + inchans * out_ch];
+            double *workp = workbuf;
+            const IM_SAMPLE_T * inrow = inbufs[in_ch];
+            if (coeff == 0) {
+              /* nothing to do */
+            }
+            else if (coeff == 1.0) {
+              IM_SUFFIX(vec_add)(workp, inrow, xmax);
+            }
+            else {
+              IM_SUFFIX(vec_muladd)(workp, inrow, coeff, xmax);
+            }
+	  }
+          if (in_ch < inchans) {
+            double coeff = coeffs[in_ch + inchans * out_ch];
+            if (coeff) {
+              for (x = 0; x < xmax; ++x) {
+                workbuf[x] += coeff * IM_SAMPLE_MAX;
+              }
+            }
+          }
+          IM_SUFFIX(vec_limit)(outbuf, workbuf, xmax);
+          IM_PSAMP(im, 0, xmax, y, outbuf, &out_ch, 1);
+        }
+      }
+      myfree(workbuf);
+      myfree(outbuf);
+      for (in_ch = 0; in_ch < ilimit; ++in_ch) {
+        myfree(inbufs[in_ch]);
+      }
 #/code
     }
   }
@@ -131,8 +222,10 @@ i_convert(i_img *src, const double *coeff, int outchan, int inchan) {
     int index;
     i_color *colors;
     i_palidx *vals;
+    int i, j;
+    double work[MAXCHANNELS];
 
-    im = im_img_pal_new(aIMCTX, src->xsize, src->ysize, outchan, 
+    im = im_img_pal_new(aIMCTX, src->xsize, src->ysize, outchans, 
 			i_maxcolors(src));
 
     /* just translate the color table */
@@ -142,16 +235,16 @@ i_convert(i_img *src, const double *coeff, int outchan, int inchan) {
     colors = mymalloc(count * sizeof(i_color)); /* check 04Jul05 tonyc */
     i_getcolors(src, 0, colors, count);
     for (index = 0; index < count; ++index) {
-      for (j = 0; j < outchan; ++j) {
+      for (j = 0; j < outchans; ++j) {
         work[j] = 0;
         for (i = 0; i < ilimit; ++i) {
-          work[j] += coeff[i+inchan*j] * colors[index].channel[i];
+          work[j] += coeffs[i+inchans*j] * colors[index].channel[i];
         }
-        if (i < inchan) {
-          work[j] += coeff[i+inchan*j] * 255.9;
+        if (i < inchans) {
+          work[j] += coeffs[i+inchans*j] * 255.9;
         }
       }
-      for (j = 0; j < outchan; ++j) {
+      for (j = 0; j < outchans; ++j) {
         if (work[j] < 0)
           colors[index].channel[j] = 0;
         else if (work[j] >= 255)
@@ -195,8 +288,8 @@ initialize lists of the channels to copy, zero or set to max.
 static
 int is_channel_copy(i_img *im, const double *coeff, int outchan, int inchan, 
 		    struct chan_copy *info) {
-  int srcchan[MAXCHANNELS];
-  int onechan[MAXCHANNELS];
+  int srcchan[MAXTOTALCHANNELS];
+  int onechan[MAXTOTALCHANNELS];
   int i, j;
   int ilimit = im->channels > inchan ? inchan : im->channels;
 
@@ -281,36 +374,33 @@ Perform a convert that only requires channel copies.
 static i_img *
 convert_via_copy(i_img *im, i_img *src, struct chan_copy *info) {
 #code src->bits <= i_8_bits
-  IM_COLOR *in_line = mymalloc(sizeof(IM_COLOR) * src->xsize);
-  IM_COLOR *out_line = mymalloc(sizeof(IM_COLOR) * src->xsize);
+  IM_SAMPLE_T *work_samp = mymalloc(sizeof(IM_SAMPLE_T) * src->xsize);
   i_img_dim x, y;
+  i_img_dim w = im->xsize;
   int i;
-  IM_COLOR *inp, *outp;
 
   for (y = 0; y < src->ysize; ++y) {
-    IM_GLIN(src, 0, src->xsize, y, in_line);
-
-    inp = in_line;
-    outp = out_line;
-    for (x = 0; x < src->xsize; ++x) {
-      for (i = 0; i < info->copy_count; ++i) {
-	outp->channel[info->to[i]] = inp->channel[info->from[i]];
-      }
-      for (i = 0; i < info->one_count; ++i) {
-	outp->channel[info->one[i]] = IM_SAMPLE_MAX;
-      }
-      for (i = 0; i < info->zero_count; ++i) {
-	outp->channel[info->zero[i]] = 0;
-      }
-      ++inp;
-      ++outp;
+    for (i = 0; i < info->copy_count; ++i) {
+      IM_GSAMP_ASSERT(src, 0, w, y, work_samp, &(info->from[i]), 1);
+      IM_PSAMP(im, 0, w, y, work_samp, &(info->to[i]), 1);
     }
-    
-    IM_PLIN(im, 0, src->xsize, y, out_line);
+    if (info->one_count) {
+      for (x = 0; x < w; ++x)
+        work_samp[x] = IM_SAMPLE_MAX;
+      for (i = 0; i < info->one_count; ++i) {
+        IM_PSAMP(im, 0, w, y, work_samp, &(info->one[i]), 1);
+      }
+    }
+    if (info->zero_count) {
+      for (x = 0; x < w; ++x)
+        work_samp[x] = 0;
+      for (i = 0; i < info->zero_count; ++i) {
+        IM_PSAMP(im, 0, w, y, work_samp, &(info->zero[i]), 1);
+      }
+    }
   }
   
-  myfree(in_line);
-  myfree(out_line);
+  myfree(work_samp);
 #/code
       
   return im;
