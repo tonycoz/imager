@@ -81,7 +81,12 @@ im_fatal(pIMCTX, int exitcode,const char *fmt, ... ) {
     im_vloog(aIMCTX, 0, fmt, ap);
     va_end(ap);
   }
-  exit(exitcode);
+  va_start(ap, fmt);
+  vfprintf(stderr, fmt, ap);
+  fputc('\n', stderr);
+  va_end(ap);
+  
+  abort();
 }
 
 /*
