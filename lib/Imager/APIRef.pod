@@ -91,7 +91,7 @@ Imager::APIRef - Imager's C API - reference.
 
   # Image creation/destruction
   i_img *img = i_sametype(src, width, height);
-  i_img *img = i_sametype_chans(src, width, height, channels);
+  i_img *img = i_sametype_chans_extra(src, width, height, channels, extra);
   i_img *img = im_img_16_new_extra(aIMCTX, width, height, channels);
   i_img *img = i_img_16_new_extra(width, height, channels);
   i_img *img = im_img_8_new_extra(aIMCTX, width, height, channels, extra);
@@ -112,6 +112,7 @@ Imager::APIRef - Imager's C API - reference.
   i_img *img = i_lin_img_16_new(width, height, channels);
   i_img *img = im_lin_img_double_new(aIMCTX, width, height, channels);
   i_img *img = i_lin_img_double_new(width, height, channels);
+  i_img *img = i_sametype_chans(src, width, height, channels);
   i_img *img = im_lin_img_16_new_extra(aIMCTX, width, height, channels);
   i_img *img = i_lin_img_16_new_extra(width, height, channels);
   i_img *img = im_img_pal_new(aIMCTX, width, height, channels, max_palette_size)
@@ -1013,7 +1014,7 @@ returns -1 and pushes an error.
 
 
 =for comment
-From: immacros.h
+From: iminline.h
 
 =item i_psamp_bits(im, left, right, y, samples, channels, channel_count, bits)
 
@@ -1049,7 +1050,7 @@ returns -1 and pushes an error.
 
 
 =for comment
-From: immacros.h
+From: iminline.h
 
 
 =back
@@ -1867,7 +1868,22 @@ From: image.c
 
   i_img *img = i_sametype_chans(src, width, height, channels);
 
-Returns an image of the same type (sample size).
+Returns an image of the same type (sample size) with the specified
+number of color channels.
+
+For paletted images the equivalent direct type is returned.
+
+
+=for comment
+From: iminline.h
+
+=item i_sametype_chans_extra(C<im>, C<xsize>, C<ysize>, C<channels>, C<extra>)
+
+
+  i_img *img = i_sametype_chans_extra(src, width, height, channels, extra);
+
+Returns an image of the same type (sample size), with the specified
+number of color and extra channels.
 
 For paletted images the equivalent direct type is returned.
 
@@ -3280,6 +3296,10 @@ B<i_img_check_entries>
 =item *
 
 B<i_new_image_data_alloc_def>
+
+=item *
+
+B<im_fatal>
 
 =item *
 

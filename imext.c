@@ -42,7 +42,7 @@ im_ext_funcs imager_function_table =
     mathom_i_img_pal_new,
     i_img_destroy,
     i_sametype,
-    i_sametype_chans,
+    i_sametype_chans_extra,
     i_img_info,
 
     i_plin,
@@ -243,6 +243,7 @@ im_ext_funcs imager_function_table =
    on the function names.
 */
 
+#if 0
 /*
 =item i_gsamp(im, left, right, y, samples, channels, channel_count)
 
@@ -288,6 +289,7 @@ i_img_dim
            const int *chans, int chan_count) {
   return i_gsampf(im, l, r, y, samp, chans, chan_count);
 }
+#endif
 
 /*
 =item i_gsamp_bits(im, left, right, y, samples, channels, channel_count, bits)

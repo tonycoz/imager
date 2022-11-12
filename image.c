@@ -688,12 +688,13 @@ i_sametype(i_img *src, i_img_dim xsize, i_img_dim ysize) {
 }
 
 /*
-=item i_sametype_chans(C<im>, C<xsize>, C<ysize>, C<channels>)
+=item i_sametype_chans_extra(C<im>, C<xsize>, C<ysize>, C<channels>, C<extra>)
 
 =category Image creation/destruction
-=synopsis i_img *img = i_sametype_chans(src, width, height, channels);
+=synopsis i_img *img = i_sametype_chans_extra(src, width, height, channels, extra);
 
-Returns an image of the same type (sample size).
+Returns an image of the same type (sample size), with the specified
+number of color and extra channels.
 
 For paletted images the equivalent direct type is returned.
 
@@ -701,20 +702,20 @@ For paletted images the equivalent direct type is returned.
 */
 
 i_img *
-i_sametype_chans(i_img *src, i_img_dim xsize, i_img_dim ysize, int channels) {
+i_sametype_chans_extra(i_img *src, i_img_dim xsize, i_img_dim ysize, int channels, int extra) {
   dIMCTXim(src);
 
   if (src->bits == 8) {
-    return i_img_8_new(xsize, ysize, channels);
+    return i_img_8_new_extra(xsize, ysize, channels, extra);
   }
   else if (src->bits == i_16_bits) {
-    return i_img_16_new(xsize, ysize, channels);
+    return i_img_16_new_extra(xsize, ysize, channels, extra);
   }
   else if (src->bits == i_double_bits) {
-    return i_img_double_new(xsize, ysize, channels);
+    return i_img_double_new_extra(xsize, ysize, channels, extra);
   }
   else if (src->bits == i_float_bits) {
-    return i_img_float_new(xsize, ysize, channels);
+    return i_img_float_new_extra(xsize, ysize, channels, extra);
   }
   else {
     i_push_error(0, "Unknown image bits");

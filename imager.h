@@ -101,7 +101,7 @@ extern int i_setcolors_forward(i_img *im, int index, const i_color *colors,
 void   i_img_info(i_img *im,i_img_dim *info);
 
 extern i_img *i_sametype(i_img *im, i_img_dim xsize, i_img_dim ysize);
-extern i_img *i_sametype_chans(i_img *im, i_img_dim xsize, i_img_dim ysize, int channels);
+extern i_img *i_sametype_chans_extra(i_img *im, i_img_dim xsize, i_img_dim ysize, int channels, int extra);
 
 extern int i_img_check_entries(i_img *im);
 
@@ -122,11 +122,6 @@ extern i_img_dim i_plinf(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y,
 			   const i_fcolor *vals);
 extern i_img_dim i_glinf(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, 
 			   i_fcolor *vals);
-extern i_img_dim (i_gsamp)(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y,
-			   i_sample_t *samp, const int *chans, int chan_count);
-extern i_img_dim
-(i_gsampf)(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, i_fsample_t *samp,
-	   const int *chans, int chan_count);
 extern i_img_dim
 (i_gpal)(i_img *im, i_img_dim x, i_img_dim r, i_img_dim y, i_palidx *vals);
 extern i_img_dim
@@ -226,7 +221,7 @@ int i_conv        (i_img *im,const double *coeff,int len);
 void i_unsharp_mask(i_img *im, double stddev, double scale);
 
 /* colour manipulation */
-extern i_img *i_convert(i_img *src, const double *coeff, int outchan, int inchan);
+extern i_img *i_convert(i_img *src, const double *coeff, int outchan, int extraoutchans, int inchan);
 extern void i_map(i_img *im, unsigned char (*maps)[256], unsigned int mask);
 
 float i_img_diff   (i_img *im1,i_img *im2);
