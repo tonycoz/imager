@@ -283,6 +283,8 @@ extern im_ext_funcs *imager_function_ext_table;
 #define i_pslin_fallback (im_extt->f_i_pslin_fallback)
 #define i_pslinf_fallback (im_extt->f_i_pslinf_fallback)
 
+#define im_fatal (im_extt->f_im_fatal)
+
 #ifdef IMAGER_LOG
 #ifndef IMAGER_NO_CONTEXT
 #define mm_log(x) { i_lhead(__FILE__,__LINE__); i_loog x; } 
