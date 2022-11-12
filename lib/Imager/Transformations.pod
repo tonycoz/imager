@@ -858,6 +858,33 @@ extract a single channel from an image.
 
 set a given channel to a particular value (or from another channel)
 
+=item *
+
+add or remove extra channels to or from an image.
+
+=back
+
+Parameters:
+
+=over
+
+=item *
+
+C<preset> - a preset conversion as listed below.
+
+=item *
+
+C<matrix> - a reference to an array containing references to arrays of
+co-efficients as documented below used to specify non-extra channels
+for the image.  Either this or C<preset> is required.
+
+=item *
+
+C<extra> - a reference to an array containing references to arrays of
+co-efficients as documented below used to specify extra channels for
+the image.  Defaults to not add (or even keeping) extra channels from
+the source image.
+
 =back
 
 The currently defined presets are:
@@ -965,6 +992,13 @@ alpha channel:
                                            [ 0, 0, 1, 0 ],
                                            [ 0, 0, 0, 0.5 ],
                                          ]);
+
+To add an extra channel all set to 255 to a 3 channel input image:
+
+  my $withextra = $rgb->convert(matrix => [ [ 1, 0, 0 ],
+                                            [ 0, 1, 0 ],
+                                            [ 0, 0, 1 ] ],
+                                extra  => [ [ 0, 0, 0, 1 ] ]);
 
 =item combine()
 X<combine>

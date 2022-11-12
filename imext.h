@@ -56,7 +56,7 @@ extern im_ext_funcs *imager_function_ext_table;
 
 #define i_img_destroy(im) ((im_extt->f_i_img_destroy)(im))
 #define i_sametype(im, xsize, ysize) ((im_extt->f_i_sametype)((im), (xsize), (ysize)))
-#define i_sametype_chans(im, xsize, ysize, channels) ((im_extt->f_i_sametype_chans)((im), (xsize), (ysize), (channels)))
+#define i_sametype_chans_extra(im, xsize, ysize, channels, extra) ((im_extt->f_i_sametype_chans_extra)((im), (xsize), (ysize), (channels), (extra)))
 #define i_img_info(im, info) ((im_extt->f_i_img_info)((im), (info)))
 
 #ifndef IMAGER_DIRECT_IMAGE_CALLS
