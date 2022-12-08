@@ -2714,7 +2714,7 @@ i_conv(im,coef)
 	RETVAL
 
 Imager::ImgRaw
-i_convert(src, avmain, avextra = NULL)
+i_convert(src, avmain, avextra = NULL, int linear = 0)
     Imager::ImgRaw     src
     AV *avmain
     AV *avextra
@@ -2727,7 +2727,7 @@ i_convert(src, avmain, avextra = NULL)
     i_clear_error();
     if (extract_convert_matrix(aTHX_ avmain, avextra, &coeff, &inchans,
                                &outchans, &extrachans, &total_coeff)) {
-      RETVAL = i_convert(src, coeff, outchans, extrachans, inchans);
+      RETVAL = i_convert(src, coeff, outchans, extrachans, inchans, linear);
     }
     else {
       XSRETURN_EMPTY;

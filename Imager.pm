@@ -4174,8 +4174,22 @@ sub convert {
 
   my $extra = $opts{extra} || [];
 
+  my $scale = $opts{scale} || "linear";
+
+  my $linear = 1;
+  if ($scale eq "gamma") {
+    $linear = 0;
+  }
+  elsif ($scale eq "linear") {
+    $linear = 1;
+  }
+  else {
+    $self->{ERRSTR} = "convert: Unknown value '$scale' for parameter scale";
+    return undef;
+  }
+
   my $new = Imager->new;
-  $new->{IMG} = i_convert($self->{IMG}, $matrix, $extra);
+  $new->{IMG} = i_convert($self->{IMG}, $matrix, $extra, $linear);
   unless ($new->{IMG}) {
     # most likely a bad matrix
     i_push_error(0, "convert");

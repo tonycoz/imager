@@ -891,13 +891,13 @@ C<preset> - a preset conversion as listed below.
 =item *
 
 C<matrix> - a reference to an array containing references to arrays of
-co-efficients as documented below used to specify non-extra channels
+coefficients as documented below used to specify non-extra channels
 for the image.  Either this or C<preset> is required.
 
 =item *
 
 C<extra> - a reference to an array containing references to arrays of
-co-efficients as documented below used to specify extra channels for
+coefficients as documented below used to specify extra channels for
 the image.  Defaults to not add (or even keeping) extra channels from
 the source image.
 

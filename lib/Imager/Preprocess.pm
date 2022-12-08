@@ -147,11 +147,13 @@ sub byte_samples {
     s/\bIM_GSAMP_ASSERT\b/i_gsamp_assert/g;
     s/\bIM_PSAMP\b/i_psamp/g;
     s/\bIM_GSLIN\b/i_gslin/g;
+    s/\bIM_GSLIN_ASSERT\b/i_gslin_assert/g;
     s/\bIM_PSLIN\b/i_pslin/g;
     s/\bIM_SAMPLE_MAX\b/255/g;
     s/\bIM_SAMPLE_MAX2\b/65025/g;
     s/\bIM_SAMPLE_T/i_sample_t/g;
     s/\bIM_LIN_SAMPLE_T\b/i_sample16_t/g;
+    s/\bIM_LIN_SAMPLE_MAX\b/65535/g;
     s/\bIM_COLOR\b/i_color/g;
     s/\bIM_WORK_T\b/int/g;
     s/\bIM_Sf\b/"%d"/g;
@@ -184,11 +186,13 @@ sub double_samples {
     s/\bIM_GSAMP_ASSERT\b/i_gsampf_assert/g;
     s/\bIM_PSAMP\b/i_psampf/g;
     s/\bIM_GSLIN\b/i_gslinf/g;
+    s/\bIM_GSLIN_ASSERT\b/i_gslinf_assert/g;
     s/\bIM_PSLIN\b/i_pslinf/g;
     s/\bIM_SAMPLE_MAX\b/1.0/g;
     s/\bIM_SAMPLE_MAX2\b/1.0/g;
     s/\bIM_SAMPLE_T/i_fsample_t/g;
     s/\bIM_LIN_SAMPLE_T\b/i_fsample_t/g;
+    s/\bIM_LIN_SAMPLE_MAX\b/1.0/g;
     s/\bIM_COLOR\b/i_fcolor/g;
     s/\bIM_WORK_T\b/double/g;
     s/\bIM_Sf\b/"%f"/g;
@@ -273,7 +277,7 @@ You can also define extra sample-size dependent macros with C<#!define>:
 
 =over
 
-C<#define> I<common-name> I<eight-bit-name> I<floating-point-name>
+C<#!define> I<common-name> I<eight-bit-name> I<floating-point-name>
 
 =back
 
@@ -306,6 +310,22 @@ becomes i_gpix() or i_gpixf() as appropriate.
 
 =item *
 
+IM_GSAMP_ASSERT(C<im>, C<l>, C<r>, C<y>, C<samples>, C<chans>, C<chan_count>)
+
+=item *
+
+IM_GSLIN(C<im>, C<l>, C<r>, C<y>, C<samples>, C<chans>, C<chan_count>)
+
+=item *
+
+IM_GSLIN_ASSERT(C<im>, C<l>, C<r>, C<y>, C<samples>, C<chans>, C<chan_count>)
+
+=item *
+
+IM_PSLIN(C<im>, C<l>, C<r>, C<y>, C<samples>, C<chans>, C<chan_count>)
+
+=item *
+
 IM_ADAPT_COLORS(C<dest_channels>, C<src_channels>, C<colors>, C<count>)
 
 Call i_adapt_colors() or i_adapt_fcolors().
@@ -322,11 +342,11 @@ object.
 
 =item *
 
-IM_ABS(sample) - calculate the absolute value of an IM_WORK_T value.
+IM_ABS(sample) - calculate the absolute value of an IM_WORK_T value. (abs(), fabs())
 
 =item *
 
-IM_SAMPLE_MAX - maximum value for a sample
+IM_SAMPLE_MAX - maximum value for a sample (255, 1.0)
 
 =item *
 
@@ -334,23 +354,31 @@ IM_SAMPLE_MAX2 - maximum value for a sample, squared
 
 =item *
 
-IM_SAMPLE_T - type of a sample (i_sample_t or i_fsample_t)
+IM_SAMPLE_T - type of a sample (i_sample_t, i_fsample_t)
 
 =item *
 
-IM_COLOR - color type, either i_color or i_fcolor.
+IM_LIN_SAMPLE_T - type of a linear sample (i_sample16_t, i_fsample_t)
 
 =item *
 
-IM_WORK_T - working sample type, either int or double.
+IM_LIN_SAMPLE_MAX - maximum value for a linear sample (65535, 1.0)
 
 =item *
 
-IM_Sf - format string for the sample type, C<"%d"> or C<"%f">.
+IM_COLOR - color type (i_color, i_fcolor).
 
 =item *
 
-IM_Wf - format string for the work type, C<"%d"> or C<"%f">.
+IM_WORK_T - working sample type, (int, double).
+
+=item *
+
+IM_Sf - format string for the sample type, (C<"%d">, C<"%f">).
+
+=item *
+
+IM_Wf - format string for the work type, (C<"%d">, C<"%f">).
 
 =item *
 
@@ -359,6 +387,12 @@ IM_SUFFIX(identifier) - adds _8 or _double onto the end of identifier.
 =item *
 
 IM_EIGHT_BIT - this is a macro defined only in 8-bit/sample code.
+
+  #ifdef IM_EIGHT_BIT
+   /* 8-bit per sample only code */
+  #else
+   /* double per sample only code */
+  #endif
 
 =back
 

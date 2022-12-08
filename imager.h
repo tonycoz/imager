@@ -14,6 +14,7 @@
 #include <stdio.h>
 #include <math.h>
 #include <stdlib.h>
+#include <errno.h>
 
 #ifdef SUNOS
 #include <strings.h>
@@ -221,7 +222,7 @@ int i_conv        (i_img *im,const double *coeff,int len);
 void i_unsharp_mask(i_img *im, double stddev, double scale);
 
 /* colour manipulation */
-extern i_img *i_convert(i_img *src, const double *coeff, int outchan, int extraoutchans, int inchan);
+extern i_img *i_convert(i_img *src, const double *coeff, int outchan, int extraoutchans, int inchan, int linear);
 extern void i_map(i_img *im, unsigned char (*maps)[256], unsigned int mask);
 
 float i_img_diff   (i_img *im1,i_img *im2);

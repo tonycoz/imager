@@ -14,10 +14,26 @@ i_gslin(i_img *im, i_img_dim x, i_img_dim r, i_img_dim y,
   return (im->vtbl->i_f_gslin)(im, x, r, y, samp, chan, chan_count);
 }
 
+IMAGER_STATIC_INLINE void
+i_gslin_assert(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y,
+        i_sample16_t *samp, const int *chan, int chan_count) {
+  i_img_dim result = i_gslin(im, l, r, y, samp, chan, chan_count);
+  IM_UNUSED_VAR(result);
+  assert(result == (r-l) * chan_count);
+}
+
 IMAGER_STATIC_INLINE i_img_dim
 i_gslinf(i_img *im, i_img_dim x, i_img_dim r, i_img_dim y,
          i_fsample_t *samp, const int *chan, int chan_count) {
   return (im->vtbl->i_f_gslinf)(im, x, r, y, samp, chan, chan_count);
+}
+
+IMAGER_STATIC_INLINE void
+i_gslinf_assert(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y,
+        i_fsample_t *samp, const int *chan, int chan_count) {
+  i_img_dim result = i_gslinf(im, l, r, y, samp, chan, chan_count);
+  IM_UNUSED_VAR(result);
+  assert(result == (r-l) * chan_count);
 }
 
 IMAGER_STATIC_INLINE i_img_dim
@@ -47,23 +63,17 @@ i_gsampf(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, i_fsample_t *samps,
 IMAGER_STATIC_INLINE void
 i_gsamp_assert(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, i_sample_t *samps,
                const int *chans, int chan_count) {
-  if (i_gsamp(im, l, r, y, samps, chans, chan_count) != (r-l)*chan_count) {
-#ifdef IMAGER_NO_CONTEXT
-    dIMCTXim(im);
-#endif
-    im_fatal(aIMCTX, 3, "Unexpected i_gsamp() short result");
-  }
+  i_img_dim result = i_gsamp(im, l, r, y, samps, chans, chan_count);
+  IM_UNUSED_VAR(result);
+  assert(result == (r-l)*chan_count);
 }
 
 IMAGER_STATIC_INLINE void
 i_gsampf_assert(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, i_fsample_t *samps,
                 const int *chans, int chan_count) {
-  if (i_gsampf(im, l, r, y, samps, chans, chan_count) != (r-l)*chan_count) {
-#ifdef IMAGER_NO_CONTEXT
-    dIMCTXim(im);
-#endif
-    im_fatal(aIMCTX, 3, "Unexpected i_gsampf() short result");
-  }
+  i_img_dim result = i_gsampf(im, l, r, y, samps, chans, chan_count);
+  IM_UNUSED_VAR(result);
+  assert(result == (r-l)*chan_count);
 }
 
 /*
@@ -639,6 +649,177 @@ For paletted images the equivalent direct type is returned.
 IMAGER_STATIC_INLINE i_img *
 i_sametype_chans(i_img *src, i_img_dim xsize, i_img_dim ysize, int channels) {
   return i_sametype_chans_extra(src, xsize, ysize, channels, 0);
+}
+
+/*
+=item im_align_size(align, size)
+
+Given an alignment and a size, return size rounded up to be a multiple
+of the alignment.
+
+C<align> must be a power of two.
+
+=cut
+*/
+
+IMAGER_STATIC_INLINE size_t
+im_align_size(size_t align, size_t size) {
+  assert(("align must be a power of 2", (align & -align) == align));
+  if (size & (align - 1U)) {
+    size_t new_size = (size + align) & ~(align - 1);
+    assert(new_size > size);
+    assert((new_size & (align-1)) == 0);
+    return new_size;
+  }
+  else {
+    return size;
+  }
+}
+
+/*
+=item im_aligned_alloc_low(C<align>, C<size>)
+
+Low level function to allocate aligned memory.
+
+This will use malloc() and returned unaligned memory if no aligned
+allocation function was found during configuration.
+
+C<align> must be a power of two.
+
+C<size> may be rounded up to a multiple of C<align>.
+
+This may return NULL on failure.
+
+=cut
+*/
+
+IMAGER_STATIC_INLINE void *
+im_aligned_alloc_low(size_t align, size_t size) {
+  size_t aligned_size = im_align_size(align, size);
+#if IM_ALIGNED_ALLOC_TYPE == IM_ALIGNED_ALLOC_C11
+  /* posix_memalign() requires that the alignment be at least sizeof(void *),
+     and aligned_alloc() may inherit that requirement
+  */
+  if (align < sizeof(void *)) {
+    return malloc(aligned_size);
+  }
+
+  return aligned_alloc(align, aligned_size);
+#elif IM_ALIGNED_ALLOC_TYPE == IM_ALIGNED_ALLOC_POSIX
+  /* posix_memalign() requires that the alignment be at least sizeof(void *) */
+  if (align < sizeof(void *)) {
+    return malloc(size);
+  }
+
+  void *p;
+  if (posix_memalign(&p, align, aligned_sizesize) != 0)
+    return NULL;
+
+  return p;
+#elif IM_ALIGNED_ALLOC_TYPE == IM_ALIGNED_ALLOC_MSVC
+  return _aligned_malloc(aligned_size, align);
+#else
+  return malloc(aligned_size);
+#endif
+}
+
+/*
+=item im_aligned_free(C<p>)
+
+Free a block of memory allocated with im_aligned_alloc_low().
+
+=cut
+*/
+
+IMAGER_STATIC_INLINE void
+im_aligned_free(void *p) {
+#if IM_ALIGNED_ALLOC_TYPE == IM_ALIGNED_ALLOC_C11 || \
+    IM_ALIGNED_ALLOC_TYPE == IM_ALIGNED_ALLOC_POSIX
+  free(p);
+#elif IM_ALIGNED_ALLOC_TYPE == IM_ALIGNED_ALLOC_MSVC
+  _aligned_free(size, align);
+#else
+  return free(p);
+#endif
+}
+
+/*
+=item im_aligned_alloc_fatal(align, size)
+
+Allocate aligned memory and abort execution on failure.
+
+This will fallback to mymalloc() if no aligned allocation function was
+found during configuration (and return unaligned memory.)
+
+C<align> must be a power of 2.
+
+=cut
+*/
+
+IMAGER_STATIC_INLINE void *
+im_aligned_alloc_fatal(size_t align, size_t size) {
+  void *p = im_aligned_alloc_low(align, size);
+  if (!p) {
+#ifdef IMAGER_NO_CONTEXT
+    dIMCTX;
+#endif
+    im_fatal(aIMCTX, 3, "Out of memory");
+  }
+  return p;
+}
+
+/*
+=item im_aligned_alloc_simd_null(type_size, count)
+
+Allocate (at least) count units of type_size, aligned for SIMD
+processing.
+
+Returns NULL on allocation failure or integer overflow.
+
+=cut
+*/
+
+IMAGER_STATIC_INLINE void *
+im_aligned_alloc_simd_null(size_t type_size, size_t count) {
+  size_t size = type_size * count;
+  if (size / type_size != count) {
+    errno = EINVAL;
+    return NULL;
+  }
+
+  return im_aligned_alloc_low(IMAGER_ALIGN_SIZE(type_size), size);
+}
+
+/*
+=item im_aligned_alloc_simd_fatal(type_size, count)
+
+Allocate (at least) count units of type_size, aligned for SIMD
+processing.
+
+Aborts the program on allocation failure or integer overflow.
+
+=cut
+*/
+
+IMAGER_STATIC_INLINE void *
+im_aligned_alloc_simd_fatal(size_t type_size, size_t count) {
+  size_t size = type_size * count;
+  if (size / type_size != count) {
+#ifdef IMAGER_NO_CONTEXT
+    dIMCTX;
+#endif
+    im_fatal(aIMCTX, 3, "Integer overflow calculating allocation");
+  }
+
+  void *p = im_aligned_alloc_low(IMAGER_ALIGN_SIZE(type_size), size);
+  if (!p) {
+#ifdef IMAGER_NO_CONTEXT
+    dIMCTX;
+#endif
+    im_fatal(aIMCTX, 3, "Out of memory");
+  }
+
+  return p;
 }
 
 #ifdef __cplusplus

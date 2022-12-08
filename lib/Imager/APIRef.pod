@@ -3299,6 +3299,30 @@ B<i_new_image_data_alloc_def>
 
 =item *
 
+B<im_align_size>
+
+=item *
+
+B<im_aligned_alloc_fatal>
+
+=item *
+
+B<im_aligned_alloc_low>
+
+=item *
+
+B<im_aligned_alloc_simd_fatal>
+
+=item *
+
+B<im_aligned_alloc_simd_null>
+
+=item *
+
+B<im_aligned_free>
+
+=item *
+
 B<im_fatal>
 
 =item *
