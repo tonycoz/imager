@@ -2,7 +2,8 @@
 use strict;
 use Imager qw(:all :handy);
 use Test::More;
-use Imager::Test qw(test_colorf_gpix is_fcolor1 is_fcolor3 is_arrayf);
+use Imager::Test qw(test_colorf_gpix is_fcolor1 is_fcolor3 is_arrayf test_image
+                    to_linear_srgb to_gamma_srgb to_linear_srgbf to_gamma_srgbf);
 
 -d "testout" or mkdir "testout";
 
@@ -217,7 +218,7 @@ SKIP:
     is_fcolor3($c1, 0.1, 0.2, 0.3, "check it was set")
       or print "#", join(",", $c1->rgba), "\n";
     
-    my $targ16 = $imbase16->convert(matrix => [ [ 0.05, 0.15, 0.01, 0.5 ] ]);
+    my $targ16 = $imbase16->convert(matrix => [ [ 0.05, 0.15, 0.01, 0.5 ] ], scale => "gamma");
     ok($targ16, "convert another 16/bit sample image")
       or skip("could not convert", 3);
     is($targ16->getchannels, 1, "convert should be 1 channel");
@@ -300,12 +301,139 @@ SKIP:
      "this would crash");
   is($im->errstr, "convert: invalid matrix: element 0 is not an array ref",
      "check the error message");
+  my $im2 = $im->convert(preset => "grey", extra => [ [ 0, 0, 0, 3 ] ]);
+  ok($im2, "convert OO with extras");
+  is($im2->getchannels, 1, "expected channels");
+  is($im2->extrachannels, 1, "expected extra channels");
+}
+
+{
+  my $im = Imager->new(xsize => 10, ysize => 10, channels => 3, extrachannels => 1);
+  is($im->setsamples(y => 0, data => [ 127, 64, 255, 127 ], channels => 4), 4,
+     "write some samples");
+  is_deeply([ $im->getsamples(y => 0, width => 1, channels => 4) ],
+            [ 127, 64, 255, 127 ],
+            "check samples");
 }
 
 {
   my $empty = Imager->new;
   ok(!$empty->convert(preset => "addalpha"), "can't convert an empty image");
   is($empty->errstr, "convert: empty input image", "check error message");
+}
+
+{
+  my $im = test_image;
+  ok(!$im->convert(matrix => [ map { [ 0 ] } 1 .. 5 ]),
+     "can't convert to image with 5 normal channels");
+  like($im->errstr, qr/convert: cannot have outchans \(5\) > MAXCHANNELS \(4\)/,
+       "check message");
+  ok(!$im->convert(matrix => [  ], extra => [  ]),
+     "can't convert to image with no total channels");
+  like($im->errstr, qr/convert: there must be at least one output channel/,
+       "check message");
+  ok(!$im->convert(matrix => [ ([0]) x 4 ], extra => [ ( [0] ) x 11 ]),
+     "can't convert to image with too many total channels");
+  like($im->errstr, qr/convert: cannot have normal output channels \(4\) \+ extra channels \(11\) > maximum total channels \(14\)/,
+       "check message");
+}
+
+sub limit8 {
+  my $d = shift;
+  if ($d < 0) {
+    return 0;
+  }
+  elsif ($d > 255) {
+    return 255;
+  }
+  else {
+    return $d;
+  }
+}
+
+sub limitd {
+  my $d = shift;
+  if ($d < 0) {
+    return 0;
+  }
+  elsif ($d > 1.0) {
+    return 1.0;
+  }
+  else {
+    return $d;
+  }
+}
+
+{
+  # gamma
+  my @samps = ( 255, 127, 64 );
+  my $im = Imager->new(xsize => 10, ysize => 10, channels => 1);
+  is($im->setsamples(y => 1, data => \@samps), 3, "set some samples");
+
+  {
+    my $result = $im->convert(matrix => [ [ 0.5 ] ], scale => "gamma");
+    ok($result, "make 0.5 input gamma converted image");
+    is_deeply([ $result->getsamples(y => 1, width => 3) ], [ map { int($_/2) } @samps ],
+              "check samples scaled as if gamma was luminance");
+  }
+  {
+    my $result = $im->convert(matrix => [ [ 0.5 ] ]);
+    ok($result, "make 0.5 input linear converted image");
+    my @expect = map { sprintf("%.0f", to_gamma_srgb(to_linear_srgb($_)/2)) } @samps;
+    is_deeply([ $result->getsamples(y => 1, width => 3) ], \@expect,
+              "check samples scaled by luminance");
+  }
+  {
+    my $result = $im->convert(matrix => [ [ 1.0, -0.5 ] ], scale => "gamma");
+    ok($result, "make (+1.0, -0.5) gamma converted image");
+    my @expect = map { limit8(int($_ - (255/2))) } @samps;
+    is_deeply([ $result->getsamples(y => 1, width => 3) ],
+              \@expect,
+              "check with 1.0 of input sample (gamma)");
+  }
+  {
+    my $result = $im->convert(matrix => [ [ 1.0, -0.5 ] ],);
+    ok($result, "make (+1.0, -0.5) gamma converted image");
+    my @expect = map { sprintf("%.0f", limit8(to_gamma_srgb(to_linear_srgb($_) - (65535/2)))) } @samps;
+    is_deeply([ $result->getsamples(y => 1, width => 3) ],
+              \@expect,
+              "check with 1.0 of input sample");
+  }
+
+  # similar for float
+  my $fim = $im->to_rgb_double;
+  my @fsamps = map { $_ / 255 } @samps;
+  {
+    my $result = $fim->convert(matrix => [ [ 0.5 ] ], scale => "gamma");
+    ok($result, "float: make 0.5 input gamma converted image");
+    is_arrayf([ $result->getsamples(y => 1, width => 3, type => "float") ],
+              [ map { $_/2 } @fsamps ],
+              "check samples scaled as if gamma was luminance");
+  }
+  {
+    my $result = $fim->convert(matrix => [ [ 0.5 ] ]);
+    ok($result, "float: make 0.5 input linear converted image");
+    my @expect = map { to_gamma_srgbf(to_linear_srgbf($_)/2) } @fsamps;
+    is_arrayf([ $result->getsamples(y => 1, width => 3, type => "float") ], \@expect,
+              "check samples scaled by luminance");
+  }
+  {
+    my $result = $fim->convert(matrix => [ [ 1.0, -0.5 ] ], scale => "gamma");
+    ok($result, "float: make (+1.0, -0.5) gamma converted image");
+    my @expect = map { limitd($_ - 0.5) } @fsamps;
+    is_arrayf([ $result->getsamples(y => 1, width => 3, type => "float") ],
+              \@expect,
+              "float: check with 1.0 of input sample (gamma)");
+  }
+  {
+    my $result = $fim->convert(matrix => [ [ 1.0, -0.5 ] ]);
+    ok($result, "float: make (+1.0, -0.5) gamma converted image");
+    my @expect = map { limitd(to_gamma_srgbf(to_linear_srgbf($_) - 0.5)) } @fsamps;
+    is_arrayf([ $result->getsamples(y => 1, width => 3, type => "float") ],
+              \@expect,
+              "float: check with 1.0 of input sample");
+  }
+
 }
 
 done_testing();

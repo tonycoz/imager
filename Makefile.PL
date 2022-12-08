@@ -839,6 +839,82 @@ EOS
 /* size of pointers, for use in preprocessing */
 #define IMAGER_PTR_SIZE $Config{ptrsize}
 EOS
+
+  my ($ptr_int_type, $need_stdint) = probe_ptr_int_type();
+  my $stdint = $need_stdint ? "#include <stdint.h>\n" : "";
+  print $config <<"EOS";
+
+/*
+An unsigned integer type that is the same size or larger than a void*
+
+C99 optionally allows an implementation to define uintptr_t, but it
+isn't required.
+*/
+
+$stdint
+typedef $ptr_int_type im_ptr_int;
+EOS
+
+  my ($type, $defs) = probe_aligned_alloc();
+  print $config <<EOS;
+
+/*
+ IM_ALIGNED_ALLOC_TYPE selects one of three possible aligned
+ allocation functions.
+
+  They all have different parameter lists, so we can't just define a
+  symbol that names the function.
+
+  MSVC doesn't implement the C11 function
+*/
+
+$defs
+#define IM_ALIGNED_ALLOC_TYPE $type
+EOS
+
+  my $nr = probe_noreturn();
+  print $config <<EOS;
+/*
+
+IMAGER_NORETURN is a function attribute that can be used before a
+function definition (and declaration) to indicate that the function
+doe not return.
+
+Similar to perl.h's __attribute__noreturn__ except this is expected to
+be used *before* the declaration, and doesn't invade the
+implementations reserved namespace.
+
+C++ compatible definitions are provided if possible.
+
+*/
+
+#ifdef __cplusplus
+#  if defined(__has_cpp_attribute) && __has_cpp_attribute(noreturn)
+#    define IMAGER_NORETURN [[noreturn]]
+#  else
+#    define IMAGER_NORETURN
+#  endif
+#else
+#  define IMAGER_NORETURN $nr
+#endif
+EOS
+
+  print $config <<'EOS';
+
+/*
+
+IMAGER_ALIGN_SIZE is intended for use in helping to generate
+alignment values suitable for building with automatic vectorization.
+
+For now this is a fixed multiplier.  This may be modified in the
+future to be more adaptive to the architecture and the size.
+
+*/
+
+#define IMAGER_ALIGN_SIZE(type) (8 * sizeof(type))
+
+EOS
+
   print $config <<'EOS';
 
 #ifdef __cplusplus
@@ -913,6 +989,148 @@ EOS
   }
   print "no 16-bit float type found\n";
   return;
+}
+
+# try to find an unsigned integer type that can hold a void *
+sub probe_ptr_int_type {
+  my $code = <<'EOS';
+#include <stdint.h>
+
+int x = 0;
+
+int main() {
+  uintptr_t y = (uintptr_t)(void*)&x;
+  int *z = (int *)(void *)y;
+
+  return *z;
+}
+EOS
+  if (try_compile_and_link($code)) {
+    return ("uintptr_t", 1);
+  }
+
+  for my $type ("unsigned", "unsigned long", "unsigned long long") {
+    my $code = <<"EOS";
+#include <stdint.h>
+
+int x = 0;
+
+int main() {
+  $type y = ($type)(void*)&x;
+  int *z = (int *)(void *)y;
+
+  return *z;
+}
+EOS
+    if (try_compile_and_link($code)) {
+      return ($type, 0);
+    }
+  }
+
+  die "Cannot find an unsigned integer type that can hold a pointer\n";
+}
+
+# probe for an allocation function that we can specify alignment for.
+# these functions have different parameter handling, so we can't just
+# define names here
+sub probe_aligned_alloc {
+  my @types = qw(IM_ALIGNED_ALLOC_C11 IM_ALIGNED_ALLOC_POSIX IM_ALIGNED_ALLOC_MSVC);
+  my %types;
+  @types{@types} = 0 .. $#types;
+  my @keys = sort { $types{$a} <=> $types{$b} } keys %types;
+  my @deftypes = ( @types, "IM_ALIGNED_ALLOC_NONE" );
+  my $defs = join("", map { "#define $deftypes[$_] $_\n" } 0..$#deftypes );
+  for my $type (@keys) {
+    my $code = <<EOS;
+#include <stdlib.h>
+#include <stdio.h>
+
+$defs
+
+#define ALLOC_TYPE $type
+
+#if ALLOC_TYPE == IM_ALIGNED_ALLOC_MSVC
+#include <malloc.h>
+#endif
+
+void *
+my_aligned_alloc(size_t align, size_t size) {
+#if ALLOC_TYPE == IM_ALIGNED_ALLOC_C11
+  return aligned_alloc(align, size);
+#elif ALLOC_TYPE == IM_ALIGNED_ALLOC_POSIX
+  void *p = NULL;
+  if (posix_memalign(&p, align, size)) {
+    return NULL;
+  }
+  return p;
+#elif ALLOC_TYPE == IM_ALIGNED_ALLOC_MSVC
+  return _aligned_malloc(size, align);
+#else
+#  error "Unknown ALLOC_TYPE"
+#endif
+}
+
+void
+my_aligned_free(void *p) {
+#if ALLOC_TYPE == IM_ALIGNED_ALLOC_C11 || ALLOC_TYPE == IM_ALIGNED_ALLOC_POSIX
+  free(p);
+#elif ALLOC_TYPE == IM_ALIGNED_ALLOC_MSVC
+  _aligned_free(p);
+#else
+#  error "Unknown ALLOC_TYPE $type " ALLOC_TYPE
+#endif
+}
+
+int main() {
+    double *p = my_aligned_alloc(sizeof(double) * 16, sizeof(double) * 200);
+    if (p == NULL) {
+       perror("$type aligned allocation failed");
+       return 1;
+    }
+    my_aligned_free(p);
+    return 0;
+}
+EOS
+    if (try_compile_and_link($code, run => 1)) {
+      return ($type, $defs);
+    }
+  }
+  return ("IM_ALIGNED_ALLOC_NONE", $defs);
+}
+
+# probe for a definition that can go before the declaration of
+# function that indicates that the function does not return.
+#
+# perl.h defines something similar, but that's only tested *after* the
+# closing ) of the parameter list, but the more portal versions of
+# this mechanism go before the the function
+sub probe_noreturn {
+  for my $nr ("_Noreturn", "[[noreturn]]", "__attribute__((__noreturn__))") {
+    print "Noreturn: trying $nr\n" if $VERBOSE;
+    my $code = <<CODE;
+#include <stdlib.h>
+#include <stdnoreturn.h>
+
+void $nr myfunc(void);
+
+int
+somefunc(int test) {
+  if (test) {
+    myfunc();
+  }
+  else {
+    return 0;
+  }
+}
+CODE
+    if (try_compile_and_link($code, nolink => 1)) {
+      print "Found $nr to mark functions as not returning\n";
+      return $nr;
+    }
+  }
+
+  print "No way to mark functions as noreturn found\n";
+  return "";
 }
 
 sub usage {
@@ -1071,26 +1289,39 @@ sub try_compile_and_link {
     my $errornull = $VERBOSE ? '' : "2>" . File::Spec->devnull;
 
     my $libs = $args{libs} || '';
-    my $cccmd = "$cc -o $tmp $ccflags $tmp.c $libs $errornull";
+    my $cccmd;
+    my $tmp_out;
+    if ($args{nolink}) {
+      $tmp_out = "$tmp$obj_ext";
+      $cccmd = "$cc -c -o $tmp_out $ccflags $tmp.c $errornull";
+    }
+    else {
+      $tmp_out = "$tmp$Config{_exe}";
+      $cccmd = "$cc -o $tmp $ccflags $tmp.c $libs $errornull";
+    }
 
-    my $tmp_exe = "$tmp$Config{_exe}";
     printf "cccmd = $cccmd\n" if $VERBOSE;
     my $res = system($cccmd);
-    $ok = defined($res) && $res == 0 && -s $tmp_exe && -x _;
+    $ok = defined($res) && $res == 0 && -s $tmp_out;
+
+    if ($ok && !$args{nolink} && !-x $tmp_out) {
+      $ok = 0;
+    }
 
     if ( $ok && exists $args{run} && $args{run} ) {
       my $tmp_exe =
-        File::Spec->catfile(File::Spec->curdir, $tmp_exe);
+        File::Spec->catfile(File::Spec->curdir, $tmp_out);
       my @run = $tmp_exe;
       unshift @run, $Config{run} if $Config{run} && -e $Config{run};
       printf "Running $tmp_exe..." if $VERBOSE;
       if (system(@run) == 0) {
         $ok = 1;
+        print " success\n" if $VERBOSE;
       } else {
         $ok = 0;
         my $errno = $? >> 8;
         local $! = $errno;
-        printf <<EOF if $args{noisyrun};
+        printf <<EOF if $args{noisyrun} || $VERBOSE;
 
 *** The test run of '$tmp_exe' failed: status $?
 *** (the status means: errno = $errno or '$!')
@@ -1098,7 +1329,7 @@ sub try_compile_and_link {
 EOF
       }
     }
-    unlink("$tmp.c", $tmp_exe);
+    unlink("$tmp.c", $tmp_out);
   }
 
   return $ok;

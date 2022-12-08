@@ -55,8 +55,18 @@ vec_add_double(double * restrict out, const i_fsample_t * restrict in, size_t co
   }
 }
 
+#define vec_add_lin_double vec_add_double
+
 IMAGER_STATIC_INLINE void
 vec_add_8(double * restrict out, const i_sample_t * restrict in, size_t count) {
+  size_t i;
+  for (i = 0; i < count; ++i) {
+    out[i] += in[i];
+  }
+}
+
+IMAGER_STATIC_INLINE void
+vec_add_lin_8(double * restrict out, const i_sample16_t * restrict in, size_t count) {
   size_t i;
   for (i = 0; i < count; ++i) {
     out[i] += in[i];
@@ -71,8 +81,18 @@ vec_muladd_double(double * restrict out, const i_fsample_t * restrict in, double
   }
 }
 
+#define vec_muladd_lin_double vec_muladd_double
+
 IMAGER_STATIC_INLINE void
 vec_muladd_8(double * restrict out, const i_sample_t * restrict in, double coeff, size_t count) {
+  size_t i;
+  for (i = 0; i < count; ++i) {
+    out[i] += in[i] * coeff;
+  }
+}
+
+IMAGER_STATIC_INLINE void
+vec_muladd_lin_8(double * restrict out, const i_sample16_t * restrict in, double coeff, size_t count) {
   size_t i;
   for (i = 0; i < count; ++i) {
     out[i] += in[i] * coeff;
@@ -89,15 +109,27 @@ vec_limit_8(i_sample_t * restrict out, const double * restrict in, size_t count)
 }
 
 IMAGER_STATIC_INLINE void
-vec_limit_double(i_fsample_t * restrict out, const double * restrict in, size_t count) {
+vec_limit_lin_8(i_sample16_t * restrict out, const double * restrict in, size_t count) {
   size_t i;
   for (i = 0; i < count; ++i) {
-    out[i] = in[i];
+    double val = in[i];
+    out[i] = val < 0 ? 0 : val > 65535 ? 65535 : val;
   }
 }
 
+IMAGER_STATIC_INLINE void
+vec_limit_double(i_fsample_t * restrict out, const double * restrict in, size_t count) {
+  size_t i;
+  for (i = 0; i < count; ++i) {
+    double val = in[i];
+    out[i] = val < 0 ? 0 : val > 1.0 ? 1.0 : val;
+  }
+}
+
+#define vec_limit_lin_double vec_limit_double
+
 /*
-=item i_convert(src, coeff, outchans, extraoutchans, inchans)
+=item i_convert(src, coeff, outchans, extraoutchans, inchans, linear)
 
 Converts the image src into another image.
 
@@ -108,16 +140,16 @@ each output pixel:
   im[x,y] = [ coeff[inchan], coeff[inchan+1]...        ] * [ src[x,y], 1]
               ...              coeff[inchan*outchan-1]
 
-If im has the wrong number of channels or is the wrong size then
-i_convert() will re-create it.
-
 Now handles images with more than 8-bits/sample.
+
+If C<linear> is a true value, convert correctly using linear samples,
+otherwise use the old gamma sample code.
 
 =cut
 */
 
 i_img *
-i_convert(i_img *src, const double *coeffs, int outchans, int extraoutchans, int inchans) {
+i_convert(i_img *src, const double *coeffs, int outchans, int extraoutchans, int inchans, int linear) {
   i_img_dim x, y;
   int in_ch, out_ch;
   i_img *im = NULL;
@@ -138,13 +170,18 @@ i_convert(i_img *src, const double *coeffs, int outchans, int extraoutchans, int
     return NULL;
   }
   if (outchans == 0 && extraoutchans == 0) {
-    im_push_errorf(aIMCTX, 0, "Either outchans (%d) or extraoutchans (%d) must be > 0",
-                  outchans, extraoutchans);
+    im_push_errorf(aIMCTX, 0, "there must be at least one output channel");
     return NULL;
   }
 
-  if (outtotalch > MAXCHANNELS) {
-    im_push_errorf(aIMCTX, 0, "cannot have outchans (%d) + extraoutchan s(%d) > MAXTOTALCHANNELS (%d)",
+  if (outchans > MAXCHANNELS) {
+    im_push_errorf(aIMCTX, 0, "cannot have outchans (%d) > MAXCHANNELS (%d)",
+                  outchans, MAXCHANNELS);
+    return NULL;
+  }
+
+  if (outtotalch > MAXTOTALCHANNELS) {
+    im_push_errorf(aIMCTX, 0, "cannot have normal output channels (%d) + extra channels (%d) > maximum total channels (%d)",
                   outchans, extraoutchans, MAXTOTALCHANNELS);
     return NULL;
   }
@@ -157,63 +194,126 @@ i_convert(i_img *src, const double *coeffs, int outchans, int extraoutchans, int
       return convert_via_copy(im, src, &info);
     }
     else {
+      if (linear) {
 #code src->bits <= i_8_bits
-      /* allocating individual per channel buffers for input here to
-         increase the chance they're equally aligned, increasing the
-         chance that auto vectorization can happen.
+        /* linear version */
+        /* allocating individual per channel buffers for input here to
+           increase the chance they're equally aligned, increasing the
+           chance that auto vectorization can happen.
 
-         Later the mymalloc() calls will be replaced with something
-         that returns memory aligned suitable for vectorization *and*
-         hopefully tells the compiler that memory is aligned that way.
-      */
-      IM_SAMPLE_T *inbufs[MAXTOTALCHANNELS];
-      IM_SAMPLE_T *outbuf = mymalloc(sizeof(IM_SAMPLE_T) * im->xsize);
-      double *workbuf = mymalloc(sizeof(double) * im->xsize);
+           Later the mymalloc() calls will be replaced with something
+           that returns memory aligned suitable for vectorization *and*
+           hopefully tells the compiler that memory is aligned that way.
+        */
+        IM_LIN_SAMPLE_T *inbufs[MAXTOTALCHANNELS];
+        IM_LIN_SAMPLE_T *outbuf = im_aligned_alloc_simd_fatal(sizeof(IM_LIN_SAMPLE_T), im->xsize);
+        double *workbuf = im_aligned_alloc_simd_fatal(sizeof(double), im->xsize);
 
-      for (in_ch = 0; in_ch < ilimit; ++in_ch) {
-        inbufs[in_ch] = mymalloc(sizeof(IM_SAMPLE_T) * im->xsize);
-      }
-      
-      for (y = 0; y < src->ysize; ++y) {
         for (in_ch = 0; in_ch < ilimit; ++in_ch) {
-          IM_GSAMP_ASSERT(src, 0, xmax, y, inbufs[in_ch], &in_ch, 1);
+          inbufs[in_ch] = im_aligned_alloc_simd_fatal(sizeof(IM_LIN_SAMPLE_T), im->xsize);
         }
-        for (out_ch = 0; out_ch < outtotalch; ++out_ch) {
-          for (x = 0; x < xmax; ++x) {
-            workbuf[x] = 0;
-          }
+
+        for (y = 0; y < src->ysize; ++y) {
           for (in_ch = 0; in_ch < ilimit; ++in_ch) {
-            double coeff = coeffs[in_ch + inchans * out_ch];
-            double *workp = workbuf;
-            const IM_SAMPLE_T * inrow = inbufs[in_ch];
-            if (coeff == 0) {
-              /* nothing to do */
+            IM_GSLIN_ASSERT(src, 0, xmax, y, inbufs[in_ch], &in_ch, 1);
+          }
+          for (out_ch = 0; out_ch < outtotalch; ++out_ch) {
+            for (x = 0; x < xmax; ++x) {
+              workbuf[x] = 0;
             }
-            else if (coeff == 1.0) {
-              IM_SUFFIX(vec_add)(workp, inrow, xmax);
-            }
-            else {
-              IM_SUFFIX(vec_muladd)(workp, inrow, coeff, xmax);
-            }
-	  }
-          if (in_ch < inchans) {
-            double coeff = coeffs[in_ch + inchans * out_ch];
-            if (coeff) {
-              for (x = 0; x < xmax; ++x) {
-                workbuf[x] += coeff * IM_SAMPLE_MAX;
+            for (in_ch = 0; in_ch < ilimit; ++in_ch) {
+              double coeff = coeffs[in_ch + inchans * out_ch];
+              double *workp = workbuf;
+              const IM_LIN_SAMPLE_T * inrow = inbufs[in_ch];
+              if (coeff == 0) {
+                /* nothing to do */
+              }
+              else if (coeff == 1.0) {
+                IM_SUFFIX(vec_add_lin)(workp, inrow, xmax);
+              }
+              else {
+                IM_SUFFIX(vec_muladd_lin)(workp, inrow, coeff, xmax);
               }
             }
+            if (in_ch < inchans) {
+              double coeff = coeffs[in_ch + inchans * out_ch];
+              if (coeff) {
+                for (x = 0; x < xmax; ++x) {
+                  workbuf[x] += coeff * IM_LIN_SAMPLE_MAX;
+                }
+              }
+            }
+            IM_SUFFIX(vec_limit_lin)(outbuf, workbuf, xmax);
+            IM_PSLIN(im, 0, xmax, y, outbuf, &out_ch, 1);
           }
-          IM_SUFFIX(vec_limit)(outbuf, workbuf, xmax);
-          IM_PSAMP(im, 0, xmax, y, outbuf, &out_ch, 1);
         }
-      }
-      myfree(workbuf);
-      myfree(outbuf);
-      for (in_ch = 0; in_ch < ilimit; ++in_ch) {
-        myfree(inbufs[in_ch]);
-      }
+        im_aligned_free(workbuf);
+        im_aligned_free(outbuf);
+        for (in_ch = 0; in_ch < ilimit; ++in_ch) {
+          im_aligned_free(inbufs[in_ch]);
+        }
 #/code
+      }
+      else {
+#code src->bits <= i_8_bits
+        /* gamma version */
+        /* allocating individual per channel buffers for input here to
+           increase the chance they're equally aligned, increasing the
+           chance that auto vectorization can happen.
+
+           Later the mymalloc() calls will be replaced with something
+           that returns memory aligned suitable for vectorization *and*
+           hopefully tells the compiler that memory is aligned that way.
+        */
+        IM_SAMPLE_T *inbufs[MAXTOTALCHANNELS];
+        IM_SAMPLE_T *outbuf = im_aligned_alloc_simd_fatal(sizeof(IM_SAMPLE_T), im->xsize);
+        double *workbuf = im_aligned_alloc_simd_fatal(sizeof(double), im->xsize);
+
+        for (in_ch = 0; in_ch < ilimit; ++in_ch) {
+          inbufs[in_ch] = im_aligned_alloc_simd_fatal(sizeof(IM_SAMPLE_T), im->xsize);
+        }
+
+        for (y = 0; y < src->ysize; ++y) {
+          for (in_ch = 0; in_ch < ilimit; ++in_ch) {
+            IM_GSAMP_ASSERT(src, 0, xmax, y, inbufs[in_ch], &in_ch, 1);
+          }
+          for (out_ch = 0; out_ch < outtotalch; ++out_ch) {
+            for (x = 0; x < xmax; ++x) {
+              workbuf[x] = 0;
+            }
+            for (in_ch = 0; in_ch < ilimit; ++in_ch) {
+              double coeff = coeffs[in_ch + inchans * out_ch];
+              double *workp = workbuf;
+              const IM_SAMPLE_T * inrow = inbufs[in_ch];
+              if (coeff == 0) {
+                /* nothing to do */
+              }
+              else if (coeff == 1.0) {
+                IM_SUFFIX(vec_add)(workp, inrow, xmax);
+              }
+              else {
+                IM_SUFFIX(vec_muladd)(workp, inrow, coeff, xmax);
+              }
+            }
+            if (in_ch < inchans) {
+              double coeff = coeffs[in_ch + inchans * out_ch];
+              if (coeff) {
+                for (x = 0; x < xmax; ++x) {
+                  workbuf[x] += coeff * IM_SAMPLE_MAX;
+                }
+              }
+            }
+            IM_SUFFIX(vec_limit)(outbuf, workbuf, xmax);
+            IM_PSAMP(im, 0, xmax, y, outbuf, &out_ch, 1);
+          }
+        }
+        im_aligned_free(workbuf);
+        im_aligned_free(outbuf);
+        for (in_ch = 0; in_ch < ilimit; ++in_ch) {
+          im_aligned_free(inbufs[in_ch]);
+        }
+#/code
+      }
     }
   }
   else {
@@ -253,7 +353,7 @@ i_convert(i_img *src, const double *coeffs, int outchans, int extraoutchans, int
           colors[index].channel[j] = work[j];
       }
     }
-    if (count < outcount) {
+    if (count <= outcount) {
       i_setcolors(im, 0, colors, count);
     }
     else {

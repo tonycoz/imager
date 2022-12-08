@@ -69,16 +69,8 @@ extern void i_int_hlines_fill_fill(i_img *im, i_int_hlines *hlines, i_fill_t *fi
 
 #define IM_STRING(x) #x
 
-/* I considered using assert.h here, but perl does it's own thing with 
-   assert() and the NDEBUG test is opposite to the direction I prefer */
-#ifdef IM_ASSERT
-extern void im_assert_fail(char const *, int, char const *);
-#define im_assert(x) ((x) ? (void)(0) : im_assert_fail(__FILE__, __LINE__, IM_STRING(x)))
-#define IM_NOT_REACHED (im_assert_fail(__FILE__, __LINE__, "Not reachable"))
-#else
-#define im_assert(x) (void)(0)
-#define IM_NOT_REACHED
-#endif
+#define im_assert(x) assert(x)
+#define IM_NOT_REACHED assert(!"Not reached")
 
 #define im_assume(x) typedef struct { char x[x ? 1 : -1]; int y; } im_assume_ ## __LINE__
 
