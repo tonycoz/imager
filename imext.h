@@ -1,6 +1,8 @@
 #ifndef IMAGER_IMEXT_H_
 #define IMAGER_IMEXT_H_
 
+#include <stdlib.h>
+#include <errno.h>
 #include "imexttypes.h"
 #include "immacros.h"
 

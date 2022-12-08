@@ -566,7 +566,7 @@ SKIP:
     or print "# ", $grey16->errstr, "\n";
   is($grey16->bits, 16, 'got a 16-bit image');
   is($grey16->getchannels, 1, 'and its grey');
-  my $comp16 = $im16->convert(matrix => [ [ 0.299, 0.587, 0.114 ] ]);
+  my $comp16 = $im16->convert(matrix => [ [ 0.299, 0.587, 0.114 ] ], scale => "gamma");
   is_image($grey16, $comp16, 'compare grey to converted');
   
   my $grey32 = Imager->new;
@@ -576,7 +576,7 @@ SKIP:
   is($grey32->getchannels, 2, 'and its grey + alpha');
   is($grey32->tags(name => 'tiff_bitspersample'), 32, 
      "check bits per sample");
-  my $base = test_image_double->convert(preset =>'grey')
+  my $base = test_image_double->convert(preset =>'grey', scale => "gamma")
     ->convert(preset => 'addalpha');
   is_image($grey32, $base, 'compare to original');
 }

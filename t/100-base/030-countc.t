@@ -61,7 +61,7 @@ Imager::init('log'=>'testout/t90cc.log');
      'test overflow check');
 
   # test with a greyscale image
-  my $im_g = $im->convert(preset => 'grey');
+  my $im_g = $im->convert(preset => 'grey', scale => "gamma");
   # since the grey preset scales each source channel differently
   # each of the original colors will be converted to different colors
   is($im_g->getcolorcount, 3, '3 colors (grey)');

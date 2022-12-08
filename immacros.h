@@ -264,7 +264,25 @@ Intended for use in macros to warn that the given macro is deprecated.
 
 #define IM_QUOTE_(x) #x
 #define IM_QUOTE(x) IM_QUOTE_(x)
+
+#define IM_UNUSED_VAR(x) ((void)sizeof(x))
   
+#if defined(IM_ASSERT) || defined(DEBUGGING)
+#  undef NDEBUG
+#else
+#  ifndef NDEBUG
+#    define NDEBUG
+#  endif
+#endif
+#include <assert.h>
+
+#if IM_ALIGNED_ALLOC_TYPE == IM_ALIGNED_ALLOC_NONE
+#define assert_aligned(p, type) ((void)0)
+#else
+#define assert_aligned(p, type) \
+  assert(((uintptr_t)(void *)(p) % IMAGER_ALIGN_SIZE(sizeof(type))) == 0)
+#endif
+
 #ifdef __cplusplus
 }
 #endif
