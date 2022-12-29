@@ -5,6 +5,8 @@ use Test::More;
 BEGIN { use_ok(Imager=>':all') }
 use Imager::Test qw(is_image is_color4 is_image_similar to_gamma_srgb);
 use Imager::Fill;
+use lib "t";
+use ImageStuff;
 
 my @cleanup;
 
@@ -106,6 +108,13 @@ for my $bits (qw(double 8 16)) {
     #$cmp->write(file => "testout/scalecmp-$bits.ppm");
     is_image($out, $cmp, "$bits: check scaled image matches check image");
   }
+}
+
+{
+  my $im = Imager->new(file => "testimg/penguin-base.ppm") or die;
+  my $sc1 = $im->scale(qtype => "mixing", xpixels => 20, ypixels => 30, type => "nonprop");
+  my $sc2 = ImageStuff->scale_mixing($im, 20, 30);
+  is_image_similar($sc1, $sc2, 10, "check scaling vs ref implementation");
 }
 
 {
