@@ -3923,6 +3923,15 @@ i_gsamp(im, l, r, y, channels)
         i_img_dim y
         i_channel_list channels
       PPCODE:
+        i_clear_error();
+        if (!i_img_valid_channel_indexes(im, channels.channels, channels.count)) {
+          if (GIMME_V != G_ARRAY) {
+            XSRETURN_UNDEF;
+          }
+          else {
+            XSRETURN_EMPTY;
+          }
+        }
         if (l < r) {
 	  i_sample_t *data;
 	  i_img_dim count, i;
@@ -3945,6 +3954,45 @@ i_gsamp(im, l, r, y, channels)
           }
         }
 
+void
+i_gsampf(im, l, r, y, channels)
+        Imager::ImgRaw im
+        i_img_dim l
+        i_img_dim r
+        i_img_dim y
+	i_channel_list channels
+      PPCODE:
+        i_clear_error();
+        if (!i_img_valid_channel_indexes(im, channels.channels, channels.count)) {
+          if (GIMME_V != G_ARRAY) {
+            XSRETURN_UNDEF;
+          }
+          else {
+            XSRETURN_EMPTY;
+          }
+        }
+        if (l < r) {
+	  i_fsample_t *data;
+	  i_img_dim count, i;
+          data = mymalloc(sizeof(i_fsample_t) * (r-l) * channels.count);
+          count = i_gsampf(im, l, r, y, data, channels.channels, channels.count);
+          if (GIMME_V == G_ARRAY) {
+            EXTEND(SP, count);
+            for (i = 0; i < count; ++i)
+              PUSHs(sv_2mortal(newSVnv(data[i])));
+          }
+          else {
+            EXTEND(SP, 1);
+            PUSHs(sv_2mortal(newSVpv((void *)data, count * sizeof(i_fsample_t))));
+          }
+          myfree(data);
+        }
+        else {
+          if (GIMME_V != G_ARRAY) {
+	    XSRETURN_UNDEF;
+          }
+        }
+
 undef_neg_int
 i_gsamp_bits(im, l, r, y, bits, target, offset, channels)
         Imager::ImgRaw im
@@ -3960,15 +4008,15 @@ i_gsamp_bits(im, l, r, y, bits, target, offset, channels)
         i_img_dim count, i;
       CODE:
 	i_clear_error();
-        if (items < 8)
-          croak("No channel numbers supplied to g_samp()");
+        if (!i_img_valid_channel_indexes(im, channels.channels, channels.count)) {
+          XSRETURN_UNDEF;
+        }
         if (l < r) {
-          data = mymalloc(sizeof(unsigned) * (r-l) * channels.count);
+          data = malloc_temp(aTHX_ sizeof(unsigned) * (r-l) * channels.count);
           count = i_gsamp_bits(im, l, r, y, data, channels.channels, channels.count, bits);
 	  for (i = 0; i < count; ++i) {
 	    av_store(target, i+offset, newSVuv(data[i]));
 	  }
-	  myfree(data);
 	  RETVAL = count;
         }
         else {
@@ -3994,6 +4042,9 @@ i_psamp_bits(im, l, y, bits, channels, data_av, data_offset = 0, pixel_count = -
 	ptrdiff_t i;
       CODE:
 	i_clear_error();
+        if (!i_img_valid_channel_indexes(im, channels.channels, channels.count)) {
+          XSRETURN_UNDEF;
+        }
 
 	data_count = av_len(data_av) + 1;
 	if (data_offset < 0) {
@@ -4033,6 +4084,9 @@ i_psamp(im, x, y, channels, data, offset = 0, width = -1)
 	i_img_dim r;
     CODE:
 	i_clear_error();
+        if (!i_img_valid_channel_indexes(im, channels.channels, channels.count)) {
+          XSRETURN_UNDEF;
+        }
 	if (offset < 0) {
 	  i_push_error(0, "offset must be non-negative");
 	  XSRETURN_UNDEF;
@@ -4067,6 +4121,9 @@ i_psampf(im, x, y, channels, data, offset = 0, width = -1)
 	i_img_dim r;
     CODE:
 	i_clear_error();
+        if (!i_img_valid_channel_indexes(im, channels.channels, channels.count)) {
+          XSRETURN_UNDEF;
+        }
 	if (offset < 0) {
 	  i_push_error(0, "offset must be non-negative");
 	  XSRETURN_UNDEF;
@@ -4161,36 +4218,6 @@ i_ppixf(im, x, y, cl)
         i_img_dim x
         i_img_dim y
         Imager::Color::Float cl
-
-void
-i_gsampf(im, l, r, y, channels)
-        Imager::ImgRaw im
-        i_img_dim l
-        i_img_dim r
-        i_img_dim y
-	i_channel_list channels
-      PPCODE:
-        if (l < r) {
-	  i_fsample_t *data;
-	  i_img_dim count, i;
-          data = mymalloc(sizeof(i_fsample_t) * (r-l) * channels.count);
-          count = i_gsampf(im, l, r, y, data, channels.channels, channels.count);
-          if (GIMME_V == G_ARRAY) {
-            EXTEND(SP, count);
-            for (i = 0; i < count; ++i)
-              PUSHs(sv_2mortal(newSVnv(data[i])));
-          }
-          else {
-            EXTEND(SP, 1);
-            PUSHs(sv_2mortal(newSVpv((void *)data, count * sizeof(i_fsample_t))));
-          }
-          myfree(data);
-        }
-        else {
-          if (GIMME_V != G_ARRAY) {
-	    XSRETURN_UNDEF;
-          }
-        }
 
 int
 i_plinf(im, l, y, ...)
@@ -4319,7 +4346,16 @@ i_gslin(im, l, r, y, channels)
         i_img_dim r
         i_img_dim y
         i_channel_list channels
-      PPCODE:	
+      PPCODE:
+        i_clear_error();
+        if (!i_img_valid_channel_indexes(im, channels.channels, channels.count)) {
+          if (GIMME_V == G_ARRAY) {
+            XSRETURN_EMPTY;
+          }
+          else {
+            XSRETURN_UNDEF;
+          }
+        }
         if (l < r) {
 	  char *sdata;
 	  i_sample16_t *data;
@@ -4366,6 +4402,15 @@ i_gslinf(im, l, r, y, channels)
         i_img_dim y
         i_channel_list channels
       PPCODE:	
+        i_clear_error();
+        if (!i_img_valid_channel_indexes(im, channels.channels, channels.count)) {
+          if (GIMME_V == G_ARRAY) {
+	    XSRETURN_EMPTY;
+          }
+          else {
+	    XSRETURN_UNDEF;
+          }
+        }
         if (l < r) {
 	  char *sdata;
 	  i_fsample_t *data;
@@ -4416,6 +4461,9 @@ i_pslin(im, x, y, channels, data, offset = 0, width = -1)
 	i_img_dim r;
     CODE:
 	i_clear_error();
+        if (!i_img_valid_channel_indexes(im, channels.channels, channels.count)) {
+          XSRETURN_UNDEF;
+        }
 	if (offset < 0) {
 	  i_push_error(0, "offset must be non-negative");
 	  XSRETURN_UNDEF;
@@ -4450,6 +4498,9 @@ i_pslinf(im, x, y, channels, data, offset = 0, width = -1)
 	i_img_dim r;
     CODE:
 	i_clear_error();
+        if (!i_img_valid_channel_indexes(im, channels.channels, channels.count)) {
+          XSRETURN_UNDEF;
+        }
 	if (offset < 0) {
 	  i_push_error(0, "offset must be non-negative");
 	  XSRETURN_UNDEF;
