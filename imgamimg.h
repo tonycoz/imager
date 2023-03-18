@@ -25,7 +25,7 @@
   IMG_SUFFIX
     Suffix used for static callbacks, virtual table structure.
 
-  Converstions back and forth between IMG_SAMPLE_TYPE and gamma
+  Conversions back and forth between IMG_SAMPLE_TYPE and gamma
   color and non-color samples, and linear color and non-color samples;
 
   IMG_REP_TO_GAMMA_SAMPLE(x), IMG_REP_TO_GAMMA_SAMPLEF(x)
@@ -98,6 +98,13 @@ ISUFFIX(i_pslin_)(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, const i_samp
 static i_img_dim
 ISUFFIX(i_pslinf_)(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, const i_fsample_t *samps, const int *chans, int chan_count);
 
+#ifndef IMG_GSAMP_BITS
+#  define IMG_GSAMP_BITS i_gsamp_bits_fb
+#endif
+
+#ifndef IMG_PSAMP_BITS
+#  define IMG_PSAMP_BITS i_psamp_bits_fb
+#endif
 
 /*
 =item vtable_*
@@ -120,16 +127,8 @@ ISUFFIX(vtable_) = {
 
   NULL, /* i_f_destroy */
 
-#ifdef IMG_GSAMP_BITS
-  IMG_GSAMP_BITS,
-#else
-  i_gsamp_bits_fb,
-#endif
-#ifdef IMG_PSAMP_BITS
-  IMG_PSAMP_BITS,
-#else
-  i_psamp_bits_fb, /* i_f_psamp_bits */
-#endif
+  IMG_GSAMP_BITS, /* i_g_gsamp_bits */
+  IMG_PSAMP_BITS, /* i_f_psamp_bits */
 
   ISUFFIX(i_gslin_),
   ISUFFIX(i_gslinf_),
@@ -213,6 +212,7 @@ ISUFFIX(i_gsamp_)(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, i_sample_t *
                   int const *chans, int chan_count) {
   i_img_dim count, i, w;
 
+  i_assert_valid_channels(im, chans, chan_count);
   if (y >=0 && y < im->ysize && l < im->xsize && l >= 0) {
     i_img_dim off;
     int totalch = im->channels + im->extrachannels;
@@ -225,10 +225,6 @@ ISUFFIX(i_gsamp_)(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, i_sample_t *
     count = 0;
 
     if (chans) {
-      /* make sure we have good channel numbers */
-      if (!i_img_valid_channel_indexes(im, chans, chan_count)) {
-        return 0;
-      }
       for (i = 0; i < w; ++i) {
         int chi;
         for (chi = 0; chi < chan_count; ++chi) {
@@ -240,12 +236,6 @@ ISUFFIX(i_gsamp_)(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, i_sample_t *
       }
     }
     else {
-      if (chan_count <= 0 || chan_count > totalch) {
-	dIMCTXim(im);
-	im_push_errorf(aIMCTX, 0, "chan_count %d out of range, must be >0, <= total channels", 
-		      chan_count);
-	return 0;
-      }
       for (i = 0; i < w; ++i) {
         int ch;
         for (ch = 0; ch < chan_count; ++ch) {
@@ -266,7 +256,9 @@ ISUFFIX(i_gsamp_)(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, i_sample_t *
 static i_img_dim
 ISUFFIX(i_gsampf_)(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, i_fsample_t *samps, 
                    int const *chans, int chan_count) {
-  if (y >=0 && y < im->ysize && l < im->xsize && l >= 0) {
+   i_assert_valid_channels(im, chans, chan_count);
+
+   if (y >=0 && y < im->ysize && l < im->xsize && l >= 0) {
     i_img_dim count, i, w;
     i_img_dim off;
     int totalch = im->channels + im->extrachannels;
@@ -279,10 +271,6 @@ ISUFFIX(i_gsampf_)(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, i_fsample_t
     count = 0;
 
     if (chans) {
-      /* make sure we have good channel numbers */
-      if (!i_img_valid_channel_indexes(im, chans, chan_count)) {
-        return 0;
-      }
       for (i = 0; i < w; ++i) {
         int chi;
         for (chi = 0; chi < chan_count; ++chi) {
@@ -294,12 +282,6 @@ ISUFFIX(i_gsampf_)(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, i_fsample_t
       }
     }
     else {
-      if (chan_count <= 0 || chan_count > totalch) {
-	dIMCTXim(im);
-	im_push_errorf(aIMCTX, 0, "chan_count %d out of range, must be >0, <= total channels", 
-		      chan_count);
-	return 0;
-      }
       for (i = 0; i < w; ++i) {
         int ch;
         for (ch = 0; ch < chan_count; ++ch) {
@@ -333,6 +315,8 @@ bits_set(chan_mask)
 static i_img_dim
 ISUFFIX(i_psamp_)(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, 
                   const i_sample_t *samps, const int *chans, int chan_count) {
+  i_assert_valid_channels(im, chans, chan_count);
+
   if (y >=0 && y < im->ysize && l < im->xsize && l >= 0) {
     i_img_dim count, i, w;
     i_img_dim offset;
@@ -346,10 +330,6 @@ ISUFFIX(i_psamp_)(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y,
     count = 0;
 
     if (chans) {
-      /* make sure we have good channel numbers */
-      if (!i_img_valid_channel_indexes(im, chans, chan_count)) {
-        return -1;
-      }
       if (i_img_all_channel_mask(im)) {
 	for (i = 0; i < w; ++i) {
           int chi;
@@ -378,12 +358,6 @@ ISUFFIX(i_psamp_)(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y,
       }
     }
     else {
-      if (chan_count <= 0 || chan_count > totalch) {
-	dIMCTXim(im);
-	im_push_errorf(aIMCTX, 0, "chan_count %d out of range, must be >0, <= total channels", 
-		      chan_count);
-	return -1;
-      }
       for (i = 0; i < w; ++i) {
         int ch;
 	unsigned mask = 1;
@@ -425,6 +399,8 @@ static
 i_img_dim
 ISUFFIX(i_psampf_)(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, 
                    const i_fsample_t *samps, const int *chans, int chan_count) {
+  i_assert_valid_channels(im, chans, chan_count);
+
   if (y >=0 && y < im->ysize && l < im->xsize && l >= 0) {
     i_img_dim count, i, w;
     i_img_dim offset;
@@ -438,10 +414,6 @@ ISUFFIX(i_psampf_)(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y,
     count = 0;
 
     if (chans) {
-      /* make sure we have good channel numbers */
-      if (!i_img_valid_channel_indexes(im, chans, chan_count)) {
-        return -1;
-      }
       if (i_img_all_channel_mask(im)) {
 	for (i = 0; i < w; ++i) {
           int chi;
@@ -470,12 +442,6 @@ ISUFFIX(i_psampf_)(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y,
       }
     }
     else {
-      if (chan_count <= 0 || chan_count > totalch) {
-	dIMCTXim(im);
-	im_push_errorf(aIMCTX, 0, "chan_count %d out of range, must be >0, <= total channels", 
-		      chan_count);
-	return -1;
-      }
       for (i = 0; i < w; ++i) {
 	unsigned mask = 1;
         int ch;
@@ -528,6 +494,8 @@ ISUFFIX(i_gslin_)(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y,
   const imcms_curve_t *curves = i_model_curves(i_img_color_model(im), &color_chans);
   const IMG_SAMPLE_TYPE *data = (const IMG_SAMPLE_TYPE *)im->idata;
 
+  i_assert_valid_channels(im, chans, chan_count);
+
   if (y >=0 && y < im->ysize && l < im->xsize && l >= 0) {
     int totalch = i_img_totalchannels(im);
     if (r > im->xsize)
@@ -537,10 +505,6 @@ ISUFFIX(i_gslin_)(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y,
     count = 0;
 
     if (chans) {
-      /* make sure we have good channel numbers */
-      if (!i_img_valid_channel_indexes(im, chans, chan_count)) {
-        return -1;
-      }
       for (i = 0; i < w; ++i) {
         int chi;
         for (chi = 0; chi < chan_count; ++chi) {
@@ -555,11 +519,6 @@ ISUFFIX(i_gslin_)(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y,
       }
     }
     else {
-      if (chan_count <= 0 || chan_count > totalch) {
-	im_push_errorf(aIMCTX, 0, "chan_count %d out of range, must be >0, <= channels", 
-		      chan_count);
-	return 0;
-      }
       for (i = 0; i < w; ++i) {
         int ch;
         for (ch = 0; ch < chan_count; ++ch) {
@@ -589,6 +548,8 @@ ISUFFIX(i_gslinf_)(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y,
   const imcms_curve_t *curves = i_model_curves(i_img_color_model(im), &color_chans);
   const IMG_SAMPLE_TYPE *data = (const IMG_SAMPLE_TYPE *)im->idata;
 
+  i_assert_valid_channels(im, chans, chan_count);
+
   if (y >=0 && y < im->ysize && l < im->xsize && l >= 0) {
     int totalch = i_img_totalchannels(im);
     i_img_dim off;
@@ -599,10 +560,6 @@ ISUFFIX(i_gslinf_)(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y,
     count = 0;
 
     if (chans) {
-      /* make sure we have good channel numbers */
-      if (!i_img_valid_channel_indexes(im, chans, chan_count)) {
-        return -1;
-      }
       for (i = 0; i < w; ++i) {
         int chi;
         for (chi = 0; chi < chan_count; ++chi) {
@@ -617,11 +574,6 @@ ISUFFIX(i_gslinf_)(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y,
       }
     }
     else {
-      if (chan_count <= 0 || chan_count > totalch) {
-	im_push_errorf(aIMCTX, 0, "chan_count %d out of range, must be >0, <= channels", 
-		      chan_count);
-	return 0;
-      }
       for (i = 0; i < w; ++i) {
         int ch;
         for (ch = 0; ch < chan_count; ++ch) {
@@ -651,6 +603,8 @@ ISUFFIX(i_pslin_)(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y,
   const imcms_curve_t *curves = i_model_curves(i_img_color_model(im), &color_chans);
   IMG_SAMPLE_TYPE *data = (IMG_SAMPLE_TYPE *)im->idata;
 
+  i_assert_valid_channels(im, chans, chan_count);
+
   if (y >=0 && y < im->ysize && l < im->xsize && l >= 0) {
     int totalch = i_img_totalchannels(im);
     i_img_dim off;
@@ -661,10 +615,6 @@ ISUFFIX(i_pslin_)(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y,
     count = 0;
 
     if (chans) {
-      /* make sure we have good channel numbers */
-      if (!i_img_valid_channel_indexes(im, chans, chan_count)) {
-        return -1;
-      }
       if (i_img_all_channel_mask(im)) {
 	for (i = 0; i < w; ++i) {
 	  int chi;
@@ -699,11 +649,6 @@ ISUFFIX(i_pslin_)(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y,
       }
     }
     else {
-      if (chan_count <= 0 || chan_count > totalch) {
-	im_push_errorf(aIMCTX, 0, "chan_count %d out of range, must be >0, <= channels", 
-		      chan_count);
-	return -1;
-      }
       for (i = 0; i < w; ++i) {
 	unsigned mask = 1;
 	int ch;
@@ -740,6 +685,8 @@ ISUFFIX(i_pslinf_)(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y,
   const imcms_curve_t *curves = i_model_curves(i_img_color_model(im), &color_chans);
   IMG_SAMPLE_TYPE *data = (IMG_SAMPLE_TYPE *)im->idata;
 
+  i_assert_valid_channels(im, chans, chan_count);
+
   if (y >=0 && y < im->ysize && l < im->xsize && l >= 0) {
     int totalch = i_img_totalchannels(im);
     i_img_dim off;
@@ -750,10 +697,6 @@ ISUFFIX(i_pslinf_)(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y,
     count = 0;
 
     if (chans) {
-      /* make sure we have good channel numbers */
-      if (!i_img_valid_channel_indexes(im, chans, chan_count)) {
-        return -1;
-      }
       if (i_img_all_channel_mask(im)) {
 	for (i = 0; i < w; ++i) {
 	  int chi;
@@ -788,11 +731,6 @@ ISUFFIX(i_pslinf_)(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y,
       }
     }
     else {
-      if (chan_count <= 0 || chan_count > totalch) {
-	im_push_errorf(aIMCTX, 0, "chan_count %d out of range, must be >0, <= channels", 
-		      chan_count);
-	return -1;
-      }
       for (i = 0; i < w; ++i) {
 	unsigned mask = 1;
 	int ch;

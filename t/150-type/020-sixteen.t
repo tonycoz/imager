@@ -75,7 +75,7 @@ test_colorf_glin($im_rgb, 0, 1,
   # fail gsamp
   is(Imager::i_gsamp_bits($im_rgb, 18, 22, 1, 16, \@samples, 0, [ 0, 3 ]), undef,
      "i_gsamp_bits fail bad channel");
-  is(Imager->_error_as_msg(), 'No channel 3 in this image', 'check message');
+  is(Imager->_error_as_msg(), 'Channel 3 (index 1) not in this image', 'check message');
 
   is(Imager::i_gsamp_bits($im_rgb, 18, 22, 1, 17, \@samples, 0, [ 0, 2 ]), 8, 
      "i_gsamp_bits succeed high bits");
@@ -296,11 +296,11 @@ my $psamp_outside_error = "Image position outside of image";
   { # errors we catch
     is(Imager::i_psamp($imraw, 6, 8, [ 0, 1, 3 ], [ 255, 128, 32 ]),
        undef, "i_psamp channels [0, 1, 3], 3 samples (invalid channel number)");
-    is(_get_error(), "No channel 3 in this image",
+    is(_get_error(), "Channel 3 (index 2) not in this image",
        "check error message");
     is(Imager::i_psamp($imraw, 6, 8, [ 0, 1, -1 ], [ 255, 128, 32 ]),
        undef, "i_psamp channels [0, 1, -1], 3 samples (invalid channel number)");
-    is(_get_error(), "No channel -1 in this image",
+    is(_get_error(), "Channel -1 (index 2) not in this image",
        "check error message");
     is(Imager::i_psamp($imraw, 0, -1, undef, [ 0, 0, 0 ]), undef,
        "negative y");
@@ -358,11 +358,11 @@ my $psamp_outside_error = "Image position outside of image";
   { # errors we catch
     is(Imager::i_psampf($imraw, 6, 8, [ 0, 1, 3 ], [ 1, 0.5, 0.125 ]),
        undef, "i_psampf channels [0, 1, 3], 3 samples (invalid channel number)");
-    is(_get_error(), "No channel 3 in this image",
+    is(_get_error(), "Channel 3 (index 2) not in this image",
        "check error message");
     is(Imager::i_psampf($imraw, 6, 8, [ 0, 1, -1 ], [ 1, 0.5, 0.125 ]),
        undef, "i_psampf channels [0, 1, -1], 3 samples (invalid channel number)");
-    is(_get_error(), "No channel -1 in this image",
+    is(_get_error(), "Channel -1 (index 2) not in this image",
        "check error message");
     is(Imager::i_psampf($imraw, 0, -1, undef, [ 0, 0, 0 ]), undef,
        "negative y");

@@ -426,6 +426,8 @@ raw_psamp(Imager im, int chan_count) {
   static i_sample_t samps[] = { 0, 127, 255 };
 
   i_clear_error();
+  if (!i_img_valid_channel_indexes(im, NULL, chan_count))
+    return -1;
   return i_psamp(im, 0, 1, 0, samps, NULL, chan_count);
 }
 
@@ -434,6 +436,8 @@ raw_psampf(Imager im, int chan_count) {
   static i_fsample_t samps[] = { 0, 0.5, 1.0 };
 
   i_clear_error();
+  if (!i_img_valid_channel_indexes(im, NULL, chan_count))
+    return -1;
   return i_psampf(im, 0, 1, 0, samps, NULL, chan_count);
 }
 
@@ -643,6 +647,7 @@ static
 i_img_dim
 my_gsamp(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, i_sample_t *samps,
               const int *chans, int chan_count) {
+  i_img_valid_chans_assert(im, chans, chan_count);
   int ch;
   i_img_dim count, i, w;
   unsigned char *data;
@@ -656,13 +661,6 @@ my_gsamp(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, i_sample_t *samps,
     count = 0;
 
     if (chans) {
-      /* make sure we have good channel numbers */
-      for (ch = 0; ch < chan_count; ++ch) {
-        if (chans[ch] < 0 || chans[ch] >= totalch) {
-          i_push_errorf(aIMCTX, 0, "No channel %d in this image", chans[ch]);
-          return 0;
-        }
-      }
       for (i = 0; i < w; ++i) {
         for (ch = 0; ch < chan_count; ++ch) {
           *samps++ = data[chans[ch]];
@@ -672,11 +670,6 @@ my_gsamp(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, i_sample_t *samps,
       }
     }
     else {
-      if (chan_count <= 0 || chan_count > totalch) {
-	i_push_errorf(0, "chan_count %d out of range, must be >0, <= total channels", 
-		      chan_count);
-	return 0;
-      }
       for (i = 0; i < w; ++i) {
         for (ch = 0; ch < chan_count; ++ch) {
           *samps++ = data[ch];
@@ -697,6 +690,7 @@ static
 i_img_dim
 my_psamp(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, 
 	  const i_sample_t *samps, const int *chans, int chan_count) {
+  i_img_valid_chans_assert(im, chans, chan_count);
   int ch;
   i_img_dim count, i, w;
   unsigned char *data;
@@ -714,10 +708,6 @@ my_psamp(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y,
       /* and test if all channels specified are in the mask */
       int all_in_mask = 1;
       for (ch = 0; ch < chan_count; ++ch) {
-        if (chans[ch] < 0 || chans[ch] >= totalch) {
-          i_push_errorf(aIMCTX, 0, "No channel %d in this image", chans[ch]);
-          return -1;
-        }
 	if (!((1 << chans[ch]) & im->ch_mask))
 	  all_in_mask = 0;
       }
@@ -743,11 +733,6 @@ my_psamp(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y,
       }
     }
     else {
-      if (chan_count <= 0 || chan_count > totalch) {
-	i_push_errorf(0, "chan_count %d out of range, must be >0, <= channels", 
-		      chan_count);
-	return -1;
-      }
       for (i = 0; i < w; ++i) {
 	unsigned mask = 1;
         for (ch = 0; ch < chan_count; ++ch) {
@@ -859,31 +844,6 @@ test_forwarders() {
   return ok;
 }
 
-int
-test_gslin_neg(Imager im) {
-  i_sample16_t buf[100];
-  return i_gslin(im, 0, 1, 0, buf, 0, -1) == 0;
-}
-
-int
-test_gslinf_neg(Imager im) {
-  i_fsample_t buf[100];
-  return i_gslinf(im, 0, 1, 0, buf, 0, -1) == 0;
-}
-
-int
-test_pslin_neg(Imager im) {
-  i_sample16_t buf[2];
-
-  return i_pslin(im, 0, 1, 0, buf, 0, -1) == -1;
-}
-
-int
-test_pslinf_neg(Imager im) {
-  i_fsample_t buf[2];
-
-  return i_pslinf(im, 0, 1, 0, buf, 0, -1) == -1;
-}
 
 EOS
 
@@ -1038,78 +998,66 @@ for my $bits (8, 16) {
 {
   my $im = Imager->new(xsize => 10, ysize => 10);
   is(raw_psamp($im, 4), -1, "bad channel list (4) for psamp should fail");
-  is(_get_error(), "chan_count 4 out of range, must be >0, <= total channels",
+  is(_get_error(), "Channel count (4) with NULL chans > total channels (3)",
      "check message");
   is(raw_psamp($im, 0), -1, "bad channel list (0) for psamp should fail");
-  is(_get_error(), "chan_count 0 out of range, must be >0, <= total channels",
+  is(_get_error(), "Channel count (0) must be positive",
      "check message");
   is(raw_psampf($im, 4), -1, "bad channel list (4) for psampf should fail");
-  is(_get_error(), "chan_count 4 out of range, must be >0, <= total channels",
+  is(_get_error(), "Channel count (4) with NULL chans > total channels (3)",
      "check message");
   is(raw_psampf($im, 0), -1, "bad channel list (0) for psampf should fail");
-  is(_get_error(), "chan_count 0 out of range, must be >0, <= total channels",
+  is(_get_error(), "Channel count (0) must be positive",
      "check message");
 }
 
 {
   my $im = Imager->new(xsize => 10, ysize => 10, bits => 16);
   is(raw_psamp($im, 4), -1, "bad channel list (4) for psamp should fail (16-bit)");
-  is(_get_error(), "chan_count 4 out of range, must be >0, <= total channels",
+  is(_get_error(), "Channel count (4) with NULL chans > total channels (3)",
      "check message");
   is(raw_psamp($im, 0), -1, "bad channel list (0) for psamp should fail (16-bit)");
-  is(_get_error(), "chan_count 0 out of range, must be >0, <= total channels",
+  is(_get_error(), "Channel count (0) must be positive",
      "check message");
   is(raw_psampf($im, 4), -1, "bad channel list (4) for psampf should fail (16-bit)");
-  is(_get_error(), "chan_count 4 out of range, must be >0, <= total channels",
+  is(_get_error(), "Channel count (4) with NULL chans > total channels (3)",
      "check message");
   is(raw_psampf($im, 0), -1, "bad channel list (0) for psampf should fail (16-bit)");
-  is(_get_error(), "chan_count 0 out of range, must be >0, <= total channels",
+  is(_get_error(), "Channel count (0) must be positive",
      "check message");
 }
 
 {
   my $im = Imager->new(xsize => 10, ysize => 10, bits => 'double');
   is(raw_psamp($im, 4), -1, "bad channel list (4) for psamp should fail (double)");
-  is(_get_error(), "chan_count 4 out of range, must be >0, <= total channels",
+  is(_get_error(), "Channel count (4) with NULL chans > total channels (3)",
      "check message");
   is(raw_psamp($im, 0), -1,, "bad channel list (0) for psamp should fail (double)");
-  is(_get_error(), "chan_count 0 out of range, must be >0, <= total channels",
+  is(_get_error(), "Channel count (0) must be positive",
      "check message");
   is(raw_psampf($im, 4), -1, "bad channel list (4) for psampf should fail (double)");
-  is(_get_error(), "chan_count 4 out of range, must be >0, <= total channels",
+  is(_get_error(), "Channel count (4) with NULL chans > total channels (3)",
      "check message");
   is(raw_psampf($im, 0), -1, "bad channel list (0) for psampf should fail (double)");
-  is(_get_error(), "chan_count 0 out of range, must be >0, <= total channels",
+  is(_get_error(), "Channel count (0) must be positive",
      "check message");
 }
 
 {
   my $im = Imager->new(xsize => 10, ysize => 10, type => "paletted");
   is(raw_psamp($im, 4), -1, "bad channel list (4) for psamp should fail (paletted)");
-  is(_get_error(), "chan_count 4 out of range, must be >0, <= channels",
+  is(_get_error(), "Channel count (4) with NULL chans > total channels (3)",
      "check message");
   is(raw_psamp($im, 0), -1, "bad channel list (0) for psamp should fail (paletted)");
-  is(_get_error(), "chan_count 0 out of range, must be >0, <= channels",
+  is(_get_error(), "Channel count (0) must be positive",
      "check message");
   is(raw_psampf($im, 4), -1, "bad channel list (4) for psampf should fail (paletted)");
-  is(_get_error(), "chan_count 4 out of range, must be >0, <= channels",
+  is(_get_error(), "Channel count (4) with NULL chans > total channels (3)",
      "check message");
   is(raw_psampf($im, 0), -1, "bad channel list (0) for psampf should fail (paletted)");
-  is(_get_error(), "chan_count 0 out of range, must be >0, <= channels",
+  is(_get_error(), "Channel count (0) must be positive",
      "check message");
   is($im->type, "paletted", "make sure we kept the image type");
-}
-
-{
-  my $rgb = Imager->new(xsize => 10, ysize => 10);
-  is(color_model($rgb), 3, "check i_img_color_model() api");
-  is(color_channels($rgb), 3, "check i_img_color_channels() api");
-  is(alpha_channel($rgb), -1, "check i_img_alpha_channel() api");
-
-  ok(test_gslin_neg($rgb), "check negative channel count for i_gslin");
-  ok(test_gslinf_neg($rgb), "check negative channel count for i_gslinf");
-  ok(test_pslin_neg($rgb), "check negative channel count for i_pslin");
-  ok(test_pslinf_neg($rgb), "check negative channel count for i_pslin");
 }
 
 ok(test_mutex(), "call mutex APIs");

@@ -603,34 +603,101 @@ i_img_all_channel_mask(const i_img *img) {
 /*
 =item i_img_valid_channel_indexes()
 =category Image Information
-=synopsis if (i_img_valid_channel_indexes(im, chans, chan_count)) { ... }
+=synopsis if (!i_img_valid_channel_indexes(im, chans, chan_count)) { return -1; }
 
 Return true if all of the channels specified by C<chans>/C<chan_count>
 are present in the image.
 
 Used by image implementations to validate passed in channel lists.
 
-C<chans> must be non-NULL.
+=cut
+*/
+
+IMAGER_STATIC_INLINE bool
+i_img_valid_channel_indexes(i_img *im, int const *chans, int chan_count) {
+  const int total_ch = i_img_totalchannels(im);
+
+  if (chan_count < 1) {
+#ifdef IMAGER_NO_CONTEXT
+    dIMCTXim(im);
+#endif
+    im_push_errorf(aIMCTX, 0, "Channel count (%d) must be positive", chan_count);
+    return false;
+  }
+  if (chans) {
+    int chi;
+    for (chi = 0; chi < chan_count; ++chi) {
+      int ch = chans[chi];
+      if (ch < 0 || ch >= total_ch) {
+#ifdef IMAGER_NO_CONTEXT
+        dIMCTXim(im);
+#endif
+        im_push_errorf(aIMCTX, 0, "Channel %d (index %d) not in this image", ch, chi);
+        return false;
+      }
+    }
+    return true;
+  }
+  else {
+    if (chan_count > total_ch) {
+#ifdef IMAGER_NO_CONTEXT
+      dIMCTXim(im);
+#endif
+      im_push_errorf(aIMCTX, 0, "Channel count (%d) with NULL chans > total channels (%d)",
+                     chan_count, total_ch);
+      return false;
+    }
+    return true;
+  }
+}
+
+/*
+=item i_img_valid_chans_assert(im, chans, chan_count)
+
+Typically just use C<i_assert_valid_channels(im, chans, chan_count);>
+
+For use in an assertion, returns true if one of the following is true:
+
+=over
+
+=item *
+
+C<chans> is NULL and C<chan_count> is positive and less than or equal
+to the total number of channels in the image.
+
+=item *
+
+C<chans> is non-NULL and chan_count is positive and chans[0]
+.. chans[chan_count-1] are all greater than zero and less than the
+total number of channels in the image.
+
+=back
+
+For non-assertion code, use i_img_valid_channel_indexes().
 
 =cut
 */
 
-IMAGER_STATIC_INLINE int
-i_img_valid_channel_indexes(i_img *im, int const *chans, int chan_count) {
-  const int totalch = i_img_totalchannels(im);
-  int chi;
-  for (chi = 0; chi < chan_count; ++chi) {
-    int ch = chans[chi];
-    if (ch < 0 || ch >= totalch) {
-#ifdef IMAGER_NO_CONTEXT
-      dIMCTXim(im);
-#endif
-      im_push_errorf(aIMCTX, 0, "No channel %d in this image", ch);
-      return 0;
+IMAGER_STATIC_INLINE bool
+i_img_valid_chans_assert(i_img *im, const int *chans, int chan_count) {
+  const int total_ch = i_img_totalchannels(im);
+  if (chan_count <= 0)
+    return false;
+  if (chans) {
+    int chi;
+    for (chi = 0; chi < chan_count; ++chi) {
+      if (chans[chi] < 0 || chans[chi] >= total_ch)
+        return false;
     }
+    return true;
   }
-  return 1;
+  else {
+    return chan_count <= total_ch;
+  }
 }
+
+#define i_assert_valid_channels(im, chans, chan_count) \
+  assert(i_img_valid_chans_assert((im), (chans), (chan_count)))
 
 /*
 =item i_sametype_chans(C<im>, C<xsize>, C<ysize>, C<channels>)

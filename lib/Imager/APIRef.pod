@@ -143,7 +143,7 @@ Imager::APIRef - Imager's C API - reference.
   int has_alpha = i_img_alpha_channel(im, &alpha_channel);
   int color_channels = i_img_color_channels(im);
   if (i_img_all_channel_mask(im)) { ... }
-  if (i_img_valid_channel_indexes(im, chans, chan_count)) { ... }
+  if (!i_img_valid_channel_indexes(im, chans, chan_count)) { return -1; }
 
   # Image quantization
 
@@ -2361,14 +2361,12 @@ From: iminline.h
 
 =item i_img_valid_channel_indexes()
 
-  if (i_img_valid_channel_indexes(im, chans, chan_count)) { ... }
+  if (!i_img_valid_channel_indexes(im, chans, chan_count)) { return -1; }
 
 Return true if all of the channels specified by C<chans>/C<chan_count>
 are present in the image.
 
 Used by image implementations to validate passed in channel lists.
-
-C<chans> must be non-NULL.
 
 
 =for comment
@@ -3292,6 +3290,10 @@ will change:
 =item *
 
 B<i_img_check_entries>
+
+=item *
+
+B<i_img_valid_chans_assert>
 
 =item *
 

@@ -2,6 +2,7 @@
 #define _DATATYPES_H_
 
 #include <stddef.h>
+#include <stdbool.h>
 #include "imconfig.h"
 
 #ifdef __cplusplus

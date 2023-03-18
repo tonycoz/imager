@@ -1306,12 +1306,12 @@ sub std_image_tests {
     is($im->setsamples(y => 9, data => \@gsamps, channels => [-1],
 		       scale => "linear"), undef,
        "set negative channel");
-    is($im->errstr, "No channel -1 in this image",
+    is($im->errstr, "Channel -1 (index 0) not in this image",
        "check error message (negative channel)");
     is($im->setsamples(y => 9, data => \@gsamps, channels => [$channel_count],
 		       scale => "linear"), undef,
        "set too high channel");
-    is($im->errstr, "No channel $channel_count in this image",
+    is($im->errstr, "Channel $channel_count (index 0) not in this image",
        "check error message (too high channel)");
 
     is($im->setsamples(y => 9, x => 1, data => \@ten_zeros, channels => [0],
@@ -1415,12 +1415,12 @@ sub std_image_tests {
     is($im->setsamples(y => 9, data => \@gsamps, channels => [-1],
 		       scale => "linear", type => "float"), undef,
        "set negative channel (float)");
-    is($im->errstr, "No channel -1 in this image",
+    is($im->errstr, "Channel -1 (index 0) not in this image",
        "check error message (negative channel) (float)");
     is($im->setsamples(y => 9, data => \@gsamps, channels => [$channel_count],
 		       scale => "linear", type => "float"), undef,
        "set too high channel (float)");
-    is($im->errstr, "No channel $channel_count in this image",
+    is($im->errstr, "Channel $channel_count (index 0) not in this image",
        "check error message (too high channel) (float)");
 
     is($im->setsamples(y => 9, x => 1, data => \@ten_zeros, channels => [0],
