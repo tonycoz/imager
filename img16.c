@@ -20,6 +20,15 @@ sample image type to work with.
 =cut
 */
 
+#define IMAGER_NO_CONTEXT
+#include "imager.h"
+
+static i_img_dim
+i_gsamp_bits_gam16(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, unsigned *samps,
+                   int const *chans, int chan_count, int bits);
+static i_img_dim
+i_psamp_bits_gam16(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, unsigned const *samps,
+                 int const *chans, int chan_count, int bits);
 
 #define IMG_SAMPLE_TYPE i_sample16_t
 #define IMG_BITS i_16_bits
@@ -37,6 +46,8 @@ sample image type to work with.
 #define IMG_LIN_SAMPLEF_TO_REP(x, ch) SampleFTo16(imcms_from_linearf(curves[ch], (x)))
 #define IMG_LIN_SAMPLE_RAW_TO_REP(x) (x)
 #define IMG_LIN_SAMPLEF_RAW_TO_REP(x) SampleFTo16(x)
+#define IMG_GSAMP_BITS i_gsamp_bits_gam16
+#define IMG_PSAMP_BITS i_psamp_bits_gam16
 
 #include "imgamimg.h"
 
@@ -76,6 +87,115 @@ i_img_to_rgb16(i_img *im) {
   myfree(line);
 
   return targ;
+}
+
+static i_img_dim 
+i_gsamp_bits_gam16(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y,
+                   unsigned *samps, int const *chans, int chan_count, int bits) {
+  i_assert_valid_channels(im, chans, chan_count);
+
+  if (bits != 16) {
+    return i_gsamp_bits_fb(im, l, r, y, samps, chans, chan_count, bits);
+  }
+
+  if (y >=0 && y < im->ysize && l < im->xsize && l >= 0) {
+    int totalch = im->channels + im->extrachannels;
+    const IMG_SAMPLE_TYPE *data = (const IMG_SAMPLE_TYPE *)im->idata;
+
+    if (r > im->xsize)
+      r = im->xsize;
+
+    i_img_dim off = (l + y * im->xsize) * totalch;
+    i_img_dim w = r - l;
+    i_img_dim count = 0;
+
+    if (chans) {
+      i_img_dim i;
+      for (i = 0; i < w; ++i) {
+        int chi;
+        for (chi = 0; chi < chan_count; ++chi) {
+          int ch = chans[chi];
+          *samps++ = data[off+ch];
+          ++count;
+        }
+        off += totalch;
+      }
+    }
+    else {
+      i_img_dim i;
+      for (i = 0; i < w; ++i) {
+        int ch;
+        for (ch = 0; ch < chan_count; ++ch) {
+          *samps++ = data[off+ch];
+          ++count;
+        }
+        off += totalch;
+      }
+    }
+
+    return count;
+  }
+  else {
+    dIMCTXim(im);
+    i_push_error(0, "Image position outside of image");
+    return -1;
+  }
+}
+
+static i_img_dim 
+i_psamp_bits_gam16(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y,
+                   unsigned const *samps, int const *chans, int chan_count, int bits) {
+  i_assert_valid_channels(im, chans, chan_count);
+
+  if (bits != 16) {
+    return i_psamp_bits_fb(im, l, r, y, samps, chans, chan_count, bits);
+  }
+
+  if (y >=0 && y < im->ysize && l < im->xsize && l >= 0) {
+    int totalch = im->channels + im->extrachannels;
+    IMG_SAMPLE_TYPE *data = (IMG_SAMPLE_TYPE *)im->idata;
+
+    if (r > im->xsize)
+      r = im->xsize;
+    i_img_dim off = (l + y * im->xsize) * totalch;
+    i_img_dim w = r - l;
+    i_img_dim count = 0;
+
+    if (chans) {
+      i_img_dim i;
+      for (i = 0; i < w; ++i) {
+        int chi;
+        for (chi = 0; chi < chan_count; ++chi) {
+          int ch = chans[chi];
+          if (im->ch_mask & (1 << ch))
+            data[off+ch] = *samps;
+          ++samps;
+          ++count;
+        }
+        off += totalch;
+      }
+    }
+    else {
+      i_img_dim i;
+      for (i = 0; i < w; ++i) {
+        int ch;
+        for (ch = 0; ch < chan_count; ++ch) {
+          if (im->ch_mask & (1 << ch)) 
+            data[off+ch] = *samps;
+          ++samps;
+          ++count;
+        }
+        off += totalch;
+      }
+    }
+
+    return count;
+  }
+  else {
+    dIMCTXim(im);
+    i_push_error(0, "Image position outside of image");
+    return -1;
+  }
 }
 
 /*

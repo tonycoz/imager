@@ -356,6 +356,8 @@ i_ppix_p(i_img *im, i_img_dim x, i_img_dim y, const i_color *val) {
 */
 static i_img_dim i_gsamp_p(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, i_sample_t *samps, 
               int const *chans, int chan_count) {
+  i_assert_valid_channels(im, chans, chan_count);
+
   int ch;
   if (y >= 0 && y < im->ysize && l < im->xsize && l >= 0) {
     int palsize = PALEXT(im)->count;
@@ -368,13 +370,6 @@ static i_img_dim i_gsamp_p(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, i_s
     count = 0;
     w = r - l;
     if (chans) {
-      for (ch = 0; ch < chan_count; ++ch) {
-        if (chans[ch] < 0 || chans[ch] >= im->channels) {
-	  dIMCTXim(im);
-          im_push_errorf(aIMCTX, 0, "No channel %d in this image", chans[ch]);
-        }
-      }
-
       for (i = 0; i < w; ++i) {
         i_palidx which = *data++;
         if (which < palsize) {
@@ -386,12 +381,6 @@ static i_img_dim i_gsamp_p(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, i_s
       }
     }
     else {
-      if (chan_count <= 0 || chan_count > im->channels) {
-	dIMCTXim(im);
-	im_push_errorf(aIMCTX, 0, "chan_count %d out of range, must be >0, <= channels", 
-		      chan_count);
-	return 0;
-      }
       for (i = 0; i < w; ++i) {
         i_palidx which = *data++;
         if (which < palsize) {
@@ -583,6 +572,8 @@ handlers.
 static i_img_dim 
 i_psamp_p(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y,
 	  const i_sample_t *samps, const int *chans, int chan_count) {
+  i_assert_valid_channels(im, chans, chan_count);
+
   if (y >=0 && y < im->ysize && l < im->xsize && l >= 0) {
     i_img_dim count = 0;
     int ch;
@@ -591,14 +582,6 @@ i_psamp_p(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y,
       r = im->xsize;
       
     if (chans) {
-      /* make sure we have good channel numbers */
-      for (ch = 0; ch < chan_count; ++ch) {
-        if (chans[ch] < 0 || chans[ch] >= im->channels) {
-	  dIMCTXim(im);
-          im_push_errorf(aIMCTX, 0, "No channel %d in this image", chans[ch]);
-          return -1;
-        }
-      }
       while (l < r && im->type == i_palette_type) {
 	i_color c;
 	
@@ -611,13 +594,6 @@ i_psamp_p(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y,
       }
     }
     else {
-      if (chan_count <= 0 || chan_count > im->channels) {
-	dIMCTXim(im);
-	im_push_errorf(aIMCTX, 0, "chan_count %d out of range, must be >0, <= channels", 
-		      chan_count);
-	return -1;
-      }
-
       while (l < r && im->type == i_palette_type) {
 	i_color c;
 	
