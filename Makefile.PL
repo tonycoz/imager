@@ -1037,6 +1037,17 @@ sub probe_aligned_alloc {
   my @keys = sort { $types{$a} <=> $types{$b} } keys %types;
   my @deftypes = ( @types, "IM_ALIGNED_ALLOC_NONE" );
   my $defs = join("", map { "#define $deftypes[$_] $_\n" } 0..$#deftypes );
+
+  if (my $type = $ENV{IM_ALIGNED_ALLOC}) {
+    grep "IM_ALIGNED_ALLOC_$type" eq $_, @types
+      or do {
+        my @etypes = @types;
+        s/^IM_ALIGNED_ALLOC_// for @etypes;
+        die "IM_ALIGNED_ALLOC environment variable set but invalid, must be one of @etypes\n";
+      };
+    return ("IM_ALIGNED_ALLOC_$type", $defs)
+  }
+
   for my $type (@keys) {
     my $code = <<EOS;
 #include <stdlib.h>
