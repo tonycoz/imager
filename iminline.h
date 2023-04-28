@@ -763,6 +763,7 @@ This may return NULL on failure.
 IMAGER_STATIC_INLINE void *
 im_aligned_alloc_low(size_t align, size_t size) {
   size_t aligned_size = im_align_size(align, size);
+  IM_ALIGNED_ALLOC_TYPE;
 #if IM_ALIGNED_ALLOC_TYPE == IM_ALIGNED_ALLOC_C11
   /* posix_memalign() requires that the alignment be at least sizeof(void *),
      and aligned_alloc() may inherit that requirement
@@ -779,7 +780,7 @@ im_aligned_alloc_low(size_t align, size_t size) {
   }
 
   void *p;
-  if (posix_memalign(&p, align, aligned_sizesize) != 0)
+  if (posix_memalign(&p, align, aligned_size) != 0)
     return NULL;
 
   return p;
