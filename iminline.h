@@ -805,7 +805,7 @@ im_aligned_free(void *p) {
     IM_ALIGNED_ALLOC_TYPE == IM_ALIGNED_ALLOC_POSIX
   free(p);
 #elif IM_ALIGNED_ALLOC_TYPE == IM_ALIGNED_ALLOC_MSVC
-  _aligned_free(size, align);
+  _aligned_free(p);
 #else
   return free(p);
 #endif
