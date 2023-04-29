@@ -40,5 +40,6 @@ jobs:
               result=1
               echo "::error ::$name failed"
             fi
+            echo "::endgroup::";
           done
           exit $result
