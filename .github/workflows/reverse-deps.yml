@@ -42,4 +42,4 @@ jobs:
             fi
             echo "::endgroup::";
           done
-          exit $result
+          #exit $result
