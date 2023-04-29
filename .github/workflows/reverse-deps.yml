@@ -36,10 +36,13 @@ jobs:
           result=0
           for name in $(grep -v '^#' .github/downstreams.txt) ; do
             echo "::group::Testing $name"
+            thisfailed=
             if ! cpanm --sudo -v $name ; then
-              result=1
-              echo "::error ::$name failed"
+              result=1 ; thisfailed=1
             fi
             echo "::endgroup::";
+            if [ ! -z "$thisfailed" ] ; then
+              echo "::error ::$name failed"
+            fi
           done
           #exit $result
