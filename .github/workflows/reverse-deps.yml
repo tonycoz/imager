@@ -45,4 +45,4 @@ jobs:
               echo "::error ::$name failed"
             fi
           done
-          #exit $result
+          exit $result
