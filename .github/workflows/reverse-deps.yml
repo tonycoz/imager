@@ -37,7 +37,7 @@ jobs:
           for name in $(grep -v '^#' .github/downstreams.txt) ; do
             echo "::group::Testing $name"
             if ! cpanm --sudo -v $name ; then
-              result = 1
+              result=1
             fi
           done
           exit $result
