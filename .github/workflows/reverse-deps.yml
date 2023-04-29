@@ -31,53 +31,18 @@ jobs:
             HARNESS_OPTIONS=j2 IMAGER_AUTHOR_TESTING=1 make test
       - name: install
         run: sudo make install
-      - name: Imager-File-WEBP
-        run: cpanm --sudo -v Imager::File::WEBP
-      - name: Imager-File-APNG
-        run: cpanm --sudo -v Imager::File::APNG
-      - name: Imager-File-QOI
-        run: cpanm --sudo -v Imager::File::QOI
-      - name: Imager-File-HEIF
-        run: cpanm --sudo -v Imager::File::HEIF
-      - name: Music::FretboardDiagram
-        run: cpanm --sudo -v Music::FretboardDiagram
-      - name: Image::PHash
-        run: cpanm --sudo -v Image::PHash
-      - name: Geo::OSM::Imager
-        run: cpanm --sudo -v Geo::OSM::Imager
-      - name: Imager::IMBarcode::JP
-        run: cpanm --sudo -v Imager::IMBarcode::JP
-      # https://rt.cpan.org/Public/Bug/Display.html?id=136799
-      #- name: Graphics::Framebuffer
-      #  run: cpanm --sudo-v Graphics::Framebuffer
-      # needs perl 5.32, and ubuntu is 5.30
-      #- name: Games::Simutrans::Pakset
-      #  run: cpanm --sudo -v Games::Simutrans::Pakset
-      - name: Tree::Cladogram
-        run: cpanm --sudo -v Tree::Cladogram
-      - name: Image::Checkerboard
-        run: cpanm --sudo -v Image::Checkerboard
-      - name: Image::Base::Imager
-        run: cpanm --sudo -v Image::Base::Imager
-      - name: Imager::Filter::Statistic
-        run: cpanm --sudo -v Imager::Filter::Statistic
-      - name: Imager::Barcode128
-        run: cpanm --sudo -v Imager::Barcode128
-      - name: Imager::Filter::Autocrop
-        run: cpanm --sudo -v Imager::Filter::Autocrop
-      - name: Imager::Filter::Bakumatsu
-        run: cpanm --sudo -v Imager::Filter::Bakumatsu
-      - name: Imager::Trim
-        run: cpanm --sudo -v Imager::Trim
-      - name: Ham::WorldMap
-        run: cpanm --sudo -v Ham::WorldMap
-      - name: Image::Select
-        run: cpanm --sudo -v Image::Select
-      - name: Imager::Filter::Statistic
-        run: cpanm --sudo -v Imager::Filter::Statistic
-      - name: Imager::QRCode
-        run: cpanm --sudo -v Imager::QRCode
-      - name: Image::JpegMinimal
-        run: cpanm --sudo -v Image::JpegMinimal
-      - name: Acme::DreamyImage
-        run: cpanm --sudo -v Acme::DreamyImage
+      - name: Test downstreams
+        run: |
+          result=0
+          for name in $(grep -v '^#' .github/downstreams.txt) ; do
+            echo "::group::Testing $name"
+            thisfailed=
+            if ! cpanm --sudo -v $name ; then
+              result=1 ; thisfailed=1
+            fi
+            echo "::endgroup::";
+            if [ ! -z "$thisfailed" ] ; then
+              echo "::error ::$name failed"
+            fi
+          done
+          exit $result
