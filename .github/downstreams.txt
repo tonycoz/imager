@@ -1,0 +1,25 @@
+Imager::File::WEBP
+Imager::File::APNG
+Imager::File::QOI
+Imager::File::HEIF
+Music::FretboardDiagram
+Image::PHash
+Geo::OSM::Imager
+Imager::IMBarcode::JP
+# https://rt.cpan.org/Public/Bug/Display.html?id=136799
+#Graphics::Framebuffer
+# needs perl 5.32, and ubuntu is 5.30
+#Games::Simutrans::Pakset
+Tree::Cladogram
+Image::Checkerboard
+Image::Base::Imager
+Imager::Filter::Statistic
+Imager::Barcode128
+Imager::Filter::Autocrop
+Imager::Filter::Bakumatsu
+Imager::Trim
+Ham::WorldMap
+Image::Select
+Imager::QRCode
+Image::JpegMinimal
+Acme::DreamyImage
