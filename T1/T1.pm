@@ -23,12 +23,14 @@ sub new {
 	   size=>15,
 	   @_);
 
-  unless ($hsh{file}) {
+  my $file = $hsh{file};
+  my $afm  = $hsh{afm};
+  unless (defined $file) {
     $Imager::ERRSTR = "No font file specified";
     return;
   }
-  unless (-e $hsh{file}) {
-    $Imager::ERRSTR = "Font file $hsh{file} not found";
+  unless (-e $file) {
+    $Imager::ERRSTR = "Font file $file not found";
     return;
   }
   unless ($Imager::formats{t1}) {
@@ -36,28 +38,28 @@ sub new {
     return;
   }
   # we want to avoid T1Lib's file search mechanism
-  unless ($hsh{file} =~ m!^/!
-	  || $hsh{file} =~ m!^\.\/?/!
-	  || $^O =~ /^(MSWin32|cygwin)$/ && $hsh{file} =~ /^[a-z]:/i) {
-    $hsh{file} = './' . $hsh{file};
+  unless ($file =~ m!^/!
+	  || $file =~ m!^\.\/?/!
+	  || $^O =~ /^(MSWin32|cygwin)$/ && $file =~ /^[a-z]:/i) {
+    $file = './' . $file;
   }
 
-  if(defined $hsh{afm} && length $hsh{afm}) {
-    unless (-e $hsh{afm}) {
-      $Imager::ERRSTR = "Afm file $hsh{afm} not found";
+  if(defined $afm && length $afm) {
+    unless (-e $afm) {
+      $Imager::ERRSTR = "Afm file $afm not found";
       return;
     }
-    unless ($hsh{afm} =~ m!^/!
-            || $hsh{afm} =~ m!^\./!
-            || $^O =~ /^(MSWin32|cygwin)$/ && $hsh{file} =~ /^[a-z]:/i) {
-      $hsh{file} = './' . $hsh{file};
+    unless ($afm =~ m!^/!
+            || $afm =~ m!^\./!
+            || $^O =~ /^(MSWin32|cygwin)$/ && $file =~ /^[a-z]:/i) {
+      $afm = './' . $afm;
     }
   }
   else {
-    $hsh{afm} = undef;
+    $afm = undef;
   }
 
-  my $font = Imager::Font::T1xs->new($hsh{file},$hsh{afm});
+  my $font = Imager::Font::T1xs->new($file, $afm);
   unless ($font) { # the low-level code may miss some error handling
     Imager->_set_error(Imager->_error_as_msg);
     return;
@@ -65,7 +67,7 @@ sub new {
   return bless {
 		t1font    => $font,
 		aa    => $hsh{aa} || 0,
-		file  => $hsh{file},
+		file  => $file,
 		type  => 't1',
 		size  => $hsh{size},
 		color => $hsh{color},
