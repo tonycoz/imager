@@ -15,6 +15,8 @@ typedef i_t1_font_t Imager__Font__T1xs;
 
 #define i_t1_DESTROY(font) i_t1_destroy(font)
 
+typedef char * possible_str;
+
 MODULE = Imager::Font::T1  PACKAGE = Imager::Font::T1
 
 undef_int
@@ -25,8 +27,8 @@ MODULE = Imager::Font::T1  PACKAGE = Imager::Font::T1xs PREFIX = i_t1_
 
 Imager::Font::T1xs
 i_t1_new(class,pfb,afm)
-       	      char*    pfb
-       	      char*    afm
+              char*    pfb
+              possible_str    afm
   C_ARGS:
     pfb, afm
 

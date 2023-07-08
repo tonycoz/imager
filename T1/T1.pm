@@ -6,7 +6,7 @@ our @ISA = qw(Imager::Font);
 use Scalar::Util ();
 
 BEGIN {
-  our $VERSION = "1.029";
+  our $VERSION = "1.030";
 
   require XSLoader;
   XSLoader::load('Imager::Font::T1', $VERSION);
@@ -42,18 +42,19 @@ sub new {
     $hsh{file} = './' . $hsh{file};
   }
 
-  if($hsh{afm}) {
-	  unless (-e $hsh{afm}) {
-	    $Imager::ERRSTR = "Afm file $hsh{afm} not found";
-	    return;
-	  }
-	  unless ($hsh{afm} =~ m!^/!
-		  || $hsh{afm} =~ m!^\./!
-		  || $^O =~ /^(MSWin32|cygwin)$/ && $hsh{file} =~ /^[a-z]:/i) {
-	    $hsh{file} = './' . $hsh{file};
-	  }
-  } else {
-	  $hsh{afm} = 0;
+  if(defined $hsh{afm} && length $hsh{afm}) {
+    unless (-e $hsh{afm}) {
+      $Imager::ERRSTR = "Afm file $hsh{afm} not found";
+      return;
+    }
+    unless ($hsh{afm} =~ m!^/!
+            || $hsh{afm} =~ m!^\./!
+            || $^O =~ /^(MSWin32|cygwin)$/ && $hsh{file} =~ /^[a-z]:/i) {
+      $hsh{file} = './' . $hsh{file};
+    }
+  }
+  else {
+    $hsh{afm} = undef;
   }
 
   my $font = Imager::Font::T1xs->new($hsh{file},$hsh{afm});

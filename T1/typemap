@@ -1,1 +1,8 @@
 Imager::Font::T1xs	T_PTROBJ
+possible_str		T_POSSIBLESTR
+
+INPUT
+
+T_POSSIBLESTR
+        SvGETMAGIC($arg);
+        $var = SvOK($arg) ? SvPV_nomg_nolen($arg) : NULL;
