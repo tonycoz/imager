@@ -3,6 +3,14 @@ use strict;
 use Test::More;
 use ExtUtils::Manifest qw(maniread);
 use File::Temp;
+
+plan skip_all => "Changes to Pod::Spell and possibly aspell broke this";
+
+# X<> contents are now included and concatenated with the following text, so
+# Xsomeword>Sometext
+# becomes "somewordSometext" in the text passed to spellchecking,
+# This was fixed but there's also other changes which have caused problems.
+
 eval "use Pod::Spell 1.15";
 plan skip_all => "Pod::Spell 1.15 required for spellchecking POD" if $@;
 my @pod = @ARGV;
