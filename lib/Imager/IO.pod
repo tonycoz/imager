@@ -20,7 +20,7 @@ same code to work with disk files, in memory data and callbacks.
 If you're writing an Imager file handler your code will be passed an
 Imager::IO object to write to or read from.
 
-X<UTF-8>X<Unicode>Note that Imager::IO can only work with collections of bytes -
+X<UTF-8> X<Unicode> Note that Imager::IO can only work with collections of bytes -
 if you need to read UTF-8 data you will need to read the bytes and
 decode them.  If you want to write UTF-8 data you will need to encode
 your characters to bytes and write the bytes.

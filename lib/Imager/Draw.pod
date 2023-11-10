@@ -85,7 +85,8 @@ think of C<(10, 20)> as C<(10.00, 20.00)> and consider the consequences.
 
 =head2 Color Parameters
 
-X<color parameters>The C<color> parameter for any of the drawing
+X<color parameters>
+The C<color> parameter for any of the drawing
 methods can be an L<Imager::Color> object, a simple scalar that
 Imager::Color can understand, a hashref of parameters that
 Imager::Color->new understands, or an arrayref of red, green, blue
@@ -106,7 +107,8 @@ the color as an L<Imager::Color> object:
 
 =head2 Fill Parameters
 
-X<fill parameters>All filled primitives, i.e. C<arc()>, C<box()>,
+X<fill parameters>
+All filled primitives, i.e. C<arc()>, C<box()>,
 C<circle()>, C<polygon()> and the C<flood_fill()> method can take a
 C<fill> parameter instead of a C<color> parameter which can either be
 an Imager::Fill object, or a reference to a hash containing the
@@ -159,7 +161,8 @@ order.
   $img->line(color=>$green, x1=>10, x2=>100,
                             y1=>20, y2=>50, aa=>1, endp=>1 );
 
-X<line method>Draws a line from (x1,y1) to (x2,y2).  The endpoint
+X<line method>
+Draws a line from (x1,y1) to (x2,y2).  The endpoint
 (x2,y2) is drawn by default.  If C<endp> of 0 is specified then the
 endpoint will not be drawn.  If C<aa> is set then the line will be
 drawn anti-aliased.  The C<antialias> parameter is still available for
@@ -194,12 +197,16 @@ C<aa> - if true the line is drawn anti-aliased.  Default: 0.
 
 =back
 
+=for stopwords
+polyline polypolygon
+
 =item polyline()
 
   $img->polyline(points=>[[$x0,$y0],[$x1,$y1],[$x2,$y2]],color=>$red);
   $img->polyline(x=>[$x0,$x1,$x2], y=>[$y0,$y1,$y2], aa=>1);
 
-X<polyline method>C<polyline> is used to draw multiple lines between a
+X<polyline method>
+C<polyline> is used to draw multiple lines between a
 series of points.  The point set can either be specified as an
 arrayref to an array of array references (where each such array
 represents a point).  The other way is to specify two array
@@ -245,7 +252,8 @@ be supplied as C<antialias> for backward compatibility.
   $img->box(color => $blue, xmin=>10, ymin=>30, xmax=>200, ymax=>300, 
             filled=>1);
 
-X<box method>If any of the edges of the box are omitted it will snap
+X<box method>
+If any of the edges of the box are omitted it will snap
 to the outer edge of the image in that direction.  If C<filled> is
 omitted the box is drawn as an outline.  Instead of a color it is
 possible to use a C<fill> pattern:
@@ -477,7 +485,7 @@ image, I<not> as pixel locations.  This means that:
 fills only a single pixel at C<(0, 0)>, not four.
 
 =item polypolygon()
-X<polypolygon() method>X<methods, polypolygon>
+X<polypolygon() method> X<methods, polypolygon>
 
   $img->polypolygon(points => $points, color => $color);
 
@@ -521,7 +529,8 @@ fills only a single pixel at C<(0, 0)>, not four.
 
 =item flood_fill()
 
-X<flood_fill>You can fill a region that all has the same color using
+X<flood_fill>
+You can fill a region that all has the same color using
 the flood_fill() method, for example:
 
   $img->flood_fill(x=>50, y=>50, color=>$color);

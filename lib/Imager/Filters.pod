@@ -492,7 +492,7 @@ for Euclidean squared, and 2 for Manhattan distance.
                colors=>[ qw(red blue green) ]);
 
 =item C<hardinvert>
-X<filters, hardinvert>X<hardinvert>
+X<filters, hardinvert> X<hardinvert>
 
 inverts the image, black to white, white to black.  All color channels
 are inverted, excluding the alpha channel if any.
@@ -501,7 +501,7 @@ are inverted, excluding the alpha channel if any.
     or die $img->errstr;
 
 =item C<hardinvertall>
-X<filters, hardinvertall>X<hardinvertall>
+X<filters, hardinvertall> X<hardinvertall>
 
 inverts the image, black to white, white to black.  All channels are
 inverted, including the alpha channel if any.

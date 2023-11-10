@@ -502,7 +502,7 @@ L<Imager::Filters/difference()> method.
 =head1 SPECIAL EFFECTS
 
 =head2 Drop Shadows
-X<drop shadow>X<effects, drop shadow>
+X<drop shadow> X<effects, drop shadow>
 
 This can be used for a glow effect as well.
 

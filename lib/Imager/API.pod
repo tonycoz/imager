@@ -222,7 +222,7 @@ C<WindingRule> for X and C<WINDING> for Win32 GDI.
 
 =head1 Create an XS module using the Imager API
 
-=head2 Foo.pm
+=head2 C<Foo.pm>
 
 Load Imager:
 

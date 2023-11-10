@@ -89,7 +89,7 @@ if you want to keep an original after doing something that changes the image.
 
 =item scale()
 
-X<scale>To scale an image so proportions are maintained use the
+X<scale> To scale an image so proportions are maintained use the
 C<$img-E<gt>scale()> method.  if you give either a C<xpixels> or
 C<ypixels> parameter they will determine the width or height
 respectively.  If both are given the one resulting in a larger image
@@ -620,7 +620,7 @@ A list of the transformations that alter the source image follows:
 
 =item paste()
 
-X<paste>To copy an image to onto another image use the C<paste()>
+X<paste> To copy an image to onto another image use the C<paste()>
 method.
 
   $dest->paste(left=>40, top=>20, src=>$logo);

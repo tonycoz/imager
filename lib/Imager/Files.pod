@@ -178,7 +178,7 @@ and can be any of the following:
   tiff  Tagged Image File Format (TIFF)
 
 Support for other formats can be found on CPAN, including:
-X<heif>X<QOI>X<webp>
+X<C<heif>> X<C<QOI>> X<C<webp>>
 
   apng        Imager::File::APNG
   avif        Imager::File::AVIF
@@ -276,7 +276,7 @@ C<io> - an L<Imager::IO> object.
 
 =back
 
-X<buffering>X<unbuffered>By default Imager will use buffered I/O when
+X<buffering> X<unbuffered> By default Imager will use buffered I/O when
 reading or writing an image.  You can disabled buffering for output by
 supplying a C<< buffered => 0 >> parameter to C<write()> or
 C<write_multi()>.
@@ -391,8 +391,8 @@ buffered data.
 Return true on success.
 
 =head2 Guessing types
-X<FORMATGUESS>
 
+X<C<FORMATGUESS>>
 When writing to a file, if you don't supply a C<type> parameter Imager
 will attempt to guess it from the file name.  This is done by calling
 the code reference stored in C<$Imager::FORMATGUESS>.  This is only
@@ -545,7 +545,7 @@ You can get the current limits with the get_file_limits() method:
      Imager->get_file_limits();
 
 =item check_file_limits()
-X<class methods, check_file_limits()>X<check_file_limits()>
+X<class methods, check_file_limits()> X<check_file_limits()>
 
 Intended for use by file handlers to check that the size of a file is
 within the limits set by C<set_file_limits()>.
@@ -624,12 +624,12 @@ The following tags are set when reading a PNM file:
 
 =item *
 
-X<pnm_maxval>C<pnm_maxval> - the C<maxvals> number from the PGM/PPM header.
+X<pnm_maxval> C<pnm_maxval> - the C<maxvals> number from the PGM/PPM header.
 Always set to 2 for a C<PBM> file.
 
 =item *
 
-X<pnm_type>C<pnm_type> - the type number from the C<PNM> header, 1 for ASCII
+X<pnm_type> C<pnm_type> - the type number from the C<PNM> header, 1 for ASCII
 C<PBM> files, 2 for ASCII C<PGM> files, 3 for ASCII c<PPM> files, 4 for binary
 C<PBM> files, 5 for binary C<PGM> files, 6 for binary C<PPM> files.
 
@@ -642,7 +642,7 @@ The following tag is checked when writing an image with more than
 
 =item *
 
-X<pnm_write_wide_data>pnm_write_wide_data - if this is non-zero then
+X<pnm_write_wide_data> pnm_write_wide_data - if this is non-zero then
 write() can write C<PGM>/C<PPM> files with 16-bits/sample.  Some
 applications, for example GIMP 2.2, and tools can only read
 8-bit/sample binary PNM files, so Imager will only write a 16-bit
@@ -1271,7 +1271,7 @@ compression quality.  High values are better quality and larger files.
 
 =item *
 
-X<tags, tiff_resolutionunit>C<tiff_resolutionunit> - The value of the
+X<tags, tiff_resolutionunit> C<tiff_resolutionunit> - The value of the
 C<ResolutionUnit> tag.  This is ignored on writing if the
 i_aspect_only tag is non-zero.
 
@@ -1281,7 +1281,7 @@ stored in the TIFF file.
 
 =item *
 
-X<tags, tiff_resolutionunit_name>C<tiff_resolutionunit_name> - This is
+X<tags, tiff_resolutionunit_name> C<tiff_resolutionunit_name> - This is
 set when reading a TIFF file to the name of the unit given by
 C<tiff_resolutionunit>.  Possible results include C<inch>,
 C<centimeter>, C<none> (the C<i_aspect_only> tag is also set reading
@@ -1289,13 +1289,13 @@ these files) or C<unknown>.
 
 =item *
 
-X<tags, tiff_bitspersample>C<tiff_bitspersample> - Bits per sample
+X<tags, tiff_bitspersample> C<tiff_bitspersample> - Bits per sample
 from the image.  This value is not used when writing an image, it is
 only set on a read image.
 
 =item *
 
-X<tags, tiff_photometric>C<tiff_photometric> - Value of the
+X<tags, tiff_photometric> C<tiff_photometric> - Value of the
 C<PhotometricInterpretation> tag from the image.  This value is not
 used when writing an image, it is only set on a read image.
 
@@ -1546,39 +1546,39 @@ directly supported:
 
 =item *
 
-C<i_comment>X<tags,i_comment> - keyword of "Comment".
+C<i_comment> X<tags,i_comment> - keyword of "Comment".
 
 =item *
 
-C<png_author>X<tags,PNG,png_author> - keyword "Author".
+C<png_author> X<tags,PNG,png_author> - keyword "Author".
 
 =item *
 
-C<png_copyright>X<tags,PNG,png_copyright> - keyword "Copyright".
+C<png_copyright> X<tags,PNG,png_copyright> - keyword "Copyright".
 
 =item *
 
-C<png_creation_time>X<tags,PNG,png_creation_time> - keyword "Creation Time".
+C<png_creation_time> X<tags,PNG,png_creation_time> - keyword "Creation Time".
 
 =item *
 
-C<png_description>X<tags,PNG,png_description> - keyword "Description".
+C<png_description> X<tags,PNG,png_description> - keyword "Description".
 
 =item *
 
-C<png_disclaimer>X<tags,PNG,png_disclaimer> - keyword "Disclaimer".
+C<png_disclaimer> X<tags,PNG,png_disclaimer> - keyword "Disclaimer".
 
 =item *
 
-C<png_software>X<tags,PNG,png_software> - keyword "Software".
+C<png_software> X<tags,PNG,png_software> - keyword "Software".
 
 =item *
 
-C<png_title>X<tags,PNG,png_title> - keyword "Title".
+C<png_title> X<tags,PNG,png_title> - keyword "Title".
 
 =item *
 
-C<png_warning>X<tags,PNG,png_warning> - keyword "Warning".
+C<png_warning> X<tags,PNG,png_warning> - keyword "Warning".
 
 =back
 
@@ -1623,7 +1623,7 @@ or text do not satisfy the requirements above the write will fail.
 
 =item *
 
-X<tags, png_interlace>C<png_interlace>, C<png_interlace_name> - only
+X<tags, png_interlace> C<png_interlace>, C<png_interlace_name> - only
 set when reading, C<png_interlace> is set to the type of interlacing
 used by the file, 0 for one, 1 for Adam7.  C<png_interlace_name> is
 set to a keyword describing the interlacing, either C<none> or
@@ -1631,7 +1631,7 @@ C<adam7>.
 
 =item *
 
-X<tags, png_srgb_intent>C<png_srgb_intent> - the sRGB rendering intent
+X<tags, png_srgb_intent> C<png_srgb_intent> - the sRGB rendering intent
 for the image. an integer from 0 to 3, per the PNG specification.  If
 this chunk is found in the PNG file the C<gAMA> and C<cHRM> are
 ignored and the C<png_gamma> and C<png_chroma_...> tags are not set.
@@ -1640,13 +1640,13 @@ C<cHRM> chunks are not written.
 
 =item *
 
-X<tags, png_gamma>C<png_gamma> - the gamma of the image. This value is
+X<tags, png_gamma> C<png_gamma> - the gamma of the image. This value is
 not currently used by Imager when processing the image, but this may
 change in the future.
 
 =item *
 
-X<tags, png_chroma_...>C<png_chroma_white_x>, C<png_chroma_white_y>,
+X<tags, png_chroma_...> C<png_chroma_white_x>, C<png_chroma_white_y>,
 C<png_chroma_red_x>, C<png_chroma_red_y>, C<png_chroma_green_x>,
 C<png_chroma_green_y>, C<png_chroma_blue_x>, C<png_chroma_blue_y> -
 the primary chromaticities of the image, defining the color model.
@@ -1660,12 +1660,12 @@ I<Imager::ImageTypes/CommonTags>.
 
 =item *
 
-X<tags, png_bits>C<png_bits> - the number of bits per sample in the
+X<tags, png_bits> C<png_bits> - the number of bits per sample in the
 representation.  Ignored when writing.
 
 =item *
 
-X<tags, png_time>C<png_time> - the creation time of the file formatted
+X<tags, png_time> C<png_time> - the creation time of the file formatted
 as C<< I<year>-I<month>-I<day>TI<hour>:I<minute>:I<second> >>.  This
 is stored as time data structure in the file, not a string.  If you
 set C<png_time> and it cannot be parsed as above, writing the PNG file
@@ -1677,7 +1677,7 @@ C<i_background> - set from the C<sBKG> when reading an image file.
 
 =back
 
-X<compression>X<png_compression_level>You can control the level of
+X<compression> X<png_compression_level>You can control the level of
 F<zlib> compression used when writing with the
 C<png_compression_level> parameter.  This can be an integer between 0
 (uncompressed) and 9 (best compression).
@@ -1685,7 +1685,7 @@ C<png_compression_level> parameter.  This can be an integer between 0
 =for stopwords
 CRC
 
-X<png_ignore_benign_errors>If you're using F<libpng> 1.6 or later, or
+X<png_ignore_benign_errors> If you're using F<libpng> 1.6 or later, or
 an earlier release configured with C<PNG_BENIGN_ERRORS_SUPPORTED>, you
 can choose to ignore file format errors the authors of F<libpng>
 consider I<benign>, this includes at least CRC errors and palette

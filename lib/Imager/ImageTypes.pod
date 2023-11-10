@@ -334,7 +334,7 @@ value of C<getwidth()> is undef.
 Same details apply as for L</getwidth()>.
 
 =item getchannels()
-X<getchannels() method>X<methods, getchannels()>
+X<getchannels() method> X<methods, getchannels()>
 
   print "Image has ",$img->getchannels(), " channels\n";
 
@@ -347,7 +347,7 @@ This may change in a future release of Imager.
 Returns an empty list if the image object is not initialized.
 
 =item colorchannels()
-X<colorchannels() method>X<methods, colorchannels()>
+X<colorchannels() method> X<methods, colorchannels()>
 
 Returns the number of color channels.
 
@@ -357,7 +357,7 @@ a future version of Imager.
 Returns an empty list if the image object is not initialized.
 
 =item colormodel()
-X<colormodel method>X<methods, colormodel>
+X<C<colormodel> method> X<methods, C<colormodel>>
 
 Returns the color model of the image, including whether there is an
 alpha channel.
@@ -380,7 +380,7 @@ then the color model is returned as a number, mapped as follows:
       4    rgba
 
 =item alphachannel()
-X<alphachannel() method>X<methods, alphachannel()>
+X<alphachannel() method> X<methods, alphachannel()>
 
 Returns the channel index of the alpha channel of the image.
 
@@ -622,7 +622,7 @@ Note: getcolorcount() treats the image as an 8-bit per sample image.
 
 =item *
 
-X<maxcolors!getcolorcount>C<maxcolors> - the maximum number of colors to
+X<C<maxcolors>!getcolorcount>C<maxcolors> - the maximum number of colors to
 return.  Default: unlimited.
 
 =back
@@ -639,7 +639,7 @@ Calculates a histogram of colors used by the image.
 
 =item *
 
-X<maxcolors!getcolorusagehash>C<maxcolors> - the maximum number of colors
+X<C<maxcolors>!getcolorusagehash>C<maxcolors> - the maximum number of colors
 to return.  Default: unlimited.
 
 =back
@@ -928,7 +928,7 @@ some standard information.
 
 =item *
 
-X<i_xres tag>X<i_yres tag>X<tags, i_xres>X<tags, i_yres>C<i_xres>, C<i_yres>
+X<i_xres tag> X<i_yres tag> X<tags, i_xres> X<tags, i_yres> C<i_xres>, C<i_yres>
 - The spatial resolution of the image in pixels per inch.  If the
 image format uses a different scale, eg. pixels per meter, then this
 value is converted.  A floating point number stored as a string.
@@ -945,32 +945,32 @@ value is converted.  A floating point number stored as a string.
 
 =item *
 
-X<i_aspect_only tag>X<tags, i_aspect_only>C<i_aspect_only> - If this is
+X<i_aspect_only tag> X<tags, i_aspect_only> C<i_aspect_only> - If this is
 non-zero then the values in i_xres and i_yres are treated as a ratio
 only.  If the image format does not support aspect ratios then this is
 scaled so the smaller value is 72 DPI.
 
 =item *
 
-X<i_incomplete tag>X<tags, i_incomplete>C<i_incomplete> - If this tag is
+X<i_incomplete tag> X<tags, i_incomplete> C<i_incomplete> - If this tag is
 present then the whole image could not be read.  This isn't
 implemented for all images yet, and may not be.
 
 =item *
 
-X<i_lines_read tag>X<tags, i_lines_read>C<i_lines_read> - If
+X<i_lines_read tag> X<tags, i_lines_read> C<i_lines_read> - If
 C<i_incomplete> is set then this tag may be set to the number of
 scan lines successfully read from the file.  This can be used to decide
 whether an image is worth processing.
 
 =item *
 
-X<i_format tag>X<tags, i_format>i_format - The file format this file
+X<i_format tag> X<tags, i_format>i_format - The file format this file
 was read from.
 
 =item *
 
-X<i_background>X<tags, i_background>i_background - used when writing
+X<i_background> X<tags, i_background> i_background - used when writing
 an image with an alpha channel to a file format that doesn't support
 alpha channels.  The C<write> method will convert a normal color
 specification like "#FF0000" into a color object for you, but if you
