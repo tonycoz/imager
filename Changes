@@ -1,5 +1,68 @@
 Imager release history.  Older releases can be found in Changes.old
 
+Major binary compatibility changes:
+
+  - system:
+
+    - require a 16-bit integer type (which was always there anyway)
+
+    - allow use of LittleCMS for sample comversion, the default is an
+      internal implementation.  I expect to use LittleCMS for color
+      management in the future.
+
+    - many macros are now inline functions instead.
+
+  - image (Imager::ImgRaw) objects:
+
+    - moved the image object function pointers from being embedded in
+      the image structure to a separate vtable
+
+    - C level image objects are now reference counted
+
+    - add limited support for "extra" channels, which can store
+      channels beyond the color/alpha channels.
+
+    - add the i_img_data() entry point to allow access to or sythesis
+      of image data from an image in some basic formats.  Exposed as
+      the data() method.
+
+    - remove some of the function pointers from the image object:
+      i_plin(), i_plinf(), i_glin(), i_glinf(), i_gpix(), i_gpixf(),
+      i_ppix(), i_ppixf().  These are now all implemented as functions
+      that use the underlying i_gsamp(), i_gsampf(), i_psamp(),
+      i_psampf() functions.
+
+    - add linear versions of the sample get/put entry points:
+      i_gslin(), i_gslinf(), i_pslin(), i_pslinf() and implement them
+      for each image type. These return linear luminance for each color
+      channel rather than the roughly exponential value of normal
+      pixel values.
+
+    - scaling now properly combines linear luminance for each scaling
+      method.
+
+    - refactor 8-bit, 16 bit, double per sample image implementations
+      into a single implementation using macros.
+
+    - add float/sample images
+
+    - add linear sample images with 16-bit integer, double per sample.
+      This isn't directly used for anything yet.
+
+  - io_glue (Imager::IO) objects:
+
+    - moved the io_glue function pointers from being embedded in the
+      io_glue structure to a separate vtable.
+
+    - i_io_size() and the callbacks that implement it now return off_t
+      instead of ssize_t.
+
+    - exposed i_io_size() throw the Imager::IO wrapper
+
+    - add i_io_mmap() and i_io_munmap() interfaces to io_glue objects
+      and implement it for FD and buffer objects.  This is only usable
+      from C.
+
 Imager 1.024 - 6 Apr 2024
 ============
 
