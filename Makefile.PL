@@ -111,6 +111,9 @@ if (@enable && @disable) {
   print STDERR "Only --enable or --disable can be used, not both, try --help\n";
   exit 1;
 }
+if (!@enable && !@disable) {
+  @disable = qw(T1 FT1);
+}
 
 my %definc;
 my %deflib;
