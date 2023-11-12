@@ -1,0 +1,59 @@
+name: test-libtiff
+
+on:
+  push:
+    branches:
+      - '**'
+    tags-ignore:
+      - '*'
+  pull_request:
+
+
+jobs:
+  imager-file-tiff:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        LIBTIFF_RELEASE:
+          - "4.1.0"
+          - "4.2.0"
+          - "4.3.0"
+          - "4.4.0"
+          - "4.5.0"
+          - "4.6.0"
+    steps:
+      - name: install dependencies
+        run: |
+            sudo apt-get update ||:
+            sudo apt-get -y install build-essential automake autoconf libtool m4 git yasm pkgconf libjpeg-turbo8-dev
+            wget https://download.osgeo.org/libtiff/tiff-${{ matrix.LIBTIFF_RELEASE }}.tar.gz
+            ls
+            tar xzf tiff-${{ matrix.LIBTIFF_RELEASE }}.tar.gz
+            ls
+            cd tiff-${{ matrix.LIBTIFF_RELEASE }}
+            mkdir ../tiffbuild
+            cmake -B ../tiffbuild && cd ../tiffbuild && make && sudo make install
+            echo "LD_LIBRARY_PATH=$(pkg-config --variable=libdir libtiff-4)" >>$GITHUB_ENV
+      - name: perl version
+        run: |
+          perl -v
+          perl -V
+      - name: checkout
+        uses: actions/checkout@v4
+      - name: Imager
+        run: |
+          IM_ENABLE=none perl Makefile.PL
+          HARNESS_OPTIONS=j3 make test
+          sudo make install
+      - name: configure
+        run: |
+          cd TIFF
+          perl Makefile.PL
+      - name: build
+        run: |
+            make -C TIFF -j2
+      - name: test
+        run: |
+            make -C TIFF test
