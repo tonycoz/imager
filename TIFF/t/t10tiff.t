@@ -24,6 +24,7 @@ ok(my ($full, $major, $minor, $point) =
    "extract library version")
   or diag("Could not extract from:\n$ver_string");
 diag("libtiff release $full") if $full;
+diag("build version date " . Imager::File::TIFF->builddate);
 # make something we can compare
 my $cmp_ver = sprintf("%03d%03d%03d", $major, $minor, $point);
 if ($cmp_ver lt '003007000') {

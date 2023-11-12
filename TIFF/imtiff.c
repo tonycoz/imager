@@ -2185,6 +2185,14 @@ i_tiff_libversion(void) {
   return TIFFGetVersion();
 }
 
+#define Q(x) Q_(x)
+#define Q_(x) #x
+
+char const *
+i_tiff_builddate(void) {
+  return Q(TIFFLIB_VERSION);
+}
+
 static int 
 setup_paletted(read_state_t *state) {
   uint16 *maps[3];

@@ -149,6 +149,12 @@ i_tiff_has_compression(name)
 SV *
 i_tiff_ieeefp()
 
+MODULE = Imager::File::TIFF  PACKAGE = Imager::File::TIFF  PREFIX = i_tiff_
+
+const char *
+i_tiff_builddate(...)
+  C_ARGS:
+
 BOOT:
 	PERL_INITIALIZE_IMAGER_CALLBACKS;
 	i_tiff_init();
