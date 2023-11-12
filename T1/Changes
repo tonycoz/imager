@@ -1,3 +1,11 @@
+Imager::Font::T1 1.030
+======================
+
+Imager no longer installs this module by default, FreeType 2.x also
+supports Type1 fonts and is actually maintained.
+
+ - fix some mishandling of afm file names
+
 Imager::Font::T1 1.028
 ======================
 
