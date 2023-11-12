@@ -3,9 +3,22 @@
 #include "imtiff.h"
 #include "imext.h"
 
+/* 4.3.0 (aka 20210416) made the old tifflib specific types deprecated in
+   favour of the C99 <inttypes.h> types.
+*/
+#if TIFFLIB_VERSION >= 20210416
+typedef uint8_t tf_uint8;
+typedef uint16_t tf_uint16;
+typedef uint32_t tf_uint32;
+#else
+typedef uint8 tf_uint8;
+typedef uint16 tf_uint16;
+typedef uint32 tf_uint32;
+#endif
+
 /* needed to implement our substitute TIFFIsCODECConfigured */
 #if TIFFLIB_VERSION < 20031121
-static int TIFFIsCODECConfigured(uint16 scheme);
+static int TIFFIsCODECConfigured(tf_uint16 scheme);
 #endif
 
 /*
@@ -47,7 +60,7 @@ Some of these functions are internal.
 
 struct tag_name {
   char *name;
-  uint32 tag;
+  tf_uint32 tag;
 };
 
 static i_img *read_one_rgb_tiled(TIFF *tif, i_img_dim width, i_img_dim height, int allow_incomplete);
@@ -100,7 +113,7 @@ static const int sample_format_value_count =
   sizeof(sample_format_values) / sizeof(*sample_format_values);
 
 static int 
-myTIFFIsCODECConfigured(uint16 scheme);
+myTIFFIsCODECConfigured(tf_uint16 scheme);
 
 typedef struct read_state_tag read_state_t;
 /* the setup function creates the image object, allocates the line buffer */
@@ -127,9 +140,9 @@ struct read_state_tag {
   i_img_dim pixels_read;
   int allow_incomplete;
   void *line_buf;
-  uint32 width, height;
-  uint16 bits_per_sample;
-  uint16 photometric;
+  tf_uint32 width, height;
+  tf_uint16 bits_per_sample;
+  tf_uint16 photometric;
 
   /* the total number of channels (samples per pixel) */
   int samples_per_pixel;
@@ -371,18 +384,18 @@ comp_close(thandle_t h) {
 
 static i_img *read_one_tiff(TIFF *tif, int allow_incomplete) {
   i_img *im;
-  uint32 width, height;
-  uint16 samples_per_pixel;
+  tf_uint32 width, height;
+  tf_uint16 samples_per_pixel;
   int tiled;
   float xres, yres;
-  uint16 resunit;
+  tf_uint16 resunit;
   int gotXres, gotYres;
-  uint16 photometric;
-  uint16 bits_per_sample;
-  uint16 planar_config;
-  uint16 inkset;
-  uint16 compress;
-  uint16 sample_format;
+  tf_uint16 photometric;
+  tf_uint16 bits_per_sample;
+  tf_uint16 planar_config;
+  tf_uint16 inkset;
+  tf_uint16 compress;
+  tf_uint16 sample_format;
   int i;
   read_state_t state;
   read_setup_t setupf = NULL;
@@ -856,12 +869,12 @@ i_readtiff_multi_wiol(io_glue *ig, int *count) {
 
 undef_int
 i_writetiff_low_faxable(TIFF *tif, i_img *im, int fine) {
-  uint32 width, height;
+  tf_uint32 width, height;
   unsigned char *linebuf = NULL;
-  uint32 y;
+  tf_uint32 y;
   int rc;
-  uint32 x;
-  uint32 rowsperstrip;
+  tf_uint32 x;
+  tf_uint32 rowsperstrip;
   float vres = fine ? 196 : 98;
   int luma_chan;
 
@@ -942,7 +955,7 @@ i_writetiff_low_faxable(TIFF *tif, i_img *im, int fine) {
       int bits;
       int bitpos;
       i_sample_t luma[8];
-      uint8 bitval = 128;
+      tf_uint8 bitval = 128;
       linebuf[linebufpos]=0;
       bits = width-x; if(bits>8) bits=8;
       i_gsamp(im, x, x+8, y, luma, &luma_chan, 1);
@@ -962,13 +975,13 @@ i_writetiff_low_faxable(TIFF *tif, i_img *im, int fine) {
   return 1;
 }
 
-static uint16
-find_compression(char const *name, uint16 *compress) {
+static tf_uint16
+find_compression(char const *name, tf_uint16 *compress) {
   int i;
 
   for (i = 0; i < compress_value_count; ++i) {
     if (strcmp(compress_values[i].name, name) == 0) {
-      *compress = (uint16)compress_values[i].tag;
+      *compress = (tf_uint16)compress_values[i].tag;
       return 1;
     }
   }
@@ -977,22 +990,22 @@ find_compression(char const *name, uint16 *compress) {
   return 0;
 }
 
-static uint16
-get_compression(i_img *im, uint16 def_compress) {
+static tf_uint16
+get_compression(i_img *im, tf_uint16 def_compress) {
   int entry;
   int value;
 
   if (i_tags_find(&im->tags, "tiff_compression", 0, &entry)
       && im->tags.tags[entry].data) {
-    uint16 compress;
+    tf_uint16 compress;
     if (find_compression(im->tags.tags[entry].data, &compress)
 	&& myTIFFIsCODECConfigured(compress))
       return compress;
   }
   if (i_tags_get_int(&im->tags, "tiff_compression", 0, &value)) {
-    if ((uint16)value == value
-	&& myTIFFIsCODECConfigured((uint16)value))
-      return (uint16)value;
+    if ((tf_uint16)value == value
+	&& myTIFFIsCODECConfigured((tf_uint16)value))
+      return (tf_uint16)value;
   }
 
   return def_compress;
@@ -1000,7 +1013,7 @@ get_compression(i_img *im, uint16 def_compress) {
 
 int
 i_tiff_has_compression(const char *name) {
-  uint16 compress;
+  tf_uint16 compress;
 
   if (!find_compression(name, &compress))
     return 0;
@@ -1009,8 +1022,8 @@ i_tiff_has_compression(const char *name) {
 }
 
 static int
-set_base_tags(TIFF *tif, i_img *im, uint16 compress, uint16 photometric, 
-	      uint16 bits_per_sample, uint16 samples_per_pixel) {
+set_base_tags(TIFF *tif, i_img *im, tf_uint16 compress, tf_uint16 photometric, 
+	      tf_uint16 bits_per_sample, tf_uint16 samples_per_pixel) {
   double xres, yres;
   int resunit;
   int got_xres, got_yres;
@@ -1080,7 +1093,7 @@ set_base_tags(TIFF *tif, i_img *im, uint16 compress, uint16 photometric,
       i_push_error(0, "write TIFF: setting yresolution tag");
       return 0;
     }
-    if (!TIFFSetField(tif, TIFFTAG_RESOLUTIONUNIT, (uint16)resunit)) {
+    if (!TIFFSetField(tif, TIFFTAG_RESOLUTIONUNIT, (tf_uint16)resunit)) {
       i_push_error(0, "write TIFF: setting resolutionunit tag");
       return 0;
     }
@@ -1091,8 +1104,8 @@ set_base_tags(TIFF *tif, i_img *im, uint16 compress, uint16 photometric,
 
 static int 
 write_one_bilevel(TIFF *tif, i_img *im, int zero_is_white) {
-  uint16 compress = get_compression(im, COMPRESSION_PACKBITS);
-  uint16 photometric;
+  tf_uint16 compress = get_compression(im, COMPRESSION_PACKBITS);
+  tf_uint16 photometric;
   unsigned char *in_row;
   unsigned char *out_row;
   unsigned out_size;
@@ -1166,12 +1179,12 @@ write_one_bilevel(TIFF *tif, i_img *im, int zero_is_white) {
 static int
 set_palette(TIFF *tif, i_img *im, int size) {
   int count;
-  uint16 *colors;
-  uint16 *out[3];
+  tf_uint16 *colors;
+  tf_uint16 *out[3];
   i_color c;
   int i, ch;
   
-  colors = (uint16 *)_TIFFmalloc(sizeof(uint16) * 3 * size);
+  colors = (tf_uint16 *)_TIFFmalloc(sizeof(tf_uint16) * 3 * size);
   out[0] = colors;
   out[1] = colors + size;
   out[2] = colors + 2 * size;
@@ -1198,7 +1211,7 @@ set_palette(TIFF *tif, i_img *im, int size) {
 
 static int
 write_one_paletted8(TIFF *tif, i_img *im) {
-  uint16 compress = get_compression(im, COMPRESSION_PACKBITS);
+  tf_uint16 compress = get_compression(im, COMPRESSION_PACKBITS);
   unsigned char *out_row;
   unsigned out_size;
   i_img_dim y;
@@ -1242,7 +1255,7 @@ write_one_paletted8(TIFF *tif, i_img *im) {
 
 static int
 write_one_paletted4(TIFF *tif, i_img *im) {
-  uint16 compress = get_compression(im, COMPRESSION_PACKBITS);
+  tf_uint16 compress = get_compression(im, COMPRESSION_PACKBITS);
   unsigned char *in_row;
   unsigned char *out_row;
   size_t out_size;
@@ -1290,11 +1303,11 @@ write_one_paletted4(TIFF *tif, i_img *im) {
 }
 
 static int
-set_direct_tags(TIFF *tif, i_img *im, uint16 compress, 
-		uint16 bits_per_sample) {
-  uint16 extras = EXTRASAMPLE_ASSOCALPHA;
-  uint16 extra_count = im->channels == 2 || im->channels == 4;
-  uint16 photometric = im->channels >= 3 ? 
+set_direct_tags(TIFF *tif, i_img *im, tf_uint16 compress, 
+		tf_uint16 bits_per_sample) {
+  tf_uint16 extras = EXTRASAMPLE_ASSOCALPHA;
+  tf_uint16 extra_count = im->channels == 2 || im->channels == 4;
+  tf_uint16 photometric = im->channels >= 3 ? 
     PHOTOMETRIC_RGB : PHOTOMETRIC_MINISBLACK;
 
   if (!set_base_tags(tif, im, compress, photometric, bits_per_sample, 
@@ -1325,10 +1338,10 @@ set_direct_tags(TIFF *tif, i_img *im, uint16 compress,
 
 static int 
 write_one_32(TIFF *tif, i_img *im) {
-  uint16 compress = get_compression(im, COMPRESSION_PACKBITS);
+  tf_uint16 compress = get_compression(im, COMPRESSION_PACKBITS);
   unsigned *in_row;
   size_t out_size;
-  uint32 *out_row;
+  tf_uint32 *out_row;
   i_img_dim y;
   size_t sample_count = im->xsize * im->channels;
   size_t sample_index;
@@ -1344,7 +1357,7 @@ write_one_32(TIFF *tif, i_img *im) {
 
   in_row = mymalloc(sample_count * sizeof(unsigned));
   out_size = TIFFScanlineSize(tif);
-  out_row = (uint32 *)_TIFFmalloc( out_size );
+  out_row = (tf_uint32 *)_TIFFmalloc( out_size );
 
   for (y = 0; y < im->ysize; ++y) {
     if (i_gsamp_bits(im, 0, im->xsize, y, in_row, NULL, im->channels, 32) <= 0) {
@@ -1369,10 +1382,10 @@ write_one_32(TIFF *tif, i_img *im) {
 
 static int 
 write_one_16(TIFF *tif, i_img *im) {
-  uint16 compress = get_compression(im, COMPRESSION_PACKBITS);
+  tf_uint16 compress = get_compression(im, COMPRESSION_PACKBITS);
   unsigned *in_row;
   size_t out_size;
-  uint16 *out_row;
+  tf_uint16 *out_row;
   i_img_dim y;
   size_t sample_count = im->xsize * im->channels;
   size_t sample_index;
@@ -1388,7 +1401,7 @@ write_one_16(TIFF *tif, i_img *im) {
 
   in_row = mymalloc(sample_count * sizeof(unsigned));
   out_size = TIFFScanlineSize(tif);
-  out_row = (uint16 *)_TIFFmalloc( out_size );
+  out_row = (tf_uint16 *)_TIFFmalloc( out_size );
 
   for (y = 0; y < im->ysize; ++y) {
     if (i_gsamp_bits(im, 0, im->xsize, y, in_row, NULL, im->channels, 16) <= 0) {
@@ -1413,7 +1426,7 @@ write_one_16(TIFF *tif, i_img *im) {
 
 static int 
 write_one_8(TIFF *tif, i_img *im) {
-  uint16 compress = get_compression(im, COMPRESSION_PACKBITS);
+  tf_uint16 compress = get_compression(im, COMPRESSION_PACKBITS);
   size_t out_size;
   unsigned char *out_row;
   i_img_dim y;
@@ -1447,8 +1460,8 @@ write_one_8(TIFF *tif, i_img *im) {
 
 static int
 i_writetiff_low(TIFF *tif, i_img *im) {
-  uint32 width, height;
-  uint16 channels;
+  tf_uint32 width, height;
+  tf_uint16 channels;
   int zero_is_white;
 
   width    = im->xsize;
@@ -1854,10 +1867,10 @@ family of functions.
 
 static void
 fallback_rgb_channels(TIFF *tif, i_img_dim width, i_img_dim height, int *channels, int *alpha_chan) {
-  uint16 photometric;
-  uint16 in_channels;
-  uint16 extra_count;
-  uint16 *extras;
+  tf_uint16 photometric;
+  tf_uint16 in_channels;
+  tf_uint16 extra_count;
+  tf_uint16 *extras;
 
   TIFFGetFieldDefaulted(tif, TIFFTAG_SAMPLESPERPIXEL, &in_channels);
   TIFFGetFieldDefaulted(tif, TIFFTAG_PHOTOMETRIC, &photometric);
@@ -1901,8 +1914,8 @@ make_rgb(TIFF *tif, i_img_dim width, i_img_dim height, int *alpha_chan) {
 static i_img *
 read_one_rgb_lines(TIFF *tif, i_img_dim width, i_img_dim height, int allow_incomplete) {
   i_img *im;
-  uint32* raster = NULL;
-  uint32 rowsperstrip, row;
+  tf_uint32* raster = NULL;
+  tf_uint32 rowsperstrip, row;
   i_color *line_buf;
   int alpha_chan;
   int rc;
@@ -1918,7 +1931,7 @@ read_one_rgb_lines(TIFF *tif, i_img_dim width, i_img_dim height, int allow_incom
     rowsperstrip = height;
   }
   
-  raster = (uint32*)_TIFFmalloc(width * rowsperstrip * sizeof (uint32));
+  raster = (tf_uint32*)_TIFFmalloc(width * rowsperstrip * sizeof(tf_uint32));
   if (!raster) {
     i_img_destroy(im);
     i_push_error(0, "No space for raster buffer");
@@ -1928,7 +1941,7 @@ read_one_rgb_lines(TIFF *tif, i_img_dim width, i_img_dim height, int allow_incom
   line_buf = mymalloc(sizeof(i_color) * width);
   
   for( row = 0; row < height; row += rowsperstrip ) {
-    uint32 newrows, i_row;
+    tf_uint32 newrows, i_row;
     
     if (!TIFFReadRGBAStrip(tif, row, raster)) {
       if (allow_incomplete) {
@@ -1948,11 +1961,11 @@ read_one_rgb_lines(TIFF *tif, i_img_dim width, i_img_dim height, int allow_incom
     mm_log((1, "newrows=%d\n", newrows));
     
     for( i_row = 0; i_row < newrows; i_row++ ) { 
-      uint32 x;
+      tf_uint32 x;
       i_color *outp = line_buf;
 
       for(x = 0; x<width; x++) {
-	uint32 temp = raster[x+width*(newrows-i_row-1)];
+	tf_uint32 temp = raster[x+width*(newrows-i_row-1)];
 	outp->rgba.r = TIFFGetR(temp);
 	outp->rgba.g = TIFFGetG(temp);
 	outp->rgba.b = TIFFGetB(temp);
@@ -1994,13 +2007,13 @@ read_one_rgb_lines(TIFF *tif, i_img_dim width, i_img_dim height, int allow_incom
   or failure.
  */
 static int
-myTIFFReadRGBATile(TIFFRGBAImage *img, uint32 col, uint32 row, uint32 * raster)
+myTIFFReadRGBATile(TIFFRGBAImage *img, tf_uint32 col, tf_uint32 row, tf_uint32 * raster)
 
 {
     int 	ok;
-    uint32	tile_xsize, tile_ysize;
-    uint32	read_xsize, read_ysize;
-    uint32	i_row;
+    tf_uint32	tile_xsize, tile_ysize;
+    tf_uint32	read_xsize, read_ysize;
+    tf_uint32	i_row;
 
     /*
      * Verify that our request is legal - on a tile file, and on a
@@ -2056,14 +2069,14 @@ myTIFFReadRGBATile(TIFFRGBAImage *img, uint32 col, uint32 row, uint32 * raster)
     for( i_row = 0; i_row < read_ysize; i_row++ ) {
         memmove( raster + (tile_ysize - i_row - 1) * tile_xsize,
                  raster + (read_ysize - i_row - 1) * read_xsize,
-                 read_xsize * sizeof(uint32) );
+                 read_xsize * sizeof(tf_uint32) );
         _TIFFmemset( raster + (tile_ysize - i_row - 1) * tile_xsize+read_xsize,
-                     0, sizeof(uint32) * (tile_xsize - read_xsize) );
+                     0, sizeof(tf_uint32) * (tile_xsize - read_xsize) );
     }
 
     for( i_row = read_ysize; i_row < tile_ysize; i_row++ ) {
         _TIFFmemset( raster + (tile_ysize - i_row - 1) * tile_xsize,
-                     0, sizeof(uint32) * tile_xsize );
+                     0, sizeof(tf_uint32) * tile_xsize );
     }
 
     return (ok);
@@ -2072,10 +2085,10 @@ myTIFFReadRGBATile(TIFFRGBAImage *img, uint32 col, uint32 row, uint32 * raster)
 static i_img *
 read_one_rgb_tiled(TIFF *tif, i_img_dim width, i_img_dim height, int allow_incomplete) {
   i_img *im;
-  uint32* raster = NULL;
+  tf_uint32* raster = NULL;
   int ok = 1;
-  uint32 row, col;
-  uint32 tile_width, tile_height;
+  tf_uint32 row, col;
+  tf_uint32 tile_width, tile_height;
   unsigned long pixels = 0;
   char 	emsg[1024] = "";
   TIFFRGBAImage img;
@@ -2097,7 +2110,7 @@ read_one_rgb_tiled(TIFF *tif, i_img_dim width, i_img_dim height, int allow_incom
   TIFFGetField(tif, TIFFTAG_TILELENGTH, &tile_height);
   mm_log((1, "i_readtiff_wiol: tile_width=%d, tile_height=%d\n", tile_width, tile_height));
   
-  raster = (uint32*)_TIFFmalloc(sizeof(uint32) * tile_width * tile_height);
+  raster = (tf_uint32*)_TIFFmalloc(sizeof(tf_uint32) * tile_width * tile_height);
   if (!raster) {
     i_img_destroy(im);
     i_push_error(0, "No space for raster buffer");
@@ -2111,15 +2124,15 @@ read_one_rgb_tiled(TIFF *tif, i_img_dim width, i_img_dim height, int allow_incom
       
       /* Read the tile into an RGBA array */
       if (myTIFFReadRGBATile(&img, col, row, raster)) {
-	uint32 i_row, x;
-	uint32 newrows = (row+tile_height > height) ? height-row : tile_height;
-	uint32 newcols = (col+tile_width  > width ) ? width-col  : tile_width;
+	tf_uint32 i_row, x;
+	tf_uint32 newrows = (row+tile_height > height) ? height-row : tile_height;
+	tf_uint32 newcols = (col+tile_width  > width ) ? width-col  : tile_width;
 
 	mm_log((1, "i_readtiff_wiol: tile(%d, %d) newcols=%d newrows=%d\n", col, row, newcols, newrows));
 	for( i_row = 0; i_row < newrows; i_row++ ) {
 	  i_color *outp = line;
 	  for(x = 0; x < newcols; x++) {
-	    uint32 temp = raster[x+tile_width*(tile_height-i_row-1)];
+	    tf_uint32 temp = raster[x+tile_width*(tile_height-i_row-1)];
 	    outp->rgba.r = TIFFGetR(temp);
 	    outp->rgba.g = TIFFGetG(temp);
 	    outp->rgba.b = TIFFGetB(temp);
@@ -2195,7 +2208,7 @@ i_tiff_builddate(void) {
 
 static int 
 setup_paletted(read_state_t *state) {
-  uint16 *maps[3];
+  tf_uint16 *maps[3];
   int i, ch;
   int color_count = 1 << state->bits_per_sample;
 
@@ -2222,10 +2235,10 @@ setup_paletted(read_state_t *state) {
 
 static int 
 tile_contig_getter(read_state_t *state, read_putter_t putter) {
-  uint32 tile_width, tile_height;
-  uint32 this_tile_height, this_tile_width;
-  uint32 rows_left, cols_left;
-  uint32 x, y;
+  tf_uint32 tile_width, tile_height;
+  tf_uint32 this_tile_height, this_tile_width;
+  tf_uint32 rows_left, cols_left;
+  tf_uint32 x, y;
 
   state->raster = _TIFFmalloc(TIFFTileSize(state->tif));
   if (!state->raster) {
@@ -2265,9 +2278,9 @@ tile_contig_getter(read_state_t *state, read_putter_t putter) {
 
 static int 
 strip_contig_getter(read_state_t *state, read_putter_t putter) {
-  uint32 rows_per_strip;
+  tf_uint32 rows_per_strip;
   tsize_t strip_size = TIFFStripSize(state->tif);
-  uint32 y, strip_rows, rows_left;
+  tf_uint32 y, strip_rows, rows_left;
 
   state->raster = _TIFFmalloc(strip_size);
   if (!state->raster) {
@@ -2312,8 +2325,8 @@ paletted_putter8(read_state_t *state, i_img_dim x, i_img_dim y, i_img_dim width,
 
 static int 
 paletted_putter4(read_state_t *state, i_img_dim x, i_img_dim y, i_img_dim width, i_img_dim height, int extras) {
-  uint32 img_line_size = (width + 1) / 2;
-  uint32 skip_line_size = (width + extras + 1) / 2;
+  tf_uint32 img_line_size = (width + 1) / 2;
+  tf_uint32 skip_line_size = (width + extras + 1) / 2;
   unsigned char *p = state->raster;
 
   if (!state->line_buf)
@@ -2333,8 +2346,8 @@ paletted_putter4(read_state_t *state, i_img_dim x, i_img_dim y, i_img_dim width,
 
 static void
 rgb_channels(read_state_t *state, int *out_channels) {
-  uint16 extra_count;
-  uint16 *extras;
+  tf_uint16 extra_count;
+  tf_uint16 *extras;
   
   /* safe defaults */
   *out_channels = 3;
@@ -2379,8 +2392,8 @@ rgb_channels(read_state_t *state, int *out_channels) {
 
 static void
 grey_channels(read_state_t *state, int *out_channels) {
-  uint16 extra_count;
-  uint16 *extras;
+  tf_uint16 extra_count;
+  tf_uint16 *extras;
   
   /* safe defaults */
   *out_channels = 1;
@@ -2453,7 +2466,7 @@ setup_16_grey(read_state_t *state) {
 static int 
 putter_16(read_state_t *state, i_img_dim x, i_img_dim y, i_img_dim width, i_img_dim height, 
 	  int row_extras) {
-  uint16 *p = state->raster;
+  tf_uint16 *p = state->raster;
   int out_chan = state->img->channels;
 
   state->pixels_read += width * height;
@@ -2591,7 +2604,7 @@ setup_32_grey(read_state_t *state) {
 static int 
 putter_32(read_state_t *state, i_img_dim x, i_img_dim y, i_img_dim width, i_img_dim height, 
 	  int row_extras) {
-  uint32 *p = state->raster;
+  tf_uint32 *p = state->raster;
   int out_chan = state->img->channels;
 
   state->pixels_read += width * height;
@@ -2697,8 +2710,8 @@ putter_bilevel(read_state_t *state, i_img_dim x, i_img_dim y, i_img_dim width, i
 
 static void
 cmyk_channels(read_state_t *state, int *out_channels) {
-  uint16 extra_count;
-  uint16 *extras;
+  tf_uint16 extra_count;
+  tf_uint16 *extras;
   
   /* safe defaults */
   *out_channels = 3;
@@ -2817,7 +2830,7 @@ setup_cmyk16(read_state_t *state) {
 static int 
 putter_cmyk16(read_state_t *state, i_img_dim x, i_img_dim y, i_img_dim width, i_img_dim height, 
 	       int row_extras) {
-  uint16 *p = state->raster;
+  tf_uint16 *p = state->raster;
   int out_chan = state->img->channels;
 
   mm_log((4, "putter_cmyk16(%p, %" i_DF ", %" i_DF ", %" i_DF
@@ -2881,7 +2894,7 @@ putter_cmyk16(read_state_t *state, i_img_dim x, i_img_dim y, i_img_dim width, i_
 #if TIFFLIB_VERSION < 20031121
 
 int 
-TIFFIsCODECConfigured(uint16 scheme) {
+TIFFIsCODECConfigured(tf_uint16 scheme) {
   switch (scheme) {
     /* these schemes are all shipped with tifflib */
  case COMPRESSION_NONE:
@@ -2905,7 +2918,7 @@ TIFFIsCODECConfigured(uint16 scheme) {
 #endif
 
 static int 
-myTIFFIsCODECConfigured(uint16 scheme) {
+myTIFFIsCODECConfigured(tf_uint16 scheme) {
 #if TIFFLIB_VERSION < 20040724
   if (scheme == COMPRESSION_LZW)
     return 0;
