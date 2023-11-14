@@ -16,11 +16,6 @@ typedef uint16 tf_uint16;
 typedef uint32 tf_uint32;
 #endif
 
-/* needed to implement our substitute TIFFIsCODECConfigured */
-#if TIFFLIB_VERSION < 20031121
-static int TIFFIsCODECConfigured(tf_uint16 scheme);
-#endif
-
 /*
 =head1 NAME
 
@@ -112,9 +107,6 @@ sample_format_values[] =
 static const int sample_format_value_count = 
   sizeof(sample_format_values) / sizeof(*sample_format_values);
 
-static int 
-myTIFFIsCODECConfigured(tf_uint16 scheme);
-
 typedef struct read_state_tag read_state_t;
 /* the setup function creates the image object, allocates the line buffer */
 typedef int (*read_setup_t)(read_state_t *state);
@@ -204,10 +196,6 @@ fallback_rgb_channels(TIFF *tif, i_img_dim width, i_img_dim height, int *channel
 static const int text_tag_count = 
   sizeof(text_tag_names) / sizeof(*text_tag_names);
 
-#if TIFFLIB_VERSION >= 20051230
-#define USE_EXT_WARN_HANDLER
-#endif
-
 #define TIFFIO_MAGIC 0xC6A340CC
 
 static void error_handler(char const *module, char const *fmt, va_list ap) {
@@ -218,10 +206,8 @@ static void error_handler(char const *module, char const *fmt, va_list ap) {
 typedef struct {
   unsigned magic;
   io_glue *ig;
-#ifdef USE_EXT_WARN_HANDLER
   char *warn_buffer;
   size_t warn_size;
-#endif
 } tiffio_context_t;
 
 static void
@@ -230,8 +216,6 @@ static void
 tiffio_context_final(tiffio_context_t *c);
 
 #define WARN_BUFFER_LIMIT 10000
-
-#ifdef USE_EXT_WARN_HANDLER
 
 static void
 warn_handler_ex(thandle_t h, const char *module, const char *fmt, va_list ap) {
@@ -264,40 +248,6 @@ warn_handler_ex(thandle_t h, const char *module, const char *fmt, va_list ap) {
     strcat(c->warn_buffer, "\n");
   }
 }
-
-#else
-
-static char *warn_buffer = NULL;
-static int warn_buffer_size = 0;
-
-static void warn_handler(char const *module, char const *fmt, va_list ap) {
-  char buf[1000];
-
-  buf[0] = '\0';
-#ifdef IMAGER_VSNPRINTF
-  vsnprintf(buf, sizeof(buf), fmt, ap);
-#else
-  vsprintf(buf, fmt, ap);
-#endif
-  mm_log((1, "tiff warning %s\n", buf));
-
-  if (!warn_buffer || strlen(warn_buffer)+strlen(buf)+2 > warn_buffer_size) {
-    int new_size = warn_buffer_size + strlen(buf) + 2;
-    char *old_buffer = warn_buffer;
-    if (new_size > WARN_BUFFER_LIMIT) {
-      new_size = WARN_BUFFER_LIMIT;
-    }
-    warn_buffer = myrealloc(warn_buffer, new_size);
-    if (!old_buffer) *warn_buffer = '\0';
-    warn_buffer_size = new_size;
-  }
-  if (strlen(warn_buffer)+strlen(buf)+2 <= warn_buffer_size) {
-    strcat(warn_buffer, buf);
-    strcat(warn_buffer, "\n");
-  }
-}
-
-#endif
 
 static i_mutex_t mutex;
 
@@ -639,7 +589,6 @@ static i_img *read_one_tiff(TIFF *tif, int allow_incomplete) {
   }
 
   i_tags_set(&im->tags, "i_format", "tiff", 4);
-#ifdef USE_EXT_WARN_HANDLER
   {
     tiffio_context_t *ctx = TIFFClientdata(tif);
     if (ctx->warn_buffer && ctx->warn_buffer[0]) {
@@ -647,12 +596,6 @@ static i_img *read_one_tiff(TIFF *tif, int allow_incomplete) {
       ctx->warn_buffer[0] = '\0';
     }
   }
-#else
-  if (warn_buffer && *warn_buffer) {
-    i_tags_set(&im->tags, "i_warning", warn_buffer, -1);
-    *warn_buffer = '\0';
-  }
-#endif
 
   for (i = 0; i < compress_value_count; ++i) {
     if (compress_values[i].tag == compress) {
@@ -687,9 +630,7 @@ i_readtiff_wiol(io_glue *ig, int allow_incomplete, int page) {
   TIFF* tif;
   TIFFErrorHandler old_handler;
   TIFFErrorHandler old_warn_handler;
-#ifdef USE_EXT_WARN_HANDLER
   TIFFErrorHandlerExt old_ext_warn_handler;
-#endif
   i_img *im;
   int current_page;
   tiffio_context_t ctx;
@@ -698,14 +639,8 @@ i_readtiff_wiol(io_glue *ig, int allow_incomplete, int page) {
 
   i_clear_error();
   old_handler = TIFFSetErrorHandler(error_handler);
-#ifdef USE_EXT_WARN_HANDLER
   old_warn_handler = TIFFSetWarningHandler(NULL);
   old_ext_warn_handler = TIFFSetWarningHandlerExt(warn_handler_ex);
-#else
-  old_warn_handler = TIFFSetWarningHandler(warn_handler);
-  if (warn_buffer)
-    *warn_buffer = '\0';
-#endif
 
   /* Add code to get the filename info from the iolayer */
   /* Also add code to check for mmapped code */
@@ -729,9 +664,7 @@ i_readtiff_wiol(io_glue *ig, int allow_incomplete, int page) {
     i_push_error(0, "Error opening file");
     TIFFSetErrorHandler(old_handler);
     TIFFSetWarningHandler(old_warn_handler);
-#ifdef USE_EXT_WARN_HANDLER
     TIFFSetWarningHandlerExt(old_ext_warn_handler);
-#endif
     tiffio_context_final(&ctx);
     i_mutex_unlock(mutex);
     return NULL;
@@ -743,9 +676,7 @@ i_readtiff_wiol(io_glue *ig, int allow_incomplete, int page) {
       i_push_errorf(0, "could not switch to page %d", page);
       TIFFSetErrorHandler(old_handler);
       TIFFSetWarningHandler(old_warn_handler);
-#ifdef USE_EXT_WARN_HANDLER
-    TIFFSetWarningHandlerExt(old_ext_warn_handler);
-#endif
+      TIFFSetWarningHandlerExt(old_ext_warn_handler);
       TIFFClose(tif);
       tiffio_context_final(&ctx);
       i_mutex_unlock(mutex);
@@ -758,9 +689,7 @@ i_readtiff_wiol(io_glue *ig, int allow_incomplete, int page) {
   if (TIFFLastDirectory(tif)) mm_log((1, "Last directory of tiff file\n"));
   TIFFSetErrorHandler(old_handler);
   TIFFSetWarningHandler(old_warn_handler);
-#ifdef USE_EXT_WARN_HANDLER
-    TIFFSetWarningHandlerExt(old_ext_warn_handler);
-#endif
+  TIFFSetWarningHandlerExt(old_ext_warn_handler);
   TIFFClose(tif);
   tiffio_context_final(&ctx);
     i_mutex_unlock(mutex);
@@ -780,9 +709,7 @@ i_readtiff_multi_wiol(io_glue *ig, int *count) {
   TIFF* tif;
   TIFFErrorHandler old_handler;
   TIFFErrorHandler old_warn_handler;
-#ifdef USE_EXT_WARN_HANDLER
   TIFFErrorHandlerExt old_ext_warn_handler;
-#endif
   i_img **results = NULL;
   int result_alloc = 0;
   tiffio_context_t ctx;
@@ -791,14 +718,8 @@ i_readtiff_multi_wiol(io_glue *ig, int *count) {
 
   i_clear_error();
   old_handler = TIFFSetErrorHandler(error_handler);
-#ifdef USE_EXT_WARN_HANDLER
   old_warn_handler = TIFFSetWarningHandler(NULL);
   old_ext_warn_handler = TIFFSetWarningHandlerExt(warn_handler_ex);
-#else
-  old_warn_handler = TIFFSetWarningHandler(warn_handler);
-  if (warn_buffer)
-    *warn_buffer = '\0';
-#endif
 
   tiffio_context_init(&ctx, ig);
 
@@ -823,9 +744,7 @@ i_readtiff_multi_wiol(io_glue *ig, int *count) {
     i_push_error(0, "Error opening file");
     TIFFSetErrorHandler(old_handler);
     TIFFSetWarningHandler(old_warn_handler);
-#ifdef USE_EXT_WARN_HANDLER
     TIFFSetWarningHandlerExt(old_ext_warn_handler);
-#endif
     tiffio_context_final(&ctx);
     i_mutex_unlock(mutex);
     return NULL;
@@ -857,9 +776,7 @@ i_readtiff_multi_wiol(io_glue *ig, int *count) {
 
   TIFFSetWarningHandler(old_warn_handler);
   TIFFSetErrorHandler(old_handler);
-#ifdef USE_EXT_WARN_HANDLER
-    TIFFSetWarningHandlerExt(old_ext_warn_handler);
-#endif
+  TIFFSetWarningHandlerExt(old_ext_warn_handler);
   TIFFClose(tif);
   tiffio_context_final(&ctx);
   i_mutex_unlock(mutex);
@@ -999,12 +916,12 @@ get_compression(i_img *im, tf_uint16 def_compress) {
       && im->tags.tags[entry].data) {
     tf_uint16 compress;
     if (find_compression(im->tags.tags[entry].data, &compress)
-	&& myTIFFIsCODECConfigured(compress))
+	&& TIFFIsCODECConfigured(compress))
       return compress;
   }
   if (i_tags_get_int(&im->tags, "tiff_compression", 0, &value)) {
     if ((tf_uint16)value == value
-	&& myTIFFIsCODECConfigured((tf_uint16)value))
+	&& TIFFIsCODECConfigured((tf_uint16)value))
       return (tf_uint16)value;
   }
 
@@ -1018,7 +935,7 @@ i_tiff_has_compression(const char *name) {
   if (!find_compression(name, &compress))
     return 0;
 
-  return myTIFFIsCODECConfigured(compress);
+  return TIFFIsCODECConfigured(compress);
 }
 
 static int
@@ -2882,68 +2799,19 @@ putter_cmyk16(read_state_t *state, i_img_dim x, i_img_dim y, i_img_dim width, i_
   return 1;
 }
 
-/*
-
-  Older versions of tifflib we support don't define this, so define it
-  ourselves.
-
-  If you want this detection to do anything useful, use a newer
-  release of tifflib.
-
- */
-#if TIFFLIB_VERSION < 20031121
-
-int 
-TIFFIsCODECConfigured(tf_uint16 scheme) {
-  switch (scheme) {
-    /* these schemes are all shipped with tifflib */
- case COMPRESSION_NONE:
- case COMPRESSION_PACKBITS:
- case COMPRESSION_CCITTRLE:
- case COMPRESSION_CCITTRLEW:
- case COMPRESSION_CCITTFAX3:
- case COMPRESSION_CCITTFAX4:
-    return 1;
-
-    /* these require external library support */
-  default:
- case COMPRESSION_JPEG:
- case COMPRESSION_LZW:
- case COMPRESSION_DEFLATE:
- case COMPRESSION_ADOBE_DEFLATE:
-    return 0;
-  }
-}
-
-#endif
-
-static int 
-myTIFFIsCODECConfigured(tf_uint16 scheme) {
-#if TIFFLIB_VERSION < 20040724
-  if (scheme == COMPRESSION_LZW)
-    return 0;
-#endif
-
-  return TIFFIsCODECConfigured(scheme);
-}
-
 static void
 tiffio_context_init(tiffio_context_t *c, io_glue *ig) {
   c->magic = TIFFIO_MAGIC;
   c->ig = ig;
-#ifdef USE_EXT_WARN_HANDLER
   c->warn_buffer = NULL;
   c->warn_size = 0;
-#endif
 }
 
 static void
 tiffio_context_final(tiffio_context_t *c) {
   c->magic = TIFFIO_MAGIC;
-#ifdef USE_EXT_WARN_HANDLER
   if (c->warn_buffer)
     myfree(c->warn_buffer);
-#endif
 }
 
 /*
