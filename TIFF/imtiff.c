@@ -1908,94 +1908,6 @@ read_one_rgb_lines(TIFF *tif, i_img_dim width, i_img_dim height, int allow_incom
   return im;
 }
 
-/* adapted from libtiff 
-
-  libtiff's TIFFReadRGBATile succeeds even when asked to read an
-  invalid tile, which means we have no way of knowing whether the data
-  we received from it is valid or not.
-
-  So the caller here has set stoponerror to 1 so that
-  TIFFRGBAImageGet() will fail.
-
-  read_one_rgb_tiled() then takes that into account for i_incomplete
-  or failure.
- */
-static int
-myTIFFReadRGBATile(TIFFRGBAImage *img, tf_uint32 col, tf_uint32 row, tf_uint32 * raster)
-
-{
-    int 	ok;
-    tf_uint32	tile_xsize, tile_ysize;
-    tf_uint32	read_xsize, read_ysize;
-    tf_uint32	i_row;
-
-    /*
-     * Verify that our request is legal - on a tile file, and on a
-     * tile boundary.
-     */
-    
-    TIFFGetFieldDefaulted(img->tif, TIFFTAG_TILEWIDTH, &tile_xsize);
-    TIFFGetFieldDefaulted(img->tif, TIFFTAG_TILELENGTH, &tile_ysize);
-    if( (col % tile_xsize) != 0 || (row % tile_ysize) != 0 )
-    {
-      i_push_errorf(0, "Row/col passed to myTIFFReadRGBATile() must be top"
-		    "left corner of a tile.");
-      return 0;
-    }
-
-    /*
-     * The TIFFRGBAImageGet() function doesn't allow us to get off the
-     * edge of the image, even to fill an otherwise valid tile.  So we
-     * figure out how much we can read, and fix up the tile buffer to
-     * a full tile configuration afterwards.
-     */
-
-    if( row + tile_ysize > img->height )
-        read_ysize = img->height - row;
-    else
-        read_ysize = tile_ysize;
-    
-    if( col + tile_xsize > img->width )
-        read_xsize = img->width - col;
-    else
-        read_xsize = tile_xsize;
-
-    /*
-     * Read the chunk of imagery.
-     */
-    
-    img->row_offset = row;
-    img->col_offset = col;
-
-    ok = TIFFRGBAImageGet(img, raster, read_xsize, read_ysize );
-        
-    /*
-     * If our read was incomplete we will need to fix up the tile by
-     * shifting the data around as if a full tile of data is being returned.
-     *
-     * This is all the more complicated because the image is organized in
-     * bottom to top format. 
-     */
-
-    if( read_xsize == tile_xsize && read_ysize == tile_ysize )
-        return( ok );
-
-    for( i_row = 0; i_row < read_ysize; i_row++ ) {
-        memmove( raster + (tile_ysize - i_row - 1) * tile_xsize,
-                 raster + (read_ysize - i_row - 1) * read_xsize,
-                 read_xsize * sizeof(tf_uint32) );
-        _TIFFmemset( raster + (tile_ysize - i_row - 1) * tile_xsize+read_xsize,
-                     0, sizeof(tf_uint32) * (tile_xsize - read_xsize) );
-    }
-
-    for( i_row = read_ysize; i_row < tile_ysize; i_row++ ) {
-        _TIFFmemset( raster + (tile_ysize - i_row - 1) * tile_xsize,
-                     0, sizeof(tf_uint32) * tile_xsize );
-    }
-
-    return (ok);
-}
-
 static i_img *
 read_one_rgb_tiled(TIFF *tif, i_img_dim width, i_img_dim height, int allow_incomplete) {
   i_img *im;
@@ -2004,8 +1916,6 @@ read_one_rgb_tiled(TIFF *tif, i_img_dim width, i_img_dim height, int allow_incom
   tf_uint32 row, col;
   tf_uint32 tile_width, tile_height;
   unsigned long pixels = 0;
-  char 	emsg[1024] = "";
-  TIFFRGBAImage img;
   i_color *line;
   int alpha_chan;
   
@@ -2013,13 +1923,6 @@ read_one_rgb_tiled(TIFF *tif, i_img_dim width, i_img_dim height, int allow_incom
   if (!im)
     return NULL;
   
-  if (!TIFFRGBAImageOK(tif, emsg) 
-      || !TIFFRGBAImageBegin(&img, tif, 1, emsg)) {
-    i_push_error(0, emsg);
-    i_img_destroy(im);
-    return( 0 );
-  }
-
   TIFFGetField(tif, TIFFTAG_TILEWIDTH, &tile_width);
   TIFFGetField(tif, TIFFTAG_TILELENGTH, &tile_height);
   mm_log((1, "i_readtiff_wiol: tile_width=%d, tile_height=%d\n", tile_width, tile_height));
@@ -2028,7 +1931,6 @@ read_one_rgb_tiled(TIFF *tif, i_img_dim width, i_img_dim height, int allow_incom
   if (!raster) {
     i_img_destroy(im);
     i_push_error(0, "No space for raster buffer");
-    TIFFRGBAImageEnd(&img);
     return NULL;
   }
   line = mymalloc(tile_width * sizeof(i_color));
@@ -2037,7 +1939,7 @@ read_one_rgb_tiled(TIFF *tif, i_img_dim width, i_img_dim height, int allow_incom
     for( col = 0; col < width; col += tile_width ) {
       
       /* Read the tile into an RGBA array */
-      if (myTIFFReadRGBATile(&img, col, row, raster)) {
+      if (TIFFReadRGBATileExt(tif, col, row, raster, 1)) {
 	tf_uint32 i_row, x;
 	tf_uint32 newrows = (row+tile_height > height) ? height-row : tile_height;
 	tf_uint32 newcols = (col+tile_width  > width ) ? width-col  : tile_width;
@@ -2094,7 +1996,6 @@ read_one_rgb_tiled(TIFF *tif, i_img_dim width, i_img_dim height, int allow_incom
   }
 
   myfree(line);
-  TIFFRGBAImageEnd(&img);
   _TIFFfree(raster);
   
   return im;
@@ -2102,7 +2003,6 @@ read_one_rgb_tiled(TIFF *tif, i_img_dim width, i_img_dim height, int allow_incom
  error:
   myfree(line);
   _TIFFfree(raster);
-  TIFFRGBAImageEnd(&img);
   i_img_destroy(im);
   return NULL;
 }
