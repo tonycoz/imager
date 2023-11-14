@@ -405,9 +405,10 @@ makemap_addi(i_quantize *quant, i_img **imgs, int count) {
       } else {
         /* let's try something else */
         clr[i].used = 0;
-        clr[i].r=rand();
-        clr[i].g=rand();
-        clr[i].b=rand();
+        /* the " & 0xFF" prevents "uncontrolled value" warnings from CodeQL */
+        clr[i].r = rand() & 0xFF;
+        clr[i].g = rand() & 0xFF;
+        clr[i].b = rand() & 0xFF;
       }
       
       clr[i].dr=0;
