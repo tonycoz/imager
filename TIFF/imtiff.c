@@ -1,5 +1,6 @@
 #include <tiffio.h>
 #include <string.h>
+#include <stdio.h>
 #include "imtiff.h"
 #include "imext.h"
 
@@ -226,11 +227,7 @@ warn_handler_ex(thandle_t h, const char *module, const char *fmt, va_list ap) {
     return;
 
   buf[0] = '\0';
-#ifdef IMAGER_VSNPRINTF
   vsnprintf(buf, sizeof(buf), fmt, ap);
-#else
-  vsprintf(buf, fmt, ap);
-#endif
   mm_log((1, "tiff warning %s\n", buf));
 
   if (!c->warn_buffer || strlen(c->warn_buffer)+strlen(buf)+2 > c->warn_size) {
