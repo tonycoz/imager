@@ -1,3 +1,9 @@
+Imager::Font::T1 1.031
+======================
+
+ - forgot to update Changes for the last Imager release, no
+   code changes beyond the $VERSION bump
+
 Imager::Font::T1 1.030
 ======================
 
