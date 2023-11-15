@@ -1,5 +1,6 @@
 #include <tiffio.h>
 #include <string.h>
+#include <stdio.h>
 #include "imtiff.h"
 #include "imext.h"
 
@@ -14,11 +15,6 @@ typedef uint32_t tf_uint32;
 typedef uint8 tf_uint8;
 typedef uint16 tf_uint16;
 typedef uint32 tf_uint32;
-#endif
-
-/* needed to implement our substitute TIFFIsCODECConfigured */
-#if TIFFLIB_VERSION < 20031121
-static int TIFFIsCODECConfigured(tf_uint16 scheme);
 #endif
 
 /*
@@ -49,24 +45,21 @@ Some of these functions are internal.
 =cut
 */
 
-#define byteswap_macro(x) \
-     ((((x) & 0xff000000) >> 24) | (((x) & 0x00ff0000) >>  8) |     \
-      (((x) & 0x0000ff00) <<  8) | (((x) & 0x000000ff) << 24))
-
 #define CLAMP8(x) ((x) < 0 ? 0 : (x) > 255 ? 255 : (x))
 #define CLAMP16(x) ((x) < 0 ? 0 : (x) > 65535 ? 65535 : (x))
 
 #define Sample16To8(num) ((num) / 257)
 
 struct tag_name {
-  char *name;
+  const char *name;
   tf_uint32 tag;
 };
 
 static i_img *read_one_rgb_tiled(TIFF *tif, i_img_dim width, i_img_dim height, int allow_incomplete);
 static i_img *read_one_rgb_lines(TIFF *tif, i_img_dim width, i_img_dim height, int allow_incomplete);
 
-static struct tag_name text_tag_names[] =
+static const struct tag_name
+text_tag_names[] =
 {
   { "tiff_documentname", TIFFTAG_DOCUMENTNAME, },
   { "tiff_imagedescription", TIFFTAG_IMAGEDESCRIPTION, },
@@ -79,7 +72,7 @@ static struct tag_name text_tag_names[] =
   { "tiff_hostcomputer", TIFFTAG_HOSTCOMPUTER, },
 };
 
-static struct tag_name 
+static const struct tag_name
 compress_values[] =
   {
     { "none",     COMPRESSION_NONE },
@@ -100,7 +93,7 @@ compress_values[] =
 static const int compress_value_count = 
   sizeof(compress_values) / sizeof(*compress_values);
 
-static struct tag_name
+static const struct tag_name
 sample_format_values[] =
   {
     { "uint",      SAMPLEFORMAT_UINT },
@@ -111,9 +104,6 @@ sample_format_values[] =
 
 static const int sample_format_value_count = 
   sizeof(sample_format_values) / sizeof(*sample_format_values);
-
-static int 
-myTIFFIsCODECConfigured(tf_uint16 scheme);
 
 typedef struct read_state_tag read_state_t;
 /* the setup function creates the image object, allocates the line buffer */
@@ -199,18 +189,15 @@ grey_channels(read_state_t *state, int *out_channels);
 static void
 cmyk_channels(read_state_t *state, int *out_channels);
 static void
-fallback_rgb_channels(TIFF *tif, i_img_dim width, i_img_dim height, int *channels, int *alpha_chan);
+fallback_rgb_channels(TIFF *tif, int *channels, int *alpha_chan);
 
 static const int text_tag_count = 
   sizeof(text_tag_names) / sizeof(*text_tag_names);
 
-#if TIFFLIB_VERSION >= 20051230
-#define USE_EXT_WARN_HANDLER
-#endif
-
 #define TIFFIO_MAGIC 0xC6A340CC
 
 static void error_handler(char const *module, char const *fmt, va_list ap) {
+  (void)module;
   mm_log((1, "tiff error fmt %s\n", fmt));
   i_push_errorvf(0, fmt, ap);
 }
@@ -218,10 +205,8 @@ static void error_handler(char const *module, char const *fmt, va_list ap) {
 typedef struct {
   unsigned magic;
   io_glue *ig;
-#ifdef USE_EXT_WARN_HANDLER
   char *warn_buffer;
   size_t warn_size;
-#endif
 } tiffio_context_t;
 
 static void
@@ -231,10 +216,10 @@ tiffio_context_final(tiffio_context_t *c);
 
 #define WARN_BUFFER_LIMIT 10000
 
-#ifdef USE_EXT_WARN_HANDLER
-
 static void
 warn_handler_ex(thandle_t h, const char *module, const char *fmt, va_list ap) {
+  (void)module;
+
   tiffio_context_t *c = (tiffio_context_t *)h;
   char buf[200];
 
@@ -242,11 +227,7 @@ warn_handler_ex(thandle_t h, const char *module, const char *fmt, va_list ap) {
     return;
 
   buf[0] = '\0';
-#ifdef IMAGER_VSNPRINTF
   vsnprintf(buf, sizeof(buf), fmt, ap);
-#else
-  vsprintf(buf, fmt, ap);
-#endif
   mm_log((1, "tiff warning %s\n", buf));
 
   if (!c->warn_buffer || strlen(c->warn_buffer)+strlen(buf)+2 > c->warn_size) {
@@ -265,40 +246,6 @@ warn_handler_ex(thandle_t h, const char *module, const char *fmt, va_list ap) {
   }
 }
 
-#else
-
-static char *warn_buffer = NULL;
-static int warn_buffer_size = 0;
-
-static void warn_handler(char const *module, char const *fmt, va_list ap) {
-  char buf[1000];
-
-  buf[0] = '\0';
-#ifdef IMAGER_VSNPRINTF
-  vsnprintf(buf, sizeof(buf), fmt, ap);
-#else
-  vsprintf(buf, fmt, ap);
-#endif
-  mm_log((1, "tiff warning %s\n", buf));
-
-  if (!warn_buffer || strlen(warn_buffer)+strlen(buf)+2 > warn_buffer_size) {
-    int new_size = warn_buffer_size + strlen(buf) + 2;
-    char *old_buffer = warn_buffer;
-    if (new_size > WARN_BUFFER_LIMIT) {
-      new_size = WARN_BUFFER_LIMIT;
-    }
-    warn_buffer = myrealloc(warn_buffer, new_size);
-    if (!old_buffer) *warn_buffer = '\0';
-    warn_buffer_size = new_size;
-  }
-  if (strlen(warn_buffer)+strlen(buf)+2 <= warn_buffer_size) {
-    strcat(warn_buffer, buf);
-    strcat(warn_buffer, "\n");
-  }
-}
-
-#endif
-
 static i_mutex_t mutex;
 
 void
@@ -313,6 +260,7 @@ pack_4bit_to(unsigned char *dest, const unsigned char *src, i_img_dim count);
 
 
 static toff_t sizeproc(thandle_t x) {
+  (void)x;
 	return 0;
 }
 
@@ -349,6 +297,9 @@ This shouldn't ever be called but newer tifflibs want it anyway.
 static 
 int
 comp_mmap(thandle_t h, tdata_t*p, toff_t*off) {
+  (void)h;
+  (void)p;
+  (void)off;
   return -1;
 }
 
@@ -364,6 +315,9 @@ This shouldn't ever be called but newer tifflibs want it anyway.
 
 static void
 comp_munmap(thandle_t h, tdata_t p, toff_t off) {
+  (void)h;
+  (void)p;
+  (void)off;
   /* do nothing */
 }
 
@@ -535,7 +489,7 @@ static i_img *read_one_tiff(TIFF *tif, int allow_incomplete) {
   }
   else {
     int alpha;
-    fallback_rgb_channels(tif, width, height, &channels, &alpha);
+    fallback_rgb_channels(tif, &channels, &alpha);
     sample_size = 1;
   }
 
@@ -639,7 +593,6 @@ static i_img *read_one_tiff(TIFF *tif, int allow_incomplete) {
   }
 
   i_tags_set(&im->tags, "i_format", "tiff", 4);
-#ifdef USE_EXT_WARN_HANDLER
   {
     tiffio_context_t *ctx = TIFFClientdata(tif);
     if (ctx->warn_buffer && ctx->warn_buffer[0]) {
@@ -647,12 +600,6 @@ static i_img *read_one_tiff(TIFF *tif, int allow_incomplete) {
       ctx->warn_buffer[0] = '\0';
     }
   }
-#else
-  if (warn_buffer && *warn_buffer) {
-    i_tags_set(&im->tags, "i_warning", warn_buffer, -1);
-    *warn_buffer = '\0';
-  }
-#endif
 
   for (i = 0; i < compress_value_count; ++i) {
     if (compress_values[i].tag == compress) {
@@ -687,9 +634,7 @@ i_readtiff_wiol(io_glue *ig, int allow_incomplete, int page) {
   TIFF* tif;
   TIFFErrorHandler old_handler;
   TIFFErrorHandler old_warn_handler;
-#ifdef USE_EXT_WARN_HANDLER
   TIFFErrorHandlerExt old_ext_warn_handler;
-#endif
   i_img *im;
   int current_page;
   tiffio_context_t ctx;
@@ -698,14 +643,8 @@ i_readtiff_wiol(io_glue *ig, int allow_incomplete, int page) {
 
   i_clear_error();
   old_handler = TIFFSetErrorHandler(error_handler);
-#ifdef USE_EXT_WARN_HANDLER
   old_warn_handler = TIFFSetWarningHandler(NULL);
   old_ext_warn_handler = TIFFSetWarningHandlerExt(warn_handler_ex);
-#else
-  old_warn_handler = TIFFSetWarningHandler(warn_handler);
-  if (warn_buffer)
-    *warn_buffer = '\0';
-#endif
 
   /* Add code to get the filename info from the iolayer */
   /* Also add code to check for mmapped code */
@@ -729,9 +668,7 @@ i_readtiff_wiol(io_glue *ig, int allow_incomplete, int page) {
     i_push_error(0, "Error opening file");
     TIFFSetErrorHandler(old_handler);
     TIFFSetWarningHandler(old_warn_handler);
-#ifdef USE_EXT_WARN_HANDLER
     TIFFSetWarningHandlerExt(old_ext_warn_handler);
-#endif
     tiffio_context_final(&ctx);
     i_mutex_unlock(mutex);
     return NULL;
@@ -743,9 +680,7 @@ i_readtiff_wiol(io_glue *ig, int allow_incomplete, int page) {
       i_push_errorf(0, "could not switch to page %d", page);
       TIFFSetErrorHandler(old_handler);
       TIFFSetWarningHandler(old_warn_handler);
-#ifdef USE_EXT_WARN_HANDLER
-    TIFFSetWarningHandlerExt(old_ext_warn_handler);
-#endif
+      TIFFSetWarningHandlerExt(old_ext_warn_handler);
       TIFFClose(tif);
       tiffio_context_final(&ctx);
       i_mutex_unlock(mutex);
@@ -758,9 +693,7 @@ i_readtiff_wiol(io_glue *ig, int allow_incomplete, int page) {
   if (TIFFLastDirectory(tif)) mm_log((1, "Last directory of tiff file\n"));
   TIFFSetErrorHandler(old_handler);
   TIFFSetWarningHandler(old_warn_handler);
-#ifdef USE_EXT_WARN_HANDLER
-    TIFFSetWarningHandlerExt(old_ext_warn_handler);
-#endif
+  TIFFSetWarningHandlerExt(old_ext_warn_handler);
   TIFFClose(tif);
   tiffio_context_final(&ctx);
     i_mutex_unlock(mutex);
@@ -780,9 +713,7 @@ i_readtiff_multi_wiol(io_glue *ig, int *count) {
   TIFF* tif;
   TIFFErrorHandler old_handler;
   TIFFErrorHandler old_warn_handler;
-#ifdef USE_EXT_WARN_HANDLER
   TIFFErrorHandlerExt old_ext_warn_handler;
-#endif
   i_img **results = NULL;
   int result_alloc = 0;
   tiffio_context_t ctx;
@@ -791,14 +722,8 @@ i_readtiff_multi_wiol(io_glue *ig, int *count) {
 
   i_clear_error();
   old_handler = TIFFSetErrorHandler(error_handler);
-#ifdef USE_EXT_WARN_HANDLER
   old_warn_handler = TIFFSetWarningHandler(NULL);
   old_ext_warn_handler = TIFFSetWarningHandlerExt(warn_handler_ex);
-#else
-  old_warn_handler = TIFFSetWarningHandler(warn_handler);
-  if (warn_buffer)
-    *warn_buffer = '\0';
-#endif
 
   tiffio_context_init(&ctx, ig);
 
@@ -823,9 +748,7 @@ i_readtiff_multi_wiol(io_glue *ig, int *count) {
     i_push_error(0, "Error opening file");
     TIFFSetErrorHandler(old_handler);
     TIFFSetWarningHandler(old_warn_handler);
-#ifdef USE_EXT_WARN_HANDLER
     TIFFSetWarningHandlerExt(old_ext_warn_handler);
-#endif
     tiffio_context_final(&ctx);
     i_mutex_unlock(mutex);
     return NULL;
@@ -857,9 +780,7 @@ i_readtiff_multi_wiol(io_glue *ig, int *count) {
 
   TIFFSetWarningHandler(old_warn_handler);
   TIFFSetErrorHandler(old_handler);
-#ifdef USE_EXT_WARN_HANDLER
-    TIFFSetWarningHandlerExt(old_ext_warn_handler);
-#endif
+  TIFFSetWarningHandlerExt(old_ext_warn_handler);
   TIFFClose(tif);
   tiffio_context_final(&ctx);
   i_mutex_unlock(mutex);
@@ -999,12 +920,12 @@ get_compression(i_img *im, tf_uint16 def_compress) {
       && im->tags.tags[entry].data) {
     tf_uint16 compress;
     if (find_compression(im->tags.tags[entry].data, &compress)
-	&& myTIFFIsCODECConfigured(compress))
+	&& TIFFIsCODECConfigured(compress))
       return compress;
   }
   if (i_tags_get_int(&im->tags, "tiff_compression", 0, &value)) {
     if ((tf_uint16)value == value
-	&& myTIFFIsCODECConfigured((tf_uint16)value))
+	&& TIFFIsCODECConfigured((tf_uint16)value))
       return (tf_uint16)value;
   }
 
@@ -1018,7 +939,7 @@ i_tiff_has_compression(const char *name) {
   if (!find_compression(name, &compress))
     return 0;
 
-  return myTIFFIsCODECConfigured(compress);
+  return TIFFIsCODECConfigured(compress);
 }
 
 static int
@@ -1866,7 +1787,7 @@ family of functions.
 */
 
 static void
-fallback_rgb_channels(TIFF *tif, i_img_dim width, i_img_dim height, int *channels, int *alpha_chan) {
+fallback_rgb_channels(TIFF *tif, int *channels, int *alpha_chan) {
   tf_uint16 photometric;
   tf_uint16 in_channels;
   tf_uint16 extra_count;
@@ -1906,7 +1827,7 @@ static i_img *
 make_rgb(TIFF *tif, i_img_dim width, i_img_dim height, int *alpha_chan) {
   int channels = 0;
 
-  fallback_rgb_channels(tif, width, height, &channels, alpha_chan);
+  fallback_rgb_channels(tif, &channels, alpha_chan);
 
   return i_img_8_new(width, height, channels);
 }
@@ -1925,9 +1846,10 @@ read_one_rgb_lines(TIFF *tif, i_img_dim width, i_img_dim height, int allow_incom
     return NULL;
 
   rc = TIFFGetField(tif, TIFFTAG_ROWSPERSTRIP, &rowsperstrip);
-  mm_log((1, "i_readtiff_wiol: rowsperstrip=%d rc = %d\n", rowsperstrip, rc));
+  mm_log((1, "i_readtiff_wiol: rowsperstrip=%u rc = %d\n",
+          (unsigned)rowsperstrip, rc));
   
-  if (rc != 1 || rowsperstrip==-1) {
+  if (rc != 1 || rowsperstrip == (tf_uint32)-1) {
     rowsperstrip = height;
   }
   
@@ -1994,94 +1916,6 @@ read_one_rgb_lines(TIFF *tif, i_img_dim width, i_img_dim height, int allow_incom
   return im;
 }
 
-/* adapted from libtiff 
-
-  libtiff's TIFFReadRGBATile succeeds even when asked to read an
-  invalid tile, which means we have no way of knowing whether the data
-  we received from it is valid or not.
-
-  So the caller here has set stoponerror to 1 so that
-  TIFFRGBAImageGet() will fail.
-
-  read_one_rgb_tiled() then takes that into account for i_incomplete
-  or failure.
- */
-static int
-myTIFFReadRGBATile(TIFFRGBAImage *img, tf_uint32 col, tf_uint32 row, tf_uint32 * raster)
-
-{
-    int 	ok;
-    tf_uint32	tile_xsize, tile_ysize;
-    tf_uint32	read_xsize, read_ysize;
-    tf_uint32	i_row;
-
-    /*
-     * Verify that our request is legal - on a tile file, and on a
-     * tile boundary.
-     */
-    
-    TIFFGetFieldDefaulted(img->tif, TIFFTAG_TILEWIDTH, &tile_xsize);
-    TIFFGetFieldDefaulted(img->tif, TIFFTAG_TILELENGTH, &tile_ysize);
-    if( (col % tile_xsize) != 0 || (row % tile_ysize) != 0 )
-    {
-      i_push_errorf(0, "Row/col passed to myTIFFReadRGBATile() must be top"
-		    "left corner of a tile.");
-      return 0;
-    }
-
-    /*
-     * The TIFFRGBAImageGet() function doesn't allow us to get off the
-     * edge of the image, even to fill an otherwise valid tile.  So we
-     * figure out how much we can read, and fix up the tile buffer to
-     * a full tile configuration afterwards.
-     */
-
-    if( row + tile_ysize > img->height )
-        read_ysize = img->height - row;
-    else
-        read_ysize = tile_ysize;
-    
-    if( col + tile_xsize > img->width )
-        read_xsize = img->width - col;
-    else
-        read_xsize = tile_xsize;
-
-    /*
-     * Read the chunk of imagery.
-     */
-    
-    img->row_offset = row;
-    img->col_offset = col;
-
-    ok = TIFFRGBAImageGet(img, raster, read_xsize, read_ysize );
-        
-    /*
-     * If our read was incomplete we will need to fix up the tile by
-     * shifting the data around as if a full tile of data is being returned.
-     *
-     * This is all the more complicated because the image is organized in
-     * bottom to top format. 
-     */
-
-    if( read_xsize == tile_xsize && read_ysize == tile_ysize )
-        return( ok );
-
-    for( i_row = 0; i_row < read_ysize; i_row++ ) {
-        memmove( raster + (tile_ysize - i_row - 1) * tile_xsize,
-                 raster + (read_ysize - i_row - 1) * read_xsize,
-                 read_xsize * sizeof(tf_uint32) );
-        _TIFFmemset( raster + (tile_ysize - i_row - 1) * tile_xsize+read_xsize,
-                     0, sizeof(tf_uint32) * (tile_xsize - read_xsize) );
-    }
-
-    for( i_row = read_ysize; i_row < tile_ysize; i_row++ ) {
-        _TIFFmemset( raster + (tile_ysize - i_row - 1) * tile_xsize,
-                     0, sizeof(tf_uint32) * tile_xsize );
-    }
-
-    return (ok);
-}
-
 static i_img *
 read_one_rgb_tiled(TIFF *tif, i_img_dim width, i_img_dim height, int allow_incomplete) {
   i_img *im;
@@ -2090,8 +1924,6 @@ read_one_rgb_tiled(TIFF *tif, i_img_dim width, i_img_dim height, int allow_incom
   tf_uint32 row, col;
   tf_uint32 tile_width, tile_height;
   unsigned long pixels = 0;
-  char 	emsg[1024] = "";
-  TIFFRGBAImage img;
   i_color *line;
   int alpha_chan;
   
@@ -2099,13 +1931,6 @@ read_one_rgb_tiled(TIFF *tif, i_img_dim width, i_img_dim height, int allow_incom
   if (!im)
     return NULL;
   
-  if (!TIFFRGBAImageOK(tif, emsg) 
-      || !TIFFRGBAImageBegin(&img, tif, 1, emsg)) {
-    i_push_error(0, emsg);
-    i_img_destroy(im);
-    return( 0 );
-  }
-
   TIFFGetField(tif, TIFFTAG_TILEWIDTH, &tile_width);
   TIFFGetField(tif, TIFFTAG_TILELENGTH, &tile_height);
   mm_log((1, "i_readtiff_wiol: tile_width=%d, tile_height=%d\n", tile_width, tile_height));
@@ -2114,7 +1939,6 @@ read_one_rgb_tiled(TIFF *tif, i_img_dim width, i_img_dim height, int allow_incom
   if (!raster) {
     i_img_destroy(im);
     i_push_error(0, "No space for raster buffer");
-    TIFFRGBAImageEnd(&img);
     return NULL;
   }
   line = mymalloc(tile_width * sizeof(i_color));
@@ -2123,7 +1947,7 @@ read_one_rgb_tiled(TIFF *tif, i_img_dim width, i_img_dim height, int allow_incom
     for( col = 0; col < width; col += tile_width ) {
       
       /* Read the tile into an RGBA array */
-      if (myTIFFReadRGBATile(&img, col, row, raster)) {
+      if (TIFFReadRGBATileExt(tif, col, row, raster, 1)) {
 	tf_uint32 i_row, x;
 	tf_uint32 newrows = (row+tile_height > height) ? height-row : tile_height;
 	tf_uint32 newcols = (col+tile_width  > width ) ? width-col  : tile_width;
@@ -2180,7 +2004,6 @@ read_one_rgb_tiled(TIFF *tif, i_img_dim width, i_img_dim height, int allow_incom
   }
 
   myfree(line);
-  TIFFRGBAImageEnd(&img);
   _TIFFfree(raster);
   
   return im;
@@ -2188,7 +2011,6 @@ read_one_rgb_tiled(TIFF *tif, i_img_dim width, i_img_dim height, int allow_incom
  error:
   myfree(line);
   _TIFFfree(raster);
-  TIFFRGBAImageEnd(&img);
   i_img_destroy(im);
   return NULL;
 }
@@ -2882,68 +2704,19 @@ putter_cmyk16(read_state_t *state, i_img_dim x, i_img_dim y, i_img_dim width, i_
   return 1;
 }
 
-/*
-
-  Older versions of tifflib we support don't define this, so define it
-  ourselves.
-
-  If you want this detection to do anything useful, use a newer
-  release of tifflib.
-
- */
-#if TIFFLIB_VERSION < 20031121
-
-int 
-TIFFIsCODECConfigured(tf_uint16 scheme) {
-  switch (scheme) {
-    /* these schemes are all shipped with tifflib */
- case COMPRESSION_NONE:
- case COMPRESSION_PACKBITS:
- case COMPRESSION_CCITTRLE:
- case COMPRESSION_CCITTRLEW:
- case COMPRESSION_CCITTFAX3:
- case COMPRESSION_CCITTFAX4:
-    return 1;
-
-    /* these require external library support */
-  default:
- case COMPRESSION_JPEG:
- case COMPRESSION_LZW:
- case COMPRESSION_DEFLATE:
- case COMPRESSION_ADOBE_DEFLATE:
-    return 0;
-  }
-}
-
-#endif
-
-static int 
-myTIFFIsCODECConfigured(tf_uint16 scheme) {
-#if TIFFLIB_VERSION < 20040724
-  if (scheme == COMPRESSION_LZW)
-    return 0;
-#endif
-
-  return TIFFIsCODECConfigured(scheme);
-}
-
 static void
 tiffio_context_init(tiffio_context_t *c, io_glue *ig) {
   c->magic = TIFFIO_MAGIC;
   c->ig = ig;
-#ifdef USE_EXT_WARN_HANDLER
   c->warn_buffer = NULL;
   c->warn_size = 0;
-#endif
 }
 
 static void
 tiffio_context_final(tiffio_context_t *c) {
   c->magic = TIFFIO_MAGIC;
-#ifdef USE_EXT_WARN_HANDLER
   if (c->warn_buffer)
     myfree(c->warn_buffer);
-#endif
 }
 
 /*
