@@ -1835,9 +1835,10 @@ read_one_rgb_lines(TIFF *tif, i_img_dim width, i_img_dim height, int allow_incom
     return NULL;
 
   rc = TIFFGetField(tif, TIFFTAG_ROWSPERSTRIP, &rowsperstrip);
-  mm_log((1, "i_readtiff_wiol: rowsperstrip=%d rc = %d\n", rowsperstrip, rc));
+  mm_log((1, "i_readtiff_wiol: rowsperstrip=%u rc = %d\n",
+          (unsigned)rowsperstrip, rc));
   
-  if (rc != 1 || rowsperstrip==-1) {
+  if (rc != 1 || rowsperstrip == (tf_uint32)-1) {
     rowsperstrip = height;
   }
   
