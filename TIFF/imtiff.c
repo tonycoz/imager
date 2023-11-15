@@ -45,10 +45,6 @@ Some of these functions are internal.
 =cut
 */
 
-#define byteswap_macro(x) \
-     ((((x) & 0xff000000) >> 24) | (((x) & 0x00ff0000) >>  8) |     \
-      (((x) & 0x0000ff00) <<  8) | (((x) & 0x000000ff) << 24))
-
 #define CLAMP8(x) ((x) < 0 ? 0 : (x) > 255 ? 255 : (x))
 #define CLAMP16(x) ((x) < 0 ? 0 : (x) > 65535 ? 65535 : (x))
 
