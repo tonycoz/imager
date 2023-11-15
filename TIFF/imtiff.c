@@ -188,7 +188,7 @@ grey_channels(read_state_t *state, int *out_channels);
 static void
 cmyk_channels(read_state_t *state, int *out_channels);
 static void
-fallback_rgb_channels(TIFF *tif, i_img_dim width, i_img_dim height, int *channels, int *alpha_chan);
+fallback_rgb_channels(TIFF *tif, int *channels, int *alpha_chan);
 
 static const int text_tag_count = 
   sizeof(text_tag_names) / sizeof(*text_tag_names);
@@ -478,7 +478,7 @@ static i_img *read_one_tiff(TIFF *tif, int allow_incomplete) {
   }
   else {
     int alpha;
-    fallback_rgb_channels(tif, width, height, &channels, &alpha);
+    fallback_rgb_channels(tif, &channels, &alpha);
     sample_size = 1;
   }
 
@@ -1776,7 +1776,7 @@ family of functions.
 */
 
 static void
-fallback_rgb_channels(TIFF *tif, i_img_dim width, i_img_dim height, int *channels, int *alpha_chan) {
+fallback_rgb_channels(TIFF *tif, int *channels, int *alpha_chan) {
   tf_uint16 photometric;
   tf_uint16 in_channels;
   tf_uint16 extra_count;
@@ -1816,7 +1816,7 @@ static i_img *
 make_rgb(TIFF *tif, i_img_dim width, i_img_dim height, int *alpha_chan) {
   int channels = 0;
 
-  fallback_rgb_channels(tif, width, height, &channels, alpha_chan);
+  fallback_rgb_channels(tif, &channels, alpha_chan);
 
   return i_img_8_new(width, height, channels);
 }
