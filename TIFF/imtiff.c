@@ -196,6 +196,7 @@ static const int text_tag_count =
 #define TIFFIO_MAGIC 0xC6A340CC
 
 static void error_handler(char const *module, char const *fmt, va_list ap) {
+  (void)module;
   mm_log((1, "tiff error fmt %s\n", fmt));
   i_push_errorvf(0, fmt, ap);
 }
@@ -216,6 +217,8 @@ tiffio_context_final(tiffio_context_t *c);
 
 static void
 warn_handler_ex(thandle_t h, const char *module, const char *fmt, va_list ap) {
+  (void)module;
+
   tiffio_context_t *c = (tiffio_context_t *)h;
   char buf[200];
 
@@ -256,6 +259,7 @@ pack_4bit_to(unsigned char *dest, const unsigned char *src, i_img_dim count);
 
 
 static toff_t sizeproc(thandle_t x) {
+  (void)x;
 	return 0;
 }
 
@@ -292,6 +296,9 @@ This shouldn't ever be called but newer tifflibs want it anyway.
 static 
 int
 comp_mmap(thandle_t h, tdata_t*p, toff_t*off) {
+  (void)h;
+  (void)p;
+  (void)off;
   return -1;
 }
 
@@ -307,6 +314,9 @@ This shouldn't ever be called but newer tifflibs want it anyway.
 
 static void
 comp_munmap(thandle_t h, tdata_t p, toff_t off) {
+  (void)h;
+  (void)p;
+  (void)off;
   /* do nothing */
 }
 
