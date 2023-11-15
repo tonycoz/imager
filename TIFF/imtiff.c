@@ -51,14 +51,15 @@ Some of these functions are internal.
 #define Sample16To8(num) ((num) / 257)
 
 struct tag_name {
-  char *name;
+  const char *name;
   tf_uint32 tag;
 };
 
 static i_img *read_one_rgb_tiled(TIFF *tif, i_img_dim width, i_img_dim height, int allow_incomplete);
 static i_img *read_one_rgb_lines(TIFF *tif, i_img_dim width, i_img_dim height, int allow_incomplete);
 
-static struct tag_name text_tag_names[] =
+static const struct tag_name
+text_tag_names[] =
 {
   { "tiff_documentname", TIFFTAG_DOCUMENTNAME, },
   { "tiff_imagedescription", TIFFTAG_IMAGEDESCRIPTION, },
@@ -71,7 +72,7 @@ static struct tag_name text_tag_names[] =
   { "tiff_hostcomputer", TIFFTAG_HOSTCOMPUTER, },
 };
 
-static struct tag_name 
+static const struct tag_name
 compress_values[] =
   {
     { "none",     COMPRESSION_NONE },
@@ -92,7 +93,7 @@ compress_values[] =
 static const int compress_value_count = 
   sizeof(compress_values) / sizeof(*compress_values);
 
-static struct tag_name
+static const struct tag_name
 sample_format_values[] =
   {
     { "uint",      SAMPLEFORMAT_UINT },
