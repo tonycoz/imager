@@ -791,7 +791,6 @@ i_readtiff_multi_wiol(io_glue *ig, int *count) {
 undef_int
 i_writetiff_low_faxable(TIFF *tif, i_img *im, int fine) {
   tf_uint32 width, height;
-  unsigned char *linebuf = NULL;
   tf_uint32 y;
   int rc;
   tf_uint32 x;
@@ -832,37 +831,35 @@ i_writetiff_low_faxable(TIFF *tif, i_img *im, int fine) {
     { mm_log((1, "i_writetiff_wiol_faxable: TIFFSetField width=%d failed\n", width)); return 0; }
   if (!TIFFSetField(tif, TIFFTAG_IMAGELENGTH,     height)  )
     { mm_log((1, "i_writetiff_wiol_faxable: TIFFSetField length=%d failed\n", height)); return 0; }
-  if (!TIFFSetField(tif, TIFFTAG_SAMPLESPERPIXEL, 1))
+  if (!TIFFSetField(tif, TIFFTAG_SAMPLESPERPIXEL, (tf_uint16)1U))
     { mm_log((1, "i_writetiff_wiol_faxable: TIFFSetField samplesperpixel=1 failed\n")); return 0; }
-  if (!TIFFSetField(tif, TIFFTAG_ORIENTATION,  ORIENTATION_TOPLEFT))
+  if (!TIFFSetField(tif, TIFFTAG_ORIENTATION,  (tf_uint16)ORIENTATION_TOPLEFT))
     { mm_log((1, "i_writetiff_wiol_faxable: TIFFSetField Orientation=topleft\n")); return 0; }
-  if (!TIFFSetField(tif, TIFFTAG_BITSPERSAMPLE,   1)        )
+  if (!TIFFSetField(tif, TIFFTAG_BITSPERSAMPLE,   (tf_uint16)1U)        )
     { mm_log((1, "i_writetiff_wiol_faxable: TIFFSetField bitpersample=1\n")); return 0; }
-  if (!TIFFSetField(tif, TIFFTAG_PLANARCONFIG, PLANARCONFIG_CONTIG))
+  if (!TIFFSetField(tif, TIFFTAG_PLANARCONFIG, (tf_uint16)PLANARCONFIG_CONTIG))
     { mm_log((1, "i_writetiff_wiol_faxable: TIFFSetField planarconfig\n")); return 0; }
-  if (!TIFFSetField(tif, TIFFTAG_PHOTOMETRIC, PHOTOMETRIC_MINISWHITE))
+  if (!TIFFSetField(tif, TIFFTAG_PHOTOMETRIC, (tf_uint16)PHOTOMETRIC_MINISWHITE))
     { mm_log((1, "i_writetiff_wiol_faxable: TIFFSetField photometric=%d\n", PHOTOMETRIC_MINISBLACK)); return 0; }
-  if (!TIFFSetField(tif, TIFFTAG_COMPRESSION, 3))
-    { mm_log((1, "i_writetiff_wiol_faxable: TIFFSetField compression=3\n")); return 0; }
+  if (!TIFFSetField(tif, TIFFTAG_COMPRESSION, (tf_uint16)COMPRESSION_CCITTFAX3))
+    { mm_log((1, "i_writetiff_wiol_faxable: TIFFSetField compression=COMPRESSION_CCITTFAX3\n")); return 0; }
 
-  linebuf = (unsigned char *)_TIFFmalloc( TIFFScanlineSize(tif) );
-  
-  if (!TIFFSetField(tif, TIFFTAG_ROWSPERSTRIP, TIFFDefaultStripSize(tif, -1))) {
-    mm_log((1, "i_writetiff_wiol_faxable: TIFFSetField rowsperstrip=-1\n")); return 0; }
+  size_t scan_line_size = TIFFScanlineSize(tif);
+  rowsperstrip = TIFFDefaultStripSize(tif, -1);
+  if (!TIFFSetField(tif, TIFFTAG_ROWSPERSTRIP, rowsperstrip)) {
+    mm_log((1, "i_writetiff_wiol_faxable: TIFFSetField rowsperstrip=%u\n", rowsperstrip)); return 0; }
 
-  TIFFGetField(tif, TIFFTAG_ROWSPERSTRIP, &rowsperstrip);
   TIFFGetField(tif, TIFFTAG_ROWSPERSTRIP, &rc);
 
-  mm_log((1, "i_writetiff_wiol_faxable: TIFFGetField rowsperstrip=%d\n", rowsperstrip));
-  mm_log((1, "i_writetiff_wiol_faxable: TIFFGetField scanlinesize=%lu\n",
-	  (unsigned long)TIFFScanlineSize(tif) ));
-  mm_log((1, "i_writetiff_wiol_faxable: TIFFGetField planarconfig=%d == %d\n", rc, PLANARCONFIG_CONTIG));
+  mm_log((1, "i_writetiff_wiol_faxable: TIFFGetField rowsperstrip=%u\n", rowsperstrip));
+  mm_log((1, "i_writetiff_wiol_faxable: TIFFGetField scanlinesize=%zu\n", scan_line_size ));
+  mm_log((1, "i_writetiff_wiol_faxable: TIFFGetField planarconfig=%d\n", PLANARCONFIG_CONTIG));
 
   if (!TIFFSetField(tif, TIFFTAG_XRESOLUTION, (float)204))
     { mm_log((1, "i_writetiff_wiol_faxable: TIFFSetField Xresolution=204\n")); return 0; }
   if (!TIFFSetField(tif, TIFFTAG_YRESOLUTION, vres))
     { mm_log((1, "i_writetiff_wiol_faxable: TIFFSetField Yresolution=196\n")); return 0; }
-  if (!TIFFSetField(tif, TIFFTAG_RESOLUTIONUNIT, RESUNIT_INCH)) {
+  if (!TIFFSetField(tif, TIFFTAG_RESOLUTIONUNIT, (tf_uint16)RESUNIT_INCH)) {
     mm_log((1, "i_writetiff_wiol_faxable: TIFFSetField ResolutionUnit=%d\n", RESUNIT_INCH)); return 0; 
   }
 
@@ -870,6 +867,8 @@ i_writetiff_low_faxable(TIFF *tif, i_img *im, int fine) {
     return 0;
   }
 
+  unsigned char *linebuf = (unsigned char *)_TIFFmalloc( scan_line_size );
+  
   for (y=0; y<height; y++) {
     int linebufpos=0;
     for(x=0; x<width; x+=8) { 
@@ -879,7 +878,7 @@ i_writetiff_low_faxable(TIFF *tif, i_img *im, int fine) {
       tf_uint8 bitval = 128;
       linebuf[linebufpos]=0;
       bits = width-x; if(bits>8) bits=8;
-      i_gsamp(im, x, x+8, y, luma, &luma_chan, 1);
+      i_gsamp(im, x, x+bits, y, luma, &luma_chan, 1);
       for(bitpos=0;bitpos<bits;bitpos++) {
 	linebuf[linebufpos] |= ((luma[bitpos] < 128) ? bitval : 0);
 	bitval >>= 1;
@@ -888,12 +887,16 @@ i_writetiff_low_faxable(TIFF *tif, i_img *im, int fine) {
     }
     if (TIFFWriteScanline(tif, linebuf, y, 0) < 0) {
       mm_log((1, "i_writetiff_wiol_faxable: TIFFWriteScanline failed.\n"));
-      break;
+      goto fail;
     }
   }
-  if (linebuf) _TIFFfree(linebuf);
+  _TIFFfree(linebuf);
 
   return 1;
+
+ fail:
+  _TIFFfree(linebuf);
+  return 0;
 }
 
 static tf_uint16
@@ -950,19 +953,25 @@ set_base_tags(TIFF *tif, i_img *im, tf_uint16 compress, tf_uint16 photometric,
   int got_xres, got_yres;
   int aspect_only;
 
-  if (!TIFFSetField(tif, TIFFTAG_IMAGEWIDTH, im->xsize)) {
+  if ((tf_uint32)im->xsize != im->xsize ||
+      (tf_uint32)im->ysize != im->ysize) {
+    i_push_error(0, "image too large for TIFF");
+    return 0;
+  }
+
+  if (!TIFFSetField(tif, TIFFTAG_IMAGEWIDTH, (tf_uint32)im->xsize)) {
     i_push_error(0, "write TIFF: setting width tag");
     return 0;
   }
-  if (!TIFFSetField(tif, TIFFTAG_IMAGELENGTH, im->ysize)) {
+  if (!TIFFSetField(tif, TIFFTAG_IMAGELENGTH, (tf_uint32)im->ysize)) {
     i_push_error(0, "write TIFF: setting length tag");
     return 0;
   }
-  if (!TIFFSetField(tif, TIFFTAG_ORIENTATION, ORIENTATION_TOPLEFT)) {
+  if (!TIFFSetField(tif, TIFFTAG_ORIENTATION, (tf_uint16)ORIENTATION_TOPLEFT)) {
     i_push_error(0, "write TIFF: setting orientation tag");
     return 0;
   }
-  if (!TIFFSetField(tif, TIFFTAG_PLANARCONFIG, PLANARCONFIG_CONTIG)) {
+  if (!TIFFSetField(tif, TIFFTAG_PLANARCONFIG, (tf_uint16)PLANARCONFIG_CONTIG)) {
     i_push_error(0, "write TIFF: setting planar configuration tag");
     return 0;
   }
