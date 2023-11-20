@@ -14,4 +14,12 @@ char const * i_tiff_libversion(void);
 char const * i_tiff_builddate(void);
 int i_tiff_has_compression(char const *name);
 
+typedef struct {
+  const char *description;
+  const char *name;
+  unsigned code;
+} i_tiff_codec;
+
+i_tiff_codec *i_tiff_get_codecs(size_t *pcount);
+
 #endif

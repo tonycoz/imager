@@ -82,12 +82,23 @@ compress_values[] =
     { "fax4",     COMPRESSION_CCITTFAX4 },
     { "t6",       COMPRESSION_CCITTFAX4 },
     { "lzw",      COMPRESSION_LZW },
+    { "oldjpeg",  COMPRESSION_OJPEG },
     { "jpeg",     COMPRESSION_JPEG },
+    { "next",     COMPRESSION_NEXT },
     { "packbits", COMPRESSION_PACKBITS },
+    { "thunder",  COMPRESSION_THUNDERSCAN },
     { "deflate",  COMPRESSION_ADOBE_DEFLATE },
     { "zip",      COMPRESSION_ADOBE_DEFLATE },
+    { "pixarlog", COMPRESSION_PIXARLOG },
     { "oldzip",   COMPRESSION_DEFLATE },
     { "ccittrlew", COMPRESSION_CCITTRLEW },
+    { "jbig",     COMPRESSION_JBIG },
+    { "sgilog",   COMPRESSION_SGILOG },
+    { "sgilog24", COMPRESSION_SGILOG24 },
+    { "lerc",     COMPRESSION_LERC },
+    { "lzma",     COMPRESSION_LZMA },
+    { "zstd",     COMPRESSION_ZSTD },
+    { "webp",     COMPRESSION_WEBP },
   };
 
 static const int compress_value_count = 
@@ -921,10 +932,20 @@ get_compression(i_img *im, tf_uint16 def_compress) {
 
   if (i_tags_find(&im->tags, "tiff_compression", 0, &entry)
       && im->tags.tags[entry].data) {
+    const char *name = im->tags.tags[entry].data;
     tf_uint16 compress;
-    if (find_compression(im->tags.tags[entry].data, &compress)
+    if (find_compression(name, &compress)
 	&& TIFFIsCODECConfigured(compress))
       return compress;
+
+    TIFFCodec *codecs = TIFFGetConfiguredCODECs();
+    for (TIFFCodec *c = codecs; c->name; ++c) {
+      if (strcmp(c->name, name) == 0) {
+        _TIFFfree(codecs);
+        return c->scheme;
+      }
+    }
+    _TIFFfree(codecs);
   }
   if (i_tags_get_int(&im->tags, "tiff_compression", 0, &value)) {
     if ((tf_uint16)value == value
@@ -2726,6 +2747,35 @@ tiffio_context_final(tiffio_context_t *c) {
   c->magic = TIFFIO_MAGIC;
   if (c->warn_buffer)
     myfree(c->warn_buffer);
+}
+
+i_tiff_codec *
+i_tiff_get_codecs(size_t *pcount) {
+  TIFFCodec *codecs = TIFFGetConfiguredCODECs();
+
+  if (!codecs)
+    return NULL;
+
+  int count;
+  for (count = 0; codecs[count].name; ++count) {
+    /* just counting */
+  }
+  i_tiff_codec *mycodecs = mymalloc(sizeof(i_tiff_codec) * count);
+  for (int i = 0; i < count; ++i) {
+    mycodecs[i].description = codecs[i].name;
+    mycodecs[i].name = "";
+    for (int j = 0; j < compress_value_count; ++j) {
+      if (codecs[i].scheme == compress_values[j].tag) {
+        mycodecs[i].name = compress_values[j].name;
+        break;
+      }
+    }
+    mycodecs[i].code = codecs[i].scheme;
+  }
+  _TIFFfree(codecs);
+  
+  *pcount = count;
+  return mycodecs;
 }
 
 /*

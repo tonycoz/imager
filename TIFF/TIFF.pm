@@ -118,9 +118,42 @@ Imager::File::TIFF - read and write TIFF files
   $img->write(file => "foo.tif")
     or die $img->errstr;
 
+  my @codecs = Imager::File::TIFF->codecs;
+
 =head1 DESCRIPTION
 
 Imager's TIFF support is documented in L<Imager::Files>.
+
+=head1 CLASS METHODS
+
+=over
+
+=item Imager::File::TIFF->codecs
+
+Returns a list of hashrefs, each hash contains:
+
+=over
+
+=item *
+
+C<code> - the numeric TIFF defined identifier for this compression
+codec.
+
+=item *
+
+C<name> - the short name traditionally used by Imager::File::TIFF for
+this compression codec.  This may be an empty string if
+Imager::File::TIFF doesn't have a name for this codec.
+
+=item *
+
+C<description> - the C<libtiff> defined name for this codec.  You can
+now supply this name in the C<tiff_compression> tag to select this
+compression.
+
+=back
+
+=back
 
 =head1 AUTHOR
 

@@ -1,6 +1,6 @@
 #!perl -w
 use strict;
-use Test::More tests => 247;
+use Test::More;
 use Imager qw(:all);
 use Imager::Test qw(is_image is_image_similar test_image test_image_16 test_image_double test_image_raw);
 
@@ -881,3 +881,36 @@ SKIP:
     is($tags{tiff_sample_format_name}, "ieeefp", "check sample format name");
   }
 }
+
+{
+  my @codecs = Imager::File::TIFF->codecs;
+
+  my %codecs = map {; $_->{code} => $_ } @codecs;
+
+  is($codecs{1}{description},     "None", "no compression description");
+  is($codecs{1}{name},            "none", "no compression name");
+  is($codecs{5}{description},     "LZW",  "LZW description");
+  is($codecs{5}{name},            "lzw",  "LZW name");
+  is($codecs{32773}{description}, "PackBits",  "PackBits description");
+  is($codecs{32773}{name},        "packbits",  "PackBits name");
+  is($codecs{32771}{description}, "CCITT RLE/W", "CCITT RLE/W description");
+  is($codecs{32771}{name},        "ccittrlew",   "CCITT RLE/W name");
+}
+
+SKIP:
+{
+  # check compression selection by name works
+  my @codecs = Imager::File::TIFF->codecs;
+  grep { $_->{description} eq "AdobeDeflate" } @codecs
+    or skip "No AdobeDeflate available", 1;
+  my $im = test_image;
+  my $data;
+  ok($im->write(type => "tiff", data => \$data, tiff_compression => "AdobeDeflate"),
+     "write with AdobeDeflate");
+  my $im2 = Imager->new(data => \$data);
+  is_image($im, $im2, "check read image matches");
+  is($im2->tags(name => "tiff_compression"), "deflate",
+     "got expected compression");
+}
+
+done_testing();

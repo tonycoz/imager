@@ -27,7 +27,7 @@ jobs:
       - name: install dependencies
         run: |
             sudo apt-get update ||:
-            sudo apt-get -y install build-essential automake autoconf libtool m4 git yasm pkgconf libjpeg-turbo8-dev
+            sudo apt-get -y install build-essential automake autoconf libtool m4 git yasm pkgconf libjpeg-turbo8-dev libwebp-dev liblerc-dev
             wget https://download.osgeo.org/libtiff/tiff-${{ matrix.LIBTIFF_RELEASE }}.tar.gz
             ls
             tar xzf tiff-${{ matrix.LIBTIFF_RELEASE }}.tar.gz
@@ -57,3 +57,7 @@ jobs:
       - name: test
         run: |
             make -C TIFF test
+      - name: codecs
+        run: |
+            cd TIFF
+            perl -Mblib -MImager::File::TIFF -E 'say "$_->{code}: $_->{description} ($_->{name})" for sort { $a->{code} <=> $b->{code} } Imager::File::TIFF->codecs'

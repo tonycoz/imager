@@ -155,6 +155,23 @@ const char *
 i_tiff_builddate(...)
   C_ARGS:
 
+void
+i_tiff_codecs(class)
+    PPCODE:
+      size_t count;
+      i_tiff_codec *codecs = i_tiff_get_codecs(&count);
+      EXTEND(SP, count);
+      for (int i = 0; i < count; ++i) {
+        i_tiff_codec *codec = codecs + i;
+        HV *hv = newHV();
+        hv_stores(hv, "description", newSVpvn(codec->description, strlen(codec->description)));
+        hv_stores(hv, "name",        newSVpv(codec->name, 0));
+        hv_stores(hv, "code",        newSViv(codec->code));
+        SV *rv = newRV_noinc((SV*)hv);
+        PUSHs(sv_2mortal(rv));
+      }
+      myfree(codecs);
+
 BOOT:
 	PERL_INITIALIZE_IMAGER_CALLBACKS;
 	i_tiff_init();
