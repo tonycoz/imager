@@ -383,7 +383,7 @@ my $warned = Imager->new;
 ok($warned->read(file=>"testimg/tiffwarn.tif"), "read tiffwarn.tif");
 my ($warning) = $warned->tags(name=>'i_warning');
 ok(defined $warning, "check warning is set");
-like($warning, qr/[Uu]nknown field with tag 28712/,
+like($warning, qr/TIFFReadDirectory: Unknown field with tag 28712/,
      "check that warning tag correct");
 
 { # support for reading a given page

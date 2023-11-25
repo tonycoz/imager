@@ -218,7 +218,7 @@ typedef struct {
 } tiffio_context_t;
 
 static void
-do_warn_handler(tiffio_context_t *c, const char *fmt, va_list ap) {
+do_warn_handler(tiffio_context_t *c, const char *module, const char *fmt, va_list ap) {
   char buf[200];
 
   if (c->magic != TIFFIO_MAGIC)
@@ -231,6 +231,8 @@ do_warn_handler(tiffio_context_t *c, const char *fmt, va_list ap) {
   if (!c->warn_buf)
     c->warn_buf = io_new_bufchain();
 
+  i_io_write(c->warn_buf, module, strlen(module));
+  i_io_write(c->warn_buf, ": ", 2);
   i_io_write(c->warn_buf, buf, strlen(buf));
   i_io_write(c->warn_buf, "\n", 1);
 }
@@ -253,7 +255,7 @@ warn_handler_extr(TIFF *tif, void *user_data, const char *module,
                    const char *fmt, va_list ap) {
   tiffio_context_t *c = (tiffio_context_t *)user_data;
 
-  do_warn_handler(c, fmt, ap);
+  do_warn_handler(c, module, fmt, ap);
 
   return 1;
 }
@@ -269,11 +271,9 @@ error_handler(char const *module, char const *fmt, va_list ap) {
 
 static void
 warn_handler_ex(thandle_t h, const char *module, const char *fmt, va_list ap) {
-  (void)module;
-
   tiffio_context_t *c = (tiffio_context_t *)h;
 
-  do_warn_handler(c, fmt, ap);
+  do_warn_handler(c, module, fmt, ap);
 }
 
 #endif
