@@ -125,6 +125,7 @@ my %probe =
    incpath => \@incpaths,
    libpath => \@libpaths,
    verbose => $verbose,
+   pkg => [ qw(libtiff-5 libtiff-4) ],
   );
 
 my $probe_res = Imager::Probe->probe(\%probe);
