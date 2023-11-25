@@ -444,7 +444,7 @@ like($warning, qr/[Uu]nknown field with tag 28712/,
 { # test reading returns an error correctly - use test script as an
   # invalid TIFF file
   my $im = Imager->new;
-  ok(!$im->read(file=>'t/t10tiff.t', type=>'tiff'),
+  ok(!$im->read(file=>'t/10tiff.t', type=>'tiff'),
      "fail to read script as image");
   # we get different magic number values depending on the platform
   # byte ordering

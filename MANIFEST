@@ -484,7 +484,7 @@ TIFF/imtiff.c
 TIFF/imtiff.h
 TIFF/Makefile.PL
 TIFF/README
-TIFF/t/t10tiff.t		Test tiff support
+TIFF/t/10tiff.t			Test tiff support
 TIFF/testimg/alpha.tif		Alpha scaling test image
 TIFF/testimg/comp4.bmp		Compressed 4-bit/pixel BMP
 TIFF/testimg/comp4.tif		4-bit/pixel paletted TIFF
