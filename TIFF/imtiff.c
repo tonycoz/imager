@@ -211,13 +211,10 @@ static const int text_tag_count =
 
 #define TIFFIO_MAGIC 0xC6A340CC
 
-#define WARN_BUFFER_LIMIT 10000
-
 typedef struct {
   unsigned magic;
   io_glue *ig;
-  char *warn_buffer;
-  size_t warn_size;
+  io_glue *warn_buf;
 } tiffio_context_t;
 
 static void
@@ -231,20 +228,11 @@ do_warn_handler(tiffio_context_t *c, const char *fmt, va_list ap) {
   vsnprintf(buf, sizeof(buf), fmt, ap);
   mm_log((1, "tiff warning %s\n", buf));
 
-  if (!c->warn_buffer || strlen(c->warn_buffer)+strlen(buf)+2 > c->warn_size) {
-    size_t new_size = c->warn_size + strlen(buf) + 2;
-    char *old_buffer = c->warn_buffer;
-    if (new_size > WARN_BUFFER_LIMIT) {
-      new_size = WARN_BUFFER_LIMIT;
-    }
-    c->warn_buffer = myrealloc(c->warn_buffer, new_size);
-    if (!old_buffer) c->warn_buffer[0] = '\0';
-    c->warn_size = new_size;
-  }
-  if (strlen(c->warn_buffer)+strlen(buf)+2 <= c->warn_size) {
-    strcat(c->warn_buffer, buf);
-    strcat(c->warn_buffer, "\n");
-  }
+  if (!c->warn_buf)
+    c->warn_buf = io_new_bufchain();
+
+  i_io_write(c->warn_buf, buf, strlen(buf));
+  i_io_write(c->warn_buf, "\n", 1);
 }
 
 #ifdef USE_TIFFOPEN_OPTIONS
@@ -722,9 +710,14 @@ static i_img *read_one_tiff(TIFF *tif, int allow_incomplete) {
   i_tags_set(&im->tags, "i_format", "tiff", 4);
   {
     tiffio_context_t *ctx = TIFFClientdata(tif);
-    if (ctx->warn_buffer && ctx->warn_buffer[0]) {
-      i_tags_set(&im->tags, "i_warning", ctx->warn_buffer, -1);
-      ctx->warn_buffer[0] = '\0';
+    if (ctx->warn_buf) {
+      i_io_flush(ctx->warn_buf);
+      unsigned char *data = NULL;
+      size_t len = io_slurp(ctx->warn_buf, &data);
+
+      i_tags_set(&im->tags, "i_warning", (const char *)data, len);
+      io_glue_destroy(ctx->warn_buf);
+      ctx->warn_buf = NULL;
     }
   }
 
@@ -2680,15 +2673,14 @@ static void
 tiffio_context_init(tiffio_context_t *c, io_glue *ig) {
   c->magic = TIFFIO_MAGIC;
   c->ig = ig;
-  c->warn_buffer = NULL;
-  c->warn_size = 0;
+  c->warn_buf = NULL;
 }
 
 static void
 tiffio_context_final(tiffio_context_t *c) {
   c->magic = TIFFIO_MAGIC;
-  if (c->warn_buffer)
-    myfree(c->warn_buffer);
+  if (c->warn_buf)
+    io_glue_destroy(c->warn_buf);
 }
 
 i_tiff_codec *
