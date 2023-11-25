@@ -17,6 +17,10 @@ typedef uint16 tf_uint16;
 typedef uint32 tf_uint32;
 #endif
 
+#if TIFFLIB_VERSION >= 20221213
+#  define USE_TIFFOPEN_OPTIONS
+#endif
+
 /*
 =head1 NAME
 
@@ -207,11 +211,7 @@ static const int text_tag_count =
 
 #define TIFFIO_MAGIC 0xC6A340CC
 
-static void error_handler(char const *module, char const *fmt, va_list ap) {
-  (void)module;
-  mm_log((1, "tiff error fmt %s\n", fmt));
-  i_push_errorvf(0, fmt, ap);
-}
+#define WARN_BUFFER_LIMIT 10000
 
 typedef struct {
   unsigned magic;
@@ -221,17 +221,7 @@ typedef struct {
 } tiffio_context_t;
 
 static void
-tiffio_context_init(tiffio_context_t *c, io_glue *ig);
-static void
-tiffio_context_final(tiffio_context_t *c);
-
-#define WARN_BUFFER_LIMIT 10000
-
-static void
-warn_handler_ex(thandle_t h, const char *module, const char *fmt, va_list ap) {
-  (void)module;
-
-  tiffio_context_t *c = (tiffio_context_t *)h;
+do_warn_handler(tiffio_context_t *c, const char *fmt, va_list ap) {
   char buf[200];
 
   if (c->magic != TIFFIO_MAGIC)
@@ -257,18 +247,53 @@ warn_handler_ex(thandle_t h, const char *module, const char *fmt, va_list ap) {
   }
 }
 
-static i_mutex_t mutex;
+#ifdef USE_TIFFOPEN_OPTIONS
 
-void
-i_tiff_init(void) {
-  mutex = i_mutex_new();
+static int
+error_handler_extr(TIFF *tif, void *user_data, const char *module,
+                   const char *fmt, va_list ap) {
+  (void)tif;
+  (void)user_data;
+  (void)module;
+  mm_log((1, "tiff error fmt %s\n", fmt));
+  i_push_errorvf(0, fmt, ap);
+  return 1;
 }
 
-static int save_tiff_tags(TIFF *tif, i_img *im);
+static int
+warn_handler_extr(TIFF *tif, void *user_data, const char *module,
+                   const char *fmt, va_list ap) {
+  tiffio_context_t *c = (tiffio_context_t *)user_data;
 
-static void 
-pack_4bit_to(unsigned char *dest, const unsigned char *src, i_img_dim count);
+  do_warn_handler(c, fmt, ap);
 
+  return 1;
+}
+
+#else
+
+static void
+error_handler(char const *module, char const *fmt, va_list ap) {
+  (void)module;
+  mm_log((1, "tiff error fmt %s\n", fmt));
+  i_push_errorvf(0, fmt, ap);
+}
+
+static void
+warn_handler_ex(thandle_t h, const char *module, const char *fmt, va_list ap) {
+  (void)module;
+
+  tiffio_context_t *c = (tiffio_context_t *)h;
+
+  do_warn_handler(c, fmt, ap);
+}
+
+#endif
+
+static void
+tiffio_context_init(tiffio_context_t *c, io_glue *ig);
+static void
+tiffio_context_final(tiffio_context_t *c);
 
 static toff_t sizeproc(thandle_t x) {
   (void)x;
@@ -346,6 +371,97 @@ static int
 comp_close(thandle_t h) {
   return i_io_close(((tiffio_context_t *)h)->ig);
 }
+
+#ifndef USE_TIFFOPEN_OPTIONS
+static i_mutex_t mutex;
+#endif
+
+typedef struct {
+  TIFF *tif;
+  tiffio_context_t ctx;
+#ifndef USE_TIFFOPEN_OPTIONS
+  TIFFErrorHandler old_error;
+  TIFFErrorHandler old_warn;
+  TIFFErrorHandlerExt old_warn_ext;
+#endif
+} tiff_state;
+
+static TIFF *
+do_tiff_open(tiff_state *state, io_glue *ig, const char *mode) {
+  memset(state, 0, sizeof(*state));
+  tiffio_context_init(&state->ctx, ig);
+#ifdef USE_TIFFOPEN_OPTIONS
+  TIFFOpenOptions *options = TIFFOpenOptionsAlloc();
+  TIFFOpenOptionsSetErrorHandlerExtR(options, error_handler_extr, &state->ctx);
+  TIFFOpenOptionsSetWarningHandlerExtR(options, warn_handler_extr, &state->ctx);
+  TIFF *tif = TIFFClientOpenExt("(Iolayer)", 
+		       mode, 
+		       (thandle_t) &state->ctx,
+		       comp_read,
+		       comp_write,
+		       comp_seek,
+		       comp_close,
+		       sizeproc,
+		       comp_mmap,
+                       comp_munmap,
+                       options);
+  TIFFOpenOptionsFree(options);
+#else
+  i_mutex_lock(mutex);
+
+  state->old_error = TIFFSetErrorHandler(error_handler);
+  state->old_warn = TIFFSetWarningHandler(NULL);
+  state->old_warn_ext = TIFFSetWarningHandlerExt(warn_handler_ex);
+
+  TIFF *tif = TIFFClientOpen("(Iolayer)", 
+		       mode, 
+		       (thandle_t) &state->ctx,
+		       comp_read,
+		       comp_write,
+		       comp_seek,
+		       comp_close,
+		       sizeproc,
+		       comp_mmap,
+		       comp_munmap);
+  if (!tif) {
+    TIFFSetErrorHandler(state->old_error);
+    TIFFSetWarningHandler(state->old_warn);
+    TIFFSetWarningHandlerExt(state->old_warn_ext);
+    i_mutex_unlock(mutex);
+  }
+#endif
+  if (!tif) {
+    tiffio_context_final(&state->ctx);
+  }
+  state->tif = tif;
+
+  return tif;
+}
+
+static void
+do_tiff_close(tiff_state *state) {
+  TIFFClose(state->tif);
+#ifndef USE_TIFFOPEN_OPTIONS
+  TIFFSetErrorHandler(state->old_error);
+  TIFFSetWarningHandler(state->old_warn);
+  TIFFSetWarningHandlerExt(state->old_warn_ext);
+  i_mutex_unlock(mutex);
+#endif
+  tiffio_context_final(&state->ctx);
+}
+
+void
+i_tiff_init(void) {
+#ifndef USE_TIFFOPEN_OPTIONS
+  mutex = i_mutex_new();
+#endif
+}
+
+static int save_tiff_tags(TIFF *tif, i_img *im);
+
+static void 
+pack_4bit_to(unsigned char *dest, const unsigned char *src, i_img_dim count);
+
 
 static i_img *read_one_tiff(TIFF *tif, int allow_incomplete) {
   i_img *im;
@@ -642,46 +758,21 @@ static i_img *read_one_tiff(TIFF *tif, int allow_incomplete) {
 */
 i_img*
 i_readtiff_wiol(io_glue *ig, int allow_incomplete, int page) {
-  TIFF* tif;
-  TIFFErrorHandler old_handler;
-  TIFFErrorHandler old_warn_handler;
-  TIFFErrorHandlerExt old_ext_warn_handler;
-  i_img *im;
   int current_page;
-  tiffio_context_t ctx;
-
-  i_mutex_lock(mutex);
 
   i_clear_error();
-  old_handler = TIFFSetErrorHandler(error_handler);
-  old_warn_handler = TIFFSetWarningHandler(NULL);
-  old_ext_warn_handler = TIFFSetWarningHandlerExt(warn_handler_ex);
 
   /* Add code to get the filename info from the iolayer */
   /* Also add code to check for mmapped code */
 
   mm_log((1, "i_readtiff_wiol(ig %p, allow_incomplete %d, page %d)\n", ig, allow_incomplete, page));
-  
-  tiffio_context_init(&ctx, ig);
-  tif = TIFFClientOpen("(Iolayer)", 
-		       "rm", 
-		       (thandle_t) &ctx,
-		       comp_read,
-		       comp_write,
-		       comp_seek,
-		       comp_close,
-		       sizeproc,
-		       comp_mmap,
-		       comp_munmap);
+
+  tiff_state ts;
+  TIFF *tif = do_tiff_open(&ts, ig, "rm");
   
   if (!tif) {
     mm_log((1, "i_readtiff_wiol: Unable to open tif file\n"));
     i_push_error(0, "Error opening file");
-    TIFFSetErrorHandler(old_handler);
-    TIFFSetWarningHandler(old_warn_handler);
-    TIFFSetWarningHandlerExt(old_ext_warn_handler);
-    tiffio_context_final(&ctx);
-    i_mutex_unlock(mutex);
     return NULL;
   }
 
@@ -689,27 +780,22 @@ i_readtiff_wiol(io_glue *ig, int allow_incomplete, int page) {
     if (!TIFFReadDirectory(tif)) {
       mm_log((1, "i_readtiff_wiol: Unable to switch to directory %d\n", page));
       i_push_errorf(0, "could not switch to page %d", page);
-      TIFFSetErrorHandler(old_handler);
-      TIFFSetWarningHandler(old_warn_handler);
-      TIFFSetWarningHandlerExt(old_ext_warn_handler);
-      TIFFClose(tif);
-      tiffio_context_final(&ctx);
-      i_mutex_unlock(mutex);
-      return NULL;
+      goto fail;
     }
   }
 
-  im = read_one_tiff(tif, allow_incomplete);
+  i_img *im = read_one_tiff(tif, allow_incomplete);
 
-  if (TIFFLastDirectory(tif)) mm_log((1, "Last directory of tiff file\n"));
-  TIFFSetErrorHandler(old_handler);
-  TIFFSetWarningHandler(old_warn_handler);
-  TIFFSetWarningHandlerExt(old_ext_warn_handler);
-  TIFFClose(tif);
-  tiffio_context_final(&ctx);
-    i_mutex_unlock(mutex);
+  if (TIFFLastDirectory(tif))
+    mm_log((1, "Last directory of tiff file\n"));
+
+  do_tiff_close(&ts);
 
   return im;
+
+ fail:
+  do_tiff_close(&ts);
+  return NULL;
 }
 
 /*
@@ -721,47 +807,22 @@ Reads multiple images from a TIFF.
 */
 i_img**
 i_readtiff_multi_wiol(io_glue *ig, int *count) {
-  TIFF* tif;
-  TIFFErrorHandler old_handler;
-  TIFFErrorHandler old_warn_handler;
-  TIFFErrorHandlerExt old_ext_warn_handler;
   i_img **results = NULL;
   int result_alloc = 0;
-  tiffio_context_t ctx;
 
-  i_mutex_lock(mutex);
 
   i_clear_error();
-  old_handler = TIFFSetErrorHandler(error_handler);
-  old_warn_handler = TIFFSetWarningHandler(NULL);
-  old_ext_warn_handler = TIFFSetWarningHandlerExt(warn_handler_ex);
-
-  tiffio_context_init(&ctx, ig);
 
   /* Add code to get the filename info from the iolayer */
   /* Also add code to check for mmapped code */
 
   mm_log((1, "i_readtiff_wiol(ig %p)\n", ig));
-  
-  tif = TIFFClientOpen("(Iolayer)", 
-		       "rm", 
-		       (thandle_t) &ctx,
-		       comp_read,
-		       comp_write,
-		       comp_seek,
-		       comp_close,
-		       sizeproc,
-		       comp_mmap,
-		       comp_munmap);
-  
+
+  tiff_state ts;
+  TIFF *tif = do_tiff_open(&ts, ig, "rm");
   if (!tif) {
     mm_log((1, "i_readtiff_wiol: Unable to open tif file\n"));
     i_push_error(0, "Error opening file");
-    TIFFSetErrorHandler(old_handler);
-    TIFFSetWarningHandler(old_warn_handler);
-    TIFFSetWarningHandlerExt(old_ext_warn_handler);
-    tiffio_context_final(&ctx);
-    i_mutex_unlock(mutex);
     return NULL;
   }
 
@@ -789,14 +850,14 @@ i_readtiff_multi_wiol(io_glue *ig, int *count) {
     results[*count-1] = im;
   } while (TIFFReadDirectory(tif));
 
-  TIFFSetWarningHandler(old_warn_handler);
-  TIFFSetErrorHandler(old_handler);
-  TIFFSetWarningHandlerExt(old_ext_warn_handler);
-  TIFFClose(tif);
-  tiffio_context_final(&ctx);
-  i_mutex_unlock(mutex);
+  do_tiff_close(&ts);
 
   return results;
+
+ fail:
+
+  do_tiff_close(&ts);
+  return NULL;
 }
 
 undef_int
@@ -1475,67 +1536,37 @@ Stores an image in the iolayer object.
 
 undef_int
 i_writetiff_multi_wiol(io_glue *ig, i_img **imgs, int count) {
-  TIFF* tif;
-  TIFFErrorHandler old_handler;
   int i;
-  tiffio_context_t ctx;
-
-  i_mutex_lock(mutex);
-
-  old_handler = TIFFSetErrorHandler(error_handler);
 
   i_clear_error();
   mm_log((1, "i_writetiff_multi_wiol(ig %p, imgs %p, count %d)\n", 
           ig, imgs, count));
 
-  tiffio_context_init(&ctx, ig);
   
-  tif = TIFFClientOpen("No name", 
-		       "wm",
-		       (thandle_t) &ctx, 
-		       comp_read,
-		       comp_write,
-		       comp_seek,
-		       comp_close, 
-		       sizeproc,
-		       comp_mmap,
-		       comp_munmap);
-  
-
+  tiff_state ts;
+  TIFF *tif = do_tiff_open(&ts, ig, "wm");
+    
 
   if (!tif) {
     mm_log((1, "i_writetiff_multi_wiol: Unable to open tif file for writing\n"));
     i_push_error(0, "Could not create TIFF object");
-    TIFFSetErrorHandler(old_handler);
-    tiffio_context_final(&ctx);
-    i_mutex_unlock(mutex);
     return 0;
   }
 
   for (i = 0; i < count; ++i) {
     if (!i_writetiff_low(tif, imgs[i])) {
-      TIFFClose(tif);
-      TIFFSetErrorHandler(old_handler);
-      tiffio_context_final(&ctx);
-      i_mutex_unlock(mutex);
+      do_tiff_close(&ts);
       return 0;
     }
 
     if (!TIFFWriteDirectory(tif)) {
       i_push_error(0, "Cannot write TIFF directory");
-      TIFFClose(tif);
-      TIFFSetErrorHandler(old_handler);
-      tiffio_context_final(&ctx);
-      i_mutex_unlock(mutex);
+      do_tiff_close(&ts);
       return 0;
     }
   }
 
-  TIFFSetErrorHandler(old_handler);
-  (void) TIFFClose(tif);
-  tiffio_context_final(&ctx);
-
-  i_mutex_unlock(mutex);
+  do_tiff_close(&ts);
 
   if (i_io_close(ig))
     return 0;
@@ -1558,67 +1589,35 @@ Stores an image in the iolayer object.
 
 undef_int
 i_writetiff_multi_wiol_faxable(io_glue *ig, i_img **imgs, int count, int fine) {
-  TIFF* tif;
   int i;
-  TIFFErrorHandler old_handler;
-  tiffio_context_t ctx;
-
-  i_mutex_lock(mutex);
-
-  old_handler = TIFFSetErrorHandler(error_handler);
 
   i_clear_error();
   mm_log((1, "i_writetiff_multi_wiol(ig %p, imgs %p, count %d)\n", 
           ig, imgs, count));
 
-  tiffio_context_init(&ctx, ig);
+  tiff_state ts;
+  TIFF *tif = do_tiff_open(&ts, ig, "wm");
   
-  tif = TIFFClientOpen("No name", 
-		       "wm",
-		       (thandle_t) &ctx, 
-		       comp_read,
-		       comp_write,
-		       comp_seek,
-		       comp_close, 
-		       sizeproc,
-		       comp_mmap,
-		       comp_munmap);
-  
-
-
   if (!tif) {
     mm_log((1, "i_writetiff_mulit_wiol: Unable to open tif file for writing\n"));
     i_push_error(0, "Could not create TIFF object");
-    TIFFSetErrorHandler(old_handler);
-    tiffio_context_final(&ctx);
-    i_mutex_unlock(mutex);
     return 0;
   }
 
   for (i = 0; i < count; ++i) {
     if (!i_writetiff_low_faxable(tif, imgs[i], fine)) {
-      TIFFClose(tif);
-      TIFFSetErrorHandler(old_handler);
-      tiffio_context_final(&ctx);
-      i_mutex_unlock(mutex);
+      do_tiff_close(&ts);
       return 0;
     }
 
     if (!TIFFWriteDirectory(tif)) {
       i_push_error(0, "Cannot write TIFF directory");
-      TIFFClose(tif);
-      TIFFSetErrorHandler(old_handler);
-      tiffio_context_final(&ctx);
-      i_mutex_unlock(mutex);
+      do_tiff_close(&ts);
       return 0;
     }
   }
 
-  (void) TIFFClose(tif);
-  TIFFSetErrorHandler(old_handler);
-  tiffio_context_final(&ctx);
-
-  i_mutex_unlock(mutex);
+  do_tiff_close(&ts);
 
   if (i_io_close(ig))
     return 0;
@@ -1638,53 +1637,25 @@ Stores an image in the iolayer object.
 */
 undef_int
 i_writetiff_wiol(i_img *img, io_glue *ig) {
-  TIFF* tif;
-  TIFFErrorHandler old_handler;
-  tiffio_context_t ctx;
-
-  i_mutex_lock(mutex);
-
-  old_handler = TIFFSetErrorHandler(error_handler);
-
   i_clear_error();
   mm_log((1, "i_writetiff_wiol(img %p, ig %p)\n", img, ig));
 
-  tiffio_context_init(&ctx, ig);
-
-  tif = TIFFClientOpen("No name", 
-		       "wm",
-		       (thandle_t) &ctx, 
-		       comp_read,
-		       comp_write,
-		       comp_seek,
-		       comp_close, 
-		       sizeproc,
-		       comp_mmap,
-		       comp_munmap);
-  
+  tiff_state ts;
+  TIFF *tif = do_tiff_open(&ts, ig, "wm");
 
 
   if (!tif) {
     mm_log((1, "i_writetiff_wiol: Unable to open tif file for writing\n"));
     i_push_error(0, "Could not create TIFF object");
-    tiffio_context_final(&ctx);
-    TIFFSetErrorHandler(old_handler);
-    i_mutex_unlock(mutex);
     return 0;
   }
 
   if (!i_writetiff_low(tif, img)) {
-    TIFFClose(tif);
-    tiffio_context_final(&ctx);
-    TIFFSetErrorHandler(old_handler);
-    i_mutex_unlock(mutex);
+    do_tiff_close(&ts);
     return 0;
   }
 
-  (void) TIFFClose(tif);
-  TIFFSetErrorHandler(old_handler);
-  tiffio_context_final(&ctx);
-  i_mutex_unlock(mutex);
+  do_tiff_close(&ts);
 
   if (i_io_close(ig))
     return 0;
@@ -1711,53 +1682,24 @@ point.
 
 undef_int
 i_writetiff_wiol_faxable(i_img *im, io_glue *ig, int fine) {
-  TIFF* tif;
-  TIFFErrorHandler old_handler;
-  tiffio_context_t ctx;
-
-  i_mutex_lock(mutex);
-
-  old_handler = TIFFSetErrorHandler(error_handler);
-
   i_clear_error();
   mm_log((1, "i_writetiff_wiol(img %p, ig %p)\n", im, ig));
 
-  tiffio_context_init(&ctx, ig);
-  
-  tif = TIFFClientOpen("No name", 
-		       "wm",
-		       (thandle_t) &ctx, 
-		       comp_read,
-		       comp_write,
-		       comp_seek,
-		       comp_close, 
-		       sizeproc,
-		       comp_mmap,
-		       comp_munmap);
-  
-
+  tiff_state ts;
+  TIFF* tif = do_tiff_open(&ts, ig, "wm");
 
   if (!tif) {
     mm_log((1, "i_writetiff_wiol: Unable to open tif file for writing\n"));
     i_push_error(0, "Could not create TIFF object");
-    TIFFSetErrorHandler(old_handler);
-    tiffio_context_final(&ctx);
-    i_mutex_unlock(mutex);
     return 0;
   }
 
   if (!i_writetiff_low_faxable(tif, im, fine)) {
-    TIFFClose(tif);
-    TIFFSetErrorHandler(old_handler);
-    tiffio_context_final(&ctx);
-    i_mutex_unlock(mutex);
+    do_tiff_close(&ts);
     return 0;
   }
 
-  (void) TIFFClose(tif);
-  TIFFSetErrorHandler(old_handler);
-  tiffio_context_final(&ctx);
-  i_mutex_unlock(mutex);
+  do_tiff_close(&ts);
 
   if (i_io_close(ig))
     return 0;
