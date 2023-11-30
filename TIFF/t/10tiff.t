@@ -28,11 +28,6 @@ diag("build version date " . Imager::File::TIFF->builddate);
 # only from 4.5.0 or later
 my $buildversion = Imager::File::TIFF->buildversion;
 diag("build version $buildversion") if $buildversion;
-# make something we can compare
-my $cmp_ver = sprintf("%03d%03d%03d", $major, $minor, $point);
-if ($cmp_ver lt '003007000') {
-  diag("You have an old version of libtiff - $full, some tests will be skipped");
-}
 
 Imager::i_tags_add($img, "i_xres", 0, "300", 0);
 Imager::i_tags_add($img, "i_yres", 0, undef, 250);
@@ -481,22 +476,20 @@ like($warning, qr/TIFFReadDirectory: Unknown field with tag 28712/,
   my $photo_cielab = 8;
   my @alpha_images =
     (
-     [ 'srgb.tif',    3, $photo_rgb,    '003005005' ],
-     [ 'srgba.tif',   4, $photo_rgb,    '003005005' ],
-     [ 'srgbaa.tif',  4, $photo_rgb,    '003005005' ],
-     [ 'scmyk.tif',   3, $photo_cmyk,   '003005005' ],
-     [ 'scmyka.tif',  4, $photo_cmyk,   '003005005' ],
-     [ 'scmykaa.tif', 4, $photo_cmyk,   '003005005' ],
-     [ 'slab.tif',    3, $photo_cielab, '003006001' ],
+     [ 'srgb.tif',    3, $photo_rgb    ],
+     [ 'srgba.tif',   4, $photo_rgb    ],
+     [ 'srgbaa.tif',  4, $photo_rgb    ],
+     [ 'scmyk.tif',   3, $photo_cmyk   ],
+     [ 'scmyka.tif',  4, $photo_cmyk   ],
+     [ 'scmykaa.tif', 4, $photo_cmyk   ],
+     [ 'slab.tif',    3, $photo_cielab ],
     );
   
   for my $test (@alpha_images) {
-    my ($input, $channels, $photo, $need_ver) = @$test;
+    my ($input, $channels, $photo) = @$test;
     
   SKIP: {
       my $skipped = $channels == 4 ? 4 : 3;
-      $need_ver le $cmp_ver
-	or skip("Your ancient tifflib is buggy/limited for this test", $skipped);
       my $im = Imager->new;
       ok($im->read(file => "testimg/$input"),
 	 "read alpha test $input")
@@ -533,8 +526,6 @@ SKIP:
   ok(open(TIFF, '< testimg/pengtile.tif'), 'open pengtile.tif')
     or skip 'cannot open testimg/pengtile.tif', 4;
   
-  $cmp_ver ge '003005007'
-    or skip("Your ancient tifflib has bad error handling", 4);
   binmode TIFF;
   my $data = do { local $/; <TIFF>; };
   
