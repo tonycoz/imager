@@ -180,4 +180,6 @@ Tony Cook <tonyc@cpan.org>
 
 Imager, Imager::Files.
 
+http://www.simplesystems.org/libtiff/
+
 =cut
