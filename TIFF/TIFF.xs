@@ -139,9 +139,6 @@ i_writetiff_multi_wiol_faxable(ig, fine, ...)
       OUTPUT:
         RETVAL
 
-const char *
-i_tiff_libversion()
-
 bool
 i_tiff_has_compression(name)
 	const char *name
@@ -153,6 +150,14 @@ MODULE = Imager::File::TIFF  PACKAGE = Imager::File::TIFF  PREFIX = i_tiff_
 
 const char *
 i_tiff_builddate(...)
+  C_ARGS:
+
+const char *
+i_tiff_buildversion(...)
+  C_ARGS:
+
+const char *
+i_tiff_libversion(...)
   C_ARGS:
 
 void

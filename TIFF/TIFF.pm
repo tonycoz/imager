@@ -153,6 +153,23 @@ compression.
 
 =back
 
+=item Imager::File::TIFF->builddate
+
+The release date of the version of C<libtiff> Imager::File::TIFF was
+built with.  eg. C<20230609>.
+
+=item Imager::File::TIFF->buildversion
+
+The version number of C<libtiff> Imager::File::TIFF was built with.
+eg. C<4.5.0>.  Only available from C<libtiff> 4.5.0.
+
+=item Imager::File::TIFF->libversion
+
+The version number of C<libtiff> Imager::File::TIFF is running with.
+This should be the same as C<buildversion> at build time, but an
+upgrade to libtiff may result in C<libversion> changing without
+C<buildversion> changing.
+
 =back
 
 =head1 AUTHOR

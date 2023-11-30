@@ -18,13 +18,16 @@ my $red=i_color_new(255,0,0,255);
 
 my $img=test_image_raw();
 
-my $ver_string = Imager::File::TIFF::i_tiff_libversion();
+my $ver_string = Imager::File::TIFF->libversion();
 ok(my ($full, $major, $minor, $point) = 
    $ver_string =~ /Version +((\d+)\.(\d+).(\d+))/,
    "extract library version")
   or diag("Could not extract from:\n$ver_string");
-diag("libtiff release $full") if $full;
+diag("libtiff binary release $full") if $full;
 diag("build version date " . Imager::File::TIFF->builddate);
+# only from 4.5.0 or later
+my $buildversion = Imager::File::TIFF->buildversion;
+diag("build version $buildversion") if $buildversion;
 # make something we can compare
 my $cmp_ver = sprintf("%03d%03d%03d", $major, $minor, $point);
 if ($cmp_ver lt '003007000') {

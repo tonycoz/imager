@@ -1993,6 +1993,15 @@ i_tiff_builddate(void) {
   return Q(TIFFLIB_VERSION);
 }
 
+char const *
+i_tiff_buildversion(void) {
+#ifdef TIFFLIB_MAJOR_VERSION
+  return Q(TIFFLIB_MAJOR_VERSION) "." Q(TIFFLIB_MINOR_VERSION) "." Q(TIFFLIB_MICRO_VERSION);
+#else
+  return "";
+#endif
+}
+
 static int 
 setup_paletted(read_state_t *state) {
   tf_uint16 *maps[3];
