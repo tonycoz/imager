@@ -1,3 +1,37 @@
+Imager-File-TIFF 0.96
+=====================
+
+ - require libtiff 4.1.0 or later
+
+ - add buildversion, builddate and libversion methods
+
+ - add the codecs method which fetches a list of available TIFF
+   compression codes
+
+ - avoid deprecation warnings from libtiff about using the old
+   libtiff defined integer types
+
+ - require vsnprintf() (C99)
+
+ - remove my adaption of TIFFReadRGBATile() since libtiff now provides
+   TIFFReadRGBATileExt() which can do the same thing
+
+ - use pkg-config to find libtiff if possible
+
+ - for sufficiently modern libtiff (4.5.0) use TIFFClientOptions to
+   specify the warning and error handlers, this means we no longer
+   need a mutex for 4.5.0 and later.
+
+ - collect warnings using a buffer chain instead of custom allocation
+   code.
+
+ - include the "module" name (typically a libtiff function name) when
+   recording libtiff warnings.
+
+ - add CI to test Imager::File::TIFF against libtiff 4.1.0 through 4.6.0
+
+ - other minor fixes
+
 Imager-File-TIFF 0.95
 =====================
 
