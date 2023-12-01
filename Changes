@@ -12,6 +12,8 @@ Major binary compatibility changes:
 
     - many macros are now inline functions instead.
 
+    - require C99
+
   - image (Imager::ImgRaw) objects:
 
     - moved the image object function pointers from being embedded in
@@ -41,6 +43,8 @@ Major binary compatibility changes:
     - scaling now properly combines linear luminance for each scaling
       method.
 
+    - add support for extra channels to convert()
+
     - refactor 8-bit, 16 bit, double per sample image implementations
       into a single implementation using macros.
 
@@ -48,6 +52,9 @@ Major binary compatibility changes:
 
     - add linear sample images with 16-bit integer, double per sample.
       This isn't directly used for anything yet.
+
+    - creating an image with an unsupported bits value now fails
+      rather than silently returning an 8 bit/sample image.
 
   - io_glue (Imager::IO) objects:
 
@@ -57,7 +64,7 @@ Major binary compatibility changes:
     - i_io_size() and the callbacks that implement it now return off_t
       instead of ssize_t.
 
-    - exposed i_io_size() throw the Imager::IO wrapper
+    - exposed i_io_size() through the Imager::IO wrapper
 
     - add i_io_mmap() and i_io_munmap() interfaces to io_glue objects
       and implement it for FD and buffer objects.  This is only usable
