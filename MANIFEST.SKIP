@@ -60,7 +60,7 @@ Makefile\.old$
 \.o$
 ^MANIFEST\.bak$
 \bMYMETA\.yml$
-\bMYMETA\.json$
+\bMYMETA\.json(\.lock)?$
 
 ^testout/
 ^FT2/testout/
