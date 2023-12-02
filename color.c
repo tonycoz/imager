@@ -77,12 +77,11 @@ Each value is scaled into the range 0 to 255.
 =cut
 */
 void i_rgb_to_hsv(i_color *color) {
-  double h = 0, s, v;
-  double temp;
+  double h = 0, s;
   double Cr, Cg, Cb;
 
-  v = my_max(my_max(color->rgb.r, color->rgb.g), color->rgb.b);
-  temp = my_min(my_min(color->rgb.r, color->rgb.g), color->rgb.b);
+  int v = my_max(my_max(color->rgb.r, color->rgb.g), color->rgb.b);
+  int temp = my_min(my_min(color->rgb.r, color->rgb.g), color->rgb.b);
   if (v == 0)
     s = 0;
   else
@@ -90,9 +89,9 @@ void i_rgb_to_hsv(i_color *color) {
   if (s == 0)
     h = 0;
   else {
-    Cr = (v - color->rgb.r)/(v-temp);
-    Cg = (v - color->rgb.g)/(v-temp);
-    Cb = (v - color->rgb.b)/(v-temp);
+    Cr = (v - color->rgb.r)/((double)v-temp);
+    Cg = (v - color->rgb.g)/((double)v-temp);
+    Cb = (v - color->rgb.b)/((double)v-temp);
     if (color->rgb.r == v)
       h = Cb - Cg;
     else if (color->rgb.g == v)

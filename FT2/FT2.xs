@@ -283,7 +283,6 @@ i_ft2_glyph_name(handle, text_sv, utf8 = 0, reliable_only = 1)
         STRLEN work_len;
         size_t len;
         char name[255];
-	SSize_t count = 0;
       PPCODE:
         i_clear_error();
         text = SvPV(text_sv, work_len);

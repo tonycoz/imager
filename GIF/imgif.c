@@ -1598,10 +1598,10 @@ i_writegif_low(i_quantize *quant, GifFileType *gf, i_img **imgs, int count) {
       ++color_bits;
   }
   else {
-    int count = quant->mc_count;
+    int mccount = quant->mc_count;
     if (want_trans)
-      ++count;
-    while (count > (1 << color_bits))
+      ++mccount;
+    while (mccount > (1 << color_bits))
       ++color_bits;
   }
   

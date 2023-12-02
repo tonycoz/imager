@@ -497,7 +497,6 @@ i_circle_aa_fill(i_img *im, double x, double y, double rad, i_fill_t *fill) {
 static void
 i_circle_aa_low(i_img *im, double x, double y, double rad, flush_render_t r,
 		void *ctx) {
-  i_color temp;
   i_img_dim ly;
   dIMCTXim(im);
   double ceil_rad = ceil(rad);
@@ -587,8 +586,6 @@ i_circle_aa_low(i_img *im, double x, double y, double rad, flush_render_t r,
 	   ++work_x, frac_work_x += 16) {
 	if (work_x <= left_solid || work_x >= right_solid) {
 	  int pix_coverage = 0;
-	  int ch;
-	  double ratio;
 	  i_img_dim frac_work_right = frac_work_x + 16;
 	  for (sub = 0; sub < 16; ++sub) {
 	    frac pix_left = min_frac_x[sub];

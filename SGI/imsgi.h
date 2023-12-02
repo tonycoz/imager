@@ -1,5 +1,5 @@
-#ifndef IMAGER_IMICON_H
-#define IMAGER_IMICON_H
+#ifndef IMAGER_IMSGI_H
+#define IMAGER_IMSGI_H
 
 #include "imext.h"
 

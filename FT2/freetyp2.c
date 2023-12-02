@@ -595,7 +595,7 @@ i_ft2_bbox_r(FT2_Fonthandle *handle, double cheight, double cwidth,
   i_img_dim bounds[4] = { 0 };
   double x = 0, y = 0;
   int i;
-  FT_GlyphSlot slot;
+  FT_GlyphSlot gslot;
   int loadFlags = FT_LOAD_DEFAULT;
 
   if (vlayout)
@@ -633,8 +633,8 @@ i_ft2_bbox_r(FT2_Fonthandle *handle, double cheight, double cwidth,
                     c, index);
       return 0;
     }
-    slot = handle->face->glyph; 
-    gm = &slot->metrics;
+    gslot = handle->face->glyph; 
+    gm = &gslot->metrics;
 
     /* these probably don't mean much for vertical layouts */
     glyph_ascent = gm->horiBearingY / 64;
@@ -672,8 +672,8 @@ i_ft2_bbox_r(FT2_Fonthandle *handle, double cheight, double cwidth,
     else {
       expand_bounds(bounds, work);
     }
-    x += slot->advance.x / 64;
-    y += slot->advance.y / 64;
+    x += gslot->advance.x / 64;
+    y += gslot->advance.y / 64;
 
     if (glyph_ascent > ascent)
       ascent = glyph_ascent;
@@ -735,7 +735,7 @@ i_ft2_text(FT2_Fonthandle *handle, i_img *im, i_img_dim tx, i_img_dim ty, const 
   int index;
   FT_Glyph_Metrics *gm;
   i_img_dim bbox[BOUNDING_BOX_COUNT];
-  FT_GlyphSlot slot;
+  FT_GlyphSlot gslot;
   int x, y;
   unsigned char map[256];
   char last_mode = ft_pixel_mode_none; 
@@ -800,11 +800,11 @@ i_ft2_text(FT2_Fonthandle *handle, i_img *im, i_img_dim tx, i_img_dim ty, const 
         i_render_delete(render);
       return 0;
     }
-    slot = handle->face->glyph;
-    gm = &slot->metrics;
+    gslot = handle->face->glyph;
+    gm = &gslot->metrics;
 
     if (gm->width) {
-      error = FT_Render_Glyph(slot, aa ? ft_render_mode_normal : ft_render_mode_mono);
+      error = FT_Render_Glyph(gslot, aa ? ft_render_mode_normal : ft_render_mode_mono);
       if (error) {
 	ft2_push_message(error);
 	i_push_errorf(0, "rendering glyph 0x%04lX (character \\x%02X)", c, index);
@@ -812,17 +812,17 @@ i_ft2_text(FT2_Fonthandle *handle, i_img *im, i_img_dim tx, i_img_dim ty, const 
 	  i_render_delete(render);
 	return 0;
       }
-      if (slot->bitmap.pixel_mode == ft_pixel_mode_mono) {
-	unsigned char *bmp = slot->bitmap.buffer;
-	if (work_bmp_size < slot->bitmap.width) {
-	  work_bmp_size = slot->bitmap.width;
+      if (gslot->bitmap.pixel_mode == ft_pixel_mode_mono) {
+	unsigned char *bmp = gslot->bitmap.buffer;
+	if (work_bmp_size < gslot->bitmap.width) {
+	  work_bmp_size = gslot->bitmap.width;
 	  work_bmp =  myrealloc(work_bmp, work_bmp_size);
 	}
-	for (y = 0; y < slot->bitmap.rows; ++y) {
+	for (y = 0; y < gslot->bitmap.rows; ++y) {
 	  int pos = 0;
 	  int bit = 0x80;
 	  unsigned char *p = work_bmp;
-	  for (x = 0; x < slot->bitmap.width; ++x) {
+	  for (x = 0; x < gslot->bitmap.width; ++x) {
 	    *p++ = (bmp[pos] & bit) ? 0xff : 0;
 
 	    bit >>= 1;
@@ -831,40 +831,40 @@ i_ft2_text(FT2_Fonthandle *handle, i_img *im, i_img_dim tx, i_img_dim ty, const 
 	      ++pos;
 	    }
 	  }
-          i_render_color(render, tx + slot->bitmap_left, ty-slot->bitmap_top+y,
-                         slot->bitmap.width, work_bmp, cl);
+          i_render_color(render, tx + gslot->bitmap_left, ty-gslot->bitmap_top+y,
+                         gslot->bitmap.width, work_bmp, cl);
 
-	  bmp += slot->bitmap.pitch;
+	  bmp += gslot->bitmap.pitch;
 	}
       }
       else {
-	unsigned char *bmp = slot->bitmap.buffer;
+	unsigned char *bmp = gslot->bitmap.buffer;
 
 	/* grey scale or something we can treat as greyscale */
 	/* we create a map to convert from the bitmap values to 0-255 */
-	if (last_mode != slot->bitmap.pixel_mode 
-	    || last_grays != slot->bitmap.num_grays) {
-	  if (!make_bmp_map(&slot->bitmap, map))
+	if (last_mode != gslot->bitmap.pixel_mode 
+	    || last_grays != gslot->bitmap.num_grays) {
+	  if (!make_bmp_map(&gslot->bitmap, map))
 	    return 0;
-	  last_mode = slot->bitmap.pixel_mode;
-	  last_grays = slot->bitmap.num_grays;
+	  last_mode = gslot->bitmap.pixel_mode;
+	  last_grays = gslot->bitmap.num_grays;
 	}
 
-	for (y = 0; y < slot->bitmap.rows; ++y) {
+	for (y = 0; y < gslot->bitmap.rows; ++y) {
           if (last_mode == ft_pixel_mode_grays &&
               last_grays != 255) {
-            for (x = 0; x < slot->bitmap.width; ++x) 
+            for (x = 0; x < gslot->bitmap.width; ++x) 
               bmp[x] = map[bmp[x]];
           }
-          i_render_color(render, tx + slot->bitmap_left, ty-slot->bitmap_top+y,
-                         slot->bitmap.width, bmp, cl);
-	  bmp += slot->bitmap.pitch;
+          i_render_color(render, tx + gslot->bitmap_left, ty - gslot->bitmap_top+y,
+                         gslot->bitmap.width, bmp, cl);
+	  bmp += gslot->bitmap.pitch;
 	}
       }
     }
 
-    tx += slot->advance.x / 64;
-    ty -= slot->advance.y / 64;
+    tx += gslot->advance.x / 64;
+    ty -= gslot->advance.y / 64;
   }
 
   if (render)

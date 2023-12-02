@@ -414,7 +414,6 @@ i_readjpeg_wiol(io_glue *data, int length, char** iptc_itext, int *itlength) {
   transfer_function_t transfer_f;
   int channels;
   volatile int src_set = 0;
-  int jfif;
 
   mm_log((1,"i_readjpeg_wiol(data %p, length %d,iptc_itext %p)\n", data, length, iptc_itext));
 
@@ -533,10 +532,10 @@ i_readjpeg_wiol(io_glue *data, int length, char** iptc_itext, int *itlength) {
 		 markerp->data_length);
     }
     else if (markerp->marker == JPEG_APP1 && !seen_exif) {
-      unsigned char *data = markerp->data;
-      size_t len = markerp->data_length;
-      if (len >= 6 && memcmp(data, "Exif\0\0", 6) == 0) {
-	seen_exif = im_decode_exif(im, data+6, len-6);
+      unsigned char *mdata = markerp->data;
+      size_t mlen = markerp->data_length;
+      if (mlen >= 6 && memcmp(mdata, "Exif\0\0", 6) == 0) {
+	seen_exif = im_decode_exif(im, mdata+6, mlen-6);
       }
     }
     else if (markerp->marker == JPEG_APP13) {
@@ -894,9 +893,9 @@ i_writejpeg_wiol(i_img *im, io_glue *ig, int qfactor) {
   {
     char restart_str[20];
     if (i_tags_get_string(&im->tags, "jpeg_restart", 0, restart_str, sizeof(restart_str))) {
-      long restart_count;
+      long restart_count = -1;
       char block_flag = '\0';
-      if (sscanf(restart_str, "%ld%c", &restart_count, &block_flag)
+      if (sscanf(restart_str, "%ld%c", &restart_count, &block_flag) >= 1
           && restart_count >= 0 && restart_count <= 65535
           && (block_flag == '\0' || block_flag == 'b' || block_flag == 'B')) {
         if (block_flag) {

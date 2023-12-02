@@ -17,6 +17,9 @@ GetOptions("t|test=s" => \@tests,
 	   "r" => \$regen_only)
   or die;
 
+my ($gcov2perl) = grep -x, map { "$_/gcov2perl"; } @Config{qw/sitebin installbin/}
+  or die "Cannot find gcov2perl";
+
 my $do_build = !$regen_only;
 if ($do_build) {
   my $make = $Config{make};
@@ -67,8 +70,6 @@ for my $filename (keys %$mani) {
     }
   }
 }
-
-my $gcov2perl = $Config{sitebin} . "/gcov2perl";
 
 for my $path (keys %paths) {
   if ($path) {

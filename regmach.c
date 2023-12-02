@@ -72,9 +72,10 @@ static double hsv_sat(i_color color) {
 }
 
 static i_color make_hsv(double hue, double sat, double val, int alpha) {
-  int i;
   i_color c;
-  for( i=0; i< MAXCHANNELS; i++) c.channel[i]=0;
+  int j;
+  for( j=0; j < MAXCHANNELS; j++)
+    c.channel[j]=0;
   DBG(("hsv=%f %f %f\n", hue, sat, val));
   if (sat <= 0) { /* handle -ve in case someone supplies a bad value */
     /* should this be * 256? */

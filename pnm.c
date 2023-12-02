@@ -712,7 +712,7 @@ write_ppm_data_8(i_img *im, io_glue *ig, int want_channels) {
   i_color bg;
 
   i_get_file_background(im, &bg);
-  while (y < im->ysize && rc >= 0) {
+  while (y < im->ysize) {
     i_gsamp_bg(im, 0, im->xsize, y, data, want_channels, &bg);
     if (i_io_write(ig, data, write_size) != write_size) {
       i_push_error(errno, "could not write ppm data");

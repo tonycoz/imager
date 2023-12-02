@@ -115,7 +115,7 @@ i_readraw_wiol(io_glue *ig, i_img_dim x, i_img_dim y, int datachannels, int stor
     }
     interleave(inbuffer,ilbuffer,im->xsize,datachannels);
     expandchannels(ilbuffer,exbuffer,im->xsize,datachannels,storechannels);
-    /* FIXME: Do we ever want to save to a virtual image? */
+    /* https://github.com/tonycoz/imager/issues/521 */
     memcpy(&(im->idata[im->xsize*storechannels*k]),exbuffer,exbuflen);
     k++;
   }

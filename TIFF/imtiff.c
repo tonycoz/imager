@@ -2573,20 +2573,20 @@ putter_cmyk8(read_state_t *state, i_img_dim x, i_img_dim y, i_img_dim width, i_i
     i_color *outp = state->line_buf;
 
     for (i = 0; i < width; ++i) {
-      unsigned char c, m, y, k;
-      c = p[0];
-      m = p[1];
-      y = p[2];
-      k = 255 - p[3];
+      unsigned char cc, mc, yc, kc;
+      cc = p[0];
+      mc = p[1];
+      yc = p[2];
+      kc = 255 - p[3];
       if (state->sample_signed) {
-	c ^= 0x80;
-	m ^= 0x80;
-	y ^= 0x80;
-	k ^= 0x80;
+	cc ^= 0x80;
+	mc ^= 0x80;
+	yc ^= 0x80;
+	kc ^= 0x80;
       }
-      outp->rgba.r = (k * (255 - c)) / 255;
-      outp->rgba.g = (k * (255 - m)) / 255;
-      outp->rgba.b = (k * (255 - y)) / 255;
+      outp->rgba.r = (kc * (255 - cc)) / 255;
+      outp->rgba.g = (kc * (255 - mc)) / 255;
+      outp->rgba.b = (kc * (255 - yc)) / 255;
       if (state->alpha_chan) {
 	outp->rgba.a = p[state->alpha_chan];
 	if (state->scale_alpha 
@@ -2640,20 +2640,20 @@ putter_cmyk16(read_state_t *state, i_img_dim x, i_img_dim y, i_img_dim width, i_
     unsigned *outp = state->line_buf;
 
     for (i = 0; i < width; ++i) {
-      unsigned c, m, y, k;
-      c = p[0];
-      m = p[1];
-      y = p[2];
-      k = 65535 - p[3];
+      unsigned cc, mc, yc, kc;
+      cc = p[0];
+      mc = p[1];
+      yc = p[2];
+      kc = 65535 - p[3];
       if (state->sample_signed) {
-	c ^= 0x8000;
-	m ^= 0x8000;
-	y ^= 0x8000;
-	k ^= 0x8000;
+	cc ^= 0x8000;
+	mc ^= 0x8000;
+	yc ^= 0x8000;
+	kc ^= 0x8000;
       }
-      outp[0] = (k * (65535U - c)) / 65535U;
-      outp[1] = (k * (65535U - m)) / 65535U;
-      outp[2] = (k * (65535U - y)) / 65535U;
+      outp[0] = (kc * (65535U - cc)) / 65535U;
+      outp[1] = (kc * (65535U - mc)) / 65535U;
+      outp[2] = (kc * (65535U - yc)) / 65535U;
       if (state->alpha_chan) {
 	outp[3] = p[state->alpha_chan];
 	if (state->scale_alpha 
