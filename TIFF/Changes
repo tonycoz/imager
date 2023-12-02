@@ -1,3 +1,12 @@
+Imager-File-TIFF 0.97
+=====================
+
+TIFF:
+
+ - We can no longer be lazy in implemening the size callback.
+   https://github.com/tonycoz/imager/issues/522
+   https://bugs.debian.org/1057270
+
 Imager-File-TIFF 0.96
 =====================
 
