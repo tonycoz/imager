@@ -1,0 +1,7 @@
+{
+   "workaround bug in valgrind"
+   Memcheck:Overlap
+   fun:__memcpy_chk
+   obj:/usr/lib/x86_64-linux-gnu/perl-base/auto/Cwd/Cwd.so
+   fun:Perl_pp_entersub
+}
