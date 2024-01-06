@@ -1015,8 +1015,9 @@ get_compression(i_img *im, tf_uint16 def_compress) {
     TIFFCodec *codecs = TIFFGetConfiguredCODECs();
     for (TIFFCodec *c = codecs; c->name; ++c) {
       if (strcmp(c->name, name) == 0) {
+        tf_uint16 scheme = c->scheme;
         _TIFFfree(codecs);
-        return c->scheme;
+        return scheme;
       }
     }
     _TIFFfree(codecs);
