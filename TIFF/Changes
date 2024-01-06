@@ -1,3 +1,10 @@
+Imager-File-TIFF 0.98
+=====================
+
+ - fix a read-after-free when looking up a compression codec by the
+   libtiff defined name
+   https://github.com/tonycoz/imager/issues/524
+
 Imager-File-TIFF 0.97
 =====================
 

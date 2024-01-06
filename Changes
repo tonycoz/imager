@@ -1,5 +1,9 @@
 Imager release history.  Older releases can be found in Changes.old
 
+ - TIFF: don't read after free when looking up a compression codec
+   by the libtiff defined name,
+   https://github.com/tonycoz/imager/issues/524
+
 Imager 1.022 - 3 Dec 2023
 ============
 
