@@ -1,5 +1,8 @@
 Imager release history.  Older releases can be found in Changes.old
 
+Imager 1.023 - 13 Jan 2024
+============
+
  - TIFF: don't read after free when looking up a compression codec
    by the libtiff defined name,
    https://github.com/tonycoz/imager/issues/524
@@ -7,7 +10,7 @@ Imager release history.  Older releases can be found in Changes.old
 Imager 1.022 - 3 Dec 2023
 ============
 
- - TIFF: We can no longer be lazy in implemening the size callback.
+ - TIFF: We can no longer be lazy in implementing the size callback.
    https://github.com/tonycoz/imager/issues/522
    https://bugs.debian.org/1057270
 
