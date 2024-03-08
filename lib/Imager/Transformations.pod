@@ -142,33 +142,49 @@ New in Imager 0.54.
 
 =item *
 
-C<type> - controls whether the larger or smaller of the two possible
-sizes is chosen, possible values are:
+C<type> - when both C<xpixels> and C<ypixels> are supplied and do not
+scale the image proportionally C<type> controls whether the larger or
+smaller of the two possible sizes is chosen, or whether the resulting
+image is stretched.
+
+Possible values are:
 
 =over
 
 =item *
 
-C<min> - the smaller of the 2 sizes are chosen.
+C<min> - the smaller of the two possible sizes is chosen.
 
 =item *
 
-C<max> - the larger of the 2 sizes.  This is the default.
+C<max> - the larger of the two possible sizes is chosen.  This is the
+default.
 
 =item *
 
-C<nonprop> - non-proportional scaling.  New in Imager 0.54.
+C<nonprop> - allow non-proportional scaling.
 
 =back
 
 scale() will fail if C<type> is set to some other value.
 
 For example, if the original image is 400 pixels wide by 200 pixels
-high and C<xpixels> is set to 300, and C<ypixels> is set to 160.  When
-C<type> is C<'min'> the resulting image is 300 x 150, when C<type> is
-C<'max'> the resulting image is 320 x 160.
+high and C<xpixels> is set to 300, and C<ypixels> is set to 160:
 
-C<type> is only used if both C<xpixels> and C<ypixels> are supplied.
+  # $image is 400x200
+  my $scaled = $image->scale(xpixels => 300, ypixels => 160, type => $type);
+
+then scaling to 300x160 would distort the message, making it look
+stretched vertically.
+
+Scaling to 300 x 150, based on C<xpixels> or 320 x 160 based on
+C<ypixels> prevents any stretching, preserving a ratio of two to one
+for width to height.
+
+When C<type> is C<min> the result is the smaller 300 x 150 image, when
+C<type> is C<max> the result is the larger 320 x 160 image.
+C<nonprop> doesn't attempt to scale proportionally at all, producing a
+300 x 160 image.
 
 =item *
 
