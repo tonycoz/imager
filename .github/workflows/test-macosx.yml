@@ -18,7 +18,7 @@ jobs:
       - name: install dependencies
         run: |
             brew update ||:
-            brew install perl giflib libjpeg libtiff freetype libpng
+            HOMEBREW_NO_INSTALLED_DEPENDENTS_CHECK=1 brew install perl giflib libjpeg-turbo libtiff freetype libpng
       - name: configure
         run: |
             perl Makefile.PL
