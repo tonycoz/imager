@@ -901,6 +901,12 @@ coefficients as documented below used to specify extra channels for
 the image.  Defaults to not add (or even keeping) extra channels from
 the source image.
 
+=item *
+
+C<scale> - whether the linear luminance of each channel is used, or
+the numeric value.  Possible values are "linear" or "gamma".  Default:
+"linear".
+
 =back
 
 The currently defined presets are:

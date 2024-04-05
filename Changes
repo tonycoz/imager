@@ -1,5 +1,37 @@
 Imager release history.  Older releases can be found in Changes.old
 
+Perl visible changes:
+
+  - the output of scaling now works based on the linear luminance of
+    each channel rather than the numeric value.
+    This will result in changes to the output of scaling.
+    https://github.com/tonycoz/imager/issues/216
+
+  - convert() uses the linear luminance of each channel by default,
+    but you can override this.
+
+  - you can now create an image with "extra channels", they can be
+    used by file handlers to support extra per-pixel information such
+    as extra alpha channels, non RGB color channels.  Most operations
+    ignore these channels.  Extra channels are the same type (8-bit,
+    16-bit, float, double) as the other channels of the image.
+
+  - added the data() method which fetches the raw image data in
+    various formats.
+
+  - you can now create linear sample images, which internally
+    represent the sample values as linear luminance rather than as the
+    typical gamma/sRGB light curve value.
+
+  - creating an image with unsupported sample size now fails rather
+    than returning an 8-bit per sample image.
+
+  - reading pixel colors from a paletted image with getscanline() now
+    only fills in the color channels with the number of channels
+    defined for the image.  Previously each pixel would be filled in
+    from the full palette entry for the image.
+
+
 Major binary compatibility changes:
 
   - system:
@@ -44,6 +76,8 @@ Major binary compatibility changes:
       method.
 
     - add support for extra channels to convert()
+
+    - convert() now uses linear samples by default
 
     - refactor 8-bit, 16 bit, double per sample image implementations
       into a single implementation using macros.
@@ -184,7 +218,7 @@ Imager 1.017 - 14 Jun 2022
 
 Bug fix:
 
- - fix a one bytes underallocation for Imager::TrimColorList.  On
+ - fix a one byte underallocation for Imager::TrimColorList.  On
    older perls this could lead to writing a zero byte one past the end
    of the allocated block.
 
