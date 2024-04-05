@@ -100,10 +100,16 @@ compress_values[] =
     { "jbig",     COMPRESSION_JBIG },
     { "sgilog",   COMPRESSION_SGILOG },
     { "sgilog24", COMPRESSION_SGILOG24 },
+#ifdef COMPRESSION_LERC
     { "lerc",     COMPRESSION_LERC },
+#endif
     { "lzma",     COMPRESSION_LZMA },
+#ifdef COMPRESSION_ZSTD
     { "zstd",     COMPRESSION_ZSTD },
+#endif
+#ifdef COMPRESSION_WEBP
     { "webp",     COMPRESSION_WEBP },
+#endif
   };
 
 static const int compress_value_count = 
