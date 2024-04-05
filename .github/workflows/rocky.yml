@@ -1,0 +1,37 @@
+name: rocky
+
+on:
+  push:
+    branches:
+      - '**'
+    tags-ignore:
+      - '*'
+  pull_request:
+
+
+jobs:
+  imager:
+    runs-on: ubuntu-latest
+    container:
+      image: rockylinux/rockylinux:8
+    timeout-minutes: 10
+    steps:
+      - name: install dependencies
+        run: |
+            dnf update -y
+            dnf groupinstall -y "Development Tools"
+            dnf install -y --enablerepo=powertools libtiff-devel libpng-devel giflib-devel freetype-devel libjpeg-devel perl-Test-Pod-Coverage perl-Test-Pod perl-Pod-Parser cpanminus
+            cpanm Parse::RecDescent
+      - name: checkout
+        uses: actions/checkout@v4
+      - name: git annoyance
+        run: git config --global --add safe.directory /__w/imager/imager
+      - name: configure
+        run: |
+          perl Makefile.PL
+      - name: build
+        run: |
+            make -j2
+      - name: test
+        run: |
+            HARNESS_OPTIONS=j2 IMAGER_AUTHOR_TESTING=1 make test
