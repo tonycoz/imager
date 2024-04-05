@@ -173,8 +173,8 @@ else {
 }
 
 fprintf(stderr, "TIFF: library version %.*s, header version %ld\n", ver_len, ver_start, (long)TIFFLIB_VERSION);
-if (TIFFLIB_VERSION < 20191103) {
-  fprintf(stderr, "TIFF: libtiff 4.1.0 or later required\n");
+if (TIFFLIB_VERSION < 20170521) {
+  fprintf(stderr, "TIFF: libtiff 4.0.8 or later required\n");
   return 1;
 }
 return 0;
