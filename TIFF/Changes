@@ -1,4 +1,11 @@
+Imager-File-TIFF 0.99
+=====================
+
  - improve reporting from a test on failure.
+
+ - support back to libtiff 4.0.8, for compatibility with RHEL
+   and its clones.
+   https://github.com/tonycoz/imager/issues/527
 
 Imager-File-TIFF 0.98
 =====================

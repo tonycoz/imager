@@ -1,5 +1,14 @@
 Imager release history.  Older releases can be found in Changes.old
 
+Imager 1.024 - 6 Apr 2024
+============
+
+ - TIFF: improve reporting from a test on failure.
+
+ - TIFF: support back to libtiff 4.0.8, for compatibility with RHEL
+   and its clones.
+   https://github.com/tonycoz/imager/issues/527
+
 Imager 1.023 - 13 Jan 2024
 ============
 
