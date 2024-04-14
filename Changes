@@ -4,11 +4,21 @@ Perl visible changes:
 
   - the output of scaling now works based on the linear luminance of
     each channel rather than the numeric value.
-    This will result in changes to the output of scaling.
+    This will result in changes to the output of scale().
     https://github.com/tonycoz/imager/issues/216
 
+  - creating an image with unsupported sample size now fails rather
+    than returning an 8-bit per sample image.
+
+  - reading pixel colors from a paletted image with getscanline() now
+    only fills in the color channels with the number of channels
+    defined for the image.  Previously each pixel would be filled in
+    from the full palette entry for the image.
+
   - convert() uses the linear luminance of each channel by default,
-    but you can override this.
+    but you can override this.  This will result in changes to the
+    output of convert() when the result convert() isn't just moving
+    channels around.
 
   - you can now create an image with "extra channels", they can be
     used by file handlers to support extra per-pixel information such
@@ -22,15 +32,6 @@ Perl visible changes:
   - you can now create linear sample images, which internally
     represent the sample values as linear luminance rather than as the
     typical gamma/sRGB light curve value.
-
-  - creating an image with unsupported sample size now fails rather
-    than returning an 8-bit per sample image.
-
-  - reading pixel colors from a paletted image with getscanline() now
-    only fills in the color channels with the number of channels
-    defined for the image.  Previously each pixel would be filled in
-    from the full palette entry for the image.
-
 
 Major binary compatibility changes:
 
@@ -103,6 +104,15 @@ Major binary compatibility changes:
     - add i_io_mmap() and i_io_munmap() interfaces to io_glue objects
       and implement it for FD and buffer objects.  This is only usable
       from C.
+
+Breaks:
+
+  - Image::PHash - the change to scaling produces a slightly different
+    image in the phash calculation, resulting in a higher difference
+    metric, failing a test.
+
+  - Imager::Filter::Bakumatsu - tests the exact output of a series of
+    processes that includes convert(), failing a test.
 
 Imager 1.024 - 6 Apr 2024
 ============
