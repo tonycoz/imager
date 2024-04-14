@@ -20,7 +20,9 @@
  Version 5 changed the return types of i_get_file_background() and
  i_get_file_backgroundf() from void to int.
 
- Version 6 moved the function pointers from i_img into a vtable.
+ Version 6 moved the function pointers from i_img into a vtable,
+ similarly for io_glue, added and removed several i_img virtual
+ function pointers, added extrachannels, islinear to i_img.
 
 */
 #define IMAGER_API_VERSION 6
