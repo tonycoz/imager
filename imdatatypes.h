@@ -568,10 +568,6 @@ i_img_init().
 
 =item *
 
-C<im_data> - image specific data internal to Imager.
-
-=item *
-
 C<context> - the Imager API context this image belongs to.
 
 =back
