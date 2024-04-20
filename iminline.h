@@ -741,7 +741,7 @@ C<align> must be a power of two.
 
 IMAGER_STATIC_INLINE size_t
 im_align_size(size_t align, size_t size) {
-  assert(("align must be a power of 2", (align & -align) == align));
+  assert(("align must be a power of 2" && (align & -align) == align));
   if (size & (align - 1U)) {
     size_t new_size = (size + align) & ~(align - 1);
     assert(new_size > size);
