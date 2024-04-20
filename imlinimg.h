@@ -171,7 +171,7 @@ LINIMG_NEW_EXTRA_NAME(pIMCTX, i_img_dim x, i_img_dim y, int ch, int extra) {
   size_t bytes, line_bytes;
   int totalch;
 
-  im_log((aIMCTX, 1, IM_QUOTE(LINIMG_NEW_EXTRA_NAME) "(x %" i_DF ", y %" i_DF ", ch %d)\n",
+  im_log((aIMCTX, 1, IM_QUOTE(LINIMG_NEW_EXTRA_NAME) "(x %" i_DF ", y %" i_DF ", ch %d, extra %d)\n",
 	  i_DFc(x), i_DFc(y), ch, extra));
 
   im_clear_error(aIMCTX);
