@@ -1,5 +1,8 @@
 Imager release history.  Older releases can be found in Changes.old
 
+Imager 1.024_002 - 20 Apr 2024
+================
+
  - handle the C++ attribute detection in a way that's safer for older
    compilers.
    http://www.cpantesters.org/cpan/report/03a1b9ec-faf1-11ee-8dad-63dd6d8775ea
