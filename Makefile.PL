@@ -889,7 +889,12 @@ C++ compatible definitions are provided if possible.
 */
 
 #ifdef __cplusplus
-#  if defined(__has_cpp_attribute) && __has_cpp_attribute(noreturn)
+#  ifdef __has_cpp_attribute
+#    define IMAGER_HAS_CPP_ATTRIBUTE(x) __has_cpp_attribute(x)
+#  else
+#    define IMAGER_HAS_CPP_ATTRIBUTE(x) 0
+#  endif
+#  if IMAGER_HAS_CPP_ATTRIBUTE(noreturn)
 #    define IMAGER_NORETURN [[noreturn]]
 #  else
 #    define IMAGER_NORETURN
