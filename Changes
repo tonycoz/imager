@@ -1,5 +1,14 @@
 Imager release history.  Older releases can be found in Changes.old
 
+ - handle the C++ attribute detection in a way that's safer for older
+   compilers.
+   http://www.cpantesters.org/cpan/report/03a1b9ec-faf1-11ee-8dad-63dd6d8775ea
+
+ - re-work an assertion expression to avoid a warning
+
+ - fix the format used to log image creation for linear sample images to
+   match the parameters supplied (last parameter was unused)
+
 Imager 1.024_001 - 14 Apr 2024
 ================
 
