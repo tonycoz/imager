@@ -125,6 +125,8 @@ for my $name (qw(ccflags ldflags lddlflags optimize cc)) {
   }
 }
 
+probe_c99_flag();
+
 setenv();
 
 if ($ENV{AUTOMATED_TESTING}) {
@@ -134,7 +136,7 @@ if ($ENV{AUTOMATED_TESTING}) {
 if ($VERBOSE) { 
   print "Verbose mode\n"; 
   require Data::Dumper; 
-  import Data::Dumper qw(Dumper);
+  Data::Dumper->import("Dumper");
 }
 
 my @defines;
@@ -1389,6 +1391,38 @@ sub make_depend {
   }
 
   return \%final_deps;
+}
+
+sub probe_c99_flag {
+  my $code = <<'CODE';
+#include <stdio.h>
+
+int main() {
+  int sum = 55;
+  for (int i = 0; i <= 10; ++i) {
+    sum -= i;
+  }
+  return sum;
+}
+CODE
+
+  # preferably no option, modern gcc (and hopefully other compilers)
+  # default to later than C99
+  for my $flag ("", qw(-std=c99)) {
+    if ($VERBOSE) {
+      if ($flag) {
+        print "Trying '$flag' to compile C99 code\n";
+      }
+      else {
+        print "Trying to compile C99 code with no extra flags\n";
+      }
+    }
+    if (try_compile_and_link($code, run => 1, ccflags => $flag)) {
+      $MyConfig{ccflags} .= $flag if $flag;
+      return;
+    }
+  }
+  die "OS unsupported: Can't compile C99\n";
 }
 
 1;
