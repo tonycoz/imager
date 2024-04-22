@@ -142,13 +142,15 @@ IMAGER_STATIC_INLINE int
 i_gpix(i_img *im, i_img_dim x, i_img_dim y, i_color *val) {
   int count = i_gsamp(im, x, x+1, y, val->channel, NULL, im->channels);
   if (count > 0) {
-    for (int ch = im->channels; ch < MAXCHANNELS; ++ch) {
+    int ch;
+    for (ch = im->channels; ch < MAXCHANNELS; ++ch) {
       val->channel[ch] = 0;
     }
     return 0;
   }
   else {
-    for (int ch = 0; ch < MAXCHANNELS; ++ch)
+    int ch;
+    for (ch = 0; ch < MAXCHANNELS; ++ch)
       val->channel[ch] = 0;
     return -1;
   }
@@ -169,13 +171,15 @@ IMAGER_STATIC_INLINE int
 i_gpixf(i_img *im, i_img_dim x, i_img_dim y, i_fcolor *val) {
   int count = i_gsampf(im, x, x+1, y, val->channel, NULL, im->channels);
   if (count > 0) {
-    for (int ch = im->channels; ch < MAXCHANNELS; ++ch) {
+    int ch;
+    for (ch = im->channels; ch < MAXCHANNELS; ++ch) {
       val->channel[ch] = 0;
     }
     return 0;
   }
   else {
-    for (int ch = 0; ch < MAXCHANNELS; ++ch)
+    int ch;
+    for (ch = 0; ch < MAXCHANNELS; ++ch)
       val->channel[ch] = 0;
     return -1;
   }
