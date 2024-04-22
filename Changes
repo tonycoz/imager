@@ -1,6 +1,6 @@
 Imager release history.  Older releases can be found in Changes.old
 
-Imager 1.024_003
+Imager 1.024_003 - 22 Apr 2024
 ================
 
  - don't define i_sample16_t twice
