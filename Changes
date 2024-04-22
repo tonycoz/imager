@@ -1,5 +1,16 @@
 Imager release history.  Older releases can be found in Changes.old
 
+Imager 1.024_003
+================
+
+ - don't define i_sample16_t twice
+
+ - probe for C99 compiler support, and try to convince to compiler to
+   be C99 compatible.
+
+ - make the headers C89 compatible, since they're visible to Imager
+   API users
+
 Imager 1.024_002 - 20 Apr 2024
 ================
 
