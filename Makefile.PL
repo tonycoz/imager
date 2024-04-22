@@ -746,8 +746,6 @@ EOS
 typedef $Config{ivtype} i_dim_format_t;
 #define i_DF $Config{ivdformat}
 
-/* type for 16-bit samples */
-typedef $Config{u16type} i_sample16_t;
 EOS
 
   if ($Config{d_static_inline}) {
