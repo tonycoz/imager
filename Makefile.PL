@@ -88,6 +88,11 @@ GetOptions("help" => \&usage,
 	  )
   or die "Error in command-line arguments, try $^X $0 --help\n";
 
+if ($ENV{AUTOMATED_TESTING}) {
+  $assert = 1;
+  $VERBOSE = 1;
+}
+
 if ($coverage) {
     if ($Config{gccversion}) {
         push @Aoptimize, '-ftest-coverage -fprofile-arcs';
@@ -128,10 +133,6 @@ for my $name (qw(ccflags ldflags lddlflags optimize cc)) {
 probe_c99_flag();
 
 setenv();
-
-if ($ENV{AUTOMATED_TESTING}) {
-  $assert = 1;
-}
 
 if ($VERBOSE) { 
   print "Verbose mode\n"; 
