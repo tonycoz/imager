@@ -1418,7 +1418,7 @@ CODE
       }
     }
     if (try_compile_and_link($code, run => 1, ccflags => $flag)) {
-      $MyConfig{ccflags} .= $flag if $flag;
+      $MyConfig{ccflags} .= " $flag" if $flag;
       return;
     }
   }
