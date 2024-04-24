@@ -1,5 +1,8 @@
 Imager release history.  Older releases can be found in Changes.old
 
+Imager 1.024_004 - 24 Apr 2024
+================
+
  - Fix a dumb mistake in adding the -std=c99 option
    http://www.cpantesters.org/cpan/report/bcea1bec-01ae-11ef-8e60-0e176e8775ea
 
