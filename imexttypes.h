@@ -289,6 +289,9 @@ typedef struct {
   void
   (*f_im_fatal)(im_context_t, int exit_code, const char *format, ...);
 
+  void * (*f_im_aligned_alloc_low)(size_t align, size_t size);
+  void (*f_im_aligned_free)(void *p);
+  
 } im_ext_funcs;
 
 #define PERL_FUNCTION_TABLE_NAME "Imager::__ext_func_table"

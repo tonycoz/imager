@@ -408,6 +408,8 @@ void* mymalloc_file_line (size_t size, char* file, int line);
 void* myzmalloc_file_line (size_t size, const char* file, int line);
 void  myfree_file_line   (void *p, char*file, int line);
 void* myrealloc_file_line(void *p, size_t newsize, char* file,int line);
+void *im_aligned_alloc_low(size_t align, size_t size);
+void im_aligned_free(void *p);
 
 #ifdef IMAGER_DEBUG_MALLOC
 

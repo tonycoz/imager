@@ -3131,6 +3131,31 @@ Returns ~0UL on failure.
 =for comment
 From: io.c
 
+=item im_aligned_alloc_low(C<align>, C<size>)
+
+Low level function to allocate aligned memory.
+
+This will use malloc() and returned unaligned memory if no aligned
+allocation function was found during configuration.
+
+C<align> must be a power of two.
+
+C<size> may be rounded up to a multiple of C<align>.
+
+This may return NULL on failure.
+
+
+=for comment
+From: io.c
+
+=item im_aligned_free(C<p>)
+
+Free a block of memory allocated with im_aligned_alloc_low().
+
+
+=for comment
+From: io.c
+
 =item im_context_refdec(ctx, where)
 X<im_context_refdec API>
 =section Context objects
@@ -3305,19 +3330,11 @@ B<im_aligned_alloc_fatal>
 
 =item *
 
-B<im_aligned_alloc_low>
-
-=item *
-
 B<im_aligned_alloc_simd_fatal>
 
 =item *
 
 B<im_aligned_alloc_simd_null>
-
-=item *
-
-B<im_aligned_free>
 
 =item *
 

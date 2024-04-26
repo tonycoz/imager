@@ -232,7 +232,9 @@ im_ext_funcs imager_function_table =
     im_img_float_new_extra,
     im_lin_img_16_new_extra,
     im_lin_img_double_new_extra,
-    im_fatal
+    im_fatal,
+    im_aligned_alloc_low,
+    im_aligned_free
   };
 
 /* in general these functions aren't called by Imager internally, but

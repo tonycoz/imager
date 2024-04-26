@@ -264,6 +264,12 @@ extern im_ext_funcs *imager_function_ext_table;
 #define myzmalloc_file_line(size, file, lineno) \
   ((im_extt->f_myzmalloc_file_line)((size), (file), (lineno)))
 
+#define im_aligned_alloc_low(align, size) \
+  ((im_extt->f_im_aligned_alloc_low)((align), (size)))
+#define im_aligned_free(p) \
+  ((im_extt->f_im_aligned_free)(p))
+
+
 /* these are a bit special, mostly the APIs won't be called directly,
    but used to initialize a vtable.
 */

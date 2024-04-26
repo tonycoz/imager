@@ -844,6 +844,12 @@ test_forwarders() {
   return ok;
 }
 
+bool
+try_aligned_alloc() {
+  void *p = im_aligned_alloc_simd_null(16, 64);
+  im_aligned_free(p);
+  return true;
+}
 
 EOS
 
