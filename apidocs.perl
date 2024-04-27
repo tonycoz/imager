@@ -52,14 +52,14 @@ EOS
           push @{$cats{$category}}, $func;
         }
         else {
-          print STDERR "$func: no category defined\n";
+          #print STDERR "$func: no category defined\n";
         }
 
         if ($synopsis) {
           $funcsyns{$func} = $synopsis;
         }
         else {
-          print STDERR "$func: no synopsis\n";
+          #print STDERR "$func: no synopsis\n";
         }
 	defined $order or $order = 50;
 	$order{$func} = $order;
