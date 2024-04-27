@@ -790,19 +790,8 @@ EOS
 
 EOS
   }
-  my ($u16type, $inttypes) = probe_uint16();
-  if ($u16type) {
-    print $config <<EOS
-/* Used for 16-bit images, and the type of the data returned by
-  i_img_data() for i_16_bit.
-*/
-
-typedef $u16type i_sample16_t;
-#$inttypes IMAGER_USE_INTTYPES_H
-
-EOS
-  }
-  else {
+  my ($u16type, $need_stdint_uint16) = probe_uint16();
+  unless ($u16type) {
     die <<'EOS'
 No unsigned 16-bit integer type found.
 
@@ -811,6 +800,32 @@ config.sh generated for your system and the name of the type.
 
 EOS
   }
+  my ($ptr_int_type, $need_stdint_ptr_int) = probe_ptr_int_type();
+  my $need_stdint = "$need_stdint_uint16$need_stdint_ptr_int" =~ /define/
+    ? "define" : "undef";
+
+  print $config <<EOS;
+#$need_stdint IMAGER_USE_STDINT_H
+#ifdef IMAGER_USE_STDINT_H
+#  include <stdint.h>
+#endif
+
+/* Used for 16-bit images, and the type of the data returned by
+  i_img_data() for i_16_bit.
+*/
+
+typedef $u16type i_sample16_t;
+
+/*
+An unsigned integer type that is the same size or larger than a void*
+
+C99 optionally allows an implementation to define uintptr_t, but it
+isn't required.
+*/
+
+typedef $ptr_int_type im_ptr_int;
+EOS
+
   my $f16type = probe_float16();
   my $f16def = $f16type ? 'define' : 'undef';
     print $config <<EOS;
@@ -839,21 +854,6 @@ EOS
 
 /* size of pointers, for use in preprocessing */
 #define IMAGER_PTR_SIZE $Config{ptrsize}
-EOS
-
-  my ($ptr_int_type, $need_stdint) = probe_ptr_int_type();
-  my $stdint = $need_stdint ? "#include <stdint.h>\n" : "";
-  print $config <<"EOS";
-
-/*
-An unsigned integer type that is the same size or larger than a void*
-
-C99 optionally allows an implementation to define uintptr_t, but it
-isn't required.
-*/
-
-$stdint
-typedef $ptr_int_type im_ptr_int;
 EOS
 
   my ($type, $defs) = probe_aligned_alloc();
@@ -936,12 +936,12 @@ sub probe_uint16 {
   local $| = 1;
   print "Looking for a 16-bit unsigned integer type ... ";
   for my $case ([ "unsigned short", "undef" ], [ "uint16_t", "define" ]) {
-    my ($type, $inttypes) = @$case;
+    my ($type, $stdint) = @$case;
     my $verb = $VERBOSE ? "define" : "undef";
     my $code = <<EOS;
-#$inttypes I_INTTYPES
-#ifdef I_INTTYPES
-#include <inttypes.h>
+#$stdint I_STDINT
+#ifdef I_STDINT
+#include <stdint.h>
 #endif
 #$verb VERBOSE
 #ifdef VERBOSE
@@ -967,7 +967,7 @@ EOS
     print $code if $VERBOSE;
     if (try_compile_and_link($code, run => 1)) {
       print "found $type\n";
-      return ( $type, $inttypes );
+      return ( $type, $stdint );
     }
   }
 }
@@ -1012,13 +1012,11 @@ int main() {
 }
 EOS
   if (try_compile_and_link($code)) {
-    return ("uintptr_t", 1);
+    return ("uintptr_t", "define");
   }
 
   for my $type ("unsigned", "unsigned long", "unsigned long long") {
     my $code = <<"EOS";
-#include <stdint.h>
-
 int x = 0;
 
 int main() {
@@ -1029,7 +1027,7 @@ int main() {
 }
 EOS
     if (try_compile_and_link($code)) {
-      return ($type, 0);
+      return ($type, "undef");
     }
   }
 
