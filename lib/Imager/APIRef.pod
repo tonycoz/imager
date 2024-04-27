@@ -22,6 +22,10 @@ Imager::APIRef - Imager's C API - reference.
 
   # Blit tools
 
+  # Context objects
+  im_context_refinc(aIMCTX, "a description");
+  im_context_refdec(aIMCTX, "a description");
+
   # Data Types
   i_img *img;
   i_color black;
@@ -224,6 +228,36 @@ Allocate a new C<i_render> object and initialize it.
 
 =for comment
 From: render.im
+
+
+=back
+
+=head2 Context objects
+
+=over
+
+=item im_context_refdec(ctx, where)
+X<im_context_refdec API>
+
+  im_context_refdec(aIMCTX, "a description");
+
+Remove a reference to the context, releasing it if all references have
+been removed.
+
+
+=for comment
+From: context.c
+
+=item im_context_refinc(ctx, where)
+X<im_context_refinc API>
+
+  im_context_refinc(aIMCTX, "a description");
+
+Add a new reference to the context.
+
+
+=for comment
+From: context.c
 
 
 =back
@@ -3155,31 +3189,6 @@ Free a block of memory allocated with im_aligned_alloc_low().
 
 =for comment
 From: io.c
-
-=item im_context_refdec(ctx, where)
-X<im_context_refdec API>
-=section Context objects
-
-  im_context_refdec(aIMCTX, "a description");
-
-Remove a reference to the context, releasing it if all references have
-been removed.
-
-
-=for comment
-From: context.c
-
-=item im_context_refinc(ctx, where)
-X<im_context_refinc API>
-=section Context objects
-
-  im_context_refinc(aIMCTX, "a description");
-
-Add a new reference to the context.
-
-
-=for comment
-From: context.c
 
 =item im_context_slot_get(ctx, slot)
 

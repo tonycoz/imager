@@ -8,6 +8,7 @@ static void fill_curves(im_context_t ctx);
 
 /*
 =item im_context_new()
+=category Context objects
 
 Create a new Imager context object.
 
@@ -71,7 +72,7 @@ im_context_new(void) {
 /*
 =item im_context_refinc(ctx, where)
 X<im_context_refinc API>
-=section Context objects
+=category Context objects
 =synopsis im_context_refinc(aIMCTX, "a description");
 
 Add a new reference to the context.
@@ -92,7 +93,7 @@ im_context_refinc(im_context_t ctx, const char *where) {
 /*
 =item im_context_refdec(ctx, where)
 X<im_context_refdec API>
-=section Context objects
+=category Context objects
 =synopsis im_context_refdec(aIMCTX, "a description");
 
 Remove a reference to the context, releasing it if all references have

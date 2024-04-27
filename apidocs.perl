@@ -11,7 +11,7 @@ my %funcs = map { $_ => 1 } @funcs, @inline;
 # look for files to parse
 
 my $mani = maniread;
-my @files = sort grep /\.(c|im|h)$/, keys %$mani;
+my @files = sort grep /\.(c|im|h)$/ && !m(/), keys %$mani;
 
 # scan each file for =item <func>\b
 my $func;
@@ -51,8 +51,15 @@ EOS
           $funccats{$func} = $category;
           push @{$cats{$category}}, $func;
         }
+        else {
+          print STDERR "$func: no category defined\n";
+        }
+
         if ($synopsis) {
           $funcsyns{$func} = $synopsis;
+        }
+        else {
+          print STDERR "$func: no synopsis\n";
         }
 	defined $order or $order = 50;
 	$order{$func} = $order;
