@@ -1,5 +1,17 @@
 Imager release history.  Older releases can be found in Changes.old
 
+Imager 1.024_005 - 27 Apr 2024
+================
+
+Unfortunately a PAUSE outage meant CPAN tests didn't see _004, so a
+new release to try and get the diagnostics I wanted.
+
+ - make the aligned allocation functions non-inline, these can require C99,
+   and this also ensures the libc that allocates the memory also frees the
+   memory (mostly a Windows issue)
+
+ - some apidocs cleanup, this needs more
+
 Imager 1.024_004 - 24 Apr 2024
 ================
 
