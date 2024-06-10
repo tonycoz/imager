@@ -1426,7 +1426,9 @@ CODE
 
   # probe for a flag if we need it
   # which we may for [[noreturn]] or aligned_alloc()
-  for my $flag (qw(-std=c -std:c)) {
+  # GNU to work around perl depending on _GNU_SOURCE and defaults rather
+  # than the standard macros
+  for my $flag (qw(-std=gnu -std=c -std:c)) {
     print "Trying '${flag}99' to compile C99 code\n"
       if $VERBOSE;
 
