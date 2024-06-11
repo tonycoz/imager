@@ -1,5 +1,14 @@
 Imager release history.  Older releases can be found in Changes.old
 
+Imager 1.024_006 - 11 Jun 2024
+================
+
+ - re-work Makefile.PL probing to select the C or POSIX standard
+   needed for stdnoreturn.h, [[noreturn]], posix_memalign() etc.
+
+ - fallback to -std=gnuXX for standard selection, since perl's config
+   doesn't use the standard POSIX macros as it should.
+
 Imager 1.024_005 - 27 Apr 2024
 ================
 
