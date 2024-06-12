@@ -1142,7 +1142,7 @@ EOS
     if (try_compile_and_link($code, %probe_opts, run => 1)) {
       print "Found $descs{$type} for aligned allocation\n";
       promote_std($std, "aligned_alloc()") if $std;
-      $CFLAGS .= " -D_POSIX_C_SOURCE=20112L"
+      $CFLAGS .= " -D_POSIX_C_SOURCE=200112L"
         if $type =~ /POSIX/;
       return ($type, $defs);
     }
