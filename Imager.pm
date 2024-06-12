@@ -149,7 +149,7 @@ BEGIN {
   if ($ex_version < 5.57) {
     our @ISA = qw(Exporter);
   }
-  $VERSION = '1.024_006';
+  $VERSION = '1.024_007';
   require XSLoader;
   XSLoader::load(Imager => $VERSION);
 }
