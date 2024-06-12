@@ -266,9 +266,9 @@ make_imconfig(\@defines);
 
 my $std = $MyConfig{std};
 if ($std) {
-  if ($std != 99 || ($std == 99 && !$MyConfig{defstd99})) {
+  #if ($std != 99 || ($std == 99 && !$MyConfig{defstd99})) {
     $CFLAGS .= " $MyConfig{stdflag}$std";
-  }
+  #}
 }
 
 my %opts=
