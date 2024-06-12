@@ -1,5 +1,13 @@
 Imager release history.  Older releases can be found in Changes.old
 
+Imager 1.024_007 - 12 Jun 2024
+================
+
+ - use correct _POSIX_C_SOURCE
+
+ - always add -std if we find it, rather than relying on the c99 test
+   (which isn't working somehow)
+
 Imager 1.024_006 - 11 Jun 2024
 ================
 
