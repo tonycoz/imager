@@ -130,6 +130,7 @@ for my $name (qw(ccflags ldflags lddlflags optimize cc)) {
   }
 }
 
+my $needed_std = 99;
 probe_std_flag();
 
 setenv();
@@ -264,10 +265,9 @@ if (-d "xt" && scalar(() = glob("xt/*.t"))) {
 
 make_imconfig(\@defines);
 
-my $std = $MyConfig{std};
-if ($std) {
+if ($needed_std) {
   #if ($std != 99 || ($std == 99 && !$MyConfig{defstd99})) {
-    $CFLAGS .= " $MyConfig{stdflag}$std";
+    $CFLAGS .= " $MyConfig{stdflag}$needed_std";
   #}
 }
 
@@ -1228,10 +1228,10 @@ CODE
 sub promote_std {
   my ($std, $why) = @_;
 
-  my ($newstd) = sort_std($std, $MyConfig{std});
-  if (!$MyConfig{std} || $newstd != $MyConfig{std}) {
+  my ($newstd) = sort_std($std, $needed_std);
+  if ($newstd != $needed_std) {
     print "Promoting std to $std for $why\n";
-    $MyConfig{std} = $std;
+    $needed_std = $std;
   }
 }
 
@@ -1468,7 +1468,7 @@ sub try_compile_and_link {
     $ccflags .= " $args{ccflags}" if $args{ccflags};
     $ccflags .= " $MyConfig{'optimize'}";
     # we want the maximum std
-    my ($std) = sort_std($args{std}, $MyConfig{std});
+    my ($std) = sort_std($args{std}, $needed_std);
     my $stdflag = $args{stdflag} || $MyConfig{stdflag};
     if ($std && $stdflag) {
       $ccflags .= " $stdflag$std";
