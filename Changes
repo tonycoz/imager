@@ -1,5 +1,8 @@
 Imager release history.  Older releases can be found in Changes.old
 
+Imager 1.024_008 - 13 Jun 2024
+================
+
  - actually set a default std value (some systems aren't setting -std=)
 
 Imager 1.024_007 - 12 Jun 2024
