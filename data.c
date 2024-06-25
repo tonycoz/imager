@@ -415,7 +415,7 @@ lin_data_16(i_img *im, i_data_layout_t layout, unsigned flags,
   data = mymalloc(size);
   row_size = count * im->xsize;
   for (y = 0, datap = data; y < im->ysize; ++y, datap += row_size) {
-    i_gslin(im, 0, im->xsize, y, datap, chans, count);
+    i_get_linear_samples(im, 0, im->xsize, y, datap, chans, count);
     if (need_alpha >= 0) {
       for (x = 0, pixelp = datap; x < im->xsize; ++x, pixelp += count) {
         pixelp[need_alpha] = 65535;
@@ -464,7 +464,7 @@ lin_data_double(i_img *im, i_data_layout_t layout, unsigned flags,
   data = mymalloc(size);
   row_size = count * im->xsize;
   for (y = 0, datap = data; y < im->ysize; ++y, datap += row_size) {
-    i_gslinf(im, 0, im->xsize, y, datap, chans, count);
+    i_get_linear_fsamples(im, 0, im->xsize, y, datap, chans, count);
     if (need_alpha >= 0) {
       for (x = 0, pixelp = datap; x < im->xsize; ++x, pixelp += count) {
         pixelp[need_alpha] = 1.0;

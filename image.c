@@ -184,19 +184,19 @@ i_img_check_entries(i_img *im) {
     im_push_error(aIMCTX, 0, "no i_f_psamp_bits");
     ok = 0;
   }
-  if (!vtbl->i_f_gslin) {
-    im_push_error(aIMCTX, 0, "no i_f_gslin");
+  if (!vtbl->i_f_get_linear_samples) {
+    im_push_error(aIMCTX, 0, "no i_f_get_linear_samples");
     ok = 0;
   }
-  if (!vtbl->i_f_gslinf) {
-    im_push_error(aIMCTX, 0, "no i_f_gslinf");
+  if (!vtbl->i_f_get_linear_fsamples) {
+    im_push_error(aIMCTX, 0, "no i_f_get_linear_fsamples");
     ok = 0;
   }
-  if (!vtbl->i_f_pslin) {
-    im_push_error(aIMCTX, 0, "no i_f_pslin");
+  if (!vtbl->i_f_put_linear_samples) {
+    im_push_error(aIMCTX, 0, "no i_f_put_linear_samples");
     ok = 0;
   }
-  if (!vtbl->i_f_pslinf) {
+  if (!vtbl->i_f_put_linear_fsamples) {
     im_push_error(aIMCTX, 0, "no i_f_pslinf");
     ok = 0;
   }

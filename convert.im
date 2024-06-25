@@ -215,7 +215,7 @@ i_convert(i_img *src, const double *coeffs, int outchans, int extraoutchans, int
 
         for (y = 0; y < src->ysize; ++y) {
           for (in_ch = 0; in_ch < ilimit; ++in_ch) {
-            IM_GSLIN_ASSERT(src, 0, xmax, y, inbufs[in_ch], &in_ch, 1);
+            IM_GET_LINEAR_SAMPLES_ASSERT(src, 0, xmax, y, inbufs[in_ch], &in_ch, 1);
           }
           for (out_ch = 0; out_ch < outtotalch; ++out_ch) {
             for (x = 0; x < xmax; ++x) {
@@ -244,7 +244,7 @@ i_convert(i_img *src, const double *coeffs, int outchans, int extraoutchans, int
               }
             }
             IM_SUFFIX(vec_limit_lin)(outbuf, workbuf, xmax);
-            IM_PSLIN(im, 0, xmax, y, outbuf, &out_ch, 1);
+            IM_PUT_LINEAR_SAMPLES(im, 0, xmax, y, outbuf, &out_ch, 1);
           }
         }
         im_aligned_free(workbuf);

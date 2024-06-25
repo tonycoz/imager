@@ -8,7 +8,7 @@ use Text::ParseWords;
 
 our @EXPORT = qw(preprocess);
 
-our $VERSION = "1.004";
+our $VERSION = "1.005";
 
 sub preprocess {
   unshift @ARGV, grep /^-/, shellwords($ENV{IMAGER_PREPROCESS_OPTS})
@@ -141,14 +141,12 @@ sub byte_samples {
     s/\bIM_GLIN\b/i_glin/g;
     s/\bIM_PPIX\b/i_ppix/g;
     s/\bIM_PLIN\b/i_plin/g;
-    s/\bIM_GSLIN\b/i_gslin/g;
-    s/\bIM_PSLIN\b/i_pslin/g;
+    s/\bIM_GET_LINEAR_SAMPLES\b/i_get_linear_samples/g;
+    s/\bIM_GET_LINEAR_SAMPLES_ASSERT\b/i_get_linear_samples_assert/g;
+    s/\bIM_PUT_LINEAR_SAMPLES\b/i_put_linear_samples/g;
     s/\bIM_GSAMP\b/i_gsamp/g;
     s/\bIM_GSAMP_ASSERT\b/i_gsamp_assert/g;
     s/\bIM_PSAMP\b/i_psamp/g;
-    s/\bIM_GSLIN\b/i_gslin/g;
-    s/\bIM_GSLIN_ASSERT\b/i_gslin_assert/g;
-    s/\bIM_PSLIN\b/i_pslin/g;
     s/\bIM_SAMPLE_MAX\b/255/g;
     s/\bIM_SAMPLE_MAX2\b/65025/g;
     s/\bIM_SAMPLE_T/i_sample_t/g;
@@ -180,14 +178,12 @@ sub double_samples {
     s/\bIM_GLIN\b/i_glinf/g;
     s/\bIM_PPIX\b/i_ppixf/g;
     s/\bIM_PLIN\b/i_plinf/g;
-    s/\bIM_GSLIN\b/i_gslinf/g;
-    s/\bIM_PSLIN\b/i_pslinf/g;
+    s/\bIM_GET_LINEAR_SAMPLES\b/i_get_linear_fsamples/g;
+    s/\bIM_GET_LINEAR_SAMPLES_ASSERT\b/i_get_linear_fsamples_assert/g;
+    s/\bIM_PUT_LINEAR_SAMPLES\b/i_put_linear_fsamples/g;
     s/\bIM_GSAMP\b/i_gsampf/g;
     s/\bIM_GSAMP_ASSERT\b/i_gsampf_assert/g;
     s/\bIM_PSAMP\b/i_psampf/g;
-    s/\bIM_GSLIN\b/i_gslinf/g;
-    s/\bIM_GSLIN_ASSERT\b/i_gslinf_assert/g;
-    s/\bIM_PSLIN\b/i_pslinf/g;
     s/\bIM_SAMPLE_MAX\b/1.0/g;
     s/\bIM_SAMPLE_MAX2\b/1.0/g;
     s/\bIM_SAMPLE_T/i_fsample_t/g;

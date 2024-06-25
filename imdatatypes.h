@@ -366,19 +366,19 @@ typedef int
 (*i_f_imageop_t)(i_img *im, const char *opname, void *params);
 
 typedef i_img_dim
-(*i_f_gslin_t)(i_img *im, i_img_dim x, i_img_dim r, i_img_dim y,
+(*i_f_get_linear_samples_t)(i_img *im, i_img_dim x, i_img_dim r, i_img_dim y,
 	       i_sample16_t *samp, const int *chan, int chan_count);
 
 typedef i_img_dim
-(*i_f_gslinf_t)(i_img *im, i_img_dim x, i_img_dim r, i_img_dim y,
+(*i_f_get_linear_fsamples_t)(i_img *im, i_img_dim x, i_img_dim r, i_img_dim y,
 		i_fsample_t *samp, const int *chan, int chan_count);
 
 typedef i_img_dim
-(*i_f_pslin_t)(i_img *im, i_img_dim x, i_img_dim r, i_img_dim y,
+(*i_f_put_linear_samples_t)(i_img *im, i_img_dim x, i_img_dim r, i_img_dim y,
 	       const i_sample16_t *samp, const int *chan, int chan_count);
 
 typedef i_img_dim
-(*i_f_pslinf_t)(i_img *im, i_img_dim x, i_img_dim r, i_img_dim y,
+(*i_f_put_linear_fsamples_t)(i_img *im, i_img_dim x, i_img_dim r, i_img_dim y,
 		const i_fsample_t *samp, const int *chan, int chan_count);
 
 /*
@@ -464,10 +464,10 @@ typedef struct i_img_vtable_struct {
   i_f_gsamp_bits_t i_f_gsamp_bits;
   i_f_psamp_bits_t i_f_psamp_bits;
 
-  i_f_gslin_t i_f_gslin;
-  i_f_gslinf_t i_f_gslinf;
-  i_f_pslin_t i_f_pslin;
-  i_f_pslinf_t i_f_pslinf;
+  i_f_get_linear_samples_t i_f_get_linear_samples;
+  i_f_get_linear_fsamples_t i_f_get_linear_fsamples;
+  i_f_put_linear_samples_t i_f_put_linear_samples;
+  i_f_put_linear_fsamples_t i_f_put_linear_fsamples;
 
   i_f_data_t i_f_data;
 

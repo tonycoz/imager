@@ -4340,7 +4340,7 @@ i_glinf(im, l, r, y)
         }
 
 void
-i_gslin(im, l, r, y, channels)
+i_get_linear_samples(im, l, r, y, channels)
 	Imager::ImgRaw im
         i_img_dim l
         i_img_dim r
@@ -4363,7 +4363,7 @@ i_gslin(im, l, r, y, channels)
           Newx(sdata, sizeof(i_sample16_t) * (r-l) * channels.count + 2, char);
 	  data = (i_sample16_t *)sdata;
 	  i_clear_error();
-          count = i_gslin(im, l, r, y, data, channels.channels, channels.count);
+          count = i_get_linear_samples(im, l, r, y, data, channels.channels, channels.count);
           if (GIMME_V == G_ARRAY) {
             EXTEND(SP, count);
             for (i = 0; i < count; ++i)
@@ -4395,7 +4395,7 @@ i_gslin(im, l, r, y, channels)
         }
 
 void
-i_gslinf(im, l, r, y, channels)
+i_get_linear_fsamples(im, l, r, y, channels)
 	Imager::ImgRaw im
         i_img_dim l
         i_img_dim r
@@ -4417,7 +4417,7 @@ i_gslinf(im, l, r, y, channels)
 	  i_img_dim count, i;
           Newx(sdata, sizeof(i_fsample_t) * (r-l) * channels.count + 2, char);
 	  data = (i_fsample_t *)sdata;
-          count = i_gslinf(im, l, r, y, data, channels.channels, channels.count);
+          count = i_get_linear_fsamples(im, l, r, y, data, channels.channels, channels.count);
           if (GIMME_V == G_ARRAY) {
             EXTEND(SP, count);
             for (i = 0; i < count; ++i)
@@ -4449,7 +4449,7 @@ i_gslinf(im, l, r, y, channels)
         }
 
 undef_neg_int
-i_pslin(im, x, y, channels, data, offset = 0, width = -1)
+i_put_linear_samples(im, x, y, channels, data, offset = 0, width = -1)
 	Imager::ImgRaw im
 	i_img_dim x
 	i_img_dim y
@@ -4481,12 +4481,12 @@ i_pslin(im, x, y, channels, data, offset = 0, width = -1)
 	  width = data.count / channels.count;
         }
 	r = x + width;
-	RETVAL = i_pslin(im, x, r, y, data.samples, channels.channels, channels.count);
+	RETVAL = i_put_linear_samples(im, x, r, y, data.samples, channels.channels, channels.count);
     OUTPUT:
 	RETVAL
 
 undef_neg_int
-i_pslinf(im, x, y, channels, data, offset = 0, width = -1)
+i_put_linear_fsamples(im, x, y, channels, data, offset = 0, width = -1)
 	Imager::ImgRaw im
 	i_img_dim x
 	i_img_dim y
@@ -4518,7 +4518,7 @@ i_pslinf(im, x, y, channels, data, offset = 0, width = -1)
 	  width = data.count / channels.count;
         }
 	r = x + width;
-	RETVAL = i_pslinf(im, x, r, y, data.samples, channels.channels, channels.count);
+	RETVAL = i_put_linear_fsamples(im, x, r, y, data.samples, channels.channels, channels.count);
     OUTPUT:
 	RETVAL
 

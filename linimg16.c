@@ -74,8 +74,8 @@ i_img_to_linrgb16(i_img *im) {
   
   line = mymalloc(sizeof(i_sample16_t) * (size_t)totalch * im->xsize);
   for (y = 0; y < im->ysize; ++y) {
-    i_gslin(im, 0, im->xsize, y, line, NULL, totalch);
-    i_pslin(targ, 0, im->xsize, y, line, NULL, totalch);
+    i_get_linear_samples(im, 0, im->xsize, y, line, NULL, totalch);
+    i_put_linear_samples(targ, 0, im->xsize, y, line, NULL, totalch);
   }
 
   myfree(line);

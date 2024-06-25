@@ -135,7 +135,7 @@ i_scale_mixing(i_img *src, i_img_dim x_out, i_img_dim y_out) {
   for (y = 0; y < y_out; ++y) {
     if (y_out == src->ysize) {
       /* no vertical scaling, just load it */
-      i_gslinf(src, 0, src->xsize, y, accum_row, NULL, src->channels);
+      i_get_linear_fsamples_assert(src, 0, src->xsize, y, accum_row, NULL, src->channels);
 
       /* alpha adjust if needed */
       if (has_alpha) {
@@ -155,7 +155,7 @@ i_scale_mixing(i_img *src, i_img_dim x_out, i_img_dim y_out) {
       while (fracrowtofill > 0) {
 	if (rowsleft <= 0) {
 	  if (rowsread < src->ysize) {
-	    IM_GSLIN(src, 0, src->xsize, rowsread, in_row, NULL, src->channels);
+	    IM_GET_LINEAR_SAMPLES(src, 0, src->xsize, rowsread, in_row, NULL, src->channels);
 	    ++rowsread;
 	  }
 	  /* else just use the last row read */
@@ -219,15 +219,15 @@ i_scale_mixing(i_img *src, i_img_dim x_out, i_img_dim y_out) {
           }
 	}
       }
-      IM_PSLIN(result, 0, x_out, y, xscale_row, NULL, src->channels);
+      IM_PUT_LINEAR_SAMPLES(result, 0, x_out, y, xscale_row, NULL, src->channels);
 #else
-      IM_PSLIN(result, 0, x_out, y, accum_row, NULL, src->channels);
+      IM_PUT_LINEAR_SAMPLES(result, 0, x_out, y, accum_row, NULL, src->channels);
 #endif
     }
     else {
       IM_SUFFIX(horizontal_scale)(xscale_row, x_out, accum_row, 
                                   src->xsize, src->channels, has_alpha);
-      IM_PSLIN(result, 0, x_out, y, xscale_row, NULL, src->channels);
+      IM_PUT_LINEAR_SAMPLES(result, 0, x_out, y, xscale_row, NULL, src->channels);
     }
   }
   myfree(in_row);
@@ -532,7 +532,7 @@ i_scaleaxis(i_img *im, double Value, int Axis) {
 	  
 	  mx = (mx < 0) ? 0 : mx >= im->xsize ? im->xsize - 1 : mx;
 	  
-	  i_gslin(im, mx, mx+1, i, val1, NULL, work_channels);
+	  i_get_linear_samples(im, mx, mx+1, i, val1, NULL, work_channels);
 
 	  if (has_alpha) {
 	    i_sample16_t alpha1 = val1[color_chans];
@@ -571,7 +571,7 @@ i_scaleaxis(i_img *im, double Value, int Axis) {
 	    val[k] = minmax(0,65535,psave);
 	  }
 	}
-	i_pslin(new_img, j, j+1, i, val, NULL, work_channels);
+	i_put_linear_samples(new_img, j, j+1, i, val, NULL, work_channels);
       }
       
     } else {
@@ -588,7 +588,7 @@ i_scaleaxis(i_img *im, double Value, int Axis) {
 	  
 	  my = (my < 0) ? 0 : my >= im->ysize ? im->ysize - 1 : my;
 
-	  i_gslin(im, i, i+1, my, val1, NULL, work_channels);
+	  i_get_linear_samples(im, i, i+1, my, val1, NULL, work_channels);
 	  if (has_alpha) {
 	    i_sample16_t alpha1 = val1[color_chans];
 	    for (k=0; k < color_chans; k++) {
@@ -623,7 +623,7 @@ i_scaleaxis(i_img *im, double Value, int Axis) {
 	    val[k]=minmax(0,65535,psave);
 	  }
 	}
-	i_pslin(new_img, i, i+1, j, val, NULL, work_channels);
+	i_put_linear_samples(new_img, i, i+1, j, val, NULL, work_channels);
       }
       
     }

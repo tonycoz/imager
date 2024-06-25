@@ -422,8 +422,8 @@ i_gslin_masked(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, i_sample16_t *s
   if (y >= 0 && y < im->ysize && l < im->xsize && l >= 0) {
     if (r > im->xsize)
       r = im->xsize;
-    return i_gslin(ext->targ, l + ext->xbase, r + ext->xbase,
-                   y + ext->ybase, samp, chans, chan_count);
+    return i_get_linear_samples(ext->targ, l + ext->xbase, r + ext->xbase,
+                                y + ext->ybase, samp, chans, chan_count);
   }
   else {
     return 0;
@@ -437,8 +437,8 @@ i_gslinf_masked(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, i_fsample_t *s
   if (y >= 0 && y < im->ysize && l < im->xsize && l >= 0) {
     if (r > im->xsize)
       r = im->xsize;
-    return i_gslinf(ext->targ, l + ext->xbase, r + ext->xbase,
-                   y + ext->ybase, samp, chans, chan_count);
+    return i_get_linear_fsamples(ext->targ, l + ext->xbase, r + ext->xbase,
+                                 y + ext->ybase, samp, chans, chan_count);
   }
   else {
     return 0;
@@ -487,7 +487,7 @@ pslin_masked(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y,
             ++x;
             samples += chan_count;
           }
-          result += i_pslin(ext->targ, run_left, x, work_y, run_samps, chans, chan_count);
+          result += i_put_linear_samples(ext->targ, run_left, x, work_y, run_samps, chans, chan_count);
         }
         else {
           ++i;
@@ -498,7 +498,7 @@ pslin_masked(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y,
       }
     }
     else {
-      result = i_pslin(ext->targ, l + ext->xbase, r + ext->xbase,
+      result = i_put_linear_samples(ext->targ, l + ext->xbase, r + ext->xbase,
                        y + ext->ybase, samples, chans, chan_count);
     }
     im->type = ext->targ->type;
@@ -554,7 +554,7 @@ pslinf_masked(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y,
             ++x;
             samples += chan_count;
           }
-          result += i_pslinf(ext->targ, run_left, x, work_y, run_samps, chans, chan_count);
+          result += i_put_linear_fsamples(ext->targ, run_left, x, work_y, run_samps, chans, chan_count);
         }
         else {
           ++i;
@@ -565,8 +565,8 @@ pslinf_masked(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y,
       }
     }
     else {
-      result = i_pslinf(ext->targ, l + ext->xbase, r + ext->xbase,
-                       y + ext->ybase, samples, chans, chan_count);
+      result = i_put_linear_fsamples(ext->targ, l + ext->xbase, r + ext->xbase,
+                                     y + ext->ybase, samples, chans, chan_count);
     }
     im->type = ext->targ->type;
     ext->targ->ch_mask = old_ch_mask;

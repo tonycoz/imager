@@ -3929,12 +3929,12 @@ sub getsamples {
       my $offset = $opts{offset} || 0;
       my @samples;
       if ($type eq '16bit') {
-	@samples = i_gslin($self->{IMG}, $x, $x + $width,
-			   $y, $channels)
+	@samples = i_get_linear_samples($self->{IMG}, $x, $x + $width,
+                                        $y, $channels)
       }
       elsif ($type eq 'float') {
-	@samples = i_gslinf($self->{IMG}, $x, $x + $width,
-			    $y, $channels)
+	@samples = i_get_linear_fsamples($self->{IMG}, $x, $x + $width,
+                                         $y, $channels)
       }
       else {
 	$self->_set_error("invalid type for linear scale");
@@ -3945,12 +3945,12 @@ sub getsamples {
     }
     else {
       if ($type eq '16bit') {
-	return i_gslin($self->{IMG}, $x, $x+$width, $y,
-		       $channels);
+	return i_get_linear_samples($self->{IMG}, $x, $x+$width, $y,
+                                    $channels);
       }
       elsif ($type eq 'float') {
-	return i_gslinf($self->{IMG}, $x, $x+$width, $y,
-		       $channels);
+	return i_get_linear_fsamples($self->{IMG}, $x, $x+$width, $y,
+                                     $channels);
       }
       else {
 	$self->_set_error("invalid type for linear scale - must be 16bit or float");
@@ -4041,12 +4041,12 @@ sub setsamples {
   elsif ($scale eq "linear") {
     defined $type or $type = "16bit";
     if ($type eq "16bit") {
-      $count = i_pslin($self->{IMG}, $x, $y, $channels,
-		       $_[$data_index], $offset, $width);
+      $count = i_put_linear_samples($self->{IMG}, $x, $y, $channels,
+                                    $_[$data_index], $offset, $width);
     }
     elsif ($type eq "float") {
-      $count = i_pslinf($self->{IMG}, $x, $y, $channels,
-			$_[$data_index], $offset, $width);
+      $count = i_put_linear_fsamples($self->{IMG}, $x, $y, $channels,
+                                     $_[$data_index], $offset, $width);
     }
     else {
       $self->_set_error('setsamples: type parameter invalid');

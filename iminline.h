@@ -9,43 +9,43 @@ extern "C" {
 #endif
 
 IMAGER_STATIC_INLINE i_img_dim
-i_gslin(i_img *im, i_img_dim x, i_img_dim r, i_img_dim y,
+i_get_linear_samples(i_img *im, i_img_dim x, i_img_dim r, i_img_dim y,
         i_sample16_t *samp, const int *chan, int chan_count) {
-  return (im->vtbl->i_f_gslin)(im, x, r, y, samp, chan, chan_count);
+  return (im->vtbl->i_f_get_linear_samples)(im, x, r, y, samp, chan, chan_count);
 }
 
 IMAGER_STATIC_INLINE void
-i_gslin_assert(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y,
+i_get_linear_samples_assert(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y,
         i_sample16_t *samp, const int *chan, int chan_count) {
-  i_img_dim result = i_gslin(im, l, r, y, samp, chan, chan_count);
+  i_img_dim result = i_get_linear_samples(im, l, r, y, samp, chan, chan_count);
   IM_UNUSED_VAR(result);
   assert(result == (r-l) * chan_count);
 }
 
 IMAGER_STATIC_INLINE i_img_dim
-i_gslinf(i_img *im, i_img_dim x, i_img_dim r, i_img_dim y,
+i_get_linear_fsamples(i_img *im, i_img_dim x, i_img_dim r, i_img_dim y,
          i_fsample_t *samp, const int *chan, int chan_count) {
-  return (im->vtbl->i_f_gslinf)(im, x, r, y, samp, chan, chan_count);
+  return (im->vtbl->i_f_get_linear_fsamples)(im, x, r, y, samp, chan, chan_count);
 }
 
 IMAGER_STATIC_INLINE void
-i_gslinf_assert(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y,
+i_get_linear_fsamples_assert(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y,
         i_fsample_t *samp, const int *chan, int chan_count) {
-  i_img_dim result = i_gslinf(im, l, r, y, samp, chan, chan_count);
+  i_img_dim result = i_get_linear_fsamples(im, l, r, y, samp, chan, chan_count);
   IM_UNUSED_VAR(result);
   assert(result == (r-l) * chan_count);
 }
 
 IMAGER_STATIC_INLINE i_img_dim
-i_pslin(i_img *im, i_img_dim x, i_img_dim r, i_img_dim y,
+i_put_linear_samples(i_img *im, i_img_dim x, i_img_dim r, i_img_dim y,
         const i_sample16_t *samp, const int *chan, int chan_count) {
-  return (im->vtbl->i_f_pslin)(im, x, r, y, samp, chan, chan_count);
+  return (im->vtbl->i_f_put_linear_samples)(im, x, r, y, samp, chan, chan_count);
 }
 
 IMAGER_STATIC_INLINE i_img_dim
-i_pslinf(i_img *im, i_img_dim x, i_img_dim r, i_img_dim y,
+i_put_linear_fsamples(i_img *im, i_img_dim x, i_img_dim r, i_img_dim y,
                   const i_fsample_t *samp, const int *chan, int chan_count) {
-  return (im->vtbl->i_f_pslinf)(im, x, r, y, samp, chan, chan_count);
+  return (im->vtbl->i_f_put_linear_fsamples)(im, x, r, y, samp, chan, chan_count);
 }
 
 IMAGER_STATIC_INLINE i_img_dim
