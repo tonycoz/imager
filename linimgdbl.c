@@ -66,7 +66,7 @@ i_img_to_linrgbdbl(i_img *im) {
   i_fsample_t *line;
   i_img_dim y;
   dIMCTXim(im);
-  const int totalch = i_img_totalchannels(im);
+  const int totalch = i_img_total_channels(im);
 
   targ = im_lin_img_double_new_extra(aIMCTX, im->xsize, im->ysize, im->channels, im->extrachannels);
   if (!targ)

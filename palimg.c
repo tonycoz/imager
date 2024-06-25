@@ -170,12 +170,12 @@ same width, height and channels.
 
 static void
 i_img_rgb_convert(i_img *targ, i_img *src) {
-  int totalch = i_img_totalchannels(targ);
+  int totalch = i_img_total_channels(targ);
   i_sample_t *row = mymalloc(sizeof(i_color) * targ->xsize);
   i_img_dim y;
 
   assert(i_img_channels(targ) == i_img_channels(src));
-  assert(i_img_extrachannels(targ) == i_img_extrachannels(src));
+  assert(i_img_extra_channels(targ) == i_img_extra_channels(src));
   assert(i_img_bits(targ) == i_8_bits);
 
   for (y = 0; y < targ->ysize; ++y) {
@@ -273,7 +273,7 @@ i_img_to_rgb(i_img *src) {
   dIMCTXim(src);
   i_img *im =
     im_img_8_new_extra(aIMCTX, i_img_get_width(src), i_img_get_height(src), i_img_channels(src),
-                       i_img_extrachannels(src));
+                       i_img_extra_channels(src));
 
   if (!im)
     return NULL;

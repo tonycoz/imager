@@ -58,7 +58,7 @@ i_img_to_drgb(i_img *im) {
   i_img_dim y;
   dIMCTXim(im);
   size_t num_samps;
-  int totalch = i_img_totalchannels(im);
+  int totalch = i_img_total_channels(im);
 
   targ = im_img_double_new_extra(aIMCTX, im->xsize, im->ysize, im->channels,
                                  im->extrachannels);

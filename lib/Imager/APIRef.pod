@@ -138,8 +138,8 @@ Imager::APIRef - Imager's C API - reference.
   i_img_bits_t bits = i_img_bits(im);
   int chans = i_img_channels(im);
   int chans = i_img_getchannels(im);
-  int extra = i_img_extrachannels(im);
-  int totalch = i_img_totalchannels(im);
+  int extra = i_img_extra_channels(im);
+  int totalch = i_img_total_channels(im);
   i_img_dim width = i_img_get_width(im);
   i_img_dim height = i_img_get_height(im);
   i_color_model_t cm = i_img_color_model(im);
@@ -2255,9 +2255,9 @@ Returns the color model for the image.
 =for comment
 From: iminline.h
 
-=item i_img_extrachannels()
+=item i_img_extra_channels()
 
-  int extra = i_img_extrachannels(im);
+  int extra = i_img_extra_channels(im);
 
 Returns the number of extra channels, the channels in addition to the
 color and alpha channels in the image.
@@ -2368,9 +2368,9 @@ written to in the image.
 =for comment
 From: image.c
 
-=item i_img_totalchannels()
+=item i_img_total_channels()
 
-  int totalch = i_img_totalchannels(im);
+  int totalch = i_img_total_channels(im);
 
 Returns the total number of channels, including both the color, alpha
 and extra channels.

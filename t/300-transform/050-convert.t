@@ -155,7 +155,7 @@ SKIP:
   my $extraim = Imager::i_convert($im, [], [ [ 0.5, 0.5, 0 ], [ 0, 0, 0, 1 ] ]);
   ok($extraim, "make extra channels image");
   is(Imager::i_img_getchannels($extraim), 0, "had no normal channels");
-  is(Imager::i_img_extrachannels($extraim), 2, "had 2 extra channels");
+  is(Imager::i_img_extra_channels($extraim), 2, "had 2 extra channels");
   my @samp = Imager::i_gsamp($extraim, 0, 1, 0, 2);
   is_deeply(\@samp, [ 127, 255 ], "check samples expected")
     or diag "@samp";
@@ -165,7 +165,7 @@ SKIP:
   ok($extraim2, "got copy only extra channel image")
     or diag(Imager->_error_as_msg);
   is(Imager::i_img_getchannels($extraim2), 0, "copy only: no normal channels");
-  is(Imager::i_img_extrachannels($extraim2), 1, "copy only: 1 extra channel");
+  is(Imager::i_img_extra_channels($extraim2), 1, "copy only: 1 extra channel");
   @samp = Imager::i_gsamp($extraim2, 0, 1, 0, 1);
   is_deeply(\@samp, [ 255 ], "copy only: check samples expected");
 }
@@ -263,7 +263,7 @@ SKIP:
                              [ [ 0,   0,   0,   0.5 ] ]);
   ok($impalextra, "convert paletted image to add extra channels");
   is(Imager::i_img_getchannels($impalextra), 1, "expected base channels");
-  is(Imager::i_img_extrachannels($impalextra), 1, "expected extra channels");
+  is(Imager::i_img_extra_channels($impalextra), 1, "expected extra channels");
   my @samp = Imager::i_gsamp($impalextra, 0, 1, 0, 2);
   is_deeply(\@samp, [ 0, 127 ], "check extra channels set");
 }

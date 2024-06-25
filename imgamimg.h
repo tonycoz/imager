@@ -497,7 +497,7 @@ ISUFFIX(i_gslin_)(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y,
   i_assert_valid_channels(im, chans, chan_count);
 
   if (y >=0 && y < im->ysize && l < im->xsize && l >= 0) {
-    int totalch = i_img_totalchannels(im);
+    int totalch = i_img_total_channels(im);
     if (r > im->xsize)
       r = im->xsize;
     off = (l+y*im->xsize) * totalch;
@@ -551,7 +551,7 @@ ISUFFIX(i_gslinf_)(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y,
   i_assert_valid_channels(im, chans, chan_count);
 
   if (y >=0 && y < im->ysize && l < im->xsize && l >= 0) {
-    int totalch = i_img_totalchannels(im);
+    int totalch = i_img_total_channels(im);
     i_img_dim off;
     if (r > im->xsize)
       r = im->xsize;
@@ -606,7 +606,7 @@ ISUFFIX(i_pslin_)(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y,
   i_assert_valid_channels(im, chans, chan_count);
 
   if (y >=0 && y < im->ysize && l < im->xsize && l >= 0) {
-    int totalch = i_img_totalchannels(im);
+    int totalch = i_img_total_channels(im);
     i_img_dim off;
     if (r > im->xsize)
       r = im->xsize;
@@ -688,7 +688,7 @@ ISUFFIX(i_pslinf_)(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y,
   i_assert_valid_channels(im, chans, chan_count);
 
   if (y >=0 && y < im->ysize && l < im->xsize && l >= 0) {
-    int totalch = i_img_totalchannels(im);
+    int totalch = i_img_total_channels(im);
     i_img_dim off;
     if (r > im->xsize)
       r = im->xsize;

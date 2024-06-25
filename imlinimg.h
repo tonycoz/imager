@@ -234,7 +234,7 @@ IM_CAT(i_gsamp_, LINIMG_SUFFIX)(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y
 
   if (y >=0 && y < im->ysize && l < im->xsize && l >= 0) {
     const LINIMG_SAMPLE_TYPE * const data = (const LINIMG_SAMPLE_TYPE *)im->idata;
-    const int totalch = i_img_totalchannels(im);
+    const int totalch = i_img_total_channels(im);
     int color_chans;
     const imcms_curve_t *curves = i_model_curves(i_img_color_model(im), &color_chans);
     i_img_dim x;
@@ -293,7 +293,7 @@ IM_CAT(i_gsampf_, LINIMG_SUFFIX)(i_img *im, i_img_dim l, i_img_dim r, i_img_dim 
 
   if (y >=0 && y < im->ysize && l < im->xsize && l >= 0) {
     const LINIMG_SAMPLE_TYPE *const data = (const LINIMG_SAMPLE_TYPE *)im->idata;
-    const int totalch = i_img_totalchannels(im);
+    const int totalch = i_img_total_channels(im);
     int color_chans;
     const imcms_curve_t *curves = i_model_curves(i_img_color_model(im), &color_chans);
     i_img_dim x;
@@ -359,7 +359,7 @@ IM_CAT(i_psamp_, LINIMG_SUFFIX)(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y
   i_assert_valid_channels(im, chans, chan_count);
 
   if (y >=0 && y < im->ysize && l < im->xsize && l >= 0) {
-    const int totalch = i_img_totalchannels(im);
+    const int totalch = i_img_total_channels(im);
     LINIMG_SAMPLE_TYPE * const data = (LINIMG_SAMPLE_TYPE *)im->idata;    
     i_img_dim offset = (l + y * im->xsize) * totalch;
     i_img_dim count = 0;
@@ -455,7 +455,7 @@ IM_CAT(i_psampf_, LINIMG_SUFFIX)(i_img *im, i_img_dim l, i_img_dim r, i_img_dim 
   if (y >=0 && y < im->ysize && l < im->xsize && l >= 0) {
     int color_chans;
     const imcms_curve_t *curves = i_model_curves(i_img_color_model(im), &color_chans);
-    const int totalch = i_img_totalchannels(im);
+    const int totalch = i_img_total_channels(im);
     LINIMG_SAMPLE_TYPE *const data = (LINIMG_SAMPLE_TYPE *)im->idata;    
     i_img_dim count = 0;
     i_img_dim x;
@@ -550,7 +550,7 @@ IM_CAT(i_gslin_, LINIMG_SUFFIX)(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y
 
   if (y >=0 && y < im->ysize && l < im->xsize && l >= 0) {
     const LINIMG_SAMPLE_TYPE * const data = (const LINIMG_SAMPLE_TYPE *)im->idata;
-    const int totalch = i_img_totalchannels(im);
+    const int totalch = i_img_total_channels(im);
     i_img_dim x;
     i_img_dim count = 0;
     i_img_dim off = (l+y*im->xsize) * totalch;
@@ -613,7 +613,7 @@ IM_CAT(i_gslinf_, LINIMG_SUFFIX)(i_img *im, i_img_dim l, i_img_dim r, i_img_dim 
 
   if (y >=0 && y < im->ysize && l < im->xsize && l >= 0) {
     const LINIMG_SAMPLE_TYPE * const data = (const LINIMG_SAMPLE_TYPE *)im->idata;
-    int const totalch = i_img_totalchannels(im);
+    int const totalch = i_img_total_channels(im);
     i_img_dim off = (l+y*im->xsize) * totalch;;
     i_img_dim x;
     i_img_dim count = 0;
@@ -676,7 +676,7 @@ IM_CAT(i_pslin_, LINIMG_SUFFIX)(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y
 
   if (y >=0 && y < im->ysize && l < im->xsize && l >= 0) {
     LINIMG_SAMPLE_TYPE * const data = (LINIMG_SAMPLE_TYPE *)im->idata;    
-    const int totalch = i_img_totalchannels(im);
+    const int totalch = i_img_total_channels(im);
     i_img_dim off = (l + y * im->xsize) * totalch;
     i_img_dim count = 0;
     i_img_dim x;
@@ -744,7 +744,7 @@ IM_CAT(i_pslinf_, LINIMG_SUFFIX)(i_img *im, i_img_dim l, i_img_dim r, i_img_dim 
 
   if (y >=0 && y < im->ysize && l < im->xsize && l >= 0) {
     LINIMG_SAMPLE_TYPE * const data = (LINIMG_SAMPLE_TYPE *)im->idata;    
-    const int totalch = i_img_totalchannels(im);
+    const int totalch = i_img_total_channels(im);
     i_img_dim off = (l + y * im->xsize) * totalch;
     i_img_dim count = 0;
     i_img_dim x;

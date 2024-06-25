@@ -1456,7 +1456,7 @@ sub extrachannels {
   $self->_valid_image("extrachannels")
     or return;
 
-  return i_img_extrachannels($self->{IMG});
+  return i_img_extra_channels($self->{IMG});
 }
 
 sub totalchannels {
@@ -1465,7 +1465,7 @@ sub totalchannels {
   $self->_valid_image("totalchannels")
     or return;
 
-  return i_img_totalchannels($self->{IMG});
+  return i_img_total_channels($self->{IMG});
 }
 
 sub linear {

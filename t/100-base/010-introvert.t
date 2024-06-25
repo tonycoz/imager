@@ -29,7 +29,7 @@ my $f_green = Imager::Color::Float->new(0, 1.0, 0);
 my $f_blue = Imager::Color::Float->new(0, 0, 1.0);
 
 is(Imager::i_img_getchannels($im_g), 1, "1 channel image channel count");
-is(Imager::i_img_extrachannels($im_g), 0, "0 extra channels");
+is(Imager::i_img_extra_channels($im_g), 0, "0 extra channels");
 
 ok(Imager::i_img_getmask($im_g) & 1, "1 channel image mask");
 ok(!Imager::i_img_virtual($im_g), "1 channel image not virtual");
@@ -58,8 +58,8 @@ undef $im_rgb;
   my $im_extra = Imager::i_img_8_new_extra(100, 101, 3, 5);
   ok($im_extra, "make an image with extra channels");
   is(Imager::i_img_getchannels($im_extra), 3, "still has 3 normal channels");
-  is(Imager::i_img_extrachannels($im_extra), 5, "has 5 extra channels");
-  is(Imager::i_img_totalchannels($im_extra), 8, "has 8 total channels");
+  is(Imager::i_img_extra_channels($im_extra), 5, "has 5 extra channels");
+  is(Imager::i_img_total_channels($im_extra), 8, "has 8 total channels");
   ok(!Imager::i_img_virtual($im_extra), "it isn't virtual");
 }
 

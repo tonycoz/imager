@@ -55,7 +55,7 @@ i_img *
 i_img_to_float_rgb(i_img *im) {
   i_img *targ;
   i_img_dim y;
-  int totalchannels = i_img_totalchannels(im);
+  int totalchannels = i_img_total_channels(im);
   dIMCTXim(im);
   double *samps;
 

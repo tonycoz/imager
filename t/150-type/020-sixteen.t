@@ -16,7 +16,7 @@ use Imager::Test qw(test_image is_image image_bounds_checks test_colorf_gpix
 my $im_g = Imager::i_img_16_new(100, 101, 1);
 
 is(Imager::i_img_getchannels($im_g), 1, "1 channel image channel count");
-is(Imager::i_img_extrachannels($im_g), 0, "no extra channels");
+is(Imager::i_img_extra_channels($im_g), 0, "no extra channels");
 ok(Imager::i_img_getmask($im_g) & 1, "1 channel image mask");
 ok(!Imager::i_img_virtual($im_g), "shouldn't be marked virtual");
 is(Imager::i_img_bits($im_g), 16, "1 channel image has bits == 16");
@@ -31,7 +31,7 @@ undef $im_g;
 my $im_rgb = Imager::i_img_16_new(100, 101, 3);
 
 is(Imager::i_img_getchannels($im_rgb), 3, "3 channel image channel count");
-is(Imager::i_img_extrachannels($im_rgb), 0, "no extra channels");
+is(Imager::i_img_extra_channels($im_rgb), 0, "no extra channels");
 ok((Imager::i_img_getmask($im_rgb) & 7) == 7, "3 channel image mask");
 is(Imager::i_img_bits($im_rgb), 16, "3 channel image bits");
 is(Imager::i_img_type($im_rgb), 0, "3 channel image type");

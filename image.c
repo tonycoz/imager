@@ -605,7 +605,7 @@ i_copy(i_img *src) {
   x1 = src->xsize;
   y1 = src->ysize;
   if (src->type == i_direct_type) {
-    int totalch = i_img_totalchannels(im);
+    int totalch = i_img_total_channels(im);
     if (src->bits == i_8_bits) {
       i_sample_t *pv = mymalloc(sizeof(i_sample_t) * x1 * totalch);
       
@@ -796,8 +796,8 @@ i_img_diff(i_img *im1,i_img *im2) {
   float tdiff;
   i_color val1,val2;
   dIMCTXim(im1);
-  int ch1 = i_img_totalchannels(im1);
-  int ch2 = i_img_totalchannels(im2);
+  int ch1 = i_img_total_channels(im1);
+  int ch2 = i_img_total_channels(im2);
   i_sample_t *row1;
   i_sample_t *row2;
   i_img_dim sampn;
@@ -1367,7 +1367,7 @@ i_pslin_fallback(i_img *im, i_img_dim x, i_img_dim r, i_img_dim y,
     const imcms_curve_t *curves = im_model_curves(aIMCTX, i_img_color_model(im), &color_chans);
     i_sample_t *work = NULL;
     i_img_dim result;
-    int total_channels = i_img_totalchannels(im);
+    int total_channels = i_img_total_channels(im);
 
     if (r > im->xsize)
       r = im->xsize;
@@ -1462,7 +1462,7 @@ i_pslinf_fallback(i_img *im, i_img_dim x, i_img_dim r, i_img_dim y,
     const imcms_curve_t *curves = im_model_curves(aIMCTX, i_img_color_model(im), &color_chans);
     i_fsample_t *work = NULL;
     i_img_dim result;
-    int total_channels = i_img_totalchannels(im);
+    int total_channels = i_img_total_channels(im);
 
     if (r > im->xsize)
       r = im->xsize;

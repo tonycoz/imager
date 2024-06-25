@@ -66,7 +66,7 @@ i_img_to_linrgb16(i_img *im) {
   i_sample16_t *line;
   i_img_dim y;
   dIMCTXim(im);
-  int totalch = i_img_totalchannels(im);
+  int totalch = i_img_total_channels(im);
 
   targ = im_lin_img_16_new_extra(aIMCTX, im->xsize, im->ysize, im->channels, im->extrachannels);
   if (!targ)

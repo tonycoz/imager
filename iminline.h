@@ -326,9 +326,9 @@ i_img_getchannels(const i_img *im) {
 }
 
 /*
-=item i_img_extrachannels()
+=item i_img_extra_channels()
 =category Image Information
-=synopsis int extra = i_img_extrachannels(im);
+=synopsis int extra = i_img_extra_channels(im);
 
 Returns the number of extra channels, the channels in addition to the
 color and alpha channels in the image.
@@ -337,15 +337,15 @@ color and alpha channels in the image.
 */
 
 IMAGER_STATIC_INLINE int
-i_img_extrachannels(const i_img * im) {
+i_img_extra_channels(const i_img * im) {
   return im->extrachannels;
 }
 
 
 /*
-=item i_img_totalchannels()
+=item i_img_total_channels()
 =category Image Information
-=synopsis int totalch = i_img_totalchannels(im);
+=synopsis int totalch = i_img_total_channels(im);
 
 Returns the total number of channels, including both the color, alpha
 and extra channels.
@@ -354,7 +354,7 @@ and extra channels.
 */
 
 IMAGER_STATIC_INLINE int
-i_img_totalchannels(const i_img *im) {
+i_img_total_channels(const i_img *im) {
   return im->channels + im->extrachannels;
 }
 
@@ -608,7 +608,7 @@ image, including any extra channels.
 
 IMAGER_STATIC_INLINE int
 i_img_all_channel_mask(const i_img *img) {
-  const int totalch = i_img_totalchannels(img);
+  const int totalch = i_img_total_channels(img);
   const unsigned mask = (1 << totalch) - 1;
 
   return (img->ch_mask & mask) == mask;
@@ -629,7 +629,7 @@ Used by image implementations to validate passed in channel lists.
 
 IMAGER_STATIC_INLINE bool
 i_img_valid_channel_indexes(i_img *im, int const *chans, int chan_count) {
-  const int total_ch = i_img_totalchannels(im);
+  const int total_ch = i_img_total_channels(im);
 
   if (chan_count < 1) {
 #ifdef IMAGER_NO_CONTEXT
@@ -694,7 +694,7 @@ For non-assertion code, use i_img_valid_channel_indexes().
 
 IMAGER_STATIC_INLINE bool
 i_img_valid_chans_assert(i_img *im, const int *chans, int chan_count) {
-  const int total_ch = i_img_totalchannels(im);
+  const int total_ch = i_img_total_channels(im);
   if (chan_count <= 0)
     return false;
   if (chans) {

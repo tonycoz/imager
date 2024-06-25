@@ -3882,11 +3882,11 @@ i_img_virtual(im)
         Imager::ImgRaw  im
 
 int
-i_img_extrachannels(im)
+i_img_extra_channels(im)
         Imager::ImgRaw  im
 
 int
-i_img_totalchannels(im)
+i_img_total_channels(im)
         Imager::ImgRaw  im
 
 int

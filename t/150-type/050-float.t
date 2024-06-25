@@ -37,7 +37,7 @@ my $im_rgb = Imager::i_img_float_new(100, 101, 3);
 
 is(Imager::i_img_getchannels($im_rgb), 3,
    "3 channel image channel count mismatch");
-is(Imager::i_img_extrachannels($im_rgb), 0,
+is(Imager::i_img_extra_channels($im_rgb), 0,
    "3 channel image extra channel count mismatch");
 is((Imager::i_img_getmask($im_rgb) & 7), 7, "3 channel image bad mask");
 is(Imager::i_img_bits($im_rgb), $float_bits,

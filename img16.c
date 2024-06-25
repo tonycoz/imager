@@ -72,7 +72,7 @@ i_img_to_rgb16(i_img *im) {
   dIMCTXim(im);
   size_t num_samps;
   i_img_dim sampn;
-  int totalch = i_img_totalchannels(im);
+  int totalch = i_img_total_channels(im);
 
   targ = im_img_16_new_extra(aIMCTX, im->xsize, im->ysize, im->channels, im->extrachannels);
   if (!targ)

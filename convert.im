@@ -153,7 +153,7 @@ i_convert(i_img *src, const double *coeffs, int outchans, int extraoutchans, int
   i_img_dim x, y;
   int in_ch, out_ch;
   i_img *im = NULL;
-  int intotalch = i_img_totalchannels(src);
+  int intotalch = i_img_total_channels(src);
   int ilimit = inchans > intotalch ? intotalch : inchans;
   int outtotalch = outchans + extraoutchans;
   i_img_dim xmax = src->xsize;
