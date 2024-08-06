@@ -909,8 +909,7 @@ $nrdefs
 #  endif
 #else
 #  if IMAGER_NO_RETURN_TYPE == IM_NRTYPE_C11
-#    include <stdnoreturn.h>
-#    define IMAGER_NORETURN noreturn
+#    define IMAGER_NORETURN _Noreturn
 #  elif IMAGER_NO_RETURN_TYPE == IM_NRTYPE_C23
 #    define IMAGER_NORETURN [[noreturn]]
 #  elif IMAGER_NO_RETURN_TYPE == IM_NRTYPE_GNUISH
@@ -1164,7 +1163,7 @@ sub probe_noreturn {
   my %descs;
   @descs{@nrtypes} =
     (
-      "C11 noreturn",
+      "C11 _Noreturn",
       "C23 [[noreturn]]",
       "GNU-ish __attribute__((noreturn))",
       );
@@ -1181,8 +1180,7 @@ $defs
 #define NRTYPE $nr
 
 #if NRTYPE == IM_NRTYPE_C11
-#include <stdnoreturn.h>
-#define IM_NORETURN noreturn
+#define IM_NORETURN _Noreturn
 #elif NRTYPE == IM_NRTYPE_C23
 #define IM_NORETURN [[noreturn]]
 #elif NRTYPE == IM_NRTYPE_GNUISH
