@@ -291,7 +291,9 @@ typedef struct {
 
   void * (*f_im_aligned_alloc_low)(size_t align, size_t size);
   void (*f_im_aligned_free)(void *p);
-  
+
+  const imcms_curve_t *
+  (*f_im_model_curves)(im_context_t, i_color_model_t model, int *color_chans);
 } im_ext_funcs;
 
 #define PERL_FUNCTION_TABLE_NAME "Imager::__ext_func_table"

@@ -227,6 +227,26 @@ This can safely accept a NULL pointer.
 #define i_io_get_max_mmap_size()     im_io_get_max_mmap_size(aIMCTX)
 
 /*
+=item i_model_curves(model, pcolor_chans)
+=synopsis int color_chans;
+=synopsis imcms_curve_t *curves = i_model_curves(icm_gray, &color_chans);
+
+Fetch the color channel curves for each channel in the given color
+model.
+
+
+Exactly equivalent to:
+
+  im_model_curves(aIMCTX, model, pcolor_chans)
+
+See L</im_model_curves>.
+
+=cut
+*/
+#define i_model_curves(model, pcolor_chans) \
+  im_model_curves(aIMCTX, (model), (pcolor_chans))
+
+/*
 =item IM_DEPRECATED(name)
 
 Expands to an attribute on supported compilers that causes the

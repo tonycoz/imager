@@ -269,6 +269,8 @@ extern im_ext_funcs *imager_function_ext_table;
 #define im_aligned_free(p) \
   ((im_extt->f_im_aligned_free)(p))
 
+#define im_model_curves(ctx, model, pcolor_chans)                \
+  ((im_extt->f_im_model_curves)((ctx), (model), (pcolor_chans)))
 
 /* these are a bit special, mostly the APIs won't be called directly,
    but used to initialize a vtable.
