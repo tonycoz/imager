@@ -63,7 +63,7 @@ for my $file (@pod) {
   $parser->parse_from_file($file);
 
   unless (ok(!@errors, "check links in $relfile")) {
-    print STDERR "# $_\n" for @errors;
+    print STDERR "# $relfile:$_\n" for @errors;
   }
 }
 
