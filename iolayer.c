@@ -47,8 +47,8 @@ typedef struct {
   i_io_glue_t   base;
   const char	*data;
   size_t	len;
-  i_io_closebufp_t     closecb;        /* free memory mapped segment or decrement refcount */
-  void          *closedata;
+  i_io_closebufp_t     destroycb;        /* free memory mapped segment or decrement refcount */
+  void          *destroydata;
   off_t cpos;
 } io_buffer;
 
@@ -259,7 +259,7 @@ im_io_new_bufchain(pIMCTX) {
 }
 
 /*
-=item im_io_new_buffer(ctx, data, length)
+=item im_io_new_buffer(ctx, data, length, destroycb, destroydata)
 X<im_io_new_buffer API>X<io_new_buffer API>
 =order 10
 =category I/O Layers
@@ -268,27 +268,33 @@ Returns a new io_glue object that has the source defined as reading
 from specified buffer.  Note that the buffer is not copied.
 
    ctx - an Imager context object
-   data - buffer to read from
-   length - length of buffer
+   data - buffer to read from (const char *)
+   length - length of buffer (size_t)
+   destroycb - called when the io_glue object is destroyed. May be NULL.
+   destroydata - passed to destroycb
 
-Also callable as C<io_new_buffer(data, length>.
+C<destroycb> should be defined as:
+
+  void my_destroycb(void *p) { ... }
+
+Also callable as C<io_new_buffer(data, length, destroycb, destroydata)>.
 
 =cut
 */
 
 io_glue *
-im_io_new_buffer(pIMCTX, const char *data, size_t len, i_io_closebufp_t closecb, void *closedata) {
+im_io_new_buffer(pIMCTX, const char *data, size_t len, i_io_closebufp_t destroycb, void *destroydata) {
   io_buffer *ig;
   
-  im_log((aIMCTX, 1, "io_new_buffer(data %p, len %ld, closecb %p, closedata %p)\n", data, (long)len, closecb, closedata));
+  im_log((aIMCTX, 1, "io_new_buffer(data %p, len %ld, destroycb %p, destroydata %p)\n", data, (long)len, destroycb, destroydata));
 
   ig = mymalloc(sizeof(io_buffer));
   memset(ig, 0, sizeof(*ig));
   i_io_init(aIMCTX, &ig->base, BUFFER, &buffer_vtable);
-  ig->data      = data;
-  ig->len       = len;
-  ig->closecb   = closecb;
-  ig->closedata = closedata;
+  ig->data        = data;
+  ig->len         = len;
+  ig->destroycb   = destroycb;
+  ig->destroydata = destroydata;
 
   ig->cpos   = 0;
   
@@ -334,7 +340,7 @@ im_io_new_fd(pIMCTX, int fd) {
 }
 
 /*
-=item im_io_new_cb(ctx, p, read_cb, write_cb, seek_cb, close_cb, destroy_cb)
+=item im_io_new_cb(ctx, p, readcb, writecb, seekcb, closecb, destroycb)
 X<im_io_new_cb API>X<io_new_cb API>
 =category I/O Layers
 =order 10
@@ -1603,11 +1609,11 @@ void
 buffer_destroy(io_glue *igo) {
   io_buffer *ig = (io_buffer *)igo;
 
-  if (ig->closecb) {
+  if (ig->destroycb) {
     dIMCTXio(igo);
-    im_log((aIMCTX, 1,"calling close callback %p for io_buffer\n", 
-	    ig->closecb));
-    ig->closecb(ig->closedata);
+    im_log((aIMCTX, 1,"calling destroy callback %p for io_buffer\n", 
+	    ig->destroycb));
+    ig->destroycb(ig->destroydata);
   }
 }
 

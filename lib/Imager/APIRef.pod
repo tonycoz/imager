@@ -1508,23 +1508,29 @@ Also callable as C<io_new_bufchain()>.
 =for comment
 From: iolayer.c
 
-=item im_io_new_buffer(ctx, data, length)
+=item im_io_new_buffer(ctx, data, length, destroycb, destroydata)
 X<im_io_new_buffer API>X<io_new_buffer API>
 
 Returns a new io_glue object that has the source defined as reading
 from specified buffer.  Note that the buffer is not copied.
 
    ctx - an Imager context object
-   data - buffer to read from
-   length - length of buffer
+   data - buffer to read from (const char *)
+   length - length of buffer (size_t)
+   destroycb - called when the io_glue object is destroyed. May be NULL.
+   destroydata - passed to destroycb
 
-Also callable as C<io_new_buffer(data, length>.
+C<destroycb> should be defined as:
+
+  void my_destroycb(void *p) { ... }
+
+Also callable as C<io_new_buffer(data, length, destroycb, destroydata)>.
 
 
 =for comment
 From: iolayer.c
 
-=item im_io_new_cb(ctx, p, read_cb, write_cb, seek_cb, close_cb, destroy_cb)
+=item im_io_new_cb(ctx, p, readcb, writecb, seekcb, closecb, destroycb)
 X<im_io_new_cb API>X<io_new_cb API>
 
 Create a new I/O layer object that calls your supplied callbacks.
@@ -1848,6 +1854,42 @@ Returns the number of bytes written.
 
 =for comment
 From: iolayer.c
+
+=item io_new_bufchain()
+
+Exactly equivalent to:
+
+  im_io_new_bufchain(aIMCTX)
+
+See L</im_io_new_bufchain(ctx)>
+
+
+=for comment
+From: immacros.h
+
+=item io_new_buffer(data, length, destroycb, destroydata)
+
+Exactly equivalent to:
+
+  im_io_new_buffer(aIMCTX, data, len, destroycb, destroydata)
+
+See L</im_io_new_buffer(ctx, data, length, destroycb, destroydata)>
+
+
+=for comment
+From: immacros.h
+
+=item io_new_cb(p, readcb, writecb, seekcb, closecb, destroycb)
+
+Exactly equivalent to:
+
+  im_io_new_cb(aIMCTX, p, readcb, writecb, seekcb, closecb, destroycb)
+
+See L</im_io_new_cb(ctx, p, readcb, writecb, seekcb, closecb, destroycb)>
+
+
+=for comment
+From: immacros.h
 
 =item io_new_fd(fd)
 
@@ -3802,18 +3844,6 @@ C<im_lin_img_double_new_extra>
 =item *
 
 C<im_loog>
-
-=item *
-
-C<io_new_bufchain>
-
-=item *
-
-C<io_new_buffer>
-
-=item *
-
-C<io_new_cb>
 
 
 

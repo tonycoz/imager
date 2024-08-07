@@ -144,6 +144,33 @@ Exactly equivalent to:
 
 See L</im_io_new_fd(ctx, file)>.
 
+=item io_new_bufchain()
+=category I/O Layers
+
+Exactly equivalent to:
+
+  im_io_new_bufchain(aIMCTX)
+
+See L</im_io_new_bufchain(ctx)>
+
+=item io_new_buffer(data, length, destroycb, destroydata)
+=category I/O Layers
+
+Exactly equivalent to:
+
+  im_io_new_buffer(aIMCTX, data, len, destroycb, destroydata)
+
+See L</im_io_new_buffer(ctx, data, length, destroycb, destroydata)>
+
+=item io_new_cb(p, readcb, writecb, seekcb, closecb, destroycb)
+=category I/O Layers
+
+Exactly equivalent to:
+
+  im_io_new_cb(aIMCTX, p, readcb, writecb, seekcb, closecb, destroycb)
+
+See L</im_io_new_cb(ctx, p, readcb, writecb, seekcb, closecb, destroycb)>
+
 =cut
 */
 
