@@ -48,11 +48,47 @@ i_put_linear_fsamples(i_img *im, i_img_dim x, i_img_dim r, i_img_dim y,
   return (im->vtbl->i_f_put_linear_fsamples)(im, x, r, y, samp, chan, chan_count);
 }
 
+/*
+=item i_gsamp(im, left, right, y, samples, channels, channel_count)
+
+=category Drawing
+
+Reads sample values from C<im> for the horizontal line (left, y) to
+(right-1,y) for the channels specified by C<channels>, an array of int
+with C<channel_count> elements.
+
+If channels is NULL then the first channels_count channels are retrieved for
+each pixel.
+
+Returns the number of samples read (which should be (right-left) *
+channel_count)
+
+=cut
+*/
+
 IMAGER_STATIC_INLINE i_img_dim
 i_gsamp(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, i_sample_t *samps,
         const int *chans, int count) {
   return im->vtbl->i_f_gsamp(im, l, r, y, samps, chans, count);
 }
+
+/*
+=item i_gsampf(im, left, right, y, samples, channels, channel_count)
+
+=category Drawing
+
+Reads floating point sample values from C<im> for the horizontal line
+(left, y) to (right-1,y) for the channels specified by C<channels>, an
+array of int with channel_count elements.
+
+If C<channels> is NULL then the first C<channel_count> channels are
+retrieved for each pixel.
+
+Returns the number of samples read (which should be (C<right>-C<left>)
+* C<channel_count>)
+
+=cut
+*/
 
 IMAGER_STATIC_INLINE i_img_dim
 i_gsampf(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, i_fsample_t *samps,
@@ -60,13 +96,33 @@ i_gsampf(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, i_fsample_t *samps,
   return im->vtbl->i_f_gsampf(im, l, r, y, samps, chans, count);
 }
 
+/*
+=item i_gsamp_assert(im, l, r, y, samps, chans, chan_count)
+=category Drawing
+
+Calls i_gsamp() and asserts that a C<(l - r) * chan_count> samples
+were returned.
+
+=cut
+*/
+
 IMAGER_STATIC_INLINE void
-i_gsamp_assert(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, i_sample_t *samps,
-               const int *chans, int chan_count) {
+i_gsamp_assert(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y,
+               i_sample_t *samps, const int *chans, int chan_count) {
   i_img_dim result = i_gsamp(im, l, r, y, samps, chans, chan_count);
   IM_UNUSED_VAR(result);
   assert(result == (r-l)*chan_count);
 }
+
+/*
+=item i_gsampf_assert(im, l, r, y, samps, chans, chan_count)
+=category Drawing
+
+Calls i_gsampf() and asserts that a C<(l - r) * chan_count> samples
+were returned.
+
+=cut
+*/
 
 IMAGER_STATIC_INLINE void
 i_gsampf_assert(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, i_fsample_t *samps,
@@ -220,6 +276,262 @@ color to the image.
 IMAGER_STATIC_INLINE int
 i_ppixf(i_img *im, i_img_dim x, i_img_dim y, const i_fcolor *val) {
   return i_psampf(im, x, x+1, y, val->channel, NULL, im->channels) > 0 ? 0 : -1;
+}
+
+/*
+=item i_gsamp_bits(im, left, right, y, samples, channels, channel_count, bits)
+=category Drawing
+
+Reads integer samples scaled to C<bits> bits of precision into the
+C<unsigned int> array C<samples>.
+
+Expect this to be slow unless C<< bits == im->bits >>.
+
+Returns the number of samples copied, or -1 on error.
+
+Not all image types implement this method.
+
+Pushes errors, but does not call C<i_clear_error()>.
+
+=cut
+*/
+
+IMAGER_STATIC_INLINE i_img_dim
+i_gsamp_bits(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y,
+             unsigned *samps, const int *chans, int count, int bits) {
+  return im->vtbl->i_f_gsamp_bits(im, l, r, y, samps, chans, count, bits);
+}
+
+/*
+=item i_psamp_bits(im, left, right, y, samples, channels, channel_count, bits)
+=category Drawing
+
+Writes integer samples scaled to C<bits> bits of precision from the
+C<unsigned int> array C<samples>.
+
+Expect this to be slow unless C<< bits == im->bits >>.
+
+Returns the number of samples copied, or -1 on error.
+
+Not all image types implement this method.
+
+Pushes errors, but does not call C<i_clear_error()>.
+
+=cut
+*/
+
+IMAGER_STATIC_INLINE i_img_dim
+i_psamp_bits(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y,
+             const unsigned *samps, const int *chans, int count,
+             int bits) {
+  return im->vtbl->i_f_psamp_bits(im, l, r, y, samps, chans, count, bits);
+}
+
+/*
+=item i_findcolor(im, color, &entry)
+
+=category Paletted images
+
+Searches the images palette for the given color.
+
+On success sets *I<entry> to the index of the color, and returns true.
+
+On failure returns false.
+
+Always fails on direct color images.
+
+=cut
+*/
+
+IMAGER_STATIC_INLINE int
+i_findcolor(i_img *im, const i_color *color, i_palidx *entry) {
+  if (im->vtbl->i_f_findcolor) {
+    return im->vtbl->i_f_findcolor(im, color, entry);
+  }
+  else {
+    return 0;
+  }
+}
+
+/*
+=item i_gpal(im, left, right, y, indexes)
+
+=category Drawing
+
+Reads palette indexes for the horizontal line (left, y) to (right-1,
+y) into C<indexes>.
+
+Returns the number of indexes read.
+
+Always returns 0 for direct color images.
+
+=cut
+*/
+
+IMAGER_STATIC_INLINE i_img_dim
+i_gpal(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, i_palidx *vals) {
+  if (im->vtbl->i_f_gpal) {
+    return im->vtbl->i_f_gpal(im, l, r, y, vals);
+  }
+  else {
+    return 0;
+  }
+}
+
+/*
+=item i_ppal(im, left, right, y, indexes)
+
+=category Drawing
+
+Writes palette indexes for the horizontal line (left, y) to (right-1,
+y) from C<indexes>.
+
+Returns the number of indexes written.
+
+Always returns 0 for direct color images.
+
+=cut
+*/
+
+IMAGER_STATIC_INLINE i_img_dim
+i_ppal(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y,
+       const i_palidx *vals) {
+  if (im->vtbl->i_f_ppal) {
+    return im->vtbl->i_f_ppal(im, l, r, y, vals);
+  }
+  else {
+    return 0;
+  }
+}
+
+/*
+=item i_addcolors(im, colors, count)
+
+=category Paletted images
+
+Adds colors to the image's palette.
+
+On success returns the index of the lowest color added.
+
+On failure returns -1.
+
+Always fails for direct color images.
+
+=cut
+*/
+
+IMAGER_STATIC_INLINE int
+i_addcolors(i_img *im, const i_color *colors, int count) {
+  if (im->vtbl->i_f_addcolors) {
+    return im->vtbl->i_f_addcolors(im, colors, count);
+  }
+  else {
+    return -1;
+  }
+}
+
+/*
+=item i_getcolors(im, index, colors, count)
+
+=category Paletted images
+
+Retrieves I<count> colors starting from I<index> in the image's
+palette.
+
+On success stores the colors into I<colors> and returns true.
+
+On failure returns false.
+
+Always fails for direct color images.
+
+Fails if there are less than I<index>+I<count> colors in the image's
+palette.
+
+=cut
+*/
+
+IMAGER_STATIC_INLINE int
+i_getcolors(i_img *im, int index, i_color *color, int count) {
+  if (im->vtbl->i_f_getcolors) {
+    return im->vtbl->i_f_getcolors(im, index, color, count);
+  }
+  else {
+    0;
+  }
+}
+
+/*
+=item i_setcolors(im, index, colors, count)
+
+=category Paletted images
+
+Sets I<count> colors starting from I<index> in the image's palette.
+
+On success returns true.
+
+On failure returns false.
+
+The image must have at least I<index>+I<count> colors in it's palette
+for this to succeed.
+
+Always fails on direct color images.
+
+=cut
+*/
+
+IMAGER_STATIC_INLINE int
+i_setcolors(i_img *im, int index, const i_color *color, int count) {
+  if (im->vtbl->i_f_setcolors) {
+    return im->vtbl->i_f_setcolors(im, index, color, count);
+  }
+  else {
+    return 0;
+  }
+}
+
+/*
+=item i_colorcount(im)
+
+=category Paletted images
+
+Returns the number of colors in the image's palette.
+
+Returns -1 for direct images.
+
+=cut
+*/
+
+IMAGER_STATIC_INLINE int
+i_colorcount(i_img *im) {
+  if (im->vtbl->i_f_colorcount) {
+    return im->vtbl->i_f_colorcount(im);
+  }
+  else {
+    return -1;
+  }
+}
+
+/*
+=item i_maxcolors(im)
+
+=category Paletted images
+
+Returns the maximum number of colors the palette can hold for the
+image.
+
+Returns -1 for direct color images.
+
+=cut
+*/
+
+IMAGER_STATIC_INLINE int
+i_maxcolors(i_img *im) {
+  if (im->vtbl->i_f_maxcolors) {
+    return im->vtbl->i_f_maxcolors(im);
+  }
+  else {
+    return -1;
+  }
 }
 
 /*
@@ -622,7 +934,10 @@ i_img_all_channel_mask(const i_img *img) {
 Return true if all of the channels specified by C<chans>/C<chan_count>
 are present in the image.
 
-Used by image implementations to validate passed in channel lists.
+Used by the XS layer to validate passed in channel lists.
+
+This was previously used by the image implementations, but these now
+only validate with assertions.
 
 =cut
 */
@@ -709,9 +1024,6 @@ i_img_valid_chans_assert(i_img *im, const int *chans, int chan_count) {
     return chan_count <= total_ch;
   }
 }
-
-#define i_assert_valid_channels(im, chans, chan_count) \
-  assert(i_img_valid_chans_assert((im), (chans), (chan_count)))
 
 /*
 =item i_sametype_chans(C<im>, C<xsize>, C<ysize>, C<channels>)
@@ -834,6 +1146,147 @@ im_aligned_alloc_simd_fatal(size_t type_size, size_t count) {
   }
 
   return p;
+}
+
+/*
+=item i_img_data()
+
+  i_img_data(im, layout, bits, flags, &ptr, &size, &extrachannels)
+
+Returns raw bytes representing the image.
+
+Typical use is something like:
+
+  // image data I can write to a file
+  void *data;
+  size_t size;
+  i_image_alloc_t *alloc = i_img_data(img, idf_rgb, i_8_bits, idf_synthesize, &data, &size, NULL);
+  if (alloc) {
+    // write to some file
+    ...
+    i_img_data_release(alloc);
+  }
+
+  // image data I can modify to modify the image
+  void *data;
+  size_t size;
+  i_image_alloc_t *alloc = i_img_data(img, idf_rgb, i_8_bits, idf_writable, &data, &size, NULL);
+  if (alloc) {
+    // modify the image data
+    ...
+    i_img_data_release(alloc);
+  }
+
+Note that even without C<idf_synthesize> the data pointer should be
+treated as pointing at read only data, unless C<idf_writable> is set
+in C<flags>.
+
+Parameters:
+
+=over
+
+=item * C<img> - the image to return image data for
+
+=item *
+
+C<layout> - the desired image layout.  Note that the typical Imager
+layouts are C<idf_palette> through C<idf_rgb_alpha>.  The numeric
+values of C<idf_gray> through C<idf_rgb_alpha> correspond to the
+Imager channel counts, but it's possible for third-party images (of
+which none exist at this point) may have another layout.
+
+=item *
+
+C<bits> - the sample size for the images.  This can be any of
+C<i_8_bits>, C<i_16_bits> or C<i_double_bits>.  Other sample sizes may
+be added.
+
+=item *
+
+C<flags> - a bit combination of the following:
+
+=over
+
+=item *
+
+C<idf_writable> - modifying samples pointed at will modify the image.
+Without this flag the data should be treated as read only (and this
+may be enforced.)
+
+=item *
+
+C<idf_synthesize> - if the native image data doesn't match the
+requested format, Imager will allocate memory and synthesize the
+layout requested.  Some layouts are not supported for synthesis
+including C<idf_palette> in any case and C<idf_gray> or
+C<idf_gray_alpha> from any RGB layout.
+
+=item *
+
+C<idf_extras> - allows for the original image data to be returned,
+ie. for non-synthesizes or writable data even if the image has extra
+channels stored for pixel.
+
+=back
+
+=item *
+
+C<&data> - a pointer to C<void *> which is filled with a pointer to
+the image data.
+
+=item *
+
+C<&size> - a pointer to C<size_t> which is filled with the size of the
+image data in bytes.  This is intended for validating the result.
+
+=item *
+
+C<&extrachannels> - a pointer to C<int> which will be filled with the
+number of extra channels in the image.  This pointer may be C<NULL> if
+the C<idf_extras> flag isn't set.  Extra channels are currently not
+implemented and this will always be set to zero.
+
+=back
+
+Since i_img_data_release() safely handles a NULL allocation, if you
+need to access image data from multiple images you can safely call
+i_img_data() for each and then test the results:
+
+  i_image_data_alloc_t *one = i_img_data(im1, ...);
+  i_image_data_alloc_t *two = i_img_data(im2, ...);
+  if (one && two) {
+    // do something
+  }
+  i_img_data_release(one);
+  i_img_data_release(two);
+
+=cut
+*/
+
+IMAGER_STATIC_INLINE i_image_data_alloc_t *
+i_img_data(i_img *im, i_data_layout_t layout, i_img_bits_t bits,
+           unsigned flags, void **pptr, size_t *psize, int *pextra) {
+  return im->vtbl->i_f_data(im, layout, bits, flags, pptr, psize, pextra);
+}
+
+/*
+=item i_img_data_release()
+
+Releases the allocation structure and any associated resources
+returned from i_img_data().
+
+  i_img_data_release(allocation);
+
+This can safely accept a NULL pointer.
+
+=cut
+*/
+
+IMAGER_STATIC_INLINE void
+i_img_data_release(i_image_data_alloc_t *alloc) {
+  if (alloc) {
+    alloc->f_release(alloc);
+  }
 }
 
 #ifdef __cplusplus

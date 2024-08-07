@@ -2,9 +2,9 @@
 
  */
 #define IMAGER_NO_CONTEXT
-#include "imager.h"
 #include "EXTERN.h"
 #include "perl.h"
+#include "imager.h"
 #include "imperlio.h"
 
 

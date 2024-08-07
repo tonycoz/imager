@@ -83,6 +83,23 @@ i_img_dim i_abs(i_img_dim x);
 
 #define color_to_grey(col) ((col)->rgb.r * 0.222  + (col)->rgb.g * 0.707 + (col)->rgb.b * 0.071)
 
+/*
+=item assert_aligned(p, type)
+=category Utilities
+
+Assert that pointer C<p> is aligned enough for C<type> to be used in
+vector processing.
+
+=cut
+*/
+
+#if IM_ALIGNED_ALLOC_TYPE == IM_ALIGNED_ALLOC_NONE
+#define assert_aligned(p, type) ((void)0)
+#else
+#define assert_aligned(p, type) \
+  assert(((uintptr_t)(void *)(p) % IMAGER_ALIGN_SIZE(sizeof(type))) == 0)
+#endif
+
 struct file_magic_entry {
   unsigned char *magic;
   size_t magic_size;

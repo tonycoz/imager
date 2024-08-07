@@ -134,7 +134,7 @@ im_img_init(pIMCTX, i_img *img) {
 }
 
 /*
-=item i_check_image_entries()
+=item i_img_check_entries()
 
 Validates that an image has all the entries required for its type.
 
@@ -2296,11 +2296,17 @@ i_get_file_backgroundf(i_img *im, i_fcolor *fbg) {
 }
 
 /*
-=item i_model_curves(model, &count)
+=item im_model_curves(ctx, model, pcolor_chans)
+=synopsis int chan_count;
+=synopsis const imcms_curve_t *curves = im_model_curves(aIMCTX, model, &chan_count);
+=synopsis const imcms_curve_t *curves2 = i_model_curves(model, &chan_count);
 
 Return a pointer to an array of curves for the given color model.
 
 Returns the number of color channels in the image in count.
+
+NB: returns 1 channel for C<icm_gray_alpha> and 3 channels for
+C<icm_rgb_alpha>.
 
 Returns NULL and a count of zero for the icm_unknown model.
 
@@ -2323,6 +2329,7 @@ im_model_curves(pIMCTX, i_color_model_t model, int *color_chan) {
     *color_chan = 3;
     return aIMCTX->rgb_curves;
   }
+  assert(0);
 }
 
 

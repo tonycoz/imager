@@ -123,18 +123,6 @@ extern i_img_dim i_plinf(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y,
 			   const i_fcolor *vals);
 extern i_img_dim i_glinf(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, 
 			   i_fcolor *vals);
-extern i_img_dim
-(i_gpal)(i_img *im, i_img_dim x, i_img_dim r, i_img_dim y, i_palidx *vals);
-extern i_img_dim
-(i_ppal)(i_img *im, i_img_dim x, i_img_dim r, i_img_dim y, const i_palidx *vals);
-extern int (i_addcolors)(i_img *im, const i_color *colors, int count);
-extern int (i_getcolors)(i_img *im, int i, i_color *, int count);
-extern int (i_colorcount)(i_img *im);
-extern int (i_maxcolors)(i_img *im);
-extern int (i_findcolor)(i_img *im, const i_color *color, i_palidx *entry);
-extern int (i_setcolors)(i_img *im, int index, const i_color *colors, 
-                       int count);
-
 
 extern i_fill_t *i_new_fill_solidf(const i_fcolor *c, int combine);
 extern i_fill_t *i_new_fill_solid(const i_color *c, int combine);

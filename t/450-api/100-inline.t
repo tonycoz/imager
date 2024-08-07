@@ -851,6 +851,15 @@ try_aligned_alloc() {
   return true;
 }
 
+int
+test_model_curves(int chans) {
+   int ccnt;
+   imcms_curve_t *c = i_model_curves((i_color_model_t)chans, &ccnt);
+   if (c == NULL)
+     return -1;
+   return ccnt;
+}
+
 EOS
 
 my $im = Imager->new(xsize=>50, ysize=>50);
@@ -1162,6 +1171,12 @@ ok(test_zmalloc(), "calls to myzmalloc");
 }
 
 ok(test_forwarders(), "test paletted forwarders are set");
+
+is(test_model_curves(1), 1, "1 curve for gray");
+is(test_model_curves(2), 1, "1 curve for gray alpha");
+is(test_model_curves(3), 3, "3 curves for rgb");
+is(test_model_curves(4), 3, "3 curves for rgb alpha");
+is(test_model_curves(0), -1, "invalid curves for zero channels");
 
 =item APIs to add TODO
 

@@ -169,6 +169,8 @@ Imager::APIRef - Imager's C API - reference.
   i_tags_setn(&img->tags, "i_xres", 204);
   i_tags_setn(&img->tags, "i_yres", 196);
 
+  # Utility macros
+
 =head1 DESCRIPTION
 
 =head2 Blit tools
@@ -236,6 +238,68 @@ From: render.im
 
 =over
 
+=item aIMCTX
+
+The imager context object.
+
+When C<IMAGER_NO_CONTEXT> is defined this expects a C<dIMCTX*> or
+C<pIMCTX> in scope.
+
+When C<IMAGER_NO_CONTEXT> is not defined, this directly calls the
+context fetch function.
+
+Unlike the perl XS C<aTHX> there is no C<aIMCTX_> since Imager always
+uses the context object.
+
+
+=for comment
+From: immacros.h
+
+=item dIMCTX
+
+Defines and initializes a context object pointer from TLS.
+
+Only available when C<IMAGER_NO_CONTEXT> is defined.
+
+
+=for comment
+From: immacros.h
+
+=item dIMCTXctx(context)
+
+Defines and initializes a local context object pointer from C<ctx>.
+
+Used to define the other macros such as dIMCTX, dIMCTXim() and
+dIMCTXio() which you probably want to use instead.
+
+Only available when C<IMAGER_NO_CONTEXT> is defined.
+
+
+=for comment
+From: immacros.h
+
+=item dIMCTXim(im)
+
+Defines and initializes a context object pointer from the context
+pointer in an image.
+
+Only available when C<IMAGER_NO_CONTEXT> is defined.
+
+
+=for comment
+From: immacros.h
+
+=item dIMCTXio(io)
+
+Defines and initializes a context object pointer from the context
+pointer in an C<io_glue> object.
+
+Only available when C<IMAGER_NO_CONTEXT> is defined.
+
+
+=for comment
+From: immacros.h
+
 =item im_context_refdec(ctx, where)
 X<im_context_refdec API>
 
@@ -258,6 +322,15 @@ Add a new reference to the context.
 
 =for comment
 From: context.c
+
+=item pIMCTX
+
+Declares a context object, similar to C<dTHX> in perl XS, except that
+it is non-conditional, so there is no C<pIMCTX_>.
+
+
+=for comment
+From: immacros.h
 
 
 =back
@@ -775,7 +848,7 @@ Always returns 0 for direct color images.
 
 
 =for comment
-From: imext.c
+From: iminline.h
 
 =item i_gpix(im, C<x>, C<y>, C<color>)
 
@@ -812,7 +885,16 @@ channel_count)
 
 
 =for comment
-From: imext.c
+From: iminline.h
+
+=item i_gsamp_assert(im, l, r, y, samps, chans, chan_count)
+
+Calls i_gsamp() and asserts that a C<(l - r) * chan_count> samples
+were returned.
+
+
+=for comment
+From: iminline.h
 
 =item i_gsamp_bg(im, l, r, y, samples, out_channels, background)
 
@@ -842,7 +924,7 @@ Pushes errors, but does not call C<i_clear_error()>.
 
 
 =for comment
-From: imext.c
+From: iminline.h
 
 =item i_gsampf(im, left, right, y, samples, channels, channel_count)
 
@@ -859,7 +941,16 @@ Returns the number of samples read (which should be (C<right>-C<left>)
 
 
 =for comment
-From: imext.c
+From: iminline.h
+
+=item i_gsampf_assert(im, l, r, y, samps, chans, chan_count)
+
+Calls i_gsampf() and asserts that a C<(l - r) * chan_count> samples
+were returned.
+
+
+=for comment
+From: iminline.h
 
 =item i_gsampf_bg(im, l, r, y, samples, out_channels, background)
 
@@ -1000,7 +1091,7 @@ Always returns 0 for direct color images.
 
 
 =for comment
-From: imext.c
+From: iminline.h
 
 =item i_ppix(im, x, y, color)
 
@@ -1061,7 +1152,7 @@ Pushes errors, but does not call C<i_clear_error()>.
 
 
 =for comment
-From: imext.c
+From: iminline.h
 
 =item i_psampf(im, left, right, y, samples, channels, channel_count)
 
@@ -1758,6 +1849,18 @@ Returns the number of bytes written.
 =for comment
 From: iolayer.c
 
+=item io_new_fd(fd)
+
+Exactly equivalent to:
+
+ im_io_new_fd(aIMCTX, fd);
+
+See L</im_io_new_fd(ctx, file)>.
+
+
+=for comment
+From: immacros.h
+
 =item io_slurp(ig, c)
 X<io_slurp API>
 
@@ -2396,7 +2499,10 @@ From: iminline.h
 Return true if all of the channels specified by C<chans>/C<chan_count>
 are present in the image.
 
-Used by image implementations to validate passed in channel lists.
+Used by the XS layer to validate passed in channel lists.
+
+This was previously used by the image implementations, but these now
+only validate with assertions.
 
 
 =for comment
@@ -2486,6 +2592,25 @@ This is an internal function called by the mm_log() macro.
 
 =for comment
 From: log.c
+
+=item mm_log((aIMCTX, level, format, ...))
+
+This is the main entry point to logging. Note that the extra set of
+parentheses are required due to limitations in C89 macros.
+
+This will format a string with the current file and line number to the
+log file if logging is enabled.
+
+This must be called with a context object defined by one of the
+C<dIMCTX> macros in scope.
+
+This can also be called as C<mm_log((level, format, args))> in which
+case the currently active context is used and any in scope context is
+ignored.
+
+
+=for comment
+From: log.h
 
 
 =back
@@ -2577,7 +2702,7 @@ Always fails for direct color images.
 
 
 =for comment
-From: imext.c
+From: iminline.h
 
 =item i_colorcount(im)
 
@@ -2588,7 +2713,7 @@ Returns -1 for direct images.
 
 
 =for comment
-From: imext.c
+From: iminline.h
 
 =item i_findcolor(im, color, &entry)
 
@@ -2603,7 +2728,7 @@ Always fails on direct color images.
 
 
 =for comment
-From: imext.c
+From: iminline.h
 
 =item i_getcolors(im, index, colors, count)
 
@@ -2622,7 +2747,7 @@ palette.
 
 
 =for comment
-From: imext.c
+From: iminline.h
 
 =item i_maxcolors(im)
 
@@ -2634,7 +2759,7 @@ Returns -1 for direct color images.
 
 
 =for comment
-From: imext.c
+From: iminline.h
 
 =item i_setcolors(im, index, colors, count)
 
@@ -2652,7 +2777,7 @@ Always fails on direct color images.
 
 
 =for comment
-From: imext.c
+From: iminline.h
 
 
 =back
@@ -2868,6 +2993,60 @@ From: tags.c
 
 =back
 
+=head2 Utility macros
+
+=over
+
+=item IM_CAT(x, y)
+
+Token pasting - concatenate the macro expansions of C<x> and C<y>.
+
+
+=for comment
+From: immacros.h
+
+=item IM_DEPRECATED(name)
+
+Expands to an attribute on supported compilers that causes the
+compiler to produce a deprecation warning when the given function is
+called.
+
+  int foo(void) IM_DEPRECATED(foo);
+
+
+=for comment
+From: immacros.h
+
+=item IM_DEPRECATED_MACRO(name)
+
+Intended for use in macros to warn that the given macro is deprecated.
+
+  #define foo() (IM_DEPRECATED_MACRO(foo), code for foo)
+
+
+=for comment
+From: immacros.h
+
+=item IM_QUOTE(x)
+
+Token pasting - quote the macro expansion of C<x>.
+
+
+=for comment
+From: immacros.h
+
+=item IM_UNUSED_VAR
+
+Used to mention a variable to suppress unused variable or parameter
+warnings.
+
+
+=for comment
+From: immacros.h
+
+
+=back
+
 =head2 Uncategorized functions
 
 =over
@@ -2877,6 +3056,15 @@ From: tags.c
 
 =for comment
 From: image.c
+
+=item i_assert_valid_channels(im, chans, chan_count)
+
+This is used by image get/set sample implementations to assert that
+C<chans>/C<chan_count> paremeters are valid.
+
+
+=for comment
+From: immacros.h
 
 =item i_colorcount_forward(i_img *im)
 
@@ -2942,6 +3130,20 @@ This must be released with i_img_data_release().
 
 =for comment
 From: imdatatypes.h
+
+=item i_img_check_entries()
+
+Validates that an image has all the entries required for its type.
+
+  int ok = i_check_image_entries(img);
+
+Returns true on success.
+
+Pushes an error for each error found, if any.
+
+
+=for comment
+From: image.c
 
 =item i_img_data()
 
@@ -3042,9 +3244,21 @@ implemented and this will always be set to zero.
 
 =back
 
+Since i_img_data_release() safely handles a NULL allocation, if you
+need to access image data from multiple images you can safely call
+i_img_data() for each and then test the results:
+
+  i_image_data_alloc_t *one = i_img_data(im1, ...);
+  i_image_data_alloc_t *two = i_img_data(im2, ...);
+  if (one && two) {
+    // do something
+  }
+  i_img_data_release(one);
+  i_img_data_release(two);
+
 
 =for comment
-From: immacros.h
+From: iminline.h
 
 =item i_img_data_fallback()
 
@@ -3072,6 +3286,19 @@ and my_img_data goes into the image's virtual table.
 =for comment
 From: data.c
 
+=item i_img_data_release()
+
+Releases the allocation structure and any associated resources
+returned from i_img_data().
+
+  i_img_data_release(allocation);
+
+This can safely accept a NULL pointer.
+
+
+=for comment
+From: iminline.h
+
 =item i_img_refcnt_inc()
 
 Increment the reference count of the image.
@@ -3084,11 +3311,57 @@ This is unrelated to Perl C<SV> reference counts.
 =for comment
 From: image.c
 
+=item i_img_valid_chans_assert(im, chans, chan_count)
+
+Typically just use C<i_assert_valid_channels(im, chans, chan_count);>
+
+For use in an assertion, returns true if one of the following is true:
+
+=over
+
+=item *
+
+C<chans> is NULL and C<chan_count> is positive and less than or equal
+to the total number of channels in the image.
+
+=item *
+
+C<chans> is non-NULL and chan_count is positive and chans[0]
+.. chans[chan_count-1] are all greater than zero and less than the
+total number of channels in the image.
+
+=back
+
+For non-assertion code, use i_img_valid_channel_indexes().
+
+
+=for comment
+From: iminline.h
+
 =item i_maxcolors_forward(i_img *im)
 
 
 =for comment
 From: image.c
+
+=item i_model_curves(model, pcolor_chans)
+
+  int color_chans;
+  imcms_curve_t *curves = i_model_curves(icm_gray, &color_chans);
+
+Fetch the color channel curves for each channel in the given color
+model.
+
+
+Exactly equivalent to:
+
+  im_model_curves(aIMCTX, model, pcolor_chans)
+
+See L</im_model_curves(ctx, model, pcolor_chans)>.
+
+
+=for comment
+From: immacros.h
 
 =item i_new_image_data_alloc_free()
 
@@ -3165,6 +3438,30 @@ Returns ~0UL on failure.
 =for comment
 From: io.c
 
+=item im_align_size(align, size)
+
+Given an alignment and a size, return size rounded up to be a multiple
+of the alignment.
+
+C<align> must be a power of two.
+
+
+=for comment
+From: iminline.h
+
+=item im_aligned_alloc_fatal(align, size)
+
+Allocate aligned memory and abort execution on failure.
+
+This will fallback to mymalloc() if no aligned allocation function was
+found during configuration (and return unaligned memory.)
+
+C<align> must be a power of 2.
+
+
+=for comment
+From: iminline.h
+
 =item im_aligned_alloc_low(C<align>, C<size>)
 
 Low level function to allocate aligned memory.
@@ -3181,6 +3478,28 @@ This may return NULL on failure.
 
 =for comment
 From: io.c
+
+=item im_aligned_alloc_simd_fatal(type_size, count)
+
+Allocate (at least) count units of type_size, aligned for SIMD
+processing.
+
+Aborts the program on allocation failure or integer overflow.
+
+
+=for comment
+From: iminline.h
+
+=item im_aligned_alloc_simd_null(type_size, count)
+
+Allocate (at least) count units of type_size, aligned for SIMD
+processing.
+
+Returns NULL on allocation failure or integer overflow.
+
+
+=for comment
+From: iminline.h
 
 =item im_aligned_free(C<p>)
 
@@ -3305,6 +3624,25 @@ files.
 =for comment
 From: iolayer.c
 
+=item im_model_curves(ctx, model, pcolor_chans)
+
+  int chan_count;
+  const imcms_curve_t *curves = im_model_curves(aIMCTX, model, &chan_count);
+  const imcms_curve_t *curves2 = i_model_curves(model, &chan_count);
+
+Return a pointer to an array of curves for the given color model.
+
+Returns the number of color channels in the image in count.
+
+NB: returns 1 channel for C<icm_gray_alpha> and 3 channels for
+C<icm_rgb_alpha>.
+
+Returns NULL and a count of zero for the icm_unknown model.
+
+
+=for comment
+From: image.c
+
 
 
 =back
@@ -3319,51 +3657,163 @@ will change:
 
 =item *
 
-B<i_img_check_entries>
+C<i_clear_error>
 
 =item *
 
-B<i_img_valid_chans_assert>
+C<i_errors>
 
 =item *
 
-B<i_new_image_data_alloc_def>
+C<i_get_image_file_limits>
 
 =item *
 
-B<im_align_size>
+C<i_get_linear_fsamples>
 
 =item *
 
-B<im_aligned_alloc_fatal>
+C<i_get_linear_fsamples_assert>
 
 =item *
 
-B<im_aligned_alloc_simd_fatal>
+C<i_get_linear_samples>
 
 =item *
 
-B<im_aligned_alloc_simd_null>
+C<i_get_linear_samples_assert>
 
 =item *
 
-B<im_fatal>
+C<i_img_16_new>
 
 =item *
 
-B<im_lhead>
+C<i_img_16_new_extra>
 
 =item *
 
-B<im_lin_img_double_new_extra>
+C<i_img_8_new>
 
 =item *
 
-B<im_loog>
+C<i_img_8_new_extra>
 
 =item *
 
-B<mm_log>
+C<i_img_alloc>
+
+=item *
+
+C<i_img_double_new>
+
+=item *
+
+C<i_img_double_new_extra>
+
+=item *
+
+C<i_img_float_new>
+
+=item *
+
+C<i_img_float_new_extra>
+
+=item *
+
+C<i_img_getchannels>
+
+=item *
+
+C<i_img_init>
+
+=item *
+
+C<i_img_new>
+
+=item *
+
+C<i_img_pal_new>
+
+=item *
+
+C<i_int_check_image_file_limits>
+
+=item *
+
+C<i_io_get_max_mmap_size>
+
+=item *
+
+C<i_io_set_max_mmap_size>
+
+=item *
+
+C<i_lin_img_16_new>
+
+=item *
+
+C<i_lin_img_16_new_extra>
+
+=item *
+
+C<i_lin_img_double_new>
+
+=item *
+
+C<i_lin_img_double_new_extra>
+
+=item *
+
+C<i_new_image_data_alloc_def>
+
+=item *
+
+C<i_push_error>
+
+=item *
+
+C<i_push_errorvf>
+
+=item *
+
+C<i_put_linear_fsamples>
+
+=item *
+
+C<i_put_linear_samples>
+
+=item *
+
+C<i_set_image_file_limits>
+
+=item *
+
+C<im_fatal>
+
+=item *
+
+C<im_lhead>
+
+=item *
+
+C<im_lin_img_double_new_extra>
+
+=item *
+
+C<im_loog>
+
+=item *
+
+C<io_new_bufchain>
+
+=item *
+
+C<io_new_buffer>
+
+=item *
+
+C<io_new_cb>
 
 
 

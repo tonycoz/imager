@@ -2,11 +2,31 @@
 use strict;
 use ExtUtils::Manifest 'maniread';
 
-my $outname = shift || '-';
+use Getopt::Long;
 
-my @funcs = make_ext_func_list();
-my @inline = make_inline_func_list();
-my %funcs = map { $_ => 1 } @funcs, @inline;
+my $verbose;
+GetOptions("v:i" => \$verbose);
+
+defined $verbose && $verbose == 0
+  and $verbose = 1;
+defined $verbose or $verbose = 0;
+
+print "verbose $verbose\n";
+
+my $outname = shift
+  or die "Usage: $0 [-v] output\n";
+
+# functions/macros/types we want documented
+my @funcs =
+  (
+    make_ext_func_list(),
+    make_inline_func_list(),
+    make_immacro_macro_list(),
+   );
+# lines where we found names of functions/macros/types
+my %lines;
+my %funcs = map { $_ => 1 } @funcs;
+@funcs = keys %funcs;
 
 # look for files to parse
 
@@ -27,24 +47,16 @@ my %funcsyns;
 my $order;
 my %order;
 my $errors = 0;
+my $level = 0;
 for my $file (@files) {
-  open my $src, "< $file"
+  open my $src, "<", $file
     or die "Cannot open $file for documentation: $!\n";
+  print "File: $file\n" if $verbose > 0;
   while (<$src>) {
-    if (/^=item (\w+)\b/ && $funcs{$1}) {
-      $func = $1;
-      $start = $.;
-      @funcdocs = $_;
-      if ($alldocs{$func}) {
-        print STDERR <<EOS;
-Duplicate documentation for $func at $file:$.
-Originally found at: $from{$func}
-EOS
-        ++$errors;
-      }
-    }
-    elsif ($func && /^=(cut|head)/) {
+    if ($func && (/^=(cut|head)/
+                 || /^=item\s/ && $level == 0)) {
       if ($funcs{$func}) { # only save the API functions
+        print "   store $func\n" if $verbose > 2;
         $alldocs{$func} = [ @funcdocs ];
         $from{$func} = "$file";
         if ($category) {
@@ -63,11 +75,28 @@ EOS
         }
 	defined $order or $order = 50;
 	$order{$func} = $order;
+        if (/^=(cut|head)/ && $level) {
+          die "$file:$. some =over missing =back\n";
+        }
       }
       undef $func;
       undef $category;
       undef $order;
       $synopsis = '';
+    }
+
+    if (/^=item (\w+)\b/ && $funcs{$1}) {
+      $func = $1;
+      $start = $.;
+      print "  $func\n" if $verbose > 1;
+      @funcdocs = $_;
+      if ($alldocs{$func}) {
+        print STDERR <<EOS;
+Duplicate documentation for $func at $file:$.
+Originally found at: $from{$func}
+EOS
+        ++$errors;
+      }
     }
     elsif ($func) {
       if (/^=category (.*)/) {
@@ -87,6 +116,14 @@ EOS
       }
       else {
         push @funcdocs, $_;
+      }
+      if (/=over/) {
+        ++$level;
+      }
+      elsif (/=back/) {
+        if (--$level < 0) {
+          die "$file:$. Unbalanced =back\n";
+        }
       }
     }
   }
@@ -165,10 +202,12 @@ for my $cat (sort { lc $a cmp lc $b } keys %cats) {
 
 # see if we have an uncategorised section
 if (grep $alldocs{$_}, keys %undoc) {
+  print "Processing uncategorized functions\n" if $verbose;
   print $out "=head2 Uncategorized functions\n\n=over\n\n";
   #print join(",", grep !exists $order{$_}, @funcs), "\n";
   for my $func (sort { $order{$a} <=> $order{$b} || $a cmp $b }
 		grep $undoc{$_} && $alldocs{$_}, @funcs) {
+    print "  $func\n" if $verbose > 1;
     print $out @{$alldocs{$func}}, "\n";
     print $out "=for comment\nFrom: $from{$func}\n\n";
     delete $undoc{$func};
@@ -188,7 +227,7 @@ will change:
 
 EOS
 
-  print $out "=item *\n\nB<$_>\n\n" for sort keys %undoc;
+  print $out "=item *\n\nC<$_>\n\n" for sort keys %undoc;
 
   print $out "\n\n=back\n\n";
 }
@@ -243,21 +282,53 @@ sub make_ext_func_list {
 }
 
 sub make_inline_func_list {
+  return scan_definition_list("iminline.h");
+}
+
+sub make_immacro_macro_list {
+  return scan_definition_list("immacros.h");
+}
+
+sub scan_definition_list {
+  my ($src) = @_;
+
   my @funcs;
-  open my $in, "<", "iminline.h"
-    or die "Cannot open iminline.h: $!";
+  open my $in, "<", $src
+    or die "Cannot open $src: $!";
 
   my $depth = 0;
+  my $inline;
   while (<$in>) {
-    if (/^=item (\w+)\(/ && $depth == 0) {
+    if (/^IMAGER_STATIC_INLINE\b/ || /^static inline\b/) {
+      $inline = 1;
+    }
+    elsif ($inline) {
+      if (/^(\w+)\(/) {
+        push @funcs, $1;
+        $lines{$1} = "$src:$.";
+      }
+      else {
+        print STDERR "$src:$. found inline indicator but no function name\n";
+      }
+      $inline = 0;
+    }
+    elsif (/^\#\s*define\s+(\w+)/) {
+      my $name = $1;
+      if ($name !~ /_$/ && $name ne "NDEBUG") {
+        push @funcs, $1;
+        $lines{$1} = "$src:$1";
+      }
+    }
+    elsif (/^=item (\w+)\(/ && $depth == 0) {
       push @funcs, $1;
+      $lines{$1} = "$src:$1";
     }
     elsif (/^=over/) {
       ++$depth;
     }
     elsif (/^=back/) {
       if ($depth == 0) {
-        die "=back without =over iminline.h: $.\n";
+        die "=back without =over $src:$.\n";
       }
       --$depth;
     }

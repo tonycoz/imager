@@ -23,7 +23,7 @@ void i_loog(int level,const char *msg, ... ) I_FORMAT_ATTR(2,3);
 void im_loog(pIMCTX, int level,const char *msg, ... ) I_FORMAT_ATTR(3,4);
 
 /*
-=item im_log((aIMCTX, level, format, ...))
+=item mm_log((aIMCTX, level, format, ...))
 =category Logging
 
 This is the main entry point to logging. Note that the extra set of

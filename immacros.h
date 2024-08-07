@@ -11,162 +11,79 @@ extern "C" {
 #endif
 
 /*
-=item i_img_data()
+=item pIMCTX
+=category Context objects
 
-  i_img_data(im, layout, bits, flags, &ptr, &size, &extrachannels)
-
-Returns raw bytes representing the image.
-
-Typical use is something like:
-
-  // image data I can write to a file
-  void *data;
-  size_t size;
-  i_image_alloc_t *alloc = i_img_data(img, idf_rgb, i_8_bits, idf_synthesize, &data, &size, NULL);
-  if (alloc) {
-    // write to some file
-    ...
-    i_img_data_release(alloc);
-  }
-
-  // image data I can modify to modify the image
-  void *data;
-  size_t size;
-  i_image_alloc_t *alloc = i_img_data(img, idf_rgb, i_8_bits, idf_writable, &data, &size, NULL);
-  if (alloc) {
-    // modify the image data
-    ...
-    i_img_data_release(alloc);
-  }
-
-Note that even without C<idf_synthesize> the data pointer should be
-treated as pointing at read only data, unless C<idf_writable> is set
-in C<flags>.
-
-Parameters:
-
-=over
-
-=item * C<img> - the image to return image data for
-
-=item *
-
-C<layout> - the desired image layout.  Note that the typical Imager
-layouts are C<idf_palette> through C<idf_rgb_alpha>.  The numeric
-values of C<idf_gray> through C<idf_rgb_alpha> correspond to the
-Imager channel counts, but it's possible for third-party images (of
-which none exist at this point) may have another layout.
-
-=item *
-
-C<bits> - the sample size for the images.  This can be any of
-C<i_8_bits>, C<i_16_bits> or C<i_double_bits>.  Other sample sizes may
-be added.
-
-=item *
-
-C<flags> - a bit combination of the following:
-
-=over
-
-=item *
-
-C<idf_writable> - modifying samples pointed at will modify the image.
-Without this flag the data should be treated as read only (and this
-may be enforced.)
-
-=item *
-
-C<idf_synthesize> - if the native image data doesn't match the
-requested format, Imager will allocate memory and synthesize the
-layout requested.  Some layouts are not supported for synthesis
-including C<idf_palette> in any case and C<idf_gray> or
-C<idf_gray_alpha> from any RGB layout.
-
-=item *
-
-C<idf_extras> - allows for the original image data to be returned,
-ie. for non-synthesizes or writable data even if the image has extra
-channels stored for pixel.
-
-=back
-
-=item *
-
-C<&data> - a pointer to C<void *> which is filled with a pointer to
-the image data.
-
-=item *
-
-C<&size> - a pointer to C<size_t> which is filled with the size of the
-image data in bytes.  This is intended for validating the result.
-
-=item *
-
-C<&extrachannels> - a pointer to C<int> which will be filled with the
-number of extra channels in the image.  This pointer may be C<NULL> if
-the C<idf_extras> flag isn't set.  Extra channels are currently not
-implemented and this will always be set to zero.
-
-=back
+Declares a context object, similar to C<dTHX> in perl XS, except that
+it is non-conditional, so there is no C<pIMCTX_>.
 
 =cut
 */
-
-#define i_img_data(im, layout, bits, flags, pptr, psize, pextra) \
-  (((im)->vtbl->i_f_data)((im), (layout), (bits), (flags), (pptr), (psize), (pextra)))
-
-/*
-=item i_img_data_release()
-
-Releases the allocation structure and any associated resources
-returned from i_img_data().
-
-  i_img_data_release(allocation);
-
-This can safely accept a NULL pointer.
-
-=cut
-*/
-
-#define i_img_data_release(alloc) ((alloc) ? (( ((i_image_data_alloc_t *)(alloc))->f_release)(alloc)) : (void)0)
-
-#ifndef IMAGER_DIRECT_IMAGE_CALLS
-#define IMAGER_DIRECT_IMAGE_CALLS 1
-#endif
-
-#if IMAGER_DIRECT_IMAGE_CALLS
-
-#endif
-
-#define i_gsamp_bits(im, l, r, y, samps, chans, count, bits) \
-  (((im)->vtbl->i_f_gsamp_bits)((im), (l), (r), (y), (samps), (chans), (count), (bits)))
-#define i_psamp_bits(im, l, r, y, samps, chans, count, bits) \
-       (((im)->vtbl->i_f_psamp_bits)((im), (l), (r), (y), (samps), (chans), (count), (bits)))
-
-#define i_findcolor(im, color, entry) \
-  (((im)->vtbl->i_f_findcolor) ? ((im)->vtbl->i_f_findcolor)((im), (color), (entry)) : 0)
-
-#define i_gpal(im, l, r, y, vals) \
-  (((im)->vtbl->i_f_gpal) ? ((im)->vtbl->i_f_gpal)((im), (l), (r), (y), (vals)) : 0)
-#define i_ppal(im, l, r, y, vals) \
-  (((im)->vtbl->i_f_ppal) ? ((im)->vtbl->i_f_ppal)((im), (l), (r), (y), (vals)) : 0)
-#define i_addcolors(im, colors, count) \
-  (((im)->vtbl->i_f_addcolors) ? ((im)->vtbl->i_f_addcolors)((im), (colors), (count)) : -1)
-#define i_getcolors(im, index, color, count) \
-  (((im)->vtbl->i_f_getcolors) ? \
-   ((im)->vtbl->i_f_getcolors)((im), (index), (color), (count)) : 0)
-#define i_setcolors(im, index, color, count) \
-  (((im)->vtbl->i_f_setcolors) ? \
-   ((im)->vtbl->i_f_setcolors)((im), (index), (color), (count)) : 0)
-#define i_colorcount(im) \
-  (((im)->vtbl->i_f_colorcount) ? ((im)->vtbl->i_f_colorcount)(im) : -1)
-#define i_maxcolors(im) \
-  (((im)->vtbl->i_f_maxcolors) ? ((im)->vtbl->i_f_maxcolors)(im) : -1)
-#define i_findcolor(im, color, entry) \
-  (((im)->vtbl->i_f_findcolor) ? ((im)->vtbl->i_f_findcolor)((im), (color), (entry)) : 0)
 
 #define pIMCTX im_context_t my_im_ctx
+
+/*
+=item i_assert_valid_channels(im, chans, chan_count)
+
+This is used by image get/set sample implementations to assert that
+C<chans>/C<chan_count> paremeters are valid.
+
+=cut
+*/
+
+#define i_assert_valid_channels(im, chans, chan_count) \
+  assert(i_img_valid_chans_assert((im), (chans), (chan_count)))
+
+/*
+=item dIMCTXctx(context)
+=category Context objects
+
+Defines and initializes a local context object pointer from C<ctx>.
+
+Used to define the other macros such as dIMCTX, dIMCTXim() and
+dIMCTXio() which you probably want to use instead.
+
+Only available when C<IMAGER_NO_CONTEXT> is defined.
+
+=item dIMCTX
+=category Context objects
+
+Defines and initializes a context object pointer from TLS.
+
+Only available when C<IMAGER_NO_CONTEXT> is defined.
+
+=item dIMCTXim(im)
+=category Context objects
+
+Defines and initializes a context object pointer from the context
+pointer in an image.
+
+Only available when C<IMAGER_NO_CONTEXT> is defined.
+
+=item dIMCTXio(io)
+=category Context objects
+
+Defines and initializes a context object pointer from the context
+pointer in an C<io_glue> object.
+
+Only available when C<IMAGER_NO_CONTEXT> is defined.
+
+=item aIMCTX
+=category Context objects
+
+The imager context object.
+
+When C<IMAGER_NO_CONTEXT> is defined this expects a C<dIMCTX*> or
+C<pIMCTX> in scope.
+
+When C<IMAGER_NO_CONTEXT> is not defined, this directly calls the
+context fetch function.
+
+Unlike the perl XS C<aTHX> there is no C<aIMCTX_> since Imager always
+uses the context object.
+
+=cut
+*/
 
 #ifdef IMAGER_NO_CONTEXT
 #define dIMCTXctx(ctx) pIMCTX = (ctx)
@@ -217,6 +134,19 @@ This can safely accept a NULL pointer.
 #define i_push_error(code, msg) im_push_error(aIMCTX, code, msg)
 #define i_errors() im_errors(aIMCTX)
 
+/*
+=item io_new_fd(fd)
+=category I/O Layers
+
+Exactly equivalent to:
+
+ im_io_new_fd(aIMCTX, fd);
+
+See L</im_io_new_fd(ctx, file)>.
+
+=cut
+*/
+
 #define io_new_fd(fd) im_io_new_fd(aIMCTX, (fd))
 #define io_new_bufchain() im_io_new_bufchain(aIMCTX)
 #define io_new_buffer(data, len, closecb, closectx) im_io_new_buffer(aIMCTX, (data), (len), (closecb), (closectx))
@@ -239,7 +169,7 @@ Exactly equivalent to:
 
   im_model_curves(aIMCTX, model, pcolor_chans)
 
-See L</im_model_curves>.
+See L</im_model_curves(ctx, model, pcolor_chans)>.
 
 =cut
 */
@@ -248,6 +178,7 @@ See L</im_model_curves>.
 
 /*
 =item IM_DEPRECATED(name)
+=category Utility macros
 
 Expands to an attribute on supported compilers that causes the
 compiler to produce a deprecation warning when the given function is
@@ -256,6 +187,7 @@ called.
   int foo(void) IM_DEPRECATED(foo);
 
 =item IM_DEPRECATED_MACRO(name)
+=category Utility macros
 
 Intended for use in macros to warn that the given macro is deprecated.
 
@@ -263,12 +195,12 @@ Intended for use in macros to warn that the given macro is deprecated.
 
 =cut
 */
-
+  
 #if defined(__GNUC__) || defined(__clang__)
 
 #define IM_DEPRECATED(name) __attribute__((deprecated))
-#define IM_DO_PRAGMA(x)     (_Pragma #x)
-#define IM_DEPRECATED_MACRO(name)    IM_DO_PRAGMA(GCC warning (#name " is deprecated"))
+#define IM_DEPRECATED_MACRO(name) \
+  (_Pragma GCC warning (#name " is deprecated"))
 
 #else
 
@@ -277,7 +209,25 @@ Intended for use in macros to warn that the given macro is deprecated.
 
 #endif
 
-#define i_model_curves(im, pcolor_chans) im_model_curves(aIMCTX, (im), (pcolor_chans))
+/*
+=item IM_CAT(x, y)
+=category Utility macros
+
+Token pasting - concatenate the macro expansions of C<x> and C<y>.
+
+=item IM_QUOTE(x)
+=category Utility macros
+
+Token pasting - quote the macro expansion of C<x>.
+
+=item IM_UNUSED_VAR
+=category Utility macros
+
+Used to mention a variable to suppress unused variable or parameter
+warnings.
+
+=cut
+*/
 
 #define IM_CAT_(x, y) x##y
 #define IM_CAT(x, y) IM_CAT_(x, y)
@@ -295,13 +245,6 @@ Intended for use in macros to warn that the given macro is deprecated.
 #  endif
 #endif
 #include <assert.h>
-
-#if IM_ALIGNED_ALLOC_TYPE == IM_ALIGNED_ALLOC_NONE
-#define assert_aligned(p, type) ((void)0)
-#else
-#define assert_aligned(p, type) \
-  assert(((uintptr_t)(void *)(p) % IMAGER_ALIGN_SIZE(sizeof(type))) == 0)
-#endif
 
 #ifdef __cplusplus
 }
