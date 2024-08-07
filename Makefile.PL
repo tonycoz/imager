@@ -421,6 +421,9 @@ imconfig.h : Makefile.PL
 lib/Imager/APIRef.pod : \$(C_FILES) \$(H_FILES) apidocs.perl
 	$perl apidocs.perl lib/Imager/APIRef.pod
 
+doctest : all
+	prove xt/x20spell.t xt/x30podlinkcheck.t xt/x50cpod.t
+
 !.join('', map _im_rule($perl, $_), @ims)
 
 }
