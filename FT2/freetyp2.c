@@ -47,6 +47,9 @@ Truetype, Type1 and Windows FNT.
 #include FT_MULTIPLE_MASTERS_H
 #endif
 #endif
+#ifdef FT_TYPE1_TABLES_H
+#include FT_TYPE1_TABLES_H
+#endif
 
 static void ft2_push_message(int code);
 
