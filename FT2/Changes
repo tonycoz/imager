@@ -1,3 +1,11 @@
+Imager-Font-FT2 1.001
+=====================
+
+ - separately #include t1tables.h, since ftmm.h no longer includes it
+   from freetype 2.13.3
+   https://github.com/tonycoz/imager/pull/533
+   https://bugs.debian.org/1081821
+
 Imager-Font-FT2 1.000
 =====================
 
