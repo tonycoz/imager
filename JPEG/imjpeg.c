@@ -896,7 +896,7 @@ i_writejpeg_wiol(i_img *im, io_glue *ig, int qfactor) {
     if (i_tags_get_string(&im->tags, "jpeg_restart", 0, restart_str, sizeof(restart_str))) {
       long restart_count;
       char block_flag = '\0';
-      if (sscanf(restart_str, "%ld%c", &restart_count, &block_flag)
+      if (sscanf(restart_str, "%ld%c", &restart_count, &block_flag) > 0
           && restart_count >= 0 && restart_count <= 65535
           && (block_flag == '\0' || block_flag == 'b' || block_flag == 'B')) {
         if (block_flag) {
