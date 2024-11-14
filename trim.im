@@ -63,7 +63,7 @@ trim_rect_simple(i_img *im, double transp_threshold, int color_count,
   const int chan_count = check_alpha ? 4 : 3;
   i_img_dim x, y;
 #code im->bits <= 8
-  IM_SAMPLE_T *samps = mymalloc(sizeof(IM_SAMPLE_T) * im->ysize * chan_count);
+  IM_SAMPLE_T *samps = mymalloc(sizeof(IM_SAMPLE_T) * im->xsize * chan_count);
 #if IM_EIGHT_BIT
   const IM_WORK_T work_threshold = floor(IM_SAMPLE_MAX * transp_threshold);
 #else
