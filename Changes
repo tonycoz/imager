@@ -1,5 +1,8 @@
 Imager release history.  Older releases can be found in Changes.old
 
+ - trim: fix a buffer overflow due to a mis-sized buffer
+   https://github.com/tonycoz/imager/issues/534
+
  - JPEG: fix an invalid sscanf() return value check detected by CodeQL
 
  - FT2: separately #include t1tables.h, since ftmm.h no longer
