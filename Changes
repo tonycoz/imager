@@ -1,5 +1,8 @@
 Imager release history.  Older releases can be found in Changes.old
 
+Imager 1.025 - 16 Nov 2024
+============
+
  - trim: fix a buffer overflow due to a mis-sized buffer
    https://github.com/tonycoz/imager/issues/534
 
