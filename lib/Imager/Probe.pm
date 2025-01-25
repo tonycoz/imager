@@ -5,7 +5,7 @@ use File::Spec;
 use Config;
 use Cwd ();
 
-our $VERSION = "1.008";
+our $VERSION = "1.009";
 
 my @alt_transfer = qw/altname incsuffix libbase/;
 
@@ -354,7 +354,7 @@ sub _probe_test {
     Devel::CheckLib::check_lib
 	(
 	 debug => $req->{verbose},
-	 LIBS => [ $result->{LIBS} ],
+	 LIBS => $result->{LIBS},
 	 INC => $result->{INC},
 	 header => $req->{testcodeheaders},
 	 function => $req->{testcode},
