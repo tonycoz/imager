@@ -1,3 +1,8 @@
+Imager-File-JPEG 1.000
+======================
+
+ - update bundled Devel::CheckLib from CPAN with backported changes
+
 Imager-File-JPEG 0.98
 =====================
 

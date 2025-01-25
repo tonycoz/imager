@@ -12,6 +12,7 @@ use Text::ParseWords qw(quotewords shellwords);
 
 use File::Spec;
 use File::Temp;
+use File::Path qw(rmtree);
 
 require Exporter;
 @ISA = qw(Exporter);
@@ -78,6 +79,9 @@ you can pass your own function body for main() thus:
 In that case, it will fail to build if either foo() or libversion() don't
 exist, and main() will return the wrong value if libversion()'s return
 value isn't what you want.
+
+You can also use the C<prologue> parameter to add extra supporting
+code between the headers and the definition of C<main>.
 
 =head1 FUNCTIONS
 
@@ -307,9 +311,10 @@ sub _compile_cmd {
 }
 
 sub _make_cfile {
-    my ($use_headers, $function, $debug) = @_;
+    my ($use_headers, $function, $debug, $prologue) = @_;
     my $code = '';
     $code .= qq{#include <$_>\n} for @$use_headers;
+    $code .= "$prologue\n" if defined $prologue;
     $code .= "int main(int argc, char *argv[]) { ".($function || 'return 0;')." }\n";
     if ($debug) {
 	(my $c = $code) =~ s:^:# :gm;
@@ -384,7 +389,7 @@ sub assert_lib {
     }
 
     # now do each library in turn with headers
-    my ($cfile, $ofile) = _make_cfile(\@use_headers, @args{qw(function debug)});
+    my ($cfile, $ofile) = _make_cfile(\@use_headers, @args{qw(function debug prologue)});
     for my $lib ( @libs ) {
         last if $Config{cc} eq 'CC/DECC';          # VMS
         my $exefile = File::Temp::mktemp( 'assertlibXXXXXXXX' ) . $Config{_exe};
@@ -438,6 +443,12 @@ sub _cleanup_exe {
     }
     foreach (grep -f, @rmfiles) {
 	unlink $_ or warn "Could not remove $_: $!";
+    }
+    if ($^O eq "darwin") {
+        # created by clang on darwin
+        my $dsym_dir = $exefile;
+        $dsym_dir =~ s/\Q$Config{_exe}\E$/.dSYM/;
+        rmtree $dsym_dir if -d $dsym_dir;
     }
     return
 }

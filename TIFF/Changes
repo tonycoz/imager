@@ -1,3 +1,8 @@
+Imager-File-TIFF 1.000
+======================
+
+ - update bundled Devel::CheckLib from CPAN with backported changes
+
 Imager-File-TIFF 0.99
 =====================
 
