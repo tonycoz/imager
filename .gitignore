@@ -35,6 +35,7 @@ trim.c
 *.bs
 */Makefile
 Imager-[0-9]*
+imfound.cfg
 
 # test generated files
 _Inline/

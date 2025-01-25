@@ -345,6 +345,12 @@ print "  $_\n" for @good;
 print "Libraries *not* found:\n" if @bad;
 print "  $_\n" for @bad;
 
+open my $fh, ">", "imfound.cfg"
+  or die "Cannot create imfound.cfg: $!\n";
+binmode $fh;
+print $fh lc, "\n" for @good;
+close $fh;
+
 exit;
 
 

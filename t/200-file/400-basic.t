@@ -23,6 +23,15 @@ my @types = qw( jpeg png raw pnm gif tiff bmp tga );
 # multiple image/file formats
 my @mtypes = qw(tiff gif);
 
+# formats we need to check if they were successfully configured
+my %check_formats = map { $_ => 1 } qw(tiff png jpeg gif);
+
+open my $fh, "<", "imfound.cfg"
+  or plan skip_all => "Could not open imfound.cfg: $!";
+chomp(my @cfg_found = <$fh>);
+my %cfg_found = map { $_ => 1 } @cfg_found;
+close $fh;
+
 my %hsh=%Imager::formats;
 
 print "# avaliable formats:\n";
@@ -48,7 +57,11 @@ my %writeopts =
   );
 
 for my $type (@types) {
+  # only try it if we found it
   next unless $hsh{$type};
+  # only try it if it was installed during this build
+  # pre-installed modules may have bugs
+  next if $check_formats{$type} && !$cfg_found{$type};
   print "# type $type\n";
   my %opts = %{$files{$type}};
   my @a = map { "$_=>${opts{$_}}" } keys %opts;

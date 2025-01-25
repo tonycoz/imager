@@ -99,6 +99,7 @@ Makefile\.old$
 ^meta\.tmp$
 /meta\.tmp$
 ^imconfig\.h$
+^imfound\.cfg$
 
 # generated if we build them in their own directory
 ^(PNG|TIFF|FT2|W32|GIF)/blib/
