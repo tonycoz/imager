@@ -326,10 +326,7 @@ t/150-type/040-palette.t	Test paletted images
 t/150-type/100-masked.t		Test masked images
 t/200-file/010-iolayer.t	Test Imager I/O layer objects
 t/200-file/100-files.t		Format independent file tests
-t/200-file/200-nojpeg.t		Test handling when jpeg not available
-t/200-file/210-nopng.t		Test handling when png not available
-t/200-file/220-nogif.t		Test handling when gif not available
-t/200-file/230-notiff.t		Test handling when tiff not available
+t/200-file/200-nosuch.t		Test handling of unknown formats
 t/200-file/300-raw.t		Test raw file handling
 t/200-file/310-pnm.t		Test PNM file handling
 t/200-file/320-bmp.t		Test BMP file handling
