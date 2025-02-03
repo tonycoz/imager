@@ -21,6 +21,8 @@ jobs:
         run: |
             apt-get update ||:
             apt-get -y install build-essential libtiff-dev libpng-dev libgif-dev libfreetype6-dev libjpeg-dev git-core
+      - name: perl -V
+        run: "perl -V"
       - name: checkout
         uses: actions/checkout@v1
       - name: workaround
