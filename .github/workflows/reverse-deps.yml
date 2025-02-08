@@ -56,11 +56,13 @@ jobs:
         if: always()
         run: cpanm --sudo -v Imager::IMBarcode::JP
       # https://rt.cpan.org/Public/Bug/Display.html?id=136799
-      #- name: Graphics::Framebuffer
-      #  run: cpanm --sudo-v Graphics::Framebuffer
+      - name: Graphics::Framebuffer
+        if: always()
+        run: cpanm --sudo -v Graphics::Framebuffer
       # needs perl 5.32, and ubuntu is 5.30
-      #- name: Games::Simutrans::Pakset
-      #  run: cpanm --sudo -v Games::Simutrans::Pakset
+      - name: Games::Simutrans::Pakset
+        if: always()
+        run: cpanm --sudo -v Games::Simutrans::Pakset
       - name: Tree::Cladogram
         if: always()
         run: cpanm --sudo -v Tree::Cladogram
