@@ -1,10 +1,26 @@
 Imager release history.  Older releases can be found in Changes.old
 
+ - change t/200-file/400-basic.t to only test formats that were found
+   during configuration.
+ - remove the specific unknown file format tests since they could load
+   a non-functional (due to library changes) format handler.
+   https://github.com/tonycoz/imager/issues/536
+
+ - update bundled Devel::CheckLib to current version on CPAN, with some
+   extra changes:
+     - add support for a prologue parameter to insert code before main()
+       https://github.com/mattn/p5-Devel-CheckLib/pull/41
+     - add cleanup code for the *.dSYM/ directories left behind on
+       darwin
+       https://github.com/mattn/p5-Devel-CheckLib/pull/42
+   also https://github.com/tonycoz/imager/issues/536
+
 Imager 1.025 - 16 Nov 2024
 ============
 
  - trim: fix a buffer overflow due to a mis-sized buffer
    https://github.com/tonycoz/imager/issues/534
+   CVE-2024-53901
 
  - JPEG: fix an invalid sscanf() return value check detected by CodeQL
 
