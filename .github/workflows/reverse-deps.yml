@@ -56,9 +56,10 @@ jobs:
       - name: Imager::IMBarcode::JP
         if: always()
         run: cpanm --sudo -v Imager::IMBarcode::JP
-      - name: Graphics::Framebuffer
-        if: always()
-        run: cpanm --sudo -v Graphics::Framebuffer
+      # seems to segfault
+      #- name: Graphics::Framebuffer
+      #  if: always()
+      #  run: cpanm --sudo -v Graphics::Framebuffer
       # https://rt.cpan.org/Ticket/Display.html?id=150935
       #- name: Games::Simutrans::Pakset
       #  if: always()
