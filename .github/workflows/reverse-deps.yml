@@ -31,9 +31,10 @@ jobs:
             HARNESS_OPTIONS=j2 IMAGER_AUTHOR_TESTING=1 make test
       - name: install
         run: sudo make install
-      - name: Imager-File-WEBP
-        if: always()
-        run: cpanm --sudo -v Imager::File::WEBP
+      # https://github.com/tonycoz/imager/issues/538
+      #- name: Imager-File-WEBP
+      #  if: always()
+      #  run: cpanm --sudo -v Imager::File::WEBP
       - name: Imager-File-APNG
         if: always()
         run: cpanm --sudo -v Imager::File::APNG
