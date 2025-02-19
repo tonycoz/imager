@@ -3,6 +3,9 @@ Imager release history.  Older releases can be found in Changes.old
 Imager 1.026 - 08 Feb 2025
 ============
 
+1.026 was withdrawn from CPAN due to incompatibility with downstream
+modules.
+
  - change t/200-file/400-basic.t to only test formats that were found
    during configuration.
  - remove the specific unknown file format tests since they could load
