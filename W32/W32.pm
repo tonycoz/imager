@@ -5,7 +5,7 @@ use Imager;
 our @ISA = qw(Imager::Font);
 
 BEGIN {
-  our $VERSION = "0.94";
+  our $VERSION = "0.95";
 
   require XSLoader;
   XSLoader::load('Imager::Font::W32', $VERSION);

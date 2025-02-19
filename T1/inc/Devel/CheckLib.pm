@@ -6,7 +6,7 @@ Devel::CheckLib; # don't index
 use 5.00405; #postfix foreach
 use strict;
 use vars qw($VERSION @ISA @EXPORT);
-$VERSION = '1.16';
+$VERSION = '1.16_02';
 use Config qw(%Config);
 use Text::ParseWords qw(quotewords shellwords);
 
@@ -272,36 +272,36 @@ sub _parsewords {
 }
 
 sub _compile_cmd {
-    my ($Config_cc, $cc, $cfile, $exefile, $incpaths, $ld, $Config_libs, $lib, $libpaths) = @_;
+    my ($Config_cc, $cc, $cfile, $exefile, $incpaths, $ld, $Config_libs, $libs, $libpaths) = @_;
     my @sys_cmd = @$cc;
     if ( $Config_cc eq 'cl' ) {                 # Microsoft compiler
 	# this is horribly sensitive to the order of arguments
 	push @sys_cmd,
 	    $cfile,
-	    (defined $lib ? "${lib}.lib" : ()),
+	    (defined $libs ? ( map "$_.lib", @$libs ) : ()),
 	    "/Fe$exefile",
 	    (map '/I'.$_, @$incpaths),
 	    "/link",
 	    @$ld,
 	    _parsewords($Config_libs),
-	    (defined $lib ? map '/libpath:'.$_, @$libpaths : ()),
+	    (defined $libs ? map '/libpath:'.$_, @$libpaths : ()),
 	    ;
     } elsif($Config_cc =~ /bcc32(\.exe)?/) {    # Borland
 	push @sys_cmd,
 	    @$ld,
 	    (map "-I$_", @$incpaths),
 	    "-o$exefile",
-	    (defined $lib ? ((map "-L$_", @$libpaths), "-l$lib") : ()),
+	    (defined $libs ? ((map "-L$_", @$libpaths), map "-l$_", @$libs) : ()),
 	    $cfile,
 	    ;
     } else { # Unix-ish: gcc, Sun, AIX (gcc, cc), ...
 	push @sys_cmd,
 	    (map "-I$_", @$incpaths),
 	    $cfile,
-	    (!defined $lib ? () : (
+	    (!defined $libs ? () : (
 	      (map "-L$_", @$libpaths),
 	      ($^O eq 'darwin' ? (map { "-Wl,-rpath,$_" } @$libpaths) : ()),
-	      "-l$lib",
+	      map "-l$_", @$libs
 	    )),
 	    @$ld,
 	    "-o", $exefile,
@@ -356,11 +356,25 @@ sub assert_lib {
         }
     }
 
+    my @link_cfgs = map [ \@libpaths, [ $_ ] ], @libs;
     if(defined($args{LIBS})) {
-        foreach my $arg (_parsewords($args{LIBS})) {
-            die("LIBS argument badly-formed: $arg\n") unless($arg =~ /^-[lLR]/);
-            push @{$arg =~ /^-l/ ? \@libs : \@libpaths}, substr($arg, 2);
-        }
+        if (ref $args{LIBS}) {
+	    foreach my $arg (@{$args{LIBS}}) {
+		my @sep = _parsewords($arg);
+		my @libs = map { /^-l(.+)$/ ? $1 : () } @sep;
+		my @paths = map { /^-L(.+)$/ ? $1 : () } @sep;
+		push @link_cfgs, [ \@paths, \@libs ];
+	    }
+	}
+	else {
+	    my @libs;
+	    my @paths;
+	    foreach my $arg (split(' ', $args{LIBS})) {
+		die("LIBS argument badly-formed: $arg\n") unless($arg =~ /^-l/i);
+		push @{$arg =~ /^-l/ ? \@libs : \@paths}, substr($arg, 2);
+	    }
+	    push @link_cfgs, map [ \@paths, [ $_ ] ], @libs;
+	}
     }
     if(defined($args{INC})) {
         foreach my $arg (_parsewords($args{INC})) {
@@ -390,16 +404,17 @@ sub assert_lib {
 
     # now do each library in turn with headers
     my ($cfile, $ofile) = _make_cfile(\@use_headers, @args{qw(function debug prologue)});
-    for my $lib ( @libs ) {
+    for my $link_cfg ( @link_cfgs ) {
+        my ($paths, $libs) = @$link_cfg;
         last if $Config{cc} eq 'CC/DECC';          # VMS
         my $exefile = File::Temp::mktemp( 'assertlibXXXXXXXX' ) . $Config{_exe};
-        my @sys_cmd = _compile_cmd($Config{cc}, $cc, $cfile, $exefile, \@incpaths, $ld, $Config{libs}, $lib, \@libpaths);
+        my @sys_cmd = _compile_cmd($Config{cc}, $cc, $cfile, $exefile, \@incpaths, $ld, $Config{libs}, $libs, \@libpaths);
         warn "# @sys_cmd\n" if $args{debug};
         local $ENV{LD_RUN_PATH} = join(":", grep $_, @libpaths, $ENV{LD_RUN_PATH}) unless $^O eq 'MSWin32' or $^O eq 'darwin';
         local $ENV{PATH} = join(";", @libpaths).";".$ENV{PATH} if $^O eq 'MSWin32';
         my $rv = $args{debug} ? system(@sys_cmd) : _quiet_system(@sys_cmd);
         if ($rv != 0 || ! -f $exefile) {
-            push @missing, $lib;
+            push @missing, "@$libs";
         }
         else {
             chmod 0755, $exefile;
@@ -409,10 +424,10 @@ sub assert_lib {
             if ($execute) {
                 my $retval = system($absexefile);
                 warn "# return value: $retval\n" if $args{debug};
-                push @wrongresult, $lib if $retval != 0;
+                push @wrongresult, "@$libs" if $retval != 0;
             }
-            push @wronganalysis, $lib
-                if $analyze_binary and !$analyze_binary->($lib, $exefile);
+            push @wronganalysis, "@$libs"
+                if $analyze_binary and !$analyze_binary->($libs ? $libs->[0] : undef, $exefile);
         }
         _cleanup_exe($exefile);
     }
