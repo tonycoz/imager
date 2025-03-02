@@ -1,5 +1,11 @@
 Imager release history.  Older releases can be found in Changes.old
 
+Imager 1.027 - 02 Mar 2025
+============
+
+ - reinstate multi-library probes to bundled Devel::CheckLib
+   https://github.com/tonycoz/imager/issues/543
+
 Imager 1.026 - 08 Feb 2025
 ============
 
