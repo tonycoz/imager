@@ -2073,7 +2073,7 @@ to autoload it.
 
 =item preload()
 
-C<Imager->preload> preloads the file support modules included with or
+C<< Imager->preload >> preloads the file support modules included with or
 that have been included with Imager in the past.
 
 It isn't typically needed, but some cases where you might want to use
