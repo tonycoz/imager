@@ -393,7 +393,7 @@ Return true on success.
 =head2 Guessing types
 
 X<C<FORMATGUESS>>
-When writing to a file, if you don't supply a C<type> parameter Imager
+When writing to a file, if you don't supply a C<type> parameter, Imager
 will attempt to guess it from the file name.  This is done by calling
 the code reference stored in C<$Imager::FORMATGUESS>.  This is only
 done when write() or write_multi() is called with a C<file> parameter,
@@ -411,19 +411,19 @@ X<methods, def_guess_type()>
 This is the default function Imager uses to derive a file type from a
 file name.  This is a function, not a method.
 
-Accepts a single parameter, the file name and returns the type or
-undef.
+Accepts a single parameter, the file name, and returns the type or
+C<undef>.
 
 =back
 
-You can replace function with your own implementation if you have some
+You can replace the function with your own implementation if you have some
 specialized need.  The function takes a single parameter, the name of
-the file, and should return either a file type or under.
+the file, and should return either a file type or C<undef>.
 
   # I'm writing jpegs to weird filenames
   local $Imager::FORMATGUESS = sub { 'jpeg' };
 
-When reading a file Imager examines beginning of the file for
+When reading a file Imager examines the beginning of the file for
 identifying information.  The current implementation attempts to
 detect the following image types beyond those supported by Imager:
 
@@ -464,8 +464,8 @@ C<mask> - a mask controlling which parts of I<bits> are significant.
 
 =back
 
-While I<mask> is mostly a bit mask, some byte values are translated,
-the space character is treated as all zeros (C<"\x00">), and the C<x> character as
+While I<mask> is mostly a bit mask, some byte values are translated:
+The space character is treated as all zeros (C<"\x00">), and the C<x> character as
 all ones (C<"\xFF">).
 
 New magic entries take priority over old entries.
