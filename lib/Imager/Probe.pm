@@ -4,15 +4,17 @@ use strict;
 use File::Spec;
 use Config;
 use Cwd ();
+use File::Temp ();
+use Carp ();
 
-our $VERSION = "1.010";
+our $VERSION = "1.011";
 
 my @alt_transfer = qw/altname incsuffix libbase/;
 
 sub probe {
   my ($class, $req) = @_;
 
-  $req->{verbose} ||= $ENV{IM_VERBOSE};
+  _populate_defaults($req);
 
   my $name = $req->{name};
   my $result;
@@ -66,6 +68,23 @@ sub probe {
   $result or return;
 
   return $result;
+}
+
+my @default_argv_names =
+  (
+    qw(ccflags optimize cc ldflags)
+   );
+
+sub _populate_defaults {
+  my ($req) = @_;
+  $req->{verbose} ||= $ENV{IM_VERBOSE};
+  my %names = map {; $_ => 1 } @default_argv_names;
+  @$req{@default_argv_names} = @Config{@default_argv_names};
+  for my $arg (@ARGV) {
+    if ($arg =~ /^\U\Q$arg\E=(.*)$/) {
+      $req->{$arg} = $1;
+    }
+  }
 }
 
 sub _probe_code {
@@ -329,7 +348,6 @@ sub _probe_fake {
 sub _probe_test {
   my ($req, $result) = @_;
 
-  require Devel::CheckLib;
   # setup LD_RUN_PATH to match link time
   print "Asking liblist for LD_RUN_PATH:\n" if $req->{verbose};
   my ($extra, $bs_load, $ld_load, $ld_run_path) =
@@ -350,16 +368,14 @@ sub _probe_test {
 	join " ", map "$prefix$_", split $Config{path_sep}, $ld_run_path;
     }
   }
-  my $good =
-    Devel::CheckLib::check_lib
-	(
-	 debug => $req->{verbose},
-	 LIBS => [ $result->{LIBS} ],
-	 INC => $result->{INC},
-	 header => $req->{testcodeheaders},
-	 function => $req->{testcode},
-	 prologue => $req->{testcodeprologue},
-	);
+  my $good = _check_lib(
+    $req,
+    LIBS => $result->{LIBS},
+    INC => $result->{INC},
+    header => $req->{testcodeheaders},
+    function => $req->{testcode},
+    prologue => $req->{testcodeprologue},
+   );
   unless ($good) {
     print "$req->{name}: Test code failed: $@";
     return;
@@ -367,6 +383,30 @@ sub _probe_test {
 
   print "$req->{name}: Passed code check\n";
   return $result;
+}
+
+sub _check_lib {
+  my ($req, %args) = @_;
+
+  my $code = $args{code} || "";
+  unless ($code) {
+    if (my $hdrs = $args{header}) {
+      ref $hdrs or $hdrs = [ $hdrs ];
+      $code .= "#include <$_>\n" for @$hdrs;
+    }
+    $code .= $args{prologue} if $args{prologue};
+    $args{function} or Carp::confess "Missing function";
+    $code .= "int main(int argc, char **argv) {\n$args{function}\n}\n";
+  }
+
+  return _try_compile_and_link
+    (
+      $code, $req,
+      name => $req->{name},
+      ccflags => $args{INC},
+      run => 1,
+      libs => $args{LIBS},
+     );
 }
 
 sub _resolve_libs {
@@ -572,6 +612,147 @@ sub _tilde_expand {
   }
 
   return $path;
+}
+
+sub _tcal_state {
+  my ($req) = @_;
+  my %state;
+
+  $state{start_dir} = Cwd::getcwd()
+    or die "Cannot save current directory: $!\n";
+  $state{keep} = !!$ENV{IMAGER_PROBE_KEEP_FILES};
+  $state{tmpdir} = File::Temp->newdir(CLEANUP => !$state{keep})
+    or Carp::confess("panic: cannot create temp directory");
+  $state{num} = 1;
+
+  \%state;
+}
+
+sub _sort_std {
+  my @stds = grep defined, @_;
+  # we don't support -std=iso9899:1999 etc
+  my $std_map = sub { my $std = shift; return $std > 80 ? $std-100 : $std };
+  return sort { $std_map->($b) <=> $std_map->($a) } grep defined, @stds;
+}
+
+# _try_compile_and_link
+# adapted from Time::HiRes and then adapted some more.
+# This is not part of the Imager::Probe API
+#
+# $code - code to test
+#
+# %args - options to control this test
+#   name - required description of what we're testing, used for verbose
+#   cc - optional C compiler (overrides $req->{cc}
+#   ccflags - optional extra compiler flags
+#   ccflags_only - only use ccflags and don't use $req->{ccflags}
+#   libs - extra libraries to link to
+#   std - C standard, needs stdflag set in $req per by probe_std()
+#   nolink - only test compilation success
+#
+# $req contains probing state, used here:
+#   verbose - print messages if true
+#   stdflag - compiler option used to select a C standard, by probe_std
+#   minstd - minimum standard (default: 99)
+#   ccflags - base ccflags
+#   cc - base cc
+#
+
+sub _try_compile_and_link {
+  my ($code, $req, %args) = @_;
+
+  my $verbose = $req->{verbose} || 0;
+  my $indent = $req->{indent} || "";
+  my $name = $args{name}
+    or Carp::confess("panic: no name supplied to _try_compile_and_link");
+  my $state = $req->{tcal_state} ||= _tcal_state($req);
+  chdir $state->{tmpdir}
+    or die "Cannot chdir to $state->{tmpdir}: $!";
+  my $ok = 0;
+  my $base = "test$state->{num}";
+  ++$state->{num};
+
+  my $obj_ext = $Config{obj_ext} || ".o";
+  unlink("$base.c", "$base$obj_ext");
+
+  if (open(my $tmpc, '>', "$base.c")) {
+    print $tmpc $code;
+    close($tmpc);
+
+    # we don't need this for our probes
+    #my $COREincdir = File::Spec->catdir($Config{'archlibexp'}, 'CORE');
+
+    my $cc = $req->{cc};
+    my $ccflags = "";
+    $ccflags = $req->{ccflags} unless $args{ccflags_only};
+    $ccflags .= " $args{ccflags}" if $args{ccflags};
+    $ccflags .= " $req->{'optimize'}";
+    # we want the maximum std
+    my ($std) = _sort_std($args{std}, $req->{minstd});
+    my $stdflag = $args{stdflag} || $req->{stdflag};
+    if ($std && $stdflag) {
+      $ccflags .= " $stdflag$std";
+    }
+    # we don't need this (yet)
+    #. ' ' . "-I$COREincdir" . ' -DPERL_NO_INLINE_FUNCTIONS';
+
+    my $errornull = $verbose ? '' : "2>" . File::Spec->devnull;
+
+    my $cccmd;
+    my $base_out;
+    if ($args{nolink}) {
+      $base_out = "$base$obj_ext";
+      $cccmd = "$cc -c -o $base_out $ccflags $base.c $errornull";
+    }
+    else {
+      my $libs = $args{libs} || '';
+      $base_out = "$base$Config{_exe}";
+      $cccmd = "$cc -o $base_out $ccflags $base.c $libs $errornull";
+    }
+
+    printf "${indent}cccmd = $cccmd\n" if $verbose;
+    my $res = system($cccmd);
+    $ok = defined($res) && $res == 0 && -s $base_out;
+
+    if ($ok && !$args{nolink} && !-x $base_out) {
+      $ok = 0;
+    }
+
+    if ( $ok && $args{run} ) {
+      # some Imager module probes use files shipped with the module
+      # so run from the original directory so they're visible
+      chdir $state->{start_dir}
+        or die "Cannot return to original current directory $state->{start_dir}: $!\n";
+
+      my $tmp_exe =
+        File::Spec->catfile($state->{tmpdir}, $base_out);
+      my @run = $tmp_exe;
+      unshift @run, $Config{run} if $Config{run} && -e $Config{run};
+      printf "${indent}Running $tmp_exe..." if $verbose;
+      if (system(@run) == 0) {
+        $ok = 1;
+        print "${indent} success\n" if $verbose;
+      } else {
+        $ok = 0;
+        my $errno = $? >> 8;
+        local $! = $errno;
+        printf <<EOF if $verbose;
+
+${indent}*** The test run of '$tmp_exe' failed: status $?
+${indent}*** (the status means: errno = $errno or '$!')
+EOF
+      }
+    }
+    # now cleaned up with the temp dir
+    # unlink("$tmp.c", $tmp_out);
+  }
+
+  # redundant but harmless if we ran the test executable
+  chdir $state->{start_dir}
+    or die "Cannot return to original current directory $state->{start_dir}: $!\n";
+
+
+  return $ok;
 }
 
 1;
