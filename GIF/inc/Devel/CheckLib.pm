@@ -6,7 +6,7 @@ Devel::CheckLib; # don't index
 use 5.00405; #postfix foreach
 use strict;
 use vars qw($VERSION @ISA @EXPORT);
-$VERSION = '1.16_02';
+$VERSION = '1.16_03';
 use Config qw(%Config);
 use Text::ParseWords qw(quotewords shellwords);
 
@@ -408,7 +408,7 @@ sub assert_lib {
         my ($paths, $libs) = @$link_cfg;
         last if $Config{cc} eq 'CC/DECC';          # VMS
         my $exefile = File::Temp::mktemp( 'assertlibXXXXXXXX' ) . $Config{_exe};
-        my @sys_cmd = _compile_cmd($Config{cc}, $cc, $cfile, $exefile, \@incpaths, $ld, $Config{libs}, $libs, \@libpaths);
+        my @sys_cmd = _compile_cmd($Config{cc}, $cc, $cfile, $exefile, \@incpaths, $ld, $Config{libs}, $libs, $paths);
         warn "# @sys_cmd\n" if $args{debug};
         local $ENV{LD_RUN_PATH} = join(":", grep $_, @libpaths, $ENV{LD_RUN_PATH}) unless $^O eq 'MSWin32' or $^O eq 'darwin';
         local $ENV{PATH} = join(";", @libpaths).";".$ENV{PATH} if $^O eq 'MSWin32';
