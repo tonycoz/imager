@@ -1,0 +1,68 @@
+name: raw-probe
+
+on:
+  push:
+    branches:
+      - '**'
+    tags-ignore:
+      - '*'
+  pull_request:
+
+
+jobs:
+  raw-probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        LIBTIFF_RELEASE:
+          - "4.7.0"
+    steps:
+      - name: install dependencies
+        run: |
+            sudo apt-get update ||:
+            sudo apt-get -y install build-essential cmake
+      - name: install libtiff from source
+        run: |
+            wget https://download.osgeo.org/libtiff/tiff-${{ matrix.LIBTIFF_RELEASE }}.tar.gz
+            ls
+            tar xzf tiff-${{ matrix.LIBTIFF_RELEASE }}.tar.gz
+            ls
+            cd tiff-${{ matrix.LIBTIFF_RELEASE }}
+            mkdir ../tiffbuild
+            export TIFFBASE=$(realpath ../../libtiff)
+            echo TIFFBASE=$TIFFBASE
+            cmake -B ../tiffbuild -D CMAKE_INSTALL_PREFIX=$TIFFBASE && cd ../tiffbuild && make && sudo make install
+            echo "LD_LIBRARY_PATH=$TIFFBASE" >>$GITHUB_ENV
+            echo "IM_INCPATH=$TIFFBASE/include" >>$GITHUB_ENV
+            echo "IM_LIBPATH=$TIFFBASE/lib" >>$GITHUB_ENV
+      - name: check install
+        run: |
+          ls -l $IM_INCPATH
+          ls -l $IM_LIBPATH
+      - name: perl version
+        run: |
+          perl -v
+          perl -V
+      - name: checkout
+        uses: actions/checkout@v4
+      - name: Imager
+        run: |
+          IM_ENABLE=none perl Makefile.PL
+          HARNESS_OPTIONS=j3 make test
+          sudo make install
+      - name: configure
+        run: |
+          cd TIFF
+          IM_VERBOSE=1 perl Makefile.PL
+      - name: build
+        run: |
+            make -C TIFF -j2
+      - name: test
+        run: |
+            make -C TIFF test
+      - name: codecs
+        run: |
+            cd TIFF
+            perl -Mblib -MImager::File::TIFF -E 'say "$_->{code}: $_->{description} ($_->{name})" for sort { $a->{code} <=> $b->{code} } Imager::File::TIFF->codecs'
