@@ -1,0 +1,94 @@
+#!perl
+use strict;
+use Getopt::Long;
+use Config;
+use Cwd "getcwd";
+use ExtUtils::Manifest qw(maniread);
+use File::Copy "copy";
+use File::Spec;
+use File::Path "make_path";
+
+my $clang = "clang";
+my $llvm_cov = "llvm-cov";
+my $llvm_profdata = "llvm-profdata";
+my $llvm_suffix = "";
+
+GetOptions("clang=s" => \$clang,
+           "llvmcov=s" => \$llvm_cov,
+           "s|suffix=s" => \$llvm_suffix);
+
+if ($llvm_suffix) {
+  $clang = "clang$llvm_suffix";
+  $llvm_cov = "llvm-cov$llvm_suffix";
+  $llvm_profdata = "llvm-profdata$llvm_suffix";
+}
+
+my $ccflags = "$Config{ccflags} -fprofile-instr-generate -fcoverage-mapping";
+my $lddlflags = "$Config{lddlflags} -fprofile-instr-generate -fcoverage-mapping";
+
+for my $dir (qw(coverage coverage/source coverage/lcov)) {
+  -d $dir or mkdir $dir or die "Cannot mkdir $dir: $!";
+}
+
+my $cwd = getcwd;
+
+$ENV{LLVM_PROFILE_FILE} = "$cwd/default.profraw";
+print "Raw profile: $ENV{LLVM_PROFILE_FILE}\n";
+run($^X, "Makefile.PL", "CCFLAGS=$ccflags", "CC=$clang",
+    "LDDLFLAGS=$lddlflags", "LD=$clang")
+  and die "Cannot configure\n";
+run("make")
+  and die "Cannot make\n";
+run("make", "test")
+  and die "Cannot make test\n";
+
+run($llvm_profdata, "merge", "-sparse", "default.profraw", "-o", "default.profdata")
+  and die "Cannot merge profile data\n";
+
+my $mani = maniread();
+
+for my $file (sort keys %$mani) {
+  $file =~ /\.(xs|c)$/
+    or next;
+  my ($vol, $dir, $fn) = File::Spec->splitpath($file);
+  my $lcovdir = "coverage/lcov/$dir";
+  my $srcdir = "coverage/source/$dir";
+  if ($dir ne "") {
+    -d $lcovdir or make_path($lcovdir);
+  }
+  if ($file =~ s/\.xs$/.c/) {
+    next unless -f $file; # W32.c probably
+    # only need srcdir for xs files
+    if ($dir ne "") {
+      -d $srcdir or make_path($srcdir);
+    }
+    copy($file, "coverage/source/$file")
+      or die "Cannot copy $file to artifact: $!\n";
+  }
+
+  my $ofile = $file =~ s/\.c$/.o/r;
+  -f $ofile
+    or next;
+  open my $prof_fh, "-|", $llvm_cov, "export", "-instr-profile",
+    "default.profdata", "-format=lcov", $ofile
+    or die "Cannot fetch profile data for $ofile\n";
+  open my $out_fh, ">", "coverage/lcov/$file"
+    or die "Cannot open coverage file coverage/lcov/$file: $!\n";
+  while (<$prof_fh>) {
+    # make SF records relative where applicable
+    if (m!^SF:\Q$cwd\E/(.*)$!) {
+      $_ = "SF:$1\n";
+    }
+    print $out_fh $_;
+  }
+  close $out_fh
+    or die "Cannot close lcov output: $!\n";
+  close $prof_fh;
+}
+
+sub run {
+  my @x = @_;
+
+  print "Run @x\n";
+  system @x;
+}

@@ -46,6 +46,12 @@
 # might distribute one day
 ^tools/imager$
 
+^tools/cover-clang$
+
+# from clang coverage profiler
+^default.profraw$
+^default.profdata$
+^coverage/
 
 # trash left by Inline::C
 \b_Inline/

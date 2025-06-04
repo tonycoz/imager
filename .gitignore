@@ -51,6 +51,9 @@ testout/
 *.gcov
 cover_db/
 */cover_db/
+coverage/
+default.profraw
+default.profdata
 
 # Win32
 */*.def
