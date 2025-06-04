@@ -1,3 +1,8 @@
+Imager-File-TIFF 1.002
+======================
+
+ - update bundled Devel::CheckLib with a fix to backported changes
+
 Imager-File-TIFF 1.001
 ======================
 

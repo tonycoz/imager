@@ -4,7 +4,7 @@ use strict;
 use Imager;
 
 BEGIN {
-  our $VERSION = "1.001";
+  our $VERSION = "1.002";
 
   require XSLoader;
   XSLoader::load('Imager::File::GIF', $VERSION);

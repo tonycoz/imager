@@ -1,3 +1,8 @@
+Imager::Font::T1 1.034
+======================
+
+ - update bundled Devel::CheckLib with a fix to backported changes
+
 Imager::Font::T1 1.033
 ======================
 

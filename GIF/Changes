@@ -1,7 +1,12 @@
+Imager-File-GIF 1.002
+=====================
+
+ - update bundled Devel::CheckLib with a fix to backported changes
+
 Imager-File-GIF 1.001
 =====================
 
- - update bundled Devel::CheckLib with more backported Changes
+ - update bundled Devel::CheckLib with more backported changes
 
 Imager-File-GIF 1.000
 =====================
