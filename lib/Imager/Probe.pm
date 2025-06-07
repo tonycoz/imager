@@ -388,16 +388,14 @@ sub _probe_test {
 sub _check_lib {
   my ($req, %args) = @_;
 
-  my $code = $args{code} || "";
-  unless ($code) {
-    if (my $hdrs = $args{header}) {
-      ref $hdrs or $hdrs = [ $hdrs ];
-      $code .= "#include <$_>\n" for @$hdrs;
-    }
-    $code .= $args{prologue} if $args{prologue};
-    $args{function} or Carp::confess "Missing function";
-    $code .= "int main(int argc, char **argv) {\n$args{function}\n}\n";
+  my $code = "";
+  if (my $hdrs = $args{header}) {
+    ref $hdrs or $hdrs = [ $hdrs ];
+    $code .= "#include <$_>\n" for @$hdrs;
   }
+  $code .= $args{prologue} if $args{prologue};
+  $args{function} or Carp::confess "Missing function";
+  $code .= "int main(int argc, char **argv) {\n$args{function}\n}\n";
 
   return _try_compile_and_link
     (
