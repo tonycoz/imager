@@ -293,6 +293,7 @@ samples/slant_text.pl		Using $font->transform() to slant text
 samples/tk-photo.pl
 samples/wiggle.pl		"Wiggle" stereoscopy
 scale.im			Newer scaling code
+SECURITY.md
 SGI/imsgi.c
 SGI/imsgi.h
 SGI/Makefile.PL
