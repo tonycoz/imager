@@ -22,6 +22,10 @@ typedef uint32 tf_uint32;
 #  define USE_TIFFOPEN_OPTIONS
 #endif
 
+#if TIFFLIB_VERSION >= 20241029
+#  define USE_SET_WARN_ABOUT_UNKNOWN_TAGS
+#endif
+
 /*
 =head1 NAME
 
@@ -406,6 +410,9 @@ do_tiff_open(tiff_state *state, io_glue *ig, const char *mode) {
   tiffio_context_init(&state->ctx, ig);
 #ifdef USE_TIFFOPEN_OPTIONS
   TIFFOpenOptions *options = TIFFOpenOptionsAlloc();
+#ifdef USE_SET_WARN_ABOUT_UNKNOWN_TAGS
+  TIFFOpenOptionsSetWarnAboutUnknownTags(options, 1);
+#endif
   TIFFOpenOptionsSetErrorHandlerExtR(options, error_handler_extr, &state->ctx);
   TIFFOpenOptionsSetWarningHandlerExtR(options, warn_handler_extr, &state->ctx);
   TIFF *tif = TIFFClientOpenExt("(Iolayer)", 
