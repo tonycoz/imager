@@ -1,3 +1,9 @@
+Imager-File-TIFF 1.003
+======================
+
+ - fix a test failure against libtiff 4.7.1
+   https://github.com/tonycoz/imager/pull/558
+
 Imager-File-TIFF 1.002
 ======================
 
