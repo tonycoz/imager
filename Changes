@@ -1,5 +1,8 @@
 Imager release history.  Older releases can be found in Changes.old
 
+ - addtag(): store non-"int" numbers as strings
+   https://github.com/tonycoz/imager/issues/559
+
 Imager 1.029 - 06 Oct 2025
 ============
 

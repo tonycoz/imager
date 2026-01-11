@@ -7,6 +7,7 @@ use Test::More;
 
 BEGIN { use_ok(Imager => qw(:handy :all)) }
 use warnings;
+use POSIX qw(INT_MIN INT_MAX UINT_MAX);
 
 use Imager::Test qw(image_bounds_checks is_color3 is_color4 is_fcolor4 color_cmp mask_tests is_fcolor3);
 
@@ -1166,6 +1167,25 @@ SKIP:
     $im->addtag(code => 12, value => 12);
   }
   is(scalar @warn, 0, "addtag with code with warning disabled doesn't warn");
+
+  {
+    my @tag_tests =
+      (
+        [ intmax    => INT_MAX + 0 ],
+        [ uintmax   => UINT_MAX + 0 ],
+        [ intmin    => INT_MIN + 0 ],
+        [ intmaxp1  => 1+INT_MAX ],
+        [ uintmaxp1 => 1+UINT_MAX ],
+       );
+    for my $test (@tag_tests) {
+      my ($name, $val) = @$test;
+      ok($im->addtag(name => $name, value => $val),
+         "add $name = $val");
+      my $got = $im->tags(name => $name);
+      is($got, $val, "$name added correctly");
+    }
+  }
+     
 
   # setmask
   @warn = ();

@@ -7,6 +7,7 @@ use Imager::Color;
 use Imager::Color::Float;
 use Imager::Font;
 use Imager::TrimColorList;
+use POSIX qw(INT_MIN INT_MAX);
 use if $] >= 5.014, "warnings::register" => qw(tagcodes channelmask);
 
 our $ERRSTR;
@@ -1413,14 +1414,15 @@ sub addtag {
   $self->_valid_image("addtag")
     or return;
 
+  my $value = $opts{value};
   if ($opts{name}) {
-    if (defined $opts{value}) {
-      if ($opts{value} =~ /^\d+$/) {
-        # add as a number
-        return i_tags_addn($self->{IMG}, $opts{name}, 0, $opts{value});
+    if (defined $value) {
+      if ($value =~ /-?^\d+$/ && $value >= INT_MIN && $value <= INT_MAX) {
+        # add as an int
+        return i_tags_addn($self->{IMG}, $opts{name}, 0, $value);
       }
       else {
-        return i_tags_add($self->{IMG}, $opts{name}, 0, $opts{value}, 0);
+        return i_tags_add($self->{IMG}, $opts{name}, 0, $value, 0);
       }
     }
     elsif (defined $opts{data}) {
@@ -1435,8 +1437,8 @@ sub addtag {
   elsif ($opts{code}) {
     warnings::warnif("Imager::tagcodes", "addtag: code parameter is deprecated")
         if $] >= 5.014;
-    if (defined $opts{value}) {
-      if ($opts{value} =~ /^\d+$/) {
+    if (defined $value) {
+      if ($value =~ /^-\d+$/ && $value >= INT_MIN && $value <= INT_MAX) {
         # add as a number
         return i_tags_addn($self->{IMG}, $opts{code}, 0, $opts{value});
       }
