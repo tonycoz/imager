@@ -1176,6 +1176,8 @@ SKIP:
         [ intmin    => INT_MIN + 0 ],
         [ intmaxp1  => 1+INT_MAX ],
         [ uintmaxp1 => 1+UINT_MAX ],
+        [ neg1      => -1 ],
+        [ zero      => 0 ],
        );
     for my $test (@tag_tests) {
       my ($name, $val) = @$test;
