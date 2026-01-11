@@ -3,6 +3,9 @@ Imager release history.  Older releases can be found in Changes.old
  - addtag(): store non-"int" numbers as strings
    https://github.com/tonycoz/imager/issues/559
 
+ - API: i_tags_get_int() - now fails if the value is stored as a string
+   and is out of range for an int.
+
 Imager 1.029 - 06 Oct 2025
 ============
 

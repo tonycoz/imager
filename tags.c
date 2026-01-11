@@ -429,8 +429,22 @@ int i_tags_get_int(i_img_tags *tags, char const *name, int code, int *value) {
       return 0;
   }
   entry = tags->tags+index;
-  if (entry->data)
-    *value = atoi(entry->data);
+  if (entry->data) {
+    *value = 0;
+    int save_errno = errno; /* probably doesn't matter */
+    errno = 0;
+    long work = strtol(entry->data, NULL, 10);
+    if (errno)
+      return 0;
+#if INT_MAX != LONG_MAX
+    if ((int)work != work) {
+      errno = ERANGE;
+      return 0;
+    }
+#endif
+    *value = (int)work;
+    errno = save_errno;
+  }
   else
     *value = entry->idata;
 
