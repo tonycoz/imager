@@ -3,6 +3,11 @@ Imager release history.  Older releases can be found in Changes.old
  - addtag(): store non-"int" numbers as strings
    https://github.com/tonycoz/imager/issues/559
 
+ - addtag: improve the regexp used to decide if a value can be stored
+   as an int.
+   Thanks to vadim-160102 for pointing out my mistake.
+   https://github.com/tonycoz/imager/issues/559#issuecomment-3734463685
+
  - API: i_tags_get_int() - now fails if the value is stored as a string
    and is out of range for an int.
 

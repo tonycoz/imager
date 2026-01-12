@@ -21,7 +21,7 @@ plan skip_all => "perl 5.005_04, 5.005_05 too buggy"
 
 print STDERR "Inline version $Inline::VERSION\n";
 
-plan tests => 122;
+plan tests => 126;
 require Inline;
 Inline->import(with => 'Imager');
 Inline->import("FORCE"); # force rebuild
@@ -495,6 +495,18 @@ tags_get_int(Imager im, const char *name) {
     return -1;
 }
 
+int
+tags_is_int(Imager im, const char *name) {
+  int index;
+  i_img_tag *tag;
+  if (!i_tags_find(&im->tags, name, 0, &index))
+    return 0;
+  tag = im->tags.tags + index;
+  if (tag->data)
+    return 0;
+  return 1;
+}
+
 EOS
 
 my $im = Imager->new(xsize=>50, ysize=>50);
@@ -722,12 +734,17 @@ ok(test_mutex(), "call mutex APIs");
 ok(test_slots(), "call slot APIs");
 
 {
-  use POSIX qw(UINT_MAX INT_MAX);
+  use POSIX qw(UINT_MAX INT_MAX INT_MIN);
   my $im = Imager->new(xsize => 1, ysize => 1);
   $im->addtag(name => "intmax", value => INT_MAX);
+  $im->addtag(name => "intmin", value => INT_MIN);
   $im->addtag(name => "uintmax", value => UINT_MAX);
   is(tags_get_int($im, "intmax"), INT_MAX);
+  ok(tags_is_int($im, "intmax"), "intmax stored as int");
+  is(tags_get_int($im, "intmin"), INT_MIN);
+  ok(tags_is_int($im, "intmin"), "intmin stored as int");
   is(tags_get_int($im, "uintmax"), -1);
+  ok(!tags_is_int($im, "uintmax"), "uintmax not stored as int");
 }
 
 sub _get_error {

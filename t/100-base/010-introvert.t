@@ -1178,12 +1178,18 @@ SKIP:
         [ uintmaxp1 => 1+UINT_MAX ],
         [ neg1      => -1 ],
         [ zero      => 0 ],
+        [ zerozero  => "00" ],
+        [ zeroone   => "01" ],
+        [ negzero   => "-0" ],
+        [ negzone   => "-01" ],
+        [ arabone   => "\x{661}", "no unicode yet" ],
        );
     for my $test (@tag_tests) {
-      my ($name, $val) = @$test;
+      my ($name, $val, $todo) = @$test;
       ok($im->addtag(name => $name, value => $val),
          "add $name = $val");
       my $got = $im->tags(name => $name);
+      local $TODO = $todo;
       is($got, $val, "$name added correctly");
     }
   }
