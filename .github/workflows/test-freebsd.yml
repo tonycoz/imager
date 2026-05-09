@@ -1,0 +1,36 @@
+name: test-freebsd
+
+on:
+  push:
+    branches:
+      - '**'
+    tags-ignore:
+      - '*'
+  pull_request:
+
+
+jobs:
+  imager:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: checkout
+        uses: actions/checkout@v6
+      - name: test in freebsd
+        id: test
+        uses: vmactions/freebsd-vm@v1
+        with:
+          prepare: |
+            pkg install -y perl5 tiff png giflib jpeg-turbo freetype2 git
+          run: |
+            echo '::group::uname -a'
+            uname -a
+            echo -e '::endgroup::\n::group::perl -V'
+            perl -V
+            echo -e '::endgroup::\n::group::Configure'
+            perl Makefile.PL
+            echo -e '::endgroup::\n::group::Build'
+            make -j2
+            echo -e '::endgroup::\n::group::Tests'
+            HARNESS_OPTIONS=j2 IMAGER_AUTHOR_TESTING=1 make test
+            echo '::endgroup::'
