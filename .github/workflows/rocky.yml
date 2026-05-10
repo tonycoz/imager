@@ -23,7 +23,7 @@ jobs:
             dnf install -y --enablerepo=powertools libtiff-devel libpng-devel giflib-devel freetype-devel libjpeg-devel perl-Test-Pod-Coverage perl-Test-Pod perl-Pod-Parser cpanminus
             cpanm Parse::RecDescent
       - name: checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
       - name: git annoyance
         run: git config --global --add safe.directory /__w/imager/imager
       - name: configure

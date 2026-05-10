@@ -22,12 +22,12 @@ jobs:
             sudo apt-get -y install libcapture-tiny-perl libmodule-build-perl
             sudo cpanm Inline::CPP
       - name: checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v6
       - name: coverage
         run: |
           perl tools/cover-clang
       - name: artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: coverage
           path: coverage/

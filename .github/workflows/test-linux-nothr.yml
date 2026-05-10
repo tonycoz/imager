@@ -19,7 +19,7 @@ jobs:
             sudo apt-get update ||:
             sudo apt-get -y install build-essential libtiff-dev libpng-dev libgif-dev libfreetype6-dev libjpeg-dev
       - name: checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v6
       - name: setup non-threaded perl
         uses: shogo82148/actions-setup-perl@v1
         with:

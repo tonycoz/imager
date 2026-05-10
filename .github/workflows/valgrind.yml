@@ -10,7 +10,7 @@ on:
 
 
 jobs:
-  imager:
+  valgrind:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
@@ -22,7 +22,7 @@ jobs:
             sudo apt-get -y install libcapture-tiny-perl libmodule-build-perl
             sudo cpanm Inline::CPP
       - name: checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v6
       - name: configure
         run: |
           perl Makefile.PL OPTIMIZE="-O0 -g"
