@@ -1,4 +1,4 @@
-name: test-macosx
+name: os-macos
 
 on:
   push:
@@ -9,7 +9,7 @@ on:
   pull_request:
 
 jobs:
-  perl-macos:
+  os-macos:
     runs-on: macos-latest
     timeout-minutes: 15
     steps:

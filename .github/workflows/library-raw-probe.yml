@@ -1,4 +1,4 @@
-name: test-libtiff
+name: library-raw-probe
 
 on:
   push:
@@ -10,34 +10,37 @@ on:
 
 
 jobs:
-  imager-file-tiff:
+  library-raw-probe:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     strategy:
       fail-fast: false
       matrix:
         LIBTIFF_RELEASE:
-          - "4.1.0"
-          - "4.2.0"
-          - "4.3.0"
-          - "4.4.0"
-          - "4.5.0"
-          - "4.6.0"
           - "4.7.0"
-          - "4.7.1"
     steps:
       - name: install dependencies
         run: |
             sudo apt-get update ||:
-            sudo apt-get -y install build-essential automake autoconf libtool m4 git yasm pkgconf libjpeg-turbo8-dev libwebp-dev liblerc-dev
+            sudo apt-get -y install build-essential cmake
+      - name: install libtiff from source
+        run: |
             wget https://download.osgeo.org/libtiff/tiff-${{ matrix.LIBTIFF_RELEASE }}.tar.gz
             ls
             tar xzf tiff-${{ matrix.LIBTIFF_RELEASE }}.tar.gz
             ls
             cd tiff-${{ matrix.LIBTIFF_RELEASE }}
             mkdir ../tiffbuild
-            cmake -B ../tiffbuild && cd ../tiffbuild && make && sudo make install
-            echo "LD_LIBRARY_PATH=$(pkg-config --variable=libdir libtiff-4)" >>$GITHUB_ENV
+            export TIFFBASE=$(realpath ../../libtiff)
+            echo TIFFBASE=$TIFFBASE
+            cmake -B ../tiffbuild -D CMAKE_INSTALL_PREFIX=$TIFFBASE && cd ../tiffbuild && make && sudo make install
+            echo "LD_LIBRARY_PATH=$TIFFBASE" >>$GITHUB_ENV
+            echo "IM_INCPATH=$TIFFBASE/include" >>$GITHUB_ENV
+            echo "IM_LIBPATH=$TIFFBASE/lib" >>$GITHUB_ENV
+      - name: check install
+        run: |
+          ls -l $IM_INCPATH
+          ls -l $IM_LIBPATH
       - name: perl version
         run: |
           perl -v
@@ -52,7 +55,7 @@ jobs:
       - name: configure
         run: |
           cd TIFF
-          perl Makefile.PL
+          IM_VERBOSE=1 perl Makefile.PL
       - name: build
         run: |
             make -C TIFF -j2

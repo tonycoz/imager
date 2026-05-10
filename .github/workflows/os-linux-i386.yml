@@ -1,4 +1,4 @@
-name: test-linux-i386
+name: os-linux-i386
 
 on:
   push:
@@ -9,7 +9,7 @@ on:
   pull_request:
 
 jobs:
-  imager:
+  os-linux-i386:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     container:

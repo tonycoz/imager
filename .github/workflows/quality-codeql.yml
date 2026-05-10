@@ -9,7 +9,7 @@
 # the `language` matrix defined below to confirm you have the correct set of
 # supported CodeQL languages.
 #
-name: "CodeQL"
+name: quality-codeql
 
 on:
   push:
@@ -19,7 +19,7 @@ on:
     branches: [ master ]
 
 jobs:
-  analyze:
+  quality-codeql:
     name: Analyze
     runs-on: ubuntu-latest
     permissions:

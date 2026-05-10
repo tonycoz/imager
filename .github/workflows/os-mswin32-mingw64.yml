@@ -1,4 +1,4 @@
-name: test-win32-mingw64
+name: os-mswin32-mingw64
 on:
   push:
     branches:
@@ -8,7 +8,7 @@ on:
   pull_request:
 
 jobs:
-  imager:
+  os-mswin32-mingw64:
     runs-on: windows-latest
     timeout-minutes: 15
     steps:

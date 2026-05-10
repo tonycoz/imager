@@ -1,4 +1,4 @@
-name: valgrind
+name: quality-valgrind
 
 on:
   push:
@@ -10,7 +10,7 @@ on:
 
 
 jobs:
-  valgrind:
+  quality-valgrind:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:

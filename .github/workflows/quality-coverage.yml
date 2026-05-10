@@ -1,4 +1,4 @@
-name: coverage
+name: quality-coverage
 
 on:
   push:
@@ -10,7 +10,7 @@ on:
 
 
 jobs:
-  coverage:
+  quality-coverage:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:

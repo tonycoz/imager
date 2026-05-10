@@ -1,4 +1,4 @@
-name: test-netbsd
+name: os-freebsd
 
 on:
   push:
@@ -10,18 +10,18 @@ on:
 
 
 jobs:
-  imager-netbsd:
+  os-freebsd:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
       - name: checkout
         uses: actions/checkout@v6
-      - name: test in netbsd
+      - name: test in freebsd
         id: test
-        uses: vmactions/netbsd-vm@v1
+        uses: vmactions/freebsd-vm@v1
         with:
           prepare: |
-            /usr/sbin/pkg_add -u perl tiff png giflib libjpeg-turbo freetype2 git
+            pkg install -y perl5 tiff png giflib jpeg-turbo freetype2 git
           run: |
             echo '::group::uname -a'
             uname -a

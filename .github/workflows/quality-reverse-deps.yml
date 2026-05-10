@@ -1,4 +1,4 @@
-name: reverse-deps
+name: quality-reverse-deps
 
 on:
   push:
@@ -10,7 +10,7 @@ on:
 
 
 jobs:
-  reverse-deps:
+  quality-reverse-deps:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:

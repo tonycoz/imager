@@ -1,4 +1,4 @@
-name: rocky
+name: os-linux-rocky
 
 on:
   push:
@@ -10,7 +10,7 @@ on:
 
 
 jobs:
-  imager:
+  os-linux-rocky:
     runs-on: ubuntu-latest
     container:
       image: rockylinux/rockylinux:8

@@ -1,4 +1,4 @@
-name: test-cygwin
+name: os-mswin32-cygwin
 
 on:
   push:
@@ -10,7 +10,7 @@ on:
 
 
 jobs:
-  imager:
+  os-mswin32-cygwin:
     runs-on: windows-latest
     timeout-minutes: 10
     steps:
