@@ -14,12 +14,12 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
-      - name: install dependencies
-        run: |
-            sudo apt-get update ||:
-            sudo apt-get -y install build-essential libtiff-dev libpng-dev libgif-dev libfreetype6-dev libjpeg-dev libtest-pod-coverage-perl libtest-pod-perl libpod-parser-perl libpod-spell-perl aspell libinline-c-perl libparse-recdescent-perl cpanminus
-            # prerequisites for Inline::CPP
-            sudo apt-get -y install libcapture-tiny-perl libmodule-build-perl
+      - name: install package dependencies cached
+        uses: tonycoz/cache-apt-pkgs-action@v1-node-20-warning
+        with:
+            packages: install build-essential libtiff-dev libpng-dev libgif-dev libfreetype6-dev libjpeg-dev libtest-pod-coverage-perl libtest-pod-perl libpod-parser-perl libpod-spell-perl aspell libinline-c-perl libparse-recdescent-perl cpanminus libcapture-tiny-perl libmodule-build-perl
+      -name: install CPAN dependencies
+       run: |
             sudo cpanm Inline::CPP
       - name: checkout
         uses: actions/checkout@v6
