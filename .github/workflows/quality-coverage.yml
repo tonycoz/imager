@@ -1,13 +1,7 @@
 name: quality-coverage
 
 on:
-  push:
-    branches:
-      - '**'
-    tags-ignore:
-      - '*'
-  pull_request:
-
+  workflow_call:
 
 jobs:
   quality-coverage:

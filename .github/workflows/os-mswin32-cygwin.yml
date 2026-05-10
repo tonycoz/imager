@@ -1,13 +1,7 @@
 name: os-mswin32-cygwin
 
 on:
-  push:
-    branches:
-      - '**'
-    tags-ignore:
-      - '*'
-  pull_request:
-
+  workflow_call:
 
 jobs:
   os-mswin32-cygwin:

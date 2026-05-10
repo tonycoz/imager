@@ -17,9 +17,10 @@ jobs:
       - name: install package dependencies cached
         uses: tonycoz/cache-apt-pkgs-action@v1-node-20-warning
         with:
-            packages: install build-essential libtiff-dev libpng-dev libgif-dev libfreetype6-dev libjpeg-dev libtest-pod-coverage-perl libtest-pod-perl libpod-parser-perl libpod-spell-perl aspell libinline-c-perl libparse-recdescent-perl cpanminus libcapture-tiny-perl libmodule-build-perl
-      -name: install CPAN dependencies
-       run: |
+          packages: install build-essential libtiff-dev libpng-dev libgif-dev libfreetype6-dev libjpeg-dev libtest-pod-coverage-perl libtest-pod-perl libpod-parser-perl libpod-spell-perl aspell libinline-c-perl libparse-recdescent-perl cpanminus libcapture-tiny-perl libmodule-build-perl
+          version: 1.2
+      - name: install CPAN dependencies
+        run: |
             sudo cpanm Inline::CPP
       - name: checkout
         uses: actions/checkout@v6
@@ -32,3 +33,55 @@ jobs:
       - name: test
         run: |
             HARNESS_OPTIONS=j2 IMAGER_AUTHOR_TESTING=1 make test
+
+  os-linux-i386:
+    needs: os-linux
+    uses: ./.github/workflows/os-linux-i386.yml
+
+  os-linux-nothr:
+    needs: os-linux
+    uses: ./.github/workflows/os-linux-nothr.yml
+
+  os-linux-rocky:
+    needs: os-linux
+    uses: ./.github/workflows/os-linux-rocky.yml
+
+  os-macos:
+    needs: os-linux
+    uses: ./.github/workflows/os-macos.yml
+
+  os-freebsd:
+    needs: os-linux
+    uses: ./.github/workflows/os-freebsd.yml
+
+  os-netbsd:
+    needs: os-linux
+    uses: ./.github/workflows/os-netbsd.yml
+
+  os-mswin32-cygwin:
+    needs: os-linux
+    uses: ./.github/workflows/os-mswin32-cygwin.yml
+
+  os-mswin32-mingw64:
+    needs: os-linux
+    uses: ./.github/workflows/os-mswin32-mingw64.yml
+
+  library-raw-probe:
+    needs: os-linux
+    uses: ./.github/workflows/library-raw-probe.yml
+
+  library-tiff:
+    needs: os-linux
+    uses: ./.github/workflows/library-tiff.yml
+
+  quality-coverage:
+    needs: os-linux
+    uses: ./.github/workflows/quality-coverage.yml
+
+  quality-reverse-deps:
+    needs: os-linux
+    uses: ./.github/workflows/quality-reverse-deps.yml
+
+  quality-valgrind:
+    needs: os-linux
+    uses: ./.github/workflows/quality-valgrind.yml

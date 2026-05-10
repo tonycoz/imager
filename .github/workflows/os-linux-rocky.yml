@@ -1,13 +1,7 @@
 name: os-linux-rocky
 
 on:
-  push:
-    branches:
-      - '**'
-    tags-ignore:
-      - '*'
-  pull_request:
-
+  workflow_call:
 
 jobs:
   os-linux-rocky:

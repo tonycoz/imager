@@ -1,13 +1,7 @@
 name: os-netbsd
 
 on:
-  push:
-    branches:
-      - '**'
-    tags-ignore:
-      - '*'
-  pull_request:
-
+  workflow_call:
 
 jobs:
   os-netbsd:

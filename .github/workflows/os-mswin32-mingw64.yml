@@ -1,11 +1,6 @@
 name: os-mswin32-mingw64
 on:
-  push:
-    branches:
-      - '**'
-    tags-ignore:
-      - '*'
-  pull_request:
+  workflow_call:
 
 jobs:
   os-mswin32-mingw64:

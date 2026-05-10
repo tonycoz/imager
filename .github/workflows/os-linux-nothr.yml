@@ -1,13 +1,7 @@
 name: os-linux-nothr
 
 on:
-  push:
-    branches:
-      - '**'
-    tags-ignore:
-      - '*'
-  pull_request:
-
+  workflow_call:
 
 jobs:
   os-linux-nothr:

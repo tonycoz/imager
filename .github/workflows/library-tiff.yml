@@ -1,13 +1,7 @@
 name: library-tiff
 
 on:
-  push:
-    branches:
-      - '**'
-    tags-ignore:
-      - '*'
-  pull_request:
-
+  workflow_call:
 
 jobs:
   library-tiff:

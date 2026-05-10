@@ -1,12 +1,7 @@
 name: os-linux-i386
 
 on:
-  push:
-    branches:
-      - '**'
-    tags-ignore:
-      - '*'
-  pull_request:
+  workflow_call:
 
 jobs:
   os-linux-i386:
