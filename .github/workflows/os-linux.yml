@@ -65,6 +65,10 @@ jobs:
     needs: os-linux
     uses: ./.github/workflows/os-netbsd.yml
 
+  os-openbsd:
+    needs: os-linux
+    uses: ./.github/workflows/os-openbsd.yml
+
   os-mswin32-cygwin:
     needs: os-linux
     uses: ./.github/workflows/os-mswin32-cygwin.yml
