@@ -2,6 +2,10 @@ name: os-freebsd
 
 on:
   workflow_call:
+    inputs:
+      os-release:
+        required: true
+        type: string
 
 jobs:
   os-freebsd:
@@ -14,6 +18,7 @@ jobs:
         id: test
         uses: vmactions/freebsd-vm@v1
         with:
+          release: ${{ inputs.os-release }}
           prepare: |
             pkg install -y perl5 tiff png giflib jpeg-turbo freetype2 git
           run: |

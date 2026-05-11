@@ -52,7 +52,14 @@ jobs:
 
   os-freebsd:
     needs: os-linux
+    strategy:
+      matrix:
+        os-release:
+          - "13.5"
+          - "15.0"
     uses: ./.github/workflows/os-freebsd.yml
+    with:
+      os-release: ${{ matrix.os-release }}
 
   os-netbsd:
     needs: os-linux
