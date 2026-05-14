@@ -24,7 +24,7 @@ $SIG{__DIE__} = sub { confess @_ };
 
 init_log("testout/t105gif.log",1);
 
-plan tests => 146;
+plan tests => 147;
 
 my $green=i_color_new(0,255,0,255);
 my $blue=i_color_new(0,0,255,255);
@@ -753,6 +753,11 @@ SKIP:
 	 "check error message");
 }
 
+ext_test(1, <<'CODE', 1, "CVE-2026-8454");
+use Imager;
+my $im = Imager->new(file => "testimg/cve-2026-8454.gif", page => 1);
+print "ok\n";
+CODE
 
 sub test_readgif_cb {
   my ($size) = @_;

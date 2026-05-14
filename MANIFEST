@@ -86,6 +86,7 @@ GIF/t/t40limit.t
 GIF/t/t50header.t
 GIF/testimg/badindex.gif	GIF with a bad color index
 GIF/testimg/bandw.gif
+GIF/testimg/cve-2026-8454.gif
 GIF/testimg/expected.gif
 GIF/testimg/loccmap.gif
 GIF/testimg/nocmap.gif

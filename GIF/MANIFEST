@@ -15,6 +15,7 @@ t/t40limit.t
 t/t50header.t
 testimg/badindex.gif
 testimg/bandw.gif
+testimg/cve-2026-8454.gif
 testimg/expected.gif
 testimg/loccmap.gif
 testimg/nocmap.gif
