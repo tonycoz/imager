@@ -28,4 +28,4 @@ jobs:
             echo '::group::Imager'
             IMAGER_AUTHOR_TESTING=1 prove -e 'valgrind --error-exitcode=1 --suppressions=.github/valgrind.supp -q perl -Mblib' -r t
             echo '::endgroup::Imager'
-            for subdir in FT2 GIF ICO JPEG PNG SGI TIFF ; do ( cd $subdir ; echo "::group::$subdir" ; prove -e 'valgrind --error-exitcode=1 --suppressions=../.github/valgrind.supp -q perl -Mblib' t ; echo "::endgroup::$subdir" ) done
+            for subdir in FT2 GIF ICO JPEG PNG SGI TIFF ; do ( cd $subdir ; echo "::group::$subdir" ; IMAGER_VALGRIND=1 prove -e 'valgrind --error-exitcode=1 --suppressions=../.github/valgrind.supp -q perl -Mblib' t ; echo "::endgroup::$subdir" ) done

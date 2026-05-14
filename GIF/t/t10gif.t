@@ -835,6 +835,7 @@ PROLOG
 
     print "# script: $script\n";
     my $cmd = "$perl -Mblib $script";
+    $cmd = "valgrind $cmd" if $ENV{IMAGER_VALGRIND};
     print "# command: $cmd\n";
 
     my $ok = 1;
