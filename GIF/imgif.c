@@ -600,6 +600,21 @@ i_readgif_multi_low(GifFileType *GifFile, int *count, int page) {
 	return NULL;
       }
 
+      mm_log((1,"i_readgif_multi_low: Image %d at (%d, %d) [%dx%d]: \n",
+              ImageNum, GifFile->Image.Left, GifFile->Image.Top, Width,
+              Height));
+
+      if (GifFile->Image.Left + GifFile->Image.Width > GifFile->SWidth ||
+          GifFile->Image.Top + GifFile->Image.Height > GifFile->SHeight) {
+        i_push_errorf(0, "Image %d is not confined to screen dimension, aborted.\n",ImageNum);
+        free_images(results, *count);
+        (void)myDGifCloseFile(GifFile, NULL);
+        myfree(GifRow);
+        if (comment)
+          myfree(comment);
+        return(0);
+      }
+
       Width = GifFile->Image.Width;
       Height = GifFile->Image.Height;
       if (page == -1 || page == ImageNum) {
@@ -701,20 +716,6 @@ i_readgif_multi_low(GifFileType *GifFile, int *count, int page) {
 	  i_tags_set(&img->tags, "gif_comment", comment, strlen(comment));
 	  myfree(comment);
 	  comment = NULL;
-	}
-	
-	mm_log((1,"i_readgif_multi_low: Image %d at (%d, %d) [%dx%d]: \n",
-		ImageNum, GifFile->Image.Left, GifFile->Image.Top, Width, Height));
-	
-	if (GifFile->Image.Left + GifFile->Image.Width > GifFile->SWidth ||
-	    GifFile->Image.Top + GifFile->Image.Height > GifFile->SHeight) {
-	  i_push_errorf(0, "Image %d is not confined to screen dimension, aborted.\n",ImageNum);
-	  free_images(results, *count);        
-	  (void)myDGifCloseFile(GifFile, NULL);
-	  myfree(GifRow);
-	  if (comment)
-	    myfree(comment);
-	  return(0);
 	}
 	
 	if (GifFile->Image.Interlace) {
