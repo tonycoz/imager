@@ -600,6 +600,8 @@ i_readgif_multi_low(GifFileType *GifFile, int *count, int page) {
 	return NULL;
       }
 
+      Width = GifFile->Image.Width;
+      Height = GifFile->Image.Height;
       mm_log((1,"i_readgif_multi_low: Image %d at (%d, %d) [%dx%d]: \n",
               ImageNum, GifFile->Image.Left, GifFile->Image.Top, Width,
               Height));
@@ -615,8 +617,6 @@ i_readgif_multi_low(GifFileType *GifFile, int *count, int page) {
         return(0);
       }
 
-      Width = GifFile->Image.Width;
-      Height = GifFile->Image.Height;
       if (page == -1 || page == ImageNum) {
 	if (( ColorMap = (GifFile->Image.ColorMap ? GifFile->Image.ColorMap : GifFile->SColorMap) )) {
 	  mm_log((1, "Adding local colormap\n"));
