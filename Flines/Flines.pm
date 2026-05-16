@@ -4,7 +4,7 @@ use strict;
 use Imager;
 
 BEGIN {
-  our $VERSION = "0.04";
+  our $VERSION = "0.05";
   
   require XSLoader;
   XSLoader::load('Imager::Filter::Flines', $VERSION);

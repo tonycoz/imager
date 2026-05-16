@@ -12,6 +12,8 @@ Imager release history.  Older releases can be found in Changes.old
      - XS EXTEND() likes a signed number of entries
      - unused variable in i_ft2_glyph_name()
      - fix various signed vs unsigned comparisons
+   - Flines: (demo XS API usage)
+     - fix signed vs unsigned comparisons
 
 Imager 1.031 - 15 May 2026
 ============
