@@ -74,3 +74,6 @@ dynfilt/*.dll
 cov-int/
 config-build.txt
 imager-cov.tgz
+
+# clangd
+compile_commands.json

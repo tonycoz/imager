@@ -166,3 +166,6 @@ MYMETA.json
 
 # this hangs around
 ^ImUgly\.sfd$
+
+# for clangd
+^compile_commands\.json$
