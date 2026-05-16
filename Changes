@@ -3,6 +3,10 @@ Imager release history.  Older releases can be found in Changes.old
  - getscanline() with type float in list context would leak the
    returned SVs
 
+ - TIFF: sizeproc could potentiallly ignore a seek error when finding
+   the current position (but then should fail later trying to restore
+   it.)  Revealed by a signed comparison warning.
+
 Imager 1.031 - 15 May 2026
 ============
 

@@ -1,6 +1,13 @@
 Imager-File-TIFF 1.003
 ======================
 
+ - sizeproc could potentiallly ignore a seek error when finding the
+   current position (but then should fail later trying to restore it.)
+   Revealed by a signed comparison warning.
+
+Imager-File-TIFF 1.003
+======================
+
  - fix a test failure against libtiff 4.7.1
    https://github.com/tonycoz/imager/pull/558
 
