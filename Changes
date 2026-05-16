@@ -43,6 +43,10 @@ Imager 1.032 - 1 July 2026
  - GIF: fix use of uninitialized values when logging introduced by the
    CVE-2026-8454 fix.
 
+ - TIFF: sizeproc could potentiallly ignore a seek error when finding
+   the current position (but then should fail later trying to restore
+   it.)  Revealed by a signed comparison warning.
+
 Imager 1.031 - 15 May 2026
 ============
 
