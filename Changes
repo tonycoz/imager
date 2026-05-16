@@ -56,6 +56,10 @@ Imager 1.032 - 1 July 2026
      - fix signed vs unsigned comparisons
    - ICO: (Windows icon/cursor images)
      - fix signed vs unsigned comparisons
+   - JPEG:
+     - "(void)" an unused callback argument
+     - volatile some variables used around setjmp()
+     - fix various signed vs unsigned comparison warnings
 
 Imager 1.031 - 15 May 2026
 ============
