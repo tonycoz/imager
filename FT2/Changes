@@ -1,6 +1,14 @@
 Imager-Font-FT2 1.004
 =====================
 
+ - warning fix pass, testing with -Wall -Wextra -Werror:
+   - XS EXTEND() likes a signed number of entries
+   - unused variable in i_ft2_glyph_name()
+   - fix various signed vs unsigned comparisons
+
+Imager-Font-FT2 1.004
+=====================
+
  - update bundled Devel::CheckLib with a fix to backported changes
 
 Imager-Font-FT2 1.003
