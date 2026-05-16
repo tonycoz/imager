@@ -1,3 +1,11 @@
+Imager-File-JPEG 1.003
+======================
+
+ - warning fix pass, testing with -Wall -Wextra -Werror:
+   - "(void)" an unused callback argument
+   - volatile some variables used around setjmp()
+   - fix various signed vs unsigned comparison warnings
+
 Imager-File-JPEG 1.002
 ======================
 

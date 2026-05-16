@@ -142,6 +142,7 @@ wiol_skip_input_data (j_decompress_ptr cinfo, long num_bytes) {
 
 static void
 wiol_term_source (j_decompress_ptr cinfo) {
+  (void)cinfo;
   /* no work necessary here */
   /* we used to free memory for the I/O buffer,
      but we let the library handle that now
@@ -234,7 +235,7 @@ wiol_term_destination (j_compress_ptr cinfo) {
   /* yes, this needs to flush the buffer */
   /* needs error handling */
 
-  if (i_io_write(dest->data, dest->buffer, nbytes) != nbytes) {
+  if (i_io_write(dest->data, dest->buffer, nbytes) != (ssize_t)nbytes) {
     ERREXIT(cinfo, JERR_FILE_WRITE);
   }
 }
@@ -404,7 +405,7 @@ has_decode_arith_coding(void) {
 i_img*
 i_readjpeg_wiol(io_glue *data, int length, char** iptc_itext, int *itlength) {
   i_img * volatile im = NULL;
-  int seen_exif = 0;
+  int seen_exif;
   i_color * volatile line_buffer = NULL;
   struct jpeg_decompress_struct cinfo;
   struct my_error_mgr jerr;
@@ -414,7 +415,6 @@ i_readjpeg_wiol(io_glue *data, int length, char** iptc_itext, int *itlength) {
   transfer_function_t transfer_f;
   int channels;
   volatile int src_set = 0;
-  int jfif;
 
   mm_log((1,"i_readjpeg_wiol(data %p, length %d,iptc_itext %p)\n", data, length, iptc_itext));
 
@@ -527,6 +527,7 @@ i_readjpeg_wiol(io_glue *data, int length, char** iptc_itext, int *itlength) {
 
   /* check for APP1 marker and save */
   markerp = cinfo.marker_list;
+  seen_exif = 0;
   while (markerp != NULL) {
     if (markerp->marker == JPEG_COM) {
       i_tags_set(&im->tags, "jpeg_comment", (const char *)markerp->data,
@@ -608,7 +609,8 @@ struct moz_option {
 #define MOZ_OPTION_ENTRY(name, tag) { name }
 #endif
 
-static struct moz_option boolean_options[] = {
+static struct moz_option
+boolean_options[] = {
   MOZ_OPTION_ENTRY("jpeg_optimize_scans",        JBOOLEAN_OPTIMIZE_SCANS),
   MOZ_OPTION_ENTRY("jpeg_trellis_quant",         JBOOLEAN_TRELLIS_QUANT),
   MOZ_OPTION_ENTRY("jpeg_trellis_quant_dc",      JBOOLEAN_TRELLIS_QUANT_DC),
@@ -618,11 +620,17 @@ static struct moz_option boolean_options[] = {
   MOZ_OPTION_ENTRY("jpeg_overshoot_deringing",   JBOOLEAN_OVERSHOOT_DERINGING)
 };
 
+const ssize_t
+boolean_option_count = sizeof(boolean_options) / sizeof(boolean_options[0]);
+
 static struct moz_option float_options[] = {
   MOZ_OPTION_ENTRY("jpeg_lambda_log_scale1",       JFLOAT_LAMBDA_LOG_SCALE1),
   MOZ_OPTION_ENTRY("jpeg_lambda_log_scale2",       JFLOAT_LAMBDA_LOG_SCALE2),
   MOZ_OPTION_ENTRY("jpeg_trellis_delta_dc_weight", JFLOAT_TRELLIS_DELTA_DC_WEIGHT)
 };
+
+const ssize_t
+float_option_count = sizeof(float_options) / sizeof(float_options[0]);
 
 static struct moz_option int_options[] = {
   MOZ_OPTION_ENTRY("jpeg_trellis_freq_split", JINT_TRELLIS_FREQ_SPLIT),
@@ -630,6 +638,9 @@ static struct moz_option int_options[] = {
   MOZ_OPTION_ENTRY("jpeg_base_quant_tbl_idx", JINT_BASE_QUANT_TBL_IDX),
   MOZ_OPTION_ENTRY("jpeg_dc_scan_opt_mode",   JINT_DC_SCAN_OPT_MODE)
 };
+
+const ssize_t
+int_option_count = sizeof(int_options) / sizeof(int_options[0]);
 
 /*
 =item i_writejpeg_wiol(im, ig, qfactor)
@@ -643,7 +654,7 @@ i_writejpeg_wiol(i_img *im, io_glue *ig, int qfactor) {
   int got_xres, got_yres, aspect_only, resunit;
   double xres, yres;
   int comment_entry;
-  int want_channels = im->channels;
+  volatile int want_channels = im->channels;
   int progressive = 0;
   int optimize = 0;
   int arithmetic = 0;
@@ -785,7 +796,7 @@ i_writejpeg_wiol(i_img *im, io_glue *ig, int qfactor) {
 
   {
     int i;
-    for (i = 0; i < sizeof(boolean_options) / sizeof(boolean_options[0]); ++i) {
+    for (i = 0; i < boolean_option_count; ++i) {
       int val;
       const struct moz_option *opt = boolean_options + i;
       if (i_tags_get_int(&im->tags, opt->name, 0, &val)) {
@@ -802,7 +813,7 @@ i_writejpeg_wiol(i_img *im, io_glue *ig, int qfactor) {
 
   {
     int i;
-    for (i = 0; i < sizeof(float_options) / sizeof(float_options[0]); ++i) {
+    for (i = 0; i < float_option_count; ++i) {
       double val;
       const struct moz_option *opt = float_options + i;
       if (i_tags_get_float(&im->tags, opt->name, 0, &val)) {
@@ -825,7 +836,7 @@ i_writejpeg_wiol(i_img *im, io_glue *ig, int qfactor) {
 
     {
     int i;
-    for (i = 0; i < sizeof(int_options) / sizeof(int_options[0]); ++i) {
+    for (i = 0; i < int_option_count; ++i) {
       int val;
       const struct moz_option *opt = int_options + i;
       if (i_tags_get_int(&im->tags, opt->name, 0, &val)) {
