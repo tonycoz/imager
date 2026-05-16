@@ -4084,7 +4084,7 @@ i_glinf(im, l, r, y)
           if (GIMME_V == G_ARRAY) {
             EXTEND(SP, count);
             for (i = 0; i < count; ++i) {
-              SV *sv = make_i_fcolor_sv(aTHX_ vals+i);
+              SV *sv = make_i_fcolor_sv_mortal(aTHX_ vals+i);
               PUSHs(sv);
             }
           }
