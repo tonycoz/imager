@@ -13,8 +13,7 @@ extern "C" {
 #include "imext.h"
 #include "imperl.h"
 
-unsigned char
-static
+static unsigned char
 saturate(int in) {
   if (in>255) { return 255; }
   else if (in>0) return in;
