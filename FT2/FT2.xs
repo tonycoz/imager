@@ -244,7 +244,7 @@ i_ft2_has_chars(handle, text_sv, utf8)
         count = i_ft2_has_chars(handle, text, len, utf8, work);
         if (GIMME_V == G_ARRAY) {
 	  if (count) {
-            EXTEND(SP, count);
+            EXTEND(SP, (SSize_t)count);
             for (i = 0; i < count; ++i) {
               PUSHs(boolSV(work[i]));
             }
@@ -283,7 +283,6 @@ i_ft2_glyph_name(handle, text_sv, utf8 = 0, reliable_only = 1)
         STRLEN work_len;
         size_t len;
         char name[255];
-	SSize_t count = 0;
       PPCODE:
         i_clear_error();
         text = SvPV(text_sv, work_len);

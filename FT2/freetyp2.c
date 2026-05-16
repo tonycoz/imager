@@ -202,6 +202,9 @@ static struct enc_score {
   { FT_ENCODING_ADOBE_EXPERT,    6 },
 };
 
+static const ssize_t
+enc_score_count = sizeof(enc_scores) / sizeof(*enc_scores);
+
 /*
 =item i_ft2_new(char *name, int index)
 
@@ -245,7 +248,7 @@ i_ft2_new(const char *name, int index) {
     mm_log((2, "i_ft2_new, encoding %X platform %u encoding %u\n",
             (unsigned)enc_entry, face->charmaps[i]->platform_id,
             face->charmaps[i]->encoding_id));
-    for (j = 0; j < sizeof(enc_scores) / sizeof(*enc_scores); ++j) {
+    for (j = 0; j < enc_score_count; ++j) {
       if (enc_scores[j].encoding == enc_entry && enc_scores[j].score > score) {
         encoding = enc_entry;
         score = enc_scores[j].score;
@@ -277,13 +280,13 @@ i_ft2_new(const char *name, int index) {
 #ifdef IM_FT2_MM
  {
    FT_Multi_Master *mm = &result->mm;
-   int i;
+   unsigned i;
 
    if ((face->face_flags & FT_FACE_FLAG_MULTIPLE_MASTERS) != 0 
        && (error = FT_Get_Multi_Master(face, mm)) == 0) {
      mm_log((2, "MM Font, %d axes, %d designs\n", mm->num_axis, mm->num_designs));
      for (i = 0; i < mm->num_axis; ++i) {
-       mm_log((2, "  axis %d name %s range %ld - %ld\n", i, mm->axis[i].name,
+       mm_log((2, "  axis %u name %s range %ld - %ld\n", i, mm->axis[i].name,
                (long)(mm->axis[i].minimum), (long)(mm->axis[i].maximum)));
      }
      result->has_mm = 1;
@@ -739,7 +742,7 @@ i_ft2_text(FT2_Fonthandle *handle, i_img *im, i_img_dim tx, i_img_dim ty, const 
   FT_Glyph_Metrics *gm;
   i_img_dim bbox[BOUNDING_BOX_COUNT];
   FT_GlyphSlot slot;
-  int x, y;
+  unsigned x, y;
   unsigned char map[256];
   char last_mode = ft_pixel_mode_none; 
   int last_grays = -1;
@@ -1208,7 +1211,7 @@ i_ft2_is_multiple_master(FT2_Fonthandle *handle) {
 int
 i_ft2_get_multiple_masters(FT2_Fonthandle *handle, i_font_mm *mm) {
 #ifdef IM_FT2_MM
-  int i;
+  unsigned i;
   FT_Multi_Master *mms = &handle->mm;
 
   i_clear_error();
@@ -1244,7 +1247,7 @@ i_ft2_set_mm_coords(FT2_Fonthandle *handle, int coord_count, const long *coords)
     i_push_error(0, "Font has no multiple masters");
     return 0;
   }
-  if (coord_count != handle->mm.num_axis) {
+  if ((unsigned)coord_count != handle->mm.num_axis) {
     i_push_error(0, "Number of MM coords doesn't match MM axis count");
     return 0;
   }
