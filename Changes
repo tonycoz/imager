@@ -54,6 +54,8 @@ Imager 1.032 - 1 July 2026
      - fix various signed vs unsigned comparisons
    - Flines: (demo XS API usage)
      - fix signed vs unsigned comparisons
+   - ICO: (Windows icon/cursor images)
+     - fix signed vs unsigned comparisons
 
 Imager 1.031 - 15 May 2026
 ============

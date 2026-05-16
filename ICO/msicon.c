@@ -647,7 +647,7 @@ int read_packed(io_glue *ig, const char *format, ...) {
   unsigned char buffer[100];
   va_list ap;
   long *p;
-  int size;
+  unsigned size;
   const char *formatp;
   unsigned char *bufp;
 
@@ -1129,7 +1129,7 @@ write_packed(i_io_glue_t *ig, char const *format, ...) {
   unsigned char buffer[100];
   va_list ap;
   unsigned long p;
-  int size;
+  unsigned size;
   const char *formatp;
   unsigned char *bufp;
 
