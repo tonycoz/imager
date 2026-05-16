@@ -2,7 +2,9 @@
 
 char evalstr[]="Description string of plugin dyntest - kind of like";
 
-void null_plug(void *ptr) { }
+void null_plug(void *ptr) {
+    (void)ptr;
+}
 
 /* Example dynamic filter - level stretch (linear) - note it only stretches and doesn't compress */
 
