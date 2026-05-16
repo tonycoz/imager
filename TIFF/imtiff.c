@@ -301,7 +301,7 @@ sizeproc(thandle_t h) {
   /* iolayer doesn't have a size callback, use seek() to find
      the end
   */
-  toff_t orig_off = i_io_seek(ig, 0, SEEK_CUR);
+  off_t orig_off = i_io_seek(ig, 0, SEEK_CUR);
   if (orig_off < 0) {
     i_push_error(errno, "seek to current failed");
     return -1;
