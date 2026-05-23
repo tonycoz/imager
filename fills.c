@@ -170,15 +170,13 @@ static void fill_solid(i_fill_t *, i_img_dim x, i_img_dim y, i_img_dim width,
 static void fill_solidf(i_fill_t *, i_img_dim x, i_img_dim y, i_img_dim width,
 			int channels, i_fcolor *);
 
-static i_fill_solid_t base_solid_fill =
+static i_fill_t base_solid_fill =
 {
-  {
-    fill_solid,
-    fill_solidf,
-    NULL,
-    NULL,
-    NULL,
-  },
+  fill_solid,
+  fill_solidf,
+  NULL,
+  NULL,
+  NULL,
 };
 
 /*
@@ -216,8 +214,9 @@ i_fill_t *
 i_new_fill_solidf(const i_fcolor *c, int combine) {
   int ch;
   i_fill_solid_t *fill = mymalloc(sizeof(i_fill_solid_t)); /* checked 14jul05 tonyc */
+  memset(fill, 0, sizeof(*fill));
   
-  *fill = base_solid_fill;
+  fill->base = base_solid_fill;
   if (combine) {
     i_get_combine(combine, &fill->base.combine, &fill->base.combinef);
   }
@@ -248,7 +247,8 @@ i_new_fill_solid(const i_color *c, int combine) {
   int ch;
   i_fill_solid_t *fill = mymalloc(sizeof(i_fill_solid_t)); /* checked 14jul05 tonyc */
 
-  *fill = base_solid_fill;
+  memset(fill, 0, sizeof(*fill));
+  fill->base = base_solid_fill;
   if (combine) {
     i_get_combine(combine, &fill->base.combine, &fill->base.combinef);
   }
@@ -485,15 +485,14 @@ struct i_fill_image_t {
   double matrix[9];
 };
 
-static struct i_fill_image_t
-image_fill_proto =
-  {
-    {
-      fill_image,
-      fill_imagef,
-      NULL
-    }
-  };
+static i_fill_t
+image_fill_proto = {
+  fill_image,
+  fill_imagef,
+  NULL,
+  NULL,
+  NULL
+};
 
 /*
 =item i_new_fill_image(C<im>, C<matrix>, C<xoff>, C<yoff>, C<combine>)
@@ -513,7 +512,8 @@ i_fill_t *
 i_new_fill_image(i_img *im, const double *matrix, i_img_dim xoff, i_img_dim yoff, int combine) {
   struct i_fill_image_t *fill = mymalloc(sizeof(*fill)); /* checked 14jul05 tonyc */
 
-  *fill = image_fill_proto;
+  memset(fill, 0, sizeof(*fill));
+  fill->base = image_fill_proto;
 
   if (combine) {
     i_get_combine(combine, &fill->base.combine, &fill->base.combinef);
@@ -550,20 +550,21 @@ struct i_fill_opacity_t {
   double alpha_mult;
 };
 
-static struct i_fill_opacity_t
-opacity_fill_proto =
-  {
-    {
-      fill_opacity,
-      fill_opacityf,
-      NULL
-    }
-  };
+static i_fill_t
+opacity_fill_proto = {
+  fill_opacity,
+  fill_opacityf,
+  NULL,
+  NULL,
+  NULL
+};
 
 i_fill_t *
 i_new_fill_opacity(i_fill_t *base_fill, double alpha_mult) {
   struct i_fill_opacity_t *fill = mymalloc(sizeof(*fill));
-  *fill = opacity_fill_proto;
+
+  memset(fill, 0, sizeof(*fill));
+  fill->base = opacity_fill_proto;
 
   fill->base.combine = base_fill->combine;
   fill->base.combinef = base_fill->combinef;
@@ -598,6 +599,10 @@ static void
 fill_solid(i_fill_t *fill, i_img_dim x, i_img_dim y, i_img_dim width,
 	   int channels, i_color *data) {
   i_color c = T_SOLID_FILL(fill)->c;
+
+  (void)x;
+  (void)y;
+  
   i_adapt_colors(channels > 2 ? 4 : 2, 4, &c, 1);
   while (width-- > 0) {
     *data++ = c;
@@ -615,21 +620,24 @@ static void
 fill_solidf(i_fill_t *fill, i_img_dim x, i_img_dim y, i_img_dim width,
 	    int channels, i_fcolor *data) {
   i_fcolor c = T_SOLID_FILL(fill)->fc;
+
+  (void)x;
+  (void)y;
+  
   i_adapt_fcolors(channels > 2 ? 4 : 2, 4, &c, 1);
   while (width-- > 0) {
     *data++ = c;
   }
 }
 
-static i_fill_hatch_t
-hatch_fill_proto =
-  {
-    {
-      fill_hatch,
-      fill_hatchf,
-      NULL
-    }
-  };
+static i_fill_t
+hatch_fill_proto = {
+  fill_hatch,
+  fill_hatchf,
+  NULL,
+  NULL,
+  NULL
+};
 
 /*
 =item i_new_hatch_low(fg, bg, ffg, fbg, combine, hatch, cust_hatch, dx, dy)
@@ -646,7 +654,8 @@ i_new_hatch_low(const i_color *fg, const i_color *bg,
                 i_img_dim dx, i_img_dim dy) {
   i_fill_hatch_t *fill = mymalloc(sizeof(i_fill_hatch_t)); /* checked 14jul05 tonyc */
 
-  *fill = hatch_fill_proto;
+  memset(fill, 0, sizeof(*fill));
+  fill->base = hatch_fill_proto;
   if (fg && bg) {
     fill->fg = *fg;
     fill->bg = *bg;
@@ -675,8 +684,8 @@ i_new_hatch_low(const i_color *fg, const i_color *bg,
     memcpy(fill->hatch, cust_hatch, 8);
   }
   else {
-    if (hatch >= sizeof(builtin_hatches)/sizeof(*builtin_hatches)
-	|| hatch < 0) {
+    if (hatch < 0
+        || (size_t)hatch >= sizeof(builtin_hatches)/sizeof(*builtin_hatches)) {
       hatch = 0;
     }
     memcpy(fill->hatch, builtin_hatches[hatch], 8);

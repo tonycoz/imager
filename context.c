@@ -39,7 +39,7 @@ im_context_new(void) {
   ctx->max_bytes = DEF_BYTES_LIMIT;
 
   ctx->slot_alloc = slot_count;
-  ctx->slots = calloc(sizeof(void *), ctx->slot_alloc);
+  ctx->slots = calloc(ctx->slot_alloc, sizeof(void *));
   if (!ctx->slots) {
     free(ctx);
     return NULL;
@@ -75,6 +75,8 @@ im_context_refinc(im_context_t ctx, const char *where) {
 #ifdef IMAGER_TRACE_CONTEXT
   fprintf(stderr, "im_context:%s: refinc %p (count now %lu)\n", where,
 	  ctx, (unsigned long)ctx->refcount);
+#else
+  (void)where;
 #endif
 }
 
@@ -93,7 +95,7 @@ been removed.
 void
 im_context_refdec(im_context_t ctx, const char *where) {
   int i;
-  im_slot_t slot;
+  size_t slot;
 
   im_assert(ctx->refcount > 0);
 
@@ -102,6 +104,8 @@ im_context_refdec(im_context_t ctx, const char *where) {
 #ifdef IMAGER_TRACE_CONTEXT
   fprintf(stderr, "im_context:%s: delete %p (count now %lu)\n", where,
 	  ctx, (unsigned long)ctx->refcount);
+#else
+  (void)where;
 #endif
 
   if (ctx->refcount != 0)
@@ -160,7 +164,7 @@ im_context_clone(im_context_t ctx, const char *where) {
     return NULL;
 
   nctx->slot_alloc = slot_count;
-  nctx->slots = calloc(sizeof(void *), nctx->slot_alloc);
+  nctx->slots = calloc(nctx->slot_alloc, sizeof(void *));
   if (!nctx->slots) {
     free(nctx);
     return NULL;
@@ -241,6 +245,8 @@ im_context_clone(im_context_t ctx, const char *where) {
 
 #ifdef IMAGER_TRACE_CONTEXT
   fprintf(stderr, "im_context:%s: cloned %p to %p\n", where, ctx, nctx);
+#else
+  (void)where;
 #endif
 
   return nctx;
@@ -301,16 +307,16 @@ im_context_slot_set(im_context_t ctx, im_slot_t slot, void *value) {
     abort();
   }
 
-  if (slot >= ctx->slot_alloc) {
-    ssize_t i;
+  if ((size_t)slot >= ctx->slot_alloc) {
+    size_t slot_index;
     size_t new_alloc = slot_count;
     void **new_slots = realloc(ctx->slots, sizeof(void *) * new_alloc);
 
     if (!new_slots)
       return 0;
 
-    for (i = ctx->slot_alloc; i < new_alloc; ++i)
-      new_slots[i] = NULL;
+    for (slot_index = ctx->slot_alloc; slot_index < new_alloc; ++slot_index)
+      new_slots[slot_index] = NULL;
 
     ctx->slots = new_slots;
     ctx->slot_alloc = new_alloc;
@@ -338,7 +344,7 @@ im_context_slot_get(im_context_t ctx, im_slot_t slot) {
     abort();
   }
 
-  if (slot >= ctx->slot_alloc)
+  if ((size_t)slot >= ctx->slot_alloc)
     return NULL;
 
   return ctx->slots[slot];

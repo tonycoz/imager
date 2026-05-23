@@ -14,7 +14,7 @@ btm_new(i_img_dim xsize,i_img_dim ysize) {
   struct i_bitmap *btm;
   btm=(struct i_bitmap*)mymalloc(sizeof(struct i_bitmap)); /* checked 4jul05 tonyc */
   bytes = (xsize*ysize+8)/8;
-  if (bytes * 8 / ysize < xsize-1) { /* this is kind of rough */
+  if (bytes * 8 / ysize < (size_t)xsize-1) { /* this is kind of rough */
     fprintf(stderr, "Integer overflow allocating bitmap (" i_DFp ")",
 	    i_DFcp(xsize, ysize));
     exit(3);

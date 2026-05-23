@@ -88,7 +88,10 @@ static i_img IIM_base_double_direct =
   NULL, /* i_f_psamp_bits */
 
   i_psamp_ddoub, /* i_f_psamp */
-  i_psampf_ddoub /* i_f_psampf */
+  i_psampf_ddoub, /* i_f_psampf */
+
+  NULL,
+  NULL
 };
 
 /*
@@ -121,7 +124,7 @@ im_img_double_new(pIMCTX, i_img_dim x, i_img_dim y, int ch) {
     return NULL;
   }
   bytes = x * y * ch * sizeof(double);
-  if (bytes / y / ch / sizeof(double) != x) {
+  if (bytes / y / ch / sizeof(double) != (size_t)x) {
     im_push_errorf(aIMCTX, 0, "integer overflow calculating image allocation");
     return NULL;
   }

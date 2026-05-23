@@ -184,7 +184,7 @@ i_int_hlines_add(i_int_hlines *hlines, i_img_dim y, i_img_dim x, i_img_dim width
     else {
       i_int_hline_seg *seg;
       /* add a new segment */
-      if (entry->count == entry->alloc) {
+      if ((size_t)entry->count == entry->alloc) {
 	/* expand it */
 	size_t alloc = entry->alloc * 3 / 2;
 	entry = myrealloc(entry, sizeof(i_int_hline_entry) +

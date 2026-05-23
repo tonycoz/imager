@@ -49,8 +49,8 @@ match_any_fcolor(const i_fsample_t *testme, const i_trim_colors_t *tests, int co
 static const int gray_chans[4] = { 0, 0, 0, 1 };
 
 #define TEST_COLOR(s) 					    \
-  (color_count && MATCH_ANY_COLOR((s), colors, color_count) ||	\
-   check_alpha && (s)[3] <= work_threshold)
+  ((color_count && MATCH_ANY_COLOR((s), colors, color_count)) ||	\
+   (check_alpha && (s)[3] <= work_threshold))
 
 static int
 trim_rect_simple(i_img *im, double transp_threshold, int color_count,

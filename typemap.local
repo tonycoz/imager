@@ -60,7 +60,7 @@ T_IM_SAMPLE_LIST
 	if (!SvOK($arg))
 	  croak(\"$var must be a scalar or an arrayref\");
 	if (SvROK($arg)) {
-	  i_img_dim i;
+	  size_t i;
 	  AV *av;
 	  i_sample_t *s;
 	  if (SvTYPE(SvRV($arg)) != SVt_PVAV)
@@ -88,7 +88,7 @@ T_IM_FSAMPLE_LIST
 	if (!SvOK($arg))
 	  croak(\"$var must be a scalar or an arrayref\");
 	if (SvROK($arg)) {
-	  i_img_dim i;
+	  size_t i;
 	  AV *av;
 	  i_fsample_t *s;
 	  if (SvTYPE(SvRV($arg)) != SVt_PVAV)

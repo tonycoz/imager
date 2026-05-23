@@ -64,6 +64,10 @@ i_img* i_transform2(i_img_dim width, i_img_dim height, int channels,
     return NULL;
   }
 
+  /* FIXME: add a validation check for the supplied ops vs
+     the supplied registers and a return op
+  */
+
   new_img = i_img_empty_ch(NULL, width, height, channels);
   for (x = 0; x < width; ++x) {
     for (y = 0; y < height; ++y) {

@@ -67,7 +67,7 @@ typedef struct {
 #define calc_seek_offset(curr_off, length, offset, whence) \
   (((whence) == SEEK_SET) ? (offset) : \
    ((whence) == SEEK_CUR) ? (curr_off) + (offset) : \
-   ((whence) == SEEK_END) ? (length) + (offset) : -1)
+   ((whence) == SEEK_END) ? (off_t)(length) + (offset) : -1)
 
 /*
 =head1 NAME
@@ -570,13 +570,13 @@ i_io_peekn(io_glue *ig, void *buf, size_t size) {
   if (!ig->buffer)
     i_io_setup_buffer(ig);
 
-  if ((!ig->read_ptr || size > ig->read_end - ig->read_ptr)
+  if ((!ig->read_ptr || (ssize_t)size > ig->read_end - ig->read_ptr)
       && !(ig->buf_eof || ig->error)) {
     i_io_read_fill(ig, size);
   }
 
   if (ig->read_ptr && ig->read_end != ig->read_ptr) {
-    if (size > ig->read_end - ig->read_ptr)
+    if ((ssize_t)size > ig->read_end - ig->read_ptr)
       size = ig->read_end - ig->read_ptr;
 
     if (size)
@@ -773,7 +773,7 @@ i_io_write(io_glue *ig, const void *buf, size_t size) {
 
     result = i_io_raw_write(ig, buf, size);
 
-    if (result != size) {
+    if (result != (ssize_t)size) {
       ig->error = 1;
       IOL_DEB(fprintf(IOL_DEBs, "  unbuffered, setting error flag\n"));
     }
@@ -813,7 +813,7 @@ i_io_write(io_glue *ig, const void *buf, size_t size) {
   if (size) {
     if (!i_io_flush(ig)) {
       IOL_DEB(fprintf(IOL_DEBs, "i_io_write() => %d (i_io_flush failure)\n", (int)write_count));
-      return write_count ? write_count : -1;
+      return write_count ? (ssize_t)write_count : -1;
     }
 
     i_io_start_write(ig);
@@ -1165,11 +1165,11 @@ i_io_read_fill(io_glue *ig, ssize_t needed) {
   if (ig->error || ig->buf_eof)
     return 0;
 
-  if (needed > ig->buf_size)
+  if (needed > (ssize_t)ig->buf_size)
     needed = ig->buf_size;
 
   if (ig->read_ptr && ig->read_ptr < ig->read_end) {
-    size_t kept = ig->read_end - ig->read_ptr;
+    ssize_t kept = ig->read_end - ig->read_ptr;
 
     if (needed < kept) {
       IOL_DEB(fprintf(IOL_DEBs, "i_io_read_fill(%u) -> 1 (already have enough)\n", (unsigned)needed));
@@ -1333,7 +1333,7 @@ realseek_write(io_glue *igo, const void *buf, size_t count) {
   io_cb        *ig = (io_cb *)igo;
   void          *p = ig->p;
   ssize_t       rc = 0;
-  size_t        bc = 0;
+  ssize_t        bc = 0;
   char       *cbuf = (char*)buf; 
   
   IOL_DEB( fprintf(IOL_DEBs, "realseek_write: ig = %p, buf = %p, "
@@ -1341,7 +1341,7 @@ realseek_write(io_glue *igo, const void *buf, size_t count) {
 
   /* Is this a good idea? Would it be better to handle differently? 
      skip handling? */
-  while( count!=bc && (rc = ig->writecb(p,cbuf+bc,count-bc))>0 ) {
+  while( (ssize_t)count != bc && (rc = ig->writecb(p, cbuf+bc, count-bc)) > 0 ) {
     bc+=rc;
   }
 
@@ -1463,6 +1463,8 @@ static
 ssize_t 
 buffer_write(io_glue *ig, const void *buf, size_t count) {
   dIMCTXio(ig);
+  (void)buf;
+  (void)count;
   im_log((aIMCTX, 1, "buffer_write called, this method should never be called.\n"));
   return -1;
 }
@@ -1508,7 +1510,7 @@ buffer_seek(io_glue *igo, off_t offset, int whence) {
   off_t reqpos = 
     calc_seek_offset(ig->cpos, ig->len, offset, whence);
   
-  if (reqpos > ig->len) {
+  if (reqpos > (off_t)ig->len) {
     dIMCTXio(igo);
     im_log((aIMCTX, 1, "seeking out of readable range\n"));
     return (off_t)-1;
@@ -1746,12 +1748,12 @@ bufchain_read(io_glue *ig, void *buf, size_t count) {
   im_log((aIMCTX, 1, "bufchain_read(ig %p, buf %p, count %ld)\n", ig, buf, (long)count));
 
   while( scount ) {
-    int clen = (ieb->cp == ieb->tail) ? ieb->tfill : ieb->cp->len;
+    int clen = (ieb->cp == ieb->tail) ? ieb->tfill : (off_t)ieb->cp->len;
     if (clen == ieb->cpos) {
       if (ieb->cp == ieb->tail) break; /* EOF */
       ieb->cp = ieb->cp->next;
       ieb->cpos = 0;
-      clen = (ieb->cp == ieb->tail) ? ieb->tfill : ieb->cp->len;
+      clen = (ieb->cp == ieb->tail) ? ieb->tfill : (off_t)ieb->cp->len;
     }
 
     sk = clen - ieb->cpos;
@@ -1798,7 +1800,7 @@ bufchain_write(io_glue *ig, const void *buf, size_t count) {
   
   while(count) {
     im_log((aIMCTX, 2, "bufchain_write: - looping - count = %ld\n", (long)count));
-    if (ieb->cp->len == ieb->cpos) {
+    if ((off_t)ieb->cp->len == ieb->cpos) {
       im_log((aIMCTX, 1, "bufchain_write: cp->len == ieb->cpos = %ld - advancing chain\n", (long) ieb->cpos));
       io_bchain_advance(ieb);
     }
@@ -1880,12 +1882,12 @@ bufchain_seek(io_glue *ig, off_t offset, int whence) {
   ieb->gpos = 0;
   
   while( scount ) {
-    int clen = (ieb->cp == ieb->tail) ? ieb->tfill : ieb->cp->len;
+    int clen = (ieb->cp == ieb->tail) ? ieb->tfill : (off_t)ieb->cp->len;
     if (clen == ieb->cpos) {
       if (ieb->cp == ieb->tail) break; /* EOF */
       ieb->cp = ieb->cp->next;
       ieb->cpos = 0;
-      clen = (ieb->cp == ieb->tail) ? ieb->tfill : ieb->cp->len;
+      clen = (ieb->cp == ieb->tail) ? ieb->tfill : (off_t)ieb->cp->len;
     }
     
     sk = clen - ieb->cpos;
@@ -1997,6 +1999,7 @@ static off_t fd_seek(io_glue *igo, off_t offset, int whence) {
 }
 
 static int fd_close(io_glue *ig) {
+  (void)ig;
   /* no, we don't close it */
   return 0;
 }

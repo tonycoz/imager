@@ -115,7 +115,7 @@ on success else false.
 
 static
 int
-gnum(io_glue *ig, int *i) {
+gnum(io_glue *ig, unsigned *i) {
   int c;
   *i = 0;
 
@@ -126,7 +126,7 @@ gnum(io_glue *ig, int *i) {
   if (!misnumber(c))
     return 0;
   while( (c = i_io_peekc(ig)) != EOF && misnumber(c) ) {
-    int work = *i * 10 + (c - '0');
+    unsigned work = *i * 10 + (c - '0');
     if (work < *i) {
       /* overflow */
       i_push_error(0, "integer overflow");
@@ -142,12 +142,12 @@ gnum(io_glue *ig, int *i) {
 static
 i_img *
 read_pgm_ppm_bin8(io_glue *ig, i_img *im, int width, int height, 
-                  int channels, int maxval, int allow_incomplete) {
+                  int channels, unsigned maxval, int allow_incomplete) {
   i_color *line, *linep;
   int read_size;
   unsigned char *read_buf, *readp;
   int x, y, ch;
-  int rounder = maxval / 2;
+  unsigned rounder = maxval / 2;
 
   line = mymalloc(width * sizeof(i_color));
   read_size = channels * width;
@@ -200,7 +200,7 @@ read_pgm_ppm_bin8(io_glue *ig, i_img *im, int width, int height,
 static
 i_img *
 read_pgm_ppm_bin16(io_glue *ig, i_img *im, int width, int height, 
-                  int channels, int maxval, int allow_incomplete) {
+                  int channels, unsigned maxval, int allow_incomplete) {
   i_fcolor *line, *linep;
   int read_size;
   unsigned char *read_buf, *readp;
@@ -335,17 +335,17 @@ read_pbm_ascii(io_glue *ig, i_img *im, int width, int height, int allow_incomple
 static
 i_img *
 read_pgm_ppm_ascii(io_glue *ig, i_img *im, int width, int height, int channels, 
-                   int maxval, int allow_incomplete) {
+                   unsigned maxval, int allow_incomplete) {
   i_color *line, *linep;
   int x, y, ch;
-  int rounder = maxval / 2;
+  unsigned rounder = maxval / 2;
 
   line = mymalloc(width * sizeof(i_color));
   for(y=0;y<height;y++) {
     linep = line;
     for(x=0; x<width; x++) {
       for(ch=0; ch<channels; ch++) {
-        int sample;
+        unsigned sample;
         
         if (!gnum(ig, &sample)) {
           myfree(line);
@@ -379,7 +379,7 @@ read_pgm_ppm_ascii(io_glue *ig, i_img *im, int width, int height, int channels,
 static
 i_img *
 read_pgm_ppm_ascii_16(io_glue *ig, i_img *im, int width, int height, 
-                      int channels, int maxval, int allow_incomplete) {
+                      int channels, unsigned maxval, int allow_incomplete) {
   i_fcolor *line, *linep;
   int x, y, ch;
   double maxvalf = maxval;
@@ -389,7 +389,7 @@ read_pgm_ppm_ascii_16(io_glue *ig, i_img *im, int width, int height,
     linep = line;
     for(x=0; x<width; x++) {
       for(ch=0; ch<channels; ch++) {
-        int sample;
+        unsigned sample;
         
         if (!gnum(ig, &sample)) {
           myfree(line);
@@ -435,7 +435,7 @@ i_img *
 i_readpnm_wiol( io_glue *ig, int allow_incomplete) {
   i_img* im;
   int type;
-  int width, height, maxval, channels;
+  unsigned width, height, maxval, channels;
   int c;
 
   i_clear_error();
@@ -714,7 +714,7 @@ write_ppm_data_8(i_img *im, io_glue *ig, int want_channels) {
   i_get_file_background(im, &bg);
   while (y < im->ysize && rc >= 0) {
     i_gsamp_bg(im, 0, im->xsize, y, data, want_channels, &bg);
-    if (i_io_write(ig, data, write_size) != write_size) {
+    if (i_io_write(ig, data, write_size) != (ssize_t)write_size) {
       i_push_error(errno, "could not write ppm data");
       rc = 0;
       break;
@@ -752,7 +752,7 @@ write_ppm_data_16(i_img *im, io_glue *ig, int want_channels) {
       *writep++ = sample16 >> 8;
       *writep++ = sample16 & 0xFF;
     }
-    if (i_io_write(ig, write_buf, write_size) != write_size) {
+    if (i_io_write(ig, write_buf, write_size) != (ssize_t)write_size) {
       i_push_error(errno, "could not write ppm data");
       rc = 0;
       break;
@@ -811,7 +811,7 @@ i_writeppm_wiol(i_img *im, io_glue *ig) {
     sprintf(header,"P%d\n#CREATOR: Imager\n%" i_DF " %" i_DF"\n%d\n", 
             type, i_DFc(im->xsize), i_DFc(im->ysize), maxval);
 
-    if (i_io_write(ig,header,strlen(header)) != strlen(header)) {
+    if (i_io_write(ig,header,strlen(header)) != (ssize_t)strlen(header)) {
       i_push_error(errno, "could not write ppm header");
       mm_log((1,"i_writeppm: unable to write ppm header.\n"));
       return(0);
@@ -819,7 +819,7 @@ i_writeppm_wiol(i_img *im, io_glue *ig) {
 
     if (!i_img_virtual(im) && im->bits == i_8_bits && im->type == i_direct_type
 	&& im->channels == want_channels) {
-      if (i_io_write(ig,im->idata,im->bytes) != im->bytes) {
+      if (i_io_write(ig,im->idata,im->bytes) != (ssize_t)im->bytes) {
         i_push_error(errno, "could not write ppm data");
         return 0;
       }

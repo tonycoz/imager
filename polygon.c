@@ -157,7 +157,7 @@ ss_scanline_reset(ss_scanline *ss) {
 
 static
 void
-ss_scanline_init(ss_scanline *ss, i_img_dim linelen, int linepairs) {
+ss_scanline_init(ss_scanline *ss, i_img_dim linelen) {
   ss->line    = mymalloc( sizeof(int) * linelen );
   ss->linelen = linelen;
   ss_scanline_reset(ss);
@@ -366,10 +366,11 @@ render_slice_scanline(ss_scanline *ss, int y, p_line *l, p_line *r, pcord miny, 
   i_img_dim stoppix;	/* temporary variable for "end of this interval" */
 
   /* Find the y bounds of scanline_slice */
+  (void)y;
 
   POLY_DEB
     (
-     printf("render_slice_scanline(..., y=%d)\n");
+     printf("render_slice_scanline(..., y=%d)\n", y);
      printf("  left  n=%d p1(%.2g, %.2g) p2(%.2g,%.2g) min(%.2g, %.2g) max(%.2g,%.2g) updown(%d)\n",
 	    l->n, l->x1/16.0, l->y1/16.0, l->x2/16.0, l->y2/16.0, 
 	    l->minx/16.0, l->miny/16.0, l->maxx/16.0, l->maxy/16.0,
@@ -445,7 +446,8 @@ static int
 i_poly_poly_aa_low(i_img *im, int count, const i_polygon_t *polys,
 		   i_poly_fill_mode_t mode, void *ctx,
 		   scanline_flusher flusher) {
-  int i ,k;			/* Index variables */
+  size_t pt_index;
+  int k;			/* Index variables */
   i_img_dim clc;		/* Lines inside current interval */
   /* initialize to avoid compiler warnings */
   pcord tempy = 0;
@@ -477,8 +479,8 @@ i_poly_poly_aa_low(i_img *im, int count, const i_polygon_t *polys,
   for (k = 0; k < count; ++k) {
     const i_polygon_t *p = polys + k;
     im_log((aIMCTX, 2, "poly %d\n", k));
-    for(i = 0; i < p->count; i++) {
-      im_log((aIMCTX, 2, " (%.2f, %.2f)\n", p->x[i], p->y[i]));
+    for(pt_index = 0; pt_index < p->count; pt_index++) {
+      im_log((aIMCTX, 2, " (%.2f, %.2f)\n", p->x[pt_index], p->y[pt_index]));
     }
   }
 
@@ -491,7 +493,7 @@ i_poly_poly_aa_low(i_img *im, int count, const i_polygon_t *polys,
   pset     = point_set_new(polys, count, &pcount);
   lset     = line_set_new(polys, count, &lcount);
 
-  ss_scanline_init(&templine, im->xsize, lcount);
+  ss_scanline_init(&templine, im->xsize);
 
   tllist   = mymalloc(sizeof(p_slice) * lcount);
   
@@ -507,24 +509,25 @@ i_poly_poly_aa_low(i_img *im, int count, const i_polygon_t *polys,
   
 
   /* loop on intervals */
-  for(i=0; i<pcount-1; i++) {
-    i_img_dim startscan = i_max( coarse(pset[i].y), 0);
-    i_img_dim stopscan = i_min( coarse(pset[i+1].y+15), im->ysize);
+  for (pt_index = 0; pt_index < pcount-1; pt_index++) {
+    i_img_dim startscan = i_max( coarse(pset[pt_index].y), 0);
+    i_img_dim stopscan = i_min( coarse(pset[pt_index+1].y+15), im->ysize);
     pcord miny, maxy;	/* y bounds in fine coordinates */
 
-    POLY_DEB( pcord cc = (pset[i].y + pset[i+1].y)/2 );
+    POLY_DEB( pcord cc = (pset[pt_index].y + pset[pt_index+1].y)/2 );
 
     POLY_DEB(
 	     printf("current slice is %d: %d to %d ( cpoint %d ) scanlines %d to %d\n", 
-		    i, pset[i].y, pset[i+1].y, cc, startscan, stopscan)
+		    pt_index, pset[pt_index].y, pset[pt_index+1].y, cc,
+                    startscan, stopscan)
 	     );
     
-    if (pset[i].y == pset[i+1].y) {
+    if (pset[pt_index].y == pset[pt_index+1].y) {
       POLY_DEB( printf("current slice thickness = 0 => skipping\n") );
       continue;
     }
 
-    clc = lines_in_interval(lset, lcount, tllist, pset[i].y, pset[i+1].y);
+    clc = lines_in_interval(lset, lcount, tllist, pset[pt_index].y, pset[pt_index+1].y);
     qsort(tllist, clc, sizeof(p_slice), (int(*)(const void *,const void *))p_compx);
 
     mark_updown_slices(aIMCTX, lset, tllist, clc);
@@ -561,7 +564,7 @@ i_poly_poly_aa_low(i_img *im, int count, const i_polygon_t *polys,
       pcord scan_miny = i_max(miny, cscl * 16);
       pcord scan_maxy = i_min(maxy, (cscl + 1 ) * 16);
       
-      tempy = i_min(cscl*16+16, pset[i+1].y);
+      tempy = i_min(cscl*16+16, pset[pt_index+1].y);
       POLY_DEB( printf("evaluating scan line %d \n", cscl) );
       if (mode == i_pfm_evenodd) {
 	for(k=0; k<clc-1; k+=2) {

@@ -436,7 +436,7 @@ io_writer(void *p, void const *data, size_t size) {
   FREETMPS;
   LEAVE;
 
-  return success ? size : -1;
+  return success ? (ssize_t)size : -1;
 }
 
 static ssize_t 
@@ -699,17 +699,18 @@ ip_handle_quant_opts_low(pTHX_ i_quantize *quant, HV *hv, int push_errors)
 	sv = hv_fetch(hv, "tr_map", 6, 0);
 	if (sv && *sv && SvTYPE(SvRV(*sv)) == SVt_PVAV) {
 	  AV *av = (AV*)SvRV(*sv);
+          unsigned index;
 	  len = av_len(av) + 1;
 	  if (len > sizeof(quant->tr_custom))
 	    len = sizeof(quant->tr_custom);
-	  for (i = 0; i < len; ++i) {
-	    SV **sv2 = av_fetch(av, i, 0);
+	  for (index = 0; index < len; ++index) {
+	    SV **sv2 = av_fetch(av, index, 0);
 	    if (sv2 && *sv2) {
-	      quant->tr_custom[i] = SvIV(*sv2);
+	      quant->tr_custom[index] = SvIV(*sv2);
 	    }
 	  }
-	  while (i < sizeof(quant->tr_custom))
-	    quant->tr_custom[i++] = 0;
+	  while (index < sizeof(quant->tr_custom))
+	    quant->tr_custom[index++] = 0;
 	}
       }
     }
@@ -745,9 +746,13 @@ ip_handle_quant_opts_low(pTHX_ i_quantize *quant, HV *hv, int push_errors)
   }
   sv = hv_fetch(hv, "max_colors", 10, 0);
   if (sv && *sv) {
-    i = SvIV(*sv);
-    if (i <= quant->mc_size && i >= quant->mc_count)
-      quant->mc_size = i;
+    IV iv = SvIV(*sv);
+    if (iv <= 0) {
+      i_push_errorf(0, "max_colors of %ld is invalid", (long)iv);
+      return 0;
+    }
+    if (iv <= quant->mc_size && iv >= quant->mc_count)
+      quant->mc_size = iv;
   }
 
   quant->translate = pt_closest;
@@ -890,7 +895,7 @@ S_get_poly_fill_mode(pTHX_ SV *sv) {
 static void
 S_get_polygon_list(pTHX_ i_polygon_list *polys, SV *sv) {
   AV *av;
-  int i;
+  size_t poly_index;
   i_polygon_t *s;
 
   SvGETMAGIC(sv);
@@ -902,8 +907,8 @@ S_get_polygon_list(pTHX_ i_polygon_list *polys, SV *sv) {
   if (polys->count < 1)
     croak("polypolygon: no polygons provided");
   s = malloc_temp(aTHX_ sizeof(i_polygon_t) * polys->count);
-  for (i = 0; i < polys->count; ++i) {
-    SV **poly_sv = av_fetch(av, i, 0);
+  for (poly_index = 0; poly_index < polys->count; ++poly_index) {
+    SV **poly_sv = av_fetch(av, poly_index, 0);
     AV *poly_av;
     SV **x_sv, **y_sv;
     AV *x_av, *y_av;
@@ -912,31 +917,37 @@ S_get_polygon_list(pTHX_ i_polygon_list *polys, SV *sv) {
     ssize_t point_count;
 
     if (!poly_sv)
-      croak("poly_polygon: nothing found for polygon %d", i);
+      croak("poly_polygon: nothing found for polygon %zu", poly_index);
     /* needs to be another av */
     SvGETMAGIC(*poly_sv);
     if (!SvOK(*poly_sv) || !SvROK(*poly_sv) || SvTYPE(SvRV(*poly_sv)) != SVt_PVAV)
-      croak("poly_polygon: polygon %d isn't an arrayref", i);
+      croak("poly_polygon: polygon %zu isn't an arrayref", poly_index);
     poly_av = (AV*)SvRV(*poly_sv);
     /* with two elements */
     if (av_len(poly_av) != 1)
-      croak("poly_polygon: polygon %d should contain two arrays", i);
+      croak("poly_polygon: polygon %zu should contain two arrays", poly_index);
     x_sv = av_fetch(poly_av, 0, 0);
     y_sv = av_fetch(poly_av, 1, 0);
     if (!x_sv)
-      croak("poly_polygon: polygon %d has no x elements", i);
+      croak("poly_polygon: polygon %zu has no x elements", poly_index);
     if (!y_sv)
-      croak("poly_polygon: polygon %d has no y elements", i);
+      croak("poly_polygon: polygon %zu has no y elements", poly_index);
     SvGETMAGIC(*x_sv);
     SvGETMAGIC(*y_sv);
-    if (!SvOK(*x_sv) || !SvROK(*x_sv) || SvTYPE(SvRV(*x_sv)) != SVt_PVAV)
-      croak("poly_polygon: polygon %d x elements isn't an array", i);
-    if (!SvOK(*y_sv) || !SvROK(*y_sv) || SvTYPE(SvRV(*y_sv)) != SVt_PVAV)
-      croak("poly_polygon: polygon %d y elements isn't an array", i);
+    if (!SvOK(*x_sv) || !SvROK(*x_sv) || SvTYPE(SvRV(*x_sv)) != SVt_PVAV) {
+      croak("poly_polygon: polygon %zu x elements isn't an array",
+            poly_index);
+    }
+    if (!SvOK(*y_sv) || !SvROK(*y_sv) || SvTYPE(SvRV(*y_sv)) != SVt_PVAV) {
+      croak("poly_polygon: polygon %zu y elements isn't an array",
+            poly_index);
+    }
     x_av = (AV*)SvRV(*x_sv);
     y_av = (AV*)SvRV(*y_sv);
-    if (av_len(x_av) != av_len(y_av))
-      croak("poly_polygon: polygon %d x and y arrays different lengths", i+1);
+    if (av_len(x_av) != av_len(y_av)) {
+      croak("poly_polygon: polygon %zu x and y arrays different lengths",
+            poly_index+1);
+    }
     point_count = av_len(x_av)+1;
     x_data = malloc_temp(aTHX_ sizeof(double) * point_count * 2);
     y_data = x_data + point_count;
@@ -947,9 +958,9 @@ S_get_polygon_list(pTHX_ i_polygon_list *polys, SV *sv) {
       x_data[j] = x_item_sv ? SvNV(*x_item_sv) : 0;
       y_data[j] = y_item_sv ? SvNV(*y_item_sv) : 0;
     }
-    s[i].x = x_data;
-    s[i].y = y_data;
-    s[i].count = point_count;
+    s[poly_index].x = x_data;
+    s[poly_index].y = y_data;
+    s[poly_index].count = point_count;
   }
   polys->polygons = s;
 }
@@ -1157,9 +1168,9 @@ static im_pl_ext_funcs im_perl_funcs =
   ip_handle_quant_opts2
 };
 
-#define trim_color_list__new(cls) S_trim_color_list__new(aTHX_ (cls))
+#define trim_color_list__new() S_trim_color_list__new(aTHX)
 static i_trim_color_list
-S_trim_color_list__new(pTHX_ const char *cls) {
+S_trim_color_list__new(pTHX) {
   i_trim_color_list r;
 
   r.count = 0;
@@ -1230,7 +1241,7 @@ S_trim_color_list_get(pTHX_ i_trim_color_list t, IV i) {
   AV *av;
   const i_trim_colors_t *e;
 
-  if (i < 0 || i >= t.count) {
+  if (i < 0 || (size_t)i >= t.count) {
     return &PL_sv_undef;
   }
 
@@ -1653,7 +1664,9 @@ i_io_raw_read(ig, buffer_sv, size)
 	ssize_t result;
       PPCODE:
         if (size <= 0)
-	  croak("size negative in call to i_io_raw_read()");
+	  croak("size %" IVdf " non-positive in call to i_io_raw_read()", size);
+        if (size >= SSize_t_MAX)
+          croak("size %" IVdf " too large in call to i_io_raw_read()", size);
         /* prevent an undefined value warning if they supplied an 
           undef buffer.
            Orginally conditional on !SvOK(), but this will prevent the
@@ -1663,7 +1676,7 @@ i_io_raw_read(ig, buffer_sv, size)
        if (SvUTF8(buffer_sv))
           sv_utf8_downgrade(buffer_sv, FALSE);
 #endif
-	buffer = SvGROW(buffer_sv, size+1);
+	buffer = SvGROW(buffer_sv, (STRLEN)size+1);
         result = i_io_raw_read(ig, buffer, size);
         if (result >= 0) {
 	  SvCUR_set(buffer_sv, result);
@@ -1685,9 +1698,11 @@ i_io_raw_read2(ig, size)
 	ssize_t result;
       PPCODE:
         if (size <= 0)
-	  croak("size negative in call to i_io_read2()");
-	buffer_sv = newSV(size);
-	buffer = SvGROW(buffer_sv, size+1);
+	  croak("size %" IVdf " negative in call to i_io_read2()", size);
+        if (size >= SSize_t_MAX)
+          croak("size %" IVdf " too large in i_io_read2()", size);
+	buffer_sv = newSV(size+1);
+	buffer = SvGROW(buffer_sv, (STRLEN)size+1);
         result = i_io_raw_read(ig, buffer, size);
         if (result >= 0) {
 	  SvCUR_set(buffer_sv, result);
@@ -1789,6 +1804,8 @@ i_io_read(ig, buffer_sv, size)
       PPCODE:
         if (size <= 0)
 	  croak("size negative in call to i_io_read()");
+        if (size >= SSize_t_MAX)
+          croak("size too large in call to i_io_read()");
         /* prevent an undefined value warning if they supplied an 
           undef buffer.
            Orginally conditional on !SvOK(), but this will prevent the
@@ -1798,7 +1815,7 @@ i_io_read(ig, buffer_sv, size)
        if (SvUTF8(buffer_sv))
           sv_utf8_downgrade(buffer_sv, FALSE);
 #endif
-	buffer = SvGROW(buffer_sv, size+1);
+	buffer = SvGROW(buffer_sv, (STRLEN)size+1);
         result = i_io_read(ig, buffer, size);
         if (result >= 0) {
 	  SvCUR_set(buffer_sv, result);
@@ -2353,16 +2370,15 @@ i_combine(src_av, channels_av = NULL)
 	i_img **imgs = NULL;
 	STRLEN in_count;
 	int *channels = NULL;
-	int i;
-	SV **psv;
 	IV tmp;
   CODE:
 	in_count = av_len(src_av) + 1;
 	if (in_count > 0) {
+          unsigned i;
 	  imgs = mymalloc(sizeof(i_img*) * in_count);
 	  channels = mymalloc(sizeof(int) * in_count);
 	  for (i = 0; i < in_count; ++i) {
-	    psv = av_fetch(src_av, i, 0);
+	    SV **psv = av_fetch(src_av, i, 0);
 	    if (!psv || !*psv || !sv_derived_from(*psv, "Imager::ImgRaw")) {
 	      myfree(imgs);
 	      myfree(channels);
@@ -2433,23 +2449,24 @@ i_matrix_transform(im, xsize, ysize, matrix_av, ...)
     double matrix[9];
     STRLEN len;
     SV *sv1;
-    int i;
+    int item_index;
+    unsigned coeff_index;
     i_color *backp = NULL;
     i_fcolor *fbackp = NULL;
   CODE:
     len=av_len(matrix_av)+1;
     if (len > 9)
       len = 9;
-    for (i = 0; i < len; ++i) {
-      sv1=(*(av_fetch(matrix_av,i,0)));
-      matrix[i] = SvNV(sv1);
+    for (coeff_index = 0; coeff_index < len; ++coeff_index) {
+      sv1=(*(av_fetch(matrix_av, coeff_index, 0)));
+      matrix[coeff_index] = SvNV(sv1);
     }
-    for (; i < 9; ++i)
-      matrix[i] = 0;
+    for (; coeff_index < 9; ++coeff_index)
+      matrix[coeff_index] = 0;
     /* extract the bg colors if any */
     /* yes, this is kind of strange */
-    for (i = 4; i < items; ++i) {
-      sv1 = ST(i);
+    for (item_index = 4; item_index < items; ++item_index) {
+      sv1 = ST(item_index);
       if (sv_derived_from(sv1, "Imager::Color")) {
         IV tmp = SvIV((SV*)SvRV(sv1));
 	backp = INT2PTR(i_color *, tmp);
@@ -3458,7 +3475,6 @@ i_img_to_pal(src, quant_hv)
         Imager::ImgRaw src
 	HV *quant_hv
       PREINIT:
-        HV *hv;
         i_quantize quant;
       CODE:
         memset(&quant, 0, sizeof(quant));
@@ -3483,21 +3499,21 @@ i_img_to_rgb(src)
 void
 i_img_make_palette(HV *quant_hv, ...)
       PREINIT:
-        size_t count = items - 1;
+        ssize_t count = items - 1;
 	i_quantize quant;
 	i_img **imgs = NULL;
-	ssize_t i;
+	ssize_t color_index;
       PPCODE:
         if (count <= 0)
-	  croak("Please supply at least one image (%d)", (int)count);
+	  croak("Please supply at least one image (%zd)", count);
 	imgs = malloc_temp(aTHX_ count * sizeof(i_img *));
-	for (i = 0; i < count; ++i) {
-	  SV *img_sv = ST(i + 1);
+	for (color_index = 0; color_index < count; ++color_index) {
+	  SV *img_sv = ST(color_index + 1);
 	  if (SvROK(img_sv) && sv_derived_from(img_sv, "Imager::ImgRaw")) {
-	    imgs[i] = INT2PTR(i_img *, SvIV((SV*)SvRV(img_sv)));
+	    imgs[color_index] = INT2PTR(i_img *, SvIV((SV*)SvRV(img_sv)));
 	  }
 	  else {
-	    croak("Image %d is not an image object", (int)i+1);
+	    croak("Image %zd is not an image object", color_index+1);
           }
 	}
         memset(&quant, 0, sizeof(quant));
@@ -3508,8 +3524,8 @@ i_img_make_palette(HV *quant_hv, ...)
 	}
 	i_quant_makemap(&quant, imgs, count);
 	EXTEND(SP, quant.mc_count);
-	for (i = 0; i < quant.mc_count; ++i) {
-	  SV *sv_c = make_i_color_sv_mortal(aTHX_ quant.mc_colors + i);
+	for (color_index = 0; color_index < quant.mc_count; ++color_index) {
+	  SV *sv_c = make_i_color_sv_mortal(aTHX_ quant.mc_colors + color_index);
 	  PUSHs(sv_c);
 	}
  	ip_cleanup_quant_opts(aTHX_ &quant);
@@ -3773,7 +3789,7 @@ i_psamp_bits(im, l, y, bits, channels, data_av, data_offset = 0, pixel_count = -
 	STRLEN data_count;
 	size_t data_used;
 	unsigned *data;
-	ptrdiff_t i;
+	size_t data_index;
       CODE:
 	i_clear_error();
 
@@ -3781,18 +3797,20 @@ i_psamp_bits(im, l, y, bits, channels, data_av, data_offset = 0, pixel_count = -
 	if (data_offset < 0) {
 	  croak("data_offset must be non-negative");
 	}
-	if (data_offset > data_count) {
+	if ((size_t)data_offset > data_count) {
 	  croak("data_offset greater than number of samples supplied");
         }
 	if (pixel_count == -1 || 
-	    data_offset + pixel_count * channels.count > data_count) {
+	    (size_t)data_offset + pixel_count * channels.count > data_count) {
 	  pixel_count = (data_count - data_offset) / channels.count;
 	}
 
 	data_used = pixel_count * channels.count;
 	data = mymalloc(sizeof(unsigned) * data_count);
-	for (i = 0; i < data_used; ++i)
-	  data[i] = SvUV(*av_fetch(data_av, data_offset + i, 0));
+	for (data_index = 0; data_index < data_used; ++data_index) {
+	  data[data_index] =
+              SvUV(*av_fetch(data_av, data_offset + data_index, 0));
+        }
 
 	RETVAL = i_psamp_bits(im, l, l + pixel_count, y, data, channels.channels, 
 	                      channels.count, bits);
@@ -3820,7 +3838,7 @@ i_psamp(im, x, y, channels, data, offset = 0, width = -1)
 	  XSRETURN_UNDEF;
 	}
 	if (offset > 0) {
-	  if (offset > data.count) {
+	  if ((size_t)offset > data.count) {
 	    i_push_error(0, "offset greater than number of samples supplied");
 	    XSRETURN_UNDEF;
 	  }
@@ -3828,8 +3846,16 @@ i_psamp(im, x, y, channels, data, offset = 0, width = -1)
 	  data.count -= offset;
 	}
 	if (width == -1 ||
-	    width * channels.count > data.count) {
+	    (size_t)width * channels.count > data.count) {
 	  width = data.count / channels.count;
+        }
+        if (x >= im->xsize) {
+          i_push_error(0, "Image position outside of image");
+          XSRETURN_UNDEF;
+        }
+        if (width <= 0) {
+          i_push_errorf(0, "i_psamp: width %zd negative or zero", width);
+          XSRETURN_UNDEF;
         }
 	r = x + width;
 	RETVAL = i_psamp(im, x, r, y, data.samples, channels.channels, channels.count);
@@ -3854,7 +3880,7 @@ i_psampf(im, x, y, channels, data, offset = 0, width = -1)
 	  XSRETURN_UNDEF;
 	}
 	if (offset > 0) {
-	  if (offset > data.count) {
+	  if ((size_t)offset > data.count) {
 	    i_push_error(0, "offset greater than number of samples supplied");
 	    XSRETURN_UNDEF;
 	  }
@@ -3862,7 +3888,7 @@ i_psampf(im, x, y, channels, data, offset = 0, width = -1)
 	  data.count -= offset;
 	}
 	if (width == -1 ||
-	    width * channels.count > data.count) {
+	    (size_t)width * channels.count > data.count) {
 	  width = data.count / channels.count;
         }
 	r = x + width;
@@ -3900,7 +3926,6 @@ i_plin(im, l, y, ...)
         i_img_dim     y
       PREINIT:
         i_color *work;
-        STRLEN i;
         STRLEN len;
         size_t count;
       CODE:
@@ -3915,12 +3940,13 @@ i_plin(im, l, y, ...)
             RETVAL = i_plin(im, l, l+count, y, work);
           }
 	  else {
+            I32 item_index;
             work = mymalloc(sizeof(i_color) * (items-3));
-            for (i=0; i < items-3; ++i) {
-              if (sv_isobject(ST(i+3)) 
-                  && sv_derived_from(ST(i+3), "Imager::Color")) {
-                IV tmp = SvIV((SV *)SvRV(ST(i+3)));
-                work[i] = *INT2PTR(i_color *, tmp);
+            for (item_index = 0; item_index < items-3; ++item_index) {
+              if (sv_isobject(ST(item_index+3))
+                  && sv_derived_from(ST(item_index+3), "Imager::Color")) {
+                IV tmp = SvIV((SV *)SvRV(ST(item_index+3)));
+                work[item_index] = *INT2PTR(i_color *, tmp);
               }
               else {
                 myfree(work);
@@ -4436,7 +4462,8 @@ i_int_hlines_CLONE_SKIP(cls)
 MODULE = Imager  PACKAGE = Imager::TrimColorList PREFIX=trim_color_list_
 
 Imager::TrimColorList
-trim_color_list__new(const char *cls)
+trim_color_list__new(cls)
+  C_ARGS:
 
 int
 trim_color_list_add_color(Imager::TrimColorList t, Imager::Color c1, Imager::Color c2)

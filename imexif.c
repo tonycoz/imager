@@ -66,10 +66,10 @@ static int type_sizes[] =
 typedef struct {
   int tag;
   int type;
-  int count;
-  int item_size;
-  int size;
-  int offset;
+  size_t count;
+  size_t item_size;
+  size_t size;
+  size_t offset;
 } ifd_entry;
 
 typedef struct {
@@ -223,7 +223,7 @@ typedef struct {
   unsigned long first_ifd_offset;
   
   /* size (in entries) and data */
-  int ifd_size; 
+  size_t ifd_size; 
   ifd_entry *ifd;
   unsigned long next_ifd;
 } imtiff;
@@ -391,7 +391,7 @@ static tag_value_map ifd0_values[] =
 static void
 save_ifd0_tags(i_img *im, imtiff *tiff, unsigned long *exif_ifd_offset,
 	       unsigned long *gps_ifd_offset) {
-  int tag_index;
+  size_t tag_index;
   int work;
   ifd_entry *entry;
 
@@ -678,7 +678,7 @@ static tag_map exif_num_arrays[] =
 
 static void
 save_exif_ifd_tags(i_img *im, imtiff *tiff) {
-  int i, tag_index;
+  size_t i, tag_index;
   ifd_entry *entry;
   char *user_comment;
   unsigned long maker_note_offset = 0;
@@ -811,6 +811,10 @@ documented by the manufacturers.
 
 static void
 process_maker_note(i_img *im, imtiff *tiff, unsigned long offset, size_t size) {
+  (void)im;
+  (void)tiff;
+  (void)offset;
+  (void)size;
   /* this will be added in a future release */
 }
 
@@ -906,7 +910,7 @@ tiff_load_ifd(imtiff *tiff, unsigned long offset) {
   unsigned count;
   int ifd_size;
   ifd_entry *entries = NULL;
-  int i;
+  unsigned i;
   unsigned long base;
 
   tiff_clear_ifd(tiff);
@@ -1011,13 +1015,13 @@ tiff_get_tag_double_array(imtiff *tiff, int index, double *result,
 			  int array_index) {
   ifd_entry *entry;
   unsigned long offset;
-  if (index < 0 || index >= tiff->ifd_size) {
+  if (index < 0 || (size_t)index >= tiff->ifd_size) {
     mm_log((3, "tiff_get_tag_double_array() tag index out of range"));
     return 0;
   }
   
   entry = tiff->ifd + index;
-  if (array_index < 0 || array_index >= entry->count) {
+  if (array_index < 0 || (size_t)array_index >= entry->count) {
     mm_log((3, "tiff_get_tag_double_array() array index out of range"));
     return 0;
   }
@@ -1076,7 +1080,7 @@ The value must have a count of 1.
 static int
 tiff_get_tag_double(imtiff *tiff, int index, double *result) {
   ifd_entry *entry;
-  if (index < 0 || index >= tiff->ifd_size) {
+  if (index < 0 || (size_t)index >= tiff->ifd_size) {
     mm_log((3, "tiff_get_tag_double() index out of range"));
     return 0;
   }
@@ -1108,13 +1112,13 @@ static int
 tiff_get_tag_int_array(imtiff *tiff, int index, int *result, int array_index) {
   ifd_entry *entry;
   unsigned long offset;
-  if (index < 0 || index >= tiff->ifd_size) {
+  if (index < 0 || (size_t)index >= tiff->ifd_size) {
     mm_log((3, "tiff_get_tag_int_array() tag index out of range"));
     return 0;
   }
   
   entry = tiff->ifd + index;
-  if (array_index < 0 || array_index >= entry->count) {
+  if (array_index < 0 || (size_t)array_index >= entry->count) {
     mm_log((3, "tiff_get_tag_int_array() array index out of range"));
     return 0;
   }
@@ -1165,7 +1169,7 @@ The value must have a count of 1.
 static int
 tiff_get_tag_int(imtiff *tiff, int index, int *result) {
   ifd_entry *entry;
-  if (index < 0 || index >= tiff->ifd_size) {
+  if (index < 0 || (size_t)index >= tiff->ifd_size) {
     mm_log((3, "tiff_get_tag_int() index out of range"));
     return 0;
   }
@@ -1199,7 +1203,8 @@ Scans the IFD for integer tags and sets them in the image,
 
 static void
 copy_int_tags(i_img *im, imtiff *tiff, tag_map *map, int map_count) {
-  int i, tag_index;
+  int i;
+  size_t tag_index;
   ifd_entry *entry;
 
   for (tag_index = 0, entry = tiff->ifd; 
@@ -1225,7 +1230,8 @@ Scans the IFD for rational tags and sets them in the image.
 
 static void
 copy_rat_tags(i_img *im, imtiff *tiff, tag_map *map, int map_count) {
-  int i, tag_index;
+  int i;
+  size_t tag_index;
   ifd_entry *entry;
 
   for (tag_index = 0, entry = tiff->ifd; 
@@ -1251,7 +1257,8 @@ Scans the IFD for string tags and sets them in the image.
 
 static void
 copy_string_tags(i_img *im, imtiff *tiff, tag_map *map, int map_count) {
-  int i, tag_index;
+  int i;
+  size_t tag_index;
   ifd_entry *entry;
 
   for (tag_index = 0, entry = tiff->ifd; 
@@ -1281,7 +1288,9 @@ Scans the IFD for arrays of numbers and sets them in the image.
 
 static void
 copy_num_array_tags(i_img *im, imtiff *tiff, tag_map *map, int map_count) {
-  int i, j, tag_index;
+  int i;
+  size_t j;
+  size_t tag_index;
   ifd_entry *entry;
 
   for (tag_index = 0, entry = tiff->ifd; 
@@ -1295,7 +1304,7 @@ copy_num_array_tags(i_img *im, imtiff *tiff, tag_map *map, int map_count) {
 	  *workstr = '\0';
 	  for (j = 0; j < entry->count; ++j) {
 	    if (!tiff_get_tag_double_array(tiff, tag_index, &value, j)) {
-	      mm_log((3, "unexpected failure from tiff_get_tag_double_array(..., %d, ..., %d)\n", tag_index, j));
+	      mm_log((3, "unexpected failure from tiff_get_tag_double_array(..., %zu, ..., %zu)\n", tag_index, j));
 	      return;
 	    }
 	    if (len >= sizeof(workstr) - 1) {
@@ -1324,7 +1333,7 @@ copy_num_array_tags(i_img *im, imtiff *tiff, tag_map *map, int map_count) {
 	  *workstr = '\0';
 	  for (j = 0; j < entry->count; ++j) {
 	    if (!tiff_get_tag_int_array(tiff, tag_index, &value, j)) {
-	      mm_log((3, "unexpected failure from tiff_get_tag_int_array(..., %d, ..., %d)\n", tag_index, j));
+	      mm_log((3, "unexpected failure from tiff_get_tag_int_array(..., %zu, ..., %zu)\n", tag_index, j));
 	      return;
 	    }
 	    if (len >= sizeof(workstr) - 1) {
@@ -1363,7 +1372,8 @@ then the same tage with a "_name" suffix here.
 
 static void
 copy_name_tags(i_img *im, imtiff *tiff, tag_value_map *map, int map_count) {
-  int i, j, tag_index;
+  int i, j;
+  size_t tag_index;
   ifd_entry *entry;
 
   for (tag_index = 0, entry = tiff->ifd; 

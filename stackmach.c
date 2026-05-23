@@ -5,6 +5,11 @@ i_op_run(int codes[], size_t code_size, double parms[], size_t parm_size) {
   double stack[100];
   double *sp = stack;
 
+  /* FIXME: add a function to validate the op codes agains the parms
+     list size, and that the stack doesn't overflow or underflow and
+     has only a single element at the end.
+  */
+
   while (code_size) {
     switch (*codes++) {
     case bcAdd:
@@ -28,8 +33,15 @@ i_op_run(int codes[], size_t code_size, double parms[], size_t parm_size) {
       break;
 
     case bcParm:
-      *sp++ = parms[*codes++];
-      --code_size;
+      if (code_size) {
+        size_t index = *codes++;
+        if (index >= parm_size)
+          return 0.0;
+        *sp++ = parms[index];
+        --code_size;
+      }
+      else
+        return 0.0;
       break;
 
     case bcSin:
