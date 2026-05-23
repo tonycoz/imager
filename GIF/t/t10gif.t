@@ -1,15 +1,5 @@
 #!perl -w
 
-=pod
-
-IF THIS TEST CRASHES
-
-Giflib/libungif have a long history of bugs, so if this script crashes
-and you aren't running version 4.1.4 of giflib or libungif then
-UPGRADE.
-
-=cut
-
 use strict;
 $|=1;
 use Test::More;
@@ -756,8 +746,10 @@ SKIP:
 ext_test(1, <<'CODE', 1, "CVE-2026-8454");
 use Imager;
 my $im = Imager->new(file => "testimg/cve-2026-8454.gif", page => 1);
-print "ok\n";
+print "ok #cve-2026-8454\n";
 CODE
+
+Imager->close_log;
 
 sub test_readgif_cb {
   my ($size) = @_;
@@ -805,6 +797,14 @@ sub _add_tags {
   }
 }
 
+# usage: ext_test($testnum, $code, $count, $name)
+#  $testnum - used to set a default $name
+#  $code - script code to run
+#  $count - number of TAP test results to expect and generate
+#  $name - script name
+# The name for ok($ok, $name) is extracted from the script output,
+# expecting /^ok \d* - (.*)/
+
 sub ext_test {
   my ($testnum, $code, $count, $name) = @_;
 
@@ -813,8 +813,8 @@ sub ext_test {
 
   # build our code
   my $script = "testout/$name.pl";
-  if (open SCRIPT, "> $script") {
-    print SCRIPT <<'PROLOG';
+  if (open my $script_fh, "> $script") {
+    print $script_fh <<'PROLOG';
 #!perl -w
 if (lc $^O eq 'mswin32') {
   # avoid the dialog box that window's pops up on a GPF
@@ -827,16 +827,20 @@ if (lc $^O eq 'mswin32') {
 }
 PROLOG
 
-    print SCRIPT $code;
-    close SCRIPT;
+    print $script_fh $code;
+    close $script_fh;
 
     my $perl = $^X;
     $perl = qq/"$perl"/ if $perl =~ / /;
 
-    print "# script: $script\n";
+    note "script: $script\n";
     my $cmd = "$perl -Mblib $script";
-    $cmd = "valgrind $cmd" if $ENV{IMAGER_VALGRIND};
-    print "# command: $cmd\n";
+    if ($ENV{IMAGER_VALGRIND}) {
+        my $valgrind = $ENV{IMAGER_VALGRIND};
+        $valgrind =~ /valgrind/ or $valgrind = "valgrind";
+        $cmd = "$valgrind $cmd";
+    }
+    note "command: $cmd\n";
 
     my $ok = 1;
     my @out = `$cmd`; # should work on DOS and Win32
@@ -855,7 +859,7 @@ PROLOG
       }
     }
     unless ($count == $found) {
-      print "# didn't see enough ok/not ok\n";
+      diag "didn't see enough ok/not ok\n";
       $ok = 0;
     }
     return $ok;
