@@ -673,7 +673,7 @@ int read_packed(io_glue *ig, const char *format, ...) {
     exit(1);
   }
 
-  if (i_io_read(ig, buffer, size) != size) {
+  if (i_io_read(ig, buffer, size) != (ssize_t)size) {
     return 0;
   }
 
@@ -1186,7 +1186,7 @@ write_packed(i_io_glue_t *ig, char const *format, ...) {
     ++format;
   }
 
-  if (i_io_write(ig, buffer, size) != size)
+  if (i_io_write(ig, buffer, size) != (ssize_t)size)
     return 0;
   
   return 1;
