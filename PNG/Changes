@@ -1,3 +1,11 @@
+Imager-File-PNG 1.003
+=====================
+
+ - fix various -Wall/-Wextra build warnings, including:
+   - some unused parameters, some removed, some cast to void
+   - fix various signed vs unsigned comparisons
+   - volatile some variables used around setjmp()
+
 Imager-File-PNG 1.002
 =====================
 

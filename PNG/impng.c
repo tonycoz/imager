@@ -30,7 +30,7 @@ static int
 write_direct16(png_structp png_ptr, png_infop info_ptr, i_img *im);
 
 static int
-write_paletted(png_structp png_ptr, png_infop info_ptr, i_img *im, int bits);
+write_paletted(png_structp png_ptr, png_infop info_ptr, i_img *im);
 
 static int
 write_bilevel(png_structp png_ptr, png_infop info_ptr, i_img *im);
@@ -82,7 +82,10 @@ static void
 wiol_read_data(png_structp png_ptr, png_bytep data, png_size_t length) {
   io_glue *ig = png_get_io_ptr(png_ptr);
   ssize_t rc = i_io_read(ig, data, length);
-  if (rc != length) png_error(png_ptr, "Read overflow error on an iolayer source.");
+  if (rc == -1)
+    png_error(png_ptr, "Read error on an iolayer source.");
+  else if (rc != (ssize_t)length)
+    png_error(png_ptr, "Read incomplete on an iolayer source.");
 }
 
 static void
@@ -90,7 +93,8 @@ wiol_write_data(png_structp png_ptr, png_bytep data, png_size_t length) {
   ssize_t rc;
   io_glue *ig = png_get_io_ptr(png_ptr);
   rc = i_io_write(ig, data, length);
-  if (rc != length) png_error(png_ptr, "Write error on an iolayer source.");
+  if (rc != (ssize_t)length)
+    png_error(png_ptr, "Write error on an iolayer source.");
 }
 
 static void
@@ -116,6 +120,7 @@ error_handler(png_structp png_ptr, png_const_charp msg) {
 */
 static void
 write_warn_handler(png_structp png_ptr, png_const_charp msg) {
+  (void)png_ptr; /* unused */
   mm_log((1, "PNG write warning '%s'\n", msg));
 
   i_push_error(0, msg);
@@ -130,7 +135,8 @@ i_writepng_wiol(i_img *im, io_glue *ig) {
   i_img_dim width,height;
   volatile int cspace,channels;
   int bits;
-  int is_bilevel = 0, zero_is_white;
+  volatile int is_bilevel = 0;
+  int zero_is_white;
 
   mm_log((1,"i_writepng(im %p ,ig %p)\n", im, ig));
 
@@ -262,7 +268,7 @@ i_writepng_wiol(i_img *im, io_glue *ig) {
     }
   }
   else if (im->type == i_palette_type) {
-    if (!write_paletted(png_ptr, info_ptr, im, bits)) {
+    if (!write_paletted(png_ptr, info_ptr, im)) {
       png_destroy_write_struct(&png_ptr, &info_ptr);
       return 0;
     }
@@ -424,6 +430,7 @@ read_direct8(png_structp png_ptr, png_infop info_ptr, int channels,
   i_img *im;
   unsigned char *line;
   unsigned char * volatile vline = NULL;
+  volatile int vchannels = channels;
 
   if (setjmp(png_jmpbuf(png_ptr))) {
     if (vim) i_img_destroy(vim);
@@ -442,14 +449,14 @@ read_direct8(png_structp png_ptr, png_infop info_ptr, int channels,
     png_set_expand(png_ptr);
     
   if (png_get_valid(png_ptr, info_ptr, PNG_INFO_tRNS)) {
-    channels++;
-    mm_log((1, "image has transparency, adding alpha: channels = %d\n", channels));
+    vchannels++;
+    mm_log((1, "image has transparency, adding alpha: channels = %d\n", vchannels));
     png_set_expand(png_ptr);
   }
   
   png_read_update_info(png_ptr, info_ptr);
   
-  im = vim = i_img_8_new(width,height,channels);
+  im = vim = i_img_8_new(width,height,vchannels);
   if (!im) {
     png_destroy_read_struct(&png_ptr, &info_ptr, (png_infopp)NULL);
     return NULL;
@@ -459,9 +466,9 @@ read_direct8(png_structp png_ptr, png_infop info_ptr, int channels,
   for (pass = 0; pass < number_passes; pass++) {
     for (y = 0; y < height; y++) {
       if (pass > 0)
-	i_gsamp(im, 0, width, y, line, NULL, channels);
+	i_gsamp(im, 0, width, y, line, NULL, vchannels);
       png_read_row(png_ptr,(png_bytep)line, NULL);
-      i_psamp(im, 0, width, y, line, NULL, channels);
+      i_psamp(im, 0, width, y, line, NULL, vchannels);
     }
   }
   myfree(line);
@@ -484,6 +491,7 @@ read_direct16(png_structp png_ptr, png_infop info_ptr, int channels,
   unsigned *bits_line;
   unsigned * volatile vbits_line = NULL;
   size_t row_bytes;
+  volatile int vchannels = channels;
 
   if (setjmp(png_jmpbuf(png_ptr))) {
     if (vim) i_img_destroy(vim);
@@ -498,13 +506,13 @@ read_direct16(png_structp png_ptr, png_infop info_ptr, int channels,
 
   if (png_get_valid(png_ptr, info_ptr, PNG_INFO_tRNS)) {
     channels++;
-    mm_log((1, "image has transparency, adding alpha: channels = %d\n", channels));
+    mm_log((1, "image has transparency, adding alpha: channels = %d\n", vchannels));
     png_set_expand(png_ptr);
   }
   
   png_read_update_info(png_ptr, info_ptr);
   
-  im = vim = i_img_16_new(width,height,channels);
+  im = vim = i_img_16_new(width,height,vchannels);
   if (!im) {
     png_destroy_read_struct(&png_ptr, &info_ptr, (png_infopp)NULL);
     return NULL;
@@ -513,20 +521,20 @@ read_direct16(png_structp png_ptr, png_infop info_ptr, int channels,
   row_bytes = png_get_rowbytes(png_ptr, info_ptr);
   line = vline = mymalloc(row_bytes);
   memset(line, 0, row_bytes);
-  bits_line = vbits_line = mymalloc(sizeof(unsigned) * width * channels);
+  bits_line = vbits_line = mymalloc(sizeof(unsigned) * width * vchannels);
   for (pass = 0; pass < number_passes; pass++) {
     for (y = 0; y < height; y++) {
       if (pass > 0) {
-	i_gsamp_bits(im, 0, width, y, bits_line, NULL, channels, 16);
-	for (x = 0; x < width * channels; ++x) {
+	i_gsamp_bits(im, 0, width, y, bits_line, NULL, vchannels, 16);
+	for (x = 0; x < width * vchannels; ++x) {
 	  line[x*2] = bits_line[x] >> 8;
 	  line[x*2+1] = bits_line[x] & 0xff;
 	}
       }
       png_read_row(png_ptr,(png_bytep)line, NULL);
-      for (x = 0; x < width * channels; ++x)
+      for (x = 0; x < width * vchannels; ++x)
 	bits_line[x] = (line[x*2] << 8) + line[x*2+1];
-      i_psamp_bits(im, 0, width, y, bits_line, NULL, channels, 16);
+      i_psamp_bits(im, 0, width, y, bits_line, NULL, vchannels, 16);
     }
   }
   myfree(line);
@@ -622,6 +630,7 @@ read_paletted(png_structp png_ptr, png_infop info_ptr, int channels,
   png_bytep png_pal_trans;
   png_color_16p png_color_trans;
   int num_pal_trans;
+  volatile int vchannels = channels;
 
   if (setjmp(png_jmpbuf(png_ptr))) {
     if (vim) i_img_destroy(vim);
@@ -646,7 +655,7 @@ read_paletted(png_structp png_ptr, png_infop info_ptr, int channels,
 
   if (png_get_tRNS(png_ptr, info_ptr, &png_pal_trans, &num_pal_trans,
 		   &png_color_trans)) {
-    channels++;
+    vchannels++;
   }
   else {
     num_pal_trans = 0;
@@ -654,7 +663,7 @@ read_paletted(png_structp png_ptr, png_infop info_ptr, int channels,
   
   png_read_update_info(png_ptr, info_ptr);
   
-  im = vim = i_img_pal_new(width, height, channels, 256);
+  im = vim = i_img_pal_new(width, height, vchannels, 256);
   if (!im) {
     png_destroy_read_struct(&png_ptr, &info_ptr, (png_infopp)NULL);
     return NULL;
@@ -1244,7 +1253,7 @@ write_direct16(png_structp png_ptr, png_infop info_ptr, i_img *im) {
 }
 
 static int
-write_paletted(png_structp png_ptr, png_infop info_ptr, i_img *im, int bits) {
+write_paletted(png_structp png_ptr, png_infop info_ptr, i_img *im) {
   unsigned char *data, *volatile vdata = NULL;
   i_img_dim y;
   unsigned char pal_map[256];
