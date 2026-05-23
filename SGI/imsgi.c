@@ -502,7 +502,7 @@ read_rgb_8_rle(i_img *img, io_glue *ig, rgb_header const *header) {
 
   mm_log((1, "maxlen for an rle buffer: %lu\n", max_length));
 
-  if (max_length > (img->xsize + 1) * 2) {
+  if (max_length > (size_t)((img->xsize + 1) * 2)) {
     i_push_errorf(0, "SGI image: ridiculous RLE line length %lu", max_length);
     goto ErrorReturn;
   }
@@ -520,7 +520,7 @@ read_rgb_8_rle(i_img *img, io_glue *ig, rgb_header const *header) {
       int pixels_left = width;
       i_sample_t sample;
       
-      if (i_io_seek(ig, start_tab[ci], SEEK_SET) != start_tab[ci]) {
+      if (i_io_seek(ig, start_tab[ci], SEEK_SET) != (ssize_t)start_tab[ci]) {
 	i_push_error(0, "SGI image: cannot seek to RLE data");
 	goto ErrorReturn;
       }
@@ -716,7 +716,7 @@ read_rgb_16_rle(i_img *img, io_glue *ig, rgb_header const *header) {
 
   mm_log((1, "maxlen for an rle buffer: %lu\n", max_length));
 
-  if (max_length > (img->xsize * 2 + 1) * 2) {
+  if (max_length > (size_t)((img->xsize * 2 + 1) * 2)) {
     i_push_errorf(0, "SGI image: ridiculous RLE line length %lu", max_length);
     goto ErrorReturn;
   }
@@ -738,7 +738,7 @@ read_rgb_16_rle(i_img *img, io_glue *ig, rgb_header const *header) {
 	i_push_error(0, "SGI image: invalid RLE length value for BPC=2");
 	goto ErrorReturn;
       }
-      if (i_io_seek(ig, start_tab[ci], SEEK_SET) != start_tab[ci]) {
+      if (i_io_seek(ig, start_tab[ci], SEEK_SET) != (ssize_t)start_tab[ci]) {
 	i_push_error(0, "SGI image: cannot seek to RLE data");
 	goto ErrorReturn;
       }
@@ -945,7 +945,7 @@ write_sgi_8_rle(i_img *img, io_glue *ig) {
   i_sample_t *inp;
   size_t comp_size;
 
-  if (offsets_size / 2 / 4 / img->channels != img->ysize) {
+  if (offsets_size / 2 / 4 / img->channels != (size_t)img->ysize) {
     i_push_error(0, "SGI image: integer overflow calculating allocation size");
     return 0;
   }
@@ -954,7 +954,7 @@ write_sgi_8_rle(i_img *img, io_glue *ig) {
   comp_buf = mymalloc((width + 1) * 2);  /* checked 31Jul07 TonyC */
   offsets = mymalloc(offsets_size);
   memset(offsets, 0, offsets_size);
-  if (i_io_write(ig, offsets, offsets_size) != offsets_size) {
+  if (i_io_write(ig, offsets, offsets_size) != (ssize_t)offsets_size) {
     i_push_error(errno, "SGI image: error writing offsets/lengths");
     goto Error;
   }
@@ -1014,7 +1014,7 @@ write_sgi_8_rle(i_img *img, io_glue *ig) {
       store_32(lengths + offset_pos, comp_size);
       offset_pos += 4;
       current_offset += comp_size;
-      if (i_io_write(ig, comp_buf, comp_size) != comp_size) {
+      if (i_io_write(ig, comp_buf, comp_size) != (ssize_t)comp_size) {
 	i_push_error(errno, "SGI image: error writing RLE data");
 	goto Error;
       }
@@ -1027,7 +1027,7 @@ write_sgi_8_rle(i_img *img, io_glue *ig) {
     goto Error;
   }
 
-  if (i_io_write(ig, offsets, offsets_size) != offsets_size) {
+  if (i_io_write(ig, offsets, offsets_size) != (ssize_t)offsets_size) {
     i_push_error(errno, "SGI image: cannot write final RLE table");
     goto Error;
   }
@@ -1104,7 +1104,7 @@ write_sgi_16_rle(i_img *img, io_glue *ig) {
   size_t comp_size;
   i_img_dim x;
 
-  if (offsets_size / 4 / 2 / img->channels != img->ysize) {
+  if (offsets_size / 4 / 2 / img->channels != (size_t)img->ysize) {
     i_push_error(0, "SGI image: integer overflow calculating allocation size");
     return 0;
   }
@@ -1114,7 +1114,7 @@ write_sgi_16_rle(i_img *img, io_glue *ig) {
   comp_buf = mymalloc((width + 1) * 2 * 2);  /* checked 31Jul07 TonyC */
   offsets = mymalloc(offsets_size);
   memset(offsets, 0, offsets_size);
-  if (i_io_write(ig, offsets, offsets_size) != offsets_size) {
+  if (i_io_write(ig, offsets, offsets_size) != (ssize_t)offsets_size) {
     i_push_error(errno, "SGI image: error writing offsets/lengths");
     goto Error;
   }
@@ -1180,7 +1180,7 @@ write_sgi_16_rle(i_img *img, io_glue *ig) {
       store_32(lengths + offset_pos, comp_size);
       offset_pos += 4;
       current_offset += comp_size;
-      if (i_io_write(ig, comp_buf, comp_size) != comp_size) {
+      if (i_io_write(ig, comp_buf, comp_size) != (ssize_t)comp_size) {
 	i_push_error(errno, "SGI image: error writing RLE data");
 	goto Error;
       }
@@ -1193,7 +1193,7 @@ write_sgi_16_rle(i_img *img, io_glue *ig) {
     goto Error;
   }
 
-  if (i_io_write(ig, offsets, offsets_size) != offsets_size) {
+  if (i_io_write(ig, offsets, offsets_size) != (ssize_t)offsets_size) {
     i_push_error(errno, "SGI image: cannot write final RLE table");
     goto Error;
   }
