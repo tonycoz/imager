@@ -5,3 +5,10 @@
    obj:/usr/lib/x86_64-linux-gnu/perl-base/auto/Cwd/Cwd.so
    fun:Perl_pp_entersub
 }
+{
+   "we don't clean up mutexes"
+    Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:malloc
+   fun:i_mutex_new  
+}
