@@ -1,3 +1,12 @@
+Imager-File-TIFF 1.004
+======================
+
+ - warning fix pass, testing with -Wall -Wextra -Werror:
+   - fix various signed vs unsigned comparisons, including using
+     EXTEND() with an unsigned count
+   - (void) an unused parameter in a callback
+   - remove code at an unused label
+
 Imager-File-TIFF 1.003
 ======================
 

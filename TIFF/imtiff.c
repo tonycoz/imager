@@ -266,6 +266,8 @@ warn_handler_extr(TIFF *tif, void *user_data, const char *module,
                    const char *fmt, va_list ap) {
   tiffio_context_t *c = (tiffio_context_t *)user_data;
 
+  (void)tif;
+
   do_warn_handler(c, module, fmt, ap);
 
   return 1;
@@ -879,11 +881,6 @@ i_readtiff_multi_wiol(io_glue *ig, int *count) {
   do_tiff_close(&ts);
 
   return results;
-
- fail:
-
-  do_tiff_close(&ts);
-  return NULL;
 }
 
 undef_int
