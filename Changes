@@ -8,10 +8,23 @@ Imager release history.  Older releases can be found in Changes.old
    it.)  Revealed by a signed comparison warning.
 
  - warning fix pass, testing with -Wall -Wextra -Werror:
+   - base Imager:
+     - fix many signed vs unsigned comparisons
+     - some mixed signed/unsigned result ternary expressions
+     - (void) cast some unused parameters
+     - remove some unused parameters
+     - add missing initializers to some structure initializations
+     - restructure fill object initialization to only brace initialize
+       the base structure
+     - add /* FALLTHROUGH */ comments to a few switch statements to
+       suppress some switch case fall through warnings (which
+       were deliberate)
    - FT2:
      - XS EXTEND() likes a signed number of entries
      - unused variable in i_ft2_glyph_name()
      - fix various signed vs unsigned comparisons
+   - DynTest: (old API test)
+     - (void) cast an unused argument in a callback
    - Flines: (demo XS API usage)
      - fix signed vs unsigned comparisons
    - ICO: (Windows icon/cursor images)
@@ -20,6 +33,17 @@ Imager release history.  Older releases can be found in Changes.old
      - "(void)" an unused callback argument
      - volatile some variables used around setjmp()
      - fix various signed vs unsigned comparison warnings
+   - PNG:
+     - some unused parameters, some removed, some cast to void
+     - fix various signed vs unsigned comparisons
+     - volatile some variables used around setjmp()
+   - SGI:
+     - fix various signed vs unsigned comparisons
+   - TIFF:
+     - fix various signed vs unsigned comparisons, including using
+       EXTEND() with an unsigned count
+     - (void) an unused parameter in a callback
+     - remove code at an unused label
 
 Imager 1.031 - 15 May 2026
 ============
