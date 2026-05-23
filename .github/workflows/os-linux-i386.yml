@@ -22,7 +22,7 @@ jobs:
         run: "git config --global --add safe.directory /__w/imager/imager"
       - name: configure
         run: |
-          perl Makefile.PL
+          perl Makefile.PL OPTIMIZE="-Wall -Wextra -Werror -O2 -g"
       - name: build
         run: |
             make -j2
