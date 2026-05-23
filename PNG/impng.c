@@ -142,7 +142,8 @@ i_writepng_wiol(i_img *im, io_glue *ig) {
 
   i_clear_error();
 
-  if (im->xsize > PNG_UINT_31_MAX || im->ysize > PNG_UINT_31_MAX) {
+  if ((size_t)im->xsize > PNG_UINT_31_MAX
+      || (size_t)im->ysize > PNG_UINT_31_MAX) {
     i_push_error(0, "image too large for PNG");
     return 0;
   }
