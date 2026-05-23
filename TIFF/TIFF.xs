@@ -165,8 +165,8 @@ i_tiff_codecs(class)
     PPCODE:
       size_t count;
       i_tiff_codec *codecs = i_tiff_get_codecs(&count);
-      EXTEND(SP, count);
-      for (int i = 0; i < count; ++i) {
+      EXTEND(SP, (ssize_t)count);
+      for (unsigned i = 0; i < count; ++i) {
         i_tiff_codec *codec = codecs + i;
         HV *hv = newHV();
         hv_stores(hv, "description", newSVpvn(codec->description, strlen(codec->description)));
