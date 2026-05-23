@@ -150,15 +150,24 @@ MODULE = Imager::File::TIFF  PACKAGE = Imager::File::TIFF  PREFIX = i_tiff_
 
 const char *
 i_tiff_builddate(...)
-  C_ARGS:
+  CODE:
+    (void)items; /* the ... args means items is unused */
+    RETVAL = i_tiff_builddate();
+  OUTPUT: RETVAL
 
 const char *
 i_tiff_buildversion(...)
-  C_ARGS:
+  CODE:
+    (void)items; /* the ... args means items is unused */
+    RETVAL = i_tiff_buildversion();
+  OUTPUT: RETVAL
 
 const char *
 i_tiff_libversion(...)
-  C_ARGS:
+  CODE:
+    (void)items; /* the ... args means items is unused */
+    RETVAL = i_tiff_libversion();
+  OUTPUT: RETVAL
 
 void
 i_tiff_codecs(class)

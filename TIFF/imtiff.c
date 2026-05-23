@@ -896,7 +896,7 @@ i_writetiff_low_faxable(TIFF *tif, i_img *im, int fine) {
   width    = im->xsize;
   height   = im->ysize;
 
-  if (width != im->xsize || height != im->ysize) {
+  if ((i_img_dim)width != im->xsize || (i_img_dim)height != im->ysize) {
     i_push_error(0, "image too large for TIFF");
     return 0;
   }
@@ -1059,8 +1059,8 @@ set_base_tags(TIFF *tif, i_img *im, tf_uint16 compress, tf_uint16 photometric,
   int got_xres, got_yres;
   int aspect_only;
 
-  if ((tf_uint32)im->xsize != im->xsize ||
-      (tf_uint32)im->ysize != im->ysize) {
+  if ((tf_uint32)im->xsize != (i_img_dim_u)im->xsize ||
+      (tf_uint32)im->ysize != (i_img_dim_u)im->ysize) {
     i_push_error(0, "image too large for TIFF");
     return 0;
   }
@@ -1504,7 +1504,7 @@ i_writetiff_low(TIFF *tif, i_img *im) {
   height   = im->ysize;
   channels = im->channels;
 
-  if (width != im->xsize || height != im->ysize) {
+  if ((i_img_dim)width != im->xsize || (i_img_dim)height != im->ysize) {
     i_push_error(0, "image too large for TIFF");
     return 0;
   }
@@ -1832,10 +1832,12 @@ static i_img *
 read_one_rgb_lines(TIFF *tif, i_img_dim width, i_img_dim height, int allow_incomplete) {
   i_img *im;
   tf_uint32* raster = NULL;
-  tf_uint32 rowsperstrip, row;
+  tf_uint32 rowsperstrip;
+  i_img_dim_u row;
   i_color *line_buf;
   int alpha_chan;
   int rc;
+  i_img_dim_u uheight = height;
 
   im = make_rgb(tif, width, height, &alpha_chan);
   if (!im)
@@ -1858,7 +1860,7 @@ read_one_rgb_lines(TIFF *tif, i_img_dim width, i_img_dim height, int allow_incom
 
   line_buf = mymalloc(sizeof(i_color) * width);
   
-  for( row = 0; row < height; row += rowsperstrip ) {
+  for( row = 0; row < uheight; row += rowsperstrip ) {
     tf_uint32 newrows, i_row;
     
     if (!TIFFReadRGBAStrip(tif, row, raster)) {
@@ -1875,14 +1877,14 @@ read_one_rgb_lines(TIFF *tif, i_img_dim width, i_img_dim height, int allow_incom
       }
     }
     
-    newrows = (row+rowsperstrip > height) ? height-row : rowsperstrip;
-    mm_log((1, "newrows=%d\n", newrows));
+    newrows = (row+rowsperstrip > uheight) ? uheight-row : rowsperstrip;
+    mm_log((1, "newrows=%u\n", (unsigned)newrows));
     
     for( i_row = 0; i_row < newrows; i_row++ ) { 
       tf_uint32 x;
       i_color *outp = line_buf;
 
-      for(x = 0; x<width; x++) {
+      for(x = 0; x < (i_img_dim_u)width; x++) {
 	tf_uint32 temp = raster[x+width*(newrows-i_row-1)];
 	outp->rgba.r = TIFFGetR(temp);
 	outp->rgba.g = TIFFGetG(temp);
@@ -1922,6 +1924,8 @@ read_one_rgb_tiled(TIFF *tif, i_img_dim width, i_img_dim height, int allow_incom
   unsigned long pixels = 0;
   i_color *line;
   int alpha_chan;
+  i_img_dim_u uheight = height;
+  i_img_dim_u uwidth = width;
   
   im = make_rgb(tif, width, height, &alpha_chan);
   if (!im)
@@ -1939,14 +1943,14 @@ read_one_rgb_tiled(TIFF *tif, i_img_dim width, i_img_dim height, int allow_incom
   }
   line = mymalloc(tile_width * sizeof(i_color));
   
-  for( row = 0; row < height; row += tile_height ) {
-    for( col = 0; col < width; col += tile_width ) {
+  for( row = 0; row < (i_img_dim_u)height; row += tile_height ) {
+    for( col = 0; col < (i_img_dim_u)width; col += tile_width ) {
       
       /* Read the tile into an RGBA array */
       if (TIFFReadRGBATileExt(tif, col, row, raster, 1)) {
 	tf_uint32 i_row, x;
-	tf_uint32 newrows = (row+tile_height > height) ? height-row : tile_height;
-	tf_uint32 newcols = (col+tile_width  > width ) ? width-col  : tile_width;
+	tf_uint32 newrows = (row+tile_height > uheight) ? height-row : tile_height;
+	tf_uint32 newcols = (col+tile_width  > uwidth ) ? width-col  : tile_width;
 
 	mm_log((1, "i_readtiff_wiol: tile(%d, %d) newcols=%d newrows=%d\n", col, row, newcols, newrows));
 	for( i_row = 0; i_row < newrows; i_row++ ) {
