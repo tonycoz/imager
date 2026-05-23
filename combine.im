@@ -21,7 +21,7 @@ Combines channels from the input images into an output image.
 i_img *
 i_combine(i_img **imgs, const int *channels, int in_count) {
   i_img *out = NULL;
-  int maxbits = 0;
+  i_img_bits_t maxbits = 0;
   i_img *maximg = NULL;
   int i;
   i_img_dim width, height;

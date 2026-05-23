@@ -511,6 +511,7 @@ static int parse_color(char *data, char **end, i_color *value) {
     value->channel[i] = n[i];
   if (count < 4)
     value->channel[3] = 255;
+  *end = data;
 
   return 1;
 }
@@ -614,7 +615,8 @@ int i_tags_get_string(i_img_tags *tags, char const *name, int code,
   }
   entry = tags->tags+index;
   if (entry->data) {
-    size_t cpsize = value_size < entry->size ? value_size : entry->size;
+    size_t cpsize = value_size < (size_t)entry->size
+      ? value_size : (size_t)entry->size;
     memcpy(value, entry->data, cpsize);
     if (cpsize == value_size)
       --cpsize;

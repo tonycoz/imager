@@ -80,7 +80,7 @@ i_scale_mixing(i_img *src, i_img_dim x_out, i_img_dim y_out) {
   y_scale = y_out / (double)src->ysize;
 
   accum_row_bytes = sizeof(i_fcolor) * src->xsize;
-  if (accum_row_bytes / sizeof(i_fcolor) != src->xsize) {
+  if (accum_row_bytes / sizeof(i_fcolor) != (size_t)src->xsize) {
     i_push_error(0, "integer overflow allocating accumulator row buffer");
     return NULL;
   }
@@ -97,14 +97,14 @@ i_scale_mixing(i_img *src, i_img_dim x_out, i_img_dim y_out) {
   size_t in_row_bytes, out_row_bytes;
 
   in_row_bytes = sizeof(IM_COLOR) * src->xsize;
-  if (in_row_bytes / sizeof(IM_COLOR) != src->xsize) {
+  if (in_row_bytes / sizeof(IM_COLOR) != (size_t)src->xsize) {
     myfree(accum_row);
     i_img_destroy(result);
     i_push_error(0, "integer overflow allocating input row buffer");
     return NULL;
   }
   out_row_bytes = sizeof(IM_COLOR) * x_out;
-  if (out_row_bytes / sizeof(IM_COLOR) != x_out) {
+  if (out_row_bytes / sizeof(IM_COLOR) != (size_t)x_out) {
     myfree(accum_row);
     i_img_destroy(result);
     i_push_error(0, "integer overflow allocating output row buffer");

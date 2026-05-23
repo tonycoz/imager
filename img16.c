@@ -91,7 +91,10 @@ static i_img IIM_base_16bit_direct =
   i_psamp_bits_d16,
 
   i_psamp_d16,
-  i_psampf_d16
+  i_psampf_d16,
+
+  NULL,
+  NULL
 };
 
 /* it's possible some platforms won't have a 16-bit integer type,
@@ -182,7 +185,7 @@ im_img_16_new(pIMCTX, i_img_dim x, i_img_dim y, int ch) {
     return NULL;
   }
   bytes =  x * y * ch * 2;
-  if (bytes / y / ch / 2 != x) {
+  if (bytes / y / ch / 2 != (size_t)x) {
     im_push_errorf(aIMCTX, 0, "integer overflow calculating image allocation");
     return NULL;
   }

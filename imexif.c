@@ -826,6 +826,10 @@ documented by the manufacturers.
 
 static void
 process_maker_note(i_img *im, imtiff *tiff, unsigned long offset, size_t size) {
+  (void)im;
+  (void)tiff;
+  (void)offset;
+  (void)size;
   /* this will be added in a future release */
   (void)im;
   (void)tiff;
@@ -1317,7 +1321,7 @@ copy_num_array_tags(i_img *im, imtiff *tiff, tag_map *map, unsigned map_count) {
             *workstr = '\0';
             for (j = 0; j < entry->count; ++j) {
               if (!tiff_get_tag_double_array(tiff, tag_index, &value, j)) {
-                mm_log((3, "unexpected failure from tiff_get_tag_double_array(..., %d, ..., %d)\n", tag_index, j));
+                mm_log((3, "unexpected failure from tiff_get_tag_double_array(..., %u, ..., %u)\n", tag_index, j));
                 return;
               }
               if (len >= sizeof(workstr) - 1) {
@@ -1346,7 +1350,7 @@ copy_num_array_tags(i_img *im, imtiff *tiff, tag_map *map, unsigned map_count) {
             *workstr = '\0';
             for (j = 0; j < entry->count; ++j) {
               if (!tiff_get_tag_int_array(tiff, tag_index, &value, j)) {
-                mm_log((3, "unexpected failure from tiff_get_tag_int_array(..., %d, ..., %d)\n", tag_index, j));
+                mm_log((3, "unexpected failure from tiff_get_tag_int_array(..., %u, ..., %u)\n", tag_index, j));
                 return;
               }
               if (len >= sizeof(workstr) - 1) {

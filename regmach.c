@@ -179,6 +179,13 @@ i_color i_rm_run(struct rm_op codes[], size_t code_count,
   struct rm_op *codes_base = codes;
   size_t count_base = code_count;
 
+  /* FIXME: add a separate function to validate the code block against
+     the number of registers and images
+  */
+  (void)n_regs_count;
+  (void)c_regs_count;
+  (void)image_count;
+
   DBG(("rm_run(%p, %d)\n", codes, code_count));
   while (code_count) {
     DBG((" rm_code %d\n", codes->code));

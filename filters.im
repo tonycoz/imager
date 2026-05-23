@@ -658,7 +658,6 @@ Do autolevels, but monochromatically.
 
 void
 i_autolevels_mono(i_img *im, float lsat, float usat) {
-  i_color val;
   i_img_dim i, x, y, hist[256];
   i_img_dim sum_lum, min_lum, max_lum;
   i_img_dim upper_accum, lower_accum;
@@ -1248,13 +1247,13 @@ i_nearest_color(i_img *im, int num, i_img_dim *xo, i_img_dim *yo, i_color *oval,
     return 0;
   }
 
-  tval_bytes = sizeof(float)*num*im->channels;
-  if (tval_bytes / num != sizeof(float) * im->channels) {
+  tval_bytes = sizeof(float) * (size_t)num * (size_t)im->channels;
+  if (tval_bytes / (size_t)num != sizeof(float) * (size_t)im->channels) {
     i_push_error(0, "integer overflow calculating memory allocation");
     return 0;
   }
-  ival_bytes  = sizeof(i_color) * num;
-  if (ival_bytes / sizeof(i_color) != num) {
+  ival_bytes  = sizeof(i_color) * (size_t)num;
+  if (ival_bytes / sizeof(i_color) != (size_t)num) {
     i_push_error(0, "integer overflow calculating memory allocation");
     return 0;
   }
@@ -1684,7 +1683,7 @@ struct fount_state {
 static void
 fount_init_state(struct fount_state *state, double xa, double ya, 
                  double xb, double yb, i_fountain_type type, 
-                 i_fountain_repeat repeat, int combine, int super_sample, 
+                 i_fountain_repeat repeat, int super_sample, 
                  double ssample_param, int count, i_fountain_seg *segs);
 
 static void
@@ -1815,8 +1814,8 @@ i_fountain(i_img *im, double xa, double ya, double xb, double yb,
 
   /* i_fountain() allocates floating colors even for 8-bit images,
      so we need to do this check */
-  line_bytes = sizeof(i_fcolor) * im->xsize;
-  if (line_bytes / sizeof(i_fcolor) != im->xsize) {
+  line_bytes = sizeof(i_fcolor) * (size_t)im->xsize;
+  if (line_bytes / sizeof(i_fcolor) != (size_t)im->xsize) {
     i_push_error(0, "integer overflow calculating memory allocation");
     return 0;
   }
@@ -1828,7 +1827,7 @@ i_fountain(i_img *im, double xa, double ya, double xb, double yb,
     work = mymalloc(line_bytes); /* checked 17feb2005 tonyc */
   }
 
-  fount_init_state(&state, xa, ya, xb, yb, type, repeat, combine, 
+  fount_init_state(&state, xa, ya, xb, yb, type, repeat,
                    super_sample, ssample_param, count, segs);
 
   for (y = 0; y < im->ysize; ++y) {
@@ -1869,16 +1868,15 @@ fill_fountf(i_fill_t *fill, i_img_dim x, i_img_dim y, i_img_dim width, int chann
 static void
 fount_fill_destroy(i_fill_t *fill);
 
-static i_fill_fountain_t
+static i_fill_t
 fount_fill_proto =
   {
-    {
-      NULL,
-      fill_fountf,
-      fount_fill_destroy
-    }
+    NULL,
+    fill_fountf,
+    fount_fill_destroy,
+    NULL,
+    NULL
   };
-
 
 /*
 =item i_new_fill_fount(C<xa>, C<ya>, C<xb>, C<yb>, C<type>, C<repeat>, C<combine>, C<super_sample>, C<ssample_param>, C<count>, C<segs>)
@@ -1899,15 +1897,15 @@ i_new_fill_fount(double xa, double ya, double xb, double yb,
                  int combine, int super_sample, double ssample_param, 
                  int count, i_fountain_seg *segs) {
   i_fill_fountain_t *fill = mymalloc(sizeof(i_fill_fountain_t));
-  
-  *fill = fount_fill_proto;
+  memset(fill, 0, sizeof(*fill));
+  fill->base = fount_fill_proto;
   if (combine)
     i_get_combine(combine, &fill->base.combine, &fill->base.combinef);
   else {
     fill->base.combine = NULL;
     fill->base.combinef = NULL;
   }
-  fount_init_state(&fill->state, xa, ya, xb, yb, type, repeat, combine, 
+  fount_init_state(&fill->state, xa, ya, xb, yb, type, repeat,
                    super_sample, ssample_param, count, segs);
 
   return &fill->base;
@@ -1930,7 +1928,7 @@ Used by both the fountain fill filter and the fountain fill.
 static void
 fount_init_state(struct fount_state *state, double xa, double ya, 
                  double xb, double yb, i_fountain_type type, 
-                 i_fountain_repeat repeat, int combine, int super_sample, 
+                 i_fountain_repeat repeat, int super_sample, 
                  double ssample_param, int count, i_fountain_seg *segs) {
   int i, j;
   size_t bytes;
@@ -1979,6 +1977,7 @@ fount_init_state(struct fount_state *state, double xa, double ya,
   switch (type) {
   default:
     type = i_ft_linear; /* make the invalid value valid */
+    /* FALLTHROUGH */
   case i_ft_linear:
   case i_ft_bilinear:
     state->lC = ya * ya - ya * yb + xa * xa - xa * xb;
@@ -2500,7 +2499,9 @@ static void
 fill_fountf(i_fill_t *fill, i_img_dim x, i_img_dim y, i_img_dim width,
 	    int channels, i_fcolor *data) {
   i_fill_fountain_t *f = (i_fill_fountain_t *)fill;
-  
+
+  (void)channels;
+
   while (width--) {
     i_fcolor c;
     int got_one;

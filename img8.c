@@ -61,7 +61,10 @@ static i_img IIM_base_8bit_direct =
   NULL, /* i_f_psamp_bits */
 
   i_psamp_d,
-  i_psampf_d
+  i_psampf_d,
+
+  NULL,
+  NULL
 };
 
 /*static void set_8bit_direct(i_img *im) {
@@ -160,7 +163,7 @@ im_img_empty_ch(pIMCTX, i_img *im,i_img_dim x,i_img_dim y,int ch) {
   }
   /* check this multiplication doesn't overflow */
   bytes = x*y*ch;
-  if (bytes / y / ch != x) {
+  if (bytes / y / ch != (size_t)x) {
     im_push_errorf(aIMCTX, 0, "integer overflow calculating image allocation");
     return NULL;
   }

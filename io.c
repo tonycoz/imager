@@ -245,6 +245,8 @@ mymalloc(size_t size) {
 
 void *
 mymalloc_file_line(size_t size, char *file, int line) {
+  (void)file;
+  (void)line;
   return mymalloc(size);
 }
 
@@ -256,6 +258,8 @@ myfree(void *p) {
 
 void
 myfree_file_line(void *p, char *file, int line) {
+  (void)file;
+  (void)line;
   myfree(p);
 }
 
@@ -273,7 +277,9 @@ myrealloc(void *block, size_t size) {
 }
 
 void *
-myrealloc_file_line(void *block, size_t newsize, char *file, int size) {
+myrealloc_file_line(void *block, size_t newsize, char *file, int line) {
+  (void)file;
+  (void)line;
   return myrealloc(block, newsize);
 }
 
@@ -367,7 +373,9 @@ Returns ~0UL on failure.
 unsigned long 
 i_utf8_advance(char const **p, size_t *len) {
   unsigned char c;
-  int i, ci, clen = 0;
+  unsigned i;
+  int ci;
+  unsigned clen = 0;
   unsigned char codes[3];
   if (*len == 0)
     return ~0UL;

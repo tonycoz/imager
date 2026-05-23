@@ -370,7 +370,8 @@ int write_bmphead(io_glue *ig, i_img *im, int bit_count, int data_size) {
   int offset = FILEHEAD_SIZE + INFOHEAD_SIZE;
   dIMCTXim(im);
 
-  if (im->xsize > SIGNMAX32 || im->ysize > SIGNMAX32) {
+  if ((i_img_dim_u)im->xsize > SIGNMAX32
+      || (i_img_dim_u)im->ysize > SIGNMAX32) {
     i_push_error(0, "image too large to write to BMP");
     return 0;
   }
@@ -1451,7 +1452,7 @@ read_direct_bmp(io_glue *ig, int xsize, int ysize, int bit_count,
   /* I wasn't able to make this overflow in testing, but better to be
      safe */
   bytes = sizeof(i_color) * xsize;
-  if (bytes / sizeof(i_color) != xsize) {
+  if (bytes / sizeof(i_color) != (size_t)xsize) {
     i_img_destroy(im);
     i_push_error(0, "integer overflow calculating buffer size");
     return NULL;

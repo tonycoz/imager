@@ -125,11 +125,13 @@ bpp_to_channels(unsigned int bpp, int attr_bit_count) {
   case 16:
     if (attr_bit_count == 1)
       return 4;
+    /* FALLTHROUGH */
   case 15:
     return 3;
   case 32:
     if (attr_bit_count == 8)
       return 4;
+    /* FALLTHROUGH */
   case 24:
     return 3;
   }
@@ -431,14 +433,16 @@ care of decompressing the stream if needed.
 static
 int
 tga_source_read(tga_source *s, unsigned char *buf, size_t pixels) {
-  int cp = 0, j, k;
+  size_t cp = 0;
+  size_t j, k;
   if (!s->compressed) {
-    if (i_io_read(s->ig, buf, pixels*s->bytepp) != pixels*s->bytepp) return 0;
+    if ((size_t)i_io_read(s->ig, buf, pixels*s->bytepp)
+        != pixels*s->bytepp) return 0;
     return 1;
   }
   
   while(cp < pixels) {
-    int ml;
+    size_t ml;
     if (s->len == 0) s->state = NoInit;
     switch (s->state) {
     case NoInit:
@@ -451,20 +455,26 @@ tga_source_read(tga_source *s, unsigned char *buf, size_t pixels) {
 	static cnt = 0;
 	printf("%04d %s: %d\n", cnt++, s->state==Rle?"RLE":"RAW", s->len);
  */
-     }
-      if (s->state == Rle && i_io_read(s->ig, s->cval, s->bytepp) != s->bytepp) return 0;
+      }
+      if (s->state == Rle
+          && (size_t)i_io_read(s->ig, s->cval, s->bytepp) != s->bytepp) {
+        return 0;
+      }
 
       break;
     case Rle:
       ml = i_min(s->len, pixels-cp);
-      for(k=0; k<ml; k++) for(j=0; j<s->bytepp; j++) 
+      for(k=0; k<ml; k++) for(j=0; j < s->bytepp; j++) 
 	buf[(cp+k)*s->bytepp+j] = s->cval[j];
       cp     += ml;
       s->len -= ml;
       break;
     case Raw:
       ml = i_min(s->len, pixels-cp);
-      if (i_io_read(s->ig, buf+cp*s->bytepp, ml*s->bytepp) != ml*s->bytepp) return 0;
+      if ((size_t)i_io_read(s->ig, buf+cp*s->bytepp, ml*s->bytepp)
+          != ml*s->bytepp) {
+        return 0;
+      }
       cp     += ml;
       s->len -= ml;
       break;
@@ -492,17 +502,20 @@ destination is compressed.
 static
 int
 tga_dest_write(tga_dest *s, unsigned char *buf, size_t pixels) {
-  int cp = 0;
+  size_t cp = 0;
 
   if (!s->compressed) {
-    if (i_io_write(s->ig, buf, pixels*s->bytepp) != pixels*s->bytepp) return 0;
+    if ((size_t)i_io_write(s->ig, buf, pixels*s->bytepp)
+        != pixels*s->bytepp) {
+      return 0;
+    }
     return 1;
   }
   
   while(cp < pixels) {
     int tlen;
     int nxtrip = find_repeat(buf+cp*s->bytepp, pixels-cp, s->bytepp);
-    tlen = (nxtrip == -1) ? pixels-cp : nxtrip;
+    tlen = (nxtrip == -1) ? (int)(pixels-cp) : nxtrip;
     while(tlen) {
       unsigned char clen = (tlen>128) ? 128 : tlen;
       clen--;
@@ -558,7 +571,7 @@ tga_palette_read(io_glue *ig, i_img *img, int bytepp, int colourmaplength) {
   palbsize = (size_t)colourmaplength * bytepp;
   palbuf   = mymalloc(palbsize);
   
-  if (i_io_read(ig, palbuf, palbsize) != palbsize) {
+  if ((size_t)i_io_read(ig, palbuf, palbsize) != palbsize) {
     myfree(palbuf);
     i_push_error(errno, "could not read targa colormap");
     return 0;
@@ -601,7 +614,7 @@ tga_palette_write(io_glue *ig, i_img *img, int bitspp, int colourmaplength) {
     color_pack(palbuf+i*bytepp, bitspp, &val);
   }
   
-  if (i_io_write(ig, palbuf, palbsize) != palbsize) {
+  if ((size_t)i_io_write(ig, palbuf, palbsize) != palbsize) {
     i_push_error(errno, "could not write targa colormap");
     return 0;
   }
@@ -727,6 +740,7 @@ i_readtga_wiol(io_glue *ig, int length) {
   case 2:  /* Uncompressed, rgb images          */ /* FALLTHROUGH */
   case 10: /* Compressed,   rgb images          */ /* FALLTHROUGH */
     mapped = 0;
+    /* FALLTHROUGH */
   case 1:  /* Uncompressed, color-mapped images */
   case 9:  /* Compressed,   color-mapped images */
     if ((channels = bpp_to_channels(mapped ? 
@@ -902,7 +916,7 @@ i_writetga_wiol(i_img *img, io_glue *ig, int wierdpack, int compress, char *idst
   }
 
   if (idlen) {
-    if (i_io_write(ig, idstring, idlen) != idlen) {
+    if ((size_t)i_io_write(ig, idstring, idlen) != idlen) {
       i_push_error(errno, "could not write targa idstring");
       return 0;
     }
@@ -920,7 +934,8 @@ i_writetga_wiol(i_img *img, io_glue *ig, int wierdpack, int compress, char *idst
     if (!tga_palette_write(ig, img, bitspp, i_colorcount(img))) return 0;
     
     if (!i_img_virtual(img) && !dest.compressed) {
-      if (i_io_write(ig, img->idata, img->bytes) != img->bytes) {
+      /* FIXME: assumes image layout */
+      if ((size_t)i_io_write(ig, img->idata, img->bytes) != img->bytes) {
 	i_push_error(errno, "could not write targa image data");
 	return 0;
       }

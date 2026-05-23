@@ -102,7 +102,7 @@ i_readraw_wiol(io_glue *ig, i_img_dim x, i_img_dim y, int datachannels, int stor
   k=0;
   while( k<im->ysize ) {
     rc = i_io_read(ig, inbuffer, inbuflen);
-    if (rc != inbuflen) { 
+    if (rc != (ssize_t)inbuflen) { 
       if (rc < 0)
 	i_push_error(0, "error reading file");
       else
@@ -141,7 +141,7 @@ i_writeraw_wiol(i_img* im, io_glue *ig) {
   if (im == NULL) { mm_log((1,"Image is empty\n")); return(0); }
   if (!i_img_virtual(im)) {
     rc = i_io_write(ig,im->idata,im->bytes);
-    if (rc != im->bytes) { 
+    if (rc != (ssize_t)im->bytes) { 
       i_push_error(errno, "Could not write to file");
       mm_log((1,"i_writeraw: Couldn't write to file\n")); 
       return(0);
@@ -150,7 +150,7 @@ i_writeraw_wiol(i_img* im, io_glue *ig) {
     if (im->type == i_direct_type) {
       /* just save it as 8-bits, maybe support saving higher bit count
          raw images later */
-      size_t line_size = im->xsize * im->channels;
+      ssize_t line_size = im->xsize * im->channels;
       unsigned char *data = mymalloc(line_size);
 
       i_img_dim y = 0;
@@ -169,8 +169,8 @@ i_writeraw_wiol(i_img* im, io_glue *ig) {
       /* paletted image - assumes the caller puts the palette somewhere 
          else
       */
-      size_t line_size = sizeof(i_palidx) * im->xsize;
-      i_palidx *data = mymalloc(sizeof(i_palidx) * im->xsize);
+      ssize_t line_size = sizeof(i_palidx) * im->xsize;
+      i_palidx *data = mymalloc(line_size);
 
       i_img_dim y = 0;
       rc = line_size;

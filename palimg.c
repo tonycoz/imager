@@ -82,7 +82,10 @@ static i_img IIM_base_8bit_pal =
   NULL, /* i_f_psamp_bits */
   
   i_psamp_p,
-  i_psampf_p
+  i_psampf_p,
+
+  NULL,
+  NULL
 };
 
 /*
@@ -122,7 +125,7 @@ im_img_pal_new(pIMCTX, i_img_dim x, i_img_dim y, int channels, int maxpal) {
     return NULL;
   }
   bytes = sizeof(i_palidx) * x * y;
-  if (bytes / y / sizeof(i_palidx) != x) {
+  if (bytes / y / sizeof(i_palidx) != (size_t)x) {
     i_push_error(0, "integer overflow calculating image allocation");
     return NULL;
   }

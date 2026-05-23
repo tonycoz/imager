@@ -129,8 +129,8 @@ i_quant_translate(i_quantize *quant, i_img *img) {
     return NULL;
   }
 
-  bytes = img->xsize * img->ysize;
-  if (bytes / img->ysize != img->xsize) {
+  bytes = (size_t)img->xsize * (size_t)img->ysize;
+  if (bytes / img->ysize != (size_t)img->xsize) {
     i_push_error(0, "integer overflow calculating memory allocation");
     return NULL;
   }
