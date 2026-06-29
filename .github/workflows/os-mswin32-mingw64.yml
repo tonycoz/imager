@@ -9,6 +9,8 @@ jobs:
     steps:
       - run: git config --global core.autocrlf false
       - uses: actions/checkout@v6
+      - name: perl -V
+        run: perl -V
       - name: configure
         run: |
            $env:path = "c:\strawberry\c\bin;"+$env:path
