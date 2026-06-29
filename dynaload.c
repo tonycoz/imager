@@ -146,7 +146,7 @@ DSO_open(char *file, char **evalstring) {
     FreeLibrary(d_handle);
     return NULL;
   }
-  if ((f = (void (*)(void *, void*))GetProcAddress(d_handle, I_INSTALL_TABLES)) == NULL) {
+  if ((f = (void (*)(void *, void*))(void (*)(void))GetProcAddress(d_handle, I_INSTALL_TABLES)) == NULL) {
     mm_log((1, "DSO_open: GetProcAddress didn't find '%s': %lu\n", I_INSTALL_TABLES, GetLastError()));
     FreeLibrary(d_handle);
     return NULL;
