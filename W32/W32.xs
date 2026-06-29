@@ -30,7 +30,7 @@ i_wf_bbox(face, size, text_sv, utf8=0)
         if (SvUTF8(text_sv))
           utf8 = 1;
 #endif
-        if (rc = i_wf_bbox(face, size, text, text_len, cords, utf8)) {
+        if ((rc = i_wf_bbox(face, size, text, text_len, cords, utf8)) != 0) {
           EXTEND(SP, rc);  
           for (i = 0; i < rc; ++i) 
             PUSHs(sv_2mortal(newSViv(cords[i])));

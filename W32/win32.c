@@ -198,8 +198,7 @@ i_wf_text(const char *face, i_img *im, i_img_dim tx, i_img_dim ty, const i_color
   unsigned char *bits;
   SIZE sz;
   size_t line_width;
-  i_img_dim x, y;
-  int ch;
+  i_img_dim y;
   TEXTMETRIC tm;
   int top;
   i_img_dim bbox[BOUNDING_BOX_COUNT];
@@ -293,6 +292,8 @@ i_wf_cp(const char *face, i_img *im, i_img_dim tx, i_img_dim ty, int channel, i_
   return 1;
 }
 
+/* a function pointer type that prevents cast-function-type warnings */
+typedef void (*NeutralFunction_t)(void);
 static HMODULE gdi_dll;
 typedef BOOL (CALLBACK *AddFontResourceExA_t)(LPCSTR, DWORD, PVOID);
 static AddFontResourceExA_t AddFontResourceExAp;
@@ -319,8 +320,10 @@ i_wf_addfont(char const *filename) {
   if (!gdi_dll) {
     gdi_dll = GetModuleHandle("GDI32");
     if (gdi_dll) {
-      AddFontResourceExAp = (AddFontResourceExA_t)GetProcAddress(gdi_dll, "AddFontResourceExA");
-      RemoveFontResourceExAp = (RemoveFontResourceExA_t)GetProcAddress(gdi_dll, "RemoveFontResourceExA");
+      AddFontResourceExAp = (AddFontResourceExA_t)(NeutralFunction_t)
+        GetProcAddress(gdi_dll, "AddFontResourceExA");
+      RemoveFontResourceExAp = (RemoveFontResourceExA_t)(NeutralFunction_t)
+        GetProcAddress(gdi_dll, "RemoveFontResourceExA");
       mm_log((1, "i_wf_addfont: AddFontResourceExA %p RemoveFontResourceExA %p\n",
 	      AddFontResourceExAp, RemoveFontResourceExAp));
     }
@@ -566,7 +569,7 @@ utf8_to_wide_string(char const *text, int text_len, int *wide_chars) {
 static LPWSTR
 latin1_to_wide_string(char const *text, int text_len, int *wide_chars) {
   LPWSTR result = mymalloc(sizeof(WCHAR) * (text_len + 1));
-  size_t i;
+  int i;
 
   for (i = 0; i < text_len; ++i) {
     result[i] = (unsigned char)text[i];
