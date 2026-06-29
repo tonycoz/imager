@@ -10,7 +10,9 @@ jobs:
       - run: git config --global core.autocrlf false
       - uses: actions/checkout@v6
       - name: perl -V
-        run: perl -V
+        run: |
+            perl -V
+            perl -V:ivdformat -V:ivtype
       - name: configure
         run: |
            $env:path = "c:\strawberry\c\bin;"+$env:path
