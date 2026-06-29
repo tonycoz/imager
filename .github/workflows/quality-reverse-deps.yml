@@ -58,9 +58,11 @@ jobs:
       #- name: Games::Simutrans::Pakset
       #  if: always()
       #  run: cpanm --sudo -v Games::Simutrans::Pakset
-      - name: Tree::Cladogram
-        if: always()
-        run: cpanm --sudo -v Tree::Cladogram
+      # hard dependency on Image::Magick and it doesn't
+      # like the libimagemagick-perl that ubuntu provides
+      #- name: Tree::Cladogram
+      #  if: always()
+      #  run: cpanm --sudo -v Tree::Cladogram
       - name: Image::Checkerboard
         if: always()
         run: cpanm --sudo -v Image::Checkerboard
