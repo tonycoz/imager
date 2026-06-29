@@ -16,7 +16,9 @@ jobs:
       - name: configure
         run: |
            $env:path = "c:\strawberry\c\bin;"+$env:path
-           perl Makefile.PL OPTIMIZE="-Wall -Wextra -Werror -O2 -g"
+           # disable formats because perl uses I64d for long long
+           # which confuses gcc
+           perl Makefile.PL OPTIMIZE="-Wall -Wextra -Werror -Wno-format -O2 -g"
       - name: build
         run: |
            $env:path = "c:\strawberry\c\bin;"+$env:path
