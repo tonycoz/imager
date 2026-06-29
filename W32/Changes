@@ -1,3 +1,13 @@
+Imager-Font-W32 0.97
+====================
+
+fix some warnings
+
+ - unused variables
+ - cast-function-type warnings from casting GetProcAddress()
+   results
+ - a signed vs unsigned comparison
+
 Imager-Font-W32 0.96
 ====================
 

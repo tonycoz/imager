@@ -84,6 +84,11 @@ Imager 1.032 - 1 July 2026
        EXTEND() with an unsigned count
      - (void) an unused parameter in a callback
      - remove code at an unused label
+   - W32:
+     - unused variables
+     - cast-function-type warnings from casting GetProcAddress()
+       results
+     - a signed vs unsigned comparison
 
 Imager 1.031 - 15 May 2026
 ============
