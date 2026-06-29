@@ -12,7 +12,7 @@ jobs:
       - name: configure
         run: |
            $env:path = "c:\strawberry\c\bin;"+$env:path
-           perl Makefile.PL
+           perl Makefile.PL OPTIMIZE="-Wall -Wextra -Werror -O2 -g"
       - name: build
         run: |
            $env:path = "c:\strawberry\c\bin;"+$env:path
