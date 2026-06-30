@@ -168,6 +168,7 @@ JPEG/t/t10jpeg.t		Test jpeg support
 JPEG/t/t20limit.t
 JPEG/testimg/209_yonge.jpg	Regression test: #17981
 JPEG/testimg/exiftest.jpg	Test image for EXIF parsing
+JPEG/testimg/iptcdup.jpg	Test image for duplicate IPTC blocks
 JPEG/testimg/scmyk.jpg		Simple CMYK JPEG image
 JPEG/testimg/zerotype.jpg	Image with a zero type entry in the EXIF data
 lib/Imager/API.pod

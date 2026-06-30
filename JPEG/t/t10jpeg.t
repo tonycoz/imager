@@ -377,6 +377,15 @@ SKIP:
   is($iptc{credit}, 'No Credit Given', 'check iptc credit');
 }
 
+{
+    # leak with duplicate IPTC blocks
+    # only detectable with valgrind, etc
+    my $im = Imager->new;
+    ok($im->read(file => "testimg/iptcdup.jpg"),
+       "read jpeg with multiple iptc blocks")
+        or diag "read iptcdup.jpg: ", Imager->errstr;
+}
+
 { # handling of CMYK jpeg
   # http://rt.cpan.org/Ticket/Display.html?id=20416
   my $im = Imager->new;

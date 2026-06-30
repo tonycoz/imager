@@ -540,6 +540,8 @@ i_readjpeg_wiol(io_glue *data, int length, char** iptc_itext, int *itlength) {
       }
     }
     else if (markerp->marker == JPEG_APP13) {
+      if (*iptc_itext)
+        myfree(*iptc_itext);
       *iptc_itext = mymalloc(markerp->data_length);
       memcpy(*iptc_itext, markerp->data, markerp->data_length);
       *itlength = markerp->data_length;

@@ -127,6 +127,7 @@ while (!eof($fh)) {
     }
     elsif ($chead eq "\xFF\xE1") {
       # APP1
+      print "APP1: ($len bytes)\n";
       if ($appdata =~ s/^Exif\0.//) {
 	print "  EXIF data ($len bytes)\n";
 	if ($exiffile) {
@@ -138,6 +139,13 @@ while (!eof($fh)) {
 	    or die "Cannot close $exiffile: $!\n";
 	}
       }
+      else {
+        print "  non-EXIF APP1\n";
+        print "    Lead bytes: ", unpack("H*", substr($appdata, 0, 16)), "\n";
+      }
+    }
+    elsif ($chead eq "\xFF\xED") {
+      print "APP13: ($len bytes)\n";
     }
   }
   elsif ($chead eq "\xFF\xFE") {
