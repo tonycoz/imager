@@ -305,6 +305,7 @@ SGI/t/00load.t
 SGI/t/10read.t
 SGI/t/20write.t
 SGI/t/30limit.t			Test size limit checking
+SGI/testimg/overflow.rgb
 SGI/testimg/rle.rgb
 SGI/testimg/rle12.rgb
 SGI/testimg/rle16.rgb

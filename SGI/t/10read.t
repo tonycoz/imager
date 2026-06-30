@@ -2,7 +2,7 @@
 use strict;
 use Imager;
 use Imager::Test qw(is_image is_color3);
-use Test::More tests => 103;
+use Test::More;
 
 -d 'testout' or mkdir 'testout', 0777;
 
@@ -300,6 +300,18 @@ Imager::init_log('testout/10read.log', 2);
     ++$test_index;
   }
 }
+
+{
+    # CVE-2026-13705
+    # the file here is invalid, and should fail to load
+    # without the fix expect a valgrind buffer read overflow
+    # causing the test to fail on valgrind
+    my $im = Imager->new;
+    ok(!$im->read(file => "testimg/overflow.rgb"),
+       "fail to load file with had last scanline");
+}
+
+done_testing();
 
 sub load_patched_file {
   my ($filename, $patches) = @_;

@@ -764,7 +764,7 @@ read_rgb_16_rle(i_img *img, io_glue *ig, rgb_header const *header) {
 	    i_push_error(0, "SGI image: literal run overflows scanline");
 	    goto ErrorReturn;
 	  }
-	  if (count > data_left) {
+	  if (count > data_left / 2) {
 	    i_push_error(0, "SGI image: literal run consumes more data than available");
 	    goto ErrorReturn;
 	  }
