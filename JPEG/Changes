@@ -1,3 +1,10 @@
+Imager-File-JPEG 1.003
+======================
+
+ - fix a memory leak from reading a JPEG image with more than
+   one IPTC/APP13 block
+   CVE-2026-13708
+
 Imager-File-JPEG 1.002
 ======================
 

@@ -1,5 +1,9 @@
 Imager release history.  Older releases can be found in Changes.old
 
+ - JPEG: fix a memory leak from reading a JPEG image with more than
+   one IPTC/APP13 block
+   CVE-2026-13708
+
  - getscanline() with type float in list context would leak the
    returned SVs
 
