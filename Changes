@@ -1,5 +1,8 @@
 Imager release history.  Older releases can be found in Changes.old
 
+Imager 1.032 - 1 July 2026
+============
+
  - JPEG: fix a memory leak from reading a JPEG image with more than
    one IPTC/APP13 block
    CVE-2026-13708
