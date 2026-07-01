@@ -4,6 +4,10 @@ Imager release history.  Older releases can be found in Changes.old
    one IPTC/APP13 block
    CVE-2026-13708
 
+ - SGI: fix a buffer read over flow when reading a crafted RLE SGI
+   file.
+   CVE-2026-13705
+
  - getscanline() with type float in list context would leak the
    returned SVs
 
