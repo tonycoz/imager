@@ -21,7 +21,6 @@ plan skip_all => "perl 5.005_04, 5.005_05 too buggy"
 
 print STDERR "Inline version $Inline::VERSION\n";
 
-plan tests => 126;
 require Inline;
 Inline->import(with => 'Imager');
 Inline->import("FORCE"); # force rebuild
@@ -507,6 +506,16 @@ tags_is_int(Imager im, const char *name) {
   return 1;
 }
 
+void
+decode_exif(Imager im, SV *data) {
+  SvGETMAGIC(data);
+  if (!SvOK(data)) return;
+  STRLEN len;
+  const char *pv = SvPV(data, len);
+  /* return value is unfortunately not useful */
+  (void)im_decode_exif(im, (const unsigned char *)pv, len);
+}
+
 EOS
 
 my $im = Imager->new(xsize=>50, ysize=>50);
@@ -746,6 +755,27 @@ ok(test_slots(), "call slot APIs");
   is(tags_get_int($im, "uintmax"), -1);
   ok(!tags_is_int($im, "uintmax"), "uintmax not stored as int");
 }
+
+{
+    my $im = Imager->new(xsize => 1, ysize => 1);
+    decode_exif($im, "not exif");
+    my @tags = grep $_->[0] =~ /^exif_/, $im->tags;
+    is(scalar @tags, 0, "decode_exif obviously not exif");
+
+    my $exif_name = "t/data/exifgood.bin";
+    open my $exif_fh, "<", $exif_name
+        or die "Cannot open $exif_name: $!";
+    binmode $exif_fh;
+    my $exif_data = do { local $/; <$exif_fh> };
+    close $exif_fh;
+    $im = Imager->new(xsize => 1, ysize => 1);
+    decode_exif($im, $exif_data);
+    note "decode valid exif";
+    is($im->tags(name => "exif_make"), "Canon", "valid exif model");
+    is($im->tags(name => "exif_artist"), "Tony Cook", "valid exif artist");
+}
+
+done_testing();
 
 sub _get_error {
   my @errors = Imager::i_errors();
