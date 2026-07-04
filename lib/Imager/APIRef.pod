@@ -2567,7 +2567,12 @@ The intent is that invalid EXIF data will simply fail to set tags, and
 write to the log.  In no case should this code exit when supplied
 invalid data.
 
-Returns true if an EXIF header was seen.
+Returns true if the EXIF block was valid, this is mostly used for
+testing, you don't need to test this in a typical file reader unless
+you have a strict mode.
+
+This is a limited version of "validity", eg. IFDs are meant to be
+sorted, which this doesn't check.
 
 
 =for comment
