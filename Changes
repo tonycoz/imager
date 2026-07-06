@@ -8,6 +8,9 @@ Imager release history.  Older releases can be found in Changes.old
    IFD referenced memory is outside the EXIF block.
    CVE-2026-14454
 
+ - TIFF: fix a leak from processing the TIFF warnings buffer.
+   Introduced in Imager 1.021, Imager::File::TIFF 0.96.
+
 Imager 1.032 - 1 July 2026
 ============
 
