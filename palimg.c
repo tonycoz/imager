@@ -208,9 +208,6 @@ i_img_to_rgb_inplace(i_img *im) {
   i_img_exorcise(im);
   *im = temp;
 
-  /* i_img_empty_ch() calls i_img_init() which takes a ref */
-  im_context_refdec(aIMCTX, "img_destroy");
-
   return 1;
 }
 

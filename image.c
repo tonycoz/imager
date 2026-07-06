@@ -244,6 +244,20 @@ void i_fcolor_destroy(i_fcolor *cl) {
   myfree(cl);
 }
 
+static void
+do_img_exorcise(pIMCTX, i_img *im) {
+  i_tags_destroy(&im->tags);
+  if (im->i_f_destroy)
+    (im->i_f_destroy)(im);
+  if (im->idata != NULL) { myfree(im->idata); }
+  im->idata    = NULL;
+  im->xsize    = 0;
+  im->ysize    = 0;
+  im->channels = 0;
+
+  im->ext_data=NULL;
+}
+
 /* 
 =item i_img_exorcise(im)
 
@@ -258,16 +272,8 @@ void
 i_img_exorcise(i_img *im) {
   dIMCTXim(im);
   im_log((aIMCTX,1,"i_img_exorcise(im* %p)\n",im));
-  i_tags_destroy(&im->tags);
-  if (im->i_f_destroy)
-    (im->i_f_destroy)(im);
-  if (im->idata != NULL) { myfree(im->idata); }
-  im->idata    = NULL;
-  im->xsize    = 0;
-  im->ysize    = 0;
-  im->channels = 0;
-
-  im->ext_data=NULL;
+  do_img_exorcise(aIMCTX, im);
+  im_context_refdec(aIMCTX, "img_destroy");
 }
 
 /* 
@@ -285,7 +291,7 @@ void
 i_img_destroy(i_img *im) {
   dIMCTXim(im);
   im_log((aIMCTX, 1,"i_img_destroy(im %p)\n",im));
-  i_img_exorcise(im);
+  do_img_exorcise(aIMCTX, im);
   myfree(im);
   im_context_refdec(aIMCTX, "img_destroy");
 }
