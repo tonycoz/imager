@@ -8,6 +8,9 @@ Imager release history.  Older releases can be found in Changes.old
    IFD referenced memory is outside the EXIF block.
    CVE-2026-14454
 
+ - fix a thread context object reference count leak in the bumpmap and
+   bumpmap_complex filters.
+
  - TIFF: fix a leak from processing the TIFF warnings buffer.
    Introduced in Imager 1.021, Imager::File::TIFF 0.96.
 
