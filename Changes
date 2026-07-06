@@ -1,5 +1,13 @@
 Imager release history.  Older releases can be found in Changes.old
 
+ - fix mishandling of large EXIF IFD entry count values, treating them
+   as negative numbers.  This could lead to an attempt to allocate a
+   block nearly the size of the address space, which fails and causes
+   an exit.  Such counts are now treated as unsigned and caught either
+   when the multiplication result is checked, or when the end of the
+   IFD referenced memory is outside the EXIF block.
+   CVE-2026-14454
+
 Imager 1.032 - 1 July 2026
 ============
 
