@@ -750,6 +750,7 @@ static i_img *read_one_tiff(TIFF *tif, int allow_incomplete) {
 
       i_tags_set(&im->tags, "i_warning", (const char *)data, len);
       io_glue_destroy(ctx->warn_buf);
+      myfree(data);
       ctx->warn_buf = NULL;
     }
   }
