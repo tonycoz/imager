@@ -1,3 +1,9 @@
+Imager-File-JPEG 1.004
+======================
+
+ - depend on Imager 1.033 for the EXIF decoding fix.
+   CVE-2026-14454
+
 Imager-File-JPEG 1.003
 ======================
 

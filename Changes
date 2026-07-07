@@ -6,7 +6,10 @@ Imager release history.  Older releases can be found in Changes.old
    an exit.  Such counts are now treated as unsigned and caught either
    when the multiplication result is checked, or when the end of the
    IFD referenced memory is outside the EXIF block.
+   Thanks to cpan-security.
    CVE-2026-14454
+
+ - JPEG: depend on Imager 1.033 for the EXIF fix.
 
  - fix a thread context object reference count leak in the bumpmap and
    bumpmap_complex filters.
@@ -19,16 +22,18 @@ Imager 1.032 - 1 July 2026
 
  - JPEG: fix a memory leak from reading a JPEG image with more than
    one IPTC/APP13 block
+   Thanks to cpan-security.
    CVE-2026-13708
 
  - SGI: fix a buffer read over flow when reading a crafted RLE SGI
    file.
+   Thanks to cpan-security.
    CVE-2026-13705
 
  - getscanline() with type float in list context would leak the
    returned SVs.  Introduced in 1.013.
 
- - TIFF: sizeproc could potentiallly ignore a seek error when finding
+ - TIFF: sizeproc could potentially ignore a seek error when finding
    the current position (but then should fail later trying to restore
    it.)  Revealed by a signed comparison warning.
 
@@ -39,6 +44,7 @@ Imager 1.031 - 15 May 2026
 ============
 
  - GIF: fix a heap buffer overflow with attacker controlled data
+   Thanks to cpan-security.
    CVE-2026-8454
 
 Imager 1.030 - 13 Apr 2026

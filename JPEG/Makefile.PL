@@ -64,7 +64,7 @@ else {
   $opts{TYPEMAPS} = [ Imager::ExtUtils->typemap ];
 
   # Imager required configure through use
-  my @Imager_req = ( Imager => "1.008" );
+  my @Imager_req = ( Imager => "1.033" );
   if (eval { ExtUtils::MakeMaker->VERSION('6.46'); 1 }) {
     $opts{META_MERGE}{prereqs} =
       {
