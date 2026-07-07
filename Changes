@@ -1,5 +1,8 @@
 Imager release history.  Older releases can be found in Changes.old
 
+Imager 1.033 - 7 July 2026
+============
+
  - fix mishandling of large EXIF IFD entry count values, treating them
    as negative numbers.  This could lead to an attempt to allocate a
    block nearly the size of the address space, which fails and causes
