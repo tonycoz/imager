@@ -178,5 +178,5 @@ i_tiff_codecs(class)
       myfree(codecs);
 
 BOOT:
-	PERL_INITIALIZE_IMAGER_CALLBACKS;
+        PERL_INITIALIZE_IMAGER_CALLBACKS_NAME("Imager::File::TIFF");
 	i_tiff_init();

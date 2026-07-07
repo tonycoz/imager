@@ -71,4 +71,4 @@ has_decode_arith_coding(cls)
 
 
 BOOT:
-	PERL_INITIALIZE_IMAGER_CALLBACKS;
+    PERL_INITIALIZE_IMAGER_CALLBACKS_NAME("Imager::File::JPEG");
