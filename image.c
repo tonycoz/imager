@@ -75,6 +75,7 @@ object.
 
 i_img *
 im_img_alloc(pIMCTX) {
+  (void)aIMCTX;
   return mymalloc(sizeof(i_img));
 }
 
@@ -246,6 +247,7 @@ void i_fcolor_destroy(i_fcolor *cl) {
 
 static void
 do_img_exorcise(pIMCTX, i_img *im) {
+  (void)aIMCTX;
   i_tags_destroy(&im->tags);
   if (im->i_f_destroy)
     (im->i_f_destroy)(im);
@@ -1608,7 +1610,7 @@ test_magic(unsigned char *buffer, size_t length, struct file_magic_entry const *
   if (length < magic->magic_size)
     return 0;
   if (magic->mask) {
-    int i;
+    size_t i;
     unsigned char *bufp = buffer, 
       *maskp = magic->mask, 
       *magicp = magic->magic;
@@ -1637,7 +1639,7 @@ Check the beginning of the supplied file for a 'magic number'
 */
 
 #define FORMAT_ENTRY(magic, type) \
-  { (unsigned char *)(magic ""), sizeof(magic)-1, type }
+  { (unsigned char *)(magic ""), sizeof(magic)-1, type, NULL }
 #define FORMAT_ENTRY2(magic, type, mask) \
   { (unsigned char *)(magic ""), sizeof(magic)-1, type, (unsigned char *)(mask) }
 
@@ -1740,7 +1742,7 @@ im_test_format_probe(im_context_t ctx, io_glue *data, int length) {
     FORMAT_ENTRY2("\x00\x00\x00\x00\x00\x00\x00\x07", 
 		  "xwd", "    xxxx"), /* X Windows Dump */
   };
-
+  (void)length; /* FIXME? */
   unsigned int i;
   unsigned char head[18];
   ssize_t rc;
