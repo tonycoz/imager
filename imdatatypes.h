@@ -1,5 +1,5 @@
-#ifndef _DATATYPES_H_
-#define _DATATYPES_H_
+#ifndef IMAGER_IMDATATYPES_H
+#define IMAGER_IMDATATYPES_H
 
 #include <stddef.h>
 #include "imconfig.h"
