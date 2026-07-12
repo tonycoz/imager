@@ -1,0 +1,13 @@
+Checks:
+ - bugprone-*
+ - -bugprone-multi-level-implicit-pointer-conversion
+ - -bugprone-assignment-in-if-condition
+ - -bugprone-easily-swappable-parameters
+ - cert-*
+ - -cert-int09-c
+ - clang-*
+ - -clang-analyzer-security.insecureAPI.DeprecatedOrUnsafeBufferHandling
+ - misc-*
+ - -misc-include-cleaner
+CheckOptions:
+ "bugprone-signed-bitwise.IgnorePositiveIntegerLiterals": true
