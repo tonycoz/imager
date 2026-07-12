@@ -208,10 +208,11 @@ create the appropriate GifFileType object and pass it in.
 =cut
 */
 
-i_img *
+static i_img *
 i_readgif_low(GifFileType *GifFile, int **colour_table, int *colours) {
   i_img *im;
-  int i, j, Size, Row, Col, Width, Height, ExtCode, Count, x;
+  int i, j, Row, Col, Width, Height, ExtCode, x;
+  size_t Size;
   int cmapcnt = 0, ImageNum = 0;
   ColorMapObject *ColorMap;
  
@@ -332,8 +333,7 @@ i_readgif_low(GifFileType *GifFile, int **colour_table, int *colours) {
       }
       if (GifFile->Image.Interlace) {
 
-	for (Count = i = 0; i < 4; i++) for (j = Row + InterlacedOffset[i]; j < Row + Height; j += InterlacedJumps[i]) {
-	  Count++;
+	for (i = 0; i < 4; i++) for (j = Row + InterlacedOffset[i]; j < Row + Height; j += InterlacedJumps[i]) {
 	  if (DGifGetLine(GifFile, GifRow, Width) == GIF_ERROR) {
 	    gif_push_error(myGifError(GifFile));
 	    i_push_error(0, "Reading GIF line");
@@ -413,7 +413,6 @@ i_readgif_low(GifFileType *GifFile, int **colour_table, int *colours) {
       }
       break;
     case TERMINATE_RECORD_TYPE:
-      break;
     default:		    /* Should be traps by DGifGetRecordType. */
       break;
     }
@@ -537,10 +536,11 @@ standard.
 =cut
 */
 
-i_img **
+static i_img **
 i_readgif_multi_low(GifFileType *GifFile, int *count, int page) {
   i_img *img;
-  int i, j, Size, Width, Height, ExtCode, Count;
+  int i, j, Width, Height, ExtCode;
+  size_t Size;
   int ImageNum = 0, ColorMapSize = 0;
   ColorMapObject *ColorMap;
  
@@ -699,10 +699,10 @@ i_readgif_multi_low(GifFileType *GifFile, int *count, int page) {
 	  i_tags_setn(&img->tags, "gif_localmap", 1);
 	}
 	if (got_gce) {
-	  if (trans_index >= 0) {
 	    i_color trans;
+	  if (trans_index >= 0
+              && i_getcolors(img, trans_index, &trans, 1) == 1) {
 	    i_tags_setn(&img->tags, "gif_trans_index", trans_index);
-	    i_getcolors(img, trans_index, &trans, 1);
 	    i_tags_set_color(&img->tags, "gif_trans_color", 0, &trans);
 	  }
 	  i_tags_setn(&img->tags, "gif_delay", gif_delay);
@@ -719,10 +719,9 @@ i_readgif_multi_low(GifFileType *GifFile, int *count, int page) {
 	}
 	
 	if (GifFile->Image.Interlace) {
-	  for (Count = i = 0; i < 4; i++) {
+	  for (i = 0; i < 4; i++) {
 	    for (j = InterlacedOffset[i]; j < Height; 
 		 j += InterlacedJumps[i]) {
-	      Count++;
 	      if (DGifGetLine(GifFile, GifRow, Width) == GIF_ERROR) {
 		gif_push_error(myGifError(GifFile));
 		i_push_error(0, "Reading GIF line");
@@ -836,7 +835,7 @@ i_readgif_multi_low(GifFileType *GifFile, int *count, int page) {
           trans_index = -1;
         gif_delay = Extension[2] + 256 * Extension[3];
         user_input = (Extension[1] & 2) != 0;
-        disposal = (Extension[1] >> 2) & 7;
+        disposal = ((unsigned)Extension[1] >> 2) & 7;
       }
       if (ExtCode == 0xFF && *Extension == 11) {
         if (memcmp(Extension+1, "NETSCAPE2.0", 11) == 0) {
@@ -883,7 +882,6 @@ i_readgif_multi_low(GifFileType *GifFile, int *count, int page) {
       }
       break;
     case TERMINATE_RECORD_TYPE:
-      break;
     default:		    /* Should be trapped by DGifGetRecordType. */
       break;
     }
@@ -1071,7 +1069,7 @@ do_write(GifFileType *gf, int interlace, i_img *img, i_palidx *data) {
     int i, j;
     for (i = 0; i < 4; ++i) {
       for (j = InterlacedOffset[i]; j < img->ysize; j += InterlacedJumps[i]) {
-	if (EGifPutLine(gf, data+j*img->xsize, img->xsize) == GIF_ERROR) {
+	if (EGifPutLine(gf, data+j*img->xsize, gf->Image.Width) == GIF_ERROR) {
 	  gif_push_error(myGifError(gf));
 	  i_push_error(0, "Could not save image data:");
 	  mm_log((1, "Error in EGifPutLine\n"));
@@ -1083,7 +1081,7 @@ do_write(GifFileType *gf, int interlace, i_img *img, i_palidx *data) {
   else {
     int y;
     for (y = 0; y < img->ysize; ++y) {
-      if (EGifPutLine(gf, data, img->xsize) == GIF_ERROR) {
+      if (EGifPutLine(gf, data, gf->Image.Width) == GIF_ERROR) {
 	gif_push_error(myGifError(gf));
 	i_push_error(0, "Could not save image data:");
 	mm_log((1, "Error in EGifPutLine\n"));
@@ -1116,7 +1114,7 @@ do_gce(GifFileType *gf, i_img *img, int want_trans, int trans_index)
   int disposal_method;
 
   if (want_trans) {
-    gce[0] |= 1;
+    gce[0] |= 1U;
     gce[3] = trans_index;
     ++want_gce;
   }
@@ -1127,7 +1125,7 @@ do_gce(GifFileType *gf, i_img *img, int want_trans, int trans_index)
   }
   if (i_tags_get_int(&img->tags, "gif_user_input", 0, &user_input) 
       && user_input) {
-    gce[0] |= 2;
+    gce[0] |= 2U;
     ++want_gce;
   }
   if (i_tags_get_int(&img->tags, "gif_disposal", 0, &disposal_method)) {
@@ -1163,12 +1161,9 @@ do_comments(GifFileType *gf, i_img *img) {
     }
     else {
       char buf[50];
-#ifdef IMAGER_SNPRINTF
-      snprintf(buf, sizeof(buf), "%d", img->tags.tags[pos].idata);
-#else
-      sprintf(buf, "%d", img->tags.tags[pos].idata);
-#endif
-      if (EGifPutComment(gf, buf) == GIF_ERROR) {
+      int len = snprintf(buf, sizeof(buf), "%d", img->tags.tags[pos].idata);
+      if ((size_t)len >= sizeof(buf)
+          || EGifPutComment(gf, buf) == GIF_ERROR) {
         return 0;
       }
     }
@@ -1406,8 +1401,7 @@ has_common_palette(i_img **imgs, int count, i_quantize *quant) {
     for (i = 0; i < col_count; ++i) {
       i_color c;
       
-      i_getcolors(imgs[imgn], i, &c, 1);
-      if (used[i]) {
+      if (used[i] && i_getcolors(imgs[imgn], i, &c, 1) == 1) {
         if (in_palette(&c, quant, quant->mc_count) < 0) {
 	  mm_log((1, "  color not found in palette, no palette shortcut\n"));
   
