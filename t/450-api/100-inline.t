@@ -508,14 +508,15 @@ tags_is_int(Imager im, const char *name) {
   return 1;
 }
 
-void
+int
 decode_exif(Imager im, SV *data) {
   SvGETMAGIC(data);
-  if (!SvOK(data)) return;
+  if (!SvOK(data)) return 0;
   STRLEN len;
   const char *pv = SvPV(data, len);
-  /* return value is unfortunately not useful */
-  (void)im_decode_exif(im, (const unsigned char *)pv, len);
+  i_clear_error();
+
+  return im_decode_exif(im, (const unsigned char *)pv, len);
 }
 
 EOS
@@ -777,6 +778,18 @@ ok(test_slots(), "call slot APIs");
 
     ($im, $ok) = do_one_exif("t/data/exifbadifdoff1.bin");
     ok(!$ok, "fail to load exif with bad exif ifd offset");
+
+    ($im, $ok) = do_one_exif("t/data/exifbad0ascii.bin");
+    ok($ok, "load exif with zero length ascii")
+        or diag(Imager->_error_as_msg);
+    is($im->tags(name => "exif_image_description"), "",
+       "read invalid zero length ascii as zero length string");
+
+    ($im, $ok) = do_one_exif("t/data/exifattack.bin");
+    ok($ok, "load exif with zero length ascii (POC)")
+        or diag(Imager->_error_as_msg);
+    is($im->tags(name => "exif_make"), "",
+       "read invalid zero length ascii as zero length string (POC)");
 }
 
 sub do_one_exif {

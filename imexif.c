@@ -1283,7 +1283,9 @@ copy_string_tags(i_img *im, imtiff *tiff, tag_map *map, unsigned map_count) {
        tag_index < tiff->ifd_size; ++tag_index, ++entry) {
     for (i = 0; i < map_count; ++i) {
       if (map[i].tag == entry->tag) {
-	int len = entry->type == ift_ascii ? entry->size - 1 : entry->size;
+	int len = entry->size;
+        if (entry->type == ift_ascii && len > 0)
+          --len;
 	i_tags_set(&im->tags, map[i].name,
 		   (char const *)(tiff->base + entry->offset), len);
 	break;
