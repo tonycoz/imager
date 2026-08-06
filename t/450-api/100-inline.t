@@ -790,6 +790,10 @@ ok(test_slots(), "call slot APIs");
         or diag(Imager->_error_as_msg);
     is($im->tags(name => "exif_make"), "",
        "read invalid zero length ascii as zero length string (POC)");
+
+    ($im, $ok) = do_one_exif("t/data/exifbadascoff.bin");
+    ok(!$ok, "fail to load exif with ascii bad offset")
+        or diag(Imager->_error_as_msg);
 }
 
 sub do_one_exif {
