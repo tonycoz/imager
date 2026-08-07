@@ -463,7 +463,7 @@ read_direct8(png_structp png_ptr, png_infop info_ptr, int channels,
     return NULL;
   }
   
-  line = vline = mymalloc(channels * width);
+  line = vline = mymalloc(vchannels * width);
   for (pass = 0; pass < number_passes; pass++) {
     for (y = 0; y < height; y++) {
       if (pass > 0)
@@ -506,7 +506,7 @@ read_direct16(png_structp png_ptr, png_infop info_ptr, int channels,
   mm_log((1,"number of passes=%d\n",number_passes));
 
   if (png_get_valid(png_ptr, info_ptr, PNG_INFO_tRNS)) {
-    channels++;
+    vchannels++;
     mm_log((1, "image has transparency, adding alpha: channels = %d\n", vchannels));
     png_set_expand(png_ptr);
   }
