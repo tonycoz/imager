@@ -55,6 +55,7 @@ fontfiles/ExistenceTest.ttf	generated using pfaedit
 fontfiles/ImUgly.ttf
 fontfiles/NameTest.ttf		test glyph_names() - see FT2/t/t10ft2.t
 fontft1.c
+FT2/Changes
 FT2/fontfiles/dodge.ttf
 FT2/fontfiles/ExistenceTest.afm
 FT2/fontfiles/ExistenceTest.pfb
@@ -73,6 +74,7 @@ FT2/t/t20thread.t
 FT2/t/t90std.t			Standard font tests for FT2
 FT2/typemap
 gaussian.im
+GIF/Changes
 GIF/GIF.pm
 GIF/GIF.xs
 GIF/imgif.c
@@ -157,6 +159,7 @@ io.c
 iolayer.c
 iolayer.h
 iolayert.h			IO layer types
+JPEG/Changes
 JPEG/imjpeg.c
 JPEG/imjpeg.h
 JPEG/JPEG.pm
@@ -233,6 +236,7 @@ palimg.c
 paste.im
 perlio.c
 plug.h
+PNG/Changes
 PNG/impng.c
 PNG/impng.h
 PNG/Makefile.PL
@@ -386,17 +390,18 @@ t/950-kwalitee/050-meta.t	Check META.yml is valid
 t/950-kwalitee/060-podstruct.t
 t/950-kwalitee/070-mymeta.t
 t/950-kwalitee/080-nousevars.t	Check various standards
-t/GoodTestFont.pm		A dummy (hardly implemented) font driver.
-t/Pod/Coverage/Imager.pm
 t/data/exifattack.bin		EXIF with zero length ASCII field (POC)
 t/data/exifbad0ascii.bin	EXIF with zero length ASCII field
 t/data/exifbadascoff.bin	EXIF block with bad ASCII field offset
-t/data/exifbadoff.bin		EXIF with bad directory entry offset
 t/data/exifbadderoff.bin	EXIF with (U32)-1 DE offset
 t/data/exifbadifdoff1.bin	EXIF with (U32)-1 DE offset
 t/data/exifbadifdoff2.bin	EXIF with (U32)-1 DE offset
+t/data/exifbadoff.bin		EXIF with bad directory entry offset
 t/data/exifgood.bin		Good EXIF data block
+t/GoodTestFont.pm		A dummy (hardly implemented) font driver.
+t/Pod/Coverage/Imager.pm
 t/t1000lib/Imager/File/BAD.pm	Test failing to load a file handler
+T1/Changes
 T1/fontfiles/dcr10.afm
 T1/fontfiles/dcr10.pfb
 T1/fontfiles/ExistenceTest.afm	please edit ExistenceTest.sfd in CVS
@@ -489,6 +494,7 @@ testimg/winrgb4off.bmp		4-bit bmp with image data offset from header
 testimg/winrgb8.bmp		8-bit bmp base
 testimg/winrgb8off.bmp		8-bit bmp with image data offset from header
 tga.c				Reading and writing Targa files
+TIFF/Changes
 TIFF/imtiff.c
 TIFF/imtiff.h
 TIFF/Makefile.PL
@@ -532,6 +538,7 @@ trim.im
 typemap
 typemap.local			typemap for Imager.xs specific definitions
 typemap.oldperl			typemap for older versions of perl
+W32/Changes
 W32/fontfiles/ExistenceTest.ttf
 W32/imw32.h
 W32/lib/Imager/Font/Win32.pm

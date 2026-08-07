@@ -93,7 +93,6 @@ Makefile\.old$
 ^T1/T1\.c$
 ^W32/W32\.c$
 
-^.*/Changes$
 ^.*/MANIFEST(\.SKIP)?$
 ^.+/inc/Devel/CheckLib\.pm$
 ^.+/blib/
