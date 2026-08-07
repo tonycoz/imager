@@ -68,6 +68,8 @@ FT2/FT2.pm
 FT2/FT2.xs
 FT2/imft2.h
 FT2/Makefile.PL
+FT2/MANIFEST
+FT2/MANIFEST.SKIP
 FT2/README
 FT2/t/t10ft2.t
 FT2/t/t20thread.t
@@ -80,6 +82,8 @@ GIF/GIF.xs
 GIF/imgif.c
 GIF/imgif.h
 GIF/Makefile.PL
+GIF/MANIFEST
+GIF/MANIFEST.SKIP
 GIF/README
 GIF/t/t10gif.t
 GIF/t/t20new.t
@@ -165,6 +169,8 @@ JPEG/imjpeg.h
 JPEG/JPEG.pm
 JPEG/JPEG.xs
 JPEG/Makefile.PL
+JPEG/MANIFEST
+JPEG/MANIFEST.SKIP
 JPEG/README
 JPEG/t/t00load.t
 JPEG/t/t10jpeg.t		Test jpeg support
@@ -240,6 +246,8 @@ PNG/Changes
 PNG/impng.c
 PNG/impng.h
 PNG/Makefile.PL
+PNG/MANIFEST
+PNG/MANIFEST.SKIP
 PNG/PNG.pm
 PNG/PNG.xs
 PNG/README
@@ -411,6 +419,8 @@ T1/fontfiles/SpaceTest.pfb
 T1/imt1.c
 T1/imt1.h
 T1/Makefile.PL
+T1/MANIFEST
+T1/MANIFEST.SKIP
 T1/README
 T1/t/t10type1.t
 T1/t/t20oo.t
@@ -498,6 +508,8 @@ TIFF/Changes
 TIFF/imtiff.c
 TIFF/imtiff.h
 TIFF/Makefile.PL
+TIFF/MANIFEST
+TIFF/MANIFEST.SKIP
 TIFF/README
 TIFF/t/10tiff.t			Test tiff support
 TIFF/testimg/alpha.tif		Alpha scaling test image
@@ -543,6 +555,8 @@ W32/fontfiles/ExistenceTest.ttf
 W32/imw32.h
 W32/lib/Imager/Font/Win32.pm
 W32/Makefile.PL
+W32/MANIFEST
+W32/MANIFEST.SKIP
 W32/README
 W32/t/t10win32.t		Tests Win32 GDI font support
 W32/t/t90std.t			Standard font tests for W32

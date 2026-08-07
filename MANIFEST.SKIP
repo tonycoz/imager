@@ -93,7 +93,6 @@ Makefile\.old$
 ^T1/T1\.c$
 ^W32/W32\.c$
 
-^.*/MANIFEST(\.SKIP)?$
 ^.+/inc/Devel/CheckLib\.pm$
 ^.+/blib/
 ^blib/
@@ -108,9 +107,6 @@ Makefile\.old$
 
 # generated if we build them in their own directory
 ^(PNG|TIFF|FT2|W32|GIF)/blib/
-
-# not shipped with Imager itself
-^(PNG|TIFF|FT2|W32|GIF)/MANIFEST
 
 # generated from .im files
 ^combine\.c$
