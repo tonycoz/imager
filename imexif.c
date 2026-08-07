@@ -961,7 +961,7 @@ tiff_load_ifd(imtiff *tiff, unsigned long offset) {
     entry->count = tiff_get32(tiff, base+4);
     if (entry->type >= 1 && entry->type <= ift_last) {
       entry->item_size = type_sizes[entry->type];
-      entry->size = entry->item_size * entry->count;
+      entry->size = (size_t)entry->item_size * entry->count;
       if (entry->size / entry->item_size != entry->count) {
 	myfree(entries);
 	mm_log((1, "Integer overflow calculating tag data size processing EXIF block\n"));
@@ -1047,7 +1047,7 @@ tiff_get_tag_double_array(imtiff *tiff, unsigned index, double *result,
     return 0;
   }
 
-  offset = entry->offset + array_index * entry->item_size;
+  offset = entry->offset + array_index * (size_t)entry->item_size;
 
   switch (entry->type) {
   case ift_short:
@@ -1144,7 +1144,7 @@ tiff_get_tag_int_array(imtiff *tiff, unsigned index, int *result, unsigned array
     return 0;
   }
 
-  offset = entry->offset + array_index * entry->item_size;
+  offset = entry->offset + array_index * (size_t)entry->item_size;
 
   switch (entry->type) {
   case ift_short:
