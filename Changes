@@ -1,48 +1,5 @@
 Imager release history.  Older releases can be found in Changes.old
 
-Imager 1.033 - 7 July 2026
-============
-
- - fix mishandling of large EXIF IFD entry count values, treating them
-   as negative numbers.  This could lead to an attempt to allocate a
-   block nearly the size of the address space, which fails and causes
-   an exit.  Such counts are now treated as unsigned and caught either
-   when the multiplication result is checked, or when the end of the
-   IFD referenced memory is outside the EXIF block.
-   Thanks to cpan-security.
-   CVE-2026-14454
-
- - JPEG: depend on Imager 1.033 for the EXIF fix.
-
- - fix a thread context object reference count leak in the bumpmap and
-   bumpmap_complex filters.
-
- - TIFF: fix a leak from processing the TIFF warnings buffer.
-   Introduced in Imager 1.021, Imager::File::TIFF 0.96.
-
-Imager 1.032 - 1 July 2026
-============
-
- - JPEG: fix a memory leak from reading a JPEG image with more than
-   one IPTC/APP13 block
-   Thanks to cpan-security.
-   CVE-2026-13708
-
- - SGI: fix a buffer read over flow when reading a crafted RLE SGI
-   file.
-   Thanks to cpan-security.
-   CVE-2026-13705
-
- - getscanline() with type float in list context would leak the
-   returned SVs.  Introduced in 1.013.
-
- - TIFF: sizeproc could potentially ignore a seek error when finding
-   the current position (but then should fail later trying to restore
-   it.)  Revealed by a signed comparison warning.
-
- - GIF: fix use of uninitialized values when logging introduced by the
-   CVE-2026-8454 fix.
-
  - TIFF: sizeproc could potentiallly ignore a seek error when finding
    the current position (but then should fail later trying to restore
    it.)  Revealed by a signed comparison warning.
@@ -89,6 +46,49 @@ Imager 1.032 - 1 July 2026
      - cast-function-type warnings from casting GetProcAddress()
        results
      - a signed vs unsigned comparison
+
+Imager 1.033 - 7 July 2026
+============
+
+ - fix mishandling of large EXIF IFD entry count values, treating them
+   as negative numbers.  This could lead to an attempt to allocate a
+   block nearly the size of the address space, which fails and causes
+   an exit.  Such counts are now treated as unsigned and caught either
+   when the multiplication result is checked, or when the end of the
+   IFD referenced memory is outside the EXIF block.
+   Thanks to cpan-security.
+   CVE-2026-14454
+
+ - JPEG: depend on Imager 1.033 for the EXIF fix.
+
+ - fix a thread context object reference count leak in the bumpmap and
+   bumpmap_complex filters.
+
+ - TIFF: fix a leak from processing the TIFF warnings buffer.
+   Introduced in Imager 1.021, Imager::File::TIFF 0.96.
+
+Imager 1.032 - 1 July 2026
+============
+
+ - JPEG: fix a memory leak from reading a JPEG image with more than
+   one IPTC/APP13 block
+   Thanks to cpan-security.
+   CVE-2026-13708
+
+ - SGI: fix a buffer read over flow when reading a crafted RLE SGI
+   file.
+   Thanks to cpan-security.
+   CVE-2026-13705
+
+ - getscanline() with type float in list context would leak the
+   returned SVs.  Introduced in 1.013.
+
+ - TIFF: sizeproc could potentially ignore a seek error when finding
+   the current position (but then should fail later trying to restore
+   it.)  Revealed by a signed comparison warning.
+
+ - GIF: fix use of uninitialized values when logging introduced by the
+   CVE-2026-8454 fix.
 
 Imager 1.031 - 15 May 2026
 ============
