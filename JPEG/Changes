@@ -1,6 +1,9 @@
 Imager-File-JPEG 1.005
 ======================
 
+ - depend on Imager 1.034 for another EXIF decoding fix
+   CVE-2026-19082
+
  - warning fix pass, testing with -Wall -Wextra -Werror:
    - "(void)" an unused callback argument
    - volatile some variables used around setjmp()

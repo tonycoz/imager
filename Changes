@@ -1,5 +1,17 @@
 Imager release history.  Older releases can be found in Changes.old
 
+Imager 1.034 - 7 August 2026
+============
+
+ - EXIF: fix decoding of ASCII fields with zero size.
+   thanks to Arpit Jain for the report
+   GHSA-hx46-55wp-hv6m
+   CVE-2026-19082
+
+ - JPEG: depend on Imager 1.034 for the EXIF decoding fix.
+
+ - include bundled module Changes files in the main Imager distribution
+
  - TIFF: sizeproc could potentiallly ignore a seek error when finding
    the current position (but then should fail later trying to restore
    it.)  Revealed by a signed comparison warning.
