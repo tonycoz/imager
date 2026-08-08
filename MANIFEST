@@ -396,6 +396,8 @@ t/data/exifbadascoff.bin	EXIF block with bad ASCII field offset
 t/data/exifbadderoff.bin	EXIF with (U32)-1 DE offset
 t/data/exifbadifdoff1.bin	EXIF with (U32)-1 DE offset
 t/data/exifbadifdoff2.bin	EXIF with (U32)-1 DE offset
+t/data/exifbadifdstart.bin
+t/data/exifbadifdstart2.bin
 t/data/exifbadoff.bin		EXIF with bad directory entry offset
 t/data/exifgood.bin		Good EXIF data block
 t/GoodTestFont.pm		A dummy (hardly implemented) font driver.

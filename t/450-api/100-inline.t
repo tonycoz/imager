@@ -779,6 +779,12 @@ ok(test_slots(), "call slot APIs");
     ($im, $ok) = do_one_exif("t/data/exifbadifdoff1.bin");
     ok(!$ok, "fail to load exif with bad exif ifd offset");
 
+    ($im, $ok) = do_one_exif("t/data/exifbadifdstart.bin");
+    ok(!$ok, "fail to load exif with bad exif ifd0 start offset");
+
+    ($im, $ok) = do_one_exif("t/data/exifbadifdstart2.bin");
+    ok(!$ok, "fail to load exif with bad exif exififd start offset");
+
     ($im, $ok) = do_one_exif("t/data/exifbad0ascii.bin");
     ok($ok, "load exif with zero length ascii")
         or diag(Imager->_error_as_msg);
@@ -798,13 +804,14 @@ ok(test_slots(), "call slot APIs");
 
 sub do_one_exif {
     my ($exif_name) = @_;
-    
+
     open my $exif_fh, "<", $exif_name
         or die "Cannot open $exif_name: $!";
     binmode $exif_fh;
     my $exif_data = do { local $/; <$exif_fh> };
     close $exif_fh;
     $im = Imager->new(xsize => 1, ysize => 1);
+    Imager::i_log_entry("Testing $exif_name", 2);
     my $ok = decode_exif($im, $exif_data);
     
     return ($im, $ok);
