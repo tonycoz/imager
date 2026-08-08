@@ -15,7 +15,7 @@ jobs:
       - name: install dependencies
         run: |
             apt-get update ||:
-            apt-get -y install build-essential libtiff-dev libpng-dev libgif-dev libfreetype6-dev libjpeg-dev git-core
+            apt-get -y install build-essential libtiff-dev libpng-dev libgif-dev libfreetype6-dev libjpeg-dev git-core libinline-c-perl
       - name: perl -V
         run: "perl -V"
       - name: checkout
