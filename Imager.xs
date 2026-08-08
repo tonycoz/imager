@@ -681,10 +681,11 @@ ip_handle_quant_opts_low(pTHX_ i_quantize *quant, HV *hv, int push_errors)
     }
     if (quant->transp == tr_errdiff) {
       sv = hv_fetch(hv, "tr_errdiff", 10, 0);
-      if (sv && *sv && (str = SvPV(*sv, len)))
+      if (sv && *sv && (str = SvPV(*sv, len))) {
 	quant->tr_errdiff = lookup_name(errdiff_names, sizeof(errdiff_names)/sizeof(*errdiff_names), str, ed_floyd, push_errors, "tr_errdiff", &failed);
 	if (failed)
 	  return 0;
+      }
     }
     if (quant->transp == tr_ordered) {
       quant->tr_orddith = od_tiny;
