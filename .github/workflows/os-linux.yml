@@ -19,6 +19,9 @@ jobs:
         with:
           packages: install build-essential libtiff-dev libpng-dev libgif-dev libfreetype6-dev libjpeg-dev libtest-pod-coverage-perl libtest-pod-perl libpod-parser-perl libpod-spell-perl aspell libinline-c-perl libparse-recdescent-perl cpanminus libcapture-tiny-perl libmodule-build-perl
           version: 1.2
+      - name: perl -V
+        run: |
+            perl -V
       - name: install CPAN dependencies
         run: |
             sudo cpanm Inline::CPP
