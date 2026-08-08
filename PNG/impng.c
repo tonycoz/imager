@@ -421,7 +421,7 @@ i_readpng_wiol(io_glue *ig, int flags) {
 }
 
 static i_img *
-read_direct8(png_structp png_ptr, png_infop info_ptr, int channels,
+read_direct8(png_structp png_ptr, png_infop info_ptr, int ochannels,
 	     i_img_dim width, i_img_dim height) {
   i_img * volatile vim = NULL;
   int color_type = png_get_color_type(png_ptr, info_ptr);
@@ -431,7 +431,7 @@ read_direct8(png_structp png_ptr, png_infop info_ptr, int channels,
   i_img *im;
   unsigned char *line;
   unsigned char * volatile vline = NULL;
-  volatile int vchannels = channels;
+  volatile int vchannels = ochannels;
 
   if (setjmp(png_jmpbuf(png_ptr))) {
     if (vim) i_img_destroy(vim);
@@ -463,7 +463,7 @@ read_direct8(png_structp png_ptr, png_infop info_ptr, int channels,
     return NULL;
   }
   
-  line = vline = mymalloc(channels * width);
+  line = vline = mymalloc(vchannels * width);
   for (pass = 0; pass < number_passes; pass++) {
     for (y = 0; y < height; y++) {
       if (pass > 0)
@@ -481,7 +481,7 @@ read_direct8(png_structp png_ptr, png_infop info_ptr, int channels,
 }
 
 static i_img *
-read_direct16(png_structp png_ptr, png_infop info_ptr, int channels,
+read_direct16(png_structp png_ptr, png_infop info_ptr, int ochannels,
 	     i_img_dim width, i_img_dim height) {
   i_img * volatile vim = NULL;
   i_img_dim x, y;
@@ -492,7 +492,7 @@ read_direct16(png_structp png_ptr, png_infop info_ptr, int channels,
   unsigned *bits_line;
   unsigned * volatile vbits_line = NULL;
   size_t row_bytes;
-  volatile int vchannels = channels;
+  volatile int vchannels = ochannels;
 
   if (setjmp(png_jmpbuf(png_ptr))) {
     if (vim) i_img_destroy(vim);
@@ -506,7 +506,7 @@ read_direct16(png_structp png_ptr, png_infop info_ptr, int channels,
   mm_log((1,"number of passes=%d\n",number_passes));
 
   if (png_get_valid(png_ptr, info_ptr, PNG_INFO_tRNS)) {
-    channels++;
+    vchannels++;
     mm_log((1, "image has transparency, adding alpha: channels = %d\n", vchannels));
     png_set_expand(png_ptr);
   }
@@ -616,7 +616,7 @@ read_bilevel(png_structp png_ptr, png_infop info_ptr,
 /* FIXME: do we need to unscale palette color values from the 
    supplied alphas? */
 static i_img *
-read_paletted(png_structp png_ptr, png_infop info_ptr, int channels,
+read_paletted(png_structp png_ptr, png_infop info_ptr, int ochannels,
 	      i_img_dim width, i_img_dim height) {
   i_img * volatile vim = NULL;
   int color_type = png_get_color_type(png_ptr, info_ptr);
@@ -631,7 +631,7 @@ read_paletted(png_structp png_ptr, png_infop info_ptr, int channels,
   png_bytep png_pal_trans;
   png_color_16p png_color_trans;
   int num_pal_trans;
-  volatile int vchannels = channels;
+  volatile int vchannels = ochannels;
 
   if (setjmp(png_jmpbuf(png_ptr))) {
     if (vim) i_img_destroy(vim);
