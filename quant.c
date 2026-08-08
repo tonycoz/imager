@@ -302,7 +302,7 @@ makemap_addi(i_quantize *quant, i_img **imgs, int count) {
   int cnum, i, bst_idx=0, ld, cd, iter, currhb, img_num;
   i_img_dim x, y;
   i_sample_t *val;
-  float dlt, accerr;
+  float dlt;
   hashbox *hb;
   i_mempool mp;
   i_img_dim maxwidth = 0;
@@ -348,8 +348,6 @@ makemap_addi(i_quantize *quant, i_img **imgs, int count) {
   cr_hashindex(clr, cnum, hb);
 
   for(iter=0;iter<3;iter++) {
-    accerr=0.0;
-    
     for (img_num = 0; img_num < count; ++img_num) {
       i_img *im = imgs[img_num];
       sample_indices = im->channels >= 3 ? NULL : gray_samples;
@@ -372,7 +370,6 @@ makemap_addi(i_quantize *quant, i_img **imgs, int count) {
           }
           
           clr[bst_idx].mcount++;
-          accerr+=(ld);
           clr[bst_idx].dr+=val[0];
           clr[bst_idx].dg+=val[1];
           clr[bst_idx].db+=val[2];
@@ -1597,10 +1594,9 @@ static
 void
 cr_hashindex(cvec clr[256],int cnum,hashbox hb[512]) {
   
-  int bx,mind,cd,cumcnt,i;
+  int bx,mind,cd,i;
 /*  printf("indexing... \n");*/
   
-  cumcnt=0;
   for(bx=0; bx<512; bx++) {
     mind=196608;
     for(i=0; i<cnum; i++) { 
@@ -1612,7 +1608,6 @@ cr_hashindex(cvec clr[256],int cnum,hashbox hb[512]) {
     for(i=0;i<cnum;i++) if (mindist(bx,&clr[i])<mind) hb[bx].vec[hb[bx].cnt++]=i;
     /*printf("box %d -> approx -> %d\n",bx,hb[bx].cnt); */
     /*	statbox(bx,cnum,clr); */
-    cumcnt+=hb[bx].cnt;
   }
   
 /*  printf("Average search space: %d\n",cumcnt/512); */

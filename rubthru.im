@@ -66,7 +66,7 @@ static int
 rubthru_targ_alpha(i_img *im, i_img *src, i_img_dim tx, i_img_dim ty, 
                    i_img_dim src_minx, i_img_dim src_miny,
                    i_img_dim src_maxx, i_img_dim src_maxy) {
-  i_img_dim x, y, ttx, tty;
+  i_img_dim x, y, tty;
   int want_channels;
   int alphachan;
   int ch;
@@ -117,7 +117,6 @@ rubthru_targ_alpha(i_img *im, i_img *src, i_img_dim tx, i_img_dim ty,
     if (max_x > min_x) {
       i_img_dim work_left = tx + min_x - src_minx;
       i_img_dim work_width = max_x - min_x;
-      ttx = work_left;
       IM_GLIN(im, work_left, work_left + work_width, tty, dest_line);
       
       for(x = min_x; x < max_x; x++) {
@@ -139,7 +138,6 @@ rubthru_targ_alpha(i_img *im, i_img *src, i_img_dim tx, i_img_dim ty,
 	}
 	++srcp;
 	++destp;
-	ttx++;
       }
       IM_PLIN(im, work_left, work_left + work_width, tty, dest_line);
     }
