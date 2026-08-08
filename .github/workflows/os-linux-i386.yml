@@ -8,7 +8,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     container:
-        image: i386/ubuntu:latest
+        image: i386/debian:latest
         env:
             WORKSPACE: ${{ github.workspace }}
     steps:
