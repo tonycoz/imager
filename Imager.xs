@@ -32,6 +32,10 @@ extern "C" {
 
 #define ARRAY_COUNT(array) (sizeof(array)/sizeof(*array))
 
+#ifndef SSize_t_MAX
+#define SSize_t_MAX (SSize_t)(~(Size_t)0 >> 1)
+#endif
+
 /*
 
 Context object management
