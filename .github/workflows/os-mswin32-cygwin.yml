@@ -10,11 +10,14 @@ jobs:
     steps:
       - run: git config --global core.autocrlf false
       - name: Set up Cygwin and install dependencies
-        shell: cmd
-        run: |
-          choco install cygwin --params="/InstallDir:%GITHUB_WORKSPACE%\cygwin" -r
-          choco install cyg-get
-          cyg-get cygwin-devel gcc-core gcc gcc-g++ make w32api-headers w32api-runtime binutils libtool git ccache perl libcrypt-devel libpng-devel libfreetype-devel libgif-devel libtiff-devel libjpeg-devel pkg-config libnsl-devel
+        uses: cygwin/cygwin-install-action@v3
+        with:
+          packages: >
+              cygwin-devel gcc-core gcc-g++ make w32api-headers w32api-runtime
+              binutils libtool git perl libcrypt-devel  libpng-devel
+              libfreetype-devel libgif-devel libtiff-devel libjpeg-devel
+              pkg-config libnsl-devel
+          install-dir: ${{ github.workspace }}\cygwin
       - name: Check out using Cygwin git, to ensure correct file permissions
         env:
             GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
