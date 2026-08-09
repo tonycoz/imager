@@ -88,6 +88,10 @@ jobs:
     needs: os-linux
     uses: ./.github/workflows/library-tiff.yml
 
+  perl-versions:
+    needs: os-linux
+    uses: ./.github/workflows/perl-versions.yml
+
   quality-coverage:
     needs: os-linux
     uses: ./.github/workflows/quality-coverage.yml

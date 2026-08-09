@@ -1,0 +1,58 @@
+name: perl-versions
+
+on:
+  workflow_call:
+
+jobs:
+  perl-versions:
+    name: dist ${{ matrix.os.label }} ${{ matrix.perl-version }} ${{ matrix.threads.label }}
+    runs-on: ${{ matrix.os.id }}
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        # once some failures are resolved we may be able to add Windows to this
+        os:
+          - id: ubuntu-latest
+            label: Linux
+        perl-version:
+          - '5.42'
+          - '5.26'
+          - '5.18'
+          - '5.12'
+        threads:
+          - enable: true
+            label: -Dusethreads
+          - enable: false
+            label: -Uusethreads
+    steps:
+      - name: install package dependencies cached
+        uses: tonycoz/cache-apt-pkgs-action@v1-node-20-warning
+        with:
+          packages: install build-essential libtiff-dev libpng-dev libgif-dev libfreetype6-dev libjpeg-dev aspell 
+          version: 1.2
+      - uses: actions/checkout@v6
+        with:
+          path: imager
+      - name: Set up perl
+        uses: shogo82148/actions-setup-perl@v1.41.1
+        with:
+          perl-version: ${{ matrix.perl-version }}
+          multi-thread: ${{ matrix.threads.enable }}
+          install-modules:
+            ExtUtils::MakeMaker
+            Inline::C
+            Inline::CPP
+            Parse::RecDescent
+            Perl::OSType
+            Scalar::Util
+            Socket
+            version
+      - name: perl -V
+        run: perl -V
+      - name: configure
+        run: cd imager && perl Makefile.PL
+      - name: Build
+        run: cd imager && make -j2
+      - name: Test
+        run: cd imager && make HARNESS_OPTIONS=j4 IMAGER_AUTHOR_TESTING=1 test
