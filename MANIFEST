@@ -262,8 +262,12 @@ PNG/testimg/palette.png
 PNG/testimg/palette_out.png
 PNG/testimg/paltrans.png
 PNG/testimg/rgb16.png
+PNG/testimg/rgb16trns.png
+PNG/testimg/rgb16trnsa.png
 PNG/testimg/rgb8.png
 PNG/testimg/rgb8i.png
+PNG/testimg/rgb8trns.png
+PNG/testimg/rgb8trnsa.png
 pnm.c
 polygon.c
 ppport.h

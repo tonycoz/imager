@@ -832,6 +832,12 @@ SKIP:
 }
 
 {
+    my $im = Imager->new(file => "testimg/rgb8trns.png", type => "png");
+    my $ex = Imager->new(file => "testimg/rgb8trnsa.png", type => "png");
+    is_image($im, $ex, "test trns 8-bit rgb parsed properly");
+}
+
+{
     my $im = Imager->new(file => "testimg/rgb16trns.png", type => "png");
     my $ex = Imager->new(file => "testimg/rgb16trnsa.png", type => "png");
     is_image($im, $ex, "test trns 16-bit rgb parsed properly");

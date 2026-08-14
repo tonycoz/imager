@@ -31,3 +31,5 @@ testimg/rgb16trns.png		RGB16 image with tRNS chunk
 testimg/rgb16trnsa.png		simple RGBA16 version of the tRNS file
 testimg/rgb8.png
 testimg/rgb8i.png
+testimg/rgb8trns.png		RGB8 image with tRNS chunk
+testimg/rgb8trnsa.png		rgb8trns.png as a simple RGBA8PNG
