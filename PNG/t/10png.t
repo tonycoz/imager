@@ -2,7 +2,8 @@
 use strict;
 use Imager qw(:all);
 use Test::More;
-use Imager::Test qw(test_image_raw test_image is_image is_imaged test_image_16 test_image_double);
+use Imager::Test qw(test_image_raw test_image is_image is_imaged
+                    test_image_16 test_image_double test_image_gray_16);
 
 my $debug_writes = 1;
 
@@ -828,6 +829,12 @@ SKIP:
   ok($imr->read(data => $data), "read it back")
     or diag($imr->errstr);
   is_image($imr, $im1, "check it matches");
+}
+
+{
+    my $im = Imager->new(file => "testimg/rgb16trns.png", type => "png");
+    my $ex = Imager->new(file => "testimg/rgb16trnsa.png", type => "png");
+    is_image($im, $ex, "test trns 16-bit rgb parsed properly");
 }
 
 done_testing();

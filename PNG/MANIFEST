@@ -27,5 +27,7 @@ testimg/palette.png
 testimg/palette_out.png
 testimg/paltrans.png
 testimg/rgb16.png
+testimg/rgb16trns.png		RGB16 image with tRNS chunk
+testimg/rgb16trnsa.png		simple RGBA16 version of the tRNS file
 testimg/rgb8.png
 testimg/rgb8i.png
