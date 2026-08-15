@@ -800,6 +800,14 @@ ok(test_slots(), "call slot APIs");
     ($im, $ok) = do_one_exif("t/data/exifbadascoff.bin");
     ok(!$ok, "fail to load exif with ascii bad offset")
         or diag(Imager->_error_as_msg);
+
+    ($im, $ok) = do_one_exif("t/data/exif32overcnt.bin");
+    ok(!$ok, "fail to load exif with 32-bit overflow count")
+        or diag(Imager->_error_as_msg);
+
+    ($im, $ok) = do_one_exif("t/data/exif32oversz.bin");
+    ok(!$ok, "fail to load exif with 32-bit overflow sz")
+        or diag(Imager->_error_as_msg);
 }
 
 sub do_one_exif {
