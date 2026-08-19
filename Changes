@@ -1,5 +1,36 @@
 Imager release history.  Older releases can be found in Changes.old
 
+ - PNG: fix mishandling of volatile aliases for parameters.
+   https://github.com/tonycoz/imager/pull/567
+   This lead to:
+   - a buffer overflow when reading 8-bit per sample images with a tRNS
+     chunk, and
+     https://github.com/tonycoz/imager/security/advisories/GHSA-jhx5-34j8-9g88
+     CVE-2026-73639
+   - image corruption when reading a 16-bit per sample image with a
+     tRNS chunk
+
+ - EXIF: fix some more decoding issues, in particular on 32-bit builds
+   (ie. 32-bit pointers, size_t)
+   https://github.com/tonycoz/imager/issues/568
+   https://github.com/tonycoz/imager/security/advisories/GHSA-j47j-8w8p-3mmc
+   CVE-2026-73638
+
+ - define SSize_t_MAX for compatibility with older perls
+   https://github.com/tonycoz/imager/issues/569
+
+ - fixed some more warnings, found by clang:
+   - missing braces on an if which could fail to report on error on an
+     invalid tr_errdiff parameter for quantization options.
+   - removed some set but otherwise unused variables
+
+ - CI:
+   - use Debian instead of Ubuntu for i386 builds, to use a vaguely
+     modern perl
+   - install Inline::C for i386 builds, which would have detected some
+     of the EXIF issues
+   - test against older perls
+
 Imager 1.034 - 7 August 2026
 ============
 

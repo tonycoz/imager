@@ -1,3 +1,16 @@
+Imager-File-PNG 1.004
+=====================
+
+ - fix mishandling of volatile aliases for parameters.
+   https://github.com/tonycoz/imager/pull/567
+   This lead to:
+   - a buffer overflow when reading 8-bit per sample images with a tRNS
+     chunk, and
+     https://github.com/tonycoz/imager/security/advisories/GHSA-jhx5-34j8-9g88
+     CVE-2026-73639
+   - image corruption when reading a 16-bit per sample image with a
+     tRNS chunk
+
 Imager-File-PNG 1.003
 =====================
 
