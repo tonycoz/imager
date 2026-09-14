@@ -1,5 +1,11 @@
 Imager release history.  Older releases can be found in Changes.old
 
+ - TGA:
+   - don't interpret large color map sizes as negative.
+     this would lead to an attempt a very large allocation which would
+     fail, and the Imager would exit().
+     https://github.com/tonycoz/imager/security/advisories/GHSA-p4vw-rc54-p2c2
+
 Imager 1.035 - 19 August 2026
 ============
 

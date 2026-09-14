@@ -41,11 +41,11 @@ typedef struct {
   unsigned char  idlength;
   char  colourmaptype;
   char  datatypecode;
-  short int colourmaporigin;
-  short int colourmaplength;
-  char  colourmapdepth;
-  short int x_origin;
-  short int y_origin;
+  unsigned colourmaporigin;
+  unsigned colourmaplength;
+  unsigned char  colourmapdepth;
+  unsigned x_origin;
+  unsigned y_origin;
   int width;
   int height;
   char  bitsperpixel;
@@ -562,11 +562,22 @@ structure.
 
 static
 int
-tga_palette_read(io_glue *ig, i_img *img, int bytepp, int colourmaplength) {
-  int i;
+tga_palette_read(io_glue *ig, i_img *img, int bytepp,
+                 unsigned colourmaporigin, unsigned colourmaplength) {
+  unsigned i;
   size_t palbsize;
   unsigned char *palbuf;
   i_color val;
+  unsigned colourmapusable = colourmaplength;
+
+  if (colourmaporigin > 255) {
+    i_push_errorf(0, "colourmaporigin %u not supported", colourmaporigin);
+    return 0;
+  }
+  if (colourmaplength > 256
+      || colourmaporigin + colourmaplength > 256) {
+    colourmapusable = 256U - colourmaporigin;
+  }
 
   palbsize = (size_t)colourmaplength * bytepp;
   palbuf   = mymalloc(palbsize);
@@ -578,10 +589,13 @@ tga_palette_read(io_glue *ig, i_img *img, int bytepp, int colourmaplength) {
   }
   
   /* populate the palette of the new image */
-  for(i=0; i<colourmaplength; i++) {
+  for(i=0; i<colourmapusable; i++) {
     color_unpack(palbuf+i*bytepp, bytepp, &val);
     i_addcolors(img, &val, 1);
   }
+  /* discard anything from 256 to colourmaplength.
+     previously that would happen from i_addcolors() failing
+   */
   myfree(palbuf);
   return 1;
 }
@@ -786,6 +800,7 @@ i_readtga_wiol(io_glue *ig, int length) {
       !tga_palette_read(ig,
 			img,
 			bpp_to_bytes(header.colourmapdepth),
+                        header.colourmaporigin,
 			header.colourmaplength)
       ) {
     /* tga_palette_read() sets a message */

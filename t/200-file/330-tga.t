@@ -260,6 +260,15 @@ is($compressed, 1, "check compressed tag");
 	 "check error message");
 }
 
+{
+  # for now
+  my $im = Imager->new;
+  ok(!$im->read(file => "testimg/badcmlen.tga", type => "tga"),
+     "fail to read tga with out of range palette size");
+  like($im->errstr, qr/could not read targa colormap/,
+       "check message");
+}
+
 done_testing();
 
 sub write_test {
