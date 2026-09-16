@@ -88,6 +88,8 @@ static i_img IIM_base_8bit_pal =
   NULL
 };
 
+#define PALETTE_COLOR_COUNT 256
+
 /*
 =item im_img_pal_new(ctx, C<x>, C<y>, C<channels>, C<maxpal>)
 X<im_img_pal_new API>X<i_img_pal_new API>
@@ -97,7 +99,8 @@ X<im_img_pal_new API>X<i_img_pal_new API>
 
 Creates a new paletted image of the supplied dimensions.
 
-C<maxpal> is the maximum palette size and should normally be 256.
+C<max_palette_size> is now ignored, all images have a 256 color
+palette allocated.
 
 Returns a new image or NULL on failure.
 
@@ -111,11 +114,9 @@ im_img_pal_new(pIMCTX, i_img_dim x, i_img_dim y, int channels, int maxpal) {
   i_img_pal_ext *palext;
   size_t bytes, line_bytes;
 
+  (void)maxpal; /* no longer used */
+
   i_clear_error();
-  if (maxpal < 1 || maxpal > 256) {
-    i_push_error(0, "Maximum of 256 palette entries");
-    return NULL;
-  }
   if (x < 1 || y < 1) {
     i_push_error(0, "Image sizes must be positive");
     return NULL;
@@ -142,9 +143,16 @@ im_img_pal_new(pIMCTX, i_img_dim x, i_img_dim y, int channels, int maxpal) {
   im = i_img_alloc();
   memcpy(im, &IIM_base_8bit_pal, sizeof(i_img));
   palext = mymalloc(sizeof(i_img_pal_ext));
-  palext->pal = mymalloc(sizeof(i_color) * maxpal);
+  palext->pal = mymalloc(sizeof(i_color) * PALETTE_COLOR_COUNT);
   palext->count = 0;
-  palext->alloc = maxpal;
+  palext->alloc = PALETTE_COLOR_COUNT;
+  {
+    i_color *pal = palext->pal;
+    int i;
+    /* unused colors are read as transparent black */
+    for (i = 0; i < PALETTE_COLOR_COUNT; ++i)
+      pal[i] = i_color_black0;
+  }
   palext->last_found = -1;
   im->ext_data = palext;
   i_tags_new(&im->tags);
@@ -342,9 +350,10 @@ static int i_gpix_p(i_img *im, i_img_dim x, i_img_dim y, i_color *val) {
     return -1;
   }
   which = ((i_palidx *)im->idata)[x + y * im->xsize];
-  if (which > PALEXT(im)->count)
-    return -1;
+  /* unallocated entries are black */
   *val = PALEXT(im)->pal[which];
+  if (which >= PALEXT(im)->count)
+    return -1;
 
   return 0;
 }
@@ -358,7 +367,6 @@ Retrieve a row of pixels.
 */
 static i_img_dim i_glin_p(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, i_color *vals) {
   if (y >= 0 && y < im->ysize && l < im->xsize && l >= 0) {
-    int palsize = PALEXT(im)->count;
     i_color *pal = PALEXT(im)->pal;
     i_palidx *data;
     i_img_dim count, i;
@@ -368,8 +376,7 @@ static i_img_dim i_glin_p(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, i_co
     count = r - l;
     for (i = 0; i < count; ++i) {
       i_palidx which = *data++;
-      if (which < palsize)
-        vals[i] = pal[which];
+      vals[i] = pal[which];
     }
     return count;
   }
@@ -424,7 +431,6 @@ static i_img_dim i_gsamp_p(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, i_s
               int const *chans, int chan_count) {
   int ch;
   if (y >= 0 && y < im->ysize && l < im->xsize && l >= 0) {
-    int palsize = PALEXT(im)->count;
     i_color *pal = PALEXT(im)->pal;
     i_palidx *data;
     i_img_dim count, i, w;
@@ -443,11 +449,9 @@ static i_img_dim i_gsamp_p(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, i_s
 
       for (i = 0; i < w; ++i) {
         i_palidx which = *data++;
-        if (which < palsize) {
-          for (ch = 0; ch < chan_count; ++ch) {
-            *samps++ = pal[which].channel[chans[ch]];
-            ++count;
-          }
+        for (ch = 0; ch < chan_count; ++ch) {
+          *samps++ = pal[which].channel[chans[ch]];
+          ++count;
         }
       }
     }
@@ -460,11 +464,9 @@ static i_img_dim i_gsamp_p(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, i_s
       }
       for (i = 0; i < w; ++i) {
         i_palidx which = *data++;
-        if (which < palsize) {
-          for (ch = 0; ch < chan_count; ++ch) {
-            *samps++ = pal[which].channel[ch];
-            ++count;
-          }
+        for (ch = 0; ch < chan_count; ++ch) {
+          *samps++ = pal[which].channel[ch];
+          ++count;
         }
       }
     }

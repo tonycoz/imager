@@ -519,6 +519,30 @@ decode_exif(Imager im, SV *data) {
   return im_decode_exif(im, (const unsigned char *)pv, len);
 }
 
+int
+raw_ppal_one(Imager im, i_img_dim x, i_img_dim y, int index) {
+  i_palidx pindex = index;
+  return i_ppal(im, x, x+1, y, &pindex);
+}
+
+int
+raw_gpix(Imager im, i_img_dim x, i_img_dim y, Imager::Color val) {
+  return i_gpix(im, x, y, val);
+}
+
+int
+raw_glin_one(Imager im, i_img_dim x, i_img_dim y, Imager::Color val) {
+  return i_glin(im, x, x+1, y, val);
+}
+
+int
+raw_gsamp_one(Imager im, i_img_dim x, i_img_dim y, SV *sv) {
+  i_sample_t samps[MAXCHANNELS];
+  int count = i_gsamp(im, x, x+1, y, samps, NULL, im->channels);
+  sv_setpvn(sv, samps, count);
+  return count;
+}
+
 EOS
 
 my $im = Imager->new(xsize=>50, ysize=>50);
@@ -739,6 +763,24 @@ for my $bits (8, 16) {
   is(color_model($rgb), 3, "check i_img_color_model() api");
   is(color_channels($rgb), 3, "check i_img_color_channels() api");
   is(alpha_channel($rgb), -1, "check i_img_alpha_channel() api");
+}
+
+for my $bad_index (1, 255) {
+  my $im = Imager->new(xsize => 2, ysize => 2, type => "paletted");
+  ok($im, "make paletted image $bad_index");
+  ok(defined $im->addcolors(colors => [ [ 10, 20, 30 ] ]),
+     "add just one color $bad_index");
+  ok(raw_ppal_one($im, 0, 0, 0), "set a valid index $bad_index");
+  ok(raw_ppal_one($im, 1, 0, $bad_index), "set a bad index $bad_index");
+  my $c = Imager::Color->new( 20, 30, 40 );
+  is(raw_gpix($im, 1, 0, $c), -1, "read the bad pixel $bad_index");
+  is_color3($c, 0, 0, 0, "gpix: bad index should be black $bad_index");
+  $c = Imager::Color->new( 20, 30, 40 );
+  is(raw_glin_one($im, 1, 0, $c), 1, "read via glin $bad_index");
+  is_color3($c, 0, 0, 0, "glin: bad index should be black $bad_index");
+  my $samps;
+  is(raw_gsamp_one($im, 1, 0, $samps), 3, "correct sample count $bad_index");
+  is(unpack("H*", $samps), "000000", "gsamp: bad index black $bad_index");
 }
 
 ok(test_mutex(), "call mutex APIs");

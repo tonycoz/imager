@@ -418,6 +418,8 @@ extern void i_mutex_destroy(i_mutex_t m);
 extern void i_mutex_lock(i_mutex_t m);
 extern void i_mutex_unlock(i_mutex_t m);
 
+#define i_color_black0 ((i_color){.rgba = { 0, 0, 0, 0 }})
+
 #include "imio.h"
 
 #endif

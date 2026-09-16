@@ -686,8 +686,12 @@ read_paletted(png_structp png_ptr, png_infop info_ptr, int ochannels,
   line = vline = mymalloc(width);
   for (pass = 0; pass < number_passes; pass++) {
     for (y = 0; y < height; y++) {
-      if (pass > 0)
+      if (pass == 0) {
+        memset(line, 0, width);
+      }
+      else {
 	i_gpal(im, 0, width, y, line);
+      }
       png_read_row(png_ptr,(png_bytep)line, NULL);
       i_ppal(im, 0, width, y, line);
     }

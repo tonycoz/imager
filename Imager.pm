@@ -1049,7 +1049,7 @@ sub img_set {
 
   if ($hsh{type} eq 'paletted' || $hsh{type} eq 'pseudo') {
     $self->{IMG} = i_img_pal_new($hsh{xsize}, $hsh{ysize}, $hsh{channels},
-                                 $hsh{maxcolors} || 256);
+                                 256);
   }
   elsif ($hsh{bits} eq 'double') {
     $self->{IMG} = i_img_double_new($hsh{xsize}, $hsh{ysize}, $hsh{channels});

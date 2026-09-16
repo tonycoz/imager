@@ -1800,7 +1800,8 @@ X<im_img_pal_new API>X<i_img_pal_new API>
 
 Creates a new paletted image of the supplied dimensions.
 
-C<maxpal> is the maximum palette size and should normally be 256.
+C<max_palette_size> is now ignored, all images have a 256 color
+palette allocated.
 
 Returns a new image or NULL on failure.
 
