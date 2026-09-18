@@ -6,6 +6,11 @@ Imager release history.  Older releases can be found in Changes.old
      fail, and the Imager would exit().
      https://github.com/tonycoz/imager/security/advisories/GHSA-p4vw-rc54-p2c2
 
+ - PNG:
+   - for the first pass (for interleaved images) when reading a
+     paletted image, initialize the pixel buffer to zeroes.  This
+     prevents out of range intermediate indexes in the image.
+
  - paletted images:
    - these always have 256 colors allocated, rather than being
      controlled by maxcolors.

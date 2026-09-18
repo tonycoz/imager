@@ -1,3 +1,10 @@
+Imager-File-PNG 1.005
+=====================
+
+ - for the first pass (for interleaved images) when reading a paletted
+   image, initialize the pixel buffer to zeroes.  This prevents out
+   of range intermediate indexes in the image.
+ 
 Imager-File-PNG 1.004
 =====================
 
