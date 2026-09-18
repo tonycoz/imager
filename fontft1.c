@@ -1290,7 +1290,7 @@ i_tt_face_name(TT_Fonthandle *handle, char *name_buf, size_t name_buf_size) {
     strncpy(name_buf, name, name_buf_size);
     name_buf[name_buf_size-1] = '\0';
 
-    return strlen(name) + 1;
+    return strlen(name_buf) + 1;
   }
   else {
     i_push_error(0, "no face name present");
