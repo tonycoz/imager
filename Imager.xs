@@ -2777,7 +2777,7 @@ i_tt_has_chars(handle, text_sv, utf8)
             }
 	  }
         }
-        else {
+        else if (count) {
           EXTEND(SP, 1);
           PUSHs(sv_2mortal(newSVpv(work, count)));
         }
@@ -3555,7 +3555,7 @@ i_gpal(im, l, r, y)
               PUSHs(sv_2mortal(newSViv(work[i])));
             }
           }
-          else {
+          else if (count) {
             EXTEND(SP, 1);
             PUSHs(sv_2mortal(newSVpv((char *)work, count * sizeof(i_palidx))));
           }
@@ -3736,7 +3736,7 @@ i_gsamp(im, l, r, y, channels)
             for (i = 0; i < count; ++i)
               PUSHs(sv_2mortal(newSViv(data[i])));
           }
-          else {
+          else if (count) {
             EXTEND(SP, 1);
             PUSHs(sv_2mortal(newSVpv((char *)data, count * sizeof(i_sample_t))));
           }
@@ -3994,7 +3994,7 @@ i_gsampf(im, l, r, y, channels)
             for (i = 0; i < count; ++i)
               PUSHs(sv_2mortal(newSVnv(data[i])));
           }
-          else {
+          else if (count) {
             EXTEND(SP, 1);
             PUSHs(sv_2mortal(newSVpv((void *)data, count * sizeof(i_fsample_t))));
           }
