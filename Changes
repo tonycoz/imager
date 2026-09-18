@@ -5,6 +5,7 @@ Imager release history.  Older releases can be found in Changes.old
      this would lead to an attempt a very large allocation which would
      fail, and the Imager would exit().
      https://github.com/tonycoz/imager/security/advisories/GHSA-p4vw-rc54-p2c2
+     CVE-2026-93019
 
  - PNG:
    - for the first pass (for interleaved images) when reading a
@@ -21,6 +22,7 @@ Imager release history.  Older releases can be found in Changes.old
        The perl get_pixel() and getscanline() methods always returned
        black.
        https://github.com/tonycoz/imager/security/advisories/GHSA-j7v7-cm4g-vrgf
+       CVE-2026-93018
      - the i_gsamp() API and getsamples() method no longer skip such pixels
        and return them as black
 
