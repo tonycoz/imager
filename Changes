@@ -6,6 +6,19 @@ Imager release history.  Older releases can be found in Changes.old
      fail, and the Imager would exit().
      https://github.com/tonycoz/imager/security/advisories/GHSA-p4vw-rc54-p2c2
 
+ - paletted images:
+   - these always have 256 colors allocated, rather than being
+     controlled by maxcolors.
+   - if an out of range color index is written to the image:
+     - the i_gpix() and i_glin() APIs will return black for such
+       pixels rather than leaving them uninitialized, or returning an
+       uninitialized entry from the palette.
+       The perl get_pixel() and getscanline() methods always returned
+       black.
+       https://github.com/tonycoz/imager/security/advisories/GHSA-j7v7-cm4g-vrgf
+     - the i_gsamp() API and getsamples() method no longer skip such pixels
+       and return them as black
+
 Imager 1.035 - 19 August 2026
 ============
 
