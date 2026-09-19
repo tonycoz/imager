@@ -1,3 +1,10 @@
+Imager-File-JPEG 1.006
+======================
+
+ - use newSVpvn(p, len) instead of newSVpv(p, len) since newSVpv() will
+   try to wastefully or dangerously strlen(p) if len happens to be zero.
+   related to https://github.com/tonycoz/imager/pull/576
+
 Imager-File-JPEG 1.005
 ======================
 

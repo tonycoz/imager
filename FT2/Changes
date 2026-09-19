@@ -1,4 +1,15 @@
-Imager-Font-FT2 1.004
+Imager-Font-FT2 1.006
+=====================
+
+ - use newSVpvn(p, len) instead of newSVpv(p, len) since newSVpv() will
+   try to wastefully or dangerously strlen(p) if len happens to be zero.
+   related to https://github.com/tonycoz/imager/pull/576
+
+ - use newSVpv(p, 0) instead of newSVpv(p, strlen(p)) for the
+   convenience of this otherwise annoying API.
+   related to https://github.com/tonycoz/imager/pull/576
+
+Imager-Font-FT2 1.005
 =====================
 
  - warning fix pass, testing with -Wall -Wextra -Werror:

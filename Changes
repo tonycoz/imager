@@ -1,5 +1,27 @@
 Imager release history.  Older releases can be found in Changes.old
 
+ - i_tt_has_chars(), i_gpal(), i_gsamp(), i_gsampf() - avoid calling
+   newSVpv() with a zero length
+   https://github.com/tonycoz/imager/pull/576
+
+ - i_tt_face_name() - ensure the returned string length matches the
+   buffer
+   https://github.com/tonycoz/imager/pull/577
+
+Note: i_tt_has_chars() and i_tt_face_name() are part of Freetype 1.x
+support, which is disabled unless explicitly enabled.
+
+ - Core Imager, JPEG, FT2:
+   - use newSVpvn(p, len) instead of newSVpv(p, len) since newSVpv() will
+     try to wastefully or dangerously strlen(p) if len happens to be zero.
+     related to https://github.com/tonycoz/imager/pull/576
+
+ - Core Imager, FT2:
+   - use newSVpv(p, 0) instead of newSVpv(p, strlen(p)) for the
+     convenience of this otherwise annoying API.
+     related to https://github.com/tonycoz/imager/pull/576
+
+
 Imager 1.036 - 18 September 2026
 ============
 
