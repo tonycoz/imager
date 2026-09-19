@@ -423,7 +423,7 @@ io_writer(void *p, void const *data, size_t size) {
   SAVETMPS;
   EXTEND(SP, 1);
   PUSHMARK(SP);
-  PUSHs(sv_2mortal(newSVpv((char *)data, size)));
+  PUSHs(sv_2mortal(newSVpvn((char *)data, size)));
   PUTBACK;
 
   count = perl_call_sv(cbd->writecb, G_SCALAR);
@@ -1537,7 +1537,7 @@ io_slurp(ig)
 	     CODE:
  	      data    = NULL;
               tlength = io_slurp(ig, &data);
-              RETVAL = newSVpv((char *)data,tlength);
+              RETVAL = newSVpvn((char *)data, tlength);
               myfree(data);
 	     OUTPUT:
 	      RETVAL
@@ -1639,7 +1639,7 @@ io_slurp(class, ig)
     CODE:
 	data    = NULL;
 	tlength = io_slurp(ig, &data);
-	RETVAL = newSVpv((char *)data,tlength);
+	RETVAL = newSVpvn((char *)data, tlength);
 	myfree(data);
     OUTPUT:
 	RETVAL
@@ -1999,7 +1999,7 @@ i_img_getdata(im)
              PPCODE:
 	       EXTEND(SP, 1);
                PUSHs(im->idata ? 
-	             sv_2mortal(newSVpv((char *)im->idata, im->bytes)) 
+	             sv_2mortal(newSVpvn((char *)im->idata, im->bytes))
 		     : &PL_sv_undef);
 
 IV
@@ -3557,7 +3557,7 @@ i_gpal(im, l, r, y)
           }
           else if (count) {
             EXTEND(SP, 1);
-            PUSHs(sv_2mortal(newSVpv((char *)work, count * sizeof(i_palidx))));
+            PUSHs(sv_2mortal(newSVpvn((char *)work, count * sizeof(i_palidx))));
           }
           myfree(work);
         }
@@ -3738,7 +3738,7 @@ i_gsamp(im, l, r, y, channels)
           }
           else if (count) {
             EXTEND(SP, 1);
-            PUSHs(sv_2mortal(newSVpv((char *)data, count * sizeof(i_sample_t))));
+            PUSHs(sv_2mortal(newSVpvn((char *)data, count * sizeof(i_sample_t))));
           }
 	  myfree(data);
         }
@@ -3996,7 +3996,7 @@ i_gsampf(im, l, r, y, channels)
           }
           else if (count) {
             EXTEND(SP, 1);
-            PUSHs(sv_2mortal(newSVpv((void *)data, count * sizeof(i_fsample_t))));
+            PUSHs(sv_2mortal(newSVpvn((void *)data, count * sizeof(i_fsample_t))));
           }
           myfree(data);
         }
@@ -4089,7 +4089,7 @@ i_glin(im, l, r, y)
           }
           else if (count) {
 	    EXTEND(SP, 1);
-	    PUSHs(sv_2mortal(newSVpv((void *)vals, count * sizeof(i_color))));
+	    PUSHs(sv_2mortal(newSVpvn((void *)vals, count * sizeof(i_color))));
           }
           myfree(vals);
         }
@@ -4121,7 +4121,7 @@ i_glinf(im, l, r, y)
           }
           else if (count) {
             EXTEND(SP, 1);
-            PUSHs(sv_2mortal(newSVpv((void *)vals, count * sizeof(i_fcolor))));
+            PUSHs(sv_2mortal(newSVpvn((void *)vals, count * sizeof(i_fcolor))));
           }
           myfree(vals);
         }
