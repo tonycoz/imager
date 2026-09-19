@@ -1,0 +1,7 @@
+# I expect to expand on this
+Checks:
+ - -*
+ - perl-unsafe-*
+WarningsAsErrors: 'perl-unsafe-*'
+CheckOptions:
+  PerlCheckMultiplicity: 1

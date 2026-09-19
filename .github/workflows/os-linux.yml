@@ -103,3 +103,7 @@ jobs:
   quality-valgrind:
     needs: os-linux
     uses: ./.github/workflows/quality-valgrind.yml
+
+  quality-tidy:
+    needs: os-linux
+    uses: ./.github/workflows/quality-tidy.yml
