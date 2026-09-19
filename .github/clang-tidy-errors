@@ -2,6 +2,7 @@
 Checks:
  - -*
  - perl-unsafe-*
-WarningsAsErrors: 'perl-unsafe-*'
+ - perl-literal-hv_fetch
+WarningsAsErrors: 'perl-unsafe-*,perl-literal-hv_fetch'
 CheckOptions:
   PerlCheckMultiplicity: 1

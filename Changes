@@ -21,6 +21,10 @@ support, which is disabled unless explicitly enabled.
      convenience of this otherwise annoying API.
      related to https://github.com/tonycoz/imager/pull/576
 
+ - replace uses of hv_fetch(hv, "literal", length_of_literal, 0)
+   with hv_fetchs()
+
+ - add CI to check for misuse of newSVpv(), hv_fetch() with literal
 
 Imager 1.036 - 18 September 2026
 ============

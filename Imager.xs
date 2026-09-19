@@ -670,7 +670,7 @@ ip_handle_quant_opts_low(pTHX_ i_quantize *quant, HV *hv, int push_errors)
 
   quant->mc_colors = mymalloc(quant->mc_size * sizeof(i_color));
 
-  sv = hv_fetch(hv, "transp", 6, 0);
+  sv = hv_fetchs(hv, "transp", 0);
   if (sv && *sv && (str = SvPV(*sv, len))) {
     quant->transp = 
       lookup_name(transp_names, sizeof(transp_names)/sizeof(*transp_names), 
@@ -679,12 +679,12 @@ ip_handle_quant_opts_low(pTHX_ i_quantize *quant, HV *hv, int push_errors)
        return 0;
     if (quant->transp != tr_none) {
       quant->tr_threshold = 127;
-      sv = hv_fetch(hv, "tr_threshold", 12, 0);
+      sv = hv_fetchs(hv, "tr_threshold", 0);
       if (sv && *sv)
 	quant->tr_threshold = SvIV(*sv);
     }
     if (quant->transp == tr_errdiff) {
-      sv = hv_fetch(hv, "tr_errdiff", 10, 0);
+      sv = hv_fetchs(hv, "tr_errdiff", 0);
       if (sv && *sv && (str = SvPV(*sv, len))) {
 	quant->tr_errdiff = lookup_name(errdiff_names, sizeof(errdiff_names)/sizeof(*errdiff_names), str, ed_floyd, push_errors, "tr_errdiff", &failed);
 	if (failed)
@@ -693,7 +693,7 @@ ip_handle_quant_opts_low(pTHX_ i_quantize *quant, HV *hv, int push_errors)
     }
     if (quant->transp == tr_ordered) {
       quant->tr_orddith = od_tiny;
-      sv = hv_fetch(hv, "tr_orddith", 10, 0);
+      sv = hv_fetchs(hv, "tr_orddith", 0);
       if (sv && *sv && (str = SvPV(*sv, len))) {
 	quant->tr_orddith = lookup_name(orddith_names, sizeof(orddith_names)/sizeof(*orddith_names), str, od_random, push_errors, "tr_orddith", &failed);
 	if (failed)
@@ -701,7 +701,7 @@ ip_handle_quant_opts_low(pTHX_ i_quantize *quant, HV *hv, int push_errors)
       }
 
       if (quant->tr_orddith == od_custom) {
-	sv = hv_fetch(hv, "tr_map", 6, 0);
+	sv = hv_fetchs(hv, "tr_map", 0);
 	if (sv && *sv && SvTYPE(SvRV(*sv)) == SVt_PVAV) {
 	  AV *av = (AV*)SvRV(*sv);
           unsigned index;
@@ -721,14 +721,14 @@ ip_handle_quant_opts_low(pTHX_ i_quantize *quant, HV *hv, int push_errors)
     }
   }
   quant->make_colors = mc_median_cut;
-  sv = hv_fetch(hv, "make_colors", 11, 0);
+  sv = hv_fetchs(hv, "make_colors", 0);
   if (sv && *sv && (str = SvPV(*sv, len))) {
     quant->make_colors = 
       lookup_name(make_color_names, sizeof(make_color_names)/sizeof(*make_color_names), str, mc_median_cut, push_errors, "make_colors", &failed);
     if (failed)
       return 0;
   }
-  sv = hv_fetch(hv, "colors", 6, 0);
+  sv = hv_fetchs(hv, "colors", 0);
   if (sv && *sv && SvROK(*sv) && SvTYPE(SvRV(*sv)) == SVt_PVAV) {
     /* needs to be an array of Imager::Color
        note that the caller allocates the mc_color array and sets mc_size
@@ -749,7 +749,7 @@ ip_handle_quant_opts_low(pTHX_ i_quantize *quant, HV *hv, int push_errors)
       }
     }
   }
-  sv = hv_fetch(hv, "max_colors", 10, 0);
+  sv = hv_fetchs(hv, "max_colors", 0);
   if (sv && *sv) {
     IV iv = SvIV(*sv);
     if (iv <= 0) {
@@ -761,13 +761,13 @@ ip_handle_quant_opts_low(pTHX_ i_quantize *quant, HV *hv, int push_errors)
   }
 
   quant->translate = pt_closest;
-  sv = hv_fetch(hv, "translate", 9, 0);
+  sv = hv_fetchs(hv, "translate", 0);
   if (sv && *sv && (str = SvPV(*sv, len))) {
     quant->translate = lookup_name(translate_names, sizeof(translate_names)/sizeof(*translate_names), str, pt_closest, push_errors, "translate", &failed);
     if (failed)
       return 0;
   }
-  sv = hv_fetch(hv, "errdiff", 7, 0);
+  sv = hv_fetchs(hv, "errdiff", 0);
   if (sv && *sv && (str = SvPV(*sv, len))) {
     quant->errdiff = lookup_name(errdiff_names, sizeof(errdiff_names)/sizeof(*errdiff_names), str, ed_floyd, push_errors, "errdiff", &failed);
     if (failed)
@@ -775,19 +775,19 @@ ip_handle_quant_opts_low(pTHX_ i_quantize *quant, HV *hv, int push_errors)
   }
   if (quant->translate == pt_errdiff && quant->errdiff == ed_custom) {
     /* get the error diffusion map */
-    sv = hv_fetch(hv, "errdiff_width", 13, 0);
+    sv = hv_fetchs(hv, "errdiff_width", 0);
     if (sv && *sv)
       quant->ed_width = SvIV(*sv);
-    sv = hv_fetch(hv, "errdiff_height", 14, 0);
+    sv = hv_fetchs(hv, "errdiff_height", 0);
     if (sv && *sv)
       quant->ed_height = SvIV(*sv);
-    sv = hv_fetch(hv, "errdiff_orig", 12, 0);
+    sv = hv_fetchs(hv, "errdiff_orig", 0);
     if (sv && *sv)
       quant->ed_orig = SvIV(*sv);
     if (quant->ed_width > 0 && quant->ed_height > 0) {
       int sum = 0;
       quant->ed_map = mymalloc(sizeof(int) * quant->ed_width * quant->ed_height);
-      sv = hv_fetch(hv, "errdiff_map", 11, 0);
+      sv = hv_fetchs(hv, "errdiff_map", 0);
       if (sv && *sv && SvROK(*sv) && SvTYPE(SvRV(*sv)) == SVt_PVAV) {
 	AV *av = (AV*)SvRV(*sv);
         size_t avi;
@@ -820,7 +820,7 @@ ip_handle_quant_opts_low(pTHX_ i_quantize *quant, HV *hv, int push_errors)
       }
     }
   }
-  sv = hv_fetch(hv, "perturb", 7, 0);
+  sv = hv_fetchs(hv, "perturb", 0);
   if (sv && *sv)
     quant->perturb = SvIV(*sv);
 
@@ -856,7 +856,7 @@ ip_copy_colors_back(pTHX_ HV *hv, i_quantize *quant) {
   int i;
   SV *work;
 
-  sv = hv_fetch(hv, "colors", 6, 0);
+  sv = hv_fetchs(hv, "colors", 0);
   if (!sv || !*sv || !SvROK(*sv) || SvTYPE(SvRV(*sv)) != SVt_PVAV) {
     /* nothing to do */
     return;
