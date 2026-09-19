@@ -27,9 +27,9 @@ jobs:
             label: -Uusethreads
     steps:
       - name: install package dependencies cached
-        uses: tonycoz/cache-apt-pkgs-action@v1-node-20-warning
+        uses: awalsh128/cache-apt-pkgs-action@v1.6.3
         with:
-          packages: install build-essential libtiff-dev libpng-dev libgif-dev libfreetype6-dev libjpeg-dev aspell 
+          packages: build-essential libtiff-dev libpng-dev libgif-dev libfreetype6-dev libjpeg-dev aspell 
           version: 1.2
       - uses: actions/checkout@v6
         with:
