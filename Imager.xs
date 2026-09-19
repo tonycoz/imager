@@ -3323,7 +3323,7 @@ i_errors()
 	i = 0;
 	while (errors[i].msg) {
 	  av = newAV();
-	  sv = newSVpv(errors[i].msg, strlen(errors[i].msg));
+	  sv = newSVpv(errors[i].msg, 0);
 	  if (!av_store(av, 0, sv)) {
 	    SvREFCNT_dec(sv);
 	  }
