@@ -1,5 +1,10 @@
 Imager release history.  Older releases can be found in Changes.old
 
+ - getsamples() with type "float" on a direct 8-bit per sample image
+   and default channels would dereference a NULL pointer, crashing
+   perl.
+   https://github.com/tonycoz/imager/issues/575
+
  - i_tt_has_chars(), i_gpal(), i_gsamp(), i_gsampf() - avoid calling
    newSVpv() with a zero length
    https://github.com/tonycoz/imager/pull/576

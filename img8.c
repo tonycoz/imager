@@ -529,12 +529,7 @@ i_gsampf_d(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, i_fsample_t *samps,
   int ch;
   i_img_dim count, i, w;
   unsigned char *data;
-  for (ch = 0; ch < chan_count; ++ch) {
-    if (chans[ch] < 0 || chans[ch] >= im->channels) {
-      dIMCTXim(im);
-      im_push_errorf(aIMCTX, 0, "No channel %d in this image", chans[ch]);
-    }
-  }
+
   if (y >=0 && y < im->ysize && l < im->xsize && l >= 0) {
     if (r > im->xsize)
       r = im->xsize;

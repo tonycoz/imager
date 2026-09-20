@@ -762,7 +762,12 @@ my $psamp_outside_error = "Image position outside of image";
 	      $im->getsamples('y'=>4, 'x'=>3, width=>4,
 			      type=>'float', channels=>[3,2,1,0]) ],
 	    [ map { ($_->rgba)[3,2,1,0] } @fcolors ],
-	    "get channels 3..0 as scalar, float samples");
+	    "get channels 3..0 as packed, float samples");
+  is_deeply([ unpack "d*", 
+	      $im->getsamples('y'=>4, 'x'=>3, width=>4,
+			      type=>'float') ],
+	    [ map { $_->rgba } @fcolors ],
+	    "get default channels 0..3 as packed, float samples");
   
   print "# end OO level scanline function tests\n";
 }
