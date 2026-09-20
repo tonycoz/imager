@@ -1,3 +1,4 @@
+#define IMAGER_NO_CONTEXT
 #include "imager.h"
 #include "imageri.h"
 #include <stdlib.h>
@@ -5,32 +6,34 @@
 #include <unistd.h>
 #endif
 
-
 void*
 mymalloc(size_t size) {
+  dIMCTX;
   void *buf;
 
   if ( (buf = malloc(size)) == NULL ) {
-    mm_log((1, "mymalloc: unable to malloc %ld\n", (long)size));
+    im_log((aIMCTX, 1, "mymalloc: unable to malloc %ld\n", (long)size));
     fprintf(stderr,"Unable to malloc %ld.\n", (long)size); exit(3);
   }
-  mm_log((1, "mymalloc(size %ld) -> %p\n", (long)size, buf));
+  im_log((aIMCTX, 1, "mymalloc(size %ld) -> %p\n", (long)size, buf));
   return buf;
 }
 
 void
 myfree(void *p) {
-  mm_log((1, "myfree(p %p)\n", p));
+  dIMCTX;
+  im_log((aIMCTX, 1, "myfree(p %p)\n", p));
   free(p);
 }
 
 void *
 myrealloc(void *block, size_t size) {
+  dIMCTX;
   void *result;
 
-  mm_log((1, "myrealloc(block %p, size %ld)\n", block, (long)size));
+  im_log((aIMCTX, 1, "myrealloc(block %p, size %ld)\n", block, (long)size));
   if ((result = realloc(block, size)) == NULL) {
-    mm_log((1, "myrealloc: out of memory\n"));
+    im_log((aIMCTX, 1, "myrealloc: out of memory\n"));
     fprintf(stderr, "Out of memory.\n");
     exit(3);
   }
