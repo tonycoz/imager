@@ -9,5 +9,12 @@ Checks:
  - -clang-analyzer-security.insecureAPI.DeprecatedOrUnsafeBufferHandling
  - misc-*
  - -misc-include-cleaner
+ - cppcoreguidelines-*
+ - modernize-*
+ - performance-*
+ - portability-*
+ - readability-*
+ - -readability-function-cognitive-complexity
+ - perl-*
 CheckOptions:
  "bugprone-signed-bitwise.IgnorePositiveIntegerLiterals": true
