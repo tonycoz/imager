@@ -3393,9 +3393,6 @@ i_nearest_color(im, ...)
         RETVAL
 
 void
-malloc_state()
-
-void
 DSO_open(filename)
              char*       filename
 	     PREINIT:

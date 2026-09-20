@@ -117,11 +117,6 @@ X<< C<IMAGER_NOLOG> >>C<IMAGER_NOLOG> - build Imager with logging disabled.
 
 =item *
 
-X<< C<IMAGER_DEBUG_MALLOC> >>C<IMAGER_DEBUG_MALLOC> - build Imager with it's
-debug malloc wrappers.  This is I<not> compatible with threaded code.
-
-=item *
-
 X<< C<IM_INCPATH> >>C<IM_INCPATH> - equivalent to C<--incpath>.
 
 =item *

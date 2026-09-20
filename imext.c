@@ -37,10 +37,6 @@ im_ext_funcs imager_function_table =
     myfree,
     myrealloc,
 
-    mymalloc_file_line,
-    myfree_file_line,
-    myrealloc_file_line,
-
     mathom_i_img_8_new,
     mathom_i_img_16_new,
     mathom_i_img_double_new,

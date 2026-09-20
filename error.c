@@ -111,17 +111,16 @@ Also callable as C<i_clear_error()>.
 
 void
 im_clear_error(im_context_t ctx) {
-#ifdef IMAGER_DEBUG_MALLOC
   int i;
 
   for (i = 0; i < IM_ERROR_COUNT; ++i) {
-    if (ctx->error_space[i]) {
+    if (ctx->error_alloc[i]) {
       myfree(ctx->error_stack[i].msg);
       ctx->error_stack[i].msg = NULL;
-      ctx->error_space[i] = 0;
+      ctx->error_alloc[i] = 0;
     }
   }
-#endif
+
   ctx->error_sp = IM_ERROR_COUNT-1;
 }
 

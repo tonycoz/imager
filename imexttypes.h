@@ -29,8 +29,10 @@ extern "C" {
  Version 5 changed the return types of i_get_file_background() and
  i_get_file_backgroundf() from void to int.
 
+ Version 6 removed the IMAGER_DEBUG_MALLOC entry points.
+
 */
-#define IMAGER_API_VERSION 5
+#define IMAGER_API_VERSION 6
 
 /*
  IMAGER_API_LEVEL is the level of the structure.  New function pointers
@@ -48,9 +50,6 @@ typedef struct {
   void * (*f_mymalloc)(size_t size);
   void (*f_myfree)(void *block);
   void * (*f_myrealloc)(void *block, size_t newsize);
-  void* (*f_mymalloc_file_line)(size_t size, char* file, int line);
-  void  (*f_myfree_file_line)(void *p, char*file, int line);
-  void* (*f_myrealloc_file_line)(void *p, size_t newsize, char* file,int line);
 
   i_img *(*f_i_img_8_new)(i_img_dim xsize, i_img_dim ysize, int channels); /* SKIP */
   i_img *(*f_i_img_16_new)(i_img_dim xsize, i_img_dim ysize, int channels);  /* SKIP */

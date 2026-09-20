@@ -18,7 +18,6 @@ my @private =
    '^DSO_',
    '^Inline$',
    '^yatf$',
-   '^malloc_state$',
    '^init_log$',
    '^polybezier$', # not ready for public consumption
    '^border$', # I don't know what it is, expect it to go away

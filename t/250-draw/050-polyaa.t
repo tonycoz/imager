@@ -265,8 +265,6 @@ my $black = Imager::Color->new(0, 0, 0);
 
 Imager->close_log;
 
-Imager::malloc_state();
-
 #initialized in a BEGIN, later
 my %primitives;
 my %polygens;

@@ -79,8 +79,6 @@ our @EXPORT_OK = qw(
 		i_mosaic
 		i_watermark
 
-		malloc_state
-
 		list_formats
 
 		i_gifquant
@@ -536,7 +534,6 @@ END {
   if ($DEBUG) {
     print "shutdown code\n";
     #	for(keys %instances) { $instances{$_}->DESTROY(); }
-    malloc_state(); # how do decide if this should be used? -- store something from the import
     print "Imager exiting\n";
   }
 }

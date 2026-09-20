@@ -370,8 +370,6 @@ for my $type (@mtypes) {
 
 done_testing();
 
-Imager::malloc_state();
-
 Imager->close_log;
 
 END {

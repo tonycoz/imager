@@ -345,8 +345,6 @@ my $white = '#FFFFFF';
 
 done_testing();
 
-malloc_state();
-
 unless ($ENV{IMAGER_KEEP_FILES}) {
   unlink "testout/t21draw.ppm";
   unlink "testout/t21circout.ppm";
