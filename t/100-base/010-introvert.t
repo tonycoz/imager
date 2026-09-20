@@ -185,6 +185,8 @@ is($impal2->colorchannels, 3, "check colorchannels");
   is($impal2->findcolor(color=>$blue), 1, "findcolors found blue");
   ok($impal2->setcolors(start=>0, colors=>[ $blue, $red ]),
      "we can setcolors");
+  is_deeply([ $impal2->getsamples(y => 0, type => "float") ],
+            [ (0, 0, 1) x 200 ], "get float samples from paletted");
 
   # make an rgb version
   my $imrgb2 = $impal2->to_rgb8()
