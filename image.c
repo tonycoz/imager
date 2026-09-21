@@ -75,8 +75,7 @@ object.
 
 i_img *
 im_img_alloc(pIMCTX) {
-  (void)aIMCTX;
-  return mymalloc(sizeof(i_img));
+  return i_malloc(sizeof(i_img));
 }
 
 /*
@@ -120,7 +119,8 @@ ICL_new_internal(unsigned char r,unsigned char g,unsigned char b,unsigned char a
 
   im_log((aIMCTX,1,"ICL_new_internal(r %d,g %d,b %d,a %d)\n", r, g, b, a));
 
-  if ( (cl=mymalloc(sizeof(i_color))) == NULL) im_fatal(aIMCTX, 2,"malloc() error\n");
+  if ( (cl=i_malloc(sizeof(i_color))) == NULL)
+    im_fatal(aIMCTX, 2,"malloc() error\n");
   cl->rgba.r = r;
   cl->rgba.g = g;
   cl->rgba.b = b;
@@ -149,7 +149,7 @@ ICL_set_internal(i_color *cl,unsigned char r,unsigned char g,unsigned char b,uns
   dIMCTX;
   im_log((aIMCTX,1,"ICL_set_internal(cl* %p,r %d,g %d,b %d,a %d)\n",cl,r,g,b,a));
   if (cl == NULL)
-    if ( (cl=mymalloc(sizeof(i_color))) == NULL)
+    if ( (cl=i_malloc(sizeof(i_color))) == NULL)
       im_fatal(aIMCTX, 2,"malloc() error\n");
   cl->rgba.r=r;
   cl->rgba.g=g;
@@ -212,7 +212,7 @@ void
 ICL_DESTROY(i_color *cl) {
   dIMCTX;
   im_log((aIMCTX, 1,"ICL_DESTROY(cl* %p)\n",cl));
-  myfree(cl);
+  i_free(cl);
 }
 
 /*
@@ -226,7 +226,7 @@ i_fcolor *i_fcolor_new(double r, double g, double b, double a) {
 
   im_log((aIMCTX, 1,"i_fcolor_new(r %g,g %g,b %g,a %g)\n", r, g, b, a));
 
-  if ( (cl=mymalloc(sizeof(i_fcolor))) == NULL) im_fatal(aIMCTX, 2,"malloc() error\n");
+  cl=i_malloc(sizeof(i_fcolor));
   cl->rgba.r = r;
   cl->rgba.g = g;
   cl->rgba.b = b;
@@ -247,11 +247,12 @@ void i_fcolor_destroy(i_fcolor *cl) {
 
 static void
 do_img_exorcise(pIMCTX, i_img *im) {
-  (void)aIMCTX;
   i_tags_destroy(&im->tags);
   if (im->i_f_destroy)
     (im->i_f_destroy)(im);
-  if (im->idata != NULL) { myfree(im->idata); }
+  if (im->idata != NULL) {
+    i_free(im->idata);
+  }
   im->idata    = NULL;
   im->xsize    = 0;
   im->ysize    = 0;
@@ -294,7 +295,7 @@ i_img_destroy(i_img *im) {
   dIMCTXim(im);
   im_log((aIMCTX, 1,"i_img_destroy(im %p)\n",im));
   do_img_exorcise(aIMCTX, im);
-  myfree(im);
+  i_free(im);
   im_context_refdec(aIMCTX, "img_destroy");
 }
 
@@ -557,34 +558,34 @@ i_copy(i_img *src) {
   if (src->type == i_direct_type) {
     if (src->bits == i_8_bits) {
       i_color *pv;
-      pv = mymalloc(sizeof(i_color) * x1);
+      pv = i_malloc(sizeof(i_color) * x1);
       
       for (y = 0; y < y1; ++y) {
         i_glin(src, 0, x1, y, pv);
         i_plin(im, 0, x1, y, pv);
       }
-      myfree(pv);
+      i_free(pv);
     }
     else {
       i_fcolor *pv;
 
-      pv = mymalloc(sizeof(i_fcolor) * x1);
+      pv = i_malloc(sizeof(i_fcolor) * x1);
       for (y = 0; y < y1; ++y) {
         i_glinf(src, 0, x1, y, pv);
         i_plinf(im, 0, x1, y, pv);
       }
-      myfree(pv);
+      i_free(pv);
     }
   }
   else {
     i_palidx *vals;
 
-    vals = mymalloc(sizeof(i_palidx) * x1);
+    vals = i_malloc(sizeof(i_palidx) * x1);
     for (y = 0; y < y1; ++y) {
       i_gpal(src, 0, x1, y, vals);
       i_ppal(im, 0, x1, y, vals);
     }
-    myfree(vals);
+    i_free(vals);
   }
 
   return im;
@@ -671,8 +672,8 @@ i_scaleaxis(i_img *im, double Value, int Axis) {
   LanczosWidthFactor = (Value >= 1) ? 1 : (i_img_dim) (1.4/Value); 
   lMax = LanczosWidthFactor << 1;
   
-  l0 = mymalloc(lMax * sizeof(float));
-  l1 = mymalloc(lMax * sizeof(float));
+  l0 = i_malloc(lMax * sizeof(float));
+  l1 = i_malloc(lMax * sizeof(float));
   
   for (j=0; j<jEnd; j++) {
     OldLocation = ((double) j) / Value;
@@ -808,8 +809,8 @@ i_scaleaxis(i_img *im, double Value, int Axis) {
       
     }
   }
-  myfree(l0);
-  myfree(l1);
+  i_free(l0);
+  i_free(l1);
 
   im_log((aIMCTX, 1,"(%p) <- i_scaleaxis\n", new_img));
 
@@ -1181,6 +1182,7 @@ to indicate that it was more than max colors
  * i_gsamp instead of i_gpix */
 int
 i_count_colors(i_img *im,int maxc) {
+  dIMCTXim(im);
   struct octt *ct;
   i_img_dim x,y;
   int colorcnt;
@@ -1201,7 +1203,7 @@ i_count_colors(i_img *im,int maxc) {
 
   ct = octt_new();
 
-  samp = (i_sample_t *) mymalloc( xsize * 3 * sizeof(i_sample_t));
+  samp = (i_sample_t *) i_malloc( xsize * 3 * sizeof(i_sample_t));
 
   colorcnt = 0;
   for(y = 0; y < ysize; ) {
@@ -1216,7 +1218,7 @@ i_count_colors(i_img *im,int maxc) {
           }
       }
   }
-  myfree(samp);
+  i_free(samp);
   octt_delete(ct);
   return colorcnt;
 }
@@ -1271,6 +1273,7 @@ hpsort(unsigned int n, unsigned *ra) {
 /* Uses octt_histo */
 int
 i_get_anonymous_color_histo(i_img *im, unsigned int **col_usage, int maxc) {
+  dIMCTXim(im);
   struct octt *ct;
   i_img_dim x,y;
   int colorcnt;
@@ -1284,7 +1287,7 @@ i_get_anonymous_color_histo(i_img *im, unsigned int **col_usage, int maxc) {
   int samp_cnt = 3 * xsize;
   ct = octt_new();
   
-  samp = (i_sample_t *) mymalloc( xsize * 3 * sizeof(i_sample_t));
+  samp = (i_sample_t *) i_malloc( xsize * 3 * sizeof(i_sample_t));
   
   if (im->channels >= 3) {
     samp_chans = NULL;
@@ -1302,12 +1305,12 @@ i_get_anonymous_color_histo(i_img *im, unsigned int **col_usage, int maxc) {
       x += 3;
       if (colorcnt > maxc) { 
 	octt_delete(ct);
-	myfree(samp);
+	i_free(samp);
 	return -1; 
       }
     }
   }
-  myfree(samp);
+  i_free(samp);
   /* Now that we know the number of colours... */
   col_usage_it = *col_usage = (unsigned int *) mymalloc(colorcnt * sizeof(unsigned int));
   octt_histo(ct, &col_usage_it);
@@ -1375,13 +1378,14 @@ i_plinf_fp(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, const i_fcolor *pix
       i_img_dim ret;
       i_img_dim i;
       int ch;
-      work = mymalloc(sizeof(i_color) * (r-l));
+      dIMCTXim(im);
+      work = i_malloc(sizeof(i_color) * (r-l));
       for (i = 0; i < r-l; ++i) {
         for (ch = 0; ch < im->channels; ++ch) 
           work[i].channel[ch] = SampleFTo8(pix[i].channel[ch]);
       }
       ret = i_plin(im, l, r, y, work);
-      myfree(work);
+      i_free(work);
 
       return ret;
     }
@@ -1410,13 +1414,14 @@ i_glinf_fp(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, i_fcolor *pix) {
       i_img_dim ret;
       i_img_dim i;
       int ch;
-      work = mymalloc(sizeof(i_color) * (r-l));
+      dIMCTXim(im);
+      work = i_malloc(sizeof(i_color) * (r-l));
       ret = i_plin(im, l, r, y, work);
       for (i = 0; i < r-l; ++i) {
         for (ch = 0; ch < im->channels; ++ch) 
           pix[i].channel[ch] = Sample8ToF(work[i].channel[ch]);
       }
-      myfree(work);
+      i_free(work);
 
       return ret;
     }
@@ -1438,7 +1443,6 @@ i_glinf_fp(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, i_fcolor *pix) {
 i_img_dim
 i_gsampf_fp(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, i_fsample_t *samp, 
                 int const *chans, int chan_count) {
-  i_sample_t *work;
 
   if (y >= 0 && y < im->ysize && l < im->xsize && l >= 0) {
     if (r > im->xsize)
@@ -1446,12 +1450,13 @@ i_gsampf_fp(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, i_fsample_t *samp,
     if (r > l) {
       i_img_dim ret;
       i_img_dim i;
-      work = mymalloc(sizeof(i_sample_t) * (r-l) * chan_count);
+      dIMCTXim(im);
+      i_sample_t *work = i_malloc(sizeof(i_sample_t) * (r-l) * chan_count);
       ret = i_gsamp(im, l, r, y, work, chans, chan_count);
       for (i = 0; i < ret; ++i) {
           samp[i] = Sample8ToF(work[i]);
       }
-      myfree(work);
+      i_free(work);
 
       return ret;
     }

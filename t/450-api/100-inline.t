@@ -543,6 +543,14 @@ raw_gsamp_one(Imager im, i_img_dim x, i_img_dim y, SV *sv) {
   return count;
 }
 
+int
+allocation() {
+  void *p = i_malloc(10);
+  p = i_realloc(p, 20);
+  i_free(p);
+  return 1;
+}
+
 EOS
 
 my $im = Imager->new(xsize=>50, ysize=>50);
@@ -852,6 +860,12 @@ ok(test_slots(), "call slot APIs");
         or diag(Imager->_error_as_msg);
 }
 
+ok(allocation(), "test modern allocation interfaces");
+
+done_testing();
+
+Imager->close_log();
+
 sub do_one_exif {
     my ($exif_name) = @_;
 
@@ -866,10 +880,6 @@ sub do_one_exif {
     
     return ($im, $ok);
 }
-
-done_testing();
-
-Imager->close_log();
 
 sub _get_error {
   my @errors = Imager::i_errors();

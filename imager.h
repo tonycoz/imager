@@ -354,6 +354,9 @@ im_int_check_image_file_limits(im_context_t ctx, i_img_dim width, i_img_dim heig
 void* mymalloc(size_t size);
 void  myfree(void *p);
 void* myrealloc(void *p, size_t newsize);
+void *im_malloc(im_context_t ctx, size_t size);
+void  im_free(im_context_t ctx, void *p);
+void* im_realloc(im_context_t ctx, void *p, size_t newsize);
 
 #include "imrender.h"
 

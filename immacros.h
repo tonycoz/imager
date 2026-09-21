@@ -155,6 +155,10 @@ returns -1 and pushes an error.
 #define io_new_cb(p, readcb, writecb, seekcb, closecb, destroycb) \
   im_io_new_cb(aIMCTX, (p), (readcb), (writecb), (seekcb), (closecb), (destroycb))
 
+#define i_malloc(size) im_malloc(aIMCTX, size)
+#define i_realloc(p, size) im_realloc(aIMCTX, p, size)
+#define i_free(p) im_free(aIMCTX, p)
+
 #ifdef __cplusplus
 }
 #endif

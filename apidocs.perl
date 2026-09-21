@@ -198,7 +198,7 @@ sub make_func_list {
        im_context_t i_img_dim i_img_dim_u im_slot_t
        i_polygon_t i_poly_fill_mode_t i_mutex_t
        i_img_has_alpha i_DF i_DFc i_DFp i_DFcp i_psamp_bits i_gsamp_bits
-       i_psamp i_psampf);
+       i_psamp i_psampf mymalloc myrealloc myfree);
   open FUNCS, "< imexttypes.h"
     or die "Cannot open imexttypes.h: $!\n";
   my $in_struct;

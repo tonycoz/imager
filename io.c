@@ -6,9 +6,42 @@
 #include <unistd.h>
 #endif
 
-void*
+/*
+=item mymalloc(size)
+=category Memory Management
+
+Allocate a block of C<size> bytes of memory.
+
+exit()s on failure.
+
+Always uses im_get_context() to fetch the current Imager context.
+
+=cut
+*/
+
+void *
 mymalloc(size_t size) {
   dIMCTX;
+  return i_malloc(size);
+}
+
+/*
+=item im_malloc(aIMCTX, size)
+=category Memory Management
+X<i_malloc>
+
+Allocate a block of C<size> bytes of memory.
+
+exit()s on failure.
+
+Callable as C<i_malloc(size)>, and will use the local IMCTX under
+IMAGER_NO_CONTEXT.
+
+=cut
+*/
+
+void*
+im_malloc(pIMCTX, size_t size) {
   void *buf;
 
   if ( (buf = malloc(size)) == NULL ) {
@@ -19,16 +52,80 @@ mymalloc(size_t size) {
   return buf;
 }
 
+/*
+=item myfree(p)
+=category Memory Management
+
+Release the memory block C<p> points at.
+
+This is not suitable for memory allocated by perl itself.
+
+Always uses im_get_context() to fetch the current Imager context.
+
+=cut
+*/
+
 void
 myfree(void *p) {
   dIMCTX;
+  i_free(p);
+}
+
+/*
+=item im_free(aIMCTX, p)
+=category Memory Management
+
+Release the memory block C<p> points at.
+
+This is not suitable for memory allocated by perl itself.
+
+Callable as i_free(p), and will use the local IMCTX under
+IMAGER_NO_CONTEXT.
+
+=cut
+*/
+
+void
+im_free(pIMCTX, void *p) {
   im_log((aIMCTX, 1, "myfree(p %p)\n", p));
   free(p);
 }
 
+/*
+=item myrealloc(p, size)
+=category Memory Management
+
+Resize the block C<p> to C<size> bytes of memory.
+
+exit()s on failure.
+
+Always uses im_get_context() to fetch the current Imager context.
+
+=cut
+*/
+
 void *
 myrealloc(void *block, size_t size) {
   dIMCTX;
+  return i_realloc(block, size);
+}
+
+/*
+=item im_realloc(aIMCTX, p, size)
+=category Memory Management
+
+Resize the block C<p> to C<size> bytes of memory.
+
+exit()s on failure.
+
+Callable as C<i_realloc(p, size)>, and will use the local IMCTX under
+IMAGER_NO_CONTEXT.
+
+=cut
+*/
+
+void *
+im_realloc(pIMCTX, void *block, size_t size) {
   void *result;
 
   im_log((aIMCTX, 1, "myrealloc(block %p, size %ld)\n", block, (long)size));

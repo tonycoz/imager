@@ -40,7 +40,7 @@ extern "C" {
  will result in an increment of IMAGER_API_LEVEL.
 */
 
-#define IMAGER_API_LEVEL 10
+#define IMAGER_API_LEVEL 11
 
 typedef struct {
   int version;
@@ -277,6 +277,9 @@ typedef struct {
   int (*f_im_decode_exif)(i_img *im, const unsigned char *data, size_t length);
 
   /* IMAGER_API_LEVEL 11 functions will be added here */
+  void *(*f_im_malloc)(im_context_t, size_t);
+  void *(*f_im_realloc)(im_context_t, void *, size_t);
+  void (*f_im_free)(im_context_t, void *);
 } im_ext_funcs;
 
 #define PERL_FUNCTION_TABLE_NAME "Imager::__ext_func_table"

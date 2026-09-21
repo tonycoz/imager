@@ -124,6 +124,8 @@ Imager::APIRef - Imager's C API - reference.
 
   # Logging
 
+  # Memory Management
+
   # mutex
   i_mutex_t mutex;
 
@@ -2090,6 +2092,89 @@ This is an internal function called by the mm_log() macro.
 
 =for comment
 From: File log.c
+
+
+=back
+
+=head2 Memory Management
+
+=over
+
+=item im_free(aIMCTX, p)
+
+Release the memory block C<p> points at.
+
+This is not suitable for memory allocated by perl itself.
+
+Callable as i_free(p), and will use the local IMCTX under
+IMAGER_NO_CONTEXT.
+
+
+=for comment
+From: File io.c
+
+=item im_malloc(aIMCTX, size)
+X<i_malloc>
+
+Allocate a block of C<size> bytes of memory.
+
+exit()s on failure.
+
+Callable as C<i_malloc(size)>, and will use the local IMCTX under
+IMAGER_NO_CONTEXT.
+
+
+=for comment
+From: File io.c
+
+=item im_realloc(aIMCTX, p, size)
+
+Resize the block C<p> to C<size> bytes of memory.
+
+exit()s on failure.
+
+Callable as C<i_realloc(p, size)>, and will use the local IMCTX under
+IMAGER_NO_CONTEXT.
+
+
+=for comment
+From: File io.c
+
+=item myfree(p)
+
+Release the memory block C<p> points at.
+
+This is not suitable for memory allocated by perl itself.
+
+Always uses im_get_context() to fetch the current Imager context.
+
+
+=for comment
+From: File io.c
+
+=item mymalloc(size)
+
+Allocate a block of C<size> bytes of memory.
+
+exit()s on failure.
+
+Always uses im_get_context() to fetch the current Imager context.
+
+
+=for comment
+From: File io.c
+
+=item myrealloc(p, size)
+
+Resize the block C<p> to C<size> bytes of memory.
+
+exit()s on failure.
+
+Always uses im_get_context() to fetch the current Imager context.
+
+
+=for comment
+From: File io.c
 
 
 =back

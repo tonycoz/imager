@@ -253,6 +253,10 @@ extern im_ext_funcs *imager_function_ext_table;
 
 #define im_decode_exif(im, data, len) ((im_extt->f_im_decode_exif)((im), (data), (len)))
 
+#define im_malloc(ctx, size)  ((im_extt->f_im_malloc)((ctx), (size)))
+#define im_realloc(ctx, p, size)  ((im_extt->f_im_realloc)((ctx), (p), (size)))
+#define im_free(ctx, p)  ((im_extt->f_im_free)((ctx), (p)))
+
 #ifdef IMAGER_LOG
 #ifndef IMAGER_NO_CONTEXT
 #define mm_log(x) { i_lhead(__FILE__,__LINE__); i_loog x; } 
