@@ -659,6 +659,29 @@ my $psamp_outside_error = "Image position outside of image";
   is($col[0]->alpha, 255, "should have a 255 alpha");
 }
 
+SKIP:
+{
+  $ENV{IMAGER_RISKY_TESTS}
+    or skip "Skipping risky tests", 1;
+  $Config{ptrsize} == 8
+    or skip "Need 64-bit for this test", 1;
+  {
+    no warnings 'portable';
+    my $imx = Imager->new(xsize => eval "0x2_0000_0000", ysize => 0xFFFF_FFFF,
+                          type => "paletted" );
+    ok(!$imx, "Fail to create with overflow");
+    like(Imager->errstr, qr/integer overflow calculating image allocation/,
+         "check overflow message");
+  }
+  {
+    my $imx = Imager->new(xsize => 0x1000_0000, ysize => 0x1000_0000,
+                          type => "paletted" );
+    ok(!$imx, "Fail to create with out of memory");
+    like(Imager->errstr, qr/Out of memory allocating image surface/,
+         "check out of memory message");
+  }
+}
+
 Imager->close_log;
 
 done_testing();

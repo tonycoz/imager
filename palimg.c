@@ -142,7 +142,20 @@ im_img_pal_new(pIMCTX, i_img_dim x, i_img_dim y, int channels, int maxpal) {
 
   im = i_img_alloc();
   memcpy(im, &IIM_base_8bit_pal, sizeof(i_img));
+
+  im->idata = i_malloc_fail(bytes);
+  if (im->idata == NULL) {
+    /* can't i_img_destroy() until we've done i_img_init() */
+    i_free(im);
+
+    im_log((aIMCTX, 1, "i_img_pal_new(): out of memory\n"));
+    i_push_error(0, "Out of memory allocating image surface");
+    return NULL;
+  }
+  memset(im->idata, 0, bytes);
+
   palext = mymalloc(sizeof(i_img_pal_ext));
+  
   palext->pal = mymalloc(sizeof(i_color) * PALETTE_COLOR_COUNT);
   palext->count = 0;
   palext->alloc = PALETTE_COLOR_COUNT;
@@ -157,9 +170,7 @@ im_img_pal_new(pIMCTX, i_img_dim x, i_img_dim y, int channels, int maxpal) {
   im->ext_data = palext;
   i_tags_new(&im->tags);
   im->bytes = bytes;
-  im->idata = mymalloc(im->bytes);
   im->channels = channels;
-  memset(im->idata, 0, im->bytes);
   im->xsize = x;
   im->ysize = y;
 
