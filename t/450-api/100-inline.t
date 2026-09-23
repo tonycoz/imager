@@ -548,6 +548,8 @@ allocation() {
   void *p = i_malloc(10);
   p = i_realloc(p, 20);
   i_free(p);
+  p = i_malloc_fail(10);
+  i_free(p);
   return 1;
 }
 

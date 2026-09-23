@@ -137,6 +137,29 @@ im_realloc(pIMCTX, void *block, size_t size) {
   return result;
 }
 
+/*
+=item im_malloc_fail(aIMCTX, size)
+=category Memory Management
+
+Allocate C<size> bytes of memory, returning NULL on failure.
+
+=cut
+*/
+
+void *
+im_malloc_fail(pIMCTX, size_t size) {
+  void *buf;
+
+  if ( (buf = malloc(size)) == NULL ) {
+    im_log((aIMCTX, 1, "im_malloc_fail: unable to allocate %zu\n",
+            size));
+    return NULL;
+  }
+  im_log((aIMCTX, 1, "im_malloc_fail(size %zu) -> %p\n",
+          size, buf));
+  return buf;
+}
+
 /* memory pool implementation */
 
 void

@@ -219,7 +219,8 @@ im_ext_funcs imager_function_table =
     /* level 11 */
     im_malloc,
     im_realloc,
-    im_free
+    im_free,
+    im_malloc_fail
   };
 
 /* in general these functions aren't called by Imager internally, but

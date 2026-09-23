@@ -2127,6 +2127,14 @@ IMAGER_NO_CONTEXT.
 =for comment
 From: File io.c
 
+=item im_malloc_fail(aIMCTX, size)
+
+Allocate C<size> bytes of memory, returning NULL on failure.
+
+
+=for comment
+From: File io.c
+
 =item im_realloc(aIMCTX, p, size)
 
 Resize the block C<p> to C<size> bytes of memory.

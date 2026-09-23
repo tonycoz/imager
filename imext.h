@@ -256,6 +256,7 @@ extern im_ext_funcs *imager_function_ext_table;
 #define im_malloc(ctx, size)  ((im_extt->f_im_malloc)((ctx), (size)))
 #define im_realloc(ctx, p, size)  ((im_extt->f_im_realloc)((ctx), (p), (size)))
 #define im_free(ctx, p)  ((im_extt->f_im_free)((ctx), (p)))
+#define im_malloc_fail(ctx, size)  ((im_extt->f_im_malloc_fail)((ctx), (size)))
 
 #ifdef IMAGER_LOG
 #ifndef IMAGER_NO_CONTEXT

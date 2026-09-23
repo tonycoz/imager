@@ -4,6 +4,7 @@
 
 use strict;
 use Test::More;
+use Config;
 
 BEGIN { use_ok(Imager => qw(:handy :all)) }
 use warnings;
@@ -280,6 +281,25 @@ ok(!Imager->new(xsize=>1, ysize=>1, channels=>5),
    "fail to create a five channel image");
 cmp_ok(Imager->errstr, '=~', qr/channels must be between 1 and 4/,
        "out of range channel message check");
+SKIP:
+{
+  $ENV{IMAGER_RISKY_TESTS}
+    or skip "Skipping risky tests", 1;
+  $Config{ptrsize} == 8
+    or skip "Need 64-bit for this test", 1;
+  {
+    my $imx = Imager->new(xsize => 0x8000_0000, ysize => 0xFFFF_FFFF);
+    ok(!$imx, "Fail to create with overflow");
+    like(Imager->errstr, qr/integer overflow calculating image allocation/,
+         "check overflow message");
+  }
+  {
+    my $imx = Imager->new(xsize => 0x1000_0000, ysize => 0x1000_0000);
+    ok(!$imx, "Fail to create with out of memory");
+    like(Imager->errstr, qr/Out of memory allocating image surface/,
+         "check out of memory message");
+  }
+}
 
 {
   # https://rt.cpan.org/Ticket/Display.html?id=8213

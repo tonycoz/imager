@@ -280,6 +280,7 @@ typedef struct {
   void *(*f_im_malloc)(im_context_t, size_t);
   void *(*f_im_realloc)(im_context_t, void *, size_t);
   void (*f_im_free)(im_context_t, void *);
+  void *(*f_im_malloc_fail)(im_context_t, size_t);
 } im_ext_funcs;
 
 #define PERL_FUNCTION_TABLE_NAME "Imager::__ext_func_table"

@@ -149,6 +149,7 @@ Re-new image reference
 i_img *
 im_img_empty_ch(pIMCTX, i_img *im,i_img_dim x,i_img_dim y,int ch) {
   size_t bytes;
+  i_img *const orig_im = im;
 
   im_log((aIMCTX, 1,"i_img_empty_ch(*im %p, x %" i_DF ", y %" i_DF ", ch %d)\n",
 	  im, i_DFc(x), i_DFc(y), ch));
@@ -172,15 +173,24 @@ im_img_empty_ch(pIMCTX, i_img *im,i_img_dim x,i_img_dim y,int ch) {
     im = im_img_alloc(aIMCTX);
 
   memcpy(im, &IIM_base_8bit_direct, sizeof(i_img));
+
+  if ( (im->idata = i_malloc_fail(bytes)) == NULL) {
+    if (!orig_im)
+      /* can't i_img_destroy() until we've done i_img_init() */
+      i_free(im);
+    im_log((aIMCTX, 1, "i_img_empty_ch(): out of memory\n"));
+    i_push_error(0, "Out of memory allocating image surface");
+    return NULL;
+  }
+
+  memset(im->idata, 0, bytes);
+
   i_tags_new(&im->tags);
   im->xsize    = x;
   im->ysize    = y;
   im->channels = ch;
   im->ch_mask  = ~0U;
-  im->bytes=bytes;
-  if ( (im->idata=mymalloc(im->bytes)) == NULL) 
-    im_fatal(aIMCTX, 2,"malloc() error\n"); 
-  memset(im->idata,0,(size_t)im->bytes);
+  im->bytes    = bytes;
   
   im->ext_data = NULL;
 

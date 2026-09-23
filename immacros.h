@@ -158,6 +158,7 @@ returns -1 and pushes an error.
 #define i_malloc(size) im_malloc(aIMCTX, size)
 #define i_realloc(p, size) im_realloc(aIMCTX, p, size)
 #define i_free(p) im_free(aIMCTX, p)
+#define i_malloc_fail(size) im_malloc_fail(aIMCTX, size)
 
 #ifdef __cplusplus
 }
