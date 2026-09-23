@@ -1447,6 +1447,8 @@ i_diff_image(i_img *im1, i_img *im2, double mindist) {
   ysize = i_min(im1->ysize, im2->ysize);
 
   out = i_sametype_chans(im1, xsize, ysize, outchans);
+  if (!out)
+    return NULL;
 
   if (im1->bits == i_8_bits && im2->bits == i_8_bits) {
     i_color *line1 = mymalloc(xsize * sizeof(*line1)); /* checked 17feb2005 tonyc */
@@ -1555,6 +1557,8 @@ i_rgbdiff_image(i_img *im1, i_img *im2) {
   ysize = i_min(im1->ysize, im2->ysize);
 
   out = i_sametype_chans(im1, xsize, ysize, outchans);
+  if (!out)
+    return NULL;
 
 #code im1->bits == i_8_bits && im2->bits == i_8_bits
     IM_COLOR *line1 = mymalloc(xsize * sizeof(*line1));

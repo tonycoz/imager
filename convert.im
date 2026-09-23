@@ -88,6 +88,8 @@ i_convert(i_img *src, const double *coeff, int outchan, int inchan) {
   if (src->type == i_direct_type) {
     struct chan_copy info;
     im = i_sametype_chans(src, src->xsize, src->ysize, outchan);
+    if (!im)
+      return 0;
     
     if (is_channel_copy(src, coeff, outchan, inchan, &info)) {
       return convert_via_copy(im, src, &info);
@@ -134,6 +136,8 @@ i_convert(i_img *src, const double *coeff, int outchan, int inchan) {
 
     im = im_img_pal_new(aIMCTX, src->xsize, src->ysize, outchan, 
 			i_maxcolors(src));
+    if (!im)
+      return 0;
 
     /* just translate the color table */
     count = i_colorcount(src);

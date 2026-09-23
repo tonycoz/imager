@@ -852,6 +852,8 @@ i_scale_nn(i_img *im, double scx, double scy) {
   im_assert(scx != 0 && scy != 0);
     
   new_img=i_img_empty_ch(NULL,nxsize,nysize,im->channels);
+  if (!new_img)
+    return NULL;
   
   for(ny=0;ny<nysize;ny++) for(nx=0;nx<nxsize;nx++) {
     i_gpix(im,((double)nx)/scx,((double)ny)/scy,&val);
@@ -900,9 +902,11 @@ i_sametype(i_img *src, i_img_dim xsize, i_img_dim ysize) {
     int i;
 
     i_img *targ = i_img_pal_new(xsize, ysize, src->channels, i_maxcolors(src));
-    for (i = 0; i < i_colorcount(src); ++i) {
-      i_getcolors(src, i, &col, 1);
-      i_addcolors(targ, &col, 1);
+    if (targ) {
+      for (i = 0; i < i_colorcount(src); ++i) {
+        i_getcolors(src, i, &col, 1);
+        i_addcolors(targ, &col, 1);
+      }
     }
 
     return targ;
@@ -974,6 +978,8 @@ i_transform(i_img *im, int *opx,int opxl,int *opy,int opyl,double parm[],int par
   nysize = im->ysize ;
   
   new_img=i_img_empty_ch(NULL,nxsize,nysize,im->channels);
+  if (new_img == NULL)
+    return NULL;
   /*   fprintf(stderr,"parm[2]=%f\n",parm[2]);   */
   for(ny=0;ny<nysize;ny++) for(nx=0;nx<nxsize;nx++) {
     /*     parm[parmlen-2]=(double)nx;
@@ -1142,7 +1148,13 @@ i_haar(i_img *im) {
   /* horizontal pass */
   
   new_img=i_img_empty_ch(NULL,fx*2,fy*2,im->channels);
+  if (!new_img)
+    return NULL;
   new_img2=i_img_empty_ch(NULL,fx*2,fy*2,im->channels);
+  if (!new_img2) {
+    i_img_destroy(new_img);
+    return NULL;
+  }
 
   for(y=0;y<my;y++) for(x=0;x<fx;x++) {
     i_gpix(im,x*2,y,&val1);

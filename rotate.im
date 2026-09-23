@@ -32,6 +32,8 @@ i_img *i_rotate90(i_img *src, int degrees) {
     /* essentially the same as flipxy(..., 2) except that it's not
        done in place */
     targ = i_sametype(src, src->xsize, src->ysize);
+    if (!targ)
+      return NULL;
     if (src->type == i_direct_type) {
 #code src->bits <= 8
       IM_COLOR *vals = mymalloc(src->xsize * sizeof(IM_COLOR));
@@ -84,6 +86,8 @@ i_img *i_rotate90(i_img *src, int degrees) {
       tyinc = 1;
     }
     targ = i_sametype(src, src->ysize, src->xsize);
+    if (!targ)
+      return NULL;
     if (src->type == i_direct_type) {
 #code src->bits <= 8
       IM_COLOR *vals = mymalloc(src->xsize * sizeof(IM_COLOR));
@@ -208,6 +212,9 @@ i_img *i_matrix_transform_bg(i_img *src, i_img_dim xsize, i_img_dim ysize, const
   int ch;
   i_img_dim i, j;
   double sx, sy, sz;
+
+  if (!result)
+    return NULL;
 
   if (src->type == i_direct_type) {
 #code src->bits <= 8

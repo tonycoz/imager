@@ -111,6 +111,8 @@ i_gaussian2(i_img *im, double stddevX, double stddevY) {
   }
 
   timg = i_sametype(im, im->xsize, im->ysize);
+  if (!timg)
+    return 0;
 
   if( stddevX > 0 ) {
     /* Build Y coefficient matrix */

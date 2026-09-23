@@ -42,6 +42,8 @@ i_conv(i_img *im, const double *coeff,int len) {
   }
 
   timg = i_sametype(im, im->xsize, im->ysize);
+  if (!timg)
+    return 0;
 
 #code im->bits <= 8
   IM_COLOR rcolor;

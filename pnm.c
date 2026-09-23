@@ -549,7 +549,8 @@ i_readpnm_wiol( io_glue *ig, int allow_incomplete) {
     pbm_pal[1].channel[0] = 0;
     
     im = i_img_pal_new(width, height, 1, 256);
-    i_addcolors(im, pbm_pal, 2);
+    if (im)
+      i_addcolors(im, pbm_pal, 2);
   }
   else {
     if (maxval > 255)
@@ -557,6 +558,8 @@ i_readpnm_wiol( io_glue *ig, int allow_incomplete) {
     else
       im = i_img_8_new(width, height, channels);
   }
+  if (!im)
+    return NULL;
 
   switch (type) {
   case 1: /* Ascii types */

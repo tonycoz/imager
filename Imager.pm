@@ -904,7 +904,8 @@ sub crop {
     $self->_set_error("attempting to crop outside of the image");
     return;
   }
-  my $dst = $self->_sametype(xsize=>$r-$l, ysize=>$b-$t);
+  my $dst = $self->_sametype(xsize=>$r-$l, ysize=>$b-$t)
+    or return;
 
   i_copyto($dst->{IMG},$self->{IMG},$l,$t,$r,$b,0,0);
   return $dst;
