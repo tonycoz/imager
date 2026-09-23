@@ -201,14 +201,24 @@ im_img_16_new(pIMCTX, i_img_dim x, i_img_dim y, int ch) {
 
   im = im_img_alloc(aIMCTX);
   *im = IIM_base_16bit_direct;
+
+  im->idata = i_malloc_fail(bytes);
+  if (im->idata == NULL) {
+    /* can't i_img_destroy() until we've done i_img_init() */
+    i_free(im);
+
+    im_log((aIMCTX, 1, "i_img_16_new(): out of memory\n"));
+    i_push_error(0, "Out of memory allocating image surface");
+    return NULL;
+  }
+  memset(im->idata, 0, bytes);
+
   i_tags_new(&im->tags);
   im->xsize = x;
   im->ysize = y;
   im->channels = ch;
   im->bytes = bytes;
   im->ext_data = NULL;
-  im->idata = mymalloc(im->bytes);
-  memset(im->idata, 0, im->bytes);
 
   im_img_init(aIMCTX, im);
 
