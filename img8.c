@@ -164,8 +164,8 @@ im_img_empty_ch(pIMCTX, i_img *im,i_img_dim x,i_img_dim y,int ch) {
     return NULL;
   }
   /* check this multiplication doesn't overflow */
-  bytes = x*y*ch;
-  if (bytes / y / ch != (size_t)x) {
+  bytes = (size_t)x * (size_t)y * (size_t)ch;
+  if (bytes / (size_t)y / (size_t)ch != (size_t)x) {
     im_push_errorf(aIMCTX, 0, "integer overflow calculating image allocation");
     return NULL;
   }

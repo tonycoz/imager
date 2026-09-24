@@ -125,8 +125,8 @@ im_img_pal_new(pIMCTX, i_img_dim x, i_img_dim y, int channels, int maxpal) {
     im_push_errorf(aIMCTX, 0, "Channels must be positive and <= %d", MAXCHANNELS);
     return NULL;
   }
-  bytes = sizeof(i_palidx) * x * y;
-  if (bytes / y / sizeof(i_palidx) != (size_t)x) {
+  bytes = sizeof(i_palidx) * (size_t)x * (size_t)y;
+  if (bytes / (size_t)y / sizeof(i_palidx) != (size_t)x) {
     i_push_error(0, "integer overflow calculating image allocation");
     return NULL;
   }
