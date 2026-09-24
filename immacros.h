@@ -160,6 +160,9 @@ returns -1 and pushes an error.
 #define i_free(p) im_free(aIMCTX, p)
 #define i_malloc_fail(size) im_malloc_fail(aIMCTX, size)
 
+#define i_set_out_of_memory(callme, userdata) \
+  im_set_out_of_memory(aIMCTX, callme, userdata)
+
 #ifdef __cplusplus
 }
 #endif

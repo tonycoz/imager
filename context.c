@@ -47,6 +47,9 @@ im_context_new(void) {
 
   ctx->file_magic = NULL;
 
+  ctx->out_of_memory = im_def_out_of_memory;
+  ctx->out_of_memory_userdata = NULL;
+
   ctx->refcount = 1;
 
 #ifdef IMAGER_TRACE_CONTEXT
@@ -208,6 +211,9 @@ im_context_clone(im_context_t ctx, const char *where) {
   nctx->max_width = ctx->max_width;
   nctx->max_height = ctx->max_height;
   nctx->max_bytes = ctx->max_bytes;
+
+  nctx->out_of_memory = ctx->out_of_memory;
+  nctx->out_of_memory_userdata = ctx->out_of_memory_userdata;
 
   nctx->refcount = 1;
 

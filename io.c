@@ -45,8 +45,7 @@ im_malloc(pIMCTX, size_t size) {
   void *buf;
 
   if ( (buf = malloc(size)) == NULL ) {
-    im_log((aIMCTX, 1, "mymalloc: unable to malloc %ld\n", (long)size));
-    fprintf(stderr,"Unable to malloc %ld.\n", (long)size); exit(3);
+    im_out_of_memory(aIMCTX, "mymalloc", size);
   }
   im_log((aIMCTX, 1, "mymalloc(size %ld) -> %p\n", (long)size, buf));
   return buf;
@@ -130,9 +129,7 @@ im_realloc(pIMCTX, void *block, size_t size) {
 
   im_log((aIMCTX, 1, "myrealloc(block %p, size %ld)\n", block, (long)size));
   if ((result = realloc(block, size)) == NULL) {
-    im_log((aIMCTX, 1, "myrealloc: out of memory\n"));
-    fprintf(stderr, "Out of memory.\n");
-    exit(3);
+    im_out_of_memory(aIMCTX, "myrealloc", size);
   }
   return result;
 }

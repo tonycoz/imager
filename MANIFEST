@@ -376,6 +376,8 @@ t/400-filter/020-autolevels.t	Test the autolevels filter
 t/450-api/100-inline.t		Inline::C integration and API
 t/450-api/110-inlinectx.t	context APIs
 t/450-api/130-cpp.t		Inline::CPP integration and API
+t/450-api/140-memory1.t
+t/450-api/150-memory2.t
 t/850-thread/010-base.t		Test wrt to perl threads
 t/850-thread/100-error.t	error stack handling with threads
 t/850-thread/110-log.t		log handling with threads

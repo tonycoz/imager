@@ -84,6 +84,41 @@ im_fatal(pIMCTX, int exitcode,const char *fmt, ... ) {
   exit(exitcode);
 }
 
+void
+im_def_out_of_memory(pIMCTX, void *userdata, const char *func, size_t size) {
+  (void)userdata;
+
+  im_log((aIMCTX, 0, "Out of memory %s allocating %zu bytes\n", func, size));
+  fprintf(stderr, "Out of memory\n");
+}
+
+/*
+=item im_out_of_memory(ctx, func, size)
+=category Memory Management
+
+Called by Imager when mymalloc/i_malloc/myrealloc/i_realloc fail.
+
+Calls im_def_out_of_memory() by default, which prints to the log and
+to stderr and calls abort().
+
+=cut
+*/
+
+void
+im_out_of_memory(pIMCTX, const char *func, size_t size) {
+  aIMCTX->out_of_memory(aIMCTX, aIMCTX->out_of_memory_userdata,
+			func, size);
+  /* if the user function returns */
+  abort();
+}
+
+void
+im_set_out_of_memory(pIMCTX, i_out_of_memory_handler handler,
+                     void *userdata) {
+  aIMCTX->out_of_memory = handler ? handler : im_def_out_of_memory;
+  aIMCTX->out_of_memory_userdata = userdata;
+}
+
 /*
 =item i_loog(level, format, ...)
 =category Logging

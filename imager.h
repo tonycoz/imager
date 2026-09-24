@@ -358,6 +358,13 @@ void *im_malloc(im_context_t ctx, size_t size);
 void  im_free(im_context_t ctx, void *p);
 void* im_realloc(im_context_t ctx, void *p, size_t newsize);
 void *im_malloc_fail(im_context_t ctx, size_t size);
+void
+im_def_out_of_memory(pIMCTX, void *userdata, const char *func, size_t size);
+void
+im_out_of_memory(pIMCTX, const char *func, size_t size);
+void
+im_set_out_of_memory(pIMCTX, i_out_of_memory_handler handler,
+                     void *userdata);
 
 #include "imrender.h"
 

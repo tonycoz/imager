@@ -11,6 +11,7 @@ use POSIX qw(INT_MIN INT_MAX);
 use if $] >= 5.014, "warnings::register" => qw(tagcodes channelmask);
 
 our $ERRSTR;
+our $_out_of_memory;
 
 our @EXPORT_OK = qw(
 		init
@@ -4375,6 +4376,17 @@ sub check_file_limits {
   return $result;
 }
 
+sub set_out_of_memory_handler {
+  my $class = shift;
+
+  if (@_) {
+    my $handler = shift;
+    $_out_of_memory = $handler;
+    i_set_out_of_memory(defined $handler);
+  }
+  $_out_of_memory;
+}
+
 # Shortcuts that can be exported
 
 sub newcolor { Imager::Color->new(@_); }
@@ -4928,6 +4940,38 @@ If it was a class method then call errstr() as a class method:
 Note that in some cases object methods are implemented in terms of
 class methods so a failing object method may set both.
 
+=item set_out_of_memory_handler()
+
+=item set_out_of_memory_handler($coderef)
+
+By default if Imager runs out of memory allocating what should be
+trivial amounts of memory it will print "Out of memory" and abort
+execution.
+
+You can provide a code reference to call instead, which is called with
+the name of the allocation function that failed (often "mymalloc") and
+the size of the memory block that failed allocation:
+
+  Imager->set_out_of_memory_handler(sub { die "out of memory @_" });
+
+You can reset to the default handler by calling this with C<undef>:
+
+  Imager->set_out_of_memory_handler(undef);
+
+Your handler should throw an exception, exit, or exec.  If your
+handler returns Imager will throw an exception.
+
+When your handler is called Imager may have succeeded other
+allocations that won't have been released, this is not considered a
+bug.
+
+if your handler is called you should clean up and restart your process
+if it is long lived.
+
+You can fetch the current handler by calling with no parameter:
+
+  my $current = set_out_of_memory_handler();
+
 =back
 
 The C<Imager-E<gt>new> method is described in detail in
@@ -5151,6 +5195,8 @@ in a paletted image
 set_file_limits() - L<Imager::Files/set_file_limits()>
 
 setmask() - L<Imager::ImageTypes/setmask()>
+
+set_out_of_memory_handler() - L</set_out_of_memory_handler()>
 
 setpixel() - L<Imager::Draw/setpixel()>
 

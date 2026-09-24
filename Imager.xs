@@ -1286,6 +1286,29 @@ S_get_trim_color_list(pTHX_ SV *sv, i_trim_color_list *t) {
   return TRUE;
 }
 
+static void
+my_out_of_memory(pIMCTX, void *userdata, const char *func, size_t size) {
+  dTHX;
+  dSP;
+  SV *callme = get_sv("Imager::_out_of_memory", 0);
+
+  (void)my_im_ctx;
+  (void)userdata;
+
+  if (!SvOK(callme))
+    Perl_croak(aTHX_ "out of memory %s size %zu", func, size);
+
+  PUSHSTACK;
+  PUSHMARK(SP);
+  EXTEND(SP, 2);
+  PUSHs(sv_2mortal(newSVpv(func, 0)));
+  PUSHs(sv_2mortal(newSVuv(size)));
+  PUTBACK;
+  (void)call_sv(callme, G_VOID);
+  /* we shouldn't get here */
+  Perl_croak(aTHX_ "out of memory handler returned");
+}
+
 typedef i_trim_color_list Imager__TrimColorList;
 #define trim_color_list_count(t) ((t).count)
 
@@ -1569,6 +1592,11 @@ i_int_check_image_file_limits(width, height, channels, sample_size)
 	int channels
 	size_t sample_size
   PROTOTYPE: DISABLE
+
+void
+i_set_out_of_memory(bool use_perl)
+     PPCODE:
+     i_set_out_of_memory(use_perl ? my_out_of_memory : NULL, NULL);
 
 void
 i_trim_rect(Imager::ImgRaw im, double transp_threshold, Imager::TrimColorList cls)

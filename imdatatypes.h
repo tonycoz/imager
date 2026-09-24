@@ -1200,6 +1200,8 @@ Casts two C<i_img_dim> values for use with the i_DF (or i_DFp) format.
 #define i_DFcp(x, y) i_DFc(x), i_DFc(y)
 #define i_DFp "%" i_DF ", %" i_DF
 
+typedef void (*i_out_of_memory_handler)(im_context_t, void *, const char *, size_t);
+
 #ifdef __cplusplus
 }
 #endif
