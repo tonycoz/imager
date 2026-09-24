@@ -175,7 +175,7 @@ im_img_16_new(pIMCTX, i_img_dim x, i_img_dim y, int ch) {
 
   im_log((aIMCTX, 1,"i_img_16_new(x %" i_DF ", y %" i_DF ", ch %d)\n",
 	  i_DFc(x), i_DFc(y), ch));
-
+  i_clear_error();
   if (x < 1 || y < 1) {
     im_push_error(aIMCTX, 0, "Image sizes must be positive");
     return NULL;
