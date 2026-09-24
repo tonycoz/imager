@@ -22,4 +22,4 @@ jobs:
             make -j2
       - name: test
         run: |
-            HARNESS_OPTIONS=j2 make test
+            HARNESS_OPTIONS=j2 IMAGER_RISKY_TESTS=1 make test

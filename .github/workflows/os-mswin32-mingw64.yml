@@ -25,4 +25,4 @@ jobs:
            gmake -j3
       - name: test
         run: |
-           gmake test HARNESS_OPTIONS=j2
+           gmake test HARNESS_OPTIONS=j2 IMAGER_RISKY_TESTS=1

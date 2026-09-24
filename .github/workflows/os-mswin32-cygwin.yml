@@ -39,5 +39,5 @@ jobs:
         shell: cmd
         run: |
             path %GITHUB_WORKSPACE%\cygwin\bin;%GITHUB_WORKSPACE%\cygwin\usr\bin
-            sh -c "cd ~/work; HARNESS_OPTIONS=j2 make test"
+            sh -c "cd ~/work; HARNESS_OPTIONS=j2 IMAGER_RISKY_TESTS=1 make test"
 

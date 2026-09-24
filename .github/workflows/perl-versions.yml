@@ -55,4 +55,4 @@ jobs:
       - name: Build
         run: cd imager && make -j2
       - name: Test
-        run: cd imager && make HARNESS_OPTIONS=j4 IMAGER_AUTHOR_TESTING=1 test
+        run: cd imager && make HARNESS_OPTIONS=j4 IMAGER_AUTHOR_TESTING=1 IMAGER_RISKY_TESTS=1 test

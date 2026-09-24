@@ -27,5 +27,5 @@ jobs:
             echo -e '::endgroup::\n::group::Build'
             make -j2
             echo -e '::endgroup::\n::group::Tests'
-            HARNESS_OPTIONS=j2 make test
+            HARNESS_OPTIONS=j2 IMAGER_RISKY_TESTS=1 make test
             echo '::endgroup::'
