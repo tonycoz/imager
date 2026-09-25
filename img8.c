@@ -163,9 +163,8 @@ im_img_empty_ch(pIMCTX, i_img *im,i_img_dim x,i_img_dim y,int ch) {
     im_push_errorf(aIMCTX, 0, "channels must be between 1 and %d", MAXCHANNELS);
     return NULL;
   }
-  /* check this multiplication doesn't overflow */
-  bytes = (size_t)x * (size_t)y * (size_t)ch;
-  if (bytes / (size_t)y / (size_t)ch != (size_t)x) {
+
+  if (im_mult_overflow3(&bytes, x, y, ch)) {
     im_push_errorf(aIMCTX, 0, "integer overflow calculating image allocation");
     return NULL;
   }
