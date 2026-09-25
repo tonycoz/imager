@@ -1,5 +1,23 @@
 Imager release history.  Older releases can be found in Changes.old
 
+The Imager C API major version has changed, any modules that depend on
+the Imager C API will need to be rebuilt.
+
+ - image creation no longer aborts the process if allocation of the
+   image surface fails.
+
+ - failed allocation of other memory blocks (typically much smaller)
+   now uses abort() to exit the process instead of exit().  This is
+   easier to catch in a debugger and you can handle SIGABRT to capture
+   this, but...
+
+ - you can now set a handler for otherwise fatal memory allocation
+   failures using set_out_of_memory_handler().  This handler should
+   croak or otherwise clean up.
+
+ - removed IMAGER_DEBUG_MALLOC, tools like valgrind, ASAN and DrMemory
+   provide much better diagnostics.
+
  - getsamples() with type "float" on a direct 8-bit per sample image
    and default channels would dereference a NULL pointer, crashing
    perl.
@@ -16,6 +34,8 @@ Imager release history.  Older releases can be found in Changes.old
 Note: i_tt_has_chars() and i_tt_face_name() are part of Freetype 1.x
 support, which is disabled unless explicitly enabled.
 
+Perl API usage clean up:
+
  - Core Imager, JPEG, FT2:
    - use newSVpvn(p, len) instead of newSVpv(p, len) since newSVpv() will
      try to wastefully or dangerously strlen(p) if len happens to be zero.
@@ -30,6 +50,8 @@ support, which is disabled unless explicitly enabled.
    with hv_fetchs()
 
  - add CI to check for misuse of newSVpv(), hv_fetch() with literal
+
+(partly applying perl-check checks)
 
 Imager 1.036 - 18 September 2026
 ============
