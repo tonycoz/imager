@@ -165,7 +165,7 @@ im_img_empty_ch(pIMCTX, i_img *im,i_img_dim x,i_img_dim y,int ch) {
   }
 
   if (im_mult_overflow3(&bytes, x, y, ch)) {
-    im_push_errorf(aIMCTX, 0, "integer overflow calculating image allocation");
+    im_push_error(aIMCTX, 0, "integer overflow calculating image allocation");
     return NULL;
   }
 
