@@ -1456,14 +1456,19 @@ i_img_dim
 i_gsampf_fp(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, i_fsample_t *samp, 
                 int const *chans, int chan_count) {
 
-  if (y >= 0 && y < im->ysize && l < im->xsize && l >= 0) {
+  if (y >= 0 && y < im->ysize && l < im->xsize && l >= 0 && chan_count > 0) {
     if (r > im->xsize)
       r = im->xsize;
     if (r > l) {
       i_img_dim ret;
       i_img_dim i;
       dIMCTXim(im);
-      i_sample_t *work = i_malloc(sizeof(i_sample_t) * (r-l) * chan_count);
+      size_t row_bytes;
+      if (im_mult_overflow3(&row_bytes, sizeof(i_sample_t), (r-l), chan_count)) {
+        im_push_error(aIMCTX, 0, "integer overflow calculating buffer size");
+        return 0;
+      }
+      i_sample_t *work = i_malloc(row_bytes);
       ret = i_gsamp(im, l, r, y, work, chans, chan_count);
       for (i = 0; i < ret; ++i) {
           samp[i] = Sample8ToF(work[i]);
