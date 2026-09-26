@@ -1,4 +1,5 @@
 #include "imager.h"
+#include "imageri.h"
 #include <stdio.h>
 #include "iolayer.h"
 #ifndef _MSC_VER
@@ -81,12 +82,20 @@ i_readraw_wiol(io_glue *ig, i_img_dim x, i_img_dim y, int datachannels, int stor
     i_push_error(0, "raw_storechannels must be between 1 and 4");
     return NULL;
   }
+  if (datachannels < 1 || datachannels > 16) {
+    i_push_error(0, "raw_datachannels must be between 1 and 16");
+    return NULL;
+  }
   
-  im = i_img_empty_ch(NULL,x,y,storechannels);
+  if (im_mult_overflow2(&inbuflen, x, datachannels)) {
+    i_push_error(0, "Integer overflow calculating input buffer size");
+    return NULL;
+  }
+
+  im = i_img_8_new(x, y, storechannels);
   if (!im)
     return NULL;
   
-  inbuflen = im->xsize*datachannels;
   ilbuflen = inbuflen;
   exbuflen = im->xsize*storechannels;
   inbuffer = (unsigned char*)mymalloc(inbuflen);

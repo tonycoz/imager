@@ -1497,7 +1497,7 @@ C<storechannels>.
 =item *
 
 C<raw_datachannels> - the number of channels to read from the file.
-Range: 1 or more.  Default: 3.  Alternatively and historically spelled
+Range: 1 to 16.  Default: 3.  Alternatively and historically spelled
 C<datachannels>.
 
 =back

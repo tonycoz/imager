@@ -1,6 +1,6 @@
 #!perl -w
 use strict;
-use Test::More tests => 56;
+use Test::More;
 use Imager qw(:all);
 use Imager::Test qw/is_color3 is_color4 test_image test_image_mono is_image/;
 
@@ -275,6 +275,36 @@ SKIP:
   is_color4($im->getpixel(x => 2, y => 1), 0x12, 0x23, 0x34, 0x00,
 	    "check last channel zeroed");
 }
+{
+  for my $datach (-1, 0, 17) {
+    my $im = Imager->new;
+    my $data = "\x00" x (4 * 4 * 3);
+    ok(!$im->read(data => \$data, type => "raw",
+                  raw_interleave => 0,
+                  xsize => 4,
+                  ysize => 4,
+                  raw_datachannels => $datach),
+       "read with datachannels $datach");
+    is($im->errstr, "raw_datachannels must be between 1 and 16",
+       "check message for datachannels $datach");
+  }
+}
+{
+  # black to compare against
+  # not a great check
+  my $cmpimg = Imager->new(xsize => 4, ysize => 4, channels => 3);
+  for my $datach (1, 4, 16) {
+    my $im = Imager->new;
+    my $data = "\x00" x (4 * 4 * $datach);
+    ok($im->read(data => \$data, type => "raw",
+                 raw_interleave => 0,
+                 xsize => 4,
+                 ysize => 4,
+                 raw_datachannels => $datach),
+       "read with datachannels $datach");
+    is_image($im, $cmpimg, "$datach: got an image");
+  }
+}
 
 {
   my @ims = ( basic => test_image(), mono => test_image_mono() );
@@ -320,6 +350,8 @@ unless ($ENV{IMAGER_KEEP_FILES}) {
   unlink(qw(testout/t103_base.raw testout/t103_3to4.raw
 	    testout/t103_line_int.raw testout/t103_img_int.raw))
 }
+
+done_testing();
 
 sub read_test {
   my ($in, $xsize, $ysize, $data, $store, $intrl, $base) = @_;

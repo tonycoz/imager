@@ -3,6 +3,10 @@ Imager release history.  Older releases can be found in Changes.old
 The Imager C API major version has changed, any modules that depend on
 the Imager C API will need to be rebuilt.
 
+ - RAW:
+   - validate raw_datachannels and limit to a maximum of 16
+   - check raw line buffer calculation for overflow
+
  - image creation no longer aborts the process if allocation of the
    image surface fails.
 
