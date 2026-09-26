@@ -150,6 +150,7 @@ i_img *
 im_img_empty_ch(pIMCTX, i_img *im,i_img_dim x,i_img_dim y,int ch) {
   size_t bytes;
   i_img *const orig_im = im;
+  size_t line_bytes;
 
   im_log((aIMCTX, 1,"i_img_empty_ch(*im %p, x %" i_DF ", y %" i_DF ", ch %d)\n",
 	  im, i_DFc(x), i_DFc(y), ch));
@@ -166,6 +167,14 @@ im_img_empty_ch(pIMCTX, i_img *im,i_img_dim x,i_img_dim y,int ch) {
 
   if (im_mult_overflow3(&bytes, x, y, ch)) {
     im_push_error(aIMCTX, 0, "integer overflow calculating image allocation");
+    return NULL;
+  }
+
+  /* basic assumption: we can always allocate a buffer representing a
+     line from the image, otherwise we're going to have trouble
+     working with the image */
+  if (im_mult_overflow2(&line_bytes, x, sizeof(i_fcolor))) {
+    im_push_error(aIMCTX, 0, "integer overflow calculating scanline allocation");
     return NULL;
   }
 
