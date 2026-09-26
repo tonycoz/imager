@@ -6,6 +6,11 @@ the Imager C API will need to be rebuilt.
  - RAW:
    - validate raw_datachannels and limit to a maximum of 16
    - check raw line buffer calculation for overflow
+     https://github.com/tonycoz/imager/security/advisories/GHSA-g549-r73g-x7x6
+
+ - RAW:
+   - implement file size limit checks for raw images too.
+     (see the set_file_limits() method)
 
  - image creation no longer aborts the process if allocation of the
    image surface fails.

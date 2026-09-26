@@ -87,6 +87,11 @@ i_readraw_wiol(io_glue *ig, i_img_dim x, i_img_dim y, int datachannels, int stor
     return NULL;
   }
   
+  if (!i_int_check_image_file_limits(x, y, storechannels, sizeof(i_sample_t))) {
+    mm_log((1, "i_readraw: image size exceeds limits\n"));
+    return NULL;
+  }
+
   if (im_mult_overflow2(&inbuflen, x, datachannels)) {
     i_push_error(0, "Integer overflow calculating input buffer size");
     return NULL;

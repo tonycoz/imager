@@ -307,6 +307,49 @@ SKIP:
 }
 
 {
+  # test file limits obeyed
+  my $data = "\x00" x (150 * 150 * 3);
+  ok(Imager->set_file_limits(reset=>1, width=>149), "set width limit 149");
+  my $im = Imager->new;
+  ok(!$im->read(data=>$data, type => "raw", xsize => 150, ysize => 150,
+               raw_interleave => 1),
+     "should fail read due to size limits");
+  print "# ",$im->errstr,"\n";
+  like($im->errstr, qr/image width/, "check message");
+
+  ok(Imager->set_file_limits(reset=>1, height=>149), "set height limit 149");
+  ok(!$im->read(data=>$data, type => "raw", xsize => 150, ysize => 150,
+               raw_interleave => 1),
+     "should fail read due to size limits");
+  print "# ",$im->errstr,"\n";
+  like($im->errstr, qr/image height/, "check message");
+
+  ok(Imager->set_file_limits(reset=>1, width=>150), "set width limit 150");
+  ok($im->read(data=>$data, type => "raw", xsize => 150, ysize => 150,
+               raw_interleave => 1),
+     "should succeed - just inside width limit");
+  ok(Imager->set_file_limits(reset=>1, height=>150), "set height limit 150");
+  ok($im->read(data=>$data, type => "raw", xsize => 150, ysize => 150,
+               raw_interleave => 1),
+     "should succeed - just inside height limit");
+
+  # 150 x 150 x 3 channel image uses 67500 bytes
+  ok(Imager->set_file_limits(reset=>1, bytes=>67499),
+     "set bytes limit 67499");
+  ok(!$im->read(data=>$data, type => "raw", xsize => 150, ysize => 150,
+               raw_interleave => 1),
+     "should fail - too many bytes");
+  print "# ",$im->errstr,"\n";
+  like($im->errstr, qr/storage size/, "check error message");
+  ok(Imager->set_file_limits(reset=>1, bytes=>67500),
+     "set bytes limit 67500");
+  ok($im->read(data=>$data, type => "raw", xsize => 150, ysize => 150,
+               raw_interleave => 1),
+     "should succeed - just inside bytes limit");
+  Imager->set_file_limits(reset=>1);
+}
+
+{
   my @ims = ( basic => test_image(), mono => test_image_mono() );
   push @ims, masked => test_image()->masked();
 
