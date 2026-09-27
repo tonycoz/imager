@@ -1309,6 +1309,80 @@ my_out_of_memory(pIMCTX, void *userdata, const char *func, size_t size) {
   Perl_croak(aTHX_ "out of memory handler returned");
 }
 
+/* test the numeric parameters of i_[pg]sampf?(?:_bits)?
+  for validity.
+  Pushes errors.
+  Returns the size of the buffer in *buf_size.
+
+  Returns non-zero if valid.
+*/
+
+static int
+is_valid_sample_params(
+  i_img *im, i_img_dim l, i_img_dim *pr, i_img_dim y,
+  i_channel_list *channels, size_t sample_size, size_t *buf_size) {
+  if (l < 0 || l > im->xsize) {
+    i_push_error(0, "getsamples: left outside of image");
+    return 0;
+  }
+  if (*pr > im->xsize)
+    *pr = im->xsize;
+  if (l >= *pr) {
+    i_push_errorf(0, "left not left of right");
+    return 0;
+  }
+  if (y < 0 || y >= im->ysize) {
+    i_push_error(0, "y outside of image");
+    return 0;
+  }
+  if (channels->count < 1) {
+    /* caught in the type handler */
+    i_push_error(0, "must be at least one channel");
+    return 0;
+  }
+  if (channels->channels) {
+    int i;
+    for (i = 0; i < channels->count; ++i) {
+      int ch = channels->channels[i];
+      if (ch < 0 || ch >= im->channels) {
+        i_push_errorf(0, "channel %d out of range for %d channel image",
+          ch, im->channels);
+        return 0;
+      }
+    }
+  }
+  else {
+    /* the type handler doesn't do this (yet) */
+    if (channels->count > im->channels) {
+      i_push_errorf(0, "channel count %d out of range for %d channel image",
+        channels->count, im->channels);
+      return 0;
+    }
+  }
+
+  if (im_mult_overflow3(buf_size, *pr - l, channels->count, sample_size)) {
+    i_push_error(0, "integer overflow calculating buffer size");
+    return 0;
+  }
+
+  return 1;
+}
+
+static void
+save_error_sv(pTHX_ SV *err_sv) {
+  i_errmsg *errors = i_errors();
+  int i = 0;
+  SvPVCLEAR(err_sv);
+
+  while (errors[i].msg) {
+    if (i)
+      sv_catpvs(err_sv, ": ");
+    sv_catpv(err_sv, errors[i].msg);
+    ++i;
+  }
+  SvSETMAGIC(err_sv);
+}
+
 typedef i_trim_color_list Imager__TrimColorList;
 #define trim_color_list_count(t) ((t).count)
 
@@ -3743,18 +3817,17 @@ i_img_virtual(im)
         Imager::ImgRaw  im
 
 void
-i_gsamp(im, l, r, y, channels)
-        Imager::ImgRaw im
-        i_img_dim l
-        i_img_dim r
-        i_img_dim y
-        i_channel_list channels
+i_gsamp(Imager::ImgRaw im, i_img_dim l, i_img_dim r, i_img_dim y, \
+        i_channel_list channels, SV *err_sv = NULL)
       PREINIT:
         i_sample_t *data;
         i_img_dim count, i;
+        size_t buf_size;
       PPCODE:
-        if (l < r) {
-          data = mymalloc(sizeof(i_sample_t) * (r-l) * channels.count);
+        i_clear_error();
+        if (is_valid_sample_params(im, l, &r, y, &channels,
+            sizeof(i_sample_t), &buf_size)) {
+          data = mymalloc(buf_size);
           count = i_gsamp(im, l, r, y, data, channels.channels, channels.count);
           if (GIMME_V == G_ARRAY) {
             EXTEND(SP, count);
@@ -3765,11 +3838,20 @@ i_gsamp(im, l, r, y, channels)
             EXTEND(SP, 1);
             PUSHs(sv_2mortal(newSVpvn((char *)data, count * sizeof(i_sample_t))));
           }
-	  myfree(data);
+          else {
+            i_push_error(0, "getsamples");
+            if (err_sv)
+              save_error_sv(aTHX_ err_sv);
+          }
+          myfree(data);
         }
         else {
-          if (GIMME_V != G_ARRAY) {
-	    XSRETURN_UNDEF;
+          i_push_error(0, "getsamples");
+          if (err_sv)
+            save_error_sv(aTHX_ err_sv);
+          if (GIMME_V == G_SCALAR) {
+            EXTEND(SP, 1);
+            PUSHs(&PL_sv_undef);
           }
         }
 

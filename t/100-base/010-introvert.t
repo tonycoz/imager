@@ -10,7 +10,7 @@ BEGIN { use_ok(Imager => qw(:handy :all)) }
 use warnings;
 use POSIX qw(INT_MIN INT_MAX UINT_MAX);
 
-use Imager::Test qw(image_bounds_checks is_color3 is_color4 is_fcolor4 color_cmp mask_tests is_fcolor3);
+use Imager::Test qw(image_bounds_checks is_color3 is_color4 is_fcolor4 color_cmp mask_tests is_fcolor3 std_image_tests);
 
 -d "testout" or mkdir "testout";
 
@@ -1254,6 +1254,8 @@ SKIP:
     is($im->colorchannels, $color_channels, "check colorchannels");
   }
 }
+
+std_image_tests({ bits => 8 });
 
 done_testing();
 

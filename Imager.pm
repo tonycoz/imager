@@ -3725,7 +3725,7 @@ sub getsamples {
     my $offset = $opts{offset};
     if ($opts{type} eq '8bit') {
       my @samples = i_gsamp($self->{IMG}, $opts{x}, $opts{x}+$opts{width},
-			    $opts{y}, $opts{channels})
+			    $opts{y}, $opts{channels}, $self->{ERRSTR})
 	or return;
       @{$target}[$offset .. $offset + @samples - 1] = @samples;
       return scalar(@samples);
@@ -3758,7 +3758,7 @@ sub getsamples {
   else {
     if ($opts{type} eq '8bit') {
       return i_gsamp($self->{IMG}, $opts{x}, $opts{x}+$opts{width},
-		     $opts{y}, $opts{channels});
+		     $opts{y}, $opts{channels}, $self->{ERRSTR});
     }
     elsif ($opts{type} eq 'float') {
       return i_gsampf($self->{IMG}, $opts{x}, $opts{x}+$opts{width},

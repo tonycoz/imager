@@ -1,3 +1,4 @@
+#include "imager.h"
 #include "imageri.h"
 #include <stdio.h>
 

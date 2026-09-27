@@ -410,5 +410,6 @@ extern void i_mutex_unlock(i_mutex_t m);
 #define i_color_black0 ((i_color){.rgba = { 0, 0, 0, 0 }})
 
 #include "imio.h"
+#include "iminline.h"
 
 #endif

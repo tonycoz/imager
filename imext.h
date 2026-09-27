@@ -271,4 +271,6 @@ extern im_ext_funcs *imager_function_ext_table;
 }
 #endif
 
+#include "iminline.h"
+
 #endif

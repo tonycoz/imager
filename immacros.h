@@ -163,6 +163,8 @@ returns -1 and pushes an error.
 #define i_set_out_of_memory(callme, userdata) \
   im_set_out_of_memory(aIMCTX, callme, userdata)
 
+#define im_size_t_max (~(size_t)0)
+
 #ifdef __cplusplus
 }
 #endif
