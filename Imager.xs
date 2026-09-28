@@ -3823,11 +3823,13 @@ i_gsamp(Imager::ImgRaw im, i_img_dim l, i_img_dim r, i_img_dim y, \
         i_sample_t *data;
         i_img_dim count, i;
         size_t buf_size;
+        SV *result_sv;
       PPCODE:
         i_clear_error();
         if (is_valid_sample_params(im, l, &r, y, &channels,
             sizeof(i_sample_t), &buf_size)) {
-          data = mymalloc(buf_size);
+          result_sv = newSV(buf_size);
+          data = (i_sample_t *)SvPVX(result_sv);
           count = i_gsamp(im, l, r, y, data, channels.channels, channels.count);
           if (GIMME_V == G_ARRAY) {
             EXTEND(SP, count);
@@ -3836,14 +3838,16 @@ i_gsamp(Imager::ImgRaw im, i_img_dim l, i_img_dim r, i_img_dim y, \
           }
           else if (count) {
             EXTEND(SP, 1);
-            PUSHs(sv_2mortal(newSVpvn((char *)data, count * sizeof(i_sample_t))));
+            SvCUR_set(result_sv, count * sizeof(i_sample_t));
+            *SvEND(result_sv) = '\0';
+            SvPOK_only(result_sv);
+            PUSHs(result_sv);
           }
           else {
             i_push_error(0, "getsamples");
             if (err_sv)
               save_error_sv(aTHX_ err_sv);
           }
-          myfree(data);
         }
         else {
           i_push_error(0, "getsamples");
