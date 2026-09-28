@@ -3732,7 +3732,7 @@ sub getsamples {
     }
     elsif ($opts{type} eq 'float') {
       my @samples = i_gsampf($self->{IMG}, $opts{x}, $opts{x}+$opts{width},
-			     $opts{y}, $opts{channels});
+			     $opts{y}, $opts{channels}, $self->{ERRSTR});
       @{$target}[$offset .. $offset + @samples - 1] = @samples;
       return scalar(@samples);
     }
@@ -3742,7 +3742,7 @@ sub getsamples {
       my @data;
       my $count = i_gsamp_bits($self->{IMG}, $opts{x}, $opts{x}+$opts{width}, 
 			       $opts{y}, $bits, $target, 
-			       $offset, $opts{channels});
+			       $offset, $opts{channels}, $self->{ERRSTR});
       unless (defined $count) {
 	$self->_set_error(Imager->_error_as_msg);
 	return;
@@ -3762,14 +3762,15 @@ sub getsamples {
     }
     elsif ($opts{type} eq 'float') {
       return i_gsampf($self->{IMG}, $opts{x}, $opts{x}+$opts{width},
-		      $opts{y}, $opts{channels});
+		      $opts{y}, $opts{channels}, $self->{ERRSTR});
     }
     elsif ($opts{type} =~ /^(\d+)bit$/) {
       my $bits = $1;
 
       my @data;
       i_gsamp_bits($self->{IMG}, $opts{x}, $opts{x}+$opts{width}, 
-		   $opts{y}, $bits, \@data, 0, $opts{channels})
+		   $opts{y}, $bits, \@data, 0, $opts{channels},
+                   $self->{ERRSTR})
 	or return;
       return @data;
     }

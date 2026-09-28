@@ -939,83 +939,88 @@ sub std_image_tests {
     ok($im->setpixel(x => 1, y => 0, color => { channels => $colors[1] }),
        "set a normal spread of values at (1,0)");
 
-    {
-      # getsamples, 8bit, direct return
-      # one too many channels
-      ok(!$im->getsamples(y => 0, channels => [ $channel_count ]),
-         "fetch invalid channel");
-      like($im->errstr, qr/getsamples: channel $channel_count out of range for $channel_count channel image/,
-           "check message channel $channel_count");
+    for my $type (qw(8bit float 16bit)) {
+      {
+        # getsamples, direct return
+        # one too many channels
+        ok(!$im->getsamples(type => $type, y => 0,
+                            channels => [ $channel_count ]),
+           "fetch invalid channel type $type");
+        like($im->errstr, qr/getsamples: channel $channel_count out of range for $channel_count channel image/,
+             "check message channel $channel_count type $type");
 
-      ok(!$im->getsamples(y => 0, channels => [ -1 ]),
-         "fetch no channels");
-      like($im->errstr, qr/getsamples: channel -1 out of range for $channel_count channel image/,
-           "check message for negative channel");
+        ok(!$im->getsamples(type => $type, y => 0, channels => [ -1 ]),
+           "fetch no channels type $type");
+        like($im->errstr, qr/getsamples: channel -1 out of range for $channel_count channel image/,
+             "check message for negative channel type $type");
 
-      ok(!$im->getsamples(y => -1),
-         "fetch from row -1");
-      like($im->errstr, qr/getsamples: y outside of image/,
-           "check message for y -1");
+        ok(!$im->getsamples(type => $type, y => -1),
+           "fetch from row -1 type $type");
+        like($im->errstr, qr/getsamples: y outside of image/,
+             "check message for y -1 type $type");
 
-      ok(!$im->getsamples(y => 10),
-         "fetch from row 10");
-      like($im->errstr, qr/getsamples: y outside of image/,
-           "check message for y 10");
+        ok(!$im->getsamples(type => $type, y => 10),
+           "fetch from row 10 type $type");
+        like($im->errstr, qr/getsamples: y outside of image/,
+             "check message for y 10 type $type");
 
-      ok(!$im->getsamples(x => -1, y => 0),
-         "fetch from x = -1");
-      like($im->errstr, qr/getsamples: left outside of image/,
-           "check message for x -1");
+        ok(!$im->getsamples(type => $type, x => -1, y => 0),
+           "fetch from x = -1 type $type");
+        like($im->errstr, qr/getsamples: left outside of image/,
+             "check message for x -1 type $type");
 
-      ok(!$im->getsamples(x => 11, width => 2, y => 0),
-         "fetch from x = 11");
-      like($im->errstr, qr/getsamples: left outside of image/,
-           "check message for x 11");
+        ok(!$im->getsamples(type => $type, x => 11, width => 2, y => 0),
+           "fetch from x = 11");
+        like($im->errstr, qr/getsamples: left outside of image/,
+             "check message for x 11 type $type");
 
-      ok(!$im->getsamples(x => 5, width => 0, y => 0),
-         "fetch from x = 5, width 0");
-      like($im->errstr, qr/getsamples: left not left of right/,
-           "check message for x = 5, width 0");
-    }
+        ok(!$im->getsamples(type => $type, x => 5, width => 0, y => 0),
+           "fetch from x = 5, width 0");
+        like($im->errstr, qr/getsamples: left not left of right/,
+             "check message for x = 5, width 0 type $type");
+      }
 
-    {
-      # getsamples, 8bit, target return
-      # one too many channels
-      my @t;
-      ok(!$im->getsamples(target => \@t, y => 0, channels => [ $channel_count ]),
-         "fetch invalid channel");
-      like($im->errstr, qr/getsamples: channel $channel_count out of range for $channel_count channel image/,
-           "check message channel $channel_count");
+      {
+        # getsamples, target return
+        # one too many channels
+        my @t;
+        ok(!$im->getsamples(type => $type, target => \@t, y => 0,
+                            channels => [ $channel_count ]),
+           "fetch invalid channel type $type");
+        like($im->errstr, qr/getsamples: channel $channel_count out of range for $channel_count channel image/,
+             "check message channel $channel_count type $type");
 
-      ok(!$im->getsamples(target => \@t, y => 0, channels => [ -1 ]),
-         "fetch no channels");
-      like($im->errstr, qr/getsamples: channel -1 out of range for $channel_count channel image/,
-           "check message for negative channel");
+        ok(!$im->getsamples(type => $type, target => \@t, y => 0,
+                            channels => [ -1 ]),
+           "fetch no channels type $type");
+        like($im->errstr, qr/getsamples: channel -1 out of range for $channel_count channel image/,
+             "check message for negative channel type $type");
 
-      ok(!$im->getsamples(target => \@t, y => -1),
-         "fetch from row -1");
-      like($im->errstr, qr/getsamples: y outside of image/,
-           "check message for y -1");
+        ok(!$im->getsamples(type => $type, target => \@t, y => -1),
+           "fetch from row -1 type $type");
+        like($im->errstr, qr/getsamples: y outside of image/,
+             "check message for y -1 type $type");
 
-      ok(!$im->getsamples(target => \@t, y => 10),
-         "fetch from row 10");
-      like($im->errstr, qr/getsamples: y outside of image/,
-           "check message for y 10");
+        ok(!$im->getsamples(type => $type, target => \@t, y => 10),
+           "fetch from row 10 type $type");
+        like($im->errstr, qr/getsamples: y outside of image/,
+             "check message for y 10 type $type");
 
-      ok(!$im->getsamples(target => \@t, x => -1, y => 0),
-         "fetch from x = -1");
-      like($im->errstr, qr/getsamples: left outside of image/,
-           "check message for x -1");
+        ok(!$im->getsamples(type => $type, target => \@t, x => -1, y => 0),
+           "fetch from x = -1 type $type");
+        like($im->errstr, qr/getsamples: left outside of image/,
+             "check message for x -1 type $type");
 
-      ok(!$im->getsamples(target => \@t, x => 11, width => 2, y => 0),
-         "fetch from x = 11");
-      like($im->errstr, qr/getsamples: left outside of image/,
-           "check message for x 11");
+        ok(!$im->getsamples(type => $type, target => \@t, x => 11, width => 2, y => 0),
+           "fetch from x = 11 type $type");
+        like($im->errstr, qr/getsamples: left outside of image/,
+             "check message for x 11 type $type");
 
-      ok(!$im->getsamples(target => \@t, x => 5, width => 0, y => 0),
-         "fetch from x = 5, width 0");
-      like($im->errstr, qr/getsamples: left not left of right/,
-           "check message for x = 5, width 0");
+        ok(!$im->getsamples(type => $type, target => \@t, x => 5, width => 0, y => 0),
+           "fetch from x = 5, width 0 type $type");
+        like($im->errstr, qr/getsamples: left not left of right/,
+             "check message for x = 5, width 0 type $type");
+      }
     }
   }
 }

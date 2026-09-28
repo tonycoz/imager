@@ -72,7 +72,9 @@ test_colorf_glin($im_rgb, 0, 1,
   # fail gsamp
   is(Imager::i_gsamp_bits($im_rgb, 18, 22, 1, 16, \@samples, 0, [ 0, 3 ]), undef,
      "i_gsamp_bits fail bad channel");
-  is(Imager->_error_as_msg(), 'No channel 3 in this image', 'check message');
+  is(Imager->_error_as_msg(),
+     'getsamples: channel 3 out of range for 3 channel image',
+     'check message');
 
   is(Imager::i_gsamp_bits($im_rgb, 18, 22, 1, 17, \@samples, 0, [ 0, 2 ]), 8, 
      "i_gsamp_bits succeed high bits");

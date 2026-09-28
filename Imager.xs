@@ -3856,33 +3856,37 @@ i_gsamp(Imager::ImgRaw im, i_img_dim l, i_img_dim r, i_img_dim y, \
         }
 
 undef_neg_int
-i_gsamp_bits(im, l, r, y, bits, target, offset, channels)
-        Imager::ImgRaw im
-        i_img_dim l
-        i_img_dim r
-        i_img_dim y
-	int bits
-	AV *target
-	STRLEN offset
-        i_channel_list channels
+i_gsamp_bits(Imager::ImgRaw im, i_img_dim l, i_img_dim r, i_img_dim y, \
+	int bits, AV *target, STRLEN offset, i_channel_list channels, \
+        SV *err_sv = NULL)
       PREINIT:
         unsigned *data;
         i_img_dim count, i;
+        size_t buf_size;
       CODE:
 	i_clear_error();
-        if (items < 8)
-          croak("No channel numbers supplied to g_samp()");
-        if (l < r) {
-          data = mymalloc(sizeof(unsigned) * (r-l) * channels.count);
+        if (is_valid_sample_params(im, l, &r, y, &channels,
+            sizeof(unsigned), &buf_size)) {
+          data = mymalloc(buf_size);
           count = i_gsamp_bits(im, l, r, y, data, channels.channels, channels.count, bits);
-	  for (i = 0; i < count; ++i) {
-	    av_store(target, i+offset, newSVuv(data[i]));
-	  }
+          if (count >= 0) {
+	    for (i = 0; i < count; ++i) {
+	      av_store(target, i+offset, newSVuv(data[i]));
+	    }
+          }
+          else {
+            i_push_error(0, "getsamples");
+            if (err_sv)
+              save_error_sv(aTHX_ err_sv);
+          }
 	  myfree(data);
 	  RETVAL = count;
         }
         else {
-	  RETVAL = 0;
+          i_push_error(0, "getsamples");
+          if (err_sv)
+            save_error_sv(aTHX_ err_sv);
+	  RETVAL = -1;
         }
       OUTPUT:
 	RETVAL
@@ -4083,18 +4087,17 @@ i_ppixf(im, x, y, cl)
         Imager::Color::Float cl
 
 void
-i_gsampf(im, l, r, y, channels)
-        Imager::ImgRaw im
-        i_img_dim l
-        i_img_dim r
-        i_img_dim y
-	i_channel_list channels
+i_gsampf(Imager::ImgRaw im, i_img_dim l, i_img_dim r, i_img_dim y, \
+        i_channel_list channels, SV *err_sv = NULL)
       PREINIT:
         i_fsample_t *data;
         i_img_dim count, i;
+        size_t buf_size;
       PPCODE:
-        if (l < r) {
-          data = mymalloc(sizeof(i_fsample_t) * (r-l) * channels.count);
+        i_clear_error();
+        if (is_valid_sample_params(im, l, &r, y, &channels,
+            sizeof(i_fsample_t), &buf_size)) {
+          data = mymalloc(buf_size);
           count = i_gsampf(im, l, r, y, data, channels.channels, channels.count);
           if (GIMME_V == G_ARRAY) {
             EXTEND(SP, count);
@@ -4108,8 +4111,12 @@ i_gsampf(im, l, r, y, channels)
           myfree(data);
         }
         else {
-          if (GIMME_V != G_ARRAY) {
-	    XSRETURN_UNDEF;
+          i_push_error(0, "getsamples");
+          if (err_sv)
+            save_error_sv(aTHX_ err_sv);
+          if (GIMME_V == G_SCALAR) {
+            EXTEND(SP, 1);
+            PUSHs(&PL_sv_undef);
           }
         }
 
