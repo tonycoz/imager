@@ -19,6 +19,7 @@ jobs:
           - "4.6.0"
           - "4.7.0"
           - "4.7.1"
+          - "4.7.2"
     steps:
       - name: install dependencies
         run: |
