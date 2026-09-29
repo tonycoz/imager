@@ -23,6 +23,12 @@ the Imager C API will need to be rebuilt.
    perl.
    https://github.com/tonycoz/imager/issues/575
 
+ - validate earlier in the backend functions used by getsamples(), and
+   add error reporting on validation errors.
+
+ - getsamples() for 8 bit or float samples now fetches directly to an
+   SV, rather than using an intermediate memory block, saving a copy.
+
  - i_tt_has_chars(), i_gpal(), i_gsamp(), i_gsampf() - avoid calling
    newSVpv() with a zero length
    https://github.com/tonycoz/imager/pull/576
