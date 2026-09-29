@@ -1,20 +1,18 @@
-name: os-linux-rocky
+name: os-linux-alma
 
 on:
   workflow_call:
 
 jobs:
-  os-linux-rocky:
+  os-linux-alma:
     runs-on: ubuntu-latest
     container:
-      image: rockylinux/rockylinux:8
+      image: almalinux:8
     timeout-minutes: 10
     steps:
       - name: install dependencies
         run: |
-            dnf update -y
-            dnf groupinstall -y "Development Tools"
-            dnf install -y --enablerepo=powertools libtiff-devel libpng-devel giflib-devel freetype-devel libjpeg-devel perl-Test-Pod-Coverage perl-Test-Pod perl-Pod-Parser cpanminus
+            dnf install -y --enablerepo=powertools '@Development Tools' libtiff-devel libpng-devel giflib-devel freetype-devel libjpeg-devel perl-Test-Pod-Coverage perl-Test-Pod perl-Pod-Parser cpanminus
             cpanm Parse::RecDescent
       - name: checkout
         uses: actions/checkout@v6

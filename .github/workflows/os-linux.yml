@@ -62,9 +62,9 @@ jobs:
     needs: os-linux
     uses: ./.github/workflows/os-linux-nothr.yml
 
-  os-linux-rocky:
+  os-linux-alma:
     needs: os-linux
-    uses: ./.github/workflows/os-linux-rocky.yml
+    uses: ./.github/workflows/os-linux-alma.yml
 
   os-macos:
     needs: os-linux
