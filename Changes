@@ -7,18 +7,25 @@ the Imager C API will need to be rebuilt.
    - validate raw_datachannels and limit to a maximum of 16
    - check raw line buffer calculation for overflow
      https://github.com/tonycoz/imager/security/advisories/GHSA-g549-r73g-x7x6
+     CVE-2026-102504
+
+ - getsamples() with type "float" on a paletted image fetching more than one
+   channel would allocate too small a block.  Code calling this on an
+   untrusted image could have an attacker controlled buffer overflow.
+   https://github.com/tonycoz/imager/security/advisories/GHSA-4rx6-cgv3-fmxp
+   CVE-2026-102505
 
  - RAW:
    - implement file size limit checks for raw images too.
      (see the set_file_limits() method)
 
  - image creation no longer aborts the process if allocation of the
-   image surface fails.
+   image surface fails, and fails image creation instead.
 
  - failed allocation of other memory blocks (typically much smaller)
    now uses abort() to exit the process instead of exit().  This is
-   easier to catch in a debugger and you can handle SIGABRT to capture
-   this, but...
+   easier to catch in a debugger or core dump and you can handle
+   SIGABRT to capture this, but...
 
  - you can now set a handler for otherwise fatal memory allocation
    failures using set_out_of_memory_handler().  This handler should
