@@ -1,5 +1,8 @@
 Imager release history.  Older releases can be found in Changes.old
 
+Imager 1.037 - 30 September 2026
+============
+
 The Imager C API major version has changed, any modules that depend on
 the Imager C API will need to be rebuilt.
 
