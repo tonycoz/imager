@@ -148,7 +148,7 @@ It's only useful for creating an Imager object to call the read()
 method on later.
 
   %opts = (xsize=>300, ysize=>200);
-  $img = Imager->new(%opts); # create direct mode RGBA image
+  $img = Imager->new(%opts); # create direct mode RGB image
   $img = Imager->new(%opts, channels=>4); # create direct mode RGBA image
 
 You can also read a file from new():
@@ -819,8 +819,11 @@ construct a common palette for use in several images:
 
   my @colors = Imager->make_palette(\%opts, @images);
 
-You must supply at least one image, even if the C<make_colors>
-parameter produces a fixed palette.
+where C<%opts> contains the options specified under L</Quantization
+options>.
+
+You must supply at least one image, even if the C<%opts> parameter
+produces a fixed palette.
 
 On failure returns no colors and you can check C<< Imager->errstr >>.
 
@@ -840,8 +843,8 @@ You can retrieve tags from an image using the tags() method, you can
 get all of the tags in an image, as a list of array references, with
 the code or name of the tag followed by the value of the tag.
 
-Imager's support for fairly limited, for access to pretty much all
-image metadata you may want to try L<Image::ExifTool>.
+Imager's support for metadata is fairly limited, for access to pretty
+much all image metadata you may want to try L<Image::ExifTool>.
 
 =over
 
@@ -947,7 +950,7 @@ value is converted.  A floating point number stored as a string.
 =item *
 
 X<i_aspect_only tag> X<tags, i_aspect_only> C<i_aspect_only> - If this is
-non-zero then the values in i_xres and i_yres are treated as a ratio
+non-zero then the values in C<i_xres> and C<i_yres> are treated as a ratio
 only.  If the image format does not support aspect ratios then this is
 scaled so the smaller value is 72 DPI.
 

@@ -118,6 +118,7 @@ sub sequence {
     my ($pod, $part) = split m(/), $link, 2;
     $pod ||= $self->{link};
     if ($part) {
+      $part =~ tr/\n/ /;
       $part =~ s/^\"//;
       $part =~ s/"$//;
     }
