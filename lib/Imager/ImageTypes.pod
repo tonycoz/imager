@@ -853,11 +853,11 @@ With no parameters, retrieves a list array references, each containing
 a name and value: all tags in the image:
 
   # get a list of ( [ name1 => value1 ], [ name2 => value2 ] ... )
-  my @alltags = $img->tags;
-  print $_->[0], ":", $_->[1], "\n" for @all_tags;
+  my @all_tags = $img->tags;
+  print "$_->[0]:$_->[1]\n" for @all_tags;
 
   # or put it in a hash, but this will lose duplicates
-  my %alltags = map @$_, $img->tags;
+  my %al_ltags = map @$_, $img->tags;
 
 in scalar context this returns the number of tags:
 
