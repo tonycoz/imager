@@ -60,6 +60,8 @@ typedef struct {
   i_io_seekl_t	seekcb;
   i_io_closel_t closecb;
   i_io_destroyl_t      destroycb;
+  i_io_sizel_t sizecb;
+  off_t size;
 } io_cb;
 
 typedef struct {
@@ -147,6 +149,7 @@ static ssize_t realseek_write(io_glue *igo, const void *buf, size_t count);
 static int realseek_close(io_glue *igo);
 static off_t realseek_seek(io_glue *igo, off_t offset, int whence);
 static void realseek_destroy(io_glue *igo);
+static off_t realseek_size(io_glue *igo);
 static ssize_t buffer_read(io_glue *igo, void *buf, size_t count);
 static ssize_t buffer_write(io_glue *ig, const void *buf, size_t count);
 static int buffer_close(io_glue *ig);
@@ -210,7 +213,7 @@ callback_vtable =
     realseek_write,
     realseek_seek,
     realseek_close,
-    NULL,
+    realseek_size,
     realseek_destroy,
     NULL,
     NULL
@@ -338,7 +341,7 @@ im_io_new_fd(pIMCTX, int fd) {
 }
 
 /*
-=item im_io_new_cb(ctx, p, read_cb, write_cb, seek_cb, close_cb, destroy_cb)
+=item im_io_new_cb8(ctx, p, read_cb, write_cb, seek_cb, close_cb, destroy_cb, size_cb)
 X<im_io_new_cb API>X<io_new_cb API>
 =category I/O Layers
 =order 10
@@ -387,14 +390,22 @@ io_glue *
 im_io_new_cb(pIMCTX, void *p, i_io_readl_t readcb, i_io_writel_t writecb, 
 	  i_io_seekl_t seekcb, i_io_closel_t closecb, 
 	  i_io_destroyl_t destroycb) {
+  return im_io_new_cb8(aIMCTX, p, readcb, writecb, seekcb, closecb,
+                       destroycb, NULL);
+}
+
+io_glue *
+im_io_new_cb8(pIMCTX, void *p, i_io_readl_t readcb, i_io_writel_t writecb, 
+	  i_io_seekl_t seekcb, i_io_closel_t closecb, 
+              i_io_destroyl_t destroycb, i_io_sizel_t sizecb) {
   io_cb *ig;
 
   im_log((aIMCTX, 1, "io_new_cb(p %p, readcb %p, writecb %p, seekcb %p, closecb %p, "
-          "destroycb %p)\n", p, readcb, writecb, seekcb, closecb, destroycb));
+          "destroycb %p, seekcb %p)\n", p, readcb, writecb, seekcb, closecb, destroycb, seekcb));
   ig = mymalloc(sizeof(io_cb));
   memset(ig, 0, sizeof(*ig));
   i_io_init(aIMCTX, &ig->base, CBSEEK, &callback_vtable);
-  im_log((aIMCTX, 1, "(%p) <- io_new_cb\n", ig));
+  im_log((aIMCTX, 1, "(%p) <- io_new_cb8\n", ig));
 
   ig->p         = p;
   ig->readcb    = readcb;
@@ -402,8 +413,10 @@ im_io_new_cb(pIMCTX, void *p, i_io_readl_t readcb, i_io_writel_t writecb,
   ig->seekcb    = seekcb;
   ig->closecb   = closecb;
   ig->destroycb = destroycb;
+  ig->sizecb    = sizecb;
+  ig->size      = -1;
   
-  im_context_refinc(aIMCTX, "im_io_new_bufchain");
+  im_context_refinc(aIMCTX, "im_io_new_cb8");
 
   return (io_glue *)ig;
 }
@@ -1331,14 +1344,6 @@ dump_data(unsigned char *start, unsigned char *end, int bias) {
 }
 
 /*
- * Callbacks for sources that cannot seek
- */
-
-/*
- * Callbacks for sources that can seek 
- */
-
-/*
 =item realseek_read(ig, buf, count)
 
 Does the reading from a source that can be seeked on
@@ -1461,6 +1466,29 @@ realseek_destroy(io_glue *igo) {
 
   if (ig->destroycb)
     ig->destroycb(ig->p);
+}
+
+/* assuming this is just for read-only */
+static off_t
+realseek_size(io_glue *igo) {
+  io_cb *ig = (io_cb *)igo;
+  void *p = ig->p;
+  if (ig->size != -1) {
+    if (ig->sizecb) {
+      ig->size = ig->sizecb(p);
+    }
+    else {
+      /* try to figure it out */
+      off_t sz = -1;
+      off_t orig_pos = realseek_seek(igo, 0, SEEK_CUR);
+      if (orig_pos != (off_t)-1) {
+        sz = realseek_seek(igo, 0, SEEK_END);
+        realseek_seek(igo, orig_pos, SEEK_SET);
+      }
+      ig->size = sz;
+    }
+  }
+  return ig->size;
 }
 
 /*
