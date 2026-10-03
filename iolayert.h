@@ -90,18 +90,6 @@ struct i_io_glue_t {
 #define I_IO_DUMP_STATUS 4
 #define I_IO_DUMP_DEFAULT (I_IO_DUMP_BUFFER | I_IO_DUMP_STATUS)
 
-#define i_io_type(ig) ((ig)->source.ig_type)
-#define i_io_raw_read(ig, buf, size) ((ig)->vtbl->readcb((ig), (buf), (size)))
-#define i_io_raw_write(ig, data, size) ((ig)->vtbl->writecb((ig), (data), (size)))
-#define i_io_raw_seek(ig, offset, whence) ((ig)->vtbl->seekcb((ig), (offset), (whence)))
-#define i_io_raw_close(ig) ((ig)->vtbl->closecb(ig))
-#define i_io_is_buffered(ig) ((int)((ig)->buffered))
-#define i_io_size(ig) ((ig)->vtbl->sizecb ? (ig)->vtbl->sizecb(ig) : (off_t)-1)
-#define i_io_mmap(ig, pdata, psize) \
-  ((ig)->vtbl->mmapcb ? (ig)->vtbl->mmapcb((ig), (pdata), (psize)) : 0)
-#define i_io_munmap(ig) \
-  ((ig)->vtbl->munmapcb ? (ig)->vtbl->munmapcb(ig) : 0)
-
 #define i_io_getc(ig) \
   ((ig)->read_ptr < (ig)->read_end ? \
      *((ig)->read_ptr++) : \
