@@ -163,6 +163,7 @@ static ssize_t bufchain_read(io_glue *ig, void *buf, size_t count);
 static ssize_t bufchain_write(io_glue *ig, const void *buf, size_t count);
 static int bufchain_close(io_glue *ig);
 static off_t bufchain_seek(io_glue *ig, off_t offset, int whence);
+static off_t bufchain_size(io_glue *ig);
 static void bufchain_destroy(io_glue *ig);
 
 static const i_io_glue_vtable_t
@@ -172,7 +173,7 @@ bufchain_vtable =
     bufchain_write,
     bufchain_seek,
     bufchain_close,
-    NULL,
+    bufchain_size,
     bufchain_destroy,
     NULL,
     NULL
@@ -1901,6 +1902,12 @@ bufchain_write(io_glue *ig, const void *buf, size_t count) {
     count     -= sk;
   }
   return ocount;
+}
+
+static off_t
+bufchain_size(io_glue *ig) {
+  io_ex_bchain *ieb = ig->exdata;
+  return ieb->length;
 }
 
 /*
