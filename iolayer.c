@@ -16,6 +16,10 @@
 #ifdef IMAGER_POSIX_MMAP
 #include <sys/mman.h>
 #endif
+#ifdef WIN32
+#include <windows.h>
+#include <io.h> /* _get_osfhandle */
+#endif
 
 #define IOL_DEB(x)
 #define IOL_DEBs stderr
@@ -38,7 +42,7 @@ typedef struct {
   int		fd;
   off_t         size;
   int size_set;
-#if defined(IMAGER_POSIX_MMAP)
+#if defined(IMAGER_POSIX_MMAP) || defined(WIN32)
   void *mapped;
   size_t map_size;
 #endif
@@ -2140,7 +2144,7 @@ fd_size(io_glue *igo) {
 
 static int
 fd_mmap(io_glue *igo, const void **pdata, size_t *psize) {
-#if defined(IMAGER_POSIX_MMAP)
+#if defined(IMAGER_POSIX_MMAP) || defined(WIN32)
   io_fdseek *ig = (io_fdseek *)igo;
 
   if (!ig->mapped) {
@@ -2151,10 +2155,20 @@ fd_mmap(io_glue *igo, const void **pdata, size_t *psize) {
       fd_size(igo);
     if (ig->size <= 0)
       return 0;
+#  if defined(IMAGER_POSIX_MMAP)
     data = mmap(NULL, ig->size, PROT_READ, MAP_SHARED, ig->fd, 0);
     if (data == (void *)-1) {
       return 0;
     }
+#  else
+    HANDLE h_mapping =
+      CreateFileMapping((HANDLE)_get_osfhandle(ig->fd), NULL, PAGE_READONLY,
+                        0, 0, NULL);
+    if (h_mapping == NULL)
+      return 0;
+    data = MapViewOfFile(h_mapping, FILE_MAP_READ, 0, 0, 0);
+    CloseHandle(h_mapping);
+#  endif
     ig->mapped = data;
     ig->map_size = ig->size;
     im_log((aIMCTX, 2, "mapped io %p to address %p size %zu\n",
@@ -2176,12 +2190,16 @@ fd_mmap(io_glue *igo, const void **pdata, size_t *psize) {
 
 static int
 fd_munmap(io_glue *igo) {
-#if defined(IMAGER_POSIX_MMAP)
+#if defined(IMAGER_POSIX_MMAP) || defined(WIN32)
   io_fdseek *ig = (io_fdseek *)igo;
 
   if (ig->mapped) {
     dIMCTXio(igo);
+#  ifdef IMAGER_POSIX_MMAP
     munmap(ig->mapped, ig->size);
+#  else
+    UnmapViewOfFile(ig->mapped);
+#  endif
     im_log((aIMCTX, 2, "unmapped io %p from address %p\n",
             (void *)ig, ig->mapped));
     ig->mapped = NULL;
