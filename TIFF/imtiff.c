@@ -326,9 +326,6 @@ comp_seek(thandle_t h, toff_t o, int w) {
 /*
 =item comp_mmap(thandle_t, tdata_t*, toff_t*)
 
-Dummy mmap stub.
-
-This shouldn't ever be called but newer tifflibs want it anyway.
 
 =cut
 */
@@ -336,28 +333,30 @@ This shouldn't ever be called but newer tifflibs want it anyway.
 static 
 int
 comp_mmap(thandle_t h, tdata_t*p, toff_t*off) {
-  (void)h;
-  (void)p;
-  (void)off;
-  return -1;
+  io_glue *ig = ((tiffio_context_t *)h)->ig;
+  size_t my_off;
+
+  /* on 64-bit *off is size_t, but not on 32-bit, so do the copy dance */
+  int ok = i_io_mmap(ig, (const void **)p, &my_off);
+  if (ok) {
+    *off = my_off;
+  }
+  return ok;
 }
 
 /*
 =item comp_munmap(thandle_t h, tdata_t p, toff_t off)
-
-Dummy munmap stub.
-
-This shouldn't ever be called but newer tifflibs want it anyway.
 
 =cut
 */
 
 static void
 comp_munmap(thandle_t h, tdata_t p, toff_t off) {
-  (void)h;
+  io_glue *ig = ((tiffio_context_t *)h)->ig;
   (void)p;
   (void)off;
-  /* do nothing */
+
+  i_io_munmap(ig);
 }
 
 static tsize_t
@@ -780,7 +779,7 @@ i_readtiff_wiol(io_glue *ig, int allow_incomplete, int page) {
   mm_log((1, "i_readtiff_wiol(ig %p, allow_incomplete %d, page %d)\n", ig, allow_incomplete, page));
 
   tiff_state ts;
-  TIFF *tif = do_tiff_open(&ts, ig, "rm");
+  TIFF *tif = do_tiff_open(&ts, ig, "rM");
   
   if (!tif) {
     mm_log((1, "i_readtiff_wiol: Unable to open tif file\n"));
@@ -831,7 +830,7 @@ i_readtiff_multi_wiol(io_glue *ig, int *count) {
   mm_log((1, "i_readtiff_wiol(ig %p)\n", ig));
 
   tiff_state ts;
-  TIFF *tif = do_tiff_open(&ts, ig, "rm");
+  TIFF *tif = do_tiff_open(&ts, ig, "rM");
   if (!tif) {
     mm_log((1, "i_readtiff_wiol: Unable to open tif file\n"));
     i_push_error(0, "Error opening file");
