@@ -1,5 +1,19 @@
 Imager release history.  Older releases can be found in Changes.old
 
+The Imager C API major version has changed, any modules that depend on
+the Imager C API will need to be rebuilt.
+
+ - iolayers:
+   - restructure the iolayer object to move the vtable outside of the
+     object, rather than entirely embedded.
+   - implement the size entry point, which existed, but had never been
+     implemented
+   - add mmap and munmap entry points (largely pulled from an old
+     topic branch), and implement it for POSIX-likes and Windows
+
+ - TIFF:
+   - use the new iolayer size and mmap entry points
+
  - Imager::ImageTypes:
    - fix some incorrect sample code
    - other minor documentation updates
