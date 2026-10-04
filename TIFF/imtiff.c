@@ -300,24 +300,7 @@ static toff_t
 sizeproc(thandle_t h) {
   io_glue *ig = ((tiffio_context_t *)h)->ig;
 
-  /* iolayer doesn't have a size callback, use seek() to find
-     the end
-  */
-  off_t orig_off = i_io_seek(ig, 0, SEEK_CUR);
-  if (orig_off < 0) {
-    i_push_error(errno, "seek to current failed");
-    return -1;
-  }
-  off_t size = i_io_seek(ig, 0, SEEK_END);
-  if (size < 0) {
-    i_push_error(errno, "seek to end failed");
-    return -1;
-  }
-  if (i_io_seek(ig, orig_off, SEEK_SET) < 0) {
-    i_push_error(errno, "seek restore failed");
-    return -1;
-  }
-  return size;
+  return i_io_size(ig);
 }
 
 
