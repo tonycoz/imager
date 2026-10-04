@@ -1555,17 +1555,11 @@ sub _get_reader_io {
     if (!$input->{seekcb}) {
       $self->_set_error("Need a seekcb parameter");
     }
-    if ($input->{maxbuffer}) {
-      return io_new_cb($input->{writecb},
-                       $input->{callback} || $input->{readcb},
-                       $input->{seekcb}, $input->{closecb},
-                       $input->{maxbuffer});
-    }
-    else {
-      return io_new_cb($input->{writecb},
-                       $input->{callback} || $input->{readcb},
-                       $input->{seekcb}, $input->{closecb});
-    }
+    my $sizecb = defined $input->{size} ? 0+$input->{size} : $input->{sizecb};
+    return io_new_cb($input->{writecb},
+                     $input->{callback} || $input->{readcb},
+                     $input->{seekcb}, $input->{closecb},
+                     $sizecb);
   }
   else {
     $self->_set_error("file/fd/fh/data/callback parameter missing");
@@ -1607,12 +1601,9 @@ sub _get_writer_io {
     $io = io_new_bufchain();
   }
   elsif ($input->{callback} || $input->{writecb}) {
-    if ($input->{maxbuffer} && $input->{maxbuffer} == 1) {
-      $buffered = 0;
-    }
     $io = io_new_cb($input->{callback} || $input->{writecb},
-		    $input->{readcb},
-		    $input->{seekcb}, $input->{closecb});
+		    $input->{readcb}, $input->{seekcb},
+                    $input->{closecb});
   }
   else {
     $self->_set_error("file/fd/fh/data/callback parameter missing");

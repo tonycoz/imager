@@ -231,8 +231,8 @@ extern im_ext_funcs *imager_function_ext_table;
 #define im_io_new_bufchain(ctx) ((im_extt->f_im_io_new_bufchain)(ctx))
 #define im_io_new_buffer(ctx, data, len, closecb, closedata)		\
   ((im_extt->f_im_io_new_buffer)((ctx), (data), (len), (closecb), (closedata)))
-#define im_io_new_cb(ctx, p, readcb, writecb, seekcb, closecb, destroycb) \
-  ((im_extt->f_im_io_new_cb)((ctx), (p), (readcb), (writecb), (seekcb), (closecb), (destroycb)))
+#define im_io_new_cb8(ctx, p, readcb, writecb, seekcb, closecb, destroycb, sizecb) \
+  ((im_extt->f_im_io_new_cb8)((ctx), (p), (readcb), (writecb), (seekcb), (closecb), (destroycb), (sizecb)))
 #define io_slurp(ig, datap) ((im_extt->f_io_slurp)((ig), (datap)))
 #define io_glue_destroy(ig) ((im_extt->f_io_glue_destroy)(ig))
 

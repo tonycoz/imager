@@ -5,6 +5,7 @@ use Imager::Test qw(is_image);
 # for SEEK_SET etc, Fcntl doesn't provide these in 5.005_03
 use IO::Seekable;
 use Config;
+use Errno qw(EINVAL);
 
 BEGIN { use_ok(Imager => ':all') };
 
@@ -116,6 +117,30 @@ sub io_writer {
   1;
 }
 
+sub io_seeker {
+  my ($off, $where) = @_;
+  my $new_pos;
+  if ($where == SEEK_SET) {
+    $new_pos = $off;
+  }
+  elsif ($where == SEEK_CUR) {
+    $new_pos = $pos + $off;
+  }
+  elsif ($where == SEEK_END) {
+    $new_pos = length($work) + $off;
+  }
+  else {
+    $! = EINVAL;
+    return -1;
+  }
+  if ($new_pos < 0) {
+    $! = EINVAL;
+    return -1;
+  }
+  $pos = $new_pos;
+  return $pos;
+}
+
 my $did_close;
 sub io_close {
   ++$did_close;
@@ -132,7 +157,7 @@ is($work, $data2, "write image match");
 ok($did_close, "did close");
 
 # with a short buffer, no closer
-my $IO9 = Imager::io_new_cb(\&io_writer, undef, undef, undef, 1);
+my $IO9 = Imager::io_new_cb(\&io_writer, undef, undef, undef);
 ok($IO9, "making short writecb object");
 $pos = 0;
 $work = '';
@@ -156,6 +181,33 @@ is($work, $data2, "short write image match");
   is($io9->raw_seek(-10, SEEK_CUR), -1, "seek failure");
   undef $io9;
 }
+
+{
+  $work = "x" x 1000;
+  $pos = 0;
+  my $io = Imager::IO->new_cb(\&io_writer, \&io_reader, \&io_seeker, undef);
+  is($io->size, 1000, "cb: check fallback size via seek");
+}
+{
+  $work = "x" x 999;
+  $pos = 0;
+  my $io = Imager::IO->new_cb(\&io_writer, \&io_reader, undef, undef, 999);
+  is($io->size, 999, "cb: check literal size");
+}
+my $size_called;
+sub io_size {
+  note "size called";
+  $size_called = 1;
+  length $work;
+}
+{
+  $work = "x" x 998;
+  $pos = 0;
+  my $io = Imager::IO->new_cb(\&io_writer, \&io_reader, undef, undef, \&io_size);
+  is($io->size, 998, "cb: check callback size");
+  ok($size_called, "size was called");
+}
+
 {
   my $io = Imager::IO->new_bufchain();
   is(ref $io, "Imager::IO", "check class");
@@ -170,6 +222,7 @@ is($work, $data2, "short write image match");
   is($io->raw_seek(4, SEEK_SET), 4, "absolute seek to write some");
   is($io->raw_write("testdata"), 8, "write");
   is($io->raw_seek(0, SEEK_CUR), 12, "check size");
+  is($io->size, 12, "check size method");
   $io->raw_close();
   
   # grab the data
@@ -178,7 +231,7 @@ is($work, $data2, "short write image match");
 }
 
 { # callback failure checks
-  my $fail_io = Imager::io_new_cb(\&fail_write, \&fail_read, \&fail_seek, undef, 1);
+  my $fail_io = Imager::io_new_cb(\&fail_write, \&fail_read, \&fail_seek, undef);
   # scalar context
   my $buffer;
   my $read_result = $fail_io->raw_read($buffer, 10);

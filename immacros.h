@@ -154,6 +154,8 @@ returns -1 and pushes an error.
 #define io_new_buffer(data, len, closecb, closectx) im_io_new_buffer(aIMCTX, (data), (len), (closecb), (closectx))
 #define io_new_cb(p, readcb, writecb, seekcb, closecb, destroycb) \
   im_io_new_cb(aIMCTX, (p), (readcb), (writecb), (seekcb), (closecb), (destroycb))
+#define io_new_cb8(p, readcb, writecb, seekcb, closecb, destroycb, sizecb)     \
+  im_io_new_cb8(aIMCTX, (p), (readcb), (writecb), (seekcb), (closecb), (destroycb), (sizecb))
 
 #define i_malloc(size) im_malloc(aIMCTX, size)
 #define i_realloc(p, size) im_realloc(aIMCTX, p, size)

@@ -266,9 +266,15 @@ a reference to the scalar to save the image file data to.
 
 =item *
 
-C<callback>, C<readcb>, C<writecb>, C<seekcb>, C<closecb> - Imager
-will make calls back to your supplied coderefs to read, write and seek
-from/to/through the image file.  See L</"I/O Callbacks"> below for details.
+C<callback>, C<readcb>, C<writecb>, C<seekcb>, C<closecb>, C<sizecb> -
+Imager will make calls back to your supplied coderefs to read, write
+and seek from/to/through the image file.  See L</"I/O Callbacks">
+below for details.
+
+=item *
+
+C<size> - when reading using callbacks, you can set this to the size
+of the image file.
 
 =item *
 
@@ -389,6 +395,15 @@ when there is no more data to be written.  This could be used to flush
 buffered data.
 
 Return true on success.
+
+=head3 C<sizecb>
+
+Called when reading to find the size of the file.  Return -1 if the
+size of the file cannot be calculated.  Alternatively you can simply
+suppy the size via the C<size> parameter.
+
+If this isn't supplied Imager will try to calculate the size by
+seeking to the end of file.
 
 =head2 Guessing types
 

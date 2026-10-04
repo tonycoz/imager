@@ -60,6 +60,25 @@ Imager make_10x10() {
   return im;
 }
 
+int
+do_io_cb() {
+  static char data[] = "Hello, World!";
+  static off_t pos;
+  constexpr auto data_sz = sizeof(data);
+  auto readcb =
+  +[](void */* p */, void *b, size_t amt) {
+    if (pos + amt > data_sz)
+      amt = data_sz - pos;
+    memcpy(b, data+pos, amt);
+    return (ssize_t)amt;
+  };
+  io_glue *ig = io_new_cb(nullptr,readcb, nullptr, nullptr, nullptr, nullptr);
+  io_glue_destroy(ig);
+  ig = io_new_cb8(nullptr,readcb, nullptr, nullptr, nullptr, nullptr, nullptr);
+  io_glue_destroy(ig);
+  return 1;
+}
+
 EOS
 
 my $im = Imager->new(xsize=>50, ysize=>50);
@@ -76,5 +95,6 @@ ok($im2->box(filled=>1, xmin=>1, ymin=>1, xmax => 8, ymax=>8, color=>$black),
 is(count_color($im2, $black), 64, "check modified black count");
 is(count_color($im2, $white), 36, "check modified white count");
 
+ok(do_io_cb(), "check we can call io_new_cb8?");
 
 done_testing();

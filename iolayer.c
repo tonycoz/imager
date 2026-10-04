@@ -61,6 +61,8 @@ typedef struct {
   i_io_seekl_t	seekcb;
   i_io_closel_t closecb;
   i_io_destroyl_t      destroycb;
+  i_io_sizel_t sizecb;
+  off_t size;
 } io_cb;
 
 typedef struct {
@@ -148,6 +150,7 @@ static ssize_t realseek_write(io_glue *igo, const void *buf, size_t count);
 static int realseek_close(io_glue *igo);
 static off_t realseek_seek(io_glue *igo, off_t offset, int whence);
 static void realseek_destroy(io_glue *igo);
+static off_t realseek_size(io_glue *igo);
 static ssize_t buffer_read(io_glue *igo, void *buf, size_t count);
 static ssize_t buffer_write(io_glue *ig, const void *buf, size_t count);
 static int buffer_close(io_glue *ig);
@@ -212,7 +215,7 @@ callback_vtable =
     realseek_write,
     realseek_seek,
     realseek_close,
-    NULL,
+    realseek_size,
     realseek_destroy,
     NULL,
     NULL
@@ -340,7 +343,7 @@ im_io_new_fd(pIMCTX, int fd) {
 }
 
 /*
-=item im_io_new_cb(ctx, p, read_cb, write_cb, seek_cb, close_cb, destroy_cb)
+=item im_io_new_cb8(ctx, p, read_cb, write_cb, seek_cb, close_cb, destroy_cb, size_cb)
 X<im_io_new_cb API>X<io_new_cb API>
 =category I/O Layers
 =order 10
@@ -386,17 +389,17 @@ destroycb)>.
 */
 
 io_glue *
-im_io_new_cb(pIMCTX, void *p, i_io_readl_t readcb, i_io_writel_t writecb, 
-	  i_io_seekl_t seekcb, i_io_closel_t closecb, 
-	  i_io_destroyl_t destroycb) {
+im_io_new_cb8(pIMCTX, void *p, i_io_readl_t readcb, i_io_writel_t writecb,
+	  i_io_seekl_t seekcb, i_io_closel_t closecb,
+              i_io_destroyl_t destroycb, i_io_sizel_t sizecb) {
   io_cb *ig;
 
   im_log((aIMCTX, 1, "io_new_cb(p %p, readcb %p, writecb %p, seekcb %p, closecb %p, "
-          "destroycb %p)\n", p, readcb, writecb, seekcb, closecb, destroycb));
+          "destroycb %p, seekcb %p)\n", p, readcb, writecb, seekcb, closecb, destroycb, seekcb));
   ig = mymalloc(sizeof(io_cb));
   memset(ig, 0, sizeof(*ig));
   i_io_init(aIMCTX, &ig->base, CBSEEK, &callback_vtable);
-  im_log((aIMCTX, 1, "(%p) <- io_new_cb\n", ig));
+  im_log((aIMCTX, 1, "(%p) <- io_new_cb8\n", ig));
 
   ig->p         = p;
   ig->readcb    = readcb;
@@ -404,8 +407,10 @@ im_io_new_cb(pIMCTX, void *p, i_io_readl_t readcb, i_io_writel_t writecb,
   ig->seekcb    = seekcb;
   ig->closecb   = closecb;
   ig->destroycb = destroycb;
+  ig->sizecb    = sizecb;
+  ig->size      = -1;
   
-  im_context_refinc(aIMCTX, "im_io_new_bufchain");
+  im_context_refinc(aIMCTX, "im_io_new_cb8");
 
   return (io_glue *)ig;
 }
@@ -1333,14 +1338,6 @@ dump_data(unsigned char *start, unsigned char *end, int bias) {
 }
 
 /*
- * Callbacks for sources that cannot seek
- */
-
-/*
- * Callbacks for sources that can seek 
- */
-
-/*
 =item realseek_read(ig, buf, count)
 
 Does the reading from a source that can be seeked on
@@ -1361,6 +1358,10 @@ realseek_read(io_glue *igo, void *buf, size_t count) {
 
   IOL_DEB( fprintf(IOL_DEBs, "realseek_read:  buf = %p, count = %u\n", 
 		   buf, (unsigned)count) );
+  if (!ig->readcb) {
+    errno = EINVAL;
+    return -1;
+  }
   rc = ig->readcb(p,buf,count);
 
   IOL_DEB( fprintf(IOL_DEBs, "realseek_read: rc = %d\n", (int)rc) );
@@ -1392,6 +1393,11 @@ realseek_write(io_glue *igo, const void *buf, size_t count) {
   
   IOL_DEB( fprintf(IOL_DEBs, "realseek_write: ig = %p, buf = %p, "
 		   "count = %u\n", ig, buf, (unsigned)count) );
+
+  if (!ig->writecb) {
+    errno = EINVAL;
+    return -1;
+  }
 
   /* Is this a good idea? Would it be better to handle differently? 
      skip handling? */
@@ -1449,6 +1455,10 @@ realseek_seek(io_glue *igo, off_t offset, int whence) {
   void *p = ig->p;
   off_t rc;
   IOL_DEB( fprintf(IOL_DEBs, "realseek_seek(ig %p, offset %ld, whence %d)\n", ig, (long) offset, whence) );
+  if (!ig->seekcb) {
+    errno = ESPIPE;
+    return -1;
+  }
   rc = ig->seekcb(p, offset, whence);
 
   IOL_DEB( fprintf(IOL_DEBs, "realseek_seek: rc %ld\n", (long) rc) );
@@ -1463,6 +1473,27 @@ realseek_destroy(io_glue *igo) {
 
   if (ig->destroycb)
     ig->destroycb(ig->p);
+}
+
+static off_t
+realseek_size(io_glue *igo) {
+  io_cb * const ig = (io_cb *)igo;
+  void *p = ig->p;
+
+  off_t result = (off_t)-1;
+  if (ig->sizecb) {
+      result = ig->sizecb(p);
+  }
+  if (result == (off_t)-1 && ig->seekcb) {
+    /* try to figure it out */
+    const off_t orig_pos = realseek_seek(igo, 0, SEEK_CUR);
+    if (orig_pos != (off_t)-1) {
+      result = realseek_seek(igo, 0, SEEK_END);
+      realseek_seek(igo, orig_pos, SEEK_SET);
+    }
+  }
+
+return result;
 }
 
 /*
@@ -2131,7 +2162,7 @@ fd_mmap(io_glue *igo, const void **pdata, size_t *psize) {
   }
   
   *pdata = ig->mapped;
-  *psize = ig->map_size;
+  *psize = ig->size;
 
   return 1;
 #else

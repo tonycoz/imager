@@ -311,6 +311,8 @@ struct cbdata {
   SV *readcb;
   SV *seekcb;
   SV *closecb;
+  off_t size;
+  SV *sizecb;
 };
 
 static ssize_t
@@ -395,7 +397,12 @@ io_seeker(void *p, off_t offset, int whence) {
   if (count != 1)
     croak("Result of perl_call_sv(..., G_SCALAR) != 1");
 
+#if IVSIZE < 8
+  /* please -Duse64bitint */
+  result = POPn;
+#else
   result = POPi;
+#endif
 
   PUTBACK;
   FREETMPS;
@@ -483,6 +490,50 @@ static int io_closer(void *p) {
   return success ? 0 : -1;
 }
 
+static const char *
+describe_sv(SV *sv);
+
+static off_t
+io_size(void *p) {
+  dTHX;
+  struct cbdata *cbd = p;
+  int count;
+  off_t result;
+  dSP;
+
+  if (cbd->size != (off_t)-1)
+    return cbd->size;
+
+  if (!cbd->sizecb) {
+    return (off_t)-1;
+  }
+
+  ENTER;
+  SAVETMPS;
+  PUSHMARK(SP);
+  PUTBACK;
+
+  count = perl_call_sv(cbd->sizecb, G_SCALAR);
+
+  SPAGAIN;
+
+  if (count != 1)
+    croak("Result of perl_call_sv(..., G_SCALAR) != 1");
+
+#if IVSIZE < 8
+  /* please -Duse64bitint */
+  result = POPn;
+#else
+  result = POPi;
+#endif
+
+  PUTBACK;
+  FREETMPS;
+  LEAVE;
+
+  return result;
+}
+
 static void io_destroyer(void *p) {
   dTHX;
   struct cbdata *cbd = p;
@@ -491,6 +542,7 @@ static void io_destroyer(void *p) {
   SvREFCNT_dec(cbd->readcb);
   SvREFCNT_dec(cbd->seekcb);
   SvREFCNT_dec(cbd->closecb);
+  SvREFCNT_dec(cbd->sizecb);
   myfree(cbd);
 }
 
@@ -567,19 +619,36 @@ do_io_new_buffer(pTHX_ SV *data_sv) {
 }
 
 static i_io_glue_t *
-do_io_new_cb(pTHX_ SV *writecb, SV *readcb, SV *seekcb, SV *closecb) {
+do_io_new_cb(pTHX_ SV *writecb, SV *readcb, SV *seekcb, SV *closecb, SV *size_or_cb) {
   struct cbdata *cbd;
 
+  i_clear_error();
   cbd = mymalloc(sizeof(struct cbdata));
   cbd->writecb = newSVsv(writecb);
   cbd->readcb = newSVsv(readcb);
   cbd->seekcb = newSVsv(seekcb);
   cbd->closecb = newSVsv(closecb);
 
+  cbd->sizecb = NULL;
+  cbd->size = -1;
+
+  if (size_or_cb) {
+    SvGETMAGIC(size_or_cb);
+    if (SvROK(size_or_cb) && SvTYPE(SvRV(size_or_cb)) == SVt_PVCV) {
+      cbd->sizecb = newSVsv(size_or_cb);
+    }
+    else if (size_or_cb && SvOK(size_or_cb)) {
+#if IVSIZE < 8
+      cbd->size = SvNV(size_or_cb);
+#else
+      cbd->size = SvIV(size_or_cb);
+#endif
+    }
+  }
   mm_log((1, "do_io_new_cb(writecb %p (%s), readcb %p (%s), seekcb %p (%s), closecb %p (%s))\n", writecb, describe_sv(writecb), readcb, describe_sv(readcb), seekcb, describe_sv(seekcb), closecb, describe_sv(closecb)));
 
-  return io_new_cb(cbd, io_reader, io_writer, io_seeker, io_closer, 
-		   io_destroyer);
+  return im_io_new_cb8(aIMCTX, cbd, io_reader, io_writer, io_seeker,
+                       io_closer, io_destroyer, io_size);
 }
 
 struct value_name {
@@ -1615,13 +1684,9 @@ io_new_buffer(data_sv)
           RETVAL
 
 Imager::IO
-io_new_cb(writecb, readcb, seekcb, closecb, maxwrite = CBDATA_BUFSIZE)
-        SV *writecb;
-        SV *readcb;
-        SV *seekcb;
-        SV *closecb;
+io_new_cb(SV *writecb, SV *readcb, SV *seekcb, SV *closecb, SV *size_or_cb = NULL)
       CODE:
-        RETVAL = do_io_new_cb(aTHX_ writecb, readcb, seekcb, closecb);
+        RETVAL = do_io_new_cb(aTHX_ writecb, readcb, seekcb, closecb, size_or_cb);
       OUTPUT:
         RETVAL
 
@@ -1687,6 +1752,8 @@ i_trim_rect(Imager::ImgRaw im, double transp_threshold, Imager::TrimColorList cl
 
 MODULE = Imager		PACKAGE = Imager::IO	PREFIX = io_
 
+PROTOTYPES: DISABLE
+
 Imager::IO
 io_new_fd(class, fd)
 	int fd
@@ -1707,13 +1774,9 @@ io_new_buffer(class, data_sv)
         RETVAL
 
 Imager::IO
-io_new_cb(class, writecb, readcb, seekcb, closecb)
-        SV *writecb;
-        SV *readcb;
-        SV *seekcb;
-        SV *closecb;
+io_new_cb(class, SV *writecb, SV *readcb, SV *seekcb, SV *closecb, SV *size_or_cb = NULL)
     CODE:
-        RETVAL = do_io_new_cb(aTHX_ writecb, readcb, seekcb, closecb);
+        RETVAL = do_io_new_cb(aTHX_ writecb, readcb, seekcb, closecb, size_or_cb);
     OUTPUT:
         RETVAL
 
@@ -2019,8 +2082,7 @@ i_io_error(ig)
 	Imager::IO ig
 
 off_t
-i_io_size(ig)
-        Imager::IO ig
+i_io_size(Imager::IO ig)
 
 MODULE = Imager		PACKAGE = Imager
 

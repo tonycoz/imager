@@ -31,8 +31,10 @@ extern "C" {
 
  Version 6 removed the IMAGER_DEBUG_MALLOC entry points.
 
+ Version 7 reorganized the iolayer types.
+
 */
-#define IMAGER_API_VERSION 6
+#define IMAGER_API_VERSION 7
 
 /*
  IMAGER_API_LEVEL is the level of the structure.  New function pointers
@@ -241,7 +243,7 @@ typedef struct {
   i_io_glue_t *(*f_im_io_new_fd)(im_context_t ctx, int fd);
   i_io_glue_t *(*f_im_io_new_bufchain)(im_context_t ctx);
   i_io_glue_t *(*f_im_io_new_buffer)(im_context_t ctx, const char *data, size_t len, i_io_closebufp_t closecb, void *closedata);
-  i_io_glue_t *(*f_im_io_new_cb)(im_context_t ctx, void *p, i_io_readl_t readcb, i_io_writel_t writecb, i_io_seekl_t seekcb, i_io_closel_t closecb, i_io_destroyl_t destroycb);
+  i_io_glue_t *(*f_im_io_new_cb8)(im_context_t ctx, void *p, i_io_readl_t readcb, i_io_writel_t writecb, i_io_seekl_t seekcb, i_io_closel_t closecb, i_io_destroyl_t destroycb, i_io_sizel_t sizecb);
 
   im_context_t (*f_im_get_context)(void);
 

@@ -38,6 +38,14 @@ im_mult_overflow4(size_t *out, size_t sz1, size_t sz2, size_t sz3,
   return 0;
 }
 
+static inline io_glue *
+im_io_new_cb(im_context_t ctx, void *p, i_io_readl_t readcb, i_io_writel_t writecb,
+              i_io_seekl_t seekcb, i_io_closel_t closecb,
+              i_io_destroyl_t destroycb) {
+  return im_io_new_cb8(ctx, p, readcb, writecb, seekcb, closecb,
+                       destroycb, NULL);
+}
+
 static inline io_type
 i_io_type(io_glue *ig) {
   return ig->type;

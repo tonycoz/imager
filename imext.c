@@ -188,7 +188,7 @@ im_ext_funcs imager_function_table =
     im_io_new_fd,
     im_io_new_bufchain,
     im_io_new_buffer,
-    im_io_new_cb,
+    im_io_new_cb8,
     get_context,
     im_lhead,
     im_loog,

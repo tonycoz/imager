@@ -1393,7 +1393,7 @@ Also callable as C<io_new_buffer(data, length>.
 =for comment
 From: File iolayer.c
 
-=item im_io_new_cb(ctx, p, read_cb, write_cb, seek_cb, close_cb, destroy_cb)
+=item im_io_new_cb8(ctx, p, read_cb, write_cb, seek_cb, close_cb, destroy_cb, size_cb)
 X<im_io_new_cb API>X<io_new_cb API>
 
 Create a new I/O layer object that calls your supplied callbacks.
