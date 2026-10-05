@@ -102,3 +102,6 @@ jobs:
       - name: Acme::DreamyImage
         if: always()
         run: cpanm --sudo -v Acme::DreamyImage
+      - name: Imager::ExifOrientation
+        if: always()
+        run: cpanm --sudo -v Imager::ExifOrientation
