@@ -38,7 +38,7 @@ my $ifd0_off;
         $ord = "<";
     }
     elsif (substr($head, 0, 2) eq "MM") {
-        print "Big-endian size %d (0x%#x)\n", ($total_size) x 2;
+        printf "Big-endian size %d (0x%x)\n", ($total_size) x 2;
         $little_endian = 0;
         $ord = ">";
     }
