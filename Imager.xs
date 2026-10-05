@@ -430,7 +430,7 @@ io_writer(void *p, void const *data, size_t size) {
   SAVETMPS;
   EXTEND(SP, 1);
   PUSHMARK(SP);
-  PUSHs(sv_2mortal(newSVpvn((char *)data, size)));
+  PUSHs(newSVpvn_flags((char *)data, size, SVs_TEMP));
   PUTBACK;
 
   count = perl_call_sv(cbd->writecb, G_SCALAR);
@@ -2167,7 +2167,7 @@ i_img_getdata(im)
              PPCODE:
 	       EXTEND(SP, 1);
                PUSHs(im->idata ? 
-	             sv_2mortal(newSVpvn((char *)im->idata, im->bytes))
+	             newSVpvn_flags((char *)im->idata, im->bytes, SVs_TEMP)
 		     : &PL_sv_undef);
 
 IV
@@ -3572,7 +3572,7 @@ DSO_open(filename)
                  if (evstr!=NULL) {
                    EXTEND(SP,2); 
                    PUSHs(sv_2mortal(newSViv(PTR2IV(rc))));
-                   PUSHs(sv_2mortal(newSVpvn(evstr, strlen(evstr))));
+                   PUSHs(sv_2mortal(newSVpv(evstr, 0)));
                  } else {
                    EXTEND(SP,1);
                    PUSHs(sv_2mortal(newSViv(PTR2IV(rc))));
@@ -3722,7 +3722,7 @@ i_gpal(im, l, r, y)
           }
           else if (count) {
             EXTEND(SP, 1);
-            PUSHs(sv_2mortal(newSVpvn((char *)work, count * sizeof(i_palidx))));
+            PUSHs(newSVpvn_flags((char *)work, count * sizeof(i_palidx), SVs_TEMP));
           }
           myfree(work);
         }
@@ -4277,7 +4277,7 @@ i_glin(im, l, r, y)
           }
           else if (count) {
 	    EXTEND(SP, 1);
-	    PUSHs(sv_2mortal(newSVpvn((void *)vals, count * sizeof(i_color))));
+	    PUSHs(newSVpvn_flags((void *)vals, count * sizeof(i_color), SVs_TEMP));
           }
           myfree(vals);
         }
@@ -4309,7 +4309,7 @@ i_glinf(im, l, r, y)
           }
           else if (count) {
             EXTEND(SP, 1);
-            PUSHs(sv_2mortal(newSVpvn((void *)vals, count * sizeof(i_fcolor))));
+            PUSHs(newSVpvn_flags((void *)vals, count * sizeof(i_fcolor), SVs_TEMP));
           }
           myfree(vals);
         }
@@ -4463,7 +4463,7 @@ i_tags_get(im, index)
             PUSHs(sv_2mortal(newSViv(entry->code)));
           }
           if (entry->data) {
-            PUSHs(sv_2mortal(newSVpvn(entry->data, entry->size)));
+            PUSHs(newSVpvn_flags(entry->data, entry->size, SVs_TEMP));
           }
           else {
             PUSHs(sv_2mortal(newSViv(entry->idata)));

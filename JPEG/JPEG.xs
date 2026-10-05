@@ -49,7 +49,7 @@ i_readjpeg_wiol(ig)
 	            EXTEND(SP,2);
 	            sv_setref_pv(r, "Imager::ImgRaw", (void*)rimg);
  		    PUSHs(r);
-		    PUSHs(sv_2mortal(newSVpvn(iptc_itext, tlength)));
+		    PUSHs(newSVpvn_flags(iptc_itext, tlength, SVs_TEMP));
                     myfree(iptc_itext);
 	      }
 

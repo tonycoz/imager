@@ -252,7 +252,7 @@ i_ft2_has_chars(handle, text_sv, utf8)
         }
         else {
           EXTEND(SP, 1);
-          PUSHs(sv_2mortal(newSVpvn(work, count)));
+          PUSHs(newSVpvn_flags(work, count, SVs_TEMP));
         }
         myfree(work);
 
