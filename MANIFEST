@@ -399,6 +399,7 @@ t/950-kwalitee/070-mymeta.t
 t/950-kwalitee/080-nousevars.t	Check various standards
 t/data/exif32overcnt.bin	EXIF with count beyond block size
 t/data/exif32oversz.bin		EXIF with size beyond block size
+t/data/exif580atend.bin         EXIF with data right at EOF (correctly)
 t/data/exifattack.bin		EXIF with zero length ASCII field (POC)
 t/data/exifbad0ascii.bin	EXIF with zero length ASCII field
 t/data/exifbadascoff.bin	EXIF block with bad ASCII field offset

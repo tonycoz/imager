@@ -912,6 +912,11 @@ ok(test_slots(), "call slot APIs");
     ($im, $ok) = do_one_exif("t/data/exif32oversz.bin");
     ok(!$ok, "fail to load exif with 32-bit overflow sz")
         or diag(Imager->_error_as_msg);
+
+    # https://github.com/tonycoz/imager/issues/580
+    ($im, $ok) = do_one_exif("t/data/exif580atend.bin");
+    ok($ok, "load exif with data right at the end")
+        or diag(Imager->_error_as_msg);
 }
 
 ok(allocation(), "test modern allocation interfaces");

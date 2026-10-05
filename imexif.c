@@ -982,7 +982,7 @@ tiff_load_ifd(imtiff *tiff, unsigned long offset) {
 	if (entry->offset >= tiff->size
             || entry->offset + entry->size > tiff->size
             /* 32-bit: the addition might wrap */
-            || tiff->size - entry->offset <= entry->size) {
+            ||  entry->size > tiff->size - entry->offset) {
 	  mm_log((2, "Invalid data offset processing IFD\n"));
 	  myfree(entries);
 	  return 0;
