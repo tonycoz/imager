@@ -3,6 +3,12 @@ Imager release history.  Older releases can be found in Changes.old
 The Imager C API major version has changed, any modules that depend on
 the Imager C API will need to be rebuilt.
 
+ - EXIF:
+   - fix an off-by-one error that could reject an IFD entry where the data
+     was exactly (and correctly) at the end of the EXIF data.
+     This broke Imager::ExifOrientation, which I've added to CI.
+     https://github.com/tonycoz/imager/issues/580
+
  - iolayers:
    - restructure the iolayer object to move the vtable outside of the
      object, rather than entirely embedded.
