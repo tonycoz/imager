@@ -24,6 +24,8 @@ the Imager C API will need to be rebuilt.
    - fix some incorrect sample code
    - other minor documentation updates
 
+ - fix the rest of the failing perl-check checks.
+
 Imager 1.037 - 30 September 2026
 ============
 
