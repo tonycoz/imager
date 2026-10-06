@@ -51,6 +51,12 @@ im_context_new(void) {
   ctx->out_of_memory = im_def_out_of_memory;
   ctx->out_of_memory_userdata = NULL;
 
+#if IMAGER_PTR_SIZE > 4
+  ctx->max_mmap_size = 0x80000000UL; /* 2GB */
+#else
+  ctx->max_mmap_size = 0x01000000UL; /* 16MB */
+#endif
+
   ctx->refcount = 1;
 
 #ifdef IMAGER_TRACE_CONTEXT
@@ -215,6 +221,8 @@ im_context_clone(im_context_t ctx, const char *where) {
 
   nctx->out_of_memory = ctx->out_of_memory;
   nctx->out_of_memory_userdata = ctx->out_of_memory_userdata;
+
+  nctx->max_mmap_size = ctx->max_mmap_size;
 
   nctx->refcount = 1;
 

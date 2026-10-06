@@ -258,6 +258,9 @@ extern im_ext_funcs *imager_function_ext_table;
 #define im_free(ctx, p)  ((im_extt->f_im_free)((ctx), (p)))
 #define im_malloc_fail(ctx, size)  ((im_extt->f_im_malloc_fail)((ctx), (size)))
 
+#define im_io_get_max_mmap_size(ctx) ((im_extt->f_im_io_get_max_mmap_size)(ctx))
+#define im_io_set_max_mmap_size(ctx, newsize) ((im_extt->f_im_io_set_max_mmap_size)((ctx), (newsize)))
+
 #ifdef IMAGER_LOG
 #ifndef IMAGER_NO_CONTEXT
 #define mm_log(x) { i_lhead(__FILE__,__LINE__); i_loog x; } 

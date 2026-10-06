@@ -2155,6 +2155,16 @@ fd_mmap(io_glue *igo, const void **pdata, size_t *psize) {
       fd_size(igo);
     if (ig->size <= 0)
       return 0;
+#if IMAGER_PTR_SIZE == 4
+    if (ig->size > im_ssize_t_max) {
+      im_push_error(aIMCTX, 0, "file too large to mmap");
+      return 0;
+    }
+#endif
+    if ((size_t)ig->size > aIMCTX->max_mmap_size) {
+      im_push_error(aIMCTX, 0, "file larger than max mmap size");
+      return 0;
+    }
 #  if defined(IMAGER_POSIX_MMAP)
     data = mmap(NULL, ig->size, PROT_READ, MAP_SHARED, ig->fd, 0);
     if (data == (void *)-1) {
@@ -2164,10 +2174,18 @@ fd_mmap(io_glue *igo, const void **pdata, size_t *psize) {
     HANDLE h_mapping =
       CreateFileMapping((HANDLE)_get_osfhandle(ig->fd), NULL, PAGE_READONLY,
                         0, 0, NULL);
-    if (h_mapping == NULL)
+    if (h_mapping == NULL) {
+      im_push_errorf(aIMCTX, 0, "CreateFileMapping failure %lu",
+                     (unsigned long)GetLastError());
       return 0;
+    }
     data = MapViewOfFile(h_mapping, FILE_MAP_READ, 0, 0, 0);
     CloseHandle(h_mapping);
+    if (data == NULL) {
+      im_push_errorf(aIMCTX, 0, "MapViewOfFile failure %lu",
+                     (unsigned long)GetLastError());
+      return 0;
+    }
 #  endif
     ig->mapped = data;
     ig->map_size = ig->size;
@@ -2225,6 +2243,48 @@ fd_destroy(io_glue *igo) {
   (void)igo;
 #endif
   
+}
+
+/*
+=item im_io_get_max_mmap_size()
+
+  size_t size = im_io_get_max_mmap_size(aIMCTX);
+  size_t size = i_io_get_max_mmap_size();
+
+Fetch the maximum address space than can be mapped by i_io_mmap() for
+files.
+
+=cut
+*/
+
+size_t
+im_io_get_max_mmap_size(pIMCTX) {
+  return aIMCTX->max_mmap_size;
+}
+
+/*
+=item im_io_set_max_mmap_size()
+
+  int ok size = im_io_set_max_mmap_size(aIMCTX, new_size);
+  int ok size = i_io_set_max_mmap_size(new_size);
+
+Set the maximum address space than can be mapped by i_io_mmap() for
+files.
+
+=cut
+*/
+
+int
+im_io_set_max_mmap_size(pIMCTX, size_t new_size) {
+  im_clear_error(aIMCTX);
+
+  if (new_size > im_size_t_max / 2) {
+    im_push_error(aIMCTX, 0, "set_max_map_size: new size too large (> half address space)");
+    return 0;
+  }
+  aIMCTX->max_mmap_size = new_size;
+
+  return 1;
 }
 
 

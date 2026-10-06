@@ -680,6 +680,12 @@ EOS
 EOS
 
   }
+
+  print $config <<"EOS";
+/* size of pointers, for use in preprocessing */
+#define IMAGER_PTR_SIZE $Config{ptrsize}
+EOS
+
   print $config <<'EOS';
 
 #ifdef __cplusplus

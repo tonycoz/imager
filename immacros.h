@@ -165,7 +165,11 @@ returns -1 and pushes an error.
 #define i_set_out_of_memory(callme, userdata) \
   im_set_out_of_memory(aIMCTX, callme, userdata)
 
+#define i_io_set_max_mmap_size(size) im_io_set_max_mmap_size(aIMCTX, (size))
+#define i_io_get_max_mmap_size()     im_io_get_max_mmap_size(aIMCTX)
+
 #define im_size_t_max (~(size_t)0)
+#define im_ssize_t_max ((ssize_t)((~(size_t)0) >> 1))
 
 #ifdef __cplusplus
 }

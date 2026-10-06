@@ -160,6 +160,9 @@ typedef struct im_context_tag {
   i_out_of_memory_handler out_of_memory;
   void *out_of_memory_userdata;
 
+  /* maximum size of i_io_mmap() */
+  size_t max_mmap_size;
+
   ptrdiff_t refcount;
 } im_context_struct;
 
