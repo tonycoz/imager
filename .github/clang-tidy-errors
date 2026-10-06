@@ -1,10 +1,7 @@
 # I expect to expand on this
 Checks:
  - -*
- - perl-unsafe-*
- - perl-literal-hv_fetch
- - perl-literal-sv_setpvn
- - perl-mortal-newSVpvn
-WarningsAsErrors: 'perl-unsafe-*,perl-literal-hv_fetch,perl-mortal-newSVpvn,perl-literal-sv_setpvn'
+ - perl-*
+WarningsAsErrors: 'perl-*'
 CheckOptions:
   PerlCheckMultiplicity: 1
