@@ -3,7 +3,8 @@ Checks:
  - -*
  - perl-unsafe-*
  - perl-literal-hv_fetch
+ - perl-literal-sv_setpvn
  - perl-mortal-newSVpvn
-WarningsAsErrors: 'perl-unsafe-*,perl-literal-hv_fetch,perl-mortal-newSVpvn'
+WarningsAsErrors: 'perl-unsafe-*,perl-literal-hv_fetch,perl-mortal-newSVpvn,perl-literal-sv_setpvn'
 CheckOptions:
   PerlCheckMultiplicity: 1

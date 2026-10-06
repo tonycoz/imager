@@ -9,6 +9,7 @@ i_polygon_list		T_IM_POLYGON_LIST
 i_trim_color_list	I_IM_TRIM_COLOR_LIST
 
 off_t			T_OFF_T
+ImSysRet		T_IMSYSRET
 
 Imager::Internal::Hlines T_PTROBJ
 
@@ -157,3 +158,12 @@ T_OFF_T
 
 T_IM_TRIM_COLOR_LIST
 	$arg = $var.rsv;
+
+T_IMSYSRET
+        /* copied from core, use sv_setpvs instead */
+	if ($var != -1) {
+	    if ($var == 0)
+		sv_setpvs($arg, "0 but true");
+	    else
+		sv_setiv($arg, (IV)$var);
+	}

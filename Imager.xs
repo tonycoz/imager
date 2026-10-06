@@ -1460,7 +1460,7 @@ typedef i_trim_color_list Imager__TrimColorList;
 
 #define IIM_new i_img_8_new
 #define IIM_DESTROY i_img_destroy
-typedef int SysRet;
+typedef int ImSysRet;
 
 #ifdef IMEXIF_ENABLE
 #define i_exif_enabled() 1
@@ -1841,7 +1841,7 @@ i_io_raw_read(ig, buffer_sv, size)
           undef buffer.
            Orginally conditional on !SvOK(), but this will prevent the
           downgrade from croaking */
-       sv_setpvn(buffer_sv, "", 0);
+       SvPVCLEAR(buffer_sv);
 #ifdef SvUTF8
        if (SvUTF8(buffer_sv))
           sv_utf8_downgrade(buffer_sv, FALSE);
@@ -1980,7 +1980,7 @@ i_io_read(ig, buffer_sv, size)
           undef buffer.
            Orginally conditional on !SvOK(), but this will prevent the
           downgrade from croaking */
-       sv_setpvn(buffer_sv, "", 0);
+       SvPVCLEAR(buffer_sv);
 #ifdef SvUTF8
        if (SvUTF8(buffer_sv))
           sv_utf8_downgrade(buffer_sv, FALSE);
@@ -3778,7 +3778,7 @@ i_ppal_p(im, l, y, data)
       OUTPUT:
         RETVAL
 
-SysRet
+ImSysRet
 i_addcolors(im, ...)
         Imager::ImgRaw  im
       PREINIT:
@@ -4387,7 +4387,7 @@ i_tags_add(im, name_sv, code, data_sv, idata)
       OUTPUT:
         RETVAL
 
-SysRet
+ImSysRet
 i_tags_find(im, name, start)
         Imager::ImgRaw  im
         char *name
@@ -4403,7 +4403,7 @@ i_tags_find(im, name, start)
       OUTPUT:
         RETVAL
 
-SysRet
+ImSysRet
 i_tags_findn(im, code, start)
         Imager::ImgRaw  im
         int             code
