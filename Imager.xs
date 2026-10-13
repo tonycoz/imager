@@ -3902,7 +3902,7 @@ i_gsamp(Imager::ImgRaw im, i_img_dim l, i_img_dim r, i_img_dim y, \
         i_clear_error();
         if (is_valid_sample_params(im, l, &r, y, &channels,
             sizeof(i_sample_t), &buf_size)) {
-          result_sv = newSV(buf_size);
+          result_sv = sv_2mortal(newSV(buf_size));
           data = (i_sample_t *)SvPVX(result_sv);
           count = i_gsamp(im, l, r, y, data, channels.channels, channels.count);
           if (GIMME_V == G_ARRAY) {
@@ -4176,7 +4176,7 @@ i_gsampf(Imager::ImgRaw im, i_img_dim l, i_img_dim r, i_img_dim y, \
         i_clear_error();
         if (is_valid_sample_params(im, l, &r, y, &channels,
             sizeof(i_fsample_t), &buf_size)) {
-          result_sv = newSV(buf_size);
+          result_sv = sv_2mortal(newSV(buf_size));
           data = (i_fsample_t *)SvPVX(result_sv);
           count = i_gsampf(im, l, r, y, data, channels.channels, channels.count);
           if (GIMME_V == G_ARRAY) {
