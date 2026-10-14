@@ -1,5 +1,8 @@
 Imager release history.  Older releases can be found in Changes.old
 
+  - fix a stupid memory leak in getsamples() introduced in 1.037
+    https://github.com/tonycoz/imager/pull/581
+
 Imager 1.038 - 7 October 2026
 ============
 
