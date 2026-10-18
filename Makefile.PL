@@ -244,7 +244,7 @@ if ($coverage) {
 }
 
 if (eval { ExtUtils::MakeMaker->VERSION('6.06'); 1 }) {
-  $opts{AUTHOR} = 'Tony Cook <tonyc@cpan.org>, Arnar M. Hrafnkelsson';
+  $opts{AUTHOR} = 'Tony Cook <tony@develop-help.com>, Arnar M. Hrafnkelsson';
   $opts{ABSTRACT} = 'Perl extension for Generating 24 bit Images';
 }
 

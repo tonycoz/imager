@@ -12,7 +12,7 @@ my %opts =
   );
 my $MM_ver = eval $ExtUtils::MakeMaker::VERSION;
 if ($MM_ver > 6.06) {
-  $opts{AUTHOR} = 'Tony Cook <tonyc@cpan.org>';
+  $opts{AUTHOR} = 'Tony Cook <tony@develop-help.com>';
   $opts{ABSTRACT} = 'Icon Image file support';
 }
 

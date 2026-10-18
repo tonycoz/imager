@@ -199,8 +199,4 @@ Simple sample of adding borders to an image.
 
 Tony Cook <tony@develop-help.com>
 
-=head1 REVISION
-
-$Revision$
-
 =cut

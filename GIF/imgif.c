@@ -1974,7 +1974,7 @@ gif_push_error(int code) {
 
 Arnar M. Hrafnkelsson, addi@umich.edu
 
-Tony Cook <tonyc@cpan.org>
+Tony Cook <tony@develop-help.com>
 
 =head1 SEE ALSO
 

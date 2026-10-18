@@ -4,7 +4,7 @@ use strict;
 use Imager;
 use Imager::Expr::Assem;
 
-our $VERSION = "1.007";
+our $VERSION = "1.008";
 
 my %funcs =
   (
@@ -533,6 +533,6 @@ Imager(3), F<transform.perl>
 
 =head1 AUTHOR
 
-Tony Cook <tonyc@cpan.org>
+Tony Cook <tony@develop-help.com>
 
 =cut

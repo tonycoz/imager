@@ -2,7 +2,7 @@ package Imager::Font::Test;
 use 5.006;
 use strict;
 
-our $VERSION = "1.002";
+our $VERSION = "1.003";
 
 use base 'Imager::Font';
 
@@ -89,7 +89,7 @@ The output is simple box for the whole string.
 
 =head1 AUTHOR
 
-Tony Cook <tonyc@cpan.org>
+Tony Cook <tony@develop-help.com>
 
 =cut
 

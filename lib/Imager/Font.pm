@@ -3,7 +3,7 @@ use 5.006;
 use Imager::Color;
 use strict;
 
-our $VERSION = "1.039";
+our $VERSION = "1.040";
 
 # the aim here is that we can:
 #  - add file based types in one place: here
@@ -1080,10 +1080,6 @@ driver always returns the right edge of the right-most glyph.
 
 The newer advance_width and right_bearing values allow access to any
 of the above.
-
-=head1 REVISION
-
-$Revision$
 
 =head1 SEE ALSO
 

@@ -25,7 +25,7 @@ my %opts =
 
 if (eval { ExtUtils::MakeMaker->VERSION('6.46'); 1 }) {
   $opts{LICENSE} = "perl_5";
-  $opts{AUTHOR} = 'Tony Cook <tonyc@cpan.org>';
+  $opts{AUTHOR} = 'Tony Cook <tony@develop-help.com>';
   $opts{ABSTRACT} = 'GIF Image file support for Imager';
   $opts{META_MERGE} =
     {

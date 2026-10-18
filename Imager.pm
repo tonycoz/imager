@@ -5495,7 +5495,7 @@ attachment mechanism.
 
 =head1 AUTHOR
 
-Tony Cook <tonyc@cpan.org> is the current maintainer for Imager.
+Tony Cook <tony@develop-help.com> is the current maintainer for Imager.
 
 Arnar M. Hrafnkelsson is the original author of Imager.
 

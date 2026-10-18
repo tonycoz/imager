@@ -1342,7 +1342,7 @@ Returns a true value if logging is enabled.
 
 =head1 AUTHOR
 
-Tony Cook <tonyc@cpan.org>, Arnar M. Hrafnkelsson
+Tony Cook <tony@develop-help.com>, Arnar M. Hrafnkelsson
 
 =head1 SEE ALSO
 

@@ -7,7 +7,7 @@ use Cwd ();
 use File::Temp ();
 use Carp ();
 
-our $VERSION = "1.011";
+our $VERSION = "1.012";
 
 my @alt_transfer = qw/altname incsuffix libbase/;
 
@@ -887,6 +887,6 @@ an alternative defaults to the value from the main configuration.
 
 =head1 AUTHOR
 
-Tony Cook <tonyc@cpan.org>, Arnar M. Hrafnkelsson
+Tony Cook <tony@develop-help.com>, Arnar M. Hrafnkelsson
 
 =cut

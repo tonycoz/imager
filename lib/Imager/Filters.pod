@@ -837,14 +837,10 @@ C<other> - the other image object to compare against
 
 =head1 AUTHOR
 
-Arnar M. Hrafnkelsson, Tony Cook <tonyc@cpan.org>.
+Arnar M. Hrafnkelsson, Tony Cook <tony@develop-help.com>.
 
 =head1 SEE ALSO
 
 Imager, Imager::Filter::Flines, Imager::Filter::Mandelbrot
-
-=head1 REVISION
-
-$Revision$
 
 =cut

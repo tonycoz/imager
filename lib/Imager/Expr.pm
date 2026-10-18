@@ -3,7 +3,7 @@ use 5.006;
 use Imager::Regops;
 use strict;
 
-our $VERSION = "1.008";
+our $VERSION = "1.009";
 
 my %expr_types;
 
@@ -698,6 +698,6 @@ rewritten, and any optimization you perform may well be broken too
 
 =head1 AUTHOR
 
-Tony Cook <tonyc@cpan.org>, Arnar M. Hrafnkelsson
+Tony Cook <tony@develop-help.com>, Arnar M. Hrafnkelsson
 
 =cut

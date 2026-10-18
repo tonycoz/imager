@@ -144,14 +144,10 @@ Using JPEG as the output format is not recommended.
 
 =head1 AUTHOR
 
-Tony Cook <tonyc@cpan.org>
+Tony Cook <tony@develop-help.com>
 
 =for stopwords Oppenheim
 
 Thanks to Dan Oppenheim, who provided the impetus for this sample.
-
-=head1 REVISION
-
-$Revision$
 
 =cut

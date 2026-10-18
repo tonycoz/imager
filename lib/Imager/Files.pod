@@ -2249,6 +2249,6 @@ Imager(3)
 
 =head1 AUTHOR
 
-Tony Cook <tonyc@cpan.org>, Arnar M. Hrafnkelsson
+Tony Cook <tony@develop-help.com>, Arnar M. Hrafnkelsson
 
 =cut

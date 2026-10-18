@@ -98,10 +98,6 @@ __END__
 
 =back
 
-=head1 REVISION
-
-$Revision$
-
 =head1 AUTHOR
 
 Tony Cook <tony@develop-help.com>

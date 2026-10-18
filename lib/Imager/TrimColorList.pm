@@ -6,7 +6,7 @@ use List::Util ();
 use POSIX ();
 use Imager;
 
-our $VERSION = "1.000";
+our $VERSION = "1.001";
 
 sub new {
   my $class = shift;
@@ -411,12 +411,12 @@ threads are created.
 
 =head1 AUTHOR
 
-Tony Cook <tonyc@cpan.org>
+Tony Cook <tony@develop-help.com>
 
 =head1 HISTORY
 
 Originally the range handling for this was going to be embedded in the
-trim() method, but this meant that every called that used color ranges
+trim() method, but this meant that every call that used color ranges
 would pay some cost as the range list was checked for names (vs color
 objects) and non-standard forms such as single colors and the color
 plus variance.

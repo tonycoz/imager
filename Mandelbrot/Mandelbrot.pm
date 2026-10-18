@@ -4,7 +4,7 @@ use strict;
 use Imager;
 
 BEGIN {
-  our $VERSION = "0.05";
+  our $VERSION = "0.06";
   
   require XSLoader;
   XSLoader::load('Imager::Filter::Mandelbrot', $VERSION);
@@ -75,7 +75,7 @@ if the sequence tend towards infinity.
 
 Original by Arnar M. Hrafnkelsson.
 
-Adapted and expanded by Tony Cook <tonyc@cpan.org>
+Adapted and expanded by Tony Cook <tony@develop-help.com>
 
 =head1 SEE ALSO
 

@@ -1408,14 +1408,10 @@ unified yet.
 
 =head1 AUTHOR
 
-Tony Cook <tonyc@cpan.org>, Arnar M. Hrafnkelsson.
+Tony Cook <tony@develop-help.com>, Arnar M. Hrafnkelsson.
 
 =head1 SEE ALSO
 
 L<Imager>(3), L<Imager::Cookbook>(3)
-
-=head1 REVISION
-
-$Revision$
 
 =cut

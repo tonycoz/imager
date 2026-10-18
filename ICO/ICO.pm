@@ -4,7 +4,7 @@ use strict;
 use Imager;
 
 BEGIN {
-  our $VERSION = "0.09";
+  our $VERSION = "0.10";
   
   require XSLoader;
   XSLoader::load('Imager::File::ICO', $VERSION);
@@ -167,7 +167,7 @@ Imager's MS Icon support is documented in L<Imager::Files>.
 
 =head1 AUTHOR
 
-Tony Cook <tonyc@cpan.org>
+Tony Cook <tony@develop-help.com>
 
 =head1 SEE ALSO
 

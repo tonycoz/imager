@@ -180,7 +180,7 @@ print OUT <<'EOS';
 
 =head1 AUTHOR
 
-Tony Cook <tonyc@cpan.org>
+Tony Cook <tony@develop-help.com>
 
 =head1 SEE ALSO
 
@@ -262,7 +262,7 @@ Functions with equal order are otherwise ordered by name.
 
 =head1 AUTHOR
 
-Tony Cook <tonyc@cpan.org>
+Tony Cook <tony@develop-help.com>
 
 =cut
 

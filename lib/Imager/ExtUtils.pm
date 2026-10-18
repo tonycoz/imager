@@ -3,7 +3,7 @@ use 5.006;
 use strict;
 use File::Spec;
 
-our $VERSION = "1.003";
+our $VERSION = "1.004";
 
 =head1 NAME
 
@@ -121,11 +121,7 @@ __END__
 
 =head1 AUTHOR
 
-Tony Cook <tonyc@cpan.org>
-
-=head1 REVISION
-
-$Revision$
+Tony Cook <tony@develop-help.com>
 
 =head1 SEE ALSO
 

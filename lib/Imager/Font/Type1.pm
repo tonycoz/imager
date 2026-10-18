@@ -5,7 +5,7 @@ use Imager::Font::T1;
 
 our @ISA = qw(Imager::Font::T1);
 
-our $VERSION = "1.013";
+our $VERSION = "1.014";
 
 1;
 
@@ -22,6 +22,6 @@ compatibility.
 
 =head1 AUTHOR
 
-Tony Cook <tonyc@cpan.org>
+Tony Cook <tony@develop-help.com>
 
 =cut

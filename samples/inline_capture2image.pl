@@ -86,10 +86,6 @@ http://www.perlmonks.org/?node_id=539316
 
 =head1 AUTHOR
 
-Tony Cook <tonyc@cpan.org>
-
-=head1 REVISION
-
-$Revision$
+Tony Cook <tony@develop-help.com>
 
 =cut

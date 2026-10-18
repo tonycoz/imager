@@ -273,7 +273,7 @@ same number of channels.
 
 Several functions have been written to simplify creating new image types.
 
-These tools are available by including F<imagei.h>.
+These tools are available by including F<imageri.h>.
 
 =head2 Floating point wrappers
 
@@ -323,7 +323,7 @@ If this is not the case then these functions will just crash :)
 
 =head2 Sample macros
 
-C<imagei.h> defines several macros for converting samples between
+F<imageri.h> defines several macros for converting samples between
 different sizes.
 
 Each macro is of the form C<Sample>I<size>C<To>I<size> where I<size> is one
@@ -347,6 +347,6 @@ of 8, 16, or F (for floating-point samples).
 
 =head1 AUTHOR
 
-Tony Cook <tonyc@cpan.org>, Arnar M. Hrafnkelsson
+Tony Cook <tony@develop-help.com>, Arnar M. Hrafnkelsson
 
 =cut

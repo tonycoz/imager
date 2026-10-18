@@ -849,7 +849,7 @@ i_writeppm_wiol(i_img *im, io_glue *ig) {
 
 =head1 AUTHOR
 
-Arnar M. Hrafnkelsson <addi@umich.edu>, Tony Cook <tonyc@cpan.org>,
+Arnar M. Hrafnkelsson <addi@umich.edu>, Tony Cook <tony@develop-help.com>,
 Philip Gwyn <gwyn@cpan.org>.
 
 =head1 SEE ALSO

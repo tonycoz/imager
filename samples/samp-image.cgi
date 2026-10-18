@@ -56,10 +56,6 @@ generate the image.
 
 See samp-form.cgi for more detail.
 
-=head1 REVISION
-
-$Revision$
-
 =head1 AUTHOR
 
 Tony Cook <tony@develop-help.com>

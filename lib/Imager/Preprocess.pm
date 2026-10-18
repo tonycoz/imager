@@ -8,7 +8,7 @@ use Text::ParseWords;
 
 our @EXPORT = qw(preprocess);
 
-our $VERSION = "1.003";
+our $VERSION = "1.004";
 
 sub preprocess {
   unshift @ARGV, grep /^-/, shellwords($ENV{IMAGER_PREPROCESS_OPTS})
@@ -351,6 +351,6 @@ Other types, functions and values may be added in the future.
 
 =head1 AUTHOR
 
-Tony Cook <tonyc@cpan.org>
+Tony Cook <tony@develop-help.com>
 
 =cut

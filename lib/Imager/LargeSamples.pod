@@ -109,7 +109,7 @@ of the image, using filled => 1 and color works at 8-bits/sample
 
 =head1 AUTHOR
 
-Tony Cook <tonyc@cpan.org>
+Tony Cook <tony@develop-help.com>
 
 =cut
 

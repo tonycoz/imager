@@ -6,7 +6,7 @@ require Exporter;
 our @EXPORT_OK = 'count_color';
 
 BEGIN {
-  our $VERSION = "0.03";
+  our $VERSION = "0.04";
   our @ISA = qw(Exporter);
 
   require XSLoader;
@@ -42,7 +42,7 @@ Imager, Imager::Filter::DynTest
 
 =head1 AUTHOR
 
-Tony Cook <tonyc@cpan.org>
+Tony Cook <tony@develop-help.com>
 
 =cut
 

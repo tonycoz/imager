@@ -4,7 +4,7 @@ use strict;
 use Imager;
 
 BEGIN {
-  our $VERSION = "0.05";
+  our $VERSION = "0.06";
   
   require XSLoader;
   XSLoader::load('Imager::Filter::Flines', $VERSION);
@@ -41,7 +41,7 @@ This filter has no parameters.
 
 Original by Arnar M. Hrafnkelsson.
 
-Adapted by Tony Cook <tonyc@cpan.org>
+Adapted by Tony Cook <tony@develop-help.com>
 
 =head1 SEE ALSO
 
