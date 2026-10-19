@@ -223,6 +223,10 @@ i_readgif_low(GifFileType *GifFile, int **colour_table, int *colours) {
   GifColorType *ColorMapEntry;
   i_color col;
   int error;
+  i_color black; /* substitute for invalid indexes */
+
+  for (i = 0; i < MAXCHANNELS; ++i)
+    black.channel[i] = 0;
 
   mm_log((1,"i_readgif_low(GifFile %p, colour_table %p, colours %p)\n", GifFile, colour_table, colours));
 
@@ -348,11 +352,17 @@ i_readgif_low(GifFileType *GifFile, int **colour_table, int *colours) {
 	  }
 	  
 	  for (x = 0; x < Width; x++) {
-	    ColorMapEntry = &ColorMap->Colors[GifRow[x]];
-	    col.rgb.r = ColorMapEntry->Red;
-	    col.rgb.g = ColorMapEntry->Green;
-	    col.rgb.b = ColorMapEntry->Blue;
-	    i_ppix(im,Col+x,j,&col);
+            unsigned index = GifRow[x];
+            if (index >= (unsigned)ColorMap->ColorCount) {
+              col = black;
+            }
+            else {
+              ColorMapEntry = &ColorMap->Colors[index];
+              col.rgb.r = ColorMapEntry->Red;
+              col.rgb.g = ColorMapEntry->Green;
+              col.rgb.b = ColorMapEntry->Blue;
+            }
+            i_ppix(im,Col+x,j,&col);
 	  }
 	  
 	}
@@ -373,11 +383,17 @@ i_readgif_low(GifFileType *GifFile, int **colour_table, int *colours) {
 	  }
 
 	  for (x = 0; x < Width; x++) {
-	    ColorMapEntry = &ColorMap->Colors[GifRow[x]];
-	    col.rgb.r = ColorMapEntry->Red;
-	    col.rgb.g = ColorMapEntry->Green;
-	    col.rgb.b = ColorMapEntry->Blue;
-	    i_ppix(im, Col+x, Row, &col);
+            unsigned index = GifRow[x];
+            if (index >= (unsigned)ColorMap->ColorCount) {
+              col = black;
+            }
+            else {
+              ColorMapEntry = &ColorMap->Colors[index];
+              col.rgb.r = ColorMapEntry->Red;
+              col.rgb.g = ColorMapEntry->Green;
+              col.rgb.b = ColorMapEntry->Blue;
+            }
+            i_ppix(im, Col+x, Row, &col);
 	  }
 	  Row++;
 	}
