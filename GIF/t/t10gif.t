@@ -14,7 +14,7 @@ $SIG{__DIE__} = sub { confess @_ };
 
 init_log("testout/t105gif.log",1);
 
-plan tests => 147;
+plan tests => 149;
 
 my $green=i_color_new(0,255,0,255);
 my $blue=i_color_new(0,0,255,255);
@@ -747,6 +747,27 @@ ext_test(1, <<'CODE', 1, "CVE-2026-8454");
 use Imager;
 my $im = Imager->new(file => "testimg/cve-2026-8454.gif", page => 1);
 print "ok #cve-2026-8454\n";
+CODE
+
+ext_test(1, <<'CODE', 1, "v4hp-5h6w-9897");
+use Imager;
+my $im = Imager->new;
+# while the sample file does the overflow, it also
+# has LZW errors and fails to load
+# so we can't check the color
+$im->read(file => "testimg/v4hp-5h6w-9897.gif",
+          gif_consolidate => 1);
+print "ok # v4hp-5h6w-9897\n";
+CODE
+ext_test(1, <<'CODE', 1, "rv4hp-5h6w-9897-i");
+use Imager;
+my $im = Imager->new;
+# while the sample file does the overflow, it also
+# has LZW errors and fails to load
+# so we can't check the color
+$im->read(file => "testimg/v4hp-5h6w-9897-i.gif",
+          gif_consolidate => 1);
+print "ok # v4hp-5h6w-9897-i\n";
 CODE
 
 Imager->close_log;

@@ -98,6 +98,8 @@ GIF/testimg/screen2.gif
 GIF/testimg/screen3.gif
 GIF/testimg/trimgdesc.gif
 GIF/testimg/trmiddesc.gif
+GIF/testimg/v4hp-5h6w-9897-i.gif
+GIF/testimg/v4hp-5h6w-9897.gif
 GIF/testimg/zerocomm.gif	Image with a zero-length comment extension
 hlines.c			Manage sets of horizontal line segments
 ICO/ICO.pm			Windows Icon file support
