@@ -121,6 +121,10 @@ jobs:
     needs: os-linux
     uses: ./.github/workflows/quality-valgrind.yml
 
+  quality-asan:
+    needs: os-linux
+    uses: ./.github/workflows/quality-asan.yml
+
   quality-tidy:
     needs: os-linux
     uses: ./.github/workflows/quality-tidy.yml

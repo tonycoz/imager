@@ -1,0 +1,57 @@
+name: quality-asan
+
+on:
+  workflow_call:
+
+jobs:
+  quality-asan:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: install package dependencies cached
+        uses: awalsh128/cache-apt-pkgs-action@v1.6.3
+        with:
+          packages: build-essential libtiff-dev libpng-dev libgif-dev libfreetype6-dev libjpeg-dev aspell
+          version: 1.2
+      - name: Set up perl
+        uses: shogo82148/actions-setup-perl@v1.41.1
+        with:
+          perl-version: '5'
+          multi-thread: true
+          install-modules:
+            Affix::Infix2Postfix
+            ExtUtils::MakeMaker
+            Inline::C
+            Inline::CPP
+            Parse::RecDescent
+            Perl::OSType
+            Pod::Spell
+            Scalar::Util
+            Socket
+            Test::Pod
+            Test::Pod::Coverage
+            version
+      - name: perl -V
+        run: |
+            perl -V
+      - name: checkout
+        uses: actions/checkout@v6
+        with:
+          path: imager
+      - name: configure
+        run: |
+          perl Makefile.PL OPTIMIZE="-O0 -ggdb3 -fsanitize=address" LDDLFLAGS="$(perl -MConfig -e 'print $Config{lddlflags}') -fsanitize=address"
+        working-directory: imager
+      - name: build
+        run: |
+            make -j2
+        working-directory: imager
+      - name: ldd
+        run: ldd imager/blib/arch/auto/Imager/Imager.so
+      - name: test
+        run: |
+            echo '::group::Imager'
+            LD_PRELOAD=libasan.so.8 ASAN_OPTIONS=detect_leaks=0 PERL_DESTRUCT_LEVEL=2 IMAGER_AUTHOR_TESTING=1 prove -b -r t
+            echo '::endgroup::Imager'
+            for subdir in FT2 GIF ICO JPEG PNG SGI TIFF ; do ( cd $subdir ; echo "::group::$subdir" ; LD_PRELOAD=libasan.so.8 ASAN_OPTIONS=detect_leaks=0 PERL_DESTRUCT_LEVEL=2 IMAGER_RISKY_TESTS=1 prove -I ../blib/arch -I ../blib/lib t ; echo "::endgroup::$subdir" ) done
+        working-directory: imager
