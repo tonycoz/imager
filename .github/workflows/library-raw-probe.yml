@@ -27,7 +27,7 @@ jobs:
             mkdir ../tiffbuild
             export TIFFBASE=$(realpath ../../libtiff)
             echo TIFFBASE=$TIFFBASE
-            cmake -B ../tiffbuild -D CMAKE_INSTALL_PREFIX=$TIFFBASE && cd ../tiffbuild && make && sudo make install
+            cmake -B ../tiffbuild -D CMAKE_INSTALL_PREFIX=$TIFFBASE -DCMAKE_POLICY_VERSION_MINIMUM=3.5 && cd ../tiffbuild && make && sudo make install
             echo "LD_LIBRARY_PATH=$TIFFBASE" >>$GITHUB_ENV
             echo "IM_INCPATH=$TIFFBASE/include" >>$GITHUB_ENV
             echo "IM_LIBPATH=$TIFFBASE/lib" >>$GITHUB_ENV
