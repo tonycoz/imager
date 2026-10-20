@@ -31,7 +31,7 @@ jobs:
             ls
             cd tiff-${{ matrix.LIBTIFF_RELEASE }}
             mkdir ../tiffbuild
-            cmake -B ../tiffbuild && cd ../tiffbuild && make && sudo make install
+            cmake -B ../tiffbuild -DCMAKE_POLICY_VERSION_MINIMUM=3.5 && cd ../tiffbuild && make && sudo make install
             echo "LD_LIBRARY_PATH=$(pkg-config --variable=libdir libtiff-4)" >>$GITHUB_ENV
       - name: perl version
         run: |
