@@ -1,3 +1,12 @@
+Imager-File-GIF 1.006
+=====================
+
+ - fix a malloc buffer read overflow in the gif_consolidate reader,
+   these could read past the end of the giflib supplied color map.
+   https://github.com/tonycoz/imager/security/advisories/GHSA-v4hp-5h6w-9897
+   CVE-2026-112202
+ - clean up old cpan.org email addresses.
+
 Imager-File-GIF 1.005
 =====================
 

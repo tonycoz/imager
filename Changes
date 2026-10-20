@@ -1,5 +1,18 @@
 Imager release history.  Older releases can be found in Changes.old
 
+ - GIF:
+   - fix a malloc buffer read overflow in the gif_consolidate reader,
+     these could read past the end of the giflib supplied color map.
+     https://github.com/tonycoz/imager/security/advisories/GHSA-v4hp-5h6w-9897
+     CVE-2026-112202
+
+ - cleanup old cpan.org email addresses in core Imager and GIF/
+ - cleanup old $Revision$ tags from CVS
+ - CI:
+   - update new freebsd runs, 13.5 packages seem to be no longer
+     available, add 14.5 and upgrade from 15.0 to 15.1
+   - add an ASAN run
+
 Imager 1.039 - 16 October 2026
 ============
 
