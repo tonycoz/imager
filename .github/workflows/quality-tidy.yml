@@ -5,13 +5,13 @@ on:
 
 jobs:
   quality-tidy:
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
       - name: install package dependencies cached
         uses: awalsh128/cache-apt-pkgs-action@v1.6.3
         with:
-          packages: build-essential libtiff-dev libpng-dev libgif-dev libfreetype6-dev libjpeg-dev libtest-pod-coverage-perl libtest-pod-perl libpod-parser-perl libpod-spell-perl aspell libinline-c-perl libparse-recdescent-perl cpanminus libcapture-tiny-perl libmodule-build-perl clang-tidy libclang-dev bear
+          packages: build-essential libtiff-dev libpng-dev libgif-dev libfreetype6-dev libjpeg-dev aspell clang-tidy-22 libclang-22-dev bear
           version: tidy
       - name: Set up perl
         uses: shogo82148/actions-setup-perl@v1.41.1
@@ -19,6 +19,7 @@ jobs:
           perl-version: 5.42.0
           multi-thread: true
           install-modules:
+            Capture::Tiny
             Inline::C
             Inline::CPP
             Parse::RecDescent
@@ -30,7 +31,7 @@ jobs:
           wget https://github.com/tonycoz/perl-check/archive/refs/tags/v1.0.0.tar.gz
           tar xzf v1.0.0.tar.gz
           cd perl-check-1.0.0
-          cmake -B build
+          cmake -B build -DCMAKE_PREFIX_PATH=/usr/lib/llvm-22
           cmake --build build -v
           echo "PERL_CHECK=$(pwd)/build/libperl-check.so" >>$GITHUB_ENV
       - name: checkout
@@ -45,7 +46,7 @@ jobs:
           cd imager && bear -- make -j2
       - name: tidy
         run: |
-          cd imager && run-clang-tidy -load "$PERL_CHECK" -config-file .github/clang-tidy
+          cd imager && run-clang-tidy-22 -load "$PERL_CHECK" -config-file .github/clang-tidy
       - name: tidy-errors
         run: |
-          cd imager && run-clang-tidy -load "$PERL_CHECK" -config-file .github/clang-tidy-errors
+          cd imager && run-clang-tidy-22 -load "$PERL_CHECK" -config-file .github/clang-tidy-errors
