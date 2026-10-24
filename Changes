@@ -4,6 +4,12 @@ Imager release history.  Older releases can be found in Changes.old
    - fix a build warning from the library check probe
      https://github.com/tonycoz/imager/issues/571
 
+ - API:
+   - eliminate double documentation of im_data in the i_img type
+   - eliminate the in-place image construction API i_img_empty_ch()
+     and variants
+   - both pulled from an old topic branch, with some updates
+
 Imager 1.040 - 20 October 2026
 ============
 
