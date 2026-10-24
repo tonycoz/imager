@@ -2744,7 +2744,8 @@ i_tiff_get_codecs(size_t *pcount) {
 
 =head1 AUTHOR
 
-Arnar M. Hrafnkelsson <addi@umich.edu>, Tony Cook <tonyc@cpan.org>
+Arnar M. Hrafnkelsson <addi@umich.edu>,
+Tony Cook <tony@develop-help.com>
 
 =head1 SEE ALSO
 

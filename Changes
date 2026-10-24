@@ -3,6 +3,7 @@ Imager release history.  Older releases can be found in Changes.old
  - TIFF:
    - fix a build warning from the library check probe
      https://github.com/tonycoz/imager/issues/571
+   - cleanup old cpan.org email addresses
 
  - API:
    - eliminate double documentation of im_data in the i_img type
