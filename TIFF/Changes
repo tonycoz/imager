@@ -1,3 +1,9 @@
+Imager-File-TIFF 1.008
+======================
+
+ - fix a build warning from the library check probe
+   https://github.com/tonycoz/imager/issues/571
+
 Imager-File-TIFF 1.007
 ======================
 
