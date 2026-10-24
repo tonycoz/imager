@@ -163,7 +163,7 @@ int ver_len;
 if (ver_start && ver_start[ver_base_len] >= '3' && ver_start[ver_base_len] < '9') {
   ver_start += ver_base_len;
   ver_end = ver_start;
-  while (*ver_end && (*ver_end == '.' || *ver_end >= '0' && *ver_end <= '9'))
+  while (*ver_end && (*ver_end == '.' || (*ver_end >= '0' && *ver_end <= '9')))
     ++ver_end;
   ver_len = ver_end - ver_start;
 }
