@@ -535,12 +535,6 @@ i_readpnm_wiol( io_glue *ig, int allow_incomplete) {
   }
 
   channels = (type == 3 || type == 6) ? 3:1;
-
-  if (!i_int_check_image_file_limits(width, height, channels, sizeof(i_sample_t))) {
-    mm_log((1, "i_readpnm: image size exceeds limits\n"));
-    return NULL;
-  }
-
   mm_log((1, "i_readpnm: (%d x %d), channels = %d, maxval = %d\n", width, height, channels, maxval));
 
   if (type == 1 || type == 4) {
@@ -548,15 +542,15 @@ i_readpnm_wiol( io_glue *ig, int allow_incomplete) {
     pbm_pal[0].channel[0] = 255;
     pbm_pal[1].channel[0] = 0;
     
-    im = i_img_pal_new(width, height, 1, 256);
+    im = i_img_pal_file_new(width, height, 1);
     if (im)
       i_addcolors(im, pbm_pal, 2);
   }
   else {
     if (maxval > 255)
-      im = i_img_16_new(width, height, channels);
+      im = i_img_16_file_new(width, height, channels);
     else
-      im = i_img_8_new(width, height, channels);
+      im = i_img_8_file_new(width, height, channels);
   }
   if (!im)
     return NULL;
