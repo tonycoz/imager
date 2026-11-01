@@ -1,8 +1,9 @@
 #!perl -w
 use Imager ':all';
-use Test::More tests => 205;
+use Test::More;
 use strict;
-use Imager::Test qw(test_image_raw test_image_16 is_color3 is_color1 is_image test_image_named);
+use Imager::Test qw(test_image_raw test_image_16 is_color3 is_color1
+                    is_image test_image_named test_image_gray_16);
 
 $| = 1;
 
@@ -204,6 +205,49 @@ is($ooim->tags(name=>'pnm_type'), 1, "check pnm_type tag");
      "set bytes limit 67500");
   ok($im->read(file=>$limit_file),
      "should succeed - just inside bytes limit");
+  Imager->set_file_limits(reset=>1);
+}
+{
+  my $limit16_im = test_image_16;
+  my $data;
+  ok($limit16_im->write(data => \$data, type => "pnm",
+                        pnm_write_wide_data => 1),
+     "write as 16-bit image");
+  my ($w, $h) = ( $limit16_im->getwidth, $limit16_im->getheight );
+  my $big_enough = $w * $h * 3 * 2;
+  ok(Imager->set_file_limits(reset => 1, bytes => $big_enough - 1),
+     "set byte limit just too small");
+  my $im = Imager->new;
+  ok(!$im->read(data => \$data, type => "pnm"),
+     "try to read 16-bit RGB image with limit too low");
+  like($im->errstr, qr/storage size/, "check error message");
+  ok(Imager->set_file_limits(reset => 1, bytes => $big_enough),
+     "set byte limit just right");
+  ok($im->read(data => \$data, type => "pnm"),
+     "try to read 16-bit RGB image with limit just right");
+  is($im->bits, 16, "check we read as 16-bit image");
+  Imager->set_file_limits(reset=>1);
+}
+
+{
+  my $limit16_im = test_image_gray_16;
+  my $data;
+  ok($limit16_im->write(data => \$data, type => "pnm",
+                        pnm_write_wide_data => 1),
+     "write as 16-bit gray image");
+  my ($w, $h) = ( $limit16_im->getwidth, $limit16_im->getheight );
+  my $big_enough = $w * $h * 2;
+  ok(Imager->set_file_limits(reset => 1, bytes => $big_enough - 1),
+     "set byte limit just too small");
+  my $im = Imager->new;
+  ok(!$im->read(data => \$data, type => "pnm"),
+     "try to read 16-bit gray image with limit too low");
+  like($im->errstr, qr/storage size/, "check error message");
+  ok(Imager->set_file_limits(reset => 1, bytes => $big_enough),
+     "set byte limit just right");
+  ok($im->read(data => \$data, type => "pnm"),
+     "try to read 16-bit gray image with limit just right");
+  is($im->bits, 16, "check we read as 16-bit image");
   Imager->set_file_limits(reset=>1);
 }
 
@@ -628,6 +672,8 @@ print "# check error handling\n";
 	 "check error message");
   }
 }
+
+done_testing();
 
 Imager->close_log;
 
