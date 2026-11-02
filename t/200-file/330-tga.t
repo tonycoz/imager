@@ -269,6 +269,30 @@ is($compressed, 1, "check compressed tag");
        "check message");
 }
 
+{
+  my $testim = test_image;
+  my $data;
+  ok($testim->write(data => \$data, type => "tga"), "write sample");
+  # truncate after the header
+  substr($data, 18) = "";
+  substr($data, 0, 1) = "\xFF"; # long idstring
+  my $im = Imager->new;
+  ok(!$im->read(data => \$data, type => "tga"),
+     "fail to read image truncated immediately after header");
+  # this would leak:
+  # 256 bytes in 1 blocks are definitely lost in loss record 8 of 18
+  #     at 0x4844818: malloc (vg_replace_malloc.c:446)
+  #     by 0x139A7611: im_malloc (io.c:47)
+  #     by 0x139CC42F: i_readtga_wiol (tga.c:694)
+  #     by 0x1394629A: XS_Imager_i_readtga_wiol (Imager.c:10134)
+  #     by 0x3142BD: Perl_rpp_invoke_xs (inline.h:1221)
+  #     by 0x3396E1: Perl_pp_entersub (pp_hot.c:6628)
+  #     by 0x1F42A0: Perl_runops_debug (dump.c:3324)
+  #     by 0x1A84AD: S_run_body (perl.c:2897)
+  #     by 0x1A7AA3: perl_run (perl.c:2810)
+  #     by 0x154184: main (perlmain.c:127)
+}
+
 done_testing();
 
 sub write_test {
