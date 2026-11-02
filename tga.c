@@ -5,6 +5,7 @@
 #include <stdlib.h>
 #include <errno.h>
 
+#define IDSTRING_MAX 255
 
 /*
 =head1 NAME
@@ -657,7 +658,7 @@ i_readtga_wiol(io_glue *ig, int length) {
   int x, y;
   int width, height, channels;
   int mapped;
-  char *idstring = NULL;
+  char idbuf[IDSTRING_MAX];
 
   tga_source src;
   tga_header header;
@@ -691,8 +692,7 @@ i_readtga_wiol(io_glue *ig, int length) {
 
   if (header.idlength) {
     /* max of 256, so this is safe */
-    idstring = mymalloc(header.idlength+1);
-    if (i_io_read(ig, idstring, header.idlength) != header.idlength) {
+    if (i_io_read(ig, idbuf, header.idlength) != header.idlength) {
       i_push_error(errno, "short read on targa idstring");
       return NULL;
     }
@@ -707,7 +707,6 @@ i_readtga_wiol(io_glue *ig, int length) {
   switch (header.datatypecode) {
   case 0: /* No data in image */
     i_push_error(0, "Targa image contains no image data");
-    if (idstring) myfree(idstring);
     return NULL;
     break;
   case 1:  /* Uncompressed, color-mapped images */
@@ -716,7 +715,6 @@ i_readtga_wiol(io_glue *ig, int length) {
   case 11: /* Compressed,   grayscale images    */
     if (header.bitsperpixel != 8) {
       i_push_error(0, "Targa: mapped/grayscale image's bpp is not 8, unsupported.");
-      if (idstring) myfree(idstring);
       return NULL;
     }
     src.bytepp = 1;
@@ -726,18 +724,15 @@ i_readtga_wiol(io_glue *ig, int length) {
     if ((src.bytepp = bpp_to_bytes(header.bitsperpixel)))
       break;
     i_push_error(0, "Targa: direct color image's bpp is not 15/16/24/32 - unsupported.");
-    if (idstring) myfree(idstring);
     return NULL;
     break;
   case 32: /* Compressed color-mapped, Huffman, Delta and runlength */
   case 33: /* Compressed color-mapped, Huffman, Delta and runlength */
     i_push_error(0, "Unsupported Targa (Huffman/delta/rle/quadtree) subformat is not supported");
-    if (idstring) myfree(idstring);
     return NULL;
     break;
   default: /* All others which we don't know which might be */
     i_push_error(0, "Unknown targa format");
-    if (idstring) myfree(idstring);
     return NULL;
     break;
   }
@@ -762,7 +757,6 @@ i_readtga_wiol(io_glue *ig, int length) {
 				   header.bitsperpixel,
 				    header.imagedescriptor & 0xF))) break;
     i_push_error(0, "Targa Image has none of 15/16/24/32 pixel layout");
-    if (idstring) myfree(idstring);
     return NULL;
     break;
   case 3:  /* Uncompressed, grayscale images    */ /* FALLTHROUGH */
@@ -786,14 +780,11 @@ i_readtga_wiol(io_glue *ig, int length) {
     i_img_8_new(width, height, channels);
 
   if (!img) {
-    if (idstring) 
-      myfree(idstring);
     return NULL;
   }
   
-  if (idstring) {
-    i_tags_add(&img->tags, "tga_idstring", 0, idstring, header.idlength, 0);
-    myfree(idstring);
+  if (header.idlength) {
+    i_tags_add(&img->tags, "tga_idstring", 0, idbuf, header.idlength, 0);
   }
 
   if (mapped &&
