@@ -540,7 +540,7 @@ default memory size limit is one gigabyte.
 
 You can reset all limits to their defaults with the reset parameter:
 
-  # no limits
+  # almost no limits
   Imager->set_file_limits(reset=>1);
 
 This can be used with the other limits to reset all but the limit you
@@ -551,6 +551,28 @@ pass:
 
   # only bytes is limited
   Imager->set_file_limits(reset=>1, bytes=>10_000_000);
+
+Note that the bytes limit limits the size of the memory allocated for
+the image surface only.
+
+Imager may temporarily allocate other memory blocks in the process of
+reading a file, including some larger than the image surface itself.
+
+For 8-bit per sample images this is typically no larger than an 8-bit
+color per pixel in a row of the image.
+
+For larger sample images this will be no larger than a floating point
+color (sizeof(double) * 4) for each pixel in a row.
+
+But this isn't guaranteed, some format support libraries will load the
+entire image file into memory (or require that), and allocate other
+memory needed for decoding the image.
+
+This does not limit images created via any other mechanism, including
+direct image creation, such as via new() or the rgba_double() method,
+or other operations such as scaling.  These other mechanisms may also
+temporarily allocate memory needed for processing, possibly including
+intermediate images.
 
 =item get_file_limits()
 

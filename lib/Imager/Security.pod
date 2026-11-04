@@ -47,8 +47,8 @@ With compression, and especially with pointer formats like TIFF, it's
 possible to store very large images in a relatively small file.
 
 If you're receiving image data from an untrusted source you should
-limit the amount of memory that Imager can allocate for a read in
-image file using the C<set_file_limits()> method.
+limit the amount of memory that Imager can allocate for the image
+surface of a read in image file using the C<set_file_limits()> method.
 
   Imager->set_file_limits(bytes => 10_000_000);
 
@@ -66,6 +66,8 @@ This has no effect on images created without a file:
 You can reset to the defaults with:
 
   Imager->set_file_limits(reset => 1);
+
+See L<Imager::Files/set_file_limits()> for more detail.
 
 =head1 AUTHOR
 
