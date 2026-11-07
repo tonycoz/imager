@@ -137,6 +137,15 @@ returns -1 and pushes an error.
 #define i_img_double_new(xsize, ysize, channels) im_img_double_new(aIMCTX, (xsize), (ysize), (channels))
 #define i_img_pal_new(xsize, ysize, channels, maxpal) im_img_pal_new(aIMCTX, (xsize), (ysize), (channels), (maxpal))
 
+#define i_img_8_file_new(xsize, ysize, channels) \
+  im_img_8_file_new(aIMCTX, (xsize), (ysize), (channels))
+#define i_img_16_file_new(xsize, ysize, channels) \
+  im_img_16_file_new(aIMCTX, (xsize), (ysize), (channels))
+#define i_img_double_file_new(xsize, ysize, channels) \
+  im_img_double_file_new(aIMCTX, (xsize), (ysize), (channels))
+#define i_img_pal_file_new(xsize, ysize, channels) \
+  im_img_pal_file_new(aIMCTX, (xsize), (ysize), (channels))
+
 #define i_img_alloc() im_img_alloc(aIMCTX)
 #define i_img_init(im) im_img_init(aIMCTX, im)
 

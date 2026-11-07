@@ -91,5 +91,32 @@ i_io_munmap(io_glue *ig) {
   return ig->vtbl->munmapcb ? ig->vtbl->munmapcb(ig) : 0;
 }
 
+static inline i_img *
+im_img_8_file_new(pIMCTX, i_img_dim x, i_img_dim y, int ch) {
+  if (!im_int_check_image_file_limits(my_im_ctx, x, y, ch, 1))
+    return NULL;
+  return im_img_8_new(my_im_ctx, x, y, ch);
+}
+
+static inline i_img *
+im_img_16_file_new(pIMCTX, i_img_dim x, i_img_dim y, int ch) {
+  if (!im_int_check_image_file_limits(my_im_ctx, x, y, ch, 2))
+    return NULL;
+  return im_img_16_new(my_im_ctx, x, y, ch);
+}
+
+static inline i_img *
+im_img_double_file_new(pIMCTX, i_img_dim x, i_img_dim y, int ch) {
+  if (!im_int_check_image_file_limits(my_im_ctx, x, y, ch, sizeof(double)))
+    return NULL;
+  return im_img_double_new(my_im_ctx, x, y, ch);
+}
+
+static inline i_img *
+im_img_pal_file_new(pIMCTX, i_img_dim x, i_img_dim y, int ch) {
+  if (!im_int_check_image_file_limits(my_im_ctx, x, y, ch, 1))
+    return NULL;
+  return im_img_pal_new(my_im_ctx, x, y, ch, 256);
+}
 
 #endif
