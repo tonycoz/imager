@@ -25,7 +25,7 @@ my %opts =
 
 if (eval { ExtUtils::MakeMaker->VERSION('6.46'); 1 }) {
   $opts{LICENSE} = "perl_5";
-  $opts{AUTHOR} = 'Tony Cook <tonyc@cpan.org>';
+  $opts{AUTHOR} = 'Tony Cook <tony@develop-help.com>';
   $opts{ABSTRACT} = 'PNG Image file support for Imager';
   $opts{META_MERGE} =
     {
@@ -64,7 +64,7 @@ else {
   $opts{TYPEMAPS} = [ Imager::ExtUtils->typemap ];
 
   # Imager required configure through use
-  my @Imager_req = ( Imager => "0.90" );
+  my @Imager_req = ( Imager => "1.041" );
   if (eval { ExtUtils::MakeMaker->VERSION('6.46'); 1 }) {
     $opts{META_MERGE}{prereqs} =
       {
