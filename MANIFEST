@@ -248,6 +248,9 @@ PNG/PNG.xs
 PNG/README
 PNG/t/00load.t
 PNG/t/10png.t			Test png support
+PNG/testimg/02-8bit-gray-tRNS-2x.png
+PNG/testimg/03-16bit-gray-noTRNS-2x.png
+PNG/testimg/04-16bit-gray-tRNS-4x.png
 PNG/testimg/badcrc.png
 PNG/testimg/bilevel.png
 PNG/testimg/bipalette.png	bi-level but with a palette
@@ -259,6 +262,7 @@ PNG/testimg/coveri.png
 PNG/testimg/coverpal.png
 PNG/testimg/coverpali.png
 PNG/testimg/gray.png
+PNG/testimg/gray16a.png
 PNG/testimg/graya.png
 PNG/testimg/pal.png
 PNG/testimg/palette.png

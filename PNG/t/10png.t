@@ -843,6 +843,43 @@ SKIP:
     is_image($im, $ex, "test trns 16-bit rgb parsed properly");
 }
 
+{
+  # file limits conformance
+  #
+  # diferent variations of PNG image type (gray, graya, pal, rgb, rgb16)
+  # and tRNS where valid
+  my @imgs = qw(02-8bit-gray-tRNS-2x.png gray.png graya.png
+                03-16bit-gray-noTRNS-2x.png 04-16bit-gray-tRNS-4x.png gray16a.png
+                pal.png paltrans.png
+                rgb8trns.png rgb8.png rgb8trnsa.png
+                rgb16.png rgb16trns.png rgb16trnsa.png);
+  for my $name (@imgs) {
+    my $fname = "testimg/$name";
+    my $imbase = Imager->new;
+    ok($imbase->read(file => $fname, type => "png"),
+       "load $name with no limits")
+      or diag "$name: ", $imbase->errstr;
+    my ($w, $h, $ch, $bits) = ($imbase->getwidth,    $imbase->getheight,
+                               $imbase->getchannels, $imbase->bits);
+    my $limit = $w * $h * $ch * int($bits / 8);
+    my $limitm1 = $limit - 1;
+    my $desc = "$w x $h x $ch x $bits";
+    # just too small
+    Imager->set_file_limits(bytes => $limitm1);
+    my $small = Imager->new;
+    ok(!$small->read(file => $fname, type => "png"),
+       "should fail to read $name ($desc) with bytes limit one too small ($limitm1)");
+    like($small->errstr, qr/storage size/, "check message for too small");
+    Imager->set_file_limits(bytes => $limit);
+    my $justright = Imager->new;
+    ok($justright->read(file => $fname, type => "png"),
+       "should succeed reading $name ($desc) with bytes limit just right ($limit)")
+      or diag "$name just right: ", $justright->errstr;
+    
+    Imager->set_file_limits(reset => 1);
+  }
+}
+
 done_testing();
 
 sub limited_write {

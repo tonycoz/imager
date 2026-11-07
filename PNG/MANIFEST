@@ -10,6 +10,9 @@ PNG.xs
 README
 t/00load.t
 t/10png.t
+testimg/02-8bit-gray-tRNS-2x.png
+testimg/03-16bit-gray-noTRNS-2x.png
+testimg/04-16bit-gray-tRNS-4x.png
 testimg/badcrc.png
 testimg/bilevel.png
 testimg/bipalette.png		bi-level but with a palette
@@ -21,6 +24,7 @@ testimg/coveri.png
 testimg/coverpal.png
 testimg/coverpali.png
 testimg/gray.png
+testimg/gray16a.png
 testimg/graya.png
 testimg/pal.png
 testimg/palette.png
