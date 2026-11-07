@@ -382,12 +382,6 @@ i_readpng_wiol(io_glue *ig, int flags) {
 
   mm_log((1,"i_readpng_wiol: channels %d\n",channels));
 
-  if (!i_int_check_image_file_limits(width, height, channels, sizeof(i_sample_t))) {
-    mm_log((1, "i_readpnm: image size exceeds limits\n"));
-    png_destroy_read_struct(&png_ptr, &info_ptr, (png_infopp)NULL);
-    return NULL;
-  }
-
   if (color_type == PNG_COLOR_TYPE_PALETTE) {
     im = read_paletted(png_ptr, info_ptr, channels, width, height);
   }
@@ -457,9 +451,8 @@ read_direct8(png_structp png_ptr, png_infop info_ptr, int ochannels,
   
   png_read_update_info(png_ptr, info_ptr);
   
-  im = vim = i_img_8_new(width,height,vchannels);
+  im = vim = i_img_8_file_new(width,height,vchannels);
   if (!im) {
-    png_destroy_read_struct(&png_ptr, &info_ptr, (png_infopp)NULL);
     return NULL;
   }
   
@@ -513,9 +506,8 @@ read_direct16(png_structp png_ptr, png_infop info_ptr, int ochannels,
   
   png_read_update_info(png_ptr, info_ptr);
   
-  im = vim = i_img_16_new(width,height,vchannels);
+  im = vim = i_img_16_file_new(width,height,vchannels);
   if (!im) {
-    png_destroy_read_struct(&png_ptr, &info_ptr, (png_infopp)NULL);
     return NULL;
   }
   
@@ -575,9 +567,8 @@ read_bilevel(png_structp png_ptr, png_infop info_ptr,
   
   png_read_update_info(png_ptr, info_ptr);
   
-  im = vim = i_img_pal_new(width, height, 1, 256);
+  im = vim = i_img_pal_file_new(width, height, 1);
   if (!im) {
-    png_destroy_read_struct(&png_ptr, &info_ptr, (png_infopp)NULL);
     return NULL;
   }
 
@@ -664,9 +655,8 @@ read_paletted(png_structp png_ptr, png_infop info_ptr, int ochannels,
   
   png_read_update_info(png_ptr, info_ptr);
   
-  im = vim = i_img_pal_new(width, height, vchannels, 256);
+  im = vim = i_img_pal_file_new(width, height, vchannels);
   if (!im) {
-    png_destroy_read_struct(&png_ptr, &info_ptr, (png_infopp)NULL);
     return NULL;
   }
 
