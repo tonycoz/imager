@@ -6,7 +6,7 @@ Imager release history.  Older releases can be found in Changes.old
 
  - PNG:
    - ensure file limit checks match the files created, using the new APIs
-     https://github.com/tonycoz/imager/security/advisories/GHSA-4574-vr7j-8jwm
+     https://github.com/tonycoz/imager/security/advisories/GHSA-q682-9rc3-fm5f
    - cleanup old cpan.org email addresses
 
  - PNM:
@@ -28,6 +28,7 @@ Imager release history.  Older releases can be found in Changes.old
      etc) that check the file limits before creating the image.  These
      help ensure the limit checked matches the image created.
      https://github.com/tonycoz/imager/security/advisories/GHSA-4574-vr7j-8jwm
+     https://github.com/tonycoz/imager/security/advisories/GHSA-q682-9rc3-fm5f
 
 
 Imager 1.040 - 20 October 2026

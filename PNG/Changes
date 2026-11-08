@@ -3,7 +3,7 @@ Imager-File-PNG 1.006
 =====================
 
  - ensure file limit checks match the files created
-   https://github.com/tonycoz/imager/security/advisories/GHSA-4574-vr7j-8jwm
+   https://github.com/tonycoz/imager/security/advisories/GHSA-q682-9rc3-fm5f
 
 =====================
 Imager-File-PNG 1.005
