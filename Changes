@@ -2,6 +2,8 @@ Imager release history.  Older releases can be found in Changes.old
 
  - TGA: small memory leak for images with a non-zero idstring length,
    but not enough file length to satisfy it.
+   This could also leak that memory if the image was larger than the
+   image file limits.
    https://github.com/tonycoz/imager/security/advisories/GHSA-259f-62p5-33rg
 
  - PNG:
