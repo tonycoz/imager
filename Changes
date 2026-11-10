@@ -1,5 +1,8 @@
 Imager release history.  Older releases can be found in Changes.old
 
+Imager 1.041 - 10 November 2026
+============
+
  - TGA: small memory leak for images with a non-zero idstring length,
    but not enough file length to satisfy it.
    This could also leak that memory if the image was larger than the
