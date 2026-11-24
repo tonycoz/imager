@@ -451,10 +451,19 @@ C<RLE>.
 
 =back
 
-You can now add to the magic database Imager uses for detecting file
-types:
+Other methods
 
 =over
+
+=item probe_format()
+
+Takes the C<file>, C<fh> etc parameters like read() to specify a file to
+probe the file format.
+
+  my $fmt = Imager->probe_format(file => "myfile.gif")
+    or die "Unknown format or failed to open";
+  my $fmt_data = Imager->probe_format(data => \$data)
+    or die "Failed to probe format";
 
 =item add_file_magic()
 

@@ -1623,6 +1623,15 @@ sub _test_format {
   return i_test_format_probe($io, -1);
 }
 
+sub probe_format {
+  my ($class, %input) = @_;
+
+  my ($IO, $fh) = $class->_get_reader_io(\%input)
+    or return;
+
+  return _test_format($IO);
+}
+
 sub add_file_magic {
   my ($class, %opts) = @_;
 
@@ -5150,6 +5159,9 @@ polyline() - L<Imager::Draw/polyline()>
 polypolygon() - L<Imager::Draw/polypolygon()>
 
 preload() - L<Imager::Files/preload()>
+
+probe_format() - L<Imager::Files/probe_format()> - probe the format of
+a file given filename, handle, data or callbacks.
 
 read() - L<Imager::Files/read()> - read a single image from an image file
 

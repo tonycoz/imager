@@ -409,6 +409,20 @@ AVIS
      "test adding a file type works");
 }
 
+is(Imager->probe_format(file => "testimg/alpha16.tga"), "tga",
+   "probe_format a filename");
+SKIP:
+{
+  open my $fh, "<", "testimg/alpha16.tga"
+    or die "Could not open testimg/alpha16.tga: $!";
+  is(Imager->probe_format(fh => $fh), "tga",
+     "probe format a file handle");
+  seek($fh, 0, 0);
+  my $data = do { local $/; <$fh>; };
+  is(Imager->probe_format(data => \$data), "tga",
+     "probe format in memory data");
+}
+
 Imager->close_log;
 
 done_testing();

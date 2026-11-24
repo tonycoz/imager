@@ -1,5 +1,8 @@
 Imager release history.  Older releases can be found in Changes.old
 
+ - add probe_format() method - probe a file's format, like read() does
+   if you don't supply a format.
+
 Imager 1.041 - 10 November 2026
 ============
 
