@@ -769,12 +769,6 @@ i_readtga_wiol(io_glue *ig, int length) {
     return NULL;
   }
 
-  if (!i_int_check_image_file_limits(width, height, channels, 
-				     sizeof(i_sample_t))) {
-    mm_log((1, "i_readtga_wiol: image size exceeds limits\n"));
-    return NULL;
-  }
-  
   img = mapped ? 
     i_img_pal_file_new(width, height, channels) :
     i_img_8_file_new(width, height, channels);

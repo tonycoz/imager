@@ -145,11 +145,6 @@ i_readbmp_wiol(io_glue *ig, int allow_incomplete) {
 	  (int)size_image, (int)xres, (int)yres, (int)clr_used, 
           (int)clr_important));
 
-  if (!i_int_check_image_file_limits(xsize, abs((int)ysize), 3, sizeof(i_sample_t))) {
-    im_log((aIMCTX, 1, "i_readbmp_wiol: image size exceeds limits\n"));
-    return NULL;
-  }
-  
   switch (bit_count) {
   case 1:
     im = read_1bit_bmp(ig, xsize, ysize, clr_used, compression, offbits, 
