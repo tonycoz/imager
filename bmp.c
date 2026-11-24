@@ -788,7 +788,7 @@ read_1bit_bmp(io_glue *ig, int xsize, int ysize, int clr_used,
     return NULL;
   }
 
-  im = i_img_pal_new(xsize, ysize, 3, 256);
+  im = i_img_pal_file_new(xsize, ysize, 3);
   if (!im)
     return NULL;
   if (!read_bmp_pal(ig, im, clr_used)) {
@@ -906,7 +906,7 @@ read_4bit_bmp(io_glue *ig, int xsize, int ysize, int clr_used,
     return NULL;
   }
 
-  im = i_img_pal_new(xsize, ysize, 3, 256);
+  im = i_img_pal_file_new(xsize, ysize, 3);
   if (!im) /* error should have been pushed already */
     return NULL;
   if (!read_bmp_pal(ig, im, clr_used)) {
@@ -1138,7 +1138,7 @@ read_8bit_bmp(io_glue *ig, int xsize, int ysize, int clr_used,
     return NULL;
   }
 
-  im = i_img_pal_new(xsize, ysize, 3, 256);
+  im = i_img_pal_file_new(xsize, ysize, 3);
   if (!im)
     return NULL;
   if (!read_bmp_pal(ig, im, clr_used)) {
@@ -1443,7 +1443,7 @@ read_direct_bmp(io_glue *ig, int xsize, int ysize, int bit_count,
     }
   }
   
-  im = i_img_8_new(xsize, ysize, 3);
+  im = i_img_8_file_new(xsize, ysize, 3);
   if (!im)
     return NULL;
 
