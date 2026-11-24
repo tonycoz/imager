@@ -10,6 +10,8 @@ Imager release history.  Older releases can be found in Changes.old
 
  - TGA: use the new file check image creation APIs
 
+ - PMG: test with std_file_limit_tests()
+
 Imager 1.041 - 10 November 2026
 ============
 

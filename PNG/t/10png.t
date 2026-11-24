@@ -3,7 +3,8 @@ use strict;
 use Imager qw(:all);
 use Test::More;
 use Imager::Test qw(test_image_raw test_image is_image is_imaged
-                    test_image_16 test_image_double test_image_gray_16);
+                    test_image_16 test_image_double test_image_gray_16
+                    std_file_limit_tests);
 
 my $debug_writes = 1;
 
@@ -879,6 +880,8 @@ SKIP:
     Imager->set_file_limits(reset => 1);
   }
 }
+
+std_file_limit_tests("png");
 
 done_testing();
 

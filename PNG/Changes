@@ -2,6 +2,12 @@
 Imager-File-PNG 1.006
 =====================
 
+ - test with std_file_limit_tests()
+
+=====================
+Imager-File-PNG 1.006
+=====================
+
  - ensure file limit checks match the files created
    https://github.com/tonycoz/imager/security/advisories/GHSA-q682-9rc3-fm5f
 
