@@ -500,15 +500,7 @@ i_readjpeg_wiol(io_glue *data, int length, char** iptc_itext, int *itlength) {
     return NULL;
   }
 
-  if (!i_int_check_image_file_limits(cinfo.output_width, cinfo.output_height,
-				     channels, sizeof(i_sample_t))) {
-    mm_log((1, "i_readjpeg: image size exceeds limits\n"));
-    wiol_term_source(&cinfo);
-    jpeg_destroy_decompress(&cinfo);
-    return NULL;
-  }
-
-  im = i_img_8_new(cinfo.output_width, cinfo.output_height, channels);
+  im = i_img_8_file_new(cinfo.output_width, cinfo.output_height, channels);
   if (!im) {
     wiol_term_source(&cinfo);
     jpeg_destroy_decompress(&cinfo);

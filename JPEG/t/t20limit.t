@@ -1,7 +1,8 @@
 #!perl -w
 use strict;
 use Imager;
-use Test::More tests => 12;
+use Test::More;;
+use Imager::Test qw(std_file_limit_tests);
 
 my $max_dim = 65500;
 
@@ -52,3 +53,7 @@ my $max_dim = 65500;
     is($im->getheight, $max_dim, "check height");
   }
 }
+
+std_file_limit_tests("jpeg");
+
+done_testing();

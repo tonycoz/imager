@@ -1,3 +1,15 @@
+Imager-File-JPEG 1.008
+======================
+
+ - test with std_file_limit_tests()
+
+Imager-File-JPEG 1.007
+======================
+
+Forgot to add this change entry:
+
+ - use newSVpvn_flags(..., SVs_TEMP) instead of mortalizing newSVpvn()
+
 Imager-File-JPEG 1.006
 ======================
 
