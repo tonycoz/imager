@@ -8,6 +8,8 @@ Imager release history.  Older releases can be found in Changes.old
 
  - BMP: use the new file check image creation APIs
 
+ - TGA: use the new file check image creation APIs
+
 Imager 1.041 - 10 November 2026
 ============
 
