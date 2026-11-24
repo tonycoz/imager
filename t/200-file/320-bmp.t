@@ -1,8 +1,9 @@
 #!perl -w
 use strict;
-use Test::More tests => 215;
+use Test::More;;
 use Imager qw(:all);
-use Imager::Test qw(test_image_raw is_image is_color3 test_image);
+use Imager::Test qw(test_image_raw is_image is_color3 test_image
+                  std_file_limit_tests);
 
 -d "testout" or mkdir "testout";
 
@@ -681,7 +682,11 @@ for my $comp (@comp) {
 	 "check error message");
 }
 
+std_file_limit_tests("bmp");
+
 Imager->close_log;
+
+done_testing();
 
 unless ($ENV{IMAGER_KEEP_FILES}) {
   unlink map "testout/$_", @files;

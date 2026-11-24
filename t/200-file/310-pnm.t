@@ -3,7 +3,8 @@ use Imager ':all';
 use Test::More;
 use strict;
 use Imager::Test qw(test_image_raw test_image_16 is_color3 is_color1
-                    is_image test_image_named test_image_gray_16);
+                    is_image test_image_named test_image_gray_16
+                    std_file_limit_tests);
 
 $| = 1;
 
@@ -656,6 +657,8 @@ print "# check error handling\n";
        "check error message");
   }
 }
+
+std_file_limit_tests("pnm");
 
 { # make sure close is checked for each image type
   my $fail_close = sub {

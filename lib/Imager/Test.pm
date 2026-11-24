@@ -8,7 +8,7 @@ require Exporter;
 use Carp qw(croak carp);
 use Config;
 
-our $VERSION = "1.008";
+our $VERSION = "1.009";
 
 our @ISA = qw(Exporter);
 our @EXPORT_OK = 
@@ -43,6 +43,7 @@ our @EXPORT_OK =
      std_font_tests
      std_font_test_count
      std_image_tests
+     std_file_limit_tests
      );
 
 sub diff_text_with_nul {
@@ -1025,6 +1026,103 @@ sub std_image_tests {
   }
 }
 
+sub std_file_limit_tests {
+  my ($type, @filenames) = @_;
+
+  my $scanned = 0;
+  my $testimgs;
+  unless (@filenames) {
+    my $dh;
+    $testimgs = -d "testimg" ? "testimg" : "testimgs";
+    if (opendir $dh, $testimgs) {
+      @filenames =
+        grep {
+          my $fmt = Imager->probe_format(file => $_);
+          $fmt && $fmt eq $type
+        }
+        grep -f $_, map "$testimgs/$_", readdir $dh;
+      closedir $dh;
+    }
+    @filenames
+      or die "No filenames supplied, none with type $type found in $testimgs";
+    $scanned = 1;
+  }
+
+  my $usable = 0;
+  for my $filename (@filenames) {
+    my $im = Imager->new;
+    my $ok = $im->read(file => $filename, type => $type);
+    if (!$ok) {
+      $scanned
+        or die "Could not load $filename: ", Imager->errstr;
+      next;
+    }
+    ++$usable;
+    my $bits = $im->bits;
+    my $sample_size = $bits eq "double" ? length pack "d", 0.0 : $bits/8;
+    my $width = $im->getwidth();
+    my $height = $im->getheight();
+    my $total_bytes =  $width * $height * $im->getchannels() * $sample_size;
+
+    Imager->set_file_limits(bytes => $total_bytes - 1);
+
+    {
+      my $im_small = Imager->new;
+      ok(!$im_small->read(file => $filename, type => $type),
+         "$filename: fail to read too small byte limits");
+      like($im_small->errstr, qr/storage size/,
+           "$filename: check message for too small byte limit");
+    }
+    Imager->set_file_limits(bytes => $total_bytes);
+    {
+      my $im_ok = Imager->new;
+      ok($im_ok->read(file => $filename, type => $type),
+         "$filename: load with just right byte limits")
+        or diag "$filename just right byte limit ", $im_ok->errstr;
+    }
+    if ($width > 1) {
+      Imager->set_file_limits(reset => 1, width => $width - 1);
+      {
+        my $im_small = Imager->new;
+        ok(!$im_small->read(file => $filename, type => $type),
+           "$filename: fail to read too small width limits");
+        like($im_small->errstr, qr/image width/,
+             "$filename: check message for too small width limit");
+      }
+      Imager->set_file_limits(width => $width);
+      {
+        my $im_ok = Imager->new;
+        ok($im_ok->read(file => $filename, type => $type),
+           "$filename: load with just right width limits")
+          or diag "$filename just right width limit ", $im_ok->errstr;
+      }
+    }
+
+    if ($height > 1) {
+      Imager->set_file_limits(reset => 1, height => $height - 1);
+      {
+        my $im_small = Imager->new;
+        ok(!$im_small->read(file => $filename, type => $type),
+           "$filename: fail to read too small height limits");
+        like($im_small->errstr, qr/image heigh/,
+             "$filename: check message for too small height limit");
+      }
+      Imager->set_file_limits(height => $height);
+      {
+        my $im_ok = Imager->new;
+        ok($im_ok->read(file => $filename, type => $type),
+           "$filename: load with just right height limits")
+          or diag "$filename just right height limit ", $im_ok->errstr;
+      }
+    }
+
+    Imager->set_file_limits(reset => 1);
+  }
+  if ($usable == 0 && $scanned) {
+    die "None of the files found scanning $testimgs could be loaded";
+  }
+}
+
 package Imager::Test::OverUtf8;
 use overload '""' => sub { "A".chr(0x2010)."A" };
 
@@ -1187,6 +1285,15 @@ Perform standard font interface tests.
 =item std_font_test_count()
 
 The number of tests performed by std_font_tests().
+
+=item std_file_limit_tests($type, @filenames)
+
+Performs image limit boundary checks on each of the supplied
+filenames.
+
+If no files are supplied it will scan F<testimg> or F<testimgs> for
+files that have type matching C<$type> and can be loaded with
+the read method with C<type => $type>.
 
 =back
 

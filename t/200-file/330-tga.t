@@ -2,7 +2,7 @@
 use Imager qw(:all);
 use strict;
 use Test::More;
-use Imager::Test qw(is_color4 is_image test_image);
+use Imager::Test qw(is_color4 is_image test_image std_file_limit_tests);
 
 -d "testout" or mkdir "testout";
 
@@ -292,6 +292,8 @@ is($compressed, 1, "check compressed tag");
   #     by 0x1A7AA3: perl_run (perl.c:2810)
   #     by 0x154184: main (perlmain.c:127)
 }
+
+std_file_limit_tests("tga");
 
 done_testing();
 
