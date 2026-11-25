@@ -1062,6 +1062,9 @@ sub std_file_limit_tests {
     my $sample_size = $bits eq "double" ? length pack "d", 0.0 : $bits/8;
     my $width = $im->getwidth();
     my $height = $im->getheight();
+
+    # we count channels even for paletted images, since they get
+    # auto-converted so easily
     my $total_bytes =  $width * $height * $im->getchannels() * $sample_size;
 
     Imager->set_file_limits(bytes => $total_bytes - 1);
