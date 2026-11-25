@@ -4,6 +4,9 @@ Imager-File-TIFF 1.009
  - test with std_file_limit_tests()
  - use the correct channel count when checking limits for
    paletted image
+ - use the new file check image creation APIs (which obsoleted
+   the paletted image channel count fix)
+ - fix a crash if image creation failed for CMYK TIFF images
 
 Imager-File-TIFF 1.008
 ======================

@@ -488,7 +488,6 @@ static i_img *read_one_tiff(TIFF *tif, int allow_incomplete) {
   read_getter_t getterf = NULL;
   read_putter_t putterf = NULL;
   int channels = MAXCHANNELS;
-  size_t sample_size = ~0; /* force failure if some code doesn't set it */
   i_img_dim total_pixels;
   int samples_integral;
 
@@ -539,7 +538,6 @@ static i_img *read_one_tiff(TIFF *tif, int allow_incomplete) {
     else
       mm_log((1, "unsupported paletted bits_per_sample %d\n", bits_per_sample));
 
-    sample_size = sizeof(i_sample_t);
     channels = 3;
   }
   else if (bits_per_sample == 16 
@@ -548,7 +546,6 @@ static i_img *read_one_tiff(TIFF *tif, int allow_incomplete) {
 	   && samples_integral) {
     setupf = setup_16_rgb;
     putterf = putter_16;
-    sample_size = 2;
     rgb_channels(&state, &channels);
   }
   else if (bits_per_sample == 16
@@ -556,7 +553,6 @@ static i_img *read_one_tiff(TIFF *tif, int allow_incomplete) {
 	   && samples_integral) {
     setupf = setup_16_grey;
     putterf = putter_16;
-    sample_size = 2;
     grey_channels(&state, &channels);
   }
   else if (bits_per_sample == 8
@@ -564,7 +560,6 @@ static i_img *read_one_tiff(TIFF *tif, int allow_incomplete) {
 	   && samples_integral) {
     setupf = setup_8_grey;
     putterf = putter_8;
-    sample_size = 1;
     grey_channels(&state, &channels);
   }
   else if (bits_per_sample == 8
@@ -572,7 +567,6 @@ static i_img *read_one_tiff(TIFF *tif, int allow_incomplete) {
 	   && samples_integral) {
     setupf = setup_8_rgb;
     putterf = putter_8;
-    sample_size = 1;
     rgb_channels(&state, &channels);
   }
   else if (bits_per_sample == 32 
@@ -580,14 +574,12 @@ static i_img *read_one_tiff(TIFF *tif, int allow_incomplete) {
 	   && samples_per_pixel >= 3) {
     setupf = setup_32_rgb;
     putterf = putter_32;
-    sample_size = sizeof(i_fsample_t);
     rgb_channels(&state, &channels);
   }
   else if (bits_per_sample == 32
 	   && photometric == PHOTOMETRIC_MINISBLACK) {
     setupf = setup_32_grey;
     putterf = putter_32;
-    sample_size = sizeof(i_fsample_t);
     grey_channels(&state, &channels);
   }
   else if (bits_per_sample == 1
@@ -596,7 +588,6 @@ static i_img *read_one_tiff(TIFF *tif, int allow_incomplete) {
 	   && samples_per_pixel == 1) {
     setupf = setup_bilevel;
     putterf = putter_bilevel;
-    sample_size = sizeof(i_palidx);
     channels = 1;
   }
   else if (bits_per_sample == 8
@@ -606,7 +597,6 @@ static i_img *read_one_tiff(TIFF *tif, int allow_incomplete) {
 	   && samples_integral) {
     setupf = setup_cmyk8;
     putterf = putter_cmyk8;
-    sample_size = 1;
     cmyk_channels(&state, &channels);
   }
   else if (bits_per_sample == 16
@@ -616,17 +606,11 @@ static i_img *read_one_tiff(TIFF *tif, int allow_incomplete) {
 	   && samples_integral) {
     setupf = setup_cmyk16;
     putterf = putter_cmyk16;
-    sample_size = 2;
     cmyk_channels(&state, &channels);
   }
   else {
     int alpha;
     fallback_rgb_channels(tif, &channels, &alpha);
-    sample_size = 1;
-  }
-
-  if (!i_int_check_image_file_limits(width, height, channels, sample_size)) {
-    return NULL;
   }
 
   if (tiled) {
@@ -1808,7 +1792,7 @@ make_rgb(TIFF *tif, i_img_dim width, i_img_dim height, int *alpha_chan) {
 
   fallback_rgb_channels(tif, &channels, alpha_chan);
 
-  return i_img_8_new(width, height, channels);
+  return i_img_8_file_new(width, height, channels);
 }
 
 static i_img *
@@ -2026,7 +2010,7 @@ setup_paletted(read_state_t *state) {
   int i, ch;
   int color_count = 1 << state->bits_per_sample;
 
-  state->img = i_img_pal_new(state->width, state->height, 3, 256);
+  state->img = i_img_pal_file_new(state->width, state->height, 3);
   if (!state->img)
     return 0;
 
@@ -2255,7 +2239,7 @@ setup_16_rgb(read_state_t *state) {
 
   rgb_channels(state, &out_channels);
 
-  state->img = i_img_16_new(state->width, state->height, out_channels);
+  state->img = i_img_16_file_new(state->width, state->height, out_channels);
   if (!state->img)
     return 0;
   state->line_buf = mymalloc(sizeof(unsigned) * state->width * out_channels);
@@ -2269,7 +2253,7 @@ setup_16_grey(read_state_t *state) {
 
   grey_channels(state, &out_channels);
 
-  state->img = i_img_16_new(state->width, state->height, out_channels);
+  state->img = i_img_16_file_new(state->width, state->height, out_channels);
   if (!state->img)
     return 0;
   state->line_buf = mymalloc(sizeof(unsigned) * state->width * out_channels);
@@ -2323,7 +2307,7 @@ setup_8_rgb(read_state_t *state) {
 
   rgb_channels(state, &out_channels);
 
-  state->img = i_img_8_new(state->width, state->height, out_channels);
+  state->img = i_img_8_file_new(state->width, state->height, out_channels);
   if (!state->img)
     return 0;
   state->line_buf = mymalloc(sizeof(unsigned) * state->width * out_channels);
@@ -2337,7 +2321,7 @@ setup_8_grey(read_state_t *state) {
 
   grey_channels(state, &out_channels);
 
-  state->img = i_img_8_new(state->width, state->height, out_channels);
+  state->img = i_img_8_file_new(state->width, state->height, out_channels);
   if (!state->img)
     return 0;
   state->line_buf = mymalloc(sizeof(i_color) * state->width * out_channels);
@@ -2393,7 +2377,7 @@ setup_32_rgb(read_state_t *state) {
 
   rgb_channels(state, &out_channels);
 
-  state->img = i_img_double_new(state->width, state->height, out_channels);
+  state->img = i_img_double_file_new(state->width, state->height, out_channels);
   if (!state->img)
     return 0;
   state->line_buf = mymalloc(sizeof(i_fcolor) * state->width);
@@ -2407,7 +2391,7 @@ setup_32_grey(read_state_t *state) {
 
   grey_channels(state, &out_channels);
 
-  state->img = i_img_double_new(state->width, state->height, out_channels);
+  state->img = i_img_double_file_new(state->width, state->height, out_channels);
   if (!state->img)
     return 0;
   state->line_buf = mymalloc(sizeof(i_fcolor) * state->width);
@@ -2468,7 +2452,7 @@ putter_32(read_state_t *state, i_img_dim x, i_img_dim y, i_img_dim width, i_img_
 static int
 setup_bilevel(read_state_t *state) {
   i_color black, white;
-  state->img = i_img_pal_new(state->width, state->height, 1, 256);
+  state->img = i_img_pal_file_new(state->width, state->height, 1);
   if (!state->img)
     return 0;
   black.channel[0] = black.channel[1] = black.channel[2] = 
@@ -2572,7 +2556,9 @@ setup_cmyk8(read_state_t *state) {
   int channels;
 
   cmyk_channels(state, &channels);
-  state->img = i_img_8_new(state->width, state->height, channels);
+  state->img = i_img_8_file_new(state->width, state->height, channels);
+  if (!state->img)
+    return 0;
 
   state->line_buf = mymalloc(sizeof(i_color) * state->width);
 
@@ -2634,7 +2620,9 @@ setup_cmyk16(read_state_t *state) {
   int channels;
 
   cmyk_channels(state, &channels);
-  state->img = i_img_16_new(state->width, state->height, channels);
+  state->img = i_img_16_file_new(state->width, state->height, channels);
+  if (!state->img)
+    return 0;
 
   state->line_buf = mymalloc(sizeof(unsigned) * state->width * channels);
 
