@@ -540,7 +540,7 @@ static i_img *read_one_tiff(TIFF *tif, int allow_incomplete) {
       mm_log((1, "unsupported paletted bits_per_sample %d\n", bits_per_sample));
 
     sample_size = sizeof(i_sample_t);
-    channels = 1;
+    channels = 3;
   }
   else if (bits_per_sample == 16 
 	   && photometric == PHOTOMETRIC_RGB

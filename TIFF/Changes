@@ -1,3 +1,10 @@
+Imager-File-TIFF 1.009
+======================
+
+ - test with std_file_limit_tests()
+ - use the correct channel count when checking limits for
+   paletted image
+
 Imager-File-TIFF 1.008
 ======================
 

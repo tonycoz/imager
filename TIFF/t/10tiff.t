@@ -2,7 +2,8 @@
 use strict;
 use Test::More;
 use Imager qw(:all);
-use Imager::Test qw(is_image is_image_similar test_image test_image_16 test_image_double test_image_raw);
+use Imager::Test qw(is_image is_image_similar test_image test_image_16
+                    test_image_double test_image_raw std_file_limit_tests);
 
 BEGIN { use_ok("Imager::File::TIFF"); }
 
@@ -906,5 +907,7 @@ SKIP:
   is($im2->tags(name => "tiff_compression"), "deflate",
      "got expected compression");
 }
+
+std_file_limit_tests("tiff");
 
 done_testing();
