@@ -4,17 +4,27 @@ Imager release history.  Older releases can be found in Changes.old
    if you don't supply a format.
  - add std_file_limit_tests() to Imager::Test for more complete
    testing of file limit checks.
-   PNG/TGA/BMP: test with std_file_limit_tests().
+ - add extra logging to file limit checks
 
- - BMP: use the new file check image creation APIs
+ - BMP:
+   - use the new file check image creation APIs
+   - test with std_file_limit_tests().
 
- - TGA: use the new file check image creation APIs
+ - TGA:
+  - use the new file check image creation APIs
+   - test with std_file_limit_tests().
 
- - PNG: test with std_file_limit_tests()
+ - PNG:
+   - test with std_file_limit_tests()
 
  - JPEG:
    - use the new file check image creation APIs
    - test with std_file_limit_tests().
+
+ - GIF:
+   - use the new file check image creation APIs
+   - test with std_file_limit_tests().
+   - fix error reporting when failing to read with gif_consolidate
 
  - TIFF:
    - test with std_file_limit_tests().

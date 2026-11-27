@@ -82,6 +82,9 @@ im_set_image_file_limits(pIMCTX, i_img_dim width, i_img_dim height, size_t bytes
   aIMCTX->max_height = height;
   aIMCTX->max_bytes = bytes ? bytes : DEF_BYTES_LIMIT;
 
+  im_log((aIMCTX, 1, "set_image_file_limits(%" i_DF " x %" i_DF ", %zu)\n",
+          i_DFc(width), i_DFc(height), aIMCTX->max_bytes));
+
   return 1;
 }
 
@@ -148,57 +151,64 @@ int
 im_int_check_image_file_limits(pIMCTX, i_img_dim width, i_img_dim height, int channels, size_t sample_size) {
   size_t bytes;
   im_clear_error(aIMCTX);
+
+  im_log((aIMCTX, 1, "check_image_file_limits(%" i_DF " x %" i_DF " x %d x %u)\n",
+          i_DFc(width), i_DFc(height), channels, (unsigned)sample_size));
   
   if (width <= 0) {
     im_push_errorf(aIMCTX, 0, "file size limit - image width of %" i_DF " is not positive",
 		  i_DFc(width));
+    im_log((aIMCTX, 1, "check_image_file_limits -> negative width\n"));
     return 0;
   }
   if (aIMCTX->max_width && width > aIMCTX->max_width) {
     im_push_errorf(aIMCTX, 0, "file size limit - image width of %" i_DF " exceeds limit of %" i_DF,
 		  i_DFc(width), i_DFc(aIMCTX->max_width));
+    im_log((aIMCTX, 1, "check_image_file_limits -> width exceeds limit\n"));
     return 0;
   }
 
   if (height <= 0) {
     im_push_errorf(aIMCTX, 0, "file size limit - image height of %" i_DF " is not positive",
 		  i_DFc(height));
+    im_log((aIMCTX, 1, "check_image_file_limits -> negative height\n"));
     return 0;
   }
 
   if (aIMCTX->max_height && height > aIMCTX->max_height) {
     im_push_errorf(aIMCTX, 0, "file size limit - image height of %" i_DF
 		  " exceeds limit of %" i_DF, i_DFc(height), i_DFc(aIMCTX->max_height));
+    im_log((aIMCTX, 1, "check_image_file_limits -> height exceeds limit\n"));
     return 0;
   }
 
   if (channels < 1 || channels > MAXCHANNELS) {
     im_push_errorf(aIMCTX, 0, "file size limit - channels %d out of range",
 		  channels);
+    im_log((aIMCTX, 1, "check_image_file_limits -> channels out of range\n"));
     return 0;
   }
   
   if (sample_size < 1 || sample_size > sizeof(long double)) {
     im_push_errorf(aIMCTX, 0, "file size limit - sample_size %ld out of range",
 		  (long)sample_size);
+    im_log((aIMCTX, 1, "check_image_file_limits -> sample_size out of range\n"));
     return 0;
   }
 
-  /* This overflow check is a bit more paranoid than usual.
-     We don't protect it under max_bytes since we always want to check 
-     for overflow.
-  */
-  bytes = width * height * channels * sample_size;
-  if (bytes / width != height * channels * sample_size
-      || bytes / height != width * channels * sample_size) {
+  if (im_mult_overflow4(&bytes, width, height, channels, sample_size)) {
     im_push_error(aIMCTX, 0, "file size limit - integer overflow calculating storage");
+    im_log((aIMCTX, 1, "check_image_file_limits -> overflow calculating bytes\n"));
     return 0;
   }
   if (aIMCTX->max_bytes) {
     if (bytes > aIMCTX->max_bytes) {
-      im_push_errorf(aIMCTX, 0, "file size limit - storage size of %lu "
-		    "exceeds limit of %lu", (unsigned long)bytes,
-		    (unsigned long)aIMCTX->max_bytes);
+      im_push_errorf(aIMCTX, 0, "file size limit - storage size of %zu "
+		    "exceeds limit of %zu", bytes,
+		    aIMCTX->max_bytes);
+      im_log((aIMCTX, 1, "check_image_file_limits -> storage size %zu "
+              "exceeds limit of %zu\n",
+              bytes, aIMCTX->max_bytes));
       return 0;
     }
   }

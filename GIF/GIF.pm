@@ -4,7 +4,7 @@ use strict;
 use Imager;
 
 BEGIN {
-  our $VERSION = "1.006";
+  our $VERSION = "1.007";
 
   require XSLoader;
   XSLoader::load('Imager::File::GIF', $VERSION);
@@ -27,6 +27,10 @@ Imager->register_reader
        }
        else {
 	 $im->{IMG} =i_readgif_wiol( $io );
+       }
+       unless ($im->{IMG}) {
+	 $im->_set_error(Imager->_error_as_msg);
+	 return;
        }
      }
      else {

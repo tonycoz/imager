@@ -1029,6 +1029,16 @@ sub std_image_tests {
 sub std_file_limit_tests {
   my ($type, @filenames) = @_;
 
+  my %opts = (
+    read_options => [],
+   );
+  if (ref $type) {
+    %opts = ( %opts, %$type );
+    $type = $opts{type};
+  }
+  my @read_options = @{$opts{read_options}};
+  my $prefix = $opts{name} ? "$opts{name}: " : "";
+
   my $scanned = 0;
   my $testimgs;
   unless (@filenames) {
@@ -1044,17 +1054,17 @@ sub std_file_limit_tests {
       closedir $dh;
     }
     @filenames
-      or die "No filenames supplied, none with type $type found in $testimgs";
+      or die "${prefix}No filenames supplied, none with type $type found in $testimgs";
     $scanned = 1;
   }
 
   my $usable = 0;
   for my $filename (@filenames) {
     my $im = Imager->new;
-    my $ok = $im->read(file => $filename, type => $type);
+    my $ok = $im->read(file => $filename, type => $type, @read_options);
     if (!$ok) {
       $scanned
-        or die "Could not load $filename: ", Imager->errstr;
+        or die "${prefix}Could not load $filename: ", Imager->errstr;
       next;
     }
     ++$usable;
@@ -1062,42 +1072,46 @@ sub std_file_limit_tests {
     my $sample_size = $bits eq "double" ? length pack "d", 0.0 : $bits/8;
     my $width = $im->getwidth();
     my $height = $im->getheight();
+    my $channels = $im->getchannels();
 
     # we count channels even for paletted images, since they get
     # auto-converted so easily
-    my $total_bytes =  $width * $height * $im->getchannels() * $sample_size;
+    my $just_right =  $width * $height * $channels * $sample_size;
+    my $too_small = $just_right -1;
+    note "${prefix}$filename: $width x $height x $channels x $sample_size";
+    note "just right: $just_right  too small: $too_small";
 
-    Imager->set_file_limits(bytes => $total_bytes - 1);
+    Imager->set_file_limits(bytes => $too_small);
 
     {
       my $im_small = Imager->new;
-      ok(!$im_small->read(file => $filename, type => $type),
-         "$filename: fail to read too small byte limits");
+      ok(!$im_small->read(file => $filename, type => $type, @read_options),
+         "${prefix}$filename: fail to read too small byte limits");
       like($im_small->errstr, qr/storage size/,
-           "$filename: check message for too small byte limit");
+           "${prefix}$filename: check message for too small byte limit");
     }
-    Imager->set_file_limits(bytes => $total_bytes);
+    Imager->set_file_limits(bytes => $just_right);
     {
       my $im_ok = Imager->new;
-      ok($im_ok->read(file => $filename, type => $type),
-         "$filename: load with just right byte limits")
-        or diag "$filename just right byte limit ", $im_ok->errstr;
+      ok($im_ok->read(file => $filename, type => $type, @read_options),
+         "${prefix}$filename: load with just right byte limits")
+        or diag "${prefix}$filename just right byte limit ", $im_ok->errstr;
     }
     if ($width > 1) {
       Imager->set_file_limits(reset => 1, width => $width - 1);
       {
         my $im_small = Imager->new;
-        ok(!$im_small->read(file => $filename, type => $type),
-           "$filename: fail to read too small width limits");
+        ok(!$im_small->read(file => $filename, type => $type, @read_options),
+           "${prefix}$filename: fail to read too small width limits");
         like($im_small->errstr, qr/image width/,
-             "$filename: check message for too small width limit");
+             "${prefix}$filename: check message for too small width limit");
       }
       Imager->set_file_limits(width => $width);
       {
         my $im_ok = Imager->new;
-        ok($im_ok->read(file => $filename, type => $type),
-           "$filename: load with just right width limits")
-          or diag "$filename just right width limit ", $im_ok->errstr;
+        ok($im_ok->read(file => $filename, type => $type, @read_options),
+           "${prefix}$filename: load with just right width limits")
+          or diag "${prefix}$filename just right width limit ", $im_ok->errstr;
       }
     }
 
@@ -1105,24 +1119,24 @@ sub std_file_limit_tests {
       Imager->set_file_limits(reset => 1, height => $height - 1);
       {
         my $im_small = Imager->new;
-        ok(!$im_small->read(file => $filename, type => $type),
-           "$filename: fail to read too small height limits");
-        like($im_small->errstr, qr/image heigh/,
-             "$filename: check message for too small height limit");
+        ok(!$im_small->read(file => $filename, type => $type, @read_options),
+           "${prefix}$filename: fail to read too small height limits");
+        like($im_small->errstr, qr/image height/,
+             "${prefix}$filename: check message for too small height limit");
       }
       Imager->set_file_limits(height => $height);
       {
         my $im_ok = Imager->new;
-        ok($im_ok->read(file => $filename, type => $type),
-           "$filename: load with just right height limits")
-          or diag "$filename just right height limit ", $im_ok->errstr;
+        ok($im_ok->read(file => $filename, type => $type, @read_options),
+           "${prefix}$filename: load with just right height limits")
+          or diag "${prefix}$filename just right height limit ", $im_ok->errstr;
       }
     }
 
     Imager->set_file_limits(reset => 1);
   }
   if ($usable == 0 && $scanned) {
-    die "None of the files found scanning $testimgs could be loaded";
+    die "${prefix}None of the files found scanning $testimgs could be loaded";
   }
 }
 
@@ -1297,6 +1311,33 @@ filenames.
 If no files are supplied it will scan F<testimg> or F<testimgs> for
 files that have type matching C<$type> and can be loaded with
 the read method with C<type => $type>.
+
+Typically C<$type> is just a file type, such as C<"gif">, but you can
+supply a hash reference with the following keys:
+
+=over
+
+=item *
+
+C<type> - the image type code.
+
+=item *
+
+C<read_options> - an array reference of extra options to supply to
+read().  Defaults to an empty array.  For example, GIF uses this set
+to C<< [ gif_consolidate => 1 ] >> to test the consolidated reader.
+
+=item *
+
+C<name> - if non-empty, text to prefix to test names, as in C<ok($ok,
+$name)> to distinguish different sets of tests.
+
+=back
+
+  std_file_limit_tests("gif");
+  std_file_limit_tests({ type => "gif",
+                         name => "consolidate",
+                         read_options => [ gif_consolidate => 1 ] });
 
 =back
 

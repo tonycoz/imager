@@ -4,7 +4,8 @@ use strict;
 $|=1;
 use Test::More;
 use Imager qw(:all);
-use Imager::Test qw(is_color3 test_image test_image_raw test_image_mono);
+use Imager::Test qw(is_color3 test_image test_image_raw test_image_mono
+                    std_file_limit_tests);
 use Imager::File::GIF;
 
 use Carp 'confess';
@@ -13,8 +14,6 @@ $SIG{__DIE__} = sub { confess @_ };
 -d "testout" or mkdir "testout";
 
 init_log("testout/t105gif.log",1);
-
-plan tests => 149;
 
 my $green=i_color_new(0,255,0,255);
 my $blue=i_color_new(0,0,255,255);
@@ -769,6 +768,13 @@ $im->read(file => "testimg/v4hp-5h6w-9897-i.gif",
           gif_consolidate => 1);
 print "ok # v4hp-5h6w-9897-i\n";
 CODE
+
+std_file_limit_tests("gif");
+std_file_limit_tests({ type => "gif",
+                       name => "consolidate",
+                       read_options => [ gif_consolidate => 1 ] });
+
+done_testing();
 
 Imager->close_log;
 

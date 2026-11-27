@@ -243,17 +243,7 @@ i_readgif_low(GifFileType *GifFile, int **colour_table, int *colours) {
     cmapcnt++;
   }
   
-  if (!i_int_check_image_file_limits(GifFile->SWidth, GifFile->SHeight, 3, sizeof(i_sample_t))) {
-    if (colour_table && *colour_table) {
-      myfree(*colour_table);
-      *colour_table = NULL;
-    }
-    (void)myDGifCloseFile(GifFile, NULL);
-    mm_log((1, "i_readgif: image size exceeds limits\n"));
-    return NULL;
-  }
-
-  im = i_img_8_new(GifFile->SWidth, GifFile->SHeight, 3);
+  im = i_img_8_file_new(GifFile->SWidth, GifFile->SHeight, 3);
   if (!im) {
     if (colour_table && *colour_table) {
       myfree(*colour_table);
@@ -653,16 +643,7 @@ i_readgif_multi_low(GifFileType *GifFile, int *count, int page) {
 	channels = 3;
 	if (got_gce && trans_index >= 0)
 	  channels = 4;
-	if (!i_int_check_image_file_limits(Width, Height, channels, sizeof(i_sample_t))) {
-	  free_images(results, *count);
-	  mm_log((1, "i_readgif: image size exceeds limits\n"));
-	  (void)myDGifCloseFile(GifFile, NULL);
-	  myfree(GifRow);
-	  if (comment)
-	    myfree(comment);
-	  return NULL;
-	}
-	img = i_img_pal_new(Width, Height, channels, 256);
+	img = i_img_pal_file_new(Width, Height, channels);
 	if (!img) {
 	  free_images(results, *count);
 	  (void)myDGifCloseFile(GifFile, NULL);
