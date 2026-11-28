@@ -12,22 +12,22 @@ Imager release history.  Older releases can be found in Changes.old
      or 10th page)
  - add extra logging to file limit checks
 
+ - BMP/PNM/TGA/JPEG:
+   - only succeed reading page zero.  Previously these would ignore
+     the "page" parameter.
+
  - BMP:
    - use the new file check image creation APIs
    - test with std_file_limit_tests().
-   - only succeed reading page zero
-
- - PNM:
-   - only succeed reading page zero
 
  - TGA:
    - use the new file check image creation APIs
    - test with std_file_limit_tests().
-   - only succeed reading page zero
 
  - PNG:
    - test with std_file_limit_tests()
-   - only succeed reading page zero (for now)
+   - only succeed reading page zero (for now, APNG support will happen
+     eventually)
 
  - ICO:
    - test with std_file_limit_tests()
@@ -36,7 +36,6 @@ Imager release history.  Older releases can be found in Changes.old
  - JPEG:
    - use the new file check image creation APIs
    - test with std_file_limit_tests().
-   - only succeed reading page zero
 
  - GIF:
    - use the new file check image creation APIs
