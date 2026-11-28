@@ -16,35 +16,22 @@ Imager release history.  Older releases can be found in Changes.old
    - only succeed reading page zero.  Previously these would ignore
      the "page" parameter.
 
- - BMP:
-   - use the new file check image creation APIs
-   - test with std_file_limit_tests().
+ - BMP/TGA/ICO/JPEG/GIF/ICO:
+   - use the new file check image creation APIs.
+     PNM and PNG already use them.
 
- - TGA:
-   - use the new file check image creation APIs
+ - BMP/TGA/PNG/ICO/JPEG/GIF/TIFF:
    - test with std_file_limit_tests().
 
  - PNG:
-   - test with std_file_limit_tests()
    - only succeed reading page zero (for now, APNG support will happen
      eventually)
 
- - ICO:
-   - test with std_file_limit_tests()
-   - use the new file check image creation APIs
-
- - JPEG:
-   - use the new file check image creation APIs
-   - test with std_file_limit_tests().
-
  - GIF:
-   - use the new file check image creation APIs
-   - test with std_file_limit_tests().
    - fix error reporting when failing to read with gif_consolidate
    - only succeed reading page zero with gif_consolidate
 
  - TIFF:
-   - test with std_file_limit_tests().
    - use the correct channel count when checking limits for
      paletted image
    - use the new file check image creation APIs (which obsoleted
