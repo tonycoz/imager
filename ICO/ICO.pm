@@ -4,7 +4,7 @@ use strict;
 use Imager;
 
 BEGIN {
-  our $VERSION = "0.10";
+  our $VERSION = "0.11";
   
   require XSLoader;
   XSLoader::load('Imager::File::ICO', $VERSION);

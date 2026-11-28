@@ -48,13 +48,7 @@ read_one_icon(ico_reader_t *file, int index, int masked, int alpha_masked) {
     ico_color_t *inp = image->image_data;
     int channels = masked || image->bit_count == 32 ? 4 : 3;
 
-    if (!i_int_check_image_file_limits(image->width, image->height, channels, 1)) {
-      ico_image_release(image);
-      return NULL;
-    }
-
-    
-    result = i_img_8_new(image->width, image->height, channels);
+    result = i_img_8_file_new(image->width, image->height, channels);
     if (!result) {
       ico_image_release(image);
       return NULL;
@@ -83,12 +77,7 @@ read_one_icon(ico_reader_t *file, int index, int masked, int alpha_masked) {
     unsigned char *image_data;
     int channels = masked ? 4 : 3;
 
-    if (!i_int_check_image_file_limits(image->width, image->height, channels, 1)) {
-      ico_image_release(image);
-      return NULL;
-    }
-
-    result = i_img_pal_new(image->width, image->height, channels, 256);
+    result = i_img_pal_file_new(image->width, image->height, channels);
     if (!result) {
       ico_image_release(image);
       return NULL;

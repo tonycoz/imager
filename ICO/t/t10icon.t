@@ -1,7 +1,7 @@
 #!perl -w
 use strict;
-use Test::More tests => 111;
-use Imager::Test qw(is_image isnt_image test_image);
+use Test::More;
+use Imager::Test qw(is_image isnt_image test_image std_file_limit_tests);
 
 BEGIN { use_ok('Imager::File::ICO'); }
 
@@ -438,3 +438,8 @@ EOS
   $cmp->setpixel(x => 0, y => 0, color => [ 255, 0, 0, 0 ]);
   isnt_image($im3, $cmp, "bad mask makes some pixels transparent");
 }
+
+std_file_limit_tests("ico");
+std_file_limit_tests("cur");
+
+done_testing();
