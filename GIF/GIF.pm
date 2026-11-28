@@ -17,7 +17,13 @@ Imager->register_reader
    sub { 
      my ($im, $io, %hsh) = @_;
 
+     my $page = $hsh{page};
+     defined $page or $page = 0;
      if ($hsh{gif_consolidate}) {
+       if ($page != 0) {
+         $im->_set_error("Only page 0 for gif_consolidate");
+         return;
+       }
        if ($hsh{colors}) {
 	 my $colors;
 	 ($im->{IMG}, $colors) =i_readgif_wiol( $io );
@@ -34,8 +40,6 @@ Imager->register_reader
        }
      }
      else {
-       my $page = $hsh{page};
-       defined $page or $page = 0;
        $im->{IMG} = i_readgif_single_wiol($io, $page);
 
        unless ($im->{IMG}) {

@@ -2,29 +2,42 @@ Imager release history.  Older releases can be found in Changes.old
 
  - add probe_format() method - probe a file's format, like read() does
    if you don't supply a format.
+
  - add std_file_limit_tests() to Imager::Test for more complete
    testing of file limit checks.
+   - tests byte / width / height limits for each page in each file
+     specified or readable files found in testimg(s)
+   - ensures page is honoured on read, by checking some file has less
+     than the maximum number of pages checked (page 9 or 10th page)
  - add extra logging to file limit checks
 
  - BMP:
    - use the new file check image creation APIs
    - test with std_file_limit_tests().
+   - only succeed reading page zero
+
+ - PNM:
+   - only succeed reading page zero
 
  - TGA:
-  - use the new file check image creation APIs
+   - use the new file check image creation APIs
    - test with std_file_limit_tests().
+   - only succeed reading page zero
 
  - PNG:
    - test with std_file_limit_tests()
+   - only succeed reading page zero (for now)
 
  - JPEG:
    - use the new file check image creation APIs
    - test with std_file_limit_tests().
+   - only succeed reading page zero
 
  - GIF:
    - use the new file check image creation APIs
    - test with std_file_limit_tests().
    - fix error reporting when failing to read with gif_consolidate
+   - only succeed reading page zero with gif_consolidate
 
  - TIFF:
    - test with std_file_limit_tests().

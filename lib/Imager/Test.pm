@@ -1026,11 +1026,14 @@ sub std_image_tests {
   }
 }
 
+use constant MAX_FILE_PAGE => 9;
+
 sub std_file_limit_tests {
   my ($type, @filenames) = @_;
 
   my %opts = (
     read_options => [],
+    pages => 1,
    );
   if (ref $type) {
     %opts = ( %opts, %$type );
@@ -1038,6 +1041,7 @@ sub std_file_limit_tests {
   }
   my @read_options = @{$opts{read_options}};
   my $prefix = $opts{name} ? "$opts{name}: " : "";
+  my $max_page = $opts{pages} ? MAX_FILE_PAGE : 0;
 
   my $scanned = 0;
   my $testimgs;
@@ -1059,84 +1063,115 @@ sub std_file_limit_tests {
   }
 
   my $usable = 0;
+  my $min_max_page_seen = MAX_FILE_PAGE;
+ FILE:
   for my $filename (@filenames) {
-    my $im = Imager->new;
-    my $ok = $im->read(file => $filename, type => $type, @read_options);
-    if (!$ok) {
-      $scanned
-        or die "${prefix}Could not load $filename: ", Imager->errstr;
-      next;
-    }
-    ++$usable;
-    my $bits = $im->bits;
-    my $sample_size = $bits eq "double" ? length pack "d", 0.0 : $bits/8;
-    my $width = $im->getwidth();
-    my $height = $im->getheight();
-    my $channels = $im->getchannels();
+    my $max_page_seen;
+  PAGE:
+    for my $page (0 .. $max_page) {
+      my $im = Imager->new;
+      my @page = $opts{pages} ? ( page => $page ) : ();
+      my $ok = $im->read(file => $filename, type => $type,
+                         @page, @read_options);
+      #diag "$filename:@page $ok\n";
+      if (!$ok) {
+        if ($page) {
+          # read at least one page
+          last PAGE;
+        }
+        $scanned
+          or die "${prefix}Could not load $filename: ", Imager->errstr;
+        next;
+      }
+      $max_page_seen = $page;
+      ++$usable;
+      my $bits = $im->bits;
+      my $sample_size = $bits eq "double" ? length pack "d", 0.0 : $bits/8;
+      my $width = $im->getwidth();
+      my $height = $im->getheight();
+      my $channels = $im->getchannels();
 
-    # we count channels even for paletted images, since they get
-    # auto-converted so easily
-    my $just_right =  $width * $height * $channels * $sample_size;
-    my $too_small = $just_right -1;
-    note "${prefix}$filename: $width x $height x $channels x $sample_size";
-    note "just right: $just_right  too small: $too_small";
+      # we count channels even for paletted images, since they get
+      # auto-converted so easily
+      my $just_right =  $width * $height * $channels * $sample_size;
+      my $too_small = $just_right -1;
+      note "${prefix}$filename:$page: $width x $height x $channels x $sample_size";
+      note "just right: $just_right  too small: $too_small";
 
-    Imager->set_file_limits(bytes => $too_small);
+      Imager->set_file_limits(bytes => $too_small);
 
-    {
-      my $im_small = Imager->new;
-      ok(!$im_small->read(file => $filename, type => $type, @read_options),
-         "${prefix}$filename: fail to read too small byte limits");
-      like($im_small->errstr, qr/storage size/,
-           "${prefix}$filename: check message for too small byte limit");
-    }
-    Imager->set_file_limits(bytes => $just_right);
-    {
-      my $im_ok = Imager->new;
-      ok($im_ok->read(file => $filename, type => $type, @read_options),
-         "${prefix}$filename: load with just right byte limits")
-        or diag "${prefix}$filename just right byte limit ", $im_ok->errstr;
-    }
-    if ($width > 1) {
-      Imager->set_file_limits(reset => 1, width => $width - 1);
       {
         my $im_small = Imager->new;
-        ok(!$im_small->read(file => $filename, type => $type, @read_options),
-           "${prefix}$filename: fail to read too small width limits");
-        like($im_small->errstr, qr/image width/,
-             "${prefix}$filename: check message for too small width limit");
+        ok(!$im_small->read(file => $filename, type => $type,
+                            @page, @read_options),
+           "${prefix}$filename:$page: fail to read too small byte limits");
+        like($im_small->errstr, qr/storage size/,
+             "${prefix}$filename:$page: check message for too small byte limit");
       }
-      Imager->set_file_limits(width => $width);
+      Imager->set_file_limits(bytes => $just_right);
       {
         my $im_ok = Imager->new;
-        ok($im_ok->read(file => $filename, type => $type, @read_options),
-           "${prefix}$filename: load with just right width limits")
-          or diag "${prefix}$filename just right width limit ", $im_ok->errstr;
+        ok($im_ok->read(file => $filename, type => $type,
+                        @page, @read_options),
+           "${prefix}$filename:$page: load with just right byte limits")
+          or diag "${prefix}$filename:$page: just right byte limit ", $im_ok->errstr;
       }
-    }
+      if ($width > 1) {
+        Imager->set_file_limits(reset => 1, width => $width - 1);
+        {
+          my $im_small = Imager->new;
+          ok(!$im_small->read(file => $filename, type => $type,
+                              @page, @read_options),
+             "${prefix}$filename:$page: fail to read too small width limits");
+          like($im_small->errstr, qr/image width/,
+               "${prefix}$filename:$page: check message for too small width limit");
+        }
+        Imager->set_file_limits(width => $width);
+        {
+          my $im_ok = Imager->new;
+          ok($im_ok->read(file => $filename, type => $type,
+                          @page, @read_options),
+             "${prefix}$filename:$page: load with just right width limits")
+            or diag "${prefix}$filename:$page: just right width limit ", $im_ok->errstr;
+        }
+      }
 
-    if ($height > 1) {
-      Imager->set_file_limits(reset => 1, height => $height - 1);
-      {
-        my $im_small = Imager->new;
-        ok(!$im_small->read(file => $filename, type => $type, @read_options),
-           "${prefix}$filename: fail to read too small height limits");
-        like($im_small->errstr, qr/image height/,
-             "${prefix}$filename: check message for too small height limit");
+      if ($height > 1) {
+        Imager->set_file_limits(reset => 1, height => $height - 1);
+        {
+          my $im_small = Imager->new;
+          ok(!$im_small->read(file => $filename, type => $type,
+                              @page, @read_options),
+             "${prefix}$filename:$page: fail to read too small height limits");
+          like($im_small->errstr, qr/image height/,
+               "${prefix}$filename:$page: check message for too small height limit");
+        }
+        Imager->set_file_limits(height => $height);
+        {
+          my $im_ok = Imager->new;
+          ok($im_ok->read(file => $filename, type => $type,
+                          @page, @read_options),
+             "${prefix}$filename:$page: load with just right height limits")
+            or diag "${prefix}$filename:$page: just right height limit ", $im_ok->errstr;
+        }
       }
-      Imager->set_file_limits(height => $height);
-      {
-        my $im_ok = Imager->new;
-        ok($im_ok->read(file => $filename, type => $type, @read_options),
-           "${prefix}$filename: load with just right height limits")
-          or diag "${prefix}$filename just right height limit ", $im_ok->errstr;
-      }
-    }
 
-    Imager->set_file_limits(reset => 1);
+      Imager->set_file_limits(reset => 1);
+    }
+    if (defined $max_page_seen && $max_page_seen < $min_max_page_seen) {
+      $min_max_page_seen = $max_page_seen;
+    }
   }
   if ($usable == 0 && $scanned) {
     die "${prefix}None of the files found scanning $testimgs could be loaded";
+  }
+  if ($min_max_page_seen == MAX_FILE_PAGE) {
+    # I assume not every test file has at least MAX_FILE_PAGE pages,
+    # there's almost always going to be single image files.
+    #
+    # So if all of the files have maximum pages page is likely being
+    # ignored.
+    die "$type: ${prefix}Looks like all files have MAX_FILE_PAGE images, or page is being ignored\n";
   }
 }
 
@@ -1331,6 +1366,11 @@ to C<< [ gif_consolidate => 1 ] >> to test the consolidated reader.
 
 C<name> - if non-empty, text to prefix to test names, as in C<ok($ok,
 $name)> to distinguish different sets of tests.
+
+=item *
+
+C<pages> - if supplied and false, disable testing each image in a
+multi-image file, using the C<page> parameter.
 
 =back
 

@@ -1694,6 +1694,15 @@ sub read {
   my $allow_incomplete = $input{allow_incomplete};
   defined $allow_incomplete or $allow_incomplete = 0;
 
+  my $page = $input{page};
+  defined $page or $page = 0;
+
+  if ($page != 0) {
+    # PNM will support more, at some point
+    $self->{ERRSTR} = "Only page 0 supported for $type";
+    return;
+  }
+  
   if ( $type eq 'pnm' ) {
     $self->{IMG}=i_readpnm_wiol( $IO, $allow_incomplete );
     if ( !defined($self->{IMG}) ) {

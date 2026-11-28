@@ -14,6 +14,12 @@ sub read {
   my ($class, $im, $io, %hsh) = @_;
 
   my $flags = 0;
+  my $page = $hsh{page};
+  defined $page or $page = 0;
+  if ($page != 0) {
+    $im->_set_error("Only page 0 supported for PNG");
+    return;
+  }
   $hsh{png_ignore_benign_errors}
     and $flags |= IMPNG_READ_IGNORE_BENIGN_ERRORS;
   $im->{IMG} = i_readpng_wiol($io, $flags);

@@ -17,6 +17,12 @@ Imager->register_reader
    sub { 
      my ($im, $io, %hsh) = @_;
 
+     my $page = $hsh{page};
+     if (defined $page && $page != 0) {
+       $im->_set_error("Only page 0 is available for JPEG");
+       return;
+     }
+
      ($im->{IMG},$im->{IPTCRAW}) = i_readjpeg_wiol( $io );
 
      unless ($im->{IMG}) {

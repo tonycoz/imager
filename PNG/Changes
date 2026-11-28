@@ -3,6 +3,7 @@ Imager-File-PNG 1.006
 =====================
 
  - test with std_file_limit_tests()
+ - only succeed reading page zero (for now)
 
 =====================
 Imager-File-PNG 1.006

@@ -1,7 +1,9 @@
 Imager-File-JPEG 1.008
 ======================
 
+ - use the new file check image creation APIs
  - test with std_file_limit_tests()
+ - only succeed reading page zero
 
 Imager-File-JPEG 1.007
 ======================

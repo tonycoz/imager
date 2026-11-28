@@ -4,6 +4,7 @@ Imager-File-GIF 1.007
  - use the new file check image creation APIs
  - test with std_file_limit_tests().
  - fix error reporting when failing to read with gif_consolidate
+ - only succeed reading page zero with gif_consolidate
 
 Imager-File-GIF 1.006
 =====================
